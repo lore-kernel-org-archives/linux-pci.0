@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37C9E1E4AF;
-	Sun,  1 Mar 2026 01:18:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 446C924BBEE;
+	Sun,  1 Mar 2026 01:18:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772327921; cv=none; b=IEE1H80ptY/ggDRS6zHUbNBukmfEu1U7a1eDGDgvvpzV1gpGyIoXyqyFixE5mgkOwxat2HMCt/ophjShH1INRj0Sr/FEAE1YfmA6g8uT0FidhiJLanf49sqY4fh49iDoUA4Z6CIG5VjfEXSrZ5MEo/hmQjBvOL6mdq+IMAfYtkE=
+	t=1772327937; cv=none; b=SAyRSs2ClghEljAKElXJfdjlByztLFejXiJmMl489HljtLGtapYhl7OwNjASYpuxbXEpDbB+HgURO/ul45f3lGzug2eu574AGxflSpB2SHi56e+3lG7wG5wdSR6kKhwXcLg4lk9oD2yfB3b3bCgmGm2zjend0pWssKS28fR6v44=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772327921; c=relaxed/simple;
-	bh=Azvw4qdyjkxFA7XLpZS+79i/nX3i1SUO+MF/PkhXQs0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kykmz6rVnxbutWadAQZgzFwRnxWaQWCcCLY7H6XKRu4Go2lnHVUC+NsZm0YTz09GMTro6JT7psK28L75IboYXdpYoji6zUJuUFe4+YDCNWzCh/o7e7BJ/e2psQvqDAmlXYlbUFUADTcVwdDf3ESa4nAurMANwqttYP2bwaPAprY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XVT91QZT; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772327937; c=relaxed/simple;
+	bh=mzwfA0MU28H18a8drU+/Qj9olAM45RcYuCQJhmlig6U=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=UAjhdmt8Mo1mW9yrWpAHNv2sT9TeYnW3hgoZTkk25Qv+JLsSLNVRDjT3D8OjQhppZHy1mF7NQ1jMyxLpW4AXzyDNLHUtUZ4qWXP2iJ0SGcVG0cUdoBMTFoOTnmqSEwluTl7dCcsXCiib+JetMbm17/mLvaM2VmRjFMfM1BVIaK4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HbamYAa2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XVT91QZT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CF84C19421;
-	Sun,  1 Mar 2026 01:18:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HbamYAa2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51F75C19421;
+	Sun,  1 Mar 2026 01:18:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772327921;
-	bh=Azvw4qdyjkxFA7XLpZS+79i/nX3i1SUO+MF/PkhXQs0=;
+	s=k20201202; t=1772327937;
+	bh=mzwfA0MU28H18a8drU+/Qj9olAM45RcYuCQJhmlig6U=;
 	h=From:To:Cc:Subject:Date:From;
-	b=XVT91QZTVAaCL5SOMNA6Bi0aKpl+e70z12kX5+xu0yzVXk4XRBebnIJ/PjlmRGojN
-	 0H8izsQJaW+o1lu3gXunW7f1fnkIUZRBIHLvwBhNmJhNEF0EJ8zoQcg9UKnKCFxD/s
-	 SFVJ4iMZjpoZgqM3LZQjtjlVHvKsXCmEpKDl6ke+n6/8TFYrtt/gj240LgfdMxYFPZ
-	 Tatj7Ca/DTerbvX6jq9T71P2hyo1JxhQ1tG/gH5nByzHf2RZXiZVxnmM1DXsth2mqL
-	 jGOpExXVujZDL3A1pd07QyuwurTRCQP0oTFfTVeFc/2rOdBdHGC6S5jpfEqAI4Dq0d
-	 QbQg22jI9KGQA==
+	b=HbamYAa2M+G2IRbSZt4x/jx6VCJBI5XgBv+TNV/y0qcaewUH2WhJ/4H5c3DA4pBtL
+	 6mezaM93k8x+hZoqx8yCT2bljMDVVFKhwn0VPKe5uPMdnxUtS4RAKsc7nSNy+6S7Xb
+	 XNQ1t+Ktj9V+GJT9FzsIfG650hR3FgXA7bEiyt74btVtpOQ4jYMdWTe834rmj2uoPU
+	 eE6G/188cYgHEBISE7M8ahHqhwTdih1lU5hjBnmQqD2nMvnK0VHpTLovznE2FtiCrz
+	 I4vsq9miTXXJEA8dJBmKuQ49JbZ00sNvfSfvZZ6uVhvTFpB7YGImKDugiVCoAKCSdX
+	 FuZs0/Mk1g2Sw==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
-	cassel@kernel.org
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	linux-arm-msm@vger.kernel.org,
+	ilpo.jarvinen@linux.intel.com
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andy Shevchenko <andriy.shevchenko@intel.com>,
+	Christian Marangi <ansuelsmth@gmail.com>,
 	linux-pci@vger.kernel.org
-Subject: FAILED: Patch "Revert "PCI: qcom: Enable MSI interrupts together with Link up if 'Global IRQ' is supported"" failed to apply to 6.12-stable tree
-Date: Sat, 28 Feb 2026 20:18:39 -0500
-Message-ID: <20260301011839.1673093-1-sashal@kernel.org>
+Subject: FAILED: Patch "PCI: Use resource_set_range() that correctly sets ->end" failed to apply to 6.12-stable tree
+Date: Sat, 28 Feb 2026 20:18:54 -0500
+Message-ID: <20260301011855.1673399-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -44,6 +44,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: ignore
 X-stable: review
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 The patch below does not apply to the 6.12-stable tree.
@@ -56,51 +57,63 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From 7ebdefb87942073679e56cfbc5a72e8fc5441bfc Mon Sep 17 00:00:00 2001
-From: Niklas Cassel <cassel@kernel.org>
-Date: Mon, 22 Dec 2025 07:42:11 +0100
-Subject: [PATCH] Revert "PCI: qcom: Enable MSI interrupts together with Link
- up if 'Global IRQ' is supported"
+From 11721c45a8266a9d0c9684153d20e37159465f96 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Mon, 8 Dec 2025 16:56:54 +0200
+Subject: [PATCH] PCI: Use resource_set_range() that correctly sets ->end
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-This reverts commit ba4a2e2317b9faeca9193ed6d3193ddc3cf2aba3.
+__pci_read_base() sets resource start and end addresses when resource
+is larger than 4G but pci_bus_addr_t or resource_size_t are not capable
+of representing 64-bit PCI addresses. This creates a problematic
+resource that has non-zero flags but the start and end addresses do not
+yield to resource size of 0 but 1.
 
-Since the Link up IRQ support is going away, revert the MSI logic that got
-added for it too.
+Replace custom resource addresses setup with resource_set_range()
+that correctly sets end address as -1 which results in resource_size()
+returning 0.
 
-Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
-[mani: reworded the description]
-Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
-Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
-Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+For consistency, also use resource_set_range() in the other branch that
+does size based resource setup.
+
+Fixes: 23b13bc76f35 ("PCI: Fail safely if we can't handle BARs larger than 4GB")
+Link: https://lore.kernel.org/all/20251207215359.28895-1-ansuelsmth@gmail.com/T/#m990492684913c5a158ff0e5fc90697d8ad95351b
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
 Cc: stable@vger.kernel.org
-Link: https://patch.msgid.link/20251222064207.3246632-12-cassel@kernel.org
+Cc: Christian Marangi <ansuelsmth@gmail.com>
+Link: https://patch.msgid.link/20251208145654.5294-1-ilpo.jarvinen@linux.intel.com
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/pci/probe.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index e87ec6779d44f..c5fcb87972e91 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -136,7 +136,6 @@
- 
- /* PARF_INT_ALL_{STATUS/CLEAR/MASK} register fields */
- #define PARF_INT_ALL_LINK_UP			BIT(13)
--#define PARF_INT_MSI_DEV_0_7			GENMASK(30, 23)
- 
- /* PARF_NO_SNOOP_OVERRIDE register fields */
- #define WR_NO_SNOOP_OVERRIDE_EN			BIT(1)
-@@ -1982,8 +1981,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 			goto err_host_deinit;
- 		}
- 
--		writel_relaxed(PARF_INT_ALL_LINK_UP | PARF_INT_MSI_DEV_0_7,
--			       pcie->parf + PARF_INT_ALL_MASK);
-+		writel_relaxed(PARF_INT_ALL_LINK_UP, pcie->parf + PARF_INT_ALL_MASK);
- 	}
- 
- 	qcom_pcie_icc_opp_update(pcie);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 41183aed8f5d9..ad5ae05aad3c8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -287,8 +287,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		if ((sizeof(pci_bus_addr_t) < 8 || sizeof(resource_size_t) < 8)
+ 		    && sz64 > 0x100000000ULL) {
+ 			res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
+-			res->start = 0;
+-			res->end = 0;
++			resource_set_range(res, 0, 0);
+ 			pci_err(dev, "%s: can't handle BAR larger than 4GB (size %#010llx)\n",
+ 				res_name, (unsigned long long)sz64);
+ 			goto out;
+@@ -297,8 +296,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		if ((sizeof(pci_bus_addr_t) < 8) && l) {
+ 			/* Above 32-bit boundary; try to reallocate */
+ 			res->flags |= IORESOURCE_UNSET;
+-			res->start = 0;
+-			res->end = sz64 - 1;
++			resource_set_range(res, 0, sz64);
+ 			pci_info(dev, "%s: can't handle BAR above 4GB (bus address %#010llx)\n",
+ 				 res_name, (unsigned long long)l64);
+ 			goto out;
 -- 
 2.51.0
 
