@@ -1,117 +1,125 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f170.google.com (mail-qk1-f170.google.com [209.85.222.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C5D2430BB5;
-	Sun,  1 Mar 2026 16:34:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FA3933506D
+	for <linux-pci@vger.kernel.org>; Sun,  1 Mar 2026 17:55:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772382883; cv=none; b=k4DwpMcwBGola/2RCSTJgaofnBo275c4aaDUAl1306dlVrtOtexxgACISjcYaQ1OtuFmDqvb2kDm13fEO1CHNu+6dxG3CA7Ve6jTl7hhKFWEzP0Yi6iPFRcxRQ/G7iNdFzy6iEil2gnJqU9wG2a4BQfuRMco/BHJRpvr1gMdL4A=
+	t=1772387755; cv=none; b=F1hqLw5XmhRtSinIuZpxrG6YbwT8KbyYqyleRHFF007jpKE44Ea5ZzE1vjCH+Grl86WPmleNfDOzVNtxu62ZpiyaI42TPr/9zHvDquuVk2HxoVxy0y4wcnx0nkvi6yYhIVhH47pcCKwh0rAw51xdVKVMrgSwcwV3tkUpr7mUUew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772382883; c=relaxed/simple;
-	bh=je5mLoR2Jxu2IjLDAPypnbsm91i4Kuu9GRu6352moZk=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=PcIinGqutMH4jAj/WjLH85L/ZWt5bmXJkmzPSCNtkxD/RqmYzGHoKI/Ei68XgfXI8YcdtsyALTtWwsTrEoErJPhSXwnyt2jJ5k1XUqZ9/uL/z97ldP9aNm52ddSXODjGpDXP2gX2vCQUh9VnQVhWeK5eWRYUx4ZvCu3XGVSnmeA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TKgzX0hf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772387755; c=relaxed/simple;
+	bh=yhgi5eMSXsQDCYKm+CXjR4bsxzX9U+ECNX3EnREIBps=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Fh8s2AbQM+yZLZKEVNgwAqWyJtgWQzusydPkrfMPDgeCXGxD4G5ikxvUn+iM0yIWN6vMpo+/0ARFXJovCD7HEyRuJ2Ko/0M0Qa2uvnV6sf2tTlJ4s6llOnqMyLW2HN+zpUX9f6jahOAccxXiwsFIfl+FJfla5h0rnbwFzodOXiQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=dIrerKPj; arc=none smtp.client-ip=209.85.222.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TKgzX0hf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FC44C116C6;
-	Sun,  1 Mar 2026 16:34:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772382883;
-	bh=je5mLoR2Jxu2IjLDAPypnbsm91i4Kuu9GRu6352moZk=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=TKgzX0hf3d0lhMQetjAEiiWCOKnFnzvXZWHgmPaqhbewdN3fJRosoCZCc9qBvc/po
-	 evHx93y+6jGFm1MG3XNqYQsOr8ddGPjYTtni3MBr4+Wfeg0Bdp7DgyJtpeSaRoBKsq
-	 /8EmI4goKRcWrT+Ty8VXffQn9jZgFIq3COzQDhZXz+v1zP/sZmvi7J3/9qpNTmJlXX
-	 dvga5zyWNUWjv9DVOk3rU4gbLyOte0fKmobQCF487i0iZ6UJJpeiE7pdPHIoBrDEge
-	 JZG83Fy8G1/GE+0kCzgow04ihq31SX509/egQfJwEahHcltsBfRDzs14I3kQCC0Q4D
-	 NTYljGVX/IW5w==
-From: Andreas Hindborg <a.hindborg@kernel.org>
-To: Gary Guo <gary@garyguo.net>, Miguel Ojeda <ojeda@kernel.org>, Gary Guo
- <gary@garyguo.net>, =?utf-8?Q?Bj=C3=B6rn?= Roy Baron
- <bjorn3_gh@protonmail.com>, Benno
- Lossin <lossin@kernel.org>, Alice Ryhl <aliceryhl@google.com>, Trevor
- Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Dave Ertman
- <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, Leon
- Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, Serge
- Hallyn <sergeh@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, David
- Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, Alexander
- Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>,
- Jan Kara <jack@suse.cz>, Igor Korotin <igor.korotin.linux@gmail.com>,
- Daniel Almeida <daniel.almeida@collabora.com>, Lorenzo Stoakes
- <lorenzo.stoakes@oracle.com>, "Liam R. Howlett" <Liam.Howlett@oracle.com>,
- Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, Stephen
- Boyd <sboyd@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Krzysztof
- =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Boqun
- Feng <boqun@kernel.org>, Vlastimil Babka <vbabka@suse.cz>, Uladzislau
- Rezki <urezki@gmail.com>
-Cc: linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org,
- linux-block@vger.kernel.org, linux-security-module@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
- linux-mm@kvack.org, linux-pm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v16 01/10] rust: alloc: add `KBox::into_nonnull`
-In-Reply-To: <DGRHAEM7OFBD.27RUUCHCRHI6K@garyguo.net>
-References: <20260224-unique-ref-v16-0-c21afcb118d3@kernel.org>
- <20260224-unique-ref-v16-1-c21afcb118d3@kernel.org>
- <eeDADnWQGSX9PG7jNOEyh9Z-iXlTEy6eK8CZ-KE7UWlWo-TJy15t_R1SkLj-Zway00qMRKkb0xBdxADLH766dA==@protonmail.internalid>
- <DGRHAEM7OFBD.27RUUCHCRHI6K@garyguo.net>
-Date: Sun, 01 Mar 2026 17:34:26 +0100
-Message-ID: <87ldgbbjal.fsf@t14s.mail-host-address-is-not-set>
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="dIrerKPj"
+Received: by mail-qk1-f170.google.com with SMTP id af79cd13be357-8cb5c9ba82bso662578185a.2
+        for <linux-pci@vger.kernel.org>; Sun, 01 Mar 2026 09:55:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1772387753; x=1772992553; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=YCd8bTN0yDfsSyi6ZA8FG9Faz13YGXHzhnf02MTH1b8=;
+        b=dIrerKPjtw6iWP+dBwRH0Ci9RBi4QAE8rVnJeoI2Fg76E9IxhSGUNGqi7RaYvdv+BF
+         cZ702ssNmV2/pOwLexFowpgH6EL4LUzOHaC2R6E8TzPUi9QeXSoD6n6qBMcuL9b5BtY/
+         EqtmxRRyZgK7KcguiqjyPckkhPiR7qmPGHkDJY/PfLmhsdxIgoRE+5ESWp6Ub4opPveW
+         CzSnh2rO8m8xGo4U1XzDl+YjYutgBUPTCKBDw61xlT2gVgnUYu9iSJXQj+7BpRya9cHB
+         1nzkKljJH+32/UTRhGKxtMmAVXIhiIM5KGt7w5niHzF1uhkiZkN3rkRqdZDkkgbLQH4m
+         ykgg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772387753; x=1772992553;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=YCd8bTN0yDfsSyi6ZA8FG9Faz13YGXHzhnf02MTH1b8=;
+        b=A6hDinknHcdT1hwkWse17KpGtH/X66foJyVDG1tjMD+ZxDRV8lujNTU/BL/jKXGjOL
+         81e/h+7X4pFhjoLwwZB0/ozrptibkwvf3jD5NwFFos+KX9Ifp+8By/fQoPx9iNjWqqDr
+         4RIs7KB207GUPtUU3J7YyhBhqqU+uvWHvqUaAnfjXS5yXapf4Y5wGsfTN359sHV73Abx
+         5v8idl1/BRn2d3m7plBKXLjWUljCLsThOlrbr5ynODSWucETk/L9BL8mIgPkjnruJGfh
+         /YJH4GeTJPQH6g0N0KwVienDKvHRidcZVYcr5Frov3enAA+65ItG7TFNHhg8uFkf/HOJ
+         7TUA==
+X-Forwarded-Encrypted: i=1; AJvYcCU/SLehBrir6V0ueZ69+B4JdfSEOofLC3RsGeroxxz2SJdkTenVpd0IsvR7ovaPtli6VwNXZmANnRA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzPSTg08GU0g1j3y6QAdiYC2qi5OwhdtNG4IP1MXsiexHw6f8cK
+	Y2P8s1d7w41gO5976Pm+1On0SmKAPNboBo9yGQwx1vJNleQxTA+hgdxhzgSha5bsp60=
+X-Gm-Gg: ATEYQzxIvsrKPi3Rz0TGWF86JNWQ8+99r3PJBTAPFAZJU0URAskUzhmQ+Tn0nvIshgD
+	RQqZ0IpdvL57h23cRTwcJd7ddc/iF9mAAgIsq/UubMxW0ye/LTxVQZYL05aspkZei7RRx346ru5
+	LU7ANsXNUbcoK1G8OBLRF1oz3pEc10kgWyOG2GzRuZP9QdopLownQlKrd9HChSjru8NFAPEexy6
+	CU3FFecxhISztZ4mEKvmGwovm8KbtLqecwEG3dxtQgrYoCx7pDd+RcaoKG2mkZmtaEsxpub3BMt
+	Wl1b8R98KviL0rHhXiBXD8pMoD0cymIdfhxln88+KC3w3bVUv+LMXXnPuxOWPZSwO8RVj7LzdQE
+	97gXLBnxk3k5qQRnpehQ2NAO6yYfAQZ5p8hhkkJtPNCitZoMP6sbfPOQzEk3KVF8MSw9Y5wMDsr
+	Ja0voBxH7rSN0jgV/GLlcTpXPhOYB+saCaacyJ5qi0lpEifPHWYKezWLuB744TEQoX5A9F6CHtZ
+	SnXuDohauHvHLgvH1A=
+X-Received: by 2002:a05:620a:2802:b0:8c7:155a:6d04 with SMTP id af79cd13be357-8cbc8e6817cmr1277844485a.54.1772387752963;
+        Sun, 01 Mar 2026 09:55:52 -0800 (PST)
+Received: from ziepe.ca (hlfxns017vw-142-162-112-119.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.112.119])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-8cbbf6f873dsm1033539385a.25.2026.03.01.09.55.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 01 Mar 2026 09:55:52 -0800 (PST)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1vwl1D-00000002dJu-0Hxd;
+	Sun, 01 Mar 2026 13:55:51 -0400
+Date: Sun, 1 Mar 2026 13:55:51 -0400
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Keith Busch <kbusch@kernel.org>
+Cc: Zhiping Zhang <zhipingz@meta.com>, Leon Romanovsky <leon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-rdma@vger.kernel.org,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, Yochai Cohen <yochai@nvidia.com>,
+	Yishai Hadas <yishaih@nvidia.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [RFC 2/2] RMDA MLX5: get tph for p2p access when registering
+ dmabuf mr
+Message-ID: <20260301175551.GT44359@ziepe.ca>
+References: <20260210194014.2147481-1-zhipingz@meta.com>
+ <20260210194014.2147481-3-zhipingz@meta.com>
+ <aaDxmGoqpjnvmVs9@kbusch-mbp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aaDxmGoqpjnvmVs9@kbusch-mbp>
 
-"Gary Guo" <gary@garyguo.net> writes:
+On Thu, Feb 26, 2026 at 06:21:28PM -0700, Keith Busch wrote:
+> On Tue, Feb 10, 2026 at 11:39:55AM -0800, Zhiping Zhang wrote:
+> > +static void get_tph_mr_dmabuf(struct mlx5_ib_dev *dev, int fd, u16 *st_index,
+> > +							  u8 *ph)
+> > +{
+> > +	int ret;
+> > +	struct dma_buf *dmabuf;
+> > +
+> > +	dmabuf = dma_buf_get(fd);
+> > +	if (IS_ERR(dmabuf))
+> > +		return;
+> > +
+> > +	if (!dif there's any implication mabuf->ops->get_tph)
+> > +		goto end_dbuf_put;
+> > +
+> > +	ret = dmabuf->ops->get_tph(dmabuf, st_index, ph);
+> 
+> You defined the "get_tph" function to take a pointer to a raw steering
+> tag value, but you're passing in the steering index to it's table.
 
-> On Tue Feb 24, 2026 at 11:17 AM GMT, Andreas Hindborg wrote:
->> Add a method to consume a `Box<T, A>` and return a `NonNull<T>`. This
->> is a convenience wrapper around `Self::into_raw` for callers that need
->> a `NonNull` pointer rather than a raw pointer.
->>
->> Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
->> ---
->>  rust/kernel/alloc/kbox.rs | 8 ++++++++
->>  1 file changed, 8 insertions(+)
->>
->> diff --git a/rust/kernel/alloc/kbox.rs b/rust/kernel/alloc/kbox.rs
->> index 622b3529edfcb..e6efdd572aeea 100644
->> --- a/rust/kernel/alloc/kbox.rs
->> +++ b/rust/kernel/alloc/kbox.rs
->> @@ -213,6 +213,14 @@ pub fn leak<'a>(b: Self) -> &'a mut T {
->>          // which points to an initialized instance of `T`.
->>          unsafe { &mut *Box::into_raw(b) }
->>      }
->> +
->> +    /// Consumes the `Box<T,A>` and returns a `NonNull<T>`.
->> +    ///
->> +    /// Like [`Self::into_raw`], but returns a `NonNull`.
->> +    pub fn into_nonnull(b: Self) -> NonNull<T> {
->> +        // SAFETY: `KBox::into_raw` returns a valid pointer.
->> +        unsafe { NonNull::new_unchecked(Self::into_raw(b)) }
->> +    }
->
-> Hi Andreas,
->
-> It looks like this patch and many others in the series are missing `#[inline]`
-> for quite a few very simple functions. Could you go through the series and mark
-> small functions as such?
+Yeah that's weird, there should be one TPH for a DMABUF, not many.
 
-Sure.
+> But in general, since you're letting the user put whatever they want in
+> the vfio private area, should there be some validation that it's in the
+> valid range? I'm also not quite sure how user space comes to know what
+> steering tag to use, or what harm might happen if the wrong one is used.
 
-Could you remind me why we need this directive? Would the compiler not
-be able to decide?
+If the device is VFIO compatible then it needs to ensure that whatever
+it does with its steering tags fit the security model of VFIO. You
+can't harm the device - you can't reach outside the VFIO sandbox (eg
+into another VF or something) and so on.
 
-I know we have an issue when we have call to C function in short
-functions, but not in the general case?
+Under these conditions the kernel doesn't care what TPH is used, just
+let userspace specify the raw bits on the wire.
 
-
-Best regards,
-Andreas Hindborg
-
-
-
+Jason
