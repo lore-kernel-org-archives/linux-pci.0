@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD1E42C032E;
-	Sun,  1 Mar 2026 01:40:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D27062773CC;
+	Sun,  1 Mar 2026 01:40:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772329221; cv=none; b=Hv3/KyPzdCEHsrVXkITj4dHATvMfhz380vVPpan1MnaYJmnmGhxye6Mx/ZXqZzvOPj/NT26QJvZG03PM3x40VeNSSaObkDsp0Phg76KNpgNNPdkoPZT58y7uJIXTkDEY5MQ7hZLxNMlv8pihzpTpj+JyVP0yRFueHC4i6ln07QY=
+	t=1772329223; cv=none; b=N1Lv878k1otcfyRAsiQPFBo5pkOLOhVwJtAe4BsoB6YdZYQYuQBaAIE80I1qyYLi6OX4+z1k4ifPWNX0fLMf+Fsmy3WefXwFnP4Fe8waJiC/WZ/4OevgZBhoeGHo1rBC8Y0liMvdlzMuAwbLnvss1OgOz+MaxAqpJkdAClcAJmI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772329221; c=relaxed/simple;
-	bh=HOR70tu412dDpRqy858lbiCFaCJ6RxS/Co8VPlOdhf4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TKSPkVH7XUIpWyyKShBAxZw55etMCIdU0d/P8izbGSEqw1On+be6pLVSmgWQiyIXmFquGdI9UI9r1TwTMMHGV6O1RaaT+nzBlFnpSjWQ7LVP6EWNX/aIImlWzIQ1X6cLtP9CgMP2zE6z4nhb9zv2WutcynNQsszWTcaWYjoINzo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZXDlx1V8; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772329223; c=relaxed/simple;
+	bh=nsdxKdhvp7JAm98G2OMyIwBSbCWrWQp0Muj2gcuqy/0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mKnYrRE5FyA4sOI6g8gtaNAp8bl6LVKXPWM7S1EGQdzkxbrok61Nni1MAzqrRqUsdN+NwhCO+sghKn2Qkmlw4y4PyEZKGcIVVCPrrQ749te0txUX6UKinMIRuYbo/oF8rEmFDTuCuZP9TpwqrJ8AIXcxyg6JWXaAz1mk/zgD4T0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PlmLxH2B; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZXDlx1V8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A57E9C19424;
-	Sun,  1 Mar 2026 01:40:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PlmLxH2B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14711C19421;
+	Sun,  1 Mar 2026 01:40:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772329221;
-	bh=HOR70tu412dDpRqy858lbiCFaCJ6RxS/Co8VPlOdhf4=;
+	s=k20201202; t=1772329223;
+	bh=nsdxKdhvp7JAm98G2OMyIwBSbCWrWQp0Muj2gcuqy/0=;
 	h=From:To:Cc:Subject:Date:From;
-	b=ZXDlx1V88itZpL6HJcPl56JMwV8gtT2IBvWc8JoqJIRcOYh5+Wlp+WOmFRXOBq770
-	 pGm2pVDqjitf/Q1BAFEdhNLUD6Pxk1PJMkNaNkkLypF6nX0ZPk7XE9qME1K3XDfN8n
-	 9FS7/qt9+IastN0Mbg33NscKnTxdrA/2c1HrOxl1Rcbs+fY55Org7v6ALQGZ+fszLr
-	 jqzWParZPW+g8+M2zhB/h3zwy5n/B1j5nwB2bBgCPrKYXYWlXZecOFKZDhI6negY9F
-	 in+bienldJw+ZRJBAdqTzxx2HIAs534wG7ZJaxhaUmG0e2m/p9Zc5yK2YXS3OM6V8y
-	 AcJAjK/9FDv/w==
+	b=PlmLxH2BmwJTZ//xowhDSRVqZx8/MHD7Vv5UWWDU8qRxZ1xr9hijMt/0RumNXbjCB
+	 GJYJ80w2CxSSz6KhXqs70oROpsD5EA74tvpTTVFZcDlAIRN3cYWC8Hs0qX/VR9pfD9
+	 L1g3OeWzZu1E4sHIh3W4HNyEctAIeIZ+2Dtg0NZPSXk9WClAihQg7oAq1I+DWFYT6W
+	 y5XzRBtqGNOL/XaLRWbe/BwS+Q8v8Yub48WPLWzevT+Q9ILN0rz/iOVe+Vo3GiI54J
+	 5ESezm6NySSoJu4Z3oO0SVBfo0yq1qQL/OCy0Xz/WMhRdwLe+YP/a83gR93tA40l4/
+	 w4409ViQ4E9Qg==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
 	cassel@kernel.org
 Cc: Manivannan Sadhasivam <mani@kernel.org>,
 	Shawn Lin <shawn.lin@rock-chips.com>,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-rockchip@lists.infradead.org
-Subject: FAILED: Patch "Revert "PCI: dw-rockchip: Don't wait for link since we can detect Link Up"" failed to apply to 6.1-stable tree
-Date: Sat, 28 Feb 2026 20:40:19 -0500
-Message-ID: <20260301014019.1701545-1-sashal@kernel.org>
+	linux-arm-msm@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: FAILED: Patch "Revert "PCI: qcom: Don't wait for link if we can detect Link Up"" failed to apply to 6.1-stable tree
+Date: Sat, 28 Feb 2026 20:40:21 -0500
+Message-ID: <20260301014021.1701590-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -57,13 +56,13 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From fc6298086bfacaa7003b0bd1da4e4f42b29f7d77 Mon Sep 17 00:00:00 2001
+From e9ce5b3804436301ab343bc14203a4c14b336d1b Mon Sep 17 00:00:00 2001
 From: Niklas Cassel <cassel@kernel.org>
-Date: Mon, 22 Dec 2025 07:42:08 +0100
-Subject: [PATCH] Revert "PCI: dw-rockchip: Don't wait for link since we can
- detect Link Up"
+Date: Mon, 22 Dec 2025 07:42:10 +0100
+Subject: [PATCH] Revert "PCI: qcom: Don't wait for link if we can detect Link
+ Up"
 
-This reverts commit ec9fd499b9c60a187ac8d6414c3c343c77d32e42.
+This reverts commit 36971d6c5a9a134c15760ae9fd13c6d5f9a36abb.
 
 While this fake hotplugging was a nice idea, it has shown that this feature
 does not handle PCIe switches correctly:
@@ -109,23 +108,34 @@ Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
 Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
 Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
 Cc: stable@vger.kernel.org
-Link: https://patch.msgid.link/20251222064207.3246632-9-cassel@kernel.org
+Link: https://patch.msgid.link/20251222064207.3246632-11-cassel@kernel.org
 ---
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-qcom.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index 8c1c922088023..ca808d8f79753 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -601,7 +601,6 @@ static int rockchip_pcie_configure_rc(struct platform_device *pdev,
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 60373fe1362f8..e87ec6779d44f 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1958,10 +1958,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
  
- 	pp = &rockchip->pci.pp;
- 	pp->ops = &rockchip_pcie_host_ops;
--	pp->use_linkup_irq = true;
+ 	platform_set_drvdata(pdev, pcie);
  
+-	irq = platform_get_irq_byname_optional(pdev, "global");
+-	if (irq > 0)
+-		pp->use_linkup_irq = true;
+-
  	ret = dw_pcie_host_init(pp);
  	if (ret) {
+ 		dev_err(dev, "cannot initialize host\n");
+@@ -1975,6 +1971,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		goto err_host_deinit;
+ 	}
+ 
++	irq = platform_get_irq_byname_optional(pdev, "global");
+ 	if (irq > 0) {
+ 		ret = devm_request_threaded_irq(&pdev->dev, irq, NULL,
+ 						qcom_pcie_global_irq_thread,
 -- 
 2.51.0
 
