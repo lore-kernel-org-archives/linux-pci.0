@@ -1,368 +1,505 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020131.outbound.protection.outlook.com [52.101.228.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ECB63090CB
-	for <linux-pci@vger.kernel.org>; Sun,  1 Mar 2026 12:00:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772366438; cv=none; b=IOAIeaq56MNeSzfFrizB4iAzxpAYCJ9Dl7dEhf/BllU79wndhUpRAIYEYhAB3NqpiVJEM4EpneAfDlbSwIAEk4+jtJ1UQTumCnkWYvdeAQe/82ZvCiKirIuhdKhqMy0HNsMmgVl5ZOS+jPaynsWOh2fk7llOPY+/9cuO4ZB+HPM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772366438; c=relaxed/simple;
-	bh=SJn37WLxz8bdumoUfZk482foyrecXcwFItjxJ/0ufQo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LRH0qnKX9udvRYhfsrysby0KLs2G7arj0uyeKYkJsJDvYQCCzSxd7g4WibfohCLge9V0t9/3E+qsaVA6R0T5I81l7w+WyfdUAtY6nCisN4IvwVR/gvM03C2dip0nQWyQWgT6638sVl4qBSJktOASewnvWJRlaksJKuZvZmAVl8w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=WoP5ZbKp; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Q+aGDFec; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F7A42517AC;
+	Sun,  1 Mar 2026 13:11:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.131
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772370704; cv=fail; b=f+CLlu6WeTzOVVcaDaYv9rf/lR5g2d4tXckJdPZPZAaRA3NipYG8SFj4c1VYZDepsg8Os7kBIcw0uifJQ8q+85BkYY0Sr6kVFxVuEHGIPvInvDBppJvQBUF/uMxNb1ikDhEVIRvTZENNS4MG8Cb+MLMZhPUFyIYpaG6vpJXjGNs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772370704; c=relaxed/simple;
+	bh=x2IyZvmF2k1ApoT8CPcL6b6HuTdwjyXDvIBpIw++0vg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=Y47ZSV6tCAqx/YJm814a2G4t+vKYlBS7c9rahjeJYrhspvltF4dkNn/3WwRIiPAeOsx1qjpHgtdu4Rtnn6B67RzOgfdM871jwXwVRTM7VUoFaLq7oJ542Vk7rNZcNsnwTCM+9hj4H0jHBEHbomb7dFBJ3Xs9vFfb27Bzzf8wAfg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=K7KV2Dms; arc=fail smtp.client-ip=52.101.228.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="WoP5ZbKp";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Q+aGDFec"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 621AHmaZ944323
-	for <linux-pci@vger.kernel.org>; Sun, 1 Mar 2026 12:00:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=CHM6ea+T/SQTyKD6VE8gREYx
-	tQS0AV0BBIY+fO3U/+Q=; b=WoP5ZbKpVdVKlkXv2aH+KEPi03kUWMTYBCJXM+o0
-	bueM9nMs/bFFYl420otJKZY2dXshgOWxzxAFKqgZHYZv9Y+wfE00JUx9gc9JCh6y
-	V+d7SqShjxe+e3A4/hPi/TSmO2SHHa3u4E4bpGSwPJrOw7mX9mMBDw/bmCKTBp/I
-	txGW5FF5wCHDF770OacBskjkh+vvedtPD21saeukgigmMIxit4IgxQAnS+fsvhPs
-	F+p68LXBy/X93NlrWUCnmXUMXNp8Iordm9wjkO/Ua6JnTSz5zG0EFCHsrsYlGufg
-	Kw00/KOKaJQnpLM74TWrU6XkLJxwFn1k/m3ivgU4SjGccA==
-Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com [209.85.219.72])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cksgq2nmh-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Sun, 01 Mar 2026 12:00:36 +0000 (GMT)
-Received: by mail-qv1-f72.google.com with SMTP id 6a1803df08f44-899b98ebf47so598201236d6.2
-        for <linux-pci@vger.kernel.org>; Sun, 01 Mar 2026 04:00:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1772366435; x=1772971235; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=CHM6ea+T/SQTyKD6VE8gREYxtQS0AV0BBIY+fO3U/+Q=;
-        b=Q+aGDFeclvYDN4NPXKVswwpBnrW820roGHHAspgrcXKRp2mnbNjwOCrk2r7/jVMOIw
-         HnnS2qBxjGc8yCCb88INx3Ivcm1nbFhRClTfKXWkdxtgHLHDYTyGCEpYviC6mTIA1Rbd
-         tt3IxTURALw9ItWuFYh0yUsqxhWd2P5cFsUBgDcuWI6hed+xmT2dmN3WuxHQPxo9xur5
-         /Lj8sNAcyk0xRru6LUSTbc5Mzqwq8ucsa7aI40tfa26RkQLUGUS8iZpkpUWcE+LAZlv7
-         l1tZZuUi523klJPf9IlTxxi8oDUOX5DCufdFrWuXEApdbpz8Q4xnRnu2xd/Rgs1L16DK
-         KSqQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772366435; x=1772971235;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=CHM6ea+T/SQTyKD6VE8gREYxtQS0AV0BBIY+fO3U/+Q=;
-        b=vf4Fz6vi9jGOViHruJB1+S36NI4s7P0wdvEnroJtndMg6vUVC4gI7+8yP+a+4O+gq6
-         Qm2R5OUpiW+TuhPpfALgYOWFF2EdUXZOGuUx+/Jobb13NngHNHP8J+LN/2Nyr2Q2yt/A
-         VLbGAVdt2kq4KYSSkPLwIppjAEvvz4nFw8NzIpSnkSRFK8idB+Lu33BDlMLIW60Z8UG0
-         K++qijB0IiNiwJ7U1AjKMkR9CGOhiO3jPoVjuXEXUbCMYDN4zIKDkA9I5FXcYVTDdEZd
-         6uBUe2sQ69JEgsfJhonHhWj11DjMupLyLtMQsJebHcTx/KxEux8kk9IelYJ/zlgfhBtm
-         lh5Q==
-X-Forwarded-Encrypted: i=1; AJvYcCWJYTkIPieE9B4y8UcaXyoAY4yGecjbADlq9npFCPgY3U55Qdi/EOPvKEqvHvIORl0O6gZrcyVlxEo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzTpcHxKXSdl+szhS3CVKLqGr72cXTfJSm2geVCdMlBfI4pwps6
-	DpNwm6zNgT0thz3nWAXEjbFvn7GTzapTtpmPJQbXBeBK3EgUJeV3Q2WnooIKsjCaeYMdlosA1mm
-	Hm0Y2ZCkaK0XFg6CXIgkNOk2wXdzcV1JP41lusvvPPwXFf3ob9HtUsyKFa8ahqF8=
-X-Gm-Gg: ATEYQzwesPskl6uUXLqiAWt275yIrfk+f44+QSGoGSuKpV4JNYnM3b2Xa4NHFbWE2d9
-	hjPCTKLoD7miJm6CnM2SElpMOEHOAoNU77fiz26BIVMonayD8BkyrSDXwRtlE8s8W27QMb1QC4I
-	C5Pq1Q81h98A6DJvUckmeXELTO0kp221arlF9Y7/6HjxhCd4ItAZ/Moy3AH5Yq2TJX9XJXzZJq9
-	comKQ8lsdDe7Kv5vx0xRSTDDBb6NNuSiNtXwWSXNmPkjhRNA9wKJKRzzaBpr97B0dT+HsyA+eDO
-	cnc0alrhYmvUKPVAC7Vzh0Y8ViL3UlRnsfgs8C5vhGcW/QT7jvRv4Zn1W9OnAZHWygAIoMMA+5S
-	e/0Yjl+2olNcr6Lmbp2AvFZfd+wHWN2/OWnydP6v58DYxtYXTa0eXeIUNg3x+p3xwEOCJMiyspC
-	09fxzRbWYTexIEo0T/tFjduRHw+BTRGm8YxRM=
-X-Received: by 2002:a05:620a:198a:b0:8b2:7435:f5ef with SMTP id af79cd13be357-8cbc8e4f7a8mr1056040085a.41.1772366434883;
-        Sun, 01 Mar 2026 04:00:34 -0800 (PST)
-X-Received: by 2002:a05:620a:198a:b0:8b2:7435:f5ef with SMTP id af79cd13be357-8cbc8e4f7a8mr1056033185a.41.1772366434283;
-        Sun, 01 Mar 2026 04:00:34 -0800 (PST)
-Received: from umbar.lan (2001-14ba-a073-af00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a073:af00:264b:feff:fe8b:be8a])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5a115bd5a66sm1006367e87.34.2026.03.01.04.00.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 01 Mar 2026 04:00:32 -0800 (PST)
-Date: Sun, 1 Mar 2026 14:00:28 +0200
-From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-To: Marc Zyngier <maz@kernel.org>
-Cc: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>,
-        Nipun Gupta <nipun.gupta@amd.com>,
-        Nikhil Agarwal <nikhil.agarwal@amd.com>,
-        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Thomas Gleixner <tglx@kernel.org>, Rob Herring <robh@kernel.org>,
-        Saravana Kannan <saravanak@kernel.org>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>, Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-        Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Prakash Gupta <prakash.gupta@oss.qualcomm.com>,
-        Vikash Garodia <vikash.garodia@oss.qualcomm.com>,
-        linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, imx@lists.linux.dev,
-        xen-devel@lists.xenproject.org, linux-arm-msm@vger.kernel.org,
-        Charan Teja Kalla <charan.kalla@oss.qualcomm.com>
-Subject: Re: [PATCH v9 2/3] of: factor arguments passed to of_map_id() into a
- struct
-Message-ID: <khlwmcip3dacnkdc55w37sxplcshfb3uahgfb3cjm4kpdlfi4y@fletnzhayazf>
-References: <20260301-parse_iommu_cells-v9-0-4d1bceecc5e1@oss.qualcomm.com>
- <20260301-parse_iommu_cells-v9-2-4d1bceecc5e1@oss.qualcomm.com>
- <861pi3amuu.wl-maz@kernel.org>
- <ehhnta6zvfua723llpb52hh3lwqdh4ttomzt7xqrmcjnsslbop@p4w3gjzxp4rn>
- <86zf4r93ns.wl-maz@kernel.org>
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="K7KV2Dms"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=iA953Qi8nZGzKCoFmU+IT+D28PlH5Hsms34VJihHgDSNxpe+XDH1JBjpHImWbm+K2AYENaaq5SKsw3Xjr8PKcJO074zNPkDEOsOdP9HcrM2RjSgKcCmQXgZhQYiUQ7qII9Hl6DnKcaXluMrOjSDGlTP/UIWDxQVcw+gNezv8U7EtfXAPSA7dapQkPcEiGYziyA40aXaoeXmIWPt+GFgCJDWYrdM4G89RlcSXzQzh4PJjzhenRgnwxZ1eYLbvMb3SZG0cq8X/S3WfhlgQG/XXnSL96QUBVBYCJmpvb5D/LKCyNIzFZlCEehMLbcWfVq6ALFiFOeGmikB6ur1B7B4w+Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=tRn3hLWnV0t8CvqmNX5PjK1vXzRtgscYDbSGX6uXHOY=;
+ b=JVc9EvmneUN1n1R5iMWeDMmYS/DKhMAOLvAnPYoBJipejtPavsTEfnam8y3/ENxaEwUk7aabOhi0tScJe7e7MMsb21wvtRN4Tpi/5wL5sa1CBHWEUwFhevqnMxTfG3i282/hVCOpHARXXrG0rMqI4wtm36oVsCVDd4cdRhSAJyg1TJkdtgzsE7TpSrDCg+/QNTd52rURAg9sLKQUC8sMrlmbdGNnZd7b+cobph2+YTnt/BWrNsKIEqPrXcXGPrhoLUzNAs/oL+Dw2zqzl9/zyriHIp5nj60ehH6dyntZQbIGYDVyLLG++VexzlHo++IHq5OCMS3JbQYRbOyhJXe2Yg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tRn3hLWnV0t8CvqmNX5PjK1vXzRtgscYDbSGX6uXHOY=;
+ b=K7KV2DmsR6I629TLY1WQ2o5Wi4tof54hSVSUX7lbh8+OJNoHh3mfcDxjsAqqoRVN08OQYRby3VNPW3V2jaCwpdE79Pc3/Pe8CcfU1jk/QmQ+VEzjXvNfuWAwoOsIvRDExb6sH/qEHtjtbFsKLLD+yPLgxdQ1Ksg8cOKzgayKmpI=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TY4P286MB6207.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:332::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.18; Sun, 1 Mar
+ 2026 13:11:38 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9654.015; Sun, 1 Mar 2026
+ 13:11:37 +0000
+Date: Sun, 1 Mar 2026 22:11:35 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Vignesh Raghavendra <vigneshr@ti.com>, 
+	Siddharth Vadapalli <s-vadapalli@ti.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Richard Zhu <hongxing.zhu@nxp.com>, Lucas Stach <l.stach@pengutronix.de>, 
+	Frank Li <Frank.Li@nxp.com>, Sascha Hauer <s.hauer@pengutronix.de>, 
+	Pengutronix Kernel Team <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, 
+	Minghuan Lian <minghuan.Lian@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>, 
+	Jesper Nilsson <jesper.nilsson@axis.com>, Jingoo Han <jingoohan1@gmail.com>, 
+	Heiko Stuebner <heiko@sntech.de>, Marek Vasut <marek.vasut+renesas@gmail.com>, 
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, Geert Uytterhoeven <geert+renesas@glider.be>, 
+	Magnus Damm <magnus.damm@gmail.com>, Christian Bruel <christian.bruel@foss.st.com>, 
+	Maxime Coquelin <mcoquelin.stm32@gmail.com>, Alexandre Torgue <alexandre.torgue@foss.st.com>, 
+	Thierry Reding <thierry.reding@gmail.com>, Jonathan Hunter <jonathanh@nvidia.com>, 
+	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>, Masami Hiramatsu <mhiramat@kernel.org>, 
+	Manikanta Maddireddy <mmaddireddy@nvidia.com>, Damien Le Moal <dlemoal@kernel.org>, linux-omap@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev, 
+	linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@axis.com, linux-rockchip@lists.infradead.org, 
+	linux-arm-msm@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	linux-stm32@st-md-mailman.stormreply.com, linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v2 6/9] PCI: dwc: Disable BARs in common code instead of
+ in each glue driver
+Message-ID: <6hth37ppnarfia7vudzh3mw7ftq2hzqyfupq4yn75xogbyuu7y@jjkhirnmiawo>
+References: <20260225170324.4033466-11-cassel@kernel.org>
+ <20260225170324.4033466-17-cassel@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260225170324.4033466-17-cassel@kernel.org>
+X-ClientProxiedBy: TYCPR01CA0067.jpnprd01.prod.outlook.com
+ (2603:1096:405:2::31) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <86zf4r93ns.wl-maz@kernel.org>
-X-Proofpoint-GUID: 2KrKrYtrZBzPgJbDXaZDfg8rKYzBeplG
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzAxMDEwOCBTYWx0ZWRfX4di5q9yZ//Go
- bDkELtHSCL4UcLcWPOsPSjem+HE9yRYImKbECo2Vv4gRkpZ/n2yfjE6ebkO1KqbV8IjhH4g0sg8
- YNV0heeCR+4YpmSqB7XY6i8eLv4VvQcCVYMFtRonoWF4jwDHYnVoO4wmi8+VZveSdjvRTGCXVZP
- EKbCnquBpcGbSBG8cLlZ6vt1rd4pTLprLNdHdGK34dx5I2yvkBAU/F0Eo6FrH7WHx8NtmWZyZ7I
- imTzCAbjJm99JF+kq2jpTzFrlJ55AEAox4mkO5aFG6nK5deCktWPC7ZNukM0BQGk2KTk3fKpW7K
- g8R5Jt2KLFCi4GFh3tyaPKQTZAwcTtlLCJWhZN/CDwM65s3osMYr6L/rAIBWowLS0jKefx4VyUv
- gBgax+gZbtBEdl0JLcrehOvcqjaiZqKH92kSYqrxGT6pYMt6EhAic1rXG2Rbb0+OHtDk50VCi3/
- txzsmce4xbqA1a2+/3Q==
-X-Authority-Analysis: v=2.4 cv=bdRmkePB c=1 sm=1 tr=0 ts=69a42a64 cx=c_pps
- a=7E5Bxpl4vBhpaufnMqZlrw==:117 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
- a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22 a=YG64nluAAAAA:20
- a=EUspDBNiAAAA:8 a=VwQbUJbxAAAA:8 a=BCSTLeMbECCLQgZ0D0gA:9 a=CjuIK1q_8ugA:10
- a=pJ04lnu7RYOZP9TFuWaZ:22 a=bA3UWDv6hWIuX7UZL3qL:22
-X-Proofpoint-ORIG-GUID: 2KrKrYtrZBzPgJbDXaZDfg8rKYzBeplG
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-01_01,2026-02-27_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 bulkscore=0 priorityscore=1501 clxscore=1015
- malwarescore=0 impostorscore=0 suspectscore=0 adultscore=0 spamscore=0
- phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2602130000
- definitions=main-2603010108
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY4P286MB6207:EE_
+X-MS-Office365-Filtering-Correlation-Id: 63bc0c9e-8e7e-48b3-e291-08de779411bc
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|10070799003|366016|376014|7416014|7053199007;
+X-Microsoft-Antispam-Message-Info:
+	5QavH8rN6gwtI85b4lBxD9osOwVk9zVDxVjd4r6Pit+jk2t+ZmbpgL7CvJmaBr+zhMKK3LrUTjuCqfjBticBYlqXCXpM24WhnBdvFQLI8KcHF7n/KUF70HybMYEUxmfDaKpK8ZPVWRApOjR1IUETg/QCh9jJJ2zTFsYOH+niRxBdiDOXYt5iQj6YYz0gtIyGgxM4kr6vyVdwWLKhV5VO6oSUbnHR1UHAALmBmCfD/c2EkdLVa51v1R2OE4H84Xq8y+d9iDOVCYhZU4Na1tWEGPy/197HYdwbqg4/DAfBMRaCVagQFY/SruMketHLHiAwtst2cmbhTQ3vpOHjR8yQUvBzFM+dElAzoKdxlmcFTWV/dDg94x+Wa1TvVqEOn8UykgNpG26iZK7kplQA5c9NLZXUajY5CTRpIzM0zV6wbyvkoAsJWwqOk4k3HRYrUgkYbGzRj/y3kp7QKhRXdgGFTwPU1uffKaEEQp3dvnyMdCQI+7uUZp0X7gZnFULesGBmoPGCRL4i8oPQwdsNJ3/PKBq6U3oy+CfS2qaPaAXd6kS3Nx0xBLSpBsDuz68BQElwcxtOvrUhaEZYOyzPwopiXxMZBdgtOah3r75Gm6heGz7wZNxyM3OuQPR6Xmx42Okfv8UkhpDRltN9LPUGdQwTUdkNzHVIVMGpWY2z9K0tyktasjqDdGWxsDt+uIfiWgnqs/H+EtLIeujh1xKtNNgn8MTWuUObEbdNbF1rdnziWic=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(366016)(376014)(7416014)(7053199007);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?r7uH8E/caIhFE272UhDb9AjctgTbA8mHSxAuG2P+MsEwG8W6Bi57okrs6V4m?=
+ =?us-ascii?Q?QKSLLp7lEgPryspeW7FhU/AjdFfNxXtlXa5N+xcuOcT5ZyeHgL9MdTiNvcQG?=
+ =?us-ascii?Q?Qd/9gOaQVjZZ9d+kvUxiB/zuWAA8cKIsvc1/l0C8PojDHaHlO51hwAw+i+hF?=
+ =?us-ascii?Q?Metr7FX4W/d45ZOPQ1NGyiXcq+jGYCRXom3cTZTLbNcliAHculGEkqBZkEO3?=
+ =?us-ascii?Q?XLD/SKus7WuePmQoB2tMdt7noRWYwtuads0k0RldklHKHGkU1udONuqp+gnj?=
+ =?us-ascii?Q?hcpzrG28RvtYWzTaar6ywvbqzaKZKV0Oem8AdB0FGnq/ezrQB8Rd2IlchIAX?=
+ =?us-ascii?Q?h/IL2gZd84QHfZ0WZSbGMRtlaqxr3sZh+hAwA60zHBGwrakoMo4kkoGYGxyk?=
+ =?us-ascii?Q?+v4j3af0/gCZs1PLmLqS36h5llRg4TsnejOYXmU4u7W9c/CV6A5CdloTxNNC?=
+ =?us-ascii?Q?0v5D7JSXYixdZy7OSazx2saAm/19SnbNTTvMQFPPqkop5UUJmZ/uTPLrsPSF?=
+ =?us-ascii?Q?PBbpHZ9+cpLoSuqljcu6lBn/p3M6B/80PkwYxDcpWDJNu4eAjVQxPF+8Rf4+?=
+ =?us-ascii?Q?qnNkfun6DxyG8nhwo2+dVMLCILikUe+pOHiOtv6CSrmzyp9GNv1HMY8VQlcy?=
+ =?us-ascii?Q?WzzsIXR975HS94uJ2KEvx0/54ZZ/bOkWYm76T0FYSh6xtYInaijBnqfx0/XZ?=
+ =?us-ascii?Q?uPyrfUQqGoPdjKw0Cx8ggEB5ING4xxo2Qg68P+4Hc8DBagirFmE5LaM4mcbm?=
+ =?us-ascii?Q?1d63KQ4Z5V/28OZQJir5Zu7SeamqB40f0IJSmAR7iJuCF9zpRr+MWOIZM7HD?=
+ =?us-ascii?Q?2eJLjNttN2eGBPIuec8CBUQbgJ5ODeu/iv1Ixj/VjpyjrcnyzUWDjtbWPO1c?=
+ =?us-ascii?Q?UTxFnvkMz8r+H28FwQmOpYfQYFkB6xyBQinZREB8wMXOk9QWLZ70KW3Ht1aB?=
+ =?us-ascii?Q?cQCyLZxtyNKTBC5MT6sa0xGG+uRvNt3PkNKsjDegzWp2WIuXrUtC9V9rYP8J?=
+ =?us-ascii?Q?6V2zp/EDuYOZaFSFHMkhHYDzwYOgjRKfNJcQ828YI7Ia8cG5zkS3TN6rSkmS?=
+ =?us-ascii?Q?XvALsGyz7fhybWaVPQ+VdP5brIf4hIhyXovKP5QFHkE/VpmYcmcsF8x8CD/s?=
+ =?us-ascii?Q?RjLWJQopuKAycuCJfBObLPm3wVn5MBfw/IOkv+EpXsLP0M+gZTZ57SV+SFZN?=
+ =?us-ascii?Q?ULeRwWXzo8smgsfQCUjVQZno7DResgw4IZLG1kN4m1NKUMgOPVXVdQIzhhXo?=
+ =?us-ascii?Q?IqAkwcKvo8N1ldgETMkvgYXaFRxcjuSXgI1lKaScjUBD5Kz0Z4gZEm17ujWT?=
+ =?us-ascii?Q?kVogbVuSLiF3L/ufKsLXbkvGBUSUveVLGTUEmzp3XuzNQVkQVsqthVG2GAqg?=
+ =?us-ascii?Q?mu4mHmmTG+vBUGQ/vhrGo4+2qaQPfHGUmb6cvlUScpZH8rF3e1SPfXVvAVPF?=
+ =?us-ascii?Q?C2bcNHrPcCXbgyaUm6tDSGPUBjLl41dt0XHrUq2g8DjeaCfdQ/Cjh3h3+dzY?=
+ =?us-ascii?Q?GTtnTsXgoaOYEBUyN1JD8OajYNHOJ6qlF1BlaHKQyZbjrEjjrVTr7DvS/3aR?=
+ =?us-ascii?Q?3SHLksxAN4LncxgG19qws6Bt0x5+bLcVJ0yL+GcGuySY+mIGz3Jbyyf6S7o7?=
+ =?us-ascii?Q?5Pc23fQdQgAHRN3gBz/5mkkFpTR1iMntZw5RFAhoKAL5QVgEbwoTvUiqC7hr?=
+ =?us-ascii?Q?7KQRrVngRC9FfXA43F0ov7bXk8fp9qGW5JP0Nd+PZslxAETQ0tOokiq2TXv3?=
+ =?us-ascii?Q?i8FaV0X0BcnRlTfJfQKTgivt8yU6gzZZEuDrSJZZSCpP0Evn4Zp+?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 63bc0c9e-8e7e-48b3-e291-08de779411bc
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Mar 2026 13:11:37.0687
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: GTtx8PlCaaBojOOGgCQ0duvpuarMDE29qEb2trOY4Fo61lsR9tPAZikZcDWWVf7pTu8HwUgmDs1E19lj1U2kfQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY4P286MB6207
 
-On Sun, Mar 01, 2026 at 11:42:47AM +0000, Marc Zyngier wrote:
-> On Sun, 01 Mar 2026 10:46:57 +0000,
-> Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com> wrote:
-> > 
-> > On Sun, Mar 01, 2026 at 10:02:49AM +0000, Marc Zyngier wrote:
-> > > On Sun, 01 Mar 2026 08:34:20 +0000,
-> > > Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com> wrote:
-> > > > 
-> > > > From: Charan Teja Kalla <charan.kalla@oss.qualcomm.com>
-> > > > 
-> > > > Change of_map_id() to take a pointer to struct of_phandle_args
-> > > > instead of passing target device node and translated IDs separately.
-> > > > Update all callers accordingly.
-> > > > 
-> > > > Subsequent patch will make use of the args_count field in
-> > > > struct of_phandle_args.
-> > > > 
-> > > > Suggested-by: Rob Herring (Arm) <robh@kernel.org>
-> > > > Signed-off-by: Charan Teja Kalla <charan.kalla@oss.qualcomm.com>
-> > > > Signed-off-by: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>
-> > > > ---
-> > > >  drivers/iommu/of_iommu.c              |  2 +-
-> > > >  drivers/of/base.c                     | 37 +++++++++++++++++------------------
-> > > >  drivers/pci/controller/dwc/pci-imx6.c |  8 +++++++-
-> > > >  drivers/pci/controller/pcie-apple.c   |  4 +++-
-> > > >  drivers/xen/grant-dma-ops.c           |  2 +-
-> > > >  include/linux/of.h                    | 21 +++++++++++++-------
-> > > >  6 files changed, 44 insertions(+), 30 deletions(-)
-> > > > 
-> > > > diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> > > > index a511ecf21fcd..d255d0f58e8c 100644
-> > > > --- a/drivers/iommu/of_iommu.c
-> > > > +++ b/drivers/iommu/of_iommu.c
-> > > > @@ -48,7 +48,7 @@ static int of_iommu_configure_dev_id(struct device_node *master_np,
-> > > >  	struct of_phandle_args iommu_spec = { .args_count = 1 };
-> > > >  	int err;
-> > > >  
-> > > > -	err = of_map_iommu_id(master_np, *id, &iommu_spec.np, iommu_spec.args);
-> > > > +	err = of_map_iommu_id(master_np, *id, &iommu_spec);
-> > > >  	if (err)
-> > > >  		return err;
-> > > >  
-> > > > diff --git a/drivers/of/base.c b/drivers/of/base.c
-> > > > index 57420806c1a2..6c3628255908 100644
-> > > > --- a/drivers/of/base.c
-> > > > +++ b/drivers/of/base.c
-> > > > @@ -2102,8 +2102,11 @@ int of_find_last_cache_level(unsigned int cpu)
-> > > >   * @id: device ID to map.
-> > > >   * @map_name: property name of the map to use.
-> > > >   * @map_mask_name: optional property name of the mask to use.
-> > > > - * @target: optional pointer to a target device node.
-> > > > - * @id_out: optional pointer to receive the translated ID.
-> > > > + * @arg: of_phandle_args structure,
-> > > > + *	which includes:
-> > > > + *	np: pointer to the target device node
-> > > > + *	args_count: number of arguments
-> > > 
-> > > Number of arguments *to what*? Isn't that the size of args[] instead?
-> > 
-> > It is a number of values corresponding to the phandle in the DT
-> > property.
+On Wed, Feb 25, 2026 at 06:03:29PM +0100, Niklas Cassel wrote:
+> The current EPC core design relies on an EPC driver disabling all BARs by
+> default. An EPF driver will then enable the BARs that it wants to enabled.
 > 
-> No. It is what the *caller* expects. Not what is is in the DT, which
-> could be (and generally is) a pile of random crap.
-
-Nice
-
-> If the two don't
-> match, return an error. But don't randomly overwrite data that is not
-> yours.
-
-Mark, no. The caller can't know how many cell arguments the provider
-uses until:
-- the provider handle is parsed
-- provider node is consulted for the #foo-cells
-
-It is not a number of arguments for the _caller_. It is how many u32
-values are used by the _provider_.
-
-In case of IOMMUs, enough IOMMU devices have #iommu-cells = <2>, which
-means that it uses two u32 values to identify the SID or set of SIDs.
-
-Following your analogy, if we force 1 cell in the iommu-map property, we
-are trying to force the function which expects to take two arguments to
-accept just one. But it's not the caller, it's the IOMMU's xlate
-function.
-
-
+> This design is there because there is no epc->ops->disable_bar().
+> (There is a epc->ops->clear_bar(), but that is only to disable a BAR that
+> has been enabled using epc->ops->set_bar() first.)
 > 
-> [...]
+> By default, an EPF driver will not be able to get/enable BARs that are
+> marked as BAR_RESERVED or BAR_DISABLED (see pci_epc_get_next_free_bar()).
 > 
-> > It might be not obvious here for iommu-maps, but the struct is
-> > idiomatic in OF world. Let me quote a (trimmed) example from
-> > qcom/sm8650.dtsi (for a different property, but it explains the meaning
-> > of the values here):
-> > 
-> > gem_noc: interconnect@24100000 {
-> > 	#interconnect-cells = <2>;
-> > };
-> > 
-> > epss_l3: interconnect@17d90000 {
-> > 	#interconnect-cells = <1>;
-> > };
-> > 
-> > interconnects = <&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ACTIVE_ONLY
-> > 		 &gem_noc SLAVE_LLCC QCOM_ICC_TAG_ACTIVE_ONLY>,
-> > 		<&epss_l3 MASTER_EPSS_L3_APPS
-> > 		 &epss_l3 SLAVE_EPSS_L3_SHARED>;
-> > /* I skipped the second pair, it adds nothing here */
-> > 
-> > Here the parsing function for this property (of_icc_get_by_index()) will
-> > call of_parse_phandle_with_args() 4 times and it expects to return the
-> > following values in the of_phandle_args:
-> > 
-> > 1. { .np = gem_noc, .args_count = 2, .args = [MASTER_APPSS_PROC,
-> >                                               QCOM_ICC_TAG_ACTIVE_ONLY] }
-> > 2. { .np = gem_noc, .args_count = 2, .args = [SLAVE_LLCC,
-> >                                               QCOM_ICC_TAG_ACTIVE_ONLY] }
-> > 3. { .np = epss_l3, .args_count = 1, .args = [MASTER_EPSS_L3_APPS] }
-> > 4. { .np = epss_l3, .args_count = 1, .args = [SLAVE_EPSS_L3_SHARED] }
-> > 
-> > The whole of_phandle_args is then typically passed to the corresponding
-> > xlate function, specific to the paricular .np ('provider'), which will
-> > use #args_count values from the #args array to return the object from
-> > the provider.
-> > 
-> > Now let's see iommu-maps (again, qcom/sm8650.dtsi):
-> > 
-> > apps_smmu: iommu@15000000 {
-> > 	#iommu-cells = <2>;
-> > };
-> > 
-> > iommu-map = <0     &apps_smmu 0x1400 0x1>,
-> > 	    <0x100 &apps_smmu 0x1401 0x1>;
-> > 
-> > The property matches current definition at [1], however this spec
-> > doesn't match the DT practice. It forces that the property should use 1
-> > cell for identifying the "object" in the IOMMU provider, even if the
-> > provider expects to use 2 cells (two args).
-> > 
-> > The correct property should look like:
-> > 
-> > iommu-map = <0     &apps_smmu 0x1400 0x0 0x1>,
-> > 	    <0x100 &apps_smmu 0x1401 0x0 0x1>;
-> > 
-> > [1] https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-iommu.yaml
-> > 
-> > > 
-> > > > + *	args[]: array to receive the translated ID(s).
-> > > >   *
-> > > >   * Given a device ID, look up the appropriate implementation-defined
-> > > >   * platform ID and/or the target device which receives transactions on that
-> > > > @@ -2117,21 +2120,21 @@ int of_find_last_cache_level(unsigned int cpu)
-> > > >   */
-> > > >  int of_map_id(const struct device_node *np, u32 id,
-> > > >  	       const char *map_name, const char *map_mask_name,
-> > > > -	       struct device_node **target, u32 *id_out)
-> > > > +	       struct of_phandle_args *arg)
-> > > >  {
-> > > >  	u32 map_mask, masked_id;
-> > > >  	int map_len;
-> > > >  	const __be32 *map = NULL;
-> > > >  
-> > > > -	if (!np || !map_name || (!target && !id_out))
-> > > > +	if (!np || !map_name || !arg)
-> > > >  		return -EINVAL;
-> > > >  
-> > > >  	map = of_get_property(np, map_name, &map_len);
-> > > >  	if (!map) {
-> > > > -		if (target)
-> > > > +		if (arg->np)
-> > > >  			return -ENODEV;
-> > > >  		/* Otherwise, no map implies no translation */
-> > > > -		*id_out = id;
-> > > > +		arg->args[0] = id;
-> > > 
-> > > What if args_count is 0? Given that you place no restriction on the
-> > > way this can be called, that'd be entirely legitimate, and you'd
-> > > corrupt something you're not supposed to touch.
-> > 
-> > args is an array (not a pointer) in of_phandle_args. As such we know
-> > that args[0] is legit.
+> Since the current EPC code design requires an EPC driver to disable all
+> BARs by default, let's move this to DWC common code from each glue driver.
 > 
-> Again, no. The caller is telling you what it expects. This is strictly
-> equivalent to:
+> BAR_RESERVED BARs are not disabled by default because these BARs are
+> hardware backed, and should only be disabled explicitly by an EPF driver
+> if absolutely necessary for the EPF driver to function correctly.
+> (This is similar to how e.g. NVMe may have vendor specific BARs outside of
+> the mandatory BAR0 which contains the NVMe registers.)
 > 
-> 	void func(void *blah[], int sz);
+> Note that there is currently no EPC operation to disable a BAR that has not
+> first been programmed using pci_epc_set_bar(). If an EPF driver ever wants
+> to disable a BAR marked as BAR_RESERVED, a disable_bar() operation would
+> have to be added first.
 > 
-> func() is not supposed to look beyond sz. As it stands, this change in
-> not acceptable.
+> No functional changes intended.
+> 
+> Tested-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> Reviewed-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+>  drivers/pci/controller/dwc/pci-dra7xx.c       |  4 ----
+>  drivers/pci/controller/dwc/pci-imx6.c         | 10 --------
+>  .../pci/controller/dwc/pci-layerscape-ep.c    |  4 ----
+>  drivers/pci/controller/dwc/pcie-artpec6.c     |  4 ----
+>  .../pci/controller/dwc/pcie-designware-ep.c   | 24 +++++++++++++++++++
+>  .../pci/controller/dwc/pcie-designware-plat.c | 10 --------
+>  drivers/pci/controller/dwc/pcie-dw-rockchip.c |  4 ----
 
-DT parsing functions follow a different approach, because of the "random
-crap". It is:
+With this patch, the source code comment above
+rockchip_pcie_epc_features_rk3588 should be updated. It currently says:
 
-    int parse(void *phandle, u32 **args, int *sz);
+   "(rockchip_pcie_ep_init() will disable all BARs by default.)"
 
-So, if the caller insists that it can handle only one argument, it
-should call parse(), then check that (sz == 1) and return -EINVAL
-otherwise (kfreeing *args and of_node_puting phandle while it does so).
+I looked through the other glue drivers and did not find similar comments
+that depend on the previous behavior, so this (pcie-dw-rockchip.c) appears
+to be the only place that needs updating, unless I missed something.
 
-I will quote of_phandle_args here:
+Best regards,
+Koichiro
 
-struct of_phandle_args {
-        struct device_node *np;
-        int args_count;
-        uint32_t args[MAX_PHANDLE_ARGS];
-};
-
-
-Please take a look at how of_parse_phandle_with_args() works.
-
--- 
-With best wishes
-Dmitry
+>  drivers/pci/controller/dwc/pcie-qcom-ep.c     | 10 --------
+>  drivers/pci/controller/dwc/pcie-rcar-gen4.c   | 10 --------
+>  drivers/pci/controller/dwc/pcie-stm32-ep.c    | 10 --------
+>  drivers/pci/controller/dwc/pcie-tegra194.c    | 10 --------
+>  drivers/pci/controller/dwc/pcie-uniphier-ep.c | 10 --------
+>  12 files changed, 24 insertions(+), 86 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+> index d5d26229063f..cd904659c321 100644
+> --- a/drivers/pci/controller/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+> @@ -378,10 +378,6 @@ static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
+>  {
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+> -	enum pci_barno bar;
+> -
+> -	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
+> -		dw_pcie_ep_reset_bar(pci, bar);
+>  
+>  	dra7xx_pcie_enable_wrapper_interrupts(dra7xx);
+>  }
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index ec1e3557ca53..f5fe5cfc46c7 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -1401,15 +1401,6 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+>  	.stop_link = imx_pcie_stop_link,
+>  };
+>  
+> -static void imx_pcie_ep_init(struct dw_pcie_ep *ep)
+> -{
+> -	enum pci_barno bar;
+> -	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> -
+> -	for (bar = BAR_0; bar <= BAR_5; bar++)
+> -		dw_pcie_ep_reset_bar(pci, bar);
+> -}
+> -
+>  static int imx_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+>  				  unsigned int type, u16 interrupt_num)
+>  {
+> @@ -1478,7 +1469,6 @@ imx_pcie_ep_get_features(struct dw_pcie_ep *ep)
+>  }
+>  
+>  static const struct dw_pcie_ep_ops pcie_ep_ops = {
+> -	.init = imx_pcie_ep_init,
+>  	.raise_irq = imx_pcie_ep_raise_irq,
+>  	.get_features = imx_pcie_ep_get_features,
+>  };
+> diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+> index 5a03a8f895f9..1f5fccdb4ff4 100644
+> --- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
+> +++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+> @@ -152,15 +152,11 @@ static void ls_pcie_ep_init(struct dw_pcie_ep *ep)
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>  	struct ls_pcie_ep *pcie = to_ls_pcie_ep(pci);
+>  	struct dw_pcie_ep_func *ep_func;
+> -	enum pci_barno bar;
+>  
+>  	ep_func = dw_pcie_ep_get_func_from_ep(ep, 0);
+>  	if (!ep_func)
+>  		return;
+>  
+> -	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
+> -		dw_pcie_ep_reset_bar(pci, bar);
+> -
+>  	pcie->ls_epc->msi_capable = ep_func->msi_cap ? true : false;
+>  	pcie->ls_epc->msix_capable = ep_func->msix_cap ? true : false;
+>  }
+> diff --git a/drivers/pci/controller/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
+> index e994b75986c3..55cb957ae1f3 100644
+> --- a/drivers/pci/controller/dwc/pcie-artpec6.c
+> +++ b/drivers/pci/controller/dwc/pcie-artpec6.c
+> @@ -340,15 +340,11 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
+>  {
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>  	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+> -	enum pci_barno bar;
+>  
+>  	artpec6_pcie_assert_core_reset(artpec6_pcie);
+>  	artpec6_pcie_init_phy(artpec6_pcie);
+>  	artpec6_pcie_deassert_core_reset(artpec6_pcie);
+>  	artpec6_pcie_wait_for_phy(artpec6_pcie);
+> -
+> -	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
+> -		dw_pcie_ep_reset_bar(pci, bar);
+>  }
+>  
+>  static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> index 295076cf70de..386bfb7b2bf6 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> @@ -1114,6 +1114,28 @@ static void dw_pcie_ep_init_non_sticky_registers(struct dw_pcie *pci)
+>  	dw_pcie_dbi_ro_wr_dis(pci);
+>  }
+>  
+> +static void dw_pcie_ep_disable_bars(struct dw_pcie_ep *ep)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +	enum pci_epc_bar_type bar_type;
+> +	enum pci_barno bar;
+> +
+> +	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++) {
+> +		bar_type = dw_pcie_ep_get_bar_type(ep, bar);
+> +
+> +		/*
+> +		 * Reserved BARs should not get disabled by default. All other
+> +		 * BAR types are disabled by default.
+> +		 *
+> +		 * This is in line with the current EPC core design, where all
+> +		 * BARs are disabled by default, and then the EPF driver enables
+> +		 * the BARs it wishes to use.
+> +		 */
+> +		if (bar_type != BAR_RESERVED)
+> +			dw_pcie_ep_reset_bar(pci, bar);
+> +	}
+> +}
+> +
+>  /**
+>   * dw_pcie_ep_init_registers - Initialize DWC EP specific registers
+>   * @ep: DWC EP device
+> @@ -1196,6 +1218,8 @@ int dw_pcie_ep_init_registers(struct dw_pcie_ep *ep)
+>  	if (ep->ops->init)
+>  		ep->ops->init(ep);
+>  
+> +	dw_pcie_ep_disable_bars(ep);
+> +
+>  	/*
+>  	 * PCIe r6.0, section 7.9.15 states that for endpoints that support
+>  	 * PTM, this capability structure is required in exactly one
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+> index 8530746ec5cb..d103ab759c4e 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-plat.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+> @@ -32,15 +32,6 @@ struct dw_plat_pcie_of_data {
+>  static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
+>  };
+>  
+> -static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
+> -{
+> -	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> -	enum pci_barno bar;
+> -
+> -	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
+> -		dw_pcie_ep_reset_bar(pci, bar);
+> -}
+> -
+>  static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+>  				     unsigned int type, u16 interrupt_num)
+>  {
+> @@ -73,7 +64,6 @@ dw_plat_pcie_get_features(struct dw_pcie_ep *ep)
+>  }
+>  
+>  static const struct dw_pcie_ep_ops pcie_ep_ops = {
+> -	.init = dw_plat_pcie_ep_init,
+>  	.raise_irq = dw_plat_pcie_ep_raise_irq,
+>  	.get_features = dw_plat_pcie_get_features,
+>  };
+> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> index ecc28093c589..4e9b813c3afb 100644
+> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> @@ -361,13 +361,9 @@ static void rockchip_pcie_ep_hide_broken_ats_cap_rk3588(struct dw_pcie_ep *ep)
+>  static void rockchip_pcie_ep_init(struct dw_pcie_ep *ep)
+>  {
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> -	enum pci_barno bar;
+>  
+>  	rockchip_pcie_enable_l0s(pci);
+>  	rockchip_pcie_ep_hide_broken_ats_cap_rk3588(ep);
+> -
+> -	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
+> -		dw_pcie_ep_reset_bar(pci, bar);
+>  };
+>  
+>  static int rockchip_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+> index e55675b3840a..e8c8ba1659fd 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+> @@ -861,17 +861,7 @@ qcom_pcie_epc_get_features(struct dw_pcie_ep *pci_ep)
+>  	return &qcom_pcie_epc_features;
+>  }
+>  
+> -static void qcom_pcie_ep_init(struct dw_pcie_ep *ep)
+> -{
+> -	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> -	enum pci_barno bar;
+> -
+> -	for (bar = BAR_0; bar <= BAR_5; bar++)
+> -		dw_pcie_ep_reset_bar(pci, bar);
+> -}
+> -
+>  static const struct dw_pcie_ep_ops pci_ep_ops = {
+> -	.init = qcom_pcie_ep_init,
+>  	.raise_irq = qcom_pcie_ep_raise_irq,
+>  	.get_features = qcom_pcie_epc_get_features,
+>  };
+> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> index 9dd05bac22b9..1198ddc1752c 100644
+> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> @@ -386,15 +386,6 @@ static void rcar_gen4_pcie_ep_pre_init(struct dw_pcie_ep *ep)
+>  	writel(PCIEDMAINTSTSEN_INIT, rcar->base + PCIEDMAINTSTSEN);
+>  }
+>  
+> -static void rcar_gen4_pcie_ep_init(struct dw_pcie_ep *ep)
+> -{
+> -	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> -	enum pci_barno bar;
+> -
+> -	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
+> -		dw_pcie_ep_reset_bar(pci, bar);
+> -}
+> -
+>  static void rcar_gen4_pcie_ep_deinit(struct rcar_gen4_pcie *rcar)
+>  {
+>  	writel(0, rcar->base + PCIEDMAINTSTSEN);
+> @@ -449,7 +440,6 @@ static unsigned int rcar_gen4_pcie_ep_get_dbi2_offset(struct dw_pcie_ep *ep,
+>  
+>  static const struct dw_pcie_ep_ops pcie_ep_ops = {
+>  	.pre_init = rcar_gen4_pcie_ep_pre_init,
+> -	.init = rcar_gen4_pcie_ep_init,
+>  	.raise_irq = rcar_gen4_pcie_ep_raise_irq,
+>  	.get_features = rcar_gen4_pcie_ep_get_features,
+>  	.get_dbi_offset = rcar_gen4_pcie_ep_get_dbi_offset,
+> diff --git a/drivers/pci/controller/dwc/pcie-stm32-ep.c b/drivers/pci/controller/dwc/pcie-stm32-ep.c
+> index c1944b40ce02..a7988dff1045 100644
+> --- a/drivers/pci/controller/dwc/pcie-stm32-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-stm32-ep.c
+> @@ -28,15 +28,6 @@ struct stm32_pcie {
+>  	unsigned int perst_irq;
+>  };
+>  
+> -static void stm32_pcie_ep_init(struct dw_pcie_ep *ep)
+> -{
+> -	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> -	enum pci_barno bar;
+> -
+> -	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
+> -		dw_pcie_ep_reset_bar(pci, bar);
+> -}
+> -
+>  static int stm32_pcie_start_link(struct dw_pcie *pci)
+>  {
+>  	struct stm32_pcie *stm32_pcie = to_stm32_pcie(pci);
+> @@ -82,7 +73,6 @@ stm32_pcie_get_features(struct dw_pcie_ep *ep)
+>  }
+>  
+>  static const struct dw_pcie_ep_ops stm32_pcie_ep_ops = {
+> -	.init = stm32_pcie_ep_init,
+>  	.raise_irq = stm32_pcie_raise_irq,
+>  	.get_features = stm32_pcie_get_features,
+>  };
+> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+> index 9f9453e8cd23..3a6bffaff9ea 100644
+> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+> @@ -1923,15 +1923,6 @@ static irqreturn_t tegra_pcie_ep_pex_rst_irq(int irq, void *arg)
+>  	return IRQ_HANDLED;
+>  }
+>  
+> -static void tegra_pcie_ep_init(struct dw_pcie_ep *ep)
+> -{
+> -	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> -	enum pci_barno bar;
+> -
+> -	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
+> -		dw_pcie_ep_reset_bar(pci, bar);
+> -};
+> -
+>  static int tegra_pcie_ep_raise_intx_irq(struct tegra_pcie_dw *pcie, u16 irq)
+>  {
+>  	/* Tegra194 supports only INTA */
+> @@ -2008,7 +1999,6 @@ tegra_pcie_ep_get_features(struct dw_pcie_ep *ep)
+>  }
+>  
+>  static const struct dw_pcie_ep_ops pcie_ep_ops = {
+> -	.init = tegra_pcie_ep_init,
+>  	.raise_irq = tegra_pcie_ep_raise_irq,
+>  	.get_features = tegra_pcie_ep_get_features,
+>  };
+> diff --git a/drivers/pci/controller/dwc/pcie-uniphier-ep.c b/drivers/pci/controller/dwc/pcie-uniphier-ep.c
+> index 5bde3ee682b5..494376d1812d 100644
+> --- a/drivers/pci/controller/dwc/pcie-uniphier-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-uniphier-ep.c
+> @@ -203,15 +203,6 @@ static void uniphier_pcie_stop_link(struct dw_pcie *pci)
+>  	uniphier_pcie_ltssm_enable(priv, false);
+>  }
+>  
+> -static void uniphier_pcie_ep_init(struct dw_pcie_ep *ep)
+> -{
+> -	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> -	enum pci_barno bar;
+> -
+> -	for (bar = BAR_0; bar <= BAR_5; bar++)
+> -		dw_pcie_ep_reset_bar(pci, bar);
+> -}
+> -
+>  static int uniphier_pcie_ep_raise_intx_irq(struct dw_pcie_ep *ep)
+>  {
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> @@ -283,7 +274,6 @@ uniphier_pcie_get_features(struct dw_pcie_ep *ep)
+>  }
+>  
+>  static const struct dw_pcie_ep_ops uniphier_pcie_ep_ops = {
+> -	.init = uniphier_pcie_ep_init,
+>  	.raise_irq = uniphier_pcie_ep_raise_irq,
+>  	.get_features = uniphier_pcie_get_features,
+>  };
+> -- 
+> 2.53.0
+> 
