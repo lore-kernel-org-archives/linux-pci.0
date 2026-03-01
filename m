@@ -1,125 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2837F303C8A;
-	Sun,  1 Mar 2026 02:03:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DF68320A04;
+	Sun,  1 Mar 2026 07:00:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772330622; cv=none; b=emy5dzoMSL+byzB3AaPpw9S5unPGhPSya3rgPVMmawpdfMSTknnTOXn8+yHhlbqNctk9dNDQJXKVM6XrsTxqWHLyoLaDeyLaY5ZH+A8izpN2riPPJmqjxvbFhFOH/F++eFr2zExRQfmrt3utxoMX+yrGTHkydsrBtZEaATMl/p8=
+	t=1772348408; cv=none; b=tELZR/ia6BsVEEFSVMNXV67a+WcEhXNGkL54IPiGQ8slpZq94piG/ksh0X1qDFu7Xi/7HfYYxMfEied6CafcY8w37QbozCt/zUspOIzX1ZSiE4gRjf9lskq4NDaYn82Csz1oGOlqy9QJuqYazNMgQ8jdcSsdXUK0M3R8Rs5XTHo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772330622; c=relaxed/simple;
-	bh=5yMDD5SfaNUC9nV6p47bNNwTNs5+nlqZoXzZJlpiaKE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uC6gESkdP+5iMpyA4yw5HahrS3/sNE3kQ7Z0mfct73MOrei+UF+cyJWHVr52j/g21+cN0Vm5SmnE8V0VnW7ASTwClYp6USzITXVLtnHrMn5U2tiME5+RkcLm8UtVuCl9kOBlSr+pkMW6mqvLRgzfkGovZ0VvHRPKYJFq3TIMGHs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SLTE4kKG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772348408; c=relaxed/simple;
+	bh=I8EQo/NbWjLKrDlFxdsKTBfRrpz+7VWtsvEBPsnJquA=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=oXJpdQibQjRED/i5JwaakUxAeKo0yrBWsIh2LXYgEubxH6/O6xqhBT9YILn+F9fR+dDwnvtRi/ugTGr0+C/Zmd8n//k0aHdOUajRrgAhIBcELeqv0OXFlYAGwqdv2mi5C74qIkVwU+5pmc1VkEmUBiYuTxfUvXoJKS9Sftj5P4c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=UHCNbsgy; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=SYECe4KG; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SLTE4kKG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 776AFC19424;
-	Sun,  1 Mar 2026 02:03:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772330622;
-	bh=5yMDD5SfaNUC9nV6p47bNNwTNs5+nlqZoXzZJlpiaKE=;
-	h=From:To:Cc:Subject:Date:From;
-	b=SLTE4kKGbWDmi8kHz0pLYh5XpNMEjQAbxD0Kyi+z+vgcTi2VD92Pa19oN9Kx9ladq
-	 mio/5KH7k99vgUKqtOxBp8eZ7nppiHlt3N+tNp46ExTDofdxTHUel3z6Vkr/qk0DvJ
-	 aWwh6TzENzgxTr4/NQc5OCDxNGV51fF42JSVK/bJ/0LtkhwmMwKKXic3yqqXx/2Gq9
-	 pgsG0W6lGr7E5RZmOjZPXMyVqPRTbfpY2h+OUrDyaI2rIEcuSJI+X8TRqHky8cuayd
-	 50akiUUxQmFxaWRgHDx/c37GWx9pqn9ew/v9Y6hQFa2+nMnTA1qg/zzi3F0NKPecQ4
-	 OC0/4/QxL+70Q==
-From: Sasha Levin <sashal@kernel.org>
-To: stable@vger.kernel.org,
-	guojinhui.liam@bytedance.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	linux-pci@vger.kernel.org
-Subject: FAILED: Patch "PCI: Fix pci_slot_trylock() error handling" failed to apply to 5.10-stable tree
-Date: Sat, 28 Feb 2026 21:03:40 -0500
-Message-ID: <20260301020340.1731790-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="UHCNbsgy";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="SYECe4KG"
+From: Nam Cao <namcao@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1772348402;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=I8EQo/NbWjLKrDlFxdsKTBfRrpz+7VWtsvEBPsnJquA=;
+	b=UHCNbsgyx/6ZWOygB5rCjnV9ylgVGph4Q5rD/PkSl7E0vMV/eNKHF9wjEkasjXBawmTFMH
+	1XAOi+vz7QdZMPANg1U1iAgm6GHCoF6780fRGrXjBloae1sbrc9We+lxIfPGHloYzit0mQ
+	F1NxWo14CeIBA5SCTjai1giJithnZ5+0uKQPm55mcRxZ4vJcCkjw17BStPo6Q9jVcBR7ZP
+	o1c+ZHWH4y6obBA/9uz1oXmvhOHPpFuF/XvI0wZF/qWlJLFZlfn4aOQ7voc9WR3ZCCwoUR
+	1YNNIU4gWryB+TMZruvP3n6EMBTmfJj/Qg/hgEf7yE1JiIcC2p/mjlxTh2Pqxw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1772348402;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=I8EQo/NbWjLKrDlFxdsKTBfRrpz+7VWtsvEBPsnJquA=;
+	b=SYECe4KGSP/zVd5WloNpXB8nNRX4FTDjfqx+O8v978PDMMwI/6lozc9SiZmc4D2Obd7nw6
+	6A+ARbmoW+JjGyDA==
+To: Nilay Shroff <nilay@linux.ibm.com>, linuxppc-dev@lists.ozlabs.org,
+ linux-pci@vger.kernel.org, sparclinux@vger.kernel.org
+Cc: wangruikang@iscas.ac.cn, tglx@kernel.org, maddy@linux.ibm.com,
+ mpe@ellerman.id.au, npiggin@gmail.com, chleroy@kernel.org, gjoyce@ibm.com,
+ helgaas@kernel.org, davem@davemloft.net, andreas@gaisler.com, Nilay Shroff
+ <nilay@linux.ibm.com>
+Subject: Re: [PATCHv2 1/2] powerpc/pci: Initialize msi_addr_mask for
+ OF-created PCI devices
+In-Reply-To: <20260220070239.1693303-2-nilay@linux.ibm.com>
+References: <20260220070239.1693303-1-nilay@linux.ibm.com>
+ <20260220070239.1693303-2-nilay@linux.ibm.com>
+Date: Sun, 01 Mar 2026 13:59:46 +0700
+Message-ID: <87a4ws6nml.fsf@yellow.woof>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Patchwork-Hint: ignore
-X-stable: review
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-The patch below does not apply to the 5.10-stable tree.
-If someone wants it applied there, or to any other stable or longterm
-tree, then please email the backport, including the original git commit
-id to <stable@vger.kernel.org>.
+Nilay Shroff <nilay@linux.ibm.com> writes:
+> Recent changes replaced the use of no_64bit_msi with msi_addr_mask.
+> As a result, msi_addr_mask is now expected to be initialized to
+> DMA_BIT_MASK(64) when a pci_dev is set up. However, this initialization
+> was missed on powerpc due to differences in the device initialization
+> path compared to other (x86) architecture. Due to this, now PCI device
+> probe method fails on powerpc system.
+>
+> On powerpc systems, struct pci_dev instances are created from device
+> tree nodes via of_create_pci_dev(). Because msi_addr_mask was not
+> initialized there, it remained zero. Later, during MSI setup,
+> msi_verify_entries() validates the programmed MSI address against
+> pdev->msi_addr_mask. Since the mask was not set correctly, the
+> validation fails, causing PCI driver probe failures for devices on
+> powerpc systems.
+>
+> Initialize pdev->msi_addr_mask to DMA_BIT_MASK(64) in
+> of_create_pci_dev() so that MSI address validation succeeds and device
+> probe works as expected.
+>
+> Fixes: 386ced19e9a3 ("PCI/MSI: Convert the boolean no_64bit_msi flag to a DMA address mask")
+> Signed-off-by: Nilay Shroff <nilay@linux.ibm.com>
 
-Thanks,
-Sasha
+I ran into this problem today. Great that it's already been fixed.
 
------------------- original commit in Linus's tree ------------------
+Reviewed-by: Nam Cao <namcao@linutronix.de>
+Tested-by: Nam Cao <namcao@linutronix.de>
 
-From 9368d1ee62829b08aa31836b3ca003803caf0b72 Mon Sep 17 00:00:00 2001
-From: Jinhui Guo <guojinhui.liam@bytedance.com>
-Date: Fri, 12 Dec 2025 22:55:28 +0800
-Subject: [PATCH] PCI: Fix pci_slot_trylock() error handling
-
-Commit a4e772898f8b ("PCI: Add missing bridge lock to pci_bus_lock()")
-delegates the bridge device's pci_dev_trylock() to pci_bus_trylock() in
-pci_slot_trylock(), but it forgets to remove the corresponding
-pci_dev_unlock() when pci_bus_trylock() fails.
-
-Before a4e772898f8b, the code did:
-
-  if (!pci_dev_trylock(dev)) /* <- lock bridge device */
-    goto unlock;
-  if (dev->subordinate) {
-    if (!pci_bus_trylock(dev->subordinate)) {
-      pci_dev_unlock(dev);   /* <- unlock bridge device */
-      goto unlock;
-    }
-  }
-
-After a4e772898f8b the bridge-device lock is no longer taken, but the
-pci_dev_unlock(dev) on the failure path was left in place, leading to the
-bug.
-
-This yields one of two errors:
-
-  1. A warning that the lock is being unlocked when no one holds it.
-  2. An incorrect unlock of a lock that belongs to another thread.
-
-Fix it by removing the now-redundant pci_dev_unlock(dev) on the failure
-path.
-
-[Same patch later posted by Keith at
-https://patch.msgid.link/20260116184150.3013258-1-kbusch@meta.com]
-
-Fixes: a4e772898f8b ("PCI: Add missing bridge lock to pci_bus_lock()")
-Signed-off-by: Jinhui Guo <guojinhui.liam@bytedance.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-Cc: stable@vger.kernel.org
-Link: https://patch.msgid.link/20251212145528.2555-1-guojinhui.liam@bytedance.com
----
- drivers/pci/pci.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 13dbb405dc31f..59319e08fca61 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5346,10 +5346,8 @@ static int pci_slot_trylock(struct pci_slot *slot)
- 		if (!dev->slot || dev->slot != slot)
- 			continue;
- 		if (dev->subordinate) {
--			if (!pci_bus_trylock(dev->subordinate)) {
--				pci_dev_unlock(dev);
-+			if (!pci_bus_trylock(dev->subordinate))
- 				goto unlock;
--			}
- 		} else if (!pci_dev_trylock(dev))
- 			goto unlock;
- 	}
--- 
-2.51.0
-
-
-
-
+Nam
