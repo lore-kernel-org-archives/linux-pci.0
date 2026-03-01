@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D344223328;
-	Sun,  1 Mar 2026 01:17:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3471724A076;
+	Sun,  1 Mar 2026 01:18:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772327835; cv=none; b=mVZe095giQMUPJ0yoXbDVUYVQbqFiqyvLLLyCtwB1ye6WdCiT1sws2SUbw1/JuvAoHWipqjtBo/MkZl7NmVGDqZ+g3ON9U161AXOCY6RWaznC+9ReQoo/hStJ4V56L1gFMOl6/Azz3sjSxLzR31k7gmCv5EJ7iM2W0wROd/mW4Y=
+	t=1772327909; cv=none; b=hC0fEkbS/wj+NbGr5Hl5kQ86bxhzfaCbkQbE3BX+jxxdVsy+f5SBvJhgHR0BeHALYiK7/1yLkq0pClgLAV8PfQ423B1E/cACQ3anN2TtXYoD9+UA6ITmuQ0TnTMAHZ3E+xfg9YK7Wm8NxXW8tkPcRhMVjpeAp3PBImgah9xojg8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772327835; c=relaxed/simple;
-	bh=DImL8ykp9E32oGLEA3KwuLgDbsHq3JEH8IZv775Yu88=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GekEHxdz+xFFoeI+3ayiZBzkhl8NSnWNRMLPSz7p26vF350qCkty/4jbWGuy/wLLH0n53/eBf6XogMXGxCMokW1w/Dz1NtsVSW8KTaP0k5vyK1CQFW5vt4c/UNhzJoLUd7b5K0NTOfCktOedLrJmMaLLwXvGeDM37Rrt41Ie+Z4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Brya+uDd; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772327909; c=relaxed/simple;
+	bh=f1QwRXDsZKMS/2TuoSSMhTKDnJYmX/+DL2BMiCFg27w=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pPryP5QcO0y33VBtSGFVg7sngbKX2sOjwxQ0neAuTkBI+kd0Nzvn4Iq0kdsQbvg+qPhV0tdIhVL8Ei2lhydDdqJbBB05FV+YAB6ZZPb2Toi+xS7KFAKgvXAITJGVliNptNanFyHsSvXYe+Ax1RtQ4yXeD9DCyme1hYz6QJfGPoU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DH3TsAnl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Brya+uDd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AEEAC19421;
-	Sun,  1 Mar 2026 01:17:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DH3TsAnl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D0FAC19421;
+	Sun,  1 Mar 2026 01:18:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772327834;
-	bh=DImL8ykp9E32oGLEA3KwuLgDbsHq3JEH8IZv775Yu88=;
+	s=k20201202; t=1772327909;
+	bh=f1QwRXDsZKMS/2TuoSSMhTKDnJYmX/+DL2BMiCFg27w=;
 	h=From:To:Cc:Subject:Date:From;
-	b=Brya+uDdn777ns1BV1X7BZ1mynq5Vvh0DIapADMWQmr8Ua+NotBqrHRQU3AoUO5HK
-	 e5tF19oOxfzm3pICs2aRFUViTg6iVfNMhXj5pyzdF81kfYqAF+MEkL4K1r+AjM+qos
-	 2OLGu60LsyULdTsLX/Q5jJN1iuNuKBl63ULewB1uuAkypdIw1Y7tyeTV5ei0nYqGT9
-	 sTcEODKNW1nFvcUZClD/h585QB5d7SeI5dr0b1NIVjMeJRYmsoUpxceYIypaGN49+t
-	 jG6lsSk+mO5sYb3vZ1lG84BPrhiiZWCM5OkX831qlU8tTJ78plJr9Vv8QpvDO13qUj
-	 wJY/xZP30maLw==
+	b=DH3TsAnlqLQn8JmdK/p2ldNAgdyIoSVOVpbDWCiMttFhJS8oygTJegw6Cw6enVccF
+	 O0qK8UYOoHnNG3diXEdekpH3g0FJBNwmhw4DRwiQUS47+40W4pCQjR+Jp9cozM54pB
+	 r0ZyynOMz1sIRe2NAaJUTBFtBANOzBaOyuScyfb86e4esvRKixa+lL6IdhW6sMGkU2
+	 3fQtvih3x/oi8DO5H8q9WR4BXFL0qIehc6pxM44Wr0K4PASjFH0oSXqdGBycPsEY5A
+	 WkqrRKxQSjJieO00EnxQhn4sRLoKp6w+hVbJbA6g6yG1GeDpC78M8FgAyhFSmEK0Wi
+	 KormKpW1sdpzA==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
-	a-garg7@ti.com
+	cassel@kernel.org
 Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Niklas Cassel <cassel@kernel.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	linux-arm-msm@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: FAILED: Patch "PCI: dwc: ep: Fix resizable BAR support for multi-PF configurations" failed to apply to 6.18-stable tree
-Date: Sat, 28 Feb 2026 20:17:12 -0500
-Message-ID: <20260301011712.1671074-1-sashal@kernel.org>
+Subject: FAILED: Patch "Revert "PCI: qcom: Don't wait for link if we can detect Link Up"" failed to apply to 6.12-stable tree
+Date: Sat, 28 Feb 2026 20:18:27 -0500
+Message-ID: <20260301011827.1672839-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -46,7 +46,7 @@ X-Patchwork-Hint: ignore
 X-stable: review
 Content-Transfer-Encoding: 8bit
 
-The patch below does not apply to the 6.18-stable tree.
+The patch below does not apply to the 6.12-stable tree.
 If someone wants it applied there, or to any other stable or longterm
 tree, then please email the backport, including the original git commit
 id to <stable@vger.kernel.org>.
@@ -56,171 +56,86 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From 43d67ec26b329f8aea34ba9dff23d69b84a8e564 Mon Sep 17 00:00:00 2001
-From: Aksh Garg <a-garg7@ti.com>
-Date: Fri, 30 Jan 2026 17:25:14 +0530
-Subject: [PATCH] PCI: dwc: ep: Fix resizable BAR support for multi-PF
- configurations
+From e9ce5b3804436301ab343bc14203a4c14b336d1b Mon Sep 17 00:00:00 2001
+From: Niklas Cassel <cassel@kernel.org>
+Date: Mon, 22 Dec 2025 07:42:10 +0100
+Subject: [PATCH] Revert "PCI: qcom: Don't wait for link if we can detect Link
+ Up"
 
-The resizable BAR support added by the commit 3a3d4cabe681 ("PCI: dwc: ep:
-Allow EPF drivers to configure the size of Resizable BARs") incorrectly
-configures the resizable BARs only for the first Physical Function (PF0)
-in EP mode.
+This reverts commit 36971d6c5a9a134c15760ae9fd13c6d5f9a36abb.
 
-The resizable BAR configuration functions use generic dw_pcie_*_dbi()
-operations instead of physical function specific dw_pcie_ep_*_dbi()
-operations. This causes resizable BAR configuration to always target
-PF0 regardless of the requested function number.
+While this fake hotplugging was a nice idea, it has shown that this feature
+does not handle PCIe switches correctly:
+pci_bus 0004:43: busn_res: can not insert [bus 43-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci_bus 0004:43: busn_res: [bus 43-41] end is updated to 43
+pci_bus 0004:43: busn_res: can not insert [bus 43] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci 0004:42:00.0: devices behind bridge are unusable because [bus 43] cannot be assigned for them
+pci_bus 0004:44: busn_res: can not insert [bus 44-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci_bus 0004:44: busn_res: [bus 44-41] end is updated to 44
+pci_bus 0004:44: busn_res: can not insert [bus 44] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci 0004:42:02.0: devices behind bridge are unusable because [bus 44] cannot be assigned for them
+pci_bus 0004:45: busn_res: can not insert [bus 45-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci_bus 0004:45: busn_res: [bus 45-41] end is updated to 45
+pci_bus 0004:45: busn_res: can not insert [bus 45] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci 0004:42:06.0: devices behind bridge are unusable because [bus 45] cannot be assigned for them
+pci_bus 0004:46: busn_res: can not insert [bus 46-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci_bus 0004:46: busn_res: [bus 46-41] end is updated to 46
+pci_bus 0004:46: busn_res: can not insert [bus 46] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci 0004:42:0e.0: devices behind bridge are unusable because [bus 46] cannot be assigned for them
+pci_bus 0004:42: busn_res: [bus 42-41] end is updated to 46
+pci_bus 0004:42: busn_res: can not insert [bus 42-46] under [bus 41] (conflicts with (null) [bus 41])
+pci 0004:41:00.0: devices behind bridge are unusable because [bus 42-46] cannot be assigned for them
+pcieport 0004:40:00.0: bridge has subordinate 41 but max busn 46
 
-Additionally, dw_pcie_ep_init_non_sticky_registers() only initializes
-resizable BAR registers for PF0, leaving other PFs unconfigured during
-the execution of this function.
+During the initial scan, PCI core doesn't see the switch and since the Root
+Port is not hot plug capable, the secondary bus number gets assigned as the
+subordinate bus number. This means, the PCI core assumes that only one bus
+will appear behind the Root Port since the Root Port is not hot plug
+capable.
 
-Fix this by using physical function specific configuration space access
-operations throughout the resizable BAR code path and initializing
-registers for all the physical functions that support resizable BARs.
+This works perfectly fine for PCIe endpoints connected to the Root Port,
+since they don't extend the bus. However, if a PCIe switch is connected,
+then there is a problem when the downstream busses starts showing up and
+the PCI core doesn't extend the subordinate bus number and bridge resources
+after initial scan during boot.
 
-Fixes: 3a3d4cabe681 ("PCI: dwc: ep: Allow EPF drivers to configure the size of Resizable BARs")
-Signed-off-by: Aksh Garg <a-garg7@ti.com>
-[mani: added stable tag]
+The long term plan is to migrate this driver to the upcoming pwrctrl APIs
+that are supposed to handle this problem elegantly.
+
+Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
 Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
+Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
 Cc: stable@vger.kernel.org
-Link: https://patch.msgid.link/20260130115516.515082-2-a-garg7@ti.com
+Link: https://patch.msgid.link/20251222064207.3246632-11-cassel@kernel.org
 ---
- .../pci/controller/dwc/pcie-designware-ep.c   | 48 ++++++++++++-------
- 1 file changed, 32 insertions(+), 16 deletions(-)
+ drivers/pci/controller/dwc/pcie-qcom.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 855b2e58c3380..1cc2985bab03d 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -75,6 +75,13 @@ static u8 dw_pcie_ep_find_capability(struct dw_pcie_ep *ep, u8 func_no, u8 cap)
- 				 cap, NULL, ep, func_no);
- }
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 60373fe1362f8..e87ec6779d44f 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1958,10 +1958,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
  
-+static u16 dw_pcie_ep_find_ext_capability(struct dw_pcie_ep *ep,
-+					  u8 func_no, u8 cap)
-+{
-+	return PCI_FIND_NEXT_EXT_CAP(dw_pcie_ep_read_cfg, 0,
-+				     cap, NULL, ep, func_no);
-+}
-+
- static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
- 				   struct pci_epf_header *hdr)
- {
-@@ -350,22 +357,22 @@ static void dw_pcie_ep_clear_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
- 	ep->epf_bar[bar] = NULL;
- }
+ 	platform_set_drvdata(pdev, pcie);
  
--static unsigned int dw_pcie_ep_get_rebar_offset(struct dw_pcie *pci,
-+static unsigned int dw_pcie_ep_get_rebar_offset(struct dw_pcie_ep *ep, u8 func_no,
- 						enum pci_barno bar)
- {
- 	u32 reg, bar_index;
- 	unsigned int offset, nbars;
- 	int i;
- 
--	offset = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_REBAR);
-+	offset = dw_pcie_ep_find_ext_capability(ep, func_no, PCI_EXT_CAP_ID_REBAR);
- 	if (!offset)
- 		return offset;
- 
--	reg = dw_pcie_readl_dbi(pci, offset + PCI_REBAR_CTRL);
-+	reg = dw_pcie_ep_readl_dbi(ep, func_no, offset + PCI_REBAR_CTRL);
- 	nbars = FIELD_GET(PCI_REBAR_CTRL_NBAR_MASK, reg);
- 
- 	for (i = 0; i < nbars; i++, offset += PCI_REBAR_CTRL) {
--		reg = dw_pcie_readl_dbi(pci, offset + PCI_REBAR_CTRL);
-+		reg = dw_pcie_ep_readl_dbi(ep, func_no, offset + PCI_REBAR_CTRL);
- 		bar_index = FIELD_GET(PCI_REBAR_CTRL_BAR_IDX, reg);
- 		if (bar_index == bar)
- 			return offset;
-@@ -386,7 +393,7 @@ static int dw_pcie_ep_set_bar_resizable(struct dw_pcie_ep *ep, u8 func_no,
- 	u32 rebar_cap, rebar_ctrl;
- 	int ret;
- 
--	rebar_offset = dw_pcie_ep_get_rebar_offset(pci, bar);
-+	rebar_offset = dw_pcie_ep_get_rebar_offset(ep, func_no, bar);
- 	if (!rebar_offset)
- 		return -EINVAL;
- 
-@@ -416,16 +423,16 @@ static int dw_pcie_ep_set_bar_resizable(struct dw_pcie_ep *ep, u8 func_no,
- 	 * 1 MB to 128 TB. Bits 31:16 in PCI_REBAR_CTRL define "supported sizes"
- 	 * bits for sizes 256 TB to 8 EB. Disallow sizes 256 TB to 8 EB.
- 	 */
--	rebar_ctrl = dw_pcie_readl_dbi(pci, rebar_offset + PCI_REBAR_CTRL);
-+	rebar_ctrl = dw_pcie_ep_readl_dbi(ep, func_no, rebar_offset + PCI_REBAR_CTRL);
- 	rebar_ctrl &= ~GENMASK(31, 16);
--	dw_pcie_writel_dbi(pci, rebar_offset + PCI_REBAR_CTRL, rebar_ctrl);
-+	dw_pcie_ep_writel_dbi(ep, func_no, rebar_offset + PCI_REBAR_CTRL, rebar_ctrl);
- 
- 	/*
- 	 * The "selected size" (bits 13:8) in PCI_REBAR_CTRL are automatically
- 	 * updated when writing PCI_REBAR_CAP, see "Figure 3-26 Resizable BAR
- 	 * Example for 32-bit Memory BAR0" in DWC EP databook 5.96a.
- 	 */
--	dw_pcie_writel_dbi(pci, rebar_offset + PCI_REBAR_CAP, rebar_cap);
-+	dw_pcie_ep_writel_dbi(ep, func_no, rebar_offset + PCI_REBAR_CAP, rebar_cap);
- 
- 	dw_pcie_dbi_ro_wr_dis(pci);
- 
-@@ -1023,20 +1030,17 @@ void dw_pcie_ep_deinit(struct dw_pcie_ep *ep)
- }
- EXPORT_SYMBOL_GPL(dw_pcie_ep_deinit);
- 
--static void dw_pcie_ep_init_non_sticky_registers(struct dw_pcie *pci)
-+static void dw_pcie_ep_init_rebar_registers(struct dw_pcie_ep *ep, u8 func_no)
- {
--	struct dw_pcie_ep *ep = &pci->ep;
- 	unsigned int offset;
- 	unsigned int nbars;
- 	enum pci_barno bar;
- 	u32 reg, i, val;
- 
--	offset = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_REBAR);
+-	irq = platform_get_irq_byname_optional(pdev, "global");
+-	if (irq > 0)
+-		pp->use_linkup_irq = true;
 -
--	dw_pcie_dbi_ro_wr_en(pci);
-+	offset = dw_pcie_ep_find_ext_capability(ep, func_no, PCI_EXT_CAP_ID_REBAR);
- 
- 	if (offset) {
--		reg = dw_pcie_readl_dbi(pci, offset + PCI_REBAR_CTRL);
-+		reg = dw_pcie_ep_readl_dbi(ep, func_no, offset + PCI_REBAR_CTRL);
- 		nbars = FIELD_GET(PCI_REBAR_CTRL_NBAR_MASK, reg);
- 
- 		/*
-@@ -1057,16 +1061,28 @@ static void dw_pcie_ep_init_non_sticky_registers(struct dw_pcie *pci)
- 			 * the controller when RESBAR_CAP_REG is written, which
- 			 * is why RESBAR_CAP_REG is written here.
- 			 */
--			val = dw_pcie_readl_dbi(pci, offset + PCI_REBAR_CTRL);
-+			val = dw_pcie_ep_readl_dbi(ep, func_no, offset + PCI_REBAR_CTRL);
- 			bar = FIELD_GET(PCI_REBAR_CTRL_BAR_IDX, val);
- 			if (ep->epf_bar[bar])
- 				pci_epc_bar_size_to_rebar_cap(ep->epf_bar[bar]->size, &val);
- 			else
- 				val = BIT(4);
- 
--			dw_pcie_writel_dbi(pci, offset + PCI_REBAR_CAP, val);
-+			dw_pcie_ep_writel_dbi(ep, func_no, offset + PCI_REBAR_CAP, val);
- 		}
+ 	ret = dw_pcie_host_init(pp);
+ 	if (ret) {
+ 		dev_err(dev, "cannot initialize host\n");
+@@ -1975,6 +1971,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		goto err_host_deinit;
  	}
-+}
-+
-+static void dw_pcie_ep_init_non_sticky_registers(struct dw_pcie *pci)
-+{
-+	struct dw_pcie_ep *ep = &pci->ep;
-+	u8 funcs = ep->epc->max_functions;
-+	u8 func_no;
-+
-+	dw_pcie_dbi_ro_wr_en(pci);
-+
-+	for (func_no = 0; func_no < funcs; func_no++)
-+		dw_pcie_ep_init_rebar_registers(ep, func_no);
  
- 	dw_pcie_setup(pci);
- 	dw_pcie_dbi_ro_wr_dis(pci);
++	irq = platform_get_irq_byname_optional(pdev, "global");
+ 	if (irq > 0) {
+ 		ret = devm_request_threaded_irq(&pdev->dev, irq, NULL,
+ 						qcom_pcie_global_irq_thread,
 -- 
 2.51.0
 
