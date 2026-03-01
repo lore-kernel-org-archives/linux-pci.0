@@ -1,40 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AC6B2727EB;
-	Sun,  1 Mar 2026 01:25:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B95B92727EB;
+	Sun,  1 Mar 2026 01:25:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772328310; cv=none; b=RBksEa6kZ2YT5dSkXo5H/zaU7uqiAsAiy3UK9AJhmrmH26XHajTi/GSJKkgrvsyTtNqY0NKKfpghQMvIxWTwD1PyAnogGr0q+y4pgcOEgzfv4ChxP21lZmtzFsMoK3mxWCYRPqopBdsaYNPMagzgnAyjZM6cMYMBbE/BcgGNnSM=
+	t=1772328339; cv=none; b=WUKj9UHoYOfe44EEAhZ1pkiRiOq4E0DhMKGhzA/AXrU8xdY61fUfYR6Kf6iCMVmN+4v1SaIj9QGbavRlWATh+D980OBqgRNEjhGK8IRIu4t6uH5aB8Pm0pkvMAfb4W6rHKsMShZjLRpAevwFwdWxIdEOvlLz2+9tsPNl/RuEQdA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772328310; c=relaxed/simple;
-	bh=yfLntZyjFRtW0d6AS6ZFzz8TUaysqvRNczAUc7bZNJw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Cweu1Z6Oy8QO45Wf5kdzkQOJlHwF8BRBRY+zqlA5ev/cko4j34B8LRSRzRPGrjGwiJctt9IOgDQPuYiTKKrwiYbSC/XpDRnqDHhLnXQhiRdCDJU3hIDQEhaB9M/LWCOXbGa6BBva9Ui8qervnHAll9s1DLNda+wDA7crEE3E3Es=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hfKK8AW/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772328339; c=relaxed/simple;
+	bh=+HdMuB34N0LsxYZj8bVKBorISNoOvGunSXYL0NbAFDc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TO8BWZoaLIXDr2ZFScJMFVmR3nUORPbQDJ2eaW3afB+JqUprlzuPmEnB3ALwuUKqY6uyQ/uuzJHXFOu1IdMb7FHOxDG7nPZ7zWqwCcbcibgs6e97gnaeDtV2MfoHrkrpu2o5Kgw5w6w5R2yAHK4Wpi2fPU7cil09DlTaSslpYYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uw6gADA+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hfKK8AW/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 609A2C19424;
-	Sun,  1 Mar 2026 01:25:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uw6gADA+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A94CBC19421;
+	Sun,  1 Mar 2026 01:25:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772328310;
-	bh=yfLntZyjFRtW0d6AS6ZFzz8TUaysqvRNczAUc7bZNJw=;
+	s=k20201202; t=1772328339;
+	bh=+HdMuB34N0LsxYZj8bVKBorISNoOvGunSXYL0NbAFDc=;
 	h=From:To:Cc:Subject:Date:From;
-	b=hfKK8AW/sb8A+Ia1Pu1t0D+2XSFXy0Bcve5ufVChdoghmNzjQ6AWFBjt4ngD8bLuz
-	 +ZLZ8z33l4kt+2xDucS8GiCT03xylR2fy6Mn23fcJvB6sKhccznsd0lb6+ynckeAvN
-	 2Dw5UX5cRhwohuvQBaGNAu57RAtDJxiFrocHXnGmKRVNVKnu6NgIU9kh2YZh4kqOa6
-	 1L3lDQ4HcZhVv5Z8TuATrXuntXVLdVAffLRVCGQbqIJJJ+sFZDLcsB2qQNq3mwUq2G
-	 ZdLGj2MgUwAF2raZAf+XVvXbBXp8T8HtPbppVT/Ywk2khNllvNaMV3rSWAKxh5JKQb
-	 u08ZkEeZpXH5g==
+	b=uw6gADA+u2VqB7GjYxf2h78NZifuUx++ne9SpDa9wBzBycNN8LOH2QLxsE0lNXJfZ
+	 u3MAyW2oWkYOOVMEnuRkfH/r+opsptnhAxEqreuq/lEM6TzONyk0Nmhicn7wvcDCgq
+	 GPw6GWNvNjQBgtjEZ4o3tcSQFkUOX+vj+tP3OmMLAk2PEEy+s4aZ3Ota+O+0p5af+H
+	 wAzkVXbtrRY6rM5ByMtk1IdVTOTlic1uYqIdbTtBK5r1oajyhTCkPbRcTzAJ93qdus
+	 EoTdsvqqB9e1A1wFHI9p8qXSdxAVmLhKqh4Z/JsPknUJQSfdvxz6PDJvtGzQgN8fZ/
+	 Jip9/8yy98eRw==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
-	schnelle@linux.ibm.com
-Cc: Benjamin Block <bblock@linux.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gerd Bayer <gbayer@linux.ibm.com>,
+	cassel@kernel.org
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	"Maciej W. Rozycki" <macro@orcam.me.uk>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Hans Zhang <zhanghuabing@ecosda.com>,
+	Frank Li <Frank.Li@nxp.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
 	linux-pci@vger.kernel.org
-Subject: FAILED: Patch "PCI/IOV: Fix race between SR-IOV enable/disable and hotplug" failed to apply to 6.12-stable tree
-Date: Sat, 28 Feb 2026 20:25:07 -0500
-Message-ID: <20260301012508.1682164-1-sashal@kernel.org>
+Subject: FAILED: Patch "PCI: dwc: Fix msg_atu_index assignment" failed to apply to 6.12-stable tree
+Date: Sat, 28 Feb 2026 20:25:37 -0500
+Message-ID: <20260301012537.1682778-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -56,63 +59,64 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From a5338e365c4559d7b4d7356116b0eb95b12e08d5 Mon Sep 17 00:00:00 2001
-From: Niklas Schnelle <schnelle@linux.ibm.com>
-Date: Tue, 16 Dec 2025 23:14:03 +0100
-Subject: [PATCH] PCI/IOV: Fix race between SR-IOV enable/disable and hotplug
+From 58fbf08935d9c4396417e5887df89a4e681fa7e3 Mon Sep 17 00:00:00 2001
+From: Niklas Cassel <cassel@kernel.org>
+Date: Tue, 27 Jan 2026 16:10:39 +0100
+Subject: [PATCH] PCI: dwc: Fix msg_atu_index assignment
 
-Commit 05703271c3cd ("PCI/IOV: Add PCI rescan-remove locking when
-enabling/disabling SR-IOV") tried to fix a race between the VF removal
-inside sriov_del_vfs() and concurrent hot unplug by taking the PCI
-rescan/remove lock in sriov_del_vfs(). Similarly the PCI rescan/remove lock
-was also taken in sriov_add_vfs() to protect addition of VFs.
+When dw_pcie_iatu_setup() configures outbound address translation for both
+type PCIE_ATU_TYPE_MEM and PCIE_ATU_TYPE_IO, the iATU index to use is
+incremented before calling dw_pcie_prog_outbound_atu().
 
-This approach however causes deadlock on trying to remove PFs with SR-IOV
-enabled because PFs disable SR-IOV during removal and this removal happens
-under the PCI rescan/remove lock. So the original fix had to be reverted.
+However for msg_atu_index, the index is not incremented before use,
+causing the iATU index to be the same as the last configured iATU index,
+which means that it will incorrectly use the same iATU index that is
+already in use, breaking outbound address translation.
 
-Instead of taking the PCI rescan/remove lock in sriov_add_vfs() and
-sriov_del_vfs(), fix the race that occurs with SR-IOV enable and disable vs
-hotplug higher up in the callchain by taking the lock in
-sriov_numvfs_store() before calling into the driver's sriov_configure()
-callback.
+In total there are three problems with this code:
+-It assigns msg_atu_index the same index that was used for the last
+ outbound address translation window, rather than incrementing the index
+ before assignment.
+-The index should only be incremented (and msg_atu_index assigned) if the
+ use_atu_msg feature is actually requested/in use (pp->use_atu_msg is set).
+-If the use_atu_msg feature is requested/in use, and there are no outbound
+ iATUs available, the code should return an error, as otherwise when this
+ this feature is used, it will use an iATU index that is out of bounds.
 
-Fixes: 05703271c3cd ("PCI/IOV: Add PCI rescan-remove locking when enabling/disabling SR-IOV")
-Reported-by: Benjamin Block <bblock@linux.ibm.com>
-Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
-Reviewed-by: Gerd Bayer <gbayer@linux.ibm.com>
+Fixes: e1a4ec1a9520 ("PCI: dwc: Add generic MSG TLP support for sending PME_Turn_Off when system suspend")
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+Tested-by: Maciej W. Rozycki <macro@orcam.me.uk>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Hans Zhang <zhanghuabing@ecosda.com>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
 Cc: stable@vger.kernel.org
-Link: https://patch.msgid.link/20251216-revert_sriov_lock-v3-2-dac4925a7621@linux.ibm.com
+Link: https://patch.msgid.link/20260127151038.1484881-6-cassel@kernel.org
 ---
- drivers/pci/iov.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/pci/controller/dwc/pcie-designware-host.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 7de5b18647beb..4a659c34935e1 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -495,7 +495,9 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index b3d6a474fd16a..d7f57d77bdf55 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -982,7 +982,14 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+ 		dev_warn(pci->dev, "Ranges exceed outbound iATU size (%d)\n",
+ 			 pci->num_ob_windows);
  
- 	if (num_vfs == 0) {
- 		/* disable VFs */
-+		pci_lock_rescan_remove();
- 		ret = pdev->driver->sriov_configure(pdev, 0);
-+		pci_unlock_rescan_remove();
- 		goto exit;
- 	}
+-	pp->msg_atu_index = i;
++	if (pp->use_atu_msg) {
++		if (pci->num_ob_windows > ++i) {
++			pp->msg_atu_index = i;
++		} else {
++			dev_err(pci->dev, "Cannot add outbound window for MSG TLP\n");
++			return -ENOMEM;
++		}
++	}
  
-@@ -507,7 +509,9 @@ static ssize_t sriov_numvfs_store(struct device *dev,
- 		goto exit;
- 	}
- 
-+	pci_lock_rescan_remove();
- 	ret = pdev->driver->sriov_configure(pdev, num_vfs);
-+	pci_unlock_rescan_remove();
- 	if (ret < 0)
- 		goto exit;
- 
+ 	i = 0;
+ 	resource_list_for_each_entry(entry, &pp->bridge->dma_ranges) {
 -- 
 2.51.0
 
