@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEE062E6CC0;
-	Sun,  1 Mar 2026 01:53:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2200D2D5937;
+	Sun,  1 Mar 2026 01:59:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772330039; cv=none; b=CQfM2NGRb1kNi1nB1wd5H+IZ+A3ZnX+Uz4I/Ut4JQeRjaCC+QmaSvP+2PEn8jikRzkgxcXKEUPwzwn/8Bu8+aHKoU8XzHpSQMYdjgOtvV1O9nA4w3xQiIYEW+FoZBZj6GM13/b1lAqW/6zoH+FkHWJiGfwBSYUoHUBw9C4RDd6s=
+	t=1772330342; cv=none; b=Lzg1KaaXjbKrl4yHLaWWixR3o9A1qlfgiD8krufa5q4SS56FCwjTsM5DHirxHfuXP/PyBr/QKFAQ+Xbkj2a0VkaWbChtg1JwEZBLMcTYSr7DKjOqSDX6xFIlPP1ZlCtMVeDxlgr8Z1L9Jn/LCquZpNOyRhKQFCVPem+UjT7E0u0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772330039; c=relaxed/simple;
-	bh=B+QKWh4kotwyH+bdw56pFm+qXELNoFGXNP6SKLlHiFw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bheXnPD4vOMdTyghZznDvz7LDzCoPtBwmal2q5SJ8ygo5n6tydK/ZtaQHZEl52OCse/Y+F16mdJd0I0L+yuh6hymGOSFPiv/v+jVzeq5h3vNHeYbuecsRAKPO1RuFDcBFXr9DTVhvj4RsFOdizF3nApIKNzZxZZxZzpfxAlRa1g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZupN4A3v; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772330342; c=relaxed/simple;
+	bh=q3c03j4ZUmjq3xmagV+Seit5o9GsYXTRNK3Wm2+sOYI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=h+wnFUwbNtKtGHJE1myNTFu8BrbwVjRNMqRc7+NpKFVD1PUq/5LNVq5WyARSP5UKMQc7CD3UJXqFStDJ5XADm/5m74TayDVdP79yboVWD8t7OSEBt5NKIoZME4XXcoswrI0ZYRTOapmLBB7yJ+e85vj6lG7+LvG4jernTIB3C9o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uis+U9iA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZupN4A3v"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28115C19424;
-	Sun,  1 Mar 2026 01:53:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uis+U9iA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FD61C19425;
+	Sun,  1 Mar 2026 01:59:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772330039;
-	bh=B+QKWh4kotwyH+bdw56pFm+qXELNoFGXNP6SKLlHiFw=;
+	s=k20201202; t=1772330342;
+	bh=q3c03j4ZUmjq3xmagV+Seit5o9GsYXTRNK3Wm2+sOYI=;
 	h=From:To:Cc:Subject:Date:From;
-	b=ZupN4A3vXS7pF7yUJ+SYDQtUJxvoERi3uFbu1cv+O/XnqNL8gz1z2qltwePyfeNVI
-	 H3YWokTsdeM9/7hsdzJJfT0oX0880+8V2ot00GJFavNIMEu/D99UxV6A13JK+5dOYY
-	 GhAPZp/kIorFp00aboMXv867Sna2BCu/xH3mQeNwWQMCKPYU26nHxF+6lX8fgYb5FO
-	 4hNtGG1CQtl5OEI9b15QbSNggye8/IdE4vd5oH4nzHRAFM2JSOtb/sKtPBFpN9MdBS
-	 Ahh7KpY3fjYMK/vDbG2oh3eshq9Y0AoKj2V5oDnTeybLJ+0FVLZY26FxU1doBCil4W
-	 mkauPE4TKuPnQ==
+	b=uis+U9iAUYvKeZnHL9DOWUujkoKvpOYBRvMtVWpv9Wa93cPtlgo/TowEkyiN/3Pyz
+	 UNLq0ajXLDnt6prhzvLH5T81PQlfJLq0DBI5QtjBPghwzrApgbGbgu+vvdz2brgIKE
+	 ikD6wMe0ufzxUT4pk99jTyL7f6gAY+3lHHgKvi9QrG3vYfNd3ZpCsZ0KKQ7uS4+8kk
+	 j/aI/YVqMfHQrzwSCAOV/QzjfF/QQEH6xuRePsUy7pDgFLuNwFwrp9N8A5vw0QlNKu
+	 OV3AGhStYps1ZoOnwWqHPCwDaklNxg0TGd+28M7jqhaAvNZO812VOHywP5SEdYH+v7
+	 lzgLNm9w4vOoA==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
-	guojinhui.liam@bytedance.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	linux-pci@vger.kernel.org
-Subject: FAILED: Patch "PCI: Fix pci_slot_trylock() error handling" failed to apply to 5.15-stable tree
-Date: Sat, 28 Feb 2026 20:53:57 -0500
-Message-ID: <20260301015358.1720850-1-sashal@kernel.org>
+	cassel@kernel.org
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	linux-pci@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org
+Subject: FAILED: Patch "Revert "PCI: qcom: Don't wait for link if we can detect Link Up"" failed to apply to 5.10-stable tree
+Date: Sat, 28 Feb 2026 20:58:59 -0500
+Message-ID: <20260301015900.1724645-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -45,7 +46,7 @@ X-Patchwork-Hint: ignore
 X-stable: review
 Content-Transfer-Encoding: 8bit
 
-The patch below does not apply to the 5.15-stable tree.
+The patch below does not apply to the 5.10-stable tree.
 If someone wants it applied there, or to any other stable or longterm
 tree, then please email the backport, including the original git commit
 id to <stable@vger.kernel.org>.
@@ -55,68 +56,86 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From 9368d1ee62829b08aa31836b3ca003803caf0b72 Mon Sep 17 00:00:00 2001
-From: Jinhui Guo <guojinhui.liam@bytedance.com>
-Date: Fri, 12 Dec 2025 22:55:28 +0800
-Subject: [PATCH] PCI: Fix pci_slot_trylock() error handling
+From e9ce5b3804436301ab343bc14203a4c14b336d1b Mon Sep 17 00:00:00 2001
+From: Niklas Cassel <cassel@kernel.org>
+Date: Mon, 22 Dec 2025 07:42:10 +0100
+Subject: [PATCH] Revert "PCI: qcom: Don't wait for link if we can detect Link
+ Up"
 
-Commit a4e772898f8b ("PCI: Add missing bridge lock to pci_bus_lock()")
-delegates the bridge device's pci_dev_trylock() to pci_bus_trylock() in
-pci_slot_trylock(), but it forgets to remove the corresponding
-pci_dev_unlock() when pci_bus_trylock() fails.
+This reverts commit 36971d6c5a9a134c15760ae9fd13c6d5f9a36abb.
 
-Before a4e772898f8b, the code did:
+While this fake hotplugging was a nice idea, it has shown that this feature
+does not handle PCIe switches correctly:
+pci_bus 0004:43: busn_res: can not insert [bus 43-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci_bus 0004:43: busn_res: [bus 43-41] end is updated to 43
+pci_bus 0004:43: busn_res: can not insert [bus 43] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci 0004:42:00.0: devices behind bridge are unusable because [bus 43] cannot be assigned for them
+pci_bus 0004:44: busn_res: can not insert [bus 44-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci_bus 0004:44: busn_res: [bus 44-41] end is updated to 44
+pci_bus 0004:44: busn_res: can not insert [bus 44] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci 0004:42:02.0: devices behind bridge are unusable because [bus 44] cannot be assigned for them
+pci_bus 0004:45: busn_res: can not insert [bus 45-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci_bus 0004:45: busn_res: [bus 45-41] end is updated to 45
+pci_bus 0004:45: busn_res: can not insert [bus 45] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci 0004:42:06.0: devices behind bridge are unusable because [bus 45] cannot be assigned for them
+pci_bus 0004:46: busn_res: can not insert [bus 46-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci_bus 0004:46: busn_res: [bus 46-41] end is updated to 46
+pci_bus 0004:46: busn_res: can not insert [bus 46] under [bus 42-41] (conflicts with (null) [bus 42-41])
+pci 0004:42:0e.0: devices behind bridge are unusable because [bus 46] cannot be assigned for them
+pci_bus 0004:42: busn_res: [bus 42-41] end is updated to 46
+pci_bus 0004:42: busn_res: can not insert [bus 42-46] under [bus 41] (conflicts with (null) [bus 41])
+pci 0004:41:00.0: devices behind bridge are unusable because [bus 42-46] cannot be assigned for them
+pcieport 0004:40:00.0: bridge has subordinate 41 but max busn 46
 
-  if (!pci_dev_trylock(dev)) /* <- lock bridge device */
-    goto unlock;
-  if (dev->subordinate) {
-    if (!pci_bus_trylock(dev->subordinate)) {
-      pci_dev_unlock(dev);   /* <- unlock bridge device */
-      goto unlock;
-    }
-  }
+During the initial scan, PCI core doesn't see the switch and since the Root
+Port is not hot plug capable, the secondary bus number gets assigned as the
+subordinate bus number. This means, the PCI core assumes that only one bus
+will appear behind the Root Port since the Root Port is not hot plug
+capable.
 
-After a4e772898f8b the bridge-device lock is no longer taken, but the
-pci_dev_unlock(dev) on the failure path was left in place, leading to the
-bug.
+This works perfectly fine for PCIe endpoints connected to the Root Port,
+since they don't extend the bus. However, if a PCIe switch is connected,
+then there is a problem when the downstream busses starts showing up and
+the PCI core doesn't extend the subordinate bus number and bridge resources
+after initial scan during boot.
 
-This yields one of two errors:
+The long term plan is to migrate this driver to the upcoming pwrctrl APIs
+that are supposed to handle this problem elegantly.
 
-  1. A warning that the lock is being unlocked when no one holds it.
-  2. An incorrect unlock of a lock that belongs to another thread.
-
-Fix it by removing the now-redundant pci_dev_unlock(dev) on the failure
-path.
-
-[Same patch later posted by Keith at
-https://patch.msgid.link/20260116184150.3013258-1-kbusch@meta.com]
-
-Fixes: a4e772898f8b ("PCI: Add missing bridge lock to pci_bus_lock()")
-Signed-off-by: Jinhui Guo <guojinhui.liam@bytedance.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
+Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
 Cc: stable@vger.kernel.org
-Link: https://patch.msgid.link/20251212145528.2555-1-guojinhui.liam@bytedance.com
+Link: https://patch.msgid.link/20251222064207.3246632-11-cassel@kernel.org
 ---
- drivers/pci/pci.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/pci/controller/dwc/pcie-qcom.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 13dbb405dc31f..59319e08fca61 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5346,10 +5346,8 @@ static int pci_slot_trylock(struct pci_slot *slot)
- 		if (!dev->slot || dev->slot != slot)
- 			continue;
- 		if (dev->subordinate) {
--			if (!pci_bus_trylock(dev->subordinate)) {
--				pci_dev_unlock(dev);
-+			if (!pci_bus_trylock(dev->subordinate))
- 				goto unlock;
--			}
- 		} else if (!pci_dev_trylock(dev))
- 			goto unlock;
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 60373fe1362f8..e87ec6779d44f 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1958,10 +1958,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 
+ 	platform_set_drvdata(pdev, pcie);
+ 
+-	irq = platform_get_irq_byname_optional(pdev, "global");
+-	if (irq > 0)
+-		pp->use_linkup_irq = true;
+-
+ 	ret = dw_pcie_host_init(pp);
+ 	if (ret) {
+ 		dev_err(dev, "cannot initialize host\n");
+@@ -1975,6 +1971,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		goto err_host_deinit;
  	}
+ 
++	irq = platform_get_irq_byname_optional(pdev, "global");
+ 	if (irq > 0) {
+ 		ret = devm_request_threaded_irq(&pdev->dev, irq, NULL,
+ 						qcom_pcie_global_irq_thread,
 -- 
 2.51.0
 
