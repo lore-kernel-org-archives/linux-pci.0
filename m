@@ -1,88 +1,190 @@
-Received: from pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.42.203.116])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89298430B85;
-	Sat, 28 Feb 2026 23:59:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.42.203.116
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F4451F7541;
+	Sun,  1 Mar 2026 01:15:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772323191; cv=none; b=esA7zR5q7/AuwLDih1rzyXhk93VE9MHiUzpsYX3NiMkX9Lfro8b09EuQKJhc3QcZq+6/6Wfs04GagZ0qPkMwUgHKsTlTMNe9f2Rp6XwX1d1MONdbFFDuX4C7Tj1cErLOLeXl+lcu7rSeYjl2DAEgMdFSc2+EYUCn+uF5a6corGI=
+	t=1772327713; cv=none; b=sxX7/T5UGSJ9//upnviVYevaJRabxuXnzKvOo1Fb0tYCjlvup2S3Xpd+GPATkyxCER3jfa50E9a+ptBd9Q8ZCf3hyxJXx2pNOvoHfHLtf9qoTb8x4wdQSE0CxfPHMzxC5M7/REyjpI272rT0bEpUl624YKbJuiakfnyE/gpEYrE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772323191; c=relaxed/simple;
-	bh=hKXMk9JqLxIF/o307cUGlK9XOB5P+KxCRqeDOLdx134=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=awIN2xRG9zohnm7qMgjjwEgwgGXFEK4mHS/j1dIZJVfuE2/8SqMXbG7enn1q2nkGVmsdBvoAEigjcf8orVBlOC+9H/SoegUKeFUH19ToJEvmd+d39y/fLoV3nsM4vkdqD3qy/n6EG5+QwbanUA7o2Rc0nQrTtpR93oK3u/24ln8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de; spf=pass smtp.mailfrom=amazon.de; dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b=RBycUBJz; arc=none smtp.client-ip=52.42.203.116
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
+	s=arc-20240116; t=1772327713; c=relaxed/simple;
+	bh=TzfHRjikC4mXJxw70nHiI3sTzBTXHcO+bZfXpx2LNN4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TuxaueZpbJyK7pe51NXgiJqdPVrJzLi+UkCCN05lgTiC0ylD1gm3AJd14sm0CGjBSVYulCdqEW6WcD30yvKa4A3MOLFnnyp6TH0wtkZzWQlMClD38nQYAMX1iK4yq4NBExGi8eL3GvRPD1HIP7qC400JkJZJ5tpPbUnHSRcLe84=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AiuQGxsR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b="RBycUBJz"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.de; i=@amazon.de; q=dns/txt; s=amazoncorp2;
-  t=1772323189; x=1803859189;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=hKXMk9JqLxIF/o307cUGlK9XOB5P+KxCRqeDOLdx134=;
-  b=RBycUBJzl1TnEirhzoDPyUP9699MSwRerISGm1K8Ukxqb5pjWYBbnP1O
-   5bgTEXuhiiMXxn/Ab2DImaA5ExD9+UNuOfe/Cn8RyO4JXTIdqnGxp4wMN
-   FNjl1M5ALJ6uAgnYBmmqMadcCd+vD9YaSfne1oR/JzlRg+AXyJQQJOsGe
-   ieLjzJ+PfG4EMmqJV/G6TLUzQESXHp3St3mydIeDv2DYeSoW2VUndo/vH
-   hugYKtfkoH5C/8D7pn0wK7vo9L+iz03MOF5IfFk+9Z5MYYkbegkrqOVY9
-   eeK3ZTnfQEa4VdKJNqH01OqRzAxsJELvr4fYLaFkpmSzVHr8AdFVcLmzb
-   w==;
-X-CSE-ConnectionGUID: UHUJOMCRSv23JoznsU88lg==
-X-CSE-MsgGUID: QEADJu9oSbqIMFSlYLgYag==
-X-IronPort-AV: E=Sophos;i="6.21,317,1763424000"; 
-   d="scan'208";a="14019297"
-Received: from ip-10-5-6-203.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.6.203])
-  by internal-pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Feb 2026 23:59:46 +0000
-Received: from EX19MTAUWB002.ant.amazon.com [205.251.233.111:21683]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.33.152:2525] with esmtp (Farcaster)
- id 34b04a31-8249-412d-b8fd-6b389c0de126; Sat, 28 Feb 2026 23:59:46 +0000 (UTC)
-X-Farcaster-Flow-ID: 34b04a31-8249-412d-b8fd-6b389c0de126
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWB002.ant.amazon.com (10.250.64.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Sat, 28 Feb 2026 23:59:46 +0000
-Received: from dev-dsk-darnshah-1c-a4c7d5e9.eu-west-1.amazon.com (172.19.90.4)
- by EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Sat, 28 Feb 2026 23:59:44 +0000
-From: Darshit Shah <darnshah@amazon.de>
-To: <darnshah@amazon.de>
-CC: <Jonthan.Cameron@huawei.com>, <bhelgaas@google.com>, <darnir@gnu.org>,
-	<feng.tang@linux.alibaba.com>, <kbusch@kernel.org>, <kwilczynski@kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<lukas@wunner.de>, <nh-open-source@amazon.com>, <olof@lixom.net>,
-	<sathyanarayanan.kuppuswamy@linux.intel.com>, <stable@vger.kernel.org>
-Subject: Re: [PATCH v3] drivers/pci: Decouple DPC from AER service
-Date: Sat, 28 Feb 2026 23:59:38 +0000
-Message-ID: <20260228235940.47613-1-darnshah@amazon.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251211164257.81655-1-darnshah@amazon.de>
-References: <20251211164257.81655-1-darnshah@amazon.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AiuQGxsR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43FD6C19421;
+	Sun,  1 Mar 2026 01:15:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772327713;
+	bh=TzfHRjikC4mXJxw70nHiI3sTzBTXHcO+bZfXpx2LNN4=;
+	h=From:To:Cc:Subject:Date:From;
+	b=AiuQGxsRCZg0oJfOV35WUubgio+51vBxqANQq2p7lNL9zf5NHMG7hG1YTL+QHvgjP
+	 gBjgl2JcVrZRRaeEkqESHaJuPMVdnDvZHbZ6TLeITaIukj8uuJFrTfNZbD9pi0zUSd
+	 bhYt2uV3c8S4HX7f13PM/JM+yP5H20Lo19uPVgUBBmagc3oeAEilXubw1JeBYT1Dp1
+	 8enhFiA6Dz+zeJFa/cWtrTZfhEGpz4SK1bb4vS7kz7s5/cZ2ja3DlnPk3dQpSJSsHi
+	 UHPHeWF4taGfJFDwgN86JrHMotajBKDUHgujwfzbDlF01LYqPx3HSbSxH127EpMJQu
+	 SryZSdf1DmX8w==
+From: Sasha Levin <sashal@kernel.org>
+To: stable@vger.kernel.org,
+	s-vadapalli@ti.com
+Cc: kernel test robot <lkp@intel.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	linux-omap@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: FAILED: Patch "PCI: j721e: Add config guards for Cadence Host and Endpoint library APIs" failed to apply to 6.18-stable tree
+Date: Sat, 28 Feb 2026 20:15:10 -0500
+Message-ID: <20260301011511.1668175-1-sashal@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ClientProxiedBy: EX19D044UWA002.ant.amazon.com (10.13.139.11) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+X-Patchwork-Hint: ignore
+X-stable: review
+Content-Transfer-Encoding: 8bit
 
-Hi Bjorn,
+The patch below does not apply to the 6.18-stable tree.
+If someone wants it applied there, or to any other stable or longterm
+tree, then please email the backport, including the original git commit
+id to <stable@vger.kernel.org>.
 
-I'd like to follow up on the v3 of the patch submitted earlier and see if
-we can merge them.
+Thanks,
+Sasha
+
+------------------ original commit in Linus's tree ------------------
+
+From 4b361b1e92be255ff923453fe8db74086cc7cf66 Mon Sep 17 00:00:00 2001
+From: Siddharth Vadapalli <s-vadapalli@ti.com>
+Date: Mon, 17 Nov 2025 17:02:06 +0530
+Subject: [PATCH] PCI: j721e: Add config guards for Cadence Host and Endpoint
+ library APIs
+
+Commit under Fixes enabled loadable module support for the driver under
+the assumption that it shall be the sole user of the Cadence Host and
+Endpoint library APIs. This assumption guarantees that we won't end up
+in a case where the driver is built-in and the library support is built
+as a loadable module.
+
+With the introduction of [1], this assumption is no longer valid. The
+SG2042 driver could be built as a loadable module, implying that the
+Cadence Host library is also selected as a loadable module. However, the
+pci-j721e.c driver could be built-in as indicated by CONFIG_PCI_J721E=y
+due to which the Cadence Endpoint library is built-in. Despite the
+library drivers being built as specified by their respective consumers,
+since the 'pci-j721e.c' driver has references to the Cadence Host
+library APIs as well, we run into a build error as reported at [0].
+
+Fix this by adding config guards as a temporary workaround. The proper
+fix is to split the 'pci-j721e.c' driver into independent Host and
+Endpoint drivers as aligned at [2].
+
+[0]: https://lore.kernel.org/r/202511111705.MZ7ls8Hm-lkp@intel.com/
+[1]: commit 1c72774df028 ("PCI: sg2042: Add Sophgo SG2042 PCIe driver")
+[2]: https://lore.kernel.org/r/37f6f8ce-12b2-44ee-a94c-f21b29c98821@app.fastmail.com/
+
+Fixes: a2790bf81f0f ("PCI: j721e: Add support to build as a loadable module")
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202511111705.MZ7ls8Hm-lkp@intel.com/
+Suggested-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
+Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+Cc: stable@vger.kernel.org
+Link: https://patch.msgid.link/20251117113246.1460644-1-s-vadapalli@ti.com
+---
+ drivers/pci/controller/cadence/pci-j721e.c | 41 +++++++++++++---------
+ 1 file changed, 25 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index ecd1b03124006..6f2501479c701 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -620,9 +620,11 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 			gpiod_set_value_cansleep(pcie->reset_gpio, 1);
+ 		}
+ 
+-		ret = cdns_pcie_host_setup(rc);
+-		if (ret < 0)
+-			goto err_pcie_setup;
++		if (IS_ENABLED(CONFIG_PCI_J721E_HOST)) {
++			ret = cdns_pcie_host_setup(rc);
++			if (ret < 0)
++				goto err_pcie_setup;
++		}
+ 
+ 		break;
+ 	case PCI_MODE_EP:
+@@ -632,9 +634,11 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 			goto err_get_sync;
+ 		}
+ 
+-		ret = cdns_pcie_ep_setup(ep);
+-		if (ret < 0)
+-			goto err_pcie_setup;
++		if (IS_ENABLED(CONFIG_PCI_J721E_EP)) {
++			ret = cdns_pcie_ep_setup(ep);
++			if (ret < 0)
++				goto err_pcie_setup;
++		}
+ 
+ 		break;
+ 	}
+@@ -659,10 +663,11 @@ static void j721e_pcie_remove(struct platform_device *pdev)
+ 	struct cdns_pcie_ep *ep;
+ 	struct cdns_pcie_rc *rc;
+ 
+-	if (pcie->mode == PCI_MODE_RC) {
++	if (IS_ENABLED(CONFIG_PCI_J721E_HOST) &&
++	    pcie->mode == PCI_MODE_RC) {
+ 		rc = container_of(cdns_pcie, struct cdns_pcie_rc, pcie);
+ 		cdns_pcie_host_disable(rc);
+-	} else {
++	} else if (IS_ENABLED(CONFIG_PCI_J721E_EP)) {
+ 		ep = container_of(cdns_pcie, struct cdns_pcie_ep, pcie);
+ 		cdns_pcie_ep_disable(ep);
+ 	}
+@@ -728,10 +733,12 @@ static int j721e_pcie_resume_noirq(struct device *dev)
+ 			gpiod_set_value_cansleep(pcie->reset_gpio, 1);
+ 		}
+ 
+-		ret = cdns_pcie_host_link_setup(rc);
+-		if (ret < 0) {
+-			clk_disable_unprepare(pcie->refclk);
+-			return ret;
++		if (IS_ENABLED(CONFIG_PCI_J721E_HOST)) {
++			ret = cdns_pcie_host_link_setup(rc);
++			if (ret < 0) {
++				clk_disable_unprepare(pcie->refclk);
++				return ret;
++			}
+ 		}
+ 
+ 		/*
+@@ -741,10 +748,12 @@ static int j721e_pcie_resume_noirq(struct device *dev)
+ 		for (enum cdns_pcie_rp_bar bar = RP_BAR0; bar <= RP_NO_BAR; bar++)
+ 			rc->avail_ib_bar[bar] = true;
+ 
+-		ret = cdns_pcie_host_init(rc);
+-		if (ret) {
+-			clk_disable_unprepare(pcie->refclk);
+-			return ret;
++		if (IS_ENABLED(CONFIG_PCI_J721E_HOST)) {
++			ret = cdns_pcie_host_init(rc);
++			if (ret) {
++				clk_disable_unprepare(pcie->refclk);
++				return ret;
++			}
+ 		}
+ 	}
+ 
+-- 
+2.51.0
 
 
 
-Amazon Web Services Development Center Germany GmbH
-Tamara-Danz-Str. 13
-10243 Berlin
-Geschaeftsfuehrung: Christof Hellmis, Andreas Stieger
-Eingetragen am Amtsgericht Charlottenburg unter HRB 257764 B
-Sitz: Berlin
-Ust-ID: DE 365 538 597
 
