@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C6CE3009C7;
-	Sun,  1 Mar 2026 01:53:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEE062E6CC0;
+	Sun,  1 Mar 2026 01:53:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772329996; cv=none; b=b8KFb3DCsYy2iqXVYeolgi5PFnJzkHRv5qVy2pcge4oucftZF+Lh4E8N+TMnbyxq0ZUcj1yQxEDpiX+ew7SNyoL1/kYrvkdPRMF9Xft48og40baVM2m0DZNcC1xkmV60JjVzcZOU7wEC0c1KrKiLbYQJLdPbXJZb6i+3Cm5H0P4=
+	t=1772330039; cv=none; b=CQfM2NGRb1kNi1nB1wd5H+IZ+A3ZnX+Uz4I/Ut4JQeRjaCC+QmaSvP+2PEn8jikRzkgxcXKEUPwzwn/8Bu8+aHKoU8XzHpSQMYdjgOtvV1O9nA4w3xQiIYEW+FoZBZj6GM13/b1lAqW/6zoH+FkHWJiGfwBSYUoHUBw9C4RDd6s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772329996; c=relaxed/simple;
-	bh=nwnikz7Y97S+6RINtBisdr3vqkYaqZ5m2FkQ+sicu4Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZDGnLKtt+8PrZKOC4ivLEWqaPkOr5VT39wLhKgsCmGEbTuTJN2HILd8qrAC0C1K4/X95qBsapOkotMbqweRxfGWHeYe2aElXaev5gF/yqpFB6wiuGS5/Ba8FMWVAwVmcTRbUQshQIp/Zry6qdBVntJwh9mfdjHKhnsUeLizQ8Mk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FPmwmDJW; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772330039; c=relaxed/simple;
+	bh=B+QKWh4kotwyH+bdw56pFm+qXELNoFGXNP6SKLlHiFw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bheXnPD4vOMdTyghZznDvz7LDzCoPtBwmal2q5SJ8ygo5n6tydK/ZtaQHZEl52OCse/Y+F16mdJd0I0L+yuh6hymGOSFPiv/v+jVzeq5h3vNHeYbuecsRAKPO1RuFDcBFXr9DTVhvj4RsFOdizF3nApIKNzZxZZxZzpfxAlRa1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZupN4A3v; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FPmwmDJW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52D3FC19424;
-	Sun,  1 Mar 2026 01:53:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZupN4A3v"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28115C19424;
+	Sun,  1 Mar 2026 01:53:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772329996;
-	bh=nwnikz7Y97S+6RINtBisdr3vqkYaqZ5m2FkQ+sicu4Q=;
+	s=k20201202; t=1772330039;
+	bh=B+QKWh4kotwyH+bdw56pFm+qXELNoFGXNP6SKLlHiFw=;
 	h=From:To:Cc:Subject:Date:From;
-	b=FPmwmDJWtifR9D++epTFHsytCM2HBr6nwjI5RWj4kXlCXlGMBQA8xxY5vO/NB8mXq
-	 cRaNx6bkSwfGUf3lnc9+F7/MTzvb9KRr7mE2iF68a5n9jbuRXvcGOIz3oeN/Dwgdji
-	 HBKJ+lna9aclO08A0I/WozX+64iWQkP/nCoZ9xGWP1NYnSMrXQPYK0NqnponDnWt69
-	 Pj9cHg4jHAHygasTC7fZtcmI0bPub49dpWFPYJePHjFE05LbuOlcQnVKP5X10jQ//x
-	 3c3Esvv3u4BZajmA6f+y9Hba5ilg3rMQEuyzodJcqU5Fzj8jzpTwpp6202jsRgj27r
-	 PMUfuXjjMMWdQ==
+	b=ZupN4A3vXS7pF7yUJ+SYDQtUJxvoERi3uFbu1cv+O/XnqNL8gz1z2qltwePyfeNVI
+	 H3YWokTsdeM9/7hsdzJJfT0oX0880+8V2ot00GJFavNIMEu/D99UxV6A13JK+5dOYY
+	 GhAPZp/kIorFp00aboMXv867Sna2BCu/xH3mQeNwWQMCKPYU26nHxF+6lX8fgYb5FO
+	 4hNtGG1CQtl5OEI9b15QbSNggye8/IdE4vd5oH4nzHRAFM2JSOtb/sKtPBFpN9MdBS
+	 Ahh7KpY3fjYMK/vDbG2oh3eshq9Y0AoKj2V5oDnTeybLJ+0FVLZY26FxU1doBCil4W
+	 mkauPE4TKuPnQ==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
-	schnelle@linux.ibm.com
-Cc: Benjamin Block <bblock@linux.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gerd Bayer <gbayer@linux.ibm.com>,
+	guojinhui.liam@bytedance.com
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
 	linux-pci@vger.kernel.org
-Subject: FAILED: Patch "PCI/IOV: Fix race between SR-IOV enable/disable and hotplug" failed to apply to 5.15-stable tree
-Date: Sat, 28 Feb 2026 20:53:13 -0500
-Message-ID: <20260301015314.1719938-1-sashal@kernel.org>
+Subject: FAILED: Patch "PCI: Fix pci_slot_trylock() error handling" failed to apply to 5.15-stable tree
+Date: Sat, 28 Feb 2026 20:53:57 -0500
+Message-ID: <20260301015358.1720850-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -56,63 +55,68 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From a5338e365c4559d7b4d7356116b0eb95b12e08d5 Mon Sep 17 00:00:00 2001
-From: Niklas Schnelle <schnelle@linux.ibm.com>
-Date: Tue, 16 Dec 2025 23:14:03 +0100
-Subject: [PATCH] PCI/IOV: Fix race between SR-IOV enable/disable and hotplug
+From 9368d1ee62829b08aa31836b3ca003803caf0b72 Mon Sep 17 00:00:00 2001
+From: Jinhui Guo <guojinhui.liam@bytedance.com>
+Date: Fri, 12 Dec 2025 22:55:28 +0800
+Subject: [PATCH] PCI: Fix pci_slot_trylock() error handling
 
-Commit 05703271c3cd ("PCI/IOV: Add PCI rescan-remove locking when
-enabling/disabling SR-IOV") tried to fix a race between the VF removal
-inside sriov_del_vfs() and concurrent hot unplug by taking the PCI
-rescan/remove lock in sriov_del_vfs(). Similarly the PCI rescan/remove lock
-was also taken in sriov_add_vfs() to protect addition of VFs.
+Commit a4e772898f8b ("PCI: Add missing bridge lock to pci_bus_lock()")
+delegates the bridge device's pci_dev_trylock() to pci_bus_trylock() in
+pci_slot_trylock(), but it forgets to remove the corresponding
+pci_dev_unlock() when pci_bus_trylock() fails.
 
-This approach however causes deadlock on trying to remove PFs with SR-IOV
-enabled because PFs disable SR-IOV during removal and this removal happens
-under the PCI rescan/remove lock. So the original fix had to be reverted.
+Before a4e772898f8b, the code did:
 
-Instead of taking the PCI rescan/remove lock in sriov_add_vfs() and
-sriov_del_vfs(), fix the race that occurs with SR-IOV enable and disable vs
-hotplug higher up in the callchain by taking the lock in
-sriov_numvfs_store() before calling into the driver's sriov_configure()
-callback.
+  if (!pci_dev_trylock(dev)) /* <- lock bridge device */
+    goto unlock;
+  if (dev->subordinate) {
+    if (!pci_bus_trylock(dev->subordinate)) {
+      pci_dev_unlock(dev);   /* <- unlock bridge device */
+      goto unlock;
+    }
+  }
 
-Fixes: 05703271c3cd ("PCI/IOV: Add PCI rescan-remove locking when enabling/disabling SR-IOV")
-Reported-by: Benjamin Block <bblock@linux.ibm.com>
-Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+After a4e772898f8b the bridge-device lock is no longer taken, but the
+pci_dev_unlock(dev) on the failure path was left in place, leading to the
+bug.
+
+This yields one of two errors:
+
+  1. A warning that the lock is being unlocked when no one holds it.
+  2. An incorrect unlock of a lock that belongs to another thread.
+
+Fix it by removing the now-redundant pci_dev_unlock(dev) on the failure
+path.
+
+[Same patch later posted by Keith at
+https://patch.msgid.link/20260116184150.3013258-1-kbusch@meta.com]
+
+Fixes: a4e772898f8b ("PCI: Add missing bridge lock to pci_bus_lock()")
+Signed-off-by: Jinhui Guo <guojinhui.liam@bytedance.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
-Reviewed-by: Gerd Bayer <gbayer@linux.ibm.com>
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
 Cc: stable@vger.kernel.org
-Link: https://patch.msgid.link/20251216-revert_sriov_lock-v3-2-dac4925a7621@linux.ibm.com
+Link: https://patch.msgid.link/20251212145528.2555-1-guojinhui.liam@bytedance.com
 ---
- drivers/pci/iov.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/pci/pci.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 7de5b18647beb..4a659c34935e1 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -495,7 +495,9 @@ static ssize_t sriov_numvfs_store(struct device *dev,
- 
- 	if (num_vfs == 0) {
- 		/* disable VFs */
-+		pci_lock_rescan_remove();
- 		ret = pdev->driver->sriov_configure(pdev, 0);
-+		pci_unlock_rescan_remove();
- 		goto exit;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 13dbb405dc31f..59319e08fca61 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5346,10 +5346,8 @@ static int pci_slot_trylock(struct pci_slot *slot)
+ 		if (!dev->slot || dev->slot != slot)
+ 			continue;
+ 		if (dev->subordinate) {
+-			if (!pci_bus_trylock(dev->subordinate)) {
+-				pci_dev_unlock(dev);
++			if (!pci_bus_trylock(dev->subordinate))
+ 				goto unlock;
+-			}
+ 		} else if (!pci_dev_trylock(dev))
+ 			goto unlock;
  	}
- 
-@@ -507,7 +509,9 @@ static ssize_t sriov_numvfs_store(struct device *dev,
- 		goto exit;
- 	}
- 
-+	pci_lock_rescan_remove();
- 	ret = pdev->driver->sriov_configure(pdev, num_vfs);
-+	pci_unlock_rescan_remove();
- 	if (ret < 0)
- 		goto exit;
- 
 -- 
 2.51.0
 
