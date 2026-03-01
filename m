@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D27062773CC;
-	Sun,  1 Mar 2026 01:40:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38FBA1EF09B;
+	Sun,  1 Mar 2026 01:40:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772329223; cv=none; b=N1Lv878k1otcfyRAsiQPFBo5pkOLOhVwJtAe4BsoB6YdZYQYuQBaAIE80I1qyYLi6OX4+z1k4ifPWNX0fLMf+Fsmy3WefXwFnP4Fe8waJiC/WZ/4OevgZBhoeGHo1rBC8Y0liMvdlzMuAwbLnvss1OgOz+MaxAqpJkdAClcAJmI=
+	t=1772329230; cv=none; b=mvZjqKwk8m2IN+JzsuvRNcsTBpAt6SHY3FCe8GtVUi2e2PkaOj74cEn00XzN0bPB7JNTVVhcjz/Jozwsa1AiN65njgGB1F0JxHwtfLv93FTOj1zAI6yWHG8Tj2Qg0vqpA84xWRvWVcBi6PSvN/0haIYjWHeHWB/BMsBAja8aNiY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772329223; c=relaxed/simple;
-	bh=nsdxKdhvp7JAm98G2OMyIwBSbCWrWQp0Muj2gcuqy/0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mKnYrRE5FyA4sOI6g8gtaNAp8bl6LVKXPWM7S1EGQdzkxbrok61Nni1MAzqrRqUsdN+NwhCO+sghKn2Qkmlw4y4PyEZKGcIVVCPrrQ749te0txUX6UKinMIRuYbo/oF8rEmFDTuCuZP9TpwqrJ8AIXcxyg6JWXaAz1mk/zgD4T0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PlmLxH2B; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772329230; c=relaxed/simple;
+	bh=qXPACjF+msHmR4ykWmbA3RT2S7OQ5lY7LY9fv8Tl8ic=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Dp5oGpuOfT88mYh9FKjUIZkio89Sv5l4W0KVpk+loWHLU5ycFwmLVLCsc0wJmV11rrVliVVFgMUqmeVE5oqJoS2uwSWAWjxqDNakWk8l9C5H36C7amo6j/5x2chGYMFRopyHRDk/zTJyfN86FPC6Hs6GknZoa6cawqVQWADshAs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tiDViKvC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PlmLxH2B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14711C19421;
-	Sun,  1 Mar 2026 01:40:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tiDViKvC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29D83C19425;
+	Sun,  1 Mar 2026 01:40:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772329223;
-	bh=nsdxKdhvp7JAm98G2OMyIwBSbCWrWQp0Muj2gcuqy/0=;
+	s=k20201202; t=1772329229;
+	bh=qXPACjF+msHmR4ykWmbA3RT2S7OQ5lY7LY9fv8Tl8ic=;
 	h=From:To:Cc:Subject:Date:From;
-	b=PlmLxH2BmwJTZ//xowhDSRVqZx8/MHD7Vv5UWWDU8qRxZ1xr9hijMt/0RumNXbjCB
-	 GJYJ80w2CxSSz6KhXqs70oROpsD5EA74tvpTTVFZcDlAIRN3cYWC8Hs0qX/VR9pfD9
-	 L1g3OeWzZu1E4sHIh3W4HNyEctAIeIZ+2Dtg0NZPSXk9WClAihQg7oAq1I+DWFYT6W
-	 y5XzRBtqGNOL/XaLRWbe/BwS+Q8v8Yub48WPLWzevT+Q9ILN0rz/iOVe+Vo3GiI54J
-	 5ESezm6NySSoJu4Z3oO0SVBfo0yq1qQL/OCy0Xz/WMhRdwLe+YP/a83gR93tA40l4/
-	 w4409ViQ4E9Qg==
+	b=tiDViKvCl6aIYAK8yuT6zxCWzoPrh7QvFB0H6UN0oOPmpT5y2ltVHkk+wjPVx7EjX
+	 bpMFMc6mOLXKdnCjykAHRMHiGeVm4wOAo83kw4XzZTvt2Q2R1x/tRsOTZSr7yuhZzu
+	 NUfoDaZJrLr7KvgNubQiKjBKMvwUJAZ0f3U7LUt0ptHuYBRHHGM/Qf5eg92W3pv6Rz
+	 /6u3Q4rwzA9Q73YJ8HtKLVDlgpEuP4HRhI/mtYpNOmQVUgsbk5XdS7U7pjP9PiBWlA
+	 /O21+FNGsZBTgCZnBnxFj7ucBHXrLWHhcqxU+3ukh/k+LjJQbvc3UPTTqLGoU2ax1G
+	 RMpF/taN5GXwg==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
-	cassel@kernel.org
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	linux-arm-msm@vger.kernel.org,
+	ilpo.jarvinen@linux.intel.com
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andy Shevchenko <andriy.shevchenko@intel.com>,
+	Christian Marangi <ansuelsmth@gmail.com>,
 	linux-pci@vger.kernel.org
-Subject: FAILED: Patch "Revert "PCI: qcom: Don't wait for link if we can detect Link Up"" failed to apply to 6.1-stable tree
-Date: Sat, 28 Feb 2026 20:40:21 -0500
-Message-ID: <20260301014021.1701590-1-sashal@kernel.org>
+Subject: FAILED: Patch "PCI: Use resource_set_range() that correctly sets ->end" failed to apply to 6.1-stable tree
+Date: Sat, 28 Feb 2026 20:40:27 -0500
+Message-ID: <20260301014028.1701693-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -44,6 +44,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: ignore
 X-stable: review
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 The patch below does not apply to the 6.1-stable tree.
@@ -56,86 +57,63 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From e9ce5b3804436301ab343bc14203a4c14b336d1b Mon Sep 17 00:00:00 2001
-From: Niklas Cassel <cassel@kernel.org>
-Date: Mon, 22 Dec 2025 07:42:10 +0100
-Subject: [PATCH] Revert "PCI: qcom: Don't wait for link if we can detect Link
- Up"
+From 11721c45a8266a9d0c9684153d20e37159465f96 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Mon, 8 Dec 2025 16:56:54 +0200
+Subject: [PATCH] PCI: Use resource_set_range() that correctly sets ->end
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-This reverts commit 36971d6c5a9a134c15760ae9fd13c6d5f9a36abb.
+__pci_read_base() sets resource start and end addresses when resource
+is larger than 4G but pci_bus_addr_t or resource_size_t are not capable
+of representing 64-bit PCI addresses. This creates a problematic
+resource that has non-zero flags but the start and end addresses do not
+yield to resource size of 0 but 1.
 
-While this fake hotplugging was a nice idea, it has shown that this feature
-does not handle PCIe switches correctly:
-pci_bus 0004:43: busn_res: can not insert [bus 43-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci_bus 0004:43: busn_res: [bus 43-41] end is updated to 43
-pci_bus 0004:43: busn_res: can not insert [bus 43] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci 0004:42:00.0: devices behind bridge are unusable because [bus 43] cannot be assigned for them
-pci_bus 0004:44: busn_res: can not insert [bus 44-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci_bus 0004:44: busn_res: [bus 44-41] end is updated to 44
-pci_bus 0004:44: busn_res: can not insert [bus 44] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci 0004:42:02.0: devices behind bridge are unusable because [bus 44] cannot be assigned for them
-pci_bus 0004:45: busn_res: can not insert [bus 45-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci_bus 0004:45: busn_res: [bus 45-41] end is updated to 45
-pci_bus 0004:45: busn_res: can not insert [bus 45] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci 0004:42:06.0: devices behind bridge are unusable because [bus 45] cannot be assigned for them
-pci_bus 0004:46: busn_res: can not insert [bus 46-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci_bus 0004:46: busn_res: [bus 46-41] end is updated to 46
-pci_bus 0004:46: busn_res: can not insert [bus 46] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci 0004:42:0e.0: devices behind bridge are unusable because [bus 46] cannot be assigned for them
-pci_bus 0004:42: busn_res: [bus 42-41] end is updated to 46
-pci_bus 0004:42: busn_res: can not insert [bus 42-46] under [bus 41] (conflicts with (null) [bus 41])
-pci 0004:41:00.0: devices behind bridge are unusable because [bus 42-46] cannot be assigned for them
-pcieport 0004:40:00.0: bridge has subordinate 41 but max busn 46
+Replace custom resource addresses setup with resource_set_range()
+that correctly sets end address as -1 which results in resource_size()
+returning 0.
 
-During the initial scan, PCI core doesn't see the switch and since the Root
-Port is not hot plug capable, the secondary bus number gets assigned as the
-subordinate bus number. This means, the PCI core assumes that only one bus
-will appear behind the Root Port since the Root Port is not hot plug
-capable.
+For consistency, also use resource_set_range() in the other branch that
+does size based resource setup.
 
-This works perfectly fine for PCIe endpoints connected to the Root Port,
-since they don't extend the bus. However, if a PCIe switch is connected,
-then there is a problem when the downstream busses starts showing up and
-the PCI core doesn't extend the subordinate bus number and bridge resources
-after initial scan during boot.
-
-The long term plan is to migrate this driver to the upcoming pwrctrl APIs
-that are supposed to handle this problem elegantly.
-
-Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
-Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
-Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
-Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+Fixes: 23b13bc76f35 ("PCI: Fail safely if we can't handle BARs larger than 4GB")
+Link: https://lore.kernel.org/all/20251207215359.28895-1-ansuelsmth@gmail.com/T/#m990492684913c5a158ff0e5fc90697d8ad95351b
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
 Cc: stable@vger.kernel.org
-Link: https://patch.msgid.link/20251222064207.3246632-11-cassel@kernel.org
+Cc: Christian Marangi <ansuelsmth@gmail.com>
+Link: https://patch.msgid.link/20251208145654.5294-1-ilpo.jarvinen@linux.intel.com
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/pci/probe.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 60373fe1362f8..e87ec6779d44f 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -1958,10 +1958,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 
- 	platform_set_drvdata(pdev, pcie);
- 
--	irq = platform_get_irq_byname_optional(pdev, "global");
--	if (irq > 0)
--		pp->use_linkup_irq = true;
--
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
- 		dev_err(dev, "cannot initialize host\n");
-@@ -1975,6 +1971,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 		goto err_host_deinit;
- 	}
- 
-+	irq = platform_get_irq_byname_optional(pdev, "global");
- 	if (irq > 0) {
- 		ret = devm_request_threaded_irq(&pdev->dev, irq, NULL,
- 						qcom_pcie_global_irq_thread,
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 41183aed8f5d9..ad5ae05aad3c8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -287,8 +287,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		if ((sizeof(pci_bus_addr_t) < 8 || sizeof(resource_size_t) < 8)
+ 		    && sz64 > 0x100000000ULL) {
+ 			res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
+-			res->start = 0;
+-			res->end = 0;
++			resource_set_range(res, 0, 0);
+ 			pci_err(dev, "%s: can't handle BAR larger than 4GB (size %#010llx)\n",
+ 				res_name, (unsigned long long)sz64);
+ 			goto out;
+@@ -297,8 +296,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		if ((sizeof(pci_bus_addr_t) < 8) && l) {
+ 			/* Above 32-bit boundary; try to reallocate */
+ 			res->flags |= IORESOURCE_UNSET;
+-			res->start = 0;
+-			res->end = sz64 - 1;
++			resource_set_range(res, 0, sz64);
+ 			pci_info(dev, "%s: can't handle BAR above 4GB (bus address %#010llx)\n",
+ 				 res_name, (unsigned long long)l64);
+ 			goto out;
 -- 
 2.51.0
 
