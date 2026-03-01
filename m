@@ -1,39 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 049A5145A1F;
-	Sun,  1 Mar 2026 01:43:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C3882C1788;
+	Sun,  1 Mar 2026 01:43:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772329401; cv=none; b=IvnjGmritrxj+DBum405/ZpaOV8nbEjXazCclFPTEly7B5AaciG8dB57d6xtCM60UnyTn8KQLk6AaViiGoAZ9Pr6UsWFS2EAaxXBWAviBD4Gx9k88EZjpTiA6avqVHr5iAM9UC2qoMZwXXTicgL1UWq0e/nY1q+wa0LOrOHi604=
+	t=1772329419; cv=none; b=dT6E1ujXf5S+OwnEeSxiK8P6BN1fuY1ZP0WIei9LpVV61QVSu33F51iCThDZYGnXfuzGChBWs3DG+aW5dmzBmOMktrU32SwRxM65TANkmizcByQImln+FqJ8wMnydoeO8VaXRKfmJl3AQataxWcUVVeWbf7BKfSZK0yGW1ww4B4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772329401; c=relaxed/simple;
-	bh=CSveXeKFRY6NMKjZcWQcH75+UINLpctLbHpkF6zG7oU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AQgiNYaQTv0JcaD7dUfZ4MO5pWBvctP5rBoq2EzG72QeUmHD/DfQVcDwM9oh/zC1QXAz1gendj4Gx4Zo9EOppBTKXol2KgbIYeA/FtRKBFzLxvMWu3U6+tAt2/nOTXtwjEpRZLl0D2iZyVht4U5XJzL27vIbFlPXEsr4AtHClfA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ky4b13cf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772329419; c=relaxed/simple;
+	bh=lyBxLh9LnsM2texUtGYbGBBSF2aTYDOF6E2zcP8GGXk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Xeq99kcgdbFDjiY1Gp3wXQx43hJbeFF3Bwks+6IkuJSEb24IcAXvhNHYEjRpSllvNswW3tAp6c8Ke+8+tzjB95CcdXhzxrRZWlbZeCtSk+C8KyGFg1GdLU2/adohC7ffO9j8q5LzCoE4RLdSauLT+qiBDPFuCNTYwA00/oo2ry4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n+9mYhEO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ky4b13cf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52628C19421;
-	Sun,  1 Mar 2026 01:43:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n+9mYhEO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40DDCC19421;
+	Sun,  1 Mar 2026 01:43:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772329400;
-	bh=CSveXeKFRY6NMKjZcWQcH75+UINLpctLbHpkF6zG7oU=;
+	s=k20201202; t=1772329419;
+	bh=lyBxLh9LnsM2texUtGYbGBBSF2aTYDOF6E2zcP8GGXk=;
 	h=From:To:Cc:Subject:Date:From;
-	b=Ky4b13cfkYKZQdQ0nqIgKhKquZNhZLXRyh8YJn3xZq+VyfGDE0z1ZoM2hITOWdeNc
-	 ZUxAJK3d3k8geEWPN2tPWS7AQzq2p7iS5Zl5nmu4Es3INRkzfQX1QgXx2jZ5DlMXcq
-	 xf226xuLNPgmph3phcBphbM2tqK6KlkqTL/s8At6vnReWy2/QjFSV15+dMF71OQpUl
-	 pUQVUPuFlTj18IoDRRZezuErClH+gujCYoOcA0j+ZpBsHKwOjM6zuUjz9+kxFrRPuf
-	 BASJzjXQkP0aQGvk9WcY/OKWOw2eUy4W04C6qD5v8vNy6WpIfxBlR7TwYCXevCl9Es
-	 23ktgsxCqF4OA==
+	b=n+9mYhEOku0QvXAwUg8AZrK2UbPcwoJUWsmNucrzKOcPJGtSkyKp6Df+sHGbwHuMz
+	 yu46asT4EO5iPhmGNoT3wun4qJcIGgbV8CfxlWCdCsOX5+ionovsWHd9I9dDhNDLgZ
+	 //64tRW5+fVZlJmwQA8WFF/s3BdPyrVRPhKk21caMnf5TJlT8/SZ2aj6lJV+e9z/AK
+	 1EalZgdWj5StsJA5IVhkgKfDUmdYukN3QxGUgXsRYun3qo0v/BdfwZdJaBunOvjECV
+	 2BHydvvR+ojaLplWXdTEwPqly+Lsu7NYplnYQK2EMpRNHlZzDQxaEwL0NDS8tFMmOm
+	 MbLxXgKusn4tQ==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
-	briannorris@chromium.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
+	mmaddireddy@nvidia.com
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	Frank Li <Frank.Li@nxp.com>,
 	linux-pci@vger.kernel.org
-Subject: FAILED: Patch "PCI/PM: Prevent runtime suspend until devices are fully initialized" failed to apply to 6.1-stable tree
-Date: Sat, 28 Feb 2026 20:43:18 -0500
-Message-ID: <20260301014319.1705393-1-sashal@kernel.org>
+Subject: FAILED: Patch "PCI: endpoint: Fix swapped parameters in pci_{primary/secondary}_epc_epf_unlink() functions" failed to apply to 6.1-stable tree
+Date: Sat, 28 Feb 2026 20:43:36 -0500
+Message-ID: <20260301014337.1705741-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -55,105 +57,79 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From 51c0996dadaea20d73eb0495aeda9cb0422243e8 Mon Sep 17 00:00:00 2001
-From: Brian Norris <briannorris@chromium.org>
-Date: Thu, 22 Jan 2026 09:48:15 -0800
-Subject: [PATCH] PCI/PM: Prevent runtime suspend until devices are fully
- initialized
+From 8754dd7639ab0fd68c3ab9d91c7bdecc3e5740a8 Mon Sep 17 00:00:00 2001
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Date: Thu, 8 Jan 2026 11:57:47 +0530
+Subject: [PATCH] PCI: endpoint: Fix swapped parameters in
+ pci_{primary/secondary}_epc_epf_unlink() functions
 
-Previously, it was possible for a PCI device to be runtime-suspended before
-it was fully initialized. When that happened, the suspend process could
-save invalid device state, for example, before BAR assignment. Restoring
-the invalid state during resume may leave the device non-functional.
+struct configfs_item_operations callbacks are defined like the following:
 
-Prevent runtime suspend for PCI devices until they are fully initialized by
-deferring pm_runtime_enable().
+  int (*allow_link)(struct config_item *src, struct config_item *target);
+  void (*drop_link)(struct config_item *src, struct config_item *target);
 
-More details on how exactly this may occur:
+While pci_primary_epc_epf_link() and pci_secondary_epc_epf_link() specify
+the parameters in the correct order, pci_primary_epc_epf_unlink() and
+pci_secondary_epc_epf_unlink() specify the parameters in the wrong order,
+leading to the below kernel crash when using the unlink command in
+configfs:
 
-  1. PCI device is created by pci_scan_slot() or similar
+  Unable to handle kernel paging request at virtual address 0000000300000857
+  Mem abort info:
+  ...
+  pc : string+0x54/0x14c
+  lr : vsnprintf+0x280/0x6e8
+  ...
+  string+0x54/0x14c
+  vsnprintf+0x280/0x6e8
+  vprintk_default+0x38/0x4c
+  vprintk+0xc4/0xe0
+  pci_epf_unbind+0xdc/0x108
+  configfs_unlink+0xe0/0x208+0x44/0x74
+  vfs_unlink+0x120/0x29c
+  __arm64_sys_unlinkat+0x3c/0x90
+  invoke_syscall+0x48/0x134
+  do_el0_svc+0x1c/0x30prop.0+0xd0/0xf0
 
-  2. As part of pci_scan_slot(), pci_pm_init() puts the device in D0 and
-     prevents runtime suspend prevented via pm_runtime_forbid()
-
-  3. pci_device_add() adds the underlying 'struct device' via device_add(),
-     which means user space can allow runtime suspend, e.g.,
-
-       echo auto > /sys/bus/pci/devices/.../power/control
-
-  4. PCI device receives BAR configuration
-     (pci_assign_unassigned_bus_resources(), etc.)
-
-  5. pci_bus_add_device() applies final fixups, saves device state, and
-     tries to attach a driver
-
-The device may potentially be suspended between #3 and #5, so this is racy
-with user space (udev or similar).
-
-Many PCI devices are enumerated at subsys_initcall time and so will not
-race with user space, but devices created later by hotplug or modular
-pwrctrl or host controller drivers are susceptible to this race.
-
-More runtime PM details at the first Link: below.
-
-Link: https://lore.kernel.org/all/0e35a4e1-894a-47c1-9528-fc5ffbafd9e2@samsung.com/
-Signed-off-by: Brian Norris <briannorris@chromium.org>
-[bhelgaas: update comments per https://lore.kernel.org/r/CAJZ5v0iBNOmMtqfqEbrYyuK2u+2J2+zZ-iQd1FvyCPjdvU2TJg@mail.gmail.com]
+Fixes: e85a2d783762 ("PCI: endpoint: Add support in configfs to associate two EPCs with EPF")
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+[mani: cced stable, changed commit message as per https://lore.kernel.org/linux-pci/aV9joi3jF1R6ca02@ryzen]
+Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
 Cc: stable@vger.kernel.org
-Link: https://patch.msgid.link/20260122094815.v5.1.I60a53c170a8596661883bd2b4ef475155c7aa72b@changeid
+Link: https://patch.msgid.link/20260108062747.1870669-1-mmaddireddy@nvidia.com
 ---
- drivers/pci/bus.c | 8 ++++++++
- drivers/pci/pci.c | 8 +++++++-
- 2 files changed, 15 insertions(+), 1 deletion(-)
+ drivers/pci/endpoint/pci-ep-cfs.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 4383a36fd6ca0..41e5c45e38b5e 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -15,6 +15,7 @@
- #include <linux/of.h>
- #include <linux/of_platform.h>
- #include <linux/platform_device.h>
-+#include <linux/pm_runtime.h>
- #include <linux/proc_fs.h>
- #include <linux/slab.h>
- 
-@@ -379,6 +380,13 @@ void pci_bus_add_device(struct pci_dev *dev)
- 		put_device(&pdev->dev);
- 	}
- 
-+	/*
-+	 * Enable runtime PM, which potentially allows the device to
-+	 * suspend immediately, only after the PCI state has been
-+	 * configured completely.
-+	 */
-+	pm_runtime_enable(&dev->dev);
-+
- 	if (!dn || of_device_is_available(dn))
- 		pci_dev_allow_binding(dev);
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 86ccbd0efb495..d5f4b52899ada 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3199,8 +3199,14 @@ void pci_pm_init(struct pci_dev *dev)
- poweron:
- 	pci_pm_power_up_and_verify_state(dev);
- 	pm_runtime_forbid(&dev->dev);
-+
-+	/*
-+	 * Runtime PM will be enabled for the device when it has been fully
-+	 * configured, but since its parent and suppliers may suspend in
-+	 * the meantime, prevent them from doing so by changing the
-+	 * device's runtime PM status to "active".
-+	 */
- 	pm_runtime_set_active(&dev->dev);
--	pm_runtime_enable(&dev->dev);
+diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+index 43feb6139fa36..8b392a8363bb1 100644
+--- a/drivers/pci/endpoint/pci-ep-cfs.c
++++ b/drivers/pci/endpoint/pci-ep-cfs.c
+@@ -68,8 +68,8 @@ static int pci_secondary_epc_epf_link(struct config_item *epf_item,
+ 	return 0;
  }
  
- static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
+-static void pci_secondary_epc_epf_unlink(struct config_item *epc_item,
+-					 struct config_item *epf_item)
++static void pci_secondary_epc_epf_unlink(struct config_item *epf_item,
++					 struct config_item *epc_item)
+ {
+ 	struct pci_epf_group *epf_group = to_pci_epf_group(epf_item->ci_parent);
+ 	struct pci_epc_group *epc_group = to_pci_epc_group(epc_item);
+@@ -132,8 +132,8 @@ static int pci_primary_epc_epf_link(struct config_item *epf_item,
+ 	return 0;
+ }
+ 
+-static void pci_primary_epc_epf_unlink(struct config_item *epc_item,
+-				       struct config_item *epf_item)
++static void pci_primary_epc_epf_unlink(struct config_item *epf_item,
++				       struct config_item *epc_item)
+ {
+ 	struct pci_epf_group *epf_group = to_pci_epf_group(epf_item->ci_parent);
+ 	struct pci_epc_group *epc_group = to_pci_epc_group(epc_item);
 -- 
 2.51.0
 
