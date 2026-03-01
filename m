@@ -1,41 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0ECC2D8796;
-	Sun,  1 Mar 2026 01:34:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 967122DBF45;
+	Sun,  1 Mar 2026 01:35:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772328876; cv=none; b=FHuYgDld6msuaO2fBfw14aPRMjDc4Zu8Qgt8NnGnRTd8RNGCzF1fHM1rnRBrOfdeWhZs1knBrPdEX33LmrBH/snO218BUsoZXOr1SVuI9nrCyq/K+0zUvt1LW8vEqWR8yOvRH6xpqs8JoCejuGd11Oucd7mpJWGtuzX8LdWU2mI=
+	t=1772328910; cv=none; b=lLE6HHurWmieLWliYLhnqhKyRJVPs9fdIB/R/HDvwoVmK1t1DGXB1NfiOQAwfkmjcs2MawwQ6SRXihUDALlsPMYOcBFR4LTLcoZUFaSmVO/MieHuU2UTg+L5Kgm9om3TybCVoumXqwqHt6AROQAIXdt5lKvC7goW72uHBZg0JmQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772328876; c=relaxed/simple;
-	bh=Tk9YFBsJwtWrt4yHWfRJjqSxr3CKFnJOP0I5MzrAtAo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=R5iZiqCCmUAIFus/zedY4nZnbquqbt7PtsHvotqTnQyVwrWemGIyIAuznhRDbHN6tGW3sqkJ9hvU6/fvitIjpc3654Ox+mVlzKG7BoDpiE9+h5bob7WLR+gTNO6y1kTGQaLp6BQjqus4IEoFQl83UELem2BRFPOw4As7Ua86bs8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LbAAqu4e; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772328910; c=relaxed/simple;
+	bh=CTDxb1I7H5+Evib1C8dmNHMpsdBunIDSdS10KOY66xc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=g0CKwNUCxLwf+UyhC+edEdqDCROZPzION1hfAEdh8J88qRLbk/2HjP7UQzjVYjZA9OMmv5N8PP5qiUH+b8rXQ6cgg9l8uDjRrrub+B3pm5rSMOItKYmS9CMshC9RrYo5pp11jMZgoESzIsG9Fxto+NN5KeAODsAjx2NDJh+L1x0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D61TuaZq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LbAAqu4e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8C1EC19421;
-	Sun,  1 Mar 2026 01:34:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D61TuaZq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8DC9C19424;
+	Sun,  1 Mar 2026 01:35:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772328876;
-	bh=Tk9YFBsJwtWrt4yHWfRJjqSxr3CKFnJOP0I5MzrAtAo=;
+	s=k20201202; t=1772328910;
+	bh=CTDxb1I7H5+Evib1C8dmNHMpsdBunIDSdS10KOY66xc=;
 	h=From:To:Cc:Subject:Date:From;
-	b=LbAAqu4eRzo6zeEcVwOU3UvqIcQov+bVgCVNk2V3vkIuqcsxZ7mZ5jXvOMvJ7p5/v
-	 ak1Em+hlHUSBGVhbf/+m9QXw7jh02tPHZ7L2FR7w/sluP9k9vKSK1gdYirFQFuVkyT
-	 Hd8Dwv44VAd6D7dDs820h4OMmKPKLkrOlpzE54VQMohNpClBBc+oPYiwPjHiKiPWxW
-	 NzJcEJqlP0l0DgENU9aB95uqCwPYPuHCZSvokd61ZhUy47EeoM5iKe9vJgfL3klJB3
-	 L5EdryFpNTh2FxMWwP2NIuSBgsF1VggsLGHQgaDNOj2d+3+Cd96H9TEhFSkQq21zR9
-	 GnHNw09EypIbg==
+	b=D61TuaZqMbzxJMaQuDioSM7v6+KHcwLvnxv1J/aQS5+81QQsoaUsIS2XydfktWmyi
+	 5YBtz4IsWsEIJzYqbKkHL5VR1ZzLWQbUslPM19e6XUTZ1ubXoUU6ZsVhpCyss89z62
+	 XzxU+NE7pliiLOSPv7E1ETI35q6ILQ0qqJ+aRtH3u4Y6U4Q2wiPFHUt8uBlKeRrzQP
+	 mM5l8SOenGaw1koH0a8dn3FNUlwD4kxogj5YPnqcHg3Bn7WNKaJX/MfoheU6LYQBRe
+	 fMxuLtMoGLeA3k14Fp7ERKsebYDAW8i+VF2xBpf6SEGlNf02tLZoVZhm8EKvZmz0aZ
+	 qUfF8Bt5c6brQ==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
-	mmaddireddy@nvidia.com
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	ilpo.jarvinen@linux.intel.com
+Cc: =?UTF-8?q?Malte=20Schr=C3=B6der?= <malte+lkml@tnxip.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Frank Li <Frank.Li@nxp.com>,
 	linux-pci@vger.kernel.org
-Subject: FAILED: Patch "PCI: endpoint: Fix swapped parameters in pci_{primary/secondary}_epc_epf_unlink() functions" failed to apply to 6.6-stable tree
-Date: Sat, 28 Feb 2026 20:34:34 -0500
-Message-ID: <20260301013434.1694129-1-sashal@kernel.org>
+Subject: FAILED: Patch "PCI: Fix bridge window alignment with optional resources" failed to apply to 6.6-stable tree
+Date: Sat, 28 Feb 2026 20:35:08 -0500
+Message-ID: <20260301013508.1694727-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -45,6 +43,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: ignore
 X-stable: review
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 The patch below does not apply to the 6.6-stable tree.
@@ -57,79 +56,102 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From 8754dd7639ab0fd68c3ab9d91c7bdecc3e5740a8 Mon Sep 17 00:00:00 2001
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Date: Thu, 8 Jan 2026 11:57:47 +0530
-Subject: [PATCH] PCI: endpoint: Fix swapped parameters in
- pci_{primary/secondary}_epc_epf_unlink() functions
+From 7e90360e6d4599795b6f4e094e20d0bdf3b2615f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Fri, 19 Dec 2025 19:40:14 +0200
+Subject: [PATCH] PCI: Fix bridge window alignment with optional resources
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-struct configfs_item_operations callbacks are defined like the following:
+pbus_size_mem() has two alignments, one for required resources in min_align
+and another in add_align that takes account optional resources.
 
-  int (*allow_link)(struct config_item *src, struct config_item *target);
-  void (*drop_link)(struct config_item *src, struct config_item *target);
+The add_align is applied to the bridge window through the realloc_head
+list. It can happen, however, that add_align is larger than min_align but
+calculated size1 and size0 are equal due to extra tailroom (e.g., hotplug
+reservation, tail alignment), and therefore no entry is created to the
+realloc_head list. Without the bridge appearing in the realloc head,
+add_align is lost when pbus_size_mem() returns.
 
-While pci_primary_epc_epf_link() and pci_secondary_epc_epf_link() specify
-the parameters in the correct order, pci_primary_epc_epf_unlink() and
-pci_secondary_epc_epf_unlink() specify the parameters in the wrong order,
-leading to the below kernel crash when using the unlink command in
-configfs:
+The problem is visible in this log for 0000:05:00.0 which lacks
+add_size ... add_align ... line that would indicate it was added into
+the realloc_head list:
 
-  Unable to handle kernel paging request at virtual address 0000000300000857
-  Mem abort info:
+  pci 0000:05:00.0: PCI bridge to [bus 06-16]
   ...
-  pc : string+0x54/0x14c
-  lr : vsnprintf+0x280/0x6e8
-  ...
-  string+0x54/0x14c
-  vsnprintf+0x280/0x6e8
-  vprintk_default+0x38/0x4c
-  vprintk+0xc4/0xe0
-  pci_epf_unbind+0xdc/0x108
-  configfs_unlink+0xe0/0x208+0x44/0x74
-  vfs_unlink+0x120/0x29c
-  __arm64_sys_unlinkat+0x3c/0x90
-  invoke_syscall+0x48/0x134
-  do_el0_svc+0x1c/0x30prop.0+0xd0/0xf0
+  pci 0000:06:00.0: bridge window [mem 0x00100000-0x001fffff] to [bus 07] requires relaxed alignment rules
+  pci 0000:06:06.0: bridge window [mem 0x00100000-0x001fffff] to [bus 0a] requires relaxed alignment rules
+  pci 0000:06:07.0: bridge window [mem 0x00100000-0x003fffff] to [bus 0b] requires relaxed alignment rules
+  pci 0000:06:08.0: bridge window [mem 0x00800000-0x00ffffff 64bit pref] to [bus 0c-14] requires relaxed alignment rules
+  pci 0000:06:08.0: bridge window [mem 0x01000000-0x057fffff] to [bus 0c-14] requires relaxed alignment rules
+  pci 0000:06:08.0: bridge window [mem 0x01000000-0x057fffff] to [bus 0c-14] requires relaxed alignment rules
+  pci 0000:06:08.0: bridge window [mem 0x01000000-0x057fffff] to [bus 0c-14] add_size 100000 add_align 1000000
+  pci 0000:06:0c.0: bridge window [mem 0x00100000-0x001fffff] to [bus 15] requires relaxed alignment rules
+  pci 0000:06:0d.0: bridge window [mem 0x00100000-0x001fffff] to [bus 16] requires relaxed alignment rules
+  pci 0000:06:0d.0: bridge window [mem 0x00100000-0x001fffff] to [bus 16] requires relaxed alignment rules
+  pci 0000:05:00.0: bridge window [mem 0xd4800000-0xd97fffff]: assigned
+  pci 0000:05:00.0: bridge window [mem 0x1060000000-0x10607fffff 64bit pref]: assigned
+  pci 0000:06:08.0: bridge window [mem size 0x04900000]: can't assign; no space
+  pci 0000:06:08.0: bridge window [mem size 0x04900000]: failed to assign
 
-Fixes: e85a2d783762 ("PCI: endpoint: Add support in configfs to associate two EPCs with EPF")
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-[mani: cced stable, changed commit message as per https://lore.kernel.org/linux-pci/aV9joi3jF1R6ca02@ryzen]
-Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+While this bug itself seems old, it has likely become more visible after
+the relaxed tail alignment that does not grossly overestimate the size
+needed for the bridge window.
+
+Make sure add_align > min_align too results in adding an entry into the
+realloc head list. In addition, add handling to the cases where add_size is
+zero while only alignment differs.
+
+Fixes: d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing and assigning")
+Reported-by: Malte Schröder <malte+lkml@tnxip.de>
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Tested-by: Malte Schröder <malte+lkml@tnxip.de>
 Cc: stable@vger.kernel.org
-Link: https://patch.msgid.link/20260108062747.1870669-1-mmaddireddy@nvidia.com
+Link: https://patch.msgid.link/20251219174036.16738-2-ilpo.jarvinen@linux.intel.com
 ---
- drivers/pci/endpoint/pci-ep-cfs.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/pci/setup-bus.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index 43feb6139fa36..8b392a8363bb1 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -68,8 +68,8 @@ static int pci_secondary_epc_epf_link(struct config_item *epf_item,
- 	return 0;
- }
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 6e90f46f52afd..4b918ff4d2d8b 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -14,6 +14,7 @@
+  *	     tighter packing. Prefetchable range support.
+  */
  
--static void pci_secondary_epc_epf_unlink(struct config_item *epc_item,
--					 struct config_item *epf_item)
-+static void pci_secondary_epc_epf_unlink(struct config_item *epf_item,
-+					 struct config_item *epc_item)
- {
- 	struct pci_epf_group *epf_group = to_pci_epf_group(epf_item->ci_parent);
- 	struct pci_epc_group *epc_group = to_pci_epc_group(epc_item);
-@@ -132,8 +132,8 @@ static int pci_primary_epc_epf_link(struct config_item *epf_item,
- 	return 0;
- }
++#include <linux/align.h>
+ #include <linux/bitops.h>
+ #include <linux/bug.h>
+ #include <linux/init.h>
+@@ -456,7 +457,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ 					"%s %pR: ignoring failure in optional allocation\n",
+ 					res_name, res);
+ 			}
+-		} else if (add_size > 0) {
++		} else if (add_size > 0 || !IS_ALIGNED(res->start, align)) {
+ 			res->flags |= add_res->flags &
+ 				 (IORESOURCE_STARTALIGN|IORESOURCE_SIZEALIGN);
+ 			if (pci_reassign_resource(dev, idx, add_size, align))
+@@ -1442,12 +1443,13 @@ static void pbus_size_mem(struct pci_bus *bus, unsigned long type,
  
--static void pci_primary_epc_epf_unlink(struct config_item *epc_item,
--				       struct config_item *epf_item)
-+static void pci_primary_epc_epf_unlink(struct config_item *epf_item,
-+				       struct config_item *epc_item)
- {
- 	struct pci_epf_group *epf_group = to_pci_epf_group(epf_item->ci_parent);
- 	struct pci_epc_group *epc_group = to_pci_epc_group(epc_item);
+ 	resource_set_range(b_res, min_align, size0);
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+-	if (bus->self && size1 > size0 && realloc_head) {
++	if (bus->self && realloc_head && (size1 > size0 || add_align > min_align)) {
+ 		b_res->flags &= ~IORESOURCE_DISABLED;
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
++		add_size = size1 > size0 ? size1 - size0 : 0;
++		add_to_list(realloc_head, bus->self, b_res, add_size, add_align);
+ 		pci_info(bus->self, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+ 			   b_res, &bus->busn_res,
+-			   (unsigned long long) (size1 - size0),
++			   (unsigned long long) add_size,
+ 			   (unsigned long long) add_align);
+ 	}
+ }
 -- 
 2.51.0
 
