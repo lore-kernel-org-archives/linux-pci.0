@@ -1,41 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E0B7274B28;
-	Sun,  1 Mar 2026 01:23:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F08EC8F0;
+	Sun,  1 Mar 2026 01:24:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772328213; cv=none; b=pCc+FGIPQCxxL/hSbZzORwS67J+aqYawiPU9plK2N0jg4rPEx4gms7oZvNcdPrZ7nBfAvOfAzoMJP4wgX8ubTPhpNs133su9T4LRjn0c28syqA0RdLRZHCfdgcb9a/ecUZZXJYxfCpVS2bzvm6g/dB4256I8vPBGpt0mhmjEf2Q=
+	t=1772328249; cv=none; b=B6YohjQyl1agAvBYiqL0Xm9u5UZ9RFZsCCFWcDkFtV7eWgF2axZa7755Aw7fnrVdHa5K5Lrv+4liVRt5jpfe2Zo2hcMR181OKt+HMv/PFClTeI6OGlyEAneHPSgPqJKzzwfIXdiEInc632eheGBVJM5twLzgz0e9fJKAYXhLKFg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772328213; c=relaxed/simple;
-	bh=//5SP2/0CvP9KuTPcyCOrHd1vJ29R6pkFffPXu3YoZ4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Fh3AgBCFjtaepV8d/Ep1k52AZ7hrJH4TqxAZoWbV1ZSrmXXg4547fwDEwZGCeGtq36j60wyI2CuX0jpI+vUOf9Ogi6ywGiPwTt6b+tqoip7epFq7QP41pQJxoDb4/Kc6eeCyGKDFRDfLo0uLF2QBiag8nLnNBNY2W+SWGxWaPTA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IQfD7LWE; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772328249; c=relaxed/simple;
+	bh=TQ3WS7xrSDrkWsZUWcdsmed+WLHe+KwVejHgAu1KVak=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Rn+zjXH0DkAXowALf3afQGgs3IsSbvz5SSH/YwNz46WCgJKJcaPnUIQnL60wgKmDFS1LJV2HMKOd8AfIbHwXXuPGR74UYMH/7pLKy5VllsVV15R4ldXm9p4chtsDsM8nCzhU2p3XCZgF4zJrF5Hbx1XTFsau9GaatfAAuA+4U9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pQV57zZZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IQfD7LWE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69F06C4AF09;
-	Sun,  1 Mar 2026 01:23:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pQV57zZZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CA40C19421;
+	Sun,  1 Mar 2026 01:24:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772328213;
-	bh=//5SP2/0CvP9KuTPcyCOrHd1vJ29R6pkFffPXu3YoZ4=;
+	s=k20201202; t=1772328249;
+	bh=TQ3WS7xrSDrkWsZUWcdsmed+WLHe+KwVejHgAu1KVak=;
 	h=From:To:Cc:Subject:Date:From;
-	b=IQfD7LWE8E5la/xBF7sVPKmPGClvqRm7LWPOqhzoL0h4m/v4PIMSw6liE+PW5RUA4
-	 YhxGE6Otggc18c0DQwPZkHwfNnf/9VyHIz7QZlYsL2C3dyiZb02L+EO8cL9hzJvmG9
-	 2OTeB8vFqGRIC+y9etEyIgsq9w5ijf0A76ljn+ityHMPVc65YUECvsTCmo6qqxBgwN
-	 gRFW1sFPDPU6Azqti6vuscoKAprxSFHR8Jv/S4+oM0W1m+10knN3rxb/y85+WhKkWU
-	 HFyPgt7Ec7HCFE3M1t4KxWN9aduvFIUt+fPbXDR/F5lrh7BYBbAaMxbGVKNjvPYJE9
-	 aIky1cagd7xLw==
+	b=pQV57zZZF/kFlEP8IH6tquW5FzZlzHwfONKu7j3MffApTNagN7M0lIzi7t9cvDlND
+	 tk35L4TOVkazTgxuDq9XhPJ7DyearCN4qCxoNChsHz5yhFvcgXpUlxwncaKRy+Qcot
+	 KPGomOiVEgfdqVNnRKGabqkxJWE8lIL3gPh4NMGJE9bCAy40nP1Sk64oqOx+SkaZRT
+	 qxmox+WUb2/dh+vz8mGd1DJ5Treu2KmdaC3+Q5EXCbUqktnfbAO9dEVgiEv5bZFCGL
+	 xzHJP5ZTLgv5GBGyEcPqW4uUTEzQgJb0UOW+1EE+gd1ZNnPd+lXdXFvzBRFAnp+jP6
+	 DwkHXhNL5uYjg==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
-	mmaddireddy@nvidia.com
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	ilpo.jarvinen@linux.intel.com
+Cc: =?UTF-8?q?Malte=20Schr=C3=B6der?= <malte+lkml@tnxip.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Frank Li <Frank.Li@nxp.com>,
 	linux-pci@vger.kernel.org
-Subject: FAILED: Patch "PCI: endpoint: Fix swapped parameters in pci_{primary/secondary}_epc_epf_unlink() functions" failed to apply to 6.12-stable tree
-Date: Sat, 28 Feb 2026 20:23:30 -0500
-Message-ID: <20260301012331.1680247-1-sashal@kernel.org>
+Subject: FAILED: Patch "PCI: Rewrite bridge window head alignment function" failed to apply to 6.12-stable tree
+Date: Sat, 28 Feb 2026 20:24:07 -0500
+Message-ID: <20260301012407.1680882-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -45,6 +43,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: ignore
 X-stable: review
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 The patch below does not apply to the 6.12-stable tree.
@@ -57,79 +56,171 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From 8754dd7639ab0fd68c3ab9d91c7bdecc3e5740a8 Mon Sep 17 00:00:00 2001
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Date: Thu, 8 Jan 2026 11:57:47 +0530
-Subject: [PATCH] PCI: endpoint: Fix swapped parameters in
- pci_{primary/secondary}_epc_epf_unlink() functions
+From bc75c8e5071120e919beb39e69f0979cccfdf219 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Fri, 19 Dec 2025 19:40:15 +0200
+Subject: [PATCH] PCI: Rewrite bridge window head alignment function
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-struct configfs_item_operations callbacks are defined like the following:
+The calculation of bridge window head alignment is done by
+calculate_mem_align() [*]. With the default bridge window alignment, it
+is used for both head and tail alignment.
 
-  int (*allow_link)(struct config_item *src, struct config_item *target);
-  void (*drop_link)(struct config_item *src, struct config_item *target);
+The selected head alignment does not always result in tight-fitting
+resources (gap at d4f00000-d4ffffff):
 
-While pci_primary_epc_epf_link() and pci_secondary_epc_epf_link() specify
-the parameters in the correct order, pci_primary_epc_epf_unlink() and
-pci_secondary_epc_epf_unlink() specify the parameters in the wrong order,
-leading to the below kernel crash when using the unlink command in
-configfs:
+  d4800000-dbffffff : PCI Bus 0000:06
+    d4800000-d48fffff : PCI Bus 0000:07
+      d4800000-d4803fff : 0000:07:00.0
+        d4800000-d4803fff : nvme
+    d4900000-d49fffff : PCI Bus 0000:0a
+      d4900000-d490ffff : 0000:0a:00.0
+        d4900000-d490ffff : r8169
+      d4910000-d4913fff : 0000:0a:00.0
+    d4a00000-d4cfffff : PCI Bus 0000:0b
+      d4a00000-d4bfffff : 0000:0b:00.0
+        d4a00000-d4bfffff : 0000:0b:00.0
+      d4c00000-d4c07fff : 0000:0b:00.0
+    d4d00000-d4dfffff : PCI Bus 0000:15
+      d4d00000-d4d07fff : 0000:15:00.0
+        d4d00000-d4d07fff : xhci-hcd
+    d4e00000-d4efffff : PCI Bus 0000:16
+      d4e00000-d4e7ffff : 0000:16:00.0
+      d4e80000-d4e803ff : 0000:16:00.0
+        d4e80000-d4e803ff : ahci
+    d5000000-dbffffff : PCI Bus 0000:0c
 
-  Unable to handle kernel paging request at virtual address 0000000300000857
-  Mem abort info:
-  ...
-  pc : string+0x54/0x14c
-  lr : vsnprintf+0x280/0x6e8
-  ...
-  string+0x54/0x14c
-  vsnprintf+0x280/0x6e8
-  vprintk_default+0x38/0x4c
-  vprintk+0xc4/0xe0
-  pci_epf_unbind+0xdc/0x108
-  configfs_unlink+0xe0/0x208+0x44/0x74
-  vfs_unlink+0x120/0x29c
-  __arm64_sys_unlinkat+0x3c/0x90
-  invoke_syscall+0x48/0x134
-  do_el0_svc+0x1c/0x30prop.0+0xd0/0xf0
+This has not caused problems (for years) with the default bridge window
+tail alignment that grossly over-estimates the required tail alignment
+leaving more tail room than necessary. With the introduction of relaxed
+tail alignment that leaves no extra tail room whatsoever, any gaps will
+immediately turn into assignment failures.
 
-Fixes: e85a2d783762 ("PCI: endpoint: Add support in configfs to associate two EPCs with EPF")
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-[mani: cced stable, changed commit message as per https://lore.kernel.org/linux-pci/aV9joi3jF1R6ca02@ryzen]
-Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+Introduce head alignment calculation that ensures no gaps are left and
+apply the new approach when using relaxed alignment. We may want to
+consider using it for the normal alignment eventually, but as the first
+step, solve only the problem with the relaxed tail alignment.
+
+([*] I don't understand the algorithm in calculate_mem_align().)
+
+Link: https://git.kernel.org/history/history/c/5d0a8965aea9 ("[PATCH] 2.5.14: New PCI allocation code (alpha, arm, parisc) [2/2]")
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220775
+Reported-by: Malte Schröder <malte+lkml@tnxip.de>
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Tested-by: Malte Schröder <malte+lkml@tnxip.de>
 Cc: stable@vger.kernel.org
-Link: https://patch.msgid.link/20260108062747.1870669-1-mmaddireddy@nvidia.com
+Link: https://patch.msgid.link/20251219174036.16738-3-ilpo.jarvinen@linux.intel.com
 ---
- drivers/pci/endpoint/pci-ep-cfs.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/pci/setup-bus.c | 53 ++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 44 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index 43feb6139fa36..8b392a8363bb1 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -68,8 +68,8 @@ static int pci_secondary_epc_epf_link(struct config_item *epf_item,
- 	return 0;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 4b918ff4d2d8b..80e5a8fc62e70 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1228,6 +1228,45 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
+ 	return min_align;
  }
  
--static void pci_secondary_epc_epf_unlink(struct config_item *epc_item,
--					 struct config_item *epf_item)
-+static void pci_secondary_epc_epf_unlink(struct config_item *epf_item,
-+					 struct config_item *epc_item)
++/*
++ * Calculate bridge window head alignment that leaves no gaps in between
++ * resources.
++ */
++static resource_size_t calculate_head_align(resource_size_t *aligns,
++					    int max_order)
++{
++	resource_size_t head_align = 1;
++	resource_size_t remainder = 0;
++	int order;
++
++	/* Take the largest alignment as the starting point. */
++	head_align <<= max_order + __ffs(SZ_1M);
++
++	for (order = max_order - 1; order >= 0; order--) {
++		resource_size_t align1 = 1;
++
++		align1 <<= order + __ffs(SZ_1M);
++
++		/*
++		 * Account smaller resources with alignment < max_order that
++		 * could be used to fill head room if alignment less than
++		 * max_order is used.
++		 */
++		remainder += aligns[order];
++
++		/*
++		 * Test if head fill is enough to satisfy the alignment of
++		 * the larger resources after reducing the alignment.
++		 */
++		while ((head_align > align1) && (remainder >= head_align / 2)) {
++			head_align /= 2;
++			remainder -= head_align;
++		}
++	}
++
++	return head_align;
++}
++
+ /**
+  * pbus_upstream_space_available - Check no upstream resource limits allocation
+  * @bus:	The bus
+@@ -1315,13 +1354,13 @@ static void pbus_size_mem(struct pci_bus *bus, unsigned long type,
  {
- 	struct pci_epf_group *epf_group = to_pci_epf_group(epf_item->ci_parent);
- 	struct pci_epc_group *epc_group = to_pci_epc_group(epc_item);
-@@ -132,8 +132,8 @@ static int pci_primary_epc_epf_link(struct config_item *epf_item,
- 	return 0;
- }
+ 	struct pci_dev *dev;
+ 	resource_size_t min_align, win_align, align, size, size0, size1 = 0;
+-	resource_size_t aligns[28]; /* Alignments from 1MB to 128TB */
++	resource_size_t aligns[28] = {}; /* Alignments from 1MB to 128TB */
++	resource_size_t aligns2[28] = {};/* Alignments from 1MB to 128TB */
+ 	int order, max_order;
+ 	struct resource *b_res = pbus_select_window_for_type(bus, type);
+ 	resource_size_t children_add_size = 0;
+ 	resource_size_t children_add_align = 0;
+ 	resource_size_t add_align = 0;
+-	resource_size_t relaxed_align;
+ 	resource_size_t old_size;
  
--static void pci_primary_epc_epf_unlink(struct config_item *epc_item,
--				       struct config_item *epf_item)
-+static void pci_primary_epc_epf_unlink(struct config_item *epf_item,
-+				       struct config_item *epc_item)
- {
- 	struct pci_epf_group *epf_group = to_pci_epf_group(epf_item->ci_parent);
- 	struct pci_epc_group *epc_group = to_pci_epc_group(epc_item);
+ 	if (!b_res)
+@@ -1331,7 +1370,6 @@ static void pbus_size_mem(struct pci_bus *bus, unsigned long type,
+ 	if (b_res->parent)
+ 		return;
+ 
+-	memset(aligns, 0, sizeof(aligns));
+ 	max_order = 0;
+ 	size = 0;
+ 
+@@ -1382,6 +1420,7 @@ static void pbus_size_mem(struct pci_bus *bus, unsigned long type,
+ 			 */
+ 			if (r_size <= align)
+ 				aligns[order] += align;
++			aligns2[order] += align;
+ 			if (order > max_order)
+ 				max_order = order;
+ 
+@@ -1406,9 +1445,7 @@ static void pbus_size_mem(struct pci_bus *bus, unsigned long type,
+ 
+ 	if (bus->self && size0 &&
+ 	    !pbus_upstream_space_available(bus, b_res, size0, min_align)) {
+-		relaxed_align = 1ULL << (max_order + __ffs(SZ_1M));
+-		relaxed_align = max(relaxed_align, win_align);
+-		min_align = min(min_align, relaxed_align);
++		min_align = calculate_head_align(aligns2, max_order);
+ 		size0 = calculate_memsize(size, min_size, 0, 0, old_size, win_align);
+ 		resource_set_range(b_res, min_align, size0);
+ 		pci_info(bus->self, "bridge window %pR to %pR requires relaxed alignment rules\n",
+@@ -1422,9 +1459,7 @@ static void pbus_size_mem(struct pci_bus *bus, unsigned long type,
+ 
+ 		if (bus->self && size1 &&
+ 		    !pbus_upstream_space_available(bus, b_res, size1, add_align)) {
+-			relaxed_align = 1ULL << (max_order + __ffs(SZ_1M));
+-			relaxed_align = max(relaxed_align, win_align);
+-			min_align = min(min_align, relaxed_align);
++			min_align = calculate_head_align(aligns2, max_order);
+ 			size1 = calculate_memsize(size, min_size, add_size, children_add_size,
+ 						  old_size, win_align);
+ 			pci_info(bus->self,
 -- 
 2.51.0
 
