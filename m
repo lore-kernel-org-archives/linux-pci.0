@@ -1,139 +1,152 @@
-Received: from mail-dy1-f169.google.com (mail-dy1-f169.google.com [74.125.82.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86E2536C9FA
-	for <linux-pci@vger.kernel.org>; Mon,  2 Mar 2026 12:32:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.169
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772454758; cv=pass; b=Ssg0EiSjQRaYJtbP7npRgDdYgw4ocDnURon09e/iLUx+HRcWclgfP0T5B5CCcS0cd4GtLubodQ3HIqHaiM16QWRRMHiduIjC+NuzdQyci+SqRRFoswv5SaxBxFnXDQPy3gKPQZkQKWyIuaMjBFWSN8l91C6PKeL4KX9yPU45f0U=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772454758; c=relaxed/simple;
-	bh=zQz0rPb0FHUXbzgHRy665O9Jasbnueaxd3e7FIEzeyU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=pWd+XDCSd2MP+WTvR0hWVcFQtNmsmWpG6Hf43wxoRBgx2cbPBbibltxEd5XYMZJPHlJe2rqHCb22ty6PxZotq6OjNUH8lQjfcGdQfWPUqqcAldaMWkZQvob6AYDcxLgc7s3zXxGIHnv13wRMyectLRDd5QJ2Z/oFXwMuz+glx/Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KtoUIMmv; arc=pass smtp.client-ip=74.125.82.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59EF83E7165;
+	Mon,  2 Mar 2026 13:23:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772457830; cv=none; b=SFBvVXWb/kTC/wkJBkL4wvS7mk1K4DPEy2BMyZXrGcBWe0udMb/KiGvlMPC95+Kal5Dj2g1q526t1tSvSusNthm+4XYki7luLOTvijjVknvTIAsZV78O30cEsQAPvE8QfuHxQ4zw/04/qI+KF97+s75wToEY+MRPmRxIIzYrn+s=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772457830; c=relaxed/simple;
+	bh=N+tnx8WWF8pCSyywrl44J5+kQYdBQLh8rR4igmMR9GQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=C7u4xEQOMw31kdWHj9xHZsA8j5DXi5p8GBCkTMlETSe/Pvg+3ow2TRhGIK4RnXnKwTa5P3YTVYyx4lyfc8S9fgcXJz+YBwRI3RsitpavSPI63TcYOpP78b4iENCR8PxEY+aNKdb6edP7vRgLI4gmVREyjmAS7ezaDg5a9LRSMzs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=VhrGVyEp; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KtoUIMmv"
-Received: by mail-dy1-f169.google.com with SMTP id 5a478bee46e88-2bda3b4318dso338067eec.1
-        for <linux-pci@vger.kernel.org>; Mon, 02 Mar 2026 04:32:37 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1772454757; cv=none;
-        d=google.com; s=arc-20240605;
-        b=Md8+uVK0daQMR7PoOUKmHEmbrvBovfgR01TwFRMt3YCtjwOK7p4rYvJF8Q3aeUSj0f
-         xTi6WijRYS4ale4HkKxvBtS611YG4xAb8yLalIGFTfidaxLr00stdzXfeI95uMvAO+zp
-         WGGpmc4VtoxuSp5W30rtq3cvpFW+Bt34TTInk+woVh2i2TBfxJB4FwWTYnKPgu9WCn3F
-         /44HlyxhI4gt5PqaW099zd8cjuTU4ZKi72RvZc7bxr7UzqKmfrXCHOhvtrURWbhj1Ozk
-         5Ez8kl9aaLq3RYnZ/59750Anbyc5HuM0LaG+K0tv+nQXKzkrhZjsNxJVK5cPyjEIC/uA
-         LZPQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=zQz0rPb0FHUXbzgHRy665O9Jasbnueaxd3e7FIEzeyU=;
-        fh=hy0EIbdJLnWG127p+sV+9k1sGhA0V6aBJ0k7dJvDjH8=;
-        b=ZjhajZQK0m6RjJ37cuPFVX1vfErJBlIogoab9YdgULRmNRgXFcmuJ7Hk5ubimd01H1
-         lMbuMITRcNRYc0bDsTADZ1esQx/2J7FsOF2eR+YwVL8rbOTY/E/WR92xYH88DN2A9tIs
-         BdbQkhDrIFc4Tw1p80wgI4dK0ctJNOFCrtqmIV3en2nXdJDwkliWxr/DAKwGEcC05euE
-         E8wqOfYYMQUsgXoM7v+OAw+Q514ISVLkxkbE+0N8JYhudMwFVofAMWePMPWhdaw8f8RO
-         9udULWEQ3Nwjxorm4+xm3j1CFGGSBMriXl5uzF5UFoye0sbWi43RRHNuvieHwnF2R2Rt
-         rkjQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772454757; x=1773059557; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=zQz0rPb0FHUXbzgHRy665O9Jasbnueaxd3e7FIEzeyU=;
-        b=KtoUIMmvcT9a1/mJwfhsK4ojPgzcyjaxTFsEcYoZHNxa9cIO7JLI8+2vzY7sr6IXWs
-         INDCyzwkjX7MYDdtmfTXbb5lNbJJyUd8EAH+GUZn1TLJlwfVj3XfqpdzLvewFUhWegbJ
-         houyxh19vsOHE3ucUTuT46UASQcLmznDmqjYrOFDtNM4GdWzVpPFJaAnG+iJTZcL5I6+
-         43i7B8ennRgMwdU1GhdIbMex7AT/IqbwGF5F6KAHYkjL+3inuUfXyYPZ2WU77m7wvmrV
-         tX0DqNdR/hSNUqoZYQjeE3p3Usu63AK42R4NCObpWHhSI0UjKEhpWhjgROxcziVYmWdo
-         5M1w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772454757; x=1773059557;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=zQz0rPb0FHUXbzgHRy665O9Jasbnueaxd3e7FIEzeyU=;
-        b=PSwuC12on5aeODeHaMoyXIBSCGNOpDq7XxY1ageDXknDt0RZZxj5gHKtRtSxCMFMJF
-         0pxRORMglzTHqedGzUolxGruUV1mbdRgHCXgJS26fDGS8fAMYJRNI3j4HGt8t3JBBkgv
-         WqzPremB3f3GM6gFRrVFJLxBHdjiCoYfrWpfb9+BkLHkkhuz6vjOVpP6gZzrgvX2mDbt
-         nPT6RcroTP4D4zdsp27IVqYwRG83LrT6NC/8QYkmLdexbIy5Myy2Zp/lquhBYlaBLT2L
-         uo1p/VfhSi7RCII/Qv8JpiTF4rID8gs+rAQ+N9XQvng6L8bIxUkh5Bonuo+xzbfhLl7P
-         f7OQ==
-X-Forwarded-Encrypted: i=1; AJvYcCW3CFxKguktUBMFMYovUoPgETgru05nRcSh0fH4RVFFyce+Pa114utZyNCgNPYYd1/gkHlGuofvNg8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwNKR2b8FoWwT0xRptzh3y6Ljjvm8c0teU8hcqhlsIn++EmRy22
-	quSjTl2wL8VIDPscYtJxXi87lJ9qyJ5LbDPSjMURBh3Ew9KuIkoC2EzBy1/nWaR+/OrVNPzmttX
-	0vtbwOZYxf7xvTX6KLXJwjtIbIn+HIOw=
-X-Gm-Gg: ATEYQzyf7KUhUT/mMeVsogrLUUKp2Q4GLgWiEPODA1VgA9wVlfIwv4E96rnFUL6sJDL
-	ARAI1Z5YlA7Dd+uHry+V0YMCWc+UOfUE6KGRCu2wR44bjpDirvCkmG2q51aZyc/55ZI7oWZneUs
-	dV08w96rMNLQkMfqvS/gDNNDBX5iqsNV6y1usK44TjoM0BFXiJnQIuwUuvERjNtXIaLthIYa2w2
-	XFcKZd2oj5tJSUuUMuUhIBWgIrTiAF5rE6Ussc4edm5cfnFg4/bh63k+WwWFn8rohELzwIIHx0w
-	BTWAH8MSNLUbBKaWsUrbrjd7oe+S99fLFF5F2294OGVFegQc2QD4CpGxXmLzJP4T1286FHGlzK8
-	a/XBMTS1lnmD+fBNlyK+eFD/w5Wk/
-X-Received: by 2002:a05:7301:128f:b0:2be:1946:8576 with SMTP id
- 5a478bee46e88-2be19468a7cmr221836eec.4.1772454756603; Mon, 02 Mar 2026
- 04:32:36 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="VhrGVyEp"
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 621Nulli2246261;
+	Mon, 2 Mar 2026 13:23:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=m5eZb7
+	dbXw8DApMgFS3qRxehYGTCtVaX4Oq3XuZhuQg=; b=VhrGVyEpiKwW4de2kt2H4t
+	uJq6FLJOI8W0sSy4g/DdZJqn/vl1Ql7/wF3oxzE5FdUCZMDzGN6FGKaNE8YOqoaW
+	0popfeHAGdZG+oF03X4EuGVkd4/sdhnzmF46tYuCcKrml+b2fvpYLCiU63AfBS1W
+	YQNVjAZxc2dInNyjI585PnBF01tQpWFxoTF3pzYgChgGNlkn1HqSmJcFWb7hYYEB
+	TpfFrduu6epwUd8sv6hYvoAU7UnFW0p1MxWtV3By1fANT/+I5JjLYW7az9VjhMxk
+	japgGARNKlCzOIkD5xVRxzw8rpUVhNZQANVXtFlG7Q6qC4B/ckxeoQ4UC9loZeug
+	==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cksk3pk2t-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 02 Mar 2026 13:23:41 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 622D3bGf010305;
+	Mon, 2 Mar 2026 13:23:40 GMT
+Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4cmc6jx6jc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 02 Mar 2026 13:23:40 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 622DNaOn45613410
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 2 Mar 2026 13:23:36 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 8CF5F20043;
+	Mon,  2 Mar 2026 13:23:36 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 3A4E820040;
+	Mon,  2 Mar 2026 13:23:36 +0000 (GMT)
+Received: from [9.52.217.119] (unknown [9.52.217.119])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Mon,  2 Mar 2026 13:23:36 +0000 (GMT)
+Message-ID: <253d0c0a-ee6f-4bfc-ad19-4fbd794a6c82@linux.ibm.com>
+Date: Mon, 2 Mar 2026 14:23:36 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260224-unique-ref-v16-0-c21afcb118d3@kernel.org>
- <20260224-unique-ref-v16-1-c21afcb118d3@kernel.org> <eeDADnWQGSX9PG7jNOEyh9Z-iXlTEy6eK8CZ-KE7UWlWo-TJy15t_R1SkLj-Zway00qMRKkb0xBdxADLH766dA==@protonmail.internalid>
- <DGRHAEM7OFBD.27RUUCHCRHI6K@garyguo.net> <87ldgbbjal.fsf@t14s.mail-host-address-is-not-set>
- <DGROXQD756OU.T2CRAPKA2HCB@garyguo.net> <DGRPNLWTEQJG.27A17T7HREAF4@kernel.org>
- <p7rsBPaYxHKSMFCYVUFY5hdI1H6jxHK0s7lxLQkqH4rylM6yS03Yt52SCjiTO5qBVUmc41ZHZ7XZ0_3w_U-O0g==@protonmail.internalid>
- <DGRQNTVD3N23.33347CYLKMKEH@garyguo.net> <87ikbebsx4.fsf@t14s.mail-host-address-is-not-set>
-In-Reply-To: <87ikbebsx4.fsf@t14s.mail-host-address-is-not-set>
-From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date: Mon, 2 Mar 2026 13:32:24 +0100
-X-Gm-Features: AaiRm52T7cw5MIQan-WghpnUecgDLtb8HLJUgWIjNNPX7ugGbu9wZy-93BfirNw
-Message-ID: <CANiq72k_c06P4_JVDCNmwu8SwCUP3UjofLCAsovBVzQi=fb6CA@mail.gmail.com>
-Subject: Re: [PATCH v16 01/10] rust: alloc: add `KBox::into_nonnull`
-To: Andreas Hindborg <a.hindborg@kernel.org>
-Cc: Gary Guo <gary@garyguo.net>, Benno Lossin <lossin@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, 
-	=?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
-	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
-	Danilo Krummrich <dakr@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
-	Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, Serge Hallyn <sergeh@kernel.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Igor Korotin <igor.korotin.linux@gmail.com>, 
-	Daniel Almeida <daniel.almeida@collabora.com>, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, 
-	"Liam R. Howlett" <Liam.Howlett@oracle.com>, Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, 
-	Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Boqun Feng <boqun@kernel.org>, Vlastimil Babka <vbabka@suse.cz>, Uladzislau Rezki <urezki@gmail.com>, 
-	linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org, 
-	linux-block@vger.kernel.org, linux-security-module@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org, 
-	linux-mm@kvack.org, linux-pm@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/3] vfio/ism: Implement vfio_pci driver for ISM
+ devices
+To: Julian Ruess <julianr@linux.ibm.com>, schnelle@linux.ibm.com,
+        ts@linux.ibm.com, oberpar@linux.ibm.com, gbayer@linux.ibm.com,
+        Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+        Yishai Hadas <yishaih@nvidia.com>,
+        Shameer Kolothum
+ <skolothumtho@nvidia.com>,
+        Kevin Tian <kevin.tian@intel.com>
+Cc: mjrosato@linux.ibm.com, alifm@linux.ibm.com, raspl@linux.ibm.com,
+        hca@linux.ibm.com, agordeev@linux.ibm.com, gor@linux.ibm.com,
+        kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-pci@vger.kernel.org
+References: <20260224-vfio_pci_ism-v2-0-f010945373fa@linux.ibm.com>
+ <20260224-vfio_pci_ism-v2-2-f010945373fa@linux.ibm.com>
+ <5e10827b-e87e-43a6-8783-2e5d23a186e1@linux.ibm.com>
+ <DGSAHB6FS2D4.1KN7KTIF0EWE5@linux.ibm.com>
+Content-Language: en-US
+From: Alexandra Winter <wintera@linux.ibm.com>
+In-Reply-To: <DGSAHB6FS2D4.1KN7KTIF0EWE5@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: P7E2GibNP_-aWJwYOtp1VHjK1-NkjLwE
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzAyMDExMSBTYWx0ZWRfX+kl7S5bpmnwk
+ ObKKjCRhrvwDJTOEhgkyJp9Ww/sfnvHbNm953WJPSsspVveQic5T19Hk7uBeMVVaubeokJ3zoIS
+ dvym3GyMjsBR9OVjJQ2bxnHnB9iLQZH/V2IeNIryAcJ585TgKLu8sunyyWCrrE83B0NucsFBoPg
+ 131EC9u9qx03W07s8RDEv54Pf8RWADYmR/GV6BDtawCiz8R/Bt+9iQroEMqh5VNlX8uts+qRn7W
+ qKPq43Z2s39/qCpJvPxlUzLwT8578QFKXgV4Te4YIh5QLC9nFViW2ztCv67WkrYCkZ/yCxNeRGa
+ LNanV8nbeiAtw7V0WDK/hPpzuupMoD+0Ridd5hJuqX8WY6WI3/JZTecYG3Vg1R251GtsojczHR8
+ uNx3k/Q1JzNSbIw+mxmsx1CbH4YfzDMw1rIjE9bXbq7MhQGlbdWkW95O1YAcTu48g/QCRMqR34Z
+ 84WXTKY+QEq9MFC6oYA==
+X-Authority-Analysis: v=2.4 cv=csCWUl4i c=1 sm=1 tr=0 ts=69a58f5d cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=Y2IxJ9c9Rs8Kov3niI8_:22 a=jeZ6-WCPrn04vPXoU0QA:9
+ a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: P7E2GibNP_-aWJwYOtp1VHjK1-NkjLwE
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-02_03,2026-02-27_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 priorityscore=1501 suspectscore=0 malwarescore=0 adultscore=0
+ clxscore=1015 bulkscore=0 phishscore=0 spamscore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603020111
 
-On Mon, Mar 2, 2026 at 8:19=E2=80=AFAM Andreas Hindborg <a.hindborg@kernel.=
-org> wrote:
->
-> I was thinking something similar, in clippy or checkpatch.pl. If we
-> should always have this attribute for small functions, we need to have a
-> check.
 
-No, as Gary said, we do not always want to have it.
 
-So something trivial in `checkpatch.pl` or something like the existing
-Clippy lint would have quite bad false positives (and even false
-negatives, in the case of `checkpatch.pl`, depending on what logic you
-are thinking about).
+On 02.03.26 13:18, Julian Ruess wrote:
+>>> +struct ism_vfio_pci_core_device {
+>>> +	struct vfio_pci_core_device core_device;
+>>> +};
+>>> +
+>>> +static int ism_pci_open_device(struct vfio_device *core_vdev)
+>>> +{
+>>> +	struct ism_vfio_pci_core_device *ivdev;
+>>> +	struct vfio_pci_core_device *vdev;
+>>
+>> Why do you need 'struct ism_vfio_pci_core_device'?
+>> Unlike other vfio_pci variant drivers your struct only has a single member.
+>> I see it is used below as well, but couldn't you directly use 'struct vfio_pci_core_device'
+>> in all places?
+> Theoretically yes, but functions like vfio_alloc_device() expect this parent
+> struct.
 
-We would need cross-TU heuristics for this, because at the end of the
-day what you are trying to say is "this function will end up being
-trivial even if it may look like it doesn't before inlining
-everything".
 
-Cheers,
-Miguel
+Couldn't you do something like:
+
+static int ism_vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+{
+	struct vfio_pci_core_device *vdev;
+	int ret;
+
+	vdev = vfio_alloc_device(vfio_pci_core_device, vdev, &pdev->dev,
+				 &ism_pci_ops);
+	...
+
+
+But I'm just thinking out loud. No strong feelings.
+If you think it's worth to define an additional struct, so your driver looks more like the others - that's fine with me.
+
+
+
+>> Where do you free 'data' ?
+> void *data __free(kfree) = NULL;
+
+Thank you; I learned something.
