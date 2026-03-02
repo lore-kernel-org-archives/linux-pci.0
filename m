@@ -1,236 +1,145 @@
-Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011054.outbound.protection.outlook.com [52.101.62.54])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30CD11A681F;
-	Mon,  2 Mar 2026 20:38:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.54
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772483935; cv=fail; b=AB41K/vew03/jogS6BazuSjMgDxCjoMi+1z3jZ3mJNf85awiO+8ucpNmaBqIl2sVyUz9F+FHpG2s0KL7IKZokS8Vl+yI8LbRyQbnWNPFtVt/AFZyXT/Xmqa1v3TUZXgvUqxex2Mjp3FWh4wWF2O/sAQinjXW0aNz2afrhCAfsxM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772483935; c=relaxed/simple;
-	bh=lxNs8YlCP+ZCcpBDon+HAIt4BBh2mlEeELWbdJFqeY0=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ll73bhqRwfwdkSBrQg4fOjLoTEce/C8m2PTHRgR1QqnpheZndHNQU8kzL4ZPy1Xq4EH4bttMko5ZCX9mpfBk7yqI1FWE/3C/++2bTV1rk9+CFx9PPYtckhzriIhNpiysM/GUAnYtN7lrQTT81RLVA+S0YlpzLDvc3pFIR3f+4aY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=SnUZTbIn; arc=fail smtp.client-ip=52.101.62.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D667282F0D;
+	Mon,  2 Mar 2026 22:07:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772489234; cv=none; b=RHoZw5HbZG4kab/L2GbYQlTsJEpCKEgt6X3lxK9MWCTAibQ3Q13Y/OpLmXQ7PR6DG2ke8DdtTLYhXavqCR3CIwPmtoqtwNnei9cphh7SiVZWW++unfmulRe1Wlrio7Ih6rx4NS/C34wg6jsMcQJogHArg8So0X3lAoaFBV0ue4g=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772489234; c=relaxed/simple;
+	bh=S+774mm1EeK5jbLqwATzSdBMWxYbxOszAJUPkaegO1s=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GhexaewFkJFxWtlZDMKBdkuCwzRcPNDhxm5Jp+Gv2BTnhL4gcsCoEvH/g5G++tvtMyy5Fz0cgPPtwAXKuMNM4LY8vTIXOJyRLs9xqUbQGZ8pc5a0FSxTFSQAZOfJIT8HbUSOvOTgN0ZPUEvwOUq58Hl0rM4H6ZPPy89TeTJ7zXY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=lZ/v9LTl; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="SnUZTbIn"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=MSN+CJ+qReB98dFkKqwAcZ5IYDJ+7aYXgF8FJJY17jmNc6CqiCRdwg7WWnJvekaYdXg+Yx6n8QaNYj7qT/QdXr9MsGtmAzOnwK7Ug+XMYrEVhenSk6894/raoHiqMMamaJvsIDFj74zdFvd4RM4pqlWtqH6mULl0imPIuXVQFGN5Yek1+5kYcAqnL7an/ysnzog+8fbGt+OLUz49zFv9/KXG5KWnD1hjNCPR9GQgndbF0+JQ7rFCJXpbc+7Uq6cH6M3DsMU6M2LgJgR/fgugKfNGmeLBPQMoolJ+dwOhCrvVJgyBBby9P+0OyuaL/ooxrpo6LXYdfARxuQnPJWSxmQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4C8MxuOoPLIrAuz5w9497cUSjt/ogyfQpM6OM8azx9Y=;
- b=ApCzXENLdCUvVHWhHki6pt7/Z7FnppOHrOrQzxygqz6dLMwQG7hixDBeB5hRrX3tWViqXnfwaN274+0QH4A6M1c2OFEfw6TT1NUF2pi72abaaX6z6dWfOipzt8WzWzcGIA5fSODYWpidnA1bPoSXnTsL44GKfOGZ7FyYWLqlW6+uJ7Giyact6hL6NqOPkSpHnXeA4gyF32FSemp0lXI24M9jL0xMAOS65AFsmJ7bO830sD3779NQGr06R8GwY5wdQoyopYDaMhTPV3sJZCx8g7zVCkAIU31MSymPCTnhYg5gSEhAL/GXV09mtag2MFgJRop5tCbufuVz4aM9gON30Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=stgolabs.net smtp.mailfrom=amd.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=amd.com; dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4C8MxuOoPLIrAuz5w9497cUSjt/ogyfQpM6OM8azx9Y=;
- b=SnUZTbIny1FHHPo2TPGhR3UgTNdCJTUU3AglBA73JRsR2dwnsxJUAk/6F5LKBeEeXwlH5xkFmBWOe4iprnbTKVLUpqaPJ3/222ekSD+vVhnZ1+mcmshu/ZaUKR8DRnzMEiztmqLP5WBnKZDR+GPdJik/zFBK2TupapLGsMQ1Pbw=
-Received: from BL1PR13CA0085.namprd13.prod.outlook.com (2603:10b6:208:2b8::30)
- by CH0PR12MB8550.namprd12.prod.outlook.com (2603:10b6:610:192::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.21; Mon, 2 Mar
- 2026 20:38:47 +0000
-Received: from MN1PEPF0000ECDB.namprd02.prod.outlook.com
- (2603:10b6:208:2b8:cafe::b8) by BL1PR13CA0085.outlook.office365.com
- (2603:10b6:208:2b8::30) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9654.21 via Frontend Transport; Mon,
- 2 Mar 2026 20:38:22 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
-Received: from satlexmb07.amd.com (165.204.84.17) by
- MN1PEPF0000ECDB.mail.protection.outlook.com (10.167.242.139) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9654.16 via Frontend Transport; Mon, 2 Mar 2026 20:38:47 +0000
-Received: from ethanolx7ea3host.amd.com (10.180.168.240) by satlexmb07.amd.com
- (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Mon, 2 Mar
- 2026 14:38:44 -0600
-From: Terry Bowman <terry.bowman@amd.com>
-To: <dave@stgolabs.net>, <jonathan.cameron@huawei.com>,
-	<dave.jiang@intel.com>, <alison.schofield@intel.com>,
-	<dan.j.williams@intel.com>, <bhelgaas@google.com>, <shiju.jose@huawei.com>,
-	<ming.li@zohomail.com>, <Smita.KoralahalliChannabasappa@amd.com>,
-	<rrichter@amd.com>, <dan.carpenter@linaro.org>,
-	<PradeepVineshReddy.Kodamati@amd.com>, <lukas@wunner.de>,
-	<Benjamin.Cheatham@amd.com>, <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	<linux-cxl@vger.kernel.org>, <vishal.l.verma@intel.com>, <alucerop@amd.com>,
-	<ira.weiny@intel.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<terry.bowman@amd.com>
-Subject: [PATCH v16 10/10] cxl: Enable CXL protocol error reporting
-Date: Mon, 2 Mar 2026 14:36:48 -0600
-Message-ID: <20260302203648.2886956-11-terry.bowman@amd.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260302203648.2886956-1-terry.bowman@amd.com>
-References: <20260302203648.2886956-1-terry.bowman@amd.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="lZ/v9LTl"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 622F5Rnb2104912;
+	Mon, 2 Mar 2026 22:07:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=odGQCO
+	pWRy8fJtng74GofJD9co7PEAYxnqmwYGVJICk=; b=lZ/v9LTl0tJ7uv+bQuJMF0
+	QpTtADYB2P/R433Tb9Ifq7m50zBZe4Jrb9Lj7gwaimRBhCB0e/ksVbtRWwU5WCFh
+	UUXLBfMVEmmNJbh+LRFzD8VXhrQbzfIUKqusqTFc/f4UECcTBMO/5zc1IVjqnaD5
+	/CO+8AMlJze+NDr6Ckcde5ycSzKa61b6USBkNNiJgzHMTxwWczO+ukc+z+0oZR/Y
+	j9OsbqB6IVVeLFblz0p0sqmVk+kN2WNM9cRQHQ5Eql3QTKzcaQydkVw/0ERByIpo
+	AT8s7CqxOA0cql1IdYsaQWdwMWceLo8qcVTdB/1b77VWIdPxmEwiRz3riQ6P+5zA
+	==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4ckskcrmvx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 02 Mar 2026 22:07:06 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 622HQe1o010305;
+	Mon, 2 Mar 2026 22:07:05 GMT
+Received: from smtprelay06.wdc07v.mail.ibm.com ([172.16.1.73])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4cmc6jysjx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 02 Mar 2026 22:07:05 +0000
+Received: from smtpav04.wdc07v.mail.ibm.com (smtpav04.wdc07v.mail.ibm.com [10.39.53.231])
+	by smtprelay06.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 622M73So24642288
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 2 Mar 2026 22:07:04 GMT
+Received: from smtpav04.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id DC4BD58050;
+	Mon,  2 Mar 2026 22:07:03 +0000 (GMT)
+Received: from smtpav04.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id E34055805E;
+	Mon,  2 Mar 2026 22:07:01 +0000 (GMT)
+Received: from [9.61.253.18] (unknown [9.61.253.18])
+	by smtpav04.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Mon,  2 Mar 2026 22:07:01 +0000 (GMT)
+Message-ID: <6df57227-4fe9-4e6c-a169-3e28cb534518@linux.ibm.com>
+Date: Mon, 2 Mar 2026 14:07:01 -0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/3] vfio/ism: Implement vfio_pci driver for ISM
+ devices
+To: Julian Ruess <julianr@linux.ibm.com>, schnelle@linux.ibm.com,
+        wintera@linux.ibm.com, ts@linux.ibm.com, oberpar@linux.ibm.com,
+        gbayer@linux.ibm.com, Alex Williamson <alex@shazbot.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>, Yishai Hadas <yishaih@nvidia.com>,
+        Shameer Kolothum <skolothumtho@nvidia.com>,
+        Kevin Tian <kevin.tian@intel.com>
+Cc: mjrosato@linux.ibm.com, raspl@linux.ibm.com, hca@linux.ibm.com,
+        agordeev@linux.ibm.com, gor@linux.ibm.com, kvm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-pci@vger.kernel.org
+References: <20260224-vfio_pci_ism-v2-0-f010945373fa@linux.ibm.com>
+ <20260224-vfio_pci_ism-v2-2-f010945373fa@linux.ibm.com>
+Content-Language: en-US
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <20260224-vfio_pci_ism-v2-2-f010945373fa@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain
-X-ClientProxiedBy: satlexmb07.amd.com (10.181.42.216) To satlexmb07.amd.com
- (10.181.42.216)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MN1PEPF0000ECDB:EE_|CH0PR12MB8550:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8adfaaa8-5a2e-413c-38b5-08de789bb42b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|82310400026|36860700013|376014|7416014|921020;
-X-Microsoft-Antispam-Message-Info:
-	mZtRphh0WHH9/qWWyPRhEzzHZHvXmDq5P/2s+lntMpBRvNb/kVBn1dbYp82O2WSSdGRhQL5sh8hdhFh3dO2iU58VocmkJMMorERz46qR+LWiJtqbF084Juksi7HkFD6kF1JbT7wYM3TyzBDg7m8rFO2QIlkLIhWNPqecBx7AzdViVQmzWODPRCTgy5+Wmgrt2DWuFSvf1ysuwbWHr3Sn3lcLzZ0SKsPJRg1FE0xwlFjUfGwdhZgCSFNz94L30BIpML+1Hf4XOmbIVPALvR5jbqQvQ7zxx57DaLIxD7xW0JLNe1ctcW6/wmGKnK/wmyW0in8LtI6rF2UYPMSZzxBATFsxD8hDFWNec/Lv44he43kt0qy4TrYXHA4cCKwp9XKJhWScboPD/suBa4q7HjQFD7pzVhc0lNC4WCDvrG52HHOSFwV2uTC1zTC1Avw3myi9NOx8vS8mYGE8LW+Cph2gcZvqPwobYpRqp/kP7hpYSUXekYEfY845VSB5Q/6U2howoFYVZvQoQhLS8c6ahRuXip6DQltN+7qLi7L/cxpHpRWSuGbCfdfN66LcwQUzPNY7tQvnPDWKxHLKbfoHFeG/qNFW+b3HI8qN9USU/5G9mcES9QkeXMEriztFapHKYoVt43Orc+BF/FLhdJ6YETJIhl9b/NFBiWdrnUn2sb5AW+E4B+uqTZG5lRMQwXWcPdmWAFpAihUOFinJEi4d4IQjJ9tRlbFMCAXymgEF3IKsT/Z5xVx2b9ad3Llts2+F0JO7CLJTilACCbqtvq+YuY+wM/KWw1TSHvYko/78Db4NfLHvMSijoDdVQqDqDBsTGrrsTOZ8to0FMNxDm8L/9DfIaQFOmrifRyUST6jJ4EYz2ns=
-X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(36860700013)(376014)(7416014)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	kYMbio7pJ8Uwzfze9x5vXzYWi7zwFhBjHQtCpO7+Rwe0IEPiydRQzJnHjKdyRqz46JDPG2YdIo6LHzlj/j50Of68xxWryUgSE1kRU2XHTHm/99C9jcYYgbNNq5dYxCviU8/jXYEyZYVjzAQRzxe+2BW+JwHeE2GZ8bGfYgqUKPPiw6xHfylpnW+XCL0bnV4tzHyhlU3ULno02xvq1QEgAo8MQ9GFZSv1Vlvjpd4fDEzhgSYajOQ5se7OJoseeTn7rDbIIORqVUanVTqMFUHJPPbtdF2UlfLnxKMgs0AvKRTWkYeLsZpHAK5bV+UXlIvVs2yaePcdT061il7mZbXPX2rrNjLJ09mWSR8XzVWIbOdBIHLRpGPC0XoCLqaZoed23jbVu5lVMc8m39t6NYw+WbZJDFaXg3mvs3fs+Os1oLzLNPPbJoMX3Y1k2WMleb7g
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Mar 2026 20:38:47.0728
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8adfaaa8-5a2e-413c-38b5-08de789bb42b
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	MN1PEPF0000ECDB.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR12MB8550
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: inGojawel2g7ijeoAQY36aFvaqTUiEpm
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzAyMDE2MiBTYWx0ZWRfX94ZfC/2Veu2c
+ OZbOh+ZWXKE9bSu2iqaAHtCHiZioIImMe8Ecmb6bU7wDUSB/Cjq/fip7wOHklAsWhBkMo88e5Uz
+ rhwEJ4uyHotLselgtc6k3hKYqTJKH6hbiRKIHj/LUYa39AIDv0AW7agj4iMYcM7nlkxDFPzaxC0
+ RUNz+HqOuJp5ZxbSJBKI59rXIf/2MUwGuBwibfJplI7OH1B2TOdoeMh8xmUcvVN9ex3hF6uhYq6
+ VSgACTzopCj/pdwqn1UcwD0YnqZxVfJEICZxyHRL7Lk4/qm1Qd6zsNA+7Pa+NluZHRknzeNPxoH
+ DBn6KSOddE3SGepNkD/gKaVoPMGwHcjUJ+mWM7QpLZaytNgzDxOHek9LqqKTmrTyZt4TEgRK9Ry
+ TLEFYjKsLaLBRj8KYtL71+PHq8qVhfioE3+g8ECiSTwL5jI5qftHyQ0snLnbt0C36N/uuFdTpUH
+ q612ck+lObgpPJdbTuQ==
+X-Authority-Analysis: v=2.4 cv=H7DWAuYi c=1 sm=1 tr=0 ts=69a60a0a cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=iXc_gk3ecELjrQ0JrgkA:9
+ a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: inGojawel2g7ijeoAQY36aFvaqTUiEpm
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-02_05,2026-03-02_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 suspectscore=0 phishscore=0 clxscore=1011 priorityscore=1501
+ adultscore=0 bulkscore=0 spamscore=0 malwarescore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603020162
 
-CXL protocol errors are not enabled for all CXL devices after boot. These
-must be enabled inorder to process CXL protocol errors.
+<..snip..>
 
-Introduce cxl_unmask_proto_interrupts() to call pci_aer_unmask_internal_errors().
-pci_aer_unmask_internal_errors() expects the pdev->aer_cap is initialized.
-But, dev->aer_cap is not initialized for CXL Upstream Switch Ports and CXL
-Downstream Switch Ports. Initialize the dev->aer_cap if necessary. Enable AER
-correctable internal errors and uncorrectable internal errors for all CXL
-devices.
+On 2/24/2026 4:34 AM, Julian Ruess wrote:
+> +static const struct pci_device_id ism_device_table[] = {
+> +	{ PCI_DRIVER_OVERRIDE_DEVICE_VFIO(PCI_VENDOR_ID_IBM,
+> +					  PCI_DEVICE_ID_IBM_ISM) },
+> +	{}
+> +};
+> +MODULE_DEVICE_TABLE(pci, ism_device_table);
+> +
+> +static struct pci_driver ism_vfio_pci_driver = {
+> +	.name = KBUILD_MODNAME,
+> +	.id_table = ism_device_table,
+> +	.probe = ism_vfio_pci_probe,
+> +	.remove = ism_vfio_pci_remove,
+> +	.driver_managed_dma = true,
+> +};
 
-Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Reviewed-by: Dave Jiang <dave.jiang@intel.com>
-Reviewed-by: Ben Cheatham <benjamin.cheatham@amd.com>
+I think we should also define an err_handler callback for the driver? 
+IIUC this driver will also be the default driver for passthrough ISM 
+devices and it wouldn't support the basic error recovery we do with vfio 
+today. I think we can set the err_handler to vfio_pci_core_err_handlers 
+as we don't need anything specific for error recovery for ISM devices.
 
----
+Thanks
 
-Change in v15 -> v16:
-- None
+Farhan
 
-Change in v14 -> v15:
-- None
 
-Changes in v13->v14:
-- Update commit title's prefix (Bjorn)
-
-Changes in v12->v13:
-- Add dev and dev_is_pci() NULL checks in cxl_unmask_proto_interrupts() (Terry)
-- Add Dave Jiang's and Ben's review-by
-
-Changes in v11->v12:
-- None
----
- drivers/cxl/core/port.c |  2 ++
- drivers/cxl/core/ras.c  | 22 ++++++++++++++++++++++
- drivers/cxl/cxlpci.h    |  4 ++++
- 3 files changed, 28 insertions(+)
-
-diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
-index 27271402915f..c33d58fb7264 100644
---- a/drivers/cxl/core/port.c
-+++ b/drivers/cxl/core/port.c
-@@ -1852,6 +1852,8 @@ int devm_cxl_enumerate_ports(struct cxl_memdev *cxlmd)
- 
- 			rc = cxl_add_ep(dport, &cxlmd->dev);
- 
-+			cxl_unmask_proto_interrupts(cxlmd->cxlds->dev);
-+
- 			/*
- 			 * If the endpoint already exists in the port's list,
- 			 * that's ok, it was added on a previous pass.
-diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-index d6112b812c82..bfe6cb35154e 100644
---- a/drivers/cxl/core/ras.c
-+++ b/drivers/cxl/core/ras.c
-@@ -119,6 +119,24 @@ static void cxl_cper_prot_err_work_fn(struct work_struct *work)
- }
- static DECLARE_WORK(cxl_cper_prot_err_work, cxl_cper_prot_err_work_fn);
- 
-+void cxl_unmask_proto_interrupts(struct device *dev)
-+{
-+	if (!dev || !dev_is_pci(dev))
-+		return;
-+
-+	struct pci_dev *pdev __free(pci_dev_put) = pci_dev_get(to_pci_dev(dev));
-+
-+	if (!pdev->aer_cap) {
-+		pdev->aer_cap = pci_find_ext_capability(pdev,
-+							PCI_EXT_CAP_ID_ERR);
-+		if (!pdev->aer_cap)
-+			return;
-+	}
-+
-+	pci_aer_unmask_internal_errors(pdev);
-+}
-+EXPORT_SYMBOL_NS_GPL(cxl_unmask_proto_interrupts, "CXL");
-+
- static void cxl_dport_map_ras(struct cxl_dport *dport)
- {
- 	struct cxl_register_map *map = &dport->reg_map;
-@@ -129,6 +147,8 @@ static void cxl_dport_map_ras(struct cxl_dport *dport)
- 	else if (cxl_map_component_regs(map, &dport->regs.component,
- 					BIT(CXL_CM_CAP_CAP_ID_RAS)))
- 		dev_dbg(dev, "Failed to map RAS capability.\n");
-+
-+	cxl_unmask_proto_interrupts(dev);
- }
- 
- /**
-@@ -172,6 +192,8 @@ void devm_cxl_port_ras_setup(struct cxl_port *port)
- 	if (cxl_map_component_regs(map, &port->regs,
- 				   BIT(CXL_CM_CAP_CAP_ID_RAS)))
- 		dev_dbg(&port->dev, "Failed to map RAS capability\n");
-+
-+	cxl_unmask_proto_interrupts(port->uport_dev);
- }
- EXPORT_SYMBOL_NS_GPL(devm_cxl_port_ras_setup, "CXL");
- 
-diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
-index 184a95e96ea9..b7cf9d6137b3 100644
---- a/drivers/cxl/cxlpci.h
-+++ b/drivers/cxl/cxlpci.h
-@@ -82,6 +82,7 @@ void devm_cxl_dport_rch_ras_setup(struct cxl_dport *dport);
- pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
- 					pci_channel_state_t error);
- void devm_cxl_port_ras_setup(struct cxl_port *port);
-+void cxl_unmask_proto_interrupts(struct device *dev);
- #else
- static inline pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
- 						      pci_channel_state_t state)
-@@ -96,6 +97,9 @@ static inline void devm_cxl_dport_rch_ras_setup(struct cxl_dport *dport)
- static inline void devm_cxl_port_ras_setup(struct cxl_port *port)
- {
- }
-+static inline void cxl_unmask_proto_interrupts(struct device *dev)
-+{
-+}
- #endif
- 
- #endif /* __CXL_PCI_H__ */
--- 
-2.34.1
-
+> +
+> +module_pci_driver(ism_vfio_pci_driver);
+> +
+> +MODULE_LICENSE("GPL");
+> +MODULE_DESCRIPTION("vfio-pci variant driver for the IBM Internal Shared Memory (ISM) device");
+> +MODULE_AUTHOR("IBM Corporation");
+>
+> -- 
