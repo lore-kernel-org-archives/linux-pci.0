@@ -1,66 +1,66 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED8F341C308
-	for <linux-pci@vger.kernel.org>; Mon,  2 Mar 2026 16:30:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C73B2DCC04
+	for <linux-pci@vger.kernel.org>; Mon,  2 Mar 2026 16:32:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772469022; cv=none; b=QtgROxaqWv9ZwosdYKEzJTyPDk6RxevUHB3pXFgOF9YUFzr85NxJ2av7vCNYJQo0IFAce82ezhji/I/bKA7yZX0WEf2CbxHPIw9K7SFoMBRyDSekILVeCCCdXrKS3e6Rf2hO+GqIinxloWEfIOIFw6O5odW32vtkqqkLLbBOV5A=
+	t=1772469141; cv=none; b=F6AmyPPen66LOXooR85RFneCsN7HjOocf1SzTvrdZwZJU8aUs0SH9pAzw8bYllBiv0Izkf/ztsCQou7MuB6+of0263asIHJWzBBrU68fO/0QGG09oNPUTVBbIGkn9NEedDZN4rdoVR75R1dkL6ukOu1c6lXtufXzIOPsLg9w4/8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772469022; c=relaxed/simple;
-	bh=InL1BUMOfeVyZo7m+EoNrF/nfvrIDyNxtRvoB+UGFdM=;
+	s=arc-20240116; t=1772469141; c=relaxed/simple;
+	bh=WTJ3pzdwIneOX06IoFSpJpP/ij3N5ThgvRmHQQVgZdw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JuhxmEa3jxz2OiBm5QIq1BYlcojAfC71QEknIhmJeGYCSc64RyUlV9qcCKW/mCH0cQvowuYYCK/R7H1gHX19SQg2PZSje/iVKVl7PoRNcC9x45F92xesu0nfaBJlhT3GCN2NmcvBPW47e/xitzSVRViKkVDlmw4ewYDFvfdswNQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev; spf=pass smtp.mailfrom=tuxon.dev; dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b=QlUk4FxE; arc=none smtp.client-ip=209.85.128.44
+	 In-Reply-To:Content-Type; b=BlnrjycAh/hf5Gw69Kopl9yBBd3QsD24mUF6NgZKD0yMLIR2gqvM5Qocd+mtyg+mlB0VpUGPDewh2PMIbiMfabVfbX77yHCHPDa/HS+8puH0pa1uaxEUIDBddff3ofbtN65S3JjgXrWN35+d4qPPixvg2VS8uI4mC/U02HZffEo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev; spf=pass smtp.mailfrom=tuxon.dev; dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b=C+s9xaCV; arc=none smtp.client-ip=209.85.221.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxon.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b="QlUk4FxE"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-4806f3fc50bso50778245e9.0
-        for <linux-pci@vger.kernel.org>; Mon, 02 Mar 2026 08:30:20 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b="C+s9xaCV"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-439a7b48df2so1744263f8f.2
+        for <linux-pci@vger.kernel.org>; Mon, 02 Mar 2026 08:32:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=tuxon.dev; s=google; t=1772469019; x=1773073819; darn=vger.kernel.org;
+        d=tuxon.dev; s=google; t=1772469138; x=1773073938; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=0s39U97W2f9SABdbDeZAgoXF6pj1iuSWIw1QAIsWOcs=;
-        b=QlUk4FxEII/LBOD7wpXXkIAPaat4PBoKmOny+rQpuminNVjhe27X9b4XZl6Ef75S/a
-         kaAcecLQH1LnMXRZ3NNbBABu+EZlScBQQV1NYoAFh3XvR3i1vXUy9/TP6N4yX5twprfq
-         B5jf9uvjvgtIXYxJgThoZHSkfTnVRO9Ml2gNv00r3cqwkCqjGKlQFAxuXge6//B1Jmun
-         SzWiCwNbX7SvpIWP+FiLTh4bdo7mKzlyr1707oESQ71px9sS2QPKD6fw7f5zXGrl6qrv
-         ZRUCOG3825DN5QPF+TBtkivgcGzncpA6aKxDHCXGOBOcpl72W4wfIEzBd0d6V3RbVNf5
-         oeSA==
+        bh=6vgVgq/PKL42P9mqoX80JnTj9f0Sx394ufpp39qX55w=;
+        b=C+s9xaCVLFQDE5pK8Sk8Y/tOCYGcF+EmfdMaf9f31qd7lRzfaNiQ/7pOgXAMWuXdeW
+         l07YTl6mk83iSTWbwzi2T8ddWxNQz+mzVZcvHoiAz5eMN0nxSqU4DZJ1L5eKJjG6VGI8
+         MZzPHS6K4BYznLWO/FWGGJyJ7EI+4yoFy4Wc7URl8U1msGnFnC55aiB/vw/LOPa7Kf4R
+         f8qShO+/eKfv33mXCazLIzA7Qnc7fqnHiYnT+vYm3XPZH8s6oa6QqXEwJHJqmH24KWi4
+         f/8ok7qkh6MwZ/y3hWMW8p5SGdIo4pFa5f89zZJBbjSxFTxjTV+tIHB3KFR2rxZzT981
+         YwXA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772469019; x=1773073819;
+        d=1e100.net; s=20230601; t=1772469138; x=1773073938;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=0s39U97W2f9SABdbDeZAgoXF6pj1iuSWIw1QAIsWOcs=;
-        b=mdUizVVSYPDOFT3ZP1gPBnjWhOxXGr0AdyDc8PQZD2Qr8YQw5Q5p993InENqOSnGcF
-         9vGFw5D/H74Ay8tXz84e2y2F2wphw3Fn4mePTO04kNYUlEGWlEb0kiJU97Q07YcBkVjr
-         SEGOS8U0pD97oJTaAgHm2kD3lOVuEykQsJwTNL0mf7brysLgEIxOvJKWzFipZeCASQ1/
-         XPzdiyQ3Ov9JkrxmDGgzUc8rdR+QqDT/mU/S4hpPvYRNRDSweLdRFvBn4lE0q1Eth+Pi
-         ab1Nlt4fYVkJ3oTyyLwocmwZlrgmQ8GEoZXYYPFbDsXVa5SisFaM7lNomzb+boLe9ptJ
-         S0yQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXve/kseWhuGsthOWuHi2RL3P7HuQ22bE61qo5c6I5cG4eky5FVEuozmfOubDazWc0Grj153f0isVI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzieGPSw238q7FT7uotmngftgUWuSYvqKJnkFoebleLOphR9a2x
-	t7X4gf2zFjNhbNUlPW6G0Czj+SvUT+8laikRo8KfJzYmV58DOAirgp9Onc8AhGkk6kw=
-X-Gm-Gg: ATEYQzw0Qbx7UJqJGpDjvqfVv2E474SiDe0AidDZIPXk3i52n3fjm4Z42TXhPQzen2c
-	+Xrc6axmLHI70Re3GM6n8B/uRzAqPOfXxX7qHv8k8SnsSpGoRUM6N97uL8PuwimvTBA1PkHQV1o
-	HHVBRCH4OnDMq6GxT4D9uCYOeSvw1wyTUP4ewHtOAJHQyvZ69J9lPhSraWOlW1Qm6A4jJjyuUbf
-	8VIFiKB4OWf3coxvpevWs3EZX34m2aepv7XF7QG6RhV5GhCj1bbCw03UlEII9FBGNzGasxt9VuK
-	6Hj1levA/2lbgin6vcBZrK434LWGcQPsMiLgbMbuEuFKy2RnCeRYu8fF7zkBzaC7N5pFKygxLS5
-	N1dtt5TN2vv8uj1Bjb/8R93CQbACntNK3Nf84jVvXexHLlG2YxQ6PjDxkMHOprTIQddos4yqNrb
-	EKrt7QTGIILzkVj1ie4NIvQZn0z2Q1UdTDrdb4
-X-Received: by 2002:a05:600c:a4b:b0:483:71f7:2797 with SMTP id 5b1f17b1804b1-483c9ba3785mr244820005e9.14.1772469019294;
-        Mon, 02 Mar 2026 08:30:19 -0800 (PST)
+        bh=6vgVgq/PKL42P9mqoX80JnTj9f0Sx394ufpp39qX55w=;
+        b=b2wus1ZlaFDW6YefU1ptu5IrA+R0Xf0aFqwrOtww73IiGHPpb8YyqtWEawO/omnpll
+         PZTuws98dRFkq5TI+zXr13gz8NneEFJmBzRqk0o2APP1X1PD7KgqcJWlQ6ISvQiSPu9Z
+         U6BiSHfnDuLRHRIxibSbw4sFo5hPf9/2aFi1v0wAJ27OCdVFnG/HeV3UUEX6ly8leMzS
+         iVsgvqc9e/m1X1p0/FPIURctydrem+ZjnQ4Flx2q+YWkLwqbWSRGSwalLG1BvONoGNPT
+         s8mH/3lEarZwmEDjhW3c+GA6nm2hNXDGMFeY3hvDmUnLDxTS6Z1yygngoYrVnJy9dWKP
+         uYgg==
+X-Forwarded-Encrypted: i=1; AJvYcCX662E0Qq8WNyyGvMtkm1pAdoSOnpFiZW7nW7XqWtPL3wCAa1S+yo/GYC6Kab+VX/JOoiplR+fGyds=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwqOUQb0DOR4h/pLCUcydySY2NKXqiJWTx+BCutiGutA3xghqBx
+	D9BdbBltNGiHlslV92Mg6u+54uO1G19SMSjj+qlQpFEt5xkAOleB2/wPzQCR2KtTL7o=
+X-Gm-Gg: ATEYQzycAhfCjYBIxi5PfXUztttyAfMBHh3HwLki+ktY6OlM+F5QkUTKnFzhOsNZKu5
+	udZms+4ZlBriqNnjp580jQ8p0638VRGH7sQMTIh6L/K+R9+LFXxAp7f9Bnd2TMltu4+Jfr5pXmO
+	JF1n6F08R2SYOi3mSjVu+M68mbdFOD39IlSVqyjoTrnNHqRByD/ywM3qY4HlOfgYE+1p+9fnXPJ
+	dpRH+ewlFxV+3VSf+pGfT4Dhn7BCrxjZ+afbGSuba3I3zM/AexP+KfKRBjeaX7AQzo4driaYqZH
+	h6vWWEKJK653Y5xWjWTi403PgI3AdE0iY1IxgxdTjaPofFh9HL7uOSu9sKNPl0FUiPpB0u2k8I9
+	UW19Ji43bMNdT4gi6FofJFkdR+Yh+OxWAif9EFv6kwJ3Wu/daSKd1g6XGBUPLtwMMI0r55xSMSh
+	jFe1zGvTd5LBuEl7IVXJrBpruN6jBb9rsLsWr9
+X-Received: by 2002:a05:6000:402c:b0:439:b55d:b0e3 with SMTP id ffacd0b85a97d-439b55db2e6mr9320134f8f.42.1772469137917;
+        Mon, 02 Mar 2026 08:32:17 -0800 (PST)
 Received: from [172.19.170.194] ([213.233.104.147])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-439b4d06c27sm10041568f8f.17.2026.03.02.08.30.16
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-439b503424fsm11923248f8f.22.2026.03.02.08.32.14
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 02 Mar 2026 08:30:18 -0800 (PST)
-Message-ID: <0f19243e-60b2-42af-b059-fb19cec23826@tuxon.dev>
-Date: Mon, 2 Mar 2026 18:30:16 +0200
+        Mon, 02 Mar 2026 08:32:16 -0800 (PST)
+Message-ID: <712feb0d-2855-444b-852b-49920ebfa4e9@tuxon.dev>
+Date: Mon, 2 Mar 2026 18:32:14 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -68,8 +68,8 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 03/15] PCI: renesas: rzg3s: Rework inbound window
- algorithm for multi-SoC support
+Subject: Re: [PATCH v7 06/15] dt-bindings: PCI: renesas,r9a08g045s33-pcie:
+ Document RZ/G3E SoC
 To: John Madieu <john.madieu.xa@bp.renesas.com>,
  claudiu.beznea.uj@bp.renesas.com, lpieralisi@kernel.org,
  kwilczynski@kernel.org, mani@kernel.org, geert+renesas@glider.be,
@@ -79,55 +79,36 @@ Cc: robh@kernel.org, bhelgaas@google.com, conor+dt@kernel.org,
  linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
  devicetree@vger.kernel.org, linux-clk@vger.kernel.org, john.madieu@gmail.com
 References: <20260227153236.55988-1-john.madieu.xa@bp.renesas.com>
- <20260227153236.55988-4-john.madieu.xa@bp.renesas.com>
+ <20260227153236.55988-7-john.madieu.xa@bp.renesas.com>
 Content-Language: en-US
 From: Claudiu Beznea <claudiu.beznea@tuxon.dev>
-In-Reply-To: <20260227153236.55988-4-john.madieu.xa@bp.renesas.com>
+In-Reply-To: <20260227153236.55988-7-john.madieu.xa@bp.renesas.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-The patch title should be:
 
-"PCI: rzg3s-host: Rework inbound window algorithm for multi-SoC support"
-
-Sorry for missing it in the previous versions.
-
-Thank you,
-Claudiu
 
 On 2/27/26 17:32, John Madieu wrote:
-> The existing inbound window configuration algorithm has two issues that
-> prevent proper operation on RZ/G3E:
+> Extend the existing device tree bindings for Renesas RZ/G3S PCIe
+> controller to include support for the RZ/G3E (renesas,r9a09g047e57-pcie) PCIe
+
+Still a checkpatch warning:
+
+WARNING: Prefer a maximum 75 chars per line (possible unwrapped commit description?)
+#8:
+controller to include support for the RZ/G3E (renesas,r9a09g047e57-pcie) PCIe
+
+> controller. The RZ/G3E PCIe controller is similar to RZ/G3S but has some key
+> differences:
 > 
-> 1. Over-mapping: Using roundup_pow_of_two() on the remaining region size
->     can result in windows that extend beyond the intended memory region.
+>   - Uses a different device ID
+>   - Supports PCIe Gen3 (8.0 GT/s) link speeds
+>   - Uses a different clock naming (clkpmu vs clkl1pm)
+>   - Has a different set of interrupts, interrupt ordering, and reset signals
 > 
-> 2. Alignment violation: Addresses are only aligned to 4K regardless of
->     the actual window size. According to the RZ/G3S HW manual (Rev.1.10,
->     section 34.6.6.7) and RZ/G3E HW manual (Rev.1.15, section 6.6.7.6),
->     bit carry must not occur when adding AXI Window Base and AXI Window
->     Mask registers. This effectively requires the base address to be
->     aligned to the window size.
+> Add device tree bindings for renesas,r9a09g047e57-pcie compatible IPs.
 > 
-> RZ/G3E strictly enforces these constraints and requires precise window
-> boundaries with properly aligned addresses.
-> 
-> Rework the algorithm to properly handle arbitrary region sizes and
-> alignment constraints by splitting non-power-of-2 regions into multiple
-> windows. The new approach iteratively selects the largest power-of-2
-> size that:
->   - Fits within the remaining region (__fls of remaining size)
->   - Does not exceed the natural alignment of the CPU address (__ffs)
->   - Does not exceed the natural alignment of the PCI address (__ffs)
-> 
-> This ensures windows never over-map beyond the intended region and
-> satisfies the hardware requirement that base address + mask must not
-> cause bit carry, while maintaining the 4K * 2^N byte window size
-> constraint.
-> 
-> The reworked algorithm is required for RZ/G3E support and remains
-> fully compatible with RZ/G3S.
-> 
+> Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
 > Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 > Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
 > ---
@@ -135,101 +116,159 @@ On 2/27/26 17:32, John Madieu wrote:
 > Changes:
 > 
 > v7: No changes
-> v6: No changes
+> v6: Collected Rb tag from Claudiu
+> v5: Collected Rb tag from Rob
+> v4: Fixed clock name constraint using enum
 > 
-> v5:
->   - Updated HW manual section specification
->   - Collected Rb tag
+> v3:
+>   - Moved interrupt/clock description in distinct PATCH
+>   - Fixed clock name constraints
+>   - Updated clock descriptions
 > 
-> v4: No changes
-> v3: No changes
-> v2: New patch
+> v2: Reuse G3S names
 > 
->   drivers/pci/controller/pcie-rzg3s-host.c | 53 +++++++++++++-----------
->   1 file changed, 29 insertions(+), 24 deletions(-)
+>   .../bindings/pci/renesas,r9a08g045-pcie.yaml  | 73 +++++++++++++++++--
+>   1 file changed, 67 insertions(+), 6 deletions(-)
 > 
-> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-> index 222891324374..7f5ffc5c218a 100644
-> --- a/drivers/pci/controller/pcie-rzg3s-host.c
-> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-> @@ -1270,50 +1270,55 @@ static int rzg3s_pcie_set_inbound_windows(struct rzg3s_pcie_host *host,
->   	u64 pci_addr = entry->res->start - entry->offset;
->   	u64 cpu_addr = entry->res->start;
->   	u64 cpu_end = entry->res->end;
-> -	u64 size_id = 0;
->   	int id = *index;
->   	u64 size;
+> diff --git a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+> index d1eb92995e2c..a67108c48feb 100644
+> --- a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+> @@ -10,17 +10,21 @@ maintainers:
+>     - Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 >   
-> -	while (cpu_addr < cpu_end) {
-> +	/*
-> +	 * According to the RZ/G3S HW manual (Rev.1.10, section 34.6.6.7) and
-> +	 * RZ/G3E HW manual (Rev.1.15, section 6.6.7.6):
-> +	 * - Each window must be a single memory size of power of two
-> +	 * - Mask registers must be set to (2^N - 1)
-> +	 * - Bit carry must not occur when adding base and mask registers,
-> +	 *   meaning the base address must be aligned to the window size
-> +	 *
-> +	 * Split non-power-of-2 regions into multiple windows to satisfy
-> +	 * these constraints without over-mapping.
-> +	 */
-> +	while (cpu_addr <= cpu_end) {
-> +		u64 remaining_size = cpu_end - cpu_addr + 1;
-> +		u64 align_limit;
-> +
->   		if (id >= RZG3S_MAX_WINDOWS)
->   			return dev_err_probe(host->dev, -ENOSPC,
->   					     "Failed to map inbound window for resource (%s)\n",
->   					     entry->res->name);
+>   description:
+> -  Renesas RZ/G3S PCIe host controller complies with PCIe Base Specification
+> -  4.0 and supports up to 5 GT/s (Gen2).
+> +  Renesas RZ/G3{E,S} PCIe host controllers comply with PCIe
+> +  Base Specification 4.0 and support up to 5 GT/s (Gen2) for RZ/G3S and
+> +  up to 8 GT/s (Gen3) for RZ/G3E.
 >   
-> -		size = resource_size(entry->res) - size_id;
-> +		/* Start with largest power-of-two that fits in remaining size */
-> +		size = 1ULL << __fls(remaining_size);
+>   properties:
+>     compatible:
+> -    const: renesas,r9a08g045-pcie # RZ/G3S
+> +    enum:
+> +      - renesas,r9a08g045-pcie # RZ/G3S
+> +      - renesas,r9a09g047-pcie # RZ/G3E
 >   
->   		/*
-> -		 * According to the RZ/G3S HW manual (Rev.1.10,
-> -		 * section 34.3.1.71 AXI Window Mask (Lower) Registers) the min
-> -		 * size is 4K.
-> +		 * The "no bit carry" rule requires base addresses to be
-> +		 * aligned to the window size. Find the maximum window size
-> +		 * that both addresses can support based on their natural
-> +		 * alignment (lowest set bit).
->   		 */
-> -		size = max(size, SZ_4K);
-> +		align_limit = min(cpu_addr ? (1ULL << __ffs(cpu_addr)) : ~0ULL,
-> +				  pci_addr ? (1ULL << __ffs(pci_addr)) : ~0ULL);
+>     reg:
+>       maxItems: 1
 >   
-> -		/*
-> -		 * According the RZ/G3S HW manual (Rev.1.10, sections:
-> -		 * - 34.3.1.69 AXI Window Base (Lower) Registers
-> -		 * - 34.3.1.71 AXI Window Mask (Lower) Registers
-> -		 * - 34.3.1.73 AXI Destination (Lower) Registers)
-> -		 * the CPU addr, PCIe addr, size should be 4K aligned and be a
-> -		 * power of 2.
-> -		 */
-> -		size = ALIGN(size, SZ_4K);
-> -		size = roundup_pow_of_two(size);
-> -
-> -		cpu_addr = ALIGN(cpu_addr, SZ_4K);
-> -		pci_addr = ALIGN(pci_addr, SZ_4K);
-> +		size = min(size, align_limit);
+>     interrupts:
+> +    minItems: 16
+>       items:
+>         - description: System error interrupt
+>         - description: System error on correctable error interrupt
+> @@ -38,8 +42,16 @@ properties:
+>         - description: PCIe event interrupt
+>         - description: Message interrupt
+>         - description: All interrupts
+> +      - description: Link equalization request interrupt
+> +      - description: Turn off event interrupt
+> +      - description: PMU power off interrupt
+> +      - description: D3 event function 0 interrupt
+> +      - description: D3 event function 1 interrupt
+> +      - description: Configuration PMCSR write clear function 0 interrupt
+> +      - description: Configuration PMCSR write clear function 1 interrupt
 >   
->   		/*
-> -		 * According to the RZ/G3S HW manual (Rev.1.10, section
-> -		 * 34.3.1.71 AXI Window Mask (Lower) Registers) HW expects first
-> -		 * 12 LSB bits to be 0xfff. Subtract 1 from size for this.
-> +		 * Minimum window size is 4KB.
-> +		 * See RZ/G3S HW manual (Rev.1.10, section 34.3.1.71) and
-> +		 * RZ/G3E HW manual (Rev.1.15, section 6.6.4.1.3.(74)).
->   		 */
-> +		size = max(size, SZ_4K);
-> +
->   		rzg3s_pcie_set_inbound_window(host, cpu_addr, pci_addr,
->   					      size - 1, id);
+>     interrupt-names:
+> +    minItems: 16
+>       items:
+>         - const: serr
+>         - const: serr_cor
+> @@ -57,20 +69,28 @@ properties:
+>         - const: pcie_evt
+>         - const: msg
+>         - const: all
+> +      - const: link_equalization_request
+> +      - const: turn_off_event
+> +      - const: pmu_poweroff
+> +      - const: d3_event_f0
+> +      - const: d3_event_f1
+> +      - const: cfg_pmcsr_writeclear_f0
+> +      - const: cfg_pmcsr_writeclear_f1
 >   
->   		pci_addr += size;
->   		cpu_addr += size;
-> -		size_id = size;
->   		id++;
->   	}
->   	*index = id;
+>     interrupt-controller: true
+>   
+>     clocks:
+>       items:
+>         - description: System clock
+> -      - description: PM control clock
+> +      - description: PM control clock or clock for L1 substate handling
+>   
+>     clock-names:
+>       items:
+>         - const: aclk
+> -      - const: pm
+> +      - enum: [pm, pmu]
+>   
+>     resets:
+> +    minItems: 1
+>       items:
+>         - description: AXI2PCIe Bridge reset
+>         - description: Data link layer/transaction layer reset
+> @@ -81,6 +101,7 @@ properties:
+>         - description: Configuration register reset
+>   
+>     reset-names:
+> +    minItems: 1
+>       items:
+>         - const: aresetn
+>         - const: rst_b
+> @@ -128,7 +149,9 @@ patternProperties:
+>           const: 0x1912
+>   
+>         device-id:
+> -        const: 0x0033
+> +        enum:
+> +          - 0x0033
+> +          - 0x0039
+>   
+>         clocks:
+>           items:
+> @@ -167,6 +190,44 @@ required:
+>   
+>   allOf:
+>     - $ref: /schemas/pci/pci-host-bridge.yaml#
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            const: renesas,r9a08g045-pcie
+> +    then:
+> +      properties:
+> +        interrupts:
+> +          maxItems: 16
+> +        interrupt-names:
+> +          maxItems: 16
+> +        clock-names:
+> +          items:
+> +            - const: aclk
+> +            - const: pm
+> +        resets:
+> +          minItems: 7
+> +        reset-names:
+> +          minItems: 7
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            const: renesas,r9a09g047-pcie
+> +    then:
+> +      properties:
+> +        interrupts:
+> +          minItems: 23
+> +        interrupt-names:
+> +          minItems: 23
+> +        clock-names:
+> +          items:
+> +            - const: aclk
+> +            - const: pmu
+> +        resets:
+> +          maxItems: 1
+> +        reset-names:
+> +          maxItems: 1
+>   
+>   unevaluatedProperties: false
+>   
 
