@@ -1,90 +1,111 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from devnull.danielhodges.dev (vps-2f6e086e.vps.ovh.us [135.148.138.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F6D34014BA;
-	Mon,  2 Mar 2026 14:54:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23C67199FBA;
+	Mon,  2 Mar 2026 14:59:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=135.148.138.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772463280; cv=none; b=DoH51BtAD7ep6HSQ9dHlB2SudktPBKB/FSGecM1YeKph4u4bhZ/uf9xu72oIQPqJuW0vondeijSHbvrjgn4PSSqoIu2vGq9PumCv7L7CLH+Z3I/60zVOAkc47KYRN2tAlz7wG68FixFu/rxLZ7KHy2eA/aOY6cX/qd9uQ66lv20=
+	t=1772463600; cv=none; b=blVm8RuBTPM/Xb+T88AfodF2SUSJdj3wejTEgpjAtlFMD6wy3SvKKUWbV0lf3Mg38Ly4dMRkYQ72rjlosZKY7PEi5fEJ3nuaS8hV8rt0XooTe2iOmr1SUSBs+L5Bt4Vrv1XUQdsF6zRiSiUuJ6vrKvneo/Q8Y66tF4siKhYnN/M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772463280; c=relaxed/simple;
-	bh=PWWbqj84w74ygfO+gwepT4UHsgScdDpJJQmJM9KjRTc=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=r3+viKtVAG2aI1s5l+588PVcSy+hCHGrIO0cAKEXZAvLvFtePPfQGlMin08gjfBLWsq3Zn24fPSOJgqu3uW+xJBF1dgMnik5uFO0eMJqGOGK9hB6lDg6UuBpRsZeW4k+FOqaSV9cSUaTcDQnIQtYalPz4qQ6RWlYtarPmu7SvrA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.83])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fPhl51Y1VzHnGdP;
-	Mon,  2 Mar 2026 22:53:37 +0800 (CST)
-Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id 2C32140086;
-	Mon,  2 Mar 2026 22:54:29 +0800 (CST)
-Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
- (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 2 Mar
- 2026 14:54:28 +0000
-Date: Mon, 2 Mar 2026 14:54:26 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: Jason Gunthorpe <jgg@nvidia.com>
-CC: Nicolin Chen <nicolinc@nvidia.com>, <will@kernel.org>,
-	<robin.murphy@arm.com>, <bhelgaas@google.com>, <joro@8bytes.org>,
-	<praan@google.com>, <baolu.lu@linux.intel.com>, <kevin.tian@intel.com>,
-	<miko.lenczewski@arm.com>, <linux-arm-kernel@lists.infradead.org>,
-	<iommu@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 3/3] iommu/arm-smmu-v3: Allow ATS to be always on
-Message-ID: <20260302145426.00001960@huawei.com>
-In-Reply-To: <aZ3NS4GhxhElWhh2@nvidia.com>
-References: <cover.1771886695.git.nicolinc@nvidia.com>
-	<bdeebd35e81cfa5f76d16706a775b23ee1f01fdd.1771886695.git.nicolinc@nvidia.com>
-	<20260224120615.00003ad9@huawei.com>
-	<aZ261odHq5gwQYXg@nvidia.com>
-	<20260224155742.00000282@huawei.com>
-	<aZ3NS4GhxhElWhh2@nvidia.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1772463600; c=relaxed/simple;
+	bh=DxGkIkDdEwOD3ij4b6DLXS5/weC/z7I8vQkG0UlUNoI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mYb9Sx1s/m5Svjki4CuA6H4GGZLsUUKiwS32HC4K5FbVdpSA+QdNB9A9y1e2MnOimVDgJtVpUcwv83aEmybdYBwilN4vw6ZWvEy8hCIef7QgywuoZkdbiM8PUahxi8scFNUo0s1cLhOM/8RkGt597Re9caq8GBDCHzO2DmcKmi4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=danielhodges.dev; spf=pass smtp.mailfrom=danielhodges.dev; dkim=pass (2048-bit key) header.d=danielhodges.dev header.i=@danielhodges.dev header.b=BxDIgoO2; dkim=permerror (0-bit key) header.d=danielhodges.dev header.i=@danielhodges.dev header.b=fSolzkRG; arc=none smtp.client-ip=135.148.138.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=danielhodges.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=danielhodges.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=danielhodges.dev header.i=@danielhodges.dev header.b="BxDIgoO2";
+	dkim=permerror (0-bit key) header.d=danielhodges.dev header.i=@danielhodges.dev header.b="fSolzkRG"
+DKIM-Signature: v=1; a=rsa-sha256; s=202510r; d=danielhodges.dev; c=relaxed/relaxed;
+	h=Message-ID:Subject:To:From:Date; t=1772463586; bh=ogl6TU85WTxGAdTtdjcpJC8
+	6XT6gSVzMS3pwvCYPadI=; b=BxDIgoO2UcmsQCz/yrwpPsHDvA4HsNrjLM5/l02bT9R7LaGyNj
+	y3rZm58smFX7kdg2GOkRAds4HgF6OaHfVLwF5Dw64NaloxmcINS5cBravS0/aNjHbyQWxHufcNB
+	YC6FUf2Cmjb+nTAcxIy1PaYomYqD2kt8dExD6dQA2zgS7i3CNkqqU+HbYFofN8S3v+4Ea7AZtoX
+	SOcXKJ2dej8lAGMvMszmlmAI5dh5UXKdgvxuLLztmH49jjqV2nw6FkX7dnAAbjxccNvJabrMFvb
+	o3dA7PAmv38Obj+7fNYNj/+ezqnpsCzDTsyqp5s12zi5oISThGNgA4hg/+EDHG+qoGw==;
+DKIM-Signature: v=1; a=ed25519-sha256; s=202510e; d=danielhodges.dev; c=relaxed/relaxed;
+	h=Message-ID:Subject:To:From:Date; t=1772463586; bh=ogl6TU85WTxGAdTtdjcpJC8
+	6XT6gSVzMS3pwvCYPadI=; b=fSolzkRGWj67YSeNdvUvZMfxe+aNi0ZoGLsTgv2ja1INmLdHKF
+	eAw/6uMMLLo76jD8ES47/vmGmh5OMqcJW3Ag==;
+Date: Mon, 2 Mar 2026 09:59:46 -0500
+From: Daniel Hodges <daniel@danielhodges.dev>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, 
+	Daniel Hodges <git@danielhodges.dev>, kwilczynski@kernel.org, kishon@kernel.org, bhelgaas@google.com, 
+	mhi@lists.linux.dev, linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] PCI: epf-mhi: return 0 on success instead of positive
+ jiffies
+Message-ID: <nedv4u2zt6logpxggnpyuuj6ad23w5kbkfmke6cvh3gfz4zetx@u2z2ivn6xwve>
+References: <20260206200529.10784-1-git@danielhodges.dev>
+ <20260227191510.GA3904799@bhelgaas>
+ <xfodklav2bbej7v3ldg6equxkkkzwyadxnvuakuhrixfuc2ueo@sektmxhns7c4>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml500009.china.huawei.com (7.191.174.84) To
- dubpeml500005.china.huawei.com (7.214.145.207)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <xfodklav2bbej7v3ldg6equxkkkzwyadxnvuakuhrixfuc2ueo@sektmxhns7c4>
 
-On Tue, 24 Feb 2026 12:09:47 -0400
-Jason Gunthorpe <jgg@nvidia.com> wrote:
-
-> On Tue, Feb 24, 2026 at 03:57:42PM +0000, Jonathan Cameron wrote:
-> > On Tue, 24 Feb 2026 10:51:02 -0400
-> > Jason Gunthorpe <jgg@nvidia.com> wrote:
-> >   
-> > > On Tue, Feb 24, 2026 at 12:06:15PM +0000, Jonathan Cameron wrote:
-> > >   
-> > > > In my head at least, it would be nice if a driver had to explicitly opt in
-> > > > to this behavior. The presence of CXL.cache support for instance doesn't
-> > > > actually mean the driver is going to enable it.  However it is probably
-> > > > harmless so lets go with this as path of least resistance.    
+On Mon, Mar 02, 2026 at 11:24:23AM +0530, Manivannan Sadhasivam wrote:
+> On Fri, Feb 27, 2026 at 01:15:10PM -0600, Bjorn Helgaas wrote:
+> > On Fri, Feb 06, 2026 at 03:05:29PM -0500, Daniel Hodges wrote:
+> > > wait_for_completion_timeout() returns the number of jiffies remaining
+> > > on success (positive value) or 0 on timeout. The pci_epf_mhi_edma_read()
+> > > and pci_epf_mhi_edma_write() functions use the return value directly as
+> > > their own return value, only converting timeout (0) to -ETIMEDOUT.
 > > > 
-> > > That same remark applies to ATS in general, we have no idea if the
-> > > device is going to use it when turned on or not..  
+> > > On success, they return the positive jiffies value. The callers in
+> > > drivers/bus/mhi/ep/ring.c check for errors with "if (ret < 0)" for
+> > > read_sync and "if (ret)" for write_sync. This causes write_sync success
+> > > cases to be incorrectly treated as errors since the positive jiffies
+> > > value is non-zero.
+> > > 
+> > > Fix by setting ret to 0 when wait_for_completion_timeout() succeeds.
+> > > 
+> > > Fixes: 7b99aaaddabb ("PCI: epf-mhi: Add eDMA support")
+> > > Cc: stable@vger.kernel.org
+> > > Signed-off-by: Daniel Hodges <git@danielhodges.dev>
 > > 
-> > Yup. Understood. That's the bit that smells bad to me.  
+> > Thanks for the patch!
+> > 
+> > Two questions: first, is there any reason why __mhi_ep_cache_ring()
+> > tests for "ret < 0" but mhi_ep_ring_add_element() tests for "ret"
+> > (non-zero)?  Could/should they both test just for non-zero, which I
+> > think is the typical style?
+> > 
 > 
-> Do you have thoughts on when this is a problem (aside from device
-> pre-acceptance security already discussed)? So far I haven't heard
-> complaining on this point..
-
-Nothing explicit.  It was a very minor smells wrong moan on basis of
-assumptions of what an IOMMU is doing in the way of ATS checking if
-we have a malicious device.  So principle of not turning anything on
-we don't know we need.
-
-Jonathan
-
+> Yes, agree. I've sent a patch to fix this. Thanks for spotting!
 > 
-> Jason
+> > Second, the subject and commit log are perfectly correct but basically
+> > at the level of describing the C code.  I propose something along
+> > these lines:
+> > 
+> >   PCI: epf-mhi: Return 0, not remaining timeout, when eDMA ops complete
+> > 
+> >   pci_epf_mhi_edma_read() and pci_epf_mhi_edma_write() start DMA
+> >   operations and wait for completion with a timeout.
+> > 
+> >   On successful completion, they previously returned the remaining
+> >   timeout, which callers may treat as an error.  In particular,
+> >   mhi_ep_ring_add_element(), which calls pci_epf_mhi_edma_write() via
+> >   mhi_cntrl->write_sync(), interprets any non-zero return value as
+> >   failure.
+> > 
+> >   Return 0 on success instead of the remaining timeout to prevent
+> >   mhi_ep_ring_add_element() from treating successful completion as an
+> >   error.
+> > 
 > 
+> Ammended the commit with the above, thanks!
+> 
+> - Mani
 
+Thanks for cleaning up! I meant to get around to this, but got a little
+distracted with some other things.
+
+-Daniel
