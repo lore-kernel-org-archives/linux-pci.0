@@ -1,159 +1,106 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C72126FC3
-	for <linux-pci@vger.kernel.org>; Mon,  2 Mar 2026 05:31:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64BF4377039;
+	Mon,  2 Mar 2026 05:54:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772429499; cv=none; b=WS8bY+QWsf57UbmrIg8NpoTMY8qejdaavnqsnEv3XIO+5DzdaP20Go4puNKdza9e0aJajfP2LnQ88d7Qg5TO4ZALpyFeHU/ROFdLh2sjsAM4MGFHS/nesHbSkm8nQiazhQKhpluKTiFrG3dUktp65wkI+YyfGWSmTr5+x2TF7zU=
+	t=1772430878; cv=none; b=GLG0pKyLyrbrP1fkmGm+UxnUfPEyOS5X3i19/RgMnsE2Tq9wWKy95in5d6apb8XLnwhFxE9ofck/NDTk0VcO/sXTx9HRZteTsw2daI64ayIj8q2hQX4BmAvcp2rOlgBuIjOtNcfrWUWRRVl2tlJOgMQ3Z5522JIHYc5c7/mBaEM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772429499; c=relaxed/simple;
-	bh=aUhA32YGjPQJB795po9T8wUDAYDJceDw1NoTVN5jakE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WjqJOj3nuIM/+MLxyTl1knt0R2+bNQdjeXVCbAtcbLYoguJ5LC6vrBe++nYfol50ERj+FnzF4hS8ixejBXvlEg0soE2dSdjU4gKzkRnCZlX6Zujip9T/hmpXtfVg6nRlGO/yvqFr85VijB1gHFD5WT8BYMZkUgkN5FMe7+b6sWo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=UEyttflJ; arc=none smtp.client-ip=209.85.214.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	s=arc-20240116; t=1772430878; c=relaxed/simple;
+	bh=We9U0buQY89VHStsTKcDwDx1abOLAC2rkgbiis/y/oM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jCyi8lQw7WLPCTuilYXqREGlavlskF2TO11UafMjXmpKOiWk+AtFDP/3yP3giqDgXSS4GDApAoxpTGFZtyLWNrKYluBNbyiY5voqPvbkMl+GiC/L0QxSfMPsbDuEmK6Zp47h7tHdYGoJjGSslXXcBK52WO/Er9JkruE0IDJ7xrc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AVteTH9i; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="UEyttflJ"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2ae505619baso2819695ad.2
-        for <linux-pci@vger.kernel.org>; Sun, 01 Mar 2026 21:31:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1772429497; x=1773034297; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=l55rscaGmzYhvn0+eMNyy4NMWKpZ4qt99Qpf3fX6h+w=;
-        b=UEyttflJF6yEwHi5bY2zjb3aCjAXt5DoOZnFO/X85vYdLQayDwCB1CBFIxm0GHIKsH
-         qYiYSUDkh29UQnNpe0wEs5P3VweAya0X3y+ALr+sN/CB4dgSlKuhxtGULHPguIGcmPIb
-         EFlf6dNzpdobdXHlP9GaRj6xUSZr5mb/HdiMU=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772429497; x=1773034297;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=l55rscaGmzYhvn0+eMNyy4NMWKpZ4qt99Qpf3fX6h+w=;
-        b=sM62LdTpbYtQ87adxjM+SgEguOj9Fff5+WAXy+XRgkm4MiDnVSF6PuPyoNg+GaWAbY
-         aOTS90FxZkWn5xmGuH3Szp9PLsHjuVou/XklZx4uryXlIIrftBxOhwHIqgA4oOzs5j3D
-         gwPIEDCisfjCSCdYncs1bfVyQKz09Zp6ANQLRsU/jg2B8y1wbvVpnj5OWglKrhPn+EXz
-         pfyjkdG0YyOwuqhlJ3LxfZojSB2fXekBqXdtWsth0XkhVR9ac6wNazXEU72B4skOBdy6
-         ffMU7e4L9W0Ei7fuUw4+HUf05eiEIgk/fRPrgmr1ln+nfLADKkV5N/bZ557dyW3UJnlT
-         2nkw==
-X-Forwarded-Encrypted: i=1; AJvYcCWNQaHuxAtDr//UMGKZ7uxSlXO4GCdF5JFNelKPMSaDfJHoOOkTby1S+kCy7j1ITg3fnmk6QKjOArc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzoXC2j0VELXUznMC1NETCMX/mBiHcJXbKypyD335+QHXz0xX1Y
-	jRML2tUADXHjAbZG+ORzSY94FF+Ss8LbhSJTeCExaIYTLFFwV0AM1Lsy9BL3Xwfj6Q==
-X-Gm-Gg: ATEYQzxF8Kj+TIadg1gk1SoBTboQriaaGyBw8OH9LFz4Mt9Lq0dvOjNZNF/IZu/jY+g
-	2zYp0WdpEywV+pxY/NUcRTCgVYvUq4uYiVoLpkfMzUQGLNo1P3GavyfjHGvJkXu9F6sKw7OE1do
-	BYQqOU/lq4zqWYJ50IZHAToYpisBAtLtSAVb4zn1zyH5naeFr1aeEPJh49Sj+qjaWitZRBctYoA
-	yaHfdAG4UkGKmECOWxp/wQ+RpWwqwQN+5oVQaOlS59y52JjzzojSFriFqmrN4RxJceIauPXK8Nx
-	ZaokzO9XMnUIyC5pqjOV4o4KKXJLEFMEGbQqDEoz5TIzsli+DJ7RS8CqLiyp6GMZpMTnbDWPkkx
-	PvGQKCpdrT2Z4V3yvckrbX8J2MlMwzqKmiIibyG8uvsDn+Xcild/3zBDslcjhD31+M7RX+KOETs
-	AgSwdIU5/dB3f/8HU8MhdDVZ/U57LH7anaAcoUtwLY/ahIJJoYtZwRkO7kmZQAOucizjX0+/fJP
-	FNuSSsIutqTAZoC3Bw=
-X-Received: by 2002:a17:903:46cc:b0:2ae:5426:da49 with SMTP id d9443c01a7336-2ae5426dcf7mr12070805ad.34.1772429497286;
-        Sun, 01 Mar 2026 21:31:37 -0800 (PST)
-Received: from wenstp920.tpe.corp.google.com ([2a00:79e0:201d:8:b9b7:93f7:8c3c:59d8])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ae5229cda1sm15196435ad.23.2026.03.01.21.31.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 01 Mar 2026 21:31:36 -0800 (PST)
-From: Chen-Yu Tsai <wenst@chromium.org>
-To: Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Chen-Yu Tsai <wenst@chromium.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	linux-pci@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 7/7] arm64: dts: mediatek: mt8195-cherry-dojo: Describe M.2 M-key NVMe slot
-Date: Mon,  2 Mar 2026 13:31:07 +0800
-Message-ID: <20260302053109.1117091-8-wenst@chromium.org>
-X-Mailer: git-send-email 2.53.0.473.g4a7958ca14-goog
-In-Reply-To: <20260302053109.1117091-1-wenst@chromium.org>
-References: <20260302053109.1117091-1-wenst@chromium.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AVteTH9i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 678FDC19423;
+	Mon,  2 Mar 2026 05:54:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772430877;
+	bh=We9U0buQY89VHStsTKcDwDx1abOLAC2rkgbiis/y/oM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=AVteTH9iweErloLwBUlMvRqiKdau5qnPU/BPI8iiBg5AkWaTt4s8KcfAM4FmMb+ED
+	 /DMwHJpKardkWDyBwKrVf8uTARNnPlYnveRYmYHRBeF44CMi8NefNPrxEo0JnlGAiz
+	 o25qkLcNskvkkfYo6PadMB5sz2CsyoQ2pvnKZWjVEtxOvC593FiSlD5RHqptT2WVPh
+	 MkaveH25s1qZamr9cezjLAO4Hvu0/4pabppvhKKG6IUgcBHqbuc78REU07oNUsbPZl
+	 plxydGCVpjAQJBXkYYuX1HH+a8DQNK5uhGSP71c7u4YCqlQJu79zFGHQJ9QvLP5Otl
+	 fJmoGqUpLTogQ==
+Date: Mon, 2 Mar 2026 11:24:23 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Daniel Hodges <git@danielhodges.dev>, kwilczynski@kernel.org, 
+	kishon@kernel.org, bhelgaas@google.com, mhi@lists.linux.dev, 
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org
+Subject: Re: [PATCH] PCI: epf-mhi: return 0 on success instead of positive
+ jiffies
+Message-ID: <xfodklav2bbej7v3ldg6equxkkkzwyadxnvuakuhrixfuc2ueo@sektmxhns7c4>
+References: <20260206200529.10784-1-git@danielhodges.dev>
+ <20260227191510.GA3904799@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260227191510.GA3904799@bhelgaas>
 
-The Dojo device has a M.2 M-key slot for an included NVMe on some
-models.
+On Fri, Feb 27, 2026 at 01:15:10PM -0600, Bjorn Helgaas wrote:
+> On Fri, Feb 06, 2026 at 03:05:29PM -0500, Daniel Hodges wrote:
+> > wait_for_completion_timeout() returns the number of jiffies remaining
+> > on success (positive value) or 0 on timeout. The pci_epf_mhi_edma_read()
+> > and pci_epf_mhi_edma_write() functions use the return value directly as
+> > their own return value, only converting timeout (0) to -ETIMEDOUT.
+> > 
+> > On success, they return the positive jiffies value. The callers in
+> > drivers/bus/mhi/ep/ring.c check for errors with "if (ret < 0)" for
+> > read_sync and "if (ret)" for write_sync. This causes write_sync success
+> > cases to be incorrectly treated as errors since the positive jiffies
+> > value is non-zero.
+> > 
+> > Fix by setting ret to 0 when wait_for_completion_timeout() succeeds.
+> > 
+> > Fixes: 7b99aaaddabb ("PCI: epf-mhi: Add eDMA support")
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Daniel Hodges <git@danielhodges.dev>
+> 
+> Thanks for the patch!
+> 
+> Two questions: first, is there any reason why __mhi_ep_cache_ring()
+> tests for "ret < 0" but mhi_ep_ring_add_element() tests for "ret"
+> (non-zero)?  Could/should they both test just for non-zero, which I
+> think is the typical style?
+> 
 
-Add a proper device tree description based on the new M.2 M-key binding.
-Power for the slot is controlled by the embedded controller. As far as
-the main SoC is concerned, it is always on.
+Yes, agree. I've sent a patch to fix this. Thanks for spotting!
 
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
----
- .../dts/mediatek/mt8195-cherry-dojo-r1.dts    | 38 +++++++++++++++++++
- 1 file changed, 38 insertions(+)
+> Second, the subject and commit log are perfectly correct but basically
+> at the level of describing the C code.  I propose something along
+> these lines:
+> 
+>   PCI: epf-mhi: Return 0, not remaining timeout, when eDMA ops complete
+> 
+>   pci_epf_mhi_edma_read() and pci_epf_mhi_edma_write() start DMA
+>   operations and wait for completion with a timeout.
+> 
+>   On successful completion, they previously returned the remaining
+>   timeout, which callers may treat as an error.  In particular,
+>   mhi_ep_ring_add_element(), which calls pci_epf_mhi_edma_write() via
+>   mhi_cntrl->write_sync(), interprets any non-zero return value as
+>   failure.
+> 
+>   Return 0 on success instead of the remaining timeout to prevent
+>   mhi_ep_ring_add_element() from treating successful completion as an
+>   error.
+> 
 
-diff --git a/arch/arm64/boot/dts/mediatek/mt8195-cherry-dojo-r1.dts b/arch/arm64/boot/dts/mediatek/mt8195-cherry-dojo-r1.dts
-index 49664de99b88..57cc329f49c4 100644
---- a/arch/arm64/boot/dts/mediatek/mt8195-cherry-dojo-r1.dts
-+++ b/arch/arm64/boot/dts/mediatek/mt8195-cherry-dojo-r1.dts
-@@ -11,6 +11,28 @@ / {
- 	compatible = "google,dojo-sku7", "google,dojo-sku5",
- 		     "google,dojo-sku3", "google,dojo-sku1",
- 		     "google,dojo", "mediatek,mt8195";
-+
-+	nvme-connector {
-+		compatible = "pcie-m2-m-connector";
-+		/* power is controlled by EC */
-+		vpcie3v3-supply = <&pp3300_z2>;
-+
-+		ports {
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+
-+			port@0 {
-+				reg = <0>;
-+				#address-cells = <1>;
-+				#size-cells = <0>;
-+
-+				nvme_ep: endpoint@0 {
-+					reg = <0>;
-+					remote-endpoint = <&pcie0_ep>;
-+				};
-+			};
-+		};
-+	};
- };
- 
- &audio_codec {
-@@ -72,6 +94,22 @@ &pcie0 {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pcie0_pins_default>;
- 	status = "okay";
-+
-+	pcie@0 {
-+		compatible = "pciclass,0604";
-+		reg = <0 0 0 0 0>;
-+		device_type = "pci";
-+		num-lanes = <2>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges;
-+
-+		port {
-+			pcie0_ep: endpoint {
-+				remote-endpoint = <&nvme_ep>;
-+			};
-+		};
-+	};
- };
- 
- &pciephy {
+Ammended the commit with the above, thanks!
+
+- Mani
+
 -- 
-2.53.0.473.g4a7958ca14-goog
-
+மணிவண்ணன் சதாசிவம்
