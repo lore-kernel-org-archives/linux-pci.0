@@ -1,125 +1,90 @@
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 197E03FFAD4
-	for <linux-pci@vger.kernel.org>; Mon,  2 Mar 2026 14:31:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F6D34014BA;
+	Mon,  2 Mar 2026 14:54:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772461911; cv=none; b=mn0O/u7D6BmqUDJcwdB9HMfsuYB4hUNrMv7qfoctNLyo7VeR3q1EDtOElO+dMgo1sNDsylMVA9M12zQhpcr18bFH0RInIyMSX7pvinpbmE2Y839rO+/TroLVgRq3I4eVjLnuWcDWio7AEeQGc2rw2Je2IsMR5IPsNED50UXNaSw=
+	t=1772463280; cv=none; b=DoH51BtAD7ep6HSQ9dHlB2SudktPBKB/FSGecM1YeKph4u4bhZ/uf9xu72oIQPqJuW0vondeijSHbvrjgn4PSSqoIu2vGq9PumCv7L7CLH+Z3I/60zVOAkc47KYRN2tAlz7wG68FixFu/rxLZ7KHy2eA/aOY6cX/qd9uQ66lv20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772461911; c=relaxed/simple;
-	bh=86Ziz7ZkTNiHbyzLt91Sb1neXW3jX6vu7nzwQeYV+l4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=IhH+C+Py9sznEfef+ZBI2/r+JcWAC24MR00NL3W3SLR/tT6IkTdBIsqSkL1ByxHt+Hharx+NnS+hKjJcjTqLbTlXfXzZMfctAL6TetObjbetKhHFG6aAwxake8oyzKT8vymkQNWKOxyD7OIvSfsxpsUX2oHHgEFhz5W4LuM8B2Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZgTBPLvv; arc=none smtp.client-ip=209.85.210.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZgTBPLvv"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-82746ed8cdcso2693424b3a.3
-        for <linux-pci@vger.kernel.org>; Mon, 02 Mar 2026 06:31:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772461909; x=1773066709; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=4oQHoRaGFMus9JOapZuHMAdkvhHYxbOgXj0ogty6xog=;
-        b=ZgTBPLvvB/E9c/wpakGx4G4URcVUumaJiCvZ9YuKgOKfTu1TX4kX5G00u21q5n3J6I
-         MgA3/vH7b9ye/FtYcVenFiyokLQYKFi40u0WD86vX8aDT4hulxFqcpcKzS9HatNOPzBX
-         jlM9Xxvnuu8DREThmS/mejHNucOV2KehcgBvj9rISnMdYn/IqqViR0+G49z+fyLLjrCW
-         CUtYUFInX4eQxLWDVuMZUBNO2NCJINLkpnBSa8UDJQeUH35ZJuCKhtgmEhkUgSHE+j3X
-         i03jSDLV0xAPjX7aydn7RsJjrYiJ2CTn9CMKMbM0N0RqW8299LG1Amrst8jdEQpT/5Aj
-         p8ng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772461909; x=1773066709;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4oQHoRaGFMus9JOapZuHMAdkvhHYxbOgXj0ogty6xog=;
-        b=mqbCC6JxL5VvHIcxP11GDi0sa11EokLEumqXuQbsqfHUxs0AmcIIiyvQKQnfRA4JUz
-         GtzuiMU8wbA7IGCObge75TIeuWpw9hizgLOoGwJFxaY1zWZL1sAnsSee+ck4deBs8MvO
-         iLGI6zFMfDFzkZ6sAHCE/uUYqf1kMkevI+PJZWWurCAe5ypiDuLgEwkQflEU+DkbwUGk
-         gGMc1JuEuBmvLjHxw12L0nUWI9ZtGDK3qJBzmzZS4RrdcY6ds/PC6yw+cvfg1g9SuxOG
-         u6OsyKJ2kfyMSvn9d4Oam2kiM8Qs3gJ8ui9g9Xyhi50U38xKG1r6ohpm+gYWX7fM+/7F
-         YGVw==
-X-Forwarded-Encrypted: i=1; AJvYcCW3vi4GAI0WZC1aYu4jU9d0oPFokEqUVO18QvxfByVjUQtqpJdFDsr+YSgvKFnNAwbUwx5fzfuu4gg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyuGN5YM5DFXdb+QIaFjK6PR20GMbhjoXVx1IK32C/J9aT7ka2Q
-	6AOE7xdVFYCTJBNIQooFN3GhG32nA61zdBF1Qr58SKbyQKEvI/ExqTzq
-X-Gm-Gg: ATEYQzyxM8vAqURjzUuTgEKx8MvWMxB+6gi3kovfWaMJq+gMo8Ijgyv+Wmwf7IMgk5o
-	yaekvwVLwMKnyveDjLBdDo1PPugO6TWaEL0a3auppFbl7nGLb491A1DE4Ly3a8qI5l6VDwUmMxX
-	nKnzeQpUBPYUQLg5Jcs5/5Xd5AC33Xf1Op6HbUuXGj/NSTfC0QC6qm1CmyBMuKRp1mUIy0EucFS
-	+kVaa6XneRowqZq7fSya3s2tIiSoxFJoUFeopZwJ0nT+fKPF6lFSK3G+h8HcPbTBvQwNHf/l38B
-	CUAAea4RYEmedMxiMl+Bku6E9ZfQ3MQFadawiXsYsWI6oMJQ6553TCYCcaGwuCIGnSeK9RvtGdX
-	T6+qzGe8fq6afglDNw0mV+9QZkdS2qT2dVhUImJmbzOrtAwZl2f7+cJHsaa3gV0f8Yi8ifewWt0
-	uwY8aIOGB+BeID7mcpAQIr7fTm0yRsvfvR/p2eZvVAT4/rsL4=
-X-Received: by 2002:a17:90b:3d4e:b0:359:989f:ab3a with SMTP id 98e67ed59e1d1-359989faddfmr407907a91.30.1772461909339;
-        Mon, 02 Mar 2026 06:31:49 -0800 (PST)
-Received: from junjungu-PC.localdomain ([2408:820c:9009:3f2:4c92:fc5c:54e5:712e])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-359135ef1d7sm11412355a91.5.2026.03.02.06.31.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Mar 2026 06:31:48 -0800 (PST)
-From: Felix Gu <ustc.gu@gmail.com>
-Date: Mon, 02 Mar 2026 22:31:44 +0800
-Subject: [PATCH] power: sequencing: pcie-m2: Fix device node reference leak
- in probe
+	s=arc-20240116; t=1772463280; c=relaxed/simple;
+	bh=PWWbqj84w74ygfO+gwepT4UHsgScdDpJJQmJM9KjRTc=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=r3+viKtVAG2aI1s5l+588PVcSy+hCHGrIO0cAKEXZAvLvFtePPfQGlMin08gjfBLWsq3Zn24fPSOJgqu3uW+xJBF1dgMnik5uFO0eMJqGOGK9hB6lDg6UuBpRsZeW4k+FOqaSV9cSUaTcDQnIQtYalPz4qQ6RWlYtarPmu7SvrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.83])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fPhl51Y1VzHnGdP;
+	Mon,  2 Mar 2026 22:53:37 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id 2C32140086;
+	Mon,  2 Mar 2026 22:54:29 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 2 Mar
+ 2026 14:54:28 +0000
+Date: Mon, 2 Mar 2026 14:54:26 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: Jason Gunthorpe <jgg@nvidia.com>
+CC: Nicolin Chen <nicolinc@nvidia.com>, <will@kernel.org>,
+	<robin.murphy@arm.com>, <bhelgaas@google.com>, <joro@8bytes.org>,
+	<praan@google.com>, <baolu.lu@linux.intel.com>, <kevin.tian@intel.com>,
+	<miko.lenczewski@arm.com>, <linux-arm-kernel@lists.infradead.org>,
+	<iommu@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <dan.j.williams@intel.com>
+Subject: Re: [PATCH v2 3/3] iommu/arm-smmu-v3: Allow ATS to be always on
+Message-ID: <20260302145426.00001960@huawei.com>
+In-Reply-To: <aZ3NS4GhxhElWhh2@nvidia.com>
+References: <cover.1771886695.git.nicolinc@nvidia.com>
+	<bdeebd35e81cfa5f76d16706a775b23ee1f01fdd.1771886695.git.nicolinc@nvidia.com>
+	<20260224120615.00003ad9@huawei.com>
+	<aZ261odHq5gwQYXg@nvidia.com>
+	<20260224155742.00000282@huawei.com>
+	<aZ3NS4GhxhElWhh2@nvidia.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260302-m2-v1-1-a6533e18aa69@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAE+fpWkC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDIzMDYwMj3Vwj3TQzY4sUY0tjM2OjVCWgwoKi1LTMCrAh0bG1tQDBAh8mVAA
- AAA==
-X-Change-ID: 20260302-m2-f638d393632e
-To: Manivannan Sadhasivam <mani@kernel.org>, 
- Bartosz Golaszewski <brgl@kernel.org>
-Cc: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Felix Gu <ustc.gu@gmail.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1772461906; l=1302;
- i=ustc.gu@gmail.com; h=from:subject:message-id;
- bh=86Ziz7ZkTNiHbyzLt91Sb1neXW3jX6vu7nzwQeYV+l4=;
- b=zuLSZMTF9biur1Ulrt5Rti0GuKMmowGC/J6f/52NSyh3skq6WPI+2GW69V/u3cI//WyCJp2NS
- KiLsaD4jwbvAMhDBpynEtND8VlhqB3euXEe0XrCsBc2JJvdAmiDKrU8
-X-Developer-Key: i=ustc.gu@gmail.com; a=ed25519;
- pk=fjUXwmjchVN7Ja6KGP55IXOzFeCl9edaHoQIEUA+/hw=
+X-ClientProxiedBy: lhrpeml500009.china.huawei.com (7.191.174.84) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-In pwrseq_pcie_m2_probe(), ctx->of_node acquires an explicit reference
-to the device node using of_node_get(), but there is no corresponding
-of_node_put() in the driver's error handling paths or removal.
+On Tue, 24 Feb 2026 12:09:47 -0400
+Jason Gunthorpe <jgg@nvidia.com> wrote:
 
-Since the ctx is tied to the lifecycle of the platform device, there
-is no need to hold an additional reference to the device's own of_node.
+> On Tue, Feb 24, 2026 at 03:57:42PM +0000, Jonathan Cameron wrote:
+> > On Tue, 24 Feb 2026 10:51:02 -0400
+> > Jason Gunthorpe <jgg@nvidia.com> wrote:
+> >   
+> > > On Tue, Feb 24, 2026 at 12:06:15PM +0000, Jonathan Cameron wrote:
+> > >   
+> > > > In my head at least, it would be nice if a driver had to explicitly opt in
+> > > > to this behavior. The presence of CXL.cache support for instance doesn't
+> > > > actually mean the driver is going to enable it.  However it is probably
+> > > > harmless so lets go with this as path of least resistance.    
+> > > 
+> > > That same remark applies to ATS in general, we have no idea if the
+> > > device is going to use it when turned on or not..  
+> > 
+> > Yup. Understood. That's the bit that smells bad to me.  
+> 
+> Do you have thoughts on when this is a problem (aside from device
+> pre-acceptance security already discussed)? So far I haven't heard
+> complaining on this point..
 
-Fixes: 52e7b5bd62ba ("power: sequencing: Add the Power Sequencing driver for the PCIe M.2 connectors")
-Signed-off-by: Felix Gu <ustc.gu@gmail.com>
----
- drivers/power/sequencing/pwrseq-pcie-m2.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Nothing explicit.  It was a very minor smells wrong moan on basis of
+assumptions of what an IOMMU is doing in the way of ATS checking if
+we have a malicious device.  So principle of not turning anything on
+we don't know we need.
 
-diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
-index d31a7dd8b35c..dadb4aad9d5d 100644
---- a/drivers/power/sequencing/pwrseq-pcie-m2.c
-+++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
-@@ -109,7 +109,7 @@ static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
- 	if (!ctx)
- 		return -ENOMEM;
- 
--	ctx->of_node = of_node_get(dev->of_node);
-+	ctx->of_node = dev_of_node(dev);
- 	ctx->pdata = device_get_match_data(dev);
- 	if (!ctx->pdata)
- 		return dev_err_probe(dev, -ENODEV,
+Jonathan
 
----
-base-commit: 3fa5e5702a82d259897bd7e209469bc06368bf31
-change-id: 20260302-m2-f638d393632e
-
-Best regards,
--- 
-Felix Gu <ustc.gu@gmail.com>
+> 
+> Jason
+> 
 
