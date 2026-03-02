@@ -1,103 +1,115 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78D9A3DA7FC;
-	Mon,  2 Mar 2026 14:15:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E72B81EE7C6;
+	Mon,  2 Mar 2026 14:16:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772460955; cv=none; b=RjiPaCAx3ueP+HXkJHi1ghHRJZc9swtrF8fvlZ491MzmVLnn5V7vp9+Xud1J5bhnYBzkt7teBEUS981M6eEFJP9vLqb23DIQ2jCggWcoNi4hqkQ6QwAzLfy1sEL4utojZFYnV+Fi0Zb6peaJXniIGjf0vD+QwcmEXbwcWq1nmtU=
+	t=1772461016; cv=none; b=UVSBQVniINJdtnNqODQO4PL+F6yftT7kxJZuEk7uGGbyJMKO8usl87ee5nEnhbGXVOZpuJYV+dbUckvvPjtSOBgZNuIkVgNntk8WAI2AzP46jqmroUJ9YafSnUiROEBRE00r5AXwrbGjLvzdWkDoWS5DBQKKtsgldvOMSwvM6zk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772460955; c=relaxed/simple;
-	bh=pQQsCniROcPjC6d+VRj/iFcR4pZ8qZujZDbz/KpKee8=;
+	s=arc-20240116; t=1772461016; c=relaxed/simple;
+	bh=6hHyo/juCBP+/B0CK+jOAZVjvtmjVzEbRe5R02MtJZo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gvCATGaYuNi2yAGzuo+kF1GEuJ8oyo6bbEWtZbO7lVxH2y2IH6dtZO32QY8RRvHEgzrbCpYrZH2fW//Y/pRVaktmMiEf113Sjj4B8gwolMI/n7HmbHkML2gL+hmExS/vZTUNlEXgthAiR7ix0hzqL5roAPpITPD+hxJJPFib5wU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bsg2aane; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=h0jGB0UmpC/OSOJWdtvWfmEk0Jnuy7cJUbPfhvaGxQwMs64O2KPXDOICId1TJlk3KpG9LKCJ/iXu2Fxk2mePz3VGRnynfdWoNnCMaiDKlNbQhkjZRyNwLeB47aQcoxFRMJjviebHB1ElgJeJjFYgImHo4gTySVMw9DQf5o/w5yw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fEotZYK4; arc=none smtp.client-ip=192.198.163.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bsg2aane"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5C88C2BC86;
-	Mon,  2 Mar 2026 14:15:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772460955;
-	bh=pQQsCniROcPjC6d+VRj/iFcR4pZ8qZujZDbz/KpKee8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Bsg2aaneh+3q8BefK6Jsi2wEgucNOHaYa8a06q2komNGlfraeKdCFTjY+IHZSo/Gn
-	 AdsxiOeZPty9MnwabnEgDyKkeSU+Tt0sJy+g7UXQIn+xnf24OLUYqYfK+/EnvHce/U
-	 kHA7O4/K6bNIGKwnng0Qi6TcryMAUGYJWpzVR+ROmFACA18mQEdloQa3KxU08yh987
-	 ZL7/cCUu8TnPWXcn0Pd747kq8wS46+zta2YC/1BUW2CZMzrZf1IqfY7GmWwrbdB076
-	 BaWzT9j8ddwvEqeiWxYDzxTiwUK6db6a7ExqTO5SuxuihZwk1kbRIrz7k8NYRy79DN
-	 LyUnIVPoNqSSQ==
-Date: Mon, 2 Mar 2026 19:45:41 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Benjamin Block <bblock@linux.ibm.com>
-Cc: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>, 
-	bhelgaas@google.com, helgaas@kernel.org, sebott@linux.ibm.com, schnelle@linux.ibm.com, 
-	alifm@linux.ibm.com, julianr@linux.ibm.com, dtatulea@nvidia.com, 
-	ionut_n2001@yahoo.com, sunlightlinux@gmail.com, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v4 1/1] PCI/IOV: Add reentrant locking in
- sriov_add_vfs/sriov_del_vfs for complete serialization
-Message-ID: <cq3z34gmevzczk6gpvqfz5whevsjdodq4ls2j2jhxqx2apgngu@sowonwmqy6ol>
-References: <20260228120138.51197-2-ionut.nechita@windriver.com>
- <20260228120138.51197-4-ionut.nechita@windriver.com>
- <mvhrbhqxnxeitx4incfykvlgtcfs2jcrlje2warhujzvbyns4e@7eyme5xdea7g>
- <20260228163955.GH13050@p1gen4-pw042f0m>
- <vogl77sk53qas4nnqb4jrmduofxhuhpcgipdkab5meuswd3hhr@l6rfqqndskfv>
- <20260302101105.GA1971507@p1gen4-pw042f0m>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fEotZYK4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1772461014; x=1803997014;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=6hHyo/juCBP+/B0CK+jOAZVjvtmjVzEbRe5R02MtJZo=;
+  b=fEotZYK4xB3QM5ejmgEACqmNCUmZ7u/0QNhrdSYQVUweA7FfTE+g+XFJ
+   I/KNWTxNfBYKZxcKPDCNp40RFX/hGzwxraiLYi+t34XfItVKBr7m9ICPD
+   PHDddKSb+6FYeL5SLHicJqJaSeykdM11xmhe3jufPJ62h/Yt5ytjv7NcJ
+   ojWzJrkwebt7QunFg4GnCzGodtUxclJv3vhMEuYTMW0B3bIuhJR/CVmJ9
+   eUsNxI9U8Y5/tjv53tzXktW1C+CKfSvnLu95L0BS0HKUUjQoAdt3GtB8U
+   lFjZsuOQ+DSRv20p3Vz9COq5ngMeiTz/HzwquC1QXo+zO+t4XLNv+V4mv
+   Q==;
+X-CSE-ConnectionGUID: 8ogUahvCSue7U/cTsyJalA==
+X-CSE-MsgGUID: VkSh98n7TWCBgD46j098Vw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11717"; a="61037169"
+X-IronPort-AV: E=Sophos;i="6.21,320,1763452800"; 
+   d="scan'208";a="61037169"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2026 06:16:53 -0800
+X-CSE-ConnectionGUID: bKMCFpmqQ7OQZKvDk7uvIw==
+X-CSE-MsgGUID: a31NsuLKQ1mZeE+iDvk7ZA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,320,1763452800"; 
+   d="scan'208";a="214128991"
+Received: from dalessan-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.244.52])
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2026 06:16:50 -0800
+Date: Mon, 2 Mar 2026 16:16:48 +0200
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2 1/1] PCI: dwc: Remove not-going-to-be-supported code
+ for Baikal SoC
+Message-ID: <aaWb0OYC5JjzwgEy@ashevche-desk.local>
+References: <20260220142600.2397070-1-andriy.shevchenko@linux.intel.com>
+ <ndzk3mcrkymcf3ru7my6om6llkbc6w4paxmgyqab4b46txxjr7@2upwgzrnlu7s>
+ <aaWXWka5GpHEBjD3@ashevche-desk.local>
+ <arw5dclubv4overootx6oouf6sdk5xgezm6ogegef2obab3ial@3ci7cwkmkk4x>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260302101105.GA1971507@p1gen4-pw042f0m>
+In-Reply-To: <arw5dclubv4overootx6oouf6sdk5xgezm6ogegef2obab3ial@3ci7cwkmkk4x>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Mon, Mar 02, 2026 at 11:11:05AM +0100, Benjamin Block wrote:
-> On Mon, Mar 02, 2026 at 11:43:04AM +0530, Manivannan Sadhasivam wrote:
-> > On Sat, Feb 28, 2026 at 05:39:55PM +0100, Benjamin Block wrote:
-> > > On Sat, Feb 28, 2026 at 08:43:33PM +0530, Manivannan Sadhasivam wrote:
-> > > > On Sat, Feb 28, 2026 at 02:01:40PM +0200, Ionut Nechita (Wind River) wrote:
-> > > > > From: Ionut Nechita <ionut.nechita@windriver.com>
-> > > > > Instead, introduce owner tracking for pci_rescan_remove_lock via a new
-> > > > > pci_lock_rescan_remove_reentrant() helper. This function checks if the
-> > > > > current task already holds the lock:
-> > > > >  - If the lock is not held: acquires it and returns true, providing
-> > > > >    full serialization against concurrent hotplug events (including
-> > > > >    platform-generated events on s390).
-> > > > >  - If the lock is already held by the current task (reentrant call from
-> > > > >    remove_store or sriov_numvfs_store paths): returns false without
-> > > > >    re-acquiring, avoiding deadlock while the caller already provides
-> > > > >    the necessary serialization.
-> > > > >  - If the lock is held by another task (concurrent hotplug): blocks
-> > > > >    until the lock is released, then acquires it, providing complete
-> > > > >    serialization. This is the key improvement over a trylock approach.
+On Mon, Mar 02, 2026 at 07:37:42PM +0530, Manivannan Sadhasivam wrote:
+> On Mon, Mar 02, 2026 at 03:57:46PM +0200, Andy Shevchenko wrote:
+> > On Mon, Mar 02, 2026 at 07:21:22PM +0530, Manivannan Sadhasivam wrote:
+> > > On Fri, Feb 20, 2026 at 03:21:12PM +0100, Andy Shevchenko wrote:
+> > > > As noticed in the discussion [1] the Baikal SoC and platforms
+> > > > are not going to be finalized, hence remove stale code.
 > > > > 
-> > > > Just curious. Why can't you use mutex_trylock() here?
+> > > > Link: https://lore.kernel.org/lkml/22b92ddf-6321-41b5-8073-f9c7064d3432@infradead.org/ [1]
+> > > > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 > > > 
-> > > One problem with mutex_trylock() is we don't know whether we ourself or
-> > > someone else is holding the lock when it fails, we just know someone holds it;
-> > > and we can't wait for someone else to release it when there is a chance we
-> > > hold it ourself already. That was the problem with
-> > > 05703271c3cd ("PCI/IOV: Add PCI rescan-remove locking when enabling/disabling SR-IOV")
-> > > before it was reverted.
+> > > I see Arnd's comment in the above thread:
+> > > 
+> > > "I don't think we'll merge the rest of Baikal, we should probably
+> > > remove the entire platform."
+> > > 
+> > > But is there more to the story?
 > > 
-> > Okay, thanks for the info. I also failed to notice the mention of 'trylock' in
-> > the cover letter.
-> > 
-> > But I think, instead of caching the owner task struct locally, you can make use
-> > of mutex_get_owner() to extact the embedded owner task struct.
+> > The Baikal enterprise is Russian entity under OFAC sanctions.
 > 
-> True. Didn't know/see that one, yet. We'd have to treat the return value as
-> `struct task_struct *` to compare it, but I see debug_show_blocker() already
-> does that effectively (when I saw the function returns ulong, I thought it was
-> meant to be treated as transparent value).
+> Yeah, I knew that part,
 
-Yeah, I don't know the reasoning behind it. But atleast it avoids caching the
-task struct pointer locally.
+Then I can't tell you anything new :-)
 
-- Mani
+> but didn't know that we decided to remove the platform altogether.
+
+It was never fully added to begin with. That's why Arnd's reply is the above.
+It's half-baked and hence a dead (stale) code altogether. Bulk which would
+only waste our resources for supporting unused code.
+
+> But I can see patches floating around for other subsystems and
+> getting applied, so I will do that same for these PCI host controller patches.
+
+Thank you!
 
 -- 
-மணிவண்ணன் சதாசிவம்
+With Best Regards,
+Andy Shevchenko
+
+
