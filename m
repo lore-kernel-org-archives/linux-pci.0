@@ -1,38 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BAF413AF2;
-	Mon,  2 Mar 2026 23:09:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 415FF2E1722;
+	Mon,  2 Mar 2026 23:17:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772492985; cv=none; b=olho/Gln65Q3MalO3UtoiyiL11TGtRCihLWY1iepK4Bz4tc/0TSMjJ5wGZbs8XT78WmxHu7X9TbmrG+AuMCZPB3/ni3UbvrRm13Jqok8P3/ZKHyu55suTRrsh+MQNDsyKqhkC1s2s9G0hjSzJd8jTZjC+RxVoHqii5Gsdw3gkTU=
+	t=1772493469; cv=none; b=V+k9LhoaS1CnTMGnc1YQ8V5qv7/h4fKw7yH2VGaQtlEMLjc7qDgtLcr4EDlxIl33kEEQ8XkXYLNCmUaogcxnk68eAXicqQX3rmgyK37IStabrxEWS01T2RJpiWFo3Mn4Rt6/Pt2njfGpgJfVNzy8jWiertH/G5NyZOOeNMymack=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772492985; c=relaxed/simple;
-	bh=h3EoEjANlxG+igkhbEWcQ2Kl1vd8TKi1qjCxBGbBQxM=;
+	s=arc-20240116; t=1772493469; c=relaxed/simple;
+	bh=V9ixDt1v0uvLxDuDM0c1Km3Dx5Kce/pR5Etg4b08qwI=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=PTMedXqTDCBItq+8V+xrH9+I4GUC53BPsIANZAE6DO5NanLQDWJNfV2g0rKZVWMbLZ/kSE2WPGZWbJE3Y9MeRMMSJuCSH+kALBJejkXUfEXx1a2DmFxozmZSa1lZZXiu5IhIxZZcNJOcGG3L6+f08SS2fkyDYJpXVbXavCkGl4U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sT3kBz6s; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=REtDtehIMgSF5ufPUO8seo0kKQnCqDOdNGQAWay2TIDUupX2sqTMSVqyLfnwE9n4klHB1OhD4ockOc8LirpKm3pYEvitfvfMnLwBf/U0+5Z7t0JfgA+kMfu5Tx9/krHw6YrAV7/cYfesCJ55kprRml5zaaiJzMZjhWqv3Z/HSiU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hC3+ULNX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sT3kBz6s"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EADBBC19423;
-	Mon,  2 Mar 2026 23:09:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hC3+ULNX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FF9EC19423;
+	Mon,  2 Mar 2026 23:17:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772492985;
-	bh=h3EoEjANlxG+igkhbEWcQ2Kl1vd8TKi1qjCxBGbBQxM=;
+	s=k20201202; t=1772493468;
+	bh=V9ixDt1v0uvLxDuDM0c1Km3Dx5Kce/pR5Etg4b08qwI=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=sT3kBz6srFawPge5i6N/SFYN7uLLIq1d8gENgRP5jfz8UD/nHjoZhieUL8vhHJqFa
-	 5rSy0VcVAzrK4lBNAVveXegzooNfRjivZiX69cfmOpUAAM3/ZKd1KBUCtv5e6Z0ZuF
-	 iF0u4SF2T/6IDpItCnbh34kWXScy7XV6ZLVzUzMqE6JuUHDmiln8B0iQmE+pEJZxZC
-	 eMY6pXGRpQ+GD71r45y93+dNeyS8stGOTW/qqZ11CtVj0h9MtdwIHfoIilD5iCF+9F
-	 03jQuULfyS2WW1cv9ChF4hjl+yFECW3fSLA9sk2gWaLXTJ4Fq4N2n07DLPntd/zTpv
-	 8KwIG3c/EyVPw==
-Date: Mon, 2 Mar 2026 17:09:43 -0600
+	b=hC3+ULNXzsaOrgSe/qscOUnQnmts77FDuYlA6isxmUg9K5y2mx2HVvobLMr3OMLTM
+	 5NBLz4maCmlKtpoHJSeq8zYWQ/zgsv/rROgFO3J+kHGzQYOT5ygblj/jU2FOXHGxJb
+	 RYKhkrH7NxUMPYA7lSjp/5t9O4WpgNMXOtFPlCaNtw0+G+r5fY53ycvgirySIi3u+a
+	 tfEWHHazlFdwHqXDQwhSLrrk12Lfaj6JIZK+of5YiuJmPOR4roSPj6/OKp0kx19D60
+	 HEzckPaAQtFFSoGIgzkLTUfv+jPOZx2+CluWNmMZA6FIgA92bOdk+S89GABAUgC1gn
+	 1RgjqlywOxBKg==
+Date: Mon, 2 Mar 2026 17:17:47 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lizhi Hou <lizhi.hou@amd.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V1] PCI: Avoid FLR for AMD NPU device
-Message-ID: <20260302230943.GA4035763@bhelgaas>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+	mani@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
+	conor+dt@kernel.org, thierry.reding@gmail.com, jonathanh@nvidia.com,
+	kishon@kernel.org, arnd@arndb.de, gregkh@linuxfoundation.org,
+	Frank.Li@nxp.com, den@valinux.co.jp, hongxing.zhu@nxp.com,
+	jingoohan1@gmail.com, vidyas@nvidia.com, cassel@kernel.org,
+	18255117159@163.com, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 01/13] PCI: tegra194: Fix polling delay for L2 state
+Message-ID: <20260302231747.GA4036075@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,41 +47,41 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260226182545.3057330-1-lizhi.hou@amd.com>
+In-Reply-To: <20260223184151.3083221-2-mmaddireddy@nvidia.com>
 
-On Thu, Feb 26, 2026 at 10:25:45AM -0800, Lizhi Hou wrote:
-> The AMD NPU device (PCI device IDs 0x1502 and 0x17f0) advertises FLR
-> support. However, triggering an FLR causes the device to hang.
+On Tue, Feb 24, 2026 at 12:11:39AM +0530, Manikanta Maddireddy wrote:
+> From: Vidya Sagar <vidyas@nvidia.com>
 > 
-> Signed-off-by: Lizhi Hou <lizhi.hou@amd.com>
-
-Applied to pci/virtualization for v7.1, thanks!
-
+> As per PCIe spec r6.0, sec 5.3.3.2.1, after sending PME_Turn_Off message,
+> Root port should wait for 1~10 msec for PME_TO_Ack message. Currently,
+> driver is polling for 10 msec with 1 usec delay which is aggressive.
+> Change it to 10 msec polling with 100 usec delay. Since this function
+> is used in non-atomic context only, use non-atomic poll function.
+> 
+> Fixes: 56e15a238d92 ("PCI: tegra: Add Tegra194 PCIe support")
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 > ---
->  drivers/pci/quirks.c | 3 +++
->  1 file changed, 3 insertions(+)
+> Changes V1 -> V6: None
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 48946cca4be7..757a296eae41 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -5603,6 +5603,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
->   * AMD Starship/Matisse HD Audio Controller 0x1487
->   * AMD Starship USB 3.0 Host Controller 0x148c
->   * AMD Matisse USB 3.0 Host Controller 0x149c
-> + * AMD Neural Processing Unit 0x1502 0x17f0
->   * Intel 82579LM Gigabit Ethernet Controller 0x1502
->   * Intel 82579V Gigabit Ethernet Controller 0x1503
->   * Mediatek MT7922 802.11ax PCI Express Wireless Network Adapter
-> @@ -5615,6 +5616,8 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1487, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x148c, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x149c, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x7901, quirk_no_flr);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1502, quirk_no_flr);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x17f0, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x0616, quirk_no_flr);
-> -- 
-> 2.34.1
+>  drivers/pci/controller/dwc/pcie-tegra194.c | 9 +++++----
+>  1 file changed, 5 insertions(+), 4 deletions(-)
 > 
+> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+> index 0ddeef70726d..96d38571a7e7 100644
+> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+> @@ -198,7 +198,8 @@
+>  #define CAP_SPCIE_CAP_OFF_USP_TX_PRESET0_MASK	GENMASK(11, 8)
+>  #define CAP_SPCIE_CAP_OFF_USP_TX_PRESET0_SHIFT	8
+>  
+> -#define PME_ACK_TIMEOUT 10000
+> +#define PME_ACK_DELAY		100   /* 100 us */
+> +#define PME_ACK_TIMEOUT		10000 /* 10 ms */
+
+Can you add "_US" and "_MS" suffixes to these to indicate the units?
+
+Unless they are something specific to tegra194, the #defines should
+probably go in drivers/pci/pci.h so they can be shared.
+
+It'd be nice to update the PCIe spec citation to r7.0.
