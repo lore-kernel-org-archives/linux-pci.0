@@ -1,274 +1,434 @@
-Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C73B2DCC04
-	for <linux-pci@vger.kernel.org>; Mon,  2 Mar 2026 16:32:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF1F4423A94;
+	Mon,  2 Mar 2026 17:09:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772469141; cv=none; b=F6AmyPPen66LOXooR85RFneCsN7HjOocf1SzTvrdZwZJU8aUs0SH9pAzw8bYllBiv0Izkf/ztsCQou7MuB6+of0263asIHJWzBBrU68fO/0QGG09oNPUTVBbIGkn9NEedDZN4rdoVR75R1dkL6ukOu1c6lXtufXzIOPsLg9w4/8=
+	t=1772471383; cv=none; b=UR5VKzh3xOTI6Vl4K8uqlilN7FOvdr3afpeYytSITn91txWym9Gt37ub+LwSqrgajlc0AZXbaUM0Jiiah/aAbrpYtLngZEYVJiIAOGxxus5gZt+mr8lkJfqPdozQRsb/CKCFJKRLizOPFcQQSD86ha45YWGsAthktaqJbOHeBoo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772469141; c=relaxed/simple;
-	bh=WTJ3pzdwIneOX06IoFSpJpP/ij3N5ThgvRmHQQVgZdw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BlnrjycAh/hf5Gw69Kopl9yBBd3QsD24mUF6NgZKD0yMLIR2gqvM5Qocd+mtyg+mlB0VpUGPDewh2PMIbiMfabVfbX77yHCHPDa/HS+8puH0pa1uaxEUIDBddff3ofbtN65S3JjgXrWN35+d4qPPixvg2VS8uI4mC/U02HZffEo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev; spf=pass smtp.mailfrom=tuxon.dev; dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b=C+s9xaCV; arc=none smtp.client-ip=209.85.221.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxon.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b="C+s9xaCV"
-Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-439a7b48df2so1744263f8f.2
-        for <linux-pci@vger.kernel.org>; Mon, 02 Mar 2026 08:32:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=tuxon.dev; s=google; t=1772469138; x=1773073938; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=6vgVgq/PKL42P9mqoX80JnTj9f0Sx394ufpp39qX55w=;
-        b=C+s9xaCVLFQDE5pK8Sk8Y/tOCYGcF+EmfdMaf9f31qd7lRzfaNiQ/7pOgXAMWuXdeW
-         l07YTl6mk83iSTWbwzi2T8ddWxNQz+mzVZcvHoiAz5eMN0nxSqU4DZJ1L5eKJjG6VGI8
-         MZzPHS6K4BYznLWO/FWGGJyJ7EI+4yoFy4Wc7URl8U1msGnFnC55aiB/vw/LOPa7Kf4R
-         f8qShO+/eKfv33mXCazLIzA7Qnc7fqnHiYnT+vYm3XPZH8s6oa6QqXEwJHJqmH24KWi4
-         f/8ok7qkh6MwZ/y3hWMW8p5SGdIo4pFa5f89zZJBbjSxFTxjTV+tIHB3KFR2rxZzT981
-         YwXA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772469138; x=1773073938;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=6vgVgq/PKL42P9mqoX80JnTj9f0Sx394ufpp39qX55w=;
-        b=b2wus1ZlaFDW6YefU1ptu5IrA+R0Xf0aFqwrOtww73IiGHPpb8YyqtWEawO/omnpll
-         PZTuws98dRFkq5TI+zXr13gz8NneEFJmBzRqk0o2APP1X1PD7KgqcJWlQ6ISvQiSPu9Z
-         U6BiSHfnDuLRHRIxibSbw4sFo5hPf9/2aFi1v0wAJ27OCdVFnG/HeV3UUEX6ly8leMzS
-         iVsgvqc9e/m1X1p0/FPIURctydrem+ZjnQ4Flx2q+YWkLwqbWSRGSwalLG1BvONoGNPT
-         s8mH/3lEarZwmEDjhW3c+GA6nm2hNXDGMFeY3hvDmUnLDxTS6Z1yygngoYrVnJy9dWKP
-         uYgg==
-X-Forwarded-Encrypted: i=1; AJvYcCX662E0Qq8WNyyGvMtkm1pAdoSOnpFiZW7nW7XqWtPL3wCAa1S+yo/GYC6Kab+VX/JOoiplR+fGyds=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwqOUQb0DOR4h/pLCUcydySY2NKXqiJWTx+BCutiGutA3xghqBx
-	D9BdbBltNGiHlslV92Mg6u+54uO1G19SMSjj+qlQpFEt5xkAOleB2/wPzQCR2KtTL7o=
-X-Gm-Gg: ATEYQzycAhfCjYBIxi5PfXUztttyAfMBHh3HwLki+ktY6OlM+F5QkUTKnFzhOsNZKu5
-	udZms+4ZlBriqNnjp580jQ8p0638VRGH7sQMTIh6L/K+R9+LFXxAp7f9Bnd2TMltu4+Jfr5pXmO
-	JF1n6F08R2SYOi3mSjVu+M68mbdFOD39IlSVqyjoTrnNHqRByD/ywM3qY4HlOfgYE+1p+9fnXPJ
-	dpRH+ewlFxV+3VSf+pGfT4Dhn7BCrxjZ+afbGSuba3I3zM/AexP+KfKRBjeaX7AQzo4driaYqZH
-	h6vWWEKJK653Y5xWjWTi403PgI3AdE0iY1IxgxdTjaPofFh9HL7uOSu9sKNPl0FUiPpB0u2k8I9
-	UW19Ji43bMNdT4gi6FofJFkdR+Yh+OxWAif9EFv6kwJ3Wu/daSKd1g6XGBUPLtwMMI0r55xSMSh
-	jFe1zGvTd5LBuEl7IVXJrBpruN6jBb9rsLsWr9
-X-Received: by 2002:a05:6000:402c:b0:439:b55d:b0e3 with SMTP id ffacd0b85a97d-439b55db2e6mr9320134f8f.42.1772469137917;
-        Mon, 02 Mar 2026 08:32:17 -0800 (PST)
-Received: from [172.19.170.194] ([213.233.104.147])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-439b503424fsm11923248f8f.22.2026.03.02.08.32.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 02 Mar 2026 08:32:16 -0800 (PST)
-Message-ID: <712feb0d-2855-444b-852b-49920ebfa4e9@tuxon.dev>
-Date: Mon, 2 Mar 2026 18:32:14 +0200
+	s=arc-20240116; t=1772471383; c=relaxed/simple;
+	bh=lvj4DNsbS7PHGGRDto2mczCiON3osWvHFHQpoesTOzc=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=p1bXRvhw5UWcBW9ReeAGXH5cEAqrefKgY4CPDIu0UslBkx7CaVZKCXqLY2JhALOUwEyZZWX4MFplaeG//Brou1BcgfzoiGUw5O35jFzEMEYNW+Yqvp2kkRgwiKwmNwKjVNiVmU7cd7nFE5dov1/L9Dei3iLXz9K/LL3T1bC2e/g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.150])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fPlkz3PyBzHnGh7;
+	Tue,  3 Mar 2026 01:08:43 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id 97E4D4056A;
+	Tue,  3 Mar 2026 01:09:35 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 2 Mar
+ 2026 17:09:34 +0000
+Date: Mon, 2 Mar 2026 17:09:33 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: <alistair23@gmail.com>
+CC: <bhelgaas@google.com>, <lukas@wunner.de>,
+	<rust-for-linux@vger.kernel.org>, <akpm@linux-foundation.org>,
+	<linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <alex.gaynor@gmail.com>,
+	<benno.lossin@proton.me>, <boqun.feng@gmail.com>, <a.hindborg@kernel.org>,
+	<gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <tmgross@umich.edu>,
+	<ojeda@kernel.org>, <wilfred.mallawa@wdc.com>, <aliceryhl@google.com>,
+	Alistair Francis <alistair@alistair23.me>
+Subject: Re: [RFC v3 08/27] lib: rspdm: Initial commit of Rust SPDM
+Message-ID: <20260302170933.000016ad@huawei.com>
+In-Reply-To: <20260211032935.2705841-9-alistair.francis@wdc.com>
+References: <20260211032935.2705841-1-alistair.francis@wdc.com>
+	<20260211032935.2705841-9-alistair.francis@wdc.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 06/15] dt-bindings: PCI: renesas,r9a08g045s33-pcie:
- Document RZ/G3E SoC
-To: John Madieu <john.madieu.xa@bp.renesas.com>,
- claudiu.beznea.uj@bp.renesas.com, lpieralisi@kernel.org,
- kwilczynski@kernel.org, mani@kernel.org, geert+renesas@glider.be,
- krzk+dt@kernel.org
-Cc: robh@kernel.org, bhelgaas@google.com, conor+dt@kernel.org,
- magnus.damm@gmail.com, biju.das.jz@bp.renesas.com,
- linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- devicetree@vger.kernel.org, linux-clk@vger.kernel.org, john.madieu@gmail.com
-References: <20260227153236.55988-1-john.madieu.xa@bp.renesas.com>
- <20260227153236.55988-7-john.madieu.xa@bp.renesas.com>
-Content-Language: en-US
-From: Claudiu Beznea <claudiu.beznea@tuxon.dev>
-In-Reply-To: <20260227153236.55988-7-john.madieu.xa@bp.renesas.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml100012.china.huawei.com (7.191.174.184) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
+On Wed, 11 Feb 2026 13:29:15 +1000
+alistair23@gmail.com wrote:
 
-
-On 2/27/26 17:32, John Madieu wrote:
-> Extend the existing device tree bindings for Renesas RZ/G3S PCIe
-> controller to include support for the RZ/G3E (renesas,r9a09g047e57-pcie) PCIe
-
-Still a checkpatch warning:
-
-WARNING: Prefer a maximum 75 chars per line (possible unwrapped commit description?)
-#8:
-controller to include support for the RZ/G3E (renesas,r9a09g047e57-pcie) PCIe
-
-> controller. The RZ/G3E PCIe controller is similar to RZ/G3S but has some key
-> differences:
+> From: Alistair Francis <alistair@alistair23.me>
 > 
->   - Uses a different device ID
->   - Supports PCIe Gen3 (8.0 GT/s) link speeds
->   - Uses a different clock naming (clkpmu vs clkl1pm)
->   - Has a different set of interrupts, interrupt ordering, and reset signals
+> This is the initial commit of the Rust SPDM library. It is based on and
+> compatible with the C SPDM library in the kernel (lib/spdm).
 > 
-> Add device tree bindings for renesas,r9a09g047e57-pcie compatible IPs.
-> 
-> Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
-> Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-> Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+> Signed-off-by: Alistair Francis <alistair@alistair23.me>
+The comments that follow are based on my very limited rust knowledge.
+Hence may be garbage.
+
 > ---
+>  MAINTAINERS                     |  12 ++
+>  include/linux/spdm.h            |  39 ++++++
+>  lib/Kconfig                     |  17 +++
+>  lib/Makefile                    |   2 +
+>  lib/rspdm/Makefile              |  10 ++
+>  lib/rspdm/consts.rs             | 117 +++++++++++++++++
+>  lib/rspdm/lib.rs                | 119 +++++++++++++++++
+>  lib/rspdm/state.rs              | 220 ++++++++++++++++++++++++++++++++
+>  lib/rspdm/validator.rs          |  66 ++++++++++
+>  rust/bindings/bindings_helper.h |   2 +
+>  rust/kernel/error.rs            |   3 +
+>  11 files changed, 607 insertions(+)
+>  create mode 100644 include/linux/spdm.h
+>  create mode 100644 lib/rspdm/Makefile
+>  create mode 100644 lib/rspdm/consts.rs
+>  create mode 100644 lib/rspdm/lib.rs
+>  create mode 100644 lib/rspdm/state.rs
+>  create mode 100644 lib/rspdm/validator.rs
 > 
-> Changes:
-> 
-> v7: No changes
-> v6: Collected Rb tag from Claudiu
-> v5: Collected Rb tag from Rob
-> v4: Fixed clock name constraint using enum
-> 
-> v3:
->   - Moved interrupt/clock description in distinct PATCH
->   - Fixed clock name constraints
->   - Updated clock descriptions
-> 
-> v2: Reuse G3S names
-> 
->   .../bindings/pci/renesas,r9a08g045-pcie.yaml  | 73 +++++++++++++++++--
->   1 file changed, 67 insertions(+), 6 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
-> index d1eb92995e2c..a67108c48feb 100644
-> --- a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
-> +++ b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
-> @@ -10,17 +10,21 @@ maintainers:
->     - Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
->   
->   description:
-> -  Renesas RZ/G3S PCIe host controller complies with PCIe Base Specification
-> -  4.0 and supports up to 5 GT/s (Gen2).
-> +  Renesas RZ/G3{E,S} PCIe host controllers comply with PCIe
-> +  Base Specification 4.0 and support up to 5 GT/s (Gen2) for RZ/G3S and
-> +  up to 8 GT/s (Gen3) for RZ/G3E.
->   
->   properties:
->     compatible:
-> -    const: renesas,r9a08g045-pcie # RZ/G3S
-> +    enum:
-> +      - renesas,r9a08g045-pcie # RZ/G3S
-> +      - renesas,r9a09g047-pcie # RZ/G3E
->   
->     reg:
->       maxItems: 1
->   
->     interrupts:
-> +    minItems: 16
->       items:
->         - description: System error interrupt
->         - description: System error on correctable error interrupt
-> @@ -38,8 +42,16 @@ properties:
->         - description: PCIe event interrupt
->         - description: Message interrupt
->         - description: All interrupts
-> +      - description: Link equalization request interrupt
-> +      - description: Turn off event interrupt
-> +      - description: PMU power off interrupt
-> +      - description: D3 event function 0 interrupt
-> +      - description: D3 event function 1 interrupt
-> +      - description: Configuration PMCSR write clear function 0 interrupt
-> +      - description: Configuration PMCSR write clear function 1 interrupt
->   
->     interrupt-names:
-> +    minItems: 16
->       items:
->         - const: serr
->         - const: serr_cor
-> @@ -57,20 +69,28 @@ properties:
->         - const: pcie_evt
->         - const: msg
->         - const: all
-> +      - const: link_equalization_request
-> +      - const: turn_off_event
-> +      - const: pmu_poweroff
-> +      - const: d3_event_f0
-> +      - const: d3_event_f1
-> +      - const: cfg_pmcsr_writeclear_f0
-> +      - const: cfg_pmcsr_writeclear_f1
->   
->     interrupt-controller: true
->   
->     clocks:
->       items:
->         - description: System clock
-> -      - description: PM control clock
-> +      - description: PM control clock or clock for L1 substate handling
->   
->     clock-names:
->       items:
->         - const: aclk
-> -      - const: pm
-> +      - enum: [pm, pmu]
->   
->     resets:
-> +    minItems: 1
->       items:
->         - description: AXI2PCIe Bridge reset
->         - description: Data link layer/transaction layer reset
-> @@ -81,6 +101,7 @@ properties:
->         - description: Configuration register reset
->   
->     reset-names:
-> +    minItems: 1
->       items:
->         - const: aresetn
->         - const: rst_b
-> @@ -128,7 +149,9 @@ patternProperties:
->           const: 0x1912
->   
->         device-id:
-> -        const: 0x0033
-> +        enum:
-> +          - 0x0033
-> +          - 0x0039
->   
->         clocks:
->           items:
-> @@ -167,6 +190,44 @@ required:
->   
->   allOf:
->     - $ref: /schemas/pci/pci-host-bridge.yaml#
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            const: renesas,r9a08g045-pcie
-> +    then:
-> +      properties:
-> +        interrupts:
-> +          maxItems: 16
-> +        interrupt-names:
-> +          maxItems: 16
-> +        clock-names:
-> +          items:
-> +            - const: aclk
-> +            - const: pm
-> +        resets:
-> +          minItems: 7
-> +        reset-names:
-> +          minItems: 7
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            const: renesas,r9a09g047-pcie
-> +    then:
-> +      properties:
-> +        interrupts:
-> +          minItems: 23
-> +        interrupt-names:
-> +          minItems: 23
-> +        clock-names:
-> +          items:
-> +            - const: aclk
-> +            - const: pmu
-> +        resets:
-> +          maxItems: 1
-> +        reset-names:
-> +          maxItems: 1
->   
->   unevaluatedProperties: false
->   
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 149deedafe2c..a5c4ec16081c 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -23693,6 +23693,18 @@ M:	Security Officers <security@kernel.org>
+>  S:	Supported
+>  F:	Documentation/process/security-bugs.rst
+>  
+> +SECURITY PROTOCOL AND DATA MODEL (SPDM)
+> +M:	Jonathan Cameron <jic23@kernel.org>
+
+Evil way to get me to learn rust. Ah well, I guess I can't put it
+off for ever.
+
+> +M:	Lukas Wunner <lukas@wunner.de>
+> +M:	Alistair Francis <alistair@alistair23.me>
+> +L:	linux-coco@lists.linux.dev
+> +L:	linux-cxl@vger.kernel.org
+> +L:	linux-pci@vger.kernel.org
+> +S:	Maintained
+> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/devsec/spdm.git
+> +F:	include/linux/spdm.h
+> +F:	lib/rspdm/
+
+
+> diff --git a/lib/rspdm/consts.rs b/lib/rspdm/consts.rs
+> new file mode 100644
+> index 000000000000..40ce60eba2f3
+> --- /dev/null
+> +++ b/lib/rspdm/consts.rs
+> @@ -0,0 +1,117 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +
+> +// Copyright (C) 2024 Western Digital
+> +
+> +//! Constants used by the library
+> +//!
+> +//! Rust implementation of the DMTF Security Protocol and Data Model (SPDM)
+> +//! <https://www.dmtf.org/dsp/DSP0274>
+> +
+> +pub(crate) const SPDM_REQ: u8 = 0x80;
+> +pub(crate) const SPDM_ERROR: u8 = 0x7f;
+> +
+> +#[expect(dead_code)]
+> +#[derive(Clone, Copy)]
+> +pub(crate) enum SpdmErrorCode {
+> +    InvalidRequest = 0x01,
+> +    InvalidSession = 0x02,
+
+This is reserved by the time we reach 1.2.1 and disappeared somewhere
+in the middle of 1.1.0 (present) and 1.1.2 (reserved)
+Probably good to leave some breadcrumbs for what spec versions could use
+this error code.  That will reduce confusion for future readers.
+You have this info in the parsing code, but I'd like it here as well.
+
+> +    Busy = 0x03,
+> +    UnexpectedRequest = 0x04,
+> +    Unspecified = 0x05,
+> +    DecryptError = 0x06,
+> +    UnsupportedRequest = 0x07,
+> +    RequestInFlight = 0x08,
+> +    InvalidResponseCode = 0x09,
+> +    SessionLimitExceeded = 0x0a,
+> +    SessionRequired = 0x0b,
+> +    ResetRequired = 0x0c,
+> +    ResponseTooLarge = 0x0d,
+> +    RequestTooLarge = 0x0e,
+> +    LargeResponse = 0x0f,
+> +    MessageLost = 0x10,
+> +    InvalidPolicy = 0x11,
+> +    VersionMismatch = 0x41,
+> +    ResponseNotReady = 0x42,
+> +    RequestResynch = 0x43,
+> +    OperationFailed = 0x44,
+> +    NoPendingRequests = 0x45,
+> +    VendorDefinedError = 0xff,
+> +}
+> +
+> +impl core::fmt::LowerHex for SpdmErrorCode {
+> +    /// A debug print format for the SpdmSessionInfo struct
+> +    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+> +        match self {
+> +            SpdmErrorCode::InvalidRequest => {
+> +                writeln!(f, "0x01")?;
+
+No way to get a string from an enum value in rust?
+Having to check these against the enum above is a bit tedious.
+
+> +            }
+
+> +        }
+> +        Ok(())
+> +    }
+> +}
+> diff --git a/lib/rspdm/lib.rs b/lib/rspdm/lib.rs
+> new file mode 100644
+> index 000000000000..2bb716140e0a
+> --- /dev/null
+> +++ b/lib/rspdm/lib.rs
+> @@ -0,0 +1,119 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +
+> +// Copyright (C) 2024 Western Digital
+> +
+> +//! Top level library for SPDM
+> +//!
+> +//! Rust implementation of the DMTF Security Protocol and Data Model (SPDM)
+> +//! <https://www.dmtf.org/dsp/DSP0274>
+> +//!
+> +//! Top level library, including C compatible public functions to be called
+> +//! from other subsytems.
+> +//!
+> +//! This mimics the C SPDM implementation in the kernel
+
+The one that never gets merged if this goes according to plan ;)
+
+
+
+> diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
+> new file mode 100644
+> index 000000000000..68861f30e3fa
+> --- /dev/null
+> +++ b/lib/rspdm/state.rs
+> @@ -0,0 +1,220 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +
+> +// Copyright (C) 2024 Western Digital
+> +
+> +//! The `SpdmState` struct and implementation.
+> +//!
+> +//! Rust implementation of the DMTF Security Protocol and Data Model (SPDM)
+> +//! <https://www.dmtf.org/dsp/DSP0274>
+> +
+> +use core::ffi::c_void;
+> +use kernel::prelude::*;
+> +use kernel::{
+> +    bindings,
+> +    error::{code::EINVAL, to_result, Error},
+> +    validate::Untrusted,
+> +};
+> +
+> +use crate::consts::{SpdmErrorCode, SPDM_ERROR, SPDM_REQ};
+> +use crate::validator::{SpdmErrorRsp, SpdmHeader};
+> +
+> +/// The current SPDM session state for a device. Based on the
+> +/// C `struct spdm_state`.
+> +///
+> +/// `dev`: Responder device.  Used for error reporting and passed to @transport.
+> +/// `transport`: Transport function to perform one message exchange.
+> +/// `transport_priv`: Transport private data.
+> +/// `transport_sz`: Maximum message size the transport is capable of (in bytes).
+> +///  Used as DataTransferSize in GET_CAPABILITIES exchange.
+> +/// `keyring`: Keyring against which to check the first certificate in
+> +///  responder's certificate chain.
+
+Given the discussions, seems this will go away (for now anyway).
+
+> +/// `validate`: Function to validate additional leaf certificate requirements.
+> +///
+> +/// `version`: Maximum common supported version of requester and responder.
+> +///  Negotiated during GET_VERSION exchange.
+> +#[expect(dead_code)]
+> +pub struct SpdmState {
+> +    pub(crate) dev: *mut bindings::device,
+> +    pub(crate) transport: bindings::spdm_transport,
+> +    pub(crate) transport_priv: *mut c_void,
+> +    pub(crate) transport_sz: u32,
+> +    pub(crate) keyring: *mut bindings::key,
+> +    pub(crate) validate: bindings::spdm_validate,
+> +
+> +    // Negotiated state
+> +    pub(crate) version: u8,
+> +}
+> +
+> +impl SpdmState {
+> +    pub(crate) fn new(
+> +        dev: *mut bindings::device,
+> +        transport: bindings::spdm_transport,
+> +        transport_priv: *mut c_void,
+> +        transport_sz: u32,
+> +        keyring: *mut bindings::key,
+> +        validate: bindings::spdm_validate,
+> +    ) -> Self {
+> +        SpdmState {
+> +            dev,
+> +            transport,
+> +            transport_priv,
+> +            transport_sz,
+> +            keyring,
+> +            validate,
+> +            version: 0x10,
+> +        }
+> +    }
+
+> +
+> +    /// Start a SPDM exchange
+> +    ///
+> +    /// The data in `request_buf` is sent to the device and the response is
+> +    /// stored in `response_buf`.
+> +    pub(crate) fn spdm_exchange(
+> +        &self,
+> +        request_buf: &mut [u8],
+> +        response_buf: &mut [u8],
+> +    ) -> Result<i32, Error> {
+> +        let header_size = core::mem::size_of::<SpdmHeader>();
+> +        let request: &mut SpdmHeader = Untrusted::new_mut(request_buf).validate_mut()?;
+
+Why are we treating the request, which doesn't come from the device as untrusted?
+Just for convenience on checking we formatted it right at the upper levels or is
+the idea that might ultimately be coming from userspace?
+
+> +        let response: &SpdmHeader = Untrusted::new_ref(response_buf).validate()?;
+> +
+> +        let transport_function = self.transport.ok_or(EINVAL)?;
+> +        // SAFETY: `transport_function` is provided by the new(), we are
+> +        // calling the function.
+> +        let length = unsafe {
+> +            transport_function(
+> +                self.transport_priv,
+> +                self.dev,
+> +                request_buf.as_ptr() as *const c_void,
+> +                request_buf.len(),
+> +                response_buf.as_mut_ptr() as *mut c_void,
+> +                response_buf.len(),
+> +            ) as i32
+> +        };
+> +        to_result(length)?;
+> +
+> +        if (length as usize) < header_size {
+> +            return Ok(length); // Truncated response is handled by callers
+> +        }
+> +        if response.code == SPDM_ERROR {
+> +            if length as usize >= core::mem::size_of::<SpdmErrorRsp>() {
+> +                // SAFETY: The response buffer will be at least as large as
+> +                // `SpdmErrorRsp` so we can cast the buffer to `SpdmErrorRsp` which
+> +                // is a packed struct.
+> +                self.spdm_err(unsafe { &*(response_buf.as_ptr() as *const SpdmErrorRsp) })?;
+> +            } else {
+> +                return Err(EINVAL);
+> +            }
+> +        }
+> +
+> +        if response.code != request.code & !SPDM_REQ {
+> +            pr_err!(
+> +                "Response code {:#x} does not match request code {:#x}\n",
+> +                response.code,
+> +                request.code
+> +            );
+> +            to_result(-(bindings::EPROTO as i32))?;
+> +        }
+> +
+> +        Ok(length)
+> +    }
+> +}
+> diff --git a/lib/rspdm/validator.rs b/lib/rspdm/validator.rs
+> new file mode 100644
+> index 000000000000..a0a3a2f46952
+> --- /dev/null
+> +++ b/lib/rspdm/validator.rs
+> @@ -0,0 +1,66 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +
+> +// Copyright (C) 2024 Western Digital
+> +
+> +//! Related structs and their Validate implementations.
+> +//!
+> +//! Rust implementation of the DMTF Security Protocol and Data Model (SPDM)
+> +//! <https://www.dmtf.org/dsp/DSP0274>
+> +
+> +use crate::consts::SpdmErrorCode;
+> +use core::mem;
+> +use kernel::prelude::*;
+> +use kernel::{
+> +    error::{code::EINVAL, Error},
+> +    validate::{Unvalidated, Validate},
+> +};
+> +
+> +#[repr(C, packed)]
+> +pub(crate) struct SpdmHeader {
+> +    pub(crate) version: u8,
+> +    pub(crate) code: u8, /* RequestResponseCode */
+> +    pub(crate) param1: u8,
+> +    pub(crate) param2: u8,
+> +}
+> +
+> +impl Validate<&Unvalidated<[u8]>> for &SpdmHeader {
+> +    type Err = Error;
+> +
+> +    fn validate(unvalidated: &Unvalidated<[u8]>) -> Result<Self, Self::Err> {
+> +        let raw = unvalidated.raw();
+> +        if raw.len() < mem::size_of::<SpdmHeader>() {
+> +            return Err(EINVAL);
+> +        }
+> +
+> +        let ptr = raw.as_ptr();
+> +        // CAST: `SpdmHeader` only contains integers and has `repr(C)`.
+> +        let ptr = ptr.cast::<SpdmHeader>();
+> +        // SAFETY: `ptr` came from a reference and the cast above is valid.
+> +        Ok(unsafe { &*ptr })
+> +    }
+> +}
+> +
+> +impl Validate<&mut Unvalidated<[u8]>> for &mut SpdmHeader {
+> +    type Err = Error;
+> +
+> +    fn validate(unvalidated: &mut Unvalidated<[u8]>) -> Result<Self, Self::Err> {
+> +        let raw = unvalidated.raw_mut();
+> +        if raw.len() < mem::size_of::<SpdmHeader>() {
+> +            return Err(EINVAL);
+> +        }
+> +
+> +        let ptr = raw.as_mut_ptr();
+> +        // CAST: `SpdmHeader` only contains integers and has `repr(C)`.
+> +        let ptr = ptr.cast::<SpdmHeader>();
+> +        // SAFETY: `ptr` came from a reference and the cast above is valid.
+> +        Ok(unsafe { &mut *ptr })
+> +    }
+> +}
+> +
+> +#[repr(C, packed)]
+> +pub(crate) struct SpdmErrorRsp {
+> +    pub(crate) version: u8,
+> +    pub(crate) code: u8,
+
+Maybe document here that this will always be SPDM_ERROR 0x7F
+
+
+> +    pub(crate) error_code: SpdmErrorCode,
+> +    pub(crate) error_data: u8,
+> +}
+> diff --git a/rust/bindings/bindings_helper.h b/rust/bindings/bindings_helper.h
+> index 0075c4b62c29..5043eee2a8d6 100644
+> --- a/rust/bindings/bindings_helper.h
+> +++ b/rust/bindings/bindings_helper.h
+> @@ -84,7 +84,9 @@
+>  #include <linux/slab.h>
+>  #include <linux/task_work.h>
+>  #include <linux/tracepoint.h>
+> +#include <linux/spdm.h>
+
+Smells like this is alphabetical order. So move it up a bit?
+
+>  #include <linux/usb.h>
+> +#include <linux/uaccess.h>
+>  #include <linux/wait.h>
+>  #include <linux/workqueue.h>
+>  #include <linux/xarray.h>
 
