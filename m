@@ -1,112 +1,139 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E137232ED42;
-	Mon,  2 Mar 2026 06:13:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88443201004;
+	Mon,  2 Mar 2026 06:58:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772431999; cv=none; b=rXyODCK9Khvxh93JoI0RQRrNYwZp2ZBVS3jMG7sBcajHhm2iGL/rS9KEt1ooW4ZdhOglsM/lor09rvYA3/es+RyCyy/RC29WAWWAuN0cFRDxxMkpzQ6NfxmvahA1CNGQLb4+5GYiVJmDadP3kaByyG6jIsasScO/iIWzSgiOGCk=
+	t=1772434708; cv=none; b=rB5NahE+KADceT2E33rv8vFJc1O6RQAqH5KyPUwJUj/wYiV2JBK+RWVnM9dk+rUstZbJtVVkQMoDFH7Qx5FTI9WTUZvc+LfzcCuW4hx7u0P8u2hwXfPnTrxSD0edK+D6mJ2Sex9EK9msFmXA2hdJ7c9yutpwA0GzU4Vnsx8f7dE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772431999; c=relaxed/simple;
-	bh=+vgUVOQ14mfsfjADYu/tniw6hDr7GNc8NHvApPhBDTY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SQxNgSqkn4AWp/F6wL+Ul6dvPeoxhLDN6ppS13GFj4yKnRwj6i/3bny3dBlhQVa03FWSvpwNuSwfjdO64ehPpht22pREu++tpMO9CPFADxT+ahvbkvrbg48R2yMjfe/YfYKx6PtpLCmrmoXglFnw/++CNMIBFHGVliP7XC+9aEU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A860vboY; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772434708; c=relaxed/simple;
+	bh=QuE/TCSzAlqPVDJUGj0JHRDKd+76fYi6RJN1xDSWzNc=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=rEB7H2CgED9CkeIpCDuZ+Dcz0niVr5M/NTqmCYnuUqPx5miXWdkEB7WFoWoEkuT4suqhkGDc32gJHwZ/hSwZSjM+hvNHuhLzmyzl615L60q2/KS0g9+rHpQ6fczoJUJkiTkjvh4PAg3T4XD9yaU+Pl1FPoQRBAVo9y1/lRMguZo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OZifj2He; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A860vboY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AF1AC19423;
-	Mon,  2 Mar 2026 06:13:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OZifj2He"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D62BC19423;
+	Mon,  2 Mar 2026 06:58:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772431998;
-	bh=+vgUVOQ14mfsfjADYu/tniw6hDr7GNc8NHvApPhBDTY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=A860vboYxTXkAWSEZQug+sATq0Dpeyqr36ehKptBr7lOcg61Ny1+dr1FTIGwLRDc9
-	 Bw0kFnlNzVZc4gHb2bu7CdsHj2JijVf/9zNxZUNAQW5bcJ29RW76JkqQfcgaSu44+I
-	 KBnj5TjNxNNLKCcdDIG/GjYOotiw//O55CrSqIlibtaT0FdFGxVNfkBiNUijtdDixO
-	 pnSSCKDjYNmc1EhK72T60L5zpQlY0rAptKAi3qyRXUuYD5KCBcVyoFSd3zFtnKwMgf
-	 LasyxORtXtAn9u+DiCPd7EJGNnGFTcB1XCMwW7F2+ZBbkG1ioQYrtWr2iZdPbLuMLO
-	 Rg0wWQwHJdwrw==
-Date: Mon, 2 Mar 2026 11:43:04 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Benjamin Block <bblock@linux.ibm.com>
-Cc: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>, 
-	bhelgaas@google.com, helgaas@kernel.org, sebott@linux.ibm.com, schnelle@linux.ibm.com, 
-	alifm@linux.ibm.com, julianr@linux.ibm.com, dtatulea@nvidia.com, 
-	ionut_n2001@yahoo.com, sunlightlinux@gmail.com, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v4 1/1] PCI/IOV: Add reentrant locking in
- sriov_add_vfs/sriov_del_vfs for complete serialization
-Message-ID: <vogl77sk53qas4nnqb4jrmduofxhuhpcgipdkab5meuswd3hhr@l6rfqqndskfv>
-References: <20260228120138.51197-2-ionut.nechita@windriver.com>
- <20260228120138.51197-4-ionut.nechita@windriver.com>
- <mvhrbhqxnxeitx4incfykvlgtcfs2jcrlje2warhujzvbyns4e@7eyme5xdea7g>
- <20260228163955.GH13050@p1gen4-pw042f0m>
+	s=k20201202; t=1772434708;
+	bh=QuE/TCSzAlqPVDJUGj0JHRDKd+76fYi6RJN1xDSWzNc=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+	b=OZifj2Heh2DmSYpOSLto0qL7rXlaSTJ2G5yJ2ss4heuQdoO4Twftcgmr3l8y9BiTZ
+	 AelS3AWCJQazEYl4vnWh6Q4bBV60oiOcTrTzTs9tKS17WNqcGyjsp9p2ba447pJ2VC
+	 a+GzTYsuhU+KXm6ktaBKunKT7j5Bq56zQWvtGJkdTBpvnK4esZdvHuBSF00rZl14Q7
+	 fS4JccZPf3vKR0DLFGJAqT06mJDDLYMAuJO+BdB09PWjvw9569MYO36qqmIAtniuwV
+	 E7bHSSXILvQWuPXEwgXKHjLGReLpiqSAzAYfmkzbIdaZgkCTSGjS7Fjp78ffZwSi55
+	 7W8/TZCIyMb5A==
+X-Mailer: emacs 30.2 (via feedmail 11-beta-1 I)
+From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+To: dan.j.williams@intel.com, Alexey Kardashevskiy <aik@amd.com>,
+	x86@kernel.org
+Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Sean Christopherson <seanjc@google.com>,
+	Paolo Bonzini <pbonzini@redhat.com>,
+	Andy Lutomirski <luto@kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Mike Rapoport <rppt@kernel.org>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Ard Biesheuvel <ardb@kernel.org>,
+	Neeraj Upadhyay <Neeraj.Upadhyay@amd.com>,
+	Ashish Kalra <ashish.kalra@amd.com>,
+	Stefano Garzarella <sgarzare@redhat.com>,
+	Melody Wang <huibo.wang@amd.com>,
+	Seongman Lee <augustus92@kaist.ac.kr>,
+	Joerg Roedel <joerg.roedel@amd.com>,
+	Nikunj A Dadhania <nikunj@amd.com>,
+	Michael Roth <michael.roth@amd.com>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Andi Kleen <ak@linux.intel.com>,
+	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	David Woodhouse <dwmw@amazon.co.uk>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Denis Efremov <efremov@linux.com>,
+	Geliang Tang <geliang@kernel.org>,
+	Piotr Gregor <piotrgregor@rsyncme.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Jacob Pan <jacob.jun.pan@linux.intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kevin Brodsky <kevin.brodsky@arm.com>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Xu Yilun <yilun.xu@linux.intel.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Kim Phillips <kim.phillips@amd.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Claire Chang <tientzu@chromium.org>,
+	linux-coco@lists.linux.dev, iommu@lists.linux.dev,
+	Alexey Kardashevskiy <aik@amd.com>
+Subject: Re: [PATCH kernel 2/9] pci/tsm: Add tsm_tdi_status
+In-Reply-To: <699e97d6e8be7_1cc51003c@dwillia2-mobl4.notmuch>
+References: <20260225053806.3311234-1-aik@amd.com>
+ <20260225053806.3311234-3-aik@amd.com>
+ <699e97d6e8be7_1cc51003c@dwillia2-mobl4.notmuch>
+Date: Mon, 02 Mar 2026 12:28:10 +0530
+Message-ID: <yq5afr6iu399.fsf@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260228163955.GH13050@p1gen4-pw042f0m>
+Content-Type: text/plain
 
-On Sat, Feb 28, 2026 at 05:39:55PM +0100, Benjamin Block wrote:
-> On Sat, Feb 28, 2026 at 08:43:33PM +0530, Manivannan Sadhasivam wrote:
-> > On Sat, Feb 28, 2026 at 02:01:40PM +0200, Ionut Nechita (Wind River) wrote:
-> > > From: Ionut Nechita <ionut.nechita@windriver.com>
-> > > 
-> > > After reverting commit 05703271c3cd ("PCI/IOV: Add PCI rescan-remove
-> > > locking when enabling/disabling SR-IOV") and moving the lock to
-> > > sriov_numvfs_store(), the path through driver .remove() (e.g. rmmod,
-> > > or manual unbind) that calls pci_disable_sriov() directly remains
-> > > unprotected against concurrent hotplug events. This affects any SR-IOV
-> > > capable driver that calls pci_disable_sriov() from its .remove()
-> > > callback (i40e, ice, mlx5, bnxt, etc.).
-> > > 
-> > > On s390, platform-generated hot-unplug events for VFs can race with
-> > > sriov_del_vfs() when a PF driver is being unloaded. The platform event
-> > > handler takes pci_rescan_remove_lock, but sriov_del_vfs() does not,
-> > > leading to double removal and list corruption.
-> > > 
-> > > We cannot use a plain mutex_lock() here because sriov_del_vfs() may also
-> > > be called from paths that already hold pci_rescan_remove_lock (e.g.
-> > > remove_store -> pci_stop_and_remove_bus_device_locked, or
-> > > sriov_numvfs_store with the lock taken by the previous patch). Using
-> > > mutex_lock() in those cases would deadlock.
-> > > 
-> > > Instead, introduce owner tracking for pci_rescan_remove_lock via a new
-> > > pci_lock_rescan_remove_reentrant() helper. This function checks if the
-> > > current task already holds the lock:
-> > >  - If the lock is not held: acquires it and returns true, providing
-> > >    full serialization against concurrent hotplug events (including
-> > >    platform-generated events on s390).
-> > >  - If the lock is already held by the current task (reentrant call from
-> > >    remove_store or sriov_numvfs_store paths): returns false without
-> > >    re-acquiring, avoiding deadlock while the caller already provides
-> > >    the necessary serialization.
-> > >  - If the lock is held by another task (concurrent hotplug): blocks
-> > >    until the lock is released, then acquires it, providing complete
-> > >    serialization. This is the key improvement over a trylock approach.
-> > 
-> > Just curious. Why can't you use mutex_trylock() here?
-> 
-> One problem with mutex_trylock() is we don't know whether we ourself or
-> someone else is holding the lock when it fails, we just know someone holds it;
-> and we can't wait for someone else to release it when there is a chance we
-> hold it ourself already. That was the problem with
-> 05703271c3cd ("PCI/IOV: Add PCI rescan-remove locking when enabling/disabling SR-IOV")
-> before it was reverted.
-> 
+<dan.j.williams@intel.com> writes:
 
-Okay, thanks for the info. I also failed to notice the mention of 'trylock' in
-the cover letter.
+> Alexey Kardashevskiy wrote:
+>> Define a structure with all info about a TDI such as TDISP status,
+>> bind state, used START_INTERFACE options and the report digest.
+>> 
+>> This will be extended and shared to the userspace.
+>> 
+>> Signed-off-by: Alexey Kardashevskiy <aik@amd.com>
+>> ---
+>> 
+>> Make it uapi? We might want a sysfs node per a field so probably not.
+>> For now its only user is AMD SEV TIO with a plan to expose this struct
+>> as a whole via sysfs.
+>
+> Say more about what this uapi when sysfs already has lock+accept
+> indications?
+>
+> Or are you just talking about exporting the TDISP report as a binary
+> blob?
+>
+> I think the kernel probably wants a generic abstraction for asserting
+> that the tsm layer believes the report remains valid between fetch and
+> run. In other words I am not sure arch features like intf_report_counter
+> ever show up anywhere in uapi outside of debugfs.
+>
 
-But I think, instead of caching the owner task struct locally, you can make use
-of mutex_get_owner() to extact the embedded owner task struct.
+Agreed. For CCA, we use rsi_vdev_info, but we need a generic mechanism
+to associate this with the report that the guest has attested.
 
-- Mani
+In CCA, we call rsi_vdev_get_info(vdev_id, dev_info) and later use that
+information in rsi_vdev_enable_dma(vdev_id, dev_info).
 
--- 
-மணிவண்ணன் சதாசிவம்
+Perhaps we could add a generation number (or meas_nonce) to the TSM
+netlink response and use it when accepting the device, so we can
+reliably bind the device measurement to the attested one?
+
+-aneesh
