@@ -1,108 +1,88 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6107541324C;
-	Mon,  2 Mar 2026 16:09:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 183542D9EC2;
+	Mon,  2 Mar 2026 16:18:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772467781; cv=none; b=dqEX7dSBImKBn4t0E5YCHTDdC1ZJZ+MdH+5Lkv2xo5H2IVNGKSCCEcugjZJVhxwxutRZypPnaZwPuFXESiMDZrvESdjV/6eWunZUdPY6oQo4kj9ckLpQx9TOiE9Er7ZDjwbuefOPmdnuN9iiW9OKKIw4C7HORRDgu1xSTYqG3Kc=
+	t=1772468290; cv=none; b=eqZgcMOmr/tLLhgMfwx+8FSPIkOMtRBDPKZrqhsm3kFuGWCNICgWbkOKZilmoeQ07buh8I4QZ7TqZE04nJb5IL7VRBrZ62QdMNbo8dIFoCGpPprOS5w0CJzzP1idWHcaJv0bOpEj7X8ik/RLBPDu5V7+kGTIbC17KMopkaQS/Ds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772467781; c=relaxed/simple;
-	bh=hmLkt2fr0iWDzyNi/rFRc0FAr91etT4RAQgX+D/cr/A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OBw3NWFYfkh/chBB73ktPrjkoukMGaeMekWWSsffu9m44YfDhhMmXKu+eUYQDDsIdR3aZAtM5+R2G+LGP4qh0f8OMaQesp6qIhdSlMmKfM4eVZ2xMcsoRO++jKt/XxTPFiHT6tNaXTYI9zsyc8DgV5XeHrAzRCwrNhhFdwVHHig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VdB2ulnQ; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VdB2ulnQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 044F8C2BC87;
-	Mon,  2 Mar 2026 16:09:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772467781;
-	bh=hmLkt2fr0iWDzyNi/rFRc0FAr91etT4RAQgX+D/cr/A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VdB2ulnQRVpMkAbz4BjY4cFNS7nlxbqSK+l7snw94iFM0ZEcvqMC2bYcDWgara4et
-	 KqmzEC/C1P+mYvEwQB5Pu7Sg0m2GjivvwG8VecLhjMF/OBOYxZabRrdUWe/y/LWMz0
-	 JFuOwHW+hXe9hf09dfq+jW9Dte46o6T+BujfViMNH3otQJvphagfkLP+UkFc+XFsse
-	 y/mbkBNwWZDJHxF/jk8uiznA+xnBs6YSEc7OjxUsta9NGuqg9IUX86ik7RCk9books
-	 2VOgobs6SIlK8tY/8XmQnZmN/q5e5i2sDpX7doiEyVAjlV3HWE4N1K4KcVqwbRuUGT
-	 fd5CmKKTiUIvw==
-Date: Mon, 2 Mar 2026 21:39:26 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Frank Li <Frank.Li@nxp.com>, Jon Mason <jdmason@kudzu.us>, 
-	Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>, kwilczynski@kernel.org, 
-	Kishon Vijay Abraham I <kishon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Geert Uytterhoeven <geert+renesas@glider.be>, Ye Bin <yebin10@huawei.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, linux-pci@vger.kernel.org, ntb@lists.linux.dev, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 4/5] PCI: endpoint: pci-epf-vntb: Switch
- vpci_scan_bus() to use pci_scan_root_bus()
-Message-ID: <3tgrcel5fl55ulf3zjya4fkz4t2ms7iwwjif5rnzn2rafsydd6@i4e5etm7uqvz>
-References: <20260226084142.2226875-1-den@valinux.co.jp>
- <20260226084142.2226875-5-den@valinux.co.jp>
+	s=arc-20240116; t=1772468290; c=relaxed/simple;
+	bh=UDPdOuLkxHDttnINoMsAtS36QWhXO4/oWTlJGpDie7w=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=E3Edf4Qw1v0syA3OZ2gPUsi7iigTN88kYIFeNr2uE0jDtqplYUl0IkYoFrZ96A6VMCCXlo4i4LF1hmqPq1qaQJ2K6aGGXsw5D0291mLc1cZbvsnS9AlA8Qyo6EstVFNaqh+HpqaSZpaqomSuOviSTOLDofm99eqIM0pNHwzEiKg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.83])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fPkbY3gdWzHnGfG;
+	Tue,  3 Mar 2026 00:17:13 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id 8B3FD40573;
+	Tue,  3 Mar 2026 00:18:05 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 2 Mar
+ 2026 16:18:04 +0000
+Date: Mon, 2 Mar 2026 16:18:03 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: <alistair23@gmail.com>
+CC: <bhelgaas@google.com>, <lukas@wunner.de>,
+	<rust-for-linux@vger.kernel.org>, <akpm@linux-foundation.org>,
+	<linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <alex.gaynor@gmail.com>,
+	<benno.lossin@proton.me>, <boqun.feng@gmail.com>, <a.hindborg@kernel.org>,
+	<gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <tmgross@umich.edu>,
+	<ojeda@kernel.org>, <wilfred.mallawa@wdc.com>, <aliceryhl@google.com>,
+	Alistair Francis <alistair.francis@wdc.com>
+Subject: Re: [RFC v3 06/27] rust: add bindings for hash.h
+Message-ID: <20260302161803.00001b14@huawei.com>
+In-Reply-To: <20260211032935.2705841-7-alistair.francis@wdc.com>
+References: <20260211032935.2705841-1-alistair.francis@wdc.com>
+	<20260211032935.2705841-7-alistair.francis@wdc.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260226084142.2226875-5-den@valinux.co.jp>
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml500011.china.huawei.com (7.191.174.215) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-On Thu, Feb 26, 2026 at 05:41:41PM +0900, Koichiro Den wrote:
-> vpci_scan_bus() currently uses pci_scan_bus(), which creates a root bus
-> without a parent struct device. In a subsequent change we want to tear
-> down the virtual PCI root bus using pci_remove_root_bus(). For that to
-> work correctly, the root bus must be associated with a parent device,
-> similar to what the removed pci_scan_bus_parented() helper used to do.
+On Wed, 11 Feb 2026 13:29:13 +1000
+alistair23@gmail.com wrote:
+
+> From: Alistair Francis <alistair.francis@wdc.com>
 > 
-> Switch vpci_scan_bus() to use pci_scan_root_bus() and pass
-> &ndev->epf->epc->dev as the parent. Build the resource list in the same
-> way as pci_scan_bus(), so the behavior is unchanged except that the
-> virtual root bus now has a proper parent device. This avoids crashes in
-> the pci_epf_unbind() -> epf_ntb_unbind() -> pci_remove_root_bus() ->
-> pci_bus_release_domain_nr() path once we start removing the root bus in
-> a follow-up patch.
+> Make the functions crypto_shash_descsize(), crypto_shash_digestsize()
+> and crypto_free_shash() available to Rust.
 > 
-> Reviewed-by: Frank Li <Frank.Li@nxp.com>
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
 > ---
-> Changes since v4:
->   - Correct the subject prefix
->     s/NTB: epf: vntb:/PCI: endpoint: pci-epf-vntb:/
+>  rust/bindings/bindings_helper.h |  2 ++
+>  rust/helpers/hash.c             | 18 ++++++++++++++++++
+>  rust/helpers/helpers.c          |  1 +
+>  3 files changed, 21 insertions(+)
+>  create mode 100644 rust/helpers/hash.c
 > 
->  drivers/pci/endpoint/functions/pci-epf-vntb.c | 15 +++++++++++++--
->  1 file changed, 13 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> index 805353528967..f353e9a57194 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> @@ -1220,8 +1220,19 @@ static int vpci_scan_bus(void *sysdata)
->  {
->  	struct pci_bus *vpci_bus;
->  	struct epf_ntb *ndev = sysdata;
-> -
-> -	vpci_bus = pci_scan_bus(ndev->vbus_number, &vpci_ops, sysdata);
-> +	LIST_HEAD(resources);
-> +	static struct resource busn_res = {
-> +		.start = 0,
-> +		.end = 255,
-> +		.flags = IORESOURCE_BUS,
-> +	};
-> +
-> +	pci_add_resource(&resources, &ioport_resource);
-> +	pci_add_resource(&resources, &iomem_resource);
-> +	pci_add_resource(&resources, &busn_res);
-> +
-> +	vpci_bus = pci_scan_root_bus(&ndev->epf->epc->dev, ndev->vbus_number,
-> +				     &vpci_ops, sysdata, &resources);
+> diff --git a/rust/bindings/bindings_helper.h b/rust/bindings/bindings_helper.h
+> index a067038b4b42..0075c4b62c29 100644
+> --- a/rust/bindings/bindings_helper.h
+> +++ b/rust/bindings/bindings_helper.h
+> @@ -34,6 +34,7 @@
+>  #include <drm/drm_file.h>
+>  #include <drm/drm_gem.h>
+>  #include <drm/drm_ioctl.h>
+> +#include <crypto/hash.h>
 
-Don't you need pci_lock_rescan_remove()/pci_unlock_rescan_remove()?
+I'm not sure on ordering conventions but this feels odd..
+Maybe before the drm inclues?
 
-- Mani
+>  #include <kunit/test.h>
+>  #include <linux/auxiliary_bus.h>
+>  #include <linux/bitmap.h>
+> @@ -60,6 +61,7 @@
 
--- 
-மணிவண்ணன் சதாசிவம்
