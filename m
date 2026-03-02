@@ -1,96 +1,82 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E8E738D01A;
-	Mon,  2 Mar 2026 10:00:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0378038D009;
+	Mon,  2 Mar 2026 10:07:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772445644; cv=none; b=ZF9AP1Ys9FIIjrAhRbqwU9PM0mPzwpMOcf4ilFFoBYJF6L5qDnPKnVadcBWQaFyo2tDkf0CDvDTaC5csHpReCXmytjUGnNh3v+6TMzhjR49t0ENvHUMmGwmdhivBKriPBXnM95M/rtMD/CoR6KtVLWOXnLxnq9C/dUzi5kZUOM0=
+	t=1772446045; cv=none; b=GDrvZ6h1Bv+o4ChjzEnW6JIZuWVUxIYFRLxG7kk/UY0AI+Hcb9GcRq2nWMVsip6MOLVseLjhiqest2mhV6bYibVvVckbUY+oCdHy8fyjFgd2xl1LN3CyiykgP5cfi/DwObUOVqNhGWbxwoL1z1n8eakqygC0hU3LkkqXAbKzOCg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772445644; c=relaxed/simple;
-	bh=Hd5nSxb2ldI84kKFsCIK5FhWGhb3PvdBxayOMKngjak=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FxAU7jIGxvClZxNSWzhdl6TJKA53BaU8vGzCWoGJNRgmb6NoBnUaLE3Ha2su9I4sKU0iMjGwbQFuYlkXd/kXO56YzhJ/VFRAjQuHhh0LTNPAHrWpJXB3JiUUEUvrFmmSQVgFUlWtSpqpcWa2NZrF0UY3VmdCewb6PWz16FK/V98=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JMyWNY+9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772446045; c=relaxed/simple;
+	bh=WsKalQsrcTrCExLvVUrum2up311uMNa/m5xaR9444CU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cKUgjRqPYvrW7fJFSMlKKGMV3BEqWHAbwztfqkwM1Q9O0kiFSHvxYK0uJEnWKmM/LOBZyccsWugPE4KZ0WgYDm2A1bjFnf31h4I6QZ3e6HpfO8h9XDqcilIqmlTcnBXKPslUfAAz0hx3+8AhqeVEbS9QzCfONFt3l6De94g47GI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Idz31Tul; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JMyWNY+9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F6BEC19423;
-	Mon,  2 Mar 2026 10:00:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Idz31Tul"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A777EC19423;
+	Mon,  2 Mar 2026 10:07:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772445643;
-	bh=Hd5nSxb2ldI84kKFsCIK5FhWGhb3PvdBxayOMKngjak=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=JMyWNY+9FqR7FSouYOy7Ikq5rn4Sr6tnTM4EQVZSjmcrke6lm4w8TsTswMk5gKmXO
-	 G0XlFbViR7bEvOouRDMjGE/lElQLUyy//Zmd/1kmiYXWsCJMkRH0KsX7iptIZswzn6
-	 hIEH/Q1vBPvFBkp5aTukTg7s0pljZmLD76AUx52RWS1E8ftHGbkTKGlXRiLexoepoU
-	 XOTpSfo+jlst4MmIdOVYlweoZKBRROqMahDUYCJ0CVHogLctlhF8rj1U9aRottzKrE
-	 vzqq502MjTU3pImV6xa1+MzAI5exUvfMNd27WI2gFM0P7uAHxVvjrQRN/4N6WfCbdS
-	 LzYeC9bbaFxbg==
+	s=k20201202; t=1772446044;
+	bh=WsKalQsrcTrCExLvVUrum2up311uMNa/m5xaR9444CU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Idz31TulenK2Oc1qZMZYRCZDv8zLtAmYydFFwom9nMBYmPgd6yBncrGZAh3Pg335B
+	 nmAHJZMBGDjYDlv9jugT9XKsO0WupC4YCvHNdKxGdW+JXnx6MTf7iIpJV9jFONn6ME
+	 NOlr4q6ld56SACyoBRcsCp7d38sRhxYj9Bjq9nq7EhO8gCc63vlU1RTd6y9e32GtQX
+	 aiQaUa30Z4cNrtJ5V4/j9nekmGF0hrTp/ILbHE+AInsEbOWy7mIha0SWLkKRhDp09c
+	 97W5FBBeHxRJ9nC4On0vYFBYnMV+P1PM2AEqO7ziDFKiJC7SbJHQffyrzOSegmcGRR
+	 4T0CanHLhEOBA==
+Date: Mon, 2 Mar 2026 11:07:17 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
 	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Shuah Khan <shuah@kernel.org>
-Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-	Koichiro Den <den@valinux.co.jp>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Frank Li <Frank.Li@nxp.com>,
-	linux-pci@vger.kernel.org,
-	linux-kselftest@vger.kernel.org
-Subject: [PATCH v3 9/9] selftests: pci_endpoint: Skip reserved BARs
-Date: Mon,  2 Mar 2026 10:59:21 +0100
-Message-ID: <20260302095913.48155-20-cassel@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260302095913.48155-11-cassel@kernel.org>
-References: <20260302095913.48155-11-cassel@kernel.org>
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <allenbh@gmail.com>, Frank Li <Frank.Li@nxp.com>,
+	Bhanu Seshu Kumar Valluri <bhanuseshukumar@gmail.com>,
+	Marco Crivellari <marco.crivellari@suse.com>,
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ntb@lists.linux.dev
+Subject: Re: [PATCH v10 7/7] PCI: endpoint: pci-ep-msi: Add embedded doorbell
+ fallback
+Message-ID: <aaVhVc-teEeglUxJ@ryzen>
+References: <20260302071427.534158-1-den@valinux.co.jp>
+ <20260302071427.534158-8-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1507; i=cassel@kernel.org; h=from:subject; bh=Hd5nSxb2ldI84kKFsCIK5FhWGhb3PvdBxayOMKngjak=; b=kA0DAAoWyWQxo5nGTXIByyZiAGmlX3ujMFU2E0DUAwyDciWlEz1ekFB2wmqSZyBzRYTeVzmC2 Yh1BAAWCgAdFiEETfhEv3OLR5THIdw8yWQxo5nGTXIFAmmlX3sACgkQyWQxo5nGTXIIvgD/YQB2 9o/tlA5uSRnqulWPc8nu2w3cSvuVuBe0pgszaOIBAKK7oxeNSvQYGV4RaCTgP0uzsmkyhBJisal lvNXiWDAA
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260302071427.534158-8-den@valinux.co.jp>
 
-Running a test against a reserved BAR will result in the pci-epf-test
-driver returning -ENOBUFS.
+On Mon, Mar 02, 2026 at 04:14:27PM +0900, Koichiro Den wrote:
+> Some endpoint platforms cannot use platform MSI / GIC ITS to implement
+> EP-side doorbells. In those cases, EPF drivers cannot provide an
+> interrupt-driven doorbell and often fall back to polling.
+> 
+> Add an "embedded" doorbell backend that uses a controller-integrated
+> doorbell target (e.g. DesignWare integrated eDMA interrupt-emulation
+> doorbell).
+> 
+> The backend locates the doorbell register and a corresponding Linux IRQ
+> via the EPC aux-resource API. If the doorbell register is already
+> exposed via a fixed BAR mapping, provide BAR+offset. Otherwise provide
+> the DMA address returned by dma_map_resource() (which may be an IOVA
+> when an IOMMU is enabled) so EPF drivers can map it into BAR space.
+> 
+> When MSI doorbell allocation fails with -ENODEV,
+> pci_epf_alloc_doorbell() falls back to this embedded backend.
+> 
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
 
-Make sure that the pci_endpoint_test selftest will return skip instead of
-failure or success for reserved BARs.
-
-Tested-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Reviewed-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
-Tested-by: Koichiro Den <den@valinux.co.jp>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- tools/testing/selftests/pci_endpoint/pci_endpoint_test.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-index e0dbbb2af8c7..c417fb3a198b 100644
---- a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-+++ b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-@@ -67,6 +67,8 @@ TEST_F(pci_ep_bar, BAR_TEST)
- 	pci_ep_ioctl(PCITEST_BAR, variant->barno);
- 	if (ret == -ENODATA)
- 		SKIP(return, "BAR is disabled");
-+	if (ret == -ENOBUFS)
-+		SKIP(return, "BAR is reserved");
- 	EXPECT_FALSE(ret) TH_LOG("Test failed for BAR%d", variant->barno);
- }
- 
-@@ -84,6 +86,8 @@ TEST_F(pci_ep_bar, BAR_SUBRANGE_TEST)
- 		SKIP(return, "BAR is test register space");
- 	if (ret == -EOPNOTSUPP)
- 		SKIP(return, "Subrange map is not supported");
-+	if (ret == -ENOBUFS)
-+		SKIP(return, "BAR is reserved");
- 	EXPECT_FALSE(ret) TH_LOG("Test failed for BAR%d", variant->barno);
- }
- 
--- 
-2.53.0
-
+Tested-by: Niklas Cassel <cassel@kernel.org>
