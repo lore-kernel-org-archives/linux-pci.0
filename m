@@ -1,57 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C56F35DA71
-	for <linux-pci@vger.kernel.org>; Tue,  3 Mar 2026 22:37:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D7CC34575F
+	for <linux-pci@vger.kernel.org>; Tue,  3 Mar 2026 23:25:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772577476; cv=none; b=bIX7LRV7PoJxTgHa2EJwsC2M5J6hS/4XgqGwJO3/RrAtJWke1IObNjoU+pjlqKPecT94Io9ijDPmupyb84JnMG3Z+JfOaobHcT8qE8u9e2VCYTvE95J4+I/Svg6+LJJEOFLoiEnb1uhgOvefQdQg9W0Nn9n/IXQNYKNcaIVbCl8=
+	t=1772580359; cv=none; b=RdoZG05niG9Q+NwGaFIaYDmwDXNY8DlFoSifujZfIYbqKGk/FiLGWGg6b9xjwcMqe4osxod8jbCSdszisXqjmyTL/cmgkLWraWjnCrdM6KXbK7Wn9GlhigUT2yr+f+W23yUZJWnAoImED4dEYA4W5vo6kos8mSYd4Zl/WWw/cxk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772577476; c=relaxed/simple;
-	bh=rFwmgOEKW1bQpuy8qPokcG7sHT8yawmrQlj6lXFPFps=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=rVpBp7h34hb5V5lXv3THBPrq2GX7dxLIgtlOnYG2vrQn2cnO6wXXl5L9oHTVKn5jGwXDamrqAEDNo+1O9B7VfQoaHZCaGaD/2k+IcAMzlQpje2TIjJdV755D/xSHjNF6YhRMizGLaBb/bMKQls/UX65qnzRBCxIWwK/xNTg4jd0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=crQn1xYK; arc=none smtp.client-ip=198.175.65.10
+	s=arc-20240116; t=1772580359; c=relaxed/simple;
+	bh=7zOvCQawphsGJjpWhXSfKvIFQswEY4RCSMydhfWhpG0=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=ujygOU4LnfXCGAE2Hpn5eTJUWU2VgAc5/Ho+J+q0iSTF0QmA7eGJ0tg3UCVTfyVeOPcKU/kbklb9As8MKJdcUR8mB/avFNayOAePrrAvDBRizgUMcVLm+hTwfr0anNjNI5EvCCTbkGvCuDDgFc/lQgqd4YEef7I64UtLTe+ezs4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GpHzIldk; arc=none smtp.client-ip=198.175.65.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="crQn1xYK"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GpHzIldk"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772577476; x=1804113476;
+  t=1772580357; x=1804116357;
   h=date:from:to:cc:subject:message-id;
-  bh=rFwmgOEKW1bQpuy8qPokcG7sHT8yawmrQlj6lXFPFps=;
-  b=crQn1xYKLhumrDeNpXnSpSokoUlHluLLf8Fw/YNR0f7w36XKyzoKWjME
-   6CzgtIqITvErhJsQIuhqt/HuEp7MG56VqZWACSw73lSud+aCAQIaiMKU4
-   tj9Ay2HFcxRTfuJ34sxIpT1BSqJyKQ5nn953PxfvySl7bgK7syYz/OoJ+
-   QPmWag8VNdDs8w1TOnxI6/J9NTiMXX4glDKVpmPLO7KmrJDhflw+TrOQM
-   7hd6FAn1+jrorYe/PX5dL7IY3Z9hHk5GUGN0lx2SF0ReYgQaYG7/85vLD
-   eRGBZWEU458FKuyVsXpReDSHR+6dXtv4XbCnTKMS0mQAneQCPoTVW902Q
-   Q==;
-X-CSE-ConnectionGUID: e2ls0XMdRf6kVaMnLQDnAg==
-X-CSE-MsgGUID: YZjyFS82SqugndsoLP227Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11718"; a="91023400"
+  bh=7zOvCQawphsGJjpWhXSfKvIFQswEY4RCSMydhfWhpG0=;
+  b=GpHzIldkWzZrBkEX45tEIv/9jMHPPCx6vg3e6/Do0lZN2wFF6sgcv5D+
+   HdPC3P7rLwOSif9tKIckB3IzLJfPNIxiQ97BsmLPjLuc7vIMWgm/RIbZY
+   1oD7WPR4H0A9aKdHNMSvNtCqnhdxv/Id/LBddYODDDe4gA6WN5oKkgrtQ
+   QDn988HQWuJbQ8eeXe0Q+qE4tJobQpZSSK751gr+jtKbIEY/XEiH7b2hl
+   hHaS4r2gZ2/HCqPGcatXME0Ge0Yh8kyOQhSmdQUD0LXp0D2hsJ6gy4poR
+   2IevGmhmvGSbS9bM6f+yXs8e/q6MND7lPpc3H6G6/B4ntCbEWTEnLEQkU
+   w==;
+X-CSE-ConnectionGUID: 8LyUtTvAQTmo8uAwF/Rsxg==
+X-CSE-MsgGUID: yzuu2p/NQ8qOh1M9N5/uvQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11718"; a="77239886"
 X-IronPort-AV: E=Sophos;i="6.21,322,1763452800"; 
-   d="scan'208";a="91023400"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2026 14:37:55 -0800
-X-CSE-ConnectionGUID: n8P5rHodS4KCIlXBu1U1ag==
-X-CSE-MsgGUID: k+id6nrZSCqju1Jfuz4l6g==
+   d="scan'208";a="77239886"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2026 15:25:57 -0800
+X-CSE-ConnectionGUID: Q6YrgBryS92HtT1+LHNJmw==
+X-CSE-MsgGUID: QOH5dnX9Q2CN5mPlSdeNWw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,322,1763452800"; 
-   d="scan'208";a="241152591"
+   d="scan'208";a="217390292"
 Received: from lkp-server01.sh.intel.com (HELO f27a57aa7a36) ([10.239.97.150])
-  by fmviesa002.fm.intel.com with ESMTP; 03 Mar 2026 14:37:53 -0800
+  by orviesa010.jf.intel.com with ESMTP; 03 Mar 2026 15:25:56 -0800
 Received: from kbuild by f27a57aa7a36 with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1vxYND-000000002xF-1dWD;
-	Tue, 03 Mar 2026 22:37:51 +0000
-Date: Wed, 04 Mar 2026 06:37:05 +0800
+	id 1vxZ7h-000000002zJ-1LRZ;
+	Tue, 03 Mar 2026 23:25:53 +0000
+Date: Wed, 04 Mar 2026 07:25:24 +0800
 From: kernel test robot <lkp@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:virtualization] BUILD SUCCESS
- 806140e9a33218f22188fe5019c7874aa78d81f8
-Message-ID: <202603040657.ARMiKPHQ-lkp@intel.com>
+Subject: [pci:wip/2603-farhan-s390-err-v10] BUILD SUCCESS WITH
+ WARNING d72875f0a4958f51f7196e6fada9357799418a52
+Message-ID: <202603040713.Ir1Cv4B0-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,16 +59,45 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git virtualization
-branch HEAD: 806140e9a33218f22188fe5019c7874aa78d81f8  PCI: Avoid FLR for AMD NPU device
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git wip/2603-farhan-s390-err-v10
+branch HEAD: d72875f0a4958f51f7196e6fada9357799418a52  vfio: Remove the pcie check for VFIO_PCI_ERR_IRQ_INDEX
 
-elapsed time: 1387m
+Warning (recently discovered and may have been fixed):
 
-configs tested: 55
-configs skipped: 0
+    https://lore.kernel.org/oe-kbuild-all/202603031955.4B1fQXSq-lkp@intel.com
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+    drivers/pci/slot.c:40:19: warning: result of comparison of constant -1 with expression of type 'u16' (aka 'unsigned short') is always false [-Wtautological-constant-out-of-range-compare]
+
+Warning ids grouped by kconfigs:
+
+recent_errors
+|-- arm64-allmodconfig
+|   `-- drivers-pci-slot.c:warning:result-of-comparison-of-constant-with-expression-of-type-u16-(aka-unsigned-short-)-is-always-false
+|-- loongarch-allmodconfig
+|   `-- drivers-pci-slot.c:warning:result-of-comparison-of-constant-with-expression-of-type-u16-(aka-unsigned-short-)-is-always-false
+|-- loongarch-allnoconfig
+|   `-- drivers-pci-slot.c:warning:result-of-comparison-of-constant-with-expression-of-type-u16-(aka-unsigned-short-)-is-always-false
+|-- riscv-allmodconfig
+|   `-- drivers-pci-slot.c:warning:result-of-comparison-of-constant-with-expression-of-type-u16-(aka-unsigned-short-)-is-always-false
+|-- riscv-allyesconfig
+|   `-- drivers-pci-slot.c:warning:result-of-comparison-of-constant-with-expression-of-type-u16-(aka-unsigned-short-)-is-always-false
+|-- s390-allmodconfig
+|   `-- drivers-pci-slot.c:warning:result-of-comparison-of-constant-with-expression-of-type-u16-(aka-unsigned-short-)-is-always-false
+|-- sparc64-allmodconfig
+|   `-- drivers-pci-slot.c:warning:result-of-comparison-of-constant-with-expression-of-type-u16-(aka-unsigned-short-)-is-always-false
+|-- um-allmodconfig
+|   `-- drivers-pci-slot.c:warning:result-of-comparison-of-constant-with-expression-of-type-u16-(aka-unsigned-short-)-is-always-false
+|-- x86_64-allmodconfig
+|   `-- drivers-pci-slot.c:warning:result-of-comparison-of-constant-with-expression-of-type-u16-(aka-unsigned-short-)-is-always-false
+|-- x86_64-allyesconfig
+|   `-- drivers-pci-slot.c:warning:result-of-comparison-of-constant-with-expression-of-type-u16-(aka-unsigned-short-)-is-always-false
+`-- x86_64-rhel-9.4-rust
+    `-- drivers-pci-slot.c:warning:result-of-comparison-of-constant-with-expression-of-type-u16-(aka-unsigned-short-)-is-always-false
+
+elapsed time: 1399m
+
+configs tested: 54
+configs skipped: 1
 
 tested configs:
 alpha         allnoconfig    gcc-15.2.0
@@ -125,7 +154,6 @@ x86_64        allnoconfig    clang-20
 x86_64       allyesconfig    clang-20
 x86_64      rhel-9.4-rust    clang-20
 xtensa        allnoconfig    gcc-15.2.0
-xtensa       allyesconfig    gcc-15.2.0
 
 --
 0-DAY CI Kernel Test Service
