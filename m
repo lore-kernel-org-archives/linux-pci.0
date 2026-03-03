@@ -1,39 +1,39 @@
-Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
+Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B83383AEF53;
-	Tue,  3 Mar 2026 14:12:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.171.202.116
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4974423A9A;
+	Tue,  3 Mar 2026 14:28:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772547163; cv=none; b=VQrRfjVWg51egNW5LaoUVok+SJkAhy31rauFTB/vtUbDszqLIgfKHpRKjDaBCGtbfuqVwmgyajqz1f11CqSGYuHHXvKJ38Mt+ROFaSrHSoXI0lA/n1rgZ3AhqGGA/Xn9k+6Ka+/wI8P6qJud6XM4/ZkJnEPI2tivsCUXk58bG2k=
+	t=1772548119; cv=none; b=RzaWcsj1PdVbieU0a9J8GpKYItwHLRV7VKHZbzctTS761j/jwWNN4CtGL+S2iUfjE2zPPAzzD0s3OnOKPRERR4zFhSJ+twwmGvIwLTU/GsAtRCC1Wx82kU1qc9cr3lrpde71lg8wDD/xT/lzkjAYVYxMgKsgXIojtF7AE8kMPNI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772547163; c=relaxed/simple;
-	bh=dPGInr9bJSJ4aaTC8V6Vfs27BwEv/iSgsWjWG9xQ8Pk=;
+	s=arc-20240116; t=1772548119; c=relaxed/simple;
+	bh=sFdspMKJumEMO4fDQc2+117471ZtpGFHB8cFzHcqV9k=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VgGNSRa/nRW5IUISlBVLbf+ovl5eEyjETSImOEm7ZHdN6xbs09HGwUiqCOD9N5rkwRvh5+5wy0VtvRYM6iNiW8ozPXwpeLp2AzAzmdgZ0XA7900RLSh2scJtePmNbDrAurC4XHdAOjg4ge0m18Xp2EONxBKsdHQmhZQHwKW0PJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=PKXnJBTJ; arc=none smtp.client-ip=185.171.202.116
+	 MIME-Version:Content-Type; b=O8n8KdcANGeo5HgRhp7ATof0t1m3PSlrlvObMxNog3FLmh4gnm3KfYUejjZ27p1Y1F/lB9gi/D1MrzkeqCAC4bqrdUsKMmzBPHU8QKX7NF0mwW4DGqwh4wQvbPfRIX1W8WAZu2L6HKKwkuq54fmm/cu2pdv+TrItM7KtuC0j05o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=d/O+JXo5; arc=none smtp.client-ip=185.246.84.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="PKXnJBTJ"
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="d/O+JXo5"
 Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-04.galae.net (Postfix) with ESMTPS id 838BCC40FAB;
-	Tue,  3 Mar 2026 14:12:56 +0000 (UTC)
+	by smtpout-02.galae.net (Postfix) with ESMTPS id 6C05D1A2357;
+	Tue,  3 Mar 2026 14:28:36 +0000 (UTC)
 Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id B0FF95FF87;
-	Tue,  3 Mar 2026 14:12:38 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 29A51102F19D0;
-	Tue,  3 Mar 2026 15:12:11 +0100 (CET)
+	by smtpout-01.galae.net (Postfix) with ESMTPS id 3AFBB5FF87;
+	Tue,  3 Mar 2026 14:28:36 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 2BC881036864C;
+	Tue,  3 Mar 2026 15:28:13 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1772547155; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	t=1772548112; h=from:subject:date:message-id:to:cc:mime-version:content-type:
 	 content-transfer-encoding:in-reply-to:references;
-	bh=NDntnEFk19MkiUVyHnkpMvjEQ0xuOComNTKHqxzRgtY=;
-	b=PKXnJBTJeOSAhEFdsakoatz9eZVQJsYsja7QCQMQzgMh/5rn1PRNYjh0Y43mXfXGOsBQe3
-	ylbpcNlkEYOZJgf5w2TjuKlN6BoKRqaUv2T7NSWnft4+R5CB1JRZXmzrvE9foIFtljC0dX
-	9lnks0jyXkMRsFdgc/AIne583SVg0IBmmZGSlbX4ZFFiZoIRIMxN3ep1XEp5lG3ykQNMTV
-	2MMAGU53bJevHap0Qjn6XIWdND7dFzJBZWAWKL1cGUcMwe1FByNjIm1aDXdWkatlTF4u4d
-	eRAAosIijuZ77ayzdkxgCV3s0AjnR8VvyjdUbgJKG2IeDC3gKeA+0ZFLN444JQ==
-Date: Tue, 3 Mar 2026 15:12:10 +0100
+	bh=GWUy5XUp50lxxjU1GZxGSJIelBHwpc1HiL3azJ0BLV4=;
+	b=d/O+JXo543vedMVvGLT5gKQytZfFXK8awsVgYA6R2ojxBslqYDSqG0VaRPH7bRUxFJlQN8
+	1vkegNiRGY41CrTbPRA1NgXIqSpHHXeFNACKcalOr4bzHngc7EbH0CSSUuvUxXHy5MVFSy
+	vEESymOX/4StaUul4BCuzjnEikImvMMtImKAjJiVJGCmUvbpNeHT+w2j0OOFIPwqXLeYpl
+	cStsMnmcoZTIpyS3EgJxQykjVvH8H5XHlQadKad7TsG6qk3H2sE9QULsdlhxCLsvdS6N3P
+	Oejd8rD6YiajdGxXjpbhWcTxEQM/3Nco4XUAiT9M4D/MHRwg24QTsSLti/Lp2w==
+Date: Tue, 3 Mar 2026 15:28:12 +0100
 From: Herve Codina <herve.codina@bootlin.com>
 To: Jonathan Cameron <jonathan.cameron@huawei.com>
 Cc: Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>, "Krzysztof
@@ -71,13 +71,12 @@ Cc: Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>, "Krzysztof
  Horatiu Vultur <horatiu.vultur@microchip.com>, Steen Hegelund
  <steen.hegelund@microchip.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>,
  Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH v5 07/28] driver core: fw_devlink: Introduce
- fw_devlink_set_device()
-Message-ID: <20260303151210.6e8462b8@bootlin.com>
-In-Reply-To: <20260302122336.00006bd8@huawei.com>
+Subject: Re: [PATCH v5 11/28] cxl/test: Use fw_devlink_set_device()
+Message-ID: <20260303152812.5d699701@bootlin.com>
+In-Reply-To: <20260302122449.00006c77@huawei.com>
 References: <20260227135428.783983-1-herve.codina@bootlin.com>
-	<20260227135428.783983-8-herve.codina@bootlin.com>
-	<20260302122336.00006bd8@huawei.com>
+	<20260227135428.783983-12-herve.codina@bootlin.com>
+	<20260302122449.00006c77@huawei.com>
 Organization: Bootlin
 X-Mailer: Claws Mail 4.3.1 (GTK 3.24.49; x86_64-redhat-linux-gnu)
 Precedence: bulk
@@ -92,28 +91,32 @@ X-Last-TLS-Session-Version: TLSv1.3
 
 Hi Jonathan,
 
-On Mon, 2 Mar 2026 12:23:36 +0000
+On Mon, 2 Mar 2026 12:24:49 +0000
 Jonathan Cameron <jonathan.cameron@huawei.com> wrote:
 
-> On Fri, 27 Feb 2026 14:54:04 +0100
+> On Fri, 27 Feb 2026 14:54:08 +0100
 > Herve Codina <herve.codina@bootlin.com> wrote:
 > 
-> > Setting fwnode->dev is specific to fw_devlink.
+> > The code set directly fwnode.dev field.
 > > 
-> > In order to avoid having a direct 'fwnode->dev = dev;' in several
-> > place in the kernel, introduce fw_devlink_set_device() helper to perform
-> > this operation.
-> >   
-> I don't mind the helper, but the description could do with a little
-> detail on why.  Is it just to avoid visibility of internal details, or
-> is there a stronger reason?
+> > Use the dedicated fw_devlink_set_device() helper to perform this
+> > operation.
+> > 
+> > Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+> > Reviewed-by: Dave Jiang <dave.jiang@intel.com>  
+> Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+> 
+> From practical point of view, what path do you expect this to take?
+> Is there urgency to make the change, or does it make more sense to
+> add the helper this cycle and cleanup up the various places it can be
+> used next?
 
-I think the idea was to avoid visibility.
+I hoped to have patches 7 to 12 applied by one maintainer on his/her trees.
 
-It cames from feedback received on my first iteration
-  https://lore.kernel.org/all/20250408145139.293c79a2@bootlin.com/
+As it is related to fw_devlink, I expect to have them applied by a driver
+core maintainer.
 
-I found the idea relevant and so I did the patch.
+Any other plan can work as well.
 
 Best regards,
 Hervé
