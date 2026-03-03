@@ -1,130 +1,147 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE3132DF144
-	for <linux-pci@vger.kernel.org>; Tue,  3 Mar 2026 15:12:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67814423175;
+	Tue,  3 Mar 2026 15:24:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772550749; cv=none; b=pP4OF+fO2Hr8KT/f6osqwrr47R623u9JGx6I+FUvwAhT86AL9Hos3qAjlaqTFQEH1PlQ+eSRCuJ27jHx7MfdOPQWEbgiAsgL46mUN6UfgKFof7QyjELAfWOJuZr7mRIrFpDFEZkdg4+jj31+7Le64VSPk2cCo5HoOdqX0vvN4fs=
+	t=1772551480; cv=none; b=G2yhSBmBykhXkJ/WADRSzsrTEd0rlpV7VNykf5oFDGhlFZvpJrFRjj/mcYHBYFR71I71Up5Zg3v9Qn85wVgDBHaXwVFBIuw9mbqAN5o7fVtKoe0ggLkHPF+njwf/uNIJJ7vBbSgbjSlVCRECTBlkqkYoLFLgpMpbk0MR4lx3o0M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772550749; c=relaxed/simple;
-	bh=9m0Blrtk3S4qTrOUsN+u+5DNUGNSAQDGSODTNLlJOxw=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=U+JIqBd98swyOJNwoirjdTweH6jZUNRJ00Oj0/GYKQUYYmLl2y7uO2CkxJLejo5qZE726yXMPcQSVJTjFuNca+ywlE4EMQHCYxo6nZS2aY0VHEmiS4PpYEX6FDAgOu45K3tFnRWLRkHHTnYY0Oi5hZgdMn/2p/Bidy8UF9dGgkg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZM9oMDLO; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1772551480; c=relaxed/simple;
+	bh=ezIjOizC8RAT3P5qFtSymLpkn/IPMdhnAN93KcIKjO8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VxwCw/V3L3WL5bP8x+KQaF700SmT4y7MJTavj/5RcFrRo/lLgwf3wj51xRiEfteu6P9seotXxJIPQty+fb/dizFl70RwAz9Hrq93VUQ6NJ+KEMLU+XjJUt5lpc/Mcupq0KZtOl3fkmCRKw/1+cQ9QYTcY0YKangN3OsvXFaLkQI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=g2lKT83P; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZM9oMDLO"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="g2lKT83P"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772550746; x=1804086746;
-  h=date:from:to:cc:subject:message-id;
-  bh=9m0Blrtk3S4qTrOUsN+u+5DNUGNSAQDGSODTNLlJOxw=;
-  b=ZM9oMDLO0E3KDiuSgaxeID3dtqc1cv661oqJnGxd3O6Gfg26P0BDVel0
-   0v8q8N2BUQSGHtI2ttXQsIQ5q6JR3cQy+1MivVIoUtxnftRdBTIUHKSnG
-   hfPKQVHoCNQuLAYt7mglyfh+qPhkPrEf/oZ63+bLxCfTA3HDZIE0oyuO1
-   VxRYimdbp+9cbUWAJBLD53WlgEQzG1UDLWfzgIC43G4j2dOwlBKHYkBC0
-   ZehS8lJdz+7R+HyJylGnvobk8x9OE/WdTd8LcLldh63MZzG4OLLYLMQQe
-   xNslVoTFzWyNWvMnd9sXU4PStJ2sUQaMzOoXrh3XeidjuLEKBNO9sA6NX
-   g==;
-X-CSE-ConnectionGUID: y8kdSdNJQmCeglQDuU+vhg==
-X-CSE-MsgGUID: 26bx28yjSaO/9CLN7ns3TA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11718"; a="72790769"
+  t=1772551479; x=1804087479;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=ezIjOizC8RAT3P5qFtSymLpkn/IPMdhnAN93KcIKjO8=;
+  b=g2lKT83PCVDXdE/G1YlMMkkjIjJTI4SKcJyJYnBsc1VNm2dXL/VN/Zk2
+   lrtowPuerKv5i+UF0PagWc/6uFJI8RDqIvm/tpvufhahuM+lO19DD+dBb
+   mFmyzRT3FLICbmEjps6kb0cwYV25JZ6Qn7x+l+2uoxChuI4aHwUkZCM/L
+   aE6Sv7c+fy64QjAF+AoLXCO8cdp3op88BgyjeKPxsVFlBb47cZLPHcLbf
+   JcqIQ5LfPNqRcHMGuBiWouQi8/+7NQZH1NNprgM6KFLDFoJhYpKadpe0B
+   iN+GqlYZ5JMmw55z9MEj1DYNHexlddlah8iEr9bX2zqyjd6a3IiWTeBtF
+   A==;
+X-CSE-ConnectionGUID: xGE6+JdZQXyak+SI9MqpCQ==
+X-CSE-MsgGUID: m5NTSEq/SXy6lmorKSnlTg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11718"; a="73505063"
 X-IronPort-AV: E=Sophos;i="6.21,322,1763452800"; 
-   d="scan'208";a="72790769"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2026 07:12:25 -0800
-X-CSE-ConnectionGUID: TeCOfO/PTmSh2RSdXMd3mg==
-X-CSE-MsgGUID: 7P56yZoNSwGBSRFYRDxkYg==
+   d="scan'208";a="73505063"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2026 07:24:38 -0800
+X-CSE-ConnectionGUID: 8EDCa8VCSnelhlWlG1ZesA==
+X-CSE-MsgGUID: 5BGaqm/dSdmyx5dAFD99/g==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,322,1763452800"; 
-   d="scan'208";a="218001219"
-Received: from lkp-server01.sh.intel.com (HELO f27a57aa7a36) ([10.239.97.150])
-  by orviesa008.jf.intel.com with ESMTP; 03 Mar 2026 07:12:23 -0800
-Received: from kbuild by f27a57aa7a36 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vxRQ4-000000002Ph-0ZXM;
-	Tue, 03 Mar 2026 15:12:20 +0000
-Date: Tue, 03 Mar 2026 23:12:16 +0800
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/dwc] BUILD SUCCESS
- 5e5ea39ff55297fc9d6338f26346c2a7738a78ea
-Message-ID: <202603032309.BI2HO0J7-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+   d="scan'208";a="217269195"
+Received: from dalessan-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.245.32])
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2026 07:24:25 -0800
+Date: Tue, 3 Mar 2026 17:24:22 +0200
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Herve Codina <herve.codina@bootlin.com>
+Cc: Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Kalle Niemi <kaleposti@gmail.com>,
+	Matti Vaittinen <mazziesaccount@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>, Frank Li <Frank.Li@nxp.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	Michael Turquette <mturquette@baylibre.com>,
+	Stephen Boyd <sboyd@kernel.org>, Andi Shyti <andi.shyti@kernel.org>,
+	Wolfram Sang <wsa+renesas@sang-engineering.com>,
+	Peter Rosin <peda@axentia.se>, Arnd Bergmann <arnd@arndb.de>,
+	Saravana Kannan <saravanak@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Charles Keepax <ckeepax@opensource.cirrus.com>,
+	Richard Fitzgerald <rf@opensource.cirrus.com>,
+	David Rhodes <david.rhodes@cirrus.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Mark Brown <broonie@kernel.org>, Len Brown <lenb@kernel.org>,
+	Daniel Scally <djrscally@gmail.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sakari Ailus <sakari.ailus@linux.intel.com>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Ira Weiny <ira.weiny@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Shawn Guo <shawnguo@kernel.org>, Wolfram Sang <wsa@kernel.org>,
+	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
+	imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
+	linux-clk@vger.kernel.org, linux-i2c@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org, patches@opensource.cirrus.com,
+	linux-gpio@vger.kernel.org, linux-pm@vger.kernel.org,
+	linux-spi@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-cxl@vger.kernel.org,
+	Allan Nielsen <allan.nielsen@microchip.com>,
+	Horatiu Vultur <horatiu.vultur@microchip.com>,
+	Steen Hegelund <steen.hegelund@microchip.com>,
+	Luca Ceresoli <luca.ceresoli@bootlin.com>,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: Re: [PATCH v5 07/28] driver core: fw_devlink: Introduce
+ fw_devlink_set_device()
+Message-ID: <aab9Js6nRaeH3pn9@ashevche-desk.local>
+References: <20260227135428.783983-1-herve.codina@bootlin.com>
+ <20260227135428.783983-8-herve.codina@bootlin.com>
+ <20260302122336.00006bd8@huawei.com>
+ <20260303151210.6e8462b8@bootlin.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260303151210.6e8462b8@bootlin.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc
-branch HEAD: 5e5ea39ff55297fc9d6338f26346c2a7738a78ea  PCI: dwc: Remove not-going-to-be-supported code for Baikal SoC
+On Tue, Mar 03, 2026 at 03:12:10PM +0100, Herve Codina wrote:
+> On Mon, 2 Mar 2026 12:23:36 +0000
+> Jonathan Cameron <jonathan.cameron@huawei.com> wrote:
+> > On Fri, 27 Feb 2026 14:54:04 +0100
+> > Herve Codina <herve.codina@bootlin.com> wrote:
+> > 
+> > > Setting fwnode->dev is specific to fw_devlink.
+> > > 
+> > > In order to avoid having a direct 'fwnode->dev = dev;' in several
+> > > place in the kernel, introduce fw_devlink_set_device() helper to perform
+> > > this operation.
+> > >   
+> > I don't mind the helper, but the description could do with a little
+> > detail on why.  Is it just to avoid visibility of internal details, or
+> > is there a stronger reason?
+> 
+> I think the idea was to avoid visibility.
+> 
+> It cames from feedback received on my first iteration
+>   https://lore.kernel.org/all/20250408145139.293c79a2@bootlin.com/
+> 
+> I found the idea relevant and so I did the patch.
 
-elapsed time: 1485m
+Yes, the idea is to hide the fwnode devlink related stuff behind the getters
+and setters. Ideally, everything in fwnode_handle related to devlinks should
+be marked as __private.
 
-configs tested: 53
-configs skipped: 2
+-- 
+With Best Regards,
+Andy Shevchenko
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
 
-tested configs:
-alpha         allnoconfig    gcc-15.2.0
-alpha        allyesconfig    gcc-15.2.0
-arc          allmodconfig    gcc-15.2.0
-arc           allnoconfig    gcc-15.2.0
-arc          allyesconfig    gcc-15.2.0
-arm           allnoconfig    clang-23
-arm          allyesconfig    gcc-15.2.0
-arm64        allmodconfig    clang-19
-arm64         allnoconfig    gcc-15.2.0
-csky         allmodconfig    gcc-15.2.0
-csky          allnoconfig    gcc-15.2.0
-hexagon      allmodconfig    clang-17
-hexagon       allnoconfig    clang-23
-i386         allmodconfig    gcc-14
-i386          allnoconfig    gcc-14
-i386         allyesconfig    gcc-14
-loongarch    allmodconfig    clang-19
-loongarch     allnoconfig    clang-23
-m68k         allmodconfig    gcc-15.2.0
-m68k          allnoconfig    gcc-15.2.0
-m68k         allyesconfig    gcc-15.2.0
-microblaze    allnoconfig    gcc-15.2.0
-microblaze   allyesconfig    gcc-15.2.0
-mips         allmodconfig    gcc-15.2.0
-mips          allnoconfig    gcc-15.2.0
-mips         allyesconfig    gcc-15.2.0
-nios2        allmodconfig    gcc-11.5.0
-nios2         allnoconfig    gcc-11.5.0
-openrisc     allmodconfig    gcc-15.2.0
-openrisc      allnoconfig    gcc-15.2.0
-parisc       allmodconfig    gcc-15.2.0
-parisc        allnoconfig    gcc-15.2.0
-parisc       allyesconfig    gcc-15.2.0
-powerpc      allmodconfig    gcc-15.2.0
-powerpc       allnoconfig    gcc-15.2.0
-riscv        allmodconfig    clang-23
-riscv         allnoconfig    gcc-15.2.0
-riscv        allyesconfig    clang-16
-s390         allmodconfig    clang-18
-s390          allnoconfig    clang-23
-s390         allyesconfig    gcc-15.2.0
-sh           allmodconfig    gcc-15.2.0
-sh            allnoconfig    gcc-15.2.0
-sh           allyesconfig    gcc-15.2.0
-sparc         allnoconfig    gcc-15.2.0
-um           allmodconfig    clang-19
-um            allnoconfig    clang-23
-um           allyesconfig    gcc-14
-x86_64       allmodconfig    clang-20
-x86_64        allnoconfig    clang-20
-x86_64       allyesconfig    clang-20
-x86_64      rhel-9.4-rust    clang-20
-xtensa        allnoconfig    gcc-15.2.0
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
