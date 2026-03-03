@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 598904D2EF0;
-	Tue,  3 Mar 2026 16:18:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E18E836D9ED;
+	Tue,  3 Mar 2026 16:27:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772554687; cv=none; b=oqe8eSH7uYrCXOM4j7c/0Cfzw2zPFMpVctHwise+OwUVHvgurSBr3+g3W/DhuIoBV11XYFCR5KTg4zIjbk7he6s9D9QZtrJ80KAkZ9zxhRfLAaREdFpQnqjfdrRaw1V8hFORJCoBZDotuPx0lcXXsD2mObqf/fc5lRUL2FpiLyw=
+	t=1772555263; cv=none; b=ZvHGKAmkpZW6m69T/OZEeP/deZ1XmtkBPQ2SIi+O/Io6gbCqN+eW6ngU7p3JQmcSHzwqDfygtblH7JM1o1Co2dI4XY19UNIvQlzpH7I5KdbHj0zQJk8ayEezj+2gef9EAFnOc5hu+5RcYbXIaz+U+J3yagC13/AT6Ch8z+LEuzo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772554687; c=relaxed/simple;
-	bh=HKrZ9fFGSSlpC4H/YmdsdQhTkBYdI7OCy2dmmG6ClUI=;
+	s=arc-20240116; t=1772555263; c=relaxed/simple;
+	bh=02WuwVzfcqREGKNcO4A+gehHauWokgchNs/BbMoEVRw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eHQ4Wc5UXmaj9XfCg4zkf6PLJpGabsuQuZHBOsSMqSEGLr4d8/AiOH/0e/tcJRxOaR+mtREiRHl7L3s/GjL+wZC/BfBnjDKUNGzkx7UeXctBuIfBB6y+N+/ekRmBbtacTPKLaqRWPTzOPAPAhrRXJcrMEJmCis5JISiw7/cTqJs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qQeNMC+8; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Frfx0a3q97oS0gIEQh8VEH9Q8RtRiDGW3msbGcbW++meCfEF5866QpIA6P60InD9CFnI6e0ma9QUyo9MTuNRUc4TF3O9T5J29WX3jFsb2EaluVAeb2NVxASgaJNWParMhJDZmJ2HsEMlEphKfrTYmgDWRNubPN8iIT15uhntoy4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IGwJT3cc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qQeNMC+8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C9A1C2BCAF;
-	Tue,  3 Mar 2026 16:18:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IGwJT3cc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 464ACC19422;
+	Tue,  3 Mar 2026 16:27:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772554687;
-	bh=HKrZ9fFGSSlpC4H/YmdsdQhTkBYdI7OCy2dmmG6ClUI=;
+	s=k20201202; t=1772555262;
+	bh=02WuwVzfcqREGKNcO4A+gehHauWokgchNs/BbMoEVRw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qQeNMC+8TjYaXqWmi1Z5AsSI76NbaOZ40hNtAsZ6GNJQBq79GgyQkmnX039B+sNcP
-	 bDM2JTflnRZD6UVXAC8yjCXqWOSp30wGcd/GLC8km7VHOlR7xLAc31ecTyNeBlJvvX
-	 v+sikuYUYseEEddP2Bl7O2IQ/PyUbkNc24/NiWz3T9MyITRBthI73rba5QYcelnShE
-	 VWivcYQZyOs+RY4Cv5CJ4Za+E+SGMB2D1FhQXjtptQbcNNMA0oYpLceyhY1t48OE7l
-	 EoDm8+Oxtx3GK+n4WcAE1O5RoaMuje7me2Ytjty1HK7bQDh4zgNRAQMsTwCsd6j+Rl
-	 jHWze/5tHPx1g==
-Date: Tue, 3 Mar 2026 21:47:50 +0530
+	b=IGwJT3ccRPvCctpnE4DzTVD9FcqQmUNlycHUD0v6oE4FbMMKWy2q5rt9sKy0wKWn5
+	 XWyuo0Xe6aDRAWyTuIbehuzELvMVCVofjpVhED//48OHcWjhILi9DMBEPdLcSDWDCb
+	 d6+pNTKHz74ebyHUBnyikOrKlOvq9eJMLEd2RoXhwffxanj1dl2oO3XrEEp8Rb1vtM
+	 RKec0J64+9GRrl2bq6SfYqks3UlK1VN+5ZOBcRiq8EY9e1sIuv/vYBSCpXXDm7s652
+	 zmoURwTNwBIhEAEjysccLZK+I/09A5pk+DOppSF/yM+gXjuPFM62kyd9DKC/NLqvSw
+	 jwVKBkkp/E0PQ==
+Date: Tue, 3 Mar 2026 21:57:25 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Jon Hunter <jonathanh@nvidia.com>
 Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>, 
-	krishna.chundru@oss.qualcomm.com, Bjorn Helgaas <helgaas@kernel.org>, 
+	Bjorn Helgaas <helgaas@kernel.org>, krishna.chundru@oss.qualcomm.com, 
 	manivannan.sadhasivam@oss.qualcomm.com, Bjorn Helgaas <bhelgaas@google.com>, 
 	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
 	Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
@@ -41,17 +41,17 @@ Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
 	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org
 Subject: Re: [PATCH v2 1/2] PCI/ASPM: Override the ASPM and Clock PM states
  set by BIOS for devicetree platforms
-Message-ID: <kkly3z4durpagtenadvmzdpojlctachgfgi2fdapt6zthdl2gx@n2qhmlud2zb7>
-References: <5z7c25nkb35prvax6vq6ud7eaeuhzsswbf7fqvmlgys3xftgwb@odocboejrdrv>
- <e44c330b-778b-4fa1-b678-fa909cc05b03@nvidia.com>
+Message-ID: <km5stwtgzyshi5ogd2ke7qjj35nakwo6ztho5ju6y4ds32epln@fqqebty3v6me>
+References: <e44c330b-778b-4fa1-b678-fa909cc05b03@nvidia.com>
  <bf37b6a5-268d-4c07-a536-a826b3d5953b@nvidia.com>
  <unc5zefwndgcv7wufaezz3gkg3qtaymkjlmymhyqdqwzn3wybl@ow2rhbyt772h>
  <f9ac8c8f-8959-416b-ba90-14f0886c5bc0@nvidia.com>
  <a5m4pqtiaxsq5lmq64roro633ganbeq7mypa5ojuuqy4npkvok@wcogdbzaq6xe>
  <7157c68e-97f3-43b0-bfb5-e271a8f2a4b8@nvidia.com>
  <cf1e685a-a1cb-45ec-bdc3-1ef1a3d1044e@nvidia.com>
- <npt2cgwksulq5375dzlhszqaqrurgdvlkz6fdczer6shglqfg5@gp6a6xymymww>
- <26ad62ff-4972-4b29-8f9e-1868cd20ee00@nvidia.com>
+ <e0a0dc6d-fff0-41ec-92eb-7f2dbefa967b@nvidia.com>
+ <vpwe273ehsbsyjpysyky4ypgnawosjehen34rr2n5bpoaqjsyg@3uylwh3oyyqc>
+ <cfbbe3f0-f958-4cf2-aaa0-afca52cc5d5e@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -61,54 +61,66 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <26ad62ff-4972-4b29-8f9e-1868cd20ee00@nvidia.com>
+In-Reply-To: <cfbbe3f0-f958-4cf2-aaa0-afca52cc5d5e@nvidia.com>
 
-On Thu, Feb 26, 2026 at 04:52:57PM +0000, Jon Hunter wrote:
+On Thu, Feb 26, 2026 at 04:55:34PM +0000, Jon Hunter wrote:
 > 
-> On 26/02/2026 11:16, Manivannan Sadhasivam wrote:
+> On 26/02/2026 11:08, Manivannan Sadhasivam wrote:
 > 
 > ...
 > 
-> > I can't certainly know what is going wrong. If controller driver suspend is
-> > skipped, then ideally the controller and the NVMe device should stay powered ON
-> > during suspend. But if the platform pulls the plug at the end of suspend
-> > (firmware, gdsc or some other entity), then all the context would be lost and
-> > that might explain the failure because both the controller driver and NVMe
-> > driver would expect the RC and NVMe to be active.
+> > Since we know that ASPM is the issue on your platform and the failure also
+> > confirms that ASPM was never enabled before, I'd suggest disabling ASPM for the
+> > Root Port as a workaround:
 > > 
-> > You can try commenting out the whole PM callbacks:
-> > 		// .pm = &tegra_pcie_dw_pm_ops
+> > ```
+> > diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+> > index 06571d806ab3..f504b4ffbcb6 100644
+> > --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> > +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+> > @@ -2499,6 +2499,13 @@ module_platform_driver(tegra_pcie_dw_driver);
+> >   MODULE_DEVICE_TABLE(of, tegra_pcie_dw_of_match);
+> > +static void tegra_pcie_quirk_disable_aspm(struct pci_dev *dev)
+> > +{
+> > +       pcie_aspm_remove_cap(dev, PCI_EXP_LNKCAP_ASPM_L1 |
+> > +                                 PCI_EXP_LNKCAP_ASPM_L0S);
+> > +}
+> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID, tegra_pcie_quirk_disable_aspm);
+> > +
+> >   MODULE_AUTHOR("Vidya Sagar <vidyas@nvidia.com>");
+> >   MODULE_DESCRIPTION("NVIDIA PCIe host controller driver");
+> >   MODULE_LICENSE("GPL v2");
+> > ```
 > > 
-> > If the host itself doesn't resume, then it confirms that some other entity is
-> > pulling the plug (which is common in ARM platforms). In that case, we have to
-> > let the NVMe driver know about it so that it can shutdown the controller.
+> > You can use specific Root Port IDs or PCI_ANY_ID depending on the impact. We can
+> > also work on fixing the actual issue parallelly.
 > 
-> For Tegra, we enter a deep low power state known as SC7 on suspend which
-> does involve firmware. Nonetheless I tried for fun, but this breaks suspend
-> completely.
+> Thanks. By default we are building the PCIe driver for Tegra as a module and
+> so I am not sure we can use DECLARE_PCI_FIXUP_EARLY() right?
 > 
 
-Ah, this explains the problem. We also have a similar problem on our Qcom Auto
-boards where the firmware completely shuts down the SoC and puts the DRAM in
-self refresh mode. So NVMe driver never resumes properly. We tried multiple ways
-to address this issue in the NVMe driver, but the NVMe maintainers rejected
-every single one of them and asking for some API in the PCI or PM core to tell
-the NVMe driver when to shutdown the device during suspend. But this turned out
-to be not so trivial.
+Ah, yes. We cannot use any of these DECLARE_PCI_FIXUP*() in a module anyway :/
 
-Another way to workaround this issue would be by calling
-pm_set_suspend_via_firmware() from the driver that controls the entity doing
-power management of the SoC (firmware). In your case, it is
-drivers/soc/tegra/pmc.c?
+> I was just thinking that in pcie_aspm_override_default_link_state() we just
+> need a callback to specify the default ASPM override state?
+> 
 
-In that case, you can use this patch as a reference:
-https://lore.kernel.org/all/20251231162126.7728-1-manivannan.sadhasivam@oss.qualcomm.com
+That looks like a dirty hack. Moreover, your platform works perfectly fine with
+ASPM. So you should not be turning it off due to one driver behaving
+erratically.
 
-When pm_set_suspend_via_firmware() is set, NVMe driver assumes that the firmware
-might pull the plug during suspend, so it shutdowns the controller completely
-and brings it back from reset during resume.
+As I mentioned in [1], you should try to advertise the
+PM_SUSPEND_FLAG_FW_SUSPEND flag for the platform as per [2].
+
+FYI, this is a known issue that is plauging us for so long.
+PM_SUSPEND_FLAG_FW_SUSPEND is the cleanest solution we came up with. But
+unfortunately, we cannot use it across all of our Qcom SoCs due to firmware not
+advertising S2RAM in some of them.
 
 - Mani
+
+[1] https://lore.kernel.org/linux-pci/kkly3z4durpagtenadvmzdpojlctachgfgi2fdapt6zthdl2gx@n2qhmlud2zb7/
+[2] https://lore.kernel.org/all/20251231162126.7728-1-manivannan.sadhasivam@oss.qualcomm.com/
 
 -- 
 மணிவண்ணன் சதாசிவம்
