@@ -1,102 +1,166 @@
-Received: from mail-m3296.qiye.163.com (mail-m3296.qiye.163.com [220.197.32.96])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D14D199385;
-	Tue,  3 Mar 2026 01:01:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.96
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8142218ACC
+	for <linux-pci@vger.kernel.org>; Tue,  3 Mar 2026 01:09:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772499680; cv=none; b=UOC8tj/uhpCpeNuW3UCVR4SQdB3kbd0a7BbFoEwWWba4aSXU598J46pUdNOy1YAXVSmz4UD/i0NuyAf6oMGurwBaKK1LcMU+5Xf6tEs0aC47iobkkggUDlmQtOj3xJzfzIpopk3C9mCK3IoPtjgRAip8cRrGLlEob06yotEZ7M4=
+	t=1772500163; cv=none; b=Ud/YQ5IFxKu02uklXWghmBwCbdHJO+M8FTvHhoR2g7bidToFHyjx+DQBJklKdwcOOGIs2LfzYkGKpPfaS7Z51eUOn/T+Hkc61hTRP0SoxgeMi/j55z5d+CqYgjcdtO+k3oRGS2osAq5opsjBRKOPyNDLAe4/GeUkl2v6uWy2Bos=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772499680; c=relaxed/simple;
-	bh=YlFxWE2cpADN+FWG/CYk4BPUDtSzJ8mEMkH9lcfd2Lc=;
-	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=BYmebBqD6lV9VTaMqFQPH1fZ7lYb5hwvCFy28625cc5D4mIsZ45hBUyQ51X2jivEaT7KmyyOtowaMT8KllsxytcSViXcOou6cq1BnO9c+99zCd9M+jVIKRYz9x0iAoUfKOQ3gGgpn0gUJ4tyMQMmDRljJlfuwHyNefBAtdBbDLs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=EJ2lQYLn; arc=none smtp.client-ip=220.197.32.96
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1772500163; c=relaxed/simple;
+	bh=w3XJNMngVH9o2x8Fo5Z+SPPnOKYZk1VuCewxXQHywRk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uHpVhYPqYl1maigkeOGO/o4zdM5peiC63e6bCbsULMJXDQX+jxOvabB1NZ2fIAfY8psDMrzB1/b9imQNKtLiYHUUon0Oh1EarmK8ZI3FZra4o9PJ+/+SgaB6rcLulO26MYgVpUb8KE7oeuT1x4cIRebMPXKIq9iwJLl9eILaOUg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dS+LVF8o; arc=none smtp.client-ip=209.85.216.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="EJ2lQYLn"
-Received: from [172.16.12.14] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 3581f17ca;
-	Tue, 3 Mar 2026 09:01:06 +0800 (GMT+08:00)
-Cc: shawn.lin@rock-chips.com, Grimmauld <grimmauld@grimmauld.de>
-Subject: Re: [PATCH v3] PCI: dw-rockchip: Enable async probe by default
-To: Anand Moon <linux.amoon@gmail.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>,
- Niklas Cassel <cassel@kernel.org>, Hans Zhang <18255117159@163.com>,
- Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
- Wilfred Mallawa <wilfred.mallawa@wdc.com>,
- "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS"
- <linux-pci@vger.kernel.org>,
- "moderated list:ARM/Rockchip SoC support"
- <linux-arm-kernel@lists.infradead.org>,
- "open list:ARM/Rockchip SoC support" <linux-rockchip@lists.infradead.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <20260226101032.1042-1-linux.amoon@gmail.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <560f75f3-e82c-4825-554d-5ead1ae353ee@rock-chips.com>
-Date: Tue, 3 Mar 2026 09:01:05 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dS+LVF8o"
+Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-3567e2b4159so2679446a91.0
+        for <linux-pci@vger.kernel.org>; Mon, 02 Mar 2026 17:09:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1772500161; x=1773104961; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=SNfT7rc1kauxFP4QoLAxKKWlk0j1ruWc56+EWObHoAU=;
+        b=dS+LVF8ou9Zz93QFikDpAP7pC9t6MOJIxgU5f2273WXXLTLjKe8pM9IOBBxCIAlhcn
+         HOuu6YwE3p8U6PQUCYkxTPKlsqouBWk1UYm6kAhmfE5OW8pJp50Mu7rswWilOWbRNk9W
+         jwcsldw7G1Ig6r8wRgLXaXYeTpZ33+aGHnmStVAL1JpoDdjZQ58Gt3EENYveR/5CsZzQ
+         UMidENnBWqwspNHJFwBPjNWPcgWOd2oz/SoudWyssRN0we3Q3DU23fUSealLNtTHOptB
+         CgAEXUiWFHYCtgcbifxpG9X1c0P5BjYcYVLYjIFBsbi9WGOStwHTc6SJsI0PtP38i7WH
+         EGnQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772500161; x=1773104961;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=SNfT7rc1kauxFP4QoLAxKKWlk0j1ruWc56+EWObHoAU=;
+        b=Kd++ayPs5aEZqLl5eIbB75B+pTwYVA8n2uFavHq3oQdRG8B7DI8B93F/w8p8TJB2Hv
+         TY/fiS/fnSfL0i0typ2PyAxUDgoOd5vIl9YbFrEL3MJmvckj8oMAWNOiZ5+KlXBC83gD
+         drXLyJopAZMoqpCCTPz6sIA2CoMlC1Id2PBf1ztSMpsQqrqG11ZJcBuZPQRWDzQ2Baox
+         7SRZn+hbqLwuBXuAKzziHQE7UlYgQXBG2aXhfilsLMRqW9FZMoQnpAhMcE+iTQHs3LwV
+         aMAOEuZMyk99WuAyW26q+2X+In48OzblEEsdsVCpYqRR/kOVWWYuTIevw4uh6nUwut94
+         VkPA==
+X-Gm-Message-State: AOJu0YyAefHFznhXy1M4IzV7JLwoRfL2SX04qnfoP5V22YqiOK5oVjTy
+	MtdngOvG7Hqw7PrbQ3lVl+rdO03t4Tf2W4SgXek2VYTTBmKccRo7HeVo
+X-Gm-Gg: ATEYQzwAVxhoeivFw+ykONRB+y8sj8RHs5meQuSOVaJdSbxQw4TcDrRFgHs7IAKAL/E
+	z9oOjThIMsEFCl1nM1wnntE2WBDye3n52frpIz4wfafXlhmC3SXVCh7f6u9sp4nroL7vPLz/zIo
+	m0lC0rn14vqYAbZaOzh3cZnv07q7ZXPFWuIJZjO+RsaWWPLu2FyzF60BnAC0PshoVoKV7CzhKVX
+	AWXrjKf5Nzzd0Ris7m5oDzqWlS6rQ8WHt6SO8Oh9xswsHUHEpi1nuy2KXmSe3Xxn81VQ2UX6FA/
+	SYWpn4RsoVB16I56Vc3AYSdEjzwC4pmbeQkC1GyW7KzaLLwFNO/VzKbO7faQrwRq7t6qayp1HiC
+	HXsEJOcg9vt027t2hi+5uO0MA+2LvR9B5+f274PBqmQ8903kHWv42KJscPF4H+rvGlsAsgj1o91
+	Q0lLSY1uT1QREz5u3PDwCrWw==
+X-Received: by 2002:a17:90a:e18f:b0:340:4abf:391d with SMTP id 98e67ed59e1d1-35965cd0f39mr13847656a91.16.1772500161304;
+        Mon, 02 Mar 2026 17:09:21 -0800 (PST)
+Received: from localhost ([2001:19f0:ac00:4eb8:5400:5ff:fe30:7df3])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3599c408296sm384302a91.5.2026.03.02.17.09.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 02 Mar 2026 17:09:20 -0800 (PST)
+Date: Tue, 3 Mar 2026 09:08:53 +0800
+From: Inochi Amaoto <inochiama@gmail.com>
+To: Yao Zi <me@ziyao.cc>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Siddharth Vadapalli <s-vadapalli@ti.com>, Hans Zhang <18255117159@163.com>, 
+	Kishon Vijay Abraham I <kishon@kernel.org>, Chen Wang <unicorn_wang@outlook.com>, 
+	Manikandan K Pillai <mpillai@cadence.com>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, 
+	Inochi Amaoto <inochiama@gmail.com>, Han Gao <rabenda.cn@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI: cadence: Support platform-specific hooks for
+ RC init/deinit
+Message-ID: <aaY0kWYTZx3zs3o7@inochi.infowork>
+References: <20260227181925.52475-1-me@ziyao.cc>
+ <20260227181925.52475-2-me@ziyao.cc>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20260226101032.1042-1-linux.amoon@gmail.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9cb136851009cckunmdf53aed31047c16
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGk5OGVZJQkgeThgfSR0eQh5WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=EJ2lQYLnZonrbwDR82koQeFF/FTrJdyirHy0znOoWno2PaizrLLmn9wiRPAorVoGNm5aMOGr51u90sWqjI18XzoPbg0uPGF/OQs5cXl1vmH5IMww5arnP+YNG7hzp0Lhr6/hR6egU1kwA2q1TjO6vH1WwFenyNGHI1NOLoA9EPw=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=Mjquj/FOs/2Zx2idcFz2Tunmyq43QxK3eJDgddxDoi8=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260227181925.52475-2-me@ziyao.cc>
 
-在 2026/02/26 星期四 18:10, Anand Moon 写道:
-> Rockchip DWC PCIe driver currently performs synchronous link training for
-> combo PHYs (PCIe 3.0/2.0 and SATA 3.0) during boot. This process waits for
-> the link to be fully established, adding several milliseconds to the boot
-> sequence. To optimize boot time, this change enables asynchronous probing,
-> allowing link establishment to proceed in the background while the kernel
-> continues probing other devices.
-
-Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
-
+On Fri, Feb 27, 2026 at 06:19:24PM +0000, Yao Zi wrote:
+> Support initialization and de-initialization hooks provided by
+> platform-specific drivers. Initialization ones run after everything
+> else has been set up for RC, but before it's probed by the PCI
+> subsystem, to allow platform drivers to easily override RC properties
+> like LNKCAP. De-initialization ones run before anything else has been
+> cleaned-up.
 > 
-> Cc: Grimmauld <grimmauld@grimmauld.de>
-> Cc: Niklas Cassel <cassel@kernel.org>
-> Tested-by: Grimmauld <grimmauld@grimmauld.de>
-> Signed-off-by: Anand Moon <linux.amoon@gmail.com>
+> Signed-off-by: Yao Zi <me@ziyao.cc>
 > ---
-> v3: update the commit message to describe the changs.
->      added tested by Grimmauld.
->      https://lore.kernel.org/all/20240809073610.2517-1-linux.amoon@gmail.com/
-> v2: update the commit message to describe the changs.
-> ---
->   drivers/pci/controller/dwc/pcie-dw-rockchip.c | 1 +
->   1 file changed, 1 insertion(+)
+>  drivers/pci/controller/cadence/pcie-cadence-host.c | 8 +++++++-
+>  drivers/pci/controller/cadence/pcie-cadence.h      | 7 +++++++
+>  2 files changed, 14 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> index 5b17da63151d5..c31e0e9848327 100644
-> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> @@ -746,6 +746,7 @@ static struct platform_driver rockchip_pcie_driver = {
->   		.name	= "rockchip-dw-pcie",
->   		.of_match_table = rockchip_pcie_of_match,
->   		.suppress_bind_attrs = true,
-> +		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
->   	},
->   	.probe = rockchip_pcie_probe,
->   };
-> 
-> base-commit: f4d0ec0aa20d49f09dc01d82894ce80d72de0560
+
+LGTM.
+
+Reviewed-by: Inochi Amaoto <inochiama@gmail.com>
+
+Regards,
+Inochi
+
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
+> index db3154c1eccb..23ee5a9c240d 100644
+> --- a/drivers/pci/controller/cadence/pcie-cadence-host.c
+> +++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+> @@ -304,6 +304,8 @@ static int cdns_pcie_host_init_address_translation(struct cdns_pcie_rc *rc)
+>  
+>  static void cdns_pcie_host_deinit(struct cdns_pcie_rc *rc)
+>  {
+> +	if (rc->ops->deinit)
+> +		rc->ops->deinit(rc);
+>  	cdns_pcie_host_deinit_address_translation(rc);
+>  	cdns_pcie_host_deinit_root_port(rc);
+>  }
+> @@ -316,7 +318,11 @@ int cdns_pcie_host_init(struct cdns_pcie_rc *rc)
+>  	if (err)
+>  		return err;
+>  
+> -	return cdns_pcie_host_init_address_translation(rc);
+> +	err = cdns_pcie_host_init_address_translation(rc);
+> +	if (err)
+> +		return err;
+> +
+> +	return rc->ops->init ? rc->ops->init(rc) : 0;
+>  }
+>  EXPORT_SYMBOL_GPL(cdns_pcie_host_init);
+>  
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+> index 443033c607d7..7d8f8e87915b 100644
+> --- a/drivers/pci/controller/cadence/pcie-cadence.h
+> +++ b/drivers/pci/controller/cadence/pcie-cadence.h
+> @@ -100,6 +100,11 @@ struct cdns_pcie {
+>  	const  struct cdns_plat_pcie_of_data *cdns_pcie_reg_offsets;
+>  };
+>  
+> +struct cdns_pcie_rc_ops {
+> +	int	(*init)(struct cdns_pcie_rc *rc);
+> +	void	(*deinit)(struct cdns_pcie_rc *rc);
+> +};
+> +
+>  /**
+>   * struct cdns_pcie_rc - private data for this PCIe Root Complex driver
+>   * @pcie: Cadence PCIe controller
+> @@ -115,6 +120,7 @@ struct cdns_pcie {
+>   * @quirk_detect_quiet_flag: LTSSM Detect Quiet min delay set as quirk
+>   * @ecam_supported: Whether the ECAM is supported
+>   * @no_inbound_map: Whether inbound mapping is supported
+> + * @ops: Platform-specific hooks to initialize/de-initialize PCIe Root Complex
+>   */
+>  struct cdns_pcie_rc {
+>  	struct cdns_pcie	pcie;
+> @@ -127,6 +133,7 @@ struct cdns_pcie_rc {
+>  	unsigned int		quirk_detect_quiet_flag:1;
+>  	unsigned int            ecam_supported:1;
+>  	unsigned int            no_inbound_map:1;
+> +	const struct cdns_pcie_rc_ops *ops;
+>  };
+>  
+>  /**
+> -- 
+> 2.53.0
 > 
