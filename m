@@ -1,236 +1,243 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from canpmsgout12.his.huawei.com (canpmsgout12.his.huawei.com [113.46.200.227])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B78171DF26E;
-	Tue,  3 Mar 2026 00:29:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.12
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772497765; cv=fail; b=hU14yE30rgys5iu0FoaAxkD4ckdxJWEWkg0+zbQbGEcWKgaEav3n04bZG6cuhlYc3ARe2X774DZIPTKnOxMtsLsJGkzrJIzoIhtCSNubmuC7wnZJ6M+FDRM/ys31yNK6cbsBPjRmByXSiDd30MiKmcrAmN/SQf4VMRSqtdh2fpg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772497765; c=relaxed/simple;
-	bh=uSzBkPI3J3UBg/Sn9R4a4smEsYVBz+TipHTYH5sYwyw=;
-	h=From:Date:To:CC:Message-ID:In-Reply-To:References:Subject:
-	 Content-Type:MIME-Version; b=g/koeEVj7XV8JT2jMrfmRemD9u/WL6ILABOriG/sGuuwtP5ThfKi+JWVL4ulV4ITs5k3tZjRNxoHlJeke9/eg2T7j8SPpU9iEVFJ74Yb/tBtEhg/2+g+BoPqAVDoTam31oLvsnM0HS1pkv6l4wY99Jw731zHv1upT/8D+B2aGtk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=c7441j95; arc=fail smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14AE9224B04;
+	Tue,  3 Mar 2026 00:36:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.227
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772498199; cv=none; b=JCnbR4bjGvdieDHI5KRQTbW2CK9OKraIR0dzwfsmoECCnaqnsVf/z+sZpWYspzFNfR2Sw7Qs2T9frWpIAeX9OYSG8xG59LfqgUK9E+WKAb8p+xrJ7I6ezgzv1EejRp/3NGwj6AAPq+vOsttaduP5xytQjuhAkJdrmPp87tN472g=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772498199; c=relaxed/simple;
+	bh=0CEHPr6DEYGE59x3t5sJ9elpuDzrwhkOozxEbUISUFU=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=tox0y1egIWEdlm3SR0BDIInGACu5o1Cdy9mePkDTmIIDULi3FGil1/Dn9flLl4aiG0XfLwuzLbIf97yqgvhNPr98lswps9hlzrAIh8uh375nh4tXVLvwlA0NiTTkd/jIJydYxTVpcwjBKTxiAWKYXPMv+c/yvPcZ6fb+IMfaO3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=xxGS+VIR; arc=none smtp.client-ip=113.46.200.227
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="c7441j95"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772497763; x=1804033763;
-  h=from:date:to:cc:message-id:in-reply-to:references:
-   subject:content-transfer-encoding:mime-version;
-  bh=uSzBkPI3J3UBg/Sn9R4a4smEsYVBz+TipHTYH5sYwyw=;
-  b=c7441j95g7J7HcDKHLXEVLGex1qgoRirkbyHSuMg20141dI94cWtacT5
-   euFWE4ub1pBXtxzVojrIE5luQ6S/D9do41PfP77KMUCKZcBl8NtRv+Hyb
-   JgtGIWVde++M+wscqsJhqbjogXCIUxHfz4aKiNoMNqOd56qp6IBq+pTHx
-   Bn514I+Yq/MDGu6ZRSVIoHeVwdPF+c5GbbUfZ2mkMcSwYQDUZFzbkPsvD
-   HW2nFQiTO1aQz9s29pbILZf2wPFN4A4ZfasueCyNBrinrg+6FFDEG/zDP
-   GOw7xpc1d4/tn/Lr+tawqyVEqPr0+BC/1EjfNFoIrUI20VbM9WMnqDgvH
-   g==;
-X-CSE-ConnectionGUID: 4WdskgRVSOuZe1T5hV5ZCQ==
-X-CSE-MsgGUID: 4cC1KoDtRzmQXk692LRKig==
-X-IronPort-AV: E=McAfee;i="6800,10657,11717"; a="84988057"
-X-IronPort-AV: E=Sophos;i="6.21,321,1763452800"; 
-   d="scan'208";a="84988057"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2026 16:29:22 -0800
-X-CSE-ConnectionGUID: sOrAl4qkRdW7H+M0ONsY4Q==
-X-CSE-MsgGUID: GCmy5thpT/+GdaOmXBQsTA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,321,1763452800"; 
-   d="scan'208";a="214972540"
-Received: from fmsmsx903.amr.corp.intel.com ([10.18.126.92])
-  by fmviesa006.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2026 16:29:21 -0800
-Received: from FMSMSX902.amr.corp.intel.com (10.18.126.91) by
- fmsmsx903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="xxGS+VIR"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=sD5AimCjlJV0VqtFhbfiB9tyaA7e5aehyOcJEzn24TM=;
+	b=xxGS+VIRZ6/pTrBpzBKTsKWZpINKEE8FdTUBvDbsDx/rU4AYhOtyiwQveVX/ea5SOaV7WlkWi
+	LeHUMwuqQyCSZbUjp58awf45c64AK1yj6ADXBQZ56eSVqA15Iz8KyKJDEvzflmARVT1yeC8GyuO
+	5+gG63nWDoHeS8d6TTHOtMM=
+Received: from mail.maildlp.com (unknown [172.19.163.127])
+	by canpmsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4fPxZM6rGZznTVR;
+	Tue,  3 Mar 2026 08:31:55 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 62FD640363;
+	Tue,  3 Mar 2026 08:36:33 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Mon, 2 Mar 2026 16:29:21 -0800
-Received: from fmsedg901.ED.cps.intel.com (10.1.192.143) by
- FMSMSX902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37 via Frontend Transport; Mon, 2 Mar 2026 16:29:21 -0800
-Received: from SN4PR0501CU005.outbound.protection.outlook.com (40.93.194.16)
- by edgegateway.intel.com (192.55.55.81) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Mon, 2 Mar 2026 16:29:20 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=nzoYKy6WMeNUJeVAoj4lTG2ie3nvLigD3+pDeilFnMtgjw6fH2rMZb6NVI6MyI6Ddl1DJE+ZbOmTzBGZpMSwVvrLw5R1DWrVXL8oTMnDxZ7R+zEWIR0NAo6290kuvEeVvUVEmeIW8GHTU7QGlnttKK9Yw7qmI6ZM1qaF/DwZMPyNAnypzM56UBBT0cPxTVrOarvu3khib5WdrhPrGdGF5FrzX3N9fRF3ftF5Jsx6g7V+7ggh3D1uxm3II1IZtgE8ODqUWeKN0EN4eBTp1c09IEZR7omHP2vbtSnT3YvgZL1316hDdXyKNR2seutn4NR4plCDT70gURBIkrRyn2JWZA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Br4jupAipxzY7wciHwvsNjpqSshZYVEcKUghN+gQxdc=;
- b=v19D84tLxwjTF2ASWcKDIEtNwroOxJ2Uln7+WAqAazS5fmcaVrYiZYxqzPLGK4hLLKuHHFoAoMiyPxSm2PQMeSzmizNTpgShtIPK3Ot+5tuRNETp8GlVihiMJuuELrEisjqN+6fwUtRpxnjpLKnqYA/NASjNxjFPOZuFwS+KgVk0NMp/fQlxavh+8jCG2e5olDxf/ZcDuFqsVU2aViK8roRCXWDfmKJaE7v0MV1qi0EpxkkaXai7YRTYQFcTJfkzunAAxcu4X0M6sVYxKKlehJeMIjO+6LKSQUkT/FK5zy8JnDdJymsyV81GW/vMYdiMoYPwD6EeuK+KKQG7zSYTRg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
- by DS0PR11MB7384.namprd11.prod.outlook.com (2603:10b6:8:134::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.21; Tue, 3 Mar
- 2026 00:29:13 +0000
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::1ff:1e09:994b:21ff]) by PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::1ff:1e09:994b:21ff%3]) with mapi id 15.20.9654.020; Tue, 3 Mar 2026
- 00:29:13 +0000
-From: <dan.j.williams@intel.com>
-Date: Mon, 2 Mar 2026 16:29:11 -0800
-To: Jason Gunthorpe <jgg@ziepe.ca>, <dan.j.williams@intel.com>
-CC: Robin Murphy <robin.murphy@arm.com>, Alexey Kardashevskiy <aik@amd.com>,
-	<x86@kernel.org>, <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>, "Ingo
- Molnar" <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
-	<dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>, "Sean
- Christopherson" <seanjc@google.com>, Paolo Bonzini <pbonzini@redhat.com>,
-	"Andy Lutomirski" <luto@kernel.org>, Peter Zijlstra <peterz@infradead.org>,
-	"Bjorn Helgaas" <bhelgaas@google.com>, Marek Szyprowski
-	<m.szyprowski@samsung.com>, Andrew Morton <akpm@linux-foundation.org>,
-	Catalin Marinas <catalin.marinas@arm.com>, Michael Ellerman
-	<mpe@ellerman.id.au>, "Mike Rapoport" <rppt@kernel.org>, Tom Lendacky
-	<thomas.lendacky@amd.com>, "Ard Biesheuvel" <ardb@kernel.org>, Neeraj
- Upadhyay <Neeraj.Upadhyay@amd.com>, Ashish Kalra <ashish.kalra@amd.com>,
-	Stefano Garzarella <sgarzare@redhat.com>, Melody Wang <huibo.wang@amd.com>,
-	Seongman Lee <augustus92@kaist.ac.kr>, Joerg Roedel <joerg.roedel@amd.com>,
-	"Nikunj A Dadhania" <nikunj@amd.com>, Michael Roth <michael.roth@amd.com>,
-	"Suravee Suthikulpanit" <suravee.suthikulpanit@amd.com>, Andi Kleen
-	<ak@linux.intel.com>, Kuppuswamy Sathyanarayanan
-	<sathyanarayanan.kuppuswamy@linux.intel.com>, Tony Luck
-	<tony.luck@intel.com>, David Woodhouse <dwmw@amazon.co.uk>, "Greg
- Kroah-Hartman" <gregkh@linuxfoundation.org>, Denis Efremov
-	<efremov@linux.com>, Geliang Tang <geliang@kernel.org>, Piotr Gregor
-	<piotrgregor@rsyncme.org>, "Michael S. Tsirkin" <mst@redhat.com>, "Alex
- Williamson" <alex@shazbot.org>, Arnd Bergmann <arnd@arndb.de>, Jesse Barnes
-	<jbarnes@virtuousgeek.org>, Jacob Pan <jacob.jun.pan@linux.intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, Kevin Brodsky <kevin.brodsky@arm.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>, "Aneesh Kumar K.V (Arm)"
-	<aneesh.kumar@kernel.org>, Xu Yilun <yilun.xu@linux.intel.com>, Herbert Xu
-	<herbert@gondor.apana.org.au>, Kim Phillips <kim.phillips@amd.com>, "Konrad
- Rzeszutek Wilk" <konrad.wilk@oracle.com>, Stefano Stabellini
-	<sstabellini@kernel.org>, Claire Chang <tientzu@chromium.org>,
-	<linux-coco@lists.linux.dev>, <iommu@lists.linux.dev>
-Message-ID: <69a62b5714feb_6423c1001f@dwillia2-mobl4.notmuch>
-In-Reply-To: <20260303001911.GA964116@ziepe.ca>
-References: <20260225053806.3311234-1-aik@amd.com>
- <20260225053806.3311234-5-aik@amd.com>
- <699f238873ae7_1cc5100b6@dwillia2-mobl4.notmuch>
- <04b06a53-769c-44f1-a157-34591b9f8439@arm.com>
- <699f621daab02_2f4a1008f@dwillia2-mobl4.notmuch>
- <20260228002808.GO44359@ziepe.ca>
- <69a622e92cccf_6423c10092@dwillia2-mobl4.notmuch>
- <20260303001911.GA964116@ziepe.ca>
-Subject: Re: [PATCH kernel 4/9] dma/swiotlb: Stop forcing SWIOTLB for TDISP
- devices
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: BYAPR01CA0067.prod.exchangelabs.com (2603:10b6:a03:94::44)
- To PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
+ 15.2.1544.11; Tue, 3 Mar 2026 08:36:32 +0800
+From: Chengwen Feng <fengchengwen@huawei.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>
+CC: <linux-acpi@vger.kernel.org>, <rafael@kernel.org>, <lenb@kernel.org>,
+	<wei.huang2@amd.com>, <Eric.VanTassell@amd.com>,
+	<jonathan.cameron@huawei.com>, <wangzhou1@hisilicon.com>,
+	<wanghuiqiang@huawei.com>, <liuyonglong@huawei.com>, Chengwen Feng
+	<fengchengwen@huawei.com>, <stable@vger.kernel.org>
+Subject: [PATCH] PCI/TPH: Fix get cpu steer-tag fail on ARM64 platform
+Date: Tue, 3 Mar 2026 08:36:25 +0800
+Message-ID: <20260303003625.39035-1-fengchengwen@huawei.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|DS0PR11MB7384:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9ef8c81a-4dba-49b5-3631-08de78bbe50b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|7416014|1800799024|366016;
-X-Microsoft-Antispam-Message-Info: IUzO9P4pUEviosfX9XrZIi6l+tEen40Z9ZjlsJ+oxPMAbdUHT3kHiqH5Qivlwcg/s2qqBDGFjsU9HA1aN+wVJLbyR31e5k0V159L09yt9r7FZXXV8wJanpta7D52wu+pv0m1TCgCB3/6tJKJAyQQzRAXuVS34s1RgMW6IjHQ9riQ3UMvOgbAZ5I2vmuq2QiaEwVONlbz8qxvz0rpamHWWFGya9S9qyeeL2GHxEHftFeKejZXtls6R2hvSbm92DYrPht2qijPlsdQJ/2dHgUKMt1jEid4mqGCze8oo1+QdpTKwUG24AQM67LCCTsrC3B1ufEQyFmNYjy+AdpLfrT7LTDkjn+MmlrJHxNupfLT/cTLZuDUPsHVZJH4oeXv6hnOSRTzAl6vnykU2cS4ERrmEQbA437rwAH9FasybsrJVtLy6q6SArW6M+r6TY9V2X2BEIeVyhc1jiGCEjvPkgECMfeQ7gW/45Uaa2SJB2JQQ+ixO/GpBuNoBrLl9e5zMpvfpOJBm92WxG5zQEP/T7stQB6tRK9SF0iKEcau/2ueKkF2oa17PLQvax1E5haQtplVbS6L7UwVycBFq3AG8xJ79akEtLZhM82mDnQpvSsW8h9Np5x7dHwKGEQVmP5//o0fBdjWoE7G2Tnf+lCeci5p8YNrYiQCUF50SvOtuZ7NlfvJHi+vVuHBZQEnUoqi6uWm
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?UFpFN05HRTZKZUZhVlZza2x4ekh4dXBqckV3V1QzaEwrRkdpVVI0WkFoSHla?=
- =?utf-8?B?dldqQzBWUStQQ0YvQ2d6eEtISGdYaEttSE1HV2svWDlEeWRJcElURmQ3TmNh?=
- =?utf-8?B?NUw4TXRXMytGWnlNZHI4MkdtUHZOSTR6SVMvL043djRHUHNrTm96dHhta0Mv?=
- =?utf-8?B?b1dhdWdRRFMrQklXcDNGOEY5elR4bkppTXB0SnErUG1IdHdLM2liYnFpcVhv?=
- =?utf-8?B?M2lSZ3JrSEJoRXhZcjVINnBuckVLZ0QwVURvMU5sWW5vUU10WkM5Zy9mejgz?=
- =?utf-8?B?QU41eWpBTlhCSXlOVmMrUWZTN0xya3o5YWJEU3YwRmVodW9KN1l5KzMxRDNu?=
- =?utf-8?B?U2FUclZmenBIVi85SEFzY2JmalBWVGREQVJWQktIMUVkRE56eUppTzc4aS9B?=
- =?utf-8?B?ZnNJQm90dm1qZkt2ajAvUTdMV1BLNC8xelFWSnRKbnVhMnJKVGpTMG5tbmg5?=
- =?utf-8?B?VW40VGNMdHd3T0tVTzdHVldpUHYvN2VJY1JjdDBWYWhMQXJyYndrRFprZFd4?=
- =?utf-8?B?ejRVZWtZNEcvVkNwVzlZbVZkN0hHVGhlZUEyTWFzZkwyV0lCZzQ5dmROQnkz?=
- =?utf-8?B?NnVhTW1raUZOK3grNUJjNFQvNXZGWG9QR2ZPaGtxMkF6NW5UQnNESXd3N2U2?=
- =?utf-8?B?YUpWRUtBT3NVMUI5dzVNeDZ5dmpDdnBnWVRHRFhJSVQzM1pVYS9DaWxJL3h3?=
- =?utf-8?B?QjBrZHRoaWtYWVFIVnRpSUM4cXJvWDRFY1VHeUVmQ1MwZWdGaWk2Z3JwblJz?=
- =?utf-8?B?ellQS2tkZ29ZOEFIRTAwV3JkYm4rSUYxRFJHNmUyT1F1d09sdXBBY015YXY5?=
- =?utf-8?B?bVdMdURKZi9pUTJNTzYzcUhlT3QrWUFJVzYyN1o4YmlzMy9QUW4zUHVLbFFo?=
- =?utf-8?B?NVhPbEJWTDlJcGNoS0hvdmhCZjhKL1N6QkVUNnJmVTdhZ2VRSEM5N1F1MW1X?=
- =?utf-8?B?ZGFRWG1VVXZRYXlhbGE4RFRnVGNEdDhpL1ZPc0MyM2JOVVZqZ0JNa0Z4SDdz?=
- =?utf-8?B?Sy93c3cwYlZPcG5tTXRXOXVWdEQzTmd1bmVjQ0pNOUFCREFvVTh5UXVVSm5u?=
- =?utf-8?B?MElFamZ6R0IyY25iRUdkenlqSkpIYyt0L3lRTGZBVnJRVVJuRGwyYlYxYzlK?=
- =?utf-8?B?SWVZRnF1SkJKeUR1NmZVdDdTQmxtSU1IR0NlOTYvc2VSTDc0UG1kTDAzOHVv?=
- =?utf-8?B?bXFld3Z6bmMvcURRQ1h1SzkyN095RFFvTWRDMHJRc0dveFJOeThNQlRzSm41?=
- =?utf-8?B?d2pPdHdvZHhDZDNxTnVnUXFieHBWd21jM0tzOWVQNFJ2eWdVR0dxWGN0SWdW?=
- =?utf-8?B?MHpjQ0dZcERpSlExSEtvWFhoT0FiL21nQXM4RS8yamNlOEY0bVpLUTZWcjRl?=
- =?utf-8?B?YTRFTGtGK2pyMk0zYTQreURhRU9BK3dsUVN5c0g2RVhNTGd0dmNuRVVmczRq?=
- =?utf-8?B?UGdCZnJwSDd2MFMyOUM1bTBQVk4rRFVKYjdTSzZNaEVpdHZqeFlHY0tWRkFh?=
- =?utf-8?B?Y1VwdGpCc0FYdXNDVFVidXJ2Qm1IMmwwSmRtWXlneERxeElYL2NjUmIrclo0?=
- =?utf-8?B?RUJ0eUszbWxVcHYvSUdnWXpvZlE0SytlekJON3V3NHBPMGJDem5zZUtyM3Vu?=
- =?utf-8?B?Zmx2Vjl3ZFJtUlJNSjRTbFdVVk9TZVN5aGtTOHd2aWxVeHZ2eHdPSVE5bVlu?=
- =?utf-8?B?U0p0WlZBb0c4akMzWS9naUNKYzliaWVpYmx3WklIYUFuNW5STHN2T2ZSVnNy?=
- =?utf-8?B?VE1qVHhBcUZycEZ6WVZJcDk4Z3ZDczRkZkp0WGY2K3B6eldJNTZkYTF1V2tR?=
- =?utf-8?B?Q1IwV0dkeFBxcVNLMDNRdXMybmp3Y2VGZ0hsVWlFaDF4MmMrMkpwV21oR3Fq?=
- =?utf-8?B?R1VYSWE4MHhuL0t4T1ZaK2Q2R1pwOUg2Kyt4bXpiaXhHTGJrcUlYbzVyTEdx?=
- =?utf-8?B?dXAyWmVlWjFDWVVOSUV1VTgwV090T0U5T2RUSHJwWWJxTTRacHhBQmVaZmdw?=
- =?utf-8?B?VEt6ZjJUcWJ4azZwZlZYTFVqbm80SGNiamlsRU1tbjl0dUNXcXhLaWg5Uzll?=
- =?utf-8?B?dTg3aU54ZFBPRWZXTENXWkVQQUZpMld6OEtHM2Jjbk9LY1dpNTVjK3puQkdX?=
- =?utf-8?B?NTlGd2JQRHhPTlZ1RnJoUjcya2hVbXJGQms2V2xaZkdRWDFJMnhRRmY0bDkv?=
- =?utf-8?B?ejcyNTg5TTd6cnk4U2pnQUFzY1ZEbElvQ0xlUmN2SWNjZUZtRnMxV25oMC9P?=
- =?utf-8?B?NlpFdE9UWjJJemhvNEZKR3o0V1pucGNaNjVVQnJwbjQ1cDhyY0tPZDZMUVVh?=
- =?utf-8?B?U24zUDhETzZZNG41bDcxWnFlUmFGeXN0WXVBMXlzM1BwMVcyRXRJaTZpRFNv?=
- =?utf-8?Q?RXD/i/w/bxlcWTJM=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9ef8c81a-4dba-49b5-3631-08de78bbe50b
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Mar 2026 00:29:13.2363
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: eiYkbfVqNliPR5HFEexX6fgOBtfwE+Zu5NrMecoEhMfTe5cHD2a5bumpfFgr+DhL5OGNyOVHePgUx4gYJRicxtfsyaOblePSJ4XUKGG8jx4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR11MB7384
-X-OriginatorOrg: intel.com
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-Jason Gunthorpe wrote:
-[..]
-> > I have a v2 of a TEE I/O set going out shortly and sounds like it will
-> > need a rethink for this attribute proposal for v3. I think it still helps to
-> > have combo sets at this stage so the whole lifecycle is visible in one
-> > set, but it is nearly at the point of being too big a set to consider in
-> > one sitting.
-> 
-> My problem is I can't get in one place an actually correct picture of
-> how the IOVA translation works in all the arches and how the
-> phys_addr_t works.
-> 
-> So it is hard to make sense of all these proposals. What I would love
-> to see is one series that deals with this:
-> 
->   [PATCH v2 11/19] x86, dma: Allow accepted devices to map private memory
-> 
-> For *all* the arches, along with a description for each of:
->  * how their phys_addr_t is constructed
->  * how their S2 IOMMU mapping works
->  * how a vIOMMU S1 would change any of the above.
-> 
-> Then maybe we can see if we are actually doing it properly or not.
+Currently the pcie_tph_get_cpu_st() has a problem on ARM64 platform:
+1. The pcie_tph_get_cpu_st() function directly uses cpu_uid as the input
+   parameter to call the PCI ACPI DSM method. According to the DSM
+   definition, the input value should be the ACPI Processor UID. For
+   details, please see [1].
+2. In the Broadcom driver implementation [2] (which invoke
+   pcie_tph_get_cpu_st()), cpu_uid is obtained based on
+   cpumask_first(irq->cpu_mask), that is the logical ID of a CPU core,
+   which is generated and managed by the kernel. For example, [0,255]
+   if the system has 256 logical CPU cores.
+3. Unfortunately, on ARM64 platform, ACPI assigns Processor UID to the
+   core which listed in the MADT table, the Processor UID may not equal
+   the logical ID of a CPU core in the kernel. So the current
+   implementation cannot obtain the cpu's real steer-tag in such case.
+4. The reason why it can run on the AMD platform is that the mapping
+   between the logical ID and ACPI Processor UID is similar.
 
-Yes, this is my struggle as well. I will put this on the agenda for the
-next CCC call.
+This commit fixes it by:
+1. Introduce config ARCH_HAS_GET_CPU_ACPI_ID_API and its corresponding
+   API acpi_get_cpu_acpi_id() to obtain the ACPI Processor UID of a CPU
+   core. This API invokes get_acpi_id_for_cpu() to obtain the UID on
+   ARM64 platform.
+2. Because using the logical ID as the ACPI Processor UID directly on
+   X86 platform is not standard. This commit uses cpu_acpi_id() to
+   obtain the UID.
+3. At the same time, the input parameter cpu_uid of
+   pcie_tph_get_cpu_st() is renamed to cpu for clarity.
 
-[..]
-> 
-> I'm surprised because Xu said:
-> 
->  This is same as Intel TDX, the GPA shared bit are used by IOMMU to
->  target shared/private. You can imagine for T=1, there are 2 IOPTs, or
->  1 IOPT with all private at lower address & all shared at higher address.
-> 
->  https://lore.kernel.org/all/aaF6HD2gfe%2Fudl%2Fx@yilunxu-OptiPlex-7050/
-> 
-> So how come that not have exactly the same problem as ARM?
+[1] According to the _DSM ECN, the input is defined as: "If the target
+    is a processor, then this field represents the ACPI Processor
+    UID of the processor as specified in the MADT. If the target is
+    a processor container, then this field represents the ACPI
+    Processor UID of the processor container as specified in the
+    PPTT."
+[2] commit c214410c47d6e ("bnxt_en: Add TPH support in BNXT driver")
 
-Sorry, yes TDX has same behavior as ARM, excuse the noise.
+Fixes: d2e8a34876ce ("PCI/TPH: Add Steering Tag support")
+Cc: stable@vger.kernel.org
+Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+---
+ Documentation/PCI/tph.rst     |  4 ++--
+ drivers/acpi/Kconfig          |  8 ++++++++
+ drivers/acpi/processor_core.c | 13 +++++++++++++
+ drivers/pci/tph.c             | 13 +++++++------
+ include/linux/acpi.h          |  4 ++++
+ include/linux/pci-tph.h       |  4 ++--
+ 6 files changed, 36 insertions(+), 10 deletions(-)
+
+diff --git a/Documentation/PCI/tph.rst b/Documentation/PCI/tph.rst
+index e8993be64fd6..b6cf22b9bd90 100644
+--- a/Documentation/PCI/tph.rst
++++ b/Documentation/PCI/tph.rst
+@@ -79,10 +79,10 @@ To retrieve a Steering Tag for a target memory associated with a specific
+ CPU, use the following function::
+ 
+   int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type type,
+-                          unsigned int cpu_uid, u16 *tag);
++                          unsigned int cpu, u16 *tag);
+ 
+ The `type` argument is used to specify the memory type, either volatile
+-or persistent, of the target memory. The `cpu_uid` argument specifies the
++or persistent, of the target memory. The `cpu` argument specifies the
+ CPU where the memory is associated to.
+ 
+ After the ST value is retrieved, the device driver can use the following
+diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+index df0ff0764d0d..9d851a017cd1 100644
+--- a/drivers/acpi/Kconfig
++++ b/drivers/acpi/Kconfig
+@@ -606,6 +606,14 @@ config ACPI_PRMT
+ 	  substantially increase computational overhead related to the
+ 	  initialization of some server systems.
+ 
++config ARCH_HAS_GET_CPU_ACPI_ID_API
++	bool "Architecture supports get cpu's ACPI Processor UID"
++	depends on (X86 || ARM64)
++	default y
++	help
++	  This config indicates whether the architecture provides a standard
++	  API to get ACPI Processor UID of a cpu from MADT table.
++
+ endif	# ACPI
+ 
+ config X86_PM_TIMER
+diff --git a/drivers/acpi/processor_core.c b/drivers/acpi/processor_core.c
+index a4498357bd16..6150f5bdb62e 100644
+--- a/drivers/acpi/processor_core.c
++++ b/drivers/acpi/processor_core.c
+@@ -335,6 +335,19 @@ int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
+ }
+ EXPORT_SYMBOL_GPL(acpi_get_cpuid);
+ 
++#ifdef CONFIG_ARCH_HAS_GET_CPU_ACPI_ID_API
++unsigned int acpi_get_cpu_acpi_id(unsigned int cpu)
++{
++	if (cpu >= nr_cpu_ids)
++		return 0;
++#ifdef CONFIG_X86
++	return cpu_acpi_id(cpu);
++#elif CONFIG_ARM64
++	return get_acpi_id_for_cpu(cpu);
++#endif
++}
++#endif /* CONFIG_ARCH_HAS_GET_CPU_ACPI_ID_API */
++
+ #ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
+ static int get_ioapic_id(struct acpi_subtable_header *entry, u32 gsi_base,
+ 			 u64 *phys_addr, int *ioapic_id)
+diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+index ca4f97be7538..a47c2fbb6148 100644
+--- a/drivers/pci/tph.c
++++ b/drivers/pci/tph.c
+@@ -236,18 +236,19 @@ static int write_tag_to_st_table(struct pci_dev *pdev, int index, u16 tag)
+  * with a specific CPU
+  * @pdev: PCI device
+  * @mem_type: target memory type (volatile or persistent RAM)
+- * @cpu_uid: associated CPU id
++ * @cpu: associated CPU id
+  * @tag: Steering Tag to be returned
+  *
+  * Return the Steering Tag for a target memory that is associated with a
+- * specific CPU as indicated by cpu_uid.
++ * specific CPU as indicated by cpu.
+  *
+  * Return: 0 if success, otherwise negative value (-errno)
+  */
+ int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
+-			unsigned int cpu_uid, u16 *tag)
++			unsigned int cpu, u16 *tag)
+ {
+-#ifdef CONFIG_ACPI
++#ifdef CONFIG_ARCH_HAS_GET_CPU_ACPI_ID_API
++	unsigned int cpu_uid = acpi_get_cpu_acpi_id(cpu);
+ 	struct pci_dev *rp;
+ 	acpi_handle rp_acpi_handle;
+ 	union st_info info;
+@@ -265,9 +266,9 @@ int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
+ 
+ 	*tag = tph_extract_tag(mem_type, pdev->tph_req_type, &info);
+ 
+-	pci_dbg(pdev, "get steering tag: mem_type=%s, cpu_uid=%d, tag=%#04x\n",
++	pci_dbg(pdev, "get steering tag: mem_type=%s, cpu=%d, tag=%#04x\n",
+ 		(mem_type == TPH_MEM_TYPE_VM) ? "volatile" : "persistent",
+-		cpu_uid, *tag);
++		cpu, *tag);
+ 
+ 	return 0;
+ #else
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 4d2f0bed7a06..789bfcb8e0f3 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -324,6 +324,10 @@ int acpi_unmap_cpu(int cpu);
+ 
+ acpi_handle acpi_get_processor_handle(int cpu);
+ 
++#ifdef CONFIG_ARCH_HAS_GET_CPU_ACPI_ID_API
++unsigned int acpi_get_cpu_acpi_id(unsigned int cpu);
++#endif
++
+ #ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
+ int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
+ #endif
+diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
+index ba28140ce670..be68cd17f2f8 100644
+--- a/include/linux/pci-tph.h
++++ b/include/linux/pci-tph.h
+@@ -25,7 +25,7 @@ int pcie_tph_set_st_entry(struct pci_dev *pdev,
+ 			  unsigned int index, u16 tag);
+ int pcie_tph_get_cpu_st(struct pci_dev *dev,
+ 			enum tph_mem_type mem_type,
+-			unsigned int cpu_uid, u16 *tag);
++			unsigned int cpu, u16 *tag);
+ void pcie_disable_tph(struct pci_dev *pdev);
+ int pcie_enable_tph(struct pci_dev *pdev, int mode);
+ u16 pcie_tph_get_st_table_size(struct pci_dev *pdev);
+@@ -36,7 +36,7 @@ static inline int pcie_tph_set_st_entry(struct pci_dev *pdev,
+ { return -EINVAL; }
+ static inline int pcie_tph_get_cpu_st(struct pci_dev *dev,
+ 				      enum tph_mem_type mem_type,
+-				      unsigned int cpu_uid, u16 *tag)
++				      unsigned int cpu, u16 *tag)
+ { return -EINVAL; }
+ static inline void pcie_disable_tph(struct pci_dev *pdev) { }
+ static inline int pcie_enable_tph(struct pci_dev *pdev, int mode)
+-- 
+2.17.1
+
