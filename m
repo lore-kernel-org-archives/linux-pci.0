@@ -1,123 +1,238 @@
-Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4974423A9A;
-	Tue,  3 Mar 2026 14:28:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B41DB35E948;
+	Tue,  3 Mar 2026 14:29:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772548119; cv=none; b=RzaWcsj1PdVbieU0a9J8GpKYItwHLRV7VKHZbzctTS761j/jwWNN4CtGL+S2iUfjE2zPPAzzD0s3OnOKPRERR4zFhSJ+twwmGvIwLTU/GsAtRCC1Wx82kU1qc9cr3lrpde71lg8wDD/xT/lzkjAYVYxMgKsgXIojtF7AE8kMPNI=
+	t=1772548174; cv=none; b=nYhuxi7Uv1PDjppa4azq2BZMmMHYD6Q0bj5Hcw3hkSou1inJO490b0iPMrhuoX0xWm77ZPvYPuxvgE+K0NNcJVJdSxclxfkU6r4TGcsCMLOxZErOVESKRCoubV111SuRCsP5mWLgKePIf1Qt72Bz6fr4BnC8PoYZvkNblrsXfuk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772548119; c=relaxed/simple;
-	bh=sFdspMKJumEMO4fDQc2+117471ZtpGFHB8cFzHcqV9k=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=O8n8KdcANGeo5HgRhp7ATof0t1m3PSlrlvObMxNog3FLmh4gnm3KfYUejjZ27p1Y1F/lB9gi/D1MrzkeqCAC4bqrdUsKMmzBPHU8QKX7NF0mwW4DGqwh4wQvbPfRIX1W8WAZu2L6HKKwkuq54fmm/cu2pdv+TrItM7KtuC0j05o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=d/O+JXo5; arc=none smtp.client-ip=185.246.84.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="d/O+JXo5"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-02.galae.net (Postfix) with ESMTPS id 6C05D1A2357;
-	Tue,  3 Mar 2026 14:28:36 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 3AFBB5FF87;
-	Tue,  3 Mar 2026 14:28:36 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 2BC881036864C;
-	Tue,  3 Mar 2026 15:28:13 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1772548112; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=GWUy5XUp50lxxjU1GZxGSJIelBHwpc1HiL3azJ0BLV4=;
-	b=d/O+JXo543vedMVvGLT5gKQytZfFXK8awsVgYA6R2ojxBslqYDSqG0VaRPH7bRUxFJlQN8
-	1vkegNiRGY41CrTbPRA1NgXIqSpHHXeFNACKcalOr4bzHngc7EbH0CSSUuvUxXHy5MVFSy
-	vEESymOX/4StaUul4BCuzjnEikImvMMtImKAjJiVJGCmUvbpNeHT+w2j0OOFIPwqXLeYpl
-	cStsMnmcoZTIpyS3EgJxQykjVvH8H5XHlQadKad7TsG6qk3H2sE9QULsdlhxCLsvdS6N3P
-	Oejd8rD6YiajdGxXjpbhWcTxEQM/3Nco4XUAiT9M4D/MHRwg24QTsSLti/Lp2w==
-Date: Tue, 3 Mar 2026 15:28:12 +0100
-From: Herve Codina <herve.codina@bootlin.com>
-To: Jonathan Cameron <jonathan.cameron@huawei.com>
-Cc: Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>, "Krzysztof
- Kozlowski" <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, "Geert
- Uytterhoeven" <geert+renesas@glider.be>, Kalle Niemi <kaleposti@gmail.com>,
- Matti Vaittinen <mazziesaccount@gmail.com>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- Danilo Krummrich <dakr@kernel.org>, Frank Li <Frank.Li@nxp.com>, "Sascha
- Hauer" <s.hauer@pengutronix.de>, Pengutronix Kernel Team
- <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, "Michael
- Turquette" <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>,
- "Andi Shyti" <andi.shyti@kernel.org>, Wolfram Sang
- <wsa+renesas@sang-engineering.com>, Peter Rosin <peda@axentia.se>, "Arnd
- Bergmann" <arnd@arndb.de>, Saravana Kannan <saravanak@kernel.org>, "Bjorn
- Helgaas" <bhelgaas@google.com>, Charles Keepax
- <ckeepax@opensource.cirrus.com>, Richard Fitzgerald
- <rf@opensource.cirrus.com>, David Rhodes <david.rhodes@cirrus.com>, "Linus
- Walleij" <linusw@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, "Mark
- Brown" <broonie@kernel.org>, Len Brown <lenb@kernel.org>, Andy Shevchenko
- <andriy.shevchenko@linux.intel.com>, Daniel Scally <djrscally@gmail.com>,
- Heikki Krogerus <heikki.krogerus@linux.intel.com>, Sakari Ailus
- <sakari.ailus@linux.intel.com>, Davidlohr Bueso <dave@stgolabs.net>, "Dave
- Jiang" <dave.jiang@intel.com>, Alison Schofield
- <alison.schofield@intel.com>, Vishal Verma <vishal.l.verma@intel.com>, "Ira
- Weiny" <ira.weiny@intel.com>, Dan Williams <dan.j.williams@intel.com>,
- "Shawn Guo" <shawnguo@kernel.org>, Wolfram Sang <wsa@kernel.org>,
- <linux-kernel@vger.kernel.org>, <driver-core@lists.linux.dev>,
- <imx@lists.linux.dev>, <linux-arm-kernel@lists.infradead.org>,
- <linux-clk@vger.kernel.org>, <linux-i2c@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-sound@vger.kernel.org>, <patches@opensource.cirrus.com>,
- <linux-gpio@vger.kernel.org>, <linux-pm@vger.kernel.org>,
- <linux-spi@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
- <linux-cxl@vger.kernel.org>, Allan Nielsen <allan.nielsen@microchip.com>,
- Horatiu Vultur <horatiu.vultur@microchip.com>, Steen Hegelund
- <steen.hegelund@microchip.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>,
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH v5 11/28] cxl/test: Use fw_devlink_set_device()
-Message-ID: <20260303152812.5d699701@bootlin.com>
-In-Reply-To: <20260302122449.00006c77@huawei.com>
-References: <20260227135428.783983-1-herve.codina@bootlin.com>
-	<20260227135428.783983-12-herve.codina@bootlin.com>
-	<20260302122449.00006c77@huawei.com>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.49; x86_64-redhat-linux-gnu)
+	s=arc-20240116; t=1772548174; c=relaxed/simple;
+	bh=K9HJ2OKclEjLSs3pdlOHC7eiHnKXwNTHukzws+i2VN8=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=lfZ4HHLpsDfK1X3/XZzYa1f0np757RgtsxvhGxVazG13SLY/w0T2akbZjD8MF9ZlPiM7PrwCbGPTh4Z/RM39eZAYXfqMIE8rqSasdFqC0T2+lF6mOWpwRYD4v4J/7RurCM0bDFC4/fFfAHnulJblEGDqZSQiKlAiFyCTOryXkVk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.150])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fQJ874YZZzJ46Dt;
+	Tue,  3 Mar 2026 22:28:55 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id C89CB4056B;
+	Tue,  3 Mar 2026 22:29:28 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 3 Mar
+ 2026 14:29:27 +0000
+Date: Tue, 3 Mar 2026 14:29:26 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: <alistair23@gmail.com>
+CC: <bhelgaas@google.com>, <lukas@wunner.de>,
+	<rust-for-linux@vger.kernel.org>, <akpm@linux-foundation.org>,
+	<linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <alex.gaynor@gmail.com>,
+	<benno.lossin@proton.me>, <boqun.feng@gmail.com>, <a.hindborg@kernel.org>,
+	<gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <tmgross@umich.edu>,
+	<ojeda@kernel.org>, <wilfred.mallawa@wdc.com>, <aliceryhl@google.com>,
+	Alistair Francis <alistair@alistair23.me>
+Subject: Re: [RFC v3 15/27] lib: rspdm: Support SPDM get_digests
+Message-ID: <20260303142926.000018a5@huawei.com>
+In-Reply-To: <20260211032935.2705841-16-alistair.francis@wdc.com>
+References: <20260211032935.2705841-1-alistair.francis@wdc.com>
+	<20260211032935.2705841-16-alistair.francis@wdc.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml100012.china.huawei.com (7.191.174.184) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-Hi Jonathan,
+On Wed, 11 Feb 2026 13:29:22 +1000
+alistair23@gmail.com wrote:
 
-On Mon, 2 Mar 2026 12:24:49 +0000
-Jonathan Cameron <jonathan.cameron@huawei.com> wrote:
-
-> On Fri, 27 Feb 2026 14:54:08 +0100
-> Herve Codina <herve.codina@bootlin.com> wrote:
+> From: Alistair Francis <alistair@alistair23.me>
 > 
-> > The code set directly fwnode.dev field.
-> > 
-> > Use the dedicated fw_devlink_set_device() helper to perform this
-> > operation.
-> > 
-> > Signed-off-by: Herve Codina <herve.codina@bootlin.com>
-> > Reviewed-by: Dave Jiang <dave.jiang@intel.com>  
-> Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+> Support the GET_DIGESTS SPDM command.
 > 
-> From practical point of view, what path do you expect this to take?
-> Is there urgency to make the change, or does it make more sense to
-> add the helper this cycle and cleanup up the various places it can be
-> used next?
+> Signed-off-by: Alistair Francis <alistair@alistair23.me>
+A few things inline.
 
-I hoped to have patches 7 to 12 applied by one maintainer on his/her trees.
+Thanks,
 
-As it is related to fw_devlink, I expect to have them applied by a driver
-core maintainer.
+J 
+> diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
+> index d0b10f27cd9c..2606b825c494 100644
+> --- a/lib/rspdm/state.rs
+> +++ b/lib/rspdm/state.rs
 
-Any other plan can work as well.
 
-Best regards,
-Hervé
+>  /// The current SPDM session state for a device. Based on the
+> @@ -54,6 +54,10 @@
+>  ///  Selected by responder during NEGOTIATE_ALGORITHMS exchange.
+>  /// @meas_hash_alg: Hash algorithm for measurement blocks.
+>  ///  Selected by responder during NEGOTIATE_ALGORITHMS exchange.
+> +/// @supported_slots: Bitmask of responder's supported certificate slots.
+> +///  Received during GET_DIGESTS exchange (from SPDM 1.3).
+> +/// @provisioned_slots: Bitmask of responder's provisioned certificate slots.
+> +///  Received during GET_DIGESTS exchange.
+>  /// @base_asym_enc: Human-readable name of @base_asym_alg's signature encoding.
+>  ///  Passed to crypto subsystem when calling verify_signature().
+>  /// @sig_len: Signature length of @base_asym_alg (in bytes).
+> @@ -68,6 +72,9 @@
+>  /// @desc: Synchronous hash context for @base_hash_alg computation.
+>  /// @hash_len: Hash length of @base_hash_alg (in bytes).
+>  ///  H in SPDM specification.
+> +/// @slot: Certificate chain in each of the 8 slots.  NULL pointer if a slot is
+> +///  not populated.  Prefixed by the 4 + H header per SPDM 1.0.0 table 15.
+> +/// @slot_sz: Certificate chain size (in bytes).
+
+That's not matching the code..
+
+>  #[expect(dead_code)]
+>  pub struct SpdmState {
+>      pub(crate) dev: *mut bindings::device,
+> @@ -83,6 +90,8 @@ pub struct SpdmState {
+>      pub(crate) base_asym_alg: u32,
+>      pub(crate) base_hash_alg: u32,
+>      pub(crate) meas_hash_alg: u32,
+> +    pub(crate) supported_slots: u8,
+> +    pub(crate) provisioned_slots: u8,
+>  
+>      /* Signature algorithm */
+>      base_asym_enc: &'static CStr,
+> @@ -93,6 +102,9 @@ pub struct SpdmState {
+>      pub(crate) shash: *mut bindings::crypto_shash,
+>      pub(crate) desc: Option<&'static mut bindings::shash_desc>,
+>      pub(crate) hash_len: usize,
+> +
+> +    // Certificates
+> +    pub(crate) certs: [KVec<u8>; SPDM_SLOTS],
+>  }
+
+> @@ -539,4 +554,70 @@ pub(crate) fn negotiate_algs(&mut self) -> Result<(), Error> {
+>  
+>          Ok(())
+>      }
+> +
+> +    pub(crate) fn get_digests(&mut self) -> Result<(), Error> {
+> +        let mut request = GetDigestsReq::default();
+> +        request.version = self.version;
+> +
+> +        let req_sz = core::mem::size_of::<GetDigestsReq>();
+> +        let rsp_sz = core::mem::size_of::<GetDigestsRsp>() + SPDM_SLOTS * self.hash_len;
+> +
+> +        // SAFETY: `request` is repr(C) and packed, so we can convert it to a slice
+> +        let request_buf = unsafe { from_raw_parts_mut(&mut request as *mut _ as *mut u8, req_sz) };
+> +
+> +        let mut response_vec: KVec<u8> = KVec::with_capacity(rsp_sz, GFP_KERNEL)?;
+> +        // SAFETY: `request` is repr(C) and packed, so we can convert it to a slice
+> +        let response_buf = unsafe { from_raw_parts_mut(response_vec.as_mut_ptr(), rsp_sz) };
+> +
+> +        let rc = self.spdm_exchange(request_buf, response_buf)?;
+> +
+> +        if rc < (core::mem::size_of::<GetDigestsRsp>() as i32) {
+> +            pr_err!("Truncated digests response\n");
+> +            to_result(-(bindings::EIO as i32))?;
+> +        }
+> +
+> +        // SAFETY: `rc` is the length of data read, which will be smaller
+> +        // then the capacity of the vector
+> +        unsafe { response_vec.inc_len(rc as usize) };
+> +
+> +        let response: &mut GetDigestsRsp = Untrusted::new_mut(&mut response_vec).validate_mut()?;
+> +
+> +        if rc
+
+Perhaps another local variable to represent what this is better than the rc name does?
+
+> +            < (core::mem::size_of::<GetDigestsReq>()
+> +                + response.param2.count_ones() as usize * self.hash_len) as i32
+> +        {
+> +            pr_err!("Truncated digests response\n");
+> +            to_result(-(bindings::EIO as i32))?;
+> +        }
+> +
+> +        let mut deprovisioned_slots = self.provisioned_slots & !response.param2;
+> +        while (deprovisioned_slots.trailing_zeros() as usize) < SPDM_SLOTS {
+> +            let slot = deprovisioned_slots.trailing_zeros() as usize;
+> +            self.certs[slot].clear();
+> +            deprovisioned_slots &= !(1 << slot);
+> +        }
+> +
+> +        self.provisioned_slots = response.param2;
+> +        if self.provisioned_slots == 0 {
+> +            pr_err!("No certificates provisioned\n");
+> +            to_result(-(bindings::EPROTO as i32))?;
+> +        }
+> +
+> +        if self.version >= 0x13 && (response.param2 & !response.param1 != 0) {
+
+Should we use the define for the version?
+
+> +            pr_err!("Malformed digests response\n");
+> +            to_result(-(bindings::EPROTO as i32))?;
+> +        }
+> +
+> +        let supported_slots = if self.version >= 0x13 {
+> +            response.param1
+> +        } else {
+> +            0xFF
+> +        };
+> +
+> +        if self.supported_slots != supported_slots {
+> +            self.supported_slots = supported_slots;
+
+Why not set it unconditionally? Is this expected to have
+side effects?
+
+> +        }
+> +
+> +        Ok(())
+> +    }
+>  }
+> diff --git a/lib/rspdm/validator.rs b/lib/rspdm/validator.rs
+> index 036a077c71c3..2150a23997db 100644
+> --- a/lib/rspdm/validator.rs
+> +++ b/lib/rspdm/validator.rs
+
+> +
+> +#[repr(C, packed)]
+> +pub(crate) struct GetDigestsRsp {
+> +    pub(crate) version: u8,
+> +    pub(crate) code: u8,
+> +    pub(crate) param1: u8,
+> +    pub(crate) param2: u8,
+> +
+> +    pub(crate) digests: __IncompleteArrayField<u8>,
+Maybe include KeyPairIDs, certificatinfo, and KeyUsageMask
+in this structure definition (1.3.1 has them)
+Or at very least a comment to say they are a job for another day.
+
+None of those exist yet as we didn't ask for MULTI_KEY_CAP.
+
+> +}
+> +
+> +impl Validate<&mut Unvalidated<KVec<u8>>> for &mut GetDigestsRsp {
+> +    type Err = Error;
+> +
+> +    fn validate(unvalidated: &mut Unvalidated<KVec<u8>>) -> Result<Self, Self::Err> {
+> +        let raw = unvalidated.raw_mut();
+> +        if raw.len() < mem::size_of::<GetDigestsRsp>() {
+> +            return Err(EINVAL);
+> +        }
+> +
+> +        let ptr = raw.as_mut_ptr();
+> +        // CAST: `GetDigestsRsp` only contains integers and has `repr(C)`.
+> +        let ptr = ptr.cast::<GetDigestsRsp>();
+> +        // SAFETY: `ptr` came from a reference and the cast above is valid.
+> +        let rsp: &mut GetDigestsRsp = unsafe { &mut *ptr };
+> +
+> +        Ok(rsp)
+> +    }
+> +}
 
