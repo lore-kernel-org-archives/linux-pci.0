@@ -1,126 +1,253 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B091A37CD59;
-	Tue,  3 Mar 2026 16:42:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 991423BED6C;
+	Tue,  3 Mar 2026 16:54:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772556132; cv=none; b=ooKfF9yFXJAGH575pfRmyUTsQy92tW6bc0E4bjkLmRdIeX85V8KXJF41io5bbKSfIbxvLPPq8P441d+xeegfWBCGeabjb3tnJTQMN/0fhltbaM1oblAv3YrFLc9CRRohQo63bECCR5PNaOrvEF4zCr36AwKZ9ZBdN0mScYMf8JU=
+	t=1772556901; cv=none; b=EVs2B2/kswUMRiTYA55Xh0vrZkEuoMFWu5hkjGsncXKqkf1uz4mBOubhsxROreApOjBFUfcXGHqut/5uXauSSGrCQyZwIskOLVvPE2H+FN7al96Rh9T55TDCCs3GhaMdwLtWhBvXu+eiWrxzXM2O3fF7Dbi5ScFKivBBl4It6ZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772556132; c=relaxed/simple;
-	bh=W+8PidUEXESOH6dzGHWWec1+CrSIW7MIlvEsDcbatgo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NfPpyBjqgOAINvpkZVviDOaEgumXztydTnR3WAEe1PKMbniGIZhycRnU1ABEMzbjV6c0V08BF2n3YSq2YBwXD0eBnmsw+mb2M++TgwvOyuCIoP1XBvTysFA5ADQ0I2vvVCITA/YXEOjn34eLSajzxNq6vBGjKMzpnkXOVuZMeac=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BrkcEQLw; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BrkcEQLw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C4F3C116C6;
-	Tue,  3 Mar 2026 16:42:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772556132;
-	bh=W+8PidUEXESOH6dzGHWWec1+CrSIW7MIlvEsDcbatgo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BrkcEQLwzTitTADAopFpz6Wg4ixT5ZNhAmOqz9s4pQvNaecsvaCaMkcquPDXJjCnh
-	 uqjh8WWagZn6AaANcJi9qHeIAaWOR3H4SECpEotYfJiF+IOPQaq9LKUWZC1y4VEgIP
-	 2KpGAC38/794p0Fp6JiTspiJRcmyKzrZcCtsmEessVrtjBqAo8x6ZCrkm8y6KsJXne
-	 1bdP2URXGCQJVVtaN52lEKCslPaZH5pHuv04nQf6uUizy5V4pdp2YKna6e5kRzp7DS
-	 Vcb6Pvx537FPyzBP8NS53GphF0QeG1A8+WdFWMLMXO9yyLy5tI2bINBx75rVpCtJ4U
-	 c6JvIXGRw80tA==
-Date: Tue, 3 Mar 2026 22:12:01 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Richard Zhu <hongxing.zhu@nxp.com>, 
-	Alexander Stein <alexander.stein@ew.tq-group.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	imx@lists.linux.dev
-Subject: Re: i.MX8M Plus PCIe link regression
-Message-ID: <ac24flkmrooacnpt53swuurkbxvorbjx2yb4s3zdevqua6ddls@wjc3bcsl7zif>
-References: <23024521.EfDdHjke4D@steina-w>
+	s=arc-20240116; t=1772556901; c=relaxed/simple;
+	bh=46ZYRTVCWhb6xfRm7iUUNBXypzQPHz3VS55cVuN4mHk=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=aIHkSFuJQiM3VJmCkcLbK3JurkxElJ5qaYW0cNS67/akMOek76c9hJx9bXDal5oV4FUJxe/J4+w0lCPOeVQbU2CnYeBlQHMQGkoXXigGnSzniltrsGhl3Tl3aB6DVmOuqFoRlh2pbvdP1x53zs00rzGj99JgEgfi+j1Wfz6M/L4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.107])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fQMMY6CBTzHnH5g;
+	Wed,  4 Mar 2026 00:54:01 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id EEBDF40585;
+	Wed,  4 Mar 2026 00:54:55 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 3 Mar
+ 2026 16:54:55 +0000
+Date: Tue, 3 Mar 2026 16:54:53 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: <alistair23@gmail.com>
+CC: <bhelgaas@google.com>, <lukas@wunner.de>,
+	<rust-for-linux@vger.kernel.org>, <akpm@linux-foundation.org>,
+	<linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <alex.gaynor@gmail.com>,
+	<benno.lossin@proton.me>, <boqun.feng@gmail.com>, <a.hindborg@kernel.org>,
+	<gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <tmgross@umich.edu>,
+	<ojeda@kernel.org>, <wilfred.mallawa@wdc.com>, <aliceryhl@google.com>,
+	Alistair Francis <alistair@alistair23.me>
+Subject: Re: [RFC v3 24/27] lib: rspdm: Support SPDM challenge
+Message-ID: <20260303165453.00006a44@huawei.com>
+In-Reply-To: <20260211032935.2705841-25-alistair.francis@wdc.com>
+References: <20260211032935.2705841-1-alistair.francis@wdc.com>
+	<20260211032935.2705841-25-alistair.francis@wdc.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <23024521.EfDdHjke4D@steina-w>
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml500011.china.huawei.com (7.191.174.215) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-On Tue, Mar 03, 2026 at 01:38:13PM +0100, Alexander Stein wrote:
-> Hi,
-> 
-> these days I noticed that there is a PCIe link regression on my i.MX8MP
-> platform (TQMa8MPxL) running next-20260227.
-> I could bisect it back to commit 9c03e30e3ade3 ("PCI: imx6: Skip link up 
-> workaround for newer platforms"). I always get the following errors:
-> 
-> imx6q-pcie 33800000.pcie: Link failed to come up. LTSSM: CFG_LINKWD_START
-> imx6q-pcie 33800000.pcie: probe with driver imx6q-pcie failed with error -110
-> 
-> Connected is a Gen1 PCIe -> Ethernet adapter. Interestingly a Gen2 device is
-> detected without issues.
-> 
-> Reverting 3c96a61dd2e098dda8dcac3dce3d38a3c87afbfc and
-> b9a8d28ebbf118bb3eac953f4a37abbd341257ab "fixes" my platform, both Gen 1 and
-> Gen 2 devices are detect. Commit 3c96a61dd2e098dda8dcac3dce3d38a3c87afbfc is only
-> required for conflict free revert.
-> 
-> Here is a summary with outputs:
-> Gen 1 device
-> > 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
-> > 01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
-> > RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller (rev 01)
-> 
-> Gen 2 device
-> > 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
-> > 01:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9128 PCIe SATA 6
-> > Gb/s RAID controller (rev 20)
-> 
-> output of "dmesg | grep imx6q-pcie". Common part for all tests:
-> > imx6q-pcie 33800000.pcie: host bridge /soc@0/pcie@33800000 ranges:
-> > imx6q-pcie 33800000.pcie:       IO 0x001ff80000..0x001ff8ffff ->
-> > 0x0000000000
-> > imx6q-pcie 33800000.pcie:      MEM 0x0018000000..0x001fefffff ->
-> > 0x0018000000
-> > imx6q-pcie 33800000.pcie: config reg[1] 0x1ff00000 == cpu 0x1ff00000
-> > imx6q-pcie 33800000.pcie: iATU: unroll T, 4 ob, 4 ib, align 64K, limit 16G
-> 
-> next-20260227
-> Gen 1
-> > imx6q-pcie 33800000.pcie: Link failed to come up. LTSSM: CFG_LINKWD_START
-> > imx6q-pcie 33800000.pcie: probe with driver imx6q-pcie failed with error -110
-> 
-> Gen 2
-> > imx6q-pcie 33800000.pcie: PCIe Gen.2 x1 link up
-> > imx6q-pcie 33800000.pcie: PCI host bridge to bus 0000:00
-> 
-> next-20260227 + reverts
-> Gen 1
-> > imx6q-pcie 33800000.pcie: PCIe Gen.1 x1 link up
-> > imx6q-pcie 33800000.pcie: PCIe Gen.1 x1 link up
-> > imx6q-pcie 33800000.pcie: PCI host bridge to bus 0000:00
-> 
-> Gen 2
-> > imx6q-pcie 33800000.pcie: PCIe Gen.1 x1 link up
-> > imx6q-pcie 33800000.pcie: PCIe Gen.2 x1 link up
-> > imx6q-pcie 33800000.pcie: PCI host bridge to bus 0000:00
-> 
-> What can we do here? I'm wondering why Gen 2 trains correctly, while Gen 1
-> doesn't.
-> 
+On Wed, 11 Feb 2026 13:29:31 +1000
+alistair23@gmail.com wrote:
 
-Thanks for the report and sorry for the breakage. Commit 9c03e30e3ade3, mentions
-that the workaround is only needed for the i.MX6 platforms. So I'm not sure why
-the patch breaks i.MX8M and that too only for Gen 1 speed.
+> From: Alistair Francis <alistair@alistair23.me>
+> 
+> Support the CHALLENGE SPDM command.
+> 
+> Signed-off-by: Alistair Francis <alistair@alistair23.me>
 
-Also, before 9c03e30e3ade3, LTSSM was always started in Gen 1, but as per your
-finding, only Gen 1 devices fail to work. So the code till
-imx_pcie_wait_for_speed_change() shouldn't have an impact. Maybe the issue is
-due to skipping imx_pcie_wait_for_speed_change()?
+Nicely broken out.  I was wondering when the transcript for the
+hash might show up, but you sensibly kept that delight for only
+being done when you need it.  Might be worth talking a bit more
+about that in the patch description!
 
-Richard, thoughts?
+Minor comments inline.
 
-- Mani
+J
 
--- 
-மணிவண்ணன் சதாசிவம்
+> diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
+> index 728b920beace..a4d803af48fe 100644
+> --- a/lib/rspdm/state.rs
+> +++ b/lib/rspdm/state.rs
+
+...
+
+> @@ -834,4 +877,165 @@ pub(crate) fn validate_cert_chain(&mut self, slot: u8) -> Result<(), Error> {
+>  
+>          Ok(())
+>      }
+> +
+> +    pub(crate) fn challenge_rsp_len(&mut self, nonce_len: usize, opaque_len: usize) -> usize {
+> +        let mut length =
+> +            core::mem::size_of::<SpdmHeader>() + self.hash_len + nonce_len + opaque_len + 2;
+
+As below, perhaps add a comment at least that MSHLength == 0
+
+> +
+> +        if self.version >= 0x13 {
+> +            length += 8;
+> +        }
+> +
+> +        length + self.sig_len
+> +    }
+> +
+> +    fn verify_signature(&mut self, response_vec: &mut [u8]) -> Result<(), Error> {
+> +        let sig_start = response_vec.len() - self.sig_len;
+> +        let mut sig = bindings::public_key_signature::default();
+> +        let mut mhash: KVec<u8> = KVec::new();
+> +
+> +        sig.s = &mut response_vec[sig_start..] as *mut _ as *mut u8;
+> +        sig.s_size = self.sig_len as u32;
+
+Perhaps it makes sense to extract the signature at the caller and only pass
+that in here rather than the whole response_vec.
+
+> +        sig.encoding = self.base_asym_enc.as_ptr() as *const u8;
+> +        sig.hash_algo = self.base_hash_alg_name.as_ptr() as *const u8;
+> +
+...
+
+> +    pub(crate) fn challenge(&mut self, slot: u8, verify: bool) -> Result<(), Error> {
+> +        let mut request = ChallengeReq::default();
+> +        request.version = self.version;
+> +        request.param1 = slot;
+> +
+> +        let nonce_len = request.nonce.len();
+> +
+> +        if let Some(nonce) = &self.next_nonce {
+> +            request.nonce.copy_from_slice(&nonce);
+> +            self.next_nonce = None;
+> +        } else {
+> +            unsafe {
+> +                bindings::get_random_bytes(&mut request.nonce as *mut _ as *mut c_void, nonce_len)
+> +            };
+> +        }
+> +
+> +        let req_sz = if self.version <= 0x12 {
+> +            core::mem::size_of::<ChallengeReq>() - 8
+
+No means to do offset_of type stuff in Rust?  Would make the sizing explicitly reflect the
+structure.
+
+> +        } else {
+> +            core::mem::size_of::<ChallengeReq>()
+> +        };
+> +
+> +        let rsp_sz = self.challenge_rsp_len(nonce_len, SPDM_MAX_OPAQUE_DATA);
+> +
+> +        // SAFETY: `request` is repr(C) and packed, so we can convert it to a slice
+> +        let request_buf = unsafe { from_raw_parts_mut(&mut request as *mut _ as *mut u8, req_sz) };
+> +
+> +        let mut response_vec: KVec<u8> = KVec::with_capacity(rsp_sz, GFP_KERNEL)?;
+> +        // SAFETY: `request` is repr(C) and packed, so we can convert it to a slice
+> +        let response_buf = unsafe { from_raw_parts_mut(response_vec.as_mut_ptr(), rsp_sz) };
+> +
+> +        let rc = self.spdm_exchange(request_buf, response_buf)?;
+> +
+> +        if rc < (core::mem::size_of::<ChallengeRsp>() as i32) {
+> +            pr_err!("Truncated challenge response\n");
+> +            to_result(-(bindings::EIO as i32))?;
+> +        }
+> +
+> +        // SAFETY: `rc` is the length of data read, which will be smaller
+> +        // then the capacity of the vector
+> +        unsafe { response_vec.inc_len(rc as usize) };
+> +
+> +        let _response: &mut ChallengeRsp = Untrusted::new_mut(&mut response_vec).validate_mut()?;
+> +
+> +        let opaque_len_offset = core::mem::size_of::<SpdmHeader>() + self.hash_len + nonce_len;
+
+Might be worth adding something to reflect that this also includes the MSHLength but that is 0 as
+we didn't ask for a measurement summary hash.  Would make it a tiny bit easier to correlate
+with the spec.
+
+> +        let opaque_len = u16::from_le_bytes(
+> +            response_vec[opaque_len_offset..(opaque_len_offset + 2)]
+> +                .try_into()
+> +                .unwrap_or([0, 0]),
+> +        );
+> +
+> +        let rsp_sz = self.challenge_rsp_len(nonce_len, opaque_len as usize);
+> +
+> +        if rc < rsp_sz as i32 {
+> +            pr_err!("Truncated challenge response\n");
+> +            to_result(-(bindings::EIO as i32))?;
+> +        }
+> +
+> +        self.transcript
+> +            .extend_from_slice(&response_vec[..rsp_sz], GFP_KERNEL)?;
+> +
+> +        if verify {
+> +            /* Verify signature at end of transcript against leaf key */
+> +            match self.verify_signature(&mut response_vec[..rsp_sz]) {
+> +                Ok(()) => {
+> +                    pr_info!("Authenticated with certificate slot {slot}");
+> +                    self.authenticated = true;
+> +                }
+> +                Err(e) => {
+> +                    pr_err!("Cannot verify challenge_auth signature: {e:?}");
+> +                    self.authenticated = false;
+> +                }
+> +            };
+> +        }
+> +
+> +        Ok(())
+> +    }
+>  }
+> diff --git a/lib/rspdm/validator.rs b/lib/rspdm/validator.rs
+> index a8bc3378676f..f8a5337841f0 100644
+> --- a/lib/rspdm/validator.rs
+> +++ b/lib/rspdm/validator.rs
+
+> +
+> +#[repr(C, packed)]
+> +pub(crate) struct ChallengeRsp {
+> +    pub(crate) version: u8,
+> +    pub(crate) code: u8,
+> +    pub(crate) param1: u8,
+> +    pub(crate) param2: u8,
+> +
+> +    pub(crate) cert_chain_hash: __IncompleteArrayField<u8>,
+> +    pub(crate) nonce: [u8; 32],
+> +    pub(crate) message_summary_hash: __IncompleteArrayField<u8>,
+> +
+> +    pub(crate) opaque_data_len: u16,
+Similar to other places, I'd use a __le16 and convert at place of use
+only.
+
+
+> +    pub(crate) opaque_data: __IncompleteArrayField<u8>,
+> +
+> +    pub(crate) context: [u8; 8],
+> +    pub(crate) signature: __IncompleteArrayField<u8>,
+> +}
+> +
+> +impl Validate<&mut Unvalidated<KVec<u8>>> for &mut ChallengeRsp {
+> +    type Err = Error;
+> +
+> +    fn validate(unvalidated: &mut Unvalidated<KVec<u8>>) -> Result<Self, Self::Err> {
+> +        let raw = unvalidated.raw_mut();
+> +        if raw.len() < mem::size_of::<ChallengeRsp>() {
+> +            return Err(EINVAL);
+> +        }
+> +
+> +        let ptr = raw.as_mut_ptr();
+> +        // CAST: `ChallengeRsp` only contains integers and has `repr(C)`.
+> +        let ptr = ptr.cast::<ChallengeRsp>();
+> +        // SAFETY: `ptr` came from a reference and the cast above is valid.
+> +        let rsp: &mut ChallengeRsp = unsafe { &mut *ptr };
+> +
+> +        // rsp.opaque_data_len = rsp.opaque_data_len.to_le();
+Not sure why this is commented out. But as above, I'd leave it alone anyway.
+
+> +
+> +        Ok(rsp)
+> +    }
+> +}
+
+
