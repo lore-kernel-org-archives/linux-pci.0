@@ -1,46 +1,46 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C048135F5EC
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F9A5219A8D
 	for <linux-pci@vger.kernel.org>; Tue,  3 Mar 2026 00:01:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772496070; cv=none; b=n2iDmXBrJj8oqlHWKJ0KX/PvslfGJBuMhrS6OaLBqTIlQd8LxQ+aYpx+5KOn4ITYCZStVRr87RQn7G35WTLjZwcF+/QcQO8Hte0ULrWKqu2m/4dmLF7tzSBOjKJBFmQclGS4BAaqug23rS6nnslEdE0LhkABnvvD/CQM4c6t2wc=
+	t=1772496070; cv=none; b=VRJ9S2GKV/gb6E0wk8x4KrRA/QoXl7yC+gPcrKaEJadBJG0h8yCpT6Z2ylduIfoIT8ap+Y3gIXIfeD2YDSKaaD8+Ot1MscrRuUELOk0DJxDeHzp5POS2xOKF8CuEmnfOMLXvgKXd1af9q2GD0FDpdrhn+Q5xamwDkOLBwvUi/CM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1772496070; c=relaxed/simple;
-	bh=z6Dn+57KRgM7GH6TOtVPML7D0q4RCM/SoI7H/B8kLRM=;
+	bh=+yt/IRC9EAMMhfa2JroCdoqjaMHHXvgbADaOftB5zes=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YAkxl2GdtC2fm4Y9p5/Zwd8Ch4X+KXJab1OjQbmVeeZn/0p7p4qKtkVuXp/TU3BjfIsH4hzJnVu1C8INJruHa36YSUkrJ/r6SbUEn6vfEYJ10D1szKuEGxzSdboInpHVuShPPePGme6aebbI2bymEXqzBg5ad+U0bUQx1YwBHLk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LO30PJ15; arc=none smtp.client-ip=198.175.65.17
+	 MIME-Version; b=db0JCZxb1RGL55CBbRclHBI5AfadyFdihFe1YPGXJnmoSHcYn3Tp/+2Qlmr2Q2O1MIchOLA4MXNm5gFc2Zm6rbgzHueJJ8kl0DsUzFMxx8aQzodr4qEcRF39cCnn6pxTtmRxJXSs5qoHjR4ByYXj2dA3ULMrLQltfUGSNKkCad8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ShhvJuz1; arc=none smtp.client-ip=198.175.65.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LO30PJ15"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ShhvJuz1"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1772496069; x=1804032069;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=z6Dn+57KRgM7GH6TOtVPML7D0q4RCM/SoI7H/B8kLRM=;
-  b=LO30PJ15Qmd4LvhhOe+bLOMo6z+n0HN8Z8PccsbSP3oec3/hdbhNkCtZ
-   adApiLlb9DHuklXt8NFHHsn/MgqOMQ96ey8zuCx2+CEBGonO4Kd9p62OQ
-   Ys9kHweAg/4LOrXJsxTuyW3Vk0NdshnmdjPRChDPyQauncidksXllsiAG
-   6LPDmAXFQpWKsn9eNZnfvRMr2vXblecdroVv0ZGXbG1xkeInZ/N1NsiV3
-   BBY43VZN9oIC8aFsl2rWV177NlsNvvL5YRF54CIn35LlOFu4l/EG3NsT6
-   XtezUDQS3SmVSs9XxkirT29cgvtbuwH5PCzrDs176t/2TYktgEqHEy11s
-   A==;
-X-CSE-ConnectionGUID: yxRtbwgpTbS1rao3QfFGSQ==
-X-CSE-MsgGUID: D2KHYVt0R3ijdcjH9Isxtw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11717"; a="73483058"
+  bh=+yt/IRC9EAMMhfa2JroCdoqjaMHHXvgbADaOftB5zes=;
+  b=ShhvJuz1uD5oFTJZdy/70d4CHIOKNsG817P+GCRo3xdyW2HePKdOzFe4
+   uGemoF6dqDjFfMy1UkmQFpkhYoJSz5yKyFHlaRX324Wlu8fDd0vulQARg
+   q4g8Xfh81pW5NJNdQ4VjZBHUTFar+7DovuvzesYN5rtcC7UwlKAuehuO8
+   PUD0//nUQM0VuJ7FVtvehPGpnNfmaA+OsScEDysRRJF8B21627NhYXrKQ
+   tw4oyBRCOWxP9rTTWscR4TWbllpUUooFZ9j+OhRU6kbVLepxmHRwPFxQT
+   v7Bfu6towQb+ZIgHLbIHdq/BqIavMiBpJv1c2C7dUOz9p3Iy/fS80V/Eh
+   g==;
+X-CSE-ConnectionGUID: f9zuwV3dS+uS/yckzGY+rA==
+X-CSE-MsgGUID: C4bx/42ZQCKh6skt3sTrsA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11717"; a="73483031"
 X-IronPort-AV: E=Sophos;i="6.21,321,1763452800"; 
-   d="scan'208";a="73483058"
+   d="scan'208";a="73483031"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2026 16:01:01 -0800
-X-CSE-ConnectionGUID: +DriW8VBRcC1dW6bFg4LHA==
-X-CSE-MsgGUID: kgwkpqOVQJqDwcmAK9sYyA==
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2026 16:01:00 -0800
+X-CSE-ConnectionGUID: rvnL+1iNS7SZrF0Ewb4ohw==
+X-CSE-MsgGUID: I01UQz/SRHGn7kBd5qs1Pg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,321,1763452800"; 
-   d="scan'208";a="214967136"
+   d="scan'208";a="214967129"
 Received: from dwillia2-desk.jf.intel.com ([10.88.27.145])
   by fmviesa006.fm.intel.com with ESMTP; 02 Mar 2026 16:01:00 -0800
 From: Dan Williams <dan.j.williams@intel.com>
@@ -54,9 +54,9 @@ Cc: gregkh@linuxfoundation.org,
 	alistair23@gmail.com,
 	lukas@wunner.de,
 	jgg@nvidia.com
-Subject: [PATCH v2 18/19] samples/devsec: Add evidence support
-Date: Mon,  2 Mar 2026 16:02:06 -0800
-Message-ID: <20260303000207.1836586-19-dan.j.williams@intel.com>
+Subject: [PATCH v2 16/19] samples/devsec: Introduce a "Device Security TSM" sample driver
+Date: Mon,  2 Mar 2026 16:02:04 -0800
+Message-ID: <20260303000207.1836586-17-dan.j.williams@intel.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260303000207.1836586-1-dan.j.williams@intel.com>
 References: <20260303000207.1836586-1-dan.j.williams@intel.com>
@@ -68,291 +68,224 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-For testing purposes add "certs" and "transcript" attributes to the devsec
-faux devices. Both the link_tsm and devsec_tsm reference the same shared
-data. The flow is:
+There are 2 sides to a TEE Security Manager (TSM), the 'link' TSM, and the
+'devsec' TSM. The 'link' TSM, outside the TEE, establishes physical link
+confidentiality and integerity, and a secure session for transporting
+commands the manage the security state of devices. The 'devsec' TSM, within
+the TEE, issues requests for confidential devices to lock their
+configuration and transition to secure operation.
 
-- generate cert chain
-- sign simulated evidence
-- write blobs to "certs" and "transcript"
-- trigger tsm/connect or tsm/lock to consume that evidence
+Implement a sample implementation of a 'devsec' TSM. This leverages the PCI
+core's ability to register multiple TSMs at a time to load a sample
+devsec_tsm module alongside the existing devsec_link_tsm module. When both
+are loaded the TSM personality is selected by choosing to 'connect' vs
+'lock' the device.
+
+Drivers like tdx_guest, sev_guest, or arm-cca-guest are examples of "Device
+Security TSM" drivers.
+
+A devsec_pci driver is included to test the device_cc_probe() helper for
+drivers that need to coordinate some configuration before 'lock' and
+'accept'.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- samples/devsec/devsec.h   |   5 ++
- samples/devsec/common.c   | 134 +++++++++++++++++++++++++++++++++++++-
- samples/devsec/link_tsm.c |  21 +++++-
- samples/devsec/tsm.c      |   9 ++-
- 4 files changed, 166 insertions(+), 3 deletions(-)
+ samples/devsec/Makefile |   6 ++
+ samples/devsec/pci.c    |  39 +++++++++++++
+ samples/devsec/tsm.c    | 124 ++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 169 insertions(+)
+ create mode 100644 samples/devsec/pci.c
+ create mode 100644 samples/devsec/tsm.c
 
-diff --git a/samples/devsec/devsec.h b/samples/devsec/devsec.h
-index e0ea9c6bb5e9..a89ce587cb3b 100644
---- a/samples/devsec/devsec.h
-+++ b/samples/devsec/devsec.h
-@@ -40,4 +40,9 @@ static inline int devsec_get_domain_nr(struct devsec_sysdata *sd)
- }
- #endif
- extern struct devsec_sysdata *devsec_sysdata[NR_DEVSEC_HOST_BRIDGES];
-+extern const struct attribute_group devsec_evidence_group;
-+void devsec_evidence_busy(void);
-+void devsec_evidence_idle(void);
-+struct pci_tsm_evidence;
-+void devsec_init_evidence(struct pci_tsm_evidence *evidence);
- #endif /* __DEVSEC_H__ */
-diff --git a/samples/devsec/common.c b/samples/devsec/common.c
-index d0e8648dfe98..5dc4152e8b99 100644
---- a/samples/devsec/common.c
-+++ b/samples/devsec/common.c
-@@ -1,8 +1,11 @@
- // SPDX-License-Identifier: GPL-2.0-only
- /* Copyright (C) 2024 - 2026 Intel Corporation */
+diff --git a/samples/devsec/Makefile b/samples/devsec/Makefile
+index da122eb8d23d..0c52448a629f 100644
+--- a/samples/devsec/Makefile
++++ b/samples/devsec/Makefile
+@@ -8,3 +8,9 @@ devsec_bus-y := bus.o
  
--#include <linux/pci.h>
- #include <linux/export.h>
+ obj-$(CONFIG_SAMPLE_DEVSEC) += devsec_link_tsm.o
+ devsec_link_tsm-y := link_tsm.o
++
++obj-$(CONFIG_SAMPLE_DEVSEC) += devsec_tsm.o
++devsec_tsm-y := tsm.o
++
++obj-$(CONFIG_SAMPLE_DEVSEC) += devsec_pci.o
++devsec_pci-y := pci.o
+diff --git a/samples/devsec/pci.c b/samples/devsec/pci.c
+new file mode 100644
+index 000000000000..50519be412ed
+--- /dev/null
++++ b/samples/devsec/pci.c
+@@ -0,0 +1,39 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/* Copyright (C) 2024 - 2026 Intel Corporation */
++#include <linux/device.h>
++#include <linux/module.h>
 +#include <linux/pci.h>
-+#include <linux/pci-tsm.h>
-+#include <linux/vmalloc.h>
-+#include <uapi/linux/pci-tsm-netlink.h>
- 
- #include "devsec.h"
- 
-@@ -13,14 +16,143 @@
- struct devsec_sysdata *devsec_sysdata[NR_DEVSEC_HOST_BRIDGES];
- EXPORT_SYMBOL_FOR_MODULES(devsec_sysdata, "devsec*");
- 
-+static struct {
-+	void *certs;
-+	size_t certs_size;
-+	void *transcript;
-+	size_t transcript_size;
-+	int busy;
-+	struct mutex lock;
-+} devsec_evidence;
 +
-+void devsec_init_evidence(struct pci_tsm_evidence *evidence)
++static int devsec_pci_probe(struct pci_dev *pdev,
++			    const struct pci_device_id *id)
 +{
-+	struct pci_tsm_evidence_object *obj;
++	void __iomem *base;
++	int rc;
 +
-+	obj = &evidence->obj[PCI_TSM_EVIDENCE_TYPE_CERT0];
-+	obj->data = devsec_evidence.certs;
-+	obj->len = devsec_evidence.certs_size;
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return dev_err_probe(&pdev->dev, rc, "enable failed\n");
 +
-+	obj = &evidence->obj[PCI_TSM_EVIDENCE_TYPE_MEASUREMENTS];
-+	obj->data = devsec_evidence.transcript;
-+	obj->len = devsec_evidence.transcript_size;
-+}
-+EXPORT_SYMBOL_FOR_MODULES(devsec_init_evidence, "devsec*");
++	base = pcim_iomap_region(pdev, 0, KBUILD_MODNAME);
++	if (IS_ERR(base))
++		return dev_err_probe(&pdev->dev, PTR_ERR(base),
++				     "iomap failed\n");
 +
-+static ssize_t certs_read(struct file *file, struct kobject *kobj,
-+			  const struct bin_attribute *bin_attr, char *buf,
-+			  loff_t off, size_t count)
-+{
-+	guard(mutex)(&devsec_evidence.lock);
-+	return memory_read_from_buffer(buf, count, &off, devsec_evidence.certs,
-+				       devsec_evidence.certs_size);
++	dev_dbg(&pdev->dev, "attach\n");
++	return 0;
 +}
 +
-+#define EVIDENCE_MAX_SIZE SZ_16M
-+
-+static ssize_t evidence_write(char *buf, loff_t off, size_t count, void **data,
-+			      size_t *data_size)
-+{
-+	loff_t in_off = 0;
-+
-+	if (off + count > EVIDENCE_MAX_SIZE)
-+		return -EFBIG;
-+
-+	guard(mutex)(&devsec_evidence.lock);
-+	if (devsec_evidence.busy)
-+		return -EBUSY;
-+	if (off + count > *data_size) {
-+		void *new_data = kvrealloc(*data, off + count, GFP_KERNEL);
-+
-+		if (!new_data)
-+			return -ENOMEM;
-+		*data = new_data;
-+		*data_size = off + count;
-+	}
-+
-+	/* reset the buffer on a single byte write */
-+	if (off + count == 1) {
-+		kvfree(*data);
-+		*data = NULL;
-+		*data_size = 0;
-+		return 1;
-+	}
-+
-+	return memory_read_from_buffer(*data + off, count, &in_off, buf, count);
-+}
-+
-+static ssize_t certs_write(struct file *file, struct kobject *kobj,
-+			   const struct bin_attribute *bin_attr, char *buf,
-+			   loff_t off, size_t count)
-+{
-+	return evidence_write(buf, off, count, &devsec_evidence.certs,
-+			      &devsec_evidence.certs_size);
-+}
-+
-+static ssize_t transcript_read(struct file *file, struct kobject *kobj,
-+			       const struct bin_attribute *bin_attr, char *buf,
-+			       loff_t off, size_t count)
-+{
-+	guard(mutex)(&devsec_evidence.lock);
-+	return memory_read_from_buffer(buf, count, &off,
-+				       devsec_evidence.transcript,
-+				       devsec_evidence.transcript_size);
-+}
-+
-+static ssize_t transcript_write(struct file *file, struct kobject *kobj,
-+				const struct bin_attribute *bin_attr, char *buf,
-+				loff_t off, size_t count)
-+{
-+	return evidence_write(buf, off, count, &devsec_evidence.transcript,
-+			      &devsec_evidence.transcript_size);
-+}
-+
-+static const BIN_ATTR_RW(certs, 0);
-+static const BIN_ATTR_RW(transcript, 0);
-+
-+static const struct bin_attribute *devsec_evidence_attrs[] = {
-+	&bin_attr_certs,
-+	&bin_attr_transcript,
-+	NULL,
++static const struct pci_device_id devsec_pci_ids[] = {
++	{ PCI_DEVICE(0x8086, 0xffff), .override_only = 1, },
++	{ }
 +};
 +
-+/*
-+ * Prevent evidence from changing while any sample device is connected or locked
-+ */
-+void devsec_evidence_busy(void)
-+{
-+	guard(mutex)(&devsec_evidence.lock);
-+	devsec_evidence.busy++;
-+}
-+EXPORT_SYMBOL_FOR_MODULES(devsec_evidence_busy, "devsec*");
-+
-+void devsec_evidence_idle(void)
-+{
-+	guard(mutex)(&devsec_evidence.lock);
-+	if (devsec_evidence.busy-- <= 0) {
-+		WARN_ON_ONCE(1);
-+		devsec_evidence.busy = 0;
-+	}
-+}
-+EXPORT_SYMBOL_FOR_MODULES(devsec_evidence_idle, "devsec*");
-+
-+const struct attribute_group devsec_evidence_group = {
-+	.bin_attrs = devsec_evidence_attrs,
-+};
-+EXPORT_SYMBOL_FOR_MODULES(devsec_evidence_group, "devsec*");
-+
- static int __init common_init(void)
- {
-+	mutex_init(&devsec_evidence.lock);
- 	return 0;
- }
- module_init(common_init);
- 
- static void __exit common_exit(void)
- {
-+	kvfree(devsec_evidence.certs);
-+	kvfree(devsec_evidence.transcript);
-+	mutex_destroy(&devsec_evidence.lock);
- }
- module_exit(common_exit);
- 
-diff --git a/samples/devsec/link_tsm.c b/samples/devsec/link_tsm.c
-index 2e4c1234bdee..21b6c3c7ea52 100644
---- a/samples/devsec/link_tsm.c
-+++ b/samples/devsec/link_tsm.c
-@@ -3,6 +3,7 @@
- 
- #define dev_fmt(fmt) "devsec: " fmt
- #include <linux/device/faux.h>
-+#include <crypto/hash_info.h>
- #include <linux/pci-tsm.h>
- #include <linux/pci-ide.h>
- #include <linux/module.h>
-@@ -51,6 +52,8 @@ static struct device *pci_tsm_host(struct pci_dev *pdev)
- static struct pci_tsm *devsec_tsm_pf0_probe(struct tsm_dev *tsm_dev,
- 					    struct pci_dev *pdev)
- {
-+	struct pci_tsm_evidence *evidence;
-+	struct pci_tsm *tsm;
- 	int rc;
- 
- 	dev_dbg(tsm_dev->dev.parent, "%s\n", pci_name(pdev));
-@@ -60,10 +63,16 @@ static struct pci_tsm *devsec_tsm_pf0_probe(struct tsm_dev *tsm_dev,
- 	if (!devsec_tsm)
- 		return NULL;
- 
-+	tsm = &devsec_tsm->pci.base_tsm;
- 	rc = pci_tsm_pf0_constructor(pdev, &devsec_tsm->pci, tsm_dev);
- 	if (rc)
- 		return NULL;
- 
-+	devsec_evidence_busy();
-+	evidence = &tsm->evidence;
-+	pci_tsm_init_evidence(evidence, 0, HASH_ALGO_SHA384);
-+	devsec_init_evidence(evidence);
-+
- 	pci_dbg(pdev, "TSM enabled\n");
- 	return &no_free_ptr(devsec_tsm)->pci.base_tsm;
- }
-@@ -113,6 +122,7 @@ static void devsec_link_tsm_pci_remove(struct pci_tsm *tsm)
- 	if (is_pci_tsm_pf0(pdev)) {
- 		struct devsec_tsm_pf0 *devsec_tsm = to_devsec_tsm_pf0(tsm);
- 
-+		devsec_evidence_idle();
- 		pci_tsm_pf0_destructor(&devsec_tsm->pci);
- 		kfree(devsec_tsm);
- 	} else {
-@@ -390,7 +400,16 @@ static struct attribute *devsec_link_attrs[] = {
- 	&dev_attr_tsm_request.attr,
- 	NULL,
- };
--ATTRIBUTE_GROUPS(devsec_link);
-+
-+static const struct attribute_group devsec_link_group = {
-+	.attrs = devsec_link_attrs,
++static struct pci_driver devsec_pci_driver = {
++	.name = "devsec_pci",
++	.probe = devsec_pci_probe,
++	.id_table = devsec_pci_ids,
 +};
 +
-+static const struct attribute_group *devsec_link_groups[] = {
-+	&devsec_link_group,
-+	&devsec_evidence_group,
-+	NULL,
-+};
- 
- static int __init devsec_link_tsm_init(void)
- {
++module_pci_driver(devsec_pci_driver);
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("Device Security Sample Infrastructure: Secure PCI Driver");
 diff --git a/samples/devsec/tsm.c b/samples/devsec/tsm.c
-index 46dbe668945a..4a62e05ecf35 100644
---- a/samples/devsec/tsm.c
+new file mode 100644
+index 000000000000..46dbe668945a
+--- /dev/null
 +++ b/samples/devsec/tsm.c
-@@ -6,6 +6,7 @@
- #include <linux/pci-tsm.h>
- #include <linux/module.h>
- #include <linux/pci.h>
-+#include <linux/sysfs.h>
- #include <linux/tsm.h>
- #include "devsec.h"
- 
-@@ -105,9 +106,15 @@ static const struct faux_device_ops devsec_device_ops = {
- 	.probe = devsec_tsm_probe,
- };
- 
-+static const struct attribute_group *devsec_evidence_groups[] = {
-+	&devsec_evidence_group,
-+	NULL,
+@@ -0,0 +1,124 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/* Copyright (C) 2024 - 2026 Intel Corporation */
++
++#define dev_fmt(fmt) "devsec: " fmt
++#include <linux/device/faux.h>
++#include <linux/pci-tsm.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <linux/tsm.h>
++#include "devsec.h"
++
++struct devsec_dev_data {
++	struct pci_tsm_devsec pci;
 +};
 +
- static int __init devsec_tsm_init(void)
- {
--	devsec_tsm = faux_device_create("devsec_tsm", NULL, &devsec_device_ops);
-+	devsec_tsm = faux_device_create_with_groups(
-+		"devsec_tsm", NULL, &devsec_device_ops, devsec_evidence_groups);
- 	if (!devsec_tsm)
- 		return -ENOMEM;
- 	return 0;
++static struct devsec_dev_data *to_devsec_data(struct pci_tsm *tsm)
++{
++	return container_of(tsm, struct devsec_dev_data, pci.base_tsm);
++}
++
++static struct pci_tsm *devsec_tsm_lock(struct tsm_dev *tsm_dev, struct pci_dev *pdev)
++{
++	int rc;
++
++	struct devsec_dev_data *devsec_data __free(kfree) =
++		kzalloc(sizeof(*devsec_data), GFP_KERNEL);
++	if (!devsec_data)
++		return ERR_PTR(-ENOMEM);
++
++	rc = pci_tsm_devsec_constructor(pdev, &devsec_data->pci, tsm_dev);
++	if (rc)
++		return ERR_PTR(rc);
++
++	return &no_free_ptr(devsec_data)->pci.base_tsm;
++}
++
++static void devsec_tsm_unlock(struct pci_tsm *tsm)
++{
++	struct devsec_dev_data *devsec_data = to_devsec_data(tsm);
++	struct pci_tsm_devsec *devsec_tsm = to_pci_tsm_devsec(tsm);
++
++	pci_tsm_mmio_teardown(devsec_tsm->mmio);
++	kfree(devsec_tsm->mmio);
++	kfree(devsec_data);
++}
++
++static int devsec_tsm_accept(struct pci_dev *pdev)
++{
++	struct pci_tsm_devsec *devsec_tsm = to_pci_tsm_devsec(pdev->tsm);
++	int rc;
++
++	struct pci_tsm_mmio *mmio __free(kfree) =
++		kzalloc(struct_size(mmio, mmio, PCI_NUM_RESOURCES), GFP_KERNEL);
++	if (!mmio)
++		return -ENOMEM;
++
++	/*
++	 * Typically this range request would come from the TDISP Interface
++	 * Report. For this sample, just request all BARs be marked encrypted
++	 */
++	for (int i = 0; i < PCI_NUM_RESOURCES; i++) {
++		struct resource *res = pci_tsm_mmio_resource(mmio, mmio->nr);
++
++		if (pci_resource_len(pdev, i) == 0 ||
++		    !(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
++			continue;
++		res->start = pci_resource_start(pdev, i);
++		res->end = pci_resource_end(pdev, i);
++		mmio->nr++;
++	}
++
++	rc = pci_tsm_mmio_setup(pdev, mmio);
++	if (rc)
++		return rc;
++	devsec_tsm->mmio = no_free_ptr(mmio);
++	return 0;
++}
++
++static struct pci_tsm_ops devsec_pci_ops = {
++	.lock = devsec_tsm_lock,
++	.unlock = devsec_tsm_unlock,
++	.accept = devsec_tsm_accept,
++};
++
++static void devsec_tsm_remove(void *tsm_dev)
++{
++	tsm_unregister(tsm_dev);
++}
++
++static int devsec_tsm_probe(struct faux_device *fdev)
++{
++	struct tsm_dev *tsm_dev;
++
++	tsm_dev = tsm_register(&fdev->dev, &devsec_pci_ops);
++	if (IS_ERR(tsm_dev))
++		return PTR_ERR(tsm_dev);
++
++	return devm_add_action_or_reset(&fdev->dev, devsec_tsm_remove,
++					tsm_dev);
++}
++
++static struct faux_device *devsec_tsm;
++
++static const struct faux_device_ops devsec_device_ops = {
++	.probe = devsec_tsm_probe,
++};
++
++static int __init devsec_tsm_init(void)
++{
++	devsec_tsm = faux_device_create("devsec_tsm", NULL, &devsec_device_ops);
++	if (!devsec_tsm)
++		return -ENOMEM;
++	return 0;
++}
++module_init(devsec_tsm_init);
++
++static void __exit devsec_tsm_exit(void)
++{
++	faux_device_destroy(devsec_tsm);
++}
++module_exit(devsec_tsm_exit);
++
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("Device Security Sample Infrastructure: Device Security TSM Driver");
 -- 
 2.52.0
 
