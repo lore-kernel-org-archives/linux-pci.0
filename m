@@ -1,105 +1,108 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0D413164AA
-	for <linux-pci@vger.kernel.org>; Tue,  3 Mar 2026 01:46:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7995E1A6804
+	for <linux-pci@vger.kernel.org>; Tue,  3 Mar 2026 03:15:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772502420; cv=none; b=JOBNFnK3PozcfA4o1zcHmissqa2bM1GHx+TaWWtgbHHyA3VHrTQMQM5645/an//Lue21eganO8SRWSYiJc0mxISzSKP4bJNaGbfvWJF+HIsPu9Rb7IkC14Zo5EjVV3kC4/KB3R/YUXRAb5PieUGepRn6k6RnLl2iJkknJyPFR2M=
+	t=1772507716; cv=none; b=gm1mtpA+y2bX1nUylX3RXmAd6A/yj6VsBQbcKFERouuB4xwWAU6aO08OOryEV/ujgVFjVRwooT8H+CPyLUsMktxfPjNDqZ+mdVykU/EpJ8WVImx4AK1IhfclTzY5k6pDTXPB9/nlnOcndC9lqnewnlGP2AD3WsCW0GTfhA+CU4c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772502420; c=relaxed/simple;
-	bh=3IC8ljJJCajOS64tee02XBTHEwA4qXXnJRcjly4kkyI=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=YrqDa06okUi3yvaV4FmT1tzoJ1n+hPXUcOauNJ6toDvjjbjrT4YEidI3QgTbRkqyXdZKNeWvZwIgq4PKdp8iZKjowhi6hkeGHlJdWqjluYEGPUPZaxZHAVXERzt9AMjVAjTwXAuHNuohIGjWMdoLqfLJEHrl/Ld8Ll/wiN2rQO8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=AyhzdipD; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1772507716; c=relaxed/simple;
+	bh=xsz3XbahbxkD1Tne3qCV3REAPK8gj5He5vgtDqEZX58=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Y2NFFQfa/dscoGVBU2QwrmirTgP0tier+kABC+0HxTKwXJl7oaeTwAKIcCUgZ+VhUL6J/S2xs3RJ6UdyP20nMq1eG/W18+nUhEoCocKtlPWxl+YJPWO/yZ4E89Lr2DXEZ4J9HlBXDJCJBwoU7dlpLqIgd1p3x+vRDMH+H6Ideio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fwYbzICV; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="AyhzdipD"
-X-UUID: da81bb5a16a211f1bcd7499a721e883d-20260303
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=/0sEz2jINBRcc5irANs4F/1esK/f5shwDnPb1VrGRpU=;
-	b=AyhzdipDzLnPrFUb27ADVujk9CLn+LGCxDWOjVBSB0JNKecd0I8oaqQlNbymcgJOoPswadaqmuVJytolhCW5H2yGLoLPv6baWXnuwFCmYjYU7Q+BweqFZTcf2/JQEQZFtljN1zjU6S0sbzq347s7ddFZlIo6WrNZSl4pNRtmViQ=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.11,REQID:c5922b4b-19c2-4fc4-8f5e-c222c1cd75aa,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:89c9d04,CLOUDID:1f2d2ff1-16bd-4243-b4ca-b08ca08ab1d8,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|836|888|898,TC:-5,Content:0|15|1
-	6|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,
-	OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: da81bb5a16a211f1bcd7499a721e883d-20260303
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
-	(envelope-from <ryder.lee@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 693904821; Tue, 03 Mar 2026 09:46:53 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Tue, 3 Mar 2026 09:46:51 +0800
-Received: from mussdccf250.eus.mediatek.inc (10.73.250.250) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Tue, 3 Mar 2026 09:46:50 +0800
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
-CC: Jianjun Wang <jianjun.wang@mediatek.com>, Manivannan Sadhasivam
-	<mani@kernel.org>, =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?=
-	<kwilczynski@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	<linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>, Ryder Lee
-	<ryder.lee@mediatek.com>
-Subject: [PATCH] PCI: mediatek: fix W=1 snpringf warnings
-Date: Mon, 2 Mar 2026 17:46:48 -0800
-Message-ID: <b835e360b42c5e0994f9301a34dbdf140a8d3ef5.1772493898.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fwYbzICV"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1772507715; x=1804043715;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=xsz3XbahbxkD1Tne3qCV3REAPK8gj5He5vgtDqEZX58=;
+  b=fwYbzICVdTtA31jaUiH+EZoXjkP0QUsyVT8qK16sqfldHaaJydY0g4A/
+   yolU5pPxgnYGhewPdt2ggmTDGoAob7IK6NGMqP1Km1SHM3q5QCzviov1I
+   XLCZA8cRtieOGm4aLNN/bLds1cvHMxdGHuwPNB5hcq2VkmQ7meHV4BCy8
+   5W9PQBcFpp5kAPsQT9OQJmFgROQ1hhkpdvMrXaOCOpn5Ozb9hMrPN7kIL
+   dU2JfwTYo0KN93EeedPnaf2FhJdFwDerb5f2U6KhGyPZXWuK+Sk4NvcSG
+   qiQuRAKgzTaF83gjzLmfDhQjgoGdA2qYShOJNBQ10sZ7rEgP8cUEcrhi8
+   Q==;
+X-CSE-ConnectionGUID: mDqUIgXcTIGCQtq4q9xpRw==
+X-CSE-MsgGUID: 7x/h7OhaQgKrNlo3Cpbm3A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11717"; a="77398528"
+X-IronPort-AV: E=Sophos;i="6.21,321,1763452800"; 
+   d="scan'208";a="77398528"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2026 19:15:14 -0800
+X-CSE-ConnectionGUID: +4ipEaLzRSy9T0JOCTZuNg==
+X-CSE-MsgGUID: shjD0TQqSjK4KJB1ww6AcA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,321,1763452800"; 
+   d="scan'208";a="220886311"
+Received: from igk-lkp-server01.igk.intel.com (HELO 9958d990ccf2) ([10.211.93.152])
+  by fmviesa004.fm.intel.com with ESMTP; 02 Mar 2026 19:15:12 -0800
+Received: from kbuild by 9958d990ccf2 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vxGE2-000000001MD-0EEX;
+	Tue, 03 Mar 2026 03:15:10 +0000
+Date: Tue, 3 Mar 2026 04:14:32 +0100
+From: kernel test robot <lkp@intel.com>
+To: Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
+	linux-pci@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, gregkh@linuxfoundation.org, aik@amd.com,
+	aneesh.kumar@kernel.org, yilun.xu@linux.intel.com,
+	bhelgaas@google.com, alistair23@gmail.com, lukas@wunner.de,
+	jgg@nvidia.com, Donald Hunter <donald.hunter@gmail.com>,
+	Jakub Kicinski <kuba@kernel.org>
+Subject: Re: [PATCH v2 08/19] PCI/TSM: Add "evidence" support
+Message-ID: <202603030451.0ZpbO6ex-lkp@intel.com>
+References: <20260303000207.1836586-9-dan.j.williams@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-MTK: N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260303000207.1836586-9-dan.j.williams@intel.com>
 
-Fix the following errors in W=1 builds.
+Hi Dan,
 
-  $ make W=1 drivers/pci/controller/pcie-mediatek.o
-    CALL    scripts/checksyscalls.sh
-    DESCEND objtool
-    INSTALL libsubcmd_headers
-    CC      drivers/pci/controller/pcie-mediatek.o
-  drivers/pci/controller/pcie-mediatek.c: In function ‘mtk_pcie_parse_port’:
-  drivers/pci/controller/pcie-mediatek.c:963:43: error: ‘%d’ directive output may be truncated writing between 1 and 10 bytes into a region of size 6 [-Werror=format-truncation=]
-    963 |         snprintf(name, sizeof(name), "port%d", slot);
-	|                                           ^~
-  drivers/pci/controller/pcie-mediatek.c:963:38: note: directive argument in the range [0, 2147483647]
-    963 |         snprintf(name, sizeof(name), "port%d", slot);
-	|                                      ^~~~~~~~
-  drivers/pci/controller/pcie-mediatek.c:963:9: note: ‘snprintf’ output between 6 and 15 bytes into a destination of size 10
-    963 |         snprintf(name, sizeof(name), "port%d", slot);
-	|         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+kernel test robot noticed the following build warnings:
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- drivers/pci/controller/pcie-mediatek.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+[auto build test WARNING on c2012263047689e495e81c96d7d5b0586299578d]
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 5defa5cc4..75722524f 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -953,7 +953,7 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
- 	struct mtk_pcie_port *port;
- 	struct device *dev = pcie->dev;
- 	struct platform_device *pdev = to_platform_device(dev);
--	char name[10];
-+	char name[20];
- 	int err;
- 
- 	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
+url:    https://github.com/intel-lab-lkp/linux/commits/Dan-Williams/PCI-TSM-Report-active-IDE-streams-per-host-bridge/20260303-080409
+base:   c2012263047689e495e81c96d7d5b0586299578d
+patch link:    https://lore.kernel.org/r/20260303000207.1836586-9-dan.j.williams%40intel.com
+patch subject: [PATCH v2 08/19] PCI/TSM: Add "evidence" support
+compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+docutils: docutils (Docutils 0.21.2, Python 3.13.5, on linux)
+reproduce: (https://download.01.org/0day-ci/archive/20260303/202603030451.0ZpbO6ex-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202603030451.0ZpbO6ex-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   Warning: tools/docs/documentation-file-ref-check references a file that doesn't exist: m,^Documentation/scheduler/sched-pelt
+   Warning: tools/docs/documentation-file-ref-check references a file that doesn't exist: m,(Documentation/translations/[
+   Using alabaster theme
+   WARNING: ./include/crypto/skcipher.h:166 struct member 'SKCIPHER_ALG_COMMON' not described in 'skcipher_alg'
+   Documentation/driver-api/pci/tsm:147: ./include/linux/pci-tsm.h:112: ERROR: Unexpected indentation. [docutils]
+>> Documentation/driver-api/pci/tsm:147: ./include/linux/pci-tsm.h:113: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
+>> Documentation/driver-api/pci/tsm:147: ./include/linux/pci-tsm.h:116: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
+   ERROR: Cannot find file ./drivers/pci/tsm.c
+   ERROR: Cannot find file ./drivers/pci/tsm.c
+   WARNING: No kernel-doc for file ./drivers/pci/tsm.c
+   WARNING: ./include/linux/virtio.h:183 struct member 'map' not described in 'virtio_device'
+   WARNING: ./include/linux/virtio.h:183 struct member 'VIRTIO_DECLARE_FEATURES(features' not described in 'virtio_device'
+
 -- 
-2.45.2
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
