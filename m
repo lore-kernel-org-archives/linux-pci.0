@@ -1,46 +1,46 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65B891A304A
-	for <linux-pci@vger.kernel.org>; Tue,  3 Mar 2026 00:01:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B18333CEB9
+	for <linux-pci@vger.kernel.org>; Tue,  3 Mar 2026 00:01:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772496063; cv=none; b=knjbw9NlSRUmE/MrXSpUJqXrMDkFm5BvqnAqzWzP6WhtF/6iuvh3nS9dy8NNvs118pU7RhlFQ5zskDkCBmEa34khUdMUWXw5N4qZeLEcmEgRNia/atS1EJ93LHJh3qtZVxpaoE1P2Ko1vyrZbrzbg0FP4izbIW+z/z1PRBec6po=
+	t=1772496064; cv=none; b=IBkXF9SxGCc2OuE/p+MGnkmDyEGf7LrkkqGHaBGfvksQThxE593MnGR+ci1DCU9esFF/UoMn81Qao8M+TX7LxpZf4K61hsD07e++6215CksI2XD+qWMxU90qsZFa0LO5dWTje5PXJYEPNQI8HgW1aIKbf5FbPxiX5FYW1jdH3gU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772496063; c=relaxed/simple;
-	bh=oL7ni+DNFauKtZQmrh/AoOSNjeyKg2ToZotzZBsH0xo=;
+	s=arc-20240116; t=1772496064; c=relaxed/simple;
+	bh=e8DQOPS1xYsNLWjfVJp1ZYa7CerL54g464qoIWhkV6I=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Yr2xY18Ak9X/eZgWeR6UQuKtV2zSx/TA6reWy5rmW+4gDIAXT101sDZb0mPVlaTKyHuQww6+mOkKmnGQypaVTVj++dF2mnm4QrDSqbIJjHsDK4fyFADcryw6JcPMPtvKsUjeVx2DrHl8eGpWdutsMH7nO7f1PXppu9gurmniGJU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=d4gFEqAF; arc=none smtp.client-ip=198.175.65.17
+	 MIME-Version; b=Lz8F0jEnXObkJ55sv1wmSDaso1e2ISm20YVBT5yvf3CzuEOCARr/fxiVQ+ljiJYKhas/JstyCFOas34zTT4D6MFk55kq59Wbx5jV3q+Q6TOiY057T7f3S68SpTeKVAWTvKCsz7IDnOU2GTzE3nDjETbXPDSMSJyL1UwflTb/faU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cQep18Oy; arc=none smtp.client-ip=198.175.65.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="d4gFEqAF"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cQep18Oy"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772496061; x=1804032061;
+  t=1772496063; x=1804032063;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=oL7ni+DNFauKtZQmrh/AoOSNjeyKg2ToZotzZBsH0xo=;
-  b=d4gFEqAFgndyRE9NlHnSHBznCyFcJn870IPnZ6XGGHyfUNVKSIKkLVwG
-   xmiDx7M+tAv18HwwLQdbTSukidYeZogNEG65QTA2FBAUnFEvlvE1YwFLM
-   Pk/IH80yYIG8bNKKTzPwumOi14ma951nLy8dataNZ2BkLBddiXwq47/nv
-   ZpIUEjWbtDBTP8gN4NERIofW92NdCdy+1FsIEEYRi56NQPS0A1/acHK2g
-   RembjsTtMDnjKdyWigyjnZizqFuC9c4i1fZ/hSvXsPRQPvf0yoXXZKQV8
-   8d94H3GPswrx8UtxY3TEb0nltPzJ6lWr8TB4tvF4Pnq2YAUb3pgXwEimB
-   g==;
-X-CSE-ConnectionGUID: 3/LpPWuJTAOgsEQPJkVbYQ==
-X-CSE-MsgGUID: L1rD3K7NQaSFEwsQ5rP/tA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11717"; a="73482916"
+  bh=e8DQOPS1xYsNLWjfVJp1ZYa7CerL54g464qoIWhkV6I=;
+  b=cQep18OyakvSjQXjx+ReLK8nYxFA9Ajzp9oCgVzXOpXEObQ24pyEXtAT
+   RMSeVrYpiNxIgsw+kYAxszJcxo0gA8cY7TdHUUmruvpiKMxLjekcmiDRK
+   zSZgWtJdTl6ekV4LJ+XIIrtMr+EYC5vXdQ4PgDmW6tIaplSpjZWPvFsdZ
+   J3p1dsLAaoXbTkFPv2LsEm64YY9nLIm45uzCcflMY1WOMug5wPVRdLNhA
+   8GQUsAP0I18asFoj1s9AhA+Xxp1No2+MhRO2RXFRXkhSKaUe3T3WyKlbV
+   BvKx4WjbApbBYq9iv//j4+eE4F4nPU8A8tYAOImHyT2givZjnxW9F7C4Y
+   A==;
+X-CSE-ConnectionGUID: naWGmmGZTSuNItpFqcD0Lw==
+X-CSE-MsgGUID: 15KzKyxiTgWS+iRkkyH3Sg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11717"; a="73482927"
 X-IronPort-AV: E=Sophos;i="6.21,321,1763452800"; 
-   d="scan'208";a="73482916"
+   d="scan'208";a="73482927"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
   by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2026 16:00:57 -0800
-X-CSE-ConnectionGUID: tkGEEIq+S8KZd7PXmbMVVw==
-X-CSE-MsgGUID: /tvDSpr7SpmlBiLoaixc/A==
+X-CSE-ConnectionGUID: DpY5th/mTrm0rBHgS/Oj7w==
+X-CSE-MsgGUID: qDTRwTbaR3+oRduhlGSfOQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,321,1763452800"; 
-   d="scan'208";a="214967101"
+   d="scan'208";a="214967104"
 Received: from dwillia2-desk.jf.intel.com ([10.88.27.145])
   by fmviesa006.fm.intel.com with ESMTP; 02 Mar 2026 16:00:56 -0800
 From: Dan Williams <dan.j.williams@intel.com>
@@ -54,11 +54,10 @@ Cc: gregkh@linuxfoundation.org,
 	alistair23@gmail.com,
 	lukas@wunner.de,
 	jgg@nvidia.com,
-	Donald Hunter <donald.hunter@gmail.com>,
-	Jakub Kicinski <kuba@kernel.org>
-Subject: [PATCH v2 08/19] PCI/TSM: Add "evidence" support
-Date: Mon,  2 Mar 2026 16:01:56 -0800
-Message-ID: <20260303000207.1836586-9-dan.j.williams@intel.com>
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v2 09/19] PCI/TSM: Support creating encrypted MMIO descriptors via TDISP Report
+Date: Mon,  2 Mar 2026 16:01:57 -0800
+Message-ID: <20260303000207.1836586-10-dan.j.williams@intel.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260303000207.1836586-1-dan.j.williams@intel.com>
 References: <20260303000207.1836586-1-dan.j.williams@intel.com>
@@ -70,905 +69,358 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Once one accepts the threat model that devices may be adversarial the
-process of establishing trust in the device identity, the integrity +
-confidentiality of its link, and the integrity + confidentiality of its
-MMIO interface requires multiple evidence objects from the device. The
-device's certificate chain, measurements and interface report need to be
-retrieved by the host, validated by the TSM and transmitted to the guest
-all while mitigating TOCTOU races.
+After pci_tsm_bind() and pci_tsm_lock() the low level TSM driver is
+expected to populate PCI_TSM_EVIDENCE_TYPE_REPORT in its evidence store.
+This report is defined by the TDISP GET_DEVICE_INTERFACE_REPORT response
+payload.
 
-All TSM implementations share the same fundamental objects, but vary in how
-the TSM conveys its trust in the objects. Some TSM implementations expect
-the full documents to be conveyed over untrustworthy channels while the TSM
-securely conveys a digest. Others transmit full objects with signed SPDM
-transcripts of requester provided nonces. Some offer a single transcript
-to convey the version, capabilities, and algorithms (VCA) data and
-measurements in one blob while others split VCA as a separate signed blob.
+Add a helper to create encrypted MMIO descriptors from that report
+data. With those descriptors the TSM driver can use pci_tsm_mmio_setup() to
+inform ioremap() how to map the device per the device's expectations. The
+VM is expected to validate the interface with the relying party before
+accepting the device for operation.
 
-Introduce a netlink interface to dump all these objects in a common way
-across TSM implementations and across host and guest environments.
-Userspace is responsible for handling the variance of "TSM provides combo
-measurements + VCA + nonce + signature, vs TSM provides a digest over a
-secure channel of the same".
+The helper also provides the obfuscated starting address for each
+encrypted MMIO range as the VM is never disclosed on the hpa that
+correlates to the gpa of the device's mmio. The obfuscated address is BAR
+relative.
 
-The implementation adheres to the guideline from:
-Documentation/userspace-api/netlink/genetlink-legacy.rst
+Based on an original patch by Aneesh [1]
 
-    New Netlink families should never respond to a DO operation with
-    multiple replies, with ``NLM_F_MULTI`` set. Use a filtered dump
-    instead.
-
-Per SPDM, transcripts may grow to be 16MB in size. Large PCI/TSM netlink
-blobs are handled via a sequence of dump messages that userspace must
-concatenate.
-
-Cc: Donald Hunter <donald.hunter@gmail.com>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Xu Yilun <yilun.xu@linux.intel.com>
-Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
-Cc: Alexey Kardashevskiy <aik@amd.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Link: https://lore.kernel.org/linux-coco/20251117140007.122062-8-aneesh.kumar@kernel.org/
+Co-developed-by: Xu Yilun <yilun.xu@linux.intel.com>
+Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/pci/Makefile                     |   2 +-
- drivers/pci/tsm/Makefile                 |   9 +
- Documentation/netlink/specs/pci-tsm.yaml | 151 +++++++++++++
- drivers/pci/tsm/netlink.h                |  23 ++
- include/linux/pci-tsm.h                  |  63 ++++++
- include/uapi/linux/pci-tsm-netlink.h     | 101 +++++++++
- drivers/pci/{tsm.c => tsm/core.c}        |  17 +-
- drivers/pci/tsm/evidence.c               | 274 +++++++++++++++++++++++
- drivers/pci/tsm/netlink.c                |  43 ++++
- MAINTAINERS                              |   4 +-
- 10 files changed, 682 insertions(+), 5 deletions(-)
- create mode 100644 drivers/pci/tsm/Makefile
- create mode 100644 Documentation/netlink/specs/pci-tsm.yaml
- create mode 100644 drivers/pci/tsm/netlink.h
- create mode 100644 include/uapi/linux/pci-tsm-netlink.h
- rename drivers/pci/{tsm.c => tsm/core.c} (98%)
- create mode 100644 drivers/pci/tsm/evidence.c
- create mode 100644 drivers/pci/tsm/netlink.c
+ include/linux/ioport.h  |   1 +
+ include/linux/pci-tsm.h |  34 ++++++
+ drivers/pci/tsm/core.c  | 235 ++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 270 insertions(+)
 
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index e10cfe5a280b..31f5095360af 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -35,7 +35,7 @@ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
- obj-$(CONFIG_VGA_ARB)		+= vgaarb.o
- obj-$(CONFIG_PCI_DOE)		+= doe.o
- obj-$(CONFIG_PCI_IDE)		+= ide.o
--obj-$(CONFIG_PCI_TSM)		+= tsm.o
-+obj-$(CONFIG_PCI_TSM)		+= tsm/
- obj-$(CONFIG_PCI_DYNAMIC_OF_NODES) += of_property.o
- obj-$(CONFIG_PCI_NPEM)		+= npem.o
- obj-$(CONFIG_PCIE_TPH)		+= tph.o
-diff --git a/drivers/pci/tsm/Makefile b/drivers/pci/tsm/Makefile
-new file mode 100644
-index 000000000000..afa775224b8d
---- /dev/null
-+++ b/drivers/pci/tsm/Makefile
-@@ -0,0 +1,9 @@
-+# SPDX-License-Identifier: GPL-2.0
-+#
-+# Makefile for the PCI/TSM infrastructure
-+
-+obj-$(CONFIG_PCI_TSM) += tsm.o
-+
-+tsm-y := core.o
-+tsm-$(CONFIG_NET) += netlink.o
-+tsm-$(CONFIG_NET) += evidence.o
-diff --git a/Documentation/netlink/specs/pci-tsm.yaml b/Documentation/netlink/specs/pci-tsm.yaml
-new file mode 100644
-index 000000000000..eb7fc03bd705
---- /dev/null
-+++ b/Documentation/netlink/specs/pci-tsm.yaml
-@@ -0,0 +1,151 @@
-+# SPDX-License-Identifier: ((GPL-2.0 WITH Linux-syscall-note) OR BSD-3-Clause)
-+#
-+---
-+name: pci-tsm
-+protocol: genetlink
-+uapi-header: linux/pci-tsm-netlink.h
-+doc: PCI TSM Evidence retrieval over generic netlink
-+
-+definitions:
-+  -
-+    type: const
-+    name: max-object-size
-+    value: 0x01000000
-+  -
-+    type: const
-+    name: max-nonce-size
-+    value: 256
-+  -
-+    type: const
-+    name: max-obj-type
-+    value: 4
-+  -
-+    name: evidence-type
-+    type: enum
-+    doc: PCI device security evidence objects
-+    entries:
-+      -
-+        name: cert0
-+        doc: SPDM certificate chain from device slot0
-+      -
-+        name: cert1
-+        doc: SPDM certificate chain from device slot1
-+      -
-+        name: cert2
-+        doc: SPDM certificate chain from device slot2
-+      -
-+        name: cert3
-+        doc: SPDM certificate chain from device slot3
-+      -
-+        name: cert4
-+        doc: SPDM certificate chain from device slot4
-+      -
-+        name: cert5
-+        doc: SPDM certificate chain from device slot5
-+      -
-+        name: cert6
-+        doc: SPDM certificate chain from device slot6
-+      -
-+        name: cert7
-+        doc: SPDM certificate chain from device slot7
-+      -
-+        name: vca
-+        doc: SPDM transcript of version, capabilities, and algorithms negotiation
-+      -
-+        name: measurements
-+        doc: SPDM GET_MEASUREMENTS response
-+      -
-+        name: report
-+        doc: TDISP GET_DEVICE_INTERFACE_REPORT response
-+
-+    render-max: true
-+  -
-+    name: evidence-type-flag
-+    type: flags
-+    doc: PCI device security evidence request flags
-+    render-max: true
-+    # NOTE! these values must match the name and order of evidence-type
-+    entries:
-+      -
-+        name: cert0
-+      -
-+        name: cert1
-+      -
-+        name: cert2
-+      -
-+        name: cert3
-+      -
-+        name: cert4
-+      -
-+        name: cert5
-+      -
-+        name: cert6
-+      -
-+        name: cert7
-+      -
-+        name: vca
-+      -
-+        name: measurements
-+      -
-+        name: report
-+  -
-+    name: evidence-flag
-+    type: flags
-+    render-max: true
-+    doc: Flags to control evidence retrieval
-+    entries:
-+      -
-+        name: digest
-+        doc: Request the TSM's private digest of an evidence object
-+
-+attribute-sets:
-+  -
-+    name: evidence-object
-+    attributes:
-+      -
-+        name: type
-+        type: u32
-+        doc: evidence type-id
-+      -
-+        name: type-mask
-+        type: u32
-+        doc: evidence types as a flag mask
-+      -
-+        name: flags
-+        type: u32
-+        doc: evidence modifier flags like 'request TSM digest'
-+      -
-+        name: dev-name
-+        type: string
-+        doc: PCI device name
-+      -
-+        name: nonce
-+        type: binary
-+        checks:
-+          max-len: max-nonce-size
-+      -
-+        name: val
-+        type: binary
-+        checks:
-+          max-len: max-obj-size
-+
-+operations:
-+  list:
-+    -
-+      name: evidence-read
-+      doc: Read the PCI TSM objects of a given type mask
-+      attribute-set: evidence-object
-+      flags: [admin-perm]
-+      dump:
-+        pre: pci-tsm-nl-evidence-read-pre
-+        post: pci-tsm-nl-evidence-read-post
-+        request:
-+          attributes:
-+            - type-mask
-+            - flags
-+            - dev-name
-+            - nonce
-+        reply:
-+          attributes:
-+            - type
-+            - val
-diff --git a/drivers/pci/tsm/netlink.h b/drivers/pci/tsm/netlink.h
-new file mode 100644
-index 000000000000..34f3fb6ba2b7
---- /dev/null
-+++ b/drivers/pci/tsm/netlink.h
-@@ -0,0 +1,23 @@
-+/* SPDX-License-Identifier: ((GPL-2.0 WITH Linux-syscall-note) OR BSD-3-Clause) */
-+/* Do not edit directly, auto-generated from: */
-+/*	Documentation/netlink/specs/pci-tsm.yaml */
-+/* YNL-GEN kernel header */
-+/* To regenerate run: tools/net/ynl/ynl-regen.sh */
-+
-+#ifndef _LINUX_PCI_TSM_GEN_H
-+#define _LINUX_PCI_TSM_GEN_H
-+
-+#include <net/netlink.h>
-+#include <net/genetlink.h>
-+
-+#include <uapi/linux/pci-tsm-netlink.h>
-+
-+int pci_tsm_nl_evidence_read_pre(struct netlink_callback *cb);
-+int pci_tsm_nl_evidence_read_post(struct netlink_callback *cb);
-+
-+int pci_tsm_nl_evidence_read_dumpit(struct sk_buff *skb,
-+				    struct netlink_callback *cb);
-+
-+extern struct genl_family pci_tsm_nl_family;
-+
-+#endif /* _LINUX_PCI_TSM_GEN_H */
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 9afa30f9346f..1c106608c514 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -143,6 +143,7 @@ enum {
+ 	IORES_DESC_RESERVED			= 7,
+ 	IORES_DESC_SOFT_RESERVED		= 8,
+ 	IORES_DESC_CXL				= 9,
++	IORES_DESC_ENCRYPTED			= 10,
+ };
+ 
+ /*
 diff --git a/include/linux/pci-tsm.h b/include/linux/pci-tsm.h
-index 176d214cd0da..b70b4c0457c4 100644
+index b70b4c0457c4..8869585230a3 100644
 --- a/include/linux/pci-tsm.h
 +++ b/include/linux/pci-tsm.h
-@@ -3,7 +3,10 @@
- #define __PCI_TSM_H
- #include <linux/mutex.h>
- #include <linux/pci.h>
-+#include <linux/rwsem.h>
- #include <linux/sockptr.h>
-+#include <uapi/linux/hash_info.h>
-+#include <uapi/linux/pci-tsm-netlink.h>
- 
- struct pci_tsm;
- struct tsm_dev;
-@@ -79,6 +82,11 @@ struct pci_tsm_ops {
- 		void (*unlock)(struct pci_tsm *tsm);
- 		int (*accept)(struct pci_dev *pdev);
- 	);
-+
-+	int (*refresh_evidence)(struct pci_tsm *tsm,
-+				enum pci_tsm_evidence_type type,
-+				unsigned long flags, void *nonce,
-+				size_t nonce_len);
- };
- 
- /**
-@@ -93,6 +101,52 @@ struct pci_tdi {
- 	u32 tdi_id;
+@@ -194,12 +194,42 @@ struct pci_tsm_pf0 {
+ 	struct pci_doe_mb *doe_mb;
  };
  
 +/**
-+ * struct pci_tsm_evidence_object - General PCI/TSM blob descriptor
-+ * @data: pointer to the evidence data blob
-+ * @len: length of the evidence data blob
-+ * @digest: TSM expected digest of the data blob
-+ *
-+ * There are multiple population and verification models for these blobs
-+ * depending on TSM policy. Some examples:
-+ * 1/ Host (link) TSM: populates certs and provides a device signed measurement
-+ *    transcript PCI_TSM_EVIDENCE_TYPE_MEASUREMENTS
-+ * 2/ Guest (devsec) TSM: receives untrusted blobs via guest-to-host shared
-+ *    memory protocol and then requests digests of the same via guest-to-host
-+ *    encrypted protocol.
-+ * The expectation is that all of these blobs are received in an SPDM session
-+ * with a signed transcript, however not all TSMs provide the full transcript of
-+ * these objects' retrieval and instead require asking the TSM for cached
-+ * digests of the blobs over trusted TSM channels.
++ * struct pci_tsm_mmio_entry - an encrypted MMIO range
++ * @res: MMIO address range (typically Guest Physical Address, GPA)
++ * @tsm_offset: Host Physical Address, HPA obfuscation offset added by the TSM.
++ *		Translates report addresses to GPA.
 + */
-+struct pci_tsm_evidence_object {
-+	void *data;
-+	size_t len;
-+	void *digest;
++struct pci_tsm_mmio_entry {
++	struct resource res;
++	u64 tsm_offset;
 +};
 +
-+/**
-+ * struct pci_tsm_evidence - Retrieved evidence for SPDM session GET commands
-+ * @slot: certificate slot used by a link TSM for connect.
-+ * @generation: refresh_evidence() invocation detection
-+ * @digest_algo: payload size of PCI_TSM_EVIDENCE_FLAG_DIGEST requests
-+ * @lock: synchronize dumps vs refresh_evidence()
-+ * @obj: array of evidence objects a TSM might populate
-+ *
-+ * Note @slot selection not applicable for devsec TSMs. By the time the guest is
-+ * retrieving the device's certificates the choice of slot was long since
-+ * decided by the corresponding link TSM.
-+ *
-+ * An increment of @generation causes in flight dumps to fail with -EAGAIN.
-+ */
-+struct pci_tsm_evidence {
-+	int slot;
-+	int generation;
-+	enum hash_algo digest_algo;
-+	struct rw_semaphore lock;
-+	struct pci_tsm_evidence_object obj[PCI_TSM_EVIDENCE_TYPE_MAX + 1];
++struct pci_tsm_mmio {
++	int nr;
++	struct pci_tsm_mmio_entry mmio[] __counted_by(nr);
 +};
++
++static inline struct pci_tsm_mmio_entry *
++pci_tsm_mmio_entry(struct pci_tsm_mmio *mmio, int idx)
++{
++	return &mmio->mmio[idx];
++}
++
++static inline struct resource *pci_tsm_mmio_resource(struct pci_tsm_mmio *mmio,
++						     int idx)
++{
++	return &mmio->mmio[idx].res;
++}
 +
  /**
-  * struct pci_tsm - Core TSM context for a given PCIe endpoint
-  * @pdev: Back ref to device function, distinguishes type of pci_tsm context
-@@ -100,6 +154,8 @@ struct pci_tdi {
-  * @tsm_dev: PCI TEE Security Manager device for Link Confidentiality or Device
-  *	     Function Security operations
-  * @tdi: TDI context established by the @bind link operation
-+ * @evidence: cached evidence from SPDM session establishment (connect), or
-+ *	      TDISP bind (lock)
-  *
-  * This structure is wrapped by low level TSM driver data and returned by
-  * probe()/lock(), it is freed by the corresponding remove()/unlock().
-@@ -123,6 +179,7 @@ struct pci_tsm {
- 	struct pci_dev *dsm_dev;
- 	struct tsm_dev *tsm_dev;
- 	struct pci_tdi *tdi;
-+	struct pci_tsm_evidence evidence;
+  * struct pci_tsm_devsec - context for tracking private/accepted PCI resources
+  * @base_tsm: generic core "tsm" context
++ * @mmio: encrypted MMIO resources for this assigned device
+  */
+ struct pci_tsm_devsec {
+ 	struct pci_tsm base_tsm;
++	struct pci_tsm_mmio *mmio;
  };
  
- /**
-@@ -238,6 +295,8 @@ ssize_t pci_tsm_guest_req(struct pci_dev *pdev, enum pci_tsm_req_scope scope,
- 			  sockptr_t req_in, size_t in_len, sockptr_t req_out,
- 			  size_t out_len, u64 *tsm_code);
+ /* physical function0 and capable of 'connect' */
+@@ -297,6 +327,10 @@ ssize_t pci_tsm_guest_req(struct pci_dev *pdev, enum pci_tsm_req_scope scope,
  struct pci_tsm_devsec *to_pci_tsm_devsec(struct pci_tsm *tsm);
-+void pci_tsm_init_evidence(struct pci_tsm_evidence *evidence, int slot,
-+			   enum hash_algo digest_algo);
+ void pci_tsm_init_evidence(struct pci_tsm_evidence *evidence, int slot,
+ 			   enum hash_algo digest_algo);
++int pci_tsm_mmio_setup(struct pci_dev *pdev, struct pci_tsm_mmio *mmio);
++void pci_tsm_mmio_teardown(struct pci_tsm_mmio *mmio);
++struct pci_tsm_mmio *pci_tsm_mmio_alloc(struct pci_dev *pdev);
++int pci_tsm_mmio_free(struct pci_dev *pdev, struct pci_tsm_mmio *mmio);
  #else
  static inline int pci_tsm_register(struct tsm_dev *tsm_dev)
  {
-@@ -262,4 +321,8 @@ static inline ssize_t pci_tsm_guest_req(struct pci_dev *pdev,
- 	return -ENXIO;
- }
- #endif
-+
-+/* private: */
-+extern struct rw_semaphore pci_tsm_rwsem;
-+
- #endif /*__PCI_TSM_H */
-diff --git a/include/uapi/linux/pci-tsm-netlink.h b/include/uapi/linux/pci-tsm-netlink.h
-new file mode 100644
-index 000000000000..a0e8b044e1b8
---- /dev/null
-+++ b/include/uapi/linux/pci-tsm-netlink.h
-@@ -0,0 +1,101 @@
-+/* SPDX-License-Identifier: ((GPL-2.0 WITH Linux-syscall-note) OR BSD-3-Clause) */
-+/* Do not edit directly, auto-generated from: */
-+/*	Documentation/netlink/specs/pci-tsm.yaml */
-+/* YNL-GEN uapi header */
-+/* To regenerate run: tools/net/ynl/ynl-regen.sh */
-+
-+#ifndef _UAPI_LINUX_PCI_TSM_NETLINK_H
-+#define _UAPI_LINUX_PCI_TSM_NETLINK_H
-+
-+#define PCI_TSM_FAMILY_NAME	"pci-tsm"
-+#define PCI_TSM_FAMILY_VERSION	1
-+
-+#define PCI_TSM_MAX_OBJECT_SIZE	16777216
-+#define PCI_TSM_MAX_NONCE_SIZE	256
-+#define PCI_TSM_MAX_OBJ_TYPE	4
-+
-+/**
-+ * enum pci_tsm_evidence_type - PCI device security evidence objects
-+ * @PCI_TSM_EVIDENCE_TYPE_CERT0: SPDM certificate chain from device slot0
-+ * @PCI_TSM_EVIDENCE_TYPE_CERT1: SPDM certificate chain from device slot1
-+ * @PCI_TSM_EVIDENCE_TYPE_CERT2: SPDM certificate chain from device slot2
-+ * @PCI_TSM_EVIDENCE_TYPE_CERT3: SPDM certificate chain from device slot3
-+ * @PCI_TSM_EVIDENCE_TYPE_CERT4: SPDM certificate chain from device slot4
-+ * @PCI_TSM_EVIDENCE_TYPE_CERT5: SPDM certificate chain from device slot5
-+ * @PCI_TSM_EVIDENCE_TYPE_CERT6: SPDM certificate chain from device slot6
-+ * @PCI_TSM_EVIDENCE_TYPE_CERT7: SPDM certificate chain from device slot7
-+ * @PCI_TSM_EVIDENCE_TYPE_VCA: SPDM transcript of version, capabilities, and
-+ *   algorithms negotiation
-+ * @PCI_TSM_EVIDENCE_TYPE_MEASUREMENTS: SPDM GET_MEASUREMENTS response
-+ * @PCI_TSM_EVIDENCE_TYPE_REPORT: TDISP GET_DEVICE_INTERFACE_REPORT response
-+ */
-+enum pci_tsm_evidence_type {
-+	PCI_TSM_EVIDENCE_TYPE_CERT0,
-+	PCI_TSM_EVIDENCE_TYPE_CERT1,
-+	PCI_TSM_EVIDENCE_TYPE_CERT2,
-+	PCI_TSM_EVIDENCE_TYPE_CERT3,
-+	PCI_TSM_EVIDENCE_TYPE_CERT4,
-+	PCI_TSM_EVIDENCE_TYPE_CERT5,
-+	PCI_TSM_EVIDENCE_TYPE_CERT6,
-+	PCI_TSM_EVIDENCE_TYPE_CERT7,
-+	PCI_TSM_EVIDENCE_TYPE_VCA,
-+	PCI_TSM_EVIDENCE_TYPE_MEASUREMENTS,
-+	PCI_TSM_EVIDENCE_TYPE_REPORT,
-+
-+	/* private: */
-+	__PCI_TSM_EVIDENCE_TYPE_MAX,
-+	PCI_TSM_EVIDENCE_TYPE_MAX = (__PCI_TSM_EVIDENCE_TYPE_MAX - 1)
-+};
-+
-+/*
-+ * PCI device security evidence request flags
-+ */
-+enum pci_tsm_evidence_type_flag {
-+	PCI_TSM_EVIDENCE_TYPE_FLAG_CERT0 = 1,
-+	PCI_TSM_EVIDENCE_TYPE_FLAG_CERT1 = 2,
-+	PCI_TSM_EVIDENCE_TYPE_FLAG_CERT2 = 4,
-+	PCI_TSM_EVIDENCE_TYPE_FLAG_CERT3 = 8,
-+	PCI_TSM_EVIDENCE_TYPE_FLAG_CERT4 = 16,
-+	PCI_TSM_EVIDENCE_TYPE_FLAG_CERT5 = 32,
-+	PCI_TSM_EVIDENCE_TYPE_FLAG_CERT6 = 64,
-+	PCI_TSM_EVIDENCE_TYPE_FLAG_CERT7 = 128,
-+	PCI_TSM_EVIDENCE_TYPE_FLAG_VCA = 256,
-+	PCI_TSM_EVIDENCE_TYPE_FLAG_MEASUREMENTS = 512,
-+	PCI_TSM_EVIDENCE_TYPE_FLAG_REPORT = 1024,
-+
-+	/* private: */
-+	PCI_TSM_EVIDENCE_TYPE_FLAG_MASK = 2047,
-+};
-+
-+/**
-+ * enum pci_tsm_evidence_flag - Flags to control evidence retrieval
-+ * @PCI_TSM_EVIDENCE_FLAG_DIGEST: Request the TSM's private digest of an
-+ *   evidence object
-+ */
-+enum pci_tsm_evidence_flag {
-+	PCI_TSM_EVIDENCE_FLAG_DIGEST = 1,
-+
-+	/* private: */
-+	PCI_TSM_EVIDENCE_FLAG_MASK = 1,
-+};
-+
-+enum {
-+	PCI_TSM_A_EVIDENCE_OBJECT_TYPE = 1,
-+	PCI_TSM_A_EVIDENCE_OBJECT_TYPE_MASK,
-+	PCI_TSM_A_EVIDENCE_OBJECT_FLAGS,
-+	PCI_TSM_A_EVIDENCE_OBJECT_DEV_NAME,
-+	PCI_TSM_A_EVIDENCE_OBJECT_NONCE,
-+	PCI_TSM_A_EVIDENCE_OBJECT_VAL,
-+
-+	__PCI_TSM_A_EVIDENCE_OBJECT_MAX,
-+	PCI_TSM_A_EVIDENCE_OBJECT_MAX = (__PCI_TSM_A_EVIDENCE_OBJECT_MAX - 1)
-+};
-+
-+enum {
-+	PCI_TSM_CMD_EVIDENCE_READ = 1,
-+
-+	__PCI_TSM_CMD_MAX,
-+	PCI_TSM_CMD_MAX = (__PCI_TSM_CMD_MAX - 1)
-+};
-+
-+#endif /* _UAPI_LINUX_PCI_TSM_NETLINK_H */
-diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm/core.c
-similarity index 98%
-rename from drivers/pci/tsm.c
-rename to drivers/pci/tsm/core.c
-index aa93a59d2720..039733fd19b1 100644
---- a/drivers/pci/tsm.c
+diff --git a/drivers/pci/tsm/core.c b/drivers/pci/tsm/core.c
+index 039733fd19b1..e4f830b16d18 100644
+--- a/drivers/pci/tsm/core.c
 +++ b/drivers/pci/tsm/core.c
-@@ -3,7 +3,7 @@
-  * Interface with platform TEE Security Manager (TSM) objects as defined by
-  * PCIe r7.0 section 11 TEE Device Interface Security Protocol (TDISP)
-  *
-- * Copyright(c) 2024-2025 Intel Corporation. All rights reserved.
-+ * Copyright (C) 2024-2026 Intel Corporation
-  */
- 
- #define dev_fmt(fmt) "PCI/TSM: " fmt
-@@ -16,13 +16,13 @@
+@@ -15,6 +15,7 @@
+ #include <linux/pci-tsm.h>
  #include <linux/sysfs.h>
  #include <linux/tsm.h>
++#include <linux/unaligned.h>
  #include <linux/xarray.h>
--#include "pci.h"
-+#include "../pci.h"
+ #include "../pci.h"
  
- /*
-  * Provide a read/write lock against the init / exit of pdev tsm
-  * capabilities and arrival/departure of a TSM instance
-  */
--static DECLARE_RWSEM(pci_tsm_rwsem);
-+DECLARE_RWSEM(pci_tsm_rwsem);
- 
- /*
-  * Count of TSMs registered that support physical link operations vs device
-@@ -302,6 +302,7 @@ static ssize_t connect_store(struct device *dev, struct device_attribute *attr,
- 	rc = pci_tsm_connect(pdev, tsm_dev);
- 	if (rc)
- 		return rc;
-+
- 	return len;
+@@ -558,6 +559,240 @@ static ssize_t dsm_show(struct device *dev, struct device_attribute *attr,
  }
- static DEVICE_ATTR_RW(connect);
-@@ -933,6 +934,16 @@ void pci_tsm_tdi_constructor(struct pci_dev *pdev, struct pci_tdi *tdi,
- }
- EXPORT_SYMBOL_GPL(pci_tsm_tdi_constructor);
+ static DEVICE_ATTR_RO(dsm);
  
-+void pci_tsm_init_evidence(struct pci_tsm_evidence *evidence, int slot,
-+			   enum hash_algo digest_algo)
++static void mmio_teardown(struct pci_tsm_mmio *mmio, int nr)
 +{
-+	evidence->slot = slot;
-+	evidence->generation = 1;
-+	evidence->digest_algo = digest_algo;
-+	init_rwsem(&evidence->lock);
++	while (nr--)
++		remove_resource(pci_tsm_mmio_resource(mmio, nr));
 +}
-+EXPORT_SYMBOL_GPL(pci_tsm_init_evidence);
++
++/**
++ * pci_tsm_mmio_setup() - mark device MMIO as encrypted in iomem
++ * @pdev: device owner of MMIO resources
++ * @mmio: container of an array of resources to mark encrypted
++ */
++int pci_tsm_mmio_setup(struct pci_dev *pdev, struct pci_tsm_mmio *mmio)
++{
++	int i;
++
++	device_lock_assert(&pdev->dev);
++	if (pdev->dev.driver)
++		return -EBUSY;
++
++	for (i = 0; i < mmio->nr; i++) {
++		struct resource *res = pci_tsm_mmio_resource(mmio, i);
++		int j;
++
++		if (resource_size(res) == 0 || !res->end)
++			break;
++
++		/* Only require the caller to set the range, init remainder */
++		*res = DEFINE_RES_NAMED_DESC(res->start, resource_size(res),
++					     "PCI MMIO Encrypted",
++					     IORESOURCE_MEM,
++					     IORES_DESC_ENCRYPTED);
++
++		for (j = 0; j < PCI_NUM_RESOURCES; j++)
++			if (resource_contains(pci_resource_n(pdev, j), res))
++				break;
++
++		/* Request is outside of device MMIO */
++		if (j >= PCI_NUM_RESOURCES)
++			break;
++
++		if (insert_resource(&iomem_resource, res) != 0)
++			break;
++	}
++
++	if (i >= mmio->nr)
++		return 0;
++
++	mmio_teardown(mmio, i);
++
++	return -EINVAL;
++}
++EXPORT_SYMBOL_GPL(pci_tsm_mmio_setup);
++
++void pci_tsm_mmio_teardown(struct pci_tsm_mmio *mmio)
++{
++	mmio_teardown(mmio, mmio->nr);
++}
++EXPORT_SYMBOL_GPL(pci_tsm_mmio_teardown);
++
++/*
++ * PCIe ECN TEE Device Interface Security Protocol (TDISP)
++ *
++ * Device Interface Report data object layout as defined by PCIe r7.0 section
++ * 11.3.11
++ */
++#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_TABLE BIT(0)
++#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_PBA BIT(1)
++#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_NON_TEE BIT(2)
++#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_UPDATABLE BIT(3)
++#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_RANGE_ID GENMASK(31, 16)
++
++/* An interface report 'pfn' is 4K in size */
++struct pci_tsm_devif_mmio {
++	__le64 pfn;
++	__le32 nr_pfns;
++	__le32 attributes;
++};
++
++struct pci_tsm_devif_report {
++	__le16 interface_info;
++	__le16 reserved;
++	__le16 msi_x_message_control;
++	__le16 lnr_control;
++	__le32 tph_control;
++	__le32 mmio_range_count;
++	struct pci_tsm_devif_mmio mmio[];
++};
++
++/**
++ * pci_tsm_mmio_alloc() - allocate encrypted MMIO range descriptor
++ * @pdev: device owner of MMIO ranges
++ * @report_data: TDISP Device Interface (DevIf) Report blob
++ * @report_sz: DevIf Report size
++ *
++ * Return: the encrypted MMIO range descriptor on success, NULL on failure
++ *
++ * Assumes that this is called within the live lifetime of a PCI device's
++ * association with a low level TSM.
++ */
++struct pci_tsm_mmio *pci_tsm_mmio_alloc(struct pci_dev *pdev)
++{
++	struct pci_tsm *tsm = pdev->tsm;
++	struct pci_tsm_evidence *evidence = &tsm->evidence;
++	struct pci_tsm_evidence_object *report_obj = &evidence->obj[PCI_TSM_EVIDENCE_TYPE_REPORT];
++	struct tsm_dev *tsm_dev = tsm->tsm_dev;
++	u64 reporting_bar_base, last_reporting_end;
++	const struct pci_tsm_devif_report *report;
++	u32 mmio_range_count;
++	int last_bar = -1;
++	int i;
++
++	guard(rwsem_read)(&evidence->lock);
++	if (report_obj->len < sizeof(struct pci_tsm_devif_report))
++		return NULL;
++
++	if (dev_WARN_ONCE(&tsm_dev->dev, !IS_ALIGNED((unsigned long) report_obj->data, 8),
++			  "misaligned report data\n"))
++		return NULL;
++
++	report = report_obj->data;
++	mmio_range_count = __le32_to_cpu(report->mmio_range_count);
++
++	/* check that the report object is self-consistent on mmio entries */
++	if (report_obj->len < struct_size(report, mmio, mmio_range_count))
++		return NULL;
++
++	/* create pci_tsm_mmio descriptors from the report data */
++	struct pci_tsm_mmio *mmio __free(kfree) =
++		kzalloc(struct_size(mmio, mmio, mmio_range_count), GFP_KERNEL);
++	if (!mmio)
++		return NULL;
++
++	for (i = 0; i < mmio_range_count; i++) {
++		u64 range_off;
++		struct range range;
++		const struct pci_tsm_devif_mmio *mmio_data = &report->mmio[i];
++		struct pci_tsm_mmio_entry *entry =
++			pci_tsm_mmio_entry(mmio, mmio->nr);
++		/* report values in are in terms of 4K pages */
++		u64 tsm_offset = __le64_to_cpu(mmio_data->pfn) * SZ_4K;
++		u64 size = __le32_to_cpu(mmio_data->nr_pfns) * SZ_4K;
++		u32 attr = __le32_to_cpu(mmio_data->attributes);
++		int bar = FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_RANGE_ID,
++				    attr);
++
++		tsm_offset *= SZ_4K;
++		size *= SZ_4K;
++
++		if (bar >= PCI_STD_NUM_BARS ||
++		    !(pci_resource_flags(pdev, bar) & IORESOURCE_MEM)) {
++			pci_dbg(pdev, "Invalid reporting bar ID %d\n", bar);
++			return NULL;
++		}
++
++		if (last_bar > bar) {
++			pci_dbg(pdev, "Reporting bar ID not in ascending order\n");
++			return NULL;
++		}
++
++		if (last_bar < bar) {
++			/* transition to a new bar */
++			last_bar = bar;
++			/*
++			 * The tsm_offset for the first range of the BAR
++			 * corresponds to the BAR base.
++			 */
++			reporting_bar_base = tsm_offset;
++		} else if (tsm_offset < last_reporting_end) {
++			pci_dbg(pdev, "Reporting ranges within BAR not in ascending order\n");
++			return NULL;
++		}
++
++		last_reporting_end = tsm_offset + size;
++		if (last_reporting_end < tsm_offset) {
++			pci_dbg(pdev, "Reporting range overflow\n");
++			return NULL;
++		}
++
++		range_off = tsm_offset - reporting_bar_base;
++		if (pci_resource_len(pdev, bar) < range_off + size) {
++			pci_dbg(pdev, "Reporting range larger than BAR size\n");
++			return NULL;
++		}
++
++		range.start = pci_resource_start(pdev, bar) + range_off;
++		range.end = range.start + size - 1;
++
++		if (FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_NON_TEE,
++			      attr)) {
++			pci_dbg(pdev, "Skipping non-TEE range, BAR%d %pra\n",
++				 bar, &range);
++			continue;
++		}
++
++		/* Currently not supported */
++		if (FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_TABLE,
++			      attr) ||
++		    FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_PBA, attr)) {
++			pci_dbg(pdev, "Skipping MSIX range BAR%d %pra\n", bar,
++				 &range);
++			continue;
++		}
++
++		entry->res.start = range.start;
++		entry->res.end = range.end;
++		entry->tsm_offset = tsm_offset;
++		mmio->nr++;
++	}
++
++	return_ptr(mmio);
++}
++EXPORT_SYMBOL_GPL(pci_tsm_mmio_alloc);
++
++/**
++ * pci_tsm_mmio_free() - free a pci_tsm_mmio instance
++ * @pdev: device owner of MMIO ranges
++ * @mmio: instance to free
++ *
++ * Returns 0 if @mmio was idle on entry, -EBUSY otherwise
++ */
++int pci_tsm_mmio_free(struct pci_dev *pdev, struct pci_tsm_mmio *mmio)
++{
++	for (int i = 0; i < mmio->nr; i++) {
++		struct resource *res = pci_tsm_mmio_resource(mmio, i);
++
++		if (dev_WARN_ONCE(&pdev->dev, resource_assigned(res),
++				  "MMIO resource still assigned %pr\n", res))
++			return -EBUSY;
++	}
++	kfree(mmio);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pci_tsm_mmio_free);
 +
  /**
-  * pci_tsm_link_constructor() - base 'struct pci_tsm' initialization for link TSMs
-  * @pdev: The PCI device
-diff --git a/drivers/pci/tsm/evidence.c b/drivers/pci/tsm/evidence.c
-new file mode 100644
-index 000000000000..4d475b3dd6f6
---- /dev/null
-+++ b/drivers/pci/tsm/evidence.c
-@@ -0,0 +1,274 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/* Copyright (C) 2026 Intel Corporation */
-+
-+#include <crypto/hash_info.h>
-+#include <linux/bitfield.h>
-+#include <linux/init.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/netlink.h>
-+#include <linux/pci.h>
-+#include <linux/pci-tsm.h>
-+#include <linux/slab.h>
-+#include <net/genetlink.h>
-+#include <net/netlink.h>
-+
-+#include "netlink.h"
-+
-+struct pci_tsm_evidence_ctx {
-+	struct pci_dev *pdev;
-+	unsigned long type_mask;
-+	unsigned long flags;
-+	void *nonce;
-+	int generation;
-+	int type;
-+	u32 offset;
-+	u16 nonce_len;
-+};
-+
-+#define PCI_TSM_EVIDENCE_START U32_MAX
-+#define PCI_TSM_EVIDENCE_OBJECT_START (U32_MAX - 1)
-+int pci_tsm_nl_evidence_read_pre(struct netlink_callback *cb)
-+{
-+	struct pci_tsm_evidence_ctx *ctx = (struct pci_tsm_evidence_ctx *)cb->ctx;
-+	const struct genl_info *info = genl_info_dump(cb);
-+	unsigned long type_mask_unknown;
-+	struct nlattr *attr;
-+	struct device *dev;
-+	char name[32];
-+
-+	NL_ASSERT_CTX_FITS(struct pci_tsm_evidence_ctx);
-+
-+	if (GENL_REQ_ATTR_CHECK(info, PCI_TSM_A_EVIDENCE_OBJECT_TYPE_MASK)) {
-+		NL_SET_ERR_MSG(info->extack, "missing object request mask");
-+		return -EINVAL;
-+	}
-+
-+	attr = info->attrs[PCI_TSM_A_EVIDENCE_OBJECT_TYPE_MASK];
-+	ctx->type_mask = nla_get_u32(attr);
-+	type_mask_unknown = ctx->type_mask & ~PCI_TSM_EVIDENCE_TYPE_FLAG_MASK;
-+	if (type_mask_unknown) {
-+		NL_SET_ERR_MSG_FMT(info->extack,
-+				   "unsupported object request %#lx",
-+				   type_mask_unknown);
-+		return -EINVAL;
-+	}
-+
-+	attr = info->attrs[PCI_TSM_A_EVIDENCE_OBJECT_FLAGS];
-+	if (attr) {
-+		ctx->flags = nla_get_u32(attr);
-+		if (ctx->flags & ~PCI_TSM_EVIDENCE_FLAG_MASK) {
-+			NL_SET_BAD_ATTR(info->extack, attr);
-+			return -EINVAL;
-+		}
-+	}
-+
-+	if (GENL_REQ_ATTR_CHECK(info, PCI_TSM_A_EVIDENCE_OBJECT_DEV_NAME)) {
-+		NL_SET_ERR_MSG(info->extack, "missing device name");
-+		return -EINVAL;
-+	}
-+
-+	attr = info->attrs[PCI_TSM_A_EVIDENCE_OBJECT_DEV_NAME];
-+	if (nla_strscpy(name, attr, sizeof(name)) < 0) {
-+		NL_SET_BAD_ATTR(info->extack, attr);
-+		return -EINVAL;
-+	}
-+
-+	dev = bus_find_device_by_name(&pci_bus_type, NULL, name);
-+	if (!dev) {
-+		NL_SET_ERR_MSG_FMT(info->extack, "device '%s' not found", name);
-+		return -ENODEV;
-+	}
-+	ctx->pdev = to_pci_dev(dev);
-+
-+	ctx->type =
-+		find_first_bit(&ctx->type_mask, PCI_TSM_EVIDENCE_TYPE_MAX + 1);
-+	if (ctx->type > PCI_TSM_EVIDENCE_TYPE_MAX) {
-+		NL_SET_ERR_MSG(info->extack, "no evidence type requested");
-+		return -EINVAL;
-+	}
-+	ctx->offset = PCI_TSM_EVIDENCE_START;
-+
-+	return 0;
-+}
-+
-+int pci_tsm_nl_evidence_read_post(struct netlink_callback *cb)
-+{
-+	struct pci_tsm_evidence_ctx *ctx =
-+		(struct pci_tsm_evidence_ctx *)cb->ctx;
-+
-+	pci_dev_put(ctx->pdev);
-+	return 0;
-+}
-+
-+static size_t evidence_len(struct pci_tsm_evidence *evidence,
-+			   struct pci_tsm_evidence_object *obj,
-+			   unsigned long flags)
-+{
-+	if (flags & PCI_TSM_EVIDENCE_FLAG_DIGEST) {
-+		if (obj->digest)
-+			return hash_digest_size[evidence->digest_algo];
-+		return 0;
-+	}
-+	return obj->len;
-+}
-+
-+static void *evidence_data(struct pci_tsm_evidence_object *obj,
-+			   unsigned long flags)
-+{
-+	if (flags & PCI_TSM_EVIDENCE_FLAG_DIGEST)
-+		return obj->digest;
-+	return obj->data;
-+}
-+
-+static int __pci_tsm_evidence_read(struct sk_buff *skb,
-+				   struct netlink_callback *cb)
-+{
-+	struct pci_tsm_evidence_ctx *ctx =
-+		(struct pci_tsm_evidence_ctx *)cb->ctx;
-+	struct pci_dev *pdev = ctx->pdev;
-+	struct pci_tsm_evidence *evidence = &pdev->tsm->evidence;
-+	struct pci_tsm_evidence_object *obj = &evidence->obj[ctx->type];
-+	size_t object_len = evidence_len(evidence, obj, ctx->flags);
-+	void *object_data = evidence_data(obj, ctx->flags);
-+	size_t available, overhead, len;
-+	void *hdr;
-+	int rc;
-+
-+	hdr = genlmsg_put(skb, NETLINK_CB(cb->skb).portid, cb->nlh->nlmsg_seq,
-+			  &pci_tsm_nl_family, NLM_F_MULTI,
-+			  PCI_TSM_CMD_EVIDENCE_READ);
-+	if (!hdr)
-+		return -EMSGSIZE;
-+
-+	if (ctx->offset == PCI_TSM_EVIDENCE_OBJECT_START) {
-+		rc = nla_put_u32(skb, PCI_TSM_A_EVIDENCE_OBJECT_TYPE,
-+				 ctx->type);
-+		if (rc)
-+			goto out_cancel;
-+		ctx->offset = 0;
-+	}
-+
-+	available = skb_tailroom(skb);
-+	overhead = nla_total_size(0) + NLA_ALIGNTO;
-+	if (available <= overhead) {
-+		rc = -EMSGSIZE;
-+		goto out_cancel;
-+	}
-+
-+	if (object_len)
-+		len = min(available - overhead, object_len - ctx->offset);
-+	else
-+		len = 0;
-+
-+	rc = nla_put(skb, PCI_TSM_A_EVIDENCE_OBJECT_VAL, len,
-+		     object_data + ctx->offset);
-+	if (rc)
-+		goto out_end;
-+
-+	ctx->offset += len;
-+	if (ctx->offset < object_len) {
-+		rc = 1;
-+		goto out_end;
-+	}
-+
-+	ctx->type = find_next_bit(&ctx->type_mask,
-+				  PCI_TSM_EVIDENCE_TYPE_MAX + 1, ctx->type + 1);
-+	/* no more evidence types requested */
-+	if (ctx->type > PCI_TSM_EVIDENCE_TYPE_MAX) {
-+		rc = 0;
-+		goto out_end;
-+	}
-+	ctx->offset = PCI_TSM_EVIDENCE_OBJECT_START;
-+	rc = 1;
-+
-+out_end:
-+	genlmsg_end(skb, hdr);
-+	if (rc > 0)
-+		return skb->len;
-+	return rc;
-+
-+out_cancel:
-+	genlmsg_cancel(skb, hdr);
-+	return rc;
-+}
-+
-+static int pci_tsm_evidence_read(struct sk_buff *skb,
-+				 struct netlink_callback *cb)
-+{
-+	struct pci_tsm_evidence_ctx *ctx =
-+		(struct pci_tsm_evidence_ctx *)cb->ctx;
-+	const struct genl_info *info = genl_info_dump(cb);
-+	struct pci_tsm_evidence *evidence;
-+	struct pci_dev *pdev = ctx->pdev;
-+	int rc;
-+
-+	ACQUIRE(rwsem_read_intr, tsm_lock)(&pci_tsm_rwsem);
-+	if ((rc = ACQUIRE_ERR(rwsem_read_intr, &tsm_lock))) {
-+		NL_SET_ERR_MSG(info->extack,
-+			       "interrupted acquiring TSM context");
-+		return rc;
-+	}
-+
-+	if (!pdev->tsm) {
-+		NL_SET_ERR_MSG(info->extack, "no TSM context");
-+		return -ENXIO;
-+	}
-+
-+	evidence = &pdev->tsm->evidence;
-+	ACQUIRE(rwsem_read_intr, evidence_lock)(&evidence->lock);
-+	if ((rc = ACQUIRE_ERR(rwsem_read_intr, &evidence_lock))) {
-+		NL_SET_ERR_MSG(info->extack, "interrupted acquiring evidence");
-+		return rc;
-+	}
-+
-+	/* generation is only valid when non-zero */
-+	if (ctx->offset == PCI_TSM_EVIDENCE_START) {
-+		if (!evidence->generation) {
-+			NL_SET_ERR_MSG(info->extack, "no evidence available");
-+			return -ENXIO;
-+		}
-+		ctx->generation = evidence->generation;
-+		ctx->offset = PCI_TSM_EVIDENCE_OBJECT_START;
-+	}
-+
-+	if (ctx->generation != evidence->generation) {
-+		NL_SET_ERR_MSG(info->extack, "evidence updated during read");
-+		return -EAGAIN;
-+	}
-+
-+	return __pci_tsm_evidence_read(skb, cb);
-+}
-+
-+static int pci_tsm_evidence_refresh(struct pci_tsm_evidence_ctx *ctx)
-+{
-+	return -EOPNOTSUPP;
-+}
-+
-+int pci_tsm_nl_evidence_read_dumpit(struct sk_buff *skb,
-+				    struct netlink_callback *cb)
-+{
-+	struct pci_tsm_evidence_ctx *ctx =
-+		(struct pci_tsm_evidence_ctx *)cb->ctx;
-+	const struct genl_info *info = genl_info_dump(cb);
-+
-+	/* Attempt one refresh per dump request before reading */
-+	if (ctx->offset == PCI_TSM_EVIDENCE_START && ctx->nonce) {
-+		int rc = pci_tsm_evidence_refresh(ctx);
-+
-+		if (rc) {
-+			NL_SET_ERR_MSG_FMT(info->extack,
-+					   "evidence refresh failed: %d", rc);
-+			return rc;
-+		}
-+		ctx->nonce = NULL;
-+	}
-+	return pci_tsm_evidence_read(skb, cb);
-+}
-+
-+static int __init pci_tsm_nl_init(void)
-+{
-+	return genl_register_family(&pci_tsm_nl_family);
-+}
-+
-+subsys_initcall(pci_tsm_nl_init);
-diff --git a/drivers/pci/tsm/netlink.c b/drivers/pci/tsm/netlink.c
-new file mode 100644
-index 000000000000..26fadb727666
---- /dev/null
-+++ b/drivers/pci/tsm/netlink.c
-@@ -0,0 +1,43 @@
-+// SPDX-License-Identifier: ((GPL-2.0 WITH Linux-syscall-note) OR BSD-3-Clause)
-+/* Do not edit directly, auto-generated from: */
-+/*	Documentation/netlink/specs/pci-tsm.yaml */
-+/* YNL-GEN kernel source */
-+/* To regenerate run: tools/net/ynl/ynl-regen.sh */
-+
-+#include <net/netlink.h>
-+#include <net/genetlink.h>
-+
-+#include "netlink.h"
-+
-+#include <uapi/linux/pci-tsm-netlink.h>
-+
-+/* PCI_TSM_CMD_EVIDENCE_READ - dump */
-+static const struct nla_policy pci_tsm_evidence_read_nl_policy[PCI_TSM_A_EVIDENCE_OBJECT_NONCE + 1] = {
-+	[PCI_TSM_A_EVIDENCE_OBJECT_TYPE_MASK] = { .type = NLA_U32, },
-+	[PCI_TSM_A_EVIDENCE_OBJECT_FLAGS] = { .type = NLA_U32, },
-+	[PCI_TSM_A_EVIDENCE_OBJECT_DEV_NAME] = { .type = NLA_NUL_STRING, },
-+	[PCI_TSM_A_EVIDENCE_OBJECT_NONCE] = NLA_POLICY_MAX_LEN(PCI_TSM_MAX_NONCE_SIZE),
-+};
-+
-+/* Ops table for pci_tsm */
-+static const struct genl_split_ops pci_tsm_nl_ops[] = {
-+	{
-+		.cmd		= PCI_TSM_CMD_EVIDENCE_READ,
-+		.start		= pci_tsm_nl_evidence_read_pre,
-+		.dumpit		= pci_tsm_nl_evidence_read_dumpit,
-+		.done		= pci_tsm_nl_evidence_read_post,
-+		.policy		= pci_tsm_evidence_read_nl_policy,
-+		.maxattr	= PCI_TSM_A_EVIDENCE_OBJECT_NONCE,
-+		.flags		= GENL_ADMIN_PERM | GENL_CMD_CAP_DUMP,
-+	},
-+};
-+
-+struct genl_family pci_tsm_nl_family __ro_after_init = {
-+	.name		= PCI_TSM_FAMILY_NAME,
-+	.version	= PCI_TSM_FAMILY_VERSION,
-+	.netnsok	= true,
-+	.parallel_ops	= true,
-+	.module		= THIS_MODULE,
-+	.split_ops	= pci_tsm_nl_ops,
-+	.n_split_ops	= ARRAY_SIZE(pci_tsm_nl_ops),
-+};
-diff --git a/MAINTAINERS b/MAINTAINERS
-index da9dbc1a4019..3d5e2cbef71e 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -26534,9 +26534,11 @@ S:	Maintained
- F:	Documentation/ABI/testing/configfs-tsm-report
- F:	Documentation/driver-api/coco/
- F:	Documentation/driver-api/pci/tsm.rst
--F:	drivers/pci/tsm.c
-+F:	Documentation/netlink/specs/pci-tsm.yaml
-+F:	drivers/pci/tsm/
- F:	drivers/virt/coco/guest/
- F:	include/linux/*tsm*.h
-+F:	include/uapi/linux/pci-tsm-netlink.h
- F:	samples/tsm-mr/
- 
- TRUSTED SERVICES TEE DRIVER
+  * pci_tsm_accept() - accept a device for private MMIO+DMA operation
+  * @pdev: PCI device to accept
 -- 
 2.52.0
 
