@@ -1,71 +1,120 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E07B35F615;
-	Tue,  3 Mar 2026 13:51:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B83383AEF53;
+	Tue,  3 Mar 2026 14:12:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.171.202.116
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772545902; cv=none; b=T6UlwrFDRufIqTwFHrZF0285KJWFH7EmW1qRAZY5ab8nv/VueS1NBiCspCzEMttmY0Q6XcctmTPhs8UChXrKA1alJJ3+BRW7raM2syJO0/WgVvWu8J9qpRoOMCMAvz0Wn2X7EtuZaql5Kpiwe8OoXO47ybVJvT/shXCN5ujbY+4=
+	t=1772547163; cv=none; b=VQrRfjVWg51egNW5LaoUVok+SJkAhy31rauFTB/vtUbDszqLIgfKHpRKjDaBCGtbfuqVwmgyajqz1f11CqSGYuHHXvKJ38Mt+ROFaSrHSoXI0lA/n1rgZ3AhqGGA/Xn9k+6Ka+/wI8P6qJud6XM4/ZkJnEPI2tivsCUXk58bG2k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772545902; c=relaxed/simple;
-	bh=37wqk0tb+mVucEdvOHh2goiyzqelsFHVvn0cCNcTSrs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=I5WnUaxE0gsS18wSFWiblIc7vwwd4+a//6fyuvGygoiXTDWDj9CdLvsdojzZ8rB2rhAANWijxlSP7ACYio7biSm6NT5pbXaO2Y6NHfMm6ydjLDwwM67l2wnS3g5T7I0Gq2/cmR9RzqbhUQ9LvFzgU8kceY3xT2olV3LE7PfaFYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AlX32pQp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772547163; c=relaxed/simple;
+	bh=dPGInr9bJSJ4aaTC8V6Vfs27BwEv/iSgsWjWG9xQ8Pk=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=VgGNSRa/nRW5IUISlBVLbf+ovl5eEyjETSImOEm7ZHdN6xbs09HGwUiqCOD9N5rkwRvh5+5wy0VtvRYM6iNiW8ozPXwpeLp2AzAzmdgZ0XA7900RLSh2scJtePmNbDrAurC4XHdAOjg4ge0m18Xp2EONxBKsdHQmhZQHwKW0PJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=PKXnJBTJ; arc=none smtp.client-ip=185.171.202.116
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AlX32pQp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F4029C116C6;
-	Tue,  3 Mar 2026 13:51:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772545902;
-	bh=37wqk0tb+mVucEdvOHh2goiyzqelsFHVvn0cCNcTSrs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AlX32pQpMPlkHljOiv79BD0pENVQFDEE4QVTF12m+u7kmWSZ2DiDtvKWE5Oi8ZYiU
-	 nHcB5urxTX8rc2LohZ1Fv7BjZoeiVuG8xOcP19RMcDKp9lBvc/mBPo+bMR4yLTJIro
-	 LBkycURdJGoaW/2DQsm1lEQ/T1O4NlTakM1fvkcfZEsceAzrWDXBYQuqXtk2CSxzxZ
-	 kLIsRvfhQY7d9X7lNNAYpbdSyR8wm+1xTgs61yQZBWQiFqjHI9UwWoMZd4qubKrxzA
-	 JASqdVem75Z9NiK9o6meZoZAaHMDAnr/We5YZP74shedhCaZi13fFQtI4Ag1vbE3bi
-	 Hgq4PGWGQqPhA==
-Date: Tue, 3 Mar 2026 14:51:35 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
-	mani@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
-	conor+dt@kernel.org, thierry.reding@gmail.com, jonathanh@nvidia.com,
-	kishon@kernel.org, arnd@arndb.de, gregkh@linuxfoundation.org,
-	Frank.Li@nxp.com, den@valinux.co.jp, hongxing.zhu@nxp.com,
-	jingoohan1@gmail.com, vidyas@nvidia.com, 18255117159@163.com,
-	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 4/5] PCI: tegra194: Expose BAR2 (MSI-X) and BAR4 (DMA)
- as 64-bit BAR_RESERVED
-Message-ID: <aabnZ2VpSI4GCXUi@ryzen>
-References: <20260303072004.2384079-1-mmaddireddy@nvidia.com>
- <20260303072004.2384079-5-mmaddireddy@nvidia.com>
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="PKXnJBTJ"
+Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
+	by smtpout-04.galae.net (Postfix) with ESMTPS id 838BCC40FAB;
+	Tue,  3 Mar 2026 14:12:56 +0000 (UTC)
+Received: from mail.galae.net (mail.galae.net [212.83.136.155])
+	by smtpout-01.galae.net (Postfix) with ESMTPS id B0FF95FF87;
+	Tue,  3 Mar 2026 14:12:38 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 29A51102F19D0;
+	Tue,  3 Mar 2026 15:12:11 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
+	t=1772547155; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:in-reply-to:references;
+	bh=NDntnEFk19MkiUVyHnkpMvjEQ0xuOComNTKHqxzRgtY=;
+	b=PKXnJBTJeOSAhEFdsakoatz9eZVQJsYsja7QCQMQzgMh/5rn1PRNYjh0Y43mXfXGOsBQe3
+	ylbpcNlkEYOZJgf5w2TjuKlN6BoKRqaUv2T7NSWnft4+R5CB1JRZXmzrvE9foIFtljC0dX
+	9lnks0jyXkMRsFdgc/AIne583SVg0IBmmZGSlbX4ZFFiZoIRIMxN3ep1XEp5lG3ykQNMTV
+	2MMAGU53bJevHap0Qjn6XIWdND7dFzJBZWAWKL1cGUcMwe1FByNjIm1aDXdWkatlTF4u4d
+	eRAAosIijuZ77ayzdkxgCV3s0AjnR8VvyjdUbgJKG2IeDC3gKeA+0ZFLN444JQ==
+Date: Tue, 3 Mar 2026 15:12:10 +0100
+From: Herve Codina <herve.codina@bootlin.com>
+To: Jonathan Cameron <jonathan.cameron@huawei.com>
+Cc: Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>, "Krzysztof
+ Kozlowski" <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, "Geert
+ Uytterhoeven" <geert+renesas@glider.be>, Kalle Niemi <kaleposti@gmail.com>,
+ Matti Vaittinen <mazziesaccount@gmail.com>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ Danilo Krummrich <dakr@kernel.org>, Frank Li <Frank.Li@nxp.com>, "Sascha
+ Hauer" <s.hauer@pengutronix.de>, Pengutronix Kernel Team
+ <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, "Michael
+ Turquette" <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>,
+ "Andi Shyti" <andi.shyti@kernel.org>, Wolfram Sang
+ <wsa+renesas@sang-engineering.com>, Peter Rosin <peda@axentia.se>, "Arnd
+ Bergmann" <arnd@arndb.de>, Saravana Kannan <saravanak@kernel.org>, "Bjorn
+ Helgaas" <bhelgaas@google.com>, Charles Keepax
+ <ckeepax@opensource.cirrus.com>, Richard Fitzgerald
+ <rf@opensource.cirrus.com>, David Rhodes <david.rhodes@cirrus.com>, "Linus
+ Walleij" <linusw@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, "Mark
+ Brown" <broonie@kernel.org>, Len Brown <lenb@kernel.org>, Andy Shevchenko
+ <andriy.shevchenko@linux.intel.com>, Daniel Scally <djrscally@gmail.com>,
+ Heikki Krogerus <heikki.krogerus@linux.intel.com>, Sakari Ailus
+ <sakari.ailus@linux.intel.com>, Davidlohr Bueso <dave@stgolabs.net>, "Dave
+ Jiang" <dave.jiang@intel.com>, Alison Schofield
+ <alison.schofield@intel.com>, Vishal Verma <vishal.l.verma@intel.com>, "Ira
+ Weiny" <ira.weiny@intel.com>, Dan Williams <dan.j.williams@intel.com>,
+ "Shawn Guo" <shawnguo@kernel.org>, Wolfram Sang <wsa@kernel.org>,
+ <linux-kernel@vger.kernel.org>, <driver-core@lists.linux.dev>,
+ <imx@lists.linux.dev>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-clk@vger.kernel.org>, <linux-i2c@vger.kernel.org>,
+ <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-sound@vger.kernel.org>, <patches@opensource.cirrus.com>,
+ <linux-gpio@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+ <linux-spi@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+ <linux-cxl@vger.kernel.org>, Allan Nielsen <allan.nielsen@microchip.com>,
+ Horatiu Vultur <horatiu.vultur@microchip.com>, Steen Hegelund
+ <steen.hegelund@microchip.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>,
+ Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: Re: [PATCH v5 07/28] driver core: fw_devlink: Introduce
+ fw_devlink_set_device()
+Message-ID: <20260303151210.6e8462b8@bootlin.com>
+In-Reply-To: <20260302122336.00006bd8@huawei.com>
+References: <20260227135428.783983-1-herve.codina@bootlin.com>
+	<20260227135428.783983-8-herve.codina@bootlin.com>
+	<20260302122336.00006bd8@huawei.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.49; x86_64-redhat-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260303072004.2384079-5-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Last-TLS-Session-Version: TLSv1.3
 
-On Tue, Mar 03, 2026 at 12:50:03PM +0530, Manikanta Maddireddy wrote:
-> Tegra Endpoint exposes three 64-bit BARs at indices 0, 2, and 4:
-> - BAR0+BAR1: EPF test/data (programmable 64-bit BAR)
-> - BAR2+BAR3: MSI-X table (hardware-backed)
-> - BAR4+BAR5: DMA registers (hardware-backed)
-> 
-> Update tegra_pcie_epc_features so that BAR2 is BAR_RESERVED with
-> PCI_EPC_BAR_RSVD_MSIX_TBL_RAM (64 KB) & PCI_EPC_BAR_RSVD_MSIX_PBA_RAM (64 KB),
-> BAR3 is BAR_64BIT_UPPER, BAR4 is BAR_RESERVED with
-> PCI_EPC_BAR_RSVD_DMA_CTRL_MMIO (4KB), and BAR5 is BAR_64BIT_UPPER.
-> This keeps CONSECUTIVE_BAR_TEST working while allowing the host to use
-> 64-bit BAR2 (MSI-X) and BAR4 (DMA).
-> 
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
+Hi Jonathan,
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+On Mon, 2 Mar 2026 12:23:36 +0000
+Jonathan Cameron <jonathan.cameron@huawei.com> wrote:
+
+> On Fri, 27 Feb 2026 14:54:04 +0100
+> Herve Codina <herve.codina@bootlin.com> wrote:
+> 
+> > Setting fwnode->dev is specific to fw_devlink.
+> > 
+> > In order to avoid having a direct 'fwnode->dev = dev;' in several
+> > place in the kernel, introduce fw_devlink_set_device() helper to perform
+> > this operation.
+> >   
+> I don't mind the helper, but the description could do with a little
+> detail on why.  Is it just to avoid visibility of internal details, or
+> is there a stronger reason?
+
+I think the idea was to avoid visibility.
+
+It cames from feedback received on my first iteration
+  https://lore.kernel.org/all/20250408145139.293c79a2@bootlin.com/
+
+I found the idea relevant and so I did the patch.
+
+Best regards,
+Hervé
+
