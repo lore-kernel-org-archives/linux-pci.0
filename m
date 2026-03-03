@@ -1,46 +1,46 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E018435BDC9
-	for <linux-pci@vger.kernel.org>; Tue,  3 Mar 2026 00:01:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AAFE64
+	for <linux-pci@vger.kernel.org>; Tue,  3 Mar 2026 00:01:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772496068; cv=none; b=IUPHV0TOBaS+NSPJp6Zpy7I5YcNYjBnnPSE6DrwGzV5IliB4z3wtbW/XIiDpYusnY0vAQ70d9BUea4xM4RUlsVUormZFdw1Nn1N+mhAS9aIyLeUWCsKKRu17VfX7qxWE/Bv0uM8cMOf4JlLTuKS0p3rqwy40MeJWOel2qn+ch8E=
+	t=1772496068; cv=none; b=NL2uU6FXfIOmnHlp8+0Q9dmkiB0xvrIPYtNXhWK1HdQgDyyakTBqGUDLF6OIHoLypeGrDYi+BAcfV3Kyhkl5CMoeQAckrJSkEulR7pTmEHn7WjgCQ9lzKVkG7U2is6+7iCWCEu3aV6a/V9iL+ZpmmdGSjy342Ia4q8h6feYe0eo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1772496068; c=relaxed/simple;
-	bh=UtKD+1ggTOsvGFWGTo+MIyCQ1Owa45ETNwVucwl3+8g=;
+	bh=o6x+XItsG8PXQr4PDu1m5ZLawCijg11Offkp+Bc45yc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ItpjoxYRpeZbxuqV5yad7bkOESTKdo57m9hzYqyGn09+MSBBCiGETCvrnLOYVGKcLp6huXRqZkyyxZs54aJbwRYXw7MuBhQ1dVnCrh8j2MAbFcPtqib87LzzjXe5qbqBXWkuskytdWwABUMQDCycsozIa2szSUJwVHnSicptZCI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kfQPa3wP; arc=none smtp.client-ip=198.175.65.17
+	 MIME-Version; b=gv/PnJEFaJu65DTGbpvfwGd4X/HChafpl1upVx/2Qase3S+1M4sdzWqWroOnDrxoHJo/eFLeAAa2sMbcYCqTBo71wWNmrJUCNmSLrSyC9zWlqD01ilYQ8svJWVJ1sG07VmxJrG0JYt4aCl2i+Hscpq7sSMMxQI8uX1vg+tuYjWw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=D0IfISV2; arc=none smtp.client-ip=198.175.65.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kfQPa3wP"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="D0IfISV2"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1772496066; x=1804032066;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=UtKD+1ggTOsvGFWGTo+MIyCQ1Owa45ETNwVucwl3+8g=;
-  b=kfQPa3wPetPSNo5VEy0koi9O8jRCcjvLfdNSzwZw//ubWAr5AX4jwHwS
-   7BNwkbx0Kr5UDWCFygw9wXErSKKyMyvOnglLm1/a35pfN9IsEoUhkBwcS
-   U//IBL9fM2J/z1J2cRgjfX710TiIjMAQxIQilHqng0XBWYp4fB4lMqX80
-   tGG1tXuQEhuLTOed68ENPHUn/nVrxXmPc/DLQsgIt6j9gYTtV07j62lWs
-   YMSdCyxaJIctgmyxrFg4GBFSmxhWtDP5BaTCht/yabScPP3MN1KwR9yZL
-   06FwlcHpLL5CbkdSpHFd+HV+S6KxgHcdFFRP29ciJx8kxhn9wd2PlHFie
-   g==;
-X-CSE-ConnectionGUID: annS857aQfegjgSzSysZEQ==
-X-CSE-MsgGUID: gOzPjy7oRYebzh/WBZABKw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11717"; a="73483007"
+  bh=o6x+XItsG8PXQr4PDu1m5ZLawCijg11Offkp+Bc45yc=;
+  b=D0IfISV2ZAJqDsU0F/gCMddtdl2630ZDZRU9v+r2o5eYWDmV1w150pzE
+   7PJP+MHxPNqEOLKPdlYSXyF2ZJoQqJUQsnWRFwJNBH2bGBgYgBQMo2yu2
+   DYAkh6LE1W8J2nRgb8zxpyvVHP1FFWJsCab54XRfTd7IRfLA9K53H5pg3
+   QUx6MVYeplZHmWPn/QZ2cNR5FpjEKRYZvyx3H8olHZKZfTCC//vFN1Pns
+   8s7plyJBo1szFa2FP3RzOfKFdBSEienC/Xixj7wp9Hkdt49DvDXNX4L19
+   wTdCCs089pEHZnO4Ynx8ApIcJZewmL5QFXtjURqnNOrMUwwGqRo0bA5BU
+   w==;
+X-CSE-ConnectionGUID: aeOvCVg7QweClZwIQE/76g==
+X-CSE-MsgGUID: fus7nbT7QamqT3y97GCFTg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11717"; a="73483020"
 X-IronPort-AV: E=Sophos;i="6.21,321,1763452800"; 
-   d="scan'208";a="73483007"
+   d="scan'208";a="73483020"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
   by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2026 16:01:00 -0800
-X-CSE-ConnectionGUID: t7VBRXsaSgyGEgCZNxVUyA==
-X-CSE-MsgGUID: rv68BHq3R7qYm0MTXWk6Fw==
+X-CSE-ConnectionGUID: ifeO3uWOQw6lQ8vFNbjLGA==
+X-CSE-MsgGUID: CjmnG9WjT/O67lbdgeWjyw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,321,1763452800"; 
-   d="scan'208";a="214967122"
+   d="scan'208";a="214967126"
 Received: from dwillia2-desk.jf.intel.com ([10.88.27.145])
   by fmviesa006.fm.intel.com with ESMTP; 02 Mar 2026 16:00:59 -0800
 From: Dan Williams <dan.j.williams@intel.com>
@@ -56,9 +56,9 @@ Cc: gregkh@linuxfoundation.org,
 	jgg@nvidia.com,
 	Samuel Ortiz <sameo@rivosinc.com>,
 	Suzuki K Poulose <suzuki.poulose@arm.com>
-Subject: [PATCH v2 14/19] samples/devsec: Add sample IDE establishment
-Date: Mon,  2 Mar 2026 16:02:02 -0800
-Message-ID: <20260303000207.1836586-15-dan.j.williams@intel.com>
+Subject: [PATCH v2 15/19] samples/devsec: Add sample TSM bind and guest_request flows
+Date: Mon,  2 Mar 2026 16:02:03 -0800
+Message-ID: <20260303000207.1836586-16-dan.j.williams@intel.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260303000207.1836586-1-dan.j.williams@intel.com>
 References: <20260303000207.1836586-1-dan.j.williams@intel.com>
@@ -70,11 +70,10 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Exercise common setup and teardown flows for a sample platform TSM
-driver that implements the TSM 'connect' and 'disconnect' flows.
-
-This is both a template for platform specific implementations and a
-simple integration test for the PCI core infrastructure + ABI.
+Provide a method to test the basic object lifetime mechanics of 'struct
+pci_tdi', and passthrough sysfs message to simulate pci_tsm_guest_req().
+Arrange for pci_tsm_bind() and pci_tsm_guest_req() to be invoked via
+devsec_link_tsm faux-device sysfs attributes.
 
 Cc: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Lukas Wunner <lukas@wunner.de>
@@ -85,144 +84,242 @@ Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
 Cc: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- samples/devsec/bus.c      |  4 +++
- samples/devsec/link_tsm.c | 70 ++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 73 insertions(+), 1 deletion(-)
+ Documentation/ABI/testing/sysfs-faux-devsec |  15 ++
+ samples/devsec/link_tsm.c                   | 157 +++++++++++++++++++-
+ 2 files changed, 170 insertions(+), 2 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-faux-devsec
 
-diff --git a/samples/devsec/bus.c b/samples/devsec/bus.c
-index a55e9573c8bf..fe32b5c8e033 100644
---- a/samples/devsec/bus.c
-+++ b/samples/devsec/bus.c
-@@ -6,6 +6,7 @@
- #include <linux/device/faux.h>
- #include <linux/module.h>
- #include <linux/pci.h>
-+#include <linux/pci-ide.h>
- #include <linux/range.h>
- #include <uapi/linux/pci_regs.h>
- 
-@@ -16,6 +17,7 @@
- #define NR_DEVICES_PER_BUS 1
- #define NR_FUNCTIONS 2
- #define NR_DEVICES (NR_DEVICES_PER_BUS * NR_FUNCTIONS * NR_DEVSEC_BUSES)
-+#define NR_HOST_BRIDGE_STREAMS 4
- #define NR_PORT_STREAMS 1
- #define NR_PORT_LINK_STREAMS 4
- #define NR_ADDR_ASSOC 1
-@@ -728,6 +730,7 @@ static int devsec_add_host_bridge(struct faux_device *fdev, int hb_idx)
- 	hb->dev.parent = dev;
- 	hb->sysdata = sd;
- 	hb->ops = &devsec_ops;
-+	pci_ide_set_nr_streams(hb, NR_HOST_BRIDGE_STREAMS);
- 
- 	rc = pci_scan_root_bus_bridge(hb);
- 	if (rc)
-@@ -776,5 +779,6 @@ static void __exit devsec_bus_exit(void)
- }
- module_exit(devsec_bus_exit);
- 
-+MODULE_IMPORT_NS("PCI_IDE");
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("Device Security Sample Infrastructure: TDISP Device Emulation");
+diff --git a/Documentation/ABI/testing/sysfs-faux-devsec b/Documentation/ABI/testing/sysfs-faux-devsec
+new file mode 100644
+index 000000000000..29da17bfa720
+--- /dev/null
++++ b/Documentation/ABI/testing/sysfs-faux-devsec
+@@ -0,0 +1,15 @@
++What:		/sys/bus/faux/devices/{devsec_link_tsm,devsec_tsm}
++Contact:	linux-coco@lists.linux.dev
++Description:
++		(DIR) The devsec_link_tsm and devsec_tsm faux devices test the
++		kernel's ABIs and flows that support PCIe Trusted Device
++		Interface Security Protocol (TDISP). The devsec_link_tsm device
++		simulates a "host" TSM that establishes an SPDM session and link
++		security (PCIe IDE). The devsec_tsm device simulates a "guest"
++		TSM that implements the lock+accept flows.
++
++What:
++/sys/bus/faux/devices/devsec_link_tsm/{bind,unbind}
++Contact:	linux-coco@lists.linux.dev
++Description:
++
 diff --git a/samples/devsec/link_tsm.c b/samples/devsec/link_tsm.c
-index e5d66b877bca..dea5215ff97b 100644
+index dea5215ff97b..2e4c1234bdee 100644
 --- a/samples/devsec/link_tsm.c
 +++ b/samples/devsec/link_tsm.c
-@@ -4,6 +4,7 @@
- #define dev_fmt(fmt) "devsec: " fmt
- #include <linux/device/faux.h>
- #include <linux/pci-tsm.h>
-+#include <linux/pci-ide.h>
- #include <linux/module.h>
- #include <linux/pci.h>
- #include <linux/tsm.h>
-@@ -111,6 +112,23 @@ static void devsec_link_tsm_pci_remove(struct pci_tsm *tsm)
- 	}
+@@ -19,6 +19,10 @@ struct devsec_tsm_fn {
+ 	struct pci_tsm pci;
+ };
+ 
++struct devsec_tsm_tdi {
++	struct pci_tdi pci;
++};
++
+ static struct devsec_tsm_pf0 *to_devsec_tsm_pf0(struct pci_tsm *tsm)
+ {
+ 	return container_of(tsm, struct devsec_tsm_pf0, pci.base_tsm);
+@@ -29,6 +33,12 @@ static struct devsec_tsm_fn *to_devsec_tsm_fn(struct pci_tsm *tsm)
+ 	return container_of(tsm, struct devsec_tsm_fn, pci);
  }
  
-+/* protected by tsm_ops lock */
-+static DECLARE_BITMAP(devsec_stream_ids, NR_TSM_STREAMS);
-+static struct pci_ide *devsec_streams[NR_TSM_STREAMS];
-+
-+static unsigned long *alloc_devsec_stream_id(unsigned long *stream_id)
-+{
-+	unsigned long id;
-+
-+	id = find_first_zero_bit(devsec_stream_ids, NR_TSM_STREAMS);
-+	if (id == NR_TSM_STREAMS)
-+		return NULL;
-+	set_bit(id, devsec_stream_ids);
-+	*stream_id = id;
-+	return stream_id;
-+}
-+DEFINE_FREE(free_devsec_stream, unsigned long *, if (_T) clear_bit(*_T, devsec_stream_ids))
-+
- /*
-  * Reference consumer for a TSM driver "connect" operation callback. The
-  * low-level TSM driver understands details about the platform the PCI
-@@ -135,11 +153,61 @@ static void devsec_link_tsm_pci_remove(struct pci_tsm *tsm)
-  */
- static int devsec_link_tsm_connect(struct pci_dev *pdev)
++/*
++ * Note that outside of pci_tsm_ops callbacks, this lookup is racy. I.e. does
++ * not account for racing disconnect / unlock after reading ->tsm. The
++ * @devsec_link_groups usage of this is only for best-effort protection against
++ * using this sample / test module to interfere with other TSM drivers.
++ */
+ static struct device *pci_tsm_host(struct pci_dev *pdev)
  {
--	return -ENXIO;
-+	struct pci_dev *rp = pcie_find_root_port(pdev);
-+	unsigned long __stream_id;
-+	int rc;
+ 	struct pci_tsm *tsm = READ_ONCE(pdev->tsm);
+@@ -157,6 +167,8 @@ static int devsec_link_tsm_connect(struct pci_dev *pdev)
+ 	unsigned long __stream_id;
+ 	int rc;
+ 
++	dev_dbg(pci_tsm_host(pdev), "%s\n", pci_name(pdev));
 +
-+	unsigned long *stream_id __free(free_devsec_stream) =
-+		alloc_devsec_stream_id(&__stream_id);
-+	if (!stream_id)
-+		return -EBUSY;
+ 	unsigned long *stream_id __free(free_devsec_stream) =
+ 		alloc_devsec_stream_id(&__stream_id);
+ 	if (!stream_id)
+@@ -197,6 +209,8 @@ static void devsec_link_tsm_disconnect(struct pci_dev *pdev)
+ 	struct pci_ide *ide;
+ 	unsigned long i;
+ 
++	dev_dbg(pci_tsm_host(pdev), "%s\n", pci_name(pdev));
 +
-+	struct pci_ide *ide __free(pci_ide_stream_release) =
-+		pci_ide_stream_alloc(pdev);
-+	if (!ide)
-+		return -ENOMEM;
+ 	for_each_set_bit(i, devsec_stream_ids, NR_TSM_STREAMS)
+ 		if (devsec_streams[i]->pdev == pdev)
+ 			break;
+@@ -210,11 +224,56 @@ static void devsec_link_tsm_disconnect(struct pci_dev *pdev)
+ 	clear_bit(i, devsec_stream_ids);
+ }
+ 
++static struct pci_tdi *devsec_link_tsm_bind(struct pci_dev *pdev,
++					    struct kvm *kvm, u32 tdi_id)
++{
++	struct devsec_tsm_tdi *devsec_tdi =
++		kzalloc(sizeof(struct devsec_tsm_tdi), GFP_KERNEL);
 +
-+	ide->stream_id = *stream_id;
-+	rc = pci_ide_stream_register(ide);
-+	if (rc)
-+		return rc;
++	dev_dbg(pci_tsm_host(pdev), "%s\n", pci_name(pdev));
 +
-+	pci_ide_stream_setup(pdev, ide);
-+	pci_ide_stream_setup(rp, ide);
++	if (!devsec_tdi)
++		return ERR_PTR(-ENOMEM);
 +
-+	rc = tsm_ide_stream_register(ide);
-+	if (rc)
-+		return rc;
++	pci_tsm_tdi_constructor(pdev, &devsec_tdi->pci, kvm, tdi_id);
 +
-+	/*
-+	 * Model a TSM that handled enabling the stream at
-+	 * tsm_ide_stream_register() time
-+	 */
-+	rc = pci_ide_stream_enable(pdev, ide);
-+	if (rc)
-+		return rc;
++	return &devsec_tdi->pci;
++}
 +
-+	devsec_streams[*no_free_ptr(stream_id)] = no_free_ptr(ide);
++static void devsec_link_tsm_unbind(struct pci_tdi *tdi)
++{
++	struct devsec_tsm_tdi *devsec_tdi =
++		container_of(tdi, struct devsec_tsm_tdi, pci);
++
++	dev_dbg(pci_tsm_host(tdi->pdev), "%s\n", pci_name(tdi->pdev));
++
++	kfree(devsec_tdi);
++}
++
++static ssize_t devsec_link_tsm_guest_req(struct pci_tdi *tdi,
++					 enum pci_tsm_req_scope scope,
++					 sockptr_t req_in, size_t in_len,
++					 sockptr_t req_out, size_t out_len,
++					 u64 *tsm_code)
++{
++	if (!sockptr_is_kernel(req_in))
++		return -ENXIO;
++
++	dev_dbg(pci_tsm_host(tdi->pdev), "%s\n", pci_name(tdi->pdev));
++	print_hex_dump_debug("devsec req_in  ", DUMP_PREFIX_OFFSET, 16, 4,
++			     req_in.kernel, min(in_len, 256u), true);
 +
 +	return 0;
- }
- 
- static void devsec_link_tsm_disconnect(struct pci_dev *pdev)
- {
-+	struct pci_ide *ide;
-+	unsigned long i;
++}
 +
-+	for_each_set_bit(i, devsec_stream_ids, NR_TSM_STREAMS)
-+		if (devsec_streams[i]->pdev == pdev)
-+			break;
-+
-+	if (i >= NR_TSM_STREAMS)
-+		return;
-+
-+	ide = devsec_streams[i];
-+	devsec_streams[i] = NULL;
-+	pci_ide_stream_release(ide);
-+	clear_bit(i, devsec_stream_ids);
- }
- 
  static struct pci_tsm_ops devsec_link_pci_ops = {
+ 	.probe = devsec_link_tsm_pci_probe,
+ 	.remove = devsec_link_tsm_pci_remove,
+ 	.connect = devsec_link_tsm_connect,
+ 	.disconnect = devsec_link_tsm_disconnect,
++	.bind = devsec_link_tsm_bind,
++	.unbind = devsec_link_tsm_unbind,
++	.guest_req = devsec_link_tsm_guest_req,
+ };
+ 
+ static void devsec_link_tsm_remove(void *tsm_dev)
+@@ -240,10 +299,104 @@ static const struct faux_device_ops devsec_link_device_ops = {
+ 	.probe = devsec_link_tsm_probe,
+ };
+ 
++static struct pci_dev *pci_find_device(const char *name)
++{
++	struct device *dev = bus_find_device_by_name(&pci_bus_type, NULL, name);
++
++	if (dev)
++		return to_pci_dev(dev);
++	return NULL;
++}
++
++static ssize_t tsm_bind_store(struct device *dev, struct device_attribute *attr,
++			      const char *buf, size_t count)
++{
++	struct device *host;
++	int rc;
++
++	struct pci_dev *pdev __free(pci_dev_put) = pci_find_device(buf);
++	if (!pdev)
++		return -ENODEV;
++
++	host = pci_tsm_host(pdev);
++	if (!host || host != &devsec_link_tsm->dev)
++		return -ENXIO;
++
++	rc = pci_tsm_bind(pdev, (struct kvm *)1, pci_dev_id(pdev));
++	if (rc)
++		return rc;
++	return count;
++}
++static DEVICE_ATTR_WO(tsm_bind);
++
++static ssize_t tsm_unbind_store(struct device *dev,
++				struct device_attribute *attr,
++				const char *buf, size_t count)
++{
++	struct device *host;
++
++	struct pci_dev *pdev __free(pci_dev_put) = pci_find_device(buf);
++	if (!pdev)
++		return -ENODEV;
++
++	host = pci_tsm_host(pdev);
++	if (!host || host != &devsec_link_tsm->dev)
++		return -ENXIO;
++
++	pci_tsm_unbind(pdev);
++	return count;
++}
++static DEVICE_ATTR_WO(tsm_unbind);
++
++static ssize_t tsm_request_store(struct device *dev,
++				 struct device_attribute *attr,
++				 const char *__buf, size_t count)
++{
++	ssize_t rc;
++	u64 tsm_code = 0;
++	struct device *host;
++	char req_out[16] = {0};
++	size_t out_len = sizeof(req_out);
++
++	struct pci_dev *pdev __free(pci_dev_put) = pci_find_device(__buf);
++	if (!pdev)
++		return -ENODEV;
++
++	char *buf __free(kvfree) = kvmemdup(__buf, count, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	host = pci_tsm_host(pdev);
++	if (!host || host != &devsec_link_tsm->dev)
++		return -ENXIO;
++
++	rc = pci_tsm_guest_req(pdev, PCI_TSM_REQ_INFO, KERNEL_SOCKPTR(buf),
++			       count, KERNEL_SOCKPTR(req_out), out_len,
++			       &tsm_code);
++	if (rc)
++		return rc;
++
++	return count;
++}
++static DEVICE_ATTR_WO(tsm_request);
++
++/*
++ * Facilitate testing of the bind and request flows in lieu of VFIO/IOMMUFD
++ * support to exercise these paths.
++ */
++static struct attribute *devsec_link_attrs[] = {
++	&dev_attr_tsm_bind.attr,
++	&dev_attr_tsm_unbind.attr,
++	&dev_attr_tsm_request.attr,
++	NULL,
++};
++ATTRIBUTE_GROUPS(devsec_link);
++
+ static int __init devsec_link_tsm_init(void)
+ {
+-	devsec_link_tsm = faux_device_create("devsec_link_tsm", NULL,
+-					     &devsec_link_device_ops);
++	devsec_link_tsm = faux_device_create_with_groups(
++		"devsec_link_tsm", NULL, &devsec_link_device_ops,
++		devsec_link_groups);
+ 	if (!devsec_link_tsm)
+ 		return -ENOMEM;
+ 	return 0;
 -- 
 2.52.0
 
