@@ -1,126 +1,99 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E18E836D9ED;
-	Tue,  3 Mar 2026 16:27:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BA3437CD20;
+	Tue,  3 Mar 2026 16:30:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772555263; cv=none; b=ZvHGKAmkpZW6m69T/OZEeP/deZ1XmtkBPQ2SIi+O/Io6gbCqN+eW6ngU7p3JQmcSHzwqDfygtblH7JM1o1Co2dI4XY19UNIvQlzpH7I5KdbHj0zQJk8ayEezj+2gef9EAFnOc5hu+5RcYbXIaz+U+J3yagC13/AT6Ch8z+LEuzo=
+	t=1772555454; cv=none; b=VoTzCyay+/8T7WjX7XNnOD+Zq/eqMncZnz7M22iR9chqex5bLgfSnfNaeLkOP3sYChA5XVVg24zvlzWO7URTyCYDeLFIz9/vCF0JkVLlgwWLguyoEp2jPvJnsvsNslsdrh7CKrwasQXEXJ5gv+rG8iAk73RagbVTQj3I+ZrQuxw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772555263; c=relaxed/simple;
-	bh=02WuwVzfcqREGKNcO4A+gehHauWokgchNs/BbMoEVRw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Frfx0a3q97oS0gIEQh8VEH9Q8RtRiDGW3msbGcbW++meCfEF5866QpIA6P60InD9CFnI6e0ma9QUyo9MTuNRUc4TF3O9T5J29WX3jFsb2EaluVAeb2NVxASgaJNWParMhJDZmJ2HsEMlEphKfrTYmgDWRNubPN8iIT15uhntoy4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IGwJT3cc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772555454; c=relaxed/simple;
+	bh=D2pPg2evVcS3OwEffdyZzwyhu5mGQ3DavyPjm4j33e8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=LPMeBRoYqCHvXd5OYrJZxPAc9kWAbJYK+uEifmo4ciaiXFZMmBvr7XlQOTCmVrxAA7mRWrPCIQbtlYVxlInQ/K/eIIR4rr0hMljNiAJab+UVkH86hrfDziskU/GM2ZdRgUZLipNurleqh+vMO5djIOz2uQNI4tJ2QN0dKudYMQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W5KbtB6A; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IGwJT3cc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 464ACC19422;
-	Tue,  3 Mar 2026 16:27:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W5KbtB6A"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 734E8C116C6;
+	Tue,  3 Mar 2026 16:30:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772555262;
-	bh=02WuwVzfcqREGKNcO4A+gehHauWokgchNs/BbMoEVRw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IGwJT3ccRPvCctpnE4DzTVD9FcqQmUNlycHUD0v6oE4FbMMKWy2q5rt9sKy0wKWn5
-	 XWyuo0Xe6aDRAWyTuIbehuzELvMVCVofjpVhED//48OHcWjhILi9DMBEPdLcSDWDCb
-	 d6+pNTKHz74ebyHUBnyikOrKlOvq9eJMLEd2RoXhwffxanj1dl2oO3XrEEp8Rb1vtM
-	 RKec0J64+9GRrl2bq6SfYqks3UlK1VN+5ZOBcRiq8EY9e1sIuv/vYBSCpXXDm7s652
-	 zmoURwTNwBIhEAEjysccLZK+I/09A5pk+DOppSF/yM+gXjuPFM62kyd9DKC/NLqvSw
-	 jwVKBkkp/E0PQ==
-Date: Tue, 3 Mar 2026 21:57:25 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Jon Hunter <jonathanh@nvidia.com>
-Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>, 
-	Bjorn Helgaas <helgaas@kernel.org>, krishna.chundru@oss.qualcomm.com, 
-	manivannan.sadhasivam@oss.qualcomm.com, Bjorn Helgaas <bhelgaas@google.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, "David E. Box" <david.e.box@linux.intel.com>, 
-	Kai-Heng Feng <kai.heng.feng@canonical.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Heiner Kallweit <hkallweit1@gmail.com>, Chia-Lin Kao <acelan.kao@canonical.com>, 
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org
-Subject: Re: [PATCH v2 1/2] PCI/ASPM: Override the ASPM and Clock PM states
- set by BIOS for devicetree platforms
-Message-ID: <km5stwtgzyshi5ogd2ke7qjj35nakwo6ztho5ju6y4ds32epln@fqqebty3v6me>
-References: <e44c330b-778b-4fa1-b678-fa909cc05b03@nvidia.com>
- <bf37b6a5-268d-4c07-a536-a826b3d5953b@nvidia.com>
- <unc5zefwndgcv7wufaezz3gkg3qtaymkjlmymhyqdqwzn3wybl@ow2rhbyt772h>
- <f9ac8c8f-8959-416b-ba90-14f0886c5bc0@nvidia.com>
- <a5m4pqtiaxsq5lmq64roro633ganbeq7mypa5ojuuqy4npkvok@wcogdbzaq6xe>
- <7157c68e-97f3-43b0-bfb5-e271a8f2a4b8@nvidia.com>
- <cf1e685a-a1cb-45ec-bdc3-1ef1a3d1044e@nvidia.com>
- <e0a0dc6d-fff0-41ec-92eb-7f2dbefa967b@nvidia.com>
- <vpwe273ehsbsyjpysyky4ypgnawosjehen34rr2n5bpoaqjsyg@3uylwh3oyyqc>
- <cfbbe3f0-f958-4cf2-aaa0-afca52cc5d5e@nvidia.com>
+	s=k20201202; t=1772555453;
+	bh=D2pPg2evVcS3OwEffdyZzwyhu5mGQ3DavyPjm4j33e8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=W5KbtB6A0G2m/2ihT3XDZLZ1J31O6g7kq8xkLz7SMDzdBFPEaAXJKPILxy/5pZFxo
+	 VD3ug1zEfyyGRMgzj5yYbUGUZKzDhz1SKIs9+iJ2+oxjTxfCYw+mr5Ol63WP8jwjbY
+	 hOosGeo+emjWgCMGDrbFRWEmayrPXfx/NYajhHtgl1eSf02IYfo98sa5MP5S8vw3Q+
+	 xRud5IB6QOoqtIOWN2WIT7Bp8uGvpOkxMBuN5JiBEAPQLN/8XocgX22s/sGb2+grKN
+	 cHD08FRGQM0Vxkia4iLgppWy+vide3XkHT6UuM+9JIha9+PvKW9BgBN/7aNUr9wbPF
+	 bCbzflpQ0R+Bw==
+Date: Tue, 3 Mar 2026 10:30:51 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Madhavan Srinivasan <maddy@linux.ibm.com>
+Cc: Nilay Shroff <nilay@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	"David S. Miller" <davem@davemloft.net>,
+	Andreas Larsson <andreas@gaisler.com>,
+	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	sparclinux@vger.kernel.org, wangruikang@iscas.ac.cn,
+	tglx@kernel.org, npiggin@gmail.com, chleroy@kernel.org,
+	gjoyce@ibm.com
+Subject: Re: [PATCHv2 0/2] pci: fix msi_addr_mask on powerpc and sparc systems
+Message-ID: <20260303163051.GA4059101@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <cfbbe3f0-f958-4cf2-aaa0-afca52cc5d5e@nvidia.com>
+In-Reply-To: <d8440351-7394-4444-9891-b9af1982bd06@linux.ibm.com>
 
-On Thu, Feb 26, 2026 at 04:55:34PM +0000, Jon Hunter wrote:
-> 
-> On 26/02/2026 11:08, Manivannan Sadhasivam wrote:
-> 
-> ...
-> 
-> > Since we know that ASPM is the issue on your platform and the failure also
-> > confirms that ASPM was never enabled before, I'd suggest disabling ASPM for the
-> > Root Port as a workaround:
+On Tue, Mar 03, 2026 at 09:59:15AM +0530, Madhavan Srinivasan wrote:
+> On 2/27/26 10:14 PM, Bjorn Helgaas wrote:
+> > On Fri, Feb 20, 2026 at 12:32:26PM +0530, Nilay Shroff wrote:
+> > > Hi,
+> > > 
+> > > Recent changes [1] which replaced pci_dev::no_64bit_msi with pci_dev::
+> > > msi_addr_mask inadvertently missed to initialize the pci_dev::msi_addr_mask
+> > > to the DMA_BIT_MASK(64) on powerpc platform. Due to this, later the
+> > > validation the programmed MSI address against the msi_addr_mask fails.
+> > > This causes pci device probe method failures on powerpc platform. We also
+> > > realized that similar issue could potentially happen on sparc system as
+> > > well. So this series initializes pci_dev::msi_addr_mask to DMA_BIT_MASK(64)
+> > > when pci_dev is instantiated for both powerpc and sparc platforms.
+> > > 
+> > > The first patch in the series fixes this on powerpc platform. The second
+> > > patch fixes this issue on sparc platform. Please note that as I don't have
+> > > access to the sparc platform, this patch was only compile tested on the
+> > > sparc system. Anyone from the community is welcome to test it who has
+> > > access to the sparc machine.
+> > > 
+> > > [1] https://lore.kernel.org/all/20260129-pci-msi-addr-mask-v4-0-70da998f2750@iscas.ac.cn/
+> > > 
+> > > Changes since v1:
+> > >    - Initialize the pci_dev:msi_addr_mask on sparc platform (Vivian Wang)
+> > >    - Some minor cosmetic fixes (Bjorn Helgaas)
+> > > 
+> > > Nilay Shroff (2):
+> > >    powerpc/pci: Initialize msi_addr_mask for OF-created PCI devices
+> > >    sparc/pci: Initialize msi_addr_mask for OF-created PCI devices
+> > > 
+> > >   arch/powerpc/kernel/pci_of_scan.c | 7 +++++++
+> > >   arch/sparc/kernel/pci.c           | 7 +++++++
+> > >   2 files changed, 14 insertions(+)
+> > These fix regressions on powerpc and sparc caused by 386ced19e9a3
+> > ("PCI/MSI: Convert the boolean no_64bit_msi flag to a DMA address
+> > mask").
 > > 
-> > ```
-> > diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-> > index 06571d806ab3..f504b4ffbcb6 100644
-> > --- a/drivers/pci/controller/dwc/pcie-tegra194.c
-> > +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> > @@ -2499,6 +2499,13 @@ module_platform_driver(tegra_pcie_dw_driver);
-> >   MODULE_DEVICE_TABLE(of, tegra_pcie_dw_of_match);
-> > +static void tegra_pcie_quirk_disable_aspm(struct pci_dev *dev)
-> > +{
-> > +       pcie_aspm_remove_cap(dev, PCI_EXP_LNKCAP_ASPM_L1 |
-> > +                                 PCI_EXP_LNKCAP_ASPM_L0S);
-> > +}
-> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID, tegra_pcie_quirk_disable_aspm);
-> > +
-> >   MODULE_AUTHOR("Vidya Sagar <vidyas@nvidia.com>");
-> >   MODULE_DESCRIPTION("NVIDIA PCIe host controller driver");
-> >   MODULE_LICENSE("GPL v2");
-> > ```
+> > These fixes have been tested by Han Gao (SPARC Enterprise T5220),
+> > Nathaniel Roach (SPARC T5-2), and Venkat Rao Bagalkote (IBM Power
+> > System LPAR (pseries)).
 > > 
-> > You can use specific Root Port IDs or PCI_ANY_ID depending on the impact. We can
-> > also work on fixing the actual issue parallelly.
-> 
-> Thanks. By default we are building the PCIe driver for Tegra as a module and
-> so I am not sure we can use DECLARE_PCI_FIXUP_EARLY() right?
-> 
+> > It'd be great to have acks from the powerpc and sparc folks so they
+>
+> Sorry for the delayed response, yes we tested this from our end.
+> Acked-by: Madhavan Srinivasan <maddy@linux.ibm.com>
 
-Ah, yes. We cannot use any of these DECLARE_PCI_FIXUP*() in a module anyway :/
-
-> I was just thinking that in pcie_aspm_override_default_link_state() we just
-> need a callback to specify the default ASPM override state?
-> 
-
-That looks like a dirty hack. Moreover, your platform works perfectly fine with
-ASPM. So you should not be turning it off due to one driver behaving
-erratically.
-
-As I mentioned in [1], you should try to advertise the
-PM_SUSPEND_FLAG_FW_SUSPEND flag for the platform as per [2].
-
-FYI, this is a known issue that is plauging us for so long.
-PM_SUSPEND_FLAG_FW_SUSPEND is the cleanest solution we came up with. But
-unfortunately, we cannot use it across all of our Qcom SoCs due to firmware not
-advertising S2RAM in some of them.
-
-- Mani
-
-[1] https://lore.kernel.org/linux-pci/kkly3z4durpagtenadvmzdpojlctachgfgi2fdapt6zthdl2gx@n2qhmlud2zb7/
-[2] https://lore.kernel.org/all/20251231162126.7728-1-manivannan.sadhasivam@oss.qualcomm.com/
-
--- 
-மணிவண்ணன் சதாசிவம்
+Added your ack to the powerpc patch, thank you very much!
