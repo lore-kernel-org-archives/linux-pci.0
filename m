@@ -1,186 +1,243 @@
-Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020124.outbound.protection.outlook.com [52.101.229.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C8B826D4F9;
-	Tue,  3 Mar 2026 05:12:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772514732; cv=fail; b=Pst8Efbln0bFVktiwKYyMyRzj8xA5/ft6hh2YJeSZ2o/GcNM+hvc+UTpcRmukEFGIq3Zcd1fZL7eEFnbwhjeEuKCSP2cbQwRXJt7mg6MVmad8yRZQTzjNDP/0HI7x6lte8yNc8FC2vhtWIuDWtX3LOIrAnWsIsmeID7C7WtXMZM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772514732; c=relaxed/simple;
-	bh=W1JzMkHpvNTsEJNdt5M79PJs4uAPjxn+lTGJ1tpWVfY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=CyaolIzMCz9y5RUADMTwpM+eNHcI4kr1RQZqv9846k8eZSqJSXvPrE8U2FhqxJL3qlBAbKzlKgiYzJehDzHHAN7SzBIYAh9SB7X6aQZCY2k071PEQilqcrSFZypWCKT5vm4XBslPrT6lFoy6mlidpn90bcXU4TFHlYOLZ1HUBLc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=bK4kYtko; arc=fail smtp.client-ip=52.101.229.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A9D77263B;
+	Tue,  3 Mar 2026 05:22:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772515339; cv=none; b=DgXYS2kkBYZzQIUMk2XQ3fUDB7DT2fKG+lCSJwBoxCk6JL4qgEZ7r88dihx9P/u4cj0I43PxRQH9pDMbHNHbx07nuv0IT3m+mXI4Wkd/HSvWJy3ZxLdHqY67k9Jz6TjEJdmFp/1AU9yO6DQ8DQ0J2+CRkLQ28ggQ4ygaTzJaqSY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772515339; c=relaxed/simple;
+	bh=NOYylHBlMQbBtXZu0UXpu7/CxXYgpOwYxTWB01e2VtM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=t0znDQcXhUa2OauuXo/Z5pPX4pO70Xup46Y5VyXaaU+obXWFbSMoFOpMUWpPW72FP4vW0EAZ3lkpsgRb1iIvfSW0pxrPxZRzGCR0R5duk7PqgZwPpROawVu+0jNW5SiXP7fZNuNHZGcn1LRSHk29aS9rwlI69FUCcxRTmbouyl8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FJidQr7l; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="bK4kYtko"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=aFjr3gPg6IIl+XmjTHqM0UQ3IZtEViWOvuxPX2cQlE0QHQ30SlkEP1UkO8kzqwrseXxtmUFtMaJftwBLZO/faVreQ2Jnef85M/+pNmgaVW6juHXF2Ak8ApczUanXO/YmkVoKCrv7hJYVW5cxBUVg1zWY1ucF1hLvmFVvyVtBKtHG4PZSdIt8okZwk4PvDAJ99vzJK5BINFfN29FOheLzepjK9N91fUaTgPWm53Q68Pn9FBNZQ+yn/w1qrdUI/oLkC4BAAHRyYNdcToogCrwldVpvhIyFNU4Yt7Gf/AplxpD2xTUgbojedctRZni7TX9UsWXkzOtsJcIFcxTzVMIjHw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bf5v5GN0WURnZWuddxeGz68djR0/ekeUPD0tXrmpllA=;
- b=cZ5pLZNpNcPgr/ZmFGcH/7XNrqF7ZGkWtMGn6rYT8MbednIaRwnh88iNsw+ZhkSBfbBCR9MK87t+dzA4+55l/6N83XBnX5q//ViTT+M2+d1NB0rXr6wTrGSrhgzrR8MKoJVeebgmmVwT9PfsJgF8CLfY/DhzKMh9SiZofMxJlHRdB1KxQ2SSAIBbOHNJmqIrTOpfSDgPYAwB5RG30Mddd+IqsrqWIhnkD3CzamSj1X39yDGtWZsBD9beKyKk+co0dSjnUQjVQQrUI8C6hoOpLTY08MCbb20PlzldVYjZtsO4xbZIeKMtA7YQF+KItUcpPyR5TJ3bPL6xQv2KrHD14Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bf5v5GN0WURnZWuddxeGz68djR0/ekeUPD0tXrmpllA=;
- b=bK4kYtko25fXvzzcCAEQOs2jTlgEAWVbdD14GNP7Ex3NvoMIMZd0vvAlXxAW+DoOgdZHgBpiTD3rVNg2dcJaGYHBiA4fkjYiY187DGf1XxAQAzwRJiwefJTDjTbmh89OyktL2OX5hsDBzPli1Z+FZLmuTyE1jj/iaKZfaFjHleM=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from OSOP286MB7730.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:468::22)
- by TY4P286MB6767.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:342::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.22; Tue, 3 Mar
- 2026 05:12:07 +0000
-Received: from OSOP286MB7730.JPNP286.PROD.OUTLOOK.COM
- ([fe80::b7ab:6af2:d18e:4a71]) by OSOP286MB7730.JPNP286.PROD.OUTLOOK.COM
- ([fe80::b7ab:6af2:d18e:4a71%3]) with mapi id 15.20.9654.022; Tue, 3 Mar 2026
- 05:12:06 +0000
-Date: Tue, 3 Mar 2026 14:12:05 +0900
-From: Koichiro Den <den@valinux.co.jp>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: marek.vasut+renesas@gmail.com, yoshihiro.shimoda.uh@renesas.com, 
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org, 
-	bhelgaas@google.com, geert+renesas@glider.be, magnus.damm@gmail.com, 
-	cassel@kernel.org, linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FJidQr7l"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7880C116C6;
+	Tue,  3 Mar 2026 05:22:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772515338;
+	bh=NOYylHBlMQbBtXZu0UXpu7/CxXYgpOwYxTWB01e2VtM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=FJidQr7lbI7MwqVGxs6gOFoxIKSz0XZON46GUida+Q/M83iCU3tp5QaA/DlXULXTl
+	 KW5A3vx2Vj59z7FROiFQ+JV9W1d10AqD0sZz4unS0KNlHRCmgyCP54GzjzgJIEuQk2
+	 Jbc8jTBqhUktmv9jFqlDr5EnDj7i5wAg2eN7yXo/4nXpHFBUf87+A/f6TIT0W70E46
+	 TdIdVy428vZ0d7HC8Wy7L5XQCliI3+NmZZ4XBOhjgv8v/WDwxMD4+6lySOZhn4hJdT
+	 ioUpifJfmYIHKHuVf4QL9Mj/V+JG6onZJeAWyXz0eELetuqzyzVT3jJgUDw/AoXqk7
+	 2B+T7SW1MbUcQ==
+Date: Tue, 3 Mar 2026 10:52:05 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Frank Li <Frank.Li@nxp.com>, Jon Mason <jdmason@kudzu.us>, 
+	Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>, kwilczynski@kernel.org, 
+	Kishon Vijay Abraham I <kishon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Ye Bin <yebin10@huawei.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, linux-pci@vger.kernel.org, ntb@lists.linux.dev, 
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: dwc: rcar-gen4-ep: Mark BAR0 and BAR2 as
- Resizable BARs
-Message-ID: <ns62mpoyrskr5q3uoy7gfjzideede2xqpixsllwhc3ozkz4us3@ltdzzshbgxla>
-References: <20260210160315.2272930-1-den@valinux.co.jp>
- <20260302223150.GA4022590@bhelgaas>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260302223150.GA4022590@bhelgaas>
-X-ClientProxiedBy: TYCP286CA0145.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:31b::9) To OSOP286MB7730.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:604:468::22)
+Subject: Re: [PATCH v5 5/5] PCI: endpoint: pci-epf-vntb: manage ntb_dev
+ lifetime and fix vpci bus teardown
+Message-ID: <f3tt2dt63el5v7lzqabgnjcs2vrcj44xot2nrbkxjnqcpmyivs@o6xdl2aarsbi>
+References: <20260226084142.2226875-1-den@valinux.co.jp>
+ <20260226084142.2226875-6-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: OSOP286MB7730:EE_|TY4P286MB6767:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7ff8cadd-9fd9-4aad-37eb-08de78e36a13
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|10070799003|366016|1800799024|27256017;
-X-Microsoft-Antispam-Message-Info:
-	U86ZkTGs5qXrK1qTPMq2OixoGTvzVLhdhSOEDf4SrV35kAQp0Y5e7cz1+q0jtsemczUKqdpoDHSLc7MpzwxQFdt0CxWjVO3Jtd47hV8kLIkaXIZIaWVsr/LdNyYDvZG1JmePTBPPEdBJercoeA942HRgNFlab35FvU5zFB3pSezn1W2xh2sH04AU0espfcPU0ZnZ/1WHwWdE6I9sk0GUbQ5rCeLHU1eIFC0c5DWKtHFkptStTYhTHuz68d7iKKe+pLub5Rd3sv/nk8QQ0NPIm2fMDBhzbrJfYKRgnkJSVRUe2ItUb0/su/7PDXdW94ZqkfpL9DLeldk5HQTUUCbbLkyyxPWdlpD42NfvU560h8FsJ6FCydtSQcbr8BmwZMNi9MBZjUnUdBsjP+4g9+w/KhV2JEAGsewHP7xMeEGjhg4yozrttxcv0zzfb9l4KrfFC2UPAWAxdGIbFYy1hD6uXO/EMsZw/0d5OfTWUdrkBDC8fY7aTplkbZ0VT0lGV3RY/R5AomEicsiP7MMnDVS3Yry9AYidUl7HcZqrBjsrcmy7J8DiTk+4LeGm6R9fJHZLmu66nUO4ZB0oZLFMUevw4qvGGsFGE7Yco6VgRrYN8fg77yITvcVdQ96uM121jFSC9YkDTRkLmFJUEZH5xLWW7tJawup51h1wVMOyo4YpA3+9geUv6+K7ClVWgl6jdDOpbd7wYkwmQbUB5oXMbSDF+NrSODjxfInS7i7iRrAP/TGTHZ493okb14JTNkVvKF//Y2KxWjlErIvDf8c5Pu287BKOTuhAp57SnYeQt/lYG8k=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OSOP286MB7730.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(10070799003)(366016)(1800799024)(27256017);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?XogV5TO9qdox1CougMk5A7vjK+B13XjNPCEXGMoHDYQ91YXlhxjmIcOTyKRM?=
- =?us-ascii?Q?Uk4m5tOdEwLjRMBE68tInsuRFCtclmCgWQwTqOFeyDwm2614FIP8gRSPc+Xc?=
- =?us-ascii?Q?T7lod0IsaaXRBuqbmxPL8cioOS8IZxvY5JN2VEiW+deTLFjrnbceCPe+b7Kf?=
- =?us-ascii?Q?WBNF2kGNhYeMNu4IhFh3ncaSBqxO8c1UVjYpdPQadTybKILjAnnIjidYnlhx?=
- =?us-ascii?Q?QhaEeRix9diHD0blrrDgmE4djayNHD1qFTHC5h3M8ZXP2t7iNzAy0cjMBG0W?=
- =?us-ascii?Q?W0Y9jrGyxsPjLbf0LulILl7lYmGZ3ESu1jA/cEm05GhYFGG6bEvDc8c32d4u?=
- =?us-ascii?Q?Q0ZUkxvw5f9kfarSkTCszsg/IW1igqAnMyQnBeWSBOnKKi7t3iUGGtJR61Ci?=
- =?us-ascii?Q?0CkugyFBRyEmdXC6ajayw8k6ZzbFgcogAlK5YkE7Qa9TmNi1d6gtzVWqdeOy?=
- =?us-ascii?Q?Ct4DSWsFvJAB8nRpLpC2qrgqYYOe3G1zqHfFDcxNEXz1nkLrSb7R6dZzSRFh?=
- =?us-ascii?Q?MS/kOxyMmnQvjc8Pwt0BiRcG//e42rGuNPuhoa4CgeuwjKJCekHSr3cWKvq/?=
- =?us-ascii?Q?RvdvFWTbl7a2GiiOUbGxAh4RkuG/oF07wt6PBQLnO7x4whd9/weZy1fw7AiK?=
- =?us-ascii?Q?oDqNj6XSQgYrFPl6NJqFfOXuPu/kuF5YtAGcjSNnhyjdpos4N1ABL9ekgZDv?=
- =?us-ascii?Q?1xgyx1g7tuS0Phlaz1FCUqUBiHFuPRh3tB4nt8vbqRg+YaJx1o/reSryKh8d?=
- =?us-ascii?Q?a6/GTOxxo71+UTtAHeqWJJAcLIRQWHS7hBRPxf06WjemKRTK/tQ4xD2dZsRp?=
- =?us-ascii?Q?f4cNXpekwZScIUX3Gmm32TUqiYhrs5WNxGlsNVQVPwfNqltree2s8x7BNy81?=
- =?us-ascii?Q?N6mRb6IxKHWYypRS7lcrSHQwwH7BaqkF9QEYy8qdWradNrYk1aDyMBcBRBJ2?=
- =?us-ascii?Q?O/IhImZwX/aO84z9w6OjNyWJdRQ/NZO4xhj5kgGga5DSk0zLUumfZEJ4au0m?=
- =?us-ascii?Q?k1xGxsKhN+ottNWHHuwG9sSxMbpuyRwE5R8ioLZrdMy71DrUjvsFQjQdSIi5?=
- =?us-ascii?Q?nb8zwb4IVM0SkwBY2uNVkgn2PpXrooxgrEOHWvSWnQr2SMZBOdhqbaWumZdn?=
- =?us-ascii?Q?iwQIvm/TK/8u3PsOMVcx4zZgjSBBb5jXjiybgz1BvEmXfBHoFUq/3SHfJ5jE?=
- =?us-ascii?Q?NcoR9sAjIJ/HOE1suzo8G6UeunZArrCPO8MHzgnWvolY9rLwk/0vSjHdrMbU?=
- =?us-ascii?Q?w+3rYzyUkTNmfmlp35OgNqoMUwQXrvEUC3R71SkqLyEF2r4M+dTYSWsxAU0m?=
- =?us-ascii?Q?wRv3TE/XwEwRot9OPW6VfPmRdHA3WEyB76Z6g0jwTi0CGHrtpdRgpqfViUVR?=
- =?us-ascii?Q?JpsvGIdf0De88Rxq5+fQOW+ezUdM+fhiW/yBGl5w4PqKH3xCfMrkdv0bU3wd?=
- =?us-ascii?Q?Vl1Zix5fxIluoloFp4N70fuOpeHFh9S8WdBoIrRIeImuZK97QxHEnDlKhk7b?=
- =?us-ascii?Q?V2q3X3C3AjUIxHCsjk+pULlDkdyx0C5VDkTkidjOmNWPmwd7J7X+qtaL/Kor?=
- =?us-ascii?Q?tRAQR6QmAFXtd4IRWOSkaZ6ZFsquQidfjKA+bfQ5Sa5LSonPTo8/lmjOZLwN?=
- =?us-ascii?Q?DKvqwljbciVevchMxMUHtbEodwLK5/RSKrJCyjg8MmvBJGZ908XZyOuXlEBH?=
- =?us-ascii?Q?/I7a6Ggci5Ki1X4Exq4ud9W0FG5An0qvvp7P9BTbVMs5GDS7nwCLzFKiPt46?=
- =?us-ascii?Q?UN0hcxkow1R3J98QLzLoFi/DlUqTTu1D6/PcWudKGA1cxy+uZhr+?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7ff8cadd-9fd9-4aad-37eb-08de78e36a13
-X-MS-Exchange-CrossTenant-AuthSource: OSOP286MB7730.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Mar 2026 05:12:06.6605
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2pEfND7ODbkyiJaRVQsR64IR2uvmraPWfQdoU0JPNBdo8IyqD7iKRB7LUwomZDjy1U8dgdBjnTeY7H0TGVcJGA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY4P286MB6767
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260226084142.2226875-6-den@valinux.co.jp>
 
-On Mon, Mar 02, 2026 at 04:31:50PM -0600, Bjorn Helgaas wrote:
-> On Wed, Feb 11, 2026 at 01:03:15AM +0900, Koichiro Den wrote:
-> > R-Car Gen4 (S4) implements the PCIe Resizable BAR capability for BAR0 and
-> > BAR2. Advertise them as BAR_RESIZABLE so EPF-requested BAR sizes are
-> > reflected to the host.
-> > 
-> > Reviewed-by: Niklas Cassel <cassel@kernel.org>
-> > Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> > ---
-> > Changes since v1:
-> >   - Reword commit message only, no code changes.
-> >   - Rebased onto pci/controller/dwc as of 2026-02-11
-> > 
-> > v1: https://lore.kernel.org/linux-pci/20251023072217.901888-1-den@valinux.co.jp
-> > 
-> >  drivers/pci/controller/dwc/pcie-rcar-gen4.c | 2 ++
-> >  1 file changed, 2 insertions(+)
-> > 
-> > diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> > index a6912e85e4dd..3d4a889e38cc 100644
-> > --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> > +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> > @@ -422,7 +422,9 @@ static int rcar_gen4_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-> >  static const struct pci_epc_features rcar_gen4_pcie_epc_features = {
-> >  	DWC_EPC_COMMON_FEATURES,
-> >  	.msi_capable = true,
-> > +	.bar[BAR_0] = { .type = BAR_RESIZABLE, },
-> >  	.bar[BAR_1] = { .type = BAR_RESERVED, },
-> > +	.bar[BAR_2] = { .type = BAR_RESIZABLE, },
+On Thu, Feb 26, 2026 at 05:41:42PM +0900, Koichiro Den wrote:
+> Currently ntb_dev is embedded in epf_ntb, while configfs allows starting
+> or stopping controller and linking or unlinking functions as you want.
+> In fact, re-linking and re-starting is not possible with the embedded
+> design and leads to oopses.
 > 
-> I guess the "Resizable" property is not something that is discoverable
-> at runtime?
+> Allocate ntb_dev with devm and add a .remove callback to the pci driver
+> that calls ntb_unregister_device(). This allows a fresh device to be
+> created on the next .bind call.
 > 
-> You mention the Resizable BAR Capability, so I wondered if the driver
-> could use that to figure this out.
-
-As I understand it, it should be discoverable on DesignWare EPC, since a BAR
-configured with a resizable sizing scheme results in a corresponding Resizable
-BAR capabilioty/control pair, and the BAR index is there.
-
+> With these changes, the controller can now be stopped, a function
+> unlinked, configfs settings updated, and the controller re-linked and
+> restarted without rebooting the endpoint, as long as the underlying
+> pci_epc_ops .stop() operation is non-destructive, and .start() can
+> restore normal operations.
 > 
->  * @BAR_RESIZABLE: The BAR implements the PCI-SIG Resizable BAR Capability.
->  *                 NOTE: An EPC driver can currently only set a single supported
->  *                 size.
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
+> Changes since v4:
+>   - Adjusted context due to commit:
+>     dc693d606644 ("PCI: endpoint: pci-epf-vntb: Add MSI doorbell support")
 > 
-> Is this comment about the single supported size still accurate?
-
-Yes, I believe so. The comment still seems to reflect the current
-implementation.
-
-Niklas, please feel free to correct me here if I'm missing something.
-
-Best regards,
-Koichiro
-
+>  drivers/pci/endpoint/functions/pci-epf-vntb.c | 53 ++++++++++++++-----
+>  1 file changed, 40 insertions(+), 13 deletions(-)
 > 
-> >  	.bar[BAR_3] = { .type = BAR_RESERVED, },
-> >  	.bar[BAR_4] = { .type = BAR_FIXED, .fixed_size = 256 },
-> >  	.bar[BAR_5] = { .type = BAR_RESERVED, },
-> > -- 
-> > 2.51.0
-> > 
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> index f353e9a57194..41a2f42e8a39 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> @@ -120,7 +120,7 @@ struct epf_ntb_ctrl {
+>  } __packed;
+>  
+>  struct epf_ntb {
+> -	struct ntb_dev ntb;
+> +	struct ntb_dev *ntb;
+>  	struct pci_epf *epf;
+>  	struct config_group group;
+>  
+> @@ -147,10 +147,16 @@ struct epf_ntb {
+>  	void __iomem *vpci_mw_addr[MAX_MW];
+>  
+>  	struct delayed_work cmd_handler;
+> +
+> +	struct pci_bus *vpci_bus;
+>  };
+>  
+>  #define to_epf_ntb(epf_group) container_of((epf_group), struct epf_ntb, group)
+> -#define ntb_ndev(__ntb) container_of(__ntb, struct epf_ntb, ntb)
+> +
+> +static inline struct epf_ntb *ntb_ndev(struct ntb_dev *ntb)
+
+Nit: No need of 'inline' keyword in a .c file.
+
+- Mani
+
+> +{
+> +	return (struct epf_ntb *)ntb->pdev->sysdata;
+> +}
+>  
+>  static struct pci_epf_header epf_ntb_header = {
+>  	.vendorid	= PCI_ANY_ID,
+> @@ -176,7 +182,7 @@ static int epf_ntb_link_up(struct epf_ntb *ntb, bool link_up)
+>  	else
+>  		ntb->reg->link_status &= ~LINK_STATUS_UP;
+>  
+> -	ntb_link_event(&ntb->ntb);
+> +	ntb_link_event(ntb->ntb);
+>  	return 0;
+>  }
+>  
+> @@ -264,7 +270,7 @@ static void epf_ntb_cmd_handler(struct work_struct *work)
+>  	for (i = 1; i < ntb->db_count && !ntb->msi_doorbell; i++) {
+>  		if (ntb->epf_db[i]) {
+>  			atomic64_or(1 << (i - 1), &ntb->db);
+> -			ntb_db_event(&ntb->ntb, i);
+> +			ntb_db_event(ntb->ntb, i);
+>  			ntb->epf_db[i] = 0;
+>  		}
+>  	}
+> @@ -333,7 +339,7 @@ static irqreturn_t epf_ntb_doorbell_handler(int irq, void *data)
+>  	for (i = 1; i < ntb->db_count; i++)
+>  		if (irq == ntb->epf->db_msg[i].virq) {
+>  			atomic64_or(1 << (i - 1), &ntb->db);
+> -			ntb_db_event(&ntb->ntb, i);
+> +			ntb_db_event(ntb->ntb, i);
+>  		}
+>  
+>  	return IRQ_HANDLED;
+> @@ -1237,6 +1243,7 @@ static int vpci_scan_bus(void *sysdata)
+>  		pr_err("create pci bus failed\n");
+>  		return -EINVAL;
+>  	}
+> +	ndev->vpci_bus = vpci_bus;
+>  
+>  	pci_bus_add_devices(vpci_bus);
+>  
+> @@ -1281,7 +1288,7 @@ static int vntb_epf_mw_set_trans(struct ntb_dev *ndev, int pidx, int idx,
+>  	int ret;
+>  	struct device *dev;
+>  
+> -	dev = &ntb->ntb.dev;
+> +	dev = &ntb->ntb->dev;
+>  	barno = ntb->epf_ntb_bar[BAR_MW1 + idx];
+>  	epf_bar = &ntb->epf->bar[barno];
+>  	epf_bar->phys_addr = addr;
+> @@ -1381,7 +1388,7 @@ static int vntb_epf_peer_db_set(struct ntb_dev *ndev, u64 db_bits)
+>  	ret = pci_epc_raise_irq(ntb->epf->epc, func_no, vfunc_no,
+>  				PCI_IRQ_MSI, interrupt_num + 1);
+>  	if (ret)
+> -		dev_err(&ntb->ntb.dev, "Failed to raise IRQ\n");
+> +		dev_err(&ntb->ntb->dev, "Failed to raise IRQ\n");
+>  
+>  	return ret;
+>  }
+> @@ -1468,9 +1475,12 @@ static int pci_vntb_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	struct epf_ntb *ndev = (struct epf_ntb *)pdev->sysdata;
+>  	struct device *dev = &pdev->dev;
+>  
+> -	ndev->ntb.pdev = pdev;
+> -	ndev->ntb.topo = NTB_TOPO_NONE;
+> -	ndev->ntb.ops =  &vntb_epf_ops;
+> +	ndev->ntb = devm_kzalloc(dev, sizeof(*ndev->ntb), GFP_KERNEL);
+> +	if (!ndev->ntb)
+> +		return -ENOMEM;
+> +	ndev->ntb->pdev = pdev;
+> +	ndev->ntb->topo = NTB_TOPO_NONE;
+> +	ndev->ntb->ops = &vntb_epf_ops;
+>  
+>  	ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
+>  	if (ret) {
+> @@ -1478,7 +1488,7 @@ static int pci_vntb_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  		return ret;
+>  	}
+>  
+> -	ret = ntb_register_device(&ndev->ntb);
+> +	ret = ntb_register_device(ndev->ntb);
+>  	if (ret) {
+>  		dev_err(dev, "Failed to register NTB device\n");
+>  		return ret;
+> @@ -1488,6 +1498,17 @@ static int pci_vntb_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	return 0;
+>  }
+>  
+> +static void pci_vntb_remove(struct pci_dev *pdev)
+> +{
+> +	struct epf_ntb *ndev = (struct epf_ntb *)pdev->sysdata;
+> +
+> +	if (!ndev || !ndev->ntb)
+> +		return;
+> +
+> +	ntb_unregister_device(ndev->ntb);
+> +	ndev->ntb = NULL;
+> +}
+> +
+>  static struct pci_device_id pci_vntb_table[] = {
+>  	{
+>  		PCI_DEVICE(0xffff, 0xffff),
+> @@ -1499,6 +1520,7 @@ static struct pci_driver vntb_pci_driver = {
+>  	.name           = "pci-vntb",
+>  	.id_table       = pci_vntb_table,
+>  	.probe          = pci_vntb_probe,
+> +	.remove         = pci_vntb_remove,
+>  };
+>  
+>  /* ============ PCIe EPF Driver Bind ====================*/
+> @@ -1581,10 +1603,15 @@ static void epf_ntb_unbind(struct pci_epf *epf)
+>  {
+>  	struct epf_ntb *ntb = epf_get_drvdata(epf);
+>  
+> +	pci_unregister_driver(&vntb_pci_driver);
+> +
+> +	pci_lock_rescan_remove();
+> +	pci_stop_root_bus(ntb->vpci_bus);
+> +	pci_remove_root_bus(ntb->vpci_bus);
+> +	pci_unlock_rescan_remove();
+> +
+>  	epf_ntb_epc_cleanup(ntb);
+>  	epf_ntb_config_spad_bar_free(ntb);
+> -
+> -	pci_unregister_driver(&vntb_pci_driver);
+>  }
+>  
+>  // EPF driver probe
+> -- 
+> 2.51.0
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
