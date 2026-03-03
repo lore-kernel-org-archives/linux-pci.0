@@ -1,268 +1,57 @@
-Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
+Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [144.76.133.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADC2230EF92;
-	Tue,  3 Mar 2026 19:11:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62FD22D23A6;
+	Tue,  3 Mar 2026 19:28:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.112
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772565069; cv=none; b=p4ljKp+c4T0opJG8oJmnRhFXen7WH9b13op0L/wOx7R+sZYn60BRnc1QHRuetVRzEziWmZTsIL+gkkKtM5zfvEeAjdRqAr2gPHL6+VxnVCgktKmVcruGY1mM5pRp1jYw7rK8DrP3+Nm5klQgneNObTW4PsE6dz7unHiFS9QRvfg=
+	t=1772566137; cv=none; b=YgC3Q3hqTcfOwmLmgAaLrNDnJW+IPdxe8eLBCwrjGkd+HDImDLLlU95/IVMmkIzlI7ypFkEwfWiAAQdLPF14UNlVA0RZernjt22Yk0Y1ChLiPXk15z0PVPOEHAyP4WfL0z83+3LhcjKZRgvrPeswsiso5qI6NBQ8ZhQNq5/x6UU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772565069; c=relaxed/simple;
-	bh=YYdCNmICXyoE9G4Y7GKLEAq2DFORBQxJvXK7jOn4rz4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ke9kMvo7p5qY98j3ibVeeq19jeqgNZkjccSZe/0Z5R12gEHbRaS0PK9juWYbdgq9USQ6Mz60gLxbNLiHLvyzO+yIxdjM3FKbvvtdOt+GSYzU4/m7N9/JNsbhfizmD10kYBzdDw0DAK24I4LTwDcmR1wnfNZh64wHnK8wf0fcdpY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=bRsYtwyu; arc=none smtp.client-ip=5.135.140.105
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="bRsYtwyu"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 23B5F20DC57;
-	Tue,  3 Mar 2026 20:11:02 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
-	t=1772565064; h=from:subject:date:message-id:to:cc:mime-version:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=K0no2injFDHLVnfrCxmhoW8zcILT+gNWAee+yl4dH+g=;
-	b=bRsYtwyu5VOOa4UQxgN/usRqhBSbS3J6drtmNGBxPTeANU5YzXDljSFJJ8rLS8OpMbDtNK
-	oS76OoD2SqpVQWjBcgnyRqarWGk7adiHEP16ZsNH2XKgDXJ/P4A+O3ldqKi1TM/9FA7+Sh
-	SdpLD45P/mk9GBRl0Wvf6bNGIMi8hlfI+nzl6iJPkcgX8Y90/0mdvwdJNmSxH/5+cljoR6
-	gw9Nf7DGaOxctHbNWfHHavjgmD92r4dLX96wCwvC6u+A95NjzAKY71BsFaGoZhCf8cwJSS
-	xDgvGZVK8eYH+D1ZbQ63Q4cTarjv9cMBKy5Q/0CiKRGuIqtiHFnCXD8CFG12IA==
-From: Caleb James DeLisle <cjd@cjdns.fr>
-To: linux-mips@vger.kernel.org
-Cc: naseefkm@gmail.com,
-	mturquette@baylibre.com,
-	sboyd@kernel.org,
-	robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	cjd@cjdns.fr,
-	tsbogend@alpha.franken.de,
-	ryder.lee@mediatek.com,
-	jianjun.wang@mediatek.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	bhelgaas@google.com,
-	vkoul@kernel.org,
-	neil.armstrong@linaro.org,
-	p.zabel@pengutronix.de,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
-	nbd@nbd.name,
-	ansuelsmth@gmail.com,
-	linux-clk@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-phy@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 8/8] mips: dts: Add PCIe to EcoNet EN751221
-Date: Tue,  3 Mar 2026 19:09:48 +0000
-Message-Id: <20260303190948.694783-9-cjd@cjdns.fr>
-In-Reply-To: <20260303190948.694783-1-cjd@cjdns.fr>
-References: <20260303190948.694783-1-cjd@cjdns.fr>
+	s=arc-20240116; t=1772566137; c=relaxed/simple;
+	bh=o1E/ObinjdE0YNzNWRx8jFUPrPNn5Xxr486T1nBj8N8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eYOBs+n+ZhvQKSXLTi/WoBoElOpBxIaffJc6BJUZhGAFtLOXq//v9Qpc7/zZ0/KvwjJVlfpm75EEvF0w0trY3V4fNh5nkLNZ+cfVysquzrIfqu1pl8pxVNh8nwwJlEgiFgPt7OGrcKFRD5mxmroetbHbJufG/eQrq2jhUDoUTiA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=144.76.133.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by bmailout3.hostsharing.net (Postfix) with ESMTPS id 2949620208CA;
+	Tue, 03 Mar 2026 20:28:46 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id E88853F490; Tue,  3 Mar 2026 20:28:45 +0100 (CET)
+Date: Tue, 3 Mar 2026 20:28:45 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
+Cc: linux-pci@vger.kernel.org, helgaas@kernel.org, sebott@linux.ibm.com,
+	schnelle@linux.ibm.com, bblock@linux.ibm.com, alifm@linux.ibm.com,
+	julianr@linux.ibm.com, dtatulea@nvidia.com, mani@kernel.org,
+	ionut_n2001@yahoo.com, sunlightlinux@gmail.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 1/1] PCI/IOV: Add reentrant locking in
+ sriov_add_vfs/sriov_del_vfs for complete serialization
+Message-ID: <aac2bUCCX3dZcwo0@wunner.de>
+References: <20260303080903.28693-1-ionut.nechita@windriver.com>
+ <20260303080903.28693-2-ionut.nechita@windriver.com>
+ <aacmM9bAPstfDpgY@wunner.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aacmM9bAPstfDpgY@wunner.de>
 
-Add PCIe based on EN7528 PCIe driver, also add two MT76 wifi devices
-to SmartFiber XP8421-B.
+On Tue, Mar 03, 2026 at 07:19:31PM +0100, Lukas Wunner wrote:
+> Also, I would put this in the existing pci_lock_rescan_remove(),
+> i.e. without introducing a new _reentrant variant, because these
+> deadlocks exist elsewhere.  They're known to happen on unplug in
+> pciehp as well.
 
-Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
----
- arch/mips/boot/dts/econet/en751221.dtsi       | 114 ++++++++++++++++++
- .../econet/en751221_smartfiber_xp8421-b.dts   |  21 ++++
- arch/mips/econet/Kconfig                      |   2 +
- 3 files changed, 137 insertions(+)
-
-diff --git a/arch/mips/boot/dts/econet/en751221.dtsi b/arch/mips/boot/dts/econet/en751221.dtsi
-index 2abeef5b744a..5568486ad8b5 100644
---- a/arch/mips/boot/dts/econet/en751221.dtsi
-+++ b/arch/mips/boot/dts/econet/en751221.dtsi
-@@ -1,6 +1,8 @@
- // SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
- /dts-v1/;
- 
-+#include <dt-bindings/clock/econet,en751221-scu.h>
-+
- / {
- 	compatible = "econet,en751221";
- 	#address-cells = <1>;
-@@ -30,6 +32,30 @@ cpuintc: interrupt-controller {
- 		#interrupt-cells = <1>;
- 	};
- 
-+	chip_scu: syscon@1fa20000 {
-+		compatible = "econet,en751221-chip-scu", "syscon";
-+		reg = <0x1fa20000 0x388>;
-+	};
-+
-+	pcie_phy1: pcie-phy@1fac0000 {
-+		compatible = "econet,en751221-pcie-phy1";
-+		reg = <0x1fac0000 0x1000>;
-+		#phy-cells = <0>;
-+	};
-+
-+	pcie_phy0: pcie-phy@1faf2000 {
-+		compatible = "econet,en751221-pcie-phy0";
-+		reg = <0x1faf2000 0x1000>;
-+		#phy-cells = <0>;
-+	};
-+
-+	scuclk: clock-controller@1fb00000 {
-+		compatible = "econet,en751221-scu", "syscon";
-+		reg = <0x1fb00000 0x970>;
-+		#clock-cells = <1>;
-+		#reset-cells = <1>;
-+	};
-+
- 	intc: interrupt-controller@1fb40000 {
- 		compatible = "econet,en751221-intc";
- 		reg = <0x1fb40000 0x100>;
-@@ -41,6 +67,94 @@ intc: interrupt-controller@1fb40000 {
- 		econet,shadow-interrupts = <7 2>, <8 3>, <13 12>, <30 29>;
- 	};
- 
-+	pciecfg: pciecfg@1fb80000 {
-+		compatible = "mediatek,generic-pciecfg", "syscon";
-+		reg = <0x1fb80000 0x1000>;
-+	};
-+
-+	pcie0: pcie@1fb81000 {
-+		compatible = "econet,en7528-pcie";
-+		device_type = "pci";
-+		reg = <0x1fb81000 0x1000>;
-+		reg-names = "port0";
-+		linux,pci-domain = <0>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		interrupt-parent = <&intc>;
-+		interrupts = <23>;
-+		interrupt-names = "pcie_irq";
-+		clocks = <&scuclk EN751221_CLK_PCIE>;
-+		clock-names = "sys_ck0";
-+		phys = <&pcie_phy0>;
-+		phy-names = "pcie-phy0";
-+		bus-range = <0x00 0xff>;
-+		ranges = <0x01000000 0 0x00000000 0x1f600000 0 0x00008000>,
-+			 <0x82000000 0 0x20000000 0x20000000 0 0x08000000>;
-+		status = "disabled";
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie_intc0 0>,
-+				<0 0 0 2 &pcie_intc0 1>,
-+				<0 0 0 3 &pcie_intc0 2>,
-+				<0 0 0 4 &pcie_intc0 3>;
-+
-+		pcie_intc0: interrupt-controller {
-+			interrupt-controller;
-+			#address-cells = <0>;
-+			#interrupt-cells = <1>;
-+		};
-+
-+		slot0: pcie@0,0 {
-+			reg = <0x0000 0 0 0 0>;
-+			device_type = "pci";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+		};
-+	};
-+
-+	pcie1: pcie@1fb83000 {
-+		compatible = "econet,en7528-pcie";
-+		device_type = "pci";
-+		reg = <0x1fb83000 0x1000>;
-+		reg-names = "port1";
-+		linux,pci-domain = <1>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		interrupt-parent = <&intc>;
-+		interrupts = <24>;
-+		interrupt-names = "pcie_irq";
-+		clocks = <&scuclk EN751221_CLK_PCIE>;
-+		clock-names = "sys_ck1";
-+		phys = <&pcie_phy1>;
-+		phy-names = "pcie-phy1";
-+		bus-range = <0x00 0xff>;
-+		ranges = <0x81000000 0 0x00000000 0x1f608000 0 0x00008000>,
-+			 <0x82000000 0 0x28000000 0x28000000 0 0x08000000>;
-+		status = "disabled";
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie_intc1 0>,
-+				<0 0 0 2 &pcie_intc1 1>,
-+				<0 0 0 3 &pcie_intc1 2>,
-+				<0 0 0 4 &pcie_intc1 3>;
-+
-+		pcie_intc1: interrupt-controller {
-+			interrupt-controller;
-+			#address-cells = <0>;
-+			#interrupt-cells = <1>;
-+		};
-+
-+		slot1: pcie@1,0 {
-+			reg = <0x0800 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+		};
-+	};
-+
- 	uart: serial@1fbf0000 {
- 		compatible = "ns16550";
- 		reg = <0x1fbf0000 0x30>;
-diff --git a/arch/mips/boot/dts/econet/en751221_smartfiber_xp8421-b.dts b/arch/mips/boot/dts/econet/en751221_smartfiber_xp8421-b.dts
-index 8223c5bce67f..c633bf73add6 100644
---- a/arch/mips/boot/dts/econet/en751221_smartfiber_xp8421-b.dts
-+++ b/arch/mips/boot/dts/econet/en751221_smartfiber_xp8421-b.dts
-@@ -17,3 +17,24 @@ chosen {
- 		linux,usable-memory-range = <0x00020000 0x1bfe0000>;
- 	};
- };
-+
-+&pcie0 {
-+	status = "okay";
-+};
-+&slot0 {
-+	wifi@0,0 {
-+		/* MT7612E */
-+		compatible = "mediatek,mt76";
-+		reg = <0x0000 0 0 0 0>;
-+	};
-+};
-+&pcie1 {
-+	status = "okay";
-+};
-+&slot1 {
-+	wifi@0,0 {
-+		/* MT7592 */
-+		compatible = "mediatek,mt76";
-+		reg = <0x0000 0 0 0 0>;
-+	};
-+};
-diff --git a/arch/mips/econet/Kconfig b/arch/mips/econet/Kconfig
-index fd69884cc9a8..b37b9d25d5a4 100644
---- a/arch/mips/econet/Kconfig
-+++ b/arch/mips/econet/Kconfig
-@@ -13,7 +13,9 @@ choice
- 		bool "EN751221 family"
- 		select COMMON_CLK
- 		select ECONET_EN751221_INTC
-+		select HAVE_PCI
- 		select IRQ_MIPS_CPU
-+		select PCI_DRIVERS_GENERIC
- 		select SMP
- 		select SMP_UP
- 		select SYS_SUPPORTS_SMP
--- 
-2.39.5
-
+Actually, scratch this particular comment.  The deadlock in pciehp
+is actually an AB-BA deadlock, not recursive acquisition.
