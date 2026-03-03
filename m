@@ -1,152 +1,220 @@
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010027.outbound.protection.outlook.com [52.101.61.27])
+Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010049.outbound.protection.outlook.com [52.101.46.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80782375F9E;
-	Tue,  3 Mar 2026 07:21:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.27
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04B23386548;
+	Tue,  3 Mar 2026 07:21:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.49
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772522469; cv=fail; b=Uui+cfgFuDwj2EkwhCQwseUP24WXGJ/WA0rJ33NZ7WvftiLGABB68I7UByiWK/WhDs7fBxV/fkwNTu12khmZ4aBhIQZveCzKJM/XHGBva13kmV/GJN1kFBbdpEqTNi5+5+jkb4Gkm2IUAsR1a/Ff19w2LAhd+rnB66DDsYh7C/0=
+	t=1772522472; cv=fail; b=ONXZUtSyELj15XB4eSSWcjCLH5VqZrYNXpELDk46feXYfeizBQtLaysHohrxxyMIWfIPd/DnKaZ9GUn5hCHLC8LY/kS9Q/tR+hKUztaQVff5Ty6b3cKy0d9zEuj5G40EXXholKvyTaZPz1DgKA3+7VTgP3JsQlT7HdF/glAKJz0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772522469; c=relaxed/simple;
-	bh=BPe775gDkj4tQ+lzm4BYCS+93393ElFrx1Y+/WoCq6c=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=o4HZ+IN/jmtx9r4UPQ4Ro/cGKgGGjpzl3wA2f51bygQLZF0zgttg8uimbTpotnUVWUYTJTjb1R7+wLs5Oqg6uZcHqStVQU9vVZSbPxAVnIuyeopXTMY3mmO322U5ro48TGU+6R/CMI7C3e6mg5uXfS+R8iUGC+JWKnHiY3aqjDw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=LDW0p3y+; arc=fail smtp.client-ip=52.101.61.27
+	s=arc-20240116; t=1772522472; c=relaxed/simple;
+	bh=oGDixn+kP+NKlej2Fg5xbKeXDzV5G60CY01tn0PikOU=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=piOL7KXOi227lqu2G2WVzkwqcBO/Le5hODXfozriM4glVuXYYhlcrzh+bVZENF9t2D0o1xatFIfH/Bgz8dKnuZdymsdYmTrWg7np4bcr1KQMNowvYzjjnWkHQj91FCy5aNSOwUB8e0POc0K4YArE4xldC3CF6YWjE6gFksQiVh0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=XNC4jXRL; arc=fail smtp.client-ip=52.101.46.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="LDW0p3y+"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="XNC4jXRL"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=XMXJOmZf0f0zJN6qHAMo7nR8DahdGc5vWRftHLSd43q28KuG8l/a8Wu009oBk9HHY0e5GKBWHCVl036l4Fh3xAY/MLQdVX21hPxc4+69m1PyN0J7qegj3TX0Rwn0/CuWrSFHfRfJeGVIx4hwlLqcg5wwbA2BJgl7RoEJmjg+2l7ROPDjFmajuAGN9GcyjJnL+aeJxHp2sG0F5wroYZ2dFp6Ug4Gr8Uhftsdn9B+XTuDZ69VCebbz0VuaN8gHlpRJz45K1crb6UOdmJ/Edhhhsj4pVCoG6JfZF3UzJDslkwzsRLSqetlGMngsrBQ7mAZzdXLIcfzoa8ZRNEimo+aWRA==
+ b=QyA74XoqwGwEHG1uL8kZ0tljKxzUzq+hFTAmqJhDzhvQK9FqLCmvCzAVllNumiQpyRNLZI8ViKizCUr8PUe4kJX9bp1qq20t2fnVmj6+mILxMelpxgh7/ZcG8hs7j3MUfwUl6sXZNp4qZ0dv2QZVmQxnKnnn4x0H9JqSN9AbWcxeFVwcCWULsLRiewE5aPk4q2unwFLPw0PXYCX8S/wUzECxzrWymZx9eCkzxd3642Z6qva31vLSFnyKdMD5LQitszF01AXzRLY+YEGcKsGBaFzsI2LvHr/pSUtIPNClNIOJkBHNDpwm2BV+2/IP4delqwPav+E6DkvXewOFXcMOZA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=oWzdh0II39Fxm4u7J5ZZvg2HV3q/4bXgroeA9W8i9Dc=;
- b=XehStQSna9AX2RlzfonBzMr14f/xDDTrL4e9dnhZ+z8YKKuDYwrTtNI/zonWxUkFsTaa8RoMvXQLd7c1zDHYz+ewOwYWrBFKamlohGZFAUUJB9WfBoZWWGqjqzXDXoCNttduhJdw7KpjIjDNjnYqMwrumk/7nrOKr9xuvWxXrS1SFfHPQ3GqtEuzfN79YBoHIuWeaMZgFQaE7UpcJp2/+CqWhe3VVq+RZrQnxKfv1I5ZXN+jaIJPx8cUvtGvNllDcKJUQ71PrSNsZNmtO+KfXlsldaTB/lTjyEtol/GYv3yqiHKFfEM3IgE9XnAfCzDT0DA9ag/CRoyvyQ6prq/UQQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
+ bh=m2mqD33/v05IO4vA5lT8vpjXoGq5mqBT3t94GL9DO4Y=;
+ b=P7KmytM7eVbhCYTt/NOvdz/lY/1JXeJmqYzdM9ptBhL68Wvfelahf+Zszfv3DDN6L4Qn3hwUPquk0PZbi3qOcV+4rt3cwWvOeca54jw3j4jCxwlpjaYXqCNMRJTptIeE0qwjeYtN4DkIR4E6xIErLURD/MOoOVLiJiollO8C9Q6O+oxhWwmFZWGm+i+QJlLSHvid7LTKaDKnq8B8RzGWrySthDZ+cj2ZgII3Gcas/pKx3/K7LNrqiNErzLr+OsNEY7ZW7e/0kSEMiRSJefkbTtnoNz/C4b+ce1Pk4rI8DLJbQN0pRWSS2fbEgyI1aiQifFVFLhoWibIlHnuwR5M+mQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oWzdh0II39Fxm4u7J5ZZvg2HV3q/4bXgroeA9W8i9Dc=;
- b=LDW0p3y+RltPMYoXpqsCbxsTqRc5VoLC+MhnkGjf15ZCUZYu2RmC71XZ1CAM7p5Q+e4/9f08nNqpdkVGxb8D7MHKXSkBHJSRBqqm1a5l8Aic+hMewZf9MchLuq9NThBDNVFw+pZgsmLHrzlEBqIG5oH+aGHp+n0MVCA656LDtv2T74tqXBYLRjdJSO9PsUC5aODA842daJ4/JxfXy5xA/aVm4XdHXrVKqmyxcRUKLqyo6RS1W2lZJZ68It+I2Afpube/c59M4WUDOlgIxS4gTjU7Dy2tHR2QiuyvInGFb1OLAWNnUGZ8aqwZKwj6mOingd7o7HDrnTyP0LQf8SpRIQ==
-Received: from SJ0PR13CA0181.namprd13.prod.outlook.com (2603:10b6:a03:2c3::6)
- by DS5PPFEC0C6BDA1.namprd12.prod.outlook.com (2603:10b6:f:fc00::668) with
+ bh=m2mqD33/v05IO4vA5lT8vpjXoGq5mqBT3t94GL9DO4Y=;
+ b=XNC4jXRLdfcZGktatKwgryGokE9UCmzPaJt8ixrct8iEkLOua6qM3FKVv6LhZulydzGlEotxP5PLfdurljW6c9oeFNuTwQkNgjrgO1EebH4ckgb5JIBqksVx1/3eq832E1Zro4qPnHCqu88w749h5U/YyLtDQu4OCg6xrZ9XhoLFt5OwhO1xy7q5SriHHUKX7uqaaRq4Z24uTBiYzRAflUBJJ2cgtAjQfKHKV7zTx9+8qaHTR6xK4zXxyoisMtzEu8ew9RhCmEQoEbOwCDFzz3c1NKd3MEUmEJzx0aGtyF0a5YWWMsOlKgJ9wSOWC2HtYnr6h5TEk90f+H7IOrXzXQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS0PR12MB8245.namprd12.prod.outlook.com (2603:10b6:8:f2::16) by
+ IA0PR12MB8696.namprd12.prod.outlook.com (2603:10b6:208:48f::16) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9611.10; Tue, 3 Mar
- 2026 07:21:01 +0000
-Received: from MWH0EPF000C6192.namprd02.prod.outlook.com
- (2603:10b6:a03:2c3:cafe::f4) by SJ0PR13CA0181.outlook.office365.com
- (2603:10b6:a03:2c3::6) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9654.21 via Frontend Transport; Tue,
- 3 Mar 2026 07:21:01 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- MWH0EPF000C6192.mail.protection.outlook.com (10.167.249.102) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9654.16 via Frontend Transport; Tue, 3 Mar 2026 07:21:01 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 2 Mar
- 2026 23:20:42 -0800
-Received: from mmaddireddy-ubuntu.nvidia.com (10.126.230.35) by
- rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Mon, 2 Mar 2026 23:20:35 -0800
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.20; Tue, 3 Mar
+ 2026 07:21:03 +0000
+Received: from DS0PR12MB8245.namprd12.prod.outlook.com
+ ([fe80::e7c5:cfca:a597:7fa4]) by DS0PR12MB8245.namprd12.prod.outlook.com
+ ([fe80::e7c5:cfca:a597:7fa4%4]) with mapi id 15.20.9654.020; Tue, 3 Mar 2026
+ 07:21:03 +0000
+Message-ID: <6e39e34c-e35d-4410-9d14-2c1db8dde190@nvidia.com>
+Date: Tue, 3 Mar 2026 12:49:30 +0530
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/4] PCI: tegra194: Make BAR0 programmable and remove 1MB
+ size limit
+To: Niklas Cassel <cassel@kernel.org>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+ "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+ "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+ "mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
+ "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
+ "conor+dt@kernel.org" <conor+dt@kernel.org>,
+ "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
+ Jon Hunter <jonathanh@nvidia.com>, "kishon@kernel.org" <kishon@kernel.org>,
+ "arnd@arndb.de" <arnd@arndb.de>,
+ "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+ "Frank.Li@nxp.com" <Frank.Li@nxp.com>, "den@valinux.co.jp"
+ <den@valinux.co.jp>, "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>,
+ "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+ Vidya Sagar <vidyas@nvidia.com>, "18255117159@163.com"
+ <18255117159@163.com>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>,
+ "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20260222193456.2460963-1-mmaddireddy@nvidia.com>
+ <20260222193456.2460963-3-mmaddireddy@nvidia.com> <aZ8x80iu6p7XBD2W@ryzen>
+Content-Language: en-US
+X-Nvconfidentiality: public
 From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
-	<mani@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
-	<conor+dt@kernel.org>, <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-	<kishon@kernel.org>, <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
-	<Frank.Li@nxp.com>, <den@valinux.co.jp>, <hongxing.zhu@nxp.com>,
-	<jingoohan1@gmail.com>, <vidyas@nvidia.com>, <cassel@kernel.org>,
-	<18255117159@163.com>
-CC: <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH v2 2/5] PCI: endpoint: Allow only_64bit on BAR_RESERVED
-Date: Tue, 3 Mar 2026 12:50:01 +0530
-Message-ID: <20260303072004.2384079-3-mmaddireddy@nvidia.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260303072004.2384079-1-mmaddireddy@nvidia.com>
-References: <20260303072004.2384079-1-mmaddireddy@nvidia.com>
+In-Reply-To: <aZ8x80iu6p7XBD2W@ryzen>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: MA5PR01CA0129.INDPRD01.PROD.OUTLOOK.COM
+ (2603:1096:a01:1d5::15) To DS0PR12MB8245.namprd12.prod.outlook.com
+ (2603:10b6:8:f2::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-NVConfidentiality: public
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MWH0EPF000C6192:EE_|DS5PPFEC0C6BDA1:EE_
-X-MS-Office365-Filtering-Correlation-Id: 62a18cd8-3900-4451-8a77-08de78f56c64
+X-MS-TrafficTypeDiagnostic: DS0PR12MB8245:EE_|IA0PR12MB8696:EE_
+X-MS-Office365-Filtering-Correlation-Id: ef3c5720-4aa3-43bb-3b25-08de78f56d36
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|82310400026|7416014|376014|36860700013|921020;
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016|376014|7416014;
 X-Microsoft-Antispam-Message-Info:
-	WoimvbZuXyDzpcDivNQf7muS8jNC5NQQ+wH3bgs14Qf0d+2vYvjW/9BiOYuTc4VCUywg84BzSU0vP+NOmLQjTOUGOud5mv5o8lsKIUYUmzsBCjOP6D1MSMWF8qrBNX3k/Je5N6moIoSfZAJJQIYbqJqMDStZk18eRrGY/Ti8Ljb7XhPGSGiQQ8AaB/4bfwEdhvwlnhEWdte4VlJsvGnwIXvnyrv7J1HBZGqQH4k5Hyc0IWQmCTGJ+imP86vHkm9ReCdljW+GWrKTKe1gntk+CQBAtkVDjBytO6755ewhKHmQZpH0jMHiIxGu24kwbQh+yBCdziHetrdAVsV+6jEaau1xnnXrygcQQD0osF6OrLYR0N7IigcO9k6fmBBdZHHnaWOcYYlLNTgYDOOIxpaKGk4PD6Q5bOrCGrU8y0zWOqiFwIw9z8yyujtdFpM+PcuX/2GSYx80/+fbtaXH8S+0MbbgNhHUJgc6sg+rN8i5PoDw6eLdthMqqNatmdOXARkThxwB5wD+uUQSin9G6qycIB2uZAVrpqZYam8mUoUyaAmUYUsD3zmy8Sc2/boHuBcWbHm5Jx3zP7zFMwqrphXCizjkq+1xT/ja7DPwJDsogh/fcxoGuPgETQKSQyb+lFn1+EviDTaDIcLTIWqYvXVEiZuXb1N3YaFoHJK6qVPpmG/yH2bvo2kxydFjpHSRiI2L+KZx5sLFKNOOVZia5L2jbJGjUA92IhjbSpmf3c/cOCdJjlW8k9S1Tl2982CI/QbyOkyT0EMgNfi5EK9OzNiROLKxTybJWONedtPWK8Tohi4PkBNxR8vySC5+Jbxxd8Txz+BHdYqwO/TR+xnLvdpHuK1tBuPBXW3/WgMu13/WRsQ=
+	S5Y0p9AqEuY9P9F92k2s/rhIhKvkZPuOITTrGTuPM6Bfcpb00GbFc/U7+90auvPhLbYnoQEjTlM7eMPdutJZAHcdmV8sNDOYMdlCtle/tyY4lQhEEoc9IWnKzQAjJgEyNL1PgRLhClHL8ZuniKgrjavhcnw2Hu4mQaTge2avpYtSXin0bqlznrkejeASXwgdo4L6qlAkb5Lnht8fiYlj9c0d0z3uSql2mwCsfQy/4R+F1TDWm3O55VD8NiiwgXdaKAfGPjMYwl0e3c5dZZA2ucJI4iv7Il75LJn6C12GF9MNjfSvPxVF0rA07vssyFewy6xvbpOkKc0sgTABdVzupFZflS1H4g1Ngnno+WaxGHkACaciZSfeSx7Xx2gg7J0F0jMWM//ju4EuFm+Gp/y28FVGptYZsF8Q6cE1gPVStZQr2yX4ogocAkPALg2DlrYK0Ub6Z2L6QRUqDg89Irj+tpDV8oCRjZmwdCcKNq7DdRWFAzTIJwsqaGtuduYs2XTaLs/cOb0i19P1IGu7Ho9Mle6YJLlE7ySCyKqd58SfjGi20byEgfj2RdQTnbHZzjHGUdzWtq80Db4sKPOmVv3stjPUug+/j+ChZdomf0twKvBRv1Gl8aGap2reQNUHRaO5YbaVYAjHmb/VPXZebaFUguV5ChgpcZyEHUxsJWjFQ83Cz8uOWgKu8R5s7TyXFUDqCJtQUMfIAL5npbC19qVMSKvv037xT4zf5BLyosnDNcI=
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(7416014)(376014)(36860700013)(921020);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB8245.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(7416014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	+j3VVjwUELStOvpzwxwjpL4D2Jr0Gi54tspAFMw7L5DhqGbpZkaLwPB6tRXnstW2RsZsTqmBLqoaOV/ydC52gjISA+9AjfaDkT9HHxqdfIqU7JJgENWAQ8o7pewGXxCiueEeJUSf+2R+2NQFFwKFT8GXeFVuGdEzneYayA/tE/YrLDZej2Rs66FAGwCJCAnKzHnzR2OTLv+cXtQbv0IY5lRAk7jOFMNMWHbH2Z1BKTWBYuBKXQUSMtbf41PXQ/abjwe2DXbZogQU+uciI5kATvd9Vem1G3xEhCAhqks9LLMDTTjW2mdesZVyuYbpCAKqHu3otdlsiVFGa8mS5KKLd6ctYwI81LOKgtNRnAoL1Aag3oVIpZ1lCcEPrqo2ic4rDHmSVzV+MHf6J9yH9JLDW5LuEAhHFAuktKj25TUg87KrtsljYPn8eSrnoHyobgUb
+	=?utf-8?B?KzVaT3Z3d3pQV2FkcUowWWRNdHlHUlRSWjd1WTFoQ1RPeWgyQU51bkhJTUpN?=
+ =?utf-8?B?NWloQW51Mk84SExIanBnZnpONmNkY2Vud0RVR2JiTlIrM3J6UC9LNWtKOFMw?=
+ =?utf-8?B?MlNBbnRwZDk5c3FucVpPVzFsR2hWcXp0NXFnQ21UcGc4WWhDMUw1d2JTLzIr?=
+ =?utf-8?B?clQ3ZStQUnJLMWkzUGZRcFRoT3dZYitTUXRTUXlvUUh5Smh3enBHaTlLOEd5?=
+ =?utf-8?B?UXlLL0pkQy90Rk00QmE2d2cxYTQ5SnU1V2tyU2JFVDhDRHBaTzNmZUlWMGx0?=
+ =?utf-8?B?ZEk1TjVNbm5LRGliY0diejRaNXV6TndFZTQyTEIxOHBkYkhBeXVvai9xTXFJ?=
+ =?utf-8?B?SXp5dXNIOVArbDRuVVpoWXA0K3pNZ1VIZnV4QUpqUjdHYUFMZDJ6NjNBdHBT?=
+ =?utf-8?B?QitBc2V1UXF1ZFdQQTRyU3dlbktHYjFVNFUwbDdLdGpjM25tNEVGcWJ0amcw?=
+ =?utf-8?B?SHdNT1g3elVyZHhYcWJZeHd3eVJib3VjVDJwNGU3TkltUnN2aTVlemx3dVB4?=
+ =?utf-8?B?WVFxR09qamw4RUFHaE1QYWh0NUNBd2JZSkp5Y0lGcnNjL1E4NnJkdGxGbm9T?=
+ =?utf-8?B?dXZOL05VaGY1d1FOYnZZR2NtK0c3WkVXR1RmSnkvMEhTT2NuSzlGRnBwREsr?=
+ =?utf-8?B?anZ4eklYKzRTczdIbFZsWGtndTRUWWQ1UHJJVXIwTUpDVUJGRFBMeGFlSjNN?=
+ =?utf-8?B?SUtXUjhHdzV2MGFzNmtJeTRDbVErSkxDNG56bVgwSHlDUmNLa29ZL1ZsU3FL?=
+ =?utf-8?B?bzFhUDRHemN6azRPUUFoTzgyRnhYRVlKVVE3V0t0QzhxUzEzOUFweHlZTVVN?=
+ =?utf-8?B?VjAwRTRoM3MxU0RtVm5lRmxSYmdmdS8yWnRkUWpTbHJRcDdkbCtWZGVpRFh3?=
+ =?utf-8?B?U0hNQ0syQ1JEbUVPbEVNK3poWnNWeHFjcHo1d3ZHaWJjRnY3THZWV2NGQVdG?=
+ =?utf-8?B?OEFRRGt0bDJnTVRwVUtiaTdIOTNuV1g2Z3NRRXVlQkQyNkFsR0UvREoreDRy?=
+ =?utf-8?B?NkxmNUh4ZWlOS0RnalkxckxBZGRxMG9PRlc5dGkxdEREZkp5aFMzcElxS1Fp?=
+ =?utf-8?B?T1V0SDJoUERYejdZdnVhUVZ6bHREeXFtMzIzNVNOUWsxWU15RTBLdnIvM1pC?=
+ =?utf-8?B?VmdUZUdxRGFDVy9FdGFPM21lSHJwVGlwNENibGN6TkFrU1BIVnZ6elFkL0lI?=
+ =?utf-8?B?MlVyUXVHS2FZRVYrZTlFUVI1akhqR3hTakVqMVNGTVhscGxvZmNidWVPREdH?=
+ =?utf-8?B?UEplUUdSMVlGRFo5UGtxOWVqR1dSOC9uQnQ3ZEhSeDVEV3JFWWxsV3VsNHlG?=
+ =?utf-8?B?ZXU4WTJBbXlqOGF3RU5nTk4xcUMvU2VKWi9XZXhCa3p0dms4UnB1YThKSDJF?=
+ =?utf-8?B?RENCWHJVQlRiZU1QL3RmdndPcjc3ZEJodmJZdXROYmd4NjhINGJOenVsMkRv?=
+ =?utf-8?B?U3dqMTdPQy91YkNIL2wxY0l0Q1Ruc0daYlA1T2FpVzNTVjFwWmVRZU9lMFpr?=
+ =?utf-8?B?L2tWMzN0MlRwcjNMK0FiVmFTOFRQMGlsd3k4MGFBYnM0eFNKTjZWVE1sSEpK?=
+ =?utf-8?B?Y0xIZUVSUWRwSXJkV0FlV3ZybHY0amxEeXJ2cDNISFJVelIzQy9XaDZLaDcr?=
+ =?utf-8?B?cUdoOSt1Z2IycjNJelFIS0s2dTNEbkhRS1lPTGZhcEFCbmV0d2ZsTE5EdUdG?=
+ =?utf-8?B?UmFhM2ZFR01rdWJiMUxML256VjZoOUxORGVyRlN4blIxZFRLMzdiSjg2V0NC?=
+ =?utf-8?B?Vnp0SXY4SkJNVlJKd3VTODBGT1hsOTl6VjB4ejRTOXZ0ZFg0UjF5Zm9IVlRH?=
+ =?utf-8?B?dGM2S1ZQbnNkejBzWjYyTEVWVnVvRm5LTDUvS1JBRHY1SE9vUmNWbGttRUhn?=
+ =?utf-8?B?d1VSeE9wQVFhUWVEMEpRU0FoNjdTR045RURleVM3SzM3K0haZFpKZXhqZUh5?=
+ =?utf-8?B?a1I0SXU2TTI5cGdpL3JuN3dseFlYTlBUWlNyRVZxd050UjdodDFQQ3lPRlB0?=
+ =?utf-8?B?dWJ3UjVCZm80ekw2Vlp4aG9BeXRUSyt4SEJkZ1pJWW5pQmpkRU8veUlKVXpM?=
+ =?utf-8?B?Q3RIYkZRWnVqZUtaaTgvTGEyV1BXczl6QmI2YUlUVWxvVytmb3oxOER1elp0?=
+ =?utf-8?B?NEV3V0pkcWNpdnFTbzRqM3FielJJQU52OWxPWFhXU3hJUnJBNENOWENYMGxB?=
+ =?utf-8?B?cjdJQmRHeUJHbHJuemR0cnBnQk5BNkhsNFZBVTZLMEhEVDNNTGtIeFhvZXBS?=
+ =?utf-8?B?MVFySVlINkwxOU40T2VGTWFtSmZDNHZyeFU4L2ovRzJKdzBOcFFWVTN0T3o3?=
+ =?utf-8?B?d2QvMm0zRExBaFZsT1dMMk5jMVhtd0RBR25lRktUaGwyQU8zclA2bkUybWJy?=
+ =?utf-8?Q?LzMXMvsUUOCeXQrM=3D?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Mar 2026 07:21:01.2626
+X-MS-Exchange-CrossTenant-Network-Message-Id: ef3c5720-4aa3-43bb-3b25-08de78f56d36
+X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB8245.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Mar 2026 07:21:02.8965
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 62a18cd8-3900-4451-8a77-08de78f56c64
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	MWH0EPF000C6192.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS5PPFEC0C6BDA1
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: J4XBeozQVowfA8AOBJ8RSseVahDwlY5UYdIlmszySDQi3SM7UqV8BvYo5RKiu5Tl2lPsN6RZwlPRi964gRAqvw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB8696
 
-Remove the documentation that forbids setting only_64bit on a BAR of
-type BAR_RESERVED.
 
-When a reserved BAR is 64-bit by default, setting only_64bit is the
-most accurate description. If we later add support to disable a
-reserved BAR (e.g. disable_bar() for BARs that were never set via
-set_bar()), the implementation will need to clear the adjacent BAR
-(upper 32 bits) as well; having only_64bit set documents that
-requirement.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-v2: New patch in v2
+On 25/02/26 11:01 pm, Niklas Cassel wrote:
+> On Mon, Feb 23, 2026 at 01:04:54AM +0530, Manikanta Maddireddy wrote:
+>> BAR0 is capable of supporting various sizes via DBI2 BAR registers
+>> programmed in dw_pcie_ep_set_bar_programmable(). Remove the 1MB fixed
+>> size from pci_epc_features and set the BAR type to BAR_PROGRAMMABLE.
+>>
+>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>> ---
+>>   drivers/pci/controller/dwc/pcie-tegra194.c | 4 ++--
+>>   1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+>> index 4a3b50322204..3c84a230dc79 100644
+>> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+>> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+>> @@ -2000,11 +2000,11 @@ static int tegra_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+>>   	return 0;
+>>   }
+>>   
+>> +/* Tegra EP: BAR0 = 64-bit programmable BAR */
+>>   static const struct pci_epc_features tegra_pcie_epc_features = {
+>>   	.linkup_notifier = true,
+>>   	.msi_capable = true,
+>> -	.bar[BAR_0] = { .type = BAR_FIXED, .fixed_size = SZ_1M,
+>> -			.only_64bit = true, },
+>> +	.bar[BAR_0] = { .type = BAR_PROGRAMMABLE, .only_64bit = true, },
+> 
+> If BAR_PROGRAMMABLE, you don't strictly need .type at all, as
+> BAR_PROGRAMMABLE is (and has always been) the default, defined as value 0.
+> (So you could simply drop .type from the initializer.)
+> 
+> 
+> 
+> Are you sure that the BAR is Programmable and not Resizable though?
 
- include/linux/pci-epc.h | 5 -----
- 1 file changed, 5 deletions(-)
+Yes, Tegra194 PCIe doesn't support Resizable BAR capability.
+However, during Endpoint initialization, EPF driver can set
+desired BAR0 size once. I will update the commit message
+with this explanation.
 
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index fb3f34829d2b..8ed000dbeca4 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -247,11 +247,6 @@ struct pci_epc_bar_rsvd_region {
-  *		should be configured as 32-bit or 64-bit, the EPF driver must
-  *		configure this BAR as 64-bit. Additionally, the BAR succeeding
-  *		this BAR must be set to type BAR_64BIT_UPPER.
-- *
-- *		only_64bit should not be set on a BAR of type BAR_RESERVED.
-- *		(If BARx is a 64-bit BAR that an EPF driver is not allowed to
-- *		reprogram, then both BARx and BARx+1 must be set to type
-- *		BAR_RESERVED.)
-  * @nr_rsvd_regions: number of fixed subregions described for BAR_RESERVED
-  * @rsvd_regions: fixed subregions behind BAR_RESERVED
-  */
+Thanks,
+Manikanta
+
+> Because historically, a lot of BARs were defined as Fixed size BARs with
+> size 1 MB, because there was no Resizable BAR support yet
+> (the minimum size of a Resizable BAR is 1 MB).
+> 
+> See e.g.:
+> 6a6b66f7e607 ("PCI: keystone: Describe Resizable BARs as Resizable BARs")
+> aba2b17810d7 ("PCI: dw-rockchip: Describe Resizable BARs as Resizable BARs")
+> 
+> 
+> One easy way to check this is to just do (on the host side):
+> 
+> # lspci -s 0000:01:00.0  -vvv | grep Resizable
+>          Capabilities: [2e8 v1] Physical Resizable BAR
+> 
+> Here you see e.g. that RK3588 based EP implements the "Physical Resizable BAR"
+> capability.
+> (Replace 0000:01:00.0 with the BDF of your Tegra based EP.)
+> 
+> 
+> Kind regards,
+> Niklas
+> 
+
 -- 
-2.34.1
+nvpublic
 
