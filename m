@@ -1,176 +1,130 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B18C442F566;
-	Tue,  3 Mar 2026 15:00:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE3132DF144
+	for <linux-pci@vger.kernel.org>; Tue,  3 Mar 2026 15:12:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772550052; cv=none; b=uWh/0jJo2D6O8BDTa4kE7zXiUZ858dObd85Q2DgpKjNvG6pB/0nRRyrfjy2YMsIpcVn8rTnpudD+aeWY8IfrxQTDIgGRSG/D7TPOWRkyeZ55FQtw6P2xmA3FKUDUDfFY4VXYQHqqxG1IusDZRNLzNahvbbNYs65Z4He2cfAIDWY=
+	t=1772550749; cv=none; b=pP4OF+fO2Hr8KT/f6osqwrr47R623u9JGx6I+FUvwAhT86AL9Hos3qAjlaqTFQEH1PlQ+eSRCuJ27jHx7MfdOPQWEbgiAsgL46mUN6UfgKFof7QyjELAfWOJuZr7mRIrFpDFEZkdg4+jj31+7Le64VSPk2cCo5HoOdqX0vvN4fs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772550052; c=relaxed/simple;
-	bh=0oZrxQ9yQk2I9dUJY4B6e8lDEKDior0f9dncYIHTP2U=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uQ/t43/yaaDtecbVTO9rXv2s5X3zRvC4y+T1DTxDUWdtBXoVhjo/Ao/U/tSEZIPArTNTgh9T4ym223LqVdJfOumENJMT2HAU6SzY9VlhDtrwFip6yk7oDOKFTzMNm5K1rMvvr6zAmiYfydr7blRvO+n0M4DbeyiomXFc4MUDsZs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.107])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fQJr966Y7zJ46Yd;
-	Tue,  3 Mar 2026 23:00:09 +0800 (CST)
-Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id 1590640589;
-	Tue,  3 Mar 2026 23:00:43 +0800 (CST)
-Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
- (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 3 Mar
- 2026 15:00:42 +0000
-Date: Tue, 3 Mar 2026 15:00:40 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: <alistair23@gmail.com>
-CC: <bhelgaas@google.com>, <lukas@wunner.de>,
-	<rust-for-linux@vger.kernel.org>, <akpm@linux-foundation.org>,
-	<linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <alex.gaynor@gmail.com>,
-	<benno.lossin@proton.me>, <boqun.feng@gmail.com>, <a.hindborg@kernel.org>,
-	<gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <tmgross@umich.edu>,
-	<ojeda@kernel.org>, <wilfred.mallawa@wdc.com>, <aliceryhl@google.com>,
-	Alistair Francis <alistair@alistair23.me>
-Subject: Re: [RFC v3 22/27] lib: rspdm: Support SPDM certificate validation
-Message-ID: <20260303150040.00007458@huawei.com>
-In-Reply-To: <20260211032935.2705841-23-alistair.francis@wdc.com>
-References: <20260211032935.2705841-1-alistair.francis@wdc.com>
-	<20260211032935.2705841-23-alistair.francis@wdc.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1772550749; c=relaxed/simple;
+	bh=9m0Blrtk3S4qTrOUsN+u+5DNUGNSAQDGSODTNLlJOxw=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=U+JIqBd98swyOJNwoirjdTweH6jZUNRJ00Oj0/GYKQUYYmLl2y7uO2CkxJLejo5qZE726yXMPcQSVJTjFuNca+ywlE4EMQHCYxo6nZS2aY0VHEmiS4PpYEX6FDAgOu45K3tFnRWLRkHHTnYY0Oi5hZgdMn/2p/Bidy8UF9dGgkg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZM9oMDLO; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZM9oMDLO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1772550746; x=1804086746;
+  h=date:from:to:cc:subject:message-id;
+  bh=9m0Blrtk3S4qTrOUsN+u+5DNUGNSAQDGSODTNLlJOxw=;
+  b=ZM9oMDLO0E3KDiuSgaxeID3dtqc1cv661oqJnGxd3O6Gfg26P0BDVel0
+   0v8q8N2BUQSGHtI2ttXQsIQ5q6JR3cQy+1MivVIoUtxnftRdBTIUHKSnG
+   hfPKQVHoCNQuLAYt7mglyfh+qPhkPrEf/oZ63+bLxCfTA3HDZIE0oyuO1
+   VxRYimdbp+9cbUWAJBLD53WlgEQzG1UDLWfzgIC43G4j2dOwlBKHYkBC0
+   ZehS8lJdz+7R+HyJylGnvobk8x9OE/WdTd8LcLldh63MZzG4OLLYLMQQe
+   xNslVoTFzWyNWvMnd9sXU4PStJ2sUQaMzOoXrh3XeidjuLEKBNO9sA6NX
+   g==;
+X-CSE-ConnectionGUID: y8kdSdNJQmCeglQDuU+vhg==
+X-CSE-MsgGUID: 26bx28yjSaO/9CLN7ns3TA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11718"; a="72790769"
+X-IronPort-AV: E=Sophos;i="6.21,322,1763452800"; 
+   d="scan'208";a="72790769"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2026 07:12:25 -0800
+X-CSE-ConnectionGUID: TeCOfO/PTmSh2RSdXMd3mg==
+X-CSE-MsgGUID: 7P56yZoNSwGBSRFYRDxkYg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,322,1763452800"; 
+   d="scan'208";a="218001219"
+Received: from lkp-server01.sh.intel.com (HELO f27a57aa7a36) ([10.239.97.150])
+  by orviesa008.jf.intel.com with ESMTP; 03 Mar 2026 07:12:23 -0800
+Received: from kbuild by f27a57aa7a36 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vxRQ4-000000002Ph-0ZXM;
+	Tue, 03 Mar 2026 15:12:20 +0000
+Date: Tue, 03 Mar 2026 23:12:16 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:controller/dwc] BUILD SUCCESS
+ 5e5ea39ff55297fc9d6338f26346c2a7738a78ea
+Message-ID: <202603032309.BI2HO0J7-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml100010.china.huawei.com (7.191.174.197) To
- dubpeml500005.china.huawei.com (7.214.145.207)
 
-On Wed, 11 Feb 2026 13:29:29 +1000
-alistair23@gmail.com wrote:
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc
+branch HEAD: 5e5ea39ff55297fc9d6338f26346c2a7738a78ea  PCI: dwc: Remove not-going-to-be-supported code for Baikal SoC
 
-> From: Alistair Francis <alistair@alistair23.me>
-> 
-> Support validating the SPDM certificate chain.
-> 
-> Signed-off-by: Alistair Francis <alistair@alistair23.me>
+elapsed time: 1485m
 
-Only minor thing inline + observation on the code that I think we want to remove
-for now wrt to checking the root cert.
+configs tested: 53
+configs skipped: 2
 
-> diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
-> index 1e5656144611..728b920beace 100644
-> --- a/lib/rspdm/state.rs
-> +++ b/lib/rspdm/state.rs
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-> @@ -743,4 +746,92 @@ pub(crate) fn get_certificate(&mut self, slot: u8) -> Result<(), Error> {
->  
->          Ok(())
->      }
-> +
-> +    pub(crate) fn validate_cert_chain(&mut self, slot: u8) -> Result<(), Error> {
-> +        let cert_chain_buf = &self.certs[slot as usize];
-> +        let cert_chain_len = cert_chain_buf.len();
-> +        let header_len = 4 + self.hash_len;
-> +
-> +        let mut offset = header_len;
-> +        let mut prev_cert: Option<*mut bindings::x509_certificate> = None;
-> +
-> +        while offset < cert_chain_len {
-> +            let cert_len = unsafe {
-> +                bindings::x509_get_certificate_length(
-> +                    &cert_chain_buf[offset..] as *const _ as *const u8,
-> +                    cert_chain_len - offset,
-> +                )
-> +            };
-> +
-> +            if cert_len < 0 {
-> +                pr_err!("Invalid certificate length\n");
-> +                to_result(cert_len as i32)?;
-> +            }
-> +
-> +            let _is_leaf_cert = if offset + cert_len as usize == cert_chain_len {
-> +                true
-> +            } else {
-> +                false
-> +            };
-Same as the following?
-               let _is_leaf_cert = offset + cert_len as usize == cert_chain_len;
+tested configs:
+alpha         allnoconfig    gcc-15.2.0
+alpha        allyesconfig    gcc-15.2.0
+arc          allmodconfig    gcc-15.2.0
+arc           allnoconfig    gcc-15.2.0
+arc          allyesconfig    gcc-15.2.0
+arm           allnoconfig    clang-23
+arm          allyesconfig    gcc-15.2.0
+arm64        allmodconfig    clang-19
+arm64         allnoconfig    gcc-15.2.0
+csky         allmodconfig    gcc-15.2.0
+csky          allnoconfig    gcc-15.2.0
+hexagon      allmodconfig    clang-17
+hexagon       allnoconfig    clang-23
+i386         allmodconfig    gcc-14
+i386          allnoconfig    gcc-14
+i386         allyesconfig    gcc-14
+loongarch    allmodconfig    clang-19
+loongarch     allnoconfig    clang-23
+m68k         allmodconfig    gcc-15.2.0
+m68k          allnoconfig    gcc-15.2.0
+m68k         allyesconfig    gcc-15.2.0
+microblaze    allnoconfig    gcc-15.2.0
+microblaze   allyesconfig    gcc-15.2.0
+mips         allmodconfig    gcc-15.2.0
+mips          allnoconfig    gcc-15.2.0
+mips         allyesconfig    gcc-15.2.0
+nios2        allmodconfig    gcc-11.5.0
+nios2         allnoconfig    gcc-11.5.0
+openrisc     allmodconfig    gcc-15.2.0
+openrisc      allnoconfig    gcc-15.2.0
+parisc       allmodconfig    gcc-15.2.0
+parisc        allnoconfig    gcc-15.2.0
+parisc       allyesconfig    gcc-15.2.0
+powerpc      allmodconfig    gcc-15.2.0
+powerpc       allnoconfig    gcc-15.2.0
+riscv        allmodconfig    clang-23
+riscv         allnoconfig    gcc-15.2.0
+riscv        allyesconfig    clang-16
+s390         allmodconfig    clang-18
+s390          allnoconfig    clang-23
+s390         allyesconfig    gcc-15.2.0
+sh           allmodconfig    gcc-15.2.0
+sh            allnoconfig    gcc-15.2.0
+sh           allyesconfig    gcc-15.2.0
+sparc         allnoconfig    gcc-15.2.0
+um           allmodconfig    clang-19
+um            allnoconfig    clang-23
+um           allyesconfig    gcc-14
+x86_64       allmodconfig    clang-20
+x86_64        allnoconfig    clang-20
+x86_64       allyesconfig    clang-20
+x86_64      rhel-9.4-rust    clang-20
+xtensa        allnoconfig    gcc-15.2.0
 
-
-> +
-> +            let cert_ptr = unsafe {
-> +                from_err_ptr(bindings::x509_cert_parse(
-> +                    &cert_chain_buf[offset..] as *const _ as *const c_void,
-> +                    cert_len as usize,
-> +                ))?
-> +            };
-> +            let cert = unsafe { *cert_ptr };
-> +
-> +            if cert.unsupported_sig || cert.blacklisted {
-> +                to_result(-(bindings::EKEYREJECTED as i32))?;
-> +            }
-> +
-> +            if let Some(prev) = prev_cert {
-> +                // Check against previous certificate
-> +                let rc = unsafe { bindings::public_key_verify_signature((*prev).pub_, cert.sig) };
-> +
-> +                if rc < 0 {
-> +                    pr_err!("Signature validation error\n");
-> +                    to_result(rc)?;
-> +                }
-> +            } else {
-> +                // Check aginst root keyring
-So this is the check that Dan and Jason are proposing we drop (for now).
-
-Works for me as easy to bring back later and lets us move forward
-in the meantime. As long as userspace gets nothing to indicate
-that we have in any way checked this root cert we are making no false claims.
-
-> +                let key = unsafe {
-> +                    from_err_ptr(bindings::find_asymmetric_key(
-> +                        self.keyring,
-> +                        (*cert.sig).auth_ids[0],
-> +                        (*cert.sig).auth_ids[1],
-> +                        (*cert.sig).auth_ids[2],
-> +                        false,
-> +                    ))?
-> +                };
-> +
-> +                let rc = unsafe { bindings::verify_signature(key, cert.sig) };
-> +                unsafe { bindings::key_put(key) };
-> +
-> +                if rc < 0 {
-> +                    pr_err!("Root signature validation error\n");
-> +                    to_result(rc)?;
-> +                }
-> +            }
-> +
-> +            if let Some(prev) = prev_cert {
-> +                unsafe { bindings::x509_free_certificate(prev) };
-> +            }
-> +
-> +            prev_cert = Some(cert_ptr);
-> +            offset += cert_len as usize;
-> +        }
-> +
-> +        if let Some(prev) = prev_cert {
-> +            if let Some(validate) = self.validate {
-> +                let rc = unsafe { validate(self.dev, slot, prev) };
-> +                to_result(rc)?;
-> +            }
-> +
-> +            self.leaf_key = unsafe { Some((*prev).pub_) };
-> +        }
-> +
-> +        Ok(())
-> +    }
->  }
-
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
