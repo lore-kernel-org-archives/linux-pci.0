@@ -1,184 +1,176 @@
-Received: from mail-lj1-f173.google.com (mail-lj1-f173.google.com [209.85.208.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF96B47F2E9
-	for <linux-pci@vger.kernel.org>; Tue,  3 Mar 2026 14:58:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B18C442F566;
+	Tue,  3 Mar 2026 15:00:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772549929; cv=none; b=C+ez5EeEO/sWu646CBS5u1rnfuUNJrsVCGKKxx910BiIbiwagDPbfTNkiqwc3zzvA1iA5Tai+HS05q9Tmqx0dMy4RVlHZOxllrhilp/PvQBlZLmUm0QEqUn0i9YsT56UblGb7UtxNsJyg5MC4A2Ze738JECbJxnZ8+3qzcEhWWM=
+	t=1772550052; cv=none; b=uWh/0jJo2D6O8BDTa4kE7zXiUZ858dObd85Q2DgpKjNvG6pB/0nRRyrfjy2YMsIpcVn8rTnpudD+aeWY8IfrxQTDIgGRSG/D7TPOWRkyeZ55FQtw6P2xmA3FKUDUDfFY4VXYQHqqxG1IusDZRNLzNahvbbNYs65Z4He2cfAIDWY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772549929; c=relaxed/simple;
-	bh=oGjc1yjeiIqz4fk/uBDQWtGhcY0iItbRMgLP4C00KAw=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=qEDK81W+R7TyUDpfPDMo9sGLh3Bl83fGjX2Cvg/gwBASkV8ueJA5S7+2QN4hTpSs4L9aMMh7jNBwqQGdJFRMWNwPqs8VIObXdwGFaEqvHAZuCQZoBpU83ZnwdUSsobgFsFGVlH1bGizwzK3b5vrESuLizINCCVXWg5xHhGo5zIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LveiTJjN; arc=none smtp.client-ip=209.85.208.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LveiTJjN"
-Received: by mail-lj1-f173.google.com with SMTP id 38308e7fff4ca-389f9895c81so34366981fa.2
-        for <linux-pci@vger.kernel.org>; Tue, 03 Mar 2026 06:58:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772549924; x=1773154724; darn=vger.kernel.org;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=oGjc1yjeiIqz4fk/uBDQWtGhcY0iItbRMgLP4C00KAw=;
-        b=LveiTJjNXx5hPNvBlBSnvouKNtULsS930y+9lYTIz0ur59YAQK7guIOg6a0J4M4toT
-         awLTA2i7sR8LN9EhZvoi5ZnVNxcpk4B1ck1z9aOvPluM1ywHwjMLcmN8FC7lQsu6w4zI
-         xTu1DidaNqIdXgj8C3RAERdLJLmjDd8PVaZY3pF3KuQR95d60HDUA4NozaDCq/1NgoZc
-         V3uiyI8EaJ172xFb8kc9+L1xswUS2mByrvyuIJqfsTKiP1QMsbtVzL6mpAt9yYnsr8+c
-         2r1AEd2/cQhW1bg5BdXdgFy4+dobuUmpoHmRy/aVb1M6h5N7e5dNZViz+9tNR6Z35+CY
-         LdZg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772549924; x=1773154724;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:x-gm-gg:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=oGjc1yjeiIqz4fk/uBDQWtGhcY0iItbRMgLP4C00KAw=;
-        b=GZ+a6qYQxmNl/4crTx0oCrTYd3q3YZ1O493NBCxUKZMvyxCzwK1zk09VUVXDJfASBA
-         QV4X70AMbMVOUTcHe8rMLzmjBd9zX5JMQ3mZWaeRi255ANwATzPJohV9LglhxPWc92xv
-         2maClG7gkaCcHu9NqliXDxMGFasbtmYqFPC3yaEMlAWvAaTcBkHz2gWhhicK8YrG0wZp
-         4/V2ptplV2GSlIlY0rD4Ty2fRQWhHKaCHZI1dR2HW2uhCBjajKBtrakeh6XCBTWwzRU5
-         DNAPWEf3A2HjEAk608M0Kt78IsbiI5vRQr+OsbCy8/QxP8vprQeoUxsCgylVcg+WAlvV
-         uOwQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWHM0WDONLDlqaAMqj9NQDHEp05OrT5t0Xh9ngpCk8t+H6I3DmkLWfb5kpPvi3ixc3MXZxwA3ZOPiI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxmxQ54QGppLIXK4y9OL+NBxU+G+saKFf9zr4RbSxH80TYEFQYZ
-	GXpTSdbOyNHrfyLFFI4mKXvwRsDy/HrwbV3Ps0aH+J97bxfeqCzfD/ah
-X-Gm-Gg: ATEYQzzYHdMP+TMlB8uU4Vmyz7BMOdELmWncZR3yF/66bQpyv1JAh2Q3OTRHr6xJqT6
-	giWtlUaFHs+gRxhBadbJVqGiFXx3Wnkom/cA8v10iwu/IefAXGrLTbc46i1pbcgc9pNBWzJEz8p
-	PZ/ChM+8X24BUsDtF7FYwK+t3o8LB1Ihg0Xl2kifiVzWyFdXVviaubB2xDxO6D68UTE0IprN8Lp
-	1Xi9zjGpmDxsVby3dGMhTqY5gCz5HeEXxuKpPukSBmYT8MXIe2mVJKC6Cp0kUym1q/ppv5rSEJY
-	Vm6JvTbPRL7xOvD/7ondVzeu/IOdxDxVtMTNP4sRxuhENQQGgiy/M31hPx6wRMN+mMV7YA2jYBr
-	zuS9Moql/EXt39StUN4Uc40+qa9ESFncL6bDy0tNJSKF1ePpGIO1vY85HDyoT8eUY7XsBgsCU6A
-	g/gsS3Ga1P0QS/+6hXrGcW80myscNDh2Qt3Kz7JBy+IqWA8MlNMuU/m1IrIAUIszPC4xWpqVIDf
-	Dgf/BnrsgCEHsBXVEbVEXBTO1u5JpXATygcavI/Alt2xVA=
-X-Received: by 2002:a2e:80cf:0:b0:37b:aaf7:f022 with SMTP id 38308e7fff4ca-389ff3644bemr93473051fa.35.1772549923580;
-        Tue, 03 Mar 2026 06:58:43 -0800 (PST)
-Received: from smtpclient.apple (2001-14ba-437-c00-1991-9ef0-d3f1-621a.rev.dnainternet.fi. [2001:14ba:437:c00:1991:9ef0:d3f1:621a])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5a124d7fd31sm359172e87.68.2026.03.03.06.58.41
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 03 Mar 2026 06:58:43 -0800 (PST)
-Content-Type: text/plain;
-	charset=utf-8
+	s=arc-20240116; t=1772550052; c=relaxed/simple;
+	bh=0oZrxQ9yQk2I9dUJY4B6e8lDEKDior0f9dncYIHTP2U=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=uQ/t43/yaaDtecbVTO9rXv2s5X3zRvC4y+T1DTxDUWdtBXoVhjo/Ao/U/tSEZIPArTNTgh9T4ym223LqVdJfOumENJMT2HAU6SzY9VlhDtrwFip6yk7oDOKFTzMNm5K1rMvvr6zAmiYfydr7blRvO+n0M4DbeyiomXFc4MUDsZs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.107])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fQJr966Y7zJ46Yd;
+	Tue,  3 Mar 2026 23:00:09 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id 1590640589;
+	Tue,  3 Mar 2026 23:00:43 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 3 Mar
+ 2026 15:00:42 +0000
+Date: Tue, 3 Mar 2026 15:00:40 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: <alistair23@gmail.com>
+CC: <bhelgaas@google.com>, <lukas@wunner.de>,
+	<rust-for-linux@vger.kernel.org>, <akpm@linux-foundation.org>,
+	<linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <alex.gaynor@gmail.com>,
+	<benno.lossin@proton.me>, <boqun.feng@gmail.com>, <a.hindborg@kernel.org>,
+	<gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <tmgross@umich.edu>,
+	<ojeda@kernel.org>, <wilfred.mallawa@wdc.com>, <aliceryhl@google.com>,
+	Alistair Francis <alistair@alistair23.me>
+Subject: Re: [RFC v3 22/27] lib: rspdm: Support SPDM certificate validation
+Message-ID: <20260303150040.00007458@huawei.com>
+In-Reply-To: <20260211032935.2705841-23-alistair.francis@wdc.com>
+References: <20260211032935.2705841-1-alistair.francis@wdc.com>
+	<20260211032935.2705841-23-alistair.francis@wdc.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.400.21\))
-Subject: Re: [PATCH v5 03/28] of: dynamic: Fix overlayed devices not probing
- because of fw_devlink
-From: Kalle Niemi <kaleposti@gmail.com>
-In-Reply-To: <20260227135428.783983-4-herve.codina@bootlin.com>
-Date: Tue, 3 Mar 2026 16:58:30 +0200
-Cc: Andrew Lunn <andrew@lunn.ch>,
- Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Matti Vaittinen <mazziesaccount@gmail.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- Danilo Krummrich <dakr@kernel.org>,
- Frank Li <Frank.Li@nxp.com>,
- Sascha Hauer <s.hauer@pengutronix.de>,
- Pengutronix Kernel Team <kernel@pengutronix.de>,
- Fabio Estevam <festevam@gmail.com>,
- Michael Turquette <mturquette@baylibre.com>,
- Stephen Boyd <sboyd@kernel.org>,
- Andi Shyti <andi.shyti@kernel.org>,
- Wolfram Sang <wsa+renesas@sang-engineering.com>,
- Peter Rosin <peda@axentia.se>,
- Arnd Bergmann <arnd@arndb.de>,
- Saravana Kannan <saravanak@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Charles Keepax <ckeepax@opensource.cirrus.com>,
- Richard Fitzgerald <rf@opensource.cirrus.com>,
- David Rhodes <david.rhodes@cirrus.com>,
- Linus Walleij <linusw@kernel.org>,
- Ulf Hansson <ulf.hansson@linaro.org>,
- Mark Brown <broonie@kernel.org>,
- Len Brown <lenb@kernel.org>,
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- Daniel Scally <djrscally@gmail.com>,
- Heikki Krogerus <heikki.krogerus@linux.intel.com>,
- Sakari Ailus <sakari.ailus@linux.intel.com>,
- Davidlohr Bueso <dave@stgolabs.net>,
- Jonathan Cameron <jonathan.cameron@huawei.com>,
- Dave Jiang <dave.jiang@intel.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>,
- Ira Weiny <ira.weiny@intel.com>,
- Dan Williams <dan.j.williams@intel.com>,
- Shawn Guo <shawnguo@kernel.org>,
- Wolfram Sang <wsa@kernel.org>,
- linux-kernel@vger.kernel.org,
- driver-core@lists.linux.dev,
- imx@lists.linux.dev,
- linux-arm-kernel@lists.infradead.org,
- linux-clk@vger.kernel.org,
- linux-i2c@vger.kernel.org,
- devicetree@vger.kernel.org,
- linux-pci@vger.kernel.org,
- linux-sound@vger.kernel.org,
- patches@opensource.cirrus.com,
- linux-gpio@vger.kernel.org,
- linux-pm@vger.kernel.org,
- linux-spi@vger.kernel.org,
- linux-acpi@vger.kernel.org,
- linux-cxl@vger.kernel.org,
- Allan Nielsen <allan.nielsen@microchip.com>,
- Horatiu Vultur <horatiu.vultur@microchip.com>,
- Steen Hegelund <steen.hegelund@microchip.com>,
- Luca Ceresoli <luca.ceresoli@bootlin.com>,
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
- Saravana Kannan <saravanak@google.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <E7575FC9-7D0D-43E8-A477-4DEE79101C13@gmail.com>
-References: <20260227135428.783983-1-herve.codina@bootlin.com>
- <20260227135428.783983-4-herve.codina@bootlin.com>
-To: Herve Codina <herve.codina@bootlin.com>
-X-Mailer: Apple Mail (2.3864.400.21)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml100010.china.huawei.com (7.191.174.197) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-On 27. Feb 2026, at 15.54, Herve Codina <herve.codina@bootlin.com> =
-wrote:
->=20
-> From: Saravana Kannan <saravanak@google.com>
->=20
-> When an overlay is applied, if the target device has already probed
-> successfully and bound to a device, then some of the fw_devlink logic
-> that ran when the device was probed needs to be rerun. This allows =
-newly
-> created dangling consumers of the overlayed device tree nodes to be
-> moved to become consumers of the target device.
->=20
-> Fixes: 1a50d9403fb9 ("treewide: Fix probing of devices in DT =
-overlays")
-> Reported-by: Herve Codina <herve.codina@bootlin.com>
-> Closes: =
-https://lore.kernel.org/lkml/CAMuHMdXEnSD4rRJ-o90x4OprUacN_rJgyo8x6=3D9F9r=
-Z+-KzjOg@mail.gmail.com/
-> Closes: =
-https://lore.kernel.org/all/20240221095137.616d2aaa@bootlin.com/
-> Closes: =
-https://lore.kernel.org/lkml/20240312151835.29ef62a0@bootlin.com/
-> Signed-off-by: Saravana Kannan <saravanak@google.com>
-> Link: =
-https://lore.kernel.org/lkml/20240411235623.1260061-3-saravanak@google.com=
-/
-> [Herve: Rebase on top of recent kernel and use =
-get_device_from_fwnode()]
-> [Herve: Add the call to driver_deferred_probe_trigger()]
-> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
->=20
+On Wed, 11 Feb 2026 13:29:29 +1000
+alistair23@gmail.com wrote:
 
-Hello Herv=C3=A9,
+> From: Alistair Francis <alistair@alistair23.me>
+> 
+> Support validating the SPDM certificate chain.
+> 
+> Signed-off-by: Alistair Francis <alistair@alistair23.me>
 
-Tested this patch series with BeagleBone Black and all tests pass. =
-bd718x7 driver probes.
+Only minor thing inline + observation on the code that I think we want to remove
+for now wrt to checking the root cert.
 
-Tested-by: Kalle Niemi <kaleposti@gmail.com>
+> diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
+> index 1e5656144611..728b920beace 100644
+> --- a/lib/rspdm/state.rs
+> +++ b/lib/rspdm/state.rs
 
-BR
-Kalle=
+> @@ -743,4 +746,92 @@ pub(crate) fn get_certificate(&mut self, slot: u8) -> Result<(), Error> {
+>  
+>          Ok(())
+>      }
+> +
+> +    pub(crate) fn validate_cert_chain(&mut self, slot: u8) -> Result<(), Error> {
+> +        let cert_chain_buf = &self.certs[slot as usize];
+> +        let cert_chain_len = cert_chain_buf.len();
+> +        let header_len = 4 + self.hash_len;
+> +
+> +        let mut offset = header_len;
+> +        let mut prev_cert: Option<*mut bindings::x509_certificate> = None;
+> +
+> +        while offset < cert_chain_len {
+> +            let cert_len = unsafe {
+> +                bindings::x509_get_certificate_length(
+> +                    &cert_chain_buf[offset..] as *const _ as *const u8,
+> +                    cert_chain_len - offset,
+> +                )
+> +            };
+> +
+> +            if cert_len < 0 {
+> +                pr_err!("Invalid certificate length\n");
+> +                to_result(cert_len as i32)?;
+> +            }
+> +
+> +            let _is_leaf_cert = if offset + cert_len as usize == cert_chain_len {
+> +                true
+> +            } else {
+> +                false
+> +            };
+Same as the following?
+               let _is_leaf_cert = offset + cert_len as usize == cert_chain_len;
+
+
+> +
+> +            let cert_ptr = unsafe {
+> +                from_err_ptr(bindings::x509_cert_parse(
+> +                    &cert_chain_buf[offset..] as *const _ as *const c_void,
+> +                    cert_len as usize,
+> +                ))?
+> +            };
+> +            let cert = unsafe { *cert_ptr };
+> +
+> +            if cert.unsupported_sig || cert.blacklisted {
+> +                to_result(-(bindings::EKEYREJECTED as i32))?;
+> +            }
+> +
+> +            if let Some(prev) = prev_cert {
+> +                // Check against previous certificate
+> +                let rc = unsafe { bindings::public_key_verify_signature((*prev).pub_, cert.sig) };
+> +
+> +                if rc < 0 {
+> +                    pr_err!("Signature validation error\n");
+> +                    to_result(rc)?;
+> +                }
+> +            } else {
+> +                // Check aginst root keyring
+So this is the check that Dan and Jason are proposing we drop (for now).
+
+Works for me as easy to bring back later and lets us move forward
+in the meantime. As long as userspace gets nothing to indicate
+that we have in any way checked this root cert we are making no false claims.
+
+> +                let key = unsafe {
+> +                    from_err_ptr(bindings::find_asymmetric_key(
+> +                        self.keyring,
+> +                        (*cert.sig).auth_ids[0],
+> +                        (*cert.sig).auth_ids[1],
+> +                        (*cert.sig).auth_ids[2],
+> +                        false,
+> +                    ))?
+> +                };
+> +
+> +                let rc = unsafe { bindings::verify_signature(key, cert.sig) };
+> +                unsafe { bindings::key_put(key) };
+> +
+> +                if rc < 0 {
+> +                    pr_err!("Root signature validation error\n");
+> +                    to_result(rc)?;
+> +                }
+> +            }
+> +
+> +            if let Some(prev) = prev_cert {
+> +                unsafe { bindings::x509_free_certificate(prev) };
+> +            }
+> +
+> +            prev_cert = Some(cert_ptr);
+> +            offset += cert_len as usize;
+> +        }
+> +
+> +        if let Some(prev) = prev_cert {
+> +            if let Some(validate) = self.validate {
+> +                let rc = unsafe { validate(self.dev, slot, prev) };
+> +                to_result(rc)?;
+> +            }
+> +
+> +            self.leaf_key = unsafe { Some((*prev).pub_) };
+> +        }
+> +
+> +        Ok(())
+> +    }
+>  }
+
+
