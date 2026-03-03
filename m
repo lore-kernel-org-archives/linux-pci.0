@@ -1,85 +1,85 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23A483CF68F
-	for <linux-pci@vger.kernel.org>; Tue,  3 Mar 2026 21:15:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A88283164A9
+	for <linux-pci@vger.kernel.org>; Tue,  3 Mar 2026 21:15:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772572540; cv=none; b=TZl7FnZb+cU0VM5juInzKpY1qkNC8Nj5PL6YLszaa4alImdQ63k/O1jCFk9PSooUZ8Fe67d++VDgSwJDCcB3T/XJyjS3VhCv98lfJs8zYnvT0KkELIdSSd3tGsD//CtlJEWzpuAGwR1B5OSz1d2Caj2sjHwrLKKunVhSSwUzb5Q=
+	t=1772572544; cv=none; b=ARcLmd2JBn1aoEHESeRcSiFgvZpMtk1MowttJL8VD8iuVPo2F9jp28MsVIhOjOaiAL6UUVkhUEiEDWAJ3BYoBu/T1Atiqm2cZGrVkQ0GYbdoxs5e0NK29AmG0qPDiNELNiW9Z5V0B0qJWei/nmk1bjgYKZVW3oC6ydSgCa7q2Dc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772572540; c=relaxed/simple;
-	bh=WKMW8HVlmZaoyJE5jsAXtcRs0N48w7Ua2f/NenCBzOQ=;
+	s=arc-20240116; t=1772572544; c=relaxed/simple;
+	bh=degmGH7wPwx8NSuUy3FBbvJDakmae95tdtBgxpe2RUg=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Vp8sgfIe752Uriu6J+dJbGB7C7iBvhYLFdYgyyifeEHxq6INI0adz8NZbek97dmwmSq2gvufYeTjH8RUNddphOTCDKpb/JBuA3mrimriQ3dHgmplUmCur8nMD3z1nvpx7c0+HKWKlKw/fALqG/h5ABlOcVgN+3kfZfTCab9Bdm4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OCESQA4c; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=HTJQV5ya; arc=none smtp.client-ip=170.10.129.124
+	 In-Reply-To:To:Cc; b=AY1BD/kGn3gOnTPPrvmR4MPPUL8+4q1fKcmgKWpQRBWkQ4JV1i0S9RGJiQ69Kao7sX0fEfyt+TPIwFB4dUbIGk7lA0x2X7qWsbQJfgGjTNrM+ZSFAnlwpX4MN+LC1NhF1vZvFA+3UOlLR4nND0/xC4qBstKbfIwnGGZJOR2Ai/Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=H2VPsfiB; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=fKA3pGY5; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OCESQA4c";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="HTJQV5ya"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="H2VPsfiB";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="fKA3pGY5"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1772572538;
+	s=mimecast20190719; t=1772572542;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=irBf4YUdN1+vibh8PKUSXKnT1yGXKOqgKyvxp0mJGPY=;
-	b=OCESQA4clh8Axb1EjczquFMRnGOxVQ0eJn0FXweTVNSIxFkuzc2tNJ9bFvcsjNAOLNxk9z
-	Tzwha96xnUDt8Puun9MztQK61kbNN+O9W/1yep/mDbg01mbH1wtQMk3u13R44FXdv7jg+o
-	TRHQ8bldEBnrh6Kg+VGFCL1XExIfl38=
-Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
- [209.85.160.200]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=dKSiyMf0ynPRuLtK//gTM+BGK6ixt+B/8DTHGEJv69g=;
+	b=H2VPsfiBAnbN03VWYdZcVLruNC20irdicCD3XsepdLxO1Ca2Xk+avR3kNuRQaiDT+/jzcD
+	VrMneWcRg3RknjfRCMj2DOtUV1PY7aEQmwZ40ZfSH6u4N7d6Kl+zoASN2GxccJRhOWsfWW
+	fq5wrkMde8ibK6CaPnMCnYOMTxSaByw=
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
+ [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-499-B4eVtBfSOLOjAY2HfrT8zg-1; Tue, 03 Mar 2026 16:15:37 -0500
-X-MC-Unique: B4eVtBfSOLOjAY2HfrT8zg-1
-X-Mimecast-MFC-AGG-ID: B4eVtBfSOLOjAY2HfrT8zg_1772572537
-Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-506b4bdde91so469737601cf.2
-        for <linux-pci@vger.kernel.org>; Tue, 03 Mar 2026 13:15:37 -0800 (PST)
+ us-mta-98-qw_0eTLdNGC2MVAJTMU17A-1; Tue, 03 Mar 2026 16:15:39 -0500
+X-MC-Unique: qw_0eTLdNGC2MVAJTMU17A-1
+X-Mimecast-MFC-AGG-ID: qw_0eTLdNGC2MVAJTMU17A_1772572539
+Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-506bfa0441aso883641551cf.3
+        for <linux-pci@vger.kernel.org>; Tue, 03 Mar 2026 13:15:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1772572537; x=1773177337; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1772572539; x=1773177339; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=irBf4YUdN1+vibh8PKUSXKnT1yGXKOqgKyvxp0mJGPY=;
-        b=HTJQV5yaVlnDZ5xdll+PAyeLHEytyuDfg1D/1OB49HfeULjVhaBBEvfePuBR8sLkcQ
-         95wQt/Wj14ZOBv5RT1pThdbZzjVvkqGok4+2iFXnXpkaEI3GNyod9Qk5n6neeeJhqTzD
-         9Dbm1Kn8HDTJq2BEIzNTUGyFcqoLt3/XAWV9sfCNHQvjYwnC0dNhIacds0rEzyEJUq8K
-         qFMGWZZm5Sg0g7X88/8FdMWJiFMmlHlP1JDAIWR/WmJFKGnxfCfwSCywEXFxstokE8m7
-         plBBUXte0yTJ3AfAx1Hk3YCvoDukHeIQaCzeuQGeRKr8Rij4er46OUfg3HGt2rT46q4+
-         8+tA==
+        bh=dKSiyMf0ynPRuLtK//gTM+BGK6ixt+B/8DTHGEJv69g=;
+        b=fKA3pGY5MsDcul/N6psTEi/A9rBUoHj5oPEMPx8tGSJGL2Ulbzyitd2T+Y/hlgYs1S
+         s5jlQft7U0tyeoz11d2MrekvYoohJ0eiXQOCNpeYa0vGucRwlJSyIp6NbU4a1RCABhMc
+         zLVUfQXlH7Q/MpKBcXbMWYDmzm1mNOYJ2/kbzL2fpLBOIhBoAJi3JgtUq9KHCE5UpQEd
+         GdJA2IYTwUp7Nr7XowlfbkX+EjEuDxeFM1dPgjzQQtpT29T/D/3/SjBX7Nc5a9T9iRV7
+         Z4P+9jPuzxY0aJ5UcBq/e6bGcP+oPQbbkGj4BVtAYGWtKQ9ZZoyv4s0eDlfmJPI+lo03
+         5Clg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772572537; x=1773177337;
+        d=1e100.net; s=20230601; t=1772572539; x=1773177339;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=irBf4YUdN1+vibh8PKUSXKnT1yGXKOqgKyvxp0mJGPY=;
-        b=D1owwHxuRV+WGY7QPhVHRJ2qaax+OD9OWAo1BvGW1HwrgEcZ03vTUHBFag3mtR9ePP
-         SfgPYMqE4ymw34OTL1KyCvwIwqKKPsYoAp4sT2JGjgOOApUh2ybeECBw3KX/KIbRc/AY
-         LNzgjRsREa4pS6+43V8VIQ+kKCWhZyKqsmGwR2w/KOFTG25pGallgbrhhY+jSN0LuduW
-         Hc6PxpptVDbN9sJm8xhxBdYj8G5trfQg7gTw99tZp1WrVMDr5mkyOzoMSHrgi4uab7JQ
-         zvpt1CV38Yd/i6rp60iLZETcrJXgZFqf4VeerqGRbfimQgN3HKuBehPvG6uFhnKm3yCA
-         XzuA==
-X-Gm-Message-State: AOJu0Yxm1EkOSaymaJUUAptonRz2iR+Mj6vkwYr8Ek5B6PBh8kIXzm0k
-	kqhIFDVKqTiVnjap0IMYXTRbSOWPjON6t1LD3g8BNHDd7pqJzpZaRKDWkxUFqUF0vAm1JMGbTUZ
-	ZSeEt2+Uft7GenIK6y0Net2VBsheyzB0juVwzVNkRhaSd0DDjltUnMjNIxO8Dbg==
-X-Gm-Gg: ATEYQzxB4J+y9rQAarVxvppV+Oc9+K3ICSGOJZ9wi/xAeOnuwtmOxyKKOc5Jm6+qtny
-	p5f4prLIALR2OiG8AQhy49DyNaE+njs1wuVchh61iCJG/3dsXlEs4zWBXCAarZ2pzAcBCGhjHGQ
-	lQuMkIiFJMYwHp0QIpJdhiiEUtYWm7f9OVPz7seh9RGJ7uhak9XkirZHPj54+GqeJOtc9s2lJUv
-	z2enm6u3xGApQ1U7qlV8uvh5boJ5RLj3pKohNlP3u9qztWbsVm5+QyBkaky/DitdNe3Oyl7UOi2
-	lL+pU220YcT9UaOstBEve4UccuOT0Ze73JHs0TvJJuAzhWXRziDXK9opMqxI1bjqzXVe6QzdIVi
-	cvug0dLX/SbTDtDeuglD09idzxw==
-X-Received: by 2002:a05:622a:1891:b0:502:9abb:c919 with SMTP id d75a77b69052e-5075287910dmr225478041cf.10.1772572536422;
-        Tue, 03 Mar 2026 13:15:36 -0800 (PST)
-X-Received: by 2002:a05:622a:1891:b0:502:9abb:c919 with SMTP id d75a77b69052e-5075287910dmr225477351cf.10.1772572535732;
-        Tue, 03 Mar 2026 13:15:35 -0800 (PST)
+        bh=dKSiyMf0ynPRuLtK//gTM+BGK6ixt+B/8DTHGEJv69g=;
+        b=Wa/pdmYxj5F2lDKg92e1ZExprip16+y+mZCPw8i97cWDAdS+S6qBRh2hif/BpsQRZr
+         mVpVuxChsQnaWdD8BZm/WCow6Foch/ZYrsjQ1k2q2IcMKL6YCY2jIkSI/LRNXxiIVlqb
+         LzElk4vUSZIqNxFrdQgnpQg9zHjEbexyoDwk8hR9Te5bfMGIlXUbPe5j6oa1opjgryiU
+         TGWiSL/hrEA9d/Mbk3sbdgz33qTusCGL+TzrGrGOH46q5xR0R/7FCDi6fLcPSkUHkgPI
+         T297GOAPxPJbtRVDtzt9bV5280UtGGh8FUZ85cVrw8W+tJhq1VwWN6xlZtivIZK+j9BW
+         bGnA==
+X-Gm-Message-State: AOJu0YykcZJNAOaOH0+sHo1bcnaAfGtX/krxYJFglwv1venHTFYCyrBB
+	50uGnrkyH/DgfLyDtFfWnY21kQ9bGmDmsXsePdiIfZipia7gg1UR2xb5P8g+SsGIpAOj+U/HE7A
+	26WobB+exVEhom9ZWbQEHcoP3brLLLfo6qyMXH1sBmn/xtIzg0GHJfIZ1go6ysA==
+X-Gm-Gg: ATEYQzyFdMntTVgQtbCu3JN1t0ImdfvyEe1LwBsQzyF7B2I5bQufwKb2j+KuR+KtzpI
+	Du2DHU9QLroyqyrv/D8u5/Y3NcgGcVAtTzsTY1OZ8fWfsyZX7UkMlcywrAfbZPF3Tftjxpjq7mj
+	zwUE3IGViFK5crr6elpU6Mf/3GQ3RJ5+Uz1W7FAeU8CEpI39vxvMbiK3zJjb4hYZgkeUZKGiPRY
+	EXBv0SHJGvA4Uw8CJexmtsHMn2Ot/htEat47LjPusLQqRqtWJsAPasXGnaCH/C52g/IMbMoPxj7
+	Gpmk3k0ysC82OO6Vbqa4qngKJEz3Bo3vcO3mcshH75PkQY/tNpQbpeKewNuBG9yREMTFmAbpEoy
+	gBpc/4eZvPIME9En9z0UEixhrUg==
+X-Received: by 2002:a05:622a:50b:b0:4f1:b9ec:f6a4 with SMTP id d75a77b69052e-507527b8798mr223872371cf.33.1772572539215;
+        Tue, 03 Mar 2026 13:15:39 -0800 (PST)
+X-Received: by 2002:a05:622a:50b:b0:4f1:b9ec:f6a4 with SMTP id d75a77b69052e-507527b8798mr223871711cf.33.1772572538483;
+        Tue, 03 Mar 2026 13:15:38 -0800 (PST)
 Received: from [172.16.1.8] ([2607:f2c0:b1e3:9a00:3c7:56c2:f819:96d2])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5074481c0e5sm156286991cf.0.2026.03.03.13.15.33
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5074481c0e5sm156286991cf.0.2026.03.03.13.15.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Mar 2026 13:15:35 -0800 (PST)
+        Tue, 03 Mar 2026 13:15:38 -0800 (PST)
 From: Peter Colberg <pcolberg@redhat.com>
-Date: Tue, 03 Mar 2026 16:15:22 -0500
-Subject: [PATCH v3 02/10] fpga: dfl-pci: set driver flag to disable SR-IOV
- on remove()
+Date: Tue, 03 Mar 2026 16:15:23 -0500
+Subject: [PATCH v3 03/10] rust: pci: add {enable,disable}_sriov(), to
+ control SR-IOV capability
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -88,7 +88,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260303-rust-pci-sriov-v3-2-4443c35f0c88@redhat.com>
+Message-Id: <20260303-rust-pci-sriov-v3-3-4443c35f0c88@redhat.com>
 References: <20260303-rust-pci-sriov-v3-0-4443c35f0c88@redhat.com>
 In-Reply-To: <20260303-rust-pci-sriov-v3-0-4443c35f0c88@redhat.com>
 To: Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
@@ -118,63 +118,81 @@ Cc: linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org,
  Peter Colberg <pcolberg@redhat.com>, Jason Gunthorpe <jgg@ziepe.ca>
 X-Mailer: b4 0.14.2
 
-Set the flag managed_sriov in the pci_driver structure to show how a
-PCI driver may opt into disabling the Single Root I/O Virtualization
-(SR-IOV) capability of the device when the driver is removed.
+Add methods to enable and disable the Single Root I/O Virtualization
+(SR-IOV) capability for a PCI device. The wrapped C methods take care
+of validating whether the device is a Physical Function (PF), whether
+SR-IOV is currently disabled (or enabled), and whether the number of
+requested VFs does not exceed the total number of supported VFs.
 
-Merge the function cci_remove_feature_devs() into cci_pci_remove().
+Set the flag managed_sriov to always disable SR-IOV when a Rust PCI
+driver is unbound from a PF device. This ensures that when a Virtual
+Function (VF) is bound to a driver, the corresponding Physical Function
+(PF) is bound to a driver, too, which is a prerequisite for exposing a
+safe Rust API that allows a VF driver to obtain the PF device for a VF
+device and subsequently access the private data of the PF driver.
 
+Suggested-by: Danilo Krummrich <dakr@kernel.org>
 Signed-off-by: Peter Colberg <pcolberg@redhat.com>
 ---
 Changes in v2:
-- Demonstrate flag managed_sriov for dfl-pci driver.
+- Set flag managed_sriov to disable SR-IOV on remove().
+- Use to_result() to handle error in enable_sriov().
+- Note Bound device context in SAFETY comments.
 ---
- drivers/fpga/dfl-pci.c | 17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
+ rust/kernel/pci.rs | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-diff --git a/drivers/fpga/dfl-pci.c b/drivers/fpga/dfl-pci.c
-index e25205c6d8f00cec579016acade28e743812c924..2410e6f3efe100a635eebfdb21f28f62a3759890 100644
---- a/drivers/fpga/dfl-pci.c
-+++ b/drivers/fpga/dfl-pci.c
-@@ -125,15 +125,6 @@ static int cci_init_drvdata(struct pci_dev *pcidev)
- 	return 0;
+diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
+index af74ddff6114db3c2ce8e228c5a953cd0769e8a5..e1cab1574a3d309d25bf5267c0b0d8da8fb66d44 100644
+--- a/rust/kernel/pci.rs
++++ b/rust/kernel/pci.rs
+@@ -82,6 +82,7 @@ unsafe fn register(
+             (*pdrv.get()).probe = Some(Self::probe_callback);
+             (*pdrv.get()).remove = Some(Self::remove_callback);
+             (*pdrv.get()).id_table = T::ID_TABLE.as_ptr();
++            (*pdrv.get()).managed_sriov = true;
+         }
+ 
+         // SAFETY: `pdrv` is guaranteed to be a valid `DriverType`.
+@@ -458,6 +459,38 @@ pub fn set_master(&self) {
+         // SAFETY: `self.as_raw` is guaranteed to be a pointer to a valid `struct pci_dev`.
+         unsafe { bindings::pci_set_master(self.as_raw()) };
+     }
++
++    /// Enable the Single Root I/O Virtualization (SR-IOV) capability for this device,
++    /// where `nr_virtfn` is number of Virtual Functions (VF) to enable.
++    #[cfg(CONFIG_PCI_IOV)]
++    pub fn enable_sriov(&self, nr_virtfn: i32) -> Result {
++        // SAFETY:
++        // `self.as_raw` returns a valid pointer to a `struct pci_dev`.
++        //
++        // `pci_enable_sriov()` checks that the enable operation is valid:
++        // - the device is a Physical Function (PF),
++        // - SR-IOV is currently disabled, and
++        // - `nr_virtfn` does not exceed the total number of supported VFs.
++        //
++        // The Core device context inherits from the Bound device context,
++        // which guarantees that the PF device is bound to a driver.
++        to_result(unsafe { bindings::pci_enable_sriov(self.as_raw(), nr_virtfn) })
++    }
++
++    /// Disable the Single Root I/O Virtualization (SR-IOV) capability for this device.
++    #[cfg(CONFIG_PCI_IOV)]
++    pub fn disable_sriov(&self) {
++        // SAFETY:
++        // `self.as_raw` returns a valid pointer to a `struct pci_dev`.
++        //
++        // `pci_disable_sriov()` checks that the disable operation is valid:
++        // - the device is a Physical Function (PF), and
++        // - SR-IOV is currently enabled.
++        //
++        // The Core device context inherits from the Bound device context,
++        // which guarantees that the PF device is bound to a driver.
++        unsafe { bindings::pci_disable_sriov(self.as_raw()) };
++    }
  }
  
--static void cci_remove_feature_devs(struct pci_dev *pcidev)
--{
--	struct cci_drvdata *drvdata = pci_get_drvdata(pcidev);
--
--	/* remove all children feature devices */
--	dfl_fpga_feature_devs_remove(drvdata->cdev);
--	cci_pci_free_irq(pcidev);
--}
--
- static int *cci_pci_create_irq_table(struct pci_dev *pcidev, unsigned int nvec)
- {
- 	unsigned int i;
-@@ -425,10 +416,11 @@ static int cci_pci_sriov_configure(struct pci_dev *pcidev, int num_vfs)
- 
- static void cci_pci_remove(struct pci_dev *pcidev)
- {
--	if (dev_is_pf(&pcidev->dev))
--		cci_pci_sriov_configure(pcidev, 0);
-+	struct cci_drvdata *drvdata = pci_get_drvdata(pcidev);
- 
--	cci_remove_feature_devs(pcidev);
-+	/* remove all children feature devices */
-+	dfl_fpga_feature_devs_remove(drvdata->cdev);
-+	cci_pci_free_irq(pcidev);
- }
- 
- static struct pci_driver cci_pci_driver = {
-@@ -437,6 +429,7 @@ static struct pci_driver cci_pci_driver = {
- 	.probe = cci_pci_probe,
- 	.remove = cci_pci_remove,
- 	.sriov_configure = cci_pci_sriov_configure,
-+	.managed_sriov = true,
- };
- 
- module_pci_driver(cci_pci_driver);
+ // SAFETY: `pci::Device` is a transparent wrapper of `struct pci_dev`.
 
 -- 
 2.53.0
