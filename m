@@ -1,185 +1,108 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013003.outbound.protection.outlook.com [40.107.159.3])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA4C83B582E;
-	Wed,  4 Mar 2026 14:56:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.3
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772636218; cv=fail; b=e1fCopcfT50DCfF0W8MdRYnAnLrO6mlUNbYD0ygcmHYohZETZmQ4vGffxXEAl/mRq/IA577UVklrNIJ6K5G6yONvUO7jrg3tRc5+KLhD7NeCwyTWIIU9qc7leJjIB1e8rC4Wk9NyvmR+MfpLZIrzsx8oIda0Ezs6BNky2+Cljiw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772636218; c=relaxed/simple;
-	bh=9zbnzsKvry3cQSg9sPGefVepkKkEVkmPTXLh+ae2IWY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=GTHQjvsl2K0+vCGyCtGQ8GvfBjjfyDukAsr7iMnf0QxwC69JbJPL9YH6gDLLCtGEkP4Ceg/C4BFm/NBkfqkHUlkq/bMJyX3PGFckjsjuJbZ13HgScMCXVgp3ArwGjCiQq347n5uUvXYpw3IhIvaWJwdboeIR90wHRilIsf3HHbw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=XwnbZ7QT; arc=fail smtp.client-ip=40.107.159.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 280F53B4E94;
+	Wed,  4 Mar 2026 14:58:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772636287; cv=none; b=ateR9XdZPzUmtkG7U+JwS4vNB2JhJodZvnXg0NtwPg0RBlxz12Ye3KxlnHr3u8imyBB6ppjxQ7bqKs9XVaA6OlNBX7pBdP6xSbZ/7MpdFJm42Cz9K4hV/9oX9B26oxF9BvOi/1JDlGl4/rX5VQTZuiRlNoUeMUjTyWVNyIPsO84=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772636287; c=relaxed/simple;
+	bh=dOS1j2epf5TPYMaiUEFBxK4GWJCF7AnlRNLv83KiR6E=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
+	 References:In-Reply-To; b=Nc1GFWo3KdYYtI80GJqIBI7UEDMvYhnJpxm9GQLaWNKKzZvcZyIKM8y4ulpMlXR/i9tde7Hiv7M7q7lSP+j/xwgB2/8cnVSdzLfmVpcRR7Blhu94Ae4iKjEWd715lgvVjbMKj5fvCx7Z0BLxATCY1ommkrOw58j0o3iiidMApUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ym9EQcZf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="XwnbZ7QT"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=O6UXO1PhZPXZeK8ivh5+UEGBoT1B+sxXuqbV6l9uYfEILV6DzNU3sdqAHT4aMLNgeVHWCt7mMcFk0hjvBWn1Nl9/FJYpUY+eW0r22DRTgF00TCYKI4XOX3XXDeB8qrNK9dn+KC6GPHo2r5VX9BB9fKjzm2tscLt2lVY+IZlm/2XynBkKsPdO/SUETUF5e3M4zU+POQGMEgb3IliTmFLMjJ7EKpMzJdSpU5YteacZdS6Gswlx2P461NVUPUFk0EtteXyjYQB0cwMiiHv+dPxnXqIk7N+qMOwQYKnN/ZGmOmPh3LyNf5oHLw6q3MNPn/L6bP1203PQhujCHA66oig5vQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=9zbnzsKvry3cQSg9sPGefVepkKkEVkmPTXLh+ae2IWY=;
- b=HNEYJF7GPR9Q2P78wMSX3qe2JJmJXYYV4TgOrNwFw4keskSr4mW9iXqh0RTIp3+dq1XpshsKpfHtF/48YowJka2FaEEcrHY+MVdtUX/dD3H/jLS3uA4CNam2XDQQ3q0YnqG/+62XW6bMF0Z6Mvw9x2JU5eBHu0MWNfO8cpYADpGoPIoef1E8OddZL22mYTByi0hz6lApd4PXbk0erSZHS7wSSsfbij7noTc9rOBIr1SFQYbYYyfWJicw8mlyPlwlfFFAfQ83Tkx0LwGkUo3Q7HRDmtU1CvCOh4QEcge6t2zVgDZKCCf6NSrKWQko1wanNHyc0lwS9PAR1HOdb4/TvA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9zbnzsKvry3cQSg9sPGefVepkKkEVkmPTXLh+ae2IWY=;
- b=XwnbZ7QTtkMN3o/96jM+z773OFtnCz2hWklgJwkjIwfP+jVjHN0UqVYIHrWAVVNxXOqb/U+j5hr31qgl8c4UMZnJFAZtAdsipJOE4AWlFYYbp27XmC8Fj40UbgDBYNVXDGjDYyfhSFIydU2ZvNtVyJlNvJjExLfRAsnBnplE9SBSvZKmou6hsKRZA8JZIoRUcGMnbU43FzJeATSdyKzBdvDpSd0U5ohhN4LBuAy9ZXwMocj+zKhHVlsjUiGf31Ypr8BGykGOJQ+Prng9Tq89H0CZxNpIFZK15xCjLLjnZtZFlOwGrZhV1+QdcQlkapHZyq8y6bzSdb3JhHcHY2Bk5Q==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by PR3PR04MB7404.eurprd04.prod.outlook.com (2603:10a6:102:8f::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.22; Wed, 4 Mar
- 2026 14:56:52 +0000
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9654.020; Wed, 4 Mar 2026
- 14:56:52 +0000
-From: Frank Li <Frank.Li@nxp.com>
-To: Vignesh Raghavendra <vigneshr@ti.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Krzysztof Kozlowski <krzk@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Minghuan Lian <minghuan.Lian@nxp.com>,
-	Mingkai Hu <mingkai.hu@nxp.com>,
-	Roy Zang <roy.zang@nxp.com>,
-	Yue Wang <yue.wang@Amlogic.com>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Kevin Hilman <khilman@baylibre.com>,
-	Jerome Brunet <jbrunet@baylibre.com>,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-	Jonathan Chocron <jonnyc@amazon.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Jesper Nilsson <jesper.nilsson@axis.com>,
-	Paul Walmsley <pjw@kernel.org>,
-	Greentime Hu <greentime.hu@sifive.com>,
-	Samuel Holland <samuel.holland@sifive.com>,
-	Chuanhua Lei <lchuanhua@maxlinear.com>,
-	Srikanth Thokala <srikanth.thokala@intel.com>,
-	Xiaowei Song <songxiaowei@hisilicon.com>,
-	Binghui Wang <wangbinghui@hisilicon.com>,
-	Chen Wang <unicorn_wang@outlook.com>,
-	Inochi Amaoto <inochiama@gmail.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>,
-	Niklas Cassel <cassel@kernel.org>,
-	Hans Zhang <18255117159@163.com>,
-	"Jiri Slaby (SUSE)" <jirislaby@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Thippeswamy Havalige <thippeswamy.havalige@amd.com>,
-	Sai Krishna Musham <sai.krishna.musham@amd.com>,
-	Nagarjuna Kristam <nkristam@nvidia.com>,
-	Vidya Sagar <vidyas@nvidia.com>,
-	linux-omap@vger.kernel.org (open list:PCI DRIVER FOR TI DRA7XX/J721E),
-	linux-pci@vger.kernel.org (open list:PCI DRIVER FOR TI DRA7XX/J721E),
-	linux-arm-kernel@lists.infradead.org (moderated list:PCI DRIVER FOR TI DRA7XX/J721E),
-	linux-kernel@vger.kernel.org (open list),
-	linux-samsung-soc@vger.kernel.org (open list:PCI DRIVER FOR SAMSUNG EXYNOS),
-	linuxppc-dev@lists.ozlabs.org (open list:PCI DRIVER FOR FREESCALE LAYERSCAPE),
-	imx@lists.linux.dev (open list:PCI DRIVER FOR FREESCALE LAYERSCAPE),
-	linux-amlogic@lists.infradead.org (open list:PCIE DRIVER FOR AMLOGIC MESON),
-	linux-arm-kernel@axis.com (open list:PCIE DRIVER FOR AXIS ARTPEC),
-	sophgo@lists.linux.dev (open list:SOPHGO DEVICETREES and DRIVERS),
-	linux-tegra@vger.kernel.org (open list:TEGRA ARCHITECTURE SUPPORT),
-	linux-riscv@lists.infradead.org (open list:SIFIVE DRIVERS:Keyword:fu[57]40)
-Cc: Frank Li <frank.li@nxp.com>,
-	Anand Moon <linux.amoon@gmail.com>
-Subject: Re: [RFC v1 08/18] PCI: fu740: Allow asynchronous probing for background link training
-Date: Wed,  4 Mar 2026 09:55:37 -0500
-Message-ID: <20260304145540.3331304-3-Frank.Li@nxp.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260304140329.7089-9-linux.amoon@gmail.com>
-References: <20260304140329.7089-9-linux.amoon@gmail.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SA9PR13CA0146.namprd13.prod.outlook.com
- (2603:10b6:806:27::31) To PA4PR04MB9366.eurprd04.prod.outlook.com
- (2603:10a6:102:2a9::8)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ym9EQcZf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46750C2BC9E;
+	Wed,  4 Mar 2026 14:57:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772636286;
+	bh=dOS1j2epf5TPYMaiUEFBxK4GWJCF7AnlRNLv83KiR6E=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
+	b=Ym9EQcZfkOKBQHZvEQz/FhHVNSqmg+h+6mOr4awZN6lqVP89047H95oA7hDTD8Lxp
+	 3/zrrsmHItaW0dHSdzHTPMNUEEPPrdDoAQGGe9wmG6r942WlV+NEL+DcbydsnltayO
+	 SnkhnV7y40XDZUGJYiA6FsWGZM40iGremynvaU5Cw1rh8jc4wDHWy/miN2N3sbvfLc
+	 Rn1TTCZbSsbm8xMotdnloy7atDTjiCMTCuYwLsPrm4P+VZShXKneJTrYQO7TL2CS2W
+	 aGLtKXusmSvGJfMzJsY89VPeZZyDFz0aM8vrKSLF2R5CeTp1fFyviINf8C+4nr6mjK
+	 wEsHpF7yuJvaA==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|PR3PR04MB7404:EE_
-X-MS-Office365-Filtering-Correlation-Id: dc9ca2d1-44e2-41e6-91e5-08de79fe4518
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|19092799006|52116014|376014|7416014|921020|38350700014;
-X-Microsoft-Antispam-Message-Info:
-	A0uSeeTwJuvvbKh36i3LoGlUoeTU6xTEhoou//AznbAegKhNk+S8a/EyCpZv7ykYbE4mS5CYre39Q03bttqXHpPdEjE/0CUvv/iOCvBs270lGmGRAf/FGpzye9tvLYkhbOY9HfQXq1PpayGJyOxcpI58Y52HXZgbaW/xmFPAbrcspxtz5UZKqjWBgjMk2bi1eaKXq30TKtZsBsAwfXpDB7uKu3cmZQP/Ys6neXO6U0hEajVdZk8ETcmeX2GHljRc15LSs4GphZBvZJcwc6cb905J0+G09RI4R1X77iltDH2sirXBdNNP6ZDskO20l4ijNvIudnYqm12l+EKK5mjQQbJbDxGFxqWUFMS90hpcaOmypi6EktBHnFyquGLUd594pZ4lYHlCebQMHABPKcw8lm1M2CPYJEyw8uDnOmElgioCGMdHDGZn0C3R0mNySCqofFsVY7X+hwRp7Tygpd8JBROnTwaOWdUt6c2y5gRdoqpwfRPeQ7+CZmwdy0M7JwEw53KZaf05kmRRB0vifqoMXunSUaxpHE3+08r3SfUYGbf0rTvk2BWo56Qzbofn4iK0gg96x8KkFOzakI2N6dLrcxMHBYBHbnvR2sjFe9LFMxLla+zyJJU7n7quJ7i0WSfJ7ImvvYUniRndKrjRZDC78ra/46uuxqwK4V8xZ+g0wS1yi9zkUzOVc/MIFhyDa1PGXNx/RTCmw555VumRg3qcd4Dgslr4xTpl6gAtrkdZbndtR/zjN22SHXLv85zID//PUOagkN4FXCQsWt8jsgF5i6GI7guMEHb28piXkNSKxrcrTW/hSvmLwl7W3V6N01fm
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(19092799006)(52116014)(376014)(7416014)(921020)(38350700014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?zjpCgEmOqyXai+Z8pvLK6bwMme1/gJbrobUO+UTVfJvmEDq0Fik0VHWeB/gU?=
- =?us-ascii?Q?Ir8ZE/NNZXFDxnf+0di7ghlDcJJZ1lA/NaJvj0sx4RvV7MZbvC+7m4BdefzN?=
- =?us-ascii?Q?1vu5NNS2dYVtN3+HCDcosrc9vSnKjamhvbMbna8r1HaH1R2Rt1myhU78TLN1?=
- =?us-ascii?Q?ZYajnwUct9nFqvmL7dPcQFTtcfjWwAqaH/vZznsfflMovSWtkXqP8KFZv10M?=
- =?us-ascii?Q?TrKhJ7hUMSLlkptHXQgV0NXevjJyw72GFt3II23VUdwUUrx1//ivUixCl2Rh?=
- =?us-ascii?Q?D6xsq5RYPY8P5N+yQVkGbMOJ4g+FEjrEVOb5dYg3Xap02uenwu8FXNVmcE/r?=
- =?us-ascii?Q?I997PwD51I9pXbVBp3Bt7GjcJIKNHqXmjNBZjhDEWb0Kv9/zby4wTSjY4Sog?=
- =?us-ascii?Q?UVuIRZ+ojuDODiQQsFwwzqVIWuEc21U0cBwof07Hq/lMmHpezn5vEn96eXwv?=
- =?us-ascii?Q?maGhnK/9ZV6OCQqVfSggrWX7ixeJZAQrhu5sXettBLwFLwcbU5C6ohzoGnDs?=
- =?us-ascii?Q?9yASvACG7K/y+ruGFWoMANUUE0VgxkN/JfneJFcpyFMoSUFguF0QEr/hXa1H?=
- =?us-ascii?Q?ibeUEcdLhR2e12xRDS0mSPc1Be9jJNo8BrTTSA28AyJhbw2jdCJgp3lo88TS?=
- =?us-ascii?Q?G2jKkyUELXpskZjH0IYk7Qm3fVfi0pY+dKB1YfuQPbEz77S+tBjU4BY8r91R?=
- =?us-ascii?Q?JKcRHC5k0GlxyeMrRwKSkEp6v9I9OIAqbdRX6hYNa6ynYib42Hxl94U9WRdU?=
- =?us-ascii?Q?xm3sQaTKcPszfnqIjJOI64601wz4KzdE5NK9FUvbMjuSGfuRQ/gjN4cDDZg1?=
- =?us-ascii?Q?N5QqVbxhvHu2JPsB9jzcpz4SzCVLGqVYpGAT+VkxIv5vmmZ8h4358hDkifIt?=
- =?us-ascii?Q?zT14GMtfRsk1XSqq5M0mZx62P/LQUuWPosJqMOeoalt2qAmLeJQPY2CvIR9J?=
- =?us-ascii?Q?t3mV4DCP7AkYBdreZvvpcJSQsUcshCvQbhc5EPflTadKl/SBDb60Fxc9ZU3S?=
- =?us-ascii?Q?iUyGkEMrCzir7SMsaRFyQWmh9HFdy5TnBcluxfz7fODx6ZZBXlfqEI5eji99?=
- =?us-ascii?Q?dm5/MrAEnVOiEIqJhaoc7S/EcYolNDiyTvolC7X5pJsaE+75fG4JOCmrWyy6?=
- =?us-ascii?Q?hwJHxMQb4HXyxHtp53N49UKU0BZh1HZZV46XVSKORqEbwa12E2SjgOYTHJoA?=
- =?us-ascii?Q?8mUoTyv7qgQpnKV93QkU05kUqMLt3zn8BoIM6VqPfb1uv9JisAUZanS1JERg?=
- =?us-ascii?Q?GfD9tNxTlmoCnb4MEa+eCKHs6+lB/abQIXcOiuC7GSA4YLUW9t1f1JyX0QH/?=
- =?us-ascii?Q?dMN/D5uM8Gx1vcYJc/Eawu1A8QABI6Ts6PYEV+gd/1g7JuGNIYcIByGqcVG/?=
- =?us-ascii?Q?x9Y5Frq7hR5c+j+NIvDqqBK3292zWFKNqGiq5Fc1WrrzTx6WS+QKD5l13g9h?=
- =?us-ascii?Q?B8m7DWKdXdxyhPPmcTBWgFjQprqHNtmE3NHZO3sO52VgAeDjxeEMoGYePybT?=
- =?us-ascii?Q?bkGzvav/sUaVFWKzZd7xiEM4WLE6edU90jt2o3QFTBWyKDzh49m6NlHAnw2f?=
- =?us-ascii?Q?OcGdg7fH5MUc1CqMcUBq6nYIaqVQPXV5FABmxP7lubNLnvf7nT+zVCE1ZuML?=
- =?us-ascii?Q?32CrpYeuL+I9bOpGuDP0gQqOFot7ZJ/4JtKATyFgfMNNWN43I7u0I/ZA5g/l?=
- =?us-ascii?Q?aOzlWfJjSyfHPphbZh3JToOLn3vO/C1CYwNqtjVPCdgeV+/s?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: dc9ca2d1-44e2-41e6-91e5-08de79fe4518
-X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Mar 2026 14:56:52.4022
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: z5y6CXu7lglSYwJ0M52NIxWZOpIAOuszzXn/JPHQGaBOTXsX8VZR1Yx7PtUC2C+jLi7etBSL/kAgLvfpPhTpHw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PR3PR04MB7404
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 04 Mar 2026 15:57:57 +0100
+Message-Id: <DGU347RJX5BV.1CZYELSZ9GS9D@kernel.org>
+Subject: Re: [PATCH v3 00/10] rust: pci: add abstractions for SR-IOV
+ capability
+Cc: "Jason Gunthorpe" <jgg@ziepe.ca>, "Peter Colberg" <pcolberg@redhat.com>,
+ "Bjorn Helgaas" <bhelgaas@google.com>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Miguel
+ Ojeda" <ojeda@kernel.org>, "Alex Gaynor" <alex.gaynor@gmail.com>, "Gary
+ Guo" <gary@garyguo.net>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
+ <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Andreas
+ Hindborg" <a.hindborg@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>,
+ "Trevor Gross" <tmgross@umich.edu>, "Abdiel Janulgue"
+ <abdiel.janulgue@gmail.com>, "Daniel Almeida"
+ <daniel.almeida@collabora.com>, "Robin Murphy" <robin.murphy@arm.com>,
+ "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Dave Ertman"
+ <david.m.ertman@intel.com>, "Ira Weiny" <ira.weiny@intel.com>, "David
+ Airlie" <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Jonathan
+ Corbet" <corbet@lwn.net>, "Xu Yilun" <yilun.xu@intel.com>, "Tom Rix"
+ <trix@redhat.com>, "Moritz Fischer" <mdf@kernel.org>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
+ <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, "Alexandre Courbot" <acourbot@nvidia.com>,
+ "Alistair Popple" <apopple@nvidia.com>, "Joel Fernandes"
+ <joelagnelf@nvidia.com>, "John Hubbard" <jhubbard@nvidia.com>, "Zhi Wang"
+ <zhiw@nvidia.com>, <nouveau@lists.freedesktop.org>,
+ <dri-devel@lists.freedesktop.org>, <linux-doc@vger.kernel.org>,
+ <linux-fpga@vger.kernel.org>, <driver-core@lists.linux.dev>
+To: "Leon Romanovsky" <leon@kernel.org>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20260303-rust-pci-sriov-v3-0-4443c35f0c88@redhat.com>
+ <20260304084750.GW12611@unreal> <20260304141852.GF964116@ziepe.ca>
+ <20260304142600.GB12611@unreal>
+In-Reply-To: <20260304142600.GB12611@unreal>
 
-From: Frank Li (AI-BOT) <frank.li@nxp.com>
+On Wed Mar 4, 2026 at 3:26 PM CET, Leon Romanovsky wrote:
+> On Wed, Mar 04, 2026 at 10:18:52AM -0400, Jason Gunthorpe wrote:
+>> On Wed, Mar 04, 2026 at 10:47:50AM +0200, Leon Romanovsky wrote:
+>> > On Tue, Mar 03, 2026 at 04:15:20PM -0500, Peter Colberg wrote:
+>> > > Add Rust abstractions for the Single Root I/O Virtualization (SR-IOV=
+)
+>> > > capability of a PCI device. Provide a minimal set of wrappers for th=
+e
+>> > > SR-IOV C API to enable and disable SR-IOV for a device, and query if
+>> > > a PCI device is a Physical Function (PF) or Virtual Function (VF).
+>> >=20
+>> > <...>
+>> >=20
+>> > > For PF drivers written in C, disabling SR-IOV on remove() may be opt=
+ed
+>> > > into by setting the flag managed_sriov in the pci_driver structure. =
+For
+>> > > PF drivers written in Rust, disabling SR-IOV on unbind() is mandator=
+y.
+>> >=20
+>> > Why? Could you explain the rationale behind this difference between C =
+and
+>> > Rust? Let me remind you that SR=E2=80=91IOV devices which do not disab=
+le VFs do so
+>> > for a practical and well=E2=80=91established reason: maximizing hardwa=
+re
+>> > utilization.
+>>=20
+>> Personally I think drivers doing this are wrong. That such a driver
+>> bug was allowed to become UAPI is pretty bad. The rust approach is
+>> better.
+>
+> We already had this discussion. I see this as a perfectly valid
+> use-case.
 
-Commit message has a typo:
-
-> Fix the identation of the callback functions.
-
-Should be "indentation" (two 'n's).
-
-The code changes look good otherwise. The indentation fix aligns with kernel
-style (8-char tabs), and adding PROBE_PREFER_ASYNCHRONOUS is a straightforward
-addition that matches the stated intent.
-
-AI bot review and may be useless.
+Can you remind about a specific use-case for this please? (Ideally, one tha=
+t
+can't be solved otherwise.)
