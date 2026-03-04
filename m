@@ -1,63 +1,63 @@
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C34153B3C0B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2026 14:15:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BF183A257F
+	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2026 14:16:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772633754; cv=none; b=gHoIBEYDUqnt/o2tUbH0yjv7XtFpXar2rld9ei3WN+YmkjZ/rfLud+5QJS0MPrBsbeQS/0RIuOidE2mwoJ/NYDwAJ4IfX3tCPP/ZX3DDkG/EZcQvnrhNt8onOv/7qQjPBkMiSCFO3wMpQU29iqVLsqFMmDvABvZJB623NYhz9tQ=
+	t=1772633802; cv=none; b=iRDY626b0jcagHuzqp9hZYk93lEWNnRMMplAaFRTNTfdjhz15BTtIW9QvrNWwHpAwirvS+I15p1QMd4g+DAavPTK+ZZpLBlAiH+5wGkdFTTg0jBuHDpaP/O1iiRWTZ4JBA4QxLuEZFTd7cX2RtsIPaNASDsx/cCMGLg43uykHWw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772633754; c=relaxed/simple;
-	bh=sOuf9crnr+mGWYcFQULXSYXyooM+1ooss5UP7AG6ldw=;
+	s=arc-20240116; t=1772633802; c=relaxed/simple;
+	bh=AAR1uDouR8gmyuDZeOFLpxM99huHX4k3NzQIgrMbcCY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YdW37AvQPoBaqezS3vgR8zzw2RqmYTNt5p5xMiCXNdnMNEKaiPdDC3ytfEvu7/7D8jjZGIQeVgSW89eYo9qCnxwM+PMUVJn61XG5KJ87Gu7TfUkIWsePuReV4CvZnS619lIQsf9uDnIbZFzdqiULSR2/rT8MQhIHFkarduKi1FA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=c3y14wte; arc=none smtp.client-ip=209.85.216.42
+	 MIME-Version; b=jXnAB7lkmYZ0pOqn6p2zs9sXp9mCLYurfOb50anK/m+hXyOdcp9Xmskck9c9ChNwVwd+PApzdU00ZZnAGQUdUNfQDV5sU2SOAorg0XcQE/KLu5K3/ue5VrbKEq4WmhVezzwUseIp8Qvz+Sc3DPJps6Y5Z84HwvoVx99GaGYRCh0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ECvJoJcZ; arc=none smtp.client-ip=209.85.210.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c3y14wte"
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-3590042fa8eso4155905a91.1
-        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 06:15:53 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ECvJoJcZ"
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-8297310ce0aso373961b3a.2
+        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 06:16:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772633753; x=1773238553; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1772633801; x=1773238601; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=/CrWSKJRkZKN008VlCo4uVGQadvKlijsjSi8/hdflIY=;
-        b=c3y14wte/Zrj6mW13RYCEN5ZLsiOk35SndeJGwzS/iETGEL9b4YzFr8tpseLouILrk
-         cph+xtKU1zlOPnwfL7R41HWQcazqujvlDCrXV8WWsHFtyncdl7fCtbR77F4mrU/qCA6v
-         CJ/m5h8CAbW8MEy4XnxPHpo7JQHlxUHHMA6Pzs22KHJBvMPXM2ikoaDXTb+WCeQdK541
-         iKTax6Y1zvUBBRrCY6PlIL9SD3u7yEMBqJUWtJewxLyT6Ttus6jPL8Vw8JqHMSI5OHvG
-         dcX/h1BEL4MphJSqwY5LCyeqGOoRCpaN3boag3sculxRkSQ4xhiJYSaS+7TRrMYYHEd5
-         qn+g==
+        bh=KDjBy/zS51mD1PxaQ7mIKoDOiKAIHa799oQhdGW8t+4=;
+        b=ECvJoJcZ6LU9DSGltASg+kMYcIa/VBRXIDiDG49N2FQ+m1OL16FVP/J/LlCKsdDSe0
+         UZ4FMPONV8SXD/GHS2e9pTqpnb/ch4kVBOoZ7REhClw/gwKZSRaeJDn9eXQk8rqNp4Dl
+         L+Lh5mrL5tjVEByXBR1BEb9lI2X7Qw6HbR4zUpR6KjxzCbgSwEYQZ82TYJZOIrYWRFX1
+         UdcmnM+gCuK8q5pZAJO1oyDox+R+/jGH1kJE3dr5nQT3tZy/IHYDm14cydKGBJH3qv6u
+         5d7fy2Gwn5RZ6VTFyB2q+O2D9vvkpPHsnWQ4Cyi4HJ5ewrRyHcdtwS2qRfsOQSPKwIhx
+         ZqJA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772633753; x=1773238553;
+        d=1e100.net; s=20230601; t=1772633801; x=1773238601;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=/CrWSKJRkZKN008VlCo4uVGQadvKlijsjSi8/hdflIY=;
-        b=DVQaljNg7kmg4aoIe3dgR4votgvLqpOn1uevySetA2CxfuiVJRmVgMU2thXvC2sfyR
-         JKxFEGGPNpN+4/dY3lXa5/waijTXxCjZfsPOieifV8LfJqRYk3+RxQndIlx9ORRmsd1S
-         QJJO44gmjFIFP/3qVm7G3Ldqt3/riluTtV2Js6q4ncAdifMAalCsBCcj8Y2XVYpPSE4T
-         XlogueZ7KLNpRZl8T6Q5zsXynuL9okWxgMeS1ujtMZHynkXWyT3YYwSZNAdw+ciY8dGz
-         nXs4cDkmdM/X11haXhTQZD5+R3QHkXSbmmf2gGvArkWCcnqi25aQcSBrVX5Qnn7dnrJ6
-         Qk5Q==
-X-Forwarded-Encrypted: i=1; AJvYcCU5zIs8gdIbxoSHjJ+yyDSEBebYWRhL2LK89CM6UsFeL0uQot9powMMCkklo66lVvUMPABSYJdOo2A=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzgf9LXjhXr6IBCmlrlpcyuA/f+D98JU9tCikbwqsN9tFDzGZUr
-	YZPjfKLpKzl4VS4fq9EJOeERsLRKbOlIso008RX7j+IJMr+5mRcNuto7
-X-Gm-Gg: ATEYQzwVbd1UxWteV1DDzDrNRSjddcqKAMVGuSjk3SFrRZkawTWjWZZg6El8NfvTIFJ
-	EKc/BexMOGFbGvC4FzY9w3hcr9ad3isv2B1jjEhM8F/he/ZmuXKaL52SJ8GqefyrFBOk8pCBhJi
-	oEYwC0SuP0PDrBUbn7SAuVoD3pfwTIJ4+CtMT2lRHpC0AR6o763G4qekmYJdrvYltDDBT6YPcj9
-	d7mMW1wgSgWERDU0snuekHWs4uR/Jl40NXlTfsGLgWIDNp0g2Ze8CftHF8sx0OWZwRlhnhxJwOm
-	NJ/XJWLviruruGmEeSqw1nFAQ3ZH+wOyn/IJwAJ/b5XQJkwfz5tbxtGPH1KmELQ4M46sUJctwLm
-	pdRYcnTYDIKRGJwgcK73IpbfiXr69JcUwK9EsR4dmgjmXPynksPmvukGSc8/jJ6D8HHO/RheUWL
-	m/A9XB2Izt/tM109ujRZnE
-X-Received: by 2002:a17:90b:3506:b0:354:a57c:65dd with SMTP id 98e67ed59e1d1-359a6a66b87mr2001714a91.24.1772633753114;
-        Wed, 04 Mar 2026 06:15:53 -0800 (PST)
+        bh=KDjBy/zS51mD1PxaQ7mIKoDOiKAIHa799oQhdGW8t+4=;
+        b=Oz04ZdCx9NNplT2OBH2qq6JCiRtC7SyxO4IY66ZuJyLGk4HdwylACIMIyh6yTmBpW0
+         KMn3acS2Vh6+X8IgKcl1vZjbkNPbWqXJjeAA43Ne3m0s7fqNHdOZWlq+vr0AzA/D+oiu
+         POZEX6QPm8dWcmRrau8usQqOYUJCU4Tgd4+yr4N2LkEOmgmFWQ/s1vkOOUnch5VR40v/
+         csdURJxl3exHKGelgDRcjl5/KDDOqu9kzJ6azRfMPvXSPBD/7oNPhtTDHzZBC24EgkmB
+         xYbv5JdS7R6VwFsqgfae7Dvu/85dB4xpVYUYa10ym4qVjdkh0qKFgtRDzX+KnzQg6Jpl
+         P/Hw==
+X-Forwarded-Encrypted: i=1; AJvYcCUZqZt5FQe8z9MgO9qRcU/CGa6X2WBvU3gq3EHAtex3TrWJeanSzDuwzYQhkv/rbnWIg0bpnw7d9m0=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx/ZlyDhXTLkLmpANPcJ+qYjXcgpi3xG35GAT2yx/zRw1TZqZBZ
+	l7iRFzXo5pI7YcKzf1pQSXhBp67G2zs0ZKDACfDmfQ1l5DpGHf4akR4I
+X-Gm-Gg: ATEYQzx+o2uxcFPlTEmerK3oW8IUBB5L+iS+AGHYbtGT5zbL6C0oftVwVOEuDdX2Q2G
+	ToGELGjGnmtKsYpqejEG5UKKYr0ta+SHL6edndIkc0D7nLahZtvMHR0Bw5lXf34i16yDFjnmibw
+	gHo4u1SUITrgxebeSPAam9z9lYimqJNheFfqhM7R0h8cjuMcFUTcPR3rb9p+d5sH857NgoTrQSB
+	FE7qIxCwjJVBuAP1YU2HX+XfSmQkL2cpc3CMIrjibOai4mSEwkGkBaBh+lsBdXHhRK9q/0kgrm5
+	s7wci7H+zN0o+HqDhBnG3Px0rHB/EdMVnu29XQN2dQM6mMZdV8QlnfmpX+2QVnZGhNs0jT8Bqml
+	KvhNnPfqlEpL6F56fi2seHZZeAxQ7wmOVGEi4aDLClZED9tbICtiS9D5lgVMkRP0aWier8HYX06
+	IUb8g3UY3fXQ2aV5pgo+70
+X-Received: by 2002:a17:90b:1d4e:b0:359:8f84:ad8a with SMTP id 98e67ed59e1d1-359a6a88709mr2213203a91.33.1772633800980;
+        Wed, 04 Mar 2026 06:16:40 -0800 (PST)
 Received: from rockpi-5b ([45.112.0.200])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3599c4c0f80sm6826545a91.16.2026.03.04.06.15.39
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3599c4c0f80sm6826545a91.16.2026.03.04.06.16.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Mar 2026 06:15:52 -0800 (PST)
+        Wed, 04 Mar 2026 06:16:40 -0800 (PST)
 From: Anand Moon <linux.amoon@gmail.com>
 To: Vignesh Raghavendra <vigneshr@ti.com>,
 	Siddharth Vadapalli <s-vadapalli@ti.com>,
@@ -95,13 +95,12 @@ To: Vignesh Raghavendra <vigneshr@ti.com>,
 	Masami Hiramatsu <mhiramat@kernel.org>,
 	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>,
 	Niklas Cassel <cassel@kernel.org>,
+	Qianfeng Rong <rongqianfeng@vivo.com>,
 	Hans Zhang <18255117159@163.com>,
 	"Jiri Slaby (SUSE)" <jirislaby@kernel.org>,
-	Thippeswamy Havalige <thippeswamy.havalige@amd.com>,
 	Thomas Gleixner <tglx@kernel.org>,
 	Sai Krishna Musham <sai.krishna.musham@amd.com>,
-	Nagarjuna Kristam <nkristam@nvidia.com>,
-	Koichiro Den <den@valinux.co.jp>,
+	Thippeswamy Havalige <thippeswamy.havalige@amd.com>,
 	Vidya Sagar <vidyas@nvidia.com>,
 	linux-omap@vger.kernel.org (open list:PCI DRIVER FOR TI DRA7XX/J721E),
 	linux-pci@vger.kernel.org (open list:PCI DRIVER FOR TI DRA7XX/J721E),
@@ -116,9 +115,9 @@ To: Vignesh Raghavendra <vigneshr@ti.com>,
 	linux-tegra@vger.kernel.org (open list:TEGRA ARCHITECTURE SUPPORT),
 	linux-riscv@lists.infradead.org (open list:SIFIVE DRIVERS:Keyword:fu[57]40)
 Cc: Anand Moon <linux.amoon@gmail.com>
-Subject: [RFC v1 15/18] PCI: sophgo: Allow asynchronous probing for background link training
-Date: Wed,  4 Mar 2026 19:21:58 +0530
-Message-ID: <20260304140329.7089-16-linux.amoon@gmail.com>
+Subject: [RFC v1 16/18] PCI: tegra194: Allow asynchronous probing for background link training
+Date: Wed,  4 Mar 2026 19:21:59 +0530
+Message-ID: <20260304140329.7089-17-linux.amoon@gmail.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20260304140329.7089-1-linux.amoon@gmail.com>
 References: <20260304140329.7089-1-linux.amoon@gmail.com>
@@ -136,21 +135,21 @@ are being probed.
 
 Signed-off-by: Anand Moon <linux.amoon@gmail.com>
 ---
- drivers/pci/controller/dwc/pcie-sophgo.c | 1 +
+ drivers/pci/controller/dwc/pcie-tegra194.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-sophgo.c b/drivers/pci/controller/dwc/pcie-sophgo.c
-index 044088898819..0393f4b613de 100644
---- a/drivers/pci/controller/dwc/pcie-sophgo.c
-+++ b/drivers/pci/controller/dwc/pcie-sophgo.c
-@@ -269,6 +269,7 @@ static struct platform_driver sophgo_pcie_driver = {
- 		.name = "sophgo-pcie",
- 		.of_match_table = sophgo_pcie_of_match,
- 		.suppress_bind_attrs = true,
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index 06571d806ab3..7381d0019d24 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -2493,6 +2493,7 @@ static struct platform_driver tegra_pcie_dw_driver = {
+ 		.name	= "tegra194-pcie",
+ 		.pm = &tegra_pcie_dw_pm_ops,
+ 		.of_match_table = tegra_pcie_dw_of_match,
 +		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
  	},
- 	.probe = sophgo_pcie_probe,
  };
+ module_platform_driver(tegra_pcie_dw_driver);
 -- 
 2.50.1
 
