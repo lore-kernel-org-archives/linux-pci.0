@@ -1,126 +1,199 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EBE237FF61
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2026 06:26:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B075B28690;
+	Wed,  4 Mar 2026 06:32:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772605610; cv=none; b=ncVWYpLoE96HEbjOfQf4UH7egOfZaJ0/9LsFrspOclq2k9BW/XKA34w/YlnKHJx8MG2V+PJ/DgGESWniYplIm2P01/IXuFewBXYepQlkmHF9oxs5EcutRo+PnvdCkMtOJofFzQbnBZ/fB7WpvdIvXdTRGTOB13Fl7V0rruGQoqk=
+	t=1772605979; cv=none; b=ksZo7WPg+PaE5xokW4FMa6NbTMnef8lFrdh+86OJDRfZYozqAW5hDigyc6Crklqk6pwtdz2+loFNb12Z84Z4U7U+601ck6VwvjaCaOS3msuRfNoeir7PxT5E9CA3wPCiFlCQoao2+FuP1LfUtFI5vMasHjz0ez73J3k078TPdOw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772605610; c=relaxed/simple;
-	bh=h+mTLN6n6mBPr7PqYqmQSCCs2jhafXeB0NRdyOd/a60=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=P2vaqy8mNBkMZkKYjlorIJzncLb8MDSbKvipvXIB8EaonJTq+M/mxz/ONnIgx5475odWAr7FwvP60T23b6Rg+ZHiCxcvUQsknG0JJ7YSPyY3mrOhlG0l89vY3uImOg/KpfakQxWbrv3ZOlU5RECVERPzmKhcHLuWejIdKhNi4ww=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DF3PXUcm; arc=none smtp.client-ip=209.85.210.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1772605979; c=relaxed/simple;
+	bh=KLX+r/cNJoWvojZCxYtKCgW5FIWCy3S0O4lMxQZnvbo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JW+gg0yCokER2KCOLAo7nzqj6MZqU5JpcRZHIVtY50KEK+7pFKHdAdNknCVtzgD7P2ReoH5Bxm9vPeKTZNkU/RHQoR1ggiwIX9MEXpQdB0a06uaCATosGVBTxNMIZ92YkX1EhIRPDGO//IwPtWZ6VTKerjucSHoarg4VK/Q79Pw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GYi/RgHc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DF3PXUcm"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-827270d50d4so6875225b3a.3
-        for <linux-pci@vger.kernel.org>; Tue, 03 Mar 2026 22:26:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772605608; x=1773210408; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UNQTswAIlkxtACM2d1rPkaE1OkOxjlH5iieRYDqA/Dk=;
-        b=DF3PXUcmwq1QXhhXy6OADy9cp8wt2DPYOeTzubiRlQWtQ+uQotZQEqOqPIC6GuEd1b
-         aKoNV8rxmW4/zSXS9mHjItZEQhUfHvVNeYlbzmeFR8Zt8fBqvtBSyzIDf9zpriyRCwmQ
-         6fEYLL0Pslpyr80rRtA5P2zlW6RgbiCT6bFJaiMtKVKwIylWm87L3llLHWRm2PcvAZwT
-         RxbsgHZa3ga8NyhTAS70ByN+rGn1FgY1M4dtabTc/1AivRqE6DIvmk4Yb5+umtY1lBHc
-         2Uw2VVF/JNVA3n43P95xlN26J3JXMr3hriomPAC7bZke2CuCO2FcCCtt+vfbAVn2vyLt
-         s0eQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772605608; x=1773210408;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=UNQTswAIlkxtACM2d1rPkaE1OkOxjlH5iieRYDqA/Dk=;
-        b=Qpa0FpR3l3U+52zCheAMr1n/JWr4GWSQw0k5wuiXaG2FfO8N/Sw+T1RCPSPXYBD74v
-         fENY4L8wZBEsiZj31y+sGtxUlzwfvyZkRsI/pCquGrD6+jMil09If/xP+wuK/s4BuOyu
-         dDIZ81WEA46FoXyySB2QlIPzdcdAgVXFKBEvRhblwnxQ8AMlCM/+4ejlPEbswRV69+Dc
-         XmJcOr0qWavUGNRoLHZ0qqdsX9CsBRuRm1WbPK83+Cr058yVg3MFJa9+yFD6/ck1A5Xn
-         TKXhWtvDrgvJUgWM3zb/r7MeEJQG8LoAJQr+T+Z7kmq4b1C3aWSYJJqwvxHXrFif1whs
-         hUJw==
-X-Gm-Message-State: AOJu0YwhfJv8cqViRVFopKc61GtAZlZfft57eNKS46aPq8cowVYcnTF2
-	U7ZiHCtTw84ymiZkCakBQUKeOn4rmMfXc9bRLLkuFy2egWo/kqinQt9N
-X-Gm-Gg: ATEYQzwp/+fhsG9TdjHXceMcnsZYFZB8dXnFczrKN7gB2LEm8yvJHDM53IB5EZusAMh
-	eAhMReLrDEarRb+mP+j6VNW4lHGd/FGrHPPo53FFfFQHUct0VdCB9m1/qBKdmI8z9LgkWdy+5Bn
-	ZtjCtRyur3fWerzH5P+kesx4EMlS2ESinTj6Irgi6KxXctJYYXa1Bf2AhB0n/d8vksdiWmW34o2
-	mkGaufdXZWymUjAiVtyZHIUsgjEK9MWwiqzWfShQ907NEF4GCehx4lCqg+pAbsoB8sCMfojZR20
-	CximUH3mFgpMZtdTtZ9YaEsdPz15ko5vZIEEIS6p+gAXS0M4xQnW2xiSeJ0Mx43S8w5U0aDIvk6
-	8JV+1oo+XshpCueqbExERD943dwLjOkAnUyP2U4mBPNyelLqdMOakzvDyE4G5ydIENg7s05NvF3
-	vT1BS6L60a86imYAWnm1u6JtibJF6op2kIAxVNhAlZYjMMIG/k7Dnzkw==
-X-Received: by 2002:a05:6a00:340a:b0:81c:4a92:25a2 with SMTP id d2e1a72fcca58-82972c8324dmr849629b3a.46.1772605607659;
-        Tue, 03 Mar 2026 22:26:47 -0800 (PST)
-Received: from ZC-202510311500 ([61.185.217.216])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82739d544ffsm17933355b3a.12.2026.03.03.22.26.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Mar 2026 22:26:47 -0800 (PST)
-From: hechushiguitu666@gmail.com
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"haoyu.lu" <hechushiguitu666@gmail.com>
-Subject: [PATCH v2] PCI: probe: Use helper macros and constants
-Date: Wed,  4 Mar 2026 14:26:38 +0800
-Message-ID: <20260304062638.1782-1-hechushiguitu666@gmail.com>
-X-Mailer: git-send-email 2.53.0.windows.1
-In-Reply-To: <20260303073655.2047-1-hechushiguitu666@gmail.com>
-References: <20260303073655.2047-1-hechushiguitu666@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GYi/RgHc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56C3AC19423;
+	Wed,  4 Mar 2026 06:32:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772605979;
+	bh=KLX+r/cNJoWvojZCxYtKCgW5FIWCy3S0O4lMxQZnvbo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=GYi/RgHc/O9GuaYVlzO1gnR6pZKx0lkv+TjVM4lUDJqV977f7X2JTyAP1pDVDDPf3
+	 f1frd7YUMnSfCSR5AFvoA2ZNpZpDNkL8BugfgxktUoEHMswgkIueG8fYCGUTVEDopW
+	 4QO9lGcOS1G3SKsfgrEfI0Lv+6XdSfQjN8D6X7emLQzL2fyG394bj0iLQywVgxMjMZ
+	 h5uZFBu6MJL6YFZeh5RdYlqTz7qGNzvGGg54+KHpW4bgq9Ijf4PaPgqx3/qlQnLeY7
+	 MANj0hBh9vU2Da5exkV6COy6kMRcWXf1MewqsfdtIRaZL4BFKFnGMiWwmSaAQYlxlx
+	 OkDEhwoFhW/Xg==
+Date: Wed, 4 Mar 2026 12:02:48 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Hongxing Zhu <hongxing.zhu@nxp.com>
+Cc: Alexander Stein <alexander.stein@ew.tq-group.com>, 
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev" <imx@lists.linux.dev>
+Subject: Re: i.MX8M Plus PCIe link regression
+Message-ID: <2qto2ddqmtks37wxtklxo4ctvxyezmgtjcuprnk6crant5fvsu@vdbmqomrcqt3>
+References: <23024521.EfDdHjke4D@steina-w>
+ <ac24flkmrooacnpt53swuurkbxvorbjx2yb4s3zdevqua6ddls@wjc3bcsl7zif>
+ <AS8PR04MB88332979F06EDE29E751BCE18C7CA@AS8PR04MB8833.eurprd04.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <AS8PR04MB88332979F06EDE29E751BCE18C7CA@AS8PR04MB8833.eurprd04.prod.outlook.com>
 
-From: "haoyu.lu" <hechushiguitu666@gmail.com>
+On Wed, Mar 04, 2026 at 02:55:51AM +0000, Hongxing Zhu wrote:
+> > -----Original Message-----
+> > From: Manivannan Sadhasivam <mani@kernel.org>
+> > Sent: 2026年3月4日 0:42
+> > To: Hongxing Zhu <hongxing.zhu@nxp.com>; Alexander Stein
+> > <alexander.stein@ew.tq-group.com>
+> > Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+> > imx@lists.linux.dev
+> > Subject: Re: i.MX8M Plus PCIe link regression
+> > 
+> > On Tue, Mar 03, 2026 at 01:38:13PM +0100, Alexander Stein wrote:
+> > > Hi,
+> > >
+> > > these days I noticed that there is a PCIe link regression on my
+> > > i.MX8MP platform (TQMa8MPxL) running next-20260227.
+> > > I could bisect it back to commit 9c03e30e3ade3 ("PCI: imx6: Skip link
+> > > up workaround for newer platforms"). I always get the following errors:
+> > >
+> > > imx6q-pcie 33800000.pcie: Link failed to come up. LTSSM:
+> > > CFG_LINKWD_START imx6q-pcie 33800000.pcie: probe with driver
+> > > imx6q-pcie failed with error -110
+> > >
+> > > Connected is a Gen1 PCIe -> Ethernet adapter. Interestingly a Gen2
+> > > device is detected without issues.
+> > >
+> > > Reverting 3c96a61dd2e098dda8dcac3dce3d38a3c87afbfc and
+> > > b9a8d28ebbf118bb3eac953f4a37abbd341257ab "fixes" my platform, both
+> > Gen
+> > > 1 and Gen 2 devices are detect. Commit
+> > > 3c96a61dd2e098dda8dcac3dce3d38a3c87afbfc is only required for conflict
+> > free revert.
+> > >
+> > > Here is a summary with outputs:
+> > > Gen 1 device
+> > > > 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
+> > > > 01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
+> > > > RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller (rev
+> > > > 01)
+> > >
+> > > Gen 2 device
+> > > > 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
+> > > > 01:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9128 PCIe
+> > > > SATA 6 Gb/s RAID controller (rev 20)
+> > >
+> > > output of "dmesg | grep imx6q-pcie". Common part for all tests:
+> > > > imx6q-pcie 33800000.pcie: host bridge /soc@0/pcie@33800000 ranges:
+> > > > imx6q-pcie 33800000.pcie:       IO 0x001ff80000..0x001ff8ffff ->
+> > > > 0x0000000000
+> > > > imx6q-pcie 33800000.pcie:      MEM 0x0018000000..0x001fefffff ->
+> > > > 0x0018000000
+> > > > imx6q-pcie 33800000.pcie: config reg[1] 0x1ff00000 == cpu 0x1ff00000
+> > > > imx6q-pcie 33800000.pcie: iATU: unroll T, 4 ob, 4 ib, align 64K,
+> > > > limit 16G
+> > >
+> > > next-20260227
+> > > Gen 1
+> > > > imx6q-pcie 33800000.pcie: Link failed to come up. LTSSM:
+> > > > CFG_LINKWD_START imx6q-pcie 33800000.pcie: probe with driver
+> > > > imx6q-pcie failed with error -110
+> > >
+> > > Gen 2
+> > > > imx6q-pcie 33800000.pcie: PCIe Gen.2 x1 link up imx6q-pcie
+> > > > 33800000.pcie: PCI host bridge to bus 0000:00
+> > >
+> > > next-20260227 + reverts
+> > > Gen 1
+> > > > imx6q-pcie 33800000.pcie: PCIe Gen.1 x1 link up imx6q-pcie
+> > > > 33800000.pcie: PCIe Gen.1 x1 link up imx6q-pcie 33800000.pcie: PCI
+> > > > host bridge to bus 0000:00
+> > >
+> > > Gen 2
+> > > > imx6q-pcie 33800000.pcie: PCIe Gen.1 x1 link up imx6q-pcie
+> > > > 33800000.pcie: PCIe Gen.2 x1 link up imx6q-pcie 33800000.pcie: PCI
+> > > > host bridge to bus 0000:00
+> > >
+> > > What can we do here? I'm wondering why Gen 2 trains correctly, while
+> > > Gen 1 doesn't.
+> > >
+> > 
+> > Thanks for the report and sorry for the breakage. Commit 9c03e30e3ade3,
+> > mentions that the workaround is only needed for the i.MX6 platforms. So
+> > I'm not sure why the patch breaks i.MX8M and that too only for Gen 1
+> > speed.
+> > 
+> > Also, before 9c03e30e3ade3, LTSSM was always started in Gen 1, but as per
+> > your finding, only Gen 1 devices fail to work. So the code till
+> > imx_pcie_wait_for_speed_change() shouldn't have an impact. Maybe the
+> > issue is due to skipping imx_pcie_wait_for_speed_change()?
+> > 
+> > Richard, thoughts?
+> Hi Maini:
+> Prior to calling imx_pcie_wait_for_speed_change(), the PCIe link must
+>  already be established. Before commit 9c03e30e3ade3, the speed change
+>  procedure was only initiated after the initial Gen1 link was successfully
+>  brought up.
+> 
+> Hi Alexander:
+> Sorry for the breakage.
+> Before commit 9c03e30e3ade3, i.MX8MP PCIe forced Gen1 link training
+>  initially, then switched to Gen3 after link-up by triggering a speed
+>  change. After commit 9c03e30e3ade3, link training starts directly at
+>  the Gen3 capability level.
+> 
+> The two link training methods differ only in the i.MX8MP Root Complex (RC)
+>  link capability configuration prior to link training: one method forces
+>  Gen1 speed, while the other retains the default Gen3 setting in your tests.
+> 
 
-Replace direct resource array access with the pci_resource_n() helper
-macro and use MSEC_PER_SEC instead of the bare number 1000.
+I still don't understand why the link fails to train at Gen 1.
 
-Changes in v2:
-- Use pci_resource_n() for resource array access (Bjorn)
-- Use MSEC_PER_SEC (Bjorn)
+- Mani
 
-Signed-off-by: haoyu.lu <hechushiguitu666@gmail.com>
----
- drivers/pci/probe.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> Fortunately, I also have a RTL8168E Gigabit network card on hand.
+> Based on v7.0-rc1, here is the tests log on my i.MX8MP EVK board and one M.2
+> Key E to PCIe standard slot exchange adaptor.
+> 
+> Logs:
+> root@imx8mpevk:~# dmesg | grep pci
+> [    2.172420] imx6q-pcie 33800000.pcie: host bridge /soc@0/pcie@33800000 ranges:
+> [    2.172516] imx6q-pcie 33800000.pcie:       IO 0x001ff80000..0x001ff8ffff -> 0x0000000000
+> [    2.172545] imx6q-pcie 33800000.pcie:      MEM 0x0018000000..0x001fefffff -> 0x0018000000
+> [    2.172631] imx6q-pcie 33800000.pcie: config reg[1] 0x1ff00000 == cpu 0x1ff00000
+> [    2.380065] imx6q-pcie 33800000.pcie: iATU: unroll T, 4 ob, 4 ib, align 64K, limit 16G
+> [    2.579604] imx6q-pcie 33800000.pcie: PCIe Gen.1 x1 link up
+> [    2.580020] imx6q-pcie 33800000.pcie: PCI host bridge to bus 0000:00
+> <snipped>
+> [    2.583653] pci 0000:01:00.0: [10ec:8168] type 00 class 0x020000 PCIe Endpoint
+> [    2.583858] pci 0000:01:00.0: BAR 0 [io  0x0000-0x00ff]
+> [    2.583885] pci 0000:01:00.0: BAR 2 [mem 0x00000000-0x00000fff 64bit]
+> [    2.583902] pci 0000:01:00.0: BAR 4 [mem 0x00000000-0x00003fff 64bit pref]
+> [    2.583914] pci 0000:01:00.0: ROM [mem 0x00000000-0x0001ffff pref]
+> [    2.584280] pci 0000:01:00.0: supports D1 D2
+> [    2.584320] pci 0000:01:00.0: PME# supported from D0 D1 D2 D3hot D3cold
+> [    2.595615] pci 0000:01:00.0: ASPM: default states L0s L1
+> root@imx8mpevk:~#
+> root@imx8mpevk:~# lspci
+> 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
+> 01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller (rev 06)
+> 
+> Best Regards
+> Richard
+> > 
+> > - Mani
+> > 
+> > --
+> > மணிவண்ணன் சதாசிவம்
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index bccc7a4bdd79..d5b27d03355c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -119,7 +119,7 @@ static u64 pci_size(u64 base, u64 maxbase, u64 mask)
- 	 * Get the lowest of them to find the decode size, and from that
- 	 * the extent.
- 	 */
--	size = size & ~(size-1);
-+	size = size & ~(size - 1);
- 
- 	/*
- 	 * base == maxbase can be valid only if the BAR has already been
-@@ -594,7 +594,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
- 
- 	pci_bus_remove_resources(child);
- 	for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++)
--		child->resource[i] = &dev->resource[PCI_BRIDGE_RESOURCES+i];
-+		child->resource[i] = pci_resource_n(dev, PCI_BRIDGE_RESOURCES + i);
- 
- 	pci_read_bridge_io(child->self,
- 			   child->resource[PCI_BUS_BRIDGE_IO_WINDOW], false);
-@@ -2600,7 +2600,7 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 	struct pci_dev *dev;
- 	u32 l;
- 
--	if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
-+	if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60 * MSEC_PER_SEC))
- 		return NULL;
- 
- 	dev = pci_alloc_dev(bus);
 -- 
-2.53.0.windows.1
-
+மணிவண்ணன் சதாசிவம்
