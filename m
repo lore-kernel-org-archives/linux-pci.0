@@ -1,254 +1,189 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FA851946DA
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2026 21:17:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C66381946DA
+	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2026 21:18:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772659057; cv=none; b=hZDwIuBx+B9WYNeJ+2wqJcIK3RMFreZy1BbNCXMgXvTpdWH/6imhQ+SFRnYRyu5JN2HZ7BU4E5FvOURIEoFM2X5mnY/HQGArbP6VoPMg6VNiL6caON4FOIPZtR7jaQRWzgvVthmYQj78+koyNkL5bXdjPu3ieS/Pv+m6ua4yjdk=
+	t=1772659129; cv=none; b=bkaOZYaAKy10EMLo4UisvpZ0DRowqomxXdU51UQTd46b+DPoXyClVRtT4E5xfsSlAQGh/cIkeUkN7kHIvpZo3E9iv0jRwtOFrldM9My6HBy1nKDIy/AgwycFWuydwAUM2M2wtVE7HVbXfRTmbNFdnAxCHk6dFP+qf0rdDwDBOnM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772659057; c=relaxed/simple;
-	bh=ae/CPin5Vw9nqRzAFT5h4mcTDiSnv8XsSGIzGfpfb8s=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=ZQkhBrmJN1rf09/uhlTPjI79AwcVMnyhgBdd76i9Rf9WusP+HDTkRo6dkDHn2Au5WF3otcKWUIjA0mGV15YK8kkYQ42WotaW6wFUNMVX7GVWV1qG9McCh8XF4+Rm2uMfcOldl2+20dopB4gFieC8fTLJ5lLZqt8xq6unHQinLQw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aFYRqFiZ; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1772659129; c=relaxed/simple;
+	bh=BWpyPY8xNNR1DebVzk79xtMYqs7eXVmirltGPb7Lq3E=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=uBv5mTXve/00rcGby+tEvJJn/2MSjN2yk+avYsItSHyBdF6eiwvafRiX5XdikDyRIevCmTw8q9vo//DxeLMB1kCiVFGQ3pu68FLEN99GQUSjylBTFy+6F3r3Oht3+/mmUQibO7W6DZM7xUxJ3bWcOPWJsd/eOe/Lmy12hkYUGTE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mjMADfqM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aFYRqFiZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772659053; x=1804195053;
-  h=date:from:to:cc:subject:message-id;
-  bh=ae/CPin5Vw9nqRzAFT5h4mcTDiSnv8XsSGIzGfpfb8s=;
-  b=aFYRqFiZdvl3fOmd/oXmomwMgbsxxZM7phjeRGySzhNR/iBLLaa1261Z
-   Ssk8TV47FdxC/ZEZIgvJmSVMvkhZnnHNoEzkyvEyTM91ytFLKRKw4NCfQ
-   +p/1ZzeMOh0J1LFr7MGgG/6liOicFuGiT1yAaxlMsUuGKPeZOuFy4K3r4
-   tq2Kx5+UG8FT0CoE+s11vlWjqlo8X20M6MByrhnibo7mLtnmVksA7iEOx
-   Fff9YWZ6m1XsL3KyEyazkZVm4bnL4Pzs3u48mIQKlgjEazt7HmvcveQb/
-   ernGWFXicUqnn2Gwi71HAuGy44zu6LcN9lSPagsYtr2/3u/XmiMsnvTRZ
-   g==;
-X-CSE-ConnectionGUID: YtYddzFzQuewBpwnKe87Og==
-X-CSE-MsgGUID: Kgn+PRWiT7CgeNhjentIYg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11719"; a="84369670"
-X-IronPort-AV: E=Sophos;i="6.21,324,1763452800"; 
-   d="scan'208";a="84369670"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2026 13:17:33 -0800
-X-CSE-ConnectionGUID: w+awnfF4Rmup18wtTxOShw==
-X-CSE-MsgGUID: tQWJ+p6jQH+qdkvbSq1+Bg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,324,1763452800"; 
-   d="scan'208";a="215781440"
-Received: from lkp-server01.sh.intel.com (HELO f27a57aa7a36) ([10.239.97.150])
-  by fmviesa010.fm.intel.com with ESMTP; 04 Mar 2026 13:17:32 -0800
-Received: from kbuild by f27a57aa7a36 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vxtaz-000000004Vl-0Kuq;
-	Wed, 04 Mar 2026 21:17:29 +0000
-Date: Thu, 05 Mar 2026 05:17:25 +0800
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:endpoint] BUILD SUCCESS
- d799984233a50abd2667a7d17a9a710a3f10ebe2
-Message-ID: <202603050517.PMUAadC0-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mjMADfqM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39BB4C4CEF7;
+	Wed,  4 Mar 2026 21:18:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772659129;
+	bh=BWpyPY8xNNR1DebVzk79xtMYqs7eXVmirltGPb7Lq3E=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=mjMADfqM6tp1mG1yFtXEy/Hu+jnjndJtbeXsESk8Xiza+MNL0Cn4eDNeVNWTWpL5H
+	 +1eW+1QYDoW/xvmYyKnexyrh/FWCWyqTvjfWD4H5/g2W0LSiZdI2rBCnmpD/e39ehn
+	 4bo55iRirvyQUF5gVSEdjk2G2odlZ2GtW5N4K1BYH/GmHbVWEFv5yAS6xAvt25RBgn
+	 Klb7dANUf1a80qoUBE3zhp3071s+ATBHzW5F9V4Z5KZCswnDSiAASY7EeJMQxXdMkX
+	 2i6JiXEY46z69p82x8cbb4PUS6a41Qh/PYuQewUI6v1uBPuK+sccPAjC+fviZHDCrk
+	 am7ixIM6pdlnA==
+Date: Wed, 4 Mar 2026 15:18:47 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yunsheng Lin <linyunsheng@huawei.com>
+Cc: Paul Menzel <pmenzel@molgen.mpg.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: Linux warns `Unknown NUMA node; performance will be reduced`
+Message-ID: <20260304211847.GA36447@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b35698a4-4ac0-4db4-86a0-db794047e7c4@huawei.com>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git endpoint
-branch HEAD: d799984233a50abd2667a7d17a9a710a3f10ebe2  PCI: endpoint: pci-epf-vntb: Stop cmd_handler work in epf_ntb_epc_cleanup
+On Wed, Mar 04, 2026 at 09:34:48AM +0800, Yunsheng Lin wrote:
+> On 2026/3/4 5:55, Bjorn Helgaas wrote:
+> > [+cc Yunsheng, author of ad5086108b9f,
+> > +bcc commenters on https://bugzilla.kernel.org/show_bug.cgi?id=218951,
+> > see the email thread at
+> > https://lore.kernel.org/all/a154f694-c48b-4b3b-809f-4b74ec86a924@molgen.mpg.de]
+> > 
+> > On Sun, Jun 09, 2024 at 10:31:05AM +0200, Paul Menzel wrote:
+> >> Dear Linux folks,
+> >>
+> >> On the servers below Linux warns:
+> >>
+> >>      Unknown NUMA node; performance will be reduced
+> >>
+> >> 1.  [    0.000000] DMI: Dell Inc. PowerEdge R730/0H21J3, BIOS 2.13.0
+> >> 05/14/2021
+> >> 2.  [    0.000000] DMI: Dell Inc. PowerEdge R730/0H21J3, BIOS 2.2.5
+> >> 09/06/2016
+> >> 3.  [    0.000000] DMI: Dell Inc. PowerEdge R730xd/0WCJNT, BIOS 2.3.4
+> >> 11/08/2016
+> >> 4.  [    0.000000] DMI: Dell Inc. PowerEdge R910/0KYD3D, BIOS 2.10.0
+> >> 08/29/2013
+> >> 5.  [    0.000000] DMI: Dell Inc. PowerEdge R930/0T55KM, BIOS 2.8.1
+> >> 01/02/2020
+> >> 6.  [    0.000000] DMI: Dell Inc. PowerEdge T630/0NT78X, BIOS 2.5.4
+> >> 08/17/2017
+> >> 7.  [    0.000000] DMI: Dell Inc. PowerEdge T630/0W9WXC, BIOS 1.5.4
+> >> 10/04/2015
+> >> 8.  [    0.000000] DMI: Dell Inc. PowerEdge T630/0W9WXC, BIOS 2.11.0
+> >> 12/23/2019
+> >> 9.  [    0.000000] DMI: Dell Inc. PowerEdge T630/0W9WXC, BIOS 2.1.5
+> >> 04/13/2016
+> >> 10. [    0.000000] DMI: Supermicro Super Server/X13SAE, BIOS 2.0 10/17/2022
+> > 
+> > Similar reports in the bugzilla for:
+> > 
+> >   Host: VMware VM Ubuntu 24.04.1
+> >   CPU: Intel(R) Xeon(R) Silver 4310 CPU @ 2.10GHz
+> >   Kernel: 6.11.0-rc6
+> > 
+> > and 
+> > 
+> >   Lenovo P700 workstation
+> >   6.19.5 kernel
+> > 
+> > ad5086108b9f ("PCI: Warn if no host bridge NUMA node info") added this
+> > "Unknown NUMA node; performance will be reduced" warning.
+> > 
+> > The problem is that firmware didn't tell us anything about which CPUs
+> > are closest to this PCI host bridge, so we can't try to optimize by
+> > running the driver on a CPU that's close to the device.
+> > 
+> > The kernel can't figure out this locality information itself, so
+> > there's nothing we can really do in the kernel, and there's nothing
+> > users can do either other than check for BIOS updates.
+> > 
+> > What if we just downgraded the message to "info"?  And/or we could
+> > reword this to be less alarming.
+> 
+> If I recalled it correctly, the purpose of the above warning is about
+> having some kind of pressure for vendor to update the BIOS and fix
+> that, perhaps the warning can be reworded to something like below
+> so that users can know where they get the help to fix that?
+> 
+> "Unknown NUMA node; performance will be reduced, please check it with
+> the BIOS vendor."
 
-elapsed time: 872m
+Right.  I'm just not sure that kind of pressure on vendors is
+effective, and I'm tired of fielding reports of things we can't fix
+and likely aren't even problems at all.
 
-configs tested: 177
-configs skipped: 2
+In Paul's Dell T630 case, where we have the dmesg in email and the
+acpidump in https://bugzilla.kernel.org/show_bug.cgi?id=218951, there
+are four host bridges and two supply _PXM and two don't:
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+  ACPI: PCI Root Bridge [UNC1] (domain 0000 [bus ff])
+  pci_bus 0000:ff: Unknown NUMA node; performance will be reduced
+  ACPI: PCI Root Bridge [UNC0] (domain 0000 [bus 7f])
+  pci_bus 0000:7f: Unknown NUMA node; performance will be reduced
+  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-7e])
+  ACPI: PCI Root Bridge [PCI1] (domain 0000 [bus 80-fe])
 
-tested configs:
-alpha                             allnoconfig    gcc-15.2.0
-alpha                            allyesconfig    gcc-15.2.0
-alpha                               defconfig    gcc-15.2.0
-arc                              allmodconfig    clang-16
-arc                              allmodconfig    gcc-15.2.0
-arc                               allnoconfig    gcc-15.2.0
-arc                              allyesconfig    clang-23
-arc                                 defconfig    gcc-15.2.0
-arc                   randconfig-001-20260304    clang-23
-arc                   randconfig-002-20260304    clang-23
-arm                              alldefconfig    gcc-15.2.0
-arm                               allnoconfig    gcc-15.2.0
-arm                              allyesconfig    clang-16
-arm                              allyesconfig    gcc-15.2.0
-arm                                 defconfig    gcc-15.2.0
-arm                   randconfig-001-20260304    clang-23
-arm                   randconfig-002-20260304    clang-23
-arm                   randconfig-003-20260304    clang-23
-arm                   randconfig-004-20260304    clang-23
-arm64                            allmodconfig    clang-23
-arm64                             allnoconfig    gcc-15.2.0
-arm64                               defconfig    gcc-15.2.0
-arm64                 randconfig-001-20260304    gcc-15.2.0
-arm64                 randconfig-002-20260304    gcc-15.2.0
-arm64                 randconfig-003-20260304    gcc-15.2.0
-arm64                 randconfig-004-20260304    gcc-15.2.0
-csky                             allmodconfig    gcc-15.2.0
-csky                              allnoconfig    gcc-15.2.0
-csky                                defconfig    gcc-15.2.0
-csky                  randconfig-001-20260304    gcc-15.2.0
-csky                  randconfig-002-20260304    gcc-15.2.0
-hexagon                          allmodconfig    gcc-15.2.0
-hexagon                           allnoconfig    gcc-15.2.0
-hexagon                             defconfig    gcc-15.2.0
-hexagon               randconfig-001-20260304    gcc-15.2.0
-hexagon               randconfig-002-20260304    gcc-15.2.0
-i386                             allmodconfig    clang-20
-i386                              allnoconfig    gcc-15.2.0
-i386                             allyesconfig    clang-20
-i386        buildonly-randconfig-001-20260304    gcc-14
-i386        buildonly-randconfig-001-20260305    clang-20
-i386        buildonly-randconfig-002-20260304    gcc-14
-i386        buildonly-randconfig-002-20260305    clang-20
-i386        buildonly-randconfig-003-20260304    gcc-14
-i386        buildonly-randconfig-003-20260305    clang-20
-i386        buildonly-randconfig-004-20260304    gcc-14
-i386        buildonly-randconfig-004-20260305    clang-20
-i386        buildonly-randconfig-005-20260304    gcc-14
-i386        buildonly-randconfig-005-20260305    clang-20
-i386        buildonly-randconfig-006-20260304    gcc-14
-i386        buildonly-randconfig-006-20260305    clang-20
-i386                                defconfig    gcc-15.2.0
-i386                  randconfig-001-20260304    clang-20
-i386                  randconfig-002-20260304    clang-20
-i386                  randconfig-003-20260304    clang-20
-i386                  randconfig-004-20260304    clang-20
-i386                  randconfig-005-20260304    clang-20
-i386                  randconfig-006-20260304    clang-20
-i386                  randconfig-007-20260304    clang-20
-i386                  randconfig-011-20260304    gcc-14
-i386                  randconfig-012-20260304    gcc-14
-i386                  randconfig-013-20260304    gcc-14
-i386                  randconfig-014-20260304    gcc-14
-i386                  randconfig-015-20260304    gcc-14
-i386                  randconfig-016-20260304    gcc-14
-i386                  randconfig-017-20260304    gcc-14
-loongarch                        allmodconfig    clang-23
-loongarch                         allnoconfig    gcc-15.2.0
-loongarch                           defconfig    clang-19
-loongarch             randconfig-001-20260304    gcc-15.2.0
-loongarch             randconfig-002-20260304    gcc-15.2.0
-m68k                             allmodconfig    gcc-15.2.0
-m68k                              allnoconfig    gcc-15.2.0
-m68k                             allyesconfig    clang-16
-m68k                             allyesconfig    gcc-15.2.0
-m68k                                defconfig    clang-19
-microblaze                        allnoconfig    gcc-15.2.0
-microblaze                       allyesconfig    gcc-15.2.0
-microblaze                          defconfig    clang-19
-mips                             allmodconfig    gcc-15.2.0
-mips                              allnoconfig    gcc-15.2.0
-mips                             allyesconfig    gcc-15.2.0
-nios2                            allmodconfig    clang-23
-nios2                             allnoconfig    clang-23
-nios2                               defconfig    clang-19
-nios2                 randconfig-001-20260304    gcc-15.2.0
-nios2                 randconfig-002-20260304    gcc-15.2.0
-openrisc                         allmodconfig    clang-23
-openrisc                          allnoconfig    clang-23
-openrisc                            defconfig    gcc-15.2.0
-parisc                           allmodconfig    gcc-15.2.0
-parisc                            allnoconfig    clang-23
-parisc                           allyesconfig    clang-19
-parisc                              defconfig    gcc-15.2.0
-parisc                randconfig-001-20260304    gcc-8.5.0
-parisc                randconfig-002-20260304    gcc-8.5.0
-parisc64                            defconfig    clang-19
-powerpc                          allmodconfig    gcc-15.2.0
-powerpc                           allnoconfig    clang-23
-powerpc               randconfig-001-20260304    gcc-8.5.0
-powerpc               randconfig-002-20260304    gcc-8.5.0
-powerpc64             randconfig-001-20260304    gcc-8.5.0
-powerpc64             randconfig-002-20260304    gcc-8.5.0
-riscv                            allmodconfig    clang-23
-riscv                             allnoconfig    clang-23
-riscv                            allyesconfig    clang-16
-riscv                               defconfig    gcc-15.2.0
-riscv                 randconfig-001-20260304    clang-23
-riscv                 randconfig-001-20260305    clang-23
-riscv                 randconfig-002-20260304    clang-23
-riscv                 randconfig-002-20260305    clang-23
-s390                             allmodconfig    clang-19
-s390                              allnoconfig    clang-23
-s390                             allyesconfig    gcc-15.2.0
-s390                                defconfig    gcc-15.2.0
-s390                  randconfig-001-20260304    clang-23
-s390                  randconfig-001-20260305    clang-23
-s390                  randconfig-002-20260304    clang-23
-s390                  randconfig-002-20260305    clang-23
-sh                               allmodconfig    gcc-15.2.0
-sh                                allnoconfig    clang-23
-sh                               allyesconfig    clang-19
-sh                                  defconfig    gcc-14
-sh                    randconfig-001-20260304    clang-23
-sh                    randconfig-001-20260305    clang-23
-sh                    randconfig-002-20260304    clang-23
-sh                    randconfig-002-20260305    clang-23
-sh                           se7751_defconfig    gcc-15.2.0
-sh                     sh7710voipgw_defconfig    gcc-15.2.0
-sparc                             allnoconfig    clang-23
-sparc                               defconfig    gcc-15.2.0
-sparc64                          allmodconfig    clang-23
-sparc64                             defconfig    gcc-14
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-23
-um                               allyesconfig    gcc-15.2.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-20
-x86_64                            allnoconfig    clang-23
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20260304    gcc-14
-x86_64      buildonly-randconfig-002-20260304    gcc-14
-x86_64      buildonly-randconfig-003-20260304    gcc-14
-x86_64      buildonly-randconfig-004-20260304    gcc-14
-x86_64      buildonly-randconfig-005-20260304    gcc-14
-x86_64      buildonly-randconfig-006-20260304    gcc-14
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-20
-x86_64                randconfig-001-20260304    clang-20
-x86_64                randconfig-002-20260304    clang-20
-x86_64                randconfig-003-20260304    clang-20
-x86_64                randconfig-004-20260304    clang-20
-x86_64                randconfig-005-20260304    clang-20
-x86_64                randconfig-006-20260304    clang-20
-x86_64                randconfig-011-20260304    gcc-14
-x86_64                randconfig-012-20260304    gcc-14
-x86_64                randconfig-013-20260304    gcc-14
-x86_64                randconfig-014-20260304    gcc-14
-x86_64                randconfig-015-20260304    gcc-14
-x86_64                randconfig-016-20260304    gcc-14
-x86_64                randconfig-071-20260304    clang-20
-x86_64                randconfig-072-20260304    clang-20
-x86_64                randconfig-073-20260304    clang-20
-x86_64                randconfig-074-20260304    clang-20
-x86_64                randconfig-075-20260304    clang-20
-x86_64                randconfig-076-20260304    clang-20
-x86_64                               rhel-9.4    clang-20
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-20
-x86_64                    rhel-9.4-kselftests    clang-20
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    clang-23
-xtensa                           allyesconfig    clang-23
+I decoded the acpidump Paul attached; it has _PXM for PCI0 and PCI1.
+UNC0 and UNC1 don't have any I/O or memory windows at all, so they
+look like they're for internal "devices" that only have config space.  
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Since Dell *did* supply _PXM for PCI0 and PCI1, my guess is that
+there's no real reason to supply it for UNC0 and UNC1.
+
+I think we should do something like the patch below, so the dmesg
+would look like this instead -- we log the NUMA node when we know it
+and skip it otherwise:
+
+  ACPI: PCI Root Bridge [UNC1] (domain 0000 [bus ff])
+  PCI host bridge to bus 0000:ff
+  ACPI: PCI Root Bridge [UNC0] (domain 0000 [bus 7f])
+  PCI host bridge to bus 0000:7f
+  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-7e])
+  PCI host bridge to bus 0000:00 NUMA node 0
+  ACPI: PCI Root Bridge [PCI1] (domain 0000 [bus 80-fe])
+  PCI host bridge to bus 0000:80 NUMA node 1
+
+Bjorn
+
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index bccc7a4bdd79..e3e81926a6f3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -993,9 +993,9 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
+ 	LIST_HEAD(resources);
+ 	struct resource *res, *next_res;
+ 	bool bus_registered = false;
+-	char addr[64], *fmt;
++	char numa[32], addr[64], *fmt;
+ 	const char *name;
+-	int err;
++	int err, node;
+ 
+ 	bus = pci_alloc_bus(NULL);
+ 	if (!bus)
+@@ -1071,13 +1071,17 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
+ 	/* Create legacy_io and legacy_mem files for this bus */
+ 	pci_create_legacy_files(bus);
+ 
++	numa[0] = '\0';
++	if (nr_node_ids > 1) {
++		node = pcibus_to_node(bus);
++		if (node != NUMA_NO_NODE)
++			snprintf(numa, sizeof(numa), " on NUMA node %u", node);
++	}
++
+ 	if (parent)
+-		dev_info(parent, "PCI host bridge to bus %s\n", name);
++		dev_info(parent, "PCI host bridge to bus %s%s\n", name, numa);
+ 	else
+-		pr_info("PCI host bridge to bus %s\n", name);
+-
+-	if (nr_node_ids > 1 && pcibus_to_node(bus) == NUMA_NO_NODE)
+-		dev_warn(&bus->dev, "Unknown NUMA node; performance will be reduced\n");
++		pr_info("PCI host bridge to bus %s%s\n", name, numa);
+ 
+ 	/* Check if the boot configuration by FW needs to be preserved */
+ 	bridge->preserve_config = pci_preserve_config(bridge);
