@@ -1,155 +1,135 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+Received: from mail-qt1-f181.google.com (mail-qt1-f181.google.com [209.85.160.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D98CB3B4E96
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2026 14:18:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D89E13A4521
+	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2026 14:18:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772633899; cv=none; b=gI8Q2wOfei22CeH9/ppb7StwfDgRAE/L21qQlEwG95wOhL8dfSCbalZmY8vfDnLIHfW+YtDYKtd8WKad7rGPkodpLL7sV51iGjxoXC2xCCXlS4xRP8vKnrJBhiNTGfJd4tONhiB2r4KPdh81aJYUE68aU9HpdYRxaznyStIYTio=
+	t=1772633936; cv=none; b=EzuP6UPVWzg8uY8b6lF9h/Ga8NNCcQ9azOkNtT+pT7tdesOiEFRtDSDWYcbdsGv0arp7slTwT/gx3/l297eWbQ8+VQ44nIH5it88nEi7karzlh/cx0RYag+J5q7IR0ogbt5sQ7utPBc7Y7GHNyNQ+xvjscdGMJLug1ec0TFJ1gw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772633899; c=relaxed/simple;
-	bh=MFtn++fehPz2bcYxQs56cfdjtPdPajpg8F67EhLU4r8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FsYwyFF5dR02DnXvXhK96pjH6wnKP4wlku9FSFmYwCj0ogtFh72lVhb8VW7F+7vJJzImzy14ZkssJqp2kHXVLWd0pjlAQzZ2GTz9+ZCYvbPA4/3xgizDvx9tZRTj5JWIJe48GnBAx0lJuOqUPE269qRxdm7kwXPn42So+12u3pE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dCY2yi9f; arc=none smtp.client-ip=209.85.216.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1772633936; c=relaxed/simple;
+	bh=ICcHAv5R0LkVRgx1sRn/PLrNOjP1Y8guvnLI6zDoVjQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HuKfga5zPiagzJhdfQvCqDQxzGY81y3+Q4RkzqnT34v5wy0lHAsFe5pyUDS1LXGxpr95bP9mKOG+adksR0Ye+Sxs13+YNUmCTNsLJmyMl8TzsL5irnMvrmwMo6afhPI6Hjx8kpiLOGqz0iDQD7ta2Jtbp7QHNepCNcGU3FZaP+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=iwL4lwEp; arc=none smtp.client-ip=209.85.160.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dCY2yi9f"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-35994d84c6dso1234936a91.2
-        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 06:18:17 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="iwL4lwEp"
+Received: by mail-qt1-f181.google.com with SMTP id d75a77b69052e-506a019a7f3so84422371cf.3
+        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 06:18:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772633897; x=1773238697; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=gOqiu9rk3pfbNQbzbq46fMvxLJFiDFeJ6tCyKh6dPNk=;
-        b=dCY2yi9fpzXaTO93FzvbGxrN5zrVrSNiKzsDjv9krXAuw5iO51gCedPntI1sFcvvYc
-         JpTZ4oW4MZq7ZurW9PuZzqwvfHTvhugisL7lA+iKfObo7nclFMfJBrlGhrBcrgrXIPHT
-         8pTdOjnvKOA0jUjneAozr4wA3OKDOrglg8ircrZpe7OnthMFybZ27QqrbzekBnW/Bn7K
-         zddU2DHhlNBSUesgzyK+jjI1PCEiii+dPXPJfInTOsXArVXLZ3zeDpe16VbtGG0dgs4d
-         Fba/6mJq5/uk9WbDsdzfX8wxqijN1B0hJ89OHpI36VWClKD/jBWKcbZS2Bq8oS0X3VnW
-         qGwg==
+        d=ziepe.ca; s=google; t=1772633934; x=1773238734; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=VJb/uIHrYqSTg+GB6V2BLb5y0MXgSCVKzM/ARVauTlU=;
+        b=iwL4lwEpCvPFTLKVYRUJqmDywzHksr4krRU+dweyR/1V3/x4lCcclEwfELn5hpEMsh
+         ul3itfgjvGFUK6uiNkdkKr6yrwZAvVqHWdjOqGmZxXBBZ9IDxc/OilKKpdCqOhuZbvy2
+         eyOEWGbGmHt00JbZKH7t4jx3JF/HWOxbioYRrn22qamI3Mp54zZi/HnsquREdDyjJzlo
+         22xcK2mmHgrlqiA9cNKTxCuflpF3l6iiP/T6YJ9lS2DdSERR+PYP8hrCLrrsxZnUuSr3
+         dBNjpEHfPJlBdxyZc91Fwe7oYMyjNlXPiY8NB4qv74ax/ZtCwKTtoqcgwR4HoqFhiQV8
+         l2AQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772633897; x=1773238697;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=gOqiu9rk3pfbNQbzbq46fMvxLJFiDFeJ6tCyKh6dPNk=;
-        b=cWrzkk6BAuBRz9M9Zl2hXk4I5VIF/itrk/ee5lb9GMHPu/UMiiB6T6cdCzr1XJh7lQ
-         tjeJeY3R3B4fMkeBHLdbsOq3NWGI/f64lr3BVGqTJWKJpEkJPSo1xrAq0I/NglXHEV/X
-         fzEFIQLfTA56GxSuKS9ggk4C/bCIMU2xV9qXZwQN0aY4JviN/wc/P/dNgDhkFB14Cg1X
-         HU3gVCZ22IsEKcYjxQ3N0oz/qsnw2fSz+o1FuJ2YSNIKD0XnCgb931R4vSwU7V/qDpWS
-         leblJCdlraP7flC+AywnWWtiMwPVmLWAkoBUo1/oLMuzMf0k/mWDjB35IUXbJo7U1SYT
-         jr0A==
-X-Forwarded-Encrypted: i=1; AJvYcCXxw/Qjjpmnu8JEqPL7dki6kwcsb/2JuDXAe99uRWMEXrDsjSoFZ7TZepQ7p39Q2z4+Z++C8wat1aU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzmIaHFH+CiO48IqqkAQ1RL5468WCj16Aprv1/x0FR/+8OihYMK
-	NuxE3b2fGdXOG/+Wt3tCLzNGL25ASEyK3yhMsWKGuPr87adm27bNYlnk
-X-Gm-Gg: ATEYQzxIAAXvcdLXPosupQ96zy7VSmlGDUpfu8pMv4O47tDCFCpETuCONfkSzY0/hzJ
-	slHtIMRh9UFnTkgxDrUTL9uO9rZHAv8x8vMdI7yndcF6nIH3+a5+l5P6XhcbL7mZGVHH+3cCGMn
-	ZNwqm+HNajtap4UAvUmSt5Bx/i06p6c45TwXBeOey6M/GxBDNemWmIFq/yvLM49LB6mNCriyvKY
-	2FStBLPFFLCGv7XGcG6vCNQzurrxBX0GRAOYD8kCjbenjF6yM2AQuqTVk1x6AccPAsUM9goUyIf
-	B850F+f2EGOz1AI6TsOY30CjJuJ0RcKFv4b7Y23zt7ASDmpOo9S8SsOfu5PpxNLFDglLVTyLy5F
-	sA+5W30pzfS96hTzFAgkLCe4BwgIeyaJi87F6x6oG51vUEqhHvezJoGfku7ZhfM+DvtrjgalTna
-	NmiYSg1rQr+IedmuwKbjq1+76S0+clrO4=
-X-Received: by 2002:a17:90b:4a87:b0:352:bdcd:118a with SMTP id 98e67ed59e1d1-359a6a21675mr2061241a91.21.1772633897136;
-        Wed, 04 Mar 2026 06:18:17 -0800 (PST)
-Received: from rockpi-5b ([45.112.0.200])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3599c4c0f80sm6826545a91.16.2026.03.04.06.18.03
+        d=1e100.net; s=20230601; t=1772633934; x=1773238734;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=VJb/uIHrYqSTg+GB6V2BLb5y0MXgSCVKzM/ARVauTlU=;
+        b=LWPfVQ/x4efzgILBrusNGJxBFjb/cG3kpLSMzR7j+gzPH4dyOArWWaAqZPnb2wEbJI
+         lRytjS2htinvr6Q6Np1lyV0+Y/DA99eKM3+uQ9ueJEctoK3qYghZkXgWZLbxQYUK+KaC
+         2BMgq7PvOXkQgjl8m9fCRd50nFYJ9bx1XKTOoiMUTq1Y+14ivgAqSpKmbV2ISq87AJuC
+         CU7fRCZgDJS0yenXD1TUwyfVM0Y6AX8KA/d6h0pV13oo9Gy4ctXptT5UM9zAIaTpwxUu
+         e0LgeOf1Jnviolo7r5ky0GeW7NAxMNlxXgsC+dXjoHs30O8k5fY/q745SSjpKpK67ZWS
+         282w==
+X-Forwarded-Encrypted: i=1; AJvYcCUw19biLxmJI44GB/pR4M2W2zafNqhS1gyC2daP61Jz5HWBKMoTcL4mPt33coqE2a6jy/Fi7zJaxo4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyvbegsZAg8lBa3iCLQJ0oWNlTaEZgzP4g3JWiBBCJUtq6oDyjK
+	OrZq0+xAItw8LFAeLUZVaT562XEQ+MJfX502L0/3YDA+us028/wQYyNtUF/31of5Ytg=
+X-Gm-Gg: ATEYQzy3vI18O3hnjkrjiW8S7P4k1nucf4f9inknU5OQO9h0b0+v2lz16lX6inTO7Jd
+	lNEQiuMITcQW/mr7ucZFN50mZRY1z0mp1l45d0zZqqnqan4mjzAFn+peZv+9ZA9ffWKJufxqnlO
+	m4Kd2Di47sfXuyPMpDgzB7ADKfp7E6akAxJL017dlzxalENVRiE8h3Gruw0TZIRaUZiF3PrWJ67
+	APVz75+FOOF3m3TBQLakBJ7v3Z1tjgy1M8SUVuHwi6OLle9cNT3daXvwmW75k5FcBwjhjlMh9Jl
+	SyvNJrQ3ZP2nXAn5gfV8itcbclbyfT9zmJLXW1T0hcEekOH6u1s8ui3VV7iSv3Xqf9CMTDrWmfh
+	xLiymAiGVQgBIJHzYUZvbFSKt+IiayPL8bCWqPgUmMHU7cMU/dUr/M9Cz0X6pyaIY+/9Ee2Vb8S
+	lJNk/3eth0mglx23b9l+DkeR8DhMo1GSvTlbLdG9W9S+YHSINKUj81n40uQZafTb08Vx3nxkWsN
+	zL9lggZjF7tLRr6xj0=
+X-Received: by 2002:a05:622a:1899:b0:4f4:e15e:528f with SMTP id d75a77b69052e-508db3773fbmr27695511cf.62.1772633933669;
+        Wed, 04 Mar 2026 06:18:53 -0800 (PST)
+Received: from ziepe.ca (hlfxns017vw-142-162-112-119.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.112.119])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-50744ad885bsm152669541cf.28.2026.03.04.06.18.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Mar 2026 06:18:16 -0800 (PST)
-From: Anand Moon <linux.amoon@gmail.com>
-To: Vignesh Raghavendra <vigneshr@ti.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
+        Wed, 04 Mar 2026 06:18:52 -0800 (PST)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1vxn3s-000000056cr-144y;
+	Wed, 04 Mar 2026 10:18:52 -0400
+Date: Wed, 4 Mar 2026 10:18:52 -0400
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Peter Colberg <pcolberg@redhat.com>, Danilo Krummrich <dakr@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Krzysztof Kozlowski <krzk@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Minghuan Lian <minghuan.Lian@nxp.com>,
-	Mingkai Hu <mingkai.hu@nxp.com>,
-	Roy Zang <roy.zang@nxp.com>,
-	Yue Wang <yue.wang@Amlogic.com>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Kevin Hilman <khilman@baylibre.com>,
-	Jerome Brunet <jbrunet@baylibre.com>,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-	Jonathan Chocron <jonnyc@amazon.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Jesper Nilsson <jesper.nilsson@axis.com>,
-	Paul Walmsley <pjw@kernel.org>,
-	Greentime Hu <greentime.hu@sifive.com>,
-	Samuel Holland <samuel.holland@sifive.com>,
-	Chuanhua Lei <lchuanhua@maxlinear.com>,
-	Srikanth Thokala <srikanth.thokala@intel.com>,
-	Xiaowei Song <songxiaowei@hisilicon.com>,
-	Binghui Wang <wangbinghui@hisilicon.com>,
-	Chen Wang <unicorn_wang@outlook.com>,
-	Inochi Amaoto <inochiama@gmail.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>,
-	Niklas Cassel <cassel@kernel.org>,
-	"Jiri Slaby (SUSE)" <jirislaby@kernel.org>,
-	Hans Zhang <18255117159@163.com>,
-	Qianfeng Rong <rongqianfeng@vivo.com>,
-	Sai Krishna Musham <sai.krishna.musham@amd.com>,
-	Thippeswamy Havalige <thippeswamy.havalige@amd.com>,
-	Frank Li <Frank.Li@nxp.com>,
-	Vidya Sagar <vidyas@nvidia.com>,
-	linux-omap@vger.kernel.org (open list:PCI DRIVER FOR TI DRA7XX/J721E),
-	linux-pci@vger.kernel.org (open list:PCI DRIVER FOR TI DRA7XX/J721E),
-	linux-arm-kernel@lists.infradead.org (moderated list:PCI DRIVER FOR TI DRA7XX/J721E),
-	linux-kernel@vger.kernel.org (open list),
-	linux-samsung-soc@vger.kernel.org (open list:PCI DRIVER FOR SAMSUNG EXYNOS),
-	linuxppc-dev@lists.ozlabs.org (open list:PCI DRIVER FOR FREESCALE LAYERSCAPE),
-	imx@lists.linux.dev (open list:PCI DRIVER FOR FREESCALE LAYERSCAPE),
-	linux-amlogic@lists.infradead.org (open list:PCIE DRIVER FOR AMLOGIC MESON),
-	linux-arm-kernel@axis.com (open list:PCIE DRIVER FOR AXIS ARTPEC),
-	sophgo@lists.linux.dev (open list:SOPHGO DEVICETREES and DRIVERS),
-	linux-tegra@vger.kernel.org (open list:TEGRA ARCHITECTURE SUPPORT),
-	linux-riscv@lists.infradead.org (open list:SIFIVE DRIVERS:Keyword:fu[57]40)
-Cc: Anand Moon <linux.amoon@gmail.com>
-Subject: [RFC v1 18/18] PCI: visconti: Allow asynchronous probing for background link training
-Date: Wed,  4 Mar 2026 19:22:01 +0530
-Message-ID: <20260304140329.7089-19-linux.amoon@gmail.com>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20260304140329.7089-1-linux.amoon@gmail.com>
-References: <20260304140329.7089-1-linux.amoon@gmail.com>
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Miguel Ojeda <ojeda@kernel.org>,
+	Alex Gaynor <alex.gaynor@gmail.com>, Gary Guo <gary@garyguo.net>,
+	=?utf-8?B?QmrDtnJu?= Roy Baron <bjorn3_gh@protonmail.com>,
+	Benno Lossin <lossin@kernel.org>,
+	Andreas Hindborg <a.hindborg@kernel.org>,
+	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
+	Abdiel Janulgue <abdiel.janulgue@gmail.com>,
+	Daniel Almeida <daniel.almeida@collabora.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Dave Ertman <david.m.ertman@intel.com>,
+	Ira Weiny <ira.weiny@intel.com>, David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>, Jonathan Corbet <corbet@lwn.net>,
+	Xu Yilun <yilun.xu@intel.com>, Tom Rix <trix@redhat.com>,
+	Moritz Fischer <mdf@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Boqun Feng <boqun@kernel.org>, linux-pci@vger.kernel.org,
+	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	Joel Fernandes <joelagnelf@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>, Zhi Wang <zhiw@nvidia.com>,
+	nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-doc@vger.kernel.org, linux-fpga@vger.kernel.org,
+	driver-core@lists.linux.dev
+Subject: Re: [PATCH v3 00/10] rust: pci: add abstractions for SR-IOV
+ capability
+Message-ID: <20260304141852.GF964116@ziepe.ca>
+References: <20260303-rust-pci-sriov-v3-0-4443c35f0c88@redhat.com>
+ <20260304084750.GW12611@unreal>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260304084750.GW12611@unreal>
 
-Establishing a PCIe link can take a while, allow asynchronous probing so
-that link establishment can happen in the background while other devices
-are being probed.
+On Wed, Mar 04, 2026 at 10:47:50AM +0200, Leon Romanovsky wrote:
+> On Tue, Mar 03, 2026 at 04:15:20PM -0500, Peter Colberg wrote:
+> > Add Rust abstractions for the Single Root I/O Virtualization (SR-IOV)
+> > capability of a PCI device. Provide a minimal set of wrappers for the
+> > SR-IOV C API to enable and disable SR-IOV for a device, and query if
+> > a PCI device is a Physical Function (PF) or Virtual Function (VF).
+> 
+> <...>
+> 
+> > For PF drivers written in C, disabling SR-IOV on remove() may be opted
+> > into by setting the flag managed_sriov in the pci_driver structure. For
+> > PF drivers written in Rust, disabling SR-IOV on unbind() is mandatory.
+> 
+> Why? Could you explain the rationale behind this difference between C and
+> Rust? Let me remind you that SR‑IOV devices which do not disable VFs do so
+> for a practical and well‑established reason: maximizing hardware
+> utilization.
 
-Signed-off-by: Anand Moon <linux.amoon@gmail.com>
----
- drivers/pci/controller/dwc/pcie-visconti.c | 1 +
- 1 file changed, 1 insertion(+)
+Personally I think drivers doing this are wrong. That such a driver
+bug was allowed to become UAPI is pretty bad. The rust approach is
+better.
 
-diff --git a/drivers/pci/controller/dwc/pcie-visconti.c b/drivers/pci/controller/dwc/pcie-visconti.c
-index cdeac6177143..f21cc95fe89f 100644
---- a/drivers/pci/controller/dwc/pcie-visconti.c
-+++ b/drivers/pci/controller/dwc/pcie-visconti.c
-@@ -324,6 +324,7 @@ static struct platform_driver visconti_pcie_driver = {
- 		.name = "visconti-pcie",
- 		.of_match_table = visconti_pcie_match,
- 		.suppress_bind_attrs = true,
-+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
- 	},
- };
- builtin_platform_driver(visconti_pcie_driver);
--- 
-2.50.1
-
+Jason
