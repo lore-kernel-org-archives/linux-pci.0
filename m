@@ -1,68 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8414731AA9B;
-	Wed,  4 Mar 2026 14:26:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEAD6247291;
+	Wed,  4 Mar 2026 14:35:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772634365; cv=none; b=HPMK2OaT7X3eWO5QY8dsgiuE2Vrs7426Eui+gwJl8eDTpGHrJBgVZ1ty+LRC75kUW1HQ0cqEHSQ1lF+83ia1RUAvtvuj14kSH4i2XxMSZqDCrndUU4/DuP9/pr/5oKCZALWVHsVZJJcHYUwVxViBdFR99iLOozxWcGc5989HhCo=
+	t=1772634906; cv=none; b=mTRio6na9uILvikEpkhcfAyvb+gmaXcLR65NEjVzqWAuDU9GJ1TkH4UEuCYbzbvsKTIuYLcZYAi1Eow8+jXPKHvA181KHOrbmGuaJ0/Db/EGLIShScs18mCgBFMiPCXXET7FFG4trlmZTjdHzcKbWHChPeAfiR9aSB9QnSOH39A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772634365; c=relaxed/simple;
-	bh=B0weNWDunmwVDkkQkN0kc7eG+tPkHSnvIyKW9SWUWPk=;
+	s=arc-20240116; t=1772634906; c=relaxed/simple;
+	bh=7YNl5gggoZ4+O6tvnsD45Xy8a9CubaQJ46GDvapOXMQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aUurjURWIww4u9oj/kGcb9ryyjEkGzLnwRK3PyyOT5MRoM+jtjN93+j5twVSqVlO2ZYPc1mGh5I+1M0m8Kcl5xhXcFPkmnosdIKvpNetlhN97C2MGpCMGWkTUd9w+GsVbAxgQhxaIEIhVvthW9V79Mna2fBwt4qnrAQyR49dLYg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ts/0Flsu; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=XcpQgU04KphehHxY4gbBBwlcdzQhpPdJEKJnykXk2KlMRfxQDwBh9iAT7FVdd9Wr2FLp4xUZyZWiQ9Ex8AiEZEjM4mLB66i1cwke08cUh26DJOpiFjPuuTU5/4JkhyFxoXDDDEtEVljJZg0Ek1IesN5I6FY1JrSmPpMmznMHzsg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lrLhaZLw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ts/0Flsu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 833ACC2BC87;
-	Wed,  4 Mar 2026 14:26:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lrLhaZLw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2497C4CEF7;
+	Wed,  4 Mar 2026 14:35:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772634365;
-	bh=B0weNWDunmwVDkkQkN0kc7eG+tPkHSnvIyKW9SWUWPk=;
+	s=k20201202; t=1772634906;
+	bh=7YNl5gggoZ4+O6tvnsD45Xy8a9CubaQJ46GDvapOXMQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Ts/0Flsu+WenzEZfA5RIGH5FOlyHpWYzSgcefBgKg2f19RaSYz+irtf4VdJbC766a
-	 NEaEpQ4umSV40OOs9ljryMEiSfaxm3WaBTUH3UGZdOvowqt/RrlEXVEAKUI6C31Gvf
-	 sG/yB38kxV7mnWG2tWKaBWl+zjobjnciujPIucg+/jacQpHmpX7sP2g5nZzJTR2aZw
-	 bKWY102ePDXk+dqRHGD/xD9P0Lzhe933nURcNLqi+A56D/2L2FMtcX/pA3iitdI5HO
-	 WVnC3yjobyeiqlz2mpolNYTWQuQHio4sAY+ArQ4J4bALd5gkWoYuv152zQoKTasSQM
-	 3hHcgssibybRg==
-Date: Wed, 4 Mar 2026 16:26:00 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Peter Colberg <pcolberg@redhat.com>, Danilo Krummrich <dakr@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Miguel Ojeda <ojeda@kernel.org>,
-	Alex Gaynor <alex.gaynor@gmail.com>, Gary Guo <gary@garyguo.net>,
-	=?iso-8859-1?Q?Bj=F6rn?= Roy Baron <bjorn3_gh@protonmail.com>,
-	Benno Lossin <lossin@kernel.org>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
-	Abdiel Janulgue <abdiel.janulgue@gmail.com>,
-	Daniel Almeida <daniel.almeida@collabora.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Dave Ertman <david.m.ertman@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>, David Airlie <airlied@gmail.com>,
-	Simona Vetter <simona@ffwll.ch>, Jonathan Corbet <corbet@lwn.net>,
-	Xu Yilun <yilun.xu@intel.com>, Tom Rix <trix@redhat.com>,
-	Moritz Fischer <mdf@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Boqun Feng <boqun@kernel.org>, linux-pci@vger.kernel.org,
-	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Alexandre Courbot <acourbot@nvidia.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Joel Fernandes <joelagnelf@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>, Zhi Wang <zhiw@nvidia.com>,
-	nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	linux-doc@vger.kernel.org, linux-fpga@vger.kernel.org,
-	driver-core@lists.linux.dev
-Subject: Re: [PATCH v3 00/10] rust: pci: add abstractions for SR-IOV
- capability
-Message-ID: <20260304142600.GB12611@unreal>
-References: <20260303-rust-pci-sriov-v3-0-4443c35f0c88@redhat.com>
- <20260304084750.GW12611@unreal>
- <20260304141852.GF964116@ziepe.ca>
+	b=lrLhaZLw3V5S/n7HM7Act1acixV8vVhEyugDMjU34HYz86M9MPCaA04bh5qAq+aE0
+	 s5TgBbwEa5ls1pOyPurkZ9niyvYrnlivO1U6VyEfqcCQ2RFX8Ok023URCMTUWxsvNZ
+	 5dmBTEmDxAfkfXKW+yScTnLhwLD6Sq9N2aAmUXEpBJhSBIVok8YcjRrFpkt8DYqeAt
+	 A9bpHNiERRGGjzAGwKeHSJ7eYuFKU1zDiCmpM0DKj3Unaio48pVm/mQWuE1gMBAGwm
+	 cZQugc9P9I3PBx/6vDUjl+6Qv5P13RdY/SDUzhsx4tUMZkJEdNM8gtrbwCnXsZVitU
+	 koDoUvL3PzYpA==
+Date: Wed, 4 Mar 2026 20:04:52 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Koichiro Den <den@valinux.co.jp>, Bjorn Helgaas <helgaas@kernel.org>, 
+	marek.vasut+renesas@gmail.com, yoshihiro.shimoda.uh@renesas.com, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, geert+renesas@glider.be, 
+	magnus.damm@gmail.com, linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: dwc: rcar-gen4-ep: Mark BAR0 and BAR2 as
+ Resizable BARs
+Message-ID: <sreho2ezzdlndgzazx5alj3cx2snli4yemtrhiamjmr2v3myj5@yudnnbek4wbq>
+References: <20260210160315.2272930-1-den@valinux.co.jp>
+ <20260302223150.GA4022590@bhelgaas>
+ <ns62mpoyrskr5q3uoy7gfjzideede2xqpixsllwhc3ozkz4us3@ltdzzshbgxla>
+ <aag0bu6Me7aUNAdK@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -72,35 +50,130 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260304141852.GF964116@ziepe.ca>
+In-Reply-To: <aag0bu6Me7aUNAdK@ryzen>
 
-On Wed, Mar 04, 2026 at 10:18:52AM -0400, Jason Gunthorpe wrote:
-> On Wed, Mar 04, 2026 at 10:47:50AM +0200, Leon Romanovsky wrote:
-> > On Tue, Mar 03, 2026 at 04:15:20PM -0500, Peter Colberg wrote:
-> > > Add Rust abstractions for the Single Root I/O Virtualization (SR-IOV)
-> > > capability of a PCI device. Provide a minimal set of wrappers for the
-> > > SR-IOV C API to enable and disable SR-IOV for a device, and query if
-> > > a PCI device is a Physical Function (PF) or Virtual Function (VF).
-> > 
-> > <...>
-> > 
-> > > For PF drivers written in C, disabling SR-IOV on remove() may be opted
-> > > into by setting the flag managed_sriov in the pci_driver structure. For
-> > > PF drivers written in Rust, disabling SR-IOV on unbind() is mandatory.
-> > 
-> > Why? Could you explain the rationale behind this difference between C and
-> > Rust? Let me remind you that SR‑IOV devices which do not disable VFs do so
-> > for a practical and well‑established reason: maximizing hardware
-> > utilization.
+On Wed, Mar 04, 2026 at 02:32:30PM +0100, Niklas Cassel wrote:
+> Hello Bjorn, Koichiro,
 > 
-> Personally I think drivers doing this are wrong. That such a driver
-> bug was allowed to become UAPI is pretty bad. The rust approach is
-> better.
-
-We already had this discussion. I see this as a perfectly valid
-use-case.
-
-Thanks
-
+> On Tue, Mar 03, 2026 at 02:12:05PM +0900, Koichiro Den wrote:
+> > > > --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> > > > +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> > > > @@ -422,7 +422,9 @@ static int rcar_gen4_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+> > > >  static const struct pci_epc_features rcar_gen4_pcie_epc_features = {
+> > > >  	DWC_EPC_COMMON_FEATURES,
+> > > >  	.msi_capable = true,
+> > > > +	.bar[BAR_0] = { .type = BAR_RESIZABLE, },
+> > > >  	.bar[BAR_1] = { .type = BAR_RESERVED, },
+> > > > +	.bar[BAR_2] = { .type = BAR_RESIZABLE, },
+> > > 
+> > > I guess the "Resizable" property is not something that is discoverable
+> > > at runtime?
+> > > 
+> > > You mention the Resizable BAR Capability, so I wondered if the driver
+> > > could use that to figure this out.
+> > 
+> > As I understand it, it should be discoverable on DesignWare EPC, since a BAR
+> > configured with a resizable sizing scheme results in a corresponding Resizable
+> > BAR capabilioty/control pair, and the BAR index is there.
 > 
-> Jason
+> It is no secret that the PCI endpoint framework has been largely designed
+> with DWC based controllers in mind.
+> 
+> After all, 13 out of the 16 EPC drivers are for DWC based controllers.
+> 
+> Only 3 out of the 16 EPC drivers are for non-DWC based contollers:
+> drivers/pci/controller/cadence/pcie-cadence-ep.c
+> drivers/pci/controller/pcie-rcar-ep.c
+> drivers/pci/controller/pcie-rockchip-ep.c
+> 
+> For DWC based contollers, the databook defines three sizing schemes:
+> BARn_SIZING_SCHEME_N =Fixed Mask (0)
+> BARn_SIZING_SCHEME_N =Programmable Mask (1)
+> BARn_SIZING_SCHEME_N =Resizable BAR (2)
+> 
+> Each of these require different ways to program the BAR size/mask.
+> 
+> For Fixed, the BAR mask is fixed, so really nothing to program.
+> 
+> For Programmable, the BAR mask is writable.
+> 
+> For Resizable, the BAR mask is writable, but should be configured
+> via the Resizable BAR Capability, since you also need to define
+> which sizes the host side can change between. Right now the PCI endpoint
+> framework only supports a single supported "Resizable BAR" size.
+> So essentially it is like a programmable BAR, but still needs to be
+> program the size via the Resizable BAR Capability (so different from
+> a programmable BAR).
+> 
+> 
+> 
+> A Resizable BAR also has a minimum size of 1 MB, whereas the programmable
+> BAR can be smaller.
+> 
+> A Resizable BAR also has the unfortunate property that the selected BAR
+> size is a non-sticky register, so it gets reset during any type of reset.
+> (Unlike the register used for programmable BARs, which is sticky, and thus
+> keeps its value for most types of reset.)
+> 
+> Thus we already have code to detect and restore the BAR size for Resizable
+> BARs (if an PCI endpoint function driver has configured a BAR size):
+> https://github.com/torvalds/linux/blob/v7.0-rc2/drivers/pci/controller/dwc/pcie-designware-ep.c#L1075-L1104
+> 
+> This code works regardless of type configured in epc_features.
+> 
+> It would probably be possible to extend this code to detect that a BAR is
+> Resizable, and then "override" any default configured type in epc_features.
+> 
+> 
+> 
+> Note that there are also other things in epc_features that might be able to
+> be detected in runtime, e.g. msi_capable and msix_capable (by iterating the
+> capabilities list and see if they are there).
+> 
+> Possibly, it done this way because certain endpoint controllers, specifically
+> Qcom and Tegra, require a reference clock (i.e. PCI common clock, provided by
+> the host) before they can access DBI registers, which is needed to iterate the
+> capabilities list. (Most other EPC drivers provide their own reference clock,
+> SRNS/SRIS, so they can access DBI registers as soon as the driver has probed.)
+> 
+> By having the Resizable BAR information in the driver, we can do certain
+> things, e.g. verify that the requested/allocated BAR size, is at least 1 MB,
+> see pci_epf_alloc_space() and pci_epf_get_required_bar_size() which both have
+> a BARno param, even before the controller has been provided a reference clock.
+> 
+> So this is not something unique to BAR type/sizing scheme, the same arguments,
+> for/against, also applies for msi_capable/msix_capable.
+> 
+> Manivannan, would it be possible to automatically initialize msi/msix_capable
+> on Qcom once a reference is provided, or would this be too late?
+> 
+
+Yes, with a valid reference clock, it should be possible to read the
+capabilities and detect these. But there is no way we can make sure that the
+reference clock is always be present. Maybe we can do it using a devicetree
+property that you tried upstreaming some time before:
+https://lore.kernel.org/linux-pci/20250425092012.95418-2-cassel@kernel.org
+
+But still, if there is no SRIS/SRNS, EPC core cannot read the capabilities
+reliably and it has to make use of on the static flag.
+
+> I assume that when Kishon added msi_capable/msix_capable, he did so for a
+> reason. But perhaps it was just to have a way do disable msi/msix for platforms
+> where MSI/MSI-X is broken?
+> 
+> See e.g. a52587e0bee1 ("PCI: rockchip: Don't advertise MSI-X in PCIe capabilities")
+> 
+> But nowadays we tend to hide broken capabilities. Assuming that we hide the
+> broken capabilities, before iterating the capabilities list to see which
+> features are supported, I don't see the need for msi_capable/msix_capable.
+> (Unless there is some issue for boards like Qcom and Tegra that don't provide
+> their own reference clock.)
+> 
+
+If the EPC core can reliably read the config space, we don't need these static
+flags. But unfortunately, that cannot be done on all platforms.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
