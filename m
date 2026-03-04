@@ -1,108 +1,158 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 280F53B4E94;
-	Wed,  4 Mar 2026 14:58:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09E5C3491CD;
+	Wed,  4 Mar 2026 15:38:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772636287; cv=none; b=ateR9XdZPzUmtkG7U+JwS4vNB2JhJodZvnXg0NtwPg0RBlxz12Ye3KxlnHr3u8imyBB6ppjxQ7bqKs9XVaA6OlNBX7pBdP6xSbZ/7MpdFJm42Cz9K4hV/9oX9B26oxF9BvOi/1JDlGl4/rX5VQTZuiRlNoUeMUjTyWVNyIPsO84=
+	t=1772638730; cv=none; b=uoly9NbJLyOqYSIQvzcM32XOYUYSozELRtSo8zQ/boUOfDutbAqUhJKz9sh6u7FbtyoOqhp9JPWpp2tra6dD9CLh5abkzA5ePDy0u3aqv/BJC2o7JGQxm4Qqe+K/UqrYqOr73TfNUJhPGNtNPeaNZd4DukF+IVdfEDcMhMlO/0E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772636287; c=relaxed/simple;
-	bh=dOS1j2epf5TPYMaiUEFBxK4GWJCF7AnlRNLv83KiR6E=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=Nc1GFWo3KdYYtI80GJqIBI7UEDMvYhnJpxm9GQLaWNKKzZvcZyIKM8y4ulpMlXR/i9tde7Hiv7M7q7lSP+j/xwgB2/8cnVSdzLfmVpcRR7Blhu94Ae4iKjEWd715lgvVjbMKj5fvCx7Z0BLxATCY1ommkrOw58j0o3iiidMApUU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ym9EQcZf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772638730; c=relaxed/simple;
+	bh=+2y0TVWK+1mxtFkQGBZ5c+xyYFKAYuSiURAJvKFtcJ0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=pyG4u4jkBPsmc8xIB5GWDjMmyLMKjs6Katni+Jfy+ICTs8x0YSXbaVfdVl64tU6ce4psmQ6mmKjjy7p/LFH1waFZZdeWd6xAJf15GoGijlS/rH0yR7OwPF4cdWyL2lvgKHp8D5MLqkAmNmy6H517wxXPhrnZhYVlNyRAi37Bfy0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AZ/M2/nA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ym9EQcZf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46750C2BC9E;
-	Wed,  4 Mar 2026 14:57:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AZ/M2/nA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42BAFC4CEF7;
+	Wed,  4 Mar 2026 15:38:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772636286;
-	bh=dOS1j2epf5TPYMaiUEFBxK4GWJCF7AnlRNLv83KiR6E=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
-	b=Ym9EQcZfkOKBQHZvEQz/FhHVNSqmg+h+6mOr4awZN6lqVP89047H95oA7hDTD8Lxp
-	 3/zrrsmHItaW0dHSdzHTPMNUEEPPrdDoAQGGe9wmG6r942WlV+NEL+DcbydsnltayO
-	 SnkhnV7y40XDZUGJYiA6FsWGZM40iGremynvaU5Cw1rh8jc4wDHWy/miN2N3sbvfLc
-	 Rn1TTCZbSsbm8xMotdnloy7atDTjiCMTCuYwLsPrm4P+VZShXKneJTrYQO7TL2CS2W
-	 aGLtKXusmSvGJfMzJsY89VPeZZyDFz0aM8vrKSLF2R5CeTp1fFyviINf8C+4nr6mjK
-	 wEsHpF7yuJvaA==
+	s=k20201202; t=1772638729;
+	bh=+2y0TVWK+1mxtFkQGBZ5c+xyYFKAYuSiURAJvKFtcJ0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=AZ/M2/nA/TTlnyPlxoPPO7EVvRaa1LGPJygEkPPlAUFMqNcscOCJQSUTJYlG3BmAy
+	 VJo9Y/U/t4ky/NZ6jkYnBGtmWhCGcUh6NQnnSNmRJYD7+rAdu2wfL+RlyKZQAao1zR
+	 Jj4kUbHgSVFRk0pG9TQrHmIaump8gzcND8PfOO3wwnwrws1OIw9jpCOsc3LHWBHfzF
+	 OJtdm2qWzDZPJRKQ0hsZ5sTbnc3oUlfjuWTazLj1RdCGLP7guzUhZE5PufzyYiNfof
+	 +QK2IlC33id33RDxw7fcuokmmMnQu5uY9L3Ez2fVlgkbgmHPk3UgqnKrJzJhow1Zvg
+	 tqrNGAMRFJIDA==
+Date: Wed, 4 Mar 2026 09:38:47 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: fengchengwen <fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-acpi@vger.kernel.org, rafael@kernel.org, lenb@kernel.org,
+	wei.huang2@amd.com, Eric.VanTassell@amd.com,
+	jonathan.cameron@huawei.com, wangzhou1@hisilicon.com,
+	wanghuiqiang@huawei.com, liuyonglong@huawei.com,
+	stable@vger.kernel.org, Jeremy Linton <jeremy.linton@arm.com>,
+	Sunil V L <sunilvl@ventanamicro.com>,
+	Sunil V L <sunilvl@oss.qualcomm.com>,
+	Huacai Chen <chenhuacai@loongson.cn>,
+	Liupu Wang <wangliupu@loongson.cn>
+Subject: Re: [PATCH] PCI/TPH: Fix get cpu steer-tag fail on ARM64 platform
+Message-ID: <20260304153847.GA23109@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 04 Mar 2026 15:57:57 +0100
-Message-Id: <DGU347RJX5BV.1CZYELSZ9GS9D@kernel.org>
-Subject: Re: [PATCH v3 00/10] rust: pci: add abstractions for SR-IOV
- capability
-Cc: "Jason Gunthorpe" <jgg@ziepe.ca>, "Peter Colberg" <pcolberg@redhat.com>,
- "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Miguel
- Ojeda" <ojeda@kernel.org>, "Alex Gaynor" <alex.gaynor@gmail.com>, "Gary
- Guo" <gary@garyguo.net>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
- <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Andreas
- Hindborg" <a.hindborg@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>,
- "Trevor Gross" <tmgross@umich.edu>, "Abdiel Janulgue"
- <abdiel.janulgue@gmail.com>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Robin Murphy" <robin.murphy@arm.com>,
- "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Dave Ertman"
- <david.m.ertman@intel.com>, "Ira Weiny" <ira.weiny@intel.com>, "David
- Airlie" <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Jonathan
- Corbet" <corbet@lwn.net>, "Xu Yilun" <yilun.xu@intel.com>, "Tom Rix"
- <trix@redhat.com>, "Moritz Fischer" <mdf@kernel.org>, "Rafael J. Wysocki"
- <rafael@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, "Alexandre Courbot" <acourbot@nvidia.com>,
- "Alistair Popple" <apopple@nvidia.com>, "Joel Fernandes"
- <joelagnelf@nvidia.com>, "John Hubbard" <jhubbard@nvidia.com>, "Zhi Wang"
- <zhiw@nvidia.com>, <nouveau@lists.freedesktop.org>,
- <dri-devel@lists.freedesktop.org>, <linux-doc@vger.kernel.org>,
- <linux-fpga@vger.kernel.org>, <driver-core@lists.linux.dev>
-To: "Leon Romanovsky" <leon@kernel.org>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260303-rust-pci-sriov-v3-0-4443c35f0c88@redhat.com>
- <20260304084750.GW12611@unreal> <20260304141852.GF964116@ziepe.ca>
- <20260304142600.GB12611@unreal>
-In-Reply-To: <20260304142600.GB12611@unreal>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ddf4b6db-b0c7-43ca-baad-a9df6acdca2e@huawei.com>
 
-On Wed Mar 4, 2026 at 3:26 PM CET, Leon Romanovsky wrote:
-> On Wed, Mar 04, 2026 at 10:18:52AM -0400, Jason Gunthorpe wrote:
->> On Wed, Mar 04, 2026 at 10:47:50AM +0200, Leon Romanovsky wrote:
->> > On Tue, Mar 03, 2026 at 04:15:20PM -0500, Peter Colberg wrote:
->> > > Add Rust abstractions for the Single Root I/O Virtualization (SR-IOV=
-)
->> > > capability of a PCI device. Provide a minimal set of wrappers for th=
-e
->> > > SR-IOV C API to enable and disable SR-IOV for a device, and query if
->> > > a PCI device is a Physical Function (PF) or Virtual Function (VF).
->> >=20
->> > <...>
->> >=20
->> > > For PF drivers written in C, disabling SR-IOV on remove() may be opt=
-ed
->> > > into by setting the flag managed_sriov in the pci_driver structure. =
-For
->> > > PF drivers written in Rust, disabling SR-IOV on unbind() is mandator=
-y.
->> >=20
->> > Why? Could you explain the rationale behind this difference between C =
-and
->> > Rust? Let me remind you that SR=E2=80=91IOV devices which do not disab=
-le VFs do so
->> > for a practical and well=E2=80=91established reason: maximizing hardwa=
-re
->> > utilization.
->>=20
->> Personally I think drivers doing this are wrong. That such a driver
->> bug was allowed to become UAPI is pretty bad. The rust approach is
->> better.
->
-> We already had this discussion. I see this as a perfectly valid
-> use-case.
+On Wed, Mar 04, 2026 at 05:28:36PM +0800, fengchengwen wrote:
+> On 3/4/2026 3:02 AM, Bjorn Helgaas wrote:
+> > [+cc Jeremy, Sunil, Huacai, Liupu, authors of get_acpi_id_for_cpu()
+> > for arm64, riscv, loongson]
+> > 
+> > On Tue, Mar 03, 2026 at 08:36:25AM +0800, Chengwen Feng wrote:
+> >> Currently the pcie_tph_get_cpu_st() has a problem on ARM64 platform:
+> >> 1. The pcie_tph_get_cpu_st() function directly uses cpu_uid as the input
+> >>    parameter to call the PCI ACPI DSM method. According to the DSM
+> >>    definition, the input value should be the ACPI Processor UID. For
+> >>    details, please see [1].
+> >>
+> >> 2. In the Broadcom driver implementation [2] (which invoke
+> >>    pcie_tph_get_cpu_st()), cpu_uid is obtained based on
+> >>    cpumask_first(irq->cpu_mask), that is the logical ID of a CPU core,
+> >>    which is generated and managed by the kernel. For example, [0,255]
+> >>    if the system has 256 logical CPU cores.
+> >> 3. Unfortunately, on ARM64 platform, ACPI assigns Processor UID to the
+> >>    core which listed in the MADT table, the Processor UID may not equal
+> >>    the logical ID of a CPU core in the kernel. So the current
+> >>    implementation cannot obtain the cpu's real steer-tag in such case.
+> >> 4. The reason why it can run on the AMD platform is that the mapping
+> >>    between the logical ID and ACPI Processor UID is similar.
+> >>
+> >> This commit fixes it by:
+> >> 1. Introduce config ARCH_HAS_GET_CPU_ACPI_ID_API and its corresponding
+> >>    API acpi_get_cpu_acpi_id() to obtain the ACPI Processor UID of a CPU
+> >>    core. This API invokes get_acpi_id_for_cpu() to obtain the UID on
+> >>    ARM64 platform.
+> >> 2. Because using the logical ID as the ACPI Processor UID directly on
+> >>    X86 platform is not standard. This commit uses cpu_acpi_id() to
+> >>    obtain the UID.
+> >> 3. At the same time, the input parameter cpu_uid of
+> >>    pcie_tph_get_cpu_st() is renamed to cpu for clarity.
+> > 
+> > Thanks for raising this issue!
+> > 
+> > TLP Processing Hints (TPH) and Steering Tags are generic PCIe features
+> > that we should support for both ACPI and non-ACPI systems.
+> > 
+> > The current implementation of pcie_tph_get_cpu_st() only supports
+> > ACPI, and it assumes the cpu_uid parameter is an ACPI CPU UID that can
+> > be passed directly to the _DSM.  But since we want this to be a
+> > generic interface, I think the "cpu" parameter should be the Linux
+> > logical CPU ID, not an ACPI UID, as you point out.
+> ...
 
-Can you remind about a specific use-case for this please? (Ideally, one tha=
-t
-can't be solved otherwise.)
+> >>  int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
+> >> -			unsigned int cpu_uid, u16 *tag)
+> >> +			unsigned int cpu, u16 *tag)
+> >>  {
+> >> -#ifdef CONFIG_ACPI
+> >> +#ifdef CONFIG_ARCH_HAS_GET_CPU_ACPI_ID_API
+> >> +	unsigned int cpu_uid = acpi_get_cpu_acpi_id(cpu);
+> > 
+> > Any required conversion between Linux logical CPU and ACPI CPU UID
+> > should be internal to pcie_tph_get_cpu_st(), as you're doing here.
+> > 
+> > But rather than adding CONFIG_ARCH_HAS_GET_CPU_ACPI_ID_API and the
+> > ifdefs in acpi_get_cpu_acpi_id(), I think there should be a generic
+> > ACPI interface that converts logical CPU ID to ACPI UID, and every
+> > arch supporting ACPI should have to implement it.
+> > 
+> > We already have get_acpi_id_for_cpu(), implemented for arm64, riscv,
+> > and loongarch:
+> > 
+> >   30d87bfacbee ("arm64/acpi: Create arch specific cpu to acpi id helper")
+> >   f99561199470 ("RISC-V: ACPI: Cache and retrieve the RINTC structure")
+> >   f6f0c9a74a48 ("LoongArch: Add SMT (Simultaneous Multi-Threading) support")
+> > 
+> > What if we just implemented it for x86 as well and moved it to
+> > include/linux/acpi.h or similar?
+> 
+> Your idea to unify the ACPI CPU ID function across architectures is
+> great. I noticed that all exported ACPI functions use the `acpi_`
+> prefix, so I think we shouldn’t simply modify x86’s implementation
+> directly – we should also align the naming convention for other
+> platforms.
+> 
+> Since only x86, arm64, risc-v, and loongarch currently support ACPI,
+> how about we remove the new config and instead use this approach:
+> 
+> unsigned int acpi_get_cpu_acpi_id(unsigned int cpu)
+> {
+>         if (cpu >= nr_cpu_ids)
+>                 return 0;
+> #ifdef CONFIG_X86
+>         return cpu_acpi_id(cpu);
+> #elif defined(CONFIG_ARM64) || defined(CONFIG_RISCV) || defined(CONFIG_LOONGARCH)
+>         return get_acpi_id_for_cpu(cpu);
+> #endif
+> }
+> 
+> For any new platform that plans to support ACPI in the future, this
+> will trigger a compile error – which is intentional. It will prompt
+> the maintainers of that platform to add their own implementation of
+> either `get_acpi_id_for_cpu` or `cpu_acpi_id` as needed.
+
+I agree that an "acpi_" prefix would be appropriate.  I'd suggest
+separate implementations in arch/*/kernel/acpi.c instead of #ifdefs in
+a common version.
+
+Maybe users of cpu_acpi_id() and get_acpi_id_for_cpu() could be
+converted to use the generic interface.
