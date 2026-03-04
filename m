@@ -1,188 +1,346 @@
-Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DAB73976A4;
-	Wed,  4 Mar 2026 09:29:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37C353542E1
+	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2026 09:33:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772616543; cv=none; b=AQAfQW1erjD8u1rWnXJKmkrzXEhcEq7iLzFIBkSVhZOlaofVlrVSjpZ9X6Fl0NzwRYBM7PGX6g5MFIgDfqAMsbJwBwD132ZLhDVwBELNnR+AVhbhMvFSksYqj0T5BImqd8FHrfVv7GKAXHxPWcsUABlJatgUTP8VWGA3+lYQ7/A=
+	t=1772616827; cv=none; b=lMBXEaoptQQnmqhvNuSVV4QaeTcq9r5sTV43oq94EvG4b2Cs9Fb6otIPf5WSzOMvUuMUgeFqILULeMq3aUyCrsso7NyD4iLCRwio43DTjqhZ0iBowXbuA3RcYyCDPI9ql9BdPzybZirI+B678dWxSKQ+32N08T4rXuOklLaZjeQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772616543; c=relaxed/simple;
-	bh=Jcr0tn3DZiSPoeHfUwIDLAFM+lK8CgOCHgpZwOJ4tVs=;
+	s=arc-20240116; t=1772616827; c=relaxed/simple;
+	bh=UgQTgkB5UzffbHxj48UknwnHweyGmMrlnoYCea5R01M=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iPRy2JIq9f4PdG8DL6BimQ7G4Cb/0bYp/EoZewn7Abuk8C7uSlHMMfGDHQz5cUqZOUiE3TiMxI4Rm88SQ64r8ZQRPsAcnL2VWkPXjulydkM6ABkQoWCkS+LKRG6UrRnVaLSdqFkLLSj5eXGYFbCiQ0Ka2Vpt47hZsMZV4Ul1o+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=ncHzYAwC; arc=none smtp.client-ip=5.135.140.105
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
+	 In-Reply-To:Content-Type; b=Cam5z6xY7QAp2kb7NmMsU/s0ziPCfO836QF06xIB5bWuqiZwr0Ily9nUQv+B+gfWDA14LZxiOI/Q/nROnrPSXxU26wO3zNy9v4RDfxnbCQF3MWMoRh50F+q7VQqK5rtl0yzEbo1+sUeEz6iz/9Yc4EbEdifrttuxhrjqcmwszyA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=jG7fGQ4v; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=AnD2HPj1; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="ncHzYAwC"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 3F58322A039;
-	Wed,  4 Mar 2026 10:28:50 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
-	t=1772616537; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:content-language:in-reply-to:references;
-	bh=xn/i0N8EgAKuwuM15FDiV4PZjdt7rsAySJLonN4COK8=;
-	b=ncHzYAwCogixHNVPZGRZuZBlCM11hw7NxKf1wlD/bw1xMbPi831jWfcgUfJU1SGpwp0cuN
-	Rx2yqoJ/z4sL4VfWI0kLPehzjMcSF8eyL5zN2dHW7EJs38wYdXg7tYbpKLoccnxYqVBrO3
-	rXGLP9iEhH2S+4/L2Q9mtYc8JR6Kj2LgowV0a0KvCrQ0sGg5HuYtoBhLpnzCb5PR0Zy+1C
-	OCqlAhCLilI7JHL3nlXFdGJZsZruj//g7V1c9fs+C4s8N7lIRnhtTNAiQCNgu8RFvY38zP
-	BtHLrE155jwkaELLPVa+tjzFSXjFq9YJJ+z2qaKnJvb8zr2xNEx4Kt/bixTrqw==
-Message-ID: <63cd305f-e76f-4ed3-bb4d-d6b1dec8c92e@cjdns.fr>
-Date: Wed, 4 Mar 2026 10:28:50 +0100
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="jG7fGQ4v";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="AnD2HPj1"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6245SQ591421902
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2026 09:33:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	olej/QuVyiT3XCCYbNDROqVlMJ/ZiroIS/6G24fqqXw=; b=jG7fGQ4v5uKwi+m6
+	jYRS3LTZutxZaRvtn8jkQxwWB2a0rTwd5e4FuO+g0wWd5G6gGJcJF4AE1G5i+wFk
+	OVKDaM+De548acZWpPzF3QrgKX7M0ybyyo9T9nH5iq1FCKDwI9itphQ7adIazLDh
+	RCVUSxnyEZWmuQHAooPZDGtWaMjcWZ8Cwxhrap9wNj/tneGiKaSjMDD1SK277er9
+	zx1qlz8KOShYrjRR+IbVJPOroaviNiAlxyRY0ZMUgNqTvVo0VGxfRXNQzqpcimU5
+	5LEprhOHTQYA/7ocebT16KTOpnKkzt3JtoAKgir2XJgo30Zc72Ql1lf/KJbK5HwK
+	TOtKHw==
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cpe8u0vxw-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 09:33:45 +0000 (GMT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2ae4e9577ceso139529165ad.1
+        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 01:33:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1772616824; x=1773221624; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=olej/QuVyiT3XCCYbNDROqVlMJ/ZiroIS/6G24fqqXw=;
+        b=AnD2HPj1eZgauJ+a51GpxVR5LOXekFbZkM/CI1vXOYd5EhIQiMgjfvPxOZzHfjqgwP
+         2MSH6X2qnxMqo0MhwIvXpHrq9sQUlQg8zEFmZhnBIemjtRD0dhw0Xm+YKs0TW4k0TkLc
+         plRWwOkxz1sVw00as9jzQJgwc0LgIJDIYE7hITDl+4htUjO5PiG7SuTuk8YPgrPmy39l
+         44omh1OCnCk3bHosJLxqq/d5Ag/OA2siUhUY9l5QSBxzhSAOwhRgNO3dLISB0SHqoGCU
+         2srym+0FdLUlRbJbxffo/84LsArWxI+gDv9JKtpBQp26y74bfBVsbNRHDACWl1jVTVVt
+         g4kw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772616824; x=1773221624;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=olej/QuVyiT3XCCYbNDROqVlMJ/ZiroIS/6G24fqqXw=;
+        b=FVgSEzLo0X6UZTSh+omkuCs8+9wrML6DHoTS75vgoQepQ0p3FubqoK0ZCbD1loStl1
+         2TWOlQlOTjAwq23kaYS1sC9gGYQFw23eEbTikbNYnqQKv9qc5Bqmd+El1vf1b/3jzYxG
+         Vbxc5wp2cHwoCdvsKmnauKDhv+DsZSutQdd7UnGPvUCWD4PaCZ7jyN4m87w1Z+yHVzHU
+         yWEdenVIsaNPt1k7Kjd4zmQbG0zjjWjwn1atvcYI23XTvhdX3hqkJmoBf++upxATdYZD
+         YcbPo6kpC7Mk70ON1ZZ0wn1IHb+21VS2vkLa9PMOSX5T5bxUyl3Z+QA3NUKnEsEzW4IV
+         2XPQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUPbO9yeJKYGoZPDKkYczy1Bn27nKugdeNCAUitEGQsH0b23OMwhfjboTgAKkYUcuAlCAk0xb4t9oQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzonXsk2O2wHBOdaV7whDwmNRCFGsrCcYFcfuUNZrwx5x5BUAfd
+	EzmWdtfdkgjWcKUU+ePIgQTFc89x7xUHfZoesKKiEq+0Sm/Ztsww5If43IbYpRdVj2McEKecS7N
+	VAEwTeaVBlUeO+dKbz/guQ7qGXb0/IvctEXR0L9OuHx4xAWyiB5kRnXfxryi1Nc8=
+X-Gm-Gg: ATEYQzzy5Lv5DgNTLJ3DhjLmQgClx0K4bRJXeHhBW/l7oXyTjtSQBSNpMOHcvZi/6Aw
+	zWfXQS4tHyZQqa5qrKKY74P47UJE25SIw7Ldi1F7Mlu6s7Lf4qYD9pc2Wbl7275inr5L1lcbDM6
+	m1+g2CIuFT0/2xsEdpYRkDclvkld1S1rxw1ed3en10zKEGfTb2/Oaz2PD3f8uMi9Oppxkxu1fyW
+	RsU1xB5qq30IKoBVPxc6iCB1v0lBATNBTQ3Ahid8K7nIOiqDvlF/7s1zdmQvo/FrWwkVrhLxPzp
+	VFPlr6NP2oz1gQlB5EZ5uspcIbP8TO/yCywGoxm7qGMAazwbApaVBYoF7XfmdYfuxgBockvspHK
+	DDDOYQ3oAU5fmgb9ADm8l10P0Weuii0RFla8bt/hCrj3yBbme4pwQko3p
+X-Received: by 2002:a17:903:3586:b0:2ae:483f:b23b with SMTP id d9443c01a7336-2ae6aaae620mr19109925ad.32.1772616824007;
+        Wed, 04 Mar 2026 01:33:44 -0800 (PST)
+X-Received: by 2002:a17:903:3586:b0:2ae:483f:b23b with SMTP id d9443c01a7336-2ae6aaae620mr19109655ad.32.1772616823507;
+        Wed, 04 Mar 2026 01:33:43 -0800 (PST)
+Received: from [10.219.57.109] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ae541358d4sm76250575ad.75.2026.03.04.01.33.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 04 Mar 2026 01:33:42 -0800 (PST)
+Message-ID: <d3687764-024d-4dbc-9342-8edc9b4f1fdd@oss.qualcomm.com>
+Date: Wed, 4 Mar 2026 15:02:14 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird Beta
-Subject: Re: [PATCH 3/8] dt-bindings: phy: Document PCIe PHY in EcoNet
- EN751221 and EN7528
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: linux-mips@vger.kernel.org, naseefkm@gmail.com, mturquette@baylibre.com,
- sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
- tsbogend@alpha.franken.de, ryder.lee@mediatek.com,
- jianjun.wang@mediatek.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
- mani@kernel.org, bhelgaas@google.com, vkoul@kernel.org,
- neil.armstrong@linaro.org, p.zabel@pengutronix.de, matthias.bgg@gmail.com,
- angelogioacchino.delregno@collabora.com, nbd@nbd.name, ansuelsmth@gmail.com,
- linux-clk@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org
-References: <20260303190948.694783-1-cjd@cjdns.fr>
- <20260303190948.694783-4-cjd@cjdns.fr>
- <20260304-proficient-coati-of-lightning-df2cab@quoll>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v9 1/3] of: Add convenience wrappers for of_map_id()
+To: Marc Zyngier <maz@kernel.org>
+Cc: Nipun Gupta <nipun.gupta@amd.com>,
+        Nikhil Agarwal
+ <nikhil.agarwal@amd.com>,
+        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Thomas Gleixner
+ <tglx@kernel.org>, Rob Herring <robh@kernel.org>,
+        Saravana Kannan <saravanak@kernel.org>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Bjorn Helgaas
+ <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>, Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+        Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Krzysztof Kozlowski
+ <krzk+dt@kernel.org>,
+        Prakash Gupta <prakash.gupta@oss.qualcomm.com>,
+        Vikash Garodia <vikash.garodia@oss.qualcomm.com>,
+        linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
+        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, imx@lists.linux.dev,
+        xen-devel@lists.xenproject.org, linux-arm-msm@vger.kernel.org
+References: <20260301-parse_iommu_cells-v9-0-4d1bceecc5e1@oss.qualcomm.com>
+ <20260301-parse_iommu_cells-v9-1-4d1bceecc5e1@oss.qualcomm.com>
+ <86342janlx.wl-maz@kernel.org>
 Content-Language: en-US
-From: Caleb James DeLisle <cjd@cjdns.fr>
-In-Reply-To: <20260304-proficient-coati-of-lightning-df2cab@quoll>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Last-TLS-Session-Version: TLSv1.3
+From: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>
+In-Reply-To: <86342janlx.wl-maz@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: CgntxkxyJw9m_1fyMmjt-Vp9ZOHIDorC
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA0MDA3MiBTYWx0ZWRfX69Oage1DCoW4
+ phB5DnlGLDtnN/sJKinqQcnHVkIgkQyh4B31eaIKMq4fybhn5jb7xrflf5O0kpf1fMFw02FEqar
+ DLQTl6lM5MTzvdrZDs8kggnCfzTew2zkK6puW5JQXUucfFtZfuGpfhfOYIWiADvclGjYBf+ezhB
+ xSsTLPpHa5g7urB+SngP0ZrYNiieAfSiMW36nRSd6qt38lCWs7caLJAxj+q6ILZ+72XY+MCNhLF
+ AveFvkP+Ts8ayuLku4AXUAhOgxu0b8s5Xbwz0MFATHxRk/1tFTaAUDIDkGXdFko9rMjv/1fJsQl
+ 4ZNdDGFfXBXVGE4sFMKF8Wr9TQz4nEdJELw7KFIx5CIh9Onju7Lcr4NJPUg/iSzCkiwrQTgQi/t
+ UznmHRTKwlwdNAp5JbI8Yw2Jj8EGuojXHwfFABGN7sEJWoyoKhkXct8b3/0rf5ya+4Zg6cyQsRf
+ NT+8CCjVFETPW4oYdNw==
+X-Authority-Analysis: v=2.4 cv=FpAIPmrq c=1 sm=1 tr=0 ts=69a7fc79 cx=c_pps
+ a=JL+w9abYAAE89/QcEU+0QA==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
+ a=EUspDBNiAAAA:8 a=7CQSdrXTAAAA:8 a=VwQbUJbxAAAA:8 a=8AirrxEcAAAA:8
+ a=xEgsDuFUHT4EKXnybycA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=324X-CrmTo6CU4MGRt3R:22 a=a-qgeE7W1pNrGK8U0ZQC:22 a=ST-jHhOKWsTCqRlWije3:22
+X-Proofpoint-GUID: CgntxkxyJw9m_1fyMmjt-Vp9ZOHIDorC
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-04_05,2026-03-03_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 bulkscore=0 suspectscore=0 spamscore=0 lowpriorityscore=0
+ adultscore=0 phishscore=0 malwarescore=0 clxscore=1015 impostorscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603040072
 
 
-On 04/03/2026 09:44, Krzysztof Kozlowski wrote:
-> On Tue, Mar 03, 2026 at 07:09:43PM +0000, Caleb James DeLisle wrote:
->> EN751221 and EN7528 SoCs have two PCIe slots, and each one has a
->> PHY which behaves slightly differently because one slot is Gen1/Gen2
->> while the other is Gen1 only.
+
+On 3/1/2026 3:16 PM, Marc Zyngier wrote:
+> On Sun, 01 Mar 2026 08:34:19 +0000,
+> Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com> wrote:
 >>
->> Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
+>> From: Robin Murphy <robin.murphy@arm.com>
+>>
+>> Since we now have quite a few users parsing "iommu-map" and "msi-map"
+>> properties, give them some wrappers to conveniently encapsulate the
+>> appropriate sets of property names. This will also make it easier to
+>> then change of_map_id() to correctly account for specifier cells.
+>>
+>> Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+>> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+>> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+>> Signed-off-by: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>
 >> ---
->>   .../phy/econet,en751221-pcie-phy.yaml         | 57 +++++++++++++++++++
-> Why are you mixing multiple subsystems in the same patchset? That's
-> like three or four different ones. Don't, just make it difficult to
-> apply pieces and understand the dependencies.
-
-
-Please pardon my ignorance, I was under the impression that a patch 
-should be specific to a subsystem but a patchset should accomplish a 
-goal and avoid introducing unused code. In this case the goal is PCIe 
-support. If you prefer it, I can resend as a PHY patchset and a CLK 
-patchset, and then after those are merged, send the PCIe patchset to use 
-them.
-
-
->
->>   MAINTAINERS                                   |  6 ++
->>   2 files changed, 63 insertions(+)
->>   create mode 100644 Documentation/devicetree/bindings/phy/econet,en751221-pcie-phy.yaml
+>>  drivers/cdx/cdx_msi.c                    |  3 +--
+>>  drivers/iommu/of_iommu.c                 |  4 +---
+>>  drivers/irqchip/irq-gic-its-msi-parent.c |  2 +-
+>>  drivers/of/irq.c                         |  3 +--
+>>  drivers/pci/controller/dwc/pci-imx6.c    |  6 ++----
+>>  drivers/pci/controller/pcie-apple.c      |  3 +--
+>>  drivers/xen/grant-dma-ops.c              |  3 +--
+>>  include/linux/of.h                       | 14 ++++++++++++++
+>>  8 files changed, 22 insertions(+), 16 deletions(-)
 >>
->> diff --git a/Documentation/devicetree/bindings/phy/econet,en751221-pcie-phy.yaml b/Documentation/devicetree/bindings/phy/econet,en751221-pcie-phy.yaml
->> new file mode 100644
->> index 000000000000..8e1d3c791c6e
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/phy/econet,en751221-pcie-phy.yaml
->> @@ -0,0 +1,57 @@
->> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
->> +%YAML 1.2
->> +---
->> +$id: http://devicetree.org/schemas/phy/econet,en751221-pcie-phy.yaml#
->> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+>> diff --git a/drivers/cdx/cdx_msi.c b/drivers/cdx/cdx_msi.c
+>> index 91b95422b263..63b3544ec997 100644
+>> --- a/drivers/cdx/cdx_msi.c
+>> +++ b/drivers/cdx/cdx_msi.c
+>> @@ -128,8 +128,7 @@ static int cdx_msi_prepare(struct irq_domain *msi_domain,
+>>  	int ret;
+>>  
+>>  	/* Retrieve device ID from requestor ID using parent device */
+>> -	ret = of_map_id(parent->of_node, cdx_dev->msi_dev_id, "msi-map", "msi-map-mask",
+>> -			NULL, &dev_id);
+>> +	ret = of_map_msi_id(parent->of_node, cdx_dev->msi_dev_id, NULL, &dev_id);
+>>  	if (ret) {
+>>  		dev_err(dev, "of_map_id failed for MSI: %d\n", ret);
+>>  		return ret;
+>> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+>> index 6b989a62def2..a511ecf21fcd 100644
+>> --- a/drivers/iommu/of_iommu.c
+>> +++ b/drivers/iommu/of_iommu.c
+>> @@ -48,9 +48,7 @@ static int of_iommu_configure_dev_id(struct device_node *master_np,
+>>  	struct of_phandle_args iommu_spec = { .args_count = 1 };
+>>  	int err;
+>>  
+>> -	err = of_map_id(master_np, *id, "iommu-map",
+>> -			 "iommu-map-mask", &iommu_spec.np,
+>> -			 iommu_spec.args);
+>> +	err = of_map_iommu_id(master_np, *id, &iommu_spec.np, iommu_spec.args);
+>>  	if (err)
+>>  		return err;
+>>  
+>> diff --git a/drivers/irqchip/irq-gic-its-msi-parent.c b/drivers/irqchip/irq-gic-its-msi-parent.c
+>> index d36b278ae66c..b63343a227a9 100644
+>> --- a/drivers/irqchip/irq-gic-its-msi-parent.c
+>> +++ b/drivers/irqchip/irq-gic-its-msi-parent.c
+>> @@ -180,7 +180,7 @@ static int of_pmsi_get_msi_info(struct irq_domain *domain, struct device *dev, u
+>>  
+>>  	struct device_node *msi_ctrl __free(device_node) = NULL;
+>>  
+>> -	return of_map_id(dev->of_node, dev->id, "msi-map", "msi-map-mask", &msi_ctrl, dev_id);
+>> +	return of_map_msi_id(dev->of_node, dev->id, &msi_ctrl, dev_id);
+>>  }
+>>  
+>>  static int its_pmsi_prepare(struct irq_domain *domain, struct device *dev,
+>> diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+>> index 6367c67732d2..e37c1b3f8736 100644
+>> --- a/drivers/of/irq.c
+>> +++ b/drivers/of/irq.c
+>> @@ -817,8 +817,7 @@ u32 of_msi_xlate(struct device *dev, struct device_node **msi_np, u32 id_in)
+>>  	 * "msi-map" or an "msi-parent" property.
+>>  	 */
+>>  	for (parent_dev = dev; parent_dev; parent_dev = parent_dev->parent) {
+>> -		if (!of_map_id(parent_dev->of_node, id_in, "msi-map",
+>> -				"msi-map-mask", msi_np, &id_out))
+>> +		if (!of_map_msi_id(parent_dev->of_node, id_in, msi_np, &id_out))
+>>  			break;
+>>  		if (!of_check_msi_parent(parent_dev->of_node, msi_np))
+>>  			break;
+>> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+>> index a5b8d0b71677..bff8289f804a 100644
+>> --- a/drivers/pci/controller/dwc/pci-imx6.c
+>> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+>> @@ -1144,8 +1144,7 @@ static int imx_pcie_add_lut_by_rid(struct imx_pcie *imx_pcie, u32 rid)
+>>  	u32 sid = 0;
+>>  
+>>  	target = NULL;
+>> -	err_i = of_map_id(dev->of_node, rid, "iommu-map", "iommu-map-mask",
+>> -			  &target, &sid_i);
+>> +	err_i = of_map_iommu_id(dev->of_node, rid, &target, &sid_i);
+>>  	if (target) {
+>>  		of_node_put(target);
+>>  	} else {
+>> @@ -1158,8 +1157,7 @@ static int imx_pcie_add_lut_by_rid(struct imx_pcie *imx_pcie, u32 rid)
+>>  	}
+>>  
+>>  	target = NULL;
+>> -	err_m = of_map_id(dev->of_node, rid, "msi-map", "msi-map-mask",
+>> -			  &target, &sid_m);
+>> +	err_m = of_map_msi_id(dev->of_node, rid, &target, &sid_m);
+>>  
+>>  	/*
+>>  	 *   err_m      target
+>> diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
+>> index 2d92fc79f6dd..a0937b7b3c4d 100644
+>> --- a/drivers/pci/controller/pcie-apple.c
+>> +++ b/drivers/pci/controller/pcie-apple.c
+>> @@ -764,8 +764,7 @@ static int apple_pcie_enable_device(struct pci_host_bridge *bridge, struct pci_d
+>>  	dev_dbg(&pdev->dev, "added to bus %s, index %d\n",
+>>  		pci_name(pdev->bus->self), port->idx);
+>>  
+>> -	err = of_map_id(port->pcie->dev->of_node, rid, "iommu-map",
+>> -			"iommu-map-mask", NULL, &sid);
+>> +	err = of_map_iommu_id(port->pcie->dev->of_node, rid, NULL, &sid);
+>>  	if (err)
+>>  		return err;
+>>  
+>> diff --git a/drivers/xen/grant-dma-ops.c b/drivers/xen/grant-dma-ops.c
+>> index c2603e700178..1b7696b2d762 100644
+>> --- a/drivers/xen/grant-dma-ops.c
+>> +++ b/drivers/xen/grant-dma-ops.c
+>> @@ -325,8 +325,7 @@ static int xen_dt_grant_init_backend_domid(struct device *dev,
+>>  		struct pci_dev *pdev = to_pci_dev(dev);
+>>  		u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
+>>  
+>> -		if (of_map_id(np, rid, "iommu-map", "iommu-map-mask", &iommu_spec.np,
+>> -				iommu_spec.args)) {
+>> +		if (of_map_iommu_id(np, rid, &iommu_spec.np, iommu_spec.args)) {
+>>  			dev_dbg(dev, "Cannot translate ID\n");
+>>  			return -ESRCH;
+>>  		}
+>> diff --git a/include/linux/of.h b/include/linux/of.h
+>> index be6ec4916adf..824649867810 100644
+>> --- a/include/linux/of.h
+>> +++ b/include/linux/of.h
+>> @@ -1457,6 +1457,20 @@ static inline int of_property_read_s32(const struct device_node *np,
+>>  	return of_property_read_u32(np, propname, (u32*) out_value);
+>>  }
+>>  
+>> +static inline int of_map_iommu_id(const struct device_node *np, u32 id,
+>> +				  struct device_node **target, u32 *id_out)
+>> +{
+>> +	return of_map_id(np, id, "iommu-map", "iommu-map-mask",
+>> +			 target, id_out);
+>> +}
 >> +
->> +title: EcoNet PCI-Express PHY for EcoNet EN751221 and EN7528
+>> +static inline int of_map_msi_id(const struct device_node *np, u32 id,
+>> +				struct device_node **target, u32 *id_out)
+>> +{
+>> +	return of_map_id(np, id, "msi-map", "msi-map-mask",
+>> +			 target, id_out);
+>> +}
 >> +
->> +maintainers:
->> +  - Caleb James DeLisle <cjd@cjdns.fr>
->> +
->> +description:
->> +  The PCIe PHY supports physical layer functionality for PCIe Gen1 and
->> +  Gen1/Gen2 ports. On these SoCs, port 0 is a Gen1-only port while
->> +  port 1 is Gen1/Gen2 capable.
->> +
->> +properties:
->> +  compatible:
->> +    enum:
->> +      - econet,en751221-pcie-phy0
->> +      - econet,en751221-pcie-phy1
-> What is the difference between phy0 and phy1? This must be explicitly
-> explained in the description.
->
-> If phy1 means "port 1" (although first sentence disagrees, because it
-> says that THE SAME phy supports two ports), then the names aren't -gen1
-> and -gen2? Or what are other differences?
+> 
+> Any particular reason why this is made inline instead of out of line
+> in of/base.c? Also, some documentation would be helpful for the
+> aspiring hackers dipping into this.
+> 
+> Other than that,
+> 
+> Acked-by: Marc Zyngier <maz@kernel.org>
+> 
+> 	M.
+> 
+
+Thanks Marc.
+
+I made them static inline mainly because they’re just trivial wrappers
+around of_map_id(), so keeping them in include/linux/of.h avoids adding
+new global symbols/exports and keeps the callsites simple (similar to
+the existing of_property_read_*() inline wrappers).
+
+That said, I don’t have a strong preference—if you’d rather have
+out-of-line helpers in drivers/of/base.c, I’m happy to respin accordingly.
+
+Re Documentation, Sure I'll add comments for of_map_iommu_id() and
+of_map_msi_id() in follow up patch.
+
+Thanks,
+Vijay
 
 
-In practice, port0 is gen1 only and port1 is gen1/2. But I suppose it 
-makes sense to specify them as gen1 and gen2, so that fact is documented 
-in the DT.
 
-
->
->> +      - econet,en7528-pcie-phy0
->> +      - econet,en7528-pcie-phy1
->> +
->> +  reg:
->> +    maxItems: 1
->> +
->> +  "#phy-cells":
->> +    const: 0
->> +
->> +required:
->> +  - compatible
->> +  - reg
->> +  - '#phy-cells'
-> Use consisent quotes.
-
-OK
-
->
->> +
->> +additionalProperties: false
->> +
->> +examples:
->> +  - |
->> +    #include <dt-bindings/phy/phy.h>
-> Where do you use it here?
-Whoops, I think I daydreamed that it was needed for "#phy-cells", will 
-drop.
->
->> +    soc {
->> +      #address-cells = <1>;
->> +      #size-cells = <1>;
->> +
->> +      pcie_phy0: pcie-phy@1faf2000 {
-> Drop unused label.
-OK
->
->> +        compatible = "econet,en7528-pcie-phy0";
->> +        reg = <0x1faf2000 0x1000>;
->> +        #phy-cells = <0>;
->> +      };
->> +
->> +      pcie_phy1: pcie-phy@1fac0000 {
->> +        compatible = "econet,en7528-pcie-phy1";
-> Drop node, same as previous one.
-
-OK
-
-
-Thanks for the review.
-
-Caleb
-
-
->
-> Best regards,
-> Krzysztof
->
