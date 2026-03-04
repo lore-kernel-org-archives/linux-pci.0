@@ -1,146 +1,199 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B14E37FF79
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2026 08:16:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E18C364EA3;
+	Wed,  4 Mar 2026 08:39:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772612218; cv=none; b=DJqvjFbVE6OOow9E5UaEMy5LLex5nJnPc8Nfb/cc8uiyvPb0azpZYpSG+VRYqhnXSrzK2cZX+E7Tr8wW5a/jsiaWerwqb6awWpuS293SbYXDy1mhL8IlyXFUKpLswB+475hRVLIBigpG98NBhgAwEgXhj3CUs/fxVhjzECfZqTs=
+	t=1772613576; cv=none; b=D8sqC139S3XloOJE6SNjkGC2KWjqR+64UeGe9EkRDFcMVIDAZMJZw1wFDRWmB9FOxbzgGoCposs2eJ26xMoJwM37cURaCMDRjtKkW9diezn2ZzpKMGUGy+XkOpOp+3bMnkfmp3ARh0NCrUmPMFROH1bKOiNku0LYT3wpVanC1Fg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772612218; c=relaxed/simple;
-	bh=/opHycjzCFnLxsHbSOMeid377lF3ptlX1EQZCIflr58=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dBfXFKOVTp9u2z5HxIYDl+lXeK0nnc87HJe9YO/s11ly9RWfphuVGmdvEw/PnmJHC4nIrXCd9tpMvQLU8vZmrGAYEzBVMPgpAMiuUIz3ALNfNlnsYCOs9u4/0wuXHWPteNND1nYUt4CFec7KfGYg0iFZlICA9i2C63h16/O/3iI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=nm4m1xbB; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=NJztzAx2; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1772613576; c=relaxed/simple;
+	bh=BW1MAMlh/nk9MxeyiUabogHzZOl5p0qUa7BasAromto=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cX7jRRs/KxCzPTqtQUbQn1VRASgg6FZDSMCd+awJWxvfTDd8i95HQu/CaNInZfyPHEGJ0JRZbwM3+Tw0Q+0VzJ71aKg4ssyjuyDLfwpx0xtYsmFmu0oLJ5RKG7LSHJbX2GFYZG3atwRPvK6yq2Izw8AGYwypegIFfPIx0n3sp3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EfR5j+Gg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="nm4m1xbB";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="NJztzAx2"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6245SwjV1678348
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2026 08:16:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Job3nN6oBSFSLvd2I1gGw5nzSr+/eP+fBHqMQIMVzic=; b=nm4m1xbB27ANg9dC
-	CpysdbDg2A8oldcxHtHPfGzfi1uMPgK2bRX3h8P6+Om/07V7Vo4+DDrlus5BYb4I
-	59miPAMx/4RnREI18QeObRJ6TOkdgC749EIGtXcPYM8SZyuG7zyJqDW7IqcrLO9g
-	iUESJ4mqs4xdT+XwOE3rlIdOlConVbNoYntRnJfndYrZML1p9kuP+HEa6YbEMLIr
-	DIpwSf6k5AqT4ETNqS0o0QXulsyY6L7oNQiWYeQ+RePYRLazp1ggP8w07RXs1yYb
-	QC7TApuuhcKvONxbKOYxatm85NyjxIBGW8LQSV7LwJcSkK6EuMZfCvIBreim82Ie
-	zadMRQ==
-Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com [209.85.219.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cp73h9yn9-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 08:16:55 +0000 (GMT)
-Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-899fa82ebb9so195932226d6.3
-        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 00:16:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1772612215; x=1773217015; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Job3nN6oBSFSLvd2I1gGw5nzSr+/eP+fBHqMQIMVzic=;
-        b=NJztzAx2MFayNZJWDxF+bGWJ4YxGE+v729SwXBtCKVjHLUz6/ttc2PUXCkUj6P4Dlv
-         INbJ4ljLq+mlS/BA/c3XFMcdt87iW2cpEQNEvhIvr52K1OggPm9ftLziNgyXhWB4aVlI
-         5poI/F0w3glSOLnJBx1GgR2ZEPHyS1qXOO/KdMjQ7U5vt6U2ZUPhSi0Mm9SfA5tnXVi8
-         iQbE361lvZJ0a7aSx1pjZTm8Ao7Ds9E4owZp53nTof2BxB0h18NDGkcV6kxT67vdckou
-         7l1/phyPeSDubTjYLrx6G0kHgeLg4zLP/MpeoiYrrxDk8ftKoTRhO9woGKgAB0ltlBOD
-         o7lw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772612215; x=1773217015;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Job3nN6oBSFSLvd2I1gGw5nzSr+/eP+fBHqMQIMVzic=;
-        b=ee0N36Lk8u57wYU+befvorxK7SizcZFUV8KSFEWGfxszNQYqL7g9FPj4GI3sW/cqEG
-         6AkP5W5NAM9XE+s25RxJdJ1QcAuuTPIvqJRjctV4OcMLsYl9b6R2hvk4t8Fz1gFl36DG
-         /5Lu8sSe2G/BJ7PCooaHqCWINM0128MAU0ViJfAhvI7ilUcJqijmGKxOrAzcY+0qXugC
-         RADUHFhHcZD0+0rkHTGNfnAAEyHuIBBHvd3prACG/zpmNNL1yv/4iGrefjOBsna+j7KN
-         Ol2B2Xgu4nifVV79ke96egym8M+jUmt7ORmLsZRfcadb4OgdFmLeYkPYdiMzZpnDiUmj
-         o8TA==
-X-Forwarded-Encrypted: i=1; AJvYcCW9M6Bg7sjvqUSf+NgLtu4/Wlwo+JmUQMbWHSdkR13d4OtzWyystbJOjrdHcdIcd5IUCDMXIpx8Jac=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyIM9VJE9qjpatjn2y6MtxShdZZzmZwlzzdydBmWKEsDNfsQwAH
-	movudhCkQ1WddZ/RSXpPlnrDrKCruD2r/Coh/DhXsJre6mahozqUB+21XNPqOoiJ7ErlsslzhQ0
-	HwFa45mgNjGuQly2sxCiYdpESb4icTd8yghlc8+tsxc2XZpRpz3rYB7ZYoc2Gasw=
-X-Gm-Gg: ATEYQzxvSFwz98EZeSJCKDu/wxydz1FRzaU8loAQePWQ2ZR7y/7kvqX+RMLX7hqkr3T
-	EtCOBaMooY5j11uRj17SnoZsJyXgVPzAoolwzI9HgQRMxZBpE0QRUBeOU6ioLdKYbHgZXSJKYcS
-	HBwm1AJMpUnNUHMaSLC3Aw/HY6DcT4nAy1plOj5Ia5rkTk6nh6FqBtFwCAPsVa+5YY3G6ATI2Oe
-	c3/E6hKIFTXWSC40VX4/CYbP58BksaGI1+rPkEIuvJI0fTC3c52GmAm8fvN3cnv+RLyBxxuHzmk
-	hxJtv4E5yzd+z9ZXMtdeWtz6OLGb/kLKXkLev/fSNymkWQqqWcjVVuw8HH7eGptzK2Kn8d7rqjb
-	kwYfzK/sYigf0cPQRJ8UHRqtJdp4terKK9bdMNM+CHhHQcJw3oww=
-X-Received: by 2002:a05:620a:4410:b0:8cb:8251:3fe0 with SMTP id af79cd13be357-8cd5aefbb9fmr162488985a.24.1772612214746;
-        Wed, 04 Mar 2026 00:16:54 -0800 (PST)
-X-Received: by 2002:a05:620a:4410:b0:8cb:8251:3fe0 with SMTP id af79cd13be357-8cd5aefbb9fmr162486185a.24.1772612214248;
-        Wed, 04 Mar 2026 00:16:54 -0800 (PST)
-Received: from brgl-qcom.home ([2a01:cb1d:dc:7e00:edb0:af14:f4c7:c6ac])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-439ba2a58dasm16666429f8f.27.2026.03.04.00.16.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Mar 2026 00:16:53 -0800 (PST)
-From: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-        Bartosz Golaszewski <brgl@kernel.org>, Felix Gu <ustc.gu@gmail.com>
-Cc: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] power: sequencing: pcie-m2: Fix device node reference leak in probe
-Date: Wed,  4 Mar 2026 09:16:51 +0100
-Message-ID: <177261220761.4483.11760077832525432450.b4-ty@oss.qualcomm.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260302-m2-v1-1-a6533e18aa69@gmail.com>
-References: <20260302-m2-v1-1-a6533e18aa69@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EfR5j+Gg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31FECC19425;
+	Wed,  4 Mar 2026 08:39:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772613575;
+	bh=BW1MAMlh/nk9MxeyiUabogHzZOl5p0qUa7BasAromto=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=EfR5j+GgtqBCJg9fn4WlhlRXNMZoren5zEMp9IawERa7OzBlNPqY3ntehvva1btFW
+	 8xsJbUsmmWUhHnyf+jBxr2ja0Z8XZPiZal3Ylk/3mOuZJejvLg3d75YRVyKtZdprcg
+	 du8ajEQ+Ke7oW16KjYjfs9lxtrhRAWfHdC2W7FfL0ikdn7SSR3xv6tA9gxGOn+61Uc
+	 aJoEXQO1hg25LbX54rzdUD9KMQBbAsnJUoTM2OgDHwScrid+WkGTn1iv8KsLAC7UNK
+	 PXbWKWLa+44L3myxtKVDYzc3noL5tTlb/+Kj7FWnBEPU6Tksq/+2cPWi+vHz59pIZ2
+	 X/LjKrskKwZJA==
+Date: Wed, 4 Mar 2026 09:39:33 +0100
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Caleb James DeLisle <cjd@cjdns.fr>
+Cc: linux-mips@vger.kernel.org, naseefkm@gmail.com, 
+	mturquette@baylibre.com, sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, 
+	conor+dt@kernel.org, tsbogend@alpha.franken.de, ryder.lee@mediatek.com, 
+	jianjun.wang@mediatek.com, lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
+	bhelgaas@google.com, vkoul@kernel.org, neil.armstrong@linaro.org, 
+	p.zabel@pengutronix.de, matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com, 
+	nbd@nbd.name, ansuelsmth@gmail.com, linux-clk@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org, 
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 1/8] dt-bindings: clock, reset: Add econet EN751221
+ bindings
+Message-ID: <20260304-accomplished-helpful-orca-5d6b81@quoll>
+References: <20260303190948.694783-1-cjd@cjdns.fr>
+ <20260303190948.694783-2-cjd@cjdns.fr>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: CXvoGwP_4KHrKdlUys8iD9cgOZXQLjFs
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA0MDA2MyBTYWx0ZWRfX5CSnFeB6VoHx
- F8dQCU38G3RKev44RViMUpOeZUgsmjgCOCkpmjp5J+piN0n12NbmnJvrIOBoTiwrlkrPD9OY1BR
- CEAeHYhDDC3zbguNu3UFfekBSSO2ktyWxALj7WpbXEz59rpu640P/kbPGzzpG8AKePXE5Cea+0H
- +nAtaOMxiI/2LkQXuckpwkpjb4BobqAHG6kVJqdmp/G4pRnYGHIEj6G97fLFx56snvbb/3uN1Eq
- lkaeIAyG41DRgrOW32OIL5l0HKY1yWD+s+O4HWsJkv+MQR5sBSpVg/fpl3iXXJ0mbkv5Xp9Viwz
- lUO/Wgq7+dPeCIx6JlE4yvI/po42jT1nxPv6/G2XQrHh7lmA9Mjd1Gr59YfpKabWU/gyiAVf5HR
- AOwRByMZOYe0uSOY5IAdvxILs40XUDCg+lr/0ns0cA3UvHCjRh4fRClEvJY4zeNmaNbdHjdAYpT
- 23QsQQK6DYAzpzn2JEg==
-X-Proofpoint-ORIG-GUID: CXvoGwP_4KHrKdlUys8iD9cgOZXQLjFs
-X-Authority-Analysis: v=2.4 cv=BpWQAIX5 c=1 sm=1 tr=0 ts=69a7ea77 cx=c_pps
- a=oc9J++0uMp73DTRD5QyR2A==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22 a=VwQbUJbxAAAA:8
- a=EUspDBNiAAAA:8 a=SUrkIAiDFwdAeyG8CjUA:9 a=QEXdDO2ut3YA:10 a=ZXulRonScM0A:10
- a=iYH6xdkBrDN1Jqds4HTS:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-04_04,2026-03-03_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 suspectscore=0 bulkscore=0 adultscore=0 malwarescore=0
- lowpriorityscore=0 impostorscore=0 priorityscore=1501 phishscore=0
- spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2602130000
- definitions=main-2603040063
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260303190948.694783-2-cjd@cjdns.fr>
 
+On Tue, Mar 03, 2026 at 07:09:41PM +0000, Caleb James DeLisle wrote:
+> Add clock and reset bindings for EN751221 as well as
+> a "chip-scu" which is an additional regmap that is used
+> by the clock driver as well as others. This split of the
+> SCU across two register areas is the same as the Airoha
+> AN758x family.
 
-On Mon, 02 Mar 2026 22:31:44 +0800, Felix Gu wrote:
-> In pwrseq_pcie_m2_probe(), ctx->of_node acquires an explicit reference
-> to the device node using of_node_get(), but there is no corresponding
-> of_node_put() in the driver's error handling paths or removal.
+Please wrap commit message according to Linux coding style / submission
+process (neither too early nor over the limit):
+https://elixir.bootlin.com/linux/v6.4-rc1/source/Documentation/process/submitting-patches.rst#L597
+
+A nit, subject: drop second/last, redundant "bindings". The
+"dt-bindings" prefix is already stating that these are bindings.
+See also:
+https://elixir.bootlin.com/linux/v6.17-rc3/source/Documentation/devicetree/bindings/submitting-patches.rst#L18
+
 > 
-> Since the ctx is tied to the lifecycle of the platform device, there
-> is no need to hold an additional reference to the device's own of_node.
+> Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
+> ---
+>  .../bindings/clock/airoha,en7523-scu.yaml     | 19 ++++++-
+>  .../mips/econet,en751221-chip-scu.yaml        | 41 ++++++++++++++++
+>  MAINTAINERS                                   |  3 ++
+>  .../dt-bindings/clock/econet,en751221-scu.h   | 15 ++++++
+>  .../dt-bindings/reset/econet,en751221-scu.h   | 49 +++++++++++++++++++
+>  5 files changed, 126 insertions(+), 1 deletion(-)
+>  create mode 100644 Documentation/devicetree/bindings/mips/econet,en751221-chip-scu.yaml
+>  create mode 100644 include/dt-bindings/clock/econet,en751221-scu.h
+>  create mode 100644 include/dt-bindings/reset/econet,en751221-scu.h
 > 
-> [...]
+> diff --git a/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml b/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml
+> index a8471367175b..e60e54273393 100644
+> --- a/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml
+> +++ b/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml
+> @@ -32,6 +32,7 @@ properties:
+>        - enum:
+>            - airoha,en7523-scu
+>            - airoha,en7581-scu
+> +          - econet,en751221-scu
+>  
+>    reg:
+>      items:
+> @@ -67,7 +68,10 @@ allOf:
+>    - if:
+>        properties:
+>          compatible:
+> -          const: airoha,en7581-scu
+> +          items:
 
-Applied, thanks!
+Drop items, it's just enum
 
-[1/1] power: sequencing: pcie-m2: Fix device node reference leak in probe
-      https://git.kernel.org/brgl/c/5c3daa5301693d2e5364483a3405649a0fdaed98
+> +            - enum:
+> +                - airoha,en7581-scu
+> +                - econet,en751221-scu
+>      then:
+>        properties:
+>          reg:
+> @@ -98,3 +102,16 @@ examples:
+>                #reset-cells = <1>;
+>        };
+>      };
+> +
+> +  - |
+> +    soc {
+> +      #address-cells = <1>;
+> +      #size-cells = <1>;
+
+No need for new example, especially without any differences. You already
+have there two.
+
+> +
+> +      scuclk2: clock-controller@1fb00000 {
+> +        compatible = "econet,en751221-scu";
+> +        reg = <0x1fb00000 0x970>;
+> +        #clock-cells = <1>;
+> +        #reset-cells = <1>;
+> +      };
+> +    };
+> diff --git a/Documentation/devicetree/bindings/mips/econet,en751221-chip-scu.yaml b/Documentation/devicetree/bindings/mips/econet,en751221-chip-scu.yaml
+> new file mode 100644
+> index 000000000000..7c7c8cf8d2a5
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/mips/econet,en751221-chip-scu.yaml
+> @@ -0,0 +1,41 @@
+> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/mips/econet,en751221-chip-scu.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: EcoNet Chip SCU Controller for EN751221 SoC
+> +
+> +maintainers:
+> +  - Caleb James DeLisle <cjd@cjdns.fr>
+> +
+> +description:
+> +  The EcoNet chip-scu block provides a configuration interface for clock,
+> +  io-muxing and other functionalities used by multiple controllers (e.g. clock,
+> +  pinctrl, ecc) on EN751221 SoC.
+> +
+> +properties:
+> +  compatible:
+> +    items:
+> +      - const: econet,en751221-chip-scu
+> +      - const: syscon
+
+And it does not fit existing syscon bindings file, because ... ?
+
+> +
+> +  reg:
+> +    maxItems: 1
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +
+> +additionalProperties: false
+> +
+> +examples:
+> +  - |
+> +    soc {
+> +      #address-cells = <1>;
+> +      #size-cells = <1>;
+> +      syscon@1fa20000 {
+> +        compatible = "econet,en751221-chip-scu", "syscon";
+> +        reg = <0x1fa20000 0x388>;
+> +      };
+> +    };
+
+...
+
+> +
+> +#define EN751221_MAX_CLKS	6
+
+Drop, not a binding.
+
+> +
+> +#endif /* _DT_BINDINGS_CLOCK_ECONET_EN751221_SCU_H_ */
+> diff --git a/include/dt-bindings/reset/econet,en751221-scu.h b/include/dt-bindings/reset/econet,en751221-scu.h
+> new file mode 100644
 
 Best regards,
--- 
-Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Krzysztof
+
