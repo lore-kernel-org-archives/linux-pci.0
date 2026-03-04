@@ -1,313 +1,234 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5E6730AD1C;
-	Wed,  4 Mar 2026 22:28:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 198EB384243;
+	Wed,  4 Mar 2026 22:34:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772663290; cv=none; b=VADuGVEJfmJicNBtEqQkgt2+E+9J/Sa/qtH1EaixdaRIxG+X1adqFKEgy1CT5L1FuNckModpx944z9dP33lWFIzW7QE9K2OWRnK7taHYU4NiwsrdDiOGA4suPwYBh5IaNSd5YyxUReDL24E3Q6hn9AFA93FAls5UgapkYQixBz0=
+	t=1772663672; cv=none; b=eMJ4vN3S5XRhagegR6GMHMGD2NQxjMAD87Bq4eRdqO66RoZFbv/yJK8I6KiAs6+NWHG/D/juLu8LNS0qkfRNTzFHcQ+z7xQpQrhWcZTS2wn2djOghRoY3HQPTDcyzBwrJ5HqXKTrrCdJoZYRm/4GNzXO52BwY5qYwWDvugIkYOg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772663290; c=relaxed/simple;
-	bh=C0ZGtBuBp1fvpx0er+3GXSEkD2dQthdr27MzlEOeBDM=;
+	s=arc-20240116; t=1772663672; c=relaxed/simple;
+	bh=xtXiT6HoQdMIWu8cMUXATW0+N0I6AwrbMofSK5cScOo=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=IuEpRTloV4EnrYjOw8kYzqQDqyrLO/ZQ7cx0eUn/4YIFfAjvB3kEYzVCxnukXnCx1OyseehVNJYNB81Pic4S50HivI/hKBim4qZar8vmOu/GI9OY1ca2QlQGNFa+yfNQWr6IME9PH1ef3610KtqxYv6K7zY1ua0+owyBve+Po5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KBk482hy; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=NWi8nvbQsWtzjl2YfwDG8MNnz0wlHSBE2tfUL0nFj+vdMO4T+QM5UvdDFelvzMpu8d7KcJh2+TYzZzwaRK6Xc7QE8ykmPHO45ZvCinvfYzWb2fePZSd5pS46ZyXseArF32SznvYY2fOGsxtoYrt0d+2W1EAweb8quZJ4OVhv/sU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nftlr+2K; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KBk482hy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02BB7C4CEF7;
-	Wed,  4 Mar 2026 22:28:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nftlr+2K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93CB9C4CEF7;
+	Wed,  4 Mar 2026 22:34:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772663290;
-	bh=C0ZGtBuBp1fvpx0er+3GXSEkD2dQthdr27MzlEOeBDM=;
+	s=k20201202; t=1772663671;
+	bh=xtXiT6HoQdMIWu8cMUXATW0+N0I6AwrbMofSK5cScOo=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=KBk482hyhP65Ms7Kyp34pncPCtnpwpROK6t1T7wDtjWfFlIGz9vt4q3X6S7MFa1A7
-	 wcjwal0jOUWce4q88axOO7EX5dsUza2y0hpQ3OSPjvRNGOZAWtk6cyUycEBmQII48p
-	 8r7fmT9gmJ8sn3uTxHpgYaS8dVG9BYVxJemEfMboYGLr8qOY1tFbD8AWpdzP8nSanP
-	 QCDIsj+2wXtvKUT7Lo7pG7NNxINCMq+PLig+X88cTO+8EA16ySJ5UmubNoO3zEY73O
-	 smY7QQQ/n6SMpYfxWuw9Db0SKtabs5DPA4zlR87/ueXy11RVne0Xqb0iq29gIc0fGN
-	 UFmAfkKyD28Jg==
-Date: Wed, 4 Mar 2026 16:28:08 -0600
+	b=nftlr+2Kn5zf3LbCRv8rT1Uqt20lvfH1sSG7gDi2AIWBjEkSvUXrNTSyefzr0YfX2
+	 ooAr07FsoZDHZJM2vVaReF/OGfw8hxlllUyfMpX9cBuNRd3CwV6vok8tKSGSr6W9gf
+	 HYH+8LicxHj+WbAflJo7llMdOe4wCHHGb0xBww6kiqSlPIZN27U2YNkR+OG7ymx2j6
+	 k+ZAMh5QNlKQJOkIpmtgCPjjDZAu+Og7oc7bRm5wlpR1wIOlZTv7w0M42DyPDBIUAB
+	 RLzLa+tBB1mKCCuRKudYupgp+qUGllTJQl5etZ+KJreLpoQqi2KqZvlJ9D1idV5rd6
+	 fOJZ7tdyyJ6Xg==
+Date: Wed, 4 Mar 2026 16:34:30 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vladimir Oltean <vladimir.oltean@nxp.com>
-Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
-	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-	linux-can@vger.kernel.org, linux-gpio@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, linux-riscv@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, linux-sunxi@lists.linux.dev,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	netdev@vger.kernel.org, spacemit@lists.linux.dev,
-	UNGLinuxDriver@microchip.com,
+To: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>
+Cc: Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>, Marc Zyngier <maz@kernel.org>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>, Rob Herring <robh@kernel.org>,
+	Saravana Kannan <saravanak@kernel.org>,
+	Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
 	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
 	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>
-Subject: Re: [PATCH phy-next 08/22] PCI: remove device links to PHY
-Message-ID: <20260304222808.GA41083@bhelgaas>
+	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>, Juergen Gross <jgross@suse.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+	Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Prakash Gupta <prakash.gupta@oss.qualcomm.com>,
+	Vikash Garodia <vikash.garodia@oss.qualcomm.com>,
+	linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, imx@lists.linux.dev,
+	xen-devel@lists.xenproject.org, linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH v9 1/3] of: Add convenience wrappers for of_map_id()
+Message-ID: <20260304223430.GA41322@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260304175735.2660419-9-vladimir.oltean@nxp.com>
+In-Reply-To: <20260301-parse_iommu_cells-v9-1-4d1bceecc5e1@oss.qualcomm.com>
 
-Update subject line to:
-
-  PCI: Remove redundant device links to PHY
-
-On Wed, Mar 04, 2026 at 07:57:21PM +0200, Vladimir Oltean wrote:
-> This is practically a full revert of commit
-> 7a4db656a635 ("PCI: dra7xx: Create functional dependency between PCIe and PHY")
-> and a partial revert of the device link pieces from commits
-> dfb80534692d ("PCI: cadence: Add generic PHY support to host and EP drivers")
-> 49229238ab47 ("PCI: keystone: Cleanup PHY handling")
+On Sun, Mar 01, 2026 at 02:04:19PM +0530, Vijayanand Jitta wrote:
+> From: Robin Murphy <robin.murphy@arm.com>
 > 
-> The trouble with these commits is that they dereference fields inside
-> struct phy from a consumer driver, which will become no longer possible.
+> Since we now have quite a few users parsing "iommu-map" and "msi-map"
+> properties, give them some wrappers to conveniently encapsulate the
+> appropriate sets of property names. This will also make it easier to
+> then change of_map_id() to correctly account for specifier cells.
 > 
-> Since commit 987351e1ea77 ("phy: core: Add consumer device link
-> support") from 2019, the PHY core also adds a device link to order PHY
-> provider and consumer suspend/resume operations. All reverted commits
-> are from 2017-2018, and what they do should actually be redundant now.
-> 
-> Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
-
-With subject line update:
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Thanks for doing this; it's great to get rid of all that code.
-
+> Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+> Signed-off-by: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>
 > ---
-> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-> Cc: Manivannan Sadhasivam <mani@kernel.org>
-> Cc: Rob Herring <robh@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Vignesh Raghavendra <vigneshr@ti.com>
-> Cc: Siddharth Vadapalli <s-vadapalli@ti.com>
-> ---
->  drivers/pci/controller/cadence/pcie-cadence.c | 16 +---------
->  drivers/pci/controller/dwc/pci-dra7xx.c       | 16 ----------
->  drivers/pci/controller/dwc/pci-keystone.c     | 31 +++----------------
->  3 files changed, 5 insertions(+), 58 deletions(-)
+>  drivers/cdx/cdx_msi.c                    |  3 +--
+>  drivers/iommu/of_iommu.c                 |  4 +---
+>  drivers/irqchip/irq-gic-its-msi-parent.c |  2 +-
+>  drivers/of/irq.c                         |  3 +--
+>  drivers/pci/controller/dwc/pci-imx6.c    |  6 ++----
+>  drivers/pci/controller/pcie-apple.c      |  3 +--
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com> # drivers/pci/
+
+>  drivers/xen/grant-dma-ops.c              |  3 +--
+>  include/linux/of.h                       | 14 ++++++++++++++
+>  8 files changed, 22 insertions(+), 16 deletions(-)
 > 
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
-> index a1eada56edba..0ac980249941 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence.c
-> @@ -222,7 +222,6 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
->  	struct device_node *np = dev->of_node;
->  	int phy_count;
->  	struct phy **phy;
-> -	struct device_link **link;
->  	int i;
+> diff --git a/drivers/cdx/cdx_msi.c b/drivers/cdx/cdx_msi.c
+> index 91b95422b263..63b3544ec997 100644
+> --- a/drivers/cdx/cdx_msi.c
+> +++ b/drivers/cdx/cdx_msi.c
+> @@ -128,8 +128,7 @@ static int cdx_msi_prepare(struct irq_domain *msi_domain,
 >  	int ret;
->  	const char *name;
-> @@ -238,10 +237,6 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
->  	if (!phy)
->  		return -ENOMEM;
 >  
-> -	link = devm_kcalloc(dev, phy_count, sizeof(*link), GFP_KERNEL);
-> -	if (!link)
-> -		return -ENOMEM;
-> -
->  	for (i = 0; i < phy_count; i++) {
->  		of_property_read_string_index(np, "phy-names", i, &name);
->  		phy[i] = devm_phy_get(dev, name);
-> @@ -249,17 +244,10 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
->  			ret = PTR_ERR(phy[i]);
->  			goto err_phy;
->  		}
-> -		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
-> -		if (!link[i]) {
-> -			devm_phy_put(dev, phy[i]);
-> -			ret = -EINVAL;
-> -			goto err_phy;
-> -		}
->  	}
->  
->  	pcie->phy_count = phy_count;
->  	pcie->phy = phy;
-> -	pcie->link = link;
->  
->  	ret =  cdns_pcie_enable_phy(pcie);
->  	if (ret)
-> @@ -268,10 +256,8 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
->  	return 0;
->  
->  err_phy:
-> -	while (--i >= 0) {
-> -		device_link_del(link[i]);
-> +	while (--i >= 0)
->  		devm_phy_put(dev, phy[i]);
-> -	}
->  
->  	return ret;
->  }
-> diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-> index d5d26229063f..b91ab37845c9 100644
-> --- a/drivers/pci/controller/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-> @@ -9,7 +9,6 @@
->  
->  #include <linux/clk.h>
->  #include <linux/delay.h>
-> -#include <linux/device.h>
->  #include <linux/err.h>
->  #include <linux/interrupt.h>
->  #include <linux/irq.h>
-> @@ -683,7 +682,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
->  	int i;
->  	int phy_count;
->  	struct phy **phy;
-> -	struct device_link **link;
->  	void __iomem *base;
->  	struct dw_pcie *pci;
->  	struct dra7xx_pcie *dra7xx;
-> @@ -731,10 +729,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
->  	if (!phy)
->  		return -ENOMEM;
->  
-> -	link = devm_kcalloc(dev, phy_count, sizeof(*link), GFP_KERNEL);
-> -	if (!link)
-> -		return -ENOMEM;
-> -
->  	dra7xx->clk = devm_clk_get_optional(dev, NULL);
->  	if (IS_ERR(dra7xx->clk))
->  		return dev_err_probe(dev, PTR_ERR(dra7xx->clk),
-> @@ -749,12 +743,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
->  		phy[i] = devm_phy_get(dev, name);
->  		if (IS_ERR(phy[i]))
->  			return PTR_ERR(phy[i]);
-> -
-> -		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
-> -		if (!link[i]) {
-> -			ret = -EINVAL;
-> -			goto err_link;
-> -		}
->  	}
->  
->  	dra7xx->base = base;
-> @@ -856,10 +844,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
->  	pm_runtime_disable(dev);
->  	dra7xx_pcie_disable_phy(dra7xx);
->  
-> -err_link:
-> -	while (--i >= 0)
-> -		device_link_del(link[i]);
-> -
->  	return ret;
->  }
->  
-> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-> index 642e4c45eefc..07698c645e02 100644
-> --- a/drivers/pci/controller/dwc/pci-keystone.c
-> +++ b/drivers/pci/controller/dwc/pci-keystone.c
-> @@ -130,7 +130,6 @@ struct keystone_pcie {
->  	int			num_lanes;
->  	u32			num_viewport;
->  	struct phy		**phy;
-> -	struct device_link	**link;
->  	struct			device_node *msi_intc_np;
->  	struct irq_domain	*intx_irq_domain;
->  	struct device_node	*np;
-> @@ -1118,7 +1117,6 @@ static int ks_pcie_probe(struct platform_device *pdev)
->  	enum dw_pcie_device_mode mode;
->  	struct dw_pcie *pci;
->  	struct keystone_pcie *ks_pcie;
-> -	struct device_link **link;
->  	struct gpio_desc *gpiod;
->  	struct resource *res;
->  	void __iomem *base;
-> @@ -1189,31 +1187,17 @@ static int ks_pcie_probe(struct platform_device *pdev)
->  	if (!phy)
->  		return -ENOMEM;
->  
-> -	link = devm_kcalloc(dev, num_lanes, sizeof(*link), GFP_KERNEL);
-> -	if (!link)
-> -		return -ENOMEM;
-> -
->  	for (i = 0; i < num_lanes; i++) {
->  		snprintf(name, sizeof(name), "pcie-phy%d", i);
->  		phy[i] = devm_phy_optional_get(dev, name);
->  		if (IS_ERR(phy[i])) {
->  			ret = PTR_ERR(phy[i]);
-> -			goto err_link;
-> -		}
-> -
-> -		if (!phy[i])
-> -			continue;
-> -
-> -		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
-> -		if (!link[i]) {
-> -			ret = -EINVAL;
-> -			goto err_link;
-> +			goto err;
->  		}
->  	}
->  
->  	ks_pcie->np = np;
->  	ks_pcie->pci = pci;
-> -	ks_pcie->link = link;
->  	ks_pcie->num_lanes = num_lanes;
->  	ks_pcie->phy = phy;
->  
-> @@ -1223,7 +1207,7 @@ static int ks_pcie_probe(struct platform_device *pdev)
->  		ret = PTR_ERR(gpiod);
->  		if (ret != -EPROBE_DEFER)
->  			dev_err(dev, "Failed to get reset GPIO\n");
-> -		goto err_link;
-> +		goto err;
->  	}
->  
->  	/* Obtain references to the PHYs */
-> @@ -1238,7 +1222,7 @@ static int ks_pcie_probe(struct platform_device *pdev)
->  
+>  	/* Retrieve device ID from requestor ID using parent device */
+> -	ret = of_map_id(parent->of_node, cdx_dev->msi_dev_id, "msi-map", "msi-map-mask",
+> -			NULL, &dev_id);
+> +	ret = of_map_msi_id(parent->of_node, cdx_dev->msi_dev_id, NULL, &dev_id);
 >  	if (ret) {
->  		dev_err(dev, "failed to enable phy\n");
-> -		goto err_link;
-> +		goto err;
+>  		dev_err(dev, "of_map_id failed for MSI: %d\n", ret);
+>  		return ret;
+> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> index 6b989a62def2..a511ecf21fcd 100644
+> --- a/drivers/iommu/of_iommu.c
+> +++ b/drivers/iommu/of_iommu.c
+> @@ -48,9 +48,7 @@ static int of_iommu_configure_dev_id(struct device_node *master_np,
+>  	struct of_phandle_args iommu_spec = { .args_count = 1 };
+>  	int err;
+>  
+> -	err = of_map_id(master_np, *id, "iommu-map",
+> -			 "iommu-map-mask", &iommu_spec.np,
+> -			 iommu_spec.args);
+> +	err = of_map_iommu_id(master_np, *id, &iommu_spec.np, iommu_spec.args);
+>  	if (err)
+>  		return err;
+>  
+> diff --git a/drivers/irqchip/irq-gic-its-msi-parent.c b/drivers/irqchip/irq-gic-its-msi-parent.c
+> index d36b278ae66c..b63343a227a9 100644
+> --- a/drivers/irqchip/irq-gic-its-msi-parent.c
+> +++ b/drivers/irqchip/irq-gic-its-msi-parent.c
+> @@ -180,7 +180,7 @@ static int of_pmsi_get_msi_info(struct irq_domain *domain, struct device *dev, u
+>  
+>  	struct device_node *msi_ctrl __free(device_node) = NULL;
+>  
+> -	return of_map_id(dev->of_node, dev->id, "msi-map", "msi-map-mask", &msi_ctrl, dev_id);
+> +	return of_map_msi_id(dev->of_node, dev->id, &msi_ctrl, dev_id);
+>  }
+>  
+>  static int its_pmsi_prepare(struct irq_domain *domain, struct device *dev,
+> diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+> index 6367c67732d2..e37c1b3f8736 100644
+> --- a/drivers/of/irq.c
+> +++ b/drivers/of/irq.c
+> @@ -817,8 +817,7 @@ u32 of_msi_xlate(struct device *dev, struct device_node **msi_np, u32 id_in)
+>  	 * "msi-map" or an "msi-parent" property.
+>  	 */
+>  	for (parent_dev = dev; parent_dev; parent_dev = parent_dev->parent) {
+> -		if (!of_map_id(parent_dev->of_node, id_in, "msi-map",
+> -				"msi-map-mask", msi_np, &id_out))
+> +		if (!of_map_msi_id(parent_dev->of_node, id_in, msi_np, &id_out))
+>  			break;
+>  		if (!of_check_msi_parent(parent_dev->of_node, msi_np))
+>  			break;
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index a5b8d0b71677..bff8289f804a 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -1144,8 +1144,7 @@ static int imx_pcie_add_lut_by_rid(struct imx_pcie *imx_pcie, u32 rid)
+>  	u32 sid = 0;
+>  
+>  	target = NULL;
+> -	err_i = of_map_id(dev->of_node, rid, "iommu-map", "iommu-map-mask",
+> -			  &target, &sid_i);
+> +	err_i = of_map_iommu_id(dev->of_node, rid, &target, &sid_i);
+>  	if (target) {
+>  		of_node_put(target);
+>  	} else {
+> @@ -1158,8 +1157,7 @@ static int imx_pcie_add_lut_by_rid(struct imx_pcie *imx_pcie, u32 rid)
 >  	}
 >  
->  	platform_set_drvdata(pdev, ks_pcie);
-> @@ -1325,25 +1309,18 @@ static int ks_pcie_probe(struct platform_device *pdev)
->  	pm_runtime_disable(dev);
->  	ks_pcie_disable_phy(ks_pcie);
+>  	target = NULL;
+> -	err_m = of_map_id(dev->of_node, rid, "msi-map", "msi-map-mask",
+> -			  &target, &sid_m);
+> +	err_m = of_map_msi_id(dev->of_node, rid, &target, &sid_m);
 >  
-> -err_link:
-> -	while (--i >= 0 && link[i])
-> -		device_link_del(link[i]);
-> -
-> +err:
->  	return ret;
+>  	/*
+>  	 *   err_m      target
+> diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
+> index 2d92fc79f6dd..a0937b7b3c4d 100644
+> --- a/drivers/pci/controller/pcie-apple.c
+> +++ b/drivers/pci/controller/pcie-apple.c
+> @@ -764,8 +764,7 @@ static int apple_pcie_enable_device(struct pci_host_bridge *bridge, struct pci_d
+>  	dev_dbg(&pdev->dev, "added to bus %s, index %d\n",
+>  		pci_name(pdev->bus->self), port->idx);
+>  
+> -	err = of_map_id(port->pcie->dev->of_node, rid, "iommu-map",
+> -			"iommu-map-mask", NULL, &sid);
+> +	err = of_map_iommu_id(port->pcie->dev->of_node, rid, NULL, &sid);
+>  	if (err)
+>  		return err;
+>  
+> diff --git a/drivers/xen/grant-dma-ops.c b/drivers/xen/grant-dma-ops.c
+> index c2603e700178..1b7696b2d762 100644
+> --- a/drivers/xen/grant-dma-ops.c
+> +++ b/drivers/xen/grant-dma-ops.c
+> @@ -325,8 +325,7 @@ static int xen_dt_grant_init_backend_domid(struct device *dev,
+>  		struct pci_dev *pdev = to_pci_dev(dev);
+>  		u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
+>  
+> -		if (of_map_id(np, rid, "iommu-map", "iommu-map-mask", &iommu_spec.np,
+> -				iommu_spec.args)) {
+> +		if (of_map_iommu_id(np, rid, &iommu_spec.np, iommu_spec.args)) {
+>  			dev_dbg(dev, "Cannot translate ID\n");
+>  			return -ESRCH;
+>  		}
+> diff --git a/include/linux/of.h b/include/linux/of.h
+> index be6ec4916adf..824649867810 100644
+> --- a/include/linux/of.h
+> +++ b/include/linux/of.h
+> @@ -1457,6 +1457,20 @@ static inline int of_property_read_s32(const struct device_node *np,
+>  	return of_property_read_u32(np, propname, (u32*) out_value);
 >  }
 >  
->  static void ks_pcie_remove(struct platform_device *pdev)
->  {
->  	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
-> -	struct device_link **link = ks_pcie->link;
-> -	int num_lanes = ks_pcie->num_lanes;
->  	struct device *dev = &pdev->dev;
->  
->  	pm_runtime_put(dev);
->  	pm_runtime_disable(dev);
->  	ks_pcie_disable_phy(ks_pcie);
-> -	while (num_lanes--)
-> -		device_link_del(link[num_lanes]);
->  }
->  
->  static struct platform_driver ks_pcie_driver = {
+> +static inline int of_map_iommu_id(const struct device_node *np, u32 id,
+> +				  struct device_node **target, u32 *id_out)
+> +{
+> +	return of_map_id(np, id, "iommu-map", "iommu-map-mask",
+> +			 target, id_out);
+> +}
+> +
+> +static inline int of_map_msi_id(const struct device_node *np, u32 id,
+> +				struct device_node **target, u32 *id_out)
+> +{
+> +	return of_map_id(np, id, "msi-map", "msi-map-mask",
+> +			 target, id_out);
+> +}
+> +
+>  #define of_for_each_phandle(it, err, np, ln, cn, cc)			\
+>  	for (of_phandle_iterator_init((it), (np), (ln), (cn), (cc)),	\
+>  	     err = of_phandle_iterator_next(it);			\
+> 
 > -- 
-> 2.43.0
+> 2.34.1
 > 
