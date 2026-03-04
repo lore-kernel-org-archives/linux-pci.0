@@ -1,131 +1,131 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2AAA1E1E12
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2026 01:19:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C6522F547F
+	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2026 01:35:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772587146; cv=none; b=XM5YkTMbKH8QMsRFdsJ824yax01OiB0jLDeHCGoZZ2gUTgKz+9JsNVhrkn75MPyuH9dvfaP96xaCXeYP5YgqqMLzmPKmTr2oD4kABN1f8S8hoDDx9XMgZokdDIoXsNm2bPiWMvb8TxCdiL24V3lu7tiJrpV4fjGYY+OIbaLBLXY=
+	t=1772588109; cv=none; b=qL7p07L+rN5twBaeDuyjJLjR8mXiHdbNnTQpC+e6Ulut05bQrFtFnXZkOomby+j/QO9zkGkxZGAO8s4uJfF1KurUVcfMgVrVxg5VWnlpQ/1gCfEHFXnMxNuY7WztfTQ7EyZZwyKweTZ0lBPjFhZJxZvzFeCjHbYZVczSgDe15ig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772587146; c=relaxed/simple;
-	bh=1Rgt/R7NiNI9okC1y03QN3AGUOdZUPwpNzlpo0/Pprk=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=Xnrbxka0GtMfGwjHIyqQ5k7VLJ9A/nkO3Kf+j0FYi+q1i67IAWs/UxNpZsEhNK9GsM0tiPJ2tnCcX1hY2RfR8OadkWukscRnYVLIPnLvpM5UZyf+58XY9GwhhnSKXUPy/MeCt4SekerMGfS7wTgcXrgEcQnboOMzpNTjgJFPh4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ahwqHWis; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1772588109; c=relaxed/simple;
+	bh=eZsUsfkfv3VikK2/AIDEjYSqD+sqYbq1UqrebOuBzDs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=DmUexyCscOHYDe7o0MY1k0xywETgbGam7Lm/YW0tMOxeSChI5id+G4pPmGy2biVUYBRBQHwGRCNJzf3LwzNKSo0zuGfI9L3dD2h4sI9Mq30e+LUidyeICACzeW3rjUrxgALbtZP3lSxrXeo+/+vTUreBnnAuWsXU+NAFXSnawjs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=S5uav+bN; arc=none smtp.client-ip=113.46.200.219
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ahwqHWis"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772587145; x=1804123145;
-  h=date:from:to:cc:subject:message-id;
-  bh=1Rgt/R7NiNI9okC1y03QN3AGUOdZUPwpNzlpo0/Pprk=;
-  b=ahwqHWisuQKNCmhfXBFn+MYHSdmcYet9ELfI1OCQ/IcQGC8hsN9zF9TG
-   505x4BwDwcJpTP1E5Wrf5noupOhfScjUscoIRekjexz65feQO5qXVPMd2
-   TVsp/L6q/bscVUrgHTPCuL/dEV2qrTTxn7y19KjeUzCik2s3qvzt7JZCW
-   FyY+HCPRvX72ULYiwsPeru6TOoANXUkwh5frMfuVHUgUsXO030lvZUbxl
-   onzKZqeR1MGsHSIeUcONug3HCm3hu6N6KQOyBOTSze7MM4LulkhkGzu3I
-   is+qFlmxVQ/WnuhTUc4Rq1hBtbVbeGVldYrtL2WfmmKeEbHpKR7A3/QZu
-   A==;
-X-CSE-ConnectionGUID: X/0p890hSPGiEiTYN9WNMw==
-X-CSE-MsgGUID: YSUf+W36SYmwOOfGTre83Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11718"; a="73341112"
-X-IronPort-AV: E=Sophos;i="6.21,323,1763452800"; 
-   d="scan'208";a="73341112"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2026 17:19:04 -0800
-X-CSE-ConnectionGUID: j5vGYYlPRMmZjQqlo6zbww==
-X-CSE-MsgGUID: kgTIECtPSBSYPLO3kVghuQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,323,1763452800"; 
-   d="scan'208";a="248664333"
-Received: from lkp-server01.sh.intel.com (HELO f27a57aa7a36) ([10.239.97.150])
-  by orviesa002.jf.intel.com with ESMTP; 03 Mar 2026 17:19:03 -0800
-Received: from kbuild by f27a57aa7a36 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vxatA-0000000035R-1iDT;
-	Wed, 04 Mar 2026 01:19:00 +0000
-Date: Wed, 04 Mar 2026 09:18:01 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:wip/2603-keith-reset-v5] BUILD SUCCESS
- af7b70672fa7745fd0911adbfa5633b65af6ec5d
-Message-ID: <202603040953.fJyfqyRd-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="S5uav+bN"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=hPkYNfeM5LK89OppTUapoVKeWmmPL0MfPQnaMayVLtA=;
+	b=S5uav+bNEIGANSFUU1tHrhh2S19K3899I9tlIq/lpY5I0KrKCVjQOE8SQLPgxnpQvGxUhs15d
+	8uJDCjDRiY2oToy/AZHGjGLZmVfRlT9Bh3xFfW1g+6i4ZOxhtp3dF+3ZgEnnXdOnlVg/0bWU3Ib
+	UrDfm+KI5zixwLzyNLT9dlY=
+Received: from mail.maildlp.com (unknown [172.19.162.223])
+	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4fQZpy493wz1prmg;
+	Wed,  4 Mar 2026 09:30:02 +0800 (CST)
+Received: from dggpemf200006.china.huawei.com (unknown [7.185.36.61])
+	by mail.maildlp.com (Postfix) with ESMTPS id D292740569;
+	Wed,  4 Mar 2026 09:34:55 +0800 (CST)
+Received: from [10.67.112.40] (10.67.112.40) by dggpemf200006.china.huawei.com
+ (7.185.36.61) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Wed, 4 Mar
+ 2026 09:34:55 +0800
+Message-ID: <b35698a4-4ac0-4db4-86a0-db794047e7c4@huawei.com>
+Date: Wed, 4 Mar 2026 09:34:48 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: Linux warns `Unknown NUMA node; performance will be reduced`
+To: Bjorn Helgaas <helgaas@kernel.org>, Paul Menzel <pmenzel@molgen.mpg.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+References: <20260303215558.GA4076158@bhelgaas>
+Content-Language: en-US
+From: Yunsheng Lin <linyunsheng@huawei.com>
+In-Reply-To: <20260303215558.GA4076158@bhelgaas>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ dggpemf200006.china.huawei.com (7.185.36.61)
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git wip/2603-keith-reset-v5
-branch HEAD: af7b70672fa7745fd0911adbfa5633b65af6ec5d  PCI: make reset_subordinate hotplug safe
+On 2026/3/4 5:55, Bjorn Helgaas wrote:
+> [+cc Yunsheng, author of ad5086108b9f,
+> +bcc commenters on https://bugzilla.kernel.org/show_bug.cgi?id=218951,
+> see the email thread at
+> https://lore.kernel.org/all/a154f694-c48b-4b3b-809f-4b74ec86a924@molgen.mpg.de]
+> 
+> On Sun, Jun 09, 2024 at 10:31:05AM +0200, Paul Menzel wrote:
+>> Dear Linux folks,
+>>
+>> On the servers below Linux warns:
+>>
+>>      Unknown NUMA node; performance will be reduced
+>>
+>> 1.  [    0.000000] DMI: Dell Inc. PowerEdge R730/0H21J3, BIOS 2.13.0
+>> 05/14/2021
+>> 2.  [    0.000000] DMI: Dell Inc. PowerEdge R730/0H21J3, BIOS 2.2.5
+>> 09/06/2016
+>> 3.  [    0.000000] DMI: Dell Inc. PowerEdge R730xd/0WCJNT, BIOS 2.3.4
+>> 11/08/2016
+>> 4.  [    0.000000] DMI: Dell Inc. PowerEdge R910/0KYD3D, BIOS 2.10.0
+>> 08/29/2013
+>> 5.  [    0.000000] DMI: Dell Inc. PowerEdge R930/0T55KM, BIOS 2.8.1
+>> 01/02/2020
+>> 6.  [    0.000000] DMI: Dell Inc. PowerEdge T630/0NT78X, BIOS 2.5.4
+>> 08/17/2017
+>> 7.  [    0.000000] DMI: Dell Inc. PowerEdge T630/0W9WXC, BIOS 1.5.4
+>> 10/04/2015
+>> 8.  [    0.000000] DMI: Dell Inc. PowerEdge T630/0W9WXC, BIOS 2.11.0
+>> 12/23/2019
+>> 9.  [    0.000000] DMI: Dell Inc. PowerEdge T630/0W9WXC, BIOS 2.1.5
+>> 04/13/2016
+>> 10. [    0.000000] DMI: Supermicro Super Server/X13SAE, BIOS 2.0 10/17/2022
+> 
+> Similar reports in the bugzilla for:
+> 
+>   Host: VMware VM Ubuntu 24.04.1
+>   CPU: Intel(R) Xeon(R) Silver 4310 CPU @ 2.10GHz
+>   Kernel: 6.11.0-rc6
+> 
+> and 
+> 
+>   Lenovo P700 workstation
+>   6.19.5 kernel
+> 
+> ad5086108b9f ("PCI: Warn if no host bridge NUMA node info") added this
+> "Unknown NUMA node; performance will be reduced" warning.
+> 
+> The problem is that firmware didn't tell us anything about which CPUs
+> are closest to this PCI host bridge, so we can't try to optimize by
+> running the driver on a CPU that's close to the device.
+> 
+> The kernel can't figure out this locality information itself, so
+> there's nothing we can really do in the kernel, and there's nothing
+> users can do either other than check for BIOS updates.
+> 
+> What if we just downgraded the message to "info"?  And/or we could
+> reword this to be less alarming.
 
-elapsed time: 1480m
+If I recalled it correctly, the purpose of the above warning is about
+having some kind of pressure for vendor to update the BIOS and fix
+that, perhaps the warning can be reworded to something like below
+so that users can know where they get the help to fix that?
 
-configs tested: 54
-configs skipped: 1
+"Unknown NUMA node; performance will be reduced, please check it with
+the BIOS vendor."
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha         allnoconfig    gcc-15.2.0
-alpha        allyesconfig    gcc-15.2.0
-arc          allmodconfig    gcc-15.2.0
-arc           allnoconfig    gcc-15.2.0
-arc          allyesconfig    gcc-15.2.0
-arm           allnoconfig    clang-23
-arm          allyesconfig    gcc-15.2.0
-arm64        allmodconfig    clang-19
-arm64         allnoconfig    gcc-15.2.0
-csky         allmodconfig    gcc-15.2.0
-csky          allnoconfig    gcc-15.2.0
-hexagon      allmodconfig    clang-17
-hexagon       allnoconfig    clang-23
-i386         allmodconfig    gcc-14
-i386          allnoconfig    gcc-14
-i386         allyesconfig    gcc-14
-loongarch    allmodconfig    clang-19
-loongarch     allnoconfig    clang-23
-m68k         allmodconfig    gcc-15.2.0
-m68k          allnoconfig    gcc-15.2.0
-m68k         allyesconfig    gcc-15.2.0
-microblaze    allnoconfig    gcc-15.2.0
-microblaze   allyesconfig    gcc-15.2.0
-mips         allmodconfig    gcc-15.2.0
-mips          allnoconfig    gcc-15.2.0
-mips         allyesconfig    gcc-15.2.0
-nios2        allmodconfig    gcc-11.5.0
-nios2         allnoconfig    gcc-11.5.0
-openrisc     allmodconfig    gcc-15.2.0
-openrisc      allnoconfig    gcc-15.2.0
-parisc       allmodconfig    gcc-15.2.0
-parisc        allnoconfig    gcc-15.2.0
-parisc       allyesconfig    gcc-15.2.0
-powerpc      allmodconfig    gcc-15.2.0
-powerpc       allnoconfig    gcc-15.2.0
-riscv        allmodconfig    clang-23
-riscv         allnoconfig    gcc-15.2.0
-riscv        allyesconfig    clang-16
-s390         allmodconfig    clang-18
-s390          allnoconfig    clang-23
-s390         allyesconfig    gcc-15.2.0
-sh           allmodconfig    gcc-15.2.0
-sh            allnoconfig    gcc-15.2.0
-sh           allyesconfig    gcc-15.2.0
-sparc         allnoconfig    gcc-15.2.0
-sparc64      allmodconfig    clang-23
-um           allmodconfig    clang-19
-um            allnoconfig    clang-23
-um           allyesconfig    gcc-14
-x86_64       allmodconfig    clang-20
-x86_64        allnoconfig    clang-20
-x86_64       allyesconfig    clang-20
-x86_64      rhel-9.4-rust    clang-20
-xtensa        allnoconfig    gcc-15.2.0
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+> 
+> I guess we could even drop the message altogether and assume that
+> vendors will provide the locality information if there's any
+> meaningful performance benefit.  It could be that it really doesn't
+> matter where drivers run on these machines, so there's no benefit to
+> providing the locality information.
+> 
+> Bjorn
+> 
