@@ -1,42 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B075B28690;
-	Wed,  4 Mar 2026 06:32:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8FAE28690;
+	Wed,  4 Mar 2026 06:34:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772605979; cv=none; b=ksZo7WPg+PaE5xokW4FMa6NbTMnef8lFrdh+86OJDRfZYozqAW5hDigyc6Crklqk6pwtdz2+loFNb12Z84Z4U7U+601ck6VwvjaCaOS3msuRfNoeir7PxT5E9CA3wPCiFlCQoao2+FuP1LfUtFI5vMasHjz0ez73J3k078TPdOw=
+	t=1772606045; cv=none; b=dwwpgN3L2DXDFDlFcGGTxLMH5ljqutTPygHTyUXb+MJAJFXn/ONgJJvPEPgsimb55/yUoswmDl0YTE/tfScIl+9/VuvgNaUBaKyB75UOoHkkIU0Nx5x26hcr+sCFD+mZgVP5ecYp/gcqT4i6R1NzyBxL9vmKG+lb/7QaMvIOdGc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772605979; c=relaxed/simple;
-	bh=KLX+r/cNJoWvojZCxYtKCgW5FIWCy3S0O4lMxQZnvbo=;
+	s=arc-20240116; t=1772606045; c=relaxed/simple;
+	bh=oVIEPDU/nugqJeCpaCeerhYE0aOaD71Oxv3iXD8UH6c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JW+gg0yCokER2KCOLAo7nzqj6MZqU5JpcRZHIVtY50KEK+7pFKHdAdNknCVtzgD7P2ReoH5Bxm9vPeKTZNkU/RHQoR1ggiwIX9MEXpQdB0a06uaCATosGVBTxNMIZ92YkX1EhIRPDGO//IwPtWZ6VTKerjucSHoarg4VK/Q79Pw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GYi/RgHc; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Up6sjcj58GnIm11qEsblEUYOZcWBFQBFkf0liLjwFfh217ya8Ee6xzmuD0TJzPJP8QcMXKIq8+Vc1oheeiJXwOPc0k+cl0NbURng6SuPohzzA7pATX8MnqYYOHOOdjpoHhOFGyAZrt4AsgZSPuaSjxUsvu2L2X3uvxl/INahQ/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BauUP7sl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GYi/RgHc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56C3AC19423;
-	Wed,  4 Mar 2026 06:32:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BauUP7sl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 244D6C19423;
+	Wed,  4 Mar 2026 06:33:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772605979;
-	bh=KLX+r/cNJoWvojZCxYtKCgW5FIWCy3S0O4lMxQZnvbo=;
+	s=k20201202; t=1772606044;
+	bh=oVIEPDU/nugqJeCpaCeerhYE0aOaD71Oxv3iXD8UH6c=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=GYi/RgHc/O9GuaYVlzO1gnR6pZKx0lkv+TjVM4lUDJqV977f7X2JTyAP1pDVDDPf3
-	 f1frd7YUMnSfCSR5AFvoA2ZNpZpDNkL8BugfgxktUoEHMswgkIueG8fYCGUTVEDopW
-	 4QO9lGcOS1G3SKsfgrEfI0Lv+6XdSfQjN8D6X7emLQzL2fyG394bj0iLQywVgxMjMZ
-	 h5uZFBu6MJL6YFZeh5RdYlqTz7qGNzvGGg54+KHpW4bgq9Ijf4PaPgqx3/qlQnLeY7
-	 MANj0hBh9vU2Da5exkV6COy6kMRcWXf1MewqsfdtIRaZL4BFKFnGMiWwmSaAQYlxlx
-	 OkDEhwoFhW/Xg==
-Date: Wed, 4 Mar 2026 12:02:48 +0530
+	b=BauUP7slxOLlEYowI0YIqmZjRKU+TN7e7GoDub7PxEBkwHm9B4txYf9VpEHvZkGsP
+	 /jOKWCidq1MH+kGRd7A/kVNKIoL1HkH0ChFECnciWfi+U7JTD3N+k47/A2P12q3sW8
+	 RKgHNhT55bZ6PNPepUvznjbYExp0aPXYANv62V8C9usNWrka1LkguU6cZYbWn13ubj
+	 yxAIIL/lT6lT8EU+5eBpIV/GNo6V/c2n8f7olFOwwSMnGJRBraR7BaFv/TYe1z1Olz
+	 INFnnDVcYfRIg8n0MHgSvU0ir6MgJaxp7/bwyY1U4BJaJRZ8l0XrAtCA/gdehWsG8x
+	 qDpldJFdP5qjg==
+Date: Wed, 4 Mar 2026 12:03:51 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Hongxing Zhu <hongxing.zhu@nxp.com>
-Cc: Alexander Stein <alexander.stein@ew.tq-group.com>, 
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev" <imx@lists.linux.dev>
-Subject: Re: i.MX8M Plus PCIe link regression
-Message-ID: <2qto2ddqmtks37wxtklxo4ctvxyezmgtjcuprnk6crant5fvsu@vdbmqomrcqt3>
-References: <23024521.EfDdHjke4D@steina-w>
- <ac24flkmrooacnpt53swuurkbxvorbjx2yb4s3zdevqua6ddls@wjc3bcsl7zif>
- <AS8PR04MB88332979F06EDE29E751BCE18C7CA@AS8PR04MB8833.eurprd04.prod.outlook.com>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Frank Li <Frank.Li@nxp.com>, Jon Mason <jdmason@kudzu.us>, 
+	Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>, kwilczynski@kernel.org, 
+	Kishon Vijay Abraham I <kishon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Ye Bin <yebin10@huawei.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, linux-pci@vger.kernel.org, ntb@lists.linux.dev, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 0/5] PCI: endpoint: pci-epf-*ntb: Harden vNTB resource
+ management
+Message-ID: <owgu3bsmcvyy5ggygak6iof3v26fho2sa2wcpmh3ksxjzgq3bc@osi4xob6fpry>
+References: <20260226084142.2226875-1-den@valinux.co.jp>
+ <urqlfeqcp4grwqia5tu5am2qmzvbkiqubyxtl4pijlceidlelz@jm3lrlpcg3rp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,154 +49,119 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <AS8PR04MB88332979F06EDE29E751BCE18C7CA@AS8PR04MB8833.eurprd04.prod.outlook.com>
+In-Reply-To: <urqlfeqcp4grwqia5tu5am2qmzvbkiqubyxtl4pijlceidlelz@jm3lrlpcg3rp>
 
-On Wed, Mar 04, 2026 at 02:55:51AM +0000, Hongxing Zhu wrote:
-> > -----Original Message-----
-> > From: Manivannan Sadhasivam <mani@kernel.org>
-> > Sent: 2026年3月4日 0:42
-> > To: Hongxing Zhu <hongxing.zhu@nxp.com>; Alexander Stein
-> > <alexander.stein@ew.tq-group.com>
-> > Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
-> > imx@lists.linux.dev
-> > Subject: Re: i.MX8M Plus PCIe link regression
+On Wed, Mar 04, 2026 at 12:10:23PM +0900, Koichiro Den wrote:
+> On Thu, Feb 26, 2026 at 05:41:37PM +0900, Koichiro Den wrote:
+> > The vNTB endpoint function (pci-epf-vntb) can be configured and
+> > reconfigured through configfs (link/unlink functions, start/stop the
+> > controller, update parameters). In practice, several pitfalls present:
+> > duplicate EPC teardown that leads to oopses, a work item running after
+> > resources were torn down, and inability to re-link/restart fundamentally
+> > because ntb_dev was embedded and the vPCI bus teardown was incomplete.
 > > 
-> > On Tue, Mar 03, 2026 at 01:38:13PM +0100, Alexander Stein wrote:
-> > > Hi,
-> > >
-> > > these days I noticed that there is a PCIe link regression on my
-> > > i.MX8MP platform (TQMa8MPxL) running next-20260227.
-> > > I could bisect it back to commit 9c03e30e3ade3 ("PCI: imx6: Skip link
-> > > up workaround for newer platforms"). I always get the following errors:
-> > >
-> > > imx6q-pcie 33800000.pcie: Link failed to come up. LTSSM:
-> > > CFG_LINKWD_START imx6q-pcie 33800000.pcie: probe with driver
-> > > imx6q-pcie failed with error -110
-> > >
-> > > Connected is a Gen1 PCIe -> Ethernet adapter. Interestingly a Gen2
-> > > device is detected without issues.
-> > >
-> > > Reverting 3c96a61dd2e098dda8dcac3dce3d38a3c87afbfc and
-> > > b9a8d28ebbf118bb3eac953f4a37abbd341257ab "fixes" my platform, both
-> > Gen
-> > > 1 and Gen 2 devices are detect. Commit
-> > > 3c96a61dd2e098dda8dcac3dce3d38a3c87afbfc is only required for conflict
-> > free revert.
-> > >
-> > > Here is a summary with outputs:
-> > > Gen 1 device
-> > > > 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
-> > > > 01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
-> > > > RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller (rev
-> > > > 01)
-> > >
-> > > Gen 2 device
-> > > > 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
-> > > > 01:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9128 PCIe
-> > > > SATA 6 Gb/s RAID controller (rev 20)
-> > >
-> > > output of "dmesg | grep imx6q-pcie". Common part for all tests:
-> > > > imx6q-pcie 33800000.pcie: host bridge /soc@0/pcie@33800000 ranges:
-> > > > imx6q-pcie 33800000.pcie:       IO 0x001ff80000..0x001ff8ffff ->
-> > > > 0x0000000000
-> > > > imx6q-pcie 33800000.pcie:      MEM 0x0018000000..0x001fefffff ->
-> > > > 0x0018000000
-> > > > imx6q-pcie 33800000.pcie: config reg[1] 0x1ff00000 == cpu 0x1ff00000
-> > > > imx6q-pcie 33800000.pcie: iATU: unroll T, 4 ob, 4 ib, align 64K,
-> > > > limit 16G
-> > >
-> > > next-20260227
-> > > Gen 1
-> > > > imx6q-pcie 33800000.pcie: Link failed to come up. LTSSM:
-> > > > CFG_LINKWD_START imx6q-pcie 33800000.pcie: probe with driver
-> > > > imx6q-pcie failed with error -110
-> > >
-> > > Gen 2
-> > > > imx6q-pcie 33800000.pcie: PCIe Gen.2 x1 link up imx6q-pcie
-> > > > 33800000.pcie: PCI host bridge to bus 0000:00
-> > >
-> > > next-20260227 + reverts
-> > > Gen 1
-> > > > imx6q-pcie 33800000.pcie: PCIe Gen.1 x1 link up imx6q-pcie
-> > > > 33800000.pcie: PCIe Gen.1 x1 link up imx6q-pcie 33800000.pcie: PCI
-> > > > host bridge to bus 0000:00
-> > >
-> > > Gen 2
-> > > > imx6q-pcie 33800000.pcie: PCIe Gen.1 x1 link up imx6q-pcie
-> > > > 33800000.pcie: PCIe Gen.2 x1 link up imx6q-pcie 33800000.pcie: PCI
-> > > > host bridge to bus 0000:00
-> > >
-> > > What can we do here? I'm wondering why Gen 2 trains correctly, while
-> > > Gen 1 doesn't.
-> > >
+> > This series addresses those issues and hardens resource management of
+> > pci-epf-vntb:
 > > 
-> > Thanks for the report and sorry for the breakage. Commit 9c03e30e3ade3,
-> > mentions that the workaround is only needed for the i.MX6 platforms. So
-> > I'm not sure why the patch breaks i.MX8M and that too only for Gen 1
-> > speed.
+> > - Remove duplicate EPC resource teardown in both pci-epf-vntb and
+> >   pci-epf-ntb, avoiding crashes on .allow_link failures and during
+> >   .drop_link.
+> > - Stop the delayed cmd_handler work before clearing BARs/doorbells.
+> > - Manage ntb_dev as a devm-managed allocation and implement .remove() in
+> >   the vNTB PCI driver. Switch to pci_scan_root_bus().
 > > 
-> > Also, before 9c03e30e3ade3, LTSSM was always started in Gen 1, but as per
-> > your finding, only Gen 1 devices fail to work. So the code till
-> > imx_pcie_wait_for_speed_change() shouldn't have an impact. Maybe the
-> > issue is due to skipping imx_pcie_wait_for_speed_change()?
+> > With these changes, the controller can now be stopped, a function
+> > unlinked, configfs settings updated, and the controller re-linked and
+> > restarted without rebooting the endpoint, as long as the underlying
+> > pci_epc_ops .stop() is non-destructive and .start() restores normal
+> > operation.
 > > 
-> > Richard, thoughts?
-> Hi Maini:
-> Prior to calling imx_pcie_wait_for_speed_change(), the PCIe link must
->  already be established. Before commit 9c03e30e3ade3, the speed change
->  procedure was only initiated after the initial Gen1 link was successfully
->  brought up.
+> > Patches 1-3 carry Fixes tags and are candidates for stable.
+> > Patch 4 is a preparatory one for Patch 5.
+> > Patch 5 is a behavioral improvement that completes lifetime management for
+> > relink/restart scenarios.
 > 
-> Hi Alexander:
-> Sorry for the breakage.
-> Before commit 9c03e30e3ade3, i.MX8MP PCIe forced Gen1 link training
->  initially, then switched to Gen3 after link-up by triggering a speed
->  change. After commit 9c03e30e3ade3, link training starts directly at
->  the Gen3 capability level.
+> While I'm updating Patch 4 and 5 to address feedback from Mani, as well as the
+> concern I mentioned at [1], I noticed that if [2] gets merged before this
+> series, another issue may arrise. With [2], the DB IRQ may become a shared IRQ,
+> in which case the unbind/remove race would require additional care.
 > 
-> The two link training methods differ only in the i.MX8MP Root Complex (RC)
->  link capability configuration prior to link training: one method forces
->  Gen1 speed, while the other retains the default Gen3 setting in your tests.
+> 
+> Mani, if it's ok, could you take Patch 1-3?
+> 
+> - If so, I'll spin the rest (Patch 4-5) into a separate patch series starting
+>   from v6, with some additional commits.
 > 
 
-I still don't understand why the link fails to train at Gen 1.
+Sounds OK to me.
 
 - Mani
 
-> Fortunately, I also have a RTL8168E Gigabit network card on hand.
-> Based on v7.0-rc1, here is the tests log on my i.MX8MP EVK board and one M.2
-> Key E to PCIe standard slot exchange adaptor.
+>   It turns out that Patch 4-5 are a bigger change than I initially thought. Even
+>   though Patch 1-3 were originally written as preparatory fixes, they can be
+>   applied independently at any time.
 > 
-> Logs:
-> root@imx8mpevk:~# dmesg | grep pci
-> [    2.172420] imx6q-pcie 33800000.pcie: host bridge /soc@0/pcie@33800000 ranges:
-> [    2.172516] imx6q-pcie 33800000.pcie:       IO 0x001ff80000..0x001ff8ffff -> 0x0000000000
-> [    2.172545] imx6q-pcie 33800000.pcie:      MEM 0x0018000000..0x001fefffff -> 0x0018000000
-> [    2.172631] imx6q-pcie 33800000.pcie: config reg[1] 0x1ff00000 == cpu 0x1ff00000
-> [    2.380065] imx6q-pcie 33800000.pcie: iATU: unroll T, 4 ob, 4 ib, align 64K, limit 16G
-> [    2.579604] imx6q-pcie 33800000.pcie: PCIe Gen.1 x1 link up
-> [    2.580020] imx6q-pcie 33800000.pcie: PCI host bridge to bus 0000:00
-> <snipped>
-> [    2.583653] pci 0000:01:00.0: [10ec:8168] type 00 class 0x020000 PCIe Endpoint
-> [    2.583858] pci 0000:01:00.0: BAR 0 [io  0x0000-0x00ff]
-> [    2.583885] pci 0000:01:00.0: BAR 2 [mem 0x00000000-0x00000fff 64bit]
-> [    2.583902] pci 0000:01:00.0: BAR 4 [mem 0x00000000-0x00003fff 64bit pref]
-> [    2.583914] pci 0000:01:00.0: ROM [mem 0x00000000-0x0001ffff pref]
-> [    2.584280] pci 0000:01:00.0: supports D1 D2
-> [    2.584320] pci 0000:01:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-> [    2.595615] pci 0000:01:00.0: ASPM: default states L0s L1
-> root@imx8mpevk:~#
-> root@imx8mpevk:~# lspci
-> 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
-> 01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller (rev 06)
+>   The code in Patches 1-3 has also been unchanged since v1 (submitted last
+>   October).
 > 
-> Best Regards
-> Richard
+> [1] https://lore.kernel.org/linux-pci/mipdls67csyyrugf4rjx3qqtbxes4sjjtluy3psecnadcgcs7k@rn42d3m6ggsf/
+> [2] [PATCH v10 0/7] PCI: endpoint: pci-ep-msi: Add embedded doorbell fallback
+>     https://lore.kernel.org/linux-pci/20260302071427.534158-1-den@valinux.co.jp/
+> 
+> 
+> Best regards,
+> Koichiro
+> 
 > > 
-> > - Mani
+> > ---
+> > v4->v5 changes:
+> >   - Rebased onto the latest pci/endpoint (2026-02-26).
+> >   - Dropped [PATCH v4 1/7]; will be reposted separately via the NTB tree.
+> >   - Dropped [PATCH v4 2/7], which has been applied in a different form.
+> >   - Corrected the subject prefix of [PATCH v4 5/7]:
+> >     s/NTB: epf: vntb:/PCI: endpoint: pci-epf-vntb:/.
+> >   - Picked up a Reviewed-by tag to [PATCH v4 7/7].
+> >   - Resolved a conflict in [PATCH v4 7/7] due to commit
+> >     dc693d606644 ("PCI: endpoint: pci-epf-vntb: Add MSI doorbell support").
+> > v3->v4 changes:
+> >   - Added Reviewed-by tag for [PATCH v3 6/6].
+> >   - Corrected patch split by moving the blank-line cleanup,
+> >     based on the feedback from Frank.
+> >   (No code changes overall.)
+> > v2->v3 changes:
+> >   - Added Reviewed-by tag for [PATCH v2 4/6].
+> >   - Split [PATCH v2 6/6] into two, based on the feedback from Frank.
+> >   (No code changes overall.)
+> > v1->v2 changes:
+> >   - Incorporated feedback from Frank.
+> >   - Added Reviewed-by tags (except for patches #4 and #6).
+> >   - Fixed a typo in patch #5 title.
+> >   (No code changes overall.)
 > > 
-> > --
-> > மணிவண்ணன் சதாசிவம்
+> > v4: https://lore.kernel.org/linux-pci/20251202072348.2752371-1-den@valinux.co.jp/
+> > v3: https://lore.kernel.org/all/20251130151100.2591822-1-den@valinux.co.jp/
+> > v2: https://lore.kernel.org/all/20251029080321.807943-1-den@valinux.co.jp/
+> > v1: https://lore.kernel.org/all/20251023071757.901181-1-den@valinux.co.jp/
+> > 
+> > 
+> > Koichiro Den (5):
+> >   PCI: endpoint: pci-epf-vntb: Remove duplicate resource teardown
+> >   PCI: endpoint: pci-epf-ntb: Remove duplicate resource teardown
+> >   PCI: endpoint: pci-epf-vntb: Stop cmd_handler work in
+> >     epf_ntb_epc_cleanup
+> >   PCI: endpoint: pci-epf-vntb: Switch vpci_scan_bus() to use
+> >     pci_scan_root_bus()
+> >   PCI: endpoint: pci-epf-vntb: manage ntb_dev lifetime and fix vpci bus
+> >     teardown
+> > 
+> >  drivers/pci/endpoint/functions/pci-epf-ntb.c  | 56 +-----------
+> >  drivers/pci/endpoint/functions/pci-epf-vntb.c | 88 ++++++++++++-------
+> >  2 files changed, 57 insertions(+), 87 deletions(-)
+> > 
+> > -- 
+> > 2.51.0
+> > 
+> > 
 
 -- 
 மணிவண்ணன் சதாசிவம்
