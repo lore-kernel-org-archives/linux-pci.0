@@ -1,290 +1,226 @@
-Received: from mx-relay28-hz2.antispameurope.com (mx-relay28-hz2.antispameurope.com [94.100.136.228])
+Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D61C9375F6B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2026 08:48:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=94.100.136.228
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772614087; cv=pass; b=rLUZ91J/Z6ufS60we0t9Wi3qK1dbMzgT+aU26jwy0ZU8SFNnyrB5Z8m5+rIJcevaGMCKI8FCV09OOsHuW4zSwvafq+t8XSGxKbGvEq0QUkxXr7yfZIdhjonlnmzNrE/Emgf9RnTMA9CkFbQezQ/UZEiwayOR0nli3wmBPv293P4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772614087; c=relaxed/simple;
-	bh=RXSffSzEJPRbTJBVRVQaYy+1Rbgr2pp8gsOU8CPq9xk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fK4nLBrDEpSApMVX6yQhycTSu/tOmQJlHy/zCQiL08z58sI1vS/IYnDkpOog7uiZm0SiqBEN8lbfp8vP8CGEyg3CZ503Qpxam0sE9DI8hmwRCCYFImYGILL/iQcIyyzzl3hJPaMKMui3EJIBPUakb0Vxtt4UPb2jcM+bsQ2tV3s=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ew.tq-group.com; spf=pass smtp.mailfrom=ew.tq-group.com; dkim=pass (2048-bit key) header.d=ew.tq-group.com header.i=@ew.tq-group.com header.b=GeU9+r4Q; arc=pass smtp.client-ip=94.100.136.228
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ew.tq-group.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ew.tq-group.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA64139184B;
+	Wed,  4 Mar 2026 09:09:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772615374; cv=none; b=OVuhpzkaSj8XGWHvZkyNhuSSI61wL4Rw81JB7KajB3jREai+5oIgbZQ9KWZ6L4iNey90PyNX+I6mfI1Y4UZ5LpBcswSSFIVrlNgtUVkZ8jLiuGsuTGY5NE1qeQqFPYBcnDo2DZX7iJI2HwJaRPScjM2/+mOp9KG0CdbmVxpWgSM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772615374; c=relaxed/simple;
+	bh=yftRdM8nyWQsdJ2/EVnd712szefjtMJ1WAaLClGC6a4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=pagGXb9kjdSqHUo3ycPtJls1a23YbVscC5YxOway7o5DFzjBMTnfxvNe18P//J0I5OGOUrvig438TG3oQ6iF60OC/9BHuzpsDPsuRMSbmcM1hyTZqsm34or7UEVE2eUQe37Bsxw8A6TUFx+jZ1qDY2xwT2ChUztTK1VbO2ZUbQI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=d5U8vb6p; arc=none smtp.client-ip=5.135.140.105
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ew.tq-group.com header.i=@ew.tq-group.com header.b="GeU9+r4Q"
-ARC-Authentication-Results: i=1; mx-gate28-hz2.hornetsecurity.com 1; spf=pass
- reason=mailfrom (ip=94.100.132.6, headerfrom=ew.tq-group.com)
- smtp.mailfrom=ew.tq-group.com
- smtp.helo=hmail-p-smtp01-out03-hz1.hornetsecurity.com; dmarc=pass
- header.from=ew.tq-group.com orig.disposition=pass
-ARC-Message-Signature: a=rsa-sha256;
- bh=Tc5060lOULfVsdNRxfTIuSjgRGoa5zkf8LbdJsu7Flc=; c=relaxed/relaxed;
- d=hornetsecurity.com; h=from:to:date:subject:mime-version:; i=1; s=hse1;
- t=1772614050;
- b=ryEaI4woBBI7+/mRGOgTbzBfeczaikUxcM5Lq8H14XPiDrK+Jsgh/wOjtNRDBLXYdEce4rPh
- KenHYBa9JchzBGFwebKhJn5I1Ba/0naH01ghrDXtJvZ2wCPqbCL6BAebY19Vli25OhaUz4LgkEz
- bsvP3ACIfL12O3UMQYE5L1e4DNRw5Wk2BoC6BeLXsaDv8L7DcYIxvJ2/s02wWUg7BWulq2vcfR2
- 8g/ArRcXDq1SRpFyPK8XvgXxLRR0MsUpN9q9NPuUHLj0rN+ul7zgKZckP/hTJks2/HVeXdyImww
- s5RDx3Ai3zb1aLBI4QwvlsBU9/aoHF7mBHrLY2FuBmtug==
-ARC-Seal: a=rsa-sha256; cv=none; d=hornetsecurity.com; i=1; s=hse1;
- t=1772614050;
- b=UPoQo8ixpPA5uWEpcAu8AX7gFTtVJFNXUf20HLOqtg/No5DgV1uz82kD8AHZhAl9xzLpMcok
- MWglXCRB2gwBsPLD8bsk9N1R9frBfjS3g3WkgJUAnEKNR6jbmLqO4xiBRL7PgkQiMmptvo0dyIC
- eWgsgA0MR6qerB47NB56M/tmL0nmh0xOGarpeQ8yRRenKnj3RkiaZnydapj+g5OQTWd7NkyfZD8
- gOQJyG6DDxQ50MWwrbzDwACgMGyfISxRyb++XMsvlgABerKH68yS5jLwjj0S+YRo8qdQ38dj79x
- QHuRQHVzFtBUJBUS2+GOTj2a4ncvebDeahK/RJhhqDgvA==
-Received: from he-nlb01-hz1.hornetsecurity.com ([94.100.132.6]) by mx-relay28-hz2.antispameurope.com;
- Wed, 04 Mar 2026 09:47:30 +0100
-Received: from steina-w.localnet (host-82-135-125-110.customer.m-online.net [82.135.125.110])
-	(Authenticated sender: alexander.stein@ew.tq-group.com)
-	by hmail-p-smtp01-out03-hz1.hornetsecurity.com (Postfix) with ESMTPSA id 5ED3ACC0D36;
-	Wed,  4 Mar 2026 09:47:23 +0100 (CET)
-From: Alexander Stein <alexander.stein@ew.tq-group.com>
-To: Hongxing Zhu <hongxing.zhu@nxp.com>,
- Manivannan Sadhasivam <mani@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "imx@lists.linux.dev" <imx@lists.linux.dev>
-Subject: Re: i.MX8M Plus PCIe link regression
-Date: Wed, 04 Mar 2026 09:47:23 +0100
-Message-ID: <6102060.LvFx2qVVIh@steina-w>
-Organization: TQ-Systems GmbH
-In-Reply-To: <2qto2ddqmtks37wxtklxo4ctvxyezmgtjcuprnk6crant5fvsu@vdbmqomrcqt3>
-References:
- <23024521.EfDdHjke4D@steina-w>
- <AS8PR04MB88332979F06EDE29E751BCE18C7CA@AS8PR04MB8833.eurprd04.prod.outlook.com>
- <2qto2ddqmtks37wxtklxo4ctvxyezmgtjcuprnk6crant5fvsu@vdbmqomrcqt3>
+	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="d5U8vb6p"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 6471B22953A;
+	Wed,  4 Mar 2026 10:09:21 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
+	t=1772615369; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:content-language:in-reply-to:references;
+	bh=0QOY3SwlDPrGm+6EJVdxOMdbUCm/cndSMZI5zzeh0dI=;
+	b=d5U8vb6pBn5ABOYJsTtCnPXgqoJsbhO0uLtdRutCR/zeXaC+BKOEY1MZg+X7cB00LZyYD/
+	tvls+YGM9G4/i15SovrHmKK1Ikt3mBp74ZiRxlqgP3qHBkfHoSyOWFrwghYZBtpA/Toc13
+	0JxoAEscHkZYZjS7H8KC05CD1oe2Oth1w2lNxtCGmrH7e3FJYRhDaqPYEMR39Y/EgT4rJ+
+	How3mchqTzXemRlWZO/2TEax9ylq46DxosIW80V8jvyRuSpff48d0/WpVVq/cDjHKfehlC
+	K+/DzLb4pbYKJFIWkec2nvS7YUVsQgGgC5UuYMpPHcoCqyJR7GoBKq+3Rm+MXQ==
+Message-ID: <7888e449-fec9-4a23-8133-ad0c9651a354@cjdns.fr>
+Date: Wed, 4 Mar 2026 10:09:20 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="UTF-8"
-X-cloud-security-sender:alexander.stein@ew.tq-group.com
-X-cloud-security-recipient:linux-pci@vger.kernel.org
-X-cloud-security-crypt: load encryption module
-X-cloud-security-Mailarchiv: E-Mail archived for: alexander.stein@ew.tq-group.com
-X-cloud-security-Mailarchivtype:outbound
-X-cloud-security-Virusscan:CLEAN
-X-cloud-security-disclaimer: This E-Mail was scanned by E-Mailservice on mx-relay28-hz2.antispameurope.com with 4fQmWb5Jc5z1QKgG
-X-cloud-security-connect: he-nlb01-hz1.hornetsecurity.com[94.100.132.6], TLS=1, IP=94.100.132.6
-X-cloud-security-Digest:327ce3c9e8c61b36ad9fc7d5cc2ee034
-X-cloud-security:scantime:1.715
-DKIM-Signature: a=rsa-sha256;
- bh=Tc5060lOULfVsdNRxfTIuSjgRGoa5zkf8LbdJsu7Flc=; c=relaxed/relaxed;
- d=ew.tq-group.com;
- h=content-type:mime-version:subject:from:to:message-id:date; s=hse1;
- t=1772614050; v=1;
- b=GeU9+r4Q1FXW+hX+RWqlojwsE3FV4hFpgzq5LrD2vEJsUYm5MIJvp05UYbq31N74CrAcznCW
- F0kSiC0hMT6oamwJzAVXbP8CKYbbWiCClvz7Ydq054A2W7TY/5th58qep7KV11bLzxq0jKPZamJ
- yMBQY4D5I5+LwCwDcFZWpLb2NtpSS1MGa9tkSAccLxsUD0Pd6TwnzkARWUh4LE3CzMvus0Wt3Hg
- Lyt/k/sFhXtSHG00OhoEmKVtE2X8rkOIjru96qSb8ARKWr8EQTyluyKAf/DwgjTXxihJblFWdJY
- rZhPIZSv6xrytregMF0OUJnQ1+DMPMvde3tgISrgF9KnA==
-
-Hi,
-
-Am Mittwoch, 4. M=C3=A4rz 2026, 07:32:48 CET schrieb Manivannan Sadhasivam:
-> On Wed, Mar 04, 2026 at 02:55:51AM +0000, Hongxing Zhu wrote:
-> > > -----Original Message-----
-> > > From: Manivannan Sadhasivam <mani@kernel.org>
-> > > Sent: 2026=E5=B9=B43=E6=9C=884=E6=97=A5 0:42
-> > > To: Hongxing Zhu <hongxing.zhu@nxp.com>; Alexander Stein
-> > > <alexander.stein@ew.tq-group.com>
-> > > Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
-> > > imx@lists.linux.dev
-> > > Subject: Re: i.MX8M Plus PCIe link regression
-> > >=20
-> > > On Tue, Mar 03, 2026 at 01:38:13PM +0100, Alexander Stein wrote:
-> > > > Hi,
-> > > >
-> > > > these days I noticed that there is a PCIe link regression on my
-> > > > i.MX8MP platform (TQMa8MPxL) running next-20260227.
-> > > > I could bisect it back to commit 9c03e30e3ade3 ("PCI: imx6: Skip li=
-nk
-> > > > up workaround for newer platforms"). I always get the following err=
-ors:
-> > > >
-> > > > imx6q-pcie 33800000.pcie: Link failed to come up. LTSSM:
-> > > > CFG_LINKWD_START imx6q-pcie 33800000.pcie: probe with driver
-> > > > imx6q-pcie failed with error -110
-> > > >
-> > > > Connected is a Gen1 PCIe -> Ethernet adapter. Interestingly a Gen2
-> > > > device is detected without issues.
-> > > >
-> > > > Reverting 3c96a61dd2e098dda8dcac3dce3d38a3c87afbfc and
-> > > > b9a8d28ebbf118bb3eac953f4a37abbd341257ab "fixes" my platform, both
-> > > Gen
-> > > > 1 and Gen 2 devices are detect. Commit
-> > > > 3c96a61dd2e098dda8dcac3dce3d38a3c87afbfc is only required for confl=
-ict
-> > > free revert.
-> > > >
-> > > > Here is a summary with outputs:
-> > > > Gen 1 device
-> > > > > 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
-> > > > > 01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
-> > > > > RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller (r=
-ev
-> > > > > 01)
-> > > >
-> > > > Gen 2 device
-> > > > > 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
-> > > > > 01:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9128 P=
-CIe
-> > > > > SATA 6 Gb/s RAID controller (rev 20)
-> > > >
-> > > > output of "dmesg | grep imx6q-pcie". Common part for all tests:
-> > > > > imx6q-pcie 33800000.pcie: host bridge /soc@0/pcie@33800000 ranges:
-> > > > > imx6q-pcie 33800000.pcie:       IO 0x001ff80000..0x001ff8ffff ->
-> > > > > 0x0000000000
-> > > > > imx6q-pcie 33800000.pcie:      MEM 0x0018000000..0x001fefffff ->
-> > > > > 0x0018000000
-> > > > > imx6q-pcie 33800000.pcie: config reg[1] 0x1ff00000 =3D=3D cpu 0x1=
-ff00000
-> > > > > imx6q-pcie 33800000.pcie: iATU: unroll T, 4 ob, 4 ib, align 64K,
-> > > > > limit 16G
-> > > >
-> > > > next-20260227
-> > > > Gen 1
-> > > > > imx6q-pcie 33800000.pcie: Link failed to come up. LTSSM:
-> > > > > CFG_LINKWD_START imx6q-pcie 33800000.pcie: probe with driver
-> > > > > imx6q-pcie failed with error -110
-> > > >
-> > > > Gen 2
-> > > > > imx6q-pcie 33800000.pcie: PCIe Gen.2 x1 link up imx6q-pcie
-> > > > > 33800000.pcie: PCI host bridge to bus 0000:00
-> > > >
-> > > > next-20260227 + reverts
-> > > > Gen 1
-> > > > > imx6q-pcie 33800000.pcie: PCIe Gen.1 x1 link up imx6q-pcie
-> > > > > 33800000.pcie: PCIe Gen.1 x1 link up imx6q-pcie 33800000.pcie: PCI
-> > > > > host bridge to bus 0000:00
-> > > >
-> > > > Gen 2
-> > > > > imx6q-pcie 33800000.pcie: PCIe Gen.1 x1 link up imx6q-pcie
-> > > > > 33800000.pcie: PCIe Gen.2 x1 link up imx6q-pcie 33800000.pcie: PCI
-> > > > > host bridge to bus 0000:00
-> > > >
-> > > > What can we do here? I'm wondering why Gen 2 trains correctly, while
-> > > > Gen 1 doesn't.
-> > > >
-> > >=20
-> > > Thanks for the report and sorry for the breakage. Commit 9c03e30e3ade=
-3,
-> > > mentions that the workaround is only needed for the i.MX6 platforms. =
-So
-> > > I'm not sure why the patch breaks i.MX8M and that too only for Gen 1
-> > > speed.
-> > >=20
-> > > Also, before 9c03e30e3ade3, LTSSM was always started in Gen 1, but as=
- per
-> > > your finding, only Gen 1 devices fail to work. So the code till
-> > > imx_pcie_wait_for_speed_change() shouldn't have an impact. Maybe the
-> > > issue is due to skipping imx_pcie_wait_for_speed_change()?
-> > >=20
-> > > Richard, thoughts?
-> > Hi Maini:
-> > Prior to calling imx_pcie_wait_for_speed_change(), the PCIe link must
-> >  already be established. Before commit 9c03e30e3ade3, the speed change
-> >  procedure was only initiated after the initial Gen1 link was successfu=
-lly
-> >  brought up.
-> >=20
-> > Hi Alexander:
-> > Sorry for the breakage.
-> > Before commit 9c03e30e3ade3, i.MX8MP PCIe forced Gen1 link training
-> >  initially, then switched to Gen3 after link-up by triggering a speed
-> >  change. After commit 9c03e30e3ade3, link training starts directly at
-> >  the Gen3 capability level.
-> >=20
-> > The two link training methods differ only in the i.MX8MP Root Complex (=
-RC)
-> >  link capability configuration prior to link training: one method forces
-> >  Gen1 speed, while the other retains the default Gen3 setting in your t=
-ests.
-> >=20
->=20
-> I still don't understand why the link fails to train at Gen 1.
-
-Independently from the configured maximum link speed, shouldn't the initial
-link be Gen1 anyway and upgraded to Gen 2 later on?
-
-I added some debug output to dw_pcie_link_up()
-
-imx6q-pcie 33800000.pcie: dw_pcie_link_set_max_speed: current pci->max_link=
-_speed: 3
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f704
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x28000000
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f722
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
-imx6q-pcie 33800000.pcie: Link failed to come up. LTSSM: CFG_LINKWD_START
-imx6q-pcie 33800000.pcie: probe with driver imx6q-pcie failed with error -1=
-10
+User-Agent: Mozilla Thunderbird Beta
+Subject: Re: [PATCH 1/8] dt-bindings: clock, reset: Add econet EN751221
+ bindings
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: linux-mips@vger.kernel.org, naseefkm@gmail.com, mturquette@baylibre.com,
+ sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ tsbogend@alpha.franken.de, ryder.lee@mediatek.com,
+ jianjun.wang@mediatek.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+ mani@kernel.org, bhelgaas@google.com, vkoul@kernel.org,
+ neil.armstrong@linaro.org, p.zabel@pengutronix.de, matthias.bgg@gmail.com,
+ angelogioacchino.delregno@collabora.com, nbd@nbd.name, ansuelsmth@gmail.com,
+ linux-clk@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org
+References: <20260303190948.694783-1-cjd@cjdns.fr>
+ <20260303190948.694783-2-cjd@cjdns.fr>
+ <20260304-accomplished-helpful-orca-5d6b81@quoll>
+Content-Language: en-US
+From: Caleb James DeLisle <cjd@cjdns.fr>
+In-Reply-To: <20260304-accomplished-helpful-orca-5d6b81@quoll>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Last-TLS-Session-Version: TLSv1.3
 
 
-imx6q-pcie 33800000.pcie: dw_pcie_link_set_max_speed: current pci->max_link=
-_speed: 2
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x28000000
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x28000000
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
-imx6q-pcie 33800000.pcie: Link failed to come up. LTSSM: CFG_LINKWD_START
-imx6q-pcie 33800000.pcie: probe with driver imx6q-pcie failed with error -1=
-10
+On 04/03/2026 09:39, Krzysztof Kozlowski wrote:
+> On Tue, Mar 03, 2026 at 07:09:41PM +0000, Caleb James DeLisle wrote:
+>> Add clock and reset bindings for EN751221 as well as
+>> a "chip-scu" which is an additional regmap that is used
+>> by the clock driver as well as others. This split of the
+>> SCU across two register areas is the same as the Airoha
+>> AN758x family.
+> Please wrap commit message according to Linux coding style / submission
+> process (neither too early nor over the limit):
+> https://elixir.bootlin.com/linux/v6.4-rc1/source/Documentation/process/submitting-patches.rst#L597
+OK
+> A nit, subject: drop second/last, redundant "bindings". The
+> "dt-bindings" prefix is already stating that these are bindings.
+> See also:
+> https://elixir.bootlin.com/linux/v6.17-rc3/source/Documentation/devicetree/bindings/submitting-patches.rst#L18
+OK
+>> Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
+>> ---
+>>   .../bindings/clock/airoha,en7523-scu.yaml     | 19 ++++++-
+>>   .../mips/econet,en751221-chip-scu.yaml        | 41 ++++++++++++++++
+>>   MAINTAINERS                                   |  3 ++
+>>   .../dt-bindings/clock/econet,en751221-scu.h   | 15 ++++++
+>>   .../dt-bindings/reset/econet,en751221-scu.h   | 49 +++++++++++++++++++
+>>   5 files changed, 126 insertions(+), 1 deletion(-)
+>>   create mode 100644 Documentation/devicetree/bindings/mips/econet,en751221-chip-scu.yaml
+>>   create mode 100644 include/dt-bindings/clock/econet,en751221-scu.h
+>>   create mode 100644 include/dt-bindings/reset/econet,en751221-scu.h
+>>
+>> diff --git a/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml b/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml
+>> index a8471367175b..e60e54273393 100644
+>> --- a/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml
+>> +++ b/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml
+>> @@ -32,6 +32,7 @@ properties:
+>>         - enum:
+>>             - airoha,en7523-scu
+>>             - airoha,en7581-scu
+>> +          - econet,en751221-scu
+>>   
+>>     reg:
+>>       items:
+>> @@ -67,7 +68,10 @@ allOf:
+>>     - if:
+>>         properties:
+>>           compatible:
+>> -          const: airoha,en7581-scu
+>> +          items:
+> Drop items, it's just enum
+>
+>> +            - enum:
+>> +                - airoha,en7581-scu
+>> +                - econet,en751221-scu
+>>       then:
+>>         properties:
+>>           reg:
+>> @@ -98,3 +102,16 @@ examples:
+>>                 #reset-cells = <1>;
+>>         };
+>>       };
+>> +
+>> +  - |
+>> +    soc {
+>> +      #address-cells = <1>;
+>> +      #size-cells = <1>;
+> No need for new example, especially without any differences. You already
+> have there two.
+OK
+>> +
+>> +      scuclk2: clock-controller@1fb00000 {
+>> +        compatible = "econet,en751221-scu";
+>> +        reg = <0x1fb00000 0x970>;
+>> +        #clock-cells = <1>;
+>> +        #reset-cells = <1>;
+>> +      };
+>> +    };
+>> diff --git a/Documentation/devicetree/bindings/mips/econet,en751221-chip-scu.yaml b/Documentation/devicetree/bindings/mips/econet,en751221-chip-scu.yaml
+>> new file mode 100644
+>> index 000000000000..7c7c8cf8d2a5
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/mips/econet,en751221-chip-scu.yaml
+>> @@ -0,0 +1,41 @@
+>> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
+>> +%YAML 1.2
+>> +---
+>> +$id: http://devicetree.org/schemas/mips/econet,en751221-chip-scu.yaml#
+>> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+>> +
+>> +title: EcoNet Chip SCU Controller for EN751221 SoC
+>> +
+>> +maintainers:
+>> +  - Caleb James DeLisle <cjd@cjdns.fr>
+>> +
+>> +description:
+>> +  The EcoNet chip-scu block provides a configuration interface for clock,
+>> +  io-muxing and other functionalities used by multiple controllers (e.g. clock,
+>> +  pinctrl, ecc) on EN751221 SoC.
+>> +
+>> +properties:
+>> +  compatible:
+>> +    items:
+>> +      - const: econet,en751221-chip-scu
+>> +      - const: syscon
+> And it does not fit existing syscon bindings file, because ... ?
 
 
-imx6q-pcie 33800000.pcie: dw_pcie_link_set_max_speed: current pci->max_link=
-_speed: 1
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08000010
-imx6q-pcie 33800000.pcie: PCIe Gen.1 x1 link up
-imx6q-pcie 33800000.pcie: PCI host bridge to bus 0000:00
+If you're asking why it needs to be named "econet,en751221-chip-scu" and 
+not just "syscon", it's because the actual clock/scu searches for it by 
+compatible. This is patterned after "airoha,en7581-chip-scu" ( 
+https://lore.kernel.org/20241023-en7581-pinctrl-v9-1-afb0cbcab0ec@kernel.org 
+).
 
-So for any maximum speed above Gen1 it seems that LTSSM is stuck at link
-training.
-Unfortunately only link training and link up bits are defined and RM doesn't
-show anything, so I don't know what the other bits are indicating.
+I could drop this file and use "airoha,en7581-chip-scu" in the DT and 
+clk driver, but I do not think it is identical to the actual EN7581 chip 
+scu.
 
-=46or a Gen2 device the link training succeeds right away.
+I could also drop the file and add "econet,en751221-chip-scu" as a 
+compatible to airoha,en7581-chip-scu.yaml, but that file lives in /arm 
+and this is a MIPS.
 
-imx6q-pcie 33800000.pcie: dw_pcie_link_set_max_speed: current pci->max_link=
-_speed: 2
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
-imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08000010
-imx6q-pcie 33800000.pcie: PCIe Gen.2 x1 link up
-imx6q-pcie 33800000.pcie: PCI host bridge to bus 0000:00
+I chose this route because it seemed least hackish, but I would defer to 
+your judgement on the matter.
 
-Best regards,
-Alexander
-=2D-=20
-TQ-Systems GmbH | M=C3=BChlstra=C3=9Fe 2, Gut Delling | 82229 Seefeld, Germ=
-any
-Amtsgericht M=C3=BCnchen, HRB 105018
-Gesch=C3=A4ftsf=C3=BChrer: Detlef Schneider, R=C3=BCdiger Stahl, Stefan Sch=
-neider
-http://www.tq-group.com/
+>> +
+>> +  reg:
+>> +    maxItems: 1
+>> +
+>> +required:
+>> +  - compatible
+>> +  - reg
+>> +
+>> +additionalProperties: false
+>> +
+>> +examples:
+>> +  - |
+>> +    soc {
+>> +      #address-cells = <1>;
+>> +      #size-cells = <1>;
+>> +      syscon@1fa20000 {
+>> +        compatible = "econet,en751221-chip-scu", "syscon";
+>> +        reg = <0x1fa20000 0x388>;
+>> +      };
+>> +    };
+> ...
+>
+>> +
+>> +#define EN751221_MAX_CLKS	6
+> Drop, not a binding.
+OK
+>
+>> +
+>> +#endif /* _DT_BINDINGS_CLOCK_ECONET_EN751221_SCU_H_ */
+>> diff --git a/include/dt-bindings/reset/econet,en751221-scu.h b/include/dt-bindings/reset/econet,en751221-scu.h
+>> new file mode 100644
 
 
+Thank you kindly for the prompt review.
+
+Caleb
+
+
+> Best regards,
+> Krzysztof
+>
+>
