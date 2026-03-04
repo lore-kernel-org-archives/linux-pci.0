@@ -1,48 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f177.google.com (mail-qk1-f177.google.com [209.85.222.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05C0239A05F;
-	Wed,  4 Mar 2026 17:34:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E09B23CD8A3
+	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2026 17:45:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772645656; cv=none; b=Yy80bVntLG5MKWWgsPena6tU4b5yqjmKeGxkV1YK5x6/8w/vhuVMRiKqyZmmgTDV2FJv56d2QqZb7R/l6KBX5fwPbA9AYZBOtFFhxCPn/jUiJk02FlvLq/+QcQtt2aq3PqgekEYmPAwvfuX23/pTY6YyD+CReqiwiyhyaiN+bkE=
+	t=1772646334; cv=none; b=mRIXsL3+qEE+WI6+6Bq1QvLTPmT4l2qhNyYSldd1HN7JTQ6cZfJeKA0CKJNd7intmyr3H1notG1qSVvuFuhazBmNk7kqIAcZ7CaU3QwjtTfF9Y2FGCxc69BY5Ea+I4DvAW1FLlcYsOm0ULsSBzduo6hKABBVtkuVIuHlkjTqdHQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772645656; c=relaxed/simple;
-	bh=/LPKmotmI8lUo2wOICNb9tp9KvlZLh5e3yBDGvs7odI=;
+	s=arc-20240116; t=1772646334; c=relaxed/simple;
+	bh=Z/NZQvcQCIgLMH/ylHiLwhG3hRbIZ3DJdjrycXHaYe8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SMaz631I3Xza+vgfafdJq3+PmuDtoBwrXdmNEqvyj568F6cyFhfIcr0NUx2o/AixJB8RGvaNTqeVBf83pjL69y3+NVwxpjNhqONloTHhfss9HTEhJhdZCuPfpKyyyW4gJiu1v1Gm6g4w7oALUGwQCXjq780viuRNzWEpLtIBdrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W4awxQI6; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=jq8NAHkqNPpsoGEKouP8Yt48gacToYLok+RBYQpos+KLAQhPhpCntE6qNElMSzuxWqcstwCAtEgOr01Oh12kTOPpY8XvsBkrKaxj5zw1G0X+feXT1zLNB2WVKKUkMTcbg9T99VBQaapwUXWKe5nSa+/wkzbbWbwZ0soxVHmp8R0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=Ciuh2OlT; arc=none smtp.client-ip=209.85.222.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W4awxQI6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B094DC4CEF7;
-	Wed,  4 Mar 2026 17:34:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772645655;
-	bh=/LPKmotmI8lUo2wOICNb9tp9KvlZLh5e3yBDGvs7odI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=W4awxQI684hgnexGb8x/nbZK4CZq777X84LG4misRieZ4d417/DBDBb6n5EmrQZ0s
-	 5mEYwK5wW/q/g/in5GgDaIdWq2JJYGWfIko2Z6j+7cFFh48ZYrBgNpt3fPdrWkKgBE
-	 VbzjAuCdkuAWgV0iK+0+zy8Gh8mFZcpyCXozcdtRk7kGsiQXDKAIrFUAXbLYFd3vVZ
-	 nNTjaVFCmo5ERwxoyLcEKHNBHn5vZAqzi4CvYxR5d0Ml0glo3phc3xGHxWfJ9uDgUH
-	 R0aKEg1QJ4fTqZfDD9Y99iWFbA4DD2OrMFkfTwEV2JojfAK5MXxK6G0NYL+LdCVNn/
-	 BJo15HaPyI9jQ==
-Date: Wed, 4 Mar 2026 18:34:09 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Koichiro Den <den@valinux.co.jp>, Bjorn Helgaas <helgaas@kernel.org>,
-	marek.vasut+renesas@gmail.com, yoshihiro.shimoda.uh@renesas.com,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org,
-	bhelgaas@google.com, geert+renesas@glider.be, magnus.damm@gmail.com,
-	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: dwc: rcar-gen4-ep: Mark BAR0 and BAR2 as
- Resizable BARs
-Message-ID: <aahtEe3Klcg4QDyJ@ryzen>
-References: <20260210160315.2272930-1-den@valinux.co.jp>
- <20260302223150.GA4022590@bhelgaas>
- <ns62mpoyrskr5q3uoy7gfjzideede2xqpixsllwhc3ozkz4us3@ltdzzshbgxla>
- <aag0bu6Me7aUNAdK@ryzen>
- <sreho2ezzdlndgzazx5alj3cx2snli4yemtrhiamjmr2v3myj5@yudnnbek4wbq>
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="Ciuh2OlT"
+Received: by mail-qk1-f177.google.com with SMTP id af79cd13be357-8c710439535so465944985a.1
+        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 09:45:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1772646332; x=1773251132; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=nSAtzjXqss+uxlpk1YxZqBQHrNvbCWRFoP2RW9VjGUc=;
+        b=Ciuh2OlT5LbvGe2fLekjmWaFRmLjXcQ8+K3Q2RMQB08V72mMUT0d237S0cMP6/MXfw
+         xOh94/jCUlZlk2z3AQAWmVtiXffk4ko/7txAqj5IN+gGXZlSvQHwcpHwxfY4sFJoIhAr
+         k9CEkvEz/XaO/jKOZ3On01JDbOyBodBB/PafBIsJUHAXpcfODzDv15OBeNLanlFRmJlg
+         DTA3dqlCpMRh1aDznm5plekJncXeDjPx5SzQi9XBjcy++ug5Qv9kMpuW2raKxItuExKP
+         Sygl9M7ucBy54LbxYgn3kddbZhxLymSNrR89fDjKrpBekrPlT79wZ34Wf5QPYwzSK9m0
+         IIJg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772646332; x=1773251132;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=nSAtzjXqss+uxlpk1YxZqBQHrNvbCWRFoP2RW9VjGUc=;
+        b=Pz5f5Ki2vrbSi69XRVMCo78vYxy4wdgfsUm+9s6vdNghCBBUFPi5GoRXMBcA5KnM96
+         PWeDJxNBeOig8geegVXh6JxAGeZqEZ47Vxpn1W+Fi7Kk/U64idY/zBlEqHIw9Sq+yuir
+         2UFk0XSYX2GqtcgwnBMV0+MdsWKNKy5Mq9luSswHzU3sc04rqmOss3v+TSm0Ka1u2+EE
+         PaDa36/lhUPzH4/sDolgUZ6j7tuPcqWOkwkrI4RoUnZ4HAp0ff0RPQs3fWllj5mDRIVc
+         k7RZ6CtFczcdcL1TkawTtEtfRhHLeyTz7EoDq/hdqY4kpgWCYF2fKWXqyjK734YhiKJB
+         rc8w==
+X-Forwarded-Encrypted: i=1; AJvYcCU5C3b9QXo+ZI5Xe9AYxBZZG0LD/6Cl0DSYvuK7ykJh5Hzl1HJ3thAjTUciDYKONovXkTQWrKF7rI4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw48lJgrGlwOdxeaytqU+2fRtm+NnfSavG/G9Xj0n5AeBNk7Oc1
+	8uFf0tBOEeqUciCjmMV4/y/aCEf3AK3l4HfcXEbE3qNys0GuXFtxiTMsQm1o5PKuuMU=
+X-Gm-Gg: ATEYQzz5pWPVeX9tuYbAT7z/xyq3uENmH1oJCoMno2jqUjWTkLmTBIn7eWm7fs+9vwa
+	Eg2uROSJ36aojVysO/AspGYraW6Eef8noWMOfhSBB5nifadhkGe97yMYnJlXZFlsOPSJZxKIlOM
+	zCNsTc55ZXu/wGZCeMs6d/VkH07xnp41GZhdjEVeAhNtrzk7/kEX2glXNa+gxUClwQk2qw6d2XO
+	8fIrsIVtAeeldc7dFZr1r8Ri5HFcBjNwTtN7tmecar1G7kq1albr1LM1SIVrq5x1EdN9v+ofdVG
+	e7Na4cwJUKr8fj+aAdTaE3XWTIToLyo8Lul6KPHS3kQZQK46qffnOgtCrTEMGGHGODHOe2Tkp4j
+	Q1mc0LYJh6bhIVoKoBIXN5WHR0e7xrP/ofKEo4AojYCmBfb041cuvaf0caiLqWBk7sALS+aSge4
+	wJtauie/wqm7lcDiaWOXDSVdSoD9+IypVIh/4QFt1qLc8gJHDzfW5KT8jAqJ/OBQN54wKUsGJLf
+	OP6OSpb
+X-Received: by 2002:a05:620a:4481:b0:8c6:ee09:5eae with SMTP id af79cd13be357-8cd5adb8d1cmr343907185a.0.1772646331749;
+        Wed, 04 Mar 2026 09:45:31 -0800 (PST)
+Received: from ziepe.ca (hlfxns017vw-142-162-112-119.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.112.119])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-89a1fcb781fsm8074876d6.23.2026.03.04.09.45.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Mar 2026 09:45:31 -0800 (PST)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1vxqHq-00000005ET5-2S2S;
+	Wed, 04 Mar 2026 13:45:30 -0400
+Date: Wed, 4 Mar 2026 13:45:30 -0400
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Danilo Krummrich <dakr@kernel.org>, Peter Colberg <pcolberg@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Miguel Ojeda <ojeda@kernel.org>,
+	Alex Gaynor <alex.gaynor@gmail.com>, Gary Guo <gary@garyguo.net>,
+	=?utf-8?B?QmrDtnJu?= Roy Baron <bjorn3_gh@protonmail.com>,
+	Benno Lossin <lossin@kernel.org>,
+	Andreas Hindborg <a.hindborg@kernel.org>,
+	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
+	Abdiel Janulgue <abdiel.janulgue@gmail.com>,
+	Daniel Almeida <daniel.almeida@collabora.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Dave Ertman <david.m.ertman@intel.com>,
+	Ira Weiny <ira.weiny@intel.com>, David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>, Jonathan Corbet <corbet@lwn.net>,
+	Xu Yilun <yilun.xu@intel.com>, Tom Rix <trix@redhat.com>,
+	Moritz Fischer <mdf@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Boqun Feng <boqun@kernel.org>, linux-pci@vger.kernel.org,
+	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	Joel Fernandes <joelagnelf@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>, Zhi Wang <zhiw@nvidia.com>,
+	nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-doc@vger.kernel.org, linux-fpga@vger.kernel.org,
+	driver-core@lists.linux.dev
+Subject: Re: [PATCH v3 00/10] rust: pci: add abstractions for SR-IOV
+ capability
+Message-ID: <20260304174530.GH964116@ziepe.ca>
+References: <20260303-rust-pci-sriov-v3-0-4443c35f0c88@redhat.com>
+ <20260304084750.GW12611@unreal>
+ <20260304141852.GF964116@ziepe.ca>
+ <20260304142600.GB12611@unreal>
+ <DGU347RJX5BV.1CZYELSZ9GS9D@kernel.org>
+ <20260304162711.GI12611@unreal>
+ <20260304164551.GG964116@ziepe.ca>
+ <20260304170249.GJ12611@unreal>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,50 +112,25 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <sreho2ezzdlndgzazx5alj3cx2snli4yemtrhiamjmr2v3myj5@yudnnbek4wbq>
+In-Reply-To: <20260304170249.GJ12611@unreal>
 
-On Wed, Mar 04, 2026 at 08:04:52PM +0530, Manivannan Sadhasivam wrote:
-> > 
-> > So this is not something unique to BAR type/sizing scheme, the same arguments,
-> > for/against, also applies for msi_capable/msix_capable.
-> > 
-> > Manivannan, would it be possible to automatically initialize msi/msix_capable
-> > on Qcom once a reference is provided, or would this be too late?
-> > 
+On Wed, Mar 04, 2026 at 07:02:49PM +0200, Leon Romanovsky wrote:
+> > No, illegal, and it doesn't even work right. When VFIO FLRs the PF it
+> > will blow up the half baked SRIOV and break everything.
 > 
-> Yes, with a valid reference clock, it should be possible to read the
-> capabilities and detect these. But there is no way we can make sure that the
-> reference clock is always be present. Maybe we can do it using a devicetree
-> property that you tried upstreaming some time before:
-> https://lore.kernel.org/linux-pci/20250425092012.95418-2-cassel@kernel.org
+> The FLR can be disabled. For example, PCI_DEV_FLAGS_NO_FLR_RESET flag
+> will do it.
 
-I was thinking something more like, e.g. dw_pcie_ep_init_registers() calling:
-1) A function that hides broken features.
+Well that would break all the security properties of VFIO.
 
-2) A function that allocates and initializes features in epc_features.
-   E.g. msi_capable = true, msix_capable = true, barX = resizable,
-   based on the information it can parse from the capabilities list.
+> > VFIO already has its own sriov_config support, the right flow is to
+> > bind the PF to VFIO and then enable sriov and do your assignments.
+> 
+> VFIO started to support SR-IOV in 137e5531351d ("vfio/pci: Add
+> sriov_configure support"), which was added 8 years after VFIO core was
+> added cba3345cc494 ("vfio: VFIO core").
 
-The allocation done in 2) could be dynamically allocated memory, so the
-information could be kept even if the reference clock is lost at a later
-time.
+Well, time to upgrade, I see no reason to allow Rust drivers to
+further propogate these mistakes.
 
-At least during dw_pcie_ep_init_registers(), I would assume that there is
-a reference clock, even when using Common Clock, e.g. as default on Qcom.
-
-Anyway, while I kind of like this idea, it would be a significant change
-from the current design.
-
-E.g. pci-epf-test makes use of epc_features already in .bind().
-I don't know exactly how e.g. Qcom works, do we know that we will have
-a reference clock in .bind() ?  If I remember correctly, we only know that
-we have a reference clock in .epc_init(). So this change would also need
-to modify all existing EPF drivers to not make use of epc_features in
-.bind(), and only make use of epc_features first after .epc_init().
-
-So it sounds like quite a big change. Probably a design we would want if
-we designed the PCI endpoint framework today, but doubt it will happen now.
-
-
-Kind regards,
-Niklas
+Jason
