@@ -1,158 +1,160 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09E5C3491CD;
-	Wed,  4 Mar 2026 15:38:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35FD934AB19;
+	Wed,  4 Mar 2026 15:54:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772638730; cv=none; b=uoly9NbJLyOqYSIQvzcM32XOYUYSozELRtSo8zQ/boUOfDutbAqUhJKz9sh6u7FbtyoOqhp9JPWpp2tra6dD9CLh5abkzA5ePDy0u3aqv/BJC2o7JGQxm4Qqe+K/UqrYqOr73TfNUJhPGNtNPeaNZd4DukF+IVdfEDcMhMlO/0E=
+	t=1772639685; cv=none; b=a8JMtJFOQFpRVTpodMH8loGa269lupgkxsRi/UIXN4X6m07pMPfVsCVxNJksxOK0t4k1ST/1uDOnQMuuyN+fFpvkHKtyGbLOHsO4Mn7nM6k4JG4PZ5bgdX4TB8/nvA5HSufFUxTkM1aT3Fv6alMdKfPxIoVOvGmAadz0RCwduJ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772638730; c=relaxed/simple;
-	bh=+2y0TVWK+1mxtFkQGBZ5c+xyYFKAYuSiURAJvKFtcJ0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=pyG4u4jkBPsmc8xIB5GWDjMmyLMKjs6Katni+Jfy+ICTs8x0YSXbaVfdVl64tU6ce4psmQ6mmKjjy7p/LFH1waFZZdeWd6xAJf15GoGijlS/rH0yR7OwPF4cdWyL2lvgKHp8D5MLqkAmNmy6H517wxXPhrnZhYVlNyRAi37Bfy0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AZ/M2/nA; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772639685; c=relaxed/simple;
+	bh=QlsJuLHckh6Mhy8Ly+9BkzszlQ9anHptIAU1Q9z4D6Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=JXL+8MNXC2xl1c6mUnvzCA19hPesYJbztmcclbNnmTifdSMg2+9nPufVZPLQxsKpLhs2H9Y4wJvrum2uWLdjxFjyLoA+Lg/eZa/R/Eg91mCc5WOWw6r+u7uoIhdhqs4DqO4OV4sX1pUbhUdFWExchtYRKhQjWPlSvPA/JHQwPsY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MuLV5zDH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AZ/M2/nA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42BAFC4CEF7;
-	Wed,  4 Mar 2026 15:38:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MuLV5zDH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D8A3C4CEF7;
+	Wed,  4 Mar 2026 15:54:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772638729;
-	bh=+2y0TVWK+1mxtFkQGBZ5c+xyYFKAYuSiURAJvKFtcJ0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=AZ/M2/nA/TTlnyPlxoPPO7EVvRaa1LGPJygEkPPlAUFMqNcscOCJQSUTJYlG3BmAy
-	 VJo9Y/U/t4ky/NZ6jkYnBGtmWhCGcUh6NQnnSNmRJYD7+rAdu2wfL+RlyKZQAao1zR
-	 Jj4kUbHgSVFRk0pG9TQrHmIaump8gzcND8PfOO3wwnwrws1OIw9jpCOsc3LHWBHfzF
-	 OJtdm2qWzDZPJRKQ0hsZ5sTbnc3oUlfjuWTazLj1RdCGLP7guzUhZE5PufzyYiNfof
-	 +QK2IlC33id33RDxw7fcuokmmMnQu5uY9L3Ez2fVlgkbgmHPk3UgqnKrJzJhow1Zvg
-	 tqrNGAMRFJIDA==
-Date: Wed, 4 Mar 2026 09:38:47 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: fengchengwen <fengchengwen@huawei.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-acpi@vger.kernel.org, rafael@kernel.org, lenb@kernel.org,
-	wei.huang2@amd.com, Eric.VanTassell@amd.com,
-	jonathan.cameron@huawei.com, wangzhou1@hisilicon.com,
-	wanghuiqiang@huawei.com, liuyonglong@huawei.com,
-	stable@vger.kernel.org, Jeremy Linton <jeremy.linton@arm.com>,
-	Sunil V L <sunilvl@ventanamicro.com>,
-	Sunil V L <sunilvl@oss.qualcomm.com>,
-	Huacai Chen <chenhuacai@loongson.cn>,
-	Liupu Wang <wangliupu@loongson.cn>
-Subject: Re: [PATCH] PCI/TPH: Fix get cpu steer-tag fail on ARM64 platform
-Message-ID: <20260304153847.GA23109@bhelgaas>
+	s=k20201202; t=1772639685;
+	bh=QlsJuLHckh6Mhy8Ly+9BkzszlQ9anHptIAU1Q9z4D6Q=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=MuLV5zDHB7PppDbRrIgiA6DqLtvPrce7Q/kz2ceveoK6H8VNlqrQSnVWx4PUY6x7G
+	 lF8PWqNnLHxmrtCGMH21sU1hTyWTcK1zQEH5n5mbASRAx/bxp+ybDJ28Aggyaql1fk
+	 frx5ib6PuHJ2XXJi+zlH5K7hS5Qcj3Z/DUdYsH2ugYb22BEtUIckOzLLVxvspqhPe5
+	 O0zIaXH4kNcewaC9ZZo+g+IekD3SXC32jFGTi3Rv+iMUZKMGS885FKF/WowxfN4+7k
+	 p0FLMAdibE34WhcmFFwxYrZ5UJvwQppkSNV7DyytsEJkVSGu/KE0PfNw/w95AZRQrr
+	 UDsFgJyGvAKgg==
+Message-ID: <e7f0c171-d5f1-4b3f-9155-a774511451c1@kernel.org>
+Date: Wed, 4 Mar 2026 16:54:31 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ddf4b6db-b0c7-43ca-baad-a9df6acdca2e@huawei.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC v1 08/18] PCI: fu740: Allow asynchronous probing for
+ background link training
+To: Frank Li <Frank.Li@nxp.com>, Vignesh Raghavendra <vigneshr@ti.com>,
+ Siddharth Vadapalli <s-vadapalli@ti.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Minghuan Lian
+ <minghuan.Lian@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
+ Roy Zang <roy.zang@nxp.com>, Yue Wang <yue.wang@Amlogic.com>,
+ Neil Armstrong <neil.armstrong@linaro.org>,
+ Kevin Hilman <khilman@baylibre.com>, Jerome Brunet <jbrunet@baylibre.com>,
+ Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+ Jonathan Chocron <jonnyc@amazon.com>,
+ Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+ Jesper Nilsson <jesper.nilsson@axis.com>, Paul Walmsley <pjw@kernel.org>,
+ Greentime Hu <greentime.hu@sifive.com>,
+ Samuel Holland <samuel.holland@sifive.com>,
+ Chuanhua Lei <lchuanhua@maxlinear.com>,
+ Srikanth Thokala <srikanth.thokala@intel.com>,
+ Xiaowei Song <songxiaowei@hisilicon.com>,
+ Binghui Wang <wangbinghui@hisilicon.com>,
+ Chen Wang <unicorn_wang@outlook.com>, Inochi Amaoto <inochiama@gmail.com>,
+ Thierry Reding <thierry.reding@gmail.com>,
+ Jonathan Hunter <jonathanh@nvidia.com>,
+ Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+ Masami Hiramatsu <mhiramat@kernel.org>,
+ Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>,
+ Niklas Cassel <cassel@kernel.org>, Hans Zhang <18255117159@163.com>,
+ "Jiri Slaby (SUSE)" <jirislaby@kernel.org>, Thomas Gleixner
+ <tglx@kernel.org>, Thippeswamy Havalige <thippeswamy.havalige@amd.com>,
+ Sai Krishna Musham <sai.krishna.musham@amd.com>,
+ Nagarjuna Kristam <nkristam@nvidia.com>, Vidya Sagar <vidyas@nvidia.com>,
+ "open list:PCI DRIVER FOR TI DRA7XX/J721E" <linux-omap@vger.kernel.org>,
+ "open list:PCI DRIVER FOR TI DRA7XX/J721E" <linux-pci@vger.kernel.org>,
+ "moderated list:PCI DRIVER FOR TI DRA7XX/J721E"
+ <linux-arm-kernel@lists.infradead.org>,
+ open list <linux-kernel@vger.kernel.org>,
+ "open list:PCI DRIVER FOR SAMSUNG EXYNOS"
+ <linux-samsung-soc@vger.kernel.org>,
+ "open list:PCI DRIVER FOR FREESCALE LAYERSCAPE"
+ <linuxppc-dev@lists.ozlabs.org>,
+ "open list:PCI DRIVER FOR FREESCALE LAYERSCAPE" <imx@lists.linux.dev>,
+ "open list:PCIE DRIVER FOR AMLOGIC MESON"
+ <linux-amlogic@lists.infradead.org>,
+ "open list:PCIE DRIVER FOR AXIS ARTPEC" <linux-arm-kernel@axis.com>,
+ "open list:SOPHGO DEVICETREES and DRIVERS" <sophgo@lists.linux.dev>,
+ "open list:TEGRA ARCHITECTURE SUPPORT" <linux-tegra@vger.kernel.org>,
+ "open list:SIFIVE DRIVERS:Keyword:fu [57] 40"
+ <linux-riscv@lists.infradead.org>
+Cc: Anand Moon <linux.amoon@gmail.com>
+References: <20260304140329.7089-9-linux.amoon@gmail.com>
+ <20260304145540.3331304-3-Frank.Li@nxp.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <20260304145540.3331304-3-Frank.Li@nxp.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Mar 04, 2026 at 05:28:36PM +0800, fengchengwen wrote:
-> On 3/4/2026 3:02 AM, Bjorn Helgaas wrote:
-> > [+cc Jeremy, Sunil, Huacai, Liupu, authors of get_acpi_id_for_cpu()
-> > for arm64, riscv, loongson]
-> > 
-> > On Tue, Mar 03, 2026 at 08:36:25AM +0800, Chengwen Feng wrote:
-> >> Currently the pcie_tph_get_cpu_st() has a problem on ARM64 platform:
-> >> 1. The pcie_tph_get_cpu_st() function directly uses cpu_uid as the input
-> >>    parameter to call the PCI ACPI DSM method. According to the DSM
-> >>    definition, the input value should be the ACPI Processor UID. For
-> >>    details, please see [1].
-> >>
-> >> 2. In the Broadcom driver implementation [2] (which invoke
-> >>    pcie_tph_get_cpu_st()), cpu_uid is obtained based on
-> >>    cpumask_first(irq->cpu_mask), that is the logical ID of a CPU core,
-> >>    which is generated and managed by the kernel. For example, [0,255]
-> >>    if the system has 256 logical CPU cores.
-> >> 3. Unfortunately, on ARM64 platform, ACPI assigns Processor UID to the
-> >>    core which listed in the MADT table, the Processor UID may not equal
-> >>    the logical ID of a CPU core in the kernel. So the current
-> >>    implementation cannot obtain the cpu's real steer-tag in such case.
-> >> 4. The reason why it can run on the AMD platform is that the mapping
-> >>    between the logical ID and ACPI Processor UID is similar.
-> >>
-> >> This commit fixes it by:
-> >> 1. Introduce config ARCH_HAS_GET_CPU_ACPI_ID_API and its corresponding
-> >>    API acpi_get_cpu_acpi_id() to obtain the ACPI Processor UID of a CPU
-> >>    core. This API invokes get_acpi_id_for_cpu() to obtain the UID on
-> >>    ARM64 platform.
-> >> 2. Because using the logical ID as the ACPI Processor UID directly on
-> >>    X86 platform is not standard. This commit uses cpu_acpi_id() to
-> >>    obtain the UID.
-> >> 3. At the same time, the input parameter cpu_uid of
-> >>    pcie_tph_get_cpu_st() is renamed to cpu for clarity.
-> > 
-> > Thanks for raising this issue!
-> > 
-> > TLP Processing Hints (TPH) and Steering Tags are generic PCIe features
-> > that we should support for both ACPI and non-ACPI systems.
-> > 
-> > The current implementation of pcie_tph_get_cpu_st() only supports
-> > ACPI, and it assumes the cpu_uid parameter is an ACPI CPU UID that can
-> > be passed directly to the _DSM.  But since we want this to be a
-> > generic interface, I think the "cpu" parameter should be the Linux
-> > logical CPU ID, not an ACPI UID, as you point out.
-> ...
+On 04/03/2026 15:55, Frank Li wrote:
+> From: Frank Li (AI-BOT) <frank.li@nxp.com>
+> 
+> Commit message has a typo:
+> 
+>> Fix the identation of the callback functions.
+> 
+> Should be "indentation" (two 'n's).
+> 
+> The code changes look good otherwise. The indentation fix aligns with kernel
+> style (8-char tabs), and adding PROBE_PREFER_ASYNCHRONOUS is a straightforward
+> addition that matches the stated intent.
+> 
+> AI bot review and may be useless.
 
-> >>  int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
-> >> -			unsigned int cpu_uid, u16 *tag)
-> >> +			unsigned int cpu, u16 *tag)
-> >>  {
-> >> -#ifdef CONFIG_ACPI
-> >> +#ifdef CONFIG_ARCH_HAS_GET_CPU_ACPI_ID_API
-> >> +	unsigned int cpu_uid = acpi_get_cpu_acpi_id(cpu);
-> > 
-> > Any required conversion between Linux logical CPU and ACPI CPU UID
-> > should be internal to pcie_tph_get_cpu_st(), as you're doing here.
-> > 
-> > But rather than adding CONFIG_ARCH_HAS_GET_CPU_ACPI_ID_API and the
-> > ifdefs in acpi_get_cpu_acpi_id(), I think there should be a generic
-> > ACPI interface that converts logical CPU ID to ACPI UID, and every
-> > arch supporting ACPI should have to implement it.
-> > 
-> > We already have get_acpi_id_for_cpu(), implemented for arm64, riscv,
-> > and loongarch:
-> > 
-> >   30d87bfacbee ("arm64/acpi: Create arch specific cpu to acpi id helper")
-> >   f99561199470 ("RISC-V: ACPI: Cache and retrieve the RINTC structure")
-> >   f6f0c9a74a48 ("LoongArch: Add SMT (Simultaneous Multi-Threading) support")
-> > 
-> > What if we just implemented it for x86 as well and moved it to
-> > include/linux/acpi.h or similar?
-> 
-> Your idea to unify the ACPI CPU ID function across architectures is
-> great. I noticed that all exported ACPI functions use the `acpi_`
-> prefix, so I think we shouldn’t simply modify x86’s implementation
-> directly – we should also align the naming convention for other
-> platforms.
-> 
-> Since only x86, arm64, risc-v, and loongarch currently support ACPI,
-> how about we remove the new config and instead use this approach:
-> 
-> unsigned int acpi_get_cpu_acpi_id(unsigned int cpu)
-> {
->         if (cpu >= nr_cpu_ids)
->                 return 0;
-> #ifdef CONFIG_X86
->         return cpu_acpi_id(cpu);
-> #elif defined(CONFIG_ARM64) || defined(CONFIG_RISCV) || defined(CONFIG_LOONGARCH)
->         return get_acpi_id_for_cpu(cpu);
-> #endif
-> }
-> 
-> For any new platform that plans to support ACPI in the future, this
-> will trigger a compile error – which is intentional. It will prompt
-> the maintainers of that platform to add their own implementation of
-> either `get_acpi_id_for_cpu` or `cpu_acpi_id` as needed.
+So don't send us useless reviews. Trim your reply list, so only you see
+them.
 
-I agree that an "acpi_" prefix would be appropriate.  I'd suggest
-separate implementations in arch/*/kernel/acpi.c instead of #ifdefs in
-a common version.
-
-Maybe users of cpu_acpi_id() and get_acpi_id_for_cpu() could be
-converted to use the generic interface.
+Best regards,
+Krzysztof
