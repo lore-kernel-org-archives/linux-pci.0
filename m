@@ -1,75 +1,134 @@
-Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50CF53D1CAE;
-	Wed,  4 Mar 2026 18:01:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.240
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC768351C1F;
+	Wed,  4 Mar 2026 18:30:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772647294; cv=none; b=YF0U2ytnfXK0gMEHvib6Q07B1xDGsFbxrUOh7GuykBquJZdAmN+BCJCgZRPZlkgo8fnk0mR7s4iROTD0jyvM8QB9i7WOaz8e4YfKTNd+kfB2D7UKesQMBkRWU8bhl21IBDX8BC8h99zl/uG22QYNyfxBjUPbk99SbTVZuHBXwTA=
+	t=1772649031; cv=none; b=Y/UWwo1BNLEqWiicU2sg6RvDEv9uTnvqlj9Uie8QYs0Oy4mKP++hm6UOUgfhrscdJy4Y49iRGpACNHf2AONBigUOubkNCDY6FVuI/hwPr26DTyn4hEkTQDPS2xpc36C0ldVhmcWTKRcJE7v6HgSfYC7OsF38X63sYYnHL8mGGt8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772647294; c=relaxed/simple;
-	bh=SxnzQBt9Ot6eHMRYQurulLKTi0GMXW/OCWYbnRMqOu4=;
+	s=arc-20240116; t=1772649031; c=relaxed/simple;
+	bh=3A4++snizBAapyNv68E4VeyeJMe0EyUIxq7+6aoLznk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uk1/qcN5d7Ro9fWzIxVTwjpydGta/pcjjUhpSDBcR2JksxNNgAzFr5fl50cRHp2D5pjgcXjrStVPoq3CXvPdwAJRvribT8xl1PsANktuloe99pjRICwpcbpf0Z6+6s6Wb/eJ6EEj/SBpRGIyYA8lVV3Vlm4gJA7EwkPKGBfqkrk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.78.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by bmailout2.hostsharing.net (Postfix) with ESMTPS id 22AD820201B0;
-	Wed, 04 Mar 2026 18:52:19 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 124422CFDA; Wed,  4 Mar 2026 18:52:19 +0100 (CET)
-Date: Wed, 4 Mar 2026 18:52:19 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Rich Hanes <georgebastille@gmail.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, mario.limonciello@amd.com,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] PCI/PM: Don't call pci_pm_power_up_and_verify_state()
- for devices already in D0
-Message-ID: <aahxU99mfH2LZfrZ@wunner.de>
-References: <20260304170324.67076-1-georgebastille@gmail.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=LXRk/VdMZBzOC3D0aoM9OR+eucAZStdiIHNVxy+nHPu8R07lnV4S6A+5Xz9/wGqNZaRc5Nnbct10AibUQmmTvEC/db9pr2on8+2wllNt5Lzf9nyECbYTN3wDKWLrCZbOQPddxxBaKqEeCPUZbA9r7mvzgn4B+0vWbC3dSG4eMoI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fMsxj+87; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fMsxj+87"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CAFFC4CEF7;
+	Wed,  4 Mar 2026 18:30:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772649031;
+	bh=3A4++snizBAapyNv68E4VeyeJMe0EyUIxq7+6aoLznk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=fMsxj+87FNW8R3BcSUdbOojVubkEI7VXqH9UxVPAUOcHueIEQb1GIz8KKHKTqAqVI
+	 ZDRh6/Vy76t5TbW5ooVwhfM0Z1eW1sFBb4/qX60gdJcTJqEeOzxmT+Q5rZF2AOCy8G
+	 SFhg73lSDr9D807CtE3lcQWrkydaLeVwlwOM7w2II9Caujs0XZ48t60V1T5Lqtx7I6
+	 JB7gaZJmOIGcqdGDqBw7Hh5T6/RknLhXcAs+TTtXbXnqK4xKDfYm2dZFlVDn3jdGaf
+	 VT13DGOk6qaZibn5zURj9ob4JTHGwSpmaCf6WHh8IG1eub1Y1luUumT3GWiFSaZcLq
+	 ACufVT2HiwNJw==
+Date: Wed, 4 Mar 2026 20:30:26 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: Danilo Krummrich <dakr@kernel.org>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Peter Colberg <pcolberg@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Miguel Ojeda <ojeda@kernel.org>,
+	Alex Gaynor <alex.gaynor@gmail.com>, Gary Guo <gary@garyguo.net>,
+	=?iso-8859-1?Q?Bj=F6rn?= Roy Baron <bjorn3_gh@protonmail.com>,
+	Benno Lossin <lossin@kernel.org>,
+	Andreas Hindborg <a.hindborg@kernel.org>,
+	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
+	Abdiel Janulgue <abdiel.janulgue@gmail.com>,
+	Daniel Almeida <daniel.almeida@collabora.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Dave Ertman <david.m.ertman@intel.com>,
+	Ira Weiny <ira.weiny@intel.com>, David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>, Jonathan Corbet <corbet@lwn.net>,
+	Xu Yilun <yilun.xu@intel.com>, Tom Rix <trix@redhat.com>,
+	Moritz Fischer <mdf@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Boqun Feng <boqun@kernel.org>, linux-pci@vger.kernel.org,
+	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	Joel Fernandes <joelagnelf@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>, Zhi Wang <zhiw@nvidia.com>,
+	nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-doc@vger.kernel.org, linux-fpga@vger.kernel.org,
+	driver-core@lists.linux.dev
+Subject: Re: [PATCH v3 00/10] rust: pci: add abstractions for SR-IOV
+ capability
+Message-ID: <20260304183026.GK12611@unreal>
+References: <20260303-rust-pci-sriov-v3-0-4443c35f0c88@redhat.com>
+ <20260304084750.GW12611@unreal>
+ <20260304141852.GF964116@ziepe.ca>
+ <20260304142600.GB12611@unreal>
+ <DGU347RJX5BV.1CZYELSZ9GS9D@kernel.org>
+ <20260304162711.GI12611@unreal>
+ <20260304164551.GG964116@ziepe.ca>
+ <20260304170249.GJ12611@unreal>
+ <DGU6RZ7MWNAV.21PQC3NNK05D6@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260304170324.67076-1-georgebastille@gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <DGU6RZ7MWNAV.21PQC3NNK05D6@kernel.org>
 
-On Wed, Mar 04, 2026 at 05:03:24PM +0000, Rich Hanes wrote:
-> Reproduced on a Lenovo ThinkPad with Intel Wireless-AC 7265 (8086:095a)
-> behind PCIe root port 8086:9d10.  The workaround pcie_aspm=off confirms
-> that suppressing L1 PM substate configuration prevents the failure.
+On Wed, Mar 04, 2026 at 06:50:02PM +0100, Danilo Krummrich wrote:
+> On Wed Mar 4, 2026 at 6:02 PM CET, Leon Romanovsky wrote:
+> > On Wed, Mar 04, 2026 at 12:45:51PM -0400, Jason Gunthorpe wrote:
+> >> On Wed, Mar 04, 2026 at 06:27:11PM +0200, Leon Romanovsky wrote:
+> >> > On Wed, Mar 04, 2026 at 03:57:57PM +0100, Danilo Krummrich wrote:
+> >> > > On Wed Mar 4, 2026 at 3:26 PM CET, Leon Romanovsky wrote:
+> >> > > > On Wed, Mar 04, 2026 at 10:18:52AM -0400, Jason Gunthorpe wrote:
+> >> > > >> On Wed, Mar 04, 2026 at 10:47:50AM +0200, Leon Romanovsky wrote:
+> >> > > >> > On Tue, Mar 03, 2026 at 04:15:20PM -0500, Peter Colberg wrote:
+> >> > > >> > > Add Rust abstractions for the Single Root I/O Virtualization (SR-IOV)
+> >> > > >> > > capability of a PCI device. Provide a minimal set of wrappers for the
+> >> > > >> > > SR-IOV C API to enable and disable SR-IOV for a device, and query if
+> >> > > >> > > a PCI device is a Physical Function (PF) or Virtual Function (VF).
+> >> > > >> > 
+> >> > > >> > <...>
+> >> > > >> > 
+> >> > > >> > > For PF drivers written in C, disabling SR-IOV on remove() may be opted
+> >> > > >> > > into by setting the flag managed_sriov in the pci_driver structure. For
+> >> > > >> > > PF drivers written in Rust, disabling SR-IOV on unbind() is mandatory.
+> >> > > >> > 
+> >> > > >> > Why? Could you explain the rationale behind this difference between C and
+> >> > > >> > Rust? Let me remind you that SR‑IOV devices which do not disable VFs do so
+> >> > > >> > for a practical and well‑established reason: maximizing hardware
+> >> > > >> > utilization.
+> >> > > >> 
+> >> > > >> Personally I think drivers doing this are wrong. That such a driver
+> >> > > >> bug was allowed to become UAPI is pretty bad. The rust approach is
+> >> > > >> better.
+> >> > > >
+> >> > > > We already had this discussion. I see this as a perfectly valid
+> >> > > > use-case.
+> >> > > 
+> >> > > Can you remind about a specific use-case for this please? (Ideally, one that
+> >> > > can't be solved otherwise.)
+> >> > 
+> >> > You create X VFs through sriov_configure, unbind PF, bind it to vfio
+> >> > instead and forward (X + 1) functions to different VMs.
+> >> 
+> >> No, illegal, and it doesn't even work right. When VFIO FLRs the PF it
+> >> will blow up the half baked SRIOV and break everything.
+> >
+> > The FLR can be disabled. For example, PCI_DEV_FLAGS_NO_FLR_RESET flag
+> > will do it.
+> 
+> But this is a quirk and not a feature, no? So, we shouldn't use it as a baseline
+> for actual features.
 
-The same issue was observed on a Google Pixelbook Eve:
-https://bugzilla.kernel.org/show_bug.cgi?id=220705
+My point is slightly different. I was trying to explain the rationale for
+preserving VFs after the PF is unbound, a design choice that predates the
+introduction of the VFIO .srio_configure callback.
 
-That laptop also uses an i7265 attached to a Sunrise Point-LP PCH.
-
-The PCH suffers from a hardware erratum, it doesn't reinstate the
-clock quick enough after CLREQ# assertion to stay below the
-spec-prescribed 400 nsec.
-
-Intel's specification update recommends disabling CLKREQ# support
-at the Root Port to work around the issue.  This must be done by
-the BIOS, an operating system patch isn't the right approach.
-
-I've prepared a BIOS change for the coreboot BIOS used on the
-Pixelbook, see the above-linked bugzilla.  It has not been
-upstreamed yet as I'm waiting on the reporter to test it.
-
-If your ThinkPad can be made to boot with coreboot, I can look into
-porting the patch over to your machine.  Please specify the exact
-Thinkpad model you're using.  Otherwise please check whether Lenovo
-has released a BIOS update for your machine.
-
-Thanks,
-
-Lukas
+Thanks
