@@ -1,277 +1,199 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010066.outbound.protection.outlook.com [52.101.193.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA25C3AE189;
-	Wed,  4 Mar 2026 12:21:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772626911; cv=none; b=DclD9GO8mtw3o86eRKo90+LCJDkRIeZ3nzzPLlBc5LzHn3TBF2sqUaHiFDRNDpx5vQXDBdLgkASkrYZt0D3jUb5LKAbpSyzTKaTXxJYo4LchKa+86KbRn2cgCeA1XyOvzUYfZmIorAGu0DazOTq+pdEfOG/1ERf+dcx+mSTsA+Q=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772626911; c=relaxed/simple;
-	bh=VCgfFxUsK7AkkEJWYGENpudb7MX05VzUNGeLrQCz80I=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=f8XZlcMxh8sR/6VcNdKg28Jx2BiZj1ivkOWJ96YEr13zVvN1trio3+jlNnksqYrSkGxxcFWwpliEfDDQMn/xBUNCXXPSebXd9iurAI70nkNu1fLpTh/0JMK/adQk+CtZM2tRNzLu/tRemVOH98hGrt4WfqaxcQJRtTuDMUdfoNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YNwNd4fO; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 597C71509AB;
+	Wed,  4 Mar 2026 12:43:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.66
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772628208; cv=fail; b=Ls5b+Jr/8of8PVjFqQoWUQlp+418Dfve5Jqudgj6kKnYR3ZZsM41fL1eVq8xvofHmxKZ6BWxpGr4VRO4Im9Y/svVySIHhKyWBWwmgdyni1GnSND9fUnhVu5ytT/kUXI37QS8hIAcKj60lu23FzyiLW9dzsXZ2bjaQgpz01gU+F4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772628208; c=relaxed/simple;
+	bh=fjx+7iS7zvciK7ycQfbJwNKwNMKJlPUi6DVmLh17tBI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=kzNcokS8TfWGtbPcO5l5u9Lf930rtZozNijTnnVD6P1J/rMv0dibqb9WciBuZKY+0mILkCC60SmlFtEC49GLyImwBL2LOjKMN6zfADbTb+G5UqKzIF/IfrUGIb217heB4qvWz3z9MHqcsH/OJOJwiiX9YUH2/fqu8TwHWWM/S64=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=djQmuktu; arc=fail smtp.client-ip=52.101.193.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YNwNd4fO"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772626910; x=1804162910;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=VCgfFxUsK7AkkEJWYGENpudb7MX05VzUNGeLrQCz80I=;
-  b=YNwNd4fOF0YPTwUjTYgs/kL8gcbfkbpp2vS10GM9UQ65oOzwF8R66fQp
-   V03yCrthiP/XBUwKsBXSIzcRZWLU/ySCGgyqtINbsDGs2vJMY9BMnjv+8
-   KSrtYRWXLoiYSShwZPEWuuHHi58z1lY/5p6vZ2PhbdId1ofr8ifXpJ2v+
-   Vo1JAbapJkOFipPbJn7S/0F56e0TpA69ZFCHQwz80oppDkumXva4DOjU+
-   cHwRuCwInOmrCV4j1N6BCXqwUz5iV0ZajYiBqKpr1riCgFUutGOOTZp8g
-   AGkIodhv3RG69Adrn2bIyEHxTS8I7Of4UDFREB8GVP6af/k5T0cl6N2MD
-   A==;
-X-CSE-ConnectionGUID: NqUt2FU0Q/29kpyqQk/3nw==
-X-CSE-MsgGUID: HrEgMV/ET4SSKxbG4l+stQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11718"; a="73559019"
-X-IronPort-AV: E=Sophos;i="6.21,323,1763452800"; 
-   d="scan'208";a="73559019"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2026 04:21:49 -0800
-X-CSE-ConnectionGUID: 2kT8oMB+Q7ifyJcY0XTHJw==
-X-CSE-MsgGUID: i2N6ZurZRheyYN4Z+fL2ng==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,323,1763452800"; 
-   d="scan'208";a="217483678"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.223])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2026 04:21:46 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To: Jinhui Guo <guojinhui.liam@bytedance.com>,
-	Keith Busch <kbusch@kernel.org>,
-	"Anthony Pighin (Nokia)" <anthony.pighin@nokia.com>,
-	Alex Williamson <alex@shazbot.org>,
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="djQmuktu"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=HrlBWIbBWhBGel8RsQCYcbQLhBVYCB30xuuR2zYn9mpfU8dkQXotAIoyymUXReXroquKT59E8nfomkWiuGe9QKKTLr0G3ok9Hq0TSSMcXEaDo9/8WxTTCdqwwwEC+HEurJelzMz2uSpGH1Ps3H6Cp714mW9aWotcaPXUDYtpEBwl6Vpm2+YbBYyfDpq8AZN8f5vyN9AXTQTl6ZYeEah7CxDpY4srLlYMBBX4dWOZeXycBqIa/W7M7U9e0eP74vbnAXYFF8uZX4L6L2Rijula4JdRoMZMPSd+PoUcSS7o8m2z0VRStxPOgx6Z367hEIz1FoXgxYn1g1Eb3FQUDj6rYw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=fjx+7iS7zvciK7ycQfbJwNKwNMKJlPUi6DVmLh17tBI=;
+ b=dEdKo+ZRAsWN9RvrkFjBtzanniBUC2YhlO0/M09j8jGI0OzDXOrxhyxLteWwCO+FYZ2QkBK8x+y8wvPWJFW4KEPI6ECEvVs/W6AktXkaU9eVT75iEDNM9cnHr1WuQtWfDShv7mEAaU/15Cqpldc0ln1kJ3Nc22NnQi67uwXyxgOV00uFh8atROyF5a4b6CIuJ8wn8093anNJZJ9a3OwDDpNhFFI86N/yaQJqREkiAvBZ96uUjEciRlFNmSljlJBEypCcRW01CyIcU6xTfNXY4DarfPkGsSsPChLYUiwiTMImZXN16gdTqcj+k+nx46brzWhDuLRDZWuyTMKctAaYSg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=fjx+7iS7zvciK7ycQfbJwNKwNMKJlPUi6DVmLh17tBI=;
+ b=djQmuktuXJ+DCCVIiz2kr8TyHvHREM5hUTUncSQyM2oBCMZMCtBZACVy5vpgkLKSFJ9X6aSBiBN/S/IYlofDXnWEbMZMWFnepzDaHiy5bk1bzfguezvxIYScPswH8nHaal9knmbPKGhQVFNfgHyc7U/SdSooAn2djRwgkHt4s5csmhuXt0k14evlM6gqgvj4b8YOc+zup+eO5Lzcs/2YWpj370zcc/7QoOB7cNsFY04og/hIp/Y7R3B2928pIZwSETpoK3DQy4y4HvIrtiFUClBLBzDwst7wzRpI6DitCLcOWqC6/egoiZgg6DmJtSrC+dyZVbk4o6J5eduGIShrAg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by MN0PR12MB6222.namprd12.prod.outlook.com (2603:10b6:208:3c2::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.22; Wed, 4 Mar
+ 2026 12:43:18 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%5]) with mapi id 15.20.9654.022; Wed, 4 Mar 2026
+ 12:43:18 +0000
+Date: Wed, 4 Mar 2026 08:43:16 -0400
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Alexey Kardashevskiy <aik@amd.com>
+Cc: dan.j.williams@intel.com, Robin Murphy <robin.murphy@arm.com>,
+	x86@kernel.org, linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Sean Christopherson <seanjc@google.com>,
+	Paolo Bonzini <pbonzini@redhat.com>,
+	Andy Lutomirski <luto@kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH v2 1/1] PCI: Consolidate pci_bus/slot_lock/unlock/trylock()
-Date: Wed,  4 Mar 2026 14:21:38 +0200
-Message-Id: <20260304122139.1479-1-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.39.5
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Mike Rapoport <rppt@kernel.org>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Ard Biesheuvel <ardb@kernel.org>,
+	Neeraj Upadhyay <Neeraj.Upadhyay@amd.com>,
+	Ashish Kalra <ashish.kalra@amd.com>,
+	Stefano Garzarella <sgarzare@redhat.com>,
+	Melody Wang <huibo.wang@amd.com>,
+	Seongman Lee <augustus92@kaist.ac.kr>,
+	Joerg Roedel <joerg.roedel@amd.com>,
+	Nikunj A Dadhania <nikunj@amd.com>,
+	Michael Roth <michael.roth@amd.com>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Andi Kleen <ak@linux.intel.com>,
+	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	David Woodhouse <dwmw@amazon.co.uk>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Denis Efremov <efremov@linux.com>,
+	Geliang Tang <geliang@kernel.org>,
+	Piotr Gregor <piotrgregor@rsyncme.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Alex Williamson <alex@shazbot.org>, Arnd Bergmann <arnd@arndb.de>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Jacob Pan <jacob.jun.pan@linux.intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kevin Brodsky <kevin.brodsky@arm.com>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	"Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+	Xu Yilun <yilun.xu@linux.intel.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Kim Phillips <kim.phillips@amd.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Claire Chang <tientzu@chromium.org>, linux-coco@lists.linux.dev,
+	iommu@lists.linux.dev
+Subject: Re: [PATCH kernel 4/9] dma/swiotlb: Stop forcing SWIOTLB for TDISP
+ devices
+Message-ID: <20260304124316.GL972761@nvidia.com>
+References: <20260225053806.3311234-1-aik@amd.com>
+ <20260225053806.3311234-5-aik@amd.com>
+ <699f238873ae7_1cc5100b6@dwillia2-mobl4.notmuch>
+ <04b06a53-769c-44f1-a157-34591b9f8439@arm.com>
+ <699f621daab02_2f4a1008f@dwillia2-mobl4.notmuch>
+ <20260228002808.GO44359@ziepe.ca>
+ <69a622e92cccf_6423c10092@dwillia2-mobl4.notmuch>
+ <20260303001911.GA964116@ziepe.ca>
+ <20260303124306.GA1002356@nvidia.com>
+ <5d669086-a5c8-4e55-8108-a9fff41cf094@amd.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5d669086-a5c8-4e55-8108-a9fff41cf094@amd.com>
+X-ClientProxiedBy: BL1PR13CA0348.namprd13.prod.outlook.com
+ (2603:10b6:208:2c6::23) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|MN0PR12MB6222:EE_
+X-MS-Office365-Filtering-Correlation-Id: 69756e54-921a-4523-2c7b-08de79eb9c2f
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014|7416014;
+X-Microsoft-Antispam-Message-Info:
+	DNaoNkkE5qm6r05ZF9rG+/KqKa90eS1YOjer6N99tIqSZs2jowVI0M5kQjm/pGWist9X9VnHM0ZIo3CnbA25lKmoKP5v6yRDgWLeJJl0kCuyGYRnX6MFVf0Yo0l6oXJrLaAcSDRCkKoTm5AtO+lsOC1mSDEK+ubinPjqc4KEKOaKRSTTe9jNWd71f4Ye8N24/bFXDDfJLo5ndPAKmGy3C1iS1Fc97bNKaT5WEC4MezliwiGBiwYyidKnwxx4q/XoqQVekIUSeavpWhp1YuMRTXJ6Dm3a7Ncuv32eu3ievzJUBVKLPJWLNrlR1u+E6Rborq/Jd9RoW5BHeOfdMQCqr+jKuyCsij1UI2Qj8J6qTcYJ70YTGtzOf5Z+TS77xabnoHTZ9cUtcLSSSW1dr44b2Mst9VyBcBq8iX9/vWU1Rwr4LfYbVr7JLDTDhwUPiQi5hWFTHQVhlqSaGoWAZwNyoP0GsMnWXtnf96wpvveUS05w1FgWTOLdDBgVrpDGjV0HDfW8cH8RU33lm7tCFlK3LSuoJZonfeLxoVqFZYAlYZJYQYXZFiK0KJf2jgytn/L2exWVl0fPGOR9taBeURr/G+4WTPM5u0sKftfGvCsJon3oxpJPENuBKMyCp5pffLDLD6aS7NvI2Hhp+Qs9UWPwdzqyN9OjOVONbg0gYcYpiNmIgzxsHwgFk/pEuOEkP6hFS2C0VOmpDKKxYWEjWFhnM/mVFe72j5L1j/ixCzqB+ew=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?gcftIQnGC1Qk7HSfMuJaPdpl/vPhK110unKsXA6fxh1/Nn6nL2drXEl05Zfi?=
+ =?us-ascii?Q?v+TdSGSUgZOXkcxG4As5oPHpCrxrXnqh6Xyb93xhNLf1N//oiAXx0kYxXoUZ?=
+ =?us-ascii?Q?Ch4bvijvSJniXyj2o3XR4j4X55IaY09ZnabrowGWphlW7VYP51wE0zp6DH0G?=
+ =?us-ascii?Q?BqOh8k1tMP3eWr5VYzXU5RS4Y91l+7OtIpOJfwdVFyixLusamsdLYMm/0qGm?=
+ =?us-ascii?Q?4RRlilxUIaSyeTSQ3t+syMP/Ow23iLM+D5E6MsdLUoFLAD4veJO+BIXtec3T?=
+ =?us-ascii?Q?NZ23YGkr0eyyXE37S3OM4RuQQ94vB7tYPu9ALtnM/4x7K2rTF6Brak6ihOap?=
+ =?us-ascii?Q?QOJATM/Zh1GYyqwSedBp1xwdB85OmeGwtxqLTKniZIi8A/pC5qsdwCSSq4JW?=
+ =?us-ascii?Q?FkoDDAs00C75rMWGmZNbhGC/Y2fLRFdtUxYcOGQg3U4rn9erfarh4EnjgNZc?=
+ =?us-ascii?Q?xRIgzCmQnE6DbcPuAKB9RNlNHu6n1rts98yktjKBc1AcKHn0YkeknbQe0t+n?=
+ =?us-ascii?Q?vgngXoCBEo6unyHHOcn2VqbbCWBRkWkjGPfNiGP4+hs5zFL61dDIYdNin431?=
+ =?us-ascii?Q?0bdokx6t8pFaP0dsmoT1BcFYTMkjQATzvab2nOlzRkq/OVrX59SyJHsY8KRW?=
+ =?us-ascii?Q?V4/qjLhf5kSpK8XSlPaYsvJPeseFFGqSUrLznRqa8j/7GCkmscJ6t2ETwtod?=
+ =?us-ascii?Q?9iSTqG1zssjXTOwp3iZ7bXsIj5UQeu6wtHh5tJ9oIDUiZ6AXlLU/GPsCOrMX?=
+ =?us-ascii?Q?5U+kPrjUWhgNsOLBSzQS+FETkAPCXvxHS4ZEqe4rFKd3vBBk3B0kSoWllFXr?=
+ =?us-ascii?Q?vp4MJhoGHfd3dkmbvbuRka9rPq652to731rkshxUP+c3hostTlWIMIhOAPp6?=
+ =?us-ascii?Q?Bl/jTg2sSDh6hgeg1DOhBc7vKYNUXVLzMIs3m3utpn9X7RRJk8GCkdLNCovO?=
+ =?us-ascii?Q?FztKIcGXVgHrtaaKoR2cw82Wr8BgLgmvtvKyjOffFbotuFtU9W8aRZk1TO0X?=
+ =?us-ascii?Q?eZ4LATBFjqy/2yRL6Uj5MBpLWzDDtV1rRfbrQdnxPUYxUPWLVPu8HTyW5inj?=
+ =?us-ascii?Q?wVMuT3ANEKY9RtPKGlHXZmB4Dn//tV2+G2uMbJG1FpV34dL0fqdLqV+gNmRR?=
+ =?us-ascii?Q?+CehZ4iaQJKgfzQrROLoI6RI/gf/hekrIYfmEf/hPUULwzp9S6i/N1lYEXmN?=
+ =?us-ascii?Q?WDwYiVpHeBRbAJUWUKS0avhJpdOEw+g18gziYczdys/pnc/HfL69CFQnYYs0?=
+ =?us-ascii?Q?rI3U/RvTv0rhpiEunGbHtnlmcCOfHfanz0HOQ6YUmeddKb2PgFhNZiQTQxom?=
+ =?us-ascii?Q?ZefbEHNIy6ZqvH035WlHrI8S8zMZJ7CGxhVhInKBmUFuvcyDXUkRYxjurYTU?=
+ =?us-ascii?Q?vA1+byQqD7+GyEFL2dMXjoJW8OaKF43uHDGAaIzekbNMtgPFWX0DQwPXEh3o?=
+ =?us-ascii?Q?HQOPe3fBzvNDoG4c4mVIhwwtF/IzJko+IbLFNKOlZDdcVjXliwm4ySJW/T7a?=
+ =?us-ascii?Q?aLlJDVNno3eHJ2Y0RMxi0KOnFxfEkH7gJKL5oaC0AiM6Oksju66twuG0aRHy?=
+ =?us-ascii?Q?uWOtQQMhhgzzJHvTFLlq01/uWv05LPuaAqDB2rfpd1JJKCPg1AxeKrwDXB/G?=
+ =?us-ascii?Q?Wo6Zm44b53/Spnh00YXPKgWYXfQL6xxSF6lebH0E0fzqRd8DDEtMR7MzmLFk?=
+ =?us-ascii?Q?CpysKHO+tn1BvIcKJfSJ93UhL8I5A7smBNQL/Gvw1yDSOPB102mbu3Nwldqa?=
+ =?us-ascii?Q?jRl7QJ5OGA=3D=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 69756e54-921a-4523-2c7b-08de79eb9c2f
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Mar 2026 12:43:18.0796
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: EloZd/bHkCes+B0M546kdDs1Hrzk83EaIsudh2vrXR10lSBADR25ADOjQ+ct4WJy
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN0PR12MB6222
 
-pci_bus/slot_lock/unlock/trylock() largely duplicate the bus iteration
-loop with variation only due to slot filter handling. The only
-differences in the loops is where the struct bus is found (directly in
-the argument vs in slot->bus) and whether slot filter is applied. Those
-difference are simple to handle using function parameters.
+On Wed, Mar 04, 2026 at 05:45:31PM +1100, Alexey Kardashevskiy wrote:
 
-Consolidate the bus iteration loop to one place by creating
-__pci_bus_{lock,unlock,trylock}() and call them from the non-underscore
-locking functions.
+> > I suspect AMD needs to use their vTOM feature to allow shared memory
+> > to remain available to TDISP RUN with a high/low address split.
+>
+> I could probably do something about it bit I wonder what is the real
+> live use case which requires leaking SME mask, have a live example
+> which I could try recreating?
 
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
----
+We need shared memory allocated through a DMABUF heap:
 
-v2:
-- Rebased
-- Fixed rollback path dereferencing slot->bus (changed to use the bus
-  parameter directly as slot can be NULL)
+https://lore.kernel.org/all/20260223095136.225277-1-jiri@resnulli.us/
 
- drivers/pci/pci.c | 115 ++++++++++++++++++++--------------------------
- 1 file changed, 49 insertions(+), 66 deletions(-)
+To work with all PCI devices in the system, TDISP or not.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 8479c2e1f74f..c248224e0861 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5292,13 +5292,21 @@ static bool pci_bus_resettable(struct pci_bus *bus)
- 	return true;
- }
- 
-+static void pci_bus_lock(struct pci_bus *bus);
-+static void pci_bus_unlock(struct pci_bus *bus);
-+static int pci_bus_trylock(struct pci_bus *bus);
-+
- /* Lock devices from the top of the tree down */
--static void pci_bus_lock(struct pci_bus *bus)
-+static void __pci_bus_lock(struct pci_bus *bus, struct pci_slot *slot)
- {
--	struct pci_dev *dev;
-+	struct pci_dev *dev, *bridge = bus->self;
-+
-+	if (bridge)
-+		pci_dev_lock(bridge);
- 
--	pci_dev_lock(bus->self);
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		if (slot && (!dev->slot || dev->slot != slot))
-+			continue;
- 		if (dev->subordinate)
- 			pci_bus_lock(dev->subordinate);
- 		else
-@@ -5307,28 +5315,34 @@ static void pci_bus_lock(struct pci_bus *bus)
- }
- 
- /* Unlock devices from the bottom of the tree up */
--static void pci_bus_unlock(struct pci_bus *bus)
-+static void __pci_bus_unlock(struct pci_bus *bus, struct pci_slot *slot)
- {
--	struct pci_dev *dev;
-+	struct pci_dev *dev, *bridge = bus->self;
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		if (slot && (!dev->slot || dev->slot != slot))
-+			continue;
- 		if (dev->subordinate)
- 			pci_bus_unlock(dev->subordinate);
- 		else
- 			pci_dev_unlock(dev);
- 	}
--	pci_dev_unlock(bus->self);
-+
-+	if (bridge)
-+		pci_dev_unlock(bridge);
- }
- 
- /* Return 1 on successful lock, 0 on contention */
--static int pci_bus_trylock(struct pci_bus *bus)
-+static int __pci_bus_trylock(struct pci_bus *bus, struct pci_slot *slot)
- {
--	struct pci_dev *dev;
-+	struct pci_dev *dev, *bridge = bus->self;
- 
--	if (!pci_dev_trylock(bus->self))
-+	if (bridge && !pci_dev_trylock(bridge))
- 		return 0;
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		if (slot && (!dev->slot || dev->slot != slot))
-+			continue;
- 		if (dev->subordinate) {
- 			if (!pci_bus_trylock(dev->subordinate))
- 				goto unlock;
-@@ -5339,15 +5353,37 @@ static int pci_bus_trylock(struct pci_bus *bus)
- 
- unlock:
- 	list_for_each_entry_continue_reverse(dev, &bus->devices, bus_list) {
-+		if (slot && (!dev->slot || dev->slot != slot))
-+			continue;
- 		if (dev->subordinate)
- 			pci_bus_unlock(dev->subordinate);
- 		else
- 			pci_dev_unlock(dev);
- 	}
--	pci_dev_unlock(bus->self);
-+
-+	if (bridge)
-+		pci_dev_unlock(bridge);
- 	return 0;
- }
- 
-+/* Lock devices from the top of the tree down */
-+static void pci_bus_lock(struct pci_bus *bus)
-+{
-+	__pci_bus_lock(bus, NULL);
-+}
-+
-+/* Unlock devices from the bottom of the tree up */
-+static void pci_bus_unlock(struct pci_bus *bus)
-+{
-+	__pci_bus_unlock(bus, NULL);
-+}
-+
-+/* Return 1 on successful lock, 0 on contention */
-+static int pci_bus_trylock(struct pci_bus *bus)
-+{
-+	return __pci_bus_trylock(bus, NULL);
-+}
-+
- /* Do any devices on or below this slot prevent a bus reset? */
- static bool pci_slot_resettable(struct pci_slot *slot)
- {
-@@ -5370,72 +5406,19 @@ static bool pci_slot_resettable(struct pci_slot *slot)
- /* Lock devices from the top of the tree down */
- static void pci_slot_lock(struct pci_slot *slot)
- {
--	struct pci_dev *dev, *bridge = slot->bus->self;
--
--	if (bridge)
--		pci_dev_lock(bridge);
--
--	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
--		if (!dev->slot || dev->slot != slot)
--			continue;
--		if (dev->subordinate)
--			pci_bus_lock(dev->subordinate);
--		else
--			pci_dev_lock(dev);
--	}
-+	__pci_bus_lock(slot->bus, slot);
- }
- 
- /* Unlock devices from the bottom of the tree up */
- static void pci_slot_unlock(struct pci_slot *slot)
- {
--	struct pci_dev *dev, *bridge = slot->bus->self;
--
--	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
--		if (!dev->slot || dev->slot != slot)
--			continue;
--		if (dev->subordinate)
--			pci_bus_unlock(dev->subordinate);
--		else
--			pci_dev_unlock(dev);
--	}
--
--	if (bridge)
--		pci_dev_unlock(bridge);
-+	__pci_bus_unlock(slot->bus, slot);
- }
- 
- /* Return 1 on successful lock, 0 on contention */
- static int pci_slot_trylock(struct pci_slot *slot)
- {
--	struct pci_dev *dev, *bridge = slot->bus->self;
--
--	if (bridge && !pci_dev_trylock(bridge))
--		return 0;
--
--	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
--		if (!dev->slot || dev->slot != slot)
--			continue;
--		if (dev->subordinate) {
--			if (!pci_bus_trylock(dev->subordinate))
--				goto unlock;
--		} else if (!pci_dev_trylock(dev))
--			goto unlock;
--	}
--	return 1;
--
--unlock:
--	list_for_each_entry_continue_reverse(dev,
--					     &slot->bus->devices, bus_list) {
--		if (!dev->slot || dev->slot != slot)
--			continue;
--		if (dev->subordinate)
--			pci_bus_unlock(dev->subordinate);
--		else
--			pci_dev_unlock(dev);
--	}
--
--	if (bridge)
--		pci_dev_unlock(bridge);
--	return 0;
-+	return __pci_bus_trylock(slot->bus, slot);
- }
- 
- /*
+Without this the ability for a TDISP device to ingest (encrypted) data
+requires all kinds of memcpy..
 
-base-commit: 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f
--- 
-2.39.5
+So the DMA API should see the DMA_ATTR_CC_DECRYPTED and setup the
+correct dma_dddr_t either by choosing the shared alias for the TDISP
+device's vTOM, or setting the C bit in a vIOMMU S1.
 
+Jason
