@@ -1,189 +1,231 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C66381946DA
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2026 21:18:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E601C38911B;
+	Wed,  4 Mar 2026 22:24:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772659129; cv=none; b=bkaOZYaAKy10EMLo4UisvpZ0DRowqomxXdU51UQTd46b+DPoXyClVRtT4E5xfsSlAQGh/cIkeUkN7kHIvpZo3E9iv0jRwtOFrldM9My6HBy1nKDIy/AgwycFWuydwAUM2M2wtVE7HVbXfRTmbNFdnAxCHk6dFP+qf0rdDwDBOnM=
+	t=1772663050; cv=none; b=rUgGkZxBUuDbYB6P1kMQ+QI5QLNLxdcxMPqCCKhL1O+CFjnGDM9NODV0ZliLHFXA53g16ZeRChHTKm9HPIWissYrd9O0Is0W8DQ+lmX7axw1QtVFw4j1ed3UX2XsG6wPtxKGb1ut6AMEAhTT3HGji1FqUY25Q5mk5lPojpOAwsM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772659129; c=relaxed/simple;
-	bh=BWpyPY8xNNR1DebVzk79xtMYqs7eXVmirltGPb7Lq3E=;
+	s=arc-20240116; t=1772663050; c=relaxed/simple;
+	bh=LZ6aRV4NLElGe+XvDNm2H6HYU4en15K91g1Y0+5t5ls=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=uBv5mTXve/00rcGby+tEvJJn/2MSjN2yk+avYsItSHyBdF6eiwvafRiX5XdikDyRIevCmTw8q9vo//DxeLMB1kCiVFGQ3pu68FLEN99GQUSjylBTFy+6F3r3Oht3+/mmUQibO7W6DZM7xUxJ3bWcOPWJsd/eOe/Lmy12hkYUGTE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mjMADfqM; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=qtZjAM6ICjfGcOkdT4r76joAOupI30P0bL8qQYnaHNMEsZy+YihIex4nW49bjBD27r/fimB9o9DhMX8V2kwbefoPWEgRA8zNTraQsnXfV1JIcE0brecmV8bPr5upJbJmbia/crJvJr15WvOZNtaeXFunFiuG2Kv5Pqm9pbyGW+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JT8h8wa9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mjMADfqM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39BB4C4CEF7;
-	Wed,  4 Mar 2026 21:18:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JT8h8wa9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78788C4CEF7;
+	Wed,  4 Mar 2026 22:24:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772659129;
-	bh=BWpyPY8xNNR1DebVzk79xtMYqs7eXVmirltGPb7Lq3E=;
+	s=k20201202; t=1772663049;
+	bh=LZ6aRV4NLElGe+XvDNm2H6HYU4en15K91g1Y0+5t5ls=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=mjMADfqM6tp1mG1yFtXEy/Hu+jnjndJtbeXsESk8Xiza+MNL0Cn4eDNeVNWTWpL5H
-	 +1eW+1QYDoW/xvmYyKnexyrh/FWCWyqTvjfWD4H5/g2W0LSiZdI2rBCnmpD/e39ehn
-	 4bo55iRirvyQUF5gVSEdjk2G2odlZ2GtW5N4K1BYH/GmHbVWEFv5yAS6xAvt25RBgn
-	 Klb7dANUf1a80qoUBE3zhp3071s+ATBHzW5F9V4Z5KZCswnDSiAASY7EeJMQxXdMkX
-	 2i6JiXEY46z69p82x8cbb4PUS6a41Qh/PYuQewUI6v1uBPuK+sccPAjC+fviZHDCrk
-	 am7ixIM6pdlnA==
-Date: Wed, 4 Mar 2026 15:18:47 -0600
+	b=JT8h8wa9YGAM78bb/3oWwxOczIdTWP1RLevWv9SASlMV3F23HjV3aS0cAufk5oNIv
+	 Zbq+dj2V5Q1lrbLpdEf4tkfURlQheh0zpocuRg02jBYOuKwCUWiLX08zynlr3zyeeI
+	 6w6Tf3erGb8F5L7qg0ORfQYnKFUxrQFLM83fJWOTVoAGPovAII829usbx5s2g7ZftI
+	 8F0q5T73eVmTAvQiaF4BLlcaiBz/Wo2J+jlfrwYZ9ZRmUbse8mrHowz62l44VtX+79
+	 VS3gNkNik1DtEJIOtsvBEoQRsmWSal1XE2ICQqhs17+ZVBYOWkmudGUSL2q9myTyT4
+	 S8ZfZ2xwzNClw==
+Date: Wed, 4 Mar 2026 16:24:08 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yunsheng Lin <linyunsheng@huawei.com>
-Cc: Paul Menzel <pmenzel@molgen.mpg.de>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: Linux warns `Unknown NUMA node; performance will be reduced`
-Message-ID: <20260304211847.GA36447@bhelgaas>
+To: Vladimir Oltean <vladimir.oltean@nxp.com>
+Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
+	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+	linux-can@vger.kernel.org, linux-gpio@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org, linux-riscv@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, linux-sunxi@lists.linux.dev,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	netdev@vger.kernel.org, spacemit@lists.linux.dev,
+	UNGLinuxDriver@microchip.com,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>, Shawn Guo <shawn.guo@linaro.org>,
+	Yixun Lan <dlan@kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Kevin Xie <kevin.xie@starfivetech.com>
+Subject: Re: [PATCH phy-next 02/22] PCI: add missing headers transitively
+ included by <linux/phy/phy.h>
+Message-ID: <20260304222408.GA40990@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <b35698a4-4ac0-4db4-86a0-db794047e7c4@huawei.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260304175735.2660419-3-vladimir.oltean@nxp.com>
 
-On Wed, Mar 04, 2026 at 09:34:48AM +0800, Yunsheng Lin wrote:
-> On 2026/3/4 5:55, Bjorn Helgaas wrote:
-> > [+cc Yunsheng, author of ad5086108b9f,
-> > +bcc commenters on https://bugzilla.kernel.org/show_bug.cgi?id=218951,
-> > see the email thread at
-> > https://lore.kernel.org/all/a154f694-c48b-4b3b-809f-4b74ec86a924@molgen.mpg.de]
-> > 
-> > On Sun, Jun 09, 2024 at 10:31:05AM +0200, Paul Menzel wrote:
-> >> Dear Linux folks,
-> >>
-> >> On the servers below Linux warns:
-> >>
-> >>      Unknown NUMA node; performance will be reduced
-> >>
-> >> 1.  [    0.000000] DMI: Dell Inc. PowerEdge R730/0H21J3, BIOS 2.13.0
-> >> 05/14/2021
-> >> 2.  [    0.000000] DMI: Dell Inc. PowerEdge R730/0H21J3, BIOS 2.2.5
-> >> 09/06/2016
-> >> 3.  [    0.000000] DMI: Dell Inc. PowerEdge R730xd/0WCJNT, BIOS 2.3.4
-> >> 11/08/2016
-> >> 4.  [    0.000000] DMI: Dell Inc. PowerEdge R910/0KYD3D, BIOS 2.10.0
-> >> 08/29/2013
-> >> 5.  [    0.000000] DMI: Dell Inc. PowerEdge R930/0T55KM, BIOS 2.8.1
-> >> 01/02/2020
-> >> 6.  [    0.000000] DMI: Dell Inc. PowerEdge T630/0NT78X, BIOS 2.5.4
-> >> 08/17/2017
-> >> 7.  [    0.000000] DMI: Dell Inc. PowerEdge T630/0W9WXC, BIOS 1.5.4
-> >> 10/04/2015
-> >> 8.  [    0.000000] DMI: Dell Inc. PowerEdge T630/0W9WXC, BIOS 2.11.0
-> >> 12/23/2019
-> >> 9.  [    0.000000] DMI: Dell Inc. PowerEdge T630/0W9WXC, BIOS 2.1.5
-> >> 04/13/2016
-> >> 10. [    0.000000] DMI: Supermicro Super Server/X13SAE, BIOS 2.0 10/17/2022
-> > 
-> > Similar reports in the bugzilla for:
-> > 
-> >   Host: VMware VM Ubuntu 24.04.1
-> >   CPU: Intel(R) Xeon(R) Silver 4310 CPU @ 2.10GHz
-> >   Kernel: 6.11.0-rc6
-> > 
-> > and 
-> > 
-> >   Lenovo P700 workstation
-> >   6.19.5 kernel
-> > 
-> > ad5086108b9f ("PCI: Warn if no host bridge NUMA node info") added this
-> > "Unknown NUMA node; performance will be reduced" warning.
-> > 
-> > The problem is that firmware didn't tell us anything about which CPUs
-> > are closest to this PCI host bridge, so we can't try to optimize by
-> > running the driver on a CPU that's close to the device.
-> > 
-> > The kernel can't figure out this locality information itself, so
-> > there's nothing we can really do in the kernel, and there's nothing
-> > users can do either other than check for BIOS updates.
-> > 
-> > What if we just downgraded the message to "info"?  And/or we could
-> > reword this to be less alarming.
+Update subject line to match history:
+
+  PCI: Add missing headers transitively included by <linux/phy/phy.h>
+
+On Wed, Mar 04, 2026 at 07:57:15PM +0200, Vladimir Oltean wrote:
+> The tegra as well as a few dwc PCI controller drivers uses PM runtime
+> operations without including the required <linux/pm_runtime.h> header.
 > 
-> If I recalled it correctly, the purpose of the above warning is about
-> having some kind of pressure for vendor to update the BIOS and fix
-> that, perhaps the warning can be reworded to something like below
-> so that users can know where they get the help to fix that?
+> Similarly, pcie-rockchip-host, pcie-starfive as well as a few dwc PCI
+> controllers use the regulator consumer API without including
+> <linux/regulator/consumer.h>.
 > 
-> "Unknown NUMA node; performance will be reduced, please check it with
-> the BIOS vendor."
+> It seems these function prototypes were indirectly provided by
+> <linux/phy/phy.h>, mostly by mistake (none of the functions it exports
+> need it).
+> 
+> Before the PHY header can drop the unnecessary includes, make sure the
+> PCI controller drivers include what they use.
+> 
+> Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
 
-Right.  I'm just not sure that kind of pressure on vendors is
-effective, and I'm tired of fielding reports of things we can't fix
-and likely aren't even problems at all.
+With the subject line update:
 
-In Paul's Dell T630 case, where we have the dmesg in email and the
-acpidump in https://bugzilla.kernel.org/show_bug.cgi?id=218951, there
-are four host bridges and two supply _PXM and two don't:
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-  ACPI: PCI Root Bridge [UNC1] (domain 0000 [bus ff])
-  pci_bus 0000:ff: Unknown NUMA node; performance will be reduced
-  ACPI: PCI Root Bridge [UNC0] (domain 0000 [bus 7f])
-  pci_bus 0000:7f: Unknown NUMA node; performance will be reduced
-  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-7e])
-  ACPI: PCI Root Bridge [PCI1] (domain 0000 [bus 80-fe])
-
-I decoded the acpidump Paul attached; it has _PXM for PCI0 and PCI1.
-UNC0 and UNC1 don't have any I/O or memory windows at all, so they
-look like they're for internal "devices" that only have config space.  
-
-Since Dell *did* supply _PXM for PCI0 and PCI1, my guess is that
-there's no real reason to supply it for UNC0 and UNC1.
-
-I think we should do something like the patch below, so the dmesg
-would look like this instead -- we log the NUMA node when we know it
-and skip it otherwise:
-
-  ACPI: PCI Root Bridge [UNC1] (domain 0000 [bus ff])
-  PCI host bridge to bus 0000:ff
-  ACPI: PCI Root Bridge [UNC0] (domain 0000 [bus 7f])
-  PCI host bridge to bus 0000:7f
-  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-7e])
-  PCI host bridge to bus 0000:00 NUMA node 0
-  ACPI: PCI Root Bridge [PCI1] (domain 0000 [bus 80-fe])
-  PCI host bridge to bus 0000:80 NUMA node 1
-
-Bjorn
-
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index bccc7a4bdd79..e3e81926a6f3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -993,9 +993,9 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
- 	LIST_HEAD(resources);
- 	struct resource *res, *next_res;
- 	bool bus_registered = false;
--	char addr[64], *fmt;
-+	char numa[32], addr[64], *fmt;
- 	const char *name;
--	int err;
-+	int err, node;
- 
- 	bus = pci_alloc_bus(NULL);
- 	if (!bus)
-@@ -1071,13 +1071,17 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
- 	/* Create legacy_io and legacy_mem files for this bus */
- 	pci_create_legacy_files(bus);
- 
-+	numa[0] = '\0';
-+	if (nr_node_ids > 1) {
-+		node = pcibus_to_node(bus);
-+		if (node != NUMA_NO_NODE)
-+			snprintf(numa, sizeof(numa), " on NUMA node %u", node);
-+	}
-+
- 	if (parent)
--		dev_info(parent, "PCI host bridge to bus %s\n", name);
-+		dev_info(parent, "PCI host bridge to bus %s%s\n", name, numa);
- 	else
--		pr_info("PCI host bridge to bus %s\n", name);
--
--	if (nr_node_ids > 1 && pcibus_to_node(bus) == NUMA_NO_NODE)
--		dev_warn(&bus->dev, "Unknown NUMA node; performance will be reduced\n");
-+		pr_info("PCI host bridge to bus %s%s\n", name, numa);
- 
- 	/* Check if the boot configuration by FW needs to be preserved */
- 	bridge->preserve_config = pci_preserve_config(bridge);
+> ---
+> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+> Cc: Manivannan Sadhasivam <mani@kernel.org>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Heiko Stuebner <heiko@sntech.de>
+> Cc: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Yixun Lan <dlan@kernel.org>
+> Cc: Thierry Reding <thierry.reding@gmail.com>
+> Cc: Jonathan Hunter <jonathanh@nvidia.com>
+> Cc: Shawn Lin <shawn.lin@rock-chips.com>
+> Cc: Kevin Xie <kevin.xie@starfivetech.com>
+> ---
+>  drivers/pci/controller/dwc/pci-keystone.c     | 1 +
+>  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 1 +
+>  drivers/pci/controller/dwc/pcie-histb.c       | 1 +
+>  drivers/pci/controller/dwc/pcie-qcom-ep.c     | 1 +
+>  drivers/pci/controller/dwc/pcie-spacemit-k1.c | 2 ++
+>  drivers/pci/controller/dwc/pcie-tegra194.c    | 1 +
+>  drivers/pci/controller/pci-tegra.c            | 1 +
+>  drivers/pci/controller/pcie-rockchip-host.c   | 1 +
+>  drivers/pci/controller/plda/pcie-starfive.c   | 1 +
+>  9 files changed, 10 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+> index 20fa4dadb82a..642e4c45eefc 100644
+> --- a/drivers/pci/controller/dwc/pci-keystone.c
+> +++ b/drivers/pci/controller/dwc/pci-keystone.c
+> @@ -24,6 +24,7 @@
+>  #include <linux/of_pci.h>
+>  #include <linux/phy/phy.h>
+>  #include <linux/platform_device.h>
+> +#include <linux/pm_runtime.h>
+>  #include <linux/regmap.h>
+>  #include <linux/resource.h>
+>  #include <linux/signal.h>
+> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> index 5b17da63151d..e0079ec108ab 100644
+> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> @@ -21,6 +21,7 @@
+>  #include <linux/phy/phy.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/regmap.h>
+> +#include <linux/regulator/consumer.h>
+>  #include <linux/reset.h>
+>  
+>  #include "../../pci.h"
+> diff --git a/drivers/pci/controller/dwc/pcie-histb.c b/drivers/pci/controller/dwc/pcie-histb.c
+> index a52071589377..432a54c5bfce 100644
+> --- a/drivers/pci/controller/dwc/pcie-histb.c
+> +++ b/drivers/pci/controller/dwc/pcie-histb.c
+> @@ -18,6 +18,7 @@
+>  #include <linux/pci.h>
+>  #include <linux/phy/phy.h>
+>  #include <linux/platform_device.h>
+> +#include <linux/regulator/consumer.h>
+>  #include <linux/resource.h>
+>  #include <linux/reset.h>
+>  
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+> index 18460f01b2c6..e417122da51d 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+> @@ -19,6 +19,7 @@
+>  #include <linux/phy/phy.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/pm_domain.h>
+> +#include <linux/pm_runtime.h>
+>  #include <linux/regmap.h>
+>  #include <linux/reset.h>
+>  #include <linux/module.h>
+> diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+> index be20a520255b..dbec159fd458 100644
+> --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+> +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+> @@ -15,7 +15,9 @@
+>  #include <linux/mod_devicetable.h>
+>  #include <linux/phy/phy.h>
+>  #include <linux/platform_device.h>
+> +#include <linux/pm_runtime.h>
+>  #include <linux/regmap.h>
+> +#include <linux/regulator/consumer.h>
+>  #include <linux/reset.h>
+>  #include <linux/types.h>
+>  
+> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+> index 06571d806ab3..3378a89580ab 100644
+> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+> @@ -27,6 +27,7 @@
+>  #include <linux/platform_device.h>
+>  #include <linux/pm_runtime.h>
+>  #include <linux/random.h>
+> +#include <linux/regulator/consumer.h>
+>  #include <linux/reset.h>
+>  #include <linux/resource.h>
+>  #include <linux/types.h>
+> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+> index 512309763d1f..a2c1662b6e81 100644
+> --- a/drivers/pci/controller/pci-tegra.c
+> +++ b/drivers/pci/controller/pci-tegra.c
+> @@ -36,6 +36,7 @@
+>  #include <linux/phy/phy.h>
+>  #include <linux/pinctrl/consumer.h>
+>  #include <linux/platform_device.h>
+> +#include <linux/pm_runtime.h>
+>  #include <linux/reset.h>
+>  #include <linux/sizes.h>
+>  #include <linux/slab.h>
+> diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+> index ee1822ca01db..46adb4582fcc 100644
+> --- a/drivers/pci/controller/pcie-rockchip-host.c
+> +++ b/drivers/pci/controller/pcie-rockchip-host.c
+> @@ -24,6 +24,7 @@
+>  #include <linux/of_pci.h>
+>  #include <linux/phy/phy.h>
+>  #include <linux/platform_device.h>
+> +#include <linux/regulator/consumer.h>
+>  
+>  #include "../pci.h"
+>  #include "pcie-rockchip.h"
+> diff --git a/drivers/pci/controller/plda/pcie-starfive.c b/drivers/pci/controller/plda/pcie-starfive.c
+> index 298036c3e7f9..22344cca167b 100644
+> --- a/drivers/pci/controller/plda/pcie-starfive.c
+> +++ b/drivers/pci/controller/plda/pcie-starfive.c
+> @@ -21,6 +21,7 @@
+>  #include <linux/platform_device.h>
+>  #include <linux/pm_runtime.h>
+>  #include <linux/regmap.h>
+> +#include <linux/regulator/consumer.h>
+>  #include <linux/reset.h>
+>  #include "../../pci.h"
+>  
+> -- 
+> 2.43.0
+> 
