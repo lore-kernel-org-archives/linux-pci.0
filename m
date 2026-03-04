@@ -1,85 +1,60 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 378C9384229
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2026 11:51:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA25C3AE189;
+	Wed,  4 Mar 2026 12:21:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772625075; cv=none; b=ItiKEmB4MCCY0MCA5EMUfN0gU313fp5ZPAZwVklCQnwcnooyaTQsf4Ss34Tpyp6crtjVN1/8jpKQXhI0gPkzSGFcwterfyXYil1PMDg2L9X8WaBWZGD5pB6oopO4TBKh/K64gGr6QPqVvxH+UjeHKFEiaF1sAYEHULoq33ErenE=
+	t=1772626911; cv=none; b=DclD9GO8mtw3o86eRKo90+LCJDkRIeZ3nzzPLlBc5LzHn3TBF2sqUaHiFDRNDpx5vQXDBdLgkASkrYZt0D3jUb5LKAbpSyzTKaTXxJYo4LchKa+86KbRn2cgCeA1XyOvzUYfZmIorAGu0DazOTq+pdEfOG/1ERf+dcx+mSTsA+Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772625075; c=relaxed/simple;
-	bh=SFkQaymkmw7BeebFyk1Xm+ip7ieTvvBZLJrsQwoa9Mk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=lAUQVWdqLsz1KuABfFi6LohRT8lafoTjzjwplGCiUg0ThGURKbQgqjYN6+6xHDOX5noa26PQzeFKql36wlO+40mzm8o19qbp25lch9ILmQG6Z5Qna+obRI1mmjZzdzbNIwzqPD0CkzX3d5l2muOCe59B2SHL8oklpGz2hSLn0ko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Rx9GX3NA; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=5PV4Wu1y; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Rx9GX3NA; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=5PV4Wu1y; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1772626911; c=relaxed/simple;
+	bh=VCgfFxUsK7AkkEJWYGENpudb7MX05VzUNGeLrQCz80I=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=f8XZlcMxh8sR/6VcNdKg28Jx2BiZj1ivkOWJ96YEr13zVvN1trio3+jlNnksqYrSkGxxcFWwpliEfDDQMn/xBUNCXXPSebXd9iurAI70nkNu1fLpTh/0JMK/adQk+CtZM2tRNzLu/tRemVOH98hGrt4WfqaxcQJRtTuDMUdfoNM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YNwNd4fO; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Rx9GX3NA";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="5PV4Wu1y";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Rx9GX3NA";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="5PV4Wu1y"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 8477F5BE08;
-	Wed,  4 Mar 2026 11:51:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1772625072; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=nUoOsqWPWu62lPsUCO91lLwVluM1zFHwhqKul1eNr7Y=;
-	b=Rx9GX3NAzyQiOxIUFbidpVLVb8Ik8o0+MJeX4m0k/94HVfkSSLvdCIsedFXeBFf/ohe+wM
-	Tr/0Z6v6aMwLFrfRpjoO/ySXHNGPC3sYoAC9mNPRySCoZgwgXwdwjrPiSW/WhwfHYBzC8J
-	7ZRZ65NddvlKi2LNFgC3UDRklDeyr6U=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1772625072;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=nUoOsqWPWu62lPsUCO91lLwVluM1zFHwhqKul1eNr7Y=;
-	b=5PV4Wu1yRUfj7CrnPf1gbqEB9+qxHtojCePZftryAf2TNqK+cp10uJB7FMkk9Zf0k/F10b
-	i8CrJ6kjffuImHBw==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1772625072; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=nUoOsqWPWu62lPsUCO91lLwVluM1zFHwhqKul1eNr7Y=;
-	b=Rx9GX3NAzyQiOxIUFbidpVLVb8Ik8o0+MJeX4m0k/94HVfkSSLvdCIsedFXeBFf/ohe+wM
-	Tr/0Z6v6aMwLFrfRpjoO/ySXHNGPC3sYoAC9mNPRySCoZgwgXwdwjrPiSW/WhwfHYBzC8J
-	7ZRZ65NddvlKi2LNFgC3UDRklDeyr6U=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1772625072;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=nUoOsqWPWu62lPsUCO91lLwVluM1zFHwhqKul1eNr7Y=;
-	b=5PV4Wu1yRUfj7CrnPf1gbqEB9+qxHtojCePZftryAf2TNqK+cp10uJB7FMkk9Zf0k/F10b
-	i8CrJ6kjffuImHBw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 16A4D3EA69;
-	Wed,  4 Mar 2026 11:51:12 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id OC9iArAcqGl+ZgAAD6G6ig
-	(envelope-from <clopez@suse.de>); Wed, 04 Mar 2026 11:51:12 +0000
-From: =?UTF-8?q?Carlos=20L=C3=B3pez?= <clopez@suse.de>
-To: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org,
-	=?UTF-8?q?Carlos=20L=C3=B3pez?= <clopez@suse.de>,
-	Andy Whitcroft <apw@canonical.com>,
-	Joe Perches <joe@perches.com>,
-	Dwaipayan Ray <dwaipayanray1@gmail.com>,
-	Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Subject: [PATCH v2] checkpatch: deprecate pcim_iomap_table() and pcim_iomap_regions()
-Date: Wed,  4 Mar 2026 12:50:34 +0100
-Message-ID: <20260304115032.400104-3-clopez@suse.de>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YNwNd4fO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1772626910; x=1804162910;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=VCgfFxUsK7AkkEJWYGENpudb7MX05VzUNGeLrQCz80I=;
+  b=YNwNd4fOF0YPTwUjTYgs/kL8gcbfkbpp2vS10GM9UQ65oOzwF8R66fQp
+   V03yCrthiP/XBUwKsBXSIzcRZWLU/ySCGgyqtINbsDGs2vJMY9BMnjv+8
+   KSrtYRWXLoiYSShwZPEWuuHHi58z1lY/5p6vZ2PhbdId1ofr8ifXpJ2v+
+   Vo1JAbapJkOFipPbJn7S/0F56e0TpA69ZFCHQwz80oppDkumXva4DOjU+
+   cHwRuCwInOmrCV4j1N6BCXqwUz5iV0ZajYiBqKpr1riCgFUutGOOTZp8g
+   AGkIodhv3RG69Adrn2bIyEHxTS8I7Of4UDFREB8GVP6af/k5T0cl6N2MD
+   A==;
+X-CSE-ConnectionGUID: NqUt2FU0Q/29kpyqQk/3nw==
+X-CSE-MsgGUID: HrEgMV/ET4SSKxbG4l+stQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11718"; a="73559019"
+X-IronPort-AV: E=Sophos;i="6.21,323,1763452800"; 
+   d="scan'208";a="73559019"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2026 04:21:49 -0800
+X-CSE-ConnectionGUID: 2kT8oMB+Q7ifyJcY0XTHJw==
+X-CSE-MsgGUID: i2N6ZurZRheyYN4Z+fL2ng==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,323,1763452800"; 
+   d="scan'208";a="217483678"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.223])
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2026 04:21:46 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To: Jinhui Guo <guojinhui.liam@bytedance.com>,
+	Keith Busch <kbusch@kernel.org>,
+	"Anthony Pighin (Nokia)" <anthony.pighin@nokia.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH v2 1/1] PCI: Consolidate pci_bus/slot_lock/unlock/trylock()
+Date: Wed,  4 Mar 2026 14:21:38 +0200
+Message-Id: <20260304122139.1479-1-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -88,59 +63,215 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-1.80 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCVD_TLS_ALL(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	TO_DN_SOME(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[vger.kernel.org,suse.de,canonical.com,perches.com,gmail.com];
-	RCPT_COUNT_SEVEN(0.00)[7];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Flag: NO
-X-Spam-Score: -1.80
-X-Spam-Level: 
 
-pcim_iomap_table() and pcim_iomap_regions() have been deprecated
-since e354bb84a4c1 ("PCI: Deprecate pcim_iomap_table(),
-pcim_iomap_regions_request_all()") and d140f80f6035 ("PCI: Deprecate
-pcim_iomap_regions() in favor of pcim_iomap_region()") respectively.
-Teach checkpatch about these to prevent adding new users of these
-functions.
+pci_bus/slot_lock/unlock/trylock() largely duplicate the bus iteration
+loop with variation only due to slot filter handling. The only
+differences in the loops is where the struct bus is found (directly in
+the argument vs in slot->bus) and whether slot filter is applied. Those
+difference are simple to handle using function parameters.
 
-Signed-off-by: Carlos López <clopez@suse.de>
+Consolidate the bus iteration loop to one place by creating
+__pci_bus_{lock,unlock,trylock}() and call them from the non-underscore
+locking functions.
+
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
-v2: removed --base=auto noise from the patch
- scripts/checkpatch.pl | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-index e56374662ff7..53ee3db59b58 100755
---- a/scripts/checkpatch.pl
-+++ b/scripts/checkpatch.pl
-@@ -866,6 +866,8 @@ our %deprecated_apis = (
- 	"idr_init_base"				=> "xa_init_flags",
- 	"rcu_read_lock_trace"			=> "rcu_read_lock_tasks_trace",
- 	"rcu_read_unlock_trace"			=> "rcu_read_unlock_tasks_trace",
-+	"pcim_iomap_regions"			=> "pcim_iomap_region",
-+	"pcim_iomap_table"			=> "pcim_iomap",
- );
+v2:
+- Rebased
+- Fixed rollback path dereferencing slot->bus (changed to use the bus
+  parameter directly as slot can be NULL)
+
+ drivers/pci/pci.c | 115 ++++++++++++++++++++--------------------------
+ 1 file changed, 49 insertions(+), 66 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8479c2e1f74f..c248224e0861 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5292,13 +5292,21 @@ static bool pci_bus_resettable(struct pci_bus *bus)
+ 	return true;
+ }
  
- #Create a search pattern for all these strings to speed up a loop below
++static void pci_bus_lock(struct pci_bus *bus);
++static void pci_bus_unlock(struct pci_bus *bus);
++static int pci_bus_trylock(struct pci_bus *bus);
++
+ /* Lock devices from the top of the tree down */
+-static void pci_bus_lock(struct pci_bus *bus)
++static void __pci_bus_lock(struct pci_bus *bus, struct pci_slot *slot)
+ {
+-	struct pci_dev *dev;
++	struct pci_dev *dev, *bridge = bus->self;
++
++	if (bridge)
++		pci_dev_lock(bridge);
+ 
+-	pci_dev_lock(bus->self);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
++		if (slot && (!dev->slot || dev->slot != slot))
++			continue;
+ 		if (dev->subordinate)
+ 			pci_bus_lock(dev->subordinate);
+ 		else
+@@ -5307,28 +5315,34 @@ static void pci_bus_lock(struct pci_bus *bus)
+ }
+ 
+ /* Unlock devices from the bottom of the tree up */
+-static void pci_bus_unlock(struct pci_bus *bus)
++static void __pci_bus_unlock(struct pci_bus *bus, struct pci_slot *slot)
+ {
+-	struct pci_dev *dev;
++	struct pci_dev *dev, *bridge = bus->self;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
++		if (slot && (!dev->slot || dev->slot != slot))
++			continue;
+ 		if (dev->subordinate)
+ 			pci_bus_unlock(dev->subordinate);
+ 		else
+ 			pci_dev_unlock(dev);
+ 	}
+-	pci_dev_unlock(bus->self);
++
++	if (bridge)
++		pci_dev_unlock(bridge);
+ }
+ 
+ /* Return 1 on successful lock, 0 on contention */
+-static int pci_bus_trylock(struct pci_bus *bus)
++static int __pci_bus_trylock(struct pci_bus *bus, struct pci_slot *slot)
+ {
+-	struct pci_dev *dev;
++	struct pci_dev *dev, *bridge = bus->self;
+ 
+-	if (!pci_dev_trylock(bus->self))
++	if (bridge && !pci_dev_trylock(bridge))
+ 		return 0;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
++		if (slot && (!dev->slot || dev->slot != slot))
++			continue;
+ 		if (dev->subordinate) {
+ 			if (!pci_bus_trylock(dev->subordinate))
+ 				goto unlock;
+@@ -5339,15 +5353,37 @@ static int pci_bus_trylock(struct pci_bus *bus)
+ 
+ unlock:
+ 	list_for_each_entry_continue_reverse(dev, &bus->devices, bus_list) {
++		if (slot && (!dev->slot || dev->slot != slot))
++			continue;
+ 		if (dev->subordinate)
+ 			pci_bus_unlock(dev->subordinate);
+ 		else
+ 			pci_dev_unlock(dev);
+ 	}
+-	pci_dev_unlock(bus->self);
++
++	if (bridge)
++		pci_dev_unlock(bridge);
+ 	return 0;
+ }
+ 
++/* Lock devices from the top of the tree down */
++static void pci_bus_lock(struct pci_bus *bus)
++{
++	__pci_bus_lock(bus, NULL);
++}
++
++/* Unlock devices from the bottom of the tree up */
++static void pci_bus_unlock(struct pci_bus *bus)
++{
++	__pci_bus_unlock(bus, NULL);
++}
++
++/* Return 1 on successful lock, 0 on contention */
++static int pci_bus_trylock(struct pci_bus *bus)
++{
++	return __pci_bus_trylock(bus, NULL);
++}
++
+ /* Do any devices on or below this slot prevent a bus reset? */
+ static bool pci_slot_resettable(struct pci_slot *slot)
+ {
+@@ -5370,72 +5406,19 @@ static bool pci_slot_resettable(struct pci_slot *slot)
+ /* Lock devices from the top of the tree down */
+ static void pci_slot_lock(struct pci_slot *slot)
+ {
+-	struct pci_dev *dev, *bridge = slot->bus->self;
+-
+-	if (bridge)
+-		pci_dev_lock(bridge);
+-
+-	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+-		if (!dev->slot || dev->slot != slot)
+-			continue;
+-		if (dev->subordinate)
+-			pci_bus_lock(dev->subordinate);
+-		else
+-			pci_dev_lock(dev);
+-	}
++	__pci_bus_lock(slot->bus, slot);
+ }
+ 
+ /* Unlock devices from the bottom of the tree up */
+ static void pci_slot_unlock(struct pci_slot *slot)
+ {
+-	struct pci_dev *dev, *bridge = slot->bus->self;
+-
+-	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+-		if (!dev->slot || dev->slot != slot)
+-			continue;
+-		if (dev->subordinate)
+-			pci_bus_unlock(dev->subordinate);
+-		else
+-			pci_dev_unlock(dev);
+-	}
+-
+-	if (bridge)
+-		pci_dev_unlock(bridge);
++	__pci_bus_unlock(slot->bus, slot);
+ }
+ 
+ /* Return 1 on successful lock, 0 on contention */
+ static int pci_slot_trylock(struct pci_slot *slot)
+ {
+-	struct pci_dev *dev, *bridge = slot->bus->self;
+-
+-	if (bridge && !pci_dev_trylock(bridge))
+-		return 0;
+-
+-	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+-		if (!dev->slot || dev->slot != slot)
+-			continue;
+-		if (dev->subordinate) {
+-			if (!pci_bus_trylock(dev->subordinate))
+-				goto unlock;
+-		} else if (!pci_dev_trylock(dev))
+-			goto unlock;
+-	}
+-	return 1;
+-
+-unlock:
+-	list_for_each_entry_continue_reverse(dev,
+-					     &slot->bus->devices, bus_list) {
+-		if (!dev->slot || dev->slot != slot)
+-			continue;
+-		if (dev->subordinate)
+-			pci_bus_unlock(dev->subordinate);
+-		else
+-			pci_dev_unlock(dev);
+-	}
+-
+-	if (bridge)
+-		pci_dev_unlock(bridge);
+-	return 0;
++	return __pci_bus_trylock(slot->bus, slot);
+ }
+ 
+ /*
+
+base-commit: 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f
 -- 
-2.51.0
+2.39.5
 
