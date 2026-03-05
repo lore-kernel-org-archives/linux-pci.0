@@ -1,83 +1,85 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAA42282F11
-	for <linux-pci@vger.kernel.org>; Thu,  5 Mar 2026 06:20:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74BAE282F11
+	for <linux-pci@vger.kernel.org>; Thu,  5 Mar 2026 06:21:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772691655; cv=none; b=kmVUUDu+3+s99LmPd06A3miVDMq6kzY5eKlWwVNcJIJg2fKyQhqy8mKpi/mq77eleeFhapo/C+TFBzEvZitHMOINMQlrIpbYpZeR1Ckpc62u2x18f58MXYOorTeNXj6oA+sRlfViLsNWzk20vVeTlEE4/hkDeytKdDW2Y/Y4EyM=
+	t=1772691666; cv=none; b=LQIb8kNQegC13kp2Z0zwSMW/jt2b1sy77CfWA2OGVAcoKIwWITwkgzUA1hseTs8s0Ss5zWNUxhbUEN58fIjCKa2s1z1RkUivcSAI/ysd6xHrbN04IelE8jOx/dO23rtNHDfqro+clzQ4HQgIYvEyYqYoNea9oieqh0zI1vTCi6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772691655; c=relaxed/simple;
-	bh=pEc/tNwHOsDbqggAZEgpmAYE5s4SuUbHuqybzx9zRvo=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=AVFkzKkHKpvF4domI7qaERjq0IG3ib2pK7S4AyH8p3iAYPkL85EkwFQ5iHGtxOib+FP16m1817PLjyUCLSCm/PhlMC7VzbI12F7yXr7hyil2bcDS0pk8atYwmVhIeFVbYPx2bUfBK5w1RFAO/J70kstdd/DztNIu+90oWbnhQnY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=AD5xkbI9; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=KYhNMk3Z; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1772691666; c=relaxed/simple;
+	bh=+S/OPWfD8jiRnySHXDwKPl0Gx38XUkXnA2tMQyqcytY=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=XV0T96MB7aRdwZ27rHMcevaPLF7qg1j0xyyS85oMWvKpkRl+6hnOjF3nrPbxX/mY4FXHCEBOBhrBTuxWfVhI7KoUxfgETe7FxMLZzMCU/LWhUQWSUnDQPgUXbBuc/fonDrrDCrGQ32RnYHSzIZ0/joG/Ml5gGxMwfwN2fmzq02k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ju9HgQ8Q; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=W9YC0jei; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="AD5xkbI9";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="KYhNMk3Z"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6254KG0W1852944
-	for <linux-pci@vger.kernel.org>; Thu, 5 Mar 2026 06:20:53 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ju9HgQ8Q";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="W9YC0jei"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6251BkZe628725
+	for <linux-pci@vger.kernel.org>; Thu, 5 Mar 2026 06:21:04 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=zvXOPXCbQlaXN8adhJ+Ra5
-	kF6Tz5uWjU0aflLiqlQuE=; b=AD5xkbI9PgWUA3qQDSOVYh7+ftEHbxze0S45yF
-	v+S+cN46Y+BxytsEZczdxVlWr9L/TsdO4+K/vepzinK0cJAPVrHTVN+S8+YuuQdy
-	WTEjkVaAuUpLBbWaTMPOUTJhtwt6R/d5oSDp+Cn+FGw3Zm/gg6cJ0dPqxmgfoqdT
-	Jb8aZGJOCkIcTwZuZmmYEzqGb0Y1H7kdK6zbfMGixNnmKYafidNyygRJFWlusOzF
-	IUTMHH7XBf0IN6wGRgYXnk9vurPMi8/KV3m1bcsXDxEHG70a9m5AvOQHroZGinxB
-	swa3Veeq9QbfhGe/0AYUzFVE6WFjJ1IBZpSJ/gZIuywdh1dA==
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cq2q80b4d-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	rgaCGe2HP5UpbVXKB+EsAI8njddCU+iXqu2dkviOtjA=; b=ju9HgQ8QDLzph2X2
+	xcDGeWw8SDOnOkvNNbt49XN4ZK+XhDud5SLcq0Ghl1tvktnW2BjVxoexEvKd3IQg
+	QDZZ8u0G2DkHpJ5Uck7sp2jum/GBWLKHCaigUwZ003HZm1LismPGqN1kyiGdphzd
+	cQxtKl3qS39B+ozKyzA+57WMI4NcvDONPwoguFukPRUOEHrsuBaC8BHxGSXaOWY+
+	E+Y3H/bDoKGtm/uPPpMmUw9NIox+WUwghBOxxcLzwOoSPeZeuQFD5nN2daV3jl6q
+	nM8T2ttith7sadvyGNney6CIhS3wwj2SoMler+1/clVjqTX8YwYWXqEXmnlGHfxP
+	G41tfQ==
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cps0m22gy-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2026 06:20:52 +0000 (GMT)
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-35845fcf0f5so8720918a91.0
-        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 22:20:52 -0800 (PST)
+	for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2026 06:21:03 +0000 (GMT)
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-3597b55adebso3344680a91.2
+        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 22:21:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1772691652; x=1773296452; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=zvXOPXCbQlaXN8adhJ+Ra5kF6Tz5uWjU0aflLiqlQuE=;
-        b=KYhNMk3ZH+Jqo/IDboj7dPdcHnDJnLnERPnzw9NbItD06R1QGKCyAAjjbvZPYyTZRR
-         qOp4Ep+jiBbSGIk/Astyq+LfuCM8E51sdKGwEKjMyID6w0O5X8xZjDS18SbTb0YYbZof
-         N/2Yy9+wmz0zZH4qNWlhA/mn2Syx/9uktzXy7FPEkJst5EB9JIo6lzPAmOqbj78sI3SG
-         XqITIb18XSLNGQ6rpdpHS2IaeRtQQWhSaozg/LzPYLaE9eYuaMaQVTf1t64tOpmbj27f
-         TO7oOdoXMMN7pGB/6JnrxAijqHLDgA7lytfYkvpP52DU1YO7Bpz5as07qGzKvp+ZuxxD
-         T31Q==
+        d=oss.qualcomm.com; s=google; t=1772691663; x=1773296463; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=rgaCGe2HP5UpbVXKB+EsAI8njddCU+iXqu2dkviOtjA=;
+        b=W9YC0jeiO4xTZ+Hr1GTiNBiFd/sMGQ9+BLzoCTQNRCOzaTcFlo3+s7du05QuUF4zFK
+         m+aXtPLs/pM/Hmjcr0BNG08Stl7BNrJWnaLkI7g7TINCTzvIHFhmkYtVTyeNM5zjGTaC
+         k9234w/cFdgRefd5/8m8IpbidIdB73BlcUGWKb2DEFwG0n+UfQfvl3o18WXq2EsLzOFo
+         r7NEhcrNvI9LPtc5F7mtPHNfbAyTnZbkYOdpiUbHBWW4c/ZvG8YFsyz5s+Gohjnqufm1
+         RE9LQzCVwh8krcq26IEersEwl1BADq1OCyW/i7ccBf9yN7PYy57bssD5f+WiaCoO0qWI
+         igAA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772691652; x=1773296452;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=zvXOPXCbQlaXN8adhJ+Ra5kF6Tz5uWjU0aflLiqlQuE=;
-        b=nvkjDFkfCK16h20gkiwIoLfwXskKGKmqMKeiPNUztudEZe9682j/iediGix2mVIb4V
-         LerHV4+p2KYOkY92s8Vwa+tMcSXkvXCm7TljitI1Ocm+Nb3YoH5lpbaEK4/5vj5+aqaE
-         NCgfIgP0JwdygvLwNU4cq8eVtP/acl5cr+UnToFfUUFiaxetgrG9qjw3dFiaVFF/Ab5d
-         bxGAaH+A6Pboq+aOEs+3RDPIAo62yqu/Yd7OzbneNJCyGVmzR1yaw4x4QOXDvu9Gvo6i
-         zP0xVzUWB3GeeQSChS2omysMcbdTNTieoAhbRbCndS3L+QPN4isEGqbXvKhJ59n0tLtP
-         JzdQ==
-X-Gm-Message-State: AOJu0Ywm06CDu6+iF7RXspuRoDywpCkWWDgs5K1mWpPi3rFaJ2rzb8TV
-	VSVkH1h0JLFIEPXMTnt54OrNLefASUPShIO3Yy6pypEihwKhJzIhwHXJO9Panlx3NQi7CPChbxP
-	f2AkgGT58JVwQmocd/s4KzZ2kdYwkL83y00vUbCueIUojBK4mpOUsv7tFc+OagbU=
-X-Gm-Gg: ATEYQzzdKmJazzc9N87bPsFSwDZc43jVdbmHJfDp7HI9vpZWHIWOf9Caol18wgLvMfv
-	eY0jnSmp15s4LcM3EVv7/I0s4um3lRHDaVc+JQN+jJjYQHjatdXKRkrYU2TrzVXFIUQ8OFSbcok
-	M1ky0PYg/Xcn95VPBZjapjy0uWJYyCeUZFOwrp3kI8GDuthX4H4uK2RC3RIzbc/27+VJZnyeVE/
-	Z56ZhGamMzmN1ZTqjSyxzD+3fJ+XmHmGbUt1d/TgtAWHvg1yRzxh9VyEl86BTbyUMQlE8dQCLo6
-	TD23Ncf9CYocpW7qTdPlr1mv6FSkAVyUM55RBQoT0Jx74Zo1A+KpOxGRgAZ/S/DldlVNVYwQkFX
-	n9qZChqgy7dQDaMYFzhKkv+dg9T1JdsaVmMbWgxFzi7lGWe0=
-X-Received: by 2002:a17:90a:c107:b0:359:84a3:1942 with SMTP id 98e67ed59e1d1-359b1c31203mr1234059a91.13.1772691652233;
-        Wed, 04 Mar 2026 22:20:52 -0800 (PST)
-X-Received: by 2002:a17:90a:c107:b0:359:84a3:1942 with SMTP id 98e67ed59e1d1-359b1c31203mr1234022a91.13.1772691651634;
-        Wed, 04 Mar 2026 22:20:51 -0800 (PST)
+        d=1e100.net; s=20230601; t=1772691663; x=1773296463;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=rgaCGe2HP5UpbVXKB+EsAI8njddCU+iXqu2dkviOtjA=;
+        b=OZRczuAqOO9lTN3e8+RbHtHRcNPc1BxlIIvCblJyD/nAtoL1XGF3SIJ/awiVbcSQef
+         EvY9hDDgL0hKnPwV7bVUSkGeetOAUZoI+12yIElNJ8wqBix/2QTvOWGkH66Da8xCmZqC
+         s6KUsSYK9LVf/Q1N3hhlrbdYuV5ZBQoHXej9/VJLa0dZ1y/GIgZ7+d4wLG9OifAkLLAX
+         InS7ju8kjdMpvW6wrRano4pR3XBguFd8gBXnPOZSpcdxax9z/0/WMqB7OTAPiUFNb1Na
+         QjdXla7NQYuYmFI+psohDwCKSnN5EDDduNrHW5v3WtkoEr/9j9hCNVo8C4jJQzlMkS6U
+         tY+Q==
+X-Gm-Message-State: AOJu0YzZhGgYGXo9jtvND/BZIHYrfl2UdJQ2KB7WMF5WHrIwYnI2qGyo
+	C1cd2PlF06dvJPtRQd6UK2WtKhcKoHr6cYU1RKO8AUepM/2rU+6gkZmvWisbhDUFXrwYbnbsAoG
+	iKyyQNxafjr/TxBUnWaCVRJYlkmkpDbP0JY9t6k/q/geP31rwcQU9tx/fKwLQb0A=
+X-Gm-Gg: ATEYQzwCuJu9VtVGotpPSc2yrtkTIAUcrxt+uG9X3k3dC5oxrUvOgUNdtrsECCcQYYR
+	g0A+0ZxZ4QwIR0VIsIfD+h4qMAc15V6wUQaw7A0KBum2RpTZotaW/OmDTacwhc14VqxWUb5ONp/
+	/JGzuO3zsrQKyUIgyToV3K672cSfWrJbCTo7jljZjHbEGM2aB7VMENLbYBpPY9lc99zIV1I1WUO
+	j0Ams7ECiXREF/cOvuBvedwYh/z2s3Rv1jF/I4j4rlqHbitAp0Mykbacu6RZx61cI+iLyRoO2Bw
+	9/hwh1cjtvsCbjWEQ8FiWaN07skIcskpXcXQF0ItxoccJIhBdAHS1JAgFLliPcNv+9lytHCIMUt
+	BWi7+b0go6X8h8ylVmyNnFuxIbDeqDxh/weT157Scw+sfSg8=
+X-Received: by 2002:a17:90b:5386:b0:354:bfb7:db13 with SMTP id 98e67ed59e1d1-359a6a922b5mr4188017a91.35.1772691663116;
+        Wed, 04 Mar 2026 22:21:03 -0800 (PST)
+X-Received: by 2002:a17:90b:5386:b0:354:bfb7:db13 with SMTP id 98e67ed59e1d1-359a6a922b5mr4187982a91.35.1772691662515;
+        Wed, 04 Mar 2026 22:21:02 -0800 (PST)
 Received: from hu-sumk-hyd.qualcomm.com ([202.46.23.25])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-359b2d38ab8sm843378a91.1.2026.03.04.22.20.41
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-359b2d38ab8sm843378a91.1.2026.03.04.22.20.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Mar 2026 22:20:51 -0800 (PST)
+        Wed, 04 Mar 2026 22:21:02 -0800 (PST)
 From: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
-Subject: [PATCH v2 0/2] PCI: dwc: Add multi-port controller support
-Date: Thu, 05 Mar 2026 11:50:35 +0530
-Message-Id: <20260305-dt-parser-v2-0-85836db8dc06@oss.qualcomm.com>
+Date: Thu, 05 Mar 2026 11:50:36 +0530
+Subject: [PATCH v2 1/2] PCI: API changes for multi-port controller support
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -86,12 +88,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIALMgqWkC/32OQU7DMBBFr1J5jSvP2GPirrgHYmFPJtQSbUpcI
- lCVu+OUBSFQNpa+Ne/9f1FFhixF7TYXNciYS+6PNeDdRvE+Hp9F57ZmhQYJDBjdnvUpDpXSoUl
- kWKDpGFS9Pw3S5fer6/Gp5n0u5374uKpHmH+/LABuYRlBG91YpNZyB/dJHvpStq9v8YX7w2Fbn
- 9ldQV/bcQ0y+RhicIlc9x9IazABsLecSJB/g/P8Eb8n489mnJud55iErEC6IbBLgV0KbBXYltA
- SExL5W9NnMKxBR0QSvJPQ/DV9mqZP/33nPNYBAAA=
-X-Change-ID: 20251010-dt-parser-98b50ce18fc1
+Message-Id: <20260305-dt-parser-v2-1-85836db8dc06@oss.qualcomm.com>
+References: <20260305-dt-parser-v2-0-85836db8dc06@oss.qualcomm.com>
+In-Reply-To: <20260305-dt-parser-v2-0-85836db8dc06@oss.qualcomm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
         =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
@@ -126,86 +125,111 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-riscv@lists.infradead.org,
         Sumit Kumar <sumit.kumar@oss.qualcomm.com>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1772691640; l=2442;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1772691640; l=3103;
  i=sumit.kumar@oss.qualcomm.com; s=20250409; h=from:subject:message-id;
- bh=pEc/tNwHOsDbqggAZEgpmAYE5s4SuUbHuqybzx9zRvo=;
- b=t+bdKd9rpg456k4BQVhND8q7IgX2Q/VxxdegM8QDbAtfYkujEJcMPuMBnFidboo8oaraGHI+l
- fGr4D6tEANDBwAWNqyzdV633zxWT7xdh5IMhQ6/B5lDsMAcYO7jFdNS
+ bh=+S/OPWfD8jiRnySHXDwKPl0Gx38XUkXnA2tMQyqcytY=;
+ b=TK72jjuJyknXwVLrSUwewEGuy6eruyMEMLoyVD7ZdXByX5WQ08ffPNtXIK0+Zxd2Jj9MJeA9E
+ OHWFPph2BbeAOAPQu90/A9/51gkVzesqs0Q6tFz6anwYgEZlA0RRnh3
 X-Developer-Key: i=sumit.kumar@oss.qualcomm.com; a=ed25519;
  pk=3cys6srXqLACgA68n7n7KjDeM9JiMK1w6VxzMxr0dnM=
-X-Proofpoint-GUID: wsNeNEFNC-dZ1Ig_qd6FvdfFSbIo4sJH
-X-Proofpoint-ORIG-GUID: wsNeNEFNC-dZ1Ig_qd6FvdfFSbIo4sJH
-X-Authority-Analysis: v=2.4 cv=GecaXAXL c=1 sm=1 tr=0 ts=69a920c5 cx=c_pps
- a=vVfyC5vLCtgYJKYeQD43oA==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+X-Authority-Analysis: v=2.4 cv=e6wLiKp/ c=1 sm=1 tr=0 ts=69a920cf cx=c_pps
+ a=RP+M6JBNLl+fLTcSJhASfg==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
  a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=s_SlZju52n3xP1ZgpLgA:9 a=QEXdDO2ut3YA:10
- a=rl5im9kqc5Lf4LNbBjHf:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA1MDA0NyBTYWx0ZWRfX2Zo7HyXvfXiZ
- yj/heVSuqzPbIo1Q7fYwbGGihPYFv+ESfd212IqRARi34f4hMt2wKuB8HRKR3Kiuh3TatSwW7UJ
- EhMRUkoI1aTPCUX3zQp5JVXIaJtcc7yOnL6pqA2mf9Ib+FhsWPly/rgz2glQ2t628qOGiawDzFA
- nKKfgnRmvSuHWXem0PcRXi0MetsIKP6/pCbx5orVbO5UIVvqLC1La3b6RYfHk0+jtdH/i5eRrV/
- uQ3tLSqLJn+yJJE3Ngoi8i3RpTGIxH4PJhORzfTFYVh1heB0iMmmC1g/niNI9RVNmgHDlC07B54
- G2QcnwX61ow5GwXFz35x4Xcm26f2grhagX3jifBe2S8StMBBak4MlEghM7KYfFP0mSghHvqA2RP
- a2JUV2SwdFr0vufDxXAVY6iLklnWocAPVfb/OuMRXWCV6+23e6PWt3GnXKk9OJ9gP5einpG6jyK
- 0fmrONiDJfi+1mJx/+w==
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=EUspDBNiAAAA:8 a=ujblt7VnwxmsJrSXvRcA:9 a=QEXdDO2ut3YA:10
+ a=iS9zxrgQBfv6-_F4QbHw:22
+X-Proofpoint-ORIG-GUID: 1Hml-qyVwMHfUCFHepAFyzaqvun2LU7c
+X-Proofpoint-GUID: 1Hml-qyVwMHfUCFHepAFyzaqvun2LU7c
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA1MDA0NyBTYWx0ZWRfX2Dxb1fjHiqB3
+ t8OXbjsHE8jn0Ob0y4x97Dd9at/gZj0JTMYy++XB7lFOt78fiJzOjik+jHO4kCvY76LFth9PlL2
+ q+Kr6tsPQhHqJ6EyDQCRiyPKFAY8WeIxn2s9O51VUe3Op4iA1UIUEVB7sZuwVG6ymTt2UNElSry
+ CS1jtCVoEDcBVfZ+VvdnXxisdcK4H6RSwsvqaLXBeRhEqrWJvCz8zUkRTcxfMFzxyt0ioPwt1FN
+ Y1UNRIxHxo0Np/0otv3uKNLJCSFNf993tet041C7Suav5SbruVVXojZaILji9stV7zdGLaNOY6k
+ WwaadfgyzAET3EiPAuKQDxodLwV63RH7io5usOctuf/vxMrUW3vt21KXfKykHbTvONFL/dAwze/
+ K6PMdYDAqs7Udvm5rMoaMI/dWttfttelsVpPmTFZ4iDwr7ArqoJwe+FpaQ958Hy2dZ8giexC0gb
+ 6yoMyDIau4shC+xvZoQ==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-03-05_01,2026-03-04_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 bulkscore=0 impostorscore=0 spamscore=0 suspectscore=0
- clxscore=1015 lowpriorityscore=0 adultscore=0 malwarescore=0 phishscore=0
+ malwarescore=0 bulkscore=0 phishscore=0 lowpriorityscore=0 clxscore=1015
+ spamscore=0 adultscore=0 impostorscore=0 suspectscore=0 priorityscore=1501
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603050047
 
-This series adds support for multi-port PCIe controllers in the DesignWare
-driver. Currently, the driver only supports a single Root Port with
-controller-level properties, which doesn't work for multi-port controllers
-where each port may have different configurations.
+For multi-port controllers, equalization preset properties should be
+specified in individual Root Port nodes rather than the controller node,
+allowing each port to have its own configuration.
 
-This series introduces a per-port structure and parsing API that allows 
-each Root Port to be configured independently via pcie@N child nodes in
-device tree, while maintaining backward compatibility with existing 
-single-port bindings.
+Change of_pci_get_equalization_presets() to accept a device_node pointer.
+This allows parsing equalization presets from any device tree node,
+which is needed for multi-port PCIe controllers.
 
 Signed-off-by: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
 ---
-Changes in v2:
-- Fix error code preservation in dw_pcie_resume_noirq() to return actual
-  error from dw_pcie_wait_for_link() instead of hardcoded -ETIMEDOUT (Mani).
-- Initialize ret variable to -ENOENT in dw_pcie_parse_root_ports() (Mani).
-- dw_pcie_host_init(): Remove -ENOENT error skipping to make parsing
-  failures fatal for now, add TODO comment about making properties
-  optional later (Mani).
-- Link to v1: https://lore.kernel.org/r/20260105-dt-parser-v1-0-b11c63cb5e2c@oss.qualcomm.com
+ drivers/pci/of.c  | 6 ++++--
+ drivers/pci/pci.h | 2 ++
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
----
-Sumit Kumar (2):
-      PCI: API changes for multi-port controller support
-      PCI: dwc: Add multi-port controller support
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index 3579265f119845637e163d9051437c89662762f8..d09eff40b523c920c9ca3eaa64f784765b3c5bf8 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -971,6 +971,7 @@ EXPORT_SYMBOL_GPL(of_pci_get_slot_power_limit);
+  * of_pci_get_equalization_presets - Parses the "eq-presets-Ngts" property.
+  *
+  * @dev: Device containing the properties.
++ * @node: Device tree node containing the properties.
+  * @presets: Pointer to store the parsed data.
+  * @num_lanes: Maximum number of lanes supported.
+  *
+@@ -981,6 +982,7 @@ EXPORT_SYMBOL_GPL(of_pci_get_slot_power_limit);
+  * errno otherwise.
+  */
+ int of_pci_get_equalization_presets(struct device *dev,
++				    struct device_node *node,
+ 				    struct pci_eq_presets *presets,
+ 				    int num_lanes)
+ {
+@@ -988,7 +990,7 @@ int of_pci_get_equalization_presets(struct device *dev,
+ 	int ret;
+ 
+ 	presets->eq_presets_8gts[0] = PCI_EQ_RESV;
+-	ret = of_property_read_u16_array(dev->of_node, "eq-presets-8gts",
++	ret = of_property_read_u16_array(node, "eq-presets-8gts",
+ 					 presets->eq_presets_8gts, num_lanes);
+ 	if (ret && ret != -EINVAL) {
+ 		dev_err(dev, "Error reading eq-presets-8gts: %d\n", ret);
+@@ -998,7 +1000,7 @@ int of_pci_get_equalization_presets(struct device *dev,
+ 	for (int i = 0; i < EQ_PRESET_TYPE_MAX - 1; i++) {
+ 		presets->eq_presets_Ngts[i][0] = PCI_EQ_RESV;
+ 		snprintf(name, sizeof(name), "eq-presets-%dgts", 8 << (i + 1));
+-		ret = of_property_read_u8_array(dev->of_node, name,
++		ret = of_property_read_u8_array(node, name,
+ 						presets->eq_presets_Ngts[i],
+ 						num_lanes);
+ 		if (ret && ret != -EINVAL) {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 34f65d69662e9f61f0c489ec58de2ce17d21c0c6..72fa6db95b8a75f6e69b8019d1eb2262b6a46c13 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -965,6 +965,7 @@ void pci_release_bus_of_node(struct pci_bus *bus);
+ int devm_of_pci_bridge_init(struct device *dev, struct pci_host_bridge *bridge);
+ bool of_pci_supply_present(struct device_node *np);
+ int of_pci_get_equalization_presets(struct device *dev,
++				    struct device_node *node,
+ 				    struct pci_eq_presets *presets,
+ 				    int num_lanes);
+ #else
+@@ -1013,6 +1014,7 @@ static inline bool of_pci_supply_present(struct device_node *np)
+ }
+ 
+ static inline int of_pci_get_equalization_presets(struct device *dev,
++						  struct device_node *node,
+ 						  struct pci_eq_presets *presets,
+ 						  int num_lanes)
+ {
 
- drivers/pci/controller/dwc/pci-exynos.c           |   4 +-
- drivers/pci/controller/dwc/pci-imx6.c             |  15 +-
- drivers/pci/controller/dwc/pci-meson.c            |   1 -
- drivers/pci/controller/dwc/pcie-designware-host.c | 175 ++++++++++++++++++----
- drivers/pci/controller/dwc/pcie-designware.c      |  32 ++--
- drivers/pci/controller/dwc/pcie-designware.h      |  17 ++-
- drivers/pci/controller/dwc/pcie-fu740.c           |   6 +-
- drivers/pci/controller/dwc/pcie-intel-gw.c        |  13 +-
- drivers/pci/controller/dwc/pcie-qcom-common.c     |   5 +-
- drivers/pci/controller/dwc/pcie-qcom-ep.c         |   4 +-
- drivers/pci/controller/dwc/pcie-qcom.c            |   4 +-
- drivers/pci/controller/dwc/pcie-rcar-gen4.c       |  13 +-
- drivers/pci/controller/dwc/pcie-spear13xx.c       |   5 +-
- drivers/pci/controller/dwc/pcie-tegra194.c        |   4 +-
- drivers/pci/of.c                                  |   6 +-
- drivers/pci/pci.h                                 |   2 +
- 16 files changed, 232 insertions(+), 74 deletions(-)
----
-base-commit: 097a6c336d0080725c626fda118ecfec448acd0f
-change-id: 20251010-dt-parser-98b50ce18fc1
-
-Best regards,
 -- 
-Sumit Kumar <sumit.kumar@oss.qualcomm.com>
+2.34.1
 
