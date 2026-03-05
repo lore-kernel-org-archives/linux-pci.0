@@ -1,102 +1,133 @@
-Received: from sgoci-sdnproxy-4.icoremail.net (sgoci-sdnproxy-4.icoremail.net [129.150.39.64])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4FB2334F46F;
-	Thu,  5 Mar 2026 08:01:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=129.150.39.64
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DBDF3E47B;
+	Thu,  5 Mar 2026 08:14:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772697706; cv=none; b=XoRppZAksoZO5saKjJOc9/4ipD0s7BvMZiM2E8/z4Xg1Hv0asW0UKUsmhQnqi1FJpDhZwXrAHHbALBC8cHPHF/8AIBv2hHRZr4ZtIb3QHI3aXkiIn/2sigB6hzX331jqXCXPrBTEztHCDQubbthip4Z9HyPzfe4r4irWNLMImH4=
+	t=1772698470; cv=none; b=EB1mXq7F1BHkV3Qs76dxHe1Gleme2AaloSgIqdl4MLPwdAtXswzi7WriImNrv5kL/Xm9PfTBDx0P4DG+8k2FOEx2DJ/NACO5gcqIb8eLSTKXf0+BcLlPyr9zF9V6MI12CChzuWgFvegPnH76Udp8CaysjWj1313iDue1H8Ya4P8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772697706; c=relaxed/simple;
-	bh=AxKgOxPwkDvL3+Il99VADYTlGL/JcVJEByst9bj72t8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=Ge5qlFOdHMsrhnyjDgvdo1o0CHJ4aMfRU3jOEnFKbjbny/e7901YQkUQFS3GLiFFxlXqhiELQTsiVuAPQNuX+REDIGDoFkm6/qdqV7h5/vsg1KR+pRc3IUXfaEY7sk4CIQoNvUK7GAsTGb0GV8abumpP0nOq6/aS9y6ydo25/pA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=129.150.39.64
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
-Received: from linmin$eswincomputing.com ( [10.10.96.205] ) by
- ajax-webmail-app2 (Coremail) ; Thu, 5 Mar 2026 16:01:20 +0800 (GMT+08:00)
-Date: Thu, 5 Mar 2026 16:01:20 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: "Min Lin" <linmin@eswincomputing.com>
-To: "Manivannan Sadhasivam" <mani@kernel.org>
-Cc: zhangsenchuan@eswincomputing.com, bhelgaas@google.com,
-	krzk+dt@kernel.org, conor+dt@kernel.org, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, robh@kernel.org, p.zabel@pengutronix.de,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, christian.bruel@foss.st.com,
-	shradha.t@samsung.com, krishna.chundru@oss.qualcomm.com,
-	thippeswamy.havalige@amd.com, inochiama@gmail.com, Frank.li@nxp.com,
-	ningyu@eswincomputing.com, pinkesh.vaghela@einfochips.com,
-	ouyanghui@eswincomputing.com
-Subject: Re: Re: [PATCH v11 2/2] PCI: eic7700: Add Eswin PCIe host
- controller driver
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
- 20241203(6b039d88) Copyright (c) 2002-2026 www.mailtech.cn
- mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
-In-Reply-To: <jd4aszup2peetymesiltqghoptp2w4uuecrsdzkb2cl5vqqfot@m3vh6x4u5t6l>
-References: <20260227111536.1940-1-zhangsenchuan@eswincomputing.com>
- <20260227111808.1996-1-zhangsenchuan@eswincomputing.com>
- <jd4aszup2peetymesiltqghoptp2w4uuecrsdzkb2cl5vqqfot@m3vh6x4u5t6l>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	s=arc-20240116; t=1772698470; c=relaxed/simple;
+	bh=FSse59W+Ff1LZvFEhUNPBkjgYw1dPirV7rnWSCr1Sj8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WQqNVzhlTYwUw9Fy6PA5lz/+09eSlSErtCYM3njpuDww/y+eiGfmmCXL2YAjL2K25U2rhjVBar0xhGQF23Ip+Gqy25OCbNP9RzS7eeN6drIkoBovqpN2MzD3zQoslSghy3wVbV4XxIXLNdlUpFn22EsQkTasU0TW/AVml1kaohk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hJmlEj89; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hJmlEj89"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C08E3C116C6;
+	Thu,  5 Mar 2026 08:14:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772698469;
+	bh=FSse59W+Ff1LZvFEhUNPBkjgYw1dPirV7rnWSCr1Sj8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=hJmlEj89myprl/gUS3k/FHDfnjy8K0fq/9TU1ywSJk7t+JZpLSZZbNFqbAg9nLJYY
+	 bmJ4gA5cWGgxTE5NRNFQ7hGZoAP4QAHSxrJ/EVSU5sCWNJVdUqHdoKDk6gFahOIpXj
+	 8CwbI/0BuB14m7P8IB1O4OadNu45J27lWilkHlsxMQfQ1+quYib2uLoeh9rRzbhXoH
+	 t1I2cgH8HRdPV4JGyiwxd7C+xdXOFuA4VmrogucT+OhSYKlrcJLmhNufl4CG9TxGh7
+	 fHulUxMC+9s2xzNTpSB6eF0/nQJbHXgX15Y00ho/PJervz3gCgDMeIajT6lY6oNXnD
+	 jBz6OsXbl/NXg==
+Date: Thu, 5 Mar 2026 13:44:17 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Marek Vasut <marek.vasut+renesas@gmail.com>, 
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, Niklas Cassel <cassel@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: dwc: rcar-gen4: Use 4K EPC BAR alignment
+Message-ID: <wroiqhvgph4nrvpkunzpej3ruxv2hvo4itu5kw4xhlrlgpifo2@4hmnpth7eppw>
+References: <20260305015439.1529006-1-den@valinux.co.jp>
+ <4o42bskgjazgawswex7sfuvptmbho5gb7inmilntygpm7vdt7p@fcb6ttbbnb45>
+ <pd56nggmapksuvbk662cwdqwott6lhc7zhlczmxf5jooe3l3od@ytkoxpi3cf7s>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <57246067.3de3.19cbd03fc5f.Coremail.linmin@eswincomputing.com>
-X-Coremail-Locale: en_US
-X-CM-TRANSID:TQJkCgDH3aBROKlp7dcFAA--.1468W
-X-CM-SenderInfo: 5olqzx3q6h245lqf0zpsxwx03jof0z/1tbiAgERCWmoXwcYbwAAs1
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-	daVFxhVjvjDU=
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <pd56nggmapksuvbk662cwdqwott6lhc7zhlczmxf5jooe3l3od@ytkoxpi3cf7s>
 
-SGkgTWFuaSwKClRoYW5rcyBmb3IgeW91ciBraW5kIHN1Z2dlc3Rpb24gYW5kIGhlbHAuCgoKPiAt
-LS0tLU9yaWdpbmFsIE1lc3NhZ2VzLS0tLS0KPiBGcm9tOiAiTWFuaXZhbm5hbiBTYWRoYXNpdmFt
-IiA8bWFuaUBrZXJuZWwub3JnPgo+IFNlbmQgdGltZTpUaHVyc2RheSwgMDUvMDMvMjAyNiAxNDow
-NzozMQo+IFRvOiB6aGFuZ3NlbmNodWFuQGVzd2luY29tcHV0aW5nLmNvbQo+IENjOiBiaGVsZ2Fh
-c0Bnb29nbGUuY29tLCBrcnprK2R0QGtlcm5lbC5vcmcsIGNvbm9yK2R0QGtlcm5lbC5vcmcsIGxw
-aWVyYWxpc2lAa2VybmVsLm9yZywga3dpbGN6eW5za2lAa2VybmVsLm9yZywgcm9iaEBrZXJuZWwu
-b3JnLCBwLnphYmVsQHBlbmd1dHJvbml4LmRlLCBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnLCBk
-ZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZywgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZywg
-Y2hyaXN0aWFuLmJydWVsQGZvc3Muc3QuY29tLCBzaHJhZGhhLnRAc2Ftc3VuZy5jb20sIGtyaXNo
-bmEuY2h1bmRydUBvc3MucXVhbGNvbW0uY29tLCB0aGlwcGVzd2FteS5oYXZhbGlnZUBhbWQuY29t
-LCBpbm9jaGlhbWFAZ21haWwuY29tLCBGcmFuay5saUBueHAuY29tLCBuaW5neXVAZXN3aW5jb21w
-dXRpbmcuY29tLCBsaW5taW5AZXN3aW5jb21wdXRpbmcuY29tLCBwaW5rZXNoLnZhZ2hlbGFAZWlu
-Zm9jaGlwcy5jb20sIG91eWFuZ2h1aUBlc3dpbmNvbXB1dGluZy5jb20KPiBTdWJqZWN0OiBSZTog
-W1BBVENIIHYxMSAyLzJdIFBDSTogZWljNzcwMDogQWRkIEVzd2luIFBDSWUgaG9zdCBjb250cm9s
-bGVyIGRyaXZlcgo+IAo+IE9uIEZyaSwgRmViIDI3LCAyMDI2IGF0IDA3OjE4OjA4UE0gKzA4MDAs
-IHpoYW5nc2VuY2h1YW5AZXN3aW5jb21wdXRpbmcuY29tIHdyb3RlOgo+ID4gRnJvbTogU2VuY2h1
-YW4gWmhhbmcgPHpoYW5nc2VuY2h1YW5AZXN3aW5jb21wdXRpbmcuY29tPgo+ID4gCj4gPiBBZGQg
-ZHJpdmVyIGZvciB0aGUgRXN3aW4gRUlDNzcwMCBQQ0llIGhvc3QgY29udHJvbGxlciwgd2hpY2gg
-aXMgYmFzZWQgb24KPiA+IHRoZSBEZXNpZ25XYXJlIFBDSWUgY29yZSwgSVAgcmV2aXNpb24gNS45
-NmEuIFRoZSBQQ0llIEdlbi4zIGNvbnRyb2xsZXIKPiA+IHN1cHBvcnRzIGEgZGF0YSByYXRlIG9m
-IDggR1QvcyBhbmQgNCBjaGFubmVscywgc3VwcG9ydCBJTlR4IGFuZCBNU0kKPiA+IGludGVycnVw
-dHMuCj4gPiAKPiAKPiBJcyB0aGUgZHJpdmVyIGdvaW5nIHRvIHdvcmsgb25seSBmb3IgdGhlIFBD
-SWUgUkMgSVAgaW4gRUlDNzcwMCBTb0Mgb3IgZm9yIHRoZQo+IHVwY29taW5nIEVzd2luIFNvQ3Mg
-YXMgd2VsbD8gSnVzdCBjdXJpb3VzIGJlY2F1c2UsIHdlIGRvbid0IG5hbWUgZHJpdmVycyBiYXNl
-ZAo+IG9uIG9uZSBTb0MgbmFtZSwgYnV0IGJ5IHRoZSB2ZW5kb3Igc28gdGhhdCB0aGUgZHJpdmVy
-IChpZiBjb21wYXRpYmxlKSBjYW4gYmUKPiB1c2VkIGFjcm9zcyBvdGhlciBTb0NzIGZyb20gdGhl
-IHZlbmRvci4KPiAKPiBJZiBpdCBjYW4gd29yayBhY3Jvc3Mgb3RoZXIgU29DcywgdGhlbiBJIGNh
-biBjaGFuZ2UgJ2VpYzc3MDAnIHRvICdlc3dpbicsIHdoZXJlCj4gYXBwbGljYWJsZSB3aGlsZSBh
-cHBseWluZy4KPiAKClRoaXMgUENJZSBSQyBJUCBpbiBFSUM3NzAwIHdpbGwgb25seSBiZSB1c2Vk
-IGZvciBFSUM3NzAwIFNvQy4gT25lIHRoaW5nIGZvciBzdXJlCmlzIG91ciBuZXh0IFNvQyB3aWxs
-IHVzZSBhIGhpZ2hlciBJUCByZXZpc2lvbiBvZiB0aGUgRGVzaWduV2FyZSBQQ0llIGNvcmUuCklu
-IHRoZSBmdXR1cmUsIHRoZXJlIGlzIG5vIGRvdWJ0IHRoYXQgdGhlIHVzZSBvZiBJUCBmcm9tIG90
-aGVyIG1hbnVmYWN0dXJlcnMgbWF5CmJlIGNvbnNpZGVyZWQuCgpCYXNlZCBvbiB0aGlzLCBtYXkg
-SSBhc2sgd2hpY2ggbmFtZSBkbyB5b3UgdGhpbmsgaXMgYmV0dGVyLCBlaWM3NzAwJyBvciAnZXN3
-aW4nPwoKSSBmb3VuZCB0aGVyZSBpcyBhIGNvbW1pdCBvbiBkcml2ZXJzL3BjaS9jb250cm9sbGVy
-L2R3Yy9wY2llLXRlZ3JhMTk0LmMKSXQgYWRkZWQgVGVncmEyMzQgUENJZSBzdXBwb3J0IGluIHBj
-aWUtdGVncmExOTQuYwpJcyB0aGlzIG5hbWluZyBhcHByb2FjaCBubyBsb25nZXIgcmVjb21tZW5k
-ZWQ/Cgo+IC0gTWFuaQo+IAo+ID4gU2lnbmVkLW9mZi1ieTogWXUgTmluZyA8bmluZ3l1QGVzd2lu
-Y29tcHV0aW5nLmNvbT4KPiA+IFNpZ25lZC1vZmYtYnk6IFlhbmdodWkgT3UgPG91eWFuZ2h1aUBl
-c3dpbmNvbXB1dGluZy5jb20+Cj4gPiBTaWduZWQtb2ZmLWJ5OiBTZW5jaHVhbiBaaGFuZyA8emhh
-bmdzZW5jaHVhbkBlc3dpbmNvbXB1dGluZy5jb20+Cj4gPiAtLS0KPiA+ICBkcml2ZXJzL3BjaS9j
-b250cm9sbGVyL2R3Yy9LY29uZmlnICAgICAgICB8ICAxMSArCj4gPiAgZHJpdmVycy9wY2kvY29u
-dHJvbGxlci9kd2MvTWFrZWZpbGUgICAgICAgfCAgIDEgKwo+ID4gIGRyaXZlcnMvcGNpL2NvbnRy
-b2xsZXIvZHdjL3BjaWUtZWljNzcwMC5jIHwgNDA5ICsrKysrKysrKysrKysrKysrKysrKysKPiA+
-ICAzIGZpbGVzIGNoYW5nZWQsIDQyMSBpbnNlcnRpb25zKCspCj4gPiAgY3JlYXRlIG1vZGUgMTAw
-NjQ0IGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZWljNzcwMC5jCj4gPiAKW3NuaXBd
-CgpSZWdhcmRzLApMaW4gTWluCg==
+On Thu, Mar 05, 2026 at 04:03:03PM +0900, Koichiro Den wrote:
+> On Thu, Mar 05, 2026 at 11:27:42AM +0530, Manivannan Sadhasivam wrote:
+> > On Thu, Mar 05, 2026 at 10:54:39AM +0900, Koichiro Den wrote:
+> > > R-Car S4 Series (R8A779F[4-7]*) uses a 4K minimum iATU region size
+> > > (CX_ATU_MIN_REGION_SIZE = 4K) as per R19UH0161EJ0130 Rev.1.30.
+> > > 
+> > > Update the advertised alignment to 4K, as described in
+> > > commit 2a9a801620ef ("PCI: endpoint: Add support to specify alignment
+> > > for buffers allocated to BARs").
+> > > 
+> > > With the previous 1MB alignment requirement, iATU programming for BAR4
+> > > on this platform often cannot be performed, since a 1MB-aligned target
+> > > address may fall outside the tiny 256B BAR4 window.
+> > > 
+> > 
+> > Can you clarify this part? What do you mean by 'falling outside of the 256B
+> > BAR4 window'? Where does the failure happen exactly?
+> 
+> My primary motivation is to use MSI doorbell [1] for epf-vntb.
+> 
+> epf_ntb_db_bar_init_msi_doorbell() passes message address 'low' to
+> pci_epf_assign_bar_space(). The message address is a fixed physical address,
+> or IOVA if EPC is attached to an IOMMU domain.
+> 
+> Even though the doorbell window size (the difference between the 'high' and
+> 'low' message addresses) is typically small, forcing the base address to be
+> aligned to a 1MB boundary may push the mapping base much lower than necessary.
+> 
+> For example:
+> 
+>   When the doorbell message address 'low' is 0xffdff0a0,
+> 
+>   - With the previous 1MB alignment, it is aligned down to 0xffd00000.
+>     The offset becomes: 0xffdff0a0 - 0xffd00000 = 0xff0a0, which is far larger
+>     than the 256B BAR4 window, so the mapping cannot be programmed.
+> 
+>   - With the correct 4K alignment, it is aligned down to 0xffdff000.
+>     The offset becomes: 0xffdff0a0 - 0xffdff000 = 0xa0, which fits within 256B
+>     BAR4 window.
+> 
+
+Okay, thanks for clarifying. This information should've been present in the
+commit message. Though, the top motivation is to comply with the reference
+manual.
+
+>   Note: if the address were e.g. 0xffdff1a0 instead of 0xffdff0a0, the
+>   4K-aligned offset would become 0x1a0 (416 bytes), which still exceeds the 256B
+>   window. (For simplicity, the 32-bit write width is ignored here.) In such a
+>   case, programming the mapping would still not be possible.
+> 
+
+Hmm, that's probably fine as we would be running into hardware limitation.
+
+>   Also note that I used the term 'aligned_mem_size' above, which is the local
+>   variable name in pci_epf_assign_bar_space(). The corresponding struct
+>   pci_epf_bar field was renamed from 'aligned_size' to 'mem_size' by commit
+>   483768846d66 ("PCI: endpoint: Rename 'epf_bar::aligned_size' to
+>   'epf_bar:mem_size'").
+> 
+> [1] Precisely speaking, the "embedded" doorbell fallback:
+>     https://lore.kernel.org/linux-pci/20260302071427.534158-1-den@valinux.co.jp/
+> 
+> > 
+> > > Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> > 
+> > Fixes tag?
+> 
+> Commit e311b3834dfa ("PCI: rcar-gen4: Add endpoint mode support") is much later
+> than 2a9a801620ef ("PCI: endpoint: Add support to specify alignment for buffers
+> allocated to BARs"), so I believe it makes sense to add:
+> 
+>   Fixes: e311b3834dfa ("PCI: rcar-gen4: Add endpoint mode support")
+> 
+
+Please add it in next version.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
