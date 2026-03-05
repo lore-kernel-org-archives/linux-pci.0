@@ -1,179 +1,140 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62C683101B2
-	for <linux-pci@vger.kernel.org>; Thu,  5 Mar 2026 07:12:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94D2E18D658
+	for <linux-pci@vger.kernel.org>; Thu,  5 Mar 2026 07:13:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772694774; cv=none; b=qIjJHCcVUQ5/jrZIoGqF4oUOLd6CoRDxXhrhB8Sce0a8b09Gy0AG5qd/W7uBuyyj5ryvqvGtz4nVGw6dWhvcAb2+YqachiO5JTeZNgJKozgs3TrDKLSIJHUwrIRkkpBtOy3D6lGDJPIZ8MT7SajjlIsi5ALwecOHJAJSthyqi6w=
+	t=1772694801; cv=none; b=VcsZJqyA8W+NmA0EsfTeiR1NFFCwsIOjpOuMfdJ2t23fcx22gmdnqGaVlrTB2OXezpEEXqhGOC8FLHEfFX+oskfnupA9WSgRvLpbtVw2rwrvqYLKwqdUAtcYSv++l8jMcZESeVyXwcANIdni3IYaricqwPUxrgJgjerPgzhtV+I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772694774; c=relaxed/simple;
-	bh=yqcWMG+UFuJhqw7Kn4NxSdkkBByL8yzFPO/N6izURMM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XBYXg4EZtXyddJQZc4LAXGP0fzCLTm3M4jgnSs4wq1m8tz/i8RNYHKJL8oMh/j1uNMtoji4DlVM1FThxc9bWKg61fzYWBsu3BUjT8+AGjr/+JdxWOOt/Fhc+UYyXEGwg+Nj2pIW9SMkI9ERtgZBCY3Xc7rtJmVxI+bV1+yCHKio=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=LvT6XK+3; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=CwlOz9eC; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1772694801; c=relaxed/simple;
+	bh=i5iDqP7rKRhbcffvvgNgjvEmqRBwe+IQAfIH7QhWYSA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=VvZf42xkut/igGfYrHDdNEmNLw87RehiqWe4DRHhF75rtESTi4MdK8CxXIALhH7x03OLXNQqDLh/+Z3vKcSO16LQNrqMTJ86GHt02yd/BGkBrRLkiKhFd4xVQ9IAPY39wz2kvVFDk5zzFcZRcyO13PDCipLB52vL2chD7YbuSdw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=K247JFQY; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=hWjlfa6q; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="LvT6XK+3";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="CwlOz9eC"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6254K2k91852690
-	for <linux-pci@vger.kernel.org>; Thu, 5 Mar 2026 07:12:51 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="K247JFQY";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="hWjlfa6q"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6251Bgx8021014
+	for <linux-pci@vger.kernel.org>; Thu, 5 Mar 2026 07:13:20 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=hFm1KLFglkA
-	Ai97JZ8ZrNe+roA+mXMLTyIJBkUzj5oU=; b=LvT6XK+3cpH6zwUCq7ThyduDtlH
-	hGns/CFidUJB+7Bao+j38FB3lVpPkm9kZeX5oN/NbWmHIeMGLkz06xamB0diJLZ/
-	j7yaFm1mw2UfMN1PhnS3Y+X4i3iHPJCkd6wIt4bsjFVdCQnuGhVgVVbFr36SQx3p
-	bTXNZpC+VU8Q379H5HHEsQBg4EJzEbt686HaVvimCZJsu45OSUPQcdK3/5mabZeN
-	YMdvtbDzsenJrr+M579lLRHc5GQMLtFwCO8S3z1FeZjYClcPjC3Cp0HnucWHc7E9
-	IAEm6l0yCuZdyQwphPQIHZGfGJ1AfqHZVQf4KMm9NwEgujLoUrkxyS4X8AQ==
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cq2q80g79-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	1KWALn+owxQlHHUvDt1bNPDTkMcDKMGZRsCDyWIh+bM=; b=K247JFQY25biDkx/
+	mgG7iW1GFCqP7RIzSu8aol7bEuC8gaOGvOBpqDBTvsz2kUBTxc11uAw+P+A9+s1D
+	TFUV7XbvMaVb53VawUsY+P/Cx3pK5HeX5PaIX4n27A28aaWsknSVfNTeJ9NIaAxp
+	Wo3s2d42g4/1KoyGZb+6c63Bgs2R1mxYGypQCbP8EvqwBbly6TN8h6irikDIOPD/
+	V5hyOrAhcPqaEvfML7llDSttGV8TRHbuUbleDqB41Lu806kQzdO13xQwSTPcvl5z
+	pg6MLGjxSCzOO3Dt6uhkFX0hLrKh0hHknpgN6t4wYZ3fAkAgPRDh1PnaYrv6M3Tm
+	eZkWJA==
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cpupthmuy-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2026 07:12:51 +0000 (GMT)
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-35980a994d6so24048242a91.1
-        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 23:12:51 -0800 (PST)
+	for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2026 07:13:19 +0000 (GMT)
+Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-8297d2c1e64so385657b3a.2
+        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 23:13:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1772694771; x=1773299571; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+        d=oss.qualcomm.com; s=google; t=1772694799; x=1773299599; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=hFm1KLFglkAAi97JZ8ZrNe+roA+mXMLTyIJBkUzj5oU=;
-        b=CwlOz9eCn/fHhRgBXJvZNrbFdf0AeT+P90Q8GWNokGhTm7kvRW71Kqw7SmaLR0xBta
-         rUUnFGPhsxuE/ozxxGEaFC1QxXaQqMUeYJr34OzsYOW2tbypRzbnmokjV0+MJ2U/rOEj
-         fs1KbLPoADyA8rWeB1dnvRmAx7l0cOfdXwfXyAdWyFLpBX/2+tPWyJyPDpuFM7RQ5VTe
-         HVJMlt4VG0W2HEBBkLNHO5KGMy4OD05EgVCgNdz6/4Fie5T4VqiSexoZJZX7FpmLDtlg
-         79bYhhz2nleK8BSCp/LKOvr1BL20OIPG6O4EAnxOwrk6YbEVywrKnExDb+Yrdl98s47f
-         hMkA==
+        bh=1KWALn+owxQlHHUvDt1bNPDTkMcDKMGZRsCDyWIh+bM=;
+        b=hWjlfa6qnMu0HosXiKBZKcX/aZxxvrDYRwTsaJdBEoEo9p+YRUQwVGHAu5ZZl0+G88
+         1Qklio08e8BcBBt4K1I3cLgQALgTuN1fKGMnZOBRhf4a8XqWuA4l7rgxkYXrr+SKWipa
+         G8+bFABmckQrP9xSn1gkrfSaHtRwwNohM7cB6qAGxhtjQ5X1dQcBYTWdsJGyGQcGXMf0
+         V2WuFK1B34gZWFOlYkxpNSyTCLRn1JB9yBgg9CfC9QOkuHeBSPYhU3ooyIDFLhgOZnX5
+         Da2Pdex8qXlvbuZXQVuUVpyQPLf9zxFVet0la2mbApTdJSTZLTG7A26zNJoCw5rAx1yR
+         wIrg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772694771; x=1773299571;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+        d=1e100.net; s=20230601; t=1772694799; x=1773299599;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=hFm1KLFglkAAi97JZ8ZrNe+roA+mXMLTyIJBkUzj5oU=;
-        b=eIEIJPDzaA/dQ6Gx6amq3q4+oIos++N9yYMerUg3N9zEQsn310Q8kCVzAjibUotzPJ
-         5TpwaMChX8i3C3ZYr9wYTItOSHyaC+jExIKhMORmWFe49xb3tkTYZIC+7QVXPWCsKA4u
-         aWl+zGyg8nx9H1HUf2xRyBb+wZem4BkPjriiYGnQjwnWFC7Z2Mb1CRVEcvDdOXJL0ul4
-         K3cIHGf1Kss/XSc5gp5QXXsRB2UEt3d8TqMypV7snvZ6jRhXyIrkmQLbD8sEzJCKDW0Y
-         lOWKnIE1DVxmTEo/QWrYyLEcZLQJhpFZp1y4fF40otwGp7/r1pWgdatmaSNzK/Rwvfb7
-         1oRg==
-X-Forwarded-Encrypted: i=1; AJvYcCUOQbvox1EkyGaGNPG5HbBWDR8i2FstAmfwBYDN463pm5b3/iparv2ZKPqG+FP6rv49Orih6whjLjI=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywgxnk2ScY+1bcofPK5W5wBjwgPl0HDbAvhTQeWMp1ZZ1Xy/cOp
-	QzHRarqEh+ool9gD+cgHEDLKoVQ/TkDlwjG41T/uqN5w52HXbV99pl1T1JA4opISm0FQHqz4UB0
-	95EQ5ItslffZEEwAx9ucmzIwokteddkRzFRpy+t3F6qPdkh4oVJNJXzaMNkqQDOw=
-X-Gm-Gg: ATEYQzzS5buhFCnFBpZAIRE02a46GnucpF/MmfBeo5hhE9EqEvOmmm8U3zay1HAh6jW
-	Bu0DZIB/XaFDl6HkRVkuy1qQQHJMGSX7YPufYwljLLicreFHTdDJFexAMbY3flOp9SHiN4SMLpG
-	MJn73T6E4EyN+Xfxjcqz61Aaix/9ATPKiZ9Sm/F5Z9OiQGTR8+t1BPRw8iseIhiVsn4a5JPqmZH
-	3I0WzwKa9zw2wozu1H3PGGJjAhWuT0mg00eqWCI6TYpmA0eiXbBAiaRpDfRvlEp+C5EnFt+DcH0
-	FaWly0R7a8i4DZUB24Jt+wXwC0Y6pg6xeDR/kfpTBBhDwWcDVAsGig9WG79ThzODtB4LnJGWvnn
-	K5hzD0pd0Svg=
-X-Received: by 2002:a17:90b:4e8c:b0:354:a662:47ff with SMTP id 98e67ed59e1d1-359a6a851a9mr3957559a91.35.1772694770961;
-        Wed, 04 Mar 2026 23:12:50 -0800 (PST)
-X-Received: by 2002:a17:90b:4e8c:b0:354:a662:47ff with SMTP id 98e67ed59e1d1-359a6a851a9mr3957531a91.35.1772694770419;
-        Wed, 04 Mar 2026 23:12:50 -0800 (PST)
-Received: from work ([2401:4900:88da:227d:1b86:2ae4:5dce:122e])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-359b2d409b3sm870214a91.7.2026.03.04.23.12.47
+        bh=1KWALn+owxQlHHUvDt1bNPDTkMcDKMGZRsCDyWIh+bM=;
+        b=X0PpyQ3pER5RapdTgzcL/r9ZxtpeBj1SAg+Tp/u6GcFOR2qxmThz56JdK0hkRPci+5
+         NXe+x3e5ebPPBB/dH21yOFxFFsweayVY0QvTInIke5fMBACdDp0XNujmoyS8k8/+Wyje
+         2c5i7Vw3OZU907hEqo+9NzAwsnaQPJaYtmUKPLSeYhDxndbr+uHUqUb+/MfViQq1OC4q
+         XZ8GtuC2gsicPJzjD7+a4JOyP6hvST3zLlBBNlqZnCH3SGc4KTcu01g44qMUVbyUU902
+         tVcRXyyz6izqzQz8ahAxNks9/LIjuCgD2Xv8MXz9TXlW8XfGKTmoDxU9q1u/+FRJVgDZ
+         x5ig==
+X-Forwarded-Encrypted: i=1; AJvYcCV+UCxEYek2QXtKkg/quSd5t78GCUkai5sEV+/Ht1q/k9h6CmFyDlMkEWShfhcQ4Qrb5ueIRKKgpuw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzvJJe/vSuA8S9pkURDpvaMaVdP6D8dep2DvrRwmfIgupV8+kTw
+	GzSYhLUOz8xqUPvGl8y6FvT+SAqCkBlIkXELD3DZ/r3xqVv4eNrV9p3nm3sPEtlmqMQMvTrhO8t
+	TJnPEBadTbDbTP5eWSX7DeCuJnKTYOxHZcfaR/NUShN4b0ugIKL4kRQJnkXu+Ax4=
+X-Gm-Gg: ATEYQzyUWhKhr/TtJzV4C/UifU/RJoRX0BcmAaPBb+vhKV1tvxcQ73KOI5i0ZWV6ZQY
+	JGkFFCsigZkY1H0+qbyXVCDCmI9CpNUcpn1Z5q0mWa9tYdlDoknLubtx/hX3HOMv/2DWP751ICI
+	GBsOlmZTvaysb/JROuxnEpWoHL8OKMV8B+dmAIGEezRkUmplL9pXHwxnSWsPq+IJgBjJeYUlZUZ
+	9oLXyfpKYRQ9AEy0zuLI4omEhY3PWE1st1J4acY4RJYK83HOxMH7LU3ZQxyMZtATQPqe+HZDrBE
+	AiSV1w8R2wgtSCNS5zvY8Z7/2l52Gd8hm3ktyIvSWdXYeH6187eGjv5vF2db4hbR8xKDAETvzfz
+	Z9l683lEe4CMamuxVzFm+O44=
+X-Received: by 2002:a05:6a00:4288:b0:827:3321:7a23 with SMTP id d2e1a72fcca58-82972b63764mr3933233b3a.24.1772694799067;
+        Wed, 04 Mar 2026 23:13:19 -0800 (PST)
+X-Received: by 2002:a05:6a00:4288:b0:827:3321:7a23 with SMTP id d2e1a72fcca58-82972b63764mr3933216b3a.24.1772694798532;
+        Wed, 04 Mar 2026 23:13:18 -0800 (PST)
+Received: from [192.168.1.2] ([2401:4900:88da:227d:1b86:2ae4:5dce:122e])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82739d8c7aesm25271446b3a.21.2026.03.04.23.13.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Mar 2026 23:12:50 -0800 (PST)
+        Wed, 04 Mar 2026 23:13:18 -0800 (PST)
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
-To: mani@kernel.org, kwilczynski@kernel.org
-Cc: kishon@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Subject: [PATCH 2/2] PCI: endpoint: Improve error messages
-Date: Thu,  5 Mar 2026 12:42:35 +0530
-Message-ID: <20260305071236.23792-2-mani@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260305071236.23792-1-mani@kernel.org>
-References: <20260305071236.23792-1-mani@kernel.org>
+To: kishon@kernel.org, kwilczynski@kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, Alok Tiwari <alok.a.tiwari@oracle.com>
+Cc: alok.a.tiwarilinux@gmail.com
+In-Reply-To: <20260227030701.40533-1-alok.a.tiwari@oracle.com>
+References: <20260227030701.40533-1-alok.a.tiwari@oracle.com>
+Subject: Re: [PATCH] PCI: endpoint: Propagate error from pci_epf_create()
+Message-Id: <177269479555.23838.3081091400517601270.b4-ty@kernel.org>
+Date: Thu, 05 Mar 2026 12:43:15 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: niZDwuXGytm2Bws-m67gpt16_jIlh2Zw
-X-Proofpoint-ORIG-GUID: niZDwuXGytm2Bws-m67gpt16_jIlh2Zw
-X-Authority-Analysis: v=2.4 cv=GecaXAXL c=1 sm=1 tr=0 ts=69a92cf3 cx=c_pps
- a=RP+M6JBNLl+fLTcSJhASfg==:117 a=xqWC_Br6kY4A:10 a=Yq5XynenixoA:10
- a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=_K5XuSEh1TEqbUxoQ0s3:22 a=EUspDBNiAAAA:8 a=xB4wU2afyiWPp1UU5fEA:9
- a=iS9zxrgQBfv6-_F4QbHw:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA1MDA1NSBTYWx0ZWRfX/jZEdiC1wUU0
- EoyrW0acNjCW7OpNyFj5WaeSyOvGy98l/2rMlk18Oil3yq4gcK+ao3gvFG8hOLcaUYXA+B66Bmf
- f9NnaORC2p8zbedAe9f8Kljh93IeUxhnRHEiNWzr4W/6QDHvCVfqD7XLZbMb6kPewT4ziSaghiP
- k3WkRx3V6gFXePbvChFkJyCIOnQLAud/Gk+SQUEx/deNUFmTpYwBZmwuvNNAhqZBuqzv3gQsAAk
- 1G1tIbULoVejsMAszZjfXRu1moTxHR+O6JsCwZ8szi3JYSNYow6L3Vwj7EGQvOQmsPyxL5MHTE2
- FmSLzH1iMnuVhZAhLRn4WuFtL4hdzhn6rCvllprVbltd6vjiBEs9fKvwRHK5hxN/If0ZLpopwpY
- lNuNrfH4GYj/OQUBDpd04Zinys6zT31JX50qcE282CueU1eY2OrGkQ97rjAaDr2303NgaVHp0yW
- xWnIuK61bma9H3Pk40A==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA1MDA1NSBTYWx0ZWRfX9/HfOsxqPDtm
+ zXRLdrVuW7MpDStVLkWcKP51XnFJ7sO1ednr473syh5pCmtkJ8MeIvWUFLUxCgcWoSWQZUYy7C2
+ ooFUYVmEGtCNCBV+qbR6HXGVFQxJAJtXQ72wKVHxk83f0Urk05QisudXcKLa7Z8MOqER80jeHg9
+ +JWe2yMPiUm+5DxzH8YTT4LwMBc31GloYt3QoM5Ye3++PMhiBEBZFf25rmCKBO1RY/jLMF42ZO4
+ yCr1C0yU5EYcoL7kSCcPU14YnpSzzeQPDLqNvLPCCFfCsp5VXpX4HP9IOom9cR6tYDAp39IZxHW
+ sEpXkkETdhv70Cz1EnT82AMytYPaTLFu8yKXqv3zLOcyxdJ5dCaCeJI1TfqNXzarv269Zogc7+W
+ oUVxeVVDwbBqyvb8GDJnKmprx3rYZvzocmfy4HWTQT33cfCyh2NOGImeQjxVeQsPflqJSCm8KI4
+ JWwaDzbFWNxWpd4wdng==
+X-Proofpoint-ORIG-GUID: naYO_mVlA76ddJ1aw8tIsjuUwKWYfBH0
+X-Authority-Analysis: v=2.4 cv=Ddsaa/tW c=1 sm=1 tr=0 ts=69a92d0f cx=c_pps
+ a=mDZGXZTwRPZaeRUbqKGCBw==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22 a=VwQbUJbxAAAA:8
+ a=s_YgZJk1io9OGwFR57AA:9 a=QEXdDO2ut3YA:10 a=zc0IvFSfCIW2DFIPzwfm:22
+X-Proofpoint-GUID: naYO_mVlA76ddJ1aw8tIsjuUwKWYfBH0
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-03-05_01,2026-03-04_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 bulkscore=0 impostorscore=0 spamscore=0 suspectscore=0
- clxscore=1015 lowpriorityscore=0 adultscore=0 malwarescore=0 phishscore=0
+ clxscore=1015 priorityscore=1501 suspectscore=0 bulkscore=0 impostorscore=0
+ malwarescore=0 spamscore=0 adultscore=0 phishscore=0 lowpriorityscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603050055
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-Include errno in the error prints and also use dev_err() where applicable.
+On Thu, 26 Feb 2026 19:06:53 -0800, Alok Tiwari wrote:
+> pci_epf_make() overwrites the actual error returned by
+> pci_epf_create() with -EINVAL, which hides the real failure
+> reason. Use PTR_ERR(epf) instead and print the error code.
+> 
+> 
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
----
- drivers/pci/endpoint/pci-ep-cfs.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+Applied, thanks!
 
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index a19db22b7991..2d2efd444b02 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -565,7 +565,8 @@ static void pci_ep_cfs_add_type_group(struct pci_epf_group *epf_group)
- 
- 	if (IS_ERR(group)) {
- 		dev_err(&epf_group->epf->dev,
--			"failed to create epf type specific attributes\n");
-+			"failed to create epf type specific attributes: %d\n",
-+			(int)PTR_ERR(group));
- 		return;
- 	}
- 
-@@ -578,13 +579,17 @@ static void pci_epf_cfs_add_sub_groups(struct pci_epf_group *epf_group)
- 
- 	group = pci_ep_cfs_add_primary_group(epf_group);
- 	if (IS_ERR(group)) {
--		pr_err("failed to create 'primary' EPC interface\n");
-+		dev_err(&epf_group->epf->dev,
-+			"failed to create 'primary' EPC interface: %d\n",
-+			(int)PTR_ERR(group));
- 		return;
- 	}
- 
- 	group = pci_ep_cfs_add_secondary_group(epf_group);
- 	if (IS_ERR(group)) {
--		pr_err("failed to create 'secondary' EPC interface\n");
-+		dev_err(&epf_group->epf->dev,
-+			"failed to create 'secondary' EPC interface: %d\n",
-+			(int)PTR_ERR(group));
- 		return;
- 	}
- 
-@@ -675,8 +680,8 @@ struct config_group *pci_ep_cfs_add_epf_group(const char *name)
- 	group = configfs_register_default_group(functions_group, name,
- 						&pci_epf_group_type);
- 	if (IS_ERR(group))
--		pr_err("failed to register configfs group for %s function\n",
--		       name);
-+		pr_err("failed to register configfs group for %s function: %d\n",
-+		       name, (int)PTR_ERR(group));
- 
- 	return group;
- }
+[1/1] PCI: endpoint: Propagate error from pci_epf_create()
+      commit: 0b74f7d72399d4c4422ed3d68ef28b3612f71e74
+
+Best regards,
 -- 
-2.51.0
+Manivannan Sadhasivam <mani@kernel.org>
 
