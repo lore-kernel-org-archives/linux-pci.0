@@ -1,114 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B510933F8C2;
-	Thu,  5 Mar 2026 07:59:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from sgoci-sdnproxy-4.icoremail.net (sgoci-sdnproxy-4.icoremail.net [129.150.39.64])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4FB2334F46F;
+	Thu,  5 Mar 2026 08:01:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=129.150.39.64
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772697552; cv=none; b=FcpqxMjZXg2kJwcyZ/Nz+qGFKnBuDDKUlq4oI8dLnvpks2BJHUGJsZmz7+cdt6dW6jOMeJ+KyhN0lKCK+gRNDzgngjI3GWPX9neB/QbNoQxGjVxaSdGiu80UQ3MSjkmJSSmoFhBqgHyoWarzoxhuPm4GxqTYQjeipacIzu7Wk50=
+	t=1772697706; cv=none; b=XoRppZAksoZO5saKjJOc9/4ipD0s7BvMZiM2E8/z4Xg1Hv0asW0UKUsmhQnqi1FJpDhZwXrAHHbALBC8cHPHF/8AIBv2hHRZr4ZtIb3QHI3aXkiIn/2sigB6hzX331jqXCXPrBTEztHCDQubbthip4Z9HyPzfe4r4irWNLMImH4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772697552; c=relaxed/simple;
-	bh=mM3OjQ33S9TQppKsWWyKBLl8eCLt4XCfC08emeBfuqU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qabSnnLOcHRLpSZPdXcB09kpF1AV5/1OfbplphTkVmcjKuZt86Y+ORPBz5hRSStaZQ5ts07scBvJYcRgBOfTX8WEJPHOV2R0cBsdp3Sszs4UAFBizCoCTLhQT96mHlIK9yo275sBlpBX+1E8YdudtiIubrxzVUl+etipIYZxXw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AjssJ6aL; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AjssJ6aL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6616C116C6;
-	Thu,  5 Mar 2026 07:59:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772697552;
-	bh=mM3OjQ33S9TQppKsWWyKBLl8eCLt4XCfC08emeBfuqU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AjssJ6aLg8dT7xUstr9c/ZnzaYyKi7sI/j7A0qr8qZHrKwFfrZvtf2Xfb+6UN3nhU
-	 q1m+lNAt/BUmY4C+UV9GIOylGVrXbgQLWZf395SV7xk1xW8vi/Hho1sB+McNeSwAFb
-	 F8OkJfROXIq/Z+liGDyZK07vsG+NQ2CWGY1w8rKnWAVUS1SrxpVKTj3XOEW7grgCyP
-	 CisCZDfUEwBQuvs89Ol1dgUR3Mil53vH7zUH919FFdDVxOCWVUAE7JZqJB1InlXdol
-	 jGrhlwu6VPUZkoTvspMPKLfixAX0Agkth+auQxoKcNIO0Sx/HWb74C8aQRYBC2qePe
-	 81BZ0DzM8CWTA==
-Date: Thu, 5 Mar 2026 13:28:57 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com, 
-	bjorn.andersson@oss.qualcomm.com
-Subject: Re: [PATCH v2 5/5] PCI: qcom: Add D3cold support
-Message-ID: <om6t5hlnxadpmet5i2gochjmfjw6mdfllrdbgewiz4u6vj3zot@nse5rbl3je64>
-References: <20260217-d3cold-v2-0-89b322864043@oss.qualcomm.com>
- <20260217-d3cold-v2-5-89b322864043@oss.qualcomm.com>
+	s=arc-20240116; t=1772697706; c=relaxed/simple;
+	bh=AxKgOxPwkDvL3+Il99VADYTlGL/JcVJEByst9bj72t8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=Ge5qlFOdHMsrhnyjDgvdo1o0CHJ4aMfRU3jOEnFKbjbny/e7901YQkUQFS3GLiFFxlXqhiELQTsiVuAPQNuX+REDIGDoFkm6/qdqV7h5/vsg1KR+pRc3IUXfaEY7sk4CIQoNvUK7GAsTGb0GV8abumpP0nOq6/aS9y6ydo25/pA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=129.150.39.64
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
+Received: from linmin$eswincomputing.com ( [10.10.96.205] ) by
+ ajax-webmail-app2 (Coremail) ; Thu, 5 Mar 2026 16:01:20 +0800 (GMT+08:00)
+Date: Thu, 5 Mar 2026 16:01:20 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: "Min Lin" <linmin@eswincomputing.com>
+To: "Manivannan Sadhasivam" <mani@kernel.org>
+Cc: zhangsenchuan@eswincomputing.com, bhelgaas@google.com,
+	krzk+dt@kernel.org, conor+dt@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, robh@kernel.org, p.zabel@pengutronix.de,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, christian.bruel@foss.st.com,
+	shradha.t@samsung.com, krishna.chundru@oss.qualcomm.com,
+	thippeswamy.havalige@amd.com, inochiama@gmail.com, Frank.li@nxp.com,
+	ningyu@eswincomputing.com, pinkesh.vaghela@einfochips.com,
+	ouyanghui@eswincomputing.com
+Subject: Re: Re: [PATCH v11 2/2] PCI: eic7700: Add Eswin PCIe host
+ controller driver
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
+ 20241203(6b039d88) Copyright (c) 2002-2026 www.mailtech.cn
+ mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
+In-Reply-To: <jd4aszup2peetymesiltqghoptp2w4uuecrsdzkb2cl5vqqfot@m3vh6x4u5t6l>
+References: <20260227111536.1940-1-zhangsenchuan@eswincomputing.com>
+ <20260227111808.1996-1-zhangsenchuan@eswincomputing.com>
+ <jd4aszup2peetymesiltqghoptp2w4uuecrsdzkb2cl5vqqfot@m3vh6x4u5t6l>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260217-d3cold-v2-5-89b322864043@oss.qualcomm.com>
+Message-ID: <57246067.3de3.19cbd03fc5f.Coremail.linmin@eswincomputing.com>
+X-Coremail-Locale: en_US
+X-CM-TRANSID:TQJkCgDH3aBROKlp7dcFAA--.1468W
+X-CM-SenderInfo: 5olqzx3q6h245lqf0zpsxwx03jof0z/1tbiAgERCWmoXwcYbwAAs1
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+	daVFxhVjvjDU=
 
-On Tue, Feb 17, 2026 at 04:49:10PM +0530, Krishna Chaitanya Chundru wrote:
-> Add support for transitioning Qcom PCIe controllers into D3cold by
-
-You cannot transition a 'PCIe controller' to D3Cold state, but only the
-endpoints and bridges.
-
-> integrating with the DWC core suspend/resume helpers.
-> 
-> Implement PME_TurnOff message generation via ELBI_SYS_CTRL and hook it
-> into the DWC host operations so the controller follows the standard
-> PME_TurnOff-based power-down sequence before entering D3cold.
-> 
-> When the link is suspended into D3cold, fully tear down interconnect
-
-You cannot suspend a link into D3Cold. Link and D-State are different.
-
-> bandwidth, OPP votes. If D3cold is not entered, retain existing behavior
-> by keeping the required interconnect and OPP votes.
-> 
-> Drop the qcom_pcie::suspended flag and rely on the existing
-> dw_pcie::suspended state, which now drives both the power-management
-> flow and the interconnect/OPP handling.
-> 
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
->  drivers/pci/controller/dwc/pcie-qcom.c | 121 ++++++++++++++++++++-------------
->  1 file changed, 74 insertions(+), 47 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index b02c19bbdf2ea5db252c2a0281a569bb3a0cc497..37442bbe588c36b0b0414cc4d0016da2d8424a87 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -145,6 +145,7 @@
-
-[...]
-
-> -	if (pcie->suspended) {
-> -		ret = qcom_pcie_host_init(&pcie->pci->pp);
-> -		if (ret)
-> -			return ret;
-> +		ret = icc_enable(pcie->icc_mem);
-> +		if (ret) {
-> +			dev_err(dev, "Failed to enable PCIe-MEM interconnect path: %d\n", ret);
-> +			goto disable_icc_cpu;
-> +		}
->  
-> -		pcie->suspended = false;
-> +		/*
-> +		 * Ignore -ETIMEDOUT here since it is expected when no endpoint is
-> +		 * connected to the PCIe link.
-> +		 */
-> +		ret = dw_pcie_resume_noirq(pcie->pci);
-> +		if (ret && (ret != -ETIMEDOUT))
-
-No, dw_pcie_resume_noirq() was reworked to return -ETIMEDOUT to indicate a hard
-failure. If the device is not found, it will return -ENODEV. So you should
-fail the resume if -ETIMEDOUT is returned.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+SGkgTWFuaSwKClRoYW5rcyBmb3IgeW91ciBraW5kIHN1Z2dlc3Rpb24gYW5kIGhlbHAuCgoKPiAt
+LS0tLU9yaWdpbmFsIE1lc3NhZ2VzLS0tLS0KPiBGcm9tOiAiTWFuaXZhbm5hbiBTYWRoYXNpdmFt
+IiA8bWFuaUBrZXJuZWwub3JnPgo+IFNlbmQgdGltZTpUaHVyc2RheSwgMDUvMDMvMjAyNiAxNDow
+NzozMQo+IFRvOiB6aGFuZ3NlbmNodWFuQGVzd2luY29tcHV0aW5nLmNvbQo+IENjOiBiaGVsZ2Fh
+c0Bnb29nbGUuY29tLCBrcnprK2R0QGtlcm5lbC5vcmcsIGNvbm9yK2R0QGtlcm5lbC5vcmcsIGxw
+aWVyYWxpc2lAa2VybmVsLm9yZywga3dpbGN6eW5za2lAa2VybmVsLm9yZywgcm9iaEBrZXJuZWwu
+b3JnLCBwLnphYmVsQHBlbmd1dHJvbml4LmRlLCBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnLCBk
+ZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZywgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZywg
+Y2hyaXN0aWFuLmJydWVsQGZvc3Muc3QuY29tLCBzaHJhZGhhLnRAc2Ftc3VuZy5jb20sIGtyaXNo
+bmEuY2h1bmRydUBvc3MucXVhbGNvbW0uY29tLCB0aGlwcGVzd2FteS5oYXZhbGlnZUBhbWQuY29t
+LCBpbm9jaGlhbWFAZ21haWwuY29tLCBGcmFuay5saUBueHAuY29tLCBuaW5neXVAZXN3aW5jb21w
+dXRpbmcuY29tLCBsaW5taW5AZXN3aW5jb21wdXRpbmcuY29tLCBwaW5rZXNoLnZhZ2hlbGFAZWlu
+Zm9jaGlwcy5jb20sIG91eWFuZ2h1aUBlc3dpbmNvbXB1dGluZy5jb20KPiBTdWJqZWN0OiBSZTog
+W1BBVENIIHYxMSAyLzJdIFBDSTogZWljNzcwMDogQWRkIEVzd2luIFBDSWUgaG9zdCBjb250cm9s
+bGVyIGRyaXZlcgo+IAo+IE9uIEZyaSwgRmViIDI3LCAyMDI2IGF0IDA3OjE4OjA4UE0gKzA4MDAs
+IHpoYW5nc2VuY2h1YW5AZXN3aW5jb21wdXRpbmcuY29tIHdyb3RlOgo+ID4gRnJvbTogU2VuY2h1
+YW4gWmhhbmcgPHpoYW5nc2VuY2h1YW5AZXN3aW5jb21wdXRpbmcuY29tPgo+ID4gCj4gPiBBZGQg
+ZHJpdmVyIGZvciB0aGUgRXN3aW4gRUlDNzcwMCBQQ0llIGhvc3QgY29udHJvbGxlciwgd2hpY2gg
+aXMgYmFzZWQgb24KPiA+IHRoZSBEZXNpZ25XYXJlIFBDSWUgY29yZSwgSVAgcmV2aXNpb24gNS45
+NmEuIFRoZSBQQ0llIEdlbi4zIGNvbnRyb2xsZXIKPiA+IHN1cHBvcnRzIGEgZGF0YSByYXRlIG9m
+IDggR1QvcyBhbmQgNCBjaGFubmVscywgc3VwcG9ydCBJTlR4IGFuZCBNU0kKPiA+IGludGVycnVw
+dHMuCj4gPiAKPiAKPiBJcyB0aGUgZHJpdmVyIGdvaW5nIHRvIHdvcmsgb25seSBmb3IgdGhlIFBD
+SWUgUkMgSVAgaW4gRUlDNzcwMCBTb0Mgb3IgZm9yIHRoZQo+IHVwY29taW5nIEVzd2luIFNvQ3Mg
+YXMgd2VsbD8gSnVzdCBjdXJpb3VzIGJlY2F1c2UsIHdlIGRvbid0IG5hbWUgZHJpdmVycyBiYXNl
+ZAo+IG9uIG9uZSBTb0MgbmFtZSwgYnV0IGJ5IHRoZSB2ZW5kb3Igc28gdGhhdCB0aGUgZHJpdmVy
+IChpZiBjb21wYXRpYmxlKSBjYW4gYmUKPiB1c2VkIGFjcm9zcyBvdGhlciBTb0NzIGZyb20gdGhl
+IHZlbmRvci4KPiAKPiBJZiBpdCBjYW4gd29yayBhY3Jvc3Mgb3RoZXIgU29DcywgdGhlbiBJIGNh
+biBjaGFuZ2UgJ2VpYzc3MDAnIHRvICdlc3dpbicsIHdoZXJlCj4gYXBwbGljYWJsZSB3aGlsZSBh
+cHBseWluZy4KPiAKClRoaXMgUENJZSBSQyBJUCBpbiBFSUM3NzAwIHdpbGwgb25seSBiZSB1c2Vk
+IGZvciBFSUM3NzAwIFNvQy4gT25lIHRoaW5nIGZvciBzdXJlCmlzIG91ciBuZXh0IFNvQyB3aWxs
+IHVzZSBhIGhpZ2hlciBJUCByZXZpc2lvbiBvZiB0aGUgRGVzaWduV2FyZSBQQ0llIGNvcmUuCklu
+IHRoZSBmdXR1cmUsIHRoZXJlIGlzIG5vIGRvdWJ0IHRoYXQgdGhlIHVzZSBvZiBJUCBmcm9tIG90
+aGVyIG1hbnVmYWN0dXJlcnMgbWF5CmJlIGNvbnNpZGVyZWQuCgpCYXNlZCBvbiB0aGlzLCBtYXkg
+SSBhc2sgd2hpY2ggbmFtZSBkbyB5b3UgdGhpbmsgaXMgYmV0dGVyLCBlaWM3NzAwJyBvciAnZXN3
+aW4nPwoKSSBmb3VuZCB0aGVyZSBpcyBhIGNvbW1pdCBvbiBkcml2ZXJzL3BjaS9jb250cm9sbGVy
+L2R3Yy9wY2llLXRlZ3JhMTk0LmMKSXQgYWRkZWQgVGVncmEyMzQgUENJZSBzdXBwb3J0IGluIHBj
+aWUtdGVncmExOTQuYwpJcyB0aGlzIG5hbWluZyBhcHByb2FjaCBubyBsb25nZXIgcmVjb21tZW5k
+ZWQ/Cgo+IC0gTWFuaQo+IAo+ID4gU2lnbmVkLW9mZi1ieTogWXUgTmluZyA8bmluZ3l1QGVzd2lu
+Y29tcHV0aW5nLmNvbT4KPiA+IFNpZ25lZC1vZmYtYnk6IFlhbmdodWkgT3UgPG91eWFuZ2h1aUBl
+c3dpbmNvbXB1dGluZy5jb20+Cj4gPiBTaWduZWQtb2ZmLWJ5OiBTZW5jaHVhbiBaaGFuZyA8emhh
+bmdzZW5jaHVhbkBlc3dpbmNvbXB1dGluZy5jb20+Cj4gPiAtLS0KPiA+ICBkcml2ZXJzL3BjaS9j
+b250cm9sbGVyL2R3Yy9LY29uZmlnICAgICAgICB8ICAxMSArCj4gPiAgZHJpdmVycy9wY2kvY29u
+dHJvbGxlci9kd2MvTWFrZWZpbGUgICAgICAgfCAgIDEgKwo+ID4gIGRyaXZlcnMvcGNpL2NvbnRy
+b2xsZXIvZHdjL3BjaWUtZWljNzcwMC5jIHwgNDA5ICsrKysrKysrKysrKysrKysrKysrKysKPiA+
+ICAzIGZpbGVzIGNoYW5nZWQsIDQyMSBpbnNlcnRpb25zKCspCj4gPiAgY3JlYXRlIG1vZGUgMTAw
+NjQ0IGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZWljNzcwMC5jCj4gPiAKW3NuaXBd
+CgpSZWdhcmRzLApMaW4gTWluCg==
