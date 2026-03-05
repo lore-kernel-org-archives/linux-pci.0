@@ -1,82 +1,91 @@
-Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3514A39B4A9;
-	Thu,  5 Mar 2026 12:43:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF64239B4B7
+	for <linux-pci@vger.kernel.org>; Thu,  5 Mar 2026 12:43:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772714593; cv=none; b=USdKbTHp99T2Ou7SgRHlnwnE72ZQ/Sg1ml1Vv2GfcMbUFdga/uBX5g8igRr9bWwj29LZuEGuOq3R3wQWL4n56rRkG0CXvlIKTae5SYKuHysPc/k5JfQFkEHsPcH0AI+ruEC6ybl963lsf0wlbjRGw+dtxVW9x6OdOGBFQTyoPqQ=
+	t=1772714631; cv=none; b=J1hLRIUlrlMW9NMcoeSNX2TCB6BR8Qm1yAW0LZ44IX7DhSqBfBMSm2wERR6zP4nHhktHp9eqPOxYu2JLYcCEo9lW1fdg+5c5EbDPhZmixkNeDHp6v2107P7HcZGC+FPSG/uy+IdjShmwvc18uAS9R9NuM3wqAqCjMSiAON0Bavo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772714593; c=relaxed/simple;
-	bh=j2nmEUsed1xGW7mYNjCxskTFeMzmDSGgZTXSXzW87/E=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=pVs9bzwiACewIBkFR5XMW46rO53zJxRYgaQ2CcHV4VNuzl1QsagkHCAL7orw1uh622iwDWcoc57p4OvXtizTfJp7WxL5tP+R2f1id9EZEtHFubYu0nFsC72dS9HotTpFWtwhtedheHNynoCJ943Ho/kwlzMeC8O/ty1XlIUIK4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=cMlCYiIm; arc=none smtp.client-ip=148.251.105.195
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	s=arc-20240116; t=1772714631; c=relaxed/simple;
+	bh=+1Soi4u0zOToM+4cvb9M54dFFqUFlTLNETgvWAKHxCU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=M3O8uSQX5eJoiv1FUVN+HQim92YsKeKNvqRyF1pxMm0UaX8J7ynsuhNAUj6J0LZufu4xhi2VwlYzyOi7tdSXd6nN+nFGgSBS7XOmtfN4YqvhpqCG7rQcK5wki4QjT0nCvxH+yTRS5kju3eYA1oentnBXMfY9betzLaJpVXmfgNA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qb0jG97e; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="cMlCYiIm"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1772714589;
-	bh=j2nmEUsed1xGW7mYNjCxskTFeMzmDSGgZTXSXzW87/E=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=cMlCYiIm9nkWc0v85Ktic0IMmXr0Pjl6WyCyR2/YcPw1cnMxSUAqpvCGUbLOAmIxL
-	 wbPMgYmSSsoCbrsomViW6h7d2210+ZMnKQqiQMqvGenv4EkATTrMsfUcjdhIFu2U4D
-	 IYR9wIp2lcRsNWDDuwYO13P3SWk1idXsK+6AILiP3O5yTWFJFsB3/LH45bZ17NZ43V
-	 WEfN+5NWAFL44RpoNs+IdjTpGVMBLg+EiEnRw6J6UlxE/VnXqB76Rm0z2m3m7DRtwT
-	 m6+uFYxOzykD1JwWAEyTAEP/zwEI/F4bj4rcHG0e2pluHcVLLq3Xss0zBmG2DjXYsL
-	 eCRxH8kiH6jXg==
-Received: from IcarusMOD.eternityproject.eu (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: kholk11)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id DB2C917E0071;
-	Thu,  5 Mar 2026 13:43:08 +0100 (CET)
-From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-To: Matthias Brugger <matthias.bgg@gmail.com>, 
- Ryder Lee <ryder.lee@mediatek.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Chen-Yu Tsai <wenst@chromium.org>
-Cc: Bartosz Golaszewski <brgl@bgdev.pl>, linux-pci@vger.kernel.org, 
- linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20260302053109.1117091-1-wenst@chromium.org>
-References: <20260302053109.1117091-1-wenst@chromium.org>
-Subject: Re: (subset) [PATCH v3 0/7] PCI: mediatek-gen3: add power control
- support
-Message-Id: <177271458883.33613.9898365722639233697.b4-ty@collabora.com>
-Date: Thu, 05 Mar 2026 13:43:08 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qb0jG97e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 629C4C2BC87
+	for <linux-pci@vger.kernel.org>; Thu,  5 Mar 2026 12:43:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772714631;
+	bh=+1Soi4u0zOToM+4cvb9M54dFFqUFlTLNETgvWAKHxCU=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=Qb0jG97edmb3U2qfJOZ8W4namHJQLjHdyLa/yO8Shzxok1cow1oGiOPDZPwW1C2aX
+	 qfpAXVF5aCFXZLxPSzvgKeKSxO9o5XsLWHV8Z2J8C79wGhUQOpuNdTpOU9Dzdkkz3p
+	 TWGjcAKnefLsljHAnEj5fjLLXkP0UfERnPvGWuc0ZQekEOQjNXH5K1HWRbh9ma16qv
+	 6TkLXMUEkXlMirlttkcaQYFOEfMZ+oBljrNq1F3YIMePzlnhhwMurIVZGke7gCj1z9
+	 cdj00Q5OZUBdizfbKPYLlLKP8RyJI5QMF03gjMx1z3TalYyUwSwiQn9mCL6ZfAo7SC
+	 0i9QiFLq3vXMw==
+Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-798578e2918so74899707b3.2
+        for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2026 04:43:51 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCVYsoaw8EcLStxzhFzE7FpaIOnDsbU4iu14ejB2Wuoj4yKpaXJ8zlJkP5gAR+PL/wczCxoQ0iu7w4E=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyhmJzJO7PLOOBA8ve1TcdLNWL6l4LXrMmfuvSJii0cELYG5vOP
+	wh8sXhyBwm9e2UNWE3JXTrKvORtrVnbAmS50F4w3TZmEvC9ZmFR8NEPM2zs3U6tSEDs61tPHfY7
+	tcy+IVqP47jif/cu6nXFrQFBk/EteqPs=
+X-Received: by 2002:a05:690e:448d:b0:64c:ac70:9420 with SMTP id
+ 956f58d0204a3-64cf9bdb391mr3524893d50.76.1772714630723; Thu, 05 Mar 2026
+ 04:43:50 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
+References: <20260304175735.2660419-1-vladimir.oltean@nxp.com> <20260304175735.2660419-19-vladimir.oltean@nxp.com>
+In-Reply-To: <20260304175735.2660419-19-vladimir.oltean@nxp.com>
+From: Linus Walleij <linusw@kernel.org>
+Date: Thu, 5 Mar 2026 13:43:38 +0100
+X-Gmail-Original-Message-ID: <CAD++jLnCtu20rXcg7sMVLBi24EohscJoz0kN46XJaKPJt00O2w@mail.gmail.com>
+X-Gm-Features: AaiRm53Fhg5bHrVPoZ7KkxLKre-rHWPjFXtzmvz74i7G3hPs_-fZQdYeAKMF5Bw
+Message-ID: <CAD++jLnCtu20rXcg7sMVLBi24EohscJoz0kN46XJaKPJt00O2w@mail.gmail.com>
+Subject: Re: [PATCH phy-next 18/22] pinctrl: tegra-xusb: include PHY provider header
+To: Vladimir Oltean <vladimir.oltean@nxp.com>
+Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, dri-devel@lists.freedesktop.org, 
+	freedreno@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org, 
+	linux-arm-msm@vger.kernel.org, linux-can@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, linux-rockchip@lists.infradead.org, 
+	linux-samsung-soc@vger.kernel.org, linux-sunxi@lists.linux.dev, 
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, 
+	netdev@vger.kernel.org, spacemit@lists.linux.dev, 
+	UNGLinuxDriver@microchip.com, Thierry Reding <thierry.reding@gmail.com>, 
+	Jonathan Hunter <jonathanh@nvidia.com>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, 02 Mar 2026 13:31:00 +0800, Chen-Yu Tsai wrote:
-> This is v3 of my MediaTek PCIe gen3 controller driver power control
-> support series.
-> 
-> Changes since v2:
-> - Link to v2: https://lore.kernel.org/all/20260226092234.3859740-1-wenst@chromium.org/
-> - Made PCIE_MEDIATEK_GEN3 select PCI_PWRCTRL_SLOT, following existing
->   examples
-> 
-> [...]
+On Wed, Mar 4, 2026 at 7:00=E2=80=AFPM Vladimir Oltean <vladimir.oltean@nxp=
+.com> wrote:
 
-Applied to v7.0-next/dts64, thanks!
+> The tegra-xusb pinctrl driver is also a PHY provider (calls
+> devm_phy_create() for PCIe and SATA). However, according to Vinod Koul,
+> having PHY provider drivers outside of drivers/phy/ is discouraged,
+> although it would be difficult for me to address a proper movement here.
+>
+> Include the private provider API header from drivers/phy/, but leave a
+> FIXME in place. It will have to be moved, eventually.
+>
+> Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
 
-[6/7] arm64: dts: mediatek: mt8195-cherry: add WiFi PCIe and BT USB power supplies
-      commit: 0c5d91b3d0eeed3925dd43f834afcc19a11aa9fd
-[7/7] arm64: dts: mediatek: mt8195-cherry-dojo: Describe M.2 M-key NVMe slot
-      commit: 4c434585ce6d485ee12ed6becb1524f933454aba
+Fair enough, is this a regression so I should merge it for fixes
+or just a nonurgent fix that I can apply for next?
 
-Cheers,
-Angelo
+Long term a custom device can be created from the pin
+control driver so that the Linux device model can be
+used to move the driver over to phy.
 
-
+Yours,
+Linus Walleij
