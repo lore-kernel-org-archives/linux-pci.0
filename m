@@ -1,69 +1,159 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2305327C1D;
-	Thu,  5 Mar 2026 07:37:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19B034A35;
+	Thu,  5 Mar 2026 07:43:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772696261; cv=none; b=dlMEjxvL1ayI6/0U0gImWHBCAxLJe0tKpJl8HoUO19Hk9HQ4R9LaQgR3j1X+bfqVwVkcqZsziEVZdZ2ns0bCosZy476KfToKLQ6i7J6CgmPlWbkPTan2kwMFtKdCzS9bAokYA3givzP21rSz/Wc7Q1zATLrg2r9tJUArB+ZxU2o=
+	t=1772696589; cv=none; b=BKmiL9Ty7XExjmGR9gzoihaR6/o4G5MdJ9GQvz9+/MclPc8LcoC9p66rwpyQfqQlwILZhGIWG69CpKw45SvLb/GV5qRJeNmHCPFD0DF8iwIjHIlQat63M0nYfDghhG9L7Lf73eKUfVhFxknI8n9JV+Ms5nvSVp8G1Fkfxx+RL2k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772696261; c=relaxed/simple;
-	bh=I2T2MALFcQPlATqJAknnF/UeTg1MuA4qLIU68kXuTg0=;
+	s=arc-20240116; t=1772696589; c=relaxed/simple;
+	bh=Q4hR08jwk8NYDY7pDYXXyrQ+TK/dbIOE1VyLlysisSI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GrXBxbtdG/tCv2lU80Nye6kxrj59PM1R3CVSFexbJ1EWOJDRU+KVhmE5Xspx/mC1qBAVJAciUgs9gw64+nwAgBWBEfMfUgzUITqHVsyHxvypLcZ5N9K90P+F6zbJv/4n8nFTCLXvxd4gDB7s2lAiWiqh+3hwsFab4eVsnZYa9Uc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L+aN0GkL; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=uu38Oun7rTh7fdO903g0hJaM4w3R5dpGO+EOJdxqf5mbmLshgwnDfHn+D3JC69DyAhoe6LnUDlN0jiiMs9DjZI5s79AKLGn0QcXxpYs8LrFU04m3FQZvMWcAlgfyd/enBg/3CsxYswo4LAo/34SGgJQBhUnNP3W6rTv0s2ewVcs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lIzvDUAD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L+aN0GkL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 185B9C116C6;
-	Thu,  5 Mar 2026 07:37:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lIzvDUAD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1253C116C6;
+	Thu,  5 Mar 2026 07:43:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772696260;
-	bh=I2T2MALFcQPlATqJAknnF/UeTg1MuA4qLIU68kXuTg0=;
+	s=k20201202; t=1772696588;
+	bh=Q4hR08jwk8NYDY7pDYXXyrQ+TK/dbIOE1VyLlysisSI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=L+aN0GkLVW2KCMkKbKCqfUcB+dKaaDxnZ2MOhgObf+ekqk/Yxk3g+zKqPy/Pcg/wA
-	 scyE+Nr3E1Vn+dtL3kRqudYuXhumHOhsfmEO7IFc382awdpWkbdQ54MTfwi4IUJmxl
-	 IxGkz3H7/C/ppl9FE4PzGMfbYgqBO5ZxeEGiBu/iNwt0JJ1G5YiJuKzLJJKJhQQl+Q
-	 rPGv+Nvzb8boUrA2e9sWIxO+zIBCOXoP2/cjd2v1YQiUUDqTRWJaC3ML2ZBQ1TMWL8
-	 eW1YkAuqs+8gOEcfefRvFAh5gG4wvwNL3rfBb0UAcz6H1bF2cRB5joWIS23MiwEBQy
-	 DvXALyJ4/pQtg==
-Date: Thu, 5 Mar 2026 08:37:35 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: dwc: rcar-gen4: Use 4K EPC BAR alignment
-Message-ID: <aakyvxxFnBkl4io5@ryzen>
-References: <20260305015439.1529006-1-den@valinux.co.jp>
+	b=lIzvDUADoi0KCGyPVVuICFuXDFQEedvvlub8sDezUZrhBcsWFbq8vMpqckKgJvz+j
+	 zaxMxIfvYbmFvhLEANJ1hqA844JfUV094ICsdl6COHyjksvnYZNCSAsk3xqodhO+FD
+	 nJBN2ab+67h8qBDirUbXPIlb/fT/WJmme2S7gu2V3j0RbHQKKu+2LJT+f7wvoXmnHl
+	 645NFwdMhlPACKWsy+QJPfr0PoRQELmZKd5NnwUZ7iXlSgM4eWWKsoE76fpNroMSwD
+	 OhuklWjz2pLYBg7QsgFUHhsafcsfQ606ypYOG2kf2/gzkXhh/rS0kafYpYNkbqSsQS
+	 u26XVC7SkvTxw==
+Date: Thu, 5 Mar 2026 13:12:54 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com, 
+	bjorn.andersson@oss.qualcomm.com
+Subject: Re: [PATCH v2 1/5] PCI: host-common: Add helper to determine host
+ bridge D3cold eligibility
+Message-ID: <3fnnuxwpvpk6abtjtlp74synz3fk4cbobub27aqvtdytdx4wtd@gknztr4cwalg>
+References: <20260217-d3cold-v2-0-89b322864043@oss.qualcomm.com>
+ <20260217-d3cold-v2-1-89b322864043@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260305015439.1529006-1-den@valinux.co.jp>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260217-d3cold-v2-1-89b322864043@oss.qualcomm.com>
 
-On Thu, Mar 05, 2026 at 10:54:39AM +0900, Koichiro Den wrote:
-> R-Car S4 Series (R8A779F[4-7]*) uses a 4K minimum iATU region size
-> (CX_ATU_MIN_REGION_SIZE = 4K) as per R19UH0161EJ0130 Rev.1.30.
+On Tue, Feb 17, 2026 at 04:49:06PM +0530, Krishna Chaitanya Chundru wrote:
+> Add a common helper, pci_host_common_can_enter_d3cold(), to determine
+> whether a PCI host bridge can safely transition to D3cold.
 > 
-> Update the advertised alignment to 4K, as described in
-> commit 2a9a801620ef ("PCI: endpoint: Add support to specify alignment
-> for buffers allocated to BARs").
+> This helper is intended to be used by PCI host controller drivers to
+> decide whether they may safely put the host bridge into D3cold based on
+> the power state and wakeup capabilities of downstream endpoints.
 > 
-> With the previous 1MB alignment requirement, iATU programming for BAR4
-> on this platform often cannot be performed, since a 1MB-aligned target
-> address may fall outside the tiny 256B BAR4 window.
+> The helper walks all devices on the bridge's primary bus and only allows
+> the host bridge to enter D3cold if all PCIe endpoints are already in
+> PCI_D3hot. This ensures that we do not power off the host bridge while
+> any active endpoint still requires the link to remain powered.
+> 
+> For devices that may wake the system, the helper additionally requires
+> that the device supports PME wake from D3cold (via WAKE#). Devices that
+> do not have wakeup enabled are not restricted by this check and do not
+> block the host bridge from entering D3cold.
+> 
+> Devices without a bound driver and with PCI not enabled via sysfs are
+> treated as inactive and therefore do not prevent the host bridge from
+> entering D3cold. This allows controllers to power down more aggressively
+> when there are no actively managed endpoints.
+> 
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> ---
+>  drivers/pci/controller/pci-host-common.c | 45 ++++++++++++++++++++++++++++++++
+>  drivers/pci/controller/pci-host-common.h |  2 ++
+>  2 files changed, 47 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
+> index d6258c1cffe5ec480fd2a7e50b3af39ef6ac4c8c..b0a4a3c995e80e0245657f0273a349334071013c 100644
+> --- a/drivers/pci/controller/pci-host-common.c
+> +++ b/drivers/pci/controller/pci-host-common.c
+> @@ -106,5 +106,50 @@ void pci_host_common_remove(struct platform_device *pdev)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_host_common_remove);
+>  
+> +static int pci_host_common_check_d3cold(struct pci_dev *pdev, void *userdata)
+> +{
+> +	bool *d3cold_allow = userdata;
 
-You could also mention that CX_ATU_MIN_REGION_SIZE can configured to
-a value in range 4 kB to 64 kB, so 1 MB is clearly bogus.
+d3cold_possible
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+> +
+> +	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ENDPOINT)
+> +		return 0;
+> +
+> +	if (!pdev->dev.driver && !pci_is_enabled(pdev))
+> +		return 0;
+> +
+> +	if (pdev->current_state != PCI_D3hot)
+> +		goto exit;
+> +
+> +	if (device_may_wakeup(&pdev->dev) && !pci_pme_capable(pdev, PCI_D3cold))
+> +		goto exit;
+> +
+> +	return 0;
+
+Newline
+
+> +exit:
+> +	*d3cold_allow = false;
+
+Newline
+
+> +	return -EBUSY;
+
+I think -EOPNOTSUPP should be returned here.
+
+> +}
+> +
+> +/**
+> + * pci_host_common_can_enter_d3cold - Determine whether a host bridge may enter D3cold
+
+Since PCI core already has pci_bridge_d3_possible() API, we should try to be in
+sync by calling this API as pci_host_common_d3cold_possible().
+
+> + * @bridge: PCI host bridge to check
+> + *
+> + * Walk downstream PCIe endpoint devices and determine whether the host bridge
+> + * is permitted to transition to D3cold.
+> + *
+> + * The host bridge may enter D3cold only if all active PCIe endpoints are in
+
+s/may/can
+
+> + * %PCI_D3hot and any wakeup-enabled endpoint is capable of generating PME from
+
+Remove %
+
+> + * D3cold. Inactive endpoints are ignored.
+> + *
+> + * Return: %true if the host bridge may enter D3cold, otherwise %false.
+> + */
+> +bool pci_host_common_can_enter_d3cold(struct pci_host_bridge *bridge)
+> +{
+> +	bool d3cold_allow = true;
+> +
+> +	pci_walk_bus(bridge->bus, pci_host_common_check_d3cold, &d3cold_allow);
+
+s/pci_host_common_check_d3cold/__pci_host_common_d3cold_possible
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
