@@ -1,140 +1,169 @@
-Received: from mail-vs1-f41.google.com (mail-vs1-f41.google.com [209.85.217.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7702F319851
-	for <linux-pci@vger.kernel.org>; Thu,  5 Mar 2026 07:48:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B13C927E05E;
+	Thu,  5 Mar 2026 07:49:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772696881; cv=none; b=dghhPJvXb/hjz3kbCQG+o+FNfnBZKhD4IpWJQWzz9d2Jp+ncDSJtgj6YMdmy0GDXPsUFPtUGxBPPi8uPMLI94okisWqKaxDo5mfW0iH6hMqoD2G+tqtDx9tuGYtOecC6MNKGLstF05hgQbQe5DdFVpmewK4bI7JtR4CONRVhjBA=
+	t=1772696964; cv=none; b=foCXLIBixod16+Aq05ZDsX51ocdR9hOdyKxQt5KdtOi+Ezk9j42JkeaqWjnpCIkBug2ZiCjGkLcckoou5CLEEoohqU+CH/E6nPNl7/0H2nxml82djH997h+2pZ1/J5dX9iaw/yOerhW0shIkDTtpQXHrZ86PJz5wQx/o/UB8uXY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772696881; c=relaxed/simple;
-	bh=urVD1xPdaF3hV5GqXqVqTidMinFWi7P2lc2J0G3o7gY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ggY8+DOmy6kiDwy5UcgYTCCg/Beb2b87HmrzMDIfVF1yRealmKpwgSnXiufWZGZozQTaIK3CLa4Pf2zHRq4ITr1Mf+R2mztPSARwIYF8SoICPwxtV8J0+HMB63IBUSPjDdle5B5sKPoHY1u0PrHtDNdr255VSimrq77BN8TTNyQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.217.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-vs1-f41.google.com with SMTP id ada2fe7eead31-5ff1703cb9eso2132725137.3
-        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 23:48:00 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772696879; x=1773301679;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7xyHjzGnphi32H4Bte19x6wQV76UaiJqzbc3zMkJKs8=;
-        b=v2eAPYtbt/pzci0xhPDzUT45cBlEx4Rx8kB/zFr1M8sxXWlc9TQ9qRcK54kg1n6HmU
-         6pnHkt4H5v5fch+BdW5vlz9UpD4LvgVp18cOPJgaSo9CDQbDQk03fXC84XUKtRkdSs3W
-         3vyZOqVILGCfPduAAcOwZOhvdBC2CJ06qd9KNphoU4zn+ICOanIvpqs6JuqqtV5lT9zq
-         LClhYVafcMogOhjsXr8UjOg67edw7k2LxRMY5XT5lR0K/1Y05gDpmjRIg55Uz9nMpHLf
-         7BfxuLnHIWiiHXw+hNInv8xmo9EpDIb4f47adePx2OkqxkfAQ1uTgY1hzj4uFCPpKUW5
-         rTvA==
-X-Forwarded-Encrypted: i=1; AJvYcCXl2yfYNz2e1wbu6FvnO3V1Aqu/uh85J/if10Z+ynJAL53dhziMRD4CkfDoRBU3Vi5wjWdervUSWmo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzqThb++eANeEe01HawXlp2C+aosBHE06U6c6Zq20xRMylk5j76
-	0VwEvT/33YHTbvKMeU+bnSprMFMkiWDX7PltBvlPVxziR7nXcaDZVPcJHc33BBRM
-X-Gm-Gg: ATEYQzzchxG8ls01sA16XK1kHWhCsAgwfvelJESkq/7IghITL/6WP4snET1MKetFdFc
-	DfWDBXPl3p0Y4xlC2dMfEPJwaBLFE4cXtLGFoLget6w9EcLmio+UtqFx1KP9H6MCm4Vbk4dI7To
-	BtuQuoKXdGCLVki6iksk/QRUJkQlOhXGHO6/aQXaBl7MB9r1THN8GN7O7FsHutLyHztbQrHdf0o
-	dboa2GOtNQ8NJN6WfUQlRPg2Ej3yFAplRXEatKD6/5jZbGmjf3nbo4No6RLQyMD3OA4Ibv4rfuU
-	mIQV8uWnvWaVhcG0rV5ekKWJG89ccJYrDFh/g8H0izyTPyzHmuNPug4v3IVZkwmDcteHkJeQWu4
-	EZjy6mEgCBknwg7NAUVUtNGbVeM9tFnr8spX53TVnZoh3Un0B9uT75e6+V/1oo1IxIGNr2f9MjM
-	A23wJRbal0Pwx9izGFSwqCBRLXAc+CM92O3jRhPYrwtFNyMMvb/AqQALSjm8dI
-X-Received: by 2002:a05:6102:dc8:b0:5ff:8b8:9f89 with SMTP id ada2fe7eead31-5ffaaf66716mr2083551137.35.1772696879404;
-        Wed, 04 Mar 2026 23:47:59 -0800 (PST)
-Received: from mail-vs1-f50.google.com (mail-vs1-f50.google.com. [209.85.217.50])
-        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-5ffc3bad550sm2190478137.4.2026.03.04.23.47.58
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 04 Mar 2026 23:47:58 -0800 (PST)
-Received: by mail-vs1-f50.google.com with SMTP id ada2fe7eead31-5ffa0b23a60so857996137.0
-        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 23:47:58 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCX2xR+fuyeLVDWrkhvTp59uWuULPgncaHPciVPSNMoyzGQMZ/yP/WeIkwRDtIU11Jnwb0k07diX7ho=@vger.kernel.org
-X-Received: by 2002:a05:6102:32c1:b0:5ff:a16b:93f9 with SMTP id
- ada2fe7eead31-5ffaae2d5b0mr1883200137.21.1772696877960; Wed, 04 Mar 2026
- 23:47:57 -0800 (PST)
+	s=arc-20240116; t=1772696964; c=relaxed/simple;
+	bh=6AqLYlPW/gs3vlo4az2RBnc0fhk6dglm/YJG1KWJfp4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=t7L9ofGlAH6OP4AN5x8BwCrrWQBvnZ7GCTba1zq3NHCQbIG2B7sq+lnyKUeriv7ALUDFiLTisZNs2pQS0H1ribkEEoSPT5iicToNaXr/GRo0MkW9h1a9vl0vq1k85VoyoD1RzRq0M+5Ibvrh6CtyNWy9tlUwxGpDw7y3UmMKHTg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OX5meTB9; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OX5meTB9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95538C116C6;
+	Thu,  5 Mar 2026 07:49:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772696964;
+	bh=6AqLYlPW/gs3vlo4az2RBnc0fhk6dglm/YJG1KWJfp4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=OX5meTB9KrGVnyHJiKDDlXTURvrR3RfZb5Q477AWojqGpqFAT91ujTK66gHgJOq+a
+	 DTt/sOga39neE+CW7s4xLXJK5c52xpOnqv8aGaV9fcShBhmTWA5/pMXnVuSuGKyojQ
+	 AVEGfbMqf2VhL8o3uQIBOJcmNQaPcFURPHmM9J4caAigy7Xx4M2DEtIdPaEZYi5bDB
+	 OnK92yMjCFkw9/sXmWeopiF4lwHRMY6B6A9PKengoQ1A50XgU0Ja1cg8F4K5VTnGKV
+	 067wdC2+hhAvMJbPyPiQdtrkU8q1SU3eRLC+n/mqmxt6K38kkNQVCwPAMyVPV9jlxF
+	 uPXZZBbc3XChQ==
+Date: Thu, 5 Mar 2026 13:19:10 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com, 
+	bjorn.andersson@oss.qualcomm.com
+Subject: Re: [PATCH v2 4/5] PCI: qcom: Power down PHY via PARF_PHY_CTRL
+ before disabling rails/clocks
+Message-ID: <to6p7yf2oo5qh37hsye4zpputrc7p4bwgqvjc2plieuyapjdhp@7xshxghi4tzd>
+References: <20260217-d3cold-v2-0-89b322864043@oss.qualcomm.com>
+ <20260217-d3cold-v2-4-89b322864043@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260304175735.2660419-1-vladimir.oltean@nxp.com> <20260304175735.2660419-14-vladimir.oltean@nxp.com>
-In-Reply-To: <20260304175735.2660419-14-vladimir.oltean@nxp.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Thu, 5 Mar 2026 08:47:47 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdUNtqsui3ek1RYCTyiuDLRajpSBMnrdzED6wu6i7-QcuA@mail.gmail.com>
-X-Gm-Features: AaiRm514iMGAdfTBAVsgfVfK-GGHy9jHY4ezK-Lp3w09-JWpnENLQ0I4lkIFgvE
-Message-ID: <CAMuHMdUNtqsui3ek1RYCTyiuDLRajpSBMnrdzED6wu6i7-QcuA@mail.gmail.com>
-Subject: Re: [PATCH phy-next 13/22] phy: introduce phy_get_max_link_rate()
- helper for consumers
-To: Vladimir Oltean <vladimir.oltean@nxp.com>
-Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, dri-devel@lists.freedesktop.org, 
-	freedreno@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org, 
-	linux-arm-msm@vger.kernel.org, linux-can@vger.kernel.org, 
-	linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
-	linux-riscv@lists.infradead.org, linux-rockchip@lists.infradead.org, 
-	linux-samsung-soc@vger.kernel.org, linux-sunxi@lists.linux.dev, 
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, 
-	netdev@vger.kernel.org, spacemit@lists.linux.dev, 
-	UNGLinuxDriver@microchip.com, Andrzej Hajda <andrzej.hajda@intel.com>, 
-	Robert Foss <rfoss@kernel.org>, Laurent Pinchart <Laurent.pinchart@ideasonboard.com>, 
-	Jonas Karlman <jonas@kwiboo.se>, Jernej Skrabec <jernej.skrabec@gmail.com>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
-	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Andy Yan <andy.yan@rock-chips.com>, Marc Kleine-Budde <mkl@pengutronix.de>, 
-	Vincent Mailhol <mailhol@kernel.org>, Nicolas Ferre <nicolas.ferre@microchip.com>, 
-	Alexandre Belloni <alexandre.belloni@bootlin.com>, Claudiu Beznea <claudiu.beznea@tuxon.dev>, 
-	Markus Schneider-Pargmann <msp@baylibre.com>, Magnus Damm <magnus.damm@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260217-d3cold-v2-4-89b322864043@oss.qualcomm.com>
 
-Hi Vladimir,
+On Tue, Feb 17, 2026 at 04:49:09PM +0530, Krishna Chaitanya Chundru wrote:
+> Some Qcom PCIe controller variants bring the PHY out of test power-down
+> (PHY_TEST_PWR_DOWN) during init. When the link is later transitioned
+> towards D3cold and the driver disables PCIe clocks and/or regulators
+> without explicitly re-asserting PHY_TEST_PWR_DOWN, the PHY can remain
+> partially powered, leading to avoidable power leakage.
+> 
+> Update the init-path comments to reflect that PARF_PHY_CTRL is used to
+> power the PHY on. Also, for controller revisions that enable PHY power
+> in init (2.3.2, 2.3.3, 2.7.0 and 2.9.0), explicitly power the PHY down
+> via PARF_PHY_CTRL in the deinit path before disabling clocks/regulators.
+> 
+> This ensures the PHY is put into a defined low-power state prior to
+> removing its supplies, preventing leakage when entering D3cold.
+> 
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-qcom.c | 30 +++++++++++++++++++++++++++---
+>  1 file changed, 27 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index 2c4dc7134e006d3530a809f1bcc1a6488d4632ad..b02c19bbdf2ea5db252c2a0281a569bb3a0cc497 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -513,7 +513,7 @@ static int qcom_pcie_post_init_2_1_0(struct qcom_pcie *pcie)
+>  	u32 val;
+>  	int ret;
+>  
+> -	/* enable PCIe clocks and resets */
+> +	/* PHY power ON */
 
-On Wed, 4 Mar 2026 at 19:00, Vladimir Oltean <vladimir.oltean@nxp.com> wrote:
-> Consumer drivers shouldn't dereference struct phy, not even to get to
-> its attributes.
->
-> We have phy_get_bus_width() as a precedent for getting the bus_width
-> attribute, so let's add phy_get_max_link_rate() and use it in DRM and
-> CAN drivers.
->
-> Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
+This comment is confusing since we already have phy_power_on() API. What does
+really happen in the 'test power down' case?
 
-Thanks for your patch!
+- Mani
 
->  drivers/net/can/rcar/rcar_canfd.c                   | 2 +-
-
-For the Renesas part:
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-
-> --- a/drivers/phy/phy-core.c
-> +++ b/drivers/phy/phy-core.c
-> @@ -640,6 +640,12 @@ void phy_set_bus_width(struct phy *phy, int bus_width)
->  }
->  EXPORT_SYMBOL_GPL(phy_set_bus_width);
->
-> +u32 phy_get_max_link_rate(struct phy *phy)
-> +{
-> +       return phy->attrs.max_link_rate;
-> +}
-> +EXPORT_SYMBOL_GPL(phy_get_max_link_rate);
-
-Any specific reason you are not making this a simple static inline
-function, like phy_get_bus_width()?
-
+>  	val = readl(pcie->parf + PARF_PHY_CTRL);
+>  	val &= ~PHY_TEST_PWR_DOWN;
+>  	writel(val, pcie->parf + PARF_PHY_CTRL);
+> @@ -680,6 +680,12 @@ static int qcom_pcie_get_resources_2_3_2(struct qcom_pcie *pcie)
+>  static void qcom_pcie_deinit_2_3_2(struct qcom_pcie *pcie)
+>  {
+>  	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
+> +	u32 val;
 > +
->  /**
->   * _of_phy_get() - lookup and obtain a reference to a phy by phandle
->   * @np: device_node for which to get the phy
-
-Gr{oetje,eeting}s,
-
-                        Geert
+> +	/* PHY Power down */
+> +	val = readl(pcie->parf + PARF_PHY_CTRL);
+> +	val |= PHY_TEST_PWR_DOWN;
+> +	writel(val, pcie->parf + PARF_PHY_CTRL);
+>  
+>  	clk_bulk_disable_unprepare(res->num_clks, res->clks);
+>  	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
+> @@ -712,7 +718,7 @@ static int qcom_pcie_post_init_2_3_2(struct qcom_pcie *pcie)
+>  {
+>  	u32 val;
+>  
+> -	/* enable PCIe clocks and resets */
+> +	/* PHY Power ON */
+>  	val = readl(pcie->parf + PARF_PHY_CTRL);
+>  	val &= ~PHY_TEST_PWR_DOWN;
+>  	writel(val, pcie->parf + PARF_PHY_CTRL);
+> @@ -844,6 +850,12 @@ static int qcom_pcie_get_resources_2_3_3(struct qcom_pcie *pcie)
+>  static void qcom_pcie_deinit_2_3_3(struct qcom_pcie *pcie)
+>  {
+>  	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
+> +	u32 val;
+> +
+> +	/* PHY Power down */
+> +	val = readl(pcie->parf + PARF_PHY_CTRL);
+> +	val |= PHY_TEST_PWR_DOWN;
+> +	writel(val, pcie->parf + PARF_PHY_CTRL);
+>  
+>  	clk_bulk_disable_unprepare(res->num_clks, res->clks);
+>  }
+> @@ -994,7 +1006,7 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
+>  	/* configure PCIe to RC mode */
+>  	writel(DEVICE_TYPE_RC, pcie->parf + PARF_DEVICE_TYPE);
+>  
+> -	/* enable PCIe clocks and resets */
+> +	/* PHY power ON */
+>  	val = readl(pcie->parf + PARF_PHY_CTRL);
+>  	val &= ~PHY_TEST_PWR_DOWN;
+>  	writel(val, pcie->parf + PARF_PHY_CTRL);
+> @@ -1065,6 +1077,12 @@ static void qcom_pcie_host_post_init_2_7_0(struct qcom_pcie *pcie)
+>  static void qcom_pcie_deinit_2_7_0(struct qcom_pcie *pcie)
+>  {
+>  	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
+> +	u32 val;
+> +
+> +	/* PHY Power down */
+> +	val = readl(pcie->parf + PARF_PHY_CTRL);
+> +	val |= PHY_TEST_PWR_DOWN;
+> +	writel(val, pcie->parf + PARF_PHY_CTRL);
+>  
+>  	clk_bulk_disable_unprepare(res->num_clks, res->clks);
+>  
+> @@ -1169,6 +1187,12 @@ static int qcom_pcie_get_resources_2_9_0(struct qcom_pcie *pcie)
+>  static void qcom_pcie_deinit_2_9_0(struct qcom_pcie *pcie)
+>  {
+>  	struct qcom_pcie_resources_2_9_0 *res = &pcie->res.v2_9_0;
+> +	u32 val;
+> +
+> +	/* PHY Power down */
+> +	val = readl(pcie->parf + PARF_PHY_CTRL);
+> +	val |= PHY_TEST_PWR_DOWN;
+> +	writel(val, pcie->parf + PARF_PHY_CTRL);
+>  
+>  	clk_bulk_disable_unprepare(res->num_clks, res->clks);
+>  }
+> 
+> -- 
+> 2.34.1
+> 
 
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+மணிவண்ணன் சதாசிவம்
