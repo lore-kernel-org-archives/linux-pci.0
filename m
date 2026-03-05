@@ -1,179 +1,185 @@
-Received: from mail-dl1-f47.google.com (mail-dl1-f47.google.com [74.125.82.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E279A3A6413
-	for <linux-pci@vger.kernel.org>; Thu,  5 Mar 2026 15:13:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 845CE3BED2C;
+	Thu,  5 Mar 2026 15:16:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772723632; cv=none; b=LrSb+GDme6L+lqSGXN/nhrB0wKjlbpSdEic+fZEe7MlstCTcn9tUp7YBiePcajEy32i8AuC1rKquaBXkT8vAWV1nGbzJWclilhE4Ck0oSMdmbC2l2Cr3olu2i+v9MD9ilewkZOWLkrWu0L8Umjvll/rKzN6YVsV17BpdEPuA6ig=
+	t=1772723787; cv=none; b=H5fyhi7Cb5vskUUesnmk0lehCLqsdEtBHna9Z8w6nTcgJKD7AhbwWXzxtd/D+JLQuvIsQ+aS4F7NZa9jPHtLzp4HwcU0saRoyWe+nONxRkUwrwhmC6PX+NlG5Uqb5NOyw4NJYO41Ew/KlAbbGSAtsU9FrqJHwxpFnY9QsQjZ9zs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772723632; c=relaxed/simple;
-	bh=Ibh2bGmqBWk2KxkcdsDNsEXmMqEhPAATmvMlu7kOn/M=;
+	s=arc-20240116; t=1772723787; c=relaxed/simple;
+	bh=NIqGePwhMB9v9rBzNePQxONPR4S/D8k+T7Bqpz8eGUc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EWSePKrA8Mx/XQmOYvZ1uquWt8KJt3lUOOaoovN1e48SC+Axl73P5YLhLQvcrMvkcFc/9Ql5Dkw3J9UP2u35bRIEyCUPW/qaDJYOyJ/MZuEWNiwAtkxPgKB2b01834ZoVNMH1U0IscJ5WOS8pspeGFyI5+97T/dXwNu47GCdYic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AQkN0S8J; arc=none smtp.client-ip=74.125.82.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=UGSipjiSTkoyx6O+2efaz1aR510EhODJgM8jJmx9yuebWcugeqLLXvu9z7vUvHw93HWy1mUvMfflxqf+o3Dhfdmug817mMJFBCxFvMpFr+3mmNgxfxy0MMDEUJjTJ2UJqMOV4WjEdwdbgUktT5dzXOb05sMvgFmXMVXdJqk0Qjg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dSQAipHh; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AQkN0S8J"
-Received: by mail-dl1-f47.google.com with SMTP id a92af1059eb24-12732e6a123so133277c88.1
-        for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2026 07:13:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772723628; x=1773328428; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=N8eW07+TyJYijMsjeCHBsnEU5co6837wg++Yi11YMsM=;
-        b=AQkN0S8JldFJpaCu0pJttJv6ZF1cnn0qf0RsOVHG+hhx+FNdG+qEd6u9IMHMSRTsSg
-         uVTO/mfjmVCDrxmAtYjHzFKMzyWbHYc2pu9kxKnW5zP8qwkQ5agcql4LQp8VJOWwR1hG
-         MvrYVEBcrK1MrFESsxtkEcV6ijaDfkqFN0D2hsYmTWnnN3Fr70m3zxaGwcfzuigynsFG
-         xmYEs5e/mQ3W5xk692TbzY/aptoKUrepOBuf/TsDV1EVrzu/F9CzRJJ6YqdkmpuzdJWY
-         IC3TBdi3kDRDWp5pBLIradLHYIweDgBM/Ni2HbPdB21evnfp8Quy88tgWG9PCUU1LOg6
-         XSzg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772723628; x=1773328428;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=N8eW07+TyJYijMsjeCHBsnEU5co6837wg++Yi11YMsM=;
-        b=pbYW26hBbTgeRlXYInIIbURzeU0hVM2YRG1QqQDdfVC0a/iPEo+4rcOWuBHw6WUWG6
-         bO4fXSRfHmJkF8RmOb3UQL3kLrV5hdJC+NQqAKuAvWBW0OYPCBdGCG5xFpDSeIwJWZVc
-         uCdVPMmsr3P/j3kCgB+b/s2jrH2npcTPU9ufTeC7gaE4NLWiV9h8SqvuI9VFgdPq+yQ4
-         BMK6XhHkzJLsvgN20vveuGfK+ECVeoHQcxvF5noCn+5M+GEwhC5AKY4G4fVHm4VrWsI1
-         rElyWtLpspaUMU750ZXdFHrzP0xXee0B6op4Yx4Nss68ZKl6OeWJy4eMeKycuDCYToqs
-         jGWw==
-X-Gm-Message-State: AOJu0Yz5RkPmP2OGG7+vP0dCpWQXZnK2b8Jd/jGFF30eGQ8aHABmRGIz
-	r2YP7xiK9JbGPchNLvIUdw0U82jftAtdgsXIljORT69WJZXXq7ogz/Fqa02BSs3V
-X-Gm-Gg: ATEYQzzQ6hudN9P/D+PVzgtu/5KxU4kWf6Vg912KqZwgUY14LHaW9hjWbhTK4JOAZr0
-	cxZuWzebaMOQzIrjlrRCBjqonZDQ5ahS1Ys1k3YiMjnj7xl7kY51UjYdO8fGLc00VIrurwF1pTZ
-	2N5eAdVQhEgoBZasSAi3g8WtKcR5B3XU3zxbYnx1jihyEEW19slaw3kD2ixIW+/G0QIqjMYSGtP
-	nFQBdIQztVMIivVxu6ZoYOQBum+V5QMRVOczkz25/NT0lZEJvuiPiHs4N1TtHz5N18CuRcDRjTV
-	OklKChsF0/finmzi+oVpXBKKwdY2Eh7R7JToTirePvjEha2rcxl4MvBSdXhgH/jSa4Ux0ii0do8
-	Vp46cQKNVfICjl6qEUNHUODqTh194P/vhKgTEL2jmlwdHGzM/vmjFVEvNO0n71SnzEKnUI77UFx
-	XObJN2JDXjkEMPufYHMVxhSxKE/4j27C9l8PKw
-X-Received: by 2002:a05:693c:2c96:b0:2ba:96d8:530b with SMTP id 5a478bee46e88-2be311c3194mr2359478eec.32.1772723627653;
-        Thu, 05 Mar 2026 07:13:47 -0800 (PST)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:da43:aeff:fecc:bfd5])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2be002ee839sm13379098eec.8.2026.03.05.07.13.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Mar 2026 07:13:46 -0800 (PST)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Date: Thu, 5 Mar 2026 07:13:45 -0800
-From: Guenter Roeck <linux@roeck-us.net>
-To: Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-kernel@vger.kernel.org,
-	Malte =?iso-8859-1?Q?Schr=F6der?= <malte+lkml@tnxip.de>
-Subject: Re: [PATCH 03/23] PCI: Stop over-estimating bridge window size
-Message-ID: <b05a6f14-979d-42c9-924c-d8408cb12ae7@roeck-us.net>
-References: <20251219174036.16738-1-ilpo.jarvinen@linux.intel.com>
- <20251219174036.16738-4-ilpo.jarvinen@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dSQAipHh"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1772723785; x=1804259785;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=NIqGePwhMB9v9rBzNePQxONPR4S/D8k+T7Bqpz8eGUc=;
+  b=dSQAipHhmy0H+N9tDTM/nvs8Plu35JsKm2ZAaxdmLrHKda6QVmmkQ6Yj
+   AMZOnxrKYyl1iKZGX8SeuQH7gKeW/K5H059TlKAy5C1r+F/LA4uyd3H+G
+   JzYDK74MuhXUQjsJXTzxQ9XhZDclUIv7FUroMJ+6GUJYmROuttz8nF1bY
+   MGlWkETNaD/9DU2ZMBe+I3v2ybml5R1OiwpfPMNV2m0Xlw7Q/OQfjwySR
+   KqeJsRj/SM8Z4k31wVCX04UM1SBtAXoDG7AqXYuYYnVUltnuiAB+q11JL
+   rJc19CglQuGCK5DN/2Y0mMlluRGWnn1Bp59oZhXS+O0Wkt5hz/rBaPeTo
+   w==;
+X-CSE-ConnectionGUID: CR7Or4veS+SQgoBNdMK4TQ==
+X-CSE-MsgGUID: r/fVigRNSzK8OB/S2sN1qg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11720"; a="96431008"
+X-IronPort-AV: E=Sophos;i="6.23,103,1770624000"; 
+   d="scan'208";a="96431008"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Mar 2026 07:16:19 -0800
+X-CSE-ConnectionGUID: wnCKV1F1Q4ykB5mWY2Gqag==
+X-CSE-MsgGUID: Qs67a8/fRH2sHp+KnOhEfg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,103,1770624000"; 
+   d="scan'208";a="223667087"
+Received: from lkp-server01.sh.intel.com (HELO cadc4577a874) ([10.239.97.150])
+  by orviesa005.jf.intel.com with ESMTP; 05 Mar 2026 07:16:13 -0800
+Received: from kbuild by cadc4577a874 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vyAQs-000000000oU-2KhI;
+	Thu, 05 Mar 2026 15:16:10 +0000
+Date: Thu, 5 Mar 2026 23:15:45 +0800
+From: kernel test robot <lkp@intel.com>
+To: Nicolin Chen <nicolinc@nvidia.com>, will@kernel.org,
+	robin.murphy@arm.com, joro@8bytes.org, bhelgaas@google.com,
+	jgg@nvidia.com
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, rafael@kernel.org,
+	lenb@kernel.org, praan@google.com, kees@kernel.org,
+	baolu.lu@linux.intel.com, smostafa@google.com,
+	Alexander.Grest@microsoft.com, kevin.tian@intel.com,
+	miko.lenczewski@arm.com, linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux.dev, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	vsethi@nvidia.com
+Subject: Re: [PATCH v1 2/2] iommu/arm-smmu-v3: Recover ATC invalidate timeouts
+Message-ID: <202603052303.jrfwR7CV-lkp@intel.com>
+References: <ca7ab934bf0f433b62a5c15d42241632c4cb9366.1772686998.git.nicolinc@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251219174036.16738-4-ilpo.jarvinen@linux.intel.com>
+In-Reply-To: <ca7ab934bf0f433b62a5c15d42241632c4cb9366.1772686998.git.nicolinc@nvidia.com>
 
-Hi,
+Hi Nicolin,
 
-On Fri, Dec 19, 2025 at 07:40:16PM +0200, Ilpo Järvinen wrote:
-> New way to calculate the bridge window head alignment produces
-> tight-fit, that is, it does not leave any gaps between the resources.
-> Similarly, relaxed tail alignment does not leave extra tail room.
-> 
-> Start to use bridge window calculation that does not over-estimate
-> the size of the required window.
-> 
-> pbus_upstream_space_available() can be removed.
-> 
-> Tested-by: Malte Schröder <malte+lkml@tnxip.de>
-> Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-> ---
+kernel test robot noticed the following build errors:
 
-Google's experimental AI code review agent produced the following feedback.
-It seems real to me, but I may be missing something. PTAL and let me know
-if it has a point.
+[auto build test ERROR on pci/next]
+[also build test ERROR on pci/for-linus rafael-pm/linux-next rafael-pm/bleeding-edge soc/for-next linus/master v7.0-rc2 next-20260304]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-If it is a real problem, it may have been fixed by a later patch which I
-may have missed. If so, my apologies for the noise.
+url:    https://github.com/intel-lab-lkp/linux/commits/Nicolin-Chen/iommu-Do-not-call-pci_dev_reset_iommu_done-unless-reset-succeeds/20260305-132923
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+patch link:    https://lore.kernel.org/r/ca7ab934bf0f433b62a5c15d42241632c4cb9366.1772686998.git.nicolinc%40nvidia.com
+patch subject: [PATCH v1 2/2] iommu/arm-smmu-v3: Recover ATC invalidate timeouts
+config: arm64-randconfig-003-20260305 (https://download.01.org/0day-ci/archive/20260305/202603052303.jrfwR7CV-lkp@intel.com/config)
+compiler: clang version 16.0.6 (https://github.com/llvm/llvm-project 7cbf1a2591520c2491aa35339f227775f4d3adf6)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260305/202603052303.jrfwR7CV-lkp@intel.com/reproduce)
 
-Thanks,
-Guenter
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202603052303.jrfwR7CV-lkp@intel.com/
 
----
-commit 3958bf16e2fe1b1c95467e58694102122c951a31
-Author: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+All errors (new ones prefixed by >>):
 
-    PCI: Stop over-estimating bridge window size
+>> drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c:467:2: error: call to undeclared function 'pci_dev_lock'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+           pci_dev_lock(pdev);
+           ^
+>> drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c:471:2: error: call to undeclared function 'pci_dev_unlock'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+           pci_dev_unlock(pdev);
+           ^
+>> drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c:480:7: error: call to undeclared function 'pci_reset_function'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+           if (!pci_reset_function(pdev)) {
+                ^
+   3 errors generated.
 
-    New way to calculate the bridge window head alignment produces tight-fit,
-    that is, it does not leave any gaps between the resources.  Similarly,
-    relaxed tail alignment does not leave extra tail room.
 
-    Link: https://patch.msgid.link/20251219174036.16738-4-ilpo.jarvinen@linux.intel.com
+vim +/pci_dev_lock +467 drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index cd12926a72af..25d6d4d3afc1 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
+   431	
+   432	static void arm_smmu_atc_recovery_worker(struct work_struct *work)
+   433	{
+   434		struct arm_smmu_atc_recovery_param *param =
+   435			container_of(work, struct arm_smmu_atc_recovery_param, work);
+   436		struct pci_dev *pdev;
+   437	
+   438		scoped_guard(mutex, &param->smmu->streams_mutex) {
+   439			struct arm_smmu_master *master;
+   440	
+   441			master = arm_smmu_find_master(param->smmu, param->sid);
+   442			if (!master || WARN_ON(!dev_is_pci(master->dev)))
+   443				goto free_param;
+   444			pdev = to_pci_dev(master->dev);
+   445			pci_dev_get(pdev);
+   446		}
+   447	
+   448		scoped_guard(spinlock_irqsave, &param->smmu->atc_recovery.lock) {
+   449			struct arm_smmu_atc_recovery_param *e;
+   450	
+   451			list_for_each_entry(e, &param->smmu->atc_recovery.list, node) {
+   452				/* Device is already being recovered */
+   453				if (e->pdev == pdev)
+   454					goto put_pdev;
+   455			}
+   456			param->pdev = pdev;
+   457			list_add(&param->node, &param->smmu->atc_recovery.list);
+   458		}
+   459	
+   460		/*
+   461		 * Stop DMA (PCI) and block ATS (IOMMU) immediately, to prevent memory
+   462		 * corruption. This must take pci_dev_lock to prevent any racy unplug.
+   463		 *
+   464		 * If pci_dev_reset_iommu_prepare() fails, pci_reset_function will call
+   465		 * it again internally.
+   466		 */
+ > 467		pci_dev_lock(pdev);
+   468		pci_clear_master(pdev);
+   469		if (pci_dev_reset_iommu_prepare(pdev))
+   470			pci_err(pdev, "failed to block ATS!\n");
+ > 471		pci_dev_unlock(pdev);
+   472	
+   473		/*
+   474		 * ATC timeout indicates the device has stopped responding to coherence
+   475		 * protocol requests. The only safe recovery is a reset to flush stale
+   476		 * cached translations. Note that pci_reset_function() internally calls
+   477		 * pci_dev_reset_iommu_prepare/done() as well and ensures to block ATS
+   478		 * if PCI-level reset fails.
+   479		 */
+ > 480		if (!pci_reset_function(pdev)) {
+   481			/*
+   482			 * If reset succeeds, set BME back. Otherwise, fence the system
+   483			 * from a faulty device, in which case user will have to replug
+   484			 * the device to invoke pci_set_master().
+   485			 */
+   486			pci_dev_lock(pdev);
+   487			pci_set_master(pdev);
+   488			pci_dev_unlock(pdev);
+   489		}
+   490		scoped_guard(spinlock_irqsave, &param->smmu->atc_recovery.lock)
+   491			list_del(&param->node);
+   492	put_pdev:
+   493		pci_dev_put(pdev);
+   494	free_param:
+   495		kfree(param);
+   496	}
+   497	
 
-[ ... ]
-
-> @@ -1409,13 +1346,8 @@
->  				continue;
->  			}
->  			size += max(r_size, align);
-> -			/*
-> -			 * Exclude ranges with size > align from calculation of
-> -			 * the alignment.
-> -			 */
-> -			if (r_size <= align)
-> -				aligns[order] += align;
-> -			aligns2[order] += align;
-> +
-> +			aligns[order] += align;
->  			if (order > max_order)
->  				max_order = order;
->  
-> @@ -1429,38 +1361,19 @@
->  
->  	old_size = resource_size(b_res);
->  	win_align = window_alignment(bus, b_res->flags);
-> -	min_align = calculate_mem_align(aligns, max_order);
-> +	min_align = calculate_head_align(aligns, max_order);
->  	min_align = max(min_align, win_align);
-> -	size0 = calculate_memsize(size, min_size, 0, 0, old_size, min_align);
-> +	size0 = calculate_memsize(size, min_size, 0, 0, old_size, win_align);
-
-Does the removal of the `r_size <= align` check cause bridge window size
-underestimations if we have child resources larger than their alignment?
-
-If we have child resources with the following requirements:
-- Resource A: 4MB size, 4MB align
-- Resource B: 3MB size, 1MB align
-- Resource C: 1MB size, 1MB align
-
-The requested `size` is calculated as 4 + 3 + 1 = 8MB.
-`aligns[order]` for 1MB will now incorrectly include B, summing to 2MB.
-`calculate_head_align()` will see the 2MB remainder and reduce `min_align`
-to 2MB, assuming the remainder can perfectly fill a 2MB head gap.
-
-If the bridge window of size 8MB is allocated at a 2MB-aligned address
-(e.g., `0x10200000`), the 4MB aligned Resource A must be placed at
-`0x10400000`, leaving a 2MB gap.
-
-Resource B (3MB) cannot fit in this 2MB gap, so it is placed after A at
-`0x10800000`.
-Resource C (1MB) fits in the gap at `0x10200000`.
-
-The total space used spans from `0x10200000` to `0x10AFFFFF` (9MB).
-Since `size0` was calculated as 8MB, won't Resource B fail to allocate
-because it exceeds the bridge window?
-
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
