@@ -1,120 +1,96 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C7433E3D90;
-	Thu,  5 Mar 2026 17:33:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2AE442EEB0;
+	Thu,  5 Mar 2026 17:44:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772731989; cv=none; b=vC2fj5feQSMSB5ocSe659PXzb5qdJXGTYRW+DZIvm3/1wFljd4mJcW2taoRA3/PcIV9A1Bkd1de+q+79FjDiso4Wt1YpTNI7o2fRo/NR6KVWwqD0Q4u8uQuip2pWLjC+MYQ4Pm2ZKv5QaZ5GAlSL05QkuTETB5qIqbQL41b9BDQ=
+	t=1772732692; cv=none; b=iJhK+C1vJ10kVwkZmqhPx0vTe7eAL86z0eFvueDDCIsOW2bW5dY6mHudGNPTp2LzcStFDE3KFRLJYxywfmPIMLaZJ9ig8tWgk0wNby2nGqbEALSnyJjl+2S7f4HHVkaIxZjTY9EFsWusuDqVNwqwNHbdFzGkLc718AsUOWKBqSA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772731989; c=relaxed/simple;
-	bh=zlKTPf/6gQvJLZmSYP53dNkhZpD9yNiFsgU5DumVukk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WRn250ndOMY2IHfBm6cI48drkoRqZb3Dut39RSNYG4zufMlQ9wTGmS6T7wDWbhLdiIazFgIz0Lsvu8m7OX5AllRIv0TUgO4KRxjFpeQdZjB/sZuKQhrSUjFaLNv7I+BoXW7kSl1pnHxTeG5sQ6UXEqOC0p0QQ6mvHMbuugPbspQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=V8d3rpLM; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1772732692; c=relaxed/simple;
+	bh=ck8+DjXKb2F4QyqZhW7/Peilix4hvCClIFhFD/P2p3Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=JyCTpOF5fLNdixF3sIZaiQNIQ6D0NznbmrpUMoxjso4oFpbQlqcfVUKDkm/VBAAe9lTkU+9t83moC49rX6TxEq5WUzWgwpKz88gNlVq9gLiOl9Q5ctvSp3njZnS+9QTAE+KeWSR3UbvQBVjeQQmTBvB8Of/07ZAYj76/zRMtdDg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T1MbpKgd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="V8d3rpLM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772731989; x=1804267989;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=zlKTPf/6gQvJLZmSYP53dNkhZpD9yNiFsgU5DumVukk=;
-  b=V8d3rpLMkX0GdmyQkiPx52rYVOmjovSrMZujOI534SLxJEsZmQ1IdJK2
-   vkB2Qma8Cx5CWDKqHDDmUv9whXM7mk6Z31TYeAX5gveGcTinICuVvFhnm
-   /Z1ojYVbbTmzVD+QC0ks8aVj7ZSYhOpcLIX67vuh0HCNFsrq6z4//JyfB
-   eJEendda6ur8d7S+9td0QpXaEhmaqPdZS+JasLK02BHVWEf8kcuHenta0
-   xp/uYDEt6ZEzx46wrIHNr1hpm1+N7jSK1piZfbnAdxGFCR5eM7PlaqXPg
-   KCubxRvIPTclgYzWirctWYXPrkHgtjlKZT6pIiteID0V7rQObmD5GHWAK
-   Q==;
-X-CSE-ConnectionGUID: ocXOtSM0QLSmDW7MQ7xxVg==
-X-CSE-MsgGUID: AZrFp0zcRLqeZb11TdT4vg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11720"; a="85300979"
-X-IronPort-AV: E=Sophos;i="6.23,103,1770624000"; 
-   d="scan'208";a="85300979"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Mar 2026 09:33:08 -0800
-X-CSE-ConnectionGUID: 0gUYYKQrR1ySE7wR2l+4PQ==
-X-CSE-MsgGUID: kaQS4OhPSQWFmSV6IBzbAw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,103,1770624000"; 
-   d="scan'208";a="222893973"
-Received: from gabaabhi-mobl2.amr.corp.intel.com (HELO [10.125.109.20]) ([10.125.109.20])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Mar 2026 09:33:08 -0800
-Message-ID: <e4357c53-5f22-4156-bf50-4114ef8e5c24@intel.com>
-Date: Thu, 5 Mar 2026 09:33:15 -0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T1MbpKgd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E491C19425;
+	Thu,  5 Mar 2026 17:44:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772732691;
+	bh=ck8+DjXKb2F4QyqZhW7/Peilix4hvCClIFhFD/P2p3Y=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=T1MbpKgd8Q8mJZ8Ph4BM6FwcvM+oi+KRd+UMrzYrENNQRp3k8AegzySoK2ZcvHyLM
+	 iKGAlaJXeKN1dNrhJF4k2SIe52QOKh1MLhfmtcOK6Fj2QR69s3XhMGsDN0qUXPDgzj
+	 i7X6+3JFzymuP+rVo8PYrVsHlVrcAGdb1J44u655Ut4oPhNsdycEUFAP/SkqSV2y0C
+	 Kc4xRJhdkW17QNfxpNyNws8XDSbnEtBQ2ABDorJsqS4DZZvSNmbXWCi0Wulcm/Sx5g
+	 R+zD/BL2fbpvaqhjJBawPnfzr3c+sbD8xKdaHmRFxShSnX7RW789sVQlW+UCZRdClf
+	 IUN8T2K2y124g==
+Date: Thu, 5 Mar 2026 11:44:49 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dave Hansen <dave.hansen@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: Remove bouncing maintaner, mark Altera
+ drivers as orphans
+Message-ID: <20260305174449.GA70139@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] MAINTAINERS: Remove bouncing maintaner, mark Altera
- drivers as orphans
-To: Dave Hansen <dave.hansen@linux.intel.com>, linux-kernel@vger.kernel.org
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-References: <20260305171852.3114177-1-dave.hansen@linux.intel.com>
-From: Dave Hansen <dave.hansen@intel.com>
-Content-Language: en-US
-Autocrypt: addr=dave.hansen@intel.com; keydata=
- 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
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 In-Reply-To: <20260305171852.3114177-1-dave.hansen@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 3/5/26 09:18, Dave Hansen wrote:
+On Thu, Mar 05, 2026 at 09:18:52AM -0800, Dave Hansen wrote:
 > This maintainer's email is now bouncing. Remove them and mark
 > the code as an orphan for now.
+> 
+> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+> Cc: Manivannan Sadhasivam <mani@kernel.org>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
 
-... and I'm a doofus. I'm not sending things via my normal workflow and
-I missed:
+Applied to pci/for-linus for v7.0, thank you!
 
-Signed-off-by: Dave Hansen <dave.hansen@linux.intel.com>
-
+> ---
+>  MAINTAINERS | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index c32d76a949979..d010689fa91a9 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -20121,9 +20121,8 @@ F:	Documentation/devicetree/bindings/pci/marvell,armada-3700-pcie.yaml
+>  F:	drivers/pci/controller/pci-aardvark.c
+>  
+>  PCI DRIVER FOR ALTERA PCIE IP
+> -M:	Joyce Ooi <joyce.ooi@intel.com>
+>  L:	linux-pci@vger.kernel.org
+> -S:	Supported
+> +S:	Orphan
+>  F:	Documentation/devicetree/bindings/pci/altr,pcie-root-port.yaml
+>  F:	drivers/pci/controller/pcie-altera.c
+>  
+> @@ -20368,9 +20367,8 @@ S:	Supported
+>  F:	Documentation/PCI/pci-error-recovery.rst
+>  
+>  PCI MSI DRIVER FOR ALTERA MSI IP
+> -M:	Joyce Ooi <joyce.ooi@intel.com>
+>  L:	linux-pci@vger.kernel.org
+> -S:	Supported
+> +S:	Orphan
+>  F:	Documentation/devicetree/bindings/interrupt-controller/altr,msi-controller.yaml
+>  F:	drivers/pci/controller/pcie-altera-msi.c
+>  
+> -- 
+> 2.43.0
+> 
