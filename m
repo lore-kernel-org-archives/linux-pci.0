@@ -1,189 +1,419 @@
-Received: from mail-ua1-f42.google.com (mail-ua1-f42.google.com [209.85.222.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49BEF1A6828
-	for <linux-pci@vger.kernel.org>; Thu,  5 Mar 2026 04:19:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36C5521C9EA;
+	Thu,  5 Mar 2026 04:46:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772684364; cv=none; b=lU7+bgqejF1AhifTX3VL+55yMJ5jbQNhMdnehUxpJ04LQ4aHhFnNH4+8CekTUpfJeK6devbprRa0hFOEtWvzHrEr/YEDS9be2dbxtZLYajS71QLnx71ISs/IksAcSL5zQ5hBiKeEYf/i+yKnsoamOD3p11Uq0GTbh3497TMle4A=
+	t=1772685999; cv=none; b=VWdLO3qoSzB4ZlBWdCT68HtaTg6UdnOH7oKkK4KtWRIgF1dAjIjMy+UVs/1cJgkdwn1cgIQPAhMOPTaFMYj0+PPbMO+B9SiEbE30ZEVcu4KhLPZEHB8qoEVfpRY+VpsJIagQf1gafp5kZ4HypZNap2ieOXnKr9eiu1Frgd9CVlQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772684364; c=relaxed/simple;
-	bh=YLMX93OqrPLVPWJSCEb4hxhP3JLrjkjT+PELt9gAHVE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FE9fmmOb2JcUutLk3T9wKYyz/l9AAwcDrb7OOR0j/mUTuXaG56Kp9nLuTU/4YuNT3RuQlGxUNf1vz+crY0tKbzcjLkXeoj7LLg0A7waVab06VBeNOfjiPey0dP4QrmFP0bQ56D9M0H4Cr32dTEHRiAlPAyiYxFh7DHCbTNifqjQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OaIfmz0p; arc=none smtp.client-ip=209.85.222.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1772685999; c=relaxed/simple;
+	bh=JgKMY70MTFLFYeeqkpmSDs8x1Iw6TfduL41te7pOKaw=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=PjKYHzapOtoTnV7R53KtVV1AMGdVA6tDokhfPvwFj8OuvAbwE7Glq1bIlrr8RtqWF+7AKUS1NnRPPHrXEVN5Hs7nk1U+UA5bnf/zHa9FgdY08xMKoS97pHwF16r0apRyAcTjD4FBlzlpWD3Db9lkTD7+7a7oz0YKGq93ZKfafbk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vv2AM8Of; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OaIfmz0p"
-Received: by mail-ua1-f42.google.com with SMTP id a1e0cc1a2514c-94de6081c1cso4635354241.1
-        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2026 20:19:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772684362; x=1773289162; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=dcwLPgCuX5qGk1VO8dlUrj59t6r//UFI20kbYxyl5TI=;
-        b=OaIfmz0pr/GOJnZ6UrTlAZlyZ84zmHR5mibsTnGDmjD3tieI3UCGpTrajeCLx2bkcs
-         SOofoITN4oTEfjZQAyq44GzwYMogydLMmEbZHEnVjEAAFN0gK8W6nefXIBSbo5A901fP
-         TmKsZ4/4WwNS/+azt5jNSjGMaUM4NGjTZx0oMieimIdi8wnDZMRPctSVmwE8L0c8R6wm
-         teRap4imXUD/v3wiovjSFcs1OAdYISBrWIJfKlSB+D3/rKzhSVzUqq4EB9Zm24Up4P/g
-         GYcjRK06IK+fD13R7WtrhF0y+we/vKFtUB1/1ZYlru/J5ZpjyDOJxHAySdc65R4nV2V1
-         UR5w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772684362; x=1773289162;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=dcwLPgCuX5qGk1VO8dlUrj59t6r//UFI20kbYxyl5TI=;
-        b=K4IvcpeKA6GZ5hq6sfJrlPg+zVMDLTLnzpOJ3ZwuX4hjOTNM/Ry+TIzOFEbX44rSAL
-         7IeSWMZIAreGD7YR9LxRSASAV5KXW2ygRf04NSgTIZqksRSbk3TD/jgjfwbdoC4XfzP/
-         VLd3gzhOZgtYfoxwLGGqmSV17yYsS8cegrrItcn60yRM2bZYhCKSNvvx0hTu7IxTY8T4
-         RUYcW95NpTrsZGuElHMEX5c90uDLHeuRscCN7u5OHTmC321RJRhB2vxgZ5U1ArRyO77/
-         rN8+yYteHLyndCUHZRnumw84BQ84MnSR5curaf8VSH6wNCRRBWQQHw3HaFXyQXldP/Ro
-         6w2Q==
-X-Forwarded-Encrypted: i=1; AJvYcCV1LpQFXq0MRx2QwT5if6ke76LvVX6Ij8X5mB//zLLj3I2zK6qROvOcjKpJlgLzTRee7r7DHOi4Hx0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyvK5Ula6hZMy7557mb8z3nu6x1bkAejbMhHDi+wuiPH0YVgRHr
-	ZrkEDSVhGaWs6swMd57ipDRfqmUoO8ZsVR+2UHP3kNLtiMMU2OLOat5j
-X-Gm-Gg: ATEYQzxj23CpcyvdUumKMhg4zc8dtzz/91mvoefmqFMS96r3dFpxKjGse9o8T5P2HnZ
-	mydaW/HV9MjqUi7PtnlLdzWe3GGeTBSWoLZajCii3A0IdrrLL+08hXSQWAKLMmgNtX36RV8zzbk
-	XUXjnxJdcuGlITz7QlMGW3BOWe6bZqtBL/fVbt6oQAEyJOek5n+0Wkbl97vLlGUZOkDd2NoI/e0
-	mrI7qggg5jKZaNiwvJw7GrmhEZ7PEm8qci4RAmtBwf6nXTSatZUHhUdM1Rtgd3y7IX79Lw5y+ob
-	KNdKVaspulzfOL59nX19x0gtTqU0iF+RsunfLCFS1xdcYNKzUguEQiAt3T0A9hmSoekVDOkdp+w
-	uCZgXJgv+Prkgh4ODNQ8GBS5YcCS4G/Gh+8sA9FsaghMPwBgCwRW1NdxBNDwyAmaBcouU2h29h1
-	Q=
-X-Received: by 2002:a67:fbce:0:b0:5ff:b8d8:b40d with SMTP id ada2fe7eead31-5ffb8d8d44bmr1248639137.21.1772684362172;
-        Wed, 04 Mar 2026 20:19:22 -0800 (PST)
-Received: from geday ([2804:7f2:8080:fd2e::1])
-        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-94df6577a4fsm21273560241.10.2026.03.04.20.19.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Mar 2026 20:19:21 -0800 (PST)
-Date: Thu, 5 Mar 2026 01:19:15 -0300
-From: Geraldo Nascimento <geraldogabriel@gmail.com>
-To: Dragan Simic <dsimic@manjaro.org>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>,
-	linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 3/4] PCI: rockchip: drive at 2.5 GT/s, error other
- speeds
-Message-ID: <aakEQ_qtBbYCaUsA@geday>
-References: <cover.1772239598.git.geraldogabriel@gmail.com>
- <2a0a4aa97bb8b0cb511cb651c5d66c9ec8bab97a.1772239598.git.geraldogabriel@gmail.com>
- <d2b91260-7666-3606-69ec-0e7cb7a48c02@manjaro.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vv2AM8Of"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EBB2C116C6;
+	Thu,  5 Mar 2026 04:46:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772685998;
+	bh=JgKMY70MTFLFYeeqkpmSDs8x1Iw6TfduL41te7pOKaw=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+	b=Vv2AM8OfNCYKCF8oybSB65u47mk84qpKo3CobajR06QlzkVCPddoMBNxBca3Uhn4z
+	 Hpit0Lgf5xxccru5P/U599UgwZQug6X2x+FxfZh8kPlkGg441ZafR8s2eNCZCNnE1z
+	 B4NvMOYk07qwEmA6QJbWodv71En3egkPxAuGxXIQvRjhWlK4XPfjQxJh/borxOrFNC
+	 3MQL3y6LRFUEj64arQRnSAkvoPhYApOOqGmLxmEBLocVz9l8TwqNWxU3DGSBBBo+v2
+	 plbqfuiruyFtChytgGzm3lZfMBQfxIrTNcVrALR4iubREI/O8W4qswH6p2gaSdmU3J
+	 5nL7Rw6OrRAIw==
+X-Mailer: emacs 30.2 (via feedmail 11-beta-1 I)
+From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
+	linux-pci@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, aik@amd.com, yilun.xu@linux.intel.com,
+	bhelgaas@google.com, alistair23@gmail.com, lukas@wunner.de,
+	jgg@nvidia.com, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2 09/19] PCI/TSM: Support creating encrypted MMIO
+ descriptors via TDISP Report
+In-Reply-To: <20260303000207.1836586-10-dan.j.williams@intel.com>
+References: <20260303000207.1836586-1-dan.j.williams@intel.com>
+ <20260303000207.1836586-10-dan.j.williams@intel.com>
+Date: Thu, 05 Mar 2026 10:16:29 +0530
+Message-ID: <yq5a4imuanoa.fsf@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d2b91260-7666-3606-69ec-0e7cb7a48c02@manjaro.org>
+Content-Type: text/plain
 
-On Sat, Feb 28, 2026 at 07:16:41AM +0100, Dragan Simic wrote:
-> Hello Geraldo,
+Dan Williams <dan.j.williams@intel.com> writes:
 
-Hi Dragan,
-
+> After pci_tsm_bind() and pci_tsm_lock() the low level TSM driver is
+> expected to populate PCI_TSM_EVIDENCE_TYPE_REPORT in its evidence store.
+> This report is defined by the TDISP GET_DEVICE_INTERFACE_REPORT response
+> payload.
+>
+> Add a helper to create encrypted MMIO descriptors from that report
+> data. With those descriptors the TSM driver can use pci_tsm_mmio_setup() to
+> inform ioremap() how to map the device per the device's expectations. The
+> VM is expected to validate the interface with the relying party before
+> accepting the device for operation.
+>
+> The helper also provides the obfuscated starting address for each
+> encrypted MMIO range as the VM is never disclosed on the hpa that
+> correlates to the gpa of the device's mmio. The obfuscated address is BAR
+> relative.
+>
+> Based on an original patch by Aneesh [1]
+>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Link: https://lore.kernel.org/linux-coco/20251117140007.122062-8-aneesh.kumar@kernel.org/
+> Co-developed-by: Xu Yilun <yilun.xu@linux.intel.com>
+> Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  include/linux/ioport.h  |   1 +
+>  include/linux/pci-tsm.h |  34 ++++++
+>  drivers/pci/tsm/core.c  | 235 ++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 270 insertions(+)
+>
+> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+> index 9afa30f9346f..1c106608c514 100644
+> --- a/include/linux/ioport.h
+> +++ b/include/linux/ioport.h
+> @@ -143,6 +143,7 @@ enum {
+>  	IORES_DESC_RESERVED			= 7,
+>  	IORES_DESC_SOFT_RESERVED		= 8,
+>  	IORES_DESC_CXL				= 9,
+> +	IORES_DESC_ENCRYPTED			= 10,
+>  };
+>  
+>  /*
+> diff --git a/include/linux/pci-tsm.h b/include/linux/pci-tsm.h
+> index b70b4c0457c4..8869585230a3 100644
+> --- a/include/linux/pci-tsm.h
+> +++ b/include/linux/pci-tsm.h
+> @@ -194,12 +194,42 @@ struct pci_tsm_pf0 {
+>  	struct pci_doe_mb *doe_mb;
+>  };
+>  
+> +/**
+> + * struct pci_tsm_mmio_entry - an encrypted MMIO range
+> + * @res: MMIO address range (typically Guest Physical Address, GPA)
+> + * @tsm_offset: Host Physical Address, HPA obfuscation offset added by the TSM.
+> + *		Translates report addresses to GPA.
+> + */
+> +struct pci_tsm_mmio_entry {
+> +	struct resource res;
+> +	u64 tsm_offset;
+> +};
+> +
+> +struct pci_tsm_mmio {
+> +	int nr;
+> +	struct pci_tsm_mmio_entry mmio[] __counted_by(nr);
+> +};
+> +
+> +static inline struct pci_tsm_mmio_entry *
+> +pci_tsm_mmio_entry(struct pci_tsm_mmio *mmio, int idx)
+> +{
+> +	return &mmio->mmio[idx];
+> +}
+> +
+> +static inline struct resource *pci_tsm_mmio_resource(struct pci_tsm_mmio *mmio,
+> +						     int idx)
+> +{
+> +	return &mmio->mmio[idx].res;
+> +}
+> +
+>  /**
+>   * struct pci_tsm_devsec - context for tracking private/accepted PCI resources
+>   * @base_tsm: generic core "tsm" context
+> + * @mmio: encrypted MMIO resources for this assigned device
+>   */
+>  struct pci_tsm_devsec {
+>  	struct pci_tsm base_tsm;
+> +	struct pci_tsm_mmio *mmio;
+>  };
+>  
+>  /* physical function0 and capable of 'connect' */
+> @@ -297,6 +327,10 @@ ssize_t pci_tsm_guest_req(struct pci_dev *pdev, enum pci_tsm_req_scope scope,
+>  struct pci_tsm_devsec *to_pci_tsm_devsec(struct pci_tsm *tsm);
+>  void pci_tsm_init_evidence(struct pci_tsm_evidence *evidence, int slot,
+>  			   enum hash_algo digest_algo);
+> +int pci_tsm_mmio_setup(struct pci_dev *pdev, struct pci_tsm_mmio *mmio);
+> +void pci_tsm_mmio_teardown(struct pci_tsm_mmio *mmio);
+> +struct pci_tsm_mmio *pci_tsm_mmio_alloc(struct pci_dev *pdev);
+> +int pci_tsm_mmio_free(struct pci_dev *pdev, struct pci_tsm_mmio *mmio);
+>  #else
+>  static inline int pci_tsm_register(struct tsm_dev *tsm_dev)
+>  {
+> diff --git a/drivers/pci/tsm/core.c b/drivers/pci/tsm/core.c
+> index 039733fd19b1..e4f830b16d18 100644
+> --- a/drivers/pci/tsm/core.c
+> +++ b/drivers/pci/tsm/core.c
+> @@ -15,6 +15,7 @@
+>  #include <linux/pci-tsm.h>
+>  #include <linux/sysfs.h>
+>  #include <linux/tsm.h>
+> +#include <linux/unaligned.h>
+>  #include <linux/xarray.h>
+>  #include "../pci.h"
+>  
+> @@ -558,6 +559,240 @@ static ssize_t dsm_show(struct device *dev, struct device_attribute *attr,
+>  }
+>  static DEVICE_ATTR_RO(dsm);
+>  
+> +static void mmio_teardown(struct pci_tsm_mmio *mmio, int nr)
+> +{
+> +	while (nr--)
+> +		remove_resource(pci_tsm_mmio_resource(mmio, nr));
+> +}
+> +
+> +/**
+> + * pci_tsm_mmio_setup() - mark device MMIO as encrypted in iomem
+> + * @pdev: device owner of MMIO resources
+> + * @mmio: container of an array of resources to mark encrypted
+> + */
+> +int pci_tsm_mmio_setup(struct pci_dev *pdev, struct pci_tsm_mmio *mmio)
+> +{
+> +	int i;
+> +
+> +	device_lock_assert(&pdev->dev);
+> +	if (pdev->dev.driver)
+> +		return -EBUSY;
+> +
+> +	for (i = 0; i < mmio->nr; i++) {
+> +		struct resource *res = pci_tsm_mmio_resource(mmio, i);
+> +		int j;
+> +
+> +		if (resource_size(res) == 0 || !res->end)
+> +			break;
+> +
+> +		/* Only require the caller to set the range, init remainder */
+> +		*res = DEFINE_RES_NAMED_DESC(res->start, resource_size(res),
+> +					     "PCI MMIO Encrypted",
+> +					     IORESOURCE_MEM,
+> +					     IORES_DESC_ENCRYPTED);
+> +
+> +		for (j = 0; j < PCI_NUM_RESOURCES; j++)
+> +			if (resource_contains(pci_resource_n(pdev, j), res))
+> +				break;
+> +
+> +		/* Request is outside of device MMIO */
+> +		if (j >= PCI_NUM_RESOURCES)
+> +			break;
+> +
+> +		if (insert_resource(&iomem_resource, res) != 0)
+> +			break;
+> +	}
+> +
+> +	if (i >= mmio->nr)
+> +		return 0;
+> +
+> +	mmio_teardown(mmio, i);
+> +
+> +	return -EINVAL;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_tsm_mmio_setup);
+> +
+> +void pci_tsm_mmio_teardown(struct pci_tsm_mmio *mmio)
+> +{
+> +	mmio_teardown(mmio, mmio->nr);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_tsm_mmio_teardown);
+> +
+> +/*
+> + * PCIe ECN TEE Device Interface Security Protocol (TDISP)
+> + *
+> + * Device Interface Report data object layout as defined by PCIe r7.0 section
+> + * 11.3.11
+> + */
+> +#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_TABLE BIT(0)
+> +#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_PBA BIT(1)
+> +#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_NON_TEE BIT(2)
+> +#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_UPDATABLE BIT(3)
+> +#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_RANGE_ID GENMASK(31, 16)
+> +
+> +/* An interface report 'pfn' is 4K in size */
+> +struct pci_tsm_devif_mmio {
+> +	__le64 pfn;
+> +	__le32 nr_pfns;
+> +	__le32 attributes;
+> +};
+> +
+> +struct pci_tsm_devif_report {
+> +	__le16 interface_info;
+> +	__le16 reserved;
+> +	__le16 msi_x_message_control;
+> +	__le16 lnr_control;
+> +	__le32 tph_control;
+> +	__le32 mmio_range_count;
+> +	struct pci_tsm_devif_mmio mmio[];
+> +};
+> +
+> +/**
+> + * pci_tsm_mmio_alloc() - allocate encrypted MMIO range descriptor
+> + * @pdev: device owner of MMIO ranges
+> + * @report_data: TDISP Device Interface (DevIf) Report blob
+> + * @report_sz: DevIf Report size
+> + *
+> + * Return: the encrypted MMIO range descriptor on success, NULL on failure
+> + *
+> + * Assumes that this is called within the live lifetime of a PCI device's
+> + * association with a low level TSM.
+> + */
+> +struct pci_tsm_mmio *pci_tsm_mmio_alloc(struct pci_dev *pdev)
+> +{
+> +	struct pci_tsm *tsm = pdev->tsm;
+> +	struct pci_tsm_evidence *evidence = &tsm->evidence;
+> +	struct pci_tsm_evidence_object *report_obj = &evidence->obj[PCI_TSM_EVIDENCE_TYPE_REPORT];
+> +	struct tsm_dev *tsm_dev = tsm->tsm_dev;
+> +	u64 reporting_bar_base, last_reporting_end;
+> +	const struct pci_tsm_devif_report *report;
+> +	u32 mmio_range_count;
+> +	int last_bar = -1;
+> +	int i;
+> +
+> +	guard(rwsem_read)(&evidence->lock);
+> +	if (report_obj->len < sizeof(struct pci_tsm_devif_report))
+> +		return NULL;
+> +
+> +	if (dev_WARN_ONCE(&tsm_dev->dev, !IS_ALIGNED((unsigned long) report_obj->data, 8),
+> +			  "misaligned report data\n"))
+> +		return NULL;
+> +
+> +	report = report_obj->data;
+> +	mmio_range_count = __le32_to_cpu(report->mmio_range_count);
+> +
+> +	/* check that the report object is self-consistent on mmio entries */
+> +	if (report_obj->len < struct_size(report, mmio, mmio_range_count))
+> +		return NULL;
+> +
+> +	/* create pci_tsm_mmio descriptors from the report data */
+> +	struct pci_tsm_mmio *mmio __free(kfree) =
+> +		kzalloc(struct_size(mmio, mmio, mmio_range_count), GFP_KERNEL);
+> +	if (!mmio)
+> +		return NULL;
+> +
+> +	for (i = 0; i < mmio_range_count; i++) {
+> +		u64 range_off;
+> +		struct range range;
+> +		const struct pci_tsm_devif_mmio *mmio_data = &report->mmio[i];
+> +		struct pci_tsm_mmio_entry *entry =
+> +			pci_tsm_mmio_entry(mmio, mmio->nr);
+> +		/* report values in are in terms of 4K pages */
+> +		u64 tsm_offset = __le64_to_cpu(mmio_data->pfn) * SZ_4K;
+> +		u64 size = __le32_to_cpu(mmio_data->nr_pfns) * SZ_4K;
+> +		u32 attr = __le32_to_cpu(mmio_data->attributes);
+> +		int bar = FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_RANGE_ID,
+> +				    attr);
+> +
+> +		tsm_offset *= SZ_4K;
+> +		size *= SZ_4K;
+> +
+> +		if (bar >= PCI_STD_NUM_BARS ||
+> +		    !(pci_resource_flags(pdev, bar) & IORESOURCE_MEM)) {
+> +			pci_dbg(pdev, "Invalid reporting bar ID %d\n", bar);
+> +			return NULL;
+> +		}
+> +
+> +		if (last_bar > bar) {
+> +			pci_dbg(pdev, "Reporting bar ID not in ascending order\n");
+> +			return NULL;
+> +		}
+> +
+> +		if (last_bar < bar) {
+> +			/* transition to a new bar */
+> +			last_bar = bar;
+> +			/*
+> +			 * The tsm_offset for the first range of the BAR
+> +			 * corresponds to the BAR base.
+> +			 */
+> +			reporting_bar_base = tsm_offset;
+> +		} else if (tsm_offset < last_reporting_end) {
+> +			pci_dbg(pdev, "Reporting ranges within BAR not in ascending order\n");
+> +			return NULL;
+> +		}
+>
+....
+> +		range_off = tsm_offset - reporting_bar_base;
 > 
-> On Saturday, February 28, 2026 01:55 CET, Geraldo Nascimento <geraldogabriel@gmail.com> wrote:
-> > Configure the core to be driven at 2.5 GT/s Link Speed and ignore
-> > any other speed with a warning. The reason is that Shawn Lin from
-> > Rockchip has reiterated that there may be danger of "catastrophic
-> > failure" in using their PCIe with 5.0 GT/s speeds.
-> > 
-> > While Rockchip has done so informally without issuing a proper errata,
-> > and the particulars are thus unknown, this may cause data loss or
-> > worse.
-> > 
-> > This change is corroborated by RK3399 official datasheet [1], which
-> > states maximum link speed for this platform is 2.5 GT/s.
-> > 
-> > [1] https://opensource.rock-chips.com/images/d/d7/Rockchip_RK3399_Datasheet_V2.1-20200323.pdf
-> > 
-> > Fixes: 956cd99b35a8 ("PCI: rockchip: Separate common code from RC driver")
-> > Link: https://lore.kernel.org/all/ffd05070-9879-4468-94e3-b88968b4c21b@rock-chips.com/
-> > Cc: stable@vger.kernel.org
-> > Reported-by: Dragan Simic <dsimic@manjaro.org>
-> > Reported-by: Shawn Lin <shawn.lin@rock-chips.com>
-> > Signed-off-by: Geraldo Nascimento <geraldogabriel@gmail.com>
-> > ---
-> >  drivers/pci/controller/pcie-rockchip.c | 15 +++++++++------
-> >  1 file changed, 9 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/drivers/pci/controller/pcie-rockchip.c b/drivers/pci/controller/pcie-rockchip.c
-> > index 0f88da378805..2f211d1f4c7c 100644
-> > --- a/drivers/pci/controller/pcie-rockchip.c
-> > +++ b/drivers/pci/controller/pcie-rockchip.c
-> > @@ -66,8 +66,10 @@ int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
-> >  	}
-> >  
-> >  	rockchip->link_gen = of_pci_get_max_link_speed(node);
-> > -	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
-> > -		rockchip->link_gen = 2;
-> > +	if (rockchip->link_gen < 0 || rockchip->link_gen >= 2) {
-> > +		rockchip->link_gen = 1;
-> > +		dev_warn(dev, "invalid max-link-speed, fix your DT\n");
-> > +	}
-> 
-> I'd suggest using a bit more formal message here, like the one below,
-> which would also avoid addressing the user directly:
-> 
->   "Invalid max-link-speed found, limited to Gen1 to avoid data corruption"
+range_off will always be zero? Should we do
 
-We really should spare on characters here, but I see your point and will
-try to cook up a better way.
+ 		range_off = tsm_offset & (pci_resource_len(pdev, bar) - 1);
 
-> 
-> >  	for (i = 0; i < ROCKCHIP_NUM_PM_RSTS; i++)
-> >  		rockchip->pm_rsts[i].id = rockchip_pci_pm_rsts[i];
-> > @@ -147,12 +149,13 @@ int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
-> >  		goto err_exit_phy;
-> >  	}
-> >  
-> > -	if (rockchip->link_gen == 2)
-> > -		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_2,
-> > -				    PCIE_CLIENT_CONFIG);
-> > -	else
-> > +	if (rockchip->link_gen == 2) {
-> > +		/* 5.0 GT/s may cause catastrophic failure for this core */
-> > +		dev_warn(dev, "5.0 GT/s may cause data loss or worse\n");
-> > +	} else {
-> >  		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_1,
-> >  				    PCIE_CLIENT_CONFIG);
-> > +	}
-> 
-> I don't think we need to emit a warning here, because, as we've already
-> established through earlier discussions, the rockchip_pcie_init_port()
-> function should never receive an invalid speed value.
 
-Just as a lame excuse, those messages were everywhere in the mid of my
-development, this is one that escaped deletion, will drop.
+So that we correctly handle if the interface report is reporting a range
+within a bar. The only requirement here is bar address should be aligned
+to its size and mmio_reporting_offset should not add offsets in that range.
 
-> 
-> >  	regs = PCIE_CLIENT_ARI_ENABLE |
-> >  	       PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes);
-> 
-> It would make most sense to squash all three patches in this series
-> into a single patch, because they all form a single logical unit, which
-> introduces changes that are just going to be harder to track down later
-> if it's all scattered into multiple separate patches.
-
-I agree, having all drops in one big patch is the better tactic here.
-
-> 
-> The only possible issue with the squashing comes from the inability to
-> have different patch subject prefixes for different driver changes, but
-> I think that's actually not an issue.  The long-term benefits of having
-> everything as a single patch outweighs the benefits of having different
-> patch subjects with separate patches.
-> 
-
-Sure, will do so for v6.
-
-Many thanks,
-Geraldo Nascimento
+> +
+> +		last_reporting_end = tsm_offset + size;
+> +		if (last_reporting_end < tsm_offset) {
+> +			pci_dbg(pdev, "Reporting range overflow\n");
+> +			return NULL;
+> +		}
+> +
+> +		range_off = tsm_offset - reporting_bar_base;
+> +		if (pci_resource_len(pdev, bar) < range_off + size) {
+> +			pci_dbg(pdev, "Reporting range larger than BAR size\n");
+> +			return NULL;
+> +		}
+> +
+> +		range.start = pci_resource_start(pdev, bar) + range_off;
+> +		range.end = range.start + size - 1;
+> +
+> +		if (FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_NON_TEE,
+> +			      attr)) {
+> +			pci_dbg(pdev, "Skipping non-TEE range, BAR%d %pra\n",
+> +				 bar, &range);
+> +			continue;
+> +		}
+> +
+> +		/* Currently not supported */
+> +		if (FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_TABLE,
+> +			      attr) ||
+> +		    FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_PBA, attr)) {
+> +			pci_dbg(pdev, "Skipping MSIX range BAR%d %pra\n", bar,
+> +				 &range);
+> +			continue;
+> +		}
+> +
+> +		entry->res.start = range.start;
+> +		entry->res.end = range.end;
+> +		entry->tsm_offset = tsm_offset;
+> +		mmio->nr++;
+> +	}
+> +
+> +	return_ptr(mmio);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_tsm_mmio_alloc);
+> +
+> +/**
+> + * pci_tsm_mmio_free() - free a pci_tsm_mmio instance
+> + * @pdev: device owner of MMIO ranges
+> + * @mmio: instance to free
+> + *
+> + * Returns 0 if @mmio was idle on entry, -EBUSY otherwise
+> + */
+> +int pci_tsm_mmio_free(struct pci_dev *pdev, struct pci_tsm_mmio *mmio)
+> +{
+> +	for (int i = 0; i < mmio->nr; i++) {
+> +		struct resource *res = pci_tsm_mmio_resource(mmio, i);
+> +
+> +		if (dev_WARN_ONCE(&pdev->dev, resource_assigned(res),
+> +				  "MMIO resource still assigned %pr\n", res))
+> +			return -EBUSY;
+> +	}
+> +	kfree(mmio);
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_tsm_mmio_free);
+> +
+>  /**
+>   * pci_tsm_accept() - accept a device for private MMIO+DMA operation
+>   * @pdev: PCI device to accept
+> -- 
+> 2.52.0
