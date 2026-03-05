@@ -1,313 +1,193 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6BF243C276F;
-	Thu,  5 Mar 2026 15:24:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772724282; cv=none; b=UhFABbojmdIjFw/FA9U9D652C38ad2TRq6+Wn9vSnJUEfMS527P6rx86t+QKKvsBF6hP3hx25AInsAsEvAmc6+AWaWjxrPZu0g1p3BAoEFuQPTGYUUW2xaLMdUtSa5xTH9Dw2dSchXTCB5stiiGG00Cw5wyR8BrPCxZUgwxAqck=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772724282; c=relaxed/simple;
-	bh=FgKMMvhMUx39Ae3ouh6gcxllAs/YZMwtXQ6m8jbzCnM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=knvKCkTK8CQC3qb/WCP0rC7rFV8vVop/MkjciaKcFW510VXzRU02zMlcRK7otYUsOinU9UiS+0uZPGWPbh4ESoV3ZfpQxOfMhPnwUEMaf86HMTwBwkNW0K2yt7KB2zkM8rIBFQGoqeo99Hx3dPnwBqCQX8jSseZ3L4Hy+DLbRGs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 1CFE6339;
-	Thu,  5 Mar 2026 07:24:30 -0800 (PST)
-Received: from [10.57.48.84] (unknown [10.57.48.84])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 10D663F73B;
-	Thu,  5 Mar 2026 07:24:32 -0800 (PST)
-Message-ID: <a5ff7a43-ea52-462d-a316-d3a6c08410e0@arm.com>
-Date: Thu, 5 Mar 2026 15:24:30 +0000
+Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012054.outbound.protection.outlook.com [52.101.66.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1819454654;
+	Thu,  5 Mar 2026 15:32:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.54
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772724748; cv=fail; b=ZevVt6uift8xL20UvLPqGmpVWTFfHgFdU4c6dSEFi/YzWcw7ZidBx6Aq3LHyzoUj9YqA357Aj1YPZiq65c+COv/EYVpXzLqqXbGPqH6koJsFLJItJI9SmLn656anP+zJapy6fhxuDX8vfWH5p+UWQSabTNcch7262muN57t4eQs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772724748; c=relaxed/simple;
+	bh=54/0QlMbD3yfS/ndafyi6yTgQapooR/m5ctbOPL5KlU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=Hf2m9P2mPYVNNEwaWVmaE92JDFT8l6QhvthMZAlK/xX3c/+Q1yU1R3iw6twTC4reF23aiXj3HOYkND35U14MSf+zm1/AhDEwKeY93breAvWphbgfQsXlWkV3CHtcpxO8ZEX6fP7t46RLjY/5AMzfO5ssSVfIQNJ4n+H88bLm28A=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=J+rVZWVv; arc=fail smtp.client-ip=52.101.66.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="J+rVZWVv"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=SzCar6BtFDoSuJFNDYNnE04rribedd8o4+OOaRZMEKQIARO2PJbJaezlIQILifmJW6oTr+UGGxIe8rWBDgvNppmRC0Upg5dCDWynzzm7f8sH1/cS1YYfHMADlYY8rZ4RNm5WG5smegMSyKiWr2pF3sir/ZUaCYBfGcYANVM21eILBwB7ZT6Rsfhh+Dq2NijbkuXiEXFLho64SNlYCuPa9quz2L5gUnHKNITcA2FfkeGLc/uLnNb5YepzUbG6k3QGlldybH3sXSbEk1BEh6544k1QcIuNg/JBo4OUWYf7PGlCG/qqJakFpGXI2mLgUApR2c9HzYIxyXyAH1DMblYPww==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=VN6y+kI2YfDkrkpPMJZpKmNmx8d7dzN040/0jEUGVEU=;
+ b=u47WSvONZE1aAhC0Y9RqWQBTOniFa4DsxP2B8CGmMXag81Wzl3W6AvzvPcq9mbmq1HGlF7Slcihi6jHKUg0cySl+LplwWSsPZl4Zv6UdRj9n+FGzX4TVIDbH8sNL3fuxCQzxuqV1D4CjRvZahWb9kib6rW/aL4CSr9gN1CCUH6XtSi4JB/2Cstrw2rOC5E87C3eqtpn18G7QQcCbUMyvOoBvwt40jX0sInxV0tyjGQny6243Mq2vjoUEMgiSFbCFiuKYNC964XL28meHHULID0S/ge0BoXnz+f1JLKDSrVpNbqgjgtVdpmQeuUXiTk9u/KGo1dzOJdEbo2znQqSZIw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=VN6y+kI2YfDkrkpPMJZpKmNmx8d7dzN040/0jEUGVEU=;
+ b=J+rVZWVvkf1pYxo00EW5ckqOznG0PjIn9UVOLIF3rPC5xwAmYo8rapbbYDa8hLlVBQeDl+yE/CzsLKCt1Mu2Q4PrmL0hA8k5qLXh2jKdt8PTgcNo8L2f2liQw/JWe860bUgz7OOZk/ondIUb5JzG9tXIhHtewQFEAEwl+XYnli4VQZ7CyGY3Azc0PEI76KQmG8MOPenyUSktRAtuqwJewfBycToDvGedBiLmIAlws/7lzeCDNvPKbVvOtOpvPFc9x5nXknEISyNDgYLsWQ//yKav+qrVFwLrOCZuN8jNQ+rkWzms45TkysEwVxiFNZYNQE+Xe1kTMOs+YCVSq4PfaA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
+ by GV1PR04MB10156.eurprd04.prod.outlook.com (2603:10a6:150:1ad::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.18; Thu, 5 Mar
+ 2026 15:32:23 +0000
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9654.020; Thu, 5 Mar 2026
+ 15:32:23 +0000
+Date: Thu, 5 Mar 2026 10:32:14 -0500
+From: Frank Li <Frank.li@nxp.com>
+To: Sherry Sun <sherry.sun@nxp.com>
+Cc: hongxing.zhu@nxp.com, l.stach@pengutronix.de, bhelgaas@google.com,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	robh@kernel.org, krzk+dt@kernel.org, s.hauer@pengutronix.de,
+	festevam@gmail.com, imx@lists.linux.dev, kernel@pengutronix.de,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: imx6: Change imx_pcie_deassert_core_reset() to
+ return void
+Message-ID: <aamh_jNadvXQMGs2@lizhi-Precision-Tower-5810>
+References: <20260305095259.235049-1-sherry.sun@nxp.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260305095259.235049-1-sherry.sun@nxp.com>
+X-ClientProxiedBy: PH8PR02CA0030.namprd02.prod.outlook.com
+ (2603:10b6:510:2da::34) To PA4PR04MB9366.eurprd04.prod.outlook.com
+ (2603:10a6:102:2a9::8)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 2/2] iommu/arm-smmu-v3: Recover ATC invalidate timeouts
-To: Nicolin Chen <nicolinc@nvidia.com>, will@kernel.org, joro@8bytes.org,
- bhelgaas@google.com, jgg@nvidia.com
-Cc: rafael@kernel.org, lenb@kernel.org, praan@google.com, kees@kernel.org,
- baolu.lu@linux.intel.com, smostafa@google.com,
- Alexander.Grest@microsoft.com, kevin.tian@intel.com,
- miko.lenczewski@arm.com, linux-arm-kernel@lists.infradead.org,
- iommu@lists.linux.dev, linux-kernel@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org, vsethi@nvidia.com
-References: <cover.1772686998.git.nicolinc@nvidia.com>
- <ca7ab934bf0f433b62a5c15d42241632c4cb9366.1772686998.git.nicolinc@nvidia.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Content-Language: en-GB
-In-Reply-To: <ca7ab934bf0f433b62a5c15d42241632c4cb9366.1772686998.git.nicolinc@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|GV1PR04MB10156:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2a328ffa-5df4-4f74-0d76-08de7acc659d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|52116014|19092799006|1800799024|376014|366016|38350700014;
+X-Microsoft-Antispam-Message-Info:
+	8YJ2QItm4iox7+pVoVPEHrkvW8dN9eC4QmZU65INiHi7a99c/7fEYf5qYTssrEuPcsqIMItybPDIonaGWiDZfp3EUzha0r87Ltkpc4j+1Vv1jPrVw6ABa9TXtyunHd8WGzAUjWiV7u4nY0m45KCBNnAu/Tlkekm20aT1yNfhhoxXN0zKFhqdfG91K2bn3CqYu3suRxFQrIhVCulIuIdOViwEOL7PHZjrkVDY1MFYPZEwCyvcqMK8eEkddGWMFYJa3gbCUWrtZ1NtTwveygpVYE29DAOYOHdhoJKfgdQc/GuxFKGeDFNxlsZgru5PWpof3A2AzhwDlMMGYqjfTUy9ZbHbj+h2zAJJ3VXqAy4LH1JdhNrzLUkdkqA07BMfp3n963zjFBP+Bu2BKNSrYfBBec3bV7HGNbBaUF1w0y3SgbilsXbKrYOdp5bTm+8r9syXHJXSBd2BW3Ep9N/X2G/xCAgtmoIQdDP3l7qIqikU/ab2MDFNdSYjns6El6UkdAMTTK5+OQcmspJMeLpyKkZTRL6vhKxKSyLVDkzE1cqHj7QPA3q4DVbMeu+TOkAqQ2BWRKkPxRcwgt26pzzXhSNv448gsc0w2wjiL0rACZSouAHvI1J0RaQmrpDQ+N+1xUc8qwJfHrR4O29EDvdX7ZOIu0nfaB3+xpqL0Z0xwEuJigCiU1G97JhMqncI3ak4tSK854V9ehS826+M9DDM9pXJKnoT9jSOiFtiacO/DAXQkLvtlghBW3oAtOk+hIST0L37CCzaaCwDOw11O62Kvu2+GjzbrFb2gb+I98JFnWLSnOM=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(52116014)(19092799006)(1800799024)(376014)(366016)(38350700014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?1Y1GGRBy87BygNyATtqotnXi6HmMb1HTb9myFR/fDj3w3RORFsFPddyr7YHx?=
+ =?us-ascii?Q?j+apj8VAZMTiEvsug2BgBsh6hpr0uuH2o03dpRXqMZsltzRDA3jKZ917Bm11?=
+ =?us-ascii?Q?xB5CbsURtng78VJlHA+HywbI0p3cGq+wvwQPHXTemNDKLd4BasRZiTw1VLmI?=
+ =?us-ascii?Q?51m1sI0juxT/0a0s714IOFW5j34gpMyjs2wnLiKZOzsUhTjD6FRT+QRhVPc/?=
+ =?us-ascii?Q?milRQEPFIF7TqXnVW30LHTJ7NUofu89FZNNpUja2AGPBWkNxsbSUWhP0PNLa?=
+ =?us-ascii?Q?j7Pn4kDk7rkCx2LgxqHhb03Ihx+kX9MQNtqxXXNbV40DxHwbDaDvvLESpggQ?=
+ =?us-ascii?Q?iOkrO6G35IP38OyHp9U9qhDxNh+d8w2hc7dK5F6KL2OuOJRE+kQCJgjzum4l?=
+ =?us-ascii?Q?dLzwROvLHI1DmNZ03oARalnzfqFVzqkOqiKchbO3W3U6zKh0afDJAyi2269/?=
+ =?us-ascii?Q?C2sNawwJz5VkkBJbHVgC61HshF2wH853WUmhD6hruHwgqLK+ktJpjIAPveo0?=
+ =?us-ascii?Q?htvMjFxRFhi8WcYB6u+63w7eN4RU/IM9DTJKde/wlBQ3q5cejGXQGbvPbs81?=
+ =?us-ascii?Q?32tAyTHHLPMZBfO2zLOtywzCG6NPa7GDkVHfkhFh2q6GvI8LD6mYxrDeuGmO?=
+ =?us-ascii?Q?EtrgQCshkmCNzd9zz/PL3Wak1G3SsMgmORrJUANhm7NzlTG23cRYLfS8Q9AR?=
+ =?us-ascii?Q?nrPPHD/CaCOzIt6t/BU5NTIHgpTWt5AArGEAI41QCeaUYfiZMzjxtQtWb+Yp?=
+ =?us-ascii?Q?hd34J4t0InxLVG0RVRVtC3tAP9suNCCN8aj93JnZwO0G9tGDkKz8gx1nPqUR?=
+ =?us-ascii?Q?7SjfilEOzYy03SWPMiI5hdg3XvE3HOkUCoL5eYhpmdtNIsjWRSnpf7gAtnkQ?=
+ =?us-ascii?Q?JeFyll7crIgZQJR4JPOcjw7MBvtV5ZbVT19UvljyrdeoXpicmRwvi8KZUzWV?=
+ =?us-ascii?Q?+ugjs6vuiyUR0VKVtkR2Ln7DWAKwhS009Pl+Rm7XajHgW8gGytD0iMpctHLA?=
+ =?us-ascii?Q?pknWJ0cnMl6EfbtvRbmM9Q/z2lpSk0c1WBdP1gfoU8Q/Uc+r+YanrvvZ6KIY?=
+ =?us-ascii?Q?859E0G6FogMYkqB1/D5GQJsOoKuXTSuagmFZZhW5tSoVST8plLodmL/eetGH?=
+ =?us-ascii?Q?ghJo7kI7XYnsz+R/jBIqplp6kIuQDHjBvlxGHPlDcytabE7awAilYhSe82tF?=
+ =?us-ascii?Q?3YS0wZNTD1HddVnNTL5+CUcLHMFXmf1t2wtbnG4AUPU21sgkY6NeMILrQ7vg?=
+ =?us-ascii?Q?gUSH5jQ6rvtCni0vqzHX3GgSA5GBeV6xw7S7DeFFNLFbpIE8aK1nVcqQRk4b?=
+ =?us-ascii?Q?Okn9j9x6mdVM4JY4qkSKNZisMqqQu9Qz9HS4d9bh1hgEEAN/04vu/JPPrN2W?=
+ =?us-ascii?Q?4dkaeX9+jOA5B2ZfNU2te4E/v+N0szaMkQ6FVba2gig/8tad16o0bUQ50/gH?=
+ =?us-ascii?Q?sw6BbimnofK5ZN3qPXUDIKVMc/9SOaPMSp2Y+exh23qtN3APv2MqMYHwUWwj?=
+ =?us-ascii?Q?H+Wj9jPzEWXGUkJhMRBBk1dL1PrXPCPxAqpDxoFLJTLEy31fs8YxVvGx7Y+s?=
+ =?us-ascii?Q?E1yr+yM+JQ5N3ZNS5CM6twf463WWm7E1O1ycyK4CAZY+2DEiuZyOhZGIZtGo?=
+ =?us-ascii?Q?mxV0eAIXHtA+QrNausYEuVfSWDmqRffbeivWv/VKyCCtRsP28cBKEZ1p4aEz?=
+ =?us-ascii?Q?zabLd87qre9vZAFUMNubZHV7quEOdFE4XUsBLT17gSUksgPpIXCeZBUtHEe9?=
+ =?us-ascii?Q?mmXcMUPmGA=3D=3D?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2a328ffa-5df4-4f74-0d76-08de7acc659d
+X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Mar 2026 15:32:23.1517
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 985rTZxK+VE9lNkNWyln4YtlJmubEB6wUc4Ysy3jfZPQYWEfLzv2N41n3i+pZIYqLTBb7NwdoAePp5QQUfbRng==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV1PR04MB10156
 
-On 2026-03-05 5:21 am, Nicolin Chen wrote:
-> Currently, when GERROR_CMDQ_ERR occurs, the arm_smmu_cmdq_skip_err() won't
-> do anything for the CMDQ_ERR_CERROR_ATC_INV_IDX.
-> 
-> When a device wasn't responsive to an ATC invalidation request, this often
-> results in constant CMDQ errors:
->    unexpected global error reported (0x00000001), this could be serious
->    CMDQ error (cons 0x0302bb84): ATC invalidate timeout
->    unexpected global error reported (0x00000001), this could be serious
->    CMDQ error (cons 0x0302bb88): ATC invalidate timeout
->    unexpected global error reported (0x00000001), this could be serious
->    CMDQ error (cons 0x0302bb8c): ATC invalidate timeout
->    ...
-> 
-> An ATC invalidation timeout indicates that the device failed to respond to
-> a protocol-critical coherency request, which means that device's internal
-> ATS state is desynchronized from the SMMU.
-> 
-> Furthermore, ignoring the timeout leaves the system in an unsafe state, as
-> the device cache may retain stale ATC entries for memory pages that the OS
-> has already reclaimed and reassigned. This might lead to data corruption.
-> 
-> The only safe recovery action is to issue a PCI reset, which guarantees to
-> flush all internal device caches and recover the device.
-> 
-> Read the ATC_INV command that led to the timeouts, and schedule a recovery
-> worker to reset the device corresponding to the Stream ID. If reset fails,
-> keep the device in the resetting/blocking domain to avoid data corruption.
-> 
-> Though it'd be ideal to block it immediately in the ISR, it cannot be done
-> because an STE update would require another CFIG_STE command that couldn't
-> finish in the context of an ISR handling a CMDQ error.
+On Thu, Mar 05, 2026 at 05:52:59PM +0800, Sherry Sun wrote:
+> The function imx_pcie_deassert_core_reset() always returns 0 and the
+> return value is not used meaningfully by its callers.
+>
+> Change the return type from int to void to simplify the code and
+> remove unnecessary error handling paths. No functional change intended.
+>
+> Fixes: 835a345b18b0 ("PCI: imx6: Reformat suspend callback to keep symmetric with resume")
 
-Why not? As soon as we've acked GERRORN.CMDQ_ERR, command consumption 
-will resume and we're free to do whatever we fancy. Admittedly this 
-probably represents more work than we *want* to be doing in the SMMU's 
-IRQ handler (arguably even in a thread, since all the PCI housekeeping 
-isn't really the SMMU driver's own problem), but I would say the 
-workqueue is a definite design choice, not a functional requirement.
+This don't impact user and it belongs code improvement. So needn't fix tag
+here.
 
-> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+After remove fix tags
+
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+
+> Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
 > ---
->   drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h |   5 +
->   drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 131 +++++++++++++++++++-
->   2 files changed, 132 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
-> index 3c6d65d36164f..8789cf8294504 100644
-> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
-> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
-> @@ -803,6 +803,11 @@ struct arm_smmu_device {
->   
->   	struct rb_root			streams;
->   	struct mutex			streams_mutex;
-> +
-> +	struct {
-> +		struct list_head	list;
-> +		spinlock_t		lock; /* Lock the list */
-> +	} atc_recovery;
->   };
->   
->   struct arm_smmu_stream {
-> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> index 4d00d796f0783..de182c27c77c4 100644
-> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> @@ -106,6 +106,8 @@ static const char * const event_class_str[] = {
->   	[3] = "Reserved",
->   };
->   
-> +static struct arm_smmu_master *
-> +arm_smmu_find_master(struct arm_smmu_device *smmu, u32 sid);
->   static int arm_smmu_alloc_cd_tables(struct arm_smmu_master *master);
->   
->   static void parse_driver_options(struct arm_smmu_device *smmu)
-> @@ -174,6 +176,13 @@ static void queue_inc_cons(struct arm_smmu_ll_queue *q)
->   	q->cons = Q_OVF(q->cons) | Q_WRP(q, cons) | Q_IDX(q, cons);
->   }
->   
-> +static u32 queue_prev_cons(struct arm_smmu_ll_queue *q, u32 cons)
-> +{
-> +	u32 idx_wrp = (Q_WRP(q, cons) | Q_IDX(q, cons)) - 1;
-> +
-> +	return Q_OVF(cons) | Q_WRP(q, idx_wrp) | Q_IDX(q, idx_wrp);
-> +}
-> +
->   static void queue_sync_cons_ovf(struct arm_smmu_queue *q)
->   {
->   	struct arm_smmu_ll_queue *llq = &q->llq;
-> @@ -410,6 +419,97 @@ static void arm_smmu_cmdq_build_sync_cmd(u64 *cmd, struct arm_smmu_device *smmu,
->   		u64p_replace_bits(cmd, CMDQ_SYNC_0_CS_NONE, CMDQ_SYNC_0_CS);
->   }
->   
-> +/* ATC recovery upon ATC invalidation timeout */
-> +struct arm_smmu_atc_recovery_param {
-> +	struct arm_smmu_device *smmu;
-> +	struct pci_dev *pdev;
-> +	u32 sid;
-> +
-> +	struct work_struct work;
-> +	struct list_head node;
-> +};
-> +
-> +static void arm_smmu_atc_recovery_worker(struct work_struct *work)
-> +{
-> +	struct arm_smmu_atc_recovery_param *param =
-> +		container_of(work, struct arm_smmu_atc_recovery_param, work);
-> +	struct pci_dev *pdev;
-> +
-> +	scoped_guard(mutex, &param->smmu->streams_mutex) {
-> +		struct arm_smmu_master *master;
-> +
-> +		master = arm_smmu_find_master(param->smmu, param->sid);
-> +		if (!master || WARN_ON(!dev_is_pci(master->dev)))
-> +			goto free_param;
-> +		pdev = to_pci_dev(master->dev);
-> +		pci_dev_get(pdev);
-> +	}
-> +
-> +	scoped_guard(spinlock_irqsave, &param->smmu->atc_recovery.lock) {
-> +		struct arm_smmu_atc_recovery_param *e;
-> +
-> +		list_for_each_entry(e, &param->smmu->atc_recovery.list, node) {
-> +			/* Device is already being recovered */
-> +			if (e->pdev == pdev)
-> +				goto put_pdev;
-> +		}
-> +		param->pdev = pdev;
-> +		list_add(&param->node, &param->smmu->atc_recovery.list);
-> +	}
-> +
-> +	/*
-> +	 * Stop DMA (PCI) and block ATS (IOMMU) immediately, to prevent memory
-> +	 * corruption. This must take pci_dev_lock to prevent any racy unplug.
-> +	 *
-> +	 * If pci_dev_reset_iommu_prepare() fails, pci_reset_function will call
-> +	 * it again internally.
-> +	 */
-> +	pci_dev_lock(pdev);
-> +	pci_clear_master(pdev);
-> +	if (pci_dev_reset_iommu_prepare(pdev))
-> +		pci_err(pdev, "failed to block ATS!\n");
-> +	pci_dev_unlock(pdev);
-> +
-> +	/*
-> +	 * ATC timeout indicates the device has stopped responding to coherence
-> +	 * protocol requests. The only safe recovery is a reset to flush stale
-> +	 * cached translations. Note that pci_reset_function() internally calls
-> +	 * pci_dev_reset_iommu_prepare/done() as well and ensures to block ATS
-> +	 * if PCI-level reset fails.
-> +	 */
-> +	if (!pci_reset_function(pdev)) {
-> +		/*
-> +		 * If reset succeeds, set BME back. Otherwise, fence the system
-> +		 * from a faulty device, in which case user will have to replug
-> +		 * the device to invoke pci_set_master().
-> +		 */
-> +		pci_dev_lock(pdev);
-> +		pci_set_master(pdev);
-> +		pci_dev_unlock(pdev);
-> +	}
-> +	scoped_guard(spinlock_irqsave, &param->smmu->atc_recovery.lock)
-> +		list_del(&param->node);
-> +put_pdev:
-> +	pci_dev_put(pdev);
-> +free_param:
-> +	kfree(param);
-> +}
-
-The only thing SMMU-specific about this seems to be the use of 
-arm_smmu_find_master() to resolve the device, which could just as well 
-be done upon submission anyway - why isn't this a generic IOMMU/IOPF 
-mechanism?
-
-> +
-> +static int arm_smmu_sched_atc_recovery(struct arm_smmu_device *smmu, u32 sid)
-> +{
-> +	struct arm_smmu_atc_recovery_param *param;
-> +
-> +	param = kzalloc_obj(*param, GFP_ATOMIC);
-> +	if (!param)
-> +		return -ENOMEM;
-> +	param->smmu = smmu;
-> +	param->sid = sid;
-> +
-> +	INIT_WORK(&param->work, arm_smmu_atc_recovery_worker);
-> +	queue_work(system_unbound_wq, &param->work);
-
-Might it make more sense to have a single work item associated with the 
-list_head and use the latter as an actual queue, such that the work runs 
-until the list is empty, then here at submisison time we do the 
-list_add() and schedule_work()? That could perhaps even be a global 
-queue, since ATS timeouts can hardly be expected to be a 
-highly-contended high-perfoamnce concern.
-
-Right now it seems the list is barely doing anything - a "deduplication" 
-mechanism that only works if multiple resets for the same device happen 
-to have their work scheduled concurrently seems pretty ineffective.
-
-> +	return 0;
-> +}
-> +
->   void __arm_smmu_cmdq_skip_err(struct arm_smmu_device *smmu,
->   			      struct arm_smmu_cmdq *cmdq)
->   {
-> @@ -441,11 +541,10 @@ void __arm_smmu_cmdq_skip_err(struct arm_smmu_device *smmu,
->   	case CMDQ_ERR_CERROR_ATC_INV_IDX:
->   		/*
->   		 * ATC Invalidation Completion timeout. CONS is still pointing
-> -		 * at the CMD_SYNC. Attempt to complete other pending commands
-> -		 * by repeating the CMD_SYNC, though we might well end up back
-> -		 * here since the ATC invalidation may still be pending.
-> +		 * at the CMD_SYNC. Rewind it to read the ATC_INV command.
->   		 */
-> -		return;
-> +		cons = queue_prev_cons(&q->llq, cons);
-> +		fallthrough;
->   	case CMDQ_ERR_CERROR_ILL_IDX:
->   	default:
->   		break;
-> @@ -456,6 +555,27 @@ void __arm_smmu_cmdq_skip_err(struct arm_smmu_device *smmu,
->   	 * not to touch any of the shadow cmdq state.
->   	 */
->   	queue_read(cmd, Q_ENT(q, cons), q->ent_dwords);
-> +
-> +	if (idx == CMDQ_ERR_CERROR_ATC_INV_IDX) {
-> +		/*
-> +		 * Since commands can be issued in batch making it difficult to
-> +		 * identify which CMDQ_OP_ATC_INV actually timed out, the driver
-> +		 * must ensure only CMDQ_OP_ATC_INV commands for the same device
-> +		 * can be batched.
-
-But this *is* "the driver" - arm_smmu_atc_inv_domain() is literally 
-further down this same C file, and does not do what this comment is 
-saying it must do, so how are you expecting this to work correctly?
-
-Thanks,
-Robin.
-
-> +		 */
-> +		WARN_ON(FIELD_GET(CMDQ_0_OP, cmd[0]) != CMDQ_OP_ATC_INV);
-> +
-> +		/*
-> +		 * If we failed to schedule a recovery worker, we would well end
-> +		 * up back here since the ATC invalidation may still be pending.
-> +		 * This gives us another chance to reschedule a recovery worker.
-> +		 */
-> +		arm_smmu_sched_atc_recovery(smmu,
-> +					    FIELD_GET(CMDQ_ATC_0_SID, cmd[0]));
-> +		return;
-> +	}
-> +
-> +	/* idx == CMDQ_ERR_CERROR_ILL_IDX */
->   	dev_err(smmu->dev, "skipping command in error state:\n");
->   	for (i = 0; i < ARRAY_SIZE(cmd); ++i)
->   		dev_err(smmu->dev, "\t0x%016llx\n", (unsigned long long)cmd[i]);
-> @@ -3942,6 +4062,9 @@ static int arm_smmu_init_structures(struct arm_smmu_device *smmu)
->   {
->   	int ret;
->   
-> +	INIT_LIST_HEAD(&smmu->atc_recovery.list);
-> +	spin_lock_init(&smmu->atc_recovery.lock);
-> +
->   	mutex_init(&smmu->streams_mutex);
->   	smmu->streams = RB_ROOT;
->   
-
+>  drivers/pci/controller/dwc/pci-imx6.c | 14 +++-----------
+>  1 file changed, 3 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 81a7093494c8..ba6e7c7ee625 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -906,7 +906,7 @@ static void imx_pcie_assert_core_reset(struct imx_pcie *imx_pcie)
+>  	gpiod_set_value_cansleep(imx_pcie->reset_gpiod, 1);
+>  }
+>
+> -static int imx_pcie_deassert_core_reset(struct imx_pcie *imx_pcie)
+> +static void imx_pcie_deassert_core_reset(struct imx_pcie *imx_pcie)
+>  {
+>  	reset_control_deassert(imx_pcie->pciephy_reset);
+>
+> @@ -920,8 +920,6 @@ static int imx_pcie_deassert_core_reset(struct imx_pcie *imx_pcie)
+>  		/* Wait for 100ms after PERST# deassertion (PCIe r5.0, 6.6.1) */
+>  		msleep(100);
+>  	}
+> -
+> -	return 0;
+>  }
+>
+>  static int imx_pcie_wait_for_speed_change(struct imx_pcie *imx_pcie)
+> @@ -1292,11 +1290,7 @@ static int imx_pcie_host_init(struct dw_pcie_rp *pp)
+>  	/* Make sure that PCIe LTSSM is cleared */
+>  	imx_pcie_ltssm_disable(dev);
+>
+> -	ret = imx_pcie_deassert_core_reset(imx_pcie);
+> -	if (ret < 0) {
+> -		dev_err(dev, "pcie deassert core reset failed: %d\n", ret);
+> -		goto err_phy_off;
+> -	}
+> +	imx_pcie_deassert_core_reset(imx_pcie);
+>
+>  	if (imx_pcie->drvdata->wait_pll_lock) {
+>  		ret = imx_pcie->drvdata->wait_pll_lock(imx_pcie);
+> @@ -1613,9 +1607,7 @@ static int imx_pcie_resume_noirq(struct device *dev)
+>  		ret = imx_pcie->drvdata->enable_ref_clk(imx_pcie, true);
+>  		if (ret)
+>  			return ret;
+> -		ret = imx_pcie_deassert_core_reset(imx_pcie);
+> -		if (ret)
+> -			return ret;
+> +		imx_pcie_deassert_core_reset(imx_pcie);
+>
+>  		/*
+>  		 * Using PCIE_TEST_PD seems to disable MSI and powers down the
+> --
+> 2.37.1
+>
