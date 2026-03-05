@@ -1,372 +1,257 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C72B4375F82
-	for <linux-pci@vger.kernel.org>; Thu,  5 Mar 2026 08:53:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3659A30FC26
+	for <linux-pci@vger.kernel.org>; Thu,  5 Mar 2026 08:56:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772700796; cv=none; b=IqjQ7dbP2Wza6koAwkVKB+LwavnIiXuMg6EB+JaNJ6qWBzJ9BgWMnUxsn8zH6jQaXnY9O65K/2/CLPlVgD9Kwyb/5mKPSepNCv2YeDN1881PHOanHY+44ft74Ie2oaAajvtUTxKBgYzZRamQFxaE6RFjzY5MrM+E6EVlywRcYws=
+	t=1772700993; cv=none; b=QR/wN+HOceyV/4npR4uhcnLKv+8HWFLlpx+fdGPW8uL5WcRdMj2LTRLLn4/yEDjdwv1GSdK2za6qeRyNL/9irnXJLeMvT7U6j7L/v+lqQ/T7LZQXFA3K23OsHAXr9H4hZ+A4nydO1E9h9LoAK2blGpAT8OijiDUBWFdr7kkRg7A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772700796; c=relaxed/simple;
-	bh=lmLJav9SueX4fK6pxy1Dw2a7ykTqhKyyY2pLtA+wBdY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Sdgu87UvYeehTNmaNx2spfWj67GILB4CarVxdSLyzpI48yOyr7tmvXHqQ41ZMogwG5ZlEh5lkxN8/CoXeYCawJVEoVjaOXU53GVYFrx8++/YEun4Lb0pRwrhbw7AJo6KsSpurFiaO1HGLCy4K2aZXGvWVH2jyr5QoBXx1Zf25Sk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YkeTrWCR; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772700993; c=relaxed/simple;
+	bh=XOUtMxJmY/xukrKRhAKSN7CNtGlaNNQUyMKgIxDbAXA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HxTUQUSNY4vquxzKcuYFPu3zS08o1168iU8WKekqzRcL1wceHhEQ4dPjPbKdewuKj0Z5IoMA7/yU7iNiYHT2WIyoYpPeMNPQuvWJ1aN2zyWSZwWOjjCRAmkf5ITBqi3HSCGG7R8/cn3qkhPD9utbNJQZjXYPmvJM2NOqa2DgCps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=jLlZPU/X; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=V7tSsJ+c; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YkeTrWCR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FF15C2BCB4
-	for <linux-pci@vger.kernel.org>; Thu,  5 Mar 2026 08:53:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772700796;
-	bh=lmLJav9SueX4fK6pxy1Dw2a7ykTqhKyyY2pLtA+wBdY=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=YkeTrWCRVLa7ix2RFYXj14crYJE4Hvg5YXkZWR8rOp0mm6k9J/gdG0qaoNlGyOYxO
-	 uUtgXEcN9msZDbC/ZkLxKm4j9PUKunGrbg+q6/WRWyAvB3xHk/ge6k0FkeAtRdTDJr
-	 bdfbRBwWA7/ADYMr5uR3pPDAq9PQ5mui7Evy8xmR/EmXF7fCXgwqBfyoj9wK3Jtkku
-	 qKAjiP2pKEcWovoLCG0ST1x6eciU3wsp2uwSaGCCyBAS1bROUWjiNJf4y9MRclQvGO
-	 f7Vy3CWOGpUURdjBpQxvJxfro/Me4HafCtmpGNdvbRKlQvAOkXFvma8le2Nb24EWA2
-	 1UU8yZCMGEvGA==
-Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-66151557d0cso302178a12.3
-        for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2026 00:53:16 -0800 (PST)
-X-Gm-Message-State: AOJu0YwiyVQwSPpixyWlsQpaO3PJaR6mHzQSyCxkNKn44CXN/B/pzmyw
-	FyMODFUnZvYxeuHyqeqyGQdF3ZfapJ/Xma7T6QvRRwzCFdMPTTu6nCjOhNMFBGGlGhIfM3q9bz/
-	VaKA3SX8WP2RjtFRvMp8U4DQs082HtxU=
-X-Received: by 2002:a05:6402:358d:b0:65f:bad8:9c6 with SMTP id
- 4fb4d7f45d1cf-660efcb74femr2969453a12.12.1772700794653; Thu, 05 Mar 2026
- 00:53:14 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="jLlZPU/X";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="V7tSsJ+c"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6251Bktv628707
+	for <linux-pci@vger.kernel.org>; Thu, 5 Mar 2026 08:56:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	V3eDqJ6jpq/KisFt7ksH/4aFqk3PdilfLAwISDAZsjU=; b=jLlZPU/X1OCwF0wF
+	1UcdeX6avnQUDkUN05L8dAbQAN9kQJSjq1JuhbrHdM+l0bcNeZdPLU8AeldOtikO
+	ZVO/yTrlt5W9h0Rhr0Ny8zDx8jqgypT4tpQcyCWAGhLTewI+FGp36qDakLgCIFNU
+	crO9KULtNdiuY7AZUmPC2gP4iHSR3OMBCC3I8ZFsrcccbimQiZOOAdq0czBVP85e
+	0OIkIVYunJZcU3D2vRJ3hh/P6IiYn++rOdPecUFwau2+hGYGmKNgti0f1qqf1uiJ
+	Ub14ovt9Eag1EA9ugWUu2vNHof1rl9P147S+TtZn9m0rEiYP6MlRne/HpCcAWgpJ
+	9gQimg==
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cps0m2k7v-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2026 08:56:31 +0000 (GMT)
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2ae502a1dd9so55127425ad.3
+        for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2026 00:56:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1772700990; x=1773305790; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=V3eDqJ6jpq/KisFt7ksH/4aFqk3PdilfLAwISDAZsjU=;
+        b=V7tSsJ+ci4kYkR6nDVOlrXbnjPtSqw8fW+DItokiuZ9O3T0GPFk3VC5rhWiEvmWmPq
+         qDZv1HWomA4c9vHLX/LAZE0fUDzyCQ53H3nMpjmNeEXpYOpSpUQxjaDSN5W6gk8eXLNO
+         EgqhNV3hZ0RGQ++82arUJkfIib0Wa8LZtPTMXi8bRzMya+ePGOvOSIcR7U4V45JloFu4
+         Ippca9lXXaCMp3fnfsL0GrLEvg8H7BOIdbmIL/KuLjvjo5Wu7ftwI4KHrjZxJgSxrszj
+         4lHC1WebHMaDGCTr1MW4z/vD2TJJ+4kAswzpl+a8+qbSSdx2jIhdFjzcVyamPUa9oBEW
+         QZaQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772700990; x=1773305790;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=V3eDqJ6jpq/KisFt7ksH/4aFqk3PdilfLAwISDAZsjU=;
+        b=I3CcZ+dnu9zvWxuA7FCdiclCTJHny/jLrpJTmaKhTP9wwWD5tIM4Y0i7k8hKYakXMg
+         EGtfeE13PGVaUhuLINbE7Z3Dinl+HlrHuDAgSgmCQD645Bzcshtr9C12aP3B9rNOXoro
+         qfZjql3SbYo8sV7npFTGIbNROMffYi5NFHfKvuwaxvkHLCu17Talu6pscYy87cj68gOD
+         kqeErVlLtLtv6oD5Ju6x5I5iBZKQE0iFM3nqXeB9+stUNiHJIzBnciEVBe3mfdPAmy6F
+         g4iuEVG52cZeb+NHTBOB/k0VtQKbXg+Ve+Eb3hlC5qPgzOwSHjAobqYD+RyM237u5tkP
+         6ehg==
+X-Forwarded-Encrypted: i=1; AJvYcCXexvOlYW1tffjXCda87zOMl9HFApdFlN2gBA3Rr1JgnRKIOoRlqxZ1P1bIKwFNgwg8LCgzs/0ub9c=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxEBDUdHwxphkiEG6cXEFUsSMmi5ryFWV9X9wwSn+9hXsBXLmmy
+	/mkqNcnHVVMe+A/m+mL2GpsOqNMBGp/V41l9IpMt+GFY+gSZBnWVio7RGoIgsxOMc29HFfukWXk
+	6mYaIwjIlKw68vOrFIfeutpG2G4BY7KbsvgK3LMynPmuKff3+MS1WlH9m14Nczqw=
+X-Gm-Gg: ATEYQzwoFi3VGGCcFM6En7Dwyg8JCwdRzkmuzDtaBP4JK34tiu13DjSB+a31Zl9OeQa
+	nI3X7tUcH5Mvae4Ycpyf97szNHdr+8blbL7wFYnLPWC8AM5wWr6zB7iiRflCcgrjb5KYEK4+5VV
+	RsnD3WBufX6UPcRY+yAzvGIedQ0phQZn32N6VhjzeTwgjgIckPqdTjEtoZG4IdthSwAwxD7mN4o
+	soSdTdPZCWCQKtfXcuFqc07pqZXWfFEY89SimWmi+c1pvWcUbJJ4Gi3wwecmkMLl9ZXvt7ApVo6
+	Sl/Bk4MXf8HSsEpwGFkaastwqa7NzIs0k6oIr/FBuUqcDL84IRnWgYTbhkj7t8VGuAc3BB6tWZc
+	CqxPyeGZrQH/4SKlWU9N73aaHa4kAF1MAYYEu9juxJra3AEVS3vmxsA==
+X-Received: by 2002:a17:903:388e:b0:2ad:ba80:df62 with SMTP id d9443c01a7336-2ae6aae8d8amr47956825ad.37.1772700990103;
+        Thu, 05 Mar 2026 00:56:30 -0800 (PST)
+X-Received: by 2002:a17:903:388e:b0:2ad:ba80:df62 with SMTP id d9443c01a7336-2ae6aae8d8amr47956585ad.37.1772700989632;
+        Thu, 05 Mar 2026 00:56:29 -0800 (PST)
+Received: from [10.218.35.45] ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2adfb6bb5b2sm224434525ad.69.2026.03.05.00.56.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 05 Mar 2026 00:56:29 -0800 (PST)
+Message-ID: <313d2262-56e4-49b0-8455-2b46d0966976@oss.qualcomm.com>
+Date: Thu, 5 Mar 2026 14:26:22 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260303003625.39035-1-fengchengwen@huawei.com> <20260305083650.54611-1-fengchengwen@huawei.com>
-In-Reply-To: <20260305083650.54611-1-fengchengwen@huawei.com>
-From: Huacai Chen <chenhuacai@kernel.org>
-Date: Thu, 5 Mar 2026 16:53:02 +0800
-X-Gmail-Original-Message-ID: <CAAhV-H4xZsyLdzswPxPGHoQNd4LKXrTOL-oPGZHyVt8dj0xu6A@mail.gmail.com>
-X-Gm-Features: AaiRm52KNe1sCTgdvwoUawx92IFVO7ock76aGC0FmUYpz_759-88tc4Qm9b9dQw
-Message-ID: <CAAhV-H4xZsyLdzswPxPGHoQNd4LKXrTOL-oPGZHyVt8dj0xu6A@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI/TPH: Fix get cpu steer-tag fail on ARM64 platform
-To: Chengwen Feng <fengchengwen@huawei.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, 
-	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, 
-	WANG Xuerui <kernel@xen0n.name>, Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, 
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>, Thomas Gleixner <tglx@kernel.org>, 
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
-	"H. Peter Anvin" <hpa@zytor.com>, "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
-	Andy Gospodarek <andrew.gospodarek@broadcom.com>, Eric Van Tassell <Eric.VanTassell@amd.com>, 
-	Ajit Khaparde <ajit.khaparde@broadcom.com>, Somnath Kotur <somnath.kotur@broadcom.com>, 
-	linux-acpi@vger.kernel.org, wei.huang2@amd.com, jonathan.cameron@huawei.com, 
-	wangzhou1@hisilicon.com, wanghuiqiang@huawei.com, liuyonglong@huawei.com, 
-	stable@vger.kernel.org, jeremy.linton@arm.com, sunilvl@ventanamicro.com, 
-	sunilvl@oss.qualcomm.com, chenhuacai@loongson.cn, wangliupu@loongson.cn, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, loongarch@lists.linux.dev, 
-	linux-riscv@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 4/5] PCI: qcom: Power down PHY via PARF_PHY_CTRL before
+ disabling rails/clocks
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com,
+        bjorn.andersson@oss.qualcomm.com
+References: <20260217-d3cold-v2-0-89b322864043@oss.qualcomm.com>
+ <20260217-d3cold-v2-4-89b322864043@oss.qualcomm.com>
+ <to6p7yf2oo5qh37hsye4zpputrc7p4bwgqvjc2plieuyapjdhp@7xshxghi4tzd>
+Content-Language: en-US
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <to6p7yf2oo5qh37hsye4zpputrc7p4bwgqvjc2plieuyapjdhp@7xshxghi4tzd>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=e6wLiKp/ c=1 sm=1 tr=0 ts=69a9453f cx=c_pps
+ a=cmESyDAEBpBGqyK7t0alAg==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=EUspDBNiAAAA:8 a=kJBpcOZ6olZWUerAqwAA:9 a=QEXdDO2ut3YA:10
+ a=1OuFwYUASf3TG4hYMiVC:22
+X-Proofpoint-ORIG-GUID: SKaFR-dxGPwi4Nk6_PmY9Z3W3niu8FT3
+X-Proofpoint-GUID: SKaFR-dxGPwi4Nk6_PmY9Z3W3niu8FT3
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA1MDA3MSBTYWx0ZWRfX5G7HFr1KEHCS
+ q7dse4/yGP+K2jKzS3s4QTaD3MsxA2Kekdx5oK7w83OSWJofI6gdG/0oOllX8QFppnkybYUPjo0
+ C3DPutrzPddV5DUvq8+/dHmR4QtXJTkDDjc/XVwtXMJ1MstgwhZ+7dSprnMNV/9pkfIUtz0Mupm
+ 2uiUOgq1/vAEqm6tUXsCh8fv/rtK3rULQJ8jXYweKCVSfiiyuIvnkTIDUQTrsLKm6WBOe+b2qtr
+ n9lyv/FdhaDe6gDh2ZwcQLmj5WJSCvPHtMCWR63Vsa564TcpBzbkvQo2ClM5xHfNhsFOUVRFIzU
+ f4JKP1yd09hwtRBSqAqX7b9HXjuT9WCjDKj4ObrsgYaYownH0sNo16/+c00hBM91gpDiYccj+DF
+ O919NZ/VUnBxq94wJn3BANQ0LphPZTM+vKWGbXSGKrhIV9LHY6EougM1LKce4JaPL0YXcizVs3D
+ YYDKX+uNE9mMC4pqiCA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-05_02,2026-03-04_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 bulkscore=0 phishscore=0 lowpriorityscore=0 clxscore=1015
+ spamscore=0 adultscore=0 impostorscore=0 suspectscore=0 priorityscore=1501
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603050071
 
-Hi, Chengwen,
 
-On Thu, Mar 5, 2026 at 4:37=E2=80=AFPM Chengwen Feng <fengchengwen@huawei.c=
-om> wrote:
->
-> Currently the pcie_tph_get_cpu_st() has an issue on ARM64 platform:
-> 1. The pcie_tph_get_cpu_st() function directly uses cpu_uid as the input
->    parameter to call the PCI ACPI DSM method. According to the DSM
->    definition, the input value should be the ACPI Processor UID (see [1]
->    for details).
-> 2. In the Broadcom driver implementation [2] (which invokes
->    pcie_tph_get_cpu_st()), cpu_uid is obtained via
->    cpumask_first(irq->cpu_mask) - this is the logical CPU ID of a CPU
->    core, generated and managed by kernel (e.g., [0,255] for a system
->    with 256 logical CPU cores).
-> 3. On ARM64 platforms, ACPI assigns Processor UID to cores listed in the
->    MADT table, and this UID may not match the kernel's logical CPU ID.
->    As a result, the current implementation fails to retrieve the correct
->    CPU steer-tag in such cases.
-> 4. The function works on AMD x86 platforms only because the logical CPU
->    ID is identical to the ACPI Processor UID on those systems.
->
-> This commit fixes it by:
-> 1. Introducing acpi_get_cpu_acpi_id() in all ACPI-enabled platforms.
->    This new API calls get_acpi_id_for_cpu() to retrieve the ACPI
->    Processor UID on arm64/riscv/loongarch arch, and it calls
->    cpu_acpi_id() on x86 arch.
-> 2. Renaming pcie_tph_get_cpu_st()'s input parameter cpu_uid to cpu for
->    clarity, as the parameter now represents a logical CPU ID (not a
->    UID).
->
-> [1] According to ECN_TPH-ST_Revision_20200924
->     (https://members.pcisig.com/wg/PCI-SIG/document/15470), the input
->     is defined as: "If the target is a processor, then this field
->     represents the ACPI Processor UID of the processor as specified in
->     the MADT. If the target is a processor container, then this field
->     represents the ACPI Processor UID of the processor container as
->     specified in the PPTT."
-> [2] commit c214410c47d6e ("bnxt_en: Add TPH support in BNXT driver")
->
-> Fixes: d2e8a34876ce ("PCI/TPH: Add Steering Tag support")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
->
-> ---
-> Changes in v2:
-> - Add ECN _DSM reference doc name and its URL.
-> - Separate implement acpi_get_cpu_acpi_id() in each arch which supports
->   ACPI.
-> - Refine commit-log.
->
-> ---
->  Documentation/PCI/tph.rst    |  4 ++--
->  arch/arm64/kernel/acpi.c     |  9 +++++++++
->  arch/loongarch/kernel/acpi.c |  9 +++++++++
->  arch/riscv/kernel/acpi.c     | 10 ++++++++++
->  arch/x86/kernel/cpu/common.c | 17 +++++++++++++++++
->  drivers/pci/tph.c            | 17 ++++++++++++-----
->  include/linux/acpi.h         | 10 ++++++++++
->  include/linux/pci-tph.h      |  4 ++--
->  8 files changed, 71 insertions(+), 9 deletions(-)
->
-> diff --git a/Documentation/PCI/tph.rst b/Documentation/PCI/tph.rst
-> index e8993be64fd6..b6cf22b9bd90 100644
-> --- a/Documentation/PCI/tph.rst
-> +++ b/Documentation/PCI/tph.rst
-> @@ -79,10 +79,10 @@ To retrieve a Steering Tag for a target memory associ=
-ated with a specific
->  CPU, use the following function::
->
->    int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type type,
-> -                          unsigned int cpu_uid, u16 *tag);
-> +                          unsigned int cpu, u16 *tag);
->
->  The `type` argument is used to specify the memory type, either volatile
-> -or persistent, of the target memory. The `cpu_uid` argument specifies th=
-e
-> +or persistent, of the target memory. The `cpu` argument specifies the
->  CPU where the memory is associated to.
->
->  After the ST value is retrieved, the device driver can use the following
-> diff --git a/arch/arm64/kernel/acpi.c b/arch/arm64/kernel/acpi.c
-> index af90128cfed5..e7d4d9bd3036 100644
-> --- a/arch/arm64/kernel/acpi.c
-> +++ b/arch/arm64/kernel/acpi.c
-> @@ -29,6 +29,7 @@
->  #include <linux/suspend.h>
->  #include <linux/pgtable.h>
->
-> +#include <acpi/acpi.h>
->  #include <acpi/ghes.h>
->  #include <acpi/processor.h>
->  #include <asm/cputype.h>
-> @@ -458,3 +459,11 @@ int acpi_unmap_cpu(int cpu)
->  }
->  EXPORT_SYMBOL(acpi_unmap_cpu);
->  #endif /* CONFIG_ACPI_HOTPLUG_CPU */
-> +
-> +int acpi_get_cpu_acpi_id(unsigned int cpu)
-> +{
-> +       if (cpu >=3D nr_cpu_ids || !cpu_possible(cpu))
-> +               return -EINVAL;
-> +       return get_acpi_id_for_cpu(cpu);
-> +}
-> +EXPORT_SYMBOL_GPL(acpi_get_cpu_acpi_id);
-> diff --git a/arch/loongarch/kernel/acpi.c b/arch/loongarch/kernel/acpi.c
-> index 1367ca759468..db28747a18e8 100644
-> --- a/arch/loongarch/kernel/acpi.c
-> +++ b/arch/loongarch/kernel/acpi.c
-> @@ -16,6 +16,7 @@
->  #include <linux/memblock.h>
->  #include <linux/of_fdt.h>
->  #include <linux/serial_core.h>
-> +#include <asm/acpi.h>
->  #include <asm/io.h>
->  #include <asm/numa.h>
->  #include <asm/loongson.h>
-> @@ -385,3 +386,11 @@ int acpi_unmap_cpu(int cpu)
->  EXPORT_SYMBOL(acpi_unmap_cpu);
->
->  #endif /* CONFIG_ACPI_HOTPLUG_CPU */
-> +
-> +int acpi_get_cpu_acpi_id(unsigned int cpu)
-> +{
-> +       if (cpu >=3D nr_cpu_ids || !cpu_possible(cpu))
-> +               return -EINVAL;
-> +       return get_acpi_id_for_cpu(cpu);
-> +}
-> +EXPORT_SYMBOL_GPL(acpi_get_cpu_acpi_id);
-> diff --git a/arch/riscv/kernel/acpi.c b/arch/riscv/kernel/acpi.c
-> index 71698ee11621..287c25e79347 100644
-> --- a/arch/riscv/kernel/acpi.c
-> +++ b/arch/riscv/kernel/acpi.c
-> @@ -22,6 +22,8 @@
->  #include <linux/pci.h>
->  #include <linux/serial_core.h>
->
-> +#include <asm/acpi.h>
-> +
->  int acpi_noirq =3D 1;            /* skip ACPI IRQ initialization */
->  int acpi_disabled =3D 1;
->  EXPORT_SYMBOL(acpi_disabled);
-> @@ -337,3 +339,11 @@ int raw_pci_write(unsigned int domain, unsigned int =
-bus,
->  }
->
->  #endif /* CONFIG_PCI */
-> +
-> +int acpi_get_cpu_acpi_id(unsigned int cpu)
-> +{
-> +       if (cpu >=3D nr_cpu_ids || !cpu_possible(cpu))
-> +               return -EINVAL;
-> +       return get_acpi_id_for_cpu(cpu);
-> +}
-> +EXPORT_SYMBOL_GPL(acpi_get_cpu_acpi_id);
-> diff --git a/arch/x86/kernel/cpu/common.c b/arch/x86/kernel/cpu/common.c
-> index 1c3261cae40c..9b06c76d5c0c 100644
-> --- a/arch/x86/kernel/cpu/common.c
-> +++ b/arch/x86/kernel/cpu/common.c
-> @@ -28,6 +28,7 @@
->  #include <linux/stackprotector.h>
->  #include <linux/utsname.h>
->  #include <linux/efi.h>
-> +#include <linux/acpi.h>
->
->  #include <asm/alternative.h>
->  #include <asm/cmdline.h>
-> @@ -57,6 +58,7 @@
->  #include <asm/asm.h>
->  #include <asm/bugs.h>
->  #include <asm/cpu.h>
-> +#include <asm/smp.h>
->  #include <asm/mce.h>
->  #include <asm/msr.h>
->  #include <asm/cacheinfo.h>
-> @@ -2643,3 +2645,18 @@ void __init arch_cpu_finalize_init(void)
->          */
->         mem_encrypt_init();
->  }
-> +
-> +int acpi_get_cpu_acpi_id(unsigned int cpu)
-> +{
-> +       u32 acpi_id;
-> +
-> +       if (cpu >=3D nr_cpu_ids || !cpu_possible(cpu))
-> +               return -EINVAL;
-> +
-> +       acpi_id =3D cpu_acpi_id(cpu);
-> +       if (acpi_id =3D=3D CPU_ACPIID_INVALID)
-> +               return -ENODEV;
-> +
-> +       return (int)acpi_id;
-> +}
-> +EXPORT_SYMBOL_GPL(acpi_get_cpu_acpi_id);
-> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-> index ca4f97be7538..3cd38972fcb1 100644
-> --- a/drivers/pci/tph.c
-> +++ b/drivers/pci/tph.c
-> @@ -236,21 +236,28 @@ static int write_tag_to_st_table(struct pci_dev *pd=
-ev, int index, u16 tag)
->   * with a specific CPU
->   * @pdev: PCI device
->   * @mem_type: target memory type (volatile or persistent RAM)
-> - * @cpu_uid: associated CPU id
-> + * @cpu: associated CPU id
->   * @tag: Steering Tag to be returned
->   *
->   * Return the Steering Tag for a target memory that is associated with a
-> - * specific CPU as indicated by cpu_uid.
-> + * specific CPU as indicated by cpu.
->   *
->   * Return: 0 if success, otherwise negative value (-errno)
->   */
->  int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type=
-,
-> -                       unsigned int cpu_uid, u16 *tag)
-> +                       unsigned int cpu, u16 *tag)
->  {
->  #ifdef CONFIG_ACPI
-> +       unsigned int cpu_uid;
->         struct pci_dev *rp;
->         acpi_handle rp_acpi_handle;
->         union st_info info;
-> +       int ret;
-> +
-> +       ret =3D acpi_get_cpu_acpi_id(cpu);
-Can we use get_acpi_id_for_cpu() directly? Then just x86 needs a wrapper.
 
-Huacai
+On 3/5/2026 1:19 PM, Manivannan Sadhasivam wrote:
+> On Tue, Feb 17, 2026 at 04:49:09PM +0530, Krishna Chaitanya Chundru wrote:
+>> Some Qcom PCIe controller variants bring the PHY out of test power-down
+>> (PHY_TEST_PWR_DOWN) during init. When the link is later transitioned
+>> towards D3cold and the driver disables PCIe clocks and/or regulators
+>> without explicitly re-asserting PHY_TEST_PWR_DOWN, the PHY can remain
+>> partially powered, leading to avoidable power leakage.
+>>
+>> Update the init-path comments to reflect that PARF_PHY_CTRL is used to
+>> power the PHY on. Also, for controller revisions that enable PHY power
+>> in init (2.3.2, 2.3.3, 2.7.0 and 2.9.0), explicitly power the PHY down
+>> via PARF_PHY_CTRL in the deinit path before disabling clocks/regulators.
+>>
+>> This ensures the PHY is put into a defined low-power state prior to
+>> removing its supplies, preventing leakage when entering D3cold.
+>>
+>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+>> ---
+>>   drivers/pci/controller/dwc/pcie-qcom.c | 30 +++++++++++++++++++++++++++---
+>>   1 file changed, 27 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+>> index 2c4dc7134e006d3530a809f1bcc1a6488d4632ad..b02c19bbdf2ea5db252c2a0281a569bb3a0cc497 100644
+>> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+>> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+>> @@ -513,7 +513,7 @@ static int qcom_pcie_post_init_2_1_0(struct qcom_pcie *pcie)
+>>   	u32 val;
+>>   	int ret;
+>>   
+>> -	/* enable PCIe clocks and resets */
+>> +	/* PHY power ON */
+> This comment is confusing since we already have phy_power_on() API. What does
+> really happen in the 'test power down' case?
+QCOM PCIe controller wrapper has way to force the entire PHY into lowest 
+power
+state by turning everything off, without this bit being cleared the phy 
+will not be
+powered on even after phy_power_on(), we can think this as a kind of switch
+from the controller side to power on phy.
 
-> +       if (ret < 0)
-> +               return ret;
-> +       cpu_uid =3D (unsigned int)ret;
+- Krishna Chaitanya.
+> - Mani
 >
->         rp =3D pcie_find_root_port(pdev);
->         if (!rp || !rp->bus || !rp->bus->bridge)
-> @@ -265,9 +272,9 @@ int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tp=
-h_mem_type mem_type,
->
->         *tag =3D tph_extract_tag(mem_type, pdev->tph_req_type, &info);
->
-> -       pci_dbg(pdev, "get steering tag: mem_type=3D%s, cpu_uid=3D%d, tag=
-=3D%#04x\n",
-> +       pci_dbg(pdev, "get steering tag: mem_type=3D%s, cpu=3D%d, tag=3D%=
-#04x\n",
->                 (mem_type =3D=3D TPH_MEM_TYPE_VM) ? "volatile" : "persist=
-ent",
-> -               cpu_uid, *tag);
-> +               cpu, *tag);
->
->         return 0;
->  #else
-> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-> index 4d2f0bed7a06..426fb4dca333 100644
-> --- a/include/linux/acpi.h
-> +++ b/include/linux/acpi.h
-> @@ -324,6 +324,16 @@ int acpi_unmap_cpu(int cpu);
->
->  acpi_handle acpi_get_processor_handle(int cpu);
->
-> +/*
-> + * acpi_get_cpu_acpi_id() - Get ACPI Processor UID of a specified CPU fr=
-om MADT table
-> + * @cpu: Logical CPU number (0-based)
-> + *
-> + * Return: ACPI Processor ID of the CPU on success (non-negative);
-> + *         -EINVAL if the CPU number is invalid or not possible;
-> + *         -ENODEV if the ACPI ID of the CPU is invalid.
-> + */
-> +int acpi_get_cpu_acpi_id(unsigned int cpu);
-> +
->  #ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
->  int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr)=
-;
->  #endif
-> diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
-> index ba28140ce670..be68cd17f2f8 100644
-> --- a/include/linux/pci-tph.h
-> +++ b/include/linux/pci-tph.h
-> @@ -25,7 +25,7 @@ int pcie_tph_set_st_entry(struct pci_dev *pdev,
->                           unsigned int index, u16 tag);
->  int pcie_tph_get_cpu_st(struct pci_dev *dev,
->                         enum tph_mem_type mem_type,
-> -                       unsigned int cpu_uid, u16 *tag);
-> +                       unsigned int cpu, u16 *tag);
->  void pcie_disable_tph(struct pci_dev *pdev);
->  int pcie_enable_tph(struct pci_dev *pdev, int mode);
->  u16 pcie_tph_get_st_table_size(struct pci_dev *pdev);
-> @@ -36,7 +36,7 @@ static inline int pcie_tph_set_st_entry(struct pci_dev =
-*pdev,
->  { return -EINVAL; }
->  static inline int pcie_tph_get_cpu_st(struct pci_dev *dev,
->                                       enum tph_mem_type mem_type,
-> -                                     unsigned int cpu_uid, u16 *tag)
-> +                                     unsigned int cpu, u16 *tag)
->  { return -EINVAL; }
->  static inline void pcie_disable_tph(struct pci_dev *pdev) { }
->  static inline int pcie_enable_tph(struct pci_dev *pdev, int mode)
-> --
-> 2.17.1
->
+>>   	val = readl(pcie->parf + PARF_PHY_CTRL);
+>>   	val &= ~PHY_TEST_PWR_DOWN;
+>>   	writel(val, pcie->parf + PARF_PHY_CTRL);
+>> @@ -680,6 +680,12 @@ static int qcom_pcie_get_resources_2_3_2(struct qcom_pcie *pcie)
+>>   static void qcom_pcie_deinit_2_3_2(struct qcom_pcie *pcie)
+>>   {
+>>   	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
+>> +	u32 val;
+>> +
+>> +	/* PHY Power down */
+>> +	val = readl(pcie->parf + PARF_PHY_CTRL);
+>> +	val |= PHY_TEST_PWR_DOWN;
+>> +	writel(val, pcie->parf + PARF_PHY_CTRL);
+>>   
+>>   	clk_bulk_disable_unprepare(res->num_clks, res->clks);
+>>   	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
+>> @@ -712,7 +718,7 @@ static int qcom_pcie_post_init_2_3_2(struct qcom_pcie *pcie)
+>>   {
+>>   	u32 val;
+>>   
+>> -	/* enable PCIe clocks and resets */
+>> +	/* PHY Power ON */
+>>   	val = readl(pcie->parf + PARF_PHY_CTRL);
+>>   	val &= ~PHY_TEST_PWR_DOWN;
+>>   	writel(val, pcie->parf + PARF_PHY_CTRL);
+>> @@ -844,6 +850,12 @@ static int qcom_pcie_get_resources_2_3_3(struct qcom_pcie *pcie)
+>>   static void qcom_pcie_deinit_2_3_3(struct qcom_pcie *pcie)
+>>   {
+>>   	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
+>> +	u32 val;
+>> +
+>> +	/* PHY Power down */
+>> +	val = readl(pcie->parf + PARF_PHY_CTRL);
+>> +	val |= PHY_TEST_PWR_DOWN;
+>> +	writel(val, pcie->parf + PARF_PHY_CTRL);
+>>   
+>>   	clk_bulk_disable_unprepare(res->num_clks, res->clks);
+>>   }
+>> @@ -994,7 +1006,7 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
+>>   	/* configure PCIe to RC mode */
+>>   	writel(DEVICE_TYPE_RC, pcie->parf + PARF_DEVICE_TYPE);
+>>   
+>> -	/* enable PCIe clocks and resets */
+>> +	/* PHY power ON */
+>>   	val = readl(pcie->parf + PARF_PHY_CTRL);
+>>   	val &= ~PHY_TEST_PWR_DOWN;
+>>   	writel(val, pcie->parf + PARF_PHY_CTRL);
+>> @@ -1065,6 +1077,12 @@ static void qcom_pcie_host_post_init_2_7_0(struct qcom_pcie *pcie)
+>>   static void qcom_pcie_deinit_2_7_0(struct qcom_pcie *pcie)
+>>   {
+>>   	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
+>> +	u32 val;
+>> +
+>> +	/* PHY Power down */
+>> +	val = readl(pcie->parf + PARF_PHY_CTRL);
+>> +	val |= PHY_TEST_PWR_DOWN;
+>> +	writel(val, pcie->parf + PARF_PHY_CTRL);
+>>   
+>>   	clk_bulk_disable_unprepare(res->num_clks, res->clks);
+>>   
+>> @@ -1169,6 +1187,12 @@ static int qcom_pcie_get_resources_2_9_0(struct qcom_pcie *pcie)
+>>   static void qcom_pcie_deinit_2_9_0(struct qcom_pcie *pcie)
+>>   {
+>>   	struct qcom_pcie_resources_2_9_0 *res = &pcie->res.v2_9_0;
+>> +	u32 val;
+>> +
+>> +	/* PHY Power down */
+>> +	val = readl(pcie->parf + PARF_PHY_CTRL);
+>> +	val |= PHY_TEST_PWR_DOWN;
+>> +	writel(val, pcie->parf + PARF_PHY_CTRL);
+>>   
+>>   	clk_bulk_disable_unprepare(res->num_clks, res->clks);
+>>   }
+>>
+>> -- 
+>> 2.34.1
+>>
+
