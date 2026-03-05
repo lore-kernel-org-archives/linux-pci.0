@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE592330D4C;
-	Thu,  5 Mar 2026 10:29:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60257273803;
+	Thu,  5 Mar 2026 10:35:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772706579; cv=none; b=gbns/XXsO/pfCuDP2QBmkvbQRQuDtCC7DfwUt/iaLn5wOiuN7DZEP11SEkKDWY8Tw8k7OTbFPDyPBNoedtDUHk7m0VaLgzM9pvecrESd3oQLGE62CT2yqo70pl9CsB5CtwFCwj7l9RxIsXEm9WADi82jOeHhfZdHslSuYvIUt04=
+	t=1772706906; cv=none; b=eKjZbeCS0KdW9c3MoK/suMAYQfHOoFRFNj1v8P2okkkmhFzXeNYuQVVHZdXSK8Nq7HFFl6sTMKlWDVnCXknH9B1EizfBuw2zfbT1+4DtuiZg3SrogjJLxsyvVOlxb2fgurKYih1vd3SM5Osj9B71caaHHcj+w8aFvvLZ4byceYQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772706579; c=relaxed/simple;
-	bh=3NKQzD1ngXc8FxHPL30tr69/1jxMVdDBacxygFcfxvw=;
+	s=arc-20240116; t=1772706906; c=relaxed/simple;
+	bh=SHJrA8v6gZzVpEbA5JWqCBf2oH3mvCG/bchjwaakkwA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Bvq3V+jUkr1z3wIieUicKRk31IU+6GtJUgOVOJx+xKY97z67kav9a5mkgX1pdTAXNpkan0VsIuE4wdhVPuBy5T0eilNPrj5fQIfCs2AWrEetmASixszYt/blPg2x/IPM2+rKCqf0mRoanipgURHYkZ+yPOIm4HTz0mJlOk5VOZg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KlM4pam8; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=DoSLqr70d5/65LloN0IyOxVnTx3eQhgtUBYyFyov8Sanq4g+PxNfVWcXa1Tj457cuTCv23MpKLbDiirTLKmIaCqP8hmWhyFoJd1NmHYYyY/uRH1WMmne3GBwBet/OpDrJTFWOpG3kxPhZquNQZVPSZWXHutCc+HVeiMhB2CyFzA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PgMFW8M7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KlM4pam8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E26CBC116C6;
-	Thu,  5 Mar 2026 10:29:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PgMFW8M7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4A7BC116C6;
+	Thu,  5 Mar 2026 10:34:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772706578;
-	bh=3NKQzD1ngXc8FxHPL30tr69/1jxMVdDBacxygFcfxvw=;
+	s=k20201202; t=1772706905;
+	bh=SHJrA8v6gZzVpEbA5JWqCBf2oH3mvCG/bchjwaakkwA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KlM4pam8btijx5PpMcb9x5koYamC/kI+CbRc/fORXHwZATrOZJ+rUOmXJG/k19x99
-	 vrBGlbVmovCFVuZ4Fn31gcGwG/PN5Id15QUPvZrzn7Y7QynbdGpEElU+CGTKTMWoOT
-	 dS2AkJ4dhycHyONt8HbB1RmfoNs47zymb2VtcXGPZTp8wEFBwY2/7+uuobS+/tjVZ8
-	 HK/M151aToRiue6gqczQ9bZUh0L1oRCxqllbw4kJe+WkcU5Ri2zNOFsNRVxj3NbzWH
-	 KQ6es8bD/kSZ7Xq5nfI/9mLC/HmJgi+xqwiLK36DqkxJI4N9wU/g6y64V8A2CEMF3Z
-	 jQlvX8P6YT0bw==
-Date: Thu, 5 Mar 2026 15:59:23 +0530
+	b=PgMFW8M7Lma9TY3ZH9uzD5hW8NrbJs+osBrZMZea7orT6Y8vtiSC3fv7PnW/RoEk2
+	 FJ6r5gGefVBTo1HGq4fKGrfykYibx5D9H71ZuHbKFmSaoZ3D3zVR1tDvEIuxg5uHvO
+	 PIsP/+J1T0kH47Uv3kLf4EB54FJMFHFqx730KeiIqMLrlpsK6G37qogr1xu2LzZjRn
+	 FSgq1grBGzlNSlsvuD8C+UZXv+nG3OEDhiiXdzLffXXpwcDBAM6hsva/YhYo7OKsoL
+	 ullFXxyKojqaNrPGSZd2M4ToNecTtkRYK/nhYuxiykMxhu5o/s3Qe/SB2jerAaySV1
+	 iUefltgkZLl3w==
+Date: Thu, 5 Mar 2026 16:04:50 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
@@ -35,11 +35,10 @@ Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
 	gregkh@linuxfoundation.org, Frank.Li@nxp.com, den@valinux.co.jp, hongxing.zhu@nxp.com, 
 	jingoohan1@gmail.com, vidyas@nvidia.com, cassel@kernel.org, 18255117159@163.com, 
 	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 09/13] PCI: tegra194: Allow system suspend when the
- Endpoint link is not up
-Message-ID: <f556ofs7s7d3tzcefxhwqalzz3z6mmj3pc22frqii4ozkoseit@mbo43kjsvbwz>
+Subject: Re: [PATCH v7 11/13] PCI: tegra194: Use HW version number
+Message-ID: <bc7t56twrq25v2rwoghyoiuantmpozknhnyaq27qiafmnv7u2r@yppijlhxtzpl>
 References: <20260303065448.2361488-1-mmaddireddy@nvidia.com>
- <20260303065448.2361488-10-mmaddireddy@nvidia.com>
+ <20260303065448.2361488-12-mmaddireddy@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,66 +48,86 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260303065448.2361488-10-mmaddireddy@nvidia.com>
+In-Reply-To: <20260303065448.2361488-12-mmaddireddy@nvidia.com>
 
-On Tue, Mar 03, 2026 at 12:24:44PM +0530, Manikanta Maddireddy wrote:
-> From: Vidya Sagar <vidyas@nvidia.com>
+On Tue, Mar 03, 2026 at 12:24:46PM +0530, Manikanta Maddireddy wrote:
+> Tegra194 PCIe driver uses custom version number to detect Tegra194 and
+> Tegra234 IPs. With version detect logic added, version check results
+> in mismatch warnings.
 > 
-> Only a Root Port initiates the L2 sequence. PCIe link is kept in L2 state
 
-It is not Root Port, it is the host software which initiates the L2 entry
-sequence.
+What warnings? This sounds like a separate fix.
 
-And L2 is only guaranteed if the Vaux is available.
-
-> during suspend. If Endpoint mode is enabled and the link is up, the
-> software cannot proceed with suspend. However, when the PCIe Endpoint
-> driver is probed, but the PCIe link is not up, Tegra can go into suspend
-> state. So, allow system to suspend in this case.
+> Use HW version numbers in Tegra194 driver to avoid this kernel warnings.
 > 
-> Fixes: de2bbf2b71bb ("PCI: tegra194: Don't allow suspend when Tegra PCIe is in EP mode")
+> Fixed version check to enable ecrc for Tegra194.
+
+This is a separate fix, so separate patch. Do not combine two unreleated fixes
+in a single patch.
+
+- Mani
+
+> Existing 490A check is left intact in case any HW relying on existing check.
+> 
+> Fixes: a54e19073718 ("PCI: tegra194: Add Tegra234 PCIe support")
 > Reviewed-by: Jon Hunter <jonathanh@nvidia.com>
 > Tested-by: Jon Hunter <jonathanh@nvidia.com>
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> Reviewed-by: Vidya Sagar <vidyas@nvidia.com>
 > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 > ---
 > Changes V1 -> V7: None
 > 
->  drivers/pci/controller/dwc/pcie-tegra194.c | 31 +++++++++++++++++-----
->  1 file changed, 25 insertions(+), 6 deletions(-)
+>  drivers/pci/controller/dwc/pcie-designware.c | 2 +-
+>  drivers/pci/controller/dwc/pcie-designware.h | 2 ++
+>  drivers/pci/controller/dwc/pcie-tegra194.c   | 4 ++--
+>  3 files changed, 5 insertions(+), 3 deletions(-)
 > 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> index 345365ea97c7..0dac5d2f5a83 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -559,7 +559,7 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
+>  	if (upper_32_bits(limit_addr) > upper_32_bits(parent_bus_addr) &&
+>  	    dw_pcie_ver_is_ge(pci, 460A))
+>  		val |= PCIE_ATU_INCREASE_REGION_SIZE;
+> -	if (dw_pcie_ver_is(pci, 490A))
+> +	if (dw_pcie_ver_is(pci, 490A) || dw_pcie_ver_is(pci, 500A))
+>  		val = dw_pcie_enable_ecrc(val);
+>  	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL1, val);
+>  
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index f4cf1602cc99..5bceadbd2c9f 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -34,8 +34,10 @@
+>  #define DW_PCIE_VER_470A		0x3437302a
+>  #define DW_PCIE_VER_480A		0x3438302a
+>  #define DW_PCIE_VER_490A		0x3439302a
+> +#define DW_PCIE_VER_500A		0x3530302a
+>  #define DW_PCIE_VER_520A		0x3532302a
+>  #define DW_PCIE_VER_540A		0x3534302a
+> +#define DW_PCIE_VER_562A		0x3536322a
+>  
+>  #define __dw_pcie_ver_cmp(_pci, _ver, _op) \
+>  	((_pci)->version _op DW_PCIE_VER_ ## _ver)
 > diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-> index 5b79d3c28ba6..b2794be35cfe 100644
+> index 1963165967b9..1c6543341fb9 100644
 > --- a/drivers/pci/controller/dwc/pcie-tegra194.c
 > +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> @@ -2267,16 +2267,28 @@ static void tegra_pcie_dw_remove(struct platform_device *pdev)
->  		gpiod_set_value(pcie->pex_refclk_sel_gpiod, 0);
->  }
+> @@ -35,8 +35,8 @@
+>  #include <soc/tegra/bpmp-abi.h>
+>  #include "../../pci.h"
 >  
-> -static int tegra_pcie_dw_suspend_late(struct device *dev)
-> +static int tegra_pcie_dw_suspend(struct device *dev)
->  {
->  	struct tegra_pcie_dw *pcie = dev_get_drvdata(dev);
-> -	u32 val;
+> -#define TEGRA194_DWC_IP_VER			0x490A
+> -#define TEGRA234_DWC_IP_VER			0x562A
+> +#define TEGRA194_DWC_IP_VER			DW_PCIE_VER_500A
+> +#define TEGRA234_DWC_IP_VER			DW_PCIE_VER_562A
 >  
->  	if (pcie->of_data->mode == DW_PCIE_EP_TYPE) {
-> -		dev_err(dev, "Failed to Suspend as Tegra PCIe is in EP mode\n");
-> -		return -EPERM;
-> +		if (pcie->ep_state == EP_STATE_ENABLED) {
-> +			dev_err(dev, "Tegra PCIe is in EP mode, suspend not allowed\n");
-> +			return -EPERM;
-> +		}
-> +
-> +		disable_irq(pcie->pex_rst_irq);
-
-So you just disable PERST# IRQ during suspend? And even if the host deasserts
-PERST#, EP is not going to wakeup?
-
-Technically it is possible that whenever the EP wakes up, it will see PERST# IRQ
-since PERST# is level triggered, but it just sounds dumb to let the endpoint
-sleep after host deasserting PERST#.
-
-- Mani
+>  #define APPL_PINMUX				0x0
+>  #define APPL_PINMUX_PEX_RST			BIT(0)
+> -- 
+> 2.34.1
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
