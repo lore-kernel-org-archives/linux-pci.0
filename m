@@ -1,133 +1,166 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ua1-f46.google.com (mail-ua1-f46.google.com [209.85.222.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DBDF3E47B;
-	Thu,  5 Mar 2026 08:14:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59A18372EE8
+	for <linux-pci@vger.kernel.org>; Thu,  5 Mar 2026 08:29:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772698470; cv=none; b=EB1mXq7F1BHkV3Qs76dxHe1Gleme2AaloSgIqdl4MLPwdAtXswzi7WriImNrv5kL/Xm9PfTBDx0P4DG+8k2FOEx2DJ/NACO5gcqIb8eLSTKXf0+BcLlPyr9zF9V6MI12CChzuWgFvegPnH76Udp8CaysjWj1313iDue1H8Ya4P8=
+	t=1772699344; cv=none; b=RgYbeMHK37yuuOtvedxMZQCFyBaziN1jeqXx8gI60NzD+/YnuIkitrHx2jrZn9AHqPi5gJ6QdkjrpSreWMSK0ay7Qun4lx7fAPl1NDjU25Ma4IQnE0hdXb0g/4ZCLDgplFrDLgXsytJ64LcfNvwYcSVCTwqnqcy/qPCVKSEFRi4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772698470; c=relaxed/simple;
-	bh=FSse59W+Ff1LZvFEhUNPBkjgYw1dPirV7rnWSCr1Sj8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WQqNVzhlTYwUw9Fy6PA5lz/+09eSlSErtCYM3njpuDww/y+eiGfmmCXL2YAjL2K25U2rhjVBar0xhGQF23Ip+Gqy25OCbNP9RzS7eeN6drIkoBovqpN2MzD3zQoslSghy3wVbV4XxIXLNdlUpFn22EsQkTasU0TW/AVml1kaohk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hJmlEj89; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hJmlEj89"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C08E3C116C6;
-	Thu,  5 Mar 2026 08:14:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772698469;
-	bh=FSse59W+Ff1LZvFEhUNPBkjgYw1dPirV7rnWSCr1Sj8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hJmlEj89myprl/gUS3k/FHDfnjy8K0fq/9TU1ywSJk7t+JZpLSZZbNFqbAg9nLJYY
-	 bmJ4gA5cWGgxTE5NRNFQ7hGZoAP4QAHSxrJ/EVSU5sCWNJVdUqHdoKDk6gFahOIpXj
-	 8CwbI/0BuB14m7P8IB1O4OadNu45J27lWilkHlsxMQfQ1+quYib2uLoeh9rRzbhXoH
-	 t1I2cgH8HRdPV4JGyiwxd7C+xdXOFuA4VmrogucT+OhSYKlrcJLmhNufl4CG9TxGh7
-	 fHulUxMC+9s2xzNTpSB6eF0/nQJbHXgX15Y00ho/PJervz3gCgDMeIajT6lY6oNXnD
-	 jBz6OsXbl/NXg==
-Date: Thu, 5 Mar 2026 13:44:17 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Marek Vasut <marek.vasut+renesas@gmail.com>, 
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, Niklas Cassel <cassel@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: dwc: rcar-gen4: Use 4K EPC BAR alignment
-Message-ID: <wroiqhvgph4nrvpkunzpej3ruxv2hvo4itu5kw4xhlrlgpifo2@4hmnpth7eppw>
-References: <20260305015439.1529006-1-den@valinux.co.jp>
- <4o42bskgjazgawswex7sfuvptmbho5gb7inmilntygpm7vdt7p@fcb6ttbbnb45>
- <pd56nggmapksuvbk662cwdqwott6lhc7zhlczmxf5jooe3l3od@ytkoxpi3cf7s>
+	s=arc-20240116; t=1772699344; c=relaxed/simple;
+	bh=hefLtFvtSppGuVWRD/xSsfWMjnGgnQggEUG9Y7OFLDc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ZGzOMc0xW+QboeFQOxhuGqYIKTo5r/ijiRAwr3hgwWJesDSbbLp8PtRovHhSlIisk6NRTJSBoHFHINi0FguSZc6LoDwnp/GuibjVizyBQkS6P1MJrvLOVnyFrkZ3vLSjXq0X6raCNYHy3fNiVyvNALoGUwhYxUg+iNnPXXgE6EI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.222.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-ua1-f46.google.com with SMTP id a1e0cc1a2514c-94ace5d0e39so2297216241.2
+        for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2026 00:29:03 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772699342; x=1773304142;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZlLnToI6SbxsSn7ypnmaqq1RX+miw2VMTyDHKi+gwbk=;
+        b=NOv0hoHkTYnrI1f7oEyFARq/9e9QufDgAn1tW/oG//TUZRhZET5oz5RBgk23JCA5DB
+         fLq6w7GVlHZlsw6SBX5ZtsqqdCJbcYm4LqqPJZeNCUIJ/bTtH3tQnjI+mVV/81GnBNsZ
+         posgATwxHsvAXvosLcyHv8i4UrX7oNgqAas6NCbAA4DFlt7g6i18kygbvYpX1Ng0YOdb
+         CL4/sQfdG6y+CKt7naFZ4LpP5kbEeQ4ZnkQ8BaO5YZo0hxSpwGN4CETJO8UJpnY2sxdK
+         E99N7RuRodg/HQ8J3KN7pfPnL616TqmLJppFRcZ0NIukWywXxAoxFHE1708vVFc6NOv3
+         /tQA==
+X-Forwarded-Encrypted: i=1; AJvYcCWwUAD4TeiJkHue+8Hk3YVfOtIU3KwjL2Oni2AZzl80HMcZ5X1q16BTpcC0mXK0mvj1frKLZY8ZFbw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YziByVY1FGxB0qr9jgKP0zXwLLbivFxPJoNDtcu42N+83GF57Ne
+	4IIapJQFDeMtxZkpjmm1AV7zvtFR5T+7PzfsLmNdE/JDtQOK+mG7rZqWRree2c/C
+X-Gm-Gg: ATEYQzwrsZUCxfOOC0S7Ta4mjTNZ1RORzIw8/Mt2e27eID4S2Qo2AQVn5PIHOY+OQdt
+	lu1Qjz7HqmkUOxsGgIW8vPSw7+qnup7CAzLWMf8tZwG4kI957e3aOnHLIqt52DhHNFbl/fSFFQS
+	QAq7hJV4/L6JuqAw43l0juh1krjOTtk4mYPyLvo5it7CaSxU3a6X9FaptgAA8Ge6lZPnVY4G1j1
+	DffgmWlaE89QM8nqI4MuquGuiJCqbi00hiuXyFX/pe2pic2Sy18IHqSnMvGFVysOiYzxlRbwb/g
+	QRI9T8CwDsRcLUbIy36CviVcEYPfAMdopxG6YJS0tI/1yWVqV+2BjSqCfvGUbvGt0Bh/tSj7lyG
+	nik0Gcl024zqdJIgMmXk5/XwNCVwwlkRW7NZUmUMz/lLTg7Xwv1ZtB7GZo4FLSseFDWMuyBM9Dm
+	OtW5Q7LJkXFUO62TNV1tp5iCb8vm1TI6NHRyua9ERXlnUn840/5w+bya5JP4oN
+X-Received: by 2002:a05:6102:3709:b0:5ff:2dce:82b1 with SMTP id ada2fe7eead31-5ffaaf5d425mr2010475137.31.1772699342267;
+        Thu, 05 Mar 2026 00:29:02 -0800 (PST)
+Received: from mail-vs1-f43.google.com (mail-vs1-f43.google.com. [209.85.217.43])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-94df65b281asm20198580241.13.2026.03.05.00.29.01
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 05 Mar 2026 00:29:01 -0800 (PST)
+Received: by mail-vs1-f43.google.com with SMTP id ada2fe7eead31-5ffd57b6fc6so8172137.1
+        for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2026 00:29:01 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCVinSOy0zXd124wOBDaqeI9rSkPHDlXLXWR9uL7Z3ahQxkffwoGfjbdN9A1ATCoeLwND1da71Se/Hk=@vger.kernel.org
+X-Received: by 2002:a05:6102:1607:b0:5ff:c64d:228c with SMTP id
+ ada2fe7eead31-5ffc64d2600mr724913137.22.1772699340961; Thu, 05 Mar 2026
+ 00:29:00 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <pd56nggmapksuvbk662cwdqwott6lhc7zhlczmxf5jooe3l3od@ytkoxpi3cf7s>
+References: <20260304175735.2660419-1-vladimir.oltean@nxp.com> <20260304175735.2660419-13-vladimir.oltean@nxp.com>
+In-Reply-To: <20260304175735.2660419-13-vladimir.oltean@nxp.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Thu, 5 Mar 2026 09:28:50 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdV+7n==crPmitH-JCwtJiH+7LaPKZQYU4ZqX_duo3_7Eg@mail.gmail.com>
+X-Gm-Features: AaiRm50Kgxrt1IEt_9GEmeNyCIrylErpUd7qkh7D4FIoK_FYituUB8DTITetq4c
+Message-ID: <CAMuHMdV+7n==crPmitH-JCwtJiH+7LaPKZQYU4ZqX_duo3_7Eg@mail.gmail.com>
+Subject: Re: [PATCH phy-next 12/22] phy: move provider API out of public <linux/phy/phy.h>
+To: Vladimir Oltean <vladimir.oltean@nxp.com>
+Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, dri-devel@lists.freedesktop.org, 
+	freedreno@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org, 
+	linux-arm-msm@vger.kernel.org, linux-can@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, linux-rockchip@lists.infradead.org, 
+	linux-samsung-soc@vger.kernel.org, linux-sunxi@lists.linux.dev, 
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, 
+	netdev@vger.kernel.org, spacemit@lists.linux.dev, 
+	UNGLinuxDriver@microchip.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Mar 05, 2026 at 04:03:03PM +0900, Koichiro Den wrote:
-> On Thu, Mar 05, 2026 at 11:27:42AM +0530, Manivannan Sadhasivam wrote:
-> > On Thu, Mar 05, 2026 at 10:54:39AM +0900, Koichiro Den wrote:
-> > > R-Car S4 Series (R8A779F[4-7]*) uses a 4K minimum iATU region size
-> > > (CX_ATU_MIN_REGION_SIZE = 4K) as per R19UH0161EJ0130 Rev.1.30.
-> > > 
-> > > Update the advertised alignment to 4K, as described in
-> > > commit 2a9a801620ef ("PCI: endpoint: Add support to specify alignment
-> > > for buffers allocated to BARs").
-> > > 
-> > > With the previous 1MB alignment requirement, iATU programming for BAR4
-> > > on this platform often cannot be performed, since a 1MB-aligned target
-> > > address may fall outside the tiny 256B BAR4 window.
-> > > 
-> > 
-> > Can you clarify this part? What do you mean by 'falling outside of the 256B
-> > BAR4 window'? Where does the failure happen exactly?
-> 
-> My primary motivation is to use MSI doorbell [1] for epf-vntb.
-> 
-> epf_ntb_db_bar_init_msi_doorbell() passes message address 'low' to
-> pci_epf_assign_bar_space(). The message address is a fixed physical address,
-> or IOVA if EPC is attached to an IOMMU domain.
-> 
-> Even though the doorbell window size (the difference between the 'high' and
-> 'low' message addresses) is typically small, forcing the base address to be
-> aligned to a 1MB boundary may push the mapping base much lower than necessary.
-> 
-> For example:
-> 
->   When the doorbell message address 'low' is 0xffdff0a0,
-> 
->   - With the previous 1MB alignment, it is aligned down to 0xffd00000.
->     The offset becomes: 0xffdff0a0 - 0xffd00000 = 0xff0a0, which is far larger
->     than the 256B BAR4 window, so the mapping cannot be programmed.
-> 
->   - With the correct 4K alignment, it is aligned down to 0xffdff000.
->     The offset becomes: 0xffdff0a0 - 0xffdff000 = 0xa0, which fits within 256B
->     BAR4 window.
-> 
+Hi Vladimir,
 
-Okay, thanks for clarifying. This information should've been present in the
-commit message. Though, the top motivation is to comply with the reference
-manual.
+On Wed, 4 Mar 2026 at 19:03, Vladimir Oltean <vladimir.oltean@nxp.com> wrote:
+> The major goal is to hide the contents of struct phy from consumer
+> drivers.
+>
+> The idea with "phy-props.h" is that both consumers and providers make
+> use of some data types. So both headers include "phy-props.h".
+>
+> Two slight points of contention.
+>
+> 1. phy_set_bus_width(): Vinod explains that despite the current caller
+>    situation (9 providers, 1 consumer), it is a consumer API function.
+>
+>    The use case is that the controller (for example UFS) may have
+>    limitations and should set the expected lanes to be used and width on
+>    those lanes. A number of Generic PHYs can support multiple lanes and
+>    multiple width so this is way for controller telling I am using this
+>    configuration.
+>
+> 2. phy-provider.h should go to include/linux/phy/ or to drivers/phy/?
+>    We do have 3 PHY providers outside of drivers/phy/:
+>
+>    drivers/media/platform/sunxi/sun8i-a83t-mipi-csi2/sun8i_a83t_dphy.c
+>    drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c
+>    drivers/pinctrl/tegra/pinctrl-tegra-xusb.c
+>
+>    but the practice is not encouraged, and with time, these should be
+>    moved to the subsystem. This is not something that I can do now.
+>
+> For temporary compatibility, keep including the provider header. This
+> will be removed when abuses are all gotten rid of.
+>
+> Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
 
->   Note: if the address were e.g. 0xffdff1a0 instead of 0xffdff0a0, the
->   4K-aligned offset would become 0x1a0 (416 bytes), which still exceeds the 256B
->   window. (For simplicity, the 32-bit write width is ignored here.) In such a
->   case, programming the mapping would still not be possible.
-> 
+Thanks for your patch!
 
-Hmm, that's probably fine as we would be running into hardware limitation.
+> --- /dev/null
+> +++ b/drivers/phy/phy-provider.h
 
->   Also note that I used the term 'aligned_mem_size' above, which is the local
->   variable name in pci_epf_assign_bar_space(). The corresponding struct
->   pci_epf_bar field was renamed from 'aligned_size' to 'mem_size' by commit
->   483768846d66 ("PCI: endpoint: Rename 'epf_bar::aligned_size' to
->   'epf_bar:mem_size'").
-> 
-> [1] Precisely speaking, the "embedded" doorbell fallback:
->     https://lore.kernel.org/linux-pci/20260302071427.534158-1-den@valinux.co.jp/
-> 
-> > 
-> > > Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> > 
-> > Fixes tag?
-> 
-> Commit e311b3834dfa ("PCI: rcar-gen4: Add endpoint mode support") is much later
-> than 2a9a801620ef ("PCI: endpoint: Add support to specify alignment for buffers
-> allocated to BARs"), so I believe it makes sense to add:
-> 
->   Fixes: e311b3834dfa ("PCI: rcar-gen4: Add endpoint mode support")
-> 
+> --- a/include/linux/phy/phy.h
+> +++ b/include/linux/phy/phy.h
+> @@ -1,246 +1,38 @@
+>  /* SPDX-License-Identifier: GPL-2.0-or-later */
+>  /*
+> - * phy.h -- generic phy header file
+> + * phy.h -- Generic PHY consumer API
+>   *
+>   * Copyright (C) 2013 Texas Instruments Incorporated - http://www.ti.com
+>   *
+>   * Author: Kishon Vijay Abraham I <kishon@ti.com>
+>   */
+>
+> -#ifndef __DRIVERS_PHY_H
+> -#define __DRIVERS_PHY_H
+> +#ifndef __PHY_CONSUMER_H
+> +#define __PHY_CONSUMER_H
+>
+> -#include <linux/err.h>
+> -#include <linux/of.h>
+> -#include <linux/device.h>
+> -#include <linux/pm_runtime.h>
+> -#include <linux/regulator/consumer.h>
+> +#include <linux/phy/phy-props.h>
+>
+> -#include <linux/phy/phy-dp.h>
+> -#include <linux/phy/phy-hdmi.h>
+> -#include <linux/phy/phy-lvds.h>
+> -#include <linux/phy/phy-mipi-dphy.h>
+> +#include "../../drivers/phy/phy-provider.h"
 
-Please add it in next version.
+Shouldn't there be one more "../"?
+Interestingly, it compiles with/without.
 
-- Mani
+Gr{oetje,eeting}s,
+
+                        Geert
 
 -- 
-மணிவண்ணன் சதாசிவம்
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
