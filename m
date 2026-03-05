@@ -1,328 +1,169 @@
-Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5118B37881E
-	for <linux-pci@vger.kernel.org>; Thu,  5 Mar 2026 09:36:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEDC2372B5A;
+	Thu,  5 Mar 2026 09:40:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772703391; cv=none; b=RkE4PNC+/opDYeFJpDcfknkT2D+mutxq1vpMDOOUh2nczB1Ec4RbM6mYhY9oKT6RhJItsc2j7SBDj/izMl5sLKkfYyFfa8BG5hBLTmHjyqPZfqtoKEjx2u51K3K3n4LTVputiJBBAewK0z97dJJuaYQwkSqsgNqN+c+xn1plsXU=
+	t=1772703646; cv=none; b=BvgAKYb4fmfURsHsivnrFEk1Lb0x0x7j6F4LdCwmPOOsHfgy1o/Gy+cRPvpxb/gu8Mt3kdziXFrhK7vL7tAi9lSHhhaMbSyRZIcCO5LyHekN2A5XIpeiCpUONwrLywnD+TWjzAeIhKeOfc1+1l+oqDcW0WT/j9rcc4sH5ppydR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772703391; c=relaxed/simple;
-	bh=CMgXM6u7309Wn3e+oqvoc7hX9vYREWTZOtF5JH1MCY8=;
-	h=Mime-Version:Content-Type:Date:Message-Id:From:To:Cc:Subject:
-	 References:In-Reply-To; b=VnyyLruCCXQcZgL0A+Lc5CayIMi9uBjyg7zHMnI/Zc5ymc3R0Wl0NUr3PRrsVLXK1qO/t4aH/mhB6VrcRhsknbTzmuJ7vs/aN411PoiMkYs4phbEljtK8sDt5PGZrB6igJ0BwYA9ztqGHfSs6iS0DE7UGLsiwQHKnCG2Kzarg3M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=r8n3aZlu; arc=none smtp.client-ip=209.85.221.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
+	s=arc-20240116; t=1772703646; c=relaxed/simple;
+	bh=kgO0ABwU6ejaUWxo1SJnPWReRAdrnrMCus4MWC9HptU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aJY6/MLtygDAs3msBwrRxLwbedyVIo4AaLRG3r7o/v1hzd1wlDdLrdA5ppBpKGr+QPtV2yfOXWorklOAtSr/SXT7Q6Ga5HBu72bawGmKGaDdgZ3z/s/K5tq55Wd0qOghGOEgcrADkeG1nEPuHSglKU96eTYOomBc+FMZVkayfEw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b08uI5NN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="r8n3aZlu"
-Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-439af7d77f0so4252869f8f.0
-        for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2026 01:36:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1772703385; x=1773308185; darn=vger.kernel.org;
-        h=in-reply-to:references:subject:cc:to:from:message-id:date
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Mbidr/A9XxccdAFsJsVKLL2bBtmGRz8XUrt7LUMLgOs=;
-        b=r8n3aZluVhBTCfb7BQuBR7rtMDtwMt/hhUveTeZDZQAO4wJxkqYdVnWInamwTvoasd
-         njRsc4y1mlFqY6e8h+MrxsQmTwUtFPEr4bGcC2jwn78y+TT5X2hBUAy+EkXK3GfkPnMc
-         efI7YRWZmXX4iWMH3mdtVwJdLQgh9b+NgkxQAUiokU1kYqlHFgrFqn8X6Kh54oqNRJvL
-         W9KF9PgfXi06d+0sZ2isvDvqnFTaI47uFjf39desDXwhsR9fNqaB6S1RhpTym+6cBpi7
-         37SVpkS6dpjv/ggxoqRfyQPvFp9lVwc3QY78bUWB4dZgVEV/oWO3UY/ChIwfz5zMSHTu
-         wMIg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772703385; x=1773308185;
-        h=in-reply-to:references:subject:cc:to:from:message-id:date
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Mbidr/A9XxccdAFsJsVKLL2bBtmGRz8XUrt7LUMLgOs=;
-        b=Se+G4ptxGs0u9hBp4pCOTjjTxSgPA3Tt1dgeYoM7Y0lul2PatBdeAVFjWgdWfQUnnJ
-         f6523DbLNYjCp9guCW1K5TU8p9m8H4Y9lFueQvXI908u+PMxo7yJCodv+m6OnDtATEbq
-         Ei9jiUfrf9LYecXhW39KXWyiuRQ9rc9oT78YpRDl+maLxvd1E9JM3Wei/+PUopch2nVt
-         dxXywpN9sZR+P3ntdXJPGuZhoSc05RxazLZ4SGXpMXuRdpPbJylu74l7DOzxkzSyFses
-         GaoJjB1+bqmMNjeSAY9HrHhVSkORgSS1vXk88SGCOa6Rj3vVQcN3GebpfVZ9XFwdk/kn
-         Ixow==
-X-Forwarded-Encrypted: i=1; AJvYcCWCF+1aY/HNDjluW1JT0DIzAPW5MG7NyZAOLTMTkuA7a8BqFHUVHAgvCpvtMKTyEvxIReKT3/suj48=@vger.kernel.org
-X-Gm-Message-State: AOJu0YywpZE+3CxMvHyPddrMwOdc3b+JT74e+nlwQKhl8BfHym8kTXkp
-	ziA/h/ZAbiP+2LWx0ZZX7zdwH7RCXqEZejd0zlTATmVK8dPK5Q/ZCj10oWzxyb+ON6s=
-X-Gm-Gg: ATEYQzxGGOLaGvzSOcn0sDEMdQni9pizEVzH8gmIqQFJSauQKb8YdaxZIXamVu1eI/l
-	qVcFlVUW+b3eq5UKqyr0yg+bfnIoQMlkrbkntNut2Zf+2S+4vMoc386+2tA0SGA7hor8BOZ7JN3
-	V5qZGvxRK42nEq37knOxhe9ciPoTARe7PEr8WZJrLznQdDTX/0WIrcFtFheCANMOcKSRZ/wtiYm
-	Ef6XieMcZMA6W22RymxAvHxup9CFsF9vDLyGijhrQTx95hAfeF0UTGxsyRBHgQ5OgUrV8UGQQhT
-	UDtHo3LK4lNkOgjscamKET14HkKbUhXdlvxyTasCzXuUH4SauYhUrDR6678+HPUc9CrnY4VfRgI
-	v+FVS9VqlRAV95iwk66HE5OCEqDNhgWmSWki9cmZuI+xDe1BLGFbXhN5sKOphaaQVn8EtbEZi+d
-	SqGixCpsiV+U63xVo=
-X-Received: by 2002:a05:6000:144f:b0:439:b564:7a6c with SMTP id ffacd0b85a97d-439c7f6a2c9mr9158913f8f.4.1772703384539;
-        Thu, 05 Mar 2026 01:36:24 -0800 (PST)
-Received: from localhost ([195.52.25.213])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-439c2f7eca1sm14966458f8f.11.2026.03.05.01.36.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Mar 2026 01:36:22 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b08uI5NN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 267AFC116C6;
+	Thu,  5 Mar 2026 09:40:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772703646;
+	bh=kgO0ABwU6ejaUWxo1SJnPWReRAdrnrMCus4MWC9HptU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=b08uI5NNQpJZX1sUB7QKtFgL/ceEoR0CgHA5+AB+9NtnEsfIi8xL09NFBa6zc+jFs
+	 SUhrQzOW/xY4C2pGnfk1M80jLI6ql1xXrxF9Z+8drZGL0/GodZ9vGMjrdQlKBygZPH
+	 WpNBD1+kjS0q3lZ5tTgNqAvIxTu98mM99qKtMSQVtNVLNe0NzTwzZDoE5m5sGQK30J
+	 WP+DLfVpbu6lhOX4im8tiZw7W46UftopQXZhY44BzsHfFT6UWvjzPCMT0G8HNLrKNc
+	 kgr9uVvctbSihPQmolr1bGmTkpB00Z+NugU9RTh0t3Zc4lKh+NpmvDpuf0rhk+BO3F
+	 WA4wS4lB9c4Nw==
+Date: Thu, 5 Mar 2026 15:10:30 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
+	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	thierry.reding@gmail.com, jonathanh@nvidia.com, kishon@kernel.org, arnd@arndb.de, 
+	gregkh@linuxfoundation.org, Frank.Li@nxp.com, den@valinux.co.jp, hongxing.zhu@nxp.com, 
+	jingoohan1@gmail.com, vidyas@nvidia.com, cassel@kernel.org, 18255117159@163.com, 
+	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v7 03/13] PCI: tegra194: Don't force the device into the
+ D0 state before L2
+Message-ID: <6ekumkzuh6znxzf4deaawc46mgoen6haxcrvrein2irpw3xqhc@shwkkvjnlj6h>
+References: <20260303065448.2361488-1-mmaddireddy@nvidia.com>
+ <20260303065448.2361488-4-mmaddireddy@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed;
- boundary=b895f1e89350da7f8491f35b99d431866030fe6df54b62358155e9918430;
- micalg=pgp-sha512; protocol="application/pgp-signature"
-Date: Thu, 05 Mar 2026 10:36:14 +0100
-Message-Id: <DGUQWFYCPRQZ.17SO07GXW2DYA@baylibre.com>
-From: "Markus Schneider-Pargmann" <msp@baylibre.com>
-To: "Vladimir Oltean" <vladimir.oltean@nxp.com>,
- <linux-phy@lists.infradead.org>
-Cc: "Vinod Koul" <vkoul@kernel.org>, "Neil Armstrong"
- <neil.armstrong@linaro.org>, <dri-devel@lists.freedesktop.org>,
- <freedreno@lists.freedesktop.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-arm-msm@vger.kernel.org>, <linux-can@vger.kernel.org>,
- <linux-gpio@vger.kernel.org>, <linux-ide@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-media@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-renesas-soc@vger.kernel.org>,
- <linux-riscv@lists.infradead.org>, <linux-rockchip@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linux-sunxi@lists.linux.dev>,
- <linux-tegra@vger.kernel.org>, <linux-usb@vger.kernel.org>,
- <netdev@vger.kernel.org>, <spacemit@lists.linux.dev>,
- <UNGLinuxDriver@microchip.com>, "Andrzej Hajda" <andrzej.hajda@intel.com>,
- "Robert Foss" <rfoss@kernel.org>, "Laurent Pinchart"
- <Laurent.pinchart@ideasonboard.com>, "Jonas Karlman" <jonas@kwiboo.se>,
- "Jernej Skrabec" <jernej.skrabec@gmail.com>, "Maarten Lankhorst"
- <maarten.lankhorst@linux.intel.com>, "Maxime Ripard" <mripard@kernel.org>,
- "Thomas Zimmermann" <tzimmermann@suse.de>, "David Airlie"
- <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Andy Yan"
- <andy.yan@rock-chips.com>, "Marc Kleine-Budde" <mkl@pengutronix.de>,
- "Vincent Mailhol" <mailhol@kernel.org>, "Nicolas Ferre"
- <nicolas.ferre@microchip.com>, "Alexandre Belloni"
- <alexandre.belloni@bootlin.com>, "Claudiu Beznea"
- <claudiu.beznea@tuxon.dev>, "Markus Schneider-Pargmann" <msp@baylibre.com>,
- "Geert Uytterhoeven" <geert+renesas@glider.be>, "Magnus Damm"
- <magnus.damm@gmail.com>
-Subject: Re: [PATCH phy-next 13/22] phy: introduce phy_get_max_link_rate()
- helper for consumers
-X-Mailer: aerc 0.21.0
-References: <20260304175735.2660419-1-vladimir.oltean@nxp.com>
- <20260304175735.2660419-14-vladimir.oltean@nxp.com>
-In-Reply-To: <20260304175735.2660419-14-vladimir.oltean@nxp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260303065448.2361488-4-mmaddireddy@nvidia.com>
 
---b895f1e89350da7f8491f35b99d431866030fe6df54b62358155e9918430
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
+On Tue, Mar 03, 2026 at 12:24:38PM +0530, Manikanta Maddireddy wrote:
+> From: Vidya Sagar <vidyas@nvidia.com>
+> 
+> As per PCIe CEM spec rev 4.0 ver 1.0 sec 2.3, the PCIe Endpoint device
+> should be in D3 state to assert wake# pin. This takes precedence over PCI
 
-Hi,
+WAKE#
 
-On Wed Mar 4, 2026 at 6:57 PM CET, Vladimir Oltean wrote:
-> Consumer drivers shouldn't dereference struct phy, not even to get to
-> its attributes.
->
-> We have phy_get_bus_width() as a precedent for getting the bus_width
-> attribute, so let's add phy_get_max_link_rate() and use it in DRM and
-> CAN drivers.
->
-> Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
+> Express Base r4.0 v1.0 September 27-2017, 5.2 Link State Power Management
+> which states that the device can be put into D0 state before taking the
+> link to L2 state. To enable the wake functionality for Endpoint devices,
+> do not force the devices to D0 state before taking the link to L2 state.
+> There is no functional issue with the Endpoint devices where the link
+> doesn't go into L2 state (the reason why the earlier change was made in
+> the first place) as the Root Port proceeds with the usual flow post PME
+> timeout.
+> 
+
+So the previous claim in the comments is not true?
+
+I agree with this patch in principle, but just want to know why the comment
+claimed there is an issue if the devices are not in D0 state.
+
+- Mani
+
+> Fixes: 56e15a238d92 ("PCI: tegra: Add Tegra194 PCIe support")
+> Reviewed-by: Jon Hunter <jonathanh@nvidia.com>
+> Tested-by: Jon Hunter <jonathanh@nvidia.com>
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 > ---
-> Cc: Andrzej Hajda <andrzej.hajda@intel.com>
-> Cc: Neil Armstrong <neil.armstrong@linaro.org>
-> Cc: Robert Foss <rfoss@kernel.org>
-> Cc: Laurent Pinchart <Laurent.pinchart@ideasonboard.com>
-> Cc: Jonas Karlman <jonas@kwiboo.se>
-> Cc: Jernej Skrabec <jernej.skrabec@gmail.com>
-> Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-> Cc: Maxime Ripard <mripard@kernel.org>
-> Cc: Thomas Zimmermann <tzimmermann@suse.de>
-> Cc: David Airlie <airlied@gmail.com>
-> Cc: Simona Vetter <simona@ffwll.ch>
-> Cc: Andy Yan <andy.yan@rock-chips.com>
-> Cc: Marc Kleine-Budde <mkl@pengutronix.de>
-> Cc: Vincent Mailhol <mailhol@kernel.org>
-> Cc: Nicolas Ferre <nicolas.ferre@microchip.com>
-> Cc: Alexandre Belloni <alexandre.belloni@bootlin.com>
-> Cc: Claudiu Beznea <claudiu.beznea@tuxon.dev>
-> Cc: Markus Schneider-Pargmann <msp@baylibre.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Magnus Damm <magnus.damm@gmail.com>
-> ---
->  drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c | 4 ++--
->  drivers/gpu/drm/bridge/synopsys/dw-dp.c             | 2 +-
->  drivers/net/can/at91_can.c                          | 2 +-
->  drivers/net/can/flexcan/flexcan-core.c              | 2 +-
->  drivers/net/can/m_can/m_can_platform.c              | 2 +-
->  drivers/net/can/rcar/rcar_canfd.c                   | 2 +-
->  drivers/phy/phy-core.c                              | 6 ++++++
->  include/linux/phy/phy.h                             | 6 ++++++
->  8 files changed, 19 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c b/driver=
-s/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
-> index a8b6ae58cb0a..ed7ed82ddb64 100644
-> --- a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
-> +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
-> @@ -1300,7 +1300,7 @@ static u32 cdns_mhdp_get_training_interval_us(struc=
-t cdns_mhdp_device *mhdp,
-> =20
->  static void cdns_mhdp_fill_host_caps(struct cdns_mhdp_device *mhdp)
->  {
-> -	unsigned int link_rate;
-> +	u32 link_rate;
-> =20
->  	/* Get source capabilities based on PHY attributes */
-> =20
-> @@ -1308,7 +1308,7 @@ static void cdns_mhdp_fill_host_caps(struct cdns_mh=
-dp_device *mhdp)
->  	if (!mhdp->host.lanes_cnt)
->  		mhdp->host.lanes_cnt =3D 4;
-> =20
-> -	link_rate =3D mhdp->phy->attrs.max_link_rate;
-> +	link_rate =3D phy_get_max_link_rate(mhdp->phy);
->  	if (!link_rate)
->  		link_rate =3D drm_dp_bw_code_to_link_rate(DP_LINK_BW_8_1);
->  	else
-> diff --git a/drivers/gpu/drm/bridge/synopsys/dw-dp.c b/drivers/gpu/drm/br=
-idge/synopsys/dw-dp.c
-> index 4ab6922dd79c..79c72ee8e263 100644
-> --- a/drivers/gpu/drm/bridge/synopsys/dw-dp.c
-> +++ b/drivers/gpu/drm/bridge/synopsys/dw-dp.c
-> @@ -536,7 +536,7 @@ static int dw_dp_link_parse(struct dw_dp *dp, struct =
-drm_connector *connector)
-> =20
->  	link->revision =3D link->dpcd[DP_DPCD_REV];
->  	link->rate =3D min_t(u32, min(dp->plat_data.max_link_rate,
-> -				    dp->phy->attrs.max_link_rate * 100),
-> +				    phy_get_max_link_rate(dp->phy) * 100),
->  			   drm_dp_max_link_rate(link->dpcd));
->  	link->lanes =3D min_t(u8, phy_get_bus_width(dp->phy),
->  			    drm_dp_max_lane_count(link->dpcd));
-> diff --git a/drivers/net/can/at91_can.c b/drivers/net/can/at91_can.c
-> index 58da323f14d7..b56db253f02d 100644
-> --- a/drivers/net/can/at91_can.c
-> +++ b/drivers/net/can/at91_can.c
-> @@ -1126,7 +1126,7 @@ static int at91_can_probe(struct platform_device *p=
-dev)
->  	can_rx_offload_add_timestamp(dev, &priv->offload);
-> =20
->  	if (transceiver)
-> -		priv->can.bitrate_max =3D transceiver->attrs.max_link_rate;
-> +		priv->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
-> =20
->  	if (at91_is_sam9263(priv))
->  		dev->sysfs_groups[0] =3D &at91_sysfs_attr_group;
-> diff --git a/drivers/net/can/flexcan/flexcan-core.c b/drivers/net/can/fle=
-xcan/flexcan-core.c
-> index f5d22c61503f..3a4307bc1d61 100644
-> --- a/drivers/net/can/flexcan/flexcan-core.c
-> +++ b/drivers/net/can/flexcan/flexcan-core.c
-> @@ -2211,7 +2211,7 @@ static int flexcan_probe(struct platform_device *pd=
-ev)
->  	priv->transceiver =3D transceiver;
-> =20
->  	if (transceiver)
-> -		priv->can.bitrate_max =3D transceiver->attrs.max_link_rate;
-> +		priv->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
-> =20
->  	if (priv->devtype_data.quirks & FLEXCAN_QUIRK_NR_IRQ_3) {
->  		priv->irq_boff =3D platform_get_irq(pdev, 1);
-> diff --git a/drivers/net/can/m_can/m_can_platform.c b/drivers/net/can/m_c=
-an/m_can_platform.c
-> index 56da411878af..73525be6566b 100644
-> --- a/drivers/net/can/m_can/m_can_platform.c
-> +++ b/drivers/net/can/m_can/m_can_platform.c
-> @@ -132,7 +132,7 @@ static int m_can_plat_probe(struct platform_device *p=
-dev)
->  	}
-> =20
->  	if (transceiver)
-> -		mcan_class->can.bitrate_max =3D transceiver->attrs.max_link_rate;
-> +		mcan_class->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
-> =20
->  	priv->base =3D addr;
->  	priv->mram_base =3D mram_addr;
-> diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rca=
-r_canfd.c
-> index eaf8cac78038..645d5671705d 100644
-> --- a/drivers/net/can/rcar/rcar_canfd.c
-> +++ b/drivers/net/can/rcar/rcar_canfd.c
-> @@ -1885,7 +1885,7 @@ static int rcar_canfd_channel_probe(struct rcar_can=
-fd_global *gpriv, u32 ch,
->  	priv->channel =3D ch;
->  	priv->gpriv =3D gpriv;
->  	if (transceiver)
-> -		priv->can.bitrate_max =3D transceiver->attrs.max_link_rate;
-> +		priv->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
->  	priv->can.clock.freq =3D fcan_freq;
->  	dev_info(dev, "can_clk rate is %u\n", priv->can.clock.freq);
-> =20
-> diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
-> index a1aff00fba7c..89f7410241aa 100644
-> --- a/drivers/phy/phy-core.c
-> +++ b/drivers/phy/phy-core.c
-> @@ -640,6 +640,12 @@ void phy_set_bus_width(struct phy *phy, int bus_widt=
-h)
+> Changes V6 -> V7: Fix commit message
+> Changes V1 -> V6: None
+> 
+>  drivers/pci/controller/dwc/pcie-tegra194.c | 41 ----------------------
+>  1 file changed, 41 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+> index afbc0bdd8a93..831986de584e 100644
+> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+> @@ -1258,44 +1258,6 @@ static int tegra_pcie_bpmp_set_pll_state(struct tegra_pcie_dw *pcie,
+>  	return 0;
 >  }
->  EXPORT_SYMBOL_GPL(phy_set_bus_width);
-> =20
-> +u32 phy_get_max_link_rate(struct phy *phy)
-> +{
-
-All of the can drivers that would use this function are checking phy
-before assigning the max_link_rate:
-
-  if (transceiver)
-          priv->can.bitrate_max =3D transceiver->attrs.max_link_rate;
-
-Would it be reasonable to have
-
-  if (!phy)
-          return 0;
-
-in this function to be able to drop these individual checks of the
-drivers? This would be similar to clk_get_rate() which does the same
-check and return 0 for convenience.
-
-Best
-Markus
-
-> +	return phy->attrs.max_link_rate;
-> +}
-> +EXPORT_SYMBOL_GPL(phy_get_max_link_rate);
-> +
->  /**
->   * _of_phy_get() - lookup and obtain a reference to a phy by phandle
->   * @np: device_node for which to get the phy
-> diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
-> index 36307e47760d..af9c3e795786 100644
-> --- a/include/linux/phy/phy.h
-> +++ b/include/linux/phy/phy.h
-> @@ -57,6 +57,7 @@ int phy_notify_disconnect(struct phy *phy, int port);
->  int phy_notify_state(struct phy *phy, union phy_notify state);
->  int phy_get_bus_width(struct phy *phy);
->  void phy_set_bus_width(struct phy *phy, int bus_width);
-> +u32 phy_get_max_link_rate(struct phy *phy);
->  #else
->  static inline struct phy *phy_get(struct device *dev, const char *string=
-)
+>  
+> -static void tegra_pcie_downstream_dev_to_D0(struct tegra_pcie_dw *pcie)
+> -{
+> -	struct dw_pcie_rp *pp = &pcie->pci.pp;
+> -	struct pci_bus *child, *root_port_bus = NULL;
+> -	struct pci_dev *pdev;
+> -
+> -	/*
+> -	 * link doesn't go into L2 state with some of the endpoints with Tegra
+> -	 * if they are not in D0 state. So, need to make sure that immediate
+> -	 * downstream devices are in D0 state before sending PME_TurnOff to put
+> -	 * link into L2 state.
+> -	 * This is as per PCI Express Base r4.0 v1.0 September 27-2017,
+> -	 * 5.2 Link State Power Management (Page #428).
+> -	 */
+> -
+> -	list_for_each_entry(child, &pp->bridge->bus->children, node) {
+> -		if (child->parent == pp->bridge->bus) {
+> -			root_port_bus = child;
+> -			break;
+> -		}
+> -	}
+> -
+> -	if (!root_port_bus) {
+> -		dev_err(pcie->dev, "Failed to find downstream bus of Root Port\n");
+> -		return;
+> -	}
+> -
+> -	/* Bring downstream devices to D0 if they are not already in */
+> -	list_for_each_entry(pdev, &root_port_bus->devices, bus_list) {
+> -		if (PCI_SLOT(pdev->devfn) == 0) {
+> -			if (pci_set_power_state(pdev, PCI_D0))
+> -				dev_err(pcie->dev,
+> -					"Failed to transition %s to D0 state\n",
+> -					dev_name(&pdev->dev));
+> -		}
+> -	}
+> -}
+> -
+>  static int tegra_pcie_get_slot_regulators(struct tegra_pcie_dw *pcie)
 >  {
-> @@ -256,6 +257,11 @@ static inline int phy_get_bus_width(struct phy *phy)
->  static inline void phy_set_bus_width(struct phy *phy, int bus_width)
+>  	pcie->slot_ctl_3v3 = devm_regulator_get_optional(pcie->dev, "vpcie3v3");
+> @@ -1625,7 +1587,6 @@ static void tegra_pcie_dw_pme_turnoff(struct tegra_pcie_dw *pcie)
+>  
+>  static void tegra_pcie_deinit_controller(struct tegra_pcie_dw *pcie)
 >  {
->  }
-> +
-> +static inline u32 phy_get_max_link_rate(struct phy *phy)
-> +{
-> +	return 0;
-> +}
->  #endif /* IS_ENABLED(CONFIG_GENERIC_PHY) */
-> =20
->  #endif /* __PHY_CONSUMER_H */
+> -	tegra_pcie_downstream_dev_to_D0(pcie);
+>  	dw_pcie_host_deinit(&pcie->pci.pp);
+>  	tegra_pcie_dw_pme_turnoff(pcie);
+>  	tegra_pcie_unconfig_controller(pcie);
+> @@ -2335,7 +2296,6 @@ static int tegra_pcie_dw_suspend_noirq(struct device *dev)
+>  	if (!pcie->link_state)
+>  		return 0;
+>  
+> -	tegra_pcie_downstream_dev_to_D0(pcie);
+>  	tegra_pcie_dw_pme_turnoff(pcie);
+>  	tegra_pcie_unconfig_controller(pcie);
+>  
+> @@ -2409,7 +2369,6 @@ static void tegra_pcie_dw_shutdown(struct platform_device *pdev)
+>  			return;
+>  
+>  		debugfs_remove_recursive(pcie->debugfs);
+> -		tegra_pcie_downstream_dev_to_D0(pcie);
+>  
+>  		disable_irq(pcie->pci.pp.irq);
+>  		if (IS_ENABLED(CONFIG_PCI_MSI))
+> -- 
+> 2.34.1
+> 
 
-
---b895f1e89350da7f8491f35b99d431866030fe6df54b62358155e9918430
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iKMEABYKAEsWIQSJYVVm/x+5xmOiprOFwVZpkBVKUwUCaalOjxsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMSwyLDIRHG1zcEBiYXlsaWJyZS5jb20ACgkQhcFWaZAVSlPc
-SwEAt3Fg0ly9qnS+HJQv96JGhcc9ssPHPspnN0LcoiUH76oBAJJ1UWuuXcnIsBb3
-namewJQN1U0nDnFUFRtJbSq49LcK
-=6g8b
------END PGP SIGNATURE-----
-
---b895f1e89350da7f8491f35b99d431866030fe6df54b62358155e9918430--
+-- 
+மணிவண்ணன் சதாசிவம்
