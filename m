@@ -1,163 +1,123 @@
-Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11011005.outbound.protection.outlook.com [52.101.65.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63490146D5A;
-	Thu,  5 Mar 2026 09:13:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.65.5
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772702024; cv=fail; b=mzi5fXUa4t8xnlcmOr7geGFDQZZpHxbLfKJG/k36bY4xWubW/9G9w7RJf4jHbIta9ni4OwC5nGUE8LpbK1fLQWF/U6UNUeNkx5jkCAQNnnVhBVN+scteXwOWw6ltSaj5Lhsd/oatG2OMVMkmeqqeLHkrQaWpdA8aPR0Z9W28j00=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772702024; c=relaxed/simple;
-	bh=9FPOKILEipkJKVY6zGzoN+cWyjKneMsZzkOxsblpuao=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=r8S1sOWyOV3Qkk/JHEFbmP1jl/t99a1xJm3aHW6Cu28s2FOSbd/NeQTpGzskWGo6iI4S79weNiLi+ow5bOGuoR8yfKV2XuoQXK924yL2GmJdvtGKG05LdPYmHhH5zaoy9ODKqh5JdDrZOHa9vsYotX/j30Y1dLrpCyangswgEQ0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=dRjRcQZ6; arc=fail smtp.client-ip=52.101.65.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6186E34CFB3;
+	Thu,  5 Mar 2026 09:15:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772702104; cv=none; b=BKzrnB92n2sD5epWDjWLm0pJZ2CIJaw63saEl9qr+1oCBV6fLuVF6Z3FBVi7gF+/FUDd6/MFvyM9bEmmOIDFwZ1E+7NPTh0Etn8OcN5GLyuIJ5e/taDA/mzyqdBckgtLo3PusV8MdXqnCvsCh56l8q2pSh23sdV5F7L3pQI/yNE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772702104; c=relaxed/simple;
+	bh=tz5lE2JqOS+e6Qm6OkPiboqeV9PskCSKsvV8k7fD8aU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qSFhmM4TOmwy+pF228YOgVAS1Fi0oPA2Yi2bhjMbYkcMLqZoX4kS+Dz2efBhNPbltfOfCbIfFQtICwxkRsE5jjkYy3IYkX2vwbKtkZdhR9B58nmJlvwz6XgCTPCsENuFy19E9jCh906a4mM3ogZ7Yz8HrNnsKlMQm2zLsWVjif4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i4G49LQk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="dRjRcQZ6"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=l5YqVzmk5ipSgSmkl/SlGsMORyPqrAMNzrTiFT48zMrIewp2mhJLyiBKPmaSDMVLBPl5q0tDb8o7QYQRHxVMiEDlO2jTg1n+mVkeyJftxdLOMAjb0zZEd88eeUYs0nOBEk9uJnDkrJ1Bh+tkbwN+lphvqf6DaEuz8LDyGVVVGwxzHzQYzmOrSrf6JeX366tFf0GIHrAMXpwdHsQ1dCT4ITY1y1kDPjAQIBJshfWJBZRwlcEENY9OQiVqjh/mhypVX0lxJLjtUbKdR3q7OrhKkzdrWZN7CSJ+gB+MrDMxIZLMUd3t4929J48muw7MsN+Adnwra0MYosYxRCo54LvDzg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=PkFm4cOy2wTBlaXyBbVBfTP2/tAGbUuNaBqmeS/09Vw=;
- b=V+DG8rczpElp/b4TVRdl9ky6nqdT+lV9uBkvg39ymsjWeW8Nmo60ekpCXyxszp1sHqzrm9P2plejGUfiKc2nMzCrCvgvW94yCzi9pgwVLtCAxlZfn6VIHtertGFyosVPXeS1iDlAW6sUVEUVr8KgZsWuteuJ/O9OZTgT6l/N0++mxUbpKpwTO12VHXnRMIUo8rOR5RaqaGsThATuYAKjtMG3cfkSXwkW1C2o4KLP0x1AseA7WOrcYtSHpa7rQRoSQ8WBz28tY7ucL9aaJM5OwQy8AwjCkCbWudWP2kxY2F0aLB/swb8+I2Q18iMDo0MCvYEJCwyX+VypJb20q2Dnzg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=PkFm4cOy2wTBlaXyBbVBfTP2/tAGbUuNaBqmeS/09Vw=;
- b=dRjRcQZ6Hc4xakPYeE6LrfXb6Lgf0UvcjdLB4bnHHA1z/OBWYPDyRNhLGiz0fXEZv/OtTdzcI0lub/blKSVeWGLXG9bi/9TjuLxOWhG3yFIpnRXDpvj4BDEadsXWxVTdo0xNr9xRn/TF/44dt4Y8uMQhTDMbUBwvaLDGw/Zvez5oBTu+2zMB8kNBJY6sYctWVcTty0cZANW8Np1YUvoDNGmIGYpF6HSSpCZSDMZve+i7qNQpxTV+0ACtK8okd+X6Jd9sdwyuVlySLnJtQ7+9SDxcyGdz8Kuf1wtUE+8TIq/AqgnWzd40Z5oCh0B+hwa7xnpDNqFLV9rnX36J9q8Kdg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
- by AS8PR04MB7896.eurprd04.prod.outlook.com (2603:10a6:20b:2a2::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.18; Thu, 5 Mar
- 2026 09:13:40 +0000
-Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
- ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
- ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9678.016; Thu, 5 Mar 2026
- 09:13:40 +0000
-Date: Thu, 5 Mar 2026 11:13:36 +0200
-From: Vladimir Oltean <vladimir.oltean@nxp.com>
-To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
-	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-	linux-can@vger.kernel.org, linux-gpio@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, linux-riscv@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, linux-sunxi@lists.linux.dev,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	netdev@vger.kernel.org, spacemit@lists.linux.dev,
-	UNGLinuxDriver@microchip.com
-Subject: Re: [PATCH phy-next 22/22] MAINTAINERS: add regex for linux-phy
-Message-ID: <20260305091336.ls3k24ieehntxf4f@skbuf>
-References: <20260304175735.2660419-1-vladimir.oltean@nxp.com>
- <20260304175735.2660419-23-vladimir.oltean@nxp.com>
- <a8fee1cd-1e69-4a9e-8533-c0988c480fb9@oss.qualcomm.com>
- <20260305085148.7cwo3yflp7vcfldf@skbuf>
- <ebee2fcf-9069-4a9f-ae72-86f4471cd4f3@oss.qualcomm.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ebee2fcf-9069-4a9f-ae72-86f4471cd4f3@oss.qualcomm.com>
-X-ClientProxiedBy: VI1PR0202CA0009.eurprd02.prod.outlook.com
- (2603:10a6:803:14::22) To AM9PR04MB8585.eurprd04.prod.outlook.com
- (2603:10a6:20b:438::13)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i4G49LQk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEF3DC19423;
+	Thu,  5 Mar 2026 09:14:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772702103;
+	bh=tz5lE2JqOS+e6Qm6OkPiboqeV9PskCSKsvV8k7fD8aU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=i4G49LQkrkNVuNTGhWN+4FyojR3NmE4cE0dfJ9B5nlKdWAHIVtXIcbovnHAV1giyG
+	 M/wi1Cz1icY9bHE2tCFac1szVhQF8YHIbBWTMA+g2zJihehVII6DTVunCnOBLpwPEl
+	 gA/eHKe4ifE+ibOadelRunB7V4KBEzoM2IRqE5C1btpqoEJQNbj3AdYk3pmnOySjop
+	 h5Gu5lgskbCu9TeYXzrQdATtpAPYoDfPxqw4nW5tPG0io4tViQZYg8jKbxBCWE6Kv5
+	 iVI33IQzW0SRuMNwBz98X042rBWCKFJsjRxnpPzL0EQADz+V/0MVPQotoHf1bBPYH0
+	 P8wyKK+c032ng==
+Date: Thu, 5 Mar 2026 14:44:49 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com, 
+	bjorn.andersson@oss.qualcomm.com
+Subject: Re: [PATCH v2 5/5] PCI: qcom: Add D3cold support
+Message-ID: <miorzejq4sxcl7pucaa7fq7fplbs7bqcnflawnw4qnvntxohmf@xyttdgbfllvy>
+References: <20260217-d3cold-v2-0-89b322864043@oss.qualcomm.com>
+ <20260217-d3cold-v2-5-89b322864043@oss.qualcomm.com>
+ <om6t5hlnxadpmet5i2gochjmfjw6mdfllrdbgewiz4u6vj3zot@nse5rbl3je64>
+ <c0cb73d6-262e-4529-8b07-4c545c76015b@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|AS8PR04MB7896:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1230313a-be16-4660-d807-08de7a977dbb
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|19092799006|10070799003|1800799024|7416014|376014;
-X-Microsoft-Antispam-Message-Info:
-	D4zPoLN0updlww2q42yKUXLpJwUtvZeeYVzDxGiPfrCHA22H5oZxLEZKYQ8+1oVAyHPLfcSwKb2A62jymjhAcF+bS3ALZdT5/o9ZWsA+iZw0JgERjtgaTaokjXpenZFgIv0TDGw0HFkJ+d67pD78CB09rUlI5jjJcVB7iTOjkPYqc5afoPRONynnPU53t+c/rklhZ6yFfBBM6UsBjIB9xvX8H2ejd+gT55RdAr/ERoAq8/ONoM+2+9vMvv4ZVFKu5VlwLEZ4jsprAl10o4dN6U4wTJCMdvAkmrkVLYPwltALRe9UvCBEqDQ94nWHIGKGCPA4uTnmFfvcjGLR7Dw8kjmTaydmIUFak6BlTNty4u/3wV4ozmH2ItUiUv7PX8/i6po+hrhmnqfGjBuP2yM1amCWt/bgakd6gUbP/tPDI1ZUYsshAd0DFWAKU7E9WSPULF87Y0jGA0MB3kWlsf7Xdb4y2qbXlPwaPdxK8kyhVm8baZ6VNj7s2Kjy2XfQi8C5PHl0jqubcJXC7Zxm51R3YKnyZnEBIGmVYYeUqWLUyANLh8PmRwd3Yo5fOY4qyXL3mSDWgvjb1Np0Q+9avWwbyNbSfKv6vjNWrrksu+nLkIZmppUIpUoonSXbZHV+M4ARJR0nmvgsnoYFi30bVovXqF0Y4ot03XH5xVPjPxNQTCcoGWniWIFsuYLCfbUdn5FPH14TvC00RczkF+d8ZNp4mWAN3u5ZcLKhZkHIz/2f/bI=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(10070799003)(1800799024)(7416014)(376014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?NlwVAWYy7PleyF/x2ThwqxQn+22MYhgdSDLyzuVXMTDKdgdCHqll9wBBl43+?=
- =?us-ascii?Q?0t71CrUuNVBnllbYM7ioSyx9UpnwfxCgedSashB3bazf0GVdmUdbAN1QU0x3?=
- =?us-ascii?Q?vucBTNGhyTF77J2/UDMdbG5g7rhkq5x0rowJNxuOSV3V3INeeFhRu0ozEbEg?=
- =?us-ascii?Q?Ve6CvpYVXdGKa1btpAnNMwNzIzCPZR+Kp5waUZblkczD4ndnXg7maoQsIlrB?=
- =?us-ascii?Q?WIHVNic+ehz3flwxmvfg8TvUFK6OttNzs9wMqISLHqx9Oxa+qYy6UZN1CPuc?=
- =?us-ascii?Q?iAoD1zhV/Lg1gaRS1w/WuwhTyD3kO4nkp7/EkIajL1q7Pb6xxUlhF0f3gt86?=
- =?us-ascii?Q?V+bDlHb8HHQYanI3Lrj6SuUJjwGgEiU9agCs8JAvAN1YxydVBqhjAR8BHkro?=
- =?us-ascii?Q?nukTTR8YutItgNfjHZjXtqvm5MBPwMzHFiPCk7zi5M3xQrP5Nypo1U+cXDJv?=
- =?us-ascii?Q?ckoUNk+Kk/ACjiCY9NE6DxrIJ91Sh4IrFUSr9cYX6JXo0o/skEDoS7cW7dGm?=
- =?us-ascii?Q?FfFN9mQMeczvv5kWCHf8l+5W7/vSxzIommZrjIQA+72dfWMgFJqo+H/t81/d?=
- =?us-ascii?Q?6mG8OmgYK/dKpO7BVYhA5D0+Z1viU40Xl8bMbcKm8ToJadCZp2LgXw1bH8l1?=
- =?us-ascii?Q?G/wRFUWQjsppvq0Z92osfjtE1jfhtI+EEsxCJK+f2BYAPAGuYA4cauWEeU2D?=
- =?us-ascii?Q?2exKPYZJiAijX3mP9PdIpP+1hJGEDrPuN1UfM50lXQcLOpkZBPKeq4EunmW9?=
- =?us-ascii?Q?tUUUra/ScK8RumBfuYO/cRQAd5OSqz9wTmUWdVqsRxQ/yO5qRHP6hqBvervf?=
- =?us-ascii?Q?PRAXgIMy8l6fitf6ujHn/jPkZEOiecZfqAhsa6Av+LWzCES3lr96EC0jRAsW?=
- =?us-ascii?Q?QXjUZtNcnb8Aw4kLGw3q26hQBxO2tY9uoiSc8Tb1VkbmGTYXVuHTfz0Yq0VN?=
- =?us-ascii?Q?pjUFmPIfh7vauuQ5T9cU5F+9ICeqvGlW/8IckhjnOjdMsO9VVImDvRlaimgA?=
- =?us-ascii?Q?E2o17iDdc1d9O9jnEwJ/0SXcjAZlel4DcMd3fTPMTRlmaFQHn5QY8DU07M9Y?=
- =?us-ascii?Q?t/elIDUms/iRbpT4e2r3R7OXFgDjhkCs+/J8K+zL+rDMfC4nTxe8btpBQ6ZY?=
- =?us-ascii?Q?03Pe3AGDsPPjZAMnAPnXr9+OMOPZGstWBAPptBkmmuWlQMs8mcdxaRW1+j2E?=
- =?us-ascii?Q?G1/oXI4gXphcKej3a2Lp6NTBzJf1+a+vQfaeU5TENK+Ln4aHs7nRJ7A/HL7n?=
- =?us-ascii?Q?al2GT2NGceHgmqjQTQ298/+sRq7vppOSNYLzBm5Yf8dh6KhrqqbYOR0XYAeb?=
- =?us-ascii?Q?u+WCMDNoMi8si8UFZSoo7KCP7LwQv9IFvyCtZsBLVhzCy0PlR8f6VdGmxY/7?=
- =?us-ascii?Q?xZfhfUwSiReJsma8VZp20LCplSdxPSNtt13Pde+XWePdpaMLqSQatWBJMcfq?=
- =?us-ascii?Q?pHQW+cO8TP3LLBAdcA1djwYaXlFXZuQZZMx7tMZvL3L+VGXkyYxb5pAVSAMn?=
- =?us-ascii?Q?DeMkcbHI2PX/dpm1L+mAp4FxuVohYXlofWBy44sECNzUdkAF+RoUCOAYukD1?=
- =?us-ascii?Q?a7HsNAeeLMVz0QbLX1MrQq9y2GaLtv4M//rZ/0FOoCFll9oXts2Qg6/1viau?=
- =?us-ascii?Q?NfJXi6mGo1f6XcSeAG/4D+3YG6CwOti+oFiBP0GcaXHKs06oLNGrCZKacCxK?=
- =?us-ascii?Q?4S3FGCmqTdt44M0o3GhJULf9uiL/dHURJhklCBXwVm81JO6wyTS64rSKka/W?=
- =?us-ascii?Q?xMDLz+3ouO7Va3nhI8DHOTnvuW3aK6PhU7QfbQrf7s2RSpoNKDVB7T4Dnxo0?=
-X-MS-Exchange-AntiSpam-MessageData-1: jENNtVsibWfqG7eRkBQqDJsuIooYgxJlLjs=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1230313a-be16-4660-d807-08de7a977dbb
-X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Mar 2026 09:13:40.3243
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: W0OhWFX5SD/RWpk5aXcgrN5HGGyc/b0xMzfmRBA3CzZSmLWhfA7OvS0tQThpbI8FIbyrgPwhU+/B8M07pHV1bg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR04MB7896
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <c0cb73d6-262e-4529-8b07-4c545c76015b@oss.qualcomm.com>
 
-On Thu, Mar 05, 2026 at 10:11:32AM +0100, Konrad Dybcio wrote:
-> On 3/5/26 9:51 AM, Vladimir Oltean wrote:
-> > Hello Konrad,
-> >
-> > On Thu, Mar 05, 2026 at 09:39:35AM +0100, Konrad Dybcio wrote:
-> >>> diff --git a/MAINTAINERS b/MAINTAINERS
-> >>> index 55af015174a5..bdfa47d9c774 100644
-> >>> --- a/MAINTAINERS
-> >>> +++ b/MAINTAINERS
-> >>> @@ -10713,6 +10713,7 @@ F:    Documentation/devicetree/bindings/phy/
-> >>>  F:   drivers/phy/
-> >>>  F:   include/dt-bindings/phy/
-> >>>  F:   include/linux/phy/
-> >>> +K:   \b(devm_)?(of_)?phy_(create|destroy|init|exit|reset|power_(on|off)|configure|validate|calibrate|(get|set)_(mode|media|speed|bus_width|drvdata)|get_max_link_rate|pm_runtime_(get|put)|notify_(connect|disconnect|state)|get|put|optional_get|provider_(un)?register|simple_xlate|(create|remove)_lookup)\b|(struct\s+)?phy(_ops|_attrs|_lookup|_provider)?\b|linux/phy/phy\.h|phy-props\.h|phy-provider\.h
-> >>
-> >> Would looking for the devm/of_phy_ prefix followed by an open parentheses
-> >> not suffice for the 'has function call' case, instead of listing all
-> >> currently present exported functions?
-> >
-> > This would maybe work when you run ./scripts/get_maintainer.pl on a file.
-> > But I would like it to have good coverage on individual patches too. And
-> > since the devm/of_phy prefix only matches when you "get" the PHY, not
-> > "use" it, my fear is we would still be missing out on the most important
-> > part of the patches.
+On Thu, Mar 05, 2026 at 02:30:17PM +0530, Krishna Chaitanya Chundru wrote:
 > 
-> But that's just '(devm_)?(of_)?phy_[a-z]+\(|includes.h'?
+> 
+> On 3/5/2026 1:28 PM, Manivannan Sadhasivam wrote:
+> > On Tue, Feb 17, 2026 at 04:49:10PM +0530, Krishna Chaitanya Chundru wrote:
+> > > Add support for transitioning Qcom PCIe controllers into D3cold by
+> > You cannot transition a 'PCIe controller' to D3Cold state, but only the
+> > endpoints and bridges.
+> > 
+> > > integrating with the DWC core suspend/resume helpers.
+> > > 
+> > > Implement PME_TurnOff message generation via ELBI_SYS_CTRL and hook it
+> > > into the DWC host operations so the controller follows the standard
+> > > PME_TurnOff-based power-down sequence before entering D3cold.
+> > > 
+> > > When the link is suspended into D3cold, fully tear down interconnect
+> > You cannot suspend a link into D3Cold. Link and D-State are different.
+> > 
+> > > bandwidth, OPP votes. If D3cold is not entered, retain existing behavior
+> > > by keeping the required interconnect and OPP votes.
+> > > 
+> > > Drop the qcom_pcie::suspended flag and rely on the existing
+> > > dw_pcie::suspended state, which now drives both the power-management
+> > > flow and the interconnect/OPP handling.
+> > > 
+> > > Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> > > ---
+> > >   drivers/pci/controller/dwc/pcie-qcom.c | 121 ++++++++++++++++++++-------------
+> > >   1 file changed, 74 insertions(+), 47 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> > > index b02c19bbdf2ea5db252c2a0281a569bb3a0cc497..37442bbe588c36b0b0414cc4d0016da2d8424a87 100644
+> > > --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> > > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> > > @@ -145,6 +145,7 @@
+> > [...]
+> > 
+> > > -	if (pcie->suspended) {
+> > > -		ret = qcom_pcie_host_init(&pcie->pci->pp);
+> > > -		if (ret)
+> > > -			return ret;
+> > > +		ret = icc_enable(pcie->icc_mem);
+> > > +		if (ret) {
+> > > +			dev_err(dev, "Failed to enable PCIe-MEM interconnect path: %d\n", ret);
+> > > +			goto disable_icc_cpu;
+> > > +		}
+> > > -		pcie->suspended = false;
+> > > +		/*
+> > > +		 * Ignore -ETIMEDOUT here since it is expected when no endpoint is
+> > > +		 * connected to the PCIe link.
+> > > +		 */
+> > > +		ret = dw_pcie_resume_noirq(pcie->pci);
+> > > +		if (ret && (ret != -ETIMEDOUT))
+> > No, dw_pcie_resume_noirq() was reworked to return -ETIMEDOUT to indicate a hard
+> > failure. If the device is not found, it will return -ENODEV. So you should
+> > fail the resume if -ETIMEDOUT is returned.
+> Ack, didn't noticed the reworked changes, I will change -ETIMEDOUT to
+> -ENODEV.
+> 
 
-Yeah, but what about the networking PHY API, phy_start(), phy_connect(),
-phy_inband_caps() etc?
+No, that's what not I meant. I meant, you should do:
+
+	if (ret == -ETIMEDOUT)
+		goto fail;
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
