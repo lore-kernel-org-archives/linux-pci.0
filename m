@@ -1,45 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1426123E32D;
-	Thu,  5 Mar 2026 09:31:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39506330B14;
+	Thu,  5 Mar 2026 09:34:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772703078; cv=none; b=NAH76CLU2MzH2X+TFaOSOM6gGPtqkq8ogQ5M1O6hMmLu7QP5mw4rURDTOqVvlAhKNm5FbOEnMo5sp/p27pMmEhrbCTPbA2KsgLV6B20yU1RLn6rK3iqah31XgDpVUC9XQySsWLWzpIoaj1J22i6bp6DdLtW0I8gp4+98DVkoULg=
+	t=1772703263; cv=none; b=GlbRWRfRqcBD/tlVTyqt0vW310mqhwbebUcXfIuQtl4SHWJrrISldq/s7+kqxE8ycBlzcZ1VRbwmMA1w5gHAny8jDdym0qQ/5uuhD4tdGe27SP7CpbRiwEq2ctmOlS78GBc5FJU5u7ntVaEXSyroFjGB/Sm1qSAb7qJMlP8h99Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772703078; c=relaxed/simple;
-	bh=HEvg29/Hj9lWiQ5IuwMKZXROpFEsc2gJsguQRspFvMw=;
+	s=arc-20240116; t=1772703263; c=relaxed/simple;
+	bh=o+Gt34zYsvVZNf9S0aEU6z0ayfCGUkefkXSathmQwOY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IhFfeB2o0/8zMRl3g13WHfRg+8FEfKiIM9qatagHr7OHJRsCFUxpG66T57o1cCocRs+7fqoi1i0YAUVd+9AiYqFEDD/OlTzOTWLXGE4f5r3K3/NsZP+qkix8belNB8impKPjOfVyqSUU1rgfePDodxzbUoMux8BOWYEvZ+8qOIo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PZ5gF/Mk; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=CdFv/M6oCPplfcFPTvNZcMNKeAftYyeIiLjV0rK/p8pq3CVN9CLd3VHr8NtPsCZ8qfZez9Gxdq7TiDayvRa4TnRERmW9CscJwy8nbwOtIQiLvyyF0ruycor0hqCXjE8JLngLuVilcMXb1U18UFXmVw9O88ydiAiItI4xFMSftPQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LZoqMdIe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PZ5gF/Mk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39134C116C6;
-	Thu,  5 Mar 2026 09:31:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LZoqMdIe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD47EC19423;
+	Thu,  5 Mar 2026 09:34:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772703077;
-	bh=HEvg29/Hj9lWiQ5IuwMKZXROpFEsc2gJsguQRspFvMw=;
+	s=k20201202; t=1772703262;
+	bh=o+Gt34zYsvVZNf9S0aEU6z0ayfCGUkefkXSathmQwOY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PZ5gF/MkvkgoA6lshxtVRZ50Z+62fL76tnX0snPYEzM0zWSQjJMKwNTD7pXKXgNMw
-	 wMhkjJK30V0ZnW2Wu2khrbKmMJ+4YeIPulZSYUwRPCc6b1K85kM1vqi9OVMRKXH0Vv
-	 kf4+tI5yUMBTYNftGZNsQYepg4Qujub1LRVQx8b/hLu+yOxq60SdRFc+O0sFobqJLf
-	 pRD1kd5HXXENzpyB0B+34qS8t2ZP89sSljS1VAC88rExUsS9LoYXd54g93MW4upLW4
-	 2xxOvGu3PLm14pd18ypQhYmtNvQZcVXmnfgESSQanLINdulJCkPapK3cqgWnmO3V7v
-	 aF/MGgLsrcE5A==
-Date: Thu, 5 Mar 2026 15:01:00 +0530
+	b=LZoqMdIevoJOdKFYKmLmmvsGrlJOmvo0VKoeyPYUoepG+AmtQCtsQUtfdw5O/+lex
+	 QjlohXiJRjslpf/qz+85ry7b67eXoz+KIPtStGCLhvYiK/RmWOwF33eSRLn1566JTP
+	 PnzBM0Ao7LIzhHDhah6FP43KCz7mxfxSPr0e+JHrDn4Uyzw+f/spcE0Nof3gUeyteM
+	 xDi1IGsiQbNpIgdeZEIc168xBUYLWVPnPly8FEJc4WVHJyM58PwQMwnIPQwCiJfcUV
+	 9Bsu55isc+KqwL7GXku4cMPppOCbLZEe9ETIh/HnfSmvOt9DDCA9L3lfDyfLK46cSj
+	 kBg2ueTyjKeHA==
+Date: Thu, 5 Mar 2026 15:04:08 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
-	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
-	thierry.reding@gmail.com, jonathanh@nvidia.com, kishon@kernel.org, arnd@arndb.de, 
-	gregkh@linuxfoundation.org, Frank.Li@nxp.com, den@valinux.co.jp, hongxing.zhu@nxp.com, 
-	jingoohan1@gmail.com, vidyas@nvidia.com, cassel@kernel.org, 18255117159@163.com, 
-	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 02/13] PCI: tegra194: Refactor LTSSM state polling on
- surprise down
-Message-ID: <iqnk6hzhh4sv6ilay3eii5wrcg3473l5ekenrvcwumkb2elwnc@rgtxgmeg4tfv>
-References: <20260303065448.2361488-1-mmaddireddy@nvidia.com>
- <20260303065448.2361488-3-mmaddireddy@nvidia.com>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com, 
+	bjorn.andersson@oss.qualcomm.com
+Subject: Re: [PATCH v2 5/5] PCI: qcom: Add D3cold support
+Message-ID: <5bbsp5pqj2qk5c4zaaumykks6ekvhej6zpnezud3vzf3tha3rk@fxzjbfm3jroc>
+References: <20260217-d3cold-v2-0-89b322864043@oss.qualcomm.com>
+ <20260217-d3cold-v2-5-89b322864043@oss.qualcomm.com>
+ <om6t5hlnxadpmet5i2gochjmfjw6mdfllrdbgewiz4u6vj3zot@nse5rbl3je64>
+ <c0cb73d6-262e-4529-8b07-4c545c76015b@oss.qualcomm.com>
+ <miorzejq4sxcl7pucaa7fq7fplbs7bqcnflawnw4qnvntxohmf@xyttdgbfllvy>
+ <9327c6a7-b2af-420d-bb1e-f2829ddaef7f@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,141 +52,82 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260303065448.2361488-3-mmaddireddy@nvidia.com>
+In-Reply-To: <9327c6a7-b2af-420d-bb1e-f2829ddaef7f@oss.qualcomm.com>
 
-On Tue, Mar 03, 2026 at 12:24:37PM +0530, Manikanta Maddireddy wrote:
-> From: Vidya Sagar <vidyas@nvidia.com>
+On Thu, Mar 05, 2026 at 02:55:25PM +0530, Krishna Chaitanya Chundru wrote:
 > 
-> On surprise down, LTSSM state transits from L0 -> Recovery.RcvrLock ->
-> Recovery.RcvrSpeed -> Gen1 Recovery.RcvrLock -> Detect. Recovery.RcvrLock
-> and Recovery.RcvrSpeed transit times are 24 msec and 48 msec respectively.
-> So, the total time taken to transit from L0 to detect state is ~96 msec.
-> Hence, increase the poll time to 120 msec.
 > 
-> Disable the LTSSM state after it transits to detect to avoid LTSSM
-> toggling between polling and detect states.
-> 
+> On 3/5/2026 2:44 PM, Manivannan Sadhasivam wrote:
+> > On Thu, Mar 05, 2026 at 02:30:17PM +0530, Krishna Chaitanya Chundru wrote:
+> > > 
+> > > On 3/5/2026 1:28 PM, Manivannan Sadhasivam wrote:
+> > > > On Tue, Feb 17, 2026 at 04:49:10PM +0530, Krishna Chaitanya Chundru wrote:
+> > > > > Add support for transitioning Qcom PCIe controllers into D3cold by
+> > > > You cannot transition a 'PCIe controller' to D3Cold state, but only the
+> > > > endpoints and bridges.
+> > > > 
+> > > > > integrating with the DWC core suspend/resume helpers.
+> > > > > 
+> > > > > Implement PME_TurnOff message generation via ELBI_SYS_CTRL and hook it
+> > > > > into the DWC host operations so the controller follows the standard
+> > > > > PME_TurnOff-based power-down sequence before entering D3cold.
+> > > > > 
+> > > > > When the link is suspended into D3cold, fully tear down interconnect
+> > > > You cannot suspend a link into D3Cold. Link and D-State are different.
+> > > > 
+> > > > > bandwidth, OPP votes. If D3cold is not entered, retain existing behavior
+> > > > > by keeping the required interconnect and OPP votes.
+> > > > > 
+> > > > > Drop the qcom_pcie::suspended flag and rely on the existing
+> > > > > dw_pcie::suspended state, which now drives both the power-management
+> > > > > flow and the interconnect/OPP handling.
+> > > > > 
+> > > > > Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> > > > > ---
+> > > > >    drivers/pci/controller/dwc/pcie-qcom.c | 121 ++++++++++++++++++++-------------
+> > > > >    1 file changed, 74 insertions(+), 47 deletions(-)
+> > > > > 
+> > > > > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> > > > > index b02c19bbdf2ea5db252c2a0281a569bb3a0cc497..37442bbe588c36b0b0414cc4d0016da2d8424a87 100644
+> > > > > --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> > > > > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> > > > > @@ -145,6 +145,7 @@
+> > > > [...]
+> > > > 
+> > > > > -	if (pcie->suspended) {
+> > > > > -		ret = qcom_pcie_host_init(&pcie->pci->pp);
+> > > > > -		if (ret)
+> > > > > -			return ret;
+> > > > > +		ret = icc_enable(pcie->icc_mem);
+> > > > > +		if (ret) {
+> > > > > +			dev_err(dev, "Failed to enable PCIe-MEM interconnect path: %d\n", ret);
+> > > > > +			goto disable_icc_cpu;
+> > > > > +		}
+> > > > > -		pcie->suspended = false;
+> > > > > +		/*
+> > > > > +		 * Ignore -ETIMEDOUT here since it is expected when no endpoint is
+> > > > > +		 * connected to the PCIe link.
+> > > > > +		 */
+> > > > > +		ret = dw_pcie_resume_noirq(pcie->pci);
+> > > > > +		if (ret && (ret != -ETIMEDOUT))
+> > > > No, dw_pcie_resume_noirq() was reworked to return -ETIMEDOUT to indicate a hard
+> > > > failure. If the device is not found, it will return -ENODEV. So you should
+> > > > fail the resume if -ETIMEDOUT is returned.
+> > > Ack, didn't noticed the reworked changes, I will change -ETIMEDOUT to
+> > > -ENODEV.
+> > > 
+> > No, that's what not I meant. I meant, you should do:
+> > 
+> > 	if (ret == -ETIMEDOUT)
+> > 		goto fail;
+> there can be other failures also right, where we should fail,
+> like pci->pp.ops->init(&pci->pp); can return different error other than
+> -ETIMEDOUT in that case we should fail here. - Krishna Chaitanya.
 
-These are two separate changes (increasing poll time and disabling LTSSM).
-Please split this into two patches. A patch should only fix one issue, not more.
+Hmm, I overlooked the init() callback. In that case, you should skip both
+-ENODEV and -EIO and fail resume() for other errors.
 
 - Mani
-
-> tegra_pcie_dw_pme_turnoff() function is called in non-atomic context
-> only, so use the non-atomic poll function.
-> 
-> Fixes: 56e15a238d92 ("PCI: tegra: Add Tegra194 PCIe support")
-> Reviewed-by: Jon Hunter <jonathanh@nvidia.com>
-> Tested-by: Jon Hunter <jonathanh@nvidia.com>
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> Changes V6 -> V7: Append _US to LTSSM macros
-> Changes V5 -> V6: Retain only one fixes tag
-> Changes V1 -> V5: None
-> 
->  drivers/pci/controller/dwc/pcie-tegra194.c | 55 +++++++++++++---------
->  1 file changed, 32 insertions(+), 23 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-> index d6c6bd512b51..afbc0bdd8a93 100644
-> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
-> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> @@ -137,7 +137,11 @@
->  #define APPL_DEBUG_PM_LINKST_IN_L0		0x11
->  #define APPL_DEBUG_LTSSM_STATE_MASK		GENMASK(8, 3)
->  #define APPL_DEBUG_LTSSM_STATE_SHIFT		3
-> -#define LTSSM_STATE_PRE_DETECT			5
-> +#define LTSSM_STATE_DETECT_QUIET		0x00
-> +#define LTSSM_STATE_DETECT_ACT			0x08
-> +#define LTSSM_STATE_PRE_DETECT_QUIET		0x28
-> +#define LTSSM_STATE_DETECT_WAIT			0x30
-> +#define LTSSM_STATE_L2_IDLE			0xa8
->  
->  #define APPL_RADM_STATUS			0xE4
->  #define APPL_PM_XMT_TURNOFF_STATE		BIT(0)
-> @@ -198,7 +202,8 @@
->  #define CAP_SPCIE_CAP_OFF_USP_TX_PRESET0_MASK	GENMASK(11, 8)
->  #define CAP_SPCIE_CAP_OFF_USP_TX_PRESET0_SHIFT	8
->  
-> -#define LTSSM_TIMEOUT 50000	/* 50ms */
-> +#define LTSSM_DELAY_US		10000	/* 10 ms */
-> +#define LTSSM_TIMEOUT_US	120000	/* 120 ms */
->  
->  #define GEN3_GEN4_EQ_PRESET_INIT	5
->  
-> @@ -1589,23 +1594,22 @@ static void tegra_pcie_dw_pme_turnoff(struct tegra_pcie_dw *pcie)
->  		data &= ~APPL_PINMUX_PEX_RST;
->  		appl_writel(pcie, data, APPL_PINMUX);
->  
-> +		err = readl_poll_timeout(pcie->appl_base + APPL_DEBUG, data,
-> +			((data & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_DETECT_QUIET) ||
-> +			((data & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_DETECT_ACT) ||
-> +			((data & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_PRE_DETECT_QUIET) ||
-> +			((data & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_DETECT_WAIT),
-> +			LTSSM_DELAY_US, LTSSM_TIMEOUT_US);
-> +		if (err)
-> +			dev_info(pcie->dev, "Link didn't go to detect state\n");
-> +
->  		/*
-> -		 * Some cards do not go to detect state even after de-asserting
-> -		 * PERST#. So, de-assert LTSSM to bring link to detect state.
-> +		 * Deassert LTSSM state to stop the state toggling between
-> +		 * polling and detect.
->  		 */
->  		data = readl(pcie->appl_base + APPL_CTRL);
->  		data &= ~APPL_CTRL_LTSSM_EN;
->  		writel(data, pcie->appl_base + APPL_CTRL);
-> -
-> -		err = readl_poll_timeout_atomic(pcie->appl_base + APPL_DEBUG,
-> -						data,
-> -						((data &
-> -						APPL_DEBUG_LTSSM_STATE_MASK) >>
-> -						APPL_DEBUG_LTSSM_STATE_SHIFT) ==
-> -						LTSSM_STATE_PRE_DETECT,
-> -						1, LTSSM_TIMEOUT);
-> -		if (err)
-> -			dev_info(pcie->dev, "Link didn't go to detect state\n");
->  	}
->  	/*
->  	 * DBI registers may not be accessible after this as PLL-E would be
-> @@ -1679,19 +1683,24 @@ static void pex_ep_event_pex_rst_assert(struct tegra_pcie_dw *pcie)
->  	if (pcie->ep_state == EP_STATE_DISABLED)
->  		return;
->  
-> -	/* Disable LTSSM */
-> +	ret = readl_poll_timeout(pcie->appl_base + APPL_DEBUG, val,
-> +		((val & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_DETECT_QUIET) ||
-> +		((val & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_DETECT_ACT) ||
-> +		((val & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_PRE_DETECT_QUIET) ||
-> +		((val & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_DETECT_WAIT) ||
-> +		((val & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_L2_IDLE),
-> +		LTSSM_DELAY_US, LTSSM_TIMEOUT_US);
-> +	if (ret)
-> +		dev_err(pcie->dev, "LTSSM state: 0x%x timeout: %d\n", val, ret);
-> +
-> +	/*
-> +	 * Deassert LTSSM state to stop the state toggling between
-> +	 * polling and detect.
-> +	 */
->  	val = appl_readl(pcie, APPL_CTRL);
->  	val &= ~APPL_CTRL_LTSSM_EN;
->  	appl_writel(pcie, val, APPL_CTRL);
->  
-> -	ret = readl_poll_timeout(pcie->appl_base + APPL_DEBUG, val,
-> -				 ((val & APPL_DEBUG_LTSSM_STATE_MASK) >>
-> -				 APPL_DEBUG_LTSSM_STATE_SHIFT) ==
-> -				 LTSSM_STATE_PRE_DETECT,
-> -				 1, LTSSM_TIMEOUT);
-> -	if (ret)
-> -		dev_err(pcie->dev, "Failed to go Detect state: %d\n", ret);
-> -
->  	reset_control_assert(pcie->core_rst);
->  
->  	tegra_pcie_disable_phy(pcie);
-> -- 
-> 2.34.1
-> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
