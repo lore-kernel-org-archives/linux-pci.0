@@ -1,266 +1,152 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013015.outbound.protection.outlook.com [40.93.201.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EDF733A9C4;
-	Thu,  5 Mar 2026 23:39:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772753944; cv=none; b=B9lTmJuG0E6ik2TR1SaXnuZLuEDK0MV2yBK47nTQYGjdeC5cLPmllA7w760IdrxW5WEhcCpOvPMjYE+EM03Z0QRfIsUDH6ZDgxC27LMbGwK5t/rBu5mXk6L1uxM5e1Kl2Ej+L3ZlVaPu0wGGyCVsEUTlP0UwrA9Wzs+wF3g0NLY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772753944; c=relaxed/simple;
-	bh=aT4WhbE8Nrb6sC1xx+3iJ7Azv5WPxuLbZVGaI//+MyE=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=qYa6cduga1AAqynePFJfhZNnexWMR+xcSjNJvNb9CSzwPFDjHKq5hwF1KZKNpvkWsMjdHMlRRo/FOiTO8JAJNLE4Q6ZkuTwKBFWoXDbkVj6UWYGtaDmX2VjjEXIFzFQO8MR1kuFV2N3avMHTBaY9PIkAxW8OhD4bLDERTzypvpA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mqonaUMm; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2487536920B;
+	Thu,  5 Mar 2026 23:42:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.15
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772754126; cv=fail; b=k2vGFj42hbp01ceqCA17ALfolbHjsVJJj+Ae1jL4MZJhouLy2kZAdU/YwAQHgIOU+2MWepNsaDbnmaNz9F2Wo64/SZd1rtFwW3Hit6W5+evyzYVKj6HcXVgE1cCuziMztJQhfUsL+y4XgDvq8dU19Q10xI98gNFi0aG3t5jfB5s=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772754126; c=relaxed/simple;
+	bh=4LhD7h9za4VdGznaZ1saIkiVOV/l3LpRak0K0hBBv3M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=ASIkMJHaelnrO/Oq6Gds/RAJNqLyPGHQrZfgZag/PB/X013Rw8fkAXA3bunNYhaSJDHBtc1pXavrcFoHRM75QqqaT5N8r+8AWRq65O1KbnsUrE3nBiioT4T2IdRp9Zq+XQub/xeAWEqG6DudHOhN3JJCz2rMuqy+Tdrx9HEB5Ms=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=hWPFdqb1; arc=fail smtp.client-ip=40.93.201.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mqonaUMm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8300C116C6;
-	Thu,  5 Mar 2026 23:39:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772753944;
-	bh=aT4WhbE8Nrb6sC1xx+3iJ7Azv5WPxuLbZVGaI//+MyE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=mqonaUMm8yiy/hoVyQK0VWbgVgZD1rEPEkfkWO7HCKURlFQVjyx8BKYkP6qITunbN
-	 Bo6RjKvlAyrQwak/spxeuKaslaSHJV1OY/746R7ngrJKJWJ/937xZ5Ul0/Sq5fOsvR
-	 vAPnu/5n1Q5ksjOaIgMm/Ixm5Yiorqic9+XZcvlsA+7r3kK94XBLTmmDO4oYICpxGs
-	 KY2oo85ixxQ5dybGO33Zx7C+KlEUKrBrFGQQI6YVVKW57muzmHbrAal81nieRiBUkA
-	 ylbe2O3akk6+zpf4O9jNOkpwkbTZRU/EXOpumaUW8+Wwk0dCJHnhxwT2P6/AintuzV
-	 wve+mzYqi/mSw==
-Date: Thu, 5 Mar 2026 17:39:02 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
-Cc: Jinhui Guo <guojinhui.liam@bytedance.com>,
-	Keith Busch <kbusch@kernel.org>,
-	"Anthony Pighin (Nokia)" <anthony.pighin@nokia.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/1] PCI: Consolidate
- pci_bus/slot_lock/unlock/trylock()
-Message-ID: <20260305233902.GA80310@bhelgaas>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="hWPFdqb1"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=w5C5EPS/YJjcVq/11NaSuv1iP/HhllemT1aee9K9joWf6lv+KLIab55jYUCz40jT1XHecidMXu++QUlGP62bld/bVSIlARjDzGAbxDR/Rwerx8njal614JmfoIEqwB2b/iQeIVZ7L0nicwVkJLS3nbbcbz3jVkMeHl4yeyUKuMtgCfkBkA2jsj+ZDepeafmTevt9djVJDPrWQ4nOKYIg+a8gE0832ZaKP7mOcuJZP9vAuM4KY4bwMJyc7QbkjabUC2diKNjWx8gmHS7dBPb/7eIeVV/DGrGKwwy9gTaSEYdIGaIZrLzigreUIJMv55p97Ooy88ir6NTG0IUJim05+A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=whjQqNRb+By/48CNSv1PNH+IajT5oROh7oF0ehwZexM=;
+ b=lE0qoHdwUbvncFdjT5nv59FiHDXgkrGi8DtRPYb+PYHG4PvzI0VONIADLp+X1D4EhKnw6rYzNZ0b109jj9QxyBzVxsFIVXU2cFFhy2hiNjep27N1ayC16Rby2Zlp+c3DGnVRvVoZXyQKKZdg1GTflcj7YXd99AwZDHrhA9JLmftVXcq9z+ttvRXhXuHUcnm80OC2d/EuDn6yzZh+gqvH7SPfbsYIWD5UbGUHXx45oqBsTDWUS/WSR36W1PhSa0Ieow0jiFFaPFpkHUtUuCtOZsFgM3ippGaq4rWpIWVOuEoc/BaIWBPt+8i1x6S8pScWLqju1xOTFOw2/znbhUk83g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=whjQqNRb+By/48CNSv1PNH+IajT5oROh7oF0ehwZexM=;
+ b=hWPFdqb1V44SLKcobpV0J0vOdjj24gJ8G5MvvY0LbsZnEJKWLbk1gVja2BInVrefghWcK2KVTS8SvhdgpBp9QY1+8iQyFNPIfl3TPwTn5KihqeRrNW4/uDhKTGIZDTMjo7agQJXtDs6zaV9EoV6F4OP30q6XD6uT1swNZKFr1lt/ew+CmWmCDiNY1C5oBl9Det19REASBf5rsl7x0wTRcrjMul6jpEdTaPiEcVmUQPBIYApc4xktyMhd4LZbfTg+07SonucnkaDsXIfJg9PTJBsRs+wQzv9/IZJGtBHKGrK0ttjUowSuSpxg3arP9GGOAebbXEsmYkMlO6oYdH4Pug==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by DM4PR12MB5745.namprd12.prod.outlook.com (2603:10b6:8:5c::7) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9654.22; Thu, 5 Mar 2026 23:41:59 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%5]) with mapi id 15.20.9654.022; Thu, 5 Mar 2026
+ 23:41:59 +0000
+Date: Thu, 5 Mar 2026 19:41:58 -0400
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Nicolin Chen <nicolinc@nvidia.com>
+Cc: will@kernel.org, robin.murphy@arm.com, joro@8bytes.org,
+	bhelgaas@google.com, rafael@kernel.org, lenb@kernel.org,
+	praan@google.com, kees@kernel.org, baolu.lu@linux.intel.com,
+	smostafa@google.com, Alexander.Grest@microsoft.com,
+	kevin.tian@intel.com, miko.lenczewski@arm.com,
+	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, vsethi@nvidia.com
+Subject: Re: [PATCH v1 2/2] iommu/arm-smmu-v3: Recover ATC invalidate timeouts
+Message-ID: <20260305234158.GB1651202@nvidia.com>
+References: <cover.1772686998.git.nicolinc@nvidia.com>
+ <ca7ab934bf0f433b62a5c15d42241632c4cb9366.1772686998.git.nicolinc@nvidia.com>
+ <20260305153911.GT972761@nvidia.com>
+ <aanygWWZLA1htDdQ@Asurada-Nvidia>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aanygWWZLA1htDdQ@Asurada-Nvidia>
+X-ClientProxiedBy: BLAPR03CA0021.namprd03.prod.outlook.com
+ (2603:10b6:208:32b::26) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260304122139.1479-1-ilpo.jarvinen@linux.intel.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|DM4PR12MB5745:EE_
+X-MS-Office365-Filtering-Correlation-Id: c80bbce9-692d-4662-f467-08de7b10cb4d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016|376014|7416014;
+X-Microsoft-Antispam-Message-Info:
+	GRkjcwTGX3nEmlnzU9mDPQIwPVpsK5iic/eeb6UC9FdhY4BwltDNSEMXwFHPEet/iXu5ZR4+ZkZX4V/wGFbBIOZP7UFtacCynxPxoJALLKDQztt4Adf1IwAs73Iok7VxIeH5cUjqJreKzedv2ymegVy8qQYmjB8mDBie+QO/C7J+c6MektmW9rk8cMOa2vgo1CkFsMXIYdMOIZ3TZ7gO136SvWhvjLiaf2vKHttZkVZQAHT0hHQBot65rIniIHDrFlL4Ijtn0V9xRBl4u+lqMnbINjC2L1zg+lZieARiPrvwdGz9AOqIrAFzm2l65UICBxT/VgsIAPFtV33FFvsfj81wjBRKq1xZFyA3TiE0AayUHaeF1y5zygRaEK+CWIUK7+cjgjxnYRASu6IHhrna2wG8Or4bgTsRvUY1UUsXPMhmBtkHdXDsUMIA/usK8yN/J98itd51AqvE0cNhXuuC7n6mkq29SPRN2mFkSTwK556rNAMDGul2NPE1hE7m5Fsi4eKwNxV9D+0Bje3UsSDm3M1UUbr7F+xzRu3VhE8xOaFXJDLl6pIvj3zEN0J9gP0704GV1SdyNje82KndxRjpwt1DRipIizuZjz05Y7cTUOzhy/fYh2SbqOI9AdpjPfgCqbD8HK0XzNLhP+oPRkCQxrySdde+x208PpMuI0l2MFMxvu5Pet2zHthJHcuozGGlmLRyDs1zLbKJSbIw0Vjd1YVkrOVVtJjvmgYvUZLGaR0=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(7416014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?lI45jSG510VPWJVzeBQfYj12nUdeOAroLiGt9YF3a7oHH4LY31JhRmgJ8HE8?=
+ =?us-ascii?Q?5Bs23IZ2ERAibh4hGXq7a3NFlaIQVY4pHDl7GMEaGPcgtLWIXJYZgNLDQPjE?=
+ =?us-ascii?Q?Ge2B8HJjGcckq3TYyfueUnO4dUgTJR7T2Er6A7S3NOFniSXfdgnxxuFR4trT?=
+ =?us-ascii?Q?ul9Zs4DnmGn+9xEUGq/GUCDn4fB8aGHH0ZgMnIu0uUFv8VW5jYq9LBPH48ib?=
+ =?us-ascii?Q?aB5z7tZ/zbuz+J25w/5/Yr+Hv+iY+iaddYOOR7leeZhpg2856wWcaoIVXNr6?=
+ =?us-ascii?Q?6j2JnsXRfHNEzKVZ9mwPn1xtkXC5mkoolWWsMuaeHHw/8jsvxXJwcrHJ3HOW?=
+ =?us-ascii?Q?WrcnTTYFndfK5T1O6/cGeAerXjg0iMeDUBC9uWO5bpK4KBCPUQ+RVjFqKF8m?=
+ =?us-ascii?Q?ACVpXzAl2wgbekcIKcCxL/ejSbtX1JA5xPoO2yM+Eihw+G+fMt8+6Eu1GgKl?=
+ =?us-ascii?Q?iqUzl4OUFc20h6rUa79roHaiR1ZmzxEf9r/tu8NfTXUl6x5CRXB1yoYOyKKT?=
+ =?us-ascii?Q?DeAMxgGTeQrEyhTIM3MU2/gxRWs/Y78YNk8OuSHlGYNocM9RbgQ3KIiEH985?=
+ =?us-ascii?Q?wF7x7aFhzzXBZoxztcIUGpA40OTaEJl7dTyp2FnhpV/d0H8pOm9T4YcpnMfS?=
+ =?us-ascii?Q?ELB/W8ssVLqlvIMy+LKdNAXi0EUBxVBQEf3soQ1yAPvx7mRm9bXi+fs3i7T1?=
+ =?us-ascii?Q?3lah0wISis5iUgNNvQteREUbDcMOqAz+RAsDR90N+CFpSdCbHKKGubBwFTaR?=
+ =?us-ascii?Q?xhbqfTsj/zomyrWWwfYbTG7hs56CG7/aAXxQ0MSpp9uVOp++pI2M+Z/n6DDf?=
+ =?us-ascii?Q?ZumPzc8BHBHZIxAqJttGyHMx0db7JKK6tRXTZ4D3ywsQhuiUv0zrQGgsoPoh?=
+ =?us-ascii?Q?iyWmDiAxHOl3xY0qTh0i6TIW42mJjAHQ8VMKUZ7koICdq8mT4aUFaLljQ+NE?=
+ =?us-ascii?Q?kODi8UEd4y1FIZgNDwlHZgS5xOq135hqxhtFXuaERYkpdFJXY+qxYTh2EQOY?=
+ =?us-ascii?Q?z9D/aDLh7iIrpQIAaEvizKJBPbxEqmPlOw3jdkqJ/MYt0eiaGBmIg8yfPYUc?=
+ =?us-ascii?Q?O6wjXOM/rUIF19UUzOUFkBVwOBXWdtDgTkOSmv3b0swBYQC2/seA15R9jhFV?=
+ =?us-ascii?Q?aJcQun81mkWbIJSbUE29gemqXpzDzY7ENnEDHaRCtaCCiWLmcazLglIfgLca?=
+ =?us-ascii?Q?v8ZpCuEQWNABCHecRbor6/2q8enXiistFsiBxlTxA3x58B7rtfFAAg8R41Q+?=
+ =?us-ascii?Q?Wqd84Un1bwH+m4YmUDjezZ8tJjgfEimD272R0ZTbnCxAyLrxwPTCUXBUPXgs?=
+ =?us-ascii?Q?2GVBye88TbX60InhEZVUbxNpKaC1YizNAEXQ/35tIHz9p8tBiexeIYzglTbf?=
+ =?us-ascii?Q?HrV6Zxskap05uG7QbU9rH/FRnEJJvgIbesZ5K6wAOL4fdzUoNoYzeW9F8+xE?=
+ =?us-ascii?Q?8O4iZ7yv/FoYNHqDyZBUxUgmv3L8dKhnsbNn4g5VRPAPsgdRHDQxXf07Tpx6?=
+ =?us-ascii?Q?xQpbk1L+yfVCoDw4uryvLgmc+0ScVvE7+r/Vsu+SpCBatMrjtmr60iDEMvAY?=
+ =?us-ascii?Q?aLsvD4nTkwdqwadi+L1grMbrVsN5zvwM+Ya27XkA9RzcXBWtpVeFliMQFZzT?=
+ =?us-ascii?Q?5CB3k8cL4hvjvgUJ0DSP8pCDoBjVckYLXbhw/8f3T5T6SHYJSuyR9St9nNEr?=
+ =?us-ascii?Q?KgF/xZfNgJJkX6PDRrNLFspxrLpqHQqUlGYMMMaGl9W6BNKMU7C2ea6LK1Vh?=
+ =?us-ascii?Q?OYphLOQN6Q=3D=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c80bbce9-692d-4662-f467-08de7b10cb4d
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Mar 2026 23:41:59.5365
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: SJf0A3DjmcuS33WmwqSTZ8xEY9cTqnxDFuaVy/7/k9jdpaebqF7fI/at2DLuJauD
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB5745
 
-On Wed, Mar 04, 2026 at 02:21:38PM +0200, Ilpo Järvinen wrote:
-> pci_bus/slot_lock/unlock/trylock() largely duplicate the bus iteration
-> loop with variation only due to slot filter handling. The only
-> differences in the loops is where the struct bus is found (directly in
-> the argument vs in slot->bus) and whether slot filter is applied. Those
-> difference are simple to handle using function parameters.
-> 
-> Consolidate the bus iteration loop to one place by creating
-> __pci_bus_{lock,unlock,trylock}() and call them from the non-underscore
-> locking functions.
-> 
-> Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+On Thu, Mar 05, 2026 at 01:15:45PM -0800, Nicolin Chen wrote:
 
-Applied to pci/reset for v7.1, thanks, Ilpo.
+> You mean in arm_smmu_cmdq_issue_cmdlist() that issued the timed
+> out ATC command?
 
-> ---
+Yes, it was my off hand thought.
+
+> So my test case was to trigger a device fault followed by an ATC
+> command. But, I found that the ATC command submission returned 0
+> while only the ISR received:
+>     CMDQ error (cons 0x03000003): ATC invalidate timeout
+>     arm_smmu_debugfs_atc_write: ATC_INV ret=0
 > 
-> v2:
-> - Rebased
-> - Fixed rollback path dereferencing slot->bus (changed to use the bus
->   parameter directly as slot can be NULL)
-> 
->  drivers/pci/pci.c | 115 ++++++++++++++++++++--------------------------
->  1 file changed, 49 insertions(+), 66 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8479c2e1f74f..c248224e0861 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5292,13 +5292,21 @@ static bool pci_bus_resettable(struct pci_bus *bus)
->  	return true;
->  }
->  
-> +static void pci_bus_lock(struct pci_bus *bus);
-> +static void pci_bus_unlock(struct pci_bus *bus);
-> +static int pci_bus_trylock(struct pci_bus *bus);
-> +
->  /* Lock devices from the top of the tree down */
-> -static void pci_bus_lock(struct pci_bus *bus)
-> +static void __pci_bus_lock(struct pci_bus *bus, struct pci_slot *slot)
->  {
-> -	struct pci_dev *dev;
-> +	struct pci_dev *dev, *bridge = bus->self;
-> +
-> +	if (bridge)
-> +		pci_dev_lock(bridge);
->  
-> -	pci_dev_lock(bus->self);
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> +		if (slot && (!dev->slot || dev->slot != slot))
-> +			continue;
->  		if (dev->subordinate)
->  			pci_bus_lock(dev->subordinate);
->  		else
-> @@ -5307,28 +5315,34 @@ static void pci_bus_lock(struct pci_bus *bus)
->  }
->  
->  /* Unlock devices from the bottom of the tree up */
-> -static void pci_bus_unlock(struct pci_bus *bus)
-> +static void __pci_bus_unlock(struct pci_bus *bus, struct pci_slot *slot)
->  {
-> -	struct pci_dev *dev;
-> +	struct pci_dev *dev, *bridge = bus->self;
->  
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> +		if (slot && (!dev->slot || dev->slot != slot))
-> +			continue;
->  		if (dev->subordinate)
->  			pci_bus_unlock(dev->subordinate);
->  		else
->  			pci_dev_unlock(dev);
->  	}
-> -	pci_dev_unlock(bus->self);
-> +
-> +	if (bridge)
-> +		pci_dev_unlock(bridge);
->  }
->  
->  /* Return 1 on successful lock, 0 on contention */
-> -static int pci_bus_trylock(struct pci_bus *bus)
-> +static int __pci_bus_trylock(struct pci_bus *bus, struct pci_slot *slot)
->  {
-> -	struct pci_dev *dev;
-> +	struct pci_dev *dev, *bridge = bus->self;
->  
-> -	if (!pci_dev_trylock(bus->self))
-> +	if (bridge && !pci_dev_trylock(bridge))
->  		return 0;
->  
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> +		if (slot && (!dev->slot || dev->slot != slot))
-> +			continue;
->  		if (dev->subordinate) {
->  			if (!pci_bus_trylock(dev->subordinate))
->  				goto unlock;
-> @@ -5339,15 +5353,37 @@ static int pci_bus_trylock(struct pci_bus *bus)
->  
->  unlock:
->  	list_for_each_entry_continue_reverse(dev, &bus->devices, bus_list) {
-> +		if (slot && (!dev->slot || dev->slot != slot))
-> +			continue;
->  		if (dev->subordinate)
->  			pci_bus_unlock(dev->subordinate);
->  		else
->  			pci_dev_unlock(dev);
->  	}
-> -	pci_dev_unlock(bus->self);
-> +
-> +	if (bridge)
-> +		pci_dev_unlock(bridge);
->  	return 0;
->  }
->  
-> +/* Lock devices from the top of the tree down */
-> +static void pci_bus_lock(struct pci_bus *bus)
-> +{
-> +	__pci_bus_lock(bus, NULL);
-> +}
-> +
-> +/* Unlock devices from the bottom of the tree up */
-> +static void pci_bus_unlock(struct pci_bus *bus)
-> +{
-> +	__pci_bus_unlock(bus, NULL);
-> +}
-> +
-> +/* Return 1 on successful lock, 0 on contention */
-> +static int pci_bus_trylock(struct pci_bus *bus)
-> +{
-> +	return __pci_bus_trylock(bus, NULL);
-> +}
-> +
->  /* Do any devices on or below this slot prevent a bus reset? */
->  static bool pci_slot_resettable(struct pci_slot *slot)
->  {
-> @@ -5370,72 +5406,19 @@ static bool pci_slot_resettable(struct pci_slot *slot)
->  /* Lock devices from the top of the tree down */
->  static void pci_slot_lock(struct pci_slot *slot)
->  {
-> -	struct pci_dev *dev, *bridge = slot->bus->self;
-> -
-> -	if (bridge)
-> -		pci_dev_lock(bridge);
-> -
-> -	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
-> -		if (!dev->slot || dev->slot != slot)
-> -			continue;
-> -		if (dev->subordinate)
-> -			pci_bus_lock(dev->subordinate);
-> -		else
-> -			pci_dev_lock(dev);
-> -	}
-> +	__pci_bus_lock(slot->bus, slot);
->  }
->  
->  /* Unlock devices from the bottom of the tree up */
->  static void pci_slot_unlock(struct pci_slot *slot)
->  {
-> -	struct pci_dev *dev, *bridge = slot->bus->self;
-> -
-> -	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
-> -		if (!dev->slot || dev->slot != slot)
-> -			continue;
-> -		if (dev->subordinate)
-> -			pci_bus_unlock(dev->subordinate);
-> -		else
-> -			pci_dev_unlock(dev);
-> -	}
-> -
-> -	if (bridge)
-> -		pci_dev_unlock(bridge);
-> +	__pci_bus_unlock(slot->bus, slot);
->  }
->  
->  /* Return 1 on successful lock, 0 on contention */
->  static int pci_slot_trylock(struct pci_slot *slot)
->  {
-> -	struct pci_dev *dev, *bridge = slot->bus->self;
-> -
-> -	if (bridge && !pci_dev_trylock(bridge))
-> -		return 0;
-> -
-> -	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
-> -		if (!dev->slot || dev->slot != slot)
-> -			continue;
-> -		if (dev->subordinate) {
-> -			if (!pci_bus_trylock(dev->subordinate))
-> -				goto unlock;
-> -		} else if (!pci_dev_trylock(dev))
-> -			goto unlock;
-> -	}
-> -	return 1;
-> -
-> -unlock:
-> -	list_for_each_entry_continue_reverse(dev,
-> -					     &slot->bus->devices, bus_list) {
-> -		if (!dev->slot || dev->slot != slot)
-> -			continue;
-> -		if (dev->subordinate)
-> -			pci_bus_unlock(dev->subordinate);
-> -		else
-> -			pci_dev_unlock(dev);
-> -	}
-> -
-> -	if (bridge)
-> -		pci_dev_unlock(bridge);
-> -	return 0;
-> +	return __pci_bus_trylock(slot->bus, slot);
->  }
->  
->  /*
-> 
-> base-commit: 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f
-> -- 
-> 2.39.5
-> 
+> It seems difficult to insert a CMDQ_OP_CFGI_STE in the submission
+> thread?
+
+I didn't look, but I thought the CMDQ stops on the ATC invalidation,
+flags the error and the ISR NOP's the failing CMDQ entry and restarts
+it to resume the thread? Is that something else?
+
+If so you could insert the STE flush instead of a NOP
+
+Otherwise the arm_smmu_cmdq_issue_cmdlist() can just push another CMD
+to the queue and sync, it is obviously in a context that can do that.
+
+Jason
