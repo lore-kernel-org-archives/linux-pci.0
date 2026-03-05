@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19B034A35;
-	Thu,  5 Mar 2026 07:43:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A54C32AAA8;
+	Thu,  5 Mar 2026 07:46:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772696589; cv=none; b=BKmiL9Ty7XExjmGR9gzoihaR6/o4G5MdJ9GQvz9+/MclPc8LcoC9p66rwpyQfqQlwILZhGIWG69CpKw45SvLb/GV5qRJeNmHCPFD0DF8iwIjHIlQat63M0nYfDghhG9L7Lf73eKUfVhFxknI8n9JV+Ms5nvSVp8G1Fkfxx+RL2k=
+	t=1772696816; cv=none; b=Cg1DEnoclfpy70x+tuAQ3DTq7w7K2aSH6J7UM9QdVBQz8TtbnnPKdNBHIpdVUtXEMhW12pVK+qI9LcY0HIB3Wl9RUiSqScfAExH7auV/1rwYW1uVFosE2nxEX9LEOaevs/jV1yLubiHwufLGUIJwssWKOwW8/g4XtgIyA7ugnas=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772696589; c=relaxed/simple;
-	bh=Q4hR08jwk8NYDY7pDYXXyrQ+TK/dbIOE1VyLlysisSI=;
+	s=arc-20240116; t=1772696816; c=relaxed/simple;
+	bh=NaRIJK+9E3Xt1qmxieZYZj0jw25dQ/vq0Tp6eNlWHz4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uu38Oun7rTh7fdO903g0hJaM4w3R5dpGO+EOJdxqf5mbmLshgwnDfHn+D3JC69DyAhoe6LnUDlN0jiiMs9DjZI5s79AKLGn0QcXxpYs8LrFU04m3FQZvMWcAlgfyd/enBg/3CsxYswo4LAo/34SGgJQBhUnNP3W6rTv0s2ewVcs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lIzvDUAD; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=H83ihp7ewQG3oJxnQOPFLLGKw0btYgbLTBGdML739/AvgWNuSRQSarDx99HxIcoULQMfLirUctDYszKfGIga1smpNFqKAo+G/aJzihm0oGh/D+heyBgIVpap1s8ua+60ek8cRJH83OR93dQNpr3MyP+TTw3IABpn7tEU4bUwRPw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HGPXzrEs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lIzvDUAD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1253C116C6;
-	Thu,  5 Mar 2026 07:43:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HGPXzrEs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 777D2C116C6;
+	Thu,  5 Mar 2026 07:46:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772696588;
-	bh=Q4hR08jwk8NYDY7pDYXXyrQ+TK/dbIOE1VyLlysisSI=;
+	s=k20201202; t=1772696815;
+	bh=NaRIJK+9E3Xt1qmxieZYZj0jw25dQ/vq0Tp6eNlWHz4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=lIzvDUADoi0KCGyPVVuICFuXDFQEedvvlub8sDezUZrhBcsWFbq8vMpqckKgJvz+j
-	 zaxMxIfvYbmFvhLEANJ1hqA844JfUV094ICsdl6COHyjksvnYZNCSAsk3xqodhO+FD
-	 nJBN2ab+67h8qBDirUbXPIlb/fT/WJmme2S7gu2V3j0RbHQKKu+2LJT+f7wvoXmnHl
-	 645NFwdMhlPACKWsy+QJPfr0PoRQELmZKd5NnwUZ7iXlSgM4eWWKsoE76fpNroMSwD
-	 OhuklWjz2pLYBg7QsgFUHhsafcsfQ606ypYOG2kf2/gzkXhh/rS0kafYpYNkbqSsQS
-	 u26XVC7SkvTxw==
-Date: Thu, 5 Mar 2026 13:12:54 +0530
+	b=HGPXzrEsSpxrCo30Nx3IkTPqMVPG4L2EGfnCeG91xBWKkBlmEosbSNuMBKw8cXhTD
+	 fLxONRS7c8tDbFsFAxJsollNcDydST836ln6TQCJ0e/OvaDQRg9ydytTP/TFAWNiPq
+	 K+mE4FJoM7TVoMcVcy2u+fxmsmF1bRKvEwRgzSsQONC9Ci4qNoQQ8+ma9vRI6vv6Rx
+	 lLsotgReTWa9g+2XXXaJBhe8Y6NS+vOb9XHiQ6D8Q7Fw/udP/ou3CmIOv9S341Ma+/
+	 Ydaa6TxF1lm1j0PM3JD69wWwbFz4w/HfVirnmuWQFWoGps7iZL/K0aM2HPy095paos
+	 1Pfbo/obSe+gA==
+Date: Thu, 5 Mar 2026 13:16:41 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 Cc: Jingoo Han <jingoohan1@gmail.com>, 
@@ -35,11 +35,10 @@ Cc: Jingoo Han <jingoohan1@gmail.com>,
 	Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
 	linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com, 
 	bjorn.andersson@oss.qualcomm.com
-Subject: Re: [PATCH v2 1/5] PCI: host-common: Add helper to determine host
- bridge D3cold eligibility
-Message-ID: <3fnnuxwpvpk6abtjtlp74synz3fk4cbobub27aqvtdytdx4wtd@gknztr4cwalg>
+Subject: Re: [PATCH v2 3/5] PCI: qcom: Add .get_ltssm() helper
+Message-ID: <tesrw4icg2gnlxqfgigondqet4okvm3eokuw5phl3e5ozzzwxj@ktbka4nxsluc>
 References: <20260217-d3cold-v2-0-89b322864043@oss.qualcomm.com>
- <20260217-d3cold-v2-1-89b322864043@oss.qualcomm.com>
+ <20260217-d3cold-v2-3-89b322864043@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,109 +48,47 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260217-d3cold-v2-1-89b322864043@oss.qualcomm.com>
+In-Reply-To: <20260217-d3cold-v2-3-89b322864043@oss.qualcomm.com>
 
-On Tue, Feb 17, 2026 at 04:49:06PM +0530, Krishna Chaitanya Chundru wrote:
-> Add a common helper, pci_host_common_can_enter_d3cold(), to determine
-> whether a PCI host bridge can safely transition to D3cold.
+On Tue, Feb 17, 2026 at 04:49:08PM +0530, Krishna Chaitanya Chundru wrote:
+> For older targets like sc7280, we see reading DBI after sending PME
+> turn off message is causing NOC error.
 > 
-> This helper is intended to be used by PCI host controller drivers to
-> decide whether they may safely put the host bridge into D3cold based on
-> the power state and wakeup capabilities of downstream endpoints.
+> To avoid unsafe DBI accesses, introduce qcom_pcie_get_ltssm(), which
+> retrieves the LTSSM state from the PARF_LTSSM register instead.
 > 
-> The helper walks all devices on the bridge's primary bus and only allows
-> the host bridge to enter D3cold if all PCIe endpoints are already in
-> PCI_D3hot. This ensures that we do not power off the host bridge while
-> any active endpoint still requires the link to remain powered.
-> 
-> For devices that may wake the system, the helper additionally requires
-> that the device supports PME wake from D3cold (via WAKE#). Devices that
-> do not have wakeup enabled are not restricted by this check and do not
-> block the host bridge from entering D3cold.
-> 
-> Devices without a bound driver and with PCI not enabled via sysfs are
-> treated as inactive and therefore do not prevent the host bridge from
-> entering D3cold. This allows controllers to power down more aggressively
-> when there are no actively managed endpoints.
-> 
+
+You completely missed describing the helper here and where it is used.
+
 > Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 > ---
->  drivers/pci/controller/pci-host-common.c | 45 ++++++++++++++++++++++++++++++++
->  drivers/pci/controller/pci-host-common.h |  2 ++
->  2 files changed, 47 insertions(+)
+>  drivers/pci/controller/dwc/pcie-qcom.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
 > 
-> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
-> index d6258c1cffe5ec480fd2a7e50b3af39ef6ac4c8c..b0a4a3c995e80e0245657f0273a349334071013c 100644
-> --- a/drivers/pci/controller/pci-host-common.c
-> +++ b/drivers/pci/controller/pci-host-common.c
-> @@ -106,5 +106,50 @@ void pci_host_common_remove(struct platform_device *pdev)
->  }
->  EXPORT_SYMBOL_GPL(pci_host_common_remove);
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index 67a16af69ddc75fca1b123e70715e692a91a9135..2c4dc7134e006d3530a809f1bcc1a6488d4632ad 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -131,6 +131,7 @@
 >  
-> +static int pci_host_common_check_d3cold(struct pci_dev *pdev, void *userdata)
+>  /* PARF_LTSSM register fields */
+>  #define LTSSM_EN				BIT(8)
+> +#define PARF_LTSSM_STATE_MASK			GENMASK(5, 0)
+>  
+>  /* PARF_NO_SNOOP_OVERRIDE register fields */
+>  #define WR_NO_SNOOP_OVERRIDE_EN			BIT(1)
+> @@ -1255,6 +1256,15 @@ static bool qcom_pcie_link_up(struct dw_pcie *pci)
+>  	return val & PCI_EXP_LNKSTA_DLLLA;
+>  }
+>  
+> +static enum dw_pcie_ltssm qcom_pcie_get_ltssm(struct dw_pcie *pci)
 > +{
-> +	bool *d3cold_allow = userdata;
-
-d3cold_possible
-
+> +	struct qcom_pcie *pcie = to_qcom_pcie(pci);
+> +	u32 val;
 > +
-> +	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ENDPOINT)
-> +		return 0;
-> +
-> +	if (!pdev->dev.driver && !pci_is_enabled(pdev))
-> +		return 0;
-> +
-> +	if (pdev->current_state != PCI_D3hot)
-> +		goto exit;
-> +
-> +	if (device_may_wakeup(&pdev->dev) && !pci_pme_capable(pdev, PCI_D3cold))
-> +		goto exit;
-> +
-> +	return 0;
+> +	val = readl(pcie->parf + PARF_LTSSM);
 
 Newline
-
-> +exit:
-> +	*d3cold_allow = false;
-
-Newline
-
-> +	return -EBUSY;
-
-I think -EOPNOTSUPP should be returned here.
-
-> +}
-> +
-> +/**
-> + * pci_host_common_can_enter_d3cold - Determine whether a host bridge may enter D3cold
-
-Since PCI core already has pci_bridge_d3_possible() API, we should try to be in
-sync by calling this API as pci_host_common_d3cold_possible().
-
-> + * @bridge: PCI host bridge to check
-> + *
-> + * Walk downstream PCIe endpoint devices and determine whether the host bridge
-> + * is permitted to transition to D3cold.
-> + *
-> + * The host bridge may enter D3cold only if all active PCIe endpoints are in
-
-s/may/can
-
-> + * %PCI_D3hot and any wakeup-enabled endpoint is capable of generating PME from
-
-Remove %
-
-> + * D3cold. Inactive endpoints are ignored.
-> + *
-> + * Return: %true if the host bridge may enter D3cold, otherwise %false.
-> + */
-> +bool pci_host_common_can_enter_d3cold(struct pci_host_bridge *bridge)
-> +{
-> +	bool d3cold_allow = true;
-> +
-> +	pci_walk_bus(bridge->bus, pci_host_common_check_d3cold, &d3cold_allow);
-
-s/pci_host_common_check_d3cold/__pci_host_common_d3cold_possible
 
 - Mani
 
