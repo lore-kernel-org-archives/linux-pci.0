@@ -1,171 +1,157 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mail-m10155.netease.com (mail-m10155.netease.com [154.81.10.155])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 000F630CDBC;
-	Fri,  6 Mar 2026 17:14:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B18323D7E3;
+	Fri,  6 Mar 2026 17:26:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=154.81.10.155
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772817257; cv=none; b=SNeyvvz4TgtjPALvfBrBfMN2KBZu4DXenZal6uNoND0rFjWz3OILF9pqo7TVW4u4LTnIr1bvR+D2071UJI4CX1InC+Px0Q+iXbUcCNCdQWREx85P0ubwiCi0KYA2bNWP5yMiAc01Hl0kB+5uJM+xGH4uWiXMFo6AVwYca8+HpGk=
+	t=1772818021; cv=none; b=fC822mDnPJNcQlhoTM8osGoVRrsm8iSFrqUTcKZgiozINTkDXYUrcLuW6bjPMmvIC6+qi9HPdTfvzbrwHu0sttKBJBhVg4KR/wYPgCAu/Ybw9u04j4Bld7xG8BEDs3TlKHYXyfxTRaDH4+TlqEShlGivW6FkTrUxN64h9jYgD2k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772817257; c=relaxed/simple;
-	bh=LjSRyZhNm78EnpUVpklUgncTMdoJK/vj6Mpy4u1yUik=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=o4UY+gUua5Mj4Ria/Z/OX0iMyChReFAe69nk3mLbj/Tt9zitTayTyQy1nw7J49eKdDUDCkOffDcfi4eDPzuxTyC0O2FgiZ9gFHYnnkLbdM7CvnABx1PMy+vyF707ma7tGqD5cSsI7wIRfM5rHYgLDRuMZcmpatbzElrjhJ/HXxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=XVibHAV6; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1772818021; c=relaxed/simple;
+	bh=B9M5uCBl1KLhO43b2Y327KOuBcVGuNtqFbchQTgBDtM=;
+	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=mNhIgmesVeWN8bLE7YuKvnXkKcpDZ8oFbo17+h4uFrQMsY8T5tZsFLXzc7lxQ4QIo+rlcKv+0lYP2l1Cn5A+t22xKseJlWG7iAu3C4clDN2eAnvcYU59abT+ZL3pRazuPtJ/giZn4+bZS6v30kTReslIIrm+T561W48BR+3mH5g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=F5PZv8gN; arc=none smtp.client-ip=154.81.10.155
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="XVibHAV6"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6267t4bo2198741;
-	Fri, 6 Mar 2026 17:14:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=C6EyTk
-	VwPmKS+xTPkBWPf3/Z0hLqIMl/7s/QH96q8QQ=; b=XVibHAV6TUj6EQT+jhzTFR
-	CBcuMII+4ICBPul32kUmXDpLb7rx63iHuJd+SWSdxClOBcLxyc/89bUG6rDbD1+r
-	1sN5NN9t4AQh6DhhN2aguw+qMzAhn3bLIW2R00arbXsBtdl29WUAWMPEpJhNLdie
-	PwjsqrBYKSYmuuP+w1DoOayq9nSaC7G7rzhYN8IHevP3af1tE4zs/J+ATPwAUWpt
-	29XEApWyRSgcYchU63OXhDlvQ8EaMl5TRPS68atv5jdlpXu3JbMKB2wE0/v0wetG
-	h5Awekn52D7jvpDbiHiYTiY7h6HlMCE3KIGK+6dC9rJqE30cKlzq8S8VvLrfNN6w
-	==
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cksjdsm6c-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 06 Mar 2026 17:14:10 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 626GTVFf003266;
-	Fri, 6 Mar 2026 17:14:09 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4cmb2ygvma-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 06 Mar 2026 17:14:09 +0000
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 626HE5AN46268758
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 6 Mar 2026 17:14:05 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 0F2122004D;
-	Fri,  6 Mar 2026 17:14:05 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id D936E2004F;
-	Fri,  6 Mar 2026 17:14:04 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.87.85.9])
-	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Fri,  6 Mar 2026 17:14:04 +0000 (GMT)
-From: Gerd Bayer <gbayer@linux.ibm.com>
-Date: Fri, 06 Mar 2026 18:13:58 +0100
-Subject: [PATCH v3 1/2] PCI: AtomicOps: Define valid root port capabilities
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="F5PZv8gN"
+Received: from [172.16.12.14] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 360a7ed70;
+	Sat, 7 Mar 2026 00:11:08 +0800 (GMT+08:00)
+Cc: shawn.lin@rock-chips.com, robh@kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Cheng Xin <chengqin1525@126.com>,
+ lpieralisi@kernel.org, jingoohan1@gmail.com, kwilczynski@kernel.org,
+ bhelgaas@google.com, mani@kernel.org
+Subject: Re: [PATCH] PCI: dwc: Add PCIe event counters for groups 5 to 7 in
+ DWC debugfs
+To: Hans Zhang <18255117159@163.com>
+References: <20260306150754.41746-1-18255117159@163.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <a07f2bf8-6c91-e89f-d07b-721e6f10805c@rock-chips.com>
+Date: Sat, 7 Mar 2026 00:11:06 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260306-fix_pciatops-v3-1-99d12bcafb19@linux.ibm.com>
-References: <20260306-fix_pciatops-v3-0-99d12bcafb19@linux.ibm.com>
-In-Reply-To: <20260306-fix_pciatops-v3-0-99d12bcafb19@linux.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jay Cornwall <Jay.Cornwall@amd.com>,
-        Felix Kuehling <Felix.Kuehling@amd.com>
-Cc: Leon Romanovsky <leon@kernel.org>,
-        Niklas Schnelle <schnelle@linux.ibm.com>,
-        Alexander Schmidt <alexs@linux.ibm.com>, linux-s390@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
-        Gerd Bayer <gbayer@linux.ibm.com>
-X-Mailer: b4 0.14.2
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Authority-Analysis: v=2.4 cv=M9BA6iws c=1 sm=1 tr=0 ts=69ab0b62 cx=c_pps
- a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VwQbUJbxAAAA:8
- a=VnNF1IyMAAAA:8 a=8GgRulezAQhDBDp5LV8A:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: LoB0NE7ebOYJgEMSDJ21VLelw4onBN7B
-X-Proofpoint-GUID: LRfCEYBGKcouF1OWMR60rAad_9AdpzFS
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA2MDE2MiBTYWx0ZWRfX03LphA00eAi7
- dFG3Xd8/YlUFD+MfJu7VwotAFhujoN3tD+Bxo6rzwVshWfHmPGu1Lq92CINjm2odp1/ajuieyrP
- 1l1j+9f6NBqINJSlL1XuUej42oVuii93pGhfEKtGP7CXDnB4wCisP/uWOoGRUM6sZTNKmmpX9Eu
- /wDrO919wavwomJWSOKiWFm8oHz4mSeLcd8t4PDzeddAsMLIdy5jbObt4s+57FmneWqZIwV7D8Z
- 3m6X69ycdtNxZBUqI7P2ZS9m2/slUnUNsGv4G5u+pW65MNN1+lm6j726v80ZRZOmXzKaM//r6VD
- 22TEr3zB/b6S2DkjETGDzvU89/wIF/FAqvBTqC+YbdeE60WyYRCw+jEmX9d+shSia3WW+14UB8k
- HHZxl5JXtfVGs0t6uTqm8KUwccqDRPRit2E9RVQ9V0lxD2s69H8HCRIz5tG31/c/5M044uuSzix
- shJYGD0RUjC8vv37Rhw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-06_05,2026-03-06_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1011 priorityscore=1501 spamscore=0 adultscore=0 malwarescore=0
- bulkscore=0 lowpriorityscore=0 impostorscore=0 phishscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603060162
+In-Reply-To: <20260306150754.41746-1-18255117159@163.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9cc3eac46809cckunm0f93ce74144eb8d
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGkJDQ1ZNHx9PSU5JH0xCGUNWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=F5PZv8gNTDMjZCKX4vSQDyz8xU3dI4grkU8uWiQ/8UgNI8JA+uD5dkjG5gXhVjLSCboySJJN4IRn0FzCY2ubAMoMZAzYNj9jAaZ68b0sNQ9wuwr9uizvqdYRoGA0EjHDW4lF4b+HOJxGwV+sksAF0ePnW7Q9tlFb9dCbpitfTCY=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=hJiWJ8Vdvw44FSdcQBf/hz/zfP4GQr2RJizw/2T7UXc=;
+	h=date:mime-version:subject:message-id:from;
 
-Provide the two combinations of Atomic Op Completion size attributes
-that a root port may support per PCIe Spec 7.0 section 6.15.3.1. -
-besides the trivial "No support" - as two new defines.
+在 2026/03/06 星期五 23:07, Hans Zhang 写道:
+> Extend the DesignWare PCIe controller's debugfs statistical counter
+> interface with event definitions from groups 5 through 7 as documented
+> in the DWC PCIe Databook (version 3.30a, section 3.8.2.3, Tables 3-59,
+> 3-60, 3-61). These counters provide visibility into Layer1 non-error
+> events (link state transitions,ASPM, L1 substates), Layer2 DLLP
+> exchanges, and Layer3 TLP transactions.
+> 
+> The counters are exposed under the debugfs statistical counter directory,
+> allowing users to monitor link behavior and diagnose PCIe protocol issues
+> more effectively.
+> 
+> Co-developed-by: Cheng Xin <chengqin1525@126.com>
+> Signed-off-by: Cheng Xin <chengqin1525@126.com>
+> Signed-off-by: Hans Zhang <18255117159@163.com>
+> ---
+> Thank you, Cheng Xin, for providing the 3.30a version of the DWC PCIe Data Book.
+> ---
+>   .../controller/dwc/pcie-designware-debugfs.c  | 52 ++++++++++++++++++-
+>   1 file changed, 51 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-debugfs.c b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+> index 0d1340c9b364..2efddb21b2b2 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+> @@ -131,13 +131,16 @@ static const u32 err_inj_type_mask[] = {
+>    *				   supported in DWC RAS DES
+>    * @name: Name of the error counter
+>    * @group_no: Group number that the event belongs to. The value can range
+> - *	      from 0 to 4
+> + *	      from 0 to 7
+>    * @event_no: Event number of the particular event. The value ranges are:
+>    *		Group 0: 0 - 10
+>    *		Group 1: 5 - 13
+>    *		Group 2: 0 - 7
+>    *		Group 3: 0 - 5
+>    *		Group 4: 0 - 1
+> + *		Group 5: 0 - 13
+> + *		Group 6: 0 - 6
+> + *		Group 7: 0 - 25
+>    */
+>   struct dwc_pcie_event_counter {
+>   	const char *name;
+> @@ -181,6 +184,53 @@ static const struct dwc_pcie_event_counter event_list[] = {
+>   	{"completion_timeout", 0x3, 0x5},
+>   	{"ebuf_skp_add", 0x4, 0x0},
+>   	{"ebuf_skp_del", 0x4, 0x1},
+> +	{"l0_to_recovery_entry", 0x5, 0x0},
+> +	{"l1_to_recovery_entry", 0x5, 0x1},
+> +	{"tx_l0s_entry", 0x5, 0x2},
+> +	{"rx_l0s_entry", 0x5, 0x3},
+> +	{"aspm_l1_reject", 0x5, 0x4},
+> +	{"l1_entry", 0x5, 0x5},
+> +	{"l1_cpm", 0x5, 0x6},
+> +	{"l1.1_entry", 0x5, 0x7},
+> +	{"l1.2_entry", 0x5, 0x8},
+> +	{"l1_short_duration", 0x5, 0x9},
+> +	{"l1.2_abort", 0x5, 0xa},
+> +	{"l2_entry", 0x5, 0xb},
+> +	{"speed_change", 0x5, 0xc},
+> +	{"link_width_change", 0x5, 0xd},
+> +	{"tx_ack_dllp", 0x6, 0x0},
+> +	{"tx_update_fc_dllp", 0x6, 0x1},
+> +	{"rx_ack_dllp", 0x6, 0x2},
+> +	{"rx_update_fc_dllp", 0x6, 0x3},
+> +	{"rx_nullified_tlp", 0x6, 0x4},
+> +	{"tx_nullified_tlp", 0x6, 0x5},
+> +	{"rx_duplicate_tlp", 0x6, 0x6},
+> +	{"tx_memory_write", 0x7, 0x0},
+> +	{"tx_memory_read", 0x7, 0x1},
+> +	{"tx_configuration_write", 0x7, 0x2},
+> +	{"tx_configuration_read", 0x7, 0x3},
+> +	{"tx_io_write", 0x7, 0x4},
+> +	{"tx_io_read", 0x7, 0x5},
+> +	{"tx_completion_without_data", 0x7, 0x6},
+> +	{"tx_completion_w_data", 0x7, 0x7},
+> +	{"tx_message_tlp_pcie_vc_only", 0x7, 0x8},
+> +	{"tx_atomic", 0x7, 0x9},
+> +	{"tx_tlp_with_prefix", 0x7, 0xa},
+> +	{"rx_memory_write", 0x7, 0xb},
+> +	{"rx_memory_read", 0x7, 0xc},
+> +	{"rx_configuration_write", 0x7, 0xd},
+> +	{"rx_configuration_read", 0x7, 0xe},
+> +	{"rx_io_write", 0x7, 0xf},
+> +	{"rx_io_read", 0x7, 0x10},
+> +	{"rx_completion_without_data", 0x7, 0x11},
+> +	{"rx_completion_w_data", 0x7, 0x12},
+> +	{"rx_message_tlp_pcie_vc_only", 0x7, 0x13},
+> +	{"rx_atomic", 0x7, 0x14},
+> +	{"rx_tlp_with_prefix", 0x7, 0x15},
 
-Change documentation of pci_enable_atomic_ops_to_root() that these are
-the only ones that should be used. Also, spell out that all requested
-capabilities need to be supported at the root port for enable to
-succeed. Also emphasize that on success, this sets AtomicOpsCtl:ReqEn to
-1, and leaves it untouched in case of failure.
+Hmm, 5.10a/5.60a databooks only list the first 21 events for Group 7,
+It's rather counterintuitive, perhaps it would make sense that debug 
+signals should keep adding more. Other parts look good to me.
 
-Suggested-by: Leon Romanovsky <leon@kernel.org>
-Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
----
- drivers/pci/pci.c             | 13 +++++++------
- include/uapi/linux/pci_regs.h |  8 ++++++++
- 2 files changed, 15 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 8479c2e1f74f1044416281aba11bf071ea89488a..cc8abe6b1d07661488895876dbbcf8aaeadf4a17 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3663,15 +3663,16 @@ void pci_acs_init(struct pci_dev *dev)
- /**
-  * pci_enable_atomic_ops_to_root - enable AtomicOp requests to root port
-  * @dev: the PCI device
-- * @cap_mask: mask of desired AtomicOp sizes, including one or more of:
-- *	PCI_EXP_DEVCAP2_ATOMIC_COMP32
-- *	PCI_EXP_DEVCAP2_ATOMIC_COMP64
-- *	PCI_EXP_DEVCAP2_ATOMIC_COMP128
-+ * @cap_mask: root port must support combinations of AtomicOp sizes
-+ *	PCI_EXP_ROOT_PORT_ATOMIC_BASE
-+ *	PCI_EXP_ROOT_PORT_ATOMIC_FULL
-  *
-  * Return 0 if all upstream bridges support AtomicOp routing, egress
-  * blocking is disabled on all upstream ports, and the root port supports
-- * the requested completion capabilities (32-bit, 64-bit and/or 128-bit
-- * AtomicOp completion), or negative otherwise.
-+ * all the requested completion capabilities (BASE: 32-bit, 64-bit or
-+ * FULL: 32/64- and 128-bit AtomicOp completion). In that case enable the
-+ * device to send AtomicOp requests. Otherwise, return negative and leave
-+ * the enablement in the PCI config space untouched.
-  */
- int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
- {
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 14f634ab9350d5442192162225b5e5202dbe2308..63ac62b882a94c6873a0db433ba808332ddbea04 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -669,6 +669,14 @@
- #define  PCI_EXP_DEVCAP2_ATOMIC_COMP32	0x00000080 /* 32b AtomicOp completion */
- #define  PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* 64b AtomicOp completion */
- #define  PCI_EXP_DEVCAP2_ATOMIC_COMP128	0x00000200 /* 128b AtomicOp completion */
-+/* PCIe spec 7.0 6.15.3.1: Root ports may support one of 2 sets of Atomic Ops */
-+#define  PCI_EXP_ROOT_PORT_ATOMIC_BASE		\
-+	(PCI_EXP_DEVCAP2_ATOMIC_COMP32 |	\
-+	 PCI_EXP_DEVCAP2_ATOMIC_COMP64)
-+#define  PCI_EXP_ROOT_PORT_ATOMIC_FULL		\
-+	(PCI_EXP_DEVCAP2_ATOMIC_COMP32 |	\
-+	 PCI_EXP_DEVCAP2_ATOMIC_COMP64 |	\
-+	 PCI_EXP_DEVCAP2_ATOMIC_COMP128)
- #define  PCI_EXP_DEVCAP2_LTR		0x00000800 /* Latency tolerance reporting */
- #define  PCI_EXP_DEVCAP2_TPH_COMP_MASK	0x00003000 /* TPH completer support */
- #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
-
--- 
-2.51.0
-
+> +	{"tx_ccix_tlp", 0x7, 0x16},
+> +	{"rx_ccix_tlp", 0x7, 0x17},
+> +	{"tx_deferrable_memory_write_tlp", 0x7, 0x18},
+> +	{"rx_deferrable_memory_write_tlp", 0x7, 0x19},
+>   };
+>   
+>   static ssize_t lane_detect_read(struct file *file, char __user *buf,
+> 
