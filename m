@@ -1,24 +1,24 @@
 Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 05ABD3BD635;
-	Fri,  6 Mar 2026 14:36:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B03B83BED61;
+	Fri,  6 Mar 2026 14:36:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772807772; cv=none; b=NezKWmvScuZFZ6jhZvvprJjjqHNS5NNe4eL+2YZDdLtPQelhCxBBdXoY9c49/qplGHVA4Zc+TGQ4CrvjZudrhDUbxJQA84Pka5F7R/u+LfRtj1LQGhxUaKXXJQKor8Ixe7ls2d4+XivNDrmtREWxG8+sMn3kgi5QBdcDlFh1nyU=
+	t=1772807778; cv=none; b=Pjaaj+G8xBufBjcYHHOQjfMd5R3YhiasmCkQAhymiN31WueC5LCnhM2sJzYwDTa+1jruIeuM7ujKw4ecGjNKXM+kKmSAJOSGaqlJI3F/+R6pmXNLOv5jcXk0h7UC4SEkUPaJRqu2BUtxlcS5xXdFNojp8PNwxUN3KHuISOZTLSs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772807772; c=relaxed/simple;
-	bh=+uJoX/tIUxEUNT/weJZBHnFoBwec8+n8wiTV5vOv22U=;
+	s=arc-20240116; t=1772807778; c=relaxed/simple;
+	bh=j0/484orcT3nUiY+Ux5hE6lApiz+tiWSJFIdf8uiYAA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=G95v0IID0IOrES2P/3pI49euXC6jEVTSvS4PC4LnNnu6BwK8ubqpMdCeHX4g8Rs+KRPstRKxKJPZVLhFA1sDC8D9NIs3nCUEnCAf+q7KcwOzkyyXnag86IY74+Py+MLhScD3GvFTHcLhgdUTWGrhQQhyl+BLn1MFD+c0w8sU37Q=
+	 MIME-Version; b=Ja8T5Ocdms6qNHMMXnV1cZFMRLrKzu7ypfypVLYdvU6i6ql6DJledUuGHN8IeDpUZdaNWlV+jPwKiHMZfPWggV88Ex3qxmrszCUB6slkZO2xWoiNcgtbExkKXB77aS2EiYhHJn3wtNDs8tazL/5d4QeGg6IPVCOzP76kvzehjwQ=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
-X-CSE-ConnectionGUID: 4h3FYMCERI+Ty2yM9gQ4Hw==
-X-CSE-MsgGUID: HEJPJ70aSyCeD/Vi2gzjRA==
+X-CSE-ConnectionGUID: NWYdBZq/ScyCvKbs/v/SZg==
+X-CSE-MsgGUID: FRsgOZEZTdis4Op1HHAJnQ==
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie6.idc.renesas.com with ESMTP; 06 Mar 2026 23:36:09 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 06 Mar 2026 23:36:15 +0900
 Received: from ubuntu.adwin.renesas.com (unknown [10.226.92.98])
-	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 918074009F91;
-	Fri,  6 Mar 2026 23:36:03 +0900 (JST)
+	by relmlir5.idc.renesas.com (Postfix) with ESMTP id C995C4008546;
+	Fri,  6 Mar 2026 23:36:09 +0900 (JST)
 From: John Madieu <john.madieu.xa@bp.renesas.com>
 To: claudiu.beznea.uj@bp.renesas.com,
 	lpieralisi@kernel.org,
@@ -37,9 +37,9 @@ Cc: robh@kernel.org,
 	linux-clk@vger.kernel.org,
 	john.madieu@gmail.com,
 	John Madieu <john.madieu.xa@bp.renesas.com>
-Subject: [PATCH v8 14/15] arm64: dts: renesas: r9a09g047e57-smarc-som: Add PCIe reference clock
-Date: Fri,  6 Mar 2026 15:34:21 +0100
-Message-ID: <20260306143423.19562-15-john.madieu.xa@bp.renesas.com>
+Subject: [PATCH v8 15/15] arm64: dts: renesas: r9a09g047e57-smarc: Enable PCIe
+Date: Fri,  6 Mar 2026 15:34:22 +0100
+Message-ID: <20260306143423.19562-16-john.madieu.xa@bp.renesas.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260306143423.19562-1-john.madieu.xa@bp.renesas.com>
 References: <20260306143423.19562-1-john.madieu.xa@bp.renesas.com>
@@ -51,8 +51,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The RZ/G3E SMARC SoM has a fixed 100 MHz reference clock generator
-for PCIe. Model it as a fixed-clock and assign it to the PCIe port.
+The RZ Smarc Crarrier-II board has PCIe slots mounted on it.
+Enable PCIe support.
 
 Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
 ---
@@ -64,41 +64,67 @@ v7: No changes
 v6: No changes
 v5: No changes
 v4: No changes
-v3: No changes
-v2: No changes
 
- arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+v3:
+ - Splitted enablement into common carrier dtsi and board dts
 
-diff --git a/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
-index eb0de21d6716..7e2345bb9918 100644
---- a/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
-+++ b/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
-@@ -43,6 +43,12 @@ memory@48000000 {
- 		reg = <0x0 0x48000000 0x0 0xf8000000>;
- 	};
- 
-+	pcie_refclk: clock-pcie-ref {
-+		compatible = "fixed-clock";
-+		#clock-cells = <0>;
-+		clock-frequency = <100000000>;
-+	};
-+
- 	reg_1p8v: regulator-1p8v {
- 		compatible = "regulator-fixed";
- 		regulator-name = "fixed-1.8V";
-@@ -168,6 +174,11 @@ phy1: ethernet-phy@7 {
- 	};
+v2:
+ - Removed board-specific dma-ranges.
+ - Merged enablement and pinmux assignment in same file
+
+ .../boot/dts/renesas/r9a09g047e57-smarc.dts      | 16 ++++++++++++++++
+ arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi  |  4 ++++
+ 2 files changed, 20 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+index 696903dc7a63..1ba50512f4ef 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+@@ -122,6 +122,11 @@ key-sleep {
+ #endif
  };
  
-+&pcie_port0 {
-+	clocks = <&pcie_refclk>;
-+	clock-names = "ref";
++&pcie {
++	pinctrl-0 = <&pcie_pins>;
++	pinctrl-names = "default";
 +};
 +
  &pinctrl {
- 	eth0_pins: eth0 {
- 		clk {
+ 	canfd_pins: canfd {
+ 		can1_pins: can1 {
+@@ -167,6 +172,17 @@ rsci9_pins: rsci9 {
+ 		bias-pull-up;
+ 	};
+ 
++	pcie-clkreq-n {
++		gpio-hog;
++		gpios = <RZG3E_GPIO(4, 5) GPIO_ACTIVE_HIGH>;
++		output-low;
++		line-name = "pcie_clkreq_n";
++	};
++
++	pcie_pins: pcie {
++		pinmux = <RZG3E_PORT_PINMUX(G, 7, 1)>; /* PCIE_RST_OUT# */
++	};
++
+ 	scif_pins: scif {
+ 		pins = "SCIF_TXD", "SCIF_RXD";
+ 		renesas,output-impedance = <1>;
+diff --git a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
+index b607b5d6c259..e2a34577a1a1 100644
+--- a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
++++ b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
+@@ -96,6 +96,10 @@ &i2c0 {
+ 	clock-frequency = <400000>;
+ };
+ 
++&pcie {
++	status = "okay";
++};
++
+ &scif0 {
+ 	status = "okay";
+ };
 -- 
 2.25.1
 
