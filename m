@@ -1,193 +1,369 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010048.outbound.protection.outlook.com [52.101.201.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 607EE1D7995
-	for <linux-pci@vger.kernel.org>; Fri,  6 Mar 2026 10:31:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772793119; cv=none; b=Vw4wko6eltf13UobqyfYwsslu10KC0+DO0AAK8JrPttZt2iwHV7iCs0Tny0Fv1Nd0EWAQu2nAjX0Z6CgDtj3UubjgepvrirsrfGNZmUoNMrs4MHbShdJYvxqvq7rf/AEWp79geHWSiHIQXqYW2IRvXyPbqLKfsNLN+SVScLW3TY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772793119; c=relaxed/simple;
-	bh=uTR4/2BKw2dnFBh64MYHRVSt1FcY/0VygD9aHUzgiCk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XhvVP0oIzK+uzjIaWtsvvNM1B5+RjQQPGhuKFz28fA3xxGHk2ugjkL0scE55mmcZYHy1lgbGEb2Nrm1X07D/m3Qsrvp7YVgM/RUz88BPRr/u72puf/XlKizkYhEBJnlTdnmLdbpCUG52KbKnY/R42DLaaqyZu0U7MHWjRcH+Pnk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ID5KbRuv; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=QNIBF20+; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92806364054;
+	Fri,  6 Mar 2026 11:50:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.48
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772797844; cv=fail; b=EX0HtZFUUouJLfQJ7npXL+BNbt9zBQjT+oBGijjLAHxb8K9KdzxJPHhOnY6J8ByqPKaEIPYQUf/VgmEkXmZi5JUi1zftVYLbGXzD10rvLWZiyDmoeWMYMTl9YES6nohhKC6UUdY5sh3TWULXQkAXsEFs1sSMdwYz9SrWLMUWafA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772797844; c=relaxed/simple;
+	bh=nGsIQG3DY0/PKVO8bc/phoa3Q7BqXrTsBBS3T9/0TsE=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=tVe8FisvPkiR/32T83qSg9Sr9Rd2zBEBe5/POVf5RFMPETh3FQmzu20gBeLysQVcZctW43zi8prlQWCLcoP1ygRq5j6z/pVZKLoBS76GWpoIqN/0jC4e3IS1VvJ5cKjjjFdgOa7sYQrEFlHO0/Fr6tp4iJWW3a+rSUcyDBVhu+I=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=BptM9lLR; arc=fail smtp.client-ip=52.101.201.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ID5KbRuv";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="QNIBF20+"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6264afH31087507
-	for <linux-pci@vger.kernel.org>; Fri, 6 Mar 2026 10:31:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	v9kq8Rwj6Nj70RxlwjNL/YWOuGNBkH4XA9hyPzQZwSg=; b=ID5KbRuvUC1SoizJ
-	umuQ0puANJIk5HMtDv7fekJ4BBl2DaXH40Orl6y+Zc0Zt6unBEzS3YDVNPCk0em1
-	ZCyb2z11eHx3gM57wK2rbdoQc1hV4VEJI/uibL0Z+ZoeNM1y/Rq2Zu8OdhJfowEO
-	qBLW4VB4SM2SXULUEOzaff6DAzMYjDqw8nTjaeibkWWnI65mVKplnQByNEtk3Tio
-	X1NSyZEyLHPI8WvoD08QMNerJp1Zh6xwlbIRGY2CdVW99xDgjYu8oa+SFrpkS02X
-	slfB5qWOYr86Zf3pS2eo7iOFXo6ZeF3lvtRXRb5UEuAiIEem2guRfQpcXtiCkrmE
-	NMcyZA==
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cqfg6as5r-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 06 Mar 2026 10:31:56 +0000 (GMT)
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-c503d6be76fso33748618a12.0
-        for <linux-pci@vger.kernel.org>; Fri, 06 Mar 2026 02:31:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1772793116; x=1773397916; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=v9kq8Rwj6Nj70RxlwjNL/YWOuGNBkH4XA9hyPzQZwSg=;
-        b=QNIBF20+KDOXLwBF5uk5a5etR8QaS8ZCRtYPQlSQ6aulqmdjjtyIEAkkpYt0A/tH5+
-         e4BQCXz2mRyGb5QFNKDokYg3st7NTC/qnVno5L9OO/YuDZKP8yPm4ll5jPoNlgOSUSK3
-         EKtR+K03X8+lDHwm93B50rPG8/gGICqXr2t/83eEEVGMoC+RUEg5BvQ2D7Q2AyyRiboY
-         hvdwyol8adCtmekm6p4Lo1CsEFX8/3wSrVsm6mmUSXmaCtbny8zkAngWsAJfBoVCP8ZD
-         i5JLJUUHQ6+BTiLyOEMx+lBFCBvkCo38V5mL4Q/8NYCi1lSSFND4iigBrBGRPeX1Q1Kz
-         QQNw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772793116; x=1773397916;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=v9kq8Rwj6Nj70RxlwjNL/YWOuGNBkH4XA9hyPzQZwSg=;
-        b=h7ndIyjnjHOG8OnEVpDP//0tVhAquQT/Kb13byjbdMT6E4/hCy3yV6j6eugszYU1Yu
-         UzQal2f9uc8QeJfCEFPAPZ7KbZ0+9DIRcqiCIERJSxZWddj2FTrW0fvTr7jLu1cDj1pT
-         E4180w78HisqdZmn5PTygGtaPZreqohl6XPWmNy6a/GlmVI3DlHwS8OYRAqdxlJ7Tnb/
-         Q16cObGsluWgJhqpK0AE77v7zah8Ym70y0dN1xXgypBruoKV84pZq/WJwSYB5lOqpT5H
-         cWd5aAx5ah1pqXrFKHTvMgaYJL2UEXzyn3/kREOyAOJ0ZhvShwRC3BxOamxa42dQ3VHq
-         LURA==
-X-Forwarded-Encrypted: i=1; AJvYcCWoPHIkWZt/wRnnOviT8bzDo3nmCjz4ZTW7RNvwCHQpzB27tiucPT/yVPddiyMuml5XEqpN7EC3OyU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwxDxls1Y3uQQtM8BUMo7o14YiXr4mR4BGbXVAvXlDfeFx1Bz67
-	zt2iVotPUro7dvEl4xoRBoanB/K4Fc8S2NxDB84zTIaKwcikGqbsY69Dtpbtwh/4Vxf7dHouWC8
-	ihjl1vecu3/3+RqoMmaQXr7BPe8zXEtK2d7E1AJAoj0g8KFyxPPhRbidtqO9j2BE=
-X-Gm-Gg: ATEYQzzNBDa1/vORl2yHHXdBpfW+tpbaH1omgRWiEAjHMFi4vJtIgAz92r1G7pgraMD
-	Hjh7s6RLtA6xe2kAVoK6P52spzwNa7Q8IgSGFmCXr/q9rABt5XAXykOOqCmk9nr6C3G2aiy4B0A
-	1q1amgz2kc3DEyyeERpriy0/fLuXItlO49cQpw8qeYoVxOulS+tsLc0tLKqQ8jg+JHGSMgUiJUU
-	b5GSkYGSCotTNvd+TB+F1sdrWZFzTA2RG/yo9oe6ALardRPheol7xrNVyQZEju3VAwJWGnRo0qN
-	eifDdXghJMxbhSSg3r0YwgFdD0vEFMMYSHanfBzNmcH7AJ2i6iMbnx8wVMZT9qK0/PEvl9MxmQ2
-	H3gUKkmfbeWYd3cZHs6RmWm1/mSVT5yAlhYjEIo3bOUyf+6nSbOI77w==
-X-Received: by 2002:a05:6a21:2d44:b0:398:4b6a:90cc with SMTP id adf61e73a8af0-398590df8bcmr1886662637.70.1772793115760;
-        Fri, 06 Mar 2026 02:31:55 -0800 (PST)
-X-Received: by 2002:a05:6a21:2d44:b0:398:4b6a:90cc with SMTP id adf61e73a8af0-398590df8bcmr1886632637.70.1772793115260;
-        Fri, 06 Mar 2026 02:31:55 -0800 (PST)
-Received: from [10.218.35.45] ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-829a48dfc17sm1726877b3a.64.2026.03.06.02.31.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 06 Mar 2026 02:31:54 -0800 (PST)
-Message-ID: <aa97748a-cf72-464c-98f6-11d792551aba@oss.qualcomm.com>
-Date: Fri, 6 Mar 2026 16:01:48 +0530
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="BptM9lLR"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=kwXVdQ4k8ZdUDN44xjlkoK/NSJJuZzFABJpzxhyS+JogB6hvUeemFL337nGKB4SU18KrH4JG3svxl7aKv4u54kyo58bwK6FisSu1Lws8AA10NeQmsksXP76Os+D1hddcDbGJKUmD4mCLxIZFSgK2kK+dbEZDcRNzbBNHfpOLWnYLI2OSwWvzBiODqw/c3IiBecHWvVvZkE6L7dw1whACRYpNfb0RKh8Pzp16MCYq2eB7X0HLyrxvuwj/S8FJ6S1OZZQDfG3W6OJGpy7LdmlkvxF2FSVBIU8m5Q2+OOjSbpGdju7z7fDCE79zuy6HNi5hXljcO4pMCLH7yB/RLOKMXw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=empbgVo91/W3M0cw29MC2kIY/8WVWqFzOR0aki5y3tI=;
+ b=J9H+jdMvlB6H4vuRgIviQDuRhaKBGqVXFHxmvy9BffOk2c9Zu5OMH0K08LwurOwUqACGEpi5u91VXFlXF3K0gOslrXJJGzTGwGx5p5av8JQ5UJIEzLEaB8vlEk6KWlo8HQAeoPeGn4bvIqzR5GFX9/NK2gIL1BqgY80nLF4q4QSLmK8eSWw7lI9lVEH2Ciq6SsTxFKUdbePT1LsGIwdQm/rIRDUQmv3advo9Nf3YP1NYCB5t8USR+AcN0SQR1GE0Rj8hwC9wig0LpvBH7v2busrIMPyHj6DwiDf8BvXsLpjY17EdShblCyI5iKROcShvD1LPG2cDrz4Jef4/sLRT1Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=empbgVo91/W3M0cw29MC2kIY/8WVWqFzOR0aki5y3tI=;
+ b=BptM9lLRuz3Lh5zI+vn/O0bkDuE9L3a2kOXOQWxmRpXEu763afFrqY3Zk3RV8U4WiFEx2qjagvd+mbhlowTKlECTZa3x7goYEBCRPSwkj+WjCiDeTK/upcLH1X6HAdOaUnD1oeRcgOjv3BKxDUjK4XMA/HckMgNqX/fdGAaEKKk=
+Received: from SA1PR12MB8120.namprd12.prod.outlook.com (2603:10b6:806:331::16)
+ by SJ2PR12MB8941.namprd12.prod.outlook.com (2603:10b6:a03:542::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.5; Fri, 6 Mar
+ 2026 11:50:39 +0000
+Received: from SA1PR12MB8120.namprd12.prod.outlook.com
+ ([fe80::2fd:1a4e:2042:7dd3]) by SA1PR12MB8120.namprd12.prod.outlook.com
+ ([fe80::2fd:1a4e:2042:7dd3%5]) with mapi id 15.20.9678.017; Fri, 6 Mar 2026
+ 11:50:39 +0000
+From: "Verma, Devendra" <Devendra.Verma@amd.com>
+To: Frank Li <Frank.li@nxp.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>, "mani@kernel.org"
+	<mani@kernel.org>, "vkoul@kernel.org" <vkoul@kernel.org>,
+	"dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Simek,
+ Michal" <michal.simek@amd.com>, "Verma, Devendra" <Devendra.Verma@amd.com>
+Subject: RE: [PATCH RESEND v10 2/2] dmaengine: dw-edma: Add non-LL mode
+Thread-Topic: [PATCH RESEND v10 2/2] dmaengine: dw-edma: Add non-LL mode
+Thread-Index:
+ AQHcnzLWCO8+PlOBsUyeigW/SoG/H7WFuzkAgACmYXCAALfggIABEsjwgABxvwCAAOnmsIAAvjoAgAEKjvCAAHWzAIAEwNdwgAHz+ACAAMV0oIALcI6AgAE65FCAAEjQAIABSDxw
+Date: Fri, 6 Mar 2026 11:50:39 +0000
+Message-ID:
+ <SA1PR12MB8120C4D396C9146409C8C171957AA@SA1PR12MB8120.namprd12.prod.outlook.com>
+References: <aZXfmKs5_KzCDSPq@lizhi-Precision-Tower-5810>
+ <SA1PR12MB8120DC54060E415153AA8CDE956BA@SA1PR12MB8120.namprd12.prod.outlook.com>
+ <aZdDYJIUuceu0guJ@lizhi-Precision-Tower-5810>
+ <SA1PR12MB8120F99F2A675C17B1F649EA9568A@SA1PR12MB8120.namprd12.prod.outlook.com>
+ <aZiFtgcMzs-U2MkN@lizhi-Precision-Tower-5810>
+ <SA1PR12MB8120E7C753B717E4C8B9E7819577A@SA1PR12MB8120.namprd12.prod.outlook.com>
+ <aZ4l4IHqObEP8DfP@lizhi-Precision-Tower-5810>
+ <SA1PR12MB81203E3A32F0670DB15D63059575A@SA1PR12MB8120.namprd12.prod.outlook.com>
+ <aahkKZ9EBwWfwy95@lizhi-Precision-Tower-5810>
+ <SA1PR12MB8120CE2DB5EB97512E51F76B957DA@SA1PR12MB8120.namprd12.prod.outlook.com>
+ <aampZJo-9UgzpIV1@lizhi-Precision-Tower-5810>
+In-Reply-To: <aampZJo-9UgzpIV1@lizhi-Precision-Tower-5810>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+ MSIP_Label_dce362fe-1558-4fb5-9f64-8a6240d76441_Enabled=True;MSIP_Label_dce362fe-1558-4fb5-9f64-8a6240d76441_SiteId=3dd8961f-e488-4e60-8e11-a82d994e183d;MSIP_Label_dce362fe-1558-4fb5-9f64-8a6240d76441_SetDate=2026-03-06T11:38:35.0000000Z;MSIP_Label_dce362fe-1558-4fb5-9f64-8a6240d76441_Name=AMD
+ Internal Distribution
+ Only;MSIP_Label_dce362fe-1558-4fb5-9f64-8a6240d76441_ContentBits=3;MSIP_Label_dce362fe-1558-4fb5-9f64-8a6240d76441_Method=Standard
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA1PR12MB8120:EE_|SJ2PR12MB8941:EE_
+x-ms-office365-filtering-correlation-id: db330586-406e-4db0-abcb-08de7b7696ad
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|366016|376014|1800799024|38070700021;
+x-microsoft-antispam-message-info:
+ 2Q1BBKERoH8FLZufGh0vl692PMZMmM0JBmPqqu4bScCRJfoBre/KG5nBTrBekUG88nTuayLcO5FNwC6mmsKODPPpnNDrlGnrVY36euhWqjreqsH4Gf+wP+rr8pk9hqF7HYRvr3No4pFcCL/IqB9p8OGlXQUsJ/Knxldm5HpKT26lKHQJFQIf5xmMPhlalRkRbIrvN+koGvJFW28W0DnF5yMzNqLEaspHWxcvQRjDk8qnYZBRwftgwDu0UM20MCz2GU5jzXvTuFEInqCa4q6HNNKt6c81j2bZOzKlMxxDaMyryeoicB7fwSxZFs53BX1HSOhVd3uWR922BSigTOQ58SQ6IKqVDKtA3hV+49fAdU284yRs3cibPsLHEakyPfSWkL+DEKtcTFSh4hwZXTxvdUykEZbLyrxszoL9/doXVGV/zQSEptO3p2phUBD6inmKfiMGt/mVAhzLaAlBeUnzOPMJ8Zc49XDRv2NZtV4USlau9oVSqq2nZjGopQ5RrWS71ConELKUPg4S0JhOHQj/5zUkZQE20Q78jsLEuej/8d339I5pwVe57YfgK4C3UaGutNlrBoHrRKjjCpeFPPXayBS6KzcXdbI0PlGB5Ov/Ur1rsCQmUXFRA6acZxwitBRcBpxe3pZn62JZ90yMBky3yN3kX9P+ynwvfED5sMM1WWOvdlGoBykRuDmbdkXfX/xq38pkLGAY5vJogaVP6uznAuQ7qDR+09DQAKCZQC5XYMfxf281Q2rLVK+qHA3rZQ7Mu5DpUTy3hvSNqPx28b49fcPSfhkewYvi3pu7FdqCb0o=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB8120.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(38070700021);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?XWvc32k4cDzwTKBNCN1s/2V9nm9ihoBu548dmwZBykkLqUG3JW/5ZBZufHc0?=
+ =?us-ascii?Q?Eh+GodaBOuTRXqFFkROHDWj298EYodafRyvomefgG/tVb+PCGc38mmvWKJzN?=
+ =?us-ascii?Q?sYNDcHwwPtj4No0epZbPVi2nBVCRADdDfeVF/qmL654nuO+mcOvtAHstD+RK?=
+ =?us-ascii?Q?vJ62EfXJ8YPpPdsqJTxivhoz9YwskHwsJK01hzwKpzZEUT24Pq/MKq93AZIf?=
+ =?us-ascii?Q?H5gYnH4tg2V7O6s+ySr4RFkkulVNNHWH/N7WJrFyAreAzjdrexm4y3JZpg2G?=
+ =?us-ascii?Q?pfpW1iewAxrczrvgU04P9t9/9wp2ciwF/4mq/edXOJxRQFze3k/0D92b4baD?=
+ =?us-ascii?Q?RboOcao/1f1K2tMDht+5Rwg58IRpisTSxI3bIWhJcHjxp1PGHCIFFw+sKQ+H?=
+ =?us-ascii?Q?Qf7qYt3+qu8FDlGnSEieVWML5G6rtd5RQ/zHjfY/rnU5yfCMKUYqS/uJ8nlf?=
+ =?us-ascii?Q?6lFaNl26AtfwDBPqfuqu5IFxfB0lEJa8nTodZ1sIzr60FNbCKKGwC2dQaRbG?=
+ =?us-ascii?Q?JE/qkhQna6UI6bzxHZTVDEL5w4Dsk28nFQzek8OMvAecIxZsCCFF2TYBRh2v?=
+ =?us-ascii?Q?Epbs1ahPGrj7hhNlNb/5eB82aaDEUtfCMuqnfyWV8hPI9DF9UgjWPBM7af4a?=
+ =?us-ascii?Q?F5kAVo825ghCRY818uuSyaQSmzE6qOlNUXxFhTG9ymtlpTCm2yoZNHidr6TO?=
+ =?us-ascii?Q?S6GUOlD5JVanMHS47EdpI9A3XvKwT9UFFDxs63+zs+wnq21u72wPhs9SsZ1G?=
+ =?us-ascii?Q?SZWrI1pXuMwpx+1VxVv7vrpJaXZCZb83xBz6LO6sFKs7Q6uEo69xms/bPEkl?=
+ =?us-ascii?Q?JmjkVnhZWRAVKHdyKL4qxVdPAa92E1DC3Hw/k447bq/kM37QNtX8e/dQDRnY?=
+ =?us-ascii?Q?b5WS/RlKF1+2VQ38jO5Ive8TBK0yMxF390fIcmqST/tyQGCvL6HcSV/vE5LX?=
+ =?us-ascii?Q?lbjGf8xzR0rwrmFI+MCCOIdhpHBOaM+OOK7ggLf/WvWccGhP19WNHsrAOykB?=
+ =?us-ascii?Q?nLCBR60FStigpTcYxWNEwi7roa04PtCxireVpb6w7J6bbvwoZrPc0FzGkVHN?=
+ =?us-ascii?Q?W8eSSA3JfiYwIYwEx6g4aqJNlXT96CiQTddmPCxbGM3GzK4Yj61VOpb0t5SI?=
+ =?us-ascii?Q?f3hOWX5LRL7Ko9tXZbrQ2LOzDdVEaGahmC0Q7/aI8lL9DsPrTv/rxKWqSkHl?=
+ =?us-ascii?Q?iyNpEiwFn2Xq54lv5r5rs3SCGpBCv7o4CpcmyU5dLlX6xwFsXJCVqscNiyPF?=
+ =?us-ascii?Q?35woZj3Crq1/SYREWDwZXucnQEwejWJqrRZ8HXXBLhhaSR4aegSUUHNdWxpp?=
+ =?us-ascii?Q?kzzjwGt4lk3/Ha5Rpum0q7uksXAc/IldRKhMUfIfKWJfJ9QMh33sXCO0Kb3c?=
+ =?us-ascii?Q?ZuCPLPhpihNX2UZa1JErkhFLr9ETdj6Yc3w7cnTfe/ii3U53+TsO+WJgCKyB?=
+ =?us-ascii?Q?Fn3UssDpLR/p4DJclbTSN2fKx/N34FZrwILM/h/nm3vRXW4yQuRM3UceJLih?=
+ =?us-ascii?Q?wv7oYguCK+Nug/r5BnVdhTWBz1daGqNWLuzn70I3yMgd8FfbgV2SrRaoHEvt?=
+ =?us-ascii?Q?SiEBcMslnzyIn0P5JlMVItZtxzDthitOj2zj6Wy56D82AkVRTL2o5xxMty1B?=
+ =?us-ascii?Q?HvUCy752jFc11pn0odvfIPdkPlkMnfgD7Y5xGvXlaTMxXDOxtnX5W+9TQyOL?=
+ =?us-ascii?Q?pCCjI7QvuUBmYSyrpQpK+Z7m/2uCgn4ZAZ5Orht3dV789RWD?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 4/5] PCI: qcom: Power down PHY via PARF_PHY_CTRL before
- disabling rails/clocks
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com,
-        bjorn.andersson@oss.qualcomm.com
-References: <20260217-d3cold-v2-0-89b322864043@oss.qualcomm.com>
- <20260217-d3cold-v2-4-89b322864043@oss.qualcomm.com>
- <to6p7yf2oo5qh37hsye4zpputrc7p4bwgqvjc2plieuyapjdhp@7xshxghi4tzd>
- <313d2262-56e4-49b0-8455-2b46d0966976@oss.qualcomm.com>
- <ksd4ogzz2o5uuwnkvq6yzcwm3zsxiaeuotdj6aiqrew7jqrwl4@g3wcnqhviqwq>
-Content-Language: en-US
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-In-Reply-To: <ksd4ogzz2o5uuwnkvq6yzcwm3zsxiaeuotdj6aiqrew7jqrwl4@g3wcnqhviqwq>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: q3tsWBVm47oQwakl_KYGp9BTKOLsgCFe
-X-Proofpoint-ORIG-GUID: q3tsWBVm47oQwakl_KYGp9BTKOLsgCFe
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA2MDEwMCBTYWx0ZWRfX7f3aOM8KTZj8
- PTigUh4NRuNsSarMKZJHdOw/NYEUJ7ZUaFkenLc9JQ/RulWzVAhbiMFQz9TImv2aREwdoNg/jkj
- V3KBt0DcQxejCKiGh1Q4WP11BL2ZTiJEz1L4YeOSJ5+07gxnkxyRmJVjZboMIAVrYayQ+xfNXzU
- 7LHJy2njYisGC1h9G58R+orCz7PBtgNjOj0ienhyf/cRScdFof8THNDWaTaLKDRLTFbL27hIb2x
- yiudycUzB7WzW6+KHaxqv+5icm5yZJk4wCz1xw3C71xI2sI4SVm+6croamiQDYiS1E79XXLzHgA
- 3t5yuDJLsPFFmmroRKh0jQ782kKbQ2WcUn1ZAWvtrtquPs7T8jshz2pFMRpxjQlG0rbPjfdQ8sD
- ohTGOOjEu47sVoKI7ubI86fTkS7C82gDs7Qh6CJTEaXtjpPBdRncHHufjfJbbntaSrrToetaejn
- Lg+mG4ltI4xr+nn3Ilg==
-X-Authority-Analysis: v=2.4 cv=XKg9iAhE c=1 sm=1 tr=0 ts=69aaad1c cx=c_pps
- a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=EUspDBNiAAAA:8 a=uIgEQj9WjdynuVTCvEgA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=3WC7DwWrALyhR5TkjVHa:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-06_03,2026-03-04_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 adultscore=0 clxscore=1015 priorityscore=1501 phishscore=0
- malwarescore=0 spamscore=0 lowpriorityscore=0 impostorscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603060100
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR12MB8120.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: db330586-406e-4db0-abcb-08de7b7696ad
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Mar 2026 11:50:39.7156
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: WGij2or6k7yLL9rnUFjJZwH5TvrEBfblOURZe7WXbDOI2Ln7KIvv4PcEJIPjQrFzewaGNFyp327RJu24HhyIZQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR12MB8941
 
+[AMD Official Use Only - AMD Internal Distribution Only]
 
-
-On 3/5/2026 2:48 PM, Manivannan Sadhasivam wrote:
-> On Thu, Mar 05, 2026 at 02:26:22PM +0530, Krishna Chaitanya Chundru wrote:
->>
->> On 3/5/2026 1:19 PM, Manivannan Sadhasivam wrote:
->>> On Tue, Feb 17, 2026 at 04:49:09PM +0530, Krishna Chaitanya Chundru wrote:
->>>> Some Qcom PCIe controller variants bring the PHY out of test power-down
->>>> (PHY_TEST_PWR_DOWN) during init. When the link is later transitioned
->>>> towards D3cold and the driver disables PCIe clocks and/or regulators
->>>> without explicitly re-asserting PHY_TEST_PWR_DOWN, the PHY can remain
->>>> partially powered, leading to avoidable power leakage.
->>>>
->>>> Update the init-path comments to reflect that PARF_PHY_CTRL is used to
->>>> power the PHY on. Also, for controller revisions that enable PHY power
->>>> in init (2.3.2, 2.3.3, 2.7.0 and 2.9.0), explicitly power the PHY down
->>>> via PARF_PHY_CTRL in the deinit path before disabling clocks/regulators.
->>>>
->>>> This ensures the PHY is put into a defined low-power state prior to
->>>> removing its supplies, preventing leakage when entering D3cold.
->>>>
->>>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
->>>> ---
->>>>    drivers/pci/controller/dwc/pcie-qcom.c | 30 +++++++++++++++++++++++++++---
->>>>    1 file changed, 27 insertions(+), 3 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
->>>> index 2c4dc7134e006d3530a809f1bcc1a6488d4632ad..b02c19bbdf2ea5db252c2a0281a569bb3a0cc497 100644
->>>> --- a/drivers/pci/controller/dwc/pcie-qcom.c
->>>> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
->>>> @@ -513,7 +513,7 @@ static int qcom_pcie_post_init_2_1_0(struct qcom_pcie *pcie)
->>>>    	u32 val;
->>>>    	int ret;
->>>> -	/* enable PCIe clocks and resets */
->>>> +	/* PHY power ON */
->>> This comment is confusing since we already have phy_power_on() API. What does
->>> really happen in the 'test power down' case?
->> QCOM PCIe controller wrapper has way to force the entire PHY into lowest
->> power
->> state by turning everything off, without this bit being cleared the phy will
->> not be
->> powered on even after phy_power_on(), we can think this as a kind of switch
->> from the controller side to power on phy.
->>
-> We never cared to set/clear this bit so far. So I'm assuming that if we simply
-> set it during init, it will not do any harm and allow the PHY to fully power
-> down itself when phy_power_off() is called?
-we are already doing set/clear of this bit, its not newly introduced 
-one, I am
-updating the  comment  to correctly reflect hw behaviour. PHY power on 
-looks little
-confusing I will update the commet to "Force PHY out of lowest mode".
-
-- Krishna Chaitanya.
-> - Mani
+> -----Original Message-----
+> From: Frank Li <Frank.li@nxp.com>
+> Sent: Thursday, March 5, 2026 9:34 PM
+> To: Verma, Devendra <Devendra.Verma@amd.com>
+> Cc: bhelgaas@google.com; mani@kernel.org; vkoul@kernel.org;
+> dmaengine@vger.kernel.org; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; Simek, Michal <michal.simek@amd.com>
+> Subject: Re: [PATCH RESEND v10 2/2] dmaengine: dw-edma: Add non-LL
+> mode
+>
+> Caution: This message originated from an External Source. Use proper caut=
+ion
+> when opening attachments, clicking links, or responding.
+>
+>
+> On Thu, Mar 05, 2026 at 12:15:41PM +0000, Verma, Devendra wrote:
+> > [Public]
+> >
+> > > -----Original Message-----
+> > > From: Frank Li <Frank.li@nxp.com>
+> > > Sent: Wednesday, March 4, 2026 10:26 PM
+> > > To: Verma, Devendra <Devendra.Verma@amd.com>
+> > > Cc: bhelgaas@google.com; mani@kernel.org; vkoul@kernel.org;
+> > > dmaengine@vger.kernel.org; linux-pci@vger.kernel.org; linux-
+> > > kernel@vger.kernel.org; Simek, Michal <michal.simek@amd.com>
+> > > Subject: Re: [PATCH RESEND v10 2/2] dmaengine: dw-edma: Add non-LL
+> > > mode
+> > >
+> > > Caution: This message originated from an External Source. Use proper
+> > > caution when opening attachments, clicking links, or responding.
+> > >
+> > >
+> > > On Wed, Feb 25, 2026 at 12:06:12PM +0000, Verma, Devendra wrote:
+> > > > [AMD Official Use Only - AMD Internal Distribution Only]
+> > > >
+> > > > > -----Original Message-----
+> > > > > From: Frank Li <Frank.li@nxp.com>
+> > > > > Sent: Wednesday, February 25, 2026 3:58 AM
+> > > > > To: Verma, Devendra <Devendra.Verma@amd.com>
+> > > > > Cc: bhelgaas@google.com; mani@kernel.org; vkoul@kernel.org;
+> > > > > dmaengine@vger.kernel.org; linux-pci@vger.kernel.org; linux-
+> > > > > kernel@vger.kernel.org; Simek, Michal <michal.simek@amd.com>
+> > > > > Subject: Re: [PATCH RESEND v10 2/2] dmaengine: dw-edma: Add
+> > > > > non-LL mode
+> > > > >
+> > > > > Caution: This message originated from an External Source. Use
+> > > > > proper caution when opening attachments, clicking links, or
+> responding.
+> > > > >
+> > > > >
+> > > > > On Mon, Feb 23, 2026 at 04:40:07PM +0000, Verma, Devendra wrote:
+> > > > > > [AMD Official Use Only - AMD Internal Distribution Only]
+> > > > > >
+> > > > > > > -----Original Message-----
+> > > > > > > From: Frank Li <Frank.li@nxp.com>
+> > > > > > > Sent: Friday, February 20, 2026 9:33 PM
+> > > > > > > To: Verma, Devendra <Devendra.Verma@amd.com>
+> > > > > > > Cc: bhelgaas@google.com; mani@kernel.org; vkoul@kernel.org;
+> > > > > > > dmaengine@vger.kernel.org; linux-pci@vger.kernel.org; linux-
+> > > > > > > kernel@vger.kernel.org; Simek, Michal <michal.simek@amd.com>
+> > > > > > > Subject: Re: [PATCH RESEND v10 2/2] dmaengine: dw-edma: Add
+> > > > > > > non-LL mode
+> > > > > > >
+> > > > > ...
+> > > > > > > > But if it about writing a new function to check the LL
+> > > > > > > > mode support then I think the current variable is good
+> > > > > > > > enough which provides good readability and do not create
+> > > > > > > > any ambiguity compared to the ll region size
+> > > > > > > comparison.
+> > > > > > >
+> > > > > > > It is not big deal,  use 'bool cap_non_ll: 1' in dw_edma_chip=
+.
+> > > > > > > So we add more cap flags in future.
+> > > > > > >
+> > > > > > > Frank
+> > > > > > >
+> > > > > >
+> > > > > > Hi Frank, could you elaborate what you mean by adding the cap f=
+lag?
+> > > > > > How it is going To help identify the overall chip state?
+> > > > > > I do not understand what is being implied here.
+> > > > >
+> > > > > non_ll in chan means current status, which indicate one channel
+> > > > > work at non_ll mode or ll mode.
+> > > > >
+> > > > > here dw_edma_chip means hardware's captiblity, indicate if
+> > > > > hardware support ll mode.
+> > > > >
+> > > > > Distingiush hardware limition or current working mode.
+> > > > >
+> > > > > Frank
+> > > >
+> > > > Thanks for the explanation!
+> > > > Hardware supports the LL mode / non-LL mode, just that there is no
+> > > > piece of code available which can perform the non-LL mode as only
+> > > > one mode was supported initially by the respective developers.
+> > > > So, providing it as capability does not look justified as in any
+> > > > scenario hardware is capable of non-LL mode. Theoretically, non-LL
+> > > > mode should have been the default mode.
+> > > >
+> > > > The non-LL mode is not a hardware limitation either. LL mode needs
+> > > > extra configurations and in the absence of that, interpretation
+> > > > could be, enable the supported other mode which is non-LL mode.
+> > >
+> > > Yes, that's reason why I don't want to add non-ll in dw_edma_chip,
+> > > which should provide hardware's information.  non-ll actually miss
+> > > ll_region information.
+> > >
+> >
+> > I think, non_ll can be interpreted without using the ll-region related
+> > information as well. My view regarding the dw_edma_chip struct is
+> > slightly different, it does not provide the hardware capability rather
+> > stores a snapshot of configuration based on information provided by
+> > different means, please take a look at my comment below related to this=
+.
+> >
+> > > >
+> > > > With the current non_ll inside the dw_edma_chip, when non_ll =3D
+> > > > false, indicates It supports both the modes LL and non-LL, but
+> > > > requires user
+> > > inputs to enable it.
+> > > > With non_ll =3D true, the dw_edma_chip or the hardware has no choic=
+e
+> > > > but to work in non-LL mode only. This is the interpretation for the=
+ flag in
+> non_ll.
+> > >
+> > > we need distingiush current state and HW/SW captiblity. in dma_chan,
+> > > non_ll means current working state.
+> > >
+> > > but the same words 'non_ll' in dw_edma_chip is HW/SW capablity.
+> > >
+> > > dma_chan: non_ll       means current channel use LL OR non LL.
+> > > dma_edma_chips: non_ll means only support non LL mode OR both.
+> > >
+> > > The same words "non_ll" means difference. We should try to avoid this
+> case.
+> > >
+> > > if you want to add field in dw_edma_chip, avoid use the same words
+> > > because their means is difference.
+> > >
+> > > Frank
+> >
+> > Can we please simplify this interpretation, the non_ll in all the
+> > scenarios should mean non-LL mode only if set to true.
+> > dw_edma_chip : non_ll =3D true, it shall mean that all the channel, at =
+chip level,
+> can work in non-LL mode ONLY.
+> > dw_edma_chan: non_ll =3D true, it shall mean that individual channel is
+> configured for a transaction in non-LL mode.
+>
+> When read "a->non_ll", need good back check what type of a to know which
+> one.  if use difference name
+>         a->non_ll;
+>         b->cfg_no_ll;
+>
+> It will not think more about what is a/b.
 >
 
+This suggestion is taken. I will push in next version of patches. Thanks!
+
+> >
+> > Above all, a nice comment related to the flag shall be good enough to
+> > make the understanding clear, at the places where declared.
+> > Since the beginning my emphasis is that 'non_ll' flag should be treated=
+ for
+> what it implies, i.e non-LL mode.
+> > It was included in two different sets of structs to show the hierarchy
+> > how it could affect the overall functionality depending upon where 'non=
+_ll' is
+> set to true.
+>
+> > Coming to the dw_edma_chip struct, I do not understand why the
+> > dw_edma_chip struct is about hardware capability, it is more about the
+> > configuration of the chip which is filled anyway at the time of
+> > probe() function calling. This struct does not provide any capability
+> > information at the time of probe() calling rather it is filled based on=
+ the
+> params configured by user either as static info (eg: snps_edda_data) or b=
+y
+> reading the capability registers (eg: VSEC and channels enabled by readin=
+g
+> config space).
+> > I hope this clears the doubt. Please let me know if any further
+> > information required related to the non_ll flag Interpretation.
+>
+> I don't want to take more time at this kind small stuff. I am fine if vno=
+d Or mani
+> (who pick up these patches) think it is okay.
+>
+
+Frank, could you please approve the patches if changes look ok to you?
+
+> Frank
+>
+> >
+> > Regards,
+> > Devendra
+> >
+> > > >
+> > > > With the capability, would it not make the statement, that if
+> > > > non_ll =3D true, it supports non-LL mode but that does not mean to
+> > > > be mutually exclusive and not support LL mode at the same time?
+> > > > If there is a requirement regarding the capability then it can be
+> > > > taken as a separate update but I am not sure what purpose it can
+> > > > serve wrt
+> > > non-LL functionality.
+> > > > Please let me know your thoughts on this and lets conclude.
+> > >
+> > > >
+> > > > Thanks!
+> > > >
+> > > > > >
+> > > > > > - Regards,
+> > > > > > Devendra
+> > > > > >
+> > > > > > > >
+> > > > > > > > > Frank
+> > > > > > > > > >
+> > > > > > > > > > > >
+> > > > > > > > > > > > > > >
+> > > > > > > > > > > > > > > Frank
+> > > > > > > > > > > > > > > >  };
+> > > > > > > > > > > > > > > >
+> > > > > > > > > > > > > > > >  /* Export to the platform drivers */
+> > > > > > > > > > > > > > > > --
+> > > > > > > > > > > > > > > > 2.43.0
+> > > > > > > > > > > > > > > >
