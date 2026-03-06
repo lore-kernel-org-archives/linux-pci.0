@@ -1,25 +1,50 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id D99FA3AE6EE;
-	Fri,  6 Mar 2026 15:24:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E133A36AB4E;
+	Fri,  6 Mar 2026 15:24:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772810673; cv=none; b=Ds7r0FDjRL/FiXkT7vUlIeBy6SFjhfCIRz2p7aRQgfM9tOMHLqWThqwAIs1m614RQLCN0Nyzr/HpcHm3AQJM5tPjbp+m6yD3hASfygYFaRTMg+bUz5IYyns2pdJjsXVyK2Y/ZcZXwVZv0AstpOcQS3YBRhn14LvB2/0qtKoKMYE=
+	t=1772810697; cv=none; b=NGS/JeMfo1M4EhQ4TKryBXGKYumYci8nm0vbM2gbQq2pkgDtgOANfn7uiMga0ZmjydbPeieSTPMjsPMNN7Hcjl2H/jLHgizPDWc72S6i++LApYtq7xkAs8oFWE1dnGNlj+hckNdygmB2SSdhWcyfmnF2ix5kVkGYHb5Q8V1IggE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772810673; c=relaxed/simple;
-	bh=uzrTuoY+mNLtvgWPJYmqEAAvoSSdRfgSv66yIESWPos=;
+	s=arc-20240116; t=1772810697; c=relaxed/simple;
+	bh=M+XEIPcFRnNfKXGVqQa3O2jUSFoP+59bk0GS4PRRcJY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rWL0N03vb4Zip+PGl7m3QBA1fEUq6+aCuwAleihHCGcKZz31LVpq4ruBrSxziKsOEu11SK2o+zzMZ5pnG2AeD8Sskdgz1dAs/+pW1ZkOBS4nki/6ypFfUVfIB5Zl9mczmM0cgJkMkSbyRUmiqPjZzd6iqLXrkMkgFTgyWcUMzGk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id B97B0497;
-	Fri,  6 Mar 2026 07:24:19 -0800 (PST)
-Received: from [10.57.57.97] (unknown [10.57.57.97])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id DEDC63F836;
-	Fri,  6 Mar 2026 07:24:22 -0800 (PST)
-Message-ID: <03461707-783e-403a-86fa-ae7a5107fa30@arm.com>
-Date: Fri, 6 Mar 2026 15:24:20 +0000
+	 In-Reply-To:Content-Type; b=mc27AL7fXVzU2F0Ubk0s/iERbBPr+ViSA44QCl8pKpGwYopgkpeMwOmbsgzVdONBQZohTV5200yYdkceMVtjMpFvOzeV2l6n7y+diRH5IftbRGoDUrPVbivLBnfB5zZ8yE+QeknELZqhc8rFh5rGHzPm7N643JnYb82xwebC+k8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UbAbUaFf; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UbAbUaFf"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1772810692; x=1804346692;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=M+XEIPcFRnNfKXGVqQa3O2jUSFoP+59bk0GS4PRRcJY=;
+  b=UbAbUaFfrxLj5lOwUuU948WtRO+0lJAJdB/tEFHqDGFgCmDMzJK8NpSh
+   f3lOwfSFBsSWK9Y92wLF0SBZFboF77paJTWcx48k4NGE5npq7aD69kTze
+   C8xOKZPnzVTj/fey988li3kPaRYaXripkXfPbnR3z7zHHHQlNNgJZIgOt
+   rUyTf0Mqvc6nHlIQEXuJ8/uLqwK614TayLuzMYZHtUIsWEGKaXMTC1hcj
+   WfTCfw7vCE2P+j5Gk4sI4twkLtaSeuzQt2G8eJeLDnRW9AIAyhlSZCsmt
+   fbPykjcLihTnVhr+IZlY6KgRG5k0+abtShAdss/DgiahSNfQ8cSQesgdV
+   w==;
+X-CSE-ConnectionGUID: ZGNSQhT/QgyFQWjqCZLXUA==
+X-CSE-MsgGUID: LnT3FVunQhWj2yZDMn9nbg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11721"; a="73115315"
+X-IronPort-AV: E=Sophos;i="6.23,105,1770624000"; 
+   d="scan'208";a="73115315"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2026 07:24:51 -0800
+X-CSE-ConnectionGUID: 3HLiMIY0SNCPpmAkz+N8+A==
+X-CSE-MsgGUID: +0Ku9DjRQ3uA+3tgKFkcDg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,105,1770624000"; 
+   d="scan'208";a="223736764"
+Received: from jdoman-mobl3.amr.corp.intel.com (HELO [10.125.109.87]) ([10.125.109.87])
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2026 07:24:50 -0800
+Message-ID: <1ff2c42c-73b2-43f3-a520-fcc3c16cc0a2@intel.com>
+Date: Fri, 6 Mar 2026 08:24:48 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -27,58 +52,68 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 2/2] iommu/arm-smmu-v3: Recover ATC invalidate timeouts
-To: Jason Gunthorpe <jgg@nvidia.com>, Nicolin Chen <nicolinc@nvidia.com>
-Cc: will@kernel.org, joro@8bytes.org, bhelgaas@google.com, rafael@kernel.org,
- lenb@kernel.org, praan@google.com, kees@kernel.org,
- baolu.lu@linux.intel.com, smostafa@google.com,
- Alexander.Grest@microsoft.com, kevin.tian@intel.com,
- miko.lenczewski@arm.com, linux-arm-kernel@lists.infradead.org,
- iommu@lists.linux.dev, linux-kernel@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org, vsethi@nvidia.com
-References: <cover.1772686998.git.nicolinc@nvidia.com>
- <ca7ab934bf0f433b62a5c15d42241632c4cb9366.1772686998.git.nicolinc@nvidia.com>
- <a5ff7a43-ea52-462d-a316-d3a6c08410e0@arm.com>
- <aanwTQtMMplXY3du@Asurada-Nvidia> <20260305235252.GC1651202@nvidia.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Content-Language: en-GB
-In-Reply-To: <20260305235252.GC1651202@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: [PATCH v2 3/3] PCI: endpoint: pci-epf-vntb: Implement
+ .get_dma_dev()
+To: Koichiro Den <den@valinux.co.jp>, Jon Mason <jdmason@kudzu.us>,
+ Allen Hubbe <allenbh@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Kishon Vijay Abraham I <kishon@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
+ Niklas Cassel <cassel@kernel.org>
+Cc: ntb@lists.linux.dev, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20260306031443.1911860-1-den@valinux.co.jp>
+ <20260306031443.1911860-4-den@valinux.co.jp>
+Content-Language: en-US
+From: Dave Jiang <dave.jiang@intel.com>
+In-Reply-To: <20260306031443.1911860-4-den@valinux.co.jp>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2026-03-05 11:52 pm, Jason Gunthorpe wrote:
-> On Thu, Mar 05, 2026 at 01:06:21PM -0800, Nicolin Chen wrote:
->> That sounds like the IOPF implementation. Maybe inventing another
->> IOMMU_FAULT_ATC_TIMEOUT to reuse the existing infrastructure would
->> make things cleaner.
+
+
+On 3/5/26 8:14 PM, Koichiro Den wrote:
+> When vNTB is used as a PCI endpoint function, the NTB device is backed
+> by a virtual PCI function. For DMA API allocations and mappings, NTB
+> clients must use the device that is associated with the IOMMU domain.
 > 
-> I think the routing is quite different, IOPF wants to route an event
-> the domain creator, here you want to route an event to the IOMMU core
-> then the PCIe RAS callbacks.
+> Implement ntb_dev_ops->get_dma_dev() for pci-epf-vntb and return the EPC
+> parent device.
 > 
-> IDK if there is much to be reused there, especially since IOPF
-> requires a memory allocation and ideally we should not be allocating
-> memory to resolve this critical error condition.
+> Suggested-by: Frank Li <Frank.Li@nxp.com>
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
 
-Yeah, sorry, for a moment there I somehow forgot that we can expect to 
-use ATS without PRI, so indeed tying this to IOPF wouldn't be 
-appropriate. And given the general difficulty of trying to infer what 
-went wrong and what to do from the CMDQ contents alone, I do like your 
-idea of trying to return a new kind of sync failure back to 
-arm_smmu_atc_inv_{master,domain}() so that we can take any defensive 
-action from there, with all the information to hand. We'd just have to 
-ensure that if a large set of ATCI commands needs to span multiple 
-batches, every batch must contain its own sync (since if some other 
-batch of unrelated commands could get interleaved in the middle and 
-issue a sync that then fails due to someone else's ATC timeout, 
-everything's likely to get confused and go wrong).
+Reviewed-by: Dave Jiang <dave.jiang@intel.com>
 
-The fiddly thing then is that we might also have to be prepared to 
-"handle" CMD_SYNC timeout by manually checking for GERRORs, in case the 
-whole invalidation is in the context of an dma_unmap within some other 
-device's IRQ handler, which happens to be on the same CPU where the 
-GERROR IRQ is now pending, but can't be taken until we can complete the 
-inv and return out of the current IRQ :/
+> ---
+>  drivers/pci/endpoint/functions/pci-epf-vntb.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> index 20a400e83439..e5433404f573 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> @@ -1436,6 +1436,14 @@ static int vntb_epf_link_disable(struct ntb_dev *ntb)
+>  	return 0;
+>  }
+>  
+> +static struct device *vntb_epf_get_dma_dev(struct ntb_dev *ndev)
+> +{
+> +	struct epf_ntb *ntb = ntb_ndev(ndev);
+> +	struct pci_epc *epc = ntb->epf->epc;
+> +
+> +	return epc->dev.parent;
+> +}
+> +
+>  static const struct ntb_dev_ops vntb_epf_ops = {
+>  	.mw_count		= vntb_epf_mw_count,
+>  	.spad_count		= vntb_epf_spad_count,
+> @@ -1457,6 +1465,7 @@ static const struct ntb_dev_ops vntb_epf_ops = {
+>  	.db_clear_mask		= vntb_epf_db_clear_mask,
+>  	.db_clear		= vntb_epf_db_clear,
+>  	.link_disable		= vntb_epf_link_disable,
+> +	.get_dma_dev		= vntb_epf_get_dma_dev,
+>  };
+>  
+>  static int pci_vntb_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 
-Thanks,
-Robin.
