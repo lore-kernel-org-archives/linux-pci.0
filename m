@@ -1,281 +1,154 @@
-Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11010043.outbound.protection.outlook.com [52.101.228.43])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6A7127FD4B;
-	Fri,  6 Mar 2026 14:49:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.43
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772808563; cv=fail; b=fLJMOWicShOT18naJYHbt77f+dPgPbu19m/bdhn3Y2vT/YE7MHU5xSU/vQgag4UTsZ3cYGDnRX+OhQuTYmRNE9gxYA+SU9wDFsJrvburJQ0YdEHTOULuYOxZBfmmd4YGRFyrS/C9XXq4xwcdP5XE+4zWrFVg6H2aT9xKRWx+0do=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772808563; c=relaxed/simple;
-	bh=KG/tBuH0Lv1wiLhYNleE9itFfkVEz1isqaS5RjO6Kw8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=kJJ6qf+PFtv8S+7g2gcSgqmjZLktCRoy+ValI5Dmae/ROGg475cRt75kD410xsJHKEH/9CVc6FmtGn9OScpaEW06ZtpCBeUUa7wLQlHAyZZYkztf9vrQRq5456G1dY8EtPyVBWrWrJpHRSAsV0mLht/6NzGjtUJRYCFeIGrAuig=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b=CDVk3sB+; arc=fail smtp.client-ip=52.101.228.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 386003B3C0E;
+	Fri,  6 Mar 2026 15:08:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772809728; cv=none; b=b/RGuFIePELsryb+4r0R5Mu9UnzZAAf8xO/B1t1MK3BE54CwwJ78Ja98Dn13iqWe/YkKp+T5JyATBAg3BAQQfwfjchtzsp6jc+5C9E1DDBmwoy7GLVKDPAEJnQWKDIVclHeIVouBc79m/oFf8rFpj/DI0YMlzAsT53sknT9Net8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772809728; c=relaxed/simple;
+	bh=9x90QkjUflcjOCmysRyuKEPKn10IzcjgEwRttvXPN/Y=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ZJ1Ti8sk8cwsuLsZTv9WlQs6TdjKk7DWPQAUEEA4TBsDVMm9Y3E/+/AK6f0mLzX9vHOs5qdKg9nIvZClKS4eff+S5VLxO7eirCZ86zHMd7TH6T98kLTTsv29YHf7zqhFanzr4gmT60pwBUoIFJDOgO1ifEN/+Dt1EDFYu8AtEnk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=fu29t46o; arc=none smtp.client-ip=117.135.210.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b="CDVk3sB+"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=qmlRusTX9PAMHaiN5YI7e1JYegj0CFUs5G1ICCH5DB+ljDmReB0Dv4ZcsDCEp0HfSwXFbv0KluxyZwwoakle61EyhVS6NUcFM3TmbgXSbl6wNFPpJp+zz9SXl+AefXix6oKPLKia8q5C+x0MWWAoC/Ewn8vzDLtPLm5TSplaJ5yxMCLj61I/RjP/SSDj8+MOfBa66BtF9ggQYKoF+kCJVIhCAPxGqeMfwvXmATTeTcx7K1lySmNBcAhHTH9rSCOf3x3yIXEOSU1sx83u2/EccsmAB0eEatnpTZ2Wz4NqQYVcMlk4T4hysuhdY2YCU1UPLInsK/UvB56n6hf5QIcu7g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=9sq/0ZIFwGYdrlmCqqyuBrUBLkTIuC4SPV4JLjKygmI=;
- b=EemH3XFxS04azo/kZZhdkr7aM7eutwOY/v2DHD0trmZNne//xwd+CbfeMYlvi7z4P+tOqqNT16PhTgfKgxxbJFpcp+liz+rQgD0WISgkJjlZ0dSZhoXvgpipESsHdMhCGmA8vU+PXyibqinwKPJ1wDAmlX+LW4oro3z89Kbd60+65Kl0QJwAxaCrsJwX/wSNQ0bPvaPiqd/VXP+W9JHxQV1WbVWoIYggrAjrwpHLBkMyIhZnEkzXDT5TbcM2KgPJMMRM5v5e6pE1NXgZgvJPFBkrJJw8TrSinaj9zbT+MlsfBDFaKFesV3aobBZiVdjQilp+Ml8vcmEBVxbWCaxIGQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=bp.renesas.com; dmarc=pass action=none
- header.from=bp.renesas.com; dkim=pass header.d=bp.renesas.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bp.renesas.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9sq/0ZIFwGYdrlmCqqyuBrUBLkTIuC4SPV4JLjKygmI=;
- b=CDVk3sB+vk9Vuqdn+YBBeOe7Sua9i+sGNWqlaogSRawKOEYFo79rT/2YBgm5DE8d/V2VbouPkx6/7+rS+G509nLsysBG2Bx7wthVTMFkRsPcc/3554Y+OfTNL8hq+BEHfVQLgxPxzvDlk/tYay1A4ZtrAF89i4a0sbY6Bvzyrg0=
-Received: from TY3PR01MB11346.jpnprd01.prod.outlook.com (2603:1096:400:3d0::7)
- by OS9PR01MB15212.jpnprd01.prod.outlook.com (2603:1096:604:3b7::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.18; Fri, 6 Mar
- 2026 14:49:17 +0000
-Received: from TY3PR01MB11346.jpnprd01.prod.outlook.com
- ([fe80::87d1:4928:d55:97de]) by TY3PR01MB11346.jpnprd01.prod.outlook.com
- ([fe80::87d1:4928:d55:97de%4]) with mapi id 15.20.9678.017; Fri, 6 Mar 2026
- 14:49:17 +0000
-From: Biju Das <biju.das.jz@bp.renesas.com>
-To: John Madieu <john.madieu.xa@bp.renesas.com>, Claudiu Beznea
-	<claudiu.beznea.uj@bp.renesas.com>, "lpieralisi@kernel.org"
-	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-	"mani@kernel.org" <mani@kernel.org>, "geert+renesas@glider.be"
-	<geert+renesas@glider.be>, "krzk+dt@kernel.org" <krzk+dt@kernel.org>
-CC: "robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "conor+dt@kernel.org" <conor+dt@kernel.org>,
-	magnus.damm <magnus.damm@gmail.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-renesas-soc@vger.kernel.org"
-	<linux-renesas-soc@vger.kernel.org>, "devicetree@vger.kernel.org"
-	<devicetree@vger.kernel.org>, "linux-clk@vger.kernel.org"
-	<linux-clk@vger.kernel.org>, "john.madieu@gmail.com" <john.madieu@gmail.com>
-Subject: RE: [PATCH v7 12/15] PCI: rzg3s-host: Add support for RZ/G3E PCIe
- controller
-Thread-Topic: [PATCH v7 12/15] PCI: rzg3s-host: Add support for RZ/G3E PCIe
- controller
-Thread-Index: AQHcp/6Mgy22Z/aR3kizuyWQZDnsmrWWrjEAgAABfwCACuyegIAAA1DA
-Date: Fri, 6 Mar 2026 14:49:17 +0000
-Message-ID:
- <TY3PR01MB113468434BE43563E000C3D2D867AA@TY3PR01MB11346.jpnprd01.prod.outlook.com>
-References: <20260227153236.55988-1-john.madieu.xa@bp.renesas.com>
- <20260227153236.55988-13-john.madieu.xa@bp.renesas.com>
- <TY3PR01MB11346B9FB9B0FE7BA3B82D6378673A@TY3PR01MB11346.jpnprd01.prod.outlook.com>
- <TY6PR01MB173776608DDA83CD05D26FEA5FF73A@TY6PR01MB17377.jpnprd01.prod.outlook.com>
- <TY6PR01MB17377E0DB8F3BCB6E189E18DFFF7AA@TY6PR01MB17377.jpnprd01.prod.outlook.com>
-In-Reply-To:
- <TY6PR01MB17377E0DB8F3BCB6E189E18DFFF7AA@TY6PR01MB17377.jpnprd01.prod.outlook.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=bp.renesas.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: TY3PR01MB11346:EE_|OS9PR01MB15212:EE_
-x-ms-office365-filtering-correlation-id: a30eefc8-63f5-44fb-2b3f-08de7b8f8ab9
-x-ld-processed: 53d82571-da19-47e4-9cb4-625a166a4a2a,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|7416014|376014|366016|38070700021|7053199007;
-x-microsoft-antispam-message-info:
- pixW2z6GQ69aG/PeBS6or0KpN2zNGSMtzJrtfhmH+bFE++HPO+KDq1wDTt6RvaUgxOURtP4Ml7aX2Iqz+RC3SHyXByC2j2F1RFV+BxNa/9vYw1YtLIROHPSnn2kNTLNsxFdI9z0KcHK6U6F9Wd+Q35TR5YkO+1GzZ+7LNJ3HS8E6vZnNrkTu46FblveNlaFhAnD5YO4CIxZfwQOBNdPLYbJ8vRlaPWONT1q2Ix5/Agj08LPCyiPQ5ru1NBpwAzmdYZAAnP/brmghxCIUbajznJ2XtO0hgRVThY1n5inFnm0ZrztAW+tBEV8OKWrk2qAmoyw0otLvcFnkmpTLTqqXRvmdUsTtnNC+LXZOWkOSmPxfcBCSgZlz4uuPPhkFP868BTGFbgeKX8Nfh6WK80ejKZ8p59uewG5B0N/aP2H7K6B3RuaLXrre8Q4cvA1o1IrPu6Bskq9hBDiIXIA3y02dNubDZ0UXQD6rQ8PV7aAgD6z7KUw9205DUEqAN91ySF7LCTqEy2L6gx2FKpDdny/AiXhoBHuFsLIJj9LMD1Mr3WR0iZGgVz9XLE1sMfCrIGyIfYFzjTZPSPHrxQWZWyDAjvGNKaSRUp4Tsa2SeTUwW1PWGjvUht2VrGzUkT5cYp7hveX5d8/JMU5wrbsPC2rXjL/I9J/SVWeEz8FP6XEjlt/0gPunzdg7SnR7SBu7RTvo6BTxJJRi0auHu/zY7LOkNpkfhKcKJ8SX8kHipZpGE+wG4RkEEk9tuZwHKrOIoxjkye3hEEn24vCk1i3ZiN11a5vck4CBUibWpm/rMv07hqY=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY3PR01MB11346.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(38070700021)(7053199007);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?O9P88j/hnKT7Re6HBc3vmK/mGaXAti9jbFYosapyZ0WjF1hZE2vCtt08cxYS?=
- =?us-ascii?Q?OAVatCESmiP054xJvPg5p/CjKjchbHKcP0L5ff++Sh3iG3R070i6iPGCH3jB?=
- =?us-ascii?Q?9xxvZp1oSzVWOjWT749Im4MtgYzu8scBJJyhwB6chW89Vq73DVYcOGMyS0HJ?=
- =?us-ascii?Q?3XbWW92xo1neRzIfPHhI46QJ6+1z43X+lvHqTBCm8O7yvrNwyYkLxhXfQfO3?=
- =?us-ascii?Q?9imCVIoyvvs3J4qIbkSKphmdrsklEaT5i1Doyx82hWiSMvxLk1ImUhRv6Pzy?=
- =?us-ascii?Q?UhqNZQe5Er9x/IRuacBMCjXUs5Bq53UKK/0Ppbe+XceCZ4cpSHeg6rxJHmnK?=
- =?us-ascii?Q?TYZ9nP9uCUdRY6pa3kFpVM5eJ8tkAo/eDDI0PsvLE7isNZrjFW7s6cfUbdad?=
- =?us-ascii?Q?yBOTFqERDH3KATGMyewTonu5mwL6TdpRrpGF4KKwfBzTj1k6GRiPRlcqLjen?=
- =?us-ascii?Q?6sHUmHxLZRdqvZLMIooipKpOVu0eNzte/6GWAleGIRnc7jIkMUjq+HiSQCSe?=
- =?us-ascii?Q?82TZ2FPadOVBY7Mtpl/u7Mz4W61TW2augmnMzzJjyS5lCHMDXFbdQ1ICNLpr?=
- =?us-ascii?Q?/B/dOGwITjHeW/CM3ZJausiRzegeNnRc2yHvJK0Ae7HDeLqORm0HYeGrM2Qd?=
- =?us-ascii?Q?lkqssIlHqq82UdQYOVM/U3v69Dj88udDvk2nOQc8vqBTFOxUW6IqcehmOpTw?=
- =?us-ascii?Q?xZUpHvKtwPjBxk2uU03ZrLnmP0Co37z5dS+NtUBHCndlSWSbbU5y/+zGhsFL?=
- =?us-ascii?Q?P+Me67LscKWEN555Ed3fFqsA0trqoVd3AK+H1c7etqY5kVXQXTdud4uEbZXV?=
- =?us-ascii?Q?11ivzGhlrfeBHLqs5GN/APitsdxDsB/fB68K3fYxxCODwujF0079PdiEM57k?=
- =?us-ascii?Q?+vjIr/mHJ7+LBkytATPJTFuCfukq35EG9p+dObcl6uRRU0zWDH0S1B9gR8+Z?=
- =?us-ascii?Q?yGtFdtizwX3x7kJUdbsCowUgUuFXBx8/COXhGFOs84GMUKn/ey7KbX4QQMxE?=
- =?us-ascii?Q?oKAgXqFYiUsEDElEBbkAZepDCAUIds+v3RncjhnwE3Q32tZRntaYxZJq8MuX?=
- =?us-ascii?Q?QBa92zYvWi7/mXPOkvmfuhgMwHio/RoY/t7VbVEk6D2grpK5QhRvrnFzrFM4?=
- =?us-ascii?Q?I1Q0rLuQm8x7mMns7W6qBMv3CUfyQpLNx0dDUCY7xB82kRX8NzgZMPc3eGLo?=
- =?us-ascii?Q?MqMj8wjh85Mgc2zYbbrpBmOu0rZpKOmuHTEDxxR44mhz0Hrs01PeZfAa3JCK?=
- =?us-ascii?Q?44q7Q50quARJMi9Oj+NvIcj6mbwConNhTdJ6MYfOlCu4wtJpn116Kq3Va66a?=
- =?us-ascii?Q?lXuLcVB6AYpyiDrZO+YlwYDODJtCkcp7QX9GMpvZaG/DDGNDmhwLqt6C1dcv?=
- =?us-ascii?Q?lT1/AZD6l7H8BwXfvH5KaSSbaqvMpg0cWuhUMw7CI1NbZgOtF20VzsPM7v+7?=
- =?us-ascii?Q?L+qGK8mQaRSn6vf80xGPEC/azj2US7OkuUc5IY5e3yiuujY319DG3sEApayW?=
- =?us-ascii?Q?pnnPapxZX8c9EBBFH1NLselNTYBoYbG0YEDtOlj8BlflerwPdyOh5/wwthV+?=
- =?us-ascii?Q?z/6PSU/TSYypHDfoWqcvoJaV1vi8W5Ux7GpaAbfFOzVVIOe3yHh1xZbuOPrH?=
- =?us-ascii?Q?1Mg7GckxYwLwv58nvY3C7z7BgSjBsbz7bQ87tsbf4QXqXn5fDtxHfsBD7rWa?=
- =?us-ascii?Q?E6QlHw+FI8NUoVY/DAAqX5A1fNgxOQUfZyTcX24lHeS8RhYa6Q4xg896Q3sN?=
- =?us-ascii?Q?lxwmunwqDA=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="fu29t46o"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Pd
+	JTFjbAJfBTDrDsKAb2n3JbbdsZx/8KKa8pMM2HO34=; b=fu29t46ohTBraPa2kv
+	cxI4LBijo/yU7R695CCtKkKxyK37FmuOR92nApb50B0ng7nxRb7bdLd8qxNn0NTn
+	52mf/lZZyeo9o9T7QNJOMM4KRdOK3u4ptEpDF4kNPmdPL4XwnNJkc36DbTj4GO3K
+	g2Cr4/SI95ldfUX4SCZDjq+bo=
+Received: from zhb.. (unknown [])
+	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wC35xPH7appKyH_OA--.9601S2;
+	Fri, 06 Mar 2026 23:07:51 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: lpieralisi@kernel.org,
+	jingoohan1@gmail.com,
+	mani@kernel.org,
+	kwilczynski@kernel.org,
+	bhelgaas@google.com
+Cc: robh@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>,
+	Cheng Xin <chengqin1525@126.com>
+Subject: [PATCH] PCI: dwc: Add PCIe event counters for groups 5 to 7 in DWC debugfs
+Date: Fri,  6 Mar 2026 23:07:54 +0800
+Message-Id: <20260306150754.41746-1-18255117159@163.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: bp.renesas.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TY3PR01MB11346.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a30eefc8-63f5-44fb-2b3f-08de7b8f8ab9
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Mar 2026 14:49:17.0699
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: B5VVAufdGX35jMM0tIzlFtar2cRGPfm/0D8Ew6gsNRcTIflihSHN+OciE/5keW+TLrE4CAro+kCV0YKIDXQquGkt8DnRIj7v5v9/VKBTfgI=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS9PR01MB15212
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wC35xPH7appKyH_OA--.9601S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxGr4UXFyfur1ftw45Wr1Utrb_yoWrJFWfp3
+	yjkr42gF48tr13Zr43X3s5Cr1kZFWkJrZ7Kan3u3sxW3W3urn5Ar13Kr15Jry8Gryqqr1Y
+	vF17try8WryYy37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piJGYdUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AexVWmq7ceFYgAA3B
 
+Extend the DesignWare PCIe controller's debugfs statistical counter
+interface with event definitions from groups 5 through 7 as documented
+in the DWC PCIe Databook (version 3.30a, section 3.8.2.3, Tables 3-59,
+3-60, 3-61). These counters provide visibility into Layer1 non-error
+events (link state transitions,ASPM, L1 substates), Layer2 DLLP
+exchanges, and Layer3 TLP transactions.
 
+The counters are exposed under the debugfs statistical counter directory,
+allowing users to monitor link behavior and diagnose PCIe protocol issues
+more effectively.
 
-> -----Original Message-----
-> From: John Madieu <john.madieu.xa@bp.renesas.com>
-> Sent: 06 March 2026 14:33
-> To: Biju Das <biju.das.jz@bp.renesas.com>; Claudiu Beznea <claudiu.beznea=
-.uj@bp.renesas.com>;
-> lpieralisi@kernel.org; kwilczynski@kernel.org; mani@kernel.org; geert+ren=
-esas@glider.be;
-> krzk+dt@kernel.org
-> Cc: robh@kernel.org; bhelgaas@google.com; conor+dt@kernel.org; magnus.dam=
-m <magnus.damm@gmail.com>;
-> linux-pci@vger.kernel.org; linux-renesas-soc@vger.kernel.org; devicetree@=
-vger.kernel.org; linux-
-> clk@vger.kernel.org; john.madieu@gmail.com
-> Subject: RE: [PATCH v7 12/15] PCI: rzg3s-host: Add support for RZ/G3E PCI=
-e controller
->=20
-> Hi Biju,
->=20
-> > -----Original Message-----
-> > From: John Madieu
-> > Sent: Friday, February 27, 2026 4:44 PM
-> > To: Biju Das <biju.das.jz@bp.renesas.com>; Claudiu Beznea
-> > <claudiu.beznea.uj@bp.renesas.com>; lpieralisi@kernel.org;
-> > kwilczynski@kernel.org; mani@kernel.org; geert+renesas@glider.be;
-> > krzk+dt@kernel.org
-> > Subject: RE: [PATCH v7 12/15] PCI: rzg3s-host: Add support for RZ/G3E
-> > PCIe controller
-> >
-> > Hi Biju,
-> >
-> > Thanks for the feedback.
-> >
-> > > -----Original Message-----
-> > > From: Biju Das <biju.das.jz@bp.renesas.com>
-> > > Sent: Friday, February 27, 2026 4:42 PM
-> > > To: John Madieu <john.madieu.xa@bp.renesas.com>; Claudiu Beznea
-> > > <claudiu.beznea.uj@bp.renesas.com>; lpieralisi@kernel.org;
-> > > kwilczynski@kernel.org; mani@kernel.org; geert+renesas@glider.be;
-> > > krzk+dt@kernel.org
-> > > Subject: RE: [PATCH v7 12/15] PCI: rzg3s-host: Add support for
-> > > RZ/G3E PCIe controller
-> > >
-> > > Hi John,
-> > >
-> > > > -----Original Message-----
-> > > > From: John Madieu <john.madieu.xa@bp.renesas.com>
-> > > > Sent: 27 February 2026 15:33
-> > > > Subject: [PATCH v7 12/15] PCI: rzg3s-host: Add support for RZ/G3E
-> > > > PCIe controller
-> > > >
-> > > > Add support for the PCIe controller found in RZ/G3E SoCs to the
-> > > > existing RZ/G3S PCIe host driver. The RZ/G3E PCIe controller is
-> > > similar to the RZ/G3S's, with the following key differences:
-> > > >
-> > > >  - Supports PCIe Gen3 (8.0 GT/s) link speeds alongside Gen2 (5.0
-> > > > GT/s)
-> > > >  - Uses a different reset control mechanism via AXI registers inste=
-ad
-> > > >    of the Linux reset framework
-> > > >  - Requires specific SYSC configuration for link state control and
-> > > >    Root Complex mode selection
-> > > >
-> > > > Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
-> > > > ---
-> > > >
-> > > > Changes:
-> > > >
-> > > > v7:
-> > > >  - Renamed RZG3E_PCI_RESET* defines to RZG3S_PCI_RESET* as these
-> > > >    registers are shared with upcoming SoCs (RZ/V2H, RZ/T2N, RZ/N2H)=
-,
-> > > >    dropped associated "RZ/G3E specific registers" comment
-> > > >  - Dropped "RZ/G3E SoC-specific config implementations" comment
-> > > >  - Unified function naming to rzg3e_pcie_config_{pre_init,post_init=
-,
-> > > >    deinit}() and rzg3s_pcie_config_{post_init,deinit}()
-> > > >  - Simplified comments as per Claudiu's suggestions
-> > > >  - Used local mask variables for compactness within 80-char limit
-> > > >  - Fixed L1_ALLOW error path: goto config_deinit_and_refclk since
-> > > >    port refclk is already enabled
-> > > >  - Fixed resume: reordered MODE before RST_RSM_B to match probe
-> > > >    sequence, fixing error path handling
-> > > >
-> > > > v6:
-> > > >   - Use rzg3s_sysc_config_func() with per-function calls instead of
-> > > >     rzg3s_sysc_config() with -1 skip pattern, as suggested by Claud=
-iu
-> > > >   - Extend enum rzg3s_sysc_func_id with L1_ALLOW and MODE entries
-> > > >   - Use regmap_update_bits() consistently for all SYSC accesses
-> > > >   - Shorten comment to "Put controller in RC mode and de-assert
-> > > RST_RSM_B."
-> > > >   - Drop "Enable ASPM L1 transition" comment (function ID is
-> > > > self-documenting)
-> > > >
-> > > > v5:
-> > > >   - Introduce rzg3s_sysc_config() helper for sys configuration
-> > > >
-> > > > v4: No changes
-> > > > v3: No changes
-> > > >
-> > > >  drivers/pci/controller/pcie-rzg3s-host.c | 90
-> > > > ++++++++++++++++++++++++
-> > > >  1 file changed, 90 insertions(+)
-> > > >
-> > > > diff --git a/drivers/pci/controller/pcie-rzg3s-host.c
-> > > > b/drivers/pci/controller/pcie-rzg3s-host.c
-> > > > index 44ce056d62c6..b7f92f5aee4a 100644
-> > > > --- a/drivers/pci/controller/pcie-rzg3s-host.c
-> > > > +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-> > > > @@ -111,6 +111,15 @@
-> > > >  #define RZG3S_PCI_PERM_CFG_HWINIT_EN		BIT(2)
-> > > >  #define RZG3S_PCI_PERM_PIPE_PHY_REG_EN		BIT(1)
-> > > >
-> > > > +#define RZG3S_PCI_RESET				0x310
-> > >
-> > > If there is any new version of the series, please put a comment
-> > >
-> > > +#define RZG3S_PCI_RESET				0x310 # Only for RZ/G3E
-> > >
-> >
-> > Noted for v8, if any.
->=20
-> Finally, this register (and other RZ/G3E-specific ones) is also available=
- on RZ/V2N (and probably
-> other SoCs) where no driver changes need to be made.
->=20
-> I would suggest keeping it as it is, avoiding the extra comment.
+Co-developed-by: Cheng Xin <chengqin1525@126.com>
+Signed-off-by: Cheng Xin <chengqin1525@126.com>
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+Thank you, Cheng Xin, for providing the 3.30a version of the DWC PCIe Data Book.
+---
+ .../controller/dwc/pcie-designware-debugfs.c  | 52 ++++++++++++++++++-
+ 1 file changed, 51 insertions(+), 1 deletion(-)
 
-This register is not applicable to RZ/G3S. You can extend the comment for R=
-Z/V2N right.=20
+diff --git a/drivers/pci/controller/dwc/pcie-designware-debugfs.c b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+index 0d1340c9b364..2efddb21b2b2 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-debugfs.c
++++ b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+@@ -131,13 +131,16 @@ static const u32 err_inj_type_mask[] = {
+  *				   supported in DWC RAS DES
+  * @name: Name of the error counter
+  * @group_no: Group number that the event belongs to. The value can range
+- *	      from 0 to 4
++ *	      from 0 to 7
+  * @event_no: Event number of the particular event. The value ranges are:
+  *		Group 0: 0 - 10
+  *		Group 1: 5 - 13
+  *		Group 2: 0 - 7
+  *		Group 3: 0 - 5
+  *		Group 4: 0 - 1
++ *		Group 5: 0 - 13
++ *		Group 6: 0 - 6
++ *		Group 7: 0 - 25
+  */
+ struct dwc_pcie_event_counter {
+ 	const char *name;
+@@ -181,6 +184,53 @@ static const struct dwc_pcie_event_counter event_list[] = {
+ 	{"completion_timeout", 0x3, 0x5},
+ 	{"ebuf_skp_add", 0x4, 0x0},
+ 	{"ebuf_skp_del", 0x4, 0x1},
++	{"l0_to_recovery_entry", 0x5, 0x0},
++	{"l1_to_recovery_entry", 0x5, 0x1},
++	{"tx_l0s_entry", 0x5, 0x2},
++	{"rx_l0s_entry", 0x5, 0x3},
++	{"aspm_l1_reject", 0x5, 0x4},
++	{"l1_entry", 0x5, 0x5},
++	{"l1_cpm", 0x5, 0x6},
++	{"l1.1_entry", 0x5, 0x7},
++	{"l1.2_entry", 0x5, 0x8},
++	{"l1_short_duration", 0x5, 0x9},
++	{"l1.2_abort", 0x5, 0xa},
++	{"l2_entry", 0x5, 0xb},
++	{"speed_change", 0x5, 0xc},
++	{"link_width_change", 0x5, 0xd},
++	{"tx_ack_dllp", 0x6, 0x0},
++	{"tx_update_fc_dllp", 0x6, 0x1},
++	{"rx_ack_dllp", 0x6, 0x2},
++	{"rx_update_fc_dllp", 0x6, 0x3},
++	{"rx_nullified_tlp", 0x6, 0x4},
++	{"tx_nullified_tlp", 0x6, 0x5},
++	{"rx_duplicate_tlp", 0x6, 0x6},
++	{"tx_memory_write", 0x7, 0x0},
++	{"tx_memory_read", 0x7, 0x1},
++	{"tx_configuration_write", 0x7, 0x2},
++	{"tx_configuration_read", 0x7, 0x3},
++	{"tx_io_write", 0x7, 0x4},
++	{"tx_io_read", 0x7, 0x5},
++	{"tx_completion_without_data", 0x7, 0x6},
++	{"tx_completion_w_data", 0x7, 0x7},
++	{"tx_message_tlp_pcie_vc_only", 0x7, 0x8},
++	{"tx_atomic", 0x7, 0x9},
++	{"tx_tlp_with_prefix", 0x7, 0xa},
++	{"rx_memory_write", 0x7, 0xb},
++	{"rx_memory_read", 0x7, 0xc},
++	{"rx_configuration_write", 0x7, 0xd},
++	{"rx_configuration_read", 0x7, 0xe},
++	{"rx_io_write", 0x7, 0xf},
++	{"rx_io_read", 0x7, 0x10},
++	{"rx_completion_without_data", 0x7, 0x11},
++	{"rx_completion_w_data", 0x7, 0x12},
++	{"rx_message_tlp_pcie_vc_only", 0x7, 0x13},
++	{"rx_atomic", 0x7, 0x14},
++	{"rx_tlp_with_prefix", 0x7, 0x15},
++	{"tx_ccix_tlp", 0x7, 0x16},
++	{"rx_ccix_tlp", 0x7, 0x17},
++	{"tx_deferrable_memory_write_tlp", 0x7, 0x18},
++	{"rx_deferrable_memory_write_tlp", 0x7, 0x19},
+ };
+ 
+ static ssize_t lane_detect_read(struct file *file, char __user *buf,
+-- 
+2.34.1
 
-See [1], maybe for PCIe driver it won't care??
-
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tre=
-e/drivers/net/ethernet/renesas/ravb.h?h=3Dnext-20260305#n160
-
-
-Cheers,
-Biju
