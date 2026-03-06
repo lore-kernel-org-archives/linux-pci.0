@@ -1,223 +1,136 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C78733B960;
-	Fri,  6 Mar 2026 15:27:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B673D33F581;
+	Fri,  6 Mar 2026 15:48:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772810824; cv=none; b=EzWQXSMmu0TifejvXrKfQZ4Bx5WcyFn+p4++U33Cs60nEfZyMR0Bc8TYeYJ12vdUCC5QCkdqEv4N4p7YrbDb1m0z6kB/VQ4kxgE2e4GqMJVyttzWZCb5vZ//s/PsXSPynXyklSgK1Ov9DaaaE8JuTf2DeJSkDU6pkVKe+Rq+eZc=
+	t=1772812125; cv=none; b=ANoISC3ohujlMgG+/kTlLHx7A5pvfTefsSkoqHCvJJQ+8fRIouTeNB0nNbBisVy3QILCwG2Ga5JlTz+F02f1qVB0rIGI1wvwUHZ10KVx+GwmTXZfxenIWV2tc28NW4nDpqBu/pbQntaPIWNedUC223Hnhrapbi+HQf8Rs/6H9OI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772810824; c=relaxed/simple;
-	bh=7Wk50g8rqG4HeWFgg2izhSBWfdgcOR8s9aItIZpfc7o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gbhnyDDJGEmuMdYvWsRCyqxUkyMe+WoQmioLexU5hFdDpMs8ytIDZ/JBHA1yhOskr3/1d/8y9KZ9A+sAa0RkuOSQ4lZoIaBSlBgBp7aH5VeatBFKiRkuarSXZxJGrPw0eYjllpAZFGQlg26htGJA4YYSFxN2CnPHR2dw9qGjD1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=pG33F6xg; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1772812125; c=relaxed/simple;
+	bh=NrPqJsvZ3LD8pr8ycv5loNTcp4o72ucMHrYcQU+RyC4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=SyGlYHrC1I7rhZmFvfeUlXZYdkurpxhlZs0mk4GxfH566IkwVvvRSimGa1VDOfTYzAtS+XgDqbC3al2meCSSNwCElBanTjM4+uK19lA4meRm9/tRFOpKU9pl4WegOaJUlixKa9mJXrVaONQqYVSEMx/rYtakXjobFSuuvJ3UjiE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=RP/zq+TU; arc=none smtp.client-ip=220.197.31.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="pG33F6xg"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 626AfiMu3559845;
-	Fri, 6 Mar 2026 15:26:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:sender:subject:to; s=pp1;
-	 bh=q5kgqseMzlg7vRNkt9YBQ+vCvsfOYFApnpS9LBSUNQ0=; b=pG33F6xgLLOH
-	SFWzU6ufr+pxpH1zmqWlKNRdH5o6/8UNJ2NJkdGLl4Mxp9PX1GF1MzbvCLOMkCaJ
-	Xmul+y3MLDjDV4yYaE2jjN2fx1w4DYp9cBNCnQ4kU0Q643eRFuaG8Y07g6Hxwu4b
-	9guyGRsdA4w/eWkcXd3fI1K6hb8ybrwrPK/ARZL8wTlDcVVvMgQkyZYSAFn6tg6o
-	75Bsz7PhEJvhf9gJMK5EUo2628FwpqCN/js0HOjabR24vO62mHVYdORQoPsbNBKF
-	GPfmn1gukslaAwTuIdJT6Bb3d3APIDbPE70b85xXOJ7UayhmIgWbPqSNtfS+KrIN
-	Sx0HBkWRFw==
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4ckskd969a-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 06 Mar 2026 15:26:53 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 626D6M5F003243;
-	Fri, 6 Mar 2026 15:26:51 GMT
-Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4cmb2yggtf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 06 Mar 2026 15:26:51 +0000
-Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
-	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 626FQjZh37617924
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 6 Mar 2026 15:26:45 GMT
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id C8A1320043;
-	Fri,  6 Mar 2026 15:26:45 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id B5B5320040;
-	Fri,  6 Mar 2026 15:26:45 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.52.223.163])
-	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Fri,  6 Mar 2026 15:26:45 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.1)
-	(envelope-from <bblock@linux.ibm.com>)
-	id 1vyX4f-000000054GF-1vDU;
-	Fri, 06 Mar 2026 16:26:45 +0100
-Date: Fri, 6 Mar 2026 16:26:45 +0100
-From: Benjamin Block <bblock@linux.ibm.com>
-To: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, helgaas@kernel.org,
-        sebott@linux.ibm.com, schnelle@linux.ibm.com, alifm@linux.ibm.com,
-        julianr@linux.ibm.com, dtatulea@nvidia.com, mani@kernel.org,
-        lukas@wunner.de, kbusch@kernel.org, ionut_n2001@yahoo.com,
-        sunlightlinux@gmail.com, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org, intel-xe@lists.freedesktop.org
-Subject: Re: [PATCH v6 1/1] PCI/IOV: Make pci_lock_rescan_remove() reentrant
- and protect sriov_add_vfs/sriov_del_vfs
-Message-ID: <20260306152645.GL1971507@p1gen4-pw042f0m>
-References: <20260306082108.17322-1-ionut.nechita@windriver.com>
- <20260306082108.17322-2-ionut.nechita@windriver.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="RP/zq+TU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=0bMJsDC1jTMA/bRZ8IOj99a37a8NHcIxgkzTYf0oGOw=;
+	b=RP/zq+TUwClKRzE2WG+V7gWU5kEGbKvd7mvxaihkawfVIJeJs8cpxtbtgr8RI/
+	FMCK1hBmGrTAVyC9sEmbWiy7uj3/ZwrM3XdSHOhRJjkeevUsteEOIHw78AVMDSE+
+	0fVE8pqHiBxqw77isAk+U2XCNouJAfMi01neGY/9c42jU=
+Received: from [IPV6:240e:b8f:927e:1000:3542:2c51:dbe0:7121] (unknown [])
+	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wBXAPMf96ppEcQDOQ--.755S2;
+	Fri, 06 Mar 2026 23:47:44 +0800 (CST)
+Message-ID: <e8803d3a-e6d5-4626-87ec-228cdf8b0fb5@163.com>
+Date: Fri, 6 Mar 2026 23:47:43 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260306082108.17322-2-ionut.nechita@windriver.com>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-GUID: CwSDB7Ae9mxkIbM9fih1jXPrHqT2QzyP
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA2MDE0NSBTYWx0ZWRfX5X5nu7kG95or
- MjeylGOpNFOWjLjDd+b8Tp20yqm6aKh1u4u9yPvBmmEngBH0Cv6FHz2+nmghW1Id7/wxTEEsMK2
- 9a0L/tW7ZeSA01h2VS7Ec1OcYiAbtSjNNPNjkhYxuWYlG3kJikuIkaL8Dpy9KdDEcAzzttkd9v+
- yyOiS/PW3ifWd11PbXKxU968JQuOH1VCeUDqzyc8WvxB72duoMfUYQqTYobAvjUGQmEsrdr1HkL
- KeAyhdIQYxga+cNdEJJzN2sqHvRORcf47Ud2MlXagk2D7b56guNrIripJCJo+yrqXr3UzPWg/u8
- EB4suOg728as3vX40m/uzgGCnXaJ1LeNArptobtHj9s+AgVY646naqg0vLEWAaHxj3Ov6gIaKNv
- ikZmYsvmEYvVRg0ePEkAZcxJsplEm0t+BeUt+3bvHdPtCmO2uBGrnbETAvHz3gK1c//ie5Fp8iW
- oa+oj3JyF1EFULv54rQ==
-X-Authority-Analysis: v=2.4 cv=H7DWAuYi c=1 sm=1 tr=0 ts=69aaf23d cx=c_pps
- a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
- a=8nJEP1OIZ-IA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=VwQbUJbxAAAA:8
- a=VnNF1IyMAAAA:8 a=Ikd4Dj_1AAAA:8 a=CjxXgO3LAAAA:8 a=t7CeM3EgAAAA:8
- a=RHTUbazJTsWS8M0bD-YA:9 a=3ZKOabzyN94A:10 a=wPNLvfGTeEIA:10
- a=FdTzh2GWekK77mhwV6Dw:22
-X-Proofpoint-ORIG-GUID: qt7NbiWAQaq5ufIDnDp-4bCtwaRKMTwx
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-06_04,2026-03-06_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 suspectscore=0 phishscore=0 clxscore=1011 priorityscore=1501
- adultscore=0 bulkscore=0 spamscore=0 malwarescore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603060145
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 1/1] PCI: of: Remove max-link-speed generation
+ validation
+To: bhelgaas@google.com, helgaas@kernel.org
+Cc: mani@kernel.org, ilpo.jarvinen@linux.intel.com,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20251218132036.308094-1-18255117159@163.com>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <20251218132036.308094-1-18255117159@163.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:_____wBXAPMf96ppEcQDOQ--.755S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxCw1UXr48Cr48ZF4UuryrtFb_yoW5Ar4kpF
+	WjyryrurW8Wr4fWw4DGa1UZFyjg3Z3WrWktr4rGwnrZw13JF1aqFySgF1YvFnF9FZ5CF47
+	Z3W2qa17G34jyaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRxMa5UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxAELrmmq9yGSfQAA3a
 
-Hey Ionut,
+Hi,
 
-On Fri, Mar 06, 2026 at 10:21:08AM +0200, Ionut Nechita (Wind River) wrote:
---8<--
-> Fixes: 18f9e9d150fc ("PCI/IOV: Factor out sriov_add_vfs()")
-> Cc: stable@vger.kernel.org
-> Suggested-by: Lukas Wunner <lukas@wunner.de>
-> Tested-by: Dragos Tatulea <dtatulea@nvidia.com>
-> Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
-> Tested-by: Benjamin Block <bblock@linux.ibm.com>
+Gentle ping.
 
-I'm not sure whether you are aware of this, but generally, once you make
-substantially changes to a patch, it is common practice to remove the previous
-Tested-by and/or Reviewed-by tags again:
-https://docs.kernel.org/process/submitting-patches.html#reviewer-s-statement-of-oversight
-(3. paragraph).
+Best regards,
+Hans
 
-It's a bit of a judgement call what level of change is necessary to be
-"substantial", but anyway, I thought I'd mention it :)
-
-> Signed-off-by: Ionut Nechita <ionut_n2001@yahoo.com>
-> Signed-off-by: Ionut Nechita <ionut.nechita@windriver.com>
+On 2025/12/18 21:20, Hans Zhang wrote:
+> The current implementation of of_pci_get_max_link_speed() validates
+> max-link-speed property values to be in the range 1~4 (Gen1~Gen4).
+> However, this creates maintenance overhead as each new PCIe generation
+> requires updating this validation logic.
+> 
+> Since device tree binding validation already enforces the allowed
+> values through the schema, and the callers of this function perform
+> their own validation checks, this intermediate validation becomes
+> redundant.
+> 
+> Furthermore, with upcoming SOCs using Synopsys/Cadence IP requiring
+> Gen5/Gen6 support, removing this hardcoded check enables seamless
+> support for future PCIe generations without requiring kernel updates
+> for each new speed grade.
+> 
+> Remove the max-link-speed > 4 validation check while retaining the
+> property existence and non-zero check. This simplifies maintenance
+> and aligns with the existing validation architecture where DT binding
+> and driver-level checks provide sufficient validation.
+> 
+> Signed-off-by: Hans Zhang <18255117159@163.com>
+> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 > ---
---8<--
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index bccc7a4bdd794..c7efb8e1010d3 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -3509,16 +3509,27 @@ EXPORT_SYMBOL_GPL(pci_rescan_bus);
->   * routines should always be executed under this mutex.
->   */
->  DEFINE_MUTEX(pci_rescan_remove_lock);
-> +static struct task_struct *pci_rescan_remove_owner;
-> +static unsigned int pci_rescan_remove_count;
->  
->  void pci_lock_rescan_remove(void)
->  {
-> +	if (pci_rescan_remove_owner == current) {
-> +		pci_rescan_remove_count++;
-> +		return;
-> +	}
->  	mutex_lock(&pci_rescan_remove_lock);
-> +	pci_rescan_remove_owner = current;
-> +	pci_rescan_remove_count = 1;
->  }
->  EXPORT_SYMBOL_GPL(pci_lock_rescan_remove);
->  
->  void pci_unlock_rescan_remove(void)
->  {
-> -	mutex_unlock(&pci_rescan_remove_lock);
-> +	if (--pci_rescan_remove_count == 0) {
-> +		pci_rescan_remove_owner = NULL;
-> +		mutex_unlock(&pci_rescan_remove_lock);
-> +	}
->  }
->  EXPORT_SYMBOL_GPL(pci_unlock_rescan_remove);
+> Changes for v6:
+> - It'd be good to return the actual errno as of_property_read_u32() can return
+>    -EINVAL, -ENODATA and -EOVERFLOW. (Mani)
+> 
+> Changes for v5:
+> https://patchwork.kernel.org/project/linux-pci/patch/20251218125909.305300-1-18255117159@163.com/
+> 
+> - Delete the check for speed. (Mani)
+> 
+> Changes for v4:
+> https://patchwork.kernel.org/project/linux-pci/patch/20251105134701.182795-1-18255117159@163.com/
+> 
+> - Add pcie_max_supported_link_speed.(Ilpo)
+> 
+> Changes for v3:
+> https://patchwork.kernel.org/project/linux-pci/patch/20251101164132.14145-1-18255117159@163.com/
+> 
+> - Modify the commit message.
+> - Add Reviewed-by tag.
+> 
+> Changes for v2:
+> https://patchwork.kernel.org/project/linux-pci/cover/20250529021026.475861-1-18255117159@163.com/
+> - The following files have been deleted:
+>    Documentation/devicetree/bindings/pci/pci.txt
+> 
+>    Update to this file again:
+>    dtschema/schemas/pci/pci-bus-common.yaml
+> ---
+>   drivers/pci/of.c | 7 ++++---
+>   1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> index 3579265f1198..b56fdbcb3d72 100644
+> --- a/drivers/pci/of.c
+> +++ b/drivers/pci/of.c
+> @@ -888,10 +888,11 @@ bool of_pci_supply_present(struct device_node *np)
+>   int of_pci_get_max_link_speed(struct device_node *node)
+>   {
+>   	u32 max_link_speed;
+> +	int ret;
+>   
+> -	if (of_property_read_u32(node, "max-link-speed", &max_link_speed) ||
+> -	    max_link_speed == 0 || max_link_speed > 4)
+> -		return -EINVAL;
+> +	ret = of_property_read_u32(node, "max-link-speed", &max_link_speed);
+> +	if (ret)
+> +		return ret;
+>   
+>   	return max_link_speed;
+>   }
 
-I'm not sure Lukas meant to revert to a local cache for the task_struct, just
-that the counter variable itself doesn't need to be an atomic.
-
-How the counting is done itself is probably very much a taste question. I've
-run tests in my test lab with this change:
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6686cee98afc..28c0384424db 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -3510,27 +3510,23 @@ EXPORT_SYMBOL_GPL(pci_rescan_bus);
-  */
- DEFINE_MUTEX(pci_rescan_remove_lock);
- EXPORT_SYMBOL_GPL(pci_rescan_remove_lock);
--static struct task_struct *pci_rescan_remove_owner;
--static unsigned int pci_rescan_remove_count;
-+static size_t pci_rescan_remove_reentrant_count = 0;
- 
- void pci_lock_rescan_remove(void)
- {
--	if (pci_rescan_remove_owner == current) {
--		pci_rescan_remove_count++;
--		return;
--	}
--	mutex_lock(&pci_rescan_remove_lock);
--	pci_rescan_remove_owner = current;
--	pci_rescan_remove_count = 1;
-+	if (mutex_get_owner(&pci_rescan_remove_lock) == (unsigned long)current)
-+		pci_rescan_remove_reentrant_count++;
-+	else
-+		mutex_lock(&pci_rescan_remove_lock);
- }
- EXPORT_SYMBOL_GPL(pci_lock_rescan_remove);
- 
- void pci_unlock_rescan_remove(void)
- {
--	if (--pci_rescan_remove_count == 0) {
--		pci_rescan_remove_owner = NULL;
-+	if (pci_rescan_remove_reentrant_count > 0)
-+		pci_rescan_remove_reentrant_count--;
-+	else
- 		mutex_unlock(&pci_rescan_remove_lock);
--	}
- }
- EXPORT_SYMBOL_GPL(pci_unlock_rescan_remove);
- 
-But like I said, the counting comes down to about the same as with your patch
-(as far as I can tell), just that it also uses the mutex_get_owner() call.
-
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
-Sitz der Ges.: Ehningen     /     Registergericht: AmtsG Stuttgart, HRB 243294
