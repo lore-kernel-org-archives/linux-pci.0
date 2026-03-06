@@ -1,136 +1,97 @@
-Received: from mout6.gn-server.de (mout6.gn-server.de [87.238.194.233])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCA8418FDBD;
-	Fri,  6 Mar 2026 18:02:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=87.238.194.233
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F7BA41324C;
+	Fri,  6 Mar 2026 18:45:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772820141; cv=none; b=mud1boGoEnEBk9YjqWr7qQAOlaouthdLs0wBIYVRThYYJIOA+jpQBSgMWm0WG4C+A9GgkPu87nbs+5su9rI6KgD8owSHS4tyuYFWll6yh4dGy7+3hfdOSHhwmzvx5YlvE1C3OfiOMnNUOgjwSqo7QffwakvnoIbkWJIBB8q6a+I=
+	t=1772822721; cv=none; b=ikxUJ/5xl4w83lT7dS1f/lYdRI+rvaQsvDlbYb9D1rahCDFfd8YlzKfs6o2G2UAHBKcefUDwJXkVPh23i2mFwgiBouy57XvLCP3Aw9dOngcxbpwmw+aTxK7ErhFXfejW48DLmVRyEK60a81GXIB9bD5IGy0MZ68UEiWVsFO9E/c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772820141; c=relaxed/simple;
-	bh=mf5jm4j7kirSbdpTWnjWX7HcZ6qxHCVIc8ZIn86Qiko=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Mrnyuel8hXBX6CB2mGVZZk0ORg04l0lpNrkwf1u3jY/4CKp6s9zRThURDFf4s0PV7dzYOp/+TLXiPcwvSlKnZuGPgId2N644tIwSWHf2WFf7Qb9e9hbKp2S//7p1CXbdZX+HDNoCBb+pDvpVFmZfaftlAVElgHLVlhzmKxJeNqE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mageta.org; spf=pass smtp.mailfrom=mageta.org; dkim=pass (2048-bit key) header.d=lc0.greatnet-hosting.de header.i=@lc0.greatnet-hosting.de header.b=ltHkvu8r; arc=none smtp.client-ip=87.238.194.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mageta.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mageta.org
+	s=arc-20240116; t=1772822721; c=relaxed/simple;
+	bh=TAPEMoUBdbqiMr5CXBvVzsVUqO0KPRqErDje7YwlSrU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=IGaATpXgUHn9xb3qHYg4u14S48EOCvP3NNPW8Oc6offdXVCcmprXDFeIgwONLIQyZUSudge847Mqqy0546nS0tJblxXEMHYwx8G43K7Is/1ZGcLXULE8F1+FgeT4vQQcUfUZQRo408ba0WiYy1rGx/+AZW6Q2peGQbwSssYkepM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C6+980zh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=lc0.greatnet-hosting.de header.i=@lc0.greatnet-hosting.de header.b="ltHkvu8r"
-Received: from mout17.gn-server.de ([87.238.194.244])
-	by mout6.gn-server.de with esmtps (envelope-from <lkml@mageta.org>)
-	id 1vyZUo-0001ei-1K;
-	Fri, 06 Mar 2026 18:01:54 +0000
-Received: from lc0.greatnet-hosting.de ([178.254.50.20])
-	by mout17.gn-server.de with esmtps (envelope-from <lkml@mageta.org>)
-	id 1vyZUm-00058j-0t;
-	Fri, 06 Mar 2026 18:01:54 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-	d=lc0.greatnet-hosting.de; s=rsa1; t=1772820112;
-	bh=mf5jm4j7kirSbdpTWnjWX7HcZ6qxHCVIc8ZIn86Qiko=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ltHkvu8r2btk5PDvXDaMn68CZkN11DYeqfmhj0YK9s6zTknfJfhiUnw6IsszuCs8w
-	 XVr9FuqbkI7s9WiGixfAAcVceALMqTBBnxJ0uOeHAW31xrkccn68Z9QoOZN0slKnyc
-	 mzZ+v4KH8g2eft7of6mO7QP+sLrPLO2iJTsPvFJeQSIcQ5W5seOA3xlnCGAtOzX3c1
-	 vGOWpClpwp/FVjvb4ldgfZpEa5Wy08jL4J7uRC85TsNfKCXMNfmK2aszCpSkTcz01G
-	 9n0ts5xVm8Zmn8IQqBv5i2Hh9Y0qI+9sVZgfj1R8V0cbqw1A1s64ljNroiyDFzinHH
-	 A4vnvJxM5f0BA==
-Received: from chlorum.ategam.org (ategam.org [88.99.83.185])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (secp384r1) server-digest SHA384)
-	(No client certificate requested)
-	(Authenticated sender: work@mageta.org)
-	by lc0.greatnet-hosting.de (Postfix) with ESMTPSA id 62586157BF0B;
-	Fri,  6 Mar 2026 19:01:51 +0100 (CET)
-Date: Fri, 6 Mar 2026 19:01:49 +0100
-From: Benjamin Block <lkml@mageta.org>
-To: Keith Busch <kbusch@kernel.org>
-Cc: Benjamin Block <bblock@linux.ibm.com>,
-	Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Niklas Schnelle <schnelle@linux.ibm.com>,
-	Farhan Ali <alifm@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	linux-s390 <linux-s390@vger.kernel.org>,
-	Andreas Krebbel <krebbel@linux.ibm.com>,
-	Julian Ruess <julianr@linux.ibm.com>,
-	Matthew Rosato <mjrosato@linux.ibm.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Gerd Bayer <gbayer@linux.ibm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Tobias Schumacher <ts@linux.ibm.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Ionut Nechita <ionut.nechita@windriver.com>,
-	Ionut Nechita <ionut_n2001@yahoo.com>
-Subject: Re: [PATCH 1/4] PCI: Move declaration of pci_rescan_remove_lock into
- public pci.h
-Message-ID: <20260306180149.GD762467@chlorum.ategam.org>
-References: <cover.1772815642.git.bblock@linux.ibm.com>
- <9afaf022cb8e37241c4d2e5356cb262266b0bf3d.1772815642.git.bblock@linux.ibm.com>
- <aasPgZkgCmW5kZgV@kbusch-mbp>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C6+980zh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41770C4CEF7;
+	Fri,  6 Mar 2026 18:45:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772822720;
+	bh=TAPEMoUBdbqiMr5CXBvVzsVUqO0KPRqErDje7YwlSrU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=C6+980zh2V2zzVdWHkclZcGT8fGLhNKvxrq4lP/nCmBHw2VmFMDjL3M7Ghf/Zk5Qy
+	 L2gVoFh7mCtrAQsqSk4N4kAiS/C4rwKkEvGBw3Z3Ql/2vUPJt9wkbZdMPjtpL+QG5Q
+	 s3TbBU4WMh3pMjmqZ5BYCoM81fk2NnJTP6m/SId2SdmMxk+rxeWVWjHbcwh60vXdjc
+	 cfYfvF0fwgHE9kgWg+PNz1KRUt7eatGYQsFmEaOtbNZIfPnP08iqWd9qJ6yUUM4K+5
+	 Np0EPpnUCzSs7xuKD0GOndhDeae4KEhcvQMjb17Vv6AwPjf7bQqXQdOv9QLfN0C1bp
+	 x1L22+WIAbnmQ==
+Date: Fri, 6 Mar 2026 12:45:19 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Aksh Garg <a-garg7@ti.com>
+Cc: linux-pci@vger.kernel.org, jingoohan1@gmail.com, mani@kernel.org,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org,
+	bhelgaas@google.com, yoshihiro.shimoda.uh@renesas.com,
+	fancer.lancer@gmail.com, Zhiqiang.Hou@nxp.com,
+	gustavo.pimentel@synopsys.com, cassel@kernel.org,
+	linux-kernel@vger.kernel.org, s-vadapalli@ti.com,
+	danishanwar@ti.com
+Subject: Re: [PATCH v3 1/2] PCI: dwc: ep: Fix MSI-X configuration to write to
+ correct physical function
+Message-ID: <20260306184519.GA131984@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <aasPgZkgCmW5kZgV@kbusch-mbp>
-User-Agent: Mutt/2.3 (50e3b1f3) (2026-01-25)
-X-GN-Spam: 
-X-GN-Spam-Score-INT: 0
-X-GN-Spam-Report: Action: no action
- Symbol: ARC_NA(0.00)
- Symbol: R_SPF_ALLOW(0.00)
- Symbol: RCVD_NO_TLS_LAST(0.00)
- Symbol: IP_SCORE(0.00)
- Symbol: RCVD_VIA_SMTP_AUTH(0.00)
- Symbol: RCVD_COUNT_TWO(0.00)
- Symbol: FROM_EQ_ENVFROM(0.00)
- Symbol: TO_DN_ALL(0.00)
- Symbol: RCPT_COUNT_TWELVE(0.00)
- Symbol: R_DKIM_ALLOW(0.00)
- Symbol: DMARC_NA(0.00)
- Symbol: ASN(0.00)
- Symbol: TO_MATCH_ENVRCPT_ALL(0.00)
- Symbol: MIME_GOOD(0.00)
- Symbol: FROM_HAS_DN(0.00)
- Message: (SPF): spf allow
- Message-ID: 20260306180149.GD762467@chlorum.ategam.org
-X-GN-Spam-Score: 0.0 (/)
+In-Reply-To: <20260224083817.916782-2-a-garg7@ti.com>
 
-On Fri, Mar 06, 2026 at 10:31:45AM -0700, Keith Busch wrote:
-> On Fri, Mar 06, 2026 at 05:49:13PM +0100, Benjamin Block wrote:
-> > So far it is possible to use and call the functions
-> > pci_lock_rescan_remove() and pci_unlock_rescan_remove() from any PCI
-> > code, including modules and architecture code; but the lock
-> > `pci_rescan_remove_lock` itself is private to objects residing in
-> > `drivers/pci/` via the header `drivers/pci/pci.h`.
-> > 
-> > With that setup it is not possible to use lockdep annotations such as
-> > lockdep_assert_held(), or sparse annotations such as __must_hold() in
-> > modules or architecture code for PCI.
-> > 
-> > Since it is useful for `pci_rescan_remove_lock` to have such
-> > annotations, move the variable declaration into `include/linux/pci.h`.
+On Tue, Feb 24, 2026 at 02:08:16PM +0530, Aksh Garg wrote:
+> The MSI-X configuration code reads from the correct physical function's
+> register space using dw_pcie_ep_readw_dbi(), but writes back only to
+> PF0 using the old dw_pcie_writew_dbi() helper. This causes incorrect
+> MSI-X configuration for other PFs.
 > 
-> This big lock for pci scanning is way to easy to misuse to create
-> deadlocks, many of which still exist today, 
+> Fix this by using dw_pcie_ep_writew_dbi() to write to the correct PF's
+> register space, matching the read operation.
 
-I can fully appreciate that, having had to deal with bug reports that
-stem from it's use for several months at this point.
+Is this another case of using "PF" in a non-SR-IOV context, as I asked
+about here?
 
-> so I'm not sure making it easier to access is the right direction.
+  https://lore.kernel.org/all/20260223185558.GA3701139@bhelgaas
 
-The thing is, I really would love to be able to annotate our
-architecture code where appropriate, and I didn't see any other option.
-Explicit annotations in the code highlight far better than putting a
-comment in the function/-header.
+I do not want to use "PF" unless we're talking about a device with an
+SR-IOV Capability and we're doing something specific to SR-IOV.
 
--- 
-Best Regards und Beste Grüße, Benjamin Block
-               PGP KeyID: 9610 2BB8 2E17 6F65 2362  6DF2 46E0 4E05 67A3 2E9E
+> Fixes: 70fa02ca1446 ("PCI: dwc: Add dw_pcie_ep_{read,write}_dbi[2] helpers")
+> Reviewed-by: Niklas Cassel <cassel@kernel.org>
+> Signed-off-by: Aksh Garg <a-garg7@ti.com>
+> ---
+> 
+> Changes since v1:
+> - None
+> 
+> v1: https://lore.kernel.org/all/20260202072758.101845-2-a-garg7@ti.com/
+> 
+>  drivers/pci/controller/dwc/pcie-designware-ep.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> index 7e7844ff0f7e..771241e1a2c9 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> @@ -745,7 +745,7 @@ static int dw_pcie_ep_set_msix(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  	val = dw_pcie_ep_readw_dbi(ep, func_no, reg);
+>  	val &= ~PCI_MSIX_FLAGS_QSIZE;
+>  	val |= nr_irqs - 1; /* encoded as N-1 */
+> -	dw_pcie_writew_dbi(pci, reg, val);
+> +	dw_pcie_ep_writew_dbi(ep, func_no, reg, val);
+>  
+>  	reg = ep_func->msix_cap + PCI_MSIX_TABLE;
+>  	val = offset | bir;
+> -- 
+> 2.34.1
+> 
