@@ -1,157 +1,103 @@
-Received: from mail-m10155.netease.com (mail-m10155.netease.com [154.81.10.155])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B18323D7E3;
-	Fri,  6 Mar 2026 17:26:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=154.81.10.155
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ABAD35AC03;
+	Fri,  6 Mar 2026 17:30:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772818021; cv=none; b=fC822mDnPJNcQlhoTM8osGoVRrsm8iSFrqUTcKZgiozINTkDXYUrcLuW6bjPMmvIC6+qi9HPdTfvzbrwHu0sttKBJBhVg4KR/wYPgCAu/Ybw9u04j4Bld7xG8BEDs3TlKHYXyfxTRaDH4+TlqEShlGivW6FkTrUxN64h9jYgD2k=
+	t=1772818233; cv=none; b=A3q699jNtWrX3wVcpn5urPYTrkvxFraal8TnDjVLrUaQ2w5gwZeNYGOY6UEAbRS6MkRGRN8yVQ92QI97h6Q7bgBRnEi+kBSsjbNSNbKjx/ghUSABuaZ0ARgqKyI9EyeyFLQAfD9XvRPTIvCvdcN9ahSQZvg17JBxAiBlJKCWX2w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772818021; c=relaxed/simple;
-	bh=B9M5uCBl1KLhO43b2Y327KOuBcVGuNtqFbchQTgBDtM=;
-	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=mNhIgmesVeWN8bLE7YuKvnXkKcpDZ8oFbo17+h4uFrQMsY8T5tZsFLXzc7lxQ4QIo+rlcKv+0lYP2l1Cn5A+t22xKseJlWG7iAu3C4clDN2eAnvcYU59abT+ZL3pRazuPtJ/giZn4+bZS6v30kTReslIIrm+T561W48BR+3mH5g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=F5PZv8gN; arc=none smtp.client-ip=154.81.10.155
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1772818233; c=relaxed/simple;
+	bh=8VmuFnYbiOKgaR+BBAUnY6HUkEujulh2Twpm6HK6CSU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DblmVhaPwqGaYbvcaTJexbldGUFIC7LZGRGp9weGb6VGXmTrUWG4dfIfPimH2HuFKedUA9m3NQ7xdzvpMt+eqIhTEuKxd4FO66mtmUaOQvAVHGzxARTglIOb7mXzDu3oCUdNapNrprk94eDIxc4LpOUEw14SmpLLMSLMvDZKvAE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TR9A1LQF; arc=none smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="F5PZv8gN"
-Received: from [172.16.12.14] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 360a7ed70;
-	Sat, 7 Mar 2026 00:11:08 +0800 (GMT+08:00)
-Cc: shawn.lin@rock-chips.com, robh@kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Cheng Xin <chengqin1525@126.com>,
- lpieralisi@kernel.org, jingoohan1@gmail.com, kwilczynski@kernel.org,
- bhelgaas@google.com, mani@kernel.org
-Subject: Re: [PATCH] PCI: dwc: Add PCIe event counters for groups 5 to 7 in
- DWC debugfs
-To: Hans Zhang <18255117159@163.com>
-References: <20260306150754.41746-1-18255117159@163.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <a07f2bf8-6c91-e89f-d07b-721e6f10805c@rock-chips.com>
-Date: Sat, 7 Mar 2026 00:11:06 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TR9A1LQF"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1772818232; x=1804354232;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=8VmuFnYbiOKgaR+BBAUnY6HUkEujulh2Twpm6HK6CSU=;
+  b=TR9A1LQFCB7FJdOsC/QlqG1tp9S3imY7FgXorPbA/TAErCNXmG8vm2UY
+   Ix+Ll1Wghw4pG/WYOVHShBso6SAhs2Z20tDpz8MvgM8QCPa1uTpGawGB8
+   X9+L0waSJGhXkwZ99c0K3vaj9dyhzi5BfIMp0i0E21JoexM3bnq9s+xyD
+   lULbp4q25pOtlu30yxwhAv8GNsytFtFreYN2ZeqQggmFmK7+0JV+cXpa1
+   OTC6zaeIIUk2GONPAj63oaI6PP9SYhYtC87Qd3dgiG6A8w7VI7f+80lhY
+   CsuvPYGhhmGKlUbs9WmeRKmtqG3ssqssh1ISsVK6W3UR8ndC8zLIHGH4J
+   g==;
+X-CSE-ConnectionGUID: Rxhue+gHTwWMtUCeQT8oig==
+X-CSE-MsgGUID: oef6U4QAQImISudFb1opsw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11721"; a="76536359"
+X-IronPort-AV: E=Sophos;i="6.23,105,1770624000"; 
+   d="scan'208";a="76536359"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2026 09:30:32 -0800
+X-CSE-ConnectionGUID: 0bx+XxIITUy/ALxxQyoj5Q==
+X-CSE-MsgGUID: qc/tcyJERO+MUV1m2NxX4Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,105,1770624000"; 
+   d="scan'208";a="218305101"
+Received: from lkp-server01.sh.intel.com (HELO 058beb05654c) ([10.239.97.150])
+  by orviesa010.jf.intel.com with ESMTP; 06 Mar 2026 09:30:26 -0800
+Received: from kbuild by 058beb05654c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vyZ0H-00000000197-44lO;
+	Fri, 06 Mar 2026 17:30:21 +0000
+Date: Sat, 7 Mar 2026 01:29:40 +0800
+From: kernel test robot <lkp@intel.com>
+To: Caleb James DeLisle <cjd@cjdns.fr>, linux-mips@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, naseefkm@gmail.com,
+	mturquette@baylibre.com, sboyd@kernel.org, robh@kernel.org,
+	krzk+dt@kernel.org, conor+dt@kernel.org, cjd@cjdns.fr,
+	tsbogend@alpha.franken.de, ryder.lee@mediatek.com,
+	jianjun.wang@mediatek.com, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, bhelgaas@google.com,
+	vkoul@kernel.org, neil.armstrong@linaro.org, p.zabel@pengutronix.de,
+	matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
+	nbd@nbd.name, ansuelsmth@gmail.com, linux-clk@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
+	linux-phy@lists.infradead.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 6/8] PCI: mediatek: Add support for EcoNet EN7528 SoC
+Message-ID: <202603070131.ufbXMWzw-lkp@intel.com>
+References: <20260303190948.694783-7-cjd@cjdns.fr>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20260306150754.41746-1-18255117159@163.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9cc3eac46809cckunm0f93ce74144eb8d
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGkJDQ1ZNHx9PSU5JH0xCGUNWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=F5PZv8gNTDMjZCKX4vSQDyz8xU3dI4grkU8uWiQ/8UgNI8JA+uD5dkjG5gXhVjLSCboySJJN4IRn0FzCY2ubAMoMZAzYNj9jAaZ68b0sNQ9wuwr9uizvqdYRoGA0EjHDW4lF4b+HOJxGwV+sksAF0ePnW7Q9tlFb9dCbpitfTCY=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=hJiWJ8Vdvw44FSdcQBf/hz/zfP4GQr2RJizw/2T7UXc=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260303190948.694783-7-cjd@cjdns.fr>
 
-在 2026/03/06 星期五 23:07, Hans Zhang 写道:
-> Extend the DesignWare PCIe controller's debugfs statistical counter
-> interface with event definitions from groups 5 through 7 as documented
-> in the DWC PCIe Databook (version 3.30a, section 3.8.2.3, Tables 3-59,
-> 3-60, 3-61). These counters provide visibility into Layer1 non-error
-> events (link state transitions,ASPM, L1 substates), Layer2 DLLP
-> exchanges, and Layer3 TLP transactions.
-> 
-> The counters are exposed under the debugfs statistical counter directory,
-> allowing users to monitor link behavior and diagnose PCIe protocol issues
-> more effectively.
-> 
-> Co-developed-by: Cheng Xin <chengqin1525@126.com>
-> Signed-off-by: Cheng Xin <chengqin1525@126.com>
-> Signed-off-by: Hans Zhang <18255117159@163.com>
-> ---
-> Thank you, Cheng Xin, for providing the 3.30a version of the DWC PCIe Data Book.
-> ---
->   .../controller/dwc/pcie-designware-debugfs.c  | 52 ++++++++++++++++++-
->   1 file changed, 51 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-debugfs.c b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-> index 0d1340c9b364..2efddb21b2b2 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-> @@ -131,13 +131,16 @@ static const u32 err_inj_type_mask[] = {
->    *				   supported in DWC RAS DES
->    * @name: Name of the error counter
->    * @group_no: Group number that the event belongs to. The value can range
-> - *	      from 0 to 4
-> + *	      from 0 to 7
->    * @event_no: Event number of the particular event. The value ranges are:
->    *		Group 0: 0 - 10
->    *		Group 1: 5 - 13
->    *		Group 2: 0 - 7
->    *		Group 3: 0 - 5
->    *		Group 4: 0 - 1
-> + *		Group 5: 0 - 13
-> + *		Group 6: 0 - 6
-> + *		Group 7: 0 - 25
->    */
->   struct dwc_pcie_event_counter {
->   	const char *name;
-> @@ -181,6 +184,53 @@ static const struct dwc_pcie_event_counter event_list[] = {
->   	{"completion_timeout", 0x3, 0x5},
->   	{"ebuf_skp_add", 0x4, 0x0},
->   	{"ebuf_skp_del", 0x4, 0x1},
-> +	{"l0_to_recovery_entry", 0x5, 0x0},
-> +	{"l1_to_recovery_entry", 0x5, 0x1},
-> +	{"tx_l0s_entry", 0x5, 0x2},
-> +	{"rx_l0s_entry", 0x5, 0x3},
-> +	{"aspm_l1_reject", 0x5, 0x4},
-> +	{"l1_entry", 0x5, 0x5},
-> +	{"l1_cpm", 0x5, 0x6},
-> +	{"l1.1_entry", 0x5, 0x7},
-> +	{"l1.2_entry", 0x5, 0x8},
-> +	{"l1_short_duration", 0x5, 0x9},
-> +	{"l1.2_abort", 0x5, 0xa},
-> +	{"l2_entry", 0x5, 0xb},
-> +	{"speed_change", 0x5, 0xc},
-> +	{"link_width_change", 0x5, 0xd},
-> +	{"tx_ack_dllp", 0x6, 0x0},
-> +	{"tx_update_fc_dllp", 0x6, 0x1},
-> +	{"rx_ack_dllp", 0x6, 0x2},
-> +	{"rx_update_fc_dllp", 0x6, 0x3},
-> +	{"rx_nullified_tlp", 0x6, 0x4},
-> +	{"tx_nullified_tlp", 0x6, 0x5},
-> +	{"rx_duplicate_tlp", 0x6, 0x6},
-> +	{"tx_memory_write", 0x7, 0x0},
-> +	{"tx_memory_read", 0x7, 0x1},
-> +	{"tx_configuration_write", 0x7, 0x2},
-> +	{"tx_configuration_read", 0x7, 0x3},
-> +	{"tx_io_write", 0x7, 0x4},
-> +	{"tx_io_read", 0x7, 0x5},
-> +	{"tx_completion_without_data", 0x7, 0x6},
-> +	{"tx_completion_w_data", 0x7, 0x7},
-> +	{"tx_message_tlp_pcie_vc_only", 0x7, 0x8},
-> +	{"tx_atomic", 0x7, 0x9},
-> +	{"tx_tlp_with_prefix", 0x7, 0xa},
-> +	{"rx_memory_write", 0x7, 0xb},
-> +	{"rx_memory_read", 0x7, 0xc},
-> +	{"rx_configuration_write", 0x7, 0xd},
-> +	{"rx_configuration_read", 0x7, 0xe},
-> +	{"rx_io_write", 0x7, 0xf},
-> +	{"rx_io_read", 0x7, 0x10},
-> +	{"rx_completion_without_data", 0x7, 0x11},
-> +	{"rx_completion_w_data", 0x7, 0x12},
-> +	{"rx_message_tlp_pcie_vc_only", 0x7, 0x13},
-> +	{"rx_atomic", 0x7, 0x14},
-> +	{"rx_tlp_with_prefix", 0x7, 0x15},
+Hi Caleb,
 
-Hmm, 5.10a/5.60a databooks only list the first 21 events for Group 7,
-It's rather counterintuitive, perhaps it would make sense that debug 
-signals should keep adding more. Other parts look good to me.
+kernel test robot noticed the following build errors:
 
-> +	{"tx_ccix_tlp", 0x7, 0x16},
-> +	{"rx_ccix_tlp", 0x7, 0x17},
-> +	{"tx_deferrable_memory_write_tlp", 0x7, 0x18},
-> +	{"rx_deferrable_memory_write_tlp", 0x7, 0x19},
->   };
->   
->   static ssize_t lane_detect_read(struct file *file, char __user *buf,
-> 
+[auto build test ERROR on 3fa5e5702a82d259897bd7e209469bc06368bf31]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Caleb-James-DeLisle/dt-bindings-clock-reset-Add-econet-EN751221-bindings/20260304-031451
+base:   3fa5e5702a82d259897bd7e209469bc06368bf31
+patch link:    https://lore.kernel.org/r/20260303190948.694783-7-cjd%40cjdns.fr
+patch subject: [PATCH 6/8] PCI: mediatek: Add support for EcoNet EN7528 SoC
+config: parisc-allmodconfig (https://download.01.org/0day-ci/archive/20260307/202603070131.ufbXMWzw-lkp@intel.com/config)
+compiler: hppa-linux-gcc (GCC) 15.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260307/202603070131.ufbXMWzw-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202603070131.ufbXMWzw-lkp@intel.com/
+
+All errors (new ones prefixed by >>, old ones prefixed by <<):
+
+>> ERROR: modpost: "pcie_retrain_link" [drivers/pci/controller/pcie-mediatek.ko] undefined!
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
