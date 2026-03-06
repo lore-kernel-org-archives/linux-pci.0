@@ -1,137 +1,212 @@
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8FB548165D
-	for <linux-pci@vger.kernel.org>; Fri,  6 Mar 2026 20:54:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E1C9481648;
+	Fri,  6 Mar 2026 20:59:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772830498; cv=none; b=qFNTVUXSR6PTttX6sGfwpiY8m31gzIpC3JMyV3jCO0S9CEKoITuvY44uuGe9DMk4zPhMiX99/LjlGtWtnzPhMEUdwkHdbfwwzaHj2Qdns4p6U17h2nvRjgw2EI3YimdkwkbVr3kArDWNzTl7cLw0wjpskEIRfecdhdw2y00HzcM=
+	t=1772830794; cv=none; b=tnT9JAq/wUB8fJDQ6O1smN/rl40/kN7gb/9j8sJ4cEg+JGI5lzwMqlpcxjmLvzCPM/M3+XnWY/egadC+D5pcJkfqIh33pEMfkHgY5jT8+iI4MnOmgcXEqjEVLA6O2iFw/Wje33eLaOPE00C9czD8yE5qh4VD+Lc2wHs/53E2QHI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772830498; c=relaxed/simple;
-	bh=1GL/9IKYJEGXT9OiOarvbhmF8G4J6WrPnUY0rtLHCIk=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=THk2iKLmopwrC8OURjjSDt+PoIXU75w0SSTMU/YP5cIMSocdpxahuLUv0ivtgddrVhicEZn6SrzEa5hVA4SVr3DcUAAP/6qBsNNv3c/7o9WFx9tCZ2aUf9BoVWQVuYq69ZnNDFUtweqyjm4eAIniz2jzNRbG9e58Fe1vpL+xIns=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=SjvZB0lf; arc=none smtp.client-ip=67.231.153.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1772830794; c=relaxed/simple;
+	bh=Bq4X/Z3TJrxt2G2mbMX3VK6tRvEa3RXXyY5lvh+/N/I=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=bcqszDSAIcMJXqwNMtCJeUFzQ1EPhCipZ8W2shLiNpzYt2ODOJQdsmjh/gmLmD3XBO16VyxOq6ryJCRsRtLS/EYe15a2zzPqzfp3367vbp1dL7XOFpuovJZLfwbNNAXUY/GbvxJ88sRfB2xBijmwLzpjERkOz0vOmW2Pwb4cQA4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BCBohL7e; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="SjvZB0lf"
-Received: from pps.filterd (m0089730.ppops.net [127.0.0.1])
-	by m0089730.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 626K5c9N3598361
-	for <linux-pci@vger.kernel.org>; Fri, 6 Mar 2026 12:54:55 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=vykdHEryC/vnlsJN6kswrApntHcjxaWoLxbNgiPI9Jc=; b=SjvZB0lfs+bT
-	/H4oSo/hYHehvRpcqfIh5qvn4C5Sy32D1Xdz2jPX044BJGjlqqHJz02TNJAk7fh8
-	/PZOZdFqEZaXIwizpWEYPlfNG68ZCeGMeEX22pgHuiDGnGQHEWbCf3zMm+KCeDDV
-	YygV2FiVeEMoFfrHrgas3oUZN0qHsIblNmYgyLjIT2vl6Io6MU3vfEdNUJAEoci1
-	nLAhcoq3EK10c2IK6ZQ+evp0gzRdP8reZgSvUQqXqWu4cQM+OtiDBTXrwJ+CEm+/
-	sYYdScOCVs+rfxAjcOr6UJeXS8i3b3HfTxnLxnZoqVaeEisPYpQemE6j3tIWEMcF
-	MZWTa5p46w==
-Received: from mail.thefacebook.com ([163.114.134.16])
-	by m0089730.ppops.net (PPS) with ESMTPS id 4cqmfu2pve-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 06 Mar 2026 12:54:55 -0800 (PST)
-Received: from twshared108366.16.frc2.facebook.com (2620:10d:c085:108::150d)
- by mail.thefacebook.com (2620:10d:c08b:78::2ac9) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.35; Fri, 6 Mar 2026 20:54:54 +0000
-Received: by devbig259.ftw1.facebook.com (Postfix, from userid 664516)
-	id 9D02712CD8433; Fri,  6 Mar 2026 12:49:00 -0800 (PST)
-From: Zhiping Zhang <zhipingz@meta.com>
-To: Keith Busch <kbusch@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon
- Romanovsky <leon@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, <linux-rdma@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <dri-devel@lists.freedesktop.org>, Yochai Cohen
-	<yochai@nvidia.com>,
-        Yishai Hadas <yishaih@nvidia.com>, Zhiping Zhang
-	<zhipingz@meta.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [RFC 2/2] RMDA MLX5: get tph for p2p access when registering dmabuf mr
-Date: Fri, 6 Mar 2026 12:48:49 -0800
-Message-ID: <20260306204900.3800370-1-zhipingz@meta.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260301175551.GT44359@ziepe.ca>
-References: <20260301175551.GT44359@ziepe.ca>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BCBohL7e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2586C19425;
+	Fri,  6 Mar 2026 20:59:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772830794;
+	bh=Bq4X/Z3TJrxt2G2mbMX3VK6tRvEa3RXXyY5lvh+/N/I=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=BCBohL7eEeq4G4ELgsOBv2CSecc8hIpcIylQhqjCOVxb9FpsLjcKumtRd3kXmmfy/
+	 QROayIowYG8tRF3Tl1n21txawVDXaq7QzWktmd6rs659djTSBqbOPn2q5JiwvDwL+q
+	 Myl4qSkyVwOM9gXNht8AcZ8Aj1n2ShYlLZG1vSNp0vUeTsQgGDZWBz9YAD2mfRaRa/
+	 Fw52rRsxzR43nFyrptTVIi8nuFaPgvUVxRrVi8wLLmdhREgof1vdkyJwQl6v4AccOk
+	 7L9zIxStjrajuec/AGe+Vs4k+hQu1Qcq16qMrSC0OulMJIOxsIlftKPQG2tIiY1/C8
+	 GRgmFyqLWvXYw==
+Date: Fri, 6 Mar 2026 14:59:52 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Chen-Yu Tsai <wenst@chromium.org>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Bartosz Golaszewski <brgl@bgdev.pl>, linux-pci@vger.kernel.org,
+	linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Subject: Re: [PATCH v3 5/7] PCI: mediatek-gen3: Integrate new pwrctrl API
+Message-ID: <20260306205952.GA180227@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Authority-Analysis: v=2.4 cv=QrRTHFyd c=1 sm=1 tr=0 ts=69ab3f1f cx=c_pps
- a=CB4LiSf2rd0gKozIdrpkBw==:117 a=CB4LiSf2rd0gKozIdrpkBw==:17
- a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
- a=855S8uPTkML1Oy45N9_h:22 a=RWlL41xuHJUQnbMF2CoA:9
-X-Proofpoint-GUID: U_STOK2aFC-J13rfBTrwaVwUQMg8fDpW
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA2MDE5NyBTYWx0ZWRfX2XJBAEHkYwbT
- yStTptAWpmBlBb6uJbLSCnvullOZK4bK9j7e1/zeN9h6WK7VnoDAOZlig8R6iUR+I5+pwgHYanF
- xLzbUW7LEpTQ5K4FqPPFo8pX6GpwbwzFAd3PpZu9dvMaDCUZ6swdC2gITGvydbun54nLaLW87kc
- IQNLBiPySut2L36GahpJ+iYY2wXyeh2NgFD4wZhiz5oIInAJMo8w45z4VlZt1R149TdYramSDZX
- fR+25ZMcMoBHNEZErkpkSqDcZkNmzMS7yLD8mQtIf77yuO0xzz5iFwIuVGfqeThfv2+EMnlZpfG
- bYkVwY32oTdrtJk+8ZRlz68c6RudFPa2saGvtw/0F4FHErMYdjWPNrY/pOfJPKn7C9/eTUsS1Hf
- 3mzWhCwpcxHRkPpGvs6rrdG4Se7JkJRN3ZknMMaeomGLEMpZyRsnaFtBmpzthj8uU0U+DadxPLb
- 1WpzKfhemvVBHKGd+JA==
-X-Proofpoint-ORIG-GUID: U_STOK2aFC-J13rfBTrwaVwUQMg8fDpW
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-06_05,2026-03-06_02,2025-10-01_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260302053109.1117091-6-wenst@chromium.org>
 
-On Sun, 1 Mar 2026 13:55:51 -0400, Jason Gunthorpe wrote:
+On Mon, Mar 02, 2026 at 01:31:05PM +0800, Chen-Yu Tsai wrote:
+> With the new PCI pwrctrl API and PCI slot binding and power drivers, we
+> now have a way to describe and power up WiFi/BT adapters connected
+> through a PCIe or M.2 slot, or exploded onto the mainboard itself.
+> 
+> Integrate the PCI pwrctrl API into the PCIe driver, so that power is
+> properly enabled before PCIe link training is done, allowing the
+> card to successfully be detected.
+> 
+> Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+> Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+> Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
+> ---
+> Changes since v2
+> - Added "select PCI_PWRCTRL_SLOT" to Kconfig to fix kernel test robot
+>   compilation error
+> 
+> I'm wondering why the two existing uses select PCI_PWRCTRL_SLOT and not
+> PCI_PWRCTRL though.
+> ---
+>  drivers/pci/controller/Kconfig              |  1 +
+>  drivers/pci/controller/pcie-mediatek-gen3.c | 38 ++++++++++++++++-----
+>  2 files changed, 31 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+> index 5aaed8ac6e44..e72ac6934379 100644
+> --- a/drivers/pci/controller/Kconfig
+> +++ b/drivers/pci/controller/Kconfig
+> @@ -222,6 +222,7 @@ config PCIE_MEDIATEK_GEN3
+>  	depends on ARCH_AIROHA || ARCH_MEDIATEK || COMPILE_TEST
+>  	depends on PCI_MSI
+>  	select IRQ_MSI_LIB
+> +	select PCI_PWRCTRL_SLOT
+>  	help
+>  	  Adds support for PCIe Gen3 MAC controller for MediaTek SoCs.
+>  	  This PCIe controller is compatible with Gen3, Gen2 and Gen1 speed,
+> diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
+> index 7459e1c1899d..93e591f788f7 100644
+> --- a/drivers/pci/controller/pcie-mediatek-gen3.c
+> +++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+> @@ -22,6 +22,7 @@
+>  #include <linux/of_device.h>
+>  #include <linux/of_pci.h>
+>  #include <linux/pci.h>
+> +#include <linux/pci-pwrctrl.h>
+>  #include <linux/phy/phy.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/pm_domain.h>
+> @@ -421,15 +422,23 @@ static int mtk_pcie_device_power_up(struct mtk_gen3_pcie *pcie)
+>  		val |= PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB |
+>  		       PCIE_PE_RSTB;
+>  		writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
+> +	}
+> +
+> +	err = pci_pwrctrl_power_on_devices(pcie->dev);
+> +	if (err) {
+> +		dev_err(pcie->dev, "Failed to power on devices: %pe\n", ERR_PTR(err));
+> +		return err;
+> +	}
+>  
+> -		/*
+> -		 * Described in PCIe CEM specification revision 6.0.
+> -		 *
+> -		 * The deassertion of PERST# should be delayed 100ms (TPVPERL)
+> -		 * for the power and clock to become stable.
+> -		 */
+> -		msleep(PCIE_T_PVPERL_MS);
+> +	/*
+> +	 * Described in PCIe CEM specification revision 6.0.
+> +	 *
+> +	 * The deassertion of PERST# should be delayed 100ms (TPVPERL)
+> +	 * for the power and clock to become stable.
+> +	 */
+> +	msleep(PCIE_T_PVPERL_MS);
+>  
+> +	if (!(pcie->soc->flags & SKIP_PCIE_RSTB)) {
+>  		/* De-assert reset signals */
+>  		val &= ~(PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB |
+>  			 PCIE_PE_RSTB);
+> @@ -449,6 +458,8 @@ static void mtk_pcie_device_power_down(struct mtk_gen3_pcie *pcie)
+>  		val |= PCIE_PE_RSTB;
+>  		writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
+>  	}
+> +
+> +	pci_pwrctrl_power_off_devices(pcie->dev);
+>  }
+>  
+>  static int mtk_pcie_startup_port(struct mtk_gen3_pcie *pcie)
+> @@ -1211,9 +1222,13 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+>  	pcie->soc = device_get_match_data(dev);
+>  	platform_set_drvdata(pdev, pcie);
+>  
+> +	err = pci_pwrctrl_create_devices(pcie->dev);
+> +	if (err)
+> +		return dev_err_probe(dev, err, "failed to create pwrctrl devices\n");
+> +
+>  	err = mtk_pcie_setup(pcie);
+>  	if (err)
+> -		return err;
+> +		goto err_destroy_pwrctrl;
+>  
+>  	host->ops = &mtk_pcie_ops;
+>  	host->sysdata = pcie;
+> @@ -1226,7 +1241,12 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+>  
+>  err_teardown_irq_and_power_down:
+>  	mtk_pcie_irq_teardown(pcie);
+> +	mtk_pcie_device_power_down(pcie);
 
-> On Thu, Feb 26, 2026 at 06:21:28PM -0700, Keith Busch wrote:
-> > On Tue, Feb 10, 2026 at 11:39:55AM -0800, Zhiping Zhang wrote:
-> > > +static void get_tph_mr_dmabuf(struct mlx5_ib_dev *dev, int fd, u16=
- *st_index,
-> > > +							  u8 *ph)
-> > > +{
-> > > +	int ret;
-> > > +	struct dma_buf *dmabuf;
-> > > +
-> > > +	dmabuf =3D dma_buf_get(fd);
-> > > +	if (IS_ERR(dmabuf))
-> > > +		return;
-> > > +
-> > > +	if (!dif there's any implication mabuf->ops->get_tph)
-> > > +		goto end_dbuf_put;
-> > > +
-> > > +	ret =3D dmabuf->ops->get_tph(dmabuf, st_index, ph);
-> >=20
-> > You defined the "get_tph" function to take a pointer to a raw steerin=
-g
-> > tag value, but you're passing in the steering index to it's table.
->
-> Yeah that's weird, there should be one TPH for a DMABUF, not many.
->
+So now we have:
 
-Good catch, I'll fix it.
+  mtk_pcie_probe
+    mtk_pcie_setup
+      mtk_pcie_startup_port
+        mtk_pcie_device_power_up      <-- power up
+        mtk_pcie_device_power_down    # error path
+      mtk_pcie_setup_irq              # set up controller IRQ
+      mtk_pcie_device_power_down      # if mtk_pcie_setup_irq() failed
+    pci_host_probe                    # enumerate downstream devices
+    mtk_pcie_device_power_down        # if pci_host_probe() failed
 
-> > But in general, since you're letting the user put whatever they want =
-in
-> > the vfio private area, should there be some validation that it's in t=
-he
-> > valid range? I'm also not quite sure how user space comes to know wha=
-t
-> > steering tag to use, or what harm might happen if the wrong one is us=
-ed.
->
-> If the device is VFIO compatible then it needs to ensure that whatever
-> it does with its steering tags fit the security model of VFIO. You
-> can't harm the device - you can't reach outside the VFIO sandbox (eg
-> into another VF or something) and so on.
->
-> Under these conditions the kernel doesn't care what TPH is used, just
-> let userspace specify the raw bits on the wire.
->
-> Jason
+I think this is kind of a mess because mtk_pcie_device_power_down() is
+called from so many places, and some of them aren't connected to the
+mtk_pcie_device_power_up().
 
-thanks for clarification, that matches my understanding of how VFIO and=20
-userspace drivers work.
+In mtk_pcie_setup(), mtk_pcie_setup_irq() only deals with the
+*controller* IRQ and has nothing to do with the downstream devices.  I
+think mtk_pcie_setup_irq() should be done before
+mtk_pcie_startup_port() so we can abort before even powering up those
+devices.
 
-Zhiping
+In mtk_pcie_startup_port(), mtk_pcie_enable_msi() and the PCIe
+translation window setup also don't have anything to do with the
+downstream devices, so I think they should be done before 
+calling mtk_pcie_device_power_up().  The only thing there that needs
+the downstream devices powered up is waiting for the link to come up.
+
+>  	mtk_pcie_power_down(pcie);
+> +err_destroy_pwrctrl:
+> +	if (err != -EPROBE_DEFER)
+> +		pci_pwrctrl_destroy_devices(pcie->dev);
+> +
+>  	return err;
+>  }
+>  
+> @@ -1241,7 +1261,9 @@ static void mtk_pcie_remove(struct platform_device *pdev)
+>  	pci_unlock_rescan_remove();
+>  
+>  	mtk_pcie_irq_teardown(pcie);
+> +	pci_pwrctrl_power_off_devices(pcie->dev);
+>  	mtk_pcie_power_down(pcie);
+> +	pci_pwrctrl_destroy_devices(pcie->dev);
+>  }
+>  
+>  static void mtk_pcie_irq_save(struct mtk_gen3_pcie *pcie)
+> -- 
+> 2.53.0.473.g4a7958ca14-goog
+> 
