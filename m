@@ -1,29 +1,29 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 386003B3C0E;
-	Fri,  6 Mar 2026 15:08:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAA41318B9B;
+	Fri,  6 Mar 2026 15:15:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772809728; cv=none; b=b/RGuFIePELsryb+4r0R5Mu9UnzZAAf8xO/B1t1MK3BE54CwwJ78Ja98Dn13iqWe/YkKp+T5JyATBAg3BAQQfwfjchtzsp6jc+5C9E1DDBmwoy7GLVKDPAEJnQWKDIVclHeIVouBc79m/oFf8rFpj/DI0YMlzAsT53sknT9Net8=
+	t=1772810154; cv=none; b=Odl0lsDrlz/+sLsiULbL2HfhkBjGclhulMU60gNE33qgz5GxUjuX98ybujuwPf4PSwb98eVwUN89h6nMx4tuadtCPVF7gjGMgyfIiL3RRATfjD2h3B4jINqZwdkXmseFt7MjRC3QZ5eDVSx0/GxGIOgtWK8qoAx5LXArDFEeCGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772809728; c=relaxed/simple;
-	bh=9x90QkjUflcjOCmysRyuKEPKn10IzcjgEwRttvXPN/Y=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ZJ1Ti8sk8cwsuLsZTv9WlQs6TdjKk7DWPQAUEEA4TBsDVMm9Y3E/+/AK6f0mLzX9vHOs5qdKg9nIvZClKS4eff+S5VLxO7eirCZ86zHMd7TH6T98kLTTsv29YHf7zqhFanzr4gmT60pwBUoIFJDOgO1ifEN/+Dt1EDFYu8AtEnk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=fu29t46o; arc=none smtp.client-ip=117.135.210.5
+	s=arc-20240116; t=1772810154; c=relaxed/simple;
+	bh=itDrRKImjQv/F+3u3/JI98chLKpt7YBQse0TA6heZJc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=PM5voNqkysMVAS/YzGO0LTra+AlaY0rhkLGqd6ORI/MxbSSVMaKtoRY1PYh2kqwcH2oZbhLE0cSFPadxEdhfI8XULbYwOFZKgdsTq9upHyMspAhqvL1pfRtDMabbC1u0HtP+j+ZjWrPWU3eqwhDHAtutcxGEMtI0RTqRZvyqoZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=glptThSb; arc=none smtp.client-ip=117.135.210.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="fu29t46o"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="glptThSb"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Pd
-	JTFjbAJfBTDrDsKAb2n3JbbdsZx/8KKa8pMM2HO34=; b=fu29t46ohTBraPa2kv
-	cxI4LBijo/yU7R695CCtKkKxyK37FmuOR92nApb50B0ng7nxRb7bdLd8qxNn0NTn
-	52mf/lZZyeo9o9T7QNJOMM4KRdOK3u4ptEpDF4kNPmdPL4XwnNJkc36DbTj4GO3K
-	g2Cr4/SI95ldfUX4SCZDjq+bo=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=vc
+	b7oDKsea5aklun0/dzR/DzT5hlyRMavq5EXlRNnS8=; b=glptThSb/68Si9JhKh
+	53QaLlgJmJ7z6k8eyZE//8yOGqkIsdZs7Uj8dFe9y8ECxKn4CtZV6Sh3lBxPbP3E
+	6d/zfNuVDIVnCvEGjA0VvjD5ypopOpCIPRqIrcwsdbRyhuf+MosQFOJJB2tEaYpW
+	czJh5ppfXC99YPucDoa5L+pxc=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wC35xPH7appKyH_OA--.9601S2;
-	Fri, 06 Mar 2026 23:07:51 +0800 (CST)
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wDn93OK76ppQgsKQw--.6882S2;
+	Fri, 06 Mar 2026 23:15:22 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	jingoohan1@gmail.com,
@@ -34,10 +34,10 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>,
-	Cheng Xin <chengqin1525@126.com>
-Subject: [PATCH] PCI: dwc: Add PCIe event counters for groups 5 to 7 in DWC debugfs
-Date: Fri,  6 Mar 2026 23:07:54 +0800
-Message-Id: <20260306150754.41746-1-18255117159@163.com>
+	Cheng Xin <chengqin195275@126.com>
+Subject: [v2] PCI: dwc: Add PCIe event counters for groups 5 to 7 in DWC debugfs
+Date: Fri,  6 Mar 2026 23:15:25 +0800
+Message-Id: <20260306151525.43160-1-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -46,12 +46,12 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wC35xPH7appKyH_OA--.9601S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxGr4UXFyfur1ftw45Wr1Utrb_yoWrJFWfp3
-	yjkr42gF48tr13Zr43X3s5Cr1kZFWkJrZ7Kan3u3sxW3W3urn5Ar13Kr15Jry8Gryqqr1Y
+X-CM-TRANSID:_____wDn93OK76ppQgsKQw--.6882S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxGr4UXFyfur1ftw45Wr1Utrb_yoWrXFy3p3
+	yjyr42gF4ktr13ZrsxX3s8ur1kZFWkJrZ7Kan3uwnxu3W3urn5Ar13tr15Jry8Gryqqr1a
 	vF17try8WryYy37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piJGYdUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AexVWmq7ceFYgAA3B
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pitCztUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwwsjxmmq74tkPwAA3R
 
 Extend the DesignWare PCIe controller's debugfs statistical counter
 interface with event definitions from groups 5 through 7 as documented
@@ -64,11 +64,15 @@ The counters are exposed under the debugfs statistical counter directory,
 allowing users to monitor link behavior and diagnose PCIe protocol issues
 more effectively.
 
-Co-developed-by: Cheng Xin <chengqin1525@126.com>
-Signed-off-by: Cheng Xin <chengqin1525@126.com>
+Co-developed-by: Cheng Xin <chengqin195275@126.com>
+Signed-off-by: Cheng Xin <chengqin195275@126.com>
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
 Thank you, Cheng Xin, for providing the 3.30a version of the DWC PCIe Data Book.
+
+Changes for v2:
+- Sorry, I sent the patch multiple times in a row. The first version of
+  the email was incorrect. The email address of Cheng Xin has been corrected.
 ---
  .../controller/dwc/pcie-designware-debugfs.c  | 52 ++++++++++++++++++-
  1 file changed, 51 insertions(+), 1 deletion(-)
@@ -149,6 +153,8 @@ index 0d1340c9b364..2efddb21b2b2 100644
  };
  
  static ssize_t lane_detect_read(struct file *file, char __user *buf,
+
+base-commit: 5ee8dbf54602dc340d6235b1d6aa17c0f283f48c
 -- 
 2.34.1
 
