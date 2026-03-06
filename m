@@ -1,197 +1,148 @@
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012065.outbound.protection.outlook.com [40.107.200.65])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EDDB36C9D1
-	for <linux-pci@vger.kernel.org>; Fri,  6 Mar 2026 04:15:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83F162EC0B5;
+	Fri,  6 Mar 2026 05:06:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.200.65
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772770517; cv=pass; b=SPcNEiXoGHRyP1qslVpVLYV+6aonGXcS5QDEi61sqmYi6SeQh/E8zkL/ujZ6bv4qh1yPwBe6kYjyoq+PhPgRpBl7Y1qdGNywmyPGqpchlA6Qq/zY2c8m0WzL40d3V+NdY7+3DFMSczkahhW+ilFxgv1yRrIOg8IlQkHeEjpvZ+k=
+	t=1772773612; cv=fail; b=S1nuN71DncinWLjQmG4PU8Rr43rTiOwybxIHwMVkt0XHA63eskXia2LPxzsGC5K2yQreePUBn/mHNjEor19XVf3FmbBd2wZ/m48dVds+I/umUO2Z58C5uO6fZbGwv774utgdWlMMmRKLMkOQ/gMRZrUrFErUwc8Zisj02SfXMG8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772770517; c=relaxed/simple;
-	bh=nFIzFCEGdHvUoDkDKio798vd3KSOQ+BKfInvObQxhB0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FooNf9ZsvBXdUyYI0dUxUk1HwpdOfgVeCpdnJSkNZYMI7fkyybcKLX32hWXsq5++3P9CLntKRTLyYYpyIDh4BvLN1p3Q23ce7XzGhuWouVhVIpwrOsg5Zn1sF7p3he5alzkBr2Py6XTKxLhcVRt1ffTaL8ODnwn0jNJWk+JEII4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JuQ4LlqK; arc=pass smtp.client-ip=209.85.218.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1772773612; c=relaxed/simple;
+	bh=5tnEfUc8+JkuRT+4OVMiKzmlMjwQvKeuF5emy0uZvpQ=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GezeuxMNOVNtGlEuLZpGZj2pwd+8r4TtNTXexYsXBl6hPRZiR7SkIvlvJ77ad/BpEwxIkLsLT+ZlubgywXaaRbm4vmIzB+oC98YTj4hwhi1GyEG0ZyXG6gESfJWFf0zIUsFWIlpQXnFST/yKCO6xaLbQtuCQzsnzeRm8gFTzR2g=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=sSyMr2tl; arc=fail smtp.client-ip=40.107.200.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JuQ4LlqK"
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-b940a00415cso222622266b.1
-        for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2026 20:15:12 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1772770510; cv=none;
-        d=google.com; s=arc-20240605;
-        b=GCihYg8RLUyoS6l3ynC1iCWwzeac1ufQMYZfR4CmaEAXwos4a875aFLkOceFq0p8AH
-         0M6kTGV7AFwuiRTN6LeL1q+STzVIjt9ZFzdTGc5aL52qba/Uf3Wdq3q+KEG62SlLQUzv
-         Sa94QlG1xXBtdKw3FxuvVdRMoMSyTYY9qkAfwuLvISOWjL7DDqDHTp3Sqetu86Xz8pQo
-         /C7QrhpeZDNqP5xjOOJ8oTeXKBjn+Az0q+1JEE+HwEJm8sEawXBK1APSIF1HUQVFtnqC
-         QhXY2qEwnbJFVHJqay2kMiplBoHiW1uBLBPRtR+Uu9oqj3tMaJwt1HZWF3Rdc5PFUdDa
-         zICQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=caYlw5uZFtDTjdpuJpoLZkB8qzJjrGN/QTXEgHQCJYY=;
-        fh=LGYSEiUypzjvQiS9Y7ix23nGX5JI6GCQ53s+IYGvHGE=;
-        b=FPcwjL4ArPm2RtZVRjedLhcKG0h7BcRwmy7qe1wXiyMQ1A2B3+IeMD8i565+mumOuq
-         SxfRYuHUZEdTiV2OxjNQaBMFhXcFNzjRhPKaijxv3m1GAXfEqlgVz/axmyZ4Dv4gYnQA
-         9AgD0ZIG0dn6VYcylhu5Xl6Lcv2eFPKokCQMLY7uQZdTkxHTJz405HJKW2jsYDg1X6oN
-         6PA/DTYiITLwnc1NfmdAtpGvKrOuQG3JVjeDl8HnJ87oLswzQ5c6jCsofW+xPFN9iRMF
-         NPRUvVutr9MPwHACPaZZjYZcai6tIQLfVihOXwi9WJ9zIXPqUgmSjELfVVAprVuSR64a
-         nQyw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772770510; x=1773375310; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=caYlw5uZFtDTjdpuJpoLZkB8qzJjrGN/QTXEgHQCJYY=;
-        b=JuQ4LlqKe2uZcIT/kABI6GSC7b7JlJX0AZeWvKQeJVhKDtckoPQr5Td+YZWWzTMb4h
-         nFgshoPtGycmuLuGPGLDJ2ovrA3Tfo8HjD1Ebkd3RPgLibjIVYo3nYNBSBFUDsdcmZqs
-         9mihTwD9YwD6MQCiaxJn9BHpsClO/pJR27TRcRn4MbXAi7uigzte9NdrLWDyWl+m/6SE
-         D6xdF+22cGQwghpTK4JeBUnGXMV2zkOMJzakkGTQfDO8Fei6yCPCfK8CFraWWesjFDyJ
-         T8g59HWhFCLeHNlgXt43enDZiBLyaWUVh0kyx4K22hVBpW1QpDSIcvh/e800Qlj2x5X8
-         g7sA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772770510; x=1773375310;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=caYlw5uZFtDTjdpuJpoLZkB8qzJjrGN/QTXEgHQCJYY=;
-        b=HD3ZrxedR1fJ9M9yTvpUWNyZ02IYk8xLmARHtEOr8tGBGjvamd3N/F9WxMu0mT7A89
-         Ez+LoY4wBkGNNOJRUuwIvOuVHXDlN4ISQhrrjI34SRrWX+bwpEYdmfHOnG1+2GCtNSW6
-         HVTzJnnGB6XCLxSaFKfA0bEnzh7psDM9nVQnuVzbvRFfMOE/1Zheuh9fhICv6Vn9rQ2H
-         E+awpHi/asoTAOqyk729p32z0dcO5NypZfMeYgn4hcDC/Lf/n8Sh2rPq/ydD9InGCwGc
-         RxlBD8mfYqvVbB1t9gnfSsP3VuDkTAnBSr9HmAvLO2yRvcQ443PGLncMz7psW0BSJI9Q
-         q/wg==
-X-Forwarded-Encrypted: i=1; AJvYcCXFAHYG3VzWewh/nnroFARH6gDBO0kcS4icpTL8Ibkh/noRbUNvFB88aTM16l8u7tRo7r48D37UB5Y=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzl5DTNwGjo8oqNdxgXEuM7//AJtQCoiAI18+4XJbKkkf/plueE
-	6fGOp6Ye1WyruAWkTKHudweO1684KWo8hGbXeFkYEoCsbHWQZKUP4v+KJmCUso/l//J6dzTzmKQ
-	8wsuBJf/KRpLDZ39Es1oGEd+4n8OEqb0=
-X-Gm-Gg: ATEYQzyrbmCPxN99lNBS1QrrdOF/0YLBAyY5+k4w6mI6SnFVWnIx4g4hHUq7VHhojqh
-	a0NH+Y4htg/UMHphXONN0ua9F4VeXgHjsCWAtfTFpoYM2D3xxcjEsrzjbaxlZZfNbzab8RBNz9J
-	XiWj4Y0yHWQ4E/0Gy8FC4/Jzqwi6FSsmdRoPelikxPaNolRhNIs6NNSxDlLAfQHAvw2RU7NF1V/
-	XNn8Nyn2R36P0NdqC0Fs7Kd+AQTMfPSxcIf4l5hjgt2sl/ps7zoI0u0nOGmzf10G6cEEjiVRXV8
-	gioJDw==
-X-Received: by 2002:a17:907:6d02:b0:b93:6bfe:d556 with SMTP id
- a640c23a62f3a-b942db8682dmr33539966b.7.1772770510037; Thu, 05 Mar 2026
- 20:15:10 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="sSyMr2tl"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=nVFXwGi/SPe4v7rM7MLd0137eME+XSu3JaHFSTE+apW23hqQ/FSNzHM1cS9Ogo//toonKOQAMna4W044PqMOBMyPASkvoxo59DKZQ7AVpqHxvAdeO7bAY6m5FIXRNmM8RJEvLvIuYKDaEm3O+3bh3/eDqqL31bRlMp8RDCtWyQB/AmJnf26wgDO4/c5iapUL7GwDmdjo+EcgFz8SNTUNaryj1cgk7Voas/QaPnBbmkC7xaBpm67brj1/xMbAnpT2amE0RKA4Xrqn+0oKaCWzHtdVCEssciNadhsVb5bBleDUYAtX7T4QAr3zvGCLudXBy2qQe7We9HxZ4Vp+n5PiUA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=SJiF6BmglK0AeTwjDbUxxQND8SoI8hUjkKHETrw/fmU=;
+ b=qy/4t6vTUfHnXVthVeeVZSKKSlyO8CxD/ALtjCodo6mtwJ7N550DL3w+xsxR7OWoVwHrfm9R51wGc38jeNwDED3dQIi5ojvFzmTTWuEKiAsCGtiiK0VMir4L9yBj0XxVu+keDOAA6JiV3gPIwD9bjEjFpfNbwbgB77uJ33y8df2oQHpYP29eyfrrbvJ7OPqzRA13u2UiSKo2lPGNkvVvN5rR2dflvWxHgs+5tuUk0lC/Rs0Jrvf0buYbHMBvNxxnO4F8bkLZEr3JA4pCy6vGJDD5o8fORtNUDX7jmnf4mtR87T+6Lwg6hZ4Tqg7Vov8jiacG80XDTdwt1Y301NSUHw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.160) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=SJiF6BmglK0AeTwjDbUxxQND8SoI8hUjkKHETrw/fmU=;
+ b=sSyMr2tl1HVeAh0PBYr9Imp/7NiBkUO0ZFjvF9Uln2SaRpXzqc66tt2HulKvclbP6qbV8xMKgGOBlKZR+2wYhxdKWwQE9GoOYOmDQHFq7RY+Xi+K9XzSRMFQFoXG+OuPs6sNKgYg1EPvOcB4rkRX0CpvGeNgzhvl+YskyBwXMOnMSqjpDoePM9Iqw1PoNKcoMgLmBOL7BwRCnn407vHDAbHShCdttf2MRwwm3Qi5ILb2Nu1Hj8se/ARQzaRpNlVQVv4pPOpYIUvXR1oCsF4U614J8qJhSfYNzzln8NnRrGpfRfEHLwg77pj+a3p95gBDp+r8c2a/5ShYLshSvKbaeQ==
+Received: from BN1PR10CA0021.namprd10.prod.outlook.com (2603:10b6:408:e0::26)
+ by DM4PR12MB6422.namprd12.prod.outlook.com (2603:10b6:8:b9::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.18; Fri, 6 Mar
+ 2026 05:06:45 +0000
+Received: from BN2PEPF000044A7.namprd04.prod.outlook.com
+ (2603:10b6:408:e0:cafe::1a) by BN1PR10CA0021.outlook.office365.com
+ (2603:10b6:408:e0::26) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9654.23 via Frontend Transport; Fri,
+ 6 Mar 2026 05:06:16 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ BN2PEPF000044A7.mail.protection.outlook.com (10.167.243.101) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9678.18 via Frontend Transport; Fri, 6 Mar 2026 05:06:45 +0000
+Received: from rnnvmail202.nvidia.com (10.129.68.7) by mail.nvidia.com
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 5 Mar
+ 2026 21:06:21 -0800
+Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail202.nvidia.com
+ (10.129.68.7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 5 Mar
+ 2026 21:06:20 -0800
+Received: from Asurada-Nvidia (10.127.8.10) by mail.nvidia.com (10.129.68.9)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Thu, 5 Mar 2026 21:06:19 -0800
+Date: Thu, 5 Mar 2026 21:06:17 -0800
+From: Nicolin Chen <nicolinc@nvidia.com>
+To: Jason Gunthorpe <jgg@nvidia.com>
+CC: <will@kernel.org>, <robin.murphy@arm.com>, <joro@8bytes.org>,
+	<bhelgaas@google.com>, <rafael@kernel.org>, <lenb@kernel.org>,
+	<praan@google.com>, <kees@kernel.org>, <baolu.lu@linux.intel.com>,
+	<smostafa@google.com>, <Alexander.Grest@microsoft.com>,
+	<kevin.tian@intel.com>, <miko.lenczewski@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>, <iommu@lists.linux.dev>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <vsethi@nvidia.com>
+Subject: Re: [PATCH v1 2/2] iommu/arm-smmu-v3: Recover ATC invalidate timeouts
+Message-ID: <aapgyXadT1TEz29u@Asurada-Nvidia>
+References: <cover.1772686998.git.nicolinc@nvidia.com>
+ <ca7ab934bf0f433b62a5c15d42241632c4cb9366.1772686998.git.nicolinc@nvidia.com>
+ <20260305153911.GT972761@nvidia.com>
+ <aanygWWZLA1htDdQ@Asurada-Nvidia>
+ <20260305234158.GB1651202@nvidia.com>
+ <aaot8uRsli5jNPzH@Asurada-Nvidia>
+ <20260306013347.GD1651202@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260304140329.7089-1-linux.amoon@gmail.com> <MA5PR01MB125008C876FC8461A80514DE8FE7DA@MA5PR01MB12500.INDPRD01.PROD.OUTLOOK.COM>
-In-Reply-To: <MA5PR01MB125008C876FC8461A80514DE8FE7DA@MA5PR01MB12500.INDPRD01.PROD.OUTLOOK.COM>
-From: Anand Moon <linux.amoon@gmail.com>
-Date: Fri, 6 Mar 2026 09:44:53 +0530
-X-Gm-Features: AaiRm51D8WbPwjbtXZGUsnsbSyyBH4WmUaM2xaSBTKwsUjOwhQr-zWi1-hyOtG4
-Message-ID: <CANAwSgQ8eKV4jyxGeva_2aT98sPW=44Q9J5PxMgJ-bs3XdwrkA@mail.gmail.com>
-Subject: Re: [RFC v1 00/18] PCI: Enable async probe by default
-To: Chen Wang <unicorn_wang@outlook.com>
-Cc: Vignesh Raghavendra <vigneshr@ti.com>, Siddharth Vadapalli <s-vadapalli@ti.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Jingoo Han <jingoohan1@gmail.com>, Krzysztof Kozlowski <krzk@kernel.org>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Minghuan Lian <minghuan.Lian@nxp.com>, 
-	Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>, Yue Wang <yue.wang@amlogic.com>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, Kevin Hilman <khilman@baylibre.com>, 
-	Jerome Brunet <jbrunet@baylibre.com>, 
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>, Jonathan Chocron <jonnyc@amazon.com>, 
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Jesper Nilsson <jesper.nilsson@axis.com>, 
-	Paul Walmsley <pjw@kernel.org>, Greentime Hu <greentime.hu@sifive.com>, 
-	Samuel Holland <samuel.holland@sifive.com>, Chuanhua Lei <lchuanhua@maxlinear.com>, 
-	Srikanth Thokala <srikanth.thokala@intel.com>, Xiaowei Song <songxiaowei@hisilicon.com>, 
-	Binghui Wang <wangbinghui@hisilicon.com>, Inochi Amaoto <inochiama@gmail.com>, 
-	Thierry Reding <thierry.reding@gmail.com>, Jonathan Hunter <jonathanh@nvidia.com>, 
-	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>, Masami Hiramatsu <mhiramat@kernel.org>, 
-	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>, Niklas Cassel <cassel@kernel.org>, 
-	"Jiri Slaby (SUSE)" <jirislaby@kernel.org>, Qianfeng Rong <rongqianfeng@vivo.com>, 
-	Koichiro Den <den@valinux.co.jp>, Hans Zhang <18255117159@163.com>, 
-	Sai Krishna Musham <sai.krishna.musham@amd.com>, 
-	Thippeswamy Havalige <thippeswamy.havalige@amd.com>, Vidya Sagar <vidyas@nvidia.com>, 
-	"open list:PCI DRIVER FOR TI DRA7XX/J721E" <linux-omap@vger.kernel.org>, 
-	"open list:PCI DRIVER FOR TI DRA7XX/J721E" <linux-pci@vger.kernel.org>, 
-	"moderated list:PCI DRIVER FOR TI DRA7XX/J721E" <linux-arm-kernel@lists.infradead.org>, 
-	open list <linux-kernel@vger.kernel.org>, 
-	"open list:PCI DRIVER FOR SAMSUNG EXYNOS" <linux-samsung-soc@vger.kernel.org>, 
-	"open list:PCI DRIVER FOR FREESCALE LAYERSCAPE" <linuxppc-dev@lists.ozlabs.org>, 
-	"open list:PCI DRIVER FOR FREESCALE LAYERSCAPE" <imx@lists.linux.dev>, 
-	"open list:PCIE DRIVER FOR AMLOGIC MESON" <linux-amlogic@lists.infradead.org>, 
-	"open list:PCIE DRIVER FOR AXIS ARTPEC" <linux-arm-kernel@axis.com>, 
-	"open list:SOPHGO DEVICETREES and DRIVERS" <sophgo@lists.linux.dev>, 
-	"open list:TEGRA ARCHITECTURE SUPPORT" <linux-tegra@vger.kernel.org>, 
-	"open list:SIFIVE DRIVERS:Keyword:fu [57] 40" <linux-riscv@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20260306013347.GD1651202@nvidia.com>
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN2PEPF000044A7:EE_|DM4PR12MB6422:EE_
+X-MS-Office365-Filtering-Correlation-Id: 84bec189-2798-469f-e428-08de7b3e29f6
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|36860700016|7416014|376014|82310400026;
+X-Microsoft-Antispam-Message-Info:
+	ZRT9IG6o6SsaFE4LrMUccnG+hcw0lQMbIKF+3pSGxfaQ1L7N1QTdR0AN8VfgCEpQwq18+i/oKPAdWkX7BeYEcx8E29BfExtifjQf+yva8pt7cm+z64HpMjKYpnjA4Xy60W8lWF4qGp8RuOpnxAZv9qlAmkR2xXaS56TGSFyJs+pH9mCpvkBhmqjBQVbsINkP36S4IxwFl5wYJKxAC4+CupovYrDE99CgAcbkIXnTNqIGVIh8HQH57w/C6cL2v7FdyZtZqpjDZmbXicdThazhUf/D6RlS2P7dPpIKTQ5o2G/+fukCH0b1Fq7Bq4/t31mCYLe5rf7t/j9FQLhNxy+8ph4+NEUa7HeXIAPIMbIG6f1GhNpxFhRe9FDzJyOAKukQsUNEXXJYCWRIda+jFE2m8dZqWZYezALCZZneNAjDrcupy59W2HNGaq/efkj8PzI/I1WthNEedfg1sqK9biR8Fgx2N2tpylSotQq/ctuqOCUROqDuFXlxDT5xQ+d77g6Tq4hFnWq3+Kut2rid8FSKTMfZaYqarLh7pneHcMErNHdPOyUaYDEQqgXGkmpwhsRHCT9l0FvmKzQGncpXRtUTIJ3fLxjXtuxBhR+Ku17smRIjtvj5OCeJXGYgkRZfX8U5yv/rGJgXyqvq1fqshODenOit2+fAES1EI4TsFV2x5tEljsv/wlbJllivZgND5ejmSmVu8eOYhc9rTAPpyFtax5t3I0hoZQClW8RPcT+3n/PSkyG/43yXpnUxnFfTyUoCooaLSQa1jmg+Q6IV6dIYaw==
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(36860700016)(7416014)(376014)(82310400026);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	+dnWQc1Uhzag1LQdoDThz5TAr7VU12ghebGoupo6LvbWuB8kaPOtdj3RSm0gLvnRRnEBVORi0t9Cnd9uyZLr1itUZS8zQTJxANpHxxN5f5xXjDg28DgJGMtwzs2YYYMvZ76zRjsWeiUR+6zkPg7ZEPKJhI7Nhbpi9nrs3xELdSQ1ZsmTzKyQyPkNVhbllf7dQkZVzAWTvnDwjyC4LjON/RkBlri4NyGbU54cDhbE8IutU1E7Pc2qiPl6SYuIdgqpmCjJ+Lf3tfQ/VKICKaZ830nbsRyQdco10urQ1OLfRraw2Mhk3/wvf4JGvwzj5M3CRXaj8FnaMJ897pb982akV03qpkRZgmwmmjOC5/ov6ww36U1ObqfPLBCL9dI1RvhacGW1qlCZSFGHlDLecDWv3zJrOD/scxAZvcETopAs2MheHv32RwH4KR8WKbQqhoMa
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Mar 2026 05:06:45.2597
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 84bec189-2798-469f-e428-08de7b3e29f6
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BN2PEPF000044A7.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6422
 
-Hi Chen,
+On Thu, Mar 05, 2026 at 09:33:47PM -0400, Jason Gunthorpe wrote:
+> On Thu, Mar 05, 2026 at 05:29:22PM -0800, Nicolin Chen wrote:
+> 
+> > But arm_smmu_cmdq_issue_cmdlist() doesn't know when to push another
+> > CMD. In my case where ATC_INV irq occurs, the return value from the
+> > arm_smmu_cmdq_poll_until_sync() in the Step 5 is 0, and prods/cons
+> > are also matched. Actually, at this point that NOP ISR has already
+> > finished.
+> 
+> Yes, you'd need a sneaky way to convay the error from the ISR to the
+> cmdlist code that didn't harm performance. Maybe we could come up with
+> something, but if it works replacing the NOP with flush sounds fairly
+> appealing - though can you do a single WORD edit to the STE that will
+> block translated requests? Zero EATS?
 
-On Thu, 5 Mar 2026 at 05:57, Chen Wang <unicorn_wang@outlook.com> wrote:
->
-> Hello Anand,
->
-> On 3/4/2026 9:51 PM, Anand Moon wrote:
-> > Following recent asynchronous probing updates to the Rockchip PCIe
-> > controller, this change enables default async probe functionality for
-> > all DesignWare Core (DWC) based controllers to optimize boot times [0].
-> >
-> > [0] https://lore.kernel.org/all/20260226101032.1042-1-linux.amoon@gmail.com/
-> >
-> > This PROBE_PREFER_ASYNCHRONOUS flag help to parallelize device initialization.
-> >
-> > Thanks
-> > -Anand
-> >
-> > Anand Moon (18):
-> >    PCI: al: Allow asynchronous probing for background link training
-> >    PCI: amd-mdb: Allow asynchronous probing for background link training
-> >    PCI: armada8x: Allow asynchronous probing for background link training
-> >    PCI: artpec6: Allow asynchronous probing for background link training
-> >    PCI: bt1: Allow asynchronous probing for background link training
-> >    PCI: dra7xx: Allow asynchronous probing for background link training
-> >    PCI: exynos: Allow asynchronous probing for background link training
-> >    PCI: fu740: Allow asynchronous probing for background link training
-> >    PCI: intel-gw: Allow asynchronous probing for background link training
-> >    PCI: keystone: Allow asynchronous probing for background link training
-> >    PCI: keembay: Allow asynchronous probing for background link training
-> >    PCI: kirin: Allow asynchronous probing for background link training
-> >    PCI: layerscape: Allow asynchronous probing for background link
-> >      training
-> >    PCI: meson: Allow asynchronous probing for background link training
-> >    PCI: sophgo: Allow asynchronous probing for background link training
-> >    PCI: tegra194: Allow asynchronous probing for background link training
-> >    PCI: uniphier: Allow asynchronous probing for background link training
-> >    PCI: visconti: Allow asynchronous probing for background link training
-> >
-> >   drivers/pci/controller/dwc/pci-dra7xx.c     | 1 +
-> >   drivers/pci/controller/dwc/pci-exynos.c     | 1 +
-> >   drivers/pci/controller/dwc/pci-keystone.c   | 1 +
-> >   drivers/pci/controller/dwc/pci-layerscape.c | 1 +
-> >   drivers/pci/controller/dwc/pci-meson.c      | 1 +
-> >   drivers/pci/controller/dwc/pcie-al.c        | 1 +
-> >   drivers/pci/controller/dwc/pcie-amd-mdb.c   | 1 +
-> >   drivers/pci/controller/dwc/pcie-armada8k.c  | 1 +
-> >   drivers/pci/controller/dwc/pcie-artpec6.c   | 1 +
-> >   drivers/pci/controller/dwc/pcie-bt1.c       | 1 +
-> >   drivers/pci/controller/dwc/pcie-fu740.c     | 7 ++++---
-> >   drivers/pci/controller/dwc/pcie-intel-gw.c  | 1 +
-> >   drivers/pci/controller/dwc/pcie-keembay.c   | 1 +
-> >   drivers/pci/controller/dwc/pcie-kirin.c     | 1 +
-> >   drivers/pci/controller/dwc/pcie-sophgo.c    | 1 +
-> >   drivers/pci/controller/dwc/pcie-tegra194.c  | 1 +
-> >   drivers/pci/controller/dwc/pcie-uniphier.c  | 1 +
-> >   drivers/pci/controller/dwc/pcie-visconti.c  | 1 +
-> >   18 files changed, 21 insertions(+), 3 deletions(-)
-> >
-> >
-> > base-commit: 0031c06807cfa8aa51a759ff8aa09e1aa48149af
->
-> Suggest you indicate in the title of the cover letter for the next patch
-> that this patchset is only related to dwc.
->
-Thanks, If I get positive feedback I will append dwc in the $subject.
-> Thanks,
->
-> Chen
->
+Yea. I can give that a try.
+
+> Also, will the SMMU start spamming with blocked translation events or
+> something that will need suppression too?
+
+CD.R=0 can suppress fault records, but we would need to override
+that in every CD of the device.
+
 Thanks
--Anand
+Nicolin
