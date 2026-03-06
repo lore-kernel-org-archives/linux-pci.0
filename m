@@ -1,70 +1,58 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ABAD35AC03;
-	Fri,  6 Mar 2026 17:30:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFCC3311C01;
+	Fri,  6 Mar 2026 17:31:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772818233; cv=none; b=A3q699jNtWrX3wVcpn5urPYTrkvxFraal8TnDjVLrUaQ2w5gwZeNYGOY6UEAbRS6MkRGRN8yVQ92QI97h6Q7bgBRnEi+kBSsjbNSNbKjx/ghUSABuaZ0ARgqKyI9EyeyFLQAfD9XvRPTIvCvdcN9ahSQZvg17JBxAiBlJKCWX2w=
+	t=1772818308; cv=none; b=CsINHtZevTx7H+4dgldfyEt+hqL4Q946plX27YJJRB8d4boR4PXUxy8PiKqWVV7Xw+ZmiqSX7a02vT7EQIK3L72sxXiJCGHMJKOifuxQDpGBPQAKkqa8VgwAzl3LCx5qATMpzR9/zGlYywDdguQhxnhzjr6izja5XWg+f8fN2u0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772818233; c=relaxed/simple;
-	bh=8VmuFnYbiOKgaR+BBAUnY6HUkEujulh2Twpm6HK6CSU=;
+	s=arc-20240116; t=1772818308; c=relaxed/simple;
+	bh=6iE70g58/qwlybpeZab3Rb/sA2FkT0ozgGH89xGh4p0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DblmVhaPwqGaYbvcaTJexbldGUFIC7LZGRGp9weGb6VGXmTrUWG4dfIfPimH2HuFKedUA9m3NQ7xdzvpMt+eqIhTEuKxd4FO66mtmUaOQvAVHGzxARTglIOb7mXzDu3oCUdNapNrprk94eDIxc4LpOUEw14SmpLLMSLMvDZKvAE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TR9A1LQF; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=fMRWXinhDjfvPLQTcbYf5N5lTIhRcTpro5Xldoulmu9lJlpkMAlAIouy8HhLuk0Tl3o5abifNs2gTzn5KMeYnFGYNglhCr2NopQB04eUCnWiANtKZYAksZJ7mmULep+daOCGiwJd9aqoMCqp1qf+i4OeSr8PKglAGCx+YurT4lg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rt3Sf0KN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TR9A1LQF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772818232; x=1804354232;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=8VmuFnYbiOKgaR+BBAUnY6HUkEujulh2Twpm6HK6CSU=;
-  b=TR9A1LQFCB7FJdOsC/QlqG1tp9S3imY7FgXorPbA/TAErCNXmG8vm2UY
-   Ix+Ll1Wghw4pG/WYOVHShBso6SAhs2Z20tDpz8MvgM8QCPa1uTpGawGB8
-   X9+L0waSJGhXkwZ99c0K3vaj9dyhzi5BfIMp0i0E21JoexM3bnq9s+xyD
-   lULbp4q25pOtlu30yxwhAv8GNsytFtFreYN2ZeqQggmFmK7+0JV+cXpa1
-   OTC6zaeIIUk2GONPAj63oaI6PP9SYhYtC87Qd3dgiG6A8w7VI7f+80lhY
-   CsuvPYGhhmGKlUbs9WmeRKmtqG3ssqssh1ISsVK6W3UR8ndC8zLIHGH4J
-   g==;
-X-CSE-ConnectionGUID: Rxhue+gHTwWMtUCeQT8oig==
-X-CSE-MsgGUID: oef6U4QAQImISudFb1opsw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11721"; a="76536359"
-X-IronPort-AV: E=Sophos;i="6.23,105,1770624000"; 
-   d="scan'208";a="76536359"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2026 09:30:32 -0800
-X-CSE-ConnectionGUID: 0bx+XxIITUy/ALxxQyoj5Q==
-X-CSE-MsgGUID: qc/tcyJERO+MUV1m2NxX4Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,105,1770624000"; 
-   d="scan'208";a="218305101"
-Received: from lkp-server01.sh.intel.com (HELO 058beb05654c) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 06 Mar 2026 09:30:26 -0800
-Received: from kbuild by 058beb05654c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vyZ0H-00000000197-44lO;
-	Fri, 06 Mar 2026 17:30:21 +0000
-Date: Sat, 7 Mar 2026 01:29:40 +0800
-From: kernel test robot <lkp@intel.com>
-To: Caleb James DeLisle <cjd@cjdns.fr>, linux-mips@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, naseefkm@gmail.com,
-	mturquette@baylibre.com, sboyd@kernel.org, robh@kernel.org,
-	krzk+dt@kernel.org, conor+dt@kernel.org, cjd@cjdns.fr,
-	tsbogend@alpha.franken.de, ryder.lee@mediatek.com,
-	jianjun.wang@mediatek.com, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, mani@kernel.org, bhelgaas@google.com,
-	vkoul@kernel.org, neil.armstrong@linaro.org, p.zabel@pengutronix.de,
-	matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
-	nbd@nbd.name, ansuelsmth@gmail.com, linux-clk@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
-	linux-phy@lists.infradead.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 6/8] PCI: mediatek: Add support for EcoNet EN7528 SoC
-Message-ID: <202603070131.ufbXMWzw-lkp@intel.com>
-References: <20260303190948.694783-7-cjd@cjdns.fr>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rt3Sf0KN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1CF1C4CEF7;
+	Fri,  6 Mar 2026 17:31:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772818308;
+	bh=6iE70g58/qwlybpeZab3Rb/sA2FkT0ozgGH89xGh4p0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Rt3Sf0KN923Unc/toFJYb55B18boZgDf6U+uoM9263V+gs2vR76k2ITgL71g84buc
+	 PLQXKALixqabNOfbbkiWB0wpyJXkxGI5MSFFdjgIhVKUwdh5bu+v3hCGCTPhCK9Pou
+	 uz+pRt7dDrhldDfKNhLsDjUbsdFgeWlMLQlYAuPtB6cxvDWebV35QMY30mo4W1FTMY
+	 sWkZHukzIV6PwhBjug5yNn7k0sdyvYL/LXt74KpTaDnNKaTT6KaTh9QKmkQMHVa0Hl
+	 1hGCCxW+Hhz40inlUtXl9quHXdStzaDC1v4HFsChUw+DEqM70vco73XoVXcXrBUC8+
+	 tAQRdreh9+lGg==
+Date: Fri, 6 Mar 2026 10:31:45 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: Benjamin Block <bblock@linux.ibm.com>
+Cc: Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Farhan Ali <alifm@linux.ibm.com>,
+	Sven Schnelle <svens@linux.ibm.com>,
+	linux-s390 <linux-s390@vger.kernel.org>,
+	Andreas Krebbel <krebbel@linux.ibm.com>,
+	Julian Ruess <julianr@linux.ibm.com>,
+	Matthew Rosato <mjrosato@linux.ibm.com>,
+	Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Gerd Bayer <gbayer@linux.ibm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Tobias Schumacher <ts@linux.ibm.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Ionut Nechita <ionut.nechita@windriver.com>,
+	Ionut Nechita <ionut_n2001@yahoo.com>
+Subject: Re: [PATCH 1/4] PCI: Move declaration of pci_rescan_remove_lock into
+ public pci.h
+Message-ID: <aasPgZkgCmW5kZgV@kbusch-mbp>
+References: <cover.1772815642.git.bblock@linux.ibm.com>
+ <9afaf022cb8e37241c4d2e5356cb262266b0bf3d.1772815642.git.bblock@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -73,31 +61,22 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260303190948.694783-7-cjd@cjdns.fr>
+In-Reply-To: <9afaf022cb8e37241c4d2e5356cb262266b0bf3d.1772815642.git.bblock@linux.ibm.com>
 
-Hi Caleb,
+On Fri, Mar 06, 2026 at 05:49:13PM +0100, Benjamin Block wrote:
+> So far it is possible to use and call the functions
+> pci_lock_rescan_remove() and pci_unlock_rescan_remove() from any PCI
+> code, including modules and architecture code; but the lock
+> `pci_rescan_remove_lock` itself is private to objects residing in
+> `drivers/pci/` via the header `drivers/pci/pci.h`.
+> 
+> With that setup it is not possible to use lockdep annotations such as
+> lockdep_assert_held(), or sparse annotations such as __must_hold() in
+> modules or architecture code for PCI.
+> 
+> Since it is useful for `pci_rescan_remove_lock` to have such
+> annotations, move the variable declaration into `include/linux/pci.h`.
 
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on 3fa5e5702a82d259897bd7e209469bc06368bf31]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Caleb-James-DeLisle/dt-bindings-clock-reset-Add-econet-EN751221-bindings/20260304-031451
-base:   3fa5e5702a82d259897bd7e209469bc06368bf31
-patch link:    https://lore.kernel.org/r/20260303190948.694783-7-cjd%40cjdns.fr
-patch subject: [PATCH 6/8] PCI: mediatek: Add support for EcoNet EN7528 SoC
-config: parisc-allmodconfig (https://download.01.org/0day-ci/archive/20260307/202603070131.ufbXMWzw-lkp@intel.com/config)
-compiler: hppa-linux-gcc (GCC) 15.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260307/202603070131.ufbXMWzw-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202603070131.ufbXMWzw-lkp@intel.com/
-
-All errors (new ones prefixed by >>, old ones prefixed by <<):
-
->> ERROR: modpost: "pcie_retrain_link" [drivers/pci/controller/pcie-mediatek.ko] undefined!
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+This big lock for pci scanning is way to easy to misuse to create
+deadlocks, many of which still exist today, so I'm not sure making it
+easier to access is the right direction.
