@@ -1,24 +1,24 @@
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 20E937E0E4;
-	Fri,  6 Mar 2026 14:35:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 95221271A94;
+	Fri,  6 Mar 2026 14:35:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772807709; cv=none; b=UmcwImibderef+g6FNmGaCBXuadb6z0wCB+1jHw+rzuOMTeraa32gygLEhXTqOXkiTfp2dc49FloKG4ehDYq/NtZfnW1h0cEZNzlyDKBT8G80XT+he9BOvZ7+znac8wxWmGdQ+bZw0AZMdlbIuR3pZzzWnyOkOuLWtOY+i9UBRc=
+	t=1772807717; cv=none; b=kaUGhIx9snbBjWuwm16lAtjy6rlYexVnPPKzP6h9ysB2oOcUAlK7YuhufB5evw42bJGYDOOpYR+o8zBNaAG0GQ6+s0DkcwreR6Bol1xT5gS6MZieF3V2etNAY0bZhUJHw0im6CA5Lv34P+tBN5Fbc0yh97hBGK4UThvXhRVHL30=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772807709; c=relaxed/simple;
-	bh=7dOAFTE8x9ngpjg9qUpt+IDY84O3Hrylv8BVeH6CjIE=;
+	s=arc-20240116; t=1772807717; c=relaxed/simple;
+	bh=KSXyZwtPX7SKiBDKY9/GBte07pwH9xhZNJ1C8gxFPp8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Jq9Jgjvp9kECZUh7puhxghGuFt/LskXCeazi5WWw37PAvFqlP93Lgw3OJbUd/ylR1axdI8bHt7ZvQpVKNqZX4CgJZA5FFoOFKLRvX7uFx2NwqqseIpe4tz9SiAMtHi7nbHy67qeQdl9tMdfeIpbfYB3fRCJcrU8TTK7s5D0iAwY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.172
+	 MIME-Version; b=T/HNrpp85WPc79RpwNbGYyRzY60Ll6lO6dOsixpBaq8CbWH9vvAXKuD/q4Zbx+Mhgsx/MF2BiNFkmipAcCPmFdatEPk8KmsWkBMH0NOrUnSEJ8RkCtkdvMMhvD7h//ZHa2R12rRfqqZk5IHjwEVsKTen9Oe6m4wnaEpPYOd0HGs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
-X-CSE-ConnectionGUID: UNAkmmZnR0aSRJgQ7znbUQ==
-X-CSE-MsgGUID: UZYa339yQiiEWn6htS7+qQ==
+X-CSE-ConnectionGUID: c/xeEDcuQj2VbPbrNp6uQw==
+X-CSE-MsgGUID: nr/EsmOHSmq989faCWmKbw==
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie6.idc.renesas.com with ESMTP; 06 Mar 2026 23:35:07 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 06 Mar 2026 23:35:14 +0900
 Received: from ubuntu.adwin.renesas.com (unknown [10.226.92.98])
-	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 657FB4008546;
-	Fri,  6 Mar 2026 23:35:02 +0900 (JST)
+	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 76A6D4008546;
+	Fri,  6 Mar 2026 23:35:08 +0900 (JST)
 From: John Madieu <john.madieu.xa@bp.renesas.com>
 To: claudiu.beznea.uj@bp.renesas.com,
 	lpieralisi@kernel.org,
@@ -36,10 +36,11 @@ Cc: robh@kernel.org,
 	devicetree@vger.kernel.org,
 	linux-clk@vger.kernel.org,
 	john.madieu@gmail.com,
-	John Madieu <john.madieu.xa@bp.renesas.com>
-Subject: [PATCH v8 04/15] clk: renesas: r9a09g047: Add PCIe clocks and reset
-Date: Fri,  6 Mar 2026 15:34:11 +0100
-Message-ID: <20260306143423.19562-5-john.madieu.xa@bp.renesas.com>
+	John Madieu <john.madieu.xa@bp.renesas.com>,
+	Conor Dooley <conor.dooley@microchip.com>
+Subject: [PATCH v8 05/15] dt-bindings: PCI: renesas,r9a08g045s33-pcie: Fix naming properties
+Date: Fri,  6 Mar 2026 15:34:12 +0100
+Message-ID: <20260306143423.19562-6-john.madieu.xa@bp.renesas.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260306143423.19562-1-john.madieu.xa@bp.renesas.com>
 References: <20260306143423.19562-1-john.madieu.xa@bp.renesas.com>
@@ -51,56 +52,106 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add necessary clocks and reset entries for the PCIe controller
+Fix a typo in interrupt-names: "ser_cor" should be "serr_cor" (System
+Error Correctable).
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Also convert interrupt-names, clock-names, and reset-names properties
+from "description" to "const" to enable proper validation with
+dtbs_check.
+
+Fixes: e7534e790557 ("dt-bindings: PCI: Add Renesas RZ/G3S PCIe controller binding")
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
 ---
 
 Changes:
 
 v8: No changes
-v7:
- - Reused standard clock/reset definition macros
-
+v7: Fixed checkpatch commit message line length warnings
 v6: No changes
 v5: No changes
-v4: No changes
+v4: Collected Acked-by tag from Conor
+v3: New patch
 
-v3:
- - Collected Rb tag
- - Preserved sort order (by _onindex, _onbit); 
+ .../bindings/pci/renesas,r9a08g045-pcie.yaml  | 50 +++++++++----------
+ 1 file changed, 25 insertions(+), 25 deletions(-)
 
-v2:
- - Fixed clock names
- - Used assert-variant for reset
-
- drivers/clk/renesas/r9a09g047-cpg.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/clk/renesas/r9a09g047-cpg.c b/drivers/clk/renesas/r9a09g047-cpg.c
-index 1e9896742a06..6f5c4b0a6256 100644
---- a/drivers/clk/renesas/r9a09g047-cpg.c
-+++ b/drivers/clk/renesas/r9a09g047-cpg.c
-@@ -424,6 +424,10 @@ static const struct rzv2h_mod_clk r9a09g047_mod_clks[] __initconst = {
- 						BUS_MSTOP(8, BIT(6))),
- 	DEF_MOD("gbeth_1_aclk_i",		CLK_PLLDTY_DIV8, 12, 3, 6, 3,
- 						BUS_MSTOP(8, BIT(6))),
-+	DEF_MOD("pcie_0_aclk",			CLK_PLLDTY_ACPU_DIV2, 12, 4, 6, 4,
-+						BUS_MSTOP(1, BIT(15))),
-+	DEF_MOD("pcie_0_clk_pmu",		CLK_PLLDTY_ACPU_DIV2, 12, 5, 6, 5,
-+						BUS_MSTOP(1, BIT(15))),
- 	DEF_MOD("cru_0_aclk",			CLK_PLLDTY_ACPU_DIV2, 13, 2, 6, 18,
- 						BUS_MSTOP(9, BIT(4))),
- 	DEF_MOD_NO_PM("cru_0_vclk",		CLK_PLLVDO_CRU0, 13, 3, 6, 19,
-@@ -503,6 +507,7 @@ static const struct rzv2h_reset r9a09g047_resets[] __initconst = {
- 	DEF_RST(10, 15, 5, 0),		/* USB2_0_PRESETN */
- 	DEF_RST(11, 0, 5, 1),		/* GBETH_0_ARESETN_I */
- 	DEF_RST(11, 1, 5, 2),		/* GBETH_1_ARESETN_I */
-+	DEF_RST(11, 2, 5, 3),		/* PCIE_0_ARESETN */
- 	DEF_RST(12, 5, 5, 22),		/* CRU_0_PRESETN */
- 	DEF_RST(12, 6, 5, 23),		/* CRU_0_ARESETN */
- 	DEF_RST(12, 7, 5, 24),		/* CRU_0_S_RESETN */
+diff --git a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+index d668782546a2..d1eb92995e2c 100644
+--- a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+@@ -41,22 +41,22 @@ properties:
+ 
+   interrupt-names:
+     items:
+-      - description: serr
+-      - description: ser_cor
+-      - description: serr_nonfatal
+-      - description: serr_fatal
+-      - description: axi_err
+-      - description: inta
+-      - description: intb
+-      - description: intc
+-      - description: intd
+-      - description: msi
+-      - description: link_bandwidth
+-      - description: pm_pme
+-      - description: dma
+-      - description: pcie_evt
+-      - description: msg
+-      - description: all
++      - const: serr
++      - const: serr_cor
++      - const: serr_nonfatal
++      - const: serr_fatal
++      - const: axi_err
++      - const: inta
++      - const: intb
++      - const: intc
++      - const: intd
++      - const: msi
++      - const: link_bandwidth
++      - const: pm_pme
++      - const: dma
++      - const: pcie_evt
++      - const: msg
++      - const: all
+ 
+   interrupt-controller: true
+ 
+@@ -67,8 +67,8 @@ properties:
+ 
+   clock-names:
+     items:
+-      - description: aclk
+-      - description: pm
++      - const: aclk
++      - const: pm
+ 
+   resets:
+     items:
+@@ -82,13 +82,13 @@ properties:
+ 
+   reset-names:
+     items:
+-      - description: aresetn
+-      - description: rst_b
+-      - description: rst_gp_b
+-      - description: rst_ps_b
+-      - description: rst_rsm_b
+-      - description: rst_cfg_b
+-      - description: rst_load_b
++      - const: aresetn
++      - const: rst_b
++      - const: rst_gp_b
++      - const: rst_ps_b
++      - const: rst_rsm_b
++      - const: rst_cfg_b
++      - const: rst_load_b
+ 
+   power-domains:
+     maxItems: 1
 -- 
 2.25.1
 
