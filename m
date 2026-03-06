@@ -1,238 +1,239 @@
-Received: from mx0a-0064b401.pphosted.com (mx0a-0064b401.pphosted.com [205.220.166.238])
+Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011053.outbound.protection.outlook.com [40.93.194.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FD64378D71;
-	Fri,  6 Mar 2026 08:21:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.166.238
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 061B430F92D;
+	Fri,  6 Mar 2026 09:24:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.194.53
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772785312; cv=fail; b=ktrCN3kFU9exJYBJqpX2Mpx2qQhv87FiDC+6UFpXHgrR6GPkxM2DpG51WfoYcO7XL6hxH6E/G9zdNGV8nOkC65knP0Pxh4gIOBnIKk3y46orF9DUQyss8v5CHgwEhsxfAiPjiiVFnfS4+tvjSLIYDt5Tt5jRaGMwlz6mIkL0g+A=
+	t=1772789045; cv=fail; b=daJMQBmaD9rz8ztn3PZQDCOVMQxj6g0/fA1fVRcSG5R/i3GN7gwzqFd7AN4ZUay2JjW9BR5TxW/9XnJXyQk+HryuCEBWBUVflPWMoiR3xSI2h4MWwQND4i1tUXgieo5xOA8HCbNENODQKr1CCoJEKRTR46PdpR0nwMslt3hnpjk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772785312; c=relaxed/simple;
-	bh=nxN1nyygBlwUrY/1mJ9iAoZcW8c+tojy75JObD6axfc=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=exsa/LBnVgoPaXKiLqD8/pI+hv+wmszhgAkwK9KeaLrp3umM45+WRXmHVFDSMQfipen4X6XHA3DwWFnskbhk9AmXAGHFMC7MQAsjzoSOs0CnLincLPhKNPViKFrYyJp6D4CzWM8mSiXi2J2XxzXtzP4VeXSzUlvyfnRYF/2mKJs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b=QQ2fDKky; arc=fail smtp.client-ip=205.220.166.238
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=windriver.com
+	s=arc-20240116; t=1772789045; c=relaxed/simple;
+	bh=mJyUkuJ5T+2Wu0VBY7iCZdEu+P0zDyd0F/kWHoUNhdE=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=rEjGjYYCNcyWTtqK/qmy/G5jHPerTP5N1RqnxuGTEj8q3ET1812zivHO/3TOr8oTI/KanKOrck1avl3D51pf/cP1lek5rmSco8h/i1qQ3cwXh8zqXHl0BXVpYYKLooedm2pqeCzgXc+Zh+sFpLdAYMG5RdsDbR52wxp6qs3LLZ0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=D5HKn8uL; arc=fail smtp.client-ip=40.93.194.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b="QQ2fDKky"
-Received: from pps.filterd (m0250810.ppops.net [127.0.0.1])
-	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6267q34j3462864;
-	Fri, 6 Mar 2026 00:21:32 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com;
-	 h=cc:content-transfer-encoding:content-type:date:from
-	:message-id:mime-version:subject:to; s=PPS06212021; bh=lVWChNddX
-	AbirgcKtCKSIx79qG1ELIpqiu1uPUNqHko=; b=QQ2fDKkye9CRQ2isCBLJFsmEF
-	vERXDtgBRj1D5MuLGg7stmvZNJg/g61Py3ut97X3nsoKVUN86tRqi4JX78jXRYYF
-	QCjb+W6yVVEMy5Ibua1xyGMbdUb2OODTdHNTCAPdhjEOOEvRtUf11exgs/rMzLu2
-	0/Og7oJS7u32iJE4pmwzUXhC/exwcc6YKDJMnOKrlC0tEEuhQ+FBvqGjS4jFqFLz
-	LhV6NkUb3sqHXbwLXwluaWbtjtjybkjTIs/MjahzUBsN6Qqc4W063HKh7GGdO0LP
-	TizHFEQAP6SlJx5tdBpAW4O3msNW1j6XZOG/vr9UE8BuJ3pDY5brT7StzMs+g==
-Received: from dm5pr21cu001.outbound.protection.outlook.com (mail-centralusazon11011011.outbound.protection.outlook.com [52.101.62.11])
-	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4ckvh47cg7-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Fri, 06 Mar 2026 00:21:31 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="D5HKn8uL"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=y+4WZQDiGw5/y05AcTCVLIg6qTOhn8Bt7CIBBG/O6v2kuHEqdp319crfPjp3PapXVGM7GJwbEWBgGkRUJ+voCTYR1McYOmn4NV/Tu4qU+twCVRroVnx42U+5QdjYjnxjhOV7bYMB5LwMNyTDg865NzltuuhJ+awcY05S6GvD732Ri7eOSnG0J0rWqYiStyJqXcWQUG6RwoFwje9JbacHO+W9ixDtpiwqShBPTDYO/2ae5qLqisSEri8v27ks8GDCavzx5T4ponPrGJHv0IEsjDmLy+ufVqAbdphD4NDs/lG7x+hicAOLDG/gNn0Mv7r/zoDzhxu6yxynY/G+ymxDMw==
+ b=k9+iO9HUXk4gxnyd0cFtkkKG/bDMLJhr9uYNQxPhR+QmXmNTTVlFyF2XqPppDo1GkKMXfgrcK8465nWG7qLrf2aUX1S2dgS/l5y8cSwzex5Hp5+XjM1/k8k8X1rt2/M+xov81UmA9JQ1n48m3XSOMT8fUQl7RIOVYAlEtvZnZGk5uozoNExgiN5D66vuDdOR9yoMIgJFN91vd9u1s6H4rZG/eGAtRwLGY8qzZftxXrnq1zviFQjSzOXBRSLy+p0WbsFf/tiRVT34tqy3AB/p8AKltQv5V503+8KmlpQPt3eyO3328K04hlJscxqKUYeuiYCJWQ9b+nhNSf1/XM8CSw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=lVWChNddXAbirgcKtCKSIx79qG1ELIpqiu1uPUNqHko=;
- b=ShXC7kcVGG6hROgmQCGrOxNf5Lv9RdoANM1fQnvmZoNgwVYkb8UdX/7uVJvLYC3zmdJqv0EI9VvpOomqW0r0U70dGsT0sr1T2dqHoXgj4saierLEVfNwG4ttmdgo2f6Qmzj/vAQRvFIKZchYnZWlMEP6nZCvRTznFmVY/OIsP0UUuBiTAn9Aswx6IXR3P/hF3Sukc1Q6kFX4OYqxBbR3C1h84L6IWkxaFBQM0hY2NH3cvi7HVw7nJq5dKaNIXMVARfcXv9ol9XUErXoJeA7ySXjKIhv+lck56gkjIVnpubSKCZM89P7Ya/7C8ZlbV+A9GSg0FyYRg9ej4S9Cx9t5Xg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=windriver.com; dmarc=pass action=none
- header.from=windriver.com; dkim=pass header.d=windriver.com; arc=none
-Received: from SJ2PR11MB7546.namprd11.prod.outlook.com (2603:10b6:a03:4cc::8)
- by DS4PPFA424F92C2.namprd11.prod.outlook.com (2603:10b6:f:fc02::41) with
+ bh=pH5JYcZ7e+E3XTZhtjm5bj/txsU7dVFYS85xrlh/2bA=;
+ b=o4qnpsByazT77Lr+6uOpX1j1QVOpuL4MAcRyiE3YtFg6Fo4J1Hhl5gCEdoLbnbTNWPq6ajMqAWBjuWLlDreobfJXZPcLTeA4eAclmSxmdlh/wHiOaklqKLrNj9vOjx0R2advFf6RLL7DtLS8Z9i6gL72dZvsIoJxQcGdeWtWMVXGXPlsPzbXyxbzsNaa2AEoliFPosUnwZ3aPZcpRfByJqm94LBy3Ee3/4pmXGlGiojTemfM64L8mafRCRGTLBB8OT4Yy+5D53fD/ZY5pJEynII0G0fXnGo42VSJFCqFdK5AdhmVtfgSm+6avbZYvAz+r2IQLJzUgPUH9fhywONUFg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.160) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pH5JYcZ7e+E3XTZhtjm5bj/txsU7dVFYS85xrlh/2bA=;
+ b=D5HKn8uLsV8yM2yvQ2VQTDhDuJI6Cm7Ui0bKCPkoJfefxHzgGM8Mbz8Ohzvd0+mhl6QIk+J3cIc6Pt3405lgqAobh9w0Mz295Y0cW9iXJdJPXIwS7WzMloPOGFnfGgcSeykB+kbth3i12CUlC1H4mk3lXAD7aU64mHDW/kor+671Z4DWrLAuda5dUn0KaCLXc+H3wCrKunm/Nxr4r6Ai1hoPAZeuG4JPddMFj3uarwTB8o/nUOPCORMasDXtqsYw9TavdkbGCjNLiiwI7Et4x9rJWsQn6wFDjIZxQjc2P0iaYO7F8cATzZN33o06de4/WXwWQ2z6JRDUP0olQcvn7Q==
+Received: from SN7PR04CA0092.namprd04.prod.outlook.com (2603:10b6:806:122::7)
+ by DM3PR12MB9433.namprd12.prod.outlook.com (2603:10b6:0:47::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.17; Fri, 6 Mar
- 2026 08:21:28 +0000
-Received: from SJ2PR11MB7546.namprd11.prod.outlook.com
- ([fe80::ca9b:dcf:8881:bced]) by SJ2PR11MB7546.namprd11.prod.outlook.com
- ([fe80::ca9b:dcf:8881:bced%5]) with mapi id 15.20.9678.016; Fri, 6 Mar 2026
- 08:21:28 +0000
-From: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: helgaas@kernel.org, sebott@linux.ibm.com, schnelle@linux.ibm.com,
-        bblock@linux.ibm.com, alifm@linux.ibm.com, julianr@linux.ibm.com,
-        dtatulea@nvidia.com, mani@kernel.org, lukas@wunner.de,
-        kbusch@kernel.org, ionut_n2001@yahoo.com, sunlightlinux@gmail.com,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        intel-xe@lists.freedesktop.org,
-        "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
-Subject: [PATCH v6 0/1] PCI/IOV: Make pci_lock_rescan_remove() reentrant and protect sriov_add_vfs/sriov_del_vfs
-Date: Fri,  6 Mar 2026 10:21:07 +0200
-Message-ID: <20260306082108.17322-1-ionut.nechita@windriver.com>
-X-Mailer: git-send-email 2.53.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: VI1P195CA0090.EURP195.PROD.OUTLOOK.COM
- (2603:10a6:802:59::43) To SJ2PR11MB7546.namprd11.prod.outlook.com
- (2603:10b6:a03:4cc::8)
+ 2026 09:23:58 +0000
+Received: from SN1PEPF000397B4.namprd05.prod.outlook.com
+ (2603:10b6:806:122:cafe::bb) by SN7PR04CA0092.outlook.office365.com
+ (2603:10b6:806:122::7) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9678.18 via Frontend Transport; Fri,
+ 6 Mar 2026 09:23:58 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ SN1PEPF000397B4.mail.protection.outlook.com (10.167.248.58) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9678.18 via Frontend Transport; Fri, 6 Mar 2026 09:23:58 +0000
+Received: from rnnvmail204.nvidia.com (10.129.68.6) by mail.nvidia.com
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Fri, 6 Mar
+ 2026 01:23:32 -0800
+Received: from rnnvmail202.nvidia.com (10.129.68.7) by rnnvmail204.nvidia.com
+ (10.129.68.6) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Fri, 6 Mar
+ 2026 01:23:31 -0800
+Received: from build-smadhavan-noble-20260205.internal (10.127.8.10) by
+ mail.nvidia.com (10.129.68.7) with Microsoft SMTP Server id 15.2.2562.20 via
+ Frontend Transport; Fri, 6 Mar 2026 01:23:30 -0800
+From: <smadhavan@nvidia.com>
+To: <bhelgaas@google.com>, <dan.j.williams@intel.com>, <dave.jiang@intel.com>,
+	<jonathan.cameron@huawei.com>, <ira.weiny@intel.com>,
+	<vishal.l.verma@intel.com>, <alison.schofield@intel.com>, <dave@stgolabs.net>
+CC: <alwilliamson@nvidia.com>, <jeshuas@nvidia.com>, <vsethi@nvidia.com>,
+	<skancherla@nvidia.com>, <vaslot@nvidia.com>, <sdonthineni@nvidia.com>,
+	<mhonap@nvidia.com>, <vidyas@nvidia.com>, <jan@nvidia.com>,
+	<mochs@nvidia.com>, <dschumacher@nvidia.com>, <linux-cxl@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>, "Srirangan
+ Madhavan" <smadhavan@nvidia.com>
+Subject: [PATCH v5 0/7] CXL: Add cxl_reset sysfs attribute for PCI devices
+Date: Fri, 6 Mar 2026 09:23:15 +0000
+Message-ID: <20260306092322.148765-1-smadhavan@nvidia.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ2PR11MB7546:EE_|DS4PPFA424F92C2:EE_
-X-MS-Office365-Filtering-Correlation-Id: d8a98869-4836-4872-14de-08de7b595d0f
+X-MS-TrafficTypeDiagnostic: SN1PEPF000397B4:EE_|DM3PR12MB9433:EE_
+X-MS-Office365-Filtering-Correlation-Id: e5a02d23-3b35-4abb-9e11-08de7b6218f2
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|52116014|1800799024|10070799003|376014|366016;
+	BCL:0;ARA:13230040|1800799024|36860700016|7416014|376014|82310400026|13003099007;
 X-Microsoft-Antispam-Message-Info:
-	jjUAqu39y5lZMp9FT3Xe6lOTDyc36/pa5QzAjWCSq+5dfeGimO/25th7RQZS4pr1mDcNuRcvwtfbuAGg3iMFY6S97RP/nCpR8yLocJuSmx6/52JCj0vnffbmU6nukRLH/VWo3DJ8rVGZ1bNzQUvKULiAXDmWrxNQ5iBr/6Ag8ZpCHXsBelugnD/i9GUMUfE/jAwSsGvnNEWlz/lF1v4LYfJXV32yeAhq59/CcAfOioh2Gpa9xM41GdpMu5vCOBXbcQAx6mvdznsW82safziryVI/Z6BQka7Jor/dzV4EGwpaYcRf8tiQ/r9X/aWljcQv8Djf4y6fK3fVabpVwuS83hENrBoc0ktkj0Vg/JrjvF4eHUMzGoO8X4kSG8luY04xQwAbGu4VJ6r0edVIpOexyMB4YVAOwHVn9eOKgZaIPpVftlXGOhbO24acFHxnIXz+SsmLn+Bmb99X3kP/SjibT+MO1tah9i9k5X9JICQdgZmv62vzyFq3CxWMrkRqIcxzNigLxjIqG1xRD3nMLqyhmRtXqZpYqCAt0KjCfocppf5QsyeSyBIrTuDHdMWjMs1cv+j/m1YxguBOmbjMFNM92YOcQbbBsFr55dQKwM04IrGsjlVRWFXqIpwcxFgKsrxjfZtks5bmoQWKhmN8zZelmu2ZN9DrJG6LxUB77zl1A4RQF/3nHVVNfv8y3k/LmlMgRloGwyP4x9ML/T9dfpE+8Sdav6xmKXTA9dx8QuzY5y5D68+KBbyuxnqGg/efily1
+	7Lagw526mCWv25bZNmBKA1CwrrV5/gMAWypP2RftPAPy0iewezbFv5w8k/+pFZvy7TcEM712Mp4u8NsTtTDaJ4IKScThGCqcqx3Sggzp4Gir3rvXr1CgnPqQTeUqG8jn65aEX34HejTVsNIsh2RbxKoLFb3nAKMpjEeKlrM8CQHhnKdMcaM3Sk8UrkUTz7TcJlBsEZ39PIM+zz5hUQpE20XrHmTSuyanZD8RQ/X2vHivAsFZbHSpoCHm319kGaaVZh8C4NrXQ1L+PYrKv0iqU0eEGeeOvK2ZXiKWpDa40fn/ESvoJVp5f5Zm3prxRfFlowSyoaP22maCD18GOO7U2s6ZgYGApDdel5boOhBlIouLUiRhumHk6BVLs7Kl9AWc2m5gOffqDh7FIz9qJk0KUIDNBOEU2+kAS+6p9CHTo9FypS8jZtFIV7GEe3mrdpXUXuH2PiQxj7RFtVUAwLMleLkDm74CbeKOq+C0tMqA9V+s1Bdmt6f19sDjihqoRi2ZvmJopHayJ8+/89+Dw/osqy++Wz1DaGwZ1lqUeVFF04fWhyQokUGrQRHXTz9KLpJC6dYZqW9B+yfHrEf9TfTXyWdUopSAiamthyJwcpc+dsxa5vxu2xmLV3FKjpVlDzBAQSeOUhWuclVvVMWfkDiw3wNgCLx15o2jcUbOxkCn2Wp3g/U1I9JwldSLHjbmBfSTzTXnYchxyqF5mxjQV7NT1elI0YjftFq9loWMNYH48WKP0U6XSUHXq3zOkM2a5hjjoX2dG8D0ts+qIDQN//cyrQ==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ2PR11MB7546.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(52116014)(1800799024)(10070799003)(376014)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(36860700016)(7416014)(376014)(82310400026)(13003099007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?1EAsJMhlVENgkT/n3Eh7Zo1/t5btjM2dYcR0haqV9kGPtNfd7CwffkuqqCiP?=
- =?us-ascii?Q?lT1YI51fwTgU2Uk/ap73mS/rD5PjgFVZrUsDCPid3gEEwdW/F/dheY3XzUHw?=
- =?us-ascii?Q?cdMy38bHq6npzI7xekq7uqIx2kaW++JG2pu703wgd4Ls2MAW2FMTP7BHilmn?=
- =?us-ascii?Q?LXq9gq//2tqB+2ZkUqcuILJT1yV9WGUkl2hlkOOen+64hz2O0YRsyhD3Jgma?=
- =?us-ascii?Q?CkjUMUc8a/klk6GjO8I0MnFdkHcuKqVv5zGFP27Fy6xfwT84agN0ZZ9fv3mR?=
- =?us-ascii?Q?tX43UXK352Sv88clyHr0yBwiaASc2zFl1WDLvAdqpEs/+88+kkdj/S7PGZoG?=
- =?us-ascii?Q?5Aqu4bKj+8e1LnZb/6bkmY5sT1O/vyDYBTJsGq2Sn/6KX9QfVgjZYDo1gbVD?=
- =?us-ascii?Q?JTp010amW2s+FUSYuSTRO60Ol1EIDdqzU2DyoH7TBf1eMP8r69olaAlYT/T0?=
- =?us-ascii?Q?HyMA3Qotrd2GcF+iHmEEV0VzCg09HiGmeBhbqHiHtmprL6BSV+xDeknBdbBF?=
- =?us-ascii?Q?ZWIrbgAtuOKQBUOLc+o7bZSnSaQMvv+FBJyr05sJihbB8k6WTQprnbSV5IEw?=
- =?us-ascii?Q?QFR2z85gCZney5kB9eLS43PC1vWUh1b/ZTFQ8YWcVYTWB9qC6zqG5qiyfbeR?=
- =?us-ascii?Q?6LQwUtpI2RcHg0wikB9v/YkC7Aoed4iPSM80+MxU2ssozuQOcWdZCkDpgInJ?=
- =?us-ascii?Q?tm7d2SA5fN9sqB5fAwr5shSlO1L04+jazqGrwXQYxdmgMZc8idJdICnZ5TP4?=
- =?us-ascii?Q?3UYEhcdoQ9Y0PNq8qrWOj3lkVL47ezoCuqrTZ7ti5dm73bHAROJEBx0UJ398?=
- =?us-ascii?Q?nqLZ9SVI4RzJGwB0Oi154yILj906UaneWnCSTbhNK/hFRLe1pGmy6BIdS5MY?=
- =?us-ascii?Q?NC1mWDh7go3eJo6Dxf3Clq5txZjXUimTgI8vIfhsg/KjzbB453ee3HlMP2Th?=
- =?us-ascii?Q?y4tQZDRmOE/GXpXRaAx4PmyufP/xmG8Wocrq/fEnaP9WfvLbV3CcTpwOP+iF?=
- =?us-ascii?Q?rtOpdU9Fy+pTAShtL3wbOoCwJBOVKs7tMH9xIttX2/NiggMKpQPgWRkTb7la?=
- =?us-ascii?Q?KcL9Q7jjA5RJug76Bfl/Sbnbh6x6ZNnM4caZWLf3sxt/OklCz49B6ady6PPT?=
- =?us-ascii?Q?c0Tkf0sofrTxxrmFJvRLSLvv0yDlF2XNTsYMBjuA9VG7HfxSupP/mi9bcl1t?=
- =?us-ascii?Q?l82m82/EyeJdvK8sp0rFayMyIR1XIOPlEPKMhAwGOEYcorfk5AR5uEAQNtnb?=
- =?us-ascii?Q?Uhqnb1kSI7Ddixw8TiTuMoTHrMymAn3iH6mQTPckhcxVghC26h8k91dZ5CCK?=
- =?us-ascii?Q?JkZt3UH1+jaooXTf9E9FEnV9mC83Y8nOAapdfhpCM/z9vprKhoNJyrD3Vf8I?=
- =?us-ascii?Q?r7tYdpCrxtBPVJHbsYxz3ut5ipSCetsKXjrO2F2cdITPY9TFbDdNyP72fN5k?=
- =?us-ascii?Q?8czwaOaFXX1G1yS2VLa7mYnlK22IA1P/rQMD5dNjJsdH+qyMFYoh/v+qunWn?=
- =?us-ascii?Q?7GmjLTXjIvDPSAe7/pcIA32SdIn6T613fUDBJ20Ut2ws/Masq2SQF01KsPir?=
- =?us-ascii?Q?CDcw6r3UaguXvmoNukQiYKWOMtscnJ58gsCtWM+6JBkLJoqTwnp2pJFnsPFS?=
- =?us-ascii?Q?aI5atvet5aNmf6EoflcIXeaS4a1psZQQqsPSyu2153tqAuxJdCVRnHxA1NRQ?=
- =?us-ascii?Q?HiwxPdIate3ALFedbG1xQUuqd89tLxKUnZKvwGjsulRvCsPHL0rotV3AxL2e?=
- =?us-ascii?Q?SBZ6cetd4NoyhSX5KHDJw1fiayQbZgVYi9Etzv0tJH3IUKiw+jsVDDnW8hW8?=
-X-MS-Exchange-AntiSpam-MessageData-1: OcWTlXfe8tGiU6xrtn8DX2okZu52JOQzjis=
-X-OriginatorOrg: windriver.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d8a98869-4836-4872-14de-08de7b595d0f
-X-MS-Exchange-CrossTenant-AuthSource: SJ2PR11MB7546.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Mar 2026 08:21:27.9840
+	Sy0nnsSbbXeTjXmCFjwErikuV2N0eNm/j2sjeyeyFyDSReXkPG+yVsy+7++TYw6JQ+PK8MhVsNJcIqrzzXOCsiAlHX3VAGVie3DJZ3hejHRx8iLKVRRbVbg9rA7Cauue+zI7ShYKFZnQRHvQ47e5bjBx1L9pNWyjGWYVVY0fCvpngPhNlFehS5gOD5lccUL5WdAokWtv6Feo7OL9mPnzXsbUj2J7J+f7JdRy1JN4aWA6hBNg5O7wSwH+dXB6NxzzcDmPPdx071P54L+ejArSlDp53pFRnD6DIiNKleUaiHYPqQhU8V/9zJTxODbQru8a0UmuCtpTjk8CO/GY+R54Cr8L6spBjCqjn0u+/laje9Jd/lgLYEw/ZYyDVvOwtwVwIgSE6AHNU4tUjIpkMd6hEmHqVFzkwPNYwE4taRMFNTArnHKRolhUHDkLSWDJS78s
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Mar 2026 09:23:58.6606
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 8ddb2873-a1ad-4a18-ae4e-4644631433be
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: nf65D3Cc+SmcuJDiF/hRYDvEeQczv3/ps5lG1Izq8Vj5GAUW35cmyIs8Z4499V+8b7dvI2b+WfmAJ6d2KOi/VyFtxFvLfYPjFgreMvoPGwE=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS4PPFA424F92C2
-X-Proofpoint-ORIG-GUID: IDWbn8z-ZUWuxIEReFQE_7pBpe_hpZYJ
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA2MDA3OCBTYWx0ZWRfXyoJFBSA6qbrr
- yePQgqetZTON1xpWuRxk8K6QA9sKUkqT/KV/Dmmf8j+ohOJgKwJqCo3vEref1yOFVvFsTMiBNCL
- 7jFHp6PZVBfrr34NELjI2jIZgOPE8jgBOHRAsLqKVcXDr4MXMsci4AhwgVDuPPpoKsr2SAg0BLw
- SgprvCiwoIl3dTgCXW3ttKYU5ltThG0nAl7zE8l/2nbULm9Njoa418tB1Xy0H2sUTrBNSdSQiDq
- 8H4VrT3NtbtEaiCKUMBH97O0FZ3+uqEI9K/lBuX2GqQIVBaPyMMPFZqCHqefhF6OrD0MbN73Bqc
- W40BzOHB1IFuZDYegz9nk4UdMB9b28zCa/imo02rHTfOUPQw8+XkXcVUHe3n2S6iNDqc/wnYhMH
- mIj5+Ba7iVa4MkjlacSr07P9VOMPH/mBa98gcYwDi75ZkxxmU8FJF3G1uKBfiFcANd65bn+TuiP
- idgSocFSBQtABPPR+9w==
-X-Proofpoint-GUID: IDWbn8z-ZUWuxIEReFQE_7pBpe_hpZYJ
-X-Authority-Analysis: v=2.4 cv=Z/3h3XRA c=1 sm=1 tr=0 ts=69aa8e8b cx=c_pps
- a=TuoCv7SfN2yFw/uhdbj5/Q==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
- a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19
- a=xqWC_Br6kY4A:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=bi6dqmuHe4P4UrxVR6um:22 a=HK-ge7EqtdluswH-FwHe:22 a=VwQbUJbxAAAA:8
- a=t7CeM3EgAAAA:8 a=aLwvNF5H5t6Pi__SSGYA:9 a=FdTzh2GWekK77mhwV6Dw:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-06_02,2026-03-04_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 malwarescore=0 priorityscore=1501 adultscore=0 clxscore=1011
- impostorscore=0 lowpriorityscore=0 spamscore=0 phishscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603060078
+X-MS-Exchange-CrossTenant-Network-Message-Id: e5a02d23-3b35-4abb-9e11-08de7b6218f2
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	SN1PEPF000397B4.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM3PR12MB9433
 
-Hi Bjorn,
+From: Srirangan Madhavan <smadhavan@nvidia.com>
 
-This is v6 of the fix for the SR-IOV race between driver .remove()
-and concurrent hotplug events (particularly on s390).
+Hi folks!
 
-Changes since v5 (Mar 3):
-- Reworked based on Lukas Wunner's suggestion: instead of introducing
-  separate pci_lock_rescan_remove_reentrant() /
-  pci_unlock_rescan_remove_reentrant() helpers, make the existing
-  pci_lock_rescan_remove() / pci_unlock_rescan_remove() themselves
-  reentrant using owner tracking and a depth counter
-- No new API: callers simply use pci_lock/unlock_rescan_remove()
-  without needing to track any return value
-- No changes to include/linux/pci.h
-- Rebased on linux-next (20260305)
+This patch series introduces support for the CXL Reset method for CXL
+Type 2 devices, implementing the reset procedure outlined in CXL Spec [1]
+v3.2, Sections 8.1.3, 9.6 and 9.7.
 
-Changes since v4 (Feb 28):
-- Replaced local pci_rescan_remove_owner variable with
-  mutex_get_owner() to check lock ownership, as suggested by
-  Manivannan Sadhasivam and agreed by Benjamin Block
-- Removed owner tracking from pci_lock_rescan_remove() and
-  pci_unlock_rescan_remove() - they are now unchanged from upstream
-- Rebased on linux-next (20260302)
+v5 changes (from v4):
+- Rebased on v7.0-rc1 and applied fixes from the review v4.
+- Added CXL DVSEC and HDM save/restore as a prerequisite series [2]
+- Switched from PCI reset method to sysfs
+  interface at /sys/bus/pci/devices/.../cxl_reset (Dan, Alex)
+- Removed all PCI core changes - reset logic stays in CXL driver
+- Use cpu_cache_invalidate_memregion() instead of arch-specific code
+- Removed CONFIG_X86/CONFIG_ARM64 ifdefs
+- Added ABI documentation for sysfs interface
 
-Changes since v3 (Feb 25):
-- Rebased on linux-next (next-20260227)
-- Declared pci_rescan_remove_owner as const pointer
-  (const struct task_struct *) to make clear it is not meant to
-  modify the task (Benjamin Block)
-- Added Reviewed-by and Tested-by from Benjamin Block (IBM)
+v4 changes:
+- Fix CXL reset capability check parentheses warning
+- Gate CXL reset path on CONFIG_CXL_PCI reachability
 
-Changes since v2 (Feb 19):
-- Rebased on linux-next (next-20260225)
-- Added Tested-by from Dragos Tatulea (NVIDIA)
-- No code changes from v2
+v3 changes:
+- Restrict CXL reset to Type 2 devices only
+- Add host and device cache flushing for sibling functions and region peers
+- Add region teardown and memory online detection before reset
+- Add configuration state save/restore (DVSEC, HDM, IDE)
+- Split the series by subsystem and functional blocks
 
-Changes since v1 (Feb 14):
-- Renamed from pci_lock_rescan_remove_nested() to
-  pci_lock_rescan_remove_reentrant() to avoid confusion with
-  mutex_lock_nested() lockdep annotations (Benjamin Block)
-- Added pci_unlock_rescan_remove_reentrant(const bool locked) helper
-  to avoid open-coding conditional unlock at each call site
-  (Benjamin Block)
-- Moved declarations from drivers/pci/pci.h to include/linux/pci.h
-  alongside existing lock/unlock declarations (Benjamin Block)
-- Simplified callers: removed negation of return value and manual
-  conditional unlock in favor of the paired lock/unlock helpers
+Motivation:
+-----------
+- As support for Type 2 devices [6] is being introduced, more devices will
+  require finer-grained reset mechanisms beyond bus-wide reset methods.
 
-The problem: on s390, platform-generated hot-unplug events for VFs
-can race with sriov_del_vfs() when a PF driver is being unloaded.
-The platform event handler takes pci_rescan_remove_lock, but
-sriov_del_vfs() does not, leading to double removal and list
-corruption. We cannot use a plain mutex_lock() because
-sriov_del_vfs() may be called from paths that already hold the
-lock (deadlock), and mutex_trylock() cannot distinguish self from
-other holders.
+- FLR does not affect CXL.cache or CXL.mem protocols, making CXL Reset
+  the preferred method in some cases.
 
-The fix makes pci_lock_rescan_remove() reentrant using owner tracking
-and a depth counter: if the current task already holds the lock, the
-counter is incremented; pci_unlock_rescan_remove() decrements the
-counter and only releases the mutex when it reaches zero. This keeps
-the existing API unchanged while providing correct serialization.
+- The CXL spec (Sections 7.2.3 Binding and Unbinding, 9.5 FLR) highlights use
+  cases like function rebinding and error recovery, where CXL Reset is
+  explicitly mentioned.
 
-Link: https://lore.kernel.org/linux-pci/20260214193235.262219-3-ionut.nechita@windriver.com/ [v1]
-Link: https://lore.kernel.org/linux-pci/20260219212648.82606-1-ionut.nechita@windriver.com/ [v2]
-Link: https://lore.kernel.org/linux-pci/20260225202434.18737-1-ionut.nechita@windriver.com/ [v3]
-Link: https://lore.kernel.org/linux-pci/20260228120138.51197-2-ionut.nechita@windriver.com/ [v4]
-Link: https://lore.kernel.org/linux-pci/20260303080903.28693-1-ionut.nechita@windriver.com/ [v5]
+ABI Change reasoning (v5):
+-------------------------
+Previous versions (v1-v4) integrated CXL reset as a new PCI reset method
+in pci_reset_methods[]. Based on feedback from Dan Williams and Alex
+Williamson, v5 switches to a sysfs-based approach.
 
-Ionut Nechita (Wind River) (1):
-  PCI/IOV: Make pci_lock_rescan_remove() reentrant and protect
-    sriov_add_vfs/sriov_del_vfs
+The key reasoning is that CXL Reset has expanded scope than existing PCI
+reset methods. Mixing these in the same reset infrastructure causes
+problems. Therefore selectively exposing a cxl_reset method in pci-sysfs
+and leaving the existing interface unaffected.
 
- drivers/pci/iov.c   |  5 +++++
- drivers/pci/probe.c | 13 ++++++++++++-
- 2 files changed, 17 insertions(+), 1 deletion(-)
+Change Description:
+-------------------
 
+Patch 1: PCI: Add CXL DVSEC reset and capability register definitions
+- Add reset and cache control bit definitions to pci_regs.h
 
-base-commit: 3f9cd19e764b782706dbaacc69e502099cb014ba
+Patch 2: PCI: Export pci_dev_save_and_disable() and pci_dev_restore()
+- Export for sibling function save/restore during CXL reset
+
+Patch 3: cxl: Add memory offlining and cache flush helpers
+- Offline CXL memory regions before reset
+- Flush CPU caches using cpu_cache_invalidate_memregion()
+
+Patch 4: cxl: Add multi-function sibling coordination for CXL reset
+- Identify CXL.cachemem sibling functions via Non-CXL Function Map DVSEC
+- Save/disable and restore sibling PCI functions around reset
+
+Patch 5: cxl: Add CXL DVSEC reset sequence and flow orchestration
+- Implement cxl_dev_reset() to trigger reset via DVSEC
+- Poll for reset completion with timeout
+- cxl_do_reset() orchestrates the complete reset sequence with
+  proper locking and error handling
+
+Patch 6: cxl: Add cxl_reset sysfs interface for PCI devices
+- Expose /sys/bus/pci/devices/.../cxl_reset
+- Only visible for devices with Reset Capable bit set
+- Write "1" to trigger reset
+
+Patch 7: Documentation: ABI: Add CXL PCI cxl_reset sysfs attribute
+- Document the new sysfs interface
+- Explain scope, visibility, and error conditions
+
+Dependencies:
+-------------
+
+This series depends on:
+  [PATCH 0/5] PCI/CXL: Save and restore CXL DVSEC and HDM state across resets
+  https://lore.kernel.org/linux-cxl/20260306080026.116789-1-smadhavan@nvidia.com/T/#t
+
+The cpu_cache_invalidate_memregion() call used for CPU cache flush currently
+has support on x86. ARM64 support will be addressed in a separate RFC.
+
+Command line to test the CXL reset on a capable device:
+    echo 1 > /sys/bus/pci/devices/<pci_device>/cxl_reset
+
+Basic cxl_reset testing was done on a CXL Type-2 device: writing to the
+sysfs attribute, exercising the DVSEC reset sequence including WB+I and
+init reset, restore. Further testing is in progress.
+
+This series is based on v7.0-rc1.
+
+Srirangan Madhavan (7):
+  PCI: Add CXL DVSEC reset and capability register definitions
+  PCI: Export pci_dev_save_and_disable() and pci_dev_restore()
+  cxl: Add memory offlining and cache flush helpers
+  cxl: Add multi-function sibling coordination for CXL reset
+  cxl: Add CXL DVSEC reset sequence and flow orchestration
+  cxl: Add cxl_reset sysfs interface for PCI devices
+  Documentation: ABI: Add CXL PCI cxl_reset sysfs attribute
+
+ Documentation/ABI/testing/sysfs-bus-pci |  22 +
+ drivers/cxl/core/core.h                 |   2 +
+ drivers/cxl/core/pci.c                  | 537 ++++++++++++++++++++++++
+ drivers/cxl/core/port.c                 |   3 +
+ drivers/pci/pci.c                       |  21 +-
+ include/linux/pci.h                     |   3 +
+ include/uapi/linux/pci_regs.h           |  14 +
+ 7 files changed, 600 insertions(+), 2 deletions(-)
+
+base-commit: 6de23f81a5e0
 --
-2.53.0
+2.43.0
 
