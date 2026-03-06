@@ -1,208 +1,284 @@
-Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010059.outbound.protection.outlook.com [40.93.198.59])
+Received: from mx0a-0064b401.pphosted.com (mx0a-0064b401.pphosted.com [205.220.166.238])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47519366DB0;
-	Fri,  6 Mar 2026 08:17:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.59
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECE20371061;
+	Fri,  6 Mar 2026 08:21:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.166.238
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772785045; cv=fail; b=Ou9jKNzfwrRpjNNKO/+rxkWHb5XKtUej4uDNVhM6VOTXEtop3VeRV5VA9PEWgmgnhKiLo9IAJSmLA5oQx6c5BvaGizHyFOufwUJNp/UljX++UzUzYL6vkMHnmvlRSpLmFA0LB/vi39MDsh+J8TXojZaiGJGmKMT2YkOZbqM8jXw=
+	t=1772785306; cv=fail; b=olg+VgyDpUR0OkuL+zP7yYQzyGdWyYndKP5h/72AaJEJxR4oQPpncQKn5jqtmKN4//kDQyKss6Y2HCZtMYOzQev0Dat6z4Q8VYVBEZyOIdG7c7k2Y5VOXlQhad6AoBVka8JipOzvkgKDecU5e/AGbhc5mf0HqUMTOmw3K0xR4+U=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772785045; c=relaxed/simple;
-	bh=rrtzd7s5ASUH8C26HZIS2A5EO0g/829zn1FRZMyeE7A=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=M7j47z16otrlq+qirZVU+CFLP3MHq47XnrLi0R3Fq0Hk+xyxS7HtmqDDrr6VXAEzAwl6UF8xxrI4Q/oArROD0N/fo4XGiZvvFFln03CyFP/ua0gQCtQQShRo3MABJoJtAcBLKHWbJIYykaKLpjf2+4mObpSmrYpeCxJ1Ouh3zE8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=ngc859bg; arc=fail smtp.client-ip=40.93.198.59
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	s=arc-20240116; t=1772785306; c=relaxed/simple;
+	bh=63UZeddyfkly95uAXHxYLNezWLSDFxiLOCScDQHjJSw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=cZxPPNtbwQCmEEi/akGbbfxV5hRqxkOkPzWzNxQU9jTp/SqM1bea46FeyB3ByMleKym0fwVnSUUxiLGhRlfyZ2Gt/Wm11R8ACI/DyOnLwcmh2BY1djU4KIIHaiouDDb0MIg12LX1ahGXCXjlPWruycLzYFRge5V1uc3vH9UGVfg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b=HQuuQoWS; arc=fail smtp.client-ip=205.220.166.238
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=windriver.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="ngc859bg"
+	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b="HQuuQoWS"
+Received: from pps.filterd (m0250809.ppops.net [127.0.0.1])
+	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6265cDN93320685;
+	Fri, 6 Mar 2026 00:21:34 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com;
+	 h=cc:content-transfer-encoding:content-type:date:from
+	:in-reply-to:message-id:mime-version:references:subject:to; s=
+	PPS06212021; bh=Xkv3wrRzenJm6LlytjmgdjQZxoHZcIVm+OWY2Jx/u+4=; b=
+	HQuuQoWSe4LnTCGJeQf0FxuO/44fQqWGclrY9BwGjkeYc251Oe+e2mHA9Guo1Enq
+	wOuHA1TMtvM38WO4WFUH2Cn5niWJO29imvUfL82DqMhTh8qGoqP34LgLWQjZTgQY
+	Y57F4W5H78hRly0R/hpgl4KL3vkYGfnhhBCjJGPlA/ilRBttlvt48c1MmR4VbHfu
+	tVQN/9cZWnjv1JroQQIt0f0HZ5ix6I4RrUXzdtbCTpjaIN8YhT/LoWOzI+m28Qw9
+	UwnKH6C7apZc3zegGDcx4EHAfVPCD3TW09z6sopyRx4D+fNxDQhwqZFmM31ywhcf
+	YCtk9bt8lv0OeVyR/MOvjA==
+Received: from dm5pr21cu001.outbound.protection.outlook.com (mail-centralusazon11011022.outbound.protection.outlook.com [52.101.62.22])
+	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4cm0rgq60u-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Fri, 06 Mar 2026 00:21:34 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=dxwbc2wgRga+SKYn7b5Q99S6hhxUX7wZumnC9x494hm5BslcLHMyeGm5uzAVRLvZOTF1FEA8rn0DjDn1f55e1yBV8pLC1IYoE+tL8gcmoLrbr30sNc+Z027Ev/NYAooO0q9uTwgGf7JU2b6RLa+7NxQ/bMvDiIDfLgYfbL0AqLh4/dMNVq50bInFX2cNbQ61PwvwaMEpluDfm4WEOeOYVyrd8Up9tS7HhTirtaMGuScfNphX8X2ZoQTinavMZ0oqR/U5LlFAyumUR/YRZDSdS5b7gTZzOcpiCfJH5hM+5RiGddH/Ds44Muav7cxK7Nj83IbPZOnR+eheTzT+8jaBCQ==
+ b=UeWzZ11uLuPZczJPFM4118ZPWM48EoyRcvX7EP8g0gBpphUaFX6gXTOUkzExKiJAvM0hDR0LmYQChUppa5c1miFufTUPFIDRJiTwGuPd3nOnJvc041dw8F/O0jfZe52nHl8vZmjpKdyjfxhGLWwvc3PD3s2ogwhyHScRXqGFKw52QOXbZ0ABb+qbYnQulkNK0fxcFoWiC+YScHS+1PjE+utyJhSg88oEK9sPP+++SBwEHyMuk9dqJ8vG60SSzLrYnzyyDtKdc3D2WKEHFUGNXsd7Ni/GuRvliayhiSyNdOPwtabhc/vlY5SpC2EAOACXTLVakBrfroL0qu19Sk90RA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bGxa2/VJPSkh1nIhBiAQBxjO2GHPkYam/Srnb3Gacrc=;
- b=YefQ3tum8r0wJeUqD5XfcK3DIAfYvFSe20G2wVudLouCALJLcABjAzyLLco//yxEmaZcPqIJzRqtIiywStHTo+D1o1pkzm3xLifQKIgm1nnPVaP12+zwaSH3tDaiXl8nrsEJf2xXtjzLuchonMGk3/8iw5RXN8E9hir2ph4hfjxlvW5lhNnIbLC5Ai+jZC6WbHdXsyYSlI5lcRJCcoJ+z8DzAfKHl8rCMBStJM3uHuP3iWfDvBi4p9dBdwUIPks/WzCIEjPD7ZLfadeZA4UqT4laAw0Mqe0SBv8l625w/UAd1kO4f9sIHBWuqNOZUY9/95i+g2F3KMoJl3zLDMR1VA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.21.195) smtp.rcpttodomain=lists.infradead.org smtp.mailfrom=ti.com;
- dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bGxa2/VJPSkh1nIhBiAQBxjO2GHPkYam/Srnb3Gacrc=;
- b=ngc859bgiW3Xbui4vUgWCb5mK8ZFgkDNh7L9SrtqM8cnjMqQ/gbRWW7v4FkVhx7h4gUoogNy8xwE/Wt/F/tAST7AVleIoU1blLKW34r4Yuj3sOBH4S8fQeRiM7eKzMA+csG6DIHVY153xD7Kf1RCj9azvzb0zaugZhSwVVbWKKI=
-Received: from BLAPR03CA0131.namprd03.prod.outlook.com (2603:10b6:208:32e::16)
- by SN7PR10MB7002.namprd10.prod.outlook.com (2603:10b6:806:344::20) with
+ bh=Xkv3wrRzenJm6LlytjmgdjQZxoHZcIVm+OWY2Jx/u+4=;
+ b=LHi9NGhwWRqc+iSYUOFJwvIQgMh7AGt2q6WoJVD6Ife9Hxws4ngxeqLkpQUugEpfEh0X6aVgLNiFucEAFTiNdAaAyoahkJrCV8CGUk+uUyo+6Wry0Fie/0DeZ+UNXZCeYcF8YDIUMh1u5PhoarlHVWhDZB5CcUkkDz9ngdE+2uEjtc0jFVzvlJEUJ64I8zfgRdLFbSCxjMhquhls2bmNHSgaXcooNx5uJjlUgsLlKAc+hCpH34dLjaURDER8bozTumScSw4CnSIiVbWP7mF/YZrYUk7FdduHrDQgkx26v6C+r5ouv4yz+kPocdxhitXL8XIlbwT08+zrXjDDjrv9bg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=windriver.com; dmarc=pass action=none
+ header.from=windriver.com; dkim=pass header.d=windriver.com; arc=none
+Received: from SJ2PR11MB7546.namprd11.prod.outlook.com (2603:10b6:a03:4cc::8)
+ by DS4PPFA424F92C2.namprd11.prod.outlook.com (2603:10b6:f:fc02::41) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.17; Fri, 6 Mar
- 2026 08:17:21 +0000
-Received: from BN2PEPF000044A8.namprd04.prod.outlook.com
- (2603:10b6:208:32e:cafe::bb) by BLAPR03CA0131.outlook.office365.com
- (2603:10b6:208:32e::16) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9654.23 via Frontend Transport; Fri,
- 6 Mar 2026 08:17:21 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.195)
- smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
- action=none header.from=ti.com;
-Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.21.195 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.21.195; helo=flwvzet201.ext.ti.com; pr=C
-Received: from flwvzet201.ext.ti.com (198.47.21.195) by
- BN2PEPF000044A8.mail.protection.outlook.com (10.167.243.102) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9678.18 via Frontend Transport; Fri, 6 Mar 2026 08:17:19 +0000
-Received: from DFLE207.ent.ti.com (10.64.6.65) by flwvzet201.ext.ti.com
- (10.248.192.32) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Fri, 6 Mar
- 2026 02:17:11 -0600
-Received: from DFLE206.ent.ti.com (10.64.6.64) by DFLE207.ent.ti.com
- (10.64.6.65) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Fri, 6 Mar
- 2026 02:17:11 -0600
-Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DFLE206.ent.ti.com
- (10.64.6.64) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Fri, 6 Mar 2026 02:17:11 -0600
-Received: from [172.24.231.225] (a0507033-hp.dhcp.ti.com [172.24.231.225])
-	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 6268H7FO3453730;
-	Fri, 6 Mar 2026 02:17:08 -0600
-Message-ID: <ea32ebe2-09e4-4d74-8279-ec3bc9f8e98f@ti.com>
-Date: Fri, 6 Mar 2026 13:47:07 +0530
+ 2026 08:21:32 +0000
+Received: from SJ2PR11MB7546.namprd11.prod.outlook.com
+ ([fe80::ca9b:dcf:8881:bced]) by SJ2PR11MB7546.namprd11.prod.outlook.com
+ ([fe80::ca9b:dcf:8881:bced%5]) with mapi id 15.20.9678.016; Fri, 6 Mar 2026
+ 08:21:32 +0000
+From: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: helgaas@kernel.org, sebott@linux.ibm.com, schnelle@linux.ibm.com,
+        bblock@linux.ibm.com, alifm@linux.ibm.com, julianr@linux.ibm.com,
+        dtatulea@nvidia.com, mani@kernel.org, lukas@wunner.de,
+        kbusch@kernel.org, ionut_n2001@yahoo.com, sunlightlinux@gmail.com,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        intel-xe@lists.freedesktop.org,
+        "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
+Subject: [PATCH v6 1/1] PCI/IOV: Make pci_lock_rescan_remove() reentrant and protect sriov_add_vfs/sriov_del_vfs
+Date: Fri,  6 Mar 2026 10:21:08 +0200
+Message-ID: <20260306082108.17322-2-ionut.nechita@windriver.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260306082108.17322-1-ionut.nechita@windriver.com>
+References: <20260306082108.17322-1-ionut.nechita@windriver.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: VI1P195CA0090.EURP195.PROD.OUTLOOK.COM
+ (2603:10a6:802:59::43) To SJ2PR11MB7546.namprd11.prod.outlook.com
+ (2603:10b6:a03:4cc::8)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 3/4] PCI/DOE: Add DOE mailbox support for endpoint
- functions
-To: Manivannan Sadhasivam <mani@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<bhelgaas@google.com>, <corbet@lwn.net>, <cassel@kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-	<s-vadapalli@ti.com>, <danishanwar@ti.com>, <srk@ti.com>
-References: <20260213123603.420941-1-a-garg7@ti.com>
- <20260213123603.420941-4-a-garg7@ti.com>
- <p57x6jleaim5w7t2k3v7tioujnaxuovfpj5euop5ogefvw23se@y5fw3che5p5d>
-Content-Language: en-US
-From: Aksh Garg <a-garg7@ti.com>
-In-Reply-To: <p57x6jleaim5w7t2k3v7tioujnaxuovfpj5euop5ogefvw23se@y5fw3che5p5d>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
-X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN2PEPF000044A8:EE_|SN7PR10MB7002:EE_
-X-MS-Office365-Filtering-Correlation-Id: 03bb3ff0-29f2-404c-4ae4-08de7b58c94e
+X-MS-TrafficTypeDiagnostic: SJ2PR11MB7546:EE_|DS4PPFA424F92C2:EE_
+X-MS-Office365-Filtering-Correlation-Id: 26d90fb4-1712-424a-b013-08de7b595fd9
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|36860700016|82310400026|34020700016;
+	BCL:0;ARA:13230040|7416014|52116014|1800799024|10070799003|376014|366016;
 X-Microsoft-Antispam-Message-Info:
-	r7nJlkSvOWEHavNhoIhXT21rhS4/xaAFWTmbuH3v7vjrnIaTs5mH6VA3paacqrEuJhck7064qmTbHtvJ9Cj+zielA63Zl0e7FkvYmN/ZGYTsT5kJ6JuPHsO0LkF80XIWG+M2lOZ+IyshiKaTtJ2DVnlWTm40ruryeyhaHW/bzzHef/6L6HLjRePsgEPZ8lbIBAuizSNzbpnPRd49TyiJW8vSkVUT3ZKgG/D3Shx6+PCSdNvnvsAAQAyJaQ4Q2LnClDkWwy5E0pwZZK3sJ0OW+c4DIi2iAzT+N1Z6i6stpWfqDgaZ2cMooIzK1Fy0DtXeUItB03KEz1RiIGvqrLP+VfN/255CiQmBo4PPHamodq9PEQFhTgZy5GdnH/pjvv/JVoaQmIztmHgOngIQPrfZBB9u6/qQVdm+AWHmTqUObDh1MEnPf3l1iLx1g7NUwYdhU+5NOk6/Yo1WQViRPfq5LXinjijPXRpkSQYqF6emCliOuuPWkZe8JSOY3We33I7pIrCX2iIJYT75IELUatcw7TaTOVypTQA9b8QKDUaFe6NMspzEAd+pjLGY+b3b4A2AiM8Gf5x37DqYAFuCPCpikybwoegtcuR7NS0F7TXqUH6Ay3p6At5MLKO/NZXxjG6ngvdr2H/sh8dnKTq/Uuycqz65hz6oE546n7gMlVVf7wmcXNWFxf3xUmrmGhUF7SU6ZSsswW1UwEO1Smx774zIH7OslZ2pOO5A9/dUSpPbSQ/Q+NdhLaaKvHqwOMVdhjcZqYbtDuKqKXhPmfjytPr1UQ==
+	vpNjkaoUr/NCnvQhVkQgkBN5Afp/s6rfhOh5p4BC/oXpnDAiWzl3IZuOEjWILCKP4OgGW3pSHCFPmIoe6EUiXxUEXH0PElveB/tndASz9fFWML0TURKFbDkPRKRbk6DiOSOtG3MZ1HKhRGVqkVh8Xs4SfVUIE9sw+LIe/++FLJrlp0lAPZjwDVCPLwxcDEeskROP6LnycfaTQsr4kf40owsnkC9NCaa4lJVXKqe0zejO/E1VjJmx+fjNBnFix2tXcGdHX6R9AuIoV04yCITDThCdikABEmT89iTj+KSF2BwSJIMuao/17vl4EHIKplIS4DCbxbnZopHZRQQSnpgIqIRts4ao/mEt/muCTy+X74RnXMx/nR839G3z1R45CKZVSLNS+G0eaM15omLZBkBCIPjFBMi5nGIyszznkRA+gMiQ1BSmyoUtyysZYcIgb52VneZW5GJDe1xe4Emvl2oTd+pSaDn9PQSSAr7T5K3SQkDNfrT91aMky4dA5v315ivM381iyZZF6HvJL2ZUsxD/+Cxo6GCIUA1kcZaEKJqnReWKjunUxnBBikielDLH+kKIVoJQSpSMGuNkl6zL7Fc0RqHCKzOhNfid8imif6TstQzP6eTvAskXd9r0sr+AOsC8oQ5r0ISjVvhwR/o12lQV/hDlitVCUs2nBVmSWHSIsHSQ7td2PydoPjhnS3jkAvM7/bA8b1NI6WZTFn9uBW6a2Z9ZrdCgRUxpndeu1a9hOLs=
 X-Forefront-Antispam-Report:
-	CIP:198.47.21.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet201.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(1800799024)(376014)(36860700016)(82310400026)(34020700016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ2PR11MB7546.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(52116014)(1800799024)(10070799003)(376014)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
-	7irO5OTPWO8MaqEQtAQdlU+BhXDFDoHuEGadt3ck1+/ncWHHjVk2uqFMaTGhePi9R4cfHtQZ3uYxW6wLEOaycl5LSb3PTWJELHyyoTuc8FRTC76j2k5EP5vrm442eVFSL1LoQ4ujKI15R60ebNyD1cmd7+Uhk4WAxhrd87ZAOqeIhEV9y4AfBTvf4FdeUuu1MVvda1hDM4QuBqAN0aMvyOXSMm3TcDn8sS9gxM/HyC7M5lvQm2WrF7TgHFHLfxS8zSLMPy/+TuKw2teyGfzN4TpfqXkzO6LIn6dukdwmWPEmB6eJrGBoSg1bY7C43T9gLnKrYL/bFPF70bCEhDikDviNnHTVrrHAt5TV2f+PzoGMklLag7Ca7CkPq0YKyJR+aXElI6YTZnOWp0sGXg6j0OymRg+5tfkNwUKdNkWzQnTwPjOwzeWJlSDvPJsodmZD
-X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Mar 2026 08:17:19.6668
+	=?us-ascii?Q?7JngytDa+LLS2l/qEFZkpf1oRTe3tJ7N3YC/0q0N+55Th7aJNd1PiZDkcAcu?=
+ =?us-ascii?Q?lOfcOfXHZaCQsDzab0PJpBSmzdvRCg3Itysl8Yw/aeVi0q+kOhl3mdE35G9r?=
+ =?us-ascii?Q?YurMgs6cs6nYAflDfv0Hb+iadqflzf7F194aci0MrQmvYIQfr3Eg7gJ/jIrS?=
+ =?us-ascii?Q?Oca2vY2RNV6s/HtmNsHlRFeLFW9lAwQ+cD5kVN4lyShxPKjkWHS7hYSR0KUC?=
+ =?us-ascii?Q?4OZLDX8SJjWxMQctnq3J2CHcghYaGO4KCCaVFngEmTBIsqkPf47zhuybqbuY?=
+ =?us-ascii?Q?TVeOQ1ZRfSgNhzx4EkEAG8j5FZDcINoa868i+zMjC6rmIFJQKR4+tEicrpH4?=
+ =?us-ascii?Q?V6dL59V6/QcqfPOuJaMj7OG4Ut5GaNhkxts7/F67MiPGOvOQrOEaSigN+CtC?=
+ =?us-ascii?Q?jVDP/+/1BRW2QxpAJby6mbWAwzi313CjckDrfkdWxC38h6HWD7rTfuV3qTS0?=
+ =?us-ascii?Q?SL+Y/++TkB3w/UvCSEEUospF7D73ivG7iTX8SPWSyiqakvl4By9ptY2BnoS4?=
+ =?us-ascii?Q?YyllF9BIGnZ9uuV5EDkY3K4J4zgBrHt/RS0e4W5V/buuxzXQ2d/25mpJg8Ye?=
+ =?us-ascii?Q?4yNB4ZWFYa/WIibtrWevTWrL2d6+iSAacw8R6CtSQbPA8oE/ywDHg4i0/9Zr?=
+ =?us-ascii?Q?mCdNG7i6whUQiHrsYjk7Fg+hEVskcHr3d9y9yDWArAjV+LXlVapUnIRWRjAc?=
+ =?us-ascii?Q?U3LqwD0ssHKYvvn9FC8Tcp4cHHcKENrGgkM2VpEG4bWJHOlpScUqj9aU85FV?=
+ =?us-ascii?Q?RcwckAYODr/b8JqlZz17Vo0auDkfEYXSGuNZYsVH9Jbs+tRNGg7CHIdkzCY8?=
+ =?us-ascii?Q?5Pa6MMsmFGjazbn+4ZWDyDXhJefShjwphPN9b/H42XC4OgEaa6KYcYqY6M4f?=
+ =?us-ascii?Q?EJjordS7WgqIXUFI7Do6OtrBm0X/eyKEioaNwSYFTM26tcMdno5SjEA4nm5P?=
+ =?us-ascii?Q?S7hHgeEDu49EkPfSkWBr12PiLL8ushZmVheC+uso3rIkaurBu1cF8mKs5abk?=
+ =?us-ascii?Q?/BaFg+GoTED7COlnfefcCCEIThue1j7mkrFQDcu3wPB2gKBrMVR+irBwhvts?=
+ =?us-ascii?Q?IUnocVjuYdDGKF/8IHly25zCCSShUJzXPeLE3kYqLBFhkWBUg49hJyHwJl5a?=
+ =?us-ascii?Q?dEkVJN+Uxaf6zTEJSDYGq5KQRu+s8SZKdedX7rjXLyA7ZE7HTH0WvaPhXYqm?=
+ =?us-ascii?Q?jqf4u2UMAdC1vuEDB9Th0hG6mcJEyX/kF/rObAhXJuzc0yHNWXupMafGUQ7j?=
+ =?us-ascii?Q?1UJcF8X3o7zuavgA740S7sgW5eFOW9DYDR4txT3KyequriKs/pg6qyAGVsk3?=
+ =?us-ascii?Q?L3s3QSDKMSY6TaU+oD1TZAYVlP/lNUMdOat2hAgCpMnN5ZKtIqpZ+L3ocYdo?=
+ =?us-ascii?Q?DCin3gUDP7qtG8muhH8GNzsH9++yT3d95+UugU6C7LB4hOAY1uhaQ8IQCKuv?=
+ =?us-ascii?Q?W1JR7HO7Av9OzmLJF4qu1s+sybWpu+7KWNJ3qCOw3veXubRTPjP4PG+WewjG?=
+ =?us-ascii?Q?hXLJLLT26lqawxd3EhghzFaO2kTK3C1QHbZ+eVoaz5au2AqSCCLqiumYoG5x?=
+ =?us-ascii?Q?kiEnQul1EC63kquzfkzbDQIfjAVK/zO3sWzuW5mHzfungZnYaoHusuGeDDnH?=
+ =?us-ascii?Q?2Mj7IR9MfzWugmz7fh1/f4Br7G5eGKjNViZ6V6iHyyaMV0diJCNPYHWleACT?=
+ =?us-ascii?Q?I/8tbLV8ylCLNGMahqLGrwYe5YF7nn7rUW2Gooe7CGAW+u8OZudcB8zf5TYw?=
+ =?us-ascii?Q?USLzvYe8Ro44qOt0ysy5ztPszJSsAufEUxZyU5W4U2O0hK+I5kKMiiYhnVRO?=
+X-MS-Exchange-AntiSpam-MessageData-1: 66vwxm8gs2amEpDawLbYEnUcNYj6J+Sbp3s=
+X-OriginatorOrg: windriver.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 26d90fb4-1712-424a-b013-08de7b595fd9
+X-MS-Exchange-CrossTenant-AuthSource: SJ2PR11MB7546.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Mar 2026 08:21:32.4835
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 03bb3ff0-29f2-404c-4ae4-08de7b58c94e
-X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.195];Helo=[flwvzet201.ext.ti.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	BN2PEPF000044A8.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR10MB7002
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 8ddb2873-a1ad-4a18-ae4e-4644631433be
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: bPK62ATEHT6vQcgXB5YQQwEbipxQKCNP4yIf0Uk2fIsLkyQvuTGdBh22/mDY9VdK/SniFSIkScUi2xkAk1/TWihz9ysva/UaIc8ksyiehiw=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS4PPFA424F92C2
+X-Proofpoint-GUID: A9vurgsJognt9yuhUlhmmyum_yBYlfP8
+X-Authority-Analysis: v=2.4 cv=Of+VzxTY c=1 sm=1 tr=0 ts=69aa8e8e cx=c_pps
+ a=OTtHDJnq+OHIMh0/YV57GA==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
+ a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19
+ a=xqWC_Br6kY4A:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=bi6dqmuHe4P4UrxVR6um:22 a=iKiJcTA2PjBS6x5JeXcw:22 a=VwQbUJbxAAAA:8
+ a=Ikd4Dj_1AAAA:8 a=VnNF1IyMAAAA:8 a=CjxXgO3LAAAA:8 a=t7CeM3EgAAAA:8
+ a=6S3VQf3ZLieD-afqmuUA:9 a=FdTzh2GWekK77mhwV6Dw:22
+X-Proofpoint-ORIG-GUID: A9vurgsJognt9yuhUlhmmyum_yBYlfP8
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA2MDA3OCBTYWx0ZWRfXw4nhLbON42kt
+ p8w7nxjlmDaDpGmosbGFclmk20FB8nPwYyIUCiYDvpBSrUqKJBSn0W3ihSOpqcWX3GOGG+OoxhV
+ oJlSzRF+FtczDd1MOkT6nM6hOPJDrDr7NJLouKR+bmPBoS4P1iPfirg1WVVzoYyWiQ4zYrKf7bv
+ Ku4QMfufQkUZbyL8haxGq//vQnKi7SJeWyuFzTtnKWMUex3urBSvG2ARp6rF6790skL7mgs/eLQ
+ YE81n0TDkCPqwkyWCUG9LaNUmfDNEYdZZHiKAPOTd5riBFdzXcSbwkXtR+Cqs/CZgSDRMpokmye
+ w5H++dNUAHJK4lilsY+5xJFvjPYGKMDwJ9lYMsrtJDY2CkRn97ON8hkNeqx84QHk9yQz71bnziv
+ fNDF96VH6bnF5exhlAsl1uhbiVIkOotAEDAAhNBaGkXRNTdlrPbtUS5WkWpi8TxfeHGUcR9QUSj
+ /8Yn2XEDGl5gPY+x+4Q==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-06_02,2026-03-04_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 clxscore=1015 priorityscore=1501 lowpriorityscore=0 spamscore=0
+ impostorscore=0 malwarescore=0 adultscore=0 phishscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603060078
 
+After reverting commit 05703271c3cd ("PCI/IOV: Add PCI rescan-remove
+locking when enabling/disabling SR-IOV") and moving the lock to
+sriov_numvfs_store(), the path through driver .remove() (e.g. rmmod,
+or manual unbind) that calls pci_disable_sriov() directly remains
+unprotected against concurrent hotplug events. This affects any SR-IOV
+capable driver that calls pci_disable_sriov() from its .remove()
+callback (i40e, ice, mlx5, bnxt, etc.).
 
+On s390, platform-generated hot-unplug events for VFs can race with
+sriov_del_vfs() when a PF driver is being unloaded. The platform event
+handler takes pci_rescan_remove_lock, but sriov_del_vfs() does not,
+leading to double removal and list corruption.
 
-On 04/03/26 19:47, Manivannan Sadhasivam wrote:
-> On Fri, Feb 13, 2026 at 06:06:02PM +0530, Aksh Garg wrote:
->> From: Aksh Garg <a-garg7@ti.com>
->>
->> +/**
->> + * pci_ep_doe_add_mailbox() - Add a DOE mailbox for a physical function
->> + * @epc: PCI endpoint controller
->> + * @func_no: Physical function number
->> + * @cap_offset: Offset of the DOE capability
->> + *
->> + * Create and register a DOE mailbox for the specified physical function
->> + * and capability offset. The controller driver should call this for each
->> + * DOE capability it finds in its config space.
-> 
-> Why can't we call this helper from the EPC core driver instead? We may have to
-> introduce a new callback in 'struct pci_epc_ops' to read the endpoint config
-> space from the EPC core driver. But it will avoid duplicating the code across
-> the EPC drivers.
-> 
-> End of the day, we can read the config space of the device and identify the
-> capability in a generic way.
+We cannot use a plain mutex_lock() here because sriov_del_vfs() may also
+be called from paths that already hold pci_rescan_remove_lock (e.g.
+remove_store -> pci_stop_and_remove_bus_device_locked, or
+sriov_numvfs_store with the lock taken by the previous patch). Using
+mutex_lock() in those cases would deadlock.
 
-Thank you for the feedback. This looks better to me. Please let me know
-if the following flow would be correct:
+Make pci_lock_rescan_remove() itself reentrant using owner tracking and
+a depth counter, as suggested by Lukas Wunner, since these recursive
+locking scenarios exist elsewhere in the PCI subsystem:
+ - If the lock is not held: acquires the mutex, sets owner to current
+   task, and initializes the depth counter to 1.
+ - If the lock is already held by the current task: increments the
+   depth counter and returns without re-acquiring, avoiding deadlock.
+ - If the lock is held by another task: blocks until the lock is
+   released, providing complete serialization.
 
-'struct pci_epc_ops' would have a new callback to find the extended
-capability, taking inputs as struct pci_epc *epc, u8 func_no, u8 cap.
-The EPC core driver would have an API, taking struct pci_epc* as
-argument. This would find the extended DOE capability offsets for the
-mailboxes for all the functions in epc->max_functions, and call
-pci_ep_doe_add_mailbox() for each of them.
+pci_unlock_rescan_remove() decrements the depth counter and only
+releases the mutex when it reaches zero.
 
-This newly created API would be called by the controller driver if it is
-DOE capable. The DOE capability feature can be added in the 'struct
-pci_epc_features' as well based on which this API would be called.
+This approach keeps the API unchanged: callers simply pair lock/unlock
+calls without needing to track any return value or use separate
+reentrant variants.
 
-> 
->> + *
->> + * RETURNS: 0 on success, -errno on failure
->> + */
->> +int pci_ep_doe_add_mailbox(struct pci_epc *epc, u8 func_no, u16 cap_offset)
->> +{
->> +	struct pci_ep_doe_mb *doe_mb;
->> +	unsigned long key;
->> +	int ret;
->> +
->> +	if (!epc)
->> +		return -EINVAL;
->> +
->> +	doe_mb = kzalloc(sizeof(*doe_mb), GFP_KERNEL);
->> +	if (!doe_mb)
->> +		return -ENOMEM;
->> +
->> +	doe_mb->epc = epc;
->> +	doe_mb->func_no = func_no;
->> +	doe_mb->cap_offset = cap_offset;
->> +
->> +	doe_mb->work_queue = alloc_ordered_workqueue("pci_ep_doe[%s:pf%d:offset%x]", 0,
->> +						     dev_name(&epc->dev),
->> +						     func_no, cap_offset);
-> 
-> I believe you are trying to use cap_offset to differentiate between multiple DOE
-> mailbox instances within a single function. In that case, I'd use a simple index
-> instead of cap_offset.
+Add pci_lock_rescan_remove()/pci_unlock_rescan_remove() calls to
+sriov_add_vfs() and sriov_del_vfs() to protect VF addition and
+removal against concurrent hotplug events.
 
-Yes, the cap_offset is used to differentiate between the mailboxes.
+Fixes: 18f9e9d150fc ("PCI/IOV: Factor out sriov_add_vfs()")
+Cc: stable@vger.kernel.org
+Suggested-by: Lukas Wunner <lukas@wunner.de>
+Tested-by: Dragos Tatulea <dtatulea@nvidia.com>
+Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+Tested-by: Benjamin Block <bblock@linux.ibm.com>
+Signed-off-by: Ionut Nechita <ionut_n2001@yahoo.com>
+Signed-off-by: Ionut Nechita <ionut.nechita@windriver.com>
+---
+ drivers/pci/iov.c   |  5 +++++
+ drivers/pci/probe.c | 13 ++++++++++++-
+ 2 files changed, 17 insertions(+), 1 deletion(-)
 
-There were two reasons I chose this as a differentiator instead of a
-simple index:
-- doe.c uses cap_offset as differentiator, hence I used the same to make
-   doe-ep.c code compatible with it
-- Because the cap_offset would be unique across the mailboxes for a
-   single function, we do not have to create and manage an index for the
-   uniqueness of the mailbox, which doesn't add the redundancy of
-   introducing an index variable just as a differentiator.
-
-
-Regards,
-Aksh Garg
-
-> 
-> Rest looks OK from a high level design perspective.
-> 
-> - Mani
-> 
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 91ac4e37ecb9c..aba2fb90759cd 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -633,15 +633,18 @@ static int sriov_add_vfs(struct pci_dev *dev, u16 num_vfs)
+ 	if (dev->no_vf_scan)
+ 		return 0;
+ 
++	pci_lock_rescan_remove();
+ 	for (i = 0; i < num_vfs; i++) {
+ 		rc = pci_iov_add_virtfn(dev, i);
+ 		if (rc)
+ 			goto failed;
+ 	}
++	pci_unlock_rescan_remove();
+ 	return 0;
+ failed:
+ 	while (i--)
+ 		pci_iov_remove_virtfn(dev, i);
++	pci_unlock_rescan_remove();
+ 
+ 	return rc;
+ }
+@@ -766,8 +769,10 @@ static void sriov_del_vfs(struct pci_dev *dev)
+ 	struct pci_sriov *iov = dev->sriov;
+ 	int i;
+ 
++	pci_lock_rescan_remove();
+ 	for (i = 0; i < iov->num_VFs; i++)
+ 		pci_iov_remove_virtfn(dev, i);
++	pci_unlock_rescan_remove();
+ }
+ 
+ static void sriov_disable(struct pci_dev *dev)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index bccc7a4bdd794..c7efb8e1010d3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -3509,16 +3509,27 @@ EXPORT_SYMBOL_GPL(pci_rescan_bus);
+  * routines should always be executed under this mutex.
+  */
+ DEFINE_MUTEX(pci_rescan_remove_lock);
++static struct task_struct *pci_rescan_remove_owner;
++static unsigned int pci_rescan_remove_count;
+ 
+ void pci_lock_rescan_remove(void)
+ {
++	if (pci_rescan_remove_owner == current) {
++		pci_rescan_remove_count++;
++		return;
++	}
+ 	mutex_lock(&pci_rescan_remove_lock);
++	pci_rescan_remove_owner = current;
++	pci_rescan_remove_count = 1;
+ }
+ EXPORT_SYMBOL_GPL(pci_lock_rescan_remove);
+ 
+ void pci_unlock_rescan_remove(void)
+ {
+-	mutex_unlock(&pci_rescan_remove_lock);
++	if (--pci_rescan_remove_count == 0) {
++		pci_rescan_remove_owner = NULL;
++		mutex_unlock(&pci_rescan_remove_lock);
++	}
+ }
+ EXPORT_SYMBOL_GPL(pci_unlock_rescan_remove);
+ 
+-- 
+2.53.0
 
