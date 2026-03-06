@@ -1,488 +1,208 @@
-Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013046.outbound.protection.outlook.com [40.107.201.46])
+Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010059.outbound.protection.outlook.com [40.93.198.59])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFEEC378812;
-	Fri,  6 Mar 2026 08:01:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47519366DB0;
+	Fri,  6 Mar 2026 08:17:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.59
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772784081; cv=fail; b=BhZ0I5xxsNTqkKcqokd+Vo+TV8+0CUz+ZRZKYoY+vOW7mAbkx+TnFUPqQhdLF2txIDRdlTGn9kVnZdqdmgjJFm/bz8RIgzEFfbm9PS4yfbgiQnttA175lxIgjNFuBiqrOC4RG0TLHpn1M99AqLYmoq1jNIJyhHc36yju67gK4h8=
+	t=1772785045; cv=fail; b=Ou9jKNzfwrRpjNNKO/+rxkWHb5XKtUej4uDNVhM6VOTXEtop3VeRV5VA9PEWgmgnhKiLo9IAJSmLA5oQx6c5BvaGizHyFOufwUJNp/UljX++UzUzYL6vkMHnmvlRSpLmFA0LB/vi39MDsh+J8TXojZaiGJGmKMT2YkOZbqM8jXw=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772784081; c=relaxed/simple;
-	bh=RpGvnhmdgHZi0wj/plrBo0dzUp1uwlLQTkzrVyjkGvQ=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=on8oiuAWOlxqSUDaSP76q+NExjWqUQQgEA9dcRHJbaRm6tqxFM4jekAYN3bQi+NGXsrnoCW/nvPkL9UGjVwZt4qJhSCWRXi28V15eMd8DXw63ZQwBglChnaNU8hNvoeUutR5KjjG13zFKNIXjBetRzphHTON2J5/Oke0GUgoC7U=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=f2Iau3Xp; arc=fail smtp.client-ip=40.107.201.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1772785045; c=relaxed/simple;
+	bh=rrtzd7s5ASUH8C26HZIS2A5EO0g/829zn1FRZMyeE7A=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=M7j47z16otrlq+qirZVU+CFLP3MHq47XnrLi0R3Fq0Hk+xyxS7HtmqDDrr6VXAEzAwl6UF8xxrI4Q/oArROD0N/fo4XGiZvvFFln03CyFP/ua0gQCtQQShRo3MABJoJtAcBLKHWbJIYykaKLpjf2+4mObpSmrYpeCxJ1Ouh3zE8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=ngc859bg; arc=fail smtp.client-ip=40.93.198.59
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="f2Iau3Xp"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="ngc859bg"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=XA3VdrON260GaWXPA+eLYCF8i10Qvl1RvlwC11NFzmlL1y9Q6bC56gtFg6HsGKIOvsxdNM6AUv9apIym7hnxQ3muigkc2vMCrn2vFTj3ue/e2IC2bNRin6QunlJYglhGPMlVPWxo+Fp2Zqvo/24lVLDWY9voMIQFSG4SHBSgk3bTEEudbufFtMbr+BeESk0jXmbqFPE7QE/C/agy5m5TZ3ouNOMqhDeEGeZZ1WFVFtjguWE6vR8UwtjCeaiSxrqfERRlQepk2M5nB/Jk7gfIn2q9fg5YOrkGo2PaU1FYa+5Frz/oYR7WAlaW0lFTntERjKI4NOvpywfyhs2j1/7/YA==
+ b=dxwbc2wgRga+SKYn7b5Q99S6hhxUX7wZumnC9x494hm5BslcLHMyeGm5uzAVRLvZOTF1FEA8rn0DjDn1f55e1yBV8pLC1IYoE+tL8gcmoLrbr30sNc+Z027Ev/NYAooO0q9uTwgGf7JU2b6RLa+7NxQ/bMvDiIDfLgYfbL0AqLh4/dMNVq50bInFX2cNbQ61PwvwaMEpluDfm4WEOeOYVyrd8Up9tS7HhTirtaMGuScfNphX8X2ZoQTinavMZ0oqR/U5LlFAyumUR/YRZDSdS5b7gTZzOcpiCfJH5hM+5RiGddH/Ds44Muav7cxK7Nj83IbPZOnR+eheTzT+8jaBCQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=203Tn7P5et2Jpl9uC6hxjxKmfgDpjfSc6M1IiCpH3F0=;
- b=KxCsObd7QvMGXes1AcFGErxH7ACpczK8BTvJlu22Gx1pJSWxgl2Byb+pFXtnLwym6Yj7L5mICvmu2RKX9QEx1Gl2hjKT8YEEAOwWIQmrd/Hazg8IAbVQXRNuetGkala0be9MFK0FTW2Vo7gqF6+8PSrKpN4N3i3e/PM/FsCsqMABELdCqk2iKyKiOLpvb1JEnLSQ5S5RE4wfUbq0Ni3gcLDGoqMJmPFtKZ5pNo3Uh6IqV9lfERSz9Y00TggLVP/XpZncCqUyb3tuvUeJNubUwwF2KpiYbTtP3z0d2fufb8poYDC4TQolC05NaPiAtdk0mt3Vp9AVrZnrKfopVPKaEg==
+ bh=bGxa2/VJPSkh1nIhBiAQBxjO2GHPkYam/Srnb3Gacrc=;
+ b=YefQ3tum8r0wJeUqD5XfcK3DIAfYvFSe20G2wVudLouCALJLcABjAzyLLco//yxEmaZcPqIJzRqtIiywStHTo+D1o1pkzm3xLifQKIgm1nnPVaP12+zwaSH3tDaiXl8nrsEJf2xXtjzLuchonMGk3/8iw5RXN8E9hir2ph4hfjxlvW5lhNnIbLC5Ai+jZC6WbHdXsyYSlI5lcRJCcoJ+z8DzAfKHl8rCMBStJM3uHuP3iWfDvBi4p9dBdwUIPks/WzCIEjPD7ZLfadeZA4UqT4laAw0Mqe0SBv8l625w/UAd1kO4f9sIHBWuqNOZUY9/95i+g2F3KMoJl3zLDMR1VA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.118.232) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ 198.47.21.195) smtp.rcpttodomain=lists.infradead.org smtp.mailfrom=ti.com;
+ dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
  dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=203Tn7P5et2Jpl9uC6hxjxKmfgDpjfSc6M1IiCpH3F0=;
- b=f2Iau3XphjsSR1T60bKgnUCn+0tYsJ0lLU2MyMlyWa0A12MHBhL6oPRH0grJKjFKlM7xwicnFaRVjfZocWlnA7Pyl+RbWHop8lybjgyDSj4Y/RRu7z0FJLxr6k5w79MTZAwuqkjXK/kER/GUpFvJ06QLmLqU6U5oBTZN3VXHXOJPKIpJyJIn7ujwBXG6UcE97o+i9jhEgeUHhS+Ezi7tQy/q/KDi/5Kt2E9YbgAYiDez0UVnX6Xtef5qd9lvZjvlB/SlStYJROyiPeEnmPyG8/QE81lfpv6A3gKjv3oWDqP/RuG0DQgNxp67RiGzMan/02eXJuqGg92+pL/N5tp3ww==
-Received: from LV3P220CA0025.NAMP220.PROD.OUTLOOK.COM (2603:10b6:408:234::35)
- by PH8PR12MB7349.namprd12.prod.outlook.com (2603:10b6:510:217::14) with
+ bh=bGxa2/VJPSkh1nIhBiAQBxjO2GHPkYam/Srnb3Gacrc=;
+ b=ngc859bgiW3Xbui4vUgWCb5mK8ZFgkDNh7L9SrtqM8cnjMqQ/gbRWW7v4FkVhx7h4gUoogNy8xwE/Wt/F/tAST7AVleIoU1blLKW34r4Yuj3sOBH4S8fQeRiM7eKzMA+csG6DIHVY153xD7Kf1RCj9azvzb0zaugZhSwVVbWKKI=
+Received: from BLAPR03CA0131.namprd03.prod.outlook.com (2603:10b6:208:32e::16)
+ by SN7PR10MB7002.namprd10.prod.outlook.com (2603:10b6:806:344::20) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.18; Fri, 6 Mar
- 2026 08:01:13 +0000
-Received: from BN3PEPF0000B076.namprd04.prod.outlook.com
- (2603:10b6:408:234:cafe::43) by LV3P220CA0025.outlook.office365.com
- (2603:10b6:408:234::35) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9678.18 via Frontend Transport; Fri,
- 6 Mar 2026 08:01:12 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.118.232) by
- BN3PEPF0000B076.mail.protection.outlook.com (10.167.243.121) with Microsoft
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.17; Fri, 6 Mar
+ 2026 08:17:21 +0000
+Received: from BN2PEPF000044A8.namprd04.prod.outlook.com
+ (2603:10b6:208:32e:cafe::bb) by BLAPR03CA0131.outlook.office365.com
+ (2603:10b6:208:32e::16) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9654.23 via Frontend Transport; Fri,
+ 6 Mar 2026 08:17:21 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.195)
+ smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
+ action=none header.from=ti.com;
+Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
+ 198.47.21.195 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.21.195; helo=flwvzet201.ext.ti.com; pr=C
+Received: from flwvzet201.ext.ti.com (198.47.21.195) by
+ BN2PEPF000044A8.mail.protection.outlook.com (10.167.243.102) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9678.18 via Frontend Transport; Fri, 6 Mar 2026 08:01:12 +0000
-Received: from drhqmail201.nvidia.com (10.126.190.180) by mail.nvidia.com
- (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
+ 15.20.9678.18 via Frontend Transport; Fri, 6 Mar 2026 08:17:19 +0000
+Received: from DFLE207.ent.ti.com (10.64.6.65) by flwvzet201.ext.ti.com
+ (10.248.192.32) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Fri, 6 Mar
- 2026 00:00:56 -0800
-Received: from drhqmail203.nvidia.com (10.126.190.182) by
- drhqmail201.nvidia.com (10.126.190.180) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Fri, 6 Mar 2026 00:00:56 -0800
-Received: from build-smadhavan-noble-20260205.internal (10.127.8.10) by
- mail.nvidia.com (10.126.190.182) with Microsoft SMTP Server id 15.2.2562.20
- via Frontend Transport; Fri, 6 Mar 2026 00:00:55 -0800
-From: <smadhavan@nvidia.com>
-To: <bhelgaas@google.com>, <dan.j.williams@intel.com>, <dave.jiang@intel.com>,
-	<jonathan.cameron@huawei.com>, <ira.weiny@intel.com>,
-	<vishal.l.verma@intel.com>, <alison.schofield@intel.com>, <dave@stgolabs.net>
-CC: <alwilliamson@nvidia.com>, <jeshuas@nvidia.com>, <vsethi@nvidia.com>,
-	<skancherla@nvidia.com>, <vaslot@nvidia.com>, <sdonthineni@nvidia.com>,
-	<mhonap@nvidia.com>, <vidyas@nvidia.com>, <jan@nvidia.com>,
-	<mochs@nvidia.com>, <dschumacher@nvidia.com>, <linux-cxl@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>, "Srirangan
- Madhavan" <smadhavan@nvidia.com>
-Subject: [PATCH 5/5] PCI: Add HDM decoder state save/restore
-Date: Fri, 6 Mar 2026 08:00:19 +0000
-Message-ID: <20260306080026.116789-6-smadhavan@nvidia.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260306080026.116789-1-smadhavan@nvidia.com>
-References: <20260306080026.116789-1-smadhavan@nvidia.com>
+ 2026 02:17:11 -0600
+Received: from DFLE206.ent.ti.com (10.64.6.64) by DFLE207.ent.ti.com
+ (10.64.6.65) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Fri, 6 Mar
+ 2026 02:17:11 -0600
+Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DFLE206.ent.ti.com
+ (10.64.6.64) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Fri, 6 Mar 2026 02:17:11 -0600
+Received: from [172.24.231.225] (a0507033-hp.dhcp.ti.com [172.24.231.225])
+	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 6268H7FO3453730;
+	Fri, 6 Mar 2026 02:17:08 -0600
+Message-ID: <ea32ebe2-09e4-4d74-8279-ec3bc9f8e98f@ti.com>
+Date: Fri, 6 Mar 2026 13:47:07 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-NV-OnPremToCloud: ExternallySecured
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH 3/4] PCI/DOE: Add DOE mailbox support for endpoint
+ functions
+To: Manivannan Sadhasivam <mani@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<bhelgaas@google.com>, <corbet@lwn.net>, <cassel@kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<s-vadapalli@ti.com>, <danishanwar@ti.com>, <srk@ti.com>
+References: <20260213123603.420941-1-a-garg7@ti.com>
+ <20260213123603.420941-4-a-garg7@ti.com>
+ <p57x6jleaim5w7t2k3v7tioujnaxuovfpj5euop5ogefvw23se@y5fw3che5p5d>
+Content-Language: en-US
+From: Aksh Garg <a-garg7@ti.com>
+In-Reply-To: <p57x6jleaim5w7t2k3v7tioujnaxuovfpj5euop5ogefvw23se@y5fw3che5p5d>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN3PEPF0000B076:EE_|PH8PR12MB7349:EE_
-X-MS-Office365-Filtering-Correlation-Id: 831f9ed0-b5b9-4640-d61b-08de7b568901
+X-MS-TrafficTypeDiagnostic: BN2PEPF000044A8:EE_|SN7PR10MB7002:EE_
+X-MS-Office365-Filtering-Correlation-Id: 03bb3ff0-29f2-404c-4ae4-08de7b58c94e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|36860700016|1800799024|7416014|376014;
+	BCL:0;ARA:13230040|1800799024|376014|36860700016|82310400026|34020700016;
 X-Microsoft-Antispam-Message-Info:
-	kf//94Y76+sDwBTAAk7/hVOGDMVcXzel0WMxU6066aoDnBOaHslyjlqlo6hKxv+Eh4S1qV49dUTDXzfHulCmOhZPBhE7F9HaZnvBtZjrIwPFy29ojDS5Oh98Kq24iYyFekTWm9qfH3ITQ3MNEKN3xwEySeWy6MctIg57QbmN1lbtMu6NcSzG5FoKi7W83NQvKj4nLsiLBMsLyn/RavWu0qWCMpTZaBe/ToSa7p+VQexoEY8vjGJBy/txutKdk7R9SBGr6vxZhzPXTAX7rBKWSnl6I6jJ0slFkz5vdkhDWXvsyIZtt98rtLUJoUvpBQOkdt0zqwAaSXJi35b7/KyqYk6tRgPzMa7SY8Z++4vdojhNz2wMq+9oV+21ZBDfxluNNEaLSxui/xhcjLbV41IH86b4w2yDTCQjOxAa6heWKB4z7nSCyw77uP8C++IgUSk7/k5ELN1ossQLhH3rVCUA7tVYq9wJVX/Kxk8lflpSQ86wCIZmDCf6SyEaUmYplq5vTZvxLMiPGavK7ouiyFjt8vZlFa292bH3QjwiPMFbX7xxdgae8J9BhOYyr5o9WIAoN1mIdvZ8J5xWEa1UhmXz5IYci1/Wkc96Pcx5dmybgzYZs0LltrEn977QoyQIOv1UFXXvarRKdXPi7zmqZRpMeg3Nq1DlDqYMtzS98GG7sTQCvWJ8jNlXJVLnNylQr5xQasvp6O2UArlX03qMCQ6/lkjMF2lPWb0MAebyjwF6u5pavKYsfdmKCx/DPDnQOHsmQsptAYzvQFADocCHTofGKw==
+	r7nJlkSvOWEHavNhoIhXT21rhS4/xaAFWTmbuH3v7vjrnIaTs5mH6VA3paacqrEuJhck7064qmTbHtvJ9Cj+zielA63Zl0e7FkvYmN/ZGYTsT5kJ6JuPHsO0LkF80XIWG+M2lOZ+IyshiKaTtJ2DVnlWTm40ruryeyhaHW/bzzHef/6L6HLjRePsgEPZ8lbIBAuizSNzbpnPRd49TyiJW8vSkVUT3ZKgG/D3Shx6+PCSdNvnvsAAQAyJaQ4Q2LnClDkWwy5E0pwZZK3sJ0OW+c4DIi2iAzT+N1Z6i6stpWfqDgaZ2cMooIzK1Fy0DtXeUItB03KEz1RiIGvqrLP+VfN/255CiQmBo4PPHamodq9PEQFhTgZy5GdnH/pjvv/JVoaQmIztmHgOngIQPrfZBB9u6/qQVdm+AWHmTqUObDh1MEnPf3l1iLx1g7NUwYdhU+5NOk6/Yo1WQViRPfq5LXinjijPXRpkSQYqF6emCliOuuPWkZe8JSOY3We33I7pIrCX2iIJYT75IELUatcw7TaTOVypTQA9b8QKDUaFe6NMspzEAd+pjLGY+b3b4A2AiM8Gf5x37DqYAFuCPCpikybwoegtcuR7NS0F7TXqUH6Ay3p6At5MLKO/NZXxjG6ngvdr2H/sh8dnKTq/Uuycqz65hz6oE546n7gMlVVf7wmcXNWFxf3xUmrmGhUF7SU6ZSsswW1UwEO1Smx774zIH7OslZ2pOO5A9/dUSpPbSQ/Q+NdhLaaKvHqwOMVdhjcZqYbtDuKqKXhPmfjytPr1UQ==
 X-Forefront-Antispam-Report:
-	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(36860700016)(1800799024)(7416014)(376014);DIR:OUT;SFP:1101;
+	CIP:198.47.21.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet201.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(1800799024)(376014)(36860700016)(82310400026)(34020700016);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	RaWFwMZTvwEDxQQCEfZ6fpu1NPDfvpFSdFNWhzF9tkfsYPvHOhs9D8xTome7YumJt4zFHoyqOZBawzUorD0x8hamc9iJRzls+Znk3a8YobeZGZsN7oGWYrJddl40YawongXfC4kkKov0P4yGqk5NavD299SqfcBKng5hrP4xFiSFi5Xr4yNTjeYMkhXA9hhOVLy/wmsAgLTz8ZHo6FoR0qiNd/ifNd1RB95zgoByTOwf23wBQf7IJaf28auDn9wiFY7mAPV8zaXssw06/CNMXIaTW8uGxZIKvvnE0h9frRmpacJEbKwgV+cVsZzCEiiM5Z9ry63KKUtFXyDutczUStDaJPcwTh6PlAMdY+wXuHpj2jtUrxrp+3EerEBiy6Vkmun4NfkoxEHh2VkbBy3qsDptplUsgKtQhZzQDuabWFEiiYVCKZe/fyooSWcvSiQ8
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Mar 2026 08:01:12.7277
+	7irO5OTPWO8MaqEQtAQdlU+BhXDFDoHuEGadt3ck1+/ncWHHjVk2uqFMaTGhePi9R4cfHtQZ3uYxW6wLEOaycl5LSb3PTWJELHyyoTuc8FRTC76j2k5EP5vrm442eVFSL1LoQ4ujKI15R60ebNyD1cmd7+Uhk4WAxhrd87ZAOqeIhEV9y4AfBTvf4FdeUuu1MVvda1hDM4QuBqAN0aMvyOXSMm3TcDn8sS9gxM/HyC7M5lvQm2WrF7TgHFHLfxS8zSLMPy/+TuKw2teyGfzN4TpfqXkzO6LIn6dukdwmWPEmB6eJrGBoSg1bY7C43T9gLnKrYL/bFPF70bCEhDikDviNnHTVrrHAt5TV2f+PzoGMklLag7Ca7CkPq0YKyJR+aXElI6YTZnOWp0sGXg6j0OymRg+5tfkNwUKdNkWzQnTwPjOwzeWJlSDvPJsodmZD
+X-OriginatorOrg: ti.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Mar 2026 08:17:19.6668
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 831f9ed0-b5b9-4640-d61b-08de7b568901
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-Network-Message-Id: 03bb3ff0-29f2-404c-4ae4-08de7b58c94e
+X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.195];Helo=[flwvzet201.ext.ti.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BN3PEPF0000B076.namprd04.prod.outlook.com
+	BN2PEPF000044A8.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB7349
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR10MB7002
 
-From: Srirangan Madhavan <smadhavan@nvidia.com>
 
-Save and restore CXL HDM decoder registers (global control,
-per-decoder base/size/target-list, and commit state) across PCI
-resets. On restore, decoders that were committed are reprogrammed
-and recommitted with a 10ms timeout. Locked decoders that are
-already committed are skipped, since their state is protected by
-hardware and reprogramming them would fail.
 
-The Register Locator DVSEC is parsed directly via PCI config space
-reads rather than calling cxl_find_regblock()/cxl_setup_regs(),
-since this code lives in the PCI core and must not depend on CXL
-module symbols.
+On 04/03/26 19:47, Manivannan Sadhasivam wrote:
+> On Fri, Feb 13, 2026 at 06:06:02PM +0530, Aksh Garg wrote:
+>> From: Aksh Garg <a-garg7@ti.com>
+>>
+>> +/**
+>> + * pci_ep_doe_add_mailbox() - Add a DOE mailbox for a physical function
+>> + * @epc: PCI endpoint controller
+>> + * @func_no: Physical function number
+>> + * @cap_offset: Offset of the DOE capability
+>> + *
+>> + * Create and register a DOE mailbox for the specified physical function
+>> + * and capability offset. The controller driver should call this for each
+>> + * DOE capability it finds in its config space.
+> 
+> Why can't we call this helper from the EPC core driver instead? We may have to
+> introduce a new callback in 'struct pci_epc_ops' to read the endpoint config
+> space from the EPC core driver. But it will avoid duplicating the code across
+> the EPC drivers.
+> 
+> End of the day, we can read the config space of the device and identify the
+> capability in a generic way.
 
-MSE is temporarily enabled during save/restore to allow MMIO
-access to the HDM decoder register block.
+Thank you for the feedback. This looks better to me. Please let me know
+if the following flow would be correct:
 
-Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
----
- drivers/pci/cxl.c | 297 +++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 294 insertions(+), 3 deletions(-)
+'struct pci_epc_ops' would have a new callback to find the extended
+capability, taking inputs as struct pci_epc *epc, u8 func_no, u8 cap.
+The EPC core driver would have an API, taking struct pci_epc* as
+argument. This would find the extended DOE capability offsets for the
+mailboxes for all the functions in epc->max_functions, and call
+pci_ep_doe_add_mailbox() for each of them.
 
-diff --git a/drivers/pci/cxl.c b/drivers/pci/cxl.c
-index abcf70de9171..ed246f32dfa6 100644
---- a/drivers/pci/cxl.c
-+++ b/drivers/pci/cxl.c
-@@ -2,15 +2,31 @@
- /*
-  * CXL PCI state save/restore support.
-  *
-- * Saves and restores CXL DVSEC registers across PCI resets and link
-- * disable/enable transitions. Hooked into pci_save_state() /
-+ * Saves and restores CXL DVSEC and HDM decoder registers across PCI resets
-+ * and link disable/enable transitions. Hooked into pci_save_state() /
-  * pci_restore_state() via the PCI capability save chain.
-  */
- #include <linux/pci.h>
-+#include <linux/io.h>
-+#include <linux/jiffies.h>
-+#include <linux/cleanup.h>
- #include <cxl/pci.h>
- #include "pci.h"
+This newly created API would be called by the controller driver if it is
+DOE capable. The DOE capability feature can be added in the 'struct
+pci_epc_features' as well based on which this API would be called.
 
-+#define CXL_HDM_MAX_DECODERS 32
-+
-+struct cxl_hdm_decoder_snapshot {
-+	u32 base_lo;
-+	u32 base_hi;
-+	u32 size_lo;
-+	u32 size_hi;
-+	u32 ctrl;
-+	u32 tl_lo;
-+	u32 tl_hi;
-+};
-+
- struct cxl_pci_state {
-+	/* DVSEC saved state */
- 	u16 dvsec;
- 	u16 dvsec_ctrl;
- 	u16 dvsec_ctrl2;
-@@ -18,6 +34,15 @@ struct cxl_pci_state {
- 	u32 range_base_lo[CXL_DVSEC_RANGE_MAX];
- 	u16 dvsec_lock;
- 	bool dvsec_valid;
-+
-+	/* HDM decoder saved state */
-+	int hdm_bar;
-+	unsigned long hdm_bar_offset;
-+	unsigned long hdm_map_size;
-+	u32 hdm_global_ctrl;
-+	int hdm_count;
-+	struct cxl_hdm_decoder_snapshot decoders[CXL_HDM_MAX_DECODERS];
-+	bool hdm_valid;
- };
+> 
+>> + *
+>> + * RETURNS: 0 on success, -errno on failure
+>> + */
+>> +int pci_ep_doe_add_mailbox(struct pci_epc *epc, u8 func_no, u16 cap_offset)
+>> +{
+>> +	struct pci_ep_doe_mb *doe_mb;
+>> +	unsigned long key;
+>> +	int ret;
+>> +
+>> +	if (!epc)
+>> +		return -EINVAL;
+>> +
+>> +	doe_mb = kzalloc(sizeof(*doe_mb), GFP_KERNEL);
+>> +	if (!doe_mb)
+>> +		return -ENOMEM;
+>> +
+>> +	doe_mb->epc = epc;
+>> +	doe_mb->func_no = func_no;
+>> +	doe_mb->cap_offset = cap_offset;
+>> +
+>> +	doe_mb->work_queue = alloc_ordered_workqueue("pci_ep_doe[%s:pf%d:offset%x]", 0,
+>> +						     dev_name(&epc->dev),
+>> +						     func_no, cap_offset);
+> 
+> I believe you are trying to use cap_offset to differentiate between multiple DOE
+> mailbox instances within a single function. In that case, I'd use a simple index
+> instead of cap_offset.
 
- static void cxl_save_dvsec(struct pci_dev *pdev, struct cxl_pci_state *state)
-@@ -132,6 +157,269 @@ static void cxl_restore_dvsec(struct pci_dev *pdev,
- 	}
- }
+Yes, the cap_offset is used to differentiate between the mailboxes.
 
-+struct pci_cmd_saved {
-+	struct pci_dev *pdev;
-+	u16 cmd;
-+};
-+
-+DEFINE_FREE(restore_pci_cmd, struct pci_cmd_saved,
-+	    if (!(_T.cmd & PCI_COMMAND_MEMORY))
-+		    pci_write_config_word(_T.pdev, PCI_COMMAND, _T.cmd))
-+
-+/**
-+ * cxl_find_component_regblock - Find the Component Register Block via
-+ *                               the Register Locator DVSEC
-+ * @pdev: PCI device to scan
-+ * @bir: output BAR index
-+ * @offset: output offset within the BAR
-+ *
-+ * Parses the Register Locator DVSEC (ID 8) directly via PCI config space
-+ * reads.  No dependency on CXL module symbols.
-+ *
-+ * Return: 0 on success, -ENODEV if not found.
-+ */
-+static int cxl_find_component_regblock(struct pci_dev *pdev,
-+				       int *bir, u64 *offset)
-+{
-+	u32 regloc_size, regblocks;
-+	u16 regloc;
-+	int i;
-+
-+	regloc = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-+					   PCI_DVSEC_CXL_REG_LOCATOR);
-+	if (!regloc)
-+		return -ENODEV;
-+
-+	pci_read_config_dword(pdev, regloc + PCI_DVSEC_HEADER1, &regloc_size);
-+	regloc_size = PCI_DVSEC_HEADER1_LEN(regloc_size);
-+	regblocks = (regloc_size - PCI_DVSEC_CXL_REG_LOCATOR_BLOCK1) / 8;
-+
-+	for (i = 0; i < regblocks; i++) {
-+		u32 reg_lo, reg_hi;
-+		unsigned int off;
-+
-+		off = regloc + PCI_DVSEC_CXL_REG_LOCATOR_BLOCK1 + i * 8;
-+		pci_read_config_dword(pdev, off, &reg_lo);
-+		pci_read_config_dword(pdev, off + 4, &reg_hi);
-+
-+		if (FIELD_GET(PCI_DVSEC_CXL_REG_LOCATOR_BLOCK_ID, reg_lo) !=
-+		    CXL_REGLOC_RBI_COMPONENT)
-+			continue;
-+
-+		*bir = FIELD_GET(PCI_DVSEC_CXL_REG_LOCATOR_BIR, reg_lo);
-+		*offset = ((u64)reg_hi << 32) |
-+			  (reg_lo & PCI_DVSEC_CXL_REG_LOCATOR_BLOCK_OFF_LOW);
-+		return 0;
-+	}
-+
-+	return -ENODEV;
-+}
-+
-+/*
-+ * Discover and map HDM decoder registers.
-+ * Caller must pci_iounmap() the returned pointer.
-+ */
-+static void __iomem *cxl_hdm_map(struct pci_dev *pdev, int *bar_out,
-+				  unsigned long *offset_out,
-+				  unsigned long *size_out)
-+{
-+	int bir;
-+	u64 reg_offset;
-+	void __iomem *comp_base, *cm_base;
-+	u32 cap_hdr;
-+	int cap, cap_count;
-+	unsigned long hdm_offset = 0, hdm_size = 0;
-+	void __iomem *hdm;
-+
-+	if (cxl_find_component_regblock(pdev, &bir, &reg_offset))
-+		return NULL;
-+
-+	comp_base = pci_iomap_range(pdev, bir, reg_offset,
-+				    CXL_CM_OFFSET + SZ_4K);
-+	if (!comp_base)
-+		return NULL;
-+
-+	cm_base = comp_base + CXL_CM_OFFSET;
-+	cap_hdr = readl(cm_base);
-+
-+	if (FIELD_GET(CXL_CM_CAP_HDR_ID_MASK, cap_hdr) != CM_CAP_HDR_CAP_ID) {
-+		pci_iounmap(pdev, comp_base);
-+		return NULL;
-+	}
-+
-+	cap_count = FIELD_GET(CXL_CM_CAP_HDR_ARRAY_SIZE_MASK, cap_hdr);
-+
-+	for (cap = 1; cap <= cap_count; cap++) {
-+		u32 hdr = readl(cm_base + cap * 4);
-+		u16 cap_id = FIELD_GET(CXL_CM_CAP_HDR_ID_MASK, hdr);
-+		u32 cap_off = FIELD_GET(CXL_CM_CAP_PTR_MASK, hdr);
-+
-+		if (cap_id != CXL_CM_CAP_CAP_ID_HDM)
-+			continue;
-+
-+		hdr = readl(cm_base + cap_off);
-+		hdm_offset = CXL_CM_OFFSET + cap_off;
-+		hdm_size = 0x20 * cxl_hdm_decoder_count(hdr) + 0x10;
-+		break;
-+	}
-+
-+	pci_iounmap(pdev, comp_base);
-+
-+	if (!hdm_size)
-+		return NULL;
-+
-+	hdm = pci_iomap_range(pdev, bir, reg_offset + hdm_offset, hdm_size);
-+	if (!hdm)
-+		return NULL;
-+
-+	*bar_out = bir;
-+	*offset_out = reg_offset + hdm_offset;
-+	*size_out = hdm_size;
-+	return hdm;
-+}
-+
-+static void cxl_save_hdm(struct pci_dev *pdev, void __iomem *hdm,
-+			  struct cxl_pci_state *state, int count)
-+{
-+	int i;
-+
-+	state->hdm_count = min_t(int, count, CXL_HDM_MAX_DECODERS);
-+	state->hdm_global_ctrl = readl(hdm + CXL_HDM_DECODER_CTRL_OFFSET);
-+
-+	for (i = 0; i < state->hdm_count; i++) {
-+		struct cxl_hdm_decoder_snapshot *d = &state->decoders[i];
-+
-+		d->base_lo = readl(hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(i));
-+		d->base_hi = readl(hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(i));
-+		d->size_lo = readl(hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(i));
-+		d->size_hi = readl(hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(i));
-+		d->ctrl    = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(i));
-+		d->tl_lo   = readl(hdm + CXL_HDM_DECODER0_TL_LOW(i));
-+		d->tl_hi   = readl(hdm + CXL_HDM_DECODER0_TL_HIGH(i));
-+	}
-+}
-+
-+static void cxl_restore_hdm(struct pci_dev *pdev, void __iomem *hdm,
-+			     const struct cxl_pci_state *state)
-+{
-+	int i;
-+
-+	writel(state->hdm_global_ctrl, hdm + CXL_HDM_DECODER_CTRL_OFFSET);
-+
-+	for (i = 0; i < state->hdm_count; i++) {
-+		const struct cxl_hdm_decoder_snapshot *d = &state->decoders[i];
-+		unsigned long timeout;
-+		u32 ctrl;
-+
-+		if (!(d->ctrl & CXL_HDM_DECODER0_CTRL_COMMITTED))
-+			continue;
-+
-+		ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(i));
-+		if ((ctrl & CXL_HDM_DECODER0_CTRL_LOCK) &&
-+		    (ctrl & CXL_HDM_DECODER0_CTRL_COMMITTED))
-+			continue;
-+
-+		if (ctrl & CXL_HDM_DECODER0_CTRL_COMMITTED) {
-+			ctrl &= ~CXL_HDM_DECODER0_CTRL_COMMIT;
-+			writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(i));
-+		}
-+
-+		writel(d->base_lo, hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(i));
-+		writel(d->base_hi, hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(i));
-+		writel(d->size_lo, hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(i));
-+		writel(d->size_hi, hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(i));
-+		writel(d->tl_lo, hdm + CXL_HDM_DECODER0_TL_LOW(i));
-+		writel(d->tl_hi, hdm + CXL_HDM_DECODER0_TL_HIGH(i));
-+
-+		wmb();
-+
-+		ctrl = d->ctrl & ~(CXL_HDM_DECODER0_CTRL_COMMITTED |
-+				   CXL_HDM_DECODER0_CTRL_COMMIT_ERROR);
-+		ctrl |= CXL_HDM_DECODER0_CTRL_COMMIT;
-+		writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(i));
-+
-+		timeout = jiffies + msecs_to_jiffies(10);
-+		for (;;) {
-+			ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(i));
-+			if (ctrl & CXL_HDM_DECODER0_CTRL_COMMITTED)
-+				break;
-+			if (ctrl & CXL_HDM_DECODER0_CTRL_COMMIT_ERROR) {
-+				pci_warn(pdev,
-+					 "HDM decoder %d commit error on restore\n",
-+					 i);
-+				break;
-+			}
-+			if (time_after(jiffies, timeout)) {
-+				pci_warn(pdev,
-+					 "HDM decoder %d commit timeout on restore\n",
-+					 i);
-+				break;
-+			}
-+			cpu_relax();
-+		}
-+	}
-+}
-+
-+static void cxl_save_hdm_decoders(struct pci_dev *pdev,
-+				   struct cxl_pci_state *state)
-+{
-+	int hdm_bar;
-+	unsigned long hdm_bar_offset, hdm_map_size;
-+	void __iomem *hdm;
-+	u16 cmd;
-+	u32 cap;
-+	struct pci_cmd_saved saved __free(restore_pci_cmd) = {
-+		.pdev = pdev, .cmd = PCI_COMMAND_MEMORY,
-+	};
-+
-+	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-+	saved.cmd = cmd;
-+	if (!(cmd & PCI_COMMAND_MEMORY))
-+		pci_write_config_word(pdev, PCI_COMMAND,
-+				      cmd | PCI_COMMAND_MEMORY);
-+
-+	hdm = cxl_hdm_map(pdev, &hdm_bar, &hdm_bar_offset, &hdm_map_size);
-+	if (!hdm)
-+		return;
-+
-+	cap = readl(hdm + CXL_HDM_DECODER_CAP_OFFSET);
-+	cxl_save_hdm(pdev, hdm, state, cxl_hdm_decoder_count(cap));
-+	state->hdm_bar = hdm_bar;
-+	state->hdm_bar_offset = hdm_bar_offset;
-+	state->hdm_map_size = hdm_map_size;
-+	state->hdm_valid = true;
-+	pci_iounmap(pdev, hdm);
-+}
-+
-+static void cxl_restore_hdm_decoders(struct pci_dev *pdev,
-+				      const struct cxl_pci_state *state)
-+{
-+	void __iomem *hdm;
-+	u16 cmd;
-+	struct pci_cmd_saved saved __free(restore_pci_cmd) = {
-+		.pdev = pdev, .cmd = PCI_COMMAND_MEMORY,
-+	};
-+
-+	if (!state->hdm_valid)
-+		return;
-+
-+	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-+	saved.cmd = cmd;
-+	if (!(cmd & PCI_COMMAND_MEMORY))
-+		pci_write_config_word(pdev, PCI_COMMAND,
-+				      cmd | PCI_COMMAND_MEMORY);
-+
-+	hdm = pci_iomap_range(pdev, state->hdm_bar, state->hdm_bar_offset,
-+			      state->hdm_map_size);
-+	if (!hdm) {
-+		pci_warn(pdev, "CXL: failed to map HDM for restore\n");
-+		return;
-+	}
-+
-+	cxl_restore_hdm(pdev, hdm, state);
-+	pci_iounmap(pdev, hdm);
-+}
-+
- void pci_allocate_cxl_save_buffer(struct pci_dev *dev)
- {
- 	if (!pcie_is_cxl(dev))
-@@ -155,8 +443,10 @@ void pci_save_cxl_state(struct pci_dev *pdev)
+There were two reasons I chose this as a differentiator instead of a
+simple index:
+- doe.c uses cap_offset as differentiator, hence I used the same to make
+   doe-ep.c code compatible with it
+- Because the cap_offset would be unique across the mailboxes for a
+   single function, we do not have to create and manage an index for the
+   uniqueness of the mailbox, which doesn't add the redundancy of
+   introducing an index variable just as a differentiator.
 
- 	state = (struct cxl_pci_state *)save_state->cap.data;
- 	state->dvsec_valid = false;
-+	state->hdm_valid = false;
 
- 	cxl_save_dvsec(pdev, state);
-+	cxl_save_hdm_decoders(pdev, state);
- }
+Regards,
+Aksh Garg
 
- void pci_restore_cxl_state(struct pci_dev *pdev)
-@@ -170,8 +460,9 @@ void pci_restore_cxl_state(struct pci_dev *pdev)
- 		return;
-
- 	state = (struct cxl_pci_state *)save_state->cap.data;
--	if (!state->dvsec_valid)
-+	if (!state->dvsec_valid && !state->hdm_valid)
- 		return;
-
- 	cxl_restore_dvsec(pdev, state);
-+	cxl_restore_hdm_decoders(pdev, state);
- }
---
-2.43.0
+> 
+> Rest looks OK from a high level design perspective.
+> 
+> - Mani
+> 
 
