@@ -1,32 +1,32 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 227B7286A4;
-	Fri,  6 Mar 2026 15:51:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0E31281503;
+	Fri,  6 Mar 2026 15:51:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772812268; cv=none; b=IOeYQD+UzUAQfZcsYuCJ218UK5ZsBFPr+oVnTnF9oOwWRZF25ny68V54+YgRSG5AgCimnHpTLqUG5AUwktav/fh3qqZ6UrG0gkwis31x6eQyaCThNSRpqQd41qJgM7HNjmL9aHag+/n/NuS6dQ9CWIVSXgG6x3ulqm6uk0nvhL0=
+	t=1772812321; cv=none; b=dRVAZE3NK0Is7z30mLxab+ACIXttTcI5X3jRGgZX1m/NZ2RByC3mxzLcL4f7g3XvBVuErUtOPlXrq0A/+ZT7yx5M1wwJbAhm/Ex3e+4o8BTNu2BkjTyhwrPrFjgio5sAa2K/nElM3Z7qSUSpFhTjY4esptOnJm3UWQxad2DGV0Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772812268; c=relaxed/simple;
-	bh=/avj3KXIk3a5KxpHccpaIIecRqXYDWkNDG1i8H3oeJ4=;
+	s=arc-20240116; t=1772812321; c=relaxed/simple;
+	bh=QVAtJU32fI3hijyKBLjoH3GMdFQjjw5d7difJLTShhI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Mo+53ZwuaHOtX17AG5yMUITKEHtw2Q5Cef6pYOdLebC38tEIZhds1i+4TTxt0qqo/tU2kkCYP7expzyVBzs+MH7UX4JJD2stau/w3lp0daYyteof1rk7okJAkzfxZ7+dNGIlVLOob22qBF8D6LSiGVqyGIOisBDMjiu9jedAkLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=hiWwtcaf; arc=none smtp.client-ip=117.135.210.3
+	 In-Reply-To:Content-Type; b=KdBx/2MvPtTX2R/q2cAa220kXfL4dtk6fCoosnae5meDi0v9jWeEwLYxrelkdCHEPpzKWzdHt3ojHnGtUyfvit1CeA6Crze7fvMJszGZCgRceWRWT2gZV43dk10U84G0A6aUHKd19rFB4tdSnlyAEU3Ttv5fErwsdz4Qj8vNQQY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=HA6DQXeb; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="hiWwtcaf"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="HA6DQXeb"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
 	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=Sq5Qv3yg8QGYvAyDcjQYMbTuxuA+X5I3uxOwSuqBdH0=;
-	b=hiWwtcafYeNBs89+L/Idx9+C+GGbvzyksS+xeLdz2FY895OYRWrSyLl5vZ3DVl
-	rMBEqoGs8TGhtK4NTEiH9fJX9ptswahV2LZLKtJfp7JxnF0kwRJxJiChC18aezy9
-	3MqTi9OGm5HbJdrgpH1KMh67z9+v5pECMWFVCt0C/Nz14=
+	Content-Type; bh=z1piXpiFHso3GGftRgQQooHaij0dQTWZjfWoc2FOYuc=;
+	b=HA6DQXebmX82AC26V79kzT/UzLhiHVpv6hhXf/0TSWZCZJ2+y2Pm/AxFJqex8V
+	1hKPWb7Xp931ZhM9K+8K0XGQesgS0bVet7fUyZGXTqkXonSJWpnfEoTx33fUCc2t
+	KP5/MhnOrsm3ntlOXGRM/23buw0s2bS9TP121wvjnTTIE=
 Received: from [IPV6:240e:b8f:927e:1000:3542:2c51:dbe0:7121] (unknown [])
-	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wCHj+W396pp6JaaPg--.3724S2;
-	Fri, 06 Mar 2026 23:50:16 +0800 (CST)
-Message-ID: <1c285b60-2658-4863-b3c9-0842df2156e7@163.com>
-Date: Fri, 6 Mar 2026 23:50:15 +0800
+	by gzsmtp1 (Coremail) with SMTP id PCgvCgAXltTi96ppp8cyQg--.6084S2;
+	Fri, 06 Mar 2026 23:50:59 +0800 (CST)
+Message-ID: <142343c7-2be5-4deb-8d47-42876a6df7f4@163.com>
+Date: Fri, 6 Mar 2026 23:50:58 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -34,24 +34,23 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 0/3] PCI: Refactor PCIe speed validation and conversion
- functions
-To: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com,
- kwilczynski@kernel.org, mani@kernel.org, ilpo.jarvinen@linux.intel.com,
- jingoohan1@gmail.com
-Cc: robh@kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20251102143206.111347-1-18255117159@163.com>
+Subject: Re: [RESEND PATCH v4 0/2] PCI: Introduce pci_clear/set_config_dword()
+To: mahesh@linux.ibm.com, bhelgaas@google.com
+Cc: oohall@gmail.com, mani@kernel.org, lukas@wunner.de,
+ linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20251101162219.12016-1-18255117159@163.com>
 Content-Language: en-US
 From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20251102143206.111347-1-18255117159@163.com>
+In-Reply-To: <20251101162219.12016-1-18255117159@163.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wCHj+W396pp6JaaPg--.3724S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7CFykKFyDuF1kuw48WFWxWFg_yoW8XF4Dpa
-	y3Ka1fArW8G3sxGan3Xa1jqFy5Wan3JrW8Jry3Jas5Zw13ZFn3tr1DKryFgr9rtrWxXr12
-	9F1jva4DC3WjkaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U83ktUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBgx1Gmq97iefgAA3V
+X-CM-TRANSID:PCgvCgAXltTi96ppp8cyQg--.6084S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7KF4UJr45XryxJr1ftr1DJrb_yoW8Wry5pr
+	Z3Ary3JrW7GFya9FW7GFy2ya45Wa1kJFWrJr17Kwn5Zw13Zry8ZF9agry5AF9rJrWrXw42
+	grs2gFy8uw1qkFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRDrckUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwwQ832mq9+QQ7gAA3K
 
 Hi,
 
@@ -60,44 +59,43 @@ Gentle ping.
 Best regards,
 Hans
 
-On 2025/11/2 22:32, Hans Zhang wrote:
-> This series refactors PCIe speed validation and conversion logic to
-> shared functions in the public header, eliminating code duplication
-> and ensuring consistency across drivers.
+On 2025/11/2 00:22, Hans Zhang wrote:
+> This series introduces auxiliary functions for the PCI configuration space
+> and simplifies the read and write operations of the AER driver, reducing a
+> lot of repetitive code.
+> 
+> Patch 1 adds pci_clear_config_dword() and pci_set_config_dword() helpers
+> to reduce repetitive read-modify-write sequences when modifying PCI config
+> space. These helpers improve code readability and maintainability.
+> 
+> Patch 2 refactors the PCIe AER driver to use these new helpers,
+> eliminating manual read-modify-write patterns and intermediate variable
+> in several functions. This results in cleaner and more concise code.
 > 
 > ---
 > Changes for v4:
-> - Maintain O(1) array-based lookup for speed conversion (addressing
->    performance concerns from v3 feedback)
-> - Move pcie_valid_speed() and pci_bus_speed2lnkctl2() to pci.h
-> - Update dwc driver to use the shared functions
-> - Rebase to v6.18-rc3.
-> 
-> This addresses the feedback from Lukas Wunner and Manivannan Sadhasivam
-> on the v3 submission, ensuring no runtime performance regression while
-> achieving code reuse.
+> - Introduce pci_clear/set_config_dword()
 > 
 > Changes for v3:
-> https://patchwork.kernel.org/project/linux-pci/patch/20250816154633.338653-1-18255117159@163.com/
+> https://patchwork.kernel.org/project/linux-pci/patch/20250816161743.340684-1-18255117159@163.com/
 > 
 > - Rebase to v6.17-rc1.
-> - Gentle ping.
+> - The patch commit message were modified.
+> - Add Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 > 
 > Changes for v2:
-> - s/PCIE_SPEED2LNKCTL2_TLS_ENC/PCIE_SPEED2LNKCTL2_TLS
 > - The patch commit message were modified.
+> - New optimizations for the functions disable_ecrc_checking, aer_enable_irq, and aer_disable_irq have been added.
 > ---
 > 
-> Hans Zhang (3):
->    PCI: Add public pcie_valid_speed() for shared validation
->    PCI: Move pci_bus_speed2lnkctl2() to public header
->    PCI: dwc: Use common speed conversion function
+> Hans Zhang (2):
+>    PCI: Introduce pci_clear/set_config_dword()
+>    PCI/AER: Use pci_clear/set_config_dword to simplify code
 > 
->   drivers/pci/controller/dwc/pcie-designware.c | 18 +++-------------
->   drivers/pci/pci.h                            | 22 ++++++++++++++++++++
->   drivers/pci/pcie/bwctrl.c                    | 22 --------------------
->   3 files changed, 25 insertions(+), 37 deletions(-)
+>   drivers/pci/pcie/aer.c | 29 ++++++++++-------------------
+>   include/linux/pci.h    | 12 ++++++++++++
+>   2 files changed, 22 insertions(+), 19 deletions(-)
 > 
 > 
-> base-commit: 691d401c7e0e5ea34ac6f8151bc0696db1b2500a
+> base-commit: 8742b2d8935f476449ef37e263bc4da3295c7b58
 
