@@ -1,144 +1,114 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010014.outbound.protection.outlook.com [52.101.46.14])
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7ECD1371CE9;
-	Fri,  6 Mar 2026 19:22:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.14
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772824940; cv=fail; b=YvVp+3XM3mRqKjLKK5px9nGtufKD8lGG71gTJbimOk1UPNDZ0f0cZumuBxxlIJDIFPUh9jhp4HP9Fg5wRyLWau7m4pQLha/Yuu46SINVA+tXWp8xKMpNURn8OOHwKis6aJQRfDfZ7+pYQojjC7CfmnMjjs332wNPlPf1Z5OnIMQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772824940; c=relaxed/simple;
-	bh=D/HepSzZ++eZJItVySsvVlTM1s0RtzxUj//4iP/+7XE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=WAXh+OptR1IdMy+WhPX6u5kk1/POZ+nHhR7Fa0qrQdcVbRMdrIOJnYbkgPETqE4/e2cd5iQ+QhWFb/Pft/ysXQrAmwA2U3dmqk256LdFnLkJpTUe4B2i5Oo9ttqDWWJl8XS6nIdvpBFgNu0Av7cy35H5ZXjH66ou2hGNIquO+F4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=l8FHSI9l; arc=fail smtp.client-ip=52.101.46.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DC3D36D4F9
+	for <linux-pci@vger.kernel.org>; Fri,  6 Mar 2026 19:33:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772825639; cv=none; b=lG+5Ci27xbOCPQEn4r/XrUtqhx1iPPairN3KHuwidrlC8fhs67pQIBLapQzD7UKg69c31pqCyUv/HT+NL6OihrDhwDtsaia6z7/4SyFn6j6iqPFNv9OubSjBDWt0ALj3mPWBoqdw9mi3MFSDzHTZbJlVrkstV9syM1ndm4ZZ8J4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772825639; c=relaxed/simple;
+	bh=2Ri7B64hX2crhvJ+3cRKRgEfLRGSSXKNETH8TmvfS+Q=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=TE8j78qUHhgRuwEFki6LCgbxcbR0+Q90kSkzsfQaQBHsPBWuYo8PvX4qMc3NmJf7iRjuKKXf64qOgPGnJdHkEGy/yHurnX3hdwINjaz6KKqQWfc+caZF0nj24FbP78feq+EylLCk+F+RZ7jiU8nuMmPlhkDaoLmt1kBXqojKGCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=lAQtG2f1; arc=none smtp.client-ip=67.231.145.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="l8FHSI9l"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=k9iEgxgPzmBs8i1V+34ulAkAmYrxLXFPsl5lWOsEDr6yjydYu7titDovrsbe7ljb2AqsGljw0WLzw6cX+T5wRyJq+jDUMn1XIqrIueoEymIy4TZqw9SU/S6orEJ10t/pnUfuFBPw2F3fzKG1KohaE/e4cedGDkfvG8YaCnGwaQryP/LIt/skjnGnu/+04Owpz2sqo8oZmd8f9u9C5Xfbu9NZA22jhccNEmjn1GcLGWjwXXnI3DvaMKl9/eS4aqTTECNnVdq+Bbgk/pcs7tepd52Sz4IF5gfRBPmSTdQ7hjswViernBdEQVhX3Wy1S7fuPM71mdaJJCF/hc65+sifrA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=D/HepSzZ++eZJItVySsvVlTM1s0RtzxUj//4iP/+7XE=;
- b=VSvlq8r1XpFKBiIgObSEVxVSg3RdrZMAAQ37MZLaj4JL/kpxd+58sCqgWdk6Om+It+Qu+cEIimEJosm8O761qvsytFc4D98Hl7JyXxYh3tjJvv+BbcBVh95xDeIR8zpNpvErPa5gwAtiqUt5oLWTr0+Df001zBALP/Iq1KricXhaWDJ+0+IFjWVtpwI67LTBQV10VaGBKjlPkgatABeM0cY0okHfc3TcU2XFubZYA/whEt+/xLmIQBNii8C7ZDkSQ5iCeIdctnLv/jQSlyEPstq1SJuSdbe6sgVvyK0nnHJkljxFaHVDE/hwM0RBKgAg4hHReIJq2sAdrjJATWpqjQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=D/HepSzZ++eZJItVySsvVlTM1s0RtzxUj//4iP/+7XE=;
- b=l8FHSI9l7s66OPa/4s3zWtuy3uzQa6ao0pc+/TO1d0iB3npUJCpgROTP1AgF0yNgUV3GHTajQ4tB9kxDpLac0bduZCAexPlrOhcxZ3X2/h7Mr0tA0pM+n2SsErj+APwcOXgMDPIbphU/FyEHcacY2a+0puPnHGbo9yGtJCUGMmLB3n4ZYURxpIFwTt25oghAECPsTV6e9UUr3ha+ph4bqGIrNHgRIGnqU0kb3YqiXYP1zdk0vMYlTCg3XKVTAaiiErM4AizSknZvljrsMEw+igJ73TeNehWPt/qmNgOeSSyaknnallFjAukyIxSNLxNBWBNiIc354TLuKLQmKojKzw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
- by SA1PR12MB6896.namprd12.prod.outlook.com (2603:10b6:806:24f::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.18; Fri, 6 Mar
- 2026 19:22:12 +0000
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::299d:f5e0:3550:1528%5]) with mapi id 15.20.9654.022; Fri, 6 Mar 2026
- 19:22:11 +0000
-Date: Fri, 6 Mar 2026 15:22:11 -0400
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: Nicolin Chen <nicolinc@nvidia.com>
-Cc: will@kernel.org, robin.murphy@arm.com, joro@8bytes.org,
-	bhelgaas@google.com, rafael@kernel.org, lenb@kernel.org,
-	praan@google.com, kees@kernel.org, baolu.lu@linux.intel.com,
-	smostafa@google.com, Alexander.Grest@microsoft.com,
-	kevin.tian@intel.com, miko.lenczewski@arm.com,
-	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, vsethi@nvidia.com
-Subject: Re: [PATCH v1 2/2] iommu/arm-smmu-v3: Recover ATC invalidate timeouts
-Message-ID: <20260306192211.GK1651202@nvidia.com>
-References: <cover.1772686998.git.nicolinc@nvidia.com>
- <ca7ab934bf0f433b62a5c15d42241632c4cb9366.1772686998.git.nicolinc@nvidia.com>
- <20260305153911.GT972761@nvidia.com>
- <aanygWWZLA1htDdQ@Asurada-Nvidia>
- <20260305234158.GB1651202@nvidia.com>
- <aaot8uRsli5jNPzH@Asurada-Nvidia>
- <20260306013347.GD1651202@nvidia.com>
- <aapgyXadT1TEz29u@Asurada-Nvidia>
- <20260306130202.GG1651202@nvidia.com>
- <aaspAx9NiXmtRg11@Asurada-Nvidia>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aaspAx9NiXmtRg11@Asurada-Nvidia>
-X-ClientProxiedBy: BN9PR03CA0868.namprd03.prod.outlook.com
- (2603:10b6:408:13d::33) To LV8PR12MB9620.namprd12.prod.outlook.com
- (2603:10b6:408:2a1::19)
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="lAQtG2f1"
+Received: from pps.filterd (m0044010.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 626IwWUp1880896
+	for <linux-pci@vger.kernel.org>; Fri, 6 Mar 2026 11:33:57 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
+	 bh=Fsto2bYwR+ti6PcdpnLAZ8WgpkSbDqRu1vLh7+qCvp0=; b=lAQtG2f1cYKB
+	CMenZmgF1mN6BzQuvQNceqCAksQNcRbOIMYgHvJBnXCyNz/9BFVibDWgt9YqTeI4
+	Rzvf15wDDn4BYjb+DwZR3LRZ3WSSgGAmsU92JQ93NEPDKcombFHYkrlPbkghDKLY
+	s/MAxLfwuew2hMjapyMhU/j7my/sxMoVXIvnIw+AuGI6UqV+LPyjH1q49fNvhatr
+	museB50kmxTJg8NoSg8y/xl5ZncT4grWff7iyznukaV+WzD9n7ohx00Xror+Ddva
+	G6NakstPGPlhQhdqEGvPK0vUWPYPFAHWjzDT6l+XkLDHbZG6RblSS9kCNqfeYZnM
+	9MkqIvK6uA==
+Received: from maileast.thefacebook.com ([163.114.135.16])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4cqrh7fyuk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 06 Mar 2026 11:33:56 -0800 (PST)
+Received: from twshared10186.03.snb1.facebook.com (2620:10d:c0a8:1b::2d) by
+ mail.thefacebook.com (2620:10d:c0a9:6f::237c) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.2.2562.35; Fri, 6 Mar 2026 19:33:55 +0000
+Received: by devbig259.ftw1.facebook.com (Postfix, from userid 664516)
+	id AEFC812CCCB13; Fri,  6 Mar 2026 11:27:53 -0800 (PST)
+From: Zhiping Zhang <zhipingz@meta.com>
+To: Keith Busch <kbusch@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon
+ Romanovsky <leon@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, <linux-rdma@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <dri-devel@lists.freedesktop.org>, Yochai Cohen
+	<yochai@nvidia.com>,
+        Yishai Hadas <yishaih@nvidia.com>, Zhiping Zhang
+	<zhipingz@meta.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [RFC 1/2] Vfio: add callback to get tph info for dmabuf
+Date: Fri, 6 Mar 2026 11:27:49 -0800
+Message-ID: <20260306192753.3245649-1-zhipingz@meta.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <aaDrp7teQoutU79s@kbusch-mbp>
+References: <aaDrp7teQoutU79s@kbusch-mbp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|SA1PR12MB6896:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1649f9cb-11f9-4889-a569-08de7bb5aacb
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|7416014|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	vmRrgfGIJb/ao87a2HbhrJK4N2knjclxRMRBBOOgXlQZVKM8Ne/1/qublzHkaYp1MyqoFxDW+WeXDKSrBlC1nlnBR3ewcHM3RlhpIaAQZOWLjMtKLcuJN0nUhM0ls37Ybh3zlCE/CyFXA24vxsEQVausAtIQDeK1xbVhhlJnUTT9z5Bkg59WAdOkvwHUqx421fYdkR3NqRm/a6t3aFE2m0ZZEU0Y/ztrN9PtjzpzHq2zJ9nV4RMKWUI7dsUs6AcUMH2ZVhENdl1wlqNKPEwI4EOvdpakIwod1vR8QiVeIGP2rA781mIL9uKRgOpTCa5jzyNim9zVIOp4LCVR3NmpoayRWpKvt24nN0yBlQxqMAjDQ9JrgdG/j89AeYjPG+JbmhGA6e9eS/v+7senonCnPzjNHefQ22eDtulTphKcIC0wH2x8yH2gtz0L/5c4XYFrYsdE2PivSKL2VRmx0WdwiH4CPyRCYVjwzwQTLrKESUfZQVhqMtH5YG1PT2ak3S3P+7YXTnyTuIwU7sFyxnGInN9TuqV1NQBSadfZyBr/OLBjTONX9tbI/eA9AYZf8X/bbRWYjlT44uEm3+VfDZu9ymYM/i4zL8xW2tBGYqdcvyKQqYerSgi0G8O+lCKdtHR1UfAnCG1b/zTOT7iGt3fxtu4Blh/vHSoQ7GgN/QOcCFwEQR0k+oqGw82Qrix1LRcBiq3d/UHNZ9mz9lul4i8sQONs5OSJGpNeqrWWYdq20/A=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?Fzugug8MVQk95bEMevzD5SuqC4+rdsro7T2kaUl9pnWtVZf/wz4NRmFvH47o?=
- =?us-ascii?Q?zTLRo1NEnPlca+R8wLy7kb4VSbRTChMdNv12zipMxFnr/Cc2d2hV5U60alC9?=
- =?us-ascii?Q?SXMWD27qczJ40Cugv7TqywA0XPd7RSKOLi0oWeDDAdDrsIpxwDcTjmqeEQr1?=
- =?us-ascii?Q?CmYnjU1ZpU8xP7lDZNjR+D2cBBDRwAB0v3OxhvLP9By2IU5uFPuhrClbDNDF?=
- =?us-ascii?Q?XT8qvsdBZRYKLY1jtELH/zNSoGvrpTCgaeoFMlS5Exv6CLl9tdYvLpFYDSCM?=
- =?us-ascii?Q?D1flV7sqSDkcBcCZVs34HmZyIZu0qHEa9+mkV+OZFeW6hH969bfNHzurHFFg?=
- =?us-ascii?Q?08zKSIxeFxLNWXX7+VuIshDn/+rKgqwSov/+cmpZNMUdcZEkD4VOVRw5QxPa?=
- =?us-ascii?Q?70y/nTzDfKhi8UreYWJSnvIOiHquTtbeuIXgyAzFBD5fWrKDh+7fHLl6kumV?=
- =?us-ascii?Q?3hIFIWzW9llO4CIJnlDdyvwy0truP2lStdJT3NgbGNhJxkrfztKIuaSK3MUe?=
- =?us-ascii?Q?cXxjjVQ2JIq+siT+X1qxz0A6fsd/8G1XYmR/Z4hCJ+8b4ladJAxAsExaVq+X?=
- =?us-ascii?Q?69RzrjRM4F6/X4PLU1b/dfC1FELQ+E0HLUe0XT1ql3zYLuS+eWtcNqMgAG+w?=
- =?us-ascii?Q?u7wiXjXywIo3WjmMX4uObf/P+rFBC1IGOU/ny89FIv1+4wLBNoy0uHLVtx0Q?=
- =?us-ascii?Q?ibVPlbsaKV5LKqbbmFRs6upmL1mKxMVTCfi/GQ+Sp4rsZxOX5q+lxMfiAzbq?=
- =?us-ascii?Q?KGWF6s6FLc8aqfUnQyYDckg1kZv1vpSsIYws4O/8y8YPdcoQDBwcLR5/PdWo?=
- =?us-ascii?Q?FNUJuc3snUuupDwDy+SIjfYPGS/Yvv4SvSSVhlfliKL+GOmO6BhTdGpmcH1U?=
- =?us-ascii?Q?F04CRS/UVeDFC/VQHNbWZrQSOCBXKXKMQ/svRQVeQt6d93ApWElRZ/V328cK?=
- =?us-ascii?Q?QA//RFW5fl6IHYc83DXDZguFaGvBUIHIToB4E1GY4zYfdvdTpzLpoc/bEY2s?=
- =?us-ascii?Q?SdbBCett37H3RC3x8iRvcMnEePQfyEivaG/S3gpRoo331+xQxkma46+XVHKn?=
- =?us-ascii?Q?TIpmKoq6k2N3H7m7A4GN3DmEz3AMmv1QqBU2pyTjVdozwvKYQNa6ZCow/J9i?=
- =?us-ascii?Q?xBi3c1/LmRk1MIvmYzazFwJnaJ+8xid7g4oz2mGmkw9QcdgkyEWFSCO3bOB+?=
- =?us-ascii?Q?wA1oTZTkGzesyieu0K6hvUoV4IqUOO1ZMKq5wwWyjU91LLZrkYcfZ3uuyp+X?=
- =?us-ascii?Q?dHybsldEq3tEzIQaTzyE/VajVnb8BdRQ2nKjhgmSXrWLjAH8Kh/2myod18+/?=
- =?us-ascii?Q?Y2od9ojrnm/+csXdQP13Sax1T5jHtaAC6mdVukBV3qBDcaOPmWzqVRlqhzF9?=
- =?us-ascii?Q?pYeqNXHBHD/SsXuyJApOwMAsMIRyHhyuk2ilVEPR/uN38o4WQieSsY5vbH77?=
- =?us-ascii?Q?wFmg91ZHor9zZkuvIauBGAyNcidra05gDt3UUcX/O8ItxGGoo/M+L9EJWqqr?=
- =?us-ascii?Q?7bwYgYiQi3OBr2P286r6Yw2/25eELtoPPFaW+WSdRPJ3sIHWzPUsIZxqCXzU?=
- =?us-ascii?Q?/GOtI1hJbpVCphth2XQq3keeGxDT2s2pLqPxvtrLFEe/RWOh9TNFkSOViSKD?=
- =?us-ascii?Q?uDvKqAtczbSCjzKbTeD0NmPmj2N7u0JPKEOFPjjynA5hhHlwov/zN4r+OhKk?=
- =?us-ascii?Q?oRyQdHBKn6P7E+1fMvNoxaQB+6UXwxmg+TrDXGz5CDVPGRq/Wsen2l72pouk?=
- =?us-ascii?Q?J83klz/Zng=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1649f9cb-11f9-4889-a569-08de7bb5aacb
-X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Mar 2026 19:22:11.9333
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: YIKg2EdctwT7VG34p3HMxUYBCf4kAl34R5RCYqTNT7uR/QPYiSux3WxEE/XKkDGA
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB6896
+Content-Transfer-Encoding: quoted-printable
+X-FB-Internal: Safe
+Content-Type: text/plain
+X-Proofpoint-ORIG-GUID: tmhjxToOvqKYFpJ9kiOD1BNrwBZIC9eB
+X-Authority-Analysis: v=2.4 cv=LOlrgZW9 c=1 sm=1 tr=0 ts=69ab2c24 cx=c_pps
+ a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
+ a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
+ a=8elwO82fXORLTBIkMd32:22 a=l2nmrgH_Uvo59uWC4d4A:9
+X-Proofpoint-GUID: tmhjxToOvqKYFpJ9kiOD1BNrwBZIC9eB
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA2MDE4NSBTYWx0ZWRfX1Kl55bIv8afA
+ fjuDTQzZqRvjKopIUaRiHJbtWAedpYAVkyEYqNgTNCePdouZj/b3qnUgyKX/xsSX3geuNLx6HV3
+ QX3ySknkoKir7MrKGjLAW7x/tetnGMOf+F+J6xymK4/4ySdEzZcSU07UjSyN7A3zTS12hEOdBBR
+ XvGnodDSmrU4+K2Q/o1vNTJDjJPwV8ub87Yl0cVzfoA8rTXsqHZm2NAUnWjGQgplM5tRDwHWwnb
+ 0HUX14IDuv7nLPX07h5LmujZ475L5V5e4bBOcR4nKhgiMXjAgU9gCppls82wDW6DW1jKmfZfVrz
+ ZKwKIVwb2G3trNstZDzfFwnm6HueylucB/hzs4K2TV1n3IGYgs3xuEXt7iebOcIMc8QOVQ0mDpT
+ WMMEJfZXI0Zdh4e9NhTphkJ4YmzY/VzRNLmCYQQ7wo0Xts843HQcWFaYSDWARYfBVXd0hEUBIVj
+ 97w95nOUIt8yuJ75e7A==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-06_05,2026-03-06_02,2025-10-01_01
 
-On Fri, Mar 06, 2026 at 11:20:35AM -0800, Nicolin Chen wrote:
+On Thu, 26 Feb 2026 17:56:07 -0700, Keith Busch wrote:
 
-> In general, the maximum users count of an INV_TYPE_ATS would be 1.
-> So, an unref() would be sufficient to mute it, though it'd require
-> the unref() API to support a mismatched users counter, because the
-> PCI reset in the WQ would block ATS, which would try to unref the
-> removed command once again.
+> > diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> > index ac2329f24141..bff2f5f7e38d 100644
+> > --- a/include/uapi/linux/vfio.h
+> > +++ b/include/uapi/linux/vfio.h
+> > @@ -1501,6 +1501,8 @@ struct vfio_region_dma_range {
+> > struct vfio_device_feature_dma_buf {
+> >		__u32	region_index;
+> >		__u32	open_flags;
+> > +		__u16   steering_tag;
+> > +		__u8    ph;
+> >		__u32   flags;
+> >		__u32   nr_ranges;
+> >		struct vfio_region_dma_range dma_ranges[] __counted_by(nr_ranges);
+>
+> I don't think you can add fields to a uapi struct like this since it
+> breaks comptibility. Instead, I think you may be able to carve it out o=
+f
+> the "flags" field since it's currently reserved to be 0, so I guess it'=
+s
+> potentially available to define a new feature.
 
-INV_TYPE_ATS_DISABLED could be made to work too..
+Sure, thanks for the suggestion, yes I can also use the 'flags' field
+for this.
 
-Jason
+Zhiping
+
+
