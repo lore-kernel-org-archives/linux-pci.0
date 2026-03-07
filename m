@@ -1,62 +1,58 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from mail-m32124.qiye.163.com (mail-m32124.qiye.163.com [220.197.32.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEC6B7263B;
-	Sat,  7 Mar 2026 02:04:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A3AA27991E;
+	Sat,  7 Mar 2026 09:06:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772849049; cv=none; b=EuRIIuHIkGYFpu5tSymRgaxp+s6WvKo/5V0iMSK/MXXHLDpP1EQzpyLAnIkDRpHr9iuIkxTVlZAKVI3gu3kBMN5iu4/ZV173cihUSXefZ4vdbHw+wB8O+9tp7yqfl3w9qswDLjXF3ps4fhc+mP6KUgHkKzE4GAlNQiPJjfyNbCE=
+	t=1772874373; cv=none; b=UV+6Qc6MUuPVmo0bhyW/8rzMgxumbwgd7GnMrBcVODyTiYTmKxxdHGwwh4HD5O1VLVEOJVzbZKpQMwjM+OB8v1ut/xwc8Hpou9e08TZ1xa03vUmbYb079UPZZ3t23E8MibMhYCJOmvhXi8gnMMcidbEc12WFrbhOoQLujpDlJEs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772849049; c=relaxed/simple;
-	bh=jVl4QGQR8+geNXh8IDeiqAfACIOfEGtxx2VA2gRSsOk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=f7U4hrtSe0iwxkvnDJTRNMgcY9zm2+pJsdcrzQsWYOHHR/2+reHU5ja2rxLUKNlA3hqjbvX7zHxDmkXNy9IEC7BKY7HIucUPRvjpeJtJVfHUutKVoY2PBFeUGA8X/ujLji+UiPcK0kmTyuK3c1seBeT3JQ9gvA6HTahSbXbpFQk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=UdiVs7j9; arc=none smtp.client-ip=220.197.31.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1772874373; c=relaxed/simple;
+	bh=XlP6woD6SgVJp7HCdE0v1sN/12rhaomgKReGhyBJoA0=;
+	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=hjG6lv0jHhDohcFRVrCND4RwGAN2xK5gE6fZrauuTCNWiDyglvcDZ4gWnJTojQQLuyLHC2YpELh7lQF36crEMLiKhnDeF0v+9zqoACbm65WzD97TQ03ljeW7reWQ7yZFFvCq4yAyZVsbcfjLmvSLXReO+uGuS0WNPjO7H/HTCyk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=cUpeKtrN; arc=none smtp.client-ip=220.197.32.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="UdiVs7j9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=V5CTttFS8UvEClJKhqB9Y8uqbhRTv3BkZD3I8qCcSqA=;
-	b=UdiVs7j9clBI1/D2iwNpxcDyBsKG1XIdOGtmu0wBI8QbsX9QwZKx2J6YUx8s8R
-	ny5pXCVJ1L2BKrEzML19jdkMn46CJjbGy1xKhEBNZxUPygDJLDVOqiCAPM2AckOa
-	891Xlo6SaEkistrdl8xlkDpUo8dl4j7ANfYmLUSnsLRtI=
-Received: from [192.168.50.71] (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wD3_y2Bh6tp1ipDOg--.27363S2;
-	Sat, 07 Mar 2026 10:03:45 +0800 (CST)
-Message-ID: <0ba99020-3d4f-4526-8ef9-ab5a1225f707@163.com>
-Date: Sat, 7 Mar 2026 10:03:45 +0800
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="cUpeKtrN"
+Received: from [172.16.12.14] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 3613d2aa9;
+	Sat, 7 Mar 2026 11:23:09 +0800 (GMT+08:00)
+Cc: shawn.lin@rock-chips.com, robh@kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Cheng Xin <chengqin195275@126.com>,
+ lpieralisi@kernel.org, jingoohan1@gmail.com, mani@kernel.org,
+ kwilczynski@kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH v3] PCI: dwc: Add PCIe event counters for groups 5 to 7 in
+ DWC debugfs
+To: Hans Zhang <18255117159@163.com>
+References: <20260307020152.1224518-1-18255117159@163.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <b6881a0e-d640-ee0a-c4ff-733b2b5fae89@rock-chips.com>
+Date: Sat, 7 Mar 2026 11:23:08 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] PCI: dwc: Add PCIe event counters for groups 5 to 7 in
- DWC debugfs
-To: lpieralisi@kernel.org, jingoohan1@gmail.com, mani@kernel.org,
- kwilczynski@kernel.org, bhelgaas@google.com,
- Shawn Lin <shawn.lin@rock-chips.com>
-Cc: robh@kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Cheng Xin <chengqin195275@126.com>
-References: <20260307020152.1224518-1-18255117159@163.com>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
 In-Reply-To: <20260307020152.1224518-1-18255117159@163.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wD3_y2Bh6tp1ipDOg--.27363S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxGr4UKw1ktFyxZryDXr1DZFb_yoWrAw4fp3
-	yqyr4xKF40qr13urnrWas8GrykZFWkXr97Gwsxu3sxWFnxurn8Jr13Kr4Uury8GrW0qr1Y
-	vFy7tryUGry5t37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07Una9-UUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AFH6mmrh4F+FQAA3v
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9cc65203bc09cckunm40188020148e247
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGUJKTlZJHx5DSx0fTBpPQhpWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=cUpeKtrNMGC5CPzro90UIOcMqaYMB+d1ZZee5GTSCnUZJBvCrvac3CgflC4azElVgtRP6rBYasyp0Na/0qFkQ46/cOZn4k5+yzBS5ryuVTNv8Awz75KX85Fy4a4RbZBsoO0LSX46+2jh2GV6Sy+O3+dIENJTx+5WxQTocS87rTE=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=K/zDbBp0YZRvd44mlW0NZO+rxdGHxAlw6NniMLz/gkM=;
+	h=date:mime-version:subject:message-id:from;
 
-[+cc Shawn]
-
-On 3/7/26 10:01, Hans Zhang wrote:
+ÔÚ 2026/03/07 ÐÇÆÚÁù 10:01, Hans Zhang Ð´µÀ:
 > Extend the DesignWare PCIe controller's debugfs statistical counter
 > interface with event definitions from groups 5 through 7 as documented
 > in the DWC PCIe Databook (version 6.30a, section 3.8.2.3, Tables 3-59,
@@ -64,6 +60,12 @@ On 3/7/26 10:01, Hans Zhang wrote:
 > events (link state transitions,ASPM, L1 substates), Layer2 DLLP
 > exchanges, and Layer3 TLP transactions.
 > 
+
+Re-check the events one by one against the v6.30a databook, the new
+events are correct.
+
+Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
+
 > The counters are exposed under the debugfs statistical counter directory,
 > allowing users to monitor link behavior and diagnose PCIe protocol issues
 > more effectively.
@@ -162,4 +164,4 @@ On 3/7/26 10:01, Hans Zhang wrote:
 >   static ssize_t lane_detect_read(struct file *file, char __user *buf,
 > 
 > base-commit: 325a118c12045239076b7ea9e66391dd6f56f72e
-
+> 
