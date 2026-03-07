@@ -1,57 +1,55 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90ACF1A9F93
-	for <linux-pci@vger.kernel.org>; Sat,  7 Mar 2026 14:22:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0E028248B
+	for <linux-pci@vger.kernel.org>; Sat,  7 Mar 2026 14:31:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772893344; cv=none; b=J2c70uDPEOkVPveZaQbdO2EJPr+4bUkUfhPebbDw+Ef1WB4JMgXJOonsp3w+I0NDwRiLlbOPRkqPF26TMm8OAXkl93VCnTx6xKvt9W/Gd+DiSGeKg0dkfUV7tMqHSu2e0sFBAbKIroareS+3KvZqcVyqqHt87h7cYh9LKmm8JCY=
+	t=1772893883; cv=none; b=mUN56J0yTMFfsVOhkDZyk71cMWcGPTXqbJNY/j9Lgem9GbdXSLyGUxBWw/W1zCbhuSJdbvaU5z2SAfHDqwhi4hAWqJeNuqDHM4Zn3zkqhRSUAP6WJP6hCJfjpy4aRJuD0sEpL2BbbYsRrY1DsxtSL8B0xQwuM1c1ILSIsJgHlAw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772893344; c=relaxed/simple;
-	bh=Am72HSXM4K1DGcibYYEOUO841OLR6dKpWVB8akkQ0Io=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=tDqx3Oc52hvxQqHdwBZeGMeKekzJ+I/fJjcB2tx6jxNklLeS0nU4PCCk9C136cCoNl+WEylfGOumAM/DunA/EMdp7kcl6llO8e6hgQe1ijNh4m9l80khM44G2hu4B0sceVwkRl37OSb6Ud2ZbjBMEmsE5u8OrG95NeXcr6pDgH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=grpkrlTd; arc=none smtp.client-ip=192.198.163.15
+	s=arc-20240116; t=1772893883; c=relaxed/simple;
+	bh=XYm7sbizWqSmQ0o6QrlyzfELNqHxmG3rtIMi0d2EtlU=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=srztJ48U5E5QpaDOdbrWMnRnnQU3Ob0G0DbamO1Bw9Bq6WZVJGyuBmGL74jTfOXaxoq9qxvEF0ZaBx+7iIDUf8Qh9hagKFwtcctIRVxN46sWU7jwNblH2RD/VB0hyIcJkohsh7bl142/T/PE56YcvwDu5qnq+mm1mzI+c9R4GpQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TGwaXQ0G; arc=none smtp.client-ip=192.198.163.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="grpkrlTd"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TGwaXQ0G"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772893342; x=1804429342;
+  t=1772893882; x=1804429882;
   h=date:from:to:cc:subject:message-id;
-  bh=Am72HSXM4K1DGcibYYEOUO841OLR6dKpWVB8akkQ0Io=;
-  b=grpkrlTdbjjPnOo4TJMhWh6OzwmmGAHx78QYh14MjSnKqqGbmYEQA8TZ
-   jA7e8D9TUFpK5SEBoEHZQOpGOP7//aS/b4+kK4i7mNFltL8dmblntjtjI
-   ghjyCGbu3RpaIZsjSVdgFwMcKLhB276J9l5ESDLJ/qUqqQun+FoExmdrp
-   f5MXCRNrOqfXnTXd84a/kOMs2qRf5bY0vUsox0ldujC8dPpeDMtwM48G0
-   lrtzGQMa1leLGl45GWeDBvUESVZSB5HbCXYM946lQgAcylrPMM3mXnmss
-   gxQtFdzyL5QnA6hBVZj3cMQdkeTdabKkwSDgmblWAv0QvYLi3Ub9JtQu6
+  bh=XYm7sbizWqSmQ0o6QrlyzfELNqHxmG3rtIMi0d2EtlU=;
+  b=TGwaXQ0GaMURcc9BYsuVXfr2mMu5yZaczjQ28ixp7hvzAZbbPU33vRRu
+   1wJ79A4pI3IkLgA+rbh02yu+aWD/6MzufXpsXY3C0ETfGAOejQFZr+Hoy
+   JS0TCJvcpXJ46NJDjTI5Wl4mRtdF6CcTVjMFkDJlR3X4P+8Lu4Gz7jAtw
+   abatxuGMevOYzminsg4lsiODG8sxWivZL0avD0f8/JbHQRmhC8MUHNaYC
+   EtMFpBdD3ZuJ63wCA80+kDx7LfIZzgOosyjW2OPY8wUSrMO7x0n4Tz1MJ
+   p1vfTCrobxVvjH5L7hnGKvFMCqZRJ0VUjp+LceXSLU7hjmFZ2IYIH8uQU
    w==;
-X-CSE-ConnectionGUID: b452ELZbS+C+Igfm3BuDGA==
-X-CSE-MsgGUID: g/yS2NYxQhe0OYHd7ivHUQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11722"; a="74093112"
+X-CSE-ConnectionGUID: ILPkZi7cT2mf5UxTBlQDpA==
+X-CSE-MsgGUID: qSNtLKIuSoi/zhEyGyHhAA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11722"; a="73898309"
 X-IronPort-AV: E=Sophos;i="6.23,106,1770624000"; 
-   d="scan'208";a="74093112"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Mar 2026 06:22:21 -0800
-X-CSE-ConnectionGUID: s8ZuVCRSTouhhCI3Yv8gLg==
-X-CSE-MsgGUID: WGhnRO3GQRWpLdyhB8SW1A==
+   d="scan'208";a="73898309"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Mar 2026 06:31:21 -0800
+X-CSE-ConnectionGUID: 2vCmYF8UT+6ELulEzhtXSA==
+X-CSE-MsgGUID: xKnkvN5tSi2u38Zn439UGw==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,106,1770624000"; 
-   d="scan'208";a="219265512"
 Received: from lkp-server01.sh.intel.com (HELO 058beb05654c) ([10.239.97.150])
-  by orviesa008.jf.intel.com with ESMTP; 07 Mar 2026 06:22:20 -0800
+  by fmviesa003.fm.intel.com with ESMTP; 07 Mar 2026 06:31:19 -0800
 Received: from kbuild by 058beb05654c with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1vysXp-0000000024h-0J8X;
-	Sat, 07 Mar 2026 14:22:17 +0000
-Date: Sat, 07 Mar 2026 22:21:39 +0800
+	id 1vysgX-0000000025J-2ojT;
+	Sat, 07 Mar 2026 14:31:17 +0000
+Date: Sat, 07 Mar 2026 22:30:53 +0800
 From: kernel test robot <lkp@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/mediatek-gen3] BUILD SUCCESS
- 073a7e1b7bccf9eb6027c7eadc820686fbbd33f6
-Message-ID: <202603072232.j53i2lCN-lkp@intel.com>
+Subject: [pci:next] BUILD SUCCESS
+ a241a4330b8434f052226812c0aede170c03ab18
+Message-ID: <202603072247.1OR3p6eA-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,12 +57,12 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/mediatek-gen3
-branch HEAD: 073a7e1b7bccf9eb6027c7eadc820686fbbd33f6  PCI: mediatek-gen3: Integrate new pwrctrl API
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+branch HEAD: a241a4330b8434f052226812c0aede170c03ab18  Merge branch 'pci/controller/dwc-rockchip'
 
-elapsed time: 1063m
+elapsed time: 1011m
 
-configs tested: 171
+configs tested: 169
 configs skipped: 2
 
 The following configs have been built successfully.
@@ -105,10 +103,8 @@ hexagon                             defconfig    gcc-15.2.0
 hexagon               randconfig-001-20260307    gcc-15.2.0
 hexagon               randconfig-002-20260307    gcc-15.2.0
 i386                             allmodconfig    clang-20
-i386                             allmodconfig    gcc-14
 i386                              allnoconfig    gcc-15.2.0
 i386                             allyesconfig    clang-20
-i386                             allyesconfig    gcc-14
 i386        buildonly-randconfig-001-20260307    gcc-14
 i386        buildonly-randconfig-002-20260307    gcc-14
 i386        buildonly-randconfig-003-20260307    gcc-14
