@@ -1,117 +1,73 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+Received: from relay.hostedemail.com (smtprelay0012.hostedemail.com [216.40.44.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACF593806D4;
-	Sun,  8 Mar 2026 18:10:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 020F930AACB;
+	Sun,  8 Mar 2026 18:41:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772993457; cv=none; b=XUTs9JHrEMSGqWgIUMYO0GmFhkqvo65nlpCzMRVnWtDwfph61d11Z02C2DU8ggYR/uAyJQnY3EHzzKwQnVG3GzLqvi7KmoiZOB/Doc68OLoNXlc+T2b86HJtK0B0SSob+wWo6b57SOdJoSe2NEe0PZWG21xlAUck3nRxK5BJrGU=
+	t=1772995262; cv=none; b=HYnBGHKS+lQ4Nh1imHQlJD0ZZ6nx3OnRYkifMyfD3LyWy/2vuH7dTVlL1tmbn0I889Cx3KIR+SMi34MbXng+Cl8J2XkvTrS870cBS8XIfduMKsAmJwffxSVkbhA8U9cvQpIpo/ZyhzlS32ZJfcl48GowB2TYibn6wy5BlCm9kkY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772993457; c=relaxed/simple;
-	bh=6Ntq63r4nEfjhZuClxcNg+CH4AgZvHyEV54ooP79AKc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Z5aME9J9uZTM/vg7XNCWIUjdbBZaIUbdm8fanNV4X6NtLzQA8FjkvXve7hVoRAdHuAqnUahIbgWzC2zJPpymt6dToGGseCrb9QhRHp+iKeG//U6NcKJZexIbsHMFFU1/MgeDAQ+QReoe4oeZKkgwD1hF8z2Us0m3es3MxDlplEU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=k4UEub1z; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="k4UEub1z"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772993455; x=1804529455;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=6Ntq63r4nEfjhZuClxcNg+CH4AgZvHyEV54ooP79AKc=;
-  b=k4UEub1z9Vqq+1kQAMj5bUgqn/JNrRvGH9olIQCuR9eDVBYAr54vn9Qq
-   DOO2lIPnXBnsRfJi2LI9fDlXGkrYyxTYiZ0LbxCoFvd1B3dXqP2ZzkkGV
-   8KBzv2XePincDcEiEH4TrelT/2mpEmm1riZapZRb1ipZHJdQMdF+nVNMU
-   rcovT5Ph2SnBKdXuYZGpo97DKH17Yf3UTvvVy5NlnshnDXd1XHyraD7Tz
-   XESfemEJjVrgus3MtH8/XUrGxjp7jTe1bwKMTGBflBVJz8R+FAFyuLIrE
-   aXxF3SRWySWdROZRUZdzUL1jmKZPljtOhOvZqgDJJWIfhXiQXNA5yLkzy
-   Q==;
-X-CSE-ConnectionGUID: 9TjceVZzT028BynYzmRjNQ==
-X-CSE-MsgGUID: K7IvGcyVTYC2ESuOVng2Tw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11723"; a="73930620"
-X-IronPort-AV: E=Sophos;i="6.23,109,1770624000"; 
-   d="scan'208";a="73930620"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2026 11:10:54 -0700
-X-CSE-ConnectionGUID: KTB2GjEGTH+26Ss//Oeu4A==
-X-CSE-MsgGUID: Cv9bL8FjS/a65Vb+fPs2zQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,109,1770624000"; 
-   d="scan'208";a="216536074"
-Received: from lkp-server01.sh.intel.com (HELO 058beb05654c) ([10.239.97.150])
-  by fmviesa010.fm.intel.com with ESMTP; 08 Mar 2026 11:10:51 -0700
-Received: from kbuild by 058beb05654c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vzIaW-000000003JA-3xir;
-	Sun, 08 Mar 2026 18:10:48 +0000
-Date: Mon, 9 Mar 2026 02:10:17 +0800
-From: kernel test robot <lkp@intel.com>
-To: Hans Zhang <18255117159@163.com>, lpieralisi@kernel.org,
-	jingoohan1@gmail.com, mani@kernel.org, kwilczynski@kernel.org,
-	bhelgaas@google.com, helgaas@kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, robh@kernel.org,
-	ilpo.jarvinen@linux.intel.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Hans Zhang <18255117159@163.com>
-Subject: Re: [PATCH v7 2/2] PCI: dwc: Validate max-link-speed property
-Message-ID: <202603090252.S3qQ67Kh-lkp@intel.com>
-References: <20260308142629.75392-3-18255117159@163.com>
+	s=arc-20240116; t=1772995262; c=relaxed/simple;
+	bh=ZclR3MgADbuk8gJW1YDMUHbgzO8DIPC3p7HfmBQ2uv0=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=PgxHPiKsBanMGjkCgr5ygkGLjCp6Ccvt7qyGpv7IBnYvGZAydaT6kuIz5cs+WzxC1FNshwdEcU88HPRZB1R4ovx66h+q2jpDAdCJCV2zS5lYBmXOTD9Kd6yiIxts/MJQB3DUQO/ixxGLK+jbtSnIvtr43TAv3TTnZu3hnYmE/OU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=perches.com; spf=pass smtp.mailfrom=perches.com; arc=none smtp.client-ip=216.40.44.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=perches.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=perches.com
+Received: from omf19.hostedemail.com (a10.router.float.18 [10.200.18.1])
+	by unirelay09.hostedemail.com (Postfix) with ESMTP id D43C38CD9E;
+	Sun,  8 Mar 2026 18:40:51 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf19.hostedemail.com (Postfix) with ESMTPA id 6CBA920025;
+	Sun,  8 Mar 2026 18:40:45 +0000 (UTC)
+Message-ID: <ca170cbaf2f8bcbc89bbda68914d8e0d7640f0e7.camel@perches.com>
+Subject: Re: [PATCH v2 phy-next 24/24] MAINTAINERS: add regexes for linux-phy
+From: Joe Perches <joe@perches.com>
+To: vladimir.oltean@nxp.com, linux-phy@lists.infradead.org
+Cc: Vinod Koul <vkoul@kernel.org>, Neil Armstrong
+ <neil.armstrong@linaro.org>, 	dri-devel@lists.freedesktop.org,
+ freedreno@lists.freedesktop.org, 	linux-arm-kernel@lists.infradead.org,
+ linux-arm-msm@vger.kernel.org, 	linux-can@vger.kernel.org,
+ linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, linux-rockchip@lists.infradead.org, 
+	linux-samsung-soc@vger.kernel.org, linux-sunxi@lists.linux.dev, 
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+ netdev@vger.kernel.org, 	spacemit@lists.linux.dev,
+ UNGLinuxDriver@microchip.com
+Date: Sun, 08 Mar 2026 11:40:44 -0700
+In-Reply-To: <20260308114009.2546587-25-vladimir.oltean@nxp.com>
+References: <20260308114009.2546587-1-vladimir.oltean@nxp.com>
+	 <20260308114009.2546587-25-vladimir.oltean@nxp.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260308142629.75392-3-18255117159@163.com>
+X-Stat-Signature: mibobo4wkbramau4qyjthmehkiqudojz
+X-Rspamd-Server: rspamout01
+X-Rspamd-Queue-Id: 6CBA920025
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-Session-ID: U2FsdGVkX1/1oqpGv8s8V8RuGZRFC80nZh9ljOj3ohI=
+X-HE-Tag: 1772995245-174125
+X-HE-Meta: U2FsdGVkX1+4XRzz60ugpVFQWsQctyjPh9D8dWNkk9O80wKikqTLI//fEpSwY7VKkjTAQqCbvy/bDztttYzuNBQP3PDd6DE18CINvDdnHew5cXtwNDDJn4KiBH3EXroYIs/0V5C/aytRQmLMTGCZZlkmVqa0mog1lMlvYoTUOPxP3MIGj9+OItuBdGt7SwG+E1NN8A/Yc9Sq4U8TJPe/XcW25BuE6rH2bXBjLakvy2b4imYLaL6YRBqKlFvDSAukFbzkOlERn3vJJPcvYBJiMotKjWx2PYK5v4pDPHYsRlN9R//2k7hsjvl6B3t7ELpdAjuD6CN+C7OKO7KQLV3bHimDBNhwcxGB9M1yVBNLk9v9/I7LPCcJRUT7SR2W+eai
 
-Hi Hans,
+On Sun, 2026-03-08 at 13:40 +0200, vladimir.oltean@nxp.com wrote:
+> diff --git a/MAINTAINERS b/MAINTAINERS
+[]
+> @@ -10713,6 +10713,17 @@ F:	Documentation/devicetree/bindings/phy/
+> +K:	(?:linux/phy/phy\.h|phy-props\.h|phy-provider\.h)
 
-kernel test robot noticed the following build errors:
+phy-props.h and phy-provider.h don't seem to exist.
+Are these going to be added later?
+Maybe this should be phy-common-props.h ?
 
-[auto build test ERROR on c23719abc3308df7ed3ad35650ad211fb2d2003d]
+Perhaps if matching only the include uses:
+(/ is escaped because get_maintainer is stupid)
+something like:
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Hans-Zhang/PCI-of-Remove-max-link-speed-generation-validation/20260308-223128
-base:   c23719abc3308df7ed3ad35650ad211fb2d2003d
-patch link:    https://lore.kernel.org/r/20260308142629.75392-3-18255117159%40163.com
-patch subject: [PATCH v7 2/2] PCI: dwc: Validate max-link-speed property
-config: csky-randconfig-r071-20260308 (https://download.01.org/0day-ci/archive/20260309/202603090252.S3qQ67Kh-lkp@intel.com/config)
-compiler: csky-linux-gcc (GCC) 10.5.0
-smatch: v0.5.0-9004-gb810ac53
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260309/202603090252.S3qQ67Kh-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202603090252.S3qQ67Kh-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   In file included from include/linux/kernel.h:16,
-                    from include/linux/clk.h:13,
-                    from drivers/pci/controller/dwc/pcie-designware.c:13:
-   drivers/pci/controller/dwc/pcie-designware.c: In function 'dw_pcie_get_link_speed':
->> include/linux/array_size.h:11:32: error: invalid application of 'sizeof' to incomplete type 'const unsigned char[]'
-      11 | #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
-         |                                ^
-   drivers/pci/controller/dwc/pcie-designware.c:128:19: note: in expansion of macro 'ARRAY_SIZE'
-     128 |      max_speed >= ARRAY_SIZE(pcie_link_speed) ||
-         |                   ^~~~~~~~~~
-
-
-vim +11 include/linux/array_size.h
-
-3cd39bc3b11b8d Alejandro Colomar 2023-10-03   6  
-3cd39bc3b11b8d Alejandro Colomar 2023-10-03   7  /**
-3cd39bc3b11b8d Alejandro Colomar 2023-10-03   8   * ARRAY_SIZE - get the number of elements in array @arr
-3cd39bc3b11b8d Alejandro Colomar 2023-10-03   9   * @arr: array to be sized
-3cd39bc3b11b8d Alejandro Colomar 2023-10-03  10   */
-3cd39bc3b11b8d Alejandro Colomar 2023-10-03 @11  #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
-3cd39bc3b11b8d Alejandro Colomar 2023-10-03  12  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+K:	include\s*\<linux\/phy\/phy(?:-common-props|-provider)?\.h\>
