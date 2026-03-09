@@ -1,104 +1,104 @@
-Received: from mail-m3295.qiye.163.com (mail-m3295.qiye.163.com [220.197.32.95])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0DC622D4DC;
-	Mon,  9 Mar 2026 00:53:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.95
+Received: from sgoci-sdnproxy-4.icoremail.net (sgoci-sdnproxy-4.icoremail.net [129.150.39.64])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 940143368AD;
+	Mon,  9 Mar 2026 03:17:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=129.150.39.64
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773017626; cv=none; b=JGBmGy42GBD2xhT1QigiAwqNct+z08jKbxr/sdu1zQyOPWNbKNVsF34ZFoAeyah2edvUOOEX7VQR9u1679wnT4MyJqwp1RpfwNhg2LYkWZmugCsYJWdX+h3oK7VC5H/fa0QLJnnFNoDODB55D5Bc2Ui1YXatqmD6bV7pneWPhaU=
+	t=1773026276; cv=none; b=Q+Dd6nRLrtOOaSU2dBwm2JAtVnG+6FasXqoCNBXXrEeN+O7Z6fzr0BmPpv8QuLuQOAhABwbIb5X0eR+APzpI8EdZVata5BAGnjJQRikkgIHUswiu1VO6AcvWkXUCLTl5CWq2LP0qWE86uQfB+sCQvLjgAXa0XSPps2xkth4bPVE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773017626; c=relaxed/simple;
-	bh=oqadouO5boXOluf4D4wATX3jaZxsUbZr1IBC2YTyJuw=;
-	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=hsr1lDiohf1VJNZzJK6Pw8UVg1o9YCGDQvRvwM6AWe+ogtUX46Ex7mB3jP2tTA12z9MQ6HzoK15JbECdV0JAtgtgw1as2ecJxE38jSH6Rd6rMT9PnyN5K1e+kfbnPZ9PioBCupA9BC01EWZJlvkDA12+8hpI4uxskMf2BI38Wuc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=Im2J6y5g; arc=none smtp.client-ip=220.197.32.95
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1773026276; c=relaxed/simple;
+	bh=Xsh+hjhWpzU+NInaaLTlozQfjFTNRaxGVTac3PMQmT4=;
+	h=Date:From:To:Cc:Subject:Content-Type:MIME-Version:Message-ID; b=X5zxeA+97j8AnWerK8iQhGXILlc489BQ/HhCJ+rQu9GqG9yfM3P88FaNLpN2l/XbmwWuT4W809uH+oODSp7tkpxAwapzx0jaj7gwp4RJi++9/Wd+Y0144Cr3khrJEhtNvCVB7x6TOLsn+Ufi/CDd+A0umpXmWgpgJ/n9l/ElJmA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=buaa.edu.cn; spf=pass smtp.mailfrom=buaa.edu.cn; dkim=fail (0-bit key) header.d=buaa.edu.cn header.i=@buaa.edu.cn header.b=rRnk8yU/ reason="key not found in DNS"; arc=none smtp.client-ip=129.150.39.64
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=buaa.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=buaa.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="Im2J6y5g"
-Received: from [172.16.12.14] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 362a57f85;
-	Mon, 9 Mar 2026 08:38:15 +0800 (GMT+08:00)
-Cc: shawn.lin@rock-chips.com, robh@kernel.org, ilpo.jarvinen@linux.intel.com,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 1/2] PCI: of: Remove max-link-speed generation
- validation
-To: Hans Zhang <18255117159@163.com>, lpieralisi@kernel.org,
- jingoohan1@gmail.com, mani@kernel.org, kwilczynski@kernel.org,
- bhelgaas@google.com, helgaas@kernel.org
-References: <20260308142629.75392-1-18255117159@163.com>
- <20260308142629.75392-2-18255117159@163.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <0c558d65-edca-f3a9-9e31-01d30a206e7f@rock-chips.com>
-Date: Mon, 9 Mar 2026 08:38:11 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=buaa.edu.cn header.i=@buaa.edu.cn header.b="rRnk8yU/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=buaa.edu.cn; s=buaa; h=Received:Date:From:To:Cc:Subject:
+	Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID;
+	bh=c9p89bqyw1qOV57jcjNyvyF5NUAoOD9Pvv0VQu7LUiE=; b=rRnk8yU/N6qmj
+	ZlvYaCH0MuB36rtbxb0MqkTJkVd/EYWmvs7VOFflPVWcfvYLTtrfskmsSj+Vzjf2
+	tKnpOqiLpuujvH7ShjSYmuZSfkXZPyW5IpWRXFKncvGOUUMH5gxnqpNTphIQLy4W
+	AwrqzGX4RQz4frDMWDdFFlcoj01Et0=
+Received: from yunlong_ma$buaa.edu.cn ( [38.207.158.7] ) by
+ ajax-webmail-coremail-app2 (Coremail) ; Mon, 9 Mar 2026 11:17:47 +0800
+ (GMT+08:00)
+Date: Mon, 9 Mar 2026 11:17:47 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: =?UTF-8?B?6ams5LqR6b6Z?= <yunlong_ma@buaa.edu.cn>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [BUG] PCI: shpchp: Potential use-after-free in cleanup_slots() due
+ to missing synchronization
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.4-cmXT5 build
+ 20240305(0ac2fdd1) Copyright (c) 2002-2026 www.mailtech.cn
+ mispb-63b7ebb9-fa87-40c1-9aec-818ec5a006d9-buaa.edu.cn
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20260308142629.75392-2-18255117159@163.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9cd007c0a809cckunma97e204415ca26f
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGR9CQlZKGU8eSRpCTR0fHhhWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=Im2J6y5gzvtqCenZ61pUK7EnCPI3y/YG1W5NT6MaGSEqd4du2lGSpcN2EOZvZNw4hCZWsKFpFjaA6cdj80LKuCdoPqIN9lo4wCd4BGkcRI8ql2OuJeZm0wrna91FIvaOnJIlxyQYOCop/wQfO/3tdnDwgCkjo8vJ2KQKeFkk2pE=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=UG0fG4FpvswsWNFhQ45rHCRTKgbDLXR8HEAwDGADYj8=;
-	h=date:mime-version:subject:message-id:from;
+Message-ID: <1374387a.1f211.19cd099d060.Coremail.yunlong_ma@buaa.edu.cn>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:Nyz+CgA3JbXbO65pnXMmAg--.47327W
+X-CM-SenderInfo: l2esjjirrqmqpexdthxhgxhubq/1tbiAgMBDmmthb8coAACsO
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VW3Jw
+	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+	daVFxhVjvjDU=
 
-在 2026/03/08 星期日 22:26, Hans Zhang 写道:
-> The of_pci_get_max_link_speed() function currently validates the
-> "max-link-speed" DT property to be in the range 1..4 (Gen1..Gen4).
-> This imposes a maintenance burden because each new PCIe generation
-> would require updating this validation.
-> 
-> Remove the range check so the function returns the raw property value
-> (or a negative error code if the property is missing or malformed).
-> Callers must now validate the returned speed against the range they
-> support.  A subsequent patch adds such validation to the DWC driver,
-> which is the primary user of this function.
-> 
-> This change allows future PCIe generations to be supported without
-> modifying drivers/pci/of.c.
-> 
-> Signed-off-by: Hans Zhang <18255117159@163.com>
-> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
-> ---
->   drivers/pci/of.c | 7 ++++---
->   1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> index 9f8eb5df279e..cff5fd337c2b 100644
-> --- a/drivers/pci/of.c
-> +++ b/drivers/pci/of.c
-> @@ -889,10 +889,11 @@ EXPORT_SYMBOL_GPL(of_pci_supply_present);
->   int of_pci_get_max_link_speed(struct device_node *node)
->   {
->   	u32 max_link_speed;
-> +	int ret;
->   
-
-Should update the comment of this function, as it states:
-"-EINVAL    - Invalid "max-link-speed" property value...
-a negative value if the * required property is not found or is invalid."
-
-So it won't validate the speed after this patch. Perhaps it's even
-better to note the caller to take the responsiblity to validate it.
-
-> -	if (of_property_read_u32(node, "max-link-speed", &max_link_speed) ||
-> -	    max_link_speed == 0 || max_link_speed > 4)
-> -		return -EINVAL;
-> +	ret = of_property_read_u32(node, "max-link-speed", &max_link_speed);
-> +	if (ret)
-> +		return ret;
->   
->   	return max_link_speed;
->   }
-> 
+SGksCgpXZSBmb3VuZCBhIHBvdGVudGlhbCB1c2UtYWZ0ZXItZnJlZSBidWcgaW4gdGhlIHNocGNo
+cCBkcml2ZXIgdGhyb3VnaApzdGF0aWMgYW5hbHlzaXMuCgpTdW1tYXJ5Ci0tLS0tLS0KCkluIGNs
+ZWFudXBfc2xvdHMoKSAoZHJpdmVycy9wY2kvaG90cGx1Zy9zaHBjaHBfY29yZS5jKSwgdGhlIGZ1
+bmN0aW9uCnVzZXMgY2FuY2VsX2RlbGF5ZWRfd29yaygpIGluc3RlYWQgb2YgY2FuY2VsX2RlbGF5
+ZWRfd29ya19zeW5jKCkgYmVmb3JlCmRlc3Ryb3lpbmcgdGhlIHdvcmtxdWV1ZSBhbmQgZnJlZWlu
+ZyB0aGUgc2xvdCBzdHJ1Y3R1cmUuIFRoaXMgY2FuIGxlYWQKdG8gdXNlLWFmdGVyLWZyZWUgaWYg
+dGhlIGRlbGF5ZWQgd29yayBpcyBjdXJyZW50bHkgZXhlY3V0aW5nLgoKQW5hbHlzaXMKLS0tLS0t
+LS0KCmNhbmNlbF9kZWxheWVkX3dvcmsoKSBpcyBub24tc3luY2hyb25vdXMgLSBpdCBvbmx5IGNh
+bmNlbHMgcGVuZGluZyB3b3JrCnRoYXQgaGFzIG5vdCB5ZXQgc3RhcnRlZCBleGVjdXRpb24uIElm
+IHRoZSBkZWxheWVkIHdvcmsgaXMgYWxyZWFkeQpydW5uaW5nLCBjYW5jZWxfZGVsYXllZF93b3Jr
+KCkgcmV0dXJucyBmYWxzZSBhbmQgdGhlIHdvcmsgY29udGludWVzIHRvCmV4ZWN1dGUuCgpUaGUg
+dnVsbmVyYWJsZSBjb2RlIHBhdGg6CgogICAgdm9pZCBjbGVhbnVwX3Nsb3RzKHN0cnVjdCBjb250
+cm9sbGVyICpjdHJsKQogICAgewogICAgICAgIHN0cnVjdCBzbG90ICpzbG90LCAqbmV4dDsKCiAg
+ICAgICAgbGlzdF9mb3JfZWFjaF9lbnRyeV9zYWZlKHNsb3QsIG5leHQsICZjdHJsLT5zbG90X2xp
+c3QsIHNsb3RfbGlzdCkgewogICAgICAgICAgICBsaXN0X2RlbCgmc2xvdC0+c2xvdF9saXN0KTsK
+ICAgICAgICAgICAgY2FuY2VsX2RlbGF5ZWRfd29yaygmc2xvdC0+d29yayk7ICAgICAgLy8gbm9u
+LXN5bmMgY2FuY2VsCiAgICAgICAgICAgIGRlc3Ryb3lfd29ya3F1ZXVlKHNsb3QtPndxKTsgICAg
+ICAgICAgIC8vIHdvcmtxdWV1ZSBkZXN0cm95ZWQKICAgICAgICAgICAgcGNpX2hwX2RlcmVnaXN0
+ZXIoJnNsb3QtPmhvdHBsdWdfc2xvdCk7CiAgICAgICAgICAgIGtmcmVlKHNsb3QpOyAgICAgICAg
+ICAgICAgICAgICAgICAgICAgIC8vIHNsb3QgZnJlZWQKICAgICAgICB9CiAgICB9CgpUaGUgZGVs
+YXllZCB3b3JrIGZ1bmN0aW9uIHNocGNocF9xdWV1ZV9wdXNoYnV0dG9uX3dvcmsoKSAoc2hwY2hw
+X2N0cmwuYykKcGVyZm9ybXMgdGhlIGZvbGxvd2luZyBvcGVyYXRpb25zIHRoYXQgY2FuIHJhY2Ug
+d2l0aCBjbGVhbnVwOgoKICAgIC0gbXV0ZXhfbG9jaygmcF9zbG90LT5sb2NrKQogICAgLSBxdWV1
+ZV93b3JrKHBfc2xvdC0+d3EsICZpbmZvLT53b3JrKQogICAgLSBtdXRleF91bmxvY2soJnBfc2xv
+dC0+bG9jaykKClJhY2UgU2NlbmFyaW8KLS0tLS0tLS0tLS0tLQoKICAgIENQVTAgKGRyaXZlciB1
+bmxvYWQpICAgICAgICAgICAgICBDUFUxIChkZWxheWVkIHdvcmspCiAgICA9PT09PT09PT09PT09
+PT09PT09PSAgICAgICAgICAgICAgPT09PT09PT09PT09PT09PT09PT0KICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICBzaHBjaHBfcXVldWVfcHVzaGJ1dHRvbl93b3JrKCkKICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG11dGV4X2xvY2soJnBfc2xvdC0+
+bG9jaykKICAgIGNsZWFudXBfc2xvdHMoKQogICAgICBjYW5jZWxfZGVsYXllZF93b3JrKCkgICAg
+ICAgICAgIC8vIHJldHVybnMgZmFsc2UsIHdvcmsgcnVubmluZwogICAgICBkZXN0cm95X3dvcmtx
+dWV1ZShzbG90LT53cSkgICAgIC8vIHdvcmtxdWV1ZSBkZXN0cm95ZWQKICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgIHF1ZXVlX3dvcmsocF9zbG90LT53cSwgLi4uKSAgLy8g
+VUFGIQogICAgICBrZnJlZShzbG90KSAgICAgICAgICAgICAgICAgICAgICAgbXV0ZXhfdW5sb2Nr
+KCZwX3Nsb3QtPmxvY2spICAvLyBVQUYhCgpUcmlnZ2VyIENvbmRpdGlvbgotLS0tLS0tLS0tLS0t
+LS0tLQoKMS4gVXNlciBwcmVzc2VzIHRoZSBQQ0kgaG90cGx1ZyBhdHRlbnRpb24gYnV0dG9uCjIu
+IGhhbmRsZV9idXR0b25fcHJlc3NfZXZlbnQoKSBxdWV1ZXMgYSA1LXNlY29uZCBkZWxheWVkIHdv
+cmsKMy4gV2l0aGluIDUgc2Vjb25kcywgZHJpdmVyIGlzIHVubG9hZGVkIG9yIGRldmljZSBpcyBy
+ZW1vdmVkCjQuIGNsZWFudXBfc2xvdHMoKSByYWNlcyB3aXRoIHRoZSBleGVjdXRpbmcgZGVsYXll
+ZCB3b3JrCgpJbXBhY3QKLS0tLS0tCgotIEtlcm5lbCBjcmFzaC9wYW5pYwotIFBvdGVudGlhbCBw
+cml2aWxlZ2UgZXNjYWxhdGlvbiBpZiBmcmVlZCBtZW1vcnkgaXMgcmVhbGxvY2F0ZWQKClJlZmVy
+ZW5jZQotLS0tLS0tLS0KClRoZSBzaW1pbGFyIHBjaWVocCBkcml2ZXIgY29ycmVjdGx5IHVzZXMg
+Y2FuY2VsX2RlbGF5ZWRfd29ya19zeW5jKCkgaW4KcGNpZWhwX3JlbGVhc2VfY3RybCgpIChkcml2
+ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYzoxMDk4KSBmb3IgdGhlCnNhbWUgcGF0dGVybi4K
+ClN1Z2dlc3RlZCBGaXgKLS0tLS0tLS0tLS0tLQoKUmVwbGFjZSBjYW5jZWxfZGVsYXllZF93b3Jr
+KCkgd2l0aCBjYW5jZWxfZGVsYXllZF93b3JrX3N5bmMoKToKCiAgICAtIGNhbmNlbF9kZWxheWVk
+X3dvcmsoJnNsb3QtPndvcmspOwogICAgKyBjYW5jZWxfZGVsYXllZF93b3JrX3N5bmMoJnNsb3Qt
+PndvcmspOwoKRGV0ZWN0aW9uIEluZm9ybWF0aW9uCi0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKLSBU
+b29sOiBDb25Db3JkIChzdGF0aWMgYW5hbHlzaXMgZnJhbWV3b3JrIGZvciBjb25jdXJyZW5jeSBi
+dWdzKQotIEtlcm5lbCBWZXJzaW9uOiB2Ny4wLXJjMiAoY29tbWl0IDAwMzFjMDY4MDdjZikKLSBQ
+YXR0ZXJuOiBEZWxheWVkIHdvcmsgdGVhcmRvd24gd2l0aG91dCBzeW5jaHJvbml6YXRpb24KLSBD
+b25maWRlbmNlOiBIaWdoCgpUaGFua3MsCll1bmxvbmcgTWE=
