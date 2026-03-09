@@ -1,199 +1,133 @@
-Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013030.outbound.protection.outlook.com [40.107.162.30])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4002A39A7FF;
-	Mon,  9 Mar 2026 14:43:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.30
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773067386; cv=fail; b=FVnu95GMdyie7jmXf6yM8MpfuFsrLFALFp8a/NUNyKQiqXM3BGN+Tnn/clXsYhtKVcHHyGrYr7g/51iR2rxN7Jb9GIvH/MIG/1kx24e/Kt9O6YBhvWyb6ALXBm7YiRUk+FulZ6RHGNJIOQ46Dv1efpyIrqYd8vIkpPoc7L4KsDI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773067386; c=relaxed/simple;
-	bh=XYbpFbfmsnRwiKWE+vHOm1ux5YGidMg50oGQHJh63ZA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=dTNBqVTxt0FlJ28xmPIAPOX8pKAlrgtfUNzvggFZ4vktWnfel1PiBzIIREJPPCAuFUXaQJi+PGtTxlos9oI00s25osLhmHSKgaHvWnqbIc+nPfDMXm5+9wy7b76cwHTObEL//tyF58gfkWxqfa0CL7bjGW7UAQWAVvQXmsymp0I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=nbnXOE5/; arc=fail smtp.client-ip=40.107.162.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D2D52737EE;
+	Mon,  9 Mar 2026 14:46:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773067604; cv=none; b=PMVLpIv8Mhgxr7HNVI2RjL33gQCdPJzpN6YzGYzsEetl+ckX1nJ0l8178GB6Try4GmEh5SiRI7bYXaIeFZACgzPn7zthS9khzfnnc3U1nAOoN/iiNmo1U3PBANOBbq1Yqqqxs8NX/I9IDRRVfYTqCUvYnnxlXIV+4N22Gcy/H/4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773067604; c=relaxed/simple;
+	bh=pcjyvkWqVZuL0hNKvXxSSPOe/Gza0z73iIY1s/J2RB8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ivh6CSR+eWudrHmxjsx5ahQpgkZYEqRdiUnm8aAxXAyjzTwRJmkgT9Jq+CpE37L9XZOz5L271eNvVK5bj5kd87RfCRVADSDb0ElqFzxxaiaqaAPVqwL1dztPHGJHstFgvyDhBolInVGlCpokSgmocOac9ua80VG8vjzF5ELt8dM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=AuyTb/zV; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="nbnXOE5/"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=tYm5HTL2NuBEYs88TDtzIYw8P7DH3KufdD5BXu/y5ddHW+uA8TGlezwf45h++sN3cCQWS4/xCvw1kt9Q9Uz5RzKWy3jqJHBbD9YhavMUHjAutL1tUoG0WnnuNZdus2ZfjhWlNAHAWJsqxyeXBerQCni30JT341cwMNwBhqIMsd4PYCB91rFg4bWKmC3PBT54Sbyf/MjTLLVN1bUlhfMRYxUuyEvztsmAfjMzH0P0HVib652niyStZGwZuUZtq8C9W6/f9mcGSsJrUEysXRGJKb3KxiMZNogLlXajOodAZ2NslEwbpa+WKLdwcDRXsZmpYLKVj5VA3Yngn5eyMsWDeA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=KWVo1TJT3MQBKOWl7Pad2WNZ0erW4Q2tJQx83FA9H48=;
- b=tXkJAt9A1yA28uYEVbcATrfh6LhyBccQqbhMhA1cWeFbmXkrO3Rj4Qs/c7KtfnFvhHPu92/exkwyKIotEs+3RUu18iQNxhz0kpdEXhZ68D/vMGWt7wMGj+p9rzLyLBdXospS4Txvt/3FW7bCrxXjVrYnYybSCasDi1y0FXpcHV5k/8Wd3LxoEK4alUFYv1bfPOrkFkXWPp//GAEWd/I4cmJc44Kv/mTWzvTUccnJnuU9dzPomogGid8Cjcl6aUS60YNGmT8IMI6gSV985S7l8a19OWUCbz7KhRY/4MVauk7ky3YzaBgANzuGcstFwzuaTQHlexR4lf+defL6NTRtaA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KWVo1TJT3MQBKOWl7Pad2WNZ0erW4Q2tJQx83FA9H48=;
- b=nbnXOE5//q3a92bTity49kCPTAiX5PE7MFoypZNgaILYdeM4jfXourHVpUEI6neQeFXCrot62XJBt1UHc0knV8B/+hvUDi98vnPN4tMVAx8W5M876SicpIXOLldGfpVFpi9+F9O9WqbmWb+vuncGLJHZGziiMr0vZnLFKiOlfu/R4uyvnxMa9Qi4u9hsd1D4tM2uTyBpLLITjGjj51Jfs6PymyTHnK+jdcaCE0956411M7a7BrnFE+3fiGcgSyX2cpCk1jxD1aBqlTBoEj+cHEgyieOjjyUJOXyk8MtiQvsLGV+CO4NH7HFDDhRMTZloOFefZZLdIb52yn2rs2G8Jw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by PAXPR04MB8224.eurprd04.prod.outlook.com (2603:10a6:102:1cb::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.25; Mon, 9 Mar
- 2026 14:43:00 +0000
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9678.017; Mon, 9 Mar 2026
- 14:43:00 +0000
-Date: Mon, 9 Mar 2026 10:42:52 -0400
-From: Frank Li <Frank.li@nxp.com>
-To: Vinod Koul <vkoul@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	"David S. Miller" <davem@davemloft.net>,
-	Nicolas Ferre <nicolas.ferre@microchip.com>,
-	Alexandre Belloni <alexandre.belloni@bootlin.com>,
-	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
-	Koichiro Den <den@valinux.co.jp>, Niklas Cassel <cassel@kernel.org>,
-	dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-	mhi@lists.linux.dev, linux-arm-msm@vger.kernel.org,
-	linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	imx@lists.linux.dev
-Subject: Re: [PATCH v2 1/8] dmaengine: Add API to combine configuration and
- preparation (sg and single)
-Message-ID: <aa7cbL-B5sbjZr_l@lizhi-Precision-Tower-5810>
-References: <20251218-dma_prep_config-v2-0-c07079836128@nxp.com>
- <20251218-dma_prep_config-v2-1-c07079836128@nxp.com>
- <aa6pW-zpxnrZnfPn@vaman>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aa6pW-zpxnrZnfPn@vaman>
-X-ClientProxiedBy: SA1P222CA0198.NAMP222.PROD.OUTLOOK.COM
- (2603:10b6:806:3c4::22) To PA4PR04MB9366.eurprd04.prod.outlook.com
- (2603:10a6:102:2a9::8)
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="AuyTb/zV"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=ap/5rAAlPzEySe5EbsdRcwWW15+LeFvh7y2Jk3wcWMs=;
+	b=AuyTb/zV9D2YgeUgaBWTDKywgxokYtXmcEcy1zkWDEcswfCF07vcM3Ru9D40Qm
+	3mHrswqM/BpOn/txl+QHJPRPKQGoJikWw372bvzLnMuyjMihtBjiyMg6NiIe2CFM
+	i7PqnquVccnQOAxj03e0WbqGox660444CqOBCU8eFDe7Q=
+Received: from [IPV6:240e:b8f:927e:1000:792:97b4:4a20:b2d3] (unknown [])
+	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wD3X50S3a5pFQwYAA--.8424S2;
+	Mon, 09 Mar 2026 22:45:39 +0800 (CST)
+Message-ID: <42c07f4a-d32b-4219-a0a7-ccec5f125b32@163.com>
+Date: Mon, 9 Mar 2026 22:45:38 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|PAXPR04MB8224:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7e6767a0-972c-4821-8eff-08de7dea299d
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|52116014|376014|19092799006|7416014|1800799024|38350700014;
-X-Microsoft-Antispam-Message-Info:
-	V1l9+RLgAt4QNl9Zr7CUsnJca0tKXBRkHdPDxpCVmlz89obACBzBJDYu6wk8pPp7diSOrsQZY1ZcW5dHsdFbLKV6r5XVQ7wjkvR42OHJ0FdhbMc6jzeuqNN9paAFp+7oKNWY9XHhmiJM66K/ODHRZkQmOUY4VVkuP7tOFICJb5Gy6Eog5RKy7tT2UHCFwQUZLvNP4BMStMSuU/mzQYpLKcdCd8MxGjyJ8b5Ja+I8Fg2DgPuJPkeydmdLGAoecLIkXf6QIPu7CNoNqv+d+RIL9jJepXk1HZn0VO7afEjwFO4HBt8YCHZoH0S5gdvDgj2sPUe7Tsx6duaJ5O7JnbckMd4pMh2rRZTYdw5ovCzxEY0H/W5bcYYtLaWYuWUk/OyO1O8bYDgw9HfJ8Xth6Whf8PptC5VJBn1YFnrGS4RqXBALyzfcsOjuSEe1WjtTS3RRDFpsGh+BYEowj74azk8kcfl0u4JmwVMCqy/lxeU0CzEbDxERPGqm3Lr70CNcLF3e99g4+yQFKad8r9XdJ6Cne03MyK72JxTaPd3G1qQ/H01WcOTGaGv6faxQASzK7V4JRJE7WXV12ftGhVxdJ/jEisx+djBh8jn+bXDtRHOrMkvttbCcwgnugrZ2uxHhou3U55q820EpE8qBVj2CFvcuXbgBKpk4LkgaLKKwSQSMPGXVK45abczIrI/JoOUW+nTfBCruwonaT4buE7lb1XVUTf8hsETzbAEmrRpM+FIuoiMfqgMRwGiUwKhBUkCgL6jTo4xEEvKrec35eBINWIENDkeSX7huetH0WPVYQFaOVN8=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(52116014)(376014)(19092799006)(7416014)(1800799024)(38350700014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?iRqe6L41q7/vDif2IY/UuKhjxPa/xZv6FCNtekgGGxeei007XYHQ9F3u8zFI?=
- =?us-ascii?Q?fzMF37kcttjy8nOYWk4n3OpdzCoIsqxePhBRvjsz33drinQJMMo29H0pLn5T?=
- =?us-ascii?Q?BxrmycaLs4J6BlourMaqY3TTUu7B5bUoHkwQYH3oyDyEExSRGzlkO14x18CZ?=
- =?us-ascii?Q?VR/0nkmZxiR6J+Q9FTAyRxwpEwibqJljG3La7KP1rBxSKNS/tswhurUllHmw?=
- =?us-ascii?Q?UIm4EFHzLvtGxmJ49sbMlk3TZy5YezXeTQ3pBIu041CEtkW8GRmwvwRMt+vN?=
- =?us-ascii?Q?lHAiwABr4lbH8Mf3i1HZOFSSnoHBf+kXdgIECalT0SHkby5BcgpmxhSaPlVK?=
- =?us-ascii?Q?bPQG2ETLd5JMjXImCUaG5WNUSIhD9vstTzrYuLnui1UPtSYHzrIksbIeyUvx?=
- =?us-ascii?Q?VqFXNYnroOXkkTm2GEl7xIo7v8Jut4ByBArEKTES+llRyhUrCXxaCP4IH4r+?=
- =?us-ascii?Q?Xqo3ZvB3SFyQn6W5F9AZFeFl/Q9hqG06uU7gEBqE3fQAgnBM8IRhzDTnZDen?=
- =?us-ascii?Q?VJ+UypV3hz8bJ2BinVDEWnCiwn2vc3zr1I6n+KoJvAeK1tbaI3dsV4O5n4WK?=
- =?us-ascii?Q?Vm2KzUXnIj3BS5KiVZmKCr4NgXQDoGo8M2Hw2dhxb6s/424mNmZHw5PUAoUh?=
- =?us-ascii?Q?m/ARYGSqHohV6anRy0ymAntkXaA9nEVVi1cXZroumC+6TEywpf7n7i0+MpRD?=
- =?us-ascii?Q?n3+3AFFxx8oeKi9d3HTZHHEB7g8Ihn1svwn8IPA631cu7y48sXoJf3MVWwSS?=
- =?us-ascii?Q?kwwCLCU4Hv2WqnHbuRJCUq7Cl0lOG2FNQYK4OwihNbEK7O9WtdvUyLG6O5ay?=
- =?us-ascii?Q?rAyBkTpETb/U/aL8udQuhz1hYRRi0bp5G88N4GdNSRieeQpE2hW1hLMqQf/M?=
- =?us-ascii?Q?YWVQ69c9SUedGhBZwpKcH5xf40jNEjXmoGpUMQt235K3a2KTZ2oRVdOVqIiT?=
- =?us-ascii?Q?lyfVe7QuqHRJkVZlvMzoinCO70237H+Av6B07g7f1tY+IeN7wdcQjicpVrCr?=
- =?us-ascii?Q?hJkXw98oUAWJ9CCrhzhPnQKzRWfMBBGpIAKAKipqZL3V8CW55PpnzZBgGsfm?=
- =?us-ascii?Q?11ljrPs5rwa+j64EBBvrx0f5vljpD42fBGLQO1ZQ1WM62qakJ27D/EgS8sP+?=
- =?us-ascii?Q?9rdyxug/yuzs/Gf8ZH4bp1leRhN9Mn7pVarFmHdAP2vwRbOtqM3t/hg9+qot?=
- =?us-ascii?Q?GtLWg8nPvb2tKZqNWH3H/qmGyJ+LQNthOm8w7oIlz5GV7kEUg3V7jF7rI3Hz?=
- =?us-ascii?Q?L0J2FbB8f7fmPGsFZ+FvlchAZT1FPYQuTNHnDYNFcNhizS8affWoDbuQKKXj?=
- =?us-ascii?Q?SXeQ4I0kEkhRMOHEveoroAuCT/zUDk4yOLvuvNWbBdPH4UVGD3Vj+jrYyd/W?=
- =?us-ascii?Q?XiEVbCTtGlFbYmKNngetnZeSved1uWSiy+AiewGLrcOAEfxo0XXlLYWA2UwW?=
- =?us-ascii?Q?U6vYwcCtQc9eJloGhsRIH4pKgdx131y+yR8I2w7NrtXij7rBgwCmbqVoVH5s?=
- =?us-ascii?Q?nyY+AirguVh4bZP4d+eXOCaIRFH00P+a95KmPfEsDqr396KB/bE2q98pVXwD?=
- =?us-ascii?Q?ricUyWBpn/qih5VgRy3EUnlilyUUpHHZUdayGmAMieop3Nc7UgMR2mqbwErX?=
- =?us-ascii?Q?L+exHN0/V9OVnNy+YSxL4S71rBYfYVRATKFy3l0mEZNq49opt70Dix1Y0TwX?=
- =?us-ascii?Q?OKXUSfjezOAcKIY3alx4MSY+PXexrhtQVqP2F1Xo/5ANyJMr?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7e6767a0-972c-4821-8eff-08de7dea299d
-X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2026 14:43:00.8722
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: HjcwjvZBgxJ0sKInHt1n4heS9jEHl1MPWd51WcjppvW3QtL2H4iXCkGjdfm0rqSns8usOovErA/lT63f5HS0sQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB8224
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 2/2] PCI: dwc: Validate max-link-speed property
+To: kernel test robot <lkp@intel.com>, lpieralisi@kernel.org,
+ jingoohan1@gmail.com, mani@kernel.org, kwilczynski@kernel.org,
+ bhelgaas@google.com, helgaas@kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, robh@kernel.org,
+ ilpo.jarvinen@linux.intel.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260308142629.75392-3-18255117159@163.com>
+ <202603090252.S3qQ67Kh-lkp@intel.com>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <202603090252.S3qQ67Kh-lkp@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:_____wD3X50S3a5pFQwYAA--.8424S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxZw4UJr4Dur1xZrW5urykZrb_yoWrJr1xpa
+	yUGw1qkF98J3yfWw1UtFW8ua4Yq3Z8ZayUGr9Igr1xuF1ayr1UuF10gaySyr9rKr4v9ryx
+	KFy2kF9rCa4qy3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zR3ku3UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBSCJmmu3RQFgQAA3+
 
-On Mon, Mar 09, 2026 at 12:04:59PM +0100, Vinod Koul wrote:
-> On 18-12-25, 10:56, Frank Li wrote:
-> > Previously, configuration and preparation required two separate calls. This
-> > works well when configuration is done only once during initialization.
-> >
-> > However, in cases where the burst length or source/destination address must
-> > be adjusted for each transfer, calling two functions is verbose and
-> > requires additional locking to ensure both steps complete atomically.
-> >
-> > Add a new API dmaengine_prep_config_single() and dmaengine_prep_config_sg()
-> > and callback device_prep_config_sg() that combines configuration and
-> > preparation into a single operation. If the configuration argument is
-> > passed as NULL, fall back to the existing implementation.
-> >
-> > Add a new API dmaengine_prep_config_single_safe() and
-> > dmaengine_prep_config_sg_safe() for re-entrancy, which require driver
-> > implement callback device_prep_config_sg().
->
-> Okay to add API
->
-> > +	struct dma_async_tx_descriptor *(*device_prep_config_sg)(
-> > +		struct dma_chan *chan, struct scatterlist *sgl,
-> > +		unsigned int sg_len, enum dma_transfer_direction direction,
-> > +		unsigned long flags, struct dma_slave_config *config,
-> > +		void *context);
->
-> Do we want to have drivers implement one more callback. It does not make
-> sense to me. Why not handle this in framework and have it call the
-> respective lower level APIs.
 
-To avoid use addtional lock! suppose each API is re-entriable.
 
-thread 1:  call dmaengine_prep_config_sg_safe()
-thread 2:  call dmaengine_prep_config_sg_safe()
+On 2026/3/9 02:10, kernel test robot wrote:
+> Hi Hans,
+> 
+> kernel test robot noticed the following build errors:
+> 
+> [auto build test ERROR on c23719abc3308df7ed3ad35650ad211fb2d2003d]
+> 
+> url:    https://github.com/intel-lab-lkp/linux/commits/Hans-Zhang/PCI-of-Remove-max-link-speed-generation-validation/20260308-223128
+> base:   c23719abc3308df7ed3ad35650ad211fb2d2003d
+> patch link:    https://lore.kernel.org/r/20260308142629.75392-3-18255117159%40163.com
+> patch subject: [PATCH v7 2/2] PCI: dwc: Validate max-link-speed property
+> config: csky-randconfig-r071-20260308 (https://download.01.org/0day-ci/archive/20260309/202603090252.S3qQ67Kh-lkp@intel.com/config)
+> compiler: csky-linux-gcc (GCC) 10.5.0
+> smatch: v0.5.0-9004-gb810ac53
+> reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260309/202603090252.S3qQ67Kh-lkp@intel.com/reproduce)
+> 
+> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <lkp@intel.com>
+> | Closes: https://lore.kernel.org/oe-kbuild-all/202603090252.S3qQ67Kh-lkp@intel.com/
+> 
+> All errors (new ones prefixed by >>):
+> 
+>     In file included from include/linux/kernel.h:16,
+>                      from include/linux/clk.h:13,
+>                      from drivers/pci/controller/dwc/pcie-designware.c:13:
+>     drivers/pci/controller/dwc/pcie-designware.c: In function 'dw_pcie_get_link_speed':
+>>> include/linux/array_size.h:11:32: error: invalid application of 'sizeof' to incomplete type 'const unsigned char[]'
+>        11 | #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
+>           |                                ^
+>     drivers/pci/controller/dwc/pcie-designware.c:128:19: note: in expansion of macro 'ARRAY_SIZE'
+>       128 |      max_speed >= ARRAY_SIZE(pcie_link_speed) ||
+>           |                   ^~~~~~~~~~
+> 
+Hi Bjorn and Mani,
 
-If DMA engine driver implement device_prep_config_sg, thread 1 and thread 2
-can run parallel.
+I am currently working on a patch series aimed at removing the range 
+check in the of_pci_get_max_link_speed() function and adding validation 
+functionality in the DWC driver.
 
-If driver have not implement this callback, it have to use mutex make sure
-config and prep atomic.
+In patch 2 of v7, I used ARRAY_SIZE(pcie_link_speed) in the DWC driver 
+to validate the "max-link-speed" attribute. However, the kernel test 
+robot reported a build error [2] because pcie_link_speed is an 
+incomplete type (only an external declaration) in the pcie-designware.c 
+file, so ARRAY_SIZE cannot be used.
 
-https://lore.kernel.org/dmaengine/20260109-edma_dymatic-v1-0-9a98c9c98536@nxp.com/
-show finial opitimziation result, which depend on this. If can't call
-prep() function parallel, which will kill performace.
+To solve this problem, I suggest adding a macro named "#define 
+PCIE_LINK_SPEED_COUNT 16" in the <linux/pci.h> file to represent the 
+fixed size of the pcie_link_speed array (with 16 entries according to 
+the 4-bit field of the PCIe standard). Then use this macro in the DWC 
+driver instead of using ARRAY_SIZE.
 
->
-> Drivers should implement simple apis and collectively the functionality
-> can come from the framework.
->
-> Would you consider revising as such. Bonus all existing drivers can
-> start using this API, no change required for drivers in that case'
+The reason for adding the macro instead of using the fixed value "16" is 
+to make the code more self-explanatory and this array size can be used 
+for many years in 16 cases.
 
-Not that simple, some devices just call config at probe, especial fix
-FIFO address and burst length.
+Do you agree with this approach? Please let me know. Perhaps there are 
+any other better methods?
 
-Call config and prep only need for the case, which need adjust src/dst
-address, burst length or other parameter for each transfer.
+Best regards,
+Hans
 
-Frank
+> 
+> vim +11 include/linux/array_size.h
+> 
+> 3cd39bc3b11b8d Alejandro Colomar 2023-10-03   6
+> 3cd39bc3b11b8d Alejandro Colomar 2023-10-03   7  /**
+> 3cd39bc3b11b8d Alejandro Colomar 2023-10-03   8   * ARRAY_SIZE - get the number of elements in array @arr
+> 3cd39bc3b11b8d Alejandro Colomar 2023-10-03   9   * @arr: array to be sized
+> 3cd39bc3b11b8d Alejandro Colomar 2023-10-03  10   */
+> 3cd39bc3b11b8d Alejandro Colomar 2023-10-03 @11  #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
+> 3cd39bc3b11b8d Alejandro Colomar 2023-10-03  12
+> 
 
->
->
-> --
-> ~Vinod
