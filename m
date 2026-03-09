@@ -1,216 +1,111 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7ED838E12D;
-	Mon,  9 Mar 2026 22:40:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86C99217659;
+	Mon,  9 Mar 2026 22:50:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773096021; cv=none; b=L0GeXybGtSLuh02EVvSx9wE/iQwdTy4L3Ub1fjAUT8Lv2H5lOV2lsQZPlDwFYft1gkNM3HdcZCxHGPmr7FsteyPrzmvLk7Fs1SRI6OeXOKmSJbUFRCi7Tn/w9NI0u0XmQ3XnyoR2gQAMywaWl1PbqaDMqMyt/6PjFIKJVNNQbfU=
+	t=1773096620; cv=none; b=YW0UczzjvXrLvW5IDDe7uS4ep/MwAFfvPCTwnwmFni+aqjFMsb7LQgCrxdv0u7f4+l+Ql/qIfb3E+TYEemYe8BtvRjYbXGe35ouNi2LJsX7t2S85OobY0LnlYSB+PmzMsoEfof1rVak8Cub2GQsv+2UPq3N3NS2IeIn6o4sP0BM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773096021; c=relaxed/simple;
-	bh=P8zDMDDdSFYDR2MFOLI4fQLMe5VobcLljvz1XhWDeiE=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=L0df1PPL2/qb2K9ld4oTBzW+uYoWurGvHzwkk/QMksJGvQV5Dn7Sp+SAzvOmQgyUSj4NvI+ohCh3wXJu1GSujS8kdwdMajlVQi15GbgYmkJHWH4Kl5tA3pPfmxFTMkbT9dhQIbyx1qoKZ6ifrpwx7nwYGSK6UTtUA41oIhRw+Ts=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DtE4EbbK; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1773096620; c=relaxed/simple;
+	bh=KVdfSo8Fym+8HhHhMkfp7kvgXY9fCLwo+EIudl1KX28=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=C3OlycbsLNtOCANLHea/mWB+jJ+ydDOa5gDPfj3uvlom6CyT8ZeXeHbb17S5NkbF0Fw5mhJOSW37pn6jKRTSe/sPOnaqJozslIFq4M4h4DlRkwn+mzXjzDQ3qF9+iG2PA8rq12oB7UNRjxc9EOx1Iifh4yYg+GdxpfcATeqe9WY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QhMylrw6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DtE4EbbK"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773096020; x=1804632020;
-  h=message-id:date:mime-version:subject:from:to:cc:
-   references:in-reply-to:content-transfer-encoding;
-  bh=P8zDMDDdSFYDR2MFOLI4fQLMe5VobcLljvz1XhWDeiE=;
-  b=DtE4EbbKj9mnJs70rOkF3GUDpHNU512aZ6rdduo6sSWyJU0e2HwlYiOt
-   82GngiWiieLn1rHibtYPyGODulSZCXwpiE6w/gd4i7ZAI+4s2ej7rnp5H
-   kyGAEOB9BE/csDKRKsirkv+hW1Vp5q6JTWkDO627AzOlbV0UjNaAR4nzv
-   +XONVcW4n2/YktL5s3jE9MttIk7DEQNlrIMrJwAG4JHxeQJJcFMJck6mP
-   NQcVH+1F4tslSMtGVVWk+cPEwvfHR9MiJdM7KirvPuBCsF2iCmHhW4F2a
-   6DBVC9/LrrsDjGr9g/y/nMtSjGPnFLv4zjwkPflb1H1wJOWKDAgsx5OJ4
-   Q==;
-X-CSE-ConnectionGUID: kuWz019fS9Wra3mnLgWhAQ==
-X-CSE-MsgGUID: naKku2PxT5Kaqxxc50cBEQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11724"; a="73332616"
-X-IronPort-AV: E=Sophos;i="6.23,111,1770624000"; 
-   d="scan'208";a="73332616"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2026 15:40:18 -0700
-X-CSE-ConnectionGUID: vy7kjyGxR/Gmh9ehV60Bdg==
-X-CSE-MsgGUID: Nh7ULgs8SeG+UFgtGMmUig==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,111,1770624000"; 
-   d="scan'208";a="224597646"
-Received: from dwoodwor-mobl2.amr.corp.intel.com (HELO [10.125.109.205]) ([10.125.109.205])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2026 15:40:17 -0700
-Message-ID: <e6f9aaab-ce34-4a98-94e0-0d48fe78c5f4@intel.com>
-Date: Mon, 9 Mar 2026 15:40:15 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QhMylrw6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A0B2C4CEF7;
+	Mon,  9 Mar 2026 22:50:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773096620;
+	bh=KVdfSo8Fym+8HhHhMkfp7kvgXY9fCLwo+EIudl1KX28=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=QhMylrw6YnLkmh/z7MjhCN4+z921M/ewULuQlfOCArlyc/hJxLWKD7h5MPXCZ1J9T
+	 aJL7gu1UulTyZ5ceDjW8/nnfBBRiHuGRuiGx/UDpEb9N2AvwJWxaaKYeqa0Gjd2ypy
+	 wurnQawtQ/ZCfwTh4IKUJKaaEbf8/bv9hllAcYjQFCFWXbV2NLz4axQBh9ioythbHe
+	 0d1RlJQkfFIGd+3ssiHhJiYgyiPGV3XwRd0Z6e6DMhhJfzvXKz3kq91V1EQB4UolSb
+	 /t+9+rkv5k5ZsrA6oiTAcCbhg4BYgiilxhKOwilz0Q2bBU1lK07ufYjFIeq3Aa4WyI
+	 QJlt3njVsl7tQ==
+Date: Mon, 9 Mar 2026 17:50:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, lukas@wunner.de,
+	kwilczynski@kernel.org, mani@kernel.org,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Shuan He <heshuan@bytedance.com>
+Subject: Re: [PATCH v2] PCI: Remove redudant call to pci_proc_attach_device()
+Message-ID: <20260309225018.GA636900@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 0/7] CXL: Add cxl_reset sysfs attribute for PCI devices
-From: Dave Jiang <dave.jiang@intel.com>
-To: smadhavan@nvidia.com, bhelgaas@google.com, dan.j.williams@intel.com,
- jonathan.cameron@huawei.com, ira.weiny@intel.com, vishal.l.verma@intel.com,
- alison.schofield@intel.com, dave@stgolabs.net
-Cc: alwilliamson@nvidia.com, jeshuas@nvidia.com, vsethi@nvidia.com,
- skancherla@nvidia.com, vaslot@nvidia.com, sdonthineni@nvidia.com,
- mhonap@nvidia.com, vidyas@nvidia.com, jan@nvidia.com, mochs@nvidia.com,
- dschumacher@nvidia.com, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260306092322.148765-1-smadhavan@nvidia.com>
- <0a9380fe-33b9-4527-a9d7-edc94786ce56@intel.com>
-Content-Language: en-US
-In-Reply-To: <0a9380fe-33b9-4527-a9d7-edc94786ce56@intel.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260228072129.10445-1-manivannan.sadhasivam@oss.qualcomm.com>
 
+On Sat, Feb 28, 2026 at 12:51:29PM +0530, Manivannan Sadhasivam wrote:
+> pci_proc_init() should just initialize the top level procfs directory for
+> PCI devices and let pci_bus_add_device() add the device specific procfs
+> attributes later.
+> 
+> But it is also calling pci_proc_attach_device() for each PCI device. This
+> causes a race condition with pci_bus_add_device(), which may run in
+> parallel, calling the same API, leading to the below warning spat:
+> 
+>  proc_dir_entry '000c:00/00.0' already registered
+>  WARNING: CPU: 2 PID: 179 at fs/proc/generic.c:375 proc_register+0xf6/0x180
+>   proc_register+0xf6/0x180
+>   proc_create_data+0x3e/0x60
+>   pci_proc_attach_device+0x74/0x130
+>   pci_bus_add_device+0x42/0x100
+>   pci_bus_add_devices+0xc6/0x110
+> 
+> Hence, remove the call to pci_proc_attach_device() from pci_proc_init().
 
+Seems plausible, but given that this code has been this way basically
+forever, I'd sure like to figure out what's different about Shuan and
+Lorenzo's system that makes this issue show up now.
 
-On 3/9/26 3:37 PM, Dave Jiang wrote:
+> Reported-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
+> Reported-by: Shuan He <heshuan@bytedance.com>
+> Closes: https://lore.kernel.org/linux-pci/20250702155112.40124-1-heshuan@bytedance.com
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> ---
 > 
+> Changes in v2:
 > 
-> On 3/6/26 2:23 AM, smadhavan@nvidia.com wrote:
->> From: Srirangan Madhavan <smadhavan@nvidia.com>
->>
->> Hi folks!
->>
->> This patch series introduces support for the CXL Reset method for CXL
->> Type 2 devices, implementing the reset procedure outlined in CXL Spec [1]
->> v3.2, Sections 8.1.3, 9.6 and 9.7.
->>
->> v5 changes (from v4):
->> - Rebased on v7.0-rc1 and applied fixes from the review v4.
->> - Added CXL DVSEC and HDM save/restore as a prerequisite series [2]
->> - Switched from PCI reset method to sysfs
->>   interface at /sys/bus/pci/devices/.../cxl_reset (Dan, Alex)
->> - Removed all PCI core changes - reset logic stays in CXL driver
->> - Use cpu_cache_invalidate_memregion() instead of arch-specific code
->> - Removed CONFIG_X86/CONFIG_ARM64 ifdefs
->> - Added ABI documentation for sysfs interface
->>
->> v4 changes:
->> - Fix CXL reset capability check parentheses warning
->> - Gate CXL reset path on CONFIG_CXL_PCI reachability
->>
->> v3 changes:
->> - Restrict CXL reset to Type 2 devices only
->> - Add host and device cache flushing for sibling functions and region peers
->> - Add region teardown and memory online detection before reset
->> - Add configuration state save/restore (DVSEC, HDM, IDE)
->> - Split the series by subsystem and functional blocks
->>
->> Motivation:
->> -----------
->> - As support for Type 2 devices [6] is being introduced, more devices will
->>   require finer-grained reset mechanisms beyond bus-wide reset methods.
->>
->> - FLR does not affect CXL.cache or CXL.mem protocols, making CXL Reset
->>   the preferred method in some cases.
->>
->> - The CXL spec (Sections 7.2.3 Binding and Unbinding, 9.5 FLR) highlights use
->>   cases like function rebinding and error recovery, where CXL Reset is
->>   explicitly mentioned.
->>
->> ABI Change reasoning (v5):
->> -------------------------
->> Previous versions (v1-v4) integrated CXL reset as a new PCI reset method
->> in pci_reset_methods[]. Based on feedback from Dan Williams and Alex
->> Williamson, v5 switches to a sysfs-based approach.
->>
->> The key reasoning is that CXL Reset has expanded scope than existing PCI
->> reset methods. Mixing these in the same reset infrastructure causes
->> problems. Therefore selectively exposing a cxl_reset method in pci-sysfs
->> and leaving the existing interface unaffected.
->>
->> Change Description:
->> -------------------
->>
->> Patch 1: PCI: Add CXL DVSEC reset and capability register definitions
->> - Add reset and cache control bit definitions to pci_regs.h
->>
->> Patch 2: PCI: Export pci_dev_save_and_disable() and pci_dev_restore()
->> - Export for sibling function save/restore during CXL reset
->>
->> Patch 3: cxl: Add memory offlining and cache flush helpers
->> - Offline CXL memory regions before reset
->> - Flush CPU caches using cpu_cache_invalidate_memregion()
->>
->> Patch 4: cxl: Add multi-function sibling coordination for CXL reset
->> - Identify CXL.cachemem sibling functions via Non-CXL Function Map DVSEC
->> - Save/disable and restore sibling PCI functions around reset
->>
->> Patch 5: cxl: Add CXL DVSEC reset sequence and flow orchestration
->> - Implement cxl_dev_reset() to trigger reset via DVSEC
->> - Poll for reset completion with timeout
->> - cxl_do_reset() orchestrates the complete reset sequence with
->>   proper locking and error handling
->>
->> Patch 6: cxl: Add cxl_reset sysfs interface for PCI devices
->> - Expose /sys/bus/pci/devices/.../cxl_reset
->> - Only visible for devices with Reset Capable bit set
->> - Write "1" to trigger reset
->>
->> Patch 7: Documentation: ABI: Add CXL PCI cxl_reset sysfs attribute
->> - Document the new sysfs interface
->> - Explain scope, visibility, and error conditions
->>
->> Dependencies:
->> -------------
->>
->> This series depends on:
->>   [PATCH 0/5] PCI/CXL: Save and restore CXL DVSEC and HDM state across resets
->>   https://lore.kernel.org/linux-cxl/20260306080026.116789-1-smadhavan@nvidia.com/T/#t
->>
->> The cpu_cache_invalidate_memregion() call used for CPU cache flush currently
->> has support on x86. ARM64 support will be addressed in a separate RFC.
->>
->> Command line to test the CXL reset on a capable device:
->>     echo 1 > /sys/bus/pci/devices/<pci_device>/cxl_reset
->>
->> Basic cxl_reset testing was done on a CXL Type-2 device: writing to the
->> sysfs attribute, exercising the DVSEC reset sequence including WB+I and
->> init reset, restore. Further testing is in progress.
->>
->> This series is based on v7.0-rc1.
->>
->> Srirangan Madhavan (7):
->>   PCI: Add CXL DVSEC reset and capability register definitions
->>   PCI: Export pci_dev_save_and_disable() and pci_dev_restore()
->>   cxl: Add memory offlining and cache flush helpers
->>   cxl: Add multi-function sibling coordination for CXL reset
->>   cxl: Add CXL DVSEC reset sequence and flow orchestration
->>   cxl: Add cxl_reset sysfs interface for PCI devices
->>   Documentation: ABI: Add CXL PCI cxl_reset sysfs attribute
->>
->>  Documentation/ABI/testing/sysfs-bus-pci |  22 +
->>  drivers/cxl/core/core.h                 |   2 +
->>  drivers/cxl/core/pci.c                  | 537 ++++++++++++++++++++++++
->>  drivers/cxl/core/port.c                 |   3 +
->>  drivers/pci/pci.c                       |  21 +-
->>  include/linux/pci.h                     |   3 +
->>  include/uapi/linux/pci_regs.h           |  14 +
->>  7 files changed, 600 insertions(+), 2 deletions(-)
->>
->> base-commit: 6de23f81a5e0
-> 
-> The commit is 7.0-rc1. But b4 shazam seems to fail when attempting to apply.
-> 
-> Applying: PCI: Add CXL DVSEC reset and capability register definitions
-> Patch failed at 0001 PCI: Add CXL DVSEC reset and capability register definitions
-> error: patch failed: include/uapi/linux/pci_regs.h:1349
-> error: include/uapi/linux/pci_regs.h: patch does not apply
-> 
+> * Dropped the sysfs change as it is supposed to be replaced by static resources
+>   change.
 
-nm. I need to apply the save/restore series first. The base-commit should not be the v7.1-rc1 commit. 
-> 
->> --
->> 2.43.0
->>
-> 
-> 
+v1: https://lore.kernel.org/linux-pci/20250723111124.13694-1-manivannan.sadhasivam@oss.qualcomm.com/
 
+> NOTE: I don't know if there is any reason to call pci_proc_attach_device()
+> before pci_bus_add_device(), but it definitely causes a race.
+> 
+>  drivers/pci/proc.c | 3 ---
+>  1 file changed, 3 deletions(-)
+> 
+> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+> index ce36e35681e8..de894ae70e9a 100644
+> --- a/drivers/pci/proc.c
+> +++ b/drivers/pci/proc.c
+> @@ -463,13 +463,10 @@ int pci_proc_detach_bus(struct pci_bus *bus)
+>  
+>  static int __init pci_proc_init(void)
+>  {
+> -	struct pci_dev *dev = NULL;
+>  	proc_bus_pci_dir = proc_mkdir("bus/pci", NULL);
+>  	proc_create_seq("devices", 0, proc_bus_pci_dir,
+>  		    &proc_bus_pci_devices_op);
+>  	proc_initialized = 1;
+> -	for_each_pci_dev(dev)
+> -		pci_proc_attach_device(dev);
+>  
+>  	return 0;
+>  }
+> -- 
+> 2.51.0
+> 
