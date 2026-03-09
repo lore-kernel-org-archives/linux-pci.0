@@ -1,46 +1,46 @@
 Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011064.outbound.protection.outlook.com [52.101.70.64])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36B613EDABA;
-	Mon,  9 Mar 2026 19:09:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0CBB3F0777;
+	Mon,  9 Mar 2026 19:09:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.64
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773083384; cv=fail; b=hx4skmBdY4Sioh6236ZhHAvJfFwTC/lXK+C3II09UPyVhxQvxvpKc1Haflcnlqhhwkvz7mC0YwDS7kkWwvlB8uzIIlZqb8SeeU0W0oxdcUfFlBJBcsJZn7YWOfhAOogY4UYzfUTA5ZpySR9Rr3RlfZhOtXtte1/e5n/93Vl/tEg=
+	t=1773083387; cv=fail; b=bFRCBEfbOdgpxy4jXwOgWv5cpci4WGu5gJ3O8CRuoodU9D2IFwm6ZW8PtakQrOCIlxxstXEA+pnPDHHY7pklMxisTxLBNg/Cg072DE+HHwRpC8RTgfl944ZUFdH68porTegnSpZQryRQY8NifFZkH+9dyF9x8ZW81nvRpMokO1s=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773083384; c=relaxed/simple;
-	bh=DNVdHvtaODP1EQje0BMvE+lT1pjdrOBndHPz/7rCees=;
+	s=arc-20240116; t=1773083387; c=relaxed/simple;
+	bh=A750KnHIxGrfzKYIT2RMRGGFLsWkXENqhlTZ2hJ3ivI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=QgSYyCIDdnztoK1WQKW4ZZOFYndRB6TdRgfp2XBza9YrjztH6mYYIOYtefqklIEcQANj8B0Z0LfpuDIiO6CawKmBEOK3gFpFGGzkOm6kqE/RSnWm8Qp9lWW/0jxf8WW7hSvqYYsUt9/zMemEL4vcaR09hMmKhufXI6WxDEp5f60=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=FD6km2ZJ; arc=fail smtp.client-ip=52.101.70.64
+	 Content-Type:MIME-Version; b=uQ7dJ42tEdqB9ttyDv9YumTFE0vZCu27UvT+J+fNjZ+33QvlAEnprm19ZDCNLeXdCyqI8xfrEOO5v7p4JCdna4mAius7xSzkKlBGr1tL9qgt8HIjJwU7Y1Lfq9SvpGOfOhvuK/FWgVtOGL9Tx4RYJbXkJIvVCxMjw94y350Dz/Y=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=BQ1b8tFE; arc=fail smtp.client-ip=52.101.70.64
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="FD6km2ZJ"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="BQ1b8tFE"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=T0x8fzaQ9LBEfJRO/ZP1+fPxCWGZLPOn4ffhyycS8wSFAd0CENRh9I4r7KzNZ6JTQSW3gDeQOcsjuT0ey4GtFvmhI7irkuxjZuBl6BKEElcEOlvtgT/2WhWMjWy+Z3S3JrZwBpcaTevvgcS50MdDiuPBbQD3vvefQ6JKzx/9NWLkbkjO5xZ4wfP31GXUehIJACpAqICgANsHMRxIqMyWI6AXdy6m0AMjp93a5R8uoIbdFDt6fSYmY5MhaJUcZ7bkTl1pqnnTtH2ROtT77N+9U+ph50TJdN/DqMp8yAnRL23lv+5OUMsucTtagXnt1SRv8f9sjeYW1/HtGZS/Y9Rm2g==
+ b=rHY1yiC0CmwhdXa9WuNiDEmogzsd//23QvIcF1YE+Yfre1RAbqLzm8NnHZre0LtzLwca1woastQBEP/DdDZbtjTRMQ2rLL5UDaLwgTMEBo6BdrIk412oR/3qhthJXHCU9jSZb3dH9o7VElkNQGpob8wpO7fJfBEiZJR0NnDxfey85IdKKP4TV1sp2VeH/ue8eJu8tdZhMBRh6eOcyX7GDZeIOb0QUtvsU2Cd2L9gdXBCRR+9ByMsbE8u/omk3q1t1SiK5aOJZy5pN+3Wrsm7Hkm1Pij264FVDXedjhGfFKmDy/E5wScrsHTojFOPKUFhvM7tDcjR/trALX8z7yvu0g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=FyIQZr+rDW6jLC91REqJJkAGNC5vWrLn3ug122BI95M=;
- b=F30Hmg2rM5eJCtE6FOSHiBEa37HCIQnfaXmAvDPC22Fi0KhZyzya1VQlrStfkqcRR+YOjABGgq+eJXseJG5eowohmjhweT585QzcpCfZOc74M0/bLN37bOFGvr7nBmCOg7S6vIy9F6KnR0Q4ALyK0I+mYKFBdYDCx8EyUzdr+n5nTIo3JAMDoLX6xlZsziR2Z+0kKwOZP5t35eVXgZQNc/F0PwsofQNypU4lUN+DZNPwYUELkSOnE74C4O1KJoUgn1Zpr1NkdVzBuxGK8kGjJKapcJn+ig4FNQa+yaPWl62b/BV5IrUuy1L14zrPOHBIoRy9IkqKEwDRJvtQpZ52ww==
+ bh=DmS9KBfQea2O+dTupwy5sE9Uj0fLSTJYjZsAJfwOkdg=;
+ b=dza4iUTUMJaIBdTJKsNyUr4hikHz5I+fZq+tqoa196OTR3U/wS9lvHZYG3IuxHvi9YqRhN+9KMcnE9+OpxkFR5cnJlSCpdKUvjszG+w7/4PsAYFBmG9WKAm2yBOdJaE+9rsYSshTEMceEuOGtVeSU4xZJTy2fRjzYNAEEcVqfD0MsHdtoOhn+6Q35wh9+BcZ4EuUAAYbyMaaVXITniBf/ksv1jrQqy0bRv0nsyYq43X6KXrIGcF7nQk7+/+zq4uegZ7kOsAQ78TPjuQW/JOc/gwSMadkUxftIZT9r/RpJQBYkz0H0YlCUL8LwQq58wr35imLI7R/JF5hTaD+1ElLSQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FyIQZr+rDW6jLC91REqJJkAGNC5vWrLn3ug122BI95M=;
- b=FD6km2ZJIX8hR9f4lANPRinp/YVJrj6y5/+pAoCFJ5OU9goMQ9e3HXu60mOKsKblgJmItYbZdUPyXy5hybky0qZfUeJoInoSKrbNeYrSDUfiSyleVHaLnH5bZBIyrWzoqq0NKoj2nCO0+Zbicb8uAB1F4Bwq+dlUoJ6NcJKc4MJpFKJOKW4lO0WVrqMc56a3IMl/LQAU7AciKdFCIw8qmFhdoYGgwytsbhEiVecfdeQRm0s19XpT8XL17sQmFQtrJltfHCsSV4eFETDCk9mJT4cMlX8UsvZYCj322zmtg9rRA/VFjn7fEVjzaWKldICX9aBJVBlykBvhewB/1eOiuw==
+ bh=DmS9KBfQea2O+dTupwy5sE9Uj0fLSTJYjZsAJfwOkdg=;
+ b=BQ1b8tFEfLU6431Qe6MOefdNb+qMjriP4kQLlTrbmxxauw2JxGaUIpYXHNM1C5g4cGtHKnw4d+kBEg1VeiI1VFx15aAmhQXaJZzzO7+ZblbFxYhRuY7b5SaYR1NyUSLq6BgEfNyEQo4kKfWnWV6teleoIjMbvphY1Gk+BImG+RQ85NwfHwlShbTQ+KpxejiAgXDFFKdIlnITuT4YJCA00hBWrN37F3qmKEB+ttsdmUivoVD5MGHzC+61PBySflPEgiI2Cm0ZPmPhuufHUne5hZLFEHxMXp2PMIDIgsyG2vkOWlYpXNoU2NJ+2BHCqMipDYrsWvov909lS846NXbizQ==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
  by AM9PR04MB7540.eurprd04.prod.outlook.com (2603:10a6:20b:283::14) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.25; Mon, 9 Mar
- 2026 19:09:25 +0000
+ 2026 19:09:28 +0000
 Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
  ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
  ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9678.023; Mon, 9 Mar 2026
- 19:09:25 +0000
+ 19:09:28 +0000
 From: Vladimir Oltean <vladimir.oltean@nxp.com>
 To: linux-phy@lists.infradead.org
 Cc: Vinod Koul <vkoul@kernel.org>,
@@ -66,23 +66,24 @@ Cc: Vinod Koul <vkoul@kernel.org>,
 	netdev@vger.kernel.org,
 	spacemit@lists.linux.dev,
 	UNGLinuxDriver@microchip.com,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>
-Subject: [PATCH v3 phy-next 08/24] PCI: Remove device links to PHY
-Date: Mon,  9 Mar 2026 21:08:26 +0200
-Message-ID: <20260309190842.927634-9-vladimir.oltean@nxp.com>
+	Sandy Huang <hjc@rock-chips.com>,
+	=?UTF-8?q?Heiko=20St=C3=BCbner?= <heiko@sntech.de>,
+	Andy Yan <andy.yan@rock-chips.com>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>
+Subject: [PATCH v3 phy-next 10/24] drm/rockchip: dw_hdmi: avoid direct dereference of phy->dev.of_node
+Date: Mon,  9 Mar 2026 21:08:28 +0200
+Message-ID: <20260309190842.927634-11-vladimir.oltean@nxp.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260309190842.927634-1-vladimir.oltean@nxp.com>
 References: <20260309190842.927634-1-vladimir.oltean@nxp.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: VI1PR06CA0098.eurprd06.prod.outlook.com
- (2603:10a6:803:8c::27) To AM9PR04MB8585.eurprd04.prod.outlook.com
+X-ClientProxiedBy: VI1PR0902CA0044.eurprd09.prod.outlook.com
+ (2603:10a6:802:1::33) To AM9PR04MB8585.eurprd04.prod.outlook.com
  (2603:10a6:20b:438::13)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -92,359 +93,162 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|AM9PR04MB7540:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2b3cc4e0-41c4-4e49-184d-08de7e0f6100
+X-MS-Office365-Filtering-Correlation-Id: 7eaf30cf-b5b6-4c6c-1e2d-08de7e0f6314
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|19092799006|1800799024|366016|10070799003|7416014|376014;
 X-Microsoft-Antispam-Message-Info:
-	RQM+Euh/xKDA8qddHm5NL+fM0OVzpt/xI6KjE9U/iaMm4KJCvqePSZri4EJkwwnUQRT1y6QtSaNVut+r6XKiHxDKVju40b6OSRmY32tXtCbYPhnYfZVUbZA9hmox4i2J2MP12RDMn4XEQvQqnhzzKybXlc2nDOCpR7VZ5k5AowjkswotwNjjajllZcMHInfBvPqMTgRBfQ2fY0t9UWdhp5CkRHxvN7W8NE48jCx4gMyfamY7qAr0Xg6bUBboLOczaakN9mqfSZ+6lSr4G8GZq/iXTbvdqOllVyWRSpJsxnPpYgZUhytw6tlxmT2s2i8dx224U7E5GkJWyB6lm9byDP0YbUehpgm2L+y95V26WATn7tmH8W0zN+CZ0CHxcxeC8pmHy0oVba7nqF5ZkO97IBNLwDegsL1Nl4qa/DQudzp4Hc+MThkwKL5tmPZq7gLDbr0AgbJKMr79ghw7yzZW/BFCBs/pE/9j1jrae/ITRDZ+jRyie57lFf/uhrTaJDHFRcjdyKtTVZolsaGHhK+mAw2CiJw12jDvmWBRiuflamyymvk73hZfqDRwjQJ15I5aok2fIaXsWNwcjcuTZQmB46ZZDDrz8sNToWVmwWtCAEIcW91DBFYWyhDYW65yM0ndePv8tUzUC9DI05Se2kK2rdon8/cYMb3hje+EKz6grZhlyFN7PachNTHdhPsj3WR/xblo+i+h8VOmqXRlS9H++DH7KZA4KarPRRHgeHxtylA=
+	XYO9VnbvoybktQ4Furv3KSo4w8ZCgs329K9xDBh3mrn3arsSmBVGwfVKixjKlo75ZAag+5143gs3MhdYrToQ2wu6jG9rrikuwqEtujOWTSUPsUuCVrscPVUSW/mS5FyDAU1ypsT3WxfNKjkpUr70SZ9JP2TU5/2QMWhfwu5c/ik10SX2t78SpjQYCt7ueApctsD6YN2gTBPPzUcU5AV8jK6kJtGDBVoCH3fzKIAjxgPgiv9IXxDAXS4mb5IjRCbivL3Tjmo7uoRlhleWXMzCyzwHEvAkmGwGfBxQaIVgVLDatYNqUCtyB1h4nyRtJTwvmg9dDd4c3IRdc3hNkETQfKSfXXa+FLyFQuDhV/W+35cCul8IR7rZFRJzJZv797ifc/k9PJy2ieXivtbs2ZP9UuqKtcDbUgL23elZFYZqRjMqvNUMJSrqpA0xWHHFCAp4mZ9ddEN9hP9gRebIN/87Bi1lX8zUDf4SRWJPiJEk/TP+XOB1U2McLiFj6ik7OiF/+C+Q/8/gb4hoUVVt1CZkSpGSO70f3XG2JgSNdrC6DvOn2lrA00DoIzgjbyH3kiG4+BfT4SQJyQQjVY7xVJKdl7lTi0sOXHrjlT3hgfxQm+1pNZ9i0D0Xy33C1RvGhBVsWoILmig+qvbBl7aoqjTundf9+aVXZ1+bkDdewMMaGfzHv3tVJOUrxmhyjoWCnUo5ANos5osdZ/LFo1ABtHfH2/cmiAGSVCZ9V4LQE6omVWs=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(1800799024)(366016)(10070799003)(7416014)(376014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?UFQ2U2JrdG1IYzg4bmxET3N0anFyTkRkNzRkM0VoRGVFRDg3SGJKSFF4T0x5?=
- =?utf-8?B?UmNRRThEaFFxdFl6WW82N2gxK1l6RktHR3NFZjJURTZBeUtjSUl5cXY1Zm9W?=
- =?utf-8?B?d3VkczZFWWJtMThIaHF6UG0vdW5jS2RFdURQaGdDRGtDd0UrQTdVWmUyVVFP?=
- =?utf-8?B?UlhVam5vMmxsSytZQUVnaldENzhiRnVLTzJxbWZISVczRjN6LzcwVDY2UmJY?=
- =?utf-8?B?UFpYYSsrS2NnaFNXc0tpY2QxQktZSkwrWlRZNGg4TzY3d0RwNDhqMGo5cVJj?=
- =?utf-8?B?UElBbDBDbVRWaXVKWjZJbkF0M3E1WXViVXF5RUhRT2ViUW1kMGlkN0d0bVo5?=
- =?utf-8?B?aFJTMnN5ekM1NXg0OUJ6OWdqZTBRNE5YUk0zaE5JRVlXZTJFYlhwejlsdUhT?=
- =?utf-8?B?a1VUcVZSRHJrN2xTRzlrNnpwdlBrSitSOEhFcjhDVFBJNmpMcDJhZVUzZXZX?=
- =?utf-8?B?cUdMRW5tU3F0TVRPNUtmbmNJb1J0MzlJbE04MHc5NVBJeVZOZE5kalhHRFpx?=
- =?utf-8?B?UStyc29BaGVVSHhZdWRrZEppNmFqYndPR3VOSXJUT1dlOHYxaXB1WEZiTjRj?=
- =?utf-8?B?NlFCaGZLMUJDOWRINHM1R3l1SWx1UGpqVnBmd3VlZm9FRmhlTGVVQzVESEZY?=
- =?utf-8?B?bzc4WVRUTjk4Ri9KaEdlZnMrQkYxMW52Sml5Rkp5NTI0dmliZ1ZOQzIrV1Jj?=
- =?utf-8?B?NzI4RzZ2a0RnUGNhSnpYbHJwdUN1bVBMbjVuZ0xWSzZ2ZVRKU0R4TTN5Nlc5?=
- =?utf-8?B?dWZuZ1Q2SlNmWlh0c293bHNIdWN5bzlmbnFTZmJqQWhvWVB3bUdQc29nZDJU?=
- =?utf-8?B?aUVwNkhDeThCUVZLL3Zyakt4N0VpeE0vSDNkcXJNNVhXYVNwQU5VYTRQV3hY?=
- =?utf-8?B?akV0eGhqK1JkY2ZGR3hEUjdWNUx6VmM3cmoyajRqZXVRU0xQamFsUUxWYlFk?=
- =?utf-8?B?SFU3QVdhaEtNZjVTY2svOEFMeUg4NDVhSWVUckg1M0xNR0tZNW0rUnZXNFJo?=
- =?utf-8?B?N3NTU2ZOYk5jMDdaSE94MHA2b0w2ME1yMTlkWE9QOFpXMFR0WEtwd3paczdU?=
- =?utf-8?B?V0V0SEFyRFhMTkFGOFgwQ0hkVHFrWlp1NjVDM0xubDkrL3kvQ2ZWejY0WS9K?=
- =?utf-8?B?VTg2ZU9nTUlNcGR0K1UyU1dXQTBacnRBV1RTZ04vMkNTRFdUakpDVXdWT2Vu?=
- =?utf-8?B?dGxXbUgxNys2aXVBUXJBWmt2c1dlYmJvTnIwK1VEZ0lHYzlucEdLYnNKZlJ0?=
- =?utf-8?B?SFkzTm9ZMVpXNVFVZWljRHdET29WTERhVmtLY2Q2cGVXblhpN3lrLzhkcUQr?=
- =?utf-8?B?ZFBzcm5zbC92OTVDTkNIQnFDZTFvZmRUWHJja25HVk1PWVZWcXJzdTR4bTVh?=
- =?utf-8?B?eHlDcjErck9NNHd6OFFMMHRrUTZjY05TaG5nVWpRaDR3RTYyZFM3ZnJXSU5U?=
- =?utf-8?B?S1lLZDYwWXB5NldBZUxpcnJSQWhNZU1BTzZGNkhneElkdnNnOTBENFFLQkFY?=
- =?utf-8?B?Y3VsQTRwdTM0VnJKNituSmJjZVlUTXVZRWoyeDNONmtUUCtOajZWb1FBTE9P?=
- =?utf-8?B?Sm5YU2cyNVhzQU40WXg4N2FaMjdmcDNQR0RuM1NSS0FrUjl1ZnFaVERHYXcx?=
- =?utf-8?B?azg3ZHhCWHFmRE13NXV2YzdFVTE4UTZhZ3k5Q1M1S1dpU2QzeU5Ka0hOTlNH?=
- =?utf-8?B?MXdMdGtwZFdBUjlUeDRzL1BHSmY0ZjZaR2lBUVRHMXgxaUFoMVdTMWZOVWx5?=
- =?utf-8?B?L3BOVmZLM1p4OWd0cUhEMkdLRzI0V3k5VnI2cW9WRExQS3J2VXo4SjM4ZER3?=
- =?utf-8?B?ZWxUeXMzR1Z4Y3hEUll6YW94SVp5T29GUWpOVk9DMnA0NXFHZ0x3TXZwTGRG?=
- =?utf-8?B?cW1tUnQ3R3JTWkFwRy9lMUt5V050enBsV3FkS3lyY09uTEtQMFl0anBucEN1?=
- =?utf-8?B?aHN0cWE5YjhtbG9ITi9IcmhMK3lBVXhUbkFBVDUySllsTVVUbTJEUnpPUENI?=
- =?utf-8?B?L2hQbGdIdGJlTHhVN29tZXNTdmhxZ045bWNrUSszcWNiOTBEVGdib1FvMThv?=
- =?utf-8?B?Z0RlQm9nQzczcDJoRklsVjUwM2o4dHp1TStUSkl1ZGZrUkxYTEdmdlpHR2Zn?=
- =?utf-8?B?eWY2N05rZ1VUeGV3TmxwVFZ4NDc2QTRaOTVxTEg3SHZpOWtGeWJOUG5GOE0z?=
- =?utf-8?B?V0pkZUJDZklaS0lycEFHZXJGOFBrdEhBdGNVdGNUbHNKaFAyTjUxRmREMkNM?=
- =?utf-8?B?L1lkai9xUnJaUWVOdHBKQ1lnTG9LQ0d3UlBKOG5lc0grNmV6eWJxZlhER0tT?=
- =?utf-8?B?U3hyTmd6YmdMOHVHQ2MyaFJHNURnbmJyeUxkQlZ1Y1gwREVYWXRYNEhlV09G?=
- =?utf-8?Q?PI7ZEZXqGt6BuPtP1m1FjfLstKxRsnhiyn9g6Vmva+yf6?=
-X-MS-Exchange-AntiSpam-MessageData-1: FaPqz+EoCPEwVLqgDM6piE0VzaF2ozw9MPQ=
+	=?utf-8?B?b0h6WkwxRGZSZmcvSTAzZE14c2swVVFnam5ZNVpxSXVoNE1sbkZFQnNRdExJ?=
+ =?utf-8?B?R2pIY0xRSFpxYlJLMDlwYklLdjJjYXhvbmN0OEtlWCtQdHNLampXazRWcG5F?=
+ =?utf-8?B?aWd1T0ZtTGZ0em1nRWtjdWhMcGd3ZXNWODExdFg4bmkxWVVIQ3pweXVhQ3M1?=
+ =?utf-8?B?THFCckQ3VjFIUEJJZzNvZVlrM2hkbUFzU2Vxa0RQazN4aGh3QnlpRDRQaUVi?=
+ =?utf-8?B?NE12YlF0elFLYkxGZmNubmM2UHhFdGdyNUU2NEREY2lMRyt1UmthdFIyN2k5?=
+ =?utf-8?B?Y0hxR3ZnVFVteGJWTllVVWtidWU2ODgrdUwyQlFqN0h0aXV1REZ2bFBoOWMz?=
+ =?utf-8?B?SDJWekw3cVU1ekxMU3pIWFJWdHcraGtmYm11WHlQQkN1cU1hdVhBYWRwaVBC?=
+ =?utf-8?B?SEhEWlVkYThCRTEvQXpFUXNrTi9pTklFQ0RUUGE2dzk0WndxN1l4VjBMZnFR?=
+ =?utf-8?B?Q1M4K2ljb1k4VlI5aW40Ui9hanMrdTd6b1J3NHRHSlBmeStMWWplR1cvMUZx?=
+ =?utf-8?B?Z3AvM0ljeFd1eEtUUkROWHNpVzFqdS96UzlqS0JJUVpDYmQyWG5oeThuV255?=
+ =?utf-8?B?SjNOQUFtaXc3NGRKMEZaVXA3M3hpT0hOWDRTOXp6TCtaWUNCRkJCdkQvYjhM?=
+ =?utf-8?B?NDVWeW1sRmZPdit1d3BydDJMUkZ2U0Iyb0NHS0pzVmk0L0t6WVlsOG1YdTNE?=
+ =?utf-8?B?MW8vMEVpUy8xOExLbCtKY0thZElzOXhRSk1iNWN3TUNHTlVRUlpXWExsdDlp?=
+ =?utf-8?B?NzVYRndUSTRiMzhya3cvZlQydDhjSUlXZ3FEODdNZExQWmFWZTdyZDlGMFlv?=
+ =?utf-8?B?YnREL1U5T2RSK0MyT3J1REtGcHBhZS9BK2lCR0ZzQk5QcE02dzA2WEZUNFJC?=
+ =?utf-8?B?UkxBZENpSk1qWWErR0lsYVJ4N2xpSG90dEM5Y041b1lKcU4vdEN4RlJtVEtN?=
+ =?utf-8?B?Z1VlMDZWdHVMcmJ5RGx6WndnK3QyMEpYamN4T2dvUzBJZkhLM2krRFh1cVR0?=
+ =?utf-8?B?dTFOb0VKb3N5WTdiZkg3cEtDYi9TSXBlMm1HSXd4bFlTUmFiZWp0dmx5d3JO?=
+ =?utf-8?B?L1dFdmNsTGZlTThsYkNxNHF4d2dEaVJROFlJVVEwRVBHdEFtaDFzbXhGR2Q3?=
+ =?utf-8?B?d29hbllIOW1EeXgwTHVzVlBoWU1BSTVkTnhaRlFmU2hod1crRmNtWW9kY0p5?=
+ =?utf-8?B?ejRZSzF2TlBpQ1JXcnl6Q3VkSVNkVnh6a0M1K0NtTXBCSVA3NEtweFBMVE5Z?=
+ =?utf-8?B?QjB5OXhCa1FlMzB2d2toTUJwVmdVZTMwZHJLbG5BVDFtSzl4TGYyUytjL3Bj?=
+ =?utf-8?B?dnFueDIrdUxlUkp1a2FNWlVZbDQ1Vlg2SkoxYmg4SlhVaGpOcWEwTkNSYmti?=
+ =?utf-8?B?L3oyYXJiRXhYTXd2TmtISFg0M0k1NThZeDFvK2dSa3FwZVdMUTE4Z3R3NU5o?=
+ =?utf-8?B?OVFDYWFvT205K1BoSzFPVW5DK0VZRjJyNlMyRUZreUZHeGdJSW5tSDV4cldz?=
+ =?utf-8?B?SVNLTmNrSldEWG1vUzJoUmNSYU9aaVBIcXBDSjNQZGppWDh4SXMxNWRXVUhF?=
+ =?utf-8?B?dEQ5MkdtS2xzRTVvV1pqR0Z3bHN2VmRkR3FoQjhMeUdFSXFNcU5zZ20rYUkv?=
+ =?utf-8?B?d3lkUEl3UllUN3J6YkxYRTBmVHRteEFKRnJRd2ZMWHVaMVhxTDU2NWlIU3V1?=
+ =?utf-8?B?eTBvR1NMeStzaFBUVFhLQTc5TGcyak0wekNMTllBeHY1MXdhV0c0c0RwUmtx?=
+ =?utf-8?B?SERreVJaaXNVT29KVmtHNzQ1YldRa1laZCszN1ZrSnVVRENaaHNMYTB6NjdM?=
+ =?utf-8?B?RnpteUErYWoxZTRQOU5FOWV3dEJjM3J2bjQ3NUxqcWVaWDRGb3g3R0NkRjI4?=
+ =?utf-8?B?SUtyVFVYVUN0WHB2V0k3bFk5eDZ5bGpWd1dieWlXQzJKTnhuMEhLZEhtVWt2?=
+ =?utf-8?B?YmREMTh0dWE0SnJsNzZTU3BEbHdRMUlTeHpRa01IRzRmeVhZWEpJemt4ZDBE?=
+ =?utf-8?B?aEk3UEkvN1hSYzhYcjBYQ3RzSTI3ZlEwajlPMS8ydXd6Tm1XdEVxOXVjLzJ4?=
+ =?utf-8?B?SGZ1ZDRhR2p3dXZnVDcwZDRMU1d6bEhISFg1YzZhUVNQOFo4dm1PSW00NWgw?=
+ =?utf-8?B?ZlB5R2tjbk9ZNGlLOVhpZVN2c3FJdXdqWmFGQmVsZ1l3UnJhQnRESGNhcUxJ?=
+ =?utf-8?B?c2R4eE5CYm1IYXJHaGlSNFl3QVJtRTlLZ2hqTXZWazBidWQ3V21Zb3ljTmNP?=
+ =?utf-8?B?Wkh6UFp2K3IwRHVWOVZzeUM1VmJQTjJRN29JS1VuME5hcHBPenhJVEk5NXRt?=
+ =?utf-8?B?d0lIY2tyKzlZZmFWQ0lDdjVyalN1WXdJSnJqMVBETXNHQUVNVDh0d2RpSjlL?=
+ =?utf-8?Q?CY4fWFVtXH8Pz3W/aNlLz687hFitI4o6tGVTKV1x9WznX?=
+X-MS-Exchange-AntiSpam-MessageData-1: B4WtVxcUn2ZezDiKFmgw+vaRgmX+FQXlkRI=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2b3cc4e0-41c4-4e49-184d-08de7e0f6100
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7eaf30cf-b5b6-4c6c-1e2d-08de7e0f6314
 X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2026 19:09:25.4006
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2026 19:09:28.6058
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ATS3sS4oD/d1GXA76s+gQjUi6IVyKHzoRN2s6gAbts6F2dvjij3ytsEaH2PP59FaioT8lvdri4F+GlXt6Yl8bA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: x+pr+dnsQgG25StZQZZgiJZmjDw7G1CWNvAriUxqHPqHLvpslWNNeH7D9XxAsqYvvW03qr7hxylJO/wquDxR2g==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9PR04MB7540
 
-This is practically a full revert of commit
-7a4db656a635 ("PCI: dra7xx: Create functional dependency between PCIe and PHY")
-and a partial revert of the device link pieces from commits
-dfb80534692d ("PCI: cadence: Add generic PHY support to host and EP drivers")
-49229238ab47 ("PCI: keystone: Cleanup PHY handling")
+The dw_hdmi-rockchip driver validates pixel clock rates against the
+HDMI PHY's internal clock provider on certain SoCs like RK3328.
+This is currently achieved by dereferencing hdmi->phy->dev.of_node
+to obtain the provider node, which violates the Generic PHY API's
+encapsulation (the goal is for struct phy to be an opaque pointer).
 
-The trouble with these commits is that they dereference fields inside
-struct phy from a consumer driver, which will become no longer possible.
-
-Since commit 987351e1ea77 ("phy: core: Add consumer device link
-support") from 2019, the PHY core also adds a device link to order PHY
-provider and consumer suspend/resume operations. All reverted commits
-are from 2017-2018, and what they do should actually be redundant now.
+Refactor dw_hdmi_rockchip_bind() to perform a manual phandle lookup
+on the "hdmi" PHY index within the controller's DT node. This provides
+a parallel path to the clock provider's OF node without relying on the
+internal structure of the struct phy handle.
 
 Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Vignesh Raghavendra <vigneshr@ti.com>
-Cc: Siddharth Vadapalli <s-vadapalli@ti.com>
+Cc: Sandy Huang <hjc@rock-chips.com>
+Cc: "Heiko Stübner" <heiko@sntech.de>
+Cc: Andy Yan <andy.yan@rock-chips.com>
+Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Cc: Maxime Ripard <mripard@kernel.org>
+Cc: Thomas Zimmermann <tzimmermann@suse.de>
+Cc: David Airlie <airlied@gmail.com>
+Cc: Simona Vetter <simona@ffwll.ch>
 
-v2->v3:
-- remove dangling set but unused phy_count local variable in
-  cdns_plat_pcie_probe()
-v1->v2:
-- fully remove struct device link **link from struct cdns_pcie and from
-  cdns_plat_pcie_probe() error path
-- collect tag
-- adjust commit title
+v1->v3: none
 ---
- .../controller/cadence/pcie-cadence-plat.c    |  4 ---
- drivers/pci/controller/cadence/pcie-cadence.c | 16 +---------
- drivers/pci/controller/cadence/pcie-cadence.h |  2 --
- drivers/pci/controller/dwc/pci-dra7xx.c       | 16 ----------
- drivers/pci/controller/dwc/pci-keystone.c     | 31 +++----------------
- 5 files changed, 5 insertions(+), 64 deletions(-)
+ drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c | 25 ++++++++++++---------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-index b067a3296dd3..fc39c01b7964 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-@@ -41,7 +41,6 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
- 	struct pci_host_bridge *bridge;
- 	struct cdns_pcie_ep *ep;
- 	struct cdns_pcie_rc *rc;
--	int phy_count;
- 	bool is_rc;
- 	int ret;
- 
-@@ -122,9 +121,6 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
- 	pm_runtime_put_sync(dev);
- 	pm_runtime_disable(dev);
- 	cdns_pcie_disable_phy(cdns_plat_pcie->pcie);
--	phy_count = cdns_plat_pcie->pcie->phy_count;
--	while (phy_count--)
--		device_link_del(cdns_plat_pcie->pcie->link[phy_count]);
- 
- 	return 0;
- }
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
-index a1eada56edba..0ac980249941 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence.c
-@@ -222,7 +222,6 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 	struct device_node *np = dev->of_node;
- 	int phy_count;
- 	struct phy **phy;
--	struct device_link **link;
- 	int i;
- 	int ret;
- 	const char *name;
-@@ -238,10 +237,6 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 	if (!phy)
- 		return -ENOMEM;
- 
--	link = devm_kcalloc(dev, phy_count, sizeof(*link), GFP_KERNEL);
--	if (!link)
--		return -ENOMEM;
--
- 	for (i = 0; i < phy_count; i++) {
- 		of_property_read_string_index(np, "phy-names", i, &name);
- 		phy[i] = devm_phy_get(dev, name);
-@@ -249,17 +244,10 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 			ret = PTR_ERR(phy[i]);
- 			goto err_phy;
- 		}
--		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
--		if (!link[i]) {
--			devm_phy_put(dev, phy[i]);
--			ret = -EINVAL;
--			goto err_phy;
--		}
- 	}
- 
- 	pcie->phy_count = phy_count;
- 	pcie->phy = phy;
--	pcie->link = link;
- 
- 	ret =  cdns_pcie_enable_phy(pcie);
- 	if (ret)
-@@ -268,10 +256,8 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 	return 0;
- 
- err_phy:
--	while (--i >= 0) {
--		device_link_del(link[i]);
-+	while (--i >= 0)
- 		devm_phy_put(dev, phy[i]);
--	}
- 
- 	return ret;
- }
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 443033c607d7..35b0b33bc6fb 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -82,7 +82,6 @@ struct cdns_plat_pcie_of_data {
-  * @is_rc: tell whether the PCIe controller mode is Root Complex or Endpoint.
-  * @phy_count: number of supported PHY devices
-  * @phy: list of pointers to specific PHY control blocks
-- * @link: list of pointers to corresponding device link representations
-  * @ops: Platform-specific ops to control various inputs from Cadence PCIe
-  *       wrapper
-  * @cdns_pcie_reg_offsets: Register bank offsets for different SoC
-@@ -95,7 +94,6 @@ struct cdns_pcie {
- 	bool			             is_rc;
- 	int			             phy_count;
- 	struct phy		             **phy;
--	struct device_link	             **link;
- 	const  struct cdns_pcie_ops          *ops;
- 	const  struct cdns_plat_pcie_of_data *cdns_pcie_reg_offsets;
- };
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index d5d26229063f..b91ab37845c9 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -9,7 +9,6 @@
- 
- #include <linux/clk.h>
- #include <linux/delay.h>
--#include <linux/device.h>
- #include <linux/err.h>
- #include <linux/interrupt.h>
- #include <linux/irq.h>
-@@ -683,7 +682,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 	int i;
- 	int phy_count;
- 	struct phy **phy;
--	struct device_link **link;
- 	void __iomem *base;
- 	struct dw_pcie *pci;
- 	struct dra7xx_pcie *dra7xx;
-@@ -731,10 +729,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 	if (!phy)
- 		return -ENOMEM;
- 
--	link = devm_kcalloc(dev, phy_count, sizeof(*link), GFP_KERNEL);
--	if (!link)
--		return -ENOMEM;
--
- 	dra7xx->clk = devm_clk_get_optional(dev, NULL);
- 	if (IS_ERR(dra7xx->clk))
- 		return dev_err_probe(dev, PTR_ERR(dra7xx->clk),
-@@ -749,12 +743,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 		phy[i] = devm_phy_get(dev, name);
- 		if (IS_ERR(phy[i]))
- 			return PTR_ERR(phy[i]);
--
--		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
--		if (!link[i]) {
--			ret = -EINVAL;
--			goto err_link;
--		}
- 	}
- 
- 	dra7xx->base = base;
-@@ -856,10 +844,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 	pm_runtime_disable(dev);
- 	dra7xx_pcie_disable_phy(dra7xx);
- 
--err_link:
--	while (--i >= 0)
--		device_link_del(link[i]);
--
- 	return ret;
- }
- 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index 642e4c45eefc..07698c645e02 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -130,7 +130,6 @@ struct keystone_pcie {
- 	int			num_lanes;
- 	u32			num_viewport;
- 	struct phy		**phy;
--	struct device_link	**link;
- 	struct			device_node *msi_intc_np;
- 	struct irq_domain	*intx_irq_domain;
- 	struct device_node	*np;
-@@ -1118,7 +1117,6 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 	enum dw_pcie_device_mode mode;
- 	struct dw_pcie *pci;
- 	struct keystone_pcie *ks_pcie;
--	struct device_link **link;
- 	struct gpio_desc *gpiod;
- 	struct resource *res;
- 	void __iomem *base;
-@@ -1189,31 +1187,17 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 	if (!phy)
- 		return -ENOMEM;
- 
--	link = devm_kcalloc(dev, num_lanes, sizeof(*link), GFP_KERNEL);
--	if (!link)
--		return -ENOMEM;
--
- 	for (i = 0; i < num_lanes; i++) {
- 		snprintf(name, sizeof(name), "pcie-phy%d", i);
- 		phy[i] = devm_phy_optional_get(dev, name);
- 		if (IS_ERR(phy[i])) {
- 			ret = PTR_ERR(phy[i]);
--			goto err_link;
--		}
--
--		if (!phy[i])
--			continue;
--
--		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
--		if (!link[i]) {
--			ret = -EINVAL;
--			goto err_link;
-+			goto err;
- 		}
- 	}
- 
- 	ks_pcie->np = np;
- 	ks_pcie->pci = pci;
--	ks_pcie->link = link;
- 	ks_pcie->num_lanes = num_lanes;
- 	ks_pcie->phy = phy;
- 
-@@ -1223,7 +1207,7 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 		ret = PTR_ERR(gpiod);
- 		if (ret != -EPROBE_DEFER)
- 			dev_err(dev, "Failed to get reset GPIO\n");
--		goto err_link;
-+		goto err;
- 	}
- 
- 	/* Obtain references to the PHYs */
-@@ -1238,7 +1222,7 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 
- 	if (ret) {
- 		dev_err(dev, "failed to enable phy\n");
--		goto err_link;
-+		goto err;
- 	}
- 
- 	platform_set_drvdata(pdev, ks_pcie);
-@@ -1325,25 +1309,18 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 	pm_runtime_disable(dev);
- 	ks_pcie_disable_phy(ks_pcie);
- 
--err_link:
--	while (--i >= 0 && link[i])
--		device_link_del(link[i]);
--
-+err:
- 	return ret;
- }
- 
- static void ks_pcie_remove(struct platform_device *pdev)
+diff --git a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c
+index 0dc1eb5d2ae3..7abb42e486c0 100644
+--- a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c
++++ b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c
+@@ -537,21 +537,22 @@ static int dw_hdmi_rockchip_bind(struct device *dev, struct device *master,
+ 				 void *data)
  {
- 	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
--	struct device_link **link = ks_pcie->link;
--	int num_lanes = ks_pcie->num_lanes;
- 	struct device *dev = &pdev->dev;
+ 	struct platform_device *pdev = to_platform_device(dev);
++	struct device_node *np = dev_of_node(dev);
+ 	struct dw_hdmi_plat_data *plat_data;
+ 	const struct of_device_id *match;
+ 	struct drm_device *drm = data;
+ 	struct drm_encoder *encoder;
+ 	struct rockchip_hdmi *hdmi;
+-	int ret;
++	int ret, index;
  
- 	pm_runtime_put(dev);
- 	pm_runtime_disable(dev);
- 	ks_pcie_disable_phy(ks_pcie);
--	while (num_lanes--)
--		device_link_del(link[num_lanes]);
- }
+-	if (!pdev->dev.of_node)
++	if (!np)
+ 		return -ENODEV;
  
- static struct platform_driver ks_pcie_driver = {
+ 	hdmi = devm_kzalloc(&pdev->dev, sizeof(*hdmi), GFP_KERNEL);
+ 	if (!hdmi)
+ 		return -ENOMEM;
+ 
+-	match = of_match_node(dw_hdmi_rockchip_dt_ids, pdev->dev.of_node);
++	match = of_match_node(dw_hdmi_rockchip_dt_ids, np);
+ 	plat_data = devm_kmemdup(&pdev->dev, match->data,
+ 					     sizeof(*plat_data), GFP_KERNEL);
+ 	if (!plat_data)
+@@ -564,9 +565,9 @@ static int dw_hdmi_rockchip_bind(struct device *dev, struct device *master,
+ 	plat_data->priv_data = hdmi;
+ 	encoder = &hdmi->encoder.encoder;
+ 
+-	encoder->possible_crtcs = drm_of_find_possible_crtcs(drm, dev->of_node);
++	encoder->possible_crtcs = drm_of_find_possible_crtcs(drm, np);
+ 	rockchip_drm_encoder_set_crtc_endpoint_id(&hdmi->encoder,
+-						  dev->of_node, 0, 0);
++						  np, 0, 0);
+ 
+ 	/*
+ 	 * If we failed to find the CRTC(s) which this encoder is
+@@ -588,13 +589,17 @@ static int dw_hdmi_rockchip_bind(struct device *dev, struct device *master,
+ 		return dev_err_probe(hdmi->dev, ret, "failed to get phy\n");
+ 	}
+ 
+-	if (hdmi->phy) {
++	index = of_property_match_string(np, "phy-names", "hdmi");
++	if (index >= 0) {
+ 		struct of_phandle_args clkspec;
+ 
+-		clkspec.np = hdmi->phy->dev.of_node;
+-		hdmi->hdmiphy_clk = of_clk_get_from_provider(&clkspec);
+-		if (IS_ERR(hdmi->hdmiphy_clk))
+-			hdmi->hdmiphy_clk = NULL;
++		if (!of_parse_phandle_with_args(np, "phys", "#phy-cells", index,
++						&clkspec)) {
++			hdmi->hdmiphy_clk = of_clk_get_from_provider(&clkspec);
++			of_node_put(clkspec.np);
++			if (IS_ERR(hdmi->hdmiphy_clk))
++				hdmi->hdmiphy_clk = NULL;
++		}
+ 	}
+ 
+ 	if (hdmi->chip_data == &rk3568_chip_data) {
 -- 
 2.43.0
 
