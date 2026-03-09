@@ -1,38 +1,65 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 336102C15BA
-	for <linux-pci@vger.kernel.org>; Mon,  9 Mar 2026 20:50:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECD53347FC3;
+	Mon,  9 Mar 2026 21:05:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773089411; cv=none; b=s1P/A9DpOt4QNXz9Gxi0aq7BX/IWmirYHnOQSqavgDbAb6uj6JFOYVdie0GnbL4gDib8QHWqyA+Zanlvw3Bemw2VNSyEF1Xr/QgYhX1Pd6wJINlkbTAdQL4iQ/nwi0zqqYec/fxZ0To1PEqUlyo8RzLPbEW4ZrnHT15oDIvJDVM=
+	t=1773090308; cv=none; b=L5Quhx5k7I71zoMUqsJ3kTOXJG33UnbsTso9N9EInzhVPxaWrOogcKTqt1CEtpD48wTEYKmXvygs45i7wb8ZRmkOURHShR7WX3V/t8d9Vu44W1m1kW5FQKB1CrwaA0xAjxrSM8g6nncVH4j0Gtwddesqu2H8LvDykfcnMF5GJA8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773089411; c=relaxed/simple;
-	bh=D9o7HUYGiIX12/Vm9Z8Jq1MTyKuuasiiAOeIYqBvBPY=;
+	s=arc-20240116; t=1773090308; c=relaxed/simple;
+	bh=Nq8FH4TTfSWeK3IqSHQXr18jc5JUXALz41xxYhKgNgA=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=lnRihiFun08/uOq2Gb1+hO1TjrgAz9FDwnCTvpwVBH8GaRiFS6xFkeHkDe9s1TYWC0qpsWbirKnqdNuzcDwOy/G8v8RBvEB45EXa5Bse6Gj6CDmmRgXJOqNNLZDeghBWcHZZW9nl/AbyM7JR15xNbp9Z/F53LixOf7MDt6Ti+e4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AhbT2fUJ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=g+fRDuKaFWFDuOqtmmNoVkI11wZMV8NETM9PGPL0HWfHH8KOlXRDoaxLQB9fmLJ45bLt05L0t0eYeJujJnCZ42NmdN4ELkzX7MhXmI6ychpU+X8DFm9RKlja/owPopP0l82/AjwlHw663VZ0FqdgLBuBoM9JRvibwg9Oy48nXO4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kdf6A65n; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AhbT2fUJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCF6AC4CEF7;
-	Mon,  9 Mar 2026 20:50:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kdf6A65n"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FD26C4CEF7;
+	Mon,  9 Mar 2026 21:05:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773089410;
-	bh=D9o7HUYGiIX12/Vm9Z8Jq1MTyKuuasiiAOeIYqBvBPY=;
+	s=k20201202; t=1773090307;
+	bh=Nq8FH4TTfSWeK3IqSHQXr18jc5JUXALz41xxYhKgNgA=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=AhbT2fUJvQZl34NTL6mns6Fa+gpLHzwodOEjipAqu1om6l71Sb69tcbMABVJfmjDB
-	 qsbMoDr3vyGZDEe0Qu2yrBE632F0JL5rT2yYbIPF6FYWqiX+Kj5u/s3TuUGiCtvCkz
-	 DnJoLbpGy2AqYoGJtDrB0EaPKaK2a2ASqffZssmsR+iWUY4iHtuoGNAQRxY6oXJXuu
-	 OEXk/iKH2XlkB+cp0iM8HsziBIrBTRX/wcJUZEnJz7wlpetaVlbOqeRNB4M8BqxUyN
-	 7bQ0ReoWXE4orTdA/XneqP+7Xp+hJYCSEgO6tytJv1/lJlJ5LdLeK9rVfrj1tzSSL9
-	 NYWnZujxhGNIg==
-Date: Mon, 9 Mar 2026 15:50:09 -0500
+	b=kdf6A65npBGYj/ybcEJCHuWvMf/VZj0Jj8ZaOAFs96ROtJKN3tNO6HP1MgrC1B6oy
+	 EPz1UZwrSSC9JS6jVh8OFGGbTheePHMFWRYLgBv6QYovtZxwfOJIBlVIiFiT1GlRLD
+	 gIb3m8jY9XsN+5f9e3VF1vUYbRS23+wDBhf1FUzktXUHwBjHU/K01iV5QYd4lJUqwT
+	 Juq+UXeh/FdpGWKyQnG8gefrB2Wu+pXvMbGgRB3sIPoxuUO6Q4ct39W+i2TnSz6lEb
+	 4iJj4AIMUzMPKu8qsjNoIlfsyAQcX/cq7D4MiOj4h7VwqN29Fg5h87eIkiuTTVEPZg
+	 88YY2nPe8WVWw==
+Date: Mon, 9 Mar 2026 16:05:06 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <kbusch@meta.com>
-Cc: linux-pci@vger.kernel.org, dan.j.williams@intel.com, alex@shazbot.org,
-	ilpo.jarvinen@linux.intel.com, Keith Busch <kbusch@kernel.org>
-Subject: Re: [PATCHv5 2/3] PCI: allow all bus devices to use the same slot
-Message-ID: <20260309205009.GA582379@bhelgaas>
+To: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>
+Cc: Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>, Marc Zyngier <maz@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Saravana Kannan <saravanak@kernel.org>,
+	Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>, Juergen Gross <jgross@suse.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+	Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>,
+	Rob Herring <robh@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Prakash Gupta <prakash.gupta@oss.qualcomm.com>,
+	Vikash Garodia <vikash.garodia@oss.qualcomm.com>,
+	linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, imx@lists.linux.dev,
+	xen-devel@lists.xenproject.org, linux-arm-msm@vger.kernel.org,
+	Charan Teja Kalla <charan.kalla@oss.qualcomm.com>
+Subject: Re: [PATCH v10 0/3] of: parsing of multi #{iommu,msi}-cells in maps
+Message-ID: <20260309210506.GA589665@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,71 +68,17 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260217160836.2709885-3-kbusch@meta.com>
+In-Reply-To: <20260309-parse_iommu_cells-v10-0-c62fcaa5a1d8@oss.qualcomm.com>
 
-On Tue, Feb 17, 2026 at 08:08:35AM -0800, Keith Busch wrote:
-> From: Keith Busch <kbusch@kernel.org>
-> 
-> A pcie hotplug slot applies to the entire subordinate bus. Thus, pciehp
-> only allocates a single hotplug_slot for the bridge to that bus. The pci
-> slot, though, would only match to functions on device 0, meaning all
-> device beyond that are not matched to any slot even though they share
-> it. A slot reset will break all the missing devices because the handling
-> skips them.
+On Mon, Mar 09, 2026 at 01:03:36AM +0530, Vijayanand Jitta wrote:
+> ...
 
-I tweaked this a bit to (a) refer to the "secondary" bus instead of
-"subordinate" to avoid confusion with the PCI "subordinate" term
-("pci_dev->subordinate" already has this confusion but is harder to
-fix), and (b) mention ARI, which I think is what causes the problem
-you're solving:
+> Charan Teja Kalla (1):
+>       of: factor arguments passed to of_map_id() into a struct
 
-+ A PCIe hotplug slot applies to the entire secondary bus. Thus, pciehp only
-+ allocates a single hotplug_slot for the bridge to that bus. The existing
-+ PCI slot, though, would only match to functions on device 0, meaning any
-+ devices beyond that, e.g., ARI functions, are not matched to any slot even
-+ though they share it.
+Please make this subject line match the capitalization of those below,
+i.e., "of: Factor arguments ..."
 
-> For example, ARI devices with more than 8 functions fail because their state is
-> not properly handled, nor is the attached driver notified of the reset. In the
-> best case, the device will appear unresponsive to the driver, resulting in
-> unexpected errors. A worse possibility may panic the kernel if in flight
-> transactions trigger hardware reported errors like this real observation:
-
-> @@ -222,6 +233,13 @@ static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
->   * consist solely of a dddd:bb tuple, where dddd is the PCI domain of the
->   * %struct pci_bus and bb is the bus number. In other words, the devfn of
->   * the 'placeholder' slot will not be displayed.
-> + *
-> + * Bus-wide slots:
-> + * For PCIe hotplug, the physical slot encompasses the entire subordinate
-> + * bus, not just a single device number. Pass @slot_nr == PCI_SLOT_ALL_DEVICES
-> + * to create a slot that matches all devices on the bus. Unlike placeholder
-> + * slots, bus-wide slots go through normal slot lookup and reuse existing
-> + * slots if present.
-
-+ * For PCIe hotplug, the physical slot encompasses the entire secondary
-+ * bus, not just a single device number. If the device supports ARI and ARI
-+ * Forwarding is enabled in the upstream bridge, a multi-function device
-+ * may include functions that appear to have several different device
-+ * numbers, i.e., PCI_SLOT() values.  Pass @slot_nr == PCI_SLOT_ALL_DEVICES
-
->   */
->  struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
->  				 const char *name,
-
-> +++ b/include/linux/pci.h
-> @@ -72,12 +72,18 @@
->  /* return bus from PCI devid = ((u16)bus_number) << 8) | devfn */
->  #define PCI_BUS_NUM(x) (((x) >> 8) & 0xff)
->  
-> +/*
-> + * PCI_SLOT_ALL_DEVICES indicates a slot that covers all devices on the bus.
-> + * Used for PCIe hotplug where the physical slot is the entire subordinate bus.
-
-+ * Used for PCIe hotplug where the physical slot is the entire secondary bus,
-+ * and, if ARI Forwarding is enabled, functions may appear to be on multiple
-+ * devices.
-
-Let me know if I got any of this wrong.
-
-Bjorn
+> Robin Murphy (2):
+>       of: Add convenience wrappers for of_map_id()
+>       of: Respect #{iommu,msi}-cells in maps
