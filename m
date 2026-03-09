@@ -1,45 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98B5A336894;
-	Mon,  9 Mar 2026 06:04:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 898551F5842;
+	Mon,  9 Mar 2026 06:31:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773036289; cv=none; b=I9gJGbXfYUIB1+HZgQUbSysn/k5DsvJerIRzmIOPFN/Slj3xH0aYCJUhyKVa93/NCfdj3gW95s8kJB8icw+1ZJX8Pzg/VY+tksF9d8U2v1MheKuyLbGtqdq8fx/CIfjDTCUsr+M0oOmnayggYDePdydRwfMRNpE6nruHjbqFMZk=
+	t=1773037903; cv=none; b=LKJSXgKUix1Ao+WmpK9rwvCIqk8trPXaCJOgVNwS8wm356RvW1HM9mZry+JCci2ZkhXBNG5QNAEFNYYHlqRVRRwyEvVMgGlrEXo318NI1BaCGBFK61UIkE78XU6SjK4t8paC7PpUEMcbFX+jtZ68nt13cGan5BOgNNd+XDAEkmc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773036289; c=relaxed/simple;
-	bh=VSp/JFre7rfvlSdc8ogjVgAQFD7dOJbtcrFM4JQR094=;
+	s=arc-20240116; t=1773037903; c=relaxed/simple;
+	bh=u4WqHSsi7MhLQ9EloFcBBv9DxI3CKDY2haYY37CvwW8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TEJ5jHkJJrinRYcmqejW0oGbF0htrKbhGrIkKnG//s+x1uRW75iBCObXvtpMiekyCNCh4otlgSO9K3v2C3YEX1zlxGSu9v81GUjAKvXQe3QN5KbbPilAG3IiEL8uGHkccVnFVS6feuuswylovNJe34CivUPZZpytMMOO3VVtsTk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OiWF6yAI; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=LN8YGbUspya2k14ZlOby4Fux5rmm0VEDfHTTVPz/L3mvkSe/0dcO4CKLh2oihVLZDxCkt+dtaYwb0NxYjESq3f3S6AeI55ZCje6fVniLYdkPHD0QnF3ddyTiOhTRe39odSaD00IjWUCYeMIg8wbB/j1571j3YUfoS6TietUsBnA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vQ4l59QS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OiWF6yAI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46D9AC4CEF7;
-	Mon,  9 Mar 2026 06:04:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vQ4l59QS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2949BC4CEF7;
+	Mon,  9 Mar 2026 06:31:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773036289;
-	bh=VSp/JFre7rfvlSdc8ogjVgAQFD7dOJbtcrFM4JQR094=;
+	s=k20201202; t=1773037903;
+	bh=u4WqHSsi7MhLQ9EloFcBBv9DxI3CKDY2haYY37CvwW8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=OiWF6yAI/htrfpTJqgmum/c4BAA743DuCx/lsQyGzvjRRDlEx8DUvI7Maw7+KDV5N
-	 TM4M8leBXSYx4QaKWfI1ObSo+R+LSagtCdp0VGqcIMUD3YlPukVRf49RiLKdTs5WTo
-	 W2BsSZJngCYLMTc34wzZEDMXxxreioYILfFTT6QgrOnyXNPFB/qP91uUosecp8Xkan
-	 syimX3O4lL9/fSa2Ne8B+N7O7cEeEe8bftpvTLGcSdIvL6L0kD0YW0CU5uby8NZBrQ
-	 6+I9Sc7LJHFwM8N+5MIroBE/vdj91twlmd4AKfridfSx6B2yl+VxVuj7wm7kjYYvoQ
-	 e70nOitY9bzZw==
-Date: Mon, 9 Mar 2026 11:34:35 +0530
+	b=vQ4l59QSykiJKGI/c5n39m1bRo+zk3pLnlAAIxaVq6ks0+UoUYQxIzb/Gytwh14w9
+	 k1lIy0577ACqqTP8Ca67zy3FQBGJTuCJmNTaeSNJ1Lysl6/gv/YA2i/gJfazZiyIM6
+	 DollnoOC9mQ7ZxSdKUIZiPCpcPI5RWzRXH2ccX6XlRliKX6C6mybJ6Qzx0PbXsUmK7
+	 A9AFpWEhzuI51xEYJTj/tpPMyRjyocL+KmMsXfEqgFxp8esOGbU2Eenys7WzP5tRxC
+	 9B72C0K0Imm43MWJWbXg+6aZWJVDXkfexeRpQg3NHsU+elqrbLLD87hiHHzQecR+4K
+	 ftIV/iuEljklA==
+Date: Mon, 9 Mar 2026 12:01:29 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Chen-Yu Tsai <wenst@chromium.org>, 
-	Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Ryder Lee <ryder.lee@mediatek.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org, 
-	linux-kernel@vger.kernel.org, Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: Re: [PATCH v3 5/7] PCI: mediatek-gen3: Integrate new pwrctrl API
-Message-ID: <ybanlrmujb2ygjrlxe3occhffuygsmt3vpg7tukj4bq35e64gu@i7g2v53ayfgi>
-References: <20260302053109.1117091-6-wenst@chromium.org>
- <20260306192134.GA142888@bhelgaas>
+Cc: Aksh Garg <a-garg7@ti.com>, linux-pci@vger.kernel.org, 
+	jingoohan1@gmail.com, lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, 
+	bhelgaas@google.com, yoshihiro.shimoda.uh@renesas.com, fancer.lancer@gmail.com, 
+	Zhiqiang.Hou@nxp.com, gustavo.pimentel@synopsys.com, cassel@kernel.org, 
+	linux-kernel@vger.kernel.org, s-vadapalli@ti.com, danishanwar@ti.com
+Subject: Re: [PATCH v3 1/2] PCI: dwc: ep: Fix MSI-X configuration to write to
+ correct physical function
+Message-ID: <tlsbdp2o5qpizi4pqr4stiikglriaa37mbnxvo7ppks2k46pnd@klta5arlhkga>
+References: <20260224083817.916782-2-a-garg7@ti.com>
+ <20260306184519.GA131984@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,35 +48,29 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260306192134.GA142888@bhelgaas>
+In-Reply-To: <20260306184519.GA131984@bhelgaas>
 
-On Fri, Mar 06, 2026 at 01:21:34PM -0600, Bjorn Helgaas wrote:
-> On Mon, Mar 02, 2026 at 01:31:05PM +0800, Chen-Yu Tsai wrote:
-> > With the new PCI pwrctrl API and PCI slot binding and power drivers, we
-> > now have a way to describe and power up WiFi/BT adapters connected
-> > through a PCIe or M.2 slot, or exploded onto the mainboard itself.
+On Fri, Mar 06, 2026 at 12:45:19PM -0600, Bjorn Helgaas wrote:
+> On Tue, Feb 24, 2026 at 02:08:16PM +0530, Aksh Garg wrote:
+> > The MSI-X configuration code reads from the correct physical function's
+> > register space using dw_pcie_ep_readw_dbi(), but writes back only to
+> > PF0 using the old dw_pcie_writew_dbi() helper. This causes incorrect
+> > MSI-X configuration for other PFs.
 > > 
-> > Integrate the PCI pwrctrl API into the PCIe driver, so that power is
-> > properly enabled before PCIe link training is done, allowing the
-> > card to successfully be detected.
-> > ...
+> > Fix this by using dw_pcie_ep_writew_dbi() to write to the correct PF's
+> > register space, matching the read operation.
 > 
-> > @@ -1211,9 +1222,13 @@ static int mtk_pcie_probe(struct platform_device *pdev)
-> >  	pcie->soc = device_get_match_data(dev);
-> >  	platform_set_drvdata(pdev, pcie);
-> >  
-> > +	err = pci_pwrctrl_create_devices(pcie->dev);
+> Is this another case of using "PF" in a non-SR-IOV context, as I asked
+> about here?
 > 
-> AFAICT this has nothing at all to do with mediatek-gen3; it only has
-> to do with the fact that the platform provides a way to control the
-> main power to endpoints that happen to be connected to it.  Are we
-> going to have to add this in every single native host controller
-> driver?
+>   https://lore.kernel.org/all/20260223185558.GA3701139@bhelgaas
+> 
+> I do not want to use "PF" unless we're talking about a device with an
+> SR-IOV Capability and we're doing something specific to SR-IOV.
+> 
 
-Yes, I want this feature to be opt-in because, a lot of controller drivers
-handle the device power themselves. We can convert these drivers one-by-one and
-when atleast 50% of them are converted, we can move these calls to generic APIs
-such as pci_host_probe().
+Fixed the subject and commit log:
+https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=controller/dwc&id=271d0b1f058ae9815e75233d04b23e3558c3e4f4
 
 - Mani
 
