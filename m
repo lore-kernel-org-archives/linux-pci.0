@@ -1,274 +1,333 @@
-Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010009.outbound.protection.outlook.com [52.101.69.9])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AB3D3101CE;
-	Mon,  9 Mar 2026 08:43:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.69.9
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773045824; cv=fail; b=PKpEO1ocZZXWwrkAnYQOhjrlhdsA6yc67a9CcYTGmMGcqD4hMgs9Y+wY4FvsOQWuHTJLMy713x5FsSV6wQGRCXBpcOpQ3W0lzzlq8HSOhogrUo7VIKfH7jy08agpZB2ZfCvjLq9aBAnB9DGaHP3WFU4Pqt8MSEvcT5RDYSzNRsQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773045824; c=relaxed/simple;
-	bh=pab6LjgpqnWAsNvJSny4XoepuB4Ej0xFXBcypkm2LuU=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ufI48q1MQV0mMgk6+XXj/Ha95BoOw5rU6K1WQNo7sAvcxqkVmJYZc4hfcUj2CZ2q9QEJwpOnBaERq0bgPl0Xn1IiWi+TqmfNZ/2tp1HPTlzMcEMx3yAGnYJ89DEr4JyJt7K8F6cynMlaWR2lZr8f9J270ExzMGK4LVQlAf+ZijQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=V6TkBLiB; arc=fail smtp.client-ip=52.101.69.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D27CD3783CB
+	for <linux-pci@vger.kernel.org>; Mon,  9 Mar 2026 09:19:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773047945; cv=none; b=Y+scdQ1aZ2Gv8138Ou/ohfvWZ6hMEr17gbezhdlrKTLWLYrZ542VZydAg7w/fMrI+KUMhEmlBpNfuEwkeCGEAKfZ9hJ+NI2x5Gf9BARvStsh6xWA9TrltnIXNplpenDoVhKvMc5PyOF66PLpT5O0qmKosq3V2qSAid70OI8lCW8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773047945; c=relaxed/simple;
+	bh=CncL9gUcdJL6wlW5tkcGvRzvFuDGtQP6+c+HDcnsN/A=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=bdWBg7L698UU1c+DB631vyL0gK4cuW9lfvLWeUAZWaVvoOc3ISqO8KKGBeow3DVNkLkXuqORy/mI0CpAHSiCexka4T4X7X03Csj+yRF/47V/cuiuitPfr3YzB6cOnsLISN01y0jMjBc67VmYPc0YIEmjcWs73aSByzpG5kF2OM0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=d4bw/dK6; arc=none smtp.client-ip=209.85.221.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="V6TkBLiB"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=vq8lefpJ9fKNpcacPmc9iaQpX4Nhn5oz6HZMNFgzs50hNuwaEEfqUN/1rSwOuIxUvVVBAQa9q1+Uk5QeqnDKXFtzCss7Vg8mM909+bMQJxIYgCLZ6J6+4sPjOVmUX+ipBIUc12EZM8abxvgqmzb1dtf0Xzge2J9FGx+wwsYzPfU4tr3F+jCKEuoGqvMf98mtJiWYquL7do4TRVjphS7bu6ysmi+HKgb6We3VThaHzcKdQV2stWnfF9Pa3t4S1fPaEzqhbNtu2s/GShCsxE9fXjUJhQOU8UUD0doDxJbXKyXELXx5si1/HUhL7uQVEQAW/q237X8yHftpzvxAw2It0A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Tydq+r37F9Bi5Zn0X2hbw4knQ/vP+42P0y1gcAd4XwA=;
- b=YEZp5LwsbwUdBNaF292sKahNym6z+zfkFr+gHwwqON4ouWFZsQlGRwqdqrJOwB20I6P6Hi8eHZDHSYz6tMH9bMVz9f60eo+UsO0s4uxcMyxvkUUh8MPYHF+SLMlzWrgD0Ta8NIXSgAN4iRiwoHdt5e/RRBeOrLdLtTntNDgwYEb3kp6ACdYL84nFvGh8DeUtSFq7hAPJvXJCXusopgqzF1YajY8POieg97t9JUcA0uxQ36adDNVyfLoixCWBfrmlvU8dnCJU31TwRArICXUgF+3DjiK8B2WrVCuExNRpyVdCSZcXfTo+bpZcvw2gsSIYHbNus1fS6w4xrpMpjJRvWA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Tydq+r37F9Bi5Zn0X2hbw4knQ/vP+42P0y1gcAd4XwA=;
- b=V6TkBLiBfBqymahMS14ArsTURSjD+HQehM2gD1hK/PQXQl9voL5HTTskWUI+xGeSpYqDQ8VhwRuUaOesvZIJWyOS1wpKn2F4pN+6OJEF7K8Q5sG2Ou8/P38aJVwXDMEEoBQfs+ji4P7CirRTGxDo0z1CvIhWJFwfiVwnMWN5q4d5RMUGBj7bRdg3C+4E5dySgSf2yx5Wp1wmF2XHSe9jNKA2UswZupvIRsjyQR4S1DIrlgRn78x1dfQfyJahNOroho6TdD4iVZvyAB7FbQ5gKyrssVPuxsECHtwUNseGjMxsM+I1z5d+WigZtcEHXwbsTfMXbs9WN7cggSiOjncsRA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from AS8PR04MB8833.eurprd04.prod.outlook.com (2603:10a6:20b:42c::19)
- by VE1PR04MB7264.eurprd04.prod.outlook.com (2603:10a6:800:1b1::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.17; Mon, 9 Mar
- 2026 08:43:39 +0000
-Received: from AS8PR04MB8833.eurprd04.prod.outlook.com
- ([fe80::209c:44e4:a205:8e86]) by AS8PR04MB8833.eurprd04.prod.outlook.com
- ([fe80::209c:44e4:a205:8e86%3]) with mapi id 15.20.9678.024; Mon, 9 Mar 2026
- 08:43:39 +0000
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	bhelgaas@google.com,
-	frank.li@nxp.com,
-	l.stach@pengutronix.de,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	s.hauer@pengutronix.de,
-	kernel@pengutronix.de,
-	festevam@gmail.com
-Cc: linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org,
-	imx@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	Richard Zhu <hongxing.zhu@nxp.com>
-Subject: [PATCH v3 4/4] arm64: dts: imx943-evk: Add pcie[0,1] and pcie-ep[0,1] support
-Date: Mon,  9 Mar 2026 16:44:31 +0800
-Message-Id: <20260309084431.3015463-5-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.37.1
-In-Reply-To: <20260309084431.3015463-1-hongxing.zhu@nxp.com>
-References: <20260309084431.3015463-1-hongxing.zhu@nxp.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SG2PR01CA0168.apcprd01.prod.exchangelabs.com
- (2603:1096:4:28::24) To AS8PR04MB8833.eurprd04.prod.outlook.com
- (2603:10a6:20b:42c::19)
+	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="d4bw/dK6"
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-439bc14dcf4so4924167f8f.1
+        for <linux-pci@vger.kernel.org>; Mon, 09 Mar 2026 02:19:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1773047940; x=1773652740; darn=vger.kernel.org;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=kNiLR6YNrMRtTldTWTQRiLTdnMm5k8O8M4DvpvHP74I=;
+        b=d4bw/dK6zVqZDdZTt12+IDmKf/RFmlRClqU3NCeMemKHCYqMLQGLcBHuqQc2BcWOeD
+         MXOLsFYj6TQwgG9d1ew4SkOgDEe3IxZWa8agXhd6YzzlHAvxlPV7zRMucd8EK5v6aeJX
+         euk/7xwAo8P7CEl3x9SHefS77U8Yxi0nmtZNqbpt2kkmWh1GnCE/QKraHW/3x9H3z+eu
+         Hgh8UVKxo75IMc3SnJVjy3eWFqYuMZouwGJ3APuDh1aMYpa7dmq2cnpGcTxaxURf3yju
+         ms2CccJlDvP945saycvwiiUZr1WiiL7+9v2UEYTcmobp9tF3vIAtjiGYalZ6Cr3d5R/U
+         YqKg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1773047940; x=1773652740;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=kNiLR6YNrMRtTldTWTQRiLTdnMm5k8O8M4DvpvHP74I=;
+        b=r4v8W5HLL/WkjQN7rs7q3vo/hrYcshcq/i4EoUVfALhdXq/t4nVTQ7BgJk4pY2KeuI
+         0rCIEnzbwqt9M03+DAOKhljyC1f/enUf1/GVjYlDxRhdKn24jrNC6ZHWows1imBz1LTC
+         F/NdiQ08U57uKP03e0SIATK6QHLMl9bv5v1fD2Ll9nc3kDMKoSiJRiTU0NpDVT1MuGS3
+         Xakj6MaCXP0NZjcildgJah7bj1m7wDTthfxkkR1kLoFVoJwyE4GZrliNAqz7FDI6jlR2
+         6oso00m6RNVIpy2jP4e8ybQjxbdY0kP3Bh7vyd5/gJio8glYWDxjN/YdJgla52LrxpAs
+         DdKw==
+X-Forwarded-Encrypted: i=1; AJvYcCUSG8pfjh0sIgfMh+8P0vByw5sTy/KUHmVKF51Lo98nt+JaBvxiZUg+Gnp/eJl+5TJPQvg1MdQBsUk=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz5NReHbTQqgbgNBBUas4dTBd2zjiGRctarKmwp4+CmUviHbe3P
+	/BwzUxYF/a2q03F++WwHXb7dtKU+rNFi8hNlN39P1oCEK4ysJl7KRQRJp3gjra1cbr4=
+X-Gm-Gg: ATEYQzyRalJ7TT95OCK+q5BErDfiHLfuNmwmgcVuNUKwadrUCIX0uUwywuRZ6khLDNv
+	4j8C0/RGKZFyURfweKT+IJ8Nib5hsHeeEA1r1N4Ee74iSjWIZYIWkZirex2Od9tDEBNb7/U9ptj
+	FrV9EIvIRQcSrQmccVFbI9jzFPft+ZjUNSIPY+SWCQde7TQQe36Hn6gTFnBvIgkHy5uqM4G8SBu
+	rwjz5oJ4DaBkVMzUFrcBoXAEP/bbRZnkayo0D+r2/5nF8LXFIB9s5UrSJ3uuQJWjhzz/95fj2ma
+	zLBpzDqVds7+gfbkt/doPyPHq6UpF3ucYrkbOxNHkbnElNc3MH1XjVZrujX9TuD/T6SXDj9ggH0
+	WEYFBSM1sqmrw/k7FeBjXtbxS0Q0dZlA/kmKSPTaqSix/RSaYXlPwU9e1Qd/tmqB+NePHBRhPPO
+	snby6KL1dF3/f9Brc=
+X-Received: by 2002:a05:6000:603:b0:439:909f:c5a3 with SMTP id ffacd0b85a97d-439da3277d9mr17145973f8f.4.1773047939930;
+        Mon, 09 Mar 2026 02:18:59 -0700 (PDT)
+Received: from localhost ([195.52.25.213])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-439dada9116sm23029936f8f.14.2026.03.09.02.18.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Mar 2026 02:18:59 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AS8PR04MB8833:EE_|VE1PR04MB7264:EE_
-X-MS-Office365-Filtering-Correlation-Id: 43e63f69-5a45-4dd6-acc1-08de7db7f5f8
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|376014|7416014|52116014|19092799006|1800799024|921020|38350700014;
-X-Microsoft-Antispam-Message-Info:
-	z1LgAmOqC7fNi8J3b9s9z9lZ7uatOAaFhB0TLRlT/M70JZdjrzZrgqDF3YkbQqt5LMgCzHMkKHlc3elU8ONkLITHBerA+pTa2TZGCneWxdTczkazPW/+aeyIWNlrRSQY0e0I5FfbZ3FGSezYJNCJLkL5W7XNbSB89myLj4bB+0QNztEJjYlQMGWFDL/sWpjhbFmEm6Q8YzzUfTHeqIOy9LPLs6PpsiJ/oDLCLTPtk7d9wkDWf4h4JV9gUkIPxm2aG5rTN0l2VW1lkHe6hqSbDScRczZSJs9VygQqCt4nhJK3y+TJ6sThG+Q+KoXP2DskKXaHZ0MECKO+IpiVu5y62zCa9doy+AqDhygccBxBgPy+oDSdfCBINH1EqbijnOPcTZaksXyep15KV/xvV2g27NaZWnI0LZzCMOJZ5a9hUkmKU7HHEJLVEy/NKUe436uc5a4MuLP6Fm7jM0omU3TAsHSrqdIpoVHlhE6of1jg/WPm0+aODd2slbwhsOKG04gKGDty0OSRpcLtyXcwfpli6FMGuw5EgVnRgqsZq46uvVvpoulhLI3HhvrP0RwjepxmXxsek8iBI0Qo+UsHUkSMXV01Va/CM3N504PXzK1/x9/BzxwsXubpGpBywZBHBAgHY1dIzptejYJ/2+DWreG5BZzDDWr+jmoFexsYPMQWEEz+SrOdQFcfNXdYkKpPUuJIt1e+PT/gT+DHUQnrQV2PQusPNAtzYgxWaNVHwayYC8rKiyi65v3dQysD3657P8KPvkakGfCF4/MvyGdCb2FgerZpjY3asuMgDglF5n/jyD9kF0SsHNKNLbXRAILCH78T
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR04MB8833.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(52116014)(19092799006)(1800799024)(921020)(38350700014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?WFhhXsExFGb1pAempeLYcvPwiMyHETcN9jEOwVE8hVl0zcFaUodGl/9a1sAy?=
- =?us-ascii?Q?nt/YmQ1uQHrmRiSgzq7oOVwOAMcxDFZNg/P4h/Ikq8xQ7PUTHVSpnC0qF45i?=
- =?us-ascii?Q?sE6LfO4/S5t0mFcmrPlXnzZBbkAFsNODphuUkpL2elq2rQgBES/fBPIAb7xK?=
- =?us-ascii?Q?YdFaKjJWWsIMQoVExeaVYQTcb6v+RCkVrr7cRjBPeYEGfg2XdUEsTtN+eKye?=
- =?us-ascii?Q?KXJK3JiCo3SmdXzNvYuFpquq3URnsaOt7r/GA5R7SARDPVPQ8feSDV/9WDcE?=
- =?us-ascii?Q?9XJR6nPp5mHHDw5ulrln39pkTlm7+unzE7tJvFoxCDo1zIQL6hnw53NGsN5l?=
- =?us-ascii?Q?IE59GrPQebNF32+sNjkBaqvWA3+wfBxkBDsJdjd/dk+vyeZxWpUVpx4qRPto?=
- =?us-ascii?Q?t+YAIky8rF65virDuDGw+y+PoK8Xb9Hqvu/OKjgjXnO5A/eSE/J3nJ/Rza/L?=
- =?us-ascii?Q?UiMRC1NLQForYW0eW0j2OsFJwO20y2CB1LyyUS9uavXCB/pLXhtWVNePPxqn?=
- =?us-ascii?Q?BAUhfIm3XfRDP8kuQrWlITLepGqkL2m3X0Rkg8JrWTyFddubAFwVdWKmbnlR?=
- =?us-ascii?Q?s5QcfpJo1DrAkeu2eg2eScw3ATKi4yAGQGlKiP51fitqrarjTFRuVB4A9Q77?=
- =?us-ascii?Q?0n7aeP84IUS8cebvk0yuUsK8HYrcokFFvrWvWk7WtMVlu267W+pv2QB4Jgfa?=
- =?us-ascii?Q?rv8OUTc3bFwlsTcCSgS5T+XkicsqZLVlkPIIdocAYxeD5TzQWjUY6aYTwVhx?=
- =?us-ascii?Q?q4FNfQHX++IClC+RgmjtCTRpGr7AV3iA86PX42Q0CKcUS+mxp87s28nd0zhN?=
- =?us-ascii?Q?iOQ0jz5al7MOcDMBDJw1T30B7E+5iYazfprkzurpiieZDKt4vVcMpotZ6l+K?=
- =?us-ascii?Q?rJHfwLQ1pFSpQOpcQQgfzDPZoWIMdRcM0Lgu37BZXjg+BzgcxZjDS4KaabxE?=
- =?us-ascii?Q?kh4+Dkqh+HGmI+gzc7H0bJbJal2vP2ZJqJYmBu9yztmCF++cDtpEDfiqrou1?=
- =?us-ascii?Q?nOgD1Sq24WRShM1RHjZ5jmVX7HnQ0eyOR/FC1L+RTbTxEHBiGkVj0HpK6Xke?=
- =?us-ascii?Q?76wQ8xJNLDoWUKNkVxVWCFJLqHCrgXjFp8C5mIqf2MWR7C8c43TXhxkiR8Mw?=
- =?us-ascii?Q?aopVZYfnrnMF/1+vRpnBBWhtcvjmv/26SM75B1frOUTGeSRemC9+oGNfvsTq?=
- =?us-ascii?Q?tdRjXTACWdW9fJ9ZPyhGOMhhOOEzBpwDA0VkBJXLbcQ+VQhIYty10ljyHkGU?=
- =?us-ascii?Q?lYw3/c7GW/rp6cUTIQ5sl6N5fhvY6SHbROjZCvWkPfXNvxM7nRzjjxckSdGI?=
- =?us-ascii?Q?uO/O1s6oqH7Fjq0GxIvYDTjZwtwcnhnL/pS+H7vjrRtweu3uzLFif3LwYg9g?=
- =?us-ascii?Q?bsQjo45qjD54tci0vsT3JdJjlhgyv54DsanfuMPq/Cge2R/6B3jTFeEPf+1g?=
- =?us-ascii?Q?xlxSyC1c9HgpS+azsiRhhZpX6wVibmefATZYQqsTLWHwJ7AksvCFneyjug7/?=
- =?us-ascii?Q?pxDjPeWN6WHuHc9t5Vj+3x9GVPjIQAcXMxHjqpo2pMgFtf+FJFGHuReGDwJE?=
- =?us-ascii?Q?jRetWgZVQRQn9PEcBLYNllsbv2cWkEvUEYONL5ORPFhr12OFdJ3CJr94S4d0?=
- =?us-ascii?Q?uB99m+qnIOnG2U44RW0Lgnn2sBwmxFXNVOVBBqfk0VbteaDN+t6FSsS4vhHm?=
- =?us-ascii?Q?GzUtgLxs16bJ84ckgAN2y9cebm3p2rNkJaVaZiWKu6QiMzJV122PeJAZUdOK?=
- =?us-ascii?Q?wJRAX7Uo6A=3D=3D?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 43e63f69-5a45-4dd6-acc1-08de7db7f5f8
-X-MS-Exchange-CrossTenant-AuthSource: AS8PR04MB8833.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2026 08:43:39.4153
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: oLN1brf4a7WLVcf0ROARoXX4F+tjM1kdmykHcCVHlGmPMmz7oynjTEkx6gzgebDzttobB67PgSBLhHHPoOjjMA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VE1PR04MB7264
+Mime-Version: 1.0
+Content-Type: multipart/signed;
+ boundary=840703edd9f3f1e1e79a02bb78a8d4f69f696b0531524c2c45c8075436e0;
+ micalg=pgp-sha512; protocol="application/pgp-signature"
+Date: Mon, 09 Mar 2026 10:18:50 +0100
+Message-Id: <DGY51AQLSNAD.3LE77TJER4LGF@baylibre.com>
+Cc: "Vinod Koul" <vkoul@kernel.org>, "Neil Armstrong"
+ <neil.armstrong@linaro.org>, <dri-devel@lists.freedesktop.org>,
+ <freedreno@lists.freedesktop.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-arm-msm@vger.kernel.org>, <linux-can@vger.kernel.org>,
+ <linux-gpio@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-media@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-renesas-soc@vger.kernel.org>,
+ <linux-riscv@lists.infradead.org>, <linux-rockchip@lists.infradead.org>,
+ <linux-samsung-soc@vger.kernel.org>, <linux-sunxi@lists.linux.dev>,
+ <linux-tegra@vger.kernel.org>, <linux-usb@vger.kernel.org>,
+ <netdev@vger.kernel.org>, <spacemit@lists.linux.dev>,
+ <UNGLinuxDriver@microchip.com>, "Andrzej Hajda" <andrzej.hajda@intel.com>,
+ "Robert Foss" <rfoss@kernel.org>, "Laurent Pinchart"
+ <Laurent.pinchart@ideasonboard.com>, "Jonas Karlman" <jonas@kwiboo.se>,
+ "Jernej Skrabec" <jernej.skrabec@gmail.com>, "Maarten Lankhorst"
+ <maarten.lankhorst@linux.intel.com>, "Maxime Ripard" <mripard@kernel.org>,
+ "Thomas Zimmermann" <tzimmermann@suse.de>, "David Airlie"
+ <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Andy Yan"
+ <andy.yan@rock-chips.com>, "Marc Kleine-Budde" <mkl@pengutronix.de>,
+ "Vincent Mailhol" <mailhol@kernel.org>, "Nicolas Ferre"
+ <nicolas.ferre@microchip.com>, "Alexandre Belloni"
+ <alexandre.belloni@bootlin.com>, "Claudiu Beznea"
+ <claudiu.beznea@tuxon.dev>, "Markus Schneider-Pargmann" <msp@baylibre.com>,
+ "Geert Uytterhoeven" <geert+renesas@glider.be>, "Magnus Damm"
+ <magnus.damm@gmail.com>
+Subject: Re: [PATCH v2 phy-next 14/24] phy: introduce
+ phy_get_max_link_rate() helper for consumers
+From: "Markus Schneider-Pargmann" <msp@baylibre.com>
+To: <vladimir.oltean@nxp.com>, <linux-phy@lists.infradead.org>
+X-Mailer: aerc 0.21.0
+References: <20260308114009.2546587-1-vladimir.oltean@nxp.com>
+ <20260308114009.2546587-15-vladimir.oltean@nxp.com>
+In-Reply-To: <20260308114009.2546587-15-vladimir.oltean@nxp.com>
 
-Add pcie[0,1] and pcie-ep[0,1] support.
+--840703edd9f3f1e1e79a02bb78a8d4f69f696b0531524c2c45c8075436e0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
 
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
----
- arch/arm64/boot/dts/freescale/Makefile       |  4 +
- arch/arm64/boot/dts/freescale/imx943-evk.dts | 82 ++++++++++++++++++++
- 2 files changed, 86 insertions(+)
+Hi,
 
-diff --git a/arch/arm64/boot/dts/freescale/Makefile b/arch/arm64/boot/dts/freescale/Makefile
-index 25793aa7c0ab..0885e67e0cfa 100644
---- a/arch/arm64/boot/dts/freescale/Makefile
-+++ b/arch/arm64/boot/dts/freescale/Makefile
-@@ -451,6 +451,10 @@ dtb-$(CONFIG_ARCH_MXC) += imx95-19x19-evk-sof.dtb
- dtb-$(CONFIG_ARCH_MXC) += imx95-toradex-smarc-dev.dtb
- dtb-$(CONFIG_ARCH_MXC) += imx95-tqma9596sa-mb-smarc-2.dtb
- 
-+imx943-evk-pcie0-ep-dtbs += imx943-evk.dtb imx-pcie0-ep.dtbo
-+imx943-evk-pcie1-ep-dtbs += imx943-evk.dtb imx-pcie1-ep.dtbo
-+dtb-$(CONFIG_ARCH_MXC) += imx943-evk-pcie0-ep.dtb imx943-evk-pcie1-ep.dtb
-+
- imx95-15x15-evk-pcie0-ep-dtbs = imx95-15x15-evk.dtb imx-pcie0-ep.dtbo
- dtb-$(CONFIG_ARCH_MXC) += imx95-15x15-evk-pcie0-ep.dtb
- imx95-19x19-evk-pcie0-ep-dtbs += imx95-19x19-evk.dtb imx-pcie0-ep.dtbo
-diff --git a/arch/arm64/boot/dts/freescale/imx943-evk.dts b/arch/arm64/boot/dts/freescale/imx943-evk.dts
-index c8ceabe3d923..adcb3fa3c9de 100644
---- a/arch/arm64/boot/dts/freescale/imx943-evk.dts
-+++ b/arch/arm64/boot/dts/freescale/imx943-evk.dts
-@@ -50,6 +50,20 @@ chosen {
- 		stdout-path = &lpuart1;
- 	};
- 
-+	pcie_ref_clk: clock-pcie-ref {
-+		compatible = "gpio-gate-clock";
-+		clocks = <&xtal25m>;
-+		#clock-cells = <0>;
-+		enable-gpios = <&pca9670_i2c3 7 GPIO_ACTIVE_LOW>;
-+	};
-+
-+	xtal25m: clock-xtal25m {
-+		compatible = "fixed-clock";
-+		#clock-cells = <0>;
-+		clock-frequency = <25000000>;
-+		clock-output-names = "xtal_25MHz";
-+	};
-+
- 	dmic: dmic {
- 		compatible = "dmic-codec";
- 		#sound-dai-cells = <0>;
-@@ -71,6 +85,15 @@ reg_m2_pwr: regulator-m2-pwr {
- 		startup-delay-us = <5000>;
- 	};
- 
-+	reg_slot_pwr: regulator-slot-pwr {
-+		compatible = "regulator-fixed";
-+		regulator-name = "PCIe slot-power";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
-+		gpio = <&pcal6416_i2c3_u46 0 GPIO_ACTIVE_HIGH>;
-+		enable-active-high;
-+	};
-+
- 	reg_m2_wlan: regulator-wlan {
- 		compatible = "regulator-fixed";
- 		regulator-name = "WLAN_EN";
-@@ -653,6 +676,18 @@ IMX94_PAD_GPIO_IO28__LPI2C6_SCL		0x40000b9e
- 		>;
- 	};
- 
-+	pinctrl_pcie0: pcie0grp {
-+		fsl,pins = <
-+			IMX94_PAD_GPIO_IO20__PCIE1_CLKREQ_B	0x4000031e
-+		>;
-+	};
-+
-+	pinctrl_pcie1: pcie1grp {
-+		fsl,pins = <
-+			IMX94_PAD_GPIO_IO23__PCIE2_CLKREQ_B	0x4000031e
-+		>;
-+	};
-+
- 	pinctrl_pdm: pdmgrp {
- 		fsl,pins = <
- 			IMX94_PAD_PDM_CLK__PDM_CLK			0x31e
-@@ -821,6 +856,53 @@ IMX94_PAD_XSPI1_DQS__XSPI1_A_DQS	0x3fe
- 	};
- };
- 
-+&pcie0 {
-+	pinctrl-0 = <&pinctrl_pcie0>;
-+	pinctrl-names = "default";
-+	clocks = <&scmi_clk IMX94_CLK_HSIO>,
-+		 <&scmi_clk IMX94_CLK_HSIOPLL>,
-+		 <&scmi_clk IMX94_CLK_HSIOPLL_VCO>,
-+		 <&scmi_clk IMX94_CLK_HSIOPCIEAUX>,
-+		 <&hsio_blk_ctl 0>,
-+		 <&pcie_ref_clk>;
-+	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux",
-+		      "ref", "extref";
-+	reset-gpio = <&pcal6416_i2c3_u46 3 GPIO_ACTIVE_LOW>;
-+	vpcie3v3aux-supply = <&reg_m2_wlan>;
-+	supports-clkreq;
-+	status = "okay";
-+};
-+
-+&pcie0_ep {
-+	pinctrl-0 = <&pinctrl_pcie0>;
-+	pinctrl-names = "default";
-+	vpcie3v3aux-supply = <&reg_m2_wlan>;
-+	status = "disabled";
-+};
-+
-+&pcie1 {
-+	pinctrl-0 = <&pinctrl_pcie1>;
-+	pinctrl-names = "default";
-+	clocks = <&scmi_clk IMX94_CLK_HSIO>,
-+		 <&scmi_clk IMX94_CLK_HSIOPLL>,
-+		 <&scmi_clk IMX94_CLK_HSIOPLL_VCO>,
-+		 <&scmi_clk IMX94_CLK_HSIOPCIEAUX>,
-+		 <&hsio_blk_ctl 0>,
-+		 <&pcie_ref_clk>;
-+	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux",
-+		      "ref", "extref";
-+	reset-gpio = <&pcal6416_i2c3_u46 1 GPIO_ACTIVE_LOW>;
-+	vpcie3v3aux-supply = <&reg_slot_pwr>;
-+	status = "okay";
-+};
-+
-+&pcie1_ep {
-+	pinctrl-0 = <&pinctrl_pcie1>;
-+	pinctrl-names = "default";
-+	vpcie3v3aux-supply = <&reg_slot_pwr>;
-+	status = "disabled";
-+};
-+
- &usdhc1 {
- 	pinctrl-0 = <&pinctrl_usdhc1>;
- 	pinctrl-1 = <&pinctrl_usdhc1_100mhz>;
--- 
-2.37.1
+On Sun Mar 8, 2026 at 12:39 PM CET, vladimir.oltean wrote:
+> Consumer drivers shouldn't dereference struct phy, not even to get to
+> its attributes.
+>
+> We have phy_get_bus_width() as a precedent for getting the bus_width
+> attribute, so let's add phy_get_max_link_rate() and use it in DRM and
+> CAN drivers.
+>
+> In CAN drivers, the transceiver is acquired through devm_phy_optional_get=
+()
+> and NULL is given by the API as a non-error case, so the PHY API should
+> also tolerate NULL coming back to it. This means we can further simplify
+> the call sites that test for the NULL quality of the transceiver.
 
+Thanks for adding this.
+
+>
+> Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
+> ---
+> Cc: Andrzej Hajda <andrzej.hajda@intel.com>
+> Cc: Neil Armstrong <neil.armstrong@linaro.org>
+> Cc: Robert Foss <rfoss@kernel.org>
+> Cc: Laurent Pinchart <Laurent.pinchart@ideasonboard.com>
+> Cc: Jonas Karlman <jonas@kwiboo.se>
+> Cc: Jernej Skrabec <jernej.skrabec@gmail.com>
+> Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+> Cc: Maxime Ripard <mripard@kernel.org>
+> Cc: Thomas Zimmermann <tzimmermann@suse.de>
+> Cc: David Airlie <airlied@gmail.com>
+> Cc: Simona Vetter <simona@ffwll.ch>
+> Cc: Andy Yan <andy.yan@rock-chips.com>
+> Cc: Marc Kleine-Budde <mkl@pengutronix.de>
+> Cc: Vincent Mailhol <mailhol@kernel.org>
+> Cc: Nicolas Ferre <nicolas.ferre@microchip.com>
+> Cc: Alexandre Belloni <alexandre.belloni@bootlin.com>
+> Cc: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+> Cc: Markus Schneider-Pargmann <msp@baylibre.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Magnus Damm <magnus.damm@gmail.com>
+>
+> v1->v2: make phy_get_bus_width() NULL-tolerant to simplify CAN callers
+> ---
+>  drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c | 4 ++--
+>  drivers/gpu/drm/bridge/synopsys/dw-dp.c             | 2 +-
+>  drivers/net/can/at91_can.c                          | 3 +--
+>  drivers/net/can/flexcan/flexcan-core.c              | 3 +--
+>  drivers/net/can/m_can/m_can_platform.c              | 3 +--
+
+For m_can:
+Acked-by: Markus Schneider-Pargmann <msp@baylibre.com>
+
+Best
+Markus
+
+>  drivers/net/can/rcar/rcar_canfd.c                   | 3 +--
+>  drivers/phy/phy-core.c                              | 9 +++++++++
+>  include/linux/phy/phy.h                             | 6 ++++++
+>  8 files changed, 22 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c b/driver=
+s/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
+> index a8b6ae58cb0a..ed7ed82ddb64 100644
+> --- a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
+> +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
+> @@ -1300,7 +1300,7 @@ static u32 cdns_mhdp_get_training_interval_us(struc=
+t cdns_mhdp_device *mhdp,
+> =20
+>  static void cdns_mhdp_fill_host_caps(struct cdns_mhdp_device *mhdp)
+>  {
+> -	unsigned int link_rate;
+> +	u32 link_rate;
+> =20
+>  	/* Get source capabilities based on PHY attributes */
+> =20
+> @@ -1308,7 +1308,7 @@ static void cdns_mhdp_fill_host_caps(struct cdns_mh=
+dp_device *mhdp)
+>  	if (!mhdp->host.lanes_cnt)
+>  		mhdp->host.lanes_cnt =3D 4;
+> =20
+> -	link_rate =3D mhdp->phy->attrs.max_link_rate;
+> +	link_rate =3D phy_get_max_link_rate(mhdp->phy);
+>  	if (!link_rate)
+>  		link_rate =3D drm_dp_bw_code_to_link_rate(DP_LINK_BW_8_1);
+>  	else
+> diff --git a/drivers/gpu/drm/bridge/synopsys/dw-dp.c b/drivers/gpu/drm/br=
+idge/synopsys/dw-dp.c
+> index 4ab6922dd79c..79c72ee8e263 100644
+> --- a/drivers/gpu/drm/bridge/synopsys/dw-dp.c
+> +++ b/drivers/gpu/drm/bridge/synopsys/dw-dp.c
+> @@ -536,7 +536,7 @@ static int dw_dp_link_parse(struct dw_dp *dp, struct =
+drm_connector *connector)
+> =20
+>  	link->revision =3D link->dpcd[DP_DPCD_REV];
+>  	link->rate =3D min_t(u32, min(dp->plat_data.max_link_rate,
+> -				    dp->phy->attrs.max_link_rate * 100),
+> +				    phy_get_max_link_rate(dp->phy) * 100),
+>  			   drm_dp_max_link_rate(link->dpcd));
+>  	link->lanes =3D min_t(u8, phy_get_bus_width(dp->phy),
+>  			    drm_dp_max_lane_count(link->dpcd));
+> diff --git a/drivers/net/can/at91_can.c b/drivers/net/can/at91_can.c
+> index 58da323f14d7..7749da0a58f6 100644
+> --- a/drivers/net/can/at91_can.c
+> +++ b/drivers/net/can/at91_can.c
+> @@ -1125,8 +1125,7 @@ static int at91_can_probe(struct platform_device *p=
+dev)
+> =20
+>  	can_rx_offload_add_timestamp(dev, &priv->offload);
+> =20
+> -	if (transceiver)
+> -		priv->can.bitrate_max =3D transceiver->attrs.max_link_rate;
+> +	priv->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
+> =20
+>  	if (at91_is_sam9263(priv))
+>  		dev->sysfs_groups[0] =3D &at91_sysfs_attr_group;
+> diff --git a/drivers/net/can/flexcan/flexcan-core.c b/drivers/net/can/fle=
+xcan/flexcan-core.c
+> index f5d22c61503f..093e48b8da58 100644
+> --- a/drivers/net/can/flexcan/flexcan-core.c
+> +++ b/drivers/net/can/flexcan/flexcan-core.c
+> @@ -2210,8 +2210,7 @@ static int flexcan_probe(struct platform_device *pd=
+ev)
+>  	priv->reg_xceiver =3D reg_xceiver;
+>  	priv->transceiver =3D transceiver;
+> =20
+> -	if (transceiver)
+> -		priv->can.bitrate_max =3D transceiver->attrs.max_link_rate;
+> +	priv->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
+> =20
+>  	if (priv->devtype_data.quirks & FLEXCAN_QUIRK_NR_IRQ_3) {
+>  		priv->irq_boff =3D platform_get_irq(pdev, 1);
+> diff --git a/drivers/net/can/m_can/m_can_platform.c b/drivers/net/can/m_c=
+an/m_can_platform.c
+> index 56da411878af..2a0f163a683a 100644
+> --- a/drivers/net/can/m_can/m_can_platform.c
+> +++ b/drivers/net/can/m_can/m_can_platform.c
+> @@ -131,8 +131,7 @@ static int m_can_plat_probe(struct platform_device *p=
+dev)
+>  		goto probe_fail;
+>  	}
+> =20
+> -	if (transceiver)
+> -		mcan_class->can.bitrate_max =3D transceiver->attrs.max_link_rate;
+> +	mcan_class->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
+> =20
+>  	priv->base =3D addr;
+>  	priv->mram_base =3D mram_addr;
+> diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rca=
+r_canfd.c
+> index eaf8cac78038..9062db48d477 100644
+> --- a/drivers/net/can/rcar/rcar_canfd.c
+> +++ b/drivers/net/can/rcar/rcar_canfd.c
+> @@ -1884,8 +1884,7 @@ static int rcar_canfd_channel_probe(struct rcar_can=
+fd_global *gpriv, u32 ch,
+>  	priv->transceiver =3D transceiver;
+>  	priv->channel =3D ch;
+>  	priv->gpriv =3D gpriv;
+> -	if (transceiver)
+> -		priv->can.bitrate_max =3D transceiver->attrs.max_link_rate;
+> +	priv->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
+>  	priv->can.clock.freq =3D fcan_freq;
+>  	dev_info(dev, "can_clk rate is %u\n", priv->can.clock.freq);
+> =20
+> diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
+> index 0d0be494cfd7..737a760d97d1 100644
+> --- a/drivers/phy/phy-core.c
+> +++ b/drivers/phy/phy-core.c
+> @@ -647,6 +647,15 @@ void phy_set_bus_width(struct phy *phy, int bus_widt=
+h)
+>  }
+>  EXPORT_SYMBOL_GPL(phy_set_bus_width);
+> =20
+> +u32 phy_get_max_link_rate(struct phy *phy)
+> +{
+> +	if (!phy)
+> +		return 0;
+> +
+> +	return phy->attrs.max_link_rate;
+> +}
+> +EXPORT_SYMBOL_GPL(phy_get_max_link_rate);
+> +
+>  /**
+>   * _of_phy_get() - lookup and obtain a reference to a phy by phandle
+>   * @np: device_node for which to get the phy
+> diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
+> index a7e2432ca1ae..34b656084caf 100644
+> --- a/include/linux/phy/phy.h
+> +++ b/include/linux/phy/phy.h
+> @@ -57,6 +57,7 @@ int phy_notify_disconnect(struct phy *phy, int port);
+>  int phy_notify_state(struct phy *phy, union phy_notify state);
+>  int phy_get_bus_width(struct phy *phy);
+>  void phy_set_bus_width(struct phy *phy, int bus_width);
+> +u32 phy_get_max_link_rate(struct phy *phy);
+>  #else
+>  static inline struct phy *phy_get(struct device *dev, const char *string=
+)
+>  {
+> @@ -256,6 +257,11 @@ static inline int phy_get_bus_width(struct phy *phy)
+>  static inline void phy_set_bus_width(struct phy *phy, int bus_width)
+>  {
+>  }
+> +
+> +static inline u32 phy_get_max_link_rate(struct phy *phy)
+> +{
+> +	return 0;
+> +}
+>  #endif /* IS_ENABLED(CONFIG_GENERIC_PHY) */
+> =20
+>  #endif /* __PHY_CONSUMER_H */
+
+
+--840703edd9f3f1e1e79a02bb78a8d4f69f696b0531524c2c45c8075436e0
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iKMEABYKAEsWIQSJYVVm/x+5xmOiprOFwVZpkBVKUwUCaa6QehsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIRHG1zcEBiYXlsaWJyZS5jb20ACgkQhcFWaZAVSlO3
+cwEAzFZFZ21Yi1E3bmSFVrYlzos6oRC2RIJXE4meDDVCTjUA/2INMu045NS1yRGm
+V6PI/m62S0rUjMso1TupNVful6QE
+=gdIq
+-----END PGP SIGNATURE-----
+
+--840703edd9f3f1e1e79a02bb78a8d4f69f696b0531524c2c45c8075436e0--
