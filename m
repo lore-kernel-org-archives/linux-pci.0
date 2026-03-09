@@ -1,248 +1,168 @@
-Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012046.outbound.protection.outlook.com [52.101.66.46])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D11F4377EC6;
-	Mon,  9 Mar 2026 15:40:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773070842; cv=fail; b=J9XxZm3sFGDNxp/qKy7HTklBIJCajdVbDrFvtHfgRYS9X2x+2ASk5B7fDOPT9VqS/gxO5Kf3fNvP7BqFpLavyvC09FDcjxwoBnb1FBtsQ7ryp3WTMeLZ1oJL6TT25n8HtydVQMt3qQv9W7JQmmzfqWBcBv4kszny2BcGrJ6KW9s=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773070842; c=relaxed/simple;
-	bh=WpMwLkz9fxRI0AMyS7qd/FmuIYO3uox3dBZesbvlj6Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=tL1QFhNvoy4ZWhTnsb1WFAEWT6BAjmC56hs3zJ972XV/fzMpuYhi+ipXyYX9ZiTHo6gL82fWwzou/g+rjxUVKLOT2+el6UB9OiBxxrhR0C7jux+vodxX/qNWfCeTFgB6Qti8NGxafTmob2/WeW8ImKW6BdEjHr3tYEwUyhSwEY8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=U9pJETLL; arc=fail smtp.client-ip=52.101.66.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C3B83DBD71;
+	Mon,  9 Mar 2026 15:45:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773071142; cv=none; b=mPWinpZ9Si9XKLnp00CH83dCZK2KvNgbpnyaGuDGpQh5lY89KzvkQzpOSJSyZuLBbPkeL8cUy8YY3upZkl1AlH6ilp1x/JUw4FszE7Adu7bp+tsv8HeniH5WyQoJBrDIHdKNpB+pDHnra/tH7jTC6JiR95dTAffnY2sIc6eD/v0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773071142; c=relaxed/simple;
+	bh=jwi9ebvnM0hO6++49RVnkk82lZ9CJamEzE6bQ8Tn474=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gZJv1d+VtjuhkMf/d0Hmk89Fbg2jeVK/pbtuTisw3QCiL0Wkh4IohB8WfwGBenNhFhY0h0SjNEsOtmjk2dxZ5Ju7AknPoUxQGnkbbOcdzuQTH24NA/fLV3P9C+LtaFUys0+TWxCmNttqwNqRqi1kbr/DltFzOccLbfENBDUxrK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nZc2vjMY; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="U9pJETLL"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=TdNfAVGKJ0z5OJoK0Cg9/hMdRgnzCR7XJCPqPsom3F6bUgPmPoW4M4im6IJv6Tcb/YzJ8/FjHqTqjsPLA3fpzzUaaDdcJB1+ZvRm9XHyXGZko4TlCplZTiSZ8I9jVkJud5GqzthATjvXjKQbuKPA6Ho+jUCukdCG52LJTEvP1F5rugPc06/2znvAMHlYqid/mBPHKJ7AR4X8hv85sWZgperfdAzKR1LjfbqAbgv1Ask1CJTVIeVwlMopZBE2H4Zor/1JK1O7PPPhoGzwGlauW3a4lgXhOQ5bXlFFBNOt3M+8+mMB6Ts5dzEsl3QRczdkaVh945BCn2fiLlCXfBHqZA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=aPulvLwTTFTdu+406zX5G5rVs4O8zQFM8/ZpbVODJRQ=;
- b=FLPIA+EGdhfNPZJRAGWEHn2emha8UWNSyyBYHloJExtrbF/650ijrGiWzduss2VUc4ncS04Jrcb2SiWWLSLe1nzfUq8xZMYc1R7XdQlOjd5PIQ7KiR4ls/HbhU2tC8uOVjhYvLvQ5jrMxkCdgiLa9bebrcbJ7DoIzLQGECAEEEVhpWwhEcoL5lFwqMnvn15m4gH4eSpRI07P2sMhh5BLI+lQAsVN0XzyINVcRJWvIrdYQp3H/3SoYj21i4p5k8h/R3ves0vrgp7b9f7VG1YNhmzQsqlCYWrjUr1Trkf2/QOiC1gMVkawOkiADQwT8PpplaoLGJk3itzlfl2447g0OQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aPulvLwTTFTdu+406zX5G5rVs4O8zQFM8/ZpbVODJRQ=;
- b=U9pJETLLRdQ6smyU6mj9qas28hAerMvTSGp2aD80frFteLAqRiQHqoZ3bpou7tg4RFb+IgMP4qJhsUHS/ivupCF6VbGBzecuETpS4MoIAWzE3qoAH8r0u/YVK5kPWbOlGr1XbdmXnGKIMhfIyuahWKh+Bgoz5e1RiqkwQUd2+vDfxKWInvI/LavLdL3OnrC6kLEBCmcikXSOoA3CnobrJ7Ri5Skkf+u8NAFZ+ymm1l5g5D7iH0nGMMzV+zjA0VJDNRxwu59iQ3R+Q/zXc/wSELigRkKk9xaVvTGqIntST/ueUg8bXaUm0Fd777ChLnjsLI1/Wo4E/L8XGCC98WM5lA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by GVXPR04MB10518.eurprd04.prod.outlook.com (2603:10a6:150:1eb::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.24; Mon, 9 Mar
- 2026 15:40:36 +0000
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9678.017; Mon, 9 Mar 2026
- 15:40:35 +0000
-Date: Mon, 9 Mar 2026 11:40:29 -0400
-From: Frank Li <Frank.li@nxp.com>
-To: "Verma, Devendra" <Devendra.Verma@amd.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"mani@kernel.org" <mani@kernel.org>,
-	"vkoul@kernel.org" <vkoul@kernel.org>,
-	"dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Simek, Michal" <michal.simek@amd.com>
-Subject: Re: [PATCH v11 2/2] dmaengine: dw-edma: Add non-LL mode
-Message-ID: <aa7p7V7Dt_NbaOV8@lizhi-Precision-Tower-5810>
-References: <20260306115228.3446528-1-devendra.verma@amd.com>
- <20260306115228.3446528-3-devendra.verma@amd.com>
- <aatEUuynXVVYEhWy@lizhi-Precision-Tower-5810>
- <SA1PR12MB8120969E61FCC5C46F1C1B739579A@SA1PR12MB8120.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <SA1PR12MB8120969E61FCC5C46F1C1B739579A@SA1PR12MB8120.namprd12.prod.outlook.com>
-X-ClientProxiedBy: SA9PR13CA0019.namprd13.prod.outlook.com
- (2603:10b6:806:21::24) To PA4PR04MB9366.eurprd04.prod.outlook.com
- (2603:10a6:102:2a9::8)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nZc2vjMY"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773071140; x=1804607140;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=jwi9ebvnM0hO6++49RVnkk82lZ9CJamEzE6bQ8Tn474=;
+  b=nZc2vjMYtDqeosG19kiW00GcUhg1A3Sez9groUaeRcO9r+rULW6FiwBh
+   E/MjilmiMSs21ft/GOot3j7oowv/oE95j1UL37A25UEzSUTtQwjw0esS/
+   bsmrrpeeiUK0nrkBBTxjSdPHRQUUfD0+1ErcUEnmKwDvBUp/qT24E7cly
+   MANVxUa3iTK1QGkGqWtQyah3FuKq72dMKqzZ//tBMsydVmE4XrBRWmjxf
+   baozqT3BehlUGWTrBFCg3O4BqRyyzn426jylNEKPaHV/NJwGC6ZkLo1zi
+   d03GvcohSi2yOG7CatArHt7jEfqc4FOm6bSTA+u9HrrdF53xfwO0htZwE
+   Q==;
+X-CSE-ConnectionGUID: nC20N4XPStKAiAHYvHArgA==
+X-CSE-MsgGUID: KXPIEMR1TjmdFz91o+scvA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11723"; a="84425137"
+X-IronPort-AV: E=Sophos;i="6.23,109,1770624000"; 
+   d="scan'208";a="84425137"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2026 08:45:39 -0700
+X-CSE-ConnectionGUID: y8kklu2jQ+GS/rDGkR2w+A==
+X-CSE-MsgGUID: Kk/LttEYQ8az5973KwI19g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,109,1770624000"; 
+   d="scan'208";a="218939087"
+Received: from lkp-server01.sh.intel.com (HELO 434e41ea3c86) ([10.239.97.150])
+  by orviesa006.jf.intel.com with ESMTP; 09 Mar 2026 08:45:37 -0700
+Received: from kbuild by 434e41ea3c86 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vzcnV-000000000S0-1FRM;
+	Mon, 09 Mar 2026 15:45:33 +0000
+Date: Mon, 9 Mar 2026 23:44:47 +0800
+From: kernel test robot <lkp@intel.com>
+To: Hans Zhang <18255117159@163.com>, lpieralisi@kernel.org,
+	jingoohan1@gmail.com, mani@kernel.org, kwilczynski@kernel.org,
+	bhelgaas@google.com, helgaas@kernel.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, robh@kernel.org,
+	ilpo.jarvinen@linux.intel.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Hans Zhang <18255117159@163.com>
+Subject: Re: [PATCH v7 2/2] PCI: dwc: Validate max-link-speed property
+Message-ID: <202603092301.uROFb9mn-lkp@intel.com>
+References: <20260308142629.75392-3-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|GVXPR04MB10518:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3007d591-f0ab-45bd-694f-08de7df234de
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|19092799006|1800799024|366016|376014|52116014|38350700014|7053199007;
-X-Microsoft-Antispam-Message-Info:
-	qn7g28MPHAO+4TZE2cCcKAynRz9OjevIfsio35z5LfSXh3DJ2HgJeTxWKB679tZvpYj/9En6aASx7OkwxsY3fOro5KpOspmn/BSxmtvpWh342ls1wRzy5UGasxfwjyywKjcIOBP98LpINEEi2ovxAOmu+j0oCBVpfUo4bEylEe193bZebSZNIvwS7SKlmJ0CgrfImFOcPGbh6lz5qtRVoK9goPE7haNQGxkl+ThVS6pxN4d3VsfHMmBLZIPN4cWNAy08b9A34YHJ6WgxWn+OsyN6qPdd3QYF0qQN/mRL3ukqab0APKpK1p05aZBMXl7bONqCKZ9Ww9cVue2SSamxlmDQiwt58X3o4/aeQUWdAOtwQSG786b5zQ7i5GQcOGCec4SsuppTSiPtJRTC8+aONt0+7DxDpu/8Iaq5hZc84asMPjC0u/vBVdR8Hl0vjNvjFWz7bYbmUrHdtYOsoTUlUd+e2x58D0nwcSl2BdK5vh549yJi/OAFxU060HTX/yAnn0tk0OMfHk1qXXv27jirLYWDMoMDP2pv1YZ64/3G1XQq9G1zYm7NqVCyBFk/WvxeGreBl+NIl0EOsMgp6/d4vIrEtIYu+Wi36OFIo0btrrYwWmIAKyQ7J0k2XjduPZ/xXGaenpO31B4ZvIS5t3EFvLMpYPKTp2hPpzv8+PUeF9EZfibMOaIkbGM/X7q6wh/8xNM6u/kQSsz50+FsEcYf9EH3FOiER4hbz63pWqi5PTUnIQWMxld0BxpBdVMHueT3b3suZxQrTAb79/ViZAaRSdqxuzBnUCxbHnosxxdYQ60=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(1800799024)(366016)(376014)(52116014)(38350700014)(7053199007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?4vf+IeA1tPoR/QhX/O5GGKRubLDnda4mDSWpyRurThNlCIdONQENVzntAyZf?=
- =?us-ascii?Q?MzV3yaCD055FA2jY5EC+dusyndSG+XuX6cDM2iMGuvlD06kXqhnY4pbuayUF?=
- =?us-ascii?Q?7GHfMXhPTwxo8QbSK15wbvAQ6VYgB2pVh1DtWIbDTePruvh11xjKZLQLEQd9?=
- =?us-ascii?Q?eFgOAPQApalzB0pMmTMkdWYIioNHMGDHTDn2KM4AHToHPm1Uv36f2tes8M3h?=
- =?us-ascii?Q?cUGXDxi25MEZCaSxrCdbxvzkE8CNRAzc5UDZEgTehPfeYr42ZSgp13XE1czD?=
- =?us-ascii?Q?mZJxOPpjD+KwJGweSszKOHmQ3g6AHJ/Xj0vajdx3ITRy3yNbTgLxP3C3sppK?=
- =?us-ascii?Q?BH4akm2arAMKJmaMwiXHbEMtGqqzFfhqPgfdP4RisE6UitCE7rOmegl9rh6m?=
- =?us-ascii?Q?hSUtXCyGPoeTOybewPJxWpDNqKAjDLPrSu80b6FfdbAJG0XqA0cPouGpG2eB?=
- =?us-ascii?Q?HVDCa4kB7oqKEnumJQyHFab0LBOzkFtVOJ5I3xDr+l9YMOpXmlF6jb/yl3PZ?=
- =?us-ascii?Q?29CjXv6sknccS56rcCMai3HaY6URYSCJDpQVXZZtozXGSXy22nI7iQjV5uVT?=
- =?us-ascii?Q?8rCmWGK2vcujqzouFp0PklxAweRjve/Tet+YvrXGCS14iLZJAMtHsi4mjkS/?=
- =?us-ascii?Q?7I62KyUtGMt/bxgVEwx5v11Fa9JfRGXSfmmju04jNhScBunX9SpAV6LzgKPF?=
- =?us-ascii?Q?ECG5KCAqllmK/j7sGlRC392412FRGEv4jEOmsaQYecW61e06V419HmFIM3Oj?=
- =?us-ascii?Q?zsSj0mDD/AQjKZxQDhEmW24njSNU5NW/FE37KtikazJIhyx8tycl7/QlGY0f?=
- =?us-ascii?Q?RjFS6QctrkTwjBPhIOrMQweHtg7dzVyLQ48ole6leyMgMrWV3LRDHuISBkfY?=
- =?us-ascii?Q?BZxFx/xbUSsHLyR90YBWggHwJeyfWT36MmTB2DxLazM4MMPCaGDq+BuibTjR?=
- =?us-ascii?Q?WX9bv5gJdSChwk1NZ6PHPNX0mmZVf96OiWTFVfVsTB3KbYusKmN543mHwZEy?=
- =?us-ascii?Q?+fkTso8/rKP/IFZdCjuJvJqz8sprKQrAAZODdWzNf7jI39rcIFqX45pgEOVg?=
- =?us-ascii?Q?4KvavoFVztuugU82LvKloSpKE8l8sEb7wURio7OHRm5t8jcd5C1lnMomcNNL?=
- =?us-ascii?Q?PECQRvCmKoC/K+W4BdicqNmrKnZYmaU8Z5umlBqfbgd/yEQh+Ll32UMPeCAT?=
- =?us-ascii?Q?1be25lzMgphpTS12idpYThndyVqXTj58MYe9I1QczergEtCe8k9MRStDYbnI?=
- =?us-ascii?Q?ClMLFdWMEIwFTw3Dutb3SQrJMt8DS3G9aPvVXKLln5gBFZr8lCn/fFkPjovU?=
- =?us-ascii?Q?wshYskt4pi/ks7Is7lFLt8vrb9/zab+8Ka6lKy1t4otV09rzdo7PnTQURAbM?=
- =?us-ascii?Q?sjITIrMVzyWtsoVRppjTl8HN+b05un4fu/cLGl0/KoVhd+zEYO147ZBFHrJr?=
- =?us-ascii?Q?5fHRZY/ARN5VW+uQkLxNezKr7YUrobGTZ0R5hmmff/K1L2UXiF/YcySqDrHN?=
- =?us-ascii?Q?r/nHUGqoOsQDQhB0kfpANNhy9ZFXYz5ni7VKTE5zkIJ6Ei+IKbCx+aMZmeZf?=
- =?us-ascii?Q?O7RoF9goN+bfe/r6D3fPQXXJFPX2xjtlObwK5Q3N9yBBkdDdwKrhy+X9fJsp?=
- =?us-ascii?Q?ypMoIrhu/lWkazPaLvC942tZg3Dm4vG/EhjL1THqJQWZ1QsPKtVwh4qZvQsY?=
- =?us-ascii?Q?/azbRlQdkSXF/9oLV4mGV4xx/DietyRnjIb17keajJCQRd22?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3007d591-f0ab-45bd-694f-08de7df234de
-X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2026 15:40:35.7336
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: pbPOSPjKQxw3TH6ChIJvH39ND0uIS61A3cSCcbkpaWiYALCEwwpGKFUGzOLRdPPI5li5eVxcxfrYvX+6yuMUug==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVXPR04MB10518
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260308142629.75392-3-18255117159@163.com>
 
-On Mon, Mar 09, 2026 at 11:18:33AM +0000, Verma, Devendra wrote:
-> [AMD Official Use Only - AMD Internal Distribution Only]
->
-> > -----Original Message-----
-> > From: Frank Li <Frank.li@nxp.com>
-> > Sent: Saturday, March 7, 2026 2:47 AM
-> > To: Verma, Devendra <Devendra.Verma@amd.com>
-> > Cc: bhelgaas@google.com; mani@kernel.org; vkoul@kernel.org;
-> > dmaengine@vger.kernel.org; linux-pci@vger.kernel.org; linux-
-> > kernel@vger.kernel.org; Simek, Michal <michal.simek@amd.com>
-> > Subject: Re: [PATCH v11 2/2] dmaengine: dw-edma: Add non-LL mode
-> >
-> > Caution: This message originated from an External Source. Use proper
-> > caution when opening attachments, clicking links, or responding.
-> >
-> >
-> > On Fri, Mar 06, 2026 at 05:22:28PM +0530, Devendra K Verma wrote:
-> > ...
-> > > +             /*
-> > > +              * When there is no valid LLP base address available then the
-> > > +              * default DMA ops will use the non-LL mode.
-> > > +              *
-> > > +              * Cases where LL mode is enabled and client wants to use the
-> > > +              * non-LL mode then also client can do so via providing the
-> > > +              * peripheral_config param.
-> > > +              */
-> > > +             cfg_non_ll = chan->dw->chip->cfg_non_ll;
-> > > +             if (config->peripheral_config) {
-> > > +                     non_ll = *(int *)config->peripheral_config;
-> > > +
-> > > +                     if (cfg_non_ll && !non_ll) {
-> > > +                             dev_err(dchan->device->dev, "invalid configuration\n");
-> > > +                             return -EINVAL;
-> > > +                     }
-> > > +             }
-> > > +
-> > > +             if (cfg_non_ll || (!cfg_non_ll && non_ll))
-> > > +                     chan->non_ll = true;
-> >
-> > this logic have a little bit complex
-> >
-> > if (cfg_non_ll)
-> >         chan->non_ll = true;
-> > else
-> >         chan->non_ll = non_ll;
-> >
->
-> Thank you for your suggestion.
-> I think it is individual preference. I am not sure what seem to be complex in the
-> logic floated for review as all the boolean operations are easy to comprehend
-> in a single statement.
-> I am sure there are multiple ways to write the same logic.
-> To me, the logic you suggested looks bigger with the same outcome delivered.
-> If after distinction in variable names and simple boolean ops still cause confusion
-> then I am not sure till what point it can be simplified.
-> If fewer lines of code can deliver the same result, then it should be ok to keep it.
-> I would request to keep the change of the floated review.
+Hi Hans,
 
-Reader need thank more about "cfg_non_ll || (!cfg_non_ll && non_ll)" to
-make sure it is correct and what it do, need create true table in brain.
+kernel test robot noticed the following build errors:
 
-It is not enough straight forwards.
+[auto build test ERROR on c23719abc3308df7ed3ad35650ad211fb2d2003d]
 
-Frank
+url:    https://github.com/intel-lab-lkp/linux/commits/Hans-Zhang/PCI-of-Remove-max-link-speed-generation-validation/20260308-223128
+base:   c23719abc3308df7ed3ad35650ad211fb2d2003d
+patch link:    https://lore.kernel.org/r/20260308142629.75392-3-18255117159%40163.com
+patch subject: [PATCH v7 2/2] PCI: dwc: Validate max-link-speed property
+config: i386-randconfig-004-20260308 (https://download.01.org/0day-ci/archive/20260309/202603092301.uROFb9mn-lkp@intel.com/config)
+compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260309/202603092301.uROFb9mn-lkp@intel.com/reproduce)
 
-> Thanks!
->
-> >
-> > > +     } else if (config->peripheral_config) {
-> > > +             dev_err(dchan->device->dev,
-> > > +                     "peripheral config param applicable only for HDMA\n");
-> > > +             return -EINVAL;
-> > > +     }
-> > >
-> > ...
-> > >
-> > >  struct dw_edma_irq {
-> > > diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c
-> > > b/drivers/dma/dw-edma/dw-edma-pcie.c
-> > > index b8208186a250..f538d728609f 100644
-> > > --- a/drivers/dma/dw-edma/dw-edma-pcie.c
-> > > +++ b/drivers/dma/dw-edma/dw-edma-pcie.c
-> > > @@ -295,6 +295,15 @@ static void
-> > dw_edma_pcie_get_xilinx_dma_data(struct pci_dev *pdev,
-> > >       pdata->devmem_phys_off = off;
-> > >  }
-> > >
-> > > +static u64 dw_edma_get_phys_addr(struct pci_dev *pdev,
-> > > +                              struct dw_edma_pcie_data *pdata,
-> > > +                              enum pci_barno bar) {
-> > > +     if (pdev->vendor == PCI_VENDOR_ID_XILINX)
-> > > +             return pdata->devmem_phys_off;
-> > > +     return pci_bus_address(pdev, bar); }
-> > > +
-> >
-> > Reduce each patches's changes, make each patch is straightforward
-> >
-> > Create Prepare patch firstly, change pci_bus_address() to
-> > dw_edma_get_phys_addr()
-> >
-> > just
-> >
-> > dw_edma_get_phys_addr() {
-> > {
-> >         return return pci_bus_address(pdev, bar); }
-> >
-> > So this patch just add
-> > two lines here
-> >
-> > if (pdev->vendor == PCI_VENDOR_ID_XILINX)
-> >         return pdata->devmem_phys_off;
-> >
-> >
-> > others look good.
-> >
-> > Frank
-> >
->
-> Regarding this we already had discussion and it was concluded to let this piece of code
-> to be as is. Please check the discussion at the following link:
-> https://lore.kernel.org/all/aXe5ts7E6lUF7YRq@lizhi-Precision-Tower-5810/
->
-> > >
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202603092301.uROFb9mn-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> drivers/pci/controller/dwc/pcie-designware.c:128:19: error: invalid application of 'sizeof' to an incomplete type 'const unsigned char[]'
+     128 |             max_speed >= ARRAY_SIZE(pcie_link_speed) ||
+         |                          ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/array_size.h:11:32: note: expanded from macro 'ARRAY_SIZE'
+      11 | #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
+         |                                ^~~~~
+   drivers/pci/controller/dwc/pcie-designware.c:255:9: warning: indirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]
+     255 |         return PCI_FIND_NEXT_CAP(dw_pcie_read_cfg, PCI_CAPABILITY_LIST, cap,
+         |                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     256 |                                  NULL, pci);
+         |                                  ~~~~~~~~~~
+   drivers/pci/controller/dwc/../../pci.h:159:5: note: expanded from macro 'PCI_FIND_NEXT_CAP'
+     159 |                                 *(u8 *)prev_ptr = __prev_pos;           \
+         |                                 ^~~~~~~~~~~~~~~
+   drivers/pci/controller/dwc/pcie-designware.c:255:9: note: consider using __builtin_trap() or qualifying pointer with 'volatile'
+   drivers/pci/controller/dwc/../../pci.h:159:5: note: expanded from macro 'PCI_FIND_NEXT_CAP'
+     159 |                                 *(u8 *)prev_ptr = __prev_pos;           \
+         |                                 ^
+   drivers/pci/controller/dwc/pcie-designware.c:262:9: warning: indirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]
+     262 |         return PCI_FIND_NEXT_EXT_CAP(dw_pcie_read_cfg, 0, cap, NULL, pci);
+         |                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/pci/controller/dwc/../../pci.h:207:5: note: expanded from macro 'PCI_FIND_NEXT_EXT_CAP'
+     207 |                                 *(u16 *)prev_ptr = __prev_pos;          \
+         |                                 ^~~~~~~~~~~~~~~~
+   drivers/pci/controller/dwc/pcie-designware.c:262:9: note: consider using __builtin_trap() or qualifying pointer with 'volatile'
+   drivers/pci/controller/dwc/../../pci.h:207:5: note: expanded from macro 'PCI_FIND_NEXT_EXT_CAP'
+     207 |                                 *(u16 *)prev_ptr = __prev_pos;          \
+         |                                 ^
+   drivers/pci/controller/dwc/pcie-designware.c:329:17: warning: indirection of non-volatile null pointer will be deleted, not trap [-Wnull-dereference]
+     329 |         while ((vsec = PCI_FIND_NEXT_EXT_CAP(dw_pcie_read_cfg, vsec,
+         |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     330 |                                              PCI_EXT_CAP_ID_VNDR, NULL, pci))) {
+         |                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/pci/controller/dwc/../../pci.h:207:5: note: expanded from macro 'PCI_FIND_NEXT_EXT_CAP'
+     207 |                                 *(u16 *)prev_ptr = __prev_pos;          \
+         |                                 ^~~~~~~~~~~~~~~~
+   drivers/pci/controller/dwc/pcie-designware.c:329:17: note: consider using __builtin_trap() or qualifying pointer with 'volatile'
+   drivers/pci/controller/dwc/../../pci.h:207:5: note: expanded from macro 'PCI_FIND_NEXT_EXT_CAP'
+     207 |                                 *(u16 *)prev_ptr = __prev_pos;          \
+         |                                 ^
+   3 warnings and 1 error generated.
+
+
+vim +128 drivers/pci/controller/dwc/pcie-designware.c
+
+   112	
+   113	static void dw_pcie_get_link_speed(struct dw_pcie *pci)
+   114	{
+   115		struct device_node *np = dev_of_node(pci->dev);
+   116		int max_speed;
+   117	
+   118		max_speed = of_pci_get_max_link_speed(np);
+   119		if (max_speed < 0) {
+   120			dev_warn(pci->dev,
+   121				 "Failed to get max-link-speed, using default (Gen1)\n");
+   122			pci->max_link_speed = 1;
+   123			return;
+   124		}
+   125	
+   126		/* Validate against known speeds in pcie_link_speed */
+   127		if (max_speed == 0 ||
+ > 128		    max_speed >= ARRAY_SIZE(pcie_link_speed) ||
+   129		    pcie_link_speed[max_speed] == PCI_SPEED_UNKNOWN) {
+   130			dev_warn(pci->dev,
+   131				 "Invalid max-link-speed %d, using default (Gen1)\n",
+   132				 max_speed);
+   133			pci->max_link_speed = 1;
+   134			return;
+   135		}
+   136	
+   137		pci->max_link_speed = max_speed;
+   138	}
+   139	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
