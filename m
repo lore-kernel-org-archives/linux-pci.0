@@ -1,206 +1,128 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53F9A378805;
-	Mon,  9 Mar 2026 12:45:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36E933BD63D;
+	Mon,  9 Mar 2026 13:18:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773060349; cv=none; b=Denl3cziwaRUIq5cSsqfWzh3grSlTBVZ42EoNo/tu5QVHGa+BnYMilo0tFMRLPIgl6soGvD0CrRIF95+I8jgesEAIRLhQiVl5KBPJItZVOxuhhP7KpjeL2I8Bv4LDtokXpHM7ugrCwckDc6eAJEaMpDAYlneb6RWrkAOAWmDKx4=
+	t=1773062330; cv=none; b=TQt31AEqYN3J9dvb7Kr8+BssHkH/oM2EWIwi+EPi+KFFyrkJtmNW4tnTVbQlBq4uTrNWs2EUlE7f9btrWLU0rAowizNEhZKObwFQtpvXSqsQ30JoruMTG5cWCf14BiQfWewZN1JXCOuBBAjL8qHkrs+7t90wqWA4QJSrrR3O24o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773060349; c=relaxed/simple;
-	bh=+UI6EKa+EgAYparqRT9nD4bBj5vMZ53PZOz681Jg60Q=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dYjyfNAlFYxcNfsTWgO0t5P4We56dIcDXXSLtQoEqeKQEl2M7a05923FrwT3Kj7ZAvdZfYH2Z1FBduHP7tvnAoVImnPoPebLamIYGf+/Lc1HPcCOzwkmAHl647jdbNJD6oVUSdwWXw6yEC5+kYU/P/LAdEXFe+cfnyr5Tb44pb4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.107])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fTxZD08HdzHnHPd;
-	Mon,  9 Mar 2026 20:45:40 +0800 (CST)
-Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id BAF0A40587;
-	Mon,  9 Mar 2026 20:45:43 +0800 (CST)
-Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
- (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 9 Mar
- 2026 12:45:42 +0000
-Date: Mon, 9 Mar 2026 12:45:41 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: Terry Bowman <terry.bowman@amd.com>
-CC: <dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
-	<dan.j.williams@intel.com>, <bhelgaas@google.com>, <shiju.jose@huawei.com>,
-	<ming.li@zohomail.com>, <Smita.KoralahalliChannabasappa@amd.com>,
-	<rrichter@amd.com>, <dan.carpenter@linaro.org>,
-	<PradeepVineshReddy.Kodamati@amd.com>, <lukas@wunner.de>,
-	<Benjamin.Cheatham@amd.com>, <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	<linux-cxl@vger.kernel.org>, <vishal.l.verma@intel.com>, <alucerop@amd.com>,
-	<ira.weiny@intel.com>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v16 05/10] PCI: Establish common CXL Port protocol error
- flowUIRE
-Message-ID: <20260309124541.000006e8@huawei.com>
-In-Reply-To: <20260302203648.2886956-6-terry.bowman@amd.com>
-References: <20260302203648.2886956-1-terry.bowman@amd.com>
-	<20260302203648.2886956-6-terry.bowman@amd.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1773062330; c=relaxed/simple;
+	bh=I/fnei6+1zSYKsgxvA65UaXWt07Edw6ULpLRDKhr4Io=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ZjsPyey50QBPc36eUB7jXDwwZF6XTvUuE+2lV8hnzle5tUYIwF+Afg50uUZ7niTMChRNetQM9uFVePIXiSfFdoUrvn6rHl2ZrtPnBbCr6OQ8g1RlUt24hepK/3GwJhzpOBoLwv4AmtDFTbAGW1ZmSeIqdO1vH2UgFQdxSUrQnDs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=pass smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=GjMOdncY; arc=none smtp.client-ip=5.135.140.105
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cjdns.fr
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="GjMOdncY"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 7695B284DD7;
+	Mon,  9 Mar 2026 14:18:32 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
+	t=1773062319; h=from:subject:date:message-id:to:cc:mime-version:
+	 content-transfer-encoding; bh=Y07gyMyA+v61AkgAjpiX1Hx/H6h+2ViD5prXyk9P3U4=;
+	b=GjMOdncYe6alUKv1iGSD8mSIJWw9X7w8G8Tw2F5S3/Wz052nxQrUNbclTyhViUsqFhy8uf
+	C6/MKgSsiwk2MpOzEieAkEdUbYEUan9KLAJ6Cj/A/75ZTBzlkw5zTzbhwMs8ovUNnySttd
+	v4Ne/HYsA2K1D9If9zwt3WXq5sYb64cYAfkGCj2Po4Pxir1dJVnEiQ0YWEYnSI6RgMB7+3
+	YJ9p5GYweAJtS0hxLYE+ynGtr2gH7+YVKrdT3D9pdOwL23NOFYR7xlpuAaPel1K521I8lw
+	GCEavo2ObQVrYDX3oPynx9/EjTSt4Ex/t3pyfwxOKJd44gMtMK6MlCYlu9KD0A==
+From: Caleb James DeLisle <cjd@cjdns.fr>
+To: linux-mips@vger.kernel.org
+Cc: naseefkm@gmail.com,
+	mturquette@baylibre.com,
+	sboyd@kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	cjd@cjdns.fr,
+	tsbogend@alpha.franken.de,
+	ryder.lee@mediatek.com,
+	jianjun.wang@mediatek.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	bhelgaas@google.com,
+	vkoul@kernel.org,
+	neil.armstrong@linaro.org,
+	p.zabel@pengutronix.de,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
+	nbd@nbd.name,
+	ansuelsmth@gmail.com,
+	linux-clk@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-phy@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v2 0/8] mips: econet: Add clk/reset and PCIe support
+Date: Mon,  9 Mar 2026 13:18:10 +0000
+Message-Id: <20260309131818.74467-1-cjd@cjdns.fr>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml500012.china.huawei.com (7.191.174.4) To
- dubpeml500005.china.huawei.com (7.214.145.207)
+Content-Transfer-Encoding: 8bit
+X-Last-TLS-Session-Version: TLSv1.3
 
-On Mon, 2 Mar 2026 14:36:43 -0600
-Terry Bowman <terry.bowman@amd.com> wrote:
+Add clock/reset and PCIe support to EcoNet EN751221 and related SoCs.
+This builds on the Airoha EN7523 clock driver and the Mediatek PCIe driver.
 
-> Introduce CXL Port protocol error handling callbacks to unify detection,
-> logging, and recovery across CXL Ports and Endpoints. Establish a consistent
-> flow for correctable and uncorrectable CXL protocol errors. Support for RCH
-> Downstream Port error handling will be added in a future patch.
-> 
-> Provide the solution by adding cxl_port_cor_error_detected() and
-> cxl_port_error_detected() to handle correctable and uncorrectable handling
-> through CXL RAS helpers, coordinating uncorrectable recovery in
-> cxl_do_recovery(), and panicking when the handler returns PCI_ERS_RESULT_PANIC
-> to preserve fatal cachemem behavior. Gate Endpoint handling on the Endpoint
-> driver being bound to avoid processing errors on disabled devices.
-> 
-> Centralize the RAS base lookup in cxl_get_ras_base(), selecting the
-> downstream-port dport->regs.ras for Root/Downstream Ports and port->regs.ras
-> for Upstream Ports/Endpoints.
-> 
-> Export pcie_clear_device_status() and pci_aer_clear_fatal_status() to enable
-> cxl_core to clear PCIe/AER state in these flows.
-> 
-> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
-> 
-Hi Terry,
+Patch 6 is upstreaming of Ahmed Naseef's work on EcoNet PCIe, which was
+developed to support the EN7528, but which works equally on the EN751221.
 
-It's been long enough I've pretty much forgotten what this does, so
-fresh review.  Might well be commenting on things that have come up
-before!
+There is also a workaround in patch 7 to gracefully handle PCI hardware
+which does not advertize a bridge window and instead always reads zero.
 
-Jonathan
+Changes in v2:
+* clock/econet,en751221-scu.h drop EN751221_MAX_CLKS
+* clk-en7523.c add EN751221_MAX_CLKS
+* econet,en751221-chip-scu.yaml drop in favor of using mtd/syscon.yaml
+* airoha,en7523-scu.yaml drop redundant example
+* econet,en751221-pcie-phy.yaml Refer to PHYs as "gen1" and "gen2"
+* pcie-mediatek.c Exclude pcie_retrain_link() when building as a module
+* en751221.dtsi "econet,en751221-scu" is not a "syscon"
+* Rebase to linux-next
+* v1: https://lore.kernel.org/linux-mips/20260303190948.694783-1-cjd@cjdns.fr/
 
-> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-> index 44791f6d7d50..1d4be2d78469 100644
-> --- a/drivers/cxl/core/ras.c
-> +++ b/drivers/cxl/core/ras.c
+Caleb James DeLisle (8):
+  dt-bindings: clock, reset: Add econet EN751221
+  clk: airoha: Add econet EN751221 clock/reset support to en7523-scu
+  dt-bindings: phy: Document PCIe PHY in EcoNet EN751221 and EN7528
+  phy: econet: Add PCIe PHY driver for EcoNet EN751221 and EN7528 SoCs.
+  dt-bindings: PCI: mediatek: Add support for EcoNet EN7528
+  PCI: mediatek: Add support for EcoNet EN7528 SoC
+  PCI: Skip bridge window reads when window is not supported
+  mips: dts: Add PCIe to EcoNet EN751221
 
-> +static u64 cxl_serial_number(struct device *dev)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +	struct cxl_port *port __free(put_cxl_port) = get_cxl_port(pdev);
-> +	struct device *port_dev = port ? port->uport_dev : NULL;
-
-Maybe someone else asked for this, but to my eyes it's too complex.
-Would be simpler to drop this local variable and
-
-> +	struct cxl_memdev *cxlmd;
-> +
-
-	if (!port || !port->uport_dev || !is_cxl_memdev(dev))
-		return 0;
-
-	cxlmd = to_cxl_memdev(port->uport_dev);
-..
-
-> +	if (!port_dev || !is_cxl_memdev(dev))
-> +		return 0;
-> +
-> +	cxlmd = to_cxl_memdev(port_dev);
-> +	return cxlmd->cxlds->serial;
-> +}
-
-> +static void cxl_do_recovery(struct pci_dev *pdev)
-> +{
-> +	struct cxl_port *port __free(put_cxl_port) = get_cxl_port(pdev);
-> +	struct device *dev = &pdev->dev;
-> +	pci_ers_result_t status;
-> +
-> +	if (!port) {
-> +		pci_err(pdev, "Failed to find the CXL device\n");
-> +		return;
-> +	}
-> +
-> +	status =  cxl_handle_ras(dev, cxl_serial_number(dev), cxl_get_ras_base(dev));
-Extra space after = 
-
-> +	if (status == PCI_ERS_RESULT_PANIC)
-> +		panic("CXL cachemem error.");
-> +
-> +	if (pcie_aer_is_native(pdev)) {
-> +		pcie_clear_device_status(pdev);
-> +		pci_aer_clear_nonfatal_status(pdev);
-> +		pci_aer_clear_fatal_status(pdev);
-> +	}
-> +}
-> +
->  void cxl_handle_cor_ras(struct device *dev, u64 serial, void __iomem *ras_base)
->  {
->  	void __iomem *addr;
-> @@ -327,3 +428,71 @@ pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
-
-> +
-> +static void cxl_proto_err_work_fn(struct work_struct *work)
-> +{
-> +	struct cxl_proto_err_work_data wd;
-> +
-> +	/*
-> +	 * Dequeue work forwarded from the AER driver
-> +	 * See cxl_forward_error() for matching pci_dev_get()
-> +	 */
-> +	while (cxl_proto_err_kfifo_get(&wd)) {
-> +		struct pci_dev *pdev __free(pci_dev_put) = wd.pdev;
-
-I'm not particularly keen on the lack of constructor / destructor pairing this is giving
-us but the alternatives are fiddly.  You could make cxl_proto_err_kfifo_get() return wd
-/ ERR_PTR() and use a new DEFINE_FREE() for that structure. But it would require
-memory allocation or a dance.
+ .../bindings/clock/airoha,en7523-scu.yaml     |   7 +-
+ .../devicetree/bindings/mfd/syscon.yaml       |   2 +
+ .../bindings/pci/mediatek-pcie.yaml           |   1 +
+ .../phy/econet,en751221-pcie-phy.yaml         |  50 ++++
+ MAINTAINERS                                   |   9 +
+ arch/mips/boot/dts/econet/en751221.dtsi       | 114 +++++++++
+ .../econet/en751221_smartfiber_xp8421-b.dts   |  21 ++
+ arch/mips/econet/Kconfig                      |   2 +
+ drivers/clk/Kconfig                           |   6 +-
+ drivers/clk/clk-en7523.c                      | 238 +++++++++++++++++-
+ drivers/pci/controller/Kconfig                |   2 +-
+ drivers/pci/controller/pcie-mediatek.c        | 118 +++++++++
+ drivers/pci/probe.c                           |   6 +
+ drivers/phy/Kconfig                           |  12 +
+ drivers/phy/Makefile                          |   1 +
+ drivers/phy/phy-econet-pcie.c                 | 180 +++++++++++++
+ .../dt-bindings/clock/econet,en751221-scu.h   |  13 +
+ .../dt-bindings/reset/econet,en751221-scu.h   |  49 ++++
+ 18 files changed, 821 insertions(+), 10 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/phy/econet,en751221-pcie-phy.yaml
+ create mode 100644 drivers/phy/phy-econet-pcie.c
+ create mode 100644 include/dt-bindings/clock/econet,en751221-scu.h
+ create mode 100644 include/dt-bindings/reset/econet,en751221-scu.h
 
 
-This would become something like
-	struct cxl_proto_err_work_data scratch;
-
-	whilst(true) {
-		struct cxl_proto_err_work_data *wd __free(cxl_proto_err_work_d) =
-			cxl_proto_err_kfifo_get(scratch);
-		if (IS_ERR(wd))
-			return;
-
-		struct cxl_port *port __free(put_cxl_port) = get_cxl_port(wd->pdev);
-
-...
-
-
-	}
-
-Hmm. Also not exactly elegant. Unless others have a better idea, let us stick
-to what you have.
-
-> +		struct cxl_port *port __free(put_cxl_port) = get_cxl_port(pdev);
-> +
-> +		if (!port) {
-> +			pr_err_ratelimited("%s: Failed to find parent port device in CXL topology\n",
-> +					   pci_name(pdev));
-> +			continue;
-> +		}
-> +
-> +		guard(device)(&port->dev);
-> +		if (!port->dev.driver) {
-> +			pr_err_ratelimited("%s: Port device is unbound, abort error handling\n",
-> +					    dev_name(&port->dev));
-> +			continue;
-> +		}
-> +
-> +		cxl_handle_proto_error(pdev, wd.severity);
-> +	}
-> +}
-
+base-commit: 3fa5e5702a82d259897bd7e209469bc06368bf31
+-- 
+2.39.5
 
