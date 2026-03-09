@@ -1,145 +1,183 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A0463E7176;
-	Mon,  9 Mar 2026 16:48:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F054231A3B
+	for <linux-pci@vger.kernel.org>; Mon,  9 Mar 2026 16:58:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773074936; cv=none; b=vCJ/yU6hkOEjy+A+FabwXxDmQ1EgCUTkdHYqhyHXzJnyJ2e7I0572n4vJngSiO564fqIlvj0hG0yL6Afsm9XjQFW2W6yBYamcYstdbBJSxku4wDnv9KW3zVJRkksb5DgX5PUblOWAkDLZ/URs0YdDUQYdMXIoIXXs8g+Ho8AW/o=
+	t=1773075539; cv=none; b=BVK7W7guz7QuAdo0mQG40Wk+t7x5SkRyB6l4VSIXI1iD6oBJMAyoI8TqH1FaTdNxsz1IKKjmVqFoLF3jIBwuvhn1g6c55BXz8lbY6AfHWqo86PJgUIil0xZZ6Gd0aoTv556bqk/NZa75FUOikyAVp1+2V7yVleaEA4sIRcDcBoM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773074936; c=relaxed/simple;
-	bh=R2t8aT9AfEryA2jCPKdVCwNrXnUCL7+CnrkUTC8dBXY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YtcNQnd3Msquur9e2ewZRv46KeaCm45KmCXH3YoZZm9B2KNboqmJbvFnw4GCqX7f0246KNlWti52F+bpD4YFtPLR7KUaDmO28USthr+ulcpVIlvDLUHeCm3NatacxhSRux/0QWqkTnrf/yoHfx1kIaTaicftrZbCUNaCGCn5ttc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=VOLCym7c; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="VOLCym7c"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 629FEvNG1377495;
-	Mon, 9 Mar 2026 16:48:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=i3dle+
-	I6+lhzmsmx2XC26uNVY9RQtVYKjJf8QxUxP/8=; b=VOLCym7cSHKTsdPIZcn3Bz
-	AgKP+vTmbDPDV4NLmEvf/4e5NsxZA66ktwlECAFwD4Uv9V8eGCWnhiXzSJlIUo9a
-	ztyr9Ll51DyPl4xey/fJduJDIEW76Z0D/mMG1QR1B1SPdCN+9nMVQ3B+wCFiXrHQ
-	KfpZTsoj4C7IEEJUUVTbvcqvlIev8uM+2xLWQkCs1SHtmpkGze5ks37/hUE4FYwl
-	RWOAgM4L0pQXAwS/hgJEPriHDEPxLQ3ZNbDYUhBe80iDM5Rf3Mt9Qgz6nzYR+1DK
-	MwaeLyqKXDlM9jhGxazmvILiDZUebSw7/4Op4/2KgynCKJVDjX6M5OQPM2eLgPXw
-	==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4crcvr7arr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 09 Mar 2026 16:48:49 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 629G3Ufs015758;
-	Mon, 9 Mar 2026 16:48:48 GMT
-Received: from smtprelay01.wdc07v.mail.ibm.com ([172.16.1.68])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4cs121wfxb-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 09 Mar 2026 16:48:48 +0000
-Received: from smtpav02.wdc07v.mail.ibm.com (smtpav02.wdc07v.mail.ibm.com [10.39.53.229])
-	by smtprelay01.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 629GmkHk525198
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 9 Mar 2026 16:48:46 GMT
-Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id CA5995805C;
-	Mon,  9 Mar 2026 16:48:46 +0000 (GMT)
-Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id D6CF958058;
-	Mon,  9 Mar 2026 16:48:44 +0000 (GMT)
-Received: from [9.61.251.111] (unknown [9.61.251.111])
-	by smtpav02.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Mon,  9 Mar 2026 16:48:44 +0000 (GMT)
-Message-ID: <7bc3e127-c2de-4e72-9bbb-9554da2c1e22@linux.ibm.com>
-Date: Mon, 9 Mar 2026 09:48:44 -0700
+	s=arc-20240116; t=1773075539; c=relaxed/simple;
+	bh=Qukwj4bL1lp2i67pMMLn2seb1cfpSqXBfTSA7i7LhGk=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=pmUXETFDZRvr0ukRr/1SmF4mx+r/m7zDhFk9v0AlCNPpqwNcX/q3tLwyLQ83FAHhnDFkB4ZufLzvfHV+ck2xzCRN0ioVt02bpMbUZfQcktqj5HYgh/hGvwVXVsnwpBpx8jGZZO7Gl/E9GVYZw/N/cDm2zIBO+CVxoBPORHcGb5U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.107])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fV3BK3csRzHnGf1;
+	Tue, 10 Mar 2026 00:58:49 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id 9301140585;
+	Tue, 10 Mar 2026 00:58:53 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 9 Mar
+ 2026 16:58:52 +0000
+Date: Mon, 9 Mar 2026 16:58:51 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: Dan Williams <dan.j.williams@intel.com>
+CC: <linux-coco@lists.linux.dev>, <linux-pci@vger.kernel.org>,
+	<gregkh@linuxfoundation.org>, <aik@amd.com>, <aneesh.kumar@kernel.org>,
+	<yilun.xu@linux.intel.com>, <bhelgaas@google.com>, <alistair23@gmail.com>,
+	<lukas@wunner.de>, <jgg@nvidia.com>, Christoph Hellwig <hch@lst.de>, "Marek
+ Szyprowski" <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>,
+	Roman Kisel <romank@linux.microsoft.com>, Samuel Ortiz <sameo@rivosinc.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>, "Danilo Krummrich" <dakr@kernel.org>
+Subject: Re: [PATCH v2 05/19] device core: Autoprobe considered harmful?
+Message-ID: <20260309165851.00001308@huawei.com>
+In-Reply-To: <20260303000207.1836586-6-dan.j.williams@intel.com>
+References: <20260303000207.1836586-1-dan.j.williams@intel.com>
+	<20260303000207.1836586-6-dan.j.williams@intel.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/3] vfio/ism: Implement vfio_pci driver for ISM
- devices
-To: Julian Ruess <julianr@linux.ibm.com>, schnelle@linux.ibm.com,
-        wintera@linux.ibm.com, ts@linux.ibm.com, oberpar@linux.ibm.com,
-        gbayer@linux.ibm.com, Alex Williamson <alex@shazbot.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>, Yishai Hadas <yishaih@nvidia.com>,
-        Shameer Kolothum <skolothumtho@nvidia.com>,
-        Kevin Tian <kevin.tian@intel.com>
-Cc: mjrosato@linux.ibm.com, raspl@linux.ibm.com, hca@linux.ibm.com,
-        agordeev@linux.ibm.com, gor@linux.ibm.com, kvm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-pci@vger.kernel.org
-References: <20260305-vfio_pci_ism-v3-0-1217076c81d9@linux.ibm.com>
- <20260305-vfio_pci_ism-v3-2-1217076c81d9@linux.ibm.com>
-Content-Language: en-US
-From: Farhan Ali <alifm@linux.ibm.com>
-In-Reply-To: <20260305-vfio_pci_ism-v3-2-1217076c81d9@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA5MDE0OSBTYWx0ZWRfX5Mou3i/qOXyH
- d51DrAWmG0eTJ3+qZIuwxwilVK+eZp8qJ02dJiadI3m+SwvyKvvo1BFcq/REYlNA8VpcHU40cy6
- CnLZzzUucMN2CphRQ0WR1SaES0J6amRx5h3yyJ2IjoGMGhOboKFeu6/mOEOnLNTJcuyyEwrmekM
- DQEj4Y+O/F1LRgErr0XpPrwf/rbBak2MRRu0iExmgyevNkfOntEWg41WIDZFkYVMy1Rr8AdC5qH
- Az4020xVFuO6hIOIIVoeidGsXoZ4sMF/oXl37Fl7vEtZorSsYFLSGnP5CvrEQoVcUhU3f8BtMye
- kh9wHxsQAXfhUh+AerBOgLMJr1OEQ6LDWk6psoPUSAkvpJVDnecoDe6JbtFwKAvtZggbpM+s+Yc
- qbauMRcZrE/v2c6fm1jSapPWwt+VaKZbse/O1LHHJ0kJh/n0bgdCw3fkxdKbYafDfio/9cCS3n4
- AP/lhpE5kiaYpzZiMAQ==
-X-Proofpoint-GUID: V7IiDIBV_wBRJNM3FNP_d3VmVnEJtneF
-X-Proofpoint-ORIG-GUID: V7IiDIBV_wBRJNM3FNP_d3VmVnEJtneF
-X-Authority-Analysis: v=2.4 cv=QoFTHFyd c=1 sm=1 tr=0 ts=69aef9f1 cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VnNF1IyMAAAA:8
- a=akap8JHnbm7pTVdsz3UA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-09_04,2026-03-09_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 spamscore=0 priorityscore=1501 phishscore=0
- lowpriorityscore=0 adultscore=0 clxscore=1015 malwarescore=0 suspectscore=0
- bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2602130000
- definitions=main-2603090149
+X-ClientProxiedBy: lhrpeml500011.china.huawei.com (7.191.174.215) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
+On Mon,  2 Mar 2026 16:01:53 -0800
+Dan Williams <dan.j.williams@intel.com> wrote:
 
-On 3/5/2026 4:20 AM, Julian Ruess wrote:
-> Add a vfio_pci variant driver for the s390-specific Internal Shared
-> Memory (ISM) devices used for inter-VM communication.
->
-> This enables the development of vfio-pci-based user space drivers for
-> ISM devices.
->
-> On s390, kernel primitives such as ioread() and iowrite() are switched
-> over from function handle based PCI load/stores instructions to PCI
-> memory-I/O (MIO) loads/stores when these are available and not
-> explicitly disabled. Since these instructions cannot be used with ISM
-> devices, ensure that classic function handle-based PCI instructions are
-> used instead.
->
-> The driver is still required even when MIO instructions are disabled, as
-> the ISM device relies on the PCI store block (PCISTB) instruction to
-> perform write operations.
->
-> Stores are not fragmented, therefore one ioctl corresponds to exactly
-> one PCISTB instruction. User space must ensure to not write more than
-> 4096 bytes at once to an ISM BAR which is the maximum payload of the
-> PCISTB instruction.
->
-> Reviewed-by: Niklas Schnelle<schnelle@linux.ibm.com>
-> Signed-off-by: Julian Ruess<julianr@linux.ibm.com>
+> The threat model of PCI Trusted Execution Environment Device Interface
+> Security Protocol (TDISP), is that an adversary may be impersonating the
+> device's identity, redirecting the device's MMIO interface, and/or
+> snooping/manipulating the physical link. Outside of PCI TDISP, PCI ATS
+> (that allows IOMMU bypass) comes to mind as another threat vector that
+> warrants additional device verification beyond whether ACPI enumerates the
+> device as "internal" [1].
+> 
+> The process of verifying a device ranges from the traditional default
+> "accept everything" to gathering signed evidence from a locked device,
+> shipping it to a relying party and acting on that disposition. That policy
+> belongs in userspace. A natural way for userspace to get a control point
+> for verifying a device before use is when the driver for the device comes
+> from a module.
+> 
+> For deployments that are concerned about adversarial devices, introduce a
+> mechanism to disable autoprobe. When a driver originates from a module,
+> consult that driver's autoprobe policy at initial device or driver attach.
+> 
+> Note that with TDISP, unaccepted devices do not have access to private
+> memory (so called "T=0" mode). However, a deployment may still not want to
+> operate more than a handful of boot devices until confirming the system
+> device topology with a verifier.
+> 
+> Yes, this is a security vs convenience tradeoff. Yes, devices with
+> non-modular drivers are out of scope. Yes, there are known regression cases
+> for subsystems where device objects are expected to auto-attach outside of
+> fatal probe failure. For navigating regressions, a per-module "autoprobe"
+> option is included to allow fine grained policy.
+> 
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Jason Gunthorpe <jgg@nvidia.com>
+> Cc: Marek Szyprowski <m.szyprowski@samsung.com>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Roman Kisel <romank@linux.microsoft.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Samuel Ortiz <sameo@rivosinc.com>
+> Cc: Alexey Kardashevskiy <aik@amd.com>
+> Cc: Xu Yilun <yilun.xu@linux.intel.com>
+> Cc: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: "Rafael J. Wysocki" <rafael@kernel.org>
+> Cc: Danilo Krummrich <dakr@kernel.org>
+> Link: http://lore.kernel.org/6971b9406d069_1d33100df@dwillia2-mobl4.notmuch [1]
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Approach seems reasonable to me.
+A few trivial things inline.
+
+Jonathan
+
 > ---
->   drivers/vfio/pci/Kconfig      |   2 +
->   drivers/vfio/pci/Makefile     |   2 +
->   drivers/vfio/pci/ism/Kconfig  |  10 ++
->   drivers/vfio/pci/ism/Makefile |   3 +
->   drivers/vfio/pci/ism/main.c   | 343 ++++++++++++++++++++++++++++++++++++++++++
->   5 files changed, 360 insertions(+)
+>  drivers/base/Kconfig                  | 24 ++++++++++++++++++++++++
+>  Documentation/ABI/stable/sysfs-module | 10 ++++++++++
+>  drivers/base/base.h                   |  1 +
+>  include/linux/module.h                | 14 ++++++++++++++
+>  drivers/base/bus.c                    |  7 ++++++-
+>  drivers/base/dd.c                     | 26 +++++++++++++++++++++++---
+>  kernel/module/main.c                  | 13 +++++++++++++
+>  7 files changed, 91 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/base/Kconfig b/drivers/base/Kconfig
+> index d4743bf978ec..7c1da5df9745 100644
+> --- a/drivers/base/Kconfig
+> +++ b/drivers/base/Kconfig
+> @@ -253,4 +253,28 @@ config CONFIDENTIAL_DEVICES
+>  	depends on ARCH_HAS_CC_PLATFORM
+>  	bool
+>  
+> +config MODULES_AUTOPROBE
+> +	bool "Automatic probe of drivers from modules"
+> +	default y
+> +	help
+> +	  Say Y for the typical and traditional Linux behavior of automatically
+> +	  attaching devices to drivers when a module is loaded.
+> +
+> +	  Say N to opt into a threat model where userspace verification of a
+> +	  device is required before driver attach. This includes Confidential
+> +	  Computing use cases where the device needs to have its configuration
+> +	  locked and verified by a relying party. It also includes use cases
+> +	  like leaving devices with Address Translation (IOMMU protection
+> +	  bypass) capability disabled until userspace attests the device and
+> +	  binds a driver.
+> +
+> +	  This default value can be overridden by the "autoprobe" module option.
+> +	  Note that some subsystems may not be prepared for autoprobe to be
+> +	  disabled, take care to test your selected drivers.  Built-in drivers are
 
-Reviewed-by: Farhan Ali<alifm@linux.ibm.com>
+Stray extra space.
 
+> +	  unaffected by this policy and will autoprobe unless the bus itself has
+> +	  disabled autoprobe.
+> +
+> +	  If in doubt, say Y. The N case is only for expert configurations, and
+> +	  selective "autoprobe=0" in modprobe policy is the common expectation.
+> +
+>  endmenu
+
+
+> diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+> index 349f31bedfa1..926e120b3cc4 100644
+> --- a/drivers/base/dd.c
+> +++ b/drivers/base/dd.c
+> @@ -917,6 +917,12 @@ struct device_attach_data {
+>  	 * driver, we'll encounter one that requests asynchronous probing.
+>  	 */
+>  	bool have_async;
+> +
+> +	/*
+> +	 * On initial device arrival driver attach is subject to
+> +	 * driver_autoprobe() policy.
+> +	 */
+> +	bool initial_probe;
+
+I'm not sure 'initial' naming works.  How does that work with drivers that
+have not autobound anyway?  E.g. VFIO.
+Seems they'll be fine even if it is their initial probe.  Also the
+deferred cases remain 'initial' for repeated probing.
+
+Why not stick to the auto probing terminology here?
+
+There is clearly history of this naming though in device_initial_probe()
+So maybe that name is fine...
+
+
+>  };
+>  
+>
