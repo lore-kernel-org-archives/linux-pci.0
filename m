@@ -1,282 +1,118 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D39052A1BA
-	for <linux-pci@vger.kernel.org>; Mon,  9 Mar 2026 13:30:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA16738BF91;
+	Mon,  9 Mar 2026 14:00:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773063002; cv=none; b=tuAyRUiVAAJ8SPWvLkxw1m6q6aywhEHxRATqs8OKnqA4FcdJS8Me679m5+/tn4U9OXg+QoZWKnqlFhTpExb3eXofsW5Av6iLtE09ftugvsKXHhvwIBMBYLmiavZfwabxwrNADHVXqErlri6F1LOYngZfsYWlVScWnEWaxhng/ms=
+	t=1773064859; cv=none; b=Z17q/TwP0havIjB8DMajRVRxJ1qtA0l0lG9d4Yr2rYos/cgsy0UrHc+v1/eyJG8ONYYwcf+eMiUOhe1wsDgnKXi+OuofJNmdK+Hw8B4Gj4DLoZE8ebDuX9G1gp949uXi/KUt6Qc4Eint3pP2Q2e4Ts0Kko/7fZfzOy/LS7bcLTM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773063002; c=relaxed/simple;
-	bh=/UpE9x4v0F+CNAUIdLtq+XMTp7Kikc6ThmOhH3qFRSU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=B3ZXFcl9xC4u7M22if0n5oSZTAkncIpCAamRlwjZ2hzH0X4xzaNyiRW8+0fkmlSVPrZJhH7QnF0YcyuGAsYmA1DiOIZw9DWvSdVCVu75IyOX3NvXENwHlMBBw6ACT9X3TgcN8kGhBYPBA5YFDjJ/ZrsOQN9CQ8MIKiKPF1mBtyo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l0dcdh/U; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l0dcdh/U"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96276C2BCB0
-	for <linux-pci@vger.kernel.org>; Mon,  9 Mar 2026 13:30:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773063002;
-	bh=/UpE9x4v0F+CNAUIdLtq+XMTp7Kikc6ThmOhH3qFRSU=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=l0dcdh/UsmikM8MhM7nnR9sFSwzhhnHrl5yw3ultKfrvKHqgLOPe7/BW9hdQAoOpy
-	 2Jagib5TrJblrZ+MwYWhCwOlsEKFr5tiqHf2B4RgcY4YPgnSU/j6abw1W4rr/SrCtp
-	 JquQI0E00Vm3CrfF9UO5M2Kd06qBxfeXDtxYUe19rW3uccesip9eGAdc4f877FcIYk
-	 KuYxa3VsYebvqPtfvjUpPzU3BVa0qGHWfflqKVGSCTV4EblYvn7dvpEyvAon+iGnad
-	 wTLQTTJDsWmUXfDWDAe+5vZIZcWeI+3fLilJuh1zyd8f083A0ym0NZLLJIWixwJek/
-	 c9scmPFxwT/fQ==
-Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-b9382e59c0eso872122266b.0
-        for <linux-pci@vger.kernel.org>; Mon, 09 Mar 2026 06:30:02 -0700 (PDT)
-X-Gm-Message-State: AOJu0YyzTLu8hZtIP7/+ONKg1Vn+yXjGpNA1Gnru7F7tsYH2xnMVwPbM
-	kzcnEO+6wosowO9jU5NV2F0CGUb57jVuDCrWnxN1B5bTyhF2GF0Qq0y/KJhMsNIHsvOipgQbS/q
-	tJjjXvInM4i79NM6vzzWRsHNexo1FjBU=
-X-Received: by 2002:a17:906:6a0c:b0:b8e:3d49:25db with SMTP id
- a640c23a62f3a-b942e00db25mr648759166b.54.1773063000939; Mon, 09 Mar 2026
- 06:30:00 -0700 (PDT)
+	s=arc-20240116; t=1773064859; c=relaxed/simple;
+	bh=VHzWzSPx3+7Sz6wYhbihU0d9teB4EtAfLpDdUsqzZl8=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=JpWSOIKaN7y0VGMFPcDZGrRNzG+5YhMsoLVAgje4BoMopyLJ9Qkk7NIhL9PzUXys7JzRSle/LzGJvejP1vhkM7/BIOCtqZEhYCsZEL6CJYok+Qc7ERwWcIIqb+KU6pdaUvqkxEbHJNr7yB8/anWY+3n2iKVVQzGgV4aFNIrAcpg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.83])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fTzDB0jWLzJ46Dy;
+	Mon,  9 Mar 2026 22:00:10 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id 1DECC40086;
+	Mon,  9 Mar 2026 22:00:53 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 9 Mar
+ 2026 14:00:52 +0000
+Date: Mon, 9 Mar 2026 14:00:50 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: Terry Bowman <terry.bowman@amd.com>
+CC: <dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
+	<dan.j.williams@intel.com>, <bhelgaas@google.com>, <shiju.jose@huawei.com>,
+	<ming.li@zohomail.com>, <Smita.KoralahalliChannabasappa@amd.com>,
+	<rrichter@amd.com>, <dan.carpenter@linaro.org>,
+	<PradeepVineshReddy.Kodamati@amd.com>, <lukas@wunner.de>,
+	<Benjamin.Cheatham@amd.com>, <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	<linux-cxl@vger.kernel.org>, <vishal.l.verma@intel.com>, <alucerop@amd.com>,
+	<ira.weiny@intel.com>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v16 06/10] PCI/CXL: Add RCH support to CXL handlers
+Message-ID: <20260309140050.0000451d@huawei.com>
+In-Reply-To: <20260302203648.2886956-7-terry.bowman@amd.com>
+References: <20260302203648.2886956-1-terry.bowman@amd.com>
+	<20260302203648.2886956-7-terry.bowman@amd.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260303003625.39035-1-fengchengwen@huawei.com>
- <20260309041659.18815-1-fengchengwen@huawei.com> <20260309041659.18815-2-fengchengwen@huawei.com>
-In-Reply-To: <20260309041659.18815-2-fengchengwen@huawei.com>
-From: Huacai Chen <chenhuacai@kernel.org>
-Date: Mon, 9 Mar 2026 21:29:50 +0800
-X-Gmail-Original-Message-ID: <CAAhV-H7Cy1OuReaoGotZvdvHWLic_ECESFVZgbvNpk2HVjPjuw@mail.gmail.com>
-X-Gm-Features: AaiRm53999Ro86GVlT52rErQab9_tcwK7Kxxf4dLpRSgjEOSn5mzv7jn4vq_ISk
-Message-ID: <CAAhV-H7Cy1OuReaoGotZvdvHWLic_ECESFVZgbvNpk2HVjPjuw@mail.gmail.com>
-Subject: Re: [PATCH v4 1/2] ACPI: Rename get_acpi_id_for_cpu() to
- acpi_get_cpu_acpi_id() on non-x86
-To: Chengwen Feng <fengchengwen@huawei.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, 
-	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, 
-	WANG Xuerui <kernel@xen0n.name>, Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, 
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
-	Sunil V L <sunilvl@ventanamicro.com>, Mark Rutland <mark.rutland@arm.com>, 
-	linux-acpi@vger.kernel.org, wei.huang2@amd.com, Eric.VanTassell@amd.com, 
-	jonathan.cameron@huawei.com, wangzhou1@hisilicon.com, wanghuiqiang@huawei.com, 
-	liuyonglong@huawei.com, stable@vger.kernel.org, jeremy.linton@arm.com, 
-	sunilvl@oss.qualcomm.com, chenhuacai@loongson.cn, wangliupu@loongson.cn, 
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	loongarch@lists.linux.dev, linux-riscv@lists.infradead.org, 
-	linux-perf-users@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml500011.china.huawei.com (7.191.174.215) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-Hi, Chengwen,
+On Mon, 2 Mar 2026 14:36:44 -0600
+Terry Bowman <terry.bowman@amd.com> wrote:
 
-On Mon, Mar 9, 2026 at 12:17=E2=80=AFPM Chengwen Feng <fengchengwen@huawei.=
-com> wrote:
->
-> To unify the CPU ACPI ID retrieval interface across architectures,
-> rename the existing get_acpi_id_for_cpu() function to
-> acpi_get_cpu_acpi_id() on arm64/riscv/loongarch platforms.
-Can we also rename cpu_acpi_id() to acpi_get_cpu_acpi_id() for x86?
+> Restricted CXL Host (RCH) error handling is not currently supported by the
+> CXL Port error handling flow. Integrate the existing RCH error handling
+> into the new Port error handling.
+> 
+> Update cxl_rch_handle_error_iter() to forward the RCH protocol error using
+> the AER-CXL kfifo.
+> 
+> Update cxl_handle_proto_error() to begin the RCH error handling with a call
+> to cxl_handle_rdport_errors(). This function handles both correctable and
+> uncorrectable RCH protocol errors.
+> 
+> Change the cxl_handle_rdport_errors() function parameter from a CXL device
+> state to a PCI device.
+> 
+> Report the serial number of the RCD Endpoint in the RCH logging. This
+> is used to associate the RCH with the RCD in the logs.
+> 
+> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+One question inline.
 
-Huacai
++ a comment on a bit of neighboring code.
 
->
-> This is a pure rename with no functional change, preparing for a
-> consistent ACPI Processor UID retrieval interface across all ACPI-enabled
-> platforms.
->
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
-> ---
->  arch/arm64/include/asm/acpi.h      |  4 ++--
->  arch/loongarch/include/asm/acpi.h  |  2 +-
->  arch/riscv/include/asm/acpi.h      |  2 +-
->  arch/riscv/kernel/acpi_numa.c      |  2 +-
->  drivers/acpi/pptt.c                | 16 ++++++++--------
->  drivers/acpi/riscv/rhct.c          |  2 +-
->  drivers/perf/arm_cspmu/arm_cspmu.c |  2 +-
->  7 files changed, 15 insertions(+), 15 deletions(-)
->
-> diff --git a/arch/arm64/include/asm/acpi.h b/arch/arm64/include/asm/acpi.=
-h
-> index c07a58b96329..202107aeb05b 100644
-> --- a/arch/arm64/include/asm/acpi.h
-> +++ b/arch/arm64/include/asm/acpi.h
-> @@ -114,7 +114,7 @@ static inline bool acpi_has_cpu_in_madt(void)
->  }
->
->  struct acpi_madt_generic_interrupt *acpi_cpu_get_madt_gicc(int cpu);
-> -static inline u32 get_acpi_id_for_cpu(unsigned int cpu)
-> +static inline u32 acpi_get_cpu_acpi_id(unsigned int cpu)
+J
+> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
+> index 1d4be2d78469..48d3ef7cbb92 100644
+> --- a/drivers/cxl/core/ras.c
+> +++ b/drivers/cxl/core/ras.c
+
+>  static void cxl_handle_proto_error(struct pci_dev *pdev, int severity)
 >  {
->         return  acpi_cpu_get_madt_gicc(cpu)->uid;
->  }
-> @@ -125,7 +125,7 @@ static inline int get_cpu_for_acpi_id(u32 uid)
->
->         for (cpu =3D 0; cpu < nr_cpu_ids; cpu++)
->                 if (acpi_cpu_get_madt_gicc(cpu) &&
-> -                   uid =3D=3D get_acpi_id_for_cpu(cpu))
-> +                   uid =3D=3D acpi_get_cpu_acpi_id(cpu))
->                         return cpu;
->
->         return -EINVAL;
-> diff --git a/arch/loongarch/include/asm/acpi.h b/arch/loongarch/include/a=
-sm/acpi.h
-> index 7376840fa9f7..89c6c8f52cc3 100644
-> --- a/arch/loongarch/include/asm/acpi.h
-> +++ b/arch/loongarch/include/asm/acpi.h
-> @@ -40,7 +40,7 @@ extern struct acpi_madt_core_pic acpi_core_pic[MAX_CORE=
-_PIC];
->
->  extern int __init parse_acpi_topology(void);
->
-> -static inline u32 get_acpi_id_for_cpu(unsigned int cpu)
-> +static inline u32 acpi_get_cpu_acpi_id(unsigned int cpu)
+> +	/*
+> +	 * CXL RCD's AER error interrupt is used for reporting RCD and RCH
+> +	 * Downstream Port protocol errors. RCH protocol errors are handled
+> +	 * using a unique procedure separate from from CXL Port devices.
+> +	 * See CXL spec r4.0, 12.2 CXL Error Handling
+> +	 */
+> +	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_RC_END)
+> +		cxl_handle_rdport_errors(pdev);
+
+Maybe I'm missing something but why do we want to carry on running the rest
+of this function after this?  Superficially seems like we will be doing
+at least some stuff that didn't happen before.
+
+> +
+>  	if (severity == AER_CORRECTABLE) {
+>  		struct device *dev = &pdev->dev;
+
+> diff --git a/drivers/pci/pcie/aer_cxl_rch.c b/drivers/pci/pcie/aer_cxl_rch.c
+> index e471eefec9c4..83142eac0cab 100644
+> --- a/drivers/pci/pcie/aer_cxl_rch.c
+> +++ b/drivers/pci/pcie/aer_cxl_rch.c
+> @@ -37,26 +37,11 @@ static bool cxl_error_is_native(struct pci_dev *dev)
+>  static int cxl_rch_handle_error_iter(struct pci_dev *dev, void *data)
 >  {
->         return acpi_core_pic[cpu_logical_map(cpu)].processor_id;
->  }
-> diff --git a/arch/riscv/include/asm/acpi.h b/arch/riscv/include/asm/acpi.=
-h
-> index 6e13695120bc..1d23681b61b5 100644
-> --- a/arch/riscv/include/asm/acpi.h
-> +++ b/arch/riscv/include/asm/acpi.h
-> @@ -61,7 +61,7 @@ static inline void arch_fix_phys_package_id(int num, u3=
-2 slot) { }
->
->  void acpi_init_rintc_map(void);
->  struct acpi_madt_rintc *acpi_cpu_get_madt_rintc(int cpu);
-> -static inline u32 get_acpi_id_for_cpu(int cpu)
-> +static inline u32 acpi_get_cpu_acpi_id(int cpu)
->  {
->         return acpi_cpu_get_madt_rintc(cpu)->uid;
->  }
-> diff --git a/arch/riscv/kernel/acpi_numa.c b/arch/riscv/kernel/acpi_numa.=
-c
-> index 130769e3a99c..c2eb4824d0f7 100644
-> --- a/arch/riscv/kernel/acpi_numa.c
-> +++ b/arch/riscv/kernel/acpi_numa.c
-> @@ -40,7 +40,7 @@ static inline int get_cpu_for_acpi_id(u32 uid)
->         int cpu;
->
->         for (cpu =3D 0; cpu < nr_cpu_ids; cpu++)
-> -               if (uid =3D=3D get_acpi_id_for_cpu(cpu))
-> +               if (uid =3D=3D acpi_get_cpu_acpi_id(cpu))
->                         return cpu;
->
->         return -EINVAL;
-> diff --git a/drivers/acpi/pptt.c b/drivers/acpi/pptt.c
-> index de5f8c018333..c1a8fba4c2b2 100644
-> --- a/drivers/acpi/pptt.c
-> +++ b/drivers/acpi/pptt.c
-> @@ -459,7 +459,7 @@ static void cache_setup_acpi_cpu(struct acpi_table_he=
-ader *table,
->  {
->         struct acpi_pptt_cache *found_cache;
->         struct cpu_cacheinfo *this_cpu_ci =3D get_cpu_cacheinfo(cpu);
-> -       u32 acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
-> +       u32 acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
->         struct cacheinfo *this_leaf;
->         unsigned int index =3D 0;
->         struct acpi_pptt_processor *cpu_node =3D NULL;
-> @@ -546,7 +546,7 @@ static int topology_get_acpi_cpu_tag(struct acpi_tabl=
-e_header *table,
->                                      unsigned int cpu, int level, int fla=
-g)
->  {
->         struct acpi_pptt_processor *cpu_node;
-> -       u32 acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
-> +       u32 acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
->
->         cpu_node =3D acpi_find_processor_node(table, acpi_cpu_id);
->         if (cpu_node) {
-> @@ -622,7 +622,7 @@ static int find_acpi_cpu_topology_tag(unsigned int cp=
-u, int level, int flag)
->  static int check_acpi_cpu_flag(unsigned int cpu, int rev, u32 flag)
->  {
->         struct acpi_table_header *table;
-> -       u32 acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
-> +       u32 acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
->         struct acpi_pptt_processor *cpu_node =3D NULL;
->         int ret =3D -ENOENT;
->
-> @@ -671,7 +671,7 @@ int acpi_get_cache_info(unsigned int cpu, unsigned in=
-t *levels,
->
->         pr_debug("Cache Setup: find cache levels for CPU=3D%d\n", cpu);
->
-> -       acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
-> +       acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
->         cpu_node =3D acpi_find_processor_node(table, acpi_cpu_id);
->         if (!cpu_node)
->                 return -ENOENT;
-> @@ -797,7 +797,7 @@ int find_acpi_cpu_topology_cluster(unsigned int cpu)
->         if (!table)
->                 return -ENOENT;
->
-> -       acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
-> +       acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
->         cpu_node =3D acpi_find_processor_node(table, acpi_cpu_id);
->         if (!cpu_node || !cpu_node->parent)
->                 return -ENOENT;
-> @@ -872,7 +872,7 @@ static void acpi_pptt_get_child_cpus(struct acpi_tabl=
-e_header *table_hdr,
->         cpumask_clear(cpus);
->
->         for_each_possible_cpu(cpu) {
-> -               acpi_id =3D get_acpi_id_for_cpu(cpu);
-> +               acpi_id =3D acpi_get_cpu_acpi_id(cpu);
->                 cpu_node =3D acpi_find_processor_node(table_hdr, acpi_id)=
-;
->
->                 while (cpu_node) {
-> @@ -966,7 +966,7 @@ int find_acpi_cache_level_from_id(u32 cache_id)
->         for_each_possible_cpu(cpu) {
->                 bool empty;
->                 int level =3D 1;
-> -               u32 acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
-> +               u32 acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
->                 struct acpi_pptt_cache *cache;
->                 struct acpi_pptt_processor *cpu_node;
->
-> @@ -1030,7 +1030,7 @@ int acpi_pptt_get_cpumask_from_cache_id(u32 cache_i=
-d, cpumask_t *cpus)
->         for_each_possible_cpu(cpu) {
->                 bool empty;
->                 int level =3D 1;
-> -               u32 acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
-> +               u32 acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
->                 struct acpi_pptt_cache *cache;
->                 struct acpi_pptt_processor *cpu_node;
->
-> diff --git a/drivers/acpi/riscv/rhct.c b/drivers/acpi/riscv/rhct.c
-> index caa2c16e1697..c15ce8c13136 100644
-> --- a/drivers/acpi/riscv/rhct.c
-> +++ b/drivers/acpi/riscv/rhct.c
-> @@ -44,7 +44,7 @@ int acpi_get_riscv_isa(struct acpi_table_header *table,=
- unsigned int cpu, const
->         struct acpi_rhct_isa_string *isa_node;
->         struct acpi_table_rhct *rhct;
->         u32 *hart_info_node_offset;
-> -       u32 acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
-> +       u32 acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
->
->         BUG_ON(acpi_disabled);
->
-> diff --git a/drivers/perf/arm_cspmu/arm_cspmu.c b/drivers/perf/arm_cspmu/=
-arm_cspmu.c
-> index 34430b68f602..506b661c60fd 100644
-> --- a/drivers/perf/arm_cspmu/arm_cspmu.c
-> +++ b/drivers/perf/arm_cspmu/arm_cspmu.c
-> @@ -1115,7 +1115,7 @@ static int arm_cspmu_acpi_get_cpus(struct arm_cspmu=
- *cspmu)
->         if (affinity_flag =3D=3D ACPI_APMT_FLAGS_AFFINITY_PROC) {
->                 for_each_possible_cpu(cpu) {
->                         if (apmt_node->proc_affinity =3D=3D
-> -                           get_acpi_id_for_cpu(cpu)) {
-> +                           acpi_get_cpu_acpi_id(cpu)) {
->                                 cpumask_set_cpu(cpu, &cspmu->associated_c=
-pus);
->                                 break;
->                         }
-> --
-> 2.17.1
->
+>  	struct aer_err_info *info = (struct aer_err_info *)data;
+
+Not related to this patch but that cast isn't needed.
+
+> -	const struct pci_error_handlers *err_handler;
+>  
