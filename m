@@ -1,268 +1,282 @@
-Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CCE83C1988;
-	Mon,  9 Mar 2026 13:19:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D39052A1BA
+	for <linux-pci@vger.kernel.org>; Mon,  9 Mar 2026 13:30:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773062362; cv=none; b=IciLSJRzP5sM9w9G7UDVZHA1zBilmuAlhVgSrCxDJjZQ08T8oBIDROKIIa1IpWYLCjCVdp5IAvzvPToiyopyVrrSDUhRO1ZitmTwJ6IrCZ1M4XJDCrPOvPMZwSp+c6ZS7XNwmellxcz+etYBIoBZiEqnuzkIjq0nYZTNGI7FLQI=
+	t=1773063002; cv=none; b=tuAyRUiVAAJ8SPWvLkxw1m6q6aywhEHxRATqs8OKnqA4FcdJS8Me679m5+/tn4U9OXg+QoZWKnqlFhTpExb3eXofsW5Av6iLtE09ftugvsKXHhvwIBMBYLmiavZfwabxwrNADHVXqErlri6F1LOYngZfsYWlVScWnEWaxhng/ms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773062362; c=relaxed/simple;
-	bh=OuVg1o1oE6Dk4NJfoc56g7qoOxUkOmdON33ACGlQ9fU=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=IwGtn+KCXsIr/Blj7U2RW5OoIZvykj2dnYERs9Qwyu6vUDXcWx14KfUJKKCzx/CZ5Lhj6SmbI/axr2GvnJylCPpM/RQlCmgQMEGV+tAOqMXVlmwIaGUqn1eS6vUy8JFeNQcKf1aMlbGoW+gMPzibozlpAebCh79XhPe62onkgqo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=j9ecNe94; arc=none smtp.client-ip=5.135.140.105
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
+	s=arc-20240116; t=1773063002; c=relaxed/simple;
+	bh=/UpE9x4v0F+CNAUIdLtq+XMTp7Kikc6ThmOhH3qFRSU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=B3ZXFcl9xC4u7M22if0n5oSZTAkncIpCAamRlwjZ2hzH0X4xzaNyiRW8+0fkmlSVPrZJhH7QnF0YcyuGAsYmA1DiOIZw9DWvSdVCVu75IyOX3NvXENwHlMBBw6ACT9X3TgcN8kGhBYPBA5YFDjJ/ZrsOQN9CQ8MIKiKPF1mBtyo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l0dcdh/U; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="j9ecNe94"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 173DE286152;
-	Mon,  9 Mar 2026 14:19:13 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
-	t=1773062357; h=from:subject:date:message-id:to:cc:mime-version:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=AsslNjPsniHPFq7y9ACqeRGOIicsFNpWA+I3qRFhHu8=;
-	b=j9ecNe94U9Em4IEwzKUh0fU8VAQGLclzvHLaHHqfT106fFGiQDskAYkhTzaE1I6qjgyzGB
-	fzHSl3OV+SjCc2QfXwjyk3yMQLg7T39ghqRKxskqHiybQKxgOfaq5qCLdF/Ewkkym92M4i
-	D9RG+xHxpH0Rcbc7ezS0pZE4VKZJpacQjXW291iNDzVEpnLXuikzBcl2FFHwLxgwYFWxMF
-	RphLbS4y7iN4bji5qazjWyDImLHqnPZ1tXdm1UYNaVs6l13v8UoCR5wmGIbMJWqPjr5MfE
-	SDf5XydOSUjXeliTSKntn/ovIe2m9Wdk7LS6oGl7bpbcJ8nEHlAZkjr2ABmwDw==
-From: Caleb James DeLisle <cjd@cjdns.fr>
-To: linux-mips@vger.kernel.org
-Cc: naseefkm@gmail.com,
-	mturquette@baylibre.com,
-	sboyd@kernel.org,
-	robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	cjd@cjdns.fr,
-	tsbogend@alpha.franken.de,
-	ryder.lee@mediatek.com,
-	jianjun.wang@mediatek.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	bhelgaas@google.com,
-	vkoul@kernel.org,
-	neil.armstrong@linaro.org,
-	p.zabel@pengutronix.de,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
-	nbd@nbd.name,
-	ansuelsmth@gmail.com,
-	linux-clk@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-phy@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v2 8/8] mips: dts: Add PCIe to EcoNet EN751221
-Date: Mon,  9 Mar 2026 13:18:18 +0000
-Message-Id: <20260309131818.74467-9-cjd@cjdns.fr>
-In-Reply-To: <20260309131818.74467-1-cjd@cjdns.fr>
-References: <20260309131818.74467-1-cjd@cjdns.fr>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l0dcdh/U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96276C2BCB0
+	for <linux-pci@vger.kernel.org>; Mon,  9 Mar 2026 13:30:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773063002;
+	bh=/UpE9x4v0F+CNAUIdLtq+XMTp7Kikc6ThmOhH3qFRSU=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=l0dcdh/UsmikM8MhM7nnR9sFSwzhhnHrl5yw3ultKfrvKHqgLOPe7/BW9hdQAoOpy
+	 2Jagib5TrJblrZ+MwYWhCwOlsEKFr5tiqHf2B4RgcY4YPgnSU/j6abw1W4rr/SrCtp
+	 JquQI0E00Vm3CrfF9UO5M2Kd06qBxfeXDtxYUe19rW3uccesip9eGAdc4f877FcIYk
+	 KuYxa3VsYebvqPtfvjUpPzU3BVa0qGHWfflqKVGSCTV4EblYvn7dvpEyvAon+iGnad
+	 wTLQTTJDsWmUXfDWDAe+5vZIZcWeI+3fLilJuh1zyd8f083A0ym0NZLLJIWixwJek/
+	 c9scmPFxwT/fQ==
+Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-b9382e59c0eso872122266b.0
+        for <linux-pci@vger.kernel.org>; Mon, 09 Mar 2026 06:30:02 -0700 (PDT)
+X-Gm-Message-State: AOJu0YyzTLu8hZtIP7/+ONKg1Vn+yXjGpNA1Gnru7F7tsYH2xnMVwPbM
+	kzcnEO+6wosowO9jU5NV2F0CGUb57jVuDCrWnxN1B5bTyhF2GF0Qq0y/KJhMsNIHsvOipgQbS/q
+	tJjjXvInM4i79NM6vzzWRsHNexo1FjBU=
+X-Received: by 2002:a17:906:6a0c:b0:b8e:3d49:25db with SMTP id
+ a640c23a62f3a-b942e00db25mr648759166b.54.1773063000939; Mon, 09 Mar 2026
+ 06:30:00 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
+References: <20260303003625.39035-1-fengchengwen@huawei.com>
+ <20260309041659.18815-1-fengchengwen@huawei.com> <20260309041659.18815-2-fengchengwen@huawei.com>
+In-Reply-To: <20260309041659.18815-2-fengchengwen@huawei.com>
+From: Huacai Chen <chenhuacai@kernel.org>
+Date: Mon, 9 Mar 2026 21:29:50 +0800
+X-Gmail-Original-Message-ID: <CAAhV-H7Cy1OuReaoGotZvdvHWLic_ECESFVZgbvNpk2HVjPjuw@mail.gmail.com>
+X-Gm-Features: AaiRm53999Ro86GVlT52rErQab9_tcwK7Kxxf4dLpRSgjEOSn5mzv7jn4vq_ISk
+Message-ID: <CAAhV-H7Cy1OuReaoGotZvdvHWLic_ECESFVZgbvNpk2HVjPjuw@mail.gmail.com>
+Subject: Re: [PATCH v4 1/2] ACPI: Rename get_acpi_id_for_cpu() to
+ acpi_get_cpu_acpi_id() on non-x86
+To: Chengwen Feng <fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, 
+	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, 
+	WANG Xuerui <kernel@xen0n.name>, Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, 
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
+	Sunil V L <sunilvl@ventanamicro.com>, Mark Rutland <mark.rutland@arm.com>, 
+	linux-acpi@vger.kernel.org, wei.huang2@amd.com, Eric.VanTassell@amd.com, 
+	jonathan.cameron@huawei.com, wangzhou1@hisilicon.com, wanghuiqiang@huawei.com, 
+	liuyonglong@huawei.com, stable@vger.kernel.org, jeremy.linton@arm.com, 
+	sunilvl@oss.qualcomm.com, chenhuacai@loongson.cn, wangliupu@loongson.cn, 
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+	loongarch@lists.linux.dev, linux-riscv@lists.infradead.org, 
+	linux-perf-users@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Add PCIe based on EN7528 PCIe driver, also add two MT76 wifi devices
-to SmartFiber XP8421-B.
+Hi, Chengwen,
 
-Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
----
- arch/mips/boot/dts/econet/en751221.dtsi       | 114 ++++++++++++++++++
- .../econet/en751221_smartfiber_xp8421-b.dts   |  21 ++++
- arch/mips/econet/Kconfig                      |   2 +
- 3 files changed, 137 insertions(+)
+On Mon, Mar 9, 2026 at 12:17=E2=80=AFPM Chengwen Feng <fengchengwen@huawei.=
+com> wrote:
+>
+> To unify the CPU ACPI ID retrieval interface across architectures,
+> rename the existing get_acpi_id_for_cpu() function to
+> acpi_get_cpu_acpi_id() on arm64/riscv/loongarch platforms.
+Can we also rename cpu_acpi_id() to acpi_get_cpu_acpi_id() for x86?
 
-diff --git a/arch/mips/boot/dts/econet/en751221.dtsi b/arch/mips/boot/dts/econet/en751221.dtsi
-index 2abeef5b744a..72cb65654c34 100644
---- a/arch/mips/boot/dts/econet/en751221.dtsi
-+++ b/arch/mips/boot/dts/econet/en751221.dtsi
-@@ -1,6 +1,8 @@
- // SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
- /dts-v1/;
- 
-+#include <dt-bindings/clock/econet,en751221-scu.h>
-+
- / {
- 	compatible = "econet,en751221";
- 	#address-cells = <1>;
-@@ -30,6 +32,30 @@ cpuintc: interrupt-controller {
- 		#interrupt-cells = <1>;
- 	};
- 
-+	chip_scu: syscon@1fa20000 {
-+		compatible = "econet,en751221-chip-scu", "syscon";
-+		reg = <0x1fa20000 0x388>;
-+	};
-+
-+	pcie_phy1: pcie-phy@1fac0000 {
-+		compatible = "econet,en751221-pcie-gen2";
-+		reg = <0x1fac0000 0x1000>;
-+		#phy-cells = <0>;
-+	};
-+
-+	pcie_phy0: pcie-phy@1faf2000 {
-+		compatible = "econet,en751221-pcie-gen1";
-+		reg = <0x1faf2000 0x1000>;
-+		#phy-cells = <0>;
-+	};
-+
-+	scuclk: clock-controller@1fb00000 {
-+		compatible = "econet,en751221-scu";
-+		reg = <0x1fb00000 0x970>;
-+		#clock-cells = <1>;
-+		#reset-cells = <1>;
-+	};
-+
- 	intc: interrupt-controller@1fb40000 {
- 		compatible = "econet,en751221-intc";
- 		reg = <0x1fb40000 0x100>;
-@@ -41,6 +67,94 @@ intc: interrupt-controller@1fb40000 {
- 		econet,shadow-interrupts = <7 2>, <8 3>, <13 12>, <30 29>;
- 	};
- 
-+	pciecfg: pciecfg@1fb80000 {
-+		compatible = "mediatek,generic-pciecfg", "syscon";
-+		reg = <0x1fb80000 0x1000>;
-+	};
-+
-+	pcie0: pcie@1fb81000 {
-+		compatible = "econet,en7528-pcie";
-+		device_type = "pci";
-+		reg = <0x1fb81000 0x1000>;
-+		reg-names = "port0";
-+		linux,pci-domain = <0>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		interrupt-parent = <&intc>;
-+		interrupts = <23>;
-+		interrupt-names = "pcie_irq";
-+		clocks = <&scuclk EN751221_CLK_PCIE>;
-+		clock-names = "sys_ck0";
-+		phys = <&pcie_phy0>;
-+		phy-names = "pcie-phy0";
-+		bus-range = <0x00 0xff>;
-+		ranges = <0x01000000 0 0x00000000 0x1f600000 0 0x00008000>,
-+			 <0x82000000 0 0x20000000 0x20000000 0 0x08000000>;
-+		status = "disabled";
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie_intc0 0>,
-+				<0 0 0 2 &pcie_intc0 1>,
-+				<0 0 0 3 &pcie_intc0 2>,
-+				<0 0 0 4 &pcie_intc0 3>;
-+
-+		pcie_intc0: interrupt-controller {
-+			interrupt-controller;
-+			#address-cells = <0>;
-+			#interrupt-cells = <1>;
-+		};
-+
-+		slot0: pcie@0,0 {
-+			reg = <0x0000 0 0 0 0>;
-+			device_type = "pci";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+		};
-+	};
-+
-+	pcie1: pcie@1fb83000 {
-+		compatible = "econet,en7528-pcie";
-+		device_type = "pci";
-+		reg = <0x1fb83000 0x1000>;
-+		reg-names = "port1";
-+		linux,pci-domain = <1>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		interrupt-parent = <&intc>;
-+		interrupts = <24>;
-+		interrupt-names = "pcie_irq";
-+		clocks = <&scuclk EN751221_CLK_PCIE>;
-+		clock-names = "sys_ck1";
-+		phys = <&pcie_phy1>;
-+		phy-names = "pcie-phy1";
-+		bus-range = <0x00 0xff>;
-+		ranges = <0x81000000 0 0x00000000 0x1f608000 0 0x00008000>,
-+			 <0x82000000 0 0x28000000 0x28000000 0 0x08000000>;
-+		status = "disabled";
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie_intc1 0>,
-+				<0 0 0 2 &pcie_intc1 1>,
-+				<0 0 0 3 &pcie_intc1 2>,
-+				<0 0 0 4 &pcie_intc1 3>;
-+
-+		pcie_intc1: interrupt-controller {
-+			interrupt-controller;
-+			#address-cells = <0>;
-+			#interrupt-cells = <1>;
-+		};
-+
-+		slot1: pcie@1,0 {
-+			reg = <0x0800 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+		};
-+	};
-+
- 	uart: serial@1fbf0000 {
- 		compatible = "ns16550";
- 		reg = <0x1fbf0000 0x30>;
-diff --git a/arch/mips/boot/dts/econet/en751221_smartfiber_xp8421-b.dts b/arch/mips/boot/dts/econet/en751221_smartfiber_xp8421-b.dts
-index 8223c5bce67f..c633bf73add6 100644
---- a/arch/mips/boot/dts/econet/en751221_smartfiber_xp8421-b.dts
-+++ b/arch/mips/boot/dts/econet/en751221_smartfiber_xp8421-b.dts
-@@ -17,3 +17,24 @@ chosen {
- 		linux,usable-memory-range = <0x00020000 0x1bfe0000>;
- 	};
- };
-+
-+&pcie0 {
-+	status = "okay";
-+};
-+&slot0 {
-+	wifi@0,0 {
-+		/* MT7612E */
-+		compatible = "mediatek,mt76";
-+		reg = <0x0000 0 0 0 0>;
-+	};
-+};
-+&pcie1 {
-+	status = "okay";
-+};
-+&slot1 {
-+	wifi@0,0 {
-+		/* MT7592 */
-+		compatible = "mediatek,mt76";
-+		reg = <0x0000 0 0 0 0>;
-+	};
-+};
-diff --git a/arch/mips/econet/Kconfig b/arch/mips/econet/Kconfig
-index fd69884cc9a8..b37b9d25d5a4 100644
---- a/arch/mips/econet/Kconfig
-+++ b/arch/mips/econet/Kconfig
-@@ -13,7 +13,9 @@ choice
- 		bool "EN751221 family"
- 		select COMMON_CLK
- 		select ECONET_EN751221_INTC
-+		select HAVE_PCI
- 		select IRQ_MIPS_CPU
-+		select PCI_DRIVERS_GENERIC
- 		select SMP
- 		select SMP_UP
- 		select SYS_SUPPORTS_SMP
--- 
-2.39.5
+Huacai
 
+>
+> This is a pure rename with no functional change, preparing for a
+> consistent ACPI Processor UID retrieval interface across all ACPI-enabled
+> platforms.
+>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+> ---
+>  arch/arm64/include/asm/acpi.h      |  4 ++--
+>  arch/loongarch/include/asm/acpi.h  |  2 +-
+>  arch/riscv/include/asm/acpi.h      |  2 +-
+>  arch/riscv/kernel/acpi_numa.c      |  2 +-
+>  drivers/acpi/pptt.c                | 16 ++++++++--------
+>  drivers/acpi/riscv/rhct.c          |  2 +-
+>  drivers/perf/arm_cspmu/arm_cspmu.c |  2 +-
+>  7 files changed, 15 insertions(+), 15 deletions(-)
+>
+> diff --git a/arch/arm64/include/asm/acpi.h b/arch/arm64/include/asm/acpi.=
+h
+> index c07a58b96329..202107aeb05b 100644
+> --- a/arch/arm64/include/asm/acpi.h
+> +++ b/arch/arm64/include/asm/acpi.h
+> @@ -114,7 +114,7 @@ static inline bool acpi_has_cpu_in_madt(void)
+>  }
+>
+>  struct acpi_madt_generic_interrupt *acpi_cpu_get_madt_gicc(int cpu);
+> -static inline u32 get_acpi_id_for_cpu(unsigned int cpu)
+> +static inline u32 acpi_get_cpu_acpi_id(unsigned int cpu)
+>  {
+>         return  acpi_cpu_get_madt_gicc(cpu)->uid;
+>  }
+> @@ -125,7 +125,7 @@ static inline int get_cpu_for_acpi_id(u32 uid)
+>
+>         for (cpu =3D 0; cpu < nr_cpu_ids; cpu++)
+>                 if (acpi_cpu_get_madt_gicc(cpu) &&
+> -                   uid =3D=3D get_acpi_id_for_cpu(cpu))
+> +                   uid =3D=3D acpi_get_cpu_acpi_id(cpu))
+>                         return cpu;
+>
+>         return -EINVAL;
+> diff --git a/arch/loongarch/include/asm/acpi.h b/arch/loongarch/include/a=
+sm/acpi.h
+> index 7376840fa9f7..89c6c8f52cc3 100644
+> --- a/arch/loongarch/include/asm/acpi.h
+> +++ b/arch/loongarch/include/asm/acpi.h
+> @@ -40,7 +40,7 @@ extern struct acpi_madt_core_pic acpi_core_pic[MAX_CORE=
+_PIC];
+>
+>  extern int __init parse_acpi_topology(void);
+>
+> -static inline u32 get_acpi_id_for_cpu(unsigned int cpu)
+> +static inline u32 acpi_get_cpu_acpi_id(unsigned int cpu)
+>  {
+>         return acpi_core_pic[cpu_logical_map(cpu)].processor_id;
+>  }
+> diff --git a/arch/riscv/include/asm/acpi.h b/arch/riscv/include/asm/acpi.=
+h
+> index 6e13695120bc..1d23681b61b5 100644
+> --- a/arch/riscv/include/asm/acpi.h
+> +++ b/arch/riscv/include/asm/acpi.h
+> @@ -61,7 +61,7 @@ static inline void arch_fix_phys_package_id(int num, u3=
+2 slot) { }
+>
+>  void acpi_init_rintc_map(void);
+>  struct acpi_madt_rintc *acpi_cpu_get_madt_rintc(int cpu);
+> -static inline u32 get_acpi_id_for_cpu(int cpu)
+> +static inline u32 acpi_get_cpu_acpi_id(int cpu)
+>  {
+>         return acpi_cpu_get_madt_rintc(cpu)->uid;
+>  }
+> diff --git a/arch/riscv/kernel/acpi_numa.c b/arch/riscv/kernel/acpi_numa.=
+c
+> index 130769e3a99c..c2eb4824d0f7 100644
+> --- a/arch/riscv/kernel/acpi_numa.c
+> +++ b/arch/riscv/kernel/acpi_numa.c
+> @@ -40,7 +40,7 @@ static inline int get_cpu_for_acpi_id(u32 uid)
+>         int cpu;
+>
+>         for (cpu =3D 0; cpu < nr_cpu_ids; cpu++)
+> -               if (uid =3D=3D get_acpi_id_for_cpu(cpu))
+> +               if (uid =3D=3D acpi_get_cpu_acpi_id(cpu))
+>                         return cpu;
+>
+>         return -EINVAL;
+> diff --git a/drivers/acpi/pptt.c b/drivers/acpi/pptt.c
+> index de5f8c018333..c1a8fba4c2b2 100644
+> --- a/drivers/acpi/pptt.c
+> +++ b/drivers/acpi/pptt.c
+> @@ -459,7 +459,7 @@ static void cache_setup_acpi_cpu(struct acpi_table_he=
+ader *table,
+>  {
+>         struct acpi_pptt_cache *found_cache;
+>         struct cpu_cacheinfo *this_cpu_ci =3D get_cpu_cacheinfo(cpu);
+> -       u32 acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
+> +       u32 acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
+>         struct cacheinfo *this_leaf;
+>         unsigned int index =3D 0;
+>         struct acpi_pptt_processor *cpu_node =3D NULL;
+> @@ -546,7 +546,7 @@ static int topology_get_acpi_cpu_tag(struct acpi_tabl=
+e_header *table,
+>                                      unsigned int cpu, int level, int fla=
+g)
+>  {
+>         struct acpi_pptt_processor *cpu_node;
+> -       u32 acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
+> +       u32 acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
+>
+>         cpu_node =3D acpi_find_processor_node(table, acpi_cpu_id);
+>         if (cpu_node) {
+> @@ -622,7 +622,7 @@ static int find_acpi_cpu_topology_tag(unsigned int cp=
+u, int level, int flag)
+>  static int check_acpi_cpu_flag(unsigned int cpu, int rev, u32 flag)
+>  {
+>         struct acpi_table_header *table;
+> -       u32 acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
+> +       u32 acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
+>         struct acpi_pptt_processor *cpu_node =3D NULL;
+>         int ret =3D -ENOENT;
+>
+> @@ -671,7 +671,7 @@ int acpi_get_cache_info(unsigned int cpu, unsigned in=
+t *levels,
+>
+>         pr_debug("Cache Setup: find cache levels for CPU=3D%d\n", cpu);
+>
+> -       acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
+> +       acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
+>         cpu_node =3D acpi_find_processor_node(table, acpi_cpu_id);
+>         if (!cpu_node)
+>                 return -ENOENT;
+> @@ -797,7 +797,7 @@ int find_acpi_cpu_topology_cluster(unsigned int cpu)
+>         if (!table)
+>                 return -ENOENT;
+>
+> -       acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
+> +       acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
+>         cpu_node =3D acpi_find_processor_node(table, acpi_cpu_id);
+>         if (!cpu_node || !cpu_node->parent)
+>                 return -ENOENT;
+> @@ -872,7 +872,7 @@ static void acpi_pptt_get_child_cpus(struct acpi_tabl=
+e_header *table_hdr,
+>         cpumask_clear(cpus);
+>
+>         for_each_possible_cpu(cpu) {
+> -               acpi_id =3D get_acpi_id_for_cpu(cpu);
+> +               acpi_id =3D acpi_get_cpu_acpi_id(cpu);
+>                 cpu_node =3D acpi_find_processor_node(table_hdr, acpi_id)=
+;
+>
+>                 while (cpu_node) {
+> @@ -966,7 +966,7 @@ int find_acpi_cache_level_from_id(u32 cache_id)
+>         for_each_possible_cpu(cpu) {
+>                 bool empty;
+>                 int level =3D 1;
+> -               u32 acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
+> +               u32 acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
+>                 struct acpi_pptt_cache *cache;
+>                 struct acpi_pptt_processor *cpu_node;
+>
+> @@ -1030,7 +1030,7 @@ int acpi_pptt_get_cpumask_from_cache_id(u32 cache_i=
+d, cpumask_t *cpus)
+>         for_each_possible_cpu(cpu) {
+>                 bool empty;
+>                 int level =3D 1;
+> -               u32 acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
+> +               u32 acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
+>                 struct acpi_pptt_cache *cache;
+>                 struct acpi_pptt_processor *cpu_node;
+>
+> diff --git a/drivers/acpi/riscv/rhct.c b/drivers/acpi/riscv/rhct.c
+> index caa2c16e1697..c15ce8c13136 100644
+> --- a/drivers/acpi/riscv/rhct.c
+> +++ b/drivers/acpi/riscv/rhct.c
+> @@ -44,7 +44,7 @@ int acpi_get_riscv_isa(struct acpi_table_header *table,=
+ unsigned int cpu, const
+>         struct acpi_rhct_isa_string *isa_node;
+>         struct acpi_table_rhct *rhct;
+>         u32 *hart_info_node_offset;
+> -       u32 acpi_cpu_id =3D get_acpi_id_for_cpu(cpu);
+> +       u32 acpi_cpu_id =3D acpi_get_cpu_acpi_id(cpu);
+>
+>         BUG_ON(acpi_disabled);
+>
+> diff --git a/drivers/perf/arm_cspmu/arm_cspmu.c b/drivers/perf/arm_cspmu/=
+arm_cspmu.c
+> index 34430b68f602..506b661c60fd 100644
+> --- a/drivers/perf/arm_cspmu/arm_cspmu.c
+> +++ b/drivers/perf/arm_cspmu/arm_cspmu.c
+> @@ -1115,7 +1115,7 @@ static int arm_cspmu_acpi_get_cpus(struct arm_cspmu=
+ *cspmu)
+>         if (affinity_flag =3D=3D ACPI_APMT_FLAGS_AFFINITY_PROC) {
+>                 for_each_possible_cpu(cpu) {
+>                         if (apmt_node->proc_affinity =3D=3D
+> -                           get_acpi_id_for_cpu(cpu)) {
+> +                           acpi_get_cpu_acpi_id(cpu)) {
+>                                 cpumask_set_cpu(cpu, &cspmu->associated_c=
+pus);
+>                                 break;
+>                         }
+> --
+> 2.17.1
+>
