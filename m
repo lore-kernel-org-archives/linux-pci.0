@@ -1,32 +1,32 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D2D52737EE;
-	Mon,  9 Mar 2026 14:46:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4635C3D413B;
+	Mon,  9 Mar 2026 14:48:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773067604; cv=none; b=PMVLpIv8Mhgxr7HNVI2RjL33gQCdPJzpN6YzGYzsEetl+ckX1nJ0l8178GB6Try4GmEh5SiRI7bYXaIeFZACgzPn7zthS9khzfnnc3U1nAOoN/iiNmo1U3PBANOBbq1Yqqqxs8NX/I9IDRRVfYTqCUvYnnxlXIV+4N22Gcy/H/4=
+	t=1773067692; cv=none; b=rRtnCM4rjocIirv9wk+1tRB4GJjJg+fMFxQEGVBPCFWBRy4I8IuYbbFCPlMYrFpyylRyQ0qNHL4q2e0sG8fO14UIAR4/gKeF/UNLsChcC3czZ52ddWt5sygzcp2kkxL7ruCYr8fpv7q0SmWlTqgGdtjDp5ArdbrlKz94J2jUFi4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773067604; c=relaxed/simple;
-	bh=pcjyvkWqVZuL0hNKvXxSSPOe/Gza0z73iIY1s/J2RB8=;
+	s=arc-20240116; t=1773067692; c=relaxed/simple;
+	bh=BABLSLpDCdn9A6xWZALRPtCtLMEEBGkA9tMZSkGtedE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ivh6CSR+eWudrHmxjsx5ahQpgkZYEqRdiUnm8aAxXAyjzTwRJmkgT9Jq+CpE37L9XZOz5L271eNvVK5bj5kd87RfCRVADSDb0ElqFzxxaiaqaAPVqwL1dztPHGJHstFgvyDhBolInVGlCpokSgmocOac9ua80VG8vjzF5ELt8dM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=AuyTb/zV; arc=none smtp.client-ip=117.135.210.2
+	 In-Reply-To:Content-Type; b=gfilKl62WHo1VnmYjZZaeM5dtioZwsoVSer5T+N93K0m2e7RNRC22LEMfallyaq4lYYCZ8aZBjGO24zWThTV0DQ3UuMg8cEZHF2bnvVhI5iIHo1B7FY3pw09f8McF7f40Gz6Ud5a59A8lhlRbMxSDlfL7GItTbaOww42M7j0JhE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ouVA5WlA; arc=none smtp.client-ip=117.135.210.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="AuyTb/zV"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ouVA5WlA"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
 	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=ap/5rAAlPzEySe5EbsdRcwWW15+LeFvh7y2Jk3wcWMs=;
-	b=AuyTb/zV9D2YgeUgaBWTDKywgxokYtXmcEcy1zkWDEcswfCF07vcM3Ru9D40Qm
-	3mHrswqM/BpOn/txl+QHJPRPKQGoJikWw372bvzLnMuyjMihtBjiyMg6NiIe2CFM
-	i7PqnquVccnQOAxj03e0WbqGox660444CqOBCU8eFDe7Q=
+	Content-Type; bh=DdpWWlfEkH4+L6fqoMwXc4vkecQDDvJZ3mr6vVdOkXs=;
+	b=ouVA5WlA0XW3GeIBbuaqL8tMA2ZwTXQtZ2cZsEyoWl4aqANLs2I6qLCBr7URDv
+	PbQJaFcfBNhbvh7OcHni3ClJWIWqt9vaYzm13SzGwUHCx1/R+5MaSKes7vBXJWbU
+	cxexIk/7MuZzYQtr2Yxr+Ne8woLqji/HCICHNO/xksnvc=
 Received: from [IPV6:240e:b8f:927e:1000:792:97b4:4a20:b2d3] (unknown [])
-	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wD3X50S3a5pFQwYAA--.8424S2;
-	Mon, 09 Mar 2026 22:45:39 +0800 (CST)
-Message-ID: <42c07f4a-d32b-4219-a0a7-ccec5f125b32@163.com>
-Date: Mon, 9 Mar 2026 22:45:38 +0800
+	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wD354aK3a5p6GgWAA--.9596S2;
+	Mon, 09 Mar 2026 22:47:39 +0800 (CST)
+Message-ID: <bda5aca3-bf8c-483a-a48f-165202f3af7a@163.com>
+Date: Mon, 9 Mar 2026 22:47:38 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -34,100 +34,72 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 2/2] PCI: dwc: Validate max-link-speed property
-To: kernel test robot <lkp@intel.com>, lpieralisi@kernel.org,
- jingoohan1@gmail.com, mani@kernel.org, kwilczynski@kernel.org,
- bhelgaas@google.com, helgaas@kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, robh@kernel.org,
+Subject: Re: [PATCH v7 1/2] PCI: of: Remove max-link-speed generation
+ validation
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: lpieralisi@kernel.org, jingoohan1@gmail.com, kwilczynski@kernel.org,
+ bhelgaas@google.com, helgaas@kernel.org, robh@kernel.org,
  ilpo.jarvinen@linux.intel.com, linux-pci@vger.kernel.org,
  linux-kernel@vger.kernel.org
-References: <20260308142629.75392-3-18255117159@163.com>
- <202603090252.S3qQ67Kh-lkp@intel.com>
+References: <20260308142629.75392-1-18255117159@163.com>
+ <20260308142629.75392-2-18255117159@163.com>
+ <movonqoagqttbph3hrcmjzeqioascuktwx6btk6rci5menjnxc@5ydgeu5h2ig7>
 Content-Language: en-US
 From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <202603090252.S3qQ67Kh-lkp@intel.com>
+In-Reply-To: <movonqoagqttbph3hrcmjzeqioascuktwx6btk6rci5menjnxc@5ydgeu5h2ig7>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wD3X50S3a5pFQwYAA--.8424S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxZw4UJr4Dur1xZrW5urykZrb_yoWrJr1xpa
-	yUGw1qkF98J3yfWw1UtFW8ua4Yq3Z8ZayUGr9Igr1xuF1ayr1UuF10gaySyr9rKr4v9ryx
-	KFy2kF9rCa4qy3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zR3ku3UUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBSCJmmu3RQFgQAA3+
+X-CM-TRANSID:_____wD354aK3a5p6GgWAA--.9596S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Zr4ftw4UAr17XFy5uw1kGrg_yoW8WF18pF
+	4UGF1F9ayDGrWrAr92gF45A3WF9rn7J3y7Jr95Gw1YvrsxXr4Iqr129F4Yvry7uF95CrW2
+	qa1avF4v9FZ0vaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zR7Cz_UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AufQ2mu3YsWuAAA3E
 
 
 
-On 2026/3/9 02:10, kernel test robot wrote:
-> Hi Hans,
+On 2026/3/9 19:47, Manivannan Sadhasivam wrote:
+> On Sun, Mar 08, 2026 at 10:26:28PM +0800, Hans Zhang wrote:
+>> The of_pci_get_max_link_speed() function currently validates the
+>> "max-link-speed" DT property to be in the range 1..4 (Gen1..Gen4).
+>> This imposes a maintenance burden because each new PCIe generation
+>> would require updating this validation.
+>>
+>> Remove the range check so the function returns the raw property value
+>> (or a negative error code if the property is missing or malformed).
+>> Callers must now validate the returned speed against the range they
+>> support.  A subsequent patch adds such validation to the DWC driver,
+>> which is the primary user of this function.
+>>
+>> This change allows future PCIe generations to be supported without
+>> modifying drivers/pci/of.c.
+>>
+>> Signed-off-by: Hans Zhang <18255117159@163.com>
+>> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 > 
-> kernel test robot noticed the following build errors:
+> I take my Ack back. If we decide to go with validating DTS properties (which is
+> fine though for non-resources such as clocks), then we should make sure that it
+> happens in a single patch.
 > 
-> [auto build test ERROR on c23719abc3308df7ed3ad35650ad211fb2d2003d]
+> Right now, you remove the check in one patch and add it back in another. That
+> leaves a window...
 > 
-> url:    https://github.com/intel-lab-lkp/linux/commits/Hans-Zhang/PCI-of-Remove-max-link-speed-generation-validation/20260308-223128
-> base:   c23719abc3308df7ed3ad35650ad211fb2d2003d
-> patch link:    https://lore.kernel.org/r/20260308142629.75392-3-18255117159%40163.com
-> patch subject: [PATCH v7 2/2] PCI: dwc: Validate max-link-speed property
-> config: csky-randconfig-r071-20260308 (https://download.01.org/0day-ci/archive/20260309/202603090252.S3qQ67Kh-lkp@intel.com/config)
-> compiler: csky-linux-gcc (GCC) 10.5.0
-> smatch: v0.5.0-9004-gb810ac53
-> reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260309/202603090252.S3qQ67Kh-lkp@intel.com/reproduce)
-> 
-> If you fix the issue in a separate patch/commit (i.e. not just a new version of
-> the same patch/commit), kindly add following tags
-> | Reported-by: kernel test robot <lkp@intel.com>
-> | Closes: https://lore.kernel.org/oe-kbuild-all/202603090252.S3qQ67Kh-lkp@intel.com/
-> 
-> All errors (new ones prefixed by >>):
-> 
->     In file included from include/linux/kernel.h:16,
->                      from include/linux/clk.h:13,
->                      from drivers/pci/controller/dwc/pcie-designware.c:13:
->     drivers/pci/controller/dwc/pcie-designware.c: In function 'dw_pcie_get_link_speed':
->>> include/linux/array_size.h:11:32: error: invalid application of 'sizeof' to incomplete type 'const unsigned char[]'
->        11 | #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
->           |                                ^
->     drivers/pci/controller/dwc/pcie-designware.c:128:19: note: in expansion of macro 'ARRAY_SIZE'
->       128 |      max_speed >= ARRAY_SIZE(pcie_link_speed) ||
->           |                   ^~~~~~~~~~
-> 
-Hi Bjorn and Mani,
 
-I am currently working on a patch series aimed at removing the range 
-check in the of_pci_get_max_link_speed() function and adding validation 
-functionality in the DWC driver.
+Hi Mani,
 
-In patch 2 of v7, I used ARRAY_SIZE(pcie_link_speed) in the DWC driver 
-to validate the "max-link-speed" attribute. However, the kernel test 
-robot reported a build error [2] because pcie_link_speed is an 
-incomplete type (only an external declaration) in the pcie-designware.c 
-file, so ARRAY_SIZE cannot be used.
+For the second patch in this series, I made the changes based on Bjorn's 
+comments. Maybe I misunderstood something.
 
-To solve this problem, I suggest adding a macro named "#define 
-PCIE_LINK_SPEED_COUNT 16" in the <linux/pci.h> file to represent the 
-fixed size of the pcie_link_speed array (with 16 entries according to 
-the 4-bit field of the PCIe standard). Then use this macro in the DWC 
-driver instead of using ARRAY_SIZE.
+Bjorn's reply:
+https://lore.kernel.org/linux-pci/20260306170856.GA107733@bhelgaas/
 
-The reason for adding the macro instead of using the fixed value "16" is 
-to make the code more self-explanatory and this array size can be used 
-for many years in 16 cases.
-
-Do you agree with this approach? Please let me know. Perhaps there are 
-any other better methods?
+May I ask if I should place the second patch on top of the first one? Is 
+it just a matter of swapping the order of the two patches? Do you have 
+any good methods?
 
 Best regards,
 Hans
 
-> 
-> vim +11 include/linux/array_size.h
-> 
-> 3cd39bc3b11b8d Alejandro Colomar 2023-10-03   6
-> 3cd39bc3b11b8d Alejandro Colomar 2023-10-03   7  /**
-> 3cd39bc3b11b8d Alejandro Colomar 2023-10-03   8   * ARRAY_SIZE - get the number of elements in array @arr
-> 3cd39bc3b11b8d Alejandro Colomar 2023-10-03   9   * @arr: array to be sized
-> 3cd39bc3b11b8d Alejandro Colomar 2023-10-03  10   */
-> 3cd39bc3b11b8d Alejandro Colomar 2023-10-03 @11  #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
-> 3cd39bc3b11b8d Alejandro Colomar 2023-10-03  12
+> - Mani
 > 
 
