@@ -1,89 +1,145 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCAB03B5842
-	for <linux-pci@vger.kernel.org>; Mon,  9 Mar 2026 16:42:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A0463E7176;
+	Mon,  9 Mar 2026 16:48:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773074533; cv=none; b=AxGwQSB39qDtOeNkRsHwurpr5XBPP/VOJb7YVFWdCyeZswDC07amk55F4g5pGwWEo/RTaIRZxupSCuv2WIYccAbZJL5HDR902T38U7rtzA+sp16x7PiLdOQxVfDYecMaDZI2gQkBzGcwIv0DGty1uch87fqzzQfKE8mJTPeY8ms=
+	t=1773074936; cv=none; b=vCJ/yU6hkOEjy+A+FabwXxDmQ1EgCUTkdHYqhyHXzJnyJ2e7I0572n4vJngSiO564fqIlvj0hG0yL6Afsm9XjQFW2W6yBYamcYstdbBJSxku4wDnv9KW3zVJRkksb5DgX5PUblOWAkDLZ/URs0YdDUQYdMXIoIXXs8g+Ho8AW/o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773074533; c=relaxed/simple;
-	bh=oJXexXiXWMbqytYDDRKnVOmd8MImhm52sVrSz9CvGXw=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=M8xYHjZvnJuTYkoBd9b4HA3ZkgB6zpzbjmtSeC3yYzm80RpGWTzbjMtPYXH3QIEVwDwAXvMrheKlyeEzQscfPbswssGkoodQwSqphY8wIg8TTsRmHtlAL1rhF55MXkaNoT8sz4N9c7bGlyE8oFJNXNDVDjgZUze6miX20Ddp5ng=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.83])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fV2q14mzpzHnH44;
-	Tue, 10 Mar 2026 00:42:05 +0800 (CST)
-Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id B356C40569;
-	Tue, 10 Mar 2026 00:42:09 +0800 (CST)
-Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
- (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 9 Mar
- 2026 16:42:08 +0000
-Date: Mon, 9 Mar 2026 16:42:07 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: Dan Williams <dan.j.williams@intel.com>
-CC: <linux-coco@lists.linux.dev>, <linux-pci@vger.kernel.org>,
-	<gregkh@linuxfoundation.org>, <aik@amd.com>, <aneesh.kumar@kernel.org>,
-	<yilun.xu@linux.intel.com>, <bhelgaas@google.com>, <alistair23@gmail.com>,
-	<lukas@wunner.de>, <jgg@nvidia.com>, Christoph Hellwig <hch@lst.de>, "Jason
- Gunthorpe" <jgg@ziepe.ca>, Marek Szyprowski <m.szyprowski@samsung.com>, Robin
- Murphy <robin.murphy@arm.com>, Roman Kisel <romank@linux.microsoft.com>,
-	Samuel Ortiz <sameo@rivosinc.com>, "Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>
-Subject: Re: [PATCH v2 03/19] device core: Introduce confidential device
- acceptance
-Message-ID: <20260309164207.00006b3b@huawei.com>
-In-Reply-To: <20260303000207.1836586-4-dan.j.williams@intel.com>
-References: <20260303000207.1836586-1-dan.j.williams@intel.com>
-	<20260303000207.1836586-4-dan.j.williams@intel.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1773074936; c=relaxed/simple;
+	bh=R2t8aT9AfEryA2jCPKdVCwNrXnUCL7+CnrkUTC8dBXY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=YtcNQnd3Msquur9e2ewZRv46KeaCm45KmCXH3YoZZm9B2KNboqmJbvFnw4GCqX7f0246KNlWti52F+bpD4YFtPLR7KUaDmO28USthr+ulcpVIlvDLUHeCm3NatacxhSRux/0QWqkTnrf/yoHfx1kIaTaicftrZbCUNaCGCn5ttc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=VOLCym7c; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="VOLCym7c"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 629FEvNG1377495;
+	Mon, 9 Mar 2026 16:48:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=i3dle+
+	I6+lhzmsmx2XC26uNVY9RQtVYKjJf8QxUxP/8=; b=VOLCym7cSHKTsdPIZcn3Bz
+	AgKP+vTmbDPDV4NLmEvf/4e5NsxZA66ktwlECAFwD4Uv9V8eGCWnhiXzSJlIUo9a
+	ztyr9Ll51DyPl4xey/fJduJDIEW76Z0D/mMG1QR1B1SPdCN+9nMVQ3B+wCFiXrHQ
+	KfpZTsoj4C7IEEJUUVTbvcqvlIev8uM+2xLWQkCs1SHtmpkGze5ks37/hUE4FYwl
+	RWOAgM4L0pQXAwS/hgJEPriHDEPxLQ3ZNbDYUhBe80iDM5Rf3Mt9Qgz6nzYR+1DK
+	MwaeLyqKXDlM9jhGxazmvILiDZUebSw7/4Op4/2KgynCKJVDjX6M5OQPM2eLgPXw
+	==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4crcvr7arr-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 09 Mar 2026 16:48:49 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 629G3Ufs015758;
+	Mon, 9 Mar 2026 16:48:48 GMT
+Received: from smtprelay01.wdc07v.mail.ibm.com ([172.16.1.68])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4cs121wfxb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 09 Mar 2026 16:48:48 +0000
+Received: from smtpav02.wdc07v.mail.ibm.com (smtpav02.wdc07v.mail.ibm.com [10.39.53.229])
+	by smtprelay01.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 629GmkHk525198
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 9 Mar 2026 16:48:46 GMT
+Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id CA5995805C;
+	Mon,  9 Mar 2026 16:48:46 +0000 (GMT)
+Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id D6CF958058;
+	Mon,  9 Mar 2026 16:48:44 +0000 (GMT)
+Received: from [9.61.251.111] (unknown [9.61.251.111])
+	by smtpav02.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Mon,  9 Mar 2026 16:48:44 +0000 (GMT)
+Message-ID: <7bc3e127-c2de-4e72-9bbb-9554da2c1e22@linux.ibm.com>
+Date: Mon, 9 Mar 2026 09:48:44 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 2/3] vfio/ism: Implement vfio_pci driver for ISM
+ devices
+To: Julian Ruess <julianr@linux.ibm.com>, schnelle@linux.ibm.com,
+        wintera@linux.ibm.com, ts@linux.ibm.com, oberpar@linux.ibm.com,
+        gbayer@linux.ibm.com, Alex Williamson <alex@shazbot.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>, Yishai Hadas <yishaih@nvidia.com>,
+        Shameer Kolothum <skolothumtho@nvidia.com>,
+        Kevin Tian <kevin.tian@intel.com>
+Cc: mjrosato@linux.ibm.com, raspl@linux.ibm.com, hca@linux.ibm.com,
+        agordeev@linux.ibm.com, gor@linux.ibm.com, kvm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-pci@vger.kernel.org
+References: <20260305-vfio_pci_ism-v3-0-1217076c81d9@linux.ibm.com>
+ <20260305-vfio_pci_ism-v3-2-1217076c81d9@linux.ibm.com>
+Content-Language: en-US
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <20260305-vfio_pci_ism-v3-2-1217076c81d9@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml100012.china.huawei.com (7.191.174.184) To
- dubpeml500005.china.huawei.com (7.214.145.207)
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA5MDE0OSBTYWx0ZWRfX5Mou3i/qOXyH
+ d51DrAWmG0eTJ3+qZIuwxwilVK+eZp8qJ02dJiadI3m+SwvyKvvo1BFcq/REYlNA8VpcHU40cy6
+ CnLZzzUucMN2CphRQ0WR1SaES0J6amRx5h3yyJ2IjoGMGhOboKFeu6/mOEOnLNTJcuyyEwrmekM
+ DQEj4Y+O/F1LRgErr0XpPrwf/rbBak2MRRu0iExmgyevNkfOntEWg41WIDZFkYVMy1Rr8AdC5qH
+ Az4020xVFuO6hIOIIVoeidGsXoZ4sMF/oXl37Fl7vEtZorSsYFLSGnP5CvrEQoVcUhU3f8BtMye
+ kh9wHxsQAXfhUh+AerBOgLMJr1OEQ6LDWk6psoPUSAkvpJVDnecoDe6JbtFwKAvtZggbpM+s+Yc
+ qbauMRcZrE/v2c6fm1jSapPWwt+VaKZbse/O1LHHJ0kJh/n0bgdCw3fkxdKbYafDfio/9cCS3n4
+ AP/lhpE5kiaYpzZiMAQ==
+X-Proofpoint-GUID: V7IiDIBV_wBRJNM3FNP_d3VmVnEJtneF
+X-Proofpoint-ORIG-GUID: V7IiDIBV_wBRJNM3FNP_d3VmVnEJtneF
+X-Authority-Analysis: v=2.4 cv=QoFTHFyd c=1 sm=1 tr=0 ts=69aef9f1 cx=c_pps
+ a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VnNF1IyMAAAA:8
+ a=akap8JHnbm7pTVdsz3UA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-09_04,2026-03-09_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 spamscore=0 priorityscore=1501 phishscore=0
+ lowpriorityscore=0 adultscore=0 clxscore=1015 malwarescore=0 suspectscore=0
+ bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2602130000
+ definitions=main-2603090149
 
-On Mon,  2 Mar 2026 16:01:51 -0800
-Dan Williams <dan.j.williams@intel.com> wrote:
 
-> An "accepted" device is one that is allowed to access private memory within
-> a Trusted Computing Boundary (TCB). The concept of "acceptance" is distinct
-> from other device properties like usb_device::authorized, or
-> tb_switch::authorized. The entry to the accepted state is a violent
-> operation in which the device will reject MMIO requests that are not
-> encrypted, and the device enters a new IOMMU protection domain to allow it
-> to access addresses that were previously off-limits.
-> 
-> Subsystems like the DMA mapping layer, that need to modify their behavior
-> based on the accept state, may only have access to the base 'struct
-> device'. It is also likely that the concept of TCB acceptance grows beyond
-> PCI devices over time. For these reasons, introduce the concept of
-> acceptance in 'struct device_private' which is device common, but only
-> suitable for buses and built-in infrastructure to consume.
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Jason Gunthorpe <jgg@ziepe.ca>
-> Cc: Marek Szyprowski <m.szyprowski@samsung.com>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Roman Kisel <romank@linux.microsoft.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Samuel Ortiz <sameo@rivosinc.com>
-> Cc: Alexey Kardashevskiy <aik@amd.com>
-> Cc: Xu Yilun <yilun.xu@linux.intel.com>
-> Cc: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: "Rafael J. Wysocki" <rafael@kernel.org>
-> Cc: Danilo Krummrich <dakr@kernel.org>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Seems reasonable to me.
-Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+On 3/5/2026 4:20 AM, Julian Ruess wrote:
+> Add a vfio_pci variant driver for the s390-specific Internal Shared
+> Memory (ISM) devices used for inter-VM communication.
+>
+> This enables the development of vfio-pci-based user space drivers for
+> ISM devices.
+>
+> On s390, kernel primitives such as ioread() and iowrite() are switched
+> over from function handle based PCI load/stores instructions to PCI
+> memory-I/O (MIO) loads/stores when these are available and not
+> explicitly disabled. Since these instructions cannot be used with ISM
+> devices, ensure that classic function handle-based PCI instructions are
+> used instead.
+>
+> The driver is still required even when MIO instructions are disabled, as
+> the ISM device relies on the PCI store block (PCISTB) instruction to
+> perform write operations.
+>
+> Stores are not fragmented, therefore one ioctl corresponds to exactly
+> one PCISTB instruction. User space must ensure to not write more than
+> 4096 bytes at once to an ISM BAR which is the maximum payload of the
+> PCISTB instruction.
+>
+> Reviewed-by: Niklas Schnelle<schnelle@linux.ibm.com>
+> Signed-off-by: Julian Ruess<julianr@linux.ibm.com>
+> ---
+>   drivers/vfio/pci/Kconfig      |   2 +
+>   drivers/vfio/pci/Makefile     |   2 +
+>   drivers/vfio/pci/ism/Kconfig  |  10 ++
+>   drivers/vfio/pci/ism/Makefile |   3 +
+>   drivers/vfio/pci/ism/main.c   | 343 ++++++++++++++++++++++++++++++++++++++++++
+>   5 files changed, 360 insertions(+)
+
+Reviewed-by: Farhan Ali<alifm@linux.ibm.com>
+
