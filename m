@@ -1,185 +1,253 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC754285CB9;
-	Mon,  9 Mar 2026 18:00:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F660330301;
+	Mon,  9 Mar 2026 18:04:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773079263; cv=none; b=cggt6cBbeiqMxarHiujZsPda91lejUa93YnLSsyan0sjh1XZjQ0K0jMionRdfjfS+NIh1j1sQ88ufCLmP25ZqBrJTU8JQt9MfzYTik9qWZNE75EX2F40BtiqUEaXWasUDY+HhIjvCT0PLaKla+hixH43vaQSUBZcublHNZORtRw=
+	t=1773079452; cv=none; b=hf6Vihyx3rOVmYVcfeTgvFuHFjCJ09r9aEpq+ZwydXDjZANlsgTRiocc8er5lCOw9AtdEHufHdXffXu1/ooUfOQwQHJYO1mpqB3zs5OPfxo2kMOuG/HPbhmcwplXE5Jv8q2yvzoFai9C+sIaiFHUjzasa7avgIxzFkyGXPgNd1A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773079263; c=relaxed/simple;
-	bh=BgJQRqhGjraeZq1/E3D8YOpgm/h7Z0Fd8RnoHaYLJng=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QahyCi/+iG5ZAGG18YI+lnYlMvwTtiYM3/MvpDj3jIgU4kdt09PXZx2nmyOVFdltDST8inspo2uVmlIJpEvxPLCbhk1PBA8dY/kBjsgTzBqD+F2zscMCMW0Req3a+DDwBQLpOvNzry9HE+Ty28a5nTY8UAonvjnvuUjX7AC+6q8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.150])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fV4Yw4Q9CzHnGck;
-	Tue, 10 Mar 2026 02:00:52 +0800 (CST)
-Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id C1EA54056B;
-	Tue, 10 Mar 2026 02:00:56 +0800 (CST)
-Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
- (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 9 Mar
- 2026 18:00:55 +0000
-Date: Mon, 9 Mar 2026 18:00:54 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: Jason Gunthorpe <jgg@nvidia.com>
-CC: <dan.j.williams@intel.com>, Lukas Wunner <lukas@wunner.de>, "Alistair
- Francis" <alistair23@gmail.com>, <bhelgaas@google.com>,
-	<rust-for-linux@vger.kernel.org>, <akpm@linux-foundation.org>,
-	<linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <alex.gaynor@gmail.com>,
-	<benno.lossin@proton.me>, <boqun.feng@gmail.com>, <a.hindborg@kernel.org>,
-	<gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <tmgross@umich.edu>,
-	<ojeda@kernel.org>, <wilfred.mallawa@wdc.com>, <aliceryhl@google.com>,
-	Alistair Francis <alistair.francis@wdc.com>, <aneesh.kumar@kernel.org>,
-	<yilun.xu@linux.intel.com>, <aik@amd.com>, Mathieu Poirier
-	<mathieu.poirier@linaro.org>, Thomas Fossati <thomas.fossati@linaro.org>
-Subject: Re: [RFC v3 00/27] lib: Rust implementation of SPDM
-Message-ID: <20260309180054.00000933@huawei.com>
-In-Reply-To: <20260309155909.GG3717316@nvidia.com>
-References: <aZn9cfhv0YRxI1mw@wunner.de>
-	<699a3ff3f019a_1cc5100e1@dwillia2-mobl4.notmuch>
-	<20260223171527.000016ef@huawei.com>
-	<699ca65b5ff9b_1cc510019@dwillia2-mobl4.notmuch>
-	<69a903d4511e4_6423c1004d@dwillia2-mobl4.notmuch>
-	<20260305124837.GS972761@nvidia.com>
-	<69a9de4791667_6423c1006c@dwillia2-mobl4.notmuch>
-	<20260309113941.00007258@huawei.com>
-	<20260309123148.GC3717316@nvidia.com>
-	<20260309153339.00007b29@huawei.com>
-	<20260309155909.GG3717316@nvidia.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1773079452; c=relaxed/simple;
+	bh=5RQR0tB8TaCktoIyLXNMgaAgv+1TxrjShEKgDbTNFY4=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=A4L2RUjLxlcr9x77aPFye0lRIDfz2rNOnZxjC6NVMotuqIlcPI7q+e/y+mD39AW7wWmBas8IOKiALeFWOMlKRjezNTVOmFdlYwx8FtLCN7E84hsjZm65lNep0Z2ndFUs1lXcvKPtQ1n8oJW9WOM/OphcsXf99hdhM2ef1cm04zk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=e7JBjHhH; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="e7JBjHhH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773079451; x=1804615451;
+  h=message-id:date:mime-version:subject:from:to:cc:
+   references:in-reply-to:content-transfer-encoding;
+  bh=5RQR0tB8TaCktoIyLXNMgaAgv+1TxrjShEKgDbTNFY4=;
+  b=e7JBjHhHZJ22FnwYqj+bGXE5LDlB2htjZpaPug38Rm7OfUtsNFsWVh1a
+   ritgxnGpCETyiYFRHrW0rM9DLUsdd+cHtqw4SrEuC6IcT2yi1GtQHoRqn
+   DDmmTpME+T67uiXLtBu5JZ4SCXiid6Pj86fqEiIFpkf4iUqxQ/pqizcOB
+   VjwqyH+oybRQgzWKrKLUvogjR7gPSUWeAqqZI+67yW8rtHaJEPPyQaXf5
+   LbSrHv0d6a4563htu0eBligQGMeygrtrZRh39sSY0LtzFAKD8DIBw6Yrz
+   jnZv76xQ2v5+1AemYN4l4uLhpsxjZJ7V0OGRyBsTpYD4sl2WTWSgDqzXv
+   g==;
+X-CSE-ConnectionGUID: /ryRZr3LR06al7rWjCDPWA==
+X-CSE-MsgGUID: cmaT6xI/R3OCDpZNL2hrug==
+X-IronPort-AV: E=McAfee;i="6800,10657,11724"; a="74225017"
+X-IronPort-AV: E=Sophos;i="6.23,109,1770624000"; 
+   d="scan'208";a="74225017"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2026 11:04:10 -0700
+X-CSE-ConnectionGUID: TqnZ+j21QRuCikbnEdvpPw==
+X-CSE-MsgGUID: 0y3/eJb8S3qtzTEtnCfe8w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,109,1770624000"; 
+   d="scan'208";a="218975703"
+Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.81.126]) ([10.24.81.126])
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2026 11:04:09 -0700
+Message-ID: <19dc5e60-2740-458f-9e0a-90d3982316f4@linux.intel.com>
+Date: Mon, 9 Mar 2026 11:04:09 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml500011.china.huawei.com (7.191.174.215) To
- dubpeml500005.china.huawei.com (7.214.145.207)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] PCI: pciehp: Fix hotplug on Catlow Lake with
+ unreliable PME status
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>, Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
+References: <20260213231428.613164-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <9b639ed0-1765-4cca-814e-18a1260e01b9@linux.intel.com>
+ <CAJZ5v0iaKU6QJ7sxYCS21H0fv99DBNny-_bXzKH4g8RXgFuN6w@mail.gmail.com>
+ <7b4dd756-2ab7-4331-b560-268f9cff0887@linux.intel.com>
+ <CAJZ5v0gcZ5vs4WcS0GhvQrG9Kf05LNrNfd+oXz3WDdCA0xGjjw@mail.gmail.com>
+ <aZbEDldZxV1KG_5B@wunner.de>
+ <CAJZ5v0gF244JC5C9pLqmzxUuQkxMOXXBf92ckTKfeo9n8wgb1w@mail.gmail.com>
+ <09db5a83-980c-432e-adbc-2582680c8cf9@linux.intel.com>
+Content-Language: en-US
+In-Reply-To: <09db5a83-980c-432e-adbc-2582680c8cf9@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Mon, 9 Mar 2026 12:59:09 -0300
-Jason Gunthorpe <jgg@nvidia.com> wrote:
+Hi Lukas/Rafael,
 
-> On Mon, Mar 09, 2026 at 03:33:39PM +0000, Jonathan Cameron wrote:
+On 2/19/2026 1:54 PM, Kuppuswamy Sathyanarayanan wrote:
+> Hi,
 > 
-> > I'm not sure exactly what our security model is in the native CMA case,
-> > so what software we can trust on the host. I.e. does the DH session actually
-> > need to be between the kernel and the peer?  
+> On 2/19/2026 3:09 AM, Rafael J. Wysocki wrote:
+>> On Thu, Feb 19, 2026 at 9:04 AM Lukas Wunner <lukas@wunner.de> wrote:
+>>>
+>>> On Wed, Feb 18, 2026 at 06:33:15PM +0100, Rafael J. Wysocki wrote:
+>>>> First, keeping the ports in D0 may gate runtime PC10.  Does it not?
+>>>
+>>> The Root Port in question is on the PCH.  I'm not sure, does keeping a
+>>> PCH Root Port in D0 also prevent PC10 entry or is that only the case
+>>> for Root Ports on the CPU die/tile?
+>>
+>> If it is located in the PCH, it should not gate PC10 if in D0 at least
+>> in theory, but it would be good to verify that.
+>>
+>> Of course, it will still gate S0ix entry through runtime idle, but
+>> that's a bit moot if the platform is unable to enter S0ix through
+>> runtime idle anyway for other reasons (which is quite likely), or if
+>> the power difference between S0ix and PC10 is small.
 > 
-> Yes, absolutely a DH session is required in all cases, it is the only
-> way to generate a PCI encryption shared secret and exclude a MIM.
+> I will gather current PC10 and S0ix numbers. If there is a significant
+> difference between the two power savings, I will implement the
+> pme_is_broken() approach.
 
-Ah. I was missing what you wanted with the DH part. For some reason wasn't
-thinking about IDE (maybe because this patch set doesn't get you there for
-native). Though as I understand it some of the native usecases for CMA aren't
-using link encryption (different security model from CoCo).
+I have gathered the test results. S0ix is not a POR for this platform, so
+I was unable to collect those numbers. The deepest package  C-state supported
+is PC6.
 
-Yes, if you want to avoid MIM you need to bring up IDE etc - the basic fact
-that both ends can still talk to each other after enabling it given they have
-to have the same keys and those went over the secure channel, is part of the
-security around that. I think you can attest before that point and rely on
-the link 'failing' if there was a man in the middle. The verifier would
-want the evidence IDE was up before giving you any secrets.
+With pm_runtime_disable() keeping the port in D0, I observe approximately 
+10% reduction in PC6 residency. Given this power impact, I will proceed with 
+the pme_is_broken() approach suggested by Lukas, which allows the port to 
+enter D3hot while keeping hotplug interrupts enabled.
 
-Whether anyone actually implements root ports via standard DOE flows or
-everyone does this a custom way at the host is an open question.
-There are various mix and match situations where the Coco / TSM flows
-mean we have an encrypted channel, but we are doing our own native
-attestation (to a different DOE, say on a VF).  Anyhow, others on this thread
-have more info (I think) on the corner cases of how this is going to be
-used than I do.
+I will submit v3 with this implementation. Change log looks like below:
 
-The secure channel establishment and key exchange comes later in the SPDM
-flow than this patch set currently covers. This bit just gets you to the
-point where you know you are ultimately talking to right device - you don't
-know there isn't a MIM at this point.
 
-Next up is KEY_EXCHANGE / KEY_EXCHANGE_RSP / FINISH / FINISH_RSP that will
-exchange the public ephemeral keys and ultimately get us a secure channel.
-Then we then switch to secured-CMA which is the PCIe spec and is basically the
-format for wrapping up the session IDs etc + the encrypted channel.
-Lukas' github has the next few bits required, but not sure he's all the
-way there yet?
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 1e9158d7bac7..f854ef9551c3 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -260,13 +260,20 @@ static bool pme_is_native(struct pcie_device *dev)
+        return pcie_ports_native || host->native_pme;
+ }
 
-That then gets used for key exchange messages related to IDE via the PCI
-spec defined IDE_KM protocol. (which is fairly simple compared to the other
-steps - only about 8 pages :)).
++static bool pme_is_broken(struct pcie_device *pcie)
++{
++       struct pci_dev *pdev = pcie->port;
++
++       return !!(pdev->dev_flags & PCI_DEV_FLAGS_PME_UNRELIABLE);
++}
++
+ static void pciehp_disable_interrupt(struct pcie_device *dev)
+ {
+        /*
+         * Disable hotplug interrupt so that it does not trigger
+         * immediately when the downstream link goes down.
+         */
+-       if (pme_is_native(dev))
++       if (pme_is_native(dev) && !pme_is_broken(dev))
+                pcie_disable_interrupt(get_service_data(dev));
+ }
 
-So we may need to get a bit further before we can do the attestation
-flow that would be equivalent to what CoCo needs.  I'm thinking
-we may need one more set of measurements to verify both ends think
-IDE is up.
+@@ -318,7 +325,7 @@ static int pciehp_resume(struct pcie_device *dev)
+ {
+        struct controller *ctrl = get_service_data(dev);
 
-For now the host will know it didn't bring up IDE.
+-       if (pme_is_native(dev))
++       if (pme_is_native(dev) && !pme_is_broken(dev))
+                pcie_enable_interrupt(ctrl);
+
+        pciehp_check_presence(ctrl);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 48946cca4be7..acaa328dff51 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -6380,3 +6380,51 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
+ #endif
++
++/*
++ * When a PCIe port is in D3hot, the hotplug driver depends on PME
++ * to wake the port back to D0 and then process any hotplug-related
++ * state changes. On Intel Catlow Lake platforms, PCH PCIe root ports
++ * do not reliably update PME state during D3hot to D0 transitions.
++ *
++ * Mark affected ports with PCI_DEV_FLAGS_PME_UNRELIABLE to keep
++ * hotplug interrupts (HPIE) enabled during D3hot instead of relying on
++ * PME-based wakeup. This allows hotplug events to be delivered via
++ * direct interrupts while still permitting the port to enter D3hot for
+@@ -6380,3 +6380,51 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
+ #endif
++
++/*
++ * When a PCIe port is in D3hot, the hotplug driver depends on PME
++ * to wake the port back to D0 and then process any hotplug-related
++ * state changes. On Intel Catlow Lake platforms, PCH PCIe root ports
++ * do not reliably update PME state during D3hot to D0 transitions.
++ *
++ * Mark affected ports with PCI_DEV_FLAGS_PME_UNRELIABLE to keep
++ * hotplug interrupts (HPIE) enabled during D3hot instead of relying on
++ * PME-based wakeup. This allows hotplug events to be delivered via
++ * direct interrupts while still permitting the port to enter D3hot for
++ * power savings.
++ *
++ */
++static void quirk_intel_catlow_pcie_pme_unreliable(struct pci_dev *dev)
++{
++       dev->dev_flags |= PCI_DEV_FLAGS_PME_UNRELIABLE;
++       pci_info(dev, "Catlow PCH port: PME unreliable\n");
++}
++/* Apply quirk to Catlow Lake PCH root ports (0x7a30 - 0x7a4b) */
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a30, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a31, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a32, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a33, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a34, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a35, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a36, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a37, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a38, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a39, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3a, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3b, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3c, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3d, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3e, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3f, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a40, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a41, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a42, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a43, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a44, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a45, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a46, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a47, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a48, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a49, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4a, quirk_intel_catlow_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4b, quirk_intel_catlow_pcie_pme_unreliable);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1c270f1d5123..9761351c5d70 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -253,6 +253,8 @@ enum pci_dev_flags {
+         * integrated with the downstream devices and doesn't use real PCI.
+         */
+        PCI_DEV_FLAGS_PCI_BRIDGE_NO_ALIAS = (__force pci_dev_flags_t) (1 << 14),
++       /* Device PME is broken or unreliable */
++       PCI_DEV_FLAGS_PME_UNRELIABLE = (__force pci_dev_flags_t) (1 << 15),
+ };
+
+
+
+
 
 > 
-> For native the verifer should be able to measure the running kernel
-> using the TPM, and then confirm the measured kernel and the peer have
-> established a MIM free PCIe encryption, and finally measure the peer
-> device.
 > 
-> For instance, imagine an enhanced version of "Network-Bound Disk
-> Encryption" where the storage key is not released unless the server
-> also validates PCI properties (physically encrypted with no MIM, right
-> devices, etc)
+>>
+>>> If this does cause a power regression, the pme_is_broken() approach
+>>> suggested upthread might be a viable alternative.  It'll allow the
+>>> Root Port to go to D3hot but will keep interrupts enabled in the
+>>> Slot Control register.
+>>
+>> Sounds reasonable to me.
 > 
-> > > I suppose the flow is the usual crypto something
-> > > like
-> > >  - Kernel negotiates a DH session/CSPRNG with the peer, generates
-> > >    symmetric keys from the CSPRNG 
-> > >  - Kernel forwards a nonce challenge and peer signs it, somehow mixing in
-> > >    CSPRNG data to bind to the DH session  
-> > 
-> > We have a small amount of context (8 bytes) that we can put anything as
-> > part of challenge/auth (alongside the nonce) It will part of the signed
-> > response. Would that work for something from with the CSPRNG,
-> > mixed so that you can't go from that context to the CSPRNG value?  
+> Sounds good. 
 > 
-> I assume SPDM is doing this already somehow otherwise there is no way
-> to setup the PCI encryption keys. The fundamental purpose of the
-> signature is to exclude a MIM by signing something that proves there
-> is no MIM, and that is usually a value that both sides independently
-> pull out of the CSPRNG. If they derive the same value then they have
-> the same CSPRNG and DH tells us nobody else can have it. But there are
-> other approaches too..
+>>
+> 
 
-For SPDM it's this or pre shared key stuff which requires some out of
-band way path. So probably ignore that.
-
-> 
-> > > Of course all of this should try to align with the way TSMs are
-> > > working so we have as uniform as possible uAPI for evidence transfer.
-> > > Though obviously a kernel SPDM has to be distinguisable from any other
-> > > TSM from a verifier POV.  
-> > 
-> > Agreed. Very interesting to know what exactly is going in the TSM
-> > SPDM exchanges as hopefully that will reflect best practice. If we
-> > are really lucky they won't all do different things ;)  
-> 
-> Yeah, and I don't really know the details, just have some general idea
-> how attestation and PCI link encryption should work in broad strokes.
-> 
-> But I know people who do, so if we can get a series that clearly lays
-> out the proposed kernel flow I can possibly get someone to compare
-> it..
-> 
-> The baseline I expect is a merkle tree signed by the root of trust
-> (TPM or platform TSM) that encompases everything down to the required
-> bits of the SPDM negotiation to prove no MIM.
-
-Agreed, that's my basic undestanding as well and likewise, can get
-some appropriate folk to check it out once we have the full thing described.
-
-Jonathan
-
-> 
-> Jason
-> 
+-- 
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
 
