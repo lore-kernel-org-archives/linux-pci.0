@@ -1,50 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75F5F1DED42;
-	Mon,  9 Mar 2026 18:30:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DE383ED5A2;
+	Mon,  9 Mar 2026 18:55:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773081034; cv=none; b=PXBt6lp1+NDuXUGT0cV5zFvyxgXeEBuQ3b1gvk9h5N/PGSFudCcWGIeUOQ8C10wSRuFUPJgdO8PvKY1z2cr+Ot27hQH9pMfW98JaSt2Ft6DjjFc4fyOpyXfKIdwGTF5xuAdjMYve9Ac3bQ+gSipjN/0hniQCg9qrQaICEzfThmA=
+	t=1773082535; cv=none; b=hjmeqPNJaLQUeCGigOMJI+ltBE3WOmqYSMhS6b8c8gtSw5W3dcfO4oBo2QXgojW9t4Kl4tecmgyX5R16QTKG1CrNh0D5ZecPoKhm318ZGQBMPbWMnhOd8waeGWo0ScmzrzDpF6Xl6hfEj0tnX2ZzMAPcQu6ovOqAqsaSlFkMjCE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773081034; c=relaxed/simple;
-	bh=fcHCraRUhUoIO7CRko7nHKUewPlIyNcfVedCkLJHRI0=;
+	s=arc-20240116; t=1773082535; c=relaxed/simple;
+	bh=w1VkNd3bsGEsVZxaN9KV5MP89lEhMFQ/X0PNqqgFncM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hUmKXDSYruo/TcJRe8zqVOltmQ5Z3kPpEC3WWQDJOO6DVNu1FkN2FNEdmCXyGMfAw5adQqGV1xovBE9I6kUPvcnqhrSf8k5m+9axQlS5HtQiO1ZVevIzp9LqyWWnZ4UYdtgToTy7L4WqILs91PZ/Dhdl4SC8k9iFBn7OlVLf+oA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LbK9k7eP; arc=none smtp.client-ip=192.198.163.16
+	 In-Reply-To:Content-Type; b=r8nYpVnjG4qUZQJpCcD0I5uWMi0k2xuZ6UPsTPjAbdpalGnjwlTZ8EtiUNPHXJ7jPcwPSmpUZBZvys50KdDv+c72QErVDfgIiYt2r23YYPvweelK0Gz9vvA4zoYf79QaaFp7Z00obyyitajtBOpAholSZqULqt3GYBXLNkBGcLM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TohFGA39; arc=none smtp.client-ip=198.175.65.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LbK9k7eP"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TohFGA39"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773081032; x=1804617032;
+  t=1773082534; x=1804618534;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=fcHCraRUhUoIO7CRko7nHKUewPlIyNcfVedCkLJHRI0=;
-  b=LbK9k7ePKmiCGW1+Sru5UUhCKvWKGIMkqu7PnvVAKw8CzQ4AMkcq6PDN
-   gk90ytQh7ibejZVGsW9Hq7AtjJqfoGwlwIkdgmw/lvCgV6rU9ibBBUT7D
-   nXVyO1d07wujOkqJrOJL29b3KjivPRvc5+6GhYp3l3GTSmEodvjk1jaeF
-   4ZOW8fHyH5j8lTiDPD53P+iNkRzSHpjb0in4dc+ddmRGFWGpRZr/weRfK
-   S+uveKdDL7V0FOCAbfTlTG6lzkRJxzMmXRpDWNc0zdunbuwTM0wWttZsU
-   4h08VLjurwwsFzzGBBslNQTMBTWlHrooZopo6vR6t2+t8cANEjVTXnTOB
-   Q==;
-X-CSE-ConnectionGUID: XtbX0xElT5aI3xCFQF4pFQ==
-X-CSE-MsgGUID: GUtiee7xTbWaookSPhdibg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11724"; a="61686841"
+  bh=w1VkNd3bsGEsVZxaN9KV5MP89lEhMFQ/X0PNqqgFncM=;
+  b=TohFGA39zDfHS8ly0KYLoTqxNlKzy5TuYJ5TDa4hPpqbanAy9W3PgEnj
+   JG+244jQNpyZC/eF1AfLDMXQCCs5V3lOa2Y1HsqYgs1r4/YY86iyQyDSG
+   DTyk+juV3jrlDv3dw0xCSRcdzjP54kVlWdrm89xjqSNtrEVagaZCrrZYj
+   GtbeCtJLMJKGO9WuI+c4hFjtfP5umgbUnrJft0haJV6rbPdHsidJD44t5
+   q2dMKoMDMk8p2ocJAcFK6YlP9K4R3jNHSvVUxJpF6HYquTNLm9dRa8XV/
+   HLRVUgBtXRxq2wOTknWzvj2GDItsSrjS3racIdjz0Ymog9oomPNPlD5Yv
+   w==;
+X-CSE-ConnectionGUID: 0CbfkUCOSiSaFGtF8BJX0Q==
+X-CSE-MsgGUID: O0SyU9qaRneZsSMhkIZ0ww==
+X-IronPort-AV: E=McAfee;i="6800,10657,11724"; a="74160342"
 X-IronPort-AV: E=Sophos;i="6.23,109,1770624000"; 
-   d="scan'208";a="61686841"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2026 11:30:31 -0700
-X-CSE-ConnectionGUID: bvR4NPXoQsaMqz4Zk9XmnA==
-X-CSE-MsgGUID: 6FFLQ4RaQuyNG/2IkxxAIg==
+   d="scan'208";a="74160342"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2026 11:55:33 -0700
+X-CSE-ConnectionGUID: IeHsLyuKQ9uAh4s3xR0Nlw==
+X-CSE-MsgGUID: aIVpfg3hTsOWReGWfKID/A==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,109,1770624000"; 
-   d="scan'208";a="224780733"
+   d="scan'208";a="219819614"
 Received: from dwoodwor-mobl2.amr.corp.intel.com (HELO [10.125.109.205]) ([10.125.109.205])
-  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2026 11:30:30 -0700
-Message-ID: <2bb59ea6-9d33-4dfe-91de-644e20da6307@intel.com>
-Date: Mon, 9 Mar 2026 11:30:29 -0700
+  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2026 11:55:31 -0700
+Message-ID: <b7566e75-8d1e-4551-b21c-4e1123627583@intel.com>
+Date: Mon, 9 Mar 2026 11:55:30 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,8 +52,7 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v16 02/10] PCI/CXL: Update unregistration for AER-CXL and
- CPER-CXL kfifos
+Subject: Re: [PATCH v16 09/10] cxl: Remove Endpoint AER correctable handler
 To: Terry Bowman <terry.bowman@amd.com>, dave@stgolabs.net,
  jonathan.cameron@huawei.com, alison.schofield@intel.com,
  dan.j.williams@intel.com, bhelgaas@google.com, shiju.jose@huawei.com,
@@ -65,100 +64,116 @@ To: Terry Bowman <terry.bowman@amd.com>, dave@stgolabs.net,
  ira.weiny@intel.com
 Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 References: <20260302203648.2886956-1-terry.bowman@amd.com>
- <20260302203648.2886956-3-terry.bowman@amd.com>
+ <20260302203648.2886956-10-terry.bowman@amd.com>
 Content-Language: en-US
 From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <20260302203648.2886956-3-terry.bowman@amd.com>
+In-Reply-To: <20260302203648.2886956-10-terry.bowman@amd.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 
 
 On 3/2/26 1:36 PM, Terry Bowman wrote:
-> The current AER-CXL kfifo unregistration does not cancel pending work after
-> clearing the work function pointer. In addition, cancel_work_sync() is
-> called on behalf of the CPER-CXL kfifo in cxl_ras_exit() and should be
-> moved into the kfifo deregistration function.
+> CXL drivers dont require a correctable PCI AER handler. Correctable AER
+> errors reported by CXL devices are logged and cleared in the AER driver.
+> This makes the correctable AER handler callback in the CXL driver
+> unnecessary.
 > 
-> Add logic to cancel the AER-CXL kfifo's pending work in
-> cxl_unregister_proto_err_work().
+> Remove cxl_cor_error_detected() and drop the .cor_error_detected callback
+> from the CXL PCI error handlers.
 > 
-> Move the CPER-CXL kfifo cancel call from cxl_ras_exit() to
-> cxl_cper_unregister_prot_err_work(). Release the CPER-CXL spinlock
-> before calling cancel_work_sync() to avoid deadlock.
+> This consolidates correctable error reporting under the CXL RAS infrastructure
+> and avoids redundant or conflicting logging with the AER driver.
 > 
-> In both kfifo unregistration cases, add the necessary synchronization
-> to enforce proper lock ordering: protect pointer updates under the
-> lock, and clear the work pointer, then cancel any outstanding work
-> after the lock is released.
-> 
-> Link: https://lore.kernel.org/linux-cxl/6982ca54e094b_55fa1005@dwillia2-mobl4.notmuch/
 > Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-> Assisted-by: Azure:gtp-4.1-nano-key
 
 Reviewed-by: Dave Jiang <dave.jiang@intel.com>
 
 
 > 
-> ----
-> 
-> Changes in v16:
-> - New commit
 > ---
->  drivers/acpi/apei/ghes.c      | 6 +++++-
->  drivers/cxl/core/ras.c        | 1 -
->  drivers/pci/pcie/aer_cxl_vh.c | 9 ++++++++-
->  3 files changed, 13 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-> index 8acd2742bb27..de935e0e1dcf 100644
-> --- a/drivers/acpi/apei/ghes.c
-> +++ b/drivers/acpi/apei/ghes.c
-> @@ -776,8 +776,12 @@ int cxl_cper_unregister_prot_err_work(struct work_struct *work)
->  	if (cxl_cper_prot_err_work != work)
->  		return -EINVAL;
->  
-> -	guard(spinlock)(&cxl_cper_prot_err_work_lock);
-> +	spin_lock(&cxl_cper_prot_err_work_lock);
->  	cxl_cper_prot_err_work = NULL;
-> +	spin_unlock(&cxl_cper_prot_err_work_lock);
-> +
-> +	cancel_work_sync(work);
-> +
->  	return 0;
->  }
->  EXPORT_SYMBOL_NS_GPL(cxl_cper_unregister_prot_err_work, "CXL");
+> Changes in v15->v16:
+> - None
+> 
+> Changes in v14->v15:
+> - Remove cxl_pci_cor_error_detected(). Is not needed. AER is logged
+>   in the AER driver. (Dan)
+> - Update commit message (Terry)
+> 
+> Changes in v13->v14:
+> - New commit
+> - Change cxl_cor_error_detected() parameter to &pdev->dev device from
+>   memdev device. (Terry)
+> - Updated commit message (Terry)
+> ---
+>  drivers/cxl/core/ras.c | 23 -----------------------
+>  drivers/cxl/cxlpci.h   |  2 --
+>  drivers/cxl/pci.c      |  1 -
+>  3 files changed, 26 deletions(-)
+> 
 > diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-> index 006c6ffc2f56..949d8c8ecdfe 100644
+> index 884e40c66638..d6112b812c82 100644
 > --- a/drivers/cxl/core/ras.c
 > +++ b/drivers/cxl/core/ras.c
-> @@ -124,7 +124,6 @@ int cxl_ras_init(void)
->  void cxl_ras_exit(void)
->  {
->  	cxl_cper_unregister_prot_err_work(&cxl_cper_prot_err_work);
-> -	cancel_work_sync(&cxl_cper_prot_err_work);
+> @@ -370,29 +370,6 @@ cxl_handle_ras(struct device *dev, u64 serial, void __iomem *ras_base)
+>  	return PCI_ERS_RESULT_PANIC;
 >  }
 >  
->  static void cxl_dport_map_ras(struct cxl_dport *dport)
-> diff --git a/drivers/pci/pcie/aer_cxl_vh.c b/drivers/pci/pcie/aer_cxl_vh.c
-> index 7e2bc1894395..ebca1112652a 100644
-> --- a/drivers/pci/pcie/aer_cxl_vh.c
-> +++ b/drivers/pci/pcie/aer_cxl_vh.c
-> @@ -74,8 +74,15 @@ EXPORT_SYMBOL_NS_GPL(cxl_register_proto_err_work, "CXL");
->  
->  void cxl_unregister_proto_err_work(void)
+> -void cxl_cor_error_detected(struct pci_dev *pdev)
+> -{
+> -	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
+> -	struct cxl_memdev *cxlmd = cxlds->cxlmd;
+> -	struct device *dev = &cxlds->cxlmd->dev;
+> -
+> -	scoped_guard(device, dev) {
+> -		if (!dev->driver) {
+> -			dev_warn(&pdev->dev,
+> -				 "%s: memdev disabled, abort error handling\n",
+> -				 dev_name(dev));
+> -			return;
+> -		}
+> -
+> -		if (cxlds->rcd)
+> -			cxl_handle_rdport_errors(pdev);
+> -
+> -		cxl_handle_cor_ras(&cxlds->cxlmd->dev, cxlds->serial,
+> -				   cxlmd->endpoint->regs.ras);
+> -	}
+> -}
+> -EXPORT_SYMBOL_NS_GPL(cxl_cor_error_detected, "CXL");
+> -
+>  static bool cxl_uncor_aer_present(struct pci_dev *pdev)
 >  {
-> -	guard(rwsem_write)(&cxl_proto_err_kfifo.rwsema);
-> +	struct work_struct *work;
-> +
-> +	down_write(&cxl_proto_err_kfifo.rwsema);
-> +	work = cxl_proto_err_kfifo.work;
->  	cxl_proto_err_kfifo.work = NULL;
-> +	up_write(&cxl_proto_err_kfifo.rwsema);
-> +
-> +	if (work)
-> +		cancel_work_sync(work);
->  }
->  EXPORT_SYMBOL_NS_GPL(cxl_unregister_proto_err_work, "CXL");
+>  	struct aer_capability_regs aer_regs;
+> diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
+> index 86029d96d6bb..184a95e96ea9 100644
+> --- a/drivers/cxl/cxlpci.h
+> +++ b/drivers/cxl/cxlpci.h
+> @@ -78,13 +78,11 @@ struct cxl_dev_state;
+>  void read_cdat_data(struct cxl_port *port);
+>  
+>  #ifdef CONFIG_CXL_RAS
+> -void cxl_cor_error_detected(struct pci_dev *pdev);
+>  void devm_cxl_dport_rch_ras_setup(struct cxl_dport *dport);
+>  pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
+>  					pci_channel_state_t error);
+>  void devm_cxl_port_ras_setup(struct cxl_port *port);
+>  #else
+> -static inline void cxl_cor_error_detected(struct pci_dev *pdev) { }
+>  static inline pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
+>  						      pci_channel_state_t state)
+>  {
+> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
+> index b57f4727af53..77a2ee57222b 100644
+> --- a/drivers/cxl/pci.c
+> +++ b/drivers/cxl/pci.c
+> @@ -1055,7 +1055,6 @@ static const struct pci_error_handlers pci_error_handlers = {
+>  	.error_detected	= cxl_pci_error_detected,
+>  	.slot_reset	= cxl_slot_reset,
+>  	.resume		= cxl_error_resume,
+> -	.cor_error_detected	= cxl_cor_error_detected,
+>  	.reset_done	= cxl_reset_done,
+>  };
 >  
 
