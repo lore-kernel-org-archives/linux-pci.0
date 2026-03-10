@@ -1,473 +1,167 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f170.google.com (mail-lj1-f170.google.com [209.85.208.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D3803A6B7A;
-	Tue, 10 Mar 2026 16:14:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773159244; cv=none; b=sU8WHk5LustDgymCck5rTM2D/5Uva+3GRaIpZzBORG04YJY8Q/XCLVwalp6wJq0yNwoMblVy1vSYXJc20P7m4x9AnouMZhQ+rQt+sp4CqczGQhMwNyRqnMDZFUzJ2cSY7+YfXWtsfYftPad0ZfBk+M5zlvTFwD1CpdEdF0ZiG30=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773159244; c=relaxed/simple;
-	bh=W16GSmTPEmREHa/ncwuLvenYoXFQJu4+w8XRQCYhwsg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oSEE/c9o2HY6ejtt7cGsdY4bbPY7rC+mdqAv3SVpo67hPH716++akWzJTME54sRUY1QIRs1OxpfY72SKd4yuKMIPT/f/ala+fZOjblYRd/q+Z5jP2PJBEJxwLaIca9MK5p6dRq6FPypsfVbXksy7Z3mcYdjHRFG+++YhUNuB364=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gXDYQMP6; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A5F03CF046
+	for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2026 16:46:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.170
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773161170; cv=pass; b=KeW2+bOag8Duc3JpkooUUL/z0GE3Cj80UcPze+vwcSuR/AbwDoz5RgDa0HoCiFSJF3aJY1CRWsONYhv6VYWlC9iLqabgF1DwuyfK3yqzu3qy4lK5y5p5evHfUdOKEuA3FJnWkW8HexYXzu9S531QfzXsdJDnao+PnQtMPL3ij3w=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773161170; c=relaxed/simple;
+	bh=W4UUoMCxfEZ7BVklQrFF8Qlkt9KjG0xmQgYXi6Y0450=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Content-Type; b=ftZTNGqqzPWpqa5LSflCnKZ+tG5DbGebBu5eMuzyNbukoLaIkMp+Bji+O11SIqfX5R20Dw384GtOG5HCti9o/ylJTVNcT/fr6Pnxu5252PGRmHHcHFnOz2IH4sKJL3xtKcRCMN+pJh6M8F6cHZEG8qn3FDfIbj5iOxtwvzibCWw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GFZ7sSA3; arc=pass smtp.client-ip=209.85.208.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gXDYQMP6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773159242; x=1804695242;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=W16GSmTPEmREHa/ncwuLvenYoXFQJu4+w8XRQCYhwsg=;
-  b=gXDYQMP6GNbALh6HHfORGadAnrPEWX3GSrlUSIyP6GrK0dP9h2ZiLPoT
-   AFhxFEISAlD6zfLb6zUuxX12OelIWwqKIPrMjMmmR4qGrDVzHZ24Hkztg
-   iXOwAgZJBm/u5/DcmPF1x6CAoGJhVAFiIo7BxEkjBs3K11wJcdzAWab5n
-   B5PO7h9SFz6I23F6Jbn3VAuMjBG6HV9DsquRouJ2Dg3Rkb7EIfQna/Q6g
-   nxeKC7PVyUXraLoREptAJVBqUIEWGG2wl0aeO3na60suvo4zK7/QxF5n7
-   ChGlDn/9bGTnaKHvpfJmshIcAQQtU0dECYxXHlO6m4mYWjlNU3pj1kSyn
-   A==;
-X-CSE-ConnectionGUID: x4WaRFWLTCG2DXa+P/a3dg==
-X-CSE-MsgGUID: Sf3Am0CfR/ym6PvG0fZC3w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11725"; a="73407675"
-X-IronPort-AV: E=Sophos;i="6.23,112,1770624000"; 
-   d="scan'208";a="73407675"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 09:14:01 -0700
-X-CSE-ConnectionGUID: 5JlbAd8ZQBONj48y4Bywaw==
-X-CSE-MsgGUID: xrAf1p2aQBOmi+e8t4rPjQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,112,1770624000"; 
-   d="scan'208";a="224621553"
-Received: from aduenasd-mobl5.amr.corp.intel.com (HELO [10.125.110.11]) ([10.125.110.11])
-  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 09:13:57 -0700
-Message-ID: <ba5b26b5-d69a-48bf-9ebf-21e44aa75a60@intel.com>
-Date: Tue, 10 Mar 2026 09:13:56 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GFZ7sSA3"
+Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-38a01c80c34so141809141fa.0
+        for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2026 09:46:09 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773161167; cv=none;
+        d=google.com; s=arc-20240605;
+        b=hcjEUCjj1Vn2o5vGQ2KACKKKdddogpI8MnLxuG0HUp617VLmEMv7yQv2uTJ4Ps3ZDP
+         uG7Fdv9lbEdK1i0tPdNzRZlOIw/hwOqfloEGReDX50OaZWRKoAZhb1k9KjCGyr2awn27
+         tiNvlum95OggugGOUVYycacPCrg+Rllw6shtea65hYijXFttxpxFlbrQ0Z66zc7bzqg8
+         AT3+4yog2gLjQIAixQEyhjjdypI3PaYXBjsD+riqs+8XZnLNaRwtxVICeMWBPWPhJT0Z
+         hYf2AgFV8/giV0PEazhw/EGSbs7M5btom1T3vfrzPhe57l5/rFPc/eOP7K6eENKdFK6u
+         36Jw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:to:subject:message-id:date:from:reply-to
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=6QTUF0rve9LkHPmJW8pUUJ/gPbkWowjU6eSADSpNkBM=;
+        fh=ukumusKjPCPNBcq2YDxuVNi2DxAoknhlYNLwoeduvVg=;
+        b=WHyHh1NeBYRBY8JrfQqxUZBK2IppspREKOoU2GPVuRX9yMwd4ATjsefoaEL32WJOoz
+         ofe0YSuGREVFZ/J0Xggv/LWAAmIHDQq0VtXFbddf+X0QeDauHFtSYwCTPqcofOVthFQY
+         f23vsvk788iNhr7+nMaznFY6QZnkdzoI8ChfpRXz4a8DCW4iZeMJQPqVRb9yODJEqj5P
+         ESXlhMgTmhaYUouHqdA6C7S2ZLIfpUjJavcpgE+butk2iPK7xE3DHq/BhLQEk1W0PGsU
+         0ZhwOPjnIhpdOqe6USSPwQBfxJqp8c8Bpa0ca8313aVUGn8hFxj2RPpSbKtLNsBtLB4h
+         Hkow==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773161167; x=1773765967; darn=vger.kernel.org;
+        h=content-transfer-encoding:to:subject:message-id:date:from:reply-to
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6QTUF0rve9LkHPmJW8pUUJ/gPbkWowjU6eSADSpNkBM=;
+        b=GFZ7sSA39fHjxQ5qRzhsHfm4I3IAoNMalMgFrkCJeRW+1mPomf5oDawv1pS7u3R/Nx
+         Nk7tLGrJu/yCrZGOfseFtLAZp05BCUMLx5pez5o3cZHC05Y5uSKs+MYCtLjjmaXEAt8n
+         o4QRXULsVxdNFnv++c8KFzWv+oDvGjY9X9M9gVh1K2IUxUnZ7jEKTw94lEIxhrKqHuqg
+         WrUDL56Utj1Q74guRkDLj+r1Y/5FewVn/k83alQN14yIfndSfTh3du8mWKbK6QiVcEVl
+         6WgTjdRhGn9SzyX3y1mm/Jn9glqppWNU9SVh7AEX7Vhg104Ju8Z7DmmJ4invLywXsVxg
+         JoYw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1773161167; x=1773765967;
+        h=content-transfer-encoding:to:subject:message-id:date:from:reply-to
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=6QTUF0rve9LkHPmJW8pUUJ/gPbkWowjU6eSADSpNkBM=;
+        b=vqoQScYTn0Ppwke4BmhXIG84kMuYWEWyscQZE3J/Fc2YNK8gVlPGkxyQmwGtN42TBY
+         pnfm8eieHvw98BFIJWhDlKaiXcCfxBBmLGYGj5XhHBdolBda2xA/CCzEQ2waDQIfS0x7
+         hZbemi4w/X7jLTxDBtWZxkvUTsa+WItocqebS1ElTK7jL9cXW/v7WWjepvaVh9+CoK1y
+         T1UbuubKv4TwC9VtugupruDVbIckqek9+XyLMrbSf6wH41/JxmOlyWLBR5Xu6pOMqndh
+         QBmfgpBgCLRFDP6HbGt8axhKWk6lmstVg07HKaX2OOtR1liVOnbGn8LGsJa8fnP1CtA/
+         G/+Q==
+X-Gm-Message-State: AOJu0YxOJrgxJtLgpY3BaPIz1Vl8DxnZnLTIo56SfnSPNi28pw/iEXnu
+	lG0K90fHBelMQYiIMtUA1Vw+MTY59TGE1VTZlNukUAKGYC3fhlH4FhPLy1ESxndsGR7XSNFCX+w
+	2TArVyl57xzEq98gfiReG2TK++g9/JprTNiqS
+X-Gm-Gg: ATEYQzzJmy0Uu/SuzuaHGOErka4+K3WeQR4a58ha1ga7dDdD1OZm+FWsxSn0RPAS5uW
+	ITTZPGtkkOHbtUsr8YRtHnt+A2zLgCuzIuo453WiEIwLKFBPeFS+zUsy7vYbx1Ea2gXo8JmkgQh
+	lVdaOKP6YDxJqKi+yzExDsQnKKbb/LREhLhhJYwK7e/PW9pVAhCxUiXmDJTavHa47cr8CiPR7AB
+	NnxByc78m3VLKCsUTlZ6hPAHs7EohFsf12FkXEVKZxabUMpyJWrxcyKfe8GHPSyAnd82E9Rh2x6
+	dYuPJTtmGGvwGAxh5UTzHXY/EfequHGga7Pe/PJAE71vDA4lMIiBrG+TsqeB2q6+tj84j5Ud7Fr
+	dsFgS
+X-Received: by 2002:a2e:9cd7:0:b0:38a:3dcb:927 with SMTP id
+ 38308e7fff4ca-38a40d98832mr38624571fa.35.1773161167209; Tue, 10 Mar 2026
+ 09:46:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/5] cxl: Move HDM decoder and register map definitions to
- include/cxl/pci.h
-To: Srirangan Madhavan <smadhavan@nvidia.com>,
- Alex Williamson <alwilliamson@nvidia.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
- "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
- "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
- "ira.weiny@intel.com" <ira.weiny@intel.com>,
- "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
- "alison.schofield@intel.com" <alison.schofield@intel.com>,
- "dave@stgolabs.net" <dave@stgolabs.net>, Jeshua Smith <jeshuas@nvidia.com>,
- Vikram Sethi <vsethi@nvidia.com>,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Shanker Donthineni
- <sdonthineni@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Vidya Sagar <vidyas@nvidia.com>, Jiandi An <jan@nvidia.com>,
- Matt Ochs <mochs@nvidia.com>, Derek Schumacher <dschumacher@nvidia.com>,
- "linux-cxl@vger.kernel.org" <linux-cxl@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20260306080026.116789-1-smadhavan@nvidia.com>
- <20260306080026.116789-3-smadhavan@nvidia.com>
- <20260306104516.50ac6f40@nvidia.com>
- <DS0PR12MB772529689331805F3B034630C37BA@DS0PR12MB7725.namprd12.prod.outlook.com>
-Content-Language: en-US
-From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <DS0PR12MB772529689331805F3B034630C37BA@DS0PR12MB7725.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <bug-221205-41252@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-221205-41252@https.bugzilla.kernel.org/>
+Reply-To: bjorn@helgaas.com
+From: Bjorn Helgaas <bjorn.helgaas@gmail.com>
+Date: Tue, 10 Mar 2026 11:45:55 -0500
+X-Gm-Features: AaiRm50skEEq5WC2dP-dpps2yRU2BcFpPst7HRvORWpSYpqrcBu4tUBTbjyUOlM
+Message-ID: <CABhMZUWESYKvKxeRvXhF2gkXxAakV0zWR4hjE=50-teHRLLgug@mail.gmail.com>
+Subject: Fwd: [Bug 221205] New: pci=relloc fails on 6.18.16 and 6.19.6
+To: Linux PCI <linux-pci@vger.kernel.org>, 
+	=?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+[to Ilpo and linux-pci for visibility, reporter in bcc]
+
+[xiferdev: Sorry about the regression and thanks for the report and
+debugging.  It's best if you can attach the complete dmesg logs
+instead of extracting just the things that look related.  If you can
+attach the dmesg logs from the newest working kernel and the oldest
+broken one, that would be helpful as well.]
+
+---------- Forwarded message ---------
+From: <bugzilla-daemon@kernel.org>
+Date: Tue, Mar 10, 2026 at 8:01=E2=80=AFAM
+Subject: [Bug 221205] New: pci=3Drelloc fails on 6.18.16 and 6.19.6
+To: <bjorn@helgaas.com>
 
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D221205
 
-On 3/6/26 5:35 PM, Srirangan Madhavan wrote:
->> So moving them to the public header is just unnecessary code churn.
-> Apologies for that oversight. I can remove the unnecessary moves from this patch.
-> 
->> Also, specifically regarding cxl_find_regblock(), where 5/ implements a
->> new cxl_find_component_regblock().  The latter looks significantly
->> similar to the original.  Shouldn't we refactor the new PCI implemented
->> version to be more generic rather than scope reduced, and export it for
->> use by CXL code to avoid the duplication?
-> 
-> Regarding the duplication between cxl_find_component_regblock()
-> and the CXL subsystem's cxl_find_regblock():
-> I understand the duplication isn't ideal. I looked into generalizing the PCI version
-> (cxl_find_component_regblock) and exporting it for CXL to use, but exporting just
-> the find step from PCI while the rest of the register discovery pipeline stays in CXL
-> felt like an inconsistent split across the two subsystems. It seems like addressing
-> that would mean refactoring a significant portion of regs.c into the PCI subsystem,
-> which also doesn't appear correct.
-> Given that, would it be acceptable to keep the current scope-reduced version in the
-> PCI?
-> Please let me know if it would be acceptable to just refactor the cxl_find_component_regblock
-> and export it from pci.
+            Bug ID: 221205
+           Summary: pci=3Drelloc fails on 6.18.16 and 6.19.6
+           Product: Drivers
+           Version: 2.5
+          Hardware: All
+                OS: Linux
+            Status: NEW
+          Severity: normal
+          Priority: P3
+         Component: PCI
+          Assignee: drivers_pci@kernel-bugs.osdl.org
+          Reporter: xiferdev@gmail.com
+        Regression: No
 
-Hi Srirangan. PCI base spec in r6.2 introduced MMIO register blocks (MRB) that is patterned after CXL register blocks. A while back I hacked up some code [1] to unify the CXL register block discovery code with PCI usages. It never got around to go upstream since I was waiting on a PCI device that utilizes this new scheme. However, maybe this can be used as inspiration for your uses. Maybe we should start refactoring to make this code common given there will be PCI usages eventually?
+Created attachment 309606
+  --> https://bugzilla.kernel.org/attachment.cgi?id=3D309606&action=3Dedit
+6.18.16 pci errors
 
-[1]: https://git.kernel.org/pub/scm/linux/kernel/git/djiang/linux.git/log/?h=pci-mbox
- 
-> 
-> Thank you.
-> 
-> Regards,
-> Srirangan.
-> 
-> ________________________________________
-> From: Alex Williamson <alwilliamson@nvidia.com>
-> Sent: Friday, March 6, 2026 9:45 AM
-> To: Srirangan Madhavan
-> Cc: bhelgaas@google.com; dan.j.williams@intel.com; dave.jiang@intel.com; jonathan.cameron@huawei.com; ira.weiny@intel.com; vishal.l.verma@intel.com; alison.schofield@intel.com; dave@stgolabs.net; Jeshua Smith; Vikram Sethi; Sai Yashwanth Reddy Kancherla; Vishal Aslot; Shanker Donthineni; Manish Honap; Vidya Sagar; Jiandi An; Matt Ochs; Derek Schumacher; linux-cxl@vger.kernel.org; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
-> Subject: Re: [PATCH 2/5] cxl: Move HDM decoder and register map definitions to include/cxl/pci.h
-> 
-> On Fri, 6 Mar 2026 08:00:16 +0000
-> <smadhavan@nvidia.com> wrote:
-> 
->> From: Srirangan Madhavan <smadhavan@nvidia.com>
->>
->> Move CXL HDM decoder register defines, register map structs
->> (cxl_reg_map, cxl_component_reg_map, cxl_device_reg_map,
->> cxl_pmu_reg_map, cxl_register_map), cxl_hdm_decoder_count(),
->> enum cxl_regloc_type, and cxl_find_regblock()/cxl_setup_regs()
->> declarations from internal CXL headers to include/cxl/pci.h.
-> 
-> Regarding cxl_find_regblock()/cxl_setup_regs()..
-> 
->> This makes them accessible to code outside the CXL subsystem, in
->> particular the PCI core CXL state save/restore support added in a
->> subsequent patch.
-> 
-> Yet in 5/:
-> 
->     The Register Locator DVSEC is parsed directly via PCI config space
->     reads rather than calling cxl_find_regblock()/cxl_setup_regs(),
->     since this code lives in the PCI core and must not depend on CXL
->     module symbols.
-> 
-> So moving them to the public header is just unnecessary code churn.
-> 
-> Also, specifically regarding cxl_find_regblock(), where 5/ implements a
-> new cxl_find_component_regblock().  The latter looks significantly
-> similar to the original.  Shouldn't we refactor the new PCI implemented
-> version to be more generic rather than scope reduced, and export it for
-> use by CXL code to avoid the duplication?  Thanks,
-> 
-> Alex
-> 
->> No functional change.
->>
->> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
->> ---
->>  drivers/cxl/cxl.h    | 107 +----------------------------------
->>  drivers/cxl/cxlpci.h |  10 ----
->>  include/cxl/pci.h    | 129 +++++++++++++++++++++++++++++++++++++++++++
->>  3 files changed, 130 insertions(+), 116 deletions(-)
->>  create mode 100644 include/cxl/pci.h
->>
->> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
->> index 04c673e7cdb0..0c84695449d8 100644
->> --- a/drivers/cxl/cxl.h
->> +++ b/drivers/cxl/cxl.h
->> @@ -12,6 +12,7 @@
->>  #include <linux/node.h>
->>  #include <linux/io.h>
->>  #include <linux/range.h>
->> +#include <cxl/pci.h>
->>
->>  extern const struct nvdimm_security_ops *cxl_security_ops;
->>
->> @@ -23,63 +24,6 @@ extern const struct nvdimm_security_ops *cxl_security_ops;
->>   * (port-driver, region-driver, nvdimm object-drivers... etc).
->>   */
->>
->> -/* CXL 2.0 8.2.4 CXL Component Register Layout and Definition */
->> -#define CXL_COMPONENT_REG_BLOCK_SIZE SZ_64K
->> -
->> -/* CXL 2.0 8.2.5 CXL.cache and CXL.mem Registers*/
->> -#define CXL_CM_OFFSET 0x1000
->> -#define CXL_CM_CAP_HDR_OFFSET 0x0
->> -#define   CXL_CM_CAP_HDR_ID_MASK GENMASK(15, 0)
->> -#define     CM_CAP_HDR_CAP_ID 1
->> -#define   CXL_CM_CAP_HDR_VERSION_MASK GENMASK(19, 16)
->> -#define     CM_CAP_HDR_CAP_VERSION 1
->> -#define   CXL_CM_CAP_HDR_CACHE_MEM_VERSION_MASK GENMASK(23, 20)
->> -#define     CM_CAP_HDR_CACHE_MEM_VERSION 1
->> -#define   CXL_CM_CAP_HDR_ARRAY_SIZE_MASK GENMASK(31, 24)
->> -#define CXL_CM_CAP_PTR_MASK GENMASK(31, 20)
->> -
->> -#define   CXL_CM_CAP_CAP_ID_RAS 0x2
->> -#define   CXL_CM_CAP_CAP_ID_HDM 0x5
->> -#define   CXL_CM_CAP_CAP_HDM_VERSION 1
->> -
->> -/* HDM decoders CXL 2.0 8.2.5.12 CXL HDM Decoder Capability Structure */
->> -#define CXL_HDM_DECODER_CAP_OFFSET 0x0
->> -#define   CXL_HDM_DECODER_COUNT_MASK GENMASK(3, 0)
->> -#define   CXL_HDM_DECODER_TARGET_COUNT_MASK GENMASK(7, 4)
->> -#define   CXL_HDM_DECODER_INTERLEAVE_11_8 BIT(8)
->> -#define   CXL_HDM_DECODER_INTERLEAVE_14_12 BIT(9)
->> -#define   CXL_HDM_DECODER_INTERLEAVE_3_6_12_WAY BIT(11)
->> -#define   CXL_HDM_DECODER_INTERLEAVE_16_WAY BIT(12)
->> -#define CXL_HDM_DECODER_CTRL_OFFSET 0x4
->> -#define   CXL_HDM_DECODER_ENABLE BIT(1)
->> -#define CXL_HDM_DECODER0_BASE_LOW_OFFSET(i) (0x20 * (i) + 0x10)
->> -#define CXL_HDM_DECODER0_BASE_HIGH_OFFSET(i) (0x20 * (i) + 0x14)
->> -#define CXL_HDM_DECODER0_SIZE_LOW_OFFSET(i) (0x20 * (i) + 0x18)
->> -#define CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(i) (0x20 * (i) + 0x1c)
->> -#define CXL_HDM_DECODER0_CTRL_OFFSET(i) (0x20 * (i) + 0x20)
->> -#define   CXL_HDM_DECODER0_CTRL_IG_MASK GENMASK(3, 0)
->> -#define   CXL_HDM_DECODER0_CTRL_IW_MASK GENMASK(7, 4)
->> -#define   CXL_HDM_DECODER0_CTRL_LOCK BIT(8)
->> -#define   CXL_HDM_DECODER0_CTRL_COMMIT BIT(9)
->> -#define   CXL_HDM_DECODER0_CTRL_COMMITTED BIT(10)
->> -#define   CXL_HDM_DECODER0_CTRL_COMMIT_ERROR BIT(11)
->> -#define   CXL_HDM_DECODER0_CTRL_HOSTONLY BIT(12)
->> -#define CXL_HDM_DECODER0_TL_LOW(i) (0x20 * (i) + 0x24)
->> -#define CXL_HDM_DECODER0_TL_HIGH(i) (0x20 * (i) + 0x28)
->> -#define CXL_HDM_DECODER0_SKIP_LOW(i) CXL_HDM_DECODER0_TL_LOW(i)
->> -#define CXL_HDM_DECODER0_SKIP_HIGH(i) CXL_HDM_DECODER0_TL_HIGH(i)
->> -
->> -/* HDM decoder control register constants CXL 3.0 8.2.5.19.7 */
->> -#define CXL_DECODER_MIN_GRANULARITY 256
->> -#define CXL_DECODER_MAX_ENCODED_IG 6
->> -
->> -static inline int cxl_hdm_decoder_count(u32 cap_hdr)
->> -{
->> -     int val = FIELD_GET(CXL_HDM_DECODER_COUNT_MASK, cap_hdr);
->> -
->> -     return val ? val * 2 : 1;
->> -}
->> -
->>  /* Encode defined in CXL 2.0 8.2.5.12.7 HDM Decoder Control Register */
->>  static inline int eig_to_granularity(u16 eig, unsigned int *granularity)
->>  {
->> @@ -246,51 +190,6 @@ struct cxl_regs {
->>       );
->>  };
->>
->> -struct cxl_reg_map {
->> -     bool valid;
->> -     int id;
->> -     unsigned long offset;
->> -     unsigned long size;
->> -};
->> -
->> -struct cxl_component_reg_map {
->> -     struct cxl_reg_map hdm_decoder;
->> -     struct cxl_reg_map ras;
->> -};
->> -
->> -struct cxl_device_reg_map {
->> -     struct cxl_reg_map status;
->> -     struct cxl_reg_map mbox;
->> -     struct cxl_reg_map memdev;
->> -};
->> -
->> -struct cxl_pmu_reg_map {
->> -     struct cxl_reg_map pmu;
->> -};
->> -
->> -/**
->> - * struct cxl_register_map - DVSEC harvested register block mapping parameters
->> - * @host: device for devm operations and logging
->> - * @base: virtual base of the register-block-BAR + @block_offset
->> - * @resource: physical resource base of the register block
->> - * @max_size: maximum mapping size to perform register search
->> - * @reg_type: see enum cxl_regloc_type
->> - * @component_map: cxl_reg_map for component registers
->> - * @device_map: cxl_reg_maps for device registers
->> - * @pmu_map: cxl_reg_maps for CXL Performance Monitoring Units
->> - */
->> -struct cxl_register_map {
->> -     struct device *host;
->> -     void __iomem *base;
->> -     resource_size_t resource;
->> -     resource_size_t max_size;
->> -     u8 reg_type;
->> -     union {
->> -             struct cxl_component_reg_map component_map;
->> -             struct cxl_device_reg_map device_map;
->> -             struct cxl_pmu_reg_map pmu_map;
->> -     };
->> -};
->>
->>  void cxl_probe_component_regs(struct device *dev, void __iomem *base,
->>                             struct cxl_component_reg_map *map);
->> @@ -304,13 +203,9 @@ int cxl_map_device_regs(const struct cxl_register_map *map,
->>  int cxl_map_pmu_regs(struct cxl_register_map *map, struct cxl_pmu_regs *regs);
->>
->>  #define CXL_INSTANCES_COUNT -1
->> -enum cxl_regloc_type;
->>  int cxl_count_regblock(struct pci_dev *pdev, enum cxl_regloc_type type);
->>  int cxl_find_regblock_instance(struct pci_dev *pdev, enum cxl_regloc_type type,
->>                              struct cxl_register_map *map, unsigned int index);
->> -int cxl_find_regblock(struct pci_dev *pdev, enum cxl_regloc_type type,
->> -                   struct cxl_register_map *map);
->> -int cxl_setup_regs(struct cxl_register_map *map);
->>  struct cxl_dport;
->>  resource_size_t cxl_rcd_component_reg_phys(struct device *dev,
->>                                          struct cxl_dport *dport);
->> diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
->> index 0cf64218aa16..9e825c039dd9 100644
->> --- a/drivers/cxl/cxlpci.h
->> +++ b/drivers/cxl/cxlpci.h
->> @@ -13,16 +13,6 @@
->>   */
->>  #define CXL_PCI_DEFAULT_MAX_VECTORS 16
->>
->> -/* Register Block Identifier (RBI) */
->> -enum cxl_regloc_type {
->> -     CXL_REGLOC_RBI_EMPTY = 0,
->> -     CXL_REGLOC_RBI_COMPONENT,
->> -     CXL_REGLOC_RBI_VIRT,
->> -     CXL_REGLOC_RBI_MEMDEV,
->> -     CXL_REGLOC_RBI_PMU,
->> -     CXL_REGLOC_RBI_TYPES
->> -};
->> -
->>  /*
->>   * Table Access DOE, CDAT Read Entry Response
->>   *
->> diff --git a/include/cxl/pci.h b/include/cxl/pci.h
->> new file mode 100644
->> index 000000000000..763a048262c7
->> --- /dev/null
->> +++ b/include/cxl/pci.h
->> @@ -0,0 +1,129 @@
->> +/* SPDX-License-Identifier: GPL-2.0-only */
->> +#ifndef __CXL_CXL_PCI_H__
->> +#define __CXL_CXL_PCI_H__
->> +
->> +#include <linux/bitfield.h>
->> +#include <linux/bitops.h>
->> +#include <linux/io.h>
->> +#include <linux/types.h>
->> +
->> +/* Register Block Identifier (RBI) */
->> +enum cxl_regloc_type {
->> +     CXL_REGLOC_RBI_EMPTY = 0,
->> +     CXL_REGLOC_RBI_COMPONENT,
->> +     CXL_REGLOC_RBI_VIRT,
->> +     CXL_REGLOC_RBI_MEMDEV,
->> +     CXL_REGLOC_RBI_PMU,
->> +     CXL_REGLOC_RBI_TYPES
->> +};
->> +
->> +/* CXL 2.0 8.2.4 CXL Component Register Layout and Definition */
->> +#define CXL_COMPONENT_REG_BLOCK_SIZE SZ_64K
->> +
->> +/* CXL 2.0 8.2.5 CXL.cache and CXL.mem Registers */
->> +#define CXL_CM_OFFSET 0x1000
->> +#define CXL_CM_CAP_HDR_OFFSET 0x0
->> +#define   CXL_CM_CAP_HDR_ID_MASK GENMASK(15, 0)
->> +#define     CM_CAP_HDR_CAP_ID 1
->> +#define   CXL_CM_CAP_HDR_VERSION_MASK GENMASK(19, 16)
->> +#define     CM_CAP_HDR_CAP_VERSION 1
->> +#define   CXL_CM_CAP_HDR_CACHE_MEM_VERSION_MASK GENMASK(23, 20)
->> +#define     CM_CAP_HDR_CACHE_MEM_VERSION 1
->> +#define   CXL_CM_CAP_HDR_ARRAY_SIZE_MASK GENMASK(31, 24)
->> +#define CXL_CM_CAP_PTR_MASK GENMASK(31, 20)
->> +
->> +#define   CXL_CM_CAP_CAP_ID_RAS 0x2
->> +#define   CXL_CM_CAP_CAP_ID_HDM 0x5
->> +#define   CXL_CM_CAP_CAP_HDM_VERSION 1
->> +
->> +/* HDM decoders CXL 2.0 8.2.5.12 CXL HDM Decoder Capability Structure */
->> +#define CXL_HDM_DECODER_CAP_OFFSET 0x0
->> +#define   CXL_HDM_DECODER_COUNT_MASK GENMASK(3, 0)
->> +#define   CXL_HDM_DECODER_TARGET_COUNT_MASK GENMASK(7, 4)
->> +#define   CXL_HDM_DECODER_INTERLEAVE_11_8 BIT(8)
->> +#define   CXL_HDM_DECODER_INTERLEAVE_14_12 BIT(9)
->> +#define   CXL_HDM_DECODER_INTERLEAVE_3_6_12_WAY BIT(11)
->> +#define   CXL_HDM_DECODER_INTERLEAVE_16_WAY BIT(12)
->> +#define CXL_HDM_DECODER_CTRL_OFFSET 0x4
->> +#define   CXL_HDM_DECODER_ENABLE BIT(1)
->> +#define CXL_HDM_DECODER0_BASE_LOW_OFFSET(i) (0x20 * (i) + 0x10)
->> +#define CXL_HDM_DECODER0_BASE_HIGH_OFFSET(i) (0x20 * (i) + 0x14)
->> +#define CXL_HDM_DECODER0_SIZE_LOW_OFFSET(i) (0x20 * (i) + 0x18)
->> +#define CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(i) (0x20 * (i) + 0x1c)
->> +#define CXL_HDM_DECODER0_CTRL_OFFSET(i) (0x20 * (i) + 0x20)
->> +#define   CXL_HDM_DECODER0_CTRL_IG_MASK GENMASK(3, 0)
->> +#define   CXL_HDM_DECODER0_CTRL_IW_MASK GENMASK(7, 4)
->> +#define   CXL_HDM_DECODER0_CTRL_LOCK BIT(8)
->> +#define   CXL_HDM_DECODER0_CTRL_COMMIT BIT(9)
->> +#define   CXL_HDM_DECODER0_CTRL_COMMITTED BIT(10)
->> +#define   CXL_HDM_DECODER0_CTRL_COMMIT_ERROR BIT(11)
->> +#define   CXL_HDM_DECODER0_CTRL_HOSTONLY BIT(12)
->> +#define CXL_HDM_DECODER0_TL_LOW(i) (0x20 * (i) + 0x24)
->> +#define CXL_HDM_DECODER0_TL_HIGH(i) (0x20 * (i) + 0x28)
->> +#define CXL_HDM_DECODER0_SKIP_LOW(i) CXL_HDM_DECODER0_TL_LOW(i)
->> +#define CXL_HDM_DECODER0_SKIP_HIGH(i) CXL_HDM_DECODER0_TL_HIGH(i)
->> +
->> +/* HDM decoder control register constants CXL 3.0 8.2.5.19.7 */
->> +#define CXL_DECODER_MIN_GRANULARITY 256
->> +#define CXL_DECODER_MAX_ENCODED_IG 6
->> +
->> +static inline int cxl_hdm_decoder_count(u32 cap_hdr)
->> +{
->> +     int val = FIELD_GET(CXL_HDM_DECODER_COUNT_MASK, cap_hdr);
->> +
->> +     return val ? val * 2 : 1;
->> +}
->> +
->> +struct cxl_reg_map {
->> +     bool valid;
->> +     int id;
->> +     unsigned long offset;
->> +     unsigned long size;
->> +};
->> +
->> +struct cxl_component_reg_map {
->> +     struct cxl_reg_map hdm_decoder;
->> +     struct cxl_reg_map ras;
->> +};
->> +
->> +struct cxl_device_reg_map {
->> +     struct cxl_reg_map status;
->> +     struct cxl_reg_map mbox;
->> +     struct cxl_reg_map memdev;
->> +};
->> +
->> +struct cxl_pmu_reg_map {
->> +     struct cxl_reg_map pmu;
->> +};
->> +
->> +/**
->> + * struct cxl_register_map - DVSEC harvested register block mapping parameters
->> + * @host: device for devm operations and logging
->> + * @base: virtual base of the register-block-BAR + @block_offset
->> + * @resource: physical resource base of the register block
->> + * @max_size: maximum mapping size to perform register search
->> + * @reg_type: see enum cxl_regloc_type
->> + * @component_map: cxl_reg_map for component registers
->> + * @device_map: cxl_reg_maps for device registers
->> + * @pmu_map: cxl_reg_maps for CXL Performance Monitoring Units
->> + */
->> +struct cxl_register_map {
->> +     struct device *host;
->> +     void __iomem *base;
->> +     resource_size_t resource;
->> +     resource_size_t max_size;
->> +     u8 reg_type;
->> +     union {
->> +             struct cxl_component_reg_map component_map;
->> +             struct cxl_device_reg_map device_map;
->> +             struct cxl_pmu_reg_map pmu_map;
->> +     };
->> +};
->> +
->> +struct pci_dev;
->> +
->> +int cxl_find_regblock(struct pci_dev *pdev, enum cxl_regloc_type type,
->> +                   struct cxl_register_map *map);
->> +int cxl_setup_regs(struct cxl_register_map *map);
->> +
->> +#endif /* __CXL_CXL_PCI_H__ */
->> --
->> 2.43.0
->>
-> 
+I've been relying on pci=3Drealloc to get an Nvidia P40 24GB running on an =
+Ivy
+Bridge system with DSDT modification.  This system also has an Nvidia 1070 =
+8GB
+but that one doesn't rely on pci=3Drealloc.
 
+Arch updated linux to 6.19.6 and linux-lts to 6.18.16 recently and the P40
+fails to work on both of them.  dmesg had logs about "can't assign; no spac=
+e"
+and "failed to assign" (see attached).
+
+I downgraded back to 6.18.13 and 6.12.75-1 and both work fine again.
+
+
+Perhaps the problem is related to this recent change?
+
+6.19.6:
+commit 5bd7c96a61cfa147b0039399f3cd7ec8e15f38c5
+Author: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
+Date:   Fri Dec 19 19:40:14 2025 +0200
+
+    PCI: Fix bridge window alignment with optional resources
+[ Upstream commit 7e90360e6d4599795b6f4e094e20d0bdf3b2615f ]
+
+6.18.16:
+commit 995240f823a320ecb16afe0429b23793145dfab2
+Author: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
+Date:   Fri Dec 19 19:40:14 2025 +0200
+
+    PCI: Fix bridge window alignment with optional resources
+[ Upstream commit 7e90360e6d4599795b6f4e094e20d0bdf3b2615f ]
+
+
+Happy to help test and can pull more detailed logs if they'd be helpful.
+
+--
