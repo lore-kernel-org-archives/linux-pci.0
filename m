@@ -1,143 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FBAB3859CE;
-	Tue, 10 Mar 2026 11:20:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC1A73859C7
+	for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2026 11:37:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773141639; cv=none; b=mfOlrctKiD05NyD2RnoxS1RlllhUyikd3Z9bX6EVM6yRX/kHtxwOvtZ1bjdslEtD960qWFoWcHzgGOvc2Ng8Vnsa97Z/fALeGEh6OnNh4z/Gb3yZcnywykY5lvMlDIwhdN2rUrdMv+LfyXOvv5IzfQs3OukGKzxGOAzy5MIA8UY=
+	t=1773142637; cv=none; b=upAbEyBo9qdEqD/SD+3oPkFjeAWaT3EWgfKMGx8QdMUIqljsj45qHeLlfga92rtppwFNcER20p6K70u2dyFGv3AupBcDlqmW6zronkDXurAxKe+jp7FlviFXDKOXt28vUJcDzxoc3K0O0fCesVrcR3jJ3nqC3v8XSP+WwIjjt4E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773141639; c=relaxed/simple;
-	bh=C2ADgjcW7ubeYCmAVtJT9SIEgS2IRlsh8fhmhmzQc80=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=r9jQ1g3XWE37TiDq3xVLM3sUTHyb2mhKk92lPSw3Mrg9rEs2utfOcVHlHAz7T+0CgE3vQtDlGAluPlSDgXNqnTIX6YQuWimSFLLiqbVRIOTVyrkM1NTxVbSOSXFOC5PVqchImZ019aiFlKWa70gyEGfCbTnQ0WAekht3twG1CME=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lZOn0Xig; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773142637; c=relaxed/simple;
+	bh=wfQo3G1VdAcgol/HRvdVZRGaZRNEhdOv8p8rm/8p2+w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=L74mFFutW+HcTWJUoSbb5uCwvAK/9a1q6ThGqNQUMDs304iKkufwMWtfoRNyucB/2CozuKuO6lJXrjCUUn7FhoIT4ddxF7WNA7HYvDSay+UbB9LNm2tzIsLjhKOMwNf1y6i+Ct7zqWk5kNdFEg0PRIocwei7nKKUmEogM4TEVzg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nLkMYD3y; arc=none smtp.client-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lZOn0Xig"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75E40C19423;
-	Tue, 10 Mar 2026 11:20:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773141639;
-	bh=C2ADgjcW7ubeYCmAVtJT9SIEgS2IRlsh8fhmhmzQc80=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=lZOn0XigIlj8aAXNef4REG7v0nF9u+doGZxLo9obbQ3BVai3tF1UmH+FQTNIIsWra
-	 PhUG8IlZQJftol4npLLE29e0b1lSLj7MHT1wOImAeyCKpVVmH07QMaWa6GgM9GUuc1
-	 8Al8bCu5VEvlS0s5ZK7QSm+Yei1vKstWCRRofh9EiGz082ah1e68EcNMCwK3upDzO6
-	 0JPsvkTp0bauVf/ArjlkBvojtIIGussoWnBi3r+VfUbD1EPPMfUkUMyJyXcCfTaROK
-	 PtRzUurz07u5qWAhUviU+ZHQlLafmvG4B1+n6HbPAEMWi06kBv/U8Vn0GeWUqv6cOC
-	 6K4rdZNYJuaig==
-Message-ID: <da8f2d4d-55bc-4c2b-8c7c-aecea064774f@kernel.org>
-Date: Tue, 10 Mar 2026 12:20:31 +0100
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nLkMYD3y"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773142636; x=1804678636;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=wfQo3G1VdAcgol/HRvdVZRGaZRNEhdOv8p8rm/8p2+w=;
+  b=nLkMYD3yqndcIrqPzL9KuF2bn3jvE5Z3EKWzdgeCPv/0XGLYf3gteC4v
+   latX0MJU3FNr1p0VMOGu/yqEe3yf6apQlO9cImcTQV+3aDAPZ231FmLTM
+   nxzBDiUrJ+oJWtHalXq0Xsz84blYeKNtValMqd2Nrr0VTIF18Df/6WvZm
+   tAghp+V+pXn8Xc8KPoWteb5QhCL7BtXEKbwgai3uSjREPKaSYGmnA7VnV
+   mwZDEy1v/komqPOSNlQka2qYPvbv16Nab48GwHsIlHbAPpCUe6BUtUogQ
+   VFLfDz5a3GHQjMUDHb7rc49q7nQ7a9E5MKPk54Hx7ximncwcdQJqWLJRe
+   A==;
+X-CSE-ConnectionGUID: +zsIKdNsSHepfoHMXAUn2w==
+X-CSE-MsgGUID: HvvJMQiySuSs6lM+WrULVQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11724"; a="85662719"
+X-IronPort-AV: E=Sophos;i="6.23,112,1770624000"; 
+   d="scan'208";a="85662719"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 04:37:15 -0700
+X-CSE-ConnectionGUID: TSz16qltT7iAOKBTtOnBNA==
+X-CSE-MsgGUID: 7RkwOCdrRtKmeC9VswEKaQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,112,1770624000"; 
+   d="scan'208";a="243098885"
+Received: from zzombora-mobl1 (HELO localhost) ([10.245.244.33])
+  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 04:37:13 -0700
+Date: Tue, 10 Mar 2026 13:37:10 +0200
+From: Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <ville.syrjala@linux.intel.com>
+To: Simon Richter <Simon.Richter@hogyros.de>
+Cc: linux-pci@vger.kernel.org, intel-xe@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH v3 2/5] vgaarb: pass errors from pci_set_vga_state() up
+Message-ID: <abACZiX80vhQP0d-@intel.com>
+References: <20260307173538.763188-1-Simon.Richter@hogyros.de>
+ <20260307173538.763188-3-Simon.Richter@hogyros.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/8] dt-bindings: phy: Document PCIe PHY in EcoNet
- EN751221 and EN7528
-To: Caleb James DeLisle <cjd@cjdns.fr>
-Cc: linux-mips@vger.kernel.org, naseefkm@gmail.com, mturquette@baylibre.com,
- sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
- tsbogend@alpha.franken.de, ryder.lee@mediatek.com,
- jianjun.wang@mediatek.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
- mani@kernel.org, bhelgaas@google.com, vkoul@kernel.org,
- neil.armstrong@linaro.org, p.zabel@pengutronix.de, matthias.bgg@gmail.com,
- angelogioacchino.delregno@collabora.com, nbd@nbd.name, ansuelsmth@gmail.com,
- linux-clk@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org
-References: <20260309131818.74467-1-cjd@cjdns.fr>
- <20260309131818.74467-4-cjd@cjdns.fr>
- <20260310-scrupulous-fat-ara-eab47c@quoll>
- <1611d3d5-8c3b-4298-bf50-55ab2c2db0e7@cjdns.fr>
- <05b0fc76-4cdb-4aff-815c-1aad500837b2@kernel.org>
- <36710cc5-5a80-49fc-a9e8-0cac5c554ed2@cjdns.fr>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <36710cc5-5a80-49fc-a9e8-0cac5c554ed2@cjdns.fr>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260307173538.763188-3-Simon.Richter@hogyros.de>
+X-Patchwork-Hint: comment
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs Bertel Jungin Aukio 5, 02600 Espoo, Finland
 
-On 10/03/2026 12:13, Caleb James DeLisle wrote:
+On Sun, Mar 08, 2026 at 02:35:35AM +0900, Simon Richter wrote:
+> pci_set_vga_state() returns an error code, which so far has been ignored by
+> the only caller, __vga_tryget(), so forward it to the caller. As the return
+> type of __vga_tryget() is a pointer, wrap the error in ERR_PTR().
 > 
-> On 10/03/2026 11:40, Krzysztof Kozlowski wrote:
->> On 10/03/2026 11:37, Caleb James DeLisle wrote:
->>> On 10/03/2026 09:24, Krzysztof Kozlowski wrote:
->>>> On Mon, Mar 09, 2026 at 01:18:13PM +0000, Caleb James DeLisle wrote:
->>>>> EN751221 and EN7528 SoCs have two PCIe slots, and each one has a PHY
->>>>> which behaves slightly differently because one slot is Gen1/Gen2 while
->>>>> the other is Gen1 only.
->>>>>
->>>>> Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
->>>> Still, four separate subsystems unnecessarily merged into one patchset.
->>>> Split independent parts of your work per subsystem. See also submitting
->>>> patches.
->>>
->>> I asked for clarification last time and didn't get a reply. I'm not
->>> against changing it but need to understand exactly what's expected b/c
->>> the way I'm imagining it seems way worse. submitting-patches.rst only
->>> says of patch sets "only post say 15 or so at a time", obviously not the
->>> case here.
->>>
->>> If you're asking for one patchset for phy, one for clock, one for PCI,
->>> and then one to introduce them to the device, I can do that. I just want
->>> to be sure because introducing unused code, and patch sets that depend
->> What is "unused" code? Or how is it unused? Do you understand this will
->> go via different subsystems and nothing will be "used" anyway?
+> Signed-off-by: Simon Richter <Simon.Richter@hogyros.de>
+> ---
+>  drivers/pci/vgaarb.c | 13 +++++++++++--
+>  1 file changed, 11 insertions(+), 2 deletions(-)
 > 
-> 
-> Unused in the sense that you can't exercise that code without additional 
-> code which is out of tree - at least until the subsequent patch set lands.
+> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+> index 22b2b6ebdefd..c360eee11dd9 100644
+> --- a/drivers/pci/vgaarb.c
+> +++ b/drivers/pci/vgaarb.c
+> @@ -215,6 +215,7 @@ static struct vga_device *__vga_tryget(struct vga_device *vgadev,
+>  	struct vga_device *conflict;
+>  	unsigned int pci_bits;
+>  	u32 flags = 0;
+> +	int err;
+>  
+>  	/*
+>  	 * Account for "normal" resources to lock. If we decode the legacy,
+> @@ -307,7 +308,9 @@ static struct vga_device *__vga_tryget(struct vga_device *vgadev,
+>  		if (change_bridge)
+>  			flags |= PCI_VGA_STATE_CHANGE_BRIDGE;
+>  
+> -		pci_set_vga_state(conflict->pdev, false, pci_bits, flags);
+> +		err = pci_set_vga_state(conflict->pdev, false, pci_bits, flags);
+> +		if (err)
+> +			return ERR_PTR(err);
 
-Which is exactly the same as with your method of combining independent
-subsystems here. Do you know this goes via independent subsystems?
-Around four of them?
+I was thinking this one should never fail and maybe could warrant
+a WARN, but uv_set_vga_state() involves some kind of BIOS call and
+who knows what that does. So maybe a WARN isn't a good idea.
 
-Best regards,
-Krzysztof
+>  		conflict->owns &= ~match;
+>  
+>  		/* If we disabled normal decoding, reflect it in owns */
+> @@ -337,7 +340,9 @@ static struct vga_device *__vga_tryget(struct vga_device *vgadev,
+>  	if (wants & VGA_RSRC_LEGACY_MASK)
+>  		flags |= PCI_VGA_STATE_CHANGE_BRIDGE;
+>  
+> -	pci_set_vga_state(vgadev->pdev, true, pci_bits, flags);
+> +	err = pci_set_vga_state(vgadev->pdev, true, pci_bits, flags);
+> +	if (err)
+> +		return ERR_PTR(err);
+>  
+>  	vgadev->owns |= wants;
+>  lock_them:
+> @@ -455,6 +460,10 @@ int vga_get(struct pci_dev *pdev, unsigned int rsrc, int interruptible)
+>  		}
+>  		conflict = __vga_tryget(vgadev, rsrc);
+>  		spin_unlock_irqrestore(&vga_lock, flags);
+> +		if (IS_ERR(conflict)) {
+> +			rc = PTR_ERR(conflict);
+> +			break;
+> +		}
+>  		if (conflict == NULL)
+>  			break;
+>  
+> -- 
+> 2.47.3
+
+-- 
+Ville Syrjälä
+Intel
