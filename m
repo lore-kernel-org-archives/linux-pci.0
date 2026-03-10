@@ -1,83 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CC323CFF4F;
-	Tue, 10 Mar 2026 22:09:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C968E3B19CA;
+	Tue, 10 Mar 2026 22:37:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773180562; cv=none; b=mwsvLCVY5tmgIWxaBNf//QDM/3Z/VaFIiSEvCQ/9K6ogT2K6wS7VcBOW8FsLLO9o/2PCyX+FV0PHZlKNHnAj0vzVvioJz9QPxtlU88hjHlaIW6jy1ZWht7N5tyqGB6Iz7Wko8NLju43abYig63AuA8uDb9r5ziS/wV/QEFmuVDw=
+	t=1773182238; cv=none; b=kBwQNKfj+ffmyR6sH730+nk6R8upgoSCCF1uWsasAFsg9XDu9w/eARDKQQvwii4mORDHsUvBkMwRGlQXdZCv2Acc03+kQLgASl5Ngu/2hgj/jc6qZJDhTCUqrbgAJCvjAoqbMF75hJutk6BUrm3IE9oqh0chR2chKZ9YdULx7TE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773180562; c=relaxed/simple;
-	bh=W80lkFXkPyxzZPzLe6vTEN0SYi+yr5xZNTGscVmS0ko=;
+	s=arc-20240116; t=1773182238; c=relaxed/simple;
+	bh=pTL1Wf512hcnMUtFReWLSplTd5JUPyVtfFY07DdMnbs=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=PyfdK/Me9Qp1k01OJg5UPVhyxHoGxUQudxatPJlCBUfUow3aRdj5nnFfV4XqzqSvfaHcFr44aHuJDWoTdm9djNq20etf2gQz6TdOjKbIwlKOARqa91xkj9ou0v6GiCpTVy0ScxaIFiibB7RcmNZS02Z8ExyIsSgk976/TJXUwpA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L00YXZHP; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=KiHUNQU+0arlNJ1TheyoTrinIHz8HQiht4xBnd6YNXtU3C/kWTo74yoamrxLa78T4yYZcMMjAEdYS4BQXugEp1kaBkAtJb13O0/90aP5vdLMzfHRjs8PLt7cTqrHAW6Xk2PGF7g8r/KPfwyg9GBNI1ItlFQIFeV7jgxGJrV38CY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UnTa/+hB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L00YXZHP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8F86C19423;
-	Tue, 10 Mar 2026 22:09:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UnTa/+hB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 491BEC19423;
+	Tue, 10 Mar 2026 22:37:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773180561;
-	bh=W80lkFXkPyxzZPzLe6vTEN0SYi+yr5xZNTGscVmS0ko=;
+	s=k20201202; t=1773182238;
+	bh=pTL1Wf512hcnMUtFReWLSplTd5JUPyVtfFY07DdMnbs=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=L00YXZHPMVeEfxwGWu/AsurKr2xWM9c1K5M3MtDaIn5nfcen4jicy1Q3i8rLIm5yf
-	 WfvG20wIi1QYyAKqVzaODlOcIZAjN1oBjLxF9C/amXt1SGV5lxTwZfkpQvXdvW9gAg
-	 U5fgwzShrDb/Z15j0gztxNaymw4OC6qlveBz2cGZnyhROtlLohCqWPm8uXMsbT9F27
-	 CbZuzIyVxmIfJ98YaFyJMcT3cZFIirNKa3bxELZvJJRpc3CFl/8aYvCTYeWpkA6BN0
-	 oBTJJOco6wPHguHYPtf3q7EkbWZ3hux+WxUaIr/01eGtMcm8Pr8xqHRXg8MC7nxSZp
-	 RRiGt6sycGkpg==
-Date: Tue, 10 Mar 2026 17:09:20 -0500
+	b=UnTa/+hBxYXfLDDm5K73yF5u3g5IFAmfczZvR70oOVe3ttdzzCLq/hI/9JJXrZw/D
+	 YmzQG+DbD5pUlWEpU5JFzvvMCuHl1vttHkQ3HS73fvQjW0sH0AO6kWnEJFVI1Rx2J3
+	 8Vxzt5qU3M2ZMXFMSmbYyOtBA6FanJHqvqhMK+Lf7qOnTjbn7dwtyGjeP9Beb1ulcH
+	 fWOgFeUY039vZQiKCHLYtv0/tJa+BkffH5bChwI0P12qutZYfvUiu60KNIBmFwB7XX
+	 bS3/vjtcEKAZMStfNCpwpS3HjlIiVggT+SkauNtHJzcOeeMj4QY8Hv8htTC7J2Ej6W
+	 sjSBMGL1Ys09g==
+Date: Tue, 10 Mar 2026 17:37:17 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jeremy Linton <jeremy.linton@arm.com>
-Cc: Chengwen Feng <fengchengwen@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Huacai Chen <chenhuacai@kernel.org>,
-	WANG Xuerui <kernel@xen0n.name>, Paul Walmsley <pjw@kernel.org>,
-	Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H . Peter Anvin" <hpa@zytor.com>, Juergen Gross <jgross@suse.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	Len Brown <lenb@kernel.org>, Sunil V L <sunilvl@ventanamicro.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Kees Cook <kees@kernel.org>, Yanteng Si <si.yanteng@linux.dev>,
-	Sean Christopherson <seanjc@google.com>,
-	Kai Huang <kai.huang@intel.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Thomas Huth <thuth@redhat.com>,
-	Thorsten Blum <thorsten.blum@linux.dev>,
-	Kevin Loughlin <kevinloughlin@google.com>,
-	Zheyun Shen <szy0127@sjtu.edu.cn>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
-	Xin Li <xin@zytor.com>, "Ahmed S . Darwish" <darwi@linutronix.de>,
-	Sohil Mehta <sohil.mehta@intel.com>,
-	Ilkka Koskinen <ilkka@os.amperecomputing.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	James Clark <james.clark@linaro.org>,
-	Besar Wicaksono <bwicaksono@nvidia.com>, Ma Ke <make24@iscas.ac.cn>,
-	Ajit Khaparde <ajit.khaparde@broadcom.com>,
-	Wei Huang <wei.huang2@amd.com>,
-	Andy Gospodarek <andrew.gospodarek@broadcom.com>,
-	Somnath Kotur <somnath.kotur@broadcom.com>, wangzhou1@hisilicon.com,
-	wanghuiqiang@huawei.com, liuyonglong@huawei.com,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	loongarch@lists.linux.dev, linux-riscv@lists.infradead.org,
-	xen-devel@lists.xenproject.org, linux-acpi@vger.kernel.org,
-	linux-perf-users@vger.kernel.org, stable@vger.kernel.org,
-	Wathsala Vithanage <wathsala.vithanage@arm.com>
-Subject: Re: [PATCH v5 2/2] PCI/TPH: Fix get cpu steer-tag fail on ARM64
- platform
-Message-ID: <20260310220920.GA826995@bhelgaas>
+To: Hans Zhang <18255117159@163.com>
+Cc: lpieralisi@kernel.org, jingoohan1@gmail.com, mani@kernel.org,
+	kwilczynski@kernel.org, bhelgaas@google.com, robh@kernel.org,
+	ilpo.jarvinen@linux.intel.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v7 1/2] PCI: of: Remove max-link-speed generation
+ validation
+Message-ID: <20260310223717.GA835760@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -86,58 +44,86 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <657142d1-1632-4a3e-8800-ee1dd5763d78@arm.com>
+In-Reply-To: <20260308142629.75392-2-18255117159@163.com>
 
-On Tue, Mar 10, 2026 at 10:58:49AM -0500, Jeremy Linton wrote:
-> On 3/9/26 10:20 PM, Chengwen Feng wrote:
-> > pcie_tph_get_cpu_st() is broken on ARM64:
-> > 1. pcie_tph_get_cpu_st() passes cpu_uid to the PCI ACPI DSM method.
-> >     cpu_uid should be the ACPI Processor UID [1].
-> > 2. In BNXT, pcie_tph_get_cpu_st() is passed a cpu_uid obtained via
-> >     cpumask_first(irq->cpu_mask) - the logical CPU ID of a CPU core,
-> >     generated and managed by kernel (e.g., [0,255] for a system  with 256
-> >     logical CPU cores).
-> > 3. On ARM64 platforms, ACPI assigns Processor UID to cores listed in the
-> >     MADT table, and this UID may not match the kernel's logical CPU ID.
-> >     When this occurs, the mismatch results in the wrong CPU steer-tag.
-> > 4. On AMD x86 the logical CPU ID is identical to the ACPI Processor UID
-> >     so the mismatch is not seen.
+On Sun, Mar 08, 2026 at 10:26:28PM +0800, Hans Zhang wrote:
+> The of_pci_get_max_link_speed() function currently validates the
+> "max-link-speed" DT property to be in the range 1..4 (Gen1..Gen4).
+> This imposes a maintenance burden because each new PCIe generation
+> would require updating this validation.
+> 
+> Remove the range check so the function returns the raw property value
+> (or a negative error code if the property is missing or malformed).
+> Callers must now validate the returned speed against the range they
+> support.  A subsequent patch adds such validation to the DWC driver,
+> which is the primary user of this function.
+> 
+> This change allows future PCIe generations to be supported without
+> modifying drivers/pci/of.c.
+> 
+> Signed-off-by: Hans Zhang <18255117159@163.com>
+> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 
-> >   int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
-> > -			unsigned int cpu_uid, u16 *tag)
-> > +			unsigned int cpu, u16 *tag)
-> >   {
-> >   #ifdef CONFIG_ACPI
-> > +	u32 cpu_uid = acpi_get_cpu_acpi_id(cpu);
+Mani's right that we shouldn't have a window without any validation.
+I hope I didn't otherwise.
+
+> ---
+>  drivers/pci/of.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> index 9f8eb5df279e..cff5fd337c2b 100644
+> --- a/drivers/pci/of.c
+> +++ b/drivers/pci/of.c
+> @@ -889,10 +889,11 @@ EXPORT_SYMBOL_GPL(of_pci_supply_present);
+>  int of_pci_get_max_link_speed(struct device_node *node)
+>  {
+>  	u32 max_link_speed;
+> +	int ret;
+>  
+> -	if (of_property_read_u32(node, "max-link-speed", &max_link_speed) ||
+> -	    max_link_speed == 0 || max_link_speed > 4)
+> -		return -EINVAL;
+> +	ret = of_property_read_u32(node, "max-link-speed", &max_link_speed);
+> +	if (ret)
+> +		return ret;
+>  
+>  	return max_link_speed;
+>  }
 
 From AI review (gemini/gemini-3.1-pro-preview):
 
-  Does this code need to validate that `cpu` is within bounds before
-  using it?  Before this change, the `cpu_uid` parameter was passed
-  opaquely to the ACPI firmware via `tph_invoke_dsm()`, which would
-  gracefully handle invalid values.
+  By removing the upper bounds check here, the returned max_link_speed
+  value can now be arbitrarily large if configured incorrectly in the
+  device tree. While the commit message notes that a subsequent patch
+  adds validation to the DWC driver, there are several other callers
+  in the tree that assume the returned value is bounded. These drivers
+  remain vulnerable to out-of-bounds accesses and hardware
+  misconfiguration at the end of this patch series.
 
-  Now, `cpu` is treated as a logical CPU index and passed to
-  `acpi_get_cpu_acpi_id(cpu)`. On architectures like arm64 and riscv,
-  `acpi_get_cpu_acpi_id()` uses `cpu` directly as an array index
-  (`&cpu_madt_gicc[cpu]` and `&cpu_madt_rintc[cpu]`). On x86, it uses
-  `per_cpu(x86_cpu_to_acpiid, cpu)`.
+  For example, in drivers/pci/controller/pcie-rzg3s-host.c, the
+  returned value is used directly as an array index. Could this cause
+  an out-of-bounds read on pcie_link_speed[]?
 
-  If a caller passes an out-of-bounds `cpu` index (for example, if an
-  IRQ affinity mask is empty and `cpumask_first()` returns
-  `nr_cpu_ids`, or if userspace passes an arbitrary ID via
-  `mlx5_st_alloc_index()`), this will result in an out-of-bounds
-  memory read.
+I think this is a valid concern, and I think we should protect
+pcie_link_speed[] by making it static and accessing it via a function
+that validates the index.  It's too hard to enforce validation at
+every place that uses it.
 
-  Consider adding a bounds check:
+I think you're going to have to:
 
-    if (cpu >= nr_cpu_ids)
-      return -EINVAL;
+  - Validate every use of dw_pcie.max_link_speed (set from
+    of_pci_get_max_link_speed()) in the dwc glue drivers
 
-I agree that this is an issue, and I think implementations of
-acpi_get_cpu_acpi_id() should validate their inputs.
+  - Validate the return from of_pci_get_max_link_speed() at every
+    other caller.  It looks like j721e_pcie_set_link_speed(),
+    brcm_pcie_probe(), mtk_pcie_setup(), rzg3s_pcie_probe() would need
+    that.
 
-I don't know if there's a value that can never be a valid ACPI CPU UID
-and could be used as an error value from acpi_get_cpu_acpi_id().  I do
-see a few mentions of a ~0 value meaning "all processors" (ACPI r6.6,
-sec 5.2.12.13).  
+Right now we validate inside of_pci_get_max_link_speed(), which can
+help avoid generic problems like indexing pcie_link_speed[], but it
+can't account for individual driver restrictions.  So I do still think
+you're right to move it from drivers/pci/of.c to the individual
+drivers because those drivers are where it's really important, and it
+avoids changing a common place for driver-specific reasons.  We're
+just going to have to strictly enforce it in those drivers.
