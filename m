@@ -1,179 +1,124 @@
-Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from TYDPR03CU002.outbound.protection.outlook.com (mail-japaneastazon11023111.outbound.protection.outlook.com [52.101.127.111])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2923617C211
-	for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2026 04:49:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01CA43D34BA;
+	Tue, 10 Mar 2026 06:53:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.127.111
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773118200; cv=pass; b=qXgjurJiwHwAVYjoG9LLPOVfoHe10IOwauiMoB1N8kI6GvreUrFZEn2heKPdjj0WR4Bh4gFpb9su9v6innfQzPJTLQPXQyunKWNcPykEAc4dzRh9OwlGYpxZn1kEx5EhPHk/p6PXHdwaQF5d8kolIcWuu9PC4GbN61JbpHelf/Y=
+	t=1773125628; cv=fail; b=Z0CJFKyHdX2jpral4fCjpSQ9p/HmgCs+puvL43TiAmq/68hnkvUCkJQ27X3R9Wpk6kvO5h2CwAgmu+cvV0jWFJSoqPy+7nPhitxsu5T+NjLYqXhGa2O9P9nvkN5TXkE8H512TLATfm6y+xbNE6UUVDfLoNnxW81lVPJ5TRshsuI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773118200; c=relaxed/simple;
-	bh=MAJSsc8lNNvP/iPdy/xEkZJMM//XNwusgNiGyobk9XI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=elCR2J+skbeXB2+C1OakN83gDVuQ6pw4/0LMF2Z+Q3mvK9tYUdsV3MPG6IV65DkivGTljNprGtVQedi1DECFh2PcXuA9KUy6OQoD61BkeKzkaJ+ZB2dMGhhUJIy0Svf3mQKoU5Z0ah4ctov2bnvyofaO1WeC/6aKSr/9JyFP4wc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=V/c3Mghw; arc=pass smtp.client-ip=209.85.167.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="V/c3Mghw"
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5a13d40c760so3756265e87.0
-        for <linux-pci@vger.kernel.org>; Mon, 09 Mar 2026 21:49:58 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1773118197; cv=none;
-        d=google.com; s=arc-20240605;
-        b=bO7ELTZVBLMXFQbpBZyi23kB2Q/LeegrqnJYpU7MmYenFPD9SXHtmEjwiNnBk3dwPI
-         io3g9C0HRswBMHrcCnwW5AU7dHwBNrjFkq7h82123Kn7ad2AY+5u1KlUg27ADlDkzdeX
-         KA3gcVS9YjTXOiBfKQZ/bSmLwPU/VG8lmZbQhnz0cMlIdn5jJ+mM/8fW5toLSppAkatp
-         ydwB9l3nYzNW23YueJYR6uutf4hjr8Sh+kzMgT96FX7Uj3Xo6SfHllw1F6Usjcrk0QmZ
-         iNr5SS8ZJrcyScQpZVnbaYIgm/vj/K8CdLmI4OwDIbvLFbK6mGtZzBtSo8L6/540t2w2
-         7S2w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=TEKfTgbEhZq5Nx64xwP1FBHJw6oBbygo97C/fty+4xg=;
-        fh=W85eEadcM02OUMpxNrWea+SKQWY37Hjenc3pUQm+Ql4=;
-        b=KiaMIsdHupKx/40qwKPKQC0ZOH/Bm9vannL+MoXBJfRcHGxpaQi24evK6e2a9OcYUW
-         3c7ZvZsgYHrgAYlM4SOtK2RMLDp6cg79BkCSGNJHSsGa+h5M91e/rROd4yW7IQmuWxMP
-         6LgPeJgTy1qSXO+0aFXbOzNJ/avA1+hauTEGYYkd8imlsFASVZKSrN0rvSxCc90x9HHE
-         J7vJEtUOShAgECF/XpGQ6zybtO1JMIzGFDomAUrUONT0hQV1Y0MxDMi79SMjE10GmVjg
-         MWjN70dJYVD7NKDa0vlZTKGWw+l9f2dib83Fi5PAYLYBSt3LA2WrBF6FsiPbmcuOOtIq
-         4exg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1773118197; x=1773722997; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TEKfTgbEhZq5Nx64xwP1FBHJw6oBbygo97C/fty+4xg=;
-        b=V/c3MghwWNv6UGOVjDmIe/wFGBjSqbA41UOfdkNuQ9sdGekq0VLiB2hc332bM+44bc
-         Fo3yNBaKQeuOaFCWCDzAtU3ryT1djJBuw0CoSzF6HL5KqmS/Fm8oqK6iwYWVFInNuiU8
-         WR1K6kvUjwSHb3+8JBFxOtiOT1llY7psmnjjc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773118197; x=1773722997;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=TEKfTgbEhZq5Nx64xwP1FBHJw6oBbygo97C/fty+4xg=;
-        b=sn10way++lU6HSnXbtFwNeS7f1RT5/6CXn+M8ir2ifBeVQBAGRSF6htPQXLWB8cP1v
-         pSkoQpGv5AoC+fjUOyDGtkuZHlm+ftoOlWIOR6FqtBWS0qWfxfJauEkowLlQaspWENmR
-         yMAM1BziNiqIN4GGd4psHhbSvhsXkhVLgcjlFpfcPUH45VAkxnoMykDsy7NjGRohMSEM
-         rAZVcvTMh74YY+Rjh1hjheZ0ID/VfpbqXh6lzCilIF1c3WR/2ZjnZZ+XeZYqGIr3n46i
-         bjX9LY4wSlyT3dUY6BCcJPDMkyjYZXoedQP7gJyq0jXxs/uExIpTguluHyi2/g/E1dPC
-         /DeQ==
-X-Forwarded-Encrypted: i=1; AJvYcCU0T44Bc8J/bU/g5V5kHK1DOjqMIX0KQGHHBt915wZEqL9PQeMjdu1Z0iEUqz5E4bxfDpSOyBR/n78=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyVIV4gGCSYkwzhlX0w8crXt2YukNDAgFagIyQJH3vQJ8Ci1lkI
-	GNw8fNsn2fDz4ugJi27T6W1mGx4TzxRXBHKjv15IcQ0CN2/wwhl5Hkc+trgHhefTjjw6+LVZ7Wf
-	j6pZD6RuircPQGD72kM/haPM7Q7t0UGVIN5lzcKEH
-X-Gm-Gg: ATEYQzw3uMaHdsxQMIuqImkl5l1MN/z15xPlQV5I0o4lFAl6tKUs2YVkrg4Rh3YtTVR
-	xp1XL4JGj6ls74ZCrmWYkwiBhE+JWPX8tCVg4w3PvWOy3gty6D9Fp2FQ9UjEam5QIaqDOjmCSpH
-	1/sdhPp934D2Z+S68mmfXGds1KToM4KYMIFCwkEzN2hofnhl8PRMHgZyGXh+sCKJ5vm/MyJ65MM
-	KJL8LmMeDN8M/FO2zuE7Yyx2qLST+ZRxvqSrfVpqJ3fCldTwhsG5yBMYgQOW5ufXhyxA7H06BiJ
-	p7ydIMj2BGvbDm6tB6oZcsXTPVZkJ63qGQDMNkHLvd/FARVU
-X-Received: by 2002:a05:6512:682:b0:5a1:30b2:f2c with SMTP id
- 2adb3069b0e04-5a13cd5e33bmr4296147e87.42.1773118197277; Mon, 09 Mar 2026
- 21:49:57 -0700 (PDT)
+	s=arc-20240116; t=1773125628; c=relaxed/simple;
+	bh=hu8+CQ1YBpAw0CHEuAClgLHc/yntVywd1ryCONXkx0s=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=cSQBpHyGm2qlwmbRjjaYC0j8sGDaH96sxFYgTAbaNTeGfCbYzr7lqfy/ruX9BvqtTG+tWAOy4GH8lOob/O9TYBvmY0J5mXFDMQPAS69sNkVfUsprhvmJ/9NPVYUxgHWezEyJ5sk3pXLUo1vYRCZhj41dbL2knrFZOstHfJB1LuE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=52.101.127.111
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cixtech.com
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=sQ+IJJxS2vDnrAsuSYPm15+UhjfGQ7qWZgYOwVv4UZ6NDwp7wEMDuv6tjS51TnmfspGNeukTcqpBvsPll2nxs4FDnbNSq08pBeE2ZHurLeq26VAvWdM5v15jSjPANk17orWVO5HO+htDGqFHl21JjRE5cKQXl9074Bd1dC8k3XWuisjmqqz9uPDB6ImFLqjbQDraz0vQ55ywb5HMCG3lJUoyeRrL+N1q/X9Hggy6t1O3GWZOaIX7Rux+dNyDLhgmaCI7p0xiulELnBVjifBwbRL86sSotTlkjYfqLS+Sg75Aq6HhgMYM3tVdL7XLgV/ZeHw8gO5BzlYGgSxl7lUHWQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=sfPvKaAnqS8BmcFERN0vvPN2n/ae23HRb2weTAPYoYk=;
+ b=SJ9XHXr1GWqqAfawAiVaQDfWzQSMoEzCrvSgBxZeo4qHgMeFH38nDRPMHH+PgMPVqBTKl8w8drdBtp2ngR5FS7zq3PxliEFDQolYTOYhtE6OHMCldAq5W2VB1hxq5wd1X22b2XEuRyrjvYNfqH1pmECCHiytyhl2tsZuJPwXSgkMpyAtEdmsB/IQKlYS+r7aFPHcaHSvlqQR5wOXg8sqeulUULIs3x0SO428YMwOO13ExHGEm5s3gjrD6hMU3ztHFOnhJmtOFyhAbzAoBClOAlM5u+QRkaO7CdSenVZCRPtRH26e1N0jXQFr1Dv5zdIUoZFmRX29DpmW4Sr4xicmIA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 222.71.101.198) smtp.rcpttodomain=cixtech.com smtp.mailfrom=cixtech.com;
+ dmarc=bestguesspass action=none header.from=cixtech.com; dkim=none (message
+ not signed); arc=none (0)
+Received: from SI2PR01CA0042.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:193::23) by SEZPR06MB5811.apcprd06.prod.outlook.com
+ (2603:1096:101:aa::8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.25; Tue, 10 Mar
+ 2026 06:53:40 +0000
+Received: from OSA0EPF000000C6.apcprd02.prod.outlook.com
+ (2603:1096:4:193:cafe::e5) by SI2PR01CA0042.outlook.office365.com
+ (2603:1096:4:193::23) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9678.25 via Frontend Transport; Tue,
+ 10 Mar 2026 06:53:11 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 222.71.101.198)
+ smtp.mailfrom=cixtech.com; dkim=none (message not signed)
+ header.d=none;dmarc=bestguesspass action=none header.from=cixtech.com;
+Received-SPF: Pass (protection.outlook.com: domain of cixtech.com designates
+ 222.71.101.198 as permitted sender) receiver=protection.outlook.com;
+ client-ip=222.71.101.198; helo=smtprelay.cixcomputing.com; pr=C
+Received: from smtprelay.cixcomputing.com (222.71.101.198) by
+ OSA0EPF000000C6.mail.protection.outlook.com (10.167.240.52) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9678.18 via Frontend Transport; Tue, 10 Mar 2026 06:53:39 +0000
+Received: from localhost.localdomain (unknown [172.16.64.196])
+	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 8F25041604E7;
+	Tue, 10 Mar 2026 14:53:38 +0800 (CST)
+From: Gary Yang <gary.yang@cixtech.com>
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	peter.chen@cixtech.com
+Cc: linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	cix-kernel-upstream@cixtech.com,
+	Gary Yang <gary.yang@cixtech.com>
+Subject: [PATCH v2 0/2] Add scmi powerdomain for sky1
+Date: Tue, 10 Mar 2026 14:53:36 +0800
+Message-ID: <20260310065338.2337761-1-gary.yang@cixtech.com>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAGXv+5FhSO=+AUaeDSXgM9Je9uTVYq-EW43z9PAuvVKumK6oMg@mail.gmail.com>
- <20260309215056.GA603013@bhelgaas>
-In-Reply-To: <20260309215056.GA603013@bhelgaas>
-From: Chen-Yu Tsai <wenst@chromium.org>
-Date: Tue, 10 Mar 2026 12:49:45 +0800
-X-Gm-Features: AaiRm52BnH_hbfy2T5LoFoBuz9-oVGOul1adbuGmfRTlnBvnGQgJ2RzpGs8zhxc
-Message-ID: <CAGXv+5HHm6Tdis7s5ZNd9ErNrCHv73U7fFxsN3z+DS+q=pxK0w@mail.gmail.com>
-Subject: Re: [PATCH v3 5/7] PCI: mediatek-gen3: Integrate new pwrctrl API
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
-	Ryder Lee <ryder.lee@mediatek.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, linux-pci@vger.kernel.org, 
-	linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: OSA0EPF000000C6:EE_|SEZPR06MB5811:EE_
+Content-Type: text/plain
+X-MS-Office365-Filtering-Correlation-Id: f5d507d2-2446-49c9-469c-08de7e71c2c9
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|36860700016|1800799024|7416014|376014|82310400026;
+X-Microsoft-Antispam-Message-Info:
+	f3GOZDbANMrTxM5wdUneH4MIV3efd9M0DA9nbikyon+JHmZzHODNA13gNZQ//s5CrpBMbfzAquZ2F8Qh2wTs88VEL9gDQ7Atpeyw+QrpP3DFSMrLhIzp6KFJ8m5IKvDFtsZgdEutKC1XKGse89xHk21uFJQTmF+edskXJINOJ0zdYrIyrEhTueUHsAfPMJURun5Domen4blBRKJ4rQUJSYguUtQT3aZ65LBXez/yFbIS5Qr8SDvIVRW5NAHv50Wc4XwOwhnPI9RCL1l4ME9SyIQI3ZIvPGCsjr4B9kD7cycc1jL8veWdCx8MoeLbNwkmGWQypT/lwiqPrbvgIejCRvBLm51yId1n7+i4ZfbUbtCenjbs6s1tnP+VYQuEZkIEE6UIes1DOnoZjs+ZnTw/ioavCoS2tLgW3IOciqMgcaxPO//r7/0tazA+p0txWvXKoEB4JUtjnvcHP8DeGNbEivPPehhFxRe5v2HGpfOMXCdrgXVrqxOoQLQRkHiBzvrszGz+1i4AlW/POK7aUW7SRImTxd3IZ9HPaqlZJz91pMkUxlNZbf6OuIqjg+jHs6HbNqVkMeXy6u00z4ZFWAfF1QHJKX8hBxPzrERrnkbqMH69P7m0567ywBec2mzDl77ObYTl+/rXZ5d5urTsxqxQV4QTlorb8CulH8Er8291IkVVsuvfxy2+Mzj4B14M/uvkDb2ZI1u/uFYtSRQxbaoYwGw4C/K0S3IgEXvWuhgKqXrFEpvLjsn36Ap7j9gvzaXtr4TURMiCyR0diYFG63dE1w==
+X-Forefront-Antispam-Report:
+	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700016)(1800799024)(7416014)(376014)(82310400026);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	OCPTuF6oquXzFQSMKWCiKcbiTRtBTBwPqQ1WBiUZYkxUNT8PxVkBuuVWFoCqCTiTXjxqIyJ2apC8PjP8lL7gwRqSb8EViN8Szwh+2Uwf6Y817MD46Js0GubzMBd9KHObz0VgOzQAVa8GvWheoeTHcJEEb/9isjfVwnAOLe9EYA9qd8TG5qDjDpaPkKao2q9sThvlmsW6VWPQOGOATjjGAauhlPc8wcif1Nb+T6kgrvlGiCICTPVGkzyIXHEkNXCNazDOzNgKvzc5C7hOR3LDgJjdf7CxoE0UQkFRe/uIXG5UhBNtIF9IiymD9ahVGDPnsqgGEIiTtv5NouSM2w9RnDMkNuE+HDqnUPG8aZ+qvv5bT+DDq4HB96dTpsWpWFv6mjP5j5Ys+zP8p+YKcpuaNi+frWFdhgcVovPUUHqFHIzIHpaAHPHo//t+FQYk0+EU
+X-OriginatorOrg: cixtech.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Mar 2026 06:53:39.5107
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: f5d507d2-2446-49c9-469c-08de7e71c2c9
+X-MS-Exchange-CrossTenant-Id: 0409f77a-e53d-4d23-943e-ccade7cb4811
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=0409f77a-e53d-4d23-943e-ccade7cb4811;Ip=[222.71.101.198];Helo=[smtprelay.cixcomputing.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	OSA0EPF000000C6.apcprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEZPR06MB5811
 
-On Tue, Mar 10, 2026 at 5:50=E2=80=AFAM Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
->
-> On Mon, Mar 09, 2026 at 01:24:34PM +0800, Chen-Yu Tsai wrote:
-> > On Sat, Mar 7, 2026 at 4:59=E2=80=AFAM Bjorn Helgaas <helgaas@kernel.or=
-g> wrote:
-> > > On Mon, Mar 02, 2026 at 01:31:05PM +0800, Chen-Yu Tsai wrote:
-> > > > With the new PCI pwrctrl API and PCI slot binding and power drivers=
-, we
-> > > > now have a way to describe and power up WiFi/BT adapters connected
-> > > > through a PCIe or M.2 slot, or exploded onto the mainboard itself.
-> > ...
->
-> > > So now we have:
-> > >
-> > >   mtk_pcie_probe
-> > >     mtk_pcie_setup
-> > >       mtk_pcie_startup_port
-> > >         mtk_pcie_device_power_up      <-- power up
-> > >         mtk_pcie_device_power_down    # error path
-> > >       mtk_pcie_setup_irq              # set up controller IRQ
-> > >       mtk_pcie_device_power_down      # if mtk_pcie_setup_irq() faile=
-d
-> > >     pci_host_probe                    # enumerate downstream devices
-> > >     mtk_pcie_device_power_down        # if pci_host_probe() failed
-> > >
-> > > I think this is kind of a mess because mtk_pcie_device_power_down() i=
-s
-> > > called from so many places, and some of them aren't connected to the
-> > > mtk_pcie_device_power_up().
-> > >
-> > > In mtk_pcie_setup(), mtk_pcie_setup_irq() only deals with the
-> > > *controller* IRQ and has nothing to do with the downstream devices.  =
-I
-> > > think mtk_pcie_setup_irq() should be done before
-> > > mtk_pcie_startup_port() so we can abort before even powering up those
-> > > devices.
-> >
-> > Makes sense to me. I think it can even be moved outside of mtk_pcie_set=
-up()?
-> > That way we don't have mtk_pcie_irq_teardown() in two error paths?
-> >
-> > I can send a follow up patch for that.
->
-> What if we do those cleanups first?  That would make this patch quite
-> a bit simpler and we wouldn't have to undo things.  It would be a
-> shame to have a complicated patch to add this stuff, then another
-> complicated patch to clean it up.
+v2 changes:
+- Pass dts build check with below commands:
+make O=$OUTKNL dt_binding_check
+make O=$OUTKNL dt_binding_check DT_SCHEMA_FILES=cix,sky1-pci-host.yaml
+make O=$OUTKNL CHECK_DTBS=y W=1 cix/sky1-orion-o6.dtb
+scripts/checkpatch.pl 000*.patch
+- update dt-bindings
 
-Sure.
+Gary Yang (2):
+  dt-bindings: PCI: update CIX Sky1 PCIe Root Complex bindings
+  arm64: dts: cix: Add scmi powerdomain nodes for sky1
 
-> > > In mtk_pcie_startup_port(), mtk_pcie_enable_msi() and the PCIe
-> > > translation window setup also don't have anything to do with the
-> > > downstream devices, so I think they should be done before
-> > > calling mtk_pcie_device_power_up().  The only thing there that needs
-> > > the downstream devices powered up is waiting for the link to come up.
-> >
-> > My guess is that if the link up fails, then mtk_pcie_startup_port() is
-> > going to error out anyway, so it maybe made sense to make sure a device
-> > is actually present before doing any more work.
->
-> Doesn't sound very convincing to me.  mtk_pcie_set_trans_table() and
-> the window setup are local things with no timeouts or anything.  I
-> think the logical structure is way more important than some kind of
-> hand-crafted work avoidance.
+ .../bindings/pci/cix,sky1-pcie-host.yaml      |  6 ++++
+ arch/arm64/boot/dts/cix/sky1-power.h          | 34 +++++++++++++++++++
+ arch/arm64/boot/dts/cix/sky1.dtsi             | 22 ++++++++++++
+ 3 files changed, 62 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/cix/sky1-power.h
 
-I understand. I merely meant that I have no actual knowledge of why it
-happened, or if there are any concerns from the hardware side.
+-- 
+2.49.0
 
-> Separating the PCIe controller setup from things related to the link
-> and downstream devices is pretty high on my list.
-
-Makes sense to me.
-
-I'll send an updated version.
-
-
-Thanks
-ChenYu
