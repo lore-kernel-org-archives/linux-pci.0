@@ -1,138 +1,171 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3952940DFB8;
-	Tue, 10 Mar 2026 13:42:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 243E1391E5C;
+	Tue, 10 Mar 2026 14:02:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773150121; cv=none; b=LJTL9PRb05N4E8rcJZ+qGyaV4BRB54/kWJ1T6ERLTmY0enOxz6eTvLuKm+HznUVw5ZYuiluy158dePP9ru6FU04RiPr+dFuoml7R/KZaIgtLtlZr46SvR5aG4332WjCGrHh9rxqR5QbEc+YZaeRpufa6Y4Y1ju558rU+Z96EdPY=
+	t=1773151341; cv=none; b=cBA8SP6RaU+NKgkp6Q44Ti0vRILe1Opy4QIUw2ZSvinCbBDT+F1qyI64CLFDSJJWIxTf62PD0y+KfZFWFSa8wAE+NDlaydgHUzWz1oYEJ451c8RaRvGptVzbZwhtYW5g3p95zQFdm5qjEMIcPujn8JyUCSZOT7w/OJVC9uO+IIw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773150121; c=relaxed/simple;
-	bh=jsFoQKs/PMHOG6cQ3a8++hIBRpXtQqqlmyHFLdSwE74=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=b0IRd6WyY8f+5HNs64QLOwXtAN0iVYYOZq78eZ7Op76FktW8/jcLV4L0KawnBX0aw2xDe+oFWKPGtxwo0J6idPXdkyqyuybUPJeWidsEQMRXRsk0C8tT76uGhl+Akh+LFggllwUuqJIt3N+p2F0t9GK/ybSkHEVriBxwlHbEl+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 6250916A3;
-	Tue, 10 Mar 2026 06:41:53 -0700 (PDT)
-Received: from [10.57.59.166] (unknown [10.57.59.166])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id C1BBE3F73B;
-	Tue, 10 Mar 2026 06:41:56 -0700 (PDT)
-Message-ID: <87bc37ee-234c-4568-b72e-955c130a6838@arm.com>
-Date: Tue, 10 Mar 2026 13:41:56 +0000
+	s=arc-20240116; t=1773151341; c=relaxed/simple;
+	bh=e+CijSnACpAvUHE3G+ydvnXHYVPcarBDrd6Vye65l2c=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=M7drbIu6FjwGdaMBH5haJnIO5UIa+W2xBYOIoDpR00FHMsivMw3M6JYJAw4hA8tiaF9hVRQl8YMqNQVrPonUWehTuH0r5Ipqv2SR81XAVeE5/fuOObwMU0BsSs/bHUTzxj68loHguV6adIpsV8JlWCTbcZtHB0VuaaA8AC2NcN0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rRMr6uhD; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rRMr6uhD"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C8C66C19425;
+	Tue, 10 Mar 2026 14:02:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773151340;
+	bh=e+CijSnACpAvUHE3G+ydvnXHYVPcarBDrd6Vye65l2c=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=rRMr6uhDGG/EHpghKLYQCDX4tTJE/Qqta2nrySIKYuwJi6GUgT8qEEtBOQbz31Ksh
+	 cGKx+5EBlKR0qKLm5jHzjQ+u4w3QBMnZpAEltxg2TI90wPRk+ucg701iI+YftyquzP
+	 6RgZyIN9GclRffH4uBOx45q0nDeMhedcn+Yi3dzxTq4FxSk4fixzLX9klQaMw6iXNI
+	 Ip5PdETcw1nyM4WUUlgTjZtjbeIu8pbjF6MxHT+UIrF/KWQdzgt05pB3q9m/jGnUix
+	 HoTt6D0T22/PGU26F8weCO8VSEBqBmOaQutrsxVkZ7DsfgbnnRqYVnfAHqX7QWCqDe
+	 7hB082PhZNe/A==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6A77FD2D9C;
+	Tue, 10 Mar 2026 14:02:20 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Tue, 10 Mar 2026 19:31:59 +0530
+Subject: [PATCH v7 1/4] PCI/ERR: Add support for resetting the Root Ports
+ in a platform specific way
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] PCI: dw-rockchip: Enable async probe by default
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Heiko Stuebner <heiko@sntech.de>, Niklas Cassel <cassel@kernel.org>,
- Shawn Lin <shawn.lin@rock-chips.com>, Hans Zhang <18255117159@163.com>,
- Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
- Wilfred Mallawa <wilfred.mallawa@wdc.com>, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org,
- linux-kernel@vger.kernel.org, Anand Moon <linux.amoon@gmail.com>
-Cc: Grimmauld <grimmauld@grimmauld.de>
-References: <20260226101032.1042-1-linux.amoon@gmail.com>
- <177260693908.10259.13055467642416391434.b4-ty@kernel.org>
-From: Robin Murphy <robin.murphy@arm.com>
-Content-Language: en-GB
-In-Reply-To: <177260693908.10259.13055467642416391434.b4-ty@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Message-Id: <20260310-pci-port-reset-v7-1-9dd00ccc25ab@oss.qualcomm.com>
+References: <20260310-pci-port-reset-v7-0-9dd00ccc25ab@oss.qualcomm.com>
+In-Reply-To: <20260310-pci-port-reset-v7-0-9dd00ccc25ab@oss.qualcomm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, 
+ Mahesh J Salgaonkar <mahesh@linux.ibm.com>, 
+ Oliver O'Halloran <oohall@gmail.com>, Will Deacon <will@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Heiko Stuebner <heiko@sntech.de>, Philipp Zabel <p.zabel@pengutronix.de>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org, 
+ linux-arm-msm@vger.kernel.org, linux-rockchip@lists.infradead.org, 
+ Niklas Cassel <cassel@kernel.org>, 
+ Wilfred Mallawa <wilfred.mallawa@wdc.com>, 
+ Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+ mani@kernel.org, Lukas Wunner <lukas@wunner.de>, 
+ Richard Zhu <hongxing.zhu@nxp.com>, Brian Norris <briannorris@chromium.org>, 
+ Wilson Ding <dingwei@marvell.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+ Frank Li <Frank.Li@nxp.com>, Manivannan Sadhasivam <mani@kernel.org>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3320;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=aIuqRb8fuH3xOsqx29xICH+yE2vzbaBFc8FQ37/gZEg=;
+ b=kA0DAAoBVZ8R5v6RzvUByyZiAGmwJGrIK+D57DvdlL7z3X181VCMvq/D7qe2Thyq3G7p5Xs5m
+ YkBMwQAAQoAHRYhBGelQyqBSMvYpFgnl1WfEeb+kc71BQJpsCRqAAoJEFWfEeb+kc71Wp4H/3cK
+ ODnO2eBBsukQIGEgP3e2NvJeNsuGlwwqXTdWBG19kbpSzCyBD4wpIbZrDBp8XXrVGpcxcF7z6dV
+ 8KvoURHI+nuJMje2pDNIUaCpqm3YC5Q7BQzf3lTbiRf8TxN32uUPjG2v39Z9SjcpzxtOs9lresP
+ aFTDdoSXB4BCmX7Hk4MbaiLZpPmM+Oz9rv1soh9RBN71C3E+CXWkR6qSiYEQefskb94p8rEEEsv
+ 903JEz1zg3QEydn3YGKWFiWRllJJw/wVEdvNdaH/yRsx6ZAnUoT9tMdoAm29X4k9W23NAOs0VUa
+ RCMktpuV94fAjd5Q7HHEgJYqF53Z/3EoH/3kVRI=
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-Hi Mani,
+From: Manivannan Sadhasivam <mani@kernel.org>
 
-On 2026-03-04 6:48 am, Manivannan Sadhasivam wrote:
-> 
-> On Thu, 26 Feb 2026 15:40:23 +0530, Anand Moon wrote:
->> Rockchip DWC PCIe driver currently performs synchronous link training for
->> combo PHYs (PCIe 3.0/2.0 and SATA 3.0) during boot. This process waits for
->> the link to be fully established, adding several milliseconds to the boot
->> sequence. To optimize boot time, this change enables asynchronous probing,
->> allowing link establishment to proceed in the background while the kernel
->> continues probing other devices.
->>
->> [...]
-> 
-> Applied, thanks!
-> 
-> [1/1] PCI: dw-rockchip: Enable async probe by default
->        commit: ec392abc95932838bf7e3d659d358f4df9ff5a0a
+Some host bridge devices require resetting the Root Ports in a platform
+specific way to recover them from error conditions such as Fatal AER
+errors, Link Down etc... So introduce pci_host_bridge::reset_root_port()
+callback and call it from pcibios_reset_secondary_bus() if available. Also,
+save the Root Port config space before reset and restore it afterwards.
 
-This appears to have the side-effect that calling pci_host_probe() from
-async context can effectively force async probe for the endpoint drivers
-as well, but some drivers are not OK with that, as our CI has just
-flagged up.
+The 'reset_root_port' callback is responsible for resetting the given Root
+Port referenced by the 'pci_dev' pointer in a platform specific way and
+bring it back to the working state if possible. If any error occurs during
+the reset operation, relevant errno should be returned.
 
-(And as for that particular warning, ISTR last time I looked into it
-another context, the opinion of the MDIO/phy maintainers seemed to be
-"don't force async probe".)
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Tested-by: Brian Norris <briannorris@chromium.org>
+Tested-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Tested-by: Richard Zhu <hongxing.zhu@nxp.com>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+---
+ drivers/pci/pci.c      | 20 ++++++++++++++++++++
+ drivers/pci/pcie/err.c |  5 -----
+ include/linux/pci.h    |  1 +
+ 3 files changed, 21 insertions(+), 5 deletions(-)
 
-Thanks,
-Robin.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8479c2e1f74f..6f09057d83e0 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4812,6 +4812,26 @@ void pci_reset_secondary_bus(struct pci_dev *dev)
+ 
+ void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
+ {
++	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
++	int ret;
++
++	if (pci_is_root_bus(dev->bus) && host->reset_root_port) {
++		/*
++		 * Save the config space of the Root Port before doing the
++		 * reset, since the state could be lost. The Endpoint state
++		 * should've been saved by the caller.
++		 */
++		pci_save_state(dev);
++		ret = host->reset_root_port(host, dev);
++		if (ret)
++			pci_err(dev, "Failed to reset Root Port: %d\n", ret);
++		else
++			/* Now restore it on success */
++			pci_restore_state(dev);
++
++		return;
++	}
++
+ 	pci_reset_secondary_bus(dev);
+ }
+ 
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index bebe4bc111d7..13b9d9eb714f 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -256,11 +256,6 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 	}
+ 
+ 	if (status == PCI_ERS_RESULT_NEED_RESET) {
+-		/*
+-		 * TODO: Should call platform-specific
+-		 * functions to reset slot before calling
+-		 * drivers' slot_reset callbacks?
+-		 */
+ 		status = PCI_ERS_RESULT_RECOVERED;
+ 		pci_dbg(bridge, "broadcast slot_reset message\n");
+ 		pci_walk_bridge(bridge, report_slot_reset, &status);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1c270f1d5123..34c434b79abb 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -644,6 +644,7 @@ struct pci_host_bridge {
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	int (*enable_device)(struct pci_host_bridge *bridge, struct pci_dev *dev);
+ 	void (*disable_device)(struct pci_host_bridge *bridge, struct pci_dev *dev);
++	int (*reset_root_port)(struct pci_host_bridge *bridge, struct pci_dev *dev);
+ 	void		*release_data;
+ 	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
+ 	unsigned int	no_ext_tags:1;		/* No Extended Tags */
+
+-- 
+2.51.0
 
 
-1467 00:47:33.141229  <4>[   18.243373] ------------[ cut here ]------------
-1468 00:47:33.141490  <4>[   18.243803] WARNING: kernel/module/kmod.c:144 at __request_module+0x198/0x200, CPU#4: kworker/u32:5/101
-1469 00:47:33.142056  <4>[   18.244653] Modules linked in: r8169 snd_soc_hdmi_codec rfkill_gpio rfkill pwm_fan display_connector snd_soc_simple_card rtc_hym8563 rk805_pwrkey snd_soc_es8316 industrialio_triggered_buffer typec phy_rockchip_samsung_hdptx rockchip_thermal kfifo_buf phy_rockchip_naneng_combphy spi_rockchip_sfc rockchip_dfi synopsys_hdmirx v4l2_dv_timings snd_soc_rockchip_i2s_tdm hantro_vpu v4l2_vp9 v4l2_h264 v4l2_jpeg videobuf2_dma_contig rockchip_rga videobuf2_dma_sg v4l2_mem2mem videobuf2_memops videobuf2_v4l2 videodev videobuf2_common mc pci_endpoint_test rockchipdrm dw_hdmi_qp analogix_dp inno_hdmi dw_dp dw_mipi_dsi drm_dp_aux_bus dw_hdmi panthor drm_display_helper drm_gpuvm drm_exec cec drm_shmem_helper drm_client_lib gpu_sched drm_dma_helper drm_kms_helper snd_soc_audio_graph_card snd_soc_simple_card_utils snd_soc_core snd_compress snd_pcm_dmaengine snd_pcm drm snd_timer snd backlight soundcore dm_mod ipv6
-1470 00:47:33.142376  <4>[   18.251632] CPU: 4 UID: 0 PID: 101 Comm: kworker/u32:5 Not tainted 7.0.0-rc3-next-20260309 #1 PREEMPT
-1471 00:47:33.142648  <4>[   18.252465] Hardware name: Radxa ROCK 5B (DT)
-1472 00:47:33.142915  <4>[   18.252866] Workqueue: async async_run_entry_fn
-1473 00:47:33.143182  <4>[   18.253291] pstate: 00400009 (nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-1474 00:47:33.143450  <4>[   18.253920] pc : __request_module+0x198/0x200
-1475 00:47:33.143714  <4>[   18.254325] lr : __request_module+0x190/0x200
-1476 00:47:33.143979  <4>[   18.254730] sp : ffff800084233420
-1477 00:47:33.144239  <4>[   18.255042] x29: ffff800084233420 x28: ffff000116886000 x27: ffff000116887000
-1478 00:47:33.144524  <4>[   18.255687] x26: ffff0001168870d0 x25: ffff80007b6c1738 x24: 0000000000000000
-1479 00:47:33.172973  <4>[   18.256333] x23: ffff000116886000 x22: 0000000000000000 x21: ffff00011b80f800
-1480 00:47:33.173352  <4>[   18.256979] x20: 0000000000000001 x19: ffff800081e2bfd8 x18: 0000000000000002
-1481 00:47:33.173658  <4>[   18.257625] x17: 0000000000000000 x16: 0000000000000000 x15: 0000000000000000
-1482 00:47:33.173946  <4>[   18.258270] x14: 0000000000000001 x13: 0000000000000000 x12: 0000000000000000
-1483 00:47:33.174228  <4>[   18.258916] x11: 0000000000000000 x10: 0000000000000000 x9 : 0000000000000000
-1484 00:47:33.174507  <4>[   18.259561] x8 : ffff8000842334c8 x7 : 0000000000000000 x6 : 0000000000000000
-1485 00:47:33.174779  <4>[   18.260206] x5 : 0000000000000000 x4 : 0000000000000000 x3 : 0000000000000030
-1486 00:47:33.175050  <4>[   18.260851] x2 : 0000000000000008 x1 : ffff8000800df110 x0 : 0000000000000001
-1487 00:47:33.175318  <4>[   18.261497] Call trace:
-1488 00:47:33.175584  <4>[   18.261735]  __request_module+0x198/0x200 (P)
-1489 00:47:33.175851  <4>[   18.262141]  phy_request_driver_module+0x11c/0x17c
-1490 00:47:33.176116  <4>[   18.262584]  phy_device_create+0x234/0x260
-1491 00:47:33.176381  <4>[   18.262967]  get_phy_device+0x74/0x150
-1492 00:47:33.176674  <4>[   18.263319]  mdiobus_scan+0x34/0x114
-1493 00:47:33.176938  <4>[   18.263657]  __mdiobus_register+0x1e4/0x430
-1494 00:47:33.177201  <4>[   18.264047]  __devm_mdiobus_register+0x70/0xe8
-1495 00:47:33.177465  <4>[   18.264460]  rtl_init_one+0x95c/0x1040 [r8169]
-1496 00:47:33.177730  <4>[   18.264884]  local_pci_probe+0x40/0xa8
-1497 00:47:33.177993  <4>[   18.265239]  pci_device_probe+0xd0/0x21c
-1498 00:47:33.178255  <4>[   18.265609]  really_probe+0xbc/0x298
-1499 00:47:33.178516  <4>[   18.265948]  __driver_probe_device+0x78/0x12c
-1500 00:47:33.178778  <4>[   18.266353]  driver_probe_device+0x3c/0x15c
-1501 00:47:33.179040  <4>[   18.266742]  __device_attach_driver+0xb8/0x134
-1502 00:47:33.179302  <4>[   18.267155]  bus_for_each_drv+0x84/0xe0
-1503 00:47:33.179561  <4>[   18.267514]  __device_attach+0x9c/0x188
-1504 00:47:33.179821  <4>[   18.267874]  device_initial_probe+0x50/0x54
-1505 00:47:33.180082  <4>[   18.268264]  pci_bus_add_device+0x74/0x100
-1506 00:47:33.180343  <4>[   18.268647]  pci_bus_add_devices+0x38/0x84
-1507 00:47:33.180623  <4>[   18.269030]  pci_bus_add_devices+0x64/0x84
-1508 00:47:33.180883  <4>[   18.269412]  pci_host_probe+0x90/0x108
-1509 00:47:33.181145  <4>[   18.269766]  dw_pcie_host_init+0x3fc/0x5bc
-1510 00:47:33.181407  <4>[   18.270148]  rockchip_pcie_probe+0x354/0x380
-1511 00:47:33.181668  <4>[   18.270546]  platform_probe+0x5c/0x98
-1512 00:47:33.181933  <4>[   18.270892]  really_probe+0xbc/0x298
-1513 00:47:33.182197  <4>[   18.271229]  __driver_probe_device+0x78/0x12c
-1514 00:47:33.182460  <4>[   18.271634]  driver_probe_device+0x3c/0x15c
-1515 00:47:33.182721  <4>[   18.272025]  __device_attach_driver+0xb8/0x134
-1516 00:47:33.182981  <4>[   18.272438]  bus_for_each_drv+0x84/0xe0
-1517 00:47:33.183241  <4>[   18.272798]  __device_attach_async_helper+0xac/0xd0
-1518 00:47:33.183502  <4>[   18.273247]  async_run_entry_fn+0x34/0xe0
-1519 00:47:33.183763  <4>[   18.273622]  process_one_work+0x158/0x29c
-1520 00:47:33.184023  <4>[   18.273997]  worker_thread+0x184/0x300
-1521 00:47:33.184284  <4>[   18.274348]  kthread+0x11c/0x128
-1522 00:47:33.184560  <4>[   18.274656]  ret_from_fork+0x10/0x20
-1523 00:47:33.184823  <4>[   18.274995] ---[ end trace 0000000000000000 ]---
