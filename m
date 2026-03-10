@@ -1,63 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD67530F549
-	for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2026 09:55:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7522E3290C0;
+	Tue, 10 Mar 2026 10:37:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773136503; cv=none; b=Zr8BzBS+/xy3Fp+PwS5MKM+0PxAWMt0VohVqlb25V8VTALl7fLHDRNwrNyFeO9ZFHSh33Wf0Axz255s/fVU1bMJuvv394vshiZLkSz+eeGE9SJ2HYnv0s9zomYzQpeSb7wLY1xjEzUtsoXLuVPml+mDq7t4TwejQExOPifzJRnA=
+	t=1773139055; cv=none; b=L1aG3QdtaY21go234nkv6BomM8yQ6EMRTG/Nxnyg8u232UBFeHtHOa2FuGL28SPc/vL0knM6GK8WjBSi0aqqf5W3ZREBu1V93wwxfHjmS3yyD7wwaVARVEVhlZXFrAjzISH+UB+Ms2e2njfjMpJAsCgNuCokTKRfpGUY5pDQMwI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773136503; c=relaxed/simple;
-	bh=7cqzu0DYHZviFuOAud8k87g0tOqKObXy2EiltJ+e7Jk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=L4wFQ89TLlfmUE98oCpVu+IZJvOJ6dgXHCWGqk+9KJSVyp3PiJZAoKlN24400L0/pz6C9oftGJECK6AYmi8vipsYDz9GW4AJUP46Q6d+MU/sHw81BOcfYzg4ilHf0HWq6dfRzXgsWibml2/rzQuayqQ6HsSIXxUdhQy5Nr6hMws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tmPQRFNI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773139055; c=relaxed/simple;
+	bh=IM3vochcg7NYCrqAYrIjjYRtsA6SOjo+Yu29N2Tzjw0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=DjW3y22lR0zjQHSLJsf9yCpf7g22vL8M2/ZIwtKpIA2lKI1Gm8Z3exyCfA9hfeybIIPToakidKso2QVfyBPpubqROshD8HWe6L6KheCCjVpIveJlMQK209CNNA+LTZYIfQ3RUwSdqNR9/AZAdUg/mD8SDIqoXIEbLKH2Y1M9Rjo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=Ad7zddx8; arc=none smtp.client-ip=5.135.140.105
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tmPQRFNI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DD36C19423;
-	Tue, 10 Mar 2026 09:55:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773136503;
-	bh=7cqzu0DYHZviFuOAud8k87g0tOqKObXy2EiltJ+e7Jk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tmPQRFNI19rFSYYZ9CoWcpOlyPxVrpS3Ety5cNT5joLfJqv+bpQokFbTiL2YRQp8T
-	 /CDZO3/fECDObjSkFq1U3tibOoRdkfqMSHZ0d5eWgwgreMynW7BJ9wTkg/3UbiXrmb
-	 EVEM/BF5d9ijaQYmx8BMUDfqweDez8lA9ke3rmyWhX77A491tVLECl6x+FVG3pDokE
-	 ySh4a00wYpwTE2wiK/6Rhy7QSemtKqipYiIgddjTOtqSt/3TiyVy7epZQRCuIqdMW7
-	 a7iPxSJYn7/Z/fRK5WHQ5zClHMH1lyHCUMLZ9k5x0ZQsMv9abiXFrmU2XJ9joXYGLh
-	 mkvr88BRidbZQ==
-Date: Tue, 10 Mar 2026 10:54:59 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 0/9] PCI: endpoint: Differentiate between disabled and
- reserved BARs
-Message-ID: <aa_qc9v9lLd9MJay@ryzen>
-References: <20260302095913.48155-11-cassel@kernel.org>
+	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="Ad7zddx8"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id B1E2D28EE37;
+	Tue, 10 Mar 2026 11:37:24 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
+	t=1773139050; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:content-language:in-reply-to:references;
+	bh=jHawHue/HHoIMdOylZQNB/N2WuX1uZGGBcXmmXhdZ6Q=;
+	b=Ad7zddx8oLtstjGz5KASb6EIQGTzoZs9lk+j6pG7a0EA2N4rQpTuEP/dPCcVzlag/LRZmu
+	A81x245jxiYDnd5BMETB4uihbQnNA7byLOz7LruvohZlV/sNgt1BnsyR0wJiCRLK48B63M
+	gagBE0XLsr4ZbDD8AF0PvSXE/QSv+xEMMV608qhIzaFzoVIdQolWDUmN1+9NtEPf8O1Pyx
+	xZcZf+m3VNtkOThDFb2EuxSNqPbznlw1h2JWdyN8vSP1NdYYgIBXce9F97j7LVneL1fTfv
+	Ba5bkpXm9uRLbjKmPKvQXQpF91TvVk8rjDBQJBgYsVxamlUen4GS0++ZGkdZEA==
+Message-ID: <1611d3d5-8c3b-4298-bf50-55ab2c2db0e7@cjdns.fr>
+Date: Tue, 10 Mar 2026 11:37:23 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260302095913.48155-11-cassel@kernel.org>
+User-Agent: Mozilla Thunderbird Beta
+Subject: Re: [PATCH v2 3/8] dt-bindings: phy: Document PCIe PHY in EcoNet
+ EN751221 and EN7528
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: linux-mips@vger.kernel.org, naseefkm@gmail.com, mturquette@baylibre.com,
+ sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ tsbogend@alpha.franken.de, ryder.lee@mediatek.com,
+ jianjun.wang@mediatek.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+ mani@kernel.org, bhelgaas@google.com, vkoul@kernel.org,
+ neil.armstrong@linaro.org, p.zabel@pengutronix.de, matthias.bgg@gmail.com,
+ angelogioacchino.delregno@collabora.com, nbd@nbd.name, ansuelsmth@gmail.com,
+ linux-clk@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org
+References: <20260309131818.74467-1-cjd@cjdns.fr>
+ <20260309131818.74467-4-cjd@cjdns.fr>
+ <20260310-scrupulous-fat-ara-eab47c@quoll>
+Content-Language: en-US
+From: Caleb James DeLisle <cjd@cjdns.fr>
+In-Reply-To: <20260310-scrupulous-fat-ara-eab47c@quoll>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Last-TLS-Session-Version: TLSv1.3
 
-Hello Mani,
 
-Gentle ping on this series.
+On 10/03/2026 09:24, Krzysztof Kozlowski wrote:
+> On Mon, Mar 09, 2026 at 01:18:13PM +0000, Caleb James DeLisle wrote:
+>> EN751221 and EN7528 SoCs have two PCIe slots, and each one has a PHY
+>> which behaves slightly differently because one slot is Gen1/Gen2 while
+>> the other is Gen1 only.
+>>
+>> Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
+> Still, four separate subsystems unnecessarily merged into one patchset.
+> Split independent parts of your work per subsystem. See also submitting
+> patches.
 
-Considering that there are two other series:
-https://lore.kernel.org/linux-pci/20260302071427.534158-1-den@valinux.co.jp/
-https://lore.kernel.org/linux-pci/20260303072004.2384079-1-mmaddireddy@nvidia.com/
 
-that have this series as a dependency, I think it would be nice if we
-could handle this series, so that the other two series are unblocked.
+I asked for clarification last time and didn't get a reply. I'm not 
+against changing it but need to understand exactly what's expected b/c 
+the way I'm imagining it seems way worse. submitting-patches.rst only 
+says of patch sets "only post say 15 or so at a time", obviously not the 
+case here.
+
+If you're asking for one patchset for phy, one for clock, one for PCI, 
+and then one to introduce them to the device, I can do that. I just want 
+to be sure because introducing unused code, and patch sets that depend 
+on other patch sets both seem like anti-patterns to me.
 
 
-Kind regards,
-Niklas
+Thanks,
+
+Caleb
+
+
+>> ---
+>>   .../phy/econet,en751221-pcie-phy.yaml         | 50 +++++++++++++++++++
+>>   MAINTAINERS                                   |  6 +++
+>>   2 files changed, 56 insertions(+)
+>>   create mode 100644 Documentation/devicetree/bindings/phy/econet,en751221-pcie-phy.yaml
+> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+>
+> Best regards,
+> Krzysztof
+>
+>
