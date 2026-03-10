@@ -1,123 +1,120 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from gloria.sntech.de (gloria.sntech.de [185.11.138.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98655344056;
-	Tue, 10 Mar 2026 08:51:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3B2A43CEED;
+	Tue, 10 Mar 2026 09:08:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.11.138.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773132676; cv=none; b=D1yBcce7GqGoADmLnjaqFkSOlwT03cfvHM0Xq7HIW5atwyLcjVb7Kpqxjxu1IAjU0Z71z10ZJw/EqrYbrX73fNXcmlPNuAmWXZx+k9bCH+SGgqZTA+WE+qB5quHcTFYi4n53KpiRC07+OXe8bsI92GZf1t9ZsGLwt6Ui4S3rIiA=
+	t=1773133703; cv=none; b=Gp0g6QAKNC+q4R71GJDY4Bwh+N0dw3YEcAGoF1JEDQqm+Ru7049zgtgRjTUUfxwfy7KOiZMOXF3ITMXwYd/QmaFY/UbofRC9O0jobsKttz6y7GhU4itPlUaT0ABEXmnZDENjtj26yv2JseLVm3Qv8n1w5yu49G0MvQJoT2CmAtk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773132676; c=relaxed/simple;
-	bh=A5jsVSjKnT6U7wl0p+5sd9qd2joVHNzCFPfuHFmwE08=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=EfKQu0n84dQmeb6Bt7O2R7d71/P0ngulp4ZeiFaR8XQhFphLJFTuhwBO8r3B7MTG+I7UhfY0vL7nCAW82dEbZtHhSvHuDsW3L5vUAal73liA7DnIPn5b0N4OtHs5Q7L4qKvcx+IP4Piqbp9j/8SFFBrTogErqNSGzLruqpLytds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gPict/x5; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773133703; c=relaxed/simple;
+	bh=kvP+A80lUtHD0JXSxM0RjhmHdTQdCORerkk2CLjcP+8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=fAjTwIkRyvEbocybuLg3AQmxVbCkE7XvgDWfzoGFde/ROmAczQ5SUbllpyy2u4DyJoQW32W5W22I5yypCZAlF5jeLlvEsvxxX1MMdHvE2BZgMkFJQZoiSG1bWC5v09yNIqfNiOmcGAoXcgBC+CeJ0VTL10vmr2II3Gr5Kn2D5Ks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sntech.de; spf=pass smtp.mailfrom=sntech.de; dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b=2P8w16KW; arc=none smtp.client-ip=185.11.138.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sntech.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sntech.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gPict/x5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 938D5C19423;
-	Tue, 10 Mar 2026 08:51:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773132676;
-	bh=A5jsVSjKnT6U7wl0p+5sd9qd2joVHNzCFPfuHFmwE08=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=gPict/x5dkJJU848YPB0xKwDej6YAR+7lLQey74KLIQB/AVUaWPhBcLjxXB6tRAvn
-	 Ms0oHOjMHKydyglf/IPdBAEZoWJh38W+Rs1/2UXrexXlREqcPicKop3hO9ByNUYhS7
-	 s7Picia/YhjtWxXz6PFOqPgOjcKJPcVTWEvEnbi9iGtNN/v4oXzGZycocaV3mS3JvO
-	 Jt6jXEv4dmJM78dsirnnVEtP+tY870BZKFQ0yxl7EkInJlQT5OZ46HP6lofdmk8K6M
-	 V2kwpOMmAXSKDae+/iuJHKz5D/sOBJZtk+QWA9T90sgQc3bZ7kEFshFaNVZQiKRaFH
-	 XGbXuAu5OwqtA==
-Message-ID: <5d1e8475-64df-4e79-81b8-77bd930af497@kernel.org>
-Date: Tue, 10 Mar 2026 09:51:08 +0100
+	dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b="2P8w16KW"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sntech.de;
+	s=gloria202408; h=Content-Type:Content-Transfer-Encoding:MIME-Version:
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Reply-To;
+	bh=x+sKkqEen+FTZVcatdq7BWmJBRObIwAqW8MBSeFsbCg=; b=2P8w16KW4mcJ4VoQcD9GwW+Aaw
+	LPnWPTjV+iBSgpGU8VvlZBgivFQ41jbbUv9xPLTe0UGiC2O/TtxW9n87YjtaKXtEvok+d9X3m90n3
+	88MyVWdnk4KdCug4lCgmQ65VmF5YA3tIEvuVR5jNAJV+kyyiI3aJ/12D7cJW361aI64t62QfKt+G8
+	DpRgtf8aKTCqaf2K91HStN6cfzfIMJzfn16r4ZEdGteuKTcM5375CxPjFb+Zcjq9TyhP53oWNANrb
+	QG5VUTphEsm3do+5av7k096Uzt/+LkiRWIWXHy5//oKgMhx3VYbZAmsubGNimoJORazjXzWfE9QP0
+	iOm5zq+A==;
+From: Heiko Stuebner <heiko@sntech.de>
+To: Vladimir Oltean <vladimir.oltean@nxp.com>
+Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>,
+ Neil Armstrong <neil.armstrong@linaro.org>, dri-devel@lists.freedesktop.org,
+ freedreno@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org,
+ linux-arm-msm@vger.kernel.org, linux-can@vger.kernel.org,
+ linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ linux-riscv@lists.infradead.org, linux-rockchip@lists.infradead.org,
+ linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-sunxi@lists.linux.dev, linux-tegra@vger.kernel.org,
+ linux-usb@vger.kernel.org, netdev@vger.kernel.org, spacemit@lists.linux.dev,
+ UNGLinuxDriver@microchip.com, Sandy Huang <hjc@rock-chips.com>,
+ Andy Yan <andy.yan@rock-chips.com>,
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+ Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>
+Subject:
+ Re: [PATCH v3 phy-next 10/24] drm/rockchip: dw_hdmi: avoid direct dereference
+ of phy->dev.of_node
+Date: Tue, 10 Mar 2026 10:08:07 +0100
+Message-ID: <2772778.X9hSmTKtgW@phil>
+In-Reply-To: <20260310083752.ms6u4qpy3snl4h6w@skbuf>
+References:
+ <20260309190842.927634-1-vladimir.oltean@nxp.com> <2218670.OBFZWjSADL@phil>
+ <20260310083752.ms6u4qpy3snl4h6w@skbuf>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/8] dt-bindings: clock, reset: Add econet EN751221
-To: Caleb James DeLisle <cjd@cjdns.fr>
-Cc: linux-mips@vger.kernel.org, naseefkm@gmail.com, mturquette@baylibre.com,
- sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
- tsbogend@alpha.franken.de, ryder.lee@mediatek.com,
- jianjun.wang@mediatek.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
- mani@kernel.org, bhelgaas@google.com, vkoul@kernel.org,
- neil.armstrong@linaro.org, p.zabel@pengutronix.de, matthias.bgg@gmail.com,
- angelogioacchino.delregno@collabora.com, nbd@nbd.name, ansuelsmth@gmail.com,
- linux-clk@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org
-References: <20260309131818.74467-1-cjd@cjdns.fr>
- <20260309131818.74467-2-cjd@cjdns.fr>
- <20260310-rousing-tacky-catfish-fcba60@quoll>
- <b48c07a8-3bc0-401e-9085-fc7030187db0@cjdns.fr>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <b48c07a8-3bc0-401e-9085-fc7030187db0@cjdns.fr>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
-On 10/03/2026 09:37, Caleb James DeLisle wrote:
->>> diff --git a/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml b/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml
->>> index a8471367175b..91abe7716fce 100644
->>> --- a/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml
->>> +++ b/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml
->>> @@ -32,6 +32,7 @@ properties:
->>>         - enum:
->>>             - airoha,en7523-scu
->>>             - airoha,en7581-scu
->>> +          - econet,en751221-scu
->> 751 < 752, keep alphanumeric order
-> 
-> 
-> "econet," after "airoha," because e > a, of course I can order by number 
-> if that's really what you want.
+Am Dienstag, 10. M=C3=A4rz 2026, 09:37:52 Mitteleurop=C3=A4ische Normalzeit=
+ schrieb Vladimir Oltean:
+> On Tue, Mar 10, 2026 at 09:24:43AM +0100, Heiko Stuebner wrote:
+> > Am Montag, 9. M=C3=A4rz 2026, 20:08:28 Mitteleurop=C3=A4ische Normalzei=
+t schrieb Vladimir Oltean:
+> > > The dw_hdmi-rockchip driver validates pixel clock rates against the
+> > > HDMI PHY's internal clock provider on certain SoCs like RK3328.
+> > > This is currently achieved by dereferencing hdmi->phy->dev.of_node
+> > > to obtain the provider node, which violates the Generic PHY API's
+> > > encapsulation (the goal is for struct phy to be an opaque pointer).
+> > >=20
+> > > Refactor dw_hdmi_rockchip_bind() to perform a manual phandle lookup
+> > > on the "hdmi" PHY index within the controller's DT node. This provides
+> > > a parallel path to the clock provider's OF node without relying on the
+> > > internal structure of the struct phy handle.
+> > >=20
+> > > Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
+> > > ---
+> > > Cc: Sandy Huang <hjc@rock-chips.com>
+> > > Cc: "Heiko St=C3=BCbner" <heiko@sntech.de>
+> > > Cc: Andy Yan <andy.yan@rock-chips.com>
+> > > Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+> > > Cc: Maxime Ripard <mripard@kernel.org>
+> > > Cc: Thomas Zimmermann <tzimmermann@suse.de>
+> > > Cc: David Airlie <airlied@gmail.com>
+> > > Cc: Simona Vetter <simona@ffwll.ch>
+> > >=20
+> > > v1->v3: none
+> > > ---
+> >=20
+> > [...]
+> >=20
+> > > @@ -588,13 +589,17 @@ static int dw_hdmi_rockchip_bind(struct device =
+*dev, struct device *master,
+> > >  		return dev_err_probe(hdmi->dev, ret, "failed to get phy\n");
+> > >  	}
+> > > =20
+> > > -	if (hdmi->phy) {
+> >=20
+> > nit: a comment would be nice here. I.e. hdmi->phy being an opaque point=
+er
+> > so checking hdmi->phy !=3D NULL is not possible.
+> >=20
+> > With that being a "goal", I assume that information is not widely spread
+> > so this would prevent the next developer trying to change it back to
+> > "if (hdmi->phy)" while that handling change trickles down.
+>=20
+> Testing the NULL quality of "struct phy *phy" is still possible and legal.
+> It means that you called an "optional" variant of phy_get(), and there
+> was no PHY.
 
-Ah, yes, code is correct.
+ok, I'll keep that in mind :-)
 
-Best regards,
-Krzysztof
+
+Heiko
+
+
