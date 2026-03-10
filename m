@@ -1,279 +1,279 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9BBD38E107
-	for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2026 12:50:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F379C211A09;
+	Tue, 10 Mar 2026 13:37:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773147040; cv=none; b=fXGa2AiAJU2aAQM+c/wEOA28wgMrvjcDiS6OJ2kSw8RkRAFT6fbAWSO3MoSZzEKSCT5VMNbt+wgjXF9JWdkPp/v2ND1k9vjgXT1jVyXAATb9WyGTxP4ifQ5/9bQSxkSeh8m2pJQjamPXnij4GRdBhJQpSS0uqwqqFFytjUctux0=
+	t=1773149875; cv=none; b=qOhCeKgdM7YE32YmHV4tIIXp4GiTTcIMaO/sg09ZWnWZvvQLUrHp6dShMFWZHuCD8kwCb1OwN5uXtcShR02wQ1D4z4xxl5c67F8F0mHlAfn2aSa1Ha9imc/sfXH3COhLKf8VUXMFTutf+c/xET4TVDgDLN69Mx1Lrb6kK9scJrA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773147040; c=relaxed/simple;
-	bh=6JRJUheFRoKvRHhgDtk3Ss6ENpTbd/Wg+Ra7lm6JE6g=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=JjzohuWdjG5zCxPClJuOh/XiF2qpUaw0kfD2JnRUd/C6ZixxU2BJjeFqNddG7NU3A0GX+bA94Y08TwkXlMPoT3/oL3j47S6AxCroHAzUcW/cLU40zHTtRfp9h8ddSKkNyefPxz83Yy4O2aLDANbyfjMsuOIeHEL8zHEceysNPMg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=D+bMrz0u; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1773149875; c=relaxed/simple;
+	bh=7n4LiLaeOu7Y781LaaH2FD19YKv/KTfp5uLzE86UGvU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GwO0GvmJTIhY08LtD+idxothqMAhC9VbniqlznXDAyq5UJX0T34cS53uuUh5orD32kCWbV9UxXQaT2en1w4RG2/6lxv1EfAfJnsbrL1H0SmuQWFhSwWQXqGXB1WoMI4hCy/v7UkyJ2rFHTeTvnKTTbpVbu38TfwvhNnuPHJy20Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wfg6Pb3J; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="D+bMrz0u"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773147037; x=1804683037;
-  h=date:from:to:cc:subject:message-id;
-  bh=6JRJUheFRoKvRHhgDtk3Ss6ENpTbd/Wg+Ra7lm6JE6g=;
-  b=D+bMrz0uojzMUgUcV72KXQzZG2a9LMu+pDnbk4EtXqgqa9LU1/zuoOOY
-   /YIhSkbKNyHh1ikYCBvWihsxsAShxt7nCDRCmmjAnpoLjQM380sh89Ns+
-   Uy9qfEItKhxR0EHKJhuPYcXWm7KPhHM9t41fqKYSoIz82eu8IuwddmNVh
-   GD2GwyLbtb1u61uXVnou9erlDmL0o/J4PcPUK73U0qz9ULmj8D9kDWrcO
-   YsY9PhSUx2DmcV1M+0n1sZ/cqKgOcdZRrxTTk26qnkqijtOvru7iYO/5Y
-   Lcu0IRq4QxXziPdBT/xdRCi8dg2AaUl1B5X4J9TXwbnCT8r9lbZ5e37oV
-   Q==;
-X-CSE-ConnectionGUID: fyoJrf7SQxK034zTsftX1Q==
-X-CSE-MsgGUID: 81kzP7WwQDepZ52QcLbOQA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11724"; a="74071478"
-X-IronPort-AV: E=Sophos;i="6.23,112,1770624000"; 
-   d="scan'208";a="74071478"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 05:50:37 -0700
-X-CSE-ConnectionGUID: KgIdIiKgSuu78ycCn9HmoA==
-X-CSE-MsgGUID: x7ysbr8TRVewAC++LByWDQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,112,1770624000"; 
-   d="scan'208";a="243117185"
-Received: from lkp-server01.sh.intel.com (HELO 434e41ea3c86) ([10.239.97.150])
-  by fmviesa002.fm.intel.com with ESMTP; 10 Mar 2026 05:50:35 -0700
-Received: from kbuild by 434e41ea3c86 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vzwXh-000000001vw-1Cgp;
-	Tue, 10 Mar 2026 12:50:33 +0000
-Date: Tue, 10 Mar 2026 20:50:18 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:reset] BUILD SUCCESS
- 7b193af58b7f65715dc19e235e03e447a454b377
-Message-ID: <202603102010.lmcNYOky-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wfg6Pb3J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E847C19423;
+	Tue, 10 Mar 2026 13:37:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773149874;
+	bh=7n4LiLaeOu7Y781LaaH2FD19YKv/KTfp5uLzE86UGvU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Wfg6Pb3Jv9nz87f4TL4NjXyJ5y2dr7izkZZumUwjox9UckLpwcrxyLugMkVY+Fey7
+	 SfYvsQTEuFF2OfasvZRT2nw7myg1Oo+0tpDr4v1qpwoxvtd+ZkHD0PTQEuXq7PqGPD
+	 VANFVMhmUBZpDbWl3YRwC++GuB6Cjau8tEg2hWOXuW/zpDPqnyJzDayYz9eU9Nx3CH
+	 9FK6bCQ6MNNb+lTG6RIyqf2b0qh7VM1vKivIZkCqrqJ5w25XEKS5hiJJf1wJLL76Pw
+	 M0Cfc/d/TzPtaGqx4SK9wWTSCS8weZqpmNtfBtEfEAtfujyVf0xgDxIHy3dGER0wnr
+	 +juElQl3Sas9A==
+Date: Tue, 10 Mar 2026 19:07:39 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: manivannan.sadhasivam@oss.qualcomm.com, 
+	Bjorn Helgaas <bhelgaas@google.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, 
+	Oliver O'Halloran <oohall@gmail.com>, Will Deacon <will@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>, 
+	Philipp Zabel <p.zabel@pengutronix.de>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org, 
+	linux-arm-msm@vger.kernel.org, linux-rockchip@lists.infradead.org, 
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>, Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+	Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v6 0/4] PCI: Add support for resetting the Root Ports in
+ a platform specific way
+Message-ID: <mevtdhght66tds7yhmr5a6xg5a75fb667b6lyvguoxqexmc74p@mroqidhzptxk>
+References: <20250715-pci-port-reset-v6-0-6f9cce94e7bb@oss.qualcomm.com>
+ <aHoh1XfhR8EB_5yY@ryzen>
+ <aHokdhpJUhSZ5FSp@ryzen>
+ <tujurux64if24z7w7h6wjxhrnh4owkgiv33u2fftp7zr5ucv2m@2ijo5ok5jhfk>
+ <aJ743hJw-T9y3waX@ryzen>
+ <lakgphb7ym3cybwmpdqyipzi4tlkwbfijzhd4r6hvhho3pc7iu@6ludgw6wqkjh>
+ <aLmcO8ukT-CDZMuT@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <aLmcO8ukT-CDZMuT@ryzen>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git reset
-branch HEAD: 7b193af58b7f65715dc19e235e03e447a454b377  PCI: Consolidate pci_bus/slot_lock/unlock/trylock()
+Hi Niklas,
 
-elapsed time: 953m
+Sorry for replying very late. I lost access to my EP setup, and just got it
+back.
 
-configs tested: 202
-configs skipped: 4
+On Thu, Sep 04, 2025 at 04:03:39PM +0200, Niklas Cassel wrote:
+> Hello Mani,
+> 
+> On Fri, Aug 29, 2025 at 09:44:08PM +0530, Manivannan Sadhasivam wrote:
+> > On Fri, Aug 15, 2025 at 11:07:42AM GMT, Niklas Cassel wrote:
+> 
+> (snip)
+> 
+> > > > > > ## On EP side:
+> > > > > > # echo 0 > /sys/kernel/config/pci_ep/controllers/a40000000.pcie-ep/start && \
+> > > > > >   sleep 0.1 && echo 1 > /sys/kernel/config/pci_ep/controllers/a40000000.pcie-ep/start
+> > > > > > 
+> > > > > > Basically all tests timeout
+> > > > > > # FAILED: 1 / 16 tests passed.
+> > > > > > 
+> > > > > > Which is the same as before this patch series.
+> > > > 
+> > > > This is kind of expected since the pci_endpoint_test driver doesn't have the AER
+> > > > err_handlers defined.
+> > > 
+> > > I see.
+> > > Would be nice if we could add them then, so that we can verify that this
+> > > series is working as intended.
+> 
+> (snip)
+> 
+> > Ok, thanks for the logs. I guess what is happening here is that we are not
+> > saving/restoring the config space of the devices under the Root Port if linkdown
+> > is happens. TBH, we cannot do that from the PCI core since once linkdown
+> > happens, we cannot access any devices underneath the Root Port. But if
+> > err_handlers are available for drivers for all devices, they could do something
+> > smart like below:
+> > 
+> > diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+> > index c4e5e2c977be..9aabf1fe902e 100644
+> > --- a/drivers/misc/pci_endpoint_test.c
+> > +++ b/drivers/misc/pci_endpoint_test.c
+> > @@ -989,6 +989,8 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+> >  
+> >         pci_set_drvdata(pdev, test);
+> >  
+> > +       pci_save_state(pdev);
+> > +
+> >         id = ida_alloc(&pci_endpoint_test_ida, GFP_KERNEL);
+> >         if (id < 0) {
+> >                 ret = id;
+> > @@ -1140,12 +1142,31 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+> >  };
+> >  MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
+> >  
+> > +static pci_ers_result_t pci_endpoint_test_error_detected(struct pci_dev *pdev,
+> > +                                              pci_channel_state_t state)
+> > +{
+> > +       return PCI_ERS_RESULT_NEED_RESET;
+> > +}
+> > +
+> > +static pci_ers_result_t pci_endpoint_test_slot_reset(struct pci_dev *pdev)
+> > +{
+> > +       pci_restore_state(pdev);
+> > +
+> > +       return PCI_ERS_RESULT_RECOVERED;
+> > +}
+> > +
+> > +static const struct pci_error_handlers pci_endpoint_test_err_handler = {
+> > +       .error_detected = pci_endpoint_test_error_detected,
+> > +       .slot_reset = pci_endpoint_test_slot_reset,
+> > +};
+> > +
+> >  static struct pci_driver pci_endpoint_test_driver = {
+> >         .name           = DRV_MODULE_NAME,
+> >         .id_table       = pci_endpoint_test_tbl,
+> >         .probe          = pci_endpoint_test_probe,
+> >         .remove         = pci_endpoint_test_remove,
+> >         .sriov_configure = pci_sriov_configure_simple,
+> > +       .err_handler    = &pci_endpoint_test_err_handler,
+> >  };
+> >  module_pci_driver(pci_endpoint_test_driver);
+> > 
+> > This essentially saves the good known config space during probe and restores it
+> > during the slot_reset callback. Ofc, the state would've been overwritten if
+> > suspend/resume happens in-between, but the point I'm making is that unless all
+> > device drivers restore their known config space, devices cannot be resumed
+> > properly post linkdown recovery.
+> > 
+> > I can add a patch based on the above diff in next revision if that helps. Right
+> > now, I do not have access to my endpoint test setup. So can't test anything.
+> 
+> I tested your patch series + your suggested change above, and after a:
+> 
+> ## On EP side:
+> # echo 0 > /sys/kernel/config/pci_ep/controllers/a40000000.pcie-ep/start && \
+>   sleep 0.1 && echo 1 > /sys/kernel/config/pci_ep/controllers/a40000000.pcie-ep/start
+> 
+> Instead of:
+> 
+> # FAILED: 1 / 16 tests passed.
+> 
+> I now get:
+> # FAILED: 7 / 16 tests passed.
+> 
+> Test cases 1-7 now passes (the test cases related to BARs),
+> all other test cases still fail:
+> 
+> # /pcitest 
+> TAP version 13
+> 1..16
+> # Starting 16 tests from 9 test cases.
+> #  RUN           pci_ep_bar.BAR0.BAR_TEST ...
+> #            OK  pci_ep_bar.BAR0.BAR_TEST
+> ok 1 pci_ep_bar.BAR0.BAR_TEST
+> #  RUN           pci_ep_bar.BAR1.BAR_TEST ...
+> #            OK  pci_ep_bar.BAR1.BAR_TEST
+> ok 2 pci_ep_bar.BAR1.BAR_TEST
+> #  RUN           pci_ep_bar.BAR2.BAR_TEST ...
+> #            OK  pci_ep_bar.BAR2.BAR_TEST
+> ok 3 pci_ep_bar.BAR2.BAR_TEST
+> #  RUN           pci_ep_bar.BAR3.BAR_TEST ...
+> #            OK  pci_ep_bar.BAR3.BAR_TEST
+> ok 4 pci_ep_bar.BAR3.BAR_TEST
+> #  RUN           pci_ep_bar.BAR4.BAR_TEST ...
+> #      SKIP      BAR is disabled
+> #            OK  pci_ep_bar.BAR4.BAR_TEST
+> ok 5 pci_ep_bar.BAR4.BAR_TEST # SKIP BAR is disabled
+> #  RUN           pci_ep_bar.BAR5.BAR_TEST ...
+> #            OK  pci_ep_bar.BAR5.BAR_TEST
+> ok 6 pci_ep_bar.BAR5.BAR_TEST
+> #  RUN           pci_ep_basic.CONSECUTIVE_BAR_TEST ...
+> #            OK  pci_ep_basic.CONSECUTIVE_BAR_TEST
+> ok 7 pci_ep_basic.CONSECUTIVE_BAR_TEST
+> #  RUN           pci_ep_basic.LEGACY_IRQ_TEST ...
+> # pci_endpoint_test.c:106:LEGACY_IRQ_TEST:Expected 0 (0) == ret (-110)
+> # pci_endpoint_test.c:106:LEGACY_IRQ_TEST:Test failed for Legacy IRQ
+> # LEGACY_IRQ_TEST: Test failed
+> #          FAIL  pci_ep_basic.LEGACY_IRQ_TEST
+> not ok 8 pci_ep_basic.LEGACY_IRQ_TEST
+> #  RUN           pci_ep_basic.MSI_TEST ...
+> # pci_endpoint_test.c:118:MSI_TEST:Expected 0 (0) == ret (-110)
+> # pci_endpoint_test.c:118:MSI_TEST:Test failed for MSI1
+> # pci_endpoint_test.c:118:MSI_TEST:Expected 0 (0) == ret (-110)
+> # pci_endpoint_test.c:118:MSI_TEST:Test failed for MSI2
+> # pci_endpoint_test.c:118:MSI_TEST:Expected 0 (0) == ret (-110)
+> # pci_endpoint_test.c:118:MSI_TEST:Test failed for MSI3
+> ...
+> 
+> 
+> I think I know the reason.. you save the state before the IRQs have been allocated.
+> 
+> Perhaps we need to save the state after enabling IRQs?
+> 
+> I tried this patch on top of your patch:
+> --- a/drivers/misc/pci_endpoint_test.c
+> +++ b/drivers/misc/pci_endpoint_test.c
+> @@ -851,6 +851,8 @@ static int pci_endpoint_test_set_irq(struct pci_endpoint_test *test,
+>                 return ret;
+>         }
+>  
+> +       pci_save_state(pdev);
+> +
+>         return 0;
+>  }
+> 
+> 
+> But still:
+> # FAILED: 7 / 16 tests passed.
+> 
+> So... apparently that did not help...
+> 
+> I tried with the following change as well (on top of my patch above):
+> 
+> +static pci_ers_result_t pci_endpoint_test_slot_reset(struct pci_dev *pdev)
+> +{
+> +       struct pci_endpoint_test *test = pci_get_drvdata(pdev);
+> +       int irq_type = test->irq_type;
+> +
+> +       pci_restore_state(pdev);
+> +
+> +       if (irq_type != PCITEST_IRQ_TYPE_UNDEFINED) {
+> +               pci_endpoint_test_clear_irq(test);
+> +               pci_endpoint_test_set_irq(test, irq_type);
+> +       }
+> +
+> +       return PCI_ERS_RESULT_RECOVERED;
+> +}
+> 
+> But still only:
+> # FAILED: 7 / 16 tests passed.
+> 
+> Do you have any suggestions?
+> 
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+I guess what is going wrong here is that you might be rebooting the device
+*after* restoring the config space in 'slot_reset()' callback. So all the
+previous config space contents would be lost and the device would've started
+afresh.
 
-tested configs:
-alpha                             allnoconfig    gcc-15.2.0
-alpha                            allyesconfig    gcc-15.2.0
-alpha                               defconfig    gcc-15.2.0
-arc                              allmodconfig    clang-16
-arc                              allmodconfig    gcc-15.2.0
-arc                               allnoconfig    gcc-15.2.0
-arc                              allyesconfig    clang-23
-arc                              allyesconfig    gcc-15.2.0
-arc                                 defconfig    gcc-15.2.0
-arc                   randconfig-001-20260310    gcc-8.5.0
-arc                   randconfig-002-20260310    gcc-8.5.0
-arm                               allnoconfig    clang-23
-arm                               allnoconfig    gcc-15.2.0
-arm                              allyesconfig    clang-16
-arm                              allyesconfig    gcc-15.2.0
-arm                                 defconfig    gcc-15.2.0
-arm                   randconfig-001-20260310    gcc-8.5.0
-arm                   randconfig-002-20260310    gcc-8.5.0
-arm                   randconfig-003-20260310    gcc-8.5.0
-arm                   randconfig-004-20260310    gcc-8.5.0
-arm64                            allmodconfig    clang-19
-arm64                            allmodconfig    clang-23
-arm64                             allnoconfig    gcc-15.2.0
-arm64                               defconfig    gcc-15.2.0
-arm64                 randconfig-001-20260310    gcc-11.5.0
-arm64                 randconfig-002-20260310    gcc-11.5.0
-arm64                 randconfig-003-20260310    gcc-11.5.0
-arm64                 randconfig-004-20260310    gcc-11.5.0
-csky                             allmodconfig    gcc-15.2.0
-csky                              allnoconfig    gcc-15.2.0
-csky                                defconfig    gcc-15.2.0
-csky                  randconfig-001-20260310    gcc-11.5.0
-csky                  randconfig-002-20260310    gcc-11.5.0
-hexagon                          allmodconfig    clang-17
-hexagon                          allmodconfig    gcc-15.2.0
-hexagon                           allnoconfig    clang-23
-hexagon                           allnoconfig    gcc-15.2.0
-hexagon                             defconfig    gcc-15.2.0
-hexagon               randconfig-001-20260310    gcc-11.5.0
-hexagon               randconfig-002-20260310    gcc-11.5.0
-i386                             allmodconfig    clang-20
-i386                              allnoconfig    gcc-14
-i386                              allnoconfig    gcc-15.2.0
-i386                             allyesconfig    clang-20
-i386        buildonly-randconfig-001-20260310    clang-20
-i386        buildonly-randconfig-002-20260310    clang-20
-i386        buildonly-randconfig-003-20260310    clang-20
-i386        buildonly-randconfig-004-20260310    clang-20
-i386        buildonly-randconfig-005-20260310    clang-20
-i386        buildonly-randconfig-006-20260310    clang-20
-i386                                defconfig    gcc-15.2.0
-i386                  randconfig-001-20260310    clang-20
-i386                  randconfig-002-20260310    clang-20
-i386                  randconfig-003-20260310    clang-20
-i386                  randconfig-004-20260310    clang-20
-i386                  randconfig-005-20260310    clang-20
-i386                  randconfig-006-20260310    clang-20
-i386                  randconfig-007-20260310    clang-20
-i386                  randconfig-011-20260310    clang-20
-i386                  randconfig-012-20260310    clang-20
-i386                  randconfig-013-20260310    clang-20
-i386                  randconfig-014-20260310    clang-20
-i386                  randconfig-015-20260310    clang-20
-i386                  randconfig-016-20260310    clang-20
-i386                  randconfig-017-20260310    clang-20
-loongarch                        allmodconfig    clang-19
-loongarch                        allmodconfig    clang-23
-loongarch                         allnoconfig    clang-23
-loongarch                         allnoconfig    gcc-15.2.0
-loongarch                           defconfig    clang-19
-loongarch             randconfig-001-20260310    gcc-11.5.0
-loongarch             randconfig-002-20260310    gcc-11.5.0
-m68k                             allmodconfig    gcc-15.2.0
-m68k                              allnoconfig    gcc-15.2.0
-m68k                             allyesconfig    clang-16
-m68k                             allyesconfig    gcc-15.2.0
-m68k                                defconfig    clang-19
-microblaze                        allnoconfig    gcc-15.2.0
-microblaze                       allyesconfig    gcc-15.2.0
-microblaze                          defconfig    clang-19
-mips                             allmodconfig    gcc-15.2.0
-mips                              allnoconfig    gcc-15.2.0
-mips                             allyesconfig    gcc-15.2.0
-mips                     decstation_defconfig    gcc-15.2.0
-nios2                            allmodconfig    clang-23
-nios2                            allmodconfig    gcc-11.5.0
-nios2                             allnoconfig    clang-23
-nios2                             allnoconfig    gcc-11.5.0
-nios2                               defconfig    clang-19
-nios2                 randconfig-001-20260310    gcc-11.5.0
-nios2                 randconfig-002-20260310    gcc-11.5.0
-openrisc                         allmodconfig    clang-23
-openrisc                         allmodconfig    gcc-15.2.0
-openrisc                          allnoconfig    clang-23
-openrisc                          allnoconfig    gcc-15.2.0
-openrisc                            defconfig    gcc-15.2.0
-parisc                           allmodconfig    gcc-15.2.0
-parisc                            allnoconfig    clang-23
-parisc                            allnoconfig    gcc-15.2.0
-parisc                           allyesconfig    clang-19
-parisc                           allyesconfig    gcc-15.2.0
-parisc                              defconfig    gcc-15.2.0
-parisc                randconfig-001-20260310    gcc-15.2.0
-parisc                randconfig-002-20260310    gcc-15.2.0
-parisc64                            defconfig    clang-19
-powerpc                          allmodconfig    gcc-15.2.0
-powerpc                           allnoconfig    clang-23
-powerpc                           allnoconfig    gcc-15.2.0
-powerpc                     mpc83xx_defconfig    clang-23
-powerpc               randconfig-001-20260310    gcc-15.2.0
-powerpc               randconfig-002-20260310    gcc-15.2.0
-powerpc                    sam440ep_defconfig    gcc-15.2.0
-powerpc64             randconfig-001-20260310    gcc-15.2.0
-powerpc64             randconfig-002-20260310    gcc-15.2.0
-riscv                            allmodconfig    clang-23
-riscv                             allnoconfig    clang-23
-riscv                             allnoconfig    gcc-15.2.0
-riscv                            allyesconfig    clang-16
-riscv                               defconfig    gcc-15.2.0
-riscv                 randconfig-001-20260310    gcc-15.2.0
-riscv                 randconfig-002-20260310    gcc-15.2.0
-s390                             allmodconfig    clang-18
-s390                             allmodconfig    clang-19
-s390                              allnoconfig    clang-23
-s390                             allyesconfig    gcc-15.2.0
-s390                                defconfig    gcc-15.2.0
-s390                  randconfig-001-20260310    gcc-15.2.0
-s390                  randconfig-002-20260310    gcc-15.2.0
-sh                               alldefconfig    gcc-15.2.0
-sh                               allmodconfig    gcc-15.2.0
-sh                                allnoconfig    clang-23
-sh                                allnoconfig    gcc-15.2.0
-sh                               allyesconfig    clang-19
-sh                               allyesconfig    gcc-15.2.0
-sh                                  defconfig    gcc-14
-sh                    randconfig-001-20260310    gcc-15.2.0
-sh                    randconfig-002-20260310    gcc-15.2.0
-sparc                             allnoconfig    clang-23
-sparc                             allnoconfig    gcc-15.2.0
-sparc                               defconfig    gcc-15.2.0
-sparc                 randconfig-001-20260310    gcc-12.5.0
-sparc                 randconfig-002-20260310    gcc-12.5.0
-sparc64                          allmodconfig    clang-23
-sparc64                             defconfig    gcc-14
-sparc64               randconfig-001-20260310    gcc-12.5.0
-sparc64               randconfig-002-20260310    gcc-12.5.0
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-23
-um                               allyesconfig    gcc-14
-um                               allyesconfig    gcc-15.2.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20260310    gcc-12.5.0
-um                    randconfig-002-20260310    gcc-12.5.0
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-20
-x86_64                            allnoconfig    clang-20
-x86_64                            allnoconfig    clang-23
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20260310    gcc-14
-x86_64      buildonly-randconfig-002-20260310    gcc-14
-x86_64      buildonly-randconfig-003-20260310    gcc-14
-x86_64      buildonly-randconfig-004-20260310    gcc-14
-x86_64      buildonly-randconfig-005-20260310    gcc-14
-x86_64      buildonly-randconfig-006-20260310    gcc-14
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-20
-x86_64                randconfig-001-20260310    clang-20
-x86_64                randconfig-002-20260310    clang-20
-x86_64                randconfig-003-20260310    clang-20
-x86_64                randconfig-004-20260310    clang-20
-x86_64                randconfig-005-20260310    clang-20
-x86_64                randconfig-006-20260310    clang-20
-x86_64                randconfig-011-20260310    clang-20
-x86_64                randconfig-011-20260310    gcc-14
-x86_64                randconfig-012-20260310    clang-20
-x86_64                randconfig-012-20260310    gcc-14
-x86_64                randconfig-013-20260310    clang-20
-x86_64                randconfig-013-20260310    gcc-14
-x86_64                randconfig-014-20260310    clang-20
-x86_64                randconfig-014-20260310    gcc-14
-x86_64                randconfig-015-20260310    clang-20
-x86_64                randconfig-015-20260310    gcc-14
-x86_64                randconfig-016-20260310    clang-20
-x86_64                randconfig-071-20260310    clang-20
-x86_64                randconfig-072-20260310    clang-20
-x86_64                randconfig-073-20260310    clang-20
-x86_64                randconfig-074-20260310    clang-20
-x86_64                randconfig-075-20260310    clang-20
-x86_64                randconfig-076-20260310    clang-20
-x86_64                               rhel-9.4    clang-20
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-20
-x86_64                    rhel-9.4-kselftests    clang-20
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    clang-23
-xtensa                            allnoconfig    gcc-15.2.0
-xtensa                           allyesconfig    clang-23
-xtensa                randconfig-001-20260310    gcc-12.5.0
-xtensa                randconfig-002-20260310    gcc-12.5.0
+I don't think we can restore the config space after rebooting the EP device,
+because host has no idea about it. It can only restore the content after
+recovering the device through platform specific means.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+So I think you should just remove the PCI device from sysfs before rebooting and
+rescan the bus. If your Root Port supports Data Link Layer interrupts such as
+Link up/down, then you might get Hotplug MSIs which will take care of removing
+the device and rescanning the bus again once it has rebooted.
+
+The core idea behind this series is that to make the PCI bus useable on the host
+after LDn and without rebooting. So if the device can recover with the help of
+recovery steps carried out by the host, it should be in a useable state again.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
