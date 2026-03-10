@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E38FB271468;
-	Tue, 10 Mar 2026 23:19:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F9502E5B2A;
+	Tue, 10 Mar 2026 23:42:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773184751; cv=none; b=CHH2z2C3Crq7VOmBTQo7wBkzrkagMpJRge3aIipaIqQNnUX5DtQ8qStDFA96e2TSfaAyy9X+GRaKogosnuIuj5UmNXyTcfWzG/YqLBRnsZ3GW+iZu2DmkPU+zaJbDwE1LPYQTPadUZNP6TPm3VP8aBsasmfMnEXF+dNk1ZMB4To=
+	t=1773186161; cv=none; b=daxXZ98RNEErH/uyqAPE+sUtS9u7/oHaac1qN005+/g544DOa0SwLYtdI7XkAl3zVvKeEgWrUR7fZMZ7ogy0xIIz3PizO/NyYTjP5Jh3vlAYYnVwK0FDtTXfXGEmG7ohMd5NaN92fj9fgacgXxOuRn+Rw7DV8x01OZ2HPmL2Ls4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773184751; c=relaxed/simple;
-	bh=VKt4TguhV3l7TB0c2pw/qx9dm4urWTxkSrePuNg0CTw=;
+	s=arc-20240116; t=1773186161; c=relaxed/simple;
+	bh=Rpuzb3qFLIHbB4t+hFWiH2qTADPLyy65pzE6mzOqFfw=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=JWkmqN26jwM/ejjMFxYIW0/TOW2TYXgaKVacAyoo29O4zKXoTrAMrr1zYzNqgWcAH7F6+VjuyvVE7El3IN6xOapx5yBG6eWHkMyaYpbkEiDAIIIColntY1P+iJ67ax/hTBbZD/ztZciT8z9VhC+2cqMXkW7pSsbAImTsojKJQCA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZzLhpTHn; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=kHlc+ID0WFGUYneNLMAHjHVgE08G8cwKwyidlArctaDt3TmfaCihB3XRFSa6qJI0wHxycGaCV4Ff2uQUcwN9We3PO91VbV1YLdLvgyybwqLlMsBm7q60ZIHqkc8WmivckVq+KZQKemQLrmUKpjUTA7Tj5+uFgTjejkAbONmm6Ng=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q4pxsZq9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZzLhpTHn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69B14C19423;
-	Tue, 10 Mar 2026 23:19:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q4pxsZq9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06860C19423;
+	Tue, 10 Mar 2026 23:42:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773184750;
-	bh=VKt4TguhV3l7TB0c2pw/qx9dm4urWTxkSrePuNg0CTw=;
+	s=k20201202; t=1773186161;
+	bh=Rpuzb3qFLIHbB4t+hFWiH2qTADPLyy65pzE6mzOqFfw=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=ZzLhpTHnmI7oYiSCX1jCPAGN4M+auj53QhucBYMgvkcfnm4J1VwHmPduPiSfQUlSU
-	 PlOUqvox/vvhiDnEnWFWRantVe5iK77WuzOOTV7mhcOlGyAiYZuJ3Ns7V4O4D9iXD+
-	 Ecai+2dyXcXfOiinfvnZj9Vsl3Crckvrg8M9mQUAOOq/nzoH1mD1OKfMCoVT0GLIjx
-	 zfMzn7VdGaZ9PIWOJW483WGrsVCYEgEk7uqhpUK+6/1x9FrV54fMr5z1s3tPZLfcfS
-	 YS8lVHAvkc3WfOsKyzDEKHW3UWSc9WDKY3BN9MpnIJvSgc2nZYZFXwZDrHsAQnfXt1
-	 l/5FoKuN+XQGQ==
-Date: Tue, 10 Mar 2026 18:19:09 -0500
+	b=q4pxsZq9nfJccNFgGTEpooCkqvdoKMUab7Ic79rlNmQmB71UyflWjnNtPKpHZp6bO
+	 2I7c+vpokSgrBMXUXywc539WELU4Q2EtOd5wkkhEteR33Japc4j5NgdZmXHTMZL5I8
+	 HHpAHLdkPw0VVuRUXJxwQvjxQvxikTDbfcY6E8pGPZBDrQ/ygx9ZzYIgexzzbj79Uv
+	 he/00+lPgwYf6weNuwarrSbJDxVHY0gi2jdUD2wMZ5OtZiG88ewcVET/pBc0iDkzPG
+	 gVmtCHU9eU6aC93ywrbOO9xHfSl9K9b5Q/kxuSbc6WF3Q0SdIh9apsK3fuRvD6Hefi
+	 P8lZ1VDvIB86g==
+Date: Tue, 10 Mar 2026 18:42:39 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Chen-Yu Tsai <wenst@chromium.org>
 Cc: Matthias Brugger <matthias.bgg@gmail.com>,
@@ -39,9 +39,8 @@ Cc: Matthias Brugger <matthias.bgg@gmail.com>,
 	Bartosz Golaszewski <brgl@bgdev.pl>, linux-pci@vger.kernel.org,
 	linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
 	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: Re: [PATCH v4 1/7] PCI: mediatek-gen3: Clean up
- mtk_pcie_parse_port() with dev_err_probe()
-Message-ID: <20260310231909.GA860802@bhelgaas>
+Subject: Re: [PATCH v4 5/7] PCI: mediatek-gen3: Split out device power helpers
+Message-ID: <20260310234239.GA871399@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,23 +49,22 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260310091947.2742004-2-wenst@chromium.org>
+In-Reply-To: <20260310091947.2742004-6-wenst@chromium.org>
 
-On Tue, Mar 10, 2026 at 05:19:40PM +0800, Chen-Yu Tsai wrote:
-> mtk_pcie_parse_port() in the pcie-mediatek-gen driver has a bunch of
-> 
->     if (err) {
->     	dev_err(dev, "error message\n");
-> 	return err; # or goto
->     }
+On Tue, Mar 10, 2026 at 05:19:44PM +0800, Chen-Yu Tsai wrote:
+> In preparation for adding full power on/off control with the pwrctrl
+> API, split out the existing code that only partially deals with device
+> power sequencing into separate helper functions. The existing code only
+> handles PERST#.
 
-Mani, if you apply this, tweak this to be indented with spaces; this
-has a tab that makes "git log" output look like this:
+> +static int mtk_pcie_device_power_up(struct mtk_gen3_pcie *pcie)
 
-        if (err) {
-                dev_err(dev, "error message\n");
-        return err; # or goto
-        }
+This function name suggests that there's only a single downstream
+device, which obviously is not always the case.  When you later call
+pci_pwrctrl_power_on_devices() here, apparently that powers on the
+entire hierarchy.  Maybe this mtk_* name should be similar to make a
+connection there?
 
-I had already done this on pci/controller/mediatek-gen3.  ChenYu, if
-you repost this for other reasons, you could fix it locally.
+> +static void mtk_pcie_device_power_down(struct mtk_gen3_pcie *pcie)
+
+Same applies here, of course.
