@@ -1,45 +1,83 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAE543EE1EA;
-	Tue, 10 Mar 2026 21:52:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CC323CFF4F;
+	Tue, 10 Mar 2026 22:09:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773179560; cv=none; b=ojgy+P5zbGeMsRW7dHaaG63VdWt49ih6xJTcZeLgC7R/U3q4cVF1eqSWXa9h5Q8dbJIgbUGgKvt1xIu4CPot6LKLXBW5IkEnWrKJZceUuLzf5GoGUsIk3qopPQcmqhikFNgO/AKDSBmjRqf2u3g8tuIiBqHXJSLmcHZCjF9ZMdg=
+	t=1773180562; cv=none; b=mwsvLCVY5tmgIWxaBNf//QDM/3Z/VaFIiSEvCQ/9K6ogT2K6wS7VcBOW8FsLLO9o/2PCyX+FV0PHZlKNHnAj0vzVvioJz9QPxtlU88hjHlaIW6jy1ZWht7N5tyqGB6Iz7Wko8NLju43abYig63AuA8uDb9r5ziS/wV/QEFmuVDw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773179560; c=relaxed/simple;
-	bh=9DspE8ZzxPIkgad3kbhVNSegbVmg7d6ttJzOySzgDE4=;
+	s=arc-20240116; t=1773180562; c=relaxed/simple;
+	bh=W80lkFXkPyxzZPzLe6vTEN0SYi+yr5xZNTGscVmS0ko=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=B458eZM6DLYMIhVcYvJ3iTpJHSdkP2a1aW19MwptkymzZ55B/luE9wSCoo0YsKer2Rn7aub+2M+ukTSU8dfHwUFwQOn/X4o5wkp+YSiAgDhCep5RjcNY3r9bR/aRpqfWqd4eDzI7CDe24V0kBZ+PHoebQw0+tYUhoblZ2JH95nA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V9XDLVkP; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=PyfdK/Me9Qp1k01OJg5UPVhyxHoGxUQudxatPJlCBUfUow3aRdj5nnFfV4XqzqSvfaHcFr44aHuJDWoTdm9djNq20etf2gQz6TdOjKbIwlKOARqa91xkj9ou0v6GiCpTVy0ScxaIFiibB7RcmNZS02Z8ExyIsSgk976/TJXUwpA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L00YXZHP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V9XDLVkP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52C5BC2BCAF;
-	Tue, 10 Mar 2026 21:52:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L00YXZHP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8F86C19423;
+	Tue, 10 Mar 2026 22:09:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773179560;
-	bh=9DspE8ZzxPIkgad3kbhVNSegbVmg7d6ttJzOySzgDE4=;
+	s=k20201202; t=1773180561;
+	bh=W80lkFXkPyxzZPzLe6vTEN0SYi+yr5xZNTGscVmS0ko=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=V9XDLVkPIUguhDuLOIiUIpyMSxaGPliXRd7O6lqvaXBBvEXDJAKzrSK6ZeN/F1Xfh
-	 jUA8CdDYMJjHcHrse0iQOy7CsVP5oqh1gKttZym7Wk6Onv3Ncjth8aMn072v+4820p
-	 JKejxWFMoZQqjf88JQ0li2hVFTd+DM1a3rq34A1UjO2tDsqlw9JTVfizZAx8/rtcvY
-	 /abfz1lpZSCUDNmBxqi74Xk88jjcSfHCeT71YpX9s6YQW1oPiEFKLHojqNVzUfWTPP
-	 PFrtaONJFG1J9ZAyPMHvLg3W/QCkoN4xHt+XbVT6HcRyS6HZSJUvfdC6TETrMiH74y
-	 aFgnA4khDntVQ==
-Date: Tue, 10 Mar 2026 16:52:39 -0500
+	b=L00YXZHPMVeEfxwGWu/AsurKr2xWM9c1K5M3MtDaIn5nfcen4jicy1Q3i8rLIm5yf
+	 WfvG20wIi1QYyAKqVzaODlOcIZAjN1oBjLxF9C/amXt1SGV5lxTwZfkpQvXdvW9gAg
+	 U5fgwzShrDb/Z15j0gztxNaymw4OC6qlveBz2cGZnyhROtlLohCqWPm8uXMsbT9F27
+	 CbZuzIyVxmIfJ98YaFyJMcT3cZFIirNKa3bxELZvJJRpc3CFl/8aYvCTYeWpkA6BN0
+	 oBTJJOco6wPHguHYPtf3q7EkbWZ3hux+WxUaIr/01eGtMcm8Pr8xqHRXg8MC7nxSZp
+	 RRiGt6sycGkpg==
+Date: Tue, 10 Mar 2026 17:09:20 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gerd Bayer <gbayer@linux.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jay Cornwall <Jay.Cornwall@amd.com>,
-	Felix Kuehling <Felix.Kuehling@amd.com>,
-	Leon Romanovsky <leon@kernel.org>,
-	Niklas Schnelle <schnelle@linux.ibm.com>,
-	Alexander Schmidt <alexs@linux.ibm.com>, linux-s390@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v3 2/2] PCI: AtomicOps: Fix logic in enable function
-Message-ID: <20260310215239.GA299126@bhelgaas>
+To: Jeremy Linton <jeremy.linton@arm.com>
+Cc: Chengwen Feng <fengchengwen@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will@kernel.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Huacai Chen <chenhuacai@kernel.org>,
+	WANG Xuerui <kernel@xen0n.name>, Paul Walmsley <pjw@kernel.org>,
+	Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H . Peter Anvin" <hpa@zytor.com>, Juergen Gross <jgross@suse.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	Len Brown <lenb@kernel.org>, Sunil V L <sunilvl@ventanamicro.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Kees Cook <kees@kernel.org>, Yanteng Si <si.yanteng@linux.dev>,
+	Sean Christopherson <seanjc@google.com>,
+	Kai Huang <kai.huang@intel.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Thomas Huth <thuth@redhat.com>,
+	Thorsten Blum <thorsten.blum@linux.dev>,
+	Kevin Loughlin <kevinloughlin@google.com>,
+	Zheyun Shen <szy0127@sjtu.edu.cn>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
+	Xin Li <xin@zytor.com>, "Ahmed S . Darwish" <darwi@linutronix.de>,
+	Sohil Mehta <sohil.mehta@intel.com>,
+	Ilkka Koskinen <ilkka@os.amperecomputing.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	James Clark <james.clark@linaro.org>,
+	Besar Wicaksono <bwicaksono@nvidia.com>, Ma Ke <make24@iscas.ac.cn>,
+	Ajit Khaparde <ajit.khaparde@broadcom.com>,
+	Wei Huang <wei.huang2@amd.com>,
+	Andy Gospodarek <andrew.gospodarek@broadcom.com>,
+	Somnath Kotur <somnath.kotur@broadcom.com>, wangzhou1@hisilicon.com,
+	wanghuiqiang@huawei.com, liuyonglong@huawei.com,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	loongarch@lists.linux.dev, linux-riscv@lists.infradead.org,
+	xen-devel@lists.xenproject.org, linux-acpi@vger.kernel.org,
+	linux-perf-users@vger.kernel.org, stable@vger.kernel.org,
+	Wathsala Vithanage <wathsala.vithanage@arm.com>
+Subject: Re: [PATCH v5 2/2] PCI/TPH: Fix get cpu steer-tag fail on ARM64
+ platform
+Message-ID: <20260310220920.GA826995@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,129 +86,58 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260306-fix_pciatops-v3-2-99d12bcafb19@linux.ibm.com>
+In-Reply-To: <657142d1-1632-4a3e-8800-ee1dd5763d78@arm.com>
 
-On Fri, Mar 06, 2026 at 06:13:59PM +0100, Gerd Bayer wrote:
-> Move the check for root port requirements past the loop within
-> pci_enable_atomic_ops_to_root() that checks on potential switch
-> (up- and downstream) ports.
-> 
-> Inside the loop traversing the PCI tree upwards, prepend the switch case
-> to validate the routing capability on any port with a fallthrough-case
-> that does the additional check for Atomic Ops not being blocked on
-> upstream ports.
+On Tue, Mar 10, 2026 at 10:58:49AM -0500, Jeremy Linton wrote:
+> On 3/9/26 10:20 PM, Chengwen Feng wrote:
+> > pcie_tph_get_cpu_st() is broken on ARM64:
+> > 1. pcie_tph_get_cpu_st() passes cpu_uid to the PCI ACPI DSM method.
+> >     cpu_uid should be the ACPI Processor UID [1].
+> > 2. In BNXT, pcie_tph_get_cpu_st() is passed a cpu_uid obtained via
+> >     cpumask_first(irq->cpu_mask) - the logical CPU ID of a CPU core,
+> >     generated and managed by kernel (e.g., [0,255] for a system  with 256
+> >     logical CPU cores).
+> > 3. On ARM64 platforms, ACPI assigns Processor UID to cores listed in the
+> >     MADT table, and this UID may not match the kernel's logical CPU ID.
+> >     When this occurs, the mismatch results in the wrong CPU steer-tag.
+> > 4. On AMD x86 the logical CPU ID is identical to the ACPI Processor UID
+> >     so the mismatch is not seen.
 
-Thanks for looking at this.  I think this makes good sense, and I'd
-like to:
+> >   int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
+> > -			unsigned int cpu_uid, u16 *tag)
+> > +			unsigned int cpu, u16 *tag)
+> >   {
+> >   #ifdef CONFIG_ACPI
+> > +	u32 cpu_uid = acpi_get_cpu_acpi_id(cpu);
 
-  - Hoist the problem description up here.  IIUC we enable AtomicOps on
-    s390 when we shouldn't, which presumably leads to some problem.  I
-    think the same could happen anywhere we don't have a Root Port,
-    e.g., jailhouse, loongarch, maybe some VMM guests?
+From AI review (gemini/gemini-3.1-pro-preview):
 
-  - Reduce or remove the text above, which is basically C code
-    translated to English, and move it down after the problem
-    description, so we can state the problem and symptom, followed by
-    the solution.
+  Does this code need to validate that `cpu` is within bounds before
+  using it?  Before this change, the `cpu_uid` parameter was passed
+  opaquely to the ACPI firmware via `tph_invoke_dsm()`, which would
+  gracefully handle invalid values.
 
-I think the core is (as you say below) that if there's no Root Port,
-we previously allowed endpoints to use AtomicOps even in cases where
-we don't know if the recipient supports them.
+  Now, `cpu` is treated as a logical CPU index and passed to
+  `acpi_get_cpu_acpi_id(cpu)`. On architectures like arm64 and riscv,
+  `acpi_get_cpu_acpi_id()` uses `cpu` directly as an array index
+  (`&cpu_madt_gicc[cpu]` and `&cpu_madt_rintc[cpu]`). On x86, it uses
+  `per_cpu(x86_cpu_to_acpiid, cpu)`.
 
-That *sounds* bad, and if you actually saw some kind of corruption as
-a result, that would make this very compelling.
+  If a caller passes an out-of-bounds `cpu` index (for example, if an
+  IRQ affinity mask is empty and `cpumask_first()` returns
+  `nr_cpu_ids`, or if userspace passes an arbitrary ID via
+  `mlx5_st_alloc_index()`), this will result in an out-of-bounds
+  memory read.
 
-> Do not enable Atomic Op Requests if nothing can be learned about how the
-> device is attached - e.g. if it is on an "isolated" bus, as in s390.
-> 
-> Reported-by: Alexander Schmidt <alexs@linux.ibm.com>
+  Consider adding a bounds check:
 
-If there's any public report of the problem, include the URL here.
+    if (cpu >= nr_cpu_ids)
+      return -EINVAL;
 
-> Cc: stable@vger.kernel.org
-> Fixes: 430a23689dea ("PCI: Add pci_enable_atomic_ops_to_root()")
-> Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
-> ---
->  drivers/pci/pci.c | 30 ++++++++++++++----------------
->  1 file changed, 14 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index cc8abe6b1d07661488895876dbbcf8aaeadf4a17..23db6ad5f310ed009a9b2ca4933c7498e0d22b85 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3677,7 +3677,7 @@ void pci_acs_init(struct pci_dev *dev)
->  int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
->  {
->  	struct pci_bus *bus = dev->bus;
-> -	struct pci_dev *bridge;
-> +	struct pci_dev *bridge = NULL;
->  	u32 cap, ctl2;
->  
->  	/*
-> @@ -3715,29 +3715,27 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
+I agree that this is an issue, and I think implementations of
+acpi_get_cpu_acpi_id() should validate their inputs.
 
-Since we're looking at this, I think we should update the spec
-references in this function (in a separate patch).  
-
-  * Per PCIe r5.0, sec 9.3.5.10, the AtomicOp Requester Enable bit
-  * in Device Control 2 is reserved in VFs and the PF value applies
-  * to all associated VFs.
-
-It looks like the AtomicOp Requester Enable part of PCIe r5.0, sec
-9.3.5.10, was incorporated into the Device Control 2 Register
-description in PCIe r7.0, sec 7.5.3.16.
-
-  * Per PCIe r4.0, sec 6.15, endpoints and root ports may be
-  * AtomicOp requesters.  For now, we only support endpoints as
-  * requesters and root ports as completers.  No endpoints as
-  * completers, and no peer-to-peer.
-
-This looks like PCIe r7.0, sec 6.15.  Same section as r4.0, but we
-should at least make both of these refer to the same spec revision.
-
->  		switch (pci_pcie_type(bridge)) {
->  		/* Ensure switch ports support AtomicOp routing */
->  		case PCI_EXP_TYPE_UPSTREAM:
-> -		case PCI_EXP_TYPE_DOWNSTREAM:
-> -			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
-> -				return -EINVAL;
-> -			break;
-> -
-> -		/* Ensure root port supports all the sizes we care about */
-> -		case PCI_EXP_TYPE_ROOT_PORT:
-> -			if ((cap & cap_mask) != cap_mask)
-> -				return -EINVAL;
-> -			break;
-> -		}
-> -
-> -		/* Ensure upstream ports don't block AtomicOps on egress */
-> -		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_UPSTREAM) {
-> +			/* Upstream ports must not block AtomicOps on egress */
->  			pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2,
->  						   &ctl2);
->  			if (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
->  				return -EINVAL;
-> +			fallthrough;
-> +		/* All switch ports need to route AtomicOps */
-> +		case PCI_EXP_TYPE_DOWNSTREAM:
-> +			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
-> +				return -EINVAL;
-> +			break;
->  		}
-> -
->  		bus = bus->parent;
->  	}
->  
-> +	/* Finally, last bridge must be root port and support requested sizes */
-> +	if ((!bridge) ||
-> +	    (pci_pcie_type(bridge) != PCI_EXP_TYPE_ROOT_PORT) ||
-> +	    ((cap & cap_mask) != cap_mask))
-> +		return -EINVAL;
-> +
->  	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
->  				 PCI_EXP_DEVCTL2_ATOMIC_REQ);
->  	return 0;
-> 
-> -- 
-> 2.51.0
-> 
+I don't know if there's a value that can never be a valid ACPI CPU UID
+and could be used as an error value from acpi_get_cpu_acpi_id().  I do
+see a few mentions of a ~0 value meaning "all processors" (ACPI r6.6,
+sec 5.2.12.13).  
