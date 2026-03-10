@@ -1,44 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A470136495B;
-	Tue, 10 Mar 2026 07:59:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D7CA3D3312;
+	Tue, 10 Mar 2026 08:21:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773129598; cv=none; b=HdlMjrMDa2kB2Ojo6/2hHI8dHSeLqmlNNCXegW4WNWZ9bKKPFvHpA7ZSEYeeGv7TgEbQ5taZCj7MfaV+e5vBynQfdqxf3pC+ouAiYFPxLDh1f+9mEjU5tTOwMB1lT8fQjhpoVL8o9r2FlbmbcCKNg2z0zcLCokhjKowNqPcZwI8=
+	t=1773130914; cv=none; b=BZgEZuOChxdzafr8Y+Okq4nAuSusmDIDJ02taqZccpKBAObhDOpabUnJO1Kz/A3n+K04g+prY14vfMO3I3mASPZf26P3qsQ+EbMr/qcK/6sHu2RrjcKtRyBGxENz1le4JmTsH1irmRJ2RsuBaQ1a0b5Nye+Ku4RA97eUgcZ7hig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773129598; c=relaxed/simple;
-	bh=jkpjgvC2FbGCGFeMOvnQrLTSu+pQoksP+d5G2FrdBPM=;
+	s=arc-20240116; t=1773130914; c=relaxed/simple;
+	bh=OSpFEb+8JxBVY9j4OB3Pja7xXgXwec+4oG380zPRh7o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nMIi5bfWQvvmPL6GtYJUDsiGxW1LjPhiJbm1oRQb2xIMVE3uef5tXwkyv5nwuKVt3tyqNloCxGqzHD2Y3iPQ7BEybRZyTVqawUCEgLJYBXkIThQREekq+V/oDTqfUkAuqp8GsGIS57yQhIqrqFfCZEGRmbAXlSDDTu4y+Ulp0Tk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X+0IQUgT; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=CL0ivQwv5KhDrVbledMVDh1d/qNVIAG+j6VBrW1GCqe9pYv7d4BAXNd6jEGiMV6ICHVaffblWUTBstIkLgevR0rtFou9jU92Xwnk9t4nDF7r8t/zqos0yg5l0MFjjTqT11yZ+37WEhX4J+Z0IVuUL7uX92oKacwR5WU5VIQYYr0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RedxTO/B; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X+0IQUgT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1A4AC19423;
-	Tue, 10 Mar 2026 07:59:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RedxTO/B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3B86C4AF0B;
+	Tue, 10 Mar 2026 08:21:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773129598;
-	bh=jkpjgvC2FbGCGFeMOvnQrLTSu+pQoksP+d5G2FrdBPM=;
+	s=k20201202; t=1773130914;
+	bh=OSpFEb+8JxBVY9j4OB3Pja7xXgXwec+4oG380zPRh7o=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=X+0IQUgTsjChB/7j/QS1pOad+Co+VyFYYLCNyUSZ2dJLAh+vWOliodhxbekJzFXFP
-	 CX9YlqvuxbHvlPdjro6RdIgCPMHKjUyzy37qwCTEghwEWKyHcRjNYuIritW3FtZ/y/
-	 IpDTivXQeG4AGG+/o3AX9ipA/5yYMXk9UiI5KDybe6vI2PZuW81lIOokyOJk2avRg8
-	 0IYF1VNselYgOqfLtRJUPqU35TpINaTLtNTDXALmTdviiz4aIK4uttD7hZFwlouXTV
-	 aYDppvcm/JDxH8ZJTORUI329E0p+16Y5pWR3XqwHDzWOYXeu67r/SmSVLKJ4+jnMTy
-	 yEbHrFbCD6r3w==
-Date: Tue, 10 Mar 2026 08:59:55 +0100
+	b=RedxTO/B6FUWuNCirVgKnpdAkbhRW+yZrydrsSbKiH6rJ4fCepqVobZeyfBXjEm4k
+	 cgwzz9pjSmf1nygIOEcZ2LnEWWUGPTLjluc9h2zs+sGJ+zj2M1JQlrnrefpT2kwYyM
+	 KKQ/UdAkupvoypw42FfyRRQrgbMvRWOqLr1aXh38U3LXOLVIISIsf8gxi4H3npH7wg
+	 dsx/uArC2p8Pp1s7JQdCRKhMACtLjAmLq/2cak2yJdLXB+D40s1dc/bys/MPcC0d9U
+	 7U25KwQ6iejRCng1l9Hw/7v/8RmAKlRhENNbOvcgLhYV4Kfo5Kd1oABy12k2Rzkxy5
+	 QeYJdP/Kb5GZQ==
+Date: Tue, 10 Mar 2026 09:21:52 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
-	bhelgaas@google.com, frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org, 
-	kwilczynski@kernel.org, mani@kernel.org, s.hauer@pengutronix.de, kernel@pengutronix.de, 
-	festevam@gmail.com, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	devicetree@vger.kernel.org, imx@lists.linux.dev, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 1/4] dt-bindings: PCI: pci-imx6: Fix build warning
- after adding extref clock
-Message-ID: <20260310-prudent-exuberant-monkey-a4953a@quoll>
-References: <20260309084431.3015463-1-hongxing.zhu@nxp.com>
- <20260309084431.3015463-2-hongxing.zhu@nxp.com>
+To: Caleb James DeLisle <cjd@cjdns.fr>
+Cc: linux-mips@vger.kernel.org, naseefkm@gmail.com, 
+	mturquette@baylibre.com, sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, 
+	conor+dt@kernel.org, tsbogend@alpha.franken.de, ryder.lee@mediatek.com, 
+	jianjun.wang@mediatek.com, lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
+	bhelgaas@google.com, vkoul@kernel.org, neil.armstrong@linaro.org, 
+	p.zabel@pengutronix.de, matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com, 
+	nbd@nbd.name, ansuelsmth@gmail.com, linux-clk@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org, 
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 1/8] dt-bindings: clock, reset: Add econet EN751221
+Message-ID: <20260310-rousing-tacky-catfish-fcba60@quoll>
+References: <20260309131818.74467-1-cjd@cjdns.fr>
+ <20260309131818.74467-2-cjd@cjdns.fr>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,34 +51,57 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260309084431.3015463-2-hongxing.zhu@nxp.com>
+In-Reply-To: <20260309131818.74467-2-cjd@cjdns.fr>
 
-On Mon, Mar 09, 2026 at 04:44:28PM +0800, Richard Zhu wrote:
-> Fix dtbs_check build warnings by updating the maxItems property for
-> clocks in fsl,imx6q-pcie-common.yaml and completing the clock
-> descriptions in fsl,imx6q-pcie.yaml.
+On Mon, Mar 09, 2026 at 01:18:11PM +0000, Caleb James DeLisle wrote:
+> Add clock and reset bindings for EN751221 as well as a "chip-scu" which is
+> an additional regmap that is used by the clock driver as well as others.
+> This split of the SCU across two register areas is the same as the Airoha
+> AN758x family.
 > 
-> The warnings occur because the clock arrays exceed the previously
-> defined maximum length:
+> Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
+> ---
+>  .../bindings/clock/airoha,en7523-scu.yaml     |  7 ++-
+>  .../devicetree/bindings/mfd/syscon.yaml       |  2 +
+>  MAINTAINERS                                   |  2 +
+>  .../dt-bindings/clock/econet,en751221-scu.h   | 13 +++++
+>  .../dt-bindings/reset/econet,en751221-scu.h   | 49 +++++++++++++++++++
+>  5 files changed, 72 insertions(+), 1 deletion(-)
+>  create mode 100644 include/dt-bindings/clock/econet,en751221-scu.h
+>  create mode 100644 include/dt-bindings/reset/econet,en751221-scu.h
 > 
-> imx943-evk.dtb: pcie@4c380000 (fsl,imx95-pcie): clock-names: ['pcie', 'pcie_bus', 'pcie_phy', 'pcie_aux', 'ref', 'extref'] is too long
-> imx943-evk.dtb: pcie@4c300000 (fsl,imx95-pcie): clocks: [[5, 74], [5, 41], [5, 40], [5, 75], [46, 0], [47]] is too long
-> 
-> Fixes: 1352f58d7c8d ("dt-bindings: PCI: pci-imx6: Add external reference clock input")
+> diff --git a/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml b/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml
+> index a8471367175b..91abe7716fce 100644
+> --- a/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml
+> +++ b/Documentation/devicetree/bindings/clock/airoha,en7523-scu.yaml
+> @@ -32,6 +32,7 @@ properties:
+>        - enum:
+>            - airoha,en7523-scu
+>            - airoha,en7581-scu
+> +          - econet,en751221-scu
 
-This was three months ago. Can you finally start testing DTS the moment
-you send bindings patches?
+751 < 752, keep alphanumeric order
 
-It is not a one time issue - I see multiple buggy patches posted by NXP
-which are never validated with DTS and then months later turns out
-bindings were wrong.
+>  
+>    reg:
+>      items:
+> @@ -67,7 +68,10 @@ allOf:
+>    - if:
+>        properties:
+>          compatible:
+> -          const: airoha,en7581-scu
+> +          items:
 
-Many of them are posted and immediately trigger build errors reported by
-LKP.
+<form letter>
+This is a friendly reminder during the review process.
 
-Are you going to finally test patches BEFORE you post them?
+It seems my or other reviewer's previous comments were not fully
+addressed. Maybe the feedback got lost between the quotes, maybe you
+just forgot to apply it. Please go back to the previous discussion and
+either implement all requested changes or keep discussing them.
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Thank you.
+</form letter>
 
 Best regards,
 Krzysztof
