@@ -1,275 +1,179 @@
-Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93E6F280CD5;
-	Tue, 10 Mar 2026 03:29:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773113379; cv=none; b=VgPHYp8OTHdIwYcvVuoJ0W4xIiJcwfZsYfEqZ0rrsgSjK0FVsFh3H1E4jzUa5XlgzCXzKGyaqSSbzvoDEbWh6YPpWexUQ2mzTBi0xsg+cEJbQfeGRWdyXUc4tulKcu3GeZWZeGfduLRjTn/NNH1Biw+m5n4BByDqF4BT3eiYNsg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773113379; c=relaxed/simple;
-	bh=GO2UOPH+XbBPRFrqvOhfhAdG5OHgB0+ySTUPhB7r7qU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=qVk43naOcKc2NPlnYmut6At+pXJalcSef1PwoHMgDwtHKN0I2AC6J1ne009njGiQumWVyS6GGaU4qtVDZjlPEeCSP26DHpqlQrKFQOs2GGrMDK3GESAmFBILzpTTgt94qCqNBRF83rgTCBZiFfyXEVzwLA1Hg75p+fL0cXgZB2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=ctT3+zfM; arc=none smtp.client-ip=113.46.200.220
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2923617C211
+	for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2026 04:49:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.52
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773118200; cv=pass; b=qXgjurJiwHwAVYjoG9LLPOVfoHe10IOwauiMoB1N8kI6GvreUrFZEn2heKPdjj0WR4Bh4gFpb9su9v6innfQzPJTLQPXQyunKWNcPykEAc4dzRh9OwlGYpxZn1kEx5EhPHk/p6PXHdwaQF5d8kolIcWuu9PC4GbN61JbpHelf/Y=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773118200; c=relaxed/simple;
+	bh=MAJSsc8lNNvP/iPdy/xEkZJMM//XNwusgNiGyobk9XI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=elCR2J+skbeXB2+C1OakN83gDVuQ6pw4/0LMF2Z+Q3mvK9tYUdsV3MPG6IV65DkivGTljNprGtVQedi1DECFh2PcXuA9KUy6OQoD61BkeKzkaJ+ZB2dMGhhUJIy0Svf3mQKoU5Z0ah4ctov2bnvyofaO1WeC/6aKSr/9JyFP4wc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=V/c3Mghw; arc=pass smtp.client-ip=209.85.167.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="ctT3+zfM"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=kje1eZfcLfoGw4eodwbTMTi2f+I7QIR9DyQQLzPnscU=;
-	b=ctT3+zfMVigcgSx5Oi4o6AihKaQOVTpaMZTp63q2EF9GF44LlRmhxb4YLp/SvjVhjFtpnf1Di
-	JTCz65Qg8Z4VpwtnjHOQnOSbz34LCF1Us5hAau6WuZ2nq8Hyf/XMotZI4fK0MMXheTgc+kQlEPt
-	4qSa2/YMHyeRJq5bX6GNWRc=
-Received: from mail.maildlp.com (unknown [172.19.163.104])
-	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4fVK3f4FPQz12LCw;
-	Tue, 10 Mar 2026 11:23:58 +0800 (CST)
-Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id BC53E404AD;
-	Tue, 10 Mar 2026 11:29:34 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 10 Mar 2026 11:29:33 +0800
-Message-ID: <9d0d4685-fe6b-4ffd-b9bd-6a560c0d7c9f@huawei.com>
-Date: Tue, 10 Mar 2026 11:29:33 +0800
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="V/c3Mghw"
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5a13d40c760so3756265e87.0
+        for <linux-pci@vger.kernel.org>; Mon, 09 Mar 2026 21:49:58 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773118197; cv=none;
+        d=google.com; s=arc-20240605;
+        b=bO7ELTZVBLMXFQbpBZyi23kB2Q/LeegrqnJYpU7MmYenFPD9SXHtmEjwiNnBk3dwPI
+         io3g9C0HRswBMHrcCnwW5AU7dHwBNrjFkq7h82123Kn7ad2AY+5u1KlUg27ADlDkzdeX
+         KA3gcVS9YjTXOiBfKQZ/bSmLwPU/VG8lmZbQhnz0cMlIdn5jJ+mM/8fW5toLSppAkatp
+         ydwB9l3nYzNW23YueJYR6uutf4hjr8Sh+kzMgT96FX7Uj3Xo6SfHllw1F6Usjcrk0QmZ
+         iNr5SS8ZJrcyScQpZVnbaYIgm/vj/K8CdLmI4OwDIbvLFbK6mGtZzBtSo8L6/540t2w2
+         7S2w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=TEKfTgbEhZq5Nx64xwP1FBHJw6oBbygo97C/fty+4xg=;
+        fh=W85eEadcM02OUMpxNrWea+SKQWY37Hjenc3pUQm+Ql4=;
+        b=KiaMIsdHupKx/40qwKPKQC0ZOH/Bm9vannL+MoXBJfRcHGxpaQi24evK6e2a9OcYUW
+         3c7ZvZsgYHrgAYlM4SOtK2RMLDp6cg79BkCSGNJHSsGa+h5M91e/rROd4yW7IQmuWxMP
+         6LgPeJgTy1qSXO+0aFXbOzNJ/avA1+hauTEGYYkd8imlsFASVZKSrN0rvSxCc90x9HHE
+         J7vJEtUOShAgECF/XpGQ6zybtO1JMIzGFDomAUrUONT0hQV1Y0MxDMi79SMjE10GmVjg
+         MWjN70dJYVD7NKDa0vlZTKGWw+l9f2dib83Fi5PAYLYBSt3LA2WrBF6FsiPbmcuOOtIq
+         4exg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1773118197; x=1773722997; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=TEKfTgbEhZq5Nx64xwP1FBHJw6oBbygo97C/fty+4xg=;
+        b=V/c3MghwWNv6UGOVjDmIe/wFGBjSqbA41UOfdkNuQ9sdGekq0VLiB2hc332bM+44bc
+         Fo3yNBaKQeuOaFCWCDzAtU3ryT1djJBuw0CoSzF6HL5KqmS/Fm8oqK6iwYWVFInNuiU8
+         WR1K6kvUjwSHb3+8JBFxOtiOT1llY7psmnjjc=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1773118197; x=1773722997;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=TEKfTgbEhZq5Nx64xwP1FBHJw6oBbygo97C/fty+4xg=;
+        b=sn10way++lU6HSnXbtFwNeS7f1RT5/6CXn+M8ir2ifBeVQBAGRSF6htPQXLWB8cP1v
+         pSkoQpGv5AoC+fjUOyDGtkuZHlm+ftoOlWIOR6FqtBWS0qWfxfJauEkowLlQaspWENmR
+         yMAM1BziNiqIN4GGd4psHhbSvhsXkhVLgcjlFpfcPUH45VAkxnoMykDsy7NjGRohMSEM
+         rAZVcvTMh74YY+Rjh1hjheZ0ID/VfpbqXh6lzCilIF1c3WR/2ZjnZZ+XeZYqGIr3n46i
+         bjX9LY4wSlyT3dUY6BCcJPDMkyjYZXoedQP7gJyq0jXxs/uExIpTguluHyi2/g/E1dPC
+         /DeQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU0T44Bc8J/bU/g5V5kHK1DOjqMIX0KQGHHBt915wZEqL9PQeMjdu1Z0iEUqz5E4bxfDpSOyBR/n78=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyVIV4gGCSYkwzhlX0w8crXt2YukNDAgFagIyQJH3vQJ8Ci1lkI
+	GNw8fNsn2fDz4ugJi27T6W1mGx4TzxRXBHKjv15IcQ0CN2/wwhl5Hkc+trgHhefTjjw6+LVZ7Wf
+	j6pZD6RuircPQGD72kM/haPM7Q7t0UGVIN5lzcKEH
+X-Gm-Gg: ATEYQzw3uMaHdsxQMIuqImkl5l1MN/z15xPlQV5I0o4lFAl6tKUs2YVkrg4Rh3YtTVR
+	xp1XL4JGj6ls74ZCrmWYkwiBhE+JWPX8tCVg4w3PvWOy3gty6D9Fp2FQ9UjEam5QIaqDOjmCSpH
+	1/sdhPp934D2Z+S68mmfXGds1KToM4KYMIFCwkEzN2hofnhl8PRMHgZyGXh+sCKJ5vm/MyJ65MM
+	KJL8LmMeDN8M/FO2zuE7Yyx2qLST+ZRxvqSrfVpqJ3fCldTwhsG5yBMYgQOW5ufXhyxA7H06BiJ
+	p7ydIMj2BGvbDm6tB6oZcsXTPVZkJ63qGQDMNkHLvd/FARVU
+X-Received: by 2002:a05:6512:682:b0:5a1:30b2:f2c with SMTP id
+ 2adb3069b0e04-5a13cd5e33bmr4296147e87.42.1773118197277; Mon, 09 Mar 2026
+ 21:49:57 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 1/2] ACPI: Rename get_acpi_id_for_cpu() to
- acpi_get_cpu_acpi_id() on non-x86
-To: Huacai Chen <chenhuacai@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>, Catalin Marinas
-	<catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, WANG Xuerui
-	<kernel@xen0n.name>, Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt
-	<palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti
-	<alex@ghiti.fr>, "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown
-	<lenb@kernel.org>, Sunil V L <sunilvl@ventanamicro.com>, Mark Rutland
-	<mark.rutland@arm.com>, <linux-acpi@vger.kernel.org>, <wei.huang2@amd.com>,
-	<Eric.VanTassell@amd.com>, <jonathan.cameron@huawei.com>,
-	<wangzhou1@hisilicon.com>, <wanghuiqiang@huawei.com>,
-	<liuyonglong@huawei.com>, <stable@vger.kernel.org>, <jeremy.linton@arm.com>,
-	<sunilvl@oss.qualcomm.com>, <chenhuacai@loongson.cn>,
-	<wangliupu@loongson.cn>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <loongarch@lists.linux.dev>,
-	<linux-riscv@lists.infradead.org>, <linux-perf-users@vger.kernel.org>
-References: <20260303003625.39035-1-fengchengwen@huawei.com>
- <20260309041659.18815-1-fengchengwen@huawei.com>
- <20260309041659.18815-2-fengchengwen@huawei.com>
- <CAAhV-H7Cy1OuReaoGotZvdvHWLic_ECESFVZgbvNpk2HVjPjuw@mail.gmail.com>
-Content-Language: en-US
-From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <CAAhV-H7Cy1OuReaoGotZvdvHWLic_ECESFVZgbvNpk2HVjPjuw@mail.gmail.com>
+References: <CAGXv+5FhSO=+AUaeDSXgM9Je9uTVYq-EW43z9PAuvVKumK6oMg@mail.gmail.com>
+ <20260309215056.GA603013@bhelgaas>
+In-Reply-To: <20260309215056.GA603013@bhelgaas>
+From: Chen-Yu Tsai <wenst@chromium.org>
+Date: Tue, 10 Mar 2026 12:49:45 +0800
+X-Gm-Features: AaiRm52BnH_hbfy2T5LoFoBuz9-oVGOul1adbuGmfRTlnBvnGQgJ2RzpGs8zhxc
+Message-ID: <CAGXv+5HHm6Tdis7s5ZNd9ErNrCHv73U7fFxsN3z+DS+q=pxK0w@mail.gmail.com>
+Subject: Re: [PATCH v3 5/7] PCI: mediatek-gen3: Integrate new pwrctrl API
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
+	Ryder Lee <ryder.lee@mediatek.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, linux-pci@vger.kernel.org, 
+	linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, 
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- kwepemk500009.china.huawei.com (7.202.194.94)
+Content-Transfer-Encoding: quoted-printable
 
-Hi Huacai,
+On Tue, Mar 10, 2026 at 5:50=E2=80=AFAM Bjorn Helgaas <helgaas@kernel.org> =
+wrote:
+>
+> On Mon, Mar 09, 2026 at 01:24:34PM +0800, Chen-Yu Tsai wrote:
+> > On Sat, Mar 7, 2026 at 4:59=E2=80=AFAM Bjorn Helgaas <helgaas@kernel.or=
+g> wrote:
+> > > On Mon, Mar 02, 2026 at 01:31:05PM +0800, Chen-Yu Tsai wrote:
+> > > > With the new PCI pwrctrl API and PCI slot binding and power drivers=
+, we
+> > > > now have a way to describe and power up WiFi/BT adapters connected
+> > > > through a PCIe or M.2 slot, or exploded onto the mainboard itself.
+> > ...
+>
+> > > So now we have:
+> > >
+> > >   mtk_pcie_probe
+> > >     mtk_pcie_setup
+> > >       mtk_pcie_startup_port
+> > >         mtk_pcie_device_power_up      <-- power up
+> > >         mtk_pcie_device_power_down    # error path
+> > >       mtk_pcie_setup_irq              # set up controller IRQ
+> > >       mtk_pcie_device_power_down      # if mtk_pcie_setup_irq() faile=
+d
+> > >     pci_host_probe                    # enumerate downstream devices
+> > >     mtk_pcie_device_power_down        # if pci_host_probe() failed
+> > >
+> > > I think this is kind of a mess because mtk_pcie_device_power_down() i=
+s
+> > > called from so many places, and some of them aren't connected to the
+> > > mtk_pcie_device_power_up().
+> > >
+> > > In mtk_pcie_setup(), mtk_pcie_setup_irq() only deals with the
+> > > *controller* IRQ and has nothing to do with the downstream devices.  =
+I
+> > > think mtk_pcie_setup_irq() should be done before
+> > > mtk_pcie_startup_port() so we can abort before even powering up those
+> > > devices.
+> >
+> > Makes sense to me. I think it can even be moved outside of mtk_pcie_set=
+up()?
+> > That way we don't have mtk_pcie_irq_teardown() in two error paths?
+> >
+> > I can send a follow up patch for that.
+>
+> What if we do those cleanups first?  That would make this patch quite
+> a bit simpler and we wouldn't have to undo things.  It would be a
+> shame to have a complicated patch to add this stuff, then another
+> complicated patch to clean it up.
 
-On 3/9/2026 9:29 PM, Huacai Chen wrote:
-> Hi, Chengwen,
-> 
-> On Mon, Mar 9, 2026 at 12:17 PM Chengwen Feng <fengchengwen@huawei.com> wrote:
->>
->> To unify the CPU ACPI ID retrieval interface across architectures,
->> rename the existing get_acpi_id_for_cpu() function to
->> acpi_get_cpu_acpi_id() on arm64/riscv/loongarch platforms.
-> Can we also rename cpu_acpi_id() to acpi_get_cpu_acpi_id() for x86?
+Sure.
 
-Remove cpu_acpi_id() would make it look more concise, this was done in v5, thanks.
+> > > In mtk_pcie_startup_port(), mtk_pcie_enable_msi() and the PCIe
+> > > translation window setup also don't have anything to do with the
+> > > downstream devices, so I think they should be done before
+> > > calling mtk_pcie_device_power_up().  The only thing there that needs
+> > > the downstream devices powered up is waiting for the link to come up.
+> >
+> > My guess is that if the link up fails, then mtk_pcie_startup_port() is
+> > going to error out anyway, so it maybe made sense to make sure a device
+> > is actually present before doing any more work.
+>
+> Doesn't sound very convincing to me.  mtk_pcie_set_trans_table() and
+> the window setup are local things with no timeouts or anything.  I
+> think the logical structure is way more important than some kind of
+> hand-crafted work avoidance.
 
-> 
-> Huacai
-> 
->>
->> This is a pure rename with no functional change, preparing for a
->> consistent ACPI Processor UID retrieval interface across all ACPI-enabled
->> platforms.
->>
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
->> ---
->>  arch/arm64/include/asm/acpi.h      |  4 ++--
->>  arch/loongarch/include/asm/acpi.h  |  2 +-
->>  arch/riscv/include/asm/acpi.h      |  2 +-
->>  arch/riscv/kernel/acpi_numa.c      |  2 +-
->>  drivers/acpi/pptt.c                | 16 ++++++++--------
->>  drivers/acpi/riscv/rhct.c          |  2 +-
->>  drivers/perf/arm_cspmu/arm_cspmu.c |  2 +-
->>  7 files changed, 15 insertions(+), 15 deletions(-)
->>
->> diff --git a/arch/arm64/include/asm/acpi.h b/arch/arm64/include/asm/acpi.h
->> index c07a58b96329..202107aeb05b 100644
->> --- a/arch/arm64/include/asm/acpi.h
->> +++ b/arch/arm64/include/asm/acpi.h
->> @@ -114,7 +114,7 @@ static inline bool acpi_has_cpu_in_madt(void)
->>  }
->>
->>  struct acpi_madt_generic_interrupt *acpi_cpu_get_madt_gicc(int cpu);
->> -static inline u32 get_acpi_id_for_cpu(unsigned int cpu)
->> +static inline u32 acpi_get_cpu_acpi_id(unsigned int cpu)
->>  {
->>         return  acpi_cpu_get_madt_gicc(cpu)->uid;
->>  }
->> @@ -125,7 +125,7 @@ static inline int get_cpu_for_acpi_id(u32 uid)
->>
->>         for (cpu = 0; cpu < nr_cpu_ids; cpu++)
->>                 if (acpi_cpu_get_madt_gicc(cpu) &&
->> -                   uid == get_acpi_id_for_cpu(cpu))
->> +                   uid == acpi_get_cpu_acpi_id(cpu))
->>                         return cpu;
->>
->>         return -EINVAL;
->> diff --git a/arch/loongarch/include/asm/acpi.h b/arch/loongarch/include/asm/acpi.h
->> index 7376840fa9f7..89c6c8f52cc3 100644
->> --- a/arch/loongarch/include/asm/acpi.h
->> +++ b/arch/loongarch/include/asm/acpi.h
->> @@ -40,7 +40,7 @@ extern struct acpi_madt_core_pic acpi_core_pic[MAX_CORE_PIC];
->>
->>  extern int __init parse_acpi_topology(void);
->>
->> -static inline u32 get_acpi_id_for_cpu(unsigned int cpu)
->> +static inline u32 acpi_get_cpu_acpi_id(unsigned int cpu)
->>  {
->>         return acpi_core_pic[cpu_logical_map(cpu)].processor_id;
->>  }
->> diff --git a/arch/riscv/include/asm/acpi.h b/arch/riscv/include/asm/acpi.h
->> index 6e13695120bc..1d23681b61b5 100644
->> --- a/arch/riscv/include/asm/acpi.h
->> +++ b/arch/riscv/include/asm/acpi.h
->> @@ -61,7 +61,7 @@ static inline void arch_fix_phys_package_id(int num, u32 slot) { }
->>
->>  void acpi_init_rintc_map(void);
->>  struct acpi_madt_rintc *acpi_cpu_get_madt_rintc(int cpu);
->> -static inline u32 get_acpi_id_for_cpu(int cpu)
->> +static inline u32 acpi_get_cpu_acpi_id(int cpu)
->>  {
->>         return acpi_cpu_get_madt_rintc(cpu)->uid;
->>  }
->> diff --git a/arch/riscv/kernel/acpi_numa.c b/arch/riscv/kernel/acpi_numa.c
->> index 130769e3a99c..c2eb4824d0f7 100644
->> --- a/arch/riscv/kernel/acpi_numa.c
->> +++ b/arch/riscv/kernel/acpi_numa.c
->> @@ -40,7 +40,7 @@ static inline int get_cpu_for_acpi_id(u32 uid)
->>         int cpu;
->>
->>         for (cpu = 0; cpu < nr_cpu_ids; cpu++)
->> -               if (uid == get_acpi_id_for_cpu(cpu))
->> +               if (uid == acpi_get_cpu_acpi_id(cpu))
->>                         return cpu;
->>
->>         return -EINVAL;
->> diff --git a/drivers/acpi/pptt.c b/drivers/acpi/pptt.c
->> index de5f8c018333..c1a8fba4c2b2 100644
->> --- a/drivers/acpi/pptt.c
->> +++ b/drivers/acpi/pptt.c
->> @@ -459,7 +459,7 @@ static void cache_setup_acpi_cpu(struct acpi_table_header *table,
->>  {
->>         struct acpi_pptt_cache *found_cache;
->>         struct cpu_cacheinfo *this_cpu_ci = get_cpu_cacheinfo(cpu);
->> -       u32 acpi_cpu_id = get_acpi_id_for_cpu(cpu);
->> +       u32 acpi_cpu_id = acpi_get_cpu_acpi_id(cpu);
->>         struct cacheinfo *this_leaf;
->>         unsigned int index = 0;
->>         struct acpi_pptt_processor *cpu_node = NULL;
->> @@ -546,7 +546,7 @@ static int topology_get_acpi_cpu_tag(struct acpi_table_header *table,
->>                                      unsigned int cpu, int level, int flag)
->>  {
->>         struct acpi_pptt_processor *cpu_node;
->> -       u32 acpi_cpu_id = get_acpi_id_for_cpu(cpu);
->> +       u32 acpi_cpu_id = acpi_get_cpu_acpi_id(cpu);
->>
->>         cpu_node = acpi_find_processor_node(table, acpi_cpu_id);
->>         if (cpu_node) {
->> @@ -622,7 +622,7 @@ static int find_acpi_cpu_topology_tag(unsigned int cpu, int level, int flag)
->>  static int check_acpi_cpu_flag(unsigned int cpu, int rev, u32 flag)
->>  {
->>         struct acpi_table_header *table;
->> -       u32 acpi_cpu_id = get_acpi_id_for_cpu(cpu);
->> +       u32 acpi_cpu_id = acpi_get_cpu_acpi_id(cpu);
->>         struct acpi_pptt_processor *cpu_node = NULL;
->>         int ret = -ENOENT;
->>
->> @@ -671,7 +671,7 @@ int acpi_get_cache_info(unsigned int cpu, unsigned int *levels,
->>
->>         pr_debug("Cache Setup: find cache levels for CPU=%d\n", cpu);
->>
->> -       acpi_cpu_id = get_acpi_id_for_cpu(cpu);
->> +       acpi_cpu_id = acpi_get_cpu_acpi_id(cpu);
->>         cpu_node = acpi_find_processor_node(table, acpi_cpu_id);
->>         if (!cpu_node)
->>                 return -ENOENT;
->> @@ -797,7 +797,7 @@ int find_acpi_cpu_topology_cluster(unsigned int cpu)
->>         if (!table)
->>                 return -ENOENT;
->>
->> -       acpi_cpu_id = get_acpi_id_for_cpu(cpu);
->> +       acpi_cpu_id = acpi_get_cpu_acpi_id(cpu);
->>         cpu_node = acpi_find_processor_node(table, acpi_cpu_id);
->>         if (!cpu_node || !cpu_node->parent)
->>                 return -ENOENT;
->> @@ -872,7 +872,7 @@ static void acpi_pptt_get_child_cpus(struct acpi_table_header *table_hdr,
->>         cpumask_clear(cpus);
->>
->>         for_each_possible_cpu(cpu) {
->> -               acpi_id = get_acpi_id_for_cpu(cpu);
->> +               acpi_id = acpi_get_cpu_acpi_id(cpu);
->>                 cpu_node = acpi_find_processor_node(table_hdr, acpi_id);
->>
->>                 while (cpu_node) {
->> @@ -966,7 +966,7 @@ int find_acpi_cache_level_from_id(u32 cache_id)
->>         for_each_possible_cpu(cpu) {
->>                 bool empty;
->>                 int level = 1;
->> -               u32 acpi_cpu_id = get_acpi_id_for_cpu(cpu);
->> +               u32 acpi_cpu_id = acpi_get_cpu_acpi_id(cpu);
->>                 struct acpi_pptt_cache *cache;
->>                 struct acpi_pptt_processor *cpu_node;
->>
->> @@ -1030,7 +1030,7 @@ int acpi_pptt_get_cpumask_from_cache_id(u32 cache_id, cpumask_t *cpus)
->>         for_each_possible_cpu(cpu) {
->>                 bool empty;
->>                 int level = 1;
->> -               u32 acpi_cpu_id = get_acpi_id_for_cpu(cpu);
->> +               u32 acpi_cpu_id = acpi_get_cpu_acpi_id(cpu);
->>                 struct acpi_pptt_cache *cache;
->>                 struct acpi_pptt_processor *cpu_node;
->>
->> diff --git a/drivers/acpi/riscv/rhct.c b/drivers/acpi/riscv/rhct.c
->> index caa2c16e1697..c15ce8c13136 100644
->> --- a/drivers/acpi/riscv/rhct.c
->> +++ b/drivers/acpi/riscv/rhct.c
->> @@ -44,7 +44,7 @@ int acpi_get_riscv_isa(struct acpi_table_header *table, unsigned int cpu, const
->>         struct acpi_rhct_isa_string *isa_node;
->>         struct acpi_table_rhct *rhct;
->>         u32 *hart_info_node_offset;
->> -       u32 acpi_cpu_id = get_acpi_id_for_cpu(cpu);
->> +       u32 acpi_cpu_id = acpi_get_cpu_acpi_id(cpu);
->>
->>         BUG_ON(acpi_disabled);
->>
->> diff --git a/drivers/perf/arm_cspmu/arm_cspmu.c b/drivers/perf/arm_cspmu/arm_cspmu.c
->> index 34430b68f602..506b661c60fd 100644
->> --- a/drivers/perf/arm_cspmu/arm_cspmu.c
->> +++ b/drivers/perf/arm_cspmu/arm_cspmu.c
->> @@ -1115,7 +1115,7 @@ static int arm_cspmu_acpi_get_cpus(struct arm_cspmu *cspmu)
->>         if (affinity_flag == ACPI_APMT_FLAGS_AFFINITY_PROC) {
->>                 for_each_possible_cpu(cpu) {
->>                         if (apmt_node->proc_affinity ==
->> -                           get_acpi_id_for_cpu(cpu)) {
->> +                           acpi_get_cpu_acpi_id(cpu)) {
->>                                 cpumask_set_cpu(cpu, &cspmu->associated_cpus);
->>                                 break;
->>                         }
->> --
->> 2.17.1
->>
-> 
+I understand. I merely meant that I have no actual knowledge of why it
+happened, or if there are any concerns from the hardware side.
 
+> Separating the PCIe controller setup from things related to the link
+> and downstream devices is pretty high on my list.
+
+Makes sense to me.
+
+I'll send an updated version.
+
+
+Thanks
+ChenYu
