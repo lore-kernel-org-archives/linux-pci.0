@@ -1,124 +1,213 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail-m49216.qiye.163.com (mail-m49216.qiye.163.com [45.254.49.216])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3392366810;
-	Wed, 11 Mar 2026 00:43:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B440A2139C9;
+	Wed, 11 Mar 2026 01:00:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773189801; cv=none; b=hi5HLlHE10AKYw/e5BKBtK0UBcbtz5yHSjM5dcljF8nuw6twfUwHXdLWL9Wp6p5DaYIswMca68g/i6qfopj0uLcORXjwMr4jRzyKubUHuRP/3bDVBKffcFd5MUVkK21LzhX5HBBoTlyW2okAOmE0/609hfDxFmF9arR5rITqVpk=
+	t=1773190822; cv=none; b=IEnWe8oahQ9v1JIgFJKRTcS89pF4GZOfW96GkC70+8UOoMQ4+W227+mxXLGGDhB9U5j8BnGwrWN+16JIX6wP1HiaYCcV9UPEIpvURdYfVWKz5Q0ZLyvj3G9O0KmtBJSm9T4nE1Wrwh2nVjmpQOywK/rQhgVX6geMVU+3WbXgm6g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773189801; c=relaxed/simple;
-	bh=kH/Ie2aFI4K/lDnNQHmGKjIFS9FcKLj4P5iq92/ff4A=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=lZX6llBpYP136wYCylVQYSbpJnPA8cE1t6Y0x2rfBvJATHixv83FUNjzLTfY1W8WC89GEuRyP9Y4wQbukRJode0H7nvtn1HuBPF0fJ39JgeQtDluxqBV8hfa6fOkF3y0cHAhY0P9qtcGb4pO89huxCeNth7E0ghesECaGlnbY2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ehjrxnRq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773190822; c=relaxed/simple;
+	bh=JKTDI1fN3PMrg/qe6GDVjHqc6yJ9nZIlmej/e/ee6b4=;
+	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=LQWHpjuWaT0OpVdPNNMZ3pirMP3EKm8z4gB1BignEYC3hDWihhTerecwvFiZtjOIpEchc6q5lwmIfyRqqdavRlWRPGsjkDVyuAw8GLssF3z8naxe5oAiteuph/6Ag8l2uHo/RJQQhPVoYYKZfNas6sp6b1bgfMfPTpqdQ+nAgB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=kfOdNE3E; arc=none smtp.client-ip=45.254.49.216
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ehjrxnRq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BFE8C19423;
-	Wed, 11 Mar 2026 00:43:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773189801;
-	bh=kH/Ie2aFI4K/lDnNQHmGKjIFS9FcKLj4P5iq92/ff4A=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
-	b=ehjrxnRqe+S2eARDKmHB+T6s70Jt3cX86F+fjg7UoP9KeQpNc++YTPXyAwhtwIrtC
-	 q+wwSkK/QiCZrhT3t4VHk0J2WoSlGLUkkGpwlzyZ6jokMDIQm0yfYlsUivEzvT3bMF
-	 JgSpQf96bxTLa4D7k5pAKV6KtS++9ko/Db84UTLpbbpHn6dpFhfco15NtaOrsZdhsT
-	 vp4VUUPWaEOXi+DT0ZGVDQh52RxlDZ08G2lq7Z3+Xt5hsbx4Li0T+2Y4YDJ+32VMgZ
-	 DpWgLqCJ4KlHX1acNrBvV8OHzGz5t/OeAK2QzFST19HKtDhzq6VS1/mBLlA4Lu1IqI
-	 VCQ0H/t/tXKqg==
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="kfOdNE3E"
+Received: from [172.16.12.17] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 3678c56ad;
+	Wed, 11 Mar 2026 08:55:03 +0800 (GMT+08:00)
+Cc: shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ linux-rockchip@lists.infradead.org, Niklas Cassel <cassel@kernel.org>,
+ Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+ Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+ Lukas Wunner <lukas@wunner.de>, Richard Zhu <hongxing.zhu@nxp.com>,
+ Brian Norris <briannorris@chromium.org>, Wilson Ding <dingwei@marvell.com>,
+ Frank Li <Frank.Li@nxp.com>
+Subject: Re: [PATCH v7 2/4] PCI: host-common: Add link down handling for Root
+ Ports
+To: manivannan.sadhasivam@oss.qualcomm.com,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+ Oliver O'Halloran <oohall@gmail.com>, Will Deacon <will@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Heiko Stuebner <heiko@sntech.de>, Philipp Zabel <p.zabel@pengutronix.de>
+References: <20260310-pci-port-reset-v7-0-9dd00ccc25ab@oss.qualcomm.com>
+ <20260310-pci-port-reset-v7-2-9dd00ccc25ab@oss.qualcomm.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <2eb738fb-9dfe-1e88-6ea7-afdba9cb3d25@rock-chips.com>
+Date: Wed, 11 Mar 2026 08:55:01 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 11 Mar 2026 01:43:15 +0100
-Message-Id: <DGZJBMG2Y738.2MU5LXVGEDD47@kernel.org>
-Subject: Re: [PATCH v3] PCI: dw-rockchip: Enable async probe by default
-Cc: "Manivannan Sadhasivam" <mani@kernel.org>, "Manivannan Sadhasivam"
- <manivannan.sadhasivam@oss.qualcomm.com>, "Lorenzo Pieralisi"
- <lpieralisi@kernel.org>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, "Rob Herring" <robh@kernel.org>, "Bjorn Helgaas"
- <bhelgaas@google.com>, "Heiko Stuebner" <heiko@sntech.de>, "Niklas Cassel"
- <cassel@kernel.org>, "Shawn Lin" <shawn.lin@rock-chips.com>, "Hans Zhang"
- <18255117159@163.com>, "Nicolas Frattaroli"
- <nicolas.frattaroli@collabora.com>, "Wilfred Mallawa"
- <wilfred.mallawa@wdc.com>, <linux-pci@vger.kernel.org>,
- <linux-arm-kernel@lists.infradead.org>,
- <linux-rockchip@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
- "Anand Moon" <linux.amoon@gmail.com>, "Grimmauld" <grimmauld@grimmauld.de>,
- "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
- <rafael@kernel.org>, <driver-core@lists.linux.dev>, "Lukas Wunner"
- <lukas@wunner.de>, "Dmitry Torokhov" <dmitry.torokhov@gmail.com>
-To: "Robin Murphy" <robin.murphy@arm.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260226101032.1042-1-linux.amoon@gmail.com>
- <177260693908.10259.13055467642416391434.b4-ty@kernel.org>
- <87bc37ee-234c-4568-b72e-955c130a6838@arm.com>
- <f7tfshf7riljjibuqge4ubfjmludubpyh3ppdf6lasurzdzbtj@sw4xxagfhnn3>
- <5d88fb5b-e771-4ea6-8d2c-c5cfd21e5860@arm.com>
-In-Reply-To: <5d88fb5b-e771-4ea6-8d2c-c5cfd21e5860@arm.com>
+MIME-Version: 1.0
+In-Reply-To: <20260310-pci-port-reset-v7-2-9dd00ccc25ab@oss.qualcomm.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9cda63dc8f09cckunm38bfaea514eddb
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQk4YGFZCS05KHUxLHRpNTUpWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=kfOdNE3EOKnXsygqxi9846fL4/tfGrHHufMHhcZSqW9MTTTIqCuBGUX/zVyg7ioK37rllmhlXiocSZLOPtud5LXKachckvyWn7BGwp1H4lKUNHYY9AmWdtLUnJIF0u/fdulWGnBK2eSSI2LJdbit7/Qw5WUqh7Vhb7SNeSLBpJ4=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=sd2Fc6FSnG2d3pMTg14GqePnOxYc9BQqdVSkTf9LTHs=;
+	h=date:mime-version:subject:message-id:from;
 
-(Cc: Dmitry)
+Hi Mani
 
-On Tue Mar 10, 2026 at 10:03 PM CET, Robin Murphy wrote:
-> [ +driver-core maintainers - async probe question below ]
+在 2026/03/10 星期二 22:02, Manivannan Sadhasivam via B4 Relay 写道:
+> From: Manivannan Sadhasivam <mani@kernel.org>
+> 
+> The PCI link, when down, needs to be recovered to bring it back. But on
+> some platforms, that cannot be done in a generic way as link recovery
+> procedure is platform specific. So add a new API
+> pci_host_handle_link_down() that could be called by the host bridge drivers
+> for a specific Root Port when the link goes down.
+> 
+> The API accepts the 'pci_dev' corresponding to the Root Port which observed
+> the link down event. If CONFIG_PCIEAER is enabled, the API calls
+> pcie_do_recovery() function with 'pci_channel_io_frozen' as the state. This
+> will result in the execution of the AER Fatal error handling code. Since
+> the link down recovery is pretty much the same as AER Fatal error handling,
+> pcie_do_recovery() helper is reused here. First, the AER error_detected()
+> callback will be triggered for the bridge and then for the downstream
+> devices. Finally, pci_host_reset_root_port() will be called for the Root
+> Port, which will reset the Root Port using 'reset_root_port' callback to
+> recover the link. Once that's done, resume message will be broadcasted to
+> the bridge and the downstream devices, indicating successful link recovery.
+> 
+> But if CONFIG_PCIEAER is not enabled in the kernel, only
+> pci_host_reset_root_port() API will be called, which will in turn call
+> pci_bus_error_reset() to just reset the Root Port as there is no way we
+> could inform the drivers about link recovery.
+> 
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> Tested-by: Brian Norris <briannorris@chromium.org>
+> Tested-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> Tested-by: Richard Zhu <hongxing.zhu@nxp.com>
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> ---
+>   drivers/pci/controller/pci-host-common.c | 35 ++++++++++++++++++++++++++++++++
+>   drivers/pci/controller/pci-host-common.h |  1 +
+>   drivers/pci/pci.c                        |  1 +
+>   drivers/pci/pcie/err.c                   |  1 +
+>   4 files changed, 38 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
+> index d6258c1cffe5..15ebff8a542a 100644
+> --- a/drivers/pci/controller/pci-host-common.c
+> +++ b/drivers/pci/controller/pci-host-common.c
+> @@ -12,9 +12,11 @@
+>   #include <linux/of.h>
+>   #include <linux/of_address.h>
+>   #include <linux/of_pci.h>
+> +#include <linux/pci.h>
+>   #include <linux/pci-ecam.h>
+>   #include <linux/platform_device.h>
+>   
+> +#include "../pci.h"
+>   #include "pci-host-common.h"
+>   
+>   static void gen_pci_unmap_cfg(void *ptr)
+> @@ -106,5 +108,38 @@ void pci_host_common_remove(struct platform_device *pdev)
+>   }
+>   EXPORT_SYMBOL_GPL(pci_host_common_remove);
+>   
+> +static pci_ers_result_t pci_host_reset_root_port(struct pci_dev *dev)
+> +{
+> +	int ret;
+> +
+> +	pci_lock_rescan_remove();
+> +	ret = pci_bus_error_reset(dev);
+> +	pci_unlock_rescan_remove();
+> +	if (ret) {
+> +		pci_err(dev, "Failed to reset Root Port: %d\n", ret);
+> +		return PCI_ERS_RESULT_DISCONNECT;
+> +	}
+> +
+> +	pci_info(dev, "Root Port has been reset\n");
+> +
+> +	return PCI_ERS_RESULT_RECOVERED;
+> +}
+> +
+> +static void pci_host_recover_root_port(struct pci_dev *port)
+> +{
+> +#if IS_ENABLED(CONFIG_PCIEAER)
+> +	pcie_do_recovery(port, pci_channel_io_frozen, pci_host_reset_root_port);
+> +#else
+> +	pci_host_reset_root_port(port);
 
-<snip>
+Since pci_host_reset_root_port() returns pci_ers_result_t, shouldn't we 
+check the result? If the return value is intentionally ignored here,
+maybe pci_host_reset_root_port actually doesn't need a return value at
+all?
 
-> I'm guessing it maybe wasn't anticipated to have bus drivers calling
-> device_initial_probe() from within async in the first place?
+> +#endif
+> +}
+> +
+> +void pci_host_handle_link_down(struct pci_dev *port)
+> +{
+> +	pci_info(port, "Recovering Root Port due to Link Down\n");
+> +	pci_host_recover_root_port(port);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_host_handle_link_down);
 
-I think this is not limited to device_initial_probe(), device_attach() or e=
-ven
-device_add() would have the same problem. I.e. the driver core simply does =
-not
-consider whether it is already running in an async handler when it is reque=
-sted
-to run probe() synchronously.
+This function shouldn't be called like in interrupt context because of
+the pci_lock_rescan_remove() and pci_bus_error_reset()::pci_slot_mutex,
+but it's not so obvious from the API name. It's prone for host drivers
+to use it like:
 
-A simple workaround to this would be to check whether current_is_async() an=
-d in
-case it returns true just defer probing in an PROBE_FORCE_SYNCHRONOUS case.=
- This
-would at least be compatible with the guarantees given by
-PROBE_FORCE_SYNCHRONOUS, but it doesn't sound quite right to me -- guess I =
-have
-to think about it a bit more.
+register_LDn_irq -> irq isr -> pci_host_handle_link_down()
 
-In any case, given that this is not a supported case, this commit seems to =
-be
-wrong and should probably be reverted.
+So perhaps add a comment about it would be better.
 
-I think a quick workaround in the driver core as mentioned above is not a g=
-ood
-idea, instead this should be properly thought through.
-
-> It may not strictly be the fault of this patch - clearly 91703041697c=20
-> ("PCI: Allow built-in drivers to use async initial probing") is=20
-> implicated in this too - but the fact is that it *has* exposed a bug=20
-> that needs fixing one way or another, it can't just be left hanging and=
-=20
-> impacting end users.
-
-At a side note, I think device_initial_probe() was not meant to be exposed
-outside of the driver core in the first place. As the name suggests it is o=
-nly
-meant to be called on the initial probe() path (i.e. the initial probe() pa=
-th of
-the driver core). It seems to me that it ended up in include/linux/device.h
-instead of drivers/base/base.h by accident.
-
-The original commit - commit 765230b5f084 ("driver-core: add asynchronous
-probing support for drivers") - introducing the feature even mentions "manu=
-al
-binding is still synchronous" in its commit message and I think this has ne=
-ver
-been changed.
-
-So, it seems commit 91703041697c ("PCI: Allow built-in drivers to use async
-initial probing") relies on something that might work by accident. :)
-
-So, I wouldn't rule out any unexpected side effects entirely.
+> +
+>   MODULE_DESCRIPTION("Common library for PCI host controller drivers");
+>   MODULE_LICENSE("GPL v2");
+> diff --git a/drivers/pci/controller/pci-host-common.h b/drivers/pci/controller/pci-host-common.h
+> index b5075d4bd7eb..dd12dd1a1b23 100644
+> --- a/drivers/pci/controller/pci-host-common.h
+> +++ b/drivers/pci/controller/pci-host-common.h
+> @@ -17,6 +17,7 @@ int pci_host_common_init(struct platform_device *pdev,
+>   			 struct pci_host_bridge *bridge,
+>   			 const struct pci_ecam_ops *ops);
+>   void pci_host_common_remove(struct platform_device *pdev);
+> +void pci_host_handle_link_down(struct pci_dev *port);
+>   
+>   struct pci_config_window *pci_host_common_ecam_create(struct device *dev,
+>   	struct pci_host_bridge *bridge, const struct pci_ecam_ops *ops);
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 6f09057d83e0..1b37bfe6d079 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5650,6 +5650,7 @@ int pci_bus_error_reset(struct pci_dev *bridge)
+>   	mutex_unlock(&pci_slot_mutex);
+>   	return pci_bus_reset(bridge->subordinate, PCI_RESET_DO_RESET);
+>   }
+> +EXPORT_SYMBOL_GPL(pci_bus_error_reset);
+>   
+>   /**
+>    * pci_probe_reset_bus - probe whether a PCI bus can be reset
+> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> index 13b9d9eb714f..d77403d8855b 100644
+> --- a/drivers/pci/pcie/err.c
+> +++ b/drivers/pci/pcie/err.c
+> @@ -292,3 +292,4 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+>   
+>   	return status;
+>   }
+> +EXPORT_SYMBOL_GPL(pcie_do_recovery);
+> 
