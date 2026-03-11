@@ -1,100 +1,185 @@
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E905126F3B
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2026 04:38:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BD57EEC0;
+	Wed, 11 Mar 2026 05:04:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773203919; cv=none; b=KAm+ICLjLW6eRaaUVp5tWIX69/Y4ObvDPqUggzud7YCfrRU19aoSVoGOu9eupeUZvlK5ygp8R+2Aqhu4P0u99q/k9EBESzqrMO6KESgXFCHIyKt+BWc7jRODZTrFyRI56VlKtiKgRiP9zXwD30rjvkCD6IclDDu9WcgcgyFBk40=
+	t=1773205473; cv=none; b=UUtQszQabVVZ6IjELD6XDv0tpXDsSnzXwr6BP0/KCEsNNNOLluaABkJ9asDqYE9yR6XalV7zELMt9QQTRjFQIoWpi4iFDHMQiiBKoGiD59uVeZ+974dZiuqE0VKeDBDGu7pOn4OhgQp2FH2HhDTgLe1wt2H4Y4XNxQL5PppygmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773203919; c=relaxed/simple;
-	bh=b73m/0G4bp9qlKbyGpXs2BmQnhyq68YsG8re+bxd7zk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=OOvSvTt7KxS7JJOQWVaU4Gg8YDc6MhkqL8B18YIXvZHjbG8ToaMrCXcNaz46vsHaU4a3yxSjZGVufULWQP1OaWB1xUZl6dgfeNNyqM3h2S2cehHqgaRqNtof+JIONlBQKejNlYCHJd/vY0WKsjqNnWHQ7mF+0o8doD4kTnTZw0I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mtK1JOGN; arc=none smtp.client-ip=209.85.216.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1773205473; c=relaxed/simple;
+	bh=fYyP3Zu9FaIM29drE15IUXdeAZe+0BRP7elc4vr6eGc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pwYXNdDZi+2bVOcGcyxX+rsaQTp0e1rbH8qaqTm0YqH1bwW2DktqjhmwEX/8TKYN9NneBsv7qjXzuntR2uZ98ZWXuILyIi2qBursat9u0FTLsPlCvuBsvAXpJ9fM/Bg8rqIY4C/jfFE1oe29d6jacqZ/BsYwBY5RNr0dAQp7Wvk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nqL4eVSc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mtK1JOGN"
-Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-354bc7c2c46so8355664a91.0
-        for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2026 21:38:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1773203918; x=1773808718; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=rOpJyc/uxw9YcZ5bYmcC7bF77XfwHzZK7dfWyiG9If0=;
-        b=mtK1JOGNkUqANef7tcws9FG9uYdBx8rECyqe+z1NGsmn/MlG8YoLc42wGLz/f2Hnkx
-         maoAr9hnvvC4zKx6qJL6x8QFH5tXsbCHt4X4GsY76XrAJeTCSxrjKlcydGzA7ZCavOVZ
-         o9+aBhEwa8+tQS2gqSJrtg3adUCkLkmLp1Tr5h3fk6McCvVUnjKbb7u5uzqIaldZe6am
-         8eUy/nbiM8O/r/raMQgVj21LKlbJDYA/ySlohnBhIeFRFh1tpOKvn0DTBPzgcsLK457r
-         HX79GxnfpwQ3jHgGPGum1Lc/nLNPrqKQOqtD7Tqf2RXZ0bo8PPcl/BonHkzwYfGhU+9A
-         PJpg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773203918; x=1773808718;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=rOpJyc/uxw9YcZ5bYmcC7bF77XfwHzZK7dfWyiG9If0=;
-        b=uegmO5C9Rf7V8mqzj9y7Pn+fdf89cE7UKivNpjMz3HbYPiPys0lJ6mK9XRjYULWH7t
-         vdnQP+v+iDpAFpiWSf0DHvc8kofvoJCyxgFPn1ym99SMRn2KIlOUS/UXlK7S9f+RKHRR
-         eu8IZ4QdR9CFZrXpMaZuwRCq0eIMncitafOmMlJ3e0mpqm538bDFgxFi3HknvKTaa4FM
-         IDYokXDZOxTVdv47AALrbURNlDswMfhPc3XURU5Aaqpv+Ygq+06mU4AVtp2OsD1a/gNt
-         Z/EAXY/fXGMDcSMF6Ee313F0KISK5i4VaqIBKwy8gFWBLR4ofoRyQz1P9yirDO/eUJax
-         9X7w==
-X-Forwarded-Encrypted: i=1; AJvYcCUr5Wg6YHGmsd+qtTDI3gkyO5tbebcWW8m67mX6xnzpGEL6vMEvd514vq+zr2JAs0OfsSwvKDiVhy0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxJuKIyoDq13EGjqV0ki4aZeA0IPKRCf5RVunuLa/Lf8R1PxizY
-	0VD2k+NkrOtaD73YGpG3OIexSpxDRPnYGqXIZzK2JUTiRnNimh6Aqu5h
-X-Gm-Gg: ATEYQzzzcvrqKZfzXBTM24xA/BlsFhEgulSOKZZCTpsE+tyE2ZQ+66xaylUK5sJiexn
-	wH8qfEH0g3gVEL3xEfm/KXSpWUqgXVfBbNMHB1hOrOoMOY61rStu0E4gzJXKMdD5+ee8k1J23j9
-	bnlqrCvyB2W2Eae6n71XwFGRNQmTHy0kQIOegMAveRUaJhHc1XzuRO/SOvm/ZE93hfLkCXkjIKB
-	bwlIB2OizQVh/Ztr2/7OzkOuFutm3qwFl/mJrhF8cBW5fS5WWXDuqH5C0FwTuPyglHYe/d3A14+
-	HQEu38isI9qzvtXf2jVtHbEZL7IL3JhcOTeWgUh20JoW2pj+CD0qaWBxZCDBX+qS4SOmySzuapm
-	0g+/HD7TguTgHzsUlJ8hfhqpi19CqVp/xp0oj8e5bHk9/dO1meniRecbyr50+nOSD8IAGKYgBdn
-	UyuX2etsSVDtQx4arRi7V8lMnNKC98dhxcHq6tijRzpg49E+6Izt/BpKHG7av1Zphzu1UkkENuX
-	1xCMw==
-X-Received: by 2002:a17:90b:3c90:b0:354:c6f3:d365 with SMTP id 98e67ed59e1d1-35a012eacd0mr1283571a91.17.1773203917898;
-        Tue, 10 Mar 2026 21:38:37 -0700 (PDT)
-Received: from localhost.localdomain ([183.91.15.56])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-359f06fa04esm4679484a91.6.2026.03.10.21.38.33
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Tue, 10 Mar 2026 21:38:37 -0700 (PDT)
-From: phucduc.bui@gmail.com
-To: john.madieu.xa@bp.renesas.com
-Cc: bhelgaas@google.com,
-	biju.das.jz@bp.renesas.com,
-	claudiu.beznea.uj@bp.renesas.com,
-	conor+dt@kernel.org,
-	devicetree@vger.kernel.org,
-	geert+renesas@glider.be,
-	john.madieu@gmail.com,
-	krzk+dt@kernel.org,
-	kwilczynski@kernel.org,
-	linux-clk@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	lpieralisi@kernel.org,
-	magnus.damm@gmail.com,
-	mani@kernel.org,
-	robh@kernel.org
-Subject: Re: [PATCH v8 15/15] arm64: dts: renesas: r9a09g047e57-smarc: 
-Date: Wed, 11 Mar 2026 11:38:31 +0700
-Message-Id: <20260311043831.2576-1-phucduc.bui@gmail.com>
-X-Mailer: git-send-email 2.37.1 (Apple Git-137.1)
-In-Reply-To: <20260306143423.19562-16-john.madieu.xa@bp.renesas.com>
-References: <20260306143423.19562-16-john.madieu.xa@bp.renesas.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nqL4eVSc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AB3FC4CEF7;
+	Wed, 11 Mar 2026 05:04:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773205473;
+	bh=fYyP3Zu9FaIM29drE15IUXdeAZe+0BRP7elc4vr6eGc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nqL4eVSceLQkWZy2agF52UXOujfj7w7KrEuOhM4cOGhKUUw59uYN9x/5NytgiLzOR
+	 xyWmn0w8TWKhJQe9w/xoJxPfAi391pPUereu4K3uFM6v04Vy0yAg19kdVdcsk+Uybf
+	 M2Rb7gOuGWtqzdzH2HbGgZU1OqH3JIw2AyDnYgJBndJ7Du6iRkyELJwQFdExIOU4Ue
+	 Sm1dIkfSaGoEcCsDEFhczs0iyNeXbjA2koRhzqOeqDPtcX7Yl6WJiiPLg+Cqqkp7pf
+	 tKgqGLem++ya1KScueLxRfgME5XE5rfWQxjtKpmX42uZbg7S1f/VNDZtR75TxwvL13
+	 hssZiohpAg36Q==
+Date: Wed, 11 Mar 2026 10:34:17 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: manivannan.sadhasivam@oss.qualcomm.com, 
+	Bjorn Helgaas <bhelgaas@google.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, 
+	Oliver O'Halloran <oohall@gmail.com>, Will Deacon <will@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>, 
+	Philipp Zabel <p.zabel@pengutronix.de>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org, 
+	linux-arm-msm@vger.kernel.org, linux-rockchip@lists.infradead.org, 
+	Niklas Cassel <cassel@kernel.org>, Wilfred Mallawa <wilfred.mallawa@wdc.com>, 
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Lukas Wunner <lukas@wunner.de>, 
+	Richard Zhu <hongxing.zhu@nxp.com>, Brian Norris <briannorris@chromium.org>, 
+	Wilson Ding <dingwei@marvell.com>, Frank Li <Frank.Li@nxp.com>
+Subject: Re: [PATCH v7 2/4] PCI: host-common: Add link down handling for Root
+ Ports
+Message-ID: <vnsmjvtwaeticdxwz6u43dxnpi6duhc3r5motwnfer4l2bpqcm@noeme6lgq4jf>
+References: <20260310-pci-port-reset-v7-0-9dd00ccc25ab@oss.qualcomm.com>
+ <20260310-pci-port-reset-v7-2-9dd00ccc25ab@oss.qualcomm.com>
+ <2eb738fb-9dfe-1e88-6ea7-afdba9cb3d25@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <2eb738fb-9dfe-1e88-6ea7-afdba9cb3d25@rock-chips.com>
 
-I noticed that for gpio-hog nodes, the kernel already uses the node name 
-as the default label in /sys/kernel/debug/gpio if line-name is missing. 
-Since the node name here is already pcie-clkreq-n, the line-name property 
-seems redundant. Should we remove it to keep the DTS more concise?
+On Wed, Mar 11, 2026 at 08:55:01AM +0800, Shawn Lin wrote:
+> Hi Mani
+> 
+> 在 2026/03/10 星期二 22:02, Manivannan Sadhasivam via B4 Relay 写道:
+> > From: Manivannan Sadhasivam <mani@kernel.org>
+> > 
+> > The PCI link, when down, needs to be recovered to bring it back. But on
+> > some platforms, that cannot be done in a generic way as link recovery
+> > procedure is platform specific. So add a new API
+> > pci_host_handle_link_down() that could be called by the host bridge drivers
+> > for a specific Root Port when the link goes down.
+> > 
+> > The API accepts the 'pci_dev' corresponding to the Root Port which observed
+> > the link down event. If CONFIG_PCIEAER is enabled, the API calls
+> > pcie_do_recovery() function with 'pci_channel_io_frozen' as the state. This
+> > will result in the execution of the AER Fatal error handling code. Since
+> > the link down recovery is pretty much the same as AER Fatal error handling,
+> > pcie_do_recovery() helper is reused here. First, the AER error_detected()
+> > callback will be triggered for the bridge and then for the downstream
+> > devices. Finally, pci_host_reset_root_port() will be called for the Root
+> > Port, which will reset the Root Port using 'reset_root_port' callback to
+> > recover the link. Once that's done, resume message will be broadcasted to
+> > the bridge and the downstream devices, indicating successful link recovery.
+> > 
+> > But if CONFIG_PCIEAER is not enabled in the kernel, only
+> > pci_host_reset_root_port() API will be called, which will in turn call
+> > pci_bus_error_reset() to just reset the Root Port as there is no way we
+> > could inform the drivers about link recovery.
+> > 
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > Tested-by: Brian Norris <briannorris@chromium.org>
+> > Tested-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> > Tested-by: Richard Zhu <hongxing.zhu@nxp.com>
+> > Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> > ---
+> >   drivers/pci/controller/pci-host-common.c | 35 ++++++++++++++++++++++++++++++++
+> >   drivers/pci/controller/pci-host-common.h |  1 +
+> >   drivers/pci/pci.c                        |  1 +
+> >   drivers/pci/pcie/err.c                   |  1 +
+> >   4 files changed, 38 insertions(+)
+> > 
+> > diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
+> > index d6258c1cffe5..15ebff8a542a 100644
+> > --- a/drivers/pci/controller/pci-host-common.c
+> > +++ b/drivers/pci/controller/pci-host-common.c
+> > @@ -12,9 +12,11 @@
+> >   #include <linux/of.h>
+> >   #include <linux/of_address.h>
+> >   #include <linux/of_pci.h>
+> > +#include <linux/pci.h>
+> >   #include <linux/pci-ecam.h>
+> >   #include <linux/platform_device.h>
+> > +#include "../pci.h"
+> >   #include "pci-host-common.h"
+> >   static void gen_pci_unmap_cfg(void *ptr)
+> > @@ -106,5 +108,38 @@ void pci_host_common_remove(struct platform_device *pdev)
+> >   }
+> >   EXPORT_SYMBOL_GPL(pci_host_common_remove);
+> > +static pci_ers_result_t pci_host_reset_root_port(struct pci_dev *dev)
+> > +{
+> > +	int ret;
+> > +
+> > +	pci_lock_rescan_remove();
+> > +	ret = pci_bus_error_reset(dev);
+> > +	pci_unlock_rescan_remove();
+> > +	if (ret) {
+> > +		pci_err(dev, "Failed to reset Root Port: %d\n", ret);
+> > +		return PCI_ERS_RESULT_DISCONNECT;
+> > +	}
+> > +
+> > +	pci_info(dev, "Root Port has been reset\n");
+> > +
+> > +	return PCI_ERS_RESULT_RECOVERED;
+> > +}
+> > +
+> > +static void pci_host_recover_root_port(struct pci_dev *port)
+> > +{
+> > +#if IS_ENABLED(CONFIG_PCIEAER)
+> > +	pcie_do_recovery(port, pci_channel_io_frozen, pci_host_reset_root_port);
+> > +#else
+> > +	pci_host_reset_root_port(port);
+> 
+> Since pci_host_reset_root_port() returns pci_ers_result_t, shouldn't we
+> check the result? If the return value is intentionally ignored here,
+> maybe pci_host_reset_root_port actually doesn't need a return value at
+> all?
+> 
 
-Best regards, 
-Phuc
+The return value is mostly for pcie_do_recovery() which iterates through the
+subordinate devices and calls pci_host_reset_root_port(). It also makes use of
+the return value, so we cannot make it void.
+
+The reason why I skipped the return value in pci_host_handle_link_down() is
+that, we canot do much in the case of failure other than reporting the failure,
+which is already taken care in pci_host_reset_root_port().
+
+> > +#endif
+> > +}
+> > +
+> > +void pci_host_handle_link_down(struct pci_dev *port)
+> > +{
+> > +	pci_info(port, "Recovering Root Port due to Link Down\n");
+> > +	pci_host_recover_root_port(port);
+> > +}
+> > +EXPORT_SYMBOL_GPL(pci_host_handle_link_down);
+> 
+> This function shouldn't be called like in interrupt context because of
+> the pci_lock_rescan_remove() and pci_bus_error_reset()::pci_slot_mutex,
+> but it's not so obvious from the API name. It's prone for host drivers
+> to use it like:
+> 
+> register_LDn_irq -> irq isr -> pci_host_handle_link_down()
+> 
+> So perhaps add a comment about it would be better.
+> 
+
+Yes, I agree. I mentioned in the cover letter that this API should be called
+from a threaded IRQ handler, but it should be mentioned in the API description
+too. I will add it in next version or ammend it while applying.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
