@@ -1,213 +1,202 @@
-Received: from mail-m49216.qiye.163.com (mail-m49216.qiye.163.com [45.254.49.216])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B440A2139C9;
-	Wed, 11 Mar 2026 01:00:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.216
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773190822; cv=none; b=IEnWe8oahQ9v1JIgFJKRTcS89pF4GZOfW96GkC70+8UOoMQ4+W227+mxXLGGDhB9U5j8BnGwrWN+16JIX6wP1HiaYCcV9UPEIpvURdYfVWKz5Q0ZLyvj3G9O0KmtBJSm9T4nE1Wrwh2nVjmpQOywK/rQhgVX6geMVU+3WbXgm6g=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773190822; c=relaxed/simple;
-	bh=JKTDI1fN3PMrg/qe6GDVjHqc6yJ9nZIlmej/e/ee6b4=;
-	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=LQWHpjuWaT0OpVdPNNMZ3pirMP3EKm8z4gB1BignEYC3hDWihhTerecwvFiZtjOIpEchc6q5lwmIfyRqqdavRlWRPGsjkDVyuAw8GLssF3z8naxe5oAiteuph/6Ag8l2uHo/RJQQhPVoYYKZfNas6sp6b1bgfMfPTpqdQ+nAgB0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=kfOdNE3E; arc=none smtp.client-ip=45.254.49.216
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 808231A3164;
+	Wed, 11 Mar 2026 01:45:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.17
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773193534; cv=fail; b=YcDopAgpCYPULTpuDIr2IDdVvJw1u2wkbEBTeIMNDYeCteukk7xUSakGiDUVfsPJOfngxJLqcOKGi+TPrXC2+IJ9L5NCpRhOZk7NPdWAmEwcryFjUdqBm0nEuhrBOXUEO5EOmC2rx3IHLKvPIM42NurteL7u4v2Gwf/NIJ31yAk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773193534; c=relaxed/simple;
+	bh=aIYCACYDUNwzy8yGICR02fJl6dyhq/djtGJ9H+kOQww=;
+	h=From:Date:To:CC:Message-ID:In-Reply-To:References:Subject:
+	 Content-Type:MIME-Version; b=OMHs3JkpOckC7+T6ZGwan+5NEc/zw+FCL1XD4jrzZqDPqFJvRyVCuW9Hb8hkEXFowOVVGRjjGTy3vv6QdkBNiSl3Hjc4HBsBm3QknWoNUZXETmwLs3YcfSI6JppbPU6hl04P/F1VJ7m1scglsY1ghXj9TFAGOxfsCQRouRkDKTM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dnvKWVJJ; arc=fail smtp.client-ip=198.175.65.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="kfOdNE3E"
-Received: from [172.16.12.17] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 3678c56ad;
-	Wed, 11 Mar 2026 08:55:03 +0800 (GMT+08:00)
-Cc: shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
- linux-rockchip@lists.infradead.org, Niklas Cassel <cassel@kernel.org>,
- Wilfred Mallawa <wilfred.mallawa@wdc.com>,
- Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
- Lukas Wunner <lukas@wunner.de>, Richard Zhu <hongxing.zhu@nxp.com>,
- Brian Norris <briannorris@chromium.org>, Wilson Ding <dingwei@marvell.com>,
- Frank Li <Frank.Li@nxp.com>
-Subject: Re: [PATCH v7 2/4] PCI: host-common: Add link down handling for Root
- Ports
-To: manivannan.sadhasivam@oss.qualcomm.com,
- Bjorn Helgaas <bhelgaas@google.com>,
- Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
- Oliver O'Halloran <oohall@gmail.com>, Will Deacon <will@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Heiko Stuebner <heiko@sntech.de>, Philipp Zabel <p.zabel@pengutronix.de>
-References: <20260310-pci-port-reset-v7-0-9dd00ccc25ab@oss.qualcomm.com>
- <20260310-pci-port-reset-v7-2-9dd00ccc25ab@oss.qualcomm.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <2eb738fb-9dfe-1e88-6ea7-afdba9cb3d25@rock-chips.com>
-Date: Wed, 11 Mar 2026 08:55:01 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dnvKWVJJ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773193533; x=1804729533;
+  h=from:date:to:cc:message-id:in-reply-to:references:
+   subject:content-transfer-encoding:mime-version;
+  bh=aIYCACYDUNwzy8yGICR02fJl6dyhq/djtGJ9H+kOQww=;
+  b=dnvKWVJJ/+LTbgjNdkQ0azlpthPbAk+y8wP+g8B6ChWEssb9xPWE1gBM
+   B7n4atEA5H8H0TUW6QQ0db9IWJFI0OMsi4IzeuJdKD51iiwaDgzULiVAq
+   yjMtPyRe1I8SVPpDDdIF8yxMQOjhczcYLt/+GDqtG0ZlX9BvGFpf9CvQc
+   +pJtshs1rfQ3TCThzLwtQKwIFl+OB3uUk8OtBpKt3A/AqGGqnsguTEuUG
+   qlF4HW3zeMS7AEf9GbBCG99MKbg1xWiPgCCgnSZOZcbHgE96G+PBbB9Wi
+   +hQ25l2lU5rDyWSilTZZBjxMrbmX9GcCSmr8L9uFJhZ+C5BggLI/5chmj
+   w==;
+X-CSE-ConnectionGUID: J/9yZtO4Qk6zFmQTcFvOLw==
+X-CSE-MsgGUID: un2hbB0GS4KKel+VoXCfMg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11725"; a="74227666"
+X-IronPort-AV: E=Sophos;i="6.23,113,1770624000"; 
+   d="scan'208";a="74227666"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 18:45:32 -0700
+X-CSE-ConnectionGUID: D6x46MlER4KX8phGyLx4nw==
+X-CSE-MsgGUID: Dkp6+lXQR7CwYQlFG5pLeQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,113,1770624000"; 
+   d="scan'208";a="222857851"
+Received: from fmsmsx901.amr.corp.intel.com ([10.18.126.90])
+  by fmviesa004.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 18:45:31 -0700
+Received: from FMSMSX901.amr.corp.intel.com (10.18.126.90) by
+ fmsmsx901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Tue, 10 Mar 2026 18:45:30 -0700
+Received: from fmsedg902.ED.cps.intel.com (10.1.192.144) by
+ FMSMSX901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37 via Frontend Transport; Tue, 10 Mar 2026 18:45:30 -0700
+Received: from DM5PR21CU001.outbound.protection.outlook.com (52.101.62.16) by
+ edgegateway.intel.com (192.55.55.82) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Tue, 10 Mar 2026 18:45:29 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=laKy+xGdoXblV6tPr6CMWEmpNvnJCK0rqvK5iwEsS5iQ6tvguTXMY8c1YotLSGb6KjWbCjsQKwMvHZ02dQCL14StA92dznDSCI19by1CGIBKZ7B23JXm0x6UbWEFVu1IiGe/hn1wlfteUntoa5RXwEGf0zsWmUSxCFi0BlujM03E3X+s2QqysqbOEnvDY/fUU5cmOVlM+B4pDuW5r0hXlhk3214lt9vEfZNy7Tgf98tZv8WaOTzoPHVO1TqJnIBuckwq63QTfl54TIh3DWVuPGF/8c5cd2KhXhcifw4Zui3Xt2PK1ocB9xDNsqvqiK8uH4Y66bx+5ChAArLkCwGR9A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=vlbt8JsOjXPGKSCLdjMUf8HuVgHUWFzEN7/ivfnILqc=;
+ b=RCWEIlfhk0uf66inhqI+2ltBGH9Qs7UahFIuUh2sKpYWQv0QmNMOJHlmtBXXZfHPvNQzR+rn/BG8tpEvCDKdqCmk30m4h3YpFP5GrT/wyhpZH7frRp/PnooNp7tFHLsvfjiYOT8AVFi7uTFZ/p4xP/+K7v4r2JMXkwevFGzPAr/osOcraG8w/b71O3vO95WvF6WFX3/e3UcBBs37Hiy2IeVAy2cVOkz8l4DqtDMjlIm18U5z20G4z4qI0cHdu1X+6Sph8CpZXHArT9DkR79L9B5Vho1RPsDwT9qqjWglAQm1g0/1ZY4OnRs5/8k+py15wJ5eqLtOrDHGlxwKMqyCCg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
+ by SJ0PR11MB5814.namprd11.prod.outlook.com (2603:10b6:a03:423::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.11; Wed, 11 Mar
+ 2026 01:45:26 +0000
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::1ff:1e09:994b:21ff]) by PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::1ff:1e09:994b:21ff%3]) with mapi id 15.20.9700.010; Wed, 11 Mar 2026
+ 01:45:26 +0000
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 10 Mar 2026 18:45:24 -0700
+To: Alex Williamson <alex@shazbot.org>, Dan Williams
+	<dan.j.williams@intel.com>
+CC: <alex@shazbot.org>, <smadhavan@nvidia.com>, <bhelgaas@google.com>,
+	<dave.jiang@intel.com>, <jonathan.cameron@huawei.com>, <ira.weiny@intel.com>,
+	<vishal.l.verma@intel.com>, <alison.schofield@intel.com>,
+	<dave@stgolabs.net>, <jeshuas@nvidia.com>, <vsethi@nvidia.com>,
+	<skancherla@nvidia.com>, <vaslot@nvidia.com>, <sdonthineni@nvidia.com>,
+	<mhonap@nvidia.com>, <vidyas@nvidia.com>, <jan@nvidia.com>,
+	<mochs@nvidia.com>, <dschumacher@nvidia.com>, <linux-cxl@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Message-ID: <69b0c934b2793_2132100ec@dwillia2-mobl4.notmuch>
+In-Reply-To: <20260310164630.7abeed30@shazbot.org>
+References: <20260306080026.116789-1-smadhavan@nvidia.com>
+ <69b08f8d8eb97_490a10042@dwillia2-mobl4.notmuch>
+ <20260310164630.7abeed30@shazbot.org>
+Subject: Re: [PATCH 0/5] PCI/CXL: Save and restore CXL DVSEC and HDM state
+ across resets
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: BYAPR07CA0048.namprd07.prod.outlook.com
+ (2603:10b6:a03:60::25) To PH8PR11MB8107.namprd11.prod.outlook.com
+ (2603:10b6:510:256::6)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20260310-pci-port-reset-v7-2-9dd00ccc25ab@oss.qualcomm.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9cda63dc8f09cckunm38bfaea514eddb
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQk4YGFZCS05KHUxLHRpNTUpWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=kfOdNE3EOKnXsygqxi9846fL4/tfGrHHufMHhcZSqW9MTTTIqCuBGUX/zVyg7ioK37rllmhlXiocSZLOPtud5LXKachckvyWn7BGwp1H4lKUNHYY9AmWdtLUnJIF0u/fdulWGnBK2eSSI2LJdbit7/Qw5WUqh7Vhb7SNeSLBpJ4=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=sd2Fc6FSnG2d3pMTg14GqePnOxYc9BQqdVSkTf9LTHs=;
-	h=date:mime-version:subject:message-id:from;
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|SJ0PR11MB5814:EE_
+X-MS-Office365-Filtering-Correlation-Id: 300b42be-44f3-4197-e565-08de7f0fde3d
+X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014|7416014|22082099003|18002099003|56012099003;
+X-Microsoft-Antispam-Message-Info: vo+1HKJ6gpjirdGVzSpGN1L4h26KGr9hdAXgjgFpAImDIkpbs3oMjFPO2p+Ou/Dd+0LLZ+TTr7aBdjiGareYBudDqlBqht23AjLsqhmMODjMI6t7nc1G38L6MtDh/rj3hvE1Ju9/YYgC6xl3xKGucoPUGUI6vifnXb4ULuZQUEFqZ2Cfteu0vTj+LAmpPdMMUtkjDqiijremATxQFQOgJH7+x6ll4zbSN8oMoJPduXQ7trl61poKZKsDLkSKlrfyBKY9TZr+aN1OQyr+Yr247h/bx7FC7VpHpTZF/JIMl/ECxTKEEDvDAOZsDzFkV7EqD9oXKxX4wMslslu1sN4tCUdn+QFlhhzqVGYH3jSNActvGjSZJUudp9T+0a95b/cVpY7xu71F3RhgNdupmR+3BEqeMGRuvgdwiA8LvrRXV3o/wElLi2yW2/Y8is5JeuE0TXnsnKEl4iYCTvnO4rS+tvQKoOBwRuUvaTkYwAZ6ahRmD1UTVhUt/NTKDRWvUBNvFlLfrVjwZGCXjN0bnp1JEhylfpVf20pXLOQgwvsxmzmWxxj3gS1Ckq8/01JZLKesP4bKRWXI1xj8bwWAblxD2PheM7NLLU/rdb6PUAMxnkm6DMUfY0h6gW6CclknOUGiJJ2pzhYwsTgQW1FlHnXVjYfmFX3d5N9dblJBSL6ZMotNUKiWIjOaQGBWABI5VzSLM56QVlXr6PZJRxL2GNk/d9N82+bPHS5NOtTca6TeRhQ=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?UlVXZjhBNHJWaTdUTkIvT1UraUM4cEM0TUFiN29Ia0ZVLzJkS051RVNvRTlV?=
+ =?utf-8?B?NmZTQkVqOHllbWFKbGFBWFlhR2ZpTGwrcHIxbktFNWxkQ0pUZkhvekNLY2lM?=
+ =?utf-8?B?QnN4NmFOeWhJZFM3RU5FbHBpOFhRUmZqeXVLR3RLaVZHS0hwNHZyUTFEaTls?=
+ =?utf-8?B?MThMeWxzNG1QRFlWT2JIeDJSZzdSQURYTTJrOWQ4ZHg5b0pVOEtUQ1FVWXZl?=
+ =?utf-8?B?aVYzYVhJSm9sK1BQQzlxajFOTlNIVDREa3Q0Y3p6M25LaFRyeWozczFYb0JW?=
+ =?utf-8?B?SVNvRS9NbG9zUmp5cGJsU1d5b2JPeWpzbllTUDQ5YnN6TlRSWFNGdzFUekZs?=
+ =?utf-8?B?WUJvQ3g4N0V4cVpOWEdtZzZrQm5mcW9DdDNQdHY1SkRUQ2JQSmF2OXFKclBV?=
+ =?utf-8?B?dzRVajdTbGx3bytGa3pmTDNNVzF0MEl3SXdiUnlqdENNL25DRCtOeUt5d1cw?=
+ =?utf-8?B?SkFmZXBLY3RITld1aEl2TzVGdVRWVlNwVVFZclNQSG9TdFI4bWVJbldGSFpt?=
+ =?utf-8?B?UndIZ2F1bHNiN2NaeUNtR1FGcGZQb3ZPSkVTMDZOK280N1QzQkptWFVBS2hG?=
+ =?utf-8?B?WW5YbTJTMXJLNnlLVnhNZlh5ODBtUW1EOEZwdnJDelBDM2ZiRE1ORTJHd3h3?=
+ =?utf-8?B?VTNBS0poeVRYcmkwN0ZUVDZQNDR5Nk1KaDBxcWw2STVpdTBOaGgzN1c5S2VM?=
+ =?utf-8?B?cjM1YlZ4VE5GOXp1RVZ3ckhISENGTWFTWnFiR3VUanZHdVBuSEVHVnZKMjMy?=
+ =?utf-8?B?WGxuNWRxeXp3aE93cXFiZDF6V3RYME5ZMWRTNjk5UjN1Zjd4OW9FdFFrQVhG?=
+ =?utf-8?B?RmQrY2pwZGNiblZiazM4MTJZcTJsUGNWYlVGbmVnSHNPdG0rTjVWTFJvVE1L?=
+ =?utf-8?B?M2lWdGlvRGMwd2c4bktIak54clBJZFVaVFg5R0l6SGh6TnJwN25NbXJ2SlEx?=
+ =?utf-8?B?US9RY0Y0VitVSXI5WDBWbFRBRjAwNmxoOVZDWXBGQjh3OVJnUStGQlN4QUhU?=
+ =?utf-8?B?QlliT3hMdHJiS1VUZHY0SG1pWk1MekMzc3ZBaXkwaFlGMnB1MjhqYWsvSEdK?=
+ =?utf-8?B?Rkp6aituR0V2K0IvdGNPcUJFczlOVUxOWWtHMkhJc2RiTjMxY3ZjazRHaDh4?=
+ =?utf-8?B?L1I0bHV3LzlzMXkrNUN4NEwwVS8vbzZEd0VablExejI3WTJaeXVBNXM3TVBG?=
+ =?utf-8?B?VWdoeHZiK3o2dEdTbFAxSUNVS21WNVQ0OWVjSXFCS0lKaTFmZEFlWkt2TTlG?=
+ =?utf-8?B?cERwcWYyV3NSVVpNWXpVYkVrWElHRURBSlA1Q0loclFaMkRqQnlxVWpXM0Rp?=
+ =?utf-8?B?YXlZL2RJYmFnei96ZjIyUW1JQTg2eVRvbnhwUURMYVpSZXVqK1dxcUYvUkVM?=
+ =?utf-8?B?dWd2NFNtYzV5QVZnL1hCWWdrTUdnZE1nQ1JjSlRmOUlwQ1dYZllsZWtDQ1hB?=
+ =?utf-8?B?NWxick8zMCtBWXNYQ3ZHSlVBakR0L1BGS0g1ZklDWkdZR3FaVENPZmt2KzJF?=
+ =?utf-8?B?ZVUrWVdYREowOE83WmNLOGtuYVlQaGowSGpJTzZ3dGpzcmJyTTlwM1E4d2pV?=
+ =?utf-8?B?Zm43YjFwbHViM3VGL2tnSG4rUmZZSFo4bTBYbWFnRVRNMm9iUERZaEhiZCtk?=
+ =?utf-8?B?RkE5eloyL3FQbjIxblBKSnZNZ1FBVVJCRjczYitYdWVzTjhwRmhjNmJiTFF5?=
+ =?utf-8?B?VnVRK09KV0MwcTZ6dEVXeUZ5emdQaTVuM3A3UTVoVkRiQTgrT01QL2xKSHJy?=
+ =?utf-8?B?Q1o5WnNTT2ExMklGZ1NGOUpkYjBwT1dZY3hNTWVNbEZyckh4MzBiYTRmK2Fk?=
+ =?utf-8?B?YmV0RTFPMmplNlREdmcxbmt2VzNNVkNicTV4SzFiWUp1OWFkZ3ZtNkVUUy9v?=
+ =?utf-8?B?aDJMSHpQMEJFaWdnUUJnNEJNRkNYODlkU2QrOTNreEx1R2FmNUEvQlIrUUtj?=
+ =?utf-8?B?bmEyL3JDZllwMlFic2J4TUdvaFNQUUlSWHhlVmFaSjFsZjE4U3RWYTNTdTRZ?=
+ =?utf-8?B?SS93Z0FmMzR0OXdOVXJnQzh0WjRsZGRQQ0NTR2trTGpKRmh2UlF0TkhhaU9I?=
+ =?utf-8?B?YzNWMnJ1Q1NuRG5UNkZPa1Y5MWRLZXFWQldBWU9lOWpXSkJJWjg2cFhCdzVW?=
+ =?utf-8?B?T3Z2ZVZQcit6LzN4b0loejV0OGFJYlIrR1ZPUWIwSnpETjhIaHU3QzUwZEUz?=
+ =?utf-8?B?bzJGOFh1eW1IMTJpK1h4Q2sxL2s5dFJheVBkaEN6Z0cyQ0liak5nSkRKSkRL?=
+ =?utf-8?B?bzJoZjZvUVpqNGl1MllPRVNwMU92YkVqQisrSFJtY0tUT0tvcFdOaTcrWW1o?=
+ =?utf-8?B?QWZ3MnEwMWtoRk0vcDB6ejNKTWlyTW8yeklMSHZYU2dqajA2OWtVa3htdGlp?=
+ =?utf-8?Q?agQjfBDaosqAyokA=3D?=
+X-Exchange-RoutingPolicyChecked: UHwD4VdWFfrBADzFertPcFvY5SRv6tiCCs8VgFbSwBxlr8pFKcPk6vYnq7cws2n95o2fHAmmEkzrj6rkqDMJhKlpD4+jU4zak41vSo2ZWmZB/fWMa5BMCeAGmoX1NgRZ+DC8jatKcTxSX/rDztPmL9yPhelWpsUGqhcjGK8G+DicAUD5oC8E2V9kxMsJTAVkeT+ZIBvSLv20rQXwNPLlEW81pMdIhxZmEImcg1RfPdJeV4Yljlcd7yN75Z1Q9bswukGRrqgdpAPd3E937Q7IJaF0PdcAdcARr8JtWMyEML/WVV5oJA+pvm2gssAu360D5jwf6Pd+GQxws3OwPr5Kww==
+X-MS-Exchange-CrossTenant-Network-Message-Id: 300b42be-44f3-4197-e565-08de7f0fde3d
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Mar 2026 01:45:26.5703
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Pwjep7dJrvXLXjiATcEvnPyjPtWHr800d/pnblHMF/yR3sIknvq04Uh1YTmXEYOWtPJ0oYD9iqgUDcAgeeXN3WLut1AMbJ63ISyPHL05RCk=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR11MB5814
+X-OriginatorOrg: intel.com
 
-Hi Mani
+Alex Williamson wrote:
+[..]
+> A constraint here is that CXL_BUS can be modular while PCI is builtin,
+> but reset is initiated through PCI and drivers like vfio-pci already
+> manage an opaque blob of PCI device state that can be pushed back into
+> the device to restore it between use cases.  If PCI is not enlightened
+> about CXL state to some extent, how does this work?
 
-在 2026/03/10 星期二 22:02, Manivannan Sadhasivam via B4 Relay 写道:
-> From: Manivannan Sadhasivam <mani@kernel.org>
-> 
-> The PCI link, when down, needs to be recovered to bring it back. But on
-> some platforms, that cannot be done in a generic way as link recovery
-> procedure is platform specific. So add a new API
-> pci_host_handle_link_down() that could be called by the host bridge drivers
-> for a specific Root Port when the link goes down.
-> 
-> The API accepts the 'pci_dev' corresponding to the Root Port which observed
-> the link down event. If CONFIG_PCIEAER is enabled, the API calls
-> pcie_do_recovery() function with 'pci_channel_io_frozen' as the state. This
-> will result in the execution of the AER Fatal error handling code. Since
-> the link down recovery is pretty much the same as AER Fatal error handling,
-> pcie_do_recovery() helper is reused here. First, the AER error_detected()
-> callback will be triggered for the bridge and then for the downstream
-> devices. Finally, pci_host_reset_root_port() will be called for the Root
-> Port, which will reset the Root Port using 'reset_root_port' callback to
-> recover the link. Once that's done, resume message will be broadcasted to
-> the bridge and the downstream devices, indicating successful link recovery.
-> 
-> But if CONFIG_PCIEAER is not enabled in the kernel, only
-> pci_host_reset_root_port() API will be called, which will in turn call
-> pci_bus_error_reset() to just reset the Root Port as there is no way we
-> could inform the drivers about link recovery.
-> 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> Tested-by: Brian Norris <briannorris@chromium.org>
-> Tested-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> Tested-by: Richard Zhu <hongxing.zhu@nxp.com>
-> Reviewed-by: Frank Li <Frank.Li@nxp.com>
-> ---
->   drivers/pci/controller/pci-host-common.c | 35 ++++++++++++++++++++++++++++++++
->   drivers/pci/controller/pci-host-common.h |  1 +
->   drivers/pci/pci.c                        |  1 +
->   drivers/pci/pcie/err.c                   |  1 +
->   4 files changed, 38 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
-> index d6258c1cffe5..15ebff8a542a 100644
-> --- a/drivers/pci/controller/pci-host-common.c
-> +++ b/drivers/pci/controller/pci-host-common.c
-> @@ -12,9 +12,11 @@
->   #include <linux/of.h>
->   #include <linux/of_address.h>
->   #include <linux/of_pci.h>
-> +#include <linux/pci.h>
->   #include <linux/pci-ecam.h>
->   #include <linux/platform_device.h>
->   
-> +#include "../pci.h"
->   #include "pci-host-common.h"
->   
->   static void gen_pci_unmap_cfg(void *ptr)
-> @@ -106,5 +108,38 @@ void pci_host_common_remove(struct platform_device *pdev)
->   }
->   EXPORT_SYMBOL_GPL(pci_host_common_remove);
->   
-> +static pci_ers_result_t pci_host_reset_root_port(struct pci_dev *dev)
-> +{
-> +	int ret;
-> +
-> +	pci_lock_rescan_remove();
-> +	ret = pci_bus_error_reset(dev);
-> +	pci_unlock_rescan_remove();
-> +	if (ret) {
-> +		pci_err(dev, "Failed to reset Root Port: %d\n", ret);
-> +		return PCI_ERS_RESULT_DISCONNECT;
-> +	}
-> +
-> +	pci_info(dev, "Root Port has been reset\n");
-> +
-> +	return PCI_ERS_RESULT_RECOVERED;
-> +}
-> +
-> +static void pci_host_recover_root_port(struct pci_dev *port)
-> +{
-> +#if IS_ENABLED(CONFIG_PCIEAER)
-> +	pcie_do_recovery(port, pci_channel_io_frozen, pci_host_reset_root_port);
-> +#else
-> +	pci_host_reset_root_port(port);
+My expectation is that "vfio-cxl" is responsible. Similar to vfio-pci
+that builds on PCI core functionality for assigning a device, a vfio-cxl
+driver would build on CXL.
 
-Since pci_host_reset_root_port() returns pci_ers_result_t, shouldn't we 
-check the result? If the return value is intentionally ignored here,
-maybe pci_host_reset_root_port actually doesn't need a return value at
-all?
+Specficially, register generic 'struct cxl_memdev' and/or, 'struct
+cxl_cachdev' objects with the CXL core, like any other accelerator
+driver, and coordinate various levels of reset on those objects, not the
+'struct pci_dev'.
 
-> +#endif
-> +}
-> +
-> +void pci_host_handle_link_down(struct pci_dev *port)
-> +{
-> +	pci_info(port, "Recovering Root Port due to Link Down\n");
-> +	pci_host_recover_root_port(port);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_host_handle_link_down);
+> PCI core has already been enlightened about things like virtual-channel
+> that it doesn't otherwise touch in order to be able to save and restore
+> firmware initiated configurations.  I think there are aspects of that
+> sort of thing here as well.  Thanks,
 
-This function shouldn't be called like in interrupt context because of
-the pci_lock_rescan_remove() and pci_bus_error_reset()::pci_slot_mutex,
-but it's not so obvious from the API name. It's prone for host drivers
-to use it like:
+I am willing to hear more and admit I am not familiar with the details
+of virtual-channel that make it both amenable to vfio-pci management and
+similar to CXL. CXL needs to consider MM, cross-device dependencies, and
+decoder topology management that is more dynamic than what happens for
+PCI resources.
 
-register_LDn_irq -> irq isr -> pci_host_handle_link_down()
-
-So perhaps add a comment about it would be better.
-
-> +
->   MODULE_DESCRIPTION("Common library for PCI host controller drivers");
->   MODULE_LICENSE("GPL v2");
-> diff --git a/drivers/pci/controller/pci-host-common.h b/drivers/pci/controller/pci-host-common.h
-> index b5075d4bd7eb..dd12dd1a1b23 100644
-> --- a/drivers/pci/controller/pci-host-common.h
-> +++ b/drivers/pci/controller/pci-host-common.h
-> @@ -17,6 +17,7 @@ int pci_host_common_init(struct platform_device *pdev,
->   			 struct pci_host_bridge *bridge,
->   			 const struct pci_ecam_ops *ops);
->   void pci_host_common_remove(struct platform_device *pdev);
-> +void pci_host_handle_link_down(struct pci_dev *port);
->   
->   struct pci_config_window *pci_host_common_ecam_create(struct device *dev,
->   	struct pci_host_bridge *bridge, const struct pci_ecam_ops *ops);
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 6f09057d83e0..1b37bfe6d079 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5650,6 +5650,7 @@ int pci_bus_error_reset(struct pci_dev *bridge)
->   	mutex_unlock(&pci_slot_mutex);
->   	return pci_bus_reset(bridge->subordinate, PCI_RESET_DO_RESET);
->   }
-> +EXPORT_SYMBOL_GPL(pci_bus_error_reset);
->   
->   /**
->    * pci_probe_reset_bus - probe whether a PCI bus can be reset
-> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> index 13b9d9eb714f..d77403d8855b 100644
-> --- a/drivers/pci/pcie/err.c
-> +++ b/drivers/pci/pcie/err.c
-> @@ -292,3 +292,4 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
->   
->   	return status;
->   }
-> +EXPORT_SYMBOL_GPL(pcie_do_recovery);
-> 
+The CXL accelerator series is currently contending with being able to
+restore device configuration after reset. I expect vfio-cxl to build on
+that, not push CXL flows into the PCI core.
