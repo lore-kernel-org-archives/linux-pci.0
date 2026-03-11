@@ -1,127 +1,128 @@
-Received: from zg8tmtyylji0my4xnjeumjiw.icoremail.net (zg8tmtyylji0my4xnjeumjiw.icoremail.net [162.243.161.220])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 154253C1412;
-	Wed, 11 Mar 2026 10:35:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.243.161.220
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC5F83CF04D;
+	Wed, 11 Mar 2026 10:39:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773225349; cv=none; b=u7AEHsQGfW8ZLdkaVoJGGhFmyR+UP8RQUHYJmMvRGIxorLHjVVm55ONKZhTU37jsIoESHK4GbpJcwjUFcCVnKTjZ0mAeoCv9zvt3ZllHki7DeHuNnjpGeokuFJSVBKaH2BZhTmMh/5LauqWwEdImpd9kEjKO2kcavp1uTzv6GZA=
+	t=1773225540; cv=none; b=UzOBBPCxAQQv5kg/zT1hqixT4xTLLs+gTWtS1wkcU1tZ19mDujasgiPAVcvmrCwJnEAnfa21Fi/vSQIkFKb36bEELD1Wvs+N/C/IyEt4cgmL/uUkag5oMprTJuBTchAA3/UWkOO0+5OOQYvqPC4K5DD28voZiB1JsSdBfItRC8A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773225349; c=relaxed/simple;
-	bh=u+xi7aOGiG3I+VNqPyZnht8J+41bmBEuRK1uFCb6TRA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=hTTPcMNdQXd1KY2O6Rhsa0z/3xuNdF8w4G3Q+7XC1JhAxGhl+b6lumiNz4dTMMMINzQcNDcRbqjeNoGIYFgf3rdeasVZzxZoWA2zXyqwQWVJsFCHeot1IpEJJTqacSS2MxrD0ew+D83T7z8ayzNWGISjRjp13R6YJZNDRHGwuxE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=162.243.161.220
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
-Received: from zhangsenchuan$eswincomputing.com ( [10.12.96.83] ) by
- ajax-webmail-app2 (Coremail) ; Wed, 11 Mar 2026 18:35:12 +0800 (GMT+08:00)
-Date: Wed, 11 Mar 2026 18:35:12 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: zhangsenchuan <zhangsenchuan@eswincomputing.com>
-To: "Manivannan Sadhasivam" <mani@kernel.org>
-Cc: "Min Lin" <linmin@eswincomputing.com>, bhelgaas@google.com,
-	krzk+dt@kernel.org, conor+dt@kernel.org, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, robh@kernel.org, p.zabel@pengutronix.de,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, christian.bruel@foss.st.com,
-	shradha.t@samsung.com, krishna.chundru@oss.qualcomm.com,
-	thippeswamy.havalige@amd.com, inochiama@gmail.com, Frank.li@nxp.com,
-	ningyu@eswincomputing.com, pinkesh.vaghela@einfochips.com,
-	ouyanghui@eswincomputing.com
-Subject: Re: Re: [PATCH v11 2/2] PCI: eic7700: Add Eswin PCIe host
- controller driver
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
- 20241203(6b039d88) Copyright (c) 2002-2026 www.mailtech.cn
- mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
-In-Reply-To: <twvubrxemm7nx2i5p65byehj7y2g43c5esq3go72t6qbsz7yal@dxwvslzvgdc5>
-References: <20260227111536.1940-1-zhangsenchuan@eswincomputing.com>
- <20260227111808.1996-1-zhangsenchuan@eswincomputing.com>
- <jd4aszup2peetymesiltqghoptp2w4uuecrsdzkb2cl5vqqfot@m3vh6x4u5t6l>
- <57246067.3de3.19cbd03fc5f.Coremail.linmin@eswincomputing.com>
- <twvubrxemm7nx2i5p65byehj7y2g43c5esq3go72t6qbsz7yal@dxwvslzvgdc5>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	s=arc-20240116; t=1773225540; c=relaxed/simple;
+	bh=W7ULGNJxGs/DGU9Myuy1oXiG5LI/4bcuMikaWvPhafA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Vm+aP3yctBDRtCWqnFAbrhsLMv+GvCt7vAiOubkbb6owKfm1QtaPFF2r1dRxYhrliQ5saMHzH6WYaSEkEd8vQklpxTi+JQbZIB6rJ1YAW/iXzsBJtnbdRnPx1pr9l7rOqQuwGg+a/ZLITo4LFcdwOWRrTa0jestAHF7/3OD4AjE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EPXTMuVt; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EPXTMuVt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4256C2BC86;
+	Wed, 11 Mar 2026 10:38:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773225540;
+	bh=W7ULGNJxGs/DGU9Myuy1oXiG5LI/4bcuMikaWvPhafA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=EPXTMuVttZqUZ/o7JPPcYnite3Um4wggHLpvXqpIoWuC2usNA6k425SfK6rMs77rB
+	 CYWeP0jsQTNUcUIy8PnTh9S3O1nsMJGjNBhq2Dq0SHWq7cP3w5ZyXyw9RdDTA3R1eW
+	 S440F5uh0GmInYEkvybjOxJt938zdDJqpyKVdapOCNKsje+vi1+1YLP/xkfpiLNDws
+	 05TBCJ8PNE7rD4f12++HjlcvSoHkNaTbYC0bbQKnbCiOof2KrsmYEZaZiY5R+JFXdj
+	 /8xPc+/68mvyzrREgIspZOqMj2/RD7sCmgpK/s0D84g4YnUN/WpSgEaH93P51o62GI
+	 KrW++eDJAd9HA==
+Date: Wed, 11 Mar 2026 11:38:50 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Minghuan Lian <minghuan.Lian@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
+	Roy Zang <roy.zang@nxp.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Srikanth Thokala <srikanth.thokala@intel.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Marek Vasut <marek.vasut+renesas@gmail.com>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+	Koichiro Den <den@valinux.co.jp>,
+	Damien Le Moal <dlemoal@kernel.org>, Frank Li <Frank.Li@nxp.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
+	linux-arm-msm@vger.kernel.org, linux-tegra@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH v3 1/9] PCI: endpoint: Introduce pci_epc_bar_type
+ BAR_64BIT_UPPER
+Message-ID: <abFGOoZUX_vexLWR@fedora>
+References: <20260302095913.48155-11-cassel@kernel.org>
+ <20260302095913.48155-12-cassel@kernel.org>
+ <dtxdgxrewfby5hu3cu3pu5kljylm627uc43sw75gk7loimmm6r@ei4w6wmqgd6a>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <597765c6.41f9.19cdc76ffa4.Coremail.zhangsenchuan@eswincomputing.com>
-X-Coremail-Locale: en_US
-X-CM-TRANSID:TQJkCgAHHaBgRbFpJoQHAA--.1377W
-X-CM-SenderInfo: x2kd0wpvhquxxxdqqvxvzl0uprps33xlqjhudrp/1tbiAQEDBmmwR
-	5McuAAAss
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-	daVFxhVjvjDU=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dtxdgxrewfby5hu3cu3pu5kljylm627uc43sw75gk7loimmm6r@ei4w6wmqgd6a>
 
-PiA+ID4gU3ViamVjdDogUmU6IFtQQVRDSCB2MTEgMi8yXSBQQ0k6IGVpYzc3MDA6IEFkZCBFc3dp
-biBQQ0llIGhvc3QgY29udHJvbGxlciBkcml2ZXIKPiA+ID4gCj4gPiA+IE9uIEZyaSwgRmViIDI3
-LCAyMDI2IGF0IDA3OjE4OjA4UE0gKzA4MDAsIHpoYW5nc2VuY2h1YW5AZXN3aW5jb21wdXRpbmcu
-Y29tIHdyb3RlOgo+ID4gPiA+IEZyb206IFNlbmNodWFuIFpoYW5nIDx6aGFuZ3NlbmNodWFuQGVz
-d2luY29tcHV0aW5nLmNvbT4KPiA+ID4gPiAKPiA+ID4gPiBBZGQgZHJpdmVyIGZvciB0aGUgRXN3
-aW4gRUlDNzcwMCBQQ0llIGhvc3QgY29udHJvbGxlciwgd2hpY2ggaXMgYmFzZWQgb24KPiA+ID4g
-PiB0aGUgRGVzaWduV2FyZSBQQ0llIGNvcmUsIElQIHJldmlzaW9uIDUuOTZhLiBUaGUgUENJZSBH
-ZW4uMyBjb250cm9sbGVyCj4gPiA+ID4gc3VwcG9ydHMgYSBkYXRhIHJhdGUgb2YgOCBHVC9zIGFu
-ZCA0IGNoYW5uZWxzLCBzdXBwb3J0IElOVHggYW5kIE1TSQo+ID4gPiA+IGludGVycnVwdHMuCj4g
-PiA+ID4gCj4gPiA+IAo+ID4gPiBJcyB0aGUgZHJpdmVyIGdvaW5nIHRvIHdvcmsgb25seSBmb3Ig
-dGhlIFBDSWUgUkMgSVAgaW4gRUlDNzcwMCBTb0Mgb3IgZm9yIHRoZQo+ID4gPiB1cGNvbWluZyBF
-c3dpbiBTb0NzIGFzIHdlbGw/IEp1c3QgY3VyaW91cyBiZWNhdXNlLCB3ZSBkb24ndCBuYW1lIGRy
-aXZlcnMgYmFzZWQKPiA+ID4gb24gb25lIFNvQyBuYW1lLCBidXQgYnkgdGhlIHZlbmRvciBzbyB0
-aGF0IHRoZSBkcml2ZXIgKGlmIGNvbXBhdGlibGUpIGNhbiBiZQo+ID4gPiB1c2VkIGFjcm9zcyBv
-dGhlciBTb0NzIGZyb20gdGhlIHZlbmRvci4KPiA+ID4gCj4gPiA+IElmIGl0IGNhbiB3b3JrIGFj
-cm9zcyBvdGhlciBTb0NzLCB0aGVuIEkgY2FuIGNoYW5nZSAnZWljNzcwMCcgdG8gJ2Vzd2luJywg
-d2hlcmUKPiA+ID4gYXBwbGljYWJsZSB3aGlsZSBhcHBseWluZy4KPiA+ID4gCj4gPiAKPiA+IFRo
-aXMgUENJZSBSQyBJUCBpbiBFSUM3NzAwIHdpbGwgb25seSBiZSB1c2VkIGZvciBFSUM3NzAwIFNv
-Qy4gT25lIHRoaW5nIGZvciBzdXJlCj4gPiBpcyBvdXIgbmV4dCBTb0Mgd2lsbCB1c2UgYSBoaWdo
-ZXIgSVAgcmV2aXNpb24gb2YgdGhlIERlc2lnbldhcmUgUENJZSBjb3JlLgo+ID4gSW4gdGhlIGZ1
-dHVyZSwgdGhlcmUgaXMgbm8gZG91YnQgdGhhdCB0aGUgdXNlIG9mIElQIGZyb20gb3RoZXIgbWFu
-dWZhY3R1cmVycyBtYXkKPiA+IGJlIGNvbnNpZGVyZWQuCj4gPiAKPiA+IEJhc2VkIG9uIHRoaXMs
-IG1heSBJIGFzayB3aGljaCBuYW1lIGRvIHlvdSB0aGluayBpcyBiZXR0ZXIsIGVpYzc3MDAnIG9y
-ICdlc3dpbic/Cj4gPiAKPiAKPiBJJ2Qgc3VnZ2VzdCBnb2luZyB3aXRoIGp1c3QgJ2Vzd2luJy4g
-SWYgdGhlIGZ1dHVyZSByZXZpc2lvbnMgY29tZSB1cCB3aXRoCj4gbm9uLWR3YyBiYXNlZCBJUHMs
-IHdlIGNhbiBuYW1lIHRoZW0gYXBwcm9wcmlhdGVseS4KPiAKPiA+IEkgZm91bmQgdGhlcmUgaXMg
-YSBjb21taXQgb24gZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNpZS10ZWdyYTE5NC5jCj4g
-PiBJdCBhZGRlZCBUZWdyYTIzNCBQQ0llIHN1cHBvcnQgaW4gcGNpZS10ZWdyYTE5NC5jCj4gPiBJ
-cyB0aGlzIG5hbWluZyBhcHByb2FjaCBubyBsb25nZXIgcmVjb21tZW5kZWQ/Cj4gPiAKPiAKPiBZ
-ZXMsIHRoYXQgcHJlZGF0ZXMgbXkgdGltZSB3aXRoIGhvc3QgY29udHJvbGxlciBkcml2ZXJzLiBJ
-IHN0cm9uZ2x5IHN1Z2dlc3QKPiBuYW1pbmcgdGhlIGRyaXZlcnMgYmFzZWQgb24gdmVuZG9ycyBv
-ciBmYW1pbHkgdG8gYXZvaWQgY3JlYXRpbmcgYW4gaW1wcmVzc2lvbgo+IHRoYXQgdGhlIGRyaXZl
-ciBvbmx5IHN1cHBvcnRzIG9uZSBTb0MgdmVyc2lvbi4KPiAKPiBTaW5jZSB5b3UgYWdyZWVkIGZv
-ciByZW5hbWluZywgSSB0b29rIHRoZSBsaWJlcnR5IHRvIGRvIHRoZSBjaGFuZ2UgbXlzZWxmIGFu
-ZAo+IGFwcGxpZWQgdGhlIHBhdGNoZXMuIEkgYWxzbyBhZGRlZCB0aGUgbWFpbnRhaW5lcnMgZW50
-cnkuIFBsZWFzZSB0YWtlIGEgbG9vayBhdAo+IHRoZSBjb21taXRzIGFuZCBjb25maXJtIGlmIGV2
-ZXJ5dGhpbmcgaXMgT0s6Cj4gaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tl
-cm5lbC9naXQvcGNpL3BjaS5naXQvbG9nLz9oPWNvbnRyb2xsZXIvZHdjLWVzd2luCgpIaSBNYW5p
-LAoKVGhhbmsgeW91IHZlcnkgbXVjaCBmb3IgaGVscGluZyBtZSBjaGFuZ2UgJ2VpYzc3MDAnIHRv
-ICdlc3dpbicuCgpJIGhhdmUgdmVyaWZpZWQgdGhhdCB0aGUgY29kZSBmdW5jdGlvbnMgYXJlIGlu
-dGFjdC4gSG93ZXZlciwgdGhlcmUgYXJlIGEgZmV3IGFyZWFzCnRoYXQgcmVxdWlyZSB5b3VyIGFz
-c2lzdGFuY2UgdG8gaW5jb3Jwb3JhdGUgYW5kIG1ha2UgbmVjZXNzYXJ5IG1vZGlmaWNhdGlvbnMu
-IApBZnRlciB0aGUgbW9kaWZpY2F0aW9ucywgSSBiZWxpZXZlIHlvdSBjYW4gaW5jb3Jwb3JhdGUg
-aXQuCgpQbGVhc2Ugc2VlIHRoZSBmb2xsb3dpbmfvvJoKCiAvKiBWZW5kb3IgYW5kIGRldmljZSBJ
-RCB2YWx1ZSAqLwogI2RlZmluZSBQQ0lfVkVORE9SX0lEX0VTV0lOICAgICAgICAgICAgMHgxZmUx
-Ci0jZGVmaW5lIFBDSV9ERVZJQ0VfSURfRVNXSU5fRVNXSU4gICAgICAweDIwMzAKKyNkZWZpbmUg
-UENJX0RFVklDRV9JRF9FU1dJTl9FSUM3NzAwICAgIDB4MjAzMAogCi0jZGVmaW5lIEVTV0lOX05V
-TV9SU1RTICAgICAgICAgQVJSQVlfU0laRShlc3dpbl9wY2llX3JzdHMpCisjZGVmaW5lIEVTV0lO
-X05VTV9SU1RTICAgICAgICAgICAgICAgICBBUlJBWV9TSVpFKGVzd2luX3BjaWVfcnN0cykKIAog
-c3RhdGljIGNvbnN0IGNoYXIgKiBjb25zdCBlc3dpbl9wY2llX3JzdHNbXSA9IHsKICAgICAgICAi
-cHdyIiwKQEAgLTkxLDcgKzkxLDcgQEAgc3RhdGljIGJvb2wgZXN3aW5fcGNpZV9saW5rX3VwKHN0
-cnVjdCBkd19wY2llICpwY2kpCiB9CiAKIHN0YXRpYyBpbnQgZXN3aW5fcGNpZV9wZXJzdF9yZXNl
-dChzdHJ1Y3QgZXN3aW5fcGNpZV9wb3J0ICpwb3J0LAotICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICBzdHJ1Y3QgZXN3aW5fcGNpZSAqcGNpZSkKKyAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIHN0cnVjdCBlc3dpbl9wY2llICpwY2llKQogewogICAgICAgIGludCByZXQ7
-CiAKQEAgLTEyMyw3ICsxMjMsNyBAQCBzdGF0aWMgdm9pZCBlc3dpbl9wY2llX2Fzc2VydChzdHJ1
-Y3QgZXN3aW5fcGNpZSAqcGNpZSkKIH0KIAogc3RhdGljIGludCBlc3dpbl9wY2llX3BhcnNlX3Bv
-cnQoc3RydWN0IGVzd2luX3BjaWUgKnBjaWUsCi0gICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgc3RydWN0IGRldmljZV9ub2RlICpub2RlKQorICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICBzdHJ1Y3QgZGV2aWNlX25vZGUgKm5vZGUpCiB7CiAgICAgICAgc3RydWN0IGRldmlj
-ZSAqZGV2ID0gcGNpZS0+cGNpLmRldjsKICAgICAgICBzdHJ1Y3QgZXN3aW5fcGNpZV9wb3J0ICpw
-b3J0OwpAQCAtMjQxLDcgKzI0MSw3IEBAIHN0YXRpYyBpbnQgZXN3aW5fcGNpZV9ob3N0X2luaXQo
-c3RydWN0IGR3X3BjaWVfcnAgKnBwKQogICAgICAgICAqLwogICAgICAgIGR3X3BjaWVfZGJpX3Jv
-X3dyX2VuKHBjaSk7CiAgICAgICAgZHdfcGNpZV93cml0ZXdfZGJpKHBjaSwgUENJX1ZFTkRPUl9J
-RCwgUENJX1ZFTkRPUl9JRF9FU1dJTik7Ci0gICAgICAgZHdfcGNpZV93cml0ZXdfZGJpKHBjaSwg
-UENJX0RFVklDRV9JRCwgUENJX0RFVklDRV9JRF9FU1dJTl9FU1dJTik7CisgICAgICAgZHdfcGNp
-ZV93cml0ZXdfZGJpKHBjaSwgUENJX0RFVklDRV9JRCwgUENJX0RFVklDRV9JRF9FU1dJTl9FSUM3
-NzAwKTsKICAgICAgICBkd19wY2llX2RiaV9yb193cl9kaXMocGNpKTsKIAogICAgICAgIHJldHVy
-biAwOwoKS2luZCByZWdhcmRzLApTZW5jaHVhbg==
+Hello Mani,
+
+On Wed, Mar 11, 2026 at 12:05:59PM +0530, Manivannan Sadhasivam wrote:
+
+(snip)
+
+> This also brings the question, do we really need to mark the preceding BAR?
+
+From a pure code PoV, marking the preceding BAR is enough even with the
+current code:
+https://github.com/torvalds/linux/blob/v7.0-rc3/drivers/pci/endpoint/pci-epc-core.c#L101-L103
+
+However, the current documentation claims that the succeeding BAR must be
+marked as BAR_RESERVED:
+https://github.com/torvalds/linux/blob/v7.0-rc3/include/linux/pci-epc.h#L207-L210
+
+I want to change this to BAR_64BIT_UPPER / BAR_64BIT_UPPER_BASE, so we can use
+BAR_RESERVED for BARs that expose fixed hardware resources (e.g. eDMA regs).
+
+
+Thus, an EPC driver does not strictly need mark the succeeding BAR with anything.
+This was done mostly for clarity. (E.g. with BAR_64BIT_UPPER_BASE it is obvious
+that this BAR cannot be a standalone 32-bit BAR.)
+
+If we don't mark the succeeding BAR with anything, IMO, it is less obvious that
+the succeeding BAR cannot be used as a standalone 32-bit BAR.
+
+But... since the code already does the "right thing". We could simply nuke this
+part of the documentation, and drop the .type for all BARs succeeding a
+.only_64bit BAR, if you prefer that option over having a dedicated type for the
+"upper base of a 64-bit BAR".
+
+
+> Why can't we let the PCI EPC core to always assume that if the previous BAR
+> has 'only_64bit' bit set, next BAR cannot be used as a standalone 32bit BAR?
+> 
+> I find it weird or redundant to mark both BARs.
+
+Redundant, yes, but in my opinion marking both BARs makes it unambigious
+that two BARs are used when a BAR is "only_64bit".
+
+E.g. Manikanta originally wanted to add code comments for the upper part of
+the 64-bit BAR:
+https://lore.kernel.org/linux-pci/20260217-master-v1-2-727e26cdfaf5@nvidia.com/
+
+Sure, we can just skip the .type for the succeeding BAR...
+But is that really better than clearly showing that a "forced" 64-bit BAR will
+always occupy two BARs?
+
+
+Tell me what you prefer:
+1) s/BAR_RESERVED/BAR_64BIT_UPPER_BASE/
+2) Change documentation and drop .type for a BAR following a .only_64bit BAR.
+
+And I will respin with that.
+
+
+Kind regards,
+Niklas
