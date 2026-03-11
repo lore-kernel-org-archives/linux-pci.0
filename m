@@ -1,256 +1,150 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC02F35F17A
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2026 20:36:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8BDC324716;
+	Wed, 11 Mar 2026 21:09:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773261400; cv=none; b=A7hoFu54d0tJI1cPsjnxnFbrbhx5fcEQOqFLlxU1GuhO1TRSTPUGxfnTPYQX94DQALGlLUVMglBMgFwP1qmeLAyk8x0+pd2sG0gq6IcRL4bqHeCCdu/LNHNpA50tSTCUdDkx4dIAIOI9J7//R1qujga85/kn+H6lVX8Mmvdux+w=
+	t=1773263365; cv=none; b=PFa6GxemjTfx9ymK4h6v/rzBirTmAWh+BgfgFdciag1vQqw3Z/5kBB7poeoKcVuAJYfdQcQfmWU8IhV1n9EJ9ZtfMHP4goITFX5hJ1/CAvAI78crI0niihD5OTQuOc4SA3Idj7T8ArEhWBmdyC0bQ3XLFt6FauEMh8E4G1nI888=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773261400; c=relaxed/simple;
-	bh=qYYq9QByiFqeLn0pfmXjVP+hCnljDFrAmENHAGDV6aY=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=aT+/DlO0EDLn0RA4dNzQhqM4mS8LRqq2Yroh6jjTVou/+W59lNPBL6SSFJBrZQjYCavKxuKZ5LG+Ed8NdQxyFEmClvrCglU+02yno96JWHPxi5e6WK4pSwdhhK5Q6lqjzVifRi2JWzK/UQhWUxnrZ7QyE3gX/ry4E4a98lEXCVU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VoyJkR/M; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773263365; c=relaxed/simple;
+	bh=0rXaMvGNi4+OvPnGl2fgoLlfPW/6GtuSV3FJJcwDS9M=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
+	 References:In-Reply-To; b=Qw0DeQWZToxXzygkcqpCusukGVQaBPZUEhBJZ8wHm/hbjQ0K6bBp3m3g3OGsDpGGLLf0mPCZxU9Ur/gC01DY+JJXnnYxqqkwt7IGXqiyxr5WzCqpocEZJIOIGSfI39KvwQoj9iBwxY99cWgCwiMhcyG/ADfHL5WY704HSV0sCzg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nTY9OMOC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VoyJkR/M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65D3FC116C6;
-	Wed, 11 Mar 2026 20:36:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nTY9OMOC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3ED2FC4CEF7;
+	Wed, 11 Mar 2026 21:09:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773261400;
-	bh=qYYq9QByiFqeLn0pfmXjVP+hCnljDFrAmENHAGDV6aY=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=VoyJkR/M/IxOUME9ZYoX2VqhcATj/vDmi/gf+ibPlgD2199PdCtaEZ5ns/l1V1tAJ
-	 5YPZVmp5Q+tA6cRQ6tAPbO56Qyk8Pq5hxmVSOpIvFOmtA2f+nOcawLPLj5N4gtURRN
-	 4FoOXdl70j0fWRofMTbvhpg+c+BnbuAuUmtCKFCa2tVyD0fMZvS9sk/CiCN4wIu0FN
-	 BBmr5w9ApuUB+EW5ee7OtkZge+2FvY9CnNgTNe+bQBBTrYJRyC8o/3z+BJBnTzDC2R
-	 tUI6j8gJKSkR4zwKJ5GHjKC2dzaYTYF8D2QXVoNI1Nd0c9IWpTVX5GXjinW5lvmU8n
-	 LTfqUY1jEcFSw==
-Date: Wed, 11 Mar 2026 15:36:39 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sizhe Liu <liusizhe5@huawei.com>
-Cc: bhelgaas@google.com, Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Shiju Jose <shiju.jose@huawei.com>, Jon Pan-Doh <pandoh@google.com>,
-	linux-pci@vger.kernel.org, linuxarm@huawei.com,
-	Zeng Tao <prime.zeng@hisilicon.com>,
-	Hao Fang <fanghao11@huawei.com>, Yang Shen <shenyang39@huawei.com>,
-	Shuai Xue <xueshuai@linux.alibaba.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Terry Bowman <terry.bowman@amd.com>
-Subject: Re: [PATCH v3] PCI/AER: Fix missing AER logs in DPC and EDR paths
-Message-ID: <20260311203639.GA1008208@bhelgaas>
+	s=k20201202; t=1773263365;
+	bh=0rXaMvGNi4+OvPnGl2fgoLlfPW/6GtuSV3FJJcwDS9M=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
+	b=nTY9OMOC9F7kBpERi6z30FTuaZPxVl5Fv76LmjUo5otKD3FEeRahGXzKjzBHLciW/
+	 vsFHQE05z41uqlhKhSf82H6e/E4Nzu9yGSGunIZ9o4u6pDNHpQYJyKgpZB6+0m5s1D
+	 cAewcAljEd7Hj7kuJulzboI2aN1KxsQbjjxPrm3U6Pu/bOyjMJ6EBuAu7Zg/qeb4B0
+	 f6ToSmUPcZdepsHbptQjimEa08e1m8i4KaHUqNpNAR6l4j2zh0wNXnIpDSkMMMCK27
+	 3T5aLWdjgAYUE16y8cGqZfrCI7WYozbJwRtjgPtBEKCMJrNi+E6cOP74wmmn8fZt4t
+	 s51IXrEVJ8MCw==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260214081130.1878424-1-liusizhe5@huawei.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 11 Mar 2026 22:09:19 +0100
+Message-Id: <DH09EDBW3X6T.2996UB1CFCAW2@kernel.org>
+Subject: Re: [PATCH v3] PCI: dw-rockchip: Enable async probe by default
+Cc: "Robin Murphy" <robin.murphy@arm.com>, "Manivannan Sadhasivam"
+ <manivannan.sadhasivam@oss.qualcomm.com>, "Lorenzo Pieralisi"
+ <lpieralisi@kernel.org>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, "Rob Herring" <robh@kernel.org>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, "Heiko Stuebner" <heiko@sntech.de>, "Niklas Cassel"
+ <cassel@kernel.org>, "Shawn Lin" <shawn.lin@rock-chips.com>, "Hans Zhang"
+ <18255117159@163.com>, "Nicolas Frattaroli"
+ <nicolas.frattaroli@collabora.com>, "Wilfred Mallawa"
+ <wilfred.mallawa@wdc.com>, <linux-pci@vger.kernel.org>,
+ <linux-arm-kernel@lists.infradead.org>,
+ <linux-rockchip@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+ "Anand Moon" <linux.amoon@gmail.com>, "Grimmauld" <grimmauld@grimmauld.de>,
+ "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, <driver-core@lists.linux.dev>, "Lukas Wunner"
+ <lukas@wunner.de>
+To: "Manivannan Sadhasivam" <mani@kernel.org>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20260226101032.1042-1-linux.amoon@gmail.com>
+ <177260693908.10259.13055467642416391434.b4-ty@kernel.org>
+ <87bc37ee-234c-4568-b72e-955c130a6838@arm.com>
+ <f7tfshf7riljjibuqge4ubfjmludubpyh3ppdf6lasurzdzbtj@sw4xxagfhnn3>
+ <5d88fb5b-e771-4ea6-8d2c-c5cfd21e5860@arm.com>
+ <qwanhqrpztzkudik5fmberhabnzaly7v53677dohqzj5nq4wi2@6ndpiubyxcbi>
+ <DGZXF3LPSRK6.2QYN63QTKUQAX@kernel.org>
+ <cp5uktfqdf6zs53qsye57ior2ikmssgevxxdtevkzpisaif22h@7mrxspkuibow>
+In-Reply-To: <cp5uktfqdf6zs53qsye57ior2ikmssgevxxdtevkzpisaif22h@7mrxspkuibow>
 
-On Sat, Feb 14, 2026 at 04:11:30PM +0800, Sizhe Liu wrote:
-> Current DPC and EDR processing paths fail to print complete AER logs
-> information: aer_print_error() returns early without printing logs
-> due to uninitialized ratelimit_print variables.
-> 
-> Phenomenon:
-> -- Error log abnormal
-> pcieport 0000:20:00.0: DPC: containment event, status: 0x1f11: unmasked uncorrectable error detected
-> (------ AER logs should be printed here, but are missing ------)
-> nvme nvme0: frozen state error detected, reset controller
-> {4}[Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 0
-> 
-> Root cause analysis:
-> In aer_print_error(), PCIe AER errors are rate-limited via info->ratelimit_print[i],
-> but this variable is not initialized in DPC/EDR paths, leading to
-> early return before log printing.
-> 
-> aer_print_error() entry points and key logic:
-> 1) Native AER path (working correctly):
-> aer_isr_one_error_type(aer_err_info)
->     find_source_device(aer_err_info)
->         find_device_iter(aer_err_info)
->             add_error_device(aer_err_info)
->                 pci_dev_get(aer_err_info)                 <-- Get refcount
->                 if (aer_ratelimit(aer_err_info->severity))
->                     info->ratelimit_print[i] = 1        <-- Init ratelimit
->     aer_process_err_devices(aer_err_info)
->         aer_print_error(aer_err_info)
->             if (!info->ratelimit_print[i])
->                 return;
->             __aer_print_error()                         <-- Print AER info
->         handle_error_source(aer_err_info)
->             pci_dev_put()                             <-- Release refcount
-> 
-> 2) DPC path (missing ratelimit init; refcount not held):
-> dpc_handler()
->     dpc_process_error()
->         dpc_get_aer_uncorrect_severity(aer_err_info)
->         aer_get_device_error_info(aer_err_info)
->         aer_print_error(aer_err_info)
->             if (!info->ratelimit_print[i])
->                 return;                          <-- Early return (no log)
->             __aer_print_error()
-> 
-> 3) EDR path (missing ratelimit init only):
-> edr_handle_event()
->     acpi_dpc_port_get()
->         pci_dev_get() / pci_get_domain_bus_and_slot()     <-- Get refcount
->     dpc_process_error()
->         dpc_get_aer_uncorrect_severity(aer_err_info)
->         aer_get_device_error_info(aer_err_info)
->         aer_print_error(aer_err_info)
->             if (!info->ratelimit_print[i])
->                 return;                          <-- Early return (no log)
->             __aer_print_error()
->     pci_dev_put()    <-- Release refcount
-> 
-> Fix approach (minimal intrusive):
-> 1. Extract the initialization of info->ratelimit_print[i]
-> and e_info->root_ratelimit_print into aer_ratelimit_print_init().
-> 2. Call aer_ratelimit_print_init() in dpc_process_error() to initialize
-> ratelimit variables for DPC/EDR paths.
-> 3. Add pci_dev_get()/pci_dev_put() pairs in dpc_handler() to align
-> DPC path with EDR and native AER paths.
-> 
-> Note on not using add_error_device() directly:
-> https://lore.kernel.org/linux-pci/962a43ca-9593-430b-9a89-1591a5ae9bf9@huawei.com/
-> 
-> Test case (AER error injection):
-> - Enable DPC toggle in BIOS.
-> - Inject MalfTLP (AER FATAL ERROR) to target device.
-> 
-> Test result (normal error log):
-> pcieport 0000:20:00.0: DPC: containment event, status:0x1f11: unmasked uncorrectable error detected
-> pcieport 0000:20:00.0: PCIe Bus Error: severity=Uncorrectable (Fatal), type=Transaction Layer, (Receiver ID)
-> pcieport 0000:20:00.0: device [19e5:a120] error status/mask=00040000/04580000
-> pcieport 0000:20:00.0:    [18] MalfTLP   (First)
-> pcieport 0000:20:00.0: AER:   TLP Header: 0x00000000 0x00000000 0x00000000 0x00000000
-> nvme nvme0: frozen state error detected, reset controller
-> {2}[Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 0
-> 
-> [1] https://lore.kernel.org/linux-pci/20260127035405.712271-1-liusizhe5@huawei.com/
-> [2] https://lore.kernel.org/linux-pci/20260129140103.712011-1-liusizhe5@huawei.com/
-> 
-> Fixes: a57f2bfb4a58 ("PCI/AER: Ratelimit correctable and non-fatal error logging")
-> Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>
+On Wed Mar 11, 2026 at 1:28 PM CET, Manivannan Sadhasivam wrote:
+> On Wed, Mar 11, 2026 at 12:46:03PM +0100, Danilo Krummrich wrote:
+>> On Wed Mar 11, 2026 at 6:24 AM CET, Manivannan Sadhasivam wrote:
+>> > I have a contrary view here. If just a single driver or lib doesn't ha=
+ndle async
+>> > probe, it cannot just force other drivers to not take the advantage of=
+ async
+>> > probe. As I said above, enabling async probe easily saves a few hunder=
+d ms or
+>> > even more if there are more than one Root Port or Root Complex in an S=
+oC.
+>>=20
+>> Then the driver or lib has to be fixed / improved first or the driver co=
+re has
+>> to be enabled to deal with a case where PROBE_FORCE_SYNCHRONOUS is reque=
+sted
+>> from an async path, etc.
+>>=20
+>> In any case, applying the patch and breaking things (knowingly?) doesn't=
+ seem
+>> like the correct approach.
+>>=20
+>> > I strongly agree with you here that the underlying issue should be fix=
+ed. But
+>> > the real impact to end users is not this splat, but not having the boo=
+t time
+>> > optimization that this patch brings in. As an end user, one would want=
+ their
+>> > systems to boot quickly and they wouldn't bother much about a harmless=
+ warning
+>> > splat appearing in the dmesg log.
+>>=20
+>> You mean quickly booting into a "harmless" potential deadlock condition =
+the
+>> warning splat tries to make people aware of? :)
+>>=20
+>
+> Hmm, I overlooked the built-as-module part where the deadlock could be po=
+ssible
+> as indicated by the comment about the WARN_ON_ONCE().
+>
+> But what is the path forward here? Do you want the phylib to fix the
+> request_module() call or fix the driver core instead?
 
-Applied to pci/dpc for v7.1, thank you!
+Here are a few thoughts.
 
-I split this into two patches (holding the ref and fixing the
-ratelimit) and shortened commit log, function name, and parameters to
-match the surrounding code:
+In general, I think the best would be to get rid of the (affected)
+PROBE_FORCE_SYNCHRONOUS cases.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?id=1ca15d3c1b05
-https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?id=8f690004ff9c
+Now, I guess this can be pretty hard for a PCI controller driver, as you ca=
+n't
+really predict what ends up being probed from you async context, i.e. it co=
+uld
+even be some other bus controller and things could even propagate further.
 
-> ---
-> v1 -> v2
-> - Corrected the format and spelling errors in the commit log.
-> 
-> v2 -> v3
-> - Add PCI device reference count handling in the DPC path.
-> 
->  drivers/pci/pci.h      |  2 ++
->  drivers/pci/pcie/aer.c | 36 ++++++++++++++++++++++++------------
->  drivers/pci/pcie/dpc.c |  3 +++
->  3 files changed, 29 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index c8a0522e2e1f..070ef360189e 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -840,6 +840,8 @@ struct aer_err_info {
->  
->  int aer_get_device_error_info(struct aer_err_info *info, int i);
->  void aer_print_error(struct aer_err_info *info, int i);
-> +void aer_ratelimit_print_init(struct pci_dev *dev, struct aer_err_info *e_info,
-> +			int idx);
->  
->  int pcie_read_tlp_log(struct pci_dev *dev, int where, int where2,
->  		      unsigned int tlp_len, bool flit,
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index 2b0ac6bfdd76..f8d248e397ce 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -972,6 +972,29 @@ void pci_print_aer(struct pci_dev *dev, int aer_severity,
->  }
->  EXPORT_SYMBOL_GPL(pci_print_aer);
->  
-> +/**
-> + * aer_ratelimit_print_init - set flag whether error message should be printed
-> + * @dev: pointer to pci_dev to be rate-limited
-> + * @e_info: pointer to aer error info
-> + * @idx: index for dev array in aer error info
-> + */
-> +void aer_ratelimit_print_init(struct pci_dev *dev, struct aer_err_info *e_info,
-> +			int idx)
-> +{
-> +	/*
-> +	 * Ratelimit AER log messages.  "dev" is either the source
-> +	 * identified by the root's Error Source ID or it has an unmasked
-> +	 * error logged in its own AER Capability.  Messages are emitted
-> +	 * when "ratelimit_print[i]" is non-zero.  If we will print detail
-> +	 * for a downstream device, make sure we print the Error Source ID
-> +	 * from the root as well.
-> +	 */
-> +	if (aer_ratelimit(dev, e_info->severity)) {
-> +		e_info->ratelimit_print[idx] = 1;
-> +		e_info->root_ratelimit_print = 1;
-> +	}
-> +}
-> +
->  /**
->   * add_error_device - list device to be handled
->   * @e_info: pointer to error info
-> @@ -987,18 +1010,7 @@ static int add_error_device(struct aer_err_info *e_info, struct pci_dev *dev)
->  	e_info->dev[i] = pci_dev_get(dev);
->  	e_info->error_dev_num++;
->  
-> -	/*
-> -	 * Ratelimit AER log messages.  "dev" is either the source
-> -	 * identified by the root's Error Source ID or it has an unmasked
-> -	 * error logged in its own AER Capability.  Messages are emitted
-> -	 * when "ratelimit_print[i]" is non-zero.  If we will print detail
-> -	 * for a downstream device, make sure we print the Error Source ID
-> -	 * from the root as well.
-> -	 */
-> -	if (aer_ratelimit(dev, e_info->severity)) {
-> -		e_info->ratelimit_print[i] = 1;
-> -		e_info->root_ratelimit_print = 1;
-> -	}
-> +	aer_ratelimit_print_init(dev, e_info, i);
->  	return 0;
->  }
->  
-> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-> index fc18349614d7..6ee1f3daa766 100644
-> --- a/drivers/pci/pcie/dpc.c
-> +++ b/drivers/pci/pcie/dpc.c
-> @@ -275,6 +275,7 @@ void dpc_process_error(struct pci_dev *pdev)
->  			 status);
->  		if (dpc_get_aer_uncorrect_severity(pdev, &info) &&
->  		    aer_get_device_error_info(&info, 0)) {
-> +			aer_ratelimit_print_init(pdev, &info, 0);
->  			aer_print_error(&info, 0);
->  			pci_aer_clear_nonfatal_status(pdev);
->  			pci_aer_clear_fatal_status(pdev);
-> @@ -372,11 +373,13 @@ static irqreturn_t dpc_handler(int irq, void *context)
->  		return IRQ_HANDLED;
->  	}
->  
-> +	pci_dev_get(pdev);
->  	dpc_process_error(pdev);
->  
->  	/* We configure DPC so it only triggers on ERR_FATAL */
->  	pcie_do_recovery(pdev, pci_channel_io_frozen, dpc_reset_link);
->  
-> +	pci_dev_put(pdev);
->  	return IRQ_HANDLED;
->  }
->  
-> -- 
-> 2.33.0
-> 
+Not sure how big of a deal it is in practice though, there are not a lot of
+PROBE_FORCE_SYNCHRONOUS drivers (left), but note that specifying neither
+PROBE_FORCE_SYNCHRONOUS nor PROBE_PREFER_ASYNCHRONOUS currently results in
+synchronous by default.
+
+(Also, quite some other PCI controller drivers do set PROBE_PREFER_ASYNCHRO=
+NOUS
+and apparently got lucky with it.)
+
+From a driver-core perspective I think we're rather limited on what we can =
+do;
+we are already in async context at this point and can't magically go back t=
+o
+initcall context.
+
+So, the only thing I can think of is to kick off work on a workqueue, which=
+ in
+the end would be the same as the deferred probe handling.
+
+Another alternative would be to let the subsystem handle such cases, which =
+in
+this case would probably mean to handle the current_is_async() case in
+pci_host_probe() or pci_bus_add_devices().
+
+On the other hand, this would probably end up to be a subsystem specific
+implementation of "kick of work on a workqueue".
+
+> I can drop this patch in the meantime. But holding this prolong wouldn't =
+help.
