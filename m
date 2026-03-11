@@ -1,150 +1,134 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8BDC324716;
-	Wed, 11 Mar 2026 21:09:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A312B175A73;
+	Wed, 11 Mar 2026 21:37:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773263365; cv=none; b=PFa6GxemjTfx9ymK4h6v/rzBirTmAWh+BgfgFdciag1vQqw3Z/5kBB7poeoKcVuAJYfdQcQfmWU8IhV1n9EJ9ZtfMHP4goITFX5hJ1/CAvAI78crI0niihD5OTQuOc4SA3Idj7T8ArEhWBmdyC0bQ3XLFt6FauEMh8E4G1nI888=
+	t=1773265050; cv=none; b=AvZCtez7Noi58kyFJHpyI2DqIwjDQ1YtMLqr7LLFpCgxMtNfo9b+nsKt/9k7kYYZy0L9Inpv05r+b55NVPDQp6Sffg8espNmLgYrnIfGIWzQ0oVqXJx2iaeYINgqr7a503sb6RKFw2uN8mhnQeNxpiSwPRMBrUzG6uc4SCWtYH0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773263365; c=relaxed/simple;
-	bh=0rXaMvGNi4+OvPnGl2fgoLlfPW/6GtuSV3FJJcwDS9M=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=Qw0DeQWZToxXzygkcqpCusukGVQaBPZUEhBJZ8wHm/hbjQ0K6bBp3m3g3OGsDpGGLLf0mPCZxU9Ur/gC01DY+JJXnnYxqqkwt7IGXqiyxr5WzCqpocEZJIOIGSfI39KvwQoj9iBwxY99cWgCwiMhcyG/ADfHL5WY704HSV0sCzg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nTY9OMOC; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773265050; c=relaxed/simple;
+	bh=ORQzYJ3u6URHD61tJ2SgGSNAbElHdRC0qUDT7hNEH6w=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=f8MrGTJBz/Kalsl417RY/+Fp6GrxxljUpp/7+JNM2R9nCdQm1zvrrzdyK2mPJkgPN2ICApvAoFUVgS2Wv2xCLJz/7vXYo6LbTEtYTF2eVm0Btb7vYGv9lYhzE4EBvO3gTVFQvfzH2m30g1xmDFlEKamiPAfcuJ4hcSycKjgQHuA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nx21Hlgq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nTY9OMOC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3ED2FC4CEF7;
-	Wed, 11 Mar 2026 21:09:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nx21Hlgq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B2F5C4CEF7;
+	Wed, 11 Mar 2026 21:37:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773263365;
-	bh=0rXaMvGNi4+OvPnGl2fgoLlfPW/6GtuSV3FJJcwDS9M=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
-	b=nTY9OMOC9F7kBpERi6z30FTuaZPxVl5Fv76LmjUo5otKD3FEeRahGXzKjzBHLciW/
-	 vsFHQE05z41uqlhKhSf82H6e/E4Nzu9yGSGunIZ9o4u6pDNHpQYJyKgpZB6+0m5s1D
-	 cAewcAljEd7Hj7kuJulzboI2aN1KxsQbjjxPrm3U6Pu/bOyjMJ6EBuAu7Zg/qeb4B0
-	 f6ToSmUPcZdepsHbptQjimEa08e1m8i4KaHUqNpNAR6l4j2zh0wNXnIpDSkMMMCK27
-	 3T5aLWdjgAYUE16y8cGqZfrCI7WYozbJwRtjgPtBEKCMJrNi+E6cOP74wmmn8fZt4t
-	 s51IXrEVJ8MCw==
+	s=k20201202; t=1773265050;
+	bh=ORQzYJ3u6URHD61tJ2SgGSNAbElHdRC0qUDT7hNEH6w=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=Nx21HlgqQ6VZ+y2Us6LdjW0RQ1hUYuC/0bmVaTeszZWdDsxJXElSuZzXoBCgyp6lH
+	 jkh4i3oqF5ejljyM9fxUvcxj9oxeg8UU+1E9TR7bIWP49btl8XpKIauCxvHL8Hqi31
+	 ihrwzBSdj6MiSGNo13Ur5xHwp/QSl6B+gwVfZ5QBbfohbZZv3sFgFfxJGRmNIeIGGw
+	 pQYDAxGrh5txU1Yy3u1G5RL6av0A6kpJpSIiqUd14kk4wKEG3r7qUzhsGwa7ilKUfy
+	 CzEYKpkz2z7TfiJ5j33hP9tOJezEAhDjDne7ZorrYnrSH502PK93L9wcFogEh54tlq
+	 roZ0rovRgelGA==
+Date: Wed, 11 Mar 2026 16:37:28 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: David Jeffery <djeffery@redhat.com>, linux-kernel@vger.kernel.org,
+	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Tarun Sahu <tarunsahu@google.com>,
+	Pasha Tatashin <tatashin@google.com>,
+	=?utf-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>,
+	Jordan Richards <jordanrichards@google.com>,
+	Ewan Milne <emilne@redhat.com>,
+	John Meneghini <jmeneghi@redhat.com>,
+	"Lombardi, Maurizio" <mlombard@redhat.com>,
+	Stuart Hayes <stuart.w.hayes@gmail.com>,
+	Laurence Oberman <loberman@redhat.com>,
+	Marco Elver <elver@google.com>
+Subject: Re: [PATCH 2/5] driver core: separate function to shutdown one device
+Message-ID: <20260311213728.GA1024689@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 11 Mar 2026 22:09:19 +0100
-Message-Id: <DH09EDBW3X6T.2996UB1CFCAW2@kernel.org>
-Subject: Re: [PATCH v3] PCI: dw-rockchip: Enable async probe by default
-Cc: "Robin Murphy" <robin.murphy@arm.com>, "Manivannan Sadhasivam"
- <manivannan.sadhasivam@oss.qualcomm.com>, "Lorenzo Pieralisi"
- <lpieralisi@kernel.org>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, "Rob Herring" <robh@kernel.org>, "Bjorn Helgaas"
- <bhelgaas@google.com>, "Heiko Stuebner" <heiko@sntech.de>, "Niklas Cassel"
- <cassel@kernel.org>, "Shawn Lin" <shawn.lin@rock-chips.com>, "Hans Zhang"
- <18255117159@163.com>, "Nicolas Frattaroli"
- <nicolas.frattaroli@collabora.com>, "Wilfred Mallawa"
- <wilfred.mallawa@wdc.com>, <linux-pci@vger.kernel.org>,
- <linux-arm-kernel@lists.infradead.org>,
- <linux-rockchip@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
- "Anand Moon" <linux.amoon@gmail.com>, "Grimmauld" <grimmauld@grimmauld.de>,
- "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
- <rafael@kernel.org>, <driver-core@lists.linux.dev>, "Lukas Wunner"
- <lukas@wunner.de>
-To: "Manivannan Sadhasivam" <mani@kernel.org>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260226101032.1042-1-linux.amoon@gmail.com>
- <177260693908.10259.13055467642416391434.b4-ty@kernel.org>
- <87bc37ee-234c-4568-b72e-955c130a6838@arm.com>
- <f7tfshf7riljjibuqge4ubfjmludubpyh3ppdf6lasurzdzbtj@sw4xxagfhnn3>
- <5d88fb5b-e771-4ea6-8d2c-c5cfd21e5860@arm.com>
- <qwanhqrpztzkudik5fmberhabnzaly7v53677dohqzj5nq4wi2@6ndpiubyxcbi>
- <DGZXF3LPSRK6.2QYN63QTKUQAX@kernel.org>
- <cp5uktfqdf6zs53qsye57ior2ikmssgevxxdtevkzpisaif22h@7mrxspkuibow>
-In-Reply-To: <cp5uktfqdf6zs53qsye57ior2ikmssgevxxdtevkzpisaif22h@7mrxspkuibow>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <932d4e59-395f-4022-a2de-874fdea778ac@acm.org>
 
-On Wed Mar 11, 2026 at 1:28 PM CET, Manivannan Sadhasivam wrote:
-> On Wed, Mar 11, 2026 at 12:46:03PM +0100, Danilo Krummrich wrote:
->> On Wed Mar 11, 2026 at 6:24 AM CET, Manivannan Sadhasivam wrote:
->> > I have a contrary view here. If just a single driver or lib doesn't ha=
-ndle async
->> > probe, it cannot just force other drivers to not take the advantage of=
- async
->> > probe. As I said above, enabling async probe easily saves a few hunder=
-d ms or
->> > even more if there are more than one Root Port or Root Complex in an S=
-oC.
->>=20
->> Then the driver or lib has to be fixed / improved first or the driver co=
-re has
->> to be enabled to deal with a case where PROBE_FORCE_SYNCHRONOUS is reque=
-sted
->> from an async path, etc.
->>=20
->> In any case, applying the patch and breaking things (knowingly?) doesn't=
- seem
->> like the correct approach.
->>=20
->> > I strongly agree with you here that the underlying issue should be fix=
-ed. But
->> > the real impact to end users is not this splat, but not having the boo=
-t time
->> > optimization that this patch brings in. As an end user, one would want=
- their
->> > systems to boot quickly and they wouldn't bother much about a harmless=
- warning
->> > splat appearing in the dmesg log.
->>=20
->> You mean quickly booting into a "harmless" potential deadlock condition =
-the
->> warning splat tries to make people aware of? :)
->>=20
->
-> Hmm, I overlooked the built-as-module part where the deadlock could be po=
-ssible
-> as indicated by the comment about the WARN_ON_ONCE().
->
-> But what is the path forward here? Do you want the phylib to fix the
-> request_module() call or fix the driver core instead?
+On Wed, Mar 11, 2026 at 11:00:11AM -0700, Bart Van Assche wrote:
+> On 3/11/26 10:12 AM, David Jeffery wrote:
+> > +static void shutdown_one_device(struct device *dev)
+> > +{
+> > +	/* hold lock to avoid race with probe/release */
+> > +	if (dev->parent && dev->bus && dev->bus->need_parent_lock)
+> > +		device_lock(dev->parent);
+> > +	device_lock(dev);
+> > +
+> > +	/* Don't allow any more runtime suspends */
+> > +	pm_runtime_get_noresume(dev);
+> > +	pm_runtime_barrier(dev);
+> > +
+> > +	if (dev->class && dev->class->shutdown_pre) {
+> > +		if (initcall_debug)
+> > +			dev_info(dev, "shutdown_pre\n");
+> > +		dev->class->shutdown_pre(dev);
+> > +	}
+> > +	if (dev->bus && dev->bus->shutdown) {
+> > +		if (initcall_debug)
+> > +			dev_info(dev, "shutdown\n");
+> > +		dev->bus->shutdown(dev);
+> > +	} else if (dev->driver && dev->driver->shutdown) {
+> > +		if (initcall_debug)
+> > +			dev_info(dev, "shutdown\n");
+> > +		dev->driver->shutdown(dev);
+> > +	}
+> > +
+> > +	device_unlock(dev);
+> > +	if (dev->parent && dev->bus && dev->bus->need_parent_lock)
+> > +		device_unlock(dev->parent);
+> > +
+> > +	put_device(dev->parent);
+> > +	put_device(dev);
+> > +}
+> 
+> Please keep the following code in the caller:
+> 
+> 	if (dev->parent && dev->bus && dev->bus->need_parent_lock)
+> 		device_lock(dev->parent);
+> 
+> 	if (dev->parent && dev->bus && dev->bus->need_parent_lock)
+> 		device_unlock(dev->parent);
+> 
+> 	put_device(dev->parent);
+> 	put_device(dev);
 
-Here are a few thoughts.
+Can you elaborate on this a little bit?  I can see that doing this in
+the caller is simpler in some ways, although there are two callers
+that would need this.  Maybe it's just the lock anti-pattern below?
 
-In general, I think the best would be to get rid of the (affected)
-PROBE_FORCE_SYNCHRONOUS cases.
+> Additionally, please make sure that the caller is made compatible with
+> lock context analysis (see also
+> https://lore.kernel.org/all/20250206181711.1902989-1-elver@google.com/).
+> All that is required to make this code compatible with lock context
+> analysis is to organize it as follows:
+> 
+> 	if (dev->parent && dev->bus && dev->bus->need_parent_lock) {
+> 		device_lock(dev->parent);
+> 		shutdown_one_device(dev);
+> 		device_unlock(dev->parent);
+> 	} else {
+> 		shutdown_one_device(dev);
+> 	}
 
-Now, I guess this can be pretty hard for a PCI controller driver, as you ca=
-n't
-really predict what ends up being probed from you async context, i.e. it co=
-uld
-even be some other bus controller and things could even propagate further.
+I guess avoiding the "conditional acquisition and later conditional
+release" pattern mentioned at [1] is what makes this compatible with
+lock context analysis?
 
-Not sure how big of a deal it is in practice though, there are not a lot of
-PROBE_FORCE_SYNCHRONOUS drivers (left), but note that specifying neither
-PROBE_FORCE_SYNCHRONOUS nor PROBE_PREFER_ASYNCHRONOUS currently results in
-synchronous by default.
+I guess this is another way of expressing the "no conditionally held
+locks" rule [2], which is more concise and fits better in my pea
+brain.
 
-(Also, quite some other PCI controller drivers do set PROBE_PREFER_ASYNCHRO=
-NOUS
-and apparently got lucky with it.)
-
-From a driver-core perspective I think we're rather limited on what we can =
-do;
-we are already in async context at this point and can't magically go back t=
-o
-initcall context.
-
-So, the only thing I can think of is to kick off work on a workqueue, which=
- in
-the end would be the same as the deferred probe handling.
-
-Another alternative would be to let the subsystem handle such cases, which =
-in
-this case would probably mean to handle the current_is_async() case in
-pci_host_probe() or pci_bus_add_devices().
-
-On the other hand, this would probably end up to be a subsystem specific
-implementation of "kick of work on a workqueue".
-
-> I can drop this patch in the meantime. But holding this prolong wouldn't =
-help.
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/dev-tools/context-analysis.rst?id=v7.0-rc1#n42
+[2] https://clang.llvm.org/docs/ThreadSafetyAnalysis.html#no-conditionally-held-locks
