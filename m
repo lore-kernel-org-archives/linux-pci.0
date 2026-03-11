@@ -1,242 +1,55 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11020126.outbound.protection.outlook.com [52.101.46.126])
+Received: from psionic.psi5.com (psionic.psi5.com [185.187.169.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CD181C2AA;
-	Wed, 11 Mar 2026 22:00:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.126
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773266443; cv=fail; b=nG8oq7lIiyW+wUSkM9ddo5U204UB+w4leTxzhsJPg0lI51yOI8uufjmbPrKy0QPIZK9zDGvRP2ij5aKzx2fbiVN1+0bt06DNogbcZqi05pFCgXa+c9pOpgkxCmRb0QHJ3TZv1IQBr7aNH5QSyAWd//8almS6+ByPbIO8EcLaSgc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773266443; c=relaxed/simple;
-	bh=Ful3Ektr2opLwUfkCaO6N00r/J3Sr0JJmhLc5sck2n0=;
-	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=gG1Ze+cdsBhBrbeemHyicfkCDYgTCMjICoUKLxATgD5OxJWvgbn9m3/xFERQylKAg/1bLw44N/0b9nzBTxW9SDyxK3xYwyK65pCdEz6+PYSB4RfYqwQCiKZIFLco9CDlwgxtjZKs6vZ/JZWhmw2QhHFq70OzX3L4qnSS/1ipVGM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=asteralabs.com; spf=pass smtp.mailfrom=asteralabs.com; dkim=pass (1024-bit key) header.d=asteralabs.com header.i=@asteralabs.com header.b=eMz9PEjh; arc=fail smtp.client-ip=52.101.46.126
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=asteralabs.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asteralabs.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=asteralabs.com header.i=@asteralabs.com header.b="eMz9PEjh"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=kPpFdRF16444pox0dNs0oH6P05UlxmoB4xO4xsvlwcUdd6fLDUvr1ccURjDTwHdPJpiwkKA1HVLZXZBcJXAhPEJLmwWVGP3rEKnHXCBwEu7Xtzu43+cn73VaFH+SXTnY6eSIwxhxtA8uTovAxY6tN3PeDYIpuf8ANtyor7kn0n9duH4MdGAmPJPVae4tiMbd6mxa3tvEPZieatWiJfm4w+amaIRXo52+FujQYd21a0PUzvZywZ432pmbX/kftdkzkM+I3+fDzvfQKXJ938QYCoaZWGweiNv/VaJgNKOs45fHwfVssoaw6wE8f/ID99IXQZ4xAZhv4Prmuo4ytqsV3g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Roj+wcnHSVvjaqCq0pKIfSh6h82u20W4e+VcyHu0DLk=;
- b=YSLmyKUiEY1krQcBbWVVYdsXsWyrr82U+eD5UP2mfuTkfk23WYoTBwMKO+zvjTqKrbwKruAp7cOYYoLsuYSlBM/4eivyHZjBlMEmNvKTuXSOOSzicWaCFkhB8yGDTND7pX+FpN/SERFeVpvg5j/Oc9P8fl+CPWCQNw+yuI2yBhy88a3RbZtpz3o9Q9bY37V7NqJcWGMJznSAh/Zo/TgJNwD9BLMYPTkg6pyWMpi3s9aWMu3mPTxUUBhyWc+XzLjudRXhvauGz8DnS0vPCoYntpazJAt3hk9O7YhR3MHQXWhSyRf6kbpN2mvpKAtOsyq7g9BbfoLPYuIVKEXoPcKA4Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=asteralabs.com; dmarc=pass action=none
- header.from=asteralabs.com; dkim=pass header.d=asteralabs.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=asteralabs.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Roj+wcnHSVvjaqCq0pKIfSh6h82u20W4e+VcyHu0DLk=;
- b=eMz9PEjhzIcJhSBJuMZrWgh8Mn9sRNy1xzmUrjD4hQnnTFIUemds6vfvm62K1+74YLC6XJqiXQ7n9TQU81vNNOxx0rF+DOHz18XP4R1Wu2OtL0LVbvYbythptAutdia5H7ndlNbtDioAT3RugYzRGez7TxPgCzAPfTgbdeZ8gj8=
-Received: from LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM (2603:10b6:408:232::17)
- by DM8P221MB0537.NAMP221.PROD.OUTLOOK.COM (2603:10b6:8:1a::21) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9678.25; Wed, 11 Mar 2026 22:00:39 +0000
-Received: from LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM
- ([fe80::b063:29f1:a2f5:e3fb]) by LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM
- ([fe80::b063:29f1:a2f5:e3fb%4]) with mapi id 15.20.9700.010; Wed, 11 Mar 2026
- 22:00:39 +0000
-From: Shawn Jin <shawn.jin@asteralabs.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: [BUG] PCIe bridge resource allocation creates invalid limit addresses
- after Secondary Bus Reset recovery
-Thread-Topic: [BUG] PCIe bridge resource allocation creates invalid limit
- addresses after Secondary Bus Reset recovery
-Thread-Index: AQHcsZ3eHE22fwsOREepAuj/YABaYQ==
-Date: Wed, 11 Mar 2026 22:00:39 +0000
-Message-ID:
- <LV8P221MB1472A24B9975F7C8E8D6BF929947A@LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: yes
-X-MS-TNEF-Correlator:
-msip_labels:
- MSIP_Label_864d6687-5155-4a0e-a628-49dd428607fb_Enabled=True;MSIP_Label_864d6687-5155-4a0e-a628-49dd428607fb_SiteId=f47c88fd-08a9-4016-b488-3f361c03ff2e;MSIP_Label_864d6687-5155-4a0e-a628-49dd428607fb_SetDate=2026-03-11T22:00:39.036Z;MSIP_Label_864d6687-5155-4a0e-a628-49dd428607fb_Name=Internal;MSIP_Label_864d6687-5155-4a0e-a628-49dd428607fb_ContentBits=1;MSIP_Label_864d6687-5155-4a0e-a628-49dd428607fb_Method=Standard;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=asteralabs.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: LV8P221MB1472:EE_|DM8P221MB0537:EE_
-x-ms-office365-filtering-correlation-id: 228b8d0b-ef7c-4096-9153-08de7fb9a1c8
-x-ms-exchange-atpmessageproperties: SA
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|366016|6049299003|376014|1800799024|38070700021|4053099003|18002099003|56012099003|55112099003;
-x-microsoft-antispam-message-info:
- lUlCDGKD7L6w5y0sAgXo+v4nytZmuWTZe+J+ERlEZBW92zwbRKsMeoucdcdi5Shl0Uj1Nb818Kq0Mnisk/hvw7LHect3R00ungLN46LxRAT2uT4ef6wq8t0Pm2eOQb7D8akhHlOEDzo7RDnAOqdEQCj3hM9pNw7EmNCzP4HctyOTZGSRsurqEc3NyyAtXMl+5LMZ2tDalFrxCbvk2KbaW8snvVEB5fVrllV2xzwQoNfzv027vIleCSTjDFi8ZG471nTa0s7pQm0U6TpSRuytTVRUY9+uaG/ykPZR56hdax2k2I0QYNnAO5x7o5cPLClLNhCGbJ6ofEhYYyMY8G4EZMDmES6VW8wtbtBUG6WZuxC+HRiC8OHB3kcVAL2BHRlEX85mRM+if5AtavRTDKP4/jBMW6S2KaSVO8dJPg1e5azxqe2F8lk2HHXKBhh2yCPbxMCCBPzM3yqu1AQq98e2eYHoV+dkAIcgAop57chs05FORpJpLrkr1e6TblqBv3Q8uz+RVaIrmPxvUNL7dRuimYO4wxLY99eoHdzF95xs3lGBclCbporgpAoyCFDxMFcEJRr2aV2jvTd7dw07wE/AP0YdgaEpHMOY0FmlfGT4o8YPFQt61ED+ECx2DFfQEbbya1VNrI3KAylezY/J49E+/uFr4XPowX4j17LOdj6OWuRl2KUTWjOpNgurkKajCfyG/ac3F/ghTtNJpE3jib3BWdUGgAGetQCNaMlqfJ3Q59Uydrzg7WOY0SG3BH0RS3liqA9z3T3gZxAdgErwkX9xkcbt8eOzPY0vxwIHGeptPYc=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(6049299003)(376014)(1800799024)(38070700021)(4053099003)(18002099003)(56012099003)(55112099003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?VXllaDJLdDJ6YnhVY3FYMHNia2FtbmYrSk15RzBlSk93Wm56eDBCZXNId2dq?=
- =?utf-8?B?dzMrRjdIWGxqT1FnNUhjTmxVRTRjTTRGYjBJQzlGVnlGUC9lU0tzOXVFQWY2?=
- =?utf-8?B?cDkrdUJ6dk82MENWM1cwM2t4ckRNbVJwVVREQkFSTmVDRHZCRm5iQWN1aUVo?=
- =?utf-8?B?Tzd5aHR4TUlwbXVZT3RJbTFmWS9FYlM2SXo3UG0yemhJRVhtSWJVUjE0L29R?=
- =?utf-8?B?ME1XS3dRZHh3ZXhkQjd4bmp6NmwxNXZWZlZDK3NUWWhsSENhYWp2MEFjZWlL?=
- =?utf-8?B?cnhnU2I4emZRdkRJekhONE1CQ2gzQ0xnKytnS3VzOGp3aE9iV0tFVWtQRnBt?=
- =?utf-8?B?MFZjeCthVmdxSUN6NnhRRjN3a0JiUFhHWE9MK2dKbTl5MUE3djRheFhuby9C?=
- =?utf-8?B?cHVENElQZTlVWXJrRUFYMG1KM0pCY29iNEtxaXRZM2hUdmw2OXIvd3d2MC94?=
- =?utf-8?B?T2dWOGoyUkxuNlBIMFNDZlhPV0hkWXNpK0hlR1pueWd1S0lvcUtUeTJnd3FM?=
- =?utf-8?B?VlpGc2VmSFlzdHR6dCt4TzRvVjN4OGltcWE3R2tSVit5ZkFxSDVMZy9JQnhF?=
- =?utf-8?B?TlNsc3FDK0Vzc0NmTTgrbVMvTkdHYkNlYWZRdEN5dGVkS2hiMFNGb1o0TzdC?=
- =?utf-8?B?c01IakY0MkNONHdaWldDRnludHJ3Q0VMZWwrZ0ZxclVraVAySUFCZnpOdzZr?=
- =?utf-8?B?VGNTTDMyV1diSVpsV2xTaFVlTkpnM2E0Qm56c0o2QjVMSS9iNldpalRRUFR2?=
- =?utf-8?B?RWI0ZHFCRGJib0ZKZDhXR3I4TXowUXUyZGpiK3ZhR0gzRVFBWklwZnZkRHN6?=
- =?utf-8?B?aXVyNENPdkhwcVI1dTdwOFYxUUFmTWg2azhUUm5QZjVWLy9SK1VaYVpVSThO?=
- =?utf-8?B?RDhXcXQ4L0RsV2wzODFlcHV1bjFBcUF6SS9rT0p3RHltSWlxRU1IZjg3b0ZT?=
- =?utf-8?B?NmUyL3JOMWJONmFrdEVLRUtsVFRaWTAya1ltN05rZDFUZTFtR2xGSnYwbzV2?=
- =?utf-8?B?bG1uazgrRzZqTjFGYzV6L0pWVURKWnZLWUthb2N1NXZCWjJYTTFjSzdtRmlS?=
- =?utf-8?B?TG1mSmJpMjhza0VtVktEVVp3bTZzZnA1YXNjOXJpaS9lUWVHaVNVYlpnYkhk?=
- =?utf-8?B?bWxMeGZQeW51QysvMzQ2akg2QWtDV0RQbmg1elk5VTVLeW56QWpINjZuZUZ6?=
- =?utf-8?B?N01sSzJ6NG13L2Jsa25obkptVlN2UGlmbC9ibU9jaXVGdzN2cjE5cFErRkJm?=
- =?utf-8?B?SjBzMVUyQ1Flemp2VVBqZDNENlhNZEEzbnhhaXVQbC9SQUg4Um1hVWNJdXZ2?=
- =?utf-8?B?QjRqdHl4MTFlYk9KK0FTc090YUhvdWZQamRlcmpHZ2Q2RVVVWEhtTVByOEZs?=
- =?utf-8?B?ZzFIWjZCajhvSlMzZkhRZ0ZhWU1BaVRDUTZXWE56QVVvaklKT0JOQytUUm9K?=
- =?utf-8?B?MW90ZStxdXpCeW5xMFJSaXY2c3JXbWNER1Y1MDFRK0RxV0ZVMUhOZk1PSDU5?=
- =?utf-8?B?NVdHRnUwTmNvb0dqYnhJS1c2MHh1Y2t3cUZzNzJiaFNyTWNqTlJudmFUT2JN?=
- =?utf-8?B?RVNYbVFKQ0VsWlVvbUo2Wll6UzdUS3dldCtxcjhiNHQwZk5mbUt3WUMydnlQ?=
- =?utf-8?B?c053cEx6clFaV3g4eFJ1enZJbzZrMWV0UnZ6ZFVUVnU0a2gyMkJhUWJGWkJy?=
- =?utf-8?B?QWI3WEh4TzJrV1IxbE9hRFU5Rm1Ba2RXams3V1ZEME5leGY5L3g2L3Vzb2h2?=
- =?utf-8?B?M28ybmZ5bEI2TmFzcnRqZkRKM1FWYXN5bzBDdk9HNTcyRmMvb1V1NktzazNr?=
- =?utf-8?B?UFV1L1FxR0h5K29aczlNNUlqdXlVdlpnS0xsK0ZLbHZ5NVVZdUU1V2ZwaWRl?=
- =?utf-8?B?STdXSm5Obks1cnYybDVCYWpTWXFUMHFoZzdvOE9YWFRSamxzOFhBVGVNYWlX?=
- =?utf-8?B?UkVKa3pWNXpWN1J2QnZwaUxkdXVBYXBnanlDK2t5dFRtTWhPVnNSN28yQURi?=
- =?utf-8?B?cWpVN1Fhd1hHWTJPeDhUcUV2M2FrOVA4VXAzUS8vclA2elVaWktWcWVWaHBT?=
- =?utf-8?B?SDF0bEdhMC8rc2VuT2Jkb2EzUXNpcFhTVnF6Y1VZM2xkTDl3c09YcUxWdmpJ?=
- =?utf-8?B?Y253eVpNYUIxU0dVd2dubW1wc21KZ0NNcVB3YUJNekpDQTkwV1ZHdFdvZy9y?=
- =?utf-8?B?b1ZkeHNyMVU4MC91L3U3L0lPaHFYNDFseHR6ZmpXVlNueUxjVHhWYURBc2lZ?=
- =?utf-8?B?Rk9oQzV0R1NVV090SzZSTm9XaFdJRlorSi9NL1dQNHBVZzFrbDBRcnd6VHlz?=
- =?utf-8?B?QjhCeTNEaEhvZWpSQVJna2YyQzRUbk5kYnFaRDFOVzFyWWFRUkJJUT09?=
-Content-Type: multipart/mixed;
-	boundary="_002_LV8P221MB1472A24B9975F7C8E8D6BF929947ALV8P221MB1472NAMP_"
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0265D2E62C6
+	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2026 22:51:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.187.169.70
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773269508; cv=none; b=nMwdQLjYlkZ5dFoqtFzamEme+pCbDjauJoUBBdPeKNsz+kl0Hnhcd7KYVaPbl3+MUBX0XnLQ039gQ/dJdU0p+VLSLa7gXr3RwaidKZKzovshQK6R02SN3ZXB7uQk4cBhWvbvk+ILBCrR+kq/ynOP1q3WeJpCeN9whg5UnKHBkhY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773269508; c=relaxed/simple;
+	bh=V8oPXi0MiR7YmWMM8393UAjw/gNA9m9h98eSS64krGU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=bYGQ0IRsAZE7ETgOMzQqieGWnNCXTmGoMm/WIGx2RUxVc6bdUA3bfST8gvnPwalsXClP1QQUBnKWc11krqLnOHjblg39ywn1a7YxveSDVkO7N8ijatDEfCysEW4VeXJNdIF0n8Fddh92i3XCtM1eSiFtsILcxRdP5g9+OQrTxlw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hogyros.de; spf=pass smtp.mailfrom=hogyros.de; arc=none smtp.client-ip=185.187.169.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hogyros.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hogyros.de
+Received: from [192.168.10.94] (unknown [39.110.247.193])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by psionic.psi5.com (Postfix) with ESMTPSA id E74563F1E0;
+	Wed, 11 Mar 2026 23:51:35 +0100 (CET)
+Message-ID: <30fdf953-76b4-4aa6-b430-b9c73f91c8cb@hogyros.de>
+Date: Thu, 12 Mar 2026 07:51:31 +0900
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: asteralabs.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-Network-Message-Id: 228b8d0b-ef7c-4096-9153-08de7fb9a1c8
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Mar 2026 22:00:39.2664
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: f47c88fd-08a9-4016-b488-3f361c03ff2e
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: hyVstGlqFVV70dfcekkoLUTqB00F66NknlIqubIJV8yFJvJZ2z5Hca4jwErHZ5RXLvMEN0iiTeUAw1oa3n3R0xQnwSKXCUwyvIkZnW8XAn8=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM8P221MB0537
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 3/5] vgaarb: mark vga_get() and wrappers as
+ __must_check
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, intel-xe@lists.freedesktop.org,
+ dri-devel@lists.freedesktop.org
+References: <20260310200718.GA786702@bhelgaas>
+Content-Language: en-US
+From: Simon Richter <Simon.Richter@hogyros.de>
+In-Reply-To: <20260310200718.GA786702@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
---_002_LV8P221MB1472A24B9975F7C8E8D6BF929947ALV8P221MB1472NAMP_
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Hi,
 
-SGVsbG8sCgpJJ20gcmVwb3J0aW5nIGEgcG90ZW50aWFsIGNyaXRpY2FsIGJ1ZyBpbiB0aGUgTGlu
-dXgga2VybmVsJ3MgUENJZSByZXNvdXJjZSBhbGxvY2F0aW9uIGNvZGUgdGhhdMKgY3JlYXRlcyBp
-bnZhbGlkIGJyaWRnZSB3aW5kb3cgbGltaXQgYWRkcmVzc2VzIGR1cmluZyBob3RwbHVnwqByZS1l
-bnVtZXJhdGlvbiBhZnRlciBTZWNvbmRhcnkgQnVzIFJlc2V0IChTQlIpIHJlY292ZXJ5LgoKIyMg
-QUZGRUNURUQgS0VSTkVMIFZFUlNJT05TCi0gQ29uZmlybWVkOiA1LjE1LjAsIDYuOC4wIChVYnVu
-dHUgNi44LjAtODgtZ2VuZXJpYywgNi44LjAtOTAtZ2VuZXJpYykKLSBMaWtlbHkgYWZmZWN0ZWQ6
-IEFsbCByZWNlbnQga2VybmVscyBpbmNsdWRpbmcgNi4xOQoKIyMgSEFSRFdBUkUgQ09ORklHVVJB
-VElPTgpJbnRlbCBJY2UgTGFrZSBzZXJ2ZXIgd2l0aCBQQ0llIEdlbjUgc3dpdGNoZXMgYW5kIGVu
-ZHBvaW50czoKClRvcG9sb2d5IDE6CsKgIFJvb3QgUG9ydCA5NjowMS4wIOKGkiA5ODowMC4wIOKG
-kiA5OTowMS4wIOKGkiA5YjowMC4wIChOVklESUEgTDIwIEdQVSkKCktlcm5lbCBwYXJhbWV0ZXI6
-IHBjaT1yZWFsbG9jPW9uCgojIyBQUk9CTEVNIERFU0NSSVBUSU9OCgpBZnRlciBwZXJmb3JtaW5n
-IFNlY29uZGFyeSBCdXMgUmVzZXQgb24gYSBQQ0llIHN3aXRjaCBwb3J0IGFuZCBjbGVhcmluZyB0
-aGUgcmVzZXQgYml0LCB0aGUga2VybmVsIHJlLWVudW1lcmF0ZXMgZGV2aWNlcyBhbmQgYXNzaWdu
-cyBicmlkZ2Ugd2luZG93IHJlc291cmNlcy4gSG93ZXZlciwgdGhlwqBhc3NpZ25lZCBtZW1vcnkg
-d2luZG93IGxpbWl0IGFkZHJlc3NlcyBhcmUgSU5WQUxJRCBhY2NvcmRpbmcgdG8gUENJZSBzcGVj
-aWZpY2F0aW9uLgoKIyMjIEV2aWRlbmNlIGZyb20gZG1lc2cgKFRvcG9sb2d5IDEpOgoKKipCZWZv
-cmUgU0JSIChjb3JyZWN0IGFsbG9jYXRpb24pOioqCmBgYApbICAgIDYuNjM2NDkzXSBwY2kgMDAw
-MDo5ODowMC4wOiBQQ0kgYnJpZGdlIHRvIFtidXMgOTktOWNdClsgICAgNi42MzY1MzldIHBjaSAw
-MDAwOjk4OjAwLjA6ICAgYnJpZGdlIHdpbmRvdyBbbWVtIDB4ZTk2MDAwMDAtMHhlOTZmZmZmZl0K
-WyAgICA2LjYzNjY0NV0gcGNpIDAwMDA6OTg6MDAuMDogICBicmlkZ2Ugd2luZG93IFttZW0gMHgx
-M2IwMDAwMDAwMDAtMHgxM2I3ZmZmZmZmZmYgNjRiaXQgcHJlZl0KClsgICAgNi42NDQ0MjldIHBj
-aSAwMDAwOjk5OjAxLjA6IFBDSSBicmlkZ2UgdG8gW2J1cyA5Yl0KWyAgICA2LjY0NDQ3Nl0gcGNp
-IDAwMDA6OTk6MDEuMDogICBicmlkZ2Ugd2luZG93IFttZW0gMHhlOTYwMDAwMC0weGU5NmZmZmZm
-XQpbICAgIDYuNjQ0NjU2XSBwY2kgMDAwMDo5OTowMS4wOiAgIGJyaWRnZSB3aW5kb3cgW21lbSAw
-eDEzYjAwMDAwMDAwMC0weDEzYjdmZmZmZmZmZiA2NGJpdCBwcmVmXQoKWyAgICA2LjY1NDIwM10g
-cGNpIDAwMDA6OWI6MDAuMDogWzFlM2U6MDAwMl0gdHlwZSAwMCBjbGFzcyAweDEyMDAwMCBQQ0ll
-IEVuZHBvaW50ClsgICAgNi42NTQ2NTJdIHBjaSAwMDAwOjliOjAwLjA6IEJBUiAwIFttZW0gMHgx
-M2IwMDAwMDAwMDAtMHgxM2I3ZmZmZmZmZmYgNjRiaXQgcHJlZl0KWyAgICA2LjY1NDY2Nl0gcGNp
-IDAwMDA6OWI6MDAuMDogQkFSIDIgW21lbSAweGU5NjAwMDAwLTB4ZTk2M2ZmZmZdCmBgYAoKKipB
-ZnRlciBTQlIgY2xlYXIgKElOVkFMSUQgYWxsb2NhdGlvbik6KioKYGBgClsgIDY1Ni42NDQxODRd
-IHBjaSAwMDAwOjk4OjAwLjA6IGJyaWRnZSB3aW5kb3cgW21lbSAweDEzYjAwMDAwMDAwMC0weDEz
-YjdmZmZmZmZmZiA2NGJpdCBwcmVmXTogYXNzaWduZWQKWyAgNjU2LjY0NDE4Nl0gcGNpIDAwMDA6
-OTg6MDAuMDogYnJpZGdlIHdpbmRvdyBbbWVtIDB4ZTk2MDAwMDAtMHhlOTZmZmZmZl06IGFzc2ln
-bmVkClsgIDY1Ni42NDQxODhdIHBjaSAwMDAwOjk5OjAxLjA6IGJyaWRnZSB3aW5kb3cgW21lbSAw
-eDEzYjAwMDAwMDAwMC0weDEzYjdmZmZmZmZmZSA2NGJpdCBwcmVmXTogYXNzaWduZWQKWyAgNjU2
-LjY0NDE4OV0gcGNpIDAwMDA6OTk6MDEuMDogYnJpZGdlIHdpbmRvdyBbbWVtIDB4ZTk2MDAwMDAt
-MHhlOTZmZmZmZV06IGFzc2lnbmVkCgpbICA2NTYuNjQ0ODMwXSBwY2kgMDAwMDo5YjowMC4wOiBC
-QVIgMCBbbWVtIHNpemUgMHg4MDAwMDAwMDAgNjRiaXQgcHJlZl06IGNhbid0IGFzc2lnbjsgbm8g
-c3BhY2UKWyAgNjU2LjY0NDgzMV0gcGNpIDAwMDA6OWI6MDAuMDogQkFSIDAgW21lbSBzaXplIDB4
-ODAwMDAwMDAwIDY0Yml0IHByZWZdOiBmYWlsZWQgdG8gYXNzaWduCi8vIEJBUjIgY2FuIHN0aWxs
-IGJlIGFzc2lnbmVkIGJlY2F1c2UgdGhlIHNpemUgaXMgb25seSAyNTZLQiwgd2hpbGUgdGhlIG1p
-biB3aW5kb3cgaW4gdGhlIGJyaWRnZSBpcyAxTUIKWyAgNjU2LjY0NDgzMl0gcGNpIDAwMDA6OWI6
-MDAuMDogQkFSIDIgW21lbSAweGU5NjAwMDAwLTB4ZTk2M2ZmZmZdOiBhc3NpZ25lZAoKYGBgCgoj
-IyMgSW52YWxpZCBBZGRyZXNzZXMgQ3JlYXRlZCBieSBLZXJuZWw6Ci0gYDB4MTNiN2ZmZmZmZmZm
-YCAoZW5kcyBpbiAweEZGRkUgLSAqKjIgYnl0ZXMgc2hvcnQqKikKLSBgMHhlOTZmZmZmZWAgIChl
-bmRzIGluIDB4RkZGRSAtICoqMiBieXRlcyBzaG9ydCoqKQoKIyMgSU1QQUNUCgoxLiAqKkRldmlj
-ZSBpbml0aWFsaXphdGlvbiBmYWlsdXJlKio6IEVuZHBvaW50cyBjYW5ub3QgYWxsb2NhdGUgcmVx
-dWlyZWQgQkFScwrCoCDCoGBgYApbICA2NTYuNjQ0ODMwXSBwY2kgMDAwMDo5YjowMC4wOiBCQVIg
-MCBbbWVtIHNpemUgMHg4MDAwMDAwMDAgNjRiaXQgcHJlZl06IGNhbid0IGFzc2lnbjsgbm8gc3Bh
-Y2UKWyAgNjU2LjY0NDgzMV0gcGNpIDAwMDA6OWI6MDAuMDogQkFSIDAgW21lbSBzaXplIDB4ODAw
-MDAwMDAwIDY0Yml0IHByZWZdOiBmYWlsZWQgdG8gYXNzaWduCsKgIMKgYGBgCgoyLiAqKkNvbnNp
-c3RlbnQgYWNyb3NzIG11bHRpcGxlIGhpZXJhcmNoaWVzKio6IEFmZmVjdHMgZGlmZmVyZW50IFBD
-SWUgdG9wb2xvZ2llcyBpbmRlcGVuZGVudGx5CgojIyBSRVBST0RVQ1RJT04KClRoZSBhdHRhY2hl
-ZCBzY3JpcHQgdGVzdF9yY19zYnIuc2gudHh0IGlzc3VlcyBhIFNCUiB0byB0aGUgcm9vdCBwb3J0
-LgoKIyMgU1VTUEVDVEVEIFJPT1QgQ0FVU0UKClRoZSBidWcgYXBwZWFycyB0byBiZSBpbiBgZHJp
-dmVycy9wY2kvc2V0dXAtYnVzLmNgLCBsaWtlbHkgaW46Ci0gYHBjaV9idXNfZGlzdHJpYnV0ZV9h
-dmFpbGFibGVfcmVzb3VyY2VzKClgCi0gYGFkanVzdF9icmlkZ2Vfd2luZG93KClgCi0gYHBjaV9h
-c3NpZ25fdW5hc3NpZ25lZF9icmlkZ2VfcmVzb3VyY2VzKClgCgpUaGUgcmVzb3VyY2UgZW5kIGFk
-ZHJlc3MgY2FsY3VsYXRpb24gYXBwZWFycyB0byBwZXJmb3JtIG11bHRpcGxlIHN1YnRyYWN0aW9u
-czoKMS4gSW5pdGlhbCBjYWxjdWxhdGlvbjogYHJlcy0+ZW5kID0gcmVzLT5zdGFydCArIHNpemUg
-LSAxYCAoY29ycmVjdCkKMi4gRHVyaW5nIHJlZGlzdHJpYnV0aW9uOiBBbm90aGVyIHN1YnRyYWN0
-aW9uIG9jY3VycywgY3JlYXRpbmcgYHJlcy0+ZW5kID0gLi4uIC0gMmAKCiMjIFdPUktBUk9VTkQg
-QVRURU1QVFMKCi0gYHBjaT1yZWFsbG9jPW9uYDogRG9lcyBOT1QgZml4IHRoZSBpc3N1ZQotIE1h
-bnVhbCByZW1vdmUvcmVzY2FuIGZyb20gcm9vdDogRG9lcyBOT1QgZml4IHRoZSBpc3N1ZQotIElu
-aXRpYWwgYm9vdCBhbGxvY2F0aW9uOiBXb3JrcyBjb3JyZWN0bHkgKGJ1ZyBvbmx5IG9jY3VycyBk
-dXJpbmcgaG90cGx1ZyByZS1lbnVtZXJhdGlvbikKCiMjIFJFUVVFU1QKCkkgd2FudCB0byB0cmFj
-ayBob3cgdGhlIGJyaWRnZSB3aW5kb3dzIGFyZSBhbGxvY2F0ZWQuIElzIHRoZXJlIGEgd2F5IHRv
-IGVuYWJsZSBhZGRpdGlvbmFsIGtlcm5lbCBtZXNzYWdlcyB0byBzaG93IHRoZSBwYXRoPyBQbGVh
-c2UgaW52ZXN0aWdhdGUgaWYgdGhpcyBpcyBhIHJlYWwga2VybmVsIGJ1Zy4KClRoYW5rIHlvdSwK
-U2hhd24=
+On 3/11/26 5:07 AM, Bjorn Helgaas wrote:
 
---_002_LV8P221MB1472A24B9975F7C8E8D6BF929947ALV8P221MB1472NAMP_
-Content-Type: text/plain; name="test_rc_sbr.sh.txt"
-Content-Description: test_rc_sbr.sh.txt
-Content-Disposition: attachment; filename="test_rc_sbr.sh.txt"; size=1347;
-	creation-date="Wed, 11 Mar 2026 21:51:53 GMT";
-	modification-date="Wed, 11 Mar 2026 21:51:53 GMT"
-Content-Transfer-Encoding: base64
+> vga_get() is implemented in vgaarb.c and is only used there.  Can we
+> drop this declaration and the stub below, make it static and
+> __must_check in vgaarb.c?
 
-IyEvYmluL2Jhc2gKCiMgRnVuY3Rpb24gdG8gZGlzcGxheSB1c2FnZQp1c2FnZSgpIHsKICAgIGVj
-aG8gIlVzYWdlOiAkMCAtcnAgPFJPT1RfUE9SVF9CREY+IC11c3AgPFVTUF9CREY+IgogICAgZWNo
-byAiRXhhbXBsZTogJDAgLXJwIGM2OjAxLjAgLXVzcCBjNzowMC4wIgogICAgZXhpdCAxCn0KCiMg
-SW5pdGlhbGl6ZSB2YXJpYWJsZXMKUk9PVF9QT1JUX0JERj0iIgpVU1BfQkRGPSIiCgojIFBhcnNl
-IGNvbW1hbmQtbGluZSBhcmd1bWVudHMKd2hpbGUgW1sgJCMgLWd0IDAgXV07IGRvCiAgICBjYXNl
-ICQxIGluCiAgICAgICAgLXJwKQogICAgICAgICAgICBST09UX1BPUlRfQkRGPSIkMiIKICAgICAg
-ICAgICAgc2hpZnQgMgogICAgICAgICAgICA7OwogICAgICAgIC11c3ApCiAgICAgICAgICAgIFVT
-UF9CREY9IiQyIgogICAgICAgICAgICBzaGlmdCAyCiAgICAgICAgICAgIDs7CiAgICAgICAgLWh8
-LS1oZWxwKQogICAgICAgICAgICB1c2FnZQogICAgICAgICAgICA7OwogICAgICAgICopCiAgICAg
-ICAgICAgIGVjaG8gIlVua25vd24gb3B0aW9uOiAkMSIKICAgICAgICAgICAgdXNhZ2UKICAgICAg
-ICAgICAgOzsKICAgIGVzYWMKZG9uZQoKIyBWYWxpZGF0ZSB0aGF0IGJvdGggYXJndW1lbnRzIGFy
-ZSBwcm92aWRlZAppZiBbIC16ICIkUk9PVF9QT1JUX0JERiIgXSB8fCBbIC16ICIkVVNQX0JERiIg
-XTsgdGhlbgogICAgZWNobyAiRXJyb3I6IEJvdGggLXJwIGFuZCAtdXNwIGFyZ3VtZW50cyBhcmUg
-cmVxdWlyZWQiCiAgICB1c2FnZQpmaQoKZWNobyAiUm9vdCBQb3J0IEJERjogJFJPT1RfUE9SVF9C
-REYiCmVjaG8gIlVTUCBCREY6ICRVU1BfQkRGIgplY2hvICIiCgojIFJlbW92ZSB0aGUgVVNQIGRl
-dmljZQplY2hvIDEgfCBzdWRvIHRlZSAvc3lzL2J1cy9wY2kvZGV2aWNlcy8wMDAwOiR7VVNQX0JE
-Rn0vcmVtb3ZlCgojIFRyaWdnZXIgU0JSIHZpYSBCcmlkZ2UgQ29udHJvbCByZWdpc3RlcgpCUklE
-R0VfQ1RMPSQoc3VkbyBzZXRwY2kgLXMgJHtST09UX1BPUlRfQkRGfSAweDNFLncpCkJSSURHRV9D
-VExfUkVTRVQ9JChwcmludGYgIjB4JTA0eCIgJCgoMHgkQlJJREdFX0NUTCB8IDB4MDA0MCkpKQoK
-ZWNobyAiQXNzZXJ0aW5nIFNlY29uZGFyeSBCdXMgUmVzZXQuLi4iCnN1ZG8gc2V0cGNpIC1zICR7
-Uk9PVF9QT1JUX0JERn0gMHgzRS53PSRCUklER0VfQ1RMX1JFU0VUCnNsZWVwIDEKCmVjaG8gIkRl
-LWFzc2VydGluZyBTZWNvbmRhcnkgQnVzIFJlc2V0Li4uIgpzdWRvIHNldHBjaSAtcyAke1JPT1Rf
-UE9SVF9CREZ9IDB4M0Uudz0kQlJJREdFX0NUTApzbGVlcCAyCgojIFJlc2NhbiBQQ0kgYnVzCmVj
-aG8gMSB8IHN1ZG8gdGVlIC9zeXMvYnVzL3BjaS9yZXNjYW4K
+It's documented API, and exported. If we make it private, we need to 
+export vga_get_interruptible() and vga_get_uninterruptible() instead.
 
---_002_LV8P221MB1472A24B9975F7C8E8D6BF929947ALV8P221MB1472NAMP_--
+    Simon
