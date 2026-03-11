@@ -1,168 +1,177 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazon11022114.outbound.protection.outlook.com [52.101.126.114])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57B1228003A;
-	Wed, 11 Mar 2026 01:52:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773193957; cv=none; b=bhHE+9QfpSVBQDZUUc9Ql7ygTS3ptcrloe2uak/2k8ZpBFbI/g3wB8VcRAC6LXPrc6wpdqGmnd5HBsh6XlXif93XTnOXe6oHw2z3jKWOvrm9mLufyHduEGmZBTv9rzjnFhJAfsVAdyQfqH53AZAza7p+sICz64lAcoLyNCmFdhA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773193957; c=relaxed/simple;
-	bh=XGzlhdpEKBTOsnraVyGUlevcXvDh7h412ghI53fuwyA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DOld4P9y0m0jfurg6yNrfN5rn5CnB6RjqEEjaenFfrQwFxO8PMBGKiy53f4pvRioGNGf4EtXR0bWFpTss6boM0uquwxeBr7yroNBLV2/NSkRg2m65H4YrW84fHPYpDgJo18EtJDttJtl7CFSJdPAGMc7+wlf5PftcJXKl6QVWEU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ix1ULMRG; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ix1ULMRG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773193954; x=1804729954;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=XGzlhdpEKBTOsnraVyGUlevcXvDh7h412ghI53fuwyA=;
-  b=ix1ULMRGOvK94pFNMJ9iWMzGSGs/Sg9ldAICmhTwYIQ4iphj7emawbLr
-   D4Evp7kb1tEpnLaWCmKlA1pNLLf7Dxcu/6ZfZrA8bSaxGhUSXBIT7DaiQ
-   3ZmFlaffhjXiufubqPIpMG9A6YxJ2OgFbTb7sqFlgghjhFgakAy2blc2U
-   rFJfeenu4jCG1ldxE6BY2Pco/YKQ43Jqaw8gctBKseylPlZ4spIMGyVNY
-   +27+Fi4Ess+1u+vk4gzk19MIcoXlDQgyf27gKLLFp05a3+DfBOENolhCn
-   SLqI0QeT/HSPuCkO9Jv9A3IxPLb45tXXuq+7NmPJq9owkw5JbcIGDInHT
-   w==;
-X-CSE-ConnectionGUID: MAOwt521QAqrRt1Nm4pn0A==
-X-CSE-MsgGUID: G94gPqFJQpeMCrfm9SD4ig==
-X-IronPort-AV: E=McAfee;i="6800,10657,11725"; a="91638152"
-X-IronPort-AV: E=Sophos;i="6.23,113,1770624000"; 
-   d="scan'208";a="91638152"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 18:52:33 -0700
-X-CSE-ConnectionGUID: BL63HbhrT9y9yaaHYc0/8A==
-X-CSE-MsgGUID: 3SkngTNZQH+Vh8p5N1VljQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,113,1770624000"; 
-   d="scan'208";a="218213338"
-Received: from lkp-server01.sh.intel.com (HELO 418530b1a366) ([10.239.97.150])
-  by fmviesa008.fm.intel.com with ESMTP; 10 Mar 2026 18:52:31 -0700
-Received: from kbuild by 418530b1a366 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1w08kO-000000000W1-1j3V;
-	Wed, 11 Mar 2026 01:52:28 +0000
-Date: Wed, 11 Mar 2026 09:51:45 +0800
-From: kernel test robot <lkp@intel.com>
-To: Chen-Yu Tsai <wenst@chromium.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Chen-Yu Tsai <wenst@chromium.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>, linux-pci@vger.kernel.org,
-	linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 7/7] PCI: mediatek-gen3: Integrate new pwrctrl API
-Message-ID: <202603110916.8SVCCZYO-lkp@intel.com>
-References: <20260310091947.2742004-8-wenst@chromium.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76E3D22FE0A;
+	Wed, 11 Mar 2026 02:31:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.126.114
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773196302; cv=fail; b=g/Y3gxDdoDXsx512Bjq908CDhlqQIaI7lsJDFGzq2NbA20WFUT1v+z40m+MlMHmDwz+uBBiejA/Kv1sG4AyLJ7pxSI62B57GIFQKV7/8tP8i46WC8uyTVGlHuf1T4r9LjWUujLUodlvrj0ZXNmJP5hENsvHJ6P1rSZTTRn5SjVY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773196302; c=relaxed/simple;
+	bh=bTd7DrS9TkhKEi0ifblXzWLcXR2TWr0lPuwlDusaiMM=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=mlFVnWrDCFMSiH/YdAqpMcPVT4Vpv62b9D7s0DdfbD6dzMOaK+NVvJrR6HH7pnMuORvCfhaGIrVp7hh9bY22Mma/4IOGCcHN7dGZONXpOyd/+avMZkhZjwbZILaOz1CYnwovQMSCSOtKDrPZ+jHA+cfd6P7DXXu7DXkVSR2S7wk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=52.101.126.114
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cixtech.com
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=FTKVEtMimvNcRnsxujmPLOq20plCGKVvRCHAFk9J14xGNXPncYWqiWJfRXjY1R8I19Cvty04zL0xqtMrnwg7f6x8/wdHd3PQcK4y1FsjKzJvHANm6K8gB8BTX5IBMmfT4hn75LYHO70KR2AIgDqcrIeZ5bRWbDMHLr6LT0DKZJ9w+9JmxBHFfJ2yfOM56I3iUoh4JwkfQjOF0SpUHdvtJ8yxH/gQ2p/D2m1EXKt1H+BHVNtMmwyfb06oRXUYry+BqSRm0OrHKFEPUiNuZWdOtwslN1kZ4zSoB5OwSRm9/vSPmVNAzLAYSrCrUsESfr6SZmLFfq2/UR03iT3vTCC01Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=bTd7DrS9TkhKEi0ifblXzWLcXR2TWr0lPuwlDusaiMM=;
+ b=DRt7mHthlH/KkarqyJbqkPwokBWbzcP865VYGNDvh4FrXOmhaZUarh0vwelF3kb0mtHBGMYjlWGr1dVVklhYO33Fjq48mllRGzVAX5u6w2RlSU+O8sRz9eX5u3a3K8nWH75znHToT/6pxQuoIjjwpJx+FDWygYXP5X9Hcb99RPhTr5CUUzehSZmbEJf0a2jGDhubyAGfEZ5xWnbLH4OvR8d9iRn4y7zjFuNjYpjSobgXjmyGuxh+jrqPOI+9wL6yXhgrbFZTLpscxPuMHKqZ0gPF/u2rYZNtCdrR8rji8w+iwkWeToQwBqGvVcRFWCuyDnDD8Zqby9R2FtWUCw+B/g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=cixtech.com; dmarc=pass action=none header.from=cixtech.com;
+ dkim=pass header.d=cixtech.com; arc=none
+Received: from PUZPR06MB5887.apcprd06.prod.outlook.com (2603:1096:301:117::13)
+ by SEZPR06MB6600.apcprd06.prod.outlook.com (2603:1096:101:179::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.25; Wed, 11 Mar
+ 2026 02:31:37 +0000
+Received: from PUZPR06MB5887.apcprd06.prod.outlook.com
+ ([fe80::f320:58f6:4dc6:b908]) by PUZPR06MB5887.apcprd06.prod.outlook.com
+ ([fe80::f320:58f6:4dc6:b908%6]) with mapi id 15.20.9678.024; Wed, 11 Mar 2026
+ 02:31:37 +0000
+From: Gary Yang <gary.yang@cixtech.com>
+To: Krzysztof Kozlowski <krzk@kernel.org>, "bhelgaas@google.com"
+	<bhelgaas@google.com>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "mani@kernel.org"
+	<mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org"
+	<krzk+dt@kernel.org>, "conor+dt@kernel.org" <conor+dt@kernel.org>, Peter Chen
+	<peter.chen@cixtech.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, cix-kernel-upstream
+	<cix-kernel-upstream@cixtech.com>
+Subject:
+ =?gb2312?B?u9i4tDogW1BBVENIIHYyIDEvMl0gZHQtYmluZGluZ3M6IFBDSTogdXBkYXRl?=
+ =?gb2312?Q?_CIX_Sky1_PCIe_Root_Complex_bindings?=
+Thread-Topic: [PATCH v2 1/2] dt-bindings: PCI: update CIX Sky1 PCIe Root
+ Complex bindings
+Thread-Index: AQHcsFqmVTyaz6drxUGpqWO9ODpvBLWnXtEAgAEy0PA=
+Date: Wed, 11 Mar 2026 02:31:37 +0000
+Message-ID:
+ <PUZPR06MB5887D091B6CF979DFC46EECBEF47A@PUZPR06MB5887.apcprd06.prod.outlook.com>
+References: <20260310065338.2337761-1-gary.yang@cixtech.com>
+ <20260310065338.2337761-2-gary.yang@cixtech.com>
+ <841c0b46-76dc-49c2-bb74-7fc2e5a2a702@kernel.org>
+In-Reply-To: <841c0b46-76dc-49c2-bb74-7fc2e5a2a702@kernel.org>
+Accept-Language: zh-CN, en-US
+Content-Language: zh-CN
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=cixtech.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PUZPR06MB5887:EE_|SEZPR06MB6600:EE_
+x-ms-office365-filtering-correlation-id: e6ddacfd-b548-40b2-7d46-08de7f1651ff
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|1800799024|366016|376014|7416014|38070700021|56012099003|22082099003|18002099003;
+x-microsoft-antispam-message-info:
+ O4sa2A0nxHx56ddh74Zj2/n2aK7fuKNqZ4q+71dneR2ccItWWIxshFOMrGuln4Wr5z8R2w1REdMCJOeJH3kElWqxiOnUyNeBUFc7yvzzLc43m+XM717CuXBmYYtlVvSIDhn++hKRlr2zwXMi0U9PPLhhNg+36ReBwgvc+T9QM4cq/f+HmUpfdCM3GnRlvEPQ+0XH6Oqykk37Mv2rcTJZIuPGazrRy1ES9porErN/6mamsM8BTosgARheB3ze1jKLHRjnYcZ7wwaKchhNe6y0dn8Kw/kDfRc/8vcnubRt19ZLQeEiY6gW9kZPTM2R/fcu9FijCkV/Y8DzjCGqF3Sl2OIjd1CfnwjOa10VbnkNZZnj6PRRjqfi0Ec3fMC62WQGv5qbrNJVASdljicXYyY+7k+hb/tyga8A3HrqYcoYPsT8fGJ8ZPoudF+ZCAILZx9Denr4Mc6TaWlOeCkEl+qU3KKIuTtrw3BZi5n1Y90YSwzK+59WebUafJtjvSAFMgMMDbDVEnqrcthprZW+/w1hh3kGDnbIBm0QGHZ6q82P1uZUcKdt9uD6s2kjXhmaFkwlslxw/o7DI/dKQqPsybCi0HWoTAzszklyIBRGTzAkbSbjQiBr7u2Bj7v9tUTnbV20A/fYPXrgQKYsTyWHJ/Fw29XE4W9bQzZIvLgVFR1D9eTltOzqTIpTkY9rQ+hcECMvzYZeyx1bkcxnIdNucm9iP0X36M1zfxUFgPbHwZZ2btmVuf2mPDhUDgsuEL9AjuYIP3Pcc+hFfJ8p0RtYDOec/GVBndX6iH2PoSO4YuUH98Q=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:zh-cn;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PUZPR06MB5887.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(7416014)(38070700021)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?gb2312?B?R0ZKNEJwejl3S0ppVGZsYmhaaVhOK010L2JFancyaXN5b1N1ZkJ1bm5lVktO?=
+ =?gb2312?B?ODl1VGhHaTZhVE9sN3R5ZThoVEx2NlA0Nm5paDVsQ3R1UFByby8vcEhMWEhE?=
+ =?gb2312?B?N3dSZEVsWEI1T0t0RjlPeGFVcDNBRFQ5dHVzK1NhdWxlWkcvZ3IybjI1Qnl2?=
+ =?gb2312?B?YVo3cHRQY2xoSWlycFFrTytNYVVxT2c5eFFFZXJZWmY2OG9kcE94OU1GYTFU?=
+ =?gb2312?B?ejVWOGtJMm4wbkNHQXFCelpIeWhvWTYvUjB1UEtUdFJJanc5eEEwUWtWaTJh?=
+ =?gb2312?B?YkhBVzV5SGxnMnVQZ3F5YlpxU3Z1bXE2eWJJb0x1OTZnQmFPR0wxb1h3ck1w?=
+ =?gb2312?B?RU5WNFphNzRSRmxNakRjWnp6aTF0TFQ0aGxRZmNGY1Q4ekVSSitNb2I1UEc3?=
+ =?gb2312?B?M3o5N1hTaC9tUXpqcVFGZnBPRmxycFlUTTBKN1RPdm45MUpnWCtnUGJQUE85?=
+ =?gb2312?B?c2htWDB2Q1IxUUxFb3NzQTRNYmFubXFFZWFCMUhOb0NkMjBsS0tRQ1pyUUxs?=
+ =?gb2312?B?TXJjN2FGaXFmMlNPWlVxTjB2eTNRR1ZDZHR0OEVHQTA1WHJjVjJVbzdydDBI?=
+ =?gb2312?B?cmdiRUpFQlh4anc1SkRoSFdROVNmUE50T2kvQjRMVkFrQlRkNWpaQXlvQUk4?=
+ =?gb2312?B?MjhUc3RRdzJnRURranlPREplRnVEZS9SNytkYWtROE9DZEgvcDUxeDVHc09p?=
+ =?gb2312?B?YjdJSUE4bzdkRTJaM0NqQjFYeXZjbzYyYzVjb2ZabjUwRnBhQkg1MjFaUTNu?=
+ =?gb2312?B?NlhVeTNFN2gwWUVBRi9mSHRiQkwzeUIwS0RvT2sxVTB3cW1qVVY2alZnZTB6?=
+ =?gb2312?B?VTJPRkdOckJnMGNJTjk3YlFQOUNlRTNIdDR5U2t5ZndPY1oxdWp5ckVMQ0ZH?=
+ =?gb2312?B?TGhxMzVpSStlOUtueHJ4MG9XUkpvVjdMamxHcWFDQTE2N3ZWWFduVkN0Ujg5?=
+ =?gb2312?B?RDhXL2xjTFNCWTZqVVVPOVFuTlFHemwxMmNiTThxNi90dzlGc3dEcEVkM09V?=
+ =?gb2312?B?dlR1Qll2QjZwLy9sVnRTWGN6Y0RRcjRvdklSYXhmdEpiR1BVWWFRdVZmL0pB?=
+ =?gb2312?B?SU1weVF0a0ZFU0pQZWFwbEtFWjhtN1h5RGZNVjE1eUZWNzdBdjN6S0NrbUlU?=
+ =?gb2312?B?dUFtSXNBSU9nVVAyakRweHhGWVFTZzRRakJML3VtVmJLakhjNzZtaGoxOFg2?=
+ =?gb2312?B?Sy9hNi9WYlVIREs3NU1iRnQyb1d0UTkwT3NVOEs4cFRsM0kxaDRLajNQeE1S?=
+ =?gb2312?B?VnoyYkdydzFYUHFMbGU2VEZ6TzA2ajduSy92Ujl2dkg2N0U5TitQU29FSUw5?=
+ =?gb2312?B?UVhkWGx3dFpYeUUxTTNxU29jTmpxdUcwTW1KbndPQnF2ZUh1N3ljUXpsU1Zl?=
+ =?gb2312?B?WHF4VHVQb0RCcWN0VkQ5WkFQazBRR3FDOC9yUzFEREV0ek1GcEtIZ3k2WG9m?=
+ =?gb2312?B?UEY5ZUtqaDhuT0dQMUpCUlp6bzRBSlFSbnVZQ0tvQTJJR0R3eDVqZWlzZVVv?=
+ =?gb2312?B?SVhJaVpsaHhiMExtZFp4aFdTWXNQOFYvYzM0UStKNkpVcUxDVS93cHlLc3pL?=
+ =?gb2312?B?V3Z5dlpBMGlaa2ZIL1Z0TEY1ME90Z2J6S25rMjVkRkEwUlFVVmppMFdBWnoy?=
+ =?gb2312?B?eDJqL0cvbzVsRkRRL29qbUc2Y3RPSm5zeEYwT25TMlVhMWlFZXZrNXh2WnE5?=
+ =?gb2312?B?V1JJaTk2RmJxZXlNaXB6bkMwUmQvZk14dXdBVFFQSTM0SEwxbnJKTGZKK0dQ?=
+ =?gb2312?B?YWNMYjVlRk42ZEJ3QW9XREZsQXZZeGo4RlNoWGZiZTNZS0hrZ0UxNWtVa3cr?=
+ =?gb2312?B?UmVJUXVKdWxOQmp1UEcrNlNzU29sN01CNlJaUlg5bitRclZtQ0E5VmpTOFI3?=
+ =?gb2312?B?U0V3YkRmaHlmSngwSXdTZ0NMMUNVM2x6UmFqRmd6MUVYYVRmT3IwL1FzQnFV?=
+ =?gb2312?B?SGFuU0RidnoraUpxSmZKbGZrQklUenZKQWJmVXE2S29FM2paZzJIV2ZFN0dw?=
+ =?gb2312?B?QkFxcXl6ejZ6OFQvMi9vVXVtZk9UazhKamxxdTFjUzRKeUxqWUpWWHY1UFRM?=
+ =?gb2312?B?U2JyeXhZM1dtaXRwa1ZPODVWdmNBdm50eDlGcXVWTHlIMk85TzdUUU5LUGt5?=
+ =?gb2312?B?NW91VlR5N0tIOWhEa1FNVnIxa1B1bW9LTFlKUkV1Q2JSQm4rY0U3Q09rTG51?=
+ =?gb2312?B?STJuVEJXZEExbmpoYWtzZEt2a0tjMEZCd2kvQ25ZOE4vNnlHb1BmUVFpZEJE?=
+ =?gb2312?B?YkRsWkFOL3IyWkN4Rk9QZ01xejU2cmtiRXRRN2haQ1ZWTjNsVnNZamFqRFZV?=
+ =?gb2312?B?bEJPMWhqQXNaZ2pWb2ZoTXE0Zk94cTJSdk9HL0ZDdmd2UWd5bHV4UT09?=
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260310091947.2742004-8-wenst@chromium.org>
+X-OriginatorOrg: cixtech.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PUZPR06MB5887.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e6ddacfd-b548-40b2-7d46-08de7f1651ff
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Mar 2026 02:31:37.4623
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 0409f77a-e53d-4d23-943e-ccade7cb4811
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: heovF5OC4YO1b+Iapvjhp6kOIgGnWX2/nsAZ9u9uA4P76QHLJyLQBc0h5FzyflWnCSMzm/bP4JzRsLee2iYILA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEZPR06MB6600
 
-Hi Chen-Yu,
-
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on pci/next]
-[also build test ERROR on pci/for-linus linus/master v7.0-rc3 next-20260310]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Chen-Yu-Tsai/PCI-mediatek-gen3-Clean-up-mtk_pcie_parse_port-with-dev_err_probe/20260310-175537
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/20260310091947.2742004-8-wenst%40chromium.org
-patch subject: [PATCH v4 7/7] PCI: mediatek-gen3: Integrate new pwrctrl API
-config: sparc64-randconfig-001-20260310 (https://download.01.org/0day-ci/archive/20260311/202603110916.8SVCCZYO-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260311/202603110916.8SVCCZYO-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202603110916.8SVCCZYO-lkp@intel.com/
-
-All error/warnings (new ones prefixed by >>):
-
->> drivers/pci/controller/pcie-mediatek-gen3.c:1225:8: error: use of undeclared label 'err_teardown_irq'
-    1225 |                 goto err_teardown_irq;
-         |                      ^
->> drivers/pci/controller/pcie-mediatek-gen3.c:1248:1: warning: unused label 'err_tear_down_irq' [-Wunused-label]
-    1248 | err_tear_down_irq:
-         | ^~~~~~~~~~~~~~~~~~
-   1 warning and 1 error generated.
-
-
-vim +/err_teardown_irq +1225 drivers/pci/controller/pcie-mediatek-gen3.c
-
-  1201	
-  1202	static int mtk_pcie_probe(struct platform_device *pdev)
-  1203	{
-  1204		struct device *dev = &pdev->dev;
-  1205		struct mtk_gen3_pcie *pcie;
-  1206		struct pci_host_bridge *host;
-  1207		int err;
-  1208	
-  1209		host = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
-  1210		if (!host)
-  1211			return -ENOMEM;
-  1212	
-  1213		pcie = pci_host_bridge_priv(host);
-  1214	
-  1215		pcie->dev = dev;
-  1216		pcie->soc = device_get_match_data(dev);
-  1217		platform_set_drvdata(pdev, pcie);
-  1218	
-  1219		err = mtk_pcie_setup_irq(pcie);
-  1220		if (err)
-  1221			return dev_err_probe(dev, err, "Failed to setup IRQ domains\n");
-  1222	
-  1223		err = pci_pwrctrl_create_devices(pcie->dev);
-  1224		if (err) {
-> 1225			goto err_teardown_irq;
-  1226			dev_err_probe(dev, err, "failed to create pwrctrl devices\n");
-  1227		}
-  1228	
-  1229		err = mtk_pcie_setup(pcie);
-  1230		if (err)
-  1231			goto err_destroy_pwrctrl;
-  1232	
-  1233		host->ops = &mtk_pcie_ops;
-  1234		host->sysdata = pcie;
-  1235	
-  1236		err = pci_host_probe(host);
-  1237		if (err)
-  1238			goto err_power_down_pcie;
-  1239	
-  1240		return 0;
-  1241	
-  1242	err_power_down_pcie:
-  1243		mtk_pcie_device_power_down(pcie);
-  1244		mtk_pcie_power_down(pcie);
-  1245	err_destroy_pwrctrl:
-  1246		if (err != -EPROBE_DEFER)
-  1247			pci_pwrctrl_destroy_devices(pcie->dev);
-> 1248	err_tear_down_irq:
-  1249		mtk_pcie_irq_teardown(pcie);
-  1250		return err;
-  1251	}
-  1252	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+SGkgS3J6eXN6dG9mOg0KDQpUaGFua3MgZm9yIHlvdXIgY29tbWVudHMNCg0KPiBFWFRFUk5BTCBF
+TUFJTA0KPiANCj4gT24gMTAvMDMvMjAyNiAwNzo1MywgR2FyeSBZYW5nIHdyb3RlOg0KPiA+IGFk
+ZCBwb3dlci1kb21haW5zIGFuZCBwb3dlci1kb21haW4tbmFtZXMgcHJvcGVydHkNCj4gDQo+IFdo
+eT8gUGxlYXNlIHdyaXRlIGNvbXBsZXRlIHNlbnRlbmNlcyBleHBsYWluaW5nIHdoeSB5b3UgYXJl
+IGRvaW5nIHRoaXMuDQo+IA0KDQpTb3JyeSwgSSBkaWQgbm90IGRlc2NyaWJlIGluIGRldGFpbC4N
+Cg0KVGhlIFNreTEgUENJZSBjb250cm9sbGVyIHNpdHMgaW4gYSBwb3dlciBkb21haW4gdGhhdCBt
+dXN0IGJlIGVuYWJsZWQgYmVmb3JlIHRoZSBjb250cm9sbGVyIGNhbiBiZSBhY2Nlc3NlZC4NCkRl
+c2NyaWJlIHRoZSBwb3dlci1kb21haW5zIHByb3BlcnR5IHNvIHRoYXQgRFRTIGZpbGVzIGNhbiBy
+ZWZlcmVuY2UgdGhlIGNvcnJlY3QgcG93ZXIgZG9tYWluIHByb3ZpZGVyLg0KDQo+ID4NCj4gPiBT
+aWduZWQtb2ZmLWJ5OiBHYXJ5IFlhbmcgPGdhcnkueWFuZ0BjaXh0ZWNoLmNvbT4NCj4gPiAtLS0N
+Cj4gPiAgLi4uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2NpeCxza3kxLXBjaWUtaG9zdC55YW1s
+ICAgICAgICAgfCA2ICsrKysrKw0KPiA+ICAxIGZpbGUgY2hhbmdlZCwgNiBpbnNlcnRpb25zKCsp
+DQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdz
+L3BjaS9jaXgsc2t5MS1wY2llLWhvc3QueWFtbA0KPiBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJl
+ZS9iaW5kaW5ncy9wY2kvY2l4LHNreTEtcGNpZS1ob3N0LnlhbWwNCj4gPiBpbmRleCBiOTEwYTQy
+ZTA4NDMuLjFkOGVlODMxMDU4OCAxMDA2NDQNCj4gPiAtLS0gYS9Eb2N1bWVudGF0aW9uL2Rldmlj
+ZXRyZWUvYmluZGluZ3MvcGNpL2NpeCxza3kxLXBjaWUtaG9zdC55YW1sDQo+ID4gKysrIGIvRG9j
+dW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9jaXgsc2t5MS1wY2llLWhvc3QueWFt
+bA0KPiA+IEBAIC0zOCw2ICszOCwxMiBAQCBwcm9wZXJ0aWVzOg0KPiA+ICAgIHJhbmdlczoNCj4g
+PiAgICAgIG1heEl0ZW1zOiAzDQo+ID4NCj4gPiArICBwb3dlci1kb21haW5zOg0KPiA+ICsgICAg
+bWluSXRlbXM6IDENCj4gPiArDQo+ID4gKyAgcG93ZXItZG9tYWluLW5hbWVzOg0KPiA+ICsgICAg
+bWluSXRlbXM6IDENCj4gDQo+IFRoZXJlIGlzIG5vIHN1Y2ggc3ludGF4LiBPcGVuIGFueSBleGlz
+dGluZyBiaW5kaW5oLg0KPiANCg0KU29ycnksIFRoZXkgY29tZSBmcm9tIERvY3VtZW50YXRpb24v
+ZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvZnNsLGlteDZxLXBjaWUtY29tbW9uLnlhbWwNCg0KRXhl
+Y3V0ZSB0aGUgdHdvIGNvbW1hbmRzIGJlbG93IGJlZm9yZSBzdWJtaXQgcGF0Y2ggZXZlcnkgdGlt
+ZS4NCg0KbWFrZSBPPSRPVVRLTkwgZHRfYmluZGluZ19jaGVjaw0KbWFrZSBPPSRPVVRLTkwgZHRf
+YmluZGluZ19jaGVjayBEVF9TQ0hFTUFfRklMRVM9Y2l4LHNreTEtcGNpZS1ob3N0LnlhbWwNCg0K
+d2UgZG9uJ3QgZmluZCBhbnkgd2FybmluZyBvciBlcnJvci4gU28gd2UgdGhpbmsgYWxsIGlzIG9r
+Lg0KDQpEVEVYICAgIERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvY2l4LHNr
+eTEtcGNpZS1ob3N0LmV4YW1wbGUuZHRzDQpEVEMgW0NdIERvY3VtZW50YXRpb24vZGV2aWNldHJl
+ZS9iaW5kaW5ncy9wY2kvY2l4LHNreTEtcGNpZS1ob3N0LmV4YW1wbGUuZHRiDQoNCmFuZA0KDQpD
+SEtEVCAgIC4vRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzDQpMSU5UICAgIC4vRG9j
+dW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzDQpEVEVYICAgIERvY3VtZW50YXRpb24vZGV2
+aWNldHJlZS9iaW5kaW5ncy9wY2kvY2l4LHNreTEtcGNpZS1ob3N0LmV4YW1wbGUuZHRzDQpEVEMg
+W0NdIERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvY2l4LHNreTEtcGNpZS1o
+b3N0LmV4YW1wbGUuZHRiDQoNCklmIHRha2UgYW55IG1pc3Rha2VzIGFuZCBtaXNzIGFueSBpbmZv
+cm1hdGlvbiwgcGxlYXNlIGxldCB1cyBrbm93Lg0KDQpCZXN0IFJhZ2FyZHMNCkdhcnkNCg0KPiBC
+ZXN0IHJlZ2FyZHMsDQo+IEtyenlzenRvZg0K
