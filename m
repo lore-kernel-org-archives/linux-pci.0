@@ -1,167 +1,132 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BCBD3E2755
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2026 17:12:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81B1A3451AF;
+	Wed, 11 Mar 2026 17:13:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773249177; cv=none; b=e9QwPddm6+tQQWlQGIyJNxvueNBPttFL0jDvUqy8e0uDYF+ut4VvuN8H1Sh8nKxztGLNgIxjEhrIFfA1JufepQWXNbYoZKz2+aqkXYAX4II0pFxKleW9jD+U1qoQT7tvNQbLv6npoUCe+OK2dPfPrqAKWARqNSPB7hI8RfgbsL8=
+	t=1773249194; cv=none; b=CHDGXmEJIEte5JVYlCLGY4ZqzNj//9LHDK9ofdbqjvO6ZdcWrQV6j77lrkXQJD+SrI/KYcxi4spG+CBTq36oV79Ag8Db2T0vM8amgHlTB7/nt5wFVQbbBfBc0y2OzzjAyRun97rh++8UF3tvl0WcQeuqo+RvpPlHviBCN0QgcKg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773249177; c=relaxed/simple;
-	bh=au6iNKVCh3pMh4qk0YxwtcOHn3fQ0MaQMv1NDXsElVQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=N3V1sYVZ0tmovvlAkhaGP/LCqmXF/iqBtKCGRq5VnrTHRYHh6rn4LbLyn+yqNc0vKrFJozC5jluyjjtITIfA+eNp/IHQzfyOAk/OmZXNwib1+fLLrJ5BwXaNOhF5AmoBY8Y3V9A6GYKmCaSeaU5iyp9tr8AToNGVs7ZcPGKwyYI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=RPUCsvrv; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1773249194; c=relaxed/simple;
+	bh=HnZ43XwIpl7dh8HMwqHbhWOqb5h5K/qibXtHrWYtI2M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Igu3zhcxQ55+NVige/xl5U8x8c5xL8A5VWHPkJw8sIbo3yEpda5aU3j9mW/slO0ZF6lLmxATQZobJecpxlAXprtnhNwDY8rgOFzJkhvhkugCCJhdlI/8A/WLecDi/w0kkXYrF0WTdVybPv5KIa64W9kG5Sh6RHzKB7L2U/7Z+5Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RcjXj8/D; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RPUCsvrv"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1773249175;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=aQjBC2bc61wiPUL6nYQG9aHtMudQW42Lt4xfiI3aJZo=;
-	b=RPUCsvrvBHg9e27LVxroe/1W5BfSGhPGN27FBD2GpYETLCh3HCgZTIiuoEWDNB1PKTAYdT
-	I283Xx9RxRv0MNC0VT/Q7Qqh1Oa6FzzlRDijh3OX1ikyS1W5sbIecakq4E70opEy8Fx9WT
-	Sz1VlF/1St7kJ65sxmCscCbFemyXxFE=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-358-frrKfDUZNQGd0ENifjY7Lg-1; Wed,
- 11 Mar 2026 13:12:52 -0400
-X-MC-Unique: frrKfDUZNQGd0ENifjY7Lg-1
-X-Mimecast-MFC-AGG-ID: frrKfDUZNQGd0ENifjY7Lg_1773249170
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F35AB18005B2;
-	Wed, 11 Mar 2026 17:12:49 +0000 (UTC)
-Received: from fedora-work.redhat.com (unknown [10.22.81.247])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A4AC930002D2;
-	Wed, 11 Mar 2026 17:12:45 +0000 (UTC)
-From: David Jeffery <djeffery@redhat.com>
-To: linux-kernel@vger.kernel.org,
-	driver-core@lists.linux.dev,
-	linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>
-Cc: Tarun Sahu <tarunsahu@google.com>,
-	Pasha Tatashin <tatashin@google.com>,
-	=?UTF-8?q?Micha=C5=82=20C=C5=82api=C5=84ski?= <mclapinski@google.com>,
-	Jordan Richards <jordanrichards@google.com>,
-	Ewan Milne <emilne@redhat.com>,
-	John Meneghini <jmeneghi@redhat.com>,
-	"Lombardi, Maurizio" <mlombard@redhat.com>,
-	David Jeffery <djeffery@redhat.com>,
-	Stuart Hayes <stuart.w.hayes@gmail.com>,
-	Laurence Oberman <loberman@redhat.com>
-Subject: [PATCH 5/5] scsi: enable async shutdown support
-Date: Wed, 11 Mar 2026 13:12:09 -0400
-Message-ID: <20260311171209.9205-5-djeffery@redhat.com>
-In-Reply-To: <20260311171209.9205-1-djeffery@redhat.com>
-References: <20260311171209.9205-1-djeffery@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RcjXj8/D"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9331FC4CEF7;
+	Wed, 11 Mar 2026 17:13:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773249194;
+	bh=HnZ43XwIpl7dh8HMwqHbhWOqb5h5K/qibXtHrWYtI2M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=RcjXj8/DHiK3t9Ki5/dVU994YOCV7pkhmvdfHpP4Ni5RfLuvggNyoukzjJy+iUcM/
+	 yYF4laxETNu7z5UX4GLlXBVcBKhNJCJHqn6mM3E6eHbZq7wMw2ouAYu1SN2ILjvQYw
+	 J8A0r77BE53yNF+8d7rbvjB6vSmCFGwqsiLHpGE/KW2Dt37kEJJc9RlFVidiyXemGr
+	 p5YdhtPe4yojoe38FQJsWiCJ6ye2eC5KbXlgTUSM8cF8v1rQrqBC/ZvzQa1rfEeFJm
+	 k4tniKn4qUAyyWP4hNn60exginXUH7wdQa2jvpFX2LMzC2CHmbNC5do1atv2h6UAyW
+	 cn5vNsYhBsrUw==
+Date: Wed, 11 Mar 2026 22:42:56 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Minghuan Lian <minghuan.Lian@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>, 
+	Roy Zang <roy.zang@nxp.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Srikanth Thokala <srikanth.thokala@intel.com>, 
+	Thierry Reding <thierry.reding@gmail.com>, Jonathan Hunter <jonathanh@nvidia.com>, 
+	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>, Masami Hiramatsu <mhiramat@kernel.org>, 
+	Marek Vasut <marek.vasut+renesas@gmail.com>, Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, 
+	Kishon Vijay Abraham I <kishon@kernel.org>, Manikanta Maddireddy <mmaddireddy@nvidia.com>, 
+	Koichiro Den <den@valinux.co.jp>, Damien Le Moal <dlemoal@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	imx@lists.linux.dev, linux-arm-msm@vger.kernel.org, linux-tegra@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH v3 1/9] PCI: endpoint: Introduce pci_epc_bar_type
+ BAR_64BIT_UPPER
+Message-ID: <6b6w7ni62ty3oimj3cwfzyv75evslx2vhojp3f6rpnbxtamv7g@o35zul3tkbrf>
+References: <20260302095913.48155-11-cassel@kernel.org>
+ <20260302095913.48155-12-cassel@kernel.org>
+ <dtxdgxrewfby5hu3cu3pu5kljylm627uc43sw75gk7loimmm6r@ei4w6wmqgd6a>
+ <abFGOoZUX_vexLWR@fedora>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+In-Reply-To: <abFGOoZUX_vexLWR@fedora>
 
-Like scsi's async suspend support, allow scsi devices to be shut down
-asynchronously to improve system shutdown time.
+On Wed, Mar 11, 2026 at 11:38:50AM +0100, Niklas Cassel wrote:
+> Hello Mani,
+> 
+> On Wed, Mar 11, 2026 at 12:05:59PM +0530, Manivannan Sadhasivam wrote:
+> 
+> (snip)
+> 
+> > This also brings the question, do we really need to mark the preceding BAR?
+> 
+> From a pure code PoV, marking the preceding BAR is enough even with the
+> current code:
+> https://github.com/torvalds/linux/blob/v7.0-rc3/drivers/pci/endpoint/pci-epc-core.c#L101-L103
+> 
+> However, the current documentation claims that the succeeding BAR must be
+> marked as BAR_RESERVED:
+> https://github.com/torvalds/linux/blob/v7.0-rc3/include/linux/pci-epc.h#L207-L210
+> 
+> I want to change this to BAR_64BIT_UPPER / BAR_64BIT_UPPER_BASE, so we can use
+> BAR_RESERVED for BARs that expose fixed hardware resources (e.g. eDMA regs).
+> 
+> 
+> Thus, an EPC driver does not strictly need mark the succeeding BAR with anything.
+> This was done mostly for clarity. (E.g. with BAR_64BIT_UPPER_BASE it is obvious
+> that this BAR cannot be a standalone 32-bit BAR.)
+> 
+> If we don't mark the succeeding BAR with anything, IMO, it is less obvious that
+> the succeeding BAR cannot be used as a standalone 32-bit BAR.
+> 
+> But... since the code already does the "right thing". We could simply nuke this
+> part of the documentation, and drop the .type for all BARs succeeding a
+> .only_64bit BAR, if you prefer that option over having a dedicated type for the
+> "upper base of a 64-bit BAR".
+> 
 
-Signed-off-by: David Jeffery <djeffery@redhat.com>
-Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
-Tested-by: Laurence Oberman <loberman@redhat.com>
----
- drivers/scsi/hosts.c      | 3 +++
- drivers/scsi/scsi_scan.c  | 1 +
- drivers/scsi/scsi_sysfs.c | 4 ++++
- 3 files changed, 8 insertions(+)
+Yes, let's just remove that comment.
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index e047747d4ecf..dfb38a82c0bf 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -273,6 +273,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	pm_runtime_set_active(&shost->shost_gendev);
- 	pm_runtime_enable(&shost->shost_gendev);
- 	device_enable_async_suspend(&shost->shost_gendev);
-+	device_enable_async_shutdown(&shost->shost_gendev);
- 
- 	error = device_add(&shost->shost_gendev);
- 	if (error)
-@@ -282,6 +283,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	get_device(shost->shost_gendev.parent);
- 
- 	device_enable_async_suspend(&shost->shost_dev);
-+	device_enable_async_shutdown(&shost->shost_dev);
- 
- 	get_device(&shost->shost_gendev);
- 	error = device_add(&shost->shost_dev);
-@@ -519,6 +521,7 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_host_template *sht, int priv
- 	shost->shost_gendev.bus = &scsi_bus_type;
- 	shost->shost_gendev.type = &scsi_host_type;
- 	scsi_enable_async_suspend(&shost->shost_gendev);
-+	device_enable_async_shutdown(&shost->shost_gendev);
- 
- 	device_initialize(&shost->shost_dev);
- 	shost->shost_dev.parent = &shost->shost_gendev;
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 60c06fa4ec32..c42b33e8ea8a 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -518,6 +518,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
- 	dev->bus = &scsi_bus_type;
- 	dev->type = &scsi_target_type;
- 	scsi_enable_async_suspend(dev);
-+	device_enable_async_shutdown(dev);
- 	starget->id = id;
- 	starget->channel = channel;
- 	starget->can_queue = 0;
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 6b8c5c05f294..c76ba17b206f 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1370,6 +1370,7 @@ static int scsi_target_add(struct scsi_target *starget)
- 	pm_runtime_set_active(&starget->dev);
- 	pm_runtime_enable(&starget->dev);
- 	device_enable_async_suspend(&starget->dev);
-+	device_enable_async_shutdown(&starget->dev);
- 
- 	return 0;
- }
-@@ -1396,6 +1397,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	transport_configure_device(&starget->dev);
- 
- 	device_enable_async_suspend(&sdev->sdev_gendev);
-+	device_enable_async_shutdown(&sdev->sdev_gendev);
- 	scsi_autopm_get_target(starget);
- 	pm_runtime_set_active(&sdev->sdev_gendev);
- 	if (!sdev->rpm_autosuspend)
-@@ -1415,6 +1417,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	}
- 
- 	device_enable_async_suspend(&sdev->sdev_dev);
-+	device_enable_async_shutdown(&sdev->sdev_dev);
- 	error = device_add(&sdev->sdev_dev);
- 	if (error) {
- 		sdev_printk(KERN_INFO, sdev,
-@@ -1670,6 +1673,7 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
- 	sdev->sdev_gendev.bus = &scsi_bus_type;
- 	sdev->sdev_gendev.type = &scsi_dev_type;
- 	scsi_enable_async_suspend(&sdev->sdev_gendev);
-+	device_enable_async_shutdown(&sdev->sdev_gendev);
- 	dev_set_name(&sdev->sdev_gendev, "%d:%d:%d:%llu",
- 		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
- 	sdev->sdev_gendev.groups = hostt->sdev_groups;
+> 
+> > Why can't we let the PCI EPC core to always assume that if the previous BAR
+> > has 'only_64bit' bit set, next BAR cannot be used as a standalone 32bit BAR?
+> > 
+> > I find it weird or redundant to mark both BARs.
+> 
+> Redundant, yes, but in my opinion marking both BARs makes it unambigious
+> that two BARs are used when a BAR is "only_64bit".
+> 
+> E.g. Manikanta originally wanted to add code comments for the upper part of
+> the 64-bit BAR:
+> https://lore.kernel.org/linux-pci/20260217-master-v1-2-727e26cdfaf5@nvidia.com/
+> 
+> Sure, we can just skip the .type for the succeeding BAR...
+> But is that really better than clearly showing that a "forced" 64-bit BAR will
+> always occupy two BARs?
+> 
+
+To whom are we showing? If it is a developer, then he should understand that a
+64bit BAR occupies two consecutive 32bit BARs. The flag should only be set for
+the code not for the reader.
+
+> 
+> Tell me what you prefer:
+> 1) s/BAR_RESERVED/BAR_64BIT_UPPER_BASE/
+> 2) Change documentation and drop .type for a BAR following a .only_64bit BAR.
+> 
+
+Let's go with 2.
+
+- Mani
+
 -- 
-2.53.0
-
+மணிவண்ணன் சதாசிவம்
