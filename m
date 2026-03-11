@@ -1,75 +1,84 @@
-Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [83.223.95.100])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD60B3B636C;
-	Wed, 11 Mar 2026 08:05:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA83A361642
+	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2026 08:17:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773216307; cv=none; b=XAMUGR/N0FC8ayQ5w9GsN6yASylpgl/IAgFpyd4oIrQYLkckago2r3QKa9Z7rrSURhh+u/tZOr6DGMXJLkVWBh3pA5NoWQOrvmhqNMuHVTzeCHQeJqei7JKzQA8BClp0wMdEi9m73SLo4AkNo21F0qpPJETcouun7eX1iEYB3T8=
+	t=1773217062; cv=none; b=YtWCuTOlsnp9BsU9Fkm24sp1gHmOv4IZPUIRqetRTHzlpNzIK43xxavom/Td+9CivyQ194rVuGlx3JgZaEQsRKU2QXpcvuqm2a/dzvyX+1KYAoovBfejf+fatCyhRVmGJj9YUOMqAMOM2ce7fGvUC8J4ZljS2T8KCROHbOlvMLk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773216307; c=relaxed/simple;
-	bh=oZX4ayMIufI52STs6KSNM/xHpH99DGI6l1fwhjaFlpo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fEykZCNFBGAKz6pJ6r7VURR6q7l/NtkMs4lavwDgpdddWz6m2fcTAk4Vlee8tj9St9UGZz+UEY6VRYhImZmoAvkVUpKDtPZXs29I70TpRSeDBgEGEdxMxaoemawKyzr++sIUz9DjLhXM9o0eOgoPkLEUABQBOcZ4aJl9MT+Oh98=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.95.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by bmailout1.hostsharing.net (Postfix) with ESMTPS id 7116020202BA;
-	Wed, 11 Mar 2026 08:56:19 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 54BFA61F83; Wed, 11 Mar 2026 08:56:19 +0100 (CET)
-Date: Wed, 11 Mar 2026 08:56:19 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Robin Murphy <robin.murphy@arm.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>, Niklas Cassel <cassel@kernel.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Hans Zhang <18255117159@163.com>,
-	Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Anand Moon <linux.amoon@gmail.com>,
-	Grimmauld <grimmauld@grimmauld.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>, driver-core@lists.linux.dev
-Subject: Re: [PATCH v3] PCI: dw-rockchip: Enable async probe by default
-Message-ID: <abEgI2Q52C-p6cs1@wunner.de>
-References: <20260226101032.1042-1-linux.amoon@gmail.com>
- <177260693908.10259.13055467642416391434.b4-ty@kernel.org>
- <87bc37ee-234c-4568-b72e-955c130a6838@arm.com>
- <f7tfshf7riljjibuqge4ubfjmludubpyh3ppdf6lasurzdzbtj@sw4xxagfhnn3>
- <5d88fb5b-e771-4ea6-8d2c-c5cfd21e5860@arm.com>
- <qwanhqrpztzkudik5fmberhabnzaly7v53677dohqzj5nq4wi2@6ndpiubyxcbi>
+	s=arc-20240116; t=1773217062; c=relaxed/simple;
+	bh=7aVyH8gC2iAwka4GOoRBYJZUC2V8UwKcglbeRFr/hv4=;
+	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=DE6HVq7i5vIwAOMj6rH+w702Jm1OCREAxldcxA0F9hM/1JzLc1Xmx26dAprdYqeXIAkJXRYURUK4hKFmHPqpOpfv2No9bz1WjgoHWaoCFwxEKfHjutWBxgR9iV+dcrzPP40CiSSoPOFgXsIX6xE0TLkFNQrrAF/tyyhpVa5iuU8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D4WmvIdV; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D4WmvIdV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78B60C4CEF7
+	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2026 08:17:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773217062;
+	bh=7aVyH8gC2iAwka4GOoRBYJZUC2V8UwKcglbeRFr/hv4=;
+	h=From:In-Reply-To:References:Date:Subject:To:Cc:From;
+	b=D4WmvIdV70qZooUtYD0GQAKRaPHYl3y1t2MYESRk25Ah/gC+e8nh/iguEwOuKhjQw
+	 cXlSdkZYsCS7YsCDWOw6zPdURHlDkIhJ52gTRuuwhifEX9lUM2YT49cjkhTOT5kUIQ
+	 kxOlkASTpHvnlKK/GMBMri/vJIbFUQiBeq0290Wb9hfoaZmsPmuffz+r2VpJwgrI6X
+	 Wij85BlIT/Bkt8v6s29m1VWnOVLN/OnvBKUBRCiRVfMPw1hS/CACQVi9v6K0nGhBZy
+	 Zf3uNd1Z1w9vaA8MEF0V+rYVQ+5k6//kc8SqctnN5g1l8XTBolUzwwzsI28hEKJcYh
+	 R1x9+uw43BVkg==
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5a12cc20e71so6237741e87.0
+        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2026 01:17:42 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCV/wJPf38XpwZcuJGc8y788TDmIk91vuUzi6TbMZVCvodwQlTeuTCjPk6/FmUKOp963pgtz5ISQ2go=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyIwmfkAiJsMwsomFYihXNPlGzhRAYmOsysPrcqtz6DmquGW6EV
+	omuRT7EahSztKXXy8ukqcURa3+9KdEjt+NsZj9hCdE5x2Pvq7wMtjC5x4CdSe0pSD/FF/R1WEq4
+	3Iu1aomJk0MEkY9RmlU51+Vza6Eymw0IWmQfTB1+oWQ==
+X-Received: by 2002:ac2:4bc1:0:b0:5a1:3447:ac38 with SMTP id
+ 2adb3069b0e04-5a156ba89a2mr541449e87.2.1773217060868; Wed, 11 Mar 2026
+ 01:17:40 -0700 (PDT)
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Wed, 11 Mar 2026 01:17:39 -0700
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Wed, 11 Mar 2026 01:17:39 -0700
+From: Bartosz Golaszewski <brgl@kernel.org>
+In-Reply-To: <20260311075223.3303497-4-wenst@chromium.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <qwanhqrpztzkudik5fmberhabnzaly7v53677dohqzj5nq4wi2@6ndpiubyxcbi>
+References: <20260311075223.3303497-1-wenst@chromium.org> <20260311075223.3303497-4-wenst@chromium.org>
+Date: Wed, 11 Mar 2026 01:17:39 -0700
+X-Gmail-Original-Message-ID: <CAMRc=MfqXmq+PcFFaCi8Abc6xDVwy41GRqATZhdpKb79iJTj5w@mail.gmail.com>
+X-Gm-Features: AaiRm52ZGd8wfgNcadvnRvKWb5u5DQiXPBmMXTqNTn6MKr5B7mZiuJiWoJMteX8
+Message-ID: <CAMRc=MfqXmq+PcFFaCi8Abc6xDVwy41GRqATZhdpKb79iJTj5w@mail.gmail.com>
+Subject: Re: [PATCH v5 3/7] PCI: mediatek-gen3: Move controller setup steps
+ before PERST# control
+To: Chen-Yu Tsai <wenst@chromium.org>
+Cc: Bartosz Golaszewski <brgl@bgdev.pl>, linux-pci@vger.kernel.org, 
+	linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, 
+	Bjorn Helgaas <helgaas@kernel.org>, Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
+	Ryder Lee <ryder.lee@mediatek.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed, Mar 11, 2026 at 10:54:59AM +0530, Manivannan Sadhasivam wrote:
-> But isn't the underlying issue is with phylib calling request_module()
-> while the driver core performs async probing?
+On Wed, 11 Mar 2026 08:52:18 +0100, Chen-Yu Tsai <wenst@chromium.org> said:
+> Setting up the translation windows and enabling MSI involve only
+> configuring the controller, not the device. These can be done before the
+> device is enabled.
+>
+> Move these steps before the existing PERST# control. This provides a
+> cleaner separation of controller vs device setup. This also allows the
+> later patches that split out PERST# control and add device power
+> control to have cleaner teardown.
+>
+> This change only moves code. No functional change is expected.
+>
+> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+> Link: https://lore.kernel.org/all/20260309215056.GA603013@bhelgaas/
+> Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
+> ---
 
-I'd say the underlying issue is the call to async_synchronize_full()
-in do_init_module().  That's very coarse-grained.  Maybe it can be
-replaced with async_synchronize_full_domain() or async_synchronize_cookie()
-to perform a more targeted wait?
-
-Thanks,
-
-Lukas
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
