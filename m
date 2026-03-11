@@ -1,238 +1,216 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012051.outbound.protection.outlook.com [52.101.43.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D3D23B47F1
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2026 08:37:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773218253; cv=none; b=aIzJkm7JmKwtqh6Zww1vRt9YNdAg4bIHKJr72IuUScriZ4BJk3DGZnVlzaEDYYb67nQ7ni8TCN6h8XpWL+Z0ES2oPwqZGrb6qcYGoZI15YJRNkyYPGIPDQBKbHLgL2O40BwcE32/VKCSP8al6wskPp//qielDdh6xmTw755D5y4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773218253; c=relaxed/simple;
-	bh=x7L8prCT6Rl0yO0Ys8jD1kk7ROA4hOyc92FdG9z+IgA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AFIOwuUMY6z7HrAzIMPxT1b4b07Ja9Oee/farOdBauxva5xJWTz4J2q1Hq2DE2GWKhdutek3MGPuTG35eF83SI5yDi7cnekBf/AeD0lCWMhkfyeVaX9zvHG+12+Tw8wTITuNh0awl+wf8Bt465GZRsoTRrsBGjfzZrtWm8Io6N0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hhs5fZMy; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=F69iKgYQ; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C3D82EC54C;
+	Wed, 11 Mar 2026 08:41:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.51
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773218484; cv=fail; b=F7sHYcVg+IYBT/558WbTZxGLLKjsVB+wy5p4EX4DNFDRvyqRhYyX3oSEbfYdO9DGISdgzrvdnH6l4aFwvppsHJFNv/o1pJBB+sB3TmxlkIIUhjJ+S1+i0b4NrSQF9eIXsV+6Juy5iLb/q2YS/3lFlfrCmmiigu0Gsn9tRsZN1qw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773218484; c=relaxed/simple;
+	bh=6FzK2c3zmiI8k0I5fSEMQF+D/rHnzHdqhQrDvQhgyig=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=bUYNxtfetIPZxf0fF2XBlAAY9WQ52NRnddWf+x15K+OfL0b/GikZzDx/J9+33NSuILNpYyRc3FH8AEFL3jX3ynYzcBv4vDyQ5sUJapqBsdv25E1G5fk6QMou6KueTF6/e9L7gpcoVjgI7pBulCrBcFaO023EaLgoQ+TKi3m4fuo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=b6obB3IE; arc=fail smtp.client-ip=52.101.43.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hhs5fZMy";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="F69iKgYQ"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62B7QIm22031208
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2026 08:37:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	v6shnDKy0mTtNDl8IP4ADRHwgFmAxB+//orXLuR5fLg=; b=hhs5fZMyvtxS8Nuu
-	ytOLTRbVQ6fk7Nn3abZLkq4nk10BNPQgEP4xkSb75GAgLxtR8jfPQVALSNIK7cQt
-	rEnKprQJPKQQe1prkq0IYawtPRkKqGL5DB9X1vgxK+SrSJXxiM+5raitEo0U0ZyF
-	FJAjzHYw04iSe5osB9V/zMgrMm+hsPFXESQdDQi96rffkrjJNsmgL5axWCcr6Yxw
-	Vk/i3gIeCLyIRyRiSzbBoTD1flcFtkou7t41nocrIfOv3n0aiXLrvweArTeVorNZ
-	nxMd2wy/5pcqZREwyaV1LBEyNeUoLSvKiQtOPXTiBUtacHJtPkm1iEgB+nCoybAy
-	AC9j6w==
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cu40h07xv-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2026 08:37:30 +0000 (GMT)
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-82984060901so582834b3a.0
-        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2026 01:37:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1773218249; x=1773823049; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=v6shnDKy0mTtNDl8IP4ADRHwgFmAxB+//orXLuR5fLg=;
-        b=F69iKgYQMNbNeTeQHthCQDZJ6PIu5B8wxSWDMgmUarO96eavRJHFFRotJCZuEN1tOG
-         G6gdvhQnwdo84yrxxbeNtzCVy15ePVE+PeAEMvZJlGNkrxPKrpoZHLHNkC9TBje28fCQ
-         dB2/xYUZtoO5mZdP3wiDEyRoTFrikHAW3G/jjD07n6Dw/PTCvNRThzQmOWoERvo3qjJe
-         UQhmJypH1d3KOdOUYAon+wZ8jIVZvZgzjaFoDUHMa3uZojsb/FRn9RF4EDQNx2wINE9Z
-         o/0zrI43TG38j3kiouWQc09NGzMfvbF8l9R+gH2XO094o+FUo/VwPywIU2RQogpOQ0X/
-         /MQg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773218249; x=1773823049;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=v6shnDKy0mTtNDl8IP4ADRHwgFmAxB+//orXLuR5fLg=;
-        b=TCOE4Nk8aKQE8DxNblNc1RSD7Jr65+4Yzh0lN2kO8IL8NjIetCaZbWP3Iab/GN3jWU
-         HpYUjt3gQKRLeY9k2xd/Cr4QTD5HllEvQ93cK5Umsb6h4MROyeHAgEj6reQbmf0m1+ar
-         dG6VuIwyj1SHrkHEYezOqzfvoBR0Qisk5NfauRn3CheeKykka7qYZFVK2ZRNYAyEiex+
-         gVh+2qRauzATuHhul08z4t7hFpkj0Lv13O+Vl0SROIJ/CVU0rsRhjzREc5Bn46VKXl1n
-         U1J/OTeOk9tiPL6Fcv+NZr0AukoHBQiRsSROlDysT+f+Ib4RUmJxZglo3gP8ptaU1Unv
-         /+AQ==
-X-Gm-Message-State: AOJu0YwoVVlnvybwd6z2r+42+lbm9MJDC2Ava6VbrrQ129Lom/LSom7u
-	vrzg4LlFnK7MmL40v+/cVbPyCeqcyZ4+UkDB2ZpVtFpeqk1Mz1eBSSe9siaYMS1pLkzRtBS4TJs
-	H6enSMD7Vp1IZfxb12Oj6G/MRzX5LFtKcUiUoqcYZmJTbAf4G6LpG6r97V8iY3AY=
-X-Gm-Gg: ATEYQzyRQwPvRAMxywY/DEEVJy0fFgReJnraxaefTvRKpV+B9Pvv3+CTAwRaZmSXq1i
-	iZZlA19ce83JVOM7g2TdSAjlVwMw3bE6ojTjiFDKKVQrUIrnLL3EMm2/LVRfjGbyii2ahYf9HDs
-	h539RtXoZN+IyQN4pXbQWPyRg3IOMZjvnEcZMyKdOtWFR3XV7BFvuKZvritUrGLhJxMhtFoiAtE
-	UYCHRWzrURiUVmu4nShBF1VNoyCsQwNfPxmspPDXZYRzxArQCAjCd8TmOI8hVqg9Dpa90iEE551
-	F2/NU+kHf7s+JbmZGRE0xq2WFOTpPq18An7U6CxgNamWbZAbJ2saXqexbGVZYE2wVybuetUKl+T
-	+b+mmM3VGd6Q8bwore0hPoHBbKzuegA42Uk5PQkGV2nEIUI2Uc55RJw==
-X-Received: by 2002:a05:6a00:349a:b0:81f:4e1c:1d3b with SMTP id d2e1a72fcca58-829f7ae6a79mr1535901b3a.23.1773218249441;
-        Wed, 11 Mar 2026 01:37:29 -0700 (PDT)
-X-Received: by 2002:a05:6a00:349a:b0:81f:4e1c:1d3b with SMTP id d2e1a72fcca58-829f7ae6a79mr1535869b3a.23.1773218248955;
-        Wed, 11 Mar 2026 01:37:28 -0700 (PDT)
-Received: from [10.218.35.45] ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-829f6df3b14sm1736918b3a.20.2026.03.11.01.37.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 11 Mar 2026 01:37:28 -0700 (PDT)
-Message-ID: <cd192707-1f8e-4ad7-8be5-470415fb4e95@oss.qualcomm.com>
-Date: Wed, 11 Mar 2026 14:07:18 +0530
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="b6obB3IE"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=gXuEcfKnuFxv3R5g18JgzImgCioWXL7CqQKOlYW1e2bOadDqejuvYkBEhZYjF4Q7xdujUmnBoE94QxEOqDC8rWHmPKHicJpEmGpSqbioXcWdlTO9NcWb/H50gu+lXG8M3ea30CU27AeY+EofgI0yFFQcsdz/QFhAPjkKr97wyFiYxCW/2fC+QaaJsR4lkKzksrR6slggB/n+/XegSoMMAg6cXPgDJ+74BTPRa+Z2pecKJD47La8hDGivfiRKEivUnFRezM97YqNkFdvJoAYxP+cj+KSQ2cf2NnBHz0pUtNapWCpT8FijY+nNLa55pKZgqH/ghruJfQlHhN2izFmqVQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=svfT9XX/fVv3gr3AiLoa5CVkCFq2WzZyZqI/VsFbG9A=;
+ b=CdNzflfk0CATDnWTDxqHZo6yLtHQ7IqdCGr7ONosDGOlgA15HS5fcXQoQg2KY60fa2yCA8+XZirZzMAAq0QCX77TPqYz+LEKhu1EeiaENDc/++XY48HTw+0yxI0sc9cI72UGgSh1sIsMfAdEWajYqgEVMNYR2JU33Ya0LKg9KDXaSo/gdlD0TXWBvBL9DSYBr+I2w28aa0y3C1p1z3xUcUhCWV6rX+sTr+Ek7g4BTmhQ8Ux/nmM3bBixEKv6spT2F8wg6J/O6AStNb3vTDqIsmECEOPmuZDGCG1WZTiTn7BLCYOzeV9B10uo0rF923mqbx0ESOiOBKfFlCm5bdoWeg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=svfT9XX/fVv3gr3AiLoa5CVkCFq2WzZyZqI/VsFbG9A=;
+ b=b6obB3IENZzidmdJHfDZ/+RLh7BWx3NMOEcvkFQ53sgfedHhmSCaAbsNwpC9acu3F+TbANOBow+InpGst8ONJBxHZcO7iLx8kgFbH8j3wQKtZm87d95YtZ3NCPC9ST/8YuJ4piFDl99XIus7rr+17RyUwL9qNOMpvArqgum9tkA=
+Received: from SA1PR12MB8120.namprd12.prod.outlook.com (2603:10b6:806:331::16)
+ by CH2PR12MB4248.namprd12.prod.outlook.com (2603:10b6:610:7a::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.9; Wed, 11 Mar
+ 2026 08:41:18 +0000
+Received: from SA1PR12MB8120.namprd12.prod.outlook.com
+ ([fe80::2fd:1a4e:2042:7dd3]) by SA1PR12MB8120.namprd12.prod.outlook.com
+ ([fe80::2fd:1a4e:2042:7dd3%5]) with mapi id 15.20.9700.010; Wed, 11 Mar 2026
+ 08:41:18 +0000
+From: "Verma, Devendra" <Devendra.Verma@amd.com>
+To: Frank Li <Frank.li@nxp.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>, "mani@kernel.org"
+	<mani@kernel.org>, "vkoul@kernel.org" <vkoul@kernel.org>,
+	"dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Simek,
+ Michal" <michal.simek@amd.com>, "Verma, Devendra" <Devendra.Verma@amd.com>
+Subject: RE: [PATCH v12 2/2] dmaengine: dw-edma: Add non-LL mode
+Thread-Topic: [PATCH v12 2/2] dmaengine: dw-edma: Add non-LL mode
+Thread-Index: AQHcsInMhAVcni/CFkCmDzuUvNk127WoLEmAgADWPvA=
+Date: Wed, 11 Mar 2026 08:41:17 +0000
+Message-ID:
+ <SA1PR12MB8120F936D502F8EE9FAFDB869547A@SA1PR12MB8120.namprd12.prod.outlook.com>
+References: <20260310123055.2863727-1-devendra.verma@amd.com>
+ <20260310123055.2863727-3-devendra.verma@amd.com>
+ <abBrex-33Ot5Kdqh@lizhi-Precision-Tower-5810>
+In-Reply-To: <abBrex-33Ot5Kdqh@lizhi-Precision-Tower-5810>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+ MSIP_Label_f265efc6-e181-49d6-80f4-fae95cf838a0_Enabled=True;MSIP_Label_f265efc6-e181-49d6-80f4-fae95cf838a0_SiteId=3dd8961f-e488-4e60-8e11-a82d994e183d;MSIP_Label_f265efc6-e181-49d6-80f4-fae95cf838a0_SetDate=2026-03-11T08:40:58.0000000Z;MSIP_Label_f265efc6-e181-49d6-80f4-fae95cf838a0_Name=Open
+ Source;MSIP_Label_f265efc6-e181-49d6-80f4-fae95cf838a0_ContentBits=3;MSIP_Label_f265efc6-e181-49d6-80f4-fae95cf838a0_Method=Privileged
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA1PR12MB8120:EE_|CH2PR12MB4248:EE_
+x-ms-office365-filtering-correlation-id: dbe3b4fb-f8a6-4ae8-c28b-08de7f49f6a6
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|376014|366016|1800799024|38070700021|56012099003|18002099003|22082099003;
+x-microsoft-antispam-message-info:
+ 5Re+biFMO//d4mA9JL1keThzi6IJK5mSuOeuhSkXOMObyrdwoFDvgtK/PUYJaYSmPoaewDCumFGAsPNvUzQQV4HM/ufdqyrr/8PAiKmI8oaeNb4OVfV2V445pjY1LRvC6TG8NuAGiWtmYmowB/aRmI5lHD9xg5gpJAddNLAEodLHDCWI2B+aX51IcZkirQMZfMDh0P7TtQyY0iLVbnKYBJIFrPJ8eEdNPj78Yo1DqudsGSYAhw9jSEV4aWUJfV0HowVwjc55+Chfcelhh42o7n1qVgBGThI4+6eIuLX4m8z3410dcnBvn9oJJKqXuIKHyIzz5ZZG9p3yZUafbEtdMcTLL+WefJ9zjKc1dIwfEeB+N1d9oEnxgmpTG4zo4gbsyuzOcHU6QA8izSt5865Ydq+CRpZGsCdmgmnIiDgQMdAiVz1NpXi8OR6A4denOM7dkkSkapnrTSIr33SEQ3TjEmYMpGy30y+eC34ipj2EauA3ITHi2Jg4MxUY42Qf8B6DSjdPqnHJqPadJEwim/ygHLPlPgJhxjPfL2A6s+YuavNZjNx8maY8pp0uDgNEl7x9hBR80q2HCiI+ttqQipPlqkXCiws59uVBj+RUd0T2f2Ll9Na6MVWVnajROg30A4YfrIsy8bQPcDq1C4gt5rF85pStHRy9hdHA+rMXBqjgIEeyv6b1qLe9YSp4T7eNLqLjqgu10oZonnnsjI3/dYAXcOxmM0kdAT7VRxM5JIpdMm9XAG/PulxhCAHO0esCoUxFdE4wdzwIRbVucmvdj3XJBcSj0U/hMTe5lSenLZmb1As=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB8120.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(38070700021)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?5uPMYLD7K1YnnJQ9SGyo0ba7a/6apYV7X5VLfpiF9B/L4EpRqX1L+p0Ix5GF?=
+ =?us-ascii?Q?iVJuAc/ahYbuOksNK5PhbFYRfUFsj/Zkpf7FqQQ03M4B4xY0E4wlKi31tA/f?=
+ =?us-ascii?Q?55lZuW8pUSoR6lCmykn9K7gVdkPYPRyoBTcEzmnkdK+rb14tGTPSQdDD/pRi?=
+ =?us-ascii?Q?BHJtlqdKqxd92IREfF8e/ciI+J9t+HYOdBPkMDeLMhpkBHAV3MaMjomnSaIP?=
+ =?us-ascii?Q?6AaVxSdKOVjhFtVC/YWNshraPnzBuV4pBcNXHqZPlbOr1tXsimO4TRJrx3G5?=
+ =?us-ascii?Q?gINQ9pcBea19VPhCzNTmFDQK1xxF9j2bOeAIg2yossCb7cxbC6hOXrpQsCHm?=
+ =?us-ascii?Q?8lrRoo0ax1QM+BDS2Gzxb12to1AyzyxT7XhTi/P7xMnkKhjvHwMk8oEOvB3A?=
+ =?us-ascii?Q?DFgOwwDSSdN62UVxVsgBFzWTFijnaKBajzQNkxk7W4Kwy9Zr5k10ctkfsjEg?=
+ =?us-ascii?Q?F7NfeHBdaRRzEa0/eNqZ8PO/3fNnybJS3at1rXf8X7V1BJpfI1AinOFw+J+a?=
+ =?us-ascii?Q?r4K+PvN72FOICCuZ2G2OzRyj68bGRKMRjrcpvR0HU+Z8vo45P5NiQ+igsb5k?=
+ =?us-ascii?Q?EUB0iF6nEsT434iqMW1bvd7g0/Ps62ixYuYafw/iMdRPI8WuhUq9L/vZfOlI?=
+ =?us-ascii?Q?qhaV6als4JegO75q+Vhsc4oA6Cmm62zicLQPxExr616AwoUpCuZ2lXUhCcCw?=
+ =?us-ascii?Q?jW8E1i07upUq0S4ZSCGZkI9Ceo9HnpSurltOogPaghYyr3ZuyYp4W0q/rLsj?=
+ =?us-ascii?Q?lU/LLzyaAa7f33KIr7lXP7wWB4SVjOx/w9B4sSFRqcCmihmgovmmroCxoJxZ?=
+ =?us-ascii?Q?lJZdlOPwG9IMlNppMitx6VGNmzGwaVzqot26tGH29ksJHGM4lR/84QOCSzkv?=
+ =?us-ascii?Q?5kOTLWr79G9Oo1iJRIPzzdPnNJcmOfTvkj2pHgiksoObHFEZ4dikc9bybt/O?=
+ =?us-ascii?Q?4yXvtpTRFXcz8Bur4qkfA0IQ/UqXH5NgLNl4C2FFQEPnxZJtE6n9l1nr/XPZ?=
+ =?us-ascii?Q?5wscCsDEGkp3ynTMkfqOJyTA0pKjwyW2A5fLYuNL0WZ3/XIN6x81JnFTRF+p?=
+ =?us-ascii?Q?JdTXDN+1Dyfq7IqJS0eOguFs1sN/O8IcIGAI5PrmTHBZ6RAvNxv3N+GlXG3n?=
+ =?us-ascii?Q?L5xR/tre6QFteoHm2YmOgO5hhR2UIO4L+N5DeHxmrcExmtMQfaE5toxEGc0j?=
+ =?us-ascii?Q?7xVlWiwhO3b9x0SpHfljNfCZSyG0bKHJGh3sOhZuK+cqz4IMKpKFEame5bmu?=
+ =?us-ascii?Q?KLvx+Vz5W6JX2HOjC2PAsx4RXszzShKUQAVVvUkS05q3Rr1uxlI2+8BZ1A1t?=
+ =?us-ascii?Q?/65AMjaTHWe5KOTkSDd9Y4EjQB5MT0biJRuisLhuAVS3AcITXlIwkbrksUFV?=
+ =?us-ascii?Q?QoY1oiiBTsKtmRp5GQ8yrkVquxWybX3vyAO5o/NxMXjDO2HM5nWa9X84an9O?=
+ =?us-ascii?Q?WUgmRh63oTeDpR25MEd1y5S4ENQA1/5fSaqooZaeFqIoJuwr22m7bbHGlqjX?=
+ =?us-ascii?Q?2ORvTiU+GxLweqp3Wf/t+uTRc0KOpyJzd5Pr8ZfL50kWzCjwMqW+clv9gJGm?=
+ =?us-ascii?Q?8aIGLC+fugm+zkRmCJYY3+PkFE4ZoGwk+j5i3tmTlfno9EKMBa4c1xmix8el?=
+ =?us-ascii?Q?7WtpiiXZDhQeNr74dkG61ljYPBWYaRhDymRR2Hr2RJFPHXRZD4IPiEqfZJ49?=
+ =?us-ascii?Q?e16401QtlPaTRS68m1kTb/ZzRQMc5Vor5snE9+ilcXLtyn6x?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 0/4] PCI: Add support for resetting the Root Ports in a
- platform specific way
-To: manivannan.sadhasivam@oss.qualcomm.com,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-        Oliver O'Halloran <oohall@gmail.com>, Will Deacon <will@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Philipp Zabel <p.zabel@pengutronix.de>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Niklas Cassel <cassel@kernel.org>,
-        Wilfred Mallawa
- <wilfred.mallawa@wdc.com>,
-        Lukas Wunner <lukas@wunner.de>, Richard Zhu <hongxing.zhu@nxp.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Wilson Ding <dingwei@marvell.com>, Frank Li <Frank.Li@nxp.com>
-References: <20260310-pci-port-reset-v7-0-9dd00ccc25ab@oss.qualcomm.com>
-Content-Language: en-US
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-In-Reply-To: <20260310-pci-port-reset-v7-0-9dd00ccc25ab@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzExMDA3MSBTYWx0ZWRfX0DiH/9cDevLx
- Zr1SReBcoFP4V6SKRqN1lqDaod7mtrfUDrE/7TDidYH8Ssh2IVMrIPtqS3eTphsSbdHwlmUELOY
- t9y3hP/3lBvoNVr5fCV/WUVb6R8ktFE4UNVRcr94MtYyYijUYYS4YmJJcXel7F46LD/HEvaAw7p
- mgwyyE9GABjYRHd8UipnhFTFtG/fkC2aDV8sMdPYb/km11Qm5kO4n2C1UTwCJhQO2aGFXEzWWFW
- dukF1jFKiaUfK+Oqh1+ZFTom7OCnTX1F6blwX7AXDtlTWUAkSCTu5PKZEWh0u0Da3w0C864AmzB
- 4qHwdIK3Yf7cJxw15ahTLqQRlgd94REm+PJ0VT+E4KtsuTutOD4aKtyTtTw0d+TPCuD6s5Qx0P5
- xh8+lofPWFwgdeR8wnH2wrIYkRn1zQXAoPwFJFcrSf1HxTlhkX/kajsKGcifGvK82+cyXCkxsbl
- At+rnkbNmCK4WBPYsug==
-X-Proofpoint-ORIG-GUID: OJPglxv1qlO7grsUWFM0X_sd183pEyqs
-X-Authority-Analysis: v=2.4 cv=YJ+SCBGx c=1 sm=1 tr=0 ts=69b129cb cx=c_pps
- a=m5Vt/hrsBiPMCU0y4gIsQw==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=lJ8DZ0MjVbnDIa4D:21 a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=KKAkSRfTAAAA:8 a=ImqNvw3yTObJCdT6Mg8A:9
- a=QEXdDO2ut3YA:10 a=IoOABgeZipijB_acs4fv:22 a=cvBusfyB2V15izCimMoJ:22
-X-Proofpoint-GUID: OJPglxv1qlO7grsUWFM0X_sd183pEyqs
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-11_01,2026-03-09_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 phishscore=0 clxscore=1015 lowpriorityscore=0 adultscore=0
- spamscore=0 bulkscore=0 priorityscore=1501 malwarescore=0 impostorscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603110071
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR12MB8120.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: dbe3b4fb-f8a6-4ae8-c28b-08de7f49f6a6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Mar 2026 08:41:18.0213
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: fQg5SzpC+z5gWT0b6AKLR7Pk7Tm/YPGbnhug3UdBVChwTyayPNcwkyx21ycOGoIlbnYFyDbTdCVGeZRe1NkcJQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB4248
 
+[Public]
 
+> -----Original Message-----
+> From: Frank Li <Frank.li@nxp.com>
+> Sent: Wednesday, March 11, 2026 1:17 AM
+> To: Verma, Devendra <Devendra.Verma@amd.com>
+> Cc: bhelgaas@google.com; mani@kernel.org; vkoul@kernel.org;
+> dmaengine@vger.kernel.org; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; Simek, Michal <michal.simek@amd.com>
+> Subject: Re: [PATCH v12 2/2] dmaengine: dw-edma: Add non-LL mode
+>
+> Caution: This message originated from an External Source. Use proper
+> caution when opening attachments, clicking links, or responding.
+>
+>
+> On Tue, Mar 10, 2026 at 06:00:55PM +0530, Devendra K Verma wrote:
+> > AMD MDB IP supports Linked List (LL) mode as well as non-LL mode.
+> > The current code does not have the mechanisms to enable the DMA
+> > transactions using the non-LL mode. The following two cases are added
+> > with this patch:
+> > - For the AMD (Xilinx) only, when a valid physical base address of
+> >   the device side DDR is not configured, then the IP can still be
+> >   used in non-LL mode. For all the channels DMA transactions will
+> >   be using the non-LL mode only. This, the default non-LL mode,
+> >   is not applicable for Synopsys IP with the current code addition.
+> >
+> > - If the default mode is LL-mode, for both AMD (Xilinx) and Synosys,
+> >   and if user wants to use non-LL mode then user can do so via
+> >   configuring the peripheral_config param of dma_slave_config.
+> >
+> > Signed-off-by: Devendra K Verma <devendra.verma@amd.com>
+> > ---
+> ...
+> > diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c
+> > b/drivers/dma/dw-edma/dw-edma-pcie.c
+> > index b8208186a250..f538d728609f 100644
+> > --- a/drivers/dma/dw-edma/dw-edma-pcie.c
+> > +++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+> > @@ -295,6 +295,15 @@ static void
+> dw_edma_pcie_get_xilinx_dma_data(struct pci_dev *pdev,
+> >       pdata->devmem_phys_off =3D off;
+> >  }
+> >
+> > +static u64 dw_edma_get_phys_addr(struct pci_dev *pdev,
+> > +                              struct dw_edma_pcie_data *pdata,
+> > +                              enum pci_barno bar) {
+> > +     if (pdev->vendor =3D=3D PCI_VENDOR_ID_XILINX)
+> > +             return pdata->devmem_phys_off;
+> > +     return pci_bus_address(pdev, bar); }
+> > +
+>
+> You missed my previous review feedback about create new patch for code
+> restructure. But change related small.
+>
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
 
-On 3/10/2026 7:31 PM, Manivannan Sadhasivam via B4 Relay wrote:
-> Hi,
->
-> Currently, in the event of AER/DPC, PCI core will try to reset the slot (Root
-> Port) and its subordinate devices by invoking bridge control reset and FLR. But
-> in some cases like AER Fatal error, it might be necessary to reset the Root
-> Ports using the PCI host bridge drivers in a platform specific way (as indicated
-> by the TODO in the pcie_do_recovery() function in drivers/pci/pcie/err.c).
-> Otherwise, the PCI link won't be recovered successfully.
->
-> So this series adds a new callback 'pci_host_bridge::reset_root_port' for the
-> host bridge drivers to reset the Root Port when a fatal error happens.
->
-> Also, this series allows the host bridge drivers to handle PCI link down event
-> by resetting the Root Ports and recovering the bus. This is accomplished by the
-> help of the new 'pci_host_handle_link_down()' API. Host bridge drivers are
-> expected to call this API (preferrably from a threaded IRQ handler) with
-> relevant Root Port 'pci_dev' when a link down event is detected for the port.
-> The API will reuse the pcie_do_recovery() function to recover the link if AER
-> support is enabled, otherwise it will directly call the reset_root_port()
-> callback of the host bridge driver (if exists).
->
-> For reference, I've modified the pcie-qcom driver to call
-> pci_host_handle_link_down() API with Root Port 'pci_dev' after receiving the
-> LDn global_irq event and populated 'pci_host_bridge::reset_root_port()'
-> callback to reset the Root Ports.
->   
-> Testing
-> -------
->
-> Tested on Qcom Lemans AU Ride platform with Host and EP SoCs connected over PCIe
-> link. Simulated the LDn by disabling LTSSM_EN on the EP and I could verify that
-> the link was getting recovered successfully.
->
-> Changes in v7:
-> - Dropped Rockchip Root port reset patch due to reported issues. But the series
->    works on other platforms as tested by others.
-> - Added pci_{lock/unlock}_rescan_remove() to guard pci_bus_error_reset() as the
->    device could be removed in-between due to Native hotplug interrupt.
-> - Rebased on top of v7.0-rc1
-> - Link to v6: https://lore.kernel.org/r/20250715-pci-port-reset-v6-0-6f9cce94e7bb@oss.qualcomm.com
->
-> Changes in v6:
-> - Incorporated the patch: https://lore.kernel.org/all/20250524185304.26698-2-manivannan.sadhasivam@linaro.org/
-> - Link to v5: https://lore.kernel.org/r/20250715-pci-port-reset-v5-0-26a5d278db40@oss.qualcomm.com
->
-> Changes in v5:
-> * Reworked the pci_host_handle_link_down() to accept Root Port instead of
->    resetting all Root Ports in the event of link down.
-> * Renamed 'reset_slot' to 'reset_root_port' to avoid confusion as both terms
->    were used interchangibly and the series is intended to reset Root Port only.
-> * Added the Rockchip driver change to this series.
-> * Dropped the applied patches and review/tested tags due to rework.
-> * Rebased on top of v6.16-rc1.
->
-> Changes in v4:
-> - Handled link down first in the irq handler
-> - Updated ICC & OPP bandwidth after link up in reset_slot() callback
-> - Link to v3: https://lore.kernel.org/r/20250417-pcie-reset-slot-v3-0-59a10811c962@linaro.org
->
-> Changes in v3:
-> - Made the pci-host-common driver as a common library for host controller
->    drivers
-> - Moved the reset slot code to pci-host-common library
-> - Link to v2: https://lore.kernel.org/r/20250416-pcie-reset-slot-v2-0-efe76b278c10@linaro.org
->
-> Changes in v2:
-> - Moved calling reset_slot() callback from pcie_do_recovery() to pcibios_reset_secondary_bus()
-> - Link to v1: https://lore.kernel.org/r/20250404-pcie-reset-slot-v1-0-98952918bf90@linaro.org
->
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-For entire series,
-Reviewed-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Thank you Frank!
+I think you missed in the mails, I provided the explanation why this reques=
+t was not taken
+up. But you can take a look at the discussion happen on the following link:
+https://lore.kernel.org/all/aXe5ts7E6lUF7YRq@lizhi-Precision-Tower-5810/
 
-- Krishna Chaitanya.
-> ---
-> Manivannan Sadhasivam (4):
->        PCI/ERR: Add support for resetting the Root Ports in a platform specific way
->        PCI: host-common: Add link down handling for Root Ports
->        PCI: qcom: Add support for resetting the Root Port due to link down event
->        misc: pci_endpoint_test: Add AER error handlers
->
->   drivers/misc/pci_endpoint_test.c         |  20 +++++
->   drivers/pci/controller/dwc/pcie-qcom.c   | 143 ++++++++++++++++++++++++++++++-
->   drivers/pci/controller/pci-host-common.c |  35 ++++++++
->   drivers/pci/controller/pci-host-common.h |   1 +
->   drivers/pci/pci.c                        |  21 +++++
->   drivers/pci/pcie/err.c                   |   6 +-
->   include/linux/pci.h                      |   1 +
->   7 files changed, 221 insertions(+), 6 deletions(-)
-> ---
-> base-commit: 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f
-> change-id: 20250715-pci-port-reset-4d9519570123
->
-> Best regards,
+Please check for the string "Thank you for your persevere."
 
+I will issue another revision with the review tags collected. Thanks!
+
+>
+> >
+> > -     for (i =3D 0; i < chip->ll_wr_cnt; i++) {
+> > +     for (i =3D 0; i < chip->ll_wr_cnt && !non_ll; i++) {
+> >               struct dw_edma_region *ll_region =3D &chip->ll_region_wr[=
+i];
+> >               struct dw_edma_region *dt_region =3D &chip->dt_region_wr[=
+i];
+> >               struct dw_edma_block *ll_block =3D &vsec_data->ll_wr[i];
+> > @@ -410,7 +424,8 @@ static int dw_edma_pcie_probe(struct pci_dev
+> *pdev,
+> >                       return -ENOMEM;
+> >
+> >               ll_region->vaddr.io +=3D ll_block->off;
+> > -             ll_region->paddr =3D pci_bus_address(pdev, ll_block->bar)=
+;
+> > +             ll_region->paddr =3D dw_edma_get_phys_addr(pdev, vsec_dat=
+a,
+> > +                                                      ll_block->bar);
+> >
