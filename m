@@ -1,188 +1,172 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 795FA2E11B0;
-	Wed, 11 Mar 2026 17:02:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FFA23E2769
+	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2026 17:11:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773248548; cv=none; b=Ctv3WU8ohCu3xMQHwVyWD49UFYrhMwj+u35BtR0EXJscnwFI0GPmt8+kZ7cEnNYbiCQ4JugtDtGZ5IkNVv6wMaxm/xuytBlRTc6i3tjSny9pwnn04DqmdzT8hyyXoOW1La4r0ZbCoj/s2628rU4aIFXL4cAh2UOZtJTThSePqXA=
+	t=1773249088; cv=none; b=MJELGyaefyHOkke9aMqhI99+/iHqRxks4QtrLoK38vCGvo011j1w+980aDOssgdXkw3sLSmPvW2WRxSnavrTMO4bAIAWxczXAUvGfogVXrtbIeBNZFVlKYlUfNg0/3aIqguB/XGpZQZxx5xbgirvcuRhVU7kfT6tyRJdCz8zxDI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773248548; c=relaxed/simple;
-	bh=qbQHUZHFrMSl9GZ0M449xWT2lv88BuJUsOUnExNCyK4=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=P1rjuNmhbq0wrpebwfbcwvWIeUK1QalB6g1pbT7IikWrsjs+LbUp6jLMro62313cWkPCckSaQqrXqfDSUoGlwUd0M2ueEpjcBkxwkpzCNkiq4I4GCOKfPXMq8+5ewg63XpaILUNgByVSrmwasZTnY8NcHnDaesOK5ffeED/SUUs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=auYcSsap; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773249088; c=relaxed/simple;
+	bh=qaDW1rlJwUjkIWcyl4+QVoiQZUR+OmKLv5OwmyNHK/0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MNyYiBXJqHeWUsRHWtcN0JtaM+fDAhCeBWmeCvTVvI4jhSFJddPP+zWgELSOrVVIsXe9CdLYgaHRIc0yJA84L9XBXF/v21OuB6fgE0ymjsfkIo4XC9hcXzjR21i/TU3cj1jfHUblU23IVmyWjtauH4r6xRefokwo2f81jXbZPaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=He4T3uTU; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="auYcSsap"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD869C4CEF7;
-	Wed, 11 Mar 2026 17:02:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773248548;
-	bh=qbQHUZHFrMSl9GZ0M449xWT2lv88BuJUsOUnExNCyK4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=auYcSsapz8p65gnvMN/VpGSca+m0V47rs2fNjRxHOGbcOF7khTzKCshNZHWFukUEa
-	 bnXC+yfrXbKqbLhu68q0yQfhAyMWSCXNXNIBAKRaLjxFgWqWGJAvlEHVE71SrnEki3
-	 dKD9hbUZKlFZq0UVuNyj0aL4WApKHEHlTf0M8Ea7qH5r5ypeguDSCVP7fDO8XFkDzz
-	 KqLzUOMWPsO+YrDPq38kiCFHjNbZq9K/tQnyESpkcZj3YnLHqDfmRejiAWwWhB2AUQ
-	 D64NsEu8EfPzJunss4O8z5+fy5ezEJbruvUviqIng0ygosw3JnId/51TdCe9FKqRYj
-	 4x+0E9RndXZcA==
-Date: Wed, 11 Mar 2026 12:02:26 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: fengchengwen <fengchengwen@huawei.com>
-Cc: Jeremy Linton <jeremy.linton@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Huacai Chen <chenhuacai@kernel.org>,
-	WANG Xuerui <kernel@xen0n.name>, Paul Walmsley <pjw@kernel.org>,
-	Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H . Peter Anvin" <hpa@zytor.com>, Juergen Gross <jgross@suse.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	Len Brown <lenb@kernel.org>, Sunil V L <sunilvl@ventanamicro.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Kees Cook <kees@kernel.org>, Yanteng Si <si.yanteng@linux.dev>,
-	Sean Christopherson <seanjc@google.com>,
-	Kai Huang <kai.huang@intel.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Thomas Huth <thuth@redhat.com>,
-	Thorsten Blum <thorsten.blum@linux.dev>,
-	Kevin Loughlin <kevinloughlin@google.com>,
-	Zheyun Shen <szy0127@sjtu.edu.cn>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
-	Xin Li <xin@zytor.com>, "Ahmed S . Darwish" <darwi@linutronix.de>,
-	Sohil Mehta <sohil.mehta@intel.com>,
-	Ilkka Koskinen <ilkka@os.amperecomputing.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	James Clark <james.clark@linaro.org>,
-	Besar Wicaksono <bwicaksono@nvidia.com>, Ma Ke <make24@iscas.ac.cn>,
-	Ajit Khaparde <ajit.khaparde@broadcom.com>,
-	Wei Huang <wei.huang2@amd.com>,
-	Andy Gospodarek <andrew.gospodarek@broadcom.com>,
-	Somnath Kotur <somnath.kotur@broadcom.com>, wangzhou1@hisilicon.com,
-	wanghuiqiang@huawei.com, liuyonglong@huawei.com,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	loongarch@lists.linux.dev, linux-riscv@lists.infradead.org,
-	xen-devel@lists.xenproject.org, linux-acpi@vger.kernel.org,
-	linux-perf-users@vger.kernel.org, stable@vger.kernel.org,
-	Wathsala Vithanage <wathsala.vithanage@arm.com>
-Subject: Re: [PATCH v5 2/2] PCI/TPH: Fix get cpu steer-tag fail on ARM64
- platform
-Message-ID: <20260311170226.GA930029@bhelgaas>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="He4T3uTU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1773249086;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=wixjc/Swdulnd/bnCnUOttbqhkYwlaCgcb9KrQHl3zM=;
+	b=He4T3uTUdQLw2WCtgAM9CquiHxC1h03ECnV7p3q3iyDqjbs4BitW9WY6yF+tstKiZwzBO3
+	fQBZh0i4xqCVYNKXg20xo6qYvRF5W4xD7A7F/JfeFA1a850YxIadCjzj81hlunPiELCScJ
+	SadTQdtyjb/IauTlHy1WB2h7sWj3Mmo=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-512-abupHt5QPWWU8NTQIUKzAA-1; Wed,
+ 11 Mar 2026 13:11:22 -0400
+X-MC-Unique: abupHt5QPWWU8NTQIUKzAA-1
+X-Mimecast-MFC-AGG-ID: abupHt5QPWWU8NTQIUKzAA_1773249080
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 624AB1956050;
+	Wed, 11 Mar 2026 17:11:20 +0000 (UTC)
+Received: from fedora-work.redhat.com (unknown [10.22.81.247])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 752EB30002D2;
+	Wed, 11 Mar 2026 17:11:16 +0000 (UTC)
+From: David Jeffery <djeffery@redhat.com>
+To: linux-kernel@vger.kernel.org,
+	driver-core@lists.linux.dev,
+	linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>
+Cc: Tarun Sahu <tarunsahu@google.com>,
+	Pasha Tatashin <tatashin@google.com>,
+	=?UTF-8?q?Micha=C5=82=20C=C5=82api=C5=84ski?= <mclapinski@google.com>,
+	Jordan Richards <jordanrichards@google.com>,
+	Ewan Milne <emilne@redhat.com>,
+	John Meneghini <jmeneghi@redhat.com>,
+	"Lombardi, Maurizio" <mlombard@redhat.com>,
+	David Jeffery <djeffery@redhat.com>
+Subject: [PATCH v11 0/5] shut down devices asynchronously
+Date: Wed, 11 Mar 2026 13:09:51 -0400
+Message-ID: <20260311170956.9146-1-djeffery@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9ef9b529-839b-4cf0-a294-5b68fe8aa768@huawei.com>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Wed, Mar 11, 2026 at 11:00:02AM +0800, fengchengwen wrote:
-> On 3/11/2026 6:09 AM, Bjorn Helgaas wrote:
-> > On Tue, Mar 10, 2026 at 10:58:49AM -0500, Jeremy Linton wrote:
-> >> On 3/9/26 10:20 PM, Chengwen Feng wrote:
-> >>> pcie_tph_get_cpu_st() is broken on ARM64:
-> >>> 1. pcie_tph_get_cpu_st() passes cpu_uid to the PCI ACPI DSM method.
-> >>>     cpu_uid should be the ACPI Processor UID [1].
-> >>> 2. In BNXT, pcie_tph_get_cpu_st() is passed a cpu_uid obtained via
-> >>>     cpumask_first(irq->cpu_mask) - the logical CPU ID of a CPU core,
-> >>>     generated and managed by kernel (e.g., [0,255] for a system  with 256
-> >>>     logical CPU cores).
-> >>> 3. On ARM64 platforms, ACPI assigns Processor UID to cores listed in the
-> >>>     MADT table, and this UID may not match the kernel's logical CPU ID.
-> >>>     When this occurs, the mismatch results in the wrong CPU steer-tag.
-> >>> 4. On AMD x86 the logical CPU ID is identical to the ACPI Processor UID
-> >>>     so the mismatch is not seen.
-> > 
-> >>>   int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
-> >>> -			unsigned int cpu_uid, u16 *tag)
-> >>> +			unsigned int cpu, u16 *tag)
-> >>>   {
-> >>>   #ifdef CONFIG_ACPI
-> >>> +	u32 cpu_uid = acpi_get_cpu_acpi_id(cpu);
-> > 
-> > From AI review (gemini/gemini-3.1-pro-preview):
-> > 
-> >   Does this code need to validate that `cpu` is within bounds before
-> >   using it?  Before this change, the `cpu_uid` parameter was passed
-> >   opaquely to the ACPI firmware via `tph_invoke_dsm()`, which would
-> >   gracefully handle invalid values.
-> > 
-> >   Now, `cpu` is treated as a logical CPU index and passed to
-> >   `acpi_get_cpu_acpi_id(cpu)`. On architectures like arm64 and riscv,
-> >   `acpi_get_cpu_acpi_id()` uses `cpu` directly as an array index
-> >   (`&cpu_madt_gicc[cpu]` and `&cpu_madt_rintc[cpu]`). On x86, it uses
-> >   `per_cpu(x86_cpu_to_acpiid, cpu)`.
-> > 
-> >   If a caller passes an out-of-bounds `cpu` index (for example, if an
-> >   IRQ affinity mask is empty and `cpumask_first()` returns
-> >   `nr_cpu_ids`, or if userspace passes an arbitrary ID via
-> >   `mlx5_st_alloc_index()`), this will result in an out-of-bounds
-> >   memory read.
-> > 
-> >   Consider adding a bounds check:
-> > 
-> >     if (cpu >= nr_cpu_ids)
-> >       return -EINVAL;
-> > 
-> > I agree that this is an issue, and I think implementations of
-> > acpi_get_cpu_acpi_id() should validate their inputs.
-> > 
-> > I don't know if there's a value that can never be a valid ACPI CPU UID
-> > and could be used as an error value from acpi_get_cpu_acpi_id().  I do
-> > see a few mentions of a ~0 value meaning "all processors" (ACPI r6.6,
-> > sec 5.2.12.13).  
-> 
-> I only have the ACPI Specification Version 6.5, so I will use v6.5
-> as an example.
+This patchset allows the kernel to shutdown devices asynchronously and
+unrelated async devices to be shut down in parallel to each other.
 
-https://uefi.org/sites/default/files/resources/ACPI_Spec_6.6.pdf
+Only devices which explicitly enable it are shut down asynchronously. The
+default is for a device to be shut down from the synchronous shutdown loop.
 
-> 	int acpi_get_cpu_uid(unsigned int cpu, u32 *uid) {
-> 		if (cpu >= nr_cpu_ids)
-> 			return -EINVAL;
-> 		*uid = xxx;
-> 		return 0;
-> 	}
+This can dramatically reduce system shutdown/reboot time on systems that
+have multiple devices that take many seconds to shut down (like certain
+NVMe drives). On one system tested, the shutdown time went from 11 minutes
+without this patch to 55 seconds with the patch. And on another system from
+80 seconds to 11.
 
-This looks good to me.
+Changes from V10:
 
-> Another issue: This commit also provides an implementation for the
-> x86 platform.  However, further code analysis revealed a potential
-> problem in the implementation:
-> 
-> The acpi_get_cpu_acpi_id() retrieves uid from x86_cpu_to_acpiid in
-> SMP, and x86_cpu_to_acpiid is set through the call chain:
-> acpi_parse_lapic() -> topology_register_apic() ->
-> topo_register_apic() -> topo_set_cpuids() -> x86_cpu_to_acpiid. It
-> appears to retrieve the "ACPI Processor UID" from ACPI Section
-> 5.2.12.2, but the problem is that this field is only one byte in
-> length, which may cause issues in huge-core systems.
-> 
-> Therefore, I suggest re-implementing the acpi_get_cpu_uid function
-> for the x86 platform. Either I provide a default implementation
-> (shown below), or x86 guys contribute to the implementation:
-> 
-> 	s64 acpi_get_cpu_uid(unsigned int cpu) {
-> 		if (cpu >= nr_cpu_ids)
-> 			return -EINVAL;
-> 		return cpu;
-> 	}
+Reworked to more closely match the design used for async suspend
+  * No longer uses async subsystem cookies for synchronization
+  * Minimized changes to struct device
+  * Enable async shutdown for pci and scsi devices which support async suspend
 
-I don't think this is your problem to solve, so don't worry about it.
-If you implement acpi_get_cpu_uid() to return the same values as
-cpu_acpi_id(), it's up to the x86 folks to deal with any one-byte ID
-issues.
+Changes from V9:
 
-Bjorn
+Address resource and timing issues when spawning a unique async thread
+for every device during shutdown:
+  * Make the asynchronous threads able to shut down multiple devices,
+    instead of spawning a unique thread for every device.
+  * Modify core kernel async code with a custom wake function so it
+    doesn't wake up a thread waiting to synchronize on a cookie until
+    the cookie has reached the desired value, instead of waking up
+    every waiting thread to check the cookie every time an async thread
+    ends.
+
+Changes from V8:
+
+Deal with shutdown hangs resulting when a parent/supplier device is
+  later in the devices_kset list than its children/consumers:
+  * Ignore sync_state_only devlinks for shutdown dependencies
+  * Ignore shutdown_after for devices that don't want async shutdown
+  * Add a sanity check to revert to sync shutdown for any device that
+    would otherwise wait for a child/consumer shutdown that hasn't
+    already been scheduled
+
+Changes from V7:
+
+Do not expose driver async_shutdown_enable in sysfs.
+Wrapped a long line.
+ 
+Changes from V6:
+
+Removed a sysfs attribute that allowed the async device shutdown to be
+"on" (with driver opt-out), "safe" (driver opt-in), or "off"... what was
+previously "safe" is now the only behavior, so drivers now only need to
+have the option to enable or disable async shutdown.
+
+Changes from V5:
+
+Separated into multiple patches to make review easier.
+Reworked some code to make it more readable
+Made devices wait for consumers to shut down, not just children
+  (suggested by David Jeffery)
+
+Changes from V4:
+
+Change code to use cookies for synchronization rather than async domains
+Allow async shutdown to be disabled via sysfs, and allow driver opt-in or
+  opt-out of async shutdown (when not disabled), with ability to control
+  driver opt-in/opt-out via sysfs
+
+Changes from V3:
+
+Bug fix (used "parent" not "dev->parent" in device_shutdown)
+
+Changes from V2:
+
+Removed recursive functions to schedule children to be shutdown before
+  parents, since existing device_shutdown loop will already do this
+
+Changes from V1:
+
+Rewritten using kernel async code (suggested by Lukas Wunner)
+
+
+Stuart Hayes (2):
+  driver core: don't always lock parent in shutdown
+  driver core: separate function to shutdown one device
+
+David Jeffery (3):
+  driver core: async device shutdown infrastructure
+  pci: enable async shutdown support
+  scsi: enable async shutdown support
+
+ drivers/base/base.h       |   2 +
+ drivers/base/core.c       | 165 +++++++++++++++++++++++++++++++-------
+ drivers/pci/probe.c       |   1 +
+ drivers/scsi/hosts.c      |   3 +
+ drivers/scsi/scsi_scan.c  |   1 +
+ drivers/scsi/scsi_sysfs.c |   4 +
+ include/linux/device.h    |  13 +++
+ 7 files changed, 160 insertions(+), 29 deletions(-)
+
+-- 
+2.53.0
+
