@@ -1,348 +1,188 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 813DB3E121E;
-	Wed, 11 Mar 2026 16:41:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 795FA2E11B0;
+	Wed, 11 Mar 2026 17:02:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773247318; cv=none; b=lnNPPm0QcGHlu+YWylWezwYGbRqIE2Z7zFFfauw8W99xsKQtQcko8SK/f8InBHV9Ng2p/qQbYP9iT9ub8ub2mEQsEu/rOU+gmxIXreVy3OszhHrihmC5GKyyNScB+XdYjZ/4dn2hnifpHlBk3JaL7hYAkw9tv4TN5PkRaVdc4FQ=
+	t=1773248548; cv=none; b=Ctv3WU8ohCu3xMQHwVyWD49UFYrhMwj+u35BtR0EXJscnwFI0GPmt8+kZ7cEnNYbiCQ4JugtDtGZ5IkNVv6wMaxm/xuytBlRTc6i3tjSny9pwnn04DqmdzT8hyyXoOW1La4r0ZbCoj/s2628rU4aIFXL4cAh2UOZtJTThSePqXA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773247318; c=relaxed/simple;
-	bh=MwFrCdgrxmnI1FJp/K6j4mlAIaOu9s4/luebif+uXfA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=RZL5w2/2U2YuZrBi5qzOJGehqu5n0xkFGNDZIYa4V/poyMu0qwg63msF+HjLhaWzDwwDewsB4VmswlWFH4n4XhzO1RIoDL3slSvWmByC7T5/A/pep5MSNIt1lW83GVirlvUK0QbucOJfBBNohnLPgQWB+1jN50ZS5uH+1bJt6WE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ib+alqyj; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1773248548; c=relaxed/simple;
+	bh=qbQHUZHFrMSl9GZ0M449xWT2lv88BuJUsOUnExNCyK4=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=P1rjuNmhbq0wrpebwfbcwvWIeUK1QalB6g1pbT7IikWrsjs+LbUp6jLMro62313cWkPCckSaQqrXqfDSUoGlwUd0M2ueEpjcBkxwkpzCNkiq4I4GCOKfPXMq8+5ewg63XpaILUNgByVSrmwasZTnY8NcHnDaesOK5ffeED/SUUs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=auYcSsap; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ib+alqyj"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773247316; x=1804783316;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=MwFrCdgrxmnI1FJp/K6j4mlAIaOu9s4/luebif+uXfA=;
-  b=Ib+alqyj/HaTCDYafHC2oRWJ0lZNSqt5bCImMP663BGWwVnuvtoDtVuN
-   Mdo6Ovb4QtmczPZDu0WwG5IwNgUu3vZYvFycbMlI2u3+qRS9pBBORODjq
-   RsHXyWiwMDpKahXLIqiVIShbB1ae2dmAb0upmnEWHy6JMlWizsFl8sPzS
-   vGFxAH/8riU0SpRQc0voYVkQ2ibtdqzLGN73AGwR+ccaYG/3Y4M3kGMED
-   qNcVUaCf7M+wsWI4mcYXq8mBEaO+CHtFowDfN1fFYGgwzwO+K4OlmCJy8
-   37t37ix7OnEa6nXsyLrUxEigFs49hfjrFVWP2bCFuo2VjCEUP2fq/4Tac
-   g==;
-X-CSE-ConnectionGUID: aCKeRHS3QH2fi2BgFY3/AQ==
-X-CSE-MsgGUID: tvBv1St3SPiXy1xAFJ2zgg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11726"; a="77929055"
-X-IronPort-AV: E=Sophos;i="6.23,113,1770624000"; 
-   d="scan'208";a="77929055"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Mar 2026 09:41:55 -0700
-X-CSE-ConnectionGUID: YOcRxAPpRI+mlyb7Elnt8Q==
-X-CSE-MsgGUID: c2nsYA7qTceVpUKp3jr6fw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,113,1770624000"; 
-   d="scan'208";a="215730596"
-Received: from ettammin-mobl3.ger.corp.intel.com (HELO fdefranc-mobl3.intel.com) ([10.245.246.112])
-  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Mar 2026 09:41:52 -0700
-From: "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>
-To: linux-cxl@vger.kernel.org
-Cc: Davidlohr Bueso <dave@stgolabs.net>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="auYcSsap"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD869C4CEF7;
+	Wed, 11 Mar 2026 17:02:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773248548;
+	bh=qbQHUZHFrMSl9GZ0M449xWT2lv88BuJUsOUnExNCyK4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=auYcSsapz8p65gnvMN/VpGSca+m0V47rs2fNjRxHOGbcOF7khTzKCshNZHWFukUEa
+	 bnXC+yfrXbKqbLhu68q0yQfhAyMWSCXNXNIBAKRaLjxFgWqWGJAvlEHVE71SrnEki3
+	 dKD9hbUZKlFZq0UVuNyj0aL4WApKHEHlTf0M8Ea7qH5r5ypeguDSCVP7fDO8XFkDzz
+	 KqLzUOMWPsO+YrDPq38kiCFHjNbZq9K/tQnyESpkcZj3YnLHqDfmRejiAWwWhB2AUQ
+	 D64NsEu8EfPzJunss4O8z5+fy5ezEJbruvUviqIng0ygosw3JnId/51TdCe9FKqRYj
+	 4x+0E9RndXZcA==
+Date: Wed, 11 Mar 2026 12:02:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: fengchengwen <fengchengwen@huawei.com>
+Cc: Jeremy Linton <jeremy.linton@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	"Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>
-Subject: [RFC PATCH v2] cxl/core: Work around CXL Port PM Init failure when ACS SV enabled
-Date: Wed, 11 Mar 2026 17:36:47 +0100
-Message-ID: <20260311164145.498207-1-fabio.m.de.francesco@linux.intel.com>
-X-Mailer: git-send-email 2.53.0
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will@kernel.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Huacai Chen <chenhuacai@kernel.org>,
+	WANG Xuerui <kernel@xen0n.name>, Paul Walmsley <pjw@kernel.org>,
+	Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H . Peter Anvin" <hpa@zytor.com>, Juergen Gross <jgross@suse.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	Len Brown <lenb@kernel.org>, Sunil V L <sunilvl@ventanamicro.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Kees Cook <kees@kernel.org>, Yanteng Si <si.yanteng@linux.dev>,
+	Sean Christopherson <seanjc@google.com>,
+	Kai Huang <kai.huang@intel.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Thomas Huth <thuth@redhat.com>,
+	Thorsten Blum <thorsten.blum@linux.dev>,
+	Kevin Loughlin <kevinloughlin@google.com>,
+	Zheyun Shen <szy0127@sjtu.edu.cn>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
+	Xin Li <xin@zytor.com>, "Ahmed S . Darwish" <darwi@linutronix.de>,
+	Sohil Mehta <sohil.mehta@intel.com>,
+	Ilkka Koskinen <ilkka@os.amperecomputing.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	James Clark <james.clark@linaro.org>,
+	Besar Wicaksono <bwicaksono@nvidia.com>, Ma Ke <make24@iscas.ac.cn>,
+	Ajit Khaparde <ajit.khaparde@broadcom.com>,
+	Wei Huang <wei.huang2@amd.com>,
+	Andy Gospodarek <andrew.gospodarek@broadcom.com>,
+	Somnath Kotur <somnath.kotur@broadcom.com>, wangzhou1@hisilicon.com,
+	wanghuiqiang@huawei.com, liuyonglong@huawei.com,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	loongarch@lists.linux.dev, linux-riscv@lists.infradead.org,
+	xen-devel@lists.xenproject.org, linux-acpi@vger.kernel.org,
+	linux-perf-users@vger.kernel.org, stable@vger.kernel.org,
+	Wathsala Vithanage <wathsala.vithanage@arm.com>
+Subject: Re: [PATCH v5 2/2] PCI/TPH: Fix get cpu steer-tag fail on ARM64
+ platform
+Message-ID: <20260311170226.GA930029@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9ef9b529-839b-4cf0-a294-5b68fe8aa768@huawei.com>
 
-Compute Express Link (CXL) Specification Revision 4.0, Version 1.0, Section
-8.1.5.1 - CXL Port Extension Status, Implementation Note, describes a
-scenario where a CXL downstream port may fail PM initialization:
+On Wed, Mar 11, 2026 at 11:00:02AM +0800, fengchengwen wrote:
+> On 3/11/2026 6:09 AM, Bjorn Helgaas wrote:
+> > On Tue, Mar 10, 2026 at 10:58:49AM -0500, Jeremy Linton wrote:
+> >> On 3/9/26 10:20 PM, Chengwen Feng wrote:
+> >>> pcie_tph_get_cpu_st() is broken on ARM64:
+> >>> 1. pcie_tph_get_cpu_st() passes cpu_uid to the PCI ACPI DSM method.
+> >>>     cpu_uid should be the ACPI Processor UID [1].
+> >>> 2. In BNXT, pcie_tph_get_cpu_st() is passed a cpu_uid obtained via
+> >>>     cpumask_first(irq->cpu_mask) - the logical CPU ID of a CPU core,
+> >>>     generated and managed by kernel (e.g., [0,255] for a system  with 256
+> >>>     logical CPU cores).
+> >>> 3. On ARM64 platforms, ACPI assigns Processor UID to cores listed in the
+> >>>     MADT table, and this UID may not match the kernel's logical CPU ID.
+> >>>     When this occurs, the mismatch results in the wrong CPU steer-tag.
+> >>> 4. On AMD x86 the logical CPU ID is identical to the ACPI Processor UID
+> >>>     so the mismatch is not seen.
+> > 
+> >>>   int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
+> >>> -			unsigned int cpu_uid, u16 *tag)
+> >>> +			unsigned int cpu, u16 *tag)
+> >>>   {
+> >>>   #ifdef CONFIG_ACPI
+> >>> +	u32 cpu_uid = acpi_get_cpu_acpi_id(cpu);
+> > 
+> > From AI review (gemini/gemini-3.1-pro-preview):
+> > 
+> >   Does this code need to validate that `cpu` is within bounds before
+> >   using it?  Before this change, the `cpu_uid` parameter was passed
+> >   opaquely to the ACPI firmware via `tph_invoke_dsm()`, which would
+> >   gracefully handle invalid values.
+> > 
+> >   Now, `cpu` is treated as a logical CPU index and passed to
+> >   `acpi_get_cpu_acpi_id(cpu)`. On architectures like arm64 and riscv,
+> >   `acpi_get_cpu_acpi_id()` uses `cpu` directly as an array index
+> >   (`&cpu_madt_gicc[cpu]` and `&cpu_madt_rintc[cpu]`). On x86, it uses
+> >   `per_cpu(x86_cpu_to_acpiid, cpu)`.
+> > 
+> >   If a caller passes an out-of-bounds `cpu` index (for example, if an
+> >   IRQ affinity mask is empty and `cpumask_first()` returns
+> >   `nr_cpu_ids`, or if userspace passes an arbitrary ID via
+> >   `mlx5_st_alloc_index()`), this will result in an out-of-bounds
+> >   memory read.
+> > 
+> >   Consider adding a bounds check:
+> > 
+> >     if (cpu >= nr_cpu_ids)
+> >       return -EINVAL;
+> > 
+> > I agree that this is an issue, and I think implementations of
+> > acpi_get_cpu_acpi_id() should validate their inputs.
+> > 
+> > I don't know if there's a value that can never be a valid ACPI CPU UID
+> > and could be used as an error value from acpi_get_cpu_acpi_id().  I do
+> > see a few mentions of a ~0 value meaning "all processors" (ACPI r6.6,
+> > sec 5.2.12.13).  
+> 
+> I only have the ACPI Specification Version 6.5, so I will use v6.5
+> as an example.
 
-"Certain conditions such as Link Down, Secondary Bus Reset, or Downstream
-Port Containment reset the Downstream Component’s bus number. If the
-Component generates the CREDIT_RTN IP2PM message with Requester Bus=0, the
-Downstream Port may reject the IP2PM message if software has enabled ACS
-Source Validation. In this scenario, Power Management initialization may
-fail to complete and another Secondary Bus Reset alone will not facilitate
-recovery".
+https://uefi.org/sites/default/files/resources/ACPI_Spec_6.6.pdf
 
-Implement the recommended workaround for this scenario, which involves
-saving and disabling the ACS Source Validation and Bus Master Enable bits,
-issuing a secondary bus reset, waiting for PM init to complete, and then
-restoring those bits.
+> 	int acpi_get_cpu_uid(unsigned int cpu, u32 *uid) {
+> 		if (cpu >= nr_cpu_ids)
+> 			return -EINVAL;
+> 		*uid = xxx;
+> 		return 0;
+> 	}
 
-This is an RFC because it checks for PM init failures in ports enumeration,
-where an SBR might not be very welcome. Maybe other call sites are more
-appropriate for this workaround?
+This looks good to me.
 
-Signed-off-by: Fabio M. De Francesco <fabio.m.de.francesco@linux.intel.com>
----
+> Another issue: This commit also provides an implementation for the
+> x86 platform.  However, further code analysis revealed a potential
+> problem in the implementation:
+> 
+> The acpi_get_cpu_acpi_id() retrieves uid from x86_cpu_to_acpiid in
+> SMP, and x86_cpu_to_acpiid is set through the call chain:
+> acpi_parse_lapic() -> topology_register_apic() ->
+> topo_register_apic() -> topo_set_cpuids() -> x86_cpu_to_acpiid. It
+> appears to retrieve the "ACPI Processor UID" from ACPI Section
+> 5.2.12.2, but the problem is that this field is only one byte in
+> length, which may cause issues in huge-core systems.
+> 
+> Therefore, I suggest re-implementing the acpi_get_cpu_uid function
+> for the x86 platform. Either I provide a default implementation
+> (shown below), or x86 guys contribute to the implementation:
+> 
+> 	s64 acpi_get_cpu_uid(unsigned int cpu) {
+> 		if (cpu >= nr_cpu_ids)
+> 			return -EINVAL;
+> 		return cpu;
+> 	}
 
-Changes from v1: 
-	- change subject label from the mistaken PCI (relic of an old
-	solution which was later discarded) to cxl/core
-	- restore the class storage of sbr_masked() to static (another
-	  relic of the old solution)
+I don't think this is your problem to solve, so don't worry about it.
+If you implement acpi_get_cpu_uid() to return the same values as
+cpu_acpi_id(), it's up to the x86 folks to deal with any one-byte ID
+issues.
 
- drivers/cxl/core/pci.c        | 170 ++++++++++++++++++++++++++++++++++
- drivers/cxl/core/port.c       |  19 ++++
- drivers/cxl/cxlpci.h          |   3 +
- include/uapi/linux/pci_regs.h |   4 +
- 4 files changed, 196 insertions(+)
-
-diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-index f96ce884a213..76b69ff17b74 100644
---- a/drivers/cxl/core/pci.c
-+++ b/drivers/cxl/core/pci.c
-@@ -869,3 +869,173 @@ int cxl_port_get_possible_dports(struct cxl_port *port)
- 
- 	return ctx.count;
- }
-+
-+struct pci_saved_flags {
-+	u16 pci_command;
-+	u16 acs_ctrl;
-+};
-+
-+/*
-+ * pci_disable_acs_bme - disable ACS Source Validation and BME
-+ * @pdev: downstream port
-+ * @saved: pointer to pci_saved_acs_bme struct, for saving bit values
-+ *
-+ * Save the current ACS Source Validation and Bus Master Enable (BME)
-+ * bits before disabling them.
-+ */
-+static void pci_disable_acs_bme(struct pci_dev *pdev,
-+				struct pci_saved_flags *saved)
-+{
-+	int pos;
-+	u16 field;
-+
-+	pos = pdev->acs_cap;
-+	if (!pos)
-+		return;
-+
-+	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &field);
-+	saved->acs_ctrl = field;
-+
-+	if (field & PCI_ACS_SV)
-+		pci_write_config_word(pdev, pos + PCI_ACS_CTRL,
-+				      field & ~PCI_ACS_SV);
-+
-+	pci_read_config_word(pdev, PCI_COMMAND, &field);
-+	saved->pci_command = field;
-+
-+	if (field & PCI_COMMAND_MASTER)
-+		pci_clear_master(pdev);
-+}
-+
-+/*
-+ * pci_enable_acs_bme - enable ACS Source Validation and BME
-+ * @pdev: downstream port
-+ * @saved: pointer to pci_saved_acs_bme struct, for restoring bit values
-+ *
-+ * Restore the previously saved ACS Source Validation and Bus Master
-+ * Enable (BME) bits.
-+ */
-+static void pci_enable_acs_bme(struct pci_dev *pdev,
-+			       struct pci_saved_flags *saved)
-+{
-+	int pos;
-+	u16 field;
-+
-+	pos = pdev->acs_cap;
-+	if (!pos)
-+		return;
-+
-+	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &field);
-+	if (saved->acs_ctrl & PCI_ACS_SV)
-+		pci_write_config_word(pdev, pos + PCI_ACS_CTRL,
-+				      field | PCI_ACS_SV);
-+
-+	pci_read_config_word(pdev, PCI_COMMAND, &field);
-+	if (saved->pci_command & PCI_COMMAND_MASTER)
-+		pci_set_master(pdev);
-+}
-+
-+/**
-+ * cxl_port_pm_init_is_complete - check if the downstream port has completed PM
-+ * init
-+ *
-+ * @pdev: downstream port
-+ *
-+ * Check if the Port Power Management Initialization Complete bit is set in the
-+ * Downstream Port's CXL DVSEC Port Extended Status register.
-+ *
-+ * Returns true if PM init is complete, false otherwise.
-+ */
-+bool cxl_port_pm_init_is_complete(struct pci_dev *pdev)
-+{
-+	int pm_init_complete;
-+	u16 status;
-+	u16 dvsec;
-+
-+	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-+					  PCI_DVSEC_CXL_PORT);
-+	if (!dvsec)
-+		return false;
-+
-+	pci_read_config_word(pdev, dvsec + CXL_DVSEC_PORT_EXT_STATUS, &status);
-+	pm_init_complete = FIELD_GET(CXL_DVSEC_PORT_EXT_STATUS_PM_INIT_COMP_MASK,
-+				     status);
-+
-+	return !!pm_init_complete;
-+}
-+
-+static void mask_sbr(struct pci_dev *pdev)
-+{
-+	int dvsec;
-+	u16 reg;
-+
-+	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-+					  PCI_DVSEC_CXL_PORT);
-+	if (!dvsec)
-+		return;
-+
-+	pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_PORT_CTL, &reg);
-+
-+	pci_write_config_word(pdev, dvsec + PCI_DVSEC_CXL_PORT_CTL,
-+			      reg & ~PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR);
-+}
-+
-+static void unmask_sbr(struct pci_dev *pdev)
-+{
-+	int dvsec;
-+	u16 reg;
-+
-+	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-+					  PCI_DVSEC_CXL_PORT);
-+	if (!dvsec)
-+		return;
-+
-+	pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_PORT_CTL, &reg);
-+
-+	pci_write_config_word(pdev, dvsec + PCI_DVSEC_CXL_PORT_CTL,
-+			      reg | PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR);
-+}
-+
-+/**
-+ * cxl_port_retry_failed_pm_init - retry a downstream port's failed PM init
-+ *
-+ * @pdev: downstream port
-+ *
-+ * Retry a downstream CXL port's failed PM init according to CXL Erratum for
-+ * Section 8.1.5.1 - Port Power Management Initialization Complete.
-+ *
-+ * This entails saving and disabling the ACS Source Validation and Bus Master
-+ * enable bits, and unmasking and masking the SBR, before doing a secondary bus
-+ * reset and then restoring and re-enabling those bits.
-+ *
-+ * return: 0 on success, errors otherwise.
-+ */
-+int cxl_port_retry_failed_pm_init(struct pci_dev *pdev)
-+{
-+	struct pci_saved_flags saved;
-+	int ret;
-+
-+	if (!is_cxl_port(pdev->dev.parent))
-+		return -EINVAL;
-+
-+	pci_disable_acs_bme(pdev, &saved);
-+	unmask_sbr(pdev);
-+
-+	/* Generate Secondary Bus Reset */
-+	ret = pci_reset_bus(pdev);
-+	if (ret)
-+		dev_dbg(&pdev->dev, "Bus reset failed: %d\n", ret);
-+
-+	/*
-+	 * Wait until the Port Power Management Initialization
-+	 * Complete bit is set in the Downstream Port. CXL Spec 4.0
-+	 * Section 8.1.5.1 of the CXL spec specifies 100 ms as the
-+	 * max time needed for the PM Init Complete bit to be set.
-+	 */
-+	msleep(100);
-+
-+	mask_sbr(pdev);
-+	pci_enable_acs_bme(pdev, &saved);
-+
-+	return ret;
-+}
-diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
-index b69c2529744c..62fabcdf0faf 100644
---- a/drivers/cxl/core/port.c
-+++ b/drivers/cxl/core/port.c
-@@ -1829,12 +1829,31 @@ int devm_cxl_enumerate_ports(struct cxl_memdev *cxlmd)
- retry:
- 	for (iter = dev; iter; iter = grandparent(iter)) {
- 		struct device *dport_dev = grandparent(iter);
-+		struct pci_dev *dport_pdev = to_pci_dev(dport_dev);
- 		struct device *uport_dev;
- 		struct cxl_dport *dport;
- 
- 		if (is_cxl_host_bridge(dport_dev))
- 			return 0;
- 
-+		/*
-+		 * Check the downstream port's PM init status, and if it has
-+		 * failed retry PM init according to CXL Spec. 4.0 Sect. 8.1.5.1
-+		 * - Implementation Note
-+		 */
-+		if (!cxl_port_pm_init_is_complete(dport_pdev)) {
-+			dev_dbg(&cxlmd->dev,
-+				"PM init failed for %s, retrying PM init\n",
-+				dev_name(dport_dev));
-+
-+			cxl_port_retry_failed_pm_init(dport_pdev);
-+
-+			if (!cxl_port_pm_init_is_complete(dport_pdev))
-+				dev_dbg(&cxlmd->dev,
-+					"PM init failed retry for %s\n",
-+					dev_name(dport_dev));
-+		}
-+
- 		uport_dev = dport_dev->parent;
- 		if (!uport_dev) {
- 			dev_warn(dev, "at %s no parent for dport: %s\n",
-diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
-index 0cf64218aa16..0458096be2c4 100644
---- a/drivers/cxl/cxlpci.h
-+++ b/drivers/cxl/cxlpci.h
-@@ -101,4 +101,7 @@ static inline void devm_cxl_port_ras_setup(struct cxl_port *port)
- }
- #endif
- 
-+bool cxl_port_pm_init_is_complete(struct pci_dev *pdev);
-+int cxl_port_retry_failed_pm_init(struct pci_dev *pdev);
-+
- #endif /* __CXL_PCI_H__ */
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index ec1c54b5a310..1a12552fa89a 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -1397,4 +1397,8 @@
- #define   PCI_DVSEC_CXL_REG_LOCATOR_BLOCK_ID		__GENMASK(15, 8)
- #define   PCI_DVSEC_CXL_REG_LOCATOR_BLOCK_OFF_LOW	__GENMASK(31, 16)
- 
-+/* CXL 4.0 8.1.5.1: CXL Port Extension Status */
-+#define CXL_DVSEC_PORT_EXT_STATUS 0xA
-+#define CXL_DVSEC_PORT_EXT_STATUS_PM_INIT_COMP_MASK GENMASK(1, 0)
-+
- #endif /* LINUX_PCI_REGS_H */
--- 
-2.53.0
-
+Bjorn
