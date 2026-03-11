@@ -1,158 +1,168 @@
-Received: from mail-m1973189.qiye.163.com (mail-m1973189.qiye.163.com [220.197.31.89])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93A361A6812;
-	Wed, 11 Mar 2026 05:41:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.89
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7ED99345757;
+	Wed, 11 Mar 2026 05:52:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773207721; cv=none; b=JD0QdCQd9erUPW0KE0C7qbXMK0qzA3cK2ix6RKtP7zUzg5GURlTGaTr0zqmwi7weBYuyX+/eSXONa3eAHbb+3pBhAedO7FS2XYOe7uhwJ45q7dhmmFeiCmfRwdn5LmB3fx+/xkBn6L54B+BqbPjCuKiuiXun3d8L8GpJLX6ULQo=
+	t=1773208351; cv=none; b=BhXzdH34Px7GXpfv8iNndbPvVGehkRgQ6Zy4VdGzIoKs+qwyuCBl7w2JQvRbjAZHLggS144+Ung/Bssel96xbZUlPnkLvnCKeItQJQQJupmikPHGTwpYHXFkyGZUgTFMjErNIKq0nrzahhNfqAe8zedecwFqOr+J+uqyDDnt+EY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773207721; c=relaxed/simple;
-	bh=eZq62JBHkK1Ju69MukNzvda0TQ1C2GpK9Gtc7lrsaiI=;
-	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=hdlqHsayzVB6HahnWQ/Hfg3LigYtULzpPLSoZbk1cPb75XuTs/9hK/QlP40xDwSYN8p+ec2cCQgOHz8ThBS6foiV7zflyjWrRVWeCgs1cbU2J5vyuQ4XEfaHYTkufrrzTFJqGmo6Jamnk92p1yH8tEab7LzXrd73+Toh9apt9L0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=K7wZRUJk; arc=none smtp.client-ip=220.197.31.89
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1773208351; c=relaxed/simple;
+	bh=BWHaQd6X/rtH2bI32zQwke/69AavzK5woTtHsoahkrs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=aCaO8nFlx02Cg67ag76tcNQyr9DaxjJ0Sug9r9x/3qQbb0/zNeca7oeekTtv/bJ18nW0sdu6YEl5n6CakyIHUQTLXd71PqgNfCqFnaD9hr9xdurbIB/h68STjPI0PxYNT6xZYdP67BdGaubNcDOs/1Rxr8VklglYuV8IkJ2RTQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ofIF83yE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="K7wZRUJk"
-Received: from [172.16.12.17] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 36820e818;
-	Wed, 11 Mar 2026 13:26:29 +0800 (GMT+08:00)
-Cc: shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
- linux-rockchip@lists.infradead.org, Niklas Cassel <cassel@kernel.org>,
- Wilfred Mallawa <wilfred.mallawa@wdc.com>,
- Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
- Lukas Wunner <lukas@wunner.de>, Richard Zhu <hongxing.zhu@nxp.com>,
- Brian Norris <briannorris@chromium.org>, Wilson Ding <dingwei@marvell.com>,
- Frank Li <Frank.Li@nxp.com>
-Subject: Re: [PATCH v7 1/4] PCI/ERR: Add support for resetting the Root Ports
- in a platform specific way
-To: manivannan.sadhasivam@oss.qualcomm.com,
- Bjorn Helgaas <bhelgaas@google.com>,
- Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
- Oliver O'Halloran <oohall@gmail.com>, Will Deacon <will@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Heiko Stuebner <heiko@sntech.de>, Philipp Zabel <p.zabel@pengutronix.de>
-References: <20260310-pci-port-reset-v7-0-9dd00ccc25ab@oss.qualcomm.com>
- <20260310-pci-port-reset-v7-1-9dd00ccc25ab@oss.qualcomm.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <e951b005-d9c9-224b-ed52-23abbccf7212@rock-chips.com>
-Date: Wed, 11 Mar 2026 13:26:28 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ofIF83yE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38128C4CEF7;
+	Wed, 11 Mar 2026 05:52:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773208351;
+	bh=BWHaQd6X/rtH2bI32zQwke/69AavzK5woTtHsoahkrs=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=ofIF83yEjYLe+0ed/2I1e6ZwoWoIywD9XjwVJRlkZGjo+1Dt9YUUD4siSfFs/mThG
+	 80fgvrXiF8ago5yXFzL/frRej37uCyLHMGfxKRvLJhCcyu/uT+DNXLVkUlqXbVEIB+
+	 SA7uRh95mkiJVmzGfykg3IgGiV9PehRGeYNH4dZHUn8KoARV0EMfJLmWRrXXRUK1Ub
+	 hjsI0/nZemIJwD9l2iRPCJLRCkncKlkwUGIclHgUKErG0RguRWIfkEk5SnduwiNSFd
+	 MZKoS+RfE+YTvX6Q9A8McYmn2Xx5ZfTBshD9ueF9jGNW4wWGuFNcdDlCUGtZYND9BV
+	 Fgi7eD4vGTgQg==
+Message-ID: <168d4af2-5a5b-4564-9e53-fed9f0c062a2@kernel.org>
+Date: Wed, 11 Mar 2026 06:52:26 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20260310-pci-port-reset-v7-1-9dd00ccc25ab@oss.qualcomm.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9cdb5c5d4d09cckunma929f57d18cd2d
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQhlDTlZPHxlISE4ZSx8aHUJWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=K7wZRUJk1emUgxCcHil5+9JB/ANF+IxeKRXJYfvQNEB51UFMvURGvaB1+hEuaGfLw6gNqqGdYK7+AzOAJqC3QeulrOvdMdg98utMWmVdILteJwz08dWusEIiUceoqY1rrzpiBbUcuejudxcc0a8Y5GCv3zU3YmURNiNhYMC2e6Q=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=9yG8NQ0gHRExp7u3DqeTqLY+f4Q07ToFiRLsE78NeCU=;
-	h=date:mime-version:subject:message-id:from;
+User-Agent: Mozilla Thunderbird
+Subject: =?UTF-8?B?UmU6IOWbnuWkjTogW1BBVENIIHYyIDEvMl0gZHQtYmluZGluZ3M6IFBD?=
+ =?UTF-8?Q?I=3A_update_CIX_Sky1_PCIe_Root_Complex_bindings?=
+To: Gary Yang <gary.yang@cixtech.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+ "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+ "mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
+ "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
+ "conor+dt@kernel.org" <conor+dt@kernel.org>,
+ Peter Chen <peter.chen@cixtech.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ cix-kernel-upstream <cix-kernel-upstream@cixtech.com>
+References: <20260310065338.2337761-1-gary.yang@cixtech.com>
+ <20260310065338.2337761-2-gary.yang@cixtech.com>
+ <841c0b46-76dc-49c2-bb74-7fc2e5a2a702@kernel.org>
+ <PUZPR06MB5887D091B6CF979DFC46EECBEF47A@PUZPR06MB5887.apcprd06.prod.outlook.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <PUZPR06MB5887D091B6CF979DFC46EECBEF47A@PUZPR06MB5887.apcprd06.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-在 2026/03/10 星期二 22:01, Manivannan Sadhasivam via B4 Relay 写道:
-> From: Manivannan Sadhasivam <mani@kernel.org>
+On 11/03/2026 03:31, Gary Yang wrote:
+> Hi Krzysztof:
 > 
-> Some host bridge devices require resetting the Root Ports in a platform
-> specific way to recover them from error conditions such as Fatal AER
-> errors, Link Down etc... So introduce pci_host_bridge::reset_root_port()
-> callback and call it from pcibios_reset_secondary_bus() if available. Also,
-> save the Root Port config space before reset and restore it afterwards.
+> Thanks for your comments
 > 
-> The 'reset_root_port' callback is responsible for resetting the given Root
-> Port referenced by the 'pci_dev' pointer in a platform specific way and
-> bring it back to the working state if possible. If any error occurs during
-> the reset operation, relevant errno should be returned.
+>> EXTERNAL EMAIL
+>>
+>> On 10/03/2026 07:53, Gary Yang wrote:
+>>> add power-domains and power-domain-names property
+>>
+>> Why? Please write complete sentences explaining why you are doing this.
+>>
 > 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> Tested-by: Brian Norris <briannorris@chromium.org>
-> Tested-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> Tested-by: Richard Zhu <hongxing.zhu@nxp.com>
-> Reviewed-by: Frank Li <Frank.Li@nxp.com>
-> ---
->   drivers/pci/pci.c      | 20 ++++++++++++++++++++
->   drivers/pci/pcie/err.c |  5 -----
->   include/linux/pci.h    |  1 +
->   3 files changed, 21 insertions(+), 5 deletions(-)
+> Sorry, I did not describe in detail.
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8479c2e1f74f..6f09057d83e0 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4812,6 +4812,26 @@ void pci_reset_secondary_bus(struct pci_dev *dev)
->   
->   void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
->   {
-> +	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
-> +	int ret;
-> +
-> +	if (pci_is_root_bus(dev->bus) && host->reset_root_port) {
-> +		/*
-> +		 * Save the config space of the Root Port before doing the
-> +		 * reset, since the state could be lost. The Endpoint state
-> +		 * should've been saved by the caller.
-> +		 */
-> +		pci_save_state(dev);
-> +		ret = host->reset_root_port(host, dev);
-> +		if (ret)
-> +			pci_err(dev, "Failed to reset Root Port: %d\n", ret);
-> +		else
-> +			/* Now restore it on success */
-> +			pci_restore_state(dev);
-> +
-> +		return;
-> +	}
-> +
->   	pci_reset_secondary_bus(dev);
->   }
->   
+> The Sky1 PCIe controller sits in a power domain that must be enabled before the controller can be accessed.
+> Describe the power-domains property so that DTS files can reference the correct power domain provider.
+> 
+>>>
+>>> Signed-off-by: Gary Yang <gary.yang@cixtech.com>
+>>> ---
+>>>  .../devicetree/bindings/pci/cix,sky1-pcie-host.yaml         | 6 ++++++
+>>>  1 file changed, 6 insertions(+)
+>>>
+>>> diff --git a/Documentation/devicetree/bindings/pci/cix,sky1-pcie-host.yaml
+>> b/Documentation/devicetree/bindings/pci/cix,sky1-pcie-host.yaml
+>>> index b910a42e0843..1d8ee8310588 100644
+>>> --- a/Documentation/devicetree/bindings/pci/cix,sky1-pcie-host.yaml
+>>> +++ b/Documentation/devicetree/bindings/pci/cix,sky1-pcie-host.yaml
+>>> @@ -38,6 +38,12 @@ properties:
+>>>    ranges:
+>>>      maxItems: 3
+>>>
+>>> +  power-domains:
+>>> +    minItems: 1
+>>> +
+>>> +  power-domain-names:
+>>> +    minItems: 1
+>>
+>> There is no such syntax. Open any existing bindinh.
+>>
+> 
+> Sorry, They come from Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-common.yaml
 
-LGTM,
+There is no such syntax there.
 
-Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
+Just open the file.
 
-> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> index bebe4bc111d7..13b9d9eb714f 100644
-> --- a/drivers/pci/pcie/err.c
-> +++ b/drivers/pci/pcie/err.c
-> @@ -256,11 +256,6 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
->   	}
->   
->   	if (status == PCI_ERS_RESULT_NEED_RESET) {
-> -		/*
-> -		 * TODO: Should call platform-specific
-> -		 * functions to reset slot before calling
-> -		 * drivers' slot_reset callbacks?
-> -		 */
->   		status = PCI_ERS_RESULT_RECOVERED;
->   		pci_dbg(bridge, "broadcast slot_reset message\n");
->   		pci_walk_bridge(bridge, report_slot_reset, &status);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1c270f1d5123..34c434b79abb 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -644,6 +644,7 @@ struct pci_host_bridge {
->   	void (*release_fn)(struct pci_host_bridge *);
->   	int (*enable_device)(struct pci_host_bridge *bridge, struct pci_dev *dev);
->   	void (*disable_device)(struct pci_host_bridge *bridge, struct pci_dev *dev);
-> +	int (*reset_root_port)(struct pci_host_bridge *bridge, struct pci_dev *dev);
->   	void		*release_data;
->   	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
->   	unsigned int	no_ext_tags:1;		/* No Extended Tags */
+
 > 
+> Execute the two commands below before submit patch every time.
+> 
+> make O=$OUTKNL dt_binding_check
+> make O=$OUTKNL dt_binding_check DT_SCHEMA_FILES=cix,sky1-pcie-host.yaml
+> 
+> we don't find any warning or error. So we think all is ok.
+
+No, because there is no such code nowhere. Please take other bindings as
+an example. You miss here maxItems.
+
+Best regards,
+Krzysztof
