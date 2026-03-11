@@ -1,133 +1,348 @@
-Received: from mail-vk1-f177.google.com (mail-vk1-f177.google.com [209.85.221.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD0C2231A3B
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2026 16:12:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 813DB3E121E;
+	Wed, 11 Mar 2026 16:41:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773245561; cv=none; b=LahLeyr4uxR5uxN38X9xeKDOdC4BX5xDu9EMefziiEHHpQgrxVm3aeLbtmPBRfjwsqNjfmBPxFO9ejmCzRoP29MoxXJY/Jd1TAv9O6q9SO5ban6Qg3NQZ1g+9apaLFJ/OmaMvIWUHK9hDfd3ybcS5Ul4OdFYG8VUxXW6gWoeP/k=
+	t=1773247318; cv=none; b=lnNPPm0QcGHlu+YWylWezwYGbRqIE2Z7zFFfauw8W99xsKQtQcko8SK/f8InBHV9Ng2p/qQbYP9iT9ub8ub2mEQsEu/rOU+gmxIXreVy3OszhHrihmC5GKyyNScB+XdYjZ/4dn2hnifpHlBk3JaL7hYAkw9tv4TN5PkRaVdc4FQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773245561; c=relaxed/simple;
-	bh=kriQ31pznimK4X2P3ovzVVed34liQBkD34H6iVN9D1s=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Lk22C3l4jILLBnkZRKoPNdpxsXXyGfhpI8oAxdb3JroRiAh37j90yB3CImiX6o1c5NjriulViLNGfloy2hhOCU8uWNw/hB0HmLCCKGc9ssYZW6VACRyFGIuaDccigjV+H8qxK8x994Dva6R7vIXXui1OSmczPV3YpdntG6IoKD0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-vk1-f177.google.com with SMTP id 71dfb90a1353d-56afafef7aeso94098e0c.3
-        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2026 09:12:37 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773245556; x=1773850356;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2TZQnjO7g8xVtwDHS6cEDEA1/Z/EJi3b/CK0eN89lxs=;
-        b=Xe8Jl/3TENzAijddmO6Dc/bkehVs55To+98jZhitdDubuGrwwS1v1B+ERrCBzihbWA
-         2tYRTD3ICdFGvhUgYKwy1Fr369tdjuWul50DRxiAxs3bkL1Cuvk9wSsBHGbmsrVPMjA5
-         PoIEnMhyzeqS8YrQ0Kh7D+JQYTzsEctqmootlYtQB6x6GakqbDHETGytXpLlwKhooOVE
-         uXl+PH1jVYj0XTHbhPBfmKW9jdxpjjSFJ5aTd28SGTvkGfMblWZGGzXgRzevWXP34tK8
-         wDaiIcbPmuk9BzoXJwVPDOrUauh6l+25dnonjmD4T7lzzjK49g6ggQVkvtSRaSMyDxW+
-         KIpQ==
-X-Forwarded-Encrypted: i=1; AJvYcCW6HD6Je4GmsxmfoPpuGya+hzp6XKfOGWjcksRbLDTJSojBnkJwkJyMB6K2+2Mdc5qJvBzrBzk5zz0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwUeelg9lvB6OtR6TXLgZbjnz6+Lngcy4Xi+g9HdZC8Rr8cbHoA
-	HC9MafvXSQJUVo+A1rxK85DKM+BoHZ5J8Ph+iOZaQWZy0+oddsYAaqb3A/WCtbG73gE=
-X-Gm-Gg: ATEYQzzvMKTIax7hp2Q5LiBHpipWvWca/+vPKwvyShmTP4LdhqrwCqYx4jKXyTM1pHd
-	7L+FWzbCCY94UbDNVrRHjXOd7DLx8IbxVOcq9jYVpeVCJRe/w1IsQoPtj79lZbrAT0RLSRxLOmK
-	cjMOQTDnQ5HbInwG6mYFWSF698TdcTq2UN0F5Ir4blUc2ZeB0rewx//l5RQWZmG/W2ZjBi1SShw
-	fnSqDhfdALU0XBRdlfwU5K+CA1s5Dn61zVvCrmgeocnZpJhONbXxn7BhAgu+h/pxBmv4HOdFprP
-	pEUKnMS6lOEx+5wki+SDc6zLpkCnHYNK0x171tCCSvUhWvR55lz1LS4gdTOBDdoy5JtKsmtQPLP
-	wJcM7q31T2ErmaHZGsXy6yjJca2wYgx9HPkB2k3pYL4DMoKFu50WTVAmtcJdg+mKdml5G5XlaQy
-	fAJVAjSZlVDd6MfLuMRlf2CZbGUeHCWmwa3xwAyLSnFGJRZSAW6wNgDFBMoHqV
-X-Received: by 2002:a05:6102:510e:b0:5ff:dcb9:9222 with SMTP id ada2fe7eead31-601deb2b6a8mr1340258137.7.1773245556526;
-        Wed, 11 Mar 2026 09:12:36 -0700 (PDT)
-Received: from mail-vs1-f54.google.com (mail-vs1-f54.google.com. [209.85.217.54])
-        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-601dea9fa96sm876719137.9.2026.03.11.09.12.34
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 11 Mar 2026 09:12:35 -0700 (PDT)
-Received: by mail-vs1-f54.google.com with SMTP id ada2fe7eead31-600404dbea3so21479137.0
-        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2026 09:12:34 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCWAn87JYYaX0Gkt8EUWFn7qg7/KCHcvH3p43MwyRR7326kDft8pM1Sy5Z3Wiv6XyxyIPuAGOhm+jZQ=@vger.kernel.org
-X-Received: by 2002:a05:6102:290c:b0:5ff:d192:ff22 with SMTP id
- ada2fe7eead31-601deec1db1mr1359334137.19.1773245554633; Wed, 11 Mar 2026
- 09:12:34 -0700 (PDT)
+	s=arc-20240116; t=1773247318; c=relaxed/simple;
+	bh=MwFrCdgrxmnI1FJp/K6j4mlAIaOu9s4/luebif+uXfA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=RZL5w2/2U2YuZrBi5qzOJGehqu5n0xkFGNDZIYa4V/poyMu0qwg63msF+HjLhaWzDwwDewsB4VmswlWFH4n4XhzO1RIoDL3slSvWmByC7T5/A/pep5MSNIt1lW83GVirlvUK0QbucOJfBBNohnLPgQWB+1jN50ZS5uH+1bJt6WE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ib+alqyj; arc=none smtp.client-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ib+alqyj"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773247316; x=1804783316;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=MwFrCdgrxmnI1FJp/K6j4mlAIaOu9s4/luebif+uXfA=;
+  b=Ib+alqyj/HaTCDYafHC2oRWJ0lZNSqt5bCImMP663BGWwVnuvtoDtVuN
+   Mdo6Ovb4QtmczPZDu0WwG5IwNgUu3vZYvFycbMlI2u3+qRS9pBBORODjq
+   RsHXyWiwMDpKahXLIqiVIShbB1ae2dmAb0upmnEWHy6JMlWizsFl8sPzS
+   vGFxAH/8riU0SpRQc0voYVkQ2ibtdqzLGN73AGwR+ccaYG/3Y4M3kGMED
+   qNcVUaCf7M+wsWI4mcYXq8mBEaO+CHtFowDfN1fFYGgwzwO+K4OlmCJy8
+   37t37ix7OnEa6nXsyLrUxEigFs49hfjrFVWP2bCFuo2VjCEUP2fq/4Tac
+   g==;
+X-CSE-ConnectionGUID: aCKeRHS3QH2fi2BgFY3/AQ==
+X-CSE-MsgGUID: tvBv1St3SPiXy1xAFJ2zgg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11726"; a="77929055"
+X-IronPort-AV: E=Sophos;i="6.23,113,1770624000"; 
+   d="scan'208";a="77929055"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Mar 2026 09:41:55 -0700
+X-CSE-ConnectionGUID: YOcRxAPpRI+mlyb7Elnt8Q==
+X-CSE-MsgGUID: c2nsYA7qTceVpUKp3jr6fw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,113,1770624000"; 
+   d="scan'208";a="215730596"
+Received: from ettammin-mobl3.ger.corp.intel.com (HELO fdefranc-mobl3.intel.com) ([10.245.246.112])
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Mar 2026 09:41:52 -0700
+From: "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>
+To: linux-cxl@vger.kernel.org
+Cc: Davidlohr Bueso <dave@stgolabs.net>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Ira Weiny <ira.weiny@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	"Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>
+Subject: [RFC PATCH v2] cxl/core: Work around CXL Port PM Init failure when ACS SV enabled
+Date: Wed, 11 Mar 2026 17:36:47 +0100
+Message-ID: <20260311164145.498207-1-fabio.m.de.francesco@linux.intel.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260306143423.19562-1-john.madieu.xa@bp.renesas.com> <20260306143423.19562-16-john.madieu.xa@bp.renesas.com>
-In-Reply-To: <20260306143423.19562-16-john.madieu.xa@bp.renesas.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Wed, 11 Mar 2026 17:12:23 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdWMCqPZC2o8GMaRkJVTE3-FAtbPB3h_aDjpND6s=FWbZA@mail.gmail.com>
-X-Gm-Features: AaiRm50HgMmG-2Hd3S3CzPU1H5WBB19C2AdyrH6AqIP1ufq9nQI1hgHf7Jj5-NE
-Message-ID: <CAMuHMdWMCqPZC2o8GMaRkJVTE3-FAtbPB3h_aDjpND6s=FWbZA@mail.gmail.com>
-Subject: Re: [PATCH v8 15/15] arm64: dts: renesas: r9a09g047e57-smarc: Enable PCIe
-To: John Madieu <john.madieu.xa@bp.renesas.com>
-Cc: claudiu.beznea.uj@bp.renesas.com, lpieralisi@kernel.org, 
-	kwilczynski@kernel.org, mani@kernel.org, geert+renesas@glider.be, 
-	krzk+dt@kernel.org, robh@kernel.org, bhelgaas@google.com, conor+dt@kernel.org, 
-	magnus.damm@gmail.com, biju.das.jz@bp.renesas.com, linux-pci@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-clk@vger.kernel.org, john.madieu@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hi John,
+Compute Express Link (CXL) Specification Revision 4.0, Version 1.0, Section
+8.1.5.1 - CXL Port Extension Status, Implementation Note, describes a
+scenario where a CXL downstream port may fail PM initialization:
 
-On Fri, 6 Mar 2026 at 15:36, John Madieu <john.madieu.xa@bp.renesas.com> wrote:
-> The RZ Smarc Crarrier-II board has PCIe slots mounted on it.
-> Enable PCIe support.
->
-> Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+"Certain conditions such as Link Down, Secondary Bus Reset, or Downstream
+Port Containment reset the Downstream Component’s bus number. If the
+Component generates the CREDIT_RTN IP2PM message with Requester Bus=0, the
+Downstream Port may reject the IP2PM message if software has enabled ACS
+Source Validation. In this scenario, Power Management initialization may
+fail to complete and another Secondary Bus Reset alone will not facilitate
+recovery".
 
-Thanks for your patch!
+Implement the recommended workaround for this scenario, which involves
+saving and disabling the ACS Source Validation and Bus Master Enable bits,
+issuing a secondary bus reset, waiting for PM init to complete, and then
+restoring those bits.
 
-> --- a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
-> +++ b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
-> @@ -122,6 +122,11 @@ key-sleep {
->  #endif
->  };
->
-> +&pcie {
-> +       pinctrl-0 = <&pcie_pins>;
-> +       pinctrl-names = "default";
-> +};
-> +
->  &pinctrl {
->         canfd_pins: canfd {
->                 can1_pins: can1 {
-> @@ -167,6 +172,17 @@ rsci9_pins: rsci9 {
->                 bias-pull-up;
->         };
->
-> +       pcie-clkreq-n {
+This is an RFC because it checks for PM init failures in ports enumeration,
+where an SBR might not be very welcome. Maybe other call sites are more
+appropriate for this workaround?
 
-Please preserve sort order (alphabetical, by node name).
-No need to resend this series just for this change.
+Signed-off-by: Fabio M. De Francesco <fabio.m.de.francesco@linux.intel.com>
+---
 
-> +               gpio-hog;
-> +               gpios = <RZG3E_GPIO(4, 5) GPIO_ACTIVE_HIGH>;
-> +               output-low;
-> +               line-name = "pcie_clkreq_n";
-> +       };
-> +
-> +       pcie_pins: pcie {
-> +               pinmux = <RZG3E_PORT_PINMUX(G, 7, 1)>; /* PCIE_RST_OUT# */
-> +       };
-> +
->         scif_pins: scif {
->                 pins = "SCIF_TXD", "SCIF_RXD";
->                 renesas,output-impedance = <1>;
+Changes from v1: 
+	- change subject label from the mistaken PCI (relic of an old
+	solution which was later discarded) to cxl/core
+	- restore the class storage of sbr_masked() to static (another
+	  relic of the old solution)
 
-Gr{oetje,eeting}s,
+ drivers/cxl/core/pci.c        | 170 ++++++++++++++++++++++++++++++++++
+ drivers/cxl/core/port.c       |  19 ++++
+ drivers/cxl/cxlpci.h          |   3 +
+ include/uapi/linux/pci_regs.h |   4 +
+ 4 files changed, 196 insertions(+)
 
-                        Geert
-
+diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
+index f96ce884a213..76b69ff17b74 100644
+--- a/drivers/cxl/core/pci.c
++++ b/drivers/cxl/core/pci.c
+@@ -869,3 +869,173 @@ int cxl_port_get_possible_dports(struct cxl_port *port)
+ 
+ 	return ctx.count;
+ }
++
++struct pci_saved_flags {
++	u16 pci_command;
++	u16 acs_ctrl;
++};
++
++/*
++ * pci_disable_acs_bme - disable ACS Source Validation and BME
++ * @pdev: downstream port
++ * @saved: pointer to pci_saved_acs_bme struct, for saving bit values
++ *
++ * Save the current ACS Source Validation and Bus Master Enable (BME)
++ * bits before disabling them.
++ */
++static void pci_disable_acs_bme(struct pci_dev *pdev,
++				struct pci_saved_flags *saved)
++{
++	int pos;
++	u16 field;
++
++	pos = pdev->acs_cap;
++	if (!pos)
++		return;
++
++	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &field);
++	saved->acs_ctrl = field;
++
++	if (field & PCI_ACS_SV)
++		pci_write_config_word(pdev, pos + PCI_ACS_CTRL,
++				      field & ~PCI_ACS_SV);
++
++	pci_read_config_word(pdev, PCI_COMMAND, &field);
++	saved->pci_command = field;
++
++	if (field & PCI_COMMAND_MASTER)
++		pci_clear_master(pdev);
++}
++
++/*
++ * pci_enable_acs_bme - enable ACS Source Validation and BME
++ * @pdev: downstream port
++ * @saved: pointer to pci_saved_acs_bme struct, for restoring bit values
++ *
++ * Restore the previously saved ACS Source Validation and Bus Master
++ * Enable (BME) bits.
++ */
++static void pci_enable_acs_bme(struct pci_dev *pdev,
++			       struct pci_saved_flags *saved)
++{
++	int pos;
++	u16 field;
++
++	pos = pdev->acs_cap;
++	if (!pos)
++		return;
++
++	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &field);
++	if (saved->acs_ctrl & PCI_ACS_SV)
++		pci_write_config_word(pdev, pos + PCI_ACS_CTRL,
++				      field | PCI_ACS_SV);
++
++	pci_read_config_word(pdev, PCI_COMMAND, &field);
++	if (saved->pci_command & PCI_COMMAND_MASTER)
++		pci_set_master(pdev);
++}
++
++/**
++ * cxl_port_pm_init_is_complete - check if the downstream port has completed PM
++ * init
++ *
++ * @pdev: downstream port
++ *
++ * Check if the Port Power Management Initialization Complete bit is set in the
++ * Downstream Port's CXL DVSEC Port Extended Status register.
++ *
++ * Returns true if PM init is complete, false otherwise.
++ */
++bool cxl_port_pm_init_is_complete(struct pci_dev *pdev)
++{
++	int pm_init_complete;
++	u16 status;
++	u16 dvsec;
++
++	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
++					  PCI_DVSEC_CXL_PORT);
++	if (!dvsec)
++		return false;
++
++	pci_read_config_word(pdev, dvsec + CXL_DVSEC_PORT_EXT_STATUS, &status);
++	pm_init_complete = FIELD_GET(CXL_DVSEC_PORT_EXT_STATUS_PM_INIT_COMP_MASK,
++				     status);
++
++	return !!pm_init_complete;
++}
++
++static void mask_sbr(struct pci_dev *pdev)
++{
++	int dvsec;
++	u16 reg;
++
++	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
++					  PCI_DVSEC_CXL_PORT);
++	if (!dvsec)
++		return;
++
++	pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_PORT_CTL, &reg);
++
++	pci_write_config_word(pdev, dvsec + PCI_DVSEC_CXL_PORT_CTL,
++			      reg & ~PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR);
++}
++
++static void unmask_sbr(struct pci_dev *pdev)
++{
++	int dvsec;
++	u16 reg;
++
++	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
++					  PCI_DVSEC_CXL_PORT);
++	if (!dvsec)
++		return;
++
++	pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_PORT_CTL, &reg);
++
++	pci_write_config_word(pdev, dvsec + PCI_DVSEC_CXL_PORT_CTL,
++			      reg | PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR);
++}
++
++/**
++ * cxl_port_retry_failed_pm_init - retry a downstream port's failed PM init
++ *
++ * @pdev: downstream port
++ *
++ * Retry a downstream CXL port's failed PM init according to CXL Erratum for
++ * Section 8.1.5.1 - Port Power Management Initialization Complete.
++ *
++ * This entails saving and disabling the ACS Source Validation and Bus Master
++ * enable bits, and unmasking and masking the SBR, before doing a secondary bus
++ * reset and then restoring and re-enabling those bits.
++ *
++ * return: 0 on success, errors otherwise.
++ */
++int cxl_port_retry_failed_pm_init(struct pci_dev *pdev)
++{
++	struct pci_saved_flags saved;
++	int ret;
++
++	if (!is_cxl_port(pdev->dev.parent))
++		return -EINVAL;
++
++	pci_disable_acs_bme(pdev, &saved);
++	unmask_sbr(pdev);
++
++	/* Generate Secondary Bus Reset */
++	ret = pci_reset_bus(pdev);
++	if (ret)
++		dev_dbg(&pdev->dev, "Bus reset failed: %d\n", ret);
++
++	/*
++	 * Wait until the Port Power Management Initialization
++	 * Complete bit is set in the Downstream Port. CXL Spec 4.0
++	 * Section 8.1.5.1 of the CXL spec specifies 100 ms as the
++	 * max time needed for the PM Init Complete bit to be set.
++	 */
++	msleep(100);
++
++	mask_sbr(pdev);
++	pci_enable_acs_bme(pdev, &saved);
++
++	return ret;
++}
+diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
+index b69c2529744c..62fabcdf0faf 100644
+--- a/drivers/cxl/core/port.c
++++ b/drivers/cxl/core/port.c
+@@ -1829,12 +1829,31 @@ int devm_cxl_enumerate_ports(struct cxl_memdev *cxlmd)
+ retry:
+ 	for (iter = dev; iter; iter = grandparent(iter)) {
+ 		struct device *dport_dev = grandparent(iter);
++		struct pci_dev *dport_pdev = to_pci_dev(dport_dev);
+ 		struct device *uport_dev;
+ 		struct cxl_dport *dport;
+ 
+ 		if (is_cxl_host_bridge(dport_dev))
+ 			return 0;
+ 
++		/*
++		 * Check the downstream port's PM init status, and if it has
++		 * failed retry PM init according to CXL Spec. 4.0 Sect. 8.1.5.1
++		 * - Implementation Note
++		 */
++		if (!cxl_port_pm_init_is_complete(dport_pdev)) {
++			dev_dbg(&cxlmd->dev,
++				"PM init failed for %s, retrying PM init\n",
++				dev_name(dport_dev));
++
++			cxl_port_retry_failed_pm_init(dport_pdev);
++
++			if (!cxl_port_pm_init_is_complete(dport_pdev))
++				dev_dbg(&cxlmd->dev,
++					"PM init failed retry for %s\n",
++					dev_name(dport_dev));
++		}
++
+ 		uport_dev = dport_dev->parent;
+ 		if (!uport_dev) {
+ 			dev_warn(dev, "at %s no parent for dport: %s\n",
+diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
+index 0cf64218aa16..0458096be2c4 100644
+--- a/drivers/cxl/cxlpci.h
++++ b/drivers/cxl/cxlpci.h
+@@ -101,4 +101,7 @@ static inline void devm_cxl_port_ras_setup(struct cxl_port *port)
+ }
+ #endif
+ 
++bool cxl_port_pm_init_is_complete(struct pci_dev *pdev);
++int cxl_port_retry_failed_pm_init(struct pci_dev *pdev);
++
+ #endif /* __CXL_PCI_H__ */
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index ec1c54b5a310..1a12552fa89a 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -1397,4 +1397,8 @@
+ #define   PCI_DVSEC_CXL_REG_LOCATOR_BLOCK_ID		__GENMASK(15, 8)
+ #define   PCI_DVSEC_CXL_REG_LOCATOR_BLOCK_OFF_LOW	__GENMASK(31, 16)
+ 
++/* CXL 4.0 8.1.5.1: CXL Port Extension Status */
++#define CXL_DVSEC_PORT_EXT_STATUS 0xA
++#define CXL_DVSEC_PORT_EXT_STATUS_PM_INIT_COMP_MASK GENMASK(1, 0)
++
+ #endif /* LINUX_PCI_REGS_H */
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+2.53.0
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
