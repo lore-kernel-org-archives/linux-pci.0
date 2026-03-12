@@ -1,123 +1,150 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77DB4375F88;
-	Thu, 12 Mar 2026 15:27:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7355B3537C6;
+	Thu, 12 Mar 2026 16:19:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773329239; cv=none; b=VhY9aUeSXBmsNXFmR+5Q4zRrPnR90RKGGV+EAmLkhpyOwQ+2kGcnztzwHdahjArPovFekJrHGjly6w4eEQqoAxRRIq0jYYZtPy+0Rmm/elToZSg8aNY4Qq6F45TeHhcLD5Gzfgzb3eayc4UfAjxyu22HrEa5rlnxvIBrVAendV4=
+	t=1773332376; cv=none; b=C5NTjmsB8EBq20Gc7fUnoYLo4Riyg72fmWQCUp66u6+EaXJ1rlt3m5PIKQoaO7xb7W/dRJuU8g4vEkwH8QBKseAvZ2EwU9BZNRwuOpBtW/JJrhVYMQqcI558GWzgOsRqWN45Z4dgbvVwm8l6MXA8UrAgs5UDshCs/xuFfqUj2Ro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773329239; c=relaxed/simple;
-	bh=3gNgYTTVULTKANJUJ/9Pi3V8zjzLXODn4zDu8DouePU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CDnkaJjtI7/uS6gnJpKts2PayWJr/Jx0EowyggnWArpZf46fFcYPV11cYFLPrSDvKlRylbUAwoD90tiNPOZ15PZE5A30IjuAlQTHgw1pe6qWtZ82f0q65EbY/IpIDSxTJXudc0sPhVvyt/r+Z0JO4RtQ/JkWuwowOtuvf1kQ4DA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=kM8HjATG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773332376; c=relaxed/simple;
+	bh=sq23CloKbyRwC39uUMgOHC1mIdTGEOUJLoAZdJtI6ac=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=p1QIWarH0+MK906dauCBvE3OI83CfZQM/l2ln4g5xzfhcsSy0YojiNZhGTIBG5skp+x5tSRrJU5wKnKrkRSUPgzS7ax5Y7n3+0aylulrMqOdqusvmwh2AfXW4Oy58BRmVUMpNyvkwYQvlcLMTG2JCU7Q4mbNWPlHuWm9kzsMMLE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Q4JbzW+M; arc=none smtp.client-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="kM8HjATG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FAE7C4CEF7;
-	Thu, 12 Mar 2026 15:27:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1773329239;
-	bh=3gNgYTTVULTKANJUJ/9Pi3V8zjzLXODn4zDu8DouePU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kM8HjATG79tRKUGkuqfgkwFddma+9QRl1vjcNBOKPetSajqw1znNWVuws9HsU0mq/
-	 DHMjUSFr0wmKflSkf5i/6IO5CBWS3kHWFN/QrdZwXyWaOZbpLFdbaZBac7Tt/w/ov8
-	 pz30LFNoTFHMP1XgPK2joLFiKrlfolOA88SuJ2QA=
-Date: Thu, 12 Mar 2026 16:27:07 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Herve Codina <herve.codina@bootlin.com>, Andrew Lunn <andrew@lunn.ch>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Kalle Niemi <kaleposti@gmail.com>,
-	Matti Vaittinen <mazziesaccount@gmail.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>, Frank Li <Frank.Li@nxp.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>, Andi Shyti <andi.shyti@kernel.org>,
-	Wolfram Sang <wsa+renesas@sang-engineering.com>,
-	Peter Rosin <peda@axentia.se>, Arnd Bergmann <arnd@arndb.de>,
-	Saravana Kannan <saravanak@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Charles Keepax <ckeepax@opensource.cirrus.com>,
-	Richard Fitzgerald <rf@opensource.cirrus.com>,
-	David Rhodes <david.rhodes@cirrus.com>,
-	Linus Walleij <linusw@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Mark Brown <broonie@kernel.org>, Len Brown <lenb@kernel.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Daniel Scally <djrscally@gmail.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sakari Ailus <sakari.ailus@linux.intel.com>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Shawn Guo <shawnguo@kernel.org>, Wolfram Sang <wsa@kernel.org>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
-	linux-clk@vger.kernel.org, linux-i2c@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org, patches@opensource.cirrus.com,
-	linux-gpio@vger.kernel.org, linux-pm@vger.kernel.org,
-	linux-spi@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-cxl@vger.kernel.org,
-	Allan Nielsen <allan.nielsen@microchip.com>,
-	Horatiu Vultur <horatiu.vultur@microchip.com>,
-	Steen Hegelund <steen.hegelund@microchip.com>,
-	Luca Ceresoli <luca.ceresoli@bootlin.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Saravana Kannan <saravanak@google.com>,
-	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: Re: [PATCH v5 02/28] driver core: Rename get_dev_from_fwnode()
- wrapper to get_device_from_fwnode()
-Message-ID: <2026031242-debug-aviation-19b8@gregkh>
-References: <20260227135428.783983-1-herve.codina@bootlin.com>
- <20260227135428.783983-3-herve.codina@bootlin.com>
- <CAMuHMdVVsEB-xb8Jz4ujBam2NxtxAOb7byYa3VR_eHsbTD5rXw@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Q4JbzW+M"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=sYAp2VSnYxks6oevHvjdp6DJcqQc1zpAQ6ueXOh7CV8=;
+	b=Q4JbzW+MmpfDmA0jj/nUjiqiveAVIvCrEe10/h2pf2EgNLlPcVn2RlDiSwHflB
+	vF9KV8oqm9YVSnsdVRMEhigLNwrcmwpRbKWwviZnz1mcJfCTd/fvkQGqgwyWiO71
+	6D+zp37aALzA5m54NLGRHP2fEX49pjpAa/koYzFewLEMw=
+Received: from [IPV6:240e:b8f:927e:1000:1caf:6d92:f4ee:5e02] (unknown [])
+	by gzsmtp2 (Coremail) with SMTP id PSgvCgD3n+Ng57Jp21l6VQ--.25885S2;
+	Fri, 13 Mar 2026 00:18:41 +0800 (CST)
+Message-ID: <26c5ad7d-4685-467a-8e34-9580586d7eb6@163.com>
+Date: Fri, 13 Mar 2026 00:18:41 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAMuHMdVVsEB-xb8Jz4ujBam2NxtxAOb7byYa3VR_eHsbTD5rXw@mail.gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 1/2] PCI: of: Remove max-link-speed generation
+ validation
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: lpieralisi@kernel.org, jingoohan1@gmail.com, mani@kernel.org,
+ kwilczynski@kernel.org, bhelgaas@google.com, robh@kernel.org,
+ ilpo.jarvinen@linux.intel.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260310223717.GA835760@bhelgaas>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <20260310223717.GA835760@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:PSgvCgD3n+Ng57Jp21l6VQ--.25885S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxCF45KF4UWr1DGr1rtFykAFb_yoWrJFWkpF
+	W2yr1Y9r1UJF45Xr47Ja1rZa4Y9wnxWrWUtr15Gw1kur13ZFsxtFy2qFyaqF9a9r9rZr12
+	qa1aqFsrCa4qvaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRnFxbUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AEZvGmy52FdZQAA3t
 
-On Tue, Mar 10, 2026 at 04:03:42PM +0100, Geert Uytterhoeven wrote:
-> Hi Hervé,
+
+
+On 2026/3/11 06:37, Bjorn Helgaas wrote:
+> On Sun, Mar 08, 2026 at 10:26:28PM +0800, Hans Zhang wrote:
+>> The of_pci_get_max_link_speed() function currently validates the
+>> "max-link-speed" DT property to be in the range 1..4 (Gen1..Gen4).
+>> This imposes a maintenance burden because each new PCIe generation
+>> would require updating this validation.
+>>
+>> Remove the range check so the function returns the raw property value
+>> (or a negative error code if the property is missing or malformed).
+>> Callers must now validate the returned speed against the range they
+>> support.  A subsequent patch adds such validation to the DWC driver,
+>> which is the primary user of this function.
+>>
+>> This change allows future PCIe generations to be supported without
+>> modifying drivers/pci/of.c.
+>>
+>> Signed-off-by: Hans Zhang <18255117159@163.com>
+>> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 > 
-> On Fri, 27 Feb 2026 at 14:55, Herve Codina <herve.codina@bootlin.com> wrote:
-> > get_dev_from_fwnode() calls get_device() and so it acquires a reference
-> > on the device returned.
-> >
-> > In order to be more obvious that this wrapper is a get_device() variant,
-> > rename it to get_device_from_fwnode().
-> >
-> > Suggested-by: Mark Brown <broonie@kernel.org>
-> > Link: https://lore.kernel.org/lkml/CAGETcx97QjnjVR8Z5g0ndLHpK96hLd4aYSV=iEkKPNbNOccYmA@mail.gmail.com/
-> > Signed-off-by: Herve Codina <herve.codina@bootlin.com>
-> > Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > Reviewed-by: Saravana Kannan <saravanak@google.com>
-> > Reviewed-by: Luca Ceresoli <luca.ceresoli@bootlin.com>
-> > Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
+> Mani's right that we shouldn't have a window without any validation.
+> I hope I didn't otherwise.
 > 
-> FTR, one more user of get_dev_from_fwnode() appeared in commit
-> 9035073d0ef1de81 ("reset: convert reset core to using firmware nodes")
-> in reset/next.
+>> ---
+>>   drivers/pci/of.c | 7 ++++---
+>>   1 file changed, 4 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+>> index 9f8eb5df279e..cff5fd337c2b 100644
+>> --- a/drivers/pci/of.c
+>> +++ b/drivers/pci/of.c
+>> @@ -889,10 +889,11 @@ EXPORT_SYMBOL_GPL(of_pci_supply_present);
+>>   int of_pci_get_max_link_speed(struct device_node *node)
+>>   {
+>>   	u32 max_link_speed;
+>> +	int ret;
+>>   
+>> -	if (of_property_read_u32(node, "max-link-speed", &max_link_speed) ||
+>> -	    max_link_speed == 0 || max_link_speed > 4)
+>> -		return -EINVAL;
+>> +	ret = of_property_read_u32(node, "max-link-speed", &max_link_speed);
+>> +	if (ret)
+>> +		return ret;
+>>   
+>>   	return max_link_speed;
+>>   }
+> 
+>  From AI review (gemini/gemini-3.1-pro-preview):
+> 
+>    By removing the upper bounds check here, the returned max_link_speed
+>    value can now be arbitrarily large if configured incorrectly in the
+>    device tree. While the commit message notes that a subsequent patch
+>    adds validation to the DWC driver, there are several other callers
+>    in the tree that assume the returned value is bounded. These drivers
+>    remain vulnerable to out-of-bounds accesses and hardware
+>    misconfiguration at the end of this patch series.
+> 
+>    For example, in drivers/pci/controller/pcie-rzg3s-host.c, the
+>    returned value is used directly as an array index. Could this cause
+>    an out-of-bounds read on pcie_link_speed[]?
+> 
+> I think this is a valid concern, and I think we should protect
+> pcie_link_speed[] by making it static and accessing it via a function
+> that validates the index.  It's too hard to enforce validation at
+> every place that uses it.
+> 
+> I think you're going to have to:
+> 
+>    - Validate every use of dw_pcie.max_link_speed (set from
+>      of_pci_get_max_link_speed()) in the dwc glue drivers
+> 
+>    - Validate the return from of_pci_get_max_link_speed() at every
+>      other caller.  It looks like j721e_pcie_set_link_speed(),
+>      brcm_pcie_probe(), mtk_pcie_setup(), rzg3s_pcie_probe() would need
+>      that.
+> 
+> Right now we validate inside of_pci_get_max_link_speed(), which can
+> help avoid generic problems like indexing pcie_link_speed[], but it
+> can't account for individual driver restrictions.  So I do still think
+> you're right to move it from drivers/pci/of.c to the individual
+> drivers because those drivers are where it's really important, and it
+> avoids changing a common place for driver-specific reasons.  We're
+> just going to have to strictly enforce it in those drivers.
 
-Ick, that's going to make this hard to land anywhere.  This is a rough
-series, perhaps it should be split up to make it easier somehow?
+Hi Bjorn,
 
-thanks,
+Thank you very much for your reply. The V8 series will be sent to you 
+for review shortly. If there are any issues, I will make the corrections 
+again.
 
-greg k-h
+Best regards,
+Hans
+
