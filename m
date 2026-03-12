@@ -1,162 +1,276 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F2C72D1F40;
-	Thu, 12 Mar 2026 12:34:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 286B831B131
+	for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 12:40:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773318866; cv=none; b=NolJ+lH3NWDLkotKnxMgP4A0sVGv44PLg+TNVWws2aFhROY5Q3BtREyU7pPkSw3hnKC9gRgAbfOuh7HvW61nGJ2JkeQEDupiPly4ljf2i4m4Urq8kh+uf/VSxWi4+WJJRt2xES36pcxUAX8ukSyWb98ZcAc+p2fvq67zNXbc7fs=
+	t=1773319222; cv=none; b=BKY45AKH8V+5Ekj1s8YTzo3289PlCo+2NelHFTNrTElXrJ2jN02kRGe8JW8XM0Sr0R9Hzl8y6h9RimR/9Fpy4fHZ8A/uklM+7tyALA9IDCNoZ9PpFw7AVKb1/JNBZr5cW5FlThaCdPmLZV7prwgfTbJyVWaDpG4ahMfWC8A4+cU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773318866; c=relaxed/simple;
-	bh=AvklWLdyZf2RgsoCwjnzcB7jYwrR6nw0YhHsxd9E8PU=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Qn/5GVmRyCsqmbCaZqVqLZz/SfqzVvaaanRA6W7LMwx0uvDbRiSAW3IHVp8/Sw1QjAHVb419aV3CAXsxXO0FXZLtN5wrrkwVcrwIRlqWM68vvZRF9kucwcDA78jnoqFB7HXOz6c+IRWpqBCIBjIa8z5Mqabbsp5Q5r0fnmNIANA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.107])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fWn8s6jd8zJ46Zt;
-	Thu, 12 Mar 2026 20:33:33 +0800 (CST)
-Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id C404C40587;
-	Thu, 12 Mar 2026 20:34:21 +0800 (CST)
-Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
- (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 12 Mar
- 2026 12:34:20 +0000
-Date: Thu, 12 Mar 2026 12:34:19 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: <smadhavan@nvidia.com>
-CC: <bhelgaas@google.com>, <dan.j.williams@intel.com>, <dave.jiang@intel.com>,
-	<ira.weiny@intel.com>, <vishal.l.verma@intel.com>,
-	<alison.schofield@intel.com>, <dave@stgolabs.net>, <alwilliamson@nvidia.com>,
-	<jeshuas@nvidia.com>, <vsethi@nvidia.com>, <skancherla@nvidia.com>,
-	<vaslot@nvidia.com>, <sdonthineni@nvidia.com>, <mhonap@nvidia.com>,
-	<vidyas@nvidia.com>, <jan@nvidia.com>, <mochs@nvidia.com>,
-	<dschumacher@nvidia.com>, <linux-cxl@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 0/5] PCI/CXL: Save and restore CXL DVSEC and HDM state
- across resets
-Message-ID: <20260312123419.00003aca@huawei.com>
-In-Reply-To: <20260306080026.116789-1-smadhavan@nvidia.com>
-References: <20260306080026.116789-1-smadhavan@nvidia.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1773319222; c=relaxed/simple;
+	bh=+1xKgZGFMAvhaMrjFSz0ALKNTc6zvZdL+PeZs8LUg5I=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=UiLgLK3pE5pF9X9+dDfYbsHXJccaB9OlgLGjEG89bzwkQWl6cGTRnAABZYoPhyIhlKuKJHmfk4PT8gsknuvpS2ZBpch30WcrdEkyVmgkBziCdSmr+Jyl8Rt9x7uKEcWjCxp/WX4ToB4TAeK/owKSRdU9Jiu4sDOohv1ysVKQrbk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iePDUCg6; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iePDUCg6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773319220; x=1804855220;
+  h=date:from:to:cc:subject:message-id:mime-version;
+  bh=+1xKgZGFMAvhaMrjFSz0ALKNTc6zvZdL+PeZs8LUg5I=;
+  b=iePDUCg6mQSlb5jIPscDoYeUJ2f/S8R62qE7hlUcAoMSCjnJFxVXf16H
+   uLaOHGlkiB0bc4cXEK4NPaUS03cmqtjkf20MigkZif11n6efBhIA79e4K
+   nfK+iwNiMCIsPI4bKzxOMw0N+xD5fXSFPlV+qRm3ZWtzHx/nwfUDbkL0/
+   /wePpKiIS4vsdruZNR4O2AdG2j/EvRghnLLJn8eGztyzVGVeDY+W64yeV
+   0xh1IiykH+b4T3dAf/BKBK6BdnQ3zgH27Ds7UyZNNUCpCGkB2rVttlxes
+   lEJmIyedzeoDojUi35aWhYiMK8jrnopcqd1LPl5moo9C+yylNqt4xsLwD
+   g==;
+X-CSE-ConnectionGUID: vZU2+FMUR9menUnHqO+W2Q==
+X-CSE-MsgGUID: SiqRg8wYT+Ov+MDyW5BteQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11726"; a="74109193"
+X-IronPort-AV: E=Sophos;i="6.23,116,1770624000"; 
+   d="scan'208";a="74109193"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Mar 2026 05:40:19 -0700
+X-CSE-ConnectionGUID: hcWTj8caRgiw4q8rhyU1mQ==
+X-CSE-MsgGUID: 6Wtw23ZdQyyO/20u8T7N3g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,116,1770624000"; 
+   d="scan'208";a="258717244"
+Received: from lkp-server01.sh.intel.com (HELO 418530b1a366) ([10.239.97.150])
+  by orviesa001.jf.intel.com with ESMTP; 12 Mar 2026 05:40:19 -0700
+Received: from kbuild by 418530b1a366 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1w0fKp-000000002S3-3tO6;
+	Thu, 12 Mar 2026 12:40:15 +0000
+Date: Thu, 12 Mar 2026 20:39:58 +0800
+From: kernel test robot <lkp@intel.com>
+To: "Krzysztof =?utf-8?Q?Wilczy=C5=84ski"?= <kwilczynski@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:kwilczynski/static-sysfs-attributes] BUILD SUCCESS
+ 8b98479e254ba5cebb3efcfef199c17eca89d7ef
+Message-ID: <202603122052.tMV5rzNq-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-ClientProxiedBy: lhrpeml500010.china.huawei.com (7.191.174.240) To
- dubpeml500005.china.huawei.com (7.214.145.207)
+Content-Type: text/plain; charset=us-ascii
 
-On Fri, 6 Mar 2026 08:00:14 +0000
-smadhavan@nvidia.com wrote:
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git kwilczynski/static-sysfs-attributes
+branch HEAD: 8b98479e254ba5cebb3efcfef199c17eca89d7ef  PCI/sysfs: Remove pci_create_legacy_files() and pci_sysfs_init()
 
-> From: Srirangan Madhavan <smadhavan@nvidia.com>
->=20
-> CXL devices could lose their DVSEC configuration and HDM decoder programm=
-ing
-> after multiple reset methods (whenever link disable/enable). This means a
-> device that was fully configured =E2=80=94 with DVSEC control/range regis=
-ters set
-> and HDM decoders committed =E2=80=94 loses that state after reset. In cas=
-es where
-> these are programmed by firmware, downstream drivers are unable to re-ini=
-tialize
-> the device because CXL memory ranges are no longer mapped.
+elapsed time: 1257m
 
-Hi Srirangan,
+configs tested: 197
+configs skipped: 3
 
-Firstly this might be because I'm behind on patch review and there is
-a lot going on right now!  So this might be addressed in a different series.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-I'd like to understand the whole use case + flow here.  In general I think
-we have a problem if a driver is relying on the bios having set up the
-decoders and simply doesn't function if the bios didn't do it (and
-that applies in this reset case as well). For starters, no hotplug.
-Anyhow, that's a different issue, so we can leave that for now.
+tested configs:
+alpha                             allnoconfig    gcc-15.2.0
+alpha                            allyesconfig    gcc-15.2.0
+alpha                               defconfig    gcc-15.2.0
+arc                              allmodconfig    clang-16
+arc                              allmodconfig    gcc-15.2.0
+arc                               allnoconfig    gcc-15.2.0
+arc                              allyesconfig    clang-23
+arc                              allyesconfig    gcc-15.2.0
+arc                                 defconfig    gcc-15.2.0
+arc                   randconfig-001-20260312    gcc-8.5.0
+arc                   randconfig-002-20260312    gcc-8.5.0
+arm                               allnoconfig    clang-23
+arm                               allnoconfig    gcc-15.2.0
+arm                              allyesconfig    clang-16
+arm                              allyesconfig    gcc-15.2.0
+arm                                 defconfig    gcc-15.2.0
+arm                   randconfig-001-20260312    gcc-8.5.0
+arm                   randconfig-002-20260312    gcc-8.5.0
+arm                   randconfig-003-20260312    gcc-8.5.0
+arm                   randconfig-004-20260312    gcc-8.5.0
+arm64                            allmodconfig    clang-19
+arm64                            allmodconfig    clang-23
+arm64                             allnoconfig    gcc-15.2.0
+arm64                               defconfig    gcc-15.2.0
+arm64                 randconfig-001-20260312    clang-18
+arm64                 randconfig-002-20260312    clang-18
+arm64                 randconfig-003-20260312    clang-18
+arm64                 randconfig-004-20260312    clang-18
+csky                             allmodconfig    gcc-15.2.0
+csky                              allnoconfig    gcc-15.2.0
+csky                                defconfig    gcc-15.2.0
+csky                  randconfig-001-20260312    clang-18
+csky                  randconfig-002-20260312    clang-18
+hexagon                          allmodconfig    clang-17
+hexagon                          allmodconfig    gcc-15.2.0
+hexagon                           allnoconfig    clang-23
+hexagon                           allnoconfig    gcc-15.2.0
+hexagon                             defconfig    gcc-15.2.0
+hexagon               randconfig-001-20260312    gcc-11.5.0
+hexagon               randconfig-002-20260312    gcc-11.5.0
+i386                             allmodconfig    clang-20
+i386                             allmodconfig    gcc-14
+i386                              allnoconfig    gcc-14
+i386                              allnoconfig    gcc-15.2.0
+i386                             allyesconfig    clang-20
+i386                             allyesconfig    gcc-14
+i386        buildonly-randconfig-001-20260312    gcc-14
+i386        buildonly-randconfig-002-20260312    gcc-14
+i386        buildonly-randconfig-003-20260312    gcc-14
+i386        buildonly-randconfig-004-20260312    gcc-14
+i386        buildonly-randconfig-005-20260312    gcc-14
+i386        buildonly-randconfig-006-20260312    gcc-14
+i386                                defconfig    gcc-15.2.0
+i386                  randconfig-001-20260312    gcc-14
+i386                  randconfig-002-20260312    gcc-14
+i386                  randconfig-003-20260312    gcc-14
+i386                  randconfig-004-20260312    gcc-14
+i386                  randconfig-005-20260312    gcc-14
+i386                  randconfig-006-20260312    gcc-14
+i386                  randconfig-007-20260312    gcc-14
+i386                  randconfig-011-20260312    clang-20
+i386                  randconfig-012-20260312    clang-20
+i386                  randconfig-013-20260312    clang-20
+i386                  randconfig-014-20260312    clang-20
+i386                  randconfig-015-20260312    clang-20
+i386                  randconfig-016-20260312    clang-20
+i386                  randconfig-017-20260312    clang-20
+loongarch                        allmodconfig    clang-19
+loongarch                        allmodconfig    clang-23
+loongarch                         allnoconfig    clang-23
+loongarch                         allnoconfig    gcc-15.2.0
+loongarch                           defconfig    clang-19
+loongarch             randconfig-001-20260312    gcc-11.5.0
+loongarch             randconfig-002-20260312    gcc-11.5.0
+m68k                             allmodconfig    gcc-15.2.0
+m68k                              allnoconfig    gcc-15.2.0
+m68k                             allyesconfig    clang-16
+m68k                             allyesconfig    gcc-15.2.0
+m68k                                defconfig    clang-19
+microblaze                        allnoconfig    gcc-15.2.0
+microblaze                       allyesconfig    gcc-15.2.0
+microblaze                          defconfig    clang-19
+mips                             allmodconfig    gcc-15.2.0
+mips                              allnoconfig    gcc-15.2.0
+mips                             allyesconfig    gcc-15.2.0
+nios2                            allmodconfig    clang-23
+nios2                            allmodconfig    gcc-11.5.0
+nios2                             allnoconfig    clang-23
+nios2                             allnoconfig    gcc-11.5.0
+nios2                               defconfig    clang-19
+nios2                 randconfig-001-20260312    gcc-11.5.0
+nios2                 randconfig-002-20260312    gcc-11.5.0
+openrisc                         allmodconfig    clang-23
+openrisc                         allmodconfig    gcc-15.2.0
+openrisc                          allnoconfig    clang-23
+openrisc                          allnoconfig    gcc-15.2.0
+openrisc                            defconfig    gcc-15.2.0
+parisc                           allmodconfig    gcc-15.2.0
+parisc                            allnoconfig    clang-23
+parisc                            allnoconfig    gcc-15.2.0
+parisc                           allyesconfig    clang-19
+parisc                           allyesconfig    gcc-15.2.0
+parisc                              defconfig    gcc-15.2.0
+parisc                randconfig-001-20260312    clang-23
+parisc                randconfig-002-20260312    clang-23
+parisc64                            defconfig    clang-19
+powerpc                          allmodconfig    gcc-15.2.0
+powerpc                           allnoconfig    clang-23
+powerpc                           allnoconfig    gcc-15.2.0
+powerpc                     kmeter1_defconfig    gcc-15.2.0
+powerpc               randconfig-001-20260312    clang-23
+powerpc               randconfig-002-20260312    clang-23
+powerpc64             randconfig-001-20260312    clang-23
+powerpc64             randconfig-002-20260312    clang-23
+riscv                            allmodconfig    clang-23
+riscv                             allnoconfig    clang-23
+riscv                             allnoconfig    gcc-15.2.0
+riscv                            allyesconfig    clang-16
+riscv                               defconfig    gcc-15.2.0
+riscv                 randconfig-001-20260312    gcc-13.4.0
+riscv                 randconfig-002-20260312    gcc-13.4.0
+s390                             allmodconfig    clang-18
+s390                             allmodconfig    clang-19
+s390                              allnoconfig    clang-23
+s390                             allyesconfig    gcc-15.2.0
+s390                                defconfig    gcc-15.2.0
+s390                  randconfig-001-20260312    gcc-13.4.0
+s390                  randconfig-002-20260312    gcc-13.4.0
+sh                               allmodconfig    gcc-15.2.0
+sh                                allnoconfig    clang-23
+sh                                allnoconfig    gcc-15.2.0
+sh                               allyesconfig    clang-19
+sh                               allyesconfig    gcc-15.2.0
+sh                                  defconfig    gcc-14
+sh                    randconfig-001-20260312    gcc-13.4.0
+sh                    randconfig-002-20260312    gcc-13.4.0
+sh                          rsk7201_defconfig    gcc-15.2.0
+sparc                             allnoconfig    clang-23
+sparc                             allnoconfig    gcc-15.2.0
+sparc                               defconfig    gcc-15.2.0
+sparc                 randconfig-001-20260312    gcc-15.2.0
+sparc                 randconfig-002-20260312    gcc-15.2.0
+sparc64                          allmodconfig    clang-23
+sparc64                             defconfig    gcc-14
+sparc64               randconfig-001-20260312    gcc-15.2.0
+sparc64               randconfig-002-20260312    gcc-15.2.0
+um                               allmodconfig    clang-19
+um                                allnoconfig    clang-23
+um                               allyesconfig    gcc-14
+um                               allyesconfig    gcc-15.2.0
+um                                  defconfig    gcc-14
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20260312    gcc-15.2.0
+um                    randconfig-002-20260312    gcc-15.2.0
+um                           x86_64_defconfig    gcc-14
+x86_64                           allmodconfig    clang-20
+x86_64                            allnoconfig    clang-20
+x86_64                            allnoconfig    clang-23
+x86_64                           allyesconfig    clang-20
+x86_64      buildonly-randconfig-001-20260312    gcc-14
+x86_64      buildonly-randconfig-002-20260312    gcc-14
+x86_64      buildonly-randconfig-003-20260312    gcc-14
+x86_64      buildonly-randconfig-004-20260312    gcc-14
+x86_64      buildonly-randconfig-005-20260312    gcc-14
+x86_64      buildonly-randconfig-006-20260312    gcc-14
+x86_64                              defconfig    gcc-14
+x86_64                                  kexec    clang-20
+x86_64                randconfig-001-20260312    clang-20
+x86_64                randconfig-002-20260312    clang-20
+x86_64                randconfig-003-20260312    clang-20
+x86_64                randconfig-004-20260312    clang-20
+x86_64                randconfig-005-20260312    clang-20
+x86_64                randconfig-006-20260312    clang-20
+x86_64                randconfig-011-20260312    clang-20
+x86_64                randconfig-012-20260312    clang-20
+x86_64                randconfig-013-20260312    clang-20
+x86_64                randconfig-014-20260312    clang-20
+x86_64                randconfig-015-20260312    clang-20
+x86_64                randconfig-016-20260312    clang-20
+x86_64                randconfig-071-20260312    gcc-14
+x86_64                randconfig-072-20260312    gcc-14
+x86_64                randconfig-073-20260312    gcc-14
+x86_64                randconfig-074-20260312    gcc-14
+x86_64                randconfig-075-20260312    gcc-14
+x86_64                randconfig-076-20260312    gcc-14
+x86_64                               rhel-9.4    clang-20
+x86_64                           rhel-9.4-bpf    gcc-14
+x86_64                          rhel-9.4-func    clang-20
+x86_64                    rhel-9.4-kselftests    clang-20
+x86_64                         rhel-9.4-kunit    gcc-14
+x86_64                           rhel-9.4-ltp    gcc-14
+x86_64                          rhel-9.4-rust    clang-20
+xtensa                            allnoconfig    clang-23
+xtensa                            allnoconfig    gcc-15.2.0
+xtensa                           allyesconfig    clang-23
+xtensa                randconfig-001-20260312    gcc-15.2.0
+xtensa                randconfig-002-20260312    gcc-15.2.0
 
-I'm thinking the reset flow is a good deal more complex than simply
-putting the bios programmed values back.  In some cases that might
-be a very bad idea as autonomous traffic can hit the type 2 device
-the moment these decoders are enabled and I'm guessing that may be
-before the device has fully recovered. There are very few spec rules
-about this that I can recall. On the setup path the BIOS presumably
-got the device into a state where enabling such traffic was fine
-and hopefully the driver bind doesn't break that state.
-
-I think you are restoring CXL.mem as well so that gate isn't
-going to save us.  Note it would be good to document what is restored and
-why more clearly.  Sure we can figure it out from the code, but
-a document might make life easier.
-
-A device might handle this mess for us, but I doubt that this is universal.
-For type 3 devices, I'm not sure what we want to do on reset in general.
-
-Anyhow, this is really a request for a more detailed description of the
-expected reset flow that goes into what the spec constrains and what
-it doesn't.  Probably something worthy of going in Documentation.
-
-Thanks,
-
-Jonathan
-
->=20
-> This series adds CXL state save/restore logic to the PCI core so
-> that DVSEC and HDM decoder state is preserved across any PCI reset
-> path that calls pci_save_state() / pci_restore_state(), for a CXL capable=
- device.
->=20
-> HDM decoder defines and the cxl_register_map infrastructure are moved from
-> internal CXL driver headers to a new public include/cxl/pci.h, allowing
-> drivers/pci/cxl.c to use them.
-> This layout aligns with Alejandro Lucero's CXL Type-2 device series [1] to
-> minimize conflicts when both land. When he rebases to 7.0-rc2, I can move=
- my
-> changes on top of his.
->=20
-> These patches were previously part of the CXL reset series and have been
-> split out [2] to allow independent review and merging. Review feedback on
-> the save/restore portions from v4 has been addressed.
->=20
-> Tested on a CXL Type-2 device. DVSEC and HDM state is correctly saved
-> before reset and restored after, with decoder commit confirmed via the
-> COMMITTED status bit. Type-3 device testing is in progress.
->=20
-> This series is based on v7.0-rc1.
->=20
-> [1] https://lore.kernel.org/linux-cxl/20260201155438.2664640-1-alejandro.=
-lucero-palau@amd.com/
-> [2] https://lore.kernel.org/linux-cxl/aa8d4f6a-e7bd-4a20-8d34-4376ea314b8=
-f@intel.com/T/#m825c6bdd1934022123807e86d235358a63b08dbc
->=20
-> Srirangan Madhavan (5):
->   PCI: Add CXL DVSEC control, lock, and range register definitions
->   cxl: Move HDM decoder and register map definitions to
->     include/cxl/pci.h
->   PCI: Add virtual extended cap save buffer for CXL state
->   PCI: Add cxl DVSEC state save/restore across resets
->   PCI/CXL: Add HDM decoder state save/restore
->=20
->  drivers/cxl/cxl.h             | 107 +-------
->  drivers/cxl/cxlpci.h          |  10 -
->  drivers/pci/Kconfig           |   4 +
->  drivers/pci/Makefile          |   1 +
->  drivers/pci/cxl.c             | 468 ++++++++++++++++++++++++++++++++++
->  drivers/pci/pci.c             |  23 ++
->  drivers/pci/pci.h             |  18 ++
->  include/cxl/pci.h             | 129 ++++++++++
->  include/uapi/linux/pci_regs.h |   6 +
->  9 files changed, 650 insertions(+), 116 deletions(-)
->  create mode 100644 drivers/pci/cxl.c
->  create mode 100644 include/cxl/pci.h
->=20
-> base-commit: 6de23f81a5e0
-> --
-> 2.43.0
->=20
->=20
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
