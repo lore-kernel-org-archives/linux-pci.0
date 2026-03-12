@@ -1,249 +1,195 @@
-Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazolkn19012055.outbound.protection.outlook.com [52.103.43.55])
+Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010067.outbound.protection.outlook.com [52.101.84.67])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4933B38C41E;
-	Thu, 12 Mar 2026 09:07:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9F9E1C5D44;
+	Thu, 12 Mar 2026 09:18:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.84.67
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773306438; cv=fail; b=oAmPuEzEBD807gVDfP4zxBY6VN7UAFz1b0gJqrgFd8LZbayWpeis7X4ExtZnbcA3GCPrujrZPw4eDYbj81GER1/aP7Nu9dFyHJwPAWTPGQI+LtipjEgPHCZGhmVL242Z8pFOPgJwhTw6CC+759S4WkJXJ+YPpVaAyL7DyidsHok=
+	t=1773307109; cv=fail; b=osg4ruzmu2DPU/S8XiKnbQzcfdPEhcXi0ZYQvPv2LMdHu6L7ObbNaWycuPfCQf2jLhdg7ql1vXbMqkf/6JO3x8BStypOwNKg+g0throlXfeW/fcGD510+057TSr2FwWhgct/9/ax0Np6X/r9IPWSJrX2GwPnAtkIAzFneOWdkvA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773306438; c=relaxed/simple;
-	bh=qG9qatKLTEk3DNyN65jq2UvuMFi5IRUAXevIPJWyppU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ewseMkQSh4p/oVuyr44b0WVZB29lCMq4BReAwRi8PJsawcIyjnYpMob7OA2fbFXNmwMArEF0tWQLvfj4G96rjg0ZMz0hP0RZrDWOhOluhNST4pSY7PhEN8/jDMN1857s+F7x9ZClOnlu3YZUZCkB8jldq2iAjdCn/C4aIGzoAjs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com; spf=pass smtp.mailfrom=hotmail.com; dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b=JsoXURJS; arc=fail smtp.client-ip=52.103.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.com
+	s=arc-20240116; t=1773307109; c=relaxed/simple;
+	bh=igS98f4G9B7LSa/y/RpyIaHEhor3ZujsO3x1+rQ3TUQ=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=s2g1PLnHfcUkl2Bmu3JH5QIC6rOQBWBU9VMNvHQALXR643dc4nVLgM2pOXKOsbBdW6DRYTXszI8mQDanoDD2l2c+YzPs9ffvMn+nyLcO9iaZm4/qP4yIrflZpwuYRdNWGUMvlOaLWU58W+hacfR/Q+Pv9n7MCAPrt8apM+aVbV0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=iajWcZLw; arc=fail smtp.client-ip=52.101.84.67
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b="JsoXURJS"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="iajWcZLw"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=UzEeMucORp8H7IrRSUxq23yPH/R30MPgzXZdvcQK1Zb3jsIfdj2uL7xrrIOs2zJVpvq8nxSK3MPzzaMzzi4+Be796foSnWivP80euXpX90TwW8oNHrlLltz9DkCyxiDhHZTHdX0hUs1jsvD4RRujCPqd5Ou27d2Fq8OxlC45FrC0zCIUAWGeNAhRuF6pEsa91KVAd5gCi9IiJRm0Oq43BEz8wBpI82ql+TArjPpk8dTAQvtp3gAp73XJ8mKN3bDeCEok0kkUIN+M3BGHVKVY/UE6jFObO5cNGxgjrlNrjetxUQa/Eoeao2hzINeX6hEii4Zfj0yvZ7LuZN/SgEDm/Q==
+ b=H25qrLOQwbUthzspiWAjrBl96+gN2jzp/jH2EEhtUGmet4K1S5tVZ7ceJwasVP77tBmpTToyK5XbUopdWwiCHc6lvdq7ux0rlxqP/QSSxhmhVI7icgdK7xMp2ywGSFLbWiGabNjQ/yrNVadnk94By2rw5jXxGqpAIwTBi495gSoU5EAf5mKZYLADKRcuPouxb/oVHLjo3hz97ij11//gOSiABnT6cdYSLTz/dM6iLfau1xPMVMQzrp8x6KITwn6i2GwinD+TUpKDn6iPR7MjTXjQ3JhV+r3zlmTuSCaxxapJpyyAuzg2y3Yw1/97n3z6s2PquSombbTXL90gfKH/FQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=P6gFKOkyRjaDY7VOgLqq9LP6ptY9x+0BAUTeLa/+AgU=;
- b=ksO7DoXMeeNR06c2A5DmeNFQm4t5YX2vg591CAlhKzTgxEzLR+5Vh/hLBKe0BOi1LKUMpmHt6/pQ0H9QBwn0smftpqg/70i690g/SuWuLOPurtCguRgjtJhjsjcNONdrOXZIXdK/ViaCdFzEAj2XbccJRrjzPIqjC0JjV9dwXLouUrbTVg52x4imCe28NtN6+WECgHVsq1NrLVvmImfWy2J6x8UsQhXss6xf9qdIj4cA1p1/QdAjY+6SNpIO3SxcOu24tDfmsPxfDZusudlbPhifn4+v9KslNRcL1a91AJVNO1wTusholGUKMG65sVJtcd2BFRNUWnZtTBEZ31eQoA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hotmail.com;
- s=selector1;
+ bh=gQ8ybzARtDLqEBHzfA1A0T2hs3btCq9Ycx69XFmASr4=;
+ b=k6VxWvYkQkZjgXr/xRrNcufLQ7BZlQPUzsNmNa9IqGJhZeA5mt5jASm+2G1hUgCEKaZePCebRp4uksxh2pq2Qhf8Zd3VvWFkw+6URKpBZIAD1Zpu/LskmdUDwgRbg4FoznFiXxk8MjjX5l+1snwmC4eTuqGdESsrAWPDv3DVy+Brz38kk2oQXOhIUj35e5/ETLKVmB2KsuLntc0wWEs4ZTefzu8x88z3ZIk/rkKj7YrUOB2H1KT1MuytCU0AVt2xEmJ4QrfMJmVgmT7WVtsi6AmQorgzir+VZmc/Mx1DCXaT7yTkc8NqDawxBGEHDw5Cf8fDX/bN71reoo3TaPckOA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=P6gFKOkyRjaDY7VOgLqq9LP6ptY9x+0BAUTeLa/+AgU=;
- b=JsoXURJScQR8X7j+s2QpvIKNMAcGHZPJLI7FTlASZQlLoX4eUmNr5b0lRxrzaREfJbLIbOkZeH2c8qCVwszvZ5PrsQJW6/gPMCPNTd5zBAAbOWLTS4kH9KPC8t9urICGKLSz8ky8yZNcGJvbG0Pik7FLP5hObf1Z5LUaFAtJlp5Bom1rGOnTJx/XAeKKoY91Js69hki9v71FdO6QHBjTtS8bp5AizdEVW2tRd0u1qv6/iB3hNio6xkb6ntED6dRzxWBf36grgUFSm/woB32cKDD6CItNXvN8FAkPzOamF2lOxefduDhxQs+crxTGwFuOH+gVvClRYcED+/xcdhx8NQ==
-Received: from SEZPR01MB4399.apcprd01.prod.exchangelabs.com
- (2603:1096:101:4f::13) by KL1PR01MB4704.apcprd01.prod.exchangelabs.com
- (2603:1096:820:c3::11) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.15; Thu, 12 Mar
- 2026 09:07:06 +0000
-Received: from SEZPR01MB4399.apcprd01.prod.exchangelabs.com
- ([fe80::fa7b:b19f:e19e:ed75]) by SEZPR01MB4399.apcprd01.prod.exchangelabs.com
- ([fe80::fa7b:b19f:e19e:ed75%5]) with mapi id 15.20.9700.010; Thu, 12 Mar 2026
- 09:07:07 +0000
-From: Wei Wang <wei.w.wang@hotmail.com>
-To: bhelgaas@google.com,
-	jgg@nvidia.com,
-	jonathan.cameron@huawei.com,
-	dan.carpenter@linaro.org,
-	akpm@linux-foundation.org,
-	bp@alien8.de,
-	rdunlap@infradead.org,
-	alex@shazbot.org,
-	kevin.tian@intel.com
-Cc: linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	wei.w.wang@hotmail.com
-Subject: [PATCH v6 6/6] PCI: Add the enhanced ACS controls check to pci_acs_flags_enabled()
-Date: Thu, 12 Mar 2026 17:06:37 +0800
+ bh=gQ8ybzARtDLqEBHzfA1A0T2hs3btCq9Ycx69XFmASr4=;
+ b=iajWcZLwBZbkfGZw/pX4pIh2w3oE13IyEYp0SyflULlGr+wj3WBlpBix+3voL0M6rlhksEK69E8yQxkVc+2q4TC2G93o3lV/QRETrlHAup9ngB68E6KzlwlOdoP13gTu7SLi5V1N1h9/l/EKs+Ri4qjCJVO5MO2c89tv8pWMh2xL5udE013FNyMCy4Fd1mHjrugV2KxdmcfhlRn0kLN5d+cCWePDaYjiVB88rjoJ6QkP6Xnvj3TKgS9+76xNJswWgCWSCTCwheyqfKJEOXWB/CCZLoWfnp4JxukVp0YYbP1csPOPp2LAkm5mQjm0foBnY7nxERMNlxYsclXRN6VMOw==
+Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
+ (2603:10a6:800:315::13) by AS1PR04MB9582.eurprd04.prod.outlook.com
+ (2603:10a6:20b:471::18) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.11; Thu, 12 Mar
+ 2026 09:18:22 +0000
+Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
+ ([fe80::feda:fd0e:147f:f994]) by VI0PR04MB12114.eurprd04.prod.outlook.com
+ ([fe80::feda:fd0e:147f:f994%5]) with mapi id 15.20.9700.010; Thu, 12 Mar 2026
+ 09:18:23 +0000
+From: Sherry Sun <sherry.sun@nxp.com>
+To: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>, Hongxing Zhu
+	<hongxing.zhu@nxp.com>, Lucas Stach <l.stach@pengutronix.de>, Lorenzo
+ Pieralisi <lpieralisi@kernel.org>, =?iso-8859-2?Q?Krzysztof_Wilczy=F1ski?=
+	<kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Rob
+ Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Krzysztof
+ Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, Frank Li
+	<frank.li@nxp.com>, Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel
+ Team <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, Jingoo Han
+	<jingoohan1@gmail.com>, Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev"
+	<imx@lists.linux.dev>, "devicetree@vger.kernel.org"
+	<devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "dmitry.torokhov@gmail.com"
+	<dmitry.torokhov@gmail.com>, "bartosz.golaszewski@linaro.org"
+	<bartosz.golaszewski@linaro.org>
+Subject: RE: [PATCH 1/2] dt-bindings: PCI: fsl,imx6q-pcie: Switch to
+ undeprecated reset-gpios
+Thread-Topic: [PATCH 1/2] dt-bindings: PCI: fsl,imx6q-pcie: Switch to
+ undeprecated reset-gpios
+Thread-Index: AQHcsW7d48vBoCVWE0O6svvFjRVGRrWqnDDA
+Date: Thu, 12 Mar 2026 09:18:23 +0000
 Message-ID:
- <SEZPR01MB43997A01AC87EC9CEB97077CDC44A@SEZPR01MB4399.apcprd01.prod.exchangelabs.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <SEZPR01MB439931D7320F6C476D181C1EDC44A@SEZPR01MB4399.apcprd01.prod.exchangelabs.com>
-References: <SEZPR01MB439931D7320F6C476D181C1EDC44A@SEZPR01MB4399.apcprd01.prod.exchangelabs.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SL2P216CA0100.KORP216.PROD.OUTLOOK.COM
- (2603:1096:101:3::15) To SEZPR01MB4399.apcprd01.prod.exchangelabs.com
- (2603:1096:101:4f::13)
-X-Microsoft-Original-Message-ID:
- <20260312090637.71548-7-wei.w.wang@hotmail.com>
+ <VI0PR04MB12114361EE728C74CEE500FED9244A@VI0PR04MB12114.eurprd04.prod.outlook.com>
+References: <20260311154955.145120-3-krzysztof.kozlowski@oss.qualcomm.com>
+In-Reply-To: <20260311154955.145120-3-krzysztof.kozlowski@oss.qualcomm.com>
+Accept-Language: zh-CN, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: VI0PR04MB12114:EE_|AS1PR04MB9582:EE_
+x-ms-office365-filtering-correlation-id: 820a181c-be63-4c67-8773-08de80184fb9
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|366016|19092799006|1800799024|7416014|376014|56012099003|22082099003|18002099003|38070700021|921020;
+x-microsoft-antispam-message-info:
+ AWWLgicox4/z3zHB3uNPEOYZHf/GUB77St3bkRCt4aOUX6P1ePv+c9QHEw8MJRkcswOYf8cojqyiTjud5LXYToY67K4PKfZy0PT8Meu3zqjFrv0RDe1lMasP/doLGw/D1M90YKqBUa0cHjFKSdvF3c63/zokdAIhzDJHFAZUwgfC6r+6LnzJHrwESGtchSKnIzfOLk41giRU0bCTFh1jhMx+aalycy5JVi6kRuh1DC35YpgfYTQErJrE7Qp42dSQFfD2rQg4cqL1OxMPnSSNUPlwqguyQ41gZgtd1TIFOR/Up43xY4OsSU1esqxt6c1HTQPuhOaTQs1xjOSr/8T6MBsZpIS4u+c3ZFKpjDXruOKA/l6l0rVbI2/EqYXQj1pipqD66beBpBWwysGWt2KVn+a8G6iGMXcKvVLkX1A1/99VtO6nO8htVr5fhGANqs5JsLEiRxddLjuI1oxCLoWmqHFcD8ilBbqvTe0KRpN1b8lZik6SlkvyZ7yRNT86vxng61OvPY3uSpX/jSo20ie1MBZYkH0xJyAYfHEeUDQWpRx7jgofTc874sndlGjMJ/xi/0bVr4TC/Anp3YztYlzLDYF0qUTMDtOEPjO8KaODkr4ZTKyER0jQVQgVta3wNFA3McunLU5RWWHaeUMNlR0BQvIV6gLoj7VKQgM8nvZlV3yFKNJb8Ocymq3Dv+mKesEZyTHUjG+p5HKf54wh05Ua8iwNy4Hj+TDTn4nWJkzgR06ogNyb7R9aZHhvN0ILNvo79c5Gv8lyFgncnViFHv8lhBhvXJVJ894EnWnaKLlJoUEEPHxSlimy84otWsNuC5i4
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI0PR04MB12114.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(1800799024)(7416014)(376014)(56012099003)(22082099003)(18002099003)(38070700021)(921020);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-2?Q?Ky/8JV2UpEjW3AVALECMEdD+gFlaiNu5JxPOjmCLj2a/Dmhlrx6R9iIA73?=
+ =?iso-8859-2?Q?svT//xcrGUH8EMzPgNjg+FD7cJzD2z76dBvpJx65EF1QaOOUKvFzT5aK3F?=
+ =?iso-8859-2?Q?ccESVs+ubhxYOr/gzTgr569pjmLIGVZ1ykPRATDDOVgKo60uqR5vwybIT7?=
+ =?iso-8859-2?Q?jZAyr+mA87R2cVEN5w0murbCy1Y0wVSRQqwZZ5tEiusUK7I/jWYi3r0ch7?=
+ =?iso-8859-2?Q?eBeL6fgFDnjYyBbG9KdejW9c27wcpTWPo9psW00noK2AKriqo60rQRS0F8?=
+ =?iso-8859-2?Q?OcZuFCNmiKlDTC3s+A6TZgj/wCEjY9toRMkCyZEJQLf2RICQ6kSmhCEKAv?=
+ =?iso-8859-2?Q?EoFoJcraJVXZEhh4UAgvWEby4Uidfo0UTl7xQc6Cga0yES24dD1Jk91tZd?=
+ =?iso-8859-2?Q?Ab0XJ+tK59Y2MQkmw1/zkLh1Jlm3Dp0MgePtKT/KfTJ50ZYvm/2XPu8Y+e?=
+ =?iso-8859-2?Q?Ph5EDrkFTy9HMqicsAP9rDwaLROi54ribOimHEZRcEbsrb3+hrphgAqB5e?=
+ =?iso-8859-2?Q?GnLXrBBxKo4fA7ve5EauyALexEEaOf2zBr6IPDhZY1JWH7c6ny4TE+QczR?=
+ =?iso-8859-2?Q?oeo6qNJTMv/K3ToIqiafnV8cwCuDMKNxDKDJzYOudT0icszEgxFwWtd1UO?=
+ =?iso-8859-2?Q?YVZdPSRjgf90SPgXFkWKuCSp9FlghrCdrkMAyfp18696QrER65ZvaT7qOe?=
+ =?iso-8859-2?Q?RYSXNEqXhNVnjWhSXYjLx//3x46+bTuPSbzFXYpd9jdLhZDIos3AMCmgnj?=
+ =?iso-8859-2?Q?IxnORLBygf4inosWdi3mVOn1q3Exn3zv88Kofoq/uZ/X9j/My4EkG72qKz?=
+ =?iso-8859-2?Q?olYX8BZ9TKcLl7J5pdDpSvmjHrLsTTRX2k+AUtzbOSwTNkp9Twx9Jw/J1J?=
+ =?iso-8859-2?Q?AvObrgCRi1GLfJ/DM6x5Ovp4kh0HVtq4FBdgNkXTqooGgZWW0DXKCQUj/9?=
+ =?iso-8859-2?Q?jFvtnzKuT5eqYFMSuscgiNj64AUkUhZU7mWWI2eFLp4+TCfmDM7iBuZGrH?=
+ =?iso-8859-2?Q?PYz3idyXUjt5exW8WmT+FW7VKaEjp6MhhY4FzVSdfDijeL/EMOz3E9/N9S?=
+ =?iso-8859-2?Q?+onqyyO4wfNzp7W3OMHov5tFqYdqgq4Fz5DTEvnfTZQqwOqOPs41co2H6/?=
+ =?iso-8859-2?Q?wmVY/vuhxO2UPddnknCk48OL76Te2xXo1L9kujYzVkaJ5TEYeF/1CQqe3p?=
+ =?iso-8859-2?Q?6mAc4E4VPs9eYgdpXgJE5+W9CE3aLKIcV8Y3rtJ8JfBM+T8UR2QkGHmxet?=
+ =?iso-8859-2?Q?8Dv0t2hooXqRkO3m7H3a3eed+d5nOga7s+7Los4FDFsmWCifBkFmedN0PA?=
+ =?iso-8859-2?Q?x5IKCOhq1TPT10GSbND/NmYeQjrDiV7YL/JCOiUhbmHdES/g3u63eChPLq?=
+ =?iso-8859-2?Q?5uYcz949c8a20CnR526Fdhi9kZzDLYQ75i90y3Jd8hAjcdtrDnADy15uu3?=
+ =?iso-8859-2?Q?ilHftBm7WWKnbGokuaM+0RBvYNogZCDlRjZ/stgLxOpgptjchC3wKlaiwb?=
+ =?iso-8859-2?Q?F1eyDScOhhrwMLb4BOQy/1UD7XUIz+J1TmECAYq6a7wAZERPJwhBiJp0Vj?=
+ =?iso-8859-2?Q?BLjvkd8BaIbjhhoCYCu28YpU3XaoLzCznzM8HWENsSoeW5/ptbRlT/Glqa?=
+ =?iso-8859-2?Q?viFGtqrtOxrz8vXw0KT48R/wklGMrHeKwVYo/xGLVmE4AXnAXvVsrPk8mr?=
+ =?iso-8859-2?Q?AecsaN/VNv/RNO0s0+7nToRKWKWj8Rk5wWZlqcndL4zNxL3qJLmG6X+Iaf?=
+ =?iso-8859-2?Q?XwTSDugUNwK+TjXoe53PJqEN/6vmYZc2clvPHtkAx8q0iE?=
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SEZPR01MB4399:EE_|KL1PR01MB4704:EE_
-X-MS-Office365-Filtering-Correlation-Id: c6a66533-226e-4530-875e-08de8016bbea
-X-Microsoft-Antispam:
-	BCL:0;ARA:14566002|37011999003|5072599009|12121999013|51005399006|15080799012|19110799012|23021999003|8060799015|461199028|41001999006|37102599003|40105399003|440099028|3412199025|1710799026;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?vGD8p7xcwI1IcJCzmaMjGw8PDVwcNIA4wYWBPDIZqMwl+xrxEpk7uOg4Lm79?=
- =?us-ascii?Q?p81hvOUfP6EA9xreYdNjEHmCqn7u+JUDnRhfGgZikmfeqA74RBUfc9p4rP73?=
- =?us-ascii?Q?yezx8B1GQirhnhnxSrAPJlbSg24FPVVm3biETVN7scFWlsDVK7TciVILEEXG?=
- =?us-ascii?Q?cSMiCs1TUhVHOuPWdYH2t9WYl88zvejxRoL3rXHv/Zcs06EahH1Bj3Gfu+zl?=
- =?us-ascii?Q?kJJYaETNWL+E/OprM74zr1IVWZkvyViiyfpvUwx60OohJdchBYyry9Fl+OA4?=
- =?us-ascii?Q?ws0KfkZoCKiUozLfvCgB+kjkrMsVGjkKPr3OakYLSd5+oDVxa1ftS1v/FiUt?=
- =?us-ascii?Q?nxQwxeVFykaklDsr5uj0N2fLgHzurLTQueb8s6V0aWPi29cqV/62kZv+zICE?=
- =?us-ascii?Q?tzM3n7B4crA4Ps7bbAtGF+aQfkq7JgL3NWwYD/9EVqwILDAcpkdjX+xUUn+L?=
- =?us-ascii?Q?/VXzIUDrysaTtr6YaHIhHDliwn87eT9T+WKeHlizvABN/JIt6+xMP3JA/3LG?=
- =?us-ascii?Q?RD7tL6xDSS1fBUdXmr71Q7DJcJJWp3vdsK4bIh6lvs9PxqFjn7BDfDdsHrfo?=
- =?us-ascii?Q?ngBqvpJXwbD6XtwnEO7AMV9zd/1Ep2+ZuZPETzG2ZAIdn70yVgGITAN0aEDl?=
- =?us-ascii?Q?/id5Xzm8kMzj7X2MV6D0KL45/Xt67/c3P4yBgRiaBSlpeODqL/QLNnGgLvao?=
- =?us-ascii?Q?mDgDagMaiM3VXfUhz/nkDMa8oeVlsEhc8eInUSWf/LnaD+pmLICLYi2ALrti?=
- =?us-ascii?Q?mdC1nXBYfrMC8HEVPY8Zus4di0d6q+yuxARQfpiGsR9eLMXoqM9iSAba24Qt?=
- =?us-ascii?Q?VDx8aOy6L+4ANEaXU4PgzRgOq9RZwJN8l2snO5yIVsI0qZn2P2MKC6DLl5uU?=
- =?us-ascii?Q?yMFQPnR3DCxMjDB8+6ZgQJdT+3wzVQqRpMtelFAw1WkPW9bxhld0YJB389JO?=
- =?us-ascii?Q?/PqgbkXHWkUK63yZysg2vj7aBckaj/ESosYnprgm0ddUJS/mJzk/tR/5OsZD?=
- =?us-ascii?Q?Wdqbg9cM1mDLX7QHB66n4T5FWGNLtJ//AvkhUnqULydIehqSFEIZgKmiLzgL?=
- =?us-ascii?Q?ferc6OOD?=
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?kNlp2asrMQqoXc04NfX/SG1BseKmEzBrZn1ZeI39qfOB5JeDwDRearkT1544?=
- =?us-ascii?Q?kfYzYHLE0cUkSTPayBZIR3OuPUcvbvA06WL+Ly5FBo7qEE3z1qhlNB506FXb?=
- =?us-ascii?Q?gI2435v8a3Pf34S8xgyM0wKjgiTYEBKY9Pf52GGciWXNco9SW1nMZZjeDDtH?=
- =?us-ascii?Q?52b1/ECaEDST65jHnywMKXHAAT5Jkb56ix0t+h6RuoqHO/tn+RTTqC0V1kzc?=
- =?us-ascii?Q?M3Pb9QLDz6bC83bTA1vw1yEymoeNuRYw+9hxBd1a5HN2acYpoSkfzb4zn2HY?=
- =?us-ascii?Q?G3GBjRV05Z/3EubReelNQsG2p/S2iPjzxZjJECCgewYYAM+N9rWeSTQCynSM?=
- =?us-ascii?Q?DfG85NM5iQL7dhtaddcPuXhshcSDwlDx6tGPGfo2TNCwpPwP1Q7jmVF5vTGU?=
- =?us-ascii?Q?ECu+JpRjkyu3Iae3P9wSHKuDXNfN6osXTgkF5BnR1wz3E5a1PxQ+qB2pGOe+?=
- =?us-ascii?Q?eEAzZlmhexMPmy0M0F3/Eme3zTEq60y2ZOKVNk2d1aXYtXwCMuowO8AZ/Typ?=
- =?us-ascii?Q?zW058l9eWMC/Nb8SU45SSWwWcfDQG5ophkfRhNk439Vbf/4ElcUAGoL+209s?=
- =?us-ascii?Q?lo0Age3kuOaBKwZs6pTDAsoH+/ZpO3S04hM4s3qmQJ9VwFtOjRw//Tc7Os2e?=
- =?us-ascii?Q?ZnMgK+bs3Bx4mpVfzamlZD4odFSur4SvEIZ6XLG4Fp7wZOEELyvXuaG4jA8h?=
- =?us-ascii?Q?bjWBaiFEpNystmirN7vk9K3kJsyAuH+bei/l5Qal5BeReFXrnUcD0mlqmnyA?=
- =?us-ascii?Q?iTlZjX+7vdHObzZ9lPXEJIn68rJvXWDLa769o586ymlpC5QY0FhGOjoM8hfG?=
- =?us-ascii?Q?GKZFU4H4m7OIzdg3dAa0OQpYJ3AkKYfgQI67pWzEzUI62xx7Aj3ashxHWJJL?=
- =?us-ascii?Q?Qakr+i8inSgOLmTZojWytCVQnoV1E11XZkx/QRZjRIFiWIVow7nXrDNX3AwB?=
- =?us-ascii?Q?lCN5F5DfUDAS28RPbdkqtMMnoxszyBMo6/PSM5X+K5VvnbNT8pNI7WduQmKy?=
- =?us-ascii?Q?Ke/6K4NvXEH09BqIUmdI4wLH8kOWuaIusoooHdStSlS25qbDJ3Ztf8GWYBM2?=
- =?us-ascii?Q?UidTGOXZVQG6cuS6fNHNPjyF8pINbLGyRBfO3JSEwnjnYRFM/4GwckR33/1V?=
- =?us-ascii?Q?0odbxwodhojoaP7uDnqLD1xGcGIbn4s7x8FtBml2J0XS+bD5fGXQ8iKMOVph?=
- =?us-ascii?Q?s6UO2stk9MW3l1JLNqbrNygLM36xfsztH4Sno9dz3GnVONjnqudCtQN86sVq?=
- =?us-ascii?Q?MlKQ7cYnKgG8pFtbUBKj7f+Vkf46A68U7S4+92PtT5ozRR6CLA+VJ8i8kTJY?=
- =?us-ascii?Q?59ud+twFVZ8PHeLGRNQFONineh8DA73v9yfLaT3WyqBiSBorlmxEyrf8IA2U?=
- =?us-ascii?Q?oXUGyOJsTKMZUydeqdoqRHkkiARG?=
-X-OriginatorOrg: sct-15-20-9412-4-msonline-outlook-3e488.templateTenant
-X-MS-Exchange-CrossTenant-Network-Message-Id: c6a66533-226e-4530-875e-08de8016bbea
-X-MS-Exchange-CrossTenant-AuthSource: SEZPR01MB4399.apcprd01.prod.exchangelabs.com
+X-OriginatorOrg: nxp.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Mar 2026 09:07:07.2152
+X-MS-Exchange-CrossTenant-AuthSource: VI0PR04MB12114.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 820a181c-be63-4c67-8773-08de80184fb9
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Mar 2026 09:18:23.8288
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
-	00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: KL1PR01MB4704
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: jWahPEmjt2Khrhv9h033a2rEfTMuRY4F48SZoFSPr6SysreqgbpnGHCtSFjne8/17OOD6DDnd637evq4DM+4sg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS1PR04MB9582
 
-The enhanced ACS controls introduced by PCIe Gen 5 ensures better device
-isolation. On devices that support the PCI_ACS_ECAP capability, the
-controls are required to be enabled properly:
-- ACS I/O Request Blocking needs to be enabled to avoid unintended
-  upstream I/O requests.
-- ACS DSP and USP Memory Target Access Control needs to be set with
-  Request Redirect or Request Blocking to ensure the Downstream and
-  Upstream Port memory resource ranges are not accessed by upstream
-  memory requests.
-- ACS Unclaimed Request Redirect needs to be enabled to ensure accesses to
-  areas that lies within a Switch's Upstream Port memory apertures but not
-  within any Downstream Port memory apertures get redirected.
+> Subject: [PATCH 1/2] dt-bindings: PCI: fsl,imx6q-pcie: Switch to undeprec=
+ated
+> reset-gpios
+>=20
+> GPIOs with "gpio" suffix were long time ago deprecated, thus "reset-gpios=
+" should
+> be used.  Linux kernel supports both, referenced schema snps,dw-pcie-
+> common.yaml lists both as well and this schema uses
+> unevaluatedProperties:false, thus change has no impact except code readab=
+ility
+> and removing deprecated patterns.
+>=20
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+> ---
+>  Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml | 5 -----
+>  1 file changed, 5 deletions(-)
+>=20
+> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+> b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+> index 12a01f7a5744..b9ba938c6239 100644
+> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+> @@ -58,11 +58,6 @@ properties:
+>        - const: msi
+>        - const: dma
+>=20
+> -  reset-gpio:
+> -    description: Should specify the GPIO for controlling the PCI bus dev=
+ice
+> -      reset signal. It's not polarity aware and defaults to active-low r=
+eset
+> -      sequence (L=3Dreset state, H=3Doperation state) (optional required=
+).
+> -
 
-To maintain compatibility with legacy devices that lack PCI_ACS_ECAP
-support, pci_acs_enabled() skips checking for the capability.
+Add Dmitry and Bartosz.
 
-Signed-off-by: Wei Wang <wei.w.wang@hotmail.com>
----
- drivers/pci/pci.c | 62 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 62 insertions(+)
+Hi Krzysztof,
+Seems this property is still handled in gpiolib-of.c, see commit b8b80348c5=
+7b
+("gpiolib: of: add polarity quirk for Freescale PCIe controller").
+Maybe need to change the quirk gpio_propname here too.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2b36dc792d10..f1b77707a1c3 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3561,6 +3561,53 @@ void pci_configure_ari(struct pci_dev *dev)
- 	}
- }
- 
-+static bool pci_dev_has_memory_bars(struct pci_dev *pdev)
-+{
-+	int i;
-+
-+	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
-+		if (pci_resource_flags(pdev, i) & IORESOURCE_MEM)
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
-+static bool pci_acs_ecap_enabled(struct pci_dev *pdev, u16 ctrl)
-+{
-+	/*
-+	 * For ACS DSP/USP Memory Target Access Control, either Request
-+	 * Redirect or Request Blocking must be enabled to enforce isolation.
-+	 * According to PCIe spec 7.0, the DSP Memory Target Access is
-+	 * applicable to both Root Ports and Switch Downstream Ports that have
-+	 * applicable Memory BAR space to protect. So if the device does not
-+	 * have a Memory BAR, it skips the check.
-+	 */
-+	if (pci_dev_has_memory_bars(pdev) &&
-+	    FIELD_GET(PCI_ACS_DMAC_MASK, ctrl) != PCI_ACS_MAC_RB &&
-+	    FIELD_GET(PCI_ACS_DMAC_MASK, ctrl) != PCI_ACS_MAC_RR)
-+		return false;
-+
-+	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
-+		/*
-+		 * The USP Memory Target Access is only applicable to
-+		 * downstream ports that have applicable Memory BAR space in
-+		 * the Switch Upstream Port to protect.
-+		 */
-+		if (pci_dev_has_memory_bars(pci_upstream_bridge(pdev)) &&
-+		    FIELD_GET(PCI_ACS_UMAC_MASK, ctrl) != PCI_ACS_MAC_RB &&
-+		    FIELD_GET(PCI_ACS_UMAC_MASK, ctrl) != PCI_ACS_MAC_RR)
-+			return false;
-+
-+		/* PCI_ACS_URRC is applicable to Downstream Ports only. */
-+		if (!(ctrl & PCI_ACS_URRC))
-+			return false;
-+	}
-+
-+	/* PCI_ACS_IB is applicable to both Root and Downstream Ports. */
-+	return !!(ctrl & PCI_ACS_IB);
-+}
-+
- static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
- {
- 	int pos;
-@@ -3578,6 +3625,19 @@ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
- 	acs_flags &= (pdev->acs_capabilities | PCI_ACS_EC);
- 
- 	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
-+
-+	if (acs_flags & PCI_ACS_ECAP &&
-+	    pdev->acs_capabilities & PCI_ACS_ECAP) {
-+		if (!pci_acs_ecap_enabled(pdev, ctrl))
-+			return false;
-+		/*
-+		 * The check for the required controls in PCI_ACS_ECAP has
-+		 * passed. Clear the ECAP flag and continue to check the
-+		 * basic ACS controls.
-+		 */
-+		acs_flags &= ~PCI_ACS_ECAP;
-+	}
-+
- 	return (ctrl & acs_flags) == acs_flags;
- }
- 
-@@ -3636,6 +3696,8 @@ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
- 	 */
- 	case PCI_EXP_TYPE_DOWNSTREAM:
- 	case PCI_EXP_TYPE_ROOT_PORT:
-+		/* PCI_ACS_ECAP applies to Root and Downstream Ports only */
-+		acs_flags |= PCI_ACS_ECAP;
- 		return pci_acs_flags_enabled(pdev, acs_flags);
- 	/*
- 	 * PCIe 3.0, 6.12.1.2 specifies ACS capabilities that should be
--- 
-2.51.0
+
+>    reset-gpio-active-high:
+>      description: If present then the reset sequence using the GPIO
+>        specified in the "reset-gpio" property is reversed (H=3Dreset stat=
+e,
+
+ Also change the "reset-gpio" to "reset-gpios" in this description.
+
+Best Regards
+Sherry
+> --
+> 2.51.0
+>=20
 
