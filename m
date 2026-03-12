@@ -1,96 +1,95 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 464083254A3;
-	Thu, 12 Mar 2026 13:03:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7891F3C455D;
+	Thu, 12 Mar 2026 13:05:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773320620; cv=none; b=GGA9yhxnLKYjOI2SUfA19uNtgSKZvRr7p9NHY84b81St4/B27B7M9hjf7KKO1KmD/UxEwqfw24p21LWb8INxSKjIbkjR66bHVozmnAJZ18ncTvyWxFGeNugKhNkRgD09ibxAoTZzpom+IlrvP5Rw4wWF8rryQnIwKGhmLbEYU1U=
+	t=1773320708; cv=none; b=daHUSaCwJtLtevbxi6zqHoXqWf2/PW6qegXC6OAb9lKiq9S7XLZRQmbYIT6kDs+SoXTTGalu7ScXNJdOVejNEj4jSCb4C7KdOx3pM7geQVXf0TQwG7jZw9cVABCDnQZenKKdG0J3v6GCLgypPuTDqtQHcqqz6y3rXdCZwgIPXj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773320620; c=relaxed/simple;
-	bh=Hd5nSxb2ldI84kKFsCIK5FhWGhb3PvdBxayOMKngjak=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TAZboN3Asdoidel9QMj74PlHSB5MNP5pBLG7WE7z5sfuovvQgC7QQHUzT+tB99GozJkfzFuvS2Pa0I1QzPBKECxCXnOgnepO+wwkbx6b7WYd6Rn6FKtBHmXQ6/T2UqydKPVf43uGyTdqjOlVBtUI7c0yJVjbFjAhYTm0YVsEQVQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QJza3sfO; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QJza3sfO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 941D7C2BC86;
-	Thu, 12 Mar 2026 13:03:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773320619;
-	bh=Hd5nSxb2ldI84kKFsCIK5FhWGhb3PvdBxayOMKngjak=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=QJza3sfOyN+Y+RF6ybpBMGFeyRFPhlbUqePq4FLgLN9vyr9MpAXaGwhMhXREhO7qs
-	 FeywWKcKNcO77VGxlgUEdLCCRPVIPY/YaJnrkpvw/bcMrORXH4tQtBjQmwvokgmoDm
-	 almRyxz4gIyMBuqNufOoqlqtcowWu2VZ7SOscneO/iYbX5i4T1qP6Yq7j7IUJavd3Y
-	 ZN/1GNBbbgJodSiiuYHnXvqykFA1tFEZb0JM/B76bpUYjZgzkzz6akhiRn7CfBJREn
-	 e7MiumOs727+/SySZWURv5C1Hcs/Ei0ciTLu1fMcyfpJ9zIoT6xHNXWXuEpfNLRsHZ
-	 sxruNdXGtavGA==
-From: Niklas Cassel <cassel@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Shuah Khan <shuah@kernel.org>
-Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-	Koichiro Den <den@valinux.co.jp>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Frank Li <Frank.Li@nxp.com>,
-	linux-pci@vger.kernel.org,
-	linux-kselftest@vger.kernel.org
-Subject: [PATCH v4 10/10] selftests: pci_endpoint: Skip reserved BARs
-Date: Thu, 12 Mar 2026 14:02:38 +0100
-Message-ID: <20260312130229.2282001-22-cassel@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260312130229.2282001-12-cassel@kernel.org>
-References: <20260312130229.2282001-12-cassel@kernel.org>
+	s=arc-20240116; t=1773320708; c=relaxed/simple;
+	bh=6Ei2vJ1bnUym9lAVWazKzaZlFn1Ck2FO0adivCJpr/s=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=pmZJyxnc1TsF5hYZA1Dh9YmBu+Vwn41VAW5RbwmVQYfO+pmExQGGkVg8HPnLPOPnOzOm9M+KMufGROORXjtN9X2OkgmU2KIvJxX/9ADxv6qApZwvf+6FC5fokoMcy9tsLY/ukXa7Tac54PRJpl0/ogzZHqlqNN7n2Pbcbly/UgI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.107])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fWns333l8zHnGh0;
+	Thu, 12 Mar 2026 21:04:55 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id 1E6D240587;
+	Thu, 12 Mar 2026 21:05:05 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 12 Mar
+ 2026 13:05:04 +0000
+Date: Thu, 12 Mar 2026 13:05:02 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: "Bowman, Terry" <terry.bowman@amd.com>
+CC: <dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
+	<dan.j.williams@intel.com>, <bhelgaas@google.com>, <shiju.jose@huawei.com>,
+	<ming.li@zohomail.com>, <Smita.KoralahalliChannabasappa@amd.com>,
+	<rrichter@amd.com>, <dan.carpenter@linaro.org>,
+	<PradeepVineshReddy.Kodamati@amd.com>, <lukas@wunner.de>,
+	<Benjamin.Cheatham@amd.com>, <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	<linux-cxl@vger.kernel.org>, <vishal.l.verma@intel.com>, <alucerop@amd.com>,
+	<ira.weiny@intel.com>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v16 07/10] cxl: Update error handlers to support CXL
+ Port devices
+Message-ID: <20260312130502.00003404@huawei.com>
+In-Reply-To: <d225ba1f-c574-45dc-ab9b-18c3bf45f217@amd.com>
+References: <20260302203648.2886956-1-terry.bowman@amd.com>
+	<20260302203648.2886956-8-terry.bowman@amd.com>
+	<20260309140518.000009e2@huawei.com>
+	<d225ba1f-c574-45dc-ab9b-18c3bf45f217@amd.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1507; i=cassel@kernel.org; h=from:subject; bh=Hd5nSxb2ldI84kKFsCIK5FhWGhb3PvdBxayOMKngjak=; b=kA0DAAoWyWQxo5nGTXIByyZiAGmyuXCjMFU2E0DUAwyDciWlEz1ekFB2wmqSZyBzRYTeVzmC2 Yh1BAAWCgAdFiEETfhEv3OLR5THIdw8yWQxo5nGTXIFAmmyuXAACgkQyWQxo5nGTXJ/CgD+I8pk mdGS4hUDjDOHGE2r/4gP/Bomj1unKIlYBHXteAYBAPDZQF8KjCEBMbwh0BYBe11w7JZ2kTFOUKg P7ED3YwwM
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml100011.china.huawei.com (7.191.174.247) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-Running a test against a reserved BAR will result in the pci-epf-test
-driver returning -ENOBUFS.
+On Wed, 11 Mar 2026 10:37:33 -0500
+"Bowman, Terry" <terry.bowman@amd.com> wrote:
 
-Make sure that the pci_endpoint_test selftest will return skip instead of
-failure or success for reserved BARs.
+> On 3/9/2026 9:05 AM, Jonathan Cameron wrote:
+> > On Mon, 2 Mar 2026 14:36:45 -0600
+> > Terry Bowman <terry.bowman@amd.com> wrote:
+> >   
+> >> CXL Protocol trace logging is called for Endpoints in cxl_handle_ras() and
+> >> cxl_handle_cor_ras(). Trace logging support for CXL Port devices is missing.
+> >>
+> >> CXL Endpoint trace logging utilizes a separate trace routine than CXL Port
+> >> device handling. Using is_cxl_memdev(), determine if the device is a CXL EP
+> >> or one of the CXL Port devices.
+> >>
+> >> Update cxl_handle_ras() and cxl_handle_cor_ras() to call the CXL Port trace
+> >> logging function. Change cxl_handle_ras() return values to be pci_ers_result_t
+> >> type.  
+> > 
+> > Why this last bit?
+> >   
+> 
+> You requested in previous review this should return a value more meaningful than bool.
+> I changed to return pci_ers_result_t.
+> 
+> https://lore.kernel.org/linux-cxl/20260205171346.00001e6b@huawei.com/
+Ah. I was probably thinking errnos.
 
-Tested-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Reviewed-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
-Tested-by: Koichiro Den <den@valinux.co.jp>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- tools/testing/selftests/pci_endpoint/pci_endpoint_test.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Maybe not appropriate.  Given how it is used, a bool was probably the right answer.
+Sorry!
 
-diff --git a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-index e0dbbb2af8c7..c417fb3a198b 100644
---- a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-+++ b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-@@ -67,6 +67,8 @@ TEST_F(pci_ep_bar, BAR_TEST)
- 	pci_ep_ioctl(PCITEST_BAR, variant->barno);
- 	if (ret == -ENODATA)
- 		SKIP(return, "BAR is disabled");
-+	if (ret == -ENOBUFS)
-+		SKIP(return, "BAR is reserved");
- 	EXPECT_FALSE(ret) TH_LOG("Test failed for BAR%d", variant->barno);
- }
- 
-@@ -84,6 +86,8 @@ TEST_F(pci_ep_bar, BAR_SUBRANGE_TEST)
- 		SKIP(return, "BAR is test register space");
- 	if (ret == -EOPNOTSUPP)
- 		SKIP(return, "Subrange map is not supported");
-+	if (ret == -ENOBUFS)
-+		SKIP(return, "BAR is reserved");
- 	EXPECT_FALSE(ret) TH_LOG("Test failed for BAR%d", variant->barno);
- }
- 
--- 
-2.53.0
-
+J
+> 
+> 
+> >>
+> >> Check for invalid ras_base and add log messages if NULL.
+> >>
+> >> Signed-off-by: Terry Bowman <terry.bowman@amd.com>  
