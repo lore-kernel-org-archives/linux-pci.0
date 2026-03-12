@@ -1,259 +1,219 @@
-Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EE263314C2
-	for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 11:40:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.50
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773315627; cv=pass; b=ChdQMN4gocfYFGlXO9mH6EScrLUdmKTR2VK56ShWUMStETIq6HyDRQCSoIfNw18YUkDNlxBLN5lkMzpHZYrvY5BVx2p0Dp3/tEwIoUnOxqsor7y1yv9jOFVavX+DJKuLNqXa2mj8Va+GV1OlFwTWb27VuFCs/9Ej1KSJvDL4SAk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773315627; c=relaxed/simple;
-	bh=2TPSG+XCAoBTjV6kl8Kgjsjnn5MIxqg/Bno09qD0lBk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=OgoKpW5rSPatFi2xDcU2dNPSVUVrpOa269onSKM7nG1mt/RryxIvIkfzMewUdfC5+BgPLJK7Wm56PyO8okeDkn+rv6LBwO9zloRL5VfLh2R2b1yOGomeSVE1WUEevtFFDTawVDY+tnBjFfBkn/1lcpSN0Thh2cfAOhwvhBvpUlA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BAvmaTiT; arc=pass smtp.client-ip=209.85.218.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E089E3947A2
+	for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 11:42:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773315722; cv=none; b=mQK5lr+Ve8T/zsqog9I9xjxUns+6MIJZqtpdw78tag18KfotEmHZIyy4Yedrfd7Ji/ThgjH96Y2cnzKJ7ubtzZ93ztBZgQ8jTKXEysNR5oZv+H5E3pJUiaxV/nlEHgAYakXDmaLH6rAK7hudj7epawy3Zk9QlhPAQpWhHpmfYNg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773315722; c=relaxed/simple;
+	bh=nwaZTsNWKtiAy3M+myiu//8Q2UY2tqa7VUs/W+GtYLk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=PS0zvX7twAWPI0PxLhzQSgAOFY9L98n0+7+zCEppBI+8SxOO7sf0QDRlRgjtHGhr/Y+tmufl10eiBw54IqI+TsxBSoJavBaaI8CaAibFCecat4qC3BEqL6hlUTVFDsIXkCXakSTPvw/+JWTaSDaTl6Mm6K94naixItA4/r8LK5M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=cTWDR23r; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Ryzj9rwH; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BAvmaTiT"
-Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-b943a880577so117883966b.3
-        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 04:40:24 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1773315623; cv=none;
-        d=google.com; s=arc-20240605;
-        b=EeiS28y5oLBEfM9/T0GQobC7jPTEWcxR6feh7tq7NwrFf5ODxBOVlJ8B9okChmzUIm
-         FX8aCcXH5hgfD+gP7rwdBtD8CrwwIQeK8QKPDmCZltvD6jpMqiHxQflFawzV08/vcWla
-         CjiDRgqioRgjG4IYWks42za+sLg6GTtK97g2uIL8QYdqJHL1955Z2RR0WpMIPZ4848nO
-         rfToatzu67sNispikYWW61RI8iD/2wbzMXtR0FLVOx0/cojpCWTjVIdhsQUy0uPS41h6
-         vfuj7OE7rIYX1vuzVHx5CJ80sE+ToVL2k7O/zoNQUgxP1UqtH+tWu8JSJ5spdmffGAwI
-         cpKw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=k9kla8PpBQz/94UsEvpzoG2D163jkyCAkG5Jr+I8Q48=;
-        fh=wuKhKuIfT+OCTEVzcwUdWf5Wpz6V/oL8MRErBPICVnE=;
-        b=XGu9jcT/VTNlfnTK0yzsunsMYls0r2pf6X/MKhoEPhmbW6T77zp1kF5H0taOJ/FmOx
-         goHtLBJL49vxGcxbIrl10TLNKx0dXsNP0m16OUEV/1E6P+4T2x2M4SwYthxrE/uDZXeb
-         PNgnbvLb5aWPc4f3IVmZGJRT9Mf+jmuL4MSjqsN22P/y7ctkeKs1bauPqKfgPYLctN/g
-         +b9BeBED6mo6lixK2cwwtIIIw3fp/0dug90fxX5uFOj1fi5ykvhRmYWyPbpRpCIXUhjK
-         zYrlJgokSsNREphU7gP0qdYJks+wfnCfvCQQcHrUz3jCb/y719nQehXVbi/wmu7i9By0
-         jX/A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="cTWDR23r";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Ryzj9rwH"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62C9NW0u3136568
+	for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 11:42:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	O6HJTG517rx7BZNC+Lqbxk38jHNOTKDXfitY+fGl2Qg=; b=cTWDR23rSNC6RXYv
+	NYm5xAfJP6JIuBegbdJxesqHYjbPVMpbyoaplrYspybiURpA1Trs2IBBicGX/68c
+	/5p+bLJWsmwM5nkoINvohPNjkwnCV2Td1WLJKuiQev/oeNlwdMwm/GB45fgFyHxJ
+	HBiAKD73NnOBoytDQFweyjSwkRPfJWCUyj7pEosaMeJDL4V+7DNFEgrEfn/EASZJ
+	6+Gx97SZIgZENJcFW2XKZ7T0QIf+zW3nzwfP8DgMViWz3ZckUTqhX36WvwMOPypt
+	LWOJsODEoFAaVja57lITwPwa+tEi6nJkKgY1F91wyXAO/nJARSgaUFBOp4o2h3W9
+	cdmcuA==
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cuh4w9y34-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 11:42:00 +0000 (GMT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2ae57228f64so10247825ad.0
+        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 04:42:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1773315623; x=1773920423; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=k9kla8PpBQz/94UsEvpzoG2D163jkyCAkG5Jr+I8Q48=;
-        b=BAvmaTiTZcclUQ3nXiagA8CGFpXxoGzHW46tbrSSDN73sQ8GUXeMraxwaSW9DEeeQ1
-         VXA2VFb4SxJ6ZQHhe5SG5Ra7JWh5o2ojJX4aYFyRW41GuRck4o1tSIHEKRF5jwlgfvAI
-         DW7chfMoEIKecV/GfA3Xx8wzOfXdVzkiRpY/r3xZ5jmY3y+SWvs9KlZ+Y2p7SmKonjnr
-         Da1JajSv37gaaioTBhoLV7wcy2Bt0tx1TnJE7Vos1OmZeEodxtv8x2j+zmVWbVxwJZwK
-         W4sx6NqaCNZx3I7igsMQqnG0UB57blRMBJnxw6lvZQyNDut6OM0t+4aBlik0rAjuL/mY
-         Em4w==
+        d=oss.qualcomm.com; s=google; t=1773315720; x=1773920520; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=O6HJTG517rx7BZNC+Lqbxk38jHNOTKDXfitY+fGl2Qg=;
+        b=Ryzj9rwHx4/L9W/95j18RQLyN36VmXh7hrBX885U/DVRYKg0KS2q5yHnfGUrJn9Y/m
+         25qed/Xs5eXNZgFtV807uvntAaJeEh7eOJNyDn782Fq+UmKAbX54+ZRzwOy9XpbwIWe+
+         CKwY6712Y626UQUtjjX4BXYdqRWX1LJCWl7YwcBglN1gyM2HDIIWFlIIwgEnxfzA1Snv
+         Tfb6WUfKsiqmADqiEDDF6Q74SbX9EMyABBwcxNzIJjaDMCs1QWCungJZvNIdtiCZ0KIa
+         bpYr9QoQ9obNvyXVvaDxjG7Cn27m2UYUo36FXp3FVxiuhqQam3e/vZypo9FgENHuTWbX
+         efWA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773315623; x=1773920423;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=k9kla8PpBQz/94UsEvpzoG2D163jkyCAkG5Jr+I8Q48=;
-        b=Y8N5dyjOXu2BZxCIL0EjlXYZdt3O7sTIVnTWnf4Jx2LYu35YgmfLYQiPbQX2fQZ2xG
-         Tefswb6Mf9awvfrl41Uqe74uA6LKWTtjlrIddbev3/la9qwvRleCR82tHXI8mgaITbQd
-         4I2uNFf+vPwbZiddo4peP4CFtsbvkwrPUAGi0J43SAFT2BQZtdeIUuP9jChG3m1Ytyiv
-         F02xA9p0x+5ienolJeq5UN4ambeGZNSjyrtCLBNtkPTiAAa3IRfkPOxx6f5yRaYGEqzv
-         v5LyEKlg9sNcY92w13EfWBoSgDZrSVmEA93pgZ7Ao304HQClF3kByt2ZY8/NlGuArP0Q
-         tZdg==
-X-Forwarded-Encrypted: i=1; AJvYcCUnOq+L0Qxze225irRgsTrLbCGwf2WwCQ5yMPRkAHwgq8QGC5ma0JB1+Z/WEq0uiu/ugwY+ke4EOiY=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywq63d31rRz3tcYScLTPsZDCOuC1n40v9aaLGqdBWerWLxWu64E
-	ct4UAnKBB1LnJxdgOoB0AyZ5xRoMNF8S1V2UMm7is6QfR4MYZh56CMyMWI8wI0HQRsvEWGMG652
-	khzmv223yo9eOcrRl9vai6Ox8+V/2X4k=
-X-Gm-Gg: ATEYQzwtWEkjsVJpcPbecQjGEAn8SP6RTJnmVU5n+BuCrVmv8BKpHuQHtZLhxysT1fq
-	+Z1p2ld1oCX0b18SroqQ2oSK8+/42Wrv1f0MaZXgiTcUMF1AMFC1SC5dn2yzkXmNpp0Dsnwxhz6
-	7AAtyPa14TbI+QhfA6hyJaQnhCi8W7r2161U4A1RcYA0doJSNHHNrvvOV8v/boItNmS6y+svQHT
-	VvWn8g+0tSTA8heVXjc9y+C6fj+fGkZP6mV73pRfvV9p3FZT14I9KpQeDmrkGSh7+VnSCTD2Bwv
-	XbSvnw==
-X-Received: by 2002:a17:906:f58d:b0:b8f:f070:8c30 with SMTP id
- a640c23a62f3a-b972e52a19dmr383837666b.49.1773315622489; Thu, 12 Mar 2026
- 04:40:22 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1773315720; x=1773920520;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=O6HJTG517rx7BZNC+Lqbxk38jHNOTKDXfitY+fGl2Qg=;
+        b=SjvNIM6ouSVWvBS54iH1ZEinmOwIMl3ZlamjnLYZuyhr9O0fJpRoC57qk3plN+NG25
+         5nZvEDEr7VYd28QzsSWlQRVqCRGnJuCC/9iPkWqBDvmhNfgB7XQW8xdtNsPdqOGO5gdc
+         o86odfoqz3leTUIBZevWw4UnI8b2ANBvomOciqhRxf5oVkv4VGsqkpTILFiFlwH692OF
+         hz8HoGdegUHuaXS1zV4LEN0PAN81fHsd5DmO2tCoCpzgWWJlju/TKJIXh1qh8NpFPbqW
+         Bi3AsuVL67YIT3dDna8wI7cvMlMFilZDKFAoKD5tdB+y/kibWSW0ZvxwQ6to1YH16E4R
+         izpA==
+X-Forwarded-Encrypted: i=1; AJvYcCWYkCqfwin3lG9dXIvAFZ+Xa/TBF0bjcLRT7bWgRTpru5VXLzCFBWcOqHkLJjlSDfUGYr3Rl/CGUho=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx7Q9loT/iaIiXepaCo90cnSWrXjfwCNg16BRtyZOhPRKE+/SwC
+	dPcAba/2hIpaPd5AY5t39k9HQGQUfRZ7AbXw1qD1Nqc03ZAjtsVrR7JAj/xWptZJ/LQQb029Veq
+	13xp7QBe32KyrYC5rxDScPkXbBAiTv0z0PYsAnoIvLdK6WP3qKQ3uxowgebX518w=
+X-Gm-Gg: ATEYQzz25wveJMDcpDC4r87eR5d01zm9A0ilX1Q+370+5LnroA2nMGwnW9eJGXqCRgg
+	NRqiLmInkAZ5l/U5ELbtzlVvp2HQVD6B9qVh08SuummsyTJEMNmsNvaVLlkWxcjj01VVB4SMusI
+	piHXiLRjEZhGH0IoBPJ+4VBtiiWTzKO8MUI8W+xoFO3tKQl9OoTG2rHGX1QLLFx8utSTZT3IOYt
+	JFbOh/0oFtbXFZi6bwEbP5cVePUwOE6fsx/i2vC2QiWpk5O3Ts+1RCPv3OsL9CAOba+R0kOz4YJ
+	vXPK7QxZXwLtZRkpR2QO6k+CItUlzi9tO3Y46NLZ0ajDG+BaamNx3zVb+a8Av5VnzrnsFdXuxJP
+	ErqZb0WqC83awtSx/SfSZBLoPVW1O4sj01Y8xUqW2qwVSzaOOOZnkuRUjDg==
+X-Received: by 2002:a17:902:e807:b0:2ae:478f:2ec with SMTP id d9443c01a7336-2aeae89119emr62683485ad.29.1773315719575;
+        Thu, 12 Mar 2026 04:41:59 -0700 (PDT)
+X-Received: by 2002:a17:902:e807:b0:2ae:478f:2ec with SMTP id d9443c01a7336-2aeae89119emr62683115ad.29.1773315719067;
+        Thu, 12 Mar 2026 04:41:59 -0700 (PDT)
+Received: from [192.168.1.10] ([38.254.186.229])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2aeae22217dsm53886225ad.4.2026.03.12.04.41.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 12 Mar 2026 04:41:58 -0700 (PDT)
+Message-ID: <57537059-4989-4704-ae6a-72576d031216@oss.qualcomm.com>
+Date: Thu, 12 Mar 2026 17:10:25 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260226101032.1042-1-linux.amoon@gmail.com> <177260693908.10259.13055467642416391434.b4-ty@kernel.org>
- <87bc37ee-234c-4568-b72e-955c130a6838@arm.com> <f7tfshf7riljjibuqge4ubfjmludubpyh3ppdf6lasurzdzbtj@sw4xxagfhnn3>
- <5d88fb5b-e771-4ea6-8d2c-c5cfd21e5860@arm.com> <qwanhqrpztzkudik5fmberhabnzaly7v53677dohqzj5nq4wi2@6ndpiubyxcbi>
- <DGZXF3LPSRK6.2QYN63QTKUQAX@kernel.org> <cp5uktfqdf6zs53qsye57ior2ikmssgevxxdtevkzpisaif22h@7mrxspkuibow>
- <DH09EDBW3X6T.2996UB1CFCAW2@kernel.org> <7b5592e7-8a9d-2cf0-bb3e-e306a6337165@rock-chips.com>
-In-Reply-To: <7b5592e7-8a9d-2cf0-bb3e-e306a6337165@rock-chips.com>
-From: Anand Moon <linux.amoon@gmail.com>
-Date: Thu, 12 Mar 2026 17:10:06 +0530
-X-Gm-Features: AaiRm52HfWRYYsTJWgJqZ1mPKHzxh5bRhcDvLmP4oDUAAo6L9RCY3sGu0RZ9H3g
-Message-ID: <CANAwSgTaZqsHYXD_ACkJGGLgk4knc7N72f4qrJaaenE-cXM8BA@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI: dw-rockchip: Enable async probe by default
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Danilo Krummrich <dakr@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Robin Murphy <robin.murphy@arm.com>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, 
-	Niklas Cassel <cassel@kernel.org>, Hans Zhang <18255117159@163.com>, 
-	Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>, linux-pci@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, 
-	linux-kernel@vger.kernel.org, Grimmauld <grimmauld@grimmauld.de>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	driver-core@lists.linux.dev, Lukas Wunner <lukas@wunner.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v10 1/3] of: Add convenience wrappers for of_map_id()
+To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Cc: Nipun Gupta <nipun.gupta@amd.com>,
+        Nikhil Agarwal
+ <nikhil.agarwal@amd.com>,
+        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+        Robin Murphy <robin.murphy@arm.com>, Marc Zyngier <maz@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Thomas Gleixner <tglx@kernel.org>,
+        Saravana Kannan <saravanak@kernel.org>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Bjorn Helgaas
+ <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>, Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+        Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>,
+        Rob Herring <robh@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Prakash Gupta <prakash.gupta@oss.qualcomm.com>,
+        Vikash Garodia <vikash.garodia@oss.qualcomm.com>,
+        linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
+        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, imx@lists.linux.dev,
+        xen-devel@lists.xenproject.org, linux-arm-msm@vger.kernel.org
+References: <20260309-parse_iommu_cells-v10-0-c62fcaa5a1d8@oss.qualcomm.com>
+ <20260309-parse_iommu_cells-v10-1-c62fcaa5a1d8@oss.qualcomm.com>
+ <3plcdobbd6teiluzijzk33yepbpsur24tnmjr32sco7a4loptm@xmzmsaurvmvj>
+Content-Language: en-US
+From: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>
+In-Reply-To: <3plcdobbd6teiluzijzk33yepbpsur24tnmjr32sco7a4loptm@xmzmsaurvmvj>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: Z43A3z7-DwK1uJ9rYksZC4gimmH4mBWT
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzEyMDA5MiBTYWx0ZWRfX8LDGT7gYOh5a
+ 5EekVJOylITykZoUYPc8bHZx7gBIVadYsd7lbZ1ERwCuSVomwwdGwInP2aF23aN0UFNSWny2bSx
+ FZqcXHJPNUCHxww7S0n3wjGulcQcZw3athv7IZgp4RHPbUtOklgu5T8zqsbr40JYNqRFZljDwBi
+ r5m+WK0m12o3Dnjk1KeAPTv83zRkqlbX6s2dUUAEJ1WUkNMGj3ms8PN/zLNR+/1lgeaR0XpLFOh
+ 6KVszdpGOOG0fZRJaQ2TS6ZQzFIoTW9ajd/czBOJF2gxL+zjf7rw9D1DhKeiM/u4T9Kk7s2DYGx
+ xIg4Ov86ZNHkc2GAxDm5+i5uSoHFNZOonAdqH+/kC2GrpAelZIEwnXjOazW7o23dMVPPPK8d4H5
+ R6JjAgUpiOnp1kdBvhSZOekADspCGgkokMI0eMS/tlAwLaEa9+uDnqB61VORIPFBt0dJG1XlOyX
+ YmwvZPKVB/RDkbAVbOg==
+X-Authority-Analysis: v=2.4 cv=YucChoYX c=1 sm=1 tr=0 ts=69b2a688 cx=c_pps
+ a=JL+w9abYAAE89/QcEU+0QA==:117 a=FuYIH7Xx0xzBSkYrynBYgw==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
+ a=7CQSdrXTAAAA:8 a=VwQbUJbxAAAA:8 a=8AirrxEcAAAA:8 a=EUspDBNiAAAA:8
+ a=6wy38kV5EeFARYyu09AA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=324X-CrmTo6CU4MGRt3R:22 a=a-qgeE7W1pNrGK8U0ZQC:22 a=ST-jHhOKWsTCqRlWije3:22
+X-Proofpoint-GUID: Z43A3z7-DwK1uJ9rYksZC4gimmH4mBWT
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-12_01,2026-03-09_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 impostorscore=0 phishscore=0 clxscore=1015 priorityscore=1501
+ adultscore=0 lowpriorityscore=0 bulkscore=0 spamscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603120092
 
-Hi Shawn, Mani, Niklas, Robin,,
 
-On Thu, 12 Mar 2026 at 07:03, Shawn Lin <shawn.lin@rock-chips.com> wrote:
->
-> Hi Mani and Danilo,
->
-> =E5=9C=A8 2026/03/12 =E6=98=9F=E6=9C=9F=E5=9B=9B 5:09, Danilo Krummrich =
-=E5=86=99=E9=81=93:
-> > On Wed Mar 11, 2026 at 1:28 PM CET, Manivannan Sadhasivam wrote:
-> >> On Wed, Mar 11, 2026 at 12:46:03PM +0100, Danilo Krummrich wrote:
-> >>> On Wed Mar 11, 2026 at 6:24 AM CET, Manivannan Sadhasivam wrote:
-> >>>> I have a contrary view here. If just a single driver or lib doesn't =
-handle async
-> >>>> probe, it cannot just force other drivers to not take the advantage =
-of async
-> >>>> probe. As I said above, enabling async probe easily saves a few hund=
-erd ms or
-> >>>> even more if there are more than one Root Port or Root Complex in an=
- SoC.
-> >>>
-> >>> Then the driver or lib has to be fixed / improved first or the driver=
- core has
-> >>> to be enabled to deal with a case where PROBE_FORCE_SYNCHRONOUS is re=
-quested
-> >>> from an async path, etc.
-> >>>
-> >>> In any case, applying the patch and breaking things (knowingly?) does=
-n't seem
-> >>> like the correct approach.
-> >>>
-> >>>> I strongly agree with you here that the underlying issue should be f=
-ixed. But
-> >>>> the real impact to end users is not this splat, but not having the b=
-oot time
-> >>>> optimization that this patch brings in. As an end user, one would wa=
-nt their
-> >>>> systems to boot quickly and they wouldn't bother much about a harmle=
-ss warning
-> >>>> splat appearing in the dmesg log.
-> >>>
-> >>> You mean quickly booting into a "harmless" potential deadlock conditi=
-on the
-> >>> warning splat tries to make people aware of? :)
-> >>>
-> >>
-> >> Hmm, I overlooked the built-as-module part where the deadlock could be=
- possible
-> >> as indicated by the comment about the WARN_ON_ONCE().
-> >>
-> >> But what is the path forward here? Do you want the phylib to fix the
-> >> request_module() call or fix the driver core instead?
-> >
-> > Here are a few thoughts.
-> >
-> > In general, I think the best would be to get rid of the (affected)
-> > PROBE_FORCE_SYNCHRONOUS cases.
-> >
-> > Now, I guess this can be pretty hard for a PCI controller driver, as yo=
-u can't
-> > really predict what ends up being probed from you async context, i.e. i=
-t could
-> > even be some other bus controller and things could even propagate furth=
-er.
-> >
-> > Not sure how big of a deal it is in practice though, there are not a lo=
-t of
-> > PROBE_FORCE_SYNCHRONOUS drivers (left), but note that specifying neithe=
-r
-> > PROBE_FORCE_SYNCHRONOUS nor PROBE_PREFER_ASYNCHRONOUS currently results=
- in
-> > synchronous by default.
-> >
-> > (Also, quite some other PCI controller drivers do set PROBE_PREFER_ASYN=
-CHRONOUS
-> > and apparently got lucky with it.)
-> >
-> >>From a driver-core perspective I think we're rather limited on what we =
-can do;
-> > we are already in async context at this point and can't magically go ba=
-ck to
-> > initcall context.
-> >
-> > So, the only thing I can think of is to kick off work on a workqueue, w=
-hich in
-> > the end would be the same as the deferred probe handling.
-> >
-> > Another alternative would be to let the subsystem handle such cases, wh=
-ich in
-> > this case would probably mean to handle the current_is_async() case in
-> > pci_host_probe() or pci_bus_add_devices().
-> >
-> > On the other hand, this would probably end up to be a subsystem specifi=
-c
-> > implementation of "kick of work on a workqueue".
->
-> Actually, this is exactly what we've been doing in our downstream
-> code[1] for quite a long time. We've even pushed this optimization down
-> to the individual driver level.
->
-> To be honest, I'm not particularly fond of this approach either.
-> However, on our platform, we have more than 5 Root Port instances that
-> need to be initialized during boot. When all of them probe
-> synchronously, it significantly delays the execution of many other
-> critical drivers. Our customers have been complaining about the boot
-> time, and our downstream team had no real choice but to kick off a
-> kthread similar to your suggestion.
->
-> The code is very ugly and expose a lot of corner cases problem which
-> wasted quite lot of time to fix. That's why I was hesitant to bring
-> up the this approach upstream initially. But since you mentioned it, I
-> think it's worth evaluating whether we can implement this at the
-> subsystem level instead of forcing each driver to handle it
-> individually. This way, the complexity would be centralized, and drivers
-> that benefit from async probe (like multi-Root-Port SoCs) could opt-in
-> without worrying about the request_module() deadlock scenario.
->
-> What do you think?
->
->
-> [1]
-> https://github.com/rockchip-linux/kernel/blob/develop-6.6/drivers/pci/con=
-troller/dwc/pcie-dw-rockchip.c#L1764
->
-> >
-> >> I can drop this patch in the meantime. But holding this prolong wouldn=
-'t help.
-> >
-I've reproduced the issue on my end. Following Danilo's suggestion,
-I used PROBE_FORCE_SYNCHRONOUS to resolve the warning.
-If you agree this is the correct fix, I=E2=80=99ll resubmit the patch.
 
- git diff drivers/pci/controller/dwc/pcie-dw-rockchip.c
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index 5b17da63151d..ecaf1b446008 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -746,6 +746,7 @@ static struct platform_driver rockchip_pcie_driver =3D =
-{
-                .name   =3D "rockchip-dw-pcie",
-                .of_match_table =3D rockchip_pcie_of_match,
-                .suppress_bind_attrs =3D true,
-+               .probe_type =3D PROBE_FORCE_SYNCHRONOUS,
-        },
-        .probe =3D rockchip_pcie_probe,
- };
+On 3/10/2026 2:46 AM, Dmitry Baryshkov wrote:
+> On Mon, Mar 09, 2026 at 01:03:37AM +0530, Vijayanand Jitta wrote:
+>> From: Robin Murphy <robin.murphy@arm.com>
+>>
+>> Since we now have quite a few users parsing "iommu-map" and "msi-map"
+>> properties, give them some wrappers to conveniently encapsulate the
+>> appropriate sets of property names. This will also make it easier to
+>> then change of_map_id() to correctly account for specifier cells.
+>>
+>> Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+>> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+>> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+>> Signed-off-by: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>
+>> ---
+>>  drivers/cdx/cdx_msi.c                    |  3 +--
+>>  drivers/iommu/of_iommu.c                 |  4 +---
+>>  drivers/irqchip/irq-gic-its-msi-parent.c |  2 +-
+>>  drivers/of/base.c                        | 36 ++++++++++++++++++++++++++++++++
+>>  drivers/of/irq.c                         |  3 +--
+>>  drivers/pci/controller/dwc/pci-imx6.c    |  6 ++----
+>>  drivers/pci/controller/pcie-apple.c      |  3 +--
+>>  drivers/xen/grant-dma-ops.c              |  3 +--
+>>  include/linux/of.h                       | 18 ++++++++++++++++
+>>  9 files changed, 62 insertions(+), 16 deletions(-)
+>>
+>> +
+>> +/**
+>> + * of_map_msi_id - Translate an ID using "msi-map" bindings.
+> 
+> Which ID are we talking about wrt. MSI interrupts?
+> 
 
-Thanks
--Anand
+id refers to the device’s requester ID (RID/BDF or platform stream ID),
+not an MSI interrupt number; it is the key used in msi-map to obtain
+the translated MSI device ID (id_out).
+
+I'll update the kernel doc as below to clarify.
+
+
+* @id: Requester ID of the device (e.g. PCI RID/BDF or a platform
+*      stream/device ID) used as the lookup key in the msi-map table.
+
+Thanks,
+Vijay
+
+>> + * @np: root complex device node.
+>> + * @id: device ID to map.
+>> + * @target: optional pointer to a target device node.
+>> + * @id_out: optional pointer to receive the translated ID.
+>> + *
+>> + * Convenience wrapper around of_map_id() using "msi-map" and "msi-map-mask".
+>> + *
+>> + * Return: 0 on success or a standard error code on failure.
+>> + */
+>> +int of_map_msi_id(const struct device_node *np, u32 id,
+>> +		  struct device_node **target, u32 *id_out)
+>> +{
+>> +	return of_map_id(np, id, "msi-map", "msi-map-mask", target, id_out);
+>> +}
+>> +EXPORT_SYMBOL_GPL(of_map_msi_id);
+> 
+
