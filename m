@@ -1,159 +1,271 @@
-Received: from mail-pj1-f100.google.com (mail-pj1-f100.google.com [209.85.216.100])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11020119.outbound.protection.outlook.com [52.101.85.119])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA011386C04
-	for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 17:07:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.100
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773335235; cv=none; b=S1T75825zd4RJQ78yxjTh+3LQcg9C5cTKj2Lc8Q16ywFPh9gdnam8ptKDDBPOULfI4oBG7PvxAAruiLpcZDY83qytNGi4LNpP/UV1UpUHdD6VfOVQ45ICQQQ8HiI3WHSTUAU91BCYV4jeBJgtD45EWv17Yl3fwQS3M8j418KOxE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773335235; c=relaxed/simple;
-	bh=4YRmuyiZ3BSKrd+XqEKuYmpqHzSqvCpxgtwy4jvlN5w=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kZAA51WUf5IXBR+gnT0YT/Nst4OzPD3G8/kHCfl4RzjViLi8qlV2qrO4J4yB10TkekfUWg9V9Gel8kfeBxOC8+94Wrm1lhNKw//FYknjVM0XsItgZhnFGawINWDqBSIwuBFs5n4XP6T0BCNbIJE5Xt3W2VPN0q3sy03dreIMeFY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=dbf8uhn1; arc=none smtp.client-ip=209.85.216.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A28FD3EF64E;
+	Thu, 12 Mar 2026 17:14:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.85.119
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773335647; cv=fail; b=pYnWnhOhzKyt9lB9ms+vd/LLa4dzprhZ7OWBjvYuSiPTwtMoxvMVOCrqnlPOjd3aHH7xF86wZoSwMGxhrygZc8qFuucY32DhSOuDvaArC3D3pJuZXSudjWr5TmTIjiHYHsftAZoseLigh/uppAhk26yzeBdqPQadYmCFRAPC0a8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773335647; c=relaxed/simple;
+	bh=OzDcPAkFfK0s+NMqqFA4ldAwV3RH8ZtnCf4Gt+UrV9k=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=n6OnD6IrcnO7IRiZjHWqGW8R8Y6hTVxWjJVtEK4cSUG9fJI1+GxsAVFG+VKZrP6w2BC6yhCH4K3/YiVXm/aIj6s1GoGcwc7l50b/OoPX8BSBnB9xJ2ROi0cQh+Rt8gtmSsozFy6dR8NIAqGP9Hxs/Zx1/f7C3k+Sqj+PPysww9I=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=asteralabs.com; spf=pass smtp.mailfrom=asteralabs.com; dkim=pass (1024-bit key) header.d=asteralabs.com header.i=@asteralabs.com header.b=XDkotQmI; arc=fail smtp.client-ip=52.101.85.119
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=asteralabs.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asteralabs.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="dbf8uhn1"
-Received: by mail-pj1-f100.google.com with SMTP id 98e67ed59e1d1-359ff894f0dso492447a91.1
-        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 10:07:07 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773335227; x=1773940027;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=r5d3U58A7EbRwEFn4KrmQ5cld9P0wudWqSFmPnXCnnU=;
-        b=vTADYlpzquiqj1iwoEu/vj9QnQSuaOYNFcEdHovvukLs8Zvbh2RsSTkS4qDrYdzXDn
-         Tx89kL2TRdU+gR/HolChPhkpOX8H7V1l/cZKI0HC7VjD5KKFBrdqiiGHcXJMQzFnEHR4
-         g7l4tvwRTzY1LrDg+Qb9g94btVjcm7FAYFtdBxD876nIw4Swk5IzFGp2c7TVRQdpQ32f
-         DnXMjBtA/T/p+jJXqFngNEdGJlDTC3oh0utgYjCrI0crWAUkGMxnOIrkrP58NBGGybWR
-         7sWZSiZ74fGaf3Tllcuz2z0P5DUARUPn8JKhW6lQmq6a0wYhmnHRmPv3+ax14x9d037M
-         t5NQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWfNIqzapNimmr9UnBmwBLHjHuR+xXO/unwPVDE80EIPfdYOaGOsyZGdotmHrw+ocw283AgDkGKKDs=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyv1QltKAn4jBTdjGYlI9cd1RxnI3EHYA2JpTk1PeF2EmlIfDuJ
-	1UNcc+T2ORJEdKXbwjYJWIBQGNF5GGncJgSyuSQht1hJFO1yDtmXtde6f3SoOO/LY44KlBsLisQ
-	Y3MhsQmsmvUpEX7aTuWM1gCr/siH5aEdos1+4rDmMDekoEfqBbzc9k01qAQhBIce1cMIk8BgMl5
-	65rwYytyqnMyllO9gz5cbqdnb+k5Lx41jrqUTXXLTk1uBViUfrpHGdHMtT+VxyTosSOwrOMLXn5
-	3B9Y2w0K/AJzCXMqAJS
-X-Gm-Gg: ATEYQzzVUgUxhnBQY/S/VgvVvVwVd0ZFRSlkBHkhkivOX6MkJv91YQ+/m/KCf+Kj/Wl
-	EvKuZz77OCu7KZogiMmtZcX+B83/jw3xsvksJtuT0lqyFZodKzqJW9O2xomfUN26rvbSQucqiuG
-	fuI4Vag8EgkktX19vo+fZ2PRQ0ixGX6FLForTXeYycefCi3C7fDrBuJ3hVzjrD1DxH8f6n8Z/SA
-	Pw9AqTSd6YW5u+QqcNTGW+8nB4IRdjC1yDRoffKjT//NGzKB+GWGr/0jWqJpmON6UrU+HF7w4oS
-	2IOSUke1HBAXizHinzAvRuXirkBmgafG/RdBmUjkdOa+Qc85+ziZ4GfJk4ndDlPSxp1OUMgahxE
-	9PP063m3fv43WkCYdFb6i4TnkAorIcsqjmES8F3CZZ0ximWohBqujCdEQ5mwhvMgEq4ZIEWqwWW
-	SgCwmr9WRZ3p5flZhOBUbRFidA2STUv2Qg6cYIBBABf+X0j4X8hWutIxBD3Ql/zw==
-X-Received: by 2002:a17:90b:1d09:b0:33b:bed8:891c with SMTP id 98e67ed59e1d1-35a22053278mr298423a91.23.1773335226850;
-        Thu, 12 Mar 2026 10:07:06 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-63.dlp.protect.broadcom.com. [144.49.247.63])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-35a02fca3eesm635298a91.4.2026.03.12.10.07.06
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 12 Mar 2026 10:07:06 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-qv1-f69.google.com with SMTP id 6a1803df08f44-899f671ceb2so72433536d6.3
-        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 10:07:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1773335225; x=1773940025; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=r5d3U58A7EbRwEFn4KrmQ5cld9P0wudWqSFmPnXCnnU=;
-        b=dbf8uhn1yqQ9cdMkVTOAE5x6DS0V3qVbFtGeBaIFfAF1uxA90q8ppuGQKFwe260pH8
-         lO8ZZkIGo+uTqKLHF0+TQj1XuR+cKVhhx5hQnOAU+A6F6rAJX+elQbo4KLScXDIWSAZn
-         JYUk61QzieEOC5FKLTFOb9i8P2D4qAg9dhdO8=
-X-Forwarded-Encrypted: i=1; AJvYcCVtPLXV0IHU/JH5Bzyno4tn8D0wGzX7rN3aiI0CE3qQz+qqOCMxCzXyyhcJhbpYKGU5T6r+LfCPLcQ=@vger.kernel.org
-X-Received: by 2002:a05:6214:29c8:b0:89a:116b:e674 with SMTP id 6a1803df08f44-89a81d5dfcemr7819696d6.20.1773335225411;
-        Thu, 12 Mar 2026 10:07:05 -0700 (PDT)
-X-Received: by 2002:a05:6214:29c8:b0:89a:116b:e674 with SMTP id 6a1803df08f44-89a81d5dfcemr7818666d6.20.1773335224670;
-        Thu, 12 Mar 2026 10:07:04 -0700 (PDT)
-Received: from [10.67.48.245] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-89a65d17023sm38864336d6.49.2026.03.12.10.07.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Mar 2026 10:07:04 -0700 (PDT)
-Message-ID: <9040aef7-1981-44c8-a25b-2179b892d37e@broadcom.com>
-Date: Thu, 12 Mar 2026 10:06:59 -0700
+	dkim=pass (1024-bit key) header.d=asteralabs.com header.i=@asteralabs.com header.b="XDkotQmI"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Om4SNlE6yrq5SXBcAPA8O0OA1/epnQfHdQXSk3YJjHVyPPd+OGCFnCwZmhmuFDs+FW8TnbJnbqBecsIzgl7v1I6BlAC9C6DD8oixP2xPm/MVPKvbGI1sqNZqGREgtEjMysNs+wSktbe2bvf6uqMjEfcYyLWIp1iTDyekpKoRoIPR/oZG4ZfcuDxPiaqAvrdZW9mIA78luRjeSVw7NcES4sUwEzC6k67JAJ6ifGblMQNWV9Q2muWj5MUaiLgGmv4X4A+p4BfYgyGTAky5PBjuI8R8qQE7XOJibew3zARhtjiTTJZXUXEbETZnKcLgPB28q74Ng4UXre5cIQu2cohOVw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=+HucCNSuBqXer7NNfNg0L2ub8sO7DRSnJ4YkHww3Too=;
+ b=IMRzJGXRJxl80NyflQQOvKx3P6FAkRqvR5zQ9Csij3Y8y4VWdhq0AyNyLGxPk1w0cEHDifIBSpZZoY0yINTezh2v3WO++piYIdcVImkLvuVOdPFt5sqLNTyTNMYuJNwBgJEvomYvTDyJHZ3rc3gSVQjk0rYEss9ILJbLShJ759tHf2oodX24cHMs3URlG+FWCvKorPRXW/Ken7kXGweDkkLGu/k5rh2+aKUYWaZcZRLdwrriVIEgC2EGi+2xnHDvnvCNPQJz2eVj82/wZMJRbLl3MRIAHbRCBg/PPPd1XFFSqgjbCkWSULr2V2iNh9jxxPwNlxUGA4AYIpcR65PZyQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=asteralabs.com; dmarc=pass action=none
+ header.from=asteralabs.com; dkim=pass header.d=asteralabs.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=asteralabs.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=+HucCNSuBqXer7NNfNg0L2ub8sO7DRSnJ4YkHww3Too=;
+ b=XDkotQmIzlEC7Tijm8L/BT9vG7K72iU+LQ+9HvCDAHzAaAjbz3evZGtid/NgQvW6YbjGflS49jHykjpCBfhYaOJz2VoW7qRCuRC74RnRC8OuZLDE+E9pXSX3HZVzQtMvY3KtzCmTBR42O07y6jK5CInZ0hKAurF8I/H010rwiKY=
+Received: from LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM (2603:10b6:408:232::17)
+ by SJ2P221MB1180.NAMP221.PROD.OUTLOOK.COM (2603:10b6:a03:53f::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.18; Thu, 12 Mar
+ 2026 17:14:00 +0000
+Received: from LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM
+ ([fe80::b063:29f1:a2f5:e3fb]) by LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM
+ ([fe80::b063:29f1:a2f5:e3fb%4]) with mapi id 15.20.9700.010; Thu, 12 Mar 2026
+ 17:14:00 +0000
+From: Shawn Jin <shawn.jin@asteralabs.com>
+To: =?iso-8859-1?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [BUG] PCIe bridge resource allocation creates invalid limit
+ addresses after Secondary Bus Reset recovery
+Thread-Topic: [BUG] PCIe bridge resource allocation creates invalid limit
+ addresses after Secondary Bus Reset recovery
+Thread-Index: AQHcsZ3eHE22fwsOREepAuj/YABaYbWp99mAgAALDviAABAm9oAA0NIAgAA+csE=
+Date: Thu, 12 Mar 2026 17:14:00 +0000
+Message-ID:
+ <LV8P221MB14722013ED06CFDD3AFF161E9944A@LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM>
+References:
+ <LV8P221MB1472A24B9975F7C8E8D6BF929947A@LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM>
+ <20260311231943.GA1086074@bhelgaas>
+ <LV8P221MB147241DCED82480888F8D73D9947A@LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM>
+ <LV8P221MB14726A1B6959675557ED1AC29944A@LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM>
+ <a128f2d6-4311-a9a3-5e10-267f46db709e@linux.intel.com>
+In-Reply-To: <a128f2d6-4311-a9a3-5e10-267f46db709e@linux.intel.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+ MSIP_Label_864d6687-5155-4a0e-a628-49dd428607fb_Enabled=True;MSIP_Label_864d6687-5155-4a0e-a628-49dd428607fb_SiteId=f47c88fd-08a9-4016-b488-3f361c03ff2e;MSIP_Label_864d6687-5155-4a0e-a628-49dd428607fb_SetDate=2026-03-12T17:13:59.325Z;MSIP_Label_864d6687-5155-4a0e-a628-49dd428607fb_Name=Internal;MSIP_Label_864d6687-5155-4a0e-a628-49dd428607fb_ContentBits=1;MSIP_Label_864d6687-5155-4a0e-a628-49dd428607fb_Method=Standard;
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=asteralabs.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: LV8P221MB1472:EE_|SJ2P221MB1180:EE_
+x-ms-office365-filtering-correlation-id: 7c974520-83ea-4dfe-27b2-08de805ac0b5
+x-ms-exchange-atpmessageproperties: SA
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|1800799024|376014|366016|38070700021|55112099003|56012099003|22082099003|18002099003;
+x-microsoft-antispam-message-info:
+ UqUVnacf4ypBHjWTBcLNN9Xk8WqB4uCbXOehqTZ2CQ4AvUib6I2WWSILM6ffSK2uJ+2bG+ZUXa0/Tw3d954GKg5JrVPeOQat+f5ds7YTS/XzzSa8hh12anENKUY/kyyUnRyT+1gAvh//6O6Og/d/XN+pf7UhY0ZprbtWhmgHOqTc9nsiIQGvu9DSs3rvEyjD5vuSXJ+uE9bHpTjeUYcbjJTVk1Y6hJ78Zn83oOSK4GV0en30sZ2TjFI/mpsEmXRfCJGJlIGU+8wf3lst8WVxPODzYIn0wxIN62KSF624r8cUNsjVQzxAinik6pW8gBPpd7pXAO4bIyZeWlbJ+Ku5MnatF8+3rHp/r+ny+ODd6flkKBf1s9yps3wYZlSYaCtE8Y0EobDznckmkYvvj2NVj8VX+ABblrXYLus+/KhNseP+rvXI4qcD0T/UzFAgSar3fq5sNYq+ShMVNTx0btccLePsqrlrMi8b1VrJ+QPx0DgoRLTM2UEmgvFi2vsv+vxN5SAI9XSTCFoCNZYL2GkTY92H7DqlD1IclUE+RFeyFs0yU7E0/CgBZVLJ+82GG/2/nu0MESV29FkSZgxIHEM7Q5FQ6vOIwMtzkgPl7/Wrd5m+43I9U7SgX770DCD6rVT9LbWALj5B35TnGcVxbp3PE5sB3S8ed3UktOBZsG6LWlblIsgXBkxrKcc87PJMcoIFKPsXH3Eb/s57imVrIcIuO5lkfTgADbo282vzsEhsHqU30Uec8nBmRNXxNfi03p16w+x3gPSXvbfUoVmERalGoW8pq/37sFbBw3Qx71ev7zY=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(38070700021)(55112099003)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-1?Q?SJk7hGNhwUgozQjk4/ciH8f+LyRSxknfKy4Og6LQFa1vy5oiKatXT5dXXT?=
+ =?iso-8859-1?Q?LU9GzRW/uR67EJiWyUeSJ/wmdzTHSHtDqdAU8/z4jZZIKrOomrSzlDTUzK?=
+ =?iso-8859-1?Q?NKdVHqD6ZUX+ZRYFX3lyEkgVQzRhI0g6GE74SZzrXDri+jbzrSrfNYu75J?=
+ =?iso-8859-1?Q?Ym44mBCw5GT2u9oRuQuYrGifEVpYBx+1j0LNeeg32PeqMo4oVyY1JT0pQF?=
+ =?iso-8859-1?Q?V03N7uQD2Z6h/9KxBBFKVcGe3hLbaRWy0ZuA+rDDhYeEhOgkQPsf94Mhze?=
+ =?iso-8859-1?Q?rIOBeK6Hbo/LqBhF0aF39yLSIWSxPcTjPGOyDV/xMqcrtngXwveuqpL50+?=
+ =?iso-8859-1?Q?gmKEzxsC8fT0ijEy0jXqaFHfwDTBJmk/able9eWkpkCPAxtK5UMQAI+eyl?=
+ =?iso-8859-1?Q?8tmwzLwRbhK2nypakvmWc33p5EV1Ft9aWmObY/dwBK15OW+nIaDwIOA6MY?=
+ =?iso-8859-1?Q?c5ihxHc8zXIYd64O2GrzUq7ohVygMfJI+DxoIPn6TGFavRBq8wg6HLBJGu?=
+ =?iso-8859-1?Q?j1qhVVBZmZALwtcCWjauquKAj7oI8HgzJYz4Ddl70rBow8pbHwpJeHnUlb?=
+ =?iso-8859-1?Q?p9lDMOH4ABRnDqWQN+SIQrqA9UIxMss55QsReBNUQXij/HxVWpHj7EJML2?=
+ =?iso-8859-1?Q?Z+1tW5e3e13JSRA6lMqsoUSp8gj5wjILEuo2fXd5Jg0RcE/lv3VsIlauRJ?=
+ =?iso-8859-1?Q?/GF+1HerKbPkUhsRYe1eLTFClnAMDTI3DiLlwKRveMNpOL53hR+E0s0w5T?=
+ =?iso-8859-1?Q?HDpUFi5QMy+w0r0xCvor9OBy/3B+pmTdi1yxGXp6C+vTm0gF+PWI6BxX6D?=
+ =?iso-8859-1?Q?MhC2bLP1OD5C3VAPk2/lPvJF5cm+5uI+zYDNjvP0Ms0Gd5kuZUVIJIFYtm?=
+ =?iso-8859-1?Q?XOVIglrns7QTmyqozyGmeegC3QBfxxg+bgZfRdUlvUAmIK2+jhwqz+EeYY?=
+ =?iso-8859-1?Q?MUPpEu6iFG7zga+W3kZeSetIUIapUVttzeML/AlMpi9zTMG6bSJLuJeOX+?=
+ =?iso-8859-1?Q?9yo/WxhFTgKLEcWUOHSAK6nBoQqTdm3Cw4FfCaJ6+EBMfXgJlI/Mq7+Nc+?=
+ =?iso-8859-1?Q?JjwIElSRDPjJW1bzepibREArZlLm9eqCUWVNHsBSUzEE4UptV1oGoaVntF?=
+ =?iso-8859-1?Q?TLzbuvzC7qNOojndpLE0afTrhO1mT2pHTQOwklE6H91znKpOEnsu+mOZsY?=
+ =?iso-8859-1?Q?tw3MC1TGICWyzOu/30OA3gPs4uUGA1afQpxhbTEbrXbjFeUyfDMf7iHrzV?=
+ =?iso-8859-1?Q?Sv2exGMXo2EcouoXohk4oScgPDltyVT9fG5pEg2XuvtxJrbrtAGGQLj5O8?=
+ =?iso-8859-1?Q?H1SUMV+dd8G9FHt36GXwY4UPWousJjxNAVl8M/Ce1Vm74jp4Lhnk6L0Uoz?=
+ =?iso-8859-1?Q?8FXJiuDWOeVX23P/kU7OYW4U5GYLD69lUalYX1dplMpgeQrwBlm6QKjdWk?=
+ =?iso-8859-1?Q?d7uCTWE81WHvDt1bTYaNTp9AJLQBezobcOa6V4/4oNjcDtq4D6bc9FadeJ?=
+ =?iso-8859-1?Q?HyjY6iNY7xDc38UH0ZXGbcivfUxDYed37g1Jr1MU1nWLYee7Hnxm/V+MiM?=
+ =?iso-8859-1?Q?gcwHuvpnvFlXhFvbvO0yUAuY5cuz1gYh86C2Yfnukgis05lzI0S7VWNYf2?=
+ =?iso-8859-1?Q?l6F/uNiCB7UdPYBcZ9YHCLwUHluaIuT/fnkPvaj/FduuuX11bQAHkYzHda?=
+ =?iso-8859-1?Q?2ECGxd62D7vLiMTQa66gcym7Pf+tYbP0KlPlkDhTuMaGpy3CPj6pseT7vj?=
+ =?iso-8859-1?Q?i3YU07c2eZpIua/FBpX6p4mFi4YqVqj6i3hvTosC+ASDRJXm8Y/o+pg6y0?=
+ =?iso-8859-1?Q?FKJC05GmoQ=3D=3D?=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 4/5] PCI: controller: Validate max-link-speed
-To: Hans Zhang <18255117159@163.com>, lpieralisi@kernel.org,
- jingoohan1@gmail.com, mani@kernel.org, kwilczynski@kernel.org,
- bhelgaas@google.com, helgaas@kernel.org, florian.fainelli@broadcom.com,
- jim2101024@gmail.com
-Cc: robh@kernel.org, ilpo.jarvinen@linux.intel.com,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-renesas-soc@vger.kernel.org, claudiu.beznea.uj@bp.renesas.com,
- linux-mediatek@lists.infradead.org, linux-tegra@vger.kernel.org,
- linux-omap@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260312163652.113228-1-18255117159@163.com>
- <20260312163652.113228-5-18255117159@163.com>
-Content-Language: en-US, fr-FR
-From: Florian Fainelli <florian.fainelli@broadcom.com>
-Autocrypt: addr=florian.fainelli@broadcom.com; keydata=
- xsBNBFPAG8ABCAC3EO02urEwipgbUNJ1r6oI2Vr/+uE389lSEShN2PmL3MVnzhViSAtrYxeT
- M0Txqn1tOWoIc4QUl6Ggqf5KP6FoRkCrgMMTnUAINsINYXK+3OLe7HjP10h2jDRX4Ajs4Ghs
- JrZOBru6rH0YrgAhr6O5gG7NE1jhly+EsOa2MpwOiXO4DE/YKZGuVe6Bh87WqmILs9KvnNrQ
- PcycQnYKTVpqE95d4M824M5cuRB6D1GrYovCsjA9uxo22kPdOoQRAu5gBBn3AdtALFyQj9DQ
- KQuc39/i/Kt6XLZ/RsBc6qLs+p+JnEuPJngTSfWvzGjpx0nkwCMi4yBb+xk7Hki4kEslABEB
- AAHNMEZsb3JpYW4gRmFpbmVsbGkgPGZsb3JpYW4uZmFpbmVsbGlAYnJvYWRjb20uY29tPsLB
- IQQQAQgAywUCZWl41AUJI+Jo+hcKAAG/SMv+fS3xUQWa0NryPuoRGjsA3SAUAAAAAAAWAAFr
- ZXktdXNhZ2UtbWFza0BwZ3AuY29tjDAUgAAAAAAgAAdwcmVmZXJyZWQtZW1haWwtZW5jb2Rp
- bmdAcGdwLmNvbXBncG1pbWUICwkIBwMCAQoFF4AAAAAZGGxkYXA6Ly9rZXlzLmJyb2FkY29t
- Lm5ldAUbAwAAAAMWAgEFHgEAAAAEFQgJChYhBNXZKpfnkVze1+R8aIExtcQpvGagAAoJEIEx
- tcQpvGagWPEH/2l0DNr9QkTwJUxOoP9wgHfmVhqc0ZlDsBFv91I3BbhGKI5UATbipKNqG13Z
- TsBrJHcrnCqnTRS+8n9/myOF0ng2A4YT0EJnayzHugXm+hrkO5O9UEPJ8a+0553VqyoFhHqA
- zjxj8fUu1px5cbb4R9G4UAySqyeLLeqnYLCKb4+GklGSBGsLMYvLmIDNYlkhMdnnzsSUAS61
- WJYW6jjnzMwuKJ0ZHv7xZvSHyhIsFRiYiEs44kiYjbUUMcXor/uLEuTIazGrE3MahuGdjpT2
- IOjoMiTsbMc0yfhHp6G/2E769oDXMVxCCbMVpA+LUtVIQEA+8Zr6mX0Yk4nDS7OiBlvOwE0E
- U8AbwQEIAKxr71oqe+0+MYCc7WafWEcpQHFUwvYLcdBoOnmJPxDwDRpvU5LhqSPvk/yJdh9k
- 4xUDQu3rm1qIW2I9Puk5n/Jz/lZsqGw8T13DKyu8eMcvaA/irm9lX9El27DPHy/0qsxmxVmU
- pu9y9S+BmaMb2CM9IuyxMWEl9ruWFS2jAWh/R8CrdnL6+zLk60R7XGzmSJqF09vYNlJ6Bdbs
- MWDXkYWWP5Ub1ZJGNJQ4qT7g8IN0qXxzLQsmz6tbgLMEHYBGx80bBF8AkdThd6SLhreCN7Uh
- IR/5NXGqotAZao2xlDpJLuOMQtoH9WVNuuxQQZHVd8if+yp6yRJ5DAmIUt5CCPcAEQEAAcLB
- gQQYAQIBKwUCU8AbwgUbDAAAAMBdIAQZAQgABgUCU8AbwQAKCRCTYAaomC8PVQ0VCACWk3n+
- obFABEp5Rg6Qvspi9kWXcwCcfZV41OIYWhXMoc57ssjCand5noZi8bKg0bxw4qsg+9cNgZ3P
- N/DFWcNKcAT3Z2/4fTnJqdJS//YcEhlr8uGs+ZWFcqAPbteFCM4dGDRruo69IrHfyyQGx16s
- CcFlrN8vD066RKevFepb/ml7eYEdN5SRALyEdQMKeCSf3mectdoECEqdF/MWpfWIYQ1hEfdm
- C2Kztm+h3Nkt9ZQLqc3wsPJZmbD9T0c9Rphfypgw/SfTf2/CHoYVkKqwUIzI59itl5Lze+R5
- wDByhWHx2Ud2R7SudmT9XK1e0x7W7a5z11Q6vrzuED5nQvkhAAoJEIExtcQpvGagugcIAJd5
- EYe6KM6Y6RvI6TvHp+QgbU5dxvjqSiSvam0Ms3QrLidCtantcGT2Wz/2PlbZqkoJxMQc40rb
- fXa4xQSvJYj0GWpadrDJUvUu3LEsunDCxdWrmbmwGRKqZraV2oG7YEddmDqOe0Xm/NxeSobc
- MIlnaE6V0U8f5zNHB7Y46yJjjYT/Ds1TJo3pvwevDWPvv6rdBeV07D9s43frUS6xYd1uFxHC
- 7dZYWJjZmyUf5evr1W1gCgwLXG0PEi9n3qmz1lelQ8lSocmvxBKtMbX/OKhAfuP/iIwnTsww
- 95A2SaPiQZA51NywV8OFgsN0ITl2PlZ4Tp9hHERDe6nQCsNI/Us=
-In-Reply-To: <20260312163652.113228-5-18255117159@163.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+X-OriginatorOrg: asteralabs.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7c974520-83ea-4dfe-27b2-08de805ac0b5
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Mar 2026 17:14:00.1587
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: f47c88fd-08a9-4016-b488-3f361c03ff2e
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: pHB4t47i5NOhksiK0auHcm7I3rfsPKHV/pcmhhhrrNjjNGlfIZqX8WroyxIP1p2lZ8fRrLkI0tgwu3yhrWwZQip6CITz7/QQ3ZcnETnhM9Q=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2P221MB1180
 
-On 3/12/26 09:36, Hans Zhang wrote:
-> Add validation for the "max-link-speed" DT property in three more
-> drivers, using the pcie_get_link_speed() helper.
-> 
-> - brcmstb: If the value is missing or invalid, fall back to no
->    limitation (pcie->gen = 0).  Fix the previous incorrect logic.
-> - mediatek-gen3: If the value is missing or invalid, use the maximum
->    speed supported by the controller.
-> - rzg3s-host: If the value is missing or invalid, fall back to Gen2.
-> 
-> This ensures that all users of of_pci_get_max_link_speed() are ready
-> for the removal of the central range check.
-> 
-> Signed-off-by: Hans Zhang <18255117159@163.com>
-> ---
->   drivers/pci/controller/pcie-brcmstb.c       | 5 +++--
+Hi Ilpo,
 
-For pcie-brcmstb.c:
+Thanks for looking into the issue. Just a quick question. So the patch you =
+linked and the patch you attached is for the latest kernel, not 6.8. Right?=
+ I'll try to install the latest kernel first and rerun my test and keep you=
+ updated.
 
-Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
--- 
-Florian
+Thanks,
+Shawn.
+
+________________________________________
+From: Ilpo J=E4rvinen <ilpo.jarvinen@linux.intel.com>
+Sent: Thursday, March 12, 2026 6:24 AM
+To: Shawn Jin <shawn.jin@asteralabs.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>; Bjorn Helgaas <bhelgaas@google.com>=
+; linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>; linux-pci@vg=
+er.kernel.org <linux-pci@vger.kernel.org>
+Subject: Re: [BUG] PCIe bridge resource allocation creates invalid limit ad=
+dresses after Secondary Bus Reset recovery
+
+[EXTERNAL EMAIL]
+
+Hi,
+First of all, many of the changes related to this additional resource
+distribution do not really make sense to me.
+
+There's one fix that tries to rectify to most gross wrongness in the
+adjustment itself because it caused a regression (not yet applied):
+
+https://lore.kernel.org/linux-pci/20260219153951.68869-1-ilpo.jarvinen@linu=
+x.intel.com/
+
+It probably doesn't address the bug you see here though it may hide it.
+
+> [  796.604869] pcieport 0000:96:01.0: distributing available resources
+> [  796.604872] pci 0000:98:00.0: bridge window [mem 0x00100000-0x001fffff=
+] extended by 0x0000000000100000
+> [  796.604876] pci 0000:99:00.0: bridge window [??? 0x00000000 flags 0x0]=
+ extended by 0x0000000000055555
+> [  796.604880] pci 0000:99:01.0: bridge window [mem 0x00100000-0x001fffff=
+] shrunken by 0x00000000000aaaac
+> [  796.604883] pci 0000:99:01.0: bridge window [mem 0x800000000-0xfffffff=
+ff 64bit pref] shrunken by 0x0000000000000001
+> [  796.604886] pci 0000:99:02.0: bridge window [??? 0x00000000 flags 0x0]=
+ extended by 0x0000000000055555
+
+Note how it's not just -1 that seems wrong, the other numbers too seem
+non-round (to 1M) as well.
+
+There seems to be a number of problems with this entire algorithm.
+I think the -1 comes from remove_dev_resource() that is called for a
+resource which does have !res->flags (+ res->start=3Dres->end=3D0 ->
+resource_size(res) =3D=3D 1).
+
+So could you please try the patch below.
+
+Not that the fix makes everything okay IMO but perhaps it addresses this
+particular case. It's not even clear to me how some of the cases with not
+valid bridge windows should be dealt with while distributing the
+additional memory between the bridges.
+
+The 55555 cases probably come from align =3D=3D 0 which makes
+ALIGN_DOWN_IF_NONZERO() to produce non-aligning sizes. The fix patch below
+might address it.
+
+I don't (yet) understand how that aaaac came to be, I suppose it somehow
+relates to this doing something unexpected so if you want to check that
+out, it would be helpful:
+                align =3D pci_resource_alignment(bridge, res);
+                if (!resource_assigned(res) && align)
+                        available[i].start =3D min(ALIGN(available[i].start=
+, align),
+                                                 available[i].end + 1);
+
+Another option is remove_dev_resource() doing something that leads to it.
+
+It might be worth adding debug traps for available[i] getting non-1M
+aligned but it's not very clear to me how and where.
+
+From: =3D?UTF-8?q?Ilpo=3D20J=3DC3=3DA4rvinen?=3D <ilpo.jarvinen@linux.intel=
+.com>
+Date: Thu, 12 Mar 2026 14:59:43 +0200
+Subject: [PATCH 1/1] PCI: Skip not valid bridge windows while distributing
+ resources
+MIME-Version: 1.0
+Content-Type: text/plain; charset=3DUTF-8
+Content-Transfer-Encoding: 8bit
+
+pci_bus_distribute_available_resources() distributes available
+resources between downstream bridges, however, it does not take
+into account cases where a bridge window is not valid.
+
+Skip touching bridge windows that are not valid.
+
+Signed-off-by: Ilpo J=E4rvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/pci/setup-bus.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 61f769aaa2f6..4fcb5e0c44b4 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1868,6 +1868,9 @@ static void remove_dev_resource(struct resource *avai=
+l, struct pci_dev *dev,
+ {
+        resource_size_t size, align, tmp;
+
++       if (!res->flags)
++               return;
++
+        size =3D resource_size(res);
+        if (!size)
+                return;
+@@ -1922,6 +1925,8 @@ static void pci_bus_distribute_available_resources(st=
+ruct pci_bus *bus,
+                available[i] =3D available_in[i];
++               if (!res->flags)
++                       continue;
+                /*
+                 * The alignment of this bridge is yet to be considered,
+                 * hence it must be done now before extending its bridge
+@@ -1993,6 +1998,8 @@ static void pci_bus_distribute_available_resources(st=
+ruct pci_bus *bus,
+                for (i =3D 0; i < PCI_P2P_BRIDGE_RESOURCE_NUM; i++) {
+                        res =3D pci_resource_n(dev, PCI_BRIDGE_RESOURCES + =
+i);
+
++                       if (!res->flags)
++                               continue;
+                        /*
+                         * Make sure the split resource space is properly
+                         * aligned for bridge windows (align it down to
+base-commit: 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f
+--
+2.39.5
 
