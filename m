@@ -1,79 +1,67 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id E278A34F48D;
-	Thu, 12 Mar 2026 22:34:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19F4E21D00A;
+	Thu, 12 Mar 2026 22:37:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773354866; cv=none; b=rBS88hghwUQSYkKE3qQ9ahAkOfYyeCgzhBfXGh83RO8e5IoMo+NdyxDGB6f1EUWyUnPDtUc2h6tnebwRdKVQIQaJVhFT6sA/reS7FxZvYKzvCAs5FflZWyb7bcJAP9cZRKkv6dH+FjemWK7dH5YKBOG8QTZpLKaCGOcMxtdr+BI=
+	t=1773355080; cv=none; b=n06gpGqDyVHFwcsn3G8HzVB7Rtt8xodxFK5G64eH/xkuL197iLkVL+p76/5/Eqs24ffU1KZWiYVvIix1U7W7I7J7yU7mGFcQeKJ/l2kKCD/Y8IR4yVHbuuUuUB2A4pCF3B88qAd7WezEtAnbml/omvuyyCxVjpbJ0hUEQ7vIjqU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773354866; c=relaxed/simple;
-	bh=9Ohx+IU3CTjmUrrLYBv7odjTrZ7menK5l3wSc/Sybts=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=L3unxRt608oRmEZSKUdX9/UaKDCZXlyc4tyUfitAozOHkKEI0V1pU/U7De6Bp9qY5+RzWuCVht2RbK9YSSkz7P0967RmtPvvhFi6TuU9u+HiOciAXZIAnq4J4V2usQnU63N+GoeJva65Fz1PR2lZuBao5VeEYL39wc+8zfcepzc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
-Received: by linux.microsoft.com (Postfix, from userid 1202)
-	id BCCE220B710C; Thu, 12 Mar 2026 15:34:25 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com BCCE220B710C
-From: Long Li <longli@microsoft.com>
-To: "K . Y . Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>,
-	Dexuan Cui <decui@microsoft.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
+	s=arc-20240116; t=1773355080; c=relaxed/simple;
+	bh=z9cfsNg/oiO3ipLCI/KoabGgexgoZyq7hg+OfePjRro=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=E3Z6rT3b6fZ8fmraf3BZqi6IHPsvgRTGWtPlBWuPX4BNA2DSYp+UAuRrqMz8pGphLLfGTlYaDR0OwFTOYPfdc0epa+WUgjEAlNU4kw/2yK68iR4sI3mxWrULQfeLE1B3OCuW6BMXXr+ZFPf1nprzdAZu/33QXv5A88s8KnxRi7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eJ9imKgP; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eJ9imKgP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ACB3C4CEF7;
+	Thu, 12 Mar 2026 22:37:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773355079;
+	bh=z9cfsNg/oiO3ipLCI/KoabGgexgoZyq7hg+OfePjRro=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=eJ9imKgP49aSp2zCrc7eeQchPQVnjVVB2euupOgnGqMFRWOJzTDyF+bb5LsWLxjPv
+	 ce2W3ncKTlGKRpTq1G87l/StnLKgVfAaQJjE3Ct0tR4HmdacqxC0YNvFQvbHaHlwNe
+	 9uzOMqLif38ZpG2Y2ZVkUJuZqDeJohQDr9xj0IlUbZpDrFIQF4xAYc2ZRwVnOOwlwq
+	 noAvnLU/LECda9Dx53n2Eb3WuuNIAPqwXBlFPP4OCbO/3HWBQWN/mNFHfzrubmb1Tg
+	 PHssIWlx+H8s4qikT4Ks9vKBUQR86UEyjb3+6j3VtXStlmG9tA1YsckvzxuIpY+5z6
+	 7i6mLLNIy0b1w==
+Date: Thu, 12 Mar 2026 17:37:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Simon Richter <Simon.Richter@hogyros.de>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Long Li <longli@microsoft.com>,
-	Rob Herring <robh@kernel.org>,
-	Michael Kelley <mikelley@microsoft.com>,
-	linux-hyperv@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: hv: Set default NUMA node to 0 for devices without affinity info
-Date: Thu, 12 Mar 2026 15:32:44 -0700
-Message-ID: <20260312223244.1006305-1-longli@microsoft.com>
-X-Mailer: git-send-email 2.43.7
+Subject: Re: [PATCH v1] PCI/VGA: Move pci_set_vga_state() to vgaarb.c
+Message-ID: <20260312223758.GA1241053@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <63ba7402-a0f1-4203-8d8e-9b909003b9e1@hogyros.de>
 
-When a Hyper-V PCI device does not have
-HV_PCI_DEVICE_FLAG_NUMA_AFFINITY set or has an out-of-range
-virtual_numa_node, hv_pci_assign_numa_node() leaves the device
-NUMA node unset. On x86_64, the default NUMA node happens to be
-0, but on ARM64 it is NUMA_NO_NODE (-1), leading to inconsistent
-behavior across architectures.
+On Thu, Mar 12, 2026 at 08:39:29AM +0900, Simon Richter wrote:
+> On 2/21/26 4:49 AM, Bjorn Helgaas wrote:
+> 
+> > pci_set_vga_state() is only used in vgaarb.c.  Move it from pci.c to
+> > vgaarb.c, make it static, and remove the declaration from
+> > include/linux/pci.h.
+> 
+> pci_register_set_vga_state() would then be exported from vgaarb.c -- is it
+> confusing to have a function with a "pci_" prefix inside a file where all
+> others have a "vga_" prefix?
+> 
+> pci_notify() in vgaarb.c is static, so there is obvious precedent for a
+> "pci_" prefix, but that's not externally visible.
 
-In Azure, when no NUMA information is available from the host,
-devices perform best when assigned to node 0. Set the device NUMA
-node to 0 unconditionally before the conditional NUMA affinity
-check, so that devices always get a valid default and behavior is
-consistent on both x86_64 and ARM64.
+Thanks for taking a look!
 
-Fixes: 999dd956d838 ("PCI: hv: Add support for protocol 1.3 and support PCI_BUS_RELATIONS2")
-Signed-off-by: Long Li <longli@microsoft.com>
----
- drivers/pci/controller/pci-hyperv.c | 3 +++
- 1 file changed, 3 insertions(+)
+I don't care too much about the "pci_" vs "vga_" prefix.
 
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index 2c7a406b4ba8..5c03b6e4cdab 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -2485,6 +2485,9 @@ static void hv_pci_assign_numa_node(struct hv_pcibus_device *hbus)
- 		if (!hv_dev)
- 			continue;
- 
-+		/* Default to node 0 for consistent behavior across architectures */
-+		set_dev_node(&dev->dev, 0);
-+
- 		if (hv_dev->desc.flags & HV_PCI_DEVICE_FLAG_NUMA_AFFINITY &&
- 		    hv_dev->desc.virtual_numa_node < num_possible_nodes())
- 			/*
--- 
-2.43.0
-
+But it *is* a problem to move pci_register_set_vga_state() to
+vgaarb.c, which is only built when CONFIG_VGA_ARB is enabled, because
+it's called from arch/x86/kernel/apic/x2apic_uv_x.c, which doesn't
+depend on CONFIG_VGA_ARB.
