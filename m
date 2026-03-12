@@ -1,217 +1,151 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45DC640DFA1;
-	Thu, 12 Mar 2026 17:48:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8677837DE84;
+	Thu, 12 Mar 2026 18:24:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773337717; cv=none; b=NrwVEMiDHjtmOBFrZfJNydgqQfgAj71L46spqegVt3fb5RHDlwao+o8kpwEUHynSFkp2FcyoGagpqK3LlLJVcManollGJFuylKBWKtBjfzyT8Sg0Rk+n63xIUaK3HjiS7qMWlJqFkzsBo2yh8HEnkrhimd2u/nQ5qLbyZMfvGqU=
+	t=1773339850; cv=none; b=ZlD+q6QU6B6SqGKCn8Qva1HYpG9Sg1tMpbSbKVXjckL33A6iAGOKDVilfiX1COMVYFq72EhsaYt++d1j/EsUTy4EaJIL+RYtO8QhwfgzjxJ12m7fxEpFv0r8JeDfhb0afw2QYT8oVK5SushxWCH8ZVWIgPL3bGu03HI+j9lKTU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773337717; c=relaxed/simple;
-	bh=vNeY9BEzB31wHirti/RD7g2xdCn37mumjwW9SQRT6aI=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=MingSZMPy2sQAtfNQiUwFBGoxA/PtdjVLyKM+X5l00ChPhN9NAiIpl0qhbVzVBSvz8nT9kedJMGIg08VoqRYe7FA+wz0UjLYhzsGA1d/mOkFiBNiuHrTgv+JI7t6YwhAcS4oAnOLMJ/AerJs1tV2C1kt2qrB+5OtnHAisvbf0Uo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Z3ZRq9Td; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Z3ZRq9Td"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773337715; x=1804873715;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=vNeY9BEzB31wHirti/RD7g2xdCn37mumjwW9SQRT6aI=;
-  b=Z3ZRq9TdkkJ43OXH4KMIXLbpNJ+W1VjVohdyvTUnzybM80GW+4l6Xzcf
-   2GmBCl2Xtgi6UoQCJ3rMXZtE5i5w2wjtnW3t9lOVhFFqZW/GasIFaPvV2
-   FpPhzo8EoT05cU8qp8+12ovpeY1Aj/fmcZyRgnvgPipkKe4S/OJS1qLnT
-   NvagVnkOaCmmxomaRYDyLYN4q3KDybSv5tFxMbxoGzVsCDKV8EY6yhi9z
-   JJSvIKIMN0ZZP2DJgo1GTbdALHuw3+WqyAyfVS1eoz6fdyO1JVUHkZlGK
-   CSiexr4o3VPg1fc+WjfLegRRATvLRRiT0lY6HH2zG4kYW4EkJkc7IZzHB
-   Q==;
-X-CSE-ConnectionGUID: yf/GjF1qQT2AusPJljTUqw==
-X-CSE-MsgGUID: wabCfbFJQH2OatJt1iYF7Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11727"; a="74141652"
-X-IronPort-AV: E=Sophos;i="6.23,116,1770624000"; 
-   d="scan'208";a="74141652"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Mar 2026 10:48:34 -0700
-X-CSE-ConnectionGUID: tG/VLZkgQOqwmFCtqjSf+Q==
-X-CSE-MsgGUID: KsVb5T+/SlypBAevussNrA==
-X-ExtLoop1: 1
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.115])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Mar 2026 10:48:31 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Thu, 12 Mar 2026 19:48:28 +0200 (EET)
-To: Shawn Jin <shawn.jin@asteralabs.com>
-cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-    "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
-    "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [BUG] PCIe bridge resource allocation creates invalid limit
- addresses after Secondary Bus Reset recovery
-In-Reply-To: <LV8P221MB14722013ED06CFDD3AFF161E9944A@LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM>
-Message-ID: <885ad11d-cf87-d926-41c1-65ad16968bc8@linux.intel.com>
-References: <LV8P221MB1472A24B9975F7C8E8D6BF929947A@LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM> <20260311231943.GA1086074@bhelgaas> <LV8P221MB147241DCED82480888F8D73D9947A@LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM> <LV8P221MB14726A1B6959675557ED1AC29944A@LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM>
- <a128f2d6-4311-a9a3-5e10-267f46db709e@linux.intel.com> <LV8P221MB14722013ED06CFDD3AFF161E9944A@LV8P221MB1472.NAMP221.PROD.OUTLOOK.COM>
+	s=arc-20240116; t=1773339850; c=relaxed/simple;
+	bh=GJPok1N29I2rdd1Y56hNtB8ClOGNj3H1Xdxe6sT9QyU=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=JXTj/ab9mAR/LqZnx704HooX9oA2C17oZWaz9SmfXwExT23P+PcC9TFbV+HqxUanA1uMnx8/+OFjY/JW5x6UzxnvXIFHe7OjCXdxWaq1FxOmS3PM8SYN+2A1kgxHZnLMciMw9qWj6dBhgsBw3+cbDFxnYRUts0v5X/BXyrBiPI8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.107])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fWwwN3rZwzJ468c;
+	Fri, 13 Mar 2026 02:23:16 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id C176340585;
+	Fri, 13 Mar 2026 02:24:04 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 12 Mar
+ 2026 18:24:03 +0000
+Date: Thu, 12 Mar 2026 18:24:01 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: Alex Williamson <alex@shazbot.org>
+CC: Lukas Wunner <lukas@wunner.de>, <smadhavan@nvidia.com>,
+	<dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
+	<vishal.l.verma@intel.com>, <ira.weiny@intel.com>,
+	<dan.j.williams@intel.com>, <bhelgaas@google.com>, <ming.li@zohomail.com>,
+	<rrichter@amd.com>, <Smita.KoralahalliChannabasappa@amd.com>,
+	<huaisheng.ye@intel.com>, <linux-cxl@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <vaslot@nvidia.com>, <vsethi@nvidia.com>,
+	<sdonthineni@nvidia.com>, <vidyas@nvidia.com>, <mochs@nvidia.com>,
+	<jsequeira@nvidia.com>, Terry Bowman <terry.bowman@amd.com>
+Subject: Re: [PATCH v4 09/10] PCI: save/restore CXL config around reset
+Message-ID: <20260312182401.00001adc@huawei.com>
+In-Reply-To: <20260126153435.5f1557df@shazbot.org>
+References: <20260120222610.2227109-1-smadhavan@nvidia.com>
+	<20260120222610.2227109-10-smadhavan@nvidia.com>
+	<aXH1lfR8g1q--oJc@wunner.de>
+	<20260122104745.00001fea@huawei.com>
+	<20260126153435.5f1557df@shazbot.org>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-2033597033-1773337708=:1070"
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml500011.china.huawei.com (7.191.174.215) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Mon, 26 Jan 2026 15:34:35 -0700
+Alex Williamson <alex@shazbot.org> wrote:
 
---8323328-2033597033-1773337708=:1070
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+> On Thu, 22 Jan 2026 10:47:45 +0000
+> Jonathan Cameron <jonathan.cameron@huawei.com> wrote:
+> 
+> > On Thu, 22 Jan 2026 11:01:57 +0100
+> > Lukas Wunner <lukas@wunner.de> wrote:
+> >   
+> > > On Tue, Jan 20, 2026 at 10:26:09PM +0000, smadhavan@nvidia.com wrote:    
+> > > > +++ b/drivers/pci/pci.c
+> > > > @@ -4989,6 +4990,11 @@ static int cxl_reset(struct pci_dev *dev, bool probe)
+> > > >  	if (probe)
+> > > >  		return 0;
+> > > > 
+> > > > +	pci_save_state(dev);
+> > > > +	rc = cxl_config_save_state(dev, &cxl_state);
+> > > > +	if (rc)
+> > > > +		pci_warn(dev, "Failed to save CXL config state: %d\n", rc);
+> > > > +      
+> > > 
+> > > Hm, shouldn't the call to cxl_config_save_state() be moved to
+> > > pci_save_state() (and likewise, cxl_config_restore_state() moved to
+> > > pci_restore_state())?
+> > > 
+> > > E.g. when a DPC event occurs, I assume CXL registers need to
+> > > be restored as well on recovery, right?    
+> > The CXL spec has some comic language around DPC that basically says
+> > "use with care, DPC trigger will bring down physical link, reset devicestate,
+> > disrupt CXL.cache and CXL.mem traffic".
+> > or in shorter words
+> > 'Good luck'
+> > 
+> > If a CXL device undergoes DPC high chance you'll either trigger CXL isolation
+> > which we aren't handing yet in Linux because we aren't convinced software
+> > can really recover form it, or stall a CPU and end up rebooting.
+> > 
+> > Maybe we'll one day we'll figure this out. Today turn off DPC on CXL ports! :)  
+> 
+> Even if we hand-wave that DPC isn't an issue, save/restore of the PCI
+> state happens at a higher level for every other PCI reset method and
+> we're creating inconsistency here.
+> 
+> PCI-core includes interfaces for saving PCI state, offloading PCI state
+> as an opaque blob, reloading, and restoring that state, and performing
+> resets without saving and restoring state.  This has a couple users,
+> including vfio.
+> 
+> If we want similar behavior for CXL type2 devices for a future vfio use
+> case, we shouldn't create unnecessary differentiation here with saving
+> the CXL state separately and making the reset method behave
+> differently.  Thanks,
+> 
 
-On Thu, 12 Mar 2026, Shawn Jin wrote:
+I'm a bit concerned that, unlike PCI where no traffic flows after reset
+and restore of basic PCIe stuff, for CXL once you've put the decoders
+etc back in place, CXL.mem traffic can happen autonomously. It's
+cacheable and physical address prefetchers on the CPU side may be able
+wander into it more or less randomly, whether there are page tables yet
+or not.
 
-> Hi Ilpo,
->=20
-> Thanks for looking into the issue. Just a quick question. So the patch=20
-> you linked and the patch you attached is for the latest kernel, not 6.8.=
-=20
-> Right? I'll try to install the latest kernel first and rerun my test and=
-=20
-> keep you updated.
+This is somewhat similar to PCI devices misbehaving if you enable
+bus mastering without ensuring they are in a clean state (just in the
+other direction).
 
-Yes, they are for the latest trees but I can look into backporting them if=
-=20
-needed.
+So I'm not sure how safe it is to restore the generic CXL state with
+out the driver taking control.
 
---
- i.
+I don't think there are tight enough guarantees that devices should be
+able to survive this if their drivers haven't managed the setup of CXL.mem
+carefully as they did during driver bind etc.  Maybe they had to
+load a firmware first before there was anything behind a CXL protocol
+front end.
 
-> ________________________________________
-> From: Ilpo J=E4rvinen <ilpo.jarvinen@linux.intel.com>
-> Sent: Thursday, March 12, 2026 6:24 AM
-> To: Shawn Jin <shawn.jin@asteralabs.com>
-> Cc: Bjorn Helgaas <helgaas@kernel.org>; Bjorn Helgaas <bhelgaas@google.co=
-m>; linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>; linux-pci@=
-vger.kernel.org <linux-pci@vger.kernel.org>
-> Subject: Re: [BUG] PCIe bridge resource allocation creates invalid limit =
-addresses after Secondary Bus Reset recovery
->=20
-> [EXTERNAL EMAIL]
->=20
-> Hi,
-> First of all, many of the changes related to this additional resource
-> distribution do not really make sense to me.
->=20
-> There's one fix that tries to rectify to most gross wrongness in the
-> adjustment itself because it caused a regression (not yet applied):
->=20
-> https://lore.kernel.org/linux-pci/20260219153951.68869-1-ilpo.jarvinen@li=
-nux.intel.com/
->=20
-> It probably doesn't address the bug you see here though it may hide it.
->=20
-> > [  796.604869] pcieport 0000:96:01.0: distributing available resources
-> > [  796.604872] pci 0000:98:00.0: bridge window [mem 0x00100000-0x001fff=
-ff] extended by 0x0000000000100000
-> > [  796.604876] pci 0000:99:00.0: bridge window [??? 0x00000000 flags 0x=
-0] extended by 0x0000000000055555
-> > [  796.604880] pci 0000:99:01.0: bridge window [mem 0x00100000-0x001fff=
-ff] shrunken by 0x00000000000aaaac
-> > [  796.604883] pci 0000:99:01.0: bridge window [mem 0x800000000-0xfffff=
-ffff 64bit pref] shrunken by 0x0000000000000001
-> > [  796.604886] pci 0000:99:02.0: bridge window [??? 0x00000000 flags 0x=
-0] extended by 0x0000000000055555
->=20
-> Note how it's not just -1 that seems wrong, the other numbers too seem
-> non-round (to 1M) as well.
->=20
-> There seems to be a number of problems with this entire algorithm.
-> I think the -1 comes from remove_dev_resource() that is called for a
-> resource which does have !res->flags (+ res->start=3Dres->end=3D0 ->
-> resource_size(res) =3D=3D 1).
->=20
-> So could you please try the patch below.
->=20
-> Not that the fix makes everything okay IMO but perhaps it addresses this
-> particular case. It's not even clear to me how some of the cases with not
-> valid bridge windows should be dealt with while distributing the
-> additional memory between the bridges.
->=20
-> The 55555 cases probably come from align =3D=3D 0 which makes
-> ALIGN_DOWN_IF_NONZERO() to produce non-aligning sizes. The fix patch belo=
-w
-> might address it.
->=20
-> I don't (yet) understand how that aaaac came to be, I suppose it somehow
-> relates to this doing something unexpected so if you want to check that
-> out, it would be helpful:
->                 align =3D pci_resource_alignment(bridge, res);
->                 if (!resource_assigned(res) && align)
->                         available[i].start =3D min(ALIGN(available[i].sta=
-rt, align),
->                                                  available[i].end + 1);
->=20
-> Another option is remove_dev_resource() doing something that leads to it.
->=20
-> It might be worth adding debug traps for available[i] getting non-1M
-> aligned but it's not very clear to me how and where.
->=20
-> From: =3D?UTF-8?q?Ilpo=3D20J=3DC3=3DA4rvinen?=3D <ilpo.jarvinen@linux.int=
-el.com>
-> Date: Thu, 12 Mar 2026 14:59:43 +0200
-> Subject: [PATCH 1/1] PCI: Skip not valid bridge windows while distributin=
-g
->  resources
-> MIME-Version: 1.0
-> Content-Type: text/plain; charset=3DUTF-8
-> Content-Transfer-Encoding: 8bit
->=20
-> pci_bus_distribute_available_resources() distributes available
-> resources between downstream bridges, however, it does not take
-> into account cases where a bridge window is not valid.
->=20
-> Skip touching bridge windows that are not valid.
->=20
-> Signed-off-by: Ilpo J=E4rvinen <ilpo.jarvinen@linux.intel.com>
-> ---
->  drivers/pci/setup-bus.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 61f769aaa2f6..4fcb5e0c44b4 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1868,6 +1868,9 @@ static void remove_dev_resource(struct resource *av=
-ail, struct pci_dev *dev,
->  {
->         resource_size_t size, align, tmp;
->=20
-> +       if (!res->flags)
-> +               return;
-> +
->         size =3D resource_size(res);
->         if (!size)
->                 return;
-> @@ -1922,6 +1925,8 @@ static void pci_bus_distribute_available_resources(=
-struct pci_bus *bus,
->                 available[i] =3D available_in[i];
-> +               if (!res->flags)
-> +                       continue;
->                 /*
->                  * The alignment of this bridge is yet to be considered,
->                  * hence it must be done now before extending its bridge
-> @@ -1993,6 +1998,8 @@ static void pci_bus_distribute_available_resources(=
-struct pci_bus *bus,
->                 for (i =3D 0; i < PCI_P2P_BRIDGE_RESOURCE_NUM; i++) {
->                         res =3D pci_resource_n(dev, PCI_BRIDGE_RESOURCES =
-+ i);
->=20
-> +                       if (!res->flags)
-> +                               continue;
->                         /*
->                          * Make sure the split resource space is properly
->                          * aligned for bridge windows (align it down to
-> base-commit: 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f
-> --
-> 2.39.5
->=20
---8323328-2033597033-1773337708=:1070--
+The drivers can't stop CXL.mem in a prepare reset callback
+prior to saving state as it may be RWL by an annoying BIOS.
+
+Maybe I'm overly paranoid and all device manufacturers are sensible.
+Or I missed some spec text that says devices should politely handle
+traffic turning up before they are ready.  If they implement the memory
+ready checks then we may be fine as hopefully Media Status == Ready
+doesn't happen until it's safe to enable access (though the spec
+doesn't actually say that is sufficient that I can find).
+
+I need to do some more digging and maybe a spot of prototyping.
+Also more than plausible I'm missing a nugget of code in here
+that makes this all safe.
+
+Jonathan
+
+
+> Alex
+
