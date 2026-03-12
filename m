@@ -1,199 +1,226 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 337A53BB48
-	for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 14:01:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773324109; cv=pass; b=MTiQ8WbyxKpZdfLss+9aIo7t/tFRqVKQZFsIeLMW27ePNDZp2EArszn+vXtPMRQwD+/TCVFTMAU98QWw43khyC49KqR6JHUrBclOPm10zSvK1ITt0QFnq4MOgjdWwZSJ7zljZJO9SJhABtD4xSjmTtP7LCqSY20u7xGSzjgHvtM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773324109; c=relaxed/simple;
-	bh=h7HyxgIgdaXVa7GaIMk60Eou7grQ16jf0HfHA3SBWAw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=GMK/gdNiicjB11+asOQeHElJk00uWwuRtFXWIbNLslbhSwKsznDe1RwaSmYSbm8xN0D7oT4jRn8MYy6o0kb1CYB78XiV6cP/tcVVQAwNOXcRmfBR3hJMIBhmx3BIc4oN6P6S+4GdbtlwC7vTmlucT5jU2FKD8actMFIsS+4q4UY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NnjXW8uq; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=nsWHhxRo; arc=pass smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7451F359A66
+	for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 14:18:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773325108; cv=none; b=pq7rADad8H6cgd52VlcZSzDnoiQMKZUH2Zi1SU+pX+wDSBOSv9GmY2X3sU5VX3gLCLiXzGdvTjSC4Tedfyh5rEhdma8+i9GMiga66IaJg5miSqGU7EHFs/+KuqlZNtP+GyZtWMxqMpQig8hcFNzfo0xk8PQHpduXg3uCOasavoY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773325108; c=relaxed/simple;
+	bh=WBp6aG8OIPb/dsUpez1Ic8Jytais2oVJHc39FfdijWw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=O/aGy9Ac7MPqrZt3/XyR1SC+7YHD+xi0jWsHeEfB02O+efPpjRrmOuK4MzQmAmvRL7IHZGlW65JtrRSxSvNhQj1m1QerZMc30nQh6p6MDodfg2+pcLH+NuDwg+c9K6d03ZxDJHWMfx0nygCXeL42gpe9dnnHBxSOezErLRFMGPQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=pC9s3oCR; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Dc2y/T8P; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NnjXW8uq";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="nsWHhxRo"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1773324107;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=svCptW0MF+j8ogyjRJzY7kaL3jUF3IX/ZurOettGWWg=;
-	b=NnjXW8uq4PtD0ubGgFHLA4szcmVWkFXn440rJ4v/IGf6w5197eWOaiwrUJCUeg9PxZs9Fq
-	kLdRwX5DXzRokkzWkefuoIkzkbnXeVLu4INLrCCx+EkO5/ozB89RxZ3oUErkWW8yPaIdXa
-	ldOzCHhNTWrfjvqdQDwhVEzIrgzR/Mw=
-Received: from mail-oa1-f72.google.com (mail-oa1-f72.google.com
- [209.85.160.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-73-skBGIqYRMIy5R1kVccNzZw-1; Thu, 12 Mar 2026 10:01:45 -0400
-X-MC-Unique: skBGIqYRMIy5R1kVccNzZw-1
-X-Mimecast-MFC-AGG-ID: skBGIqYRMIy5R1kVccNzZw_1773324105
-Received: by mail-oa1-f72.google.com with SMTP id 586e51a60fabf-4171d16aad4so9593618fac.3
-        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 07:01:45 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1773324105; cv=none;
-        d=google.com; s=arc-20240605;
-        b=GmX/e/8cV/V81SOOI6DJqlw3XD1YKFHcW34VLRk5oeH/VZRlteXjTFbuq/25xQPIXK
-         G/V1kBmRgrtWVzRjSjgLzU3UD1MGlYvKYOhCp0TlmQoMmzlOlnKM+WEbgKi1ZjgDfY8E
-         F546S8gpRUN2fqq4LqgtzYZKiQbr6pJabFb1/wKO00Bv0HS9Gh8kFcjscqSuSJL792H1
-         /JPh5WmixAuTaO3kw3z1sLtv7kT1QMNt1KZIOg+3/0tBXI0//ps1TeS07CEiiK+BoHnT
-         Ac8POvow1S4QfO1pe3Eh6y22+BEPVJuXld/RCkNMTGFMoFPaHge4JZU0XyvCPVD3NbM3
-         cxSQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=svCptW0MF+j8ogyjRJzY7kaL3jUF3IX/ZurOettGWWg=;
-        fh=UoOTW72Wge1mlIh0pIn51CvIoJb7sC4se/j/6Bpp92o=;
-        b=D4Hk1N3hFCh3t6Et3L3aKOKpiJ/94u1KpjNL+VWzMpt3es2BqP+J45+BaHKkk0Sa1f
-         wKYKPtKEBv5DgYIxqmcnZ0OwotaSLbRhG3P+8m17EnbkLrOxrXdBmofqz3i1rOgd+pHg
-         FWBuO/IHqo5ANoG+V0ODXm63/kE4wqCPMSjYy2XEwseVo3MUoThyPKjeyzPH07MgnOKe
-         f/OU2p9e/QaFfCvqHkA7zdHeFrb+ZbbK7Wb/BVeU5hYTpTGfXjfuZWKKgKYEHFvha2op
-         ZJRMd+XdFFfi6xgVHjxAn1aKMvXQK1gqWp13wD/fY/Bq17rUuuHEiBVYc3Zhdwofwqdw
-         JUaQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="pC9s3oCR";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Dc2y/T8P"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62CA0bKe4025735
+	for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 14:18:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	y7xFTGXb5DPsTd4oxsCvF8mg+z4yb1CrqE2iNac3ooo=; b=pC9s3oCR3E3pJGcF
+	6UBJOzneozRH8yHPflsxqstBz8NmkNtzIcCOMzWl7Mf8bniEEG3tg1o8Gf6eOER8
+	iEH5SI48La5x3ShD7d2U00BqfTQnGC86RMZBVy2//Y+3lQg8W+seoMLrQOG0EE+z
+	dNM8ykzfkh7kNSve4jqCX2isXmsW6au2z2aD2Vl0RhkvgqBsHAjer2W60uOZM/ou
+	G8q60QJZpk6R8OE+8EDLj6gFvBCIXS+427OcZgRvCgssFzBbiFfuWMcbTcw+C5VY
+	9kymaHldyvZ6go56cowbutM/NN/MqcTN7b0pv0p53rwa2PzV2geT4iFmeTzVyLMA
+	ChezqA==
+Received: from mail-ua1-f70.google.com (mail-ua1-f70.google.com [209.85.222.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cuh50taws-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 14:18:25 +0000 (GMT)
+Received: by mail-ua1-f70.google.com with SMTP id a1e0cc1a2514c-94ad0d8eff8so17116051241.1
+        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 07:18:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1773324105; x=1773928905; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=svCptW0MF+j8ogyjRJzY7kaL3jUF3IX/ZurOettGWWg=;
-        b=nsWHhxRozn7OrFsuD2ufuJNUcCBVYQ7g5gWFQAPzTFv3hh7nCuDHdLSezenGZogucf
-         TA3uJGw4E1MH1jB4shBdmJxQiU9suYwleO5H3QqI8Z53ASAkGys23bVAcb+5m0PLXpjc
-         vCe2ckdOdj9DyNBP8zaVAcQe9LyJui2Ds/IhEG2uxBMtXkvHCTlCdljgZKD8zc2P2H/L
-         mKSkW1PDk7vK+seGnCOaKoh5a1Q9rpUWWhDBUmPd8ZCIQmQ0FvW1+CiXzatHWYpgBDeC
-         RnOTgw5vdma9IMTshT5rNPEqsugHdqrjCHxukFnjWNvSj6tfBezUUnycSmm4IEcnpGE2
-         ZHlg==
+        d=oss.qualcomm.com; s=google; t=1773325105; x=1773929905; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=y7xFTGXb5DPsTd4oxsCvF8mg+z4yb1CrqE2iNac3ooo=;
+        b=Dc2y/T8PUdGZ77A6bD1LCjGXqRDiPTOvhNJCiONItrO+WcQKcl4rs3n/qMfmzKXR40
+         mkh076zDmK7Ep4gSAkIb81xzslAkIE3cPZFExcxbBQn1BUXaUk7r+Dhg49GAYMs0IVAg
+         81R/V9a0SkrnIa4IvZ3b25iVUm248FkAvzEyllQ6tPQvKec/dvXTHxEdbQaJ9b6/ZDUj
+         DhWXtlzl3agxAhdjxxgYwf3CRAofucC8uaJcJ/cDm3fdV/5E7E4kPXClqoGLSCEOx+Lw
+         T+USk6/KRigtzWDYnktXywGmLvDlKhUxHT62d15FlrwMG2g20eHdFud0Z56gj2D1GaCA
+         pOYg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773324105; x=1773928905;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=svCptW0MF+j8ogyjRJzY7kaL3jUF3IX/ZurOettGWWg=;
-        b=gT6CjY5FXpUW0RKNdpxxKNW/4xNIv1zBQjtdtBEsMShcVIAcMQ7FjInoV3v/iTmg7R
-         LOWQRuop5O7FIYm+HTMoylSAYWHH5I3ViKCEW0e7xXUpIZb225/hKlBMp2glnOJKnHAm
-         8yo4LHwknkRVpTy4oh7LJmPohncAP+WGCPGmd/wGZTxWlPSaGWddt8jt5fn7GaRaB3an
-         2e+6KKyH2nk90ggCd3G1c1ykOLsiLXP5lbfRvf2j61GjSjJ9FSZRboQ8NXgZBRrSSHjd
-         oNcowOwI9O+2Ck6lx7iAfToYmRoCJHMsnzKL/FhvRKW/mPzmOBwmCs9+lmT/6CLuhbcJ
-         nOqA==
-X-Forwarded-Encrypted: i=1; AJvYcCU7JjraS8huR0C1dRM4fi++hel85iYhc/jPdxn2seLGQD0tEdt0LUUUIJ1Wa6GgGlGx6kBKPXGYAd4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyaAMqaybwb8cCQr/JZNUlv+GhHbP6B1GIh5mTsdq5EtQuF1ZBS
-	IEFh0rG5rV8qhG2svm6CR2kE/JEukXOzw09ItKeeKTmENNSCDDDYtUcGKU9Z8ZAj7zr5cDkD4Yz
-	vHKfi1xvNnNGkCCXQ2Bk76z4SkEkDJH1Nu+ODFaER2Nxd2gav1xq4JkwN5BH94VaSpWwCV2QE5w
-	5AsQGQYRJw93POcydvStXL1pkW7jQSmw50wfDd
-X-Gm-Gg: ATEYQzwuM/IWic/cOLPwSIX6fefM9SNcLbDUwy4FL5ZhCIt20mdrh3yPAg3ih21tkm6
-	LM/IWuzx/Q9s4j3fba/yZ4+BzjgS6GzbFnn65Sv4TDNsnvFnZ3QEN2u/ovlJZftCtYbw10fMAKX
-	vz+Z5EIKhn5rmQy/MoU5w3iogV6EbQb1desG5xpIdnK8lxHnr8B1V4lBHZSO6I5lo+C3zEav36r
-	Om+
-X-Received: by 2002:a05:6870:d626:b0:417:5b7a:704b with SMTP id 586e51a60fabf-4177c8bd782mr3791135fac.31.1773324104850;
-        Thu, 12 Mar 2026 07:01:44 -0700 (PDT)
-X-Received: by 2002:a05:6870:d626:b0:417:5b7a:704b with SMTP id
- 586e51a60fabf-4177c8bd782mr3791060fac.31.1773324104254; Thu, 12 Mar 2026
- 07:01:44 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1773325105; x=1773929905;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=y7xFTGXb5DPsTd4oxsCvF8mg+z4yb1CrqE2iNac3ooo=;
+        b=dmk31+bk1/ipIdn9U6lhR2SpUwUodmrY1lKdOHyGFY7/4HFv9L84CmqirPirIeFAWP
+         pCsm5SCWIO+tqGAQK46p6rncT2EwcfVbIxPFK41RRuNapBrqNvgu/Kws/aH6QbzqjI4E
+         9lQWc3ivqS+F0+VAfPy6Uo/2pafxhoQuNtrZyeUFasPQNJlEkLmdkJ0XHVUHE+ScMXwC
+         eNWGRas8iAWmFycfPay5QBtvd7oB0o+42TFxOMuuL5kuczFa6l4/NYciOxcWeDUAcLrD
+         VWtlNUhbl3VLnqGHAnUu/65rNaz12zbcTQOPj+GOGAyv1jldc9KuI1QzgQrQZX+fISQF
+         eFuw==
+X-Forwarded-Encrypted: i=1; AJvYcCXMaReCawix+GtBk1cxXSbpwqDm8yGLhz0HzTZSChXCMy4sgWWbj3NEpFnBVp3CCu298qohSG6MtUc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwsUDTV1BLyjtPyEly0PNwQqTaLQivdpHZMB2EeutDGwwkCTcl0
+	aDuqu/YBfHRrpU/iAQnP6vulX1BYKYTb6tAy25EL50CUkPKOxaeWGzQVAFgEVKrQ+WN8yb7rll1
+	KJWjkeC7xaqIVGfHowhM7b0r+4sttwsChDOmzEHUOwTapBHt42flSA36KH1vLJ+E=
+X-Gm-Gg: ATEYQzyPOJUGKRNJPi9oBBWUzPcWudxj48J0vx3VAI7Z/yYW95vAevcdwXPwxhrQfTl
+	ViyDMxbnaS4TCYGxTClu2WwMTeX+tXBEdpglmtIjgtKBl4QLeVgMiDZpevuSlRTk5gCAEVgR+0A
+	EeK+VL0Chd4wfyXfBsVLzNoAFZUV7f6z40bKQi/QyJAaQ/HfpiszJZ1Wl16Vho/tkcwIeRrsRgv
+	INXtNjwm0P8RbqplmyRjeaia4Utd36ZTwMVvLUiPe4j9bWwMWKWulifx3UdDUT3HtF6oBWxCNhN
+	n2Gft2YsUUcueuigpqaIj6C3PSJKwQALRnJJw0KIjVUcg7YacekyLaYwg7sNxNqn6iiafsXizYJ
+	qpBOoO7Fb8BLEejoNclGjdaCAW0CCzFr11Tai7Jwu6r69WoUHIZjoOi6jwLE5o76ZCVm5h2RbMW
+	rZp6gCHDIIf6OclfyjYWYIlLz5CtPQCYbnuX4=
+X-Received: by 2002:a05:6102:f11:b0:5ff:eaf0:6e77 with SMTP id ada2fe7eead31-601f4a44a79mr1406610137.17.1773325104560;
+        Thu, 12 Mar 2026 07:18:24 -0700 (PDT)
+X-Received: by 2002:a05:6102:f11:b0:5ff:eaf0:6e77 with SMTP id ada2fe7eead31-601f4a44a79mr1406556137.17.1773325104042;
+        Thu, 12 Mar 2026 07:18:24 -0700 (PDT)
+Received: from umbar.lan (2001-14ba-a073-af00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a073:af00:264b:feff:fe8b:be8a])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5a15602e268sm977710e87.21.2026.03.12.07.18.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Mar 2026 07:18:22 -0700 (PDT)
+Date: Thu, 12 Mar 2026 16:18:20 +0200
+From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+To: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>
+Cc: Nipun Gupta <nipun.gupta@amd.com>, Nikhil Agarwal <nikhil.agarwal@amd.com>,
+        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+        Robin Murphy <robin.murphy@arm.com>, Marc Zyngier <maz@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Thomas Gleixner <tglx@kernel.org>,
+        Saravana Kannan <saravanak@kernel.org>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>, Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+        Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>,
+        Rob Herring <robh@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Prakash Gupta <prakash.gupta@oss.qualcomm.com>,
+        Vikash Garodia <vikash.garodia@oss.qualcomm.com>,
+        linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
+        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, imx@lists.linux.dev,
+        xen-devel@lists.xenproject.org, linux-arm-msm@vger.kernel.org,
+        Charan Teja Kalla <charan.kalla@oss.qualcomm.com>
+Subject: Re: [PATCH v10 2/3] of: factor arguments passed to of_map_id() into
+ a struct
+Message-ID: <dyjdwxaq4oc7ahri3iuhnmobh3gwmn6drhox7t2elep4rlqhuq@fe4gp5t7q5r5>
+References: <20260309-parse_iommu_cells-v10-0-c62fcaa5a1d8@oss.qualcomm.com>
+ <20260309-parse_iommu_cells-v10-2-c62fcaa5a1d8@oss.qualcomm.com>
+ <esfzpgpgenydif2sxahsetkglz6kewsgjhkmzr6ulrrkctnkbq@a4zsfdmhbxui>
+ <27edd195-b0d3-4214-9df3-74a84da1e3e1@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260311171209.9205-3-djeffery@redhat.com> <20260311230523.GA1066455@bhelgaas>
-In-Reply-To: <20260311230523.GA1066455@bhelgaas>
-From: David Jeffery <djeffery@redhat.com>
-Date: Thu, 12 Mar 2026 10:01:28 -0400
-X-Gm-Features: AaiRm520iVQTqV1-hjp19cjbWN8oiME0iudO3mEzYMJHW6uBnWcs_r1tMTE9dMI
-Message-ID: <CA+-xHTHP2QY7T_mTFbN7XN4gbtPo06-EsovuMWuJ5u1A0HXEFQ@mail.gmail.com>
-Subject: Re: [PATCH 3/5] driver core: async device shutdown infrastructure
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org, driver-core@lists.linux.dev, 
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Danilo Krummrich <dakr@kernel.org>, Tarun Sahu <tarunsahu@google.com>, 
-	Pasha Tatashin <tatashin@google.com>, =?UTF-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>, 
-	Jordan Richards <jordanrichards@google.com>, Ewan Milne <emilne@redhat.com>, 
-	John Meneghini <jmeneghi@redhat.com>, "Lombardi, Maurizio" <mlombard@redhat.com>, 
-	Stuart Hayes <stuart.w.hayes@gmail.com>, Laurence Oberman <loberman@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <27edd195-b0d3-4214-9df3-74a84da1e3e1@oss.qualcomm.com>
+X-Proofpoint-GUID: rSVIhheUc3LuTf_sulMCjhQkT9hB1dB2
+X-Authority-Analysis: v=2.4 cv=LvKfC3dc c=1 sm=1 tr=0 ts=69b2cb31 cx=c_pps
+ a=R6oCqFB+Yf/t2GF8e0/dFg==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22 a=EUspDBNiAAAA:8
+ a=VwQbUJbxAAAA:8 a=KPxCMH61eqygQ3DODZ0A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=TD8TdBvy0hsOASGTdmB-:22
+X-Proofpoint-ORIG-GUID: rSVIhheUc3LuTf_sulMCjhQkT9hB1dB2
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzEyMDExNCBTYWx0ZWRfX19D++UJ4gfbE
+ Cm7u8TaB6Y3ANJQumYRFCBO3AiOitdII9x/SzqogmBrTti+MiT9UW0ASCHJAkoBWfHPsgPevefY
+ AcCovNk253JwcydSzS3mXhBaBieLmVq5gADroSoc/F96tqwRpnTN/b3euap8YOSoSkkqATUZRPn
+ GIgQJNuaNY5QLJSbH4RiQOHlsdeMXkE2Nn186uTtUYgZGJa6VOVrch01nM0NrZjBAv29ElCdBNM
+ 5T0kXYh4x7/FW1Hzs6ItyeANujTlqs255zpneu0MBn6147VM/LOz8ChmttgnOUQ+dINb+ktQ2oE
+ HcCPXyCk5m9zy8fUrAQKBgYIc1KNWs7pxly5XP9MGCJ2wl9KRY0FkZ9XXjyRCrFP4tuzePDN+YZ
+ kzQucuXN8VosYFoZ/HAe/roNDGkjV1VsEluhQ7VtwZkROeqEh5CwZ5alj8SPg5GpEOF/CQFb3QW
+ OhHkSFnkP1zUYDM2cjw==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-12_01,2026-03-12_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 bulkscore=0 malwarescore=0 adultscore=0 suspectscore=0
+ spamscore=0 priorityscore=1501 phishscore=0 lowpriorityscore=0
+ impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
+ definitions=main-2603120114
 
-On Wed, Mar 11, 2026 at 7:05=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
->
-> On Wed, Mar 11, 2026 at 01:12:07PM -0400, David Jeffery wrote:
-> > Patterned after async suspend, allow devices to mark themselves as want=
-ing
-> > to perform async shutdown. Devices using async shutdown wait only for t=
-heir
-> > dependencies to shutdown before executing their shutdown routine.
->
-> I'm not an expert on dependencies.  Is it obvious to everybody else
-> how these dependencies are expressed?  What would I look at to verify
-> that, for example, PCI devices are dependencies of the PCI bridges
-> leading to them?  I suppose it's the same dependencies used for
-> suspend?
+On Thu, Mar 12, 2026 at 05:12:51PM +0530, Vijayanand Jitta wrote:
+> 
+> 
+> On 3/10/2026 2:53 AM, Dmitry Baryshkov wrote:
+> > On Mon, Mar 09, 2026 at 01:03:38AM +0530, Vijayanand Jitta wrote:
+> >> From: Charan Teja Kalla <charan.kalla@oss.qualcomm.com>
+> >>
+> >> Change of_map_id() to take a pointer to struct of_phandle_args
+> >> instead of passing target device node and translated IDs separately.
+> >> Update all callers accordingly.
+> >>
+> >> Subsequent patch will make use of the args_count field in
+> >> struct of_phandle_args.
+> >>
+> >> Suggested-by: Rob Herring (Arm) <robh@kernel.org>
+> >> Signed-off-by: Charan Teja Kalla <charan.kalla@oss.qualcomm.com>
+> >> Signed-off-by: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>
+> >> ---
+> >>  drivers/cdx/cdx_msi.c                    |  5 ++-
+> >>  drivers/iommu/of_iommu.c                 |  2 +-
+> >>  drivers/irqchip/irq-gic-its-msi-parent.c | 11 ++++--
+> >>  drivers/of/base.c                        | 63 ++++++++++++++++----------------
+> >>  drivers/of/irq.c                         |  8 +++-
+> >>  drivers/pci/controller/dwc/pci-imx6.c    | 16 ++++++--
+> >>  drivers/pci/controller/pcie-apple.c      |  5 ++-
+> >>  drivers/xen/grant-dma-ops.c              |  4 +-
+> >>  include/linux/of.h                       | 12 +++---
+> >>  9 files changed, 76 insertions(+), 50 deletions(-)
+> >>
+> >> diff --git a/drivers/cdx/cdx_msi.c b/drivers/cdx/cdx_msi.c
+> >> index 63b3544ec997..03232b5ffbca 100644
+> >> --- a/drivers/cdx/cdx_msi.c
+> >> +++ b/drivers/cdx/cdx_msi.c
+> >> @@ -121,6 +121,7 @@ static int cdx_msi_prepare(struct irq_domain *msi_domain,
+> >>  			   struct device *dev,
+> >>  			   int nvec, msi_alloc_info_t *info)
+> >>  {
+> >> +	struct of_phandle_args msi_spec = { .np = NULL };
+> > 
+> > Why do you need to set it? Parse functions ignore passed args, don't
+> > they?
+> > 
+> 
+> The parse function does check arg->np on input — if it is non-NULL,
+> it is used to match only entries targeting that specific node.
+> 
+> Also, there is this existing path in drivers/pci/msi/irqdomain.c which
+> pre-sets the node and passes it as input to of_msi_xlate(), so the node
+> pointer is not ignored by the parse code:
 
-Yes, it uses the same dependencies as async suspend does.
+Is it only being used for MSIs? If so, can we make that explicit in the
+API by having the 'filter' device_node pointer?
 
-> From wait_for_shutdown_dependencies() below, it looks like we'll wait
-> for each child of dev and then wait for each consumer of dev before
-> shutting down dev itself.
+> 
+> u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+> {
+>         struct device_node *of_node;
+>         u32 rid = pci_dev_id(pdev);
+> 
+>         pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+> 
+>         of_node = irq_domain_get_of_node(domain);
+>         rid = of_node ? of_msi_xlate(&pdev->dev, &of_node, rid) :
+>                         iort_msi_map_id(&pdev->dev, rid);
+> 
+>         return rid;
+> }
+> 
 
-Right, just like async suspend, all children and consumers need to
-shut down first for async shutdown.
-
->
-> > Sync shutdown devices are shut down one at a time and will only wait fo=
-r an
-> > async shutdown device if the async device is a dependency.
->
-> > @@ -132,6 +133,7 @@ struct device_private {
-> >  #ifdef CONFIG_RUST
-> >       struct driver_type driver_type;
-> >  #endif
-> > +     struct completion complete;
->
-> I thought "complete" might be a little too generic, but I guess async
-> suspend uses "dev->power.completion" :)
-
-I am open to a better name, but anything I came up with ended up
-excessively long in my opinion, so I settled on the current and boring
-"complete".
-
->
-> > +static void wait_for_shutdown_dependencies(struct device *dev, bool as=
-ync)
-> > +{
-> > +     struct device_link *link;
-> > +     int idx;
-> > +
-> > +     device_for_each_child(dev, &async, wait_for_device_shutdown);
-> > +
-> > +     idx =3D device_links_read_lock();
-> > +
-> > +     dev_for_each_link_to_consumer(link, dev)
-> > +             if (!device_link_flag_is_sync_state_only(link->flags))
-> > +                     wait_for_device_shutdown(link->consumer, &async);
-> > +
-> > +     device_links_read_unlock(idx);
-> > +}
->
-> > @@ -4828,6 +4919,12 @@ void device_shutdown(void)
-> >
-> >       cpufreq_suspend();
-> >
-> > +     /*
-> > +      * Start async device threads where possible to maximize potentia=
-l
-> > +      * paralellism and minimize false dependency on unrelated sync de=
-vices
->
-> s/paralellism/parallelism/
->
-
-Gah, I will correct it.
-
-David Jeffery
-
+-- 
+With best wishes
+Dmitry
