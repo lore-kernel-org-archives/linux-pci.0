@@ -1,175 +1,158 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97D653BE62F;
-	Thu, 12 Mar 2026 13:01:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90A03377ECC;
+	Thu, 12 Mar 2026 13:02:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773320488; cv=none; b=ZhJof4MGr+fhFeu0pyd5BzgwvP9SCEK5ewvprECxjmlHOHR4rLp18cqRrsDi1KPJ7+L1ExMK1NcyN2dQ6lNcW9DeL1kBGhskBg0Crd4KAYEpfnT3fkqhoOJqlCJpf6xYItE4lQ2D2Pea35OKSXAjcuEtwCtJe3cWreb/AOxwmiA=
+	t=1773320576; cv=none; b=lRlznHGw4aUMA9kRRQWnyhZB662HD8HwDjVhs0DqqsFieSHTe6Gq9qa/xKAl2DJmxJFhAFEpAE5wDGFYYEiKT4NOlybPDpgfvy1AMRiijKsUnu8mDY+ELN2n9ISR8eNfvt5RoemCzjUluoIniMAme7DUuNb+Tzq174PbA35xGws=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773320488; c=relaxed/simple;
-	bh=nj6vi5kyv5gs2YRmJnfboC3GxyNkX1Hv8kAnZZ+y5Js=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ajtO9+lShDZS5EuEWXB1jbbWjkJO7mhhjUMyuPZfblHOkkdVOxciOHtdb+Ghli1oADEK1AK3d5JHnLvOHoPB09K8M21piZlB36H6vux0xpnK1zldlMjfoZHd0u9Xfqm+vw7cRlC21XYoShVy0NlpoYh+wi/AVdgsRakkFT8XxxA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.83])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fWnlv4Mf7zJ46BP;
-	Thu, 12 Mar 2026 21:00:27 +0800 (CST)
-Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id 7850B40086;
-	Thu, 12 Mar 2026 21:01:15 +0800 (CST)
-Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
- (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 12 Mar
- 2026 13:01:14 +0000
-Date: Thu, 12 Mar 2026 13:01:13 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: <smadhavan@nvidia.com>
-CC: <bhelgaas@google.com>, <dan.j.williams@intel.com>, <dave.jiang@intel.com>,
-	<ira.weiny@intel.com>, <vishal.l.verma@intel.com>,
-	<alison.schofield@intel.com>, <dave@stgolabs.net>, <alwilliamson@nvidia.com>,
-	<jeshuas@nvidia.com>, <vsethi@nvidia.com>, <skancherla@nvidia.com>,
-	<vaslot@nvidia.com>, <sdonthineni@nvidia.com>, <mhonap@nvidia.com>,
-	<vidyas@nvidia.com>, <jan@nvidia.com>, <mochs@nvidia.com>,
-	<dschumacher@nvidia.com>, <linux-cxl@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v5 6/7] cxl: Add cxl_reset sysfs interface for PCI
- devices
-Message-ID: <20260312130113.00006ee2@huawei.com>
-In-Reply-To: <20260306092322.148765-7-smadhavan@nvidia.com>
-References: <20260306092322.148765-1-smadhavan@nvidia.com>
-	<20260306092322.148765-7-smadhavan@nvidia.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1773320576; c=relaxed/simple;
+	bh=TgSk+4s2logLCJYw1/1V/0WBGOGe8vlm4vuaxQUrDRo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bYRuPA+V6rXKfyCSQ+gVF39F26Ec3n3UpEZpBlbHInyPCh5S7tVkMOLPGuW98kqrFMWrV3WCnGr1LGR+bG23Sz4GJLplVlI8kp/utXiJEdaASqhkREOEVKZ8kjPtMttWNaYEGZHJ/GoMvMQkNy5hYga6jPSK4mqMWDbyQcSezes=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l9mus12T; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l9mus12T"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AB65C4CEF7;
+	Thu, 12 Mar 2026 13:02:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773320576;
+	bh=TgSk+4s2logLCJYw1/1V/0WBGOGe8vlm4vuaxQUrDRo=;
+	h=From:To:Cc:Subject:Date:From;
+	b=l9mus12TCdN4ONMZHKmRMj7JZrcmLc6V/uu15lWYvKQwiyXIeEccIOyh9QWblL840
+	 XKM9Xj20k3BUXAaQOUbsjssa36sXddRoOn+uRISawFuV/ynuA8loLqmzVY9HKBy8Bo
+	 OjxdKGCE0Bfv/BXS+gzNCxBUQFPqi9bwEC9IWLa50KFU/wHaTQiY0fQ+Fnyb1zQd+j
+	 qMeTgvH6J3q+E9LZyxMAdMjNGGxOVx0WqEKl4wo6QB3VrnwudN4kwgt/eKKj1CqQJ5
+	 p7QaIEBtR82xTJJxeiMar/y7cMH4nNfKM+k8CkFlOsZ2HuDTwU4gBQ2ce0bX39jILm
+	 3gn4Z9eMAEnSw==
+From: Niklas Cassel <cassel@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Frank Li <Frank.Li@nxp.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	Minghuan Lian <minghuan.Lian@nxp.com>,
+	Mingkai Hu <mingkai.hu@nxp.com>,
+	Roy Zang <roy.zang@nxp.com>,
+	Jesper Nilsson <jesper.nilsson@axis.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Srikanth Thokala <srikanth.thokala@intel.com>,
+	Marek Vasut <marek.vasut+renesas@gmail.com>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Christian Bruel <christian.bruel@foss.st.com>,
+	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+	Alexandre Torgue <alexandre.torgue@foss.st.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Shuah Khan <shuah@kernel.org>
+Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+	Koichiro Den <den@valinux.co.jp>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	imx@lists.linux.dev,
+	linuxppc-dev@lists.ozlabs.org,
+	linux-arm-kernel@axis.com,
+	linux-rockchip@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	linux-stm32@st-md-mailman.stormreply.com,
+	linux-tegra@vger.kernel.org,
+	linux-kselftest@vger.kernel.org
+Subject: [PATCH v4 00/10] PCI: endpoint: Differentiate between disabled and reserved BARs
+Date: Thu, 12 Mar 2026 14:02:28 +0100
+Message-ID: <20260312130229.2282001-12-cassel@kernel.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml100011.china.huawei.com (7.191.174.247) To
- dubpeml500005.china.huawei.com (7.214.145.207)
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2686; i=cassel@kernel.org; h=from:subject; bh=TgSk+4s2logLCJYw1/1V/0WBGOGe8vlm4vuaxQUrDRo=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDI37UzN2dLNHDzr3bFkpbmbuvLOSQax7F/j874n3+aSi KahfSdLRykLgxgXg6yYIovvD5f9xd3uU44r3rGBmcPKBDKEgYtTACbydSYjw1PmY1NLXJUtzn+R 6X1joBrv12+ZfCb7h5VwRsB0F9bjFxkZVoT+ns4Zd255TqnKJrPrnfdf5v57cd3wNjOP3VTX8r9 LGAA=
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On Fri, 6 Mar 2026 09:23:21 +0000
-<smadhavan@nvidia.com> wrote:
+Hello all,
 
-> From: Srirangan Madhavan <smadhavan@nvidia.com>
-> 
-> Add a "cxl_reset" sysfs attribute to PCI devices that support CXL
-> Reset (CXL r3.2 section 8.1.3.1). The attribute is visible only on
-> devices with both CXL.cache and CXL.mem capabilities and the CXL
-> Reset Capable bit set in the DVSEC.
-> 
-> Writing "1" to the attribute triggers the full CXL reset flow via
-> cxl_do_reset(). The interface is decoupled from memdev creation:
-> when a CXL memdev exists, memory offlining and cache flush are
-> performed; otherwise reset proceeds without the memory management.
-> 
-> The sysfs attribute is managed entirely by the CXL module using
-> sysfs_create_group() / sysfs_remove_group() rather than the PCI
-> core's static attribute groups. This avoids cross-module symbol
-> dependencies between the PCI core (always built-in) and CXL_BUS
-> (potentially modular).
+This series was originally written in response to the patch series from
+Manikanta Maddireddy that was posted here:
+https://lore.kernel.org/linux-pci/291dab65-3fa6-4fc8-90a2-4ad608ca015c@nvidia.com/T/#t
 
-The side effect being the races that tend to come with dynamic creation
-of sysfs. Not sure we can avoid that though.
+Manikanta has reviewed this series and will send a small series on top of
+this one.
 
-> 
-> At module init, existing PCI devices are scanned and a PCI bus
-> notifier handles hot-plug/unplug. kernfs_drain() makes sure that
-> any in-flight store() completes before sysfs_remove_group() returns,
-> preventing use-after-free during module unload.
-> 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
 
-A few trivial things inline.
+Changes since v3:
+-Modified patch 1 to simply drop BAR_RESERVED for a BAR following an
+ only_64bit BAR (Manivannan).
+-Added a patch from Manikanta, to make his follow-up series smaller,
+ since this series touches the same lines anyway.
 
-> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-> index c758b3f1b3f9..3a53d4314f24 100644
-> --- a/drivers/cxl/core/pci.c
-> +++ b/drivers/cxl/core/pci.c
-> @@ -1293,3 +1293,116 @@ static int cxl_do_reset(struct pci_dev *pdev)
-> 
->  	return rc;
->  }
-> +
-> +/*
-> + * CXL reset sysfs attribute management.
-> + *
-> + * The cxl_reset attribute is added to PCI devices that advertise CXL Reset
-> + * capability. Managed entirely by the CXL module via subsys_interface on
-> + * pci_bus_type, avoiding cross-module symbol dependencies between the PCI
-> + * core (built-in) and CXL (potentially modular).
-> + *
-> + * subsys_interface handles existing devices at register time and hot-plug
-> + * add/remove automatically. On unregister, remove_dev runs for all tracked
-> + * devices under bus core serialization.
-> + */
-> +
-> +static bool pci_cxl_reset_capable(struct pci_dev *pdev)
-> +{
-> +	int dvsec;
-> +	u16 cap;
-> +
-> +	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-> +					  PCI_DVSEC_CXL_DEVICE);
-> +	if (!dvsec)
-> +		return false;
-> +
-> +	if (pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CAP, &cap))
-> +		return false;
-> +
-> +	if (!(cap & PCI_DVSEC_CXL_CACHE_CAPABLE) ||
-> +	    !(cap & PCI_DVSEC_CXL_MEM_CAPABLE))
+Link to v3:
+https://lore.kernel.org/linux-pci/20260302095913.48155-11-cassel@kernel.org/
 
-Whilst it's a nonsensical setup to have a CXL device with no
-CXL features, is there a reason we need this explicit check?
 
-> +		return false;
-> +
-> +	return !!(cap & PCI_DVSEC_CXL_RST_CAPABLE);
+Koichiro Den (2):
+  PCI: endpoint: Describe reserved subregions within BARs
+  PCI: dw-rockchip: Describe RK3588 BAR4 DMA ctrl window
 
-Technically the !! not needed as the cast will deal with it.
-If you want to force a 0/1 I'd prefer FIELD_GET()
+Manikanta Maddireddy (1):
+  PCI: endpoint: Allow only_64bit on BAR_RESERVED
 
-> +}
-> +
-> +static ssize_t cxl_reset_store(struct device *dev,
-> +			       struct device_attribute *attr,
-> +			       const char *buf, size_t count)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +	int rc;
-> +
-> +	if (!sysfs_streq(buf, "1"))
-> +		return -EINVAL;
-> +
-> +	rc = cxl_do_reset(pdev);
-> +	return rc ? rc : count;
-> +}
-> +static DEVICE_ATTR_WO(cxl_reset);
-> +
-> +static umode_t cxl_reset_attr_is_visible(struct kobject *kobj,
-> +					  struct attribute *a, int n)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
-> +
-> +	if (!pci_cxl_reset_capable(pdev))
-> +		return 0;
-> +
-> +	return a->mode;
-> +}
-> +
-> +static struct attribute *cxl_reset_attrs[] = {
-> +	&dev_attr_cxl_reset.attr,
-> +	NULL,
+Niklas Cassel (7):
+  PCI: endpoint: Do not mark the BAR succeeding a 64-bit BAR as
+    BAR_RESERVED
+  PCI: endpoint: Introduce pci_epc_bar_type BAR_DISABLED
+  PCI: dwc: Replace certain BAR_RESERVED with BAR_DISABLED in glue
+    drivers
+  PCI: dwc: Disable BARs in common code instead of in each glue driver
+  PCI: endpoint: pci-epf-test: Advertise reserved BARs
+  misc: pci_endpoint_test: Give reserved BARs a distinct error code
+  selftests: pci_endpoint: Skip reserved BARs
 
-No comma on a terminating entry. We don't want to make it easy to
-add stuff after this!
+ drivers/misc/pci_endpoint_test.c              | 21 ++++++++-
+ drivers/pci/controller/dwc/pci-dra7xx.c       |  4 --
+ drivers/pci/controller/dwc/pci-imx6.c         | 22 +++------
+ drivers/pci/controller/dwc/pci-keystone.c     | 12 +++++
+ .../pci/controller/dwc/pci-layerscape-ep.c    |  6 ---
+ drivers/pci/controller/dwc/pcie-artpec6.c     |  4 --
+ .../pci/controller/dwc/pcie-designware-ep.c   | 24 ++++++++++
+ .../pci/controller/dwc/pcie-designware-plat.c | 10 ----
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c | 23 ++++++----
+ drivers/pci/controller/dwc/pcie-keembay.c     |  3 --
+ drivers/pci/controller/dwc/pcie-qcom-ep.c     | 12 -----
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c   | 16 ++-----
+ drivers/pci/controller/dwc/pcie-stm32-ep.c    | 10 ----
+ drivers/pci/controller/dwc/pcie-tegra194.c    | 19 ++------
+ drivers/pci/controller/dwc/pcie-uniphier-ep.c | 19 +-------
+ drivers/pci/controller/pcie-rcar-ep.c         |  3 --
+ drivers/pci/endpoint/functions/pci-epf-test.c | 24 ++++++++++
+ drivers/pci/endpoint/pci-epc-core.c           |  5 +-
+ include/linux/pci-epc.h                       | 46 +++++++++++++++----
+ .../pci_endpoint/pci_endpoint_test.c          |  4 ++
+ 20 files changed, 154 insertions(+), 133 deletions(-)
 
-> +};
 
+base-commit: 0b74f7d72399d4c4422ed3d68ef28b3612f71e74
+-- 
+2.53.0
 
