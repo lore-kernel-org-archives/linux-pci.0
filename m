@@ -1,45 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6053835A3B8
-	for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 13:03:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E74B552F8B;
+	Thu, 12 Mar 2026 13:03:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773320594; cv=none; b=lho/J+m+pLCJqxrD0TojQjDi0Zr/yRwhN8VXLmQhH0L3POWBSVine9roJNLXDMH+DSItLXhs6fzJROV5pq9cLd9htqvxtG7kUr7g7vCyT/1z3EHs2xheQc4bmSrDKoPwosAfKyU8b7729CL6tG87ckf+u3hBmk0ZIihNiG+URbA=
+	t=1773320601; cv=none; b=Gx/47r3vIXPLjW+cJktEKqoRAfnNV0VRcX5fsS4FBX1G+Jcc8tHMrX/MweIOV1w6Batf3qomdyrXbNz5XjBDTimuBY43TmAT9WhAVrXwJIYdr9Bn3A3070GyamvLlZlYOXsvPdLTvUbo0gWowwu8BUijRvUfFGE5UXV9X+265fk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773320594; c=relaxed/simple;
-	bh=EL1Ak+/XgCLmlB+se7hEtFsE+nXFp86rcFosBJKdbDE=;
+	s=arc-20240116; t=1773320601; c=relaxed/simple;
+	bh=ZCBIIybt8lnKr9jRT9qv66H2m2IVQcwITj/TT5M7ZNc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=X2GHhpNyp2uoDe6fNBj12jSij66fS8dR3kZqnfRdgOWprv3i9Wuc/CHymwoSOIoriEPE68tC9aaOJRPUgmjFFT0biOzG1+M8U4ciJZ26YqRGmdmdFtbcU3vf/E/0ymlzES6avwx8OmQT1GmJSQx3WLkcj/7KSnqzP+rJUImPass=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CYub4hXQ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=DY6J9ofVhoz21XKUnG49YQobqtGexMVasU8GFDP9hZLelZyyvTlZgiOuzjh/kCX+SBr+4F8E7SMSiZWAxUxwrPPPZZBPBG4AvAxct6ZlhXNGe9c8GFWAPNrBQD0b5LtuhcpkkrpBvSwyejdwi5oRHgFKhDO6XUAMl/KgLLO598E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LDK5iwKl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CYub4hXQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE9E9C19424;
-	Thu, 12 Mar 2026 13:03:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LDK5iwKl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30D7BC19424;
+	Thu, 12 Mar 2026 13:03:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773320594;
-	bh=EL1Ak+/XgCLmlB+se7hEtFsE+nXFp86rcFosBJKdbDE=;
+	s=k20201202; t=1773320600;
+	bh=ZCBIIybt8lnKr9jRT9qv66H2m2IVQcwITj/TT5M7ZNc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=CYub4hXQSOFLS3XMVKdXQFp1ItMwu2PaYBxrdEdgpqC4LYEDuWWiM+h7bfGTmATt+
-	 UonWPJdA1AUIL5XcdRJ7enitgiRRJrhsKICs6xiE84f3To1eU/bQVjocSQ0O31iy81
-	 hifAFaeYFcTEvNX+cEmmU0VuVkJO93+dDwrNElP2f9H0LNvcYsJ9lf9BFLat9yjZ4/
-	 /MFN+9kKkUZaXvQe+PjfqQibj8yeEV8IEUlpdBPotBJ3V8FvmNLdAZaSRtbauZHBUp
-	 V22KBgYa4G/dKuKBkXeECTM4JWNO67yVqC/KLqhDW+b+eyzMeJ0bJ9a/dLSCPvdGP6
-	 cZLBD8ymIJUMg==
+	b=LDK5iwKlRpMIOYZ0y+o2WLWgp+ECjtiMmcBuzAIjaKk0fjTohdSVojkjoda4Ui/86
+	 LxQidBOU8LzykSXol0HwnhX/Va89agPjPkgB8zF2CqoLpcGkIXfkHh3NiTLEllwpVO
+	 UiAXwzfDleuVI6KsJeNwrniuVnrR7eNOWUBjOs1mP5GOzXW7vct2YJNEjyv3QOA7w6
+	 g3CGHfcNt1yirF4Yu0i/Kee6BhigIUO9pJpeBwEnXv0m6E9IJQLA5AqImPkFLfu0qR
+	 3/mxRAIw4sFoL3upuhf0Dzv3brLPoqU0nKokCWs2PV8KEB74vtGqgBViJ9ZD8zMSdT
+	 fQI4mE0NCU6QA==
 From: Niklas Cassel <cassel@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>,
+To: Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <Frank.Li@nxp.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	Marek Vasut <marek.vasut+renesas@gmail.com>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+	Masami Hiramatsu <mhiramat@kernel.org>
 Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
 	Koichiro Den <den@valinux.co.jp>,
 	Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
-	Frank Li <Frank.Li@nxp.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v4 05/10] PCI: endpoint: Introduce pci_epc_bar_type BAR_DISABLED
-Date: Thu, 12 Mar 2026 14:02:33 +0100
-Message-ID: <20260312130229.2282001-17-cassel@kernel.org>
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	imx@lists.linux.dev,
+	linux-renesas-soc@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: [PATCH v4 06/10] PCI: dwc: Replace certain BAR_RESERVED with BAR_DISABLED in glue drivers
+Date: Thu, 12 Mar 2026 14:02:34 +0100
+Message-ID: <20260312130229.2282001-18-cassel@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260312130229.2282001-12-cassel@kernel.org>
 References: <20260312130229.2282001-12-cassel@kernel.org>
@@ -49,73 +67,143 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2621; i=cassel@kernel.org; h=from:subject; bh=EL1Ak+/XgCLmlB+se7hEtFsE+nXFp86rcFosBJKdbDE=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDI37cx5nxVsah29MMjhHfvVgNSIS5FHXHxmvy758iL1S /aq0C8bOkpZGMS4GGTFFFl8f7jsL+52n3Jc8Y4NzBxWJpAhDFycAjAR/deMDJeuywk//ftIrqXy n/vvyVpBZwzN6+UaktIffT+wsOCb6DRGhtcXc2cwPIpNC5c7nVYxtWbJL9uLZodiZx7bsD/ZIva nEi8A
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5965; i=cassel@kernel.org; h=from:subject; bh=ZCBIIybt8lnKr9jRT9qv66H2m2IVQcwITj/TT5M7ZNc=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDI37cwNYfVWmmjHdJpv/n7J/0rRj5I36d8+cMrx1N55M uGfNne2dpSyMIhxMciKKbL4/nDZX9ztPuW44h0bmDmsTCBDGLg4BWAilz0ZGVYKnlVeX1lfPF1y y5Oo1liZNvPIrO1TzUX0emboCRnOfcXwm+W95FKXhKdb567Ya/tWc2W+ZHVwVaZZZ0a/W8aJ5E2 nGQA=
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-Add a pci_epc_bar_type BAR_DISABLED to more clearly differentiate from
-BAR_RESERVED.
+Most DWC based EPC glue drivers that have BARs marked as BAR_RESERVED in
+epc_features also call dw_pcie_ep_reset_bar() for these reserved BARs in
+ep->ops->init(). (The only exception is pci-keystone.c.)
 
-This BAR type will only be used to describe a BAR that the EPC driver
-should disable, and will thus never be available to an EPF drive.
-(Unlike BAR_RESERVED, which will never be disabled by default by an EPC
-driver.)
+An EPF driver will be able to get/enable BARs that have been disabled/reset
+using dw_pcie_ep_reset_bar(), except if the BAR is marked as BAR_RESERVED
+(see pci_epc_get_next_free_bar()).
+
+Thus, all EPC drivers that have BARs marked as BAR_RESERVED in epc_features
+and call dw_pcie_ep_reset_bar(), should really have these BARs marked as
+BAR_DISABLED. If dw_pcie_ep_reset_bar() is not called by the glue driver,
+the BARs are kept as BAR_RESERVED.
+
+No EPC drivers outside drivers/pci/controllers/dwc mark their BARs as
+BAR_RESERVED, so there is nothing to do in non-DWC based EPC drivers.
 
 Tested-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Reviewed-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Co-developed-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 Reviewed-by: Frank Li <Frank.Li@nxp.com>
 Tested-by: Koichiro Den <den@valinux.co.jp>
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
- drivers/pci/endpoint/pci-epc-core.c |  5 +++--
- include/linux/pci-epc.h             | 10 +++++++++-
- 2 files changed, 12 insertions(+), 3 deletions(-)
+ drivers/pci/controller/dwc/pci-imx6.c         | 12 ++++++------
+ drivers/pci/controller/dwc/pci-keystone.c     | 12 ++++++++++++
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c   |  6 +++---
+ drivers/pci/controller/dwc/pcie-tegra194.c    |  8 ++++----
+ drivers/pci/controller/dwc/pcie-uniphier-ep.c |  4 ++--
+ 5 files changed, 27 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index e546b3dbb240..6c3c58185fc5 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -103,8 +103,9 @@ enum pci_barno pci_epc_get_next_free_bar(const struct pci_epc_features
- 		bar++;
- 
- 	for (i = bar; i < PCI_STD_NUM_BARS; i++) {
--		/* If the BAR is not reserved, return it. */
--		if (epc_features->bar[i].type != BAR_RESERVED)
-+		/* If the BAR is not reserved or disabled, return it. */
-+		if (epc_features->bar[i].type != BAR_RESERVED &&
-+		    epc_features->bar[i].type != BAR_DISABLED)
- 			return i;
- 	}
- 
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index ebcdf70aa9b9..334c2b7578d0 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -191,13 +191,21 @@ struct pci_epc {
-  * @BAR_RESIZABLE: The BAR implements the PCI-SIG Resizable BAR Capability.
-  *		   NOTE: An EPC driver can currently only set a single supported
-  *		   size.
-- * @BAR_RESERVED: The BAR should not be touched by an EPF driver.
-+ * @BAR_RESERVED: Used for HW-backed BARs (e.g. MSI-X table, DMA regs). The BAR
-+ *		  should not be disabled by an EPC driver. The BAR should not be
-+ *		  reprogrammed by an EPF driver. An EPF driver is allowed to
-+ *		  disable the BAR if absolutely necessary. (However, right now
-+ *		  there is no EPC operation to disable a BAR that has not been
-+ *		  programmed using pci_epc_set_bar().)
-+ * @BAR_DISABLED: The BAR should be disabled by an EPC driver. The BAR will be
-+ *		  unavailable to an EPF driver.
-  */
- enum pci_epc_bar_type {
- 	BAR_PROGRAMMABLE = 0,
- 	BAR_FIXED,
- 	BAR_RESIZABLE,
- 	BAR_RESERVED,
-+	BAR_DISABLED,
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index a5b8d0b71677..ec1e3557ca53 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -1433,19 +1433,19 @@ static int imx_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+ static const struct pci_epc_features imx8m_pcie_epc_features = {
+ 	DWC_EPC_COMMON_FEATURES,
+ 	.msi_capable = true,
+-	.bar[BAR_1] = { .type = BAR_RESERVED, },
+-	.bar[BAR_3] = { .type = BAR_RESERVED, },
++	.bar[BAR_1] = { .type = BAR_DISABLED, },
++	.bar[BAR_3] = { .type = BAR_DISABLED, },
+ 	.bar[BAR_4] = { .type = BAR_FIXED, .fixed_size = SZ_256, },
+-	.bar[BAR_5] = { .type = BAR_RESERVED, },
++	.bar[BAR_5] = { .type = BAR_DISABLED, },
+ 	.align = SZ_64K,
  };
  
- /**
+ static const struct pci_epc_features imx8q_pcie_epc_features = {
+ 	DWC_EPC_COMMON_FEATURES,
+ 	.msi_capable = true,
+-	.bar[BAR_1] = { .type = BAR_RESERVED, },
+-	.bar[BAR_3] = { .type = BAR_RESERVED, },
+-	.bar[BAR_5] = { .type = BAR_RESERVED, },
++	.bar[BAR_1] = { .type = BAR_DISABLED, },
++	.bar[BAR_3] = { .type = BAR_DISABLED, },
++	.bar[BAR_5] = { .type = BAR_DISABLED, },
+ 	.align = SZ_64K,
+ };
+ 
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index 20fa4dadb82a..278d2dba1db0 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -933,6 +933,18 @@ static const struct pci_epc_features ks_pcie_am654_epc_features = {
+ 	DWC_EPC_COMMON_FEATURES,
+ 	.msi_capable = true,
+ 	.msix_capable = true,
++	/*
++	 * TODO: This driver is the only DWC glue driver that had BAR_RESERVED
++	 * BARs, but did not call dw_pcie_ep_reset_bar() for the reserved BARs.
++	 *
++	 * To not change the existing behavior, these BARs were not migrated to
++	 * BAR_DISABLED. If this driver wants the BAR_RESERVED BARs to be
++	 * disabled, it should migrate them to BAR_DISABLED.
++	 *
++	 * If they actually should be enabled, then the driver must also define
++	 * what is behind these reserved BARs, see the definition of struct
++	 * pci_epc_bar_rsvd_region.
++	 */
+ 	.bar[BAR_0] = { .type = BAR_RESERVED, },
+ 	.bar[BAR_1] = { .type = BAR_RESERVED, },
+ 	.bar[BAR_2] = { .type = BAR_RESIZABLE, },
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index a6912e85e4dd..9dd05bac22b9 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -422,10 +422,10 @@ static int rcar_gen4_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+ static const struct pci_epc_features rcar_gen4_pcie_epc_features = {
+ 	DWC_EPC_COMMON_FEATURES,
+ 	.msi_capable = true,
+-	.bar[BAR_1] = { .type = BAR_RESERVED, },
+-	.bar[BAR_3] = { .type = BAR_RESERVED, },
++	.bar[BAR_1] = { .type = BAR_DISABLED, },
++	.bar[BAR_3] = { .type = BAR_DISABLED, },
+ 	.bar[BAR_4] = { .type = BAR_FIXED, .fixed_size = 256 },
+-	.bar[BAR_5] = { .type = BAR_RESERVED, },
++	.bar[BAR_5] = { .type = BAR_DISABLED, },
+ 	.align = SZ_1M,
+ };
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index f1f70fb824b2..61b9771004da 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -1993,10 +1993,10 @@ static const struct pci_epc_features tegra_pcie_epc_features = {
+ 	.msi_capable = true,
+ 	.bar[BAR_0] = { .type = BAR_FIXED, .fixed_size = SZ_1M,
+ 			.only_64bit = true, },
+-	.bar[BAR_2] = { .type = BAR_RESERVED, },
+-	.bar[BAR_3] = { .type = BAR_RESERVED, },
+-	.bar[BAR_4] = { .type = BAR_RESERVED, },
+-	.bar[BAR_5] = { .type = BAR_RESERVED, },
++	.bar[BAR_2] = { .type = BAR_DISABLED, },
++	.bar[BAR_3] = { .type = BAR_DISABLED, },
++	.bar[BAR_4] = { .type = BAR_DISABLED, },
++	.bar[BAR_5] = { .type = BAR_DISABLED, },
+ 	.align = SZ_64K,
+ };
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-uniphier-ep.c b/drivers/pci/controller/dwc/pcie-uniphier-ep.c
+index b7020131f626..d6ec6823e180 100644
+--- a/drivers/pci/controller/dwc/pcie-uniphier-ep.c
++++ b/drivers/pci/controller/dwc/pcie-uniphier-ep.c
+@@ -427,8 +427,8 @@ static const struct uniphier_pcie_ep_soc_data uniphier_pro5_data = {
+ 		.align = 1 << 16,
+ 		.bar[BAR_0] = { .only_64bit = true, },
+ 		.bar[BAR_2] = { .only_64bit = true, },
+-		.bar[BAR_4] = { .type = BAR_RESERVED, },
+-		.bar[BAR_5] = { .type = BAR_RESERVED, },
++		.bar[BAR_4] = { .type = BAR_DISABLED, },
++		.bar[BAR_5] = { .type = BAR_DISABLED, },
+ 	},
+ };
+ 
 -- 
 2.53.0
 
