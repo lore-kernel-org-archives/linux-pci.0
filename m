@@ -1,294 +1,351 @@
-Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013020.outbound.protection.outlook.com [52.101.72.20])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10763346FB3;
-	Thu, 12 Mar 2026 20:39:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.20
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773347993; cv=fail; b=KYBIqOuq2uaQ/pyukbOXYsJ/VsNDHxC5mt6GlVzdYUCxgJEA90X44btXnNpqjQe0txoWz/gcNkCuLTu2dADxSTRiIdVAGqgNFrfGYNV86C/ZnfpHW7BIT7EKqkWQEKNDkaH0k0OnirUh7ZNQHHBFK0uWt9XAN1cYRl8HhneOJkA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773347993; c=relaxed/simple;
-	bh=3MN5NtNqiCYMI2iXnWpYwrQNyEQL2f+5BOllyns7lHk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=FaZ+8PwhuMCaknWmQk8TGToy0QkVOGf1S/oBnf/Qunaf2b7KeJs8ojxGKY/PIl7EY9poXglB8qDch2EPzru5MfscTmnTYt+EgkpLP2pgdUYBUrfuknxJGiN/ts3uUZbwT8PQ7rX+tJ9HOsAOLYfiMYF/MOJA384IwFKKw7pVVEk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=CuWAQi4C; arc=fail smtp.client-ip=52.101.72.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8776133BBB4;
+	Thu, 12 Mar 2026 21:04:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773349450; cv=none; b=sJZvTkOT4sFpkBihrUK5s8IrwdlWyxvxt+soW55vWFsuSG3MA6/5zrhe9g2GR6xw+VMQA/QCOf4xkFXRRGCqncM4/goTliq7EhcMAz1oOP3Pi6mVcHlFQ/1Nf4ZxUrg6QkiYaEJFs9kEnyY8RrD3cZS2ja3zmGkpKqDQuJu0Hhw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773349450; c=relaxed/simple;
+	bh=mC5rww3WeIqUrS8X2I+Zlj7pyHjsi7WsHz0UPaQ1nek=;
+	h=Message-ID:Subject:From:To:Cc:In-Reply-To:References:Content-Type:
+	 Date:MIME-Version; b=FbmtIRZ0eFTp9L8QlfzxOCgfXMIiH6stf9l9mgQOViVrXjOdZ8ua8xD15dfb2a6ec6xRLNLEvmsnP0za6mUvYHL6UrghzLfrp3DU1bkacIxjv5LT88v5SwI530Vivat8cO1dR+8Bn+NNYVcQiEBU7sk+3zLFoqXyWyNHrPKVQos=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=rlA4zFXH; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="CuWAQi4C"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=DzgBE9baPlfr7oc5xFJBSsGa9K00VwC5R/GRbcFkA9c259McAJkLdvS5xcn+6uxrqtee3vSPhActPu3PrM1XDWs87WxTXANHNNNPZyTTJVyvqX2Nt/z5qnI05SSYoTB40zeUbQm3XHnMPbtFwDJy/BnsvMtbAwFE7w81Hf6vJ31JCSzlKGJGLoL09h7jnf6mTzPJt/zhrlgF+XQ2YCy0gQMhw/4u0I2T48Ap4tLG24ee73a4llS59atIGmeK+V4hwJS6+cIzGsoz4WGKmBACQJWNsW+V656zQAV2vMih3eoL82h3sn4NFcsoHeB3mkYn2fcK5OyVo1AiolmiaElzQg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=uzuUDLf2OUkws102eQLiR7Uqbeg/q34TLu9hDFL7Fo8=;
- b=aNMqdgk9SpTe26Ml7oPZZKvjuoTkRApg9CNHwMMCBJkhQxkAnfsGieeI5b32WIJgK/r4ojEEgXScCXf+J73OVQe4jggLQmNUwj+zSYsdh4Xc6CvT+rxFIaivIJRGqGA1l1yvmCskUc6QRYt5Ul93/TQk7kQEf7D3AGXf/GCyoVshPUsEmI7peLAmwUZDij3Mm6OwrtY6SUiB5MmVtmGwzzruipknUwfUVb0DD6pUoelWz3U+bptFm+niWT70rdEyLQEbGTzRrgEd5CsgeE5hgClo+9b9y325t1ZW/HvJB9DOSLwU6Wo+jeeO4kD2IDa4Dr7+KTqz6gaQJtUQEMrfxA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uzuUDLf2OUkws102eQLiR7Uqbeg/q34TLu9hDFL7Fo8=;
- b=CuWAQi4CndVkCYth/q0WV1AEUQkqY12CbmAZ4WP+n2/HvAy+YzlvpzCOSmD3DZRzc4yLHe3SiGxtL3oT4MFg+Uf1SAZbPIvcSZ/oEJkl9e+yxyuvUkiMYW3J2geGRzKkAKk9rvokmSPXg2qcq5+91TT4UlnLc7MtnWS8cDB9avcA+ggXLa1a1jQ2ytBsb8PoA/cLjVazKoYiF9wRAgEn3/u3h+hfkZbj3jGr9sWmfsGtTF5+RZCg6Ma8IWTLZVV2eSFAhjIMfG/RAI3eL+Ej0hOyQTH6jmqCeR0swWFE7hYpnBBJKjmBAEL2I96vG9+MRlYy7tQWtuUAn9pgS4PcWg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by GVXPR04MB10303.eurprd04.prod.outlook.com (2603:10a6:150:1ea::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.15; Thu, 12 Mar
- 2026 20:39:41 +0000
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9700.010; Thu, 12 Mar 2026
- 20:39:43 +0000
-Date: Thu, 12 Mar 2026 16:39:34 -0400
-From: Frank Li <Frank.li@nxp.com>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>,
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <allenbh@gmail.com>, Jingoo Han <jingoohan1@gmail.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Rob Herring <robh@kernel.org>, Baruch Siach <baruch@tkos.co.il>,
-	Jerome Brunet <jbrunet@baylibre.com>,
-	Niklas Cassel <cassel@kernel.org>, linux-pci@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org, ntb@lists.linux.dev
-Subject: Re: [PATCH 07/15] PCI: endpoint: Add EPC DMA channel delegation hooks
-Message-ID: <abMkhs4Ommy8P0D9@lizhi-Precision-Tower-5810>
-References: <20260312165005.1148676-1-den@valinux.co.jp>
- <20260312165005.1148676-8-den@valinux.co.jp>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260312165005.1148676-8-den@valinux.co.jp>
-X-ClientProxiedBy: BY3PR05CA0032.namprd05.prod.outlook.com
- (2603:10b6:a03:39b::7) To PA4PR04MB9366.eurprd04.prod.outlook.com
- (2603:10a6:102:2a9::8)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="rlA4zFXH"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62CF4SsL2277765;
+	Thu, 12 Mar 2026 21:04:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=dvd7qq
+	bC3/OKkT0vWcBun7ATQTDCNMlvRy4boGOPxcI=; b=rlA4zFXHYK/PRPXfVvrT9R
+	d6JIlyvcdJ5RxKqyHwrCd+yh4n6UMkg06gXAI6+BUpKynU4bIWsCRoVxUq+qIf61
+	Z+1GUyzgl+anTceBRJMHmUI5jjjwRl7IILwAHObV0hGsd0xsL5c8mjwcpufkS2jW
+	KzXebFszQctkxOqwcHgBLpQ6nWtIezJIH69zq7fZQ+hAEIFg4Q4I6ic3CGR1PI1b
+	Lq88Y64RVTFB68Bz/VHRqpemx/qmD5Zl5ltupU1nr4+27HmApUm6P2Obxu81QtqY
+	/FVgZGEK0pCt1SS2Omix7pmnXSrw403Uy0UhbAge0kE+Ro7mJlZ2cT3tV8o4m6FA
+	==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cuh91mv17-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 12 Mar 2026 21:04:07 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62CIMW8P020811;
+	Thu, 12 Mar 2026 21:04:05 GMT
+Received: from smtprelay04.wdc07v.mail.ibm.com ([172.16.1.71])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4cuha9m2a5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 12 Mar 2026 21:04:05 +0000
+Received: from smtpav05.dal12v.mail.ibm.com (smtpav05.dal12v.mail.ibm.com [10.241.53.104])
+	by smtprelay04.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62CL444Z54526332
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 12 Mar 2026 21:04:04 GMT
+Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2B12658056;
+	Thu, 12 Mar 2026 21:04:04 +0000 (GMT)
+Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2E83D58069;
+	Thu, 12 Mar 2026 21:04:01 +0000 (GMT)
+Received: from [9.111.17.170] (unknown [9.111.17.170])
+	by smtpav05.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Thu, 12 Mar 2026 21:04:01 +0000 (GMT)
+Message-ID: <df10e28bd86227dfd4830c34da8c68976df5e938.camel@linux.ibm.com>
+Subject: Re: [PATCH v2 3/3] s390/pci: Fix circular/recursive deadlocks in
+ PCI-bus and -device release
+From: Niklas Schnelle <schnelle@linux.ibm.com>
+To: Benjamin Block <bblock@linux.ibm.com>,
+        Alexander Gordeev
+	 <agordeev@linux.ibm.com>,
+        Gerd Bayer <gbayer@linux.ibm.com>,
+        Bjorn Helgaas
+	 <bhelgaas@google.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Heiko Carstens
+	 <hca@linux.ibm.com>
+Cc: Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
+        Christian Borntraeger	
+ <borntraeger@linux.ibm.com>,
+        Andreas Krebbel <krebbel@linux.ibm.com>,
+        linux-pci	 <linux-pci@vger.kernel.org>,
+        linux-kernel
+ <linux-kernel@vger.kernel.org>,
+        Ionut Nechita <ionut_n2001@yahoo.com>,
+        Tobias Schumacher <ts@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        Matthew Rosato <mjrosato@linux.ibm.com>,
+        linux-s390
+ <linux-s390@vger.kernel.org>,
+        Julian Ruess	 <julianr@linux.ibm.com>,
+        Ionut
+ Nechita <ionut.nechita@windriver.com>,
+        Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <354b9e4a54ced67f3c89df198041df19434fe4c8.1773235561.git.bblock@linux.ibm.com>
+References: <cover.1773235561.git.bblock@linux.ibm.com>
+	 <354b9e4a54ced67f3c89df198041df19434fe4c8.1773235561.git.bblock@linux.ibm.com>
+Autocrypt: addr=schnelle@linux.ibm.com; prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 12 Mar 2026 22:02:59 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|GVXPR04MB10303:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3f319259-49bd-4b71-937b-08de80777dc7
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|19092799006|366016|1800799024|52116014|376014|7416014|38350700014|56012099003|18002099003|7053199007|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	MqMNJV1G7mtrnKVS5qDkhwMQT2pUpRggM+fLI0It3mRE8AKlLpug3vZ8KIxwDJQ4TbL0PcOK4T6ogOmgb6BrEwiEWnXinMjD53Sdqwo8CjX7h/XAwp0ddgEzmE66xHzgzuunQRzl8v6Aiaxb0vI5CkuBAqutPAKov5OWT8l3DxBqTG7kAz0iJP9gVw/Fr17MKAyLi3IH7rKsTisOOVGhrtUiV08ajwRjXG8re9mXu9SFzgO9oKi6iwkhfoPrKP/ETkdlRH+AoPouznjPtPxZTd7gz248yCuYaB4N4YDlngKWXi8YGpmgwAlMvBaZGaM3JK5Yyq5NgLpSz/YcA3bpgbPXzN8RdrrBk0kFnIZfGRaOoWFfmqGxVg9YfIm4ynrXlRbobbC4zHDX5l0+qnwaXdnHGMh3H/oGfNXsyudvYFs+AZCq+Z3gFX6WnRncUIAQFtwMKjfg5kytP7AfM6KQ9aCMrT60N/k32snF7LU/1jmBoF8OEgA1UUniRnN3Jr2MPLpLJT+1riMe0WgpKw0DFLzt/KJiNGKQMfJ8Pr98xNtl2hpTNTJZQm7CxFrEhKuFURaZQk54YdGwoua7+qDV8wv+kc9ce9e2pc/s/Uy2+dUcblx+/9sFdzQ/9twKKSzf91NLZHHl85RGxpNTWPNKnYfF2lT3TY7Dyr6/bK6bBP03GKsFRlHYKTDb9pH6hsiNYS2kfycIM27Cfo+IflbWJRQUIiGbwFksopb+S/RLqh2DpOpEYuXUM4JgZ6pHdaRhPiCpznrNwsH4EhGbmLi6hRAy/Lbeic47aeZhHWxsGOQ=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(366016)(1800799024)(52116014)(376014)(7416014)(38350700014)(56012099003)(18002099003)(7053199007)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?BXWCWnbksXjcDlg7wLjy3P3WaY659lJ6kciXTwDkLQ8C95MjNtVryNQu8APQ?=
- =?us-ascii?Q?gC95E3SWK17b1Z8DdWwiMJUxP8iXXQrwIOV43yRyCozvEZVbnnRGOzk59z+B?=
- =?us-ascii?Q?F0ChxW281Auna2O0Q49yH4J4WqZEQqj6yJDKsyhcaHvfq8KM130b0PJgb/fx?=
- =?us-ascii?Q?hhkaNX1c86ghiaJ46Cu8hMA9AviC7kFqEqD/Sp5tUxh5uRtIvg61RYfS9G5a?=
- =?us-ascii?Q?ISxc/O2PymMEiL2FbLWQ3x3VFwhLR9ZQXDknUM8OrZHWWBW9JoIx8BfnSpw8?=
- =?us-ascii?Q?+liUf1AjhVQzagijE+6T2RneFKm/K5bmEwNhg56ZFE7M1LwYoP751Uk5SBSV?=
- =?us-ascii?Q?5indVfqV2B0ToDJPZrovBA9YmrrFf3BSRWUpsZn+p4zn4ng4ko0D11nX3Vn+?=
- =?us-ascii?Q?rdf4Y018p4n9xzjOZfFRI1Ih6r4di19EVnCqN2/XQOoG/qcdhTuljdIMBOjU?=
- =?us-ascii?Q?i3gkH9pQlSofweaOlNNx+xdcIiSpakYMrvaMNIGDSfMNtCi7a9XOVRXMUeiB?=
- =?us-ascii?Q?crBvakj50t2wIEuP4es2909MjReHfAzzgYv3pl2Vz23s9oToIZABJiICAuOt?=
- =?us-ascii?Q?GySgtB4I8e3KdgjfuTmazNNKoQaXCjpNRdqRZuWzZWtCEJ3PpScvuBoMFtBP?=
- =?us-ascii?Q?pqGz6Vq7MbLspa/WAtag/Z1eEGKcrR7xJnfcWZBByx52EmDWDjVWmqtaDkBm?=
- =?us-ascii?Q?mSVWVW2CQboAPVQu7P0Htro9WykkIdNDHV1MzvWWws2EdTGmUCCYMU7JJBOO?=
- =?us-ascii?Q?aoukre/UR/FDn+91Jsfz5KzsS382KTKvkM/G+EuoJaonM72gMuIrrovyTHgp?=
- =?us-ascii?Q?WibDBMD/huAdNoLvkkwNSKP6i8JGYxjbBvP0XmbX09Y5GVQ6Slfix/jAnQnl?=
- =?us-ascii?Q?gww12+T1qJEiroPB7vjQ8+4ll1pM713IDd5WxMkA7KB/ZlF+nZJUcBgBocrO?=
- =?us-ascii?Q?cRJuLg+LHdWGLlCcHaVSpFbmJDDKEN7H+1wAYoFTFv2ACKnU+tBzhYU1hbGt?=
- =?us-ascii?Q?C3A1ogGOnkjffjFHIZT3QG2DiOtW0bhG7Zolfi2f434d9RnFLcCM31oNk7c6?=
- =?us-ascii?Q?q2NfzcXK6OE8ldkFhicVztsp9qSzY40TLBBY+XGM8oYwPKAfGkTKI0IbPBUZ?=
- =?us-ascii?Q?g012lO7MGnQWeWSP1ejQiCKcp4ZCHlMqlQObcqfkUF6kgRonP8ooxb8oZh0r?=
- =?us-ascii?Q?U40Sm7P1kWJ6DH/syeOu5/NPlujLgt1+lhhWcuaTD8EuXuEJwE1sHJ0eDLox?=
- =?us-ascii?Q?rspshJ+DZVVWj5Si8C/qwnqNW9Ysgestp/ra8rZF33HUwXNb2L4zsWyjxS+/?=
- =?us-ascii?Q?rpNTp1+4WgomJ2Pnr/tZFOByArbMEFM16L6hxa30Q61jb03pv6tnXZziigVu?=
- =?us-ascii?Q?gOv+Hfy3tAry7DadER/9zFXaTosUS2aIJg1OOGQe+i46CFFWjuCBnavXdYik?=
- =?us-ascii?Q?wR7jfOGVO7AU1g8p1DhbY6hZr+l0A6w4W2f4cE4U55NeQcNTUvkX3hDFWKTq?=
- =?us-ascii?Q?4QvO9rbdGn8BfGUmfV+L2Ult7DvPczN01+iypog95Afc354URd7eHWlOPNSZ?=
- =?us-ascii?Q?EVIH9sXWbnzpq/WO6vF8qYRmJLA7BG5YmrEO5gMF2DyEe5XEgdUkgwYO5LMj?=
- =?us-ascii?Q?yZHJzTwrOx/dQU+zIwZWH1jaTTIJ4fiupKEsK+LOyvW8p8du1FwWnWd0lM5z?=
- =?us-ascii?Q?XvULweJzoIlrXhhOaBMe9z3Z2B07hkejIneAUJWTOh7dCBNv?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3f319259-49bd-4b71-937b-08de80777dc7
-X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Mar 2026 20:39:43.7617
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 67Gvv5HTnxsbopffoIH4iqao2zeOtGwTZ0c1PIjYnbLyawXkhUTKnJHkm9VKEAXarmq7X5ZoqYsNOF33yuJGKQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVXPR04MB10303
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-GUID: 6z7-w9WXyRuiIhLpyWNTk17x9mH6rA6u
+X-Authority-Analysis: v=2.4 cv=E6/AZKdl c=1 sm=1 tr=0 ts=69b32a47 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=VwQbUJbxAAAA:8
+ a=t7CeM3EgAAAA:8 a=VnNF1IyMAAAA:8 a=gz_SD1EWZaZO4LduKPQA:9 a=QEXdDO2ut3YA:10
+ a=FdTzh2GWekK77mhwV6Dw:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzEyMDE2OSBTYWx0ZWRfXycccHIAqdSQ5
+ I5XFquz8BxZLaEVI/N5CLq/M22RT/RSo7An9KAVDYOL9nv5+Ib2D5dJZjkUSvTNP5WwrN+Xau2G
+ XrF+8yOi7l7J9BtKanhuKQAmdtQKDRr62EkL7su0aFBSfGxfie5y3QpifODnXrWdcHw4MexRcC/
+ VQCj4bt68H4z6JWM/ZKbQgQTBH7x4C7EDY4RPft1FO2ES08e7jKzEULwNG8CjxjyhoAZHvORpBW
+ yLWP3DTteEAfasZ+ZAhjBeNs5b7Rx3PVWFnPF/eK/CJ71kjhstlsJEKJQlq7H8gw0SgRTtpcrH5
+ O75Kjpv5iD/iEmYnwt9yYyZftELLXhEgzzknyHQtJjh2ZhcTP6ODAcLYwVHTFeooqfsDDmgtMJA
+ +LzyaAo7trSqeLyYVHIJsAj7juPO4t9Xclh0S2GnbJkN9U+/9on7E/qoosyeD8XY72WUfevfOI3
+ lMIvNgApBVm6qKMGXLg==
+X-Proofpoint-ORIG-GUID: 0n5ehpyqdMD2aq-9n0nVryNCy-7FhUf1
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-12_02,2026-03-12_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 impostorscore=0 clxscore=1015 malwarescore=0 phishscore=0
+ suspectscore=0 priorityscore=1501 spamscore=0 lowpriorityscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603120169
 
-On Fri, Mar 13, 2026 at 01:49:57AM +0900, Koichiro Den wrote:
-> Add EPC ops and core wrappers to delegate and undelegate controller-owned
-> DMA channels.
->
-> The exported DMA helper needs more than a passive "delegated" bitmap:
-> it must be able to reserve channels away from local users, let the
-> backend perform controller-specific setup (e.g. prevent the EP from
-> racing to ack the completion interrupt for delegated channels), and
-> later hand the channels back as a matched lifetime operation.
->
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+On Wed, 2026-03-11 at 14:27 +0100, Benjamin Block wrote:
+> When removing PCI device or PCI bus objects there are a couple of
+> call-chains where it is possible that the kernel runs into a circular or
+> recursive deadlock involving taking the central `pci_rescan_remove_lock`.
+
+Now that this depends on Ionut's patch at[0] and exploits the fact that
+the rescan/remove lock can be taken recursively we may want to adjust
+and thereby shorten this description to take this into account dropping
+the recursive locking as deadlock reason.
+
+>=20
+> For example:
+>=20
+> (A) Thread =CE=B1 receives a CRW event notifying the kernel that a PCI
+
+Nit: Other PCI related code calls these "PCI events" even though
+technically they use the Channel Report Word (CRW) mechanism and thus
+are CRW events.
+
+> virtual function has been moved into Reserved state, and so the PCI
+> subsystem will try to remove that PCI function. The call-chain for that
+> looks like this:
+>   __zpci_event_availability()
+>     -> zpci_zdev_put()              # will   lock(zpci_add_remove_lock),
+>                                     # and    lock(zpci_list_lock)
+>     -> zpci_release_device()        # will unlock(zpci_list_lock)
+>     -> zpci_cleanup_bus_resources() # will   lock(pci_rescan_remove_lock)
+>=20
+> Thread =CE=B2 is triggered by userspace writing 0 into the SysFS attribut=
+e
+> `sriov_numvfs` of the parent PCI physical function of the same function
+> we just try to remove. This will also try to release the PCI virtual
+> function; but this time the call-chain looks like this:
+>   sriov_numvfs_store()              # will   lock(pci_rescan_remove_lock)
+
+With Ionut's patch a prerequisite the above taking of
+pci_rescan_remove_lock now happens in sriov_del_vfs() with a bit
+shorter chain but same result.
+
+>     -> ... (deep chain)
+>     -> pci_release_dev()
+>     -> pcibios_release_device()
+>     -> zpci_zdev_put()              # will   lock(zpci_add_remove_lock)
+>=20
+> If thread =CE=B1 and =CE=B2 coincide, this will result in a cyclic deadlo=
+ck.
+>=20
+> (B) Consider thread =CE=B2 from above; if the thread was to follow the sa=
+me
+> outlined call-chain for thread =CE=B1, and not fall into the cyclic deadl=
+ock,
+> it would recursive deadlock:
+>   sriov_numvfs_store()              # will   lock(pci_rescan_remove_lock)
+>     -> ... (deep chain)
+>     -> pci_release_dev()
+>     -> pcibios_release_device()
+>     -> zpci_zdev_put()              # will   lock(zpci_add_remove_lock),
+>                                     # and    lock(zpci_list_lock)
+>     -> zpci_release_device()        # will unlock(zpci_list_lock)
+>     -> zpci_cleanup_bus_resources() # will   lock(pci_rescan_remove_lock)
+
+Since Ionut's patch must come before this, this behavior itself would
+be okay (see argument above). Maybve just drop this part?
+
+>=20
+> (C) And even in case `pci_rescan_remove_lock` was removed from
+> zpci_cleanup_bus_resources(), the resulting call-chain would recursive
+> deadlock when it tries to release the associated PCI bus:
+>   sriov_numvfs_store()              # will   lock(pci_rescan_remove_lock)
+
+Same as above after Ionut's change the lock is taken in sriov_del_vfs()
+
+>     -> ... (deep chain)
+>     -> pci_release_dev()
+>     -> pcibios_release_device()
+>     -> zpci_zdev_put()              # will   lock(zpci_add_remove_lock),
+>                                     # and    lock(zpci_list_lock)
+>     -> zpci_release_device()        # will unlock(zpci_list_lock)
+>     -> zpci_bus_device_unregister()
+>     -> zpci_bus_put()               # will   lock(zbus_list_lock)
+>     -> zpci_bus_release()           # will unlock(zbus_list_lock),
+>                                     # will   lock(pci_rescan_remove_lock)
+
+Same argument as above for dropping the recursive deadlock part but the
+below cyclic deadlock potential remains.
+
+>=20
+> It can also easily be seen that scenario (C) offers the same risk as (A)
+> for a cyclic deadlock in cases where `pci_rescan_remove_lock` is first
+> locked, and the PCI bus released under its protection.
+
+I think this part should spell out which two locks create the cycle
+
+>=20
+> `pci_rescan_remove_lock` has to be and is taken at a "high level" in
+> most call-chains since it is intended to protect/mutual exclude all
+> rescan and/or removal actions taken in the PCI subsystem. So to prevent
+> the outlined deadlock scenarios above remove it instead from the "low
+> level" release function for both the PCI device and PCI bus objects.
+>=20
+> Instead, lock `pci_rescan_remove_lock` in all call-chains leading to
+> those release functions:
+>   * initialization of the PCI subsystem;
+>   * processing of availability events (CRWs) for PCI functions;
+>   * processing of error events (CRWs) for PCI functions;
+>   * architecture specific release PCI device implementation.
+>=20
+> Additionally, remove `pci_rescan_remove_lock` from zpci_bus_scan_bus()
+> since it is now always already taken when called.
+
+Nit: I'd add an explicit statement that the locking order between
+pci_rescan_remove_lock and zpci_add_remove_lock is thus reversed with
+pci_rescan_remove_lockk always taken first then zpci_add_remove_lock.
+Still it is understandable without it too.
+
+>=20
+> Lastly, document the new locking expectations after these changes. Add
+> sparse and lockdep annotations to functions that previously locked
+> `pci_rescan_remove_lock` explicitly, making sure the lock is now
+> already held when called. Additionally also add the annotations to
+> zpci_zdev_put() and zpci_bus_put() to make sure that every function that
+> potentially drops the last reference already holds the lock to prevent
+> surprises.
+>=20
+> Fixes: 05bc1be6db4b2 ("s390/pci: create zPCI bus")
+> Fixes: ab909509850b2 ("PCI: s390: Fix use-after-free of PCI resources wit=
+h per-function hotplug")
+> Signed-off-by: Benjamin Block <bblock@linux.ibm.com>
 > ---
->  drivers/pci/endpoint/pci-epc-core.c | 84 +++++++++++++++++++++++++++++
->  include/linux/pci-epc.h             | 19 +++++++
->  2 files changed, 103 insertions(+)
->
-> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-> index dc6d6ab4ea1e..892f7ccbd236 100644
-> --- a/drivers/pci/endpoint/pci-epc-core.c
-> +++ b/drivers/pci/endpoint/pci-epc-core.c
-> @@ -197,6 +197,90 @@ int pci_epc_get_aux_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
->  }
->  EXPORT_SYMBOL_GPL(pci_epc_get_aux_resources);
->
-> +/**
-> + * pci_epc_delegate_dma_channels() - reserve EPC-owned DMA channels
-> + * @epc: EPC device
-> + * @func_no: function number
-> + * @vfunc_no: virtual function number
-> + * @dir: DMA channel direction
-> + * @req_chans: number of channels requested
-> + * @chan_ids: output array of delegated channel IDs
-> + * @max_chans: capacity of @chan_ids in entries
-> + *
-> + * Return:
-> + *   * > 0: number of channels delegated
-> + *   * -EOPNOTSUPP: backend does not support DMA delegation
-> + *   * other -errno on failure
-> + */
-> +int pci_epc_delegate_dma_channels(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
-> +				  enum pci_epc_aux_dma_dir dir,
-> +				  u32 req_chans, int *chan_ids, u32 max_chans)
+>  arch/s390/pci/pci.c       | 11 ++++++++---
+>  arch/s390/pci/pci_bus.c   | 15 ++++++++-------
+>  arch/s390/pci/pci_event.c | 28 +++++++++++++++++++---------
+>  arch/s390/pci/pci_iov.c   |  3 +--
+>  arch/s390/pci/pci_sysfs.c |  9 +++------
+>  5 files changed, 39 insertions(+), 27 deletions(-)
+>=20
 
-Use bit mask should be simple, bit 0 for channel 0, bit 1 for channel 1
-...
+I had not previously looked at your commit message from the point of
+view when it is ordered aferr Ionut's patch[0], which it has to for the
+release case. So I ended up with a few comments now even though I
+previously read it multiple times and was just very happy with the nice
+and readable call chain and locking order explanations.
 
-Frank
-> +{
-> +	int ret;
-> +
-> +	if (!epc || !epc->ops)
-> +		return -EINVAL;
-> +
-> +	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
-> +		return -EINVAL;
-> +
-> +	if (!req_chans || !chan_ids || !max_chans)
-> +		return -EINVAL;
-> +
-> +	if (!epc->ops->delegate_dma_channels)
-> +		return -EOPNOTSUPP;
-> +
-> +	mutex_lock(&epc->lock);
-> +	ret = epc->ops->delegate_dma_channels(epc, func_no, vfunc_no, dir,
-> +					      req_chans, chan_ids, max_chans);
-> +	mutex_unlock(&epc->lock);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_epc_delegate_dma_channels);
-> +
-> +/**
-> + * pci_epc_undelegate_dma_channels() - release previously delegated channels
-> + * @epc: EPC device
-> + * @func_no: function number
-> + * @vfunc_no: virtual function number
-> + * @dir: DMA channel direction
-> + * @chan_ids: array of delegated channel IDs
-> + * @num_chans: number of entries in @chan_ids
-> + *
-> + * Return: 0 on success, negative errno otherwise.
-> + */
-> +int pci_epc_undelegate_dma_channels(struct pci_epc *epc, u8 func_no,
-> +				    u8 vfunc_no,
-> +				    enum pci_epc_aux_dma_dir dir,
-> +				    const int *chan_ids, u32 num_chans)
-> +{
-> +	int ret;
-> +
-> +	if (!epc || !epc->ops)
-> +		return -EINVAL;
-> +
-> +	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
-> +		return -EINVAL;
-> +
-> +	if (!num_chans)
-> +		return 0;
-> +
-> +	if (!chan_ids)
-> +		return -EINVAL;
-> +
-> +	if (!epc->ops->undelegate_dma_channels)
-> +		return -EOPNOTSUPP;
-> +
-> +	mutex_lock(&epc->lock);
-> +	ret = epc->ops->undelegate_dma_channels(epc, func_no, vfunc_no, dir,
-> +						chan_ids, num_chans);
-> +	mutex_unlock(&epc->lock);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_epc_undelegate_dma_channels);
-> +
->  /**
->   * pci_epc_stop() - stop the PCI link
->   * @epc: the link of the EPC device that has to be stopped
-> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-> index 7dd2e4d5d952..db8623b84c56 100644
-> --- a/include/linux/pci-epc.h
-> +++ b/include/linux/pci-epc.h
-> @@ -142,6 +142,8 @@ struct pci_epc_aux_resource {
->   * @stop: ops to stop the PCI link
->   * @get_features: ops to get the features supported by the EPC
->   * @get_aux_resources: ops to retrieve controller-owned auxiliary resources
-> + * @delegate_dma_channels: reserve controller-owned DMA channels for peer use
-> + * @undelegate_dma_channels: release previously delegated DMA channels
->   * @owner: the module owner containing the ops
->   */
->  struct pci_epc_ops {
-> @@ -176,6 +178,16 @@ struct pci_epc_ops {
->  	int	(*get_aux_resources)(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
->  				     struct pci_epc_aux_resource *resources,
->  				     int num_resources);
-> +	int	(*delegate_dma_channels)(struct pci_epc *epc, u8 func_no,
-> +					 u8 vfunc_no,
-> +					 enum pci_epc_aux_dma_dir dir,
-> +					 u32 req_chans, int *chan_ids,
-> +					 u32 max_chans);
-> +	int	(*undelegate_dma_channels)(struct pci_epc *epc, u8 func_no,
-> +					   u8 vfunc_no,
-> +					   enum pci_epc_aux_dma_dir dir,
-> +					   const int *chan_ids,
-> +					   u32 num_chans);
->  	struct module *owner;
->  };
->
-> @@ -403,6 +415,13 @@ const struct pci_epc_features *pci_epc_get_features(struct pci_epc *epc,
->  int pci_epc_get_aux_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
->  			      struct pci_epc_aux_resource *resources,
->  			      int num_resources);
-> +int pci_epc_delegate_dma_channels(struct pci_epc *epc, u8 func_no,
-> +				  u8 vfunc_no, enum pci_epc_aux_dma_dir dir,
-> +				  u32 req_chans, int *chan_ids, u32 max_chans);
-> +int pci_epc_undelegate_dma_channels(struct pci_epc *epc, u8 func_no,
-> +				    u8 vfunc_no,
-> +				    enum pci_epc_aux_dma_dir dir,
-> +				    const int *chan_ids, u32 num_chans);
->  enum pci_barno
->  pci_epc_get_first_free_bar(const struct pci_epc_features *epc_features);
->  enum pci_barno pci_epc_get_next_free_bar(const struct pci_epc_features
-> --
-> 2.51.0
->
+Either way the code itself looks good to me and I also did quite a bit
+of testing with this and the previous versions. Trying hot(un)plug and
+SR-IOV with various PCI devices and also just ran this and the previous
+version on several test systems for a few days doing other testing and
+development work.=C2=A0
+
+I also put quite a bit of effort into trying to modify this and/or
+other s390 PCI code to not require the reentrant behavior of the
+pci_rescan_remove_lock but failed. The really tricky part to me is how
+e.g. a driver can hold on to a struct pci_dev even after it has been
+removed while we have to keep both the struct zpci_dev and struct
+zpci_bus and associated struct pci_bus exactly until the last
+pci_dev_put(). And then needing to remove the PCI bus via
+zpci_bus_release() we need to have the pci_rescan_remove lock but now
+this can happen, in principle, at any pci_dev_put() and that of course
+sometimes happens when we already have the pci_rescan_remove_lock and
+sometimes without it.
+
+So feel free to add my:
+
+Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+Tested-by: Niklas Schnelle <schnelle@linux.ibm.com>
+
+Thanks,
+Niklas
+
+[0]https://lore.kernel.org/lkml/20260310074303.17480-2-ionut.nechita@windri=
+ver.com/
