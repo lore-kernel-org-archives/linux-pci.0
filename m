@@ -1,139 +1,208 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A5E11AF0BB;
-	Fri, 13 Mar 2026 09:01:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773392461; cv=none; b=m2rDiH6yOGKh19J42tT4wxJGlnXKsE5kqrRJ0iJXYskJ/Iy3hKUyzzSdQDUbc/pq4C6y6PjQ+cPbTJb0J4kzsmbL3cB281h5wJYQwBQ3W2Cp/u/wyQNx+CBObaI1S4+bUYttXBnKaVYeDArfhMoSWD43jmI7vGcypsWEq8IN03Q=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773392461; c=relaxed/simple;
-	bh=8LufsHxk+Y3YkFwtR1vxXVSuF7cD5vBLzTYBZU4j5d8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=h7BUhDAyCMLtUqiGvkKU/nZ9PzYgqIhpc8ECE0spnjdQ/LyZc2wO1n9/1VbYmptVGDGw1qlK54Mh7gcmNsIV0R2lbnU8LNo/PBFPekAaPoLUXY/TpQamHVdjQ77HINv+93V05/1fTpO+aTQTp49aHRJb+Dm1b3DfD88Z+wGVLyQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NoN/8z8i; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67E78367F35
+	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 09:25:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.51
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773393944; cv=pass; b=akXF7fx/v5xw86GOEw8ijuv7bTjDZnBheEu8voM3P/Clr2a5QUByY0dPdAlo7mTnumznqrUtUKitOUKlPIkUjpnP1fuEcNHRpSaSVBV+WQYThZSeEe1vHmhXpzpqlGo1BQtre2UExEIHwAVqN6eVqaUpxIHtaF971FQgHuV9FmI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773393944; c=relaxed/simple;
+	bh=/uB/tPENyS//AaalGzBZqiwLhleo5hjikLnLUq4+/Gg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=NnKl5tWoufukiMBUN/3vre/AbzljV9cq2qUmTU00eaBT6/AWBOL/ckXAdGQHOGoX7WxxKsjNoORCVyPfFFf/Xp7h1+R4eAu0JS5A1/W8R+TNEPHCFgNZGdm4FQSfPF92/2ZknQ8+3+vt+Sf36L9+eqkkR7oiy3SsS4gIrccXgOk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RtNZsOSQ; arc=pass smtp.client-ip=209.85.218.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NoN/8z8i"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02F4CC19424;
-	Fri, 13 Mar 2026 09:00:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773392461;
-	bh=8LufsHxk+Y3YkFwtR1vxXVSuF7cD5vBLzTYBZU4j5d8=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=NoN/8z8ib5Wo8ahi7R0aPY8K03JJfYIABBoXF8qPmPJ51i4ecChWtPURKWppTC40E
-	 /bM416gQU42TBVVvMJNwHom8SEpyZyozitvrEP0MJy/oJVXaSI4vWSwNTH3z/rOYKl
-	 w5F0WJsD9zxROZs0oy6d0/UYwc3JXIBpSkBQFii2zmBoee4HRopnOgfiNAORGvHzpH
-	 oj0BB61kgDmhHRe/cG5b7sUuonnylhha9hTmXEPfXEzkLZEftalSYw/GrcgUPvR5Kn
-	 JYuibscxD58+H6V+sr9i7VvKjhraIyoTxrkuOTeltL4xYYnpBK/5ctuu9qKtESNdwN
-	 3OnFnDYoy7NeA==
-Message-ID: <7d027652-53d6-486d-b5cd-2d82569fe6bb@kernel.org>
-Date: Fri, 13 Mar 2026 10:00:56 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RtNZsOSQ"
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-b9358bc9c50so255441766b.1
+        for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 02:25:42 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773393941; cv=none;
+        d=google.com; s=arc-20240605;
+        b=fOSWG6OKCslL8uUhm6NOTETRuDXyrNTaHsXBFc0bdLqB+la4N7XS+lgZt5MqDv3p4+
+         NXa0UQAZxaOGhDQ3qKNG0cj6ENp7/icza9X1nOF3V+edbe/lQgY2oky0HsfO6DkZmnq0
+         gtZewH7R/5l4N8owIbAmhm8VyVie1zR7hHEolPtjiHQr1rSz6CVAE3VoQSlnngedGszC
+         xwaDMWD3U0kpsHboOkvyLoMFboYhk1MUOSGjniJdrXTVxSDegL0hrhsXxkIfb2Nn7VDq
+         GhekuQu3vXL0LLa08OF6+t6nbI3PG5s7BfZ/ZFvqc+0CWIf9NfQXqnNqNszemHV7wI0w
+         MDkw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=skapIsZV+2WP9UcczRrFkVT7zb1t6DskdiJBKEA1lOE=;
+        fh=G+bb6i+x5FEavi/2HzAI17LWGWhhnepU/f/EY0nDSwY=;
+        b=KgesdXyIF9f7ku5f3esTmEntChjWJ51E5SsJR7b7Cfe/HVLptKxLJ2JWXNK24k/bcY
+         sfOnguRGhn9xVB01z0RlgKAI2wYC40yNgi5yTretAn5Z8SMejfDRMhxs/tGArRdEz8v0
+         oUf4lpDQevr0WiKQATLAPZva5/1VH+HkHxv7X1AI1n1wghbTSO7y9e3DlLO5LHyzxdMU
+         fC2RHad5wHm2a0RZIhB8ANiZSZbqhMl4vba/2d0EAkzSGxZQJbxedt5BQ1Kivxs7OVPS
+         w2ADqIafQQeNnOifCovtHwHrMbwT5W895bvbcgcwCNCFnuUfwJGuH+tIogOAqwB6PF2a
+         wjrA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773393941; x=1773998741; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=skapIsZV+2WP9UcczRrFkVT7zb1t6DskdiJBKEA1lOE=;
+        b=RtNZsOSQd/dvP7DMbMpDy5j26WNS3ulslO2vS0reEGtaioF22e9807xNERbN7BmDzo
+         BY0W5HNe0+CWMiIU0nvaIs4rIo/HAhBKrLesLtH8beBd98t40dtRfcuwu8/n9G2qeGGc
+         HhTcmUihf9BLq9PKyGzFSM2owQ8p4z4LYaaZOVB0acBNOlBq2KRYsVApljuGgT7va/g5
+         ygZVQ+WroPI/eoe5x52ffIB77Y3pKPVwEZ7yJO3TYD1NSjoRVfxy7lXFZBeK6NqaBGSC
+         /MdALwgJLekQN97FEJm96PMmVTxuVDnpxgwlXqA7LhJLKDNFetb4BVwc9xotGeXRmPF9
+         WjQQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773393941; x=1773998741;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=skapIsZV+2WP9UcczRrFkVT7zb1t6DskdiJBKEA1lOE=;
+        b=baZDuhBEXixRWALKeLwD6C4vYsKQ8P6vEoOym9KcTvhc/gB5S7cAg0PC05VQCPHGSA
+         4EV9LpYWfkX0VAygEO18UasHoHM8MII0J9zTWcSx+WJet8y1UFpN87WCLaveuL8Fm3lz
+         tKGAwSz6sRZvm/8uZgLD2cO8ayx2tIyFDGKRR5eqklBDEIDWSO3pFn6n8iq9CLAqV9X6
+         +npGrBrgMfb3PClsQ4WVuVdnb34c0JcjtJ9vXsQQlr9cXd0nrAlnp/ILPImzQX1b9bv6
+         8+NoF9tyTmHlp5VAuMVmDw4+0dRacjF9Rir19BCE2een772sCY6U9fLysEZKdtFs8BDI
+         vBSQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWwRu8kHCTCzIK+N7SKcScf854Pr3pRMfGg4tpv7PZS7kqIUlMZ3f3vALdCAmJw15qG6j4eutkCioc=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz3Lkxx7WxW8ffXSn4ijwdhk4w6gOQBB02fZZDq3kb7kG3HvSaS
+	Z1fjXyYOdsz7pij0PTU7EsOwdDABUapHWlpypkikEWhwKH6kG+DfMX4QMK6g8ckZQCyxTfztb3N
+	wbRQCzUVUmDjUjWi8FwhL/PD+LntxPLk=
+X-Gm-Gg: ATEYQzzUSPMIK5axrfl6prjjiElEeKVtYj405wM5g2eHvm9K3W0CsHpT/EMYeMCh94D
+	FB/eKwxZrjyX5p25JynLVxv9lbMjzBLfPF3HZrOz10ZoCCbeUOLOFoOzP7iQd7+FwbyIH5sjvqH
+	aDHnuKBO0RuIdakG12iZ9f9rAtcdZ98qHkIPsuxXVZ/hTKd0dmt6bq551jYydDQNa2tI/VEQCXR
+	OKoHioF40AHuTT24yZ6E8n4t5hEg37lvuZZmkth1pd9adv/ky8hAHI6ePwfkFL/srvDdhkWMmoI
+	ut5diQ==
+X-Received: by 2002:a17:907:8dcd:b0:b93:81e7:845a with SMTP id
+ a640c23a62f3a-b976507ad70mr126077666b.9.1773393940274; Fri, 13 Mar 2026
+ 02:25:40 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: =?UTF-8?B?UmU6IOWbnuWkjTogW1BBVENIIHYzIDEvMl0gZHQtYmluZGluZ3M6IFBD?=
- =?UTF-8?Q?I=3A_cix=2Csky1-pcie-host=3A_Add_power-domains?=
-To: Gary Yang <gary.yang@cixtech.com>
-Cc: "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
- "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
- "mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
- "conor+dt@kernel.org" <conor+dt@kernel.org>,
- Peter Chen <peter.chen@cixtech.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- cix-kernel-upstream <cix-kernel-upstream@cixtech.com>
-References: <20260313060308.1300518-1-gary.yang@cixtech.com>
- <20260313060308.1300518-2-gary.yang@cixtech.com>
- <20260313-piquant-robin-of-honor-cb9f39@quoll>
- <PUZPR06MB5887055EC1C0745627143092EF45A@PUZPR06MB5887.apcprd06.prod.outlook.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <PUZPR06MB5887055EC1C0745627143092EF45A@PUZPR06MB5887.apcprd06.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20260226101032.1042-1-linux.amoon@gmail.com> <177260693908.10259.13055467642416391434.b4-ty@kernel.org>
+ <87bc37ee-234c-4568-b72e-955c130a6838@arm.com> <f7tfshf7riljjibuqge4ubfjmludubpyh3ppdf6lasurzdzbtj@sw4xxagfhnn3>
+ <5d88fb5b-e771-4ea6-8d2c-c5cfd21e5860@arm.com> <qwanhqrpztzkudik5fmberhabnzaly7v53677dohqzj5nq4wi2@6ndpiubyxcbi>
+ <DGZXF3LPSRK6.2QYN63QTKUQAX@kernel.org> <cp5uktfqdf6zs53qsye57ior2ikmssgevxxdtevkzpisaif22h@7mrxspkuibow>
+ <DH09EDBW3X6T.2996UB1CFCAW2@kernel.org> <55c28218-1638-4b90-a9cd-a177fb5abcb6@arm.com>
+In-Reply-To: <55c28218-1638-4b90-a9cd-a177fb5abcb6@arm.com>
+From: Anand Moon <linux.amoon@gmail.com>
+Date: Fri, 13 Mar 2026 14:55:23 +0530
+X-Gm-Features: AaiRm52hlbsJk0-LJBm1qE_mVZnVv4Bhkj1fxNTd0yyF5TYOEj4LUpGTe5M1isE
+Message-ID: <CANAwSgTxsDB0t1vj--uvYCCxf4NhnjhBEDLqdevLnGAiuU6_pw@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: dw-rockchip: Enable async probe by default
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: Danilo Krummrich <dakr@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, 
+	Niklas Cassel <cassel@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>, 
+	Hans Zhang <18255117159@163.com>, Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>, linux-pci@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, Grimmauld <grimmauld@grimmauld.de>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	driver-core@lists.linux.dev, Lukas Wunner <lukas@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
 
-On 13/03/2026 09:53, Gary Yang wrote:
-> Hi Krzysztof:
-> 
-> Thanks for your comments
-> 
->> EXTERNAL EMAIL
->>
->> On Fri, Mar 13, 2026 at 02:03:07PM +0800, Gary Yang wrote:
->>> add power-domains and power-domain-names property
->>
->> Nothing improved.
->>
->> <form letter>
->> This is a friendly reminder during the review process.
->>
->> It seems my or other reviewer's previous comments were not fully addressed.
->> Maybe the feedback got lost between the quotes, maybe you just forgot to
->> apply it. Please go back to the previous discussion and either implement all
->> requested changes or keep discussing them.
->>
->> Thank you.
->> </form letter>
->>
-> 
-> Sorry, we only delete power-domain-names property in dts file.
-> 
-> We also delete it in yaml file on V4. Like this, All right? 
+Hi Robin,
 
-"Please go back to the previous discussion..."
+On Thu, 12 Mar 2026 at 18:18, Robin Murphy <robin.murphy@arm.com> wrote:
+>
+> On 2026-03-11 9:09 pm, Danilo Krummrich wrote:
+> > On Wed Mar 11, 2026 at 1:28 PM CET, Manivannan Sadhasivam wrote:
+> >> On Wed, Mar 11, 2026 at 12:46:03PM +0100, Danilo Krummrich wrote:
+> >>> On Wed Mar 11, 2026 at 6:24 AM CET, Manivannan Sadhasivam wrote:
+> >>>> I have a contrary view here. If just a single driver or lib doesn't handle async
+> >>>> probe, it cannot just force other drivers to not take the advantage of async
+> >>>> probe. As I said above, enabling async probe easily saves a few hunderd ms or
+> >>>> even more if there are more than one Root Port or Root Complex in an SoC.
+> >>>
+> >>> Then the driver or lib has to be fixed / improved first or the driver core has
+> >>> to be enabled to deal with a case where PROBE_FORCE_SYNCHRONOUS is requested
+> >>> from an async path, etc.
+> >>>
+> >>> In any case, applying the patch and breaking things (knowingly?) doesn't seem
+> >>> like the correct approach.
+> >>>
+> >>>> I strongly agree with you here that the underlying issue should be fixed. But
+> >>>> the real impact to end users is not this splat, but not having the boot time
+> >>>> optimization that this patch brings in. As an end user, one would want their
+> >>>> systems to boot quickly and they wouldn't bother much about a harmless warning
+> >>>> splat appearing in the dmesg log.
+> >>>
+> >>> You mean quickly booting into a "harmless" potential deadlock condition the
+> >>> warning splat tries to make people aware of? :)
+> >>>
+> >>
+> >> Hmm, I overlooked the built-as-module part where the deadlock could be possible
+> >> as indicated by the comment about the WARN_ON_ONCE().
+> >>
+> >> But what is the path forward here? Do you want the phylib to fix the
+> >> request_module() call or fix the driver core instead?
+> >
+> > Here are a few thoughts.
+> >
+> > In general, I think the best would be to get rid of the (affected)
+> > PROBE_FORCE_SYNCHRONOUS cases.
+> >
+> > Now, I guess this can be pretty hard for a PCI controller driver, as you can't
+> > really predict what ends up being probed from you async context, i.e. it could
+> > even be some other bus controller and things could even propagate further.
+> >
+> > Not sure how big of a deal it is in practice though, there are not a lot of
+> > PROBE_FORCE_SYNCHRONOUS drivers (left), but note that specifying neither
+> > PROBE_FORCE_SYNCHRONOUS nor PROBE_PREFER_ASYNCHRONOUS currently results in
+> > synchronous by default.
+> >
+> > (Also, quite some other PCI controller drivers do set PROBE_PREFER_ASYNCHRONOUS
+> > and apparently got lucky with it.)
+> >
+> >  From a driver-core perspective I think we're rather limited on what we can do;
+> > we are already in async context at this point and can't magically go back to
+> > initcall context.
+> >
+> > So, the only thing I can think of is to kick off work on a workqueue, which in
+> > the end would be the same as the deferred probe handling.
+>
+> Hmm, in fact, isn't the deferred probe mechanism itself actually quite
+> appropriate? A suitable calling context isn't the most obvious "resource
+> provider" to wait for, but ultimately it's still a case of "we don't
+> have everything we need right now, but it's worth trying again soon".
+> I may have missed some subtleties, but my instinct is that it could
+> perhaps be as simple as something like this (completely untested).
+>
+> Cheers,
+> Robin.
+>
+> ----->8-----
+>
+> diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+> index bea8da5f8a3a..3c4a0207ae3f 100644
+> --- a/drivers/base/dd.c
+> +++ b/drivers/base/dd.c
+> @@ -954,6 +954,16 @@ static int __device_attach_driver(struct device_driver *drv, void *_data)
+>         if (data->check_async && async_allowed != data->want_async)
+>                 return 0;
+>
+> +       /*
+> +        * Bus drivers may probe asynchronously, but be adding a child device
+> +        * whose driver still wants a synchronous probe. In this case, just
+> +        * defer it, to be triggered by the parent driver probe succeeding.
+> +        */
+> +       if (!async_allowed && current_is_async()) {
+> +               driver_deferred_probe_add(dev);
+> +               return 0;
+> +       }
+> +
+>         /*
+>          * Ignore errors returned by ->probe so that the next driver can try
+>          * its luck.
+>
 
+Thanks, these changes help fix the warning.
+Please add my
+Tested-by: Anand Moon <linux.amoon@gmail.com>
 
-Best regards,
-Krzysztof
+Thanks
+-Anand
