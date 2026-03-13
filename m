@@ -1,151 +1,148 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 978F03BA221;
-	Fri, 13 Mar 2026 15:39:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from fout-b2-smtp.messagingengine.com (fout-b2-smtp.messagingengine.com [202.12.124.145])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDA9A3A962D;
+	Fri, 13 Mar 2026 15:41:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.145
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773416368; cv=none; b=pC2yHCXPsjmBNTnnfJSwqVvVhOvDRJUlQgpEXzgx3ziEmPiCecI+ktCzC/UBr+ogCB17dXodS4XhMDqYY3qTbqQ2QDKEFNqsIbALJFmJ5jhw7ypHgnPjMYBdA7AbkKeV5kSrZ6Mo8FNQqjxwyUA4Ec/cI+98aeUHnp8nk/9UUIU=
+	t=1773416496; cv=none; b=NWL29dO+GRcDZoWdmNVfYUTZots76OFjNzy8nO2+r7NSxpa9qfYFmm3RuQRPoqTV37m+LWUw91ChUwdwJpe4co5R+tVwrPohDX4nn2nn+2kx+QoTIOSgDMarwPuU7jqvU2kI3pV4iPvHJo6UpkF3ZcMufLpUKPZK/2fIgBMYWTo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773416368; c=relaxed/simple;
-	bh=zPBLkwo3Kdwdr+lDCdfgMjvkdspNsuEcGQKpcizSRbs=;
+	s=arc-20240116; t=1773416496; c=relaxed/simple;
+	bh=BhJpLRvTrRnHI360Y3G/8aswiGHh9HpiQX2cB4S8o9Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ivs+FT+KCnEp7EMAO4jZENFeT8DEVNFXSOtcaqRiFsi7Q4hKS+OHLHOcfEsqea540UkzQohQpJCNbcZaM+nda4RL/EolAkEU4A0N5w7RwaXtckH+s5W9oNvfGSdW7iL+21EnbhIRshCErTiIFqTMy5jBdYWt2PWvc4GCYAAVtlg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=bxGjZFhV; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	 MIME-Version:Content-Type; b=NKovZEx+2T7K4DZpEKR7iA+XLvd1wuV650Xrr8Def0g2tIWX0R7Zh035dzWDNRCxSYhVy2hyjcIh8Xg8VtRWRUCK5jnAP5eNPUyrd5V8Xegdq+i7r3PnBEsdxrMoAv8P5HqMlUJoiK7nWwYXjJSV+Nc1LpQRneaPM9vGWlXa9Uo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=CLgutLG4; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=R9FBcQNs; arc=none smtp.client-ip=202.12.124.145
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="bxGjZFhV"
-Received: from localhost (unknown [40.65.108.177])
-	by linux.microsoft.com (Postfix) with ESMTPSA id D661420B710C;
-	Fri, 13 Mar 2026 08:39:18 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com D661420B710C
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1773416360;
-	bh=VVQdnkFvzB/gHBAeEfjDOu3ipWHlOC3d2TtGMa0Nogc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=bxGjZFhVAxog3QqvD0UQFk4sXHeeQ5NE2qTFN5kayLXjvmuIDnMGr+7++bUo9CucU
-	 ozt1v8CCrq0QALAxMV7zkbSKkHJCrii46ijMqsaPNHRiGsN8elmzY4FJG5Ye5XbnF8
-	 qQbz/XGG8TzAcfJfbSL0GA/sFnxPqdXJNavH1QSw=
-Date: Fri, 13 Mar 2026 08:39:18 -0700
-From: Jacob Pan <jacob.pan@linux.microsoft.com>
-To: David Matlack <dmatlack@google.com>
-Cc: Alex Williamson <alex@shazbot.org>, Adithya Jayachandran
- <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, Alex Mastro
- <amastro@fb.com>, Alistair Popple <apopple@nvidia.com>, Andrew Morton
- <akpm@linux-foundation.org>, Ankit Agrawal <ankita@nvidia.com>, Bjorn
- Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, David Rientjes
- <rientjes@google.com>, Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe
- <jgg@ziepe.ca>, Jonathan Corbet <corbet@lwn.net>, Josh Hilke
- <jrhilke@google.com>, Kevin Tian <kevin.tian@intel.com>,
- kexec@lists.infradead.org, kvm@vger.kernel.org, Leon Romanovsky
- <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org, linux-mm@kvack.org,
- linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, =?utf-8?Q?Mich?=
- =?utf-8?Q?a=C5=82?= Winiarski <michal.winiarski@intel.com>, Mike Rapoport
- <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, Pasha Tatashin
- <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>,
- Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta
- <rananta@google.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed
- <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, Shuah Khan
- <skhan@linuxfoundation.org>, Thomas =?utf-8?Q?Hellstr=C3=B6m?=
- <thomas.hellstrom@linux.intel.com>, Tomita Moeko <tomitamoeko@gmail.com>,
- Vipin Sharma <vipinsh@google.com>, Vivek Kasireddy
- <vivek.kasireddy@intel.com>, William Tu <witu@nvidia.com>, Yi Liu
- <yi.l.liu@intel.com>, Zhu Yanjun <yanjun.zhu@linux.dev>
-Subject: Re: [PATCH v2 10/22] vfio/pci: Skip reset of preserved device after
- Live Update
-Message-ID: <20260313083918.00005731@linux.microsoft.com>
-In-Reply-To: <abNOwcOTXqxCxNzt@google.com>
-References: <20260129212510.967611-1-dmatlack@google.com>
-	<20260129212510.967611-11-dmatlack@google.com>
-	<20260226170030.5a938c74@shazbot.org>
-	<aaDqhjdLyf1qSTSh@google.com>
-	<20260227084658.3767d801@shazbot.org>
-	<CALzav=fHy23RAzhgkdaL+JA5T2tL9FT6aPgRfXUh7i9zvYCGPA@mail.gmail.com>
-	<20260227105720.522ca97f@shazbot.org>
-	<CALzav=fjRPa_ZbXu7iFXyemcf_8Kq_dZTWT6c-A0bc6czF_Rdw@mail.gmail.com>
-	<abNOwcOTXqxCxNzt@google.com>
-Organization: LSG
-X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="CLgutLG4";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="R9FBcQNs"
+Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
+	by mailfout.stl.internal (Postfix) with ESMTP id 6196B1D001CC;
+	Fri, 13 Mar 2026 11:41:32 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-06.internal (MEProxy); Fri, 13 Mar 2026 11:41:33 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1773416492;
+	 x=1773502892; bh=kgj526aKwZrzrcQEKfOTYeHG2iUgfK1oZFrmdyv2yl0=; b=
+	CLgutLG4ntcLyFOAbBQ1AWQisumepy/Mvyl4h6KkyQgjUNg4q2L2aNSZ5iWp4F3M
+	/xz/dVV41l4kZcBIwqKaalvZ+BrFJBZcpWOua5Ri2zNXGisX1+6eBg/VF2fUIZZU
+	fIO8Bn0WIBHa82ccA7iXRB01E09TGLp+U0SNYRSa96Sdfoy16cGn5oM72iSZ73PO
+	dyPqJncSHyxxfoKtJfWvL0PRjEmc49f5uHYN0gz38tVguveWrw0vSyz51oRSQhiV
+	KqmYTuwHqZPH7jLkouEQeRO6zPINA8ci4jAhwiZYQP9CyTRb71rDMTcdicomPsds
+	HMES9jhoBDRb/4d7/+3h6Q==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1773416492; x=
+	1773502892; bh=kgj526aKwZrzrcQEKfOTYeHG2iUgfK1oZFrmdyv2yl0=; b=R
+	9FBcQNsKEocG/Osc/VTMTI+gftCa+DWHzey6JCB5AHjQAHxqa0VnzXD0WFQpk0PL
+	fvvfUwN0T/i4nZfnfst9prEtfmxBdyIm2X5FV3rI9Ty6uTn3fKab3R19jpmIDsrS
+	/azQ4vm3NfCKs/E6Qhz02xss6cOWixE2gIV9t/MD5OwcpmlR1kfxCkbOqM7KDW16
+	1aIWazdrKok8ilYrnE3RjVj1CE+HQZPQHY/HpBXjiZz4Cz/mQ5vjt5dbp9Sd4DXv
+	3ru0OfIXBdDoifYRSpVVyhlxOpwbvC/9sE3zDucE0YRCjicSWJUmVvFYRXNwo5LK
+	IGqB1n/21/3vuZC5jef2A==
+X-ME-Sender: <xms:KzC0adLdWLZrY32WZWLIH5jHdyTODgig88I69GhC3ed5x3ncWgldDQ>
+    <xme:KzC0aVRNW21Z2zpp2CcLR1Szn1x8VyXz-abkReePqUu5zbgYfieNlR-BSpAViAqr2
+    si_i-epWQCtaaDofQ43tmEEv1gblkWq59NPdTk28havlRfb-gPVpAs>
+X-ME-Received: <xmr:KzC0aRixE-EvSDPlmwhfJZOYSWsy5JcU8tf8uOB3e2FynXr-GPlQx406_WE>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvledttdehucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepfffhvfevuffkjghfofggtgfgsehtqhertdertdejnecuhfhrohhmpeetlhgvgicu
+    hghilhhlihgrmhhsohhnuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtffrrg
+    htthgvrhhnpeegudevhfejueefveduieeuueeifeettdekveekhffgvdetfeelueehgfdt
+    heffhfenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    grlhgvgiesshhhrgiisghothdrohhrghdpnhgspghrtghpthhtohepvddupdhmohguvgep
+    shhmthhpohhuthdprhgtphhtthhopehjuhhlihgrnhhrsehlihhnuhigrdhisghmrdgtoh
+    hmpdhrtghpthhtohepshgthhhnvghllhgvsehlihhnuhigrdhisghmrdgtohhmpdhrtghp
+    thhtohepfihinhhtvghrrgeslhhinhhugidrihgsmhdrtghomhdprhgtphhtthhopehtsh
+    eslhhinhhugidrihgsmhdrtghomhdprhgtphhtthhopehosggvrhhprghrsehlihhnuhig
+    rdhisghmrdgtohhmpdhrtghpthhtohepghgsrgihvghrsehlihhnuhigrdhisghmrdgtoh
+    hmpdhrtghpthhtohepjhhgghesiihivghpvgdrtggrpdhrtghpthhtohephihishhhrghi
+    hhesnhhvihguihgrrdgtohhmpdhrtghpthhtohepshhkohhlohhthhhumhhthhhosehnvh
+    hiughirgdrtghomh
+X-ME-Proxy: <xmx:KzC0aXuS-iukiHn-AxQw_9X-DZUaOAwcuTybc9gRRRtGVX7qOSyi7Q>
+    <xmx:KzC0aUiRrYkZNKkz4yatMt1gJXTsNvkCgjX2iRx2bf82GU-wE8dapg>
+    <xmx:KzC0aWGBPEfNuwc3Z_Gn0AJVBLb2y0KoxH37GL68yyqWHCCQRIjawQ>
+    <xmx:KzC0aVKZ2BjEzTdI4-GQzMalOpRMTT-NKq0QEowIDDiIs_b9SpFmug>
+    <xmx:LDC0aaWflAQVC9FrhtiTHu9vVclibp9shvsS-2SdoGbvwPREorOuODBM>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
+ 13 Mar 2026 11:41:29 -0400 (EDT)
+Date: Fri, 13 Mar 2026 09:41:27 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Julian Ruess <julianr@linux.ibm.com>
+Cc: schnelle@linux.ibm.com, wintera@linux.ibm.com, ts@linux.ibm.com,
+ oberpar@linux.ibm.com, gbayer@linux.ibm.com, Jason Gunthorpe
+ <jgg@ziepe.ca>, Yishai Hadas <yishaih@nvidia.com>, Shameer Kolothum
+ <skolothumtho@nvidia.com>, Kevin Tian <kevin.tian@intel.com>,
+ mjrosato@linux.ibm.com, alifm@linux.ibm.com, raspl@linux.ibm.com,
+ hca@linux.ibm.com, agordeev@linux.ibm.com, gor@linux.ibm.com,
+ kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-s390@vger.kernel.org, linux-pci@vger.kernel.org, alex@shazbot.org
+Subject: Re: [PATCH v4 0/3] vfio/pci: Introduce vfio_pci driver for ISM
+ devices
+Message-ID: <20260313094127.74aa0767@shazbot.org>
+In-Reply-To: <20260313-vfio_pci_ism-v4-0-4765ae056f71@linux.ibm.com>
+References: <20260313-vfio_pci_ism-v4-0-4765ae056f71@linux.ibm.com>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-Hi David,
+On Fri, 13 Mar 2026 15:40:27 +0100
+Julian Ruess <julianr@linux.ibm.com> wrote:
 
-On Thu, 12 Mar 2026 23:39:45 +0000
-David Matlack <dmatlack@google.com> wrote:
+> Hi all,
+>=20
+> This series adds a vfio_pci variant driver for the s390-specific
+> Internal Shared Memory (ISM) devices used for inter-VM communication
+> including SMC-D.
+>=20
+> This is a prerequisite for an in-development open-source user space
+> driver stack that will allow to use ISM devices to provide remote
+> console and block device functionality. This stack will be part of
+> s390-tools.
+>=20
+> This driver would also allow QEMU to mediate access to an ISM device,
+> enabling a form of PCI pass-through even for guests whose hardware
+> cannot directly execute PCI accesses, such as nested guests.
+>=20
+> On s390, kernel primitives such as ioread() and iowrite() are switched
+> over from function handle based PCI load/stores instructions to PCI
+> memory-I/O (MIO) loads/stores when these are available and not
+> explicitly disabled. Since these instructions cannot be used with ISM
+> devices, ensure that classic function handle-based PCI instructions are
+> used instead.
+>=20
+> The driver is still required even when MIO instructions are disabled, as
+> the ISM device relies on the PCI store=E2=80=91block (PCISTB) instruction=
+ to
+> perform write operations.
+>=20
+> Thank you,
+> Julian
+>=20
+> Signed-off-by: Julian Ruess <julianr@linux.ibm.com>
+> ---
+> Changes in v4:
+> - Fix bug with < 8 byte reads. For code simplicity, only support 8 byte r=
+eads.
 
-> On 2026-03-09 10:32 AM, David Matlack wrote:
-> > On Fri, Feb 27, 2026 at 9:57=E2=80=AFAM Alex Williamson <alex@shazbot.o=
-rg>
-> > wrote: =20
->=20
-> > > Sorry if I don't have the whole model in my head yet, but is
-> > > exposing the restriction to the vfio user of the device
-> > > sufficient to manage the liveupdate orchestration?  For example,
-> > > a VFIO_DEVICE_INFO_CAP pushes the knowledge to QEMU... what does
-> > > QEMU do with that knowledge?  Who imposes the policy decision to
-> > > decide what support is sufficient? =20
-> >=20
-> > Hm.. good questions. I don't think we want userspace inspecting bits
-> > exposed by the kernel and trying to infer exactly what's being
-> > preserved and whether it's "good enough" to use. And such a UAPI
-> > would become tech debt once we finish development, I suspect.
-> >=20
-> > A better approach would be to hide this support from userspace until
-> > we decide it is ready for production use-cases.
-> >=20
-> > To enable development and testing, we can add an opt-in mechanism =20
->=20
-> Here is what I am trending towards sending in v3 as the opt-in
-> mechanism:
->=20
-> diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
-> index 1e82b44bda1a..770231554221 100644
-> --- a/drivers/vfio/pci/Kconfig
-> +++ b/drivers/vfio/pci/Kconfig
-> @@ -58,6 +58,27 @@ config VFIO_PCI_ZDEV_KVM
->  config VFIO_PCI_DMABUF
->         def_bool y if VFIO_PCI_CORE && PCI_P2PDMA && DMA_SHARED_BUFFER
->=20
-> +config VFIO_PCI_LIVEUPDATE
-> +       bool "VFIO PCI support for Live Update (EXPERIMENTAL)"
-> +       depends on LIVEUPDATE && VFIO_PCI
-> +       help
-> +         Support for preserving devices bound to vfio-pci across a
-> Live
-> +         Update. The eventual goal is that preserved devices can run
-> +         uninterrupted during a Live Update, including DMA to
-> preserved
-> +         memory buffers and P2P. However there are many steps still
-> needed to
-> +         achieve this, including:
-> +
-> +          - Preservation of iommufd files
-> +          - Preservation of IOMMU driver state
-In the interim, what do you think about moving forward with noiommu
-mode without preserving IOMMU driver state? I=E2=80=99ve tested your
-vfio_pci_liveupdate_kexec_test with the noiommu cdev, and it works as
-expected.
+Does the ISM device define sub-8-byte accesses as valid?  It looks like
+if pread() doesn't return the desired size QEMU will fill the return
+with -1.  Unless such accesses are classified as undefined by ISM,
+doesn't that suggest a potential data corruption issue to the guest
+driver?  Thanks,
 
-> +          - Preservation of PCI state (BAR resources, device state,
-> ...)
-> +          - Preservation of vfio-pci driver state
-> +
-> +         This option should only be enabled by developers working on
-> +         implementing this support. Once enough support has landed
-> in the
-> +         kernel, this option will no longer be marked EXPERIMENTAL.
-> +
-> +         If you don't know what to do here, say N.
-> +
->  source "drivers/vfio/pci/mlx5/Kconfig"
->=20
->  source "drivers/vfio/pci/hisilicon/Kconfig"
-
+Alex
