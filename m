@@ -1,161 +1,190 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B17363A4F5A;
-	Fri, 13 Mar 2026 14:39:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D1113A3E7C;
+	Fri, 13 Mar 2026 14:40:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773412746; cv=none; b=YGfdI0gZWubSjUFdSG9x2/6ZWZ6V5z7s32AiF/0fi1Y+gknWWWFM13a9Iv93kbNi8bsYW0NPFSdGQ1D5+dr+v76yETM3obCAYd5x/Yo/vgyM8BGEYM2NwxrDggW37f9oQE6baanW03cswIA6Wq23+wYsMsIWlv+NFvZh1+G42Ko=
+	t=1773412850; cv=none; b=Rk07z09teFsObiqSd2/vXw3DWk4KB2NYgYknwozuyCqkp7AzN8X2c/wIQHsBi4yF3EJH5aVsKM0MuL1js8SFADGvuNDWXl7Wwu6QRmFOXmCLGvfgH0moByecy0aa9D3zMtB7022GUZAJ6XG54uinfqTPp7Y8aXBag/tNeMg+JJg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773412746; c=relaxed/simple;
-	bh=2bB1TNHSstKP1SyOMwkXhCnminoEDQyrDqJ+oh+TkPk=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=fJPkNFR6LgyOAcVi0SxZGef9CUHdTqsxhStOljiK/5rim0UHFu/dQ/YwnVX2+NYte2W4DnoO0P1h+EEQf8kca63cxpUoMExKy9aB1VPffM1gsyhehG8NS2iGYE+Lv/ft2yOgEKw8cSGr1+YLvUJn7Qn1FhD+32asQV2M+fuf8/U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pki7ElTu; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773412850; c=relaxed/simple;
+	bh=9vHhgmNNsBYrRJYJuWBOLyJEUr570bESVgKuTnb6SEo=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=mzy8GFLenibaszrQOwN3orpFgWi+AmUXZOELU4CSKE5vZXM3CPBsEvJfM04kLOA2UiThFBz+8FM4vqlBkBzbIcpDz+YcS7ZIoTHX4DVcpdx0TTuOUNMVHNLZ1mLg9MJtMp0/TxNTcjwdG6aaalJr+LJKms9nuYhFD0yejfgOyUo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Bz7LGT6F; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pki7ElTu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E677CC19421;
-	Fri, 13 Mar 2026 14:39:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773412746;
-	bh=2bB1TNHSstKP1SyOMwkXhCnminoEDQyrDqJ+oh+TkPk=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
-	b=pki7ElTugXQ1BdVOTQYUeJa13U8nnQfK7wm0vdtU5qKMDsBi0S0S/ByChMXQ8na/o
-	 2zqhkK7jAWK40WCTqBKxN4MV3ujCYogeT7bY2vVdN+nfWUh+9IKT1mUgGouYH+DNib
-	 Z8aGV56v7VX8VTx/dKwZs+MhjNbxmQyhf3pp8Xp56K8y8Mc4YjT9xyb108eKAQ68H8
-	 ycoCOcU4a2WZzgJpPZsuUr4B/KsRNxF5f5+EkaljVyQBTV+wgFffabk5+m7c/hdEsz
-	 Om9m3HdKkP+jvq4uyquP421v/CTSb5eYAOexGAdz8fo6rYCk5M/Z/KBCl+Ml+GWnb5
-	 qMi2nPna2lQCQ==
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Bz7LGT6F"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62D6suC92256628;
+	Fri, 13 Mar 2026 14:40:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=pp1; bh=7isFUTZZTAIHxK3HFmANfgTDmC+b
+	wKY6UpdApQt4NaQ=; b=Bz7LGT6F6BituM4KqBQosUPQW8/uMmzCXQ2DLsEvA6rh
+	j3Pz498RPTlvk0zvIhZ9fb6Uoey6GFkcGYB05Fh+zNpDi9LH77Vg12gj1grLh4KZ
+	jwl9t3Y2X9NbjmaLVbK5Ip/vTRdpSedZSAWd5qP/LQ5cg1G5T6zBde35iWcnjEBZ
+	JccuhCmRCsWBQ5Mi2oKM0BU4Q57KVouHLGPGOJZqeufEG5eEvqaHPaFiRsA9WPlE
+	z2xmiX9pAC58BXa2YRJywfacCXc63EleRy5vaqKV0y/6NurRhE8EVWM+4yWmdnVt
+	geBN24QUmNWihFPvyWryjid+nDI/ZOm5J7lahDDE0w==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cuh92g8tb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 13 Mar 2026 14:40:44 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62DAUI5w006130;
+	Fri, 13 Mar 2026 14:40:43 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4cuha9q0yx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 13 Mar 2026 14:40:43 +0000
+Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62DEed8p50069850
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 13 Mar 2026 14:40:39 GMT
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 787112004F;
+	Fri, 13 Mar 2026 14:40:39 +0000 (GMT)
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 3E7822004D;
+	Fri, 13 Mar 2026 14:40:39 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.87.85.9])
+	by smtpav06.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Fri, 13 Mar 2026 14:40:39 +0000 (GMT)
+From: Julian Ruess <julianr@linux.ibm.com>
+Subject: [PATCH v4 0/3] vfio/pci: Introduce vfio_pci driver for ISM devices
+Date: Fri, 13 Mar 2026 15:40:27 +0100
+Message-Id: <20260313-vfio_pci_ism-v4-0-4765ae056f71@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Fri, 13 Mar 2026 15:39:00 +0100
-Message-Id: <DH1QCLS89ADR.3H0XABP0GEFQT@kernel.org>
-Subject: Re: [PATCH v3] PCI: dw-rockchip: Enable async probe by default
-Cc: "Manivannan Sadhasivam" <mani@kernel.org>, "Manivannan Sadhasivam"
- <manivannan.sadhasivam@oss.qualcomm.com>, "Lorenzo Pieralisi"
- <lpieralisi@kernel.org>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, "Rob Herring" <robh@kernel.org>, "Bjorn Helgaas"
- <bhelgaas@google.com>, "Heiko Stuebner" <heiko@sntech.de>, "Niklas Cassel"
- <cassel@kernel.org>, "Shawn Lin" <shawn.lin@rock-chips.com>, "Hans Zhang"
- <18255117159@163.com>, "Nicolas Frattaroli"
- <nicolas.frattaroli@collabora.com>, "Wilfred Mallawa"
- <wilfred.mallawa@wdc.com>, <linux-pci@vger.kernel.org>,
- <linux-arm-kernel@lists.infradead.org>,
- <linux-rockchip@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
- "Anand Moon" <linux.amoon@gmail.com>, "Grimmauld" <grimmauld@grimmauld.de>,
- "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
- <rafael@kernel.org>, <driver-core@lists.linux.dev>, "Lukas Wunner"
- <lukas@wunner.de>
-To: "Robin Murphy" <robin.murphy@arm.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260226101032.1042-1-linux.amoon@gmail.com>
- <177260693908.10259.13055467642416391434.b4-ty@kernel.org>
- <87bc37ee-234c-4568-b72e-955c130a6838@arm.com>
- <f7tfshf7riljjibuqge4ubfjmludubpyh3ppdf6lasurzdzbtj@sw4xxagfhnn3>
- <5d88fb5b-e771-4ea6-8d2c-c5cfd21e5860@arm.com>
- <qwanhqrpztzkudik5fmberhabnzaly7v53677dohqzj5nq4wi2@6ndpiubyxcbi>
- <DGZXF3LPSRK6.2QYN63QTKUQAX@kernel.org>
- <cp5uktfqdf6zs53qsye57ior2ikmssgevxxdtevkzpisaif22h@7mrxspkuibow>
- <DH09EDBW3X6T.2996UB1CFCAW2@kernel.org>
- <55c28218-1638-4b90-a9cd-a177fb5abcb6@arm.com>
- <DH0TM60TVX5D.20W4O1X696ALA@kernel.org>
- <6cfe4bda-036f-4bb9-8a08-ed75f61cae24@arm.com>
-In-Reply-To: <6cfe4bda-036f-4bb9-8a08-ed75f61cae24@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIANshtGkC/33RTU7DMBAF4KtUWZPKM2N7YlbcA6HK8Q+1RJsqg
+ aio6t1xsiEYw3Isve+N7VszhTGFqXnc3ZoxzGlKwzkP8mHXuKM9v4Y2+Tw3KFAJRG7nmIbDxaV
+ Dmk6tcM5hkIwoucmRyxhiuq7c80uej2l6H8bPVZ9xOV0gLQDUT2jGVrROW4paaeWBnt7S+eO6T
+ /1p74bTYq/BXFQJRgHCSEVM0RbBZYuZts2mACgD4DyAt0Gw8H80k1C1IAIL1q4Db2rNctOMVAB
+ yuXPfRWKLBvuuBqgtUK6uMsBRG7Yke2mhBuhvAIUuAJ0B7w2TFEYHrl6B/wM4A1L3nfTRagOhB
+ nQbAKAAugwoJYV1psfu1+uvAGwBLADIABGhRuvz/8kSuN/vX9uB8VTlAgAA
+X-Change-ID: 20250227-vfio_pci_ism-0ccc2e472247
+To: schnelle@linux.ibm.com, wintera@linux.ibm.com, ts@linux.ibm.com,
+        oberpar@linux.ibm.com, gbayer@linux.ibm.com,
+        Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+        Yishai Hadas <yishaih@nvidia.com>,
+        Shameer Kolothum <skolothumtho@nvidia.com>,
+        Kevin Tian <kevin.tian@intel.com>
+Cc: mjrosato@linux.ibm.com, alifm@linux.ibm.com, raspl@linux.ibm.com,
+        hca@linux.ibm.com, agordeev@linux.ibm.com, gor@linux.ibm.com,
+        julianr@linux.ibm.com, kvm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-pci@vger.kernel.org
+X-Mailer: b4 0.14.2
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: yac7QH6tEPRvCmaW8vDDXMXLlW35cet8
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzEzMDExNiBTYWx0ZWRfX80DDIEuMj7D3
+ dnJxXioxpaT6mxSKhR7NZWP0m8KyQgGumc9AUKKAZP76xwc+7YR2Y2vwBHNGZ7DG/x9ILRUixTd
+ a4ZVpRhlvpd2IEy+BskWBRzbnyVEqZs4Wc4CPKaU+PWNv1YXb/knSJm/0ZR+3Uuaz1jTMNa84OP
+ ZJziD34XzYyoDFEnwJr+0h0KMobU8Xp0uSXykVY74nBgU1LslBFu+o10BgjwriaamI5qgbVNSDI
+ ZG2NDIoYNp3rGyFYmId0dEZGqzV80xNTLbDsxsGiBfVPodi1Tmxm5T1KFpGaLdqW0/SxKwRg3Vo
+ MOmSHDnojmbWjJFR/w9HaUEXL9/26SSIWgparNIx2k6txatMMT+Aeno7KFfzHWYrFqdM5s4lxUJ
+ 2QWtMkeaFRLTA+J7VvR2kDD1XmFVj+ezmVQIuhySon9s+8z3pFE08WuDwmPSWoaOtAPUyq77+rJ
+ JRj3cB4RcuCVH+l5Flg==
+X-Proofpoint-GUID: yac7QH6tEPRvCmaW8vDDXMXLlW35cet8
+X-Authority-Analysis: v=2.4 cv=XNk9iAhE c=1 sm=1 tr=0 ts=69b421ec cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VwQbUJbxAAAA:8
+ a=VnNF1IyMAAAA:8 a=N9cWH81oVO2ky6WQpksA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-13_02,2026-03-13_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 spamscore=0 clxscore=1015 lowpriorityscore=0 adultscore=0
+ bulkscore=0 phishscore=0 priorityscore=1501 impostorscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603130116
 
-On Fri Mar 13, 2026 at 2:15 PM CET, Robin Murphy wrote:
-> On 2026-03-12 12:59 pm, Danilo Krummrich wrote:
->> On Thu Mar 12, 2026 at 1:48 PM CET, Robin Murphy wrote:
->>> On 2026-03-11 9:09 pm, Danilo Krummrich wrote:
->>>>   From a driver-core perspective I think we're rather limited on what =
-we can do;
->>>> we are already in async context at this point and can't magically go b=
-ack to
->>>> initcall context.
->>>>
->>>> So, the only thing I can think of is to kick off work on a workqueue, =
-which in
->>>> the end would be the same as the deferred probe handling.
->>>
->>> Hmm, in fact, isn't the deferred probe mechanism itself actually quite
->>> appropriate?
->>=20
->> Yes, I've also mentioned this in [1], including the fact that it technic=
-ally
->> even complies with the guarantees given by PROBE_FORCE_SYNCHRONOUS. I.e.=
- the
->> documentation says:
->>=20
->> 	Use this to annotate drivers that need their probe routines to run
->> 	synchronously with driver and device registration (with the exception o=
-f
->> 	-EPROBE_DEFER handling - re-probing always ends up being done
->> 	asynchronously).
->>=20
->> However, I'm still not sure how I feel about this, since I consider this=
- to be
->> more like a workaround that just moves things to a "more approprite" asy=
-nc
->> context.
->
-> I guess the underlying problem there is that there are at least 3=20
-> different significant aspects to what "synchronous" can mean:
->
-> - literally in the context or device/driver registration as documented.=
-=20
-> Off-hand I'm not really sure what useful property may be *specific* to=20
-> those conditions that a driver might rely on, other than for=20
-> super-special cases like platform_driver_probe().
+Hi all,
 
-I'm not worried about this one, as it is already special by not being compa=
-tible
-with deferred probe. I.e. the caller already has to promise that the
-corresponding probe() call will never return -EPROBE_DEFER.
+This series adds a vfio_pci variant driver for the s390-specific
+Internal Shared Memory (ISM) devices used for inter-VM communication
+including SMC-D.
 
-This is a much more error prone requirement than just "don't call this from
-async" already.
+This is a prerequisite for an in-development open-source user space
+driver stack that will allow to use ISM devices to provide remote
+console and block device functionality. This stack will be part of
+s390-tools.
 
-> - serialised, i.e. probes of multiple devices won't happen concurrently=
-=20
-> on multiple threads. This is probably the one hiding the most driver=20
-> bugs, e.g. internal shared/global state without sufficient=20
-> synchronisation. I guess this falls out as a side-effect of the first=20
-> condition, but AFAICS it *can* also still provided by deferred probe=20
-> (given that it's a single work item iterating a list one-by-one)
->
-> - in some regular thread context that isn't liable to have issues=20
-> synchronising against other async_func workers (i.e. the request_module=
-=20
-> case). Again, deferred can't have a problem here, or it wouldn't have=20
-> worked properly in general for the last decade.
->
-> So it's not that we'd be relying on some dubious "deferred is always=20
-> synchronous" assumption - AFAICS deferred *can* launch async if the=20
-> driver permits it - more just ratifying that deferred is still able to=20
-> effectively honour all the useful properties of PROBE_FORCE_SYNCHRONOUS=
-=20
-> other than "during registration of the thing".
+This driver would also allow QEMU to mediate access to an ISM device,
+enabling a form of PCI pass-through even for guests whose hardware
+cannot directly execute PCI accesses, such as nested guests.
 
-Yes, and as mentioned above, EPROBE_DEFER has always been a valid path for
-PROBE_FORCE_SYNCHRONOUS, which is why I brought it up as a a workaround in =
-the
-first place.
+On s390, kernel primitives such as ioread() and iowrite() are switched
+over from function handle based PCI load/stores instructions to PCI
+memory-I/O (MIO) loads/stores when these are available and not
+explicitly disabled. Since these instructions cannot be used with ISM
+devices, ensure that classic function handle-based PCI instructions are
+used instead.
 
-(The reason why I still say "workaround" is because nothing actually needs =
-to be
-deferred.)
+The driver is still required even when MIO instructions are disabled, as
+the ISM device relies on the PCI store‑block (PCISTB) instruction to
+perform write operations.
 
-Anyways, as I mentioned...
+Thank you,
+Julian
 
->> On the other hand, eventually we want everything to work with
->> PROBE_PREFER_ASYNCHRONOUS, so maybe it's also good enough for the time b=
-eing.=20
+Signed-off-by: Julian Ruess <julianr@linux.ibm.com>
+---
+Changes in v4:
+- Fix bug with < 8 byte reads. For code simplicity, only support 8 byte reads.
+- Fix leak of ivpcd.
+- Fix cache replacement by implementing a per-device kmem_cache.
+- Link to v3: https://lore.kernel.org/r/20260305-vfio_pci_ism-v3-0-1217076c81d9@linux.ibm.com
 
-...plus there are not a lot of PROBE_FORCE_SYNCHRONOUS left anyways.
+Changes in v3:
+- Add comments to ism_vfio_pci_do_io_r() and ism_vfio_pci_do_io_w().
+- Format Kconfig.
+- Add 4k boundary check to ism_vfio_pci_do_io_w().
+- Use kmem_cache instead of kzalloc in ism_vfio_pci_do_io_w().
+- Add error handler to struct ism_vfio_pci_driver.
+- Link to v2: https://lore.kernel.org/r/20260224-vfio_pci_ism-v2-0-f010945373fa@linux.ibm.com
 
-Do you want to send a patch?
+Changes in v2:
+- Remove common code patch that sets VFIO_PCI_OFFSET_SHIFT to 48.
+- Implement ism_vfio_pci_ioctl_get_region_info() to have own region
+  offsets.
+- For config space accesses, rename vfio_config_do_rw() to
+  vfio_pci_config_rw_single() and export it.
+- Use zdev->maxstbl instead of ZPCI_BOUNDARY_SIZE.
+- Add comment that zPCI must not use MIO instructions for config space
+  access.
+- Rework patch descriptions.
+- Update license info.
+- Link to v1: https://lore.kernel.org/r/20260212-vfio_pci_ism-v1-0-333262ade074@linux.ibm.com
+
+---
+Julian Ruess (3):
+      vfio/pci: Rename vfio_config_do_rw() to vfio_pci_config_rw_single() and export it
+      vfio/ism: Implement vfio_pci driver for ISM devices
+      MAINTAINERS: add VFIO ISM PCI DRIVER section
+
+ MAINTAINERS                        |   6 +
+ drivers/vfio/pci/Kconfig           |   2 +
+ drivers/vfio/pci/Makefile          |   2 +
+ drivers/vfio/pci/ism/Kconfig       |  10 ++
+ drivers/vfio/pci/ism/Makefile      |   3 +
+ drivers/vfio/pci/ism/main.c        | 345 +++++++++++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_config.c |   8 +-
+ drivers/vfio/pci/vfio_pci_priv.h   |   4 +
+ 8 files changed, 377 insertions(+), 3 deletions(-)
+---
+base-commit: 0257f64bdac7fdca30fa3cae0df8b9ecbec7733a
+change-id: 20250227-vfio_pci_ism-0ccc2e472247
+
+Best regards,
+-- 
+Julian Ruess <julianr@linux.ibm.com>
+
