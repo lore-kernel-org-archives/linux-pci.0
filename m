@@ -1,125 +1,175 @@
-Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
+Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com [209.85.167.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6955388E7B
-	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 09:26:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC49329B77C
+	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 09:44:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.48
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773394007; cv=pass; b=tT34+O2UfcmVuL3U3wrwYQY8TKWRoDGQDkPj/g6QacLk18hMI2WsNHtJGoGoxVj9m/uq9I3LJkvpdPeihcyTtTlvONLVNr/rqvu9C8JjACxth/zZsTa8peD95R/L9uAzaMrrpX/sKzBEGDH9+N1zZ+HxNp9nHbQ9RMpysRypRJo=
+	t=1773395054; cv=pass; b=uV9g0P+Y4iYDHCl/lxWJiiHzUkA4Vhk/nvMsN/O8sCUHtdyWm49gM2j0be6sPWB4Xazo9gOzPpgM1psRzfLD/6kv7ChGFC+tn2ApWlCBeHUpOniyA2su8laUoM10buzKHcYzfVblvuRLGqThpHJzorZP+RQAKdrwYONDsyNDS5I=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773394007; c=relaxed/simple;
-	bh=9zhdSL5TZ0+7QU3R0xnxIo4ImepctE4X0d6M5LPIqcs=;
+	s=arc-20240116; t=1773395054; c=relaxed/simple;
+	bh=a4PkyDJIX7KyCPscZwhkhXLXTwGONJMI97/AnswuOLU=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=IhYQsGu5/wiusSyJnc2m7dmdtmAjTP+KEUUdbtlHlSZYiPHhg7RH7yaWhQqwbtZmvj6HSVP0cNerwUGeIrARUMYvP7PREGu7kXhEhXoUngftru4S/NH6pujbI04SZKaTXNtfcTKxDeaPBQJ3N5SYlR/PB4b8z5BSLfHm8wJ/fNY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NY5KiRfZ; arc=pass smtp.client-ip=209.85.208.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 To:Cc:Content-Type; b=WJwRIsodF7yAI3IQW36KAecCVC0jwdbp02uEtSJdZshuqLIcxsE9JMiMgRuynCayi1JYW8EjMCuFZsj2znWc+kOai6Nhg/ahx6MLzLkfEo/ku9pvK9rnBneIg82zMJcomLnc8qA0VEd9d2tVc2SfPnKJ2cUsnNHFMJiVZrV34R4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=CVJB0EpM; arc=pass smtp.client-ip=209.85.167.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NY5KiRfZ"
-Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-661b16ac011so3421254a12.2
-        for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 02:26:45 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1773394004; cv=none;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="CVJB0EpM"
+Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-5a107b387a5so2608504e87.2
+        for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 02:44:12 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773395051; cv=none;
         d=google.com; s=arc-20240605;
-        b=O20FSf7KZUHi7cYgc7xcQLiRyu2r92sIaFg53PjI1CpvLB+a6/SiZUZmIYz/5eFjb4
-         JA6foHacVR3dQKvFvtIBf5qe2N2eLxXVZfSIqMMeUdUEJ6vkuXO1xRehKIybgZ08GzCS
-         ffRji5WwVgY4eXmhILgDDNbyKHqQT1A0N/kjfKi68AK06WhMIQwsrH+N+2/D/3dN0MGU
-         8kPLbnxnKIFv5Owbuo3d1tetnf0fIOpRXR3WLeJgg3C0otlMXU3IzrWXz1GL0u7i37FL
-         okboqWMIKT68GDPyaMGoOWGJrpvHMytkj+JS1ZtJk3cOMoX2BHB2sAedF28DPHCurwhk
-         uXkA==
+        b=XwD+3wDOXctyvIH367AwFw3x6iIZIHJhxVRQkWw9AMjyhUZjhlFI5swmC9xEzmdKQK
+         pqmJoOwvCgCicdxSM7J4StdvpfVtOunHi8ZXD7Tw6zjLogCoQmVmmN/s5bKAPAkoPkYX
+         lFUpaMoQp9G3oh6YgZtTo1KNDh0qAO/B6M5OJN8nkmNgE6/sYhJLjaIfF/ZZdyrj68qC
+         dOg26vKQAHJD9A3KUGEWdp3GL2IsFITYHymJ/GmrcQh0iNgMivZBTQcCSb/xrJv3uB09
+         GhVEFw2nSZW82qZ08RwElCTXAcnrNx+A9/7Cu6wrcML1neWfnm99r3pID4iQjK0923Yh
+         pUNw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=9zhdSL5TZ0+7QU3R0xnxIo4ImepctE4X0d6M5LPIqcs=;
-        fh=T7uWcXCV6O/eE4GtnTykZ3+q30dH1fdDa/nVU4kjXWs=;
-        b=WllH5LLaXXhdR1ZmJPeyuRYHZjxybALLvzKV4Nu95dsfChZPqRPMu/mFVnxpm6K0La
-         vmLx33EXOfZ1nDMw+BpZPASaUXUJRaHLY/wzf1HLUCS1+Vzm0Cp2OMLQeerKqAoN5WM2
-         LT0nfzD6Mbpddy4DjeNBa0cMj8nzmkSQlZhaLQCwh9uy6vZ/eL+oA5/I6vVR4VwwssCs
-         4S/cH7pIVpq2BeKLQd02daRrY7ZtFKOfTQ8NWuFseImtd2OEXvBgmSvPOTrkMr2tDt9O
-         iuAkB7cBU0wm2srlMbdvU2uqRF/exSJG2GYNsYp7HOpLa7epjkKzRrSpMeyCFX7zxjE5
-         invA==;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=zhNoTkJIeGg7k6SX7++UNulbkoe8PKd3t4WsYSulIm0=;
+        fh=+Vs0gG8UbvpZGVmtju3e30+9YJwTGfyj8K2F89Mqm/U=;
+        b=izPZ0UZ1puYNlDfb+MH/ZAV7x8remYXU/bpFy+cw4EVXdDJm1ga/bP5F1OR/vk0/9u
+         saKtfLkqKFjCUV+6H3DGrvglA/h6QqphzQJNKBYbSDF6wonCixBK5E09pndlJLzPpwOt
+         OizdvaPnk7S0tFknGCz8/hyOBFjP1wl/DOCCNRcNa71fzw9Sr2A5yqzlCBCU8F+XP0Db
+         RYOt+g3wyTXlzE6iZ+JF6nyCVqLFptnHKJSifX4G+1b6rsQ209a6gxlGHBaMMsEHUeiq
+         uB5vF3Uy8d+A9DESaXRwsqlbFFX4vBMKHdtUToy6Kb1KcbG7wU0SCthi9VewAKuCpb+q
+         jnYQ==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1773394004; x=1773998804; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=9zhdSL5TZ0+7QU3R0xnxIo4ImepctE4X0d6M5LPIqcs=;
-        b=NY5KiRfZQA5ozvJ77ADkag8VKxVG1ZSTm7a3kRieZ0fTnep6uoKzYoti6jjvuhiFwR
-         bPGQEBzNF9BxRYcXOpjX8Xy84tDjc4PNCYBsxTl9csApTS76YfXz3Ud675ZDBcfq2VsH
-         LUK3Yy1X4X6QOTB3KY7saZCcWtoeI9eWWq5A8NZ+eFmhzizqSX0VUPHsf+U6zf3AFsU9
-         8Ch+7+aTU5iVCAxAePmrn3bsc9gBVBkDXJCgFUEMpSvXRnIRpd4xmLFy84RmPmNOCM3n
-         VjSk+6JU8Szzjh5H6Nkw6bG3z/H4geRvkd6HDPXvGOnrhHTDTg+2yfw5dwmdL7L/P1f1
-         qurA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773394004; x=1773998804;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=linaro.org; s=google; t=1773395051; x=1773999851; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=9zhdSL5TZ0+7QU3R0xnxIo4ImepctE4X0d6M5LPIqcs=;
-        b=X7lQcQxvAHZC/z/Joa2POYLYbYZvCK/MhB56ClsNhbJNdzWK+VtfTPNyybbFoDxNDr
-         4DI/QLRHo/q7Y+ezYMuEHsF0BZjLI35w/oU8BT+Bpyo6wW48AHbkuo71nqEJI00fyPht
-         XkDT34ybC2z/FT5E0nlph+1njYznUVhHsoGeNk/9jpqpFljlwRHgJXNroEiPbvVIVliI
-         LGm1CO5z3gBshVjX5UDTcXFK7b1qj1CNSfJeJa46ye8W2CcnadhlvpidEYpVG1lZ0Mpk
-         2Q5MvWFIhlSRsZx6zHieqr6lKwcaYjSJkJ7flf4zmaBPM8sL4NvsafymBJOE5ix/iK6E
-         hzkA==
-X-Forwarded-Encrypted: i=1; AJvYcCXdSGy6DKnZVOkz+PH88qST8ntZEg6i6A1fjjMOiC1DM840tXAaFZ0PHN/OhgSJz2B0bZJNjZwXcIQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyCx50sFQAbLQ+QmZFeKBT/25MrFoth6ncXgjyjxhnhvWOFdz8f
-	h6MN+EWIvPQqcA80ab7aqwydSSHWJzQ0xOEbg1ax04xlFkFEw4XgbwKzs+xEjgOTjgWJ1LuFpxn
-	90UBDMBctVWuQ4OY9QVBsvnIGYx2bopI=
-X-Gm-Gg: ATEYQzzIagUhqUDCNMVpyr7L998oSBknUl0mruTM3uvvlP1e7LAZMthWQX3CWX9/5M4
-	kPUMWIeAc6B915+EunD0kl5MGnFv5QR/zTvTY7/tR1S+bQprYM6EiqYavK+ugYYSS9d63uAU3R7
-	sPaGcALyZPGtyI9nO7eM0LixD9bW2HBso9eEclDoCcHaPJ68kWH4uxK2LVwkqOAlZ+0NFvwxMnM
-	q3WjW7gYNvEsAugBv0MHxQapZMum0pBczL9XAp5CYiAuaivOZPjPVRAAQ0/kWcgrJXE91ab256x
-	LvNjQg==
-X-Received: by 2002:a17:907:6d24:b0:b95:53ff:5e00 with SMTP id
- a640c23a62f3a-b97651ec2fcmr160615366b.58.1773394003605; Fri, 13 Mar 2026
- 02:26:43 -0700 (PDT)
+        bh=zhNoTkJIeGg7k6SX7++UNulbkoe8PKd3t4WsYSulIm0=;
+        b=CVJB0EpMEVa6sLzbpbpZgC6oxzg2jOtTdosOr5xZNtsl8bsqrxagaYbJB1fdwaFsDi
+         MU38WYuy9AWHvdgCpCuHaIpr0k74xYGQOeELdWDSwcfyzs8cqYkIXiRIRrqyxiibpEVP
+         wMrz3HxyzbyPSSjmSzWbKbBJgizyZo+BgjwH4r+2CXA44MTS6E41EE0YnfUJRp2yUitr
+         rl9LQ9jslbZWwEoeHXtCnBIpFBQl7bMUoyyvJJ1DVrzW8G12l73vTupZQjGfuJkAAf20
+         jQIIgy05OQGFnn5ib4SoM+EKD7qPNjwSuIvoucoWtcAxJOQaShYcNfKbcoRIEG60ZMKr
+         agpw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773395051; x=1773999851;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=zhNoTkJIeGg7k6SX7++UNulbkoe8PKd3t4WsYSulIm0=;
+        b=bzxJQwueFbfjfApAU3Fqtgo8AmGz04z5VzPnTBgLYVg7rFq7nKOAdf7wDa98hE5cZG
+         z44ZKjYqEich6IwjS9Wc0F0c4YAR+c93VHU38O57nrRwDcq/tPBHBBvXykjWU+LGGoOQ
+         dBmbu2nlqkmOiKeF/kzYPg3i7H8GLkajZ5+Z/iybfiognvLmeg+xS8QK9b9JAdEF3aFl
+         kx3dQmnDqnte6HtHK8aL9LNQoAgnAzUGK/mI6VViL7Wv88juWxUFv5DXkmDoxLpDJjct
+         m1e1iyUzRNO+PHXnnJU7XfXt1jage17flo4RqyXrdqM9MsskKXQtvXnU2jHBDGDvm30N
+         OY7Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVKevqf5Ei0NKFo5z023ADFo5ama4dfNDXtHRbQ6bFIZwC7qhG/jurQbAoKRhpicEPqiGVtLx3nlh0=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw5knW39YhRFbAbaI37Vh9mTe31NT879HMtsvelrJKVtgtjR09r
+	xbCaIA14EZ7eMA/aOYQgq0pE5Vtgl7DmkEWrGzhbx7qFae+Vf2/eI/ak588vUP66Z0DlasegJy7
+	FtM8eSusbId6y3kGNRYpOInpq5OUA9nn2i8RphQGFYg==
+X-Gm-Gg: ATEYQzzyD7fle66MqtLe4kbKFahqF2yWwGTljQXX9CJF3EzksCc51WueBd+1VoI/iJd
+	ZQqSfYRMQycSRaFO26KtnP5lMr9e9KX9mQScjKwV6vfIi/88pRQwM/lwSNNPbsBulwYmd5oCq4x
+	k0MlUFZHOoYZxZEOLwRgayPcJuKMothqM5De/tH5ZA5u/a2jCirfeu9VPwONJ7NwsgxoAKQtAwI
+	vGeHdrn7O0oo3mNfWb96fApKKXMNbr926sX1O5tGegWUyxY2c5k8sVeePYoVuWpM0m0sS8TurQ/
+	8A6iL4jp
+X-Received: by 2002:a05:6512:1589:b0:5a1:381b:fae2 with SMTP id
+ 2adb3069b0e04-5a162b0d32fmr863539e87.33.1773395050576; Fri, 13 Mar 2026
+ 02:44:10 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260226101032.1042-1-linux.amoon@gmail.com> <177260693908.10259.13055467642416391434.b4-ty@kernel.org>
- <87bc37ee-234c-4568-b72e-955c130a6838@arm.com> <f7tfshf7riljjibuqge4ubfjmludubpyh3ppdf6lasurzdzbtj@sw4xxagfhnn3>
- <5d88fb5b-e771-4ea6-8d2c-c5cfd21e5860@arm.com> <qwanhqrpztzkudik5fmberhabnzaly7v53677dohqzj5nq4wi2@6ndpiubyxcbi>
- <DGZXF3LPSRK6.2QYN63QTKUQAX@kernel.org> <cp5uktfqdf6zs53qsye57ior2ikmssgevxxdtevkzpisaif22h@7mrxspkuibow>
- <DH09EDBW3X6T.2996UB1CFCAW2@kernel.org> <7b5592e7-8a9d-2cf0-bb3e-e306a6337165@rock-chips.com>
- <CANAwSgTaZqsHYXD_ACkJGGLgk4knc7N72f4qrJaaenE-cXM8BA@mail.gmail.com> <DH0S7TSFKDJV.2YPSBH9F142LL@kernel.org>
-In-Reply-To: <DH0S7TSFKDJV.2YPSBH9F142LL@kernel.org>
-From: Anand Moon <linux.amoon@gmail.com>
-Date: Fri, 13 Mar 2026 14:56:28 +0530
-X-Gm-Features: AaiRm53rZCLp_kErJJxBMXMWmeLwePiSPPATSICps4w1XibNQCvpnT-mxDnWsvY
-Message-ID: <CANAwSgQCQ4z7p7Z8qe2mRqUY7zKe0w0wE+1RfYtD4NePzoit3A@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI: dw-rockchip: Enable async probe by default
-To: Danilo Krummrich <dakr@kernel.org>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Robin Murphy <robin.murphy@arm.com>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, 
-	Niklas Cassel <cassel@kernel.org>, Hans Zhang <18255117159@163.com>, 
-	Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>, linux-pci@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, 
-	linux-kernel@vger.kernel.org, Grimmauld <grimmauld@grimmauld.de>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	driver-core@lists.linux.dev, Lukas Wunner <lukas@wunner.de>
+References: <20260227135428.783983-1-herve.codina@bootlin.com>
+ <20260227135428.783983-3-herve.codina@bootlin.com> <CAMuHMdVVsEB-xb8Jz4ujBam2NxtxAOb7byYa3VR_eHsbTD5rXw@mail.gmail.com>
+ <2026031242-debug-aviation-19b8@gregkh>
+In-Reply-To: <2026031242-debug-aviation-19b8@gregkh>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Fri, 13 Mar 2026 10:43:33 +0100
+X-Gm-Features: AaiRm535RzzFrlMRqNsLHd1XM8yzn674dd-38MKB2CsmserIvJfHsK0fUYGtRYw
+Message-ID: <CAPDyKFpX3A3r4s72PNjBz5QaZUsq1xaGhn5vXwegue7Tyh_Zew@mail.gmail.com>
+Subject: Re: [PATCH v5 02/28] driver core: Rename get_dev_from_fwnode()
+ wrapper to get_device_from_fwnode()
+To: Herve Codina <herve.codina@bootlin.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Kalle Niemi <kaleposti@gmail.com>, Matti Vaittinen <mazziesaccount@gmail.com>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
+	Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team <kernel@pengutronix.de>, 
+	Fabio Estevam <festevam@gmail.com>, Michael Turquette <mturquette@baylibre.com>, 
+	Stephen Boyd <sboyd@kernel.org>, Andi Shyti <andi.shyti@kernel.org>, 
+	Wolfram Sang <wsa+renesas@sang-engineering.com>, Peter Rosin <peda@axentia.se>, 
+	Arnd Bergmann <arnd@arndb.de>, Saravana Kannan <saravanak@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Charles Keepax <ckeepax@opensource.cirrus.com>, 
+	Richard Fitzgerald <rf@opensource.cirrus.com>, David Rhodes <david.rhodes@cirrus.com>, 
+	Linus Walleij <linusw@kernel.org>, Mark Brown <broonie@kernel.org>, Len Brown <lenb@kernel.org>, 
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Daniel Scally <djrscally@gmail.com>, 
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>, 
+	Sakari Ailus <sakari.ailus@linux.intel.com>, Davidlohr Bueso <dave@stgolabs.net>, 
+	Jonathan Cameron <jonathan.cameron@huawei.com>, Dave Jiang <dave.jiang@intel.com>, 
+	Alison Schofield <alison.schofield@intel.com>, Vishal Verma <vishal.l.verma@intel.com>, 
+	Ira Weiny <ira.weiny@intel.com>, Dan Williams <dan.j.williams@intel.com>, 
+	Shawn Guo <shawnguo@kernel.org>, Wolfram Sang <wsa@kernel.org>, linux-kernel@vger.kernel.org, 
+	driver-core@lists.linux.dev, imx@lists.linux.dev, 
+	linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org, 
+	linux-i2c@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
+	patches@opensource.cirrus.com, linux-gpio@vger.kernel.org, 
+	linux-pm@vger.kernel.org, linux-spi@vger.kernel.org, 
+	linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org, 
+	Allan Nielsen <allan.nielsen@microchip.com>, Horatiu Vultur <horatiu.vultur@microchip.com>, 
+	Steen Hegelund <steen.hegelund@microchip.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>, 
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Saravana Kannan <saravanak@google.com>, 
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi Danilo,
-
-On Thu, 12 Mar 2026 at 17:24, Danilo Krummrich <dakr@kernel.org> wrote:
+On Thu, 12 Mar 2026 at 16:27, Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
 >
-> On Thu Mar 12, 2026 at 12:40 PM CET, Anand Moon wrote:
-> > I've reproduced the issue on my end. Following Danilo's suggestion,
-> > I used PROBE_FORCE_SYNCHRONOUS to resolve the warning.
+> On Tue, Mar 10, 2026 at 04:03:42PM +0100, Geert Uytterhoeven wrote:
+> > Hi Herv=C3=A9,
+> >
+> > On Fri, 27 Feb 2026 at 14:55, Herve Codina <herve.codina@bootlin.com> w=
+rote:
+> > > get_dev_from_fwnode() calls get_device() and so it acquires a referen=
+ce
+> > > on the device returned.
+> > >
+> > > In order to be more obvious that this wrapper is a get_device() varia=
+nt,
+> > > rename it to get_device_from_fwnode().
+> > >
+> > > Suggested-by: Mark Brown <broonie@kernel.org>
+> > > Link: https://lore.kernel.org/lkml/CAGETcx97QjnjVR8Z5g0ndLHpK96hLd4aY=
+SV=3DiEkKPNbNOccYmA@mail.gmail.com/
+> > > Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+> > > Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> > > Reviewed-by: Saravana Kannan <saravanak@google.com>
+> > > Reviewed-by: Luca Ceresoli <luca.ceresoli@bootlin.com>
+> > > Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
+> >
+> > FTR, one more user of get_dev_from_fwnode() appeared in commit
+> > 9035073d0ef1de81 ("reset: convert reset core to using firmware nodes")
+> > in reset/next.
 >
-> I did not propose to add PROBE_FORCE_SYNCHRONOUS, I just noted that we should
-> not force all subsequent drivers into async probe() by adding
-> PROBE_PREFER_ASYNCHRONOUS before the issue is resolved.
+> Ick, that's going to make this hard to land anywhere.  This is a rough
+> series, perhaps it should be split up to make it easier somehow?
+>
+> thanks,
+>
+> greg k-h
 
-My apologies,Thanks for clarifying. I misunderstood your point.
+I fully agree with the above. Renaming the function isn't necessary
+for the $subject series.
 
-Thanks
--Anand
+I suggest we simply drop this patch from the series - and if the
+renaming really makes sense in the end, we can deal with that
+separately later on.
+
+So withdrawing my ack from this one.
+
+Kind regards
+Uffe
