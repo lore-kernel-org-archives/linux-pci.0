@@ -1,203 +1,159 @@
-Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
+Received: from mail-m32107.qiye.163.com (mail-m32107.qiye.163.com [220.197.32.107])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CC26340A51;
-	Fri, 13 Mar 2026 02:32:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B4EA347BDB;
+	Fri, 13 Mar 2026 02:45:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.107
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773369159; cv=none; b=EU9g1ykuCwEnkQjMjb7SE1v/4O5YO2mboS6QxDDdApPSZJVxlIoFDAjGbOmLp5IjHHm94ld+xnMi8bOZj2ugYlXFVrarijxIGz+WEqL/XzxLZyi62oh7PlTiAQ7cp8BJt+HMHcbAovsGraxnFFIpUqThW+uz/x1/8pKmp4XoMaA=
+	t=1773369948; cv=none; b=m6M2Cj//Hzji9VaU8i34VNHsi8ptBBGFuEwsSp0X1popOckJdbA1Y5iSllO1MwIi05rwjR2Oj81wp/ojGzQs5bV0J7qAqKVDM+VPZbvjgqQ2ZktvMJibj0x1Us/OtQRpOt/Zk09iU8DPxP2CEBGoXuo9vmQe8FIp3L/z9MFPaOI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773369159; c=relaxed/simple;
-	bh=LExNlQiCZUjsXaPNmcgYrwD6RjjtJjnzxerVrDGlSOI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=HSXYTS+SkczcvlmNShcKeiaGoXwDrpxbwnd/ObMN2YZ1hJzpzdrY9wCXb8N4F8GNm3fMwVnLHemqIzsjwOyUa2Vft4OUMUM7ct7R1o3QWHvj+yqYXP2e2JI5mrQtQiBJh0hyCXKhWL0egl5PnxvhCZfHWpfJa9+IW2fj03I6JF8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=kwa1qp22; arc=none smtp.client-ip=113.46.200.219
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1773369948; c=relaxed/simple;
+	bh=4oCoeZIKTmWM9r85FpxYxwRKMGZsI6PF3lSGn6GsxaQ=;
+	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=FKMMqHN9lrPp8vxgscthiZo4nfDN09OwNF1ktJdeoxiICTpZ+d84PlFndYeLF+Uyhnz3z2Jb+ZdHKvTXStRH3983tQqLgqLg1X2OuccF44bq6Ar7Iy0AxvTzllwnIbD/DjpnSwteBenm8eAeC6O75oklaVGG9xvxxuarrQPwMVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=XEK9mfeo; arc=none smtp.client-ip=220.197.32.107
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="kwa1qp22"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=droVX0NUC4A+GNH3y57ZGeXheGPpw9m67aw4WCFjXtI=;
-	b=kwa1qp22L/gdJGPkqfbGAAXcu+LyOqhrEw20HKvhNdqzvoQKMdK9OzPtPhARsHhl6j2D6P+Zr
-	j6GC+HeoE9kX8IxSB+U4y21CjsurYvoSHiov38HwUlAKYHAcTB7jnvqfYq4tyu+pAfwUx7PDu7P
-	JI+N0ZgVvFlAzWAcsIeXyiI=
-Received: from mail.maildlp.com (unknown [172.19.162.223])
-	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4fX7gC35ghz1prLS;
-	Fri, 13 Mar 2026 10:27:35 +0800 (CST)
-Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id 0A2E040569;
-	Fri, 13 Mar 2026 10:32:34 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Fri, 13 Mar 2026 10:32:31 +0800
-Message-ID: <90505ea3-d842-4092-9743-6ed58c59ca55@huawei.com>
-Date: Fri, 13 Mar 2026 10:32:31 +0800
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="XEK9mfeo"
+Received: from [172.16.12.17] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 36c8f5110;
+	Fri, 13 Mar 2026 10:45:35 +0800 (GMT+08:00)
+Cc: shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+ mayank.rana@oss.qualcomm.com, quic_vbadigan@quicinc.com,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kwilczynski@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>
+Subject: Re: [PATCH v3 1/3] PCI/ASPM: Add helper to encode L1SS T_POWER_ON
+ fields
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+References: <20260311-t_power_on_fux-v3-0-9b1f1d09c6f3@oss.qualcomm.com>
+ <20260311-t_power_on_fux-v3-1-9b1f1d09c6f3@oss.qualcomm.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <00a5717e-9df3-0d50-c8f1-1da9165ff639@rock-chips.com>
+Date: Fri, 13 Mar 2026 10:45:34 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 2/3] x86: Implement acpi_get_cpu_uid()
-To: Peter Zijlstra <peterz@infradead.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Catalin Marinas
-	<catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, "Rafael J .
- Wysocki" <rafael@kernel.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan
-	<skhan@linuxfoundation.org>, Huacai Chen <chenhuacai@kernel.org>, WANG Xuerui
-	<kernel@xen0n.name>, Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt
-	<palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti
-	<alex@ghiti.fr>, Thomas Gleixner <tglx@kernel.org>, Ingo Molnar
-	<mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
-	<dave.hansen@linux.intel.com>, <x86@kernel.org>, "H . Peter Anvin"
-	<hpa@zytor.com>, Juergen Gross <jgross@suse.com>, Boris Ostrovsky
-	<boris.ostrovsky@oracle.com>, Len Brown <lenb@kernel.org>, Sunil V L
-	<sunilvl@ventanamicro.com>, Mark Rutland <mark.rutland@arm.com>, Jonathan
- Cameron <jonathan.cameron@huawei.com>, Kees Cook <kees@kernel.org>, Yanteng
- Si <si.yanteng@linux.dev>, Sean Christopherson <seanjc@google.com>, Kai Huang
-	<kai.huang@intel.com>, Tom Lendacky <thomas.lendacky@amd.com>, Thomas Huth
-	<thuth@redhat.com>, Thorsten Blum <thorsten.blum@linux.dev>, Kevin Loughlin
-	<kevinloughlin@google.com>, Zheyun Shen <szy0127@sjtu.edu.cn>, Pawan Gupta
-	<pawan.kumar.gupta@linux.intel.com>, Xin Li <xin@zytor.com>, "Ahmed S .
- Darwish" <darwi@linutronix.de>, Sohil Mehta <sohil.mehta@intel.com>, Ilkka
- Koskinen <ilkka@os.amperecomputing.com>, Robin Murphy <robin.murphy@arm.com>,
-	James Clark <james.clark@linaro.org>, Besar Wicaksono
-	<bwicaksono@nvidia.com>, Ma Ke <make24@iscas.ac.cn>, Wei Huang
-	<wei.huang2@amd.com>, Andy Gospodarek <andrew.gospodarek@broadcom.com>,
-	Somnath Kotur <somnath.kotur@broadcom.com>, <punit.agrawal@oss.qualcomm.com>,
-	<guohanjun@huawei.com>, <suzuki.poulose@arm.com>, <ryan.roberts@arm.com>,
-	<chenl311@chinatelecom.cn>, <masahiroy@kernel.org>,
-	<wangyuquan1236@phytium.com.cn>, <anshuman.khandual@arm.com>,
-	<heinrich.schuchardt@canonical.com>, <Eric.VanTassell@amd.com>,
-	<wangzhou1@hisilicon.com>, <wanghuiqiang@huawei.com>,
-	<liuyonglong@huawei.com>, <linux-pci@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <loongarch@lists.linux.dev>,
-	<linux-riscv@lists.infradead.org>, <xen-devel@lists.xenproject.org>,
-	<linux-acpi@vger.kernel.org>, <linux-perf-users@vger.kernel.org>,
-	<stable@vger.kernel.org>
-References: <20260312072316.4806-1-fengchengwen@huawei.com>
- <20260312072316.4806-3-fengchengwen@huawei.com>
- <20260312110205.GG606826@noisy.programming.kicks-ass.net>
-Content-Language: en-US
-From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <20260312110205.GG606826@noisy.programming.kicks-ass.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
- kwepemk500009.china.huawei.com (7.202.194.94)
+In-Reply-To: <20260311-t_power_on_fux-v3-1-9b1f1d09c6f3@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9ce515c44209cckunm3487bcb369734
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGh1CS1ZDTh9JGhpIGR0YSxhWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=XEK9mfeo+uZnXLRmqbsyayF1H6qs69GfrqGB8xr5wPM508RKAIkounL46lY3Ftp1wiAGS/CRWCe22uFNxF+3spjQxZQ5Y1cOV4X3nCliRUMKkoRC1SxIrrF+PWqP913VbvS9udysVJ+LUi7mpqPqyJt4jypwLQDkPJ42s8xTK4I=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=Wa1TMR8yBAxPRA2CYaUYftzWlGwup5hwJtKQHVxsFaM=;
+	h=date:mime-version:subject:message-id:from;
 
-On 3/12/2026 7:02 PM, Peter Zijlstra wrote:
-> On Thu, Mar 12, 2026 at 03:23:15PM +0800, Chengwen Feng wrote:
->> Add acpi_get_cpu_uid() implementation for x86, replacing the existing
->> cpu_acpi_id() function. This completes the unified ACPI Processor UID
->> retrieval interface across all ACPI-enabled architectures.
->>
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
->> ---
->>  arch/x86/include/asm/cpu.h   |  1 -
->>  arch/x86/include/asm/smp.h   |  1 -
->>  arch/x86/kernel/cpu/common.c | 15 +++++++++++++++
->>  arch/x86/xen/enlighten_hvm.c |  5 +++--
->>  include/linux/acpi.h         |  2 --
->>  5 files changed, 18 insertions(+), 6 deletions(-)
->>
->> diff --git a/arch/x86/include/asm/cpu.h b/arch/x86/include/asm/cpu.h
->> index ad235dda1ded..57a0786dfd75 100644
->> --- a/arch/x86/include/asm/cpu.h
->> +++ b/arch/x86/include/asm/cpu.h
->> @@ -11,7 +11,6 @@
->>  
->>  #ifndef CONFIG_SMP
->>  #define cpu_physical_id(cpu)			boot_cpu_physical_apicid
->> -#define cpu_acpi_id(cpu)			0
->>  #endif /* CONFIG_SMP */
->>  
->>  #ifdef CONFIG_HOTPLUG_CPU
->> diff --git a/arch/x86/include/asm/smp.h b/arch/x86/include/asm/smp.h
->> index 84951572ab81..05d1d479b4cf 100644
->> --- a/arch/x86/include/asm/smp.h
->> +++ b/arch/x86/include/asm/smp.h
->> @@ -130,7 +130,6 @@ __visible void smp_call_function_interrupt(struct pt_regs *regs);
->>  __visible void smp_call_function_single_interrupt(struct pt_regs *r);
->>  
->>  #define cpu_physical_id(cpu)	per_cpu(x86_cpu_to_apicid, cpu)
->> -#define cpu_acpi_id(cpu)	per_cpu(x86_cpu_to_acpiid, cpu)
->>  
->>  /*
->>   * This function is needed by all SMP systems. It must _always_ be valid
->> diff --git a/arch/x86/kernel/cpu/common.c b/arch/x86/kernel/cpu/common.c
->> index 1c3261cae40c..3081557542c7 100644
->> --- a/arch/x86/kernel/cpu/common.c
->> +++ b/arch/x86/kernel/cpu/common.c
->> @@ -28,6 +28,7 @@
->>  #include <linux/stackprotector.h>
->>  #include <linux/utsname.h>
->>  #include <linux/efi.h>
->> +#include <linux/acpi.h>
->>  
->>  #include <asm/alternative.h>
->>  #include <asm/cmdline.h>
->> @@ -57,6 +58,7 @@
->>  #include <asm/asm.h>
->>  #include <asm/bugs.h>
->>  #include <asm/cpu.h>
->> +#include <asm/smp.h>
->>  #include <asm/mce.h>
->>  #include <asm/msr.h>
->>  #include <asm/cacheinfo.h>
->> @@ -2643,3 +2645,16 @@ void __init arch_cpu_finalize_init(void)
->>  	 */
->>  	mem_encrypt_init();
->>  }
->> +
->> +int acpi_get_cpu_uid(unsigned int cpu, u32 *uid)
->> +{
->> +	if (cpu >= nr_cpu_ids)
->> +		return -EINVAL;
->> +#ifndef CONFIG_SMP
->> +	*uid = 0;
->> +#else
->> +	*uid = per_cpu(x86_cpu_to_acpiid, cpu);
->> +#endif
->> +	return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(acpi_get_cpu_uid);
->> diff --git a/arch/x86/xen/enlighten_hvm.c b/arch/x86/xen/enlighten_hvm.c
->> index fe57ff85d004..2f9fa27e5a3c 100644
->> --- a/arch/x86/xen/enlighten_hvm.c
->> +++ b/arch/x86/xen/enlighten_hvm.c
->> @@ -151,6 +151,7 @@ static void xen_hvm_crash_shutdown(struct pt_regs *regs)
->>  
->>  static int xen_cpu_up_prepare_hvm(unsigned int cpu)
->>  {
->> +	u32 cpu_uid;
->>  	int rc = 0;
->>  
->>  	/*
->> @@ -161,8 +162,8 @@ static int xen_cpu_up_prepare_hvm(unsigned int cpu)
->>  	 */
->>  	xen_uninit_lock_cpu(cpu);
->>  
->> -	if (cpu_acpi_id(cpu) != CPU_ACPIID_INVALID)
->> -		per_cpu(xen_vcpu_id, cpu) = cpu_acpi_id(cpu);
->> +	if (acpi_get_cpu_uid(cpu, &cpu_uid) == 0)
->> +		per_cpu(xen_vcpu_id, cpu) = cpu_uid;
->>  	else
->>  		per_cpu(xen_vcpu_id, cpu) = cpu;
->>  	xen_vcpu_setup(cpu);
+在 2026/03/11 星期三 20:40, Krishna Chaitanya Chundru 写道:
+> Add a shared helper to encode the PCIe L1 PM Substates T_POWER_ON
+> parameter into the T_POWER_ON_Scale and T_POWER_ON_Value fields.
 > 
-> This doesn't look right, it will now set CPU_ACPIID_INVALID, while
-> previously it would not.
-
-This is indeed an issue, it has been fixed in v7 (by treating CPU_ACPIID_INVALID as an error).
-
-Thanks
-
+> This helper can be used by the controller drivers to change the
+> default/wrong value of T_POWER_ON in L1ss capability register to
+> avoid incorrect calculation of LTR_L1.2_THRESHOLD value.
 > 
+> The helper converts a T_POWER_ON time specified in microseconds into
+> the appropriate scale/value encoding defined by the PCIe spec r7.0,
+> sec 7.8.3.2. Values that exceed the maximum encodable range are clamped
+> to the largest representable encoding.
 > 
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
+I've tested it on my end with different t_power_on values in DT, it
+works as expected.
+
+Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
+Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
+
+> ---
+>   drivers/pci/pci.h       |  2 ++
+>   drivers/pci/pcie/aspm.c | 43 +++++++++++++++++++++++++++++++++++++++++++
+>   2 files changed, 45 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 13d998fbacce6698514d92500dfea03cc562cdc2..48964602d802e114a6a2481df3fb75d9e178a31b 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -1105,6 +1105,7 @@ void pcie_aspm_pm_state_change(struct pci_dev *pdev, bool locked);
+>   void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
+>   void pci_configure_ltr(struct pci_dev *pdev);
+>   void pci_bridge_reconfigure_ltr(struct pci_dev *pdev);
+> +void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value);
+>   #else
+>   static inline void pcie_aspm_remove_cap(struct pci_dev *pdev, u32 lnkcap) { }
+>   static inline void pcie_aspm_init_link_state(struct pci_dev *pdev) { }
+> @@ -1113,6 +1114,7 @@ static inline void pcie_aspm_pm_state_change(struct pci_dev *pdev, bool locked)
+>   static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev) { }
+>   static inline void pci_configure_ltr(struct pci_dev *pdev) { }
+>   static inline void pci_bridge_reconfigure_ltr(struct pci_dev *pdev) { }
+> +static inline void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value) { }
+>   #endif
+>   
+>   #ifdef CONFIG_PCIE_ECRC
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 21f5d23e0b61bd7e1163cc869fe9356d1ab87b34..d7f9ae9e48c25dbc2d9b4887e2f74623688098e0 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -525,6 +525,49 @@ static u32 calc_l12_pwron(struct pci_dev *pdev, u32 scale, u32 val)
+>   	return 0;
+>   }
+>   
+> +/**
+> + * pcie_encode_t_power_on - Encode T_POWER_ON into scale and value fields
+> + * @t_power_on_us: T_POWER_ON time in microseconds
+> + * @scale: Encoded T_POWER_ON_Scale (0..2)
+> + * @value: Encoded T_POWER_ON_Value
+> + *
+> + * T_POWER_ON is encoded as:
+> + *   T_POWER_ON(us) = scale_unit(us) * value
+> + *
+> + * where scale_unit is selected by @scale:
+> + *   0: 2us
+> + *   1: 10us
+> + *   2: 100us
+> + *
+> + * If @t_power_on_us exceeds the maximum representable value, the result
+> + * is clamped to the largest encodable T_POWER_ON.
+> + *
+> + * See PCIe r7.0, sec 7.8.3.2.
+> + */
+> +void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value)
+> +{
+> +	u8 maxv = FIELD_MAX(PCI_L1SS_CTL2_T_PWR_ON_VALUE);
+> +
+> +	/*
+> +	 * T_POWER_ON_Value ("value") is a 5-bit field with max
+> +	 * value of 31.
+> +	 */
+> +	if (t_power_on_us <= 2 * maxv) {
+> +		*scale = 0; /* Value times 2us */
+> +		*value = DIV_ROUND_UP(t_power_on_us, 2);
+> +	} else if (t_power_on_us <= 10 * maxv) {
+> +		*scale = 1; /* Value times 10us */
+> +		*value = DIV_ROUND_UP(t_power_on_us, 10);
+> +	} else if (t_power_on_us <= 100 * maxv) {
+> +		*scale = 2; /* value times 100us */
+> +		*value = DIV_ROUND_UP(t_power_on_us, 100);
+> +	} else {
+> +		*scale = 2;
+> +		*value = maxv;
+> +	}
+> +}
+> +EXPORT_SYMBOL(pcie_encode_t_power_on);
+> +
+>   /*
+>    * Encode an LTR_L1.2_THRESHOLD value for the L1 PM Substates Control 1
+>    * register.  Ports enter L1.2 when the most recent LTR value is greater
+> 
