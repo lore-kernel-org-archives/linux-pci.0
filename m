@@ -1,162 +1,150 @@
-Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from canpmsgout03.his.huawei.com (canpmsgout03.his.huawei.com [113.46.200.218])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0F2B1D516C
-	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 02:20:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.52
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773368452; cv=pass; b=eG5c4Lu+5wUkO+hnjAVoKK539IWLY4AIptpReEMRIwmgKyQ7Vv3fYNB2fQYtuHXrHBilL8H9QUKa/7LFN575bwMjx4SVUQTCcN/4wq/vh0cOy8nq7RyOf3zVRBa/X1g4fRMu2ZBw7K/UyHYYRamvGQlDvvKH9JGAfhQpw9WLAQM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773368452; c=relaxed/simple;
-	bh=Nc3vSgPCiZyWTFw4ReuW9B3v4aeGpdG1apfFjxfTvD4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FwIMgs74oeAQiDtnLpxN4o02894nAQFNqDvJMciRWfzvoTQOQSnFFAky8smUbymUUyv+oykc39MZVNoBm/BrHD956BZHySeL+nN4oYnyEv5mH/D+KFncfIRMujAuwYk6t/xAmigNfmSf+lxqBaagzPJSsS7LXARX3Pymn3kssjA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=h5m/2h4t; arc=pass smtp.client-ip=209.85.208.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48AE8227B94;
+	Fri, 13 Mar 2026 02:21:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.218
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773368516; cv=none; b=KXLAxii3OpOBP3TOj4PRVL+N5QHy4pJr8u+OCCMIShF8NLV/BqVXPcpIb6NwzoN7d4r6GKgxpfR+GEpCN+CWC3S1KuywTwZrWaqNvwn22HtrhE3VjjcGYs3I2O8ojuWnTMlRF3b2mhKrh/WK+BGxRh2Bc6D4bx0shDIKLmTZsUQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773368516; c=relaxed/simple;
+	bh=C8FH3g7QQHs/jbvPrgWRUijURB3c8zk5RpSybl32ieg=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=i3yeqaj4kCaqogpevAHIF6hm6YnsBCqvD1p0dZcrUev9LTWVIIC06D0uh//hkr4ApuQhAh0Hq1Alj9NGSQ3hdS/PcTjPuzOWBTJUoseWG1CwMaciGLD0YEL4iS3bAdgz8jw2ZUe/I2z2rMj4/hydg3ZzAbuCkLhkUvG2XjCBTjg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=k2FbFqJD; arc=none smtp.client-ip=113.46.200.218
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h5m/2h4t"
-Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-661cfb9f3aaso2418208a12.2
-        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 19:20:49 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1773368448; cv=none;
-        d=google.com; s=arc-20240605;
-        b=VDjK1Gz+LhGPGqap9Uc0+d1HVUHhiOCjY1VvMr0pHO/dCQdVO+L7pNBEfkoh+Kdsly
-         C5l3cBAFJxR7ELrC4VHNjVqcA7oz8lqaBKX31/9zscnPnyRKlxfPhZfVJIUOi+fvS62O
-         84I/19xK0nhaDqFSC7EQ/UM8JoTCskOJBeesSxcBZ+TdH+tPzTdJ3NClNUAcRU9Df9rd
-         KUWTJ2yPM4bvKwKT610/ry/cn/udrG66tb0EzDOtcmHi3QGmq2uwQQvUy3a7uYfi4dWd
-         AzcWpZWeBGgVHRGsgE+lf+OvLt8OKPt5fuNoFPV0mDwbOBAI+brFjV+Q9csGlQMimwd3
-         PI2w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=bF3o1la32fuvNbL6eogbD9OSVNGno1MaF2cdSSjD26g=;
-        fh=stvVhoXa48gsyYndogS5b5hyntXHrWV2RslxTa20Xd8=;
-        b=CYc3quzjfhTViiHhRJnxDJSHiQT2WV63QHm5cuP6Nnov0s97zk8CZTtgYH7eUo2ywT
-         syqMini6wKnVZCw81LfCKMtXCVzNZvF+WIVBVB8VrjxxD66jWagZW3AL6bwQ6kGKXFPA
-         6qcvNl25cW9miJW+xi2/DKiIkbtr085VuUkAZe+TLYVTsj6aySVfMmYX9u3oT60wTgrf
-         VUagFYTl5hfBULzesrF4CbDmvGXEAiIkWCTes2P0Fe77N7N1Wq625HWALK0Wm5f9rNMd
-         aIWLk0EJ/bRKnI00D9652UjOiKCKz3yc6YXkhcD3J0y8iyfyNBJx1fX1x0FSyWFitABA
-         m+fg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1773368448; x=1773973248; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=bF3o1la32fuvNbL6eogbD9OSVNGno1MaF2cdSSjD26g=;
-        b=h5m/2h4tZSYh97yKPQKNRK5SkPzjkbsLDTs3h2w4/4UGx2qb5nct95DPQcMPjEmLvu
-         QLz8mY/x9UqfIykNYB5GPFSB93REPQaQbSvZH460waH4nC2nP9bvd5BKNsndUcwP6Zf7
-         Cdnybwni30ur9x4zy1pa6qts7Ggg9yDm3C+Q53o2EHPja3PYguRU9Lea81P+xJnazHFa
-         jVqpIZtYCWZHdKquQhNfwgzwJnHquxXF3Sa8Drgc1PamUK8jq8E/SaxzG1ax3UasmBLG
-         5XGKXBm5wXnrZC+MXV1OO/UlVfGlu2poukrA8a8ksFCmByoGzNleCWEQ4gq7Mw+uCM2C
-         +Euw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773368448; x=1773973248;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=bF3o1la32fuvNbL6eogbD9OSVNGno1MaF2cdSSjD26g=;
-        b=clbVvXWLMtn7l7wZw3lCqGwr/qPxpJ9SPA3S6F/Ptzxe5AQ9ZzoISR+LGcfcONI+O2
-         wDFqLbJnf3myB7IBdnSkmZD7sFi98zYZTM8A1Uu7+wgLBwhvdbeVPoK0NFhzIqocJeJf
-         PiSismnmUocFklzqXPBZRTa1d71mT80belQYR0LD6SxP1u0rylKT8fVqaRI/0aGneWlH
-         wZPr6dR+xwaFVZi64kFJGk8RK3hDsI8etz0oyih1PSDfSwoyPeO2NrjOVuxcCmfn4+JO
-         wY7WSKx02LY9a3h0FW9Vz6cs0dpWZGIw/wg7K4LALB6H+5FeFo4VfKHoca6IwZsE68KT
-         OzzQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUJtGgmAHm34YvotEga72qdsmymCmZwdhMcfX6fHJDCcdGkbSmTpVQJugAmJkOE5sYqnXuIGG3LNUQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzmeTE1EegsCK5wMEGL60U4lUdKnOYEywhgktc3HziIxoigbwV7
-	vO47rIiMqUu7MOUy7bv/xZVivvkxL6DG5PaV9jmWncV2HK3yAZ0ZU6gu5RhxcHIwZcaaCbgC5RL
-	5C3ZkdlDGSwGrv2/ALmvIg8vSGV187Mc=
-X-Gm-Gg: ATEYQzzUtUG4dMyZK0my5etcnTJgqO2W/fxeWkK25PrQH9RkISTGQZg0eUw72VssDad
-	kFJJXCKvLMCDgpl3AbfgLNZ7njjScEk3dYbABpr21V2SZrAP8SPkOyBB5xovhc84ZaNVnuCGq6k
-	qdh1lDugWqW9U3AV1Oqiv+QCySLSb6Zt/o7ec44kVSIdU8uq3XS3QW3JHoWrEcbhSGiK4Qyjbys
-	f8V8iKAIMJ3I6es9lf30VqFAld7Zts62FcDsEKmUl0oTk1fG1PoteDApgOvfhIfIohdLH4Qf4Op
-	oz3VWMxpTiwf8gJvhVljCcxk3sVkPD8rcXxUKQ==
-X-Received: by 2002:a05:6402:35cd:b0:65b:edef:40b6 with SMTP id
- 4fb4d7f45d1cf-663babb2796mr790403a12.6.1773368448051; Thu, 12 Mar 2026
- 19:20:48 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="k2FbFqJD"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=2rcpAa1TtZWLDIvssxD1LEn5AvFd7LlqWNSfVu4tX3w=;
+	b=k2FbFqJDheDFD8ZQ1TIKD7MLAMU7NtAmyzZS79wyrByImlG/9Oz+7Ht/PCD+SNciSCiVeFaBq
+	3VV/zPoCsVqgcC+m0j9DJ69/4Lo6oVqnv6AFub2EAZnQ3hPUkQ+J/R+M/YieceCx1b3KO4HESDm
+	4ZRimNSFXHPkX5qqZZQWUsU=
+Received: from mail.maildlp.com (unknown [172.19.162.140])
+	by canpmsgout03.his.huawei.com (SkyGuard) with ESMTPS id 4fX7QX0pcgzpTJ7;
+	Fri, 13 Mar 2026 10:16:36 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 9A98E2022B;
+	Fri, 13 Mar 2026 10:21:50 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Fri, 13 Mar 2026 10:21:49 +0800
+From: Chengwen Feng <fengchengwen@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Catalin Marinas
+	<catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, "Rafael J .
+ Wysocki" <rafael@kernel.org>
+CC: Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
+	Huacai Chen <chenhuacai@kernel.org>, WANG Xuerui <kernel@xen0n.name>, Paul
+ Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou
+	<aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>, Thomas Gleixner
+	<tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov
+	<bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, <x86@kernel.org>,
+	"H . Peter Anvin" <hpa@zytor.com>, Juergen Gross <jgross@suse.com>, Sohil
+ Mehta <sohil.mehta@intel.com>, Ilkka Koskinen <ilkka@os.amperecomputing.com>,
+	Robin Murphy <robin.murphy@arm.com>, James Clark <james.clark@linaro.org>,
+	Besar Wicaksono <bwicaksono@nvidia.com>, Ma Ke <make24@iscas.ac.cn>, Wei
+ Huang <wei.huang2@amd.com>, Andy Gospodarek <andrew.gospodarek@broadcom.com>,
+	Somnath Kotur <somnath.kotur@broadcom.com>, <kees@kernel.org>,
+	<punit.agrawal@oss.qualcomm.com>, <guohanjun@huawei.com>,
+	<suzuki.poulose@arm.com>, <ryan.roberts@arm.com>, <chenl311@chinatelecom.cn>,
+	<masahiroy@kernel.org>, <wangyuquan1236@phytium.com.cn>,
+	<anshuman.khandual@arm.com>, <heinrich.schuchardt@canonical.com>,
+	<Eric.VanTassell@amd.com>, <jonathan.cameron@huawei.com>,
+	<wangzhou1@hisilicon.com>, <wanghuiqiang@huawei.com>,
+	<liuyonglong@huawei.com>, <fengchengwen@huawei.com>,
+	<linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<loongarch@lists.linux.dev>, <linux-riscv@lists.infradead.org>,
+	<xen-devel@lists.xenproject.org>, <linux-acpi@vger.kernel.org>,
+	<linux-perf-users@vger.kernel.org>, <stable@vger.kernel.org>
+Subject: [PATCH v7 0/3] Fix get cpu steer-tag fail on ARM64 platform
+Date: Fri, 13 Mar 2026 10:21:41 +0800
+Message-ID: <20260313022144.40942-1-fengchengwen@huawei.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260211032935.2705841-1-alistair.francis@wdc.com>
- <20260211032935.2705841-8-alistair.francis@wdc.com> <8403c8b7a832b5274743816eb77abfa4@garyguo.net>
-In-Reply-To: <8403c8b7a832b5274743816eb77abfa4@garyguo.net>
-From: Alistair Francis <alistair23@gmail.com>
-Date: Fri, 13 Mar 2026 12:20:21 +1000
-X-Gm-Features: AaiRm52El5V2cLVcjV-Q8_ZosbewKKcX058abV65Lg9yJW4Ibt_OSl9fj2Npv2A
-Message-ID: <CAKmqyKMXmn6=suyjhB3Kq12-UHuLbPLOHPd2JO2b3Nxn4jYHpw@mail.gmail.com>
-Subject: Re: [RFC v3 07/27] rust: error: impl From<FromBytesWithNulError> for
- Kernel Error
-To: Gary Guo <gary@garyguo.net>
-Cc: bhelgaas@google.com, lukas@wunner.de, rust-for-linux@vger.kernel.org, 
-	akpm@linux-foundation.org, linux-pci@vger.kernel.org, 
-	Jonathan.Cameron@huawei.com, linux-cxl@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, alex.gaynor@gmail.com, benno.lossin@proton.me, 
-	boqun.feng@gmail.com, a.hindborg@kernel.org, bjorn3_gh@protonmail.com, 
-	tmgross@umich.edu, ojeda@kernel.org, wilfred.mallawa@wdc.com, 
-	aliceryhl@google.com, Alistair Francis <alistair.francis@wdc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-On Fri, Feb 20, 2026 at 12:49=E2=80=AFAM Gary Guo <gary@garyguo.net> wrote:
->
-> On 2026-02-11 03:29, alistair23@gmail.com wrote:
-> > From: Alistair Francis <alistair.francis@wdc.com>
-> >
-> > Implement From<FromBytesWithNulError> for the Kernel Error type
-> >
-> > Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
-> > ---
-> >  rust/kernel/error.rs | 7 +++++++
-> >  1 file changed, 7 insertions(+)
-> >
-> > diff --git a/rust/kernel/error.rs b/rust/kernel/error.rs
-> > index 258b12afdcba..569d9d032ab3 100644
-> > --- a/rust/kernel/error.rs
-> > +++ b/rust/kernel/error.rs
-> > @@ -12,6 +12,7 @@
-> >      str::CStr,
-> >  };
-> >
-> > +use core::ffi::FromBytesWithNulError;
-> >  use core::num::NonZeroI32;
-> >  use core::num::TryFromIntError;
-> >  use core::str::Utf8Error;
-> > @@ -251,6 +252,12 @@ fn from(e: core::convert::Infallible) -> Error {
-> >      }
-> >  }
-> >
-> > +impl From<FromBytesWithNulError> for Error {
-> > +    fn from(_: FromBytesWithNulError) -> Error {
-> > +        code::EINVAL
-> > +    }
-> > +}
->
-> Are we sure that `FromBytesWithNulError` maps cleanly to the `EINVAL`
-> error code?
+This patchset fixes the failure of CPU steer tag retrieval on ARM64
+platforms. The series is structured as follows:
 
-`FromBytesWithNulError` means "An error indicating that a nul byte was
-not in the expected position." [1]
+1. First commit: Refactor the ACPI Processor UID retrieval interface
+   (no functional changes when input valid) to align naming conventions
+   across arm64/riscv/loongarch architectures;
+2. Second commit: Implement acpi_get_cpu_uid() for the x86 platform to
+   complete the unified ACPI Processor UID interface across all
+   ACPI-enabled architectures;
+3. Third commit: Implement the core fix for the CPU steer tag retrieval
+   logic on ARM64 (the root cause of the retrieval failure).
 
-To me that maps with `EINVAL`
+The refactor and x86 implementation lay the groundwork for the unified
+ACPI interface required by the ARM64 steer tag fix, ensuring consistent
+CPU UID retrieval across architectures before addressing the functional
+bug.
 
-1: https://doc.rust-lang.org/std/ffi/enum.FromBytesWithNulError.html
+---
+Changes in v7:
+- Refine first commit which address Jonathan's reviews
+- Fix x86 implement bug (not consider INVALID-ID) which address Peter's
+  review
+- Fix CI error of x86 implement by moving function to acpi/boot.c
 
->
-> Anyhow, please add `#[inline]` for such simple functions.
+Changes in v6:
+- Rename existing get_acpi_id_for_cpu() to acpi_get_cpu_uid()
+- Split x86's modify as one commit
 
-I can, just noting that none of the others have `#[inline]`
+Changes in v5:
+- Refine commit-log of commit 2/2
+- Replace cpu_acpi_id() by acpi_get_cpu_acpi_id() on x86
 
-Alistair
+Changes in v4:
+- Split the rename into a separate commit.
 
->
-> Best,
-> Gary
->
-> > +
-> >  /// A [`Result`] with an [`Error`] error type.
-> >  ///
-> >  /// To be used as the return type for functions that may fail.
+Changes in v3:
+- Rename existing get_acpi_id_for_cpu() to acpi_get_cpu_acpi_id() other
+  than add one new API.
+
+Changes in v2:
+- Add ECN _DSM reference doc name and its URL.
+- Separate implement acpi_get_cpu_acpi_id() in each arch which supports
+  ACPI.
+- Refine commit-log
+
+Chengwen Feng (3):
+  ACPI: Refactor get_acpi_id_for_cpu() to acpi_get_cpu_uid() on non-x86
+  x86: Implement acpi_get_cpu_uid()
+  PCI/TPH: Fix get cpu steer-tag fail on ARM64 platform
+
+ Documentation/PCI/tph.rst          |  4 +--
+ arch/arm64/include/asm/acpi.h      | 16 +---------
+ arch/arm64/kernel/acpi.c           | 16 ++++++++++
+ arch/arm64/kernel/acpi_numa.c      | 14 +++++++++
+ arch/loongarch/include/asm/acpi.h  |  5 ---
+ arch/loongarch/kernel/acpi.c       |  9 ++++++
+ arch/riscv/include/asm/acpi.h      |  4 ---
+ arch/riscv/kernel/acpi.c           | 16 ++++++++++
+ arch/riscv/kernel/acpi_numa.c      |  9 ++++--
+ arch/x86/include/asm/cpu.h         |  1 -
+ arch/x86/include/asm/smp.h         |  1 -
+ arch/x86/kernel/acpi/boot.c        | 20 ++++++++++++
+ arch/x86/xen/enlighten_hvm.c       |  5 +--
+ drivers/acpi/pptt.c                | 50 ++++++++++++++++++++++--------
+ drivers/acpi/riscv/rhct.c          |  7 ++++-
+ drivers/pci/tph.c                  | 16 +++++++---
+ drivers/perf/arm_cspmu/arm_cspmu.c |  6 ++--
+ include/linux/acpi.h               | 11 +++++++
+ include/linux/pci-tph.h            |  4 +--
+ 19 files changed, 158 insertions(+), 56 deletions(-)
+
+-- 
+2.17.1
+
