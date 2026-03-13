@@ -1,274 +1,498 @@
-Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011029.outbound.protection.outlook.com [52.101.70.29])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30C712857F6;
-	Fri, 13 Mar 2026 05:16:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.29
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57A1626E6FA
+	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 05:36:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.42
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773379001; cv=fail; b=nQTHb80kIolCi5/gJK0VSH/ZbFse/3xrJ333lCZdvViaZUuhC6nOgMGukFipJvJkO1Xp9IBqajZYb37u+pnfaklM3jKiiL/ON9STHATIuy08lFNDbxcz1q/0R2vFsFicQbkggtteKk24qXT2YXqQRawPmaOgMspVWhZwNZ5V/SE=
+	t=1773380171; cv=pass; b=YCdmCUTg2dCT3j6gPDRxxoYJyXaopfVdE857cmKTzqvBm6ocDlN1WaEfhQW5J2OVLFTaFI0+xN5bEKYVuGWmErSJ9xssJYmxSmeWK8ZSdgWOP7RCtxnbYddKKRIRsoz6lzNHxBR1UmnZ+F0h8VXahj5UYsGQLnCq1PY97Xoju9Q=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773379001; c=relaxed/simple;
-	bh=4VlcICWHeIqfUxndlRanrhrYHgvU1g76T7hCZkW6Tvc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Gcd9zBhf+CJ26YpXdbYG45VUK/uHYHhx2PAU/ebCuV1ibwn1D045kNBdnRuyANkZLMLgtfnXrMVavg1WGA1hbiG8Shlgwg+JIleL+mehAQt4YyOfeqSEid4ZCjsK0UY3G2FJVb354t/TAXMidR3D1GGWsCe5NFtfBG2L7z1ABXc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=QhmhppiK; arc=fail smtp.client-ip=52.101.70.29
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	s=arc-20240116; t=1773380171; c=relaxed/simple;
+	bh=pUFInfE4ngkOiIq7A9ROEzatsPZM5Nujb7Th/pV73HA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=t2oC/CmCFLeTYnOkYzmNOvDgwaHM5Wbd+b+xZMGAEUlAkKlK8UCZaykJp+WLWo6cM/imnsY74m1w233LQmHw4x9F+R3VjJTMvDWBDjxGD9Wyv27PaevJ5P34GuVorFP8htPNSJ3+eJ3baDPTIKod2+J2IJjr51Bna6B6WY/Re1E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SsTxnTdo; arc=pass smtp.client-ip=209.85.208.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="QhmhppiK"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=nXi2PXJSyfaebeAqCXR3NXDmv1PbC8krqffivxvUkPxZESM9R1B1aGwmHmI5+9J8Mf1Oina8wFRodqnTmDytGzxP1ts8krvJ8ECjJLebHdMWlmqo7q6oGgx4UkD3mvQEMO67v8qy/zGOiJPbKq/7dnl9A9DRIoFHN0fQrH0N7iJFzJfnUH2LFriTkRtgWpWVwsgJK0OIMgfQGEedIV/AtR9WYJC0/4bCHAdGod+NiXsGPwDT6mpLpkpJcrO2HSbtkxXd3rLYNYLY5WCduGwfgAY1zNP1pa4TW4UKMRm0ZWGIkNCe9xe7b6fwB48TuADOuUL2olmL+TKxAr+rWgruNg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jzh0iZQ++jUq/PBrkBIYd48unoUA7BZzzG2j9ywxxjQ=;
- b=dnr2bZpsIJsoX8f6slP3zN54s1/pJp8w1YSJWQj3orKzowOGrlvRJRvVcwQ0m9hQagkUYWASzDHJ42gNcI15opxr+Ij3lia2VIi7x1SPcmoNaf+GPzEwkSD3K2cTFRrYOFyuTaP/x/3JNLh6HsPIf9iYe9qV1NNGXoTWs85uG9FQUJzP1Y1OoVzCRmhdw7lux7PsJZlI9UrpCGuVgKeVB/yBI/g10riU6M2PV8uwdRKyOT9bo7sMVkUbUmXXy8OTVhp345FGBZkK5qgZqHelblLq91/1I9SGJND0aHN0OjvClaWjtILISWtdz1YrG0ql3cdixW/KFzPJi5HT5GPIqA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jzh0iZQ++jUq/PBrkBIYd48unoUA7BZzzG2j9ywxxjQ=;
- b=QhmhppiKkJXBTIMPBhKP4rfUCM6T9kop/hSrA00odIgoDNAFaZrVZcqh5UX83QyntXk/F6N0YZ/Rx/j/+VOvGSMurxpGZSZGAJovLeor//jMRFFx1WUwXmp9nm320abSH6cKpg18EnWQ5yGizFpfuDjiyxQ+02ZHZZDQzidO1Wx0MyLqbBAlDmKJhnn2rEMLqt5OMBTTxd8nIYoqJ7hGyb8I4YnWMaLkNT8lU2UdoUdmfhPI6Kwhts2nsI+46EDAJJCB/7eTGWkAL0Ux180IxYuK+xtTR0C8xct1dPiZPzW5zxjIchW8h7L+5RcYY0nh34Tv2a8bQcrzRl5qI+6EYA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from DU2PR04MB8840.eurprd04.prod.outlook.com (2603:10a6:10:2e3::6)
- by DU4PR04MB10816.eurprd04.prod.outlook.com (2603:10a6:10:582::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.12; Fri, 13 Mar
- 2026 05:16:30 +0000
-Received: from DU2PR04MB8840.eurprd04.prod.outlook.com
- ([fe80::7c5d:60c1:2432:86a1]) by DU2PR04MB8840.eurprd04.prod.outlook.com
- ([fe80::7c5d:60c1:2432:86a1%6]) with mapi id 15.20.9700.010; Fri, 13 Mar 2026
- 05:16:26 +0000
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	bhelgaas@google.com,
-	frank.li@nxp.com,
-	l.stach@pengutronix.de,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	s.hauer@pengutronix.de,
-	kernel@pengutronix.de,
-	festevam@gmail.com
-Cc: linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org,
-	imx@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	Richard Zhu <hongxing.zhu@nxp.com>
-Subject: [PATCH v6 5/5] arm64: dts: imx943-evk: Add pcie[0,1] and pcie-ep[0,1] support
-Date: Fri, 13 Mar 2026 13:17:18 +0800
-Message-Id: <20260313051718.1931375-6-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.37.1
-In-Reply-To: <20260313051718.1931375-1-hongxing.zhu@nxp.com>
-References: <20260313051718.1931375-1-hongxing.zhu@nxp.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: MA5P287CA0161.INDP287.PROD.OUTLOOK.COM
- (2603:1096:a01:1ba::12) To AS8PR04MB8833.eurprd04.prod.outlook.com
- (2603:10a6:20b:42c::19)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SsTxnTdo"
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-661b08b04deso1984361a12.2
+        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 22:36:09 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773380167; cv=none;
+        d=google.com; s=arc-20240605;
+        b=Kr+UB8KOmjf491uLlQY+kp2I8KL7nbx/xcAwXAARW7uGlA4PkM8qnBwEj6HT5Z31lk
+         dDGMDV7OLk/HsOr2tqRZ/cRXKRCOt0kOJPPK7wIlx80H2d2MWxJzlS+Vk65Mc8/4y6PT
+         3Tju5UxqR7f8gHhAIogrsgCvH1ZV8noom5sc2zBAY2bamtBWlvTDEorYC3rxqg+on0Wy
+         FD0ZMJgimprb+iPlQtx5RY8uuxN3JRvsyihT+gEKDKKoQEl2PtCP0rSalOvvy8fAoEe8
+         dgtb6ET5dalA5lGDai8tWFytT1IVdkCAYXO28Q8tbJYKykBUX0qFXvMw8ncMxVI/Z8AU
+         ZfWA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=aQDPRle9auiI589+HEKa3AVFHfQ0L3XutZyywJyeO2c=;
+        fh=McQ1RfZqL9/OgL1RfRg5GEAn0bisjn6NgqajPINSaNI=;
+        b=X4Ie50wymtdKtk35vYc8JKuEH6Y7GquZtOgEwbvp+kktfIjFubhAfUrbINoOLdkoeR
+         n2vhNeCtSF0VBwx45ZWl6W9sy1ge9gSdeCzxH7X/sOZS6h89ZgcDcNEypvbr2IhqKwfO
+         wxPGwhbpJh5JzhDIUVEHhUPz8t+M6klyzwnPslQnIo/qU1APkFT31U1C38rnngZGiD0a
+         00hsbdHsS9Xavv9iB4c7flbPbMRkBAeQZ5Eb7mI915hL1z2TbG7n2nijMC++5SWczVZ7
+         Ys9/mqrFZr8QaKVjDjOOK0eV94KbQWnixv2iIWSZUidkYWwIg9ZXOjMFEsx1U7Ad29sN
+         eomg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773380167; x=1773984967; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=aQDPRle9auiI589+HEKa3AVFHfQ0L3XutZyywJyeO2c=;
+        b=SsTxnTdo45v/pINSSqnFfa7YFQmi6VB+yb3Yh9augwtEZh5yq2nn+4EQQUF0fstwpY
+         gg6ntltpF0oHa1X+m2dJZKH/K0Nnz7GU1VKwYi0LLeFy/ZXE+pP4sc3ASaIfZbSr0XXR
+         2ki9OpvhYXL9PZA2w31zGVb71Yt3ffaufuoO+rdshnFYn1dltuKmCholDn9/OHvPh/5P
+         9g5H7z1wrePlMXN0AwCmvlCYqLccfLmb0wx3aa+fzUq+ZaLtW/rdgR4gJyIwltiUqV91
+         y/JUNY1TssbwcqLOQo/ltEavDhtIVJX8PO+qYLymXOx/JIKmLRuwYw5pzGCnNMxf5Dsz
+         6hrA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773380167; x=1773984967;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=aQDPRle9auiI589+HEKa3AVFHfQ0L3XutZyywJyeO2c=;
+        b=kR0wvMOSCXcPqd5e5bsJTpO2QYjSYPnvoN7mjZMYmw8seSpuTGjWtNcCoVWmhDKlK8
+         BVr7fmsKSID7coeixgW4at2wdP+HIu2y7Dkmj/BeXntOyghX22ErJZj8Zp6tZSu8Xv0d
+         TetIBuCcjNhxuQuo+ij88d11rj3wo2R8ilW+o992LKgEQb3lu7Ot3KD7/vYrZfQVMKNP
+         QHGDYTSKSHI/BrucbjhWZH8mE/kWJ6+V63Q2B12kYFMrDWiA2MH1TI/0Gr8GKk0LrYHB
+         6vLtJJLr538+gM5pWGhxFZNdmRwrhKman5OPR2VELV0Ej32OZXnKzxu3LmlA2B19/5O0
+         q0kg==
+X-Forwarded-Encrypted: i=1; AJvYcCXQH7OL6mKYE+anV+KnNDz/z4Y8EKPZF+nJ3ZjWkK58ZQRmBYdw72XnQ4kzgvLAW5f/YXAlD4PoB1s=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzwir4RJJ1B+ND9aAiwPzpiURPDs5kpEXYq7TbyGZE0xiB4TVoQ
+	bWCqSvpsZsZAvmgcmQm+Rx6exy68TNAxny7+WLcZQTuLa2eJAex26wiKDjPpBWbt0U+iHpUsxf+
+	2qxKar0AeoaXEn/7eAcFfGYIavBWG/gk=
+X-Gm-Gg: ATEYQzwOsPTAJTzgUWAA1zq3cugVV7xIZsmc3vTOO5pOu0L+RQvpyX74blJQAVigmoA
+	ldMhXOOTjiGuY5GxWM2yrFk7IwAhzU81ZVry4Oc3bZM1s20CjFtn4DXrZzi1NuhYkUr2tCBfwQH
+	+D7j71HBIevUjLOa9CPOlEjzec28VXiGJnhvaCS/p8UQzA6VWKivXvG4//PcCwYPa0G8YrGaZbZ
+	V5faQBhjMgUsNXnvvwiGzZbnDoBzp08rU5FBx7Ded/5igi8rlN9XBLbboHuzVGSCMo6hTX0h//F
+	hSrM4Vr93gwoCKGQyu7Q6+3HfaPucS8YGDiuBQ==
+X-Received: by 2002:a05:6402:2805:b0:662:dc7e:b186 with SMTP id
+ 4fb4d7f45d1cf-663ba0fbe97mr1067010a12.11.1773380167124; Thu, 12 Mar 2026
+ 22:36:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DU2PR04MB8840:EE_|DU4PR04MB10816:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5ed35577-9613-4532-c7c7-08de80bfaeb3
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|52116014|7416014|19092799006|366016|1800799024|56012099003|18002099003|22082099003|921020|38350700014;
-X-Microsoft-Antispam-Message-Info:
-	9XOZ3Fc6Bjv5wKucDWN4dnrGmVeIa96EJ6h1S8yDP83XANtWEE9TTAwCfMkvx4VxznNZGtHguMWxUBpVzuTjtQ74/oK3IizjoRUp4APL3EdgvPemKxLO1ctvvWbzrLrq0OyFXcRBnhqwGsrCsnq4e9g+X8VnS+ePuIyxnic1UETSB/fYS3SGVE3rv9dEadi7BtCC2ePF8HhoQLCFJKFna8HPUQO6MLnp0sh8used95aHViU14Y4fUjXQRu8NAkrkZ12HcvctsphiPNspUusJ/g2/2OZgc4spc1Dcio28qZfi2P3AsLj6Xs2/hC/sJQPxKMzKiuU5nIuRG0ope4htpmrfeN+HiHuCbitOTVdAFFfnQhZ2tB8xyP4gOLcIH5qMkhZtScukaEnR/ZyIKNUbuEo28aHVPm8GVXw9ivZdWPw968956u3eHc1g/7DiSL0H/ew5TjDh6dohPaCQ2CT+zhDrUPcfwE7ziHdK5/I9fqAunHaAUHe3xiW/qFqyI/CIsGi+ee82eLH2oC+rChTYCHO0K7BxlbK+VKnJ4eVgqpEITtR70uc97Bjjv9OfnU5eiOTniDMSDCKMtyrsErUGyb4Nw5kAtHvSV3GdZA3l+GDAtUNdTmUT7d1hIPYaRaf0jbFAy+cnMO2xyPbd5H5CeTH/2xGabam8G58PY3mk2PGwxFhua0O3uygy/e9AWkP2sB00BndtszxHZDG3xrIDSJMiBWh6HPwG+g8Qbm2v5QI4y4vZKh+YDgLTqQAY5zUguWoKpiyAF+52Sa/ykO+vyh7fV41h7cPvMFLCot54rDj0cY/bGxFnRBdoW1OLIo/2
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DU2PR04MB8840.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(52116014)(7416014)(19092799006)(366016)(1800799024)(56012099003)(18002099003)(22082099003)(921020)(38350700014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?c93Z2Ul77iL84u+mU3IvuDJN7e/UHjiuV+G9E2WBOUJYD9r7IaCvsKhz+ozc?=
- =?us-ascii?Q?VMA00ffG8aikLrYPuWJYveKM/RXrTn14XuEmXlpdeTlh+RXU9X5xSuVHupbp?=
- =?us-ascii?Q?qEWtgE4kRYxml5qLvTfBPjfgOgFeFpWUH8zhQnxug0nxumImjowJVymz545W?=
- =?us-ascii?Q?5NMFmXYKbfWbZGnJO5B1hYUzUhqhxMFqHr7H29LedZZjjoc3sPixcZ7LKXFT?=
- =?us-ascii?Q?mOj27uSkfi1LKULa/AehCQnAu4lRDSG7k+9l8+eKI+1gkUbTaY+Gg49KIQ0K?=
- =?us-ascii?Q?tHJAVWNrJffC20SfplIquALOintmgT2Xfzbgjri6DeRUwvqQ3W8JXUazy1gT?=
- =?us-ascii?Q?EIBl2jLlUahgzV6JjsXvcctx+xywJcRQaaVSKal4H8eFYGjvha4zK/dlmjJ6?=
- =?us-ascii?Q?EBjdDLMykIrK92d/MK9sETdJgtixC+bGFyFV/dRj5Ytf5e6L0IhU6uRsDTzd?=
- =?us-ascii?Q?sI54Jt8N9gYw0CR4zPEB1mcXrwZvqQDbvQtoHLrPguwQGkJpLHiOIWMDkExP?=
- =?us-ascii?Q?deCDIV1xZTrnt0eYyeqR0A6Spcn5UPTHdQ1xTGZeg57O0Y7tKmrq/PtFVmqR?=
- =?us-ascii?Q?8WyMecrn5baRVikOy3WY6xx3irHgACMW7zhSSxQpYYjOMWs5CvG6yzHJd1pw?=
- =?us-ascii?Q?UwcdULidj20wj4BbmhVASyPr24ZzemEoyL5bossqM7oF651SIF5xNtyFGQ0X?=
- =?us-ascii?Q?mP4Qi8pTgHZMWp0UYmOZmlEdyy0QyqWW7WeoSxOR+Dpz/tHOlaxM894BOFZZ?=
- =?us-ascii?Q?32LOzOjuY0ayS1cQHVsArS/VWut04X+DRdrWvxFLQ3xlNa94btmwnwcxAJxh?=
- =?us-ascii?Q?tL5yoiF/L4oDUM7bhrO/h32GJArIvDyIjd8kAKyHy+91cnM61kDpksBCrq/z?=
- =?us-ascii?Q?BReb8yxOuRPouHJVGF+JPH4NJEKpbKLPA5hUOK57N1JmbaS1q1IOVNvBhNzp?=
- =?us-ascii?Q?winpYDgnntBWU0ZvxL+gzgHcgLGDKqxZC2ljdP/SLybyZOuuZ8p3C1Zspew3?=
- =?us-ascii?Q?gY8pFiSa75SIDbl4qJgibmWC4PzpUiDW8hljECc+IGYbY8h+JZs2UK4i/36H?=
- =?us-ascii?Q?gbi5kb9HwIThZXPnyiSMbUJLpvFYzdXxPHIZhwCqyT/Epzs6j7sgpMcjx5Xq?=
- =?us-ascii?Q?KC01EyoJ5OZDK2MRUV2n6Y66KTeDR/fn0x6UaKegynPzv9ac3WR+naB9rOXj?=
- =?us-ascii?Q?B6CyEEScbfnIsfp/7XSuCsJr30Vj4mdXQ36X/M2p6dMHCftc8C/b+9fpaLDM?=
- =?us-ascii?Q?kUVALadu90O9W42Rm1W74GlWaoSNlZp5oNwo9JaZ6zn+bss8CJIMyOiikw9k?=
- =?us-ascii?Q?+m4OpEYpgS2JCRs3VSMXZPcNt0f5y6dxJHS3LvSKvrc92W8bMFqdQT6Q/AHm?=
- =?us-ascii?Q?Ted0L3lcIURNfK6ITRs2Wo7Ms+hhlWGTxURg3KKAaciY2rsFEJiZCw3Xm+SH?=
- =?us-ascii?Q?Yb7MCWP/csD0fgvUklNutr+XkDxDoCs5yBWEhUeW3wVI44OP4cAb5fG5snWz?=
- =?us-ascii?Q?4kKOOiU6TvMF+ehRkxeHWAYJ0qGxhpJFh7OYA9Dwc1bYyTG0WyzO9iNOm/7C?=
- =?us-ascii?Q?xrCetfTenXxrXmKuR+22Cu6cfksajaPATPYnO60wvI4RaCU7joawP7U5YJZr?=
- =?us-ascii?Q?EaIM3NWS7wZZ9Ysb5YdqW16UP5ta43+VkvXW4BoC116bac/Z2NpSbGVeIP/6?=
- =?us-ascii?Q?MW2LJePjBydYV0RWVQ/gPi08JcLF3Sj1euAU/Ga2kJ3desTio/kjX8A2K1Oo?=
- =?us-ascii?Q?aBny2TwfcA=3D=3D?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5ed35577-9613-4532-c7c7-08de80bfaeb3
-X-MS-Exchange-CrossTenant-AuthSource: AS8PR04MB8833.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Mar 2026 05:16:26.3063
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: op8oAYyKLfsx9HxtswNfcYMurQtcgp5o2/iK3sVJxJcJGZwtG+sLzsm39Mq0DL+X63w0WLHxCeyVeAqom70fIg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU4PR04MB10816
+References: <20260211032935.2705841-1-alistair.francis@wdc.com>
+ <20260211032935.2705841-13-alistair.francis@wdc.com> <20260303113642.00005774@huawei.com>
+In-Reply-To: <20260303113642.00005774@huawei.com>
+From: Alistair Francis <alistair23@gmail.com>
+Date: Fri, 13 Mar 2026 15:35:40 +1000
+X-Gm-Features: AaiRm51ujclaTlYhyqJznEW2TcmQhKu6KtQRn4y8IbzebLrYInO3G-JLbzUdduo
+Message-ID: <CAKmqyKMUT__C=4Lo5BhjB_QoaGHHNHQvxLmL4xuB54U=Rm0nzg@mail.gmail.com>
+Subject: Re: [RFC v3 12/27] lib: rspdm: Support SPDM get_version
+To: Jonathan Cameron <jonathan.cameron@huawei.com>
+Cc: bhelgaas@google.com, lukas@wunner.de, rust-for-linux@vger.kernel.org, 
+	akpm@linux-foundation.org, linux-pci@vger.kernel.org, 
+	linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	alex.gaynor@gmail.com, benno.lossin@proton.me, boqun.feng@gmail.com, 
+	a.hindborg@kernel.org, gary@garyguo.net, bjorn3_gh@protonmail.com, 
+	tmgross@umich.edu, ojeda@kernel.org, wilfred.mallawa@wdc.com, 
+	aliceryhl@google.com, Alistair Francis <alistair@alistair23.me>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Add pcie[0,1] and pcie-ep[0,1] support.
+On Tue, Mar 3, 2026 at 9:36=E2=80=AFPM Jonathan Cameron
+<jonathan.cameron@huawei.com> wrote:
+>
+> On Wed, 11 Feb 2026 13:29:19 +1000
+> alistair23@gmail.com wrote:
+>
+> > From: Alistair Francis <alistair@alistair23.me>
+> >
+> > Support the GET_VERSION SPDM command.
+> >
+> > Signed-off-by: Alistair Francis <alistair@alistair23.me>
+> Hi Alistair,
+>
+> Various minor comments inline. Biggest one is what I think
+> is some confusing le16 handling that to me is in the wrong place.
+>
+> Jonathan
+>
+> > ---
+> >  lib/rspdm/consts.rs    | 17 +++++++++++
+> >  lib/rspdm/lib.rs       |  6 +++-
+> >  lib/rspdm/state.rs     | 58 ++++++++++++++++++++++++++++++++++--
+> >  lib/rspdm/validator.rs | 67 ++++++++++++++++++++++++++++++++++++++++++
+> >  4 files changed, 144 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/lib/rspdm/consts.rs b/lib/rspdm/consts.rs
+> > index 40ce60eba2f3..38f48f0863e2 100644
+> > --- a/lib/rspdm/consts.rs
+> > +++ b/lib/rspdm/consts.rs
+>
+> > @@ -115,3 +129,6 @@ fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> =
+core::fmt::Result {
+> >          Ok(())
+> >      }
+> >  }
+> > +
+> > +pub(crate) const SPDM_GET_VERSION: u8 =3D 0x84;
+> > +pub(crate) const SPDM_GET_VERSION_LEN: usize =3D mem::size_of::<SpdmHe=
+ader>() + 255;
+>
+> I'd either add a comment on where the 255 comes from. Also do we have a U=
+8_MAX definition
+> we can use?  Or some way to get it from code?
 
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
----
- arch/arm64/boot/dts/freescale/Makefile       |  4 +
- arch/arm64/boot/dts/freescale/imx943-evk.dts | 82 ++++++++++++++++++++
- 2 files changed, 86 insertions(+)
+Fixed, can just use `u8::MAX`
 
-diff --git a/arch/arm64/boot/dts/freescale/Makefile b/arch/arm64/boot/dts/freescale/Makefile
-index 25793aa7c0ab..0885e67e0cfa 100644
---- a/arch/arm64/boot/dts/freescale/Makefile
-+++ b/arch/arm64/boot/dts/freescale/Makefile
-@@ -451,6 +451,10 @@ dtb-$(CONFIG_ARCH_MXC) += imx95-19x19-evk-sof.dtb
- dtb-$(CONFIG_ARCH_MXC) += imx95-toradex-smarc-dev.dtb
- dtb-$(CONFIG_ARCH_MXC) += imx95-tqma9596sa-mb-smarc-2.dtb
- 
-+imx943-evk-pcie0-ep-dtbs += imx943-evk.dtb imx-pcie0-ep.dtbo
-+imx943-evk-pcie1-ep-dtbs += imx943-evk.dtb imx-pcie1-ep.dtbo
-+dtb-$(CONFIG_ARCH_MXC) += imx943-evk-pcie0-ep.dtb imx943-evk-pcie1-ep.dtb
-+
- imx95-15x15-evk-pcie0-ep-dtbs = imx95-15x15-evk.dtb imx-pcie0-ep.dtbo
- dtb-$(CONFIG_ARCH_MXC) += imx95-15x15-evk-pcie0-ep.dtb
- imx95-19x19-evk-pcie0-ep-dtbs += imx95-19x19-evk.dtb imx-pcie0-ep.dtbo
-diff --git a/arch/arm64/boot/dts/freescale/imx943-evk.dts b/arch/arm64/boot/dts/freescale/imx943-evk.dts
-index c8ceabe3d923..f69c0b60b039 100644
---- a/arch/arm64/boot/dts/freescale/imx943-evk.dts
-+++ b/arch/arm64/boot/dts/freescale/imx943-evk.dts
-@@ -50,6 +50,20 @@ chosen {
- 		stdout-path = &lpuart1;
- 	};
- 
-+	pcie_ref_clk: clock-pcie-ref {
-+		compatible = "gpio-gate-clock";
-+		clocks = <&xtal25m>;
-+		#clock-cells = <0>;
-+		enable-gpios = <&pca9670_i2c3 7 GPIO_ACTIVE_LOW>;
-+	};
-+
-+	xtal25m: clock-xtal25m {
-+		compatible = "fixed-clock";
-+		#clock-cells = <0>;
-+		clock-frequency = <25000000>;
-+		clock-output-names = "xtal_25MHz";
-+	};
-+
- 	dmic: dmic {
- 		compatible = "dmic-codec";
- 		#sound-dai-cells = <0>;
-@@ -71,6 +85,15 @@ reg_m2_pwr: regulator-m2-pwr {
- 		startup-delay-us = <5000>;
- 	};
- 
-+	reg_slot_pwr: regulator-slot-pwr {
-+		compatible = "regulator-fixed";
-+		regulator-name = "PCIe slot-power";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
-+		gpio = <&pcal6416_i2c3_u46 0 GPIO_ACTIVE_HIGH>;
-+		enable-active-high;
-+	};
-+
- 	reg_m2_wlan: regulator-wlan {
- 		compatible = "regulator-fixed";
- 		regulator-name = "WLAN_EN";
-@@ -653,6 +676,18 @@ IMX94_PAD_GPIO_IO28__LPI2C6_SCL		0x40000b9e
- 		>;
- 	};
- 
-+	pinctrl_pcie0: pcie0grp {
-+		fsl,pins = <
-+			IMX94_PAD_GPIO_IO20__PCIE1_CLKREQ_B	0x4000031e
-+		>;
-+	};
-+
-+	pinctrl_pcie1: pcie1grp {
-+		fsl,pins = <
-+			IMX94_PAD_GPIO_IO23__PCIE2_CLKREQ_B	0x4000031e
-+		>;
-+	};
-+
- 	pinctrl_pdm: pdmgrp {
- 		fsl,pins = <
- 			IMX94_PAD_PDM_CLK__PDM_CLK			0x31e
-@@ -821,6 +856,53 @@ IMX94_PAD_XSPI1_DQS__XSPI1_A_DQS	0x3fe
- 	};
- };
- 
-+&pcie0 {
-+	pinctrl-0 = <&pinctrl_pcie0>;
-+	pinctrl-names = "default";
-+	clocks = <&scmi_clk IMX94_CLK_HSIO>,
-+		 <&scmi_clk IMX94_CLK_HSIOPLL>,
-+		 <&scmi_clk IMX94_CLK_HSIOPLL_VCO>,
-+		 <&scmi_clk IMX94_CLK_HSIOPCIEAUX>,
-+		 <&hsio_blk_ctl 0>,
-+		 <&pcie_ref_clk>;
-+	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux",
-+		      "ref", "extref";
-+	reset-gpio = <&pcal6416_i2c3_u46 3 GPIO_ACTIVE_LOW>;
-+	vpcie3v3aux-supply = <&reg_m2_wlan>;
-+	supports-clkreq;
-+	status = "okay";
-+};
-+
-+&pcie0_ep {
-+	pinctrl-0 = <&pinctrl_pcie0>;
-+	pinctrl-names = "default";
-+	vpcie-supply = <&reg_m2_wlan>;
-+	status = "disabled";
-+};
-+
-+&pcie1 {
-+	pinctrl-0 = <&pinctrl_pcie1>;
-+	pinctrl-names = "default";
-+	clocks = <&scmi_clk IMX94_CLK_HSIO>,
-+		 <&scmi_clk IMX94_CLK_HSIOPLL>,
-+		 <&scmi_clk IMX94_CLK_HSIOPLL_VCO>,
-+		 <&scmi_clk IMX94_CLK_HSIOPCIEAUX>,
-+		 <&hsio_blk_ctl 0>,
-+		 <&pcie_ref_clk>;
-+	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux",
-+		      "ref", "extref";
-+	reset-gpio = <&pcal6416_i2c3_u46 1 GPIO_ACTIVE_LOW>;
-+	vpcie3v3aux-supply = <&reg_slot_pwr>;
-+	status = "okay";
-+};
-+
-+&pcie1_ep {
-+	pinctrl-0 = <&pinctrl_pcie1>;
-+	pinctrl-names = "default";
-+	vpcie-supply = <&reg_slot_pwr>;
-+	status = "disabled";
-+};
-+
- &usdhc1 {
- 	pinctrl-0 = <&pinctrl_usdhc1>;
- 	pinctrl-1 = <&pinctrl_usdhc1_100mhz>;
--- 
-2.37.1
+>
+> > diff --git a/lib/rspdm/lib.rs b/lib/rspdm/lib.rs
+> > index 2bb716140e0a..08abcbb21247 100644
+> > --- a/lib/rspdm/lib.rs
+> > +++ b/lib/rspdm/lib.rs
+> > @@ -108,7 +108,11 @@
+> >  /// Return 0 on success or a negative errno.  In particular, -EPROTONO=
+SUPPORT
+> >  /// indicates authentication is not supported by the device.
+> >  #[no_mangle]
+> > -pub unsafe extern "C" fn spdm_authenticate(_state: &'static mut SpdmSt=
+ate) -> c_int {
+> > +pub unsafe extern "C" fn spdm_authenticate(state: &'static mut SpdmSta=
+te) -> c_int {
+>
+> Is there more to this rename than it appears?  Can it get pushed back to =
+earlier patch?
 
+Rust will complain about `state` being unused, by adding a `_` to the
+front we don't get the warning in the previous patch. So in this patch
+I rename it back to `state` as it's now used.
+
+This is a public function that matches the C implementation, hence the
+arguments being fixed in the previous patch.
+
+>
+> > +    if let Err(e) =3D state.get_version() {
+> > +        return e.to_errno() as c_int;
+> > +    }
+> > +
+> >      0
+> >  }
+> >
+> > diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
+> > index 68861f30e3fa..3ad53ec05044 100644
+> > --- a/lib/rspdm/state.rs
+> > +++ b/lib/rspdm/state.rs
+> > @@ -8,6 +8,7 @@
+> >  //! <https://www.dmtf.org/dsp/DSP0274>
+> >
+> >  use core::ffi::c_void;
+> > +use core::slice::from_raw_parts_mut;
+> >  use kernel::prelude::*;
+> >  use kernel::{
+> >      bindings,
+> > @@ -15,8 +16,10 @@
+> >      validate::Untrusted,
+> >  };
+> >
+> > -use crate::consts::{SpdmErrorCode, SPDM_ERROR, SPDM_REQ};
+> > -use crate::validator::{SpdmErrorRsp, SpdmHeader};
+> > +use crate::consts::{
+> > +    SpdmErrorCode, SPDM_ERROR, SPDM_GET_VERSION_LEN, SPDM_MAX_VER, SPD=
+M_MIN_VER, SPDM_REQ,
+>
+> Is the Rust linter fussy about these being on one line? Feels like we'd
+> get less churn over time if we formatted this as one per line.
+
+This is just how the linter formats it when I run ` LLVM=3D1 make
+rustfmt`. I don't really want to be manually formatting things
+
+>
+> > +};
+> > +use crate::validator::{GetVersionReq, GetVersionRsp, SpdmErrorRsp, Spd=
+mHeader};
+> >
+> >  /// The current SPDM session state for a device. Based on the
+> >  /// C `struct spdm_state`.
+> > @@ -61,7 +64,7 @@ pub(crate) fn new(
+> >              transport_sz,
+> >              keyring,
+> >              validate,
+> > -            version: 0x10,
+> > +            version: SPDM_MIN_VER,
+>
+> Pull that def back to earlier patch to keep the churn confined.
+
+Fixed
+
+>
+> >          }
+> >      }
+> >
+> > @@ -217,4 +220,53 @@ pub(crate) fn spdm_exchange(
+> >
+> >          Ok(length)
+> >      }
+> > +
+> > +    /// Negoiate a supported SPDM version and store the information
+> > +    /// in the `SpdmState`.
+> > +    pub(crate) fn get_version(&mut self) -> Result<(), Error> {
+> > +        let mut request =3D GetVersionReq::default();
+> > +        request.version =3D self.version;
+> > +
+> > +        // SAFETY: `request` is repr(C) and packed, so we can convert =
+it to a slice
+> > +        let request_buf =3D unsafe {
+> > +            from_raw_parts_mut(
+> > +                &mut request as *mut _ as *mut u8,
+> > +                core::mem::size_of::<GetVersionReq>(),
+> > +            )
+> > +        };
+> > +
+> > +        let mut response_vec: KVec<u8> =3D KVec::with_capacity(SPDM_GE=
+T_VERSION_LEN, GFP_KERNEL)?;
+> > +        // SAFETY: `request` is repr(C) and packed, so we can convert =
+it to a slice
+> > +        let response_buf =3D
+> > +            unsafe { from_raw_parts_mut(response_vec.as_mut_ptr(), SPD=
+M_GET_VERSION_LEN) };
+> > +
+> > +        let rc =3D self.spdm_exchange(request_buf, response_buf)?;
+> > +
+> > +        // SAFETY: `rc` is the length of data read, which will be smal=
+ler
+> > +        // then the capacity of the vector
+>
+> than?
+
+Fixed
+
+>
+> > +        unsafe { response_vec.inc_len(rc as usize) };
+> > +
+> > +        let response: &mut GetVersionRsp =3D Untrusted::new_mut(&mut r=
+esponse_vec).validate_mut()?;
+> > +
+> > +        let mut foundver =3D false;
+> > +        for i in 0..response.version_number_entry_count {
+> > +            // Creating a reference on a packed struct will result in
+> > +            // undefined behaviour, so we operate on the raw data dire=
+ctly
+> > +            let unaligned =3D core::ptr::addr_of_mut!(response.version=
+_number_entries) as *mut u16;
+>
+> Maybe pull that out of the loop like you do below?
+
+Fixed
+
+>
+> > +            let addr =3D unaligned.wrapping_add(i as usize);
+> > +            let version =3D (unsafe { core::ptr::read_unaligned::<u16>=
+(addr) } >> 8) as u8;
+> Given the endian conversion below, this is correct, but I think leaving i=
+t as the __le16 until
+> here is better.  We could also just pull out the correct byte and ignore =
+the other one.
+
+Hmm... I'm not sure I follow.
+
+The SPDM spec describes this as a u16, so I'm reading the entire value
+and just taking the upper bits for the Major/Minor version
+
+So I'm not sure what you think I should do differently?
+
+> It's a spec quirk that they decided to have it defined as a __le16 rather=
+ than u8[2] as
+> the fields are confined one byte or the other.
+>
+> I wonder if we should also reject any alpha versions? I.e. check the bott=
+om 4 bits
+> are 0.
+
+Hmmm... That seems a bit unnecessary. Maybe a warning though?
+
+>
+> > +
+> > +            if version >=3D self.version && version <=3D SPDM_MAX_VER =
+{
+> > +                self.version =3D version;
+> > +                foundver =3D true;
+> > +            }
+> > +        }
+> > +
+> > +        if !foundver {
+> > +            pr_err!("No common supported version\n");
+> > +            to_result(-(bindings::EPROTO as i32))?;
+> > +        }
+> > +
+> > +        Ok(())
+> > +    }
+> >  }
+> > diff --git a/lib/rspdm/validator.rs b/lib/rspdm/validator.rs
+> > index a0a3a2f46952..f69be6aa6280 100644
+> > --- a/lib/rspdm/validator.rs
+> > +++ b/lib/rspdm/validator.rs
+> > @@ -7,6 +7,7 @@
+> >  //! Rust implementation of the DMTF Security Protocol and Data Model (=
+SPDM)
+> >  //! <https://www.dmtf.org/dsp/DSP0274>
+> >
+> > +use crate::bindings::{__IncompleteArrayField, __le16};
+> >  use crate::consts::SpdmErrorCode;
+> >  use core::mem;
+> >  use kernel::prelude::*;
+> > @@ -15,6 +16,8 @@
+> >      validate::{Unvalidated, Validate},
+> >  };
+> >
+> > +use crate::consts::SPDM_GET_VERSION;
+> > +
+> >  #[repr(C, packed)]
+> >  pub(crate) struct SpdmHeader {
+> >      pub(crate) version: u8,
+> > @@ -64,3 +67,67 @@ pub(crate) struct SpdmErrorRsp {
+> >      pub(crate) error_code: SpdmErrorCode,
+> >      pub(crate) error_data: u8,
+> >  }
+> > +
+> > +#[repr(C, packed)]
+>
+> Why packed?
+
+We cast it from a struct to a slice (array), so we need it to be
+packed to avoid gaps in the slice (array)
+
+>
+> > +pub(crate) struct GetVersionReq {
+> > +    pub(crate) version: u8,
+> > +    pub(crate) code: u8,
+> > +    pub(crate) param1: u8,
+> > +    pub(crate) param2: u8,
+> > +}
+> > +
+> > +impl Default for GetVersionReq {
+> > +    fn default() -> Self {
+> > +        GetVersionReq {
+> > +            version: 0,
+>
+> Given this only takes one value we could default it to 0x10
+> (even though it's written above to keep the state machine in sync).
+
+We could, I do find that less clear though. Explicit writing it as
+part of `get_version()` to me is really clear what is happening
+
+>
+> > +            code: SPDM_GET_VERSION,
+> > +            param1: 0,
+> > +            param2: 0,
+> > +        }
+> > +    }
+> > +}
+> > +
+> > +#[repr(C, packed)]
+> > +pub(crate) struct GetVersionRsp {
+> > +    pub(crate) version: u8,
+> > +    pub(crate) code: u8,
+> > +    param1: u8,
+> > +    param2: u8,
+> > +    reserved: u8,
+> > +    pub(crate) version_number_entry_count: u8,
+> > +    pub(crate) version_number_entries: __IncompleteArrayField<__le16>,
+> > +}
+> > +
+> > +impl Validate<&mut Unvalidated<KVec<u8>>> for &mut GetVersionRsp {
+> > +    type Err =3D Error;
+> > +
+> > +    fn validate(unvalidated: &mut Unvalidated<KVec<u8>>) -> Result<Sel=
+f, Self::Err> {
+> > +        let raw =3D unvalidated.raw_mut();
+> > +        if raw.len() < mem::size_of::<GetVersionRsp>() {
+> > +            return Err(EINVAL);
+> > +        }
+>
+> I guess it probably belongs at the header validation point rather that he=
+re,
+> but can we also check the version matches what was requested. Possibly an
+> additional check here that it is 0x10 (as this one is a special case wher=
+e
+> only that value is correct).
+
+Good point, I have added a check here
+
+>
+> > +
+> > +        let version_number_entries =3D *(raw.get(5).ok_or(ENOMEM))? as=
+ usize;
+> > +        let total_expected_size =3D version_number_entries * 2 + 6;
+>
+> Instead of 6 can we use mem::size_of::<GetVersionRsp>()?
+
+Yep! Good idea
+
+> Ideally something similar for the 2 as well even if it's a bit verbose.
+> (if I was lazy in the C code you get to make it better here :)
+
+let total_expected_size =3D version_number_entries *
+mem::size_of::<__le16>() + mem::size_of::<GetVersionRsp>();
+
+>
+>
+> > +        if raw.len() < total_expected_size {
+> > +            return Err(EINVAL);
+> > +        }
+> > +
+> > +        let ptr =3D raw.as_mut_ptr();
+> > +        // CAST: `GetVersionRsp` only contains integers and has `repr(=
+C)`.
+> > +        let ptr =3D ptr.cast::<GetVersionRsp>();
+> > +        // SAFETY: `ptr` came from a reference and the cast above is v=
+alid.
+> > +        let rsp: &mut GetVersionRsp =3D unsafe { &mut *ptr };
+> > +
+> > +        // Creating a reference on a packed struct will result in
+>
+> Silly question, but why is it packed?  We might need to do this for some
+> structures in SPDM but do we have transports that mess up the alignment e=
+nough
+> that where the messages themselves don't need to be packed we have to mar=
+k
+> the structures so anyway? Probably good to document this somewhere.
+
+Like above, the Rust structs contain the information which we cast to
+the slice (u8 array). So we want it to be packed to avoid gaps in the
+buffer.
+
+>
+> > +        // undefined behaviour, so we operate on the raw data directly
+> > +        let unaligned =3D core::ptr::addr_of_mut!(rsp.version_number_e=
+ntries) as *mut u16;
+> > +        for version_offset in 0..version_number_entries {
+> > +            let addr =3D unaligned.wrapping_add(version_offset);
+> > +            let version =3D unsafe { core::ptr::read_unaligned::<u16>(=
+addr) };
+> > +            unsafe { core::ptr::write_unaligned::<u16>(addr, version.t=
+o_le()) }
+>
+> I'd like to see a comment on why this seems to be doing an endian swap if=
+ we
+> are on big endian. Looking back at the c code, it has an endian swap but
+> only as part of the search for a version to use (finding the largest both
+> device and and kernel support).
+>
+> Maybe I'm reading it wrong but isn't this putting cpu endian data into a =
+structure
+> element that is of type __le16?
+
+On second thought I don't think this is required at all. It's
+converting the LE data from the SPDM response to LE. Which is just
+unnecessary no-op (LE) or a bug (BE) depending on the CPU endianness.
+
+Alistair
+
+>
+> > +        }
+> > +
+> > +        Ok(rsp)
+> > +    }
+> > +}
+>
