@@ -1,29 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B923C3CBE67;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD3D83CAE68;
 	Fri, 13 Mar 2026 16:56:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773421010; cv=none; b=MIlgiPYZQnAllq6aSBskCpvz0Sj6CxMSxDULLKnmxzoEP2xF85fefiSWnquxI+yECRT06lAcCZ2B8NW+nuA/fq4gxxxwY56dLUfG117Cr0ZY/M1b5+pCU5qASWJBDy0pDVzkm5rVqdHYyujCsbRMFouJ/EndlJRTocrrmdH47go=
+	t=1773421010; cv=none; b=ZhHCfiSpZkAD4fmlliQUjrMI/S4gYsf+KqukGZGiNjLpKwd7CGIul5R5g5obV9O8JBeSBwpA+E17b+1JJeWX9Qn4R87tgCmAencc8jxL9/g8XIX6eoi1GGGV4BpWkCOm9Q3KPTpe/NcG4TRYvegv5kKX4/q3ftBWnQvV8DY8hn4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773421010; c=relaxed/simple;
-	bh=D8t9qvxgpZ++Yo3oPbHQfrf9aK/b9K0vIff2MtOGlN0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=p2SE3krEORjNq40AWVG0hQ/u60H+PlQOrG6NfV2fV1BiDNmVFThmUD8UXFsHCuWgQln/p2gzicpiBU6NslGZLWr4eCPl64naX4JVfYSlLnmri5VSODm535tAgUWPJAILD2mcFLjrLoekFUF1kdJlnfaRTByhopWB1fIQo4xhdPg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ilnG01lu; arc=none smtp.client-ip=220.197.31.5
+	bh=Dcw+sstqEEl+GfJmTNCmY4ECojIpOSogXcJzVcb1fR8=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=NHmrvyVrEi6x6pdmF55rRo+ggn46MgeBZoNSLodlYeZ8gqL3odBEHax57WRG0i2m+7DVaKs+0cLEQ04TwggLpdT1rCv77jVMgBmA7m7onNu74gbGgdanOs9yJpUzhwuWDf1/dEHpxrT+32lu+HOJdDj28QRft0zS1V5/heBhhxw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Lwvqmfx2; arc=none smtp.client-ip=117.135.210.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ilnG01lu"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Lwvqmfx2"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
 	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Ok
-	Jydil17J/bKKSpOmhf5pXuHazCRZk9UtAzqTsen3Q=; b=ilnG01luwp4pP7OtqS
-	TeutnXAU6Ie9XpK9O0LxT8hJVpPwJeTyCsUp07tSOFcvHSSbbTrwFIMmG4J1wpqE
-	bbPVjL2lOpuHzhAYmvO8SowPA/HrN3pCfsAcwjQ4cZkJ95DZfFr6jHHolzwk/W2q
-	RSKrp86ldpZmjMP11D7JsY9RU=
+	paxYlsToPKG5PCwsUr7hGf9f4Il4PfIr73LI8TjoI=; b=Lwvqmfx2r7vzhzKL86
+	cNaSlDoz6WFzRjorwb3MWnR/mt1beOAiAe1yvOdjyQbUAoXCFPwcG97T8r6nHxIr
+	km+dPDoNHlO2N4A6fGms7XRADi+LLPkt0PzUTN7qPd/OmEIM+UO0v4wO5pmHezmT
+	lrPjPklTVnyLQdt/1eUXjifQM=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wAX2JV7QbRpTApJAw--.54345S2;
-	Sat, 14 Mar 2026 00:55:24 +0800 (CST)
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wAX2JV7QbRpTApJAw--.54345S6;
+	Sat, 14 Mar 2026 00:55:29 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	jingoohan1@gmail.com,
@@ -47,10 +48,12 @@ Cc: robh@kernel.org,
 	linux-kernel@vger.kernel.org,
 	shawn.lin@rock-chips.com,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v9 0/5] PCI: of: Remove max-link-speed generation validation
-Date: Sat, 14 Mar 2026 00:55:17 +0800
-Message-Id: <20260313165522.123518-1-18255117159@163.com>
+Subject: [PATCH v9 4/5] PCI: controller: Validate max-link-speed
+Date: Sat, 14 Mar 2026 00:55:21 +0800
+Message-Id: <20260313165522.123518-5-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260313165522.123518-1-18255117159@163.com>
+References: <20260313165522.123518-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -58,116 +61,81 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wAX2JV7QbRpTApJAw--.54345S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxAw1kuw17CF4kAF4DCFyfZwb_yoWrtr1fpa
-	y2qFWFyF1xtF4ava17J3WUuFyYg3ZxAFWjkryfWw17ZFnxCF13XFySgF4FvF9rKrZF9r12
-	q3W2q3W7KFyjyaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pi2-esUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxB32mmm0QX3JqwAA32
+X-CM-TRANSID:_____wAX2JV7QbRpTApJAw--.54345S6
+X-Coremail-Antispam: 1Uf129KBjvJXoWxur1rGryftF1rKryUGFyDKFg_yoW5Zr18pa
+	9rA3WIyF1UJF45ur4Dt3Z8WF1Yq3ZxZrWDJ3s3W3W7uFnxGFZ8GFyj9FyftF97KFs7ur17
+	X3W7tF47GanFyF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pim9aLUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxAH3m2m0QYHKAAAA3+
 
-Hi,
+Add validation for the "max-link-speed" DT property in three more
+drivers, using the pcie_get_link_speed() helper.
 
-This series moves the validation from the common OF function to the
-individual PCIe controller drivers.  To protect against out-of-bounds
-accesses to the pcie_link_speed[] array, we first introduce a helper
-function pcie_get_link_speed() that safely returns the speed value
-(or PCI_SPEED_UNKNOWN) for a given generation number.
+- brcmstb: If the value is missing or invalid, fall back to no
+  limitation (pcie->gen = 0).  Fix the previous incorrect logic.
+- mediatek-gen3: If the value is missing or invalid, use the maximum
+  speed supported by the controller.
+- rzg3s-host: If the value is missing or invalid, fall back to Gen2.
 
-Then all direct uses of pcie_link_speed[] as an array are converted to
-use the new helper, ensuring that even if an invalid generation number
-reaches those code paths, no out-of-bounds access occurs.
+This ensures that all users of of_pci_get_max_link_speed() are ready
+for the removal of the central range check.
 
-For several drivers that read the "max-link-speed" property
-(pci-j721e, brcmstb, mediatek-gen3, rzg3s-host), we add an explicit
-validation step: if the value is missing, out of range, or unsupported
-by the hardware, a safe default is used (usually Gen2). Other drivers
-(mainly DesignWare glue drivers) rely on the helper to safely handle
-invalid values, but do not yet include fallback logic or warnings.
-
-Finally, the range check is removed from of_pci_get_max_link_speed(),
-so that future PCIe generations can be supported without modifying
-drivers/pci/of.c.
-
+Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
-Changes for v9:
-- Modify the parameter passed to pcie_get_link_speed to unsigned int. If the DT
-  configuration specifies max-link-speed = -1, the obtained max_link_speed will
-  be 0xff. Therefore, it will be greater than the length of the array pcie_link_speed.
-  Thus, the condition speed <= 0 is removed. (For patch 0001. Shawn)
-- Modify the commit message for patch 0005. (Shawn)
+ drivers/pci/controller/pcie-brcmstb.c       | 5 +++--
+ drivers/pci/controller/pcie-mediatek-gen3.c | 2 +-
+ drivers/pci/controller/pcie-rzg3s-host.c    | 2 +-
+ 3 files changed, 5 insertions(+), 4 deletions(-)
 
-Changes for v8:
-https://patchwork.kernel.org/project/linux-pci/cover/20260312163652.113228-1-18255117159@163.com/
-
-- Expand series from 2 to 5 patches to introduce pcie_get_link_speed() helper
-  and split validation into per-driver changes.
-- Add pcie_get_link_speed() helper for safe pcie_link_speed[] array access (Bjorn)
-- Move max-link-speed validation from DWC core to individual drivers; add explicit
-  fallback logic only for pci-j721e, brcmstb, mediatek-gen3, rzg3s-host.
-- Convert all remaining direct pcie_link_speed[] accesses to use the new helper.
-- Update commit messages to reflect the new design.
-
-Changes for v7:
-https://patchwork.kernel.org/project/linux-pci/cover/20260308142629.75392-1-18255117159@163.com/
-
-- Add validation in dw_pcie_get_link_speed() (Bjorn)
-- Modify it so that two patches constitute one series.
-
-Changes for v6:
-https://patchwork.kernel.org/project/linux-pci/patch/20251218132036.308094-1-18255117159@163.com/
-
-- It'd be good to return the actual errno as of_property_read_u32() can return
-  -EINVAL, -ENODATA and -EOVERFLOW. (Mani)
-
-Changes for v5:
-https://patchwork.kernel.org/project/linux-pci/patch/20251218125909.305300-1-18255117159@163.com/
-
-- Delete the check for speed. (Mani)
-
-Changes for v4:
-https://patchwork.kernel.org/project/linux-pci/patch/20251105134701.182795-1-18255117159@163.com/
-
-- Add pcie_max_supported_link_speed.(Ilpo)
-
-Changes for v3:
-https://patchwork.kernel.org/project/linux-pci/patch/20251101164132.14145-1-18255117159@163.com/
-
-- Modify the commit message.
-- Add Reviewed-by tag.
-
-Changes for v2:
-https://patchwork.kernel.org/project/linux-pci/cover/20250529021026.475861-1-18255117159@163.com/
-- The following files have been deleted:
-  Documentation/devicetree/bindings/pci/pci.txt
-
-  Update to this file again:
-  dtschema/schemas/pci/pci-bus-common.yaml
----
-
-Hans Zhang (5):
-  PCI: Add pcie_get_link_speed() helper for safe array access
-  PCI: dwc: Use pcie_get_link_speed() and validate max-link-speed
-  PCI: j721e: Validate max-link-speed from DT
-  PCI: controller: Validate max-link-speed
-  PCI: of: Remove max-link-speed generation validation
-
- drivers/pci/controller/cadence/pci-j721e.c       |  3 ++-
- .../pci/controller/dwc/pcie-designware-host.c    |  2 +-
- drivers/pci/controller/dwc/pcie-designware.c     |  2 +-
- drivers/pci/controller/dwc/pcie-qcom-common.c    |  2 +-
- drivers/pci/controller/dwc/pcie-qcom-ep.c        |  4 ++--
- drivers/pci/controller/dwc/pcie-qcom.c           |  6 +++---
- drivers/pci/controller/dwc/pcie-tegra194.c       |  2 +-
- drivers/pci/controller/pcie-brcmstb.c            |  5 +++--
- drivers/pci/controller/pcie-mediatek-gen3.c      |  2 +-
- drivers/pci/controller/pcie-rzg3s-host.c         |  2 +-
- drivers/pci/of.c                                 | 16 ++++++++--------
- drivers/pci/pci.h                                |  2 ++
- drivers/pci/probe.c                              | 16 ++++++++++++++++
- 13 files changed, 42 insertions(+), 22 deletions(-)
-
-
-base-commit: 80234b5ab240f52fa45d201e899e207b9265ef91
+diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+index 062f55690012..714bcab97b60 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -1442,7 +1442,7 @@ static int brcm_pcie_start_link(struct brcm_pcie *pcie)
+ 	cls = FIELD_GET(PCI_EXP_LNKSTA_CLS, lnksta);
+ 	nlw = FIELD_GET(PCI_EXP_LNKSTA_NLW, lnksta);
+ 	dev_info(dev, "link up, %s x%u %s\n",
+-		 pci_speed_string(pcie_link_speed[cls]), nlw,
++		 pci_speed_string(pcie_get_link_speed(cls)), nlw,
+ 		 ssc_good ? "(SSC)" : "(!SSC)");
+ 
+ 	return 0;
+@@ -2072,7 +2072,8 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(pcie->clk);
+ 
+ 	ret = of_pci_get_max_link_speed(np);
+-	pcie->gen = (ret < 0) ? 0 : ret;
++	if (pcie_get_link_speed(ret) == PCI_SPEED_UNKNOWN)
++		pcie->gen = 0;
+ 
+ 	pcie->ssc = of_property_read_bool(np, "brcm,enable-ssc");
+ 
+diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
+index 75ddb8bee168..3b903ef7d3cf 100644
+--- a/drivers/pci/controller/pcie-mediatek-gen3.c
++++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+@@ -1150,7 +1150,7 @@ static int mtk_pcie_setup(struct mtk_gen3_pcie *pcie)
+ 		return err;
+ 
+ 	err = of_pci_get_max_link_speed(pcie->dev->of_node);
+-	if (err) {
++	if (pcie_get_link_speed(err) != PCI_SPEED_UNKNOWN) {
+ 		/* Get the maximum speed supported by the controller */
+ 		max_speed = mtk_pcie_get_controller_max_link_speed(pcie);
+ 
+diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+index 2809112e6317..00a11f986117 100644
+--- a/drivers/pci/controller/pcie-rzg3s-host.c
++++ b/drivers/pci/controller/pcie-rzg3s-host.c
+@@ -966,7 +966,7 @@ static int rzg3s_pcie_set_max_link_speed(struct rzg3s_pcie_host *host)
+ 	ls = readw_relaxed(host->pcie + pcie_cap + PCI_EXP_LNKSTA);
+ 	cs2 = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT2);
+ 
+-	switch (pcie_link_speed[host->max_link_speed]) {
++	switch (pcie_get_link_speed(host->max_link_speed)) {
+ 	case PCIE_SPEED_5_0GT:
+ 		max_supported_link_speeds = GENMASK(PCI_EXP_LNKSTA_CLS_5_0GB - 1, 0);
+ 		link_speed = PCI_EXP_LNKCTL2_TLS_5_0GT;
 -- 
 2.34.1
 
