@@ -1,248 +1,257 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92A05382396
-	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 21:10:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773436223; cv=none; b=jZ88GaLAzbq3qmxOMTO7GYtzKE/h5mj+CekTe9Dao9mJjFSyNhQ2j0FnE/I6rvEJieWRKyVNgblYNxoXZJQ9Xtv9ft/EJQFzakIyW50abDT5FP0Bvge64h9NU1+S1aCfhEmeO+VKUz48K8n+feDls/zshZe1WKx1k8HKHQfqjvo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773436223; c=relaxed/simple;
-	bh=Nn27dLLrR1BZTviS/aNzCnDksi17JGC0l/eH6b0dXc0=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=BGGkWdAwgLYRN+yBLuG2Pp0regKJoFrkU7+tUJwRjRx9MTO9hHEDGenLNMtCt+2ej32EoFgXauPBuxxtsndgfIz6T4YQhua2XD9TlyararoJ8MEooS5QOyEwwSYpw5hg1DaC2vnhXA00b6tuOwFGsukY4ZiUodk5fz96Hz+EH4o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=U43oTnNu; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81FBF382378
+	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 21:27:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.41
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773437241; cv=pass; b=nmZH9gDX1WwlQFovHzyfsdEtjDz1sOQuZumXB8/RHEMorGraL+QHM/y825V79AyPeiRK/V6UX+0prMfyre/Jeu/NrdRBict2ybRP6A2iZbvUm28L/UGluuwDk4jGyw7KFy7Xd/d8P7B0jmWDWpooMBRdS0UELV1Tt7Hf6JN+9JM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773437241; c=relaxed/simple;
+	bh=Mu4QL9itUMaZvCAaMREMIWEtSf4+H1iYSm9D5SGGewA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=k89XCH+zNQ6qS8BvE1reT4WiZelaGUF8HoQmlwUpilw3kQwyHC/UCT1I78vUi4kHQCM9J7aVahTbiPXtdvw6jM1bgxzS4KbnbWQOc2WnTXxC7JHE88Qz7xVrKVjsKpcfdkaaC9niqSOXZTRX1pUxHFGXwJjJUBvr+3Bz37nBHuY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kuwMu3FP; arc=pass smtp.client-ip=209.85.221.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="U43oTnNu"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 2A8CD240101
-	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 22:10:20 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1773436220; bh=+fftayEPLXkMX740k0XjlMVOkoEUiQnXBk0GASyGG94=;
-	h=Message-ID:Subject:From:To:Cc:Date:Autocrypt:Content-Type:
-	 MIME-Version:OpenPGP:From;
-	b=U43oTnNugX9LgYsYJPliWFN0u7ZaDdEUAnFWt1sDxeegjJBlhc3/Lrmt4oKO2roQf
-	 oEd9mfJRKg9ZggeNIS8L1UaIbYEhxDtxi1Dxt544B1ar3Lh3EDU/vijYxEPDykraEc
-	 DymwCWZTILq3NpaaH3L3WOTh7VJa3gkWgGdhSRy7tsRkD5J/YS0tkAA2iDZ7GyuB7S
-	 FvUqnctIvBgRPPqiVof/ftR1+0oN9l7W5Ih5T11pbttz9lO/RQkuEnBSzObxhsht0N
-	 FYbZlV+ohcvYTKwdxcd6oLXadOm9Dryq2dTInAP6FRfvD6GcAl/2vBD6BsgXXecFX6
-	 1kqveWfMAZyQA==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4fXcZc0FTvz6v0p;
-	Fri, 13 Mar 2026 22:10:16 +0100 (CET)
-Message-ID: <9f7fefeca19d2636b7a5802668dff516b2a3e5aa.camel@posteo.de>
-Subject: Re: [PATCH v3 7/7] leds: add synology microp led driver
-From: Markus Probst <markus.probst@posteo.de>
-To: Danilo Krummrich <dakr@kernel.org>, Markus Probst via B4 Relay
-	 <devnull+markus.probst.posteo.de@kernel.org>
-Cc: Lee Jones <lee@kernel.org>, Rob Herring <robh@kernel.org>, Krzysztof
- Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, Greg
- Kroah-Hartman	 <gregkh@linuxfoundation.org>, Miguel Ojeda
- <ojeda@kernel.org>, Boqun Feng	 <boqun@kernel.org>, Gary Guo
- <gary@garyguo.net>, =?ISO-8859-1?Q?Bj=F6rn?= Roy Baron
- <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, Andreas
- Hindborg	 <a.hindborg@kernel.org>, Alice Ryhl <aliceryhl@google.com>,
- Trevor Gross	 <tmgross@umich.edu>, "Rafael J. Wysocki" <rafael@kernel.org>,
- Igor Korotin	 <igor.korotin.linux@gmail.com>, Daniel Almeida
- <daniel.almeida@collabora.com>,  Bjorn Helgaas <bhelgaas@google.com>,
- Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Pavel
- Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>, Robert Moore
- <robert.moore@intel.com>, 	devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, 	rust-for-linux@vger.kernel.org,
- driver-core@lists.linux.dev, 	linux-pci@vger.kernel.org,
- linux-leds@vger.kernel.org, 	linux-acpi@vger.kernel.org,
- acpica-devel@lists.linux.dev
-Date: Fri, 13 Mar 2026 21:10:18 +0000
-In-Reply-To: <DH1YH0GO75H8.18YSW2VMKRB3C@kernel.org>
-References: <20260313-synology_microp_initial-v3-0-ad6ac463a201@posteo.de>
-	 <20260313-synology_microp_initial-v3-7-ad6ac463a201@posteo.de>
-	 <DH1YH0GO75H8.18YSW2VMKRB3C@kernel.org>
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
- keydata=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
- jfGillcaQOqFZ3WwVqyzG1BUfTow==
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-5ct7ygorhIxza/AlNDgo"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kuwMu3FP"
+Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-439b73f4ab4so2998655f8f.1
+        for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 14:27:19 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773437238; cv=none;
+        d=google.com; s=arc-20240605;
+        b=iyCaecndr+FihjcchGqj/QXJvHXrAg+Lv4NiJzBGavQqp8l3XHLRj3Uh4EMOHeXlD2
+         aeh0mX2cLJ0qHYECx9CuaLOBoCcZ7s77tpPjNZU2pqtKCwnXw8JHQnnhbWJY2L0ibMXo
+         LT0n2S/gT/Ls7gsiNxd15fEdSgA4puBXpqyEjlAEuPvlrPWppic41jx6cXrmxh1Ulzu4
+         uhnq2GY+gcaCDBGT6ewf2UELRrlZanxNIYUnvUtpIaW6+OtsQU4flzNi6O30dY9GFmr4
+         dpF/ZL/XEzQffFWrzMRr/B04L3H2I3l+HXBHx6Fxg68dA5XwL00dv2S8koS2NP7udBNI
+         RqtA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=hNqPR9afYYngIxPOY+LyXKakGBy9VYA9o61Z936t+Eg=;
+        fh=W50YvdSE5KGGm/RZRZFcmasUPTNnNxBu1CiQ3dK2zTk=;
+        b=HwuIw//yi9NIYhd42e75P4IRNw00CrnAnMYp9+eX7Z/x/Cp691v0GEVFYaT3nOzVID
+         pUJi+c4RQC9eK5LqcNZC1pbbUH0VOutSP/Jl+JGiyXXC36LoMddOZIOi0bY6Mf8P9M5w
+         sD2jjaZPtWVMiigEkC2o1CKArJHjckLuMnxItsT1wVE8ktK3+vBmlzgabmKqIAViCj4M
+         W6CrbZY17IxlcjbDPMwY7yky240nhRKKfOJizYgQRsb/gcJnB3+7y/5uSUEEeU5o5iUL
+         0rqhhijzTEpOgFcEyOHdCVx12em+rMiXHjRSFDMfCUTXP72XP0/xU7bmwVYmli0o1KoC
+         Rqpg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773437238; x=1774042038; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hNqPR9afYYngIxPOY+LyXKakGBy9VYA9o61Z936t+Eg=;
+        b=kuwMu3FPO8JSmWw/74HWuUhdC1Gx0l/ZR/UpDGNhiZmHQF4agS5JnPCllWz+cgXzNq
+         fDyW5hl21QGrTPA0zTVMrJ/r8CcZ/Z853rQbbYk/2dUgj035H8/5FO8JXGCxKzJuRsYv
+         7UzVP/pZji5oKpOMAhSL8mK2gs3vNmnUJZzlvjxL6hpDvGMQb6gQgien5RPG5owbFPbr
+         apCT4hBirQgFXxAcybVMB7ZiK5WWI4OwncsWXhKrG/CpqC63yybHc81M5mVNKIPe1ikk
+         QRhz3gj95VJU5XTBmpFSixNYnkd/69o+1Y5g8gaoLJte/6EwzdHH+hYechNR0Peq0TL/
+         jKlQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773437238; x=1774042038;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=hNqPR9afYYngIxPOY+LyXKakGBy9VYA9o61Z936t+Eg=;
+        b=JU+Z/2puJZwt0XoQYJ1igvTMve8PCx6p74e4IcbsRvrowuMP35AQ7lClb3BKpzQGjt
+         gA4u8wfwG5HgE15s6hRaMfcs/YxpC1WNFs7Nhmxe+mwkMn6cJkcNNuYwo09lmnOU1Hyp
+         g5j3qY/sxyVdQX5RkhePkK0y3mwjBUdiT3+HXZgs6/iYn5w4hGnfzT4zvb6A9jpogDEp
+         L8HqfDo2qV1VBnmVd4vXlQSodyptKS54lJ5p1aWZSDRqRrhaD97fhBT2LCoHmzZkNhse
+         QxxXhJAFIXaQMNxtDrL4HOwqTGPLj3ZIs2mUxnRVMrg33peSzNbU5ystlDA4IcwmuG5P
+         xABw==
+X-Forwarded-Encrypted: i=1; AJvYcCWY7u1103MWvdNzCT0Br4ByXsc8TrA4FnsjdP9L3nL2YAhtMCaqV0YyWsnxJ4MDf0ShwRsbKTlHKPI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzXTrzQOx0Yv0mMtxmZ3gOPvWFN/O32lCgUODBuQOr3uCV+JOdk
+	c2mOz3uSUCSNdTmfXKoKiuaS46WtXmsXMtYM5Qi9+mGyQ9f0N2ZKgWvoc38x76jBdEWXvdY2zj/
+	Ze2GLqVpCpGjecFlikMnedfn48X5bGzg=
+X-Gm-Gg: ATEYQzz7vLHwYmc5la+VbSrEIjubDAuAnXPGe+eyXItYLMgg7yOQRQUd5pibBCXwci9
+	mPNOW/6G0M/HeAbIm2wmcrwk/CgqXkMqADK1LMRX22DKj8bIJ0rRhFCNAKPPCZ+QLjkhE3QRPBT
+	qSYnYLruk8prtmDsKE2D+ICB17W4umQoBJ+3Z+buV67CWlHAHyHVwVurUBzJjJkUHmYg+uS352X
+	tZ9pjZoW8Oao5pi7GcNdo+0rw8nqi+a+qj6vPjigIampa0F+SW6sfrkiGXJ24s1oYM4X7jITgXv
+	+fzI5/Bvq9KvByBYpKQ5sxPdcU10BP/MsojhsuA727MwLK4y1XPCIrZXbDcELaNOjfY=
+X-Received: by 2002:a05:6000:2313:b0:439:b4dc:1e1e with SMTP id
+ ffacd0b85a97d-43a04dbbc58mr9731055f8f.29.1773437237509; Fri, 13 Mar 2026
+ 14:27:17 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
-
-
---=-5ct7ygorhIxza/AlNDgo
+References: <20260306143423.19562-1-john.madieu.xa@bp.renesas.com>
+In-Reply-To: <20260306143423.19562-1-john.madieu.xa@bp.renesas.com>
+From: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Date: Fri, 13 Mar 2026 21:26:51 +0000
+X-Gm-Features: AaiRm53lSqA4pk2gaI4MFbWILgOkrFUHAgNT-jqSkUe6YSU_FdaR66nqQD4N-HY
+Message-ID: <CA+V-a8veHDk_y_eq8CDHXENffpKshvT-XU9SiCYA_fYDf53yfQ@mail.gmail.com>
+Subject: Re: [PATCH v8 00/15] PCI: renesas: Add RZ/G3E PCIe controller support
+To: John Madieu <john.madieu.xa@bp.renesas.com>
+Cc: claudiu.beznea.uj@bp.renesas.com, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, mani@kernel.org, geert+renesas@glider.be, 
+	krzk+dt@kernel.org, robh@kernel.org, bhelgaas@google.com, conor+dt@kernel.org, 
+	magnus.damm@gmail.com, biju.das.jz@bp.renesas.com, linux-pci@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-clk@vger.kernel.org, john.madieu@gmail.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2026-03-13 at 22:00 +0100, Danilo Krummrich wrote:
-> On Fri Mar 13, 2026 at 8:03 PM CET, Markus Probst via B4 Relay wrote:
-> > +impl Command {
-> > +    fn write(self, dev: &platform::Device<Bound>) -> Result {
-> > +        // SAFETY: Since we have no of and no acpi match table, we ass=
-ume this is a mfd sub-device
-> > +        // and our parent is a serial device bus device, bound to the =
-synology microp core driver.
-> > +        let parent =3D unsafe { dev.as_ref().parent_unchecked::<serdev=
-::Device<Bound>>() };
->=20
-> Despite being accurate description, "assume" is not what you want to read=
- for a
-> safety justification. :)
-Apparently this is how all C mfd sub-devices I have seen yet do it. Not
-directly using the parent device, but assuming there is a parent
-device, and accessing the drvdata of that parent device with most of
-the time to little checking.
+Hi John,
 
-Some examples:
+On Fri, Mar 6, 2026 at 2:39=E2=80=AFPM John Madieu
+<john.madieu.xa@bp.renesas.com> wrote:
+>
+> The Renesas RZ/G3E SoC features a PCIe controller that shares similaritie=
+s with
+> the existing RZ/G3S PCIe controller, but with several key differences.
+> This series adds support for the RZ/G3E PCIe controller by extending the =
+existing
+> RZ/G3S driver and device tree bindings.
+>
+> Key differences between RZ/G3E and RZ/G3S PCIe controllers:
+>
+> Link Speed Support:
+>  - RZ/G3E: Supports PCIe Gen3 (8.0 GT/s) alongside Gen2 (5.0 GT/s)
+>  - RZ/G3S: Supports PCIe Gen2 (5.0 GT/s) only
+>
+> Reset Control:
+>  - RZ/G3E: Uses register-based reset control mechanism
+>  - RZ/G3S: Uses exclusively external reset control signals
+>
+> Inbound Window Configuration:
+>  - RZ/G3E: Requires precise power-of-2 window coverage with strict addres=
+s
+>    alignment constraints. Non-power-of-2 memory regions must be split int=
+o
+>    multiple windows to avoid over-mapping, ensuring proper hardware addre=
+ss
+>    decoding for DMA operations.
+>  - RZ/G3S: Uses a simpler approach that rounds up to the next power-of-2,
+>    creating single larger windows. The hardware tolerates over-mapped reg=
+ions.
+>
+> Class/Revision IDs:
+>  - RZ/G3E: Requires explicit setting of class/revision values
+>  - RZ/G3S: Has default values in hardware
+>
+> Clock Naming:
+>  - RZ/G3E: Uses "clkpmu" clock for power management
+>  - RZ/G3S: Uses "clkl1pm" PM control clock while CLKREQ_B is deasserting
+>
+> Phy Settings:
+>  - RZ/G3E: Does not need PHY settings as it works with default hw values
+>  - RZ/G3S: Requires explicit PHY settings
+>
+> This series extends the existing driver to detect the SoC type from the d=
+evice
+> tree compatible string and configure the controller appropriately. The up=
+dates
+> are minimal and focused on the hardware-specific differences while keepin=
+g the
+> common code paths unified.
+>
+> Changes:
+>
+> v8:
+>  - Collected additional Rb tags on remaining code patches
+>  - Fixed typos in patch descriptions
+>  - Fixed checkpatch warnings
+>
+> v7:
+>  - Removed former patch [04/16] adding support for init[off|asserted] clo=
+cks
+>    and resets as these steps are not required anymore
+>  - Renamed RZG3E_PCI_RESET* register defines to RZG3S_PCI_RESET* for
+>    consistency, as upcoming SoCs (RZ/V2H, RZ/T2N, RZ/N2H) share these
+>    registers
+>  - Dropped some useless comments and reduced verbose descriptions to
+>    concise forms
+>  - Unified function naming: rzg3s_pcie_config_{post_init,deinit}() and
+>    rzg3e_pcie_config_{pre_init,post_init,deinit}()
+>  - Used local mask variables in rzg3e_pcie_config_{pre_init,post_init}()
+>    for compactness within 80-char line limit
+>  - Fixed resume_noirq: reordered MODE before RST_RSM_B to match probe
+>    sequence, fixing error path handling
+>  - Fixed checkpatch commit message line length warnings
+>
+> v6:
+>  - Replaced rzg3s_sysc_config() with enum-based rzg3s_sysc_config_func()
+>    as suggested by Claudiu, dropping the -1 skip pattern
+>  - Introduced enum rzg3s_sysc_func_id and array-based SYSC function
+>    descriptors in patch 08
+>  - Used regmap_update_bits() consistently for all SYSC accesses
+>  - Fixed config_reinit error path in suspend_noirq: call config_pre_init
+>    before config_post_init as spotted by Claudiu
+>  - Fixed double config_deinit in rzg3s_pcie_host_init() error path by
+>    separating config_deinit_post into a non-fall-through path
+>  - Shortened comments as per Claudiu's suggestions
+>  - Reordered patchset, moving v5's patch 09/16 to 02/16 and added Fixes t=
+ag
+>
+> v5:
+>  - Introduced new patch to reorder reset handling
+>  - Introduced rzg3s_sysc_config() helper to handle SYS config
+>  - Collected Tags on documentation
+>
+> v4:
+>  - Collected Ab tag
+>  - Fixed binding clock name constraint
+>
+> v3:
+>  - Removed extra MaxItems in binding causing warnings
+>  - Fix potential crash for non-initialized rcdev in CPG driver
+>  - Fix binding contraints replacing 'description' with 'const' as per
+>    Geert and Rob's comment
+>
+> v2:
+>  - Address Bjorn typo comments
+>  - Address Claidiu's comment on stylish
+>  - Use single inbound-window-configuration function for both G3E/G3S
+>  - Refactor goto laballing as per Claudiu's comments
+>  - Update bindings and reused G3S's interrupt ordering
+>    * This involves reordering interrupts in dt
+>  - Remove Board-specific PCIe dma-range.
+>
+>
+> John Madieu (15):
+>   PCI: rzg3s-host: Fix reset handling in probe error path
+>   PCI: rzg3s-host: Reorder reset assertion during suspend
+>   PCI: rzg3s-host: Rework inbound window algorithm for multi-SoC support
+>   clk: renesas: r9a09g047: Add PCIe clocks and reset
+>   dt-bindings: PCI: renesas,r9a08g045s33-pcie: Fix naming properties
+>   dt-bindings: PCI: renesas,r9a08g045s33-pcie: Document RZ/G3E SoC
+>   PCI: rzg3s-host: Make SYSC register offsets SoC-specific
+>   PCI: rzg3s-host: Make configuration reset lines optional
+>   PCI: rzg3s-host: Add SoC-specific configuration and initialization
+>     callbacks
+>   PCI: rzg3s-host: Explicitly set class code for RZ/G3E compatibility
+>   PCI: rzg3s-host: Add PCIe Gen3 (8.0 GT/s) link speed support
+>   PCI: rzg3s-host: Add support for RZ/G3E PCIe controller
+>   arm64: dts: renesas: r9a09g047: Add PCIe node
+>   arm64: dts: renesas: r9a09g047e57-smarc-som: Add PCIe reference clock
+>   arm64: dts: renesas: r9a09g047e57-smarc: Enable PCIe
+>
+Thank you for the patches, Ive tested them on RZ/V2N EVK where PCIe IP
+is identical to RZ/G3E.
 
-drivers/leds/leds-lm3533.c:
-- assuming there is a parent device
-- assuming the drvdata of the parent device has the type `lm3533_led`
-- It does check however if drvdata is set.
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com> # RZ/V2N=
+ EVK
 
-drivers/leds/leds-upboard.c:
-- assuming there is a parent device
-- assuming drvdata of the parent device is set
-- assuming drvdata of the parent device has the type `upboard_fpga`
+Cheers,
+Prabhakar
 
->=20
-> We don't want to directly access the serial device from this driver. Inst=
-ead,
-> there should be an abstraction layer of the resource you are accessing.
->=20
-> If this would be I2C or SPI you would request the regmap of the parent at=
- this
-> point, e.g.
->=20
-> 	dev.parent().regmap("led_registers")
->=20
-> Now, this is a serial device, but regmap still works perfectly fine for t=
-his
-> case. It even allows you to ensure from the MFD driver to restrict the LE=
-D
-> driver of sending commands that are not LED specific by exposing a LED sp=
-ecific
-> regmap. Additionally, if you need additional locking etc. it can all be d=
-one
-> within the regmap implementation, so you entirely avoid custom APIs.
->=20
-> I'm not sure how common regmap is for serial devices to be honest, but
-> apparently there are drivers doing this and I don't really see a reason a=
-gainst
-> it.
->=20
-> For instance, there is drivers/iio/imu/bno055/, which is a chip that work=
-s on
-> both serial and I2C busses and fully abstracts this fact with regmap.
->=20
-> In Rust a regmap will probably become a backend of the generic I/O
-> infrastructure we are working on, which will also allow you to use the
-> register!() infrastructure, etc.
->=20
-> register!() and some other generic I/O improvements will land this cycle,=
- I/O
-> projections are more likely to land next cycle.
->=20
-> > +        parent.write_all(
-> > +            match self {
-> > +                Self::Power(State::On) =3D> &[0x34],
-> > +                Self::Power(State::Blink) =3D> &[0x35],
-> > +                Self::Power(State::Off) =3D> &[0x36],
-> > +
-> > +                Self::Status(_, State::Off) =3D> &[0x37],
-> > +                Self::Status(StatusLedColor::Green, State::On) =3D> &[=
-0x38],
-> > +                Self::Status(StatusLedColor::Green, State::Blink) =3D>=
- &[0x39],
-> > +                Self::Status(StatusLedColor::Orange, State::On) =3D> &=
-[0x3A],
-> > +                Self::Status(StatusLedColor::Orange, State::Blink) =3D=
-> &[0x3B],
-> > +
-> > +                Self::Alert(State::On) =3D> &[0x4C, 0x41, 0x31],
-> > +                Self::Alert(State::Blink) =3D> &[0x4C, 0x41, 0x32],
-> > +                Self::Alert(State::Off) =3D> &[0x4C, 0x41, 0x33],
-> > +
-> > +                Self::Usb(State::On) =3D> &[0x40],
-> > +                Self::Usb(State::Blink) =3D> &[0x41],
-> > +                Self::Usb(State::Off) =3D> &[0x42],
-> > +            },
-> > +            serdev::Timeout::Max,
-> > +        )?;
-> > +        Ok(())
-> > +    }
-> > +}
-
-But this looks like a better solution (the same would probably apply to
-the existing C drivers).
-
-Thanks
-- Markus Probst
-
---=-5ct7ygorhIxza/AlNDgo
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAmm0fS0bFIAAAAAABAAO
-bWFudTIsMi41KzEuMTEsMiwyAAoJEDR2H/jnrUPStiQQAIlgVAoXwNxlG8EJ5RWH
-Pnedd9MNqrzEIod+exeQyGM8bmTdt+Eg4qp8fjjpyzZjeyhAQUWC23nqwCj3IVxb
-xwPfSt6WX9XozjUwQgmou4oaI5L39IFZwZyYwU4fdAQOg6abI1rClip7W2LNq+RW
-7UucoAZmMgp5dQb9GUnTwETPWRlfSbv2cvylX1HU4hJmeojpTuDKoSmKiCRm/dvZ
-KySk0I4dTOuKE7Wp1prfq1F4q02AfodS2xLLWzCjiLjUKL2xkUzD74i0odlG3c9e
-P3lyIV4D0XU5fC1IzEopGosY5jrDGF3SXTUQDaIOZGfsePjCrBC4XwvUK2khcaHi
-yja17O7ePiQUo137s5bk7//6CuCqXrTbPutJpbEH2bW1XyHu7ytfT9BrTgDMrGDl
-znsVWfz5W2qxEiXM//envyqYjWvgJpYml37SBQZgwggACDO3fmQgJVKbtY1FRPta
-LGAXlH1T19xlwVHT6feZsmiZ0wgnjCp3GuJhjUyQPYeWrpSwiQ3DyZttnPq+XfQU
-Ys7MkksUA2o2ZGmO+8F4ItSp/J/wTzv3LEtkV/roWh8grhQGLlhZLm74aqrg4bbb
-gfGIZxfnd+aTPqhP7P2Jq1qL2SfJfbT3bmA+vO6mfn1znsytfbaPqzGnJi1U5OSI
-K43XsglexPpzCQ8pSW9xqpux
-=hU9n
------END PGP SIGNATURE-----
-
---=-5ct7ygorhIxza/AlNDgo--
+>  .../bindings/pci/renesas,r9a08g045-pcie.yaml  | 121 ++++--
+>  arch/arm64/boot/dts/renesas/r9a09g047.dtsi    |  69 ++++
+>  .../boot/dts/renesas/r9a09g047e57-smarc.dts   |  16 +
+>  .../boot/dts/renesas/renesas-smarc2.dtsi      |   4 +
+>  .../boot/dts/renesas/rzg3e-smarc-som.dtsi     |  11 +
+>  drivers/clk/renesas/r9a09g047-cpg.c           |   5 +
+>  drivers/pci/controller/pcie-rzg3s-host.c      | 362 ++++++++++++++----
+>  7 files changed, 478 insertions(+), 110 deletions(-)
+>
+> --
+> 2.25.1
+>
+>
