@@ -1,144 +1,224 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021139.outbound.protection.outlook.com [52.101.125.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E087D38656A;
-	Fri, 13 Mar 2026 08:46:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773391573; cv=none; b=mjZpcwK9KQ+4owqVeE8RfNcKdJuPjiHgdjgXTvnvc5n2Rhaj8UwW3AWxDpNeh6ZFo1lx2t6Fz32wke0l43vrkAi19ab4mZzOVbEwxL6aIGdymqOMb71UcZbhYTnDutOmcHumXS8hrUcmLAzFd/P6Hv0ttdx79yV/NV6mJinXBdA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773391573; c=relaxed/simple;
-	bh=AQYfhlnHFULcRCyiTFUzyCX+jLY+c1nvHHWu6znymH4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=hRFaX5c45iSF9ZZBJ+urxDLsTH9qRKniVPwzQkwPoYYX/zQAIDV//bqmCXZKQLKJ3u6Dz8woDlYyguS066+/5rLx40RgXvzoxeEdYYEZkESVkSbnYBS9BX8EGNP0TE9cXsHOgIguiSSbT5i9T2Rit0uYRk1WzGkVr+XBK9jes50=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OL0i9KAG; arc=none smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 528D51D555;
+	Fri, 13 Mar 2026 08:51:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.125.139
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773391885; cv=fail; b=jWXzVPEX0no7e5JriqI/dFZNTztnOggHUcV8cb4LI1nGxYGVy0rDq8ogdebRxPhv8D2uE3tlTF9oXPE4AqnjjyAMzf/mLqhAu9qu3kr493JsNH1fr7x+ioTNF9aun/srSX+F8susvCPEZ4lgcTgPvgQ72vJxW3QIDiJf4PSP9KQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773391885; c=relaxed/simple;
+	bh=Y9Ut85F98EEDq+KUocUgmtmiPh947LiNR8k2BTNIlWY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=fzIFUQ1eoosYVF/+SsxyWPSQXDFs4S7pSlPHJniDXaMqgQBfzbextg2n9ZwDlnVUcTbBnxIVuwnoHqL0vlbP8VqW+vKq/tGfisdKiK45CHgKDf5mwtLb4YiFw5SJ1rwQcavgkkXayXLgZVtZqLnC68Sk/REAXvV93pA4Yn46cok=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=JHkabu9x; arc=fail smtp.client-ip=52.101.125.139
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OL0i9KAG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773391569; x=1804927569;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=AQYfhlnHFULcRCyiTFUzyCX+jLY+c1nvHHWu6znymH4=;
-  b=OL0i9KAGlj74WFSLJM/JhvKQc7VMNJKIIv3KBF8PVf2mRp8N6+5IMnME
-   Tj3wBiJfsrNwDg4YmkCcyJ+J8FI1gQ48WKkOocvQ1gseY7vCPpVxQ/h3D
-   Pv46DP4yUy8TeVfZ3yY01aPFNEhSdQM09FA/fCULx+Zvs+0GPKLHMxJqw
-   TZdCMDM7nfWcGPcMrR2xSWQgvZrxGLPeVBH/IGfexaRoyrbRW7lac+aV5
-   dBTBGoNAVtt1BuIdV0fDZeIZNsG3hSHnk55tTM2vxS8mnh7mE3UHP1rNC
-   jv1gClkidVbPr62Idj0pdjjvS6prAMwpDtHjFkJjwlDLuQSxlg1IjnGXA
-   A==;
-X-CSE-ConnectionGUID: 6Qd18UtQTDSoM9qF8KnDLQ==
-X-CSE-MsgGUID: sOh5ROvVQkiKh4EBJNC3aA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11727"; a="84813903"
-X-IronPort-AV: E=Sophos;i="6.23,117,1770624000"; 
-   d="scan'208";a="84813903"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Mar 2026 01:46:09 -0700
-X-CSE-ConnectionGUID: yK2NxuZ+TmqKUC//FS8Heg==
-X-CSE-MsgGUID: Lm6pvK6nQ+eCqR8u2PB/uA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,117,1770624000"; 
-   d="scan'208";a="259007233"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.238])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Mar 2026 01:46:04 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Peter Nisbet <peter.nisbet@intel.com>
-Subject: [PATCH 1/1] PCI: Fix premature removal from realloc_head list
-Date: Fri, 13 Mar 2026 10:45:50 +0200
-Message-Id: <20260313084551.1934-1-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.39.5
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="JHkabu9x"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Kh3BCmdiXCcVyYmtQ5f3JtU5/oIjTyy7LZ+/GAU28BimoTgGwkvXZrs5hQiv9uPfRlQbpZJKsH+lPohIjA6PUTcmAj6tuZUaZqjD8c3sTWmXd7n+H50tq4GfvJQsAGPIUz5KbvSxSpjd+eZAYlunnZBcEzR7UPAaV9GNxSbyH+h58qHUUYMTaJtbZdiyIJrPKBFKGwTynarWO8uAV0nAnPmU6wXa/ECllZdA9Cn0fyOWRF65N8EofauvI6Njc/S1aCke9nSB7azS+HhZCkvxLQpRlifFfr1C00J5EEDBLJ2PY1E3fFuxgC9ERobm9dvBKeROe3oMhNGjxiZFETj4hw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=PbV7LYszR+MfSQGsIg3Yi/MnzzI/1XAe0uT5fGY6eC8=;
+ b=ncNDRMzhx3aXVChMhCW5ZFBi2OjTo4Yp0VoH5LR4cf+InHJPIciVtR48oKWOM5aTq4/UTDB1G6tYTUZ/43sMUdotsNbvrNw5f7VzNazlesav32adWgbd1rF06ZrDTQMv12CTjnQBIccmphGW/FPnBxGxYW+qRyUMrvTvvCJvj45dhJi7HhUjxBpoOnAIP+Qiy5MYh7UiaC9XduqFBgz/apHu6oopf4+hNNmrIgTk58VHV9VEScSyYYWZgG4sd3YN3z8cKLRGEOCEFQ2g8VQXiHCBXizd7fwpcENENkgkEgcCsELCjW3SDQr/QEycD4+tVXNcYK2ChuCvVJgx6NlC7g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PbV7LYszR+MfSQGsIg3Yi/MnzzI/1XAe0uT5fGY6eC8=;
+ b=JHkabu9xE3X1XPTpv9DVlkZwwXRs2ZlJAQGd9hLhP5CCaxwqTUZgoJxRKuMpsgNbI8V24xJQvLe3fkHaGH5qol+d+7MFTJdu5gICW74k173yUtxCNdRGKFk6xw1k1cWLqCdvhK4urRU1ezzPeYCzbFfKLfjLNzJdrUEEb9PlnOg=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by OS3P286MB2181.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:196::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.12; Fri, 13 Mar
+ 2026 08:51:19 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9700.013; Fri, 13 Mar 2026
+ 08:51:19 +0000
+Date: Fri, 13 Mar 2026 17:51:18 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Frank Li <Frank.li@nxp.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>, 
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>, 
+	Allen Hubbe <allenbh@gmail.com>, Jingoo Han <jingoohan1@gmail.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Rob Herring <robh@kernel.org>, Baruch Siach <baruch@tkos.co.il>, 
+	Jerome Brunet <jbrunet@baylibre.com>, Niklas Cassel <cassel@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org, 
+	ntb@lists.linux.dev
+Subject: Re: [PATCH 01/15] dmaengine: dw-edma: Cache DMA channel IDs in
+ dw_edma_chip
+Message-ID: <lrrh43qyixskxsbjnl5v4252zcqnbqsngvdfmj62eyjdhmen64@pjdypxohap6m>
+References: <20260312165005.1148676-1-den@valinux.co.jp>
+ <20260312165005.1148676-2-den@valinux.co.jp>
+ <abMcgQOHDD55Yv0e@lizhi-Precision-Tower-5810>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <abMcgQOHDD55Yv0e@lizhi-Precision-Tower-5810>
+X-ClientProxiedBy: TYCP286CA0089.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:2b3::16) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|OS3P286MB2181:EE_
+X-MS-Office365-Filtering-Correlation-Id: e37826d4-82c1-45b9-af16-08de80ddb191
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|366016|376014|1800799024|7416014|18002099003|22082099003|56012099003;
+X-Microsoft-Antispam-Message-Info:
+	VAAEs5WNJ/5erlBtdBknMUOYxqW4Qcv4VEOUBHoS7Byqd2gpydLOIYhD/q9uaWOtwhlwOqGKKmIab7Bi1W1Yz5bZ9mBHTv1a+55gI6SX3ZX6nwkgtkL6uliYZhYrQrrniJS55YAzZy8Dera34jCfuaM+O4yg2F0JilWlxgGg6a4HpsQo4tzo7AwrG+r4VizmLx6Rrsd45k/Tpy+2U9XvKllkpcy8cU/IeEF9yLwf69RR9C2s1dlWrOJ3kjKuXegXS9uiCfUfqbqF4pJ7/AmsqgXJ/YNUG+1nHdaBjPyzg3cwiebw076RGP5cVxxm3zArJSxjyFcGnr6AvKcIP67Jh1VlMoBIzEJmYN2Pr75kPddgP7IYLgBMNlUmw7hIjVp0QGPCIyVw8A2NRyoapUoesO6wY0O2oa9lfnF3PuPkCClg8xuv9rWWR0iH031az8ZqgP+EgtwoqlpgivQDz0CvoLr37kF/xPQL1MtGQTzmo2hrrRNXkJBx4p+fkcTzYhnZ87ssuE9cTOObSLdw/zYL3F7TTPtjbXOeV5LQVGXh5RlAGEb4PoS0RAeq/p5HZnTcChH4dyGQKSWEGul1PYzXDW1H2lCDH5RKey0b3CyoWRmWqWniRJ5Kig1Xfmns4+iavjpFQUxkY4wb/h4XZJPdKoT/nN3VMD93bDr1/DyNYE7EADj9jWW1gNCKzjcTqBEvJyZtGvKB3jUksIsI2DQCkjb19d3Hvnr9WWrJgSTDZ8s=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(366016)(376014)(1800799024)(7416014)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?JtLjtbrmGgc/nrKpDl28mZAJU6jPUHGWMjDPOcnZHyKHqJ08r/L/dwjy7M0O?=
+ =?us-ascii?Q?xZXtDQ+b70qbKqKELPoMaOkcLnl8evSY/36WLoUrqaw7aebtBsbv2wDzmW6x?=
+ =?us-ascii?Q?VMHPvgbfDNg5s6SnWifcpOxsEsaZrpBvNl1qbccF0fwgmFcK8G9udf/fxlFz?=
+ =?us-ascii?Q?HFzvUcGUa3vjdiRaF2U733i2AYjVtmF6RRlmh4N6pF2ZikUAQLI8hpUU2aLh?=
+ =?us-ascii?Q?RVKhOEZLz82Ro6vJSdxhF3a9K3jV5mixfiWvLxJAS7cpXfyajAWLQLvtdwA0?=
+ =?us-ascii?Q?UVbuOa+P4UggWlEiwM+JUa+7MfI09IiBKU0s6QYWTlSIq6+kZgwp5aji3fkY?=
+ =?us-ascii?Q?anpk4+8hD++pas5CbvSKMtLrD9YI4j7GaQBw01LhfMfrvb2l5wcYKEhS6Wi1?=
+ =?us-ascii?Q?lmBIZNhY1ykSHsToQ6ZrKk1m0VqQzh5oCEjEpprIePwJUyRhXWIIUN90og+k?=
+ =?us-ascii?Q?PrDVgcniI0g3B/X1tjbSAVDOg5j2Ogdcs1MMYLEMYh3kMcINjGlW9XwEhhrK?=
+ =?us-ascii?Q?MalvrGkUqDP/Sacb7j3EqtDiHbi1cwxaRKdzxfiwmJPexILteIw3Ry6wgbX4?=
+ =?us-ascii?Q?eDCnBvGIAjKv1TV/CAS56tz8GuT+pR66HoE2GfBBjF8cbvNhJv0+jj0ygMYA?=
+ =?us-ascii?Q?uZbiUG/AtykqG/bxsrS6J5NQcOmrdBBv3Zm4ZUrv1eRpgIvaARTZf1jTYX7Z?=
+ =?us-ascii?Q?2769WQj/wTX8PrGsiQY2wXbrSauaY5Jn+JGDxupGEZcA03LzeO5e82BGtvj+?=
+ =?us-ascii?Q?Rc8N4J3HIBp5FALBCenSvshYdvrNrhmX+MIYxe8tlEnOplTobwaY6vzKmwlL?=
+ =?us-ascii?Q?E6BeYmYzHxi794GGpxxrto5KEpBglHV21M3hoVT1eL/Z0kZssllGvOLnEpIa?=
+ =?us-ascii?Q?uWz+6NP7Sm7CfaK2c5aZvB6dwWvrnhYL5znxqfVFEcjtAkrxlxYijo9fvmaf?=
+ =?us-ascii?Q?3o1ubN1JNlep/30zjERF1xZo4jZa6bzEg4W/3wBuZn6HwL8sU28FaBg539LH?=
+ =?us-ascii?Q?UBblX7ToyIdFlyUqiFV58NyG1wg623EKr2YvLh66LxP2f2Onr2AZZPW6X5kn?=
+ =?us-ascii?Q?dpzl6qumOSoKvg+LP6gY/BEEoG3FJgJVOtJL+geFINwHfhJShmLIgg8xrJ9f?=
+ =?us-ascii?Q?Q4q+XzmtviGOBRZNtu0tE7gWqKSGzlKo+9QaUdK0ynbsHR9/IS687/AAIy8s?=
+ =?us-ascii?Q?VNcX+3GFKAuHELYaixcDVn8uvx7FioZvlK9F0vC4JakU54lHjmnXOyxuR3px?=
+ =?us-ascii?Q?zpEKMzqTzelK4it0O6EL8u2txnk5rlLrlRhXUfNuHX3dF494qRW3a0ZLy9re?=
+ =?us-ascii?Q?L//3ns6/65/uKwlO+GPDOlUleGV7h2qyjXFCn/LLJ6lELtW4aksXkkGlweCe?=
+ =?us-ascii?Q?ED1YfGdiFgUY1UqQE2a7IMDy6EFI/2bIzYT4SD3JxAoMd9IVMPMiKYr7BunC?=
+ =?us-ascii?Q?h3mlwGHt4cltSd+hmH5rgl6Vkio8+pK+RAt2Q019itiq6NdgivY2frPFIrWi?=
+ =?us-ascii?Q?dH8E8+1L7aJN6vd/orXhQeQ9I1HUCM+ThaLtGRYgCovlUcz+ihsoH18nQua0?=
+ =?us-ascii?Q?A4a+AaRx+NQdLyqqWoM/gk78OU6nRSYwGh6s4CyArNd4bPcZQ1MoIT6Se/EH?=
+ =?us-ascii?Q?AB8v8vYLleqlPb+cc3yAdOdE/kCV+k8hYmfvgMR6GNkRe0P7CjfnWMAyNvpb?=
+ =?us-ascii?Q?u/kezYUON2lfufWOnZ8anYSp+e7C8jvRQrMGT/tchpMWWYLTDj1uOtx50NxP?=
+ =?us-ascii?Q?p1Nnz34zxHFzwshzXnHO4XOLNook1IYFv8gYpNg0r9uD6/Qopyfx?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: e37826d4-82c1-45b9-af16-08de80ddb191
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Mar 2026 08:51:18.9656
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: /9GxXC6M+jY554quQYlEQzVq8SDv7MnXKF3La3DqLVqrTbH79u/bU941JdkAelm+WsbuUnWudYAvuc69AU9IQg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS3P286MB2181
 
-reassign_resources_sorted() checks for two things:
+On Thu, Mar 12, 2026 at 04:05:21PM -0400, Frank Li wrote:
+> On Fri, Mar 13, 2026 at 01:49:51AM +0900, Koichiro Den wrote:
+> > The exported-DMA path needs to describe each exposed descriptor window
+> > with the DMAEngine channel ID that owns it. Those IDs are only assigned
+> > once the channels have been registered.
+> >
+> > Cache the dma_chan IDs in dw_edma_chip after registration so controller
+> > frontends can later publish them as auxiliary-resource metadata without
+> > reaching back into the live channel objects.
+> >
+> > Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> > ---
+> >  drivers/dma/dw-edma/dw-edma-core.c | 18 +++++++++++++++++-
+> >  include/linux/dma/edma.h           |  4 ++++
+> >  2 files changed, 21 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> > index cd34a3ea602d..a13beacce2e7 100644
+> > --- a/drivers/dma/dw-edma/dw-edma-core.c
+> > +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> > @@ -837,6 +837,7 @@ static int dw_edma_channel_setup(struct dw_edma *dw, u32 wr_alloc, u32 rd_alloc)
+> >  	struct dma_device *dma;
+> >  	u32 i, ch_cnt;
+> >  	u32 pos;
+> > +	int ret;
+> >
+> >  	ch_cnt = dw->wr_ch_cnt + dw->rd_ch_cnt;
+> >  	dma = &dw->dma;
+> > @@ -932,7 +933,22 @@ static int dw_edma_channel_setup(struct dw_edma *dw, u32 wr_alloc, u32 rd_alloc)
+> >  	dma_set_max_seg_size(dma->dev, U32_MAX);
+> >
+> >  	/* Register DMA device */
+> > -	return dma_async_device_register(dma);
+> > +	ret = dma_async_device_register(dma);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	/* Cache dma_chan.id in dw_edma_chip */
+> > +	for (i = 0; i < ch_cnt; i++) {
+> > +		chan = &dw->chan[i];
+> > +
+> > +		if (i < dw->wr_ch_cnt)
+> > +			chip->chan_ids_wr[i] = chan->vc.chan.chan_id;
+> > +		else
+> > +			chip->chan_ids_rd[i - dw->wr_ch_cnt] =
+> > +						chan->vc.chan.chan_id;
+> > +	}
+> 
+> why need cache in dw_edma_chip? you's cache into chan.
 
-a) Resource assignment failures for mandatory resources by checking if
-   the resource remains unassigned, which are known to always repeat,
-   and does not attempt to assign them again.
+The reason I cached dma_chan::chan_id in dw_edma_chip is that
+dw_pcie_ep_get_aux_resources() later needs to populate
+PCI_EPC_AUX_DMA_CHAN_DESC with a key that can be matched against the struct
+dma_chan instances returned by repeated dma_request_channel().
 
-b) That resource is not among the ones being processed/assigned at this
-   stage, leading to skip processing such resources in
-   reassign_resources_sorted() as well (resource assignment progresses
-   one PCI hierarchy level at a time).
+The delegated set returned by repeated dma_request_channel() is not
+guaranteed to correspond to the first N READ channels, since some READ
+channels may already be in use by another local consumer. So I do need some
+explicit matching key.
 
-The problem here is that a) is checked before b) but b) also implies
-the resources is not being assigned yet, making also a) true. As a)
-only skips resource assignment but still removes the resource from
-realloc_head, the later stages that would need to process the
-information in realloc_head cannot obtain the optional size information
-anymore. This leads to considering only non-optional part for bridge
-windows deeper in the PCI hierarchy.
+If you have a cleaner way to correlate a delegated struct dma_chan with the
+corresponding pci_epc_aux_resource, I would be happy to rework it.
 
-This problem has been observed during rescan (add_size is not
-considered while attempting assignment for 0000:e2:00.0 indicating the
-corresponding entry was removed from realloc_head while processing
-resource assignments for 0000:e1):
+(More fundamentally, for sparse channels export I think we will eventually
+need to carry the hardware channel number separately as well.)
 
-pci_bus 0000:e1: scanning bus
-...
-pci 0000:e3:01.0: bridge window [mem 0x800000000-0x1000ffffff 64bit pref] to [bus e4] add_size 60c000000 add_align 800000000
-pci 0000:e3:01.0: bridge window [mem 0x00100000-0x000fffff] to [bus e4] add_size 200000 add_align 200000
-pci 0000:e3:02.0: disabling bridge window [mem 0x00000000-0x000fffff 64bit pref] to [bus e5] (unused)
-pci 0000:e2:00.0: bridge window [mem 0x800000000-0x1000ffffff 64bit pref] to [bus e3-e5] add_size 60c000000 add_align 800000000
-pci 0000:e2:00.0: bridge window [mem 0x00100000-0x001fffff] to [bus e3-e5] add_size 200000 add_align 200000
-pcieport 0000:e1:02.0: bridge window [io  size 0x2000]: can't assign; no space
-pcieport 0000:e1:02.0: bridge window [io  size 0x2000]: failed to assign
-pcieport 0000:e1:02.0: bridge window [io  0x1000-0x2fff]: resource restored
-pcieport 0000:e1:02.0: bridge window [io  0x1000-0x2fff]: resource restored
-pcieport 0000:e1:02.0: bridge window [io  size 0x2000]: can't assign; no space
-pcieport 0000:e1:02.0: bridge window [io  size 0x2000]: failed to assign
-pci 0000:e2:00.0: bridge window [mem 0x28f000000000-0x28f800ffffff 64bit pref]: assigned
+Thanks,
+Koichiro
 
-Fixes: 96336ec70264 ("PCI: Perform reset_resource() and build fail list in sync")
-Reported-by: Peter Nisbet <peter.nisbet@intel.com>
-Tested-by: Peter Nisbet <peter.nisbet@intel.com>
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
----
-
-There's no publically available report on this, thus no Link/Closes tags.
-
- drivers/pci/setup-bus.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 61f769aaa2f6..b0b00f10e31c 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -434,6 +434,10 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- 		dev = add_res->dev;
- 		idx = pci_resource_num(dev, res);
- 
-+		/* Skip this resource if not found in head list */
-+		if (!res_to_dev_res(head, res))
-+			continue;
-+
- 		/*
- 		 * Skip resource that failed the earlier assignment and is
- 		 * not optional as it would just fail again.
-@@ -442,10 +446,6 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- 		    !pci_resource_is_optional(dev, idx))
- 			goto out;
- 
--		/* Skip this resource if not found in head list */
--		if (!res_to_dev_res(head, res))
--			continue;
--
- 		res_name = pci_resource_name(dev, idx);
- 		add_size = add_res->add_size;
- 		align = add_res->min_align;
-
-base-commit: 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f
--- 
-2.39.5
-
+> 
+> Frank
+> > +
+> > +	return 0;
+> >  }
+> >
+> >  static inline void dw_edma_dec_irq_alloc(int *nr_irqs, u32 *alloc, u16 cnt)
+> > diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
+> > index 9da53c75e49b..0b861e8d305e 100644
+> > --- a/include/linux/dma/edma.h
+> > +++ b/include/linux/dma/edma.h
+> > @@ -100,6 +100,10 @@ struct dw_edma_chip {
+> >  	int			db_irq;
+> >  	resource_size_t		db_offset;
+> >
+> > +	/* dma_chan ids */
+> > +	int			chan_ids_wr[EDMA_MAX_WR_CH];
+> > +	int			chan_ids_rd[EDMA_MAX_RD_CH];
+> > +
+> >  	enum dw_edma_map_format	mf;
+> >
+> >  	struct dw_edma		*dw;
+> > --
+> > 2.51.0
+> >
