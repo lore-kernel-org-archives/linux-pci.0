@@ -1,127 +1,149 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DEC23DEADB
-	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 18:57:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3ABD3DFC86;
+	Fri, 13 Mar 2026 19:03:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773428259; cv=none; b=HO6ciFviWUtAaVgzpR/jJgF5O9ch7H5FtfKw87kU9NeS2+Ml5bvjs3Pcb//qOUFAtTz3uTaiMH4Wxa8+gxb/nV6+QaTPxr+BhRvWaSbZjNskYvoBqT5WpWoIzvRvyrSFI0E4xqqBJdd/Jqd9LVZy4mKNaLL/upFre4itX6ZvcDU=
+	t=1773428608; cv=none; b=SC5urzWvENNY2xFXb9fNGEmmQp0K67zncLUzMgjFPz46dRJQ3z33aPjdmVS6qGO+47VE8BxgW4JtLOhG1mEbz76VBpAR9HlXaSkwrJt1Tn6bShW6Tiu8V/B+wU9oHh3Y3+bQzZF6sxEc52n7FEPElVY2XcxEOYiYkDyWP8N6clE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773428259; c=relaxed/simple;
-	bh=34m2T8zjB+u4MLGHeKznxeFD6ttVQwhK+4XwYx0EGyM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=YYjgOrpOz+hRG38cgGI0zgKbLa7KIzPuLv+q5fnbgm7e6DIQIC2Z26N5QJPnl52eUWoZ1Tpe2eNC/XNslS5219qjZ+/MVC490tss3l9ZMsTTP9ZXhVTSx1MmzlV1jg4O+CM3yVVRn8f5+bgr8fP3OwN721TTKp+uCSn4HiSm8Nw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qm2dlo+f; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773428608; c=relaxed/simple;
+	bh=GGL+Ge1RluZCju5B3hATUukSaxdXBcAlUPKwu9Gx+8E=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=PfE6kDMNmIMyzxQWQTTI1LHONpc0QXs59mNpc6s8TeNXbbH3dPn+wsCQrRj/4SnMPQ15LLKLGSQk0Bm3PRCvfHF3bKEiKYzCf/0LEmzp6YyNbKrlbp/k3Fv4uAUNIqb/cRnhmjmCuT2krx0LVhTWcS7UU2mjvQIRVWvEBDgtV3A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ml8zml+G; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qm2dlo+f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0479CC19424
-	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 18:57:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ml8zml+G"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2DD38C19425;
+	Fri, 13 Mar 2026 19:03:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773428259;
-	bh=34m2T8zjB+u4MLGHeKznxeFD6ttVQwhK+4XwYx0EGyM=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=qm2dlo+fBapnSg37oXr63vJhpeX7UtmcLGwzmE4FZ8iaaL7nLqRsc5zqRVsU/St9v
-	 B3ltfdJEqM/EdZ6jDkan+KcUKAIF7icbF9ftnurPONFOZUumcQRlw7vIXxN419qTgZ
-	 HuUOh5abZBFDnyT7j8teuo+EPei8Br4i2SG9kQoPg/FZe6vAkzqlJ5FJndsYgzwFt4
-	 zfKw9WyvjgcbFv3HLErt8ASd8ES0WH48YiW0bCEW4J0GmzfWA85B9K6tmZ+QT/0TDu
-	 Yv2zXjMDMc0YocnwRC2JnuZA6nQDJysI5QGbsbRMhat/BaQQLODeY4npBwTYKf5Sjg
-	 olprJvVyoQDNw==
-Received: by mail-ot1-f48.google.com with SMTP id 46e09a7af769-7d7447778b9so1308732a34.2
-        for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 11:57:38 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCWdgUAV8Fj4/9Ak5fyxjpPTCqS2gXRHGUUcQlomx2ZTbZAZDt25R9MSXPyhltdiBeJ8r6anScZVwNA=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw9OVbu8zZJVMfsjAy1IUB9JwrxgDn8y3bDExmQg2ugjbSl5Fnx
-	TxAk/IBV1wMx5kcq7JgVsDArTYaEOio7AoKIFvI8FMdn2DpYLDswo3cD0HVZ0Kb7WpghponEplE
-	EuBdXUXg1kBj9zJ+XrX5znnbVAZ/FLpA=
-X-Received: by 2002:a05:6820:c93:b0:67b:bf52:9987 with SMTP id
- 006d021491bc7-67bdaa63959mr2561459eaf.60.1773428257476; Fri, 13 Mar 2026
- 11:57:37 -0700 (PDT)
+	s=k20201202; t=1773428608;
+	bh=GGL+Ge1RluZCju5B3hATUukSaxdXBcAlUPKwu9Gx+8E=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=ml8zml+G6gjTC5/LKMO27/JNzdpp9GdkHBSxF37vNRhgIdu1nz3QdLC6AQtuT6TIg
+	 J/tGcgFpFQiex2DxlpzCv7vVnsgE0EDuVBWqZQ+7C6yUNcBy05rvY6zeqRU0E5m/DV
+	 i66cPvncqpicjoKr1ozD+nupq849OrJNKdu7IyZsOztsHuj9xnisc64YdEC9T85nhI
+	 6bWrjdWpKLLbyJOZr+ecx9XmhedOeHDNTP9PzCzvy+7S74HQtldnF9dG6N4IoQa4so
+	 u0rpa1u1SuQo4+gKv3YBNUYm8nihr/MKFBBxYy/fmIb/uY53+Lq52+gAJPam/5IdoL
+	 lIwk+Raa8GsGA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B520107BCD0;
+	Fri, 13 Mar 2026 19:03:28 +0000 (UTC)
+From: Markus Probst via B4 Relay <devnull+markus.probst.posteo.de@kernel.org>
+Date: Fri, 13 Mar 2026 20:03:05 +0100
+Subject: [PATCH v3 1/7] rust: Add `parent_unchecked` function to `Device`
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260313-synology_microp_initial-v3-0-16941debd8a0@posteo.de> <20260313-synology_microp_initial-v3-3-16941debd8a0@posteo.de>
-In-Reply-To: <20260313-synology_microp_initial-v3-3-16941debd8a0@posteo.de>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 13 Mar 2026 19:57:26 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0hYcSDKid4cbz8ZVZG+vLSHvzPB2UryevEpE15W1w7G3g@mail.gmail.com>
-X-Gm-Features: AaiRm52wIYLXzpbrcPk1yGnN18zABaxFLxVozfWcNMKe7mZAiwm1YS4O-8Hh8h0
-Message-ID: <CAJZ5v0hYcSDKid4cbz8ZVZG+vLSHvzPB2UryevEpE15W1w7G3g@mail.gmail.com>
-Subject: Re: [PATCH v3 3/7] acpi: add acpi_of_match_device_ids
-To: Markus Probst <markus.probst@posteo.de>
-Cc: Lee Jones <lee@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Miguel Ojeda <ojeda@kernel.org>, 
-	Boqun Feng <boqun@kernel.org>, Gary Guo <gary@garyguo.net>, 
-	=?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
-	Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
-	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
-	Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Igor Korotin <igor.korotin.linux@gmail.com>, 
-	Daniel Almeida <daniel.almeida@collabora.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>, 
-	Robert Moore <robert.moore@intel.com>, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org, 
-	driver-core@lists.linux.dev, linux-pci@vger.kernel.org, 
-	linux-leds@vger.kernel.org, linux-acpi@vger.kernel.org, 
-	acpica-devel@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260313-synology_microp_initial-v3-1-ad6ac463a201@posteo.de>
+References: <20260313-synology_microp_initial-v3-0-ad6ac463a201@posteo.de>
+In-Reply-To: <20260313-synology_microp_initial-v3-0-ad6ac463a201@posteo.de>
+To: Lee Jones <lee@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
+ Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+ Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Igor Korotin <igor.korotin.linux@gmail.com>, 
+ Daniel Almeida <daniel.almeida@collabora.com>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>, 
+ Robert Moore <robert.moore@intel.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ rust-for-linux@vger.kernel.org, driver-core@lists.linux.dev, 
+ linux-pci@vger.kernel.org, linux-leds@vger.kernel.org, 
+ linux-acpi@vger.kernel.org, acpica-devel@lists.linux.dev, 
+ Markus Probst <markus.probst@posteo.de>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2195;
+ i=markus.probst@posteo.de; h=from:subject:message-id;
+ bh=HETHM3CRJWMhkQNDAYTp+649XpdPAf3ubTc2qfzj0Cs=;
+ b=owEBiAJ3/ZANAwAIATR2H/jnrUPSAcsmYgBptF9xtg7fm3QCPAN84bfAyXYLoytkYJX0Zk1Hy
+ ocxzpV75O+JAk4EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCabRfcRsUgAAAAAAEAA5t
+ YW51MiwyLjUrMS4xMSwyLDIACgkQNHYf+OetQ9KYOw/3QgAiL7JIEEzv95AJctnhTBiyqFlBvmt
+ 2rYNF7VZNwNIed5G49vPESuPgVmNr8Z/SKmK0QDdCrgbdBcGQ232hAi3TZA5+z50m5hZF9MzUfX
+ FJsJIqKyynUuiiViozr4rBz1j/OfxU+le1/EvUc3IByZmJyPKfBWlQPBo4UKNZXTVeP7bVP1OQC
+ c7UW5Ws0APSe807FqjLTv2H2KyaKod6o/PwtK8xHp3NpCF/3dLcUlL2GNAvk28tw8Sy5dqOTbay
+ 7OAEZsnYWgVyx9IPv4psnSXNA1naehGefhF/YGSd2eptg9XBYex2+rSPWvkdDy9tn4OM0YDX/3b
+ eQFXWugSsZ7H5D32NOVC3b+S6TVFpfiyozUnPWVT5XGnDiY92+FUn5d8flLyF5OfOqXXtVyi7t2
+ zhfHnz4w5VUybSv914BmvPsDhGFJgBp9UiZKXQYY+xLPonzOiWNlGq5daufj3u7tvBI5nGUJCLl
+ 2KAAlo59pXQt3yYBomdV0cGNXb9gWP8T8Aeiu1NC/7KsTImCU+1g88pcyEGCRwRDvDQ1CodcFEy
+ xlt0+ejIXt4gMnZVcdRma/+ybL6zuVQZ6NnTm1OpOsswdHLVU7osmsE8C/XgCoGp1lRd61kzgVm
+ BWSIIESxX4PNUz1zTxKUwcSLLBF/tZtanQoc/8+gnPqAzJOcm7A==
+X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
+ fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
+X-Endpoint-Received: by B4 Relay for markus.probst@posteo.de/default with
+ auth_id=680
+X-Original-From: Markus Probst <markus.probst@posteo.de>
+Reply-To: markus.probst@posteo.de
 
-On Fri, Mar 13, 2026 at 7:48=E2=80=AFPM Markus Probst <markus.probst@posteo=
-.de> wrote:
->
-> Add a function to match acpi devices against of_device_ids. This will be
-> used in the following commit ("mfd: match acpi devices against PRP0001")
-> to match mfd sub-devices against a of compatible string.
+From: Markus Probst <markus.probst@posteo.de>
 
-Not until I can see how this is going to be used.
+This allows mfd sub-devices to access the bus device of their parent.
 
-Maybe never.
+The existing safe `parent` function has been made public for
+consistency.
 
-> Signed-off-by: Markus Probst <markus.probst@posteo.de>
-> ---
->  drivers/acpi/bus.c      | 7 +++++++
->  include/acpi/acpi_bus.h | 2 ++
->  2 files changed, 9 insertions(+)
->
-> diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
-> index f6707325f582..5ddcc56edc87 100644
-> --- a/drivers/acpi/bus.c
-> +++ b/drivers/acpi/bus.c
-> @@ -1044,6 +1044,13 @@ int acpi_match_device_ids(struct acpi_device *devi=
-ce,
->  }
->  EXPORT_SYMBOL(acpi_match_device_ids);
->
-> +int acpi_of_match_device_ids(struct acpi_device *device,
-> +                         const struct of_device_id *ids)
-> +{
-> +       return __acpi_match_device(device, NULL, ids, NULL, NULL) ? 0 : -=
-ENOENT;
-> +}
-> +EXPORT_SYMBOL(acpi_of_match_device_ids);
-> +
->  bool acpi_driver_match_device(struct device *dev,
->                               const struct device_driver *drv)
->  {
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index aad1a95e6863..0081b9e4aaee 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -677,6 +677,8 @@ void acpi_bus_trim(struct acpi_device *start);
->  acpi_status acpi_bus_get_ejd(acpi_handle handle, acpi_handle * ejd);
->  int acpi_match_device_ids(struct acpi_device *device,
->                           const struct acpi_device_id *ids);
-> +int acpi_of_match_device_ids(struct acpi_device *device,
-> +                         const struct of_device_id *ids);
->  void acpi_set_modalias(struct acpi_device *adev, const char *default_id,
->                        char *modalias, size_t len);
->
->
-> --
-> 2.52.0
->
->
+Signed-off-by: Markus Probst <markus.probst@posteo.de>
+---
+ rust/kernel/device.rs | 25 +++++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/rust/kernel/device.rs b/rust/kernel/device.rs
+index 94e0548e7687..a53fb8a388e8 100644
+--- a/rust/kernel/device.rs
++++ b/rust/kernel/device.rs
+@@ -340,8 +340,7 @@ pub(crate) fn as_raw(&self) -> *mut bindings::device {
+     }
+ 
+     /// Returns a reference to the parent device, if any.
+-    #[cfg_attr(not(CONFIG_AUXILIARY_BUS), expect(dead_code))]
+-    pub(crate) fn parent(&self) -> Option<&Device> {
++    pub fn parent(&self) -> Option<&Device> {
+         // SAFETY:
+         // - By the type invariant `self.as_raw()` is always valid.
+         // - The parent device is only ever set at device creation.
+@@ -358,6 +357,28 @@ pub(crate) fn parent(&self) -> Option<&Device> {
+         }
+     }
+ 
++    /// Returns a reference to the parent device as bus device.
++    ///
++    /// # Safety
++    ///
++    /// Callers must ensure that the device has a parent, that is contained in `T`.
++    pub unsafe fn parent_unchecked<T: AsBusDevice<Ctx>>(&self) -> &T {
++        // SAFETY:
++        // - By the type invariant `self.as_raw()` is always valid.
++        // - The parent device is only ever set at device creation.
++        let parent_raw = unsafe { (*self.as_raw()).parent };
++
++        // SAFETY:
++        // - The safety requirements guarantee that the device has a parent, thus `parent_raw`
++        //   must be a pointer to a valid `struct device`.
++        // - `parent_raw` is valid for the lifetime of `self`, since a `struct device` holds a
++        //   reference count of its parent.
++        let parent = unsafe { Device::from_raw(parent_raw) };
++
++        // SAFETY: The safety requirements guarantee that the parent device is contained in `T`.
++        unsafe { T::from_device(parent) }
++    }
++
+     /// Convert a raw C `struct device` pointer to a `&'a Device`.
+     ///
+     /// # Safety
+
+-- 
+2.52.0
+
+
