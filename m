@@ -1,217 +1,199 @@
-Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011005.outbound.protection.outlook.com [52.101.70.5])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AAB02989B5;
-	Fri, 13 Mar 2026 06:48:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.5
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773384494; cv=fail; b=OUJsoNwv5EIdIqfuwHZDV3p5Xlq9EA8DW6Ko+uUfn+nIvC+W1yvzL3zePQmu5xfTFEs4gu5yp1FENce4qFaiqVuemFRCU9aZ34baCnkNbIDvW4naDyOGX7TUc1eQUrxCBspFTE2Zu7wgyHDZtbGGPzM6UbFbeYsSi8rsYDVF1tQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773384494; c=relaxed/simple;
-	bh=TgvKxn0fDRr+riyjNDKEotOCxxqiy3edcVMIE3jIQgU=;
-	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=BjuddjdD8hWFRdMWv05U6UUFqk9gdj5bshvrtp338Tfv6E6EYywqHw0yUrg+AafHVt6UJl9GbMCK5rUFOJC3vpxEKaNSrA9zT4V+uOFHzxupgANVj4Yub1przqMQ2iRMBhUMEXyWdqvS/FImMQY1TZhqovXcGAmyNXn8KrzGvME=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=BfKWCG9Z; arc=fail smtp.client-ip=52.101.70.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95D4133F8B4
+	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 06:49:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773384576; cv=none; b=JKtzpwbka4GR4mnV79PKxOym1pONjkblsKY5q9EvdM4gJ9Xbt0yRQsxjAfMEnY6PwSG7QNCQbdXUmA4h8PqRMh1hOwiP3/FdfsSmKlQDEqBzqwZ6FCEFKxsveiyUP0jHS2rZ5q8r325avIJDvFpbLXOAIlM74blkyxSS6K+yCws=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773384576; c=relaxed/simple;
+	bh=pvlk2gOPkIN+ITxicWXFZ618jc3EqUbu9jfuBJT+Pj8=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=Q8OckkL+JnH4kPy/DZEjsKKnDSMZxSI5U4W+PRLTPpvVhGbI0gyzBM0GGQTOTFuWoFJRtXGY5jVWWYgYaQHHW56vkW8DK5wwXxBiNbpletOrLMXUyhXoZFciZuPuBa2BgeZPLQZEH7gReFSjn2bYjX2+/kvWD+DnKwQJtycjwYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hJLgPv0Z; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=MjwttMt7; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="BfKWCG9Z"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=pW6ipnZ3rPOVrS0A82h1ECYkXawcjzzKnIXxUjrCa0E8D2vFeFvJL3h1pHj82KvPWT2NEkII7nc6eqWYHfYZvPxPZg2IRwdRDHGJidGaZ3zpdSO7JENlHd5Tqrj2EuAy8TktTZL72weR6S5knUwTsHCjUS9vqqb2Dnxt/rNTob1zprBg0MzWaaY8yzIjCgxvXswLY9n6MgvDyv01WU2lWvqj52W2HcYHUI/p4b4d8qmMfnlDtfceWtB6ZdW6d1V5fK54936E8qsSXLDObhpDfGyqjkPKpJE6tfTxjjCsOIUrHCiP8byDb6m/v25yefcTUa+urPZfPw4OhkVkf+Mbyw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=90fNp47ognxeUGeFye4NvjKTcsTUL1RSo4zhTe/DsRg=;
- b=o/Ae+TgcvAIca3lDeAPttFc+1CKMSuhQIHyEqWHn/Uho99lmedTAJJB9TAwMjkNsyVYTnwmu6MbmvyNyGu8HPqjrfnBTI4XSbu6e4amYZbYz+Jza674IS8SyZpKaqw6lvXZloPJBwg4gIc0KGW8az4D6uFx+pSyGPjWVOMQB8ZoEVUIu1kk05ahB0rN8MhujtJiwCcoSNX9Wyj//D2HTYvybJY2p8ELetYZkQspIxTw0qLb/DYE9yr/L53paGqGHLRkeKRmti3d1Q0Nch2ywifH045LguppwN4iiqXrFDDRYSQ7XoTrMUh6LC07ZagP6Te/WAlaj9KEITHr2KXl4BA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=90fNp47ognxeUGeFye4NvjKTcsTUL1RSo4zhTe/DsRg=;
- b=BfKWCG9ZgqaiEpKcwNuMZ9SG/2ITxVguJ0wdFf4EoLDYh8muAWhVyP2AL0jE4XVZ+dvFWE9HP49RfxjdaKKil0Hx1BMaYR60ECMqOxc+WbUo3+60YpwxlAKNnx+76AF8f+C3G/RHmUvy4xCrnXvJSwdAXzVPKZnNDA+FPY0DYuqJT0auUoQ7MgdEL7MEK6tiRCG472mCVhVG8zUvCZQyMfvmma2foBs0S7t5uino+7FdWXIjdiwtdSQRHszXqcZDKBfPtyMgwCx02x6UYNVIBkR89dlpz6Sb2VD78r4xWIWTxgATslLVcbGZ+JVmKs9DXOzFVtfcNCglAmKeF7/VCg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from DU2PR04MB8840.eurprd04.prod.outlook.com (2603:10a6:10:2e3::6)
- by GV4PR04MB11377.eurprd04.prod.outlook.com (2603:10a6:150:29c::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.17; Fri, 13 Mar
- 2026 06:47:56 +0000
-Received: from DU2PR04MB8840.eurprd04.prod.outlook.com
- ([fe80::7c5d:60c1:2432:86a1]) by DU2PR04MB8840.eurprd04.prod.outlook.com
- ([fe80::7c5d:60c1:2432:86a1%6]) with mapi id 15.20.9700.010; Fri, 13 Mar 2026
- 06:47:57 +0000
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: frank.li@nxp.com,
-	l.stach@pengutronix.de,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	robh@kernel.org,
-	bhelgaas@google.com,
-	shawnguo@kernel.org,
-	s.hauer@pengutronix.de,
-	kernel@pengutronix.de,
-	festevam@gmail.com
-Cc: linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	imx@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	Richard Zhu <hongxing.zhu@nxp.com>
-Subject: [PATCH v1] PCI: imx6: Don't remove MSI capability For i.MX7D/i.MX8M
-Date: Fri, 13 Mar 2026 14:49:27 +0800
-Message-Id: <20260313064927.2092800-1-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.37.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SG2PR02CA0060.apcprd02.prod.outlook.com
- (2603:1096:4:54::24) To DU2PR04MB8840.eurprd04.prod.outlook.com
- (2603:10a6:10:2e3::6)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hJLgPv0Z";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="MjwttMt7"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62D5tcYK070541
+	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 06:49:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=5AVmFAe9Ik/fE0LX/BsA8E
+	1wHztxhMYSWxglI3gqndc=; b=hJLgPv0Z4qDUBFVMEQHi0DDoGS8X4keR73BE3t
+	RKLGdEhNe7yWwXWndunp/MZkJR+6CSGY4Ke9tdGCng2D68Bpd+vEhsUfqxG2HwO7
+	ZiJlG8zfhLXxIcXG0KTwyNnjL8tF/0S0zdDsl7UKHOB5ZQjJyHvKXLZ2tpbfLglV
+	K8jiGYC0yrdyO0Eu383hfcRUAqPFoDCAHgqcbs8VwrRaFAfN+CoTk/CBnYDnapUC
+	ZXjC6iQnXBdzEhzfYSWasyBpiY2RgaAREBvHW3z9nLk5u70QOCUtywwUci/rU6cr
+	yaveQe29DY55nFQW5Ei5O3g2ASPT61JY3EmJVnHtM6lWJ9bQ==
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cuh4ymv2t-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 06:49:34 +0000 (GMT)
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-35641c14663so2104506a91.2
+        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2026 23:49:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1773384573; x=1773989373; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=5AVmFAe9Ik/fE0LX/BsA8E1wHztxhMYSWxglI3gqndc=;
+        b=MjwttMt7y0Tm2zBnv5PpTF80+1Yc+VQbJx0EW+i6vQeXrzPDwg1UoADP3cSUBp6Nzr
+         pqrXpG5M1vG3T8NT2/JWbO2URs01uSGmeIaQPp3YexsU0BdvrGIhU4agGTmpJe+CFcxG
+         7oRSeofL3sDoqtDKFZiyOPs9ehluvD/GznghRoVx4dJnnEhAy3ESYDIJLixSBkx3S15M
+         Bl5MN8rEFZHwy8XADvNUzuWjFhP7FCS37vxwjeRXQhWN2UC+oHBhKT/gIj9uQBNHMbSo
+         +IoH2xzko/nzjriGQilgRWs8F/mUZrxwjuYxB0drCKVtwrNm5fxlO/gwplyYLUsetgSc
+         SR1w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773384573; x=1773989373;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5AVmFAe9Ik/fE0LX/BsA8E1wHztxhMYSWxglI3gqndc=;
+        b=iGilMghbmMasD2Ljv3d94poQASEocT8Es493nYLNB1fyftNKZE0pHO3DMKSpJL7GIR
+         P/CseNTn0IKN6tZb3qDoD1iz8hO/L2Y8+FqhbT3gseQvpVK5XYQwWb2BXSRNEPO2tscI
+         T6jTp9WpVhXtJGdfUAiDrEicVOY/Rm2ttPOXkohT/2c6QiBGhpyasoZ0uVzLxKwI3g7q
+         qHL92KKRjQE+pDVJkfTfLuDSDmTLdj2k9TZCq3KJqfTJRm6MEOcMofiCQcTHYaSRKyjo
+         6481+cbE4FUUdjc2/JyLm65+PaPRyEgj5rXpKt8HTj79yT1/tt5YWSQHdQ8cKtowk15O
+         sLig==
+X-Forwarded-Encrypted: i=1; AJvYcCW64GwEtw221ZhfytMPbO/F5T6aVtLT9cJyoBljIlT/V0WLf9LyYEkgqPb6RyRmu+aX8T3ZWG13yC0=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yye0rho35FzOzV0vFGwelOSr1TfoHr8DV6XCw36WNBVPXb4d6q8
+	gHjRWLfGnPgDCLM3RTOZCUqBzZ+WL3Y5LyzhsfUqA4gg65lFfMcLv5c/lUBft0MZ89BcXWupHmQ
+	+y8XVYYVouhVCrxFQmdEjCqlJSYhyIJsa30FSacGB0IvUjbsy4g/HMonw4L3KXSQ=
+X-Gm-Gg: ATEYQzzqq5Z4J7vSMb56VWMSZg88WFC2L7d1ZRT46Gu0YXrKxhRQ3Ya1UJZoEMUoWgF
+	wsRrZP9hLk9EF8WxKUTm3Uu6o+ZV2awYH5kETJInJvV+39jDGHD+MoGMljAtQOCm0ThXLiS68u7
+	GtZ+KaY2cM5TN2hw3W0jkqhh4K11z+z0NOpxu8vNcPleFzxSqAPK2o8o6Urqoap7z6jxdLkYhSy
+	BmyORvXw88hxF6PA/ASp7WSFgrjS9KCu58ZdATcsky8mmcuiwxfQTAxSbbMpu/UF1fF+JK7lb5H
+	jqSORLya5MQZ2oFy/soIYmHEjIwtJMgpYjT2eWPFZSbiHXLvrobAzSuP/nVKKBbc3Xn4V7j1c7c
+	2JuxtZ5mQqzhjOMrIqiWNLm+HwW9nxC9wmbYHaPAaFt3TZ8E=
+X-Received: by 2002:a05:6a21:6197:b0:398:afdf:3463 with SMTP id adf61e73a8af0-398ece212b3mr1705945637.70.1773384573486;
+        Thu, 12 Mar 2026 23:49:33 -0700 (PDT)
+X-Received: by 2002:a05:6a21:6197:b0:398:afdf:3463 with SMTP id adf61e73a8af0-398ece212b3mr1705918637.70.1773384572883;
+        Thu, 12 Mar 2026 23:49:32 -0700 (PDT)
+Received: from hu-sumk-hyd.qualcomm.com ([202.46.23.25])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c73eb97b41dsm936160a12.5.2026.03.12.23.49.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Mar 2026 23:49:32 -0700 (PDT)
+From: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
+Subject: [PATCH 0/3] dmaengine: Add batched scatter-gather DMA support
+Date: Fri, 13 Mar 2026 12:19:24 +0530
+Message-Id: <20260313-dma_multi_sg-v1-0-8fabb0d1a759@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DU2PR04MB8840:EE_|GV4PR04MB11377:EE_
-X-MS-Office365-Filtering-Correlation-Id: 68429082-df3e-4436-6871-08de80cc75ff
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|52116014|7416014|366016|19092799006|1800799024|376014|18002099003|56012099003|38350700014|921020;
-X-Microsoft-Antispam-Message-Info:
-	eSbaVKPwoXlMgufqPCzsncmrpxVrxYKfuWlYRlwwsWxvcR7MTTbmywiXPWXAnFumYgffrJs6PEPRZclPZET+TQqVUsc5okhvRYdcUdZK1vnKljAMSlTn3zJN6Pl6/rJqgjw/lJSysPMEfo7zkPc+ozGKHgPXMB51+JayUGLKNMNE8brCL+rnKf1+ObMlO9qU446lkVmNSBRG4C+z0d/gqlZNAIJGwZMIGPaDiWmJMjGx2oyLLZYQ/twvx1adSrySRjnbqv0yKNmjd5huX0KbgAsvzoQrsO+gaIp7dEk+6aRLdyf5/LAYYZTwny7adk7Xt9rugUl/DgKHj5dQOYjZrOs59pXc2d8nV1fytidNfBRDkZrlcX7ag44sm8GT9sW9CRgOwqgz+x2c61EaCppC0GGljulQu2sCdfgo/xwJUt/8jg1qV72AtMgrJxAOZRnS+7y67qfIsBPOWCRBEEnAPZRsvxtuQUStV9YJkvZGoaBp0Q1t2g0fOnf0bFw0b0GiSmaVnoRvjeL/A3di8AePK1MF3RP9WtIAzrtGtqU31eRoFJRPbt5+g0orXZEZKCQBXcKRK62TuxSNSG9X0rraebtgmNkwM45DYEiIk/NNrUTCeGrwaxmTq/L6GVqU7kx32luoiww0uO9R1wldBV9frDAdFhK5+bSY/t1Zy7OSDbYxv5GXm3FyWR2QMUihiouPMdE3tpkXxGpfbW+ojbX4vvu5VJy70kbQzC+AV8/MgHCU7tGv5+sFXuSSdNyQFunQ19DLfKmNxoqsYtPdt/Bb/TixZxuOEiTxwdP50PGOjNOUWekcrJ8OyqQVymw+wT3Y
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DU2PR04MB8840.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(52116014)(7416014)(366016)(19092799006)(1800799024)(376014)(18002099003)(56012099003)(38350700014)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?2t67TA+LKqziKhrKLeZjclGy1v3U3c9IfDewTgDjOuPjwR5KjX2JTXYfBvoy?=
- =?us-ascii?Q?x/Q3CFkgTXRNfyf72nbKDofntln5s5PWwrW+KX1wBusx0pRdWAoijAw9x3Xn?=
- =?us-ascii?Q?KHASe7xffLmb1ieGveMY4sp4iF7OXM8NNAcJc+GUhcPjS/7BPSItrKZUSLNM?=
- =?us-ascii?Q?zF5NzAoAfcCwPSptn+2L9eVvzww6ffZcAt0KFL2scR9/HxhYfqOg6RY+vpu7?=
- =?us-ascii?Q?NPLDuGfrTjnX1o4qgfQAzEXzummn+1R053Dy4DGHrqpG9Bum1vDxuiNpMv3Z?=
- =?us-ascii?Q?t8Ez02VRiughGKkISkKRt3HVfU+MwAcV3U85OEd+cVq/+7SQfMNGy4s6P39J?=
- =?us-ascii?Q?zoajUoz+3ZLDOUbd5QvUhXrOTBAZmCv2TbbKZ08NGKqzfHgvUxaqoitYTKC9?=
- =?us-ascii?Q?7JMUEQErTqrTI763SB5bWS090+FlyheQvbG/yRBoj/n7RIk/YnfokKJnqSw/?=
- =?us-ascii?Q?g0OQumJ3sUvp4pdXNBsrEFeVtMlTIcym2HNEzvWZhr0xOwbzcD3zxhQw/nmf?=
- =?us-ascii?Q?VC9SY8PXaBwT3N57dQkeG9vmtgYc++m2gRLIRec6uPLnjydRXfvh0Kj2wP9i?=
- =?us-ascii?Q?yHmZ2s7Nrw7oe7j7aAcKDA0RbNFcxZDv5yTaczKGZf3WFZzHQv41+Ij51rJj?=
- =?us-ascii?Q?J0frQablLmFbQm9+cbb/1bQAI4JvtnfkNbzIyOW0EVJKfDqYPJe8H55a5BOi?=
- =?us-ascii?Q?FDZwC67MdMcS4pXmZaO6K/dxBEJYv91UvH76vt3nTGOdJVQj0SEYdIS9VIuU?=
- =?us-ascii?Q?G4ojPEhrci6hWbYYaLxEI+oKh8b91x2jJfd6KcpVkwCJVcelksDx4RP5YjxX?=
- =?us-ascii?Q?msG2J4XHPSLJmZqNd0WidGLeWztx8/PYje6Q5sfInnWkSJE1ud4qw4lGNOgl?=
- =?us-ascii?Q?HeO4mrCejDk9gHrdVxWy4CKLVcDPRIerpTyr10uM2Vz6nSKhHFKSymsJtH6I?=
- =?us-ascii?Q?mbkkZ5k1SPxQctrGCTK8CcECbXE2TkzVqqvBBZChSg6fEVBfYaMEXryNscE8?=
- =?us-ascii?Q?yMs3uTos+eXulvRbNNwOlf+x6H9vOdNRg2ennNkOnwDSk6bh709rZtapQX+D?=
- =?us-ascii?Q?WH+1rAZ+7JkJzGaEkFktnFkRee3Y8d088u/eQ0iLxkRRN8Nr2tL/tKOw9Y6P?=
- =?us-ascii?Q?/y92UmuUFtpV5g+VO5Xx4rUvMJjEJtX6rHLku6qS8HvSrVdT5TvEk+AmKTcq?=
- =?us-ascii?Q?Jf8S/7mHrmPPcf3vFwu3ndTdR4+OgEk6JnhPG5ZkZGZWpWEvuAyvDwcfdmNO?=
- =?us-ascii?Q?8e3mrGATJWs/m//dXySdPTDAiuULhEevBuckwVq1nSXW+u2bo9sWTQ8wertH?=
- =?us-ascii?Q?gv+n2vkRVvdcyb+5RUFpTD5HYswU+7+QB4XcmwBW++Bgcqb7juY0W67CxKfD?=
- =?us-ascii?Q?tOA3I8BGcljdpW71Rk0V5hv8k1+ZaCqmueJ77bfgUDgw/sV0AFgZfb6IPjgL?=
- =?us-ascii?Q?XTot7FCyVf216lfS1LtANyl5jrGCaUUqXetGRGZoz0ZjsLrCaY/At2RNOBPR?=
- =?us-ascii?Q?TJTH0pcXuRmNX6mcc3vCPxI6EJiWlQEi4QnnMED85bJtfumRjumCNqvjgUYy?=
- =?us-ascii?Q?bcP8PWod1zY4nmbn7cXKsQDbv24at4pxUleTpxchz3ubn3VWM9o50W2B+Pi/?=
- =?us-ascii?Q?GrFccE0JfzCmMB0OW8uMM0euhteAgRi8bRRjZY51yLYVqZup2TEGTb8ChvkJ?=
- =?us-ascii?Q?I9xjPMqCJX73v/isIZoIQG9I1EMYGmF03NVytgsRIpR2LAYgRRZ2+ELVTbOB?=
- =?us-ascii?Q?hH7H0jVRuQ=3D=3D?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 68429082-df3e-4436-6871-08de80cc75ff
-X-MS-Exchange-CrossTenant-AuthSource: DU2PR04MB8840.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Mar 2026 06:47:57.6803
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 8MI6p7LQtmHBhZjC7swQ3X6zSIBByIFgc348PMihoXq0WzpWLmhikmWApM7w2um4FjVP4jxkt0L5NPqNSRao8g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV4PR04MB11377
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAHSzs2kC/1WNwQ6CMBBEf4Xs2ZJuUTCe/A9DCJYFNqFUu0A0h
+ H+34snLJG+SebOCUGASuCQrBFpY2I8R8JCA7euxI8VNZDDa5Br1WTWurtw8TFxJp6zBIj/prMi
+ sgTh5BGr5tetuZeSeZfLhvdsX/LY/kdHZv2hBpRUezT2eEBXYXr1I+pzrwXrn0hhQbtv2AQN8W
+ 02vAAAA
+X-Change-ID: 20260108-dma_multi_sg-c217650373c2
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+        Veerabhadrarao Badiganti <veerabhadrarao.badiganti@oss.qualcomm.com>,
+        Subramanian Ananthanarayanan <subramanian.ananthanarayanan@oss.qualcomm.com>,
+        Akhil Vinod <akhil.vinod@oss.qualcomm.com>,
+        Manivannan Sadhasivam <mani@kernel.org>, Vinod Koul <vkoul@kernel.org>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
+        iommu@lists.linux.dev, linux-pci@vger.kernel.org, mhi@lists.linux.dev,
+        linux-arm-msm@vger.kernel.org,
+        Sumit Kumar <sumit.kumar@oss.qualcomm.com>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1773384567; l=2678;
+ i=sumit.kumar@oss.qualcomm.com; s=20250409; h=from:subject:message-id;
+ bh=pvlk2gOPkIN+ITxicWXFZ618jc3EqUbu9jfuBJT+Pj8=;
+ b=CJsyKHGdctf6eMe9FYY1OpAZhEpTLB18Re4kWKHiZ0+TKe0AV4X/h4B2qhl75oyvumt11XvKa
+ T/JaOl/TpY9ArzGxVUQ0/u9VR0ZLcx4FAaInJyDJiUPuxoHqhv3XDfC
+X-Developer-Key: i=sumit.kumar@oss.qualcomm.com; a=ed25519;
+ pk=3cys6srXqLACgA68n7n7KjDeM9JiMK1w6VxzMxr0dnM=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzEzMDA1MyBTYWx0ZWRfX9fQfhPTcDQT/
+ Vt2ilD2rx/6WnghITcpks7+BAduQfI/zCh+kJPMRLoFTfXiUGAGeU1SMzqBq84Kf0+bVohV/6h4
+ 8YpTaTuuA7qBcbmzsAyxF/SCq2rKTXqEedWTh7cuPlsxuwjrrXJS8PvZf80ei3KNUCom+O+deje
+ SZDlpETDyl6aQaQxd7G1BcavqZ5Ij521sZ+kTVx4uR5lpuElIMjErXbLd/CkhrmvUcL8zmZeBu1
+ DEvWnl5XWnSU4klOwlHj5Hc3U5/rDiEJJSSFBZh6G4UBTQD4cqbdiILqH9F63m/CE7UrwFlhyKv
+ +G7vvGhu4/OazPdEB1Emj16kXjdweNfs3wtI6DIdq5tBb8kiS6hxY5eaT6RNmKYk/i8xgJpsnY1
+ JqFQx1rKEDIlyMdt0eDtuprP7QM8TxNqQsDJlLeHqij/NLFBC7QACbG6IFuQ+qhy3SlMcFX/uyi
+ jfQ9J/QVxOPESmM+Txw==
+X-Proofpoint-ORIG-GUID: CrpWLd18Nx51BPiVqIKG7A7XdqVbZmuv
+X-Authority-Analysis: v=2.4 cv=C+7kCAP+ c=1 sm=1 tr=0 ts=69b3b37e cx=c_pps
+ a=RP+M6JBNLl+fLTcSJhASfg==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
+ a=EUspDBNiAAAA:8 a=f6ynY6_RdjVN_4bGfK8A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=iS9zxrgQBfv6-_F4QbHw:22
+X-Proofpoint-GUID: CrpWLd18Nx51BPiVqIKG7A7XdqVbZmuv
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-13_01,2026-03-12_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 priorityscore=1501 phishscore=0 adultscore=0 suspectscore=0
+ bulkscore=0 lowpriorityscore=0 clxscore=1015 impostorscore=0 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603130053
 
-The MSI trigger mechanism for endpoint devices connected to i.MX7D,
-i.MX8MM, and i.MX8MQ PCIe root complex ports depends on the MSI
-capability register settings in the root complex. Removing the MSI
-capability breaks MSI functionality for these endpoints.
+Synopsys DesignWare eDMA IP supports a linked-list (LL) mode where
+each LL item carries independent source and destination addresses. This
+allows multiple independent memory transfers to be described in a single
+linked list and submitted to the hardware as one DMA transaction, without
+any CPU intervention between items. The IP processes LL items strictly
+in order, guaranteeing that scatter-gather entries are never reordered.
 
-Preserve the MSI capability for i.MX7D/i.MX8M PCIe root complex to
-maintain MSI functionality.
+This series leverages that hardware capability to introduce a new
+dmaengine API — dmaengine_prep_batch_sg_dma() — for batching multiple
+independent buffers into a single DMA transaction. Each scatter-gather
+entry specifies both its own source (dma_address) and destination
+(dma_dst_address), enabling the eDMA hardware to process them as a
+single linked-list transaction.
 
-Fixes: f5cd8a929c825 ("PCI: dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI controller")
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+The primary use case is MHI endpoint ring caching. When an MHI ring
+wraps around, data spans two non-contiguous memory regions (tail and
+head portions). Previously this required two separate DMA transactions
+with two interrupts. With this series, both regions are submitted as a
+single batched transaction, reducing submission overhead and interrupt
+count.
+
+The series includes:
+1. Core DMA engine API and DW eDMA driver implementation
+2. PCI EPF MHI driver support for batched transfers
+3. MHI endpoint ring caching optimization using batched reads
+
+Performance Benefits:
+--------------------
+- Reduced DMA submission overhead for multiple transfers
+- Better hardware utilization through batched operations
+- Lower latency for ring wraparound scenarios
+
+Signed-off-by: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
 ---
- drivers/pci/controller/dwc/pci-imx6.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+Sumit Kumar (3):
+      dmaengine: Add multi-buffer support in single DMA transfer
+      PCI: epf-mhi: Add batched DMA read support
+      bus: mhi: ep: Use batched read for ring caching
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 81a7093494c8..b86d22db4a13 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -41,6 +41,7 @@
- #define IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE	BIT(11)
- #define IMX8MQ_GPR_PCIE_VREG_BYPASS		BIT(12)
- #define IMX8MQ_GPR12_PCIE2_CTRL_DEVICE_TYPE	GENMASK(11, 8)
-+#define IMX8MM_PCIE_MSI_CAP_OFFSET		0x50
- 
- #define IMX95_PCIE_PHY_GEN_CTRL			0x0
- #define IMX95_PCIE_REF_USE_PAD			BIT(17)
-@@ -117,6 +118,7 @@ enum imx_pcie_variants {
- #define IMX_PCIE_FLAG_HAS_LUT			BIT(10)
- #define IMX_PCIE_FLAG_8GT_ECN_ERR051586		BIT(11)
- #define IMX_PCIE_FLAG_SKIP_L23_READY		BIT(12)
-+#define IMX_PCIE_FLAG_KEEP_MSI_CAP		BIT(13)
- 
- #define imx_check_flag(pci, val)	(pci->drvdata->flags & val)
- 
-@@ -976,10 +978,17 @@ static int imx_pcie_start_link(struct dw_pcie *pci)
- {
- 	struct imx_pcie *imx_pcie = to_imx_pcie(pci);
- 	struct device *dev = pci->dev;
--	u8 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-+	u8 offset;
- 	u32 tmp;
- 	int ret;
- 
-+	if (imx_pcie->drvdata->flags & IMX_PCIE_FLAG_KEEP_MSI_CAP) {
-+		offset = dw_pcie_find_capability(pci, PCI_CAP_ID_PM);
-+		dw_pcie_dbi_ro_wr_en(pci);
-+		dw_pcie_writeb_dbi(pci, offset + 1, IMX8MM_PCIE_MSI_CAP_OFFSET);
-+		dw_pcie_dbi_ro_wr_dis(pci);
-+	}
-+
- 	if (!(imx_pcie->drvdata->flags &
- 	    IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND)) {
- 		imx_pcie_ltssm_enable(dev);
-@@ -991,6 +1000,7 @@ static int imx_pcie_start_link(struct dw_pcie *pci)
- 	 * started in Gen2 mode, there is a possibility the devices on the
- 	 * bus will not be detected at all.  This happens with PCIe switches.
- 	 */
-+	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
- 	dw_pcie_dbi_ro_wr_en(pci);
- 	tmp = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
- 	tmp &= ~PCI_EXP_LNKCAP_SLS;
-@@ -1907,6 +1917,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
- 	[IMX7D] = {
- 		.variant = IMX7D,
- 		.flags = IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
-+			 IMX_PCIE_FLAG_KEEP_MSI_CAP |
- 			 IMX_PCIE_FLAG_HAS_APP_RESET |
- 			 IMX_PCIE_FLAG_SKIP_L23_READY |
- 			 IMX_PCIE_FLAG_HAS_PHY_RESET,
-@@ -1919,6 +1930,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
- 	[IMX8MQ] = {
- 		.variant = IMX8MQ,
- 		.flags = IMX_PCIE_FLAG_HAS_APP_RESET |
-+			 IMX_PCIE_FLAG_KEEP_MSI_CAP |
- 			 IMX_PCIE_FLAG_HAS_PHY_RESET |
- 			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
- 		.gpr = "fsl,imx8mq-iomuxc-gpr",
-@@ -1933,6 +1945,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
- 	[IMX8MM] = {
- 		.variant = IMX8MM,
- 		.flags = IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
-+			 IMX_PCIE_FLAG_KEEP_MSI_CAP |
- 			 IMX_PCIE_FLAG_HAS_PHYDRV |
- 			 IMX_PCIE_FLAG_HAS_APP_RESET,
- 		.gpr = "fsl,imx8mm-iomuxc-gpr",
+ drivers/bus/mhi/ep/ring.c                    |  43 +++++-----
+ drivers/dma/dw-edma/Kconfig                  |   1 +
+ drivers/dma/dw-edma/dw-edma-core.c           |  40 ++++++++-
+ drivers/dma/dw-edma/dw-edma-core.h           |   3 +-
+ drivers/pci/endpoint/functions/Kconfig       |   1 +
+ drivers/pci/endpoint/functions/pci-epf-mhi.c | 120 +++++++++++++++++++++++++++
+ include/linux/dmaengine.h                    |  29 ++++++-
+ include/linux/mhi_ep.h                       |   3 +
+ include/linux/scatterlist.h                  |   7 ++
+ kernel/dma/Kconfig                           |   3 +
+ 10 files changed, 224 insertions(+), 26 deletions(-)
+---
+base-commit: f0b9d8eb98dfee8d00419aa07543bdc2c1a44fb1
+change-id: 20260108-dma_multi_sg-c217650373c2
+
+Best regards,
 -- 
-2.37.1
+Sumit Kumar <sumit.kumar@oss.qualcomm.com>
 
