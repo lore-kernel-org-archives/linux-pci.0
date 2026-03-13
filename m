@@ -1,109 +1,161 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CD641F192E
-	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 10:27:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773397667; cv=none; b=geaMgsinZBkK44qHVwBiiNHJpfW7LSJS/f31naucYQfHYDFDBPOJiH5R9v+V+chyNByH3NUmnyXMvFZUlUt4MD6dHxi33N/ujp2pQtHL07rftD2VE0NYCeoKshQJNSHIbW4JZIcCpVRGAQvWBlbCMp6+0GZffVYO5BQpOyyVhNY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773397667; c=relaxed/simple;
-	bh=LRvz29aOmDthviDx9NvYAHEaIikV3tNGXz0Q25oWcNY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tgZFodx4PT/VfdPOpkeMUv2A6pKB2wXdQt4OSS0c1+1X3FsKJRnb/xg5EgX1C2fWQ7E/29ZXWdSpQpEUI3q9xEUskjxqbCFO+HEvDmJPmxUJnBOi6fS6Fqs3wxmLiny08JH9nXufKc2Tx5LkBzbjs1yLM5ueiIxq+5K9qwW1v9w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=X4b1IqKA; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEE153815C7
+	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 10:36:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.43
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773398176; cv=pass; b=mUngEKLi3FWv2QwxK6+DVN6hcuReOdurvv2eBoXOKVi1AgxGOOskd2zukoHB9pkq7oGCyvIX1+KCEbxRkRH49g6tkqlidcLG2dGM4gdbMMTKaGqkjlm/mBJd7PFNW9kw6AVxr7x5i+DHSU4yKEr0TwvW2lXv57oYQ4JueRzkUag=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773398176; c=relaxed/simple;
+	bh=8g5q3C7nsRWNNtihsDdWzjoOptctN5Xc2r4pN5gjoAQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=npwCgxwFRt2lLPcfuR2vq1Oygj+M6p/7TIH9eK1g+a99W/SXwk/dOntJlntVUWzajvZLjSFR0Zy2OdidrhNW/d/7KPNakYA9q669iGIRtp4l1WFlkC/fiWr2XDRi3TFv6u92dIO8RnPq2OsRFnogQDMN+eVKqz50mzENPXgKEm0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=s/1tPuQ3; arc=pass smtp.client-ip=209.85.221.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="X4b1IqKA"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773397666; x=1804933666;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=LRvz29aOmDthviDx9NvYAHEaIikV3tNGXz0Q25oWcNY=;
-  b=X4b1IqKAQN0mpOMzOadhgM2VqF12NhcwAHKlNVwXVJamNOd/wuNqQnel
-   J3k8JFP9g2OlbDjOpKSJ/qpS4sXVoewTWbfO6X5iWCtc5Zw70JwJLzZs1
-   6m7BhimE226iST5Iypbd68jtN8XaOlVEF/RQETLsSZ05rwzK63XuLC7JD
-   dDsGzmUvllQpVyfGiuyMFpaeC0Mgu43nHAApAExU2/X3AIu7awdrlQL58
-   E7l5Dq7zBhLvyxhx0KyVwzNb+tiXGcvmH0fsx0z+40aIXyNpKcRM1rdXZ
-   1UFi1O+JwfGenOSJ4XmYcYNN8Ho5DTRS/78TfDy3KcccoPYq/Cz2Lhuve
-   A==;
-X-CSE-ConnectionGUID: dIF5lbCNQsmQ0qnR2/6ZYg==
-X-CSE-MsgGUID: Ot1qOcTWQLi7fBT6fFU8Nw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11727"; a="91884298"
-X-IronPort-AV: E=Sophos;i="6.23,118,1770624000"; 
-   d="scan'208";a="91884298"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Mar 2026 03:27:46 -0700
-X-CSE-ConnectionGUID: ql9T5RDOTrm0HsrOIaLBzA==
-X-CSE-MsgGUID: SyULQGfjR7OCZUjrsWglMQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,118,1770624000"; 
-   d="scan'208";a="251640572"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa002.jf.intel.com with ESMTP; 13 Mar 2026 03:27:43 -0700
-Date: Fri, 13 Mar 2026 18:07:25 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, aik@amd.com, aneesh.kumar@kernel.org,
-	bhelgaas@google.com, alistair23@gmail.com, lukas@wunner.de,
-	jgg@nvidia.com, Donald Hunter <donald.hunter@gmail.com>,
-	Jakub Kicinski <kuba@kernel.org>
-Subject: Re: [PATCH v2 08/19] PCI/TSM: Add "evidence" support
-Message-ID: <abPh3d4+opAkot3p@yilunxu-OptiPlex-7050>
-References: <20260303000207.1836586-1-dan.j.williams@intel.com>
- <20260303000207.1836586-9-dan.j.williams@intel.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="s/1tPuQ3"
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-439d8df7620so1501384f8f.0
+        for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 03:36:14 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773398173; cv=none;
+        d=google.com; s=arc-20240605;
+        b=I+pXJoQjRFJhAFI44FAYxRq+VpuBZREbz7ozCZabH1pX/U1QM5MoNBa8r4Woq0nzps
+         0xwvTde5K/atrx43yOLs0ItNO2uybkRGPku3kXcP6BTEzTNjfDkzU5sbVmcJ/aVgvjai
+         XjQBQdSdH0VtqUDVBCH/Iyu2O8g8gft2KJWLRbMAtclx+/PVEIPgDhKczDnZoWi+nmAR
+         eTIN3ie23AxNprgDfyyMnXfyTRo5cC5Tr/c0wbpioAdzaXrzDjuMesyD7xXG8nVo3yA4
+         /q32ROoJyUuZ29VbUpsl9c3cuvE+i3P11y76hkmnr3gCIyKeCYphhFnw25viR/EETOGg
+         RwzQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=/w5DLUFTZVMWmc49ACjqJvi6te4AWIx+IOTh3G/EERU=;
+        fh=9+p3k+fxbtqAmcxW2lL+hJDq4v1Y1YKk60gbtCQzcHQ=;
+        b=dNakoiGHTlIqlnQvFoP568/ru5YqpN4uek9IVwivKsxuRJ6zrWhvEcPNbPOPEnXeML
+         KIDXQofG7cCy8JThI64BMKzuEfUH8dDfB9imSc67aJLD6abFyr2Ctvq77YV6ZJgJ8mxc
+         9WqTAOw+RRoEbsoAhZTZq6yJ/DTt7YJty192a0Kl3i+580Udf+093Cn1fUmagBfpjMQJ
+         n8Wsu4R1SE4qRetaHCXiy3f7x8KEaczZ5/7H7wwUCw8jaNWF3g0dW6CYQazBkgXlFBCI
+         FpYkiKcZ3J4NY1WzFS9Satr/m2KNRdxNbSZMGIjpNXutIOefXBX7o/L9EojsuorwvjiW
+         CYdg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1773398173; x=1774002973; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/w5DLUFTZVMWmc49ACjqJvi6te4AWIx+IOTh3G/EERU=;
+        b=s/1tPuQ3pvsnKiJ6NNFhcZW2U162K2KIl9xpqvLj/XgXR/hzWGHjw+T+wEh0ksRAR5
+         X8F7nrxs4jRGj8G3aySYrvo6DG181oe1CAQRq1qGYhzoiDzvh9/+I4JNRZ1eg6EgU7/2
+         uxNgZgBoeZtsckXPw4XrAVqpqmkawRqwzW86M6FntDSDFhk6cjWBC+PAH8migQrBygPq
+         ypsK1cP8k5ZpAQM2PqWZGzQN3pTmJYAMpBhDgNyta2YFNkEyjcTLLI6P1uXTaW/P+WAU
+         Nv9qjdzBGh1kzjQ0rTIuTFcDB1J3NkJeQ7AHL6op9a7rz+MD1KgNrQ20QaN+K1joYK47
+         n19g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773398173; x=1774002973;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=/w5DLUFTZVMWmc49ACjqJvi6te4AWIx+IOTh3G/EERU=;
+        b=ENwbC9cwBEeYoKMoMQIQfn52KFSy7zQaRxqJZH+RyM9zQyvA4s/meIGIdg9Hv/2a1L
+         052LnE3vtBrXT1UXkvuTgwKc9VizEupNgA3hBAX+m9M0x5jrLwVMZTCuWSDy395bQM8Q
+         Jy052KZ84atNN6pdo6ARFmPfLTFUPQInx3y7T5Ik6Y507UkCHUArtxjePLaqfmMPDoVd
+         YTfboyq0Sf8v1mztRCtaUhws/bFg122JHFOW5Gij3RnsihmHPhpXk9fJZtxkyLcytpO/
+         qWRT7PNS0q7mEdPrVa1IKytnlL1wz4KSmCkL6aa+NVw9F1hyi3Mz5BOg9paV3i2BnXMB
+         aWAQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWZPbPh3C1xWXsGgbRqi8LH/7H2WxA2bMgJTt2cHs50SKkDTszZKvwWnskDadyIPhpKmVjNYLa6ODw=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyp8vDEeocKSr3CTAS3TcmsgTTcRByvwMBxptRB+mC/YsA5c9H+
+	9BAicblEaLdHfHi3LlJTrimHeC/eOU3mj28BvI5Gf9/81As2IdkPwmiRjJwWm1FBHcR1ZWhDs3R
+	MMWFuLA7DffPyXZCSU9yRwO0i7l6Dt6NteRrCXURn
+X-Gm-Gg: ATEYQzxiTkzxDGkjzMtcs2aD5mhom9f1lwOsxU72vbcAAKc0KiCQSqxeHiHWvbbnIxT
+	FPhJ3WbVcf36pjPDDUG9XMMo6+FDz4jZnzfoUjsMODE+v2NhY6QHgWImV0VBHn24nyJlx9s8SUU
+	9w7+EPivgtqVqm884MEoWQijci7HzNrNOn0cqwKTYqboY1mFA/aZVWt9LrpXGFhfb5B8BDQl3FF
+	n9dBe3oKUTKPa2B7CpcPWL7e74UmI7+p2kavz4nxRtnvlN6fR+Hst4Qy6MlPpPla/6Nz2NgTodv
+	7PA5wQPUEuz4OuLFyPFFv7dpp5r8wBOAflLdptj/mzcq+BYvNpWRanBXXcPNsRDnLBEssA==
+X-Received: by 2002:a05:6000:2903:b0:439:d7e1:fc51 with SMTP id
+ ffacd0b85a97d-43a04dbeec1mr5539039f8f.36.1773398172510; Fri, 13 Mar 2026
+ 03:36:12 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260303000207.1836586-9-dan.j.williams@intel.com>
+References: <20260211032935.2705841-1-alistair.francis@wdc.com>
+ <20260211032935.2705841-8-alistair.francis@wdc.com> <8403c8b7a832b5274743816eb77abfa4@garyguo.net>
+ <CAKmqyKMXmn6=suyjhB3Kq12-UHuLbPLOHPd2JO2b3Nxn4jYHpw@mail.gmail.com>
+In-Reply-To: <CAKmqyKMXmn6=suyjhB3Kq12-UHuLbPLOHPd2JO2b3Nxn4jYHpw@mail.gmail.com>
+From: Alice Ryhl <aliceryhl@google.com>
+Date: Fri, 13 Mar 2026 11:35:59 +0100
+X-Gm-Features: AaiRm53JNqGQ31WbLp4l7arJWG84T-kzONXay54ApMwLtspn9NZSDJv5HhHLQcU
+Message-ID: <CAH5fLggOnVguVErjySphX__vs3iYAo4O+J6hrXW546JrWSq5ZA@mail.gmail.com>
+Subject: Re: [RFC v3 07/27] rust: error: impl From<FromBytesWithNulError> for
+ Kernel Error
+To: Alistair Francis <alistair23@gmail.com>
+Cc: Gary Guo <gary@garyguo.net>, bhelgaas@google.com, lukas@wunner.de, 
+	rust-for-linux@vger.kernel.org, akpm@linux-foundation.org, 
+	linux-pci@vger.kernel.org, Jonathan.Cameron@huawei.com, 
+	linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	alex.gaynor@gmail.com, benno.lossin@proton.me, boqun.feng@gmail.com, 
+	a.hindborg@kernel.org, bjorn3_gh@protonmail.com, tmgross@umich.edu, 
+	ojeda@kernel.org, wilfred.mallawa@wdc.com, 
+	Alistair Francis <alistair.francis@wdc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> +void pci_tsm_init_evidence(struct pci_tsm_evidence *evidence, int slot,
-> +			   enum hash_algo digest_algo)
-> +{
-> +	evidence->slot = slot;
-> +	evidence->generation = 1;
-> +	evidence->digest_algo = digest_algo;
-> +	init_rwsem(&evidence->lock);
+On Fri, Mar 13, 2026 at 3:20=E2=80=AFAM Alistair Francis <alistair23@gmail.=
+com> wrote:
+>
+> On Fri, Feb 20, 2026 at 12:49=E2=80=AFAM Gary Guo <gary@garyguo.net> wrot=
+e:
+> >
+> > On 2026-02-11 03:29, alistair23@gmail.com wrote:
+> > > From: Alistair Francis <alistair.francis@wdc.com>
+> > >
+> > > Implement From<FromBytesWithNulError> for the Kernel Error type
+> > >
+> > > Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
+> > > ---
+> > >  rust/kernel/error.rs | 7 +++++++
+> > >  1 file changed, 7 insertions(+)
+> > >
+> > > diff --git a/rust/kernel/error.rs b/rust/kernel/error.rs
+> > > index 258b12afdcba..569d9d032ab3 100644
+> > > --- a/rust/kernel/error.rs
+> > > +++ b/rust/kernel/error.rs
+> > > @@ -12,6 +12,7 @@
+> > >      str::CStr,
+> > >  };
+> > >
+> > > +use core::ffi::FromBytesWithNulError;
+> > >  use core::num::NonZeroI32;
+> > >  use core::num::TryFromIntError;
+> > >  use core::str::Utf8Error;
+> > > @@ -251,6 +252,12 @@ fn from(e: core::convert::Infallible) -> Error {
+> > >      }
+> > >  }
+> > >
+> > > +impl From<FromBytesWithNulError> for Error {
+> > > +    fn from(_: FromBytesWithNulError) -> Error {
+> > > +        code::EINVAL
+> > > +    }
+> > > +}
+> >
+> > Are we sure that `FromBytesWithNulError` maps cleanly to the `EINVAL`
+> > error code?
+>
+> `FromBytesWithNulError` means "An error indicating that a nul byte was
+> not in the expected position." [1]
+>
+> To me that maps with `EINVAL`
+>
+> 1: https://doc.rust-lang.org/std/ffi/enum.FromBytesWithNulError.html
+>
+> >
+> > Anyhow, please add `#[inline]` for such simple functions.
+>
+> I can, just noting that none of the others have `#[inline]`
 
-IIUC, this function is for link tsm driver, is it? But in the following
-patch, devsec tsm would consume pci_tsm_mmio_alloc() which uses
-evidence->lock. So my solution is to initialize the lock on tsm
-construction.
-
---------8<--------
-diff --git a/drivers/pci/tsm/core.c b/drivers/pci/tsm/core.c
-index 9f062218c312..c55deeafe32b 100644
---- a/drivers/pci/tsm/core.c
-+++ b/drivers/pci/tsm/core.c
-@@ -1175,7 +1175,6 @@ void pci_tsm_init_evidence(struct pci_tsm_evidence *evidence, int slot,
-        evidence->slot = slot;
-        evidence->generation = 1;
-        evidence->digest_algo = digest_algo;
--       init_rwsem(&evidence->lock);
- }
- EXPORT_SYMBOL_GPL(pci_tsm_init_evidence);
-
-@@ -1198,6 +1197,7 @@ int pci_tsm_link_constructor(struct pci_dev *pdev, struct pci_tsm *tsm,
-        }
-        tsm->pdev = pdev;
-        tsm->tsm_dev = tsm_dev;
-+       init_rwsem(&tsm->evidence.lock);
-
-        return 0;
- }
-@@ -1221,6 +1221,7 @@ int pci_tsm_devsec_constructor(struct pci_dev *pdev, struct pci_tsm_devsec *tsm,
-        pci_tsm->tdi = NULL;
-        pci_tsm->pdev = pdev;
-        pci_tsm->tsm_dev = tsm_dev;
-+       init_rwsem(&pci_tsm->evidence.lock);
-
-        return 0;
- }
+I think add #[inline] to these could be a nice easy issue for new
+contributors. If you want, you can open an issue on our github.
+Alice
