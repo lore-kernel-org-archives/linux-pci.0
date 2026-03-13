@@ -1,30 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A0D83CAE77;
-	Fri, 13 Mar 2026 16:56:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0A9F3CB2D6;
+	Fri, 13 Mar 2026 16:57:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773421025; cv=none; b=MsqVHG4WHzK6gi238L7Af54Usd4+9GYc/S7feFfjP/6kEUAFsOs2INTT1OuZgM2PDINPo2NDKqwqDfNZ9AQuZU/2j22wjl6vylKgmxzu5j7jOqBGZ6C3hQmofH19Deb5B9CWLWtIYz2k2OXX3+STdOMlhc2IUmvsUTelWpIbymE=
+	t=1773421029; cv=none; b=N9BM/7Ryk+VD9aIs69H6CTJPN1L9n71skFbzNI1tmUA+9BTVmgxEfC8Ms2i4eo47fz6syJlcNL3u+TbTEhaCjrp1JRzWhV3Q9HzxtPIPzoF8UvaAkZfqwMuyJ4B06zkB4wT/Sv75V6FmqGrW7yPWTYfFTCJ/FCw87qLZhgz/eCA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773421025; c=relaxed/simple;
-	bh=dyqnxGxLuqnzGkcZLb43xdRPAjbpvPuyh3PA8tlPYCg=;
+	s=arc-20240116; t=1773421029; c=relaxed/simple;
+	bh=LaDMrP+pcd/JXJQNPKeJRt91RMSc2WISQEFS4Meu+2s=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=f9Lj31QFCFMqKDddXbBpBgwVs45/IoupxS7bu4oT34O5HSWd+keaPiLiIUTZMGrvKJkPxHCpO5QU0Y6gqkAnLm5Kl039xpApirR7jjHNKHzgWfzOmcuXrk8FtG73rOUx0oLhf5u5kgCi5ah5l4wsQdOthBbiMvFiboStrLNFOjQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=cK0MmJDl; arc=none smtp.client-ip=220.197.31.5
+	 MIME-Version; b=Xkr3Lsb9mpx5fpT0CkajgSmBIWZu5TaRClj4JaTGkayauiwMUYVBAVdcXfGva5z9MEGCbKUNYy8byYW/urrFc/mAM7kBYyjY5APNIF4s1kLsb8ytt1jQX4P5iwDo+hRV2A+Inp5RFqAZacuQllE0Bb9tSYHPaFIxth0tCvuggvI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=n0zuwsdN; arc=none smtp.client-ip=220.197.31.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="cK0MmJDl"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="n0zuwsdN"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=OS
-	3wNR44a9Lcr5qeJNGEMIZI1am9Rwc0ZQ9oLaGb9Ro=; b=cK0MmJDlf9ZvYmwmn+
-	asRAiFE8eoyXUOJsmYCxDBQz4hZkk5pzhR4bpX3KaQTISy0u9fWlHOxJx0EPB2Ve
-	Ra4sm9qGjJbaKKOw2CeJyJWIlWobu7F6oI+2bKft3852HZ7vHMC4Jhzk1rwYlzLg
-	Lyxn1TtkDyMJ6LCTXcJf+0IR4=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=jq
+	SuO3F12+BG9vDtSc8L1vzzspX/dhmwJJslZsHS+5w=; b=n0zuwsdNS0gS17QGuF
+	pXTmwopfCpJ8kBSb5N88HeJgmtmFZvZAnII+cqt0DOza14sHfaLdvpzkHzRkQo2T
+	XJHHJeWpoCPt9gFP3ON1hFls3+xe0tbEdUBgiI5oYe+sdRNKkwY2IWJ5GWVk2THK
+	IhNHb25YDUWgP+ZvqO5ewpr2Q=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wAX2JV7QbRpTApJAw--.54345S3;
-	Sat, 14 Mar 2026 00:55:25 +0800 (CST)
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wAX2JV7QbRpTApJAw--.54345S5;
+	Sat, 14 Mar 2026 00:55:28 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	jingoohan1@gmail.com,
@@ -48,9 +48,9 @@ Cc: robh@kernel.org,
 	linux-kernel@vger.kernel.org,
 	shawn.lin@rock-chips.com,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v9 1/5] PCI: Add pcie_get_link_speed() helper for safe array access
-Date: Sat, 14 Mar 2026 00:55:18 +0800
-Message-Id: <20260313165522.123518-2-18255117159@163.com>
+Subject: [PATCH v9 3/5] PCI: j721e: Validate max-link-speed from DT
+Date: Sat, 14 Mar 2026 00:55:20 +0800
+Message-Id: <20260313165522.123518-4-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260313165522.123518-1-18255117159@163.com>
 References: <20260313165522.123518-1-18255117159@163.com>
@@ -61,70 +61,37 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wAX2JV7QbRpTApJAw--.54345S3
-X-Coremail-Antispam: 1Uf129KBjvJXoW7WF48JF4fKFW8CrWUXr13urg_yoW8ZFy5pF
-	W2kw1Fyr10qF13Xr43Z3Z8ZFy5X3ZxGFW7GrW7GasFvF43Jr9xXrySgrWfJr9akrsrury2
-	qF13tr4UCF12yF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0z_uWlZUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7B72mmm0QX4ApgAA3a
+X-CM-TRANSID:_____wAX2JV7QbRpTApJAw--.54345S5
+X-Coremail-Antispam: 1Uf129KBjvdXoW7JF4rZw1ftr4xWFyxGF1DGFg_yoWDXFXE9F
+	1UXFWrAr4Uuryakr1YyryayF95A34Uuw18Wa4rtF4fAFyxWay5ZrnxAFWUWa97u3W7JF17
+	JFyDKFn5J3ZFkjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRNDGYtUUUUU==
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxAD3m2m0QYDJ6wAA3W
 
-The pcie_link_speed[] array is indexed by PCIe generation numbers
-(1 = 2.5 GT/s, 2 = 5 GT/s, ...).  Several drivers use it directly,
-which can lead to out-of-bounds accesses if an invalid generation
-number is used.
-
-Introduce a helper function pcie_get_link_speed() that returns the
-corresponding enum pci_bus_speed value for a given generation number,
-or PCI_SPEED_UNKNOWN if the generation is out of range.  This will
-allow us to safely handle invalid values after the range check is
-removed from of_pci_get_max_link_speed().
+Use the new pcie_get_link_speed() helper to validate the value read from
+the "max-link-speed" DT property.  If the value is missing or invalid,
+fall back to Gen2 (speed = 2).  This prepares for the removal of the
+range check in of_pci_get_max_link_speed().
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/pci.h   |  2 ++
- drivers/pci/probe.c | 16 ++++++++++++++++
- 2 files changed, 18 insertions(+)
+ drivers/pci/controller/cadence/pci-j721e.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 13d998fbacce..409aca7d737a 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -108,6 +108,8 @@ struct pcie_tlp_log;
- 				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index 6f2501479c70..bfdfe98d5aba 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -202,7 +202,8 @@ static int j721e_pcie_set_link_speed(struct j721e_pcie *pcie,
+ 	int ret;
  
- extern const unsigned char pcie_link_speed[];
-+unsigned char pcie_get_link_speed(unsigned int speed);
-+
- extern bool pci_early_dump;
+ 	link_speed = of_pci_get_max_link_speed(np);
+-	if (link_speed < 2)
++	if ((link_speed < 2) ||
++	    (pcie_get_link_speed(link_speed) == PCI_SPEED_UNKNOWN))
+ 		link_speed = 2;
  
- extern struct mutex pci_rescan_remove_lock;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index bccc7a4bdd79..d6592898330c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -783,6 +783,22 @@ const unsigned char pcie_link_speed[] = {
- };
- EXPORT_SYMBOL_GPL(pcie_link_speed);
- 
-+/**
-+ * pcie_link_speed_value - Get speed value from PCIe generation number
-+ * @speed: PCIe speed (1-based: 1 = 2.5GT, 2 = 5GT, ...)
-+ *
-+ * Returns the speed value (e.g., PCIE_SPEED_2_5GT) if @speed is valid,
-+ * otherwise returns PCI_SPEED_UNKNOWN.
-+ */
-+unsigned char pcie_get_link_speed(unsigned int speed)
-+{
-+	if (speed >= ARRAY_SIZE(pcie_link_speed))
-+		return PCI_SPEED_UNKNOWN;
-+
-+	return pcie_link_speed[speed];
-+}
-+EXPORT_SYMBOL_GPL(pcie_get_link_speed);
-+
- const char *pci_speed_string(enum pci_bus_speed speed)
- {
- 	/* Indexed by the pci_bus_speed enum */
+ 	val = link_speed - 1;
 -- 
 2.34.1
 
