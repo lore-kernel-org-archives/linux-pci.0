@@ -1,180 +1,191 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012069.outbound.protection.outlook.com [40.107.209.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91B4E31987D;
-	Fri, 13 Mar 2026 13:32:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773408752; cv=none; b=UTYuqERdbXZSBWBW5faMdIMCVcqbbuEiyWuOj3OKbrDixehE9OGpUsAtSffDX1qXl3W51Q+8PL+VMoKO6SREyiXKoWrTXr1MEU8g6FMuzfQLss9dJNfKn1tJU6VrIhwRwKXO2Y6znAwHj5LmzZ1CIGUtexokkIvPt20boUZp3sU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773408752; c=relaxed/simple;
-	bh=7ILJNIKoclyo/TnN31WhuPp/9WK1OvpJ43GNXbGEw+w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=g7Kg20spe20k8FDEOnw6TqlDmyh/AIm/bUitR8at0AoaIvdQJJnL6V32zlFbR5gI7ZFC3McvebYjLvdZbap9zcuolXLIhAe00Nw/WA4euh88zj0ZcU7gAiU8ELnl/2MyKo3OlrzLfyDFWTPJ8cziU/RN5BtUKcwy+0m1dNJGKEU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=CvgTnbtD; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D016431987D
+	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 13:32:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.69
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773408764; cv=fail; b=B1X1Co7TtH/cr6FQ6CcFG/KJdQhsj8dQf7xvWUVPAjNWFkYyqChEo+fwRpuckAG95pqPRJfggCz1RBoVRpCF5+n6fnehvDRTi2oosmJLJNhA5bRk7RT3nYohLI5bo3fU61KBBemcgwNqmZAgWrcnuDrTGyv1Dh1gj0AjTEaAOHg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773408764; c=relaxed/simple;
+	bh=aBIv40KWASSfJfrgxlYAQp+nUnFQB2FmNBvtdbX0YXM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=a552IQWU0v4hk5VF3MsrhRwXyfX8CTCjmGhxY9Afw9qzUjWqiAL79u0mUWgpUkuuc1dzm/UAquP/4nuWCLnyVT1Pv2mq634p7uZT8hyaLbVK9TuQEpB6BgrqZNXP4XapjMg5F5T5TGJ9rGyhLx4fZhOvP+fVsOteTJz6VQStwfU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=q6O5KzYC; arc=fail smtp.client-ip=40.107.209.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="CvgTnbtD"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62D5Iv5A2581579;
-	Fri, 13 Mar 2026 13:32:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:sender:subject:to; s=pp1;
-	 bh=knBAe5Mz9iL/gkqQCgS//1NzZK4swdv8s0rEPfyiN3I=; b=CvgTnbtDA3dO
-	BGv423Uq05e5Dekjz36Nb+pRNY9XqoBsCfT+PCAxbkMMOsxWXgzaVqUsNuNJer65
-	xjFj5QkPq2ReWxj8X6LErfKO3V727aI0mXj567dC0UNflbB5RQN/kr3pMtaHtBwZ
-	R7Iexp9+ebqOJaOsau0bJb3uyi6iwABIwfUNYUMV7QVnamrHbubcxQooTNdAVb/+
-	M3dOE/qbjJflobgpApM12BoAnNeJF43nWgbNw37MY3yUXyE3putryiFpfy6vp4VP
-	ujpxHlz1AJC7172BFpS64EmBwRbiTerMI+u/E9LCe6+teT/6jAvz56m5SDrR4fLE
-	B+LOXwxV6g==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cuh9501wp-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 13 Mar 2026 13:32:30 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62DAOBwr020823;
-	Fri, 13 Mar 2026 13:32:29 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4cuha9pt6a-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 13 Mar 2026 13:32:28 +0000
-Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62DDWPJU51052880
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 13 Mar 2026 13:32:25 GMT
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 1C3A620043;
-	Fri, 13 Mar 2026 13:32:25 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 0893E20040;
-	Fri, 13 Mar 2026 13:32:25 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.52.223.163])
-	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Fri, 13 Mar 2026 13:32:24 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.1)
-	(envelope-from <bblock@linux.ibm.com>)
-	id 1w12cq-0000000EvrQ-382Z;
-	Fri, 13 Mar 2026 14:32:24 +0100
-Date: Fri, 13 Mar 2026 14:32:24 +0100
-From: Benjamin Block <bblock@linux.ibm.com>
-To: Niklas Schnelle <schnelle@linux.ibm.com>
-Cc: Alexander Gordeev <agordeev@linux.ibm.com>,
-        Gerd Bayer <gbayer@linux.ibm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-        Vasily Gorbik <gor@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>,
-        "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>,
-        Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        Andreas Krebbel <krebbel@linux.ibm.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Ionut Nechita <ionut_n2001@yahoo.com>,
-        Tobias Schumacher <ts@linux.ibm.com>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        Matthew Rosato <mjrosato@linux.ibm.com>,
-        linux-s390 <linux-s390@vger.kernel.org>,
-        Julian Ruess <julianr@linux.ibm.com>, Farhan Ali <alifm@linux.ibm.com>
-Subject: Re: [PATCH v2 1/3] PCI: Move declaration of pci_rescan_remove_lock
- into public pci.h
-Message-ID: <20260313133224.GD2161595@p1gen4-pw042f0m>
-References: <cover.1773235561.git.bblock@linux.ibm.com>
- <e9f46b25e5b47ec1d8fdca33b10346bc6de23445.1773235561.git.bblock@linux.ibm.com>
- <0536daedd01b7ad6f88719c9dc799a9de8a3bead.camel@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="q6O5KzYC"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=GBXWg8BwJ3tMIbXtHIoMZYI5qwgX3VCjZ1vJ0/Sq1UambWFtB6//EfzCLzfB7ztS4oz3RRan9TNXSHmxmoCXmmG9PfvpoHdOiDnryyddyr5bZF6ztWWsXfnOBtmxyHDPJmZNoEDzpoM4x9orhOhPxyVW8ZqqobN7N7TyL4P0lLLcODTHUqArkzMBkULbLt/Dcb5juAboWGcT9rDZR++t9K4U0J7g2CJznmjNiR5THjmBSYt+ujNS7Tv5TpFVhB4tXzDR5BBLHnQWeX6q4erx8U0drSPKN1zLklZIuUz8zdsPJGC5E5pIVcBBdrzuOBrWrCjQ6d82KXXwTmcj7fOY4g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=OhkRLC0llhmlRDPBIq4FxIU1/y0kEeBY0nWzSBNDOUo=;
+ b=Z0Lx0QssDNlBrUYFH9kIRo33J1Q59V9/TGntx8HKepFiaTFjXI1rZwxdfs8iG+cVQtZE68spQGBC6lBMJ0cc7GgeyuWg5RHmk/KAKvqAHGPEW5ZtlMLGhNPLmNTlijaDXKEVm8Om2PcHMSbKPGJSLqBnx7V/X3tn11fd0xaMp/GU8NIf4qiuOUWyOQb4OitSLFO2KadlDZPSPCzgU/lN7m25eWYuEZBdXdUAIQ2ZX+Sx92JriIa4/3+6qMTw+/MiJiiOT05HJWAG7aynwiIqX2yzgS1Aq+UE5hd1+pE5M+IgZUhMFTmRYxziPJil/hEzLiAfdl7UTBtOgVylGHi8Gg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=OhkRLC0llhmlRDPBIq4FxIU1/y0kEeBY0nWzSBNDOUo=;
+ b=q6O5KzYCFqs9yOmi/yzGtJjXV6s18SGVT8suFa3n+hxYbwLVvgFzLVNp0kN5Hba1jbjUN5GHULywpjJRm1D9AoVdd9BfQWBtPukdI1IZP6SXvVibMhKRNztSHZU8K076cC7/jnDRYAb+iB3pJ2uyMQmj4IcgQMC8OLikJFLTjsIuZg32lO145F1brjWA38uIh5ST1u4QUlzlfmKkcfN/HbvB+6tt1zLYYXsmvi/qV2y+SDLxyqID3KecI3vDO8QZlevVe2y3DhInRqfrpFNgNd6DERE9zq+MYwISd1h+RV6gJtNPz4bVs/rHUTIlWpcsPwwsSHfZj7rdiFr5r2Z6pw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by CH1PPF2D39B31FF.namprd12.prod.outlook.com (2603:10b6:61f:fc00::60a) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.8; Fri, 13 Mar
+ 2026 13:32:37 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%5]) with mapi id 15.20.9654.022; Fri, 13 Mar 2026
+ 13:32:36 +0000
+Date: Fri, 13 Mar 2026 10:32:35 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, linux-coco@lists.linux.dev,
+	linux-pci@vger.kernel.org, aik@amd.com, aneesh.kumar@kernel.org,
+	yilun.xu@linux.intel.com, bhelgaas@google.com, alistair23@gmail.com,
+	lukas@wunner.de, Christoph Hellwig <hch@lst.de>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Roman Kisel <romank@linux.microsoft.com>,
+	Samuel Ortiz <sameo@rivosinc.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>
+Subject: Re: [PATCH v2 03/19] device core: Introduce confidential device
+ acceptance
+Message-ID: <20260313133235.GC1586734@nvidia.com>
+References: <20260303000207.1836586-1-dan.j.williams@intel.com>
+ <20260303000207.1836586-4-dan.j.williams@intel.com>
+ <2026031230-mastiff-create-7593@gregkh>
+ <69b38e7427a61_b2b610073@dwillia2-mobl4.notmuch>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <69b38e7427a61_b2b610073@dwillia2-mobl4.notmuch>
+X-ClientProxiedBy: BL1P221CA0041.NAMP221.PROD.OUTLOOK.COM
+ (2603:10b6:208:5b5::19) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <0536daedd01b7ad6f88719c9dc799a9de8a3bead.camel@linux.ibm.com>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Authority-Analysis: v=2.4 cv=QKtlhwLL c=1 sm=1 tr=0 ts=69b411ee cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=8nJEP1OIZ-IA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VnNF1IyMAAAA:8
- a=oaMjjLmQ_YMjUI20znAA:9 a=3ZKOabzyN94A:10 a=wPNLvfGTeEIA:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzEzMDEwNyBTYWx0ZWRfX2CLOJmc3poNo
- CKHAwepoW61+Z/zSE0kCJvr005y2bUCcN2jrIwmNDv+kmm+v+Z+0tauSP0VUuyCjpbQv/8Ru+8d
- 9StOT8Sl4HsMan9YDm0CABPFRrE+EQsr6h/NvV6AQiO94EuNfoiBn16Mrn155UJT5ILiUzcy/md
- VbxfQYPeGMBcvV4u6GNYCQipv+h7BggOC9aR+u3czfRRf45IlYBvdraDF4GczmmoMk4hMcHFchF
- rJsEEv3tbiLVoE8CSw2Jkjco1MpHairmG1gZ6nJrbtfXZi8yjl/ZUEv+2Bz3kmEQVzf5UlpcZyu
- O1phxoC2BqoJ+dsAmdjmjfWOBq/3Vg7pH9kbcIvn++fgEryKe6NdYYxuzgVi5xAzXAHmsydgW+W
- vVX7S3G5ujKkS2bhqaV4V9B7vcufD/lzrjT9IIOErR14dlfEWY/EWuGeSYuuQNWc0GrN83wSipb
- +fln71xrwEs7xgfc24g==
-X-Proofpoint-ORIG-GUID: TAuMCTvdsBcT0d2dx5oAWshO8xhFDVMR
-X-Proofpoint-GUID: Uw__DgqH15Dz6RgQ9SGvWMVEgZcJhcNn
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-13_02,2026-03-13_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 suspectscore=0 impostorscore=0 clxscore=1015
- priorityscore=1501 bulkscore=0 adultscore=0 phishscore=0 spamscore=0
- lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
- definitions=main-2603130107
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|CH1PPF2D39B31FF:EE_
+X-MS-Office365-Filtering-Correlation-Id: cdea4075-1a14-4126-41ff-08de8104fd80
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|7416014|376014|18002099003|56012099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	L5x9VhlCuPauXaiTtP0M68Qr8jDGhAo5cNVURnbX/F7vjOuQSfUSmZhewgVAbM/4zCVvOVPWsAn87qTO8dkMeYmRbn5jv+FhKqQToOLAPZvebEkMG9L11Sx9kcUIubQoBNU6n8pv3QBP6j7JLRJHEWweZH2VviOWEzleNOVrsPxmWUR04+/LuNfNrGyt0m4CAkVEIn6hg6Mr+jP/6LgCbulTfYGRByhywjj8aiReAOTRidahySEi9vCOt8jKbw4HauBwFP+cBPO7FaQZ0lqIKKhqg2NL8qbGz2oe3p4XX+7vSEdUNZpJV78cD9ePp03hDYfWUA2h7CjXVrEckPWIXcyhrGqC93kFiFcl8cuvPVGqulQ16Xq3trctKQKLAT6JBYPPPr/eTp0zZ/PUeQFICoo7+g2Rg0NID1c0l/QIMObWtiTwjFh7pZBJVYA0EyV78QSUQyuihqPwnZ4fDOMItQMXHSwkzeP5uDcRHTzKuBPDUuev+LcqzYMR8KAUIQybkt7gecQfUv5SEPaaODG8TFA9LMmRsEiGqs6O0nUbUZgsoav2hSH3i6QBOZzAxlNQCv4C0q33j5a1NLTARHAYWHtAmdlew6DC5b7FCz1SplTY+/K3NWjPzY8u5Yicxf2YLfAEHFDBJ2CPg7yeZ5jYCGvWRWZ52I4HLSJDrcI0adW3/7BYd78HW6J0mYgGR3VLWKi68n2bfEyAyKXOeRNjL05Yxj7cOGgCxuqFzdFOJeY=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?YP9Fh6aX/rtdowCfI78lJZjyqvTTDUnDqgrvRh/bLyyKzTxGGaBW5w1IQ1Ak?=
+ =?us-ascii?Q?IQYrIuJkEM4EIefmDRkZzVHlZ48qaaTHfT/Ih1v6t/csWfZetUcalgQnb56V?=
+ =?us-ascii?Q?s2qnXYf4pfaEPR+FXbZcHtycEISvJAg1KoVxXbzcm8oM1pQY5TNGda4GtYIL?=
+ =?us-ascii?Q?GaY61Fop498C+dLoc1WhqKteyoVjfKUD6bnvRFKwiRm4qeLoXISkJ6K4OPnM?=
+ =?us-ascii?Q?E5lMpcGlHUy9p5FhZMIax1bqfkmtU34hNxrKBadhmzXI1SoR+74Mo1v4uugN?=
+ =?us-ascii?Q?odcfc72DDBv9dLKOrumObYcikBdz2Pe84HzbVM9LWbhw28xRH+gFoUBw88TB?=
+ =?us-ascii?Q?oxFiHUUu8o36s0NagkeYAwwJY0ZUz402pgcTLYAOi2/oGhVYxXgrvi6cl9Kv?=
+ =?us-ascii?Q?3wgAJIUA6yRXAM85PWXSLe2KW8vH0vC8+2eWONdFbUy4pnigxZyp2UBvesjB?=
+ =?us-ascii?Q?idNI31KroLGL+j2X8w6WrRaKKQzB7Iu7kE8UY6HGSbS2xM720xK3mv+qlBgl?=
+ =?us-ascii?Q?WSzlA5uVkP6gpgB4LpYMwiAr5JbFWisLgFgfC6c02PIEP5UkuGxtzw9Uj04V?=
+ =?us-ascii?Q?nQHHyKv3ziqKui3OjgppN15uPnTR0E38dPHLKJ15uRDXehEMvw+YTXmmvlsK?=
+ =?us-ascii?Q?UN0T7s804Jn+n8EdIMnHJzMMp4hOQikQBENJJAPXrPDH4kkDjGkGDiniIJKl?=
+ =?us-ascii?Q?8rHN29CvmLITkVBQIZb1Mr/Q2W99DWNVDWjAYFEUUlNoELJlWUSd3wuYzH2A?=
+ =?us-ascii?Q?ZodJHssuXHgSqpeKFCg8RVaxP2KV14YBjvf+bSmmCojcoS1DTammAbjNbXTr?=
+ =?us-ascii?Q?B+uKq3LGfDHac6Vr/My4GewH9N/gtRywRv5SjLcpKWSL5jPhwFp5AbV0PLqj?=
+ =?us-ascii?Q?puWV5Cd+tzeSx+/50zC2SLMD5zQR9QEq4f1g4R4WEUk59D8mFvELYsRQ5kK3?=
+ =?us-ascii?Q?dmgUEONe2bi2RiqCHUEVAHURB8ugrF7ERsNMHY0XdIcacdH+G/anoc/GxSZA?=
+ =?us-ascii?Q?53uwadOe5vS1RkUDWWNLzTeV55sz/DUt83BnSUoCqnrM83DHbO/xIVecJBav?=
+ =?us-ascii?Q?3UxsX5JXKfWQ5dsEgODLbtYom+8S4fuEErwccnAdB+7Ppw7/GNlcb1dBEE7Y?=
+ =?us-ascii?Q?jqz/UHshTsQKIaGZrTzl+w3MkM2Z6IdPF+n5IXPkD+gSmTT4JTnke9HdfZ2z?=
+ =?us-ascii?Q?xLh9kxkrkVcqMl8UU/bsYYkkcH0mNcZ0AT/CzFhaDeerIqcEFgwy/wHl0bVZ?=
+ =?us-ascii?Q?3o2DELjeFcS4aVc8Tyeijoo7Fb+9/EcRv29k+F+lJxiK8Mt2yeXZyD7yRqQb?=
+ =?us-ascii?Q?3cLBG+Zl4gX8d7/YB0z++kHDF+dhqJ8OGB47Hln0EiLByww4WUHuWpbEsQDQ?=
+ =?us-ascii?Q?UpfMEBLJeLquDFcej4yHHDpbYEVQZfr4m82JKJyktO5gQEpniBYGIHbgo/v3?=
+ =?us-ascii?Q?i3nEGPBtGWeDb2C//1/T0jmIkuNAalWi3703A0EU3NJssdxwwxZgu6sW+Xts?=
+ =?us-ascii?Q?2HEkpduvLlfa3C/y4KeyAyyrCG6eCS1N+W+ZW0C5z98xlW07El++J6KlLJmY?=
+ =?us-ascii?Q?HPCWW7B7kCQJDMww2diZb/kzooe11JFll1bL83/F6MUpPntTtH7rTRdRc3mH?=
+ =?us-ascii?Q?y+PSwJ+ZdXQflgpaldxuluOffviNlZlrPSObnThLyEdBu6Gdgf5gVqgJFFtB?=
+ =?us-ascii?Q?fEWJAQIZ69hJh6VX34DwvMum9CGv9sg6kAQXsAqcU9laYt0+v8HE2lNBCSK9?=
+ =?us-ascii?Q?ARwF8101mg=3D=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cdea4075-1a14-4126-41ff-08de8104fd80
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Mar 2026 13:32:36.8529
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: mFX5MR+L/WtOWC83SrYpb47u2YDQquG+If7DyL0xZUCl2VtYg1Peb2BYR3d3+jcn
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH1PPF2D39B31FF
 
-On Thu, Mar 12, 2026 at 08:41:26PM +0100, Niklas Schnelle wrote:
-> On Wed, 2026-03-11 at 14:27 +0100, Benjamin Block wrote:
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index bccc7a4bdd79..e5b12878e972 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -3509,6 +3509,7 @@ EXPORT_SYMBOL_GPL(pci_rescan_bus);
-> >   * routines should always be executed under this mutex.
-> >   */
-> >  DEFINE_MUTEX(pci_rescan_remove_lock);
-> > +EXPORT_SYMBOL_GPL(pci_rescan_remove_lock);
+On Thu, Mar 12, 2026 at 09:11:32PM -0700, Dan Williams wrote:
+> Greg KH wrote:
+> > On Mon, Mar 02, 2026 at 04:01:51PM -0800, Dan Williams wrote:
+> > > An "accepted" device is one that is allowed to access private memory within
+> > > a Trusted Computing Boundary (TCB). The concept of "acceptance" is distinct
+> > > from other device properties like usb_device::authorized, or
+> > > tb_switch::authorized. The entry to the accepted state is a violent
+> > > operation in which the device will reject MMIO requests that are not
+> > > encrypted, and the device enters a new IOMMU protection domain to allow it
+> > > to access addresses that were previously off-limits.
+> > 
+> > Trying to mix/match "acceptance" with "authorized" is going to be a
+> > nightmare, what's the combination that can happen here over time?
 > 
-> This has a (rather trivial) merge conflict with Ionut's patch which at
-> the same time is a prerequisite for this series. Sadly since that isn't
-> in linux-next yet I'm not sure how to best handle this. Maybe it would
-> make sense to just include it in this series? @Ionut would that be ok
-> for you?
+> I do think Linux needs to mix/match these concepts. "Authorization" is a
+> kernel policy to operate a device at all. "Acceptance" is a mechanism
+> to operate a device within a hardware TCB boundary.
 
-Well, I don't mind either way tbf. I can also resend a new version, once other
-other patch gets into next/master. That's shouldn't be an issue.
+I'm not sure about these words either, I would revise your table to be
+more OS centric, the device can be in one of four security levels:
 
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 1c270f1d5123..fd7a962a64ef 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -39,6 +39,7 @@
-> >  #include <linux/io.h>
-> >  #include <linux/resource_ext.h>
-> >  #include <linux/msi_api.h>
-> > +#include <linux/mutex.h>
-> >  #include <uapi/linux/pci.h>
-> >  
-> >  #include <linux/pci_ids.h>
-> > @@ -1533,6 +1534,7 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev);
-> >  
-> >  /* Functions for PCI Hotplug drivers to use */
-> >  unsigned int pci_rescan_bus(struct pci_bus *bus);
-> > +extern struct mutex pci_rescan_remove_lock;
-> >  void pci_lock_rescan_remove(void);
-> >  void pci_unlock_rescan_remove(void);
-> >  
-> 
-> I do see Keith's argument that proliferation of the rescan/remove lock
-> is to be minimized. That said, since user's of this header can already
-> lock/unlock I don't think this patch makes matters worse. In fact we
-> want this patch to be able to add better lockdep asserts so it will
-> help against misuse.
-> 
-> With that feel free to add:
-> 
-> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+0 Blocked and disabled
+  The device cannot attack the system, enforced by the OS not loading a
+  driver or mapping the MMIO and IOMMU fully blocking everything from it.
 
-Thanks.
+1 In use, attacks from a hostile device are possible
+  A driver can operate the device and is expected to defend against
+  attacks from the device itself. The IOMMU restricts the device to only
+  access driver approved data (no ATS, DMA strict only, CC shared
+  only, interrupt remapping security, bounce partial DMA mappings, etc)
 
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
-Sitz der Ges.: Ehningen     /     Registergericht: AmtsG Stuttgart, HRB 243294
+2 In use, no attacks from the device
+  The device does what the driver says and is not hostile. The driver
+  does not have to defend itself, the IOMMU can run in faster & lower
+  security modes (ATS on, DMA-FQ, Identity, still CC shared only)
+   * Basically our default security level today
+
+3 In use, no attacks, and access to CC private memory
+  Like #2 and now the IOMMU allows access to CC private memory too.
+
+[*] I'm inclunding all attacks with "hostile device", including MIM on
+the PCIe link, compromised/fake device, attacks from a VMM through a
+virtual device, etc.
+
+From a CC VM perspective 0 is at boot, 1 is an out of TCB device, 2
+doesn't exist (without TDISP there is no way to keep the
+hypervisor from attacking?), and 3 is a full accepted TDSIP device.
+
+#2 can happen in bare metal where a OS may activate link encryption
+and attest the device, but doesn't have CC private/shared memory.
+
+From a uAPI perspective I'm not sold on having two bools, I think a
+level string would be more flexible. TSM and CC properties are
+orthogonal, except you can't select #3 without the TSM saying it is in
+RUN.
+
+Internally we'd probably turn that dev->trusted thing into an
+enum and teach the iommu layer to treat it more dynamically.
+
+Jason
