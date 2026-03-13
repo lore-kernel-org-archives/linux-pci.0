@@ -1,134 +1,132 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazon11022091.outbound.protection.outlook.com [52.101.126.91])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 142FC390224;
-	Fri, 13 Mar 2026 11:29:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773401371; cv=none; b=SXOE1Ah/9jsqNneykCS4tv+eU2jN+KmCsOjEkywvloVS1aEiRPZO2aCcolzR8V9anOanlrszMaMla2CGwm8fCk8ZeURhS08hxDpk5IBuObVKuwESkxzL5AJYzGWwy3mHSSWAPrEHm2Ogo+dKKNzDT1JMNxpa1V9dzhDSLkj1O2k=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773401371; c=relaxed/simple;
-	bh=qZSUqVDbcjSL5J7pa7SW1VXUFoHbZTyErrM2uAHYl1g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ae3Ry6+XVPahODlyuARt/ltDDEdImI/1ZwWrtxB5bG4/haO9oRBUik6vY+unvi8E09akSrrqR5/s54ChWZTOxec/flby5rPgY3PDrSbis4NageR+udA4Wu0OxRCJ8hTHYrZvLpZLc8LRby8UglTqUJNik3vdznaOAv8MXhYEWw4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Bu5puCN0; arc=none smtp.client-ip=192.198.163.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Bu5puCN0"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773401370; x=1804937370;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=qZSUqVDbcjSL5J7pa7SW1VXUFoHbZTyErrM2uAHYl1g=;
-  b=Bu5puCN0c4T9CTRBHVnGsjc1NZQgQdwQyNM9Pna1bTjju0qZQHg62FQ7
-   5V5q96r3rrwAgd4Q07npKxcnnNNAgfN4fHxOhJFuHF5VRJZf8NEaljAon
-   oVFowLDb2zCt6uexGOAXsyR+Z6z5J3VNBCthO/+BVfEKPl+7Vv32TOpNt
-   Plq8e/9qOX9prpBGqJ6PplqkDZkdeaCugr31P95tAeabllQA/aOY5Cqts
-   o/R4ZS7fUKEx08ymksqn7IV9h4qtyu5LmRslWmRrOf/AeYxA/Qvf7KWVo
-   s63wum3eBnWU4jizYFFlEKbhasDpkMuWCpJZ+YDfgohNL6TTfSImUklZm
-   Q==;
-X-CSE-ConnectionGUID: g8fPfMo0RHuPZMfvbMcJJA==
-X-CSE-MsgGUID: WdNVTHo7SNWpbgiaf0xgBA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11727"; a="74619009"
-X-IronPort-AV: E=Sophos;i="6.23,118,1770624000"; 
-   d="scan'208";a="74619009"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Mar 2026 04:29:29 -0700
-X-CSE-ConnectionGUID: 6kYj/7auRbO+/ZLS6AeoVg==
-X-CSE-MsgGUID: HXNoPKsWTDugNzMtXVfVvA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,118,1770624000"; 
-   d="scan'208";a="225823636"
-Received: from pgcooper-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.245.246])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Mar 2026 04:29:15 -0700
-Date: Fri, 13 Mar 2026 13:29:13 +0200
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Herve Codina <herve.codina@bootlin.com>
-Cc: Ulf Hansson <ulf.hansson@linaro.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Kalle Niemi <kaleposti@gmail.com>,
-	Matti Vaittinen <mazziesaccount@gmail.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>, Frank Li <Frank.Li@nxp.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>, Andi Shyti <andi.shyti@kernel.org>,
-	Wolfram Sang <wsa+renesas@sang-engineering.com>,
-	Peter Rosin <peda@axentia.se>, Arnd Bergmann <arnd@arndb.de>,
-	Saravana Kannan <saravanak@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Charles Keepax <ckeepax@opensource.cirrus.com>,
-	Richard Fitzgerald <rf@opensource.cirrus.com>,
-	David Rhodes <david.rhodes@cirrus.com>,
-	Linus Walleij <linusw@kernel.org>, Mark Brown <broonie@kernel.org>,
-	Len Brown <lenb@kernel.org>, Daniel Scally <djrscally@gmail.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sakari Ailus <sakari.ailus@linux.intel.com>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Shawn Guo <shawnguo@kernel.org>, Wolfram Sang <wsa@kernel.org>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
-	linux-clk@vger.kernel.org, linux-i2c@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org, patches@opensource.cirrus.com,
-	linux-gpio@vger.kernel.org, linux-pm@vger.kernel.org,
-	linux-spi@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-cxl@vger.kernel.org,
-	Allan Nielsen <allan.nielsen@microchip.com>,
-	Horatiu Vultur <horatiu.vultur@microchip.com>,
-	Steen Hegelund <steen.hegelund@microchip.com>,
-	Luca Ceresoli <luca.ceresoli@bootlin.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Saravana Kannan <saravanak@google.com>,
-	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: Re: [PATCH v5 02/28] driver core: Rename get_dev_from_fwnode()
- wrapper to get_device_from_fwnode()
-Message-ID: <abP1Cdy1uYpQT1KQ@ashevche-desk.local>
-References: <20260227135428.783983-1-herve.codina@bootlin.com>
- <20260227135428.783983-3-herve.codina@bootlin.com>
- <CAMuHMdVVsEB-xb8Jz4ujBam2NxtxAOb7byYa3VR_eHsbTD5rXw@mail.gmail.com>
- <2026031242-debug-aviation-19b8@gregkh>
- <CAPDyKFpX3A3r4s72PNjBz5QaZUsq1xaGhn5vXwegue7Tyh_Zew@mail.gmail.com>
- <20260313122027.498ff15f@bootlin.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0C06377EC4;
+	Fri, 13 Mar 2026 11:49:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.126.91
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773402562; cv=fail; b=DB3AQqWOVplPvbG8lwC90wOBWFzda5NH5OlNqxJHNJymdmLPXOxGX2HqS6moEekdz8+Ap2P5Ts6JTJ6LT8+cE5kURybj/NpF/rohPDU9h2aN4y9kKr0j9LOWiv4ZEr8bqYkUpV0UT7sTpZZwge+Vx0VUJ9QkrDxNFquM2bMXFM8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773402562; c=relaxed/simple;
+	bh=0Q0mg4gmy2bK9FsrQZs/oMWi5kwFFuMELC6lpe4SwjM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=eEesXpwB9623OrFNTARoUA/p4F9DCvQ3oGxteTudA/kXcQoOzkKgcR5m2VDYTJDz2lpA1OLoZ1cl4CScRNP8RvEuunid0pCFuEcn6Z9BJIoxsPhOftplhhifQmI88VI441HP0KCcLTSivfmubE55mjoyzZ1Pw5639JXBEihlz2g=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=52.101.126.91
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cixtech.com
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=webGxCfzsDEi+UgvOYjK9aYRdAoU5XjJBDmajb5k3cHhBWGaNAIblzvm9EjyAtONZfs/G1bSLfLlfb3jetPhr0u6YfqeyxjL9DNKDz3B0yjU9nmEA74WTD9P4xUpBP7hT/Tlt8eaqo4lzqogyezCzKYScg113aMwnh9tTtvvLiv3ftlfmyDg4phhEVgRS7cEnhD1QNfFQJjecGay6PwISQIIpWfFOtXDQApHsM2TekKq5LN6wnXhXYQqcsI2eX33w8kt2Yz1GInWnsIxmUrf+0CECK5/OQpPeurqf/ZLzuXOE2DYpKrWTqfP2Cs+GJigV/UDwj1jFX9b1nVbGjFMYA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=y4pxR76JMOqIQBEMiXt7xgkvKZiqrBwwZ0oEQFjBAmk=;
+ b=AhgUtvwQSp72VomGLLRcmwCoO19hPNrU/MEgDBTJFjPrxfua5C1bYM4NXF0gel5ERUxCJ2jw2A3ouErv35PoKnE/9+1lXmj+t9gxH+YRRDYc/0KPxxA5v+rMu9IXqc/5p0Us8fao4c9NQwBZgq4qC0PVNj4xyNuJ4T0Z9+JB6mF4yGBy5oA8FjQChp17zBbd60ejRtWfo/fCSzVAa8gGWkOolwHrgz3pHcapmuJ1BP3e0iscOto5dj2pTlTk/xbt6pwVHjDzwf45u6p86nyMhR8D4csiTY2R7rYzhIYxtq92BYPCM5KRyTtO1zvdgMum80GGj0gDTKmsBUYxNIOnDQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 222.71.101.198) smtp.rcpttodomain=cixtech.com smtp.mailfrom=cixtech.com;
+ dmarc=bestguesspass action=none header.from=cixtech.com; dkim=none (message
+ not signed); arc=none (0)
+Received: from TYCP301CA0029.JPNP301.PROD.OUTLOOK.COM (2603:1096:400:381::15)
+ by SEZPR06MB5000.apcprd06.prod.outlook.com (2603:1096:101:48::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.12; Fri, 13 Mar
+ 2026 11:49:17 +0000
+Received: from TY2PEPF0000AB87.apcprd03.prod.outlook.com
+ (2603:1096:400:381:cafe::3b) by TYCP301CA0029.outlook.office365.com
+ (2603:1096:400:381::15) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9678.30 via Frontend Transport; Fri,
+ 13 Mar 2026 11:49:18 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 222.71.101.198)
+ smtp.mailfrom=cixtech.com; dkim=none (message not signed)
+ header.d=none;dmarc=bestguesspass action=none header.from=cixtech.com;
+Received-SPF: Pass (protection.outlook.com: domain of cixtech.com designates
+ 222.71.101.198 as permitted sender) receiver=protection.outlook.com;
+ client-ip=222.71.101.198; helo=smtprelay.cixcomputing.com; pr=C
+Received: from smtprelay.cixcomputing.com (222.71.101.198) by
+ TY2PEPF0000AB87.mail.protection.outlook.com (10.167.253.6) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9700.17 via Frontend Transport; Fri, 13 Mar 2026 11:49:16 +0000
+Received: from localhost.localdomain (unknown [172.16.64.196])
+	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 0A1A740A5BD8;
+	Fri, 13 Mar 2026 19:49:15 +0800 (CST)
+From: Gary Yang <gary.yang@cixtech.com>
+To: lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	peter.chen@cixtech.com
+Cc: linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	cix-kernel-upstream@cixtech.com,
+	Gary Yang <gary.yang@cixtech.com>
+Subject: [PATCH v4 1/2] dt-bindings: PCI: cix,sky1-pcie-host: Add power-domains
+Date: Fri, 13 Mar 2026 19:49:13 +0800
+Message-ID: <20260313114914.1564115-2-gary.yang@cixtech.com>
+X-Mailer: git-send-email 2.49.0
+In-Reply-To: <20260313114914.1564115-1-gary.yang@cixtech.com>
+References: <20260313114914.1564115-1-gary.yang@cixtech.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260313122027.498ff15f@bootlin.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
+Content-Transfer-Encoding: 8bit
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY2PEPF0000AB87:EE_|SEZPR06MB5000:EE_
+Content-Type: text/plain
+X-MS-Office365-Filtering-Correlation-Id: 6bc40ccf-9578-43b1-cd91-08de80f68e4f
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|376014|7416014|1800799024|36860700016|56012099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	k6XQPeG+w8wAJSf1eIHI4xviWUvfvlwV5tNcYZxelkY/3TUmCVBPWQNuqdiik3pbfTDIBc+MS/QEAamqi3IuYKneF0FCxKNye8o6cMykAGFwVrcvfdKQ/WNMzfxEXBEj45/1eMqCANSHqhWIxXQKvqwWxqJ3xwhFUOiz4uxoud7PnlZa6PxzCuSHpyVYw+ju3gkSFbAx+DHd4mQ9HdtTslLMmikjgpao1GEOmBX3PMfkxGJHLg1Vmg8dh3lFZYvpWvv5WpavayhNyqaX9CwG559Jwd0C10i3TBNEcN8fi+7w+jQ64cF8O6zgZGV3kJQUQpKkuCZCSkPtqX9Bh5FwQIrj57jFAGDMHqMGqSDkRzMVFgGQwbTYK1qakp2iTlPdDphIuQOFLb3SjoWZN37baCPmfRwhwWHuUFb5owKR1QrRMyHH7fUKd2CSIA3WbU4maeAM9OaSHOugRiUO5gsTaYqULRdhzbVqw9K4YEAMxZN4WVmKvLUGIlK78Nut5RomdTPD3caBwUlP7AvzSAN7ZBddXBF45EaGcEtSOfxA3F7bO8A72TjMAISDF2z8FKU72WAtI+dlNBVzrlFfMib7T8imu1aLuxJ43zp5eFFtmcM45Ua58yfVxEdq+/R4LsqjNBRqsk7oS8WzviBolPEwLtm9Kl0IR3PDrmUzlPTOPBsl5mmbSx3ML4Cgzt1cgrDKm8kGJ3TXohLiXD6MbPT8r4m26HXha1ijWXWth7nL5WwR/iYQ5Uv3LsULl7drvsoXbciQoTVUip9SdfiuyOtjdA==
+X-Forefront-Antispam-Report:
+	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(376014)(7416014)(1800799024)(36860700016)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	Lv8kwz+kcDf0aLSC6tRx38WRfsb8nTmIYy+t2FsJdcLi3sVLxhes9tUNcsdGM1xAot1qn2chS70tJ3CGIJYqpwMjhy+e4XRs137lBni4BpSAcodTrqh9xf6LUBlCSRpoEfU29I2aVEl2ebqzqUUzMaDA2TJLhse2Djeqa06S7wQOgf69AX+XbeUgXz++2xatqYn4/PuKrui1yj8iCzAMN/pEjbQZW4P0dmDEvJdCX7rNz8JwVuctduyixjC0y6RTiVsZY8oAOfiLHbGUjqKwm0j8MesuqQg5QA+qzGYGwOWLFjaEVoefpdhcAlDCjGGbiZqqxY61gtlDv8dN5Tl6HKzz34ZN0Q/liE0VFVnRIQPuC8U575iRRlKVhX/Q7YZdR0UYJEr0XNXVn7/6ZOffAG7MBWJbUxE/0oU1YjuFLIq19SgoPf6CmszbxGSqKZ25
+X-OriginatorOrg: cixtech.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Mar 2026 11:49:16.3913
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6bc40ccf-9578-43b1-cd91-08de80f68e4f
+X-MS-Exchange-CrossTenant-Id: 0409f77a-e53d-4d23-943e-ccade7cb4811
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=0409f77a-e53d-4d23-943e-ccade7cb4811;Ip=[222.71.101.198];Helo=[smtprelay.cixcomputing.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	TY2PEPF0000AB87.apcprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEZPR06MB5000
 
-On Fri, Mar 13, 2026 at 12:20:27PM +0100, Herve Codina wrote:
-> On Fri, 13 Mar 2026 10:43:33 +0100
-> Ulf Hansson <ulf.hansson@linaro.org> wrote:
+The Sky1 PCIe controller resides in a dedicated power domain managed
+via SCMI. Add the power-domains property to the binding to allow
+describing this dependency.
 
-...
+Signed-off-by: Gary Yang <gary.yang@cixtech.com>
+---
+ Documentation/devicetree/bindings/pci/cix,sky1-pcie-host.yaml | 3 +++
+ 1 file changed, 3 insertions(+)
 
-> Also agree on my side. I will fully remove this function renaming part from
-> this series in its next iteration.
-
-Yeah, make this integration easier.
-
+diff --git a/Documentation/devicetree/bindings/pci/cix,sky1-pcie-host.yaml b/Documentation/devicetree/bindings/pci/cix,sky1-pcie-host.yaml
+index b910a42e0843..d55d165f1e94 100644
+--- a/Documentation/devicetree/bindings/pci/cix,sky1-pcie-host.yaml
++++ b/Documentation/devicetree/bindings/pci/cix,sky1-pcie-host.yaml
+@@ -38,6 +38,9 @@ properties:
+   ranges:
+     maxItems: 3
+ 
++  power-domains:
++    maxItems: 1
++
+ required:
+   - compatible
+   - ranges
 -- 
-With Best Regards,
-Andy Shevchenko
-
+2.49.0
 
