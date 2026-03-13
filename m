@@ -1,103 +1,220 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 601E5364946;
-	Fri, 13 Mar 2026 18:19:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64A1A3D6496
+	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 18:48:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773425962; cv=none; b=l+4Akc+iRlY7b71U7DXkcTvcrdxdzI3US9iMBMQMGtFhF6LD/bPDHnsUkzQz/XDZDILuVxQzzGZouatC8dvWFuIPoXpamyQEtWEtV6Uzz02H2JIhUxpaoQ1yUhTwaqxgSWqB2PhQP87GxHfZZnGnXieSiYocLYhfYs9nDzGq/WQ=
+	t=1773427700; cv=none; b=Ud2oAiC7QHbYQ/pJ4eJSQoPLzVUeC+kW5fPq/KwECU3Gu1uksGWA/7UwkvS7xGlBmEBSAjQ3PtJutfZ4TlBMvzjwO7vEDkb64QDFPES11PpS0dDpVFP62TPlzWe3HM2e6TGRIxSt003HbVbo5Gxlu9rUNjWmSgCwnHU+xI140AE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773425962; c=relaxed/simple;
-	bh=wGHHmea18QzDv20CIQ8/NkoCGCljzKpgR/2yblyc0Sk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C9DFHzR5TZVWh1zJGLsvEuJ4e1V4nD2TR9ECbEXObLiMhmTxrl5jYXupN2M+LDHi33KQZ5bnHBwbUpgzNRF8l/ecpdtmJg8FGihn4ozrvsoLV/JnD7fCwc4W2cBUBFxIWyVh92Owiu5Lr6HboVQfMHoeGrfSQd3smPM3p6ciZpk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=F5pK6hhj; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1773427700; c=relaxed/simple;
+	bh=lqkLCC6LSFT8sUNpEBzBY8JOtcsVr7GJ4448/pcUwY0=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=nY1urNiDKKB49eKRePutFuEemAMjEs/6fd56kSotraL1CVCFvaLQXy/wRCkEKtFktGBqM1fB6lJzRgXOAB0G+bdxIG1BvdFLDAuiwFDE6LFRQeXJfgFgvtKuGgkZ/mECK6rbQPOmJCxsBQPtiya1tjz8qv5yB5HQ6DqR6vro1+k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=SXUq2qX/; arc=none smtp.client-ip=185.67.36.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="F5pK6hhj"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773425960; x=1804961960;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=wGHHmea18QzDv20CIQ8/NkoCGCljzKpgR/2yblyc0Sk=;
-  b=F5pK6hhjocPrUn74BVv8E0HdKeSxqJd+lLfIar4C9o8xJvaIph+2St+x
-   xX36Rc4E141yyudPXfjAopNIs1hjfRYtMlLJnP5Rt/WWdtL9rpgw7VPwI
-   jRuLN9ZB7e9Nj21Xfz2fJGFfJiqcjSxYjsbgTP71kg6h+hzFsZN/EDN2+
-   VVuldfo539nWKub339SyWAuD6g3Liv2g2pemV12tHytIm/I0iVJXS9J8z
-   jo+ZuWhleGOyiyr2bwlp314UVwFMkWK+Au/T+mtktlzh9M6BMzDBxm32I
-   Ye38iFGflFxs/R4V+Wd4uJrQZ27beRXYimRMBsRqLF+GaK0y3Oq/wOnhp
-   w==;
-X-CSE-ConnectionGUID: TDsYYxbBQOGWR0aW5QS12g==
-X-CSE-MsgGUID: JMFk49YyRr+g5Oxi2iKKHA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11728"; a="74618906"
-X-IronPort-AV: E=Sophos;i="6.23,118,1770624000"; 
-   d="scan'208";a="74618906"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Mar 2026 11:19:20 -0700
-X-CSE-ConnectionGUID: IsUab5fAS8+RjETs0meTqA==
-X-CSE-MsgGUID: tK2pfwEHS9KDtmikB151zw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,118,1770624000"; 
-   d="scan'208";a="225347842"
-Received: from igk-lkp-server01.igk.intel.com (HELO 9958d990ccf2) ([10.211.93.152])
-  by orviesa003.jf.intel.com with ESMTP; 13 Mar 2026 11:19:15 -0700
-Received: from kbuild by 9958d990ccf2 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1w176O-000000003h3-2O4L;
-	Fri, 13 Mar 2026 18:19:12 +0000
-Date: Fri, 13 Mar 2026 19:18:54 +0100
-From: kernel test robot <lkp@intel.com>
-To: Hans Zhang <18255117159@163.com>, lpieralisi@kernel.org,
-	jingoohan1@gmail.com, mani@kernel.org, kwilczynski@kernel.org,
-	bhelgaas@google.com, helgaas@kernel.org,
-	florian.fainelli@broadcom.com, jim2101024@gmail.com
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, robh@kernel.org,
-	ilpo.jarvinen@linux.intel.com, linux-arm-msm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-renesas-soc@vger.kernel.org, claudiu.beznea.uj@bp.renesas.com,
-	linux-mediatek@lists.infradead.org, linux-tegra@vger.kernel.org,
-	linux-omap@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Hans Zhang <18255117159@163.com>
-Subject: Re: [PATCH v8 1/5] PCI: Add pcie_get_link_speed() helper for safe
- array access
-Message-ID: <202603131934.SHJnSGL9-lkp@intel.com>
-References: <20260312163652.113228-2-18255117159@163.com>
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="SXUq2qX/"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout01.posteo.de (Postfix) with ESMTPS id CAAF224002B
+	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 19:48:16 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
+	t=1773427697; bh=r5SX/Ue5jJ9vUSKPhSX3SKPLfgJjsR+e+Um9Nu635+4=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:To:Cc:Autocrypt:OpenPGP:From;
+	b=SXUq2qX/tG5dgMiVI7zMSGR00//D1Yi1fVsKxGyvLycRyP/wBlkQ7G981RtKwn6j3
+	 qOsm0bFTaCmKYJacyivaQsn+9zyy5UdYrGg51Ga0HzTAkh7A7R7PuBdv4l/+eWRpsu
+	 9GdTtxErFEvLf+Uz3Mm8RevFgQBkzVc7Xdw/lIHlEWS8I1wTSmjgJgCIwgzUsDrhNN
+	 REqEcWW92vbCxsgHU5feCka3dzOIK6yTGw2VNdl5384vrk1BmAb9KPs0ksUzbSKDmE
+	 foR8ZKt3CKrBTdmKWXLxLEK4tXsRG/At4GPOY92QqZREqlxFzU6hc+lnLKRswQlsAJ
+	 1+kKBvXPBmmWA==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4fXYQh1Pdkz9rxG;
+	Fri, 13 Mar 2026 19:48:12 +0100 (CET)
+From: Markus Probst <markus.probst@posteo.de>
+Subject: [PATCH v3 0/7] Introduce Synology Microp driver
+Date: Fri, 13 Mar 2026 18:48:15 +0000
+Message-Id: <20260313-synology_microp_initial-v3-0-16941debd8a0@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260312163652.113228-2-18255117159@163.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIALxbtGkC/4WPzYqDMBSFX0WynpT8qDGu5j2GIja5aQNqbJKGS
+ vHdJ9WBcTPM8lz4vnvOCwXwFgJqixfykGywbsqBfxRI3frpCtjqnBEjrCac1DgskxvcdelGq7y
+ bOzvZaPsBEyN0r8RFlLJGmZ49GPvczF/nPXu4P/KDuB9//W2R7RVlVGD/CLHLlTQkDFCVDQVJm
+ kq1iaNjpR+E0nJHBtAB97KSRihmhJFtouxNXPoAWLlxtLEtkjgR7BVH70I3G6Lzy7Y80a3RvyM
+ TxQQbZQxoqMuyUZ+zCxHcScPmTOzoaf72sOyRvJGy5oZTVR0967p+A3mvwYWXAQAA
+X-Change-ID: 20260306-synology_microp_initial-0f7dac7b7496
+To: Lee Jones <lee@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
+ Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+ Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Igor Korotin <igor.korotin.linux@gmail.com>, 
+ Daniel Almeida <daniel.almeida@collabora.com>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>, 
+ Robert Moore <robert.moore@intel.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ rust-for-linux@vger.kernel.org, driver-core@lists.linux.dev, 
+ linux-pci@vger.kernel.org, linux-leds@vger.kernel.org, 
+ linux-acpi@vger.kernel.org, acpica-devel@lists.linux.dev, 
+ Markus Probst <markus.probst@posteo.de>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4344;
+ i=markus.probst@posteo.de; h=from:subject:message-id;
+ bh=lqkLCC6LSFT8sUNpEBzBY8JOtcsVr7GJ4448/pcUwY0=;
+ b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBptFva0KVi4waUAufIhV4CSG2+oR7AcRMMSy2P+
+ KYk8QcZH/WJAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCabRb2hsUgAAAAAAEAA5t
+ YW51MiwyLjUrMS4xMSwyLDIACgkQNHYf+OetQ9JPFw/9EuSwy3G/wzL75o2KFy4QNCXEDn9de4j
+ o746o/u5CfdEZfVFj/B6lGRU78jSxptkA8+pz+B/v+wpui7o/wti3TRNxoA8LlSjj3igULsudtl
+ y/iu5pJVI6SKC0CUz3KVI6TjWtu/0UUw6IDuuyhjtQn9kxLyV3VMNlmvu+0Kd8TvCM+rrXp3PNC
+ 911WDQRwzdfKBL8ILUdLt7aQZhnuhAz+L6xr3AucxQvtCZY5Yu9YVmh6nvr3k8+FXj0kkxCkSbX
+ WOzjDY6Ysq/JunEyUWr33Ku8V6HbBHjj8jtbO3krGpScvqTa94p71StqgXm68rpcV0Wk1P1GUCH
+ P9NrC9lLIatv/Lg0Bf/n9GRzQ6p8rFgcUKxHBSc4s63xDdAp+rBwcOBpWcl57fGUxWk8/n/LmJ1
+ vv8+WkmPwqcPi/e2d5dD+FStJdba9KVqiER06I1sDG8mpVJjjJuAxaWh7H+odgZ8acq9POM0Nh7
+ OMRd2siBbNkTJWsDGVkjnyh1rM/7IlYCQcZCIo9U86Txgom9vty7zOPY3WM1ZnC6yJRElsDtWPZ
+ uPSRPt4JjSHBfV1quDujfvnO7ZWp/p/1ome6jK+8Mlx0A6XJ/E5r/HTbRasz4uPQr+QYQ0neefy
+ vmsJUnxNlCq/9ZGVy6OWuaNzAxyAP7W3oLPZ/SzSg+hlAHxa6XqY=
+X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
+ fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
+Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
+  keydata=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
+  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
+OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-Hi Hans,
+Synology uses a microcontroller in their NAS devices connected to a
+serial port to control certain LEDs, fan speeds, a beeper, to handle
+proper shutdown and restart, buttons and fan failures.
 
-kernel test robot noticed the following build warnings:
+This patch series depends on the rust led abstraction [1] and the rust
+serdev abstraction [2].
 
-[auto build test WARNING on 80234b5ab240f52fa45d201e899e207b9265ef91]
+This only adds the core driver and led driver.
+The following rust abstractions would be required, to implement the
+remaining features:
+- hwmon (include/linux/hwmon.h)
+- input (include/linux/input.h)
+- sysoff handler + hardware protection shutdown (include/linux/reboot.h)
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Hans-Zhang/PCI-Add-pcie_get_link_speed-helper-for-safe-array-access/20260313-220734
-base:   80234b5ab240f52fa45d201e899e207b9265ef91
-patch link:    https://lore.kernel.org/r/20260312163652.113228-2-18255117159%40163.com
-patch subject: [PATCH v8 1/5] PCI: Add pcie_get_link_speed() helper for safe array access
-config: x86_64-kexec (https://download.01.org/0day-ci/archive/20260313/202603131934.SHJnSGL9-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260313/202603131934.SHJnSGL9-lkp@intel.com/reproduce)
+[1] https://lore.kernel.org/rust-for-linux/20260207-rust_leds-v12-0-fdb518417b75@posteo.de/
+[2] https://lore.kernel.org/rust-for-linux/20260313-rust_serdev-v3-0-c9a3af214f7f@posteo.de/
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202603131934.SHJnSGL9-lkp@intel.com/
+Signed-off-by: Markus Probst <markus.probst@posteo.de>
+---
+Changes in v3:
+- remove `default n` from Kconfig entry, as n is the default already.
+- select RUST_SERIAL_DEV_BUS_ABSTRACTIONS in Kconfig
+- add mfd rust abstraction
+- split core and led parts into their own driver. It should now be considered a
+  MFD device.
+- split led part of dt binding into its own file
+- Link to v2: https://lore.kernel.org/r/20260308-synology_microp_initial-v2-0-9389963f31c5@posteo.de
 
-All warnings (new ones prefixed by >>):
+Changes in v2:
+- fix missing tabs in MAINTAINERS file
+- remove word binding from patch subject
+- add missing signed-off-by
+- add missing help entry in Kconfig
+- add missing spdx license headers
+- remove no-check{,-cpu}-fan properties from the dt-bindings and replace
+  them with the check_fan module parameter
+- use patternProperties for leds in dt-bindings
+- license dt-binding as GPL-2.0-only OR BSD-2-Clause
+- move driver from staging tree into mfd tree and mark it as work in
+  progress inside Kconfig
+- only register alert and usb led if fwnode is present
+- Link to v1: https://lore.kernel.org/r/20260306-synology_microp_initial-v1-0-fcffede6448c@posteo.de
 
->> Warning: drivers/pci/probe.c:793 expecting prototype for pcie_link_speed_value(). Prototype was for pcie_get_link_speed() instead
+---
+Markus Probst (7):
+      rust: Add `parent_unchecked` function to `Device`
+      rust: add basic mfd abstractions
+      acpi: add acpi_of_match_device_ids
+      mfd: match acpi devices against PRP0001
+      dt-bindings: mfd: Add synology,microp device
+      mfd: Add synology microp core driver
+      leds: add synology microp led driver
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+ .../devicetree/bindings/leds/synology,microp.yaml  |  40 +++
+ .../devicetree/bindings/mfd/synology,microp.yaml   |  51 ++++
+ MAINTAINERS                                        |  14 +
+ drivers/acpi/bus.c                                 |   7 +
+ drivers/leds/Kconfig                               |  11 +
+ drivers/leds/Makefile                              |   1 +
+ drivers/leds/leds_synology_microp.rs               | 303 +++++++++++++++++++++
+ drivers/mfd/Kconfig                                |  11 +
+ drivers/mfd/Makefile                               |   2 +
+ drivers/mfd/mfd-core.c                             |  27 ++
+ drivers/mfd/synology_microp.rs                     |  46 ++++
+ include/acpi/acpi_bus.h                            |   2 +
+ rust/bindings/bindings_helper.h                    |   1 +
+ rust/kernel/device.rs                              |  25 +-
+ rust/kernel/i2c.rs                                 |   7 +
+ rust/kernel/lib.rs                                 |   1 +
+ rust/kernel/mfd.rs                                 | 114 ++++++++
+ rust/kernel/pci.rs                                 |   7 +
+ rust/kernel/platform.rs                            |   7 +
+ rust/kernel/serdev.rs                              |   6 +
+ rust/kernel/usb.rs                                 |   7 +
+ 21 files changed, 688 insertions(+), 2 deletions(-)
+---
+base-commit: 3daa4f5dc6cc1ac1ab2f95b5b4c16bc5fb87f48f
+change-id: 20260306-synology_microp_initial-0f7dac7b7496
+prerequisite-change-id: 20251217-rust_serdev-ee5481e9085c:v3
+prerequisite-patch-id: 52b17274481cc770c257d8f95335293eca32a2c5
+prerequisite-patch-id: eec47e5051640d08bcd34a9670b98804449cad52
+prerequisite-patch-id: f24b68c71c3f69371e8ac0251efca0a023b31cc4
+prerequisite-patch-id: 3dfc1f7e5ecd3e0dd65d676aeb16f55260847b25
+prerequisite-change-id: 20251114-rust_leds-a959f7c2f7f9:v12
+prerequisite-patch-id: 42c445ef6981e3a3740dbaaf307f4b810042e46f
+prerequisite-patch-id: 90c7b200cca722a592353885e21af069101c4e09
+prerequisite-patch-id: c664a52faa3d47000d252eb7603c9c08382e868a
+
