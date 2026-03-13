@@ -1,748 +1,193 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5DB63D7D78
-	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 17:59:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773424776; cv=none; b=cTPUrnvZC4I0WeIKBuiutw8uEZdQCFfMSkJlfgUQDTX/16ZWUZXbKAtbdEPQP6GHhF5r/h0AsFHf97c1GrIJArAKY7SD4EisyRJRAZyPQz/lYQse5viBbYA9IpdT3Mf4DntTqIev3INksmZfIUcgTCaCKHHpZDe3k6OUMGfHvvM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773424776; c=relaxed/simple;
-	bh=eNBO4Mqeku4zM2ERXRLx0VHuZYbRpZgig/kvFXey0Tg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Z3+/lG5lVja/3/2Cj0wzfJyv0o9/8bUo5lDRLJoR4ngDMKS3h6YQQextKngpJRD0WsMN/3RPKKSeqax423FjM0lCF2cb7jVtJAisQNR8fvUlEIItxQz57xhJvRFkB/LxPJjO06sMoSsocJe7+uGb7ftTfB21+6I+um/V6vGzyAw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dG8JAUhc; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A230631E853
+	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 18:07:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.12
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773425232; cv=fail; b=Wm9CzeBXqZfRUxoNrnOrH5j4kyNu0k2YPXXLZiBYq7RAL4eaJW+WmjNb9ru8chGZMoc60Lc/A0W/TqHlEPVTVEST8DIKM5+QiTGK66mgVS9oXIqk3QzHi6yuakNo48ZkK8m/csoaP99W5RtdI3Fs4fDNfrFmHuL6rfsz3k2nKYI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773425232; c=relaxed/simple;
+	bh=VZjrZQO0X7daJEhQCe7aT9zBWjffDJE8KBjKsnLSI50=;
+	h=From:Date:To:CC:Message-ID:In-Reply-To:References:Subject:
+	 Content-Type:MIME-Version; b=Iwl6k1P6EMiBbDBCWJdhoJefMNRhvTfzEEwZOhV0t6fUq47e2zBj0D7z50o5vN5fsR8eLXBvBrUb53F1n5Qft0OnkfX2aA2WY6uvv7I7zwg2AJ5Gje1zuoK9ZRCsigCxWM+D8aWbnE4oOI9yX/qHH2i7qeeUsCQjZ74CvGntuA0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=awjNbUem; arc=fail smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dG8JAUhc"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2aec9255e04so10687965ad.3
-        for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 10:59:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1773424771; x=1774029571; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=YSagBdU3nLD/MUTObvb+C15QJct8NlPUmNC9xuYlYCI=;
-        b=dG8JAUhc2WnX8PL4q8zVgqdvWznr77okSz+GzDpVc6uTIyvuANbp3/3tAP290+gS+9
-         IPt6b+njbLO/0+B5fMowWrm4cI3S6LWKYNvx7pt3nAtNvHtYiLYTcjP1WlyeIrdTjElg
-         s+eYAwp/ExrQC069ivqRaSBwXPQHOfw7SkNb46ENTy6b4CFYhBAnXi4xhQ1KVUVd5KIl
-         j1TGvwrrGtdKWNolG9GpANF1uKXF2wCAE6c8qcve7jD2IvxRptcWyAkUXD4WEtB8Oe4K
-         CF8uguvyjuRbQK3ySvWbtFrQTcydyF2ExzsNMf1jX7dBZST8AeMjk0rYR+JrzcDIWNQw
-         tYtg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773424771; x=1774029571;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=YSagBdU3nLD/MUTObvb+C15QJct8NlPUmNC9xuYlYCI=;
-        b=NmoxzYMuySc7eUJx0Ah+NglbSm1owqTh5LMKp1apuIgm/7O0l81OqhullMFuf1ZWIc
-         BWkYRJYwQXB5kWR3URtNosH/b/0QiUJEG3dz70rcCZNmQ8wP2Cm8WucDAp9Qr7KOYPJA
-         QcbaVMoOCc9p1r4D4vIMZAazRBtRtsIwkQBnz6D3vPzdpW57zH2yFWYgNFIaNVpIgzyl
-         NDtkGcZI/ul6Fl3VYYprp3ICeGZH8UROAd7D90w6+EMCjbmcle3xupov5TCsAqJKeBSU
-         aWUgcaYgwXq1/9e0VZyya9LyQLVkf1MLFcOQ5SgVo8EjN/bCIyEc167nFS1Jk81aG5Sg
-         IQQQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUdcEkX4HeZ1yBHeHAnOO4GEiPn8lxfHx9Fy0W4Yt9s3W5crAVM9a1bjAEmj0jhsLXixz9DgHkC6BA=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz0DYRGLwL1r2ctO0BIQgEBeHRSJL5pZfZADp1VmsYsEFNOZb7I
-	ukdDYDOxd9ACyZIK4rI2Ittn2SF6GNujc4j5d/g0028IFQPbVcJu7bMl
-X-Gm-Gg: ATEYQzwE99yPMMEOmVcr74rZFNPWkM9XiOxN1tmUv9msfqD0DuSK4z7qpQMMkHpkLKP
-	E3Aprs6sb5cD46NBxU8316khgEKnXQj2XLEFVDXBOxfc1SLk1OHYNsbDyuRREgr/3n9ZsTebKmo
-	bz9Uqtm2KRhM9MrGS89+4ostqiPkk+GZhHbOGIVU2zfw6GaXGRv+oDJL2el15uiFGMJCMHNmlbH
-	l/Qb1TesrJ01lA52SmlgrVt/6EqQ0C7eq+8EH38Mg9HyNooggFYiSqeigcsoaO4R6NdoBB2ZRMn
-	GwN82fSJL93/K8MmAv1iK3ThEWBYyt4QZAFP+eB8fYutnUzqw1y9qa2T5WThh5yJPKLQNfRLkeR
-	cZWxo0zPgOnwbYsQS0YBkvvICbRq69mNfXaZVKTZLvNyblRC2f8HO9yvKok+To6HzfZP+J1eOq3
-	NKWHM8ccFoXR3j5DA3jTc/noPn/Zsfo9uyRRSkb6P1
-X-Received: by 2002:a17:903:41cf:b0:2ad:d0ff:2ed4 with SMTP id d9443c01a7336-2aeca9415e7mr46224575ad.6.1773424770587;
-        Fri, 13 Mar 2026 10:59:30 -0700 (PDT)
-Received: from DESKTOP-TIT0J8O.localdomain ([59.93.235.206])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2aece56ca17sm31276355ad.13.2026.03.13.10.59.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Mar 2026 10:59:30 -0700 (PDT)
-Date: Fri, 13 Mar 2026 21:58:56 +0400
-From: Ahmed Naseef <naseefkm@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Caleb James DeLisle <cjd@cjdns.fr>, linux-pci@vger.kernel.org,
-	linux-mips@vger.kernel.org, ryder.lee@mediatek.com,
-	bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
-	mani@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
-	conor+dt@kernel.org, matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
-	linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] PCI: Skip bridge window reads when window is not
- supported
-Message-ID: <abRQYM1If/6Vv/tI@DESKTOP-TIT0J8O.localdomain>
-References: <20260312165332.569772-4-cjd@cjdns.fr>
- <20260313162000.GA1385506@bhelgaas>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="awjNbUem"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773425230; x=1804961230;
+  h=from:date:to:cc:message-id:in-reply-to:references:
+   subject:content-transfer-encoding:mime-version;
+  bh=VZjrZQO0X7daJEhQCe7aT9zBWjffDJE8KBjKsnLSI50=;
+  b=awjNbUem/WcYWfec2NFY/8qxFsdHo6THUgL2kXr2JeaKjV1A+Jc5G7HR
+   ksko2dSe9FJac5xXzlSC8s8MMWPylugPvX16L9uj+0yUzw2CllDjiwmgP
+   +kL0c+o0Pha3faHiItNpqMNaQRR1I+/a/RJ2BHzDl4GcN6xIVGOol8f41
+   YCa/MPkmdNOll5D3Pc3AR0A8aMO3CUvNiOUTZg7XbHDbspjQuh+UR219c
+   DllFpH6MAmXPYCpcUApUDlsAifbjUykvxNwYSptFGrazZhM5vLa8In2Gk
+   ixDr+4nucIhfO0WR9raVWMJy9+Px9XOM1BpN8ChccIEJgncp8ROVo+icc
+   g==;
+X-CSE-ConnectionGUID: mJ045BWIRriXIO9eEVUVzA==
+X-CSE-MsgGUID: W1pBw/FoS2GH6188vN2JNw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11728"; a="78429354"
+X-IronPort-AV: E=Sophos;i="6.23,118,1770624000"; 
+   d="scan'208";a="78429354"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Mar 2026 11:07:09 -0700
+X-CSE-ConnectionGUID: 3FoYoSnRRa6rpgoaOyni8w==
+X-CSE-MsgGUID: dLHKAg3yQT6wp5az5nqBeg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,118,1770624000"; 
+   d="scan'208";a="225928274"
+Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
+  by fmviesa005.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Mar 2026 11:07:09 -0700
+Received: from ORSMSX903.amr.corp.intel.com (10.22.229.25) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Fri, 13 Mar 2026 11:07:08 -0700
+Received: from ORSEDG902.ED.cps.intel.com (10.7.248.12) by
+ ORSMSX903.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37 via Frontend Transport; Fri, 13 Mar 2026 11:07:08 -0700
+Received: from DM5PR21CU001.outbound.protection.outlook.com (52.101.62.12) by
+ edgegateway.intel.com (134.134.137.112) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Fri, 13 Mar 2026 11:07:03 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=fzDQHxzxjeNFBBP4VOOyLIaMNMXu8pxXCpMJ1YkT7H4qHp8o3qJ6I3iC/GbPw16HZQGxcdZ3kjW5D8MFOIW6nh4zT7jx3hnw0Bwva9s4UJl+6mRd3HMV1YqbHTWtZMWw/bLVj50RJbc/lcNAXZ+6ei/jMrytvZzH3doNYmrR3nTGp18za3o5vf8OVqRGTkod6Sa/mJvxvc0OeRQedUjo2EWwwVIk8NEYFpOD63kxcepo08xIsOFXS4rBxaxnurrJTgy/n9KD8O300mzu73VWW/JJcwE3B/D132HM1wEfrq9Od9wzmOTSCdudYtl+Cx1SEAfZWlSRHLv4e0ZKh9HApQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=sBVDkANrzM5x3ht0i3sNfalmrJJac86W69JNuRdCuLs=;
+ b=FUrLcSoF4oMlQC24xvNIR+lFfPI6/cJ9CKckQPYXXhFz49DEuMjj7LbNFRa97h+sO1diCHxqQb73UXKVKPu9AAaA8S7kL0D+Ou4JzZMA2BDgYiYpeT7ChFYTyL7vgH119Xdi0gOFz5r2NOKNdq/yNRx3LD2wkRzBc/R86lqJmLBybtQG0ygkoZS2c7YkWbkGoh3YErdK1GP28pUd6g9gTYkiifvcHUL/+YPv3t9BsHUadnMpyfmu1ZeCxhbBbCGmlQGMMqqmDrRF/BnKXaJBa5zB8krDre2ppyftPy17Pp4VTTUz+hbyYQMt0sBKCEtonTmg/+IUQXCxtrt8hifDVw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
+ by DS4PPFA424F92C2.namprd11.prod.outlook.com (2603:10b6:f:fc02::41) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.15; Fri, 13 Mar
+ 2026 18:06:59 +0000
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::1ff:1e09:994b:21ff]) by PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::1ff:1e09:994b:21ff%3]) with mapi id 15.20.9723.008; Fri, 13 Mar 2026
+ 18:06:59 +0000
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 13 Mar 2026 11:06:57 -0700
+To: Xu Yilun <yilun.xu@linux.intel.com>, Dan Williams
+	<dan.j.williams@intel.com>
+CC: <linux-coco@lists.linux.dev>, <linux-pci@vger.kernel.org>,
+	<gregkh@linuxfoundation.org>, <aik@amd.com>, <aneesh.kumar@kernel.org>,
+	<bhelgaas@google.com>, <alistair23@gmail.com>, <lukas@wunner.de>,
+	<jgg@nvidia.com>, Donald Hunter <donald.hunter@gmail.com>, Jakub Kicinski
+	<kuba@kernel.org>
+Message-ID: <69b45241e971a_b2b610050@dwillia2-mobl4.notmuch>
+In-Reply-To: <abPh3d4+opAkot3p@yilunxu-OptiPlex-7050>
+References: <20260303000207.1836586-1-dan.j.williams@intel.com>
+ <20260303000207.1836586-9-dan.j.williams@intel.com>
+ <abPh3d4+opAkot3p@yilunxu-OptiPlex-7050>
+Subject: Re: [PATCH v2 08/19] PCI/TSM: Add "evidence" support
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SJ0PR13CA0146.namprd13.prod.outlook.com
+ (2603:10b6:a03:2c6::31) To PH8PR11MB8107.namprd11.prod.outlook.com
+ (2603:10b6:510:256::6)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260313162000.GA1385506@bhelgaas>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|DS4PPFA424F92C2:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4066612c-c065-4665-351c-08de812b51f2
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|7416014|366016|22082099003|18002099003|56012099003;
+X-Microsoft-Antispam-Message-Info: ZLZcjlAoSHCHdcgUQxE85seGZcszBionEv5K5Bg3bmY0LKa7c8ZVyaNndsSI9O5Q9FAogf1/nNz1KbUg3SXpNHuOr9Q3QN7bMkbKCn8vFNZbUr8MQaLgqtKn+sUXhVl/8e1WZGiU0kqSMmuxILYIGfhMbkLcafdmTxBaNWTKBdDADnrCq51VdbjJObPec8nbuRK1JXlsQySxz8MkTxyd7M/3c14cSYw+CtSbvIsgBpH0ruw8VvU8P51r2Yc/ppC7NO3j0p1rWb9DpLupyUa26lgC2D4T06meY8/1sbbuqpgj1kZvfBbMNmfP9WQpscwygPWWRCAT+7vgpguzWEYkUuc88iRj2r6HBsBJYjJOaQ3mJvbL41b7dE8RcuTjYhk8oDsoZ1rpHj/r+aAFzNjl7pSQAt2b5wvXxe6NhYngjsWn8kaDPtBQYduDu0OyXMnEDqNcHVpjdDyW0FWYMZzkCktOCCdYYFr5jOsQH1xaraHA+kRH61P+BOw6AXtQXPDbpJY1p2bQ6+9KaemIjJ3Y/nmuAN9ZGUED+rHgIQCYdaARKl/A4cG99h94d75fSy/Mx1uCFFqQjpm+2MFeHNSQUjtpFlVKf52euZr/a8UzPMgBUk9UbW+RuViW2cdZBe1PIYz/DS6Qsqumy31aGmlLCUDEXxUKRhqVnAEBObiZIGm83kmjWQozFiPjdtFSuvDbuQKmm44RaieVu1QmexPAYnkrRXhQyObFBjoFLqPRbVk=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(366016)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?VnpuY1Y2dXkrdk83K1E3ZG43cENkelJueUtObFVQUmQ0SWlhdFJUSFJ1MzVv?=
+ =?utf-8?B?cWVsN21qNG9GQUtzbzVSWHZXV2lPYWx2K0hXU29xZ2hJQlZNcE5MQjNodFp0?=
+ =?utf-8?B?VFdKZHdUVW8xbm9LWEZsZi9QeGVaWnRiWmdOSkEvdGt5TXpYTVp2ZnJZSU5U?=
+ =?utf-8?B?VHlDRklsbHBUQVlvamtiWkM1Myt4RlhDZHJ4aktRQkMrNzkzb1ZWWG0rSHJR?=
+ =?utf-8?B?REpCcEd4WkNYcXRJTWo3SEdNenFTMnBHeWtGcVlEYzM5NmprWnRLbTNQVTFI?=
+ =?utf-8?B?ZGdxMUpaVWw4R0VUSm4rYVdvMHBpM3FzcndKQXBUNkVSdUNQK1VMN2l1ZGVI?=
+ =?utf-8?B?UmlrSVYvRkROdVZBdlNkMXFTMTZoMjcrS2FUYVZLbkwzeFFGZTJVVUIzZU1E?=
+ =?utf-8?B?WlRVR1ZXN0kzcE1VeXVldmgrUzU5OXJkMGFLSFRBdDFTWHV5RXR1NFZ2WW5P?=
+ =?utf-8?B?M2NsVk54R0Z2aVVjZEtQSm8yNDIrTWFiZFRxbHNMUUR4V2ozMnlNNUI4a1lh?=
+ =?utf-8?B?aitmYmJOUnhKLzdmbGZLZXdieWtkdFl1VlFFQUcveDh2Uzk2WDlmdVhjVVJr?=
+ =?utf-8?B?eUFIaXZ3OWkyZUZpS09WTmptR1hhSk9JbW96UUFJQzRyc21ZM0R2L3YrbzFx?=
+ =?utf-8?B?MlNXaGpnZFZqSjc4UjVDc0dKUTl0eDBxcmo5THdwQ0JEZWNNaCs1TVYwN001?=
+ =?utf-8?B?N2E4LzZWTTc4Qm1lWlIzWmRnYzhYM21oNnRUUmF3QzRuaVh0VlQxajFjcmRF?=
+ =?utf-8?B?ZEZSRFRCZmUyVHRUaWlFZGZvQ1IycHBpZ2dCUzQ5NktsZmEvRWJ1Y3VjVmI4?=
+ =?utf-8?B?MG93eWRPOGU5YjZWeFpkeWFDWTJjNG1KY2tVM1IrMTBBSEo1N0Y3d3NZSExY?=
+ =?utf-8?B?RFh4RHc0RkkwNUY0ZmUwTEZxR1JmR3VBby9TRFBQYnd4YWFEVDJXb3NIQytN?=
+ =?utf-8?B?bGlxK3piL1lHR3Y4ZVFjRjE5aTVQYjErTkVuRENla0pXMVVLUWVzcGpqdnRv?=
+ =?utf-8?B?ZytDckdURWZpdnJBMTlCVUIxQ29KOFhMWDFWVTVRYzgzL0xDT21BRk1aY2dC?=
+ =?utf-8?B?TmZ2eVk3UndZNzV4L0ZDbm9wQzlReFltQ1FLM0E3V2J2ZERsRW54UjJsczU5?=
+ =?utf-8?B?L2ZRb2J6bWZwSW4rZlJ6b0RZTXhWK0p5bjJsdnkzQk5DZU9lVGlqM2VmQTV3?=
+ =?utf-8?B?Z1lXbGJpTWIrWUUwSjVDclBBVnFYU1JLTUpseEhBRTE0MnAveGlMMzRXSzB2?=
+ =?utf-8?B?Zy9xMEh1eTl2VFFYa0V4VG1BaFh6VVlRQ1NmQmp6c3k5VVZreDFNZU5NMVFs?=
+ =?utf-8?B?alhOWUtsU21wbW1CWWYzQzBocnV6cGxGU1NZaVVObXY2OHNqVXZBV1JOVldp?=
+ =?utf-8?B?YUNoUWhOaE9Eb29FRWFhdkRTdk9aM1ZkVTNUMG1nK1NTcGhPd1ZmSFVSZTJk?=
+ =?utf-8?B?Mjl6Q3d2N0V3Q2o1WU5rTHlOdGFqRG5kUDB2WlBrempKOG9Ja2FBODJoYnF6?=
+ =?utf-8?B?VXF5WVFWblNlU0pCM0dSSGpLajZuOU0vWEFqM1Y2RTFNUngwTFdVdGRQOTQ5?=
+ =?utf-8?B?S3lCWFVvc2U2RlBHcWF0cml1TEFldUJ5S1lJVVBJRmN4d3FxcEtSM3FBUUNM?=
+ =?utf-8?B?M3R4a2NXcVhsZkM3MjJZYnBwMHNBRHoxM1ZhZkZVcGlLS0k4Wk9Rb3ZDSXVw?=
+ =?utf-8?B?bE1sTG1ueTFYOXRydU5nYThHSnVlS1dzUUFlRkJrSE1seU1WTkVJdUpKNjcx?=
+ =?utf-8?B?YlJRaG1KZlcrOXQyUWF3OXdubjg1STIvWC91Mm4vQ3JTTGllMWN1TFJWdFQz?=
+ =?utf-8?B?WVBraWdCdXdkbEZhQlBsSHFMV05zR0hMVEVmemNKYWRydFkyUS8wK1llTHNW?=
+ =?utf-8?B?T3hwZk1wMTc2NUo3ZzJsVFV0UVBCNG9BcWxnZytMbmFXS0ppTGNFUG45dXd3?=
+ =?utf-8?B?UzJKRWVwS00wVG5CbVh2akFzSzdQbklySEJZQkNEZVE0ZTBoK2dvblo4a3Nk?=
+ =?utf-8?B?UTIwb3VLb0JPM2dUVXlTc0pGVUdVQk0yajY2ciszVXpIbUlWSkpzTkZmeHUw?=
+ =?utf-8?B?MEprYTJZZFRYa2orblBSNmFIOTNZeStpZUJNSVdkNjhGVzdUOXA3VDlRdU0x?=
+ =?utf-8?B?dGpSTzUwaWtRcGZ3S1BhakJZSFFMa1BOSUtOTTZWUkMvdHJTRlJzY2ZWZk44?=
+ =?utf-8?B?dkQ1cXc3NUplWWs0SFVtaHZWeXgyZ2tXaDJVK2M2UytGSmdzeXhadWNObThy?=
+ =?utf-8?B?dFFJUFZEdHoyOCtEd0ppNWNrRjZpdk5pVGFqekFwVHBCRzJ6eEJVSk1tbi9F?=
+ =?utf-8?B?dmhUeUxkRklHQjd6T3c0NXJLTUM3dTA4UEdJQjNaRmRUUUZFeldGdDRkMU42?=
+ =?utf-8?Q?/fBjaTuQj40KT32w=3D?=
+X-Exchange-RoutingPolicyChecked: q/nc+ZqZd31fiyt4OBS+/SxNZ0BrEQ7loYRU2iQLJsIYgJYUDsFyz7n3N4HFI50EnfeRrbxdphlF2fv20FuE83O91b+Nk5vHjPKqywvcbdtPsUrcWy+nDctBPhW70zMq9DyFBPYTAUoETnhWcNrMsClc3aDrsT+9GoiBw6C/s9O7O9sWTvFza4jvfdXdaF9tsXOCUOo7XYpGPFfXR6hffCOYXwMrsBKYyrnxJbieb/Z50t12O8u/nOH6bVSMUtohVx9Q+FJBOReXJ4Kqq0/xKk6ACcA/XYrYSJYODK5lF12wxGcm/CugMWxBXLIL+j7ZRWITJ8LWskI/kduJAluxtA==
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4066612c-c065-4665-351c-08de812b51f2
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Mar 2026 18:06:59.3354
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: YIIXMAQ0UvB1Ro0LnQ+dHN2VJqmoNq2OePSlmwxdP+latQL8XA6fsUqpsYzX+ZKVLWAdsH/u4QakvOx5x+af9S1dLPRow/iK9hiz+fFYybs=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS4PPFA424F92C2
+X-OriginatorOrg: intel.com
 
-On Fri, Mar 13, 2026 at 11:20:00AM -0500, Bjorn Helgaas wrote:
-> On Thu, Mar 12, 2026 at 04:53:32PM +0000, Caleb James DeLisle wrote:
-> > pci_read_bridge_io() and pci_read_bridge_mmio_pref() read bridge window
-> > registers unconditionally. If the registers are hardwired to zero
-> > (not implemented), both base and limit will be 0. Since (0 <= 0) is
-> > true, a bogus window [mem 0x00000000-0x000fffff] or [io 0x0000-0x0fff]
-> > gets created.
-> > 
-> > pci_read_bridge_windows() already detects unsupported windows by
-> > testing register writability and sets io_window/pref_window flags
-> > accordingly. Check these flags at the start of pci_read_bridge_io()
-> > and pci_read_bridge_mmio_pref() to skip reading registers when the
-> > window is not supported.
-> > 
-> > Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
-> > Link: https://lore.kernel.org/all/20260113210259.GA715789@bhelgaas/
-> > Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
-> > Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
+Xu Yilun wrote:
+> > +void pci_tsm_init_evidence(struct pci_tsm_evidence *evidence, int slot,
+> > +			   enum hash_algo digest_algo)
+> > +{
+> > +	evidence->slot = slot;
+> > +	evidence->generation = 1;
+> > +	evidence->digest_algo = digest_algo;
+> > +	init_rwsem(&evidence->lock);
 > 
-> I'd like to apply this, but I don't understand what's going on here.
-> 
-Thank you for testing this and sharing your instrumentation
-patches. I applied the config access logging patch to the
-EN7528 and captured the register trace (full log below).
+> IIUC, this function is for link tsm driver, is it?
 
-> I instrumented a kernel to return zero for all reads of Root Port
-> prefetchable window registers, and it worked correctly: It didn't
-> create a bogus [mem 0x00000000-0x000fffff] window (see below for a
-> possible explanation), didn't claim to have assigned a prefetchable
-> window, and the 64-bit prefetchable BAR of the downstream device was
-> correctly placed in the non-prefetchable window.
-> 
-> I'm booting this in qemu, and the current behavior with a functional
-> prefetchable window is this:
-> 
->   pci 0000:00:1c.3: PCI bridge to [bus 04]
->   pci 0000:00:1c.3:   bridge window [io  0x4000-0x4fff]
->   pci 0000:00:1c.3:   bridge window [mem 0xfe200000-0xfe3fffff]
->   pci 0000:00:1c.3:   bridge window [mem 0xfd000000-0xfd1fffff 64bit pref]
->   pci 0000:04:00.0: [1033:0194] type 00 class 0x0c0330 PCIe Endpoint
->   pci 0000:04:00.0: BAR 0 [mem 0xfe200000-0xfe203fff 64bit]
-> 
-> With the instrumented kernel where the prefetchable window registers
-> are effectively hardwired to zero, I see this:
-> 
->   pci 0000:00:1c.3: PCI bridge to [bus 04]
->   pci 0000:00:1c.3:   bridge window [io  0x4000-0x4fff]
->   pci 0000:00:1c.3:   bridge window [mem 0xfe200000-0xfe3fffff]
->   pci 0000:04:00.0: [1033:0194] type 00 class 0x0c0330 PCIe Endpoint
->   pci 0000:04:00.0: BAR 0 [mem 0xfe200000-0xfe203fff 64bit]
-> 
-> So the 04:00.0 BAR 0 was put in the non-prefetchable window as we
-> would expect when there's no prefetchable window.
-> 
+It is meant to be generic for both, and an "optional" support
+library for the low-level TSM drivers.
 
-This shows "64bit" without "pref" , so unless I'm
-mistaken, the BAR is non-prefetchable. The issue only
-triggers when a downstream device has prefetchable BARs,
-like the mt7615e :
+- Host PCI/TSM evidence interface collects the blobs
+- Guest PCI/TSM evidence interface retrieves the digests via private TSM
+  GHCI
+- Some infrastructure (either arch specific GHCI or new common GHCI)
+  pushes the blobs from Host to Guest so that guest PCI/TSM evidence
+gathering can also get the blobs.
 
-  pci 0001:01:00.0: BAR 0 [mem 0x00000000-0x000fffff 64bit pref]
-  pci 0001:01:00.0: BAR 2 [mem 0x00000000-0x00003fff 64bit pref]
-  pci 0001:01:00.0: BAR 4 [mem 0x00000000-0x00000fff 64bit pref]
+> But in the following patch, devsec tsm would consume
+> pci_tsm_mmio_alloc() which uses evidence->lock. So my solution is to
+> initialize the lock on tsm construction.
 
-
-> Either there's something else going on with EcoNet EN7528 or I don't
-> understand the explanation.
-> 
-
-The config trace shows the following sequence:
-
-1) pci_read_bridge_windows() correctly detects the
-   prefetchable window is not supported:
-
-  rd 0x0024 0x00000000   # PCI_PREF_MEMORY_BASE
-  wr 0x0024 0xffe0fff0   # write test
-  rd 0x0024 0x00000000   # read back: still 0 -> pref_window = 0
-  wr 0x0024 0x00000000   # restore
-
-2) Later, pci_read_bridge_bases() reads the same registers
-   again without checking pref_window:
-
-  rd 0x0024 0x0000       # PCI_PREF_MEMORY_BASE
-  rd 0x0026 0x0000       # PCI_PREF_MEMORY_LIMIT
-                          # base(0) <= limit(0) -> bogus resource
-
-3) The allocator assigns the bogus prefetchable window and
-   routes the mt7615e's prefetchable BARs through it:
-
-  bridge window [mem 0x28100000-0x282fffff pref]: assigned
-  BAR 0 [mem 0x28100000-0x281fffff 64bit pref]: assigned
-  BAR 2 [mem 0x28200000-0x28203fff 64bit pref]: assigned
-  BAR 4 [mem 0x28204000-0x28204fff 64bit pref]: assigned
-
-4) The kernel programs the bridge, but the write doesn't
-   stick:
-
-  wr 0x0024 0x28202810   # program pref window
-  ...
-  rd 0x0024 0x00000000   # read back: still 0
-
-   Compare with the non-prefetchable  window, which
-   works:
-
-  wr 0x0020 0x28002800   # program non-prefetchable window
-  ...
-  rd 0x0020 0x28002800   # read back: correct
-
-
-> Based on the link above, Root Port 1 doesn't implement a prefetchable
-> window, but Linux thinks it does and puts a mt7615e WiFi device BAR in
-> the non-existent window, so it doesn't work.  I assume RP 1 is
-> 0001:00:01.0, and the mt7615e WiFi is 0001:01:00.0, and the mt7615e
-> doesn't work:
-
-Yes, that's correct.
-
-> 
->   pci 0001:00:01.0: [14c3:0811] type 01 class 0x060400 PCIe Root Port
->   pci 0001:00:01.0: PCI bridge to [bus 00]
->   pci 0001:00:01.0:   bridge window [mem 0x00000000-0x000fffff]
->   pci 0001:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
->   pci 0001:00:01.0: PCI bridge to [bus 01-ff]
->   pci 0001:00:01.0: bridge window [mem 0x28000000-0x280fffff]: assigned
->   pci 0001:00:01.0: bridge window [mem 0x28100000-0x282fffff pref]: assigned
->   pci 0001:01:00.0: BAR 0 [mem 0x28100000-0x281fffff 64bit pref]: assigned
->   WARNING: CPU: 3 PID: 1777 at target-mipsel_24kc_musl/linux-econet_en7528/mt76-2025.11.06~eb567bc7/mt7615/eeprom.c:31 mt7615_eeprom_init+0x484/0x548 [mt7615_common]
->   mt7615e 0001:01:00.0: Firmware is not ready for download
-> 
-> The [mem 0x00000000-0x000fffff] window mentioned above is not a
-> hardware problem.  This is the non-prefetchable window, which is
-> required for all bridges, and if it hasn't been initialized and
-> contains the power-up values, this is the window.  So all this is
-> telling us is that there was no firmware that programmed the window
-> before Linux.
-
-Understood , no firmware initializes the bridge before Linux
-on this platform.
-
-> 
-> FWIW, I'll attach my instrumentation patches below.  Maybe you can
-> similarly instrument your kernel to see the actual config accesses to
-> the RP in question.
-> 
-> Also, minor nit: Caleb appears to be the author, but the first
-> sign-off is from Ahmed, so the Author vs Signed-off-by order is wrong;
-> see
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst?id=v6.19#n449
-
-I'm the original author of this patch (from our earlier
-discussion). Caleb included it in his series.
-
-I could be wrong about the BAR difference being the key
-factor. Please let me know if I'm missing something.
-
-
----
-
-Full config access trace:
-
-[    0.636773] mtk-pcie 1fb81000.pcie: host bridge /pcie@1fb81000 ranges:
-[    0.643978] mtk-pcie 1fb81000.pcie:       IO 0x001f600000..0x001f60ffff -> 0x0000000000
-[    0.652749] mtk-pcie 1fb81000.pcie:      MEM 0x0020000000..0x0027ffffff -> 0x0020000000
-[    1.153150] mtk-pcie 1fb81000.pcie: PCI host bridge to bus 0000:00
-[    1.159915] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    1.165965] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-[    1.172716] pci_bus 0000:00: root bus resource [mem 0x20000000-0x27ffffff]
-[    1.180497] pci 0000:00:00.0: [14c3:0810] type 01 class 0x060400 PCIe Root Port
-[    1.188769] pci 0000:00:00.0: PCI bridge to [bus 00]
-[    1.194240] pci 0000:00:00.0:   bridge window [mem 0x00000000-0x000fffff]
-[    1.203834] pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-[    1.213461] pci 0000:01:00.0: [14c3:7603] type 00 class 0x028000 PCIe Endpoint
-[    1.221512] pci 0000:01:00.0: BAR 0 [mem 0x00000000-0x000fffff]
-[    1.228966] pci 0000:01:00.0: PME# supported from D0 D3hot D3cold
-[    1.236424] pci 0000:00:00.0: PCI bridge to [bus 01-ff]
-[    1.242226] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-[    1.249500] pci 0000:00:00.0: bridge window [mem 0x20000000-0x200fffff]: assigned
-[    1.257674] pci 0000:00:00.0: bridge window [mem 0x20100000-0x201fffff pref]: assigned
-[    1.266356] pci 0000:00:00.0: bridge window [io  0x0000-0x0fff]: assigned
-[    1.273817] pci 0000:01:00.0: BAR 0 [mem 0x20000000-0x200fffff]: assigned
-[    1.281279] pci 0000:00:00.0: PCI bridge to [bus 01]
-[    1.286677] pci 0000:00:00.0:   bridge window [io  0x0000-0x0fff]
-[    1.293420] pci 0000:00:00.0:   bridge window [mem 0x20000000-0x200fffff]
-[    1.300848] pci 0000:00:00.0:   bridge window [mem 0x20100000-0x201fffff pref]
-[    1.308771] pci_bus 0000:00: resource 4 [io  0x0000-0xffff]
-[    1.314864] pci_bus 0000:00: resource 5 [mem 0x20000000-0x27ffffff]
-[    1.321734] pci_bus 0000:01: resource 0 [io  0x0000-0x0fff]
-[    1.327818] pci_bus 0000:01: resource 1 [mem 0x20000000-0x200fffff]
-[    1.334727] pci_bus 0000:01: resource 2 [mem 0x20100000-0x201fffff pref]
-[    1.342649] OF: /pcie@1fb81000/pcie@0,0: Missing device_type
-[    1.349645] mtk-pcie 1fb81000.pcie: port0 link retrained
-[    1.355955] mtk-pcie 1fb83000.pcie: host bridge /pcie@1fb83000 ranges:
-[    1.363180] mtk-pcie 1fb83000.pcie:       IO 0x001f610000..0x001f61ffff -> 0x0000000000
-[    1.371954] mtk-pcie 1fb83000.pcie:      MEM 0x0028000000..0x002fffffff -> 0x0028000000
-[    1.519707] mtk-pcie 1fb83000.pcie: PCI host bridge to bus 0001:00
-[    1.526503] pci_bus 0001:00: root bus resource [bus 00-ff]
-[    1.532485] pci_bus 0001:00: root bus resource [mem 0x28000000-0x2fffffff]
-[    1.540087] pci 0001:00:01.0: rd 0x0000 0x081114c3
-[    1.545309] pci 0001:00:01.0: rd 0x000e 0x01
-[    1.549957] pci 0001:00:01.0: rd 0x0006 0x0010
-[    1.554845] pci 0001:00:01.0: rd 0x0034 0x50
-[    1.559504] pci 0001:00:01.0: rd 0x0050 0x7805
-[    1.564393] pci 0001:00:01.0: rd 0x0078 0x8001
-[    1.569243] pci 0001:00:01.0: rd 0x0080 0x0010
-[    1.574141] pci 0001:00:01.0: rd 0x0082 0x0142
-[    1.578984] pci 0001:00:01.0: rd 0x009e 0x0000
-[    1.583873] pci 0001:00:01.0: rd 0x0084 0x00008341
-[    1.589105] pci 0001:00:01.0: rd 0x008c 0x01608c12
-[    1.594412] pci 0001:00:01.0: rd 0x0008 0x06040002
-[    1.599609] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    1.604883] pci 0001:00:01.0: rd 0x0000 0x081114c3
-[    1.610111] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    1.615384] pci 0001:00:01.0: rd 0x00ac 0x00000000
-[    1.620636] pci 0001:00:01.0: rd 0x008c 0x01608c12
-[    1.625867] pci 0001:00:01.0: [14c3:0811] type 01 class 0x060400 PCIe Root Port
-[    1.633916] pci 0001:00:01.0: rd 0x0004 0x0000
-[    1.638758] pci 0001:00:01.0: wr 0x0004 0x0400
-[    1.643647] pci 0001:00:01.0: rd 0x0004 0x0400
-[    1.648497] pci 0001:00:01.0: wr 0x0004 0x0000
-[    1.653387] pci 0001:00:01.0: rd 0x003d 0x01
-[    1.658046] pci 0001:00:01.0: rd 0x003c 0x00
-[    1.662749] pci 0001:00:01.0: rd 0x0004 0x0000
-[    1.667594] pci 0001:00:01.0: rd 0x0010 0x00000000
-[    1.672866] pci 0001:00:01.0: wr 0x0010 0xffffffff
-[    1.678098] pci 0001:00:01.0: rd 0x0010 0x00000000
-[    1.683368] pci 0001:00:01.0: wr 0x0010 0x00000000
-[    1.688604] pci 0001:00:01.0: rd 0x0004 0x0000
-[    1.693497] pci 0001:00:01.0: rd 0x0014 0x00000000
-[    1.698722] pci 0001:00:01.0: wr 0x0014 0xffffffff
-[    1.703993] pci 0001:00:01.0: rd 0x0014 0x00000000
-[    1.709226] pci 0001:00:01.0: wr 0x0014 0x00000000
-[    1.714502] pci 0001:00:01.0: rd 0x0004 0x0000
-[    1.719348] pci 0001:00:01.0: rd 0x0038 0x00000000
-[    1.724619] pci 0001:00:01.0: wr 0x0038 0xfffff800
-[    1.729851] pci 0001:00:01.0: rd 0x0038 0x00000000
-[    1.735122] pci 0001:00:01.0: wr 0x0038 0x00000000
-[    1.740355] pci 0001:00:01.0: rd 0x0018 0x40000000
-[    1.745617] pci 0001:00:01.0: PCI bridge to [bus 00]
-[    1.751075] pci 0001:00:01.0: rd 0x001c 0x0000
-[    1.755918] pci 0001:00:01.0: wr 0x001c 0xe0f0
-[    1.760808] pci 0001:00:01.0: rd 0x001c 0x0000
-[    1.765658] pci 0001:00:01.0: wr 0x001c 0x0000
-[    1.770528] pci 0001:00:01.0: rd 0x0020 0x0000
-[    1.775399] pci 0001:00:01.0: rd 0x0022 0x0000
-[    1.780259] pci 0001:00:01.0:   bridge window [mem 0x00000000-0x000fffff]
-[    1.787735] pci 0001:00:01.0: rd 0x0024 0x00000000
-[    1.792986] pci 0001:00:01.0: wr 0x0024 0xffe0fff0
-[    1.798219] pci 0001:00:01.0: rd 0x0024 0x00000000
-[    1.803490] pci 0001:00:01.0: wr 0x0024 0x00000000
-[    1.808724] pci 0001:00:01.0: rd 0x0094 0x00040000
-[    1.814000] pci 0001:00:01.0: rd 0x0006 0x0010
-[    1.818844] pci 0001:00:01.0: rd 0x0034 0x50
-[    1.823546] pci 0001:00:01.0: rd 0x0050 0x7805
-[    1.828392] pci 0001:00:01.0: rd 0x0078 0x8001
-[    1.833282] pci 0001:00:01.0: rd 0x0080 0x0010
-[    1.838134] pci 0001:00:01.0: rd 0x0084 0x00008341
-[    1.843405] pci 0001:00:01.0: rd 0x0088 0x2810
-[    1.848255] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    1.853525] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    1.858758] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    1.864028] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    1.869262] pci 0001:00:01.0: rd 0x003e 0x0000
-[    1.874162] pci 0001:00:01.0: wr 0x003e 0x0002
-[    1.879022] pci 0001:00:01.0: rd 0x0006 0x0010
-[    1.883890] pci 0001:00:01.0: rd 0x0034 0x50
-[    1.888549] pci 0001:00:01.0: rd 0x0050 0x7805
-[    1.893438] pci 0001:00:01.0: rd 0x0078 0x8001
-[    1.898288] pci 0001:00:01.0: rd 0x0080 0x0010
-[    1.903178] pci 0001:00:01.0: rd 0x0006 0x0010
-[    1.908028] pci 0001:00:01.0: rd 0x0034 0x50
-[    1.912726] pci 0001:00:01.0: rd 0x0050 0x7805
-[    1.917577] pci 0001:00:01.0: rd 0x0052 0x0080
-[    1.922467] pci 0001:00:01.0: rd 0x0006 0x0010
-[    1.927316] pci 0001:00:01.0: rd 0x0034 0x50
-[    1.932026] pci 0001:00:01.0: rd 0x0050 0x7805
-[    1.936864] pci 0001:00:01.0: rd 0x0078 0x8001
-[    1.941754] pci 0001:00:01.0: rd 0x0080 0x0010
-[    1.946605] pci 0001:00:01.0: rd 0x0006 0x0010
-[    1.951494] pci 0001:00:01.0: rd 0x0034 0x50
-[    1.956153] pci 0001:00:01.0: rd 0x0050 0x7805
-[    1.961042] pci 0001:00:01.0: rd 0x0078 0x8001
-[    1.965892] pci 0001:00:01.0: rd 0x0080 0x0010
-[    1.970783] pci 0001:00:01.0: rd 0x0006 0x0010
-[    1.975632] pci 0001:00:01.0: rd 0x0034 0x50
-[    1.980311] pci 0001:00:01.0: rd 0x0050 0x7805
-[    1.985204] pci 0001:00:01.0: rd 0x0078 0x8001
-[    1.990050] pci 0001:00:01.0: rd 0x0080 0x0010
-[    1.994948] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.000172] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    2.005444] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.010695] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    2.015927] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.021200] pci 0001:00:01.0: rd 0x0104 0x00000000
-[    2.026431] pci 0001:00:01.0: rd 0x0110 0x00000000
-[    2.031703] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.036936] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.042210] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    2.047439] pci 0001:00:01.0: rd 0x0006 0x0010
-[    2.052334] pci 0001:00:01.0: rd 0x0034 0x50
-[    2.056986] pci 0001:00:01.0: rd 0x0050 0x7805
-[    2.061876] pci 0001:00:01.0: rd 0x0078 0x8001
-[    2.066726] pci 0001:00:01.0: rd 0x007a 0x01c3
-[    2.071617] pci 0001:00:01.0: rd 0x0006 0x0010
-[    2.076466] pci 0001:00:01.0: rd 0x0006 0x0010
-[    2.081355] pci 0001:00:01.0: rd 0x0034 0x50
-[    2.086014] pci 0001:00:01.0: rd 0x0050 0x7805
-[    2.090903] pci 0001:00:01.0: rd 0x0078 0x8001
-[    2.095753] pci 0001:00:01.0: rd 0x0080 0x0010
-[    2.100648] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.105875] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    2.111158] pci 0001:00:01.0: rd 0x0006 0x0010
-[    2.115997] pci 0001:00:01.0: rd 0x0034 0x50
-[    2.120695] pci 0001:00:01.0: rd 0x0050 0x7805
-[    2.125545] pci 0001:00:01.0: rd 0x0078 0x8001
-[    2.130415] pci 0001:00:01.0: rd 0x0080 0x0010
-[    2.135305] pci 0001:00:01.0: rd 0x007c 0x0008
-[    2.140333] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.145549] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    2.150804] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.156031] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    2.161303] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.166535] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    2.171814] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.177038] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    2.182310] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.187542] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    2.192814] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.198045] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    2.204240] pci 0001:00:01.0: rd 0x0018 0x40000000
-[    2.209446] pci 0001:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-[    2.218262] pci 0001:00:01.0: rd 0x003e 0x0002
-[    2.223130] pci 0001:00:01.0: wr 0x003e 0x0002
-[    2.227976] pci 0001:00:01.0: wr 0x0018 0x40000000
-[    2.233257] pci 0001:00:01.0: wr 0x001e 0xffff
-[    2.238097] pci 0001:00:01.0: wr 0x003e 0x0002
-[    2.242987] pci 0001:00:01.0: rd 0x0018 0x40000000
-[    2.248219] pci 0001:00:01.0: rd 0x003e 0x0002
-[    2.253108] pci 0001:00:01.0: wr 0x003e 0x0002
-[    2.257958] pci 0001:00:01.0: wr 0x0006 0xffff
-[    2.262853] pci 0001:00:01.0: rd 0x0006 0x0010
-[    2.267699] pci 0001:00:01.0: rd 0x0034 0x50
-[    2.272397] pci 0001:00:01.0: rd 0x0050 0x7805
-[    2.277246] pci 0001:00:01.0: rd 0x0078 0x8001
-[    2.282136] pci 0001:00:01.0: rd 0x0080 0x0010
-[    2.287004] pci 0001:00:01.0: rd 0x0006 0x0010
-[    2.291883] pci 0001:00:01.0: rd 0x0034 0x50
-[    2.296535] pci 0001:00:01.0: rd 0x0050 0x7805
-[    2.301424] pci 0001:00:01.0: rd 0x0078 0x8001
-[    2.306274] pci 0001:00:01.0: rd 0x0080 0x0010
-[    2.311164] pci 0001:00:01.0: rd 0x0006 0x0010
-[    2.316014] pci 0001:00:01.0: rd 0x0034 0x50
-[    2.320717] pci 0001:00:01.0: rd 0x0050 0x7805
-[    2.325562] pci 0001:00:01.0: rd 0x0078 0x8001
-[    2.330432] pci 0001:00:01.0: rd 0x0080 0x0010
-[    2.335322] pci 0001:00:01.0: rd 0x0006 0x0010
-[    2.340172] pci 0001:00:01.0: rd 0x0034 0x50
-[    2.344871] pci 0001:00:01.0: rd 0x0050 0x7805
-[    2.349720] pci 0001:00:01.0: rd 0x0078 0x8001
-[    2.354617] pci 0001:00:01.0: rd 0x0080 0x0010
-[    2.359461] pci 0001:00:01.0: rd 0x008c 0x01608c12
-[    2.364732] pci 0001:00:01.0: rd 0x0092 0x1011
-[    2.369713] pci 0001:00:01.0: wr 0x0018 0x40ff0100
-[    2.375175] pci 0001:01:00.0: [14c3:7663] type 00 class 0x000280 PCIe Endpoint
-[    2.383246] pci 0001:01:00.0: BAR 0 [mem 0x00000000-0x000fffff 64bit pref]
-[    2.390849] pci 0001:01:00.0: BAR 2 [mem 0x00000000-0x00003fff 64bit pref]
-[    2.398430] pci 0001:01:00.0: BAR 4 [mem 0x00000000-0x00000fff 64bit pref]
-[    2.406031] pci 0001:00:01.0: rd 0x0088 0x2810
-[    2.411473] pci 0001:01:00.0: supports D1 D2
-[    2.416074] pci 0001:01:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-[    2.423461] pci 0001:00:01.0: rd 0x00a4 0x00000000
-[    2.428718] pci 0001:00:01.0: rd 0x0092 0x1011
-[    2.433539] pci 0001:01:00.0: 2.000 Gb/s available PCIe bandwidth, limited by 2.5 GT/s PCIe x1 link at 0001:00:01.0 (capable of 4.000 Gb/s with 5.0 GT/s PCIe x1 link)
-[    2.449948] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.455157] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    2.460391] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.465661] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    2.471422] pci 0001:00:01.0: PCI bridge to [bus 01-ff]
-[    2.477117] pci 0001:00:01.0: rd 0x001c 0x00
-[    2.481812] pci 0001:00:01.0: rd 0x001d 0x00
-[    2.486467] pci 0001:00:01.0: rd 0x0020 0x0000
-[    2.491359] pci 0001:00:01.0: rd 0x0022 0x0000
-[    2.496206] pci 0001:00:01.0: rd 0x0024 0x0000
-[    2.501095] pci 0001:00:01.0: rd 0x0026 0x0000
-[    2.505941] pci_bus 0001:01: busn_res: [bus 01-ff] end is updated to 01
-[    2.513222] pci 0001:00:01.0: wr 0x001a 0x01
-[    2.517882] pci 0001:00:01.0: wr 0x001e 0xffff
-[    2.522769] pci 0001:00:01.0: wr 0x003e 0x0002
-[    2.527647] pci 0001:00:01.0: bridge window [mem 0x28000000-0x280fffff]: assigned
-[    2.535854] pci 0001:00:01.0: bridge window [mem 0x28100000-0x282fffff pref]: assigned
-[    2.544537] pci 0001:00:01.0: bridge window [io  size 0x1000]: can't assign; no space
-[    2.553124] pci 0001:00:01.0: bridge window [io  size 0x1000]: failed to assign
-[    2.561156] pci 0001:01:00.0: BAR 0 [mem 0x28100000-0x281fffff 64bit pref]: assigned
-[    2.569715] pci 0001:01:00.0: BAR 2 [mem 0x28200000-0x28203fff 64bit pref]: assigned
-[    2.578250] pci 0001:01:00.0: BAR 4 [mem 0x28204000-0x28204fff 64bit pref]: assigned
-[    2.586781] pci 0001:00:01.0: PCI bridge to [bus 01]
-[    2.592188] pci 0001:00:01.0: wr 0x0030 0x0000ffff
-[    2.597412] pci 0001:00:01.0: wr 0x001c 0x00f0
-[    2.602305] pci 0001:00:01.0: wr 0x0030 0x00000000
-[    2.607524] pci 0001:00:01.0:   bridge window [mem 0x28000000-0x280fffff]
-[    2.615001] pci 0001:00:01.0: wr 0x0020 0x28002800
-[    2.620233] pci 0001:00:01.0: wr 0x002c 0x00000000
-[    2.625495] pci 0001:00:01.0:   bridge window [mem 0x28100000-0x282fffff pref]
-[    2.633429] pci 0001:00:01.0: wr 0x0024 0x28202810
-[    2.638661] pci 0001:00:01.0: wr 0x0028 0x00000000
-[    2.643932] pci 0001:00:01.0: wr 0x002c 0x00000000
-[    2.649165] pci 0001:00:01.0: wr 0x003e 0x0002
-[    2.654057] pci_bus 0001:00: Some PCI device resources are unassigned, try booting with pci=realloc
-[    2.663977] pci_bus 0001:00: resource 4 [mem 0x28000000-0x2fffffff]
-[    2.670850] pci_bus 0001:01: resource 1 [mem 0x28000000-0x280fffff]
-[    2.677705] pci_bus 0001:01: resource 2 [mem 0x28100000-0x282fffff pref]
-[    2.685092] pci 0001:00:01.0: rd 0x0000 0x081114c3
-[    2.690319] pci 0001:00:01.0: rd 0x0004 0x00100000
-[    2.695591] pci 0001:00:01.0: rd 0x0008 0x06040002
-[    2.700842] pci 0001:00:01.0: rd 0x000c 0x00010000
-[    2.706075] pci 0001:00:01.0: rd 0x0010 0x00000000
-[    2.711357] pci 0001:00:01.0: rd 0x0014 0x00000000
-[    2.716578] pci 0001:00:01.0: rd 0x0018 0x40010100
-[    2.721850] pci 0001:00:01.0: rd 0x001c 0x04200000
-[    2.727081] pci 0001:00:01.0: rd 0x0020 0x28002800
-[    2.732353] pci 0001:00:01.0: rd 0x0024 0x00000000
-[    2.737585] pci 0001:00:01.0: rd 0x0028 0x00000000
-[    2.742856] pci 0001:00:01.0: rd 0x002c 0x00000000
-[    2.748088] pci 0001:00:01.0: rd 0x0030 0x00000000
-[    2.753360] pci 0001:00:01.0: rd 0x0034 0x00000050
-[    2.758592] pci 0001:00:01.0: rd 0x0038 0x00000000
-[    2.763867] pci 0001:00:01.0: rd 0x003c 0x00020100
-[    2.769097] pci 0001:00:01.0: rd 0x0088 0x2810
-[    2.773992] pci 0001:00:01.0: rd 0x0090 0x0008
-[    2.778835] pci 0001:00:01.0: rd 0x0098 0x0000
-[    2.783725] pci 0001:00:01.0: rd 0x009c 0x0000
-[    2.788575] pci 0001:00:01.0: rd 0x00a8 0x0000
-[    2.793464] pci 0001:00:01.0: rd 0x00b0 0x0002
-[    2.798316] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.803586] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    2.808819] pci 0001:00:01.0: rd 0x0006 0x0010
-[    2.813707] pci 0001:00:01.0: rd 0x0034 0x50
-[    2.818367] pci 0001:00:01.0: rd 0x0050 0x7805
-[    2.823260] pci 0001:00:01.0: rd 0x0078 0x8001
-[    2.828106] pci 0001:00:01.0: rd 0x0080 0x0010
-[    2.833004] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.838227] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    2.843499] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.848732] pci 0001:00:01.0: rd 0x0104 0x00000000
-[    2.854003] pci 0001:00:01.0: rd 0x0110 0x00000000
-[    2.859235] pci 0001:00:01.0: rd 0x0104 0x00000000
-[    2.864506] pci 0001:00:01.0: rd 0x010c 0x0000
-[    2.869356] pci 0001:00:01.0: rd 0x0110 0x00000000
-[    2.874632] pci 0001:00:01.0: rd 0x0114 0x800000ff
-[    2.879860] pci 0001:00:01.0: rd 0x0100 0x40010002
-[    2.885131] pci 0001:00:01.0: rd 0x0400 0x0001001e
-[    2.891056] pci 0001:00:01.0: rd 0x040c 0x00000028
-[    2.896268] pci 0001:00:01.0: rd 0x0408 0x00002800
-[    2.901807] pci 0001:00:01.0: rd 0x0092 0x1011
-[    2.906614] pci 0001:00:01.0: rd 0x0090 0x0008
-[    2.911487] pci 0001:00:01.0: wr 0x0090 0x0028
-[    2.916375] pci 0001:00:01.0: rd 0x0092 0x1012
-[    2.921242] pci 0001:00:01.0: wr 0x0092 0x4000
-[    2.926084] mtk-pcie 1fb83000.pcie: port1 link retrained
-
-
-[   17.276926] pci 0000:00:00.0: enabling device (0000 -> 0003)
-[   17.282837] mt7603e 0000:01:00.0: enabling device (0000 -> 0002)
-[   17.289210] mt7603e 0000:01:00.0: ASIC revision: 76030010
-[   17.301145] mt7603e 0000:01:00.0: Firmware Version: ap_pcie
-[   17.306779] mt7603e 0000:01:00.0: Build Time: 20160107100755
-[   17.350617] mt7603e 0000:01:00.0: firmware init done
-[   17.520491] mt7603e 0000:01:00.0: registering led 'mt76-phy0'
-[   17.708582] pci 0001:00:01.0: rd 0x007c 0x0008
-[   17.713304] pci 0001:00:01.0: rd 0x0004 0x0000
-[   17.717826] pci 0001:00:01.0: enabling device (0000 -> 0002)
-[   17.723627] pci 0001:00:01.0: wr 0x0004 0x0002
-[   17.728145] pci 0001:00:01.0: rd 0x003d 0x01
-[   17.732504] pci 0001:00:01.0: rd 0x0004 0x0002
-[   17.736995] pci 0001:00:01.0: rd 0x0004 0x0002
-[   17.741522] pci 0001:00:01.0: wr 0x0004 0x0006
-[   17.746040] mt7615e 0001:01:00.0: enabling device (0000 -> 0002)
-[   17.752773] pci 0001:00:01.0: rd 0x0090 0x0008
-[   17.763241] ------------[ cut here ]------------
-[   17.767961] WARNING: CPU: 0 PID: 591 at target-mipsel_24kc_musl/linux-econet_en7528/mt76-2026.03.01~ee84094d/mt7615/eeprom.c:31 mt7615_eeprom_init+0x484/0x548 [mt7615_common]
-[   17.783821] Modules linked in: mt7615e(O+) mt7615_common(O) mt7603e(O) mt76_connac_lib(O) mt76(O) mac80211(O) cfg80211(O) slhc nfnetlink nf_reject_ipv6 nf_reject_ipv4 nf_log_syslog nf_defrag_ipv6 nf_defrag_ipv4 libcrc32c hwmon crc_ccitt compat(O) econet_eth(O) i2c_dev i2c_core cryptodev(O) nls_utf8 nls_iso8859_1 nls_cp437 sha512_generic seqiv sha3_generic jitterentropy_rng drbg hmac geniv rng cmac sd_mod scsi_mod scsi_common gpio_button_hotplug(O) vfat fat nls_base crc32c_generic
-[   17.826914] CPU: 0 UID: 0 PID: 591 Comm: kmodloader Tainted: G           O       6.12.74 #0
-[   17.826959] Tainted: [O]=OOT_MODULE
-[   17.826967] Hardware name: DASAN H660GM-A (Airtel)
-[   17.826978] Stack : 000001d5 00000004 0000000c 8188c80c 80e09b3c 8102cf8c 00000001 01000000
-[   17.827045]         00000000 00000000 00000000 00000000 00000000 00000001 80e09ae8 80848c40
-[   17.827097]         00000000 00000000 8184bd54 80e09970 ffffefff 00000000 8192e928 000001d6
-[   17.827153]         80e099bc 000001d8 8192e958 fffffffa 00000001 00000000 8184bd54 00000000
-[   17.827209]         00000000 83508374 81927330 00000400 00000003 fffc6467 00000000 81af0000
-[   17.827264]         ...
-[   17.827279] Call Trace:
-[   17.827285] [<81006788>] show_stack+0x28/0xf0
-[   17.827338] [<81756b3c>] dump_stack_lvl+0x70/0xb0
-[   17.827364] [<8102d7f8>] __warn+0x9c/0x114
-[   17.827408] [<8102d998>] warn_slowpath_fmt+0x128/0x188
-[   17.827440] [<83508374>] mt7615_eeprom_init+0x484/0x548 [mt7615_common]
-[   17.827488] [<8320c2c8>] mt7615_register_device+0xb0/0x230 [mt7615e]
-[   17.827531] [<8320e140>] mt7615_mmio_probe+0x184/0x244 [mt7615e]
-[   17.827564] [<8320c12c>] mt7615e_reg_map+0x2481fdc/0x24820c8 [mt7615e]
-[   17.827643] [<81455d70>] pci_device_probe+0x90/0x130
-[   17.827690] [<814b0adc>] really_probe+0xc4/0x350
-[   17.827727] [<814b1044>] driver_probe_device+0x48/0x110
-[   17.827753] [<814b12d4>] __driver_attach+0xb0/0x180
-[   17.827778] [<814ae560>] bus_for_each_dev+0x70/0xb8
-[   17.827801] [<814afbdc>] bus_add_driver+0xf8/0x224
-[   17.827824] [<814b1ecc>] driver_register+0x88/0x154
-[   17.827853] [<81000644>] do_one_initcall+0x50/0x2b8
-[   17.827874] [<810b7fe8>] do_init_module+0x5c/0x234
-[   17.827924] [<810ba2d8>] sys_init_module+0x170/0x22c
-[   17.827954] [<8101104c>] syscall_common+0x34/0x58
-[   17.827982]
-[   17.827990] ---[ end trace 0000000000000000 ]---
-[   18.001416] mt7615e 0001:01:00.0: registering led 'mt76-phy1'
-[   18.184554] mt7615e 0001:01:00.0: Firmware is not ready for download
-
-
-Ahmed Naseef
-> 
-> Bjorn
-> 
-> 
-> commit 012e94d89d10 ("PCI: Log config accesses")
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Sat Jan 24 12:46:02 2026 -0600
-> 
->     PCI: Log config accesses
-> 
-> 
-> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> index b123da16b63b..8b03af748238 100644
-> --- a/drivers/pci/access.c
-> +++ b/drivers/pci/access.c
-> @@ -32,6 +32,49 @@ DEFINE_RAW_SPINLOCK(pci_lock);
->  # define pci_unlock_config(f)	raw_spin_unlock_irqrestore(&pci_lock, f)
->  #endif
->  
-> +/* domain, bus, dev, fn */
-> +static u64 pci_log_cfg_dev = (0LL << 32) | PCI_DEVID(0, PCI_DEVFN(0x1c, 3));
-> +
-> +#define PCI_CFG_FMT	"pci %04x:%02x:%02x.%d: %s %#06x "
-> +#define PCI_CFG_FMT_1	PCI_CFG_FMT "%#04x\n"
-> +#define PCI_CFG_FMT_2	PCI_CFG_FMT "%#06x\n"
-> +#define PCI_CFG_FMT_4	PCI_CFG_FMT "%#010x\n"
-> +
-> +static void pci_log_cfg(struct pci_bus *bus, unsigned int devfn, char *op,
-> +		        int pos, int len, u32 val, int res)
-> +{
-> +	u64 dev_match = ((u64) pci_domain_nr(bus) << 32) | devfn;
-> +	u32 domain = pci_log_cfg_dev >> 32;
-> +
-> +	if (pci_log_cfg_dev != dev_match)
-> +		return;
-> +
-> +	if (res) {
-> +		pr_info(PCI_CFG_FMT "failed (%d)\n",
-> +			domain, bus->number, PCI_SLOT(devfn), PCI_FUNC(devfn),
-> +			op, pos, res);
-> +		return;
-> +	}
-> +
-> +	switch (len) {
-> +	case 1:
-> +		pr_info(PCI_CFG_FMT_1,
-> +			domain, bus->number, PCI_SLOT(devfn), PCI_FUNC(devfn),
-> +			op, pos, val);
-> +		break;
-> +	case 2:
-> +		pr_info(PCI_CFG_FMT_2,
-> +			domain, bus->number, PCI_SLOT(devfn), PCI_FUNC(devfn),
-> +			op, pos, val);
-> +		break;
-> +	default:
-> +		pr_info(PCI_CFG_FMT_4,
-> +			domain, bus->number, PCI_SLOT(devfn), PCI_FUNC(devfn),
-> +			op, pos, val);
-> +		break;
-> +	}
-> +}
-> +
->  #define PCI_OP_READ(size, type, len) \
->  int noinline pci_bus_read_config_##size \
->  	(struct pci_bus *bus, unsigned int devfn, int pos, type *value)	\
-> @@ -50,6 +93,7 @@ int noinline pci_bus_read_config_##size \
->  	else								\
->  		*value = (type)data;					\
->  	pci_unlock_config(flags);					\
-> +	pci_log_cfg(bus, devfn, "rd", pos, len, (u32) *value, res);	\
->  									\
->  	return res;							\
->  }
-> @@ -67,6 +111,7 @@ int noinline pci_bus_write_config_##size \
->  	pci_lock_config(flags);						\
->  	res = bus->ops->write(bus, devfn, pos, len, value);		\
->  	pci_unlock_config(flags);					\
-> +	pci_log_cfg(bus, devfn, "wr", pos, len, value, res);		\
->  									\
->  	return res;							\
->  }
-> commit 744b78273da8 ("PCI: Override pref window reads to return 0")
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Fri Mar 13 10:39:27 2026 -0500
-> 
->     PCI: Override pref window reads to return 0
-> 
-> 
-> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> index 8b03af748238..675926bddc54 100644
-> --- a/drivers/pci/access.c
-> +++ b/drivers/pci/access.c
-> @@ -40,6 +40,43 @@ static u64 pci_log_cfg_dev = (0LL << 32) | PCI_DEVID(0, PCI_DEVFN(0x1c, 3));
->  #define PCI_CFG_FMT_2	PCI_CFG_FMT "%#06x\n"
->  #define PCI_CFG_FMT_4	PCI_CFG_FMT "%#010x\n"
->  
-> +static int pci_override_cfg_rd(struct pci_bus *bus, unsigned int devfn,
-> +			       int pos, int len, u32 *value)
-> +{
-> +	u64 dev_match = ((u64) pci_domain_nr(bus) << 32) | devfn;
-> +
-> +	if (pci_log_cfg_dev != dev_match)
-> +		return -ENODEV;
-> +
-> +	if (!(pos == 0x24 || pos == 0x26 || pos == 0x28 || pos == 0x2c))
-> +		return -ENODEV;
-> +
-> +	*value = 0;
-> +
-> +#if 0
-> +	u32 domain = pci_log_cfg_dev >> 32;
-> +	switch (len) {
-> +	case 1:
-> +		pr_info("override " PCI_CFG_FMT_1,
-> +			domain, bus->number, PCI_SLOT(devfn), PCI_FUNC(devfn),
-> +			"rd", pos, *value);
-> +		break;
-> +	case 2:
-> +		pr_info("override " PCI_CFG_FMT_2,
-> +			domain, bus->number, PCI_SLOT(devfn), PCI_FUNC(devfn),
-> +			"rd", pos, *value);
-> +		break;
-> +	default:
-> +		pr_info("override " PCI_CFG_FMT_4,
-> +			domain, bus->number, PCI_SLOT(devfn), PCI_FUNC(devfn),
-> +			"rd", pos, *value);
-> +		break;
-> +	}
-> +#endif
-> +
-> +	return 0;
-> +}
-> +
->  static void pci_log_cfg(struct pci_bus *bus, unsigned int devfn, char *op,
->  		        int pos, int len, u32 val, int res)
->  {
-> @@ -87,7 +124,9 @@ int noinline pci_bus_read_config_##size \
->  		return PCIBIOS_BAD_REGISTER_NUMBER;			\
->  									\
->  	pci_lock_config(flags);						\
-> -	res = bus->ops->read(bus, devfn, pos, len, &data);		\
-> +	res = pci_override_cfg_rd(bus, devfn, pos, len, &data);		\
-> +	if (res)							\
-> +		res = bus->ops->read(bus, devfn, pos, len, &data);	\
->  	if (res)							\
->  		PCI_SET_ERROR_RESPONSE(value);				\
->  	else								\
+So I did flub the "->evidence == 0" check, and yes initializing the lock
+by default looks like the right answer to that problem.
