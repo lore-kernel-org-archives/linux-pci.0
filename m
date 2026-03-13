@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C75773E0228;
-	Fri, 13 Mar 2026 19:03:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FB712DF12F;
+	Fri, 13 Mar 2026 19:03:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773428608; cv=none; b=ZbIwqPyoFQtKzWrLbu8yhl+4zhBk96xJaKcVIWz2gUC/ZOZX+ziNh/ni5sU7YIUaxyJ/D/svhw3nPXoxJ2ionS0oHrDt/E7VLKBZjeq9+aFx71qGN9gRLrUsRKZDaX4hwiZKfzOYq8bmZ1dg4Uep7prO0U3hU9Vn44L7SNj50/s=
+	t=1773428609; cv=none; b=Eti2YmGyEVFKlhutBwZEmZszlp2I5/IJGEaleCuU99PJmep1ezAT9h+TliUQtjugqG0f/Ych0HuMhCEbp08+gXNnnzW3ZDPWu/Y98/SArBkybo+5mJssy4ME2AbocxcA6D7AA0aXzKPNdx4D5PJGIY7lIO4ccounc/m+1eouBkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773428608; c=relaxed/simple;
-	bh=AlpETrqRCdSTlEzY4ZYJxwPGCgmPKV6yiLLLpTONNWc=;
+	s=arc-20240116; t=1773428609; c=relaxed/simple;
+	bh=Jx7UrUTas1KVn/N4PI1g4X8WSfQKM/+cArejjQk62XM=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=pebDcC8kVMcGsK/esAhZhPr9kVeB0FdyJ8K9utzGWaXNF/NFubwFQhw1tghEct5//4yWMESyfqTNpcxokpcDfF59eNSmRPTI2R8uBMxaRXsxodsjw0dI5t1v/z0v/9p3ZvU+iNTX0MEj0xsbaNcix2VtPwmww/JpaVRrre2whf4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L/pbdra2; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=URvK54FmBLhY5BlpIqQ6Tw2h9pS7zfOgFvEC/BR/NxGazJsE8POadZQqsck6lW+6iMUKIUi9mEin2YHPH3eCu9KsMdqZMkDN0azl4BIrFL7fqFbloiI5W0DUg1k2w79moVHzmBnOtjhR5ghjlhTLiwGa6Td+8XIml/cf3Ai4s2E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hGoB1gTC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L/pbdra2"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 395BFC2BC86;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hGoB1gTC"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 8BE56C2BCB4;
 	Fri, 13 Mar 2026 19:03:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1773428608;
-	bh=AlpETrqRCdSTlEzY4ZYJxwPGCgmPKV6yiLLLpTONNWc=;
+	bh=Jx7UrUTas1KVn/N4PI1g4X8WSfQKM/+cArejjQk62XM=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=L/pbdra2/SHny3jPvMR5mn62SZYdIHt72QCTSXSEm4XBUubDDF4BN9MPWxFJwp0MU
-	 dpAiWYeDx5IH+PRUhZYJSoZJWVR5tBtEqQmo8gELjIld+eQ8PBuMstIWiQCXw9h1QF
-	 j/GG/YPNlw7vhmsX3IiPXrqick0oiJqsbAzAVU43mnwvt0U+0/jQ0AHJpjLcKLYzxT
-	 NEqVvvkIz8xYWg10EGauZ6ihJsAy4waP+dDbD5k2Az3Lw9tPoHB+AUSuF4DOzgt3g+
-	 eAC/dNUSXrDw7RkB3CCVt3rwEBWHZBlzu5epd6QuGcf2qRGclV9Nr28SiNjN06bAyI
-	 kGHlha1LJxHwg==
+	b=hGoB1gTCzNofnwtvKWS4UPRREqrNBAStY344sOOB2vOb0N46Rk5CguD9Iuy8d6X6x
+	 GQll9c+1BxFq97mTrp15I2NiSTnFEQ5FtwNqxT+TEnBigxFaCQqXSCJs2xBw6pMz0G
+	 ODLtZmU6S47bRHLus0q2VazCDEbPuJyceZWuLlP69e+KYFh0BCqP0PlmK051dHWFRG
+	 zdMNHioNSFfWJN9oqHW/DNdIDPkR5A7jBwuK1kqKP8P1zZ6MCS0y05ffhoAZX0Zvj4
+	 7ibcUMDC4ehENvrMwCrTS3WCWxhb0iMn1L6t+SA/0Tn296sRmdsdPvXo41zoBOKT7L
+	 jOsYBVFHPfZBQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AAFE107BCD7;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 824AE107BCDF;
 	Fri, 13 Mar 2026 19:03:28 +0000 (UTC)
 From: Markus Probst via B4 Relay <devnull+markus.probst.posteo.de@kernel.org>
-Date: Fri, 13 Mar 2026 20:03:06 +0100
-Subject: [PATCH v3 2/7] rust: add basic mfd abstractions
+Date: Fri, 13 Mar 2026 20:03:09 +0100
+Subject: [PATCH v3 5/7] dt-bindings: mfd: Add synology,microp device
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,7 +40,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260313-synology_microp_initial-v3-2-ad6ac463a201@posteo.de>
+Message-Id: <20260313-synology_microp_initial-v3-5-ad6ac463a201@posteo.de>
 References: <20260313-synology_microp_initial-v3-0-ad6ac463a201@posteo.de>
 In-Reply-To: <20260313-synology_microp_initial-v3-0-ad6ac463a201@posteo.de>
 To: Lee Jones <lee@kernel.org>, Rob Herring <robh@kernel.org>, 
@@ -65,21 +65,21 @@ Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-acpi@vger.kernel.org, acpica-devel@lists.linux.dev, 
  Markus Probst <markus.probst@posteo.de>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=11227;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3421;
  i=markus.probst@posteo.de; h=from:subject:message-id;
- bh=ZJYERfpm0n00oI7yjkATxc2bgro8TlTIhPLy6Dly0cY=;
- b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBptF9zrNeiJ0tRgQoSJcNbO14e0jlYP/jaFWJju
- I4P2fGImzCJAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCabRfcxsUgAAAAAAEAA5t
- YW51MiwyLjUrMS4xMSwyLDIACgkQNHYf+OetQ9L+JQ//QYfpUWXxcV3wTaX3/5kvn1Eyhkd1hT7
- mKG40Y7ioOAYLZ4qgrmScMXXQyMJUVWbuD4XMkfoGGntf6rHQ1QX/cpVMaXcdyYREzp7tt78ybQ
- uZicXLXmohsMVNRWJDMxmO/63NycSrtfMCMr8gu/5gDIH95KsvXCe7uJrptggQHxo2ZEqPqcEGf
- PeMOzfT4SSIwP67OikPQS5xJjA+7AmffJmr40JtXWR4gJPOWnalcgrDTMHSS2AZ/ac+u8W52tQN
- AybHeoUVAW5sKEZ4a7+3VGUSSn5azkmaejdfPYhxWeyCWlDcwYErImDqwajSph64DWOwCHNDCcq
- 6/2eAV2jKYKcjBlQxNfQDGBo7zrI4UBWsJbv6LP8hQfw9qNi4spR6pOk8R3EU+cGVNwRUUWDCck
- sEbFxItpjzI1B6oMeBxADL15eDlh3ULVFcQfqWmwUiSjQecodWUf2VHGOMT1UpBdhJmIe1byWaA
- OK/CSYIhQ9lngfAujisyAhS1auD2cmCzsMXnMq55igM0BxAmEvuH/nCvUgDbo18IoYiNP7diKVS
- qW2wcp9ELPmTgOPheeoR1lc+Sl31YInzk+z1qeaQMjSNESX8rnqpwr/1sHQqYisXiP39zqiu/6B
- UmL94ll1jsleQjm2V6QA+rNopg9F6U9/joL1GDIrJyKUtBpYEt0k=
+ bh=BWCjYQBHaSfDWg8Gx+1WSTdoVU+3MjA/rzyHsPChX7o=;
+ b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBptF95QKk57C5wGYpOrgF+665YuLzVFk9/o6152
+ RHv7L3t4L+JAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCabRfeRsUgAAAAAAEAA5t
+ YW51MiwyLjUrMS4xMSwyLDIACgkQNHYf+OetQ9LkWQ/+I5FvYw6cc5ThLEBTFpIlGUb3vXxj0s5
+ CMgyALXltBdsVCG2cfRtMB29vkjz+PvR6DyghJpfPk8T8gO6XZWmqEh4op9aX4e535Hz4UIEITw
+ HMU2whDV/W88fVa9PFICGUOZPSqs44t5Mp3Hwb0OFeOyUdXZine/3B7uPy6X8zCzgj5aGklO8z9
+ olqCaoOR98NeWTlu+MP1jj6nPeG6scgII52M7pmsb2cSV3AX2sNmJPvq6f4nHE5t1F9ILwNDM70
+ VLBbMCsZeM75Lbq1bhGiHw78C+zeVv0Qov4JQuajcVwFSVVsa8zi9kEpP4ZhZo905JDuXvokEGI
+ 7Ah3Vcu51/8I9yF0ettPL1L8WuRbuIrwSJoyNleb/lA+8TzdyWFMIxL+fUXfH8llWvnj8/S77CF
+ Y/YmR2IFxAorinV8vwHyIhf4cCXp7KAu+Ia1MdM6ADMDVIvFHzgNQKKjZQ//iEX6B6vuzi0xrVo
+ ad4DSpIcRrN8JlLB3gePGKehcoM5ahQHE4oF18ASh0kq7xsPRGL77wXnHzLAGz+WTUi4I+Q7UnZ
+ Z5N4OKW6s5iKcD+Zyp65fNxkAg4wGHOaabS7sEaTjNxROsBlCWF9llL60oYal2Pqb2nMQWXC2ue
+ LKVuxQ7jsuxM3+O9Oh3SSF7DNcqCzl3xkbEUt6VOe2GgyXZ3FtG4=
 X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
  fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
 X-Endpoint-Received: by B4 Relay for markus.probst@posteo.de/default with
@@ -89,357 +89,123 @@ Reply-To: markus.probst@posteo.de
 
 From: Markus Probst <markus.probst@posteo.de>
 
-Implement the basic mfd rust abstractions required to register mfd
-sub-devices, including:
-- `mfd::Cell` - a safe wrapper for `struct mfd_cell`
-- `mfd::CellAcpiMatch` - a safe wrapper for `struct mfd_cell_acpi_match`
-- `const MFD_CELLS: Option<&'static [mfd::Cell]>` in each bus device,
-  except auxiliary
+Add the Synology Microp devicetree bindings. Those devices are
+microcontrollers found on Synology NAS devices. They are connected to a
+serial port on the host device.
 
-The mfd sub-device registration will be done after a successful call to
-probe in each bus device, except auxiliary. This guarantees that
-`mfd_add_devices` will only be run at most once per device. It also
-ensures that the sub-devices will be probed after the drvdata of the
-device has been set.
-
-In order to register mfd sub-devices for a device, the driver needs to
-set `const MFD_CELLS` in their Driver trait implementation to Some.
-A build_assert guarantees that this can only be set to Some, if
-CONFIG_MFD_CORE is enabled.
+Those devices are used to control certain LEDs, fan speeds, a beeper, to
+handle buttons, fan failures and to properly shutdown and reboot the
+device.
 
 Signed-off-by: Markus Probst <markus.probst@posteo.de>
 ---
- MAINTAINERS                     |   6 +++
- rust/bindings/bindings_helper.h |   1 +
- rust/kernel/i2c.rs              |   7 +++
- rust/kernel/lib.rs              |   1 +
- rust/kernel/mfd.rs              | 114 ++++++++++++++++++++++++++++++++++++++++
- rust/kernel/pci.rs              |   7 +++
- rust/kernel/platform.rs         |   7 +++
- rust/kernel/serdev.rs           |   6 +++
- rust/kernel/usb.rs              |   7 +++
- 9 files changed, 156 insertions(+)
+ .../devicetree/bindings/leds/synology,microp.yaml  | 40 +++++++++++++++++
+ .../devicetree/bindings/mfd/synology,microp.yaml   | 51 ++++++++++++++++++++++
+ 2 files changed, 91 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 749d63ca18fa..fa49e40836ab 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -18082,6 +18082,12 @@ F:	drivers/mfd/
- F:	include/dt-bindings/mfd/
- F:	include/linux/mfd/
- 
-+MULTIFUNCTION DEVICES (MFD) [RUST]
-+M:	Markus Probst <markus.probst@posteo.de>
-+S:	Maintained
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lee/mfd.git
-+F:	rust/kernel/mfd.rs
-+
- MULTIMEDIA CARD (MMC) ETC. OVER SPI
- S:	Orphan
- F:	drivers/mmc/host/mmc_spi.c
-diff --git a/rust/bindings/bindings_helper.h b/rust/bindings/bindings_helper.h
-index f597fe3352f5..b7c17d1d9ece 100644
---- a/rust/bindings/bindings_helper.h
-+++ b/rust/bindings/bindings_helper.h
-@@ -65,6 +65,7 @@
- #include <linux/jump_label.h>
- #include <linux/led-class-multicolor.h>
- #include <linux/mdio.h>
-+#include <linux/mfd/core.h>
- #include <linux/mm.h>
- #include <linux/miscdevice.h>
- #include <linux/of_device.h>
-diff --git a/rust/kernel/i2c.rs b/rust/kernel/i2c.rs
-index bb5b830f48c3..e733b651d878 100644
---- a/rust/kernel/i2c.rs
-+++ b/rust/kernel/i2c.rs
-@@ -14,6 +14,7 @@
-     devres::Devres,
-     driver,
-     error::*,
-+    mfd,
-     of,
-     prelude::*,
-     types::{
-@@ -167,6 +168,9 @@ extern "C" fn probe_callback(idev: *mut bindings::i2c_client) -> kernel::ffi::c_
-             let data = T::probe(idev, info);
- 
-             idev.as_ref().set_drvdata(data)?;
-+
-+            idev.as_ref().mfd_add_devices(T::MFD_CELLS)?;
-+
-             Ok(0)
-         })
-     }
-@@ -328,6 +332,9 @@ pub trait Driver: Send {
-     /// The table of ACPI device ids supported by the driver.
-     const ACPI_ID_TABLE: Option<acpi::IdTable<Self::IdInfo>> = None;
- 
-+    /// The mfd cells for mfd devices.
-+    const MFD_CELLS: Option<&'static [mfd::Cell]> = None;
-+
-     /// I2C driver probe.
-     ///
-     /// Called when a new i2c client is added or discovered.
-diff --git a/rust/kernel/lib.rs b/rust/kernel/lib.rs
-index 311fdf984b87..bacc54ca6aea 100644
---- a/rust/kernel/lib.rs
-+++ b/rust/kernel/lib.rs
-@@ -114,6 +114,7 @@
- pub mod led;
- pub mod list;
- pub mod maple_tree;
-+pub mod mfd;
- pub mod miscdevice;
- pub mod mm;
- pub mod module_param;
-diff --git a/rust/kernel/mfd.rs b/rust/kernel/mfd.rs
+diff --git a/Documentation/devicetree/bindings/leds/synology,microp.yaml b/Documentation/devicetree/bindings/leds/synology,microp.yaml
 new file mode 100644
-index 000000000000..6c47d9211bf2
+index 000000000000..f7bf32c240f7
 --- /dev/null
-+++ b/rust/kernel/mfd.rs
-@@ -0,0 +1,114 @@
-+// SPDX-License-Identifier: GPL-2.0
++++ b/Documentation/devicetree/bindings/leds/synology,microp.yaml
+@@ -0,0 +1,40 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/leds/synology,microp.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+//! Abstractions for the mfd subsystem.
-+//!
-+//! C header: [`include/linux/mfd/core.h`](srctree/include/linux/mfd/core.h)
++title: Synology NAS on-board Microcontroller LEDs
 +
-+use core::{mem::MaybeUninit, ptr};
++maintainers:
++  - Markus Probst <markus.probst@posteo.de>
 +
-+use crate::{
-+    device::{
-+        CoreInternal,
-+        Device, //
-+    },
-+    error::to_result,
-+    prelude::*, //
-+};
++description: |
++  This is part of device tree bindings for Synology NAS on-board
++  Microcontroller.
 +
-+/// A mfd cell.
-+///
-+/// # Invariants
-+///
-+/// A [`Cell`] instance represents a valid `struct mfd_cell`.
-+#[repr(transparent)]
-+pub struct Cell(bindings::mfd_cell);
++  This device can manage up to 4 leds in Synology NAS devices:
++  - Power
++  - Status
++  - Alert
++  - USB
 +
-+impl Cell {
-+    /// Creates a new mfd cell.
-+    pub const fn new(name: &'static CStr) -> Self {
-+        Self(bindings::mfd_cell {
-+            name: name.as_ptr().cast::<u8>(),
++  The Power and Status LEDs are available on every Synology NAS model,
++  therefore the associated child nodes are mandatory. If the NAS also has
++  a alert or usb led, the associated child nodes need to be added.
 +
-+            // SAFETY: Always safe to call.
-+            // This is the const equivalent to `bindings::mfd_cell::default()`.
-+            ..unsafe { MaybeUninit::zeroed().assume_init() }
-+        })
-+    }
++properties:
++  compatible:
++    const: synology,microp-leds
 +
-+    /// Sets `of_compatible` and optionally `of_reg` and `use_of_reg` on the mfd cell.
-+    pub const fn of(self, compatible: &'static CStr, reg: Option<u64>) -> Self {
-+        Self(bindings::mfd_cell {
-+            of_compatible: compatible.as_ptr().cast::<u8>(),
-+            // TODO: Use `unwrap_or` once stabilized in const fn.
-+            of_reg: if let Some(reg) = reg { reg } else { 0 },
-+            use_of_reg: reg.is_some(),
++patternProperties:
++  "^(power|status|alert|usb)-led$":
++    $ref: /schemas/leds/common.yaml
++    unevaluatedProperties: false
 +
-+            ..self.0
-+        })
-+    }
++required:
++  - compatible
++  - power-led
++  - status-led
 +
-+    /// Sets `acpi_match` on the mfd cell.
-+    pub const fn acpi(self, acpi_match: &'static CellAcpiMatch) -> Self {
-+        Self(bindings::mfd_cell {
-+            acpi_match: &raw const acpi_match.0,
++additionalProperties: false
+diff --git a/Documentation/devicetree/bindings/mfd/synology,microp.yaml b/Documentation/devicetree/bindings/mfd/synology,microp.yaml
+new file mode 100644
+index 000000000000..57bb986d24f7
+--- /dev/null
++++ b/Documentation/devicetree/bindings/mfd/synology,microp.yaml
+@@ -0,0 +1,51 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/mfd/synology,microp.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+            ..self.0
-+        })
-+    }
-+}
++title: Synology NAS on-board Microcontroller
 +
-+/// A mfd cell acpi match entry.
-+///
-+/// # Invariants
-+///
-+/// A [`CellAcpiMatch`] instance represents a valid `struct mfd_cell_acpi_match`.
-+#[repr(transparent)]
-+pub struct CellAcpiMatch(bindings::mfd_cell_acpi_match);
++maintainers:
++  - Markus Probst <markus.probst@posteo.de>
 +
-+impl CellAcpiMatch {
-+    /// Creates a new mfd cell acpi match entry, using a ACPI PNP ID.
-+    pub const fn pnpid(pnpid: &'static CStr) -> Self {
-+        Self(bindings::mfd_cell_acpi_match {
-+            pnpid: pnpid.as_ptr().cast::<u8>(),
-+            adr: 0,
-+        })
-+    }
++description: |
++  Synology Microp is a microcontroller found in Synology NAS devices.
++  It is connected to a serial port on the host device.
 +
-+    /// Creates a new mfd cell acpi match entry, using a ACPI ADR.
-+    pub const fn adr(adr: u64) -> Self {
-+        Self(bindings::mfd_cell_acpi_match {
-+            pnpid: ptr::null(),
-+            adr,
-+        })
-+    }
-+}
++  It is a multifunction device with the following sub modules:
++  - LEDs
 +
-+impl Device<CoreInternal> {
-+    /// Registers child mfd devices.
-+    // Always inline to optimize out error path of `build_assert`.
-+    #[inline(always)]
-+    pub(crate) fn mfd_add_devices(&self, cells: Option<&'static [Cell]>) -> Result {
-+        if let Some(cells) = cells {
-+            build_assert!(cfg!(CONFIG_MFD_CORE));
++properties:
++  compatible:
++    const: synology,microp
 +
-+            // SAFETY:
-+            // - `self.as_raw()` is guaranteed to be a pointer to a valid `device`.
-+            // - `cells.as_ptr()` is a guaranteed to be a pointer to a valid `mfd_cell` array
-+            //   with the length of `cells.len()`.
-+            to_result(unsafe {
-+                bindings::devm_mfd_add_devices(
-+                    self.as_raw(),
-+                    bindings::PLATFORM_DEVID_AUTO,
-+                    // CAST: `Cell` is a transparent wrapper of `mfd_cell`.
-+                    cells.as_ptr().cast::<bindings::mfd_cell>(),
-+                    i32::try_from(cells.len())?,
-+                    ptr::null_mut(),
-+                    0,
-+                    ptr::null_mut(),
-+                )
-+            })?;
-+        }
++  leds:
++    $ref: /schemas/leds/synology,microp.yaml
 +
-+        Ok(())
-+    }
-+}
-diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-index af74ddff6114..6c4cf6cf970b 100644
---- a/rust/kernel/pci.rs
-+++ b/rust/kernel/pci.rs
-@@ -17,6 +17,7 @@
-         from_result,
-         to_result, //
-     },
-+    mfd,
-     prelude::*,
-     str::CStr,
-     types::Opaque,
-@@ -116,6 +117,9 @@ extern "C" fn probe_callback(
-             let data = T::probe(pdev, info);
- 
-             pdev.as_ref().set_drvdata(data)?;
++required:
++  - compatible
 +
-+            pdev.as_ref().mfd_add_devices(T::MFD_CELLS)?;
++additionalProperties: false
 +
-             Ok(0)
-         })
-     }
-@@ -303,6 +307,9 @@ pub trait Driver: Send {
-     /// The table of device ids supported by the driver.
-     const ID_TABLE: IdTable<Self::IdInfo>;
- 
-+    /// The mfd cells for mfd devices.
-+    const MFD_CELLS: Option<&'static [mfd::Cell]> = None;
++examples:
++  - |
++    #include <dt-bindings/leds/common.h>
 +
-     /// PCI driver probe.
-     ///
-     /// Called when a new pci device is added or discovered. Implementers should
-diff --git a/rust/kernel/platform.rs b/rust/kernel/platform.rs
-index 8917d4ee499f..e2bcf8ef093c 100644
---- a/rust/kernel/platform.rs
-+++ b/rust/kernel/platform.rs
-@@ -25,6 +25,7 @@
-         self,
-         IrqRequest, //
-     },
-+    mfd,
-     of,
-     prelude::*,
-     types::Opaque,
-@@ -104,6 +105,9 @@ extern "C" fn probe_callback(pdev: *mut bindings::platform_device) -> kernel::ff
-             let data = T::probe(pdev, info);
- 
-             pdev.as_ref().set_drvdata(data)?;
++    mcu {
++      compatible = "synology,microp";
 +
-+            pdev.as_ref().mfd_add_devices(T::MFD_CELLS)?;
++      leds {
++        compatible = "synology,microp-leds";
 +
-             Ok(0)
-         })
-     }
-@@ -218,6 +222,9 @@ pub trait Driver: Send {
-     /// The table of ACPI device ids supported by the driver.
-     const ACPI_ID_TABLE: Option<acpi::IdTable<Self::IdInfo>> = None;
- 
-+    /// The mfd cells for mfd devices.
-+    const MFD_CELLS: Option<&'static [mfd::Cell]> = None;
++        power-led {
++          color = <LED_COLOR_ID_BLUE>;
++          function = LED_FUNCTION_POWER;
++        };
 +
-     /// Platform driver probe.
-     ///
-     /// Called when a new platform device is added or discovered.
-diff --git a/rust/kernel/serdev.rs b/rust/kernel/serdev.rs
-index d9fea4bd4439..6e702c734ded 100644
---- a/rust/kernel/serdev.rs
-+++ b/rust/kernel/serdev.rs
-@@ -14,6 +14,7 @@
-         to_result,
-         VTABLE_DEFAULT_ERROR, //
-     },
-+    mfd,
-     of,
-     prelude::*,
-     sync::Completion,
-@@ -180,6 +181,8 @@ extern "C" fn probe_callback(sdev: *mut bindings::serdev_device) -> kernel::ffi:
- 
-             private_data.probe_complete.complete_all();
- 
-+            sdev.as_ref().mfd_add_devices(T::MFD_CELLS)?;
-+
-             result.map(|()| 0)
-         })
-     }
-@@ -339,6 +342,9 @@ pub trait Driver: Send {
-     /// The table of ACPI device ids supported by the driver.
-     const ACPI_ID_TABLE: Option<acpi::IdTable<Self::IdInfo>> = None;
- 
-+    /// The mfd cells for mfd devices.
-+    const MFD_CELLS: Option<&'static [mfd::Cell]> = None;
-+
-     /// Serial device bus device driver probe.
-     ///
-     /// Called when a new serial device bus device is added or discovered.
-diff --git a/rust/kernel/usb.rs b/rust/kernel/usb.rs
-index 0e1b9a88f4f1..a64ed6a530f1 100644
---- a/rust/kernel/usb.rs
-+++ b/rust/kernel/usb.rs
-@@ -17,6 +17,7 @@
-         from_result,
-         to_result, //
-     },
-+    mfd,
-     prelude::*,
-     types::{
-         AlwaysRefCounted,
-@@ -96,6 +97,9 @@ extern "C" fn probe_callback(
- 
-             let dev: &device::Device<device::CoreInternal> = intf.as_ref();
-             dev.set_drvdata(data)?;
-+
-+            dev.mfd_add_devices(T::MFD_CELLS)?;
-+
-             Ok(0)
-         })
-     }
-@@ -309,6 +313,9 @@ pub trait Driver {
-     /// The table of device ids supported by the driver.
-     const ID_TABLE: IdTable<Self::IdInfo>;
- 
-+    /// The mfd cells for mfd devices.
-+    const MFD_CELLS: Option<&'static [mfd::Cell]> = None;
-+
-     /// USB driver probe.
-     ///
-     /// Called when a new USB interface is bound to this driver.
++        status-led {
++          color = <LED_COLOR_ID_MULTI>;
++          function = LED_FUNCTION_STATUS;
++        };
++      };
++    };
 
 -- 
 2.52.0
