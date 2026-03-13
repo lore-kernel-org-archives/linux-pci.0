@@ -1,212 +1,164 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010026.outbound.protection.outlook.com [52.101.56.26])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FD4733509B;
-	Fri, 13 Mar 2026 19:03:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773428609; cv=none; b=HVm4xo3JgfbnZmQbjJZ5uGOGs6fXVteu/O4DWRjCksF9fSIUOW6hPyHBENxzToRGu2Yv6ZzGlMGX5Ch9AgfbmcmJnKgGXL9pmIJntbiQ3XLEh4GdIpRP6+cP7YzayAnlrGWX5ub7uRkApGc8VjQuWfGDHMnVzFgiydDMp0ZUgPs=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773428609; c=relaxed/simple;
-	bh=e599/+9riorUGtuRfkF9HzcpRuZoJHcKGAJ9QlZI5I8=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=nXpmJuekQZ/Y23pJdseybLApJWE0YGRFkV8ddQJ0jySXw0g1ic3CzesK9Gx1W5mdLxF+9s6vIzPVrXH7jLsn6NFReOjACAhbsGZsKjt+pqP2jjLvxiQySUHgLX+r0/7xa37KjWmYBZRW53lxvtqw27wAfXhM8NZrfgQ1dmuyzvY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pvJLiRlV; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F246D34BA33
+	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 19:07:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.26
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773428879; cv=fail; b=pUjWsC7+FhaUK537YVAyiGsDexumRj/ebkGAoPBBa1iGMk/RuVkBkjCaWEQnB83E2Rhh9GyYV0nEv0eZmt2gU4YqrtQBbZ8FhClT73qGmtMRj+KV2OWLCZWHm07ZwC1hzxUNFjfQJ/Tc6/fDlJbS3HYhJ8FnGunaJljeBEYJw/o=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773428879; c=relaxed/simple;
+	bh=ZP/419+gfDET7cQ7CkMV/f3dAyDaXDTZgkh9pdRsdms=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=ItXUdWMGrS1uyuIK5s++nkOyWP3dmKCylDVi+LiT/daAdFS8yeffFLBj9Gd3yBIj7+5Wxi/hd7MdkhCkHlaeDnlHefcxKEtFcdDMTmtBq8ikMcuWx1+bIxJjiPTKHQ1tJXGbeUVJHgfZ3Sw6Er8HHymXu8+fAy1a3tGMvrYHU40=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=X1iJxOtt; arc=fail smtp.client-ip=52.101.56.26
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pvJLiRlV"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 9D21AC2BCB6;
-	Fri, 13 Mar 2026 19:03:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773428608;
-	bh=e599/+9riorUGtuRfkF9HzcpRuZoJHcKGAJ9QlZI5I8=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=pvJLiRlVTW9gj4yNp19D00dm8OTYy0w6khpjKe122WpTkf8RqPCoBowhTmwWCdTOv
-	 sv4PKFUP3zo0RueVJcPzy3YeqvYpURal4NjR6Sny/XdWyxnk2qJuc09lpFVHbKD/dK
-	 8kaVi276zEQIYnqSGmHcBVKEa161uWrEaCo8ObN/ACXevVXGzchAuPXZEKR5vEag0x
-	 IjqOVbGRGjIldUBxNKGFAbngT6tbwnBGPRpRVTU0LkAone7APgmxdlwU+pjh/UKd6n
-	 X2o+OI3tEmrHGJs40VECpZByH+5FYB0NytevZ66bnKcxY0pjZRoljm4a6ZM61r+v62
-	 RFrgUNSqQVuFw==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91AAA107BCD7;
-	Fri, 13 Mar 2026 19:03:28 +0000 (UTC)
-From: Markus Probst via B4 Relay <devnull+markus.probst.posteo.de@kernel.org>
-Date: Fri, 13 Mar 2026 20:03:10 +0100
-Subject: [PATCH v3 6/7] mfd: Add synology microp core driver
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="X1iJxOtt"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=YfVi4/UvHEaomPlTciOvd0XlBhj5X3UkxbxeFGNBPP2tbyM+KHL2LyD8zXMHwip93Ox/3FnEqDkVfOLG3pbdD9reOEYwssg0Qqi15nD27hnhDRPOcB4pfvBtFfUYQiNlxTXEGNojL1k4UR6LaTBV/mCKCoV3LAc1Ie2ed5QqRREeHQeNwJvuUe+RHHMIRyvi4yWJYqS6bChf/T9KZEeOHNPM/zIPrW5sNOyLgkp7SFE3f2Asu0kdDo2bAWYnEKXA1BzpyOf61x1XLm316sIz5tP1sxUE5Z6816SZ2FnHO+w+coh+DBA+En0I5iiJ+LneAOlhGcxVTRz80Nr9VBOk4g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=tEW4JpJPsUWgYq1VB1aeoH+7qGbVSutbsOELyWHGUjk=;
+ b=iy5w2rlFOpY/UK2O6ak32snlMWU/bhX040cfDBNjdL44kyG0iEEVHdnToDaLYpP4JOXqHcP6q7H+Gl5b6jlpe/A1bnmZ5TOsBcrxjgF37SydOvOhIvuSi77UuQOHWxTxxjME331bLGMTq2Td+8x/OcjmRZRoSwB8lIoxnvqhYIxXrTFrRzK/5AvLTnB8xTbTZFSU6iE2Iw6l8D6Atc4sA6AsIWuqlcfihaNClNkagWdQMT2MdAk4Q02kvItkiZbZe51O26x4x0YkhvMnOXW0zP2N2p2pbG6YigRF2YPOHP+lIVoaQN+26ALnoo5EsQUyykP7HY0KwDFtJqcaZnB+HA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tEW4JpJPsUWgYq1VB1aeoH+7qGbVSutbsOELyWHGUjk=;
+ b=X1iJxOttisDVkUxNzM5XpO8Kr0iEjq+J/zMzQKz17DjTb+NFa0mBM7C6EA5556Ro2/43e8GlrBRyLTMjEWuhgvW+Wt7HbHd8lpLZ2mYszshxAs/PSZNuSmKHHW4YVeHm0VjDk9UPIpp8EhTNdTf+IVxty658KG5iVo0m3dlvY49Wq3fPaqWRTxHSnjt7pCA/AAPww7z7vv5nf77Rcm4Oq900SxHqTGn473e3qNsMKejRcj+yFHyVY6qKZzEnO19Ey2UMn0BkmKhY78dm8asVJ2j/YWaHbU7gPRZhfwviargvaKtgr6JtSTixr9T+ky7VpVGQsBBOW+A24HFoT6Gmpg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by SN7PR12MB6912.namprd12.prod.outlook.com (2603:10b6:806:26d::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.4; Fri, 13 Mar
+ 2026 19:07:54 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%5]) with mapi id 15.20.9654.022; Fri, 13 Mar 2026
+ 19:07:54 +0000
+Date: Fri, 13 Mar 2026 16:07:53 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, linux-coco@lists.linux.dev,
+	linux-pci@vger.kernel.org, aik@amd.com, aneesh.kumar@kernel.org,
+	yilun.xu@linux.intel.com, bhelgaas@google.com, alistair23@gmail.com,
+	lukas@wunner.de, Christoph Hellwig <hch@lst.de>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Roman Kisel <romank@linux.microsoft.com>,
+	Samuel Ortiz <sameo@rivosinc.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>
+Subject: Re: [PATCH v2 03/19] device core: Introduce confidential device
+ acceptance
+Message-ID: <20260313190753.GF1586734@nvidia.com>
+References: <20260303000207.1836586-1-dan.j.williams@intel.com>
+ <20260303000207.1836586-4-dan.j.williams@intel.com>
+ <2026031230-mastiff-create-7593@gregkh>
+ <69b38e7427a61_b2b610073@dwillia2-mobl4.notmuch>
+ <2026031319-payee-photo-bdd9@gregkh>
+ <69b45d178ae17_b2b6100f2@dwillia2-mobl4.notmuch>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <69b45d178ae17_b2b6100f2@dwillia2-mobl4.notmuch>
+X-ClientProxiedBy: BL1P223CA0039.NAMP223.PROD.OUTLOOK.COM
+ (2603:10b6:208:5b6::10) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260313-synology_microp_initial-v3-6-ad6ac463a201@posteo.de>
-References: <20260313-synology_microp_initial-v3-0-ad6ac463a201@posteo.de>
-In-Reply-To: <20260313-synology_microp_initial-v3-0-ad6ac463a201@posteo.de>
-To: Lee Jones <lee@kernel.org>, Rob Herring <robh@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
- Gary Guo <gary@garyguo.net>, 
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
- Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
- Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
- Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
- Igor Korotin <igor.korotin.linux@gmail.com>, 
- Daniel Almeida <daniel.almeida@collabora.com>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>, 
- Robert Moore <robert.moore@intel.com>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
- rust-for-linux@vger.kernel.org, driver-core@lists.linux.dev, 
- linux-pci@vger.kernel.org, linux-leds@vger.kernel.org, 
- linux-acpi@vger.kernel.org, acpica-devel@lists.linux.dev, 
- Markus Probst <markus.probst@posteo.de>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3772;
- i=markus.probst@posteo.de; h=from:subject:message-id;
- bh=n1TKkDCU7sA420yu0PCrb8RGAbqzgpwd288LpkGJk1c=;
- b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBptF97W5uQx7vZUUUd4QTbEpR69O3l4q/MbVaPB
- MN4wBOFIiyJAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCabRfexsUgAAAAAAEAA5t
- YW51MiwyLjUrMS4xMSwyLDIACgkQNHYf+OetQ9IsyhAAhBUVFnog6ffMupKTG44AV8/+txW6AW1
- EvUWNHUFE8jVpTzG30B+pT3z9Ay1Wm6uXoBrrg9hRXLYdZczOyEPw5SHpbBQ02+xqwRi732nBd0
- NE+9GUMnsEI2Z64+5sNuqjEJCQRQT4shpdDV8fJ4QGegPLRoTcl/ns/JG7Uxik+98RCzJFKuEoH
- qPiaqjizLGlQSjWRxmToWO8wcORGh27vMzKUR1xRqWWHEBQKN6FbgK3+C+CO8sOSoamqMnhkTq9
- z4rxYOrOtA1J/ZiHlNLd55BEQhTXDyKTriwjm8POPEKXAeahPGy4nCXLK9RTKDrGIGERH7DEZCN
- IhdOEF8AYgjZG4A3F5xy5RxRRAZB2zeEYD8UqGhGthVmmPlD8eo2oBUgox3iNh7BkxER5SqYa6P
- EKkEKwJZkzbeXT2JmQ3uCNTuGiiA0sLzO0JYPeYNvnwgVtswPVgMZv4zeokBKJe+6tNFBUFcwvn
- nbQsJYfMsuR6Z/vbZXek0ofgoaTKNDfjbBNyojNybEwKLF35it2wvyfwiwfgRVDpRYcZhswpP22
- 3+DBMH2MreBmpoTD6ut+vAqGJmAwhRoEPu1P9B4sgWnWkBn6BAq7nTNm3d8nD6OGaw/CbnVpR7x
- W3cW1RzC4tFC/zCLdW9w6BMAaK9wt8vl1wEqBVbCxRHWXTqCAl7Y=
-X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
- fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
-X-Endpoint-Received: by B4 Relay for markus.probst@posteo.de/default with
- auth_id=680
-X-Original-From: Markus Probst <markus.probst@posteo.de>
-Reply-To: markus.probst@posteo.de
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|SN7PR12MB6912:EE_
+X-MS-Office365-Filtering-Correlation-Id: 85584f58-6992-4629-81e6-08de8133d456
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|7416014|376014|1800799024|22082099003|56012099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	roYkbONocVJcfeKctuXOOUBABt1TQYvQZckJJJNfEdA59w9bZiH3LKnOKakmijo/UKGS+YrTXOJ/RjpxSxxKOP78EK0c8OTPenlT5+0BNFew7na0HOZZZ+p0U0V6qQsrvcJmgGLvBkapJxEGSz8UNnQOw9Dpd2WcI5LzlBeTS2WPD0POUlGd81SxBQJJdFzfCtLPUW+mZAAo0vMgIOOhrjmoWJ1zrZ2SmupC0lNdRM5/VhH63vjgQPUjOiegq3w0KwnW8rlKJUwft/rq8qVSSrL6IS++vjFJ4lTF2z8ShjlJZPGwjLrg/ZYVw/Qr3ajtMG/0O1x31YH79fjs1BkX8eHvvH0gnQsz9ZFz2U57Z1ZeEiUReN7GssNGtBrPxtgB7JdplQSiupH3083SdrtddC0uIFWTx/Pr7eLAGZ8Pte6Ns46rtJumMh1UKPbhMQUv5nyGPgms2KbvWkHtdtkVwQZl2gaK8eXABZ9HZbZBk2n3h5WosUW+NKPzqyBwBqf4Nrt7o/BTBSG1qltWC1hYsbVyZAR2n3LNG1M/u6rTCByHohbnpIJxWRezwNX5g9+0DRHnH1tAnXRsmLfqIOZRwGh2gUwKTekWZaXuxjqL4nct3i4p07rkpziWnXj5P0QCa6mfMIoC3x25EGlmlmSqcpLfCBXnS71TdxEhpSAmAUhoqxFNnKaI3lzRPHe6THgOHHfZ6XxOeanaZfYGkZSVH8BZtT9S8eT5DJOb34kVuK8=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?KnGZRuHw1KvdQbtBff4gx8gYSBD/5QQl3J8twFVoOeClX/kYId1icmeNWMNF?=
+ =?us-ascii?Q?hmKmmj2XnrGU9tLlKmv1BN6Tkc7JWwNK3WRZuY5ZgD0GMvzAJSCnqeljLnL2?=
+ =?us-ascii?Q?e8MI0fANKzPmUSlvd3p4iz++zSmtUrI1sjpuD+NBhHH7zQLtfzLb21c1gsEX?=
+ =?us-ascii?Q?YZMkd/VgiyyZilpqQ4c0dH0plU7kCGo5qVK3JHODqqL/igGIQSGTWgYB2woK?=
+ =?us-ascii?Q?b/L7fF204LRrrst18sJT3J3HRN4UdYX3J+3hc1FZWDA5N1ZBnyQpVgkEbHgj?=
+ =?us-ascii?Q?T6u/p2Wnl0yNXfthFIQA7SIARCsINXdNyR5Lt5EUUepHyV9uOBpqkPioxeoz?=
+ =?us-ascii?Q?1cOrkqrVk1dEo16jq3qS/T722XsU5gqmmHjr1IxNvrvxpVFzgzjnEBsNmcg5?=
+ =?us-ascii?Q?1v5sGz5gAmBW7zWZsP5iGf9En0EgD+WKqUPgvnneSn04x4SwEqI1H5rnAdFq?=
+ =?us-ascii?Q?hvgXFFgGxGwd2ZPWcmVaXgmSRf8jEE3898e4wAHRNsN+Tan/GZdFrS3NLQj8?=
+ =?us-ascii?Q?WrWY6uNi3bX9GoqRqrNTsLV8I6+XwiiIxcUv0KiZNXPb5O4tzQrJA/6mA0MG?=
+ =?us-ascii?Q?Q3bLSFr0lAQUKOHKh5B5c5GvoPKhNM7O7yMqGuRvwBq6RMhZKbN6hGjGzsl8?=
+ =?us-ascii?Q?8tAHzeKBEizBMLQzgWnVcK3TWhgsxYrWltyXtuOl2MFdtS3CraGUN9GkOxT6?=
+ =?us-ascii?Q?1/4uh6QinXWQSyvnQTwwjB8dVCOX9bVg+SMgA5LiPDdKPSWOejQcyJsp7feH?=
+ =?us-ascii?Q?CzOY6G9xEJaeQnT02+YyMUFXRs8WUUOKU6w7nZKCgnH64byf6xFq8VWAn7lT?=
+ =?us-ascii?Q?UsblXIdO8KLRwyi1lrDCs0ReJuowOF/meCr6mUvgc/uy+JwRDJZWOouh8rWc?=
+ =?us-ascii?Q?o8F5Zowt8cCA4AsM6/oXnFUgBxlAcOyKhzDiQbQDtE2Ycui1rZ8NSRn4J/LK?=
+ =?us-ascii?Q?jHzbifDlypzxNMpGooB+mup4KU+RuoTNq5l7O4c3+VH7/ss/DkHAm5ruChKb?=
+ =?us-ascii?Q?WwdUP+dOBp+nCnz5qBNOiZha112UA6r7ULghnXVYhFKLQy8iWl71WORJY27f?=
+ =?us-ascii?Q?+bs6/1ogNVKnx/dwT6Dv2c/KTKMszO70ohbd9tB5g04+sz3+0GdPW33A61bA?=
+ =?us-ascii?Q?MHkGsSHt1EbykNtC+zLrCaqN8DMJGvDumtARMXhkPjaXsv39G0tN7Y7qPy6N?=
+ =?us-ascii?Q?XA+2obYzKQDY6iUoSZGnGh50eYDs0PFdqX3LDuJYHcHcA/xsxF2Doz8yiLF9?=
+ =?us-ascii?Q?UBgi6Up/0zm61+HdBwTvS3+oQVycbBgdr+lpiLK7z1/MYOznM48DqAcx7b5w?=
+ =?us-ascii?Q?kFYuVhG2Q5svwLbtH153UBm2IkxLKwMoaudAmjFyr7cJJlj6djISRK9K+97K?=
+ =?us-ascii?Q?qpud8w43vnMGFwCOxDxJydDgHbS8IBWbfQpK8HcNRH4uawJeILiD+nlr1SAy?=
+ =?us-ascii?Q?L9kTWFz98UHYxQBz681R9bG9NxjTY8UE4U7rKFmfeJtXk2SYqbQoIyjr8Yl/?=
+ =?us-ascii?Q?xcz6T5lkmTyNVClOSeVVb97uJRDTNqOcR+yvp+byvWX60kWXs36gVxuzPzE0?=
+ =?us-ascii?Q?nQFrRErOf3pBuE7SAFrIzfkWeX2us69n+Kdtl0UnILv4B9MFZK+1HLB/96P9?=
+ =?us-ascii?Q?bJiC5DfgGAgStW4xjIx6vojODX5lUtgdfUJ+1B+31z6EwCd/XJt+DNaTOyX6?=
+ =?us-ascii?Q?FVR+X4HbK1AIAUk0YohfE28dqYFuIA+6WObxvMtt8TVsxPjmD1Z0cEll+TiV?=
+ =?us-ascii?Q?x2NAGzz+vw=3D=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 85584f58-6992-4629-81e6-08de8133d456
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Mar 2026 19:07:54.0612
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6qMftm8eC1IPWyKGVFISInrxxMIcQoaPEmrUwa+cR7KQua86GYHvk2wI/lq/REYi
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB6912
 
-From: Markus Probst <markus.probst@posteo.de>
+On Fri, Mar 13, 2026 at 11:53:11AM -0700, Dan Williams wrote:
 
-Add a synology microp core driver, written in Rust.
-The driver targets a microcontroller found in Synology NAS devices. It
-only provides the base for sub-devices, like LEDs.
+> Jason's framing of an enum rather than a boolean for "trust" seems
+> workable to me and melds "authorization" and "CC acceptance" into one
+> concept.
 
-Tested successfully on a Synology DS923+.
+I think you can also fold the auto-probe into this as well.
 
-Signed-off-by: Markus Probst <markus.probst@posteo.de>
----
- MAINTAINERS                    |  7 +++++++
- drivers/mfd/Kconfig            | 11 ++++++++++
- drivers/mfd/Makefile           |  2 ++
- drivers/mfd/synology_microp.rs | 46 ++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 66 insertions(+)
+The kernel would have some default policy for what enum value to set
+upon discovery and instead of 'disable auto probe' you'd arrange to
+set trust level 0 which would block driver binding and probing
+inherently.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index fa49e40836ab..32932ecab9cf 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -25539,6 +25539,13 @@ F:	drivers/dma-buf/sync_*
- F:	include/linux/sync_file.h
- F:	include/uapi/linux/sync_file.h
- 
-+SYNOLOGY MICROP DRIVER
-+M:	Markus Probst <markus.probst@posteo.de>
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/leds/synology,microp.yaml
-+F:	Documentation/devicetree/bindings/mfd/synology,microp.yaml
-+F:	drivers/mfd/synology_microp.rs
-+
- SYNOPSYS ARC ARCHITECTURE
- M:	Vineet Gupta <vgupta@kernel.org>
- L:	linux-snps-arc@lists.infradead.org
-diff --git a/drivers/mfd/Kconfig b/drivers/mfd/Kconfig
-index 7192c9d1d268..8b8b391d1b47 100644
---- a/drivers/mfd/Kconfig
-+++ b/drivers/mfd/Kconfig
-@@ -1320,6 +1320,17 @@ config MFD_SY7636A
- 	  To enable support for building sub-devices as modules,
- 	  choose M here.
- 
-+config MFD_SYNOLOGY_MICROP
-+	tristate "Synology Microp core driver"
-+	depends on RUST
-+	select RUST_SERIAL_DEV_BUS_ABSTRACTIONS
-+	select MFD_CORE
-+	help
-+	  Enable support for the MCU found in Synology NAS devices.
-+
-+	  This driver only provides the base for sub-devices. For additional
-+	  functionality, you have to enable support for the sub-devices as well.
-+
- config MFD_RDC321X
- 	tristate "RDC R-321x southbridge"
- 	select MFD_CORE
-diff --git a/drivers/mfd/Makefile b/drivers/mfd/Makefile
-index e75e8045c28a..f754be7163cd 100644
---- a/drivers/mfd/Makefile
-+++ b/drivers/mfd/Makefile
-@@ -304,3 +304,5 @@ obj-$(CONFIG_MFD_RSMU_SPI)	+= rsmu_spi.o rsmu_core.o
- obj-$(CONFIG_MFD_UPBOARD_FPGA)	+= upboard-fpga.o
- 
- obj-$(CONFIG_MFD_LOONGSON_SE)	+= loongson-se.o
-+
-+obj-$(CONFIG_MFD_SYNOLOGY_MICROP)	+= synology_microp.o
-diff --git a/drivers/mfd/synology_microp.rs b/drivers/mfd/synology_microp.rs
-new file mode 100644
-index 000000000000..b9b5fff5c18d
---- /dev/null
-+++ b/drivers/mfd/synology_microp.rs
-@@ -0,0 +1,46 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+//! Synology Microp core driver
-+
-+use kernel::{
-+    device,
-+    mfd,
-+    of,
-+    prelude::*,
-+    serdev, //
-+};
-+
-+kernel::module_serdev_device_driver! {
-+    type: SynologyMicropCoreDriver,
-+    name: "synology_microp",
-+    authors: ["Markus Probst <markus.probst@posteo.de>"],
-+    description: "Synology Microp core driver",
-+    license: "GPL v2",
-+}
-+
-+struct SynologyMicropCoreDriver;
-+
-+kernel::of_device_table!(
-+    OF_TABLE,
-+    MODULE_OF_TABLE,
-+    <SynologyMicropCoreDriver as serdev::Driver>::IdInfo,
-+    [(of::DeviceId::new(c"synology,microp"), ()),]
-+);
-+
-+#[vtable]
-+impl serdev::Driver for SynologyMicropCoreDriver {
-+    type IdInfo = ();
-+    const OF_ID_TABLE: Option<of::IdTable<Self::IdInfo>> = Some(&OF_TABLE);
-+    const MFD_CELLS: Option<&'static [mfd::Cell]> =
-+        Some(&[mfd::Cell::new(c"synology_microp_leds").of(c"synology,microp-leds", None)]);
-+
-+    fn probe(
-+        dev: &serdev::Device<device::Core>,
-+        _id_info: Option<&Self::IdInfo>,
-+    ) -> impl PinInit<Self, kernel::error::Error> {
-+        let _ = dev.set_baudrate(9600);
-+        dev.set_flow_control(false);
-+        dev.set_parity(serdev::Parity::None)?;
-+        Ok(Self)
-+    }
-+}
+Policy in userspace then has to increase the trust level which could
+trigger an auto-bind.
 
--- 
-2.52.0
+> > > Instead, give userspace all the tools it needs to deploy policy about
+> > > when to operate a device. When it does decide to operate the device give
+> > > it the mechanism to add confidentiality, integrity and performance to
+> > > that operation.
+> > 
+> > Yes, this is a policy decision, and if you are only saying this is about
+> > "which IOMMU should we select", then that's a dma layer configuration
+> > option.  Let's not call that "acceptance" please.
+> 
+> Done.
 
+AFAICT "which IOMMU should we select" should entirely be driven by the
+TDISP state being in RUN
 
+Jason
