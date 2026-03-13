@@ -1,168 +1,143 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39C56375F88
-	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 20:32:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09AD3372ED0;
+	Fri, 13 Mar 2026 21:01:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773433950; cv=none; b=jCq4R3peJ/6CNWthgryIoV8BK8/+etTlJ7St5OQYKN2nyIvzNyO4Mh6uU30jP5EC6ndUGeYCCBuNxqXiN4bsdOQ/zczXBdQ02aaxJJiJRumP7/yYpkHVSZgWzU89Rbk9oxEa+PhGqXUhSm2Gj4b4dqHQGp3DPqeh+EjFojzgEjA=
+	t=1773435662; cv=none; b=VK0gY1I+pu6WoD8bIuG/LLTPKopv5cGEzw2wzXMC4AynNK8CgJwwOEqigkigDlLcpi/fKtrWZXm2AVKDjIvpTqpx1GVKgfRiGc7l0rH6CZGTv/Lbfx1/8udYZqRdX7aZWABGZQxtrHo8hp478cN0Tq4l37TR+5tk/dqJnifpOWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773433950; c=relaxed/simple;
-	bh=zUKmnAJJ5iJOiT/3ZJrLs5Hjcv3qUJTQaRNVnFGFl1g=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=MRTFPRQ77ibx9mUyoof8OVpAhNrk5vym+YEx/X2/rcIxZJ/FXGjjZVF2ww7/XLHuC3Tvj1aG47EUU9/LHX6B5MOdWzu8Ya1vHhmg1zrM67eaiVg/ASUodQ6GOfosRipH08GCUwm39wGVdFCj5YZiK3H++5JfGd+IJNKO83DD+/8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=HEQRJ33W; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	s=arc-20240116; t=1773435662; c=relaxed/simple;
+	bh=O1nNclFDbyjxv8qi+UO7kEi9GWMfQEet1G/iJQKNSuc=;
+	h=Mime-Version:Content-Type:Date:Message-Id:To:From:Subject:Cc:
+	 References:In-Reply-To; b=ZLcBVZjDCqqi6o1pE6N419bc32P7pvvn9rO7VwutpAIVp91iMYfCWeL5x8DZE37AplGu8J5fqNmY8Nn6q0jc6JlBcMWDOwwz1p2ezBa07q4q9ukZz8PTjxrsMH1+pvt5qNWT6Kp0dlxXLK9IwtdzYQ0ljpNgdaBRVMo9wf4V8GA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D60pN7n6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="HEQRJ33W"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 43DDB240109
-	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 21:32:23 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1773433943; bh=zUKmnAJJ5iJOiT/3ZJrLs5Hjcv3qUJTQaRNVnFGFl1g=;
-	h=Message-ID:Subject:From:To:Cc:Date:Autocrypt:Content-Type:
-	 MIME-Version:OpenPGP:From;
-	b=HEQRJ33WdiXIJ14pCtwmwL5LRPdXuKfjQnqbQB7W+RgmHBRvy+gZcSOZ461n6t5yp
-	 rWjaCbYH7Z+ZRS0+Oq1iwCLaLydUhxCCuR8+Qxx5SsprYP7tNrtAPogMwAEwEvB7pj
-	 Q4JBovRuh9rRxwckSrc223nKDdcgKNsexX+Y9ZpS3e/OGXkzTZ3cSp7HRplNFsOXvj
-	 kEoT21qD0EgasU3zySlp5uTyjECUJkhROA9iiiIxTzUznTRmwJgnVp/XE8KYjT9u+C
-	 JBwZeJ0Ll8LcTBOQsLrtpRgLZ8BoZLiv9aWIAn4LSmJlk+NH2wGMW8h7yeBi6OIdM2
-	 dZAZrImPag5gA==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4fXbkr3PS9z6twG;
-	Fri, 13 Mar 2026 21:32:20 +0100 (CET)
-Message-ID: <3fa06cd43d81d9f10f65d2bcec15f67bfffb45a6.camel@posteo.de>
-Subject: Re: [PATCH v3 3/7] acpi: add acpi_of_match_device_ids
-From: Markus Probst <markus.probst@posteo.de>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Lee Jones <lee@kernel.org>, Rob Herring <robh@kernel.org>, Krzysztof
- Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, Greg
- Kroah-Hartman	 <gregkh@linuxfoundation.org>, Miguel Ojeda
- <ojeda@kernel.org>, Boqun Feng	 <boqun@kernel.org>, Gary Guo
- <gary@garyguo.net>, =?ISO-8859-1?Q?Bj=F6rn?= Roy Baron
- <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, Andreas
- Hindborg	 <a.hindborg@kernel.org>, Alice Ryhl <aliceryhl@google.com>,
- Trevor Gross	 <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>, Igor
- Korotin	 <igor.korotin.linux@gmail.com>, Daniel Almeida
- <daniel.almeida@collabora.com>,  Bjorn Helgaas <bhelgaas@google.com>,
- Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Pavel
- Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>, Robert Moore
- <robert.moore@intel.com>, 	devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, 	rust-for-linux@vger.kernel.org,
- driver-core@lists.linux.dev, 	linux-pci@vger.kernel.org,
- linux-leds@vger.kernel.org, 	linux-acpi@vger.kernel.org,
- acpica-devel@lists.linux.dev
-Date: Fri, 13 Mar 2026 20:32:22 +0000
-In-Reply-To: <CAJZ5v0hYcSDKid4cbz8ZVZG+vLSHvzPB2UryevEpE15W1w7G3g@mail.gmail.com>
-References: <20260313-synology_microp_initial-v3-0-16941debd8a0@posteo.de>
-	 <20260313-synology_microp_initial-v3-3-16941debd8a0@posteo.de>
-	 <CAJZ5v0hYcSDKid4cbz8ZVZG+vLSHvzPB2UryevEpE15W1w7G3g@mail.gmail.com>
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
- keydata=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
- jfGillcaQOqFZ3WwVqyzG1BUfTow==
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-new+ZnvpPewWLWV6wMQM"
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D60pN7n6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E7B6C19421;
+	Fri, 13 Mar 2026 21:00:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773435661;
+	bh=O1nNclFDbyjxv8qi+UO7kEi9GWMfQEet1G/iJQKNSuc=;
+	h=Date:To:From:Subject:Cc:References:In-Reply-To:From;
+	b=D60pN7n6xCiMmcp3DkouG5BJQPAqjLqpjWsWKm+eEugVKQ5TZldFQIJXq1h3YMsmi
+	 tV83t/LH1xOh+B9DjVLiLJz8WxXP5EAk/RJVUk5gsVWhGIuL0mKQ6ZtcObZEmsfW8S
+	 VHV2QBVE+7aYD277iItBjI/hI7Vvq4wr1ngLHgGp1vHD6oDjlT+hPFTw7SICS8Cbfr
+	 pTAMPFLTsGCmuWuW2Xiqls+SP/2p1uX8tQgdRU1WOGvfcvWPoRMCdgvNyVvLfgcaUA
+	 VJxGtsGL+nlgZDLchLAdeQKG2jmZ50CX8BXimDtnaClH0fuxKSOU4TOJWSkggs2VY8
+	 2TiPAYz4wZ/EA==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
-
-
---=-new+ZnvpPewWLWV6wMQM
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 13 Mar 2026 22:00:54 +0100
+Message-Id: <DH1YH0GO75H8.18YSW2VMKRB3C@kernel.org>
+To: "Markus Probst via B4 Relay"
+ <devnull+markus.probst.posteo.de@kernel.org>
+From: "Danilo Krummrich" <dakr@kernel.org>
+Subject: Re: [PATCH v3 7/7] leds: add synology microp led driver
+Cc: <markus.probst@posteo.de>, "Lee Jones" <lee@kernel.org>, "Rob Herring"
+ <robh@kernel.org>, "Krzysztof Kozlowski" <krzk+dt@kernel.org>, "Conor
+ Dooley" <conor+dt@kernel.org>, "Greg Kroah-Hartman"
+ <gregkh@linuxfoundation.org>, "Miguel Ojeda" <ojeda@kernel.org>, "Boqun
+ Feng" <boqun@kernel.org>, "Gary Guo" <gary@garyguo.net>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Alice
+ Ryhl" <aliceryhl@google.com>, "Trevor Gross" <tmgross@umich.edu>, "Rafael
+ J. Wysocki" <rafael@kernel.org>, "Igor Korotin"
+ <igor.korotin.linux@gmail.com>, "Daniel Almeida"
+ <daniel.almeida@collabora.com>, "Bjorn Helgaas" <bhelgaas@google.com>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Pavel
+ Machek" <pavel@kernel.org>, "Len Brown" <lenb@kernel.org>, "Robert Moore"
+ <robert.moore@intel.com>, <devicetree@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <rust-for-linux@vger.kernel.org>,
+ <driver-core@lists.linux.dev>, <linux-pci@vger.kernel.org>,
+ <linux-leds@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+ <acpica-devel@lists.linux.dev>
+References: <20260313-synology_microp_initial-v3-0-ad6ac463a201@posteo.de>
+ <20260313-synology_microp_initial-v3-7-ad6ac463a201@posteo.de>
+In-Reply-To: <20260313-synology_microp_initial-v3-7-ad6ac463a201@posteo.de>
 
-On Fri, 2026-03-13 at 19:57 +0100, Rafael J. Wysocki wrote:
-> On Fri, Mar 13, 2026 at 7:48=E2=80=AFPM Markus Probst <markus.probst@post=
-eo.de> wrote:
-> >=20
-> > Add a function to match acpi devices against of_device_ids. This will b=
+On Fri Mar 13, 2026 at 8:03 PM CET, Markus Probst via B4 Relay wrote:
+> +impl Command {
+> +    fn write(self, dev: &platform::Device<Bound>) -> Result {
+> +        // SAFETY: Since we have no of and no acpi match table, we assum=
+e this is a mfd sub-device
+> +        // and our parent is a serial device bus device, bound to the sy=
+nology microp core driver.
+> +        let parent =3D unsafe { dev.as_ref().parent_unchecked::<serdev::=
+Device<Bound>>() };
+
+Despite being accurate description, "assume" is not what you want to read f=
+or a
+safety justification. :)
+
+We don't want to directly access the serial device from this driver. Instea=
+d,
+there should be an abstraction layer of the resource you are accessing.
+
+If this would be I2C or SPI you would request the regmap of the parent at t=
+his
+point, e.g.
+
+	dev.parent().regmap("led_registers")
+
+Now, this is a serial device, but regmap still works perfectly fine for thi=
+s
+case. It even allows you to ensure from the MFD driver to restrict the LED
+driver of sending commands that are not LED specific by exposing a LED spec=
+ific
+regmap. Additionally, if you need additional locking etc. it can all be don=
 e
-> > used in the following commit ("mfd: match acpi devices against PRP0001"=
-)
-> > to match mfd sub-devices against a of compatible string.
->=20
-> Not until I can see how this is going to be used.
-This is used directly in the following patch. Only half of the patch
-series has been sent by b4, because of a limit of my email provider
-(which I didn't know existed until now). I am sorry for the
-inconvenience.
+within the regmap implementation, so you entirely avoid custom APIs.
 
-The patch series has been resent via the b4 relay.
-You can take a look at [1] to see how it is used.
+I'm not sure how common regmap is for serial devices to be honest, but
+apparently there are drivers doing this and I don't really see a reason aga=
+inst
+it.
 
-[1]
-https://lore.kernel.org/rust-for-linux/20260313-synology_microp_initial-v3-=
-4-ad6ac463a201@posteo.de/T/#u
+For instance, there is drivers/iio/imu/bno055/, which is a chip that works =
+on
+both serial and I2C busses and fully abstracts this fact with regmap.
 
-Thanks
-- Markus Probst
+In Rust a regmap will probably become a backend of the generic I/O
+infrastructure we are working on, which will also allow you to use the
+register!() infrastructure, etc.
 
---=-new+ZnvpPewWLWV6wMQM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+register!() and some other generic I/O improvements will land this cycle, I=
+/O
+projections are more likely to land next cycle.
 
------BEGIN PGP SIGNATURE-----
-
-iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAmm0dFEbFIAAAAAABAAO
-bWFudTIsMi41KzEuMTEsMiwyAAoJEDR2H/jnrUPSpicQAL94zv1vs4Mj1Lj2RK8J
-icVNOUN/lVB1j01acPYts0KApvQEPQQkIy3N5TzPUX3NM6iExfLrLTBiH966yJw/
-HghJK37YwkvO69r46Mz5QBKzNG/CAWKsN8dvIrQCuKZrlbYBHYBYm5hRqQjIzvkg
-ykqFxjgEbypVc5WuJF2YFoN/7+XfUfEqAHxWIXFIX9gCtRNedKar5fxs+OsPqWze
-osjdlkRN+7sRpvcEgovulXapCwkZcJizpqiQ+74aWrju4vgyE2xhj4Tgd6OEkSJV
-LinZ2DYK2Afb/tm4b+lGOcPgQCXQTLhYPBrPhi+RiotXH0wMOI/fExMir653SY9V
-UQW0u2Usd5buuxybUUef/naaZ7AgibDxzGu5DdK7cxndbaq9gCvX9NW4YlAScADX
-Quv96acbwB1LI92PHWArdwuj2DGIGG6J/JxXY3y6lZmhTNaMO5EE8D/PfauDL9nS
-MC/4kmE8PyC3l7DvFWOg7UB95zIQLPAWI6qHaVUq/sIGEdhBvDN8M/OEyxQuK0+/
-D7yFgKOJDG0ETlqThWiyKL5c9n7y9csbzij//AzDdwoPoKsOu2UytAisch/e4Ir6
-Vgo2om5ZXc2y2P1S1mVrLK9BBUOcyBYKv2gyjVosDfCd/qfzlFP+nW3TQbW4sm+o
-rrX5rRqhN6FwZ7274oP+97aY
-=JyG6
------END PGP SIGNATURE-----
-
---=-new+ZnvpPewWLWV6wMQM--
+> +        parent.write_all(
+> +            match self {
+> +                Self::Power(State::On) =3D> &[0x34],
+> +                Self::Power(State::Blink) =3D> &[0x35],
+> +                Self::Power(State::Off) =3D> &[0x36],
+> +
+> +                Self::Status(_, State::Off) =3D> &[0x37],
+> +                Self::Status(StatusLedColor::Green, State::On) =3D> &[0x=
+38],
+> +                Self::Status(StatusLedColor::Green, State::Blink) =3D> &=
+[0x39],
+> +                Self::Status(StatusLedColor::Orange, State::On) =3D> &[0=
+x3A],
+> +                Self::Status(StatusLedColor::Orange, State::Blink) =3D> =
+&[0x3B],
+> +
+> +                Self::Alert(State::On) =3D> &[0x4C, 0x41, 0x31],
+> +                Self::Alert(State::Blink) =3D> &[0x4C, 0x41, 0x32],
+> +                Self::Alert(State::Off) =3D> &[0x4C, 0x41, 0x33],
+> +
+> +                Self::Usb(State::On) =3D> &[0x40],
+> +                Self::Usb(State::Blink) =3D> &[0x41],
+> +                Self::Usb(State::Off) =3D> &[0x42],
+> +            },
+> +            serdev::Timeout::Max,
+> +        )?;
+> +        Ok(())
+> +    }
+> +}
