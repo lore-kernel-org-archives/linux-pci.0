@@ -1,211 +1,299 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012056.outbound.protection.outlook.com [40.93.195.56])
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA52535CB6B
-	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 20:24:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.56
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773433470; cv=fail; b=KHk979yOT0m+3mkezoXeb3v9Wwdiu68njcI6fucC7bG9RB5tdNJVlGdofeM7nWlhwVKTZYkjCZi7gEBtmjMIywveK+6+udhHsHnyDwmi1Iec3BIDloTbSBNeBrB8Fh5SrvZ/Ltg2hWfJKL7nYsKqwYzMWBkPHvKwqbVJivmMwuo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773433470; c=relaxed/simple;
-	bh=oIhvt0Y7SkI+ehuZMhl8kb52oICKii8SH8ByxXDiZxI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=lyZFkmhFLya1GrBTntJ/Rjd8HS9RYDZtt0jE1IJMptgw5DqEu5D6TSsgSbTIvtj60jEsPSyRlEHGjksgJEKvG7flwBOGzA3E4F/V9kxQuI6CGyy2V65U5RB4/gWiG5ZF2zrqrS5pP4Hpqe7ULS9M2XXD2/eVyMsDKSF0uOWL/eU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=HnOKjLof; arc=fail smtp.client-ip=40.93.195.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D976D3D5661
+	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 20:29:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773433747; cv=none; b=tpf/AbJHDy7OqYWXkLFXJ8BtJ1CXtfaNOEsEd6W0YcXDMPlPGB74lxz5SeMzANtntGyrMl1wYqkhP96EQxyqaNRrBM/vAWM1WRMQm97yh7UY7uAX45Z7jLd6T7HaV3zN7MRQ7ncRNILw3IZSnIhjaauLlhAqkOnowj+EIZG5fYk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773433747; c=relaxed/simple;
+	bh=XS2aHgm5sUBzDfQIeDhEJ1Eh27j/Cdg/yT6UNDNK1Zo=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=i2SzFA0VSOggMiSxteUyEHiluul9EvvIkZ27t1whZHmRZWAJcoUF++BH706wp+lhuClLhkrEDxcR2pZQzrIvM+b8OYlJYU9NOpQyzhubxmybdv8vtnzXAKkm6xiUMFjof8hKqwT9/8+LgKDJ8A/TwR7e0Vo0GTVo9l2afPXfBug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=Lvy4G9mQ; arc=none smtp.client-ip=185.67.36.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="HnOKjLof"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=pSnFVi3Kiol7ycBoCKFIUPxDT/xG3XEwkR2FZlfyylB0aCRBERzkUN5nrhpniDKyxE7VEK5mMfwqL43lvqBvoL2a21soW+SdFqPt5T3oOrPbpZy+OEab95S9lDZMo9Wm10Fvcfg+LTVykYHo/QzyXPqqPYHErkzHxD3chf6V5gaa1Gayyv8x/Rh/2bw/HAq9xxongzoBELaIa5XME74HiiuEovIxZ7786pPFBt5yji3b6Mz5tYzxtVmz81vxaIyxZ3eA7uBbA6V6xUSIam/1J7Yl9twJ5vajHxqDSq26yxNalYMQLoSZJkFo6RQurGcK1yPjS2MjIFLCrAcrhky0CA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=tbZvYCoz4bV0/UCTFl4VxQX+U8G4K8xbZGG5qA6RX1c=;
- b=esFOkMyKtCFvzNUNk0dlnsl9rQ62SV1ZNiFgRnLZkvooc85SPRfJiz34S8dPNUQYOppvH60tkdj8Jl621Nv9eKlrx2E2V4pAP64kcqpdNpmqmS9CW5uJlk54pAJE7VQ60RahVf7WJPb0/rXMiXhhW3hWAmnY9tehihE4u93tZKIZPeAcbdIWWlCz9FYDiRrpacm0+XegA3pp4c0Y6kqx2ULiOPvxQnKa9FX8CDnoo3bolJwPqsnKyQCdPpzjtu7boxY92RITPoyncN1pO0zSPM0z5Kfu0NBzb+bVuZVfe814Y1PHTyFk6jnIV0u8A+J3/wVCvN2NdFYKGGwUcohX4g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tbZvYCoz4bV0/UCTFl4VxQX+U8G4K8xbZGG5qA6RX1c=;
- b=HnOKjLofgEx+zKiz4mOW4qHueefCVFp3Gto+VKm2b1uIP+yaIYMu0JNKVc/P4k96ifOdrcbJNYuo+ZyxyNoy4TrnHsr3e17mVDomI6J1c7IejzNCGNrmLgzE1xPLz395ttJh6AwqJNgl3dBxJ8v111loPy7DPNl74G49kbuuNflFSrPB7zwYBlvlDFSoMmPeZNpZ528HZzfMWA+1zf02EQeVgMCua7ewANHEUUU2JtVInwrBbx1eVNKnEUfqIHnRvaVmc/iH+XeS8H17Rx1SpQeXjy6blIf/V9k4xLczjJhGEJqmdWvEbb6qN3weZ83HTIEOz47NyjEFPDfOajx41w==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
- by SA5PPF634736581.namprd12.prod.outlook.com (2603:10b6:80f:fc04::8cd) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.6; Fri, 13 Mar
- 2026 20:24:22 +0000
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::299d:f5e0:3550:1528%5]) with mapi id 15.20.9654.022; Fri, 13 Mar 2026
- 20:24:22 +0000
-Date: Fri, 13 Mar 2026 17:24:21 -0300
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, linux-coco@lists.linux.dev,
-	linux-pci@vger.kernel.org, aik@amd.com, aneesh.kumar@kernel.org,
-	yilun.xu@linux.intel.com, bhelgaas@google.com, alistair23@gmail.com,
-	lukas@wunner.de, Christoph Hellwig <hch@lst.de>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Roman Kisel <romank@linux.microsoft.com>,
-	Samuel Ortiz <sameo@rivosinc.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>
-Subject: Re: [PATCH v2 03/19] device core: Introduce confidential device
- acceptance
-Message-ID: <20260313202421.GG1586734@nvidia.com>
-References: <20260303000207.1836586-1-dan.j.williams@intel.com>
- <20260303000207.1836586-4-dan.j.williams@intel.com>
- <2026031230-mastiff-create-7593@gregkh>
- <69b38e7427a61_b2b610073@dwillia2-mobl4.notmuch>
- <20260313133235.GC1586734@nvidia.com>
- <69b46bd7935d9_b2b6100b7@dwillia2-mobl4.notmuch>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <69b46bd7935d9_b2b6100b7@dwillia2-mobl4.notmuch>
-X-ClientProxiedBy: BLAPR05CA0019.namprd05.prod.outlook.com
- (2603:10b6:208:36e::24) To LV8PR12MB9620.namprd12.prod.outlook.com
- (2603:10b6:408:2a1::19)
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="Lvy4G9mQ"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout02.posteo.de (Postfix) with ESMTPS id 4175A240103
+	for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 21:29:03 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
+	t=1773433743; bh=Y+CSJSmxjqkcbaW3wd0CmAbzhYWJpcBSr+yGN8onFgE=;
+	h=Message-ID:Subject:From:To:Cc:Date:Autocrypt:Content-Type:
+	 MIME-Version:OpenPGP:From;
+	b=Lvy4G9mQhXR3mx3S16dx0FzYZ0mvlPiZrnPAme+QFRkfjWSZgVj2DoZEWycRuMQYd
+	 7oEJ6+VMpM7iUmM/jHPN9S4TpkOwQmUqU3f+AvGpCYhrwOWhKPCDlO9gnPvlSq9aEl
+	 rLJ4pi1KvsNKusYoqbQrG8tN2oFG4WnJz2NMDpJV3mZUFkIk28xno4gKFaHgNhu/8n
+	 Trcn6tv6L70fg0mOxuvKynZ/aqXdWQsKb1D7k+n2etK2U2oE3ogZckMgljxrMUK65W
+	 pW3DKlTDpO0/VnVk4wB/yNRs8Ca60jekzIebtwTBcyVDLmmf+8CiId/ciyM+LqDYMU
+	 y0KX92ebFhn6A==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4fXbfz6HX8z6tsf;
+	Fri, 13 Mar 2026 21:28:59 +0100 (CET)
+Message-ID: <6f2298f3298dc81e6e2ed34ca43424fc39ce3518.camel@posteo.de>
+Subject: Re: [PATCH v3 5/7] dt-bindings: mfd: Add synology,microp device
+From: Markus Probst <markus.probst@posteo.de>
+To: Krzysztof Kozlowski <krzk@kernel.org>, Lee Jones <lee@kernel.org>, Rob
+ Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor
+ Dooley	 <conor+dt@kernel.org>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>,  Miguel Ojeda <ojeda@kernel.org>, Boqun Feng
+ <boqun@kernel.org>, Gary Guo <gary@garyguo.net>,  =?ISO-8859-1?Q?Bj=F6rn?=
+ Roy Baron	 <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>,
+ Andreas Hindborg	 <a.hindborg@kernel.org>, Alice Ryhl
+ <aliceryhl@google.com>, Trevor Gross	 <tmgross@umich.edu>, Danilo Krummrich
+ <dakr@kernel.org>, "Rafael J. Wysocki"	 <rafael@kernel.org>, Igor Korotin
+ <igor.korotin.linux@gmail.com>, Daniel Almeida
+ <daniel.almeida@collabora.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?=	 <kwilczynski@kernel.org>, Pavel
+ Machek <pavel@kernel.org>, Len Brown	 <lenb@kernel.org>, Robert Moore
+ <robert.moore@intel.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	rust-for-linux@vger.kernel.org, driver-core@lists.linux.dev, 
+	linux-pci@vger.kernel.org, linux-leds@vger.kernel.org, 
+	linux-acpi@vger.kernel.org, acpica-devel@lists.linux.dev
+Date: Fri, 13 Mar 2026 20:29:01 +0000
+In-Reply-To: <02e0772d-ba65-4eb8-8453-e0b3eaa4af96@kernel.org>
+References: <20260313-synology_microp_initial-v3-0-ad6ac463a201@posteo.de>
+	 <20260313-synology_microp_initial-v3-5-ad6ac463a201@posteo.de>
+	 <02e0772d-ba65-4eb8-8453-e0b3eaa4af96@kernel.org>
+Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
+ keydata=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
+ jfGillcaQOqFZ3WwVqyzG1BUfTow==
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-b8ECSF0SkKDa7tfzL8rb"
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|SA5PPF634736581:EE_
-X-MS-Office365-Filtering-Correlation-Id: ef70c433-158d-4112-2dbb-08de813e82fd
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|366016|376014|1800799024|18002099003|22082099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	TioDAesHPTJNX9mWZKUdvSoPIdXNo+9LMlNENv0T+sni9VNu/U/2EQub9A4DySh4mazom1kTxZ7416akFuCAZhPo7QaVNizk9EAkrfSec7C3S7bwPwDEIDtMob3QAjz06j4wf+HosQJ+6k2TQwExtGSOAvq+skazPi63mBhwQhiAqpIvO6OwTOD7H0gz7lTQpIL/4ztGefZAyhYLdaBwEyvAjsOv0BB20vDJXjZNWpyT3O0+3KmF3jVrBIKgOl9uNaC9LaW0f5rNvso8UYDVLT461da/2kzlnvcLajnlFYxjwdZfTWKC9yaQfjvldo6D+BIQsfkLpQj71dkFIngaw4sdAXWUJ08rsKzk++5FGbtgLP046+eocHYxNztBZrHHBDsRffeFXsJcPHDtSF0omqyxxOtQDYCs5ivUtBCfKpT+uen4V9Q+qF7uGHBK3eLzW+i+7xMyKx2fj2S/y5tf2xzMSqgvZB0jUT/ebWEmJvBY5LNicqaBuJ8eeoJyHH202RPxPlQnhahHKW14zZ6N7NQ9MnrdpjFFnz6H/kXHeK38yGGMytlxTYjybeW0XTbexmhuvIggS3Q+RCKSem5T2p2AvpG1Hw+BxZqEqmf7ihTWjS+uo0bioREWF9FPRs4fnoRgyqV2P0WM5BOVJesh2Do5rtCkdRfD2k8oBGe3QXWeL1RVkDQt7k0L3GWp+AlTQ9Rh1PlcXOI5o/N2PciSEbmO2ywWvJUl2iEgh7gnKfY=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(366016)(376014)(1800799024)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?KBH15yvsPnuC3zVo30ZvvutRBh7dDspokcz+Zn2wpENo+qy8GvIou+DoXYY4?=
- =?us-ascii?Q?6wxQDYqde0qfwxGAzpDJD01jgYw26bkwhbKDhX4XCCdnksDHm/PJNJz50+tr?=
- =?us-ascii?Q?5EbpaJGxAE5Q9+jEztn9xM7UqrkxckQtFyWm4oSbFRvdqXCE8ZTL1t0UrL6Y?=
- =?us-ascii?Q?6nMSCjvkXXcDUu3jR5yvJOqmdydsjaGj9k44VMtgaahKRdGhsI2SVSXyDGMu?=
- =?us-ascii?Q?YCP/T6MzKa/yMolxg+1XJoiQD3TdXC1BUFA1PznV1MBZerm2ZJaHHyntg9SZ?=
- =?us-ascii?Q?zDuZ2+bDoMWtvXZ6klHmxikzTdmhTVFQ8AHdZH0v3xwhBO49ZumuJpBS6OMa?=
- =?us-ascii?Q?p8FRCu5AfZytk0uO30shCgpCEC4PiP89atpOFprT1C7nt3bUHTOpO1fe+s4z?=
- =?us-ascii?Q?cKDErgXBU4mHgqvdQq2GbIbgXfPN6bo3MKGljZ5EzXnfHwq0hj1WZPSAwKvb?=
- =?us-ascii?Q?80GTkQXjQAOwaUYHu55CLUOHx0nqkWWpin2T+IIBaMvdtVYVrP+CDUqAss/e?=
- =?us-ascii?Q?9grBap6Q7BtLnK4pA0oLRoR6dkHib7q4LBeFypLaTW9zH/FQm2OMk0kWBHvK?=
- =?us-ascii?Q?a5frvDszNNqbJHfEE+SbFgsfSttoBI9+oHjuPbaH4YDczUGkx+FdQKQbGxUV?=
- =?us-ascii?Q?4z9RfoAK83Nixaahjk6DA0kxZLHQdfqsP7GRMpCjAixb5Xv+tDJ3LA7vsgsT?=
- =?us-ascii?Q?BzU7FbBpA0TsCGa5v0oR2OoMz5O2NljEnZtM5B6+4UrHcMTAF9glXntng3Nh?=
- =?us-ascii?Q?7JJzL1HmQT39XEHGk3auNUZFC1ONEfHdP1j50zO45nh2xkFq4EKkHOcj1WNx?=
- =?us-ascii?Q?xjU5sHi7wzQzdhGP2A0mZAt4N/MtklPo8z0XwsuJPkNC/8GzMSCrwKng/n0c?=
- =?us-ascii?Q?JL7qgaqrQiCk3tMlwp3ZYnxd5hLLgVhfngnySatEfTNkRAgmxsFOZHfIkLbS?=
- =?us-ascii?Q?IHdGrV5POCjPH0tj/TpZjepSO8CoO2Z8cB5xLMzp6l8kWCdW14DxCgpfJFG9?=
- =?us-ascii?Q?xl0q7oX2CpK8N7/h8uoUoGBC8BzsDa9g6I8vONGAx9Btq3BWXUmVlm7z300+?=
- =?us-ascii?Q?flVKMAcNR6qRLu7cHqLUzZF50bYCiDBLwq7W/b0zdQiRarYidYKVzHTKho6H?=
- =?us-ascii?Q?sQtFGdR3VZBGhgGk73fu6eGxhZ7NBtAJfVfuN4KJCXmZqy+Aocgv6iCcbxJa?=
- =?us-ascii?Q?EZIiyVSDq3FiaSNHsYumxXGXUjZZj4fnp9riMMj5abS7bjaadi98CV4J6oFT?=
- =?us-ascii?Q?Aq16yfTAcuoZ/6HwkKdehgglWN3fBIk3GSHTjUY+qJTh2UgdnQgc/kpT/jN0?=
- =?us-ascii?Q?H+jr+nZ5uB8S+jP3S7QYaVRrzVO4NACi5w1aG2MHNi/6MHhlFdBXDf0FKhyK?=
- =?us-ascii?Q?fnHejAuNKMLeYqLD40dzmViBxbrhBk92MOPlNFXNy3L9WB4c2gbEd1ifR3ar?=
- =?us-ascii?Q?L3V3cp5vDhkeL08Hj5WOkDOzfoCn19YkNhfjkxTvUeo7EVwXvfed9qw3HGWs?=
- =?us-ascii?Q?dXXRPU/Hkn+YD+OmikqBzQqytpnhthtgRJcOEI1s2g6B+WEZkjHw58e/ee13?=
- =?us-ascii?Q?zAOPkLb28upNEQXFha8zcntJaiGPQZVLUg1L7YNhq0fxkxGMaDV9/bUtZE2K?=
- =?us-ascii?Q?P1lJiEppFMl52Z5Liq3/Hw/4qe/HnEEBG53yDMoZEL+TO2GVS+lEWlpoDly8?=
- =?us-ascii?Q?DKODXzObEmfkSlO32lw0FvDTGV+0EevkpkxQ4UjaujZFA15W+vlwJmH1C5uW?=
- =?us-ascii?Q?3UROY4f2DA=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ef70c433-158d-4112-2dbb-08de813e82fd
-X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Mar 2026 20:24:22.0467
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: HKqvZex8kSEt0H7Mk7HeWtTg59iFYAIR1Xb8fX3Zp3s5PiQYF4GO+OFHyWPsMWv+
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA5PPF634736581
+OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-On Fri, Mar 13, 2026 at 12:56:07PM -0700, Dan Williams wrote:
-> > 0 Blocked and disabled
-> >   The device cannot attack the system, enforced by the OS not loading a
-> >   driver or mapping the MMIO and IOMMU fully blocking everything from it.
-> 
-> In terms of details I am trying to think through whether the device
-> actually changes its ->trust level in reaction to a driver attaching, or
-> whether the block and disabled state is implicit in not being driver
-> bound.
 
-I am thinking of it as an independent property. When the device is
-first discovered it gets a level by default, userspace can change the
-level but only when not bound. The level restricts what the kernel
-will do with the device, 0 would mean "do not allow a driver to bind"
+--=-b8ECSF0SkKDa7tfzL8rb
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> > 1 In use, attacks from a hostile device are possible
-> >   A driver can operate the device and is expected to defend against
-> >   attacks from the device itself. The IOMMU restricts the device to only
-> >   access driver approved data (no ATS, DMA strict only, CC shared
-> >   only, interrupt remapping security, bounce partial DMA mappings, etc)
-> 
-> This is a better way to convey the current "force_swiotlb" settings that
-> TVMs deploy in their arch code.
+On Fri, 2026-03-13 at 20:37 +0100, Krzysztof Kozlowski wrote:
+> On 13/03/2026 20:03, Markus Probst via B4 Relay wrote:
+> > From: Markus Probst <markus.probst@posteo.de>
+> >=20
+> > Add the Synology Microp devicetree bindings. Those devices are
+> > microcontrollers found on Synology NAS devices. They are connected to a
+> > serial port on the host device.
+> >=20
+> > Those devices are used to control certain LEDs, fan speeds, a beeper, t=
+o
+> > handle buttons, fan failures and to properly shutdown and reboot the
+> > device.
+> >=20
+> > Signed-off-by: Markus Probst <markus.probst@posteo.de>
+> > ---
+>=20
+> You keep sending the same without responding to review.
+>=20
+> NAK
+All review comments have been resolved to my knowledge, but here a
+formal reply to all of them.
 
-SWIOTLB that is needed to make the DMA API work because the device
-cannot reach CC private memory is orthogonal - the TDISP state (or
-lack of) should directly drive that in the DMA API.
+> A nit, subject: drop second/last, redundant "binding for". The
+> "dt-bindings" prefix is already stating that these are bindings.
+Has been removed from the patch subject.
 
-The DMA API just wants a flag in the struct device that says if the
-device can access encrypted memory or only decrypted.
+> > +description: |
+> Do not need '|' unless you need to preserve formatting.
+It got removed in v2.
+In the current patch revision v3, it is needed because it has ":" in
+the description (to ensure it does not get interpreted as property).
+Thus it has been readded.
 
-> I am assuming that each bus implementation may have a different way to
-> get the device to the various trust levels.
+> > +properties:
+> > +  compatible:
+> > +    enum:
+> > +      - synology,microp
+> Missing blank line. Look at other bindings how to write one.
+Blank line has been added.
 
-I was actually thinking no, it is just a generic orthogonal driver
-core property.
+> > +  power-led:
+> > +    $ref: /schemas/leds/common.yaml
+> > +    unevaluatedProperties: false
+> > +  status-led:
+> > +    $ref: /schemas/leds/common.yaml
+> > +    unevaluatedProperties: false
+> > +  alert-led:
+> > +    $ref: /schemas/leds/common.yaml
+> > +    unevaluatedProperties: false
+> > +  usb-led:
+> > +    $ref: /schemas/leds/common.yaml
+> > +    unevaluatedProperties: false
+> That's pretty unreadable code.
+>
+> ... and could be simpler with patternProperties and regex
+It has been minified using patternProperties.
 
-> For example, the uAPI for PCI TDISP requires associating a device with a
-> TSM and asking the TSM to push the device to trust level 3. 
+> > +  no-check-fan:
+> Vendor prefix
 
-The other way, you can't get to level 3 unless the TSM subsystem ACK's
-it. So TSM independently does its bit then userspace can set the level
-to 3.
+> > +    type: boolean
+> > +    description: |
+> > +      Disable fan failure check.
+>
+> You described the desired Linux feature or behavior, not the actual
+> hardware. The bindings are about the latter, so instead you need to
+> rephrase the property and its description to match actual hardware
+> capabilities/features/configuration etc.
 
-If it sets RUN and 2 that should work and have some kind of meaning,
-just not be super useful.
+> > +
+> > +      The fan failure event is triggered on the device, even if
+the fan
+> > +      has been intentionally set to a low speed. This property
+prevents a
+> > +      hardware protection shutdown if a fan failure event is
+reported.
+> > +  no-check-cpu-fan:
+>
+> You described the desired Linux feature or behavior, not the actual
+> hardware. The bindings are about the latter, so instead you need to
+> rephrase the property and its description to match actual hardware
+> capabilities/features/configuration etc.
+The 2 properties have been removed entirely. Thus those comments are
+not relevant anymore.
 
-> Another bus like thunderbolt may want to imply that "authorized"
-> that uses challenge response (tb_domain_challenge_switch_key)
-> enables trust level 2, but otherwise only enables trust level 1.
+> > +    uart {
+>
+> Drop, unuesed
+Has been dropped.
 
-For thunderbolt/hot plug I imagine the kernel would default all
-devices to level 0. Userspace would do its thing, using whatever other
-uAPIs, and then set the level to 1 or 2. Then the driver starts.
+> > +      microp {
 
-This way nothing is coupled and the kernel can offer all kinds of
-different uAPI for device verification. Userspaces picks the
-appropriate one and acks it with the level change.
+> Node names should be generic. See also an explanation and list of
+> examples (not exhaustive) in DT specification:
+>
+https://devicetree-specification.readthedocs.io/en/latest/chapter2-devicetr=
+ee-basics.html#generic-names-recommendation
+> If you cannot find a name matching your device, please check in
+kernel
+> sources for similar cases or you can grow the spec (via pull request
+to
+> DT spec repo).
+node name has been changed to mcu.
 
-> Yes, no mitigations against spoofing the device interface without TDISP.
-> However, I would also assume that level 2 is the ATS-on trust level
-> outside of TDISP cases.
+> You we have tools which save you review time. Most important, save
+> maintainers/reviewers time from giving feedback on obvious mistakes.
+> You
+> must use these tools, otherwise maintainers get grumpy by wasting
+their
+> time.
 
-Yes, level 2 would be the break where the device is required to not do
-wild PCIe packets to maintain kernel integrity.
+> Please run scripts/checkpatch.pl on the patches and fix reported
+> warnings. After that, run also 'scripts/checkpatch.pl --strict' on
+the
+> patches and (probably) fix more warnings. Some warnings can be
+ignored,
+> especially from --strict run, but the code here looks like it needs a
+> fix. Feel free to get in touch if the warning is not clear.
+with the exception of
+- help paragraph having less than 4 lines in Kconfig (not necessary in
+this case)
+- of_device_id not being const (it has to be)
+- "added, moved or deleted file(s), does MAINTAINERS need updating?"
+(file will be added in a following patch)
+there are no warnings left.
 
-> > #2 can happen in bare metal where a OS may activate link encryption
-> > and attest the device, but doesn't have CC private/shared memory.
-> 
-> Bare metal would still need to figure out how to send T=1 MMIO cycles
-> and check with some boot attestation that it can trust its MMIO mappings
-> are indeed targeting the device. So let's say trust level 2 is
-> everything but private MMIO and private DMA.
+> This is not an "MFD" device.
+It now uses the MFD APIs. By the definiton of @Lee (assuming I
+understood it correctly), this device should now qualify as "MFD"
+device.
 
-bare metal has no T=1 and no "private" at all. It just sets up link
-encryption, excludes a MIM, attests the peer, then opens the iommu.
+> > +
+> > +    mcu {
+>
+> Please read previous comments.
 
-Jason
+You are likly trying to refer to this comment from you:
+> Depending what this is. MCU is generic purpose unit where you load
+your
+> different FW for different purposes and you have here specific - to
+> handle certain aspects of this entire machine. This looks like EC, so
+> should be called embedded-controller and placed in that directory.
+Synology uses Microchip PIC for this purpose. On a Synology DS215j, it
+uses a "Microchip PIC16F1829". At least to me, this looks like a
+general purpose microcontroller with firmware from synology flashed
+onto it. Therefore it is a MCU.
+
+If I did miss any relevant comments, let me know.
+(Replies on replies on review comments have not been included here).
+
+>=20
+> Best regards,
+> Krzysztof
+
+Thanks
+- Markus Probst
+
+--=-b8ECSF0SkKDa7tfzL8rb
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAmm0c30bFIAAAAAABAAO
+bWFudTIsMi41KzEuMTEsMiwyAAoJEDR2H/jnrUPSyREP/3+/Ri5V9Cq/3P1ORKA6
+yVucNv6MQqstNnFoH/jhsPRNSqFgzVwe7TYPnZ06ZkJ7qhAnNFJ03ZcrYPcV7hUD
+AQ0/oUOIsQbJffOgKnN4zTs9YBoRT7wJT/Z+FbWtXbUt/q41s6blyIRphwxu5aqo
+nAbrTsll6Q6Pddd8/pIwFst0925pNW1bEjWFPlgkx1Srtk3DVWdXuV4czP830TLK
+7zKOBO45koOv8GBDELjTHu4EVBxzTXJewNYaIPqXBCe48AIQMEfoYv0ePhxevyx6
+VzTv94E2angFvxbOVQvD5+QJAEnhNKoAMGLCoEWla9jh8nO63m31INElYlDz7kMe
+WkklT05+O9bImXJ8a5Q2LzFFHgJpTUlTCdgvh6bB0Zri6XLEC4MAoggoAlC6qOjA
+7eSTEb38Sc2Az7427Z7QUsPLm2LCm+i6UmVIN3ytybf58kvc6nyp2EbDvGXraVKh
+9jm29Y7Rg3GzRgfnZp1coSf0GQ28zNOtrnJHKXXYuXg1/pan+8PQbNtuPPoIPs3y
+gjwYKXjM+aaL1WIrquCnehgOSsP2tXMXwaXaMH1lwJqKwpOxm6wvlZWS6vtGSkNg
+ZGDZTjV4tDlt+sC3M2Zuu+786zSYPjMCN9jontNQ5/Kbepd2m7vYZrS2beEI6rfN
+ZSuINDibpIYoF79wdT6AFyZ9
+=sCIA
+-----END PGP SIGNATURE-----
+
+--=-b8ECSF0SkKDa7tfzL8rb--
