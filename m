@@ -1,264 +1,151 @@
-Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70F342D3EE5
-	for <linux-pci@vger.kernel.org>; Sat, 14 Mar 2026 05:13:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.44
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773465199; cv=pass; b=YzGXBgrwlIT7NXwXiOMtF2lXkCFNhsPF30fbE4iZf7AXR4PM2IxNuPusJJR5CzUsEB8ddIDOamIAE5SyJ+HdjMAvkQ9cdJHl2rR+iAlmcUqdK1r+KJ9xhXKv8bVy0xcYwXIkJVKbLVW9vcDBNj3gcYP5bAnY6t4MWbj9BCcGfgg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773465199; c=relaxed/simple;
-	bh=SzQIXiO7WCG8WN+IgnhZr8P9l0vaLniDCPkwpiqXiHA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Rkf/6fl2FJTooND2UXiGZ4QXJdS1BzM1qyNH8WlcTPOZw+3m/6B7J2EJTAOqRkFZWnHF7kh3dG9sIB71S6g9rQHTY/TAXyGmGcXLEO29LqqSn5bAtqgx2EMdUJ4aGcIeqHmKLZsWolJ8/11qmMqN232uh5DSYi+BuljBTBYYY6E=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LTPNRrey; arc=pass smtp.client-ip=209.85.208.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DA627082D;
+	Sat, 14 Mar 2026 08:49:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773478200; cv=none; b=Op2y/nXDwK01UxJrtyZQm19did44QKgXwIGZ8UWpr8Kom5QJSZedtslFIcZ0dUMuKoaPjyvW38Bosf4ZC4OLf38Lkei2qFU99SfmXYhUEzq7p2uG4HKlxOxb2oUFflYlP9ULReV9JdrY7yPOb4aOlbsIDPY+Tky1QZPUmIJd1H4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773478200; c=relaxed/simple;
+	bh=vXZYHzFnBeRy7S1yQMG+LEicyLSek5vHhy/TpvGC43Y=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=D1egRF26pxCJ7RQtGqkJBNafRr6TdK6ermb4z6Q3IVupEST6R10NBGEKug7pkOTa0+dW7BinyM1J8tQbVTV4DgXM+p3jQJ9tYOV96II0EBC1Rqbch68FDv5SXEVEqoznoRJJ2TLb15rhNy+EjEmo/hChSduHNSolP6LDE8X7Zdg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uZrSRJ1w; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LTPNRrey"
-Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-6640e55d366so1833876a12.1
-        for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 22:13:16 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1773465195; cv=none;
-        d=google.com; s=arc-20240605;
-        b=eEzyjJzwBKtLKNhMO7FsI1UdQsIgBwc08mR3bI80FaOq4KA2ZSA60l6JXI+ZqVjA+r
-         Fphs+BWAC6+1hol+hVEJJXmSeALVWKiwyIVMyv3Nr/aiUK9aWqvibkLUQB2aMA5fHPZ1
-         sd2xNU0QuW8cDfoV6axt14YQAvoSkL6QOZq/Z7JW+lunAvkE79Sb3Mb62Zqw2BpUOsn9
-         sasXPU/uU4Fz6DsEWfkfxp+76EU8x9J0UQIONOAsfo+p1gNDPzp9bxPJe2FPz6TsMReb
-         rll6IMQIO9M5HG0OHG5XH9j9oGMSpYlWU5kB84JzzKkZ+pnex1H6Ym2SzkTbW6XEhTti
-         E6kw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=IM7Q6oOyb5nhIw60KEs5pEzxBNhlQ40PGDtJzVWEr0o=;
-        fh=e/N4VifZ1tGR80416/yzQX+jEh+R4HWW6RsG7RaiU0A=;
-        b=PRM0cZYEiMInNPDdRWcVMaQFg6uvVUE7QB7S4vrj4TlwlC0CWYHRoxZK2LBkSFPu/l
-         4hbvoCnAsTW/zosngljMs3f9bALHtFF4GNYSVozPCu3hkR94enc20XdFeRMIHsCeIFL6
-         KqMSBVMJwF+8XOwmFj3Bw+8QVgco2pym7DhsrRGF1ookG4HIVdHKJU4WHDLlXY5JfTpq
-         FF1IDNAThgRthbUdX7tp1yV4//E9DvweXwDFQf6HgewtRGjKV3kYiMZDYT9oMQgTvH+V
-         KC7vUirXtFj/WcDtky46WJeF1XPCQ0+BRhQyE1+Szjlqx50wYk/co01mw9DMdx5s7eSa
-         bo5Q==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1773465195; x=1774069995; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=IM7Q6oOyb5nhIw60KEs5pEzxBNhlQ40PGDtJzVWEr0o=;
-        b=LTPNRreyiRVF0GtI7csZFOAZDntp2FXr1kZG1o33bQoOm2fbWU2UBN8SFfL7wObn40
-         e3/Cqwo/zVoLBZPh93xiYWVrCpDvlY8tEoH09kmmOcqUiKrc6R9UxC/V2xxebPlAem+b
-         XXh3Ep1mfPiJ7ShMHYtSakiIwLdtTBk896jR0fEMSJ5J7HtmAlc2hDtLsZ5gsxMUhKfO
-         AtTnbfyT86uSWMHkXQEkZMr4LcUtTIimfom+ooBEMyCzYu86E6w1Mo2tgxOWEoT3TAn+
-         O9dPfgD5T1BcvwIXjwQnxiY3eG8lCSurOdVY5o9l2C2rEoChyWnxvHwA60Htbu81HT09
-         9v2A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773465195; x=1774069995;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=IM7Q6oOyb5nhIw60KEs5pEzxBNhlQ40PGDtJzVWEr0o=;
-        b=qaZaSq/EcSA9SNzw5sO1LXJXu767+7n/XLG3RCMqeUTRPBxB/bk/4VsMCgcNcJu3bH
-         Xu7YbKAIDf1XQl9yXjI0KKVlPR8gXNjDTZgTSOtzQr3fdjc5E0ZPgxd7++QF68qPAiFn
-         H2k1vzGAKwfgwuXEMY9BMcyd4bfJNevEXSjZkZzrQhAzrNVLB14qqj+5w7EpUPWPXjJe
-         STmTmLPlB4NvLTvSS4myacKQDFwE9n31rs81+oC0T//F/gM4TYT4tMv72SJb6ioomYF0
-         xAEEB4OeQRSaxDkqedZM9HhjWXdEbJryB9sthGvn+dBrG1Yum+WF9jYG9/7PCtr6R3KB
-         se8Q==
-X-Forwarded-Encrypted: i=1; AJvYcCUd+hAEh8d6Y4Ctj1JdpoBXIiK748TKmKYaKKndn3WHcRTdb0yUqNOC7/DZHPjzTHfUhdh5KBfZ0wM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzr0OcPyoE8x21wwI9LBaxsI5zlL1O4utu26d9I4I+4LOE+UxoC
-	Zm8E74th8M7Pvj4vUv9UALLS1xrr8iNA8jpjSwaNxMFIHtGbMozu/ec03uSVai+IRU3RjlEwffJ
-	KsQJvHgSx67PnLouLbILIfxabQEd3kkI=
-X-Gm-Gg: ATEYQzxw3IjoRJIdICfXxtZgEfkzatNzkhvBefrsRKtLgPyDo27qZDqjY2u3fAulp8z
-	VDKq9nCsMJ6B+YNja5jCn8ChbaZMWiBwwGWF8+3dESKCjd79gcI98Lo5jvu2vS28tmandegy/yW
-	XAJiLzDNsfnjMECLqIIwraGppeN5SI3CygOqPlUIeDuhaS4oxdDRyGoBETKSUQmVVm6H/udK0DM
-	8s337ChldR1yqfrrFzZU1XUx8+wb3J85aUerQA4iMKM+morwzMoRImLEqF08savshY94kCyxLsX
-	vIDj1w==
-X-Received: by 2002:a17:906:208f:b0:b8e:796a:fd5c with SMTP id
- a640c23a62f3a-b976506440amr202919666b.27.1773465195027; Fri, 13 Mar 2026
- 22:13:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uZrSRJ1w"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E081C116C6;
+	Sat, 14 Mar 2026 08:49:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773478199;
+	bh=vXZYHzFnBeRy7S1yQMG+LEicyLSek5vHhy/TpvGC43Y=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=uZrSRJ1w28zJV2cr8yWmITJcsM2N8oAUzGxXzAmhixJKml7zsHgWX2t+CgbBLFm2D
+	 A8ELTWPXtLGRVK0hOIdDDc+RB8c9ZgMu92z2hYwVD5wh8vIv6ww+BoUO3hGGUXG1zs
+	 4ATzawsNWsBzJAS92Ndq2R3+EFCLkqjynDr1oYDQOdIkChVfsHagiZ4fYU6F5/X4wX
+	 FCfnO48YsxZ+GfYZvnrj2CVFJtM96UQrzlVDzD3W/SK2ECRUWirGQwrpS2ey0ws2Vx
+	 79jYlUbW4HwIOPIzpmo5Aw+6hoptf5NpM6HYFRstM+qTD2BYgcydKwowDf03YMq0jF
+	 HVV1TezacQ/TQ==
+Message-ID: <336523bb-615b-451b-8681-c965bf579203@kernel.org>
+Date: Sat, 14 Mar 2026 09:49:51 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260226101032.1042-1-linux.amoon@gmail.com> <177260693908.10259.13055467642416391434.b4-ty@kernel.org>
- <87bc37ee-234c-4568-b72e-955c130a6838@arm.com> <f7tfshf7riljjibuqge4ubfjmludubpyh3ppdf6lasurzdzbtj@sw4xxagfhnn3>
- <5d88fb5b-e771-4ea6-8d2c-c5cfd21e5860@arm.com> <qwanhqrpztzkudik5fmberhabnzaly7v53677dohqzj5nq4wi2@6ndpiubyxcbi>
- <DGZXF3LPSRK6.2QYN63QTKUQAX@kernel.org> <cp5uktfqdf6zs53qsye57ior2ikmssgevxxdtevkzpisaif22h@7mrxspkuibow>
- <DH09EDBW3X6T.2996UB1CFCAW2@kernel.org> <55c28218-1638-4b90-a9cd-a177fb5abcb6@arm.com>
- <DH0TM60TVX5D.20W4O1X696ALA@kernel.org> <6cfe4bda-036f-4bb9-8a08-ed75f61cae24@arm.com>
- <DH1QCLS89ADR.3H0XABP0GEFQT@kernel.org> <4f9fdfc9-f2ad-49b1-a6b9-ae64aaa47cfd@arm.com>
-In-Reply-To: <4f9fdfc9-f2ad-49b1-a6b9-ae64aaa47cfd@arm.com>
-From: Anand Moon <linux.amoon@gmail.com>
-Date: Sat, 14 Mar 2026 10:42:58 +0530
-X-Gm-Features: AaiRm52yI10E6vLq92rcORMoPK2tRdzWpVlxX3dbSjvIMnFFuSiMh3dLe0uhnRo
-Message-ID: <CANAwSgQ6eaM=Z=MBmS0=HrLfBxOh+vqnRSkEge_q6y+oe7AU5w@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI: dw-rockchip: Enable async probe by default
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: Danilo Krummrich <dakr@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, 
-	Niklas Cassel <cassel@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>, 
-	Hans Zhang <18255117159@163.com>, Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>, linux-pci@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, 
-	linux-kernel@vger.kernel.org, Grimmauld <grimmauld@grimmauld.de>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	driver-core@lists.linux.dev, Lukas Wunner <lukas@wunner.de>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 5/7] dt-bindings: mfd: Add synology,microp device
+To: Markus Probst <markus.probst@posteo.de>, Lee Jones <lee@kernel.org>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>,
+ Gary Guo <gary@garyguo.net>, =?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?=
+ <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>,
+ Andreas Hindborg <a.hindborg@kernel.org>, Alice Ryhl <aliceryhl@google.com>,
+ Trevor Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>,
+ Igor Korotin <igor.korotin.linux@gmail.com>,
+ Daniel Almeida <daniel.almeida@collabora.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>,
+ Robert Moore <robert.moore@intel.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ rust-for-linux@vger.kernel.org, driver-core@lists.linux.dev,
+ linux-pci@vger.kernel.org, linux-leds@vger.kernel.org,
+ linux-acpi@vger.kernel.org, acpica-devel@lists.linux.dev
+References: <20260313-synology_microp_initial-v3-0-ad6ac463a201@posteo.de>
+ <20260313-synology_microp_initial-v3-5-ad6ac463a201@posteo.de>
+ <02e0772d-ba65-4eb8-8453-e0b3eaa4af96@kernel.org>
+ <6f2298f3298dc81e6e2ed34ca43424fc39ce3518.camel@posteo.de>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <6f2298f3298dc81e6e2ed34ca43424fc39ce3518.camel@posteo.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi Robin,
+On 13/03/2026 21:29, Markus Probst wrote:
+> 
+>> This is not an "MFD" device.
+> It now uses the MFD APIs. By the definiton of @Lee (assuming I
+> understood it correctly), this device should now qualify as "MFD"
+> device.
 
-On Fri, 13 Mar 2026 at 23:07, Robin Murphy <robin.murphy@arm.com> wrote:
->
-> On 2026-03-13 2:39 pm, Danilo Krummrich wrote:
-> > On Fri Mar 13, 2026 at 2:15 PM CET, Robin Murphy wrote:
-> >> On 2026-03-12 12:59 pm, Danilo Krummrich wrote:
-> >>> On Thu Mar 12, 2026 at 1:48 PM CET, Robin Murphy wrote:
-> >>>> On 2026-03-11 9:09 pm, Danilo Krummrich wrote:
-> >>>>>    From a driver-core perspective I think we're rather limited on what we can do;
-> >>>>> we are already in async context at this point and can't magically go back to
-> >>>>> initcall context.
-> >>>>>
-> >>>>> So, the only thing I can think of is to kick off work on a workqueue, which in
-> >>>>> the end would be the same as the deferred probe handling.
-> >>>>
-> >>>> Hmm, in fact, isn't the deferred probe mechanism itself actually quite
-> >>>> appropriate?
-> >>>
-> >>> Yes, I've also mentioned this in [1], including the fact that it technically
-> >>> even complies with the guarantees given by PROBE_FORCE_SYNCHRONOUS. I.e. the
-> >>> documentation says:
-> >>>
-> >>>     Use this to annotate drivers that need their probe routines to run
-> >>>     synchronously with driver and device registration (with the exception of
-> >>>     -EPROBE_DEFER handling - re-probing always ends up being done
-> >>>     asynchronously).
-> >>>
-> >>> However, I'm still not sure how I feel about this, since I consider this to be
-> >>> more like a workaround that just moves things to a "more approprite" async
-> >>> context.
-> >>
-> >> I guess the underlying problem there is that there are at least 3
-> >> different significant aspects to what "synchronous" can mean:
-> >>
-> >> - literally in the context or device/driver registration as documented.
-> >> Off-hand I'm not really sure what useful property may be *specific* to
-> >> those conditions that a driver might rely on, other than for
-> >> super-special cases like platform_driver_probe().
-> >
-> > I'm not worried about this one, as it is already special by not being compatible
-> > with deferred probe. I.e. the caller already has to promise that the
-> > corresponding probe() call will never return -EPROBE_DEFER.
-> >
-> > This is a much more error prone requirement than just "don't call this from
-> > async" already.
-> >
-> >> - serialised, i.e. probes of multiple devices won't happen concurrently
-> >> on multiple threads. This is probably the one hiding the most driver
-> >> bugs, e.g. internal shared/global state without sufficient
-> >> synchronisation. I guess this falls out as a side-effect of the first
-> >> condition, but AFAICS it *can* also still provided by deferred probe
-> >> (given that it's a single work item iterating a list one-by-one)
-> >>
-> >> - in some regular thread context that isn't liable to have issues
-> >> synchronising against other async_func workers (i.e. the request_module
-> >> case). Again, deferred can't have a problem here, or it wouldn't have
-> >> worked properly in general for the last decade.
-> >>
-> >> So it's not that we'd be relying on some dubious "deferred is always
-> >> synchronous" assumption - AFAICS deferred *can* launch async if the
-> >> driver permits it - more just ratifying that deferred is still able to
-> >> effectively honour all the useful properties of PROBE_FORCE_SYNCHRONOUS
-> >> other than "during registration of the thing".
-> >
-> > Yes, and as mentioned above, EPROBE_DEFER has always been a valid path for
-> > PROBE_FORCE_SYNCHRONOUS, which is why I brought it up as a a workaround in the
-> > first place.
-> >
-> > (The reason why I still say "workaround" is because nothing actually needs to be
-> > deferred.)
-> >
-> > Anyways, as I mentioned...
-> >
-> >>> On the other hand, eventually we want everything to work with
-> >>> PROBE_PREFER_ASYNCHRONOUS, so maybe it's also good enough for the time being.
-> >
-> > ...plus there are not a lot of PROBE_FORCE_SYNCHRONOUS left anyways.
-> >
-> > Do you want to send a patch?
->
-> Sure, I just wanted to check that you didn't see anything obviously
-> wrong with my reasoning-by-inspection - if you're sufficiently happy
-> then I'll write this up as a proper commit message and post the patch
-> (likely on Monday now) so we can all nit-pick the details :)
->
-I believe the issue lies in the r8169 module, which currently has the
-PHY address hardcoded to zero in mdiobus_get_phy. I have modified the
-implementation to scan the MDIO bus for all possible addresses to improve
-hardware compatibility.
+No. Using Linux framework does not make this device MFD, since there is
+no such term of hardware as MFD. Otherwise please explain or link to
+verifiable external source describing what sort of device class is MFD,
+because for sure this is not MFD how Wikipedia defines it.
 
-Can you check this at your end.
+> 
+>>> +
+>>> +    mcu {
+>>
+>> Please read previous comments.
+> 
+> You are likly trying to refer to this comment from you:
+>> Depending what this is. MCU is generic purpose unit where you load
+> your
+>> different FW for different purposes and you have here specific - to
+>> handle certain aspects of this entire machine. This looks like EC, so
+>> should be called embedded-controller and placed in that directory.
+> Synology uses Microchip PIC for this purpose. On a Synology DS215j, it
+> uses a "Microchip PIC16F1829". At least to me, this looks like a
 
------>8-----
-$ git diff drivers/net/ethernet/realtek/r8169_main.c
-diff --git a/drivers/net/ethernet/realtek/r8169_main.c
-b/drivers/net/ethernet/realtek/r8169_main.c
-index 58788d196c57..fa99e33eccfe 100644
---- a/drivers/net/ethernet/realtek/r8169_main.c
-+++ b/drivers/net/ethernet/realtek/r8169_main.c
-@@ -5420,7 +5420,8 @@ static int r8169_mdio_register(struct rtl8169_private *tp)
- {
-        struct pci_dev *pdev = tp->pci_dev;
-        struct mii_bus *new_bus;
--       int ret;
-+       struct phy_device *phydev;
-+       int ret, addr;
+It does not matter what chip is used. Every component uses some sort of
+chip.
 
-        /* On some boards with this chip version the BIOS is buggy and misses
-         * to reset the PHY page selector. This results in the PHY ID read
-@@ -5455,18 +5456,30 @@ static int r8169_mdio_register(struct
-rtl8169_private *tp)
-        if (ret)
-                return ret;
+> general purpose microcontroller with firmware from synology flashed
+> onto it. Therefore it is a MCU.
 
--       tp->phydev = mdiobus_get_phy(new_bus, 0);
--       if (!tp->phydev) {
-+       /* find the first (lowest address) PHY on the current MAC's MII bus */
-+       for (addr = 0; addr < PHY_MAX_ADDR; addr++) {
-+               struct phy_device *tmp = mdiobus_get_phy(new_bus, addr);
-+               if (tmp) {
-+                       phydev = tmp;
-+                       break;
-+               }
-+       }
-+
-+       if (!phydev) {
-+               dev_err(&pdev->dev, "no PHY found on bus\n");
-                return -ENODEV;
--       } else if (!tp->phydev->drv) {
--               /* Most chip versions fail with the genphy driver.
--                * Therefore ensure that the dedicated PHY driver is loaded.
--                */
-+       }
-+
-+       /* Most chip versions fail with the genphy driver.
-+        * Therefore ensure that the dedicated PHY driver is loaded.
-+        */
-+       if (!phydev->drv || phy_driver_is_genphy(phydev)) {
-                dev_err(&pdev->dev, "no dedicated PHY driver found for
-PHY ID 0x%08x, maybe realtek.ko needs to be added to initramfs?\n",
-                        tp->phydev->phy_id);
-                return -EUNATCH;
-        }
+Every chip is then an MCU with such logic. Every PMIC, every EC.
 
-+       tp->phydev = phydev;
-        tp->phydev->mac_managed_pm = true;
-        if (rtl_supports_eee(tp))
-                phy_support_eee(tp->phydev);
+This is for me clearly embedded controller and that's where this should
+be placed and called.
 
-> Cheers,
-> Robin.
-
-Thanks
--Anand
+Best regards,
+Krzysztof
