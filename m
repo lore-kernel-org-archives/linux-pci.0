@@ -1,77 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [83.223.95.100])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DE2229E0E6;
-	Sat, 14 Mar 2026 18:12:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11D0824E4AF
+	for <linux-pci@vger.kernel.org>; Sat, 14 Mar 2026 18:37:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.100
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773511967; cv=none; b=lDgCXbOEDNs/mrA7E7Po2NTQeR5OsY8rjuQhrln4Yangtyhh2Np3gWgYyHbYfDvgB+EhYYz1tjLYN7E6/f4ZdUL7mQKv+sxaNDhvbM/R6DS3zxoYg5BHaA9XkIDyXPUSKbDp6Z1WxGyMGMk9YfJHwAxWKuZn2R/Pa88SYw2dOuU=
+	t=1773513441; cv=none; b=MB/Ms9QssD2h9A8hPlwuA8Q6aosqeYl7K/BMv9Ed8Y2beQFkkOgwvDbwSuPbPEr9qObuBLSAJn/FwweyMrRWD8kqiH6lJApjH6j8GZ0If92WCfgIn6jc4JRvVveEpQafH3sJ4akY+Oo9yAyybes327WH33/wz4Q8unU3KVIDerw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773511967; c=relaxed/simple;
-	bh=VAnfODFSMu8TaP+1ZgSSXTAsMFdEwNGSTbJD6+9zfss=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MdQaiR9a7Dquoel1IRWdw6G65XnJOD/IAUUlvbvvsb7sj+asNUh6cccHwycQOw1J2TcZ+5dZ5k+mZxF4lnP7kSyt4hmjX7eHX1n3kk5c4hyVOcjdihuJI7JB5ITy9m3j3mNqu/SYXaZpC7MLASXAghQn6umv4QsfOKn4JAiSUWU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MWdPyo9J; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MWdPyo9J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23171C116C6;
-	Sat, 14 Mar 2026 18:12:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773511966;
-	bh=VAnfODFSMu8TaP+1ZgSSXTAsMFdEwNGSTbJD6+9zfss=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=MWdPyo9JyO9zo7PY0vXzAC0iw1fLPvet5F/Ey8qbO63ZSQqNaKKZEhdzUsH6a2/+1
-	 zcIsoNW54n3TPKRaIQP/wRefGLShUN5UlWeTD3zpyZifrHHzyhLELkpMK6hojZ5R1H
-	 jclZMOGgI9dNULvN8MWrteMGkAuyZR9IR73EpPIo0AuzqRsHMiPdL3OQeLWRxdC/PC
-	 hJk+tTJBPZ4QL/gS8ufpjgDft40nNpgCFVuzFgYl3TkhGbcxKElnfqs8g5Hsf2iiO8
-	 rC0uEj9E3de6UGKz90Rbjx5Nx3i2Tge/HuutZgF17oB80QNT2O0fnNTCZlQ+1s6vEo
-	 7ZGqegjCK9PXQ==
-Date: Sat, 14 Mar 2026 11:12:45 -0700
-From: Jakub Kicinski <kuba@kernel.org>
+	s=arc-20240116; t=1773513441; c=relaxed/simple;
+	bh=zorgPiFi2fNS/ZFJPNkYvwT/2KEm5Git4UaiyVWOxTs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=geG/OXsqQv1rfmTkq5l/POc6y8B0iGUjNdsNfzOzZZgIFljfitPicHj8yPn9uoyfi0VbllaMHh+OAZXUtNsuIGdOrOLUgu76VTiiev33SEfZAhP34UxwaML4PcWaKqzi7Sp5HNAAAymocYqUyrMUgeZnKaXudBACAf185QRyLzU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.100
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by bmailout1.hostsharing.net (Postfix) with ESMTPS id 432CE2020222;
+	Sat, 14 Mar 2026 19:37:10 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 23D1F1BCF2; Sat, 14 Mar 2026 19:37:10 +0100 (CET)
+Date: Sat, 14 Mar 2026 19:37:10 +0100
+From: Lukas Wunner <lukas@wunner.de>
 To: Dan Williams <dan.j.williams@intel.com>
 Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
- gregkh@linuxfoundation.org, aik@amd.com, aneesh.kumar@kernel.org,
- yilun.xu@linux.intel.com, bhelgaas@google.com, alistair23@gmail.com,
- lukas@wunner.de, jgg@nvidia.com, Donald Hunter <donald.hunter@gmail.com>
+	gregkh@linuxfoundation.org, aik@amd.com, aneesh.kumar@kernel.org,
+	yilun.xu@linux.intel.com, bhelgaas@google.com, alistair23@gmail.com,
+	jgg@nvidia.com, Donald Hunter <donald.hunter@gmail.com>,
+	Jakub Kicinski <kuba@kernel.org>
 Subject: Re: [PATCH v2 08/19] PCI/TSM: Add "evidence" support
-Message-ID: <20260314111245.76d18d73@kernel.org>
-In-Reply-To: <20260303000207.1836586-9-dan.j.williams@intel.com>
+Message-ID: <abWq1oiE-YkksxNu@wunner.de>
 References: <20260303000207.1836586-1-dan.j.williams@intel.com>
-	<20260303000207.1836586-9-dan.j.williams@intel.com>
+ <20260303000207.1836586-9-dan.j.williams@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260303000207.1836586-9-dan.j.williams@intel.com>
 
-On Mon,  2 Mar 2026 16:01:56 -0800 Dan Williams wrote:
-> The implementation adheres to the guideline from:
-> Documentation/userspace-api/netlink/genetlink-legacy.rst
-> 
->     New Netlink families should never respond to a DO operation with
->     multiple replies, with ``NLM_F_MULTI`` set. Use a filtered dump
->     instead.
+On Mon, Mar 02, 2026 at 04:01:56PM -0800, Dan Williams wrote:
+> +definitions:
+> +  -
+> +    type: const
+> +    name: max-object-size
+> +    value: 0x01000000
+[...]
+> +      -
+> +        name: val
+> +        type: binary
+> +        checks:
+> +          max-len: max-obj-size
 
-My understanding of F_MULTI is that deserializer is supposed to
-continue deserializing into current object. IOW if we have:
+The length of a netlink attribute is a 16-bit value, so a 16 MByte value
+(0x01000000) won't fit.
 
-struct does_this {
-	int really;
-	int have_to;
-	int be_netlink;
-};
+Moreover you're referencing max-obj-size but are defining max-object-size.
 
-You can send "really" and "be_netlink" in one message and "have_to" 
-in the next, and receiver should reconstruct them into a single struct.
+This doesn't look like it's ever been tested, so at the very least
+it should be marked RFC in the subject to convey that it's not yet
+in a cut-and-dried state.
 
-If F_MULTI is not set - receiver assumes that the next message is a new
-struct. And the whole dump returns a list of structs.
+The two top-most commits on my development branch have solved the
+size problem and may serve as a template:
 
-So IOW I think what you're doing is a bit too.. inventive.
-Do you have plans to add more commands? 
-The read-only stuff feels like it could be a sysfs API?
-The main strength of Netlink is "do" commands with multiple optional
-attrs.
+https://github.com/l1k/linux/commits/doe
+
+Thanks,
+
+Lukas
