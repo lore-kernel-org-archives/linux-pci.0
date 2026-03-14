@@ -1,252 +1,264 @@
-Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021141.outbound.protection.outlook.com [52.101.125.141])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A11426059D;
-	Sat, 14 Mar 2026 04:33:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.125.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70F342D3EE5
+	for <linux-pci@vger.kernel.org>; Sat, 14 Mar 2026 05:13:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.44
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773462802; cv=fail; b=AZB7CEFRY9io04b8WmgptA87cf3858LqQxGHnMGwJuGC9bedyiuWB42y9M7vlh61kXEnVa7zFqEgrszepqNiu87mUSsEsY3yfeIxurbvZlSSbJV/rzm6dd/GqIBrbQRbA7EgRb4ODZZlzSb88vHMoWRjHmQM96XbfBHZdADIAo4=
+	t=1773465199; cv=pass; b=YzGXBgrwlIT7NXwXiOMtF2lXkCFNhsPF30fbE4iZf7AXR4PM2IxNuPusJJR5CzUsEB8ddIDOamIAE5SyJ+HdjMAvkQ9cdJHl2rR+iAlmcUqdK1r+KJ9xhXKv8bVy0xcYwXIkJVKbLVW9vcDBNj3gcYP5bAnY6t4MWbj9BCcGfgg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773462802; c=relaxed/simple;
-	bh=ndh5O1OQu31sIRBaL8vq7fgfGi4OqxoFZ7lxcMVrWjw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=NFUkpeX0J5raDbnKqqhxFiwwvdSQ2Ee+gL+Wy482aCrFEdARP9WyRNg6VFSeeCLWZsXzOIf7fbvB5KCPETY23+gksyjBJo/aPvlVvJ6o0TXyw/0JfUlbIJSbNOqSkKVJzDAKaEruvbSMM7J3AXCC2ylVGWaXWa5jxQfczhbKPe4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=iXdgjwwa; arc=fail smtp.client-ip=52.101.125.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	s=arc-20240116; t=1773465199; c=relaxed/simple;
+	bh=SzQIXiO7WCG8WN+IgnhZr8P9l0vaLniDCPkwpiqXiHA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Rkf/6fl2FJTooND2UXiGZ4QXJdS1BzM1qyNH8WlcTPOZw+3m/6B7J2EJTAOqRkFZWnHF7kh3dG9sIB71S6g9rQHTY/TAXyGmGcXLEO29LqqSn5bAtqgx2EMdUJ4aGcIeqHmKLZsWolJ8/11qmMqN232uh5DSYi+BuljBTBYYY6E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LTPNRrey; arc=pass smtp.client-ip=209.85.208.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="iXdgjwwa"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=lbGy4t/XKTq7k9GazfZnjB2a0UTQy4Mh2N0jfTEBLpnEUQ4af/qSMlNfsu+t61poW7GFWe9lLfOVGmIpOnfvpkE7wJhRX3qWqRetgQyeXLbmR6oj6FqhtoSmM6kPtWZ7viOnM+YkrfAhlt8OwnPU2JyYWfE9EfVXv5VBtTeXo6fIQolDWdIRW58fPnRkIM+g18IA6IO59ZRAjPqN0XUVlTATpl5fR0q0LlD1p3R0BGXdCV1xENT+k5/eg9kymxU0AYJbZhyOkJLW779a0zzWU1SHtpIigv/S2y6PNfyFMjPcdQA7sA/Hcb6J5NV4vEBQ661gDNfbD8vaau3/HuiVcQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Lt6l5l5f8bedU3Nd+YRqBu7yp+ZT/u5xRLV9E/MiwpY=;
- b=zJyV0BBwkU0kp71ooCUeDTAIyZ7/3sG4ygnopVSsT0FgsZL8niSlldjQlKN/8V276Jog8V6n3f1qVaqEnBa/rAF58hx9U+TjMUtV6Juz3/Rc1WdNJkxPOXhZ1Ghj2MEcCbQ1OJmiw7dMYomnrNdGyazTI/VgbKZrahocS7cpJuWH7+D4VBdSQJ31VOY1l7tw+qTA6asAdWIPZiYHqL5zFCYSJiepsbA0VCQTQufdWOYD30N6WUanXCCOZSjnAb/NxTZtMsf7sEe7aoTavtCZO8+T07VQqB9QYCYoVnyErf4Z9Ec7b99n0h9WYkwxpCI3g608KrC29TunBWBemugyPQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Lt6l5l5f8bedU3Nd+YRqBu7yp+ZT/u5xRLV9E/MiwpY=;
- b=iXdgjwwaQxYgiw7B8FmgKaVrug7Qn+C5ZL/r7BTbeHM4LXA0LvjCwWT3saegToCRnIaLIrqDJHF987FKgvIDbK3iI+IzZswhxEAaQj2Oh8jeVXeLTXjwtFtILhV8xNyVzFK7aOfZFTeZp6jw/m4acRyX+tns5j+UTq15C8sRlPU=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by TYRP286MB5686.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:2d8::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.17; Sat, 14 Mar
- 2026 04:33:17 +0000
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9700.015; Sat, 14 Mar 2026
- 04:33:16 +0000
-Date: Sat, 14 Mar 2026 13:33:14 +0900
-From: Koichiro Den <den@valinux.co.jp>
-To: Christian Bruel <christian.bruel@foss.st.com>
-Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org, 
-	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, cassel@kernel.org, 
-	Frank.Li@nxp.com, vigneshr@ti.com, s-vadapalli@ti.com, hongxing.zhu@nxp.com, 
-	l.stach@pengutronix.de, shawnguo@kernel.org, s.hauer@pengutronix.de, 
-	kernel@pengutronix.de, festevam@gmail.com, minghuan.Lian@nxp.com, mingkai.hu@nxp.com, 
-	roy.zang@nxp.com, jesper.nilsson@axis.com, heiko@sntech.de, 
-	srikanth.thokala@intel.com, marek.vasut+renesas@gmail.com, yoshihiro.shimoda.uh@renesas.com, 
-	geert+renesas@glider.be, magnus.damm@gmail.com, mcoquelin.stm32@gmail.com, 
-	alexandre.torgue@foss.st.com, thierry.reding@gmail.com, jonathanh@nvidia.com, 
-	hayashi.kunihiko@socionext.com, mhiramat@kernel.org, kishon@kernel.org, jirislaby@kernel.org, 
-	rongqianfeng@vivo.com, 18255117159@163.com, shawn.lin@rock-chips.com, 
-	nicolas.frattaroli@collabora.com, linux.amoon@gmail.com, vidyas@nvidia.com, shuah@kernel.org, 
-	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	linux-kernel@vger.kernel.org, imx@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
-	linux-arm-kernel@axis.com, linux-rockchip@lists.infradead.org, 
-	linux-arm-msm@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
-	linux-stm32@st-md-mailman.stormreply.com, linux-tegra@vger.kernel.org, linux-kselftest@vger.kernel.org
-Subject: Re: [PATCH v10 3/8] PCI: dwc: Advertise dynamic inbound mapping
- support
-Message-ID: <tkfhaovpmaoodo35attvmbnpukcqgmwyrxmfgiwjy2dga65cgl@hmj4mx2n44ki>
-References: <20260124145012.2794108-1-den@valinux.co.jp>
- <20260124145012.2794108-4-den@valinux.co.jp>
- <b2b03ebe-9482-4a13-b22f-7b44da096eed@foss.st.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b2b03ebe-9482-4a13-b22f-7b44da096eed@foss.st.com>
-X-ClientProxiedBy: TYCPR01CA0060.jpnprd01.prod.outlook.com
- (2603:1096:405:2::24) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:38f::10)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LTPNRrey"
+Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-6640e55d366so1833876a12.1
+        for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2026 22:13:16 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773465195; cv=none;
+        d=google.com; s=arc-20240605;
+        b=eEzyjJzwBKtLKNhMO7FsI1UdQsIgBwc08mR3bI80FaOq4KA2ZSA60l6JXI+ZqVjA+r
+         Fphs+BWAC6+1hol+hVEJJXmSeALVWKiwyIVMyv3Nr/aiUK9aWqvibkLUQB2aMA5fHPZ1
+         sd2xNU0QuW8cDfoV6axt14YQAvoSkL6QOZq/Z7JW+lunAvkE79Sb3Mb62Zqw2BpUOsn9
+         sasXPU/uU4Fz6DsEWfkfxp+76EU8x9J0UQIONOAsfo+p1gNDPzp9bxPJe2FPz6TsMReb
+         rll6IMQIO9M5HG0OHG5XH9j9oGMSpYlWU5kB84JzzKkZ+pnex1H6Ym2SzkTbW6XEhTti
+         E6kw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=IM7Q6oOyb5nhIw60KEs5pEzxBNhlQ40PGDtJzVWEr0o=;
+        fh=e/N4VifZ1tGR80416/yzQX+jEh+R4HWW6RsG7RaiU0A=;
+        b=PRM0cZYEiMInNPDdRWcVMaQFg6uvVUE7QB7S4vrj4TlwlC0CWYHRoxZK2LBkSFPu/l
+         4hbvoCnAsTW/zosngljMs3f9bALHtFF4GNYSVozPCu3hkR94enc20XdFeRMIHsCeIFL6
+         KqMSBVMJwF+8XOwmFj3Bw+8QVgco2pym7DhsrRGF1ookG4HIVdHKJU4WHDLlXY5JfTpq
+         FF1IDNAThgRthbUdX7tp1yV4//E9DvweXwDFQf6HgewtRGjKV3kYiMZDYT9oMQgTvH+V
+         KC7vUirXtFj/WcDtky46WJeF1XPCQ0+BRhQyE1+Szjlqx50wYk/co01mw9DMdx5s7eSa
+         bo5Q==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773465195; x=1774069995; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=IM7Q6oOyb5nhIw60KEs5pEzxBNhlQ40PGDtJzVWEr0o=;
+        b=LTPNRreyiRVF0GtI7csZFOAZDntp2FXr1kZG1o33bQoOm2fbWU2UBN8SFfL7wObn40
+         e3/Cqwo/zVoLBZPh93xiYWVrCpDvlY8tEoH09kmmOcqUiKrc6R9UxC/V2xxebPlAem+b
+         XXh3Ep1mfPiJ7ShMHYtSakiIwLdtTBk896jR0fEMSJ5J7HtmAlc2hDtLsZ5gsxMUhKfO
+         AtTnbfyT86uSWMHkXQEkZMr4LcUtTIimfom+ooBEMyCzYu86E6w1Mo2tgxOWEoT3TAn+
+         O9dPfgD5T1BcvwIXjwQnxiY3eG8lCSurOdVY5o9l2C2rEoChyWnxvHwA60Htbu81HT09
+         9v2A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773465195; x=1774069995;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=IM7Q6oOyb5nhIw60KEs5pEzxBNhlQ40PGDtJzVWEr0o=;
+        b=qaZaSq/EcSA9SNzw5sO1LXJXu767+7n/XLG3RCMqeUTRPBxB/bk/4VsMCgcNcJu3bH
+         Xu7YbKAIDf1XQl9yXjI0KKVlPR8gXNjDTZgTSOtzQr3fdjc5E0ZPgxd7++QF68qPAiFn
+         H2k1vzGAKwfgwuXEMY9BMcyd4bfJNevEXSjZkZzrQhAzrNVLB14qqj+5w7EpUPWPXjJe
+         STmTmLPlB4NvLTvSS4myacKQDFwE9n31rs81+oC0T//F/gM4TYT4tMv72SJb6ioomYF0
+         xAEEB4OeQRSaxDkqedZM9HhjWXdEbJryB9sthGvn+dBrG1Yum+WF9jYG9/7PCtr6R3KB
+         se8Q==
+X-Forwarded-Encrypted: i=1; AJvYcCUd+hAEh8d6Y4Ctj1JdpoBXIiK748TKmKYaKKndn3WHcRTdb0yUqNOC7/DZHPjzTHfUhdh5KBfZ0wM=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzr0OcPyoE8x21wwI9LBaxsI5zlL1O4utu26d9I4I+4LOE+UxoC
+	Zm8E74th8M7Pvj4vUv9UALLS1xrr8iNA8jpjSwaNxMFIHtGbMozu/ec03uSVai+IRU3RjlEwffJ
+	KsQJvHgSx67PnLouLbILIfxabQEd3kkI=
+X-Gm-Gg: ATEYQzxw3IjoRJIdICfXxtZgEfkzatNzkhvBefrsRKtLgPyDo27qZDqjY2u3fAulp8z
+	VDKq9nCsMJ6B+YNja5jCn8ChbaZMWiBwwGWF8+3dESKCjd79gcI98Lo5jvu2vS28tmandegy/yW
+	XAJiLzDNsfnjMECLqIIwraGppeN5SI3CygOqPlUIeDuhaS4oxdDRyGoBETKSUQmVVm6H/udK0DM
+	8s337ChldR1yqfrrFzZU1XUx8+wb3J85aUerQA4iMKM+morwzMoRImLEqF08savshY94kCyxLsX
+	vIDj1w==
+X-Received: by 2002:a17:906:208f:b0:b8e:796a:fd5c with SMTP id
+ a640c23a62f3a-b976506440amr202919666b.27.1773465195027; Fri, 13 Mar 2026
+ 22:13:15 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYRP286MB5686:EE_
-X-MS-Office365-Filtering-Correlation-Id: 117befd6-b300-496f-07bb-08de8182cf76
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|7416014|10070799003|366016|22082099003|56012099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	wBhPz6v9XhyEg9APV0PbwPu0Hgog0VsuiwLQJvjWIFZlkmy8jdUpH5CoaX9ALIQWZQXrtAC47Wh8LS4OJ2a8JF6nGjMATddFqdiq+fDLHGSaKqTvUPd7JKHZlzeH8Vg//PP6vsDDGYxB/AWBpChjrgmO/GAWXKu9mP2a+TyHN3eDRrYWkjHLq3oXJzhL4thb967G77n7++B9R4per46UL0XvGamr/eAH+R6/guzguriIkZ6Yyl4/ktJunClecqm0Z+fz16/lRL5CplTjNGeqg7svT6ujYgNrsYNr1lyb95Rz1QN6vYCbFss8Fe+m2IlPtCJ9tcdEq1WeghmFLUzA34Q30WU9UQH2W7EAJyDvV0exZa66EsQGX7axEDdDh3WacfnwgM/Y9ZR9PtclRZ+Ytv/UdGjJ852H7Ba3MLqjuvug0rmmch33d6wFbT4b61C3b2C9vPaDW/4FesgPK5163asmjLBBBrm5PPD7i6wq3suz3EyMWiowiaoTHAL5S9RQlwKDtF2xIbe+EqvXUMbuh7ibKhG/QQdkgDSWRRA9O89hQ6QqHKp7nl0M2smNZOYJW4dT03NK7hMcmd9Uv6fS3rdCFwbUS0mOlK06Jq7953rmgenkxm4jwTkyo0HzstCIRzM91UnFw5orba0oQeGfJxULRLhhAtABfPNdTXtpylpnEUkzPIVuw+T4Uxh0tJVYu3geme6lbDkvuFU9h0s64KgyEi+vyJk/Z03fFE40QxY=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(10070799003)(366016)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?GYzknUcMI1HL8nkg4o4Wlt4IQY6UJoMR3ZeGWhwbR97UwKpkRmnc35ILuvK2?=
- =?us-ascii?Q?jDVuYk3cxfeemXG7VNgwtGUljrEkd/IV6v/cZusdAEuUQb59l74/gCTmhvhZ?=
- =?us-ascii?Q?SAf+bxVoORnBPLNB5NLM0/rxIqfxi4wgxX2zr4yJdlEjsYlr5oQmMeL5DhVq?=
- =?us-ascii?Q?pLMoNgX7kJO6geo+h12+AFTM2/XgUXEqNN6gNS2Qk1LbxDhRJaiD1lmCEOwT?=
- =?us-ascii?Q?FjZwvBJTF76md6CsIrfqNyTh81L0LdXpwpMwSoxQry/yR+jks9iWq8xtDFc9?=
- =?us-ascii?Q?/aBjX1E5t+Sy0+k1/OLXU2xF68UusQypd8kjUSIRdCbBcM6GaTcKzDVwWxuW?=
- =?us-ascii?Q?R/+eRhr6ttPBzXj4ORmOqNaf3YapI+zXnlF/NE7M0x5brkK+9uq6L/PBGx+6?=
- =?us-ascii?Q?3xEhJS+LOwUdiPIAqz6nJZGQ0PeMP6vEtA2wtUP1cBqoPMwWysVk4Hg6yRFh?=
- =?us-ascii?Q?/Wa1KRS6oGrBpptqM/w/u5ZImTh/RBRWFRyK0fKrfMKbvTnHhhiv3maKROib?=
- =?us-ascii?Q?h7b1/8J+1/8DERi3y9J+VKMtrpqUN/YSKCOXjwSlxJg59pvNTB2UE30BXerU?=
- =?us-ascii?Q?vdGSzPHts0J5P6u54HJrlWAG6Feitk3tmfoiFSLM73/A1Xv0CViF2R4yzKcQ?=
- =?us-ascii?Q?Y234+aOiR+bIQRp+7ina23iFvboweqP4ZyWJK/dRiQe7CODHz42e/4mD+K5F?=
- =?us-ascii?Q?Dk9t8+nuNmRGHTtLvq0iNjCDHhM27Higj79NoP4pjU0UOhk0Sx6tc+LgfIIq?=
- =?us-ascii?Q?Jfi6B8yo1d+4dEy8DSgpyhYCrXAozKLlx0O2DMASUXzQmKHbD8FlDaSykBld?=
- =?us-ascii?Q?SJKGutO+CW9HoV0P4lUx/vbIyKcz6Mlztt7TUC885mTtKoNC9CFCUt+z3IYk?=
- =?us-ascii?Q?q2kQhmVpto89s6iFApN3WbVTQDZeeoXHdoawUa7//pFDMyM3dje4XteB9bqd?=
- =?us-ascii?Q?Baf+WeI+AnFdzqK2OLlt6YcET9uSgmizfzbo/jzQG1Z1HGrnOL+blWzEt5rC?=
- =?us-ascii?Q?1JnZjGRfPGaE+MqoR654SSgsBS2D3qn2KU+wao9pELNze+8eXLMyHGl55hzu?=
- =?us-ascii?Q?NNZP+/dpcgiSaLQb35ndfeReVUHDmWz5uoFPsKe+EhGhCMsxFYE8F/h0Ipim?=
- =?us-ascii?Q?MJgobvmUCmRT/cIUb4VhyonBMLZh72UQtVLSpayhQX2FQuV3aP+n4r6lpEBn?=
- =?us-ascii?Q?/762MVCcWTje/Su5w+4rnDa/DalMI9Bs7xoL+dVr3APoskwsV4PrZKPZEBfk?=
- =?us-ascii?Q?LRjWqTb+xQcF2icLlLzEkrnNlqV8F1nNPt7MBSKPZEq8Y1A52z1zuZ8TmihA?=
- =?us-ascii?Q?7+mvurcQgIEyj4c1lmFRDE44vs5nUL68ZoatZYQhJ2nrqU+V2dq9EEOx9Rpl?=
- =?us-ascii?Q?pi5qq2dJV7Oa/L0F8apFSgREVgMF9h289MfmcFzS5AgG/CjA6TMVJ7J66Y0c?=
- =?us-ascii?Q?Yq9nLgrc2IozKbJv7sdC3Qh9VW6dFID9rRDIT3VhkuH909b/CJYlIR6vHT9L?=
- =?us-ascii?Q?q5fh0dQcGD+bE03zy2kNqy8dJULbLIQS5aiW+MvRap8gQZlNfmsQvt7hRX4M?=
- =?us-ascii?Q?v9C/zafN5OB51nEp7JVWpAqlow1PqnNf24BHeqFpmMO4QWitItEfCgpCbVEH?=
- =?us-ascii?Q?wZTMTrEi9g35PBI3p/eIGQcZvn1gjeaeeTtpaxENHzGPebrUlxdBdMzuldOB?=
- =?us-ascii?Q?5qmbuKgoMUDdYbGIzUEGaN4RP/HbnQFmizrd72QlNGogqga2GsJ7M1SeqSHG?=
- =?us-ascii?Q?6OqcOqjGtA5nfgipPeoeQDat8oox5VlCxItWhJVcMiU/8ouUFB7F?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 117befd6-b300-496f-07bb-08de8182cf76
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Mar 2026 04:33:16.0321
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: qvIGl8wXaSAv8XF8Qn9pSc8/wVRucu58oFrKdRQsToXRou08snlwVJto8KmYMOjOpLKl0oEkyGJgGFgQSi+siw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYRP286MB5686
+References: <20260226101032.1042-1-linux.amoon@gmail.com> <177260693908.10259.13055467642416391434.b4-ty@kernel.org>
+ <87bc37ee-234c-4568-b72e-955c130a6838@arm.com> <f7tfshf7riljjibuqge4ubfjmludubpyh3ppdf6lasurzdzbtj@sw4xxagfhnn3>
+ <5d88fb5b-e771-4ea6-8d2c-c5cfd21e5860@arm.com> <qwanhqrpztzkudik5fmberhabnzaly7v53677dohqzj5nq4wi2@6ndpiubyxcbi>
+ <DGZXF3LPSRK6.2QYN63QTKUQAX@kernel.org> <cp5uktfqdf6zs53qsye57ior2ikmssgevxxdtevkzpisaif22h@7mrxspkuibow>
+ <DH09EDBW3X6T.2996UB1CFCAW2@kernel.org> <55c28218-1638-4b90-a9cd-a177fb5abcb6@arm.com>
+ <DH0TM60TVX5D.20W4O1X696ALA@kernel.org> <6cfe4bda-036f-4bb9-8a08-ed75f61cae24@arm.com>
+ <DH1QCLS89ADR.3H0XABP0GEFQT@kernel.org> <4f9fdfc9-f2ad-49b1-a6b9-ae64aaa47cfd@arm.com>
+In-Reply-To: <4f9fdfc9-f2ad-49b1-a6b9-ae64aaa47cfd@arm.com>
+From: Anand Moon <linux.amoon@gmail.com>
+Date: Sat, 14 Mar 2026 10:42:58 +0530
+X-Gm-Features: AaiRm52yI10E6vLq92rcORMoPK2tRdzWpVlxX3dbSjvIMnFFuSiMh3dLe0uhnRo
+Message-ID: <CANAwSgQ6eaM=Z=MBmS0=HrLfBxOh+vqnRSkEge_q6y+oe7AU5w@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: dw-rockchip: Enable async probe by default
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: Danilo Krummrich <dakr@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, 
+	Niklas Cassel <cassel@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>, 
+	Hans Zhang <18255117159@163.com>, Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>, linux-pci@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, Grimmauld <grimmauld@grimmauld.de>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	driver-core@lists.linux.dev, Lukas Wunner <lukas@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri, Mar 13, 2026 at 04:59:26PM +0100, Christian Bruel wrote:
-> Hello,
-> 
-> While testing after this series, I encountered regressions on the STM32MP2,
-> which I am unsure how to fix. The failures depend on the order in which the
-> tests are run.
-> 
-> The STM32 ATU has 4 inbound entries. After enumeration, the first 4 ATU
-> entries are allocated within ib_window_map.
-> 
-> On the first run of ./pci_endpoint_test -v BAR3(for example),
-> SUBRRANGE_SETUP calls dw_pcie_ep_ib_atu_addr(), which frees only one ATU
-> entry (BAR3), because we were in the bar_to_atu case, for the first submap
-> but fails to allocate the second submap. So the test FAILs.
-> 
-> On the second run with a different BAR, SUBRRANGE_SETUP test calls
-> dw_pcie_ep_ib_atu_addr() again, freeing the required ATU entry (BAR1) and
-> successfully using the second ATU entry (3), which was left unallocated by
-> the first test. then now the test PASSes
-> 
-> Therefore, the first invocation of ./pci_endpoint_test on any BAR always
-> fails. Other invocations are fine because the first one has left the missing
-> necessary ATU entry free. Whatever initial BAR number is used
-> 
-> I am unsure how to fix this. Always freeing all BARs before calling
-> set_bar() in the epf-test seems overkill, but safe.
-> I am also considering modifying dw_pcie_ep_clear_ib_maps() to clear N
-> num_submap entries even if ib_atu_indexes was not used yet, since only the
-> full BAR is used during the first invocation from bar_to_atu. But the
-> question is which ATU entry to select ? BAR+1 ?. This seems empirical.
-> 
-> I am not bothered by test failures due to an insufficient number of BARs
-> (this is already the case for BAR5,6), but the fact that the failures depend
-> on the test order is frustrating and show a regression.
-> 
-> But I'm not satisfied with either of the 2 possible fixes mentioned above.
-> 
-> Do you have any other thought ?
+Hi Robin,
 
-Hi Christian,
+On Fri, 13 Mar 2026 at 23:07, Robin Murphy <robin.murphy@arm.com> wrote:
+>
+> On 2026-03-13 2:39 pm, Danilo Krummrich wrote:
+> > On Fri Mar 13, 2026 at 2:15 PM CET, Robin Murphy wrote:
+> >> On 2026-03-12 12:59 pm, Danilo Krummrich wrote:
+> >>> On Thu Mar 12, 2026 at 1:48 PM CET, Robin Murphy wrote:
+> >>>> On 2026-03-11 9:09 pm, Danilo Krummrich wrote:
+> >>>>>    From a driver-core perspective I think we're rather limited on what we can do;
+> >>>>> we are already in async context at this point and can't magically go back to
+> >>>>> initcall context.
+> >>>>>
+> >>>>> So, the only thing I can think of is to kick off work on a workqueue, which in
+> >>>>> the end would be the same as the deferred probe handling.
+> >>>>
+> >>>> Hmm, in fact, isn't the deferred probe mechanism itself actually quite
+> >>>> appropriate?
+> >>>
+> >>> Yes, I've also mentioned this in [1], including the fact that it technically
+> >>> even complies with the guarantees given by PROBE_FORCE_SYNCHRONOUS. I.e. the
+> >>> documentation says:
+> >>>
+> >>>     Use this to annotate drivers that need their probe routines to run
+> >>>     synchronously with driver and device registration (with the exception of
+> >>>     -EPROBE_DEFER handling - re-probing always ends up being done
+> >>>     asynchronously).
+> >>>
+> >>> However, I'm still not sure how I feel about this, since I consider this to be
+> >>> more like a workaround that just moves things to a "more approprite" async
+> >>> context.
+> >>
+> >> I guess the underlying problem there is that there are at least 3
+> >> different significant aspects to what "synchronous" can mean:
+> >>
+> >> - literally in the context or device/driver registration as documented.
+> >> Off-hand I'm not really sure what useful property may be *specific* to
+> >> those conditions that a driver might rely on, other than for
+> >> super-special cases like platform_driver_probe().
+> >
+> > I'm not worried about this one, as it is already special by not being compatible
+> > with deferred probe. I.e. the caller already has to promise that the
+> > corresponding probe() call will never return -EPROBE_DEFER.
+> >
+> > This is a much more error prone requirement than just "don't call this from
+> > async" already.
+> >
+> >> - serialised, i.e. probes of multiple devices won't happen concurrently
+> >> on multiple threads. This is probably the one hiding the most driver
+> >> bugs, e.g. internal shared/global state without sufficient
+> >> synchronisation. I guess this falls out as a side-effect of the first
+> >> condition, but AFAICS it *can* also still provided by deferred probe
+> >> (given that it's a single work item iterating a list one-by-one)
+> >>
+> >> - in some regular thread context that isn't liable to have issues
+> >> synchronising against other async_func workers (i.e. the request_module
+> >> case). Again, deferred can't have a problem here, or it wouldn't have
+> >> worked properly in general for the last decade.
+> >>
+> >> So it's not that we'd be relying on some dubious "deferred is always
+> >> synchronous" assumption - AFAICS deferred *can* launch async if the
+> >> driver permits it - more just ratifying that deferred is still able to
+> >> effectively honour all the useful properties of PROBE_FORCE_SYNCHRONOUS
+> >> other than "during registration of the thing".
+> >
+> > Yes, and as mentioned above, EPROBE_DEFER has always been a valid path for
+> > PROBE_FORCE_SYNCHRONOUS, which is why I brought it up as a a workaround in the
+> > first place.
+> >
+> > (The reason why I still say "workaround" is because nothing actually needs to be
+> > deferred.)
+> >
+> > Anyways, as I mentioned...
+> >
+> >>> On the other hand, eventually we want everything to work with
+> >>> PROBE_PREFER_ASYNCHRONOUS, so maybe it's also good enough for the time being.
+> >
+> > ...plus there are not a lot of PROBE_FORCE_SYNCHRONOUS left anyways.
+> >
+> > Do you want to send a patch?
+>
+> Sure, I just wanted to check that you didn't see anything obviously
+> wrong with my reasoning-by-inspection - if you're sufficiently happy
+> then I'll write this up as a proper commit message and post the patch
+> (likely on Monday now) so we can all nit-pick the details :)
+>
+I believe the issue lies in the r8169 module, which currently has the
+PHY address hardcoded to zero in mdiobus_get_phy. I have modified the
+implementation to scan the MDIO bus for all possible addresses to improve
+hardware compatibility.
 
-Thanks for the report/analysis and sorry for the inconvenience.
+Can you check this at your end.
 
-If I understand it correctly, I think pci_epf_test_bar_subrange_setup() should
-simply roll back to the original BAR mapping when subrange setup fails.
+----->8-----
+$ git diff drivers/net/ethernet/realtek/r8169_main.c
+diff --git a/drivers/net/ethernet/realtek/r8169_main.c
+b/drivers/net/ethernet/realtek/r8169_main.c
+index 58788d196c57..fa99e33eccfe 100644
+--- a/drivers/net/ethernet/realtek/r8169_main.c
++++ b/drivers/net/ethernet/realtek/r8169_main.c
+@@ -5420,7 +5420,8 @@ static int r8169_mdio_register(struct rtl8169_private *tp)
+ {
+        struct pci_dev *pdev = tp->pci_dev;
+        struct mii_bus *new_bus;
+-       int ret;
++       struct phy_device *phydev;
++       int ret, addr;
 
-In other words, if there are not enough free inbound regions for the subrange
-test, the test should fail consistently and without leaving any side effect
-behind. At the moment, it seems the failed setup leaves the BAR in a different
-state (i.e. cleared), which then affects subsequent runs. That looks like a bug
-in pci_epf_test_bar_subrange_setup().
+        /* On some boards with this chip version the BIOS is buggy and misses
+         * to reset the PHY page selector. This results in the PHY ID read
+@@ -5455,18 +5456,30 @@ static int r8169_mdio_register(struct
+rtl8169_private *tp)
+        if (ret)
+                return ret;
 
-If I understood the problem correctly, would something like the patch below
-address it? My expectation is that the subrange mapping test would then fail
-consistently on platforms that do not have enough free IB iATU regions.
-
-[---8<---]
-From 039548c87a5c7a038ac562272447c4620a4c1ad2 Mon Sep 17 00:00:00 2001
-From: Koichiro Den <den@valinux.co.jp>
-Date: Sat, 14 Mar 2026 12:58:04 +0900
-Subject: [PATCH] PCI: endpoint: pci-epf-test: Roll back BAR mapping when
- subrange setup fails
-
-When the BAR subrange mapping test on DWC-based platforms fails due to
-insufficient free inbound iATU regions,
-pci_epf_test_bar_subrange_setup() returns an error (-ENOSPC) but does
-not restore the original BAR mapping. This causes subsequent test runs
-become confusing, since the failure leaves a room for the next subrange
-mapping test to pass.
-
-Fix this by restoring the original BAR mapping when preparation of the
-subrange mapping fails.
-
-Fixes: 6c5e6101423b ("PCI: endpoint: pci-epf-test: Add BAR subrange mapping test support")
-Reported-by: Christian Bruel <christian.bruel@foss.st.com>
-Signed-off-by: Koichiro Den <den@valinux.co.jp>
----
- drivers/pci/endpoint/functions/pci-epf-test.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 582938b7b4f1..0e5958088b8f 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -891,12 +891,15 @@ static void pci_epf_test_bar_subrange_setup(struct pci_epf_test *epf_test,
-
-        ret = pci_epc_set_bar(epc, epf->func_no, epf->vfunc_no, bar);
-        if (ret) {
-                dev_err(&epf->dev, "pci_epc_set_bar() failed: %d\n", ret);
-                bar->submap = old_submap;
-                bar->num_submap = old_nsub;
-+               if (pci_epc_set_bar(epc, epf->func_no, epf->vfunc_no, bar))
-+                       dev_warn(&epf->dev, "failed to roll back\n");
+-       tp->phydev = mdiobus_get_phy(new_bus, 0);
+-       if (!tp->phydev) {
++       /* find the first (lowest address) PHY on the current MAC's MII bus */
++       for (addr = 0; addr < PHY_MAX_ADDR; addr++) {
++               struct phy_device *tmp = mdiobus_get_phy(new_bus, addr);
++               if (tmp) {
++                       phydev = tmp;
++                       break;
++               }
++       }
 +
-                kfree(submap);
-                goto err;
++       if (!phydev) {
++               dev_err(&pdev->dev, "no PHY found on bus\n");
+                return -ENODEV;
+-       } else if (!tp->phydev->drv) {
+-               /* Most chip versions fail with the genphy driver.
+-                * Therefore ensure that the dedicated PHY driver is loaded.
+-                */
++       }
++
++       /* Most chip versions fail with the genphy driver.
++        * Therefore ensure that the dedicated PHY driver is loaded.
++        */
++       if (!phydev->drv || phy_driver_is_genphy(phydev)) {
+                dev_err(&pdev->dev, "no dedicated PHY driver found for
+PHY ID 0x%08x, maybe realtek.ko needs to be added to initramfs?\n",
+                        tp->phydev->phy_id);
+                return -EUNATCH;
         }
-        kfree(old_submap);
 
-        /*
---
-2.51.0
++       tp->phydev = phydev;
+        tp->phydev->mac_managed_pm = true;
+        if (rtl_supports_eee(tp))
+                phy_support_eee(tp->phydev);
 
-[---8<---]
+> Cheers,
+> Robin.
 
-I'd appreciate it if you could test this. Or, if I'm still missing the point of
-your report, please let me know.
-
-Best regards,
-Koichiro
-
-> 
-> thank you
-> 
-> Christian
+Thanks
+-Anand
