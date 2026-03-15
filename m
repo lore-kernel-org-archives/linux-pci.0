@@ -1,44 +1,61 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21BFB28726A
-	for <linux-pci@vger.kernel.org>; Sun, 15 Mar 2026 16:37:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72A972B9BA;
+	Sun, 15 Mar 2026 16:38:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773592624; cv=none; b=E2WpmB0H5gLr40V5EOmZnrr2I1TJfOKeAFwNqur7SSXArGJx6es+2a4nYD7w2UpwcS93PqHlGJK2oDDiQ41kV3Zqt+xwpGUXbkjksP8S/vStQRpMs/EJxFZ2r4ImkvbNJYx2QuprrhW8Wvo2SFnC7aHdB8ZWl969EQRq+AQx3eY=
+	t=1773592705; cv=none; b=EOS0JoSO64qvDMxhTdmbrhB8PpLJgqmI/ww6SIiVC2brXtI2or3hrO9QGF4DI3VtDm4VHAPiz5gRtgGeuMBNamRB7cKTpgvFIOzz75Ojz5stm2EA/OWcWW3hUhhZdtwK7HCsZmxVm/1UofPih+L1kHOdl7rMu+stcWXTG1mRLlQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773592624; c=relaxed/simple;
-	bh=qOmcYsZK7XicrVxE5+z1nuQLuQdsWY6oYuG+7of3r3s=;
+	s=arc-20240116; t=1773592705; c=relaxed/simple;
+	bh=WrNeMYsAA03DHVECs98FC7knzVMNjLmWyKvwlzN4Krw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FMoG20o+6ULczt3vKo4tn/yqQZC90HyrzJfjpPRrqPc422+KhHZ9PtUsE0TVv8TucMCT7A4FKWRIIeuudi0Rd31FCyydZqmkXJE4Lbv+Ne0pxqF1MILZmZXVnQd0pyALuiDnlNHjih9l5UOQvd2p+TFRuL4m3RkKaP/SvxjmHlc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cSGlTEYh; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=pHBmT8NL4pQcHhjEgl4wif5HRLz1rz23MlvfmD2CyOsax86i3au41AN+3WAcgkz/QzCkwAWXAktLTbyf3na7CePt0jcjXeLxILJ3+ucdZvt3pwfPl2vMrcEOUkk5fH7cYyLam550l6b5kLGqkRv9RdYF8KZ0a+dz8Pipu32RQ7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ODlndx/l; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cSGlTEYh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C31EC4CEF7;
-	Sun, 15 Mar 2026 16:36:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ODlndx/l"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A308C4CEF7;
+	Sun, 15 Mar 2026 16:38:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773592623;
-	bh=qOmcYsZK7XicrVxE5+z1nuQLuQdsWY6oYuG+7of3r3s=;
+	s=k20201202; t=1773592705;
+	bh=WrNeMYsAA03DHVECs98FC7knzVMNjLmWyKvwlzN4Krw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cSGlTEYh1xfG4NEgMycj2rR8yo6Bk/3wVJuRNeoeeinR73wnnwbMquSrLhtuU30Mp
-	 4p/ysFMDFKl22DzJ3ujvEgfa9I9z77mfOqFrmhvd6XK1dD+/pa68BsxVY0ie8ioRT4
-	 0KJrXrOFzTuM7dHh4fODgywa67SxpYPcGXT7iofn5/NUYBOM1b23cT1Be2hitwHy7t
-	 djPsgiI4DdunZPZl0ZnRd0ZS4Mcqqoo3CkKB9TxF3a/Esg3gi3438aPur1Eu6HjZcd
-	 5tIbo7CvlrFE5MJLACL8YwYADH9/0mDxbHxy4zn2RBr8SUEMwTt4lVGpjWhl2dW4Nl
-	 RNByPLX+QYVoA==
-Date: Sun, 15 Mar 2026 22:06:55 +0530
+	b=ODlndx/l2BTSbPjRspV9GLT7+5T3/4XNm1uJzTAR5k+bHedYGFbm7JcgrzbAMgwWW
+	 h3t+0iwi22VFwi/vk45Kz2w9HYLdExgXOq8xBGIQKNkp/kZKGRqwYWpyQfSimyVgB7
+	 WrKPZMlYKJl6FxwhgiR9lK+Hi0KC8ofixzUzYoWcVFS2xLl6FqTtVBCdp6trj9wHFZ
+	 G1cjoMWJmWsNxRMB0F4r6FJFjTbPCymS+hka/0zDBbmt7PBcrnAvIG9To3of5IcfVp
+	 JWhdazvUhIMZ2QhFYQA0dxWVuzXyQyBnyelMGJ1ME9cZe/XmLRTuJJVXnFz+VDnPI7
+	 1D2bXfJj7EFFg==
+Date: Sun, 15 Mar 2026 22:08:06 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Niklas Cassel <cassel@kernel.org>
 Cc: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
 	Kishon Vijay Abraham I <kishon@kernel.org>, Arnd Bergmann <arnd@arndb.de>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Manikanta Maddireddy <mmaddireddy@nvidia.com>, 
-	Koichiro Den <den@valinux.co.jp>, Damien Le Moal <dlemoal@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 09/10] misc: pci_endpoint_test: Give reserved BARs a
- distinct error code
-Message-ID: <k4lsuvv6qxl37mgpgzpv7tfkfe25bokermzcl655eaz2jd4urp@rkqhqb2ltjic>
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Vignesh Raghavendra <vigneshr@ti.com>, 
+	Siddharth Vadapalli <s-vadapalli@ti.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Richard Zhu <hongxing.zhu@nxp.com>, Lucas Stach <l.stach@pengutronix.de>, 
+	Frank Li <Frank.Li@nxp.com>, Sascha Hauer <s.hauer@pengutronix.de>, 
+	Pengutronix Kernel Team <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, 
+	Minghuan Lian <minghuan.Lian@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>, 
+	Jesper Nilsson <jesper.nilsson@axis.com>, Jingoo Han <jingoohan1@gmail.com>, 
+	Heiko Stuebner <heiko@sntech.de>, Srikanth Thokala <srikanth.thokala@intel.com>, 
+	Marek Vasut <marek.vasut+renesas@gmail.com>, Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, 
+	Christian Bruel <christian.bruel@foss.st.com>, Maxime Coquelin <mcoquelin.stm32@gmail.com>, 
+	Alexandre Torgue <alexandre.torgue@foss.st.com>, Thierry Reding <thierry.reding@gmail.com>, 
+	Jonathan Hunter <jonathanh@nvidia.com>, Kunihiko Hayashi <hayashi.kunihiko@socionext.com>, 
+	Masami Hiramatsu <mhiramat@kernel.org>, Shuah Khan <shuah@kernel.org>, 
+	Manikanta Maddireddy <mmaddireddy@nvidia.com>, Koichiro Den <den@valinux.co.jp>, 
+	Damien Le Moal <dlemoal@kernel.org>, linux-pci@vger.kernel.org, linux-omap@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
+	linux-arm-kernel@axis.com, linux-rockchip@lists.infradead.org, 
+	linux-arm-msm@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	linux-stm32@st-md-mailman.stormreply.com, linux-tegra@vger.kernel.org, linux-kselftest@vger.kernel.org
+Subject: Re: [PATCH v4 00/10] PCI: endpoint: Differentiate between disabled
+ and reserved BARs
+Message-ID: <skfqxnugt4t7eidfny5ojczq3wpu4u5yjfd6wdk3ikjmbgru7t@63nfqvrl5mvs>
 References: <20260312130229.2282001-12-cassel@kernel.org>
- <20260312130229.2282001-21-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,58 +65,79 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260312130229.2282001-21-cassel@kernel.org>
+In-Reply-To: <20260312130229.2282001-12-cassel@kernel.org>
 
-On Thu, Mar 12, 2026 at 02:02:37PM +0100, Niklas Cassel wrote:
-> Give reserved BARs a distinct error code, such that the pci_endpoint_test
-> selftest will be able to skip test cases that are run against reserved
-> BARs.
+On Thu, Mar 12, 2026 at 02:02:28PM +0100, Niklas Cassel wrote:
+> Hello all,
 > 
-> Tested-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> Reviewed-by: Frank Li <Frank.Li@nxp.com>
-> Tested-by: Koichiro Den <den@valinux.co.jp>
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
->  drivers/misc/pci_endpoint_test.c | 21 +++++++++++++++++++--
->  1 file changed, 19 insertions(+), 2 deletions(-)
+> This series was originally written in response to the patch series from
+> Manikanta Maddireddy that was posted here:
+> https://lore.kernel.org/linux-pci/291dab65-3fa6-4fc8-90a2-4ad608ca015c@nvidia.com/T/#t
 > 
-> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-> index 93cd57d20881..89d0aba059da 100644
-> --- a/drivers/misc/pci_endpoint_test.c
-> +++ b/drivers/misc/pci_endpoint_test.c
-> @@ -85,6 +85,12 @@
->  #define CAP_INTX				BIT(3)
->  #define CAP_SUBRANGE_MAPPING			BIT(4)
->  #define CAP_DYNAMIC_INBOUND_MAPPING		BIT(5)
-> +#define CAP_BAR0_RESERVED			BIT(6)
-> +#define CAP_BAR1_RESERVED			BIT(7)
-> +#define CAP_BAR2_RESERVED			BIT(8)
-> +#define CAP_BAR3_RESERVED			BIT(9)
-> +#define CAP_BAR4_RESERVED			BIT(10)
-> +#define CAP_BAR5_RESERVED			BIT(11)
->  
->  #define PCI_ENDPOINT_TEST_DB_BAR		0x34
->  #define PCI_ENDPOINT_TEST_DB_OFFSET		0x38
-> @@ -109,6 +115,7 @@
->  #define PCI_DEVICE_ID_ROCKCHIP_RK3588		0x3588
->  
->  #define PCI_ENDPOINT_TEST_BAR_SUBRANGE_NSUB	2
-> +#define PCI_ENDPOINT_CAP_BAR0_RESERVED_BIT	6
->  
->  static DEFINE_IDA(pci_endpoint_test_ida);
->  
-> @@ -276,6 +283,11 @@ static int pci_endpoint_test_request_irq(struct pci_endpoint_test *test)
->  	return ret;
->  }
->  
-> +static bool bar_is_reserved(struct pci_endpoint_test *test, enum pci_barno bar)
-> +{
-> +	return test->ep_caps & BIT(bar + PCI_ENDPOINT_CAP_BAR0_RESERVED_BIT);
+> Manikanta has reviewed this series and will send a small series on top of
+> this one.
+> 
 
-I've replaced PCI_ENDPOINT_CAP_BAR0_RESERVED_BIT with __fls(CAP_BAR0_RESERVED)
-while applying.
+Applied to pci/endpoint, thanks!
 
 - Mani
+
+> 
+> Changes since v3:
+> -Modified patch 1 to simply drop BAR_RESERVED for a BAR following an
+>  only_64bit BAR (Manivannan).
+> -Added a patch from Manikanta, to make his follow-up series smaller,
+>  since this series touches the same lines anyway.
+> 
+> Link to v3:
+> https://lore.kernel.org/linux-pci/20260302095913.48155-11-cassel@kernel.org/
+> 
+> 
+> Koichiro Den (2):
+>   PCI: endpoint: Describe reserved subregions within BARs
+>   PCI: dw-rockchip: Describe RK3588 BAR4 DMA ctrl window
+> 
+> Manikanta Maddireddy (1):
+>   PCI: endpoint: Allow only_64bit on BAR_RESERVED
+> 
+> Niklas Cassel (7):
+>   PCI: endpoint: Do not mark the BAR succeeding a 64-bit BAR as
+>     BAR_RESERVED
+>   PCI: endpoint: Introduce pci_epc_bar_type BAR_DISABLED
+>   PCI: dwc: Replace certain BAR_RESERVED with BAR_DISABLED in glue
+>     drivers
+>   PCI: dwc: Disable BARs in common code instead of in each glue driver
+>   PCI: endpoint: pci-epf-test: Advertise reserved BARs
+>   misc: pci_endpoint_test: Give reserved BARs a distinct error code
+>   selftests: pci_endpoint: Skip reserved BARs
+> 
+>  drivers/misc/pci_endpoint_test.c              | 21 ++++++++-
+>  drivers/pci/controller/dwc/pci-dra7xx.c       |  4 --
+>  drivers/pci/controller/dwc/pci-imx6.c         | 22 +++------
+>  drivers/pci/controller/dwc/pci-keystone.c     | 12 +++++
+>  .../pci/controller/dwc/pci-layerscape-ep.c    |  6 ---
+>  drivers/pci/controller/dwc/pcie-artpec6.c     |  4 --
+>  .../pci/controller/dwc/pcie-designware-ep.c   | 24 ++++++++++
+>  .../pci/controller/dwc/pcie-designware-plat.c | 10 ----
+>  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 23 ++++++----
+>  drivers/pci/controller/dwc/pcie-keembay.c     |  3 --
+>  drivers/pci/controller/dwc/pcie-qcom-ep.c     | 12 -----
+>  drivers/pci/controller/dwc/pcie-rcar-gen4.c   | 16 ++-----
+>  drivers/pci/controller/dwc/pcie-stm32-ep.c    | 10 ----
+>  drivers/pci/controller/dwc/pcie-tegra194.c    | 19 ++------
+>  drivers/pci/controller/dwc/pcie-uniphier-ep.c | 19 +-------
+>  drivers/pci/controller/pcie-rcar-ep.c         |  3 --
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 24 ++++++++++
+>  drivers/pci/endpoint/pci-epc-core.c           |  5 +-
+>  include/linux/pci-epc.h                       | 46 +++++++++++++++----
+>  .../pci_endpoint/pci_endpoint_test.c          |  4 ++
+>  20 files changed, 154 insertions(+), 133 deletions(-)
+> 
+> 
+> base-commit: 0b74f7d72399d4c4422ed3d68ef28b3612f71e74
+> -- 
+> 2.53.0
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
