@@ -1,52 +1,52 @@
-Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012068.outbound.protection.outlook.com [52.101.48.68])
+Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010036.outbound.protection.outlook.com [40.93.198.36])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3569A125A9;
-	Sun, 15 Mar 2026 13:44:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.68
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFD2B1A6820;
+	Sun, 15 Mar 2026 13:50:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.36
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773582269; cv=fail; b=VA+Y95lLZqsyTxcUDYCUqOyDt4z0yIIUvLjDuRAIXXOA8G0xFYH77s2+WpMpNWfH6j8WQ3rLoItItyhwiotlErrAv41DnnmqFwdpX8zogQ2ZJnr0B8JL+tro9KmU7Ee73QPMQqUbq6tnu4t9WDMPKJELirnciBXef4/ggCPvSZw=
+	t=1773582605; cv=fail; b=FBdE6MApAcZ87RRTBMOL+bwSwQ00n/8ysKRVS9vRO9KZjfw7DKBx71w3J6l0stnVv1CLzctiaEZMLqfL3tyaRtqv64ENL+Qw6br2sYxei9Wufv9J6IreNV0ksX4OvwJHFusXYom5MuvjXO6vPGTz15mNpLBHFsuua4qNob0zokQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773582269; c=relaxed/simple;
-	bh=alV+rO1TDRRaOxYIyV8fdviBfLQKNTG5xI0vEroAnGk=;
+	s=arc-20240116; t=1773582605; c=relaxed/simple;
+	bh=hPuwc+ud/laqrskCCrIoq7HR2cxJ38TyUDiZ3Tji67I=;
 	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=dArBYUKErmiRaBRidteFYlDdD7aMXdk/1gU88NFTLHh2zKx2A2tAOdwzZWcvJONDmku76AmBDZdrcwUDw+hDQGnpGkQrgZo/BIPZcnWt9plU0DLGsDcbe/65pD6fDDoE0takymdhRr2ge+30QzrPjHqtv73dfaYGTapt+waL6vc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=R3nePbyZ; arc=fail smtp.client-ip=52.101.48.68
+	 Content-Type:MIME-Version; b=YhIY4c0g4a9XuaV/Q5q+PvAiRhrGkAkpko6ZGUMAm4eBszMyDtmKHcnwheoYAsy20bRsoaDUhSQtC4WdXPUJH/onIbDJo4RtOLMnFgValWJEyJi9HrJCnQBDoOWw+KThNK4A+0L3tSieBv2NKGDFvmHs4XuJJX6ngAvucY1NbXM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=RTW7YP+q; arc=fail smtp.client-ip=40.93.198.36
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="R3nePbyZ"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="RTW7YP+q"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ffEDXxhxSFVFr/9qWVc5tXqaUjzBCU5OgtumRW0JyRzQUbW7o1TIBEK4XgNw3VqUFNRDsJWvJDuJtzWFYlt1E9BOmuiEI67VIbofAx0OQ+TK8jXgeBhTYCGEeQIPhgSvG/Sg3ddTslfxvBo2apq/gXUw0mJjye7gcng6nyzolwv2XoAFeE5arh2nLS8I8vbD4f/hhtPi3Ydyhma7nyhk0Tcw8o3tNBOta+78shWjxaeWRSJJLe/Ui7FxSoH6+Lwn/M8E3x8xJcrCifvCk5+lj21oMeg5Nfz7TAbS/RsjXJm7RRX9Vr6byN9IkP6p5RkKtz8ZSFUwObHXYWarT5rINg==
+ b=CLA9B40A371Q/ZlzeDVFb4S32qKLpG/7gHRs/zG5XWZ1zg34wI7lE36LdmE8bBtsdhWvN4td6Xy5lIMta55mAFWdXGrloP89s44CyENW5OodrqkRYK7vpbxYfXADrIO796nUjvuqF5L69iCjV24oklo0YnG1lelacNpCEnnZ2vCnHKQSJ1davCc4xck/r9tEp9+/ElKH1oyqoTH5Uba2ksuKlcOXUvBYTera6fgM9tajGLNqzXuZr85noN5v85/BY7joOJG9JYFwNrXDnXm1cLuDKAhB5JP12fXmEdUSe64wLbiI8LhI7RB/5djNyh4bW9YwMT66ZMnPFUXAC/WXlw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=voYjQpl0iKfvojekfjSuKBPJH+BkN94JZvB0nslQxGo=;
- b=LeXy327Hj1KrVxwow7D36611X0k7tUgo4sNl8ab36or28ezjjhk4ZUvV0H8XReI08NsKHm2qNLrT0Lo6DOFlJXF13a0xXiMOPhnfuRiBzcR5MjM4u2+yaEMDOSL8/GUBFTTGxsbnEHvTgVTZuEMcA0Xfa571jlzfCTqqz4a5tPcFzUt+sqZHB4zI2tbvPxkhZpkAsaNV9kXNnk1m10VOUUV55mAbg6SGWJXG66D/roeW4biIpkBJ/Ht3zPKwNqkDPq+SOrFaZreu2k3PeJMcnUJnI77Y5aOt+bC4UJoahFFeA/TmxKIHGlh+ljgCcL66PHFBErilAq4ErEeShYQxIQ==
+ bh=WsspOQh+WG2jdoanmMtRX2ocgN1dA4l//iyC8C0Owtc=;
+ b=B7AY4pgAbXoxAxQVFuLqWmXeMBlNaok7jQjWexw6PTb8yvczRsVkv5hdV+Tb7S0buzGywA0vsLuTeveIyHyMxGLbd/GOgMrRiP4OVCwHSsYkBfq6s5ay3G/PSjculCdnoSTFSAHL4Ph9DwZJiKyv/nCsU0YPuXfzSZPz0Vi4yZnOqW8TtEkb++lJ7Wh3I7tF9II0pq0qOBoWPgi9c/4T+faXoVgFj+jBGcFHvqVDnpHMxmtltjE4cddvzJiEPfzMwY/sEPwyKIXjwrs0/uThE9Ul7YF2ishhKmNM4EhyTb+OQ8HBeDV0oJsshd6DHTcLJkR/IyEXO3iYu0ExhRaSGA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=voYjQpl0iKfvojekfjSuKBPJH+BkN94JZvB0nslQxGo=;
- b=R3nePbyZrYNnW2KDL5RZkOsqvpfhr3zjh1mWtOX+elY1ILNNVxiEPoqESdOE4UcIRoW0qLTF68LNPMkUMbV6YR2kazTIwhhcwwRyOknU/J1wnOrVg2QMLr1QK0Y+O3IccqAJNd2cjwnEhLmpQpMs6VfJa1JjsfpQr5wo0gEkjRhNGdimRa+UAUMX3P4iXLFXRqV3GypqQWHvvf7YamZl2HhsFfSFR9L+QBptpg79cxEiZ93Lg7lI94RIW1QVY3C6sYLozL5BIq93MjdMVLPVj8a0YBCX4/o7CdGYwsdo1Xf/gG9nnGU1rXroflg8Uad6nndOr3g3K3cifIm6DCIKpA==
+ bh=WsspOQh+WG2jdoanmMtRX2ocgN1dA4l//iyC8C0Owtc=;
+ b=RTW7YP+qCSanHQ2Kt7my5kUq0Y9VD2f4CHsBIdTeMlcWaNZ6AMfPPoGhzF8VkjF0Tglzbh7ur7q5i4YSXOfybIkujupDEs51gC/aYJMa8Yl6vzkNZ1J8ZMO6lupHZLpggX7pIpPP8K27VXyQ6yngFnJ6gFNRmwoDhzjY8JamEOkDDRkpN8LsobyyvBXso2iYk7YvjET9n3g5TG3O77VxdEpNYTWdVXTpXdI/A0AVQACZ8TRGs/qGmic9Lrm3GeNNg9UzaiAX80WruLaQxfQFRd5uKVrs9DmfexB4ES2agMj/9rTIVJvsWE9qqJIMPGr9MQaLC+bjZ+M7A2hldQVDWA==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from CY8PR12MB8244.namprd12.prod.outlook.com (2603:10b6:930:72::7)
  by SN7PR12MB6816.namprd12.prod.outlook.com (2603:10b6:806:264::10) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.13; Sun, 15 Mar
- 2026 13:44:25 +0000
+ 2026 13:49:59 +0000
 Received: from CY8PR12MB8244.namprd12.prod.outlook.com
  ([fe80::d30c:fb69:3020:73e3]) by CY8PR12MB8244.namprd12.prod.outlook.com
  ([fe80::d30c:fb69:3020:73e3%5]) with mapi id 15.20.9723.013; Sun, 15 Mar 2026
- 13:44:25 +0000
-Message-ID: <4db20e18-c34b-431b-b65d-c94312d73335@nvidia.com>
-Date: Sun, 15 Mar 2026 19:14:14 +0530
+ 13:49:59 +0000
+Message-ID: <e05d3b86-8c80-4ae2-bbdf-c346afd32c6d@nvidia.com>
+Date: Sun, 15 Mar 2026 19:19:47 +0530
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 06/13] PCI: tegra194: Disable direct speed change for
- EP
+Subject: Re: [PATCH v7 07/13] PCI: tegra194: Set LTR message request before
+ PCIe link up
 To: Manivannan Sadhasivam <mani@kernel.org>
 Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
  "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
@@ -66,16 +66,16 @@ Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
  "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
  "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 References: <20260303065448.2361488-1-mmaddireddy@nvidia.com>
- <20260303065448.2361488-7-mmaddireddy@nvidia.com>
- <4zxcmzsm6l3zbz4pblp7c67xpn6q6okpqcilupv6l22ce4gcno@b4htj36ngr33>
+ <20260303065448.2361488-8-mmaddireddy@nvidia.com>
+ <x5m2omsus72plxulgt66hov5giw2t5madb6zfzyr2e2o5ojm4b@uhyuycoa6gpw>
 Content-Language: en-US
 X-Nvconfidentiality: public
 From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-In-Reply-To: <4zxcmzsm6l3zbz4pblp7c67xpn6q6okpqcilupv6l22ce4gcno@b4htj36ngr33>
+In-Reply-To: <x5m2omsus72plxulgt66hov5giw2t5madb6zfzyr2e2o5ojm4b@uhyuycoa6gpw>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: MA5P287CA0140.INDP287.PROD.OUTLOOK.COM
- (2603:1096:a01:1d2::10) To CY8PR12MB8244.namprd12.prod.outlook.com
+X-ClientProxiedBy: MA5P287CA0131.INDP287.PROD.OUTLOOK.COM
+ (2603:1096:a01:1d2::19) To CY8PR12MB8244.namprd12.prod.outlook.com
  (2603:10b6:930:72::7)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -85,89 +85,81 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: CY8PR12MB8244:EE_|SN7PR12MB6816:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3148f738-b05d-4afa-e031-08de8298f89b
+X-MS-Office365-Filtering-Correlation-Id: 1ac5dfad-e7e5-4d76-abcb-08de8299bf90
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|366016|376014|7416014|1800799024|22082099003|18002099003|56012099003;
 X-Microsoft-Antispam-Message-Info:
-	KI/TpHLn5vS6c1RZhLajK5pbdxSRgG1ikUcXuW/SFQuST+dykcfZBFJhkgUOfb+hrMklpRbZGu38xw0r2JaM66CFjBxWEBdGb4NtshNPzhFNb1RhYZjHLEUwCX/N+6JgmbFvXb90QThUL+Xn64x/jkb+NMHv7PUcXNjRNoSgtvT8Koa2byPPUPqg3RVV/6hgSCMBszDUsqK2pyXm+wZLJsp31BVyS6WpHZLT8Efdd04TaG58y5vJVZEVTDiHgD2oVyEn8SkcUA97kOTBfrmnpUzhNS/MK844FtOBk7ZErHILv6+AJSeXUUbADmtNPOqUttsCzSC7KO+cZgHgh4CNxZMN66m+JpNyL2EumCk/SAaeBfz92GrLWXUkx4COlZzMeabHP1mqN/afyGtjv6jbEnu+lTDtuk6qiue19HGAlhAXrS/ZHrWywgCtZlWjFUq4mBUv5qoL144BN3X0Edq8bdwMDIIFuG+/zWCSQtZaiIu24ARmcEmJOvfRiomx4OU8av09UPelDUL6kmS93JXn+cs764CBZ3sOTR5oWPCiBcUAp9trLtoxxWA2Jby4TK1WLbpbOjXVOg9DeugxUFtBDM2kouiyDwB3thSyIS+gcIxJHLUJeuf3+4H9EM90AoWfJURoFfb0/Ga72+R1FSXN0t533dUAlfvqLyYSILssAhIiHA8fn+h16hS4QARKl14orBsd4VS/K9i96FoGS/UU8m4AamUlivzfLQ7f4Feu8yU=
+	mhcIM9UJIESt1PRnB5O0AKABQrBaDe9fOAfGyCpMXsU70UIpzTMNr3c85ryC7mueTIY3M8oN/yA/Op1Uai9hSgp+KDohSRpxJVZoN0sTbMrMxwU2rRhJXvEoET9Ig0gSfdufe9lYGrRrSJKGVFQZu4NpbwiZqfLjdwreNwos8CdnTO/1/aq6wrFQ8E1xvFxybZn4RwnavnokjaYB71W/5d1CAiLl+8ylP9WRjgLKLnAb/YwouGdCqL4e6xDImWlE6T5B4aTWOirMd2lKdcEsbyixLq975ef146CLa8l5LUdjwHFbbOVbseEW7fIHsMB5emk2wf/e/YL3txKH1+5FnI9bHwdQm0ViplbXuS60hbU3DtoWw4S5iPPUgxvJU/8KbJ00zPxqPw+RNWoQcnNlNBqN8g9olRexNhEffw0F+PEMjDW0Z/RJnN8w69Wf2TZUUBPpU2+FsqLb+VX5/upbIGSzUY4Te/vZcdNfv7gtkYrlFSbFxRIie48H+R8Vrp5Syv/yMH9Y7PsLtOYvz+MlwSKx+UM6SQeHtcpiDb2bdloz/oxJBm4h5WaEtryff+k94qEU0kStJYSDgZ5s5Et3nbqcd5dalYhvE7V/4HXlO4/pXnUsgIdJx+U8UpSzB64/XiwJyRK5cOAtTY2iGbXUHQkWrReD/j5tc6WFvx/ZRmjmBBLXSDME9kltUiii1NP3TcECR9rHlDRw3Emm4z5T9oldYsPGM3fvd2pJ3/KxDyU=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR12MB8244.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?S3MxU3RqeGNVU1BsNWI0eENLNy84ZXNBcDFGNkd0bG9wMlpFdkhBLzZ2VFRO?=
- =?utf-8?B?SG4vT3VBM29TeFVITXc3cmU3Q0Zwb282cmdJUWkyMUdKZUNZam8vczVpajNW?=
- =?utf-8?B?Vm9jQjNJOTBrNC9DK3kxOEN0amFPYjhQcDhYMk4zdHNXYngxV3g3RzF4TWQv?=
- =?utf-8?B?ZHVKVXpoU2dVQzJqVmZhQ255T3U4YmtxTExvcmpubjAvRVk5cjltcmhwUWIy?=
- =?utf-8?B?dEJsNEkxOG1qK293ckRaWVphQWR4ZzFLd3lkYmE1SjJaczNWNFNLNlA5MjFt?=
- =?utf-8?B?ME9YUWZBZXZNeHA1U1NMSDNQbzBkNktGK3cxRVc5d1Qzek10RzZJcm5FVFB1?=
- =?utf-8?B?NW1ZcSt2ZncrekxNQWpGYXZiOU1TVTcyNzFCRWtobUg1ay9YTHlPMHEwTVRU?=
- =?utf-8?B?MHpTVnpFZlF1YWx3bXZmMUdwUkJ4UUtIdTk3U0RVUjNNU2RWUWR1UWh3N0ZJ?=
- =?utf-8?B?K0t0elRzNWVGL2JxN2JrRW5oNHdOeDdQWFRGT3hQUnJ0R20zL0xCaFRrYmhF?=
- =?utf-8?B?ZExVWVNxblFnZjB4K0NyNUtwdWZ3M0VLUGJnaERHL3YrZ2wzQklUMTFNdk82?=
- =?utf-8?B?SVZLNy9jNjVwN3EvYXBvaEFPM2pxZDFyU1ZvY0RVWkEyVFlKeVVRMExEcm5m?=
- =?utf-8?B?N29WdVNnVWxnYmRVVlRQUm5mSkNxWmViL2RjdXkwVkgwNFdqYXNYQ1o0d0Y2?=
- =?utf-8?B?S01GNWdQaUg5RnUzRTF3U3ZySDhkWkoyU3B6cVBKTkJ3WjlUMnNQVXpWSXBC?=
- =?utf-8?B?dHVnQUxNaFRTd1BPWGgzMzF6SjZnUUNJcHoxZlZrSFRYTllTSTdsY2FuNHd0?=
- =?utf-8?B?Q0VlbUg4Zm9QWUl4bmNQWUliVXhrai8wVmJQQXpRc0NucnI4NHdiMTd4NENm?=
- =?utf-8?B?bXo3aXRhd0FPdDNPaWpRRFRJU1F4Q3RtbG1MUW9XUXUrSTNzLzU1TnpLZ2xV?=
- =?utf-8?B?S1dQbnZwU044NHhqU0ZpSWJmTk8wRTBhdmVlOTdoUVZEd0VoRzZyVHhTMjRo?=
- =?utf-8?B?SmMvR0xZT1p2WU80YktxekovK1lyeEtIOFJab2dMZklwMlBvZmhXSldJalhj?=
- =?utf-8?B?R2ZMQksvVkk3TXJLTEFKZVpUbmVUNW9JYk91aUJlcTZnZ3lPT2thMHlvbmpj?=
- =?utf-8?B?TFZFTUNSazVGWWhmcW9PYjU1K1JtejBjQlE5ekYyNEx2RWN6V1U3cDNYKy96?=
- =?utf-8?B?ZzgvNjlaL1hvUnlTRzg4bitEUkxpMHBsMkxQbkc4eFRGZEVrWThNdjhxbU5K?=
- =?utf-8?B?dmRuaWhYUTZvSU1tZ0VOYWUvMEJhSDBXMS9acTdTZXVyWmt1ODJJWEk0eWNC?=
- =?utf-8?B?aUM4cnRKNXByamxNT3lveXVuS09oYkJNdEhZeFdmSmthb09MUlVqZXh6Tmlz?=
- =?utf-8?B?eHRKL0tvZlhCN1BRTDBvREp5TUNHaDBtOUVmMDhBeld4Y1QyRG01NnozTDVm?=
- =?utf-8?B?aG4rTkJYdS9qUEpMOHovMTNLN29sK3crRGFMay9ZdVI3c1FvVVY3YStJNVBl?=
- =?utf-8?B?K2R0cGsxVUdKOXdFQURuZHRZZHdxRFAybS9XWTMxUnU0cHRpZWFWcEhGbHd0?=
- =?utf-8?B?Y2ppa3F1STVoRGNIVEkwdGJUemZlSUprWHVZQmVDM2Joakk5V0NZTEc5dEVr?=
- =?utf-8?B?N2dTNUJrS0N6QlBRS1RrNHkzczk5TW84dC9za0FnZFQwQVV3NXUwcXBFdjdu?=
- =?utf-8?B?ZEl5VzN2K2NuWFpiR0w5N2srcGlpZmw0L0VtV1lzSnZLZVpDdXU2cjRBSS9w?=
- =?utf-8?B?T2w0VmRUelpKbDU2c3htZ2ZmNDZKZHczZDZzQnlZYndRcUdQRXh2MldORGlJ?=
- =?utf-8?B?a3BFUTRIbzM0RTRkWFpDUVZlWlpwRXZyTDRVVzJXa3A1akczUnNFTC9oQmsr?=
- =?utf-8?B?dFhjclhjdXlXRm5nOHdkdVBmRXAwSkJoT0VtN3FzMUkxSEJnZ2RDeWVzWUxh?=
- =?utf-8?B?ZHFyK0JVbm1OOXFwOUE1ei9JOHV0ekZDVHpMY3VtY1VKMno0TU5zTkZrYkkw?=
- =?utf-8?B?VDMrNXBhTlhVQy9PeTNLY3JSdG1ndG1icFBENncwemxBRk40bVEzVUpFRU1B?=
- =?utf-8?B?ek5RMVNzZGZhdGh3M0FIcFRaaUFKbGt1WlVvTzVhYWdzT1NoNlJQcHNBS2xT?=
- =?utf-8?B?cHlBYmdVQ2dja2VNcVZCdVdzWVVvMyt6UlBCU0NZY2MrTHRhRnZTRUcyaTBi?=
- =?utf-8?B?OHhRU0IwVHRCeHEyOFY4ZlA4all5WEhQWjMxbnFXaG1RZithbFdteFFoMVJa?=
- =?utf-8?B?cDVXa2pvVEtsb0FLb2s1V3dzZFE3Mk5RejhZZlVNUmJJZ0gxSzlNcU1FQ0pU?=
- =?utf-8?B?VDg5WHJGU1BlenNIdWhjdmI2KzQ1aGZ4RnhRclp3SjBrd1ZEd2NvZz09?=
+	=?utf-8?B?d0c0SXc2bnZVMGxKNmlrWE9IVzJnYnUveUtsU3ZTRTNFcFV1TGJtaUxkQUdB?=
+ =?utf-8?B?c00vS3d0VUdGdTZ0SGtyV3pCbXZkZEFkdHRReW4xeEd2aUo4R2xqSnlYa3Nr?=
+ =?utf-8?B?U1JkWjVqRDRraGQrclpkamkzMlF0Sm91K0FFMzVwbTNNUUt0SkFiN3VlaFE3?=
+ =?utf-8?B?RlZrcEdFZlRWNGZEMWFlVVNDV0RqNTk0UHdTakdKWi9OUW1lTjMyNzQ3ODN4?=
+ =?utf-8?B?YU81VEl6VGRldEd1clI4M21BR0NMMHBqTDMrZmxIUEtRWVNLUENhR2xSYWZs?=
+ =?utf-8?B?ZDV5S2YxNUFINXRpcTJWcGZrUXZpVDZCd29MYmJneGdQajJUS0pNWjJVT3FI?=
+ =?utf-8?B?WkkrTlNTUkVQbXMrQ0U5VjlkS2s4dVg2eVlJYTAyMkQrd21LODRXVWtIRlAz?=
+ =?utf-8?B?cnYySHhUSlVIcWpHRlJ0RGFvVUxSUStLak5pS3U0dkpDQ3M0VHpHWHV1dHEw?=
+ =?utf-8?B?ZG1abkFBNU9meHZHYXdoTi9HdGpZWTJVanJxSVNrOEZYSml0NWZHdTJwbHgx?=
+ =?utf-8?B?UlRmWTVoTldLK0RjY1pBb0tnaGMxL3g2dFphVVc5cmNRSHh4cmlYRW9NRm9w?=
+ =?utf-8?B?eldBYU1qcmg5Qld3ZUhSTFFibjZJTTBqQXBNMGR4bXgrQnVjc1FPUUcyY1Vv?=
+ =?utf-8?B?TzZKaHhyUzdhbnRDRlN0dHEyT2tDQnJvTXlxQUFDdDgrWFU3dkZoUm0xcmVY?=
+ =?utf-8?B?UFhFK0F5ZGU2WC82VFhUWTVhYXpra1BwSUhjZkcwWDN0cnc4RUM3ZFZvLytK?=
+ =?utf-8?B?V0dKQzZLR2drVVZwK1Z3Vnd3TjI1U1FSZFhhdm5oYVRBbTEwM1FKOS9hUFBr?=
+ =?utf-8?B?cCtCOWtTZDdRVkdiK3FVOGRYMDVqZTd4aFpuZWdjNk9HbS81WGdSS2tabzNP?=
+ =?utf-8?B?MjBORFUvOWZaL0xUb3JzWXVHbGlnbmYrLzJjY1ZUQ3lEYjQ4enNkQXlIZ3ls?=
+ =?utf-8?B?d1hKZ2lHaTludVZvUjZSUG9EZk9oakJjakJnY29TekFxUFFCMWhTbm9xYjBR?=
+ =?utf-8?B?ZlppN090VE9LbXpQNEpGb0RSWEhNNVcvaTYxOWR6YmhqaytWKzF2K0lBVWlC?=
+ =?utf-8?B?WEY5WnFjR2NFU05NdzlPcFF1cm1jdG5vYVI4aXhkUU5UYmsxRDNFd3gxSnZJ?=
+ =?utf-8?B?T1loVk5nQWFNNys0cXJ1YWFGUjBHN0pIU0xISUJkdTZwYkRtT1BXZ2RueUgw?=
+ =?utf-8?B?aEpJMWVzbjhMdlEyNmNSbGFwWDUyWURUQVR1cklRdDVkQVFMdEZTK0UwSVdj?=
+ =?utf-8?B?M0pvQ2NucFI3Y3lJZCt1WHhwOXNwTkR6RnEzb0NMam9lSkFPTHVIT0JxdHhX?=
+ =?utf-8?B?NzZ2d1JMVllTbkttWnN3ekcrQU5BQ3A1UWVmRytSQXQ3KzNndk1NeVBkVndt?=
+ =?utf-8?B?VzI2bFVHRjNVcEJ6bVh2Q3RiYzhpeXgzZ1hyUnlmWjFyWi96d2x4U1lhNnJ4?=
+ =?utf-8?B?TGcvSUY2QjhFN2FvYjJjUmRveVVEcEIxODUxRzFQRzEwTVV2bCtZV05YZ1Ns?=
+ =?utf-8?B?Ync5cTRMM2pXSWN2Q2xzOGN5aTU2THg4RG40bC9uVVB0WENDYnhDRFpIY1dK?=
+ =?utf-8?B?NzlUMWoreFZoV3JHOE5IeXY1dmNqcmZMVC9nUDJIZnRrMWRpNXNkRFlsaVJl?=
+ =?utf-8?B?eGhvQU1jNFdrYk8zbmNNQy9UR2NJcUc5clQ1NTlqQk5QMm1QWldvT3FkRk4w?=
+ =?utf-8?B?MFVrbmtYSHBxWDV0aFNseGxwV0pEaExINFd4aFZIQXdUYlRHdTJYaW9YcFVY?=
+ =?utf-8?B?R1g0aTJ6U3NkZU80UlNFTnBxczMzMXYyYVFwTVYzdnBsQkQ4Q05YUm1kaVRZ?=
+ =?utf-8?B?V0tOaFJuaTBqZit3blJvRG1UQVlxMnhITkhyR2paMGY0K3JJd3FlUHJONXZq?=
+ =?utf-8?B?RXJJTXcrYlpUSU5lQ1FndmRNaGJSbFkwQzlHOEtRUTV6U1RJQVpPaGxhZXBY?=
+ =?utf-8?B?aWFIMVpSYmFGRExRaURMcDJoYUV1U00wRmZ5Zmt6d2wvTzVrQnI1dXMwT2c5?=
+ =?utf-8?B?alpadXhqeml0RjdNdWI4aU1mWXZKUlpCYzUvbXVOVDlkUTVSRDN5WFIrSDEw?=
+ =?utf-8?B?blpKWjkyaXVMemIvYVcvb29vaFJqN3NjaW9ycXlmMklITGk3OTE3ZFh2MnBG?=
+ =?utf-8?B?QnBxUTVTNDBybVJzSm9pZ0JLUHJFV2Z6bUpCVmd5NDF3ZnlKZFFUK1JLc21x?=
+ =?utf-8?B?cDBLeXVRamxMNmxjcWQvRkp5NE9XSzNnajVkaDV2Z2d5QjZVS1FOZEdCMkxn?=
+ =?utf-8?B?cTd4cUR0djR1SkdnaERtVGdXWm9tSE1MZXdjeHphZnQ3SmlYb0EvRG85TkFw?=
+ =?utf-8?B?NTBqTHJoNFlPNTI4YnNKQlZWbUZienpiVjZpaGdQeVE4RlRJcXJpQT09?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3148f738-b05d-4afa-e031-08de8298f89b
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1ac5dfad-e7e5-4d76-abcb-08de8299bf90
 X-MS-Exchange-CrossTenant-AuthSource: CY8PR12MB8244.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Mar 2026 13:44:25.2158
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Mar 2026 13:49:59.1873
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: SjhTV2JRmalfp9TnhIYTqGL3fD/F11l+BP54MdlDxn7aKzoFmjOnqSh85XKh9s979uRLocD5iUbhij5sij9awA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: k9iGDyoV/CJgk54pPsnUAt5sLd0YslAbXIuMvcDxBYlX5gUyO3+jC3AnQqppzzQaWJDGXFIxSGfdbRTo4VdACw==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB6816
 
 
 
-On 05/03/26 3:13 pm, Manivannan Sadhasivam wrote:
-> On Tue, Mar 03, 2026 at 12:24:41PM +0530, Manikanta Maddireddy wrote:
+On 05/03/26 3:48 pm, Manivannan Sadhasivam wrote:
+> On Tue, Mar 03, 2026 at 12:24:42PM +0530, Manikanta Maddireddy wrote:
 >> From: Vidya Sagar <vidyas@nvidia.com>
 >>
->> Disable direct speed change for the Endpoint to prevent it from initiating
->> the speed change post physical layer link up at gen1. This leaves the speed
->> change ownership with the host.
+>> LTR message should be sent as soon as the Root Port enables LTR in the
+>> Endpoint. Set snoop & no snoop LTR timing and LTR message request before
+>> PCIe links up. This ensures that LTR message is sent upstream as soon as
+>> LTR is enabled.
 >>
 > 
-> Why?
 > 
-> - Mani
-In pre silicon sim tests our HW team identified that Endpoint is trying 
-to initiate speed change after secondary bus reset. So, our HW team 
-recommended to disable direct speed change feature in Endpoint to keep 
-the speed change control with host.
-
-- Manikanta
-
 > 
 >> Fixes: c57247f940e8 ("PCI: tegra: Add support for PCIe endpoint mode in Tegra194")
 >> Reviewed-by: Jon Hunter <jonathanh@nvidia.com>
@@ -175,30 +167,63 @@ the speed change control with host.
 >> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
 >> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 >> ---
->> Changes V1 -> V7: None
+>> Changes V6 -> V7: Retain FIELD_PREP() usage
+>> Changes V1 -> V6: None
 >>
->>   drivers/pci/controller/dwc/pcie-tegra194.c | 4 ++++
->>   1 file changed, 4 insertions(+)
+>>   drivers/pci/controller/dwc/pcie-tegra194.c | 18 +++++++++---------
+>>   1 file changed, 9 insertions(+), 9 deletions(-)
 >>
 >> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
->> index 7dcf3e3596dd..2da3478f0b5f 100644
+>> index 2da3478f0b5f..b50229df890e 100644
 >> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
 >> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
->> @@ -1805,6 +1805,10 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
+>> @@ -485,15 +485,6 @@ static irqreturn_t tegra_pcie_ep_irq_thread(int irq, void *arg)
+>>   	if (val & PCI_COMMAND_MASTER) {
+>>   		ktime_t timeout;
 >>   
->>   	reset_control_deassert(pcie->core_rst);
+>> -		/* 110us for both snoop and no-snoop */
+>> -		val = FIELD_PREP(PCI_LTR_VALUE_MASK, 110) |
+>> -		      FIELD_PREP(PCI_LTR_SCALE_MASK, 2) |
+>> -		      LTR_MSG_REQ |
+>> -		      FIELD_PREP(PCI_LTR_NOSNOOP_VALUE, 110) |
+>> -		      FIELD_PREP(PCI_LTR_NOSNOOP_SCALE, 2) |
+>> -		      LTR_NOSNOOP_MSG_REQ;
+>> -		appl_writel(pcie, val, APPL_LTR_MSG_1);
+>> -
+>>   		/* Send LTR upstream */
+>>   		val = appl_readl(pcie, APPL_LTR_MSG_2);
+>>   		val |= APPL_LTR_MSG_2_LTR_MSG_REQ_STATE;
+>> @@ -1803,6 +1794,15 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
+>>   	val |= APPL_INTR_EN_L1_0_0_RDLH_LINK_UP_INT_EN;
+>>   	appl_writel(pcie, val, APPL_INTR_EN_L1_0_0);
 >>   
->> +	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
->> +	val &= ~PORT_LOGIC_SPEED_CHANGE;
->> +	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
->> +
->>   	if (pcie->update_fc_fixup) {
->>   		val = dw_pcie_readl_dbi(pci, CFG_TIMER_CTRL_MAX_FUNC_NUM_OFF);
->>   		val |= 0x1 << CFG_TIMER_CTRL_ACK_NAK_SHIFT;
->> -- 
->> 2.34.1
->>
+>> +	/* 110us for both snoop and no-snoop */
+>> +	val = FIELD_PREP(PCI_LTR_VALUE_MASK, 110) |
+>> +	      FIELD_PREP(PCI_LTR_SCALE_MASK, 2) |
+>> +	      LTR_MSG_REQ |
+>> +	      FIELD_PREP(PCI_LTR_NOSNOOP_VALUE, 110) |
+>> +	      FIELD_PREP(PCI_LTR_NOSNOOP_SCALE, 2) |
+>> +	      LTR_NOSNOOP_MSG_REQ;
 > 
+> As per the spec, the device is not permitted to request Snoop/No-Snoop latencies
+> greater that the Max Snoop/No-Snoop latencies set by the host depending on the
+> platform requirement.
+> 
+> But here the driver is just using a hardcoded value without reading Max values.
+> It may be assuming that the host is always going to be another NVidia platform,
+> so it sends out fixed LTR latencies, but that's not going to be true always.
+> 
+> Also, the host can update the Max latencies at any point of time during runtime.
+> 
+> - Mani
+> 
+Agree, but this patch is only addressing case where max latencies are 
+not yet programmed by the host.  Without this programming Endpoint sends 
+0 latencies to the host. Once host sets max latencies in the config 
+space, HW compares the above latencies and the max latencies configured 
+by host and sends appropriate values to the host.
+
+- Manikanta
 
 -- 
 nvpublic
