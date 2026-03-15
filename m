@@ -1,99 +1,193 @@
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62887287268
-	for <linux-pci@vger.kernel.org>; Sat, 14 Mar 2026 20:54:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF0E7286A9
+	for <linux-pci@vger.kernel.org>; Sun, 15 Mar 2026 00:54:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773521650; cv=none; b=DPGqyHZiq97L6k5I1i/uV7I4LGpAN6XoHlIlrBYb/5x4wd0ZlWor9m+1UacS1DjLBpxygDcLkslBiHhGER761M8fdb5EszZ1eOLFhcrpAIIG7WilSkez4QrgZxYzK8zxPr6+6tL1maLAFgKiVOTabiCb94P4VlpgInln52Ug3cg=
+	t=1773536054; cv=none; b=g5DeAIBWQPekMhESSfLL2x5FFan/LLIirBrdYStuRT0r3Yzl6RyngmVRhbRID3cwUUwkx4qaPxRN82XkToVuFargZqrilh8w28eOBpWnA6FvM4CVx37nEZPX1KR+Scf5PFBuPlyk/25AHDWWOrltRG02KkYXeIDwrzZI9KGITaA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773521650; c=relaxed/simple;
-	bh=CRsU+6ICttD3gKex3EXog5ECo86CbY1P5lEAfUFwBzo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IQtpjnvWkJVBiVwLn7rJjM+4DLMVjniel5Ex/g7TIHnP5uMBpZzuSEta5/RTFw4Qo9ULk7I25i3WDXjuiMrnFH3Fd6cVqjZEmBjirEP1nH+Ssr3yPeiKFz0TxbhHXwxV7ZNDtea2mlhDUuwBOLjvkNJrbYkHYk+Xsnb1FA2YXCU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.216.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
+	s=arc-20240116; t=1773536054; c=relaxed/simple;
+	bh=EbJfoGizSDqnToWG5pqJ4vK5GpJKC7funQjd8qKdPsQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=M3fU+q/4ob2OJ9y2PH8fqnFGSQZy550ssX7bfvwtDijbkPGH/q+nZz5wX8y2b3BulKOiQS6x22G6GBAFnUef2bHeO3chorl4D9bIDjSFHB6t/Fd6DFWex+tlxHr3r0Tp+WqGlB5f7YdhifprvqzyBK/7H4G3mrXxiKhsZqBVWtM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LhJKHx5c; arc=none smtp.client-ip=209.85.218.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-35b88a4f123so332232a91.1
-        for <linux-pci@vger.kernel.org>; Sat, 14 Mar 2026 13:54:09 -0700 (PDT)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LhJKHx5c"
+Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-b941762394aso419211066b.1
+        for <linux-pci@vger.kernel.org>; Sat, 14 Mar 2026 17:54:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773536051; x=1774140851; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:subject:cc:to
+         :from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=b8IPBmLzpHl1fBgoj067M6aZlp8V7A3p5efisTtSM1g=;
+        b=LhJKHx5c2AzjVwvP1FXMLoDuJ0a4CdKZdY+pptf9+5dR0QcjwP2v6glMdO3Ti05ni2
+         qtjAFXLLk/Htx6Nxa3+iya76h012+Z98G9t1SJslK4BbNQAuRkinee1WSqZ9XJd7OfyV
+         swfB2VTghyetNd6J7N8q5h0p6F3KLXr64zrDudcVvZMNPqH6vJqgTeHY/YquUWlT+bev
+         tg5fT+XpQPC75OAEic0M/q1yuMSC6H1heZCXO4z4sSUCrbY1cdXvMTGNiBfM0TjRi9O1
+         YA/LXlwUexAtKPURe37TYFKdJSMERgATHzY+b4J7dCu40XEB0U7xti3wBLVTYsiDs1vq
+         bkHA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773521649; x=1774126449;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=oAGPFAKjNzDeumSjC72VjFRaDAA9KGhJNKncxPl46fM=;
-        b=PkSlYfTFgV0IF0kU48DNe1U0vW/iBQaAYMS4ONFz570RVnxp+mLvVC+7q+5h2Vo5aU
-         +Ri3Ro8Jo928SJ9hCATHeD1MR0jpB1skivCA31GJ+AhwGMYmnud1zB3gNL63COOLtf1z
-         lSL+sWRcUD2JB6vBt4exIk3cYfktBWdn9oYvVbB1V/XKRBYexag+QYvp0GlH/zsETsXU
-         nzfYQCU0mhem5AEOPPxFeYGq8hNT65FKqKSmFN3V1Uw/WE0dK9dttLNhs7uii/O/UHRs
-         Aqi0O4iUzUl843MxFykfglO61lNfrTpX7oCAhpKpgk8rlzAxC3nHYzBRE/fkKmzORKlO
-         4lvQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVaAJ57UdX0i0h85yZ7qUEWuRhrP5NtZRs5ih+u/mSoez+s4aIK8AwjhaSz2o6Qn8Ya1zvUcPSUkwM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz9TFc1SaIG7NGLUo74HACXasRAr01LmYGn5Z59b+DQDUe1XlaM
-	rtJ90ThuazjGHkr/rkrjSSHETGF3IK5J+cTeFna9jcJgWU3yK1nmUa1I
-X-Gm-Gg: ATEYQzzi0WvMqiVfdN6u6eTbfupXtIewbGqd2TKpw0dn7MfVdAFp8HLFnr34+hFGssS
-	wi4tDsjzx8Xdzt5f3I3j78XgqkBiy9jY3W77UqBdR7AxholYEVtDMDG7xJz04fIoQ878KLbIXCp
-	8fXur5bgOFqXKD8tnjGy6XIJ3Z5agLoJh80OpGSesI0DkDzEwA3RLb2YJxHmbPtv7HpD6ch5ukH
-	bRtHAZ2eftLc//536BVbwiKpM73ZPNbZoMwTa1pQIciOytiYC+wSyM/XDA66jE546tWENmBFRrh
-	48JG4QCL3Kd9CDn+U1Jj7kjHg8K/46oeVW6gP2NxctOd3Ex9DWO/StAq8rIay2oEmWKQnvLsZ2Q
-	XiN4os347hN9HLnGyyEovrlHg1jDBU5sy+dhEvTZJKb3ASlY5/epbZkCNp+/s6ATL8qkeQuOlZy
-	SEbDMAC8a6ISVHtQm5IEHBW/bH91KAdbyIMjm8ikouQ6MYQJsKeslSdUPHEdiysLhN/ND4dVO3Z
-	tIh8M37iElj0bkZWDLCF2f64O1ygfQ9d+WPKi+xC7nFrfRD/d4=
-X-Received: by 2002:a17:90b:1c11:b0:356:7025:56c7 with SMTP id 98e67ed59e1d1-35a21e9ef5amr6144454a91.5.1773521648721;
-        Sat, 14 Mar 2026 13:54:08 -0700 (PDT)
-Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-35b9230f2fasm1139953a91.9.2026.03.14.13.54.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 14 Mar 2026 13:54:08 -0700 (PDT)
-Date: Sun, 15 Mar 2026 05:54:07 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To: lirongqing <lirongqing@baidu.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: sysfs: Suppress FW_BUG warning when NUMA node
- already matches
-Message-ID: <20260314205407.GB672783@rocinante>
-References: <20260313050826.2126-1-lirongqing@baidu.com>
+        d=1e100.net; s=20251104; t=1773536051; x=1774140851;
+        h=content-transfer-encoding:mime-version:message-id:subject:cc:to
+         :from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=b8IPBmLzpHl1fBgoj067M6aZlp8V7A3p5efisTtSM1g=;
+        b=fHnGXYB/t2dKRQ30cYkXv/txmrcC+H3RcEHMZ34MTHV0Ap7yLpHI7ham/4o9WddJwX
+         qYcrNbtcbB9C1ooxkuJdvttETaNB6y94Dw8QUj5o3fP4tyrlcnl9c962DeIJSeK2HNC/
+         PUGnJeRgbF5ag9swYYCdzYOc2nRoAJFPHQQ7cLBkc5/UnDRzeQE5x4yGRFF111ZjBa50
+         7V6c6peg/ZGFwid4idr1wbJjRDUKQcFXzEdGAknocnhsvZqnwuMP8t+ZhCIyZzM38xui
+         Ll+VHQcfWAKyy1/wTRZsLLwxWhfAq8bmPLMUuHdpJUK8Rl7d2qkgjwdjy6jeZQRfAtJA
+         QPVg==
+X-Gm-Message-State: AOJu0YwLqKy4QBrP9zWcXLHMb31hUjMjQFKSNBRrTe0zab9HZe99aWfu
+	NCxzNELAMyKq21Nrj3+ozaG+V/9VPzkNHuUKqiZ4cX0nZW1ApQ+fj1i+t3MOhw==
+X-Gm-Gg: ATEYQzx061HPQINVqxvf7n7XYalnePVRPzd8s6qH8GpZxpDwwdm0phdE9EttE8GToEP
+	HWTFqwKk1opwe0C877dlQBdHu8bPYTIGbWil1RkBWSnw9xXFndmAaoxW69pZ2AJ+HKdhTFDcDYO
+	T1Q23+D4VmyEf4jH0mxjkMnLn93eumak3buvxdu4y2K3z1Fo2K6eRuJY4YSaIpmlRVkT+/Wkm7B
+	t2y6Me7GAwMjj4/9ACWSHKmFVI22BLM80+zYK2qMBvOkym8PY/YXtQ2LCdbNORNGzJRT3iaTj1i
+	zRB04wkzsU+4Ow+VwUQZNzkkRGqFU587dlU7yIv5SgrYJ9K1ie3/rBUALsC4j4VlfP53NdNR3It
+	X1xNU4WkHn32XPVcSaunBK7/CUzWXU52NxsvdmX2mJxMstlsQhdpq4c1iMbjFDBzKyPSN23OqPf
+	M2V4pVZcfUWjJAd/dgGZ1rLBJEtDT6HFkvkrI=
+X-Received: by 2002:a17:907:3d87:b0:b73:4d06:bc8 with SMTP id a640c23a62f3a-b97651e70ebmr452909766b.53.1773536051022;
+        Sat, 14 Mar 2026 17:54:11 -0700 (PDT)
+Received: from foxbook (bfk214.neoplus.adsl.tpnet.pl. [83.28.48.214])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b97846174cfsm236954366b.22.2026.03.14.17.54.10
+        (version=TLS1_2 cipher=AES128-SHA bits=128/128);
+        Sat, 14 Mar 2026 17:54:10 -0700 (PDT)
+Date: Sun, 15 Mar 2026 01:54:06 +0100
+From: Michal Pecio <michal.pecio@gmail.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Subject: USB controller broken by zero cacheline size in PCIe to PCI bridge
+Message-ID: <20260315015406.533684d1.michal.pecio@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260313050826.2126-1-lirongqing@baidu.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hello,
+Hi,
 
-> The numa_node sysfs interface allows users to manually override a PCI
-> device's NUMA node assignment. Currently, every write triggers a
-> FW_BUG warning and taints the kernel, even when writing the same value
-> that is already set.
+I have here a PCIe card with PEX8112 PCIe to PCI bridge and uPD720101
+PCI USB controller (OHCI+EHCI) behind the bridge.
 
-So, this works as intended, then?
+The card works in one machine and gets sluggish and barely functional
+in another one. Hoping for some PCI misconfiguration, I ran lspci -vv
+on both machines for comparison (diff pasted below).
 
-What makes multiple writes to this sysfs attribute, if you don't mind me
-asking?  Do you have some tool that does this?  Some automation?
+There are surprisingly many differences, so I started to tweak with
+setpci on live system until I got it to work after setting
+CACHE_LINE_SIZE=10 on the bridge. The original value was zero.
 
-Especially, that you seem to be writing the same value over and over.
+I rebooted and confirmed that this alone is sufficient, and changing
+back to zero immediately breaks the controller again.
 
->  	if (node != NUMA_NO_NODE && !node_online(node))
->  		return -EINVAL;
->  
-> -	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
-> -	pci_alert(pdev, FW_BUG "Overriding NUMA node to %d.  Contact your vendor for updates.",
-> -		  node);
-> +	if (node != dev->numa_node) {
-> +		add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
-> +		pci_alert(pdev, FW_BUG "Overriding NUMA node to %d.  Contact your vendor for updates.",
-> +			  node);
-> +		dev->numa_node = node;
-> +	}
+I know nothing about PCI, so I wonder if this result makes sense and
+what may be causing the "bad" system to end up in such sorry state?
 
-You could invert the check and make it an early return where you just
-return count.  Would save on the new indent level.
+Thanks,
+Michal
 
-Thank you!
 
-	Krzysztof
+--- bad
++++ good
+
+-07:00.0 PCI bridge: PLX Technology, Inc. PEX8112 x1 Lane PCI Express-to-PCI Bridge (rev aa) (prog-if 00 [Normal decode])
+-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
++02:00.0 PCI bridge: PLX Technology, Inc. PEX8112 x1 Lane PCI Express-to-PCI Bridge (rev aa) (prog-if 00 [Normal decode])
++	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+ 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+-	Latency: 0
+-	Interrupt: pin A routed to IRQ 28
+-	IOMMU group: 2
+-	Bus: primary=07, secondary=08, subordinate=08, sec-latency=0
++	Latency: 0, Cache Line Size: 64 bytes
++	Interrupt: pin A routed to IRQ 18
++	Bus: primary=02, secondary=03, subordinate=03, sec-latency=64
+ 	I/O behind bridge: [disabled] [16-bit]
+-	Memory behind bridge: d0b00000-d0bfffff [size=1M] [32-bit]
++	Memory behind bridge: fe900000-fe9fffff [size=1M] [32-bit]
+ 	Prefetchable memory behind bridge: [disabled] [32-bit]
+ 	Secondary status: 66MHz+ FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+-	BridgeCtl: Parity- SERR+ NoISA- VGA- VGA16- MAbort- >Reset- FastB2B-
++	BridgeCtl: Parity+ SERR+ NoISA+ VGA- VGA16- MAbort- >Reset- FastB2B-
+ 		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+ 	Capabilities: [40] Power Management version 2
+ 		Flags: PMEClk- DSI- D1+ D2- AuxCurrent=0mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
+ 		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+ 	Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+ 		Address: 0000000000000000  Data: 0000
+ 	Capabilities: [60] Express (v1) PCI-Express to PCI/PCI-X Bridge, IntMsgNum 0
+ 		DevCap:	MaxPayload 128 bytes, PhantFunc 0
+-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE- SlotPowerLimit 0W TEE-IO-
++			ExtTag- AttnBtn- AttnInd- PwrInd- RBE- SlotPowerLimit 25W TEE-IO-
+ 		DevCtl:	CorrErr- NonFatalErr- FatalErr- UnsupReq-
+ 			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop- BrConfRtry-
+ 			MaxPayload 128 bytes, MaxReadReq 512 bytes
+ 		DevSta:	CorrErr- NonFatalErr+ FatalErr- UnsupReq+ AuxPwr- TransPend-
+ 		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <1us, L1 <16us
+ 			ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
+-		LnkCtl:	ASPM Disabled; RCB 64 bytes, LnkDisable- CommClk-
++		LnkCtl:	ASPM Disabled; RCB 64 bytes, LnkDisable- CommClk+
+ 			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+ 		LnkSta:	Speed 2.5GT/s, Width x1
+ 			TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
+ 	Capabilities: [100 v1] Power Budgeting <?>
+ 
+-08:00.0 USB controller: NEC Corporation OHCI USB Controller (rev 43) (prog-if 10 [OHCI])
++03:00.0 USB controller: NEC Corporation OHCI USB Controller (rev 43) (prog-if 10 [OHCI])
+ 	Subsystem: NEC Corporation USB Controller
+ 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+ 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+-	Latency: 64 (250ns min, 10500ns max)
+-	Interrupt: pin A routed to IRQ 28
+-	IOMMU group: 2
+-	Region 0: Memory at d0b02000 (32-bit, non-prefetchable) [size=4K]
++	Latency: 64 (250ns min, 10500ns max), Cache Line Size: 64 bytes
++	Interrupt: pin A routed to IRQ 18
++	Region 0: Memory at fe9ff000 (32-bit, non-prefetchable) [size=4K]
+ 	Capabilities: [40] Power Management version 2
+ 		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold-)
+ 		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+ 	Kernel driver in use: ohci-pci
+ 	Kernel modules: ohci_pci
+ 
+-08:00.1 USB controller: NEC Corporation OHCI USB Controller (rev 43) (prog-if 10 [OHCI])
++03:00.1 USB controller: NEC Corporation OHCI USB Controller (rev 43) (prog-if 10 [OHCI])
+ 	Subsystem: NEC Corporation USB Controller
+ 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+ 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+-	Latency: 64 (250ns min, 10500ns max)
+-	Interrupt: pin B routed to IRQ 55
+-	IOMMU group: 2
+-	Region 0: Memory at d0b01000 (32-bit, non-prefetchable) [size=4K]
++	Latency: 64 (250ns min, 10500ns max), Cache Line Size: 64 bytes
++	Interrupt: pin B routed to IRQ 19
++	Region 0: Memory at fe9fe000 (32-bit, non-prefetchable) [size=4K]
+ 	Capabilities: [40] Power Management version 2
+ 		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold-)
+ 		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+ 	Kernel driver in use: ohci-pci
+ 	Kernel modules: ohci_pci
+ 
+-08:00.2 USB controller: NEC Corporation uPD72010x USB 2.0 Controller (rev 04) (prog-if 20 [EHCI])
++03:00.2 USB controller: NEC Corporation uPD72010x USB 2.0 Controller (rev 04) (prog-if 20 [EHCI])
+ 	Subsystem: NEC Corporation uPD72010x USB 2.0 Controller
+ 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+ 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+-	Latency: 68 (4000ns min, 8500ns max), Cache Line Size: 64 bytes
+-	Interrupt: pin C routed to IRQ 44
+-	IOMMU group: 2
+-	Region 0: Memory at d0b00000 (32-bit, non-prefetchable) [size=256]
++	Latency: 64 (4000ns min, 8500ns max), Cache Line Size: 64 bytes
++	Interrupt: pin C routed to IRQ 16
++	Region 0: Memory at fe9fdc00 (32-bit, non-prefetchable) [size=256]
+ 	Capabilities: [40] Power Management version 2
+ 		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold-)
+ 		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME+
+ 	Kernel driver in use: ehci-pci
+ 	Kernel modules: ehci_pci
