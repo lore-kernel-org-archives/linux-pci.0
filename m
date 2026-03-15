@@ -1,236 +1,123 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 949E033A6F8
-	for <linux-pci@vger.kernel.org>; Sun, 15 Mar 2026 15:21:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84A6036F42E;
+	Sun, 15 Mar 2026 15:40:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773588082; cv=none; b=T8AQRUQLVzlWwgGL+63LP0H9rnioiNj0D6AKCIjVYFB8RO+hmYn7JRktC48dKm/VjPFSJ5vd1U9bhBmbm9Rg1EoU0NEwt8tfqMwlmAjl57Kphw9Eg5tJYfG8xqwZxRFC848CAnPNUFqhOLygeexLD3VUBVD5MTlbSQaaRBEndzc=
+	t=1773589247; cv=none; b=ofct6FiFklYgtmQDgk+/zzEj3N+i1Lc3lp9ZMV2XfL6Qk48Qay3K1Njde2iX+N60MwHGz03Wk8Md3cXPG8z4zmKg6FzeCnbCeSM+poAKYZbvC5UDxj6jjna59LXI69tIlcSASZEddr6usGAbAlyClNBg349egT2jusrpSer7ynk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773588082; c=relaxed/simple;
-	bh=REF9q8pJUXe0Hybnxoc1yUrXhynEfNV5c7tvO3jiwNY=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=cMPknEVzk7vgOl5ZAgWYAHytmWIT0W+LzD1xHyAFOfWrfEUXVRB/LMmtx51j50lM0SG2dBBIzJ3QzMHioi090LFxLUspTVf455A8iU3F3Jjzq0HP56EyosuIHCbg2CCt2cnZgxXLJQ9CCaGGVy2J34sGHNqvCabcnprMP7tGx9s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=f25J/0Qi; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	s=arc-20240116; t=1773589247; c=relaxed/simple;
+	bh=tLwwATaOHHazmeAE+UXJmqf7cNq6oF88RIRsYLV8Ppw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Ak7arRgK5+8BJY3QHygMttR7+LM/db5Hol2klXZBSesBShe7OZTvMerzRc3fp79wgRkdCcv+C/xt2OpE7zN/UOsk5I+l/dipKe71KzXGc6ACUaNHRw+It9E/b+WOg7i1tPaORtTBWV7ef4ahiNszOfNSnFJkfrJz/CfANEYvK5w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=QOE/sCKA; arc=none smtp.client-ip=117.135.210.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="f25J/0Qi"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id F0E2A240103
-	for <linux-pci@vger.kernel.org>; Sun, 15 Mar 2026 16:15:09 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1773587709; bh=sgwO++bG4aPgNQJKF1kMtAtpx/6QYbiP+4vzMgut6mQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:Autocrypt:Content-Type:
-	 MIME-Version:OpenPGP:From;
-	b=f25J/0Qi3bZeibYoYgC1bkuyDysnI4ZMB3rfIe5idBYn4S6jcKOKzkUXice7VNuzO
-	 jg3SPanxX/LKIygJbKDQPIWr2ns1+4nHFBl61/vAJDmAJGzi8NvuUEVk4xXY39HzN0
-	 ZbdLWiXgfHZSknpvw93shQ9Hp02EKCE1Lo/CzS8sIItsJr4P5KPEGsy7VcG+yKBbze
-	 xiBiWKv+dMDzUBz6aszt5CdJ3uILsyev4lt2iT7vKfhcYDY/DSO7zpdkFcJzhWNci8
-	 Rn/o0K8zfKgzk1wFuzNsHVQSUEBSiQcJwVcWqhvhxMS6Ulqx3ouVWqPIQAoTA7CkDf
-	 88inBxoJCwbOA==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4fYhbt0RW5z9rxB;
-	Sun, 15 Mar 2026 16:15:06 +0100 (CET)
-Message-ID: <39f1c9bb0dbde9f1b60785f8e838289c888ffdb0.camel@posteo.de>
-Subject: Re: [PATCH v3 7/7] leds: add synology microp led driver
-From: Markus Probst <markus.probst@posteo.de>
-To: Danilo Krummrich <dakr@kernel.org>, Markus Probst via B4 Relay
-	 <devnull+markus.probst.posteo.de@kernel.org>
-Cc: Lee Jones <lee@kernel.org>, Rob Herring <robh@kernel.org>, Krzysztof
- Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, Greg
- Kroah-Hartman	 <gregkh@linuxfoundation.org>, Miguel Ojeda
- <ojeda@kernel.org>, Boqun Feng	 <boqun@kernel.org>, Gary Guo
- <gary@garyguo.net>, =?ISO-8859-1?Q?Bj=F6rn?= Roy Baron
- <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, Andreas
- Hindborg	 <a.hindborg@kernel.org>, Alice Ryhl <aliceryhl@google.com>,
- Trevor Gross	 <tmgross@umich.edu>, "Rafael J. Wysocki" <rafael@kernel.org>,
- Igor Korotin	 <igor.korotin.linux@gmail.com>, Daniel Almeida
- <daniel.almeida@collabora.com>,  Bjorn Helgaas <bhelgaas@google.com>,
- Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Pavel
- Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>, Robert Moore
- <robert.moore@intel.com>, 	devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, 	rust-for-linux@vger.kernel.org,
- driver-core@lists.linux.dev, 	linux-pci@vger.kernel.org,
- linux-leds@vger.kernel.org, 	linux-acpi@vger.kernel.org,
- acpica-devel@lists.linux.dev
-Date: Sun, 15 Mar 2026 15:15:08 +0000
-In-Reply-To: <DH1YH0GO75H8.18YSW2VMKRB3C@kernel.org>
-References: <20260313-synology_microp_initial-v3-0-ad6ac463a201@posteo.de>
-	 <20260313-synology_microp_initial-v3-7-ad6ac463a201@posteo.de>
-	 <DH1YH0GO75H8.18YSW2VMKRB3C@kernel.org>
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
- keydata=mQINBGiDvXgBEADAXUceKafpl46S35UmDh2wRvvx+UfZbcTjeQOlSwKP7YVJ4JOZrVs93
- qReNLkOWguIqPBxR9blQ4nyYrqSCV+MMw/3ifyXIm6Pw2YRUDg+WTEOjTixRCoWDgUj1nOsvJ9tVA
- m76Ww+/pAnepVRafMID0rqEfD9oGv1YrfpeFJhyE2zUw3SyyNLIKWD6QeLRhKQRbSnsXhGLFBXCqt
- 9k5JARhgQof9zvztcCVlT5KVvuyfC4H+HzeGmu9201BVyihJwKdcKPq+n/aY5FUVxNTgtI9f8wIbm
- fAjaoT1pjXSp+dszakA98fhONM98pOq723o/1ZGMZukyXFfsDGtA3BB79HoopHKujLGWAGskzClwT
- jRQxBqxh/U/lL1pc+0xPWikTNCmtziCOvv0KA0arDOMQlyFvImzX6oGVgE4ksKQYbMZ3Ikw6L1Rv1
- J+FvN0aNwOKgL2ztBRYscUGcQvA0Zo1fGCAn/BLEJvQYShWKeKqjyncVGoXFsz2AcuFKe1pwETSsN
- 6OZncjy32e4ktgs07cWBfx0v62b8md36jau+B6RVnnodaA8++oXl3FRwiEW8XfXWIjy4umIv93tb8
- 8ekYsfOfWkTSewZYXGoqe4RtK80ulMHb/dh2FZQIFyRdN4HOmB4FYO5sEYFr9YjHLmDkrUgNodJCX
- CeMe4BO4iaxUQARAQABtCdNYXJrdXMgUHJvYnN0IDxtYXJrdXMucHJvYnN0QHBvc3Rlby5kZT6JAl
- QEEwEIAD4CGwMFCwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AWIQSCdBjE9KxY53IwxHM0dh/4561
- D0gUCaIZ9HQIZAQAKCRA0dh/4561D0pKmD/92zsCfbD+SrvBpNWtbit7J9wFBNr9qSFFm2n/65qen
- NNWKDrCzDsjRbALMHSO8nigMWzjofbVjj8Nf7SDcdapRjrMCnidS0DuW3pZBo6W0sZqV/fLx+AzgQ
- 7PAr6jtBbUoKW/GCGHLLtb6Hv+zjL17KGVO0DdQeoHEXMa48mJh8rS7VlUzVtpbxsWbb1wRZJTD88
- ALDOLTWGqMbCTFDKFfGcqBLdUT13vx706Q29wrDiogmQhLGYKc6fQzpHhCLNhHTl8ZVLuKVY3wTT+
- f9TzW1BDzFTAe3ZXsKhrzF+ud7vr6ff9p1Zl+Nujz94EDYHi/5Yrtp//+N/ZjDGDmqZOEA86/Gybu
- 6XE/v4S85ls0cAe37WTqsMCJjVRMP52r7Y1AuOONJDe3sIsDge++XFhwfGPbZwBnwd4gEVcdrKhnO
- ntuP9TvBMFWeTvtLqlWJUt7n8f/ELCcGoO5acai1iZ59GC81GLl2izObOLNjyv3G6hia/w50Mw9MU
- dAdZQ2MxM6k+x4L5XeysdcR/2AydVLtu2LGFOrKyEe0M9XmlE6OvziWXvVVwomvTN3LaNUmaINhr7
- pHTFwDiZCSWKnwnvD2+jA1trKq1xKUQY1uGW9XgSj98pKyixHWoeEpydr+alSTB43c3m0351/9rYT
- TTi4KSk73wtapPKtaoIR3rOFHLQXbWFya3VzLnByb2JzdEBwb3N0ZW8uZGWJAlEEEwEIADsWIQSCd
- BjE9KxY53IwxHM0dh/4561D0gUCaIO9eAIbAwULCQgHAgIiAgYVCgkICwIEFgIDAQIeBwIXgAAKCR
- A0dh/4561D0oHZEACEmk5Ng9+OXoVxJJ+c9slBI2lYxyBO84qkWjoJ/0GpwoHk1IpyL+i+kF1Bb7y
- Hx9Tiz8ENYX7xIPTZzS8hXs1ksuo76FQUyD6onA/69xZIrYZ0NSA5HUo62qzzMSZL7od5e12R6OPR
- lR0PIuc4ecOGCEq3BLRPfZSYrL54tiase8HubXsvb6EBQ8jPI8ZUlr96ZqFEwrQZF/3ihyV6LILLk
- geExgwlTzo5Wv3piOXPTITBuzuFhBJqEnT25q2j8OumGQ+ri8oVeAzx24g1kc11pwpR0sowfa5MvZ
- WrrBcaIL7uJfR/ig7FyGnTQ1nS3btf3p0v8A3fc4eUu/K2No3l2huJp3+LHhCmpmeykOhSB63Mj3s
- 3Q87LD0HE0HBkTEMwp+sD97ZRpO67H5shzJRanUaDTb/mREfzpJmRT1uuec0X2zItL7a6itgMJvYI
- KG29aJLX3fTzzVzFGPgzVZYEdhu4y53p0qEGrrC1JtKR6DRPE1hb/OdWOkjmJ75+PPLD9U5IuRd6y
- sHJWsEBR1F0wkMPkEofWsvMYJzWXx/rvTWO8N4D6HigTgBXAXNgbc3IHpHlkvKoBJptv6DRVRtIrz
- 0G0cfBY0Sm7he4N2IYDWWdGnPBZ3rlLSdj5EiBU2YWgIgtLrb8ZNJ3ZlhYluGnBJDGRqy2jC9s1jY
- 66sLA9rQZMHhJTzMyIDwweGlvMzJAcG9zdGVvLmV1PokCbQQTAQgAVxYhBIJ0GMT0rFjncjDEczR2
- H/jnrUPSBQJpa71VGxSAAAAAAAQADm1hbnUyLDIuNSsxLjExLDIsMgIbAwULCQgHAgIiAgYVCgkIC
- wIEFgIDAQIeBwIXgAAKCRA0dh/4561D0gKJD/9uOQKYlsDoQX65Gd0LiMT0C+5vXgr3VI0PHDOwcv
- 51fJ3A1vNyPZRFPGrz8+mDEXUQOF/INfnz5Tu1QHwf+iYcWcTGAN/FHgVR6ET6VBNU2hJaKhu+Ggo
- kjYyJTOvyX+3yNRUfSny0GjTjIPuPTErjqmHF+BtjXslpgwqnNMznf3lRIuUjRORupos6p3k1DndE
- 5vzUTmXSvMyXyOD2KhBl/kL76k0bHYyAQytZPag12pltrtFbA/r2phDGN2si8PooDT99bSTJjaM45
- MTAAHbHKJfvgfK41bNFD5mMtpWpL195XRtS0Nrxdg3PaYBxN5gtTG0RyZfpYRlkdEhm+jj/8RxuSG
- i/qdhRdbiI7K2IELWeQVHSNDi9JabR/UzlR4NSnhfAjRIVlRM+eFbUl8XwxwVrAkojF5IraH2qRvg
- VCmuFsHUW07FUlrDrzpjXsD73cKppoFGDCdDR0BHJepXbFLS9+AqkT+guRJlnCTg2p+TQtnbwPgKp
- Vj98JixovCl99zRYTsL2bRNU5+q8iET65VMJ1ydyNanvLd5vI/NqDkXhlXLsGmdaDTtu4R21PkToX
- dQNGrZ91M9nlIBKw8Y7c7xZ4098qX2b8JX/CxD+gC1r4C8vuA3GkhFLx+KlkON7LyiJPkrePp6Qky
- jfGillcaQOqFZ3WwVqyzG1BUfTow==
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-45toq8Rg7CNJDZyn5Jhm"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="QOE/sCKA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=yK
+	UVVhUjlpkGQZk0KJLfVIc0IIh4GAYVDGZzZ/R+NVA=; b=QOE/sCKA6e3BOJnbL5
+	PxPAN+UOnjsuZ/XQSnwq7xyS+YAJ+vHk9UQi0rGfpnN8XBJHfy4BVz1CN+JV1v84
+	3roXrOtOOmwzIhLPdv7Ks+pUNlu9TCOIt64KmXliUavV+KfCSwO3kj/6/g0L79Up
+	BtdKkXek7Q1DEQ1aOGZqhjMR4=
+Received: from zhb.. (unknown [])
+	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wBnNHnf0rZpLaiCBA--.40077S2;
+	Sun, 15 Mar 2026 23:40:16 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org
+Cc: robh@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH] PCI: bt1: Use common dw_pcie_ltssm enum for LTSSM states
+Date: Sun, 15 Mar 2026 23:40:15 +0800
+Message-Id: <20260315154015.126074-1-18255117159@163.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wBnNHnf0rZpLaiCBA--.40077S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxXFyftFW8Gr1DArWxtFyUAwb_yoW5CF4Up3
+	yrJa9IkFW2vanrA3W5tw4rXa17t3WxAFWqkr4jgw4xX3Z7K3s3KF1rZF43KFWktr1xJw17
+	Jw1fC34Sqr97W37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRDl1gUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AD0mGm20uBtBQAA3F
 
+Use the generic dw_pcie_ltssm enum from pcie-designware.h instead of
+defining private LTSSM state macros. This eliminates duplication and
+aligns the driver with common DesignWare core definitions.
 
---=-45toq8Rg7CNJDZyn5Jhm
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ drivers/pci/controller/dwc/pcie-bt1.c | 38 +--------------------------
+ 1 file changed, 1 insertion(+), 37 deletions(-)
 
-On Fri, 2026-03-13 at 22:00 +0100, Danilo Krummrich wrote:
-> On Fri Mar 13, 2026 at 8:03 PM CET, Markus Probst via B4 Relay wrote:
-> > +impl Command {
-> > +    fn write(self, dev: &platform::Device<Bound>) -> Result {
-> > +        // SAFETY: Since we have no of and no acpi match table, we ass=
-ume this is a mfd sub-device
-> > +        // and our parent is a serial device bus device, bound to the =
-synology microp core driver.
-> > +        let parent =3D unsafe { dev.as_ref().parent_unchecked::<serdev=
-::Device<Bound>>() };
->=20
-> Despite being accurate description, "assume" is not what you want to read=
- for a
-> safety justification. :)
->=20
-> We don't want to directly access the serial device from this driver. Inst=
-ead,
-> there should be an abstraction layer of the resource you are accessing.
->=20
-> If this would be I2C or SPI you would request the regmap of the parent at=
- this
-> point, e.g.
->=20
-> 	dev.parent().regmap("led_registers")
->=20
-> Now, this is a serial device, but regmap still works perfectly fine for t=
-his
-> case. It even allows you to ensure from the MFD driver to restrict the LE=
-D
-> driver of sending commands that are not LED specific by exposing a LED sp=
-ecific
-> regmap. Additionally, if you need additional locking etc. it can all be d=
-one
-> within the regmap implementation, so you entirely avoid custom APIs.
->=20
-> I'm not sure how common regmap is for serial devices to be honest, but
-> apparently there are drivers doing this and I don't really see a reason a=
-gainst
-> it.
->=20
-> For instance, there is drivers/iio/imu/bno055/, which is a chip that work=
-s on
-> both serial and I2C busses and fully abstracts this fact with regmap.
-How would this work with handling incoming data?
+diff --git a/drivers/pci/controller/dwc/pcie-bt1.c b/drivers/pci/controller/dwc/pcie-bt1.c
+index 1340edc18d12..429fab073bba 100644
+--- a/drivers/pci/controller/dwc/pcie-bt1.c
++++ b/drivers/pci/controller/dwc/pcie-bt1.c
+@@ -41,42 +41,6 @@
+ 
+ #define BT1_CCU_PCIE_PMSC			0x148
+ #define BT1_CCU_PCIE_LTSSM_STATE_MASK		GENMASK(5, 0)
+-#define BT1_CCU_PCIE_LTSSM_DET_QUIET		0x00
+-#define BT1_CCU_PCIE_LTSSM_DET_ACT		0x01
+-#define BT1_CCU_PCIE_LTSSM_POLL_ACT		0x02
+-#define BT1_CCU_PCIE_LTSSM_POLL_COMP		0x03
+-#define BT1_CCU_PCIE_LTSSM_POLL_CONF		0x04
+-#define BT1_CCU_PCIE_LTSSM_PRE_DET_QUIET	0x05
+-#define BT1_CCU_PCIE_LTSSM_DET_WAIT		0x06
+-#define BT1_CCU_PCIE_LTSSM_CFG_LNKWD_START	0x07
+-#define BT1_CCU_PCIE_LTSSM_CFG_LNKWD_ACEPT	0x08
+-#define BT1_CCU_PCIE_LTSSM_CFG_LNNUM_WAIT	0x09
+-#define BT1_CCU_PCIE_LTSSM_CFG_LNNUM_ACEPT	0x0a
+-#define BT1_CCU_PCIE_LTSSM_CFG_COMPLETE		0x0b
+-#define BT1_CCU_PCIE_LTSSM_CFG_IDLE		0x0c
+-#define BT1_CCU_PCIE_LTSSM_RCVR_LOCK		0x0d
+-#define BT1_CCU_PCIE_LTSSM_RCVR_SPEED		0x0e
+-#define BT1_CCU_PCIE_LTSSM_RCVR_RCVRCFG		0x0f
+-#define BT1_CCU_PCIE_LTSSM_RCVR_IDLE		0x10
+-#define BT1_CCU_PCIE_LTSSM_L0			0x11
+-#define BT1_CCU_PCIE_LTSSM_L0S			0x12
+-#define BT1_CCU_PCIE_LTSSM_L123_SEND_IDLE	0x13
+-#define BT1_CCU_PCIE_LTSSM_L1_IDLE		0x14
+-#define BT1_CCU_PCIE_LTSSM_L2_IDLE		0x15
+-#define BT1_CCU_PCIE_LTSSM_L2_WAKE		0x16
+-#define BT1_CCU_PCIE_LTSSM_DIS_ENTRY		0x17
+-#define BT1_CCU_PCIE_LTSSM_DIS_IDLE		0x18
+-#define BT1_CCU_PCIE_LTSSM_DISABLE		0x19
+-#define BT1_CCU_PCIE_LTSSM_LPBK_ENTRY		0x1a
+-#define BT1_CCU_PCIE_LTSSM_LPBK_ACTIVE		0x1b
+-#define BT1_CCU_PCIE_LTSSM_LPBK_EXIT		0x1c
+-#define BT1_CCU_PCIE_LTSSM_LPBK_EXIT_TOUT	0x1d
+-#define BT1_CCU_PCIE_LTSSM_HOT_RST_ENTRY	0x1e
+-#define BT1_CCU_PCIE_LTSSM_HOT_RST		0x1f
+-#define BT1_CCU_PCIE_LTSSM_RCVR_EQ0		0x20
+-#define BT1_CCU_PCIE_LTSSM_RCVR_EQ1		0x21
+-#define BT1_CCU_PCIE_LTSSM_RCVR_EQ2		0x22
+-#define BT1_CCU_PCIE_LTSSM_RCVR_EQ3		0x23
+ #define BT1_CCU_PCIE_SMLH_LINKUP		BIT(6)
+ #define BT1_CCU_PCIE_RDLH_LINKUP		BIT(7)
+ #define BT1_CCU_PCIE_PM_LINKSTATE_L0S		BIT(8)
+@@ -108,7 +72,7 @@
+ #define BT1_CCU_PCIE_LTSSM_LINKUP(_pmsc) \
+ ({ \
+ 	int __state = FIELD_GET(BT1_CCU_PCIE_LTSSM_STATE_MASK, _pmsc); \
+-	__state >= BT1_CCU_PCIE_LTSSM_L0 && __state <= BT1_CCU_PCIE_LTSSM_L2_WAKE; \
++	__state >= DW_PCIE_LTSSM_L0 && __state <= DW_PCIE_LTSSM_L2_WAKE; \
+ })
+ 
+ /* Baikal-T1 PCIe specific control registers */
 
-For example, once the power button on the NAS device is pressed, the
-serdev device would receive a `0x30` byte.
+base-commit: 1c9982b4961334c1edb0745a04cabd34bc2de675
+-- 
+2.34.1
 
-Regmap seems like it can only do read and write after it has been
-requested. No event handling.
-
-Thanks
-- Markus Probst
-
->=20
-> In Rust a regmap will probably become a backend of the generic I/O
-> infrastructure we are working on, which will also allow you to use the
-> register!() infrastructure, etc.
->=20
-> register!() and some other generic I/O improvements will land this cycle,=
- I/O
-> projections are more likely to land next cycle.
->=20
-> > +        parent.write_all(
-> > +            match self {
-> > +                Self::Power(State::On) =3D> &[0x34],
-> > +                Self::Power(State::Blink) =3D> &[0x35],
-> > +                Self::Power(State::Off) =3D> &[0x36],
-> > +
-> > +                Self::Status(_, State::Off) =3D> &[0x37],
-> > +                Self::Status(StatusLedColor::Green, State::On) =3D> &[=
-0x38],
-> > +                Self::Status(StatusLedColor::Green, State::Blink) =3D>=
- &[0x39],
-> > +                Self::Status(StatusLedColor::Orange, State::On) =3D> &=
-[0x3A],
-> > +                Self::Status(StatusLedColor::Orange, State::Blink) =3D=
-> &[0x3B],
-> > +
-> > +                Self::Alert(State::On) =3D> &[0x4C, 0x41, 0x31],
-> > +                Self::Alert(State::Blink) =3D> &[0x4C, 0x41, 0x32],
-> > +                Self::Alert(State::Off) =3D> &[0x4C, 0x41, 0x33],
-> > +
-> > +                Self::Usb(State::On) =3D> &[0x40],
-> > +                Self::Usb(State::Blink) =3D> &[0x41],
-> > +                Self::Usb(State::Off) =3D> &[0x42],
-> > +            },
-> > +            serdev::Timeout::Max,
-> > +        )?;
-> > +        Ok(())
-> > +    }
-> > +}
-
---=-45toq8Rg7CNJDZyn5Jhm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAmm2zO0bFIAAAAAABAAO
-bWFudTIsMi41KzEuMTEsMiwyAAoJEDR2H/jnrUPSzccP/it9V573n3U1jcC4RcTa
-9IFxrNPzoebFdIMHxKBUjOO9heuP0fbfjWPqfiMhh2qpSW8CaLIthb/TiC3A5M/N
-TBU75aukVqgj9+1j9X102R6yXBNKoB//rXylbcTMkhLVqzlpsEXhZmGokoV88qbi
-jEFf+yTsw5I0+D9jBjJxUIRHsim5iUZqhSf2tVXncSG7h3wvVWun3hyZ4B3N4f1V
-PYIicBAm0+l2LfAybpdjytUTrh0rKAzHvuiYP1XytdIdXOf+lskmSTvYGC9mZhkz
-uWZE/+XcOV8mqVelKxh5LsQjepKeVYRCFZzLmMP/7ZHuzV6QlkSJ709hakmxBtNL
-IS+vnsccyBw45AkKqFVv0Jyg1XVIc6bM5JyKtxv63LeIeHomsvMz/+tjqiTX+B0k
-XbQB+wNSh+hO3gVdkufG6G4WMFOEtCFdohQRVrk86GPqn+rDRuxnrkMvQjhQpfpN
-sZzf9sAFMreijXDYz+HLJSDze5NvwLaWAN6JkUGU8tzzyW4ZQpoPyFff3iV273kL
-lnn/3YP8I0tFASZwXfJE7WAJPnhurh4Fj6edlafDgRM5YwbGeoTSzlvn7SG1Bm7S
-/kPoCWfVaqaslvWua7bckgc+tLx1wVH1ekKru3V18uWmLWRJkCa/qHjelhqNORj2
-0aQlvQALSlHo9UwFPjaVndG8
-=ltTU
------END PGP SIGNATURE-----
-
---=-45toq8Rg7CNJDZyn5Jhm--
