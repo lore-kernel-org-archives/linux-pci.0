@@ -1,74 +1,100 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEB96286A9;
-	Sun, 15 Mar 2026 00:57:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C037C20C038;
+	Sun, 15 Mar 2026 10:09:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773536223; cv=none; b=TNWp3atuEbtAZQdVpnBSY0CCG/H2UuN6x3GrZruXuiZ51xdp3fCKixS0q3SUGL2fV8QJ+LWtXcHDPXpV25mxIn9YX/JgiDw20esh1f/9+xegeknODFdcpkesqWWwkT10pjseRWqsZPIQOFXxjF/qDHq7mYgoBtlo6JXFACz+ByU=
+	t=1773569397; cv=none; b=N3t7ohVN7UpZIEYbZihuNZEc9hwE6Egb/7H84SEdicgYItImu5MHucgq481Hy+baPFMPRchT491EoffgUY/igDx3tYTKs1aPQEVKh44XHzbqGcus5jCtc5vLQUnLg9+cT/xhKDz2Ib5W8I+4iGBU7WBvian9/bLrClDw+FPPhnQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773536223; c=relaxed/simple;
-	bh=i/BnzbuVzFzJxCHZNVxxZgr4hfknOfVB6loqPoj5NOo=;
-	h=Mime-Version:Content-Type:Date:Message-Id:To:From:Subject:Cc:
-	 References:In-Reply-To; b=GY+Fn128y/tHLPdXOsJzRmGfTt6qg5gbIZ55lr3/PySUBDCjz+c8Cy5i5NZhDCN5OdNNUYebeI1ybHbKO9IxBxPhe6cZsOJoVf1DH0helQ6ZH8oeVSJ3uoayj5Uw3tzbRKc3Ybu7Ima4ycDqt+vG0t/4WvKqTUBcIk5NouNTIwk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ms3r0nLU; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773569397; c=relaxed/simple;
+	bh=xPSA+uKV1s9OI288Gn91ZJ/8IVLEIe3Pxg7Ofp0JPig=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=e/j0Nh2hpn4KIuhIur3Z/o0v0MQV8FyUtKFiwPZMQnixU4c1PQULw1y+7n5UJ+9Va+m05Qlalh42xQK8M3Qc5d2RVSZafkPaOP0VOThoBK9RxegnqI/PadyGo9ZD5TXzrarbZPYFD2e7alebfycUc6IHfPy+oidPAkkrgNz4muU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dP8lEyXD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ms3r0nLU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA1B7C116C6;
-	Sun, 15 Mar 2026 00:56:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dP8lEyXD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B0A8C4CEF7;
+	Sun, 15 Mar 2026 10:09:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773536223;
-	bh=i/BnzbuVzFzJxCHZNVxxZgr4hfknOfVB6loqPoj5NOo=;
-	h=Date:To:From:Subject:Cc:References:In-Reply-To:From;
-	b=ms3r0nLUewqMCfoDMNqsbXybV25i7V5+v4nzm/6KOnjmkY7jaR5ZQveYb24Lk+WnB
-	 DpL3cLDQH6c61L+msi17gIh5hAPLYAZ9i4TC8/HWFiZHlTK2iLFfffG/DyWa1R5tWe
-	 FMD4NE4OniyY2kd6ViF0JRLiLgYb8oe8Ea+8IzWWwoFUPgHMQAhRsaOPBEEebTs1Jg
-	 zRMaDtf3B/o4cEC2BTIbbhVuVKcODrt6AYPrjWE/AqrPdjp29hE4PHqZbW5IchTmOr
-	 k8J7auQCA/40u73dWt1pFLG9RmoI2g94o52kGL9o62JvcIpznVaAbygJ89RSfQr/bH
-	 qH/I0d/hP2Edw==
+	s=k20201202; t=1773569397;
+	bh=xPSA+uKV1s9OI288Gn91ZJ/8IVLEIe3Pxg7Ofp0JPig=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=dP8lEyXD59oUDLuPc9WQJKXUSm3/OWt+risr1P0jrLOUST7qsjvJQpzW9e+AQ0Fb0
+	 7zzTgkRWXwFhqxkp7vSwfKSt2vksnxL4KtLET6cMIDlWgg1F6Q/9GlCReAPrly0VLp
+	 J4e5ozmrfO7QtoPPcd0W1SVxlQnmHznk49BJiGTO0ISEBLgxwZxtU+pdU+fIIS1F2G
+	 kZLys8XJI0sG9oeLQTucwcCHduC39geteloYIeLPrl6vhVKtottGjvnCHn9YTG8sr9
+	 aF6a+JcnR6U/+NC/2lszK6x0L6t4qn21lVA4TQ3Qv/UxF50i4s3bWAj94r7Uj2xSkQ
+	 aeuiN/KfT+Ggg==
+Date: Sun, 15 Mar 2026 15:39:45 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: qcom: Advertise hotplug with no command completion
+ support
+Message-ID: <t66kmmr22z5anjhhez3mwfbmy64pz5246e4oepvpwf5j5l3u5o@i3gsh22x4dst>
+References: <20260314-hotplug-v1-1-96ac87d93867@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Sun, 15 Mar 2026 01:56:57 +0100
-Message-Id: <DH2Y4ARETP73.9I0ZYYM0VBDI@kernel.org>
-To: "Alexandre Courbot" <acourbot@nvidia.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-Subject: Re: [PATCH v2 0/6] rust: io: turn IoCapable into a functional trait
-Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Miguel Ojeda" <ojeda@kernel.org>, "Boqun
- Feng" <boqun.feng@gmail.com>, "Gary Guo" <gary@garyguo.net>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>, "Zhi Wang"
- <zhiw@nvidia.com>, "Lyude Paul" <lyude@redhat.com>, "Eliot Courtney"
- <ecourtney@nvidia.com>
-References: <20260206-io-v2-0-71dea20a06e6@nvidia.com>
-In-Reply-To: <20260206-io-v2-0-71dea20a06e6@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260314-hotplug-v1-1-96ac87d93867@oss.qualcomm.com>
 
-On Fri Feb 6, 2026 at 7:00 AM CET, Alexandre Courbot wrote:
+On Sat, Mar 14, 2026 at 07:26:34AM +0530, Krishna Chaitanya Chundru wrote:
+> QCOM PCIe controller advertise hotplug capability in hardware but do not
+> support hotplug command completion. As a result, the PCI core registers
+> the pciehp service and issues hotplug commands that never gets completions,
+> leading to repeated timeout warnings and multi-second delays during boot
+> and suspend/resume.
+> 
+> Commit a54db86ddc153 ("PCI: qcom: Do not advertise hotplug capability for
+> IPs v2.7.0 and v1.9.0") avoided these timeouts by clearing the Hot-Plug
+> Capability bit entirely, which also disabled all hotplug functionality.
+> 
 
-I've now picked this up in the topic/io topic branch [1]; it will soon be m=
-erged
-into driver-core-next and drm-rust-next, thanks!
+Just some background: I added commit a54db86ddc153 to disable hotplug for Qcom
+PCIe Root Ports since we were seeing completion timeouts for hotplug commands
+and also the PRSNT# signal was not exposed on any of our SoCs. After checking
+with some internal folks I learned that hotplug functionality was not exercised
+in Linux. So these facts made me believe that hotplug was not suppored at all.
 
-> Alexandre Courbot (6):
->       rust: io: turn IoCapable into a functional trait
->       rust: io: mem: use non-relaxed I/O ops in examples
->       rust: io: provide Mmio relaxed ops through a wrapper type
+But it turned out that the Qcom Root Ports support "Data Link Layer State
+Changed Events" such as DL_Up/Down events.
 
-    [ Use kernel import style in examples. - Danilo ]
+> Instead of disabling hotplug, mark these controllers as not supporting
+> command completion by setting the No Command Completed Support (NCCS) bit
+> in the Slot Capabilities register. This prevents the PCI hotplug driver
+> from waiting for commands completion while still allowing hotplug-related
+> functionality such as Data Link Layer state change events.
+> 
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-qcom.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index 67a16af69ddc75fca1b123e70715e692a91a9135..a2924610f3625f2456a491473c135840e31bafb9 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -358,7 +358,7 @@ static void qcom_pcie_clear_hpc(struct dw_pcie *pci)
+>  	dw_pcie_dbi_ro_wr_en(pci);
+>  
+>  	val = readl(pci->dbi_base + offset + PCI_EXP_SLTCAP);
+> -	val &= ~PCI_EXP_SLTCAP_HPC;
+> +	val |= PCI_EXP_SLTCAP_NCCS;
 
->       rust: io: remove legacy relaxed accessors of Mmio
->       rust: pci: io: remove overloaded Io methods of ConfigSpace
->       rust: io: remove overloaded Io methods of Mmio
+Are you sure that this is the only non-supported capability? What about
+Attention, Presence, Power Fault, MRL etc...?
 
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/driver-core/driver-core=
-.git/log/?h=3Dtopic/io
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
