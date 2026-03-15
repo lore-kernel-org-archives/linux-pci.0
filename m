@@ -1,237 +1,276 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010022.outbound.protection.outlook.com [52.101.85.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEA9033A701
-	for <linux-pci@vger.kernel.org>; Sun, 15 Mar 2026 11:55:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773575712; cv=none; b=qkJbEHVw59vFWhpVcLHhFMWfszHv5n5Lu+HWnCdLQk3xKGb8m4qNY3kO3ZUHmir9k+6ZGgrWx5TlC07WHRzjhMI1EdJmz09YNLkCwWGRTAGatnX3iF9g9E/48Vb30ue2HxufHjGq6NtK1W9JeJIOSz9FlFU823Rjkb9Fq1lZ+0k=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773575712; c=relaxed/simple;
-	bh=bcZKlzzXwwY0EJtmDoUOqgBEwQ5NCQTilsLXeIa/wss=;
-	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:Cc:To; b=OLYzk4BklbiqjiqtDpKRRxcyUYP0Vp65e6CcqA/ASR29yj3pkwCRDV+/0gSs935CU07DZbcmCjf94N9vWDnR0rJh+7cuH7+N/yT05sMOijXH5HK9IcxUrqIaK2sWliyzqJrG2+zr67VVXWWsQTU2kT7M+mr6H46BbNOqePfv5vA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=T5ti6TGw; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DD3E221D96;
+	Sun, 15 Mar 2026 13:21:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.85.22
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773580903; cv=fail; b=UgigOroZxYVv/TC+/wofakBLD6frurQ/BqRuOWSTN92jhrsiYtCMsjxw543AhhzWYnHS+TtbEkso3Jua9ShTXOqc5fsCT4uCJDBsSFqdgb7JZZxJlWXciQIH0tUAChxhRI/vXHhBnt9gCPJv111v36d7lIX69zC8uzEDueH4BTw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773580903; c=relaxed/simple;
+	bh=eZvJQabK/lUTYbpJRwcScT1glntzniDMWTCC47gJz20=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=hXd1WGpGAgYcAlDVTYk+r5drjcSHoqaymrubpWidcQaqMz0k6+F9r5KNIqWLjzqxonKqCWnh7id1IPgF0GgWEZNz5X1pWw1VgOM58Nc0ZCRyYs/v1VgtrnpvpjxqaXnFxtwj96FlM1kTyw7RaymwQ5PoApaUL68OnqLTCCOnwsk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=DCwAV3TV; arc=fail smtp.client-ip=52.101.85.22
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T5ti6TGw"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4852f8ac7e9so43323945e9.1
-        for <linux-pci@vger.kernel.org>; Sun, 15 Mar 2026 04:55:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1773575708; x=1774180508; darn=vger.kernel.org;
-        h=to:cc:date:message-id:subject:mime-version
-         :content-transfer-encoding:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=vDKnJT0wYCQGOysz22h2bC3jeqtbf0HHcGTBrmEn6hA=;
-        b=T5ti6TGwXmE0br6mUCi0AQzzW4rR97FKomaAbVRY7LXeHGN7/FJd/qz6QIc9WSV43t
-         W+uLyzV4OQTUDPFqw0miRAZPMjEaUBHpfrJLKew7Xq7bCJbxG5L687SC/gg9+nVWW/Tc
-         5sCCP0g1NBZ9DPXL9XVtlmnRcvEpQB+ym2KbEQ1quycOxztnZrJHXNhNnFuAq+uNpWed
-         KPnuKq5B1kzzcdwcDgm62xEWdFEt8HzmbLCVHCjB7lwiN5yDnijyhLon+bj6aoyH6xfJ
-         oZun+wWwmN2NJzg7qgfV1FrVbYwG4IbjldzjMNpgWpe+nxWlNaR2ukrGjxz6cPKUBHOK
-         481Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773575708; x=1774180508;
-        h=to:cc:date:message-id:subject:mime-version
-         :content-transfer-encoding:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=vDKnJT0wYCQGOysz22h2bC3jeqtbf0HHcGTBrmEn6hA=;
-        b=lCci9I5AAgAvpVFNMq4AkYs2/CdB1SlyckTLEDGdPkLDPpmS2h2Rw3FIA9YHHP6/x9
-         Bz5NMO4AdYxgQPzrjAOlQNkT+svZrb2XBFsPzRpaTCY9jZtWNPNJH3pL97LQZ0JLVtkR
-         60yRwzhaKZ95cIvwpxfbK6SZZtrplrDedIHpJVt6rhoBlyarf+aNY7fpFQ33YJkO3dsk
-         Tx4XdgLNebiw57tZO/Gttnh/uG7liSQk1rCJ1K7oDIu3G1+afjGN1a/IEcb0A7faH0Zv
-         7iCQ0oSi5C0B6P8zKP11EvHLwxtMVMYw/I1Y8JfyaROEH5SXUM6i6JEOMALlfBSJbOOJ
-         txMw==
-X-Gm-Message-State: AOJu0Yxd0BqiuMf3sJbTtlnrkbad4HlmGfI6qJulXQGKDOsDQCI7dTcM
-	eIpWxkddntCarRKiodBDVdNlsJg63rrP+wWl2MvfU9QuKfkBVzjxQi4Y7s3oOANc
-X-Gm-Gg: ATEYQzz0gwPRxjIerx/886SREZTtTgyPxwhNXacCOkSTiIGmZ2J0u38naswsTHXAqti
-	GpMkCvM15DJykOnXAly0Dgmq8ttUy/z5cAgPJ1k/t6Sb5LmZ1ucCjjECHH5Y4u8EHiAF+keAQlT
-	kUX/L7frsPrXR6NkY7/IJxAnrerjIziZK4O1kAR/6e6R/uMazk7/zws6bZs2gTQ+Qw85ze+3FJF
-	H+3IWJy4Zr9w67jwiY3VUhe180wVoIfHa3TUwiywOulJQkMxL6QFsPZrR3DQUq1/zlzqQ+S0C50
-	lQyEK76kP+HO0TKd2gK4+cv9YW4eixdPBsI9MYgtGJS/nLIff+a49Ys2tMkdE71lLog+XLBApzS
-	DqrL1/ke1vm2hvVfmr56NAN/iyRkOd8rbKTw2766Qo8pt8+irnWjBMNGM6jY1UrN2jTv7yMpOQQ
-	o63L6fpv2hyTlWzsaE3MzbxwqUvsE8PcPwugZi7vZkM+re/zb9tFoVj67IAREl1H+WsoUR/PkA5
-	tYWB17gJS6S4qPVqy5UwfBplcThLKUlL2lyo0US1XcsxktI6q874HkUtHjESfvJHYo=
-X-Received: by 2002:a05:600d:4453:20b0:477:a54a:acba with SMTP id 5b1f17b1804b1-485567031a2mr113887695e9.17.1773575708139;
-        Sun, 15 Mar 2026 04:55:08 -0700 (PDT)
-Received: from smtpclient.apple (dynamic-2a00-1028-83a2-5386-5c13-9ccd-a54b-eed2.ipv6.o2.cz. [2a00:1028:83a2:5386:5c13:9ccd:a54b:eed2])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4854b6756e4sm401505415e9.15.2026.03.15.04.55.07
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 15 Mar 2026 04:55:07 -0700 (PDT)
-From: =?utf-8?Q?Michal_Babi=C4=8Dka?= <michal.babka@gmail.com>
-Content-Type: text/plain;
-	charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="DCwAV3TV"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=gFkPofyYjNCq4fUSLQvnGpCZa7q0oJF2Px2A2VU+yHsElNQsr8GYYj3J/C9SdOT/kfI4AwnIktxy1MjTYqzCqkRF9fMRNau2Bns0MIKJT3WlPActrbBjWR0Ur4HI795qYWo9PLlaGYtpcszpCklpfuR24yXIc3vOC6gQMoUt1OZNOEdXpXW1EnYZmYhp7+ALg5T6DhXR6IxkpXC7SDSWjMgb1gJfSL7FT/mECdqO8GK21eDPIGbkbjKQMuco8Xlpv5pmBTlXUpK1OT+T2eCcRd4v1ghLtltplXFSM3ZC20gW576pSQbv7X+A7gw0zJT5d3J/J0XBMv4/QVrXl5QT7Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=W6wYsCu8ozFw6lRDWumpQzhuSu5dF4Dt7myKXItUiMg=;
+ b=oWbeukjcfGaYWusjpxIS1AMCeImmfndP6M46TwFsGCaZE2ZjdncW2z/QPP02PLim7exZrzSifn/Pqx5XJ+zPtxHeiRL4SlD2CoCpKD3cg4BaU3ArK5WKDfGpIOpa1p4yu0y9KF+QGiKVYFv6BG2TmWrWPA8o8jJmBVGw7ON4tM9X4na71EXDiKHFX8509YNMJlwZC+W/ZQoqTPVqnOPKmYneY4p/quwLidONSJUBfKeUWcA7Pjxb1qOds5856vNgF9Dlht1FBcC6p0gnq5Ctj1d0VPnKmK2Zc+qRnlnBx3HBAACNH0s6sfbudMCA0snqz8ueuJljtldy33T1RTb57A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=W6wYsCu8ozFw6lRDWumpQzhuSu5dF4Dt7myKXItUiMg=;
+ b=DCwAV3TVdCQG8Za1X/of+waXw20CxSDVtKLFufUCaeSVrt7tk9pjqNnLC9Mrrl4kdeGt5+MfEzfF1hHNAVvsEoCvG+pP4UOS5kFiOx2hs+y6ZgPLMAhrN8gqXtuHXY8nN285j+SAAFfQ3BoTAq/xpyllB+N9/oe78iRtXuAtHSUkw0VviOlw88eBuATpA7bjrvgCjjl8XZrGQjeCGWw/rEZNmC9codJrc0fif5yTWVqv7so1923dk9Mt5SHxlbiPbNqr4rhjsWA1aMaJpYXhG7xlDJS4ECZ0pTAsjv5p00bci7Uzy3pGXqYwNgbjjslDwORzKw9xbmgoGEYIm0/GJg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CY8PR12MB8244.namprd12.prod.outlook.com (2603:10b6:930:72::7)
+ by DS0PR12MB6559.namprd12.prod.outlook.com (2603:10b6:8:d1::6) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9723.13; Sun, 15 Mar 2026 13:21:35 +0000
+Received: from CY8PR12MB8244.namprd12.prod.outlook.com
+ ([fe80::d30c:fb69:3020:73e3]) by CY8PR12MB8244.namprd12.prod.outlook.com
+ ([fe80::d30c:fb69:3020:73e3%5]) with mapi id 15.20.9723.013; Sun, 15 Mar 2026
+ 13:21:35 +0000
+Message-ID: <a917e475-1ae9-4e12-98a1-babc49f042a7@nvidia.com>
+Date: Sun, 15 Mar 2026 18:51:23 +0530
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 03/13] PCI: tegra194: Don't force the device into the
+ D0 state before L2
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+ "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+ "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+ "robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org"
+ <krzk+dt@kernel.org>, "conor+dt@kernel.org" <conor+dt@kernel.org>,
+ "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
+ Jon Hunter <jonathanh@nvidia.com>, "kishon@kernel.org" <kishon@kernel.org>,
+ "arnd@arndb.de" <arnd@arndb.de>,
+ "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+ "Frank.Li@nxp.com" <Frank.Li@nxp.com>, "den@valinux.co.jp"
+ <den@valinux.co.jp>, "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>,
+ "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+ Vidya Sagar <vidyas@nvidia.com>, "cassel@kernel.org" <cassel@kernel.org>,
+ "18255117159@163.com" <18255117159@163.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20260303065448.2361488-1-mmaddireddy@nvidia.com>
+ <20260303065448.2361488-4-mmaddireddy@nvidia.com>
+ <6ekumkzuh6znxzf4deaawc46mgoen6haxcrvrein2irpw3xqhc@shwkkvjnlj6h>
+Content-Language: en-US
+X-Nvconfidentiality: public
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+In-Reply-To: <6ekumkzuh6znxzf4deaawc46mgoen6haxcrvrein2irpw3xqhc@shwkkvjnlj6h>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: MA5PR01CA0054.INDPRD01.PROD.OUTLOOK.COM
+ (2603:1096:a01:1b8::17) To DS0PR12MB8245.namprd12.prod.outlook.com
+ (2603:10b6:8:f2::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.400.21\))
-Subject: [BUG] Apple Mac mini 2018 + Thunderbolt 3 eGPU: PCI bridge window /
- BAR allocation failure prevents NVIDIA and AMD GPUs from initializing 
-Message-Id: <FCEB17D3-3DC5-49C8-8C56-8051C875E2F9@gmail.com>
-Date: Sun, 15 Mar 2026 12:54:56 +0100
-Cc: linux-usb@vger.kernel.org,
- linux-acpi@vger.kernel.org,
- regressions@lists.linux.dev,
- linux-kernel@vger.kernel.org
-To: linux-pci@vger.kernel.org
-X-Mailer: Apple Mail (2.3864.400.21)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CY8PR12MB8244:EE_|DS0PR12MB6559:EE_
+X-MS-Office365-Filtering-Correlation-Id: 38e0c8d0-8952-413a-1018-08de8295c77c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|1800799024|376014|366016|56012099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	MnEtJEPIMf3bgyi7eHdUDeJ1va3bQha0dDP84GtPC2U+YtEoHWtikXHUQHxnGZDl2282L3xjvFJhijr1OaoSO1SGvrOgs9hfDE44viP4i9vQjzDbAvhPeUzxgaOmeH5p8pMUOxulxtckWWMiMHz34lUorz305F0U4zT/Z5sS0/rVH50IIQQjShRZpxTVTxkH8P6tKRYJytgjBDiq4FNV5ZUja/4oKpw6F+kbwcFxxErtxFefOrAQikM7czYTjrtIkmPItLO07CdVGr9Zw1SxnACN3VclbsBLhromBlTf7BqDsRTRunGggMnZtdnAdJt4kt4ll5KJSuaJ3gtjCYYXkVwovVPVSnRAL1/3KzwP2vSCVw4lrD5bM9SHKlyEG8yDjxucCVn+YNjeTZ3k9L9BOKvW1sNPqK74euu6v57Xbg0YSwdlozuhYAiqotty4X6bsnONvEAdk8Fv9aq/odEg6vr45pttYrgeEVKlqCKf6MLW/Y62uox114YQ3BZD2Hvd/4WtwqF8Tx21Hcetx6QOEam2p5rkrkZ7NEeEKdRuSizX7QPFE/qyesjeDThslzMVTggMP5TbesUDid0sy+IoOwZHAmW0d+InBLyDbytll07jqsfLLXivRdKtP7vhgVd9nMr+PySfZALIZ71wrd4kMWsRumMqHn/KZJZYxrwEUBUAUpyyX8PKR6Eiz5e7QjmXYXgekhRthQ35+1m7OKqdAo0MW5l32rLflXx1JFzjbxQ=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR12MB8244.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(376014)(366016)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?Rk5JQmN2OU4reEc5M2tTNGtKU1F1YXBOVjhoRFNzSEVTMlpTTjFCQ3ljQ0J0?=
+ =?utf-8?B?c1VUZUdyMGJKREhQMkZ4VHNFTFpGMWdXSXZ2ek5CWVFDY292OUFKYWpkRE8x?=
+ =?utf-8?B?NUFYdVU2bWs0dWZIQ1ZXNjdxTWRLRGZPTTVXNVV0STF3REdsbDJlazVuaEtT?=
+ =?utf-8?B?Ujl3aUpQMm1ucDAvaEhGTkFSNEJkOEZieHE4cWovZUpkMmRkMnRSVzM4Q2NZ?=
+ =?utf-8?B?YW9DWWtjOTIwbnFTYVhWR2NiaEIxUjJPRUNzQmVVMjF5ZlQ4L08xTlZLVlNx?=
+ =?utf-8?B?SDh6akZ5ZGNPdGJ5S1hDaUJIUmlCM24vemV0WjVqWDBWTU1UTWNEZzlTZ0dD?=
+ =?utf-8?B?L0lmQTlZWnFRQm9WMkpQNndFeVVqV29FZFg4NEgzSUF2WlBDdDlobE8zU0pY?=
+ =?utf-8?B?Q3dmL2IyMXlERGJlcnpwRDRaNXFkV2w1WVZKc1YrYWRNL1NVb1h5RHp5R3l6?=
+ =?utf-8?B?MXBLSVp1dGtoOUlmcXJic2UxQXZKallNVzUzTEYwR2VSVkR2YXNaVlk3OEJP?=
+ =?utf-8?B?MkFabm5vM1RxV2YzcWxHQS92K0tjNU91TmhyWU5EQVRFM3ZtSnEwYnFzaS9K?=
+ =?utf-8?B?VGFzdXZDQnluajVuUTB4OGphTVhPRlZ1ekoxU0RoOUlDbGZaVm13bUp5U21h?=
+ =?utf-8?B?OXpmSUZYTzAvMlNFNDQ3SHVFQnF6bzgzTGVQR3V4MHd2SWtoUk5YWnhzRjJL?=
+ =?utf-8?B?bnBxUi9pbUNsTHJ4M09yMU1OMWZ6RVFjTDVXOUpFa0ptb3V5dTlPWktISUdk?=
+ =?utf-8?B?TUhTckszZHpGcEd4MnE4b0FiOSswRlpEL0dUZWZUdDMwTnIzYm5TVWFrdlNK?=
+ =?utf-8?B?dDRwT1pSZTBHd3Z4bzNBejhnN2FPREVBQXlUU2hJT3pVWjJkcTNkZUZ5Z2Ex?=
+ =?utf-8?B?di9RMjRBZEoxbVFubmF6WElkU3lKOXMraEgvanQ2ZjJjZFNwbnllZWJzK1Ft?=
+ =?utf-8?B?MkVJV2hZaUo3b250RUZvRytOK25rOWhPdXowK29nVDVCWnEzdkN4UGVxUjhx?=
+ =?utf-8?B?WmFRK1ZOUHk0eDZ3U1hVcHBoZFVGU2s4TGR2bEl2UW9yVzBJRkNtci94NTdJ?=
+ =?utf-8?B?WElsM1RWTXhDQWJUZmR1RllxN0crdXkyWmxIVnZvdU9teWZ0anFsZEFMVFE3?=
+ =?utf-8?B?Vk01dytjNXE1VnNaYmFsQXNYc1BEc3dwcmZUcy9wVTdjRFRsZjFzOFZ1WG9s?=
+ =?utf-8?B?Yk04NGgvblR0dmRMUllCcXRoTHU0K3lNVEVNdnVwMjQ3VmU5Qjc1UEFFZk5v?=
+ =?utf-8?B?R3ExeUJ2VC9idWtIa2RrS2RSTW9SZVdWeTcyTC9qVVY2VkNGYTRON1lnVHkv?=
+ =?utf-8?B?NkxMZDk1WmdRYTJXTWVGbXg5a2xtQzZaNmxheHk5MG5SOFBRa3hUSCtnVUw4?=
+ =?utf-8?B?RXZDRTdwTlRHYVVQM0dzUXVHb0hrUWFWNzBxdnBMbUhUajhYVXZRaUpCVnNG?=
+ =?utf-8?B?bS9LQmlxNm1FU3o4OGF4OVRoMnhsRlJZMnFBZ0xHeXIyOHp4Y1VvVlhveGR1?=
+ =?utf-8?B?bTBjRzJhaGpYdFYzVlVvR2FncEcxdjVIQTlBYXNNeHpmUUxXZENhYmVZNEV2?=
+ =?utf-8?B?UFEwMXZ4NGtlZWtUYzZmL1VYZDZzaTJTL0xyZkRUeGJ1THpMZitiQk12bEVa?=
+ =?utf-8?B?VlVJSmszSG9JRWZVRTdZUTR6YUo2ZnBTWmRDUnNwaVNEMjNTYWNUQmxWYUg2?=
+ =?utf-8?B?SHY2VCs3ZmVhbnovcS9XQ2sreUJyb0VHQmc0MXQvNTllKzRVVFlMeG9LRy84?=
+ =?utf-8?B?VmV1V2o1aHVPdXNKMGdOWWs0Tmo5RkJqYmhOaXFiakFMWjdERWIxNUg0RXoz?=
+ =?utf-8?B?eDVUdy9Tc25JMXRPbkhPS1Noblc2QzhiYlUxTzhZcURLTCt6dnhsc3FIZ1E0?=
+ =?utf-8?B?R0YydmdPSVZ0aTlXL2ltVmh1c04xZXJ2Q3Y5UnU3RFZyQ2plWWdaSEYzczhV?=
+ =?utf-8?B?S3RzWG1ISzNpUlY1bngzWDQxdER1VTdIRU5YVElwd3lON0dEeEdmcUlrQWpw?=
+ =?utf-8?B?WXczRzBWeitZdm8wVGwzay9MVm1xQjFDcjNNUXQyZWJsQjBiZk9UTlZNRHg0?=
+ =?utf-8?B?a0dHMDJpOVJzT09kR0ZzRjhDL1BNcHdiMzM5YVhERUt3OXVhU0tFUWxWdGpM?=
+ =?utf-8?B?T1o5ZTdIZTJQSm5TSGRhMW5Kb0hVOStyNTBXVzZtdUJYNEVJVW05U05TRGZC?=
+ =?utf-8?B?eUxZR1dmaUE4N2xDN0NPcFBGNVk0OHM2WHI2VGh5TnVsa0g5dDZNRnpBZXZq?=
+ =?utf-8?B?aFN5YXdKTTMrZStXSVRTelluZWhVTVY0NVEvR3BzZktUeFFqOTRiMHNqTFU2?=
+ =?utf-8?B?bzBHN3pXYzJGY3I5aFdiRHdnbnZzZCtVTjJ5S1dhUWhKaVRKYUEwQT09?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 38e0c8d0-8952-413a-1018-08de8295c77c
+X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB8245.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Mar 2026 13:21:35.4964
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: D/5tftfZdNPboyWqClbXdN3tAhDVr6AshFKxP3b7PV7B78pFyTbFGUlzG60ktLMdJwyC6IGDHb7af0vEPmihbw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6559
 
-Subject: Apple Mac mini 2018 + Thunderbolt 3 eGPU: PCI bridge window / =
-BAR allocation failure prevents NVIDIA and AMD GPUs from initializing
 
-Hardware / platform:
-- Host: Apple Mac mini 2018
-- Connection: Thunderbolt 3
-- eGPU enclosure: Razer Core X Chroma
-- Tested GPUs:
-  - NVIDIA Quadro P400
-  - NVIDIA Quadro P4000
-  - AMD Radeon Vega 64
 
-Linux distributions / kernels tested:
-- Ubuntu-based systems
-- Zorin OS 18 Pro
-- Multiple kernels tested, including 6.12.x and 6.17.x
+On 05/03/26 3:10 pm, Manivannan Sadhasivam wrote:
+> On Tue, Mar 03, 2026 at 12:24:38PM +0530, Manikanta Maddireddy wrote:
+>> From: Vidya Sagar <vidyas@nvidia.com>
+>>
+>> As per PCIe CEM spec rev 4.0 ver 1.0 sec 2.3, the PCIe Endpoint device
+>> should be in D3 state to assert wake# pin. This takes precedence over PCI
+> 
+> WAKE#
+> 
+>> Express Base r4.0 v1.0 September 27-2017, 5.2 Link State Power Management
+>> which states that the device can be put into D0 state before taking the
+>> link to L2 state. To enable the wake functionality for Endpoint devices,
+>> do not force the devices to D0 state before taking the link to L2 state.
+>> There is no functional issue with the Endpoint devices where the link
+>> doesn't go into L2 state (the reason why the earlier change was made in
+>> the first place) as the Root Port proceeds with the usual flow post PME
+>> timeout.
+>>
+> 
+> So the previous claim in the comments is not true?
+> 
+> I agree with this patch in principle, but just want to know why the comment
+> claimed there is an issue if the devices are not in D0 state.
+> 
+> - Mani
+No, previous claim is true. D0 fix is done to fix L2 timeout with a 
+specific Endpoint. However, later realized that it is breaking wake 
+functionality with other Endpoints. As I mentioned in the commit message 
+reverting D0 fix still causes L2 timeout with that specific Endpoint, 
+but it doesn't cause any functional issue.
 
-Problem summary:
-On Apple Mac mini 2018, an external GPU connected through Thunderbolt 3 =
-in a Razer Core X Chroma enclosure is detected and enumerates on the PCI =
-bus, but GPU initialization fails because PCI bridge windows / BAR =
-resources are not assigned correctly.
+- Manikanta
+> 
+>> Fixes: 56e15a238d92 ("PCI: tegra: Add Tegra194 PCIe support")
+>> Reviewed-by: Jon Hunter <jonathanh@nvidia.com>
+>> Tested-by: Jon Hunter <jonathanh@nvidia.com>
+>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>> ---
+>> Changes V6 -> V7: Fix commit message
+>> Changes V1 -> V6: None
+>>
+>>   drivers/pci/controller/dwc/pcie-tegra194.c | 41 ----------------------
+>>   1 file changed, 41 deletions(-)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+>> index afbc0bdd8a93..831986de584e 100644
+>> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+>> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+>> @@ -1258,44 +1258,6 @@ static int tegra_pcie_bpmp_set_pll_state(struct tegra_pcie_dw *pcie,
+>>   	return 0;
+>>   }
+>>   
+>> -static void tegra_pcie_downstream_dev_to_D0(struct tegra_pcie_dw *pcie)
+>> -{
+>> -	struct dw_pcie_rp *pp = &pcie->pci.pp;
+>> -	struct pci_bus *child, *root_port_bus = NULL;
+>> -	struct pci_dev *pdev;
+>> -
+>> -	/*
+>> -	 * link doesn't go into L2 state with some of the endpoints with Tegra
+>> -	 * if they are not in D0 state. So, need to make sure that immediate
+>> -	 * downstream devices are in D0 state before sending PME_TurnOff to put
+>> -	 * link into L2 state.
+>> -	 * This is as per PCI Express Base r4.0 v1.0 September 27-2017,
+>> -	 * 5.2 Link State Power Management (Page #428).
+>> -	 */
+>> -
+>> -	list_for_each_entry(child, &pp->bridge->bus->children, node) {
+>> -		if (child->parent == pp->bridge->bus) {
+>> -			root_port_bus = child;
+>> -			break;
+>> -		}
+>> -	}
+>> -
+>> -	if (!root_port_bus) {
+>> -		dev_err(pcie->dev, "Failed to find downstream bus of Root Port\n");
+>> -		return;
+>> -	}
+>> -
+>> -	/* Bring downstream devices to D0 if they are not already in */
+>> -	list_for_each_entry(pdev, &root_port_bus->devices, bus_list) {
+>> -		if (PCI_SLOT(pdev->devfn) == 0) {
+>> -			if (pci_set_power_state(pdev, PCI_D0))
+>> -				dev_err(pcie->dev,
+>> -					"Failed to transition %s to D0 state\n",
+>> -					dev_name(&pdev->dev));
+>> -		}
+>> -	}
+>> -}
+>> -
+>>   static int tegra_pcie_get_slot_regulators(struct tegra_pcie_dw *pcie)
+>>   {
+>>   	pcie->slot_ctl_3v3 = devm_regulator_get_optional(pcie->dev, "vpcie3v3");
+>> @@ -1625,7 +1587,6 @@ static void tegra_pcie_dw_pme_turnoff(struct tegra_pcie_dw *pcie)
+>>   
+>>   static void tegra_pcie_deinit_controller(struct tegra_pcie_dw *pcie)
+>>   {
+>> -	tegra_pcie_downstream_dev_to_D0(pcie);
+>>   	dw_pcie_host_deinit(&pcie->pci.pp);
+>>   	tegra_pcie_dw_pme_turnoff(pcie);
+>>   	tegra_pcie_unconfig_controller(pcie);
+>> @@ -2335,7 +2296,6 @@ static int tegra_pcie_dw_suspend_noirq(struct device *dev)
+>>   	if (!pcie->link_state)
+>>   		return 0;
+>>   
+>> -	tegra_pcie_downstream_dev_to_D0(pcie);
+>>   	tegra_pcie_dw_pme_turnoff(pcie);
+>>   	tegra_pcie_unconfig_controller(pcie);
+>>   
+>> @@ -2409,7 +2369,6 @@ static void tegra_pcie_dw_shutdown(struct platform_device *pdev)
+>>   			return;
+>>   
+>>   		debugfs_remove_recursive(pcie->debugfs);
+>> -		tegra_pcie_downstream_dev_to_D0(pcie);
+>>   
+>>   		disable_irq(pcie->pci.pp.irq);
+>>   		if (IS_ENABLED(CONFIG_PCI_MSI))
+>> -- 
+>> 2.34.1
+>>
+> 
 
-This is reproducible across different Linux installations and with GPUs =
-from different vendors, which strongly suggests a =
-platform/topology-level PCIe resource allocation problem rather than a =
-bug in one specific GPU driver.
+-- 
+nvpublic
 
-Observed behavior:
-- The Thunderbolt enclosure is detected correctly.
-- boltctl shows the enclosure as connected / authorized.
-- The GPU appears in lspci.
-- The kernel loads the vendor driver module.
-- GPU initialization then fails.
-
-For NVIDIA, nvidia-smi reports:
-  "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA =
-driver."
-
-Relevant NVIDIA kernel messages include:
-- "BAR 1 [mem size 0x10000000 64bit pref]: can't assign; no space"
-- "BAR 3 [mem size 0x02000000 64bit pref]: can't assign; no space"
-- "This PCI I/O region assigned to your NVIDIA device is invalid"
-- "BAR1 is 0M @ 0x0"
-- "RmInitAdapter failed"
-- in some attempts also:
-  "fallen off the bus and is not responding to commands"
-
-With NVIDIA Quadro P4000, the same general failure pattern was observed:
-- the GPU is detected on the PCI bus,
-- the NVIDIA kernel module loads,
-- initialization fails,
-- and the logs again point to invalid / missing BAR assignments and =
-resource allocation problems behind the Thunderbolt PCIe bridge =
-hierarchy.
-
-For nouveau, the failure is visible as BAR/resource allocation failure =
-as well, for example:
-- "bar: one-time init failed, -12"
-- "init failed with -12"
-- "Device allocation failed: -12"
-
-With AMD Radeon Vega 64 installed in the same enclosure on the same =
-host, the same fundamental problem occurs:
-- the enclosure is detected,
-- the GPU enumerates,
-- initialization fails,
-- and the overall behavior indicates the same lower-level PCI resource / =
-bridge window allocation issue.
-
-This strongly suggests the issue is not NVIDIA-specific.
-
-Thunderbolt state:
-boltctl reports the Razer Core X Chroma enclosure as =
-connected/authorized correctly, for example:
-- type: peripheral
-- generation: Thunderbolt 3
-- status: authorized
-- rx speed: 40 Gb/s
-- tx speed: 40 Gb/s
-
-Important conclusion:
-Thunderbolt authorization itself appears to work.
-PCI enumeration also works.
-The failure happens later, at PCI resource assignment / bridge window =
-sizing / BAR allocation time.
-
-Key dmesg patterns observed:
-- multiple "can't assign; no space" messages for PCI bridges and BARs
-- BAR1 / BAR3 of the GPU not assigned
-- bridge windows under the Thunderbolt hierarchy not large enough
-- reassignment attempts that still leave required windows unassigned or =
-invalid
-- vendor driver subsequently failing device initialization
-
-Examples of affected topology in logs:
-- 0000:00:01.1
-- 0000:05:00.0
-- 0000:06:01.0
-- 0000:0b:00.0
-- in other boots, the same problem may appear under a different BDF =
-address after Thunderbolt re-enumeration
-
-Representative log excerpts:
-- pci 0000:0b:00.0: BAR 1 [mem size 0x10000000 64bit pref]: can't =
-assign; no space
-- pci 0000:0b:00.0: BAR 3 [mem size 0x02000000 64bit pref]: can't =
-assign; no space
-- pci 0000:06:01.0: bridge window [mem size 0x10000000]: can't assign; =
-no space
-- pci 0000:05:00.0: bridge window [mem size 0x20200000]: can't assign; =
-no space
-- NVRM: BAR1 is 0M @ 0x0
-- NVRM: RmInitAdapter failed
-- NVRM: The NVIDIA GPU ... has fallen off the bus and is not responding =
-to commands
-- nouveau ... Device allocation failed: -12
-
-Kernel command line options already tested:
-The following boot parameters were tested in various combinations:
-- pci=3Drealloc=3Don
-- pci=3Dhpbussize=3D0x33,hpmemsize=3D256M,hpiosize=3D2M
-- pcie_aspm=3Doff
-- pci=3Dnommconf
-- pci=3Dnoaer
-
-These mitigations did not resolve the issue.
-
-Why this looks platform/topology specific:
-- The same Thunderbolt eGPU enclosure is recognized correctly.
-- The same failure pattern appears with NVIDIA Quadro P400, NVIDIA =
-Quadro P4000, and AMD Radeon Vega 64.
-- The common denominator is Apple Mac mini 2018 + Thunderbolt PCIe =
-topology under Linux.
-- The failure mode is centered around PCI bridge window sizing / BAR =
-placement, not around one vendor-specific driver alone.
-
-Expected behavior:
-The Thunderbolt eGPU should receive valid PCI bridge windows and valid =
-BAR assignments so that the GPU driver can initialize the device =
-successfully.
-
-Actual behavior:
-The GPU is visible on the bus, but bridge windows and BAR resources are =
-not fully assigned, which leaves the device unusable and prevents the =
-driver from completing initialization.
-
-Request:
-Please investigate PCI resource allocation / bridge window sizing for =
-Thunderbolt eGPU topologies on Apple Mac mini 2018 under Linux, =
-especially where large GPU BARs must be assigned behind multiple =
-Thunderbolt / PCIe bridges.
-
-Cross-vendor reproducibility on the same enclosure and same host =
-strongly suggests that the root cause is in PCIe/Thunderbolt resource =
-allocation on this platform rather than in a specific NVIDIA or AMD =
-driver.=
