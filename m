@@ -1,87 +1,51 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.61.103])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E64BC246768
-	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 11:16:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6397A28C869;
+	Mon, 16 Mar 2026 11:30:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.61.103
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773659794; cv=none; b=bMu+tDzIkHmxZwPfsTaXP7TGVAYbFMltqyvzhBoABqOZO3Cqvla2Ui+ITA1w6a8/gMjgqTBX4GH3v/fjBg0pR5BArdvmSd6JivHQZ1r14ysELd9XmrPMKWC2wXhKYC+ufjsyPjdH7oWAgPAC6UhNJn6eS2nK4twQaZAgXApWu1o=
+	t=1773660632; cv=none; b=FEYNYHkzrCl8tnez/iNsxA7YuLSmlgFJhTahxLdNGKhSbCV9/ChvuUcusxdUn+H8kybzVyIq6LPX97iV2WW04vrGQhi7bMGXYQMF1QSa5nZm0hk02o9N+mY9cXG3PfcP/k3GTQsY30EpmZPFKHMcN0h/q/TKonu4bjqAR4GY4nk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773659794; c=relaxed/simple;
-	bh=xG/QaDUSOhesRdmqYi6i+Ld8v3fKnFkYqZVWHVNXY3Q=;
+	s=arc-20240116; t=1773660632; c=relaxed/simple;
+	bh=VD2SZ4zPl2QiNjFQy49xFNiTsCCQnU4PUIcpFpP9Eus=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hOP2mrtrJk3y//cLvaIDcMXZ7v/kiHZLUkUfTnW1NkD7KvV2iVCCLiWaeoE0h2GN88/pc8YDWFDr2h2y+HNccDagh8vRb5wX31gF41bIOeIHM1u1VGqBzfAE4rMgG64Bqo30asPDEYghl9+0vpUVEjc8AIDej/gJ3HE0alBasn4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=cT9zdv3/; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=He/rN9Hj; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	 In-Reply-To:Content-Type; b=uMBFBaetr6julVszJR7hwXDquYFbxeveKerN2C4w+xGwUc/et79yc9yrEwJPo0Z1qJxe8UwHeuz9BBF6V7bY2WO7JXHpchX5VgEMwGtNH/CowdkzbMxMgBVG22xfGu0HjcVfcJ2Ro7k7fb/NupIEbfOYtTw9W7gI7G7687wnmXw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=cXfVaKhl; arc=none smtp.client-ip=188.68.61.103
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="cT9zdv3/";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="He/rN9Hj"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62G64h5I744133
-	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 11:16:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	/YDE7D97huJARZebmKe+OloJlAk/ia60u5iSeajG+rk=; b=cT9zdv3/LsiK0XOn
-	e7DvD3I6uHY3osqlO3yW4WM1DNHhrt9ivqErNILqLdqrcc3HlbpYqebd1yyDxoDw
-	thmpW5OA+Kcp1XdQJwWEp996Eg9qFvPF6uF//ba2oOmk/pEKkJIpgp80QR4O9CAy
-	J2aHLoEYQLli9hhzamv8mK43lNUrS3PBDOgyresS23A0sgqL+0Fzd/sVPr96gMJa
-	yunxfvbJ43lwyHlqAL92D+0LlTaUbEiuJaxpJ3q39Ji7W+HjbLnBaR/GbGdfnpFm
-	Xl9m/2CpJzA+wdVPTJ6CcBVjuU7m8BCeuf1EwUXRz4dyr1geJ9DbDT77Mdliw3Bn
-	MNvdGQ==
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com [209.85.222.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cw00bdgcu-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 11:16:30 +0000 (GMT)
-Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-8cd8dc8b434so367369985a.3
-        for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 04:16:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1773659790; x=1774264590; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=/YDE7D97huJARZebmKe+OloJlAk/ia60u5iSeajG+rk=;
-        b=He/rN9HjRVo1ipfxWsY/CryucRe9OCq50Q1yo8It//Nq8jIWcHQ5Bol0HOx4pEzKHx
-         UTgxkh0ys5EIOKsrq/mtzIexk2eIrkm/GgGqAU2ntYAkSKAA3ewcexF7rL20ku6JmzVA
-         IbFHHAaQZXVWoXpcPsu3N+Hisn/Zx64Fnn/L0pFHH4Ld+g62mZooZhrdIC7aH5nArxz7
-         sp5WsOUKe2zDwJ0CKa7Vr1Dg4ZOE5kRsSCmHxJzTZcghBrd8m7KZRfHBLaE8CDzGinYE
-         zfBnPThx/19hYJcBdEVVv41Nornopw0UYZaa9Co610ADneRvL0AGnPoHf3Ivc/dvk/nq
-         YEMg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773659790; x=1774264590;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=/YDE7D97huJARZebmKe+OloJlAk/ia60u5iSeajG+rk=;
-        b=Mqyfcmj4goN+jzDGW5tp+CkqX7CbcEtCa79wYjdGksw6BucLOyxphirDhWDv3h7ha2
-         rGxfMhw8B++w+X1k6GgJQo9E1wKn1G4ZdLv/D5jAvPzQSOcb2Z+AOdR1cJIsEB7y2RO1
-         dVVqVMO2QuE4s0f0lhudeMjQ9pIteMtS/BJRdEIqL9I+8hzYLE9mlXqAFZUlCIAXuyU1
-         VIzZK49Rtw1P5qRIscgGH/AxqpjJAlRuIOvh817qQOqJCD1pDCw7zn3vW4c1twScT0Tg
-         3vPTRWBPu8sZjK0t00/+eBIZthALJ1a8VZUJ3qXV6mgMcRCo0KAv6oFAFURE5TAU6OBO
-         PmTA==
-X-Forwarded-Encrypted: i=1; AJvYcCWDSBuUixLuhWcvJlXIczK+E5z0mBTflVG5yrxQCXB7aStLSFAVRdjq5NvWh4nngDBnYdIhpRqrv2w=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwCqebUmO6kc01Y/ikhhEFb0tHEcZEiZih74SGNhr+EIiQ2IqCV
-	J097fgRb6f6+91Bq/X3saQ2k/Ia/adsnHcGgFhzxVvRNneaKkk5WL4Vgi4/SeRbVT/h8Zy30wc9
-	rXHMsRo76uWumekzhg7ozIquurj+c1dQoQePjZZEZbh8AIsv9ndYk8kL5FhqI4KE=
-X-Gm-Gg: ATEYQzxs8HYJnkcROF9dPLpJJppTcdzUjoQk5K7KT1wtKzYqqbsmIJS9GubTy7k1mjP
-	49ftq1X7EyFQIGne1M0csmyl73yllIp8RlNXU6Kxo3V3570lB4FajOpIIW9jPEUm+NPWibhUqwE
-	qC7BLCdqVnZI1iFEdzMgEIooXFSvB6hCfKJq42tsaNyvkXjqt/3c6mPxTKB3fJ7hslOeSKoCCml
-	+1zo2ytz+hC+V1ghvuZmlfUevQqqsqFJ8jMqQCWmrT4LCgIpPI1t+L8qhOA4MsExkfuYeY2mw1O
-	0OxSrawpZergQiAWIBaA/58cGkblYfQBi3Y3daqPS6rarYEx4GLNc36vczDpZamCq9g7eyM0Y3H
-	2hIjTQJfV4PoMRikn4x1CW4lW1bcyWeieIQng6i5PfxrWJyiRdkN+84QFCShX08EBjuC1R5/Bu/
-	u5oBE=
-X-Received: by 2002:a05:620a:bc4:b0:8cd:8751:2b19 with SMTP id af79cd13be357-8cdb5b8cb21mr1296897485a.7.1773659790145;
-        Mon, 16 Mar 2026 04:16:30 -0700 (PDT)
-X-Received: by 2002:a05:620a:bc4:b0:8cd:8751:2b19 with SMTP id af79cd13be357-8cdb5b8cb21mr1296894485a.7.1773659789695;
-        Mon, 16 Mar 2026 04:16:29 -0700 (PDT)
-Received: from [192.168.119.254] (078088045245.garwolin.vectranet.pl. [78.88.45.245])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b976cdb47fasm520697266b.43.2026.03.16.04.16.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 16 Mar 2026 04:16:28 -0700 (PDT)
-Message-ID: <c404887b-ccc2-4731-a7fb-2e37ffbbaf3f@oss.qualcomm.com>
-Date: Mon, 16 Mar 2026 12:16:25 +0100
+	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="cXfVaKhl"
+Received: from mors-relay-8403.netcup.net (localhost [127.0.0.1])
+	by mors-relay-8403.netcup.net (Postfix) with ESMTPS id 4fZCZ637Sgz89BG;
+	Mon, 16 Mar 2026 12:30:22 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1773660622;
+	bh=VD2SZ4zPl2QiNjFQy49xFNiTsCCQnU4PUIcpFpP9Eus=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=cXfVaKhlC07VgloevZ/T0lyP4EuX4pTFcfxAIEgc/AdISGU1QIFyIa6oasOkgTVKu
+	 OgfHqbsg8ogfpzKUxvzAtYfrVKbk6ukECQfHt09ZRPD68YneMHUWGItbeghxSROiHz
+	 eXMcwALJta+B20b+TJzzEsZ0ymBhMmDd1PZeMRcvB+haN/1O6ooUYCniYRHg7eYowS
+	 6KBH4C75+qBH4DocFwOtBMC3YCECkl/E+S//gOdqrMecl4pnoebBpPQTLBSgbUo/96
+	 v+pp9UOJ46kap/iussgoBPLDIq66VzZAoOBJPgca7i/x6i+1AtHsswuJ2r8MZZzOG+
+	 uMq05Vds8+Wuw==
+Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
+	by mors-relay-8403.netcup.net (Postfix) with ESMTPS id 4fZCZ62RNbz89B9;
+	Mon, 16 Mar 2026 12:30:22 +0100 (CET)
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4fZCZ566d6z8svh;
+	Mon, 16 Mar 2026 12:30:21 +0100 (CET)
+Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 43263617A5;
+	Mon, 16 Mar 2026 12:30:21 +0100 (CET)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <fbe7b0ad-28c8-4fa6-adbb-860691657eb2@leemhuis.info>
+Date: Mon, 16 Mar 2026 12:30:19 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -89,73 +53,153 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 1/1] arm64: dts: qcom: hamoa: Move PCIe PERST and Wake
- GPIOs to port nodes
-To: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>, andersson@kernel.org,
-        konradybcio@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
-        conor+dt@kernel.org, jingoohan1@gmail.com, mani@kernel.org,
-        lpieralisi@kernel.org, kwilczynski@kernel.org, bhelgaas@google.com,
-        johan+linaro@kernel.org, vkoul@kernel.org, kishon@kernel.org,
-        neil.armstrong@linaro.org, abel.vesa@linaro.org, kw@linux.com
-Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
-        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com
-References: <20260313094618.1361418-1-ziyue.zhang@oss.qualcomm.com>
-Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <20260313094618.1361418-1-ziyue.zhang@oss.qualcomm.com>
+Subject: Re: [BUG] Apple Mac mini 2018 + Thunderbolt 3 eGPU: PCI bridge window
+ / BAR allocation failure prevents NVIDIA and AMD GPUs from initializing
+To: =?UTF-8?Q?Michal_Babi=C4=8Dka?= <michal.babka@gmail.com>,
+ linux-pci@vger.kernel.org
+Cc: linux-usb@vger.kernel.org, linux-acpi@vger.kernel.org,
+ regressions@lists.linux.dev, linux-kernel@vger.kernel.org
+References: <FCEB17D3-3DC5-49C8-8C56-8051C875E2F9@gmail.com>
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Content-Language: de-DE, en-US
+In-Reply-To: <FCEB17D3-3DC5-49C8-8C56-8051C875E2F9@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=IsATsb/g c=1 sm=1 tr=0 ts=69b7e68e cx=c_pps
- a=hnmNkyzTK/kJ09Xio7VxxA==:117 a=FpWmc02/iXfjRdCD7H54yg==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
- a=EUspDBNiAAAA:8 a=hNqFj29UGYf0a7zNkJMA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=PEH46H7Ffwr30OY-TuGO:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE2MDA4NiBTYWx0ZWRfX/HbTdYgJVHek
- aLdvLiy7ROvr4+60MvtRWZnD5oX1AFhDYbQ7lYvITVuucT2InmAfgpyeB3gWs92C1ShEbTKuL0A
- ijzsMyy6R4/EC4JKEvJio6kII2B3zfkEw759PeKU8LFpMo/IAE/q9LaKxf2+Ity5XQMTfSx3/iL
- DlO4cFfjwI4EdjXOsbcPI+Pm+LgDN+C2ZMFsOyDKWHe+KHCQh4MDZJ2kDwCjghLrcPJMPvrxTzY
- R6bLUtWNROyIrV1n6565merwr885iV+f45cH/IkEJRTc0YJFEvZyakTDBZ4RGz7zMwcjH1MTlNI
- WvLJWJouu76RAszATyvSAnYJhDUslFdPAvs+ksHSjF5aRRJ3Oh7BCfs79FjDoxRJUvQOUPPnI8+
- M/wqaAiQs9MBvNHcRgTHS/vTZ15ObbEP8lPbGAZHVqtlsKUFLJBxQf+aungWE+eEEfyhOZfa/1W
- PeRG8EBB6FtQnc1otAg==
-X-Proofpoint-GUID: Qxyb0Rt-q4fi7q1bDp4QBaYAw-hUrwgp
-X-Proofpoint-ORIG-GUID: Qxyb0Rt-q4fi7q1bDp4QBaYAw-hUrwgp
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-16_04,2026-03-13_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 adultscore=0 priorityscore=1501 bulkscore=0 malwarescore=0
- lowpriorityscore=0 impostorscore=0 phishscore=0 suspectscore=0 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603160086
+X-PPP-Message-ID: 
+ <177366062153.1410887.11442397827644764000@mxe9fb.netcup.net>
+X-Rspamd-Server: rspamd-worker-8404
+X-Rspamd-Queue-Id: 43263617A5
+X-NC-CID: KMW1k5vmoE6SyIQHu31VK5FSCSLrfyytH8CRfIlGnJ9kPBgqsxY=
 
-On 3/13/26 10:46 AM, Ziyue Zhang wrote:
-> Commit 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake
-> GPIOs to PCIe port nodes and add port Nodes for all PCIe ports") did not
-> convert all Hamoa‑based platforms to the new method of defining PERST and
-> Wake GPIOs in the PCIe root port nodes.
-> 
-> Without the change PCIe probe will fail. The probe failure happens because
-> the PHY stays in the controller node while the PERST/Wake GPIOs were moved
-> to the port nodes.
-> 
-> This fixes probe failures seen on the following platforms:
->  - x1-hp-omnibook-x14
->  - x1-microsoft-denali
->  - x1e80100-lenovo-yoga-slim7x
->  - x1e80100-medion-sprchrgd-14-s1
->  - x1p42100-lenovo-thinkbook-16
->  - x1-asus-zenbook-a14
->  - x1-crd
->  - x1-dell-thena
-> 
-> Fixes: 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake GPIOs to PCIe port nodes and add port Nodes for all PCIe ports")
-> Signed-off-by: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-> ---
+On 3/15/26 12:54, Michal Babička wrote:
+> Subject: Apple Mac mini 2018 + Thunderbolt 3 eGPU: PCI bridge window / BAR allocation failure prevents NVIDIA and AMD GPUs from initializing
 
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Lo! You CCed the regression list, which implies that this is a
+regression. But you did not specify when the problem started. And if it
+really is one: have you considered a git bisection? Then we'd know what
+causes this. This in case of a regression most likely will be needed,
+unless some developer has an idea what might be at fault here.
 
-Konrad
+Ciao, Thorsten
+
+> Hardware / platform:
+> - Host: Apple Mac mini 2018
+> - Connection: Thunderbolt 3
+> - eGPU enclosure: Razer Core X Chroma
+> - Tested GPUs:
+>   - NVIDIA Quadro P400
+>   - NVIDIA Quadro P4000
+>   - AMD Radeon Vega 64
+> 
+> Linux distributions / kernels tested:
+> - Ubuntu-based systems
+> - Zorin OS 18 Pro
+> - Multiple kernels tested, including 6.12.x and 6.17.x
+> 
+> Problem summary:
+> On Apple Mac mini 2018, an external GPU connected through Thunderbolt 3 in a Razer Core X Chroma enclosure is detected and enumerates on the PCI bus, but GPU initialization fails because PCI bridge windows / BAR resources are not assigned correctly.
+> 
+> This is reproducible across different Linux installations and with GPUs from different vendors, which strongly suggests a platform/topology-level PCIe resource allocation problem rather than a bug in one specific GPU driver.
+> 
+> Observed behavior:
+> - The Thunderbolt enclosure is detected correctly.
+> - boltctl shows the enclosure as connected / authorized.
+> - The GPU appears in lspci.
+> - The kernel loads the vendor driver module.
+> - GPU initialization then fails.
+> 
+> For NVIDIA, nvidia-smi reports:
+>   "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver."
+> 
+> Relevant NVIDIA kernel messages include:
+> - "BAR 1 [mem size 0x10000000 64bit pref]: can't assign; no space"
+> - "BAR 3 [mem size 0x02000000 64bit pref]: can't assign; no space"
+> - "This PCI I/O region assigned to your NVIDIA device is invalid"
+> - "BAR1 is 0M @ 0x0"
+> - "RmInitAdapter failed"
+> - in some attempts also:
+>   "fallen off the bus and is not responding to commands"
+> 
+> With NVIDIA Quadro P4000, the same general failure pattern was observed:
+> - the GPU is detected on the PCI bus,
+> - the NVIDIA kernel module loads,
+> - initialization fails,
+> - and the logs again point to invalid / missing BAR assignments and resource allocation problems behind the Thunderbolt PCIe bridge hierarchy.
+> 
+> For nouveau, the failure is visible as BAR/resource allocation failure as well, for example:
+> - "bar: one-time init failed, -12"
+> - "init failed with -12"
+> - "Device allocation failed: -12"
+> 
+> With AMD Radeon Vega 64 installed in the same enclosure on the same host, the same fundamental problem occurs:
+> - the enclosure is detected,
+> - the GPU enumerates,
+> - initialization fails,
+> - and the overall behavior indicates the same lower-level PCI resource / bridge window allocation issue.
+> 
+> This strongly suggests the issue is not NVIDIA-specific.
+> 
+> Thunderbolt state:
+> boltctl reports the Razer Core X Chroma enclosure as connected/authorized correctly, for example:
+> - type: peripheral
+> - generation: Thunderbolt 3
+> - status: authorized
+> - rx speed: 40 Gb/s
+> - tx speed: 40 Gb/s
+> 
+> Important conclusion:
+> Thunderbolt authorization itself appears to work.
+> PCI enumeration also works.
+> The failure happens later, at PCI resource assignment / bridge window sizing / BAR allocation time.
+> 
+> Key dmesg patterns observed:
+> - multiple "can't assign; no space" messages for PCI bridges and BARs
+> - BAR1 / BAR3 of the GPU not assigned
+> - bridge windows under the Thunderbolt hierarchy not large enough
+> - reassignment attempts that still leave required windows unassigned or invalid
+> - vendor driver subsequently failing device initialization
+> 
+> Examples of affected topology in logs:
+> - 0000:00:01.1
+> - 0000:05:00.0
+> - 0000:06:01.0
+> - 0000:0b:00.0
+> - in other boots, the same problem may appear under a different BDF address after Thunderbolt re-enumeration
+> 
+> Representative log excerpts:
+> - pci 0000:0b:00.0: BAR 1 [mem size 0x10000000 64bit pref]: can't assign; no space
+> - pci 0000:0b:00.0: BAR 3 [mem size 0x02000000 64bit pref]: can't assign; no space
+> - pci 0000:06:01.0: bridge window [mem size 0x10000000]: can't assign; no space
+> - pci 0000:05:00.0: bridge window [mem size 0x20200000]: can't assign; no space
+> - NVRM: BAR1 is 0M @ 0x0
+> - NVRM: RmInitAdapter failed
+> - NVRM: The NVIDIA GPU ... has fallen off the bus and is not responding to commands
+> - nouveau ... Device allocation failed: -12
+> 
+> Kernel command line options already tested:
+> The following boot parameters were tested in various combinations:
+> - pci=realloc=on
+> - pci=hpbussize=0x33,hpmemsize=256M,hpiosize=2M
+> - pcie_aspm=off
+> - pci=nommconf
+> - pci=noaer
+> 
+> These mitigations did not resolve the issue.
+> 
+> Why this looks platform/topology specific:
+> - The same Thunderbolt eGPU enclosure is recognized correctly.
+> - The same failure pattern appears with NVIDIA Quadro P400, NVIDIA Quadro P4000, and AMD Radeon Vega 64.
+> - The common denominator is Apple Mac mini 2018 + Thunderbolt PCIe topology under Linux.
+> - The failure mode is centered around PCI bridge window sizing / BAR placement, not around one vendor-specific driver alone.
+> 
+> Expected behavior:
+> The Thunderbolt eGPU should receive valid PCI bridge windows and valid BAR assignments so that the GPU driver can initialize the device successfully.
+> 
+> Actual behavior:
+> The GPU is visible on the bus, but bridge windows and BAR resources are not fully assigned, which leaves the device unusable and prevents the driver from completing initialization.
+> 
+> Request:
+> Please investigate PCI resource allocation / bridge window sizing for Thunderbolt eGPU topologies on Apple Mac mini 2018 under Linux, especially where large GPU BARs must be assigned behind multiple Thunderbolt / PCIe bridges.
+> 
+> Cross-vendor reproducibility on the same enclosure and same host strongly suggests that the root cause is in PCIe/Thunderbolt resource allocation on this platform rather than in a specific NVIDIA or AMD driver.
+
