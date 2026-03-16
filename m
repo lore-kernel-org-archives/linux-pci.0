@@ -1,134 +1,259 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E1D0369224
-	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 21:55:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE730358368;
+	Mon, 16 Mar 2026 22:08:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773698134; cv=none; b=p0aHKHwzAVr5Hr5Zv6qq69zbhi+8QJWZX4925xU1CB5FIWlYN0gBvScF7M+aagDDnO+LuChTbYCe4/b6CYqgoTQyF95KKBTm3sA8MEUbUAKNOG+t7NWvxZk42GJ4ELMWKtjz5/7ov6wI84UKgD5kOYx87HiRQdSAlgoTHKbxwM4=
+	t=1773698896; cv=none; b=Zf2Nvt+TQvVu69RYv/RZysO9EAWG2dqs0nHIYIajuz4WA4QuKaYQ9PS2AojssA0EnYn+wmRG9b9v4ISqV2QE9VKpvSovLGU6UOepgeMK+nXnSPtjMnyjQCzHBir5xXp0V6/1iX1170o4qFxVU7kvDPW3sHQu44GqFd9MtWxCGIQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773698134; c=relaxed/simple;
-	bh=VwTPs7MM4jCqIwuQ92ztyqXRl2nBE6DnvlDQACxGWH8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DqJbqQ2HjeM78BXV4B8W6R06vozqoG/pxK3svuHTyqy96dOtngqpoiGY/z/7Ogfu6FLWr2P3gM0Ap7N9YVKT73dqnfelOzWdFjxJuHVeh8ABoNVET6UtwQvLmverhJDLi7dN78NdBEpje1E/cSMtQ6krDPjSPQ/9nJWoEcwddjA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=JxEEVieu; arc=none smtp.client-ip=209.85.214.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1773698896; c=relaxed/simple;
+	bh=DTWTB7lxSyL6vpOQKnliWW5kg0j+nId3t6eF0lkT/mg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DM+P9wKFxrQ727KFCpjvREnXzJdsKp/3EU+9EhXM+xZ1AhB+CfODq+9nCAuDpf5D8XcGXqjaa9pEpiSQkdZemGbwj75sMvFz+FP6uF6+WyrnhECafOenYgOH2aYVMATQiozT6NEIjVAVvh8TOA2EAOikNtNR/JBhOlnTPOCS8m4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kdyfwz+6; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="JxEEVieu"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2b052ec7176so13675ad.1
-        for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 14:55:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1773698132; x=1774302932; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=OzZGe5xJiZCdI8yLv+9J6duKMFuSxCgV09Lwr9FRsuY=;
-        b=JxEEVieulD5WEyfi1qBA+HUPpJPkKfrzQXyKDf3qJa6RP2v7MB+wT8HCjatwLv8OnK
-         o2qKGm1ky1VbXOBRxMTwFtvbYqsW6eqeEM/y50cWsb3VO3vV7ubF5NO3efC6gRwqiAh2
-         0OqTNcwjMdolW7pDwuxfmRgUsFyxWl0HgF8Oc9FH5sWssiQZyv9a7mwz/K7NU41WVX53
-         RXUPIwq0JtQ7nqgMas6DlehowXoAsxFV9Lmgmz8KCVHzEkDtp9LI1P4q0qLur/1/VGDK
-         H9neH3i4Law/kfUQ3oQSLChaAMznQVbWxH9JkrBv/NEyt2KKRMgu6sW6o57kwWBTfW8R
-         bTmw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773698132; x=1774302932;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=OzZGe5xJiZCdI8yLv+9J6duKMFuSxCgV09Lwr9FRsuY=;
-        b=iGCisBBgbxK3gJcIQw3OSa5fAJl64A5TemQsS6swOX9BVg+luLsXIWe/IWjMGpjViE
-         tilzuVF4kUGyd6DDrNLAKw19egwkzI8Kyba+vYrJdVq9aRvsCdyLQGGFmRGYA8qgOjoS
-         5QjQqI3zkKSS/DedRjtfDV8JmlcA5Y7WDI1TEYWCmJ3fH0VAh5bSzrtVpwc98eOXsXoz
-         GonhUZiz5j4EE2NcyxunUqugm2EP6HLYF/2a6z+/KzO/yStruJ/AKJPOJcOZS28rarEU
-         Fw+8Sh4iSqw8r+7Y7T82mBTCCappKLb6et6mLQJbqUweLjiEVUamk8xO7KiMYBgAfacn
-         vnAw==
-X-Forwarded-Encrypted: i=1; AJvYcCWUaDPmTtORESGrjpoRDewlPhKfXRWM/b3pCBDXW+ZS7fGrsf7r3oaUa5jZp9BFlbdkYc9/2iuDmRE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxynPIhUaT4LCo8QqYSAL5/AiqE6OI1dfvkI7g2/0ULC5Kcoovx
-	r7ipbjuiYP7NvJ5dXq5jLbDmjqXTX1HhVlvWLji8gLUswgYKGxjQtRoLt6+Qdh2UqQ==
-X-Gm-Gg: ATEYQzw2Kd0NIfNShQ6w/CB5EtdlRQZnkzDWg047cVg62KyN8K+4UTdISQs/hlEocKN
-	uPMWwaWvp+uCLqcCJfJRbxLTHoGvHcA3H+FkiOEyz1d5b5KwHr9P6bJzSRV52aEkOudu3LRl3Ar
-	9hRTIzfX1xUhubRDTNKWWWPmXjCuX/eSPgnfp1HIph/KFa8KuY9iNMPJQ+UkYlHOw3hs+Pjbfja
-	V1BEBQnhs/t8RURHWyuTPeJpLAYYaLAmKOOj1TBhhVpJDxByeLVBEx2/J7psBV+nKrw8fOiPg2q
-	G04d0Gp4ZbXWEuLxk0KY8/LRMxWsKi5HxJw1jTYdwTAk/3PB6nIB1lBHHT2Rdv18Hg1mLUPOc3f
-	KpVD7BGWzKNT5eQ+Y5X8Bc+Gp7NOdiosojNVNuOHdPSllycPUI//oXA2pdMpQvT3EU9nCn8E6WM
-	Osn+qpMBrhwVnQrZEsVDZcHPZEwtXOS4IvbqJIE5OiW8W8go8U142rev5uRQ==
-X-Received: by 2002:a17:902:e885:b0:2ae:4e8e:954e with SMTP id d9443c01a7336-2b06599f6camr431285ad.5.1773698131381;
-        Mon, 16 Mar 2026 14:55:31 -0700 (PDT)
-Received: from google.com (60.89.247.35.bc.googleusercontent.com. [35.247.89.60])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2aece7edd14sm155239485ad.50.2026.03.16.14.55.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Mar 2026 14:55:30 -0700 (PDT)
-Date: Mon, 16 Mar 2026 14:55:26 -0700
-From: Vipin Sharma <vipinsh@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: Alex Williamson <alex@shazbot.org>, 
-	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>, 
-	Alistair Popple <apopple@nvidia.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	Ankit Agrawal <ankita@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>, 
-	Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
-	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
-	Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org, kvm@vger.kernel.org, 
-	Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
-	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>, Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>, 
-	Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed <saeedm@nvidia.com>, 
-	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, Tomita Moeko <tomitamoeko@gmail.com>, 
-	Vivek Kasireddy <vivek.kasireddy@intel.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>, 
-	Zhu Yanjun <yanjun.zhu@linux.dev>
-Subject: Re: [PATCH v2 11/22] docs: liveupdate: Document VFIO device file
- preservation
-Message-ID: <20260316215056.GC1846904.vipinsh@google.com>
-References: <20260129212510.967611-1-dmatlack@google.com>
- <20260129212510.967611-12-dmatlack@google.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kdyfwz+6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773698894; x=1805234894;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=DTWTB7lxSyL6vpOQKnliWW5kg0j+nId3t6eF0lkT/mg=;
+  b=kdyfwz+6tu5nn/bp7ZRMPN8d0nM0/nvBmqHd/F6dMskVxkPe9f8Y3h8I
+   xxbHi3oRFpxapBLkH+vaPZDFjhyh1f5MvlbvuD3BYUsoRYj4UrkiNhPT7
+   UNTbGYZMglTLMCjE5rp5A8hJm25wC2gVjS859Qen/d/pL7ErdzCj04Y7x
+   RaEPYXf7ptQivytWcBfqEd33AkftJPNEmxrMizMeLnJjGGZh6VvLyaJvC
+   zX7S831cGFkGgQScqktC/xv31Nxt6gDUqVblBf00PEQq5fLjqE2QEPN0G
+   bav/7ALcMUkDKH5IFIBN17SMooYXvPTsxOwosdpMuaqJhbQ8boUvtJ16l
+   w==;
+X-CSE-ConnectionGUID: 4wPXzExfTYu2DJ682ugMxQ==
+X-CSE-MsgGUID: VVpigXx3Sn69uJhqDDkF+g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11731"; a="92110440"
+X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
+   d="scan'208";a="92110440"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2026 15:08:13 -0700
+X-CSE-ConnectionGUID: MISg57uNQae9SLU7wCpxKQ==
+X-CSE-MsgGUID: qdrXNUAlQ5Cq2h4OfDI6jQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
+   d="scan'208";a="226742505"
+Received: from skuppusw-desk2.jf.intel.com ([10.165.154.101])
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2026 15:08:12 -0700
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J . Wysocki" <rafael@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3] PCI: pciehp: Fix hotplug on Catlow Lake with unreliable PME status
+Date: Mon, 16 Mar 2026 15:08:06 -0700
+Message-ID: <20260316220807.2433661-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260129212510.967611-12-dmatlack@google.com>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Jan 29, 2026 at 09:24:58PM +0000, David Matlack wrote:
-> Add documentation for preserving VFIO device files across a Live Update,
-> as well as some generic file preservation documentation. This
-> documentation will be extended in the future as new types of files are
-> supported and new dependency/ordering requirements are added.
-> 
-> Signed-off-by: David Matlack <dmatlack@google.com>
-> ---
->  Documentation/userspace-api/liveupdate.rst | 144 +++++++++++++++++++++
->  1 file changed, 144 insertions(+)
-> 
-> diff --git a/Documentation/userspace-api/liveupdate.rst b/Documentation/userspace-api/liveupdate.rst
-> index 41c0473e4f16..dbf1e4aeddd7 100644
-> --- a/Documentation/userspace-api/liveupdate.rst
-> +++ b/Documentation/userspace-api/liveupdate.rst
-> @@ -14,6 +14,150 @@ ioctl uAPI
->  ===========
->  .. kernel-doc:: include/uapi/linux/liveupdate.h
->  
-> +File Preservation
-> +=================
+On Intel Catlow Lake platforms, PCH PCIe root ports do not reliably
+update PME status registers (PME Status and PME Requester_ID in the
+Root Status register) during D3hot to D0 transitions, even though PME
+interrupts are delivered correctly.
 
-Should we use the existing way where documentation is written in code
-files and referenced here? Maybe luo_file.c for this?
+This issue manifests during PCIe hotplug operations as follows:
 
-> +
-> +File Retrieval
-> +==============
+1. After a hot-remove event, the PCIe port runtime suspends to D3hot.
+   pciehp_suspend() disables hotplug interrupts (HPIE) to rely on
+   PME-based wakeup.
 
-Same as above.
+2. When a hot-add occurs while the port is in D3hot, a PME interrupt
+   fires as expected to wake the port.
 
-> +
-> +
-> +VFIO Character Device (cdev) Files
-> +==================================
-> +
+3. However, the PME interrupt handler finds the PME_Status and
+   PME_Requester_ID registers unpopulated, preventing identification
+   of which device triggered the PME. The handler returns IRQ_NONE,
+   leaving the port in D3hot.
 
-vfio_pci_liveupdate.c
+4. Because the port remains in D3hot with HPIE disabled, the hotplug
+   event is lost and the newly inserted device is not recognized.
+
+The PME interrupt delivery mechanism itself works correctly;
+interrupts arrive reliably. The problem is purely the missing status
+register updates. Verification via IOSF-SideBand (IOSF-SB) backdoor
+reads confirms that these registers remain empty when the PME
+interrupt fires. Neither BIOS nor kernel code is clearing these
+registers.
+
+This issue is present in all steppings of Catlow Lake PCH and affects
+customers in production deployments. A public hardware errata document
+is not yet available.
+
+Work around this issue by introducing a PCI_DEV_FLAGS_PME_UNRELIABLE
+flag for affected ports. When this flag is set, pciehp keeps hotplug
+interrupts (HPIE) enabled during D3hot instead of disabling them and
+relying on PME. This allows hotplug events to be delivered via direct
+interrupts rather than through the broken PME status mechanism.
+
+The port still enters D3hot for power savings during runtime suspend,
+avoiding the power regression that would occur with pm_runtime_disable().
+Testing confirms this approach does not impact PC6/PC10 package C-state
+residency.
+
+During system suspend/resume, the behavior is unchanged. Ports are
+resumed unconditionally when coming out of system sleep due to
+DPM_FLAG_SMART_SUSPEND set by pcie_portdrv_probe(), and pciehp
+re-enables interrupts and checks slot occupation status during resume.
+
+The quirk is applied only to Catlow PCH PCIe root ports (device IDs
+0x7a30 through 0x7a4b). Catlow CPU PCIe ports are not affected as
+they are not hotplug-capable.
+
+Suggested-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+---
+
+Changes since v2:
+ * Switched from pm_runtime_disable() to PCI_DEV_FLAGS_PME_UNRELIABLE
+   flag approach to avoid power regression (feedback from Rafael and Lukas)
+ * Keep hotplug interrupts (HPIE) enabled during D3hot instead of
+   preventing D3hot entry entirely
+ * Port still enters D3hot for power savings; testing confirms no impact
+   on PC6 package C-state residency
+ * Modified pciehp to check pme_is_broken() before disabling/enabling
+   hotplug interrupts during suspend/resume
+ * Made quirk comment generic to cover both PME notification and status
+   update issues, with Catlow Lake specifics documented separately
+
+Changes since v1:
+ * Removed hack in hotplug driver and disabled runtime PM on affected ports.
+ * Fixed the commit log and comments accordingly.
+
+ drivers/pci/hotplug/pciehp_core.c | 11 ++++--
+ drivers/pci/quirks.c              | 60 +++++++++++++++++++++++++++++++
+ include/linux/pci.h               |  2 ++
+ 3 files changed, 71 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 1e9158d7bac7..f854ef9551c3 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -260,13 +260,20 @@ static bool pme_is_native(struct pcie_device *dev)
+ 	return pcie_ports_native || host->native_pme;
+ }
+ 
++static bool pme_is_broken(struct pcie_device *pcie)
++{
++	struct pci_dev *pdev = pcie->port;
++
++	return !!(pdev->dev_flags & PCI_DEV_FLAGS_PME_UNRELIABLE);
++}
++
+ static void pciehp_disable_interrupt(struct pcie_device *dev)
+ {
+ 	/*
+ 	 * Disable hotplug interrupt so that it does not trigger
+ 	 * immediately when the downstream link goes down.
+ 	 */
+-	if (pme_is_native(dev))
++	if (pme_is_native(dev) && !pme_is_broken(dev))
+ 		pcie_disable_interrupt(get_service_data(dev));
+ }
+ 
+@@ -318,7 +325,7 @@ static int pciehp_resume(struct pcie_device *dev)
+ {
+ 	struct controller *ctrl = get_service_data(dev);
+ 
+-	if (pme_is_native(dev))
++	if (pme_is_native(dev) && !pme_is_broken(dev))
+ 		pcie_enable_interrupt(ctrl);
+ 
+ 	pciehp_check_presence(ctrl);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 48946cca4be7..bfb52735c4e3 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -6380,3 +6380,63 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
+ #endif
++
++/*
++ * Some PCIe root ports have a hardware issue where PME-based wakeup
++ * from D3hot is unreliable. This can manifest as either PME interrupts
++ * not being delivered, or PME status registers (PME Status and PME
++ * Requester_ID in Root Status) not being reliably updated even when
++ * interrupts are delivered.
++ *
++ * When a hotplug event occurs while the port is in D3hot, the system
++ * relies on PME to wake the port back to D0. If PME notification or
++ * status updates are unreliable, the PME handler either doesn't get
++ * invoked or cannot identify the event source. This leaves the port in
++ * D3hot with hotplug interrupts disabled, causing hotplug events to be
++ * missed.
++ *
++ * Mark affected ports with PCI_DEV_FLAGS_PME_UNRELIABLE to keep
++ * hotplug interrupts (HPIE) enabled during D3hot instead of relying on
++ * PME-based wakeup. This allows hotplug events to be delivered via
++ * direct interrupts while still permitting the port to enter D3hot for
++ * power savings.
++ *
++ * Known affected hardware:
++ * - Intel Catlow Lake PCH PCIe root ports: PME status registers are
++ *   not updated during D3hot to D0 transitions, even though PME
++ *   interrupts are delivered correctly.
++ */
++static void quirk_pcie_pme_unreliable(struct pci_dev *dev)
++{
++	dev->dev_flags |= PCI_DEV_FLAGS_PME_UNRELIABLE;
++	pci_info(dev, "PME status unreliable, keeping hotplug interrupts enabled in D3hot\n");
++}
++/* Apply quirk to Catlow Lake PCH root ports (0x7a30 - 0x7a4b) */
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a30, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a31, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a32, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a33, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a34, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a35, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a36, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a37, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a38, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a39, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3a, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3b, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3c, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3d, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3e, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3f, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a40, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a41, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a42, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a43, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a44, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a45, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a46, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a47, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a48, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a49, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4a, quirk_pcie_pme_unreliable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4b, quirk_pcie_pme_unreliable);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1c270f1d5123..9761351c5d70 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -253,6 +253,8 @@ enum pci_dev_flags {
+ 	 * integrated with the downstream devices and doesn't use real PCI.
+ 	 */
+ 	PCI_DEV_FLAGS_PCI_BRIDGE_NO_ALIAS = (__force pci_dev_flags_t) (1 << 14),
++	/* Device PME is broken or unreliable */
++	PCI_DEV_FLAGS_PME_UNRELIABLE = (__force pci_dev_flags_t) (1 << 15),
+ };
+ 
+ enum pci_irq_reroute_variant {
+-- 
+2.43.0
+
