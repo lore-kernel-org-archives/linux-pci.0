@@ -1,218 +1,205 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42FD936075D
-	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 21:22:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E3F236921F
+	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 21:49:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773696155; cv=none; b=A5SLPASRepa5W/d36U4AI46p5/1MZOV8zTlI8kwx/SO/VuSGC6pq1kXVzk0N1I6kWg6e1MBKJlD1tZQL5tsTI7z3hDg/5OmyIGJE6giIygGKr3RtG5hvORtC97vdWz2QGjTG2wUh4jxOt/TpR2kzIxLpCNwa2UM2St1P8Z0bZZA=
+	t=1773697782; cv=none; b=CHIhvPF3uf/ZqVQBCNcUMlTF22LBFuTIDmrcKe10tmUu14w4WiO6fLMLkBttk5BL6Db9QB7nQdeMHgWW/hnFj0rl9sw42f8q8wMLvsMzBCNu3ojN+J9w1JNA8PG5OQuOQ55SLnoEswEPaTOrzADF6fukuOketT/TYsDmsS5FB0o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773696155; c=relaxed/simple;
-	bh=9A6u5TEy+zjTYTcMrW9Vhe/9TGzlOJ5IEFaI/Lb+SoQ=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=ZC2GgIAMyZTaKCQ89bIEgVPHGOqeGvMR3xQ6KVxWOg4BNK/v5SW3yEvDANpRwj3sZZ6McCQbAVToPzwzZEbQdvBv8e8hYIFq61rAjx71Oc1stW2CG2KRXagJmoofprqLU/Tu3ccnFQd4GZD1hTK/gi07tsibyux5DnfGOD30Pm0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cr29AmGJ; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1773697782; c=relaxed/simple;
+	bh=wQ/TGkC56TEVU9edxRoDW8klAaLsoZRqlEjOzTkcHtQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ht304k2C5/2od0dGUr+UuSXUCU5ooCB+LDgSJddB7nj/UsAk4MoGy1dFXKEhYVJcfRAhynqP086bTw05dFdMmA5CWGFHe/9yUZHcfZibEbI8ZzZ/sOboeV8c9baKnCyOeX+YMs+GbaQ42vSrn2vNyAbjE48lCJLNoZlAr/V20vQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Sz9aLFQ5; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cr29AmGJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773696154; x=1805232154;
-  h=date:from:to:cc:subject:message-id;
-  bh=9A6u5TEy+zjTYTcMrW9Vhe/9TGzlOJ5IEFaI/Lb+SoQ=;
-  b=cr29AmGJHok/bEablqBnCfNT0QFNw8663XMsWOo2vEIYRTUvW4IjMvR5
-   yNGHZ4zBh7b9UVcOJXKmSa5pB7ibcLBt6ro8oBud4Gr5dRR7um4KLPP6P
-   K8Wf4sihFp4nzqTZc7xvKBDwer6cW4jHXzJ2MKLFYOd4roESThzErSdYb
-   HVseE5y1o+VNlw8c3JaUH4eBAxVn7zLx8zpP+MXqnLzrf+sdEaCkjKnpL
-   52+WAy54cP2YYpA7TRGHt34gEevj4/MCCzwUCRlGcgQK8tDOnjxnschiu
-   rbiN7/HW5F6/eya23F6ywvU+qDMrouWu1Y6iexFrZoPXUXHMiJYsFCESd
-   Q==;
-X-CSE-ConnectionGUID: WuVsGbhuQq6AMCAYpk4lDw==
-X-CSE-MsgGUID: Or7Fr5kTTr+m7fcWZRDORw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11731"; a="92293747"
-X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
-   d="scan'208";a="92293747"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2026 14:22:34 -0700
-X-CSE-ConnectionGUID: g3HJX8BmTqWEei6aPGfvMg==
-X-CSE-MsgGUID: DnDIJ03mQ2ma3TirJy5Kfg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
-   d="scan'208";a="217821326"
-Received: from lkp-server01.sh.intel.com (HELO 892944969b78) ([10.239.97.150])
-  by fmviesa006.fm.intel.com with ESMTP; 16 Mar 2026 14:22:32 -0700
-Received: from kbuild by 892944969b78 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1w2FOQ-000000001Ja-1mmw;
-	Mon, 16 Mar 2026 21:22:30 +0000
-Date: Tue, 17 Mar 2026 05:22:21 +0800
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/dwc-eswin] BUILD SUCCESS
- cbbe59fa04b5d9f8e11138df4591653f7d2f8351
-Message-ID: <202603170515.atUQ4d2J-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Sz9aLFQ5"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2b04c9e3eb7so28085ad.0
+        for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 14:49:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1773697780; x=1774302580; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=/8z1/dIhYqxHzj3/umwHNkEcO1PtVcvAJP18LcAQq1Y=;
+        b=Sz9aLFQ5ZpzjCMQbhP0GaJlUqctaX3L9daYdMHHAWK69ofV+JdrQQNZqqHNfyhJHWT
+         enhHiksoJUu1HFOS7H5sV/6mmQvX287gMHDXX5CQnSr3xv5I/ftgY3RMZpoqGhum6QYn
+         z4R+1BiLxyabC86ANdO18xTJk7zbt2Z3SrDV8yGup3msBjRNI2SYLUdBjwZUnwAGSVn6
+         LMhCIwfYfZWZXxrJCyIpIuAKBOekqIsZhuhPIywVxn1rrlOMsD6YZI8HwEDuT/lydBNT
+         3Zpgfy+IOr6GTSSADS1sYM5OjTSeSAkISsKbU/j27ic2WwLzAmamilpN7CSDCTcFAxux
+         9+Vg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773697780; x=1774302580;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=/8z1/dIhYqxHzj3/umwHNkEcO1PtVcvAJP18LcAQq1Y=;
+        b=l5kvftTT/8yEbaxsa0ons5e9K+iGZ4z8UK6eALi90PObTK4XeiYQ35J72C2rYjWj7N
+         cqhN1fEW9fEio4Qx+zWg4lhE20L3SNP/I2HArHc+VH6NaE4sUzc22v75GgzYxffvTvkl
+         d79ncyuze0Oq5imokW1XpJmGpoWA6iK1qUhLhjwL+M2eNxEs6YLruj38Wcwicu/zu8uh
+         /372HN+4s8GrAYAEMX9miASF+QKm2/zO25lEjqCV6g6qv+ABDwePXc9w0YFMi9MkcgbN
+         ZqB1ded0QeBsnt8WD9X1VzD5PlOtC/H5qPmlB2AnW2Uu+wFeyH7U5CGTIJvP3BMfDWpN
+         AeWA==
+X-Forwarded-Encrypted: i=1; AJvYcCWiRFfbvJQzFNPkrVSzY2TN8wBVvjD06fSYYzU+xrCnkVxB71Qqfs0W3OACvFSf+Orh9V8FL3s/LNE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YySh+xe6xhEOfXg9iQHRV16G3aAGJyyjUaLpeQ39MF4+USRQ5dl
+	F7cPmcs+iSYOndrKc/fbJ3VEYIyxG7hW6ajAex+6XDv/Vhz9+zq83OGCBUPPyeqK8w==
+X-Gm-Gg: ATEYQzygP/y3HKLsSVipkmw8zEoDfEwAwv5VZk0KC4/3nPvWJBHULxfHIC2HY+5pe3m
+	7+R9gvDZV9ODH6i8aOJEnZ/RNYkKffTJ2vlLXy4VXALlkYRuoQaHLDGiEbVhoJUMFtRdBdPWAGe
+	RxHEB8sOQF7BSuHeka6QzWrMdn21ZoislSz032dJsOFNdf1gPvQ+gGR6vylCqzTLocmfVmZGzGd
+	sMmNmhgctHXhJ9fWLU9Z8Dch0mouaMazC0aZifN2TXl2CqiZQ09DzOLqydQ04nzuKa3DMN3EFM/
+	c4W8g6Lkrjmsng3Dmal6h9yBg/OcpMN5ALjKpE3A99Bk6CumEs9aBJZsMCKJnMfCbUlh83XmA12
+	72qS3Q212S07+X7EfOs66FE+1jRsGOeP5a+hNEWirEHX7dc9CylGR4Q3HDgMAOaMLavkD5v96P8
+	9RTd2KX4oraet4r+vxmSv2K1+I6sOzQnr+K44qzk7Bt0U4NnK2tNrj+1XlKNY7
+X-Received: by 2002:a17:903:98b:b0:2a8:ffed:4663 with SMTP id d9443c01a7336-2b06402f49emr1238925ad.12.1773697779367;
+        Mon, 16 Mar 2026 14:49:39 -0700 (PDT)
+Received: from google.com (176.13.105.34.bc.googleusercontent.com. [34.105.13.176])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82a07365b22sm14359627b3a.45.2026.03.16.14.49.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Mar 2026 14:49:38 -0700 (PDT)
+Date: Mon, 16 Mar 2026 14:49:34 -0700
+From: Vipin Sharma <vipinsh@google.com>
+To: David Matlack <dmatlack@google.com>
+Cc: Alex Williamson <alex@shazbot.org>, 
+	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>, 
+	Alistair Popple <apopple@nvidia.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Ankit Agrawal <ankita@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>, 
+	Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
+	Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org, kvm@vger.kernel.org, 
+	Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, linux-mm@kvack.org, 
+	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
+	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>, Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
+	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
+	Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>, 
+	Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed <saeedm@nvidia.com>, 
+	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, Tomita Moeko <tomitamoeko@gmail.com>, 
+	Vivek Kasireddy <vivek.kasireddy@intel.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>, 
+	Zhu Yanjun <yanjun.zhu@linux.dev>
+Subject: Re: [PATCH v2 10/22] vfio/pci: Skip reset of preserved device after
+ Live Update
+Message-ID: <20260316214055.GB1846904.vipinsh@google.com>
+References: <20260129212510.967611-11-dmatlack@google.com>
+ <20260226170030.5a938c74@shazbot.org>
+ <aaDqhjdLyf1qSTSh@google.com>
+ <20260227084658.3767d801@shazbot.org>
+ <CALzav=fHy23RAzhgkdaL+JA5T2tL9FT6aPgRfXUh7i9zvYCGPA@mail.gmail.com>
+ <20260227105720.522ca97f@shazbot.org>
+ <CALzav=fjRPa_ZbXu7iFXyemcf_8Kq_dZTWT6c-A0bc6czF_Rdw@mail.gmail.com>
+ <abNOwcOTXqxCxNzt@google.com>
+ <20260316160759.GA1767448.vipinsh@google.com>
+ <CALzav=cskxLZtZ5-uRa0+aV+1Kb3fwQQJ5dS=Yes4GAHrS6GpQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CALzav=cskxLZtZ5-uRa0+aV+1Kb3fwQQJ5dS=Yes4GAHrS6GpQ@mail.gmail.com>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-eswin
-branch HEAD: cbbe59fa04b5d9f8e11138df4591653f7d2f8351  PCI: Add ESWIN PCIe Root Complex driver
+On Mon, Mar 16, 2026 at 10:18:22AM -0700, David Matlack wrote:
+> On Mon, Mar 16, 2026 at 9:22 AM Vipin Sharma <vipinsh@google.com> wrote:
+> >
+> > On Thu, Mar 12, 2026 at 11:39:45PM +0000, David Matlack wrote:
+> > > On 2026-03-09 10:32 AM, David Matlack wrote:
+> > > > On Fri, Feb 27, 2026 at 9:57 AM Alex Williamson <alex@shazbot.org> wrote:
+> > >
+> > > > > Sorry if I don't have the whole model in my head yet, but is exposing
+> > > > > the restriction to the vfio user of the device sufficient to manage the
+> > > > > liveupdate orchestration?  For example, a VFIO_DEVICE_INFO_CAP pushes
+> > > > > the knowledge to QEMU... what does QEMU do with that knowledge?  Who
+> > > > > imposes the policy decision to decide what support is sufficient?
+> > > >
+> > > > Hm.. good questions. I don't think we want userspace inspecting bits
+> > > > exposed by the kernel and trying to infer exactly what's being
+> > > > preserved and whether it's "good enough" to use. And such a UAPI would
+> > > > become tech debt once we finish development, I suspect.
+> > > >
+> > > > A better approach would be to hide this support from userspace until
+> > > > we decide it is ready for production use-cases.
+> > > >
+> > > > To enable development and testing, we can add an opt-in mechanism
+> > >
+> > > Here is what I am trending towards sending in v3 as the opt-in mechanism:
+> > >
+> > > diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
+> > > index 1e82b44bda1a..770231554221 100644
+> > > --- a/drivers/vfio/pci/Kconfig
+> > > +++ b/drivers/vfio/pci/Kconfig
+> > > @@ -58,6 +58,27 @@ config VFIO_PCI_ZDEV_KVM
+> > >  config VFIO_PCI_DMABUF
+> > >         def_bool y if VFIO_PCI_CORE && PCI_P2PDMA && DMA_SHARED_BUFFER
+> > >
+> > > +config VFIO_PCI_LIVEUPDATE
+> > > +       bool "VFIO PCI support for Live Update (EXPERIMENTAL)"
+> > > +       depends on LIVEUPDATE && VFIO_PCI
+> > > +       help
+> > > +         Support for preserving devices bound to vfio-pci across a Live
+> > > +         Update. The eventual goal is that preserved devices can run
+> > > +         uninterrupted during a Live Update, including DMA to preserved
+> > > +         memory buffers and P2P. However there are many steps still needed to
+> > > +         achieve this, including:
+> > > +
+> > > +          - Preservation of iommufd files
+> > > +          - Preservation of IOMMU driver state
+> > > +          - Preservation of PCI state (BAR resources, device state, ...)
+> > > +          - Preservation of vfio-pci driver state
+> > > +
+> > > +         This option should only be enabled by developers working on
+> > > +         implementing this support. Once enough support has landed in the
+> > > +         kernel, this option will no longer be marked EXPERIMENTAL.
+> > > +
+> > > +         If you don't know what to do here, say N.
+> > > +
+> >
+> > To use VFIO liveupdate, user has to do at least two things:
+> > 1. Enable CONFIG_LIVEUPDATE
+> > 2. Pass VFIO FD to a live update session.
+> >
+> > This means someone using it has to know what live update is and
+> > intentionally pass the VFIO FDs. Isn't act of doing this itself an
+> > opt-in mechanism?
+> 
+> If it is, then I can leave this out. Alex?
+> 
+> My thinking was: Distros are free to enable LIVEUPDATE and use it. The
+> support it enables today is all fully functional (albeit new).
+> vfio-cdev, OTOH, is not. A separate Kconfig can help express that
+> difference.
+> 
+> Consider that LIVEUPDATE could be enabled by default in a future
+> release, but vfio-cdev support might not be ready yet at that point.
 
-elapsed time: 1566m
+But that also requires point 2 above i.e. userspace explicitly passing
+VFIO FD to liveupdate. Unless there is a capability mechanism like KVM
+then userspace cannot know what is exactly supported. Also, users who
+are using these APIs will already be advanced users and have to know
+many details about what liveupdate supports or not.
 
-configs tested: 141
-configs skipped: 3
+> 
+> > I am not sure providing VFIO_PCI_LIVEUPDATE alleviate Alex's concern
+> > about how userspace will know that sufficient VFIO support exists.
+> 
+> I was thinking we can flip VFIO_PCI_LIVEUPDATE to be enabled by
+> default (if LIVEUPDATE and VFIO_PCI are enabled), and drop
+> "(EXPERIMENTAL)" from the option title. That would be how distros and
+> downstream users of the kernel know that sufficient support exists to
+> enable VFIO_PCI_LIVEUPDATE.
+> 
+> > May be write in liveupdate documentation (PATCH 11 of this series) that
+> > support is experimental?
+> 
+> The documentation in patch 11 includes largely the same text that I
+> put under VFIO_PCI_LIVEU"PDATE. But I can explicitly mention
+> "experimental" as well if that's what you're asking.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Yeah, even though documentation do get stale but I think there is no
+better way in this scenario.
 
-tested configs:
-alpha                             allnoconfig    gcc-15.2.0
-alpha                            allyesconfig    gcc-15.2.0
-alpha                               defconfig    gcc-15.2.0
-arc                              allmodconfig    gcc-15.2.0
-arc                               allnoconfig    gcc-15.2.0
-arc                              allyesconfig    gcc-15.2.0
-arc                                 defconfig    gcc-15.2.0
-arc                   randconfig-001-20260317    gcc-9.5.0
-arc                   randconfig-002-20260317    gcc-13.4.0
-arm                               allnoconfig    clang-23
-arm                              allyesconfig    gcc-15.2.0
-arm                                 defconfig    clang-23
-arm                   randconfig-001-20260317    clang-23
-arm                   randconfig-002-20260317    clang-23
-arm                   randconfig-003-20260317    clang-23
-arm                   randconfig-004-20260317    clang-23
-arm64                            allmodconfig    clang-19
-arm64                             allnoconfig    gcc-15.2.0
-arm64                 randconfig-001-20260316    gcc-11.5.0
-arm64                 randconfig-002-20260316    clang-23
-arm64                 randconfig-003-20260316    clang-23
-arm64                 randconfig-004-20260316    clang-19
-csky                             allmodconfig    gcc-15.2.0
-csky                              allnoconfig    gcc-15.2.0
-csky                                defconfig    gcc-15.2.0
-csky                  randconfig-001-20260316    gcc-15.2.0
-csky                  randconfig-002-20260316    gcc-14.3.0
-hexagon                          allmodconfig    clang-17
-hexagon                           allnoconfig    clang-23
-hexagon                             defconfig    clang-23
-hexagon               randconfig-001-20260317    clang-23
-hexagon               randconfig-002-20260317    clang-23
-i386                             allmodconfig    gcc-14
-i386                              allnoconfig    gcc-14
-i386                             allyesconfig    gcc-14
-i386        buildonly-randconfig-001-20260317    clang-20
-i386        buildonly-randconfig-002-20260317    clang-20
-i386        buildonly-randconfig-003-20260317    clang-20
-i386        buildonly-randconfig-004-20260317    clang-20
-i386        buildonly-randconfig-005-20260317    clang-20
-i386        buildonly-randconfig-006-20260317    clang-20
-i386                                defconfig    clang-20
-i386                  randconfig-001-20260316    gcc-14
-i386                  randconfig-002-20260316    clang-20
-i386                  randconfig-003-20260316    gcc-14
-i386                  randconfig-004-20260316    gcc-14
-i386                  randconfig-005-20260316    clang-20
-i386                  randconfig-006-20260316    gcc-12
-i386                  randconfig-007-20260316    gcc-14
-i386                  randconfig-011-20260317    gcc-14
-i386                  randconfig-012-20260317    gcc-14
-i386                  randconfig-013-20260317    gcc-14
-i386                  randconfig-014-20260317    clang-20
-i386                  randconfig-015-20260317    clang-20
-i386                  randconfig-016-20260317    gcc-14
-i386                  randconfig-017-20260317    clang-20
-loongarch                        allmodconfig    clang-19
-loongarch                         allnoconfig    clang-23
-loongarch             randconfig-001-20260317    clang-23
-loongarch             randconfig-002-20260317    clang-18
-m68k                             allmodconfig    gcc-15.2.0
-m68k                              allnoconfig    gcc-15.2.0
-m68k                             allyesconfig    gcc-15.2.0
-microblaze                        allnoconfig    gcc-15.2.0
-microblaze                       allyesconfig    gcc-15.2.0
-mips                             allmodconfig    gcc-15.2.0
-mips                              allnoconfig    gcc-15.2.0
-mips                             allyesconfig    gcc-15.2.0
-nios2                            allmodconfig    gcc-11.5.0
-nios2                             allnoconfig    gcc-11.5.0
-nios2                 randconfig-001-20260317    gcc-8.5.0
-nios2                 randconfig-002-20260317    gcc-11.5.0
-openrisc                         allmodconfig    gcc-15.2.0
-openrisc                          allnoconfig    gcc-15.2.0
-openrisc                            defconfig    gcc-15.2.0
-parisc                           allmodconfig    gcc-15.2.0
-parisc                            allnoconfig    gcc-15.2.0
-parisc                           allyesconfig    gcc-15.2.0
-parisc                              defconfig    gcc-15.2.0
-parisc                randconfig-001-20260316    gcc-8.5.0
-parisc                randconfig-002-20260316    gcc-12.5.0
-powerpc                          allmodconfig    gcc-15.2.0
-powerpc                           allnoconfig    gcc-15.2.0
-powerpc                  mpc866_ads_defconfig    clang-23
-powerpc               randconfig-001-20260316    clang-23
-powerpc               randconfig-002-20260316    clang-23
-powerpc64             randconfig-001-20260316    gcc-13.4.0
-powerpc64             randconfig-002-20260316    gcc-8.5.0
-riscv                            allmodconfig    clang-23
-riscv                             allnoconfig    gcc-15.2.0
-riscv                            allyesconfig    clang-16
-riscv                               defconfig    clang-23
-s390                             allmodconfig    clang-18
-s390                              allnoconfig    clang-23
-s390                             allyesconfig    gcc-15.2.0
-s390                                defconfig    clang-23
-s390                  randconfig-001-20260317    gcc-15.2.0
-sh                               allmodconfig    gcc-15.2.0
-sh                                allnoconfig    gcc-15.2.0
-sh                               allyesconfig    gcc-15.2.0
-sh                                  defconfig    gcc-15.2.0
-sparc                             allnoconfig    gcc-15.2.0
-sparc                               defconfig    gcc-15.2.0
-sparc                 randconfig-001-20260316    gcc-8.5.0
-sparc                 randconfig-002-20260316    gcc-12.5.0
-sparc64                          allmodconfig    clang-23
-sparc64               randconfig-001-20260316    gcc-8.5.0
-sparc64               randconfig-002-20260316    gcc-15.2.0
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-23
-um                               allyesconfig    gcc-14
-um                                  defconfig    clang-23
-um                    randconfig-001-20260316    gcc-14
-um                    randconfig-002-20260316    clang-23
-x86_64                           allmodconfig    clang-20
-x86_64                            allnoconfig    clang-20
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20260317    clang-20
-x86_64      buildonly-randconfig-002-20260317    gcc-14
-x86_64      buildonly-randconfig-003-20260317    clang-20
-x86_64      buildonly-randconfig-004-20260317    clang-20
-x86_64      buildonly-randconfig-005-20260317    clang-20
-x86_64      buildonly-randconfig-006-20260317    gcc-14
-x86_64                randconfig-001-20260317    gcc-14
-x86_64                randconfig-002-20260317    gcc-14
-x86_64                randconfig-003-20260317    clang-20
-x86_64                randconfig-004-20260317    clang-20
-x86_64                randconfig-005-20260317    clang-20
-x86_64                randconfig-006-20260317    gcc-14
-x86_64                randconfig-011-20260317    gcc-14
-x86_64                randconfig-014-20260317    gcc-14
-x86_64                randconfig-071-20260316    gcc-12
-x86_64                randconfig-072-20260316    gcc-14
-x86_64                randconfig-073-20260316    gcc-14
-x86_64                randconfig-074-20260316    gcc-14
-x86_64                randconfig-075-20260316    clang-20
-x86_64                randconfig-076-20260316    clang-20
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    gcc-15.2.0
-xtensa                randconfig-001-20260316    gcc-15.2.0
-xtensa                randconfig-002-20260316    gcc-15.2.0
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
