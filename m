@@ -1,45 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D37733CEAA;
-	Mon, 16 Mar 2026 05:28:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80E203469F4;
+	Mon, 16 Mar 2026 05:30:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773638914; cv=none; b=E1q14nl8tME4gVcShJrE19bxbaGaMt9bZeycpPlfe9Zrl5slXkpqhc6/tAnAfji7x+T+XGVdCGbIWbJ7p025Lk2DMdDvoySbYE9nyJLXtftL/0HiNSn4ZvZH3j6sw6Zpw9BTd8kFXVCRbAajsdr0bV0yV3959m1ImofqrIMDNYE=
+	t=1773639019; cv=none; b=pX5uwWwD30qQAmK1piKkmqDIuukFS9wYqLquy9mB5kzoXYstbaCGMaVg6GcEGDHvv2ML1sCaTKYM4LWzwiEcKPXyZSW7qvciHH1acKqKOb5jkugPIjdY/tMYIVLGQceT933UzA+I1ZSgKuL9/E19wazpnsqc72F8W5f/NU1S6rE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773638914; c=relaxed/simple;
-	bh=qEDCrQ2v7dJci3xSiyFWef/LSE6H7UffGnv9arRsU4k=;
+	s=arc-20240116; t=1773639019; c=relaxed/simple;
+	bh=8B9fuSdohsuu1CMnw79SUjkL9MjMlLUlCNTDA2w6noo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JLyvvH3gIS5vDM+cJ8pQGVCB3+ij/0R+WlTCiCzNG74HmLHHbBCkYV01a1jLrOrVmZd7DjT1GedhLu5+2p9OpCIFPxsaz98NDKBr6aomu0o3mBgMlsiD5YSI/PmowDYxfig0PDxj4A01Y6pVZLTfYzaDHggyiI4KNV82xR3VHAA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jzAU86nT; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=DBdTUIta0eOUHRvtLX00MdoWevG7CGYpFBo4Bjr6kGTNtTgs0w+0DWisrgEv+XHxD8sXcrpmO9z1MCChruceXBLY3MSkg5TvnzcWsDkEjdzON44yObJM7auYBIs74H/PGC88R5HEo6+eCZw/eC0gtU6n80rUoxp1opJ2TXEZckg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kBtsWnDw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jzAU86nT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A967CC19425;
-	Mon, 16 Mar 2026 05:28:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kBtsWnDw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 461E6C19425;
+	Mon, 16 Mar 2026 05:30:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773638914;
-	bh=qEDCrQ2v7dJci3xSiyFWef/LSE6H7UffGnv9arRsU4k=;
+	s=k20201202; t=1773639019;
+	bh=8B9fuSdohsuu1CMnw79SUjkL9MjMlLUlCNTDA2w6noo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jzAU86nTbiyaRtuzpGIWRxf8Caw/dR4ABTg+vefUMEOyolPHn5h0fzbKoNiUQw1y1
-	 hyhCQgnaYNXKNvHajeMY6VY6zZHS7wlAz3xaY9Me/19ILxhtZWO0DGKAFjWv9sxCgj
-	 YIYQaAS5IrsAe1uy4qkmrUsRKqWUrfnRPk/TZNv3ov3sCQELxBNwOEu+RKGpzdSN2i
-	 sHqhiAGM/CFU6XwoShVsA/mBFqedrQslmn5QL+oWNRULDcib+zmrSwm3RDn6YhCRV6
-	 KR0UyZeYYDRGElmYuQhnJjn4XdIq0IrkolCTSQ7opMNsC/Al+fhsaH1Y4kxNkXny2x
-	 tecFgtTLw0uUQ==
-Date: Mon, 16 Mar 2026 10:58:26 +0530
+	b=kBtsWnDwe7n0y74F0kwuhppOL3Jf1ovoELahhJv2KmO48mrDBsUpOFr6UnwcdDaSD
+	 nS0n36nZvPz09OF8iIRxZSHpcJcHGcO2FblGqZsuTt0sUIK+D3ilx+EY5a7CP2fnj2
+	 JU1z/PXpSEEHoUzAiW05d/SEqGl8gzn/+idUucciuX8W8tN8p9iogB62tRi4WwQ9jt
+	 CyFDY7vdLq8Unov6pUmV/FxGfoYQNvV3rUtVD8GpgsdTLpQ1P/KEY6E3u2AmhyOzHd
+	 OqWinSAJ4pHKYAoS+QMXvJUMoMrpnIwsNZMzWafBI2EoejO4Rl0jL3rAe2V9lvHQ9H
+	 u+xNRn2dWbq+Q==
+Date: Mon, 16 Mar 2026 11:00:09 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, mayank.rana@oss.qualcomm.com, 
-	quic_vbadigan@quicinc.com
-Subject: Re: [PATCH v3 3/3] PCI: qcom: Program T_POWER_ON
-Message-ID: <moefzqwp3srzpewsuhecxp22cheuplvdhacct5hejzneukdnmu@cchguntsnto4>
-References: <20260311-t_power_on_fux-v3-0-9b1f1d09c6f3@oss.qualcomm.com>
- <20260311-t_power_on_fux-v3-3-9b1f1d09c6f3@oss.qualcomm.com>
- <wofjlohumsdyyfhndrdwf4ujxiwlrajm2rpobd6gofpqyasttb@ze54bm6pwbgq>
- <7ac68128-a3d2-4244-9435-a39f6eec1d1a@oss.qualcomm.com>
+To: Chen-Yu Tsai <wens@kernel.org>
+Cc: Sherry Sun <sherry.sun@nxp.com>, hongxing.zhu@nxp.com, 
+	l.stach@pengutronix.de, Frank.Li@nxp.com, bhelgaas@google.com, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	s.hauer@pengutronix.de, festevam@gmail.com, imx@lists.linux.dev, kernel@pengutronix.de, 
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V8 06/13] arm: dts: imx6qdl: Add Root Port node and PERST
+ property
+Message-ID: <wnbxqzsxq5v33rr4cweoz2inkxsq536bqxvtpdleboll76gx7k@rdhh4ntyydk4>
+References: <20260313020823.1592389-1-sherry.sun@nxp.com>
+ <20260313020823.1592389-7-sherry.sun@nxp.com>
+ <CAGb2v65dvWRqugwBAORB_dD+3Part+OieCe9hnSR781g-6NgZA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,77 +50,45 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <7ac68128-a3d2-4244-9435-a39f6eec1d1a@oss.qualcomm.com>
+In-Reply-To: <CAGb2v65dvWRqugwBAORB_dD+3Part+OieCe9hnSR781g-6NgZA@mail.gmail.com>
 
-On Mon, Mar 16, 2026 at 10:35:50AM +0530, Krishna Chaitanya Chundru wrote:
+On Fri, Mar 13, 2026 at 02:08:05PM +0800, Chen-Yu Tsai wrote:
+> On Fri, Mar 13, 2026 at 10:08 AM Sherry Sun <sherry.sun@nxp.com> wrote:
+> >
+> > Since describing the PCIe PERST# property under Host Bridge node is now
+> > deprecated, it is recommended to add it to the Root Port node, so
+> > creating the Root Port node and add the reset-gpios property in Root
+> > Port.
+> >
+> > Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
+> > ---
+> >  arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi |  5 +++++
+> >  arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi         | 11 +++++++++++
+> >  arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts |  5 +++++
+> >  3 files changed, 21 insertions(+)
+> >
+> > diff --git a/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi b/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
+> > index ba29720e3f72..fe9046c03ddd 100644
+> > --- a/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
+> > +++ b/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
+> > @@ -754,11 +754,16 @@ lvds0_out: endpoint {
+> >  &pcie {
+> >         pinctrl-names = "default";
+> >         pinctrl-0 = <&pinctrl_pcie>;
+> > +       /* This property is deprecated, use reset-gpios from the Root Port node. */
+> >         reset-gpio = <&gpio7 12 GPIO_ACTIVE_LOW>;
 > 
+> I'd say just remove the old description.
 > 
-> On 3/16/2026 10:23 AM, Manivannan Sadhasivam wrote:
-> > On Wed, Mar 11, 2026 at 06:10:40PM +0530, Krishna Chaitanya Chundru wrote:
-> > > Some platforms have incorrect T_POWER_ON value programmed in hardware.
-> > > Generally these will be corrected by bootloaders, but not all targets
-> > > support bootloaders to program correct values due to that
-> > > LTR_L1.2_THRESHOLD value calculated by aspm driver can be wrong, which
-> > > can result in improper L1.2 exit behavior and if AER happens to be
-> > > supported and enabled, the error may be *reported* via AER.
-> > > 
-> > > Parse "t-power-on-us" property from each root port node and program them
-> > > as part of host initialization using dw_pcie_program_t_power_on() before
-> > > link training.
-> > > 
-> > > This property in added to the dtschema here[1].
-> > > 
-> > > Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> > > Link[1]: https://lore.kernel.org/all/20260205093346.667898-1-krishna.chundru@oss.qualcomm.com/
-> > > ---
-> > >   drivers/pci/controller/dwc/pcie-qcom.c | 13 +++++++++++++
-> > >   1 file changed, 13 insertions(+)
-> > > 
-> > > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> > > index 67a16af69ddc75fca1b123e70715e692a91a9135..63d5628e988d3c07f42099c0d86e6b80fd54ce32 100644
-> > > --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> > > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> > > @@ -269,6 +269,7 @@ struct qcom_pcie_perst {
-> > >   struct qcom_pcie_port {
-> > >   	struct list_head list;
-> > >   	struct phy *phy;
-> > > +	u32 l1ss_t_power_on;
-> > >   	struct list_head perst;
-> > >   };
-> > > @@ -1283,6 +1284,14 @@ static int qcom_pcie_phy_power_on(struct qcom_pcie *pcie)
-> > >   	return 0;
-> > >   }
-> > > +static void qcom_pcie_configure_ports(struct qcom_pcie *pcie)
-> > > +{
-> > > +	struct qcom_pcie_port *port;
-> > > +
-> > > +	list_for_each_entry(port, &pcie->ports, list)
-> > > +		dw_pcie_program_t_power_on(pcie->pci, port->l1ss_t_power_on);
-> > > +}
-> > > +
-> > >   static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
-> > >   {
-> > >   	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> > > @@ -1317,6 +1326,8 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
-> > >   	dw_pcie_remove_capability(pcie->pci, PCI_CAP_ID_MSIX);
-> > >   	dw_pcie_remove_ext_capability(pcie->pci, PCI_EXT_CAP_ID_DPC);
-> > > +	qcom_pcie_configure_ports(pcie);
-> > > +
-> > >   	qcom_pcie_perst_deassert(pcie);
-> > >   	if (pcie->cfg->ops->config_sid) {
-> > > @@ -1759,6 +1770,8 @@ static int qcom_pcie_parse_port(struct qcom_pcie *pcie, struct device_node *node
-> > >   	if (ret)
-> > >   		return ret;
-> > > +	of_property_read_u32(node, "t-power-on-us", &port->l1ss_t_power_on);
-> > > +
-> > Since this is going to be common for all controller drivers, it'd be good to
-> > move this inside the dwc API.
-> As this per root port, we can summit changes to merge first so that we can
-> move this to
-> dwc.
+> You're asking for trouble by describing the same thing in two different places.
+> 
+> >         vpcie-supply = <&reg_pcie>;
+> 
+> I would probably also take this chance to just convert to the proper PCI
+> slot supply, and just add pwrctrl support into your PCIe driver.
 > 
 
-Fair. Atleast add a TODO here.
++1
 
 - Mani
 
