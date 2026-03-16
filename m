@@ -1,158 +1,211 @@
-Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com [209.85.167.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azolkn19010022.outbound.protection.outlook.com [52.103.12.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0621382F39
-	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 17:10:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EAFD396B8B;
+	Mon, 16 Mar 2026 17:11:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.12.22
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773681005; cv=pass; b=DJaxk8V3rX52nihQyvZGh5am8wrQrAAwm1M2xxOCPAgBEEEMRDYqy9wB0xKNeNrQlg8oKXbXqTlQ3G825fWkpfvxHQZn2rjxLuq3sNfWpnyx8lgOlO/SPgaK6O+qV9qsUPcVHCTF09nCGOWtLmA0rpAaU3a40Y8LOWwgyzDc42w=
+	t=1773681090; cv=fail; b=XwfuVh0oczdN8dV6p8O8eIx08faYgjnZmugMc1+3OubTWtcuVBNfke4fpXOgrr9Z5/uEMmY96d2FjWJeAY3tpj79J4UO+84czhwTFL+LwdLTU3/WsCwEhZ/p+va5kccj/8GmD2Cji3+/MI5VyIouIM1VC3ITvBGBZmYLehb8rvA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773681005; c=relaxed/simple;
-	bh=dkI9QqpDtG36LgG+kw8ZEzl8s+Rk40Z2naIpV+PYS9Y=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ANuw72mxAw4vJAyb7s5Z/6BcneasgdusT9Ru+RsWDEBTlHLMKNBGr1u0Kk0D4YJqUbGicHAXj5lNDAPWnDZoyUX0qYSNCm8AOT+tYCo9KdCFPoFDm+nzpUjUl2hO5LG3qmPwbQ+UavwxGYx8lYhNniAU9GYM38/f4UnAiVn9I9Q=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=vA8sNSIY; arc=pass smtp.client-ip=209.85.167.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1773681090; c=relaxed/simple;
+	bh=W4GXS2iyIl6VjtQtBDPG3xLl+uSunGvgi7Fc30lwBLE=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=Sa/lXNBoGlXBmyixE6Nw+D9oeUNAVHJZndWhm1pZoRs9/H2Hqr8i/VHaRdTNS4jv8z8ViaxBRu0KZdT3Q42xeUNRg/EnAODAgRGy7lTrZArxmF7HDS3NIjWKOovBZ2kqfN3SIZExXhrT4PU7drvU32waDCPHFlInptsRQRVa2sA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=af4qjm0K; arc=fail smtp.client-ip=52.103.12.22
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="vA8sNSIY"
-Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-5a140efd2d5so8761171e87.2
-        for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 10:10:03 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1773681002; cv=none;
-        d=google.com; s=arc-20240605;
-        b=DLuN6eeTLGnnxIbj+ulz639lcyB3RbXff/pmlUKWw69jZN2kdt8fFcUmkJl1me7Z0p
-         FeRjphO/ZSioHva9PsTcButhHW6LH8whszX1AsfsBLrPKev5yppD7QLAzpb4EOzOsF5l
-         5j+ZHzTRW7beoiNr5eLnQhByM/C5ulcb2UJf3Vctts+39L7cgqcYqjimjfwPL5VEUwoI
-         jGP0uCz2cOu7HBB9+6wERPzGav16NWjYeO7OWpVeGXxVZmu/MOMogdEnLmxtPt0eLIvj
-         5/+xH1/2eS4OoVeMzITbHyul2nbt131YSnczynZtvoc0yG+v7g+yPNomgs1tHFRSgJ5Q
-         V4Mg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=VjajILnhW/iAqqxkTb08T/Hii8IQWi4dcNUVIU2+S2M=;
-        fh=zuofATQHDUmG8WLLcaEOyFWMt8BYO9ZRI3pHqrnnMBg=;
-        b=W/ULSDdEqfv1M7wAn1C/ZYE3qMuMnvDof7KLdZhk7JGVkmjDMA4VOXLLI8KkZiwEMA
-         nZadkc5yP0R+TikOXLF2tQ6xmV2yNzjxJdc3MdSxAiT6GoWP2+K4IJbxKopfTOx/BALz
-         +TA0saU9IF/zQRiB5/FdNYv4zhoBroPloGZeBLJE0ReO+nre1vSnZ2ilD144CkXFblv6
-         ztV6/nEA3eazkBgfnUCNEWTVVXMK5g9gQ/LGN/fCjpw4A/8ZkKawQZOx4OpZMVe4+Kxx
-         PopT0TULVlQubt1AedUtamy8GPhCDqVnx5imw9Ec/HeiOWCXIEntSXTKzVI1B+rDXIbG
-         BXIQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1773681002; x=1774285802; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=VjajILnhW/iAqqxkTb08T/Hii8IQWi4dcNUVIU2+S2M=;
-        b=vA8sNSIYf/v4LksXXda0XuPKnMxUj1Ibw/V/HMiYc0uWmvIPLbjMjZutFH3c/xTpU1
-         RAACgDVXP6gVNYR/uFS9P972GPZRJDMuLumL9oCN8g6TCQ5IqQKJmvZeOtsCc7GMlM2S
-         Aa/WFaphNihK40YrMJShq2dVVayP7l5bbY8YUPt0AF6KmANG+U8Csv3zxhf2DSR7QsHq
-         jHtRDTb4g0voHjGWEzKpDs9CSbsAig34r9K4wIz0rzOcvVmAPXinmzrWqi9oZxytnRsY
-         dPAMooGHWuj0Ty2OwKmypVsAHPji3dnmov2T0RsZkDz/9yTkcc/BUuauM0YpgKZMaP+u
-         sGeQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773681002; x=1774285802;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=VjajILnhW/iAqqxkTb08T/Hii8IQWi4dcNUVIU2+S2M=;
-        b=Oc6c4eAeFOHz1BvLzAtNu3fEV+5OvsVlMrMQbPMSkQ+mYIf5fwOhHR1InXN2By1O9e
-         0ydjr1sZrn6M3ypYLhzrOfhQ7aMqSMQX7l9bnY9zlQDhET4pSqZRk46FI5Ikoh0aGLuN
-         awCaOh3dWo3DOM/kHObTxmEOo20oSM7FStqC4QHpy2pIpz287QGxNch7BkBxESZvc8CU
-         6YwmHJte+WnVJSPIBAimzAcYsYQBeM8KTP1d0A5cIegLAQyJ1UytNCHuBJhKxu5+7H5B
-         NYakrj5lmadt9l5+x4ev4gfKBVY3Q3+iQi1XPsCS3q4HAQLJOMskivRQTBs94s/nfzGO
-         xkgA==
-X-Forwarded-Encrypted: i=1; AJvYcCXMv8bG2kfqwMACQQtLUy4MGKHFM4rrT+RQnztusL3jO9pJjxnzEn91ipTacO1AFCUbOZTNKd/j6z4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzaakvqulPfZyoJ3b53qYeV8lLLhm030MiBQp9n6J4h1RWYWrO6
-	GDCzO+S59fNfdHl+Fq5HtIyAv+/yAGkzUD9KF3CAG3ztHNlei8ESTVgrXKrviFiM5hmbO3dgdaj
-	1DC3ffB9oeMzMSHhNgzHRR5bYoB8uYJ0cD2SB5N2q
-X-Gm-Gg: ATEYQzwOsUyf/VkboigHP/eHxkU9oGnnAw1ZWx+5OmZddrRFXSOqTnHQd3ii8OV53pZ
-	OLetbhKYDfdSusAoVVWSmEE+22YhDma/6RApV2ZnZqwQPEyf5NJ9idxWJizpiJhxUbumucgPqY6
-	Zrub8vv8MPK7L9mToxkKRJQQCy0oM0ye1a3yFq1/e+3JrVj6s3WPjYqDJIdvX4ZZ/XnRRFJ7C9q
-	rqxTs011v1elL1yqRnaADqEbDLt4VsfB0hELS6/ivQGD4F6Xnarb/yXguPAPYD3QrLW71G3Hy49
-	NOgFL/ep/O2wRIoKCcQ=
-X-Received: by 2002:a05:6512:145c:20b0:5a1:3207:694c with SMTP id
- 2adb3069b0e04-5a162b0c23emr3396226e87.29.1773681001667; Mon, 16 Mar 2026
- 10:10:01 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="af4qjm0K"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=WhDR//ecNyj8A1LK3m4CK+E/oO1+heMxXvzKyEBRxwhlDobWPFrkNiT02cSASD4iwzPh9uq/8Xr2IMOYtS97LZTokNYgUWbXlH1+ijXWUJviROoDBci5sIyJIvGhF3GmeySuQQPrcCizPkWEVSgi49xz/7CW40OMT3Uj7u91LlQs8Nccv4tKATVJXvScbj51bNMmWqkmFlMmRmUaqfMh4Vpa/Ul4SxUK/b3XUeE+iHgZWJjnvIaQ0DnyubY1Vv90hFLWJp8dOLiUppj+yUAzvM4dLHReAAQZcNG/QfE1j07Z90USQXCgsBAPhRWRNZxdq+Gauv/OdFJ6PKhAGEUsQg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=nh+VA5QPjE5rvvitGutArzgAk3hxAKTQO7hcORQNAro=;
+ b=LXTx1VDeqvZ+YeGIg9oo9c90NXnZkWWGFzK+KF65N/QphnCxoP/YSst6+OxzAiunAL02R4s+7tWhWkvyVjqdKo97TkHQCmGqgId2GIv5z9CLE33SLIcARavzeVknBEzQpZsOZpTN8O0aNVqtARfB6ENksDqbRIC1IT4k4VmEv9ZktvGEZU3Wyu8AUdJIFu/AvMzqY/w0ec635tfgD+cg9ANIXLnTCtVR6jVyBxlphlSLrAygpl1cN8MBTYDn7e8j+cYmv2cwWouRuHCuI+KIsk/9U65el4A5vSqPpH5qH+3q1gFLmkGvmsNbx7h4erdc8ZKAEPMppptcGHNRrpwQow==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=nh+VA5QPjE5rvvitGutArzgAk3hxAKTQO7hcORQNAro=;
+ b=af4qjm0KyIO9F24ZZJKW0hRVg7um/DxzqfL0nSXl/SSVbGGDUyrK6r8q4qJrYMgvH3g1A8Jv7kwyQDL+gvMQdsH0PxjAQe+IBN0pu5vnp6DzAeI6/gVO1VBCSIpP3CHLGFuID6tp61BeeVoCxXRvZCpnuMt1HVMzWJ75I3/jIvkxKrUz7n/LCtvuMRM7sM/BmYvJXLMC1nySN/2qEzxcE8ZZidRbyRsv3s2BzTxor6A+qsmlMbrTy9ANeqrb0T9aBoa2v+0HmU79nLHyl7yrCRf45jS0mGyc5BAQgIdy+NSwCdQwhEss/0jkVOf545e9bsKj4o8aBY2FNWAjsMp8Jw==
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
+ by CH4PR02MB10681.namprd02.prod.outlook.com (2603:10b6:610:246::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.24; Mon, 16 Mar
+ 2026 17:11:26 +0000
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::900:1ccf:2b1e:52b6]) by SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::900:1ccf:2b1e:52b6%6]) with mapi id 15.20.9700.024; Mon, 16 Mar 2026
+ 17:11:26 +0000
+From: Michael Kelley <mhklinux@outlook.com>
+To: Long Li <longli@microsoft.com>, "K . Y . Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, Dexuan
+ Cui <decui@microsoft.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?iso-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>, Manivannan
+ Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+CC: Rob Herring <robh@kernel.org>, Michael Kelley <mikelley@microsoft.com>,
+	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] PCI: hv: Set default NUMA node to 0 for devices without
+ affinity info
+Thread-Topic: [PATCH] PCI: hv: Set default NUMA node to 0 for devices without
+ affinity info
+Thread-Index: AQGzcdRLNO2QZSbCibyDMDhroeyPibYBl7IA
+Date: Mon, 16 Mar 2026 17:11:25 +0000
+Message-ID:
+ <SN6PR02MB415748A42DCBDD8AB635838DD440A@SN6PR02MB4157.namprd02.prod.outlook.com>
+References: <20260312223244.1006305-1-longli@microsoft.com>
+In-Reply-To: <20260312223244.1006305-1-longli@microsoft.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|CH4PR02MB10681:EE_
+x-ms-office365-filtering-correlation-id: 57e6e6b6-11f2-422d-e9b8-08de837f0e92
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|15080799012|31061999003|12121999013|461199028|13091999003|37011999003|8060799015|19110799012|8062599012|41001999006|440099028|3412199025|102099032|52005399003|40105399003;
+x-microsoft-antispam-message-info:
+ =?iso-8859-2?Q?tLR6U4KDThXixiqoqaV5a86UDXRjfL1W0AHHhQ397SPgIZtvlitdxdXawB?=
+ =?iso-8859-2?Q?yX3fG+tdHAm++m1YDxVPDweBcs7qiEGAPzbpZl0VhlvIXi5L+fRaj1CJoH?=
+ =?iso-8859-2?Q?odp9jM2vP6V6PgSHhApj1A6iOkV6h3mTBVliLA8wCl4/YtMBBAEX2MLWif?=
+ =?iso-8859-2?Q?OTouCudL+kjsWHUX+moUkj8RFCaAZlBIapxdDupbkou138j33VS/Gs11eZ?=
+ =?iso-8859-2?Q?rnTemkC5CYP57XJ9pzpw9rzQPor32WCBMC3F7F2xTntTlQBA+6Ew+UgNoS?=
+ =?iso-8859-2?Q?65o1vd9ZVJSNS/M33XM1yHSy5aKS8G0owXLf68Shz64Ze+fJYrHDZ/vlSP?=
+ =?iso-8859-2?Q?EQmnClvrYohr35qFkrb9PBnhvSeSSpZyRZXufv2MQ8SJ13BN/uQIHisy++?=
+ =?iso-8859-2?Q?xLAZiWqdmLU2kyg+WmWPn+hAHgPzWmIASmoOH5uiWsq02ncMeAz3/zYDpt?=
+ =?iso-8859-2?Q?klHsajQjsIILQqbY9Z3ssz9v3nPY8M2OW7V37lS3yEndzZ2/tsi8TOJk+c?=
+ =?iso-8859-2?Q?m99Oo6vYrz9IrKORQ/ZS5CZ55f9BpnXP2W2j6xScDab1AgTrYR1R1JyKxu?=
+ =?iso-8859-2?Q?61ZsVQ01qANvRd4YD+WB04HMuGt3NCnpmWwNITltMnoqpHCjH0G12dbzAy?=
+ =?iso-8859-2?Q?RntkI8Sudaq5OUcc6SZUEXDKGlGTmMcsuaronxklj48SMvS9/pP3Kh6r1a?=
+ =?iso-8859-2?Q?gdehkZAlpvoPeb8G7naVfQwMGzYrRee8Vj2KeQ2VfF4D0vCzF/KgM1qcTD?=
+ =?iso-8859-2?Q?1BrZjDj7NOj5ZYRahWWPa/MjStHt7NkopGJrs2hqecLS+EQsln7iFcGq/5?=
+ =?iso-8859-2?Q?0mJ6JqcH6vW1nT823k++ldghtVfLZTd8JPeY6o5pMpSEP0tHAI8kFOwHbf?=
+ =?iso-8859-2?Q?TmSUiwJw1KjqORtSjj2SJiqoOmq3rnN7a4Pr1fKcUJMqeb86f/c3TrZT4e?=
+ =?iso-8859-2?Q?GhXbi1Q0c3N8r52VnoMVUKK78mUUcs69ur2aR2gDL5zt18W/6Bbe/Mp2Cy?=
+ =?iso-8859-2?Q?y6vHaJS0iAcRxpDZ7CesREbW6TFMhb5SaBYi9t7SSt1Uc/QNoJHDYoHn6w?=
+ =?iso-8859-2?Q?ObjNKSHgPBUty3uc6WwA3Lw=3D?=
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-2?Q?9X8ElHHs1qdcT09EqsxyhGOZLMWZcfN9RxYGws8vBlbbZGItnbgGD+yhWt?=
+ =?iso-8859-2?Q?bXuiil48iSlgT/tuueodbkYyon2vG++11btsve5kMx1XqDSSc+EQ4VmvEJ?=
+ =?iso-8859-2?Q?GO7bqLtZY5bdQ8wn8VdFGzOvwfnhS1lZLb4dMWyyS2602T5wtmq8KFwqN7?=
+ =?iso-8859-2?Q?v/NQDGtjw+2yjIoT5htuKO2r7ONECe69mjEBooAHg0o1JpL3IJ9ZvJf+87?=
+ =?iso-8859-2?Q?LkK3tEhoS2gSltL6+CZGSt+4K0BYBlvO5xtlFoYI2FYANVXz40OcHcYMGc?=
+ =?iso-8859-2?Q?eClr4jsfKK+dLXY57GQ9JndxhVbMRIOtiyw9lL38u/EUR+PKZ05BaOzVTc?=
+ =?iso-8859-2?Q?W9/Z6V0D9Kc0QBIAzVyvt+6Xxskjl9rYiPQEoLRAa9r2kGM48bXPklHDnJ?=
+ =?iso-8859-2?Q?Ri0ALsiqIiO6BO7d5GYPCNZjwyq2IT5Xy68jeCM0n3bdA0nir8WeMEtzVW?=
+ =?iso-8859-2?Q?81Fptfg0DvDnJesBDo6SEYTyfztgvJ26+uXXIwjk53Lvt2j3kheeWqFyLM?=
+ =?iso-8859-2?Q?9UxpnyjSn0hFCNS5GTkX3WZNVlsA3UMKk77oQ9H1xEczk8j9mj3aARGAxA?=
+ =?iso-8859-2?Q?+Ith7cFzhS/YKAfqZ2PvOQsSqEDc5DzXP0CFWshYTzGzssJgHODEfgCWOa?=
+ =?iso-8859-2?Q?rzKDNZJQiZAjM20+XV17myKF11Qf6je54sONPjGgLAtVSrHaGtqzRltGtn?=
+ =?iso-8859-2?Q?OikDPADbVtzXqSk59VYCgKfWFCUOrVEDo8O20AQeZsto3Q3IiL4HbLg2bi?=
+ =?iso-8859-2?Q?gKbCCR0BSZ/fq2pCWQGFfmOvEruP2PxG58BCrd9panem3n7OtZQbgo4Ti3?=
+ =?iso-8859-2?Q?lgQIq9y4d3SKzDo7Itda49NUp8HDdE2GN+ctGJUeC421zFUwiZbnNdQ0LW?=
+ =?iso-8859-2?Q?cq52exW+xUXlWbkIKCqsM8ZOVwhV+u6oAdSKvKaCwKo9Dv35EDq/eH0ZrV?=
+ =?iso-8859-2?Q?WT30oeaQNmOdfmGLQUa0Bx3DNvzyXyQ5vrVzhp+FD9/478SE6RORDnQ78K?=
+ =?iso-8859-2?Q?CemVO5vhiU4k9yKdFDqBJEJUdIZzk0QI6LNFMs581hNT8o08bgnX67vMg4?=
+ =?iso-8859-2?Q?CaUOoTgSWwF8uOSB7pi3DLLZU+RXI/KuQF2bkrhOMuGVqfsndH+tz2mEqR?=
+ =?iso-8859-2?Q?hoZsHLiURXv8k7RMFOocTu/tVqrtqwSMjTr1WwY8YZh7Tf4REMVU6r0YUh?=
+ =?iso-8859-2?Q?DuRv1cdIgdKymsOMp283+iBwdbZsjK5Jo69Oi/KFq9FItZrOHh6nrYR27c?=
+ =?iso-8859-2?Q?F4n18DRaszGx8g43qmQoYPKdrpHvfwamHs6EbyP2RToYmCoJpsq7mySqVS?=
+ =?iso-8859-2?Q?1ZHjettxz5FqVA481ERqpoHSjklMj+43/lvCNM+eurrcMtMOFoXUWxGwYb?=
+ =?iso-8859-2?Q?uNmQXeBQy06JtpMll9u+a+2UzcluBVHQ3ODmLvE+MKKC0TlaYl/Fk=3D?=
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260129212510.967611-1-dmatlack@google.com> <20260129212510.967611-17-dmatlack@google.com>
- <20260314073250.GE4177610.vipinsh@google.com>
-In-Reply-To: <20260314073250.GE4177610.vipinsh@google.com>
-From: David Matlack <dmatlack@google.com>
-Date: Mon, 16 Mar 2026 10:09:31 -0700
-X-Gm-Features: AaiRm539MAtTSlMtJ9cZiQMw7S77YkLj3Qx3YTaEKJUIvtilcVTIw0VDB1yQ5S8
-Message-ID: <CALzav=fWmv_+BACzTLq2Nj2aUux575EnbLRwJTevH4aYZTXycw@mail.gmail.com>
-Subject: Re: [PATCH v2 16/22] vfio: selftests: Add vfio_pci_liveupdate_uapi_test
-To: Vipin Sharma <vipinsh@google.com>
-Cc: Alex Williamson <alex@shazbot.org>, Adithya Jayachandran <ajayachandra@nvidia.com>, 
-	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>, Alistair Popple <apopple@nvidia.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Ankit Agrawal <ankita@nvidia.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, Jonathan Corbet <corbet@lwn.net>, 
-	Josh Hilke <jrhilke@google.com>, Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org, 
-	kvm@vger.kernel.org, Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
-	=?UTF-8?Q?Micha=C5=82_Winiarski?= <michal.winiarski@intel.com>, 
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>, 
-	Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed <saeedm@nvidia.com>, 
-	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
-	=?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, 
-	Tomita Moeko <tomitamoeko@gmail.com>, Vivek Kasireddy <vivek.kasireddy@intel.com>, 
-	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>, Zhu Yanjun <yanjun.zhu@linux.dev>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: 57e6e6b6-11f2-422d-e9b8-08de837f0e92
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Mar 2026 17:11:26.1695
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH4PR02MB10681
 
-On Mon, Mar 16, 2026 at 9:05=E2=80=AFAM Vipin Sharma <vipinsh@google.com> w=
-rote:
->
-> On Thu, Jan 29, 2026 at 09:25:03PM +0000, David Matlack wrote:
-> > +
-> > +TEST_F(vfio_pci_liveupdate_uapi_test, preserve_device)
-> > +{
-> > +     int ret;
-> > +
-> > +     ret =3D luo_session_preserve_fd(self->session_fd, self->device->f=
-d, 0);
-> > +
-> > +     /* Preservation should only be supported for VFIO cdev files. */
-> > +     ASSERT_EQ(ret, self->iommu->iommufd ? 0 : -ENOENT);
-> > +}
-> > +
-> > +TEST_F(vfio_pci_liveupdate_uapi_test, preserve_group_fails)
-> > +{
-> > +     int ret;
-> > +
-> > +     if (self->iommu->iommufd)
-> > +             return;
->
-> for iommufd variant, should we mark test as skipped instead of showing
-> it as passed?
+From: Long Li <longli@microsoft.com> Sent: Thursday, March 12, 2026 3:33 PM
+>=20
+> When a Hyper-V PCI device does not have
+> HV_PCI_DEVICE_FLAG_NUMA_AFFINITY set or has an out-of-range
+> virtual_numa_node, hv_pci_assign_numa_node() leaves the device
+> NUMA node unset. On x86_64, the default NUMA node happens to be
+> 0, but on ARM64 it is NUMA_NO_NODE (-1), leading to inconsistent
+> behavior across architectures.
+>=20
+> In Azure, when no NUMA information is available from the host,
+> devices perform best when assigned to node 0. Set the device NUMA
+> node to 0 unconditionally before the conditional NUMA affinity
+> check, so that devices always get a valid default and behavior is
+> consistent on both x86_64 and ARM64.
 
-Will do.
+I'm wondering if this is the right overall approach to the inconsistency.
+Arguably, the arm64 value of NUMA_NO_NODE is more correct when the
+Hyper-V host has not provided any NUMA information to the guest. Maybe
+the x86/x64 side should be changed to default to NUMA_NO_NODE when
+there's no NUMA information provided.
 
-> > +int main(int argc, char *argv[])
-> > +{
-> > +     int fd;
-> > +
-> > +     fd =3D luo_open_device();
-> > +     if (fd < 0) {
-> > +             printf("open(%s) failed: %s, skipping\n", LUO_DEVICE, str=
-error(errno));
-> > +             return KSFT_SKIP;
->
-> Both can be combined using ksft_exit_skip()
+The observed x86/x64 default of NUMA node 0 does not come from x86/x64
+architecture specific PCI code. It's a Hyper-V specific behavior due to how
+hv_pci_probe() allocates the struct hv_pcibus_device, with its embedded
+struct pci_sysdata. That struct pci_sysdata has a "node" field that the x86=
+/x64
+__pcibus_to_node() function accesses when called from pci_device_add().
+If hv_pci_probe() were to initialize that "node" field to NUMA_NO_NODE at
+the same time that it sets the "domain" field, x86/x64 guests on Hyper-V
+would see the PCI device NUMA node default to NUMA_NO_NODE like on
+arm64. The current behavior of letting the sysdata "node" field stay zero
+as allocated might just be an historical oversight that no one noticed.
 
-Will do.
+Are there any observed problems on arm64 with the default being
+NUMA_NO_NODE? If there are such problems, they should be fixed
+separately since that case needs to work for a kernel built with
+CONFIG_NUMA=3Dn. pcibus_to_node() will return NUMA_NO_NODE,
+making the default on x86/x64 be NUMA_NO_NODE as well.
 
-Thanks!
+I've tested setting sysdata->node to NUMA_NO_NODE in hv_pci_probe(),
+and didn't see any obviously problems in an x86/x64 Azure VM with a
+MANA VF and multiple NVMe pass-thru devices. The NUMA node
+reported in /sys for these PCI devices is indeed NUMA_NO_NODE.
+But maybe there's some other issue that I'm not aware of.
+
+Michael
+
+>=20
+> Fixes: 999dd956d838 ("PCI: hv: Add support for protocol 1.3 and support P=
+CI_BUS_RELATIONS2")
+> Signed-off-by: Long Li <longli@microsoft.com>
+> ---
+>  drivers/pci/controller/pci-hyperv.c | 3 +++
+>  1 file changed, 3 insertions(+)
+>=20
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller=
+/pci-hyperv.c
+> index 2c7a406b4ba8..5c03b6e4cdab 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -2485,6 +2485,9 @@ static void hv_pci_assign_numa_node(struct hv_pcibu=
+s_device *hbus)
+>  		if (!hv_dev)
+>  			continue;
+>=20
+> +		/* Default to node 0 for consistent behavior across architectures */
+> +		set_dev_node(&dev->dev, 0);
+> +
+>  		if (hv_dev->desc.flags & HV_PCI_DEVICE_FLAG_NUMA_AFFINITY &&
+>  		    hv_dev->desc.virtual_numa_node < num_possible_nodes())
+>  			/*
+> --
+> 2.43.0
+>=20
+
