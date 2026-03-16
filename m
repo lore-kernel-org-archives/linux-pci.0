@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21F84946C;
-	Mon, 16 Mar 2026 01:31:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ED8914F112;
+	Mon, 16 Mar 2026 01:34:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773624702; cv=none; b=kjh+UzNu07jLevJ75LBfO5BW0hnwhUMjrQdjm97QH2zU5H84BUQasqDCk5uXBQUklyRJp55MQWAGW1VYZvCCOIWqUv+HQNnKVUwCbFrGIZSRP3Bp5rvfFYdg7L2i3vxifPpU+dOF2kwne9lisEqyUHjzMMkOxZoOrkzS+15tl9I=
+	t=1773624865; cv=none; b=XHJ/EkMCDSbPSq8lld9Ne0kskvrNGCmJNJsvqd9AzO1LKXJywpgGyUNkydA+apy+09k/z6xgmhiHsmeDlYlt6I81a2jWHNl0QbNLf8EfW7M8uutKZ9ub1NTD7TxMWAGsPGLvX6F3TSIL/NYrJequl+alg9iWogMeKjP7LUOAVYM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773624702; c=relaxed/simple;
-	bh=X8cCdZbBy/uTCoH54FdUwoeMK4n226fZFOcKPEkcYfg=;
+	s=arc-20240116; t=1773624865; c=relaxed/simple;
+	bh=sh9VGbG06AmkEsTW0w9Dj5wk0bvcHTXybJaPoqCrN4Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JXvzyCycHB8plgtcKK+Xh8wOaQlnekjgAradcG4rFwfUV4M2lfHfbPNm8onNKJztsZ2Y8CHxXscBo5hrrM79wiwVxdIjRCuAQvzpaKJh7VsghTsA0LdMPmn+bL/IBvoamQijXdVfDCnHtmmY749RCmf3UDPEhlO5/EhHoXDikcU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hCBjGgXY; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=o/CtXS9gDZHCNEWM6wwKf+CsBnARcDBmLNklfUrEJ9WwPXxm0bfqs02Jl4ADdLM1Yk7grYuVCyglGFBYb8xYp27vHPlH0xCkajKsjuRkF2N205hYPESuyRNoLCE3l3mVfA9J48o4/QT69b0kbzs9wOBnjhXISXhPq1wDaIGXfIg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f+N8sMFP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hCBjGgXY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30761C4CEF7;
-	Mon, 16 Mar 2026 01:31:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f+N8sMFP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57D38C4CEF7;
+	Mon, 16 Mar 2026 01:34:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773624701;
-	bh=X8cCdZbBy/uTCoH54FdUwoeMK4n226fZFOcKPEkcYfg=;
+	s=k20201202; t=1773624865;
+	bh=sh9VGbG06AmkEsTW0w9Dj5wk0bvcHTXybJaPoqCrN4Q=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hCBjGgXYoJC9jgNbzYssieOKxDW5dinqe6YS1XM5zE90l2d/en8l7SO35m8PEI/Q5
-	 FZLLfA0MexhghHA4nxrKFwKebeHZCGxALBRXWShq0aUI4de+y59IJFt3msUoE2z9cu
-	 +mwgTSMj8ZszwVhqemhDasCAtght+5JqRVY/KouStdlLbyh6137Zea+eCVbqK4uxpc
-	 i+g+a6wKG1Atji/5UMFXpjyEiZeZrGGZ/xwo0YbDtM4iz3/yMBDYvatMrUEyOnnOOR
-	 uygtUZEZrBYJKtgbtUWGIB+Zlp/gg/0Wv/5lhQ+nknQivIaaNk1oi0nMHFbkc8+wZv
-	 yiX8dx1745/0Q==
-Date: Mon, 16 Mar 2026 07:01:25 +0530
+	b=f+N8sMFPn8NFRXlQaeT9/y4QrCdU+m2Ga/ZpTzWHqCFnLYSOoP7RQvgD+4CiQ8IvO
+	 5d5za/mcxMXc3lLqL5BtkN4VFqAOaLZGXC4V7Y/UD+6B9OFZp2I0DoG5Ylyf/faIxh
+	 hZpWJUjdElBBTiOUeyLQ+QSVYlN273aVD8T4h2BxzPhlRSCwu8GiKyoiqVg5PUZ3lh
+	 RcSdy68HqY6CtSlocWb2K2OTBmRMLtBAcjcgoS9I5Mh4XwfGqPRPAGuabezmHrg4NG
+	 axlbFDuRuUT1Fw2F+wQ1GSZGUx97SJzX8nQrAu/7LCJk6iuWGXydSqqb+VTPNTTZ/Z
+	 yjRYLeS7g2SFw==
+Date: Mon, 16 Mar 2026 07:04:07 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 Cc: "bhelgaas@google.com" <bhelgaas@google.com>, 
@@ -40,13 +40,13 @@ Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
 	Vidya Sagar <vidyas@nvidia.com>, "cassel@kernel.org" <cassel@kernel.org>, 
 	"18255117159@163.com" <18255117159@163.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
 	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v7 08/13] PCI: tegra194: Apply pinctrl settings for both
- PCIe RP and EP
-Message-ID: <gnescgbeasa6x5orwtji76qia4e7pwmjsjiehq6ox2a2apzpxq@cfwwzkyjmdlo>
+Subject: Re: [PATCH v7 09/13] PCI: tegra194: Allow system suspend when the
+ Endpoint link is not up
+Message-ID: <disyrnus5ev37t7ysyr62nte4k3v2t7dmilubq4rms7hm25gbk@7vio6e7gb3zr>
 References: <20260303065448.2361488-1-mmaddireddy@nvidia.com>
- <20260303065448.2361488-9-mmaddireddy@nvidia.com>
- <gui4y7vjc4f5brtjgsfvqdn2ig6kw3tsiinrijweltgeukiwdy@2zqe2orx6pas>
- <0471cc77-3173-4987-8d9b-fe089a038bdb@nvidia.com>
+ <20260303065448.2361488-10-mmaddireddy@nvidia.com>
+ <f556ofs7s7d3tzcefxhwqalzz3z6mmj3pc22frqii4ozkoseit@mbo43kjsvbwz>
+ <95798840-8104-4fbe-a373-f33e30064d6e@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -56,39 +56,81 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <0471cc77-3173-4987-8d9b-fe089a038bdb@nvidia.com>
+In-Reply-To: <95798840-8104-4fbe-a373-f33e30064d6e@nvidia.com>
 
-On Sun, Mar 15, 2026 at 07:24:48PM +0530, Manikanta Maddireddy wrote:
+On Sun, Mar 15, 2026 at 07:40:04PM +0530, Manikanta Maddireddy wrote:
 > 
 > 
-> On 05/03/26 3:49 pm, Manivannan Sadhasivam wrote:
-> > On Tue, Mar 03, 2026 at 12:24:43PM +0530, Manikanta Maddireddy wrote:
+> On 05/03/26 3:59 pm, Manivannan Sadhasivam wrote:
+> > On Tue, Mar 03, 2026 at 12:24:44PM +0530, Manikanta Maddireddy wrote:
 > > > From: Vidya Sagar <vidyas@nvidia.com>
 > > > 
-> > > PERST# and CLKREQ# pinctrl settings should be applied for both Root Port
-> > > and Endpoint mode. Move pinctrl_pm_select_default_state() function call
-> > > from Root Port specific configuration function to probe().
-> > > 
+> > > Only a Root Port initiates the L2 sequence. PCIe link is kept in L2 state
 > > 
-> > Why should this driver care about setting default pinctrl state? Why can't it
-> > rely on the pinctrl framework as like other drivers?
+> > It is not Root Port, it is the host software which initiates the L2 entry
+> > sequence.
+> > 
+> > And L2 is only guaranteed if the Vaux is available.
+> > 
+> I will fix the commit message.
+> 
+> > > during suspend. If Endpoint mode is enabled and the link is up, the
+> > > software cannot proceed with suspend. However, when the PCIe Endpoint
+> > > driver is probed, but the PCIe link is not up, Tegra can go into suspend
+> > > state. So, allow system to suspend in this case.
+> > > 
+> > > Fixes: de2bbf2b71bb ("PCI: tegra194: Don't allow suspend when Tegra PCIe is in EP mode")
+> > > Reviewed-by: Jon Hunter <jonathanh@nvidia.com>
+> > > Tested-by: Jon Hunter <jonathanh@nvidia.com>
+> > > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> > > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> > > ---
+> > > Changes V1 -> V7: None
+> > > 
+> > >   drivers/pci/controller/dwc/pcie-tegra194.c | 31 +++++++++++++++++-----
+> > >   1 file changed, 25 insertions(+), 6 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+> > > index 5b79d3c28ba6..b2794be35cfe 100644
+> > > --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> > > +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+> > > @@ -2267,16 +2267,28 @@ static void tegra_pcie_dw_remove(struct platform_device *pdev)
+> > >   		gpiod_set_value(pcie->pex_refclk_sel_gpiod, 0);
+> > >   }
+> > > -static int tegra_pcie_dw_suspend_late(struct device *dev)
+> > > +static int tegra_pcie_dw_suspend(struct device *dev)
+> > >   {
+> > >   	struct tegra_pcie_dw *pcie = dev_get_drvdata(dev);
+> > > -	u32 val;
+> > >   	if (pcie->of_data->mode == DW_PCIE_EP_TYPE) {
+> > > -		dev_err(dev, "Failed to Suspend as Tegra PCIe is in EP mode\n");
+> > > -		return -EPERM;
+> > > +		if (pcie->ep_state == EP_STATE_ENABLED) {
+> > > +			dev_err(dev, "Tegra PCIe is in EP mode, suspend not allowed\n");
+> > > +			return -EPERM;
+> > > +		}
+> > > +
+> > > +		disable_irq(pcie->pex_rst_irq);
+> > 
+> > So you just disable PERST# IRQ during suspend? And even if the host deasserts
+> > PERST#, EP is not going to wakeup?
+> > 
+> > Technically it is possible that whenever the EP wakes up, it will see PERST# IRQ
+> > since PERST# is level triggered, but it just sounds dumb to let the endpoint
+> > sleep after host deasserting PERST#.
 > > 
 > > - Mani
-> 
-> pinctrl framework doesn't know if PCIe controller is going to be configured
-> in Endpoint or Root port mode. In Root port mode PERST# signal should be
-> configured as special function IO pin(SFIO) and in Endpoint mode it should
-> be configured as general purpose IO pin(GPIO). So, PCIe driver should
-> request appropriate pinctl values.
+> > 
+> I need to check if PERST# line in Tegra has wake feature and corresponding
+> PMC changes are available. Anyway adding wake feature will be separate
+> patch. In this current patch, I am trying to reduce the impact of Endpoint
+> on suspend. If Endpoint is never initialized I don't see a reason to block
+> suspend. Are you OK with this current patch to reduce the impact on suspend?
+> Or do you have any suggestions?
 > 
 
-So you are saying that irrespective of board design, you can configure the
-controller in host/endpoint mode? Is it possible? Dual mode controllers are
-quite common in other SoCs, but they rely on devicetree to either configure the
-controller in host or endpoint mode.
-
-If the devicetree enables the endpoint node, why can't it also define the
-pinctrl config?
+Fine with me. I was just checking the possibility of waking the endpoint during
+PERST# deassert.
 
 - Mani
 
