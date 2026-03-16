@@ -1,154 +1,180 @@
-Received: from CHN02-BJS-obe.outbound.protection.partner.outlook.cn (mail-bjschn02on2101.outbound.protection.partner.outlook.cn [139.219.17.101])
+Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021142.outbound.protection.outlook.com [52.101.125.142])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4151927EFEE
-	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 14:25:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=139.219.17.101
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28B7127A91D;
+	Mon, 16 Mar 2026 14:36:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.125.142
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773671161; cv=fail; b=Mf/ZorTcEW7YjYjbbljGCwLBm+SsysvEe6Sh+U48spsz0nHp0rI/WbPKAYBsxikd9PBK6Ad3IFGhy+fhxkVM6pmo8JXWu0m3XDfidXv3W8TkzplRKBOKzf53sA/FLsbaF1PiMuyiAQyNk/pLm4jz6tH14ZQ33+dfIh4zuCX09aM=
+	t=1773671772; cv=fail; b=frSj6P3dUrLLwvivbsHkyo8YWj3bdkrJ9kVjEN7MGVKWrGaXkjmBAEw4MkGReOjTHfXKhaEvsnolft+diM2MRzZkQ848i8lmjjKYeD8GC1Lo6zGxjApriZmrFi7LPZEIlQehJNcH2lDUdmVswMQiAayl3sInYZ2ZEIz2v5iuGeI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773671161; c=relaxed/simple;
-	bh=adnDf+vOlCMzO79QB6XaXjPMytK497A7gF5BI8AmfUk=;
-	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=WUPYGokUbRUtSly9req4GWwhRyFLkV4KyoM1G56RzSkFSoXaYDjbPE3b8wSxHKeSPlfmpg4wSvG+qiRM3wDaxVrauoUTvjh6SV2aa0QUa9mNVm9mQNUmgawSjN5GnVeBMjH7gMaJ8tiFOtdx1eunWRM+BH3Ug9Zk4MRW01AIRBw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lecomputing.com; spf=pass smtp.mailfrom=lecomputing.com; arc=fail smtp.client-ip=139.219.17.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lecomputing.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lecomputing.com
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Xc+sj9FDrp2UQteXojKTQL/IXZVmShh5y5S50LmRPSsJXiuzu0wftEdq4ExCQP9D5ZIWUw2geTKGRguGu3G8LuaAL0KZ+OjPLRrLgpG3v6eexTe0j/JP9E9NP1L2utHSXsHHRotVAZw/TkTFRQMb8zFSgBFyEujI2t/SS3/IcmG+wNNQW/tFH7Zg0jkzvEhMJtH2ptlG0VLKhps2P8IsgJ43wZ3GbvPPH9w0goNgRGhNmoiivkJU4/NLwB6hLvVWevGeOFP6f9v/1MYbT5uU2KraQJjaMNGFHvXOPT0V6gT+b4B9NE0aA/J0C71AGaacHfN2Ys+qTi6oGjxPISBL6A==
+	s=arc-20240116; t=1773671772; c=relaxed/simple;
+	bh=BZnmpT2tbCI09LTUwoZhiffNPdBYfcA/pdQBHqlbIhg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=F+otHUo5pXcQ70I9CXZ/+Sksy7H4NQz5ucmuEEUtdjxFFYpmLEOQfUQD+eWhY0EnjIzHih+VUcZacDCAF6AHV6r0sYjbc05uzkRoHqtTb9NNAYkd2/QO19wIRD+nO7yvXZUPzT2PjKHBehlSpiQH1Ksbrz3xo/43Vtd5iFKdLW0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=FUqlmJPV; arc=fail smtp.client-ip=52.101.125.142
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="FUqlmJPV"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=W2EtGi/kPvfQK6ZxGuG3PYRswyitZU1FLbELmr0UOnAjsbV9eCQIoElyE/xrHWVPVL3BTe3hWOR/2OmIUku/A3s0ZZ5cxcuFsP1ApbNpS6PqRRSFiqNXSN4sX3jdKC3Gw2xU9awfNRclMeHHSHrxaeU/e/tGlQFfaKqpoeYAXUdX63jSgCYsM2SJ+4EebBAb19W9vsnoetxz2Rxf+XAj0lfrWOTGvc1v2qhfpaVYY0vp3C0/0usdcSXeaEeXKZDRqMaa/uMZfjtD1Yam3mmdjqQCQr1K4t5cGflATVKyLOXMQnXbVS9MCn0L/yBkcFbFMBwyoVPBUUSb6rcKVJ63ZA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
+ s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=5FbWnJnMira3TOFOP5wcTlLJT8c7+kwS1Rvxqm4fQE8=;
- b=V7I2546wpnupiQCFVkuyJ+Q/lbCM1NHjn6trCrlzMnaKtUMJuFEr8sSPGMBfv3mkPs+LCDlG+27GOsm9cMnwzWiMiJ9iO42wUqcfjxk4LLQCO3PIC65GZMbRbtfCcKx8iYn/tupEY0OSGJSjcF3Cn6KCYR9uMYwZG5kP99wS1BSnP0EbFdlgH9FAPjBJL4ptQe+wFYEQepRk24S3dr0QF9WzzlDBpF7/RE5MCqEtST+Q6T43G2g5+aSoq3hcR033QedKNEp9jvySNDfym/aqa2I0ykdOOlYF9A98EMUEsKnNm8RkiXQ8te/Sw9LqIbaMMkpRJ60OhPugc+qPH7O5ew==
+ bh=l5WHzL/mIZWxnkxeTxswzp1balS2Ycah/6jCRZF2IEg=;
+ b=n0Invc++HN6Jq7sruuL7l05D6CgLHZGxkRgiVs+io5WMdcdt10grq9Ur6PNpJuMAOvA4c000I5axvn8uI1VZuuCMb6ml5X2LqqLiFmQL7HVMCy7DDhwgXUy8l8jcpVi0nW+QymuA3t6OO8F6HjHaCO74+Nq8xPkSamnx37buFoNpsCrsWZ+dp03ag4sldfE8A3IZx5v670ijgtxno9p+5V6ZHhk+luxCvHpV3JhgqPbUe1sRG1uLyDR0rALr/RSBvpoavYz00pIfVXqZeUPBwpUv4j2ihbuNE/LCvej3Kj1jbnmBhpSAmDdObKmiykDP+HMNA0L7rv013PnmKZWtYw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=lecomputing.com; dmarc=pass action=none
- header.from=lecomputing.com; dkim=pass header.d=lecomputing.com; arc=none
-Received: from NT0PR01MB1087.CHNPR01.prod.partner.outlook.cn
- (2406:e500:c510:3::12) by NT0PR01MB1247.CHNPR01.prod.partner.outlook.cn
- (2406:e500:c510:f::6) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.34; Mon, 16 Mar
- 2026 10:49:53 +0000
-Received: from NT0PR01MB1087.CHNPR01.prod.partner.outlook.cn
- ([fe80::8182:356e:d02f:519a]) by
- NT0PR01MB1087.CHNPR01.prod.partner.outlook.cn ([fe80::8182:356e:d02f:519a%7])
- with mapi id 15.20.9678.033; Mon, 16 Mar 2026 10:49:53 +0000
-From: Notics Zhang <Notics_Zhang@lecomputing.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "logang@deltatee.com" <logang@deltatee.com>
-Subject: [RFC] pci-p2pdma: mmap() on allocate attribute may create cacheable
- mapping
-Thread-Topic: [RFC] pci-p2pdma: mmap() on allocate attribute may create
- cacheable mapping
-Thread-Index: Ady1MoMcRFilmEInSZGlbkErtsP/OA==
-Date: Mon, 16 Mar 2026 10:49:52 +0000
-Message-ID:
- <NT0PR01MB1087BE9B13D5358D7C9220C3E5402@NT0PR01MB1087.CHNPR01.prod.partner.outlook.cn>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=lecomputing.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: NT0PR01MB1087:EE_|NT0PR01MB1247:EE_
-x-ms-office365-filtering-correlation-id: c5fe8506-c228-4142-6f86-08de8349c11c
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam:
- BCL:0;ARA:13230040|376014|1800799024|366016|38070700021|18002099003|56012099003;
-x-microsoft-antispam-message-info:
- 9R/vYupssnRNQrkjoibR9+1ZZLUq1IEEAvlTYVMlAHBxfA5ZhIzyINz58+MnBUN4AB70Vdv/PVR4H8mfGEu3uXdkqVoUTfwE0uQUP/I8WWxwzkKQRZ8ImZBczQgT8Qo28n0sphVCUm35BEMQFuxcMQz4MeBPVz86E/2QWkjNpeotVKAepv1K/zzjBRd/2Fz9rDxw9YL+jSh5O9EVhED9yJjic/Thq8DoYqy2elCN1Og37iEayzgPUdmL6GuY6mGA5ryMNqKdA3Ro3oTDJ9D52tm/r9K6GFXKlCFt5joi9p7MpU2ufu7V8S7ApsX6WWKoeTe28OxLPYkGDe+colpIHU6/TP8hz4lXSEwFnQG9TE1kc4cej2H8dKEXXb9nIt+GoeACQBS/focPVF0bmLRs5KkUgO84VWqTXqHn0yDAcXPUbyMuNUyAMT+F3lPHV2HZxs668GzRB52QOMDRFULmBvDw8Hl4BRHC/sZaKPoy7wzSV9IbXo9+FoGpFjVnvCIBC2ibMFjqQNtOIjXYOSDcGQ2/Lgy9QguuKrzGhA6ATl2CbXBtlrVXO8HxCvHBQCexy+WNkayZ7Mi9j6l0qiF65mBurUJRt9tHKqb9asmQil0=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:NT0PR01MB1087.CHNPR01.prod.partner.outlook.cn;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(38070700021)(18002099003)(56012099003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?A8SmlFwQI7umxih0q8n3NhORH2fsC/S2RkcR1NYh5zjCoqnz61QTW91xp+Yt?=
- =?us-ascii?Q?GWJupvvV+NYwoR4jpeUR1We6l9C7zG87z5urVKg3447/hI/XckqHQkhOx3gL?=
- =?us-ascii?Q?O/SlLCK/3ddZ5+t/gp/nPJ/8AKN8VI/9tt2itJ/3ubn64XUQUD2aQ9PUw7Cc?=
- =?us-ascii?Q?RbKBKOj0Ga9bPYZlessUU1m/2BGqBATZcJqxMA6IQ6HofrRE+hfHyCs96Vnh?=
- =?us-ascii?Q?d0jLICaFMPwXrxZUs+YsKH4fN8pVZFk7ciwtITz01cobAfZ8WzoYquvGj4sB?=
- =?us-ascii?Q?l8IFMiOqSl5Abkkc4e5Hre5Vq85C3kH3mBb5fp6MLbcsHo8Dns4yEjP1/HG+?=
- =?us-ascii?Q?TV+nm3eAOSJ06hCFKqCE+5c1rNoOZgE9Avcnbjt8j2+PWYezwSmdFEDCWPOj?=
- =?us-ascii?Q?8SVgMahfNbXIkH+VL/3Cn/CVXY4+1XAn/iVoebMvEZGxrfErLGkI3BiBrw8X?=
- =?us-ascii?Q?kxO2+awUeRql2i3pmzchViluhkHcQa8Pvz/E4Y9HiKYIoapFy4lYRUbMVy27?=
- =?us-ascii?Q?ELj8yzPJqlNUceFvq95zWw4JT3ERvI55/Nstclnr8KljCFag5srweTSbaktr?=
- =?us-ascii?Q?/rkUGe0ArGJspz27LVPDutHJNeoflYp0sNFv4cclU6354iz5kTU/Alz4BCe4?=
- =?us-ascii?Q?dgcWqIlCz1PjdRpoU9Rw64kJCzh9mOQ0v937muLRP+tjG0zHFzIks2DZSXt0?=
- =?us-ascii?Q?PA9JRSOjF3IrxAZFYLWOb/18FPZ8vYLZgWSxNrXj8r5lCflOXmz4Um8yDmuY?=
- =?us-ascii?Q?q4FIEoZN9KTrvfDUizbc+E/2rKMC4AcV6SFIA3M+HjzGCLq+3TGXGRf9EbAC?=
- =?us-ascii?Q?FwJ/RRW4dHdl8hANIrLHklL45h532D8C17C8ADVWdYicqBkK9EAMuLCk3uoI?=
- =?us-ascii?Q?8E/5lB9gtjziESfvZpBeO2Z46qIuj9TwnIhQFTLdeILbCk4iTFRSzHYsDUEY?=
- =?us-ascii?Q?mipVAQOV8b5uRP9ZBjt8FnFwZ1CSu/mkWY1u2nIggwEY7uTUB32X41xw8Y7d?=
- =?us-ascii?Q?AbLmr9vHpfpjelBeAfQHsdEGRNPgvzPGjCkYvffe7296tp0RaQHBgYS2uk8e?=
- =?us-ascii?Q?GuXLoOeDeWQIhcpTg9Ml8lp4jKyO6VQgtpbVR4aDlYYoONQD6v3L//Ie83Xo?=
- =?us-ascii?Q?eBwNwrWkaC5kkS9vxLB46jbMRk81xx+g/4mbevaTrf96MUURbLnCNEw3/OeR?=
- =?us-ascii?Q?QWNunmowChCx6MQqpTIJxMnG1tvR+x8ezquhWhWYiFUJW/4o27+Misra0hgp?=
- =?us-ascii?Q?rPuPI5wFAFqUYWp1/tViO/+PpItQ4nynm8VxIPEZDnuSiYLg9MzvdyNK+qpb?=
- =?us-ascii?Q?X36S6PSPiQv2RFygd3G8CoAWpHmCRJ8ZQyk82K/OkEkWcCQ+1nF1MfqfKXhL?=
- =?us-ascii?Q?GgDFQI+yyNtuarNQsyOYBrzkuJ0PBSqiQYHWczNMoLmXXSBLZEC+WqfVSqer?=
- =?us-ascii?Q?ir+rugy1+4O7VGaMC5uwF7mAFPsHHDmuUlZcsK7Xw9/QD2q2xpQgIfnqa2Qe?=
- =?us-ascii?Q?Knb1xOt4rkSO0lkGF3y2/4wf8DgNZMB1ZbSXwDXLuG4dNj2UaMMRXJjbRnAC?=
- =?us-ascii?Q?5CUs5rMpSes6MUfX3/c70hX37/1HpSDQP8HYRGlmsyOqVcKPBommvAIA6rcn?=
- =?us-ascii?Q?FA=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=l5WHzL/mIZWxnkxeTxswzp1balS2Ycah/6jCRZF2IEg=;
+ b=FUqlmJPVXCwpjadGgPs3F7JujcQGlBfX1+06kQC4yIu2pGGrfXyxI/hJzy15yzcY1kpi0a0PDQ+opj+ddFz/wXo1WBSfAjBfV+uaD2SYx0m2IEVL3AE3rVRou8PCj/Ucf3DJ5kEaXa6J7NzDgKeO149/juPHqVByiu0mkvGl71E=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TYWP286MB2101.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:161::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.22; Mon, 16 Mar
+ 2026 14:36:08 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9700.018; Mon, 16 Mar 2026
+ 14:36:07 +0000
+Date: Mon, 16 Mar 2026 23:36:06 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Bjorn Helgaas <bhelgaas@google.com>, Niklas Cassel <cassel@kernel.org>, 
+	Christian Bruel <christian.bruel@foss.st.com>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
+	Frank Li <Frank.Li@nxp.com>, Kees Cook <kees@kernel.org>, 
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+	Bhanu Seshu Kumar Valluri <bhanuseshukumar@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: endpoint: pci-epf-test: Roll back BAR mapping when
+ subrange setup fails
+Message-ID: <6rpfgqvrswp6zxhb4zdzkqvqzwk4ipp7zyt2wqyj2zj4w2bsri@szdiqpdpmt2b>
+References: <20260316140225.1481658-1-den@valinux.co.jp>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260316140225.1481658-1-den@valinux.co.jp>
+X-ClientProxiedBy: TY4P301CA0095.JPNP301.PROD.OUTLOOK.COM
+ (2603:1096:405:37a::17) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: lecomputing.com
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYWP286MB2101:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2ba8e066-6405-4ea4-7700-08de83695c21
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|1800799024|366016|376014|7416014|921020|18002099003|56012099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	s3CaM1XZ8Tybu1UAqQsyCkAz9DdggygVnmwIF5EeELCrlMmSq10J2spdedS0ahGkelC9CeK5Cw/ihwVf9LI1u6xIv8VG+ygkc+buz89j/48QJXfCPxdSoKDERqcFNrbbyjepCUeDUQmxEcuYTpzO4MtMiZzG6H85/sXEK4mGHz/uPj9CX/GehTJIQP+4JM1jvuyLaQdxeJLEcRMJxEnpdpZg5vncxRLY93Rw8cAKa0/gJTefDY4bf4Qp290hjs6tH2O+1xrXReBADDBKg50Bfs7AYOpMfpaX7IdUax0WWlD+VB3syeLSI/NS3UtpH7H5F0bsLedzQMQjrSONajf9gnslCojxEdAWbdK4oL+AD6xoyqOEqGLgUytTAUwengDh20DQiChkb1w3iCV5xaXINx4jIdYYTmEWazOIFy81IfUFybiNOLG4u4Uysloa/liStvUURg7W203KCmNmQSQ1ThdXAntIVeYt+w0TNdMR8Lupz2O+hrQ2OiwduEw7niAxaI5OfEO0k1SBtOWGQtEjZOCyNTxkdH+S68eCqcNsBH7Su/Z8AeoMDLOwKGQPGKBvHRyfwNsRNwXwevkBwnUpHtzzRGdwhQrQau8dKr2gKyCMU2bB+cTrDyG4d5Qr7VGECdaucMwPLZecZTHsyMsNg+LMU9Y4jK3egaeOS/yTVB2TRVoSbc56SA8F5oo8Xv9Wm7pmzTKoUL51WWNrb8HzKks/XHczWtKBslMp34dyfkmidElAR/7cqD/fk2r2vL8JqF1YRJsudDFnu2qFxZ5lP7s84kRtHc7ykwZ+op4Govw=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(1800799024)(366016)(376014)(7416014)(921020)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?X86nYjLb6+cwMfk5/TGWDTBYrFczUBoosjtK8lgq57UcPseL4TBTxnN5lRSS?=
+ =?us-ascii?Q?vkZC3wKMDrOIhYU8dikhnnNa4EiqeRryosGiYMtSOeZRpa0ciu+5U5QYmeQD?=
+ =?us-ascii?Q?2uiIUJ6ma/qdmCkfwO+gWe/AaG4RPMiJVUVTjTTf/KxBA84t39TjNDM+iKvv?=
+ =?us-ascii?Q?pdYMx0AzzGa8ELj7o9qN1LB9pWco4s4szsIpNjpuRKQkX37hne7lMSqSyRcS?=
+ =?us-ascii?Q?GeA6hJerRtnFYB8BnFMijtlB1fuKb7XxO6GLjIi4bLeHZ2wFyicXybeX0hQn?=
+ =?us-ascii?Q?cTywX2aPgzlLi7RY8vj1xKSUwOzY6m/n0+9t/MtR/LUCar/cHUiWTMrmgmkb?=
+ =?us-ascii?Q?hgOFRorjWAsmk5yuBYTHU88du1izl/zos4MOW+mEeBnm6g5WUvw3GrMDeXfK?=
+ =?us-ascii?Q?17AOsko24LVj7OOLDrmjFPfuTKumYsHD5Q+SNRHpBDpUAI7eIR6M/0sdwsio?=
+ =?us-ascii?Q?ni8w2PDwG9Md23nJ4ZMlivjkenC8O9o8pIAfjh0vA3xImkfuJunJtVa4u91t?=
+ =?us-ascii?Q?zonHPhIH7etbcVVTqu04LRbc+n9DmyJWCPr9KP08zyoLV7z+nUd+tDIgUjrB?=
+ =?us-ascii?Q?+ywgQHL59ufuumNIDmz3JR2+33aAIMr7T0hOdOr3LYiIToRyk1KHR1obZv9Q?=
+ =?us-ascii?Q?q6Qa9EFpS7NuMJjgBjQFpklZrxqopvBk4OBPKDIp68enjSM3yoWyUcyXpA2r?=
+ =?us-ascii?Q?GND92BUcVKa/NmiDsdA0HlTsYk9fzI1ZKF86Jldp0BkIAhj1juhaGEbFJgAl?=
+ =?us-ascii?Q?FgY8+EonZWWoX9JS5sC1Hm8P0CZ1uOK4a5UiA9HgIMc4BDXnC/GITw//hSWn?=
+ =?us-ascii?Q?xVFq2+L9QvfQnEiq7yhdcLEFqkL+8xLhg6ARt5DwDqaTKuqaDgDDUNUTGSId?=
+ =?us-ascii?Q?T4prvdSheY+Wdlv6aMS14ZxmfJyd6XDL842i3g6r0/GZrGCva3362CzvHRs4?=
+ =?us-ascii?Q?H0pr48ljUaGouMZN8zQwdZkUeg/9z7MDhdb2GF2mIwcGUcfXynwMDiAY3pwv?=
+ =?us-ascii?Q?jawkoX2OtKGNqr8lAyfMnNvY2jXQB1gtOjKaMkZG1YANObgE/m5j+4r8hK99?=
+ =?us-ascii?Q?9KK2PUeNjnTceutsPbTsiOyfHizWARxcHi2ia/iDBUmhX4DG7bb8zWAw7/QF?=
+ =?us-ascii?Q?izriI7sLtzLDf2DJmRs/28FgjPWbkgwe1lpwjCWYSHZ94SDGRsNElHNXZCDT?=
+ =?us-ascii?Q?6qjOwbnudlxRuZ9VLmrpiB5bpYzdI5tPulroUuZC2jSNHHrKJpIcqD35R/gd?=
+ =?us-ascii?Q?unGTA0cgklnCu4hgJqyYveCDk/Ih+uYFdoDwTrPB5VwCwKNHgA35I86y+/ab?=
+ =?us-ascii?Q?BW8IjOXrsehvPk2ntHXJ6lR3qre5DOMl/KVtCX9IUIpSMLli1TkzkmPsvYju?=
+ =?us-ascii?Q?S32DGfT4zD02dIkQEtstfNzbKXurYi34qGW5YCa4asqCDOebbzTaLzxV9Eqi?=
+ =?us-ascii?Q?cKR1udEubKF8XBE8ItdGlFZ6PUqxW2aBrH94FwRITwFUXWsUa7yuFPnihB0f?=
+ =?us-ascii?Q?qjbqbhnglPpoLkboE6wx/mRPNuTChIVdZhRLvr5LzdTGa5dWes1jngQD9cI4?=
+ =?us-ascii?Q?evw8XxtOP3fnaAno6E781yNdcJ1XEUW7LeCa8QwwTQ9rlTBV8edRiQK5wwe3?=
+ =?us-ascii?Q?mj2BqSunOtz+t9NCHlj8C0nelhIEnsjxkxOMG8skgXZD25BjRVnky9dOWxrp?=
+ =?us-ascii?Q?HrbglXzNzLPTP6edrDPDD3JV6/RIbZfcs0NDDhW8qC3O6AbL5LaIVJUXrqec?=
+ =?us-ascii?Q?+i6kWBWnupvhrw/gWx4KEPK0GIgBG5TIM2yzXxH3FRDvKbA2JBy8?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2ba8e066-6405-4ea4-7700-08de83695c21
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: NT0PR01MB1087.CHNPR01.prod.partner.outlook.cn
-X-MS-Exchange-CrossTenant-Network-Message-Id: c5fe8506-c228-4142-6f86-08de8349c11c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Mar 2026 10:49:52.8316
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Mar 2026 14:36:07.6399
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3591a018-3909-4ea2-aee8-843d5abaed8d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Tt6yXdJuf4lxRqlQtHtscj2brwWMF978MB8UGKDaovQjcuSHDPXh/6VrwjTgChIfLRta/8eNTer+Lrg9bDY1vTXaM8bE0JaWn36hQ6Njw+Y=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: NT0PR01MB1247
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: sW3Dpy6if5FrigMHfMeIQwVNj7pN3ju/mTqPXMH96TQscjxJY2SXjO99mZvH+LFbg+FK1JYutsUgsVOIKjKRrQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYWP286MB2101
 
-Hi all,
+On Mon, Mar 16, 2026 at 11:02:25PM +0900, Koichiro Den wrote:
+> When the BAR subrange mapping test on DWC-based platforms fails due to
+> insufficient free inbound iATU regions,
+> pci_epf_test_bar_subrange_setup() returns an error (-ENOSPC) but does
+> not restore the original BAR mapping. This causes subsequent test runs
+> to become confusing, since the failure may leave room for the next
+> subrange mapping test to pass.
+> 
+> Fix this by restoring the original BAR mapping when preparation of the
+> subrange mapping fails, so that no side effect remains regardless of the
+> test success or failure.
+> 
+> Fixes: 6c5e6101423b ("PCI: endpoint: pci-epf-test: Add BAR subrange mapping test support")
+> Reported-by: Christian Bruel <christian.bruel@foss.st.com>
+> Closes: https://lore.kernel.org/linux-pci/b2b03ebe-9482-4a13-b22f-7b44da096eed@foss.st.com/
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 14e61ebe1f11..f44c36f5cac5 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -898,16 +898,22 @@ static void pci_epf_test_bar_subrange_setup(struct pci_epf_test *epf_test,
+>  	bar->submap = submap;
+>  	bar->num_submap = nsub;
+>  
+>  	ret = pci_epc_set_bar(epc, epf->func_no, epf->vfunc_no, bar);
+>  	if (ret) {
+>  		dev_err(&epf->dev, "pci_epc_set_bar() failed: %d\n", ret);
+>  		bar->submap = old_submap;
+>  		bar->num_submap = old_nsub;
+> +		ret = pci_epc_set_bar(epc, epf->func_no, epf->vfunc_no, bar);
+> +		if (ret)
+> +			dev_warn(&epf->dev,
+> +				 "failed to restore the original BAR mapping: %d\n",
+> +				 ret);
 
-I'm writing to discuss a potential issue in the pci-p2pdma driver's mmap
-implementation for the "allocate" binary attribute.
+Ugh, sorry, let me send v2. I accidentally overwrote 'ret'.
 
-Background:
-When userspace mmap()s the "allocate" file (e.g.
-/sys/bus/pci/devices/.../p2pmem/allocate) with PROT_READ|PROT_WRITE and
-MAP_SHARED, the kernel's generic mmap code (do_mmap) initializes the VMA's
-page protection (vma->vm_page_prot) to a cacheable setting (PAGE_SHARED on
-most architectures, including arm64). This is the usual default for shared
-writable memory.
+Koichiro
 
-The p2pdma driver's mmap callback (p2pmem_alloc_mmap) currently does not
-modify vma->vm_page_prot before inserting pages via vm_insert_page().
-As a result, the final user mapping ends up with cacheable attributes.
-
-Problem:
-Peer-to-Peer DMA memory (such as CMB or other P2P regions) must be mapped
-as non-cacheable (device memory) to ensure coherence, because data is
-transferred directly between PCIe devices without CPU involvement. A
-cacheable mapping can lead to data corruption due to cache incoherency.
-
-The driver already uses vm_insert_page() which respects the VMA's
-protection; the missing piece is setting the correct pgprot.
-
-Proposed fix:
-In p2pmem_alloc_mmap(), before the loop that inserts pages, add:
-
-    vma->vm_page_prot =3D pgprot_noncached(vma->vm_page_prot);
-
-(or pgprot_writecombine() if write-combining is desired, though for P2P
-non-cacheable is typically required.)
-
-I have tested this change on an arm64 system with NVMe CMB and it resolves
-the data inconsistency seen during P2P transfers. However, I would like to
-confirm whether this is indeed a bug or an intentional design, and if the
-proposed fix is acceptable.
-
-I'd appreciate any feedback or suggestions.
-
-Thanks,
-notics
+> +
+>  		kfree(submap);
+>  		goto err;
+>  	}
+>  	kfree(old_submap);
+>  
+>  	/*
+>  	 * Fill deterministic signatures into the physical regions that
+>  	 * each BAR subrange maps to. RC verifies these to ensure the
+> -- 
+> 2.51.0
+> 
+> 
