@@ -1,179 +1,272 @@
-Received: from MA0PR01CU012.outbound.protection.outlook.com (mail-southindiaazolkn19011026.outbound.protection.outlook.com [52.103.67.26])
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4577238D;
-	Mon, 16 Mar 2026 17:39:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.67.26
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773682758; cv=fail; b=jxSbtf/SvM/GWs7FuRLaVOnzM+whJUiaFYhPCl1Y9fdSxdLg/yCdPKToOFMDRBXe1f7xNTtuVp0g7shWg3yvE2EULGM+wPG/noaUZ/x0q6VJ2myDecfsMh82vZcM/DusJRRpgWGcZXRQ+lom+RRvWZZ1/mgpBlu2f5axWOezAm0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773682758; c=relaxed/simple;
-	bh=8Sxv3CS2SJlti6XTML4hHXgChxt3ZIaJm/l+sB3ac00=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=XFO7DQ0d67D6A7e1P/AccGE8c3WfbJWunm68P+pxQitzF8xTCR1mAoc6tDMwgMGSx0a0LU9qzjm19ImuJ+fpkNui1I4VNfVjPk2KZNhx7gHCGPPToJZQ/ZtIWRi0+fLMkhC3Jp6uniIzh7gRqW8Ga7PZAAgpiGi+tonY3S30oQ4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=live.com; spf=pass smtp.mailfrom=live.com; dkim=pass (2048-bit key) header.d=live.com header.i=@live.com header.b=AhS06jsQ; arc=fail smtp.client-ip=52.103.67.26
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=live.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=live.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA9F133F8B9
+	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 18:06:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773684389; cv=none; b=XwaefqB6VZpVkNHxeZY7zOPx6CAUgCwsA4lLX/HwoP4QLsGCafYSWPsjUjPqId6tH6naxA8qYq8+wtKTurlxo91n/tLr4ADRqIZR9Cx3iBsn4J7Yz7m/ejcugyS9v8MZcK0y7m2DJ8Z4z1bLOs+wOonO3IyxQnBQ39lVUd6pzjo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773684389; c=relaxed/simple;
+	bh=vsCerXvNI66p0WQN4f2HWtkZDjbz/hrQ/GAa3UbU95M=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=UftTcF/P8e1D6Dho68IQRd26iVwhY1Fibsj77V8VvaK6DYy4dCaYh3uKGjkXp5daKggstPZO9esZN/9jFMupmHDYAx2so5lQUuVxKWzB/uICBDyzKB8ttrjMm8dLTf+uSHuie5nt+CNKDPuZZO92LQGrSC3AvQfZTi1eyF4/rDI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=qO6Lk7rT; arc=none smtp.client-ip=185.67.36.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=live.com header.i=@live.com header.b="AhS06jsQ"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Ac4v+uVpyzJfiuT2U7UYQ/v4PxCh2x552ERCLevktGctf45jrgfhgfO0SGjFD9inakk++fFSO31Fcn/HN3ojnpHtNI/OeBhai68vvB2tLev8DrSYVqwtKlK3oW8pXx00rnm2kqYct+Z5UUxSCsYu0q95hghlshSl8ffWMZnLRtx9D3Ez4Z+CCF3t00EaYp+bHYYbITQDQ6JIlJhn6QDjk4y8YbpzUykv3uXrRpGJPf0og45hSaSK/upClqlYrNPZE8PXAiG3F8xQTGPJZUzUf6yudBLQxKHhe4WF6G8tM7cezEYESlhjQbg7HJRv5ZjWQyiv10S1RcfTArKvQ91Srw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=8Sxv3CS2SJlti6XTML4hHXgChxt3ZIaJm/l+sB3ac00=;
- b=oF9rVLCDa6EfWm5fa/HOWWsRIgbq53Q7FcRi3aCRJXBxts0/Ow6IB5E8iCfEQMUjgqwNICPwxruzb3e4QIvEjYaBRJJ+GvmrviXBUihGYqSdMLmBJjjxEvpxakryB9D9YPHvjDPvpdJHejrO/j0WTIQRK2uQa7V2FMKgwzi7qeFU86vpphhQXvj4FiCVuNegBzFJVqHfX1Ow+HLgn8Af8pzth4MIBYP9Nfni6cfM0iLCD/5uowmeT2/LaOfInMpwOONAo/4sEdWDbUZkywGpjK8DRcjXGUu7xxr3CdqIvBeVDSKYBN2f9oZv2Civsq7wtCjjoPZ1qJiM1XO3AfXhaA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=live.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8Sxv3CS2SJlti6XTML4hHXgChxt3ZIaJm/l+sB3ac00=;
- b=AhS06jsQNh/Fi319Zsx1mdk90pVB2iiEphryfwMfDjWjTelxwK2W3RGcOg1UIm+aLkuYEUBp6OA8HftI4YC6doWnvE1AywBskyscOCrSzXoG6EAbpP6oYmQMA885uNFW4GpCwz+gmZIQfKNIE4kI0+bxjgQAv1XrqC6BDZV8fJGjrrDB+4M2MSmC+p99b7EQ4HHMGYHFC2YH6UjB81Wc7HZEejrxan0LBHi6LJDvc+KA8w7+mzpbExn/5Vyy8WVEpuv2o0CzNt74x9fsVzitzqeYY6n/hyYUtRdYjRYzy8bXkrFkXn2bu7U79trL0dbtO8YNm5Xin5Q0nHO2QvIkjw==
-Received: from MAUPR01MB11546.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:a01:19c::18) by MA0PR01MB8900.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:a01:bd::6) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.25; Mon, 16 Mar
- 2026 17:39:00 +0000
-Received: from MAUPR01MB11546.INDPRD01.PROD.OUTLOOK.COM
- ([fe80::1fed:9b0b:69b:9295]) by MAUPR01MB11546.INDPRD01.PROD.OUTLOOK.COM
- ([fe80::1fed:9b0b:69b:9295%6]) with mapi id 15.20.9700.022; Mon, 16 Mar 2026
- 17:39:00 +0000
-From: Aditya Garg <gargaditya08@live.com>
-To: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
-	<dave.hansen@linux.intel.com>, "x86@kernel.org" <x86@kernel.org>, "H. Peter
- Anvin" <hpa@zytor.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, Oliver
- O'Halloran <oohall@gmail.com>, Andreas Noever <andreas.noever@gmail.com>,
-	Mika Westerberg <westeri@kernel.org>, Yehezkel Bernat
-	<YehezkelShB@gmail.com>, Lukas Wunner <lukas@wunner.de>, Dave Jiang
-	<dave.jiang@intel.com>, Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>, Feng
- Tang <feng.tang@linux.alibaba.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org"
-	<linuxppc-dev@lists.ozlabs.org>, "linux-usb@vger.kernel.org"
-	<linux-usb@vger.kernel.org>
-Subject: Re: [PATCH RESEND v6] PCI/portdev: Disable AER for Titan Ridge 4C
- 2018
-Thread-Topic: [PATCH RESEND v6] PCI/portdev: Disable AER for Titan Ridge 4C
- 2018
-Thread-Index: AQHctWvFE8HiDz1LkUmMp75SF+UD3Q==
-Date: Mon, 16 Mar 2026 17:39:00 +0000
-Message-ID: <EDD57FBF-B2DD-4C79-B8A4-75824F4B8912@live.com>
-References: <20260113173351.1417-1-atharvatiwarilinuxdev@gmail.com>
-In-Reply-To: <20260113173351.1417-1-atharvatiwarilinuxdev@gmail.com>
-Accept-Language: en-IN, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MAUPR01MB11546:EE_|MA0PR01MB8900:EE_
-x-ms-office365-filtering-correlation-id: 77917c18-0de4-48ad-4255-08de8382e870
-x-microsoft-antispam:
- BCL:0;ARA:14566002|31061999003|8060799015|25031999004|8062599012|19110799012|461199028|15080799012|1602099012|53005399003|41105399003|40105399003|4302099013|3412199025|440099028|10035399007|102099032;
-x-microsoft-antispam-message-info:
- =?utf-8?B?MnpnNVBXdkp3NVViY3BGWDkzNUhoemlWZVZXK05NbDZvVVRQR1R0eGp6V3g0?=
- =?utf-8?B?WmNnT09nR2U0VDF2Z3pSanFid1VBeE9ZOC93cWxmNzF5a1VkYU8yN2NOcm50?=
- =?utf-8?B?UTVTeUR6dTRFdEttenpEc1U1aGFSWkxrWktMOFZBQmM3T2ZNNWVQaFMzWGYz?=
- =?utf-8?B?MFJ4dXdVYjNkaWNuWjNPbFI2LzNEU1orZTR0NTA5ZCtYM0NEUnlSM3RwajNE?=
- =?utf-8?B?a3Mvcm5jYzMyUi9jTnd4SFN4MnFwUGU4RWQ1REtERUFqUEZRWmluOHdpdXRX?=
- =?utf-8?B?ZndQUEdxdG1PaUxNd2poZHJ5b0ZsSUVZOTdzQVNoMGtmYmI0T0tMbk40Szl3?=
- =?utf-8?B?WTdBazNZRWFZNTR1eGhtb1NpTHNza2RBS0NnVlZwUmJIMFZLRUIzNDYzLzJw?=
- =?utf-8?B?bE1sRmJJYTFnK3h4VEhIQ1hleHFIY0xlc2RMRksycEhpamhaTG95QTNFNVAy?=
- =?utf-8?B?TTR6U1krekxtaWFkQ1JKdWdmSGNMSGxSYzhEZGR1WU01RTVOODdtS21paU0x?=
- =?utf-8?B?TW5UOUFFVGNTbjlzUEpYSElmbzE2OWRmdWxGbFo1TTdZQUhPaW5IZUdzV2FM?=
- =?utf-8?B?TUFTcjkza05sdG5LQ3V0Wk9ITXVxeVlIcXJpbWVoTkxyWFVmNkVTcmZzQmJ4?=
- =?utf-8?B?RzFJUzRwQ1hCTnM2VldQYjlHMjhHQ1FyZlROMXlzRENWQnd1L0h5VkZsL0tp?=
- =?utf-8?B?UEJ6ZnZIbjM1d0RjNGNjVUlCaFluQjVmbExyTithVEhYbjB4aytWYnU2RGJn?=
- =?utf-8?B?TUIzZzRET3dDaHk5QmZPV0poZUYzYW01SWIrdUpYMWF6VUM2QVpiSWtqd3J3?=
- =?utf-8?B?R2RGdFAxdGhzUlROV1QxUFNrTys5a0RJSFRzTXg3NU9LZUdyRndyRHRCNmcv?=
- =?utf-8?B?RkV2c2FPZUtDMjF3bnZsbFNkdTlhSkQxVFg3aW1iNDlxU0QxZWNPTjUrV0g3?=
- =?utf-8?B?ak9HelB0MCtFTWxGa3Z4YUwrcS9HZmdpTWNTQk42RGI2ZlNCeUlmcW5GR0hF?=
- =?utf-8?B?TjVUMGpoY1ArSnozbUIyMVd6WkFxSUNuMGFSRjZjNUJQTEJPOTA5dzJxYmcz?=
- =?utf-8?B?SDFGZ2EzelQ2YzZ6VGYxaHFOdG9RUG5xK0pjZ1JCdUxKNkswdTg5UzVKUWxv?=
- =?utf-8?B?dExZSVhSOUhKQ2NYOVN5MFpubHVYT0VWUFVzQlZ1VGJhYXVUa3BWS1JtQ2ds?=
- =?utf-8?B?TkVxQjRadkUxcVlYMGVpdTFCZG5EbTZGdFRyNHVKSU1WTTRnaXQ5MFNkZEZm?=
- =?utf-8?B?NTJDdzkrSTAzSGR2bVJ3Q0lvWVVUUWg1czNhVHpKVHhsZW1PeFcxd0ZkR01q?=
- =?utf-8?B?dHdNc0xWc2FGVnFYMzY3ZitiaFlMYlg2cUpsRjR6dzE4S1lQV3RoNXBtRDhL?=
- =?utf-8?B?dGVjTm83NDhZRUQ0Z1Q1TS82cmpoVmluK3JGbnY3U0d5dkovUk5YZ2RvNFdo?=
- =?utf-8?B?Q1pNNjFxN25NU01sMitaR21VQ29sL0g1ZkE2WlZ6bWZpcG05YUZuYUxQWTk2?=
- =?utf-8?Q?xM1j8Y=3D?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?emM3ZkZWODBJTG8vM0o5eEpBaDd2anFQVmVkdHI5bUx4NU5QMjVLSG02WmlQ?=
- =?utf-8?B?VUI5aldySGd4cEgrOFdyQWhVTld4L21RdjQ0aUIrbHQxelpveEk2WCtqQkkw?=
- =?utf-8?B?V2FwOCtZZXZHRGw5T1VVRFRrUGhNZWo0VXZEZ1VXWTNnOTV4YlQ3ZXpSVXAv?=
- =?utf-8?B?alJ6RzBtcG5LS1BrVzI4VDIwSDd3djRoQlV4L0hYMTJDMzVtT1hUT290Vzl5?=
- =?utf-8?B?aTZrMXJ0cnFkc21PYWRGOCt3aTRjSHdxTG9lVHRqaVgwMWpyRDdsRkoxZndM?=
- =?utf-8?B?d00zZlFaTTlBYWtucnh6b2ZoNEU5bm1iQ0ttYjN4ckNpaU1BTlBZMng2Z3My?=
- =?utf-8?B?MTNmL1lKR2p2Vnl6djBZd1BZR1ZyYzh0UDFocGVoQVZwaGRRQkdMN3RwNG1D?=
- =?utf-8?B?MXo3dGhUcUFzTjJMQk1QMGs0WHJYNzFaSW42ckJLdURUQ3FHeE5jZ1pFa1Ja?=
- =?utf-8?B?RkQvMjZFZ2EzLzZKR1QzVVdDTDVybzljdVJnUFFoazQrbldrU0RCZ1hKRGkw?=
- =?utf-8?B?WEdKL1VBczlsQTJtbUlPNDkrQWNidUhhUDZNZjZLY0N4UXcvMGMrbUp6WklO?=
- =?utf-8?B?K0lvMytBdEpIUEt1bElQdHJoRkhXWFZrblJnOG0xQzJVV1Q2VGVLNFI2eVFh?=
- =?utf-8?B?aXlLRmQ0ek0yQ3F1S3hoTXkyQWRFK2ZVMWNhRGVaR3ZVcXZtWGpKQkxsWERa?=
- =?utf-8?B?ODdVSVRHck8zTW4zTXc0VVROTmRKQlhvYXkrU1ViMGdPMkttMUEvUkM0dFVw?=
- =?utf-8?B?QXNXaFFaNmdJWTlvempqc0p3ajAzVjhqcjN2VHZHN2RVL2w2Zkg1QzVaaFNv?=
- =?utf-8?B?MVpvMHdvLytwNldKbVE2MUR0RDBlTjhiZ1dCem5hNE96QjUxWFRwRGdCclRp?=
- =?utf-8?B?SzRPQy9kQzFXN3RJMWRzd2xPUmtJQnJFbXB4eUtLZStmcGlsUkQ0UVNVV0tQ?=
- =?utf-8?B?KzdTUm9ST1RrYXBIL2ZHNDdvN0JOYXErVkFRQVlVa2M1THVCK1h3a1dpQVd3?=
- =?utf-8?B?NE5mUzlxcHZOMlQ1OWt0OUU1QXRCbGtUNm9JRTFuUDMvRVVvNW1RTTFialF6?=
- =?utf-8?B?cHJzS1pXUnV0TWw1M011azNLMGNMczlQZzUxWmpOaVJoN1NFbFA5TnlHcnhv?=
- =?utf-8?B?T2ZRNC9iSHpkTHd5UldlZWJjUTJZcFZLWHdmaXZqZGJVVllVcndXTEhDSjFM?=
- =?utf-8?B?VkM0WlZmK1lZTDlrU1MwODFkTUNLUG5ONWF3UDh2d0RPakE4ZUw3cnlBWFpJ?=
- =?utf-8?B?M05zakFweVZBRlFpZEw4OEpQR212QUVuejMzOUtIbnA1RGVFeW5VSzVKc1B3?=
- =?utf-8?B?cG95eWpad3B1dlo5OTBPakRad1BnQXhqb0pZOFlrOGNnc2hOSUJ1V09ZVjRn?=
- =?utf-8?B?YUUxYkRTditZOGpiUTlXb2FvUm8rUjlKNHdEUy9HVkJ6VVU5WGJHRU12Tzlj?=
- =?utf-8?B?M004SWRnNE5UM3VuazM5ZHhIK20wNUx5QkkweWhVMnh2d1JHenVOSTBjOThN?=
- =?utf-8?B?NGRZRkNpU25zT3F1dWNvcHQzbFdFRTF5cGFaRWtyR3g2dUk1RHczZ0VQaFk4?=
- =?utf-8?B?a3FldjNmeGN5R3hoTGpRNFFtZmlIbXJUeFZHOTh0Z3UreDM1ZUlxenNPeDgz?=
- =?utf-8?B?L0c5cDhaVk1CSTEzN201Zm44Mnp3Y3NIZTkzUkRRMGpSVWJWdy9CdVUxUFhu?=
- =?utf-8?B?WVIxQ3VyTUtDZURSTFhheUx1Y05xREtISWE1Z3lYNnRONWhyQ01Rd1FyNVpB?=
- =?utf-8?B?d0kwdTFhSFNjZDdtWHFCdEF1bThlMHl0VmhKNW1mQmdvSEJXSGN3VEVBOERM?=
- =?utf-8?B?RkpWcEhXQnV1UEJ1ZGFwTHYvMTF6Q3FwRTcrVnNaaHFVVEdmcXJNNjgrd0lI?=
- =?utf-8?B?RHlRUzhKb1p4aW9wY2Y4ZTNZbVNzUUpwWTJobkR5QWxuVkhFQ3MzS1lGSjlw?=
- =?utf-8?Q?f9s4Tsn2wdA=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <3DC3AD3921A0024994AD1F8A93EB3E21@INDPRD01.PROD.OUTLOOK.COM>
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="qO6Lk7rT"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout01.posteo.de (Postfix) with ESMTPS id 3A3F5240028
+	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 19:06:25 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
+	t=1773684385; bh=w4aMMeXH0b7JgTSQ3j7crI/pRlF2UNUuOM0hPyY2020=;
+	h=Message-ID:Subject:From:To:Cc:Date:Autocrypt:Content-Type:
+	 MIME-Version:OpenPGP:From;
+	b=qO6Lk7rTUW3H0fPPJfL0YGhRHR1XTS90SrfRDYE8pBk9gt5ZhKNsQAfy69KXzCiao
+	 pjGRF3NZJtST7bhPpXSAMH/DrAAvN1ENGG+ZNaaGay7YhOoKiODycXsj6QWCqG2yRa
+	 dSkp3WxoDzxayQaYAEe362SdqM2jxkoD5sxPxIKzlD9QwZtGB6XxK/3yQz0o7OS975
+	 r2fFLZ1DvGEli+vPgFyP/m+GQwIBDjYIWpY+p8Z6G3IKZTJaxBq+AIoWoNzua6OdDc
+	 blIqYZ7il8b7kff3JP3SQ5CH8dNeALlsb4bUa7Xt+AniyB/FVn66MRVd3HE5JMBA0g
+	 miEXkT04RIr6Q==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4fZNM142Ltz9rxF;
+	Mon, 16 Mar 2026 19:06:21 +0100 (CET)
+Message-ID: <3ca65f7d0b00c93c91563bc29198f18d5a30eeae.camel@posteo.de>
+Subject: Re: [PATCH v3 7/7] leds: add synology microp led driver
+From: Markus Probst <markus.probst@posteo.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Danilo Krummrich <dakr@kernel.org>, Markus Probst via B4 Relay	
+ <devnull+markus.probst.posteo.de@kernel.org>, Lee Jones <lee@kernel.org>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>,  Miguel Ojeda <ojeda@kernel.org>, Boqun
+ Feng <boqun@kernel.org>, Gary Guo <gary@garyguo.net>, 
+ =?ISO-8859-1?Q?Bj=F6rn?= Roy Baron	 <bjorn3_gh@protonmail.com>, Benno
+ Lossin <lossin@kernel.org>, Andreas Hindborg	 <a.hindborg@kernel.org>,
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross	 <tmgross@umich.edu>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Igor Korotin	
+ <igor.korotin.linux@gmail.com>, Daniel Almeida
+ <daniel.almeida@collabora.com>,  Bjorn Helgaas <bhelgaas@google.com>,
+ Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Pavel
+ Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>, Robert Moore
+ <robert.moore@intel.com>, 	devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, 	rust-for-linux@vger.kernel.org,
+ driver-core@lists.linux.dev, 	linux-pci@vger.kernel.org,
+ linux-leds@vger.kernel.org, 	linux-acpi@vger.kernel.org,
+ acpica-devel@lists.linux.dev
+Date: Mon, 16 Mar 2026 18:06:23 +0000
+In-Reply-To: <2026031602-drove-timothy-1bb1@gregkh>
+References: <20260313-synology_microp_initial-v3-0-ad6ac463a201@posteo.de>
+	 <20260313-synology_microp_initial-v3-7-ad6ac463a201@posteo.de>
+	 <DH1YH0GO75H8.18YSW2VMKRB3C@kernel.org>
+	 <39f1c9bb0dbde9f1b60785f8e838289c888ffdb0.camel@posteo.de>
+	 <DH3KAWWLECYW.3VBH7PIE7ZE20@kernel.org>
+	 <eb2f7498c5f3247265effc47b3445a04ac71956e.camel@posteo.de>
+	 <DH3M1023PCBI.1HYYZU93NS1JX@kernel.org>
+	 <2026031645-unplowed-purist-9c4b@gregkh>
+	 <a4fb56d5eea790b51aa3623044e5d774a6bab47f.camel@posteo.de>
+	 <2026031602-drove-timothy-1bb1@gregkh>
+Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
+ keydata=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
+ jfGillcaQOqFZ3WwVqyzG1BUfTow==
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-akERDsl+g92JaDyAMR+U"
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: sct-15-20-9412-4-msonline-outlook-63b91.templateTenant
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MAUPR01MB11546.INDPRD01.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 77917c18-0de4-48ad-4255-08de8382e870
-X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Mar 2026 17:39:00.1289
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MA0PR01MB8900
+OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-DQoNCj4gT24gMTMgSmFuIDIwMjYsIGF0IDExOjAz4oCvUE0sIEF0aGFydmEgVGl3YXJpIDxhdGhh
-cnZhdGl3YXJpbGludXhkZXZAZ21haWwuY29tPiB3cm90ZToNCj4gDQo+IERpc2FibGUgQUVSIGZv
-ciBJbnRlbCBUaXRhbiBSaWRnZSA0QyAyMDE4DQo+ICh1c2VkIGluIFQyIGlNYWNzLCB3aGVyZSB0
-aGUgd2FybmluZ3MgYXBwZWFyKQ0KPiB0aGF0IGdlbmVyYXRlIGNvbnRpbnVvdXMgcGNpZXBvcnQg
-d2FybmluZ3MuIHN1Y2ggYXM6DQo+IA0KPiBwY2llcG9ydCAwMDAwOjAwOjFjLjQ6IEFFUjogQ29y
-cmVjdGFibGUgZXJyb3IgbWVzc2FnZSByZWNlaXZlZCBmcm9tIDAwMDA6MDc6MDAuMA0KPiBwY2ll
-cG9ydCAwMDAwOjA3OjAwLjA6IFBDSWUgQnVzIEVycm9yOiBzZXZlcml0eT1Db3JyZWN0YWJsZSwg
-dHlwZT1EYXRhIExpbmsgTGF5ZXIsIChSZWNlaXZlciBJRCkNCj4gcGNpZXBvcnQgMDAwMDowNzow
-MC4wOiAgIGRldmljZSBbODA4NjoxNWVhXSBlcnJvciBzdGF0dXMvbWFzaz0wMDAwMDA4MC8wMDAw
-MjAwMA0KPiBwY2llcG9ydCAwMDAwOjA3OjAwLjA6ICAgIFsgN10gQmFkRExMUA0KPiANCj4gbWFj
-T1MgYWxzbyBkaXNhYmxlcyBBRVIgZm9yIFRodW5kZXJib2x0IGRldmljZXMgYW5kIGNvbnRyb2xs
-ZXJzIGluIHRoZWlyIGRyaXZlcnMuDQo+IA0KPiBDbG9zZXM6IGh0dHBzOi8vYnVnemlsbGEua2Vy
-bmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9MjIwNjUxDQo+IFNpZ25lZC1vZmYtYnk6IEF0aGFydmEg
-VGl3YXJpIDxhdGhhcnZhdGl3YXJpbGludXhkZXZAZ21haWwuY29tPg0KDQpMb29raW5nIGF0IHRo
-ZSBjb21tZW50OiBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTIy
-MDY1MSNjNCwgSSBhbSBkZWR1Y2luZyAyIHRoaW5nczoNCg0KMS4gWW91IG5lZWQgQUVSIGZvciBh
-IGRyaXZlciB5b3UgYXJlIHdyaXRpbmcNCjIuIEFFUiB3YXMgd29ya2luZyBiZWZvcmUgNi4xDQoN
-CkkgdGhpbmsgZmluZGluZyB0aGUgY2F1c2Ugb2YgdGhlIHJlZ3Jlc3Npb24gd291bGQgYmUgYmV0
-dGVyIHRoYW4gZGlzYWJsaW5nIHRoZSB0aGluZyBpdHNlbGYgcmlnaHQ/DQoNCkFuZCBpZiBkaXNh
-YmxpbmcgQUVSIGhhcyBpdHMgYmVuZWZpdHMsIHBsZWFzZSB3cml0ZSBhIHByb3BlciBjb21taXQg
-bWVzc2FnZS4NCg0K
+
+--=-akERDsl+g92JaDyAMR+U
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2026-03-16 at 14:58 +0100, Greg Kroah-Hartman wrote:
+> On Mon, Mar 16, 2026 at 01:43:44PM +0000, Markus Probst wrote:
+> > On Mon, 2026-03-16 at 07:33 +0100, Greg Kroah-Hartman wrote:
+> > > On Sun, Mar 15, 2026 at 08:41:06PM +0100, Danilo Krummrich wrote:
+> > > > I.e. if we can't (easily) use mfd cells and would need a custom API=
+, then why
+> > > > even split it up at all, given that splitting it up would probably =
+the most
+> > > > complicated part of the whole driver.
+> > > >=20
+> > > > Greg, what do you think?
+> > >=20
+> > > I think this has yet to be proven to be a kernel driver at all at thi=
+s
+> > > point, and not just a userspace daemon that listens to the serial por=
+t
+> > > and then does what is needed from there :)
+> > >=20
+> > > Or, if someone can prove that the operations on this serial data stre=
+am
+> > > actually do require it to be in the kernel (which I have yet to see a
+> > > list of what this connection does, did I miss it?) then a single driv=
+er,
+> > > under the drivers/platform section of the kernel tree makes sense.
+> > The sysoff component is strictly necessary for poweroff and reboot.
+> >=20
+> > On ARM64 Synology NAS devices it is needed so the device actually
+> > powers off after calling
+> > `syscall(SYS_reboot, LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2,
+> > LINUX_REBOOT_CMD_POWER_OFF, NULL);`
+> > . Otherwise it would stay on.
+> > Same applies to reboot.
+>=20
+> So that means a write of a set of bytes to the serial port will cause
+> the machine to reboot or shutdown?
+Yes.
+>=20
+> > On x86 it isn't clearly documented what sending the poweroff and reboot
+> > command to the microp device exactly does, so this is based on
+> > observations. It should be sent before issuing a poweroff or reboot via
+> > ACPI Sleep. On reboot it resets various device states, so fan speeds go
+> > to default, leds turn off etc., so it behaves like a coldboot.
+> > On poweroff it will mark it as graceful shutdown (i. e. the device
+> > won't turn automatically on, because it thinks a power-loss happend).
+> >=20
+> > For the other components:
+> > - leds
+> > - hwmon
+> > - input
+>=20
+> For "input" what exactly does the input device show up as?  A power
+> button?  Something else?
+
+Well there are a few other things besides a power button:
+
+- beeper (short and long variant)
+- factory reset button
+- "USB Copy" button. Not present on all devices (including not present
+on my testing device). It is meant for copying data from or to a usb
+stick.
+
+Both of these buttons don't have a keycode in include/uapi/linux/input-
+event-codes.h, which is suprising given how many devices have a factory
+reset button. So I am not sure if I can handle them in this driver.
+
+=46rom what I can tell, there isn't actually a input device type I could
+specify on registering a input device. But it would be considered a
+misc input device.
+
+>=20
+> For hwmon, that makes sense to have a kernel driver.
+>=20
+> For leds, that depends on what you want to do with the led, as in the
+> end you are just controlling it from userspace anyway :)
+
+
+>=20
+> > It could theoratically be implemented in userspace. A userspace daemon
+> > could theoratically control the fan speeds directly, issue a systemd
+> > shutdown on power button press, control the leds directly etc.
+> >=20
+> > But honestly, I don't understand why this is an argument.
+> > With that argument drivers/leds, drivers/hwmon and drivers/input would
+> > not even exist, because everything could be implemented in userspace
+> > via
+> > - I2C: /dev/i2c-* (drivers/i2c/i2c-dev.c)
+> > - MMIO: /dev/ioport and /dev/mem (drivers/char/mem.c)
+> > - GPIO: /sys/class/gpio (drivers/gpio/gpiolib-sysfs.c)
+> > - SPI: /dev/spidev* (drivers/spi/spidev.c)
+> > - PCI: /sys/class/pci_bus/ (drivers/pci/pci-sysfs.c)
+> > - Serial: /dev/ttyS*
+> > and likely almost any other bus device too.
+> >=20
+> > Generally speaking, the kernel and its drivers is the layer between
+> > hardware and software. It provides the hardware abstractions as
+> > userspace interfaces. So any software on the same cpu architecture can
+> > work with any hardware, as long as there is a kernel driver.
+>=20
+> Yes, I kind of know what drivers and classes do and why they are needed,
+> that's not the point here. :)
+>=20
+> > In the case of this driver, it means
+> > - *any* led daemon can control the leds
+> > - *any* fan control daemon can control the fan speed and frequency
+> > - *any* monitoring software can view the provided sensors
+> > - *any* init system can react to the power button
+> > - *any* process can request a reboot or shutdown
+> > .
+> > I think this is the expected behaviour.
+>=20
+> Ok great, then make a single driver that handles all of this, like other
+> drivers/platform/ drivers do today, and all should be fine.
+Great, I will.
+
+Thanks
+- Markus Probst
+
+>=20
+> thanks,
+>=20
+> greg k-h
+
+--=-akERDsl+g92JaDyAMR+U
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAmm4RoobFIAAAAAABAAO
+bWFudTIsMi41KzEuMTEsMiwyAAoJEDR2H/jnrUPSsUIQAJeCzIeF7FxfVLPKwAJv
+sYO9ZXh6FWfGwq+zzAzAXqlhJQWtoptqBFhmWtrGiAEUYFDMlEG2jO9t4zE9cQiR
+O+QVCX1qWxERY0X4gbrT0GEcHuZpB7eqDRpHqQ1edsZrrbjD0LJl2GwrR+juH3p+
+J0H6qYNP0BP5I2Ox7pt3Wjw942RE8yV99ReJX15i7IseMtToK170J0yfLhV9EYdD
+ti/CzYvzqLndEhHRCVDrJhqRkUY7ffDrb/xir2FRqRmEnMw8Tyyy05eBccafoX4K
+bhb+cld/DtCZYR2BL2wyj6PVV6EYOjInchNDRa9T1txQ/yAd/s0yx2znesXtj2Kt
+xGn4A82oT4q84JtGyz4SCTvhAFMtle+23zmYHGgsJGjWLV2rAFLrTplZErqZWtCo
+UYNRzDvzksVnGSp05DeVmM1qZp8PZtfG/UlIfEYCbkkQVT8LZVb6/2BAzGdbmjMk
+LBI9lI95d17uCyxp9+1Pb1fls+XD25b0v1Qv6U5/YJPAwbyGAW3JtGsVhb0vhpdI
+hxTeJKlM1qq9voRoRWSDq+CSYGbNtQCvpjderejTY5otR9Ip1h+HAhTa8326QFmp
+OxOfwBf0ZcvmnxG4bIHDiySMdXLMSNzgAyGlZfcfI0rhEWazQktxJncKWn7D7VWP
+ojdLA9L7y+sXPTSIujFHYCZA
+=q1ya
+-----END PGP SIGNATURE-----
+
+--=-akERDsl+g92JaDyAMR+U--
