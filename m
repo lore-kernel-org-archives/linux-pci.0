@@ -1,180 +1,107 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39BCA221D89;
-	Sun, 15 Mar 2026 20:41:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 254B03B2BA;
+	Mon, 16 Mar 2026 01:25:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773607273; cv=none; b=heh5eYuSzdMQ8f9BQnKeWO+HedphMrCCpQQ+Neia5lCY90rJXWbFmAUfSFyMt6vIA+vRQ9PV/pEzUyN4YAGK1S4RYFs5dswvRoWME9AT8GWfQEqOAN0DYecJyS6zb+ex6+jatC4rctX1rSv9TcbioQ1S06h3Oy9ukezT8Z4jhfI=
+	t=1773624325; cv=none; b=MH/XzR3fiz/D47Rm9wp4Qne38jL8bB3AHMUKBtTFVHGkIcTxrHRwi6oBWywFkbPSqCA99VMFgD7FMp1Wq2xCfoPiEWJ4wll6BU9bh3hb6M101//f0ruFhQONe7Tx3y9fRAsy38oZka7x479vfbUQvwK4hhVW3+qiuodSNjCqkF4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773607273; c=relaxed/simple;
-	bh=ZG2i/wUEe+jX3Uu2IabuhXNhfK0TQVp34srUSuF0ZE0=;
-	h=Mime-Version:Content-Type:Date:Message-Id:To:From:Subject:Cc:
-	 References:In-Reply-To; b=BPOMs9RmGMBdO7dOxbx9DihaGT5Kfv1wCWLGWC98XI6g9Z2eg4IEjvY4ZjGLfpzy7k2m/fI9T61asupZNA3grEqZBMSoF8cczZPAMeXvaVG+h4UJ2LsBm8XECnpV8i3WXTbIjV/sbBvSakRkfR0gyk7IMxF9TEUxivW3wd7Kg3k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n3u7BT1P; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773624325; c=relaxed/simple;
+	bh=aHkbnn87tDJLEor7BJnTVAnBMXTWTv+C7Eg7gVuAo3Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rh9N8arqdVhD+MZsxhSulhvk7pliItKfWYlVcuKtVzzUdqQ9M2oSXnFeemuqUq8YIxponr8AgTmwWbZ9NEp6fjmfUr51Fzzi09fqRLyuiKxCGbsg1jguek8h9SAhteDWKZVp9vvMFo2wroQ96/sZ48Lr3RAHnJnQ30bT+yfbr/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bEiYDBBN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n3u7BT1P"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32E46C19421;
-	Sun, 15 Mar 2026 20:41:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bEiYDBBN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE981C4CEF7;
+	Mon, 16 Mar 2026 01:25:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773607272;
-	bh=ZG2i/wUEe+jX3Uu2IabuhXNhfK0TQVp34srUSuF0ZE0=;
-	h=Date:To:From:Subject:Cc:References:In-Reply-To:From;
-	b=n3u7BT1P80OBjNPqGpoAkBqfpJx7qkWwItZx9xtzbcQ1S9oOGi9Ipx3p1Ia4cs43a
-	 6vw7zRb5Qj0WWQDydDrN5VzJC3JqbDyAhNrVYFTi19xESJSuNv+IbSdRL592royxRn
-	 XTVttAlonN9i4QnLbgxWM9F4ywIe4BNHCxLFt1D/MyanKXsd5iyTbCTyhnySnBODf0
-	 I5EWiLyzLdzG7m27mTba+sTEmEDV5rm3EwVtEflCcSncHWwiAhsVkCXpYL5OeVUu/m
-	 nN7eRANa0qymi27chtkgiSXhwdxCZ8gatSXXh8n/j16iE0QPh26J9FK7v+klYNkfAt
-	 kfiuSyWpke2iQ==
+	s=k20201202; t=1773624324;
+	bh=aHkbnn87tDJLEor7BJnTVAnBMXTWTv+C7Eg7gVuAo3Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=bEiYDBBN7k31TXaMtwHgCb7gjw7pKuOm4itdb4rPNZdZ1FUuaEj2ZQ8BV9+j10I5S
+	 38mvrMn2MyeG486OAk0G4xT5fJt8OK1U437FsSqfCvsQS1vyRAjD7VCWnESSqVAMsH
+	 HPCbLivTQtjsABRrQT2ZCTH37zqwGC4H3oF8Jg3RODfoVe8LVJ6ryUeRXQ9MeQks6A
+	 fShPVP9XRWp+X69goJIDBTOeW+I4P55ZJN2Clft3CjPldi78Hkg0SZi9shcFo2U5zG
+	 yxvl2uGvqQCt27L8DuWWYIgzrBcpzSrOF443u+E7uf9Z/jLFBSXbYGP2V34f35gA1p
+	 6ajYSQENJa7gQ==
+Date: Mon, 16 Mar 2026 06:55:07 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>, 
+	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>, 
+	"robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org" <krzk+dt@kernel.org>, 
+	"conor+dt@kernel.org" <conor+dt@kernel.org>, "thierry.reding@gmail.com" <thierry.reding@gmail.com>, 
+	Jon Hunter <jonathanh@nvidia.com>, "kishon@kernel.org" <kishon@kernel.org>, 
+	"arnd@arndb.de" <arnd@arndb.de>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, 
+	"Frank.Li@nxp.com" <Frank.Li@nxp.com>, "den@valinux.co.jp" <den@valinux.co.jp>, 
+	"hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>, "jingoohan1@gmail.com" <jingoohan1@gmail.com>, 
+	Vidya Sagar <vidyas@nvidia.com>, "cassel@kernel.org" <cassel@kernel.org>, 
+	"18255117159@163.com" <18255117159@163.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v7 03/13] PCI: tegra194: Don't force the device into the
+ D0 state before L2
+Message-ID: <7d7p7b6ntvqmzfkqssioatepxnyh3h2f36uxrwgsc5txeosu46@mhruqj5ikjx7>
+References: <20260303065448.2361488-1-mmaddireddy@nvidia.com>
+ <20260303065448.2361488-4-mmaddireddy@nvidia.com>
+ <6ekumkzuh6znxzf4deaawc46mgoen6haxcrvrein2irpw3xqhc@shwkkvjnlj6h>
+ <a917e475-1ae9-4e12-98a1-babc49f042a7@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Sun, 15 Mar 2026 20:41:06 +0100
-Message-Id: <DH3M1023PCBI.1HYYZU93NS1JX@kernel.org>
-To: "Markus Probst" <markus.probst@posteo.de>
-From: "Danilo Krummrich" <dakr@kernel.org>
-Subject: Re: [PATCH v3 7/7] leds: add synology microp led driver
-Cc: "Markus Probst via B4 Relay"
- <devnull+markus.probst.posteo.de@kernel.org>, "Lee Jones" <lee@kernel.org>,
- "Rob Herring" <robh@kernel.org>, "Krzysztof Kozlowski"
- <krzk+dt@kernel.org>, "Conor Dooley" <conor+dt@kernel.org>, "Greg
- Kroah-Hartman" <gregkh@linuxfoundation.org>, "Miguel Ojeda"
- <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>, "Gary Guo"
- <gary@garyguo.net>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
- <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Andreas
- Hindborg" <a.hindborg@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>,
- "Trevor Gross" <tmgross@umich.edu>, "Rafael J. Wysocki"
- <rafael@kernel.org>, "Igor Korotin" <igor.korotin.linux@gmail.com>, "Daniel
- Almeida" <daniel.almeida@collabora.com>, "Bjorn Helgaas"
- <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, "Pavel Machek" <pavel@kernel.org>, "Len Brown"
- <lenb@kernel.org>, "Robert Moore" <robert.moore@intel.com>,
- <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <rust-for-linux@vger.kernel.org>, <driver-core@lists.linux.dev>,
- <linux-pci@vger.kernel.org>, <linux-leds@vger.kernel.org>,
- <linux-acpi@vger.kernel.org>, <acpica-devel@lists.linux.dev>
-References: <20260313-synology_microp_initial-v3-0-ad6ac463a201@posteo.de>
- <20260313-synology_microp_initial-v3-7-ad6ac463a201@posteo.de>
- <DH1YH0GO75H8.18YSW2VMKRB3C@kernel.org>
- <39f1c9bb0dbde9f1b60785f8e838289c888ffdb0.camel@posteo.de>
- <DH3KAWWLECYW.3VBH7PIE7ZE20@kernel.org>
- <eb2f7498c5f3247265effc47b3445a04ac71956e.camel@posteo.de>
-In-Reply-To: <eb2f7498c5f3247265effc47b3445a04ac71956e.camel@posteo.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <a917e475-1ae9-4e12-98a1-babc49f042a7@nvidia.com>
 
-On Sun Mar 15, 2026 at 7:47 PM CET, Markus Probst wrote:
-> On Sun, 2026-03-15 at 19:20 +0100, Danilo Krummrich wrote:
->> Isn't this handled through IRQs, i.e. you device issues an IRQ and then =
-you read
->> from the serial bus?
->>=20
->> (I'm asking since such chips can usually be connected via different buss=
-es, e.g.
->> serial and I2C. And with I2C the slave can't issue a transfer by itself.=
-)
->>=20
->> Other MFD drivers register their own IRQ chip for this. I.e. one would r=
-egister
->> an IRQ chip in the MFD driver and pass it to the sub-devices created thr=
-ough
->> mfd_add_devices(). Then the sub-device receives an IRQ and reads the reg=
-map.
-> You mean registering a virtual IRQ and triggering it on data receival?
+On Sun, Mar 15, 2026 at 06:51:23PM +0530, Manikanta Maddireddy wrote:
+> 
+> 
+> On 05/03/26 3:10 pm, Manivannan Sadhasivam wrote:
+> > On Tue, Mar 03, 2026 at 12:24:38PM +0530, Manikanta Maddireddy wrote:
+> > > From: Vidya Sagar <vidyas@nvidia.com>
+> > > 
+> > > As per PCIe CEM spec rev 4.0 ver 1.0 sec 2.3, the PCIe Endpoint device
+> > > should be in D3 state to assert wake# pin. This takes precedence over PCI
+> > 
+> > WAKE#
+> > 
+> > > Express Base r4.0 v1.0 September 27-2017, 5.2 Link State Power Management
+> > > which states that the device can be put into D0 state before taking the
+> > > link to L2 state. To enable the wake functionality for Endpoint devices,
+> > > do not force the devices to D0 state before taking the link to L2 state.
+> > > There is no functional issue with the Endpoint devices where the link
+> > > doesn't go into L2 state (the reason why the earlier change was made in
+> > > the first place) as the Root Port proceeds with the usual flow post PME
+> > > timeout.
+> > > 
+> > 
+> > So the previous claim in the comments is not true?
+> > 
+> > I agree with this patch in principle, but just want to know why the comment
+> > claimed there is an issue if the devices are not in D0 state.
+> > 
+> > - Mani
+> No, previous claim is true. D0 fix is done to fix L2 timeout with a specific
+> Endpoint. However, later realized that it is breaking wake functionality
+> with other Endpoints. As I mentioned in the commit message reverting D0 fix
+> still causes L2 timeout with that specific Endpoint, but it doesn't cause
+> any functional issue.
+> 
 
-Not really virtual, there are a lot of MFD drivers that register their own =
-IRQ
-chip to forward only relevant IRQs to the sub-device.
+Okay, I just looked up the mentioned section in r4.0. The spec suggests that it
+is possible to initiate power removal without transitioning the device into
+D3Hot. It didn't explicitly say that "put device into D0", which is quite
+misleading.
 
-What you say should work as well, but as mentioned below, I feel like that'=
-s
-overkill.
+Anyway, the previous comment as well as the workaround is not correct. So ammend
+the commit message as per above in next version.
 
-> Could you provide an example driver in the tree?
+- Mani
 
-One example would be drivers/mfd/palmas.c, but there should be many more.
-
->> Now, if you don't have IRQs at all and the only event you get is through
->> receive_buf() (which implies that the chip is only compatible with a ser=
-ial bus)
->> this technically still works, but might be a bit overkill.
->
-> There is a physical IRQ, but the serial device bus abstracts that so
-> the driver only has the receive_buf() function. The driver it self is
-> not aware of an IRQs.
-
-I think you are confusing the IRQ of the serial bus controller with a devic=
-e
-IRQ. The serial bus controller the device is connected to has an IRQ itself=
-, but
-what I mean is a device IRQ line.
-
-This is very common for devices on busses such as I2C, SPI, etc., as they h=
-ave
-master/slave semantics. I.e. the device issues an IRQ and the kernel reads =
-a
-register subsequently.
-
-UART does not force master/slave sematics on a bus level though.
-
-That's why I asked whether the device is UART only, or if it supports other
-busses as well.
-
-> Having like a reverse regmap would be great (in addition), in which the
-> mfd device is the one who calls write and the sub-device has to handle
-> it. But I don't think something like this exists in the kernel.
-
-I mean, it's not really that the kernel exposes registers to the device. Th=
-e
-device just uses the fact that the UART is not a master/slave bus and pushe=
-s a
-single byte to the kernel to signal that a button has been pressed. So, it'=
-s
-still "IRQ semantics".
-
-(But I see that on abstract level one could argue in this direction.)
-
-TBH, I think that the combination of this chip supporting multiple function=
-s and
-being connected through UART, where the device pushes bytes through the UAR=
-T to
-signal events is a bit of an edge case.
-
-As mentioned, if it would be connected through I2C instead, it would be sim=
-ple:
-forward the IRQ and use a regmap, and you can do it entirely with generic
-infrastructure and no custom APIs, which in the end is the idea of MFD. I.e=
-. you
-can describe the whole sub-device with a struct mfd_cell.
-
-And while we could technically "emulate" this, it remains to be odd and has
-unnecessary overhead.
-
-I've seen one other case in the kernel, which is drivers/mfd/rave-sp.c. But=
- this
-driver doesn't use MFD infrastructure at all and just goes for a custom API=
-,
-which clearly defeats the purpose of MFD in the first place. I.e. it should=
-n't
-even live under drivers/mfd/.
-
-Greg already mentioned the auxiliary bus, which for a custom API clearly is=
- the
-better choice.
-
-But to be honest, the more I hear about this device, the more I feel like a
-monolithic driver is all that's needed, as everything else sounds like over=
-head
-that doesn't really provide any value.
-
-I.e. if we can't (easily) use mfd cells and would need a custom API, then w=
-hy
-even split it up at all, given that splitting it up would probably the most
-complicated part of the whole driver.
-
-Greg, what do you think?
-
-*me runs away*
+-- 
+மணிவண்ணன் சதாசிவம்
