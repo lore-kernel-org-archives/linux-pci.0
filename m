@@ -1,98 +1,149 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f50.google.com (mail-lf1-f50.google.com [209.85.167.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1888527BF6C;
-	Mon, 16 Mar 2026 17:08:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773680902; cv=none; b=BtzYIAa74srMWxtvYliVYPIJ4PdG0BMaUVgvOG7uvTQLxBtR9NbTqV32dX63sJP6L8c60ojtccMoNlPIbnzYj4m83pt84iVPhcG1JgVVMTOER0vIXee+atXubRSzbSnPCkmMB60bKXbGcFo3fDexmd92sHxADLoXgji+FrSIbrk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773680902; c=relaxed/simple;
-	bh=1QaWj1bwHAm5E2mhN/xOBT1kGpEQS+6ortTVaFl4lBU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=t9pHEcQh3Bb7OCd4X4+TkSc0U0quiyxRXBa/aNTOC+F9DO4I9RudhmuHt7jDUrtiksLkVPOy0S1NL/NFekqqVeDuR2O7cQIDyWxXFP/5HSSy1wCE2eg7eCex7M6xjmTG39T6Uecdd5pSf8s0xy9bg8j9lxwD3dqPMgAL/B1BZ68=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=a8MLmfvn; arc=none smtp.client-ip=192.198.163.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D1FD3CF68D
+	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 17:09:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.50
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773680978; cv=pass; b=eKWXqxUgfgYujUYQTH1a/sYAb50Rxvsuhh4in/wcUK6bMxwKNRifwm8svnXe/pUSaW1fpyCQ1daqIbaOsmTCFgY2b4CaPIM3KpcPmyxSMpGArd83t0AgaI6HqqBMds1go3bSMF/ovhesrfEtvMIK/tuvua5kPw5doZ4Rza9pdjc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773680978; c=relaxed/simple;
+	bh=NNTfBBJ92pV51Q9pBimiCqTRiAqNEv5Iq9TZRM69uyo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=AnV7wvOiYqz+hkkt7LR7mpeigTT3V68XKuFL/WcN1ANLXcBkX3XANMT7dSX0laI15dqIRGSzoQJ97woA7xbnK89qEDEEMRl2EYc4UMa0gRqZCukBiJBvq9DCP6KCxBw+R8wuj4wUuDBA+e/DjvTn3XLQ41rkGakA67XBZRCPNUQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=o4J/xobT; arc=pass smtp.client-ip=209.85.167.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="a8MLmfvn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773680901; x=1805216901;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=1QaWj1bwHAm5E2mhN/xOBT1kGpEQS+6ortTVaFl4lBU=;
-  b=a8MLmfvnGY9rHMqK23M/8dR+HlNBba9rGjc+ZMba/fnZlqaaJ/oJjQXt
-   TB8DrM1KRHEwmsNbqkwDwl6OufFEQgCfw6A2VCbJyUNTrI9VTI6cG6ftb
-   huvoAC6ugYKhMhgyIF/EZcZqpVEJ+K2ZLejSCkcfpmCKqlW4UgqIrdub+
-   rA1JDjLxD2yNODlA2FtvB6PcERoFmJRtn6WLkwGs9xZgRrqgAUT5ZKIKe
-   7AOjvNfOBaxO8ZVEQRhmdwMLNCbZTbH2SC0ZAtfDnxS45vw+Zb753uU/H
-   l62Ih1PGwsUt6XjN4tPq2oiH1h3Ca+dvxUE/2A+ehz5BWrkjjzS9oHpfJ
-   Q==;
-X-CSE-ConnectionGUID: l6xTOXvYQh2zRk4o1YS62w==
-X-CSE-MsgGUID: qkBScapfT+evu1NnRwFSrg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11731"; a="78599050"
-X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
-   d="scan'208";a="78599050"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2026 10:08:20 -0700
-X-CSE-ConnectionGUID: P8f1zGkORvWGfscsJ3OkOQ==
-X-CSE-MsgGUID: Hp+nuDmiSjWB5X2XVYMa8g==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
-   d="scan'208";a="217783569"
-Received: from lkp-server01.sh.intel.com (HELO 892944969b78) ([10.239.97.150])
-  by fmviesa006.fm.intel.com with ESMTP; 16 Mar 2026 10:08:18 -0700
-Received: from kbuild by 892944969b78 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1w2BQN-0000000010w-2UiD;
-	Mon, 16 Mar 2026 17:08:15 +0000
-Date: Tue, 17 Mar 2026 01:07:42 +0800
-From: kernel test robot <lkp@intel.com>
-To: Hans Zhang <18255117159@163.com>, bhelgaas@google.com,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	hans.zhang@cixtech.com
-Cc: oe-kbuild-all@lists.linux.dev, robh@kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Hans Zhang <18255117159@163.com>
-Subject: Re: [PATCH 2/2] PCI: cadence: Add debugfs property to provide LTSSM
- status of the PCIe link
-Message-ID: <202603170025.GkqrnkFH-lkp@intel.com>
-References: <20260315155514.127255-3-18255117159@163.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="o4J/xobT"
+Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-5a13f6bcbf4so6849728e87.1
+        for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 10:09:37 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773680976; cv=none;
+        d=google.com; s=arc-20240605;
+        b=DnNXVPjKE5V667ND8UFf057n327YDtSoJ/zFcbhaPQ+HH8kH+RoyPfSj0xPJaNQzww
+         W5PPgYHlfDWh11mI7fqLowlQwOdEt3mm9fIyw/eB8M6UuD5XFEKABcfLBpmGR5G7Ofu1
+         71EX8HcaXXVFmn5CqMLUoAdsM8OG5d16qg737ZZcJ0a9/oo1tZymxVpdSzrFUcb5CDzf
+         WHCGBbqu5A5psm2M9R8Y5QJF42IrkQRJzmMGCg8fMVpnZ/nMLxFmgUn5ddU7jyci/XJW
+         v99foFykygpZDm/EHisqt0EN3O+6AsOdyRV1Cw7j/LLJFXece3NuMK3JpBpRbHlk+dz4
+         nK6Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=9+JmK53GRb51WN1NqYAYXjEI124SxFiHPFttdlfjYpg=;
+        fh=kiiBO04bsyzmBYPramPHPpae+mreNjMDqcp9ZgNe3Po=;
+        b=aeetUV5Gs6zTh3Tm9Fq2iy3YE5v0tm8FzTm5SZThTC7BiQBXHfSZ2ahOa8+jpH6C5E
+         960YfnAaSR8xmRBV2M8NvmJpC6K3NIuZC0Ml8AbwKkaMU5Q45owHj9kotBahekZypuEF
+         ZzVBoua5uZSRTncHE5AI3v+HAsjrkZ9y/kkQldl6zSHDO2XnSfsmjivJzk8fVyQ0DOL4
+         GHHfFNrt5xWXL7sZuBj7mmWpMdkWja5+4xBhjrkeeaIyQQLJqTeGd38GQuydr1Y+GXsl
+         wJidzdLngIg70ys7vtvu+kptJ6fA1BoWNCyoZY1heGJzyy0gQGxgoFRmvjKtd9tKF7f0
+         jXMA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1773680976; x=1774285776; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=9+JmK53GRb51WN1NqYAYXjEI124SxFiHPFttdlfjYpg=;
+        b=o4J/xobTqd61lsctsq1Mp5DIFrv6bPcSemwW0YkargjsE1WDYYBUULHlKBMCDgKPtj
+         5fhMwNYHxYqciVnh8PL2wMKPEoV96+hIy8NDYDzoZl+GhXvBaH/QuNo/rcXK2s/Ayfbv
+         PKomlm9ztOHqo123bsT3x7R2n3tg29nr6V7XHLhbLlHHTpmNcCqu8sdyA+7OFaPD0BUf
+         cFbnfgnrEHYKTjk575MTqX76oiNSSki8NSgASzqPoYMRwxGt0I7bZayK2J5a8eiU411c
+         VBPbrjTqsBo1uDOIE2Uyl/MB2SLTYmlNXZiCXfEbLpMh9ZB6OaWxgNkwvT9frHFEwRkb
+         67PQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773680976; x=1774285776;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=9+JmK53GRb51WN1NqYAYXjEI124SxFiHPFttdlfjYpg=;
+        b=Cfab38n7qhUrJthSCjecNiHiFuoshP/hhmuPGGVX4+tokIppx550+wsO2dEvGGaB2G
+         oky3uWpaPJGXqWXEAJ8whxAVIQwHqkbxEOIsQ8UhOSJnK46jkAfr49EDFNif0gv/CfnC
+         clm9EAbK1a9EOEusyPUJx412OGphp2Pw1IiIKFcCmDQs43dZme9kQk7Ill7Vj4c/GJMk
+         gB+r4oK7ugHABYicBY9VjubUAZNBUIDz1k82GuSH5X9YKgAjzwWNo+KmMhnRxU1sGW4y
+         1vdzZE5mZMhpudBrceWN+qzdFk/jcZAIaDjgfoi+IO39y4TvoRReNpeMesMN5HCNUDDr
+         M8XQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVTnR5GIwOKdbxZlTP+LHW42qwR4EF9LmB5hSrbxal/wvp2mLicH5N1GuJecwPMq0ZnDH3nf83qFeU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyilVtrAcGauxnIYuYvKW0AuLwj7eU/IS2Lyj3GjR3CjB8BNhs7
+	MMhZJXXFjonojbm5iqSIGZrayi+JJ0ioPHVlvYXTGeLu1QJEAQAh4jpaITG+Q40ySKFnDqJm82G
+	VoAjq3R75IJmDenIyWymYvaJpeTxquL2g0AiGQgCZ
+X-Gm-Gg: ATEYQzye4BFcs4qpJYHj5G3acjGwpuQpOTjZxpXlzJRnJxFFAzBxzJERJ6RcY+fZhci
+	SLRD1nWeXnfgZMC3gGEw8U1SwflRM5NF1V4fZ6dkLKvTHG+tSI127ItammUAbKgGTaARzdUo0pt
+	3vloroSm5h8ZoAQgDmY7gdZT2xQ/2a/nSslAy+Oj0QZLgZscslyI7DhMGJjAj1p1YCH5EE7Bfh/
+	xLZSstQvZ8I0tKjDyZj5bvkiKIJc1dNze68IZ+xK/lNGcSPiUe9YNp9y8g7TqwF+rB4Mb97VvX7
+	UMhxiuEY
+X-Received: by 2002:a05:6512:64e2:b0:59f:6a2e:49e4 with SMTP id
+ 2adb3069b0e04-5a1626fb8abmr3594350e87.7.1773680975067; Mon, 16 Mar 2026
+ 10:09:35 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260315155514.127255-3-18255117159@163.com>
+References: <20260129212510.967611-1-dmatlack@google.com> <20260129212510.967611-8-dmatlack@google.com>
+ <20260314061747.GD4177610.vipinsh@google.com>
+In-Reply-To: <20260314061747.GD4177610.vipinsh@google.com>
+From: David Matlack <dmatlack@google.com>
+Date: Mon, 16 Mar 2026 10:09:07 -0700
+X-Gm-Features: AaiRm52NY6sLPHJr9Fl_13O_4mOB8Cua734qhyhURDdG8FlJ-PNRJ5f7ttW8G5g
+Message-ID: <CALzav=cQQny8AXzewtSe2pM-Z20+K9UbTcNBiy6SC4PUzR3sng@mail.gmail.com>
+Subject: Re: [PATCH v2 07/22] vfio/pci: Notify PCI subsystem about devices
+ preserved across Live Update
+To: Vipin Sharma <vipinsh@google.com>
+Cc: Alex Williamson <alex@shazbot.org>, Adithya Jayachandran <ajayachandra@nvidia.com>, 
+	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>, Alistair Popple <apopple@nvidia.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, Ankit Agrawal <ankita@nvidia.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
+	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
+	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, Jonathan Corbet <corbet@lwn.net>, 
+	Josh Hilke <jrhilke@google.com>, Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org, 
+	kvm@vger.kernel.org, Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, linux-mm@kvack.org, 
+	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
+	=?UTF-8?Q?Micha=C5=82_Winiarski?= <michal.winiarski@intel.com>, 
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
+	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
+	Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>, 
+	Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed <saeedm@nvidia.com>, 
+	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
+	=?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, 
+	Tomita Moeko <tomitamoeko@gmail.com>, Vivek Kasireddy <vivek.kasireddy@intel.com>, 
+	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>, Zhu Yanjun <yanjun.zhu@linux.dev>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi Hans,
+On Mon, Mar 16, 2026 at 9:03=E2=80=AFAM Vipin Sharma <vipinsh@google.com> w=
+rote:
+>
+> On Thu, Jan 29, 2026 at 09:24:54PM +0000, David Matlack wrote:
+> > diff --git a/drivers/vfio/pci/vfio_pci_liveupdate.c b/drivers/vfio/pci/=
+vfio_pci_liveupdate.c
+> > @@ -192,10 +200,24 @@ static struct liveupdate_file_handler vfio_pci_li=
+veupdate_fh =3D {
+> >
+> >  int __init vfio_pci_liveupdate_init(void)
+> >  {
+> > +     int ret;
+> > +
+> >       if (!liveupdate_enabled())
+> >               return 0;
+> >
+> > -     return liveupdate_register_file_handler(&vfio_pci_liveupdate_fh);
+> > +     ret =3D liveupdate_register_file_handler(&vfio_pci_liveupdate_fh)=
+;
+> > +     if (ret)
+> > +             return ret;
+> > +
+> > +     ret =3D pci_liveupdate_register_fh(&vfio_pci_liveupdate_fh);
+>
+> May be we should rename pci_liveupdate_register_fh() to something like
+> pci_register_to_liveupdate_flb(). In the current way, it is confusing to
+> why same handler is getting registered at two places.
+>
+> Above name will also make it similar to IOMMU series as well
+>   https://lore.kernel.org/kvm/20260203220948.2176157-2-skhawaja@google.co=
+m/
 
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on 1c9982b4961334c1edb0745a04cabd34bc2de675]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Hans-Zhang/PCI-cadence-Add-HPA-architecture-flag/20260316-002148
-base:   1c9982b4961334c1edb0745a04cabd34bc2de675
-patch link:    https://lore.kernel.org/r/20260315155514.127255-3-18255117159%40163.com
-patch subject: [PATCH 2/2] PCI: cadence: Add debugfs property to provide LTSSM status of the PCIe link
-config: csky-allmodconfig (https://download.01.org/0day-ci/archive/20260317/202603170025.GkqrnkFH-lkp@intel.com/config)
-compiler: csky-linux-gcc (GCC) 15.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260317/202603170025.GkqrnkFH-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202603170025.GkqrnkFH-lkp@intel.com/
-
-All errors (new ones prefixed by >>, old ones prefixed by <<):
-
->> ERROR: modpost: "cdns_pcie_debugfs_init" [drivers/pci/controller/cadence/pcie-cadence-host-mod.ko] undefined!
->> ERROR: modpost: "cdns_pcie_debugfs_init" [drivers/pci/controller/cadence/pcie-cadence-ep-mod.ko] undefined!
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Will do.
