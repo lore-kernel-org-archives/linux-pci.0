@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3AB0182D0;
-	Mon, 16 Mar 2026 03:27:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4CF220ED;
+	Mon, 16 Mar 2026 03:31:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773631670; cv=none; b=GkSHV3rOI78YLUNsPWNMuPr41KwI/fwRpZwm/ig6d2uKbTdQkKcUZrwYwA4cU7Lo+nZ7Rfi2nbY3/NHPj/rrh/vr7yey8syPTs05x0Ep8Oi8crBrWEjGPx2fyoYTaiUwvCYEQ1lusuVxmuQeuPUvCwjq5EgpvCdxdZf1Pfnix5k=
+	t=1773631860; cv=none; b=I1QsUIuNWp0C9NHju302AXBaHp0fZMhTYADGimJ3Kt+viobWbt3E0BzMnFJvvmvy+a70j0qcMec+C5yAlp0OhXC7xMiTG2k+jFxKNfv0yOGztIw5IBz6gFdkVpDqoVaD9dpxACilAkx75nas/pwPw5oiIltJ/4WMRxk4pqhXVHA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773631670; c=relaxed/simple;
-	bh=AOgND3p+CR+S1EUIfKeLAa9CnzejQMKxAGn7CsaMW5U=;
+	s=arc-20240116; t=1773631860; c=relaxed/simple;
+	bh=eh+2ggFPzUJNuNykNrUdyYe8tOgYiW2yDLBJTwnCtPk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Z1L0SQ511GvCBw+7dzyV/89po/mbQ8lrFu1g+D7fj5jlGI/EKeY+tnJFRMqvruCmBT3AfqL0f8LRgfpbGCmj3DdY3rG+D8S6jrF2Q1RcjT8xCK1ReJQwqup3FCX6cXpXT2olmXHAQFhEr5oYBFEPs5UDfJVuOmwr+fBckzK3xNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j2dvlI19; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=FgSe4Srv9dlHe29SpJ5CWF+fesap6cYu6TIxkHGLg4VvmBJvaVZl8hzBY4ZJpfwaZRN/gsKnCZgG0JTiY/IZUcat/uiUbdoGUPR9An4p4QWZByHu1x/GiwUDZ/LZNOGGBHMVCeS8kzI/EX5RpfLgiVscnp/o5EWpwvs0XQmzoB4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TmDlrH8n; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j2dvlI19"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA062C19425;
-	Mon, 16 Mar 2026 03:27:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TmDlrH8n"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55C32C19425;
+	Mon, 16 Mar 2026 03:30:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773631670;
-	bh=AOgND3p+CR+S1EUIfKeLAa9CnzejQMKxAGn7CsaMW5U=;
+	s=k20201202; t=1773631860;
+	bh=eh+2ggFPzUJNuNykNrUdyYe8tOgYiW2yDLBJTwnCtPk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=j2dvlI19D73CnrYW+5tfy016wwY8NWFb78PXbWYCv/M44Q1sLCGXcedni32BcBksf
-	 3DS+c63m1tjIQljFK49eqxZLv/WSxJAAyQ1+HVo2ViYbYTHfHtRdtnPX61PmCATGI6
-	 87rvKqPnoqO4lwRoqGJ3f7lej4HaxMQy/Oa9OTWEenitmS3ek6tx7v0ILmlAZwe0H9
-	 eLf7+BGtgJCHvx00toPH96KjaXpzrzv5yih6kD3Atw8EJp/t0mZk7xvaxiTZgeRdKE
-	 hv8+/BRJaRLknKKcKLQ9TDJTSwl6N0xS9tlQVQH54xgst83zVP78ckZC9qPgXl3ZCJ
-	 9/dxikA1Qjmgw==
-Date: Mon, 16 Mar 2026 08:57:39 +0530
+	b=TmDlrH8nHQOac2XasyowcxoU+9di5SWNLZi620a63eH+9GpQjlyCcOoJepcMYWPhw
+	 GZ3/IBl6kTtUFHm+q2nV+O2cPiw+7vCB0iDwyBye1/oM6kOmnBj1+Fk/EE1ZifQSGD
+	 qv3dCnaINPEt30l9cbHjvy7GWEJ/T0Tn/MtGXbxWg+7eZWB4Klt+T20OEjy/kASaCd
+	 ppr9xyTnoXwTg4iVY5yaYc23XYrWoiOCwc53HaVS1khFcjoX3kUv6tv6MkiIX7dlvW
+	 f3H0m/BZr+thTcWUPu/2kUDmOWvWy/xLyQ6G/k4/+IzJZ8Z/DZNIxqrCfhU6S6JbiZ
+	 VNgSrLANPTx7Q==
+Date: Mon, 16 Mar 2026 09:00:49 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 Cc: "bhelgaas@google.com" <bhelgaas@google.com>, 
@@ -40,12 +40,12 @@ Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
 	Vidya Sagar <vidyas@nvidia.com>, "cassel@kernel.org" <cassel@kernel.org>, 
 	"18255117159@163.com" <18255117159@163.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
 	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v7 2/9] PCI: tegra194: Calibrate P2U for Endpoint mode
-Message-ID: <kkxlwgdtthaelnbrk5svjxkprhidymyxwd3ryeausabbtjllf4@msanys6p2oav>
+Subject: Re: [PATCH v7 8/9] PCI: tegra194: Add core monitor clock support
+Message-ID: <mm6bvkorzs2d2vgc67hg2unvqjlhc6fg2of7ksoxactvsxahgm@6hpn7lxuoki3>
 References: <20260303065758.2364340-1-mmaddireddy@nvidia.com>
- <20260303065758.2364340-3-mmaddireddy@nvidia.com>
- <x7w2a766h4m56kocibxz24uwjdlssbccg3z2pfcse4prk6c6fu@xwz7axizktyv>
- <761e473a-983f-40f8-b141-8d648be8497b@nvidia.com>
+ <20260303065758.2364340-9-mmaddireddy@nvidia.com>
+ <p5eoraarj2v5oh5z4qxvixcs3whlt5vlzlgblytaeasujseupz@zjo4nufie2fy>
+ <a0b424dd-6b5d-4ef6-839d-0692e2ae6155@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -55,25 +55,73 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <761e473a-983f-40f8-b141-8d648be8497b@nvidia.com>
+In-Reply-To: <a0b424dd-6b5d-4ef6-839d-0692e2ae6155@nvidia.com>
 
-On Sun, Mar 15, 2026 at 10:47:55PM +0530, Manikanta Maddireddy wrote:
+On Sun, Mar 15, 2026 at 11:36:30PM +0530, Manikanta Maddireddy wrote:
 > 
 > 
-> On 05/03/26 4:29 pm, Manivannan Sadhasivam wrote:
-> > On Tue, Mar 03, 2026 at 12:27:51PM +0530, Manikanta Maddireddy wrote:
+> On 05/03/26 4:42 pm, Manivannan Sadhasivam wrote:
+> > On Tue, Mar 03, 2026 at 12:27:57PM +0530, Manikanta Maddireddy wrote:
 > > > From: Vidya Sagar <vidyas@nvidia.com>
 > > > 
-> > > Calibrate P2U for Endpoint controller to request UPHY PLL rate change to
+> > > Tegra supports PCIe core clock monitoring for any rate changes that may be
+> > > happening because of the link speed changes. This is useful in tracking
+> > > any changes in the core clock that are not initiated by the software. This
+> > > patch adds support to parse the monitor clock info from device-tree and
+> > > enable it if present.
+> > > 
 > > 
-> > What is P2U?
+> > Reword the description in imperative mood and avoid 'This patch...'.
 > > 
-> > - Mani
-> It is pipe to "universal PHY(analog PHY)" wrapper which connects DWC core
-> and UPHY.
+> > > Reviewed-by: Jon Hunter <jonathanh@nvidia.com>
+> > > Tested-by: Jon Hunter <jonathanh@nvidia.com>
+> > > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> > > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> > > ---
+> > > Changes V1 -> V7: None
+> > > 
+> > >   drivers/pci/controller/dwc/pcie-tegra194.c | 18 ++++++++++++++++++
+> > >   1 file changed, 18 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+> > > index 070eb7f4058d..e0455d322166 100644
+> > > --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> > > +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+> > > @@ -249,6 +249,7 @@ struct tegra_pcie_dw {
+> > >   	struct resource *atu_dma_res;
+> > >   	void __iomem *appl_base;
+> > >   	struct clk *core_clk;
+> > > +	struct clk *core_clk_m;
+> > >   	struct reset_control *core_apb_rst;
+> > >   	struct reset_control *core_rst;
+> > >   	struct dw_pcie pci;
+> > > @@ -945,6 +946,8 @@ static int tegra_pcie_dw_host_init(struct dw_pcie_rp *pp)
+> > >   	}
+> > >   	clk_set_rate(pcie->core_clk, GEN4_CORE_CLK_FREQ);
+> > > +	if (clk_prepare_enable(pcie->core_clk_m))
+> > > +		dev_err(pci->dev, "Failed to enable core monitor clock\n");
+> > >   	return 0;
+> > >   }
+> > > @@ -1017,6 +1020,12 @@ static int tegra_pcie_dw_start_link(struct dw_pcie *pci)
+> > >   		val &= ~PCI_DLF_EXCHANGE_ENABLE;
+> > >   		dw_pcie_writel_dbi(pci, offset + PCI_DLF_CAP, val);
+> > > +		/*
+> > > +		 * core_clk_m is enabled as part of host_init callback in
+> > > +		 * dw_pcie_host_init(). Disable the clock since below
+> > > +		 * tegra_pcie_dw_host_init() will enable it again.
+> > > +		 */
+> > > +		clk_disable_unprepare(pcie->core_clk_m);
+> > 
+> > Again, this change should be in a separate patch.
+> This patch is handling only one feature, which is enabling monitor clock.
+> Monitor clock is enabled in tegra_pcie_dw_host_init(), this function is
+> executed twice when handling DLFE fix, so this line is disabling the clock
+> before executing tegra_pcie_dw_host_init() 2nd time.
+> I think one patch is sufficient for this, otherwise it will introduce
+> unbalanced clock enable error.
 > 
 
-Okay, please expand it in commit message.
+Oh yes, brain fart. You can ignore the above comment.
 
 - Mani
 
