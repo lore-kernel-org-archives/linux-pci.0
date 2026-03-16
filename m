@@ -1,137 +1,161 @@
-Received: from hermes.f3n.de (hermes.f3n.de [212.204.115.44])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C3272FDC3D;
-	Mon, 16 Mar 2026 14:51:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.204.115.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5020D3A1A43
+	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 15:28:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773672719; cv=none; b=ltMyLZbphP6wzP/LezrUYhngUmG9WYyWSjDDvK3T2Nz8xyqK7Tx2XFCguxY38d3qPjpQ/39bDI6TIIhrtjEXln7QwkMXGGS1qt9w3w7oSDdDjYMHKeWujyGVh65T/T2zRmKCqGdHKVxUPvzB2nfZNqPZXjHZtvDjw88jpctPRD4=
+	t=1773674891; cv=none; b=k2kWg3PrS0ogYKDCYIlhAuy9HR++j76/0Y5vdDYSrshmZ0fCyjP82swuXStE1mlhwy9sx8EVmCLGeSlqoeKyQZJKBD5uFX+1jvoYVeMxS0/09DC4lFAKrPEshz/QhRRhzV9TYzQtLY/eHmzKUNl4WW9nwAHQuFbOA/VeRa787q0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773672719; c=relaxed/simple;
-	bh=78PKWBBTckDNf8W1c7v9X9PPGSOJD6IKwuTftDVMhu4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JFwozuHykXE4yT3pEIk0j1MHpQW/MIL7B9ac3oiyvTaZ4hXA7kGn/HUzS7PS+c5gDfhtT4uaOfo1g/YaK8xQ/Zd/3VqYbWZCpgFhCQyIcguwcFl4aqUa2yMZ1tD5cTWuf3N6evP18Gqi3PRxTQunMJw8jODunIKzHUZZZPCUiWU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fen-net.de; spf=pass smtp.mailfrom=fen-net.de; dkim=pass (2048-bit key) header.d=fen-net.de header.i=@fen-net.de header.b=HJIPrPXu; arc=none smtp.client-ip=212.204.115.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fen-net.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fen-net.de
+	s=arc-20240116; t=1773674891; c=relaxed/simple;
+	bh=F5oQXzAlSmzjBDrHgcsXALdm2k78IHKNRCmdk/xArjo=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=bhHq6MKqRm/OVbDnbptOPVwxFHU/MQPktERci8B/9ZrJLvS5smmqCm/Tipmqbi5iomVLc12E4W9IW7Mf6lM6Za5tKvWmF2iodpCms8O7VzYg47YIspJy+dKO+u9RO3dJLhvRW50I1ckO1y1Ct85RmdVoBc2favgytSKRX0dMd1c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LRwtT2ag; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fen-net.de header.i=@fen-net.de header.b="HJIPrPXu"
-Received: from [192.168.178.55] (ip1f124e75.dynamic.kabel-deutschland.de [31.18.78.117])
-	by hermes.f3n.de (Postfix) with ESMTPSA id 1A4613000F30;
-	Mon, 16 Mar 2026 15:43:36 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fen-net.de; s=ds1-f3n;
-	t=1773672217;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=RQm7xresWjvF9sNcKRMghw13/uCAmMCBZZabe7x5Tzc=;
-	b=HJIPrPXuHoIwhuDfbylsZk3Xq/Uku7SVzXXerk0504auOOn1xjcBfpcJrpKh12PHmQ5SGz
-	Y8Tn+LFJnp6wsmPOvgmNIRFgVmjgD0hsZ/w2uZ7qQnl8MvzUaB5nRvb9lRA8HbeuxahI/P
-	n5ame47Jsw9zqKCjpYxG3e8yErokeX0j0hssWXkZUGeN6skYpQ83KLgGyYnslCb8eto005
-	ywhvpV5q7kVW6m5T9CgHiqAx0nJOsjABIVX94cTI2QEBxljL/iR4+3c2U5myYQzAVl9nEO
-	Z/Z9mssGQIhuRHTkZzyRKqwlKwRwRGt5amOhg2Q9pPCNHTlNc8+UeH+9WP4pdw==
-Message-ID: <e81045f3-4446-49e7-b9bb-44245766098a@fen-net.de>
-Date: Mon, 16 Mar 2026 15:43:36 +0100
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LRwtT2ag"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773674890; x=1805210890;
+  h=date:from:to:cc:subject:message-id:mime-version;
+  bh=F5oQXzAlSmzjBDrHgcsXALdm2k78IHKNRCmdk/xArjo=;
+  b=LRwtT2ag0C6xB9SHFvp4obxRySbAZS/vjrUboBNsXffY8qmyorAB1KPC
+   0sJWm+LjqNm3kVHS4zaOIzAA8HW6pmTpX2C3UhlckXvkW3zPdNHZ9zcML
+   1DBiL0e0AWWpislMlu11K4En6SGFPcffAxj1vNJml8OIeP0Xdr+Zkj3n8
+   1DP1BLwGe1ywlhoY5jzu0xXIPcfZhnwPr0KBW5yJ13sY9+Y26BAIeIigq
+   J6Mmt69HldLvtcNo/V3Qi7dXu4Z1nXuVCMIK0E5Wv4RTiCVIRt9N/sJTC
+   GrbEuiT9hQvzRIrn7uVXHF+vPTj8dsGwLpGBotvORqlZg6OjpmApzNuip
+   g==;
+X-CSE-ConnectionGUID: g4yRiQCTSTuNOsk4tjIw4g==
+X-CSE-MsgGUID: rOsh3wpYScK07EMPAfZtig==
+X-IronPort-AV: E=McAfee;i="6800,10657,11731"; a="74811023"
+X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
+   d="scan'208";a="74811023"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2026 08:28:09 -0700
+X-CSE-ConnectionGUID: b0AzziJlSqOFRjHd/jwiEw==
+X-CSE-MsgGUID: AVvzWch1TuyyYPyAMZ9gkg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
+   d="scan'208";a="218193235"
+Received: from lkp-server01.sh.intel.com (HELO 892944969b78) ([10.239.97.150])
+  by fmviesa010.fm.intel.com with ESMTP; 16 Mar 2026 08:28:08 -0700
+Received: from kbuild by 892944969b78 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1w29rS-000000000qE-1h7V;
+	Mon, 16 Mar 2026 15:28:06 +0000
+Date: Mon, 16 Mar 2026 23:27:12 +0800
+From: kernel test robot <lkp@intel.com>
+To: "Krzysztof =?utf-8?Q?Wilczy=C5=84ski"?= <kwilczynski@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:kwilczynski/procfs-attach-device-rescan-lock] BUILD
+ SUCCESS fed277e67f534e20188f1fd551d6aabaf07ae600
+Message-ID: <202603162306.2oKy0qcP-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/1] PCI/bwctrl: Disable BW controller on Intel P45 using
- a quirk
-To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Cc: Adam Stylinski <kungfujesus06@gmail.com>
-References: <20260116131513.2359-1-ilpo.jarvinen@linux.intel.com>
-Content-Language: en-US, de-DE
-From: Roland Ziegler <ea3393@fen-net.de>
-Autocrypt: addr=ea3393@fen-net.de; keydata=
- xsDiBDuf0YURBADsCCoG/vjnXFkf4F6HxUgRh7ueD3EpvRauJIR0IE0hFkQ1E4Z2Q2896ovK
- Dh+se07P1kyfif6KkBfTuXU3FExI3X7sR7xrEoNHLV4IxMlDaaWRkOu6h5lMxDoxa5RMnkTQ
- teVSC4nfSqWHG1XOk2PEcaYIJnwbkM6JrlRSxDDkaQCg/4FlKCaW9okVTPXZLEVhvjSIjmsE
- ALMB+48nM4WlCEfPfULV4/wjPONBah8nM2MEkqrofZ5mAzv9sJhMa58xvqX1/EFKEKz0R0JE
- 0mKk1oiwrThB4oGvfZU/YFgerKm4a5ITVe/H2hsmVcqMKE7slDiz4ar+Rc4GDKCetbIhjGvF
- 68GxjOiapHeM6hHYxEAilzmzf1JrBADR5T54z89AN0zX8cfnxuAeHdyw/ycVI0slF+Gf2+Zz
- QOgOeamMBjdaduzW1knTNwlYYpyv2mbDQrhht5oVTVm6JB0jhef/w+kkVqbRZdgD+whR4Hdx
- u9ZaK0M5MpvW6fC1cN1BO7PUgTqET0wJWK9PIpGi6GSFcZAsf/kL2ePkKs0aUm9sYW5kIDxl
- YTMzOTNAZmVuLW5ldC5kZT7CWAQQEQIAGAUCO5/RhQgLAwkIBwIBCgIZAQUbAwAAAAAKCRAk
- mQ2yhQMA3UbOAJoDD75klDT4RePJ7xBuFDaaLpIxTgCfTObr1kJXyGZbJWcEBxM1SsGsk6LO
- wU0EO5/RhRAIAPZCV7cIfwgXcqK61qlC8wXo+VMROU+28W65Szgg2gGnVqMU6Y9AVfPQB8bL
- Q6mUrfdMZIZJ+AyDvWXpF9Sh01D49Vlf3HZSTz09jdvOmeFXklnN/biudE/F/Ha8g8VHMGHO
- fMlm/xX5u/2RXscBqtNbno2gpXI61Brwv0YAWCvl9Ij9WE5J280gtJ3kkQc2azNsOA1FHQ98
- iLMcfFstjvbzySPAQ/ClWxiNjrtVjLhdONM0/XwXV0OjHRhs3jMhLLUq/zzhsSlAGBGNfISn
- CnLWhsQDGcgHKXrKlQzZlp+r0ApQmwJG0wg9ZqRdQZ+cfL2JSyIZJrqrol7DVekyCzsAAgIH
- /i3/MTr4ZTy5iru7Mn/o7dcfYBkHfiVac3KKHmWCvEnZmwKtNNEseBc16pLjGRm1ATGCJYWX
- oIpYZUOfYHXFwuux9ofKrvC1gakTvh2DMrkpWSJ+octTNVVYJFiv/Wlulvk/nvcMx+24yZmQ
- Uqjjt7zjmc0U3hOJKpRtB6kt5ulr3nGxuGZ8gRBmSA/ygsIobaVPYXOhOSm+9JNZyeSJ2C+a
- 1C1Scg3jZA5vo6yqdXzYmXGfriii7cqaXGAXmauQAE9DpZ/xtFxaLdTQwOhLd8A0nAEi76Hs
- oNTFaIMTDY0xdCsDC1wDWTa7yWnhgBiGA2iAPSmY/quBw0pod7qPmjnCTAQYEQIADAUCO5/R
- hQUbDAAAAAAKCRAkmQ2yhQMA3StFAKDXoOTEsSCLDEOWewQlmzUwbaECxwCg3OVWblLOzxfW
- 9mXh/YFerX6r8rk=
-In-Reply-To: <20260116131513.2359-1-ilpo.jarvinen@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 
-On Fri, 16 Mar 2026 13:15:13 +0100, Ilpo Jarvinen wrote:
-> The commit 665745f27487 ("PCI/bwctrl: Re-add BW notification portdrv as
-> PCIe BW controller") was found to lead to a boot hang on a Intel P45
-> system. Testing without setting Link Bandwidth Management Interrupt
-> Enable (LBMIE) and Link Autonomous Bandwidth Interrupt Enable (LABIE)
-> in bwctrl allowed system to come up.
->
-> Add no_bw_notif into the struct pci_dev and quirk Intel P45 Root Port
-> with it.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git kwilczynski/procfs-attach-device-rescan-lock
+branch HEAD: fed277e67f534e20188f1fd551d6aabaf07ae600  PCI/proc: Fix race between pci_proc_init() and pci_bus_add_device()
 
-The commit 665745f27487 re-added BW notification support in bwctrl,
-but on Intel P45 root ports it can cause a boot hang when both LBMIE
-and LABIE are enabled.
+elapsed time: 1210m
 
-This patch modifies bwctrl to allow the interrupts safely. For ports
-marked no_bw_notif, each interrupt is enabled separately, preventing
-the hang while keeping BW notifications functional.
+configs tested: 82
+configs skipped: 0
 
-Patch has been tested since kernel v6.13 on P45 hardware without issues.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
----
+tested configs:
+alpha                   allnoconfig    gcc-15.2.0
+alpha                  allyesconfig    gcc-15.2.0
+arc                    allmodconfig    gcc-15.2.0
+arc                     allnoconfig    gcc-15.2.0
+arc                    allyesconfig    gcc-15.2.0
+arc         randconfig-001-20260316    gcc-10.5.0
+arc         randconfig-002-20260316    gcc-9.5.0
+arm                     allnoconfig    clang-23
+arm                    allyesconfig    gcc-15.2.0
+arm         randconfig-001-20260316    clang-23
+arm         randconfig-002-20260316    clang-23
+arm         randconfig-003-20260316    clang-23
+arm         randconfig-004-20260316    clang-23
+arm64                  allmodconfig    clang-19
+arm64                   allnoconfig    gcc-15.2.0
+csky                   allmodconfig    gcc-15.2.0
+csky                    allnoconfig    gcc-15.2.0
+hexagon                allmodconfig    clang-17
+hexagon                 allnoconfig    clang-23
+i386                   allmodconfig    gcc-14
+i386                    allnoconfig    gcc-14
+i386                   allyesconfig    gcc-14
+i386        randconfig-001-20260316    gcc-14
+i386        randconfig-002-20260316    clang-20
+i386        randconfig-003-20260316    gcc-14
+i386        randconfig-004-20260316    gcc-14
+i386        randconfig-005-20260316    clang-20
+i386        randconfig-006-20260316    gcc-12
+loongarch              allmodconfig    clang-19
+loongarch               allnoconfig    clang-23
+m68k                   allmodconfig    gcc-15.2.0
+m68k                    allnoconfig    gcc-15.2.0
+m68k                   allyesconfig    gcc-15.2.0
+microblaze              allnoconfig    gcc-15.2.0
+microblaze             allyesconfig    gcc-15.2.0
+mips                   allmodconfig    gcc-15.2.0
+mips                    allnoconfig    gcc-15.2.0
+mips                   allyesconfig    gcc-15.2.0
+nios2                  allmodconfig    gcc-11.5.0
+nios2                   allnoconfig    gcc-11.5.0
+openrisc               allmodconfig    gcc-15.2.0
+openrisc                allnoconfig    gcc-15.2.0
+parisc                 allmodconfig    gcc-15.2.0
+parisc                  allnoconfig    gcc-15.2.0
+parisc                 allyesconfig    gcc-15.2.0
+parisc      randconfig-001-20260316    gcc-8.5.0
+parisc      randconfig-002-20260316    gcc-12.5.0
+powerpc                allmodconfig    gcc-15.2.0
+powerpc                 allnoconfig    gcc-15.2.0
+powerpc     randconfig-001-20260316    clang-23
+powerpc     randconfig-002-20260316    clang-23
+powerpc64   randconfig-002-20260316    gcc-8.5.0
+riscv                  allmodconfig    clang-23
+riscv                   allnoconfig    gcc-15.2.0
+riscv                  allyesconfig    clang-16
+s390                   allmodconfig    clang-18
+s390                    allnoconfig    clang-23
+s390                   allyesconfig    gcc-15.2.0
+sh                     allmodconfig    gcc-15.2.0
+sh                      allnoconfig    gcc-15.2.0
+sh                     allyesconfig    gcc-15.2.0
+sparc                   allnoconfig    gcc-15.2.0
+sparc       randconfig-001-20260316    gcc-8.5.0
+sparc       randconfig-002-20260316    gcc-12.5.0
+sparc64                allmodconfig    clang-23
+sparc64     randconfig-001-20260316    gcc-8.5.0
+sparc64     randconfig-002-20260316    gcc-15.2.0
+um                     allmodconfig    clang-19
+um                      allnoconfig    clang-23
+um                     allyesconfig    gcc-14
+x86_64                 allmodconfig    clang-20
+x86_64                  allnoconfig    clang-20
+x86_64                 allyesconfig    clang-20
+x86_64      randconfig-071-20260316    gcc-12
+x86_64      randconfig-072-20260316    gcc-14
+x86_64      randconfig-073-20260316    gcc-14
+x86_64      randconfig-074-20260316    gcc-14
+x86_64      randconfig-075-20260316    clang-20
+x86_64      randconfig-076-20260316    clang-20
+x86_64                rhel-9.4-rust    clang-20
+xtensa                  allnoconfig    gcc-15.2.0
+xtensa                 allyesconfig    gcc-15.2.0
 
-Patch:
-
---- a/drivers/pci/pcie/bwctrl.c
-+++ b/drivers/pci/pcie/bwctrl.c
-@@ -190,8 +190,13 @@
- 	if (ret == PCIBIOS_SUCCESSFUL && link_status & PCI_EXP_LNKSTA_LBMS)
- 		set_bit(PCI_LINK_LBMS_SEEN, &port->priv_flags);
- 
--	pcie_capability_set_word(port, PCI_EXP_LNKCTL,
--				 PCI_EXP_LNKCTL_LBMIE | PCI_EXP_LNKCTL_LABIE);
-+	if (port->no_bw_notif) {
-+		pcie_capability_set_word(port, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_LBMIE);
-+		pcie_capability_set_word(port, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_LABIE);
-+	} else
-+		pcie_capability_set_word(port, PCI_EXP_LNKCTL,
-+					 PCI_EXP_LNKCTL_LBMIE | PCI_EXP_LNKCTL_LABIE);
-+
- 	pcie_capability_write_word(port, PCI_EXP_LNKSTA,
- 				   PCI_EXP_LNKSTA_LBMS | PCI_EXP_LNKSTA_LABS);
- 
-@@ -250,9 +255,6 @@
- 	struct pci_dev *port = srv->port;
- 	int ret;
- 
--	if (port->no_bw_notif)
--		return -ENODEV;
--
- 	/* Can happen if we run out of bus numbers during enumeration. */
- 	if (!port->subordinate)
- 		return -ENODEV;
-
-Fixes: 665745f27487 ("PCI/bwctrl: Re-add BW notification portdrv as PCIe BW controller")
-Link: https://lore.kernel.org/lkml/20260116131513.2359-1-ilpo.jarvinen@linux.intel.com/
-
-Signed-off-by: Roland <ea3393@fen-net.de>
-
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
