@@ -1,163 +1,208 @@
-Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 663733EDABE;
-	Mon, 16 Mar 2026 19:11:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88E9D40DFAD
+	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 19:13:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773688265; cv=none; b=fKJSXgabR0KfJ6rFwxxqU9ygtkYEqNVOkYuVaRjgGqUM8pYPl28afZRb3m/al2eFxxAfI96r1w6fk/O9jbTjLUmbd5+oHllDIy0Dq/kkDdI2W4P0N10k98pGWqU+ZvaS20x0bi392vRuxPhyY/qSY/42UUkfAYfj3KAk+lko/Jo=
+	t=1773688409; cv=none; b=ffLTUZFwKlPuxvrdlEJCysaA/ShD/QD/kA+kDtx+SE3pY3OKg2p8cemcDlkj2uEwjRgQJuh6U09bm7EWVLeaagUHPq+IRk7W/3kupeZ4wRZIG/ChgOaVt3d0hAB3uGsAPykg1rV2H2hKAgUwX8McYxcgo8W07DnTwV6SPEQfD6s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773688265; c=relaxed/simple;
-	bh=cc8ocOs4WP7lCWUMJwF/hXBI0/GUSTf6xdSHBRSav84=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=WTukqMS/KuEuRQg7KNOGtCvsy8KcKWizhvqHt38J+uRjdl50T8wqqWIPnoZZEvNGuklD7wKHhNK1sRH8qiYfzS5WItb/YWFAoJiPMWwJh8eQF15i9ZphV0E3ksRCWZu/pkXWogcbJVxBHoN0PBmb694OjqlzffPMQfjqUGgdCKU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=iPAkY3Fb; arc=none smtp.client-ip=148.251.105.195
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	s=arc-20240116; t=1773688409; c=relaxed/simple;
+	bh=EO3ax+jNjA8R5oC4tDyDT2DpCG/jun6aqiaQ6yB+XzM=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=TH7HesBUlaxNu1q0AV15doaeXJ2ekvJiiNUCNp/aZbZYlRxczri2qPtxKd0F1T64Y3Jqt6y6F+RAIbFs3SknfA/ChO8TkXGruo9H9prbwZ8lLIIloniB+jdX3bqf0XmimxwKJJos3Z6RFbeGozchiHxasoqlx6cPsjJkBrxo9yA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mrS/bh9C; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="iPAkY3Fb"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1773688259;
-	bh=cc8ocOs4WP7lCWUMJwF/hXBI0/GUSTf6xdSHBRSav84=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=iPAkY3Fb7jl92zzJPZwPA7QM4y+eA5et60E9A6TWfwtAillBqsvCWHdY4/OAaU1wH
-	 3LjOREheyE0uEr1NX1qPCPNmE0qrvIfn9nhV2XBtwEqdM1rdFwU34xEDQdeDG7XSmq
-	 Z2iSobr0bPZCsmmycqCSTgCybfy2Cl3c+ht2HpiWesn3poPiCdwqs5CsOd1oEfNQcg
-	 5eaYcC+ZBDTUMxoKmb4ihUUPwLlXJ0x8jdZ0JF3DyZH3EC/quIF11xZzSE6DOdQvnI
-	 j9qdawDm7YezrbBEJgEE+Kzu/1SIMZJ+4CP3nh8dGZfssGdyN/l1TaBDI6WXwiV4Y8
-	 wCGr87DvtwkjQ==
-Received: from jupiter.universe (dyndsl-091-248-189-119.ewe-ip-backbone.de [91.248.189.119])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
-	(No client certificate requested)
-	(Authenticated sender: sre)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id 3992617E1513;
-	Mon, 16 Mar 2026 20:10:59 +0100 (CET)
-Received: by jupiter.universe (Postfix, from userid 1000)
-	id A090C480030; Mon, 16 Mar 2026 20:10:58 +0100 (CET)
-From: Sebastian Reichel <sebastian.reichel@collabora.com>
-Date: Mon, 16 Mar 2026 20:10:50 +0100
-Subject: [PATCH v5 6/8] PCI: dw-rockchip: Add pme_turn_off support
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mrS/bh9C"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773688409; x=1805224409;
+  h=date:from:to:cc:subject:message-id;
+  bh=EO3ax+jNjA8R5oC4tDyDT2DpCG/jun6aqiaQ6yB+XzM=;
+  b=mrS/bh9Ck/hqUtdcHX5gB1PBdp+qxNlK62uturisnivXxaUciKD8CPrQ
+   DMw/GMyBM9vXolBikJB/QBAG/xvMR3xB77A+j+fucHTcRnsG7rwDveYMS
+   PoGYYICfpBW/sHUFEJ2HlDHJ0XII4zPZ0EAvjnjnni7uKexrItciAJGNZ
+   sRo5NuFhmrUOAgbt50SZ2qiC/yCx97fE45a6VnwKFJrBngp4k9HtK6ZZD
+   +/xVPyiXzLD09BtzeMpgjn5q6gqOlTUMN7agNZQxA8YkfaxeBGcVnQcGe
+   WuVSh+LUCJ2LZmPI2ry+R5JUQu2XknerUkNNIEk+Ma6qb57acU0q1KOPS
+   A==;
+X-CSE-ConnectionGUID: AM6KYOx1SNSVHZUDE9LgWA==
+X-CSE-MsgGUID: Jp3SlsrFRbK71y/673E5oA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11731"; a="74629992"
+X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
+   d="scan'208";a="74629992"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2026 12:13:28 -0700
+X-CSE-ConnectionGUID: +yzabPpBTsS7rosOtTNitQ==
+X-CSE-MsgGUID: rC9lHaLlRzCu4ZW6cAbvAA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
+   d="scan'208";a="221959332"
+Received: from lkp-server01.sh.intel.com (HELO 892944969b78) ([10.239.97.150])
+  by orviesa009.jf.intel.com with ESMTP; 16 Mar 2026 12:13:26 -0700
+Received: from kbuild by 892944969b78 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1w2DNT-000000001AQ-2Nh2;
+	Mon, 16 Mar 2026 19:13:23 +0000
+Date: Tue, 17 Mar 2026 03:12:29 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:controller/rzg3s-host] BUILD SUCCESS
+ 8197ec49a2062185f6bd432a19969ce0b3752e94
+Message-ID: <202603170323.hY8TMDXi-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260316-rockchip-pcie-system-suspend-v5-6-5bb5ad37d643@collabora.com>
-References: <20260316-rockchip-pcie-system-suspend-v5-0-5bb5ad37d643@collabora.com>
-In-Reply-To: <20260316-rockchip-pcie-system-suspend-v5-0-5bb5ad37d643@collabora.com>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, 
- Philipp Zabel <p.zabel@pengutronix.de>, Jingoo Han <jingoohan1@gmail.com>, 
- Shawn Lin <shawn.lin@rock-chips.com>, Liam Girdwood <lgirdwood@gmail.com>, 
- Mark Brown <broonie@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org, 
- kernel@collabora.com, Sebastian Reichel <sebastian.reichel@collabora.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3022;
- i=sebastian.reichel@collabora.com; h=from:subject:message-id;
- bh=cc8ocOs4WP7lCWUMJwF/hXBI0/GUSTf6xdSHBRSav84=;
- b=owJ4nAFtApL9kA0DAAoB2O7X88g7+poByyZiAGm4VcI/Q/Cle+MYuTYA1G+cbzOBb6T4b+953
- +du9qpYYfH0/4kCMwQAAQoAHRYhBO9mDQdGP4tyanlUE9ju1/PIO/qaBQJpuFXCAAoJENju1/PI
- O/qaofoP/jUXEx0aC9VDXf+iOx9ONBxh6HwSYnMnLLtbTGDtEcBBuGm2xKy6zBB0jfpmwEEzm4c
- 4+43KJz8N0psbeIAdpxzhJnUNZXknNgwrtKZ0k1g8eBN0boeFzErKKgJtNrOZrF2TQZY9yh8TDw
- dY75MxKvvZh/8T9/cTBkYH00s2Z9IHBxDcmqbA7Zt8uLLhcnWXp6GdBIwc+iozESBmDLaMT8el0
- M+AvWK743B0X64+Ozj7Jaoco1UQgypw9Ywepcuvd1N0qrpz8auV41TVQHEsCywRlu52NbLJwnuW
- v4pLpoGl3JfIG9CuVZVlcHZLd15TYEpWuDFV2CCjjRlgHrVtZOHE8kwzBN4rm3WP0dh3EQ01EUL
- ikU0TM4/6m9tkWkoB8FsmyeLiYJv1pwUc2j2sDhcoZRgSPy30bpcSmB+0rvVIpvNoFF11OyjwVl
- Kn7Gpdpg69eqXGYLLHICilscFbpqp9sVcFC2eORMKdmIwUETfFcXiVz5HJIoIsEeZn+Pd3+3z9Y
- Kp8O6Yg3JP7RjiNRrojlkNXdYokc8NS1p/zSK7wBFsDs36BxeNxzFNLwJuNntHSpgdxEKwO3Uhi
- fpq5ifKIYx3puPXOydYJJ/4KQtCQ6XHG8B+DXY/QptUJOS8muwbsa1Rx53TLb4i94o7jIcDI5uh
- +E94+RVZx6+xZ+RivoM4rgw==
-X-Developer-Key: i=sebastian.reichel@collabora.com; a=openpgp;
- fpr=EF660D07463F8B726A795413D8EED7F3C83BFA9A
 
-Prepare Rockchip PCIe controller for system suspend support by
-adding the PME turn off operation.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/rzg3s-host
+branch HEAD: 8197ec49a2062185f6bd432a19969ce0b3752e94  PCI: rzg3s-host: Add support for RZ/G3E PCIe controller
 
-Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
----
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 44 +++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+elapsed time: 1436m
 
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index 8cb0040b4ae1..147add66db15 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -42,6 +42,7 @@
- #define  PCIE_CLIENT_LD_RQ_RST_GRT	FIELD_PREP_WM16(BIT(3), 1)
- #define  PCIE_CLIENT_ENABLE_LTSSM	FIELD_PREP_WM16(BIT(2), 1)
- #define  PCIE_CLIENT_DISABLE_LTSSM	FIELD_PREP_WM16(BIT(2), 0)
-+#define PCIE_CLIENT_INTR_STATUS_MSG_RX	0x04
- 
- /* Interrupt Status Register Related to Legacy Interrupt */
- #define PCIE_CLIENT_INTR_STATUS_LEGACY	0x8
-@@ -61,6 +62,11 @@
- 
- /* Interrupt Mask Register Related to Miscellaneous Operation */
- #define PCIE_CLIENT_INTR_MASK_MISC	0x24
-+#define PCIE_CLIENT_POWER		0x2c
-+#define PCIE_CLIENT_MSG_GEN		0x34
-+#define PME_READY_ENTER_L23		BIT(3)
-+#define PME_TURN_OFF			FIELD_PREP_WM16(BIT(4), 1)
-+#define PME_TO_ACK			FIELD_PREP_WM16(BIT(9), 1)
- 
- /* Power Management Control Register */
- #define PCIE_CLIENT_POWER_CON		0x2c
-@@ -334,8 +340,46 @@ static int rockchip_pcie_host_init(struct dw_pcie_rp *pp)
- 	return 0;
- }
- 
-+static void rockchip_pcie_pme_turn_off(struct dw_pcie_rp *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
-+	struct device *dev = rockchip->pci.dev;
-+	u32 status;
-+	int ret;
-+
-+	/* 1. Broadcast PME_Turn_Off Message, bit 4 self-clear once done */
-+	rockchip_pcie_writel_apb(rockchip, PME_TURN_OFF, PCIE_CLIENT_MSG_GEN);
-+	ret = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_MSG_GEN,
-+				 status, !(status & BIT(4)), PCIE_PME_TO_L2_TIMEOUT_US / 10,
-+				 PCIE_PME_TO_L2_TIMEOUT_US);
-+	if (ret) {
-+		dev_warn(dev, "Failed to send PME_Turn_Off\n");
-+		return;
-+	}
-+
-+	/* 2. Wait for PME_TO_Ack, bit 9 will be set once received */
-+	ret = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_INTR_STATUS_MSG_RX,
-+				 status, status & BIT(9), PCIE_PME_TO_L2_TIMEOUT_US / 10,
-+				 PCIE_PME_TO_L2_TIMEOUT_US);
-+	if (ret) {
-+		dev_warn(dev, "Failed to receive PME_TO_Ack\n");
-+		return;
-+	}
-+
-+	/* 3. Clear PME_TO_Ack and Wait for ready to enter L23 message */
-+	rockchip_pcie_writel_apb(rockchip, PME_TO_ACK, PCIE_CLIENT_INTR_STATUS_MSG_RX);
-+	ret = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_POWER,
-+				 status, status & PME_READY_ENTER_L23,
-+				 PCIE_PME_TO_L2_TIMEOUT_US / 10,
-+				 PCIE_PME_TO_L2_TIMEOUT_US);
-+	if (ret)
-+		dev_err(dev, "Failed to get ready to enter L23 message\n");
-+}
-+
- static const struct dw_pcie_host_ops rockchip_pcie_host_ops = {
- 	.init = rockchip_pcie_host_init,
-+	.pme_turn_off = rockchip_pcie_pme_turn_off,
- };
- 
- /*
+configs tested: 131
+configs skipped: 3
 
--- 
-2.51.0
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
+tested configs:
+alpha                             allnoconfig    gcc-15.2.0
+alpha                            allyesconfig    gcc-15.2.0
+alpha                               defconfig    gcc-15.2.0
+arc                              allmodconfig    gcc-15.2.0
+arc                               allnoconfig    gcc-15.2.0
+arc                              allyesconfig    gcc-15.2.0
+arc                                 defconfig    gcc-15.2.0
+arc                   randconfig-001-20260316    gcc-10.5.0
+arc                   randconfig-002-20260316    gcc-9.5.0
+arm                               allnoconfig    clang-23
+arm                              allyesconfig    gcc-15.2.0
+arm                         lpc18xx_defconfig    clang-23
+arm                   randconfig-001-20260316    clang-23
+arm                   randconfig-002-20260316    clang-23
+arm                   randconfig-003-20260316    clang-23
+arm                   randconfig-004-20260316    clang-23
+arm64                            allmodconfig    clang-19
+arm64                             allnoconfig    gcc-15.2.0
+arm64                 randconfig-001-20260316    gcc-11.5.0
+arm64                 randconfig-002-20260316    clang-23
+arm64                 randconfig-003-20260316    clang-23
+arm64                 randconfig-004-20260316    clang-19
+csky                             allmodconfig    gcc-15.2.0
+csky                              allnoconfig    gcc-15.2.0
+csky                  randconfig-001-20260316    gcc-15.2.0
+csky                  randconfig-002-20260316    gcc-14.3.0
+hexagon                          allmodconfig    clang-17
+hexagon                           allnoconfig    clang-23
+hexagon               randconfig-001-20260317    clang-23
+hexagon               randconfig-002-20260317    clang-23
+i386                              allnoconfig    gcc-14
+i386                             allyesconfig    gcc-14
+i386                  randconfig-001-20260316    gcc-14
+i386                  randconfig-002-20260316    clang-20
+i386                  randconfig-003-20260316    gcc-14
+i386                  randconfig-004-20260316    gcc-14
+i386                  randconfig-005-20260316    clang-20
+i386                  randconfig-006-20260316    gcc-12
+i386                  randconfig-007-20260316    gcc-14
+i386                  randconfig-011-20260316    clang-20
+i386                  randconfig-012-20260316    gcc-14
+i386                  randconfig-013-20260316    clang-20
+i386                  randconfig-014-20260316    gcc-13
+i386                  randconfig-015-20260316    clang-20
+i386                  randconfig-016-20260316    gcc-14
+i386                  randconfig-017-20260316    clang-20
+loongarch                        allmodconfig    clang-19
+loongarch                         allnoconfig    clang-23
+loongarch             randconfig-001-20260317    clang-23
+loongarch             randconfig-002-20260317    clang-18
+m68k                             allmodconfig    gcc-15.2.0
+m68k                              allnoconfig    gcc-15.2.0
+m68k                             allyesconfig    gcc-15.2.0
+microblaze                        allnoconfig    gcc-15.2.0
+microblaze                       allyesconfig    gcc-15.2.0
+mips                             allmodconfig    gcc-15.2.0
+mips                              allnoconfig    gcc-15.2.0
+mips                             allyesconfig    gcc-15.2.0
+nios2                            allmodconfig    gcc-11.5.0
+nios2                             allnoconfig    gcc-11.5.0
+nios2                 randconfig-001-20260317    gcc-8.5.0
+nios2                 randconfig-002-20260317    gcc-11.5.0
+openrisc                         allmodconfig    gcc-15.2.0
+openrisc                          allnoconfig    gcc-15.2.0
+openrisc                            defconfig    gcc-15.2.0
+parisc                           allmodconfig    gcc-15.2.0
+parisc                            allnoconfig    gcc-15.2.0
+parisc                           allyesconfig    gcc-15.2.0
+parisc                              defconfig    gcc-15.2.0
+parisc                randconfig-001-20260316    gcc-8.5.0
+parisc                randconfig-002-20260316    gcc-12.5.0
+powerpc                          allmodconfig    gcc-15.2.0
+powerpc                           allnoconfig    gcc-15.2.0
+powerpc               randconfig-001-20260316    clang-23
+powerpc               randconfig-002-20260316    clang-23
+powerpc64             randconfig-001-20260316    gcc-13.4.0
+powerpc64             randconfig-002-20260316    gcc-8.5.0
+riscv                            allmodconfig    clang-23
+riscv                             allnoconfig    gcc-15.2.0
+riscv                            allyesconfig    clang-16
+riscv                               defconfig    clang-23
+riscv                 randconfig-001-20260317    clang-23
+riscv                 randconfig-002-20260317    gcc-8.5.0
+s390                             allmodconfig    clang-18
+s390                              allnoconfig    clang-23
+s390                             allyesconfig    gcc-15.2.0
+s390                                defconfig    clang-23
+s390                  randconfig-001-20260317    gcc-15.2.0
+s390                  randconfig-002-20260317    clang-23
+sh                               allmodconfig    gcc-15.2.0
+sh                                allnoconfig    gcc-15.2.0
+sh                               allyesconfig    gcc-15.2.0
+sh                    randconfig-001-20260317    gcc-15.2.0
+sh                    randconfig-002-20260317    gcc-10.5.0
+sparc                             allnoconfig    gcc-15.2.0
+sparc                               defconfig    gcc-15.2.0
+sparc                 randconfig-001-20260316    gcc-8.5.0
+sparc                 randconfig-002-20260316    gcc-12.5.0
+sparc64                          allmodconfig    clang-23
+sparc64               randconfig-001-20260316    gcc-8.5.0
+sparc64               randconfig-002-20260316    gcc-15.2.0
+um                               allmodconfig    clang-19
+um                                allnoconfig    clang-23
+um                               allyesconfig    gcc-14
+um                    randconfig-001-20260316    gcc-14
+um                    randconfig-002-20260316    clang-23
+x86_64                           allmodconfig    clang-20
+x86_64                            allnoconfig    clang-20
+x86_64                           allyesconfig    clang-20
+x86_64      buildonly-randconfig-001-20260316    gcc-14
+x86_64      buildonly-randconfig-002-20260316    clang-20
+x86_64      buildonly-randconfig-003-20260316    clang-20
+x86_64      buildonly-randconfig-004-20260316    gcc-14
+x86_64      buildonly-randconfig-005-20260316    gcc-14
+x86_64      buildonly-randconfig-006-20260316    clang-20
+x86_64                randconfig-011-20260316    gcc-14
+x86_64                randconfig-012-20260316    gcc-14
+x86_64                randconfig-013-20260316    gcc-14
+x86_64                randconfig-014-20260316    gcc-14
+x86_64                randconfig-015-20260316    clang-20
+x86_64                randconfig-016-20260316    gcc-14
+x86_64                randconfig-071-20260316    gcc-12
+x86_64                randconfig-072-20260316    gcc-14
+x86_64                randconfig-073-20260316    gcc-14
+x86_64                randconfig-074-20260316    gcc-14
+x86_64                randconfig-075-20260316    clang-20
+x86_64                randconfig-076-20260316    clang-20
+x86_64                          rhel-9.4-rust    clang-20
+xtensa                            allnoconfig    gcc-15.2.0
+xtensa                randconfig-001-20260316    gcc-15.2.0
+xtensa                randconfig-002-20260316    gcc-15.2.0
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
