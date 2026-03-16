@@ -1,272 +1,153 @@
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com [209.85.167.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA9F133F8B9
-	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 18:06:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773684389; cv=none; b=XwaefqB6VZpVkNHxeZY7zOPx6CAUgCwsA4lLX/HwoP4QLsGCafYSWPsjUjPqId6tH6naxA8qYq8+wtKTurlxo91n/tLr4ADRqIZR9Cx3iBsn4J7Yz7m/ejcugyS9v8MZcK0y7m2DJ8Z4z1bLOs+wOonO3IyxQnBQ39lVUd6pzjo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773684389; c=relaxed/simple;
-	bh=vsCerXvNI66p0WQN4f2HWtkZDjbz/hrQ/GAa3UbU95M=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=UftTcF/P8e1D6Dho68IQRd26iVwhY1Fibsj77V8VvaK6DYy4dCaYh3uKGjkXp5daKggstPZO9esZN/9jFMupmHDYAx2so5lQUuVxKWzB/uICBDyzKB8ttrjMm8dLTf+uSHuie5nt+CNKDPuZZO92LQGrSC3AvQfZTi1eyF4/rDI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=qO6Lk7rT; arc=none smtp.client-ip=185.67.36.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 622243CE49F
+	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 18:11:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.48
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773684714; cv=pass; b=Mnr9asZHgQ+egPF/vlVXFAsbvoHNggipE2cP7NOIdgEf1geZWq9FWYgbTEHoRE0ZiCoIjyVd3Ywvn8yZDKoYSIvIGraWoEFoTVSDUX+CFPA31h7RV3z4J7H9jR0u58+Fpfbl1Me9BKbELS7qSVplLH8OdRLpFDuPTzYdUZkn63c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773684714; c=relaxed/simple;
+	bh=m7+JQVttlm8dL3EZ1N+mfhiI+GNnG3dsJzvTlqZYD9k=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=DqlqqWf6pRBVnzOjMF6gparylbfh8CmmoRW+40MdAbXT6WnSp/wdXO8v0IMzxLDN2+WfXJIsxzkdm4J3i6kFYHaHB5HY73p+LJO+1lgVVzfRuY74s7z7Xb6DUddTgKUEAud5vfXDQyHUHZdlRj5bxwjoiui2lDKwROAtIEr/bO4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=cQt6+eQD; arc=pass smtp.client-ip=209.85.167.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="qO6Lk7rT"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout01.posteo.de (Postfix) with ESMTPS id 3A3F5240028
-	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 19:06:25 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1773684385; bh=w4aMMeXH0b7JgTSQ3j7crI/pRlF2UNUuOM0hPyY2020=;
-	h=Message-ID:Subject:From:To:Cc:Date:Autocrypt:Content-Type:
-	 MIME-Version:OpenPGP:From;
-	b=qO6Lk7rTUW3H0fPPJfL0YGhRHR1XTS90SrfRDYE8pBk9gt5ZhKNsQAfy69KXzCiao
-	 pjGRF3NZJtST7bhPpXSAMH/DrAAvN1ENGG+ZNaaGay7YhOoKiODycXsj6QWCqG2yRa
-	 dSkp3WxoDzxayQaYAEe362SdqM2jxkoD5sxPxIKzlD9QwZtGB6XxK/3yQz0o7OS975
-	 r2fFLZ1DvGEli+vPgFyP/m+GQwIBDjYIWpY+p8Z6G3IKZTJaxBq+AIoWoNzua6OdDc
-	 blIqYZ7il8b7kff3JP3SQ5CH8dNeALlsb4bUa7Xt+AniyB/FVn66MRVd3HE5JMBA0g
-	 miEXkT04RIr6Q==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4fZNM142Ltz9rxF;
-	Mon, 16 Mar 2026 19:06:21 +0100 (CET)
-Message-ID: <3ca65f7d0b00c93c91563bc29198f18d5a30eeae.camel@posteo.de>
-Subject: Re: [PATCH v3 7/7] leds: add synology microp led driver
-From: Markus Probst <markus.probst@posteo.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Danilo Krummrich <dakr@kernel.org>, Markus Probst via B4 Relay	
- <devnull+markus.probst.posteo.de@kernel.org>, Lee Jones <lee@kernel.org>, 
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>,  Miguel Ojeda <ojeda@kernel.org>, Boqun
- Feng <boqun@kernel.org>, Gary Guo <gary@garyguo.net>, 
- =?ISO-8859-1?Q?Bj=F6rn?= Roy Baron	 <bjorn3_gh@protonmail.com>, Benno
- Lossin <lossin@kernel.org>, Andreas Hindborg	 <a.hindborg@kernel.org>,
- Alice Ryhl <aliceryhl@google.com>, Trevor Gross	 <tmgross@umich.edu>,
- "Rafael J. Wysocki" <rafael@kernel.org>, Igor Korotin	
- <igor.korotin.linux@gmail.com>, Daniel Almeida
- <daniel.almeida@collabora.com>,  Bjorn Helgaas <bhelgaas@google.com>,
- Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Pavel
- Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>, Robert Moore
- <robert.moore@intel.com>, 	devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, 	rust-for-linux@vger.kernel.org,
- driver-core@lists.linux.dev, 	linux-pci@vger.kernel.org,
- linux-leds@vger.kernel.org, 	linux-acpi@vger.kernel.org,
- acpica-devel@lists.linux.dev
-Date: Mon, 16 Mar 2026 18:06:23 +0000
-In-Reply-To: <2026031602-drove-timothy-1bb1@gregkh>
-References: <20260313-synology_microp_initial-v3-0-ad6ac463a201@posteo.de>
-	 <20260313-synology_microp_initial-v3-7-ad6ac463a201@posteo.de>
-	 <DH1YH0GO75H8.18YSW2VMKRB3C@kernel.org>
-	 <39f1c9bb0dbde9f1b60785f8e838289c888ffdb0.camel@posteo.de>
-	 <DH3KAWWLECYW.3VBH7PIE7ZE20@kernel.org>
-	 <eb2f7498c5f3247265effc47b3445a04ac71956e.camel@posteo.de>
-	 <DH3M1023PCBI.1HYYZU93NS1JX@kernel.org>
-	 <2026031645-unplowed-purist-9c4b@gregkh>
-	 <a4fb56d5eea790b51aa3623044e5d774a6bab47f.camel@posteo.de>
-	 <2026031602-drove-timothy-1bb1@gregkh>
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
- keydata=mQINBGiDvXgBEADAXUceKafpl46S35UmDh2wRvvx+UfZbcTjeQOlSwKP7YVJ4JOZrVs93
- qReNLkOWguIqPBxR9blQ4nyYrqSCV+MMw/3ifyXIm6Pw2YRUDg+WTEOjTixRCoWDgUj1nOsvJ9tVA
- m76Ww+/pAnepVRafMID0rqEfD9oGv1YrfpeFJhyE2zUw3SyyNLIKWD6QeLRhKQRbSnsXhGLFBXCqt
- 9k5JARhgQof9zvztcCVlT5KVvuyfC4H+HzeGmu9201BVyihJwKdcKPq+n/aY5FUVxNTgtI9f8wIbm
- fAjaoT1pjXSp+dszakA98fhONM98pOq723o/1ZGMZukyXFfsDGtA3BB79HoopHKujLGWAGskzClwT
- jRQxBqxh/U/lL1pc+0xPWikTNCmtziCOvv0KA0arDOMQlyFvImzX6oGVgE4ksKQYbMZ3Ikw6L1Rv1
- J+FvN0aNwOKgL2ztBRYscUGcQvA0Zo1fGCAn/BLEJvQYShWKeKqjyncVGoXFsz2AcuFKe1pwETSsN
- 6OZncjy32e4ktgs07cWBfx0v62b8md36jau+B6RVnnodaA8++oXl3FRwiEW8XfXWIjy4umIv93tb8
- 8ekYsfOfWkTSewZYXGoqe4RtK80ulMHb/dh2FZQIFyRdN4HOmB4FYO5sEYFr9YjHLmDkrUgNodJCX
- CeMe4BO4iaxUQARAQABtCdNYXJrdXMgUHJvYnN0IDxtYXJrdXMucHJvYnN0QHBvc3Rlby5kZT6JAl
- QEEwEIAD4CGwMFCwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AWIQSCdBjE9KxY53IwxHM0dh/4561
- D0gUCaIZ9HQIZAQAKCRA0dh/4561D0pKmD/92zsCfbD+SrvBpNWtbit7J9wFBNr9qSFFm2n/65qen
- NNWKDrCzDsjRbALMHSO8nigMWzjofbVjj8Nf7SDcdapRjrMCnidS0DuW3pZBo6W0sZqV/fLx+AzgQ
- 7PAr6jtBbUoKW/GCGHLLtb6Hv+zjL17KGVO0DdQeoHEXMa48mJh8rS7VlUzVtpbxsWbb1wRZJTD88
- ALDOLTWGqMbCTFDKFfGcqBLdUT13vx706Q29wrDiogmQhLGYKc6fQzpHhCLNhHTl8ZVLuKVY3wTT+
- f9TzW1BDzFTAe3ZXsKhrzF+ud7vr6ff9p1Zl+Nujz94EDYHi/5Yrtp//+N/ZjDGDmqZOEA86/Gybu
- 6XE/v4S85ls0cAe37WTqsMCJjVRMP52r7Y1AuOONJDe3sIsDge++XFhwfGPbZwBnwd4gEVcdrKhnO
- ntuP9TvBMFWeTvtLqlWJUt7n8f/ELCcGoO5acai1iZ59GC81GLl2izObOLNjyv3G6hia/w50Mw9MU
- dAdZQ2MxM6k+x4L5XeysdcR/2AydVLtu2LGFOrKyEe0M9XmlE6OvziWXvVVwomvTN3LaNUmaINhr7
- pHTFwDiZCSWKnwnvD2+jA1trKq1xKUQY1uGW9XgSj98pKyixHWoeEpydr+alSTB43c3m0351/9rYT
- TTi4KSk73wtapPKtaoIR3rOFHLQXbWFya3VzLnByb2JzdEBwb3N0ZW8uZGWJAlEEEwEIADsWIQSCd
- BjE9KxY53IwxHM0dh/4561D0gUCaIO9eAIbAwULCQgHAgIiAgYVCgkICwIEFgIDAQIeBwIXgAAKCR
- A0dh/4561D0oHZEACEmk5Ng9+OXoVxJJ+c9slBI2lYxyBO84qkWjoJ/0GpwoHk1IpyL+i+kF1Bb7y
- Hx9Tiz8ENYX7xIPTZzS8hXs1ksuo76FQUyD6onA/69xZIrYZ0NSA5HUo62qzzMSZL7od5e12R6OPR
- lR0PIuc4ecOGCEq3BLRPfZSYrL54tiase8HubXsvb6EBQ8jPI8ZUlr96ZqFEwrQZF/3ihyV6LILLk
- geExgwlTzo5Wv3piOXPTITBuzuFhBJqEnT25q2j8OumGQ+ri8oVeAzx24g1kc11pwpR0sowfa5MvZ
- WrrBcaIL7uJfR/ig7FyGnTQ1nS3btf3p0v8A3fc4eUu/K2No3l2huJp3+LHhCmpmeykOhSB63Mj3s
- 3Q87LD0HE0HBkTEMwp+sD97ZRpO67H5shzJRanUaDTb/mREfzpJmRT1uuec0X2zItL7a6itgMJvYI
- KG29aJLX3fTzzVzFGPgzVZYEdhu4y53p0qEGrrC1JtKR6DRPE1hb/OdWOkjmJ75+PPLD9U5IuRd6y
- sHJWsEBR1F0wkMPkEofWsvMYJzWXx/rvTWO8N4D6HigTgBXAXNgbc3IHpHlkvKoBJptv6DRVRtIrz
- 0G0cfBY0Sm7he4N2IYDWWdGnPBZ3rlLSdj5EiBU2YWgIgtLrb8ZNJ3ZlhYluGnBJDGRqy2jC9s1jY
- 66sLA9rQZMHhJTzMyIDwweGlvMzJAcG9zdGVvLmV1PokCbQQTAQgAVxYhBIJ0GMT0rFjncjDEczR2
- H/jnrUPSBQJpa71VGxSAAAAAAAQADm1hbnUyLDIuNSsxLjExLDIsMgIbAwULCQgHAgIiAgYVCgkIC
- wIEFgIDAQIeBwIXgAAKCRA0dh/4561D0gKJD/9uOQKYlsDoQX65Gd0LiMT0C+5vXgr3VI0PHDOwcv
- 51fJ3A1vNyPZRFPGrz8+mDEXUQOF/INfnz5Tu1QHwf+iYcWcTGAN/FHgVR6ET6VBNU2hJaKhu+Ggo
- kjYyJTOvyX+3yNRUfSny0GjTjIPuPTErjqmHF+BtjXslpgwqnNMznf3lRIuUjRORupos6p3k1DndE
- 5vzUTmXSvMyXyOD2KhBl/kL76k0bHYyAQytZPag12pltrtFbA/r2phDGN2si8PooDT99bSTJjaM45
- MTAAHbHKJfvgfK41bNFD5mMtpWpL195XRtS0Nrxdg3PaYBxN5gtTG0RyZfpYRlkdEhm+jj/8RxuSG
- i/qdhRdbiI7K2IELWeQVHSNDi9JabR/UzlR4NSnhfAjRIVlRM+eFbUl8XwxwVrAkojF5IraH2qRvg
- VCmuFsHUW07FUlrDrzpjXsD73cKppoFGDCdDR0BHJepXbFLS9+AqkT+guRJlnCTg2p+TQtnbwPgKp
- Vj98JixovCl99zRYTsL2bRNU5+q8iET65VMJ1ydyNanvLd5vI/NqDkXhlXLsGmdaDTtu4R21PkToX
- dQNGrZ91M9nlIBKw8Y7c7xZ4098qX2b8JX/CxD+gC1r4C8vuA3GkhFLx+KlkON7LyiJPkrePp6Qky
- jfGillcaQOqFZ3WwVqyzG1BUfTow==
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-akERDsl+g92JaDyAMR+U"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="cQt6+eQD"
+Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-5a12cd0bd79so6220845e87.2
+        for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 11:11:53 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773684712; cv=none;
+        d=google.com; s=arc-20240605;
+        b=DsjZFeCDEe/+GSlitaN2q2YkbSTzC9HyzHiLoCOv7BmOknUkpOAv0rnUibqatiTrcw
+         Y72o9DEijloI189cYMTveXFWUgodggncHtvmxjI7/6BJw3eHt3RM1I8Vzpc4ShgDVTE2
+         +xC4M9dSuCwawgyO5Nl1Dv8EdfPk1I3mwHU1FE0UZdshJVCg7otwNkuN3e7Rlqod+ifA
+         bqSTjOwFuEymA+PM6BBv6ZKzXvWV/U/kzVh/z1XIUkZGG51mAyE6hF9epkqQtcP/vTvp
+         pKwq03ZtTYzGTfsRrPzrD3As1ZIBPUp6iY0NqMwPlKbqmNQX/Sm49C94uqkLP8sAmCQI
+         bmkA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=hacBXTanIx+HGRz6G551slI/wF3dk8INyCTw5fzLvmE=;
+        fh=r1cPdPCb+mLiZ6Ergikt4OYPXBvAz2iIFxmJj7S5XUI=;
+        b=bsFOYBRygX0g2D8J0Eg29bKMI5zxJ3dsFSa/P/9LgUmcG3to9JhLI3It9AdmdNFMzw
+         oL42uhHx8Z5fYRqbtUTXonqx6yd9Bv2L3uCw8JRFcjGNa/nZLBoq8ypbtU0deBtPX36d
+         jHhf/diBcacR0hp5XUZS7yEM3+U5AlNv1SWGSnYw6uHHwl8SJle+Ll6IjYdpP+AOBa1f
+         wxDQCsbK27d3jinEUFuYchfjtYC3vW0aXJ+WEluWfR/X+o4UHj21NmnN5ado5wqzGtmS
+         JCS2J0mOMPwjcw5FdOI8tbBIV2C5pBiwAkSiynx8SkP7ZiotEDX3BKB1HePoyVO3yfQ5
+         MZuA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1773684712; x=1774289512; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hacBXTanIx+HGRz6G551slI/wF3dk8INyCTw5fzLvmE=;
+        b=cQt6+eQDwIR5b9b3BeE4rk0iv0uO+8kW3YJcjm5smuBNn0vwCgH83jbHVCDHaqhNJV
+         OAMuZ8UI1lg+tA2ikB5mrby965zWgqovf85fv3gSu2bTyIBz2l042Jj1oHo+07t7BlPl
+         YEnWEV1HnDGVfPgQ+Q+u43YxUjzmXI0UMglnc7NK3wrMxKckSoKBSVUw4kVJ6u7zU/Dt
+         5Zarv3V4FjAu4PNHtWYuChR8bGGhFjT00Ns8UZZbHmGF6GArw/mlUtLe+rwIJ1UvtgcC
+         Q7qbVPuC4HK9paJLudrtB3Eqm4XwyNfOxtl3HjrhRU0iLXg6Fcvq0oa+c1ljtAgQnwc8
+         U4oA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773684712; x=1774289512;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=hacBXTanIx+HGRz6G551slI/wF3dk8INyCTw5fzLvmE=;
+        b=Fd2ySE6bdzFnxAqlZTOKm1ITEEp33/JTIUlU3d2BzL8uZ6YD4n9vSdU6R2vL4G7QVu
+         Xy77fMKBPSlJRI7E/nIhs4Cjbq71HLl9zowfgrZiaWr6lO6pCzUpdUy+4jlI3yDJcXre
+         jkC2kKaF24ao4opK+Flc8FIxZcqs7wMXUGRd4prkcQ2VW20TizZ9VgEg5Fb5DAp1k1F9
+         /PaxvZMipaTe/aFykWHckM9LapnICAIO6MyJI5x+BRLdSG6qXNFBOr9/RSZPTwycazMR
+         QQdNvdlYlyq+M8rDUYJpxCORxFnqoDCh5w+aH98YydneFq4yuyqNC4ZthaqU0OnOI1Wm
+         0Eew==
+X-Forwarded-Encrypted: i=1; AJvYcCWLywqji8AHEG8EjKdnO/dWKk7sjDGnQCVNatKXpKP6XtQxads4+ecXdwpxT+ukQif/nnQnU8GykfU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yysf07vj99wrDvIOGm4/pW60tvJ905ERIIAqyxoNSx5VBNlxANc
+	OSaUOXUaFKY+p+KbF2Y+aPiT++BnKUpbqmPwaflI+d3yL34lDGBykPDbr6V8mjpZwKgtzXVjVfv
+	j0ev2yi85B9cKAhJbBI7WDYANvPLAxc2NpjUYPROl
+X-Gm-Gg: ATEYQzxb52uKt0pcW5ptmCaq0eNa5PZN3bHoQVLIQ6er44GUH0tdP65HQTySY+0iyGD
+	SeDvUo7d2xAPpCb+DfIHMmM1XC4aZNtWv0FH7tGCWsGRBzjWwGzy0vw4fwQMIV7faTvZM1teMlw
+	Vww79jsz97hUi9kJzvFUh1OsvuIIYuBdNvyfpK6YhUyUXuXQVg0xIUOVrevrYxzN5dB0gl36587
+	ssQIOYK5hkUFA/XfM9zduBClduWPF3JoSkt03Sa4rPu5nnb9+iv1rhLaBgvLIXeHobS3V6oL/yX
+	zeh/VlH8
+X-Received: by 2002:a05:6512:24db:b0:5a1:44d3:7601 with SMTP id
+ 2adb3069b0e04-5a162afb717mr3098120e87.20.1773684710999; Mon, 16 Mar 2026
+ 11:11:50 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
-
-
---=-akERDsl+g92JaDyAMR+U
+References: <20260129212510.967611-1-dmatlack@google.com> <20260129212510.967611-11-dmatlack@google.com>
+ <20260226170030.5a938c74@shazbot.org> <aaDqhjdLyf1qSTSh@google.com>
+ <20260227084658.3767d801@shazbot.org> <CALzav=fHy23RAzhgkdaL+JA5T2tL9FT6aPgRfXUh7i9zvYCGPA@mail.gmail.com>
+ <20260227105720.522ca97f@shazbot.org> <CALzav=fjRPa_ZbXu7iFXyemcf_8Kq_dZTWT6c-A0bc6czF_Rdw@mail.gmail.com>
+ <abNOwcOTXqxCxNzt@google.com> <20260313083918.00005731@linux.microsoft.com>
+In-Reply-To: <20260313083918.00005731@linux.microsoft.com>
+From: David Matlack <dmatlack@google.com>
+Date: Mon, 16 Mar 2026 11:11:20 -0700
+X-Gm-Features: AaiRm52c977M5CVgCJmgqL9NIwQ1v_KtuafdRnOMJexlLUpZndu_UH9phsJ7tcA
+Message-ID: <CALzav=eGLpo5nrsHq5L8bUTC=FWZ-SgrTE1FoScrWB4p+NDgnA@mail.gmail.com>
+Subject: Re: [PATCH v2 10/22] vfio/pci: Skip reset of preserved device after
+ Live Update
+To: Jacob Pan <jacob.pan@linux.microsoft.com>
+Cc: Alex Williamson <alex@shazbot.org>, Adithya Jayachandran <ajayachandra@nvidia.com>, 
+	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>, Alistair Popple <apopple@nvidia.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, Ankit Agrawal <ankita@nvidia.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
+	David Rientjes <rientjes@google.com>, Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, Kevin Tian <kevin.tian@intel.com>, 
+	kexec@lists.infradead.org, kvm@vger.kernel.org, 
+	Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	linux-mm@kvack.org, linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
+	=?UTF-8?Q?Micha=C5=82_Winiarski?= <michal.winiarski@intel.com>, 
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
+	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
+	Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>, 
+	Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed <saeedm@nvidia.com>, 
+	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
+	=?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, 
+	Tomita Moeko <tomitamoeko@gmail.com>, Vipin Sharma <vipinsh@google.com>, 
+	Vivek Kasireddy <vivek.kasireddy@intel.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>, 
+	Zhu Yanjun <yanjun.zhu@linux.dev>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2026-03-16 at 14:58 +0100, Greg Kroah-Hartman wrote:
-> On Mon, Mar 16, 2026 at 01:43:44PM +0000, Markus Probst wrote:
-> > On Mon, 2026-03-16 at 07:33 +0100, Greg Kroah-Hartman wrote:
-> > > On Sun, Mar 15, 2026 at 08:41:06PM +0100, Danilo Krummrich wrote:
-> > > > I.e. if we can't (easily) use mfd cells and would need a custom API=
-, then why
-> > > > even split it up at all, given that splitting it up would probably =
-the most
-> > > > complicated part of the whole driver.
-> > > >=20
-> > > > Greg, what do you think?
-> > >=20
-> > > I think this has yet to be proven to be a kernel driver at all at thi=
-s
-> > > point, and not just a userspace daemon that listens to the serial por=
-t
-> > > and then does what is needed from there :)
-> > >=20
-> > > Or, if someone can prove that the operations on this serial data stre=
-am
-> > > actually do require it to be in the kernel (which I have yet to see a
-> > > list of what this connection does, did I miss it?) then a single driv=
-er,
-> > > under the drivers/platform section of the kernel tree makes sense.
-> > The sysoff component is strictly necessary for poweroff and reboot.
-> >=20
-> > On ARM64 Synology NAS devices it is needed so the device actually
-> > powers off after calling
-> > `syscall(SYS_reboot, LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2,
-> > LINUX_REBOOT_CMD_POWER_OFF, NULL);`
-> > . Otherwise it would stay on.
-> > Same applies to reboot.
->=20
-> So that means a write of a set of bytes to the serial port will cause
-> the machine to reboot or shutdown?
-Yes.
->=20
-> > On x86 it isn't clearly documented what sending the poweroff and reboot
-> > command to the microp device exactly does, so this is based on
-> > observations. It should be sent before issuing a poweroff or reboot via
-> > ACPI Sleep. On reboot it resets various device states, so fan speeds go
-> > to default, leds turn off etc., so it behaves like a coldboot.
-> > On poweroff it will mark it as graceful shutdown (i. e. the device
-> > won't turn automatically on, because it thinks a power-loss happend).
-> >=20
-> > For the other components:
-> > - leds
-> > - hwmon
-> > - input
->=20
-> For "input" what exactly does the input device show up as?  A power
-> button?  Something else?
+On Fri, Mar 13, 2026 at 8:39=E2=80=AFAM Jacob Pan <jacob.pan@linux.microsof=
+t.com> wrote:
+> On Thu, 12 Mar 2026 23:39:45 +0000
+> David Matlack <dmatlack@google.com> wrote:
 
-Well there are a few other things besides a power button:
+> > +config VFIO_PCI_LIVEUPDATE
+> > +       bool "VFIO PCI support for Live Update (EXPERIMENTAL)"
+> > +       depends on LIVEUPDATE && VFIO_PCI
+> > +       help
+> > +         Support for preserving devices bound to vfio-pci across a
+> > Live
+> > +         Update. The eventual goal is that preserved devices can run
+> > +         uninterrupted during a Live Update, including DMA to
+> > preserved
+> > +         memory buffers and P2P. However there are many steps still
+> > needed to
+> > +         achieve this, including:
+> > +
+> > +          - Preservation of iommufd files
+> > +          - Preservation of IOMMU driver state
+> In the interim, what do you think about moving forward with noiommu
+> mode without preserving IOMMU driver state?
 
-- beeper (short and long variant)
-- factory reset button
-- "USB Copy" button. Not present on all devices (including not present
-on my testing device). It is meant for copying data from or to a usb
-stick.
+I haven't gotten a chance to look at your noiommu patches yet, but I
+do think noiommu will probably be a good way to develop the VFIO and
+PCI support for Live Update without blocking on IOMMU driver support.
 
-Both of these buttons don't have a keycode in include/uapi/linux/input-
-event-codes.h, which is suprising given how many devices have a factory
-reset button. So I am not sure if I can handle them in this driver.
+> I=E2=80=99ve tested your
+> vfio_pci_liveupdate_kexec_test with the noiommu cdev, and it works as
+> expected.
 
-=46rom what I can tell, there isn't actually a input device type I could
-specify on registering a input device. But it would be considered a
-misc input device.
-
->=20
-> For hwmon, that makes sense to have a kernel driver.
->=20
-> For leds, that depends on what you want to do with the led, as in the
-> end you are just controlling it from userspace anyway :)
-
-
->=20
-> > It could theoratically be implemented in userspace. A userspace daemon
-> > could theoratically control the fan speeds directly, issue a systemd
-> > shutdown on power button press, control the leds directly etc.
-> >=20
-> > But honestly, I don't understand why this is an argument.
-> > With that argument drivers/leds, drivers/hwmon and drivers/input would
-> > not even exist, because everything could be implemented in userspace
-> > via
-> > - I2C: /dev/i2c-* (drivers/i2c/i2c-dev.c)
-> > - MMIO: /dev/ioport and /dev/mem (drivers/char/mem.c)
-> > - GPIO: /sys/class/gpio (drivers/gpio/gpiolib-sysfs.c)
-> > - SPI: /dev/spidev* (drivers/spi/spidev.c)
-> > - PCI: /sys/class/pci_bus/ (drivers/pci/pci-sysfs.c)
-> > - Serial: /dev/ttyS*
-> > and likely almost any other bus device too.
-> >=20
-> > Generally speaking, the kernel and its drivers is the layer between
-> > hardware and software. It provides the hardware abstractions as
-> > userspace interfaces. So any software on the same cpu architecture can
-> > work with any hardware, as long as there is a kernel driver.
->=20
-> Yes, I kind of know what drivers and classes do and why they are needed,
-> that's not the point here. :)
->=20
-> > In the case of this driver, it means
-> > - *any* led daemon can control the leds
-> > - *any* fan control daemon can control the fan speed and frequency
-> > - *any* monitoring software can view the provided sensors
-> > - *any* init system can react to the power button
-> > - *any* process can request a reboot or shutdown
-> > .
-> > I think this is the expected behaviour.
->=20
-> Ok great, then make a single driver that handles all of this, like other
-> drivers/platform/ drivers do today, and all should be fine.
-Great, I will.
-
-Thanks
-- Markus Probst
-
->=20
-> thanks,
->=20
-> greg k-h
-
---=-akERDsl+g92JaDyAMR+U
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAmm4RoobFIAAAAAABAAO
-bWFudTIsMi41KzEuMTEsMiwyAAoJEDR2H/jnrUPSsUIQAJeCzIeF7FxfVLPKwAJv
-sYO9ZXh6FWfGwq+zzAzAXqlhJQWtoptqBFhmWtrGiAEUYFDMlEG2jO9t4zE9cQiR
-O+QVCX1qWxERY0X4gbrT0GEcHuZpB7eqDRpHqQ1edsZrrbjD0LJl2GwrR+juH3p+
-J0H6qYNP0BP5I2Ox7pt3Wjw942RE8yV99ReJX15i7IseMtToK170J0yfLhV9EYdD
-ti/CzYvzqLndEhHRCVDrJhqRkUY7ffDrb/xir2FRqRmEnMw8Tyyy05eBccafoX4K
-bhb+cld/DtCZYR2BL2wyj6PVV6EYOjInchNDRa9T1txQ/yAd/s0yx2znesXtj2Kt
-xGn4A82oT4q84JtGyz4SCTvhAFMtle+23zmYHGgsJGjWLV2rAFLrTplZErqZWtCo
-UYNRzDvzksVnGSp05DeVmM1qZp8PZtfG/UlIfEYCbkkQVT8LZVb6/2BAzGdbmjMk
-LBI9lI95d17uCyxp9+1Pb1fls+XD25b0v1Qv6U5/YJPAwbyGAW3JtGsVhb0vhpdI
-hxTeJKlM1qq9voRoRWSDq+CSYGbNtQCvpjderejTY5otR9Ip1h+HAhTa8326QFmp
-OxOfwBf0ZcvmnxG4bIHDiySMdXLMSNzgAyGlZfcfI0rhEWazQktxJncKWn7D7VWP
-ojdLA9L7y+sXPTSIujFHYCZA
-=q1ya
------END PGP SIGNATURE-----
-
---=-akERDsl+g92JaDyAMR+U--
+Would you be able to send patches to add noiommu support to VFIO
+selftests? That would be very helpful toward allowing us to develop
+and test Live Update support with noiommu.
