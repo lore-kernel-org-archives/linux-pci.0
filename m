@@ -1,154 +1,180 @@
-Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013022.outbound.protection.outlook.com [52.101.72.22])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69640355F41;
-	Mon, 16 Mar 2026 12:27:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.22
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773664032; cv=fail; b=BwoNEoHWnCgtHXU7IQlcQqfKA4PchOHRtrZG/0fYwDNwlCdpcCOoHa3V4jw4d3kud0MNpO6T0dP5ceDN40NJXqJ1IA87OwQxI6bhze4/TA/bVln6jV/gSXYz7Vt59jf4DAOoXvgamMHoFyQMuVg+bHrgMJ7v3GaeizttVLYddn4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773664032; c=relaxed/simple;
-	bh=z+ctdomOmFYPi8YUU+wWI0l2WyWPVishFWLqoFPEmQE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=mnivSexjf7rZgk9V5zzNNxnufP+CnlFCPi9ugVEzghOpZRZ08A/gfs5YC7qJa7LlJ7g6P9f8RBfbQuIY5gqRp1qUyXiqfZUwEarL8H6CXq8FeNBH72eyN9rTIlg/QsP/PQoCmDK7Qx5xBlt1se3LCsqiUOu0lFdtVoaVV0zyFEM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=OKKyGAy2; arc=fail smtp.client-ip=52.101.72.22
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D765283C9D;
+	Mon, 16 Mar 2026 12:33:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773664395; cv=none; b=izS5Z11JjIJVVV8Auy4ssSM6iPQEvOPFgqPOq6wPjmWdLukhrt3DQ93lnR8iS+Dca+7Mmdz0UPikFySOXvtAiVcWWZIDsnc0B6GoVo9cjugmBzFlpcZdPcuQJYMkPBVO2wIwK5G60tqSM51uThzXxeQirftP1e9mr5zxjtyVPRo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773664395; c=relaxed/simple;
+	bh=JrpOQyjAilcBkykDuGfyplv1BJ1uga3/yZdS/64qzmI=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=h5RdU7AmSfCErGdmeGEesR7qepZbgc5H0XSt1rECYkEMpseQeUIAFEObreMyLAy4Y/W+5tnYMPm6SOuh+sa9bnGBwUCFr5W5Znt7o5ArYB+nsQmKlM9HG1AXdHq+mb35E6HYHsOMM04nHBIgF0gjBhcIr1OnwrHnATj1T0vIxb0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Jf1ZNm/z; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="OKKyGAy2"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=OsbYuCGJv8Np9DS5+skjXLVbpNB1fb5fU6L5tVXIZd3IyfSKm2JCwBLH5diXHoWEKv6gmeLEXDMF9KT9IWD8OFmTzAoa6GXOB+Nybowuldhp6/FDg6V8kbBXbvgLnZH6JV0kTkG5rJH7SjKVH9bXbJcB03SelrpPSzGvAgOL0q2XEELagu3KC5fxQ1j7p+WRrfm0CUl/j8mYcyEeFhcWoQwXdOs8G9EcuEKUFSzxJ9vtCeLvbUbhyY3H0VoSfjYq1XgEkUzSIVG69+PTaQtN7n5g9XYcaOzQJ3+J/2aymA/g5/iot3uW8qamuydCG1MIbFWBPjgxKy5yy0jA3mAhzw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=yXPVx8tZmEUGsO7BZr5w+XXCMNwcunqUZgCOrtBcpwQ=;
- b=A2d65HKFQsf9r4DaGlBy03nVW8xPN4dbz6kVTCublPa3yqyPMtSJAX06ZRil7iIhMR295vBzciDgGmPBndwbJohqz2XLqFV1z0T+mvOHojp5Xt5lNRxtTKrEE5iqVXWIYDS9RlvdzSqlghkPBTlpROcIhwPMTaXQ4f4jWcnnAOguEJOjoAi1I6WgrC1yLWLuLeYw3kjz9heaV5D5gpJ8JffB1Vu+s2jXCNJJlN7yLDUu/hxPd+A5zNidgLhu2NI75rZrQYmUQg+x7uUh/gROGiYN2k99DDOHmXUAdBAsWS9qnX9QRZJJS2rmcFiYaOacfEanotYdeJuDPXpMTRwcpw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=fail (sender ip is
- 164.130.1.60) smtp.rcpttodomain=kernel.org smtp.mailfrom=foss.st.com;
- dmarc=fail (p=none sp=none pct=100) action=none header.from=foss.st.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yXPVx8tZmEUGsO7BZr5w+XXCMNwcunqUZgCOrtBcpwQ=;
- b=OKKyGAy2mT2mVYANI7jTouW0qXFEyoSfAX3oqKR0jQMQC/hD2sKJ7oBOMJN/0xxYirH0D6YHtr735DSFTl5htrdqcZks5fCneDRnECt8Pt/TNlr2q5Rof/g8fAbdMq//DqZoRwZDYz58yH354LxHgMxsf5LSq3ZV6U0VVc+7dr14TXpob7kjapc1TVqZnRJne7f+x+Hw1M1bza4+vgaRfwdACcyuVEfzFj1f/evQfRF/dvsug99MX8R4wRRkwMG9B7EaId0sNqVOBNl51g+SX4yj87XkbzejJM1iVJOO7bISY2Ltnf1BEyGSCAJPPVER08J2lNA61CvFpsq7ZM7WqQ==
-Received: from DB8PR06CA0059.eurprd06.prod.outlook.com (2603:10a6:10:120::33)
- by DU0PR10MB7360.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:10:444::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.17; Mon, 16 Mar
- 2026 12:27:04 +0000
-Received: from DU2PEPF00028D05.eurprd03.prod.outlook.com
- (2603:10a6:10:120:cafe::74) by DB8PR06CA0059.outlook.office365.com
- (2603:10a6:10:120::33) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.22 via Frontend Transport; Mon,
- 16 Mar 2026 12:27:02 +0000
-X-MS-Exchange-Authentication-Results: spf=fail (sender IP is 164.130.1.60)
- smtp.mailfrom=foss.st.com; dkim=none (message not signed)
- header.d=none;dmarc=fail action=none header.from=foss.st.com;
-Received-SPF: Fail (protection.outlook.com: domain of foss.st.com does not
- designate 164.130.1.60 as permitted sender) receiver=protection.outlook.com;
- client-ip=164.130.1.60; helo=smtpO365.st.com;
-Received: from smtpO365.st.com (164.130.1.60) by
- DU2PEPF00028D05.mail.protection.outlook.com (10.167.242.165) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9678.18 via Frontend Transport; Mon, 16 Mar 2026 12:27:03 +0000
-Received: from STKDAG1NODE2.st.com (10.75.128.133) by smtpO365.st.com
- (10.250.44.72) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.29; Mon, 16 Mar
- 2026 13:29:18 +0100
-Received: from [10.130.77.120] (10.130.77.120) by STKDAG1NODE2.st.com
- (10.75.128.133) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.29; Mon, 16 Mar
- 2026 13:26:58 +0100
-Message-ID: <004f0397-6b86-4a0e-9dd8-29293fb43ffa@foss.st.com>
-Date: Mon, 16 Mar 2026 13:26:50 +0100
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Jf1ZNm/z"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62GC2sgw3991856;
+	Mon, 16 Mar 2026 12:33:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=iACLx4
+	Nm8I6fmxx5/fFJ//5pDwT/CB3x7MidVZlDOJE=; b=Jf1ZNm/zrwbnCFqk9359OK
+	naDfC3f5FqWJxFZBzBUkh4wv+gJjBQxTEW1U5o24NFPUjzR/UZlKAcHA/1/b8409
+	7A3+/g+rlbSEXckt7HG7yyn5XZ6/+IQDY27kGsNIylG1AMiHHpmO1TaTBt8axDOp
+	bRP3HHlMFsFksRtuIO3ntuEnJyXomc/UGJZWLwtWvTIcb/b5XsCvc5Vo/6CrpSKe
+	c6d19F41yxyVB35QnYKG6LR/odD6GY8+bP45bJD0w+iGlRI324rnMB7TsS10ulld
+	j8Zcq1w9bOiYub3A83EGRbykP6IkBK97FvQeym1/IIYUU4/6qAjCo6LaugtRzAxw
+	==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cvybrysu1-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 16 Mar 2026 12:33:09 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62G9evht004563;
+	Mon, 16 Mar 2026 12:33:08 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4cwj0s4weq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 16 Mar 2026 12:33:08 +0000
+Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
+	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62GCX4NS17170750
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 16 Mar 2026 12:33:04 GMT
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 8C93320043;
+	Mon, 16 Mar 2026 12:33:04 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 451E520040;
+	Mon, 16 Mar 2026 12:33:04 +0000 (GMT)
+Received: from localhost (unknown [9.52.203.172])
+	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 16 Mar 2026 12:33:04 +0000 (GMT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10 3/8] PCI: dwc: Advertise dynamic inbound mapping
- support
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Koichiro Den <den@valinux.co.jp>, <jingoohan1@gmail.com>,
-	<mani@kernel.org>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
-	<robh@kernel.org>, <bhelgaas@google.com>, <cassel@kernel.org>,
-	<Frank.Li@nxp.com>, <vigneshr@ti.com>, <s-vadapalli@ti.com>,
-	<hongxing.zhu@nxp.com>, <l.stach@pengutronix.de>, <shawnguo@kernel.org>,
-	<s.hauer@pengutronix.de>, <kernel@pengutronix.de>, <festevam@gmail.com>,
-	<minghuan.Lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-	<jesper.nilsson@axis.com>, <heiko@sntech.de>, <srikanth.thokala@intel.com>,
-	<marek.vasut+renesas@gmail.com>, <yoshihiro.shimoda.uh@renesas.com>,
-	<geert+renesas@glider.be>, <magnus.damm@gmail.com>,
-	<mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
-	<thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-	<hayashi.kunihiko@socionext.com>, <mhiramat@kernel.org>, <kishon@kernel.org>,
-	<jirislaby@kernel.org>, <rongqianfeng@vivo.com>, <18255117159@163.com>,
-	<shawn.lin@rock-chips.com>, <nicolas.frattaroli@collabora.com>,
-	<linux.amoon@gmail.com>, <vidyas@nvidia.com>, <shuah@kernel.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-	<imx@lists.linux.dev>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-arm-kernel@axis.com>, <linux-rockchip@lists.infradead.org>,
-	<linux-arm-msm@vger.kernel.org>, <linux-renesas-soc@vger.kernel.org>,
-	<linux-stm32@st-md-mailman.stormreply.com>, <linux-tegra@vger.kernel.org>,
-	<linux-kselftest@vger.kernel.org>
-References: <20260313181858.GA1427542@bhelgaas>
-Content-Language: en-US
-From: Christian Bruel <christian.bruel@foss.st.com>
-In-Reply-To: <20260313181858.GA1427542@bhelgaas>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: ENXCAS1NODE2.st.com (10.75.128.138) To STKDAG1NODE2.st.com
- (10.75.128.133)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DU2PEPF00028D05:EE_|DU0PR10MB7360:EE_
-X-MS-Office365-Filtering-Correlation-Id: 6fdf3841-643a-4f1a-4692-08de83575482
-X-LD-Processed: 75e027c9-20d5-47d5-b82f-77d7cd041e8f,ExtAddr
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
- BCL:0;ARA:13230040|82310400026|36860700016|376014|7416014|1800799024|56012099003|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
- qiJphQ11jsS5Or1DWD5TVOYxuUwA9G/w27HRBXq5sXheUkeFmm5fY5/xc1V0EFPD0N88ab3uHnp2FTPpmNB98fBJlEcq1M3oRT9+wQ0XzOvC1i4a6JhDbKHGRB2zGgfQx/lWL4K9tW1GfgCpX+de5Xl/vqFRtV79jGvHodauXDGhGkWCTYsjIziRyqKlwLvz0nh362iOM/fMGEDi2oWPEj5YRZO96j3pGWR2NI7afW1CjJr86AABLjSKd/pmbAce/SmP4GANGKmT2fsifLxK0TCls5CIMtRzRg1rWLTbCCDGwd9juqsfaO6ur6cu4vIrSIKONn+f5BL+X+c6NiscMuSmfTsnVzAzMW+VZxFApSkVqf9DOzqNDIFVgb1AZx9MXWqVBrzdrnst33HGDEBtDyq6vuLNA4aHan8uWBRKH8JwGhX1otvoAIR5NzIDCTot9X0D5ZxM1Ny9Fs/begTfqWEFVc9iBvYs468IO4v6SNNZ9vWA14jInsJEj5ybYEANJF/ENB7RXtfyBYiTmz8Q7pT6hdEIyDRjuoulU/y6grLSLXpcZU4rNPFj8YaHUj7D9w23tQGVrTk8cDw7moJcBRzuRUZYorM9Pk4MYjyWbRyT5S1RjD3czTXJnJIG1nqkMo2FWUDSoVXUVmJLuJR9/mSPoCQHl6KxfNsIiyH8/RNwGzeZnZhLhEX1MnPTX90Ryuj1QDJmdn1lYtMxBrfa+LzZmXIZpEEfxuXMu2pM3bF2Zh6/U8QyhwDbB85KAodtHSTQK0/kVmdFBew79Lb99Q==
-X-Forefront-Antispam-Report:
- CIP:164.130.1.60;CTRY:IT;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:smtpO365.st.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(36860700016)(376014)(7416014)(1800799024)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
- O+y6cixgVYTv+K2i1qubjbolSYJOW9O4mVPhdpFbxKOM6jupnZH3nZ2YBPeWhnXtboEm09MwnnAgR9rYSDvXDgEpMrDyYmLsT2P/8qQEnK5gRCWZx4Pkp1PpfPYAZ6AZFk+IsLARMlZiqGee0aRTjxGVNXjY+pSdU+zxNy+fMhTzmsfLt6Mnu9vTOGlPkgwWiIYNdFNEX5X9cezpYCVQgjfw3gQuWljTyIbuimXBRiZn7BM1vyZaJj2yRrxmXkpdPUtRFBdRIj8+4WNJPAm7PWvL0Jw6WZhJF946RIF7dNs2XA4S2MyugiJm61auIjUfxc1fgmVIJQjtO4iNVGA4l29Rl9Cg+5bPFdGKH0lCa0FNKiT47iXafQqksV6uSU6lAxTpOucjrjFpAjacxzyCH9g5OEZqB9TkHjahh7g0/byrEZCpOP/IaOLyUVsQu+MG
-X-OriginatorOrg: foss.st.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Mar 2026 12:27:03.5651
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6fdf3841-643a-4f1a-4692-08de83575482
-X-MS-Exchange-CrossTenant-Id: 75e027c9-20d5-47d5-b82f-77d7cd041e8f
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=75e027c9-20d5-47d5-b82f-77d7cd041e8f;Ip=[164.130.1.60];Helo=[smtpO365.st.com]
-X-MS-Exchange-CrossTenant-AuthSource: DU2PEPF00028D05.eurprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU0PR10MB7360
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 16 Mar 2026 13:33:04 +0100
+Message-Id: <DH47JTI4L8PJ.2A4XCC5SRV0NW@linux.ibm.com>
+Cc: <schnelle@linux.ibm.com>, <wintera@linux.ibm.com>, <ts@linux.ibm.com>,
+        <oberpar@linux.ibm.com>, <gbayer@linux.ibm.com>,
+        "Jason Gunthorpe"
+ <jgg@ziepe.ca>, "Yishai Hadas" <yishaih@nvidia.com>,
+        "Shameer Kolothum"
+ <skolothumtho@nvidia.com>,
+        "Kevin Tian" <kevin.tian@intel.com>, <mjrosato@linux.ibm.com>,
+        <alifm@linux.ibm.com>, <raspl@linux.ibm.com>, <hca@linux.ibm.com>,
+        <agordeev@linux.ibm.com>, <gor@linux.ibm.com>, <kvm@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-s390@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v4 0/3] vfio/pci: Introduce vfio_pci driver for ISM
+ devices
+From: "Julian Ruess" <julianr@linux.ibm.com>
+To: "Alex Williamson" <alex@shazbot.org>,
+        "Julian Ruess"
+ <julianr@linux.ibm.com>
+X-Mailer: aerc 0.21.0-0-g5549850facc2
+References: <20260313-vfio_pci_ism-v4-0-4765ae056f71@linux.ibm.com>
+ <20260313094127.74aa0767@shazbot.org>
+In-Reply-To: <20260313094127.74aa0767@shazbot.org>
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=MMttWcZl c=1 sm=1 tr=0 ts=69b7f885 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=VnNF1IyMAAAA:8
+ a=XT77oCoie9bqOVgFqwkA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: K5dECYn4QDvuS67C2cR4ghuTlZagqDxc
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE2MDA5MyBTYWx0ZWRfX05THRAST5MUz
+ 4vlSPI1lhJ3bPNnR0AH/BBQ4jYZNbFjNtGFjjlacDRilRTv0G12F9mgGn5Tvz9rMcZWurzOOjoC
+ +Gjmg65sCnthobqLqT/0rsmOteFj7LrwuXEnNihijIktxsS8lSuRuV3Rpj0DtsUGDylGx8FDnym
+ 6m+yszxOWTw1XIlA+vt5Hf/jQ4PFXgeA7DZBDWjYOmGAFFfFuf9gF+v4CLK5ag4I+0mbSowxA7T
+ VG9XwJgJMEvx9G/1ieYuhej5xpytS8YfJMkJYL99A517DwZSzRSuIPFzJIE5ZqOhDVhSgtsaiHD
+ rlXVXNhSj9lSDwL9P/LmlDB2SF9yx7k5XBYvJ+u7W2cFTNR209FTZag7jS58peBX6uOg35aLYSb
+ DcGbAA+8WdHQG8G7axwIdb4nmNSgfw4gS0sgAkYcBmUTusU528nuFGbTJtozm/hhxg/QpWvVFTQ
+ AIOyeDBJ7KNsymLZ0CA==
+X-Proofpoint-GUID: K5dECYn4QDvuS67C2cR4ghuTlZagqDxc
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-16_04,2026-03-16_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 lowpriorityscore=0 malwarescore=0 spamscore=0
+ priorityscore=1501 impostorscore=0 adultscore=0 phishscore=0 clxscore=1015
+ bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
+ definitions=main-2603160093
 
+On Fri Mar 13, 2026 at 4:41 PM CET, Alex Williamson wrote:
+> On Fri, 13 Mar 2026 15:40:27 +0100
+> Julian Ruess <julianr@linux.ibm.com> wrote:
+>
+>> Hi all,
+>>=20
+>> This series adds a vfio_pci variant driver for the s390-specific
+>> Internal Shared Memory (ISM) devices used for inter-VM communication
+>> including SMC-D.
+>>=20
+>> This is a prerequisite for an in-development open-source user space
+>> driver stack that will allow to use ISM devices to provide remote
+>> console and block device functionality. This stack will be part of
+>> s390-tools.
+>>=20
+>> This driver would also allow QEMU to mediate access to an ISM device,
+>> enabling a form of PCI pass-through even for guests whose hardware
+>> cannot directly execute PCI accesses, such as nested guests.
+>>=20
+>> On s390, kernel primitives such as ioread() and iowrite() are switched
+>> over from function handle based PCI load/stores instructions to PCI
+>> memory-I/O (MIO) loads/stores when these are available and not
+>> explicitly disabled. Since these instructions cannot be used with ISM
+>> devices, ensure that classic function handle-based PCI instructions are
+>> used instead.
+>>=20
+>> The driver is still required even when MIO instructions are disabled, as
+>> the ISM device relies on the PCI store=E2=80=91block (PCISTB) instructio=
+n to
+>> perform write operations.
+>>=20
+>> Thank you,
+>> Julian
+>>=20
+>> Signed-off-by: Julian Ruess <julianr@linux.ibm.com>
+>> ---
+>> Changes in v4:
+>> - Fix bug with < 8 byte reads. For code simplicity, only support 8 byte =
+reads.
+>
+> Does the ISM device define sub-8-byte accesses as valid?  It looks like
+> if pread() doesn't return the desired size QEMU will fill the return
+> with -1.  Unless such accesses are classified as undefined by ISM,
+> doesn't that suggest a potential data corruption issue to the guest
+> driver?  Thanks,
+>
+> Alex
 
+Hi Alex,
 
-On 3/13/26 19:18, Bjorn Helgaas wrote:
-> On Fri, Mar 13, 2026 at 04:59:26PM +0100, Christian Bruel wrote:
->> Hello,
->>
->> While testing after this series, I encountered regressions on the STM32MP2,
->> which I am unsure how to fix. The failures depend on the order in which the
->> tests are run.
-> 
-> c0f1506f6354 ("PCI: dwc: Advertise dynamic inbound mapping support")
-> appeared in v7.0-rc1, so apparently we added a regression in v7.0?  Do
-> we need to revert this?
+thanks for the quick feedback!
 
-With the rollback Koichiro proposed, the regression is now confined to 
-the EPF bar subrange test, and possibly to platforms that do not have 
-enough ATU entries (this I am not sure). Let's wait a bit to see if we 
-can fix it.
+We are currently developing this extension for a non=E2=80=91QEMU vfio user=
+ space
+driver. Reads smaller than 8 bytes are theoretically valid, but they are no=
+t
+used by this driver nor the existing in-kernel driver at the moment. We cou=
+ld
+extend this in the future if needed.
 
-Cheers
+vfio=E2=80=91pci based PCI pass-through of the ISM device is already possib=
+le without
+this extension. In that case, the ISM driver in the guest kernel accesses t=
+he
+BARs directly through hardware virtualization, without using the new access
+routines provided by this variant driver.
 
-Christian
+Julian
