@@ -1,180 +1,163 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012019.outbound.protection.outlook.com [52.101.66.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D765283C9D;
-	Mon, 16 Mar 2026 12:33:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773664395; cv=none; b=izS5Z11JjIJVVV8Auy4ssSM6iPQEvOPFgqPOq6wPjmWdLukhrt3DQ93lnR8iS+Dca+7Mmdz0UPikFySOXvtAiVcWWZIDsnc0B6GoVo9cjugmBzFlpcZdPcuQJYMkPBVO2wIwK5G60tqSM51uThzXxeQirftP1e9mr5zxjtyVPRo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773664395; c=relaxed/simple;
-	bh=JrpOQyjAilcBkykDuGfyplv1BJ1uga3/yZdS/64qzmI=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
-	 References:In-Reply-To; b=h5RdU7AmSfCErGdmeGEesR7qepZbgc5H0XSt1rECYkEMpseQeUIAFEObreMyLAy4Y/W+5tnYMPm6SOuh+sa9bnGBwUCFr5W5Znt7o5ArYB+nsQmKlM9HG1AXdHq+mb35E6HYHsOMM04nHBIgF0gjBhcIr1OnwrHnATj1T0vIxb0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Jf1ZNm/z; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF02B3947BC;
+	Mon, 16 Mar 2026 12:41:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.19
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773664877; cv=fail; b=lUZkgSxyd2oMqDmSh3113tQZInaCm7wgAs0asUPxPNpX8JK5OqLLdlrFdsUbcPUIXtX9ZC9e7pi+gnTtrzaTictzrjDyJ+WI2Mn4BZYRKJnxhULaXum1dgup72MqiEIlCy2v0ODjxMO3iLilvaYFQJH9c4/QpW6kuKr9rVXE1js=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773664877; c=relaxed/simple;
+	bh=PD5JxaaKsQp29D+MYnlqsqtvj0wLPmv/xuxX3VAMnL0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=JKPJIGI8k4O3kSe23xmFSupaGSkgweJHhzKbNgBsIz1woYJYcbq24V+bnP8NfPzOG7QVfj+z+BKMD79U2ChKdLXOfZgnX0qgnmbc77Qx77i8UtQlDnExJPC6W2v70+p3VID6i2kRdCkOVazVLmDNXEEwIFKElyU23NQrwrJvI1w=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=liO/lMAS; arc=fail smtp.client-ip=52.101.66.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Jf1ZNm/z"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62GC2sgw3991856;
-	Mon, 16 Mar 2026 12:33:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=iACLx4
-	Nm8I6fmxx5/fFJ//5pDwT/CB3x7MidVZlDOJE=; b=Jf1ZNm/zrwbnCFqk9359OK
-	naDfC3f5FqWJxFZBzBUkh4wv+gJjBQxTEW1U5o24NFPUjzR/UZlKAcHA/1/b8409
-	7A3+/g+rlbSEXckt7HG7yyn5XZ6/+IQDY27kGsNIylG1AMiHHpmO1TaTBt8axDOp
-	bRP3HHlMFsFksRtuIO3ntuEnJyXomc/UGJZWLwtWvTIcb/b5XsCvc5Vo/6CrpSKe
-	c6d19F41yxyVB35QnYKG6LR/odD6GY8+bP45bJD0w+iGlRI324rnMB7TsS10ulld
-	j8Zcq1w9bOiYub3A83EGRbykP6IkBK97FvQeym1/IIYUU4/6qAjCo6LaugtRzAxw
-	==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cvybrysu1-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 16 Mar 2026 12:33:09 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62G9evht004563;
-	Mon, 16 Mar 2026 12:33:08 GMT
-Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4cwj0s4weq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 16 Mar 2026 12:33:08 +0000
-Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
-	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62GCX4NS17170750
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 16 Mar 2026 12:33:04 GMT
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 8C93320043;
-	Mon, 16 Mar 2026 12:33:04 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 451E520040;
-	Mon, 16 Mar 2026 12:33:04 +0000 (GMT)
-Received: from localhost (unknown [9.52.203.172])
-	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Mon, 16 Mar 2026 12:33:04 +0000 (GMT)
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="liO/lMAS"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=plr7mGkKohhlBk72S6qefmuQMGhdGq5t2UDSZIkfwj6yQRpxACWuKG6ZPy2O99It1Vy5NhLYL9hpkpac8nCnAKxeBSfKISdMGz5Ffu+FP624iAtCYtWfkJOAn72jpJmmTFu25VgwBkYeyEVjzTPYdCuRGkKSbQ5IYcqXM7W8tNCJpgZm9R7NgS2fvsN8cjqOT1vWhzBuHSWILZL29dy8TEjrarPVzYz0qCi17xGF7UpP3YdAe4lhzixk5aByglqnJDP5MWo1a+H/Y3yuLS/yvQJMmb9W4WvJJDgVNF6zu7AUJDL8bZbKMesPM2KtYNCfmwwjY++f3W/TEa5VJHjRuw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=vFeTKtO1ufI5gH/H4m5HJwsDUC2IS5k935VF2z9Nx1c=;
+ b=Nan0sTpyKOJkK7EooSRfsBToB/vCA36ze6ixdDqy0B7e/BwxKyNZXIu23pdQoQiDZNWxtbkmdMa+KsMhhG1rrfgNNUeLtJSisJDmc1BpBbRc2FB7SOvpJlt/ArnyKky9qB1w82gw7S8/7plik6jwCXCQplQgcq9zmy5+V9RmBe2rjvA9msHQ+H6opLOyapA/unYRZTkg+6Pg6KjwldBCgOqCqqFCDbIpnxmduDv4Jx5ccZ/uHpU8QfHsfi89sHyhUvNOQMGB+bKcVKUuIPuLq79z45+G16OMQR4ON0DxsC+ECr7EY09YXj/ZNQcmlGpEtuPT1cfGInkGGLTTiC63kg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=fail (sender ip is
+ 164.130.1.60) smtp.rcpttodomain=valinux.co.jp smtp.mailfrom=foss.st.com;
+ dmarc=fail (p=none sp=none pct=100) action=none header.from=foss.st.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=vFeTKtO1ufI5gH/H4m5HJwsDUC2IS5k935VF2z9Nx1c=;
+ b=liO/lMASiQtS7DjhTtyfORdBJkSHW3/jVOr6IEyHK7yBjzm5ORKGeKI/ZMi80jY6NeH6iGh6LwdhmAD9fiQREkWfU+PfeCOSfw2uHRxqSXUGbHql6BueymhKo3DwSxtWsf9vokCAX7p0GlcSkrLfx8QeDOBlVYbabrS3NjkmjBZ2HeJ+C218WZr4hCOzcy2zdNMUz1NZV9iQiS87hhI7M0HnlikEDARE+ust61G4JoF+gFnJ71xp4c0PlAeANogTF4PojjJjNNgQzRBU9v3g8+v6xN3J/Uql+l/yz6jjm2k0YeDxCrpe9ltTzWQDbFexa6EWIQIkdRBYKZAcAXK7YQ==
+Received: from DU6P191CA0049.EURP191.PROD.OUTLOOK.COM (2603:10a6:10:53e::8) by
+ GVXPR10MB9428.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:150:2a9::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.24; Mon, 16 Mar
+ 2026 12:41:07 +0000
+Received: from DB1PEPF00039230.eurprd03.prod.outlook.com
+ (2603:10a6:10:53e:cafe::5b) by DU6P191CA0049.outlook.office365.com
+ (2603:10a6:10:53e::8) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.24 via Frontend Transport; Mon,
+ 16 Mar 2026 12:41:04 +0000
+X-MS-Exchange-Authentication-Results: spf=fail (sender IP is 164.130.1.60)
+ smtp.mailfrom=foss.st.com; dkim=none (message not signed)
+ header.d=none;dmarc=fail action=none header.from=foss.st.com;
+Received-SPF: Fail (protection.outlook.com: domain of foss.st.com does not
+ designate 164.130.1.60 as permitted sender) receiver=protection.outlook.com;
+ client-ip=164.130.1.60; helo=smtpO365.st.com;
+Received: from smtpO365.st.com (164.130.1.60) by
+ DB1PEPF00039230.mail.protection.outlook.com (10.167.8.103) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9678.18 via Frontend Transport; Mon, 16 Mar 2026 12:41:06 +0000
+Received: from STKDAG1NODE2.st.com (10.75.128.133) by smtpO365.st.com
+ (10.250.44.72) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.29; Mon, 16 Mar
+ 2026 13:43:24 +0100
+Received: from [10.130.77.120] (10.130.77.120) by STKDAG1NODE2.st.com
+ (10.75.128.133) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.29; Mon, 16 Mar
+ 2026 13:41:04 +0100
+Message-ID: <5e485218-becf-499b-8a07-d25358504807@foss.st.com>
+Date: Mon, 16 Mar 2026 13:41:03 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 16 Mar 2026 13:33:04 +0100
-Message-Id: <DH47JTI4L8PJ.2A4XCC5SRV0NW@linux.ibm.com>
-Cc: <schnelle@linux.ibm.com>, <wintera@linux.ibm.com>, <ts@linux.ibm.com>,
-        <oberpar@linux.ibm.com>, <gbayer@linux.ibm.com>,
-        "Jason Gunthorpe"
- <jgg@ziepe.ca>, "Yishai Hadas" <yishaih@nvidia.com>,
-        "Shameer Kolothum"
- <skolothumtho@nvidia.com>,
-        "Kevin Tian" <kevin.tian@intel.com>, <mjrosato@linux.ibm.com>,
-        <alifm@linux.ibm.com>, <raspl@linux.ibm.com>, <hca@linux.ibm.com>,
-        <agordeev@linux.ibm.com>, <gor@linux.ibm.com>, <kvm@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-s390@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v4 0/3] vfio/pci: Introduce vfio_pci driver for ISM
- devices
-From: "Julian Ruess" <julianr@linux.ibm.com>
-To: "Alex Williamson" <alex@shazbot.org>,
-        "Julian Ruess"
- <julianr@linux.ibm.com>
-X-Mailer: aerc 0.21.0-0-g5549850facc2
-References: <20260313-vfio_pci_ism-v4-0-4765ae056f71@linux.ibm.com>
- <20260313094127.74aa0767@shazbot.org>
-In-Reply-To: <20260313094127.74aa0767@shazbot.org>
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=MMttWcZl c=1 sm=1 tr=0 ts=69b7f885 cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=VnNF1IyMAAAA:8
- a=XT77oCoie9bqOVgFqwkA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: K5dECYn4QDvuS67C2cR4ghuTlZagqDxc
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE2MDA5MyBTYWx0ZWRfX05THRAST5MUz
- 4vlSPI1lhJ3bPNnR0AH/BBQ4jYZNbFjNtGFjjlacDRilRTv0G12F9mgGn5Tvz9rMcZWurzOOjoC
- +Gjmg65sCnthobqLqT/0rsmOteFj7LrwuXEnNihijIktxsS8lSuRuV3Rpj0DtsUGDylGx8FDnym
- 6m+yszxOWTw1XIlA+vt5Hf/jQ4PFXgeA7DZBDWjYOmGAFFfFuf9gF+v4CLK5ag4I+0mbSowxA7T
- VG9XwJgJMEvx9G/1ieYuhej5xpytS8YfJMkJYL99A517DwZSzRSuIPFzJIE5ZqOhDVhSgtsaiHD
- rlXVXNhSj9lSDwL9P/LmlDB2SF9yx7k5XBYvJ+u7W2cFTNR209FTZag7jS58peBX6uOg35aLYSb
- DcGbAA+8WdHQG8G7axwIdb4nmNSgfw4gS0sgAkYcBmUTusU528nuFGbTJtozm/hhxg/QpWvVFTQ
- AIOyeDBJ7KNsymLZ0CA==
-X-Proofpoint-GUID: K5dECYn4QDvuS67C2cR4ghuTlZagqDxc
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-16_04,2026-03-16_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 lowpriorityscore=0 malwarescore=0 spamscore=0
- priorityscore=1501 impostorscore=0 adultscore=0 phishscore=0 clxscore=1015
- bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
- definitions=main-2603160093
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v10 3/8] PCI: dwc: Advertise dynamic inbound mapping
+ support
+To: Koichiro Den <den@valinux.co.jp>
+CC: <jingoohan1@gmail.com>, <mani@kernel.org>, <lpieralisi@kernel.org>,
+	<kwilczynski@kernel.org>, <robh@kernel.org>, <bhelgaas@google.com>,
+	<cassel@kernel.org>, <Frank.Li@nxp.com>, <vigneshr@ti.com>,
+	<s-vadapalli@ti.com>, <hongxing.zhu@nxp.com>, <l.stach@pengutronix.de>,
+	<shawnguo@kernel.org>, <s.hauer@pengutronix.de>, <kernel@pengutronix.de>,
+	<festevam@gmail.com>, <minghuan.Lian@nxp.com>, <mingkai.hu@nxp.com>,
+	<roy.zang@nxp.com>, <jesper.nilsson@axis.com>, <heiko@sntech.de>,
+	<srikanth.thokala@intel.com>, <marek.vasut+renesas@gmail.com>,
+	<yoshihiro.shimoda.uh@renesas.com>, <geert+renesas@glider.be>,
+	<magnus.damm@gmail.com>, <mcoquelin.stm32@gmail.com>,
+	<alexandre.torgue@foss.st.com>, <thierry.reding@gmail.com>,
+	<jonathanh@nvidia.com>, <hayashi.kunihiko@socionext.com>,
+	<mhiramat@kernel.org>, <kishon@kernel.org>, <jirislaby@kernel.org>,
+	<rongqianfeng@vivo.com>, <18255117159@163.com>, <shawn.lin@rock-chips.com>,
+	<nicolas.frattaroli@collabora.com>, <linux.amoon@gmail.com>,
+	<vidyas@nvidia.com>, <shuah@kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <imx@lists.linux.dev>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>,
+	<linux-rockchip@lists.infradead.org>, <linux-arm-msm@vger.kernel.org>,
+	<linux-renesas-soc@vger.kernel.org>,
+	<linux-stm32@st-md-mailman.stormreply.com>, <linux-tegra@vger.kernel.org>,
+	<linux-kselftest@vger.kernel.org>
+References: <20260124145012.2794108-1-den@valinux.co.jp>
+ <20260124145012.2794108-4-den@valinux.co.jp>
+ <b2b03ebe-9482-4a13-b22f-7b44da096eed@foss.st.com>
+ <tkfhaovpmaoodo35attvmbnpukcqgmwyrxmfgiwjy2dga65cgl@hmj4mx2n44ki>
+Content-Language: en-US
+From: Christian Bruel <christian.bruel@foss.st.com>
+In-Reply-To: <tkfhaovpmaoodo35attvmbnpukcqgmwyrxmfgiwjy2dga65cgl@hmj4mx2n44ki>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: ENXCAS1NODE2.st.com (10.75.128.138) To STKDAG1NODE2.st.com
+ (10.75.128.133)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DB1PEPF00039230:EE_|GVXPR10MB9428:EE_
+X-MS-Office365-Filtering-Correlation-Id: 40765379-7348-4900-8e15-08de83594b29
+X-LD-Processed: 75e027c9-20d5-47d5-b82f-77d7cd041e8f,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+ BCL:0;ARA:13230040|1800799024|376014|7416014|82310400026|36860700016|18002099003|56012099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+ QqAcbgBlXt6JRa8dGSi2Cxdiu6q3lBdEv0/nJ4sp9M7FHeF5cUmCuVrOSmEqjvwn+CVZhG8IOpeBxpnovf+xL5mxjamgTPkJ5kojPmXyjFeHILkoC2neCROylq7YiZkh/NbpBOYzaM+6qgPBGo4VhZ01lg6n3qiGKZ7umw0q8isEoDRa2LiWTTOBrag79phrLurCgkzkBC7xYvjDxRhYm71nLFUYx0M8On+AD4Ylgxavqvs1jG5OXfBeR/phXf040DsGZmWZU0t2V3SVKU6UFSUFMAGN+FmsnPDGgOqNMx+eN+Yq/P+qh5nbo6PhwzknMeTCxs59ceyZ+NZdFDbw0ZMMxl6/X0SVWb40uIwGG/QtthmCbR7bjPR8U7pJblPAL7MUgU75I4MLKixSqcWhtXZjlPse4R3jxryUWlEwkUqFhRWeuTb4mx0979CkgICSdnMlwvAznj0RC5qB07dm5Kjnkjs7XHkXqhb7MUWzpU1S9sISSHoVDoyrzppWxtPuDOlNqQ6WITFQ6y76px51fgOHsML8Ec7g5L242zYhFcqoLPraRV61EAXNIwd12oixkjBBJbUKTe36VYVJQqFxsZxt9XgQtSeb84gzpy+uXlH58TF5mg4TsjKPeiE231PR3gwB/XWxxyD7a9XLVDbyi8ty4qQnGf8yMp7EO6w8SyBcnZNSQxw+2T3WsboMOlN7aZyiRv4CEgKuh/Cnud2dyPSsonBSvlrK10whyY1gysMSfRia2EZsg5l34n/dHjRk9/DpBYbZ/Ffoktl4YH8MYA==
+X-Forefront-Antispam-Report:
+ CIP:164.130.1.60;CTRY:IT;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:smtpO365.st.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(82310400026)(36860700016)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+ myyTgjPCpS6E9Wq7PZExwdOA/nLUpsH32pzqkeb2Ityek2ZD6/RtoZRmKcPOGJ2MlrIiC5cbVWH0LqTa+0vFAof+AtA9zgZoO9euVtBY4nPjmO1OF7gIuTGFZ/+RkMtqWKmgZAXp2nV7AVp3GWNNMklMpIGXYL8LEI9ZMPi9dIUocHij+5OWLFvjf7VvxukYzN6XdJa0BsdT75KXAhi6kYVCIyiZW8dxYNTZssRpJvQDDEO9MYadsjXe3Cb7odvx9M/+jplwnSC7Fask53tqL899njMgiQoVS2VwkzDpuBzA50MkQ8Ik8Dhw+yKKzO0IxsQ974zjfJhGWrRsRqq6vvzlUF7xRGMGgw3+sL2D46VhhBPH2iulbB9t6OXGOlmrE/D4GMPpFJvUpmxYAHaGFx3vTrvxb9DkIIJTXHZsL6B9C2gWcutDnBzLyPByHpY/
+X-OriginatorOrg: foss.st.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Mar 2026 12:41:06.8725
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 40765379-7348-4900-8e15-08de83594b29
+X-MS-Exchange-CrossTenant-Id: 75e027c9-20d5-47d5-b82f-77d7cd041e8f
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=75e027c9-20d5-47d5-b82f-77d7cd041e8f;Ip=[164.130.1.60];Helo=[smtpO365.st.com]
+X-MS-Exchange-CrossTenant-AuthSource: DB1PEPF00039230.eurprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVXPR10MB9428
 
-On Fri Mar 13, 2026 at 4:41 PM CET, Alex Williamson wrote:
-> On Fri, 13 Mar 2026 15:40:27 +0100
-> Julian Ruess <julianr@linux.ibm.com> wrote:
->
->> Hi all,
->>=20
->> This series adds a vfio_pci variant driver for the s390-specific
->> Internal Shared Memory (ISM) devices used for inter-VM communication
->> including SMC-D.
->>=20
->> This is a prerequisite for an in-development open-source user space
->> driver stack that will allow to use ISM devices to provide remote
->> console and block device functionality. This stack will be part of
->> s390-tools.
->>=20
->> This driver would also allow QEMU to mediate access to an ISM device,
->> enabling a form of PCI pass-through even for guests whose hardware
->> cannot directly execute PCI accesses, such as nested guests.
->>=20
->> On s390, kernel primitives such as ioread() and iowrite() are switched
->> over from function handle based PCI load/stores instructions to PCI
->> memory-I/O (MIO) loads/stores when these are available and not
->> explicitly disabled. Since these instructions cannot be used with ISM
->> devices, ensure that classic function handle-based PCI instructions are
->> used instead.
->>=20
->> The driver is still required even when MIO instructions are disabled, as
->> the ISM device relies on the PCI store=E2=80=91block (PCISTB) instructio=
-n to
->> perform write operations.
->>=20
->> Thank you,
->> Julian
->>=20
->> Signed-off-by: Julian Ruess <julianr@linux.ibm.com>
->> ---
->> Changes in v4:
->> - Fix bug with < 8 byte reads. For code simplicity, only support 8 byte =
-reads.
->
-> Does the ISM device define sub-8-byte accesses as valid?  It looks like
-> if pread() doesn't return the desired size QEMU will fill the return
-> with -1.  Unless such accesses are classified as undefined by ISM,
-> doesn't that suggest a potential data corruption issue to the guest
-> driver?  Thanks,
->
-> Alex
+Hi Koichiro,
 
-Hi Alex,
+> 
+> If I understood the problem correctly, would something like the patch below
+> address it? My expectation is that the subrange mapping test would then fail
+> consistently on platforms that do not have enough free IB iATU regions.
+> 
 
-thanks for the quick feedback!
+Thank you for your patch. Yes, now the bar subrange tests fail 
+consistently, so that is enough to say this is not a regression.
 
-We are currently developing this extension for a non=E2=80=91QEMU vfio user=
- space
-driver. Reads smaller than 8 bytes are theoretically valid, but they are no=
-t
-used by this driver nor the existing in-kernel driver at the moment. We cou=
-ld
-extend this in the future if needed.
+However, I think there was a clear BAR missing somewhere before running 
+the tests in the EPF driver, as the BARs could be reallocated during the 
+other tests. This is not due to the subrange tests, but the EPF test 
+driver supposes a 1:1 BAR/ATU mapping. Now this assumption is broken. 
+I'm wondering if this could be improved to make the subrange tests pass 
+on all platforms
 
-vfio=E2=80=91pci based PCI pass-through of the ISM device is already possib=
-le without
-this extension. In that case, the ISM driver in the guest kernel accesses t=
-he
-BARs directly through hardware virtualization, without using the new access
-routines provided by this variant driver.
+Cheers
 
-Julian
+Christian
+
+
+
+
+
+
+
