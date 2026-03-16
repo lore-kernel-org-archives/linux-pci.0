@@ -1,63 +1,49 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ABEC31E830
-	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 03:12:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD852C2EA;
+	Mon, 16 Mar 2026 03:20:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773630756; cv=none; b=DCEGoU44hvkAV6l9oIY4TQGaqsPmjBKot0xHNFljp5U385lmjgV5mlb4qBu7qGn7yUNJzk8PFqEIxC55JYt2fMoszp3LuSctbkoyQ9fLNNw/vaDbc0Fd4qBKbUeV0Flc5AkZbb5aZVueB4tfNurfvo0JOB8Xy7rY+V2aBZ0YFdI=
+	t=1773631223; cv=none; b=ajHwBLQGxSaE0isVztNpluaOoPa+M2Txba48FUrgfQK0xUodB1okjTL7V3FnMzAE+kYNoRHDSUrAvqKnAVcxWMYkrqxZYM9kYRT272i71ZpdxW4mTIY9qFE2wcYcAImQzk7Z1X3VyzFQj8DFh8jACd9Y7xbFCaokkthXLpqgr4M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773630756; c=relaxed/simple;
-	bh=f79oE6jpLPe1MpDhp0Uv9o4z3y9nRWjIbmaK9M2G7Pg=;
+	s=arc-20240116; t=1773631223; c=relaxed/simple;
+	bh=WuPKft6M5fTY0DWTvg8L3sujWRNBfLJxZ9DjriMFQ6M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y67e+rSNVryleTuHe/sFZJ2CdDbd1/GTkgzzCXOcBlkq52D4PZ3B1eUxk0nO0+wpsZfEewI5sWjiLuSfpyZyg6fcA8aOVrVlgTyK4sPj6Tzla1FWkPlWOfHumEl4kH4CucI22Tn1vvfdK6iINaO7Fse3rBBSGmNImjtbEVcuG3o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-82a07738118so2324556b3a.0
-        for <linux-pci@vger.kernel.org>; Sun, 15 Mar 2026 20:12:35 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773630755; x=1774235555;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=k/bfv35vSMPbpMm260c6c5TZ5tOU3wF/YzOQKgPPdZU=;
-        b=GOptcHSGnCbcSZi76zejLJR+pTLQcUQWO01L5yJngcu0Qli7jw6uuSfm0Pp8uZ5ECM
-         PlkXhQ+4ZODrF81Zd4uBGBlCb0uEtM8M9LoTFNnySqm5SARV8bxLpHn6Jhm9Qzkw4UFZ
-         k+X92pfPLm+4k7Zp2Uhg12uldcxTuN2qpoYZLseW54t7qz227knID+kTsffDHUCBGHA5
-         kcq73qEM6/vv9vLSUKXIARnOKlSNxsntFeGd+4WGbxqa3Kv8iahfVQi/X9Z/XYa2x1SJ
-         e/6EDXzyo0/hQUCcTto303/b0/rBCK38D7hvPcRy2qMXeNji/Sod2kmmEtw0/ZI3JxN/
-         Tqww==
-X-Forwarded-Encrypted: i=1; AJvYcCUoIf2P5Y69fMMPFtm8U8ihJ2vfbvlPQ6qrYo4p4F3BUSoHGMD8ID+K88cTWhkZ6bWPJM/DPvV5nKI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YweUxbdsRnGb0aqmdaa+Zdk66RD+hDhFIvPwYADmOR6+rOwYZhF
-	ajbg7EawoyISo2SQ03KSLY6eaQmKnpalWG9OGkSQLedgwse8eOxmQhF71SjT3P6DevM=
-X-Gm-Gg: ATEYQzwbvelwQrsZsgFlfaQ+OpOx0Br2Zv1eP4IJTMRwK+ux1craKESsgacUeSDEEUR
-	xjds+0C/J+c+8AES0i0CCNtf0uKB+CLZA17J1XZ5NvjUZIjaT7E73j4PL9WZfuqNY1QlIIFEPYF
-	emwZaf2lbc3wD67FCHeUlmbfuw8ienkvJu1bzPdnVgT8k8hlWkZWVwC8ds+cY/cdCkGWifxFiBK
-	LEQ+kN4C4X76YayFVMZMmfmTNEzkTCB+rIXltT0afQmSFqFgw9LQuTHHxlbsVIXQ3Ov/x8QK0cM
-	vMep2lsMQBWrpfi/ZF328iWGd99EGhaEexbXtGOMpyg/7+/TF2zuB+0oi7Gm7N32WhUMVBrAKp5
-	jZMPh3EUO63H5HS46y8e6mBOjb5U0PNXfoIfSSCQH2Skj9J2dZQlr23rNvPmb8iDdigdpDNl7c3
-	tWr/+TA/e6wsuzh++EYGNjabFRnKoeBA04seD4Nlbnm5B6dgK8QeIgtF/YoI+fRWNHbEc/kN9q2
-	y6mitWCgutD4doSNgAtBSDiJSDdq2NPfOAQ8Q/MilGHgl1vgtI=
-X-Received: by 2002:a05:6a00:18a0:b0:824:1b66:6ae2 with SMTP id d2e1a72fcca58-82a196d2c8fmr11133754b3a.10.1773630754968;
-        Sun, 15 Mar 2026 20:12:34 -0700 (PDT)
-Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82a072414f8sm11787096b3a.4.2026.03.15.20.12.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Mar 2026 20:12:34 -0700 (PDT)
-Date: Mon, 16 Mar 2026 12:12:33 +0900
-From: Krzysztof =?utf-8?B?V2lsY3p577+977+9c2tp?= <kw@linux.com>
-To: "Li,Rongqing(ACG CCN)" <lirongqing@baidu.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: =?utf-8?B?562U5aSNOiBbPz8/P10gUmU6IFtQ?=
- =?utf-8?Q?ATCH=5D_PCI=3A_sysfs?= =?utf-8?Q?=3A?= Suppress FW_BUG warning
- when NUMA node already matches
-Message-ID: <20260316031233.GA968520@rocinante>
-References: <20260313050826.2126-1-lirongqing@baidu.com>
- <20260314205407.GB672783@rocinante>
- <d1dd98ddd0a948e9b785844479712162@baidu.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ndz8Qr7KRz60ijEqKvxU+1YNWYywAZir4ZkHYn1PwG+DMw34pM5PmGuhIcZ4a42rumewTl1Y5Ykx5EBoX6w/jZtGXxajlrghpFTnYki+TC94FgtmZ90nLe9lr6hvZyzlCKqNwV84ko86fcffA840h2uKJg49vGoe9/iR7B3l3BA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IFB/n1fK; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IFB/n1fK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C959C19425;
+	Mon, 16 Mar 2026 03:20:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773631223;
+	bh=WuPKft6M5fTY0DWTvg8L3sujWRNBfLJxZ9DjriMFQ6M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=IFB/n1fKO9ANP/cV5YTY7dm/pXdFYiuy0ANIcYtQIHeWDkppN1zEUdYi2Vk6fkcLY
+	 a3F0ZOtfDrw6wZU5xrBh3mBDc+l0WO0N2NQLmiqMc/H0XjLcFUoCORBjXNfJzmJ25j
+	 OqszTiZADEV7gOinRbunwZz/zxrUg7s0yWeteD8rSv9SGKdE5WHdZ4Ex5KVJdr5bKB
+	 bmUCNuMPKMveenV5kTv3YVZVeW3dBs3uzO9aRfP2lUs5nJBXEGuWto/gW227xMUraI
+	 IDDRS+R1giasf4gU6EpMXueiZRQiQ3SUlVGWBTvUgCsSNvPJCotm0ehUren3wzZHsD
+	 qToE1CPis91Aw==
+Date: Mon, 16 Mar 2026 08:50:12 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bjorn Andersson <andersson@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, 
+	Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>, konradybcio@kernel.org, robh@kernel.org, krzk+dt@kernel.org, 
+	conor+dt@kernel.org, jingoohan1@gmail.com, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org, 
+	kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org, kw@linux.com, 
+	linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com, 
+	quic_krichai@quicinc.com, quic_vbadigan@quicinc.com
+Subject: Re: [PATCH v1 1/1] arm64: dts: qcom: hamoa: Move PCIe PERST and Wake
+ GPIOs to port nodes
+Message-ID: <kqpgjzcxnazjohiop27exget6qrv37wn3csmixt5nmc6d5dkbg@n7qjo6flaabn>
+References: <20260313094618.1361418-1-ziyue.zhang@oss.qualcomm.com>
+ <20260313164542.GA1405513@bhelgaas>
+ <en5a7jrgpbn4bsmw5qwprugb2qmjkqw2x5eey6jxxu63634duz@b43rhcsqkj3o>
+ <abdviJbrluDn2Vrx@baldur>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -67,65 +53,68 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <d1dd98ddd0a948e9b785844479712162@baidu.com>
+In-Reply-To: <abdviJbrluDn2Vrx@baldur>
 
-Hello,
-
-> > > The numa_node sysfs interface allows users to manually override a PCI
-> > > device's NUMA node assignment. Currently, every write triggers a
-> > > FW_BUG warning and taints the kernel, even when writing the same value
-> > > that is already set.
+On Sun, Mar 15, 2026 at 09:53:33PM -0500, Bjorn Andersson wrote:
+> On Sat, Mar 14, 2026 at 07:50:50PM +0530, Manivannan Sadhasivam wrote:
+> > On Fri, Mar 13, 2026 at 11:45:42AM -0500, Bjorn Helgaas wrote:
+> > > On Fri, Mar 13, 2026 at 05:46:18PM +0800, Ziyue Zhang wrote:
+> > > > Commit 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake
+> > > > GPIOs to PCIe port nodes and add port Nodes for all PCIe ports") did not
+> > > > convert all Hamoa‑based platforms to the new method of defining PERST and
+> > > > Wake GPIOs in the PCIe root port nodes.
+> > > > 
+> > > > Without the change PCIe probe will fail. The probe failure happens because
+> > > > the PHY stays in the controller node while the PERST/Wake GPIOs were moved
+> > > > to the port nodes.
+> > > > 
+> > > > This fixes probe failures seen on the following platforms:
+> > > >  - x1-hp-omnibook-x14
+> > > >  - x1-microsoft-denali
+> > > >  - x1e80100-lenovo-yoga-slim7x
+> > > >  - x1e80100-medion-sprchrgd-14-s1
+> > > >  - x1p42100-lenovo-thinkbook-16
+> > > >  - x1-asus-zenbook-a14
+> > > >  - x1-crd
+> > > >  - x1-dell-thena
+> > > > 
+> > > > Fixes: 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake GPIOs to PCIe port nodes and add port Nodes for all PCIe ports")
+> > > 
+> > > Are you saying that DTs in the field broke because of some kernel
+> > > change?  That's not supposed to happen.  Even though PHY, PERST, and
+> > > Wake GPIOs should be described in Root Port nodes instead of the Root
+> > > Complex node in *future* DTs, the kernel is still supposed to accept
+> > > the old style with them described in the Root Complex node.
+> > > 
 > > 
-> > So, this works as intended, then?
-> > 
-> 
-> I don't know if this is intended, but it feels unreasonable―writing the same value still triggers a FW_BUG warning.
-
-The pci_alert() might be a bit much.  Especially, that users often don't
-have any means to contact some vendor with a bug report or anything like
-this.
-
-Bjorn has been looking at potentially removing such warnings, if there is
-nothing actionable there for the user, precisely to remove the annoyance.
-
-The taint would remain, I suppose.
-
-> > What makes multiple writes to this sysfs attribute, if you don't mind me
-> > asking?  Do you have some tool that does this?  Some automation?
-> > 
-> 
-> I have a tool that triggered this warning, and I will fix my tool.
-> 
-> > Especially, that you seem to be writing the same value over and over.
-> > 
-> Not , but a user is allowed to write to this file,  and subsequently will generate a massive amount of kernel logs―is this considered unreasonable? Should we add some rate limit?
-
-Sure.  No problem with that.  I was more curious about what your use case
-was, if anything.
-
-> > >  	if (node != NUMA_NO_NODE && !node_online(node))
-> > >  		return -EINVAL;
-> > >
-> > > -	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
-> > > -	pci_alert(pdev, FW_BUG "Overriding NUMA node to %d.  Contact your
-> > vendor for updates.",
-> > > -		  node);
-> > > +	if (node != dev->numa_node) {
-> > > +		add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
-> > > +		pci_alert(pdev, FW_BUG "Overriding NUMA node to %d.  Contact
-> > your vendor for updates.",
-> > > +			  node);
-> > > +		dev->numa_node = node;
-> > > +	}
-> > 
-> > You could invert the check and make it an early return where you just return
-> > count.  Would save on the new indent level.
+> > This is not related to the driver change. The driver correctly parses all Root
+> > Port properties either in the Root Complex node (old binding) or Root Port node
+> > (new binding). But commit 960609b22be5, left converting mentioned board DTS to
+> > the new binding, leaving those affected platforms in a half baked state i.e.,
+> > some properties in RC node and some in Root Port node. Driver cannot parse such
+> > combinations, so it fails correctly so.
 > > 
 > 
-> Good idle, I will fix this in v2
+> Are you saying that above listed machines has broken PCIe support in
+> v7.0-rc?
 > 
-> Thanks
 
-Thank you!
+I haven't verified it, but I'm pretty sure PCIe is broken on these platforms.
 
-	Krzysztof
+> It seems this is a (partial) revert of 960609b22be5, is this actually
+> fixing that change, or is it only applicable once some other changes are
+> applied?
+> 
+
+This change is fixing the issue in the respective board DTS and is a standalone
+fix on top of v7.0-rc1.
+
+> Where should this be merged?
+> 
+
+Qcom tree for 7.0-rcX.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
