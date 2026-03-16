@@ -1,248 +1,179 @@
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11021098.outbound.protection.outlook.com [40.107.208.98])
+Received: from MA0PR01CU012.outbound.protection.outlook.com (mail-southindiaazolkn19011026.outbound.protection.outlook.com [52.103.67.26])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2326D2E401;
-	Mon, 16 Mar 2026 17:38:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4577238D;
+	Mon, 16 Mar 2026 17:39:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.67.26
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773682719; cv=fail; b=mI17J4wl5NBVZV9lztDWoaIsqVEq/Pb3S44+meEKomavDKzdeUX2OPnaa4S1C/s0Ynkt0MF7hwFBa8opMD8nZ+qpDFt5CjAbuBJhPmPJDb44Ji3gdIb7M0ovs5zKJbSm3KSw/Ig5G2zIPFZW4pwJ7pIyvqZMl8Ga41DlHY6KFAs=
+	t=1773682758; cv=fail; b=jxSbtf/SvM/GWs7FuRLaVOnzM+whJUiaFYhPCl1Y9fdSxdLg/yCdPKToOFMDRBXe1f7xNTtuVp0g7shWg3yvE2EULGM+wPG/noaUZ/x0q6VJ2myDecfsMh82vZcM/DusJRRpgWGcZXRQ+lom+RRvWZZ1/mgpBlu2f5axWOezAm0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773682719; c=relaxed/simple;
-	bh=m+SOKFoKj8NzveyIy8tq29BM4aan+/JtR+9d54Aaj7s=;
+	s=arc-20240116; t=1773682758; c=relaxed/simple;
+	bh=8Sxv3CS2SJlti6XTML4hHXgChxt3ZIaJm/l+sB3ac00=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=antCGIanxXJMLtMB8tIjLKp8BNeVrgb6/J0LjDPOFyqktD0UL1SQ63q22+4a9jVfKlbYqEG1FX9C03mBU3G14fvLMLxpBnNkptvI8viyCGIboCF2lYk5ld1qaBildjKOzWA7E4KqY3zKA//RqEXI9tO2qs7JYuFlzw5I406/OUQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=microsoft.com; dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b=DeyYstSw; arc=fail smtp.client-ip=40.107.208.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microsoft.com
+	 Content-Type:MIME-Version; b=XFO7DQ0d67D6A7e1P/AccGE8c3WfbJWunm68P+pxQitzF8xTCR1mAoc6tDMwgMGSx0a0LU9qzjm19ImuJ+fpkNui1I4VNfVjPk2KZNhx7gHCGPPToJZQ/ZtIWRi0+fLMkhC3Jp6uniIzh7gRqW8Ga7PZAAgpiGi+tonY3S30oQ4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=live.com; spf=pass smtp.mailfrom=live.com; dkim=pass (2048-bit key) header.d=live.com header.i=@live.com header.b=AhS06jsQ; arc=fail smtp.client-ip=52.103.67.26
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=live.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=live.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="DeyYstSw"
+	dkim=pass (2048-bit key) header.d=live.com header.i=@live.com header.b="AhS06jsQ"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=nehGJzJABzVOF/qXblwfqPFxvdaeZXIY1rIubBO5LL3Gwt2IDQr4Z37NURHOFccY0fYlmka/NnPfLMyH3yCRcDhzbKtawxjRrH0Zc3uYZgxOvlTwp/xnvQTSvmOmXGAhQg9hYKBsKlfTA+rkqmzVrHq17f0L2sM6jsXLIV11XRWTKudWsd1V9+BuPShP+PHCZ8S97QsrvISDaJHDIhrf2yqtSFU7Q+e6wIUVFve+XAZMc7oOCj1SY3VsJ43klz8T885OAnhX1r1n0iQmRuh10ke57DiucB+SXC75RQArQonE0yIBEOE5VvpIT0aVu01DEnw3WfWjFgePkUKyvslNuw==
+ b=Ac4v+uVpyzJfiuT2U7UYQ/v4PxCh2x552ERCLevktGctf45jrgfhgfO0SGjFD9inakk++fFSO31Fcn/HN3ojnpHtNI/OeBhai68vvB2tLev8DrSYVqwtKlK3oW8pXx00rnm2kqYct+Z5UUxSCsYu0q95hghlshSl8ffWMZnLRtx9D3Ez4Z+CCF3t00EaYp+bHYYbITQDQ6JIlJhn6QDjk4y8YbpzUykv3uXrRpGJPf0og45hSaSK/upClqlYrNPZE8PXAiG3F8xQTGPJZUzUf6yudBLQxKHhe4WF6G8tM7cezEYESlhjQbg7HJRv5ZjWQyiv10S1RcfTArKvQ91Srw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ECk7/f9H/ql18QtZ4/nIPZsRaS1rc0UWb/g++o2uoBo=;
- b=CdBU6ITxTleM0/NwqSpqlqovfIQ8wskZNShqv8zF4XK6G3qxYKSdFazp75d33gjmyg0DLNIEhSRoj8l0R749K/yzsXsrwS2/yyFRjjxYM+o6fJ8loy7l39icDj0e6rOkMqqqA56CrrBle08/mMchPLF8T6JHNGtfbkJs2iJ7L3F8FNVY5AU4RTQuaTYECQ0Xc83lgaVcEd/2RJJxhbm/f83gdYbHGRiPBr0KZfMrbdyuTrZkEFCh4xFcXRhQngGmYiZ5c0wS6hy/yFkFPyWe1vbl4jtlpa6iVqITUjXKv6u6SW4FoiJ3piTo8ng1m/bnl+rFdWAZNGhyAeXYh23mUA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
+ bh=8Sxv3CS2SJlti6XTML4hHXgChxt3ZIaJm/l+sB3ac00=;
+ b=oF9rVLCDa6EfWm5fa/HOWWsRIgbq53Q7FcRi3aCRJXBxts0/Ow6IB5E8iCfEQMUjgqwNICPwxruzb3e4QIvEjYaBRJJ+GvmrviXBUihGYqSdMLmBJjjxEvpxakryB9D9YPHvjDPvpdJHejrO/j0WTIQRK2uQa7V2FMKgwzi7qeFU86vpphhQXvj4FiCVuNegBzFJVqHfX1Ow+HLgn8Af8pzth4MIBYP9Nfni6cfM0iLCD/5uowmeT2/LaOfInMpwOONAo/4sEdWDbUZkywGpjK8DRcjXGUu7xxr3CdqIvBeVDSKYBN2f9oZv2Civsq7wtCjjoPZ1qJiM1XO3AfXhaA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=live.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ECk7/f9H/ql18QtZ4/nIPZsRaS1rc0UWb/g++o2uoBo=;
- b=DeyYstSwBwNAnNtkdzhwvLfaPbIywwrlbudSQguXBDVU87WSeoM7LjoQedB5Yad7Pg4KcrtXi3+vMCOuk1lA7Av6b5unrRYNczHp8iNq8OvbgkaWD50mQ4MARiT2uu2vb8IUPL88UxZcdMHI7rJDHmX92KhH82x5mRrql+nftuU=
-Received: from SA1PR21MB6683.namprd21.prod.outlook.com (2603:10b6:806:4a4::6)
- by SAWPR21MB6957.namprd21.prod.outlook.com (2603:10b6:806:4d4::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.6; Mon, 16 Mar
- 2026 17:38:35 +0000
-Received: from SA1PR21MB6683.namprd21.prod.outlook.com
- ([fe80::879f:eec1:ca0e:d219]) by SA1PR21MB6683.namprd21.prod.outlook.com
- ([fe80::879f:eec1:ca0e:d219%3]) with mapi id 15.20.9723.008; Mon, 16 Mar 2026
- 17:38:29 +0000
-From: Long Li <longli@microsoft.com>
-To: Michael Kelley <mhklinux@outlook.com>, KY Srinivasan <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, Dexuan
- Cui <DECUI@microsoft.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?iso-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>, Manivannan
- Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Rob Herring <robh@kernel.org>, Michael Kelley <mikelley@microsoft.com>,
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] PCI: hv: Set default NUMA node to 0 for devices without
- affinity info
-Thread-Topic: [PATCH] PCI: hv: Set default NUMA node to 0 for devices without
- affinity info
-Thread-Index: AQHcsnBlLEk5nWOmQkaR1EuarLdWWrWxavaAgAAEvnA=
-Date: Mon, 16 Mar 2026 17:38:29 +0000
-Message-ID:
- <SA1PR21MB66837DDAF5F203E832DA5339CE40A@SA1PR21MB6683.namprd21.prod.outlook.com>
-References: <20260312223244.1006305-1-longli@microsoft.com>
- <SN6PR02MB415748A42DCBDD8AB635838DD440A@SN6PR02MB4157.namprd02.prod.outlook.com>
-In-Reply-To:
- <SN6PR02MB415748A42DCBDD8AB635838DD440A@SN6PR02MB4157.namprd02.prod.outlook.com>
-Accept-Language: en-US
+ bh=8Sxv3CS2SJlti6XTML4hHXgChxt3ZIaJm/l+sB3ac00=;
+ b=AhS06jsQNh/Fi319Zsx1mdk90pVB2iiEphryfwMfDjWjTelxwK2W3RGcOg1UIm+aLkuYEUBp6OA8HftI4YC6doWnvE1AywBskyscOCrSzXoG6EAbpP6oYmQMA885uNFW4GpCwz+gmZIQfKNIE4kI0+bxjgQAv1XrqC6BDZV8fJGjrrDB+4M2MSmC+p99b7EQ4HHMGYHFC2YH6UjB81Wc7HZEejrxan0LBHi6LJDvc+KA8w7+mzpbExn/5Vyy8WVEpuv2o0CzNt74x9fsVzitzqeYY6n/hyYUtRdYjRYzy8bXkrFkXn2bu7U79trL0dbtO8YNm5Xin5Q0nHO2QvIkjw==
+Received: from MAUPR01MB11546.INDPRD01.PROD.OUTLOOK.COM
+ (2603:1096:a01:19c::18) by MA0PR01MB8900.INDPRD01.PROD.OUTLOOK.COM
+ (2603:1096:a01:bd::6) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.25; Mon, 16 Mar
+ 2026 17:39:00 +0000
+Received: from MAUPR01MB11546.INDPRD01.PROD.OUTLOOK.COM
+ ([fe80::1fed:9b0b:69b:9295]) by MAUPR01MB11546.INDPRD01.PROD.OUTLOOK.COM
+ ([fe80::1fed:9b0b:69b:9295%6]) with mapi id 15.20.9700.022; Mon, 16 Mar 2026
+ 17:39:00 +0000
+From: Aditya Garg <gargaditya08@live.com>
+To: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
+	<dave.hansen@linux.intel.com>, "x86@kernel.org" <x86@kernel.org>, "H. Peter
+ Anvin" <hpa@zytor.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, Oliver
+ O'Halloran <oohall@gmail.com>, Andreas Noever <andreas.noever@gmail.com>,
+	Mika Westerberg <westeri@kernel.org>, Yehezkel Bernat
+	<YehezkelShB@gmail.com>, Lukas Wunner <lukas@wunner.de>, Dave Jiang
+	<dave.jiang@intel.com>, Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>, Feng
+ Tang <feng.tang@linux.alibaba.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org"
+	<linuxppc-dev@lists.ozlabs.org>, "linux-usb@vger.kernel.org"
+	<linux-usb@vger.kernel.org>
+Subject: Re: [PATCH RESEND v6] PCI/portdev: Disable AER for Titan Ridge 4C
+ 2018
+Thread-Topic: [PATCH RESEND v6] PCI/portdev: Disable AER for Titan Ridge 4C
+ 2018
+Thread-Index: AQHctWvFE8HiDz1LkUmMp75SF+UD3Q==
+Date: Mon, 16 Mar 2026 17:39:00 +0000
+Message-ID: <EDD57FBF-B2DD-4C79-B8A4-75824F4B8912@live.com>
+References: <20260113173351.1417-1-atharvatiwarilinuxdev@gmail.com>
+In-Reply-To: <20260113173351.1417-1-atharvatiwarilinuxdev@gmail.com>
+Accept-Language: en-IN, en-US
 Content-Language: en-US
 X-MS-Has-Attach:
 X-MS-TNEF-Correlator:
-msip_labels:
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=c754b0aa-2f7a-4cc8-ad48-b237e59ca6b4;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2026-03-16T17:28:24Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Tag=10,
- 3, 0, 1;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
+x-ms-exchange-messagesentrepresentingtype: 1
 x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA1PR21MB6683:EE_|SAWPR21MB6957:EE_
-x-ms-office365-filtering-correlation-id: 3b85291d-51e6-40f6-8091-08de8382d65e
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
+x-ms-traffictypediagnostic: MAUPR01MB11546:EE_|MA0PR01MB8900:EE_
+x-ms-office365-filtering-correlation-id: 77917c18-0de4-48ad-4255-08de8382e870
 x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|366016|376014|7416014|22082099003|56012099003|18002099003|38070700021;
+ BCL:0;ARA:14566002|31061999003|8060799015|25031999004|8062599012|19110799012|461199028|15080799012|1602099012|53005399003|41105399003|40105399003|4302099013|3412199025|440099028|10035399007|102099032;
 x-microsoft-antispam-message-info:
- QzyQu9EvKvgNyVfr99NLTxtLUnf+ykK6GDh+lanSKRLBomGjrwiPMlLCQ+CwIriXHzie9CgE0tQ5trBWU34Rrpi0K6/7Ag7NyRYNsE72t9fXrmsDEbkIKgJYCMMw1QWH5BX+ZW/6VFVcuKXFCNFml/sxs2dNr2pvP3t9WeYUgWZlwqVKn5IVLVau2ROHPi0kbk8vc6nCNwq5A+JUw9bUT1vM7UmosVKl1JFQhwpcWJpSHpHkuu/0ZkS/gqtcfDvtq2XmS8RKS9e7gfX8mQFCzulmYRpY2wKqp2wMLkrR3rFVp742hlx3nDBPPS8lIu6N7DAQTJWQz3OV1XJbAuTyL1tWi7nw4yCe1FACCbYtVXyAnI9B1Ev8l27utqG+jPoU1JY3jN94kVWKSS2f+Nfvg7HvI1OZ5tV6fcfAtMpeEr6SiEXD2VJ8NN4OZWfubYJx9J9jVCc1EQF+o45noAfWDFFwVIdrOkt1GDiDl3Aw3dyX3Ag67ilwfcRQyaPaQYY+Vf+SgEckZwHg6x0KxibalCQjS9UaCMoMMIOy5I2lOCgokk+c6MQ78b4fp6EZBHkzXQTz6AEODkljOCXha9M+E//RxkNQNdhmfIC2WLp4L0DXYH6XUmHzQVsqEX3wgawlKbyTJT6udtRK8yWPTkBn3XNXyd7ijWJp9J1fA/hB/SoN8Ax3dVmlTwRanKYKL1kFv9jHkGHA3SfiByBnw26HyeYITzqd1bKe2EPJspCkaB2HN4tOSvOKkWm6ILNE0e+5ODvK7YFYdwrm2AldC3YBY3TzbUM/7sG4XdCh1Htkm/A=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR21MB6683.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(7416014)(22082099003)(56012099003)(18002099003)(38070700021);DIR:OUT;SFP:1102;
+ =?utf-8?B?MnpnNVBXdkp3NVViY3BGWDkzNUhoemlWZVZXK05NbDZvVVRQR1R0eGp6V3g0?=
+ =?utf-8?B?WmNnT09nR2U0VDF2Z3pSanFid1VBeE9ZOC93cWxmNzF5a1VkYU8yN2NOcm50?=
+ =?utf-8?B?UTVTeUR6dTRFdEttenpEc1U1aGFSWkxrWktMOFZBQmM3T2ZNNWVQaFMzWGYz?=
+ =?utf-8?B?MFJ4dXdVYjNkaWNuWjNPbFI2LzNEU1orZTR0NTA5ZCtYM0NEUnlSM3RwajNE?=
+ =?utf-8?B?a3Mvcm5jYzMyUi9jTnd4SFN4MnFwUGU4RWQ1REtERUFqUEZRWmluOHdpdXRX?=
+ =?utf-8?B?ZndQUEdxdG1PaUxNd2poZHJ5b0ZsSUVZOTdzQVNoMGtmYmI0T0tMbk40Szl3?=
+ =?utf-8?B?WTdBazNZRWFZNTR1eGhtb1NpTHNza2RBS0NnVlZwUmJIMFZLRUIzNDYzLzJw?=
+ =?utf-8?B?bE1sRmJJYTFnK3h4VEhIQ1hleHFIY0xlc2RMRksycEhpamhaTG95QTNFNVAy?=
+ =?utf-8?B?TTR6U1krekxtaWFkQ1JKdWdmSGNMSGxSYzhEZGR1WU01RTVOODdtS21paU0x?=
+ =?utf-8?B?TW5UOUFFVGNTbjlzUEpYSElmbzE2OWRmdWxGbFo1TTdZQUhPaW5IZUdzV2FM?=
+ =?utf-8?B?TUFTcjkza05sdG5LQ3V0Wk9ITXVxeVlIcXJpbWVoTkxyWFVmNkVTcmZzQmJ4?=
+ =?utf-8?B?RzFJUzRwQ1hCTnM2VldQYjlHMjhHQ1FyZlROMXlzRENWQnd1L0h5VkZsL0tp?=
+ =?utf-8?B?UEJ6ZnZIbjM1d0RjNGNjVUlCaFluQjVmbExyTithVEhYbjB4aytWYnU2RGJn?=
+ =?utf-8?B?TUIzZzRET3dDaHk5QmZPV0poZUYzYW01SWIrdUpYMWF6VUM2QVpiSWtqd3J3?=
+ =?utf-8?B?R2RGdFAxdGhzUlROV1QxUFNrTys5a0RJSFRzTXg3NU9LZUdyRndyRHRCNmcv?=
+ =?utf-8?B?RkV2c2FPZUtDMjF3bnZsbFNkdTlhSkQxVFg3aW1iNDlxU0QxZWNPTjUrV0g3?=
+ =?utf-8?B?ak9HelB0MCtFTWxGa3Z4YUwrcS9HZmdpTWNTQk42RGI2ZlNCeUlmcW5GR0hF?=
+ =?utf-8?B?TjVUMGpoY1ArSnozbUIyMVd6WkFxSUNuMGFSRjZjNUJQTEJPOTA5dzJxYmcz?=
+ =?utf-8?B?SDFGZ2EzelQ2YzZ6VGYxaHFOdG9RUG5xK0pjZ1JCdUxKNkswdTg5UzVKUWxv?=
+ =?utf-8?B?dExZSVhSOUhKQ2NYOVN5MFpubHVYT0VWUFVzQlZ1VGJhYXVUa3BWS1JtQ2ds?=
+ =?utf-8?B?TkVxQjRadkUxcVlYMGVpdTFCZG5EbTZGdFRyNHVKSU1WTTRnaXQ5MFNkZEZm?=
+ =?utf-8?B?NTJDdzkrSTAzSGR2bVJ3Q0lvWVVUUWg1czNhVHpKVHhsZW1PeFcxd0ZkR01q?=
+ =?utf-8?B?dHdNc0xWc2FGVnFYMzY3ZitiaFlMYlg2cUpsRjR6dzE4S1lQV3RoNXBtRDhL?=
+ =?utf-8?B?dGVjTm83NDhZRUQ0Z1Q1TS82cmpoVmluK3JGbnY3U0d5dkovUk5YZ2RvNFdo?=
+ =?utf-8?B?Q1pNNjFxN25NU01sMitaR21VQ29sL0g1ZkE2WlZ6bWZpcG05YUZuYUxQWTk2?=
+ =?utf-8?Q?xM1j8Y=3D?=
 x-ms-exchange-antispam-messagedata-chunkcount: 1
 x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-2?Q?76Je7pQoZrtHvl0KfK9rUsUOY8ZtbIJOqMcDQO841u4SamSM0KuB5I5PUU?=
- =?iso-8859-2?Q?PPY2UJ9sWOKPQReRJeOhaZrum0KoZc6qjU2Oe1bao7L3HD/j9HLfSum/th?=
- =?iso-8859-2?Q?e3Qpb4j0mzye12qgg2kFA2uFyc5sceLOie7uDoURyc8EUDU03gTTg3iqBg?=
- =?iso-8859-2?Q?zosYPI7MGxR1fCWruvUcKUJ+yU5HQcrj+Ufcu1ePlpNGLwh8i6MsGVN7qm?=
- =?iso-8859-2?Q?J1E6XI/kzY2Qeu8yIv6VRwxn8UrAcetcaPgeEicLwpXwGYgyETgHyPAuta?=
- =?iso-8859-2?Q?svhMugfqNxcAU0VXR9cpY3Nt/GLuKRvuxvjwblJ1DU7DzIRdH84rxkRLO/?=
- =?iso-8859-2?Q?Nc6a+Vo/7jVYBbPaTeG3rZUDfDqGkCSueEAv2xke3liEd3L25S4xvoqDME?=
- =?iso-8859-2?Q?B7SqHncYrk+CNEAtnGQlbgcoQUR8ZwAg52lmVCOIjxAWhnLyDJG7hpLWSK?=
- =?iso-8859-2?Q?shpa1rabZC9UFBFEGgjV9qqw9V+ZWLmLUfjUw/sCTTSkQoZ/H1a7lm7YMW?=
- =?iso-8859-2?Q?gCHPG6OEGJ1zRaXkWShG3z4HbJ4mNVj4mRkoLVF9U7ZILAArK5by1M0Nbw?=
- =?iso-8859-2?Q?A4o0CdR2EQca/hZ8BSlggnCfsKmFyhBGUdyguVIKU1W/gWE+IROtXcACFI?=
- =?iso-8859-2?Q?oUzPETP1XZxRYOoY/DqwJdAo0ndulJuAmGEjJmVX6o1xeyVpzZD/QBJnWQ?=
- =?iso-8859-2?Q?rKZwOmFTFnNf2YSmo+JZ14fiLpAb6V/Jc7YWTYAQgblWU0pIgBY5j69FmS?=
- =?iso-8859-2?Q?Vv84TjQauLhx909cgfJl8YDCtH80qM5zx4KQJ8CKzSV9/PkYnloUnRKHgb?=
- =?iso-8859-2?Q?ubH/E0fjHmFvmg7KXZaSAhvvGcBbcd2o14NDQQgXvrOhE9CB4ePfGb3wGx?=
- =?iso-8859-2?Q?kY6Vue2DsfRE+mTYv6iCSrDaDJDCSHad46qLvzUKho0p4JC+eG3tS7NCXE?=
- =?iso-8859-2?Q?L2tGvLvW5/+nwQH/1qa+t/2bEBJyOAz22cvLAgCQPH77pu/Jf/orcNvb6C?=
- =?iso-8859-2?Q?qXe1eBeeRRF75a8gF2mtC1ACFlrGbcQsrjO4ak0WbGvO6Ef+3XGjLX+1vx?=
- =?iso-8859-2?Q?Xv4X9Q0wIHJzL2iERzhc4sVxbAt7ujQfIaucKUvaEMIw5jcceMAywOE2So?=
- =?iso-8859-2?Q?5hP9/M4ZysYQlViDHni6DauV/esNN7IdxpsU46qUC+WUdXqrLGcg8b0Kpc?=
- =?iso-8859-2?Q?spB/MJy3oMw4mipKAKTAqZwbTmNLzo+8F9yI33w0CAXIjNvpR8Vtw5wUjJ?=
- =?iso-8859-2?Q?2KsT290PvKL1ywfzPptneS84bZ1GU5n7I6Uulx0N3BHqSf08+vf/TR09NY?=
- =?iso-8859-2?Q?hHdsPQCWsLWz5gfzS8Sl3l4PD9RKW8nMuFIhScLSbTyDlJ0JQ/NbYbVHlb?=
- =?iso-8859-2?Q?VAYB8+zH4MSPALkc7h0IM8sl/S4k74c1I1DtgKMLrYkUJkT0M7p7JuByGG?=
- =?iso-8859-2?Q?aWnVOTFG1zpYNKEbyFpDj1ZGztH524kVWLkKzBQe14fdrswImFokbJYZtr?=
- =?iso-8859-2?Q?m0yXFtCVoaWKSeLFQ+o77YITbnyP07kLAOBz68kpAJireHS7MNAxYpPP0t?=
- =?iso-8859-2?Q?uIUyo1+0wAdLqClffGVWESv96hGuWG8B1wCRQ/zohzB7m6DYrDdJXhjn24?=
- =?iso-8859-2?Q?9t0I0Jy/jt/Q6i0Iu55Q2eISZ0GtXsyHRqEYSVX1KNCeSEv/gzLVf1HBgk?=
- =?iso-8859-2?Q?bEYw2o5e9YAUef2vgaI3TnVLbBEPIp0dynfVEvHXkJk/c0zRjgkDcPTxOm?=
- =?iso-8859-2?Q?ht8ql28drBZ4gWYbSK9sNae/5s40ekSl8B+7fz7vOodAk5?=
-Content-Type: text/plain; charset="iso-8859-2"
-Content-Transfer-Encoding: quoted-printable
+ =?utf-8?B?emM3ZkZWODBJTG8vM0o5eEpBaDd2anFQVmVkdHI5bUx4NU5QMjVLSG02WmlQ?=
+ =?utf-8?B?VUI5aldySGd4cEgrOFdyQWhVTld4L21RdjQ0aUIrbHQxelpveEk2WCtqQkkw?=
+ =?utf-8?B?V2FwOCtZZXZHRGw5T1VVRFRrUGhNZWo0VXZEZ1VXWTNnOTV4YlQ3ZXpSVXAv?=
+ =?utf-8?B?alJ6RzBtcG5LS1BrVzI4VDIwSDd3djRoQlV4L0hYMTJDMzVtT1hUT290Vzl5?=
+ =?utf-8?B?aTZrMXJ0cnFkc21PYWRGOCt3aTRjSHdxTG9lVHRqaVgwMWpyRDdsRkoxZndM?=
+ =?utf-8?B?d00zZlFaTTlBYWtucnh6b2ZoNEU5bm1iQ0ttYjN4ckNpaU1BTlBZMng2Z3My?=
+ =?utf-8?B?MTNmL1lKR2p2Vnl6djBZd1BZR1ZyYzh0UDFocGVoQVZwaGRRQkdMN3RwNG1D?=
+ =?utf-8?B?MXo3dGhUcUFzTjJMQk1QMGs0WHJYNzFaSW42ckJLdURUQ3FHeE5jZ1pFa1Ja?=
+ =?utf-8?B?RkQvMjZFZ2EzLzZKR1QzVVdDTDVybzljdVJnUFFoazQrbldrU0RCZ1hKRGkw?=
+ =?utf-8?B?WEdKL1VBczlsQTJtbUlPNDkrQWNidUhhUDZNZjZLY0N4UXcvMGMrbUp6WklO?=
+ =?utf-8?B?K0lvMytBdEpIUEt1bElQdHJoRkhXWFZrblJnOG0xQzJVV1Q2VGVLNFI2eVFh?=
+ =?utf-8?B?aXlLRmQ0ek0yQ3F1S3hoTXkyQWRFK2ZVMWNhRGVaR3ZVcXZtWGpKQkxsWERa?=
+ =?utf-8?B?ODdVSVRHck8zTW4zTXc0VVROTmRKQlhvYXkrU1ViMGdPMkttMUEvUkM0dFVw?=
+ =?utf-8?B?QXNXaFFaNmdJWTlvempqc0p3ajAzVjhqcjN2VHZHN2RVL2w2Zkg1QzVaaFNv?=
+ =?utf-8?B?MVpvMHdvLytwNldKbVE2MUR0RDBlTjhiZ1dCem5hNE96QjUxWFRwRGdCclRp?=
+ =?utf-8?B?SzRPQy9kQzFXN3RJMWRzd2xPUmtJQnJFbXB4eUtLZStmcGlsUkQ0UVNVV0tQ?=
+ =?utf-8?B?KzdTUm9ST1RrYXBIL2ZHNDdvN0JOYXErVkFRQVlVa2M1THVCK1h3a1dpQVd3?=
+ =?utf-8?B?NE5mUzlxcHZOMlQ1OWt0OUU1QXRCbGtUNm9JRTFuUDMvRVVvNW1RTTFialF6?=
+ =?utf-8?B?cHJzS1pXUnV0TWw1M011azNLMGNMczlQZzUxWmpOaVJoN1NFbFA5TnlHcnhv?=
+ =?utf-8?B?T2ZRNC9iSHpkTHd5UldlZWJjUTJZcFZLWHdmaXZqZGJVVllVcndXTEhDSjFM?=
+ =?utf-8?B?VkM0WlZmK1lZTDlrU1MwODFkTUNLUG5ONWF3UDh2d0RPakE4ZUw3cnlBWFpJ?=
+ =?utf-8?B?M05zakFweVZBRlFpZEw4OEpQR212QUVuejMzOUtIbnA1RGVFeW5VSzVKc1B3?=
+ =?utf-8?B?cG95eWpad3B1dlo5OTBPakRad1BnQXhqb0pZOFlrOGNnc2hOSUJ1V09ZVjRn?=
+ =?utf-8?B?YUUxYkRTditZOGpiUTlXb2FvUm8rUjlKNHdEUy9HVkJ6VVU5WGJHRU12Tzlj?=
+ =?utf-8?B?M004SWRnNE5UM3VuazM5ZHhIK20wNUx5QkkweWhVMnh2d1JHenVOSTBjOThN?=
+ =?utf-8?B?NGRZRkNpU25zT3F1dWNvcHQzbFdFRTF5cGFaRWtyR3g2dUk1RHczZ0VQaFk4?=
+ =?utf-8?B?a3FldjNmeGN5R3hoTGpRNFFtZmlIbXJUeFZHOTh0Z3UreDM1ZUlxenNPeDgz?=
+ =?utf-8?B?L0c5cDhaVk1CSTEzN201Zm44Mnp3Y3NIZTkzUkRRMGpSVWJWdy9CdVUxUFhu?=
+ =?utf-8?B?WVIxQ3VyTUtDZURSTFhheUx1Y05xREtISWE1Z3lYNnRONWhyQ01Rd1FyNVpB?=
+ =?utf-8?B?d0kwdTFhSFNjZDdtWHFCdEF1bThlMHl0VmhKNW1mQmdvSEJXSGN3VEVBOERM?=
+ =?utf-8?B?RkpWcEhXQnV1UEJ1ZGFwTHYvMTF6Q3FwRTcrVnNaaHFVVEdmcXJNNjgrd0lI?=
+ =?utf-8?B?RHlRUzhKb1p4aW9wY2Y4ZTNZbVNzUUpwWTJobkR5QWxuVkhFQ3MzS1lGSjlw?=
+ =?utf-8?Q?f9s4Tsn2wdA=3D?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <3DC3AD3921A0024994AD1F8A93EB3E21@INDPRD01.PROD.OUTLOOK.COM>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
+X-OriginatorOrg: sct-15-20-9412-4-msonline-outlook-63b91.templateTenant
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR21MB6683.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3b85291d-51e6-40f6-8091-08de8382d65e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Mar 2026 17:38:29.8155
+X-MS-Exchange-CrossTenant-AuthSource: MAUPR01MB11546.INDPRD01.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: 77917c18-0de4-48ad-4255-08de8382e870
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Mar 2026 17:39:00.1289
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: jUqdLbCYsoGpGPSescTtbkzRXuf7+v0K2NNhLXwUk2Eclsn00vRz/wKV/WrLh6U7hFL4XOYEJDR4VXWytX72ag==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SAWPR21MB6957
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MA0PR01MB8900
 
-> Subject: [EXTERNAL] RE: [PATCH] PCI: hv: Set default NUMA node to 0 for d=
-evices
-> without affinity info
->=20
-> From: Long Li <longli@microsoft.com> Sent: Thursday, March 12, 2026 3:33 =
-PM
-> >
-> > When a Hyper-V PCI device does not have
-> > HV_PCI_DEVICE_FLAG_NUMA_AFFINITY set or has an out-of-range
-> > virtual_numa_node, hv_pci_assign_numa_node() leaves the device NUMA
-> > node unset. On x86_64, the default NUMA node happens to be 0, but on
-> > ARM64 it is NUMA_NO_NODE (-1), leading to inconsistent behavior across
-> > architectures.
-> >
-> > In Azure, when no NUMA information is available from the host, devices
-> > perform best when assigned to node 0. Set the device NUMA node to 0
-> > unconditionally before the conditional NUMA affinity check, so that
-> > devices always get a valid default and behavior is consistent on both
-> > x86_64 and ARM64.
->=20
-> I'm wondering if this is the right overall approach to the inconsistency.
-> Arguably, the arm64 value of NUMA_NO_NODE is more correct when the Hyper-
-> V host has not provided any NUMA information to the guest. Maybe the x86/=
-x64
-> side should be changed to default to NUMA_NO_NODE when there's no NUMA
-> information provided.
-
-Tests have shown when Azure doesn't provide NUMA information for a PCI devi=
-ce, workloads runs best when the node defaults to 0. NUMA_NO_NODE results i=
-n performance degradation on ARM64. This affects most high-performance devi=
-ces like MANA when tested to line limit.
-
->=20
-> The observed x86/x64 default of NUMA node 0 does not come from x86/x64
-> architecture specific PCI code. It's a Hyper-V specific behavior due to h=
-ow
-> hv_pci_probe() allocates the struct hv_pcibus_device, with its embedded s=
-truct
-> pci_sysdata. That struct pci_sysdata has a "node" field that the x86/x64
-> __pcibus_to_node() function accesses when called from pci_device_add().
-> If hv_pci_probe() were to initialize that "node" field to NUMA_NO_NODE at=
- the
-> same time that it sets the "domain" field, x86/x64 guests on Hyper-V woul=
-d see
-> the PCI device NUMA node default to NUMA_NO_NODE like on arm64. The
-> current behavior of letting the sysdata "node" field stay zero as allocat=
-ed might
-> just be an historical oversight that no one noticed.
-
-I agree this was an oversight in the original X64 code, in that it sets to =
-numa node 0 by chance. But it turns out to be the ideal node configuration =
-for Azure when affinity information is not available through the vPCI. (i.e=
-. non isolated VM sizes). This results in X64 perform better than ARM64 on =
-multiple NUMA non-isolated VM sizes.
-
->=20
-> Are there any observed problems on arm64 with the default being
-> NUMA_NO_NODE? If there are such problems, they should be fixed separately
-> since that case needs to work for a kernel built with CONFIG_NUMA=3Dn.
-> pcibus_to_node() will return NUMA_NO_NODE, making the default on x86/x64
-> be NUMA_NO_NODE as well.
->=20
-> I've tested setting sysdata->node to NUMA_NO_NODE in hv_pci_probe(), and
-> didn't see any obviously problems in an x86/x64 Azure VM with a MANA VF a=
-nd
-> multiple NVMe pass-thru devices. The NUMA node reported in /sys for these=
- PCI
-> devices is indeed NUMA_NO_NODE.
-> But maybe there's some other issue that I'm not aware of.
-
-Extensive tests have shown defaulting NUMA node to 0 preserved the existing=
- behavior on X64, while improving performance on ARM64, especially for MANA=
-. This has been confirmed by the Hyper-V team, and Windows VM uses the same=
- values for defaults.
-
-Thanks,
-
-Long
-
->=20
-> Michael
->=20
-> >
-> > Fixes: 999dd956d838 ("PCI: hv: Add support for protocol 1.3 and
-> > support PCI_BUS_RELATIONS2")
-> > Signed-off-by: Long Li <longli@microsoft.com>
-> > ---
-> >  drivers/pci/controller/pci-hyperv.c | 3 +++
-> >  1 file changed, 3 insertions(+)
-> >
-> > diff --git a/drivers/pci/controller/pci-hyperv.c
-> > b/drivers/pci/controller/pci-hyperv.c
-> > index 2c7a406b4ba8..5c03b6e4cdab 100644
-> > --- a/drivers/pci/controller/pci-hyperv.c
-> > +++ b/drivers/pci/controller/pci-hyperv.c
-> > @@ -2485,6 +2485,9 @@ static void hv_pci_assign_numa_node(struct
-> hv_pcibus_device *hbus)
-> >  		if (!hv_dev)
-> >  			continue;
-> >
-> > +		/* Default to node 0 for consistent behavior across architectures
-> */
-> > +		set_dev_node(&dev->dev, 0);
-> > +
-> >  		if (hv_dev->desc.flags &
-> HV_PCI_DEVICE_FLAG_NUMA_AFFINITY &&
-> >  		    hv_dev->desc.virtual_numa_node < num_possible_nodes())
-> >  			/*
-> > --
-> > 2.43.0
-> >
-
+DQoNCj4gT24gMTMgSmFuIDIwMjYsIGF0IDExOjAz4oCvUE0sIEF0aGFydmEgVGl3YXJpIDxhdGhh
+cnZhdGl3YXJpbGludXhkZXZAZ21haWwuY29tPiB3cm90ZToNCj4gDQo+IERpc2FibGUgQUVSIGZv
+ciBJbnRlbCBUaXRhbiBSaWRnZSA0QyAyMDE4DQo+ICh1c2VkIGluIFQyIGlNYWNzLCB3aGVyZSB0
+aGUgd2FybmluZ3MgYXBwZWFyKQ0KPiB0aGF0IGdlbmVyYXRlIGNvbnRpbnVvdXMgcGNpZXBvcnQg
+d2FybmluZ3MuIHN1Y2ggYXM6DQo+IA0KPiBwY2llcG9ydCAwMDAwOjAwOjFjLjQ6IEFFUjogQ29y
+cmVjdGFibGUgZXJyb3IgbWVzc2FnZSByZWNlaXZlZCBmcm9tIDAwMDA6MDc6MDAuMA0KPiBwY2ll
+cG9ydCAwMDAwOjA3OjAwLjA6IFBDSWUgQnVzIEVycm9yOiBzZXZlcml0eT1Db3JyZWN0YWJsZSwg
+dHlwZT1EYXRhIExpbmsgTGF5ZXIsIChSZWNlaXZlciBJRCkNCj4gcGNpZXBvcnQgMDAwMDowNzow
+MC4wOiAgIGRldmljZSBbODA4NjoxNWVhXSBlcnJvciBzdGF0dXMvbWFzaz0wMDAwMDA4MC8wMDAw
+MjAwMA0KPiBwY2llcG9ydCAwMDAwOjA3OjAwLjA6ICAgIFsgN10gQmFkRExMUA0KPiANCj4gbWFj
+T1MgYWxzbyBkaXNhYmxlcyBBRVIgZm9yIFRodW5kZXJib2x0IGRldmljZXMgYW5kIGNvbnRyb2xs
+ZXJzIGluIHRoZWlyIGRyaXZlcnMuDQo+IA0KPiBDbG9zZXM6IGh0dHBzOi8vYnVnemlsbGEua2Vy
+bmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9MjIwNjUxDQo+IFNpZ25lZC1vZmYtYnk6IEF0aGFydmEg
+VGl3YXJpIDxhdGhhcnZhdGl3YXJpbGludXhkZXZAZ21haWwuY29tPg0KDQpMb29raW5nIGF0IHRo
+ZSBjb21tZW50OiBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTIy
+MDY1MSNjNCwgSSBhbSBkZWR1Y2luZyAyIHRoaW5nczoNCg0KMS4gWW91IG5lZWQgQUVSIGZvciBh
+IGRyaXZlciB5b3UgYXJlIHdyaXRpbmcNCjIuIEFFUiB3YXMgd29ya2luZyBiZWZvcmUgNi4xDQoN
+CkkgdGhpbmsgZmluZGluZyB0aGUgY2F1c2Ugb2YgdGhlIHJlZ3Jlc3Npb24gd291bGQgYmUgYmV0
+dGVyIHRoYW4gZGlzYWJsaW5nIHRoZSB0aGluZyBpdHNlbGYgcmlnaHQ/DQoNCkFuZCBpZiBkaXNh
+YmxpbmcgQUVSIGhhcyBpdHMgYmVuZWZpdHMsIHBsZWFzZSB3cml0ZSBhIHByb3BlciBjb21taXQg
+bWVzc2FnZS4NCg0K
