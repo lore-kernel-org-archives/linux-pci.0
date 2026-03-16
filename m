@@ -1,89 +1,48 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D3143264F3
-	for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 16:05:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1A753314B7;
+	Mon, 16 Mar 2026 16:19:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773677101; cv=none; b=FC7O9YUBhICNBFeDbvxstEknC08zENVIvTtk2eeqXR/iOklgZlK5SR4duso+yaDM64qp35W0GDvVqmeXljCN4rTNPQbou8ekTh3dCV3Y2EZ68KOiltpn2TkbjlisRb1uhVjlnZx9ZBGTRGgcT1j8zdIjbK8i5DTad5bS+XS1t5c=
+	t=1773677973; cv=none; b=HQop8F1icm+7iJuVa+GpFh8rczQStZgN9tqenzx72j62zNFdOw+kLf5xbqDcuxMQ5T2oiS1QSr2vm4MFRoyrQ1FGQ4zwGEo24RiQW7YAsrnRV5jdaJ213fY9eYZyUgHGjLWiyvOn6RLtAG5TpERok8sO+BMgzuIaSBjBkOBZl9o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773677101; c=relaxed/simple;
-	bh=pnPMIg6QAJhhfdXh1P/12ht0oe+xBK5/i0AcyCLYy1s=;
+	s=arc-20240116; t=1773677973; c=relaxed/simple;
+	bh=5bjCo0TGDuo9742ToYwUkLPrClBbE9NRT6kZSQZEydw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qfHHQxJV6TR5ROiapuwo9FXX938/G2tTvtN+rRzw1+ahAO74SRTDDlZnCq1DSo22zHKRy34jXDm+Fxr930CjZ5IWukKW7X9CoegKq326Xj9DCZmve0IfZcgIb44Hdnf/D7XKMclNJ5eTAYbxN65klNqAAuA55sQwB+KHs9Tag1M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=BmZHXHcG; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=u6oFq6mtqV6Kw71dYp02PzVdUokPBZiyBJ/2kUdiCN0lba1m6dgtGn/KmAmn30d/xnyJV/AMll38ahYS7A38xfONBTcv+GRl5RhTI09u52nReqD99cv8BQR+kgJjzxI6brmkzJCFpnLb16OaYBaZOS87pQVzabjlAQ0vnwA+Q3o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bCwelen1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="BmZHXHcG"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2b052ec7176so94085ad.1
-        for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2026 09:05:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1773677100; x=1774281900; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=x9RU4Mq6bXwi7763tJq20duY+x4lhVoegGX5yfdZIpA=;
-        b=BmZHXHcGJzYaI37c8BNWaiYCMivWtKyuq2oIQA+zrVNsgHcNRJeLBNiGc/b9XMmjox
-         REcRfSnIa+BHCwdtM/J7AKMJhmD2nKUcYn4H1Hjv/73RMiOwzjh35UY+YZVPTS59/iSM
-         1YPelz89za90uNuVPmnw8be1a4I2fB7rjQyjtuLZVxrHGvcCOmzm/0l1DbnaeiOQfqJR
-         SMYfQuFr+0qDrFL/mVHVsdybWPG9Eb30Ty70c2J2BSKDgHATcleAFEjy+g+IVbxgIjeG
-         3owJZuNbCyzutxl1wQ3Pu+flC0BLlyvCxBGQg0uf84ye4w1sr1EFdDKZcI1h1/aoyt1e
-         FQZg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773677100; x=1774281900;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=x9RU4Mq6bXwi7763tJq20duY+x4lhVoegGX5yfdZIpA=;
-        b=XidaIk5q80yCnG9HKCh7Rs0O6s2YBVqGMX9XySh8J/kHdDfUS1zL2IQL/WqTsm+E60
-         8roQGy0DxyOSoG2ox9atrsdwiu+VfwtSQBQmBc8XNYxg3dBhJDfHDdHLoneNsLsQhiqj
-         Ql4HXHxUjZ0Lrh3C9chTBF4mJdOl7c5SRVicvuoA/pXkOTCy+QZSWBBf9NGZujG+QmLS
-         QbU564A3hPZU8WKr+GF9/ax6hyf4yN4zz1hofsmkEwr3aOI/EUrFn6UN3nhZZQMEt/3G
-         rCSaxQopeOgOuqIqTEQrBjn8XTgl2xTlSO4tn+H4a3SpMJPBr5VdNNSWA/TBAXCjyqTr
-         Xa6A==
-X-Forwarded-Encrypted: i=1; AJvYcCVo5/4d5B5oUJOAs+qtMiv63FSSZ9IGPnTUmlipJ45poZ9Vi2RTgajCWr/hdXG0YKg3JNp8D882SXc=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyrb5CiFgFRk0Wf0zL9z07wf7X7siHtu+EhuWWlDEo2m+LWbegz
-	lifuCz676ioKL8WXslVVz6kzVDj8GSPiOIzqq3EQm0QYnatNnoObibWg2HylGFoZ0w==
-X-Gm-Gg: ATEYQzyY5PWiWVo1g8NWiEcRbKnTr3TTubf1TPiyqX87K0EkHdMjz2M6gYN8SAHTY6a
-	cfZbxkkrEkGHW4XvulQEeNp74nY+pmOz/0ga4ZpmuMwteJDCm30ByWiFXLH4I0SMeM4Mp8chfi1
-	S/+D8ewmImJd6K7DjO3ac5XMwdRF8JYbFSHwyAs5ZaIbM2vUtw+Dw1duFzqD033a1L39c112nmB
-	yTpm9BiR6ZcRGa+xc91ZoJDV8Bptafb/C8x6Z90KbUKKd0w45s3vfVXfq9ikn2gZWwkOLVfNWbS
-	2lYhPnL4z1QFBIYRsDvfjuZ8Ut4FN2Yt62k6GGM4LZ83zg3LsZh3Osl2O5cLbXESU0jTdLFp+5n
-	ezvS19FFqKAhz7UwrIM8gXB5OyJ9k7PVvl1VphwoIdIbCz/ZTrA4D5AHi9yd83W9FKAxc6eP1JM
-	sQkruVF07VoZZRYiGLeuWM7AgkTKOozns7ro8GL7K8PordVYQpxIceiM+VWr8X
-X-Received: by 2002:a17:902:ce0f:b0:2ae:575f:3755 with SMTP id d9443c01a7336-2b04215e0c7mr4424785ad.20.1773677099288;
-        Mon, 16 Mar 2026 09:04:59 -0700 (PDT)
-Received: from google.com (176.13.105.34.bc.googleusercontent.com. [34.105.13.176])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b048527a19sm71890555ad.7.2026.03.16.09.04.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Mar 2026 09:04:58 -0700 (PDT)
-Date: Mon, 16 Mar 2026 09:04:54 -0700
-From: Vipin Sharma <vipinsh@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: Alex Williamson <alex@shazbot.org>, 
-	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>, 
-	Alistair Popple <apopple@nvidia.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	Ankit Agrawal <ankita@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>, 
-	Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
-	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
-	Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org, kvm@vger.kernel.org, 
-	Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
-	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>, Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>, 
-	Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed <saeedm@nvidia.com>, 
-	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, Tomita Moeko <tomitamoeko@gmail.com>, 
-	Vivek Kasireddy <vivek.kasireddy@intel.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>, 
-	Zhu Yanjun <yanjun.zhu@linux.dev>
-Subject: Re: [PATCH v2 16/22] vfio: selftests: Add
- vfio_pci_liveupdate_uapi_test
-Message-ID: <20260314073250.GE4177610.vipinsh@google.com>
-References: <20260129212510.967611-1-dmatlack@google.com>
- <20260129212510.967611-17-dmatlack@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bCwelen1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3A19C19421;
+	Mon, 16 Mar 2026 16:19:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773677973;
+	bh=5bjCo0TGDuo9742ToYwUkLPrClBbE9NRT6kZSQZEydw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=bCwelen1ckcmq3UxUbo6m+GOGQhgrM+pHuoia68YNRFLRnJce+IFLurjFUabAg0Nw
+	 9lBtJO4AvQPz5inCT4sB2n5spzQzqFJKRwcStJNAkqHYFDkRPEKEmLqDQY4DBJDc/I
+	 1h1dNyXEh6Lx6EaD57ci6BKDy+7lPSPvu9RYm7ZN4Moe7kUPxks5Y6LPqCNqBJGmXV
+	 OFn4Qr1+owRWI+up5doQXg3TUbpExGHpPCAPI9ss/1xnliuElWfnxswC94hF+IeECY
+	 +Y4I3icBY78q2WiW6dDUOQyUoFk9AnHZ/h8sJj/yocnow7N1ydh4ftjjzFbnSrvwmr
+	 +0ZYqAVGFHF0Q==
+Date: Mon, 16 Mar 2026 17:19:26 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Christian Bruel <christian.bruel@foss.st.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Frank Li <Frank.Li@nxp.com>, Kees Cook <kees@kernel.org>,
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Bhanu Seshu Kumar Valluri <bhanuseshukumar@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: endpoint: pci-epf-test: Roll back BAR mapping when
+ subrange setup fails
+Message-ID: <abgtiT6aI9GMEADH@ryzen>
+References: <20260316140225.1481658-1-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -92,38 +51,50 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260129212510.967611-17-dmatlack@google.com>
+In-Reply-To: <20260316140225.1481658-1-den@valinux.co.jp>
 
-On Thu, Jan 29, 2026 at 09:25:03PM +0000, David Matlack wrote:
-> +
-> +TEST_F(vfio_pci_liveupdate_uapi_test, preserve_device)
-> +{
-> +	int ret;
-> +
-> +	ret = luo_session_preserve_fd(self->session_fd, self->device->fd, 0);
-> +
-> +	/* Preservation should only be supported for VFIO cdev files. */
-> +	ASSERT_EQ(ret, self->iommu->iommufd ? 0 : -ENOENT);
-> +}
-> +
-> +TEST_F(vfio_pci_liveupdate_uapi_test, preserve_group_fails)
-> +{
-> +	int ret;
-> +
-> +	if (self->iommu->iommufd)
-> +		return;
+On Mon, Mar 16, 2026 at 11:02:25PM +0900, Koichiro Den wrote:
+> When the BAR subrange mapping test on DWC-based platforms fails due to
+> insufficient free inbound iATU regions,
+> pci_epf_test_bar_subrange_setup() returns an error (-ENOSPC) but does
+> not restore the original BAR mapping. This causes subsequent test runs
+> to become confusing, since the failure may leave room for the next
+> subrange mapping test to pass.
+> 
+> Fix this by restoring the original BAR mapping when preparation of the
+> subrange mapping fails, so that no side effect remains regardless of the
+> test success or failure.
+> 
+> Fixes: 6c5e6101423b ("PCI: endpoint: pci-epf-test: Add BAR subrange mapping test support")
+> Reported-by: Christian Bruel <christian.bruel@foss.st.com>
+> Closes: https://lore.kernel.org/linux-pci/b2b03ebe-9482-4a13-b22f-7b44da096eed@foss.st.com/
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 14e61ebe1f11..f44c36f5cac5 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -898,16 +898,22 @@ static void pci_epf_test_bar_subrange_setup(struct pci_epf_test *epf_test,
+>  	bar->submap = submap;
+>  	bar->num_submap = nsub;
+>  
+>  	ret = pci_epc_set_bar(epc, epf->func_no, epf->vfunc_no, bar);
+>  	if (ret) {
+>  		dev_err(&epf->dev, "pci_epc_set_bar() failed: %d\n", ret);
+>  		bar->submap = old_submap;
+>  		bar->num_submap = old_nsub;
+> +		ret = pci_epc_set_bar(epc, epf->func_no, epf->vfunc_no, bar);
+> +		if (ret)
+> +			dev_warn(&epf->dev,
+> +				 "failed to restore the original BAR mapping: %d\n",
 
-for iommufd variant, should we mark test as skipped instead of showing
-it as passed?
+Nit:
+I would use a capitalized F:
+"Failed to restore ..."
 
-> +int main(int argc, char *argv[])
-> +{
-> +	int fd;
-> +
-> +	fd = luo_open_device();
-> +	if (fd < 0) {
-> +		printf("open(%s) failed: %s, skipping\n", LUO_DEVICE, strerror(errno));
-> +		return KSFT_SKIP;
+in order to match most other prints in this file.
 
-Both can be combined using ksft_exit_skip()
-
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
