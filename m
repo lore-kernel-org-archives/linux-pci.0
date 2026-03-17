@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4850736D4FC;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BE4E36E477;
 	Tue, 17 Mar 2026 04:30:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773721803; cv=none; b=R7B1W5yeUZVRHM1ShHYeB4z3QLFRuYAp3Vh+nENYwFz1qz3PuAIu30JdvmIZB8FqocOcywU9IapYbQ4mw9l10AUVJaHQvzBAPf7QS/obuQ6nFoz0mnAqV69Ar4JMHX7o4IeZwez5Fvkrl3xGR4VR7pD5RSyFX3y0fN/D0jUwj9c=
+	t=1773721803; cv=none; b=Gefb8AigL8ESDUKHy9YCe/0Fj7FKt7c/NOhe4/8W6lgDaNrWH6zvEnjYHpnkTKXE4lE5L5aetYMF/AtpXRAqja7RVbtS63jyUUdMkOAvfemCGYWz9nNfWMgGTtwisre8lly2C55akgze1OGttv82Gu2c23KkF1CjdopWdSGbcLk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773721803; c=relaxed/simple;
-	bh=90rMoHNtpikEEOX4hxu7KxohYPZTjuhD8cCrdkwCho4=;
+	bh=JoCqd4qTmhZAw9Ra/kUSAYchs5sr6tzJ0I7Nt266T1c=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=PhtqGCkrn9LI9Y+kYef3a8bDUuR1OmygU2krd4BZCxgapE9FOa3InxJodchcr+9FfSWph+JPexhhW6QkpPMk0NZuqKogFr4i1KmJFEebowW61WXSDfuibOwcPiGv943f6MU7qPNmkbHAAoOMrB/5WlF1J20wKYegcyZdXy4frGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IRsSVi1g; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=FO0qnqhU+OGqByebql6Wt4vPtL7bm0iN2RTkGs4kHONbD2mqPctE67+I1TVSNGruzexV59vF1yE5ggF9CeYDwpka80Dm0CuoJURE1EX7J5NfDW/6oJHjL5Xg18CWyTlTB0D+T7OUc1U4y0SFfuSzaOEn9mg3Vo6QRvrrcKFMPLc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AksK2gIg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IRsSVi1g"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id E18DDC2BC9E;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AksK2gIg"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id F2FFCC4AF09;
 	Tue, 17 Mar 2026 04:30:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1773721803;
-	bh=90rMoHNtpikEEOX4hxu7KxohYPZTjuhD8cCrdkwCho4=;
+	bh=JoCqd4qTmhZAw9Ra/kUSAYchs5sr6tzJ0I7Nt266T1c=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=IRsSVi1g7WlEkI8pVUKi9MtaGzLiC7I8sSTHvz48V2YOrK/KM9FE22hQBcbPbryT8
-	 yA+xtK3RoFt9b0q5UmlDSbflPzrNMW0y5XkJ5RvTyh0SDZ96Q2P3LhnG4EDV16ZlXb
-	 QkRSFYlyRgZT8msPmVaN9VKkPaVrIQn51JmraxmNY6sg/4murMKamcLcQlRPVEmL3X
-	 MquB+oKcFCiXEKF9GMKGaJKDY93UvyC3loIEr8gpGuEKa68efLsBhQZtzr7k6b/BLC
-	 qDqJeIp/8w3C+JzRXTnHlZUuEzZO68q+z+h+VniCM7D2BO651XS1uqTTO7GdJWEGOc
-	 MXMenGv8zVNkg==
+	b=AksK2gIgIPyYByAvwm5WugRT610NCVqFuKYafU0bCYZ60gDnWGeXiwVHFVaL6YGSn
+	 ow/8WubzwXhqDGYFdnjaLEfYYlg4aU+ewNE46ahRmPYXzDEH1Cap6d1WSKemLhu+Yd
+	 bwrMz806TDOcyCJRmyIHxAvopcxXA3F/FThclIdlxaJFVHKgK9030FvtcCjOFhg+0r
+	 P6C8nfw7r68JrCEWlYugAWkjmBIiUYq+KeR3+8RQ2TliARhyEi3BKcg14g73oIY83g
+	 NkajgP7LXWoKW2Oin66UgAnFgYHrDbg+oKoRR9SCykp594TNrdMUrq6O9gE3MIsysM
+	 mu6PtPTZB7QMw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCDADFB5EAF;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE445FB5EB6;
 	Tue, 17 Mar 2026 04:30:02 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Tue, 17 Mar 2026 09:59:52 +0530
-Subject: [PATCH v6 2/9] serdev: Add an API to find the serdev controller
- associated with the devicetree node
+Date: Tue, 17 Mar 2026 09:59:53 +0530
+Subject: [PATCH v6 3/9] serdev: Do not return -ENODEV from
+ of_serdev_register_devices() if external connector is used
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260317-pci-m2-e-v6-2-9c898f108d3d@oss.qualcomm.com>
+Message-Id: <20260317-pci-m2-e-v6-3-9c898f108d3d@oss.qualcomm.com>
 References: <20260317-pci-m2-e-v6-0-9c898f108d3d@oss.qualcomm.com>
 In-Reply-To: <20260317-pci-m2-e-v6-0-9c898f108d3d@oss.qualcomm.com>
 To: Rob Herring <robh@kernel.org>, 
@@ -67,18 +67,18 @@ Cc: linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-acpi@vger.kernel.org, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
  Hans de Goede <johannes.goede@oss.qualcomm.com>, 
- Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+ Bartosz Golaszewski <brgl@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2248;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1461;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=rr2lmVP0IC6lUnB67NHw0qDXlaCs5LnvUTeOalg9qug=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpuNjHP7OTLCI2v2JEVO7b4GY8c87LN9vRLUsYb
- MkGvu6rvciJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCabjYxwAKCRBVnxHm/pHO
- 9ZAHB/4rn5Keq3wWhvaowq3W9YqMd9yLEZHQV886wlmogjs0wgzzh5fJUBMd3yGfKKvdjklZ/NF
- W/hl8xIId+94P5p3blvB1vN/jSKEd2eOfPveBS+ThJ3ayG8UN6cS4gen7hHfv6aVfH49jeq8cMv
- WNCnmLGtS46/uxBpjJTI2Px2y3P3N6qxUZGJ3Bz4YBBJ+fTplV0mjkr9or9oveKKSnJox08CkJx
- Xj0FOj0AzGycp8KZUOu470j3cOn60Gj8h9c708Xyd7RolCH1sx82JIYdNgh+fnVRXsyYvWwUd/q
- jk9buKNVQVfoMZwNcZBda0Ge5kv6fSdI78HEiJQWZjrTYopO
+ bh=9JYNk+DMPq2LlZQfTiexJ4EeAYXDboalcaCh+TYovs0=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpuNjHCVxcR2eU20/cYNvdftr00vaJ2V7UvPmaH
+ ymEVn5El6iJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCabjYxwAKCRBVnxHm/pHO
+ 9ciYB/97N4zLhjZr8iceNjwbuRKrCaK0uDrMyc88oKP1joAcuT6eaUaj9C4ac965XDtFjvjgQcd
+ HuwZVvPK4edCTJ07RJUPS/RII7SYHgt1Qp8I6dgYWfHD+zpYh1AtJQ8h4rZ1SL6HnMX3FPKAoOc
+ +juE9NbztuXO6VsYVDmE3OPHix3rydnJf4nJKmI0Vzfdw2NZJOoUUaheS+m3P21exNVYXN4PyZr
+ Fbx8q8CPiqbYDQ8A3ghk65Fy5xPFJfpoLEVq1y9Q0bRNiYFgj5OxjuT7FhchuSArGheEnntt+T4
+ oiqiSZt1qADyi4zQnyeOBcuo4wbY2gNTewEHkCOn25cCPAN8
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -88,65 +88,45 @@ Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-Add of_find_serdev_controller_by_node() API to find the serdev controller
-device associated with the devicetree node.
+If an external connector like M.2 is connected to the serdev controller
+in DT, then the serdev devices may be created dynamically by the connector
+driver. So do not return -ENODEV from of_serdev_register_devices() if the
+static nodes are not found and the graph node is used.
 
 Tested-by: Hans de Goede <johannes.goede@oss.qualcomm.com> # ThinkPad T14s gen6 (arm64)
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- drivers/tty/serdev/core.c | 19 +++++++++++++++++++
- include/linux/serdev.h    |  9 +++++++++
- 2 files changed, 28 insertions(+)
+ drivers/tty/serdev/core.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/tty/serdev/core.c b/drivers/tty/serdev/core.c
-index 8f25510f89b6..bf88b95f7458 100644
+index bf88b95f7458..e9d044a331b0 100644
 --- a/drivers/tty/serdev/core.c
 +++ b/drivers/tty/serdev/core.c
-@@ -514,6 +514,25 @@ struct serdev_controller *serdev_controller_alloc(struct device *host,
- }
- EXPORT_SYMBOL_GPL(serdev_controller_alloc);
+@@ -12,6 +12,7 @@
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/of.h>
++#include <linux/of_graph.h>
+ #include <linux/of_device.h>
+ #include <linux/pm_domain.h>
+ #include <linux/pm_runtime.h>
+@@ -561,7 +562,13 @@ static int of_serdev_register_devices(struct serdev_controller *ctrl)
+ 		} else
+ 			found = true;
+ 	}
+-	if (!found)
++
++	/*
++	 * When the serdev controller is connected to an external connector like
++	 * M.2 in DT, then the serdev devices may be created dynamically by the
++	 * connector driver.
++	 */
++	if (!found && !of_graph_is_present(dev_of_node(&ctrl->dev)))
+ 		return -ENODEV;
  
-+#ifdef CONFIG_OF
-+/**
-+ * of_find_serdev_controller_by_node() - Find the serdev controller associated
-+ *					 with the devicetree node
-+ * @node:	Devicetree node
-+ *
-+ * Return: Pointer to the serdev controller associated with the node. NULL if
-+ * the controller is not found. Caller is responsible for calling
-+ * serdev_controller_put() to drop the reference.
-+ */
-+struct serdev_controller *of_find_serdev_controller_by_node(struct device_node *node)
-+{
-+	struct device *dev = bus_find_device_by_of_node(&serdev_bus_type, node);
-+
-+	return (dev && dev->type == &serdev_ctrl_type) ? to_serdev_controller(dev) : NULL;
-+}
-+EXPORT_SYMBOL_GPL(of_find_serdev_controller_by_node);
-+#endif
-+
- static int of_serdev_register_devices(struct serdev_controller *ctrl)
- {
- 	struct device_node *node;
-diff --git a/include/linux/serdev.h b/include/linux/serdev.h
-index 0c7d3c27d1f8..188c0ba62d50 100644
---- a/include/linux/serdev.h
-+++ b/include/linux/serdev.h
-@@ -334,4 +334,13 @@ static inline bool serdev_acpi_get_uart_resource(struct acpi_resource *ares,
- }
- #endif /* CONFIG_ACPI */
- 
-+#ifdef CONFIG_OF
-+struct serdev_controller *of_find_serdev_controller_by_node(struct device_node *node);
-+#else
-+static inline struct serdev_controller *of_find_serdev_controller_by_node(struct device_node *node)
-+{
-+	return NULL;
-+}
-+#endif /* CONFIG_OF */
-+
- #endif /*_LINUX_SERDEV_H */
+ 	return 0;
 
 -- 
 2.51.0
