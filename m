@@ -1,180 +1,175 @@
-Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013051.outbound.protection.outlook.com [40.107.201.51])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAAE43BAD9D;
-	Tue, 17 Mar 2026 12:24:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.51
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773750261; cv=fail; b=CsNHkqqysOtPzcmnxb8bpZkLEYRzwX/hGdiwrkJpWlOOzK8r10L6jIR3zc18Id/m8p58Or7OkfxjNBrIzLTC2b+BDQpuYkpfCmq4QtITkFRQWzfz/6A4PPe6zvzv0tilqbzrrYy2Bnlj2AZcLL1TM2d0C95HtVouogrbz0liDaM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773750261; c=relaxed/simple;
-	bh=QUjELgy6K0n0xaRYJR5iZs3C7Jf2pUuNA+WRvrzUN44=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=eK1xyCi8bcaSe5rHE84U8f1cAtHwbilfHtxrvqm2H63rVUA1CIPuh8B2/bQT26DToTPcdGlJpLIDc6XGij5uZc3CK7ZH5T0b4fMBlOgqqQnkAqsPBH7EJKiBEeik0I6BaG+SPJ+xa9n+6KSoM7KK6bIHyqVXCRljpQiGA6ueScg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=Q325VesM; arc=fail smtp.client-ip=40.107.201.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34C6E3C661B;
+	Tue, 17 Mar 2026 12:59:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773752354; cv=none; b=CgsGNrdpVGgJZPq8lDj3rDkJB5BeE5lGDqhvF7vp0TuTHnd/5FNiZdJTn5x2lF4s9Dy/p5rbMkNk7Ad79zeXxSTbjuV+TcQ23Zfh7YvD2oZRO5H3wNh93SU3ACL/qrLI3MSddzc2L20gQvRE3r9DIvZwjgGAdvME1n5072ufkGA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773752354; c=relaxed/simple;
+	bh=fa+UCbtwReJTJptJMdx/NTEP96lWAeW85C7bH3Iv6iA=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=EqiWrmOj79tudF9QKTAlo9C/hevJdmJ8PRbtrjrvBVPdGQlxbMQFakd4yXuQ2ITh+I+CecdeeIRHNS6cK0F9BdXvK/W8rnmVdJsLFTOdXIPLoGLYIYUxIK9DUpNazNimBdbx4bHBSxPLOhO3pB71PPvUGaSA+2NxEtpCU1ski5s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=cntabcQn; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="Q325VesM"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=MQVpE1T20wnpZBXVXmDN7UA1FLjvtjdczMPN31Jtx7n3FHrM1kPr2jiuAGX5SZaefFoW1NYUvKoR8ah68zNa19PyOtstqA0qvUcOOYhB4dGZnLjJWJlMa54N3xNMaiyBcFjO5bABv5H23k3+TOiitAPHzn8RsAfrEGyJ90r93z31Pl7mtE54nEjq3YDj2IZ2ZLXneVjADAOHBHa6ZLg+rzEjGQu/37EiqA3O2iZ4UhuedkyRetdaPYK4LwkNfu7ScXXJDqlb+YXFJIf74LGXMhFJ5Iw8sAt5Ip8O9t2qIGq4F2LjnIOn1RZsvGni4QZl/5bWNbQJBaVqHD6ARyVm7A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=DsPL8Jt8R3lpGEKh0g3+vGabPUQripbFnvgmsfJ17Fc=;
- b=KMkiWBKlTNGEC6ZZN2Tv8A549jjqQcYXlUbWljwtCig6gUNwwJi3JzWCIWp1+otcJjJYnWPJg7+pmx07FGv/aQ1BozxLPAr7+1WKqt05g+QPtu5gKt4rYTf1AQ/+v4+2cub3uf7coYrajsSDb4VQN7PSQwOwjN7Mzo107ynvs7ZwNNFqBKgMOozVjsVGcGUu1/XjXNOl8oWJTwtDdZoxm+HUEt+u5olvBYKao/ADVN4E8NoRgX8KzOMHYlzBtl4JWoRK0yXduWKesLUtYCuzff3MqEkkKbiDZ/9Qav8SratvPDLZyYLYVI0zfQhi5NqteTN+epO1vkZ6xeiGwXvIJw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=DsPL8Jt8R3lpGEKh0g3+vGabPUQripbFnvgmsfJ17Fc=;
- b=Q325VesMD5u9TkcY8azZxgroNzSop2oQMzMh2twTgHsPTW4oZweLcIBzgXFby/EReAykRsUvTwicn4z9s/WLl+1QB+EbvlRyL5ktuiD/dHsx7W+LbjvqVDD18Y3Bysy8uyeHh94PnMtCP8LDLmHJMKrs2iK0rVUEGJIOOIPeKQY=
-Received: from SA1PR12MB8120.namprd12.prod.outlook.com (2603:10b6:806:331::16)
- by DM6PR12MB4434.namprd12.prod.outlook.com (2603:10b6:5:2ad::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Tue, 17 Mar
- 2026 12:24:17 +0000
-Received: from SA1PR12MB8120.namprd12.prod.outlook.com
- ([fe80::2fd:1a4e:2042:7dd3]) by SA1PR12MB8120.namprd12.prod.outlook.com
- ([fe80::2fd:1a4e:2042:7dd3%5]) with mapi id 15.20.9723.016; Tue, 17 Mar 2026
- 12:24:17 +0000
-From: "Verma, Devendra" <Devendra.Verma@amd.com>
-To: Vinod Koul <vkoul@kernel.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>, "mani@kernel.org"
-	<mani@kernel.org>, "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Simek,
- Michal" <michal.simek@amd.com>, "Verma, Devendra" <Devendra.Verma@amd.com>
-Subject: RE: [PATCH v13 0/2] Add AMD MDB Endpoint and non-LL mode Support
-Thread-Topic: [PATCH v13 0/2] Add AMD MDB Endpoint and non-LL mode Support
-Thread-Index: AQHcsUjRM/Dpzwvbc0it/CXmLkvpbbWymKgAgAAWBZA=
-Date: Tue, 17 Mar 2026 12:24:16 +0000
-Message-ID:
- <SA1PR12MB8120B73E1F0B6BB8035AA7219541A@SA1PR12MB8120.namprd12.prod.outlook.com>
-References: <20260311111834.3750297-1-devendra.verma@amd.com>
- <abk04pkF4mOR0rKP@vaman>
-In-Reply-To: <abk04pkF4mOR0rKP@vaman>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
- MSIP_Label_f265efc6-e181-49d6-80f4-fae95cf838a0_Enabled=True;MSIP_Label_f265efc6-e181-49d6-80f4-fae95cf838a0_SiteId=3dd8961f-e488-4e60-8e11-a82d994e183d;MSIP_Label_f265efc6-e181-49d6-80f4-fae95cf838a0_SetDate=2026-03-17T12:23:20.0000000Z;MSIP_Label_f265efc6-e181-49d6-80f4-fae95cf838a0_Name=Open
- Source;MSIP_Label_f265efc6-e181-49d6-80f4-fae95cf838a0_ContentBits=3;MSIP_Label_f265efc6-e181-49d6-80f4-fae95cf838a0_Method=Privileged
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA1PR12MB8120:EE_|DM6PR12MB4434:EE_
-x-ms-office365-filtering-correlation-id: 44592358-c74f-4337-cf8e-08de84201ba4
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|366016|376014|1800799024|38070700021|56012099003|18002099003|22082099003;
-x-microsoft-antispam-message-info:
- SLwtzQxVLpq0gNPtoP8fXYjkMefjDdtXXiB+0XKidwmLDWAN3H1tku8llVLbZoTUPyUCGn55ud3NR+446DC8Kb5qzR3hEWtQDFFRJJNXXY7jSN2V3pF5yVVGd+HANbyZ2z7bA+JRSEygiITK5Pslm5U+lEWiKfRlHmGnFpCJFkJRjrFzPl+Y4HqlCke1cSqL05TanFydHfqZXvYFby1uEDywLg/14vWrZ/Ml2WNd39hkosFoa8nzA1G8oN80U1cv9oF2CmZZYoAIBMW3sKGErMuR7E3UwODWRdDVGmo3xvxscNyMB9X4Wfpu8qx8/I5JHFvQQkVlZ5J75g1KxMmybraNGmA3EIXRrbNZso+k4YVCdwm1DmKGGmO1+I22in6DrxaL7XUb0dSLKZvjKuLVQ33dBSYj96VuGpQsiX2L7GWovXz9TJQ8SFkxMEv7SFpczek6Ofz2TEr04WQr7bgUFtiVSPsNM55OaiAYdMw9MD6Fbsh/YJ1qV+UYV0xIgmP5oT8+MDmxEhZ3r22B0lZNpcbV+BTij+NKxhQ5QvflfGkZmKuOdb6SVqMAT76ewy8JawhY+zSG78XpYlLSa215jh+LNjwTVgaKaLdl0nkqHIKxlYDY6chH2+gGI1nsxlPKRyCpqlCTcslYDAo3ldN+KeIvXyHMBK+upwHl8o2d4JX+zuvSrAO5DhmYT4/RR8bla8YYspGOwgd/EPbGZPIyxVBCxwImZznsXfEymSM2DeUz+oddxkRuNC4SshATBvPA3D7dDVBCKYy01BW3gR+OfiaFQzXQ+//5wqVol4DkHBo=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB8120.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(38070700021)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?whG7QFu7oDICjxZvlNtxkY5hMzzDI8GJYRZT/r8gfBaGVxgI1Jp6+/7Sal8M?=
- =?us-ascii?Q?gFVqlm5ySeTY3R3HHokR1beMzg0YSHeGFIA0FC0vhGh+309oyhd3nBoVab5Y?=
- =?us-ascii?Q?agGaADkovG47+dNkx0xJjTSxzxNfWodnLsWd02mTrFpYoSQb2XgyEpqV0k//?=
- =?us-ascii?Q?ICc4K+A+6T577agVTF+WENL6YUeV/wHy6AQxVpPQ7Tj6ESyPbHjzG/S3WDxF?=
- =?us-ascii?Q?5OWDQnf4Ca9QObGzXWfwn4Z4vKKBfs2AGSrWV4QUssJGL72lqMeCF/vZul5P?=
- =?us-ascii?Q?vtz3Bz9PPp9akhf+qahiOKpLuuvuzDJAK7ao76O+PtrBodr4aYEvWvZ9jlUj?=
- =?us-ascii?Q?ya1fhmTiVGQukzv6i0x6JxmJVHLBFB4+IJNiNH7O9MUDNwRfgM8HKPkE8hE3?=
- =?us-ascii?Q?1mnfeMVAsYiUVPhfYW20n/5qnOpl2n7x9OI1geQGjh5rnNNiTL6OdoLBol/e?=
- =?us-ascii?Q?eDFs/SEuVGhDS+5/c0x6cfO19dGs614ZjGSe8U2rTicbJSAuKb7JPu4zv6Ok?=
- =?us-ascii?Q?xEWl9q+HFkaA2wWnxq12CzG5uTQ2lu2aMlwglOTaQGWJmysR7tsltotK0aUM?=
- =?us-ascii?Q?kealDPRpbOfAz63J+kcc6VE8pwaHDKShJ1V09ElnxB2ZOXBkS2kgZmvae7NL?=
- =?us-ascii?Q?kllFjEiUyAkwySukOKzueTKPYgujkxVbN+dTHTKiwbj2EvOfMTE+8eU0huKF?=
- =?us-ascii?Q?6KJ+2IMfWFZgm+UXqs+6KhNjABezv/cmooZXKvrmIkjLMLAAdMZVFqeKpKv8?=
- =?us-ascii?Q?fP6boTOuIJ/EBqm/BjMm+rZTMqRJwG5G6/WFp+h/gm5ILsfg5x76HfCb3A4o?=
- =?us-ascii?Q?IBMC7AOIh3o8tWk9uAmatQhyAn9UkqAWY6d43uDmSaihq7RpaWHhkEFx+7x9?=
- =?us-ascii?Q?j2DzhQFUR7lnpfPM1jZtr4OpDsNYPNSq0lOY25WWoKUC1MHTXu0BCjnOF0XO?=
- =?us-ascii?Q?RsKJDXwes1k46ls8jsuLPKcmdO+UN9plq0s08wngqJloWCTyAjZTZ69j6r/n?=
- =?us-ascii?Q?clTIvR6wVVKjCgXm5uXOlVD50+Eqw9JOkRq+GDI2yozyBNudUW1s/MeKxrlZ?=
- =?us-ascii?Q?RTUgJs/5xTPboUdVW+seJPTh18IaZ5QdOy2ph4feLj/oS/9OnwXOXA1xxT75?=
- =?us-ascii?Q?7mRmByTUtOgg6xvhv3xWfE3JNdJgulyfFkpzMxriF/o+nqFzZ2fiLodZ/hLQ?=
- =?us-ascii?Q?Daryva1vZf98+dm4ueGcJWQODUWcFyEXlj0/NC82HQcHCH2wX4R4mD5+u4pO?=
- =?us-ascii?Q?ILSYgVqjp5tuswXvfFSJJKR12nHaNLtgGO7uCWlMBNYN2mnuFxnZt/GoJ1r5?=
- =?us-ascii?Q?83ncNG20gDZmP4fU9QTztqVbHQIeyYVZ6RMVgdf1BeRqbh8rlYB3UroJRlyy?=
- =?us-ascii?Q?KY2juTZylgv20NUplZ8A+0KxGkJPwemTO/EGF71bTNhZQfunBFyb1nSQuuUT?=
- =?us-ascii?Q?/cIvLZ1NwIn+9N9wszoKOwBKHWNliwNv/Bwd++CWbQwNN9HG1FxPcQ9GkZpm?=
- =?us-ascii?Q?xpCjV4jJP2LGQ1Ji5iq2lrpIQ0QjO1bUrk7tP2SnwiX7o4VRv1VEJtUUj5zC?=
- =?us-ascii?Q?Tl8hpCRN6X/qFIfS5zc1ch6yGU2+DlTzUfLHWVY+NPSDvBB6JHmfpKV9Ppyu?=
- =?us-ascii?Q?osbEeF53v3qcDcxsTKIeWx60hi4bkUkLBsc0imcdyHwDBGE7spQFjB3+OFu6?=
- =?us-ascii?Q?sZadsS3RLAP8CwD7DhW9icFpeRoHvwzJrlKcMptntpr3Iyqo?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="cntabcQn"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62H7hmBl857314;
+	Tue, 17 Mar 2026 12:59:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=DLefWu
+	Qx1WI+Y5vD2GhByCm3kkB0v+kz8E76A14iFbs=; b=cntabcQnWDTSI8gHacK8ln
+	J+v5JCiN7rRG6oMjc4cy2Ia8FAvzpu0ek/U52PVwVeFF3JqQpl5M59LNJ3wn8N4H
+	yqkBIhvkQFjiwQYjUjaWRKXbBcwAsH1L3qGPDI3GNIjCen7HrAofATOH7js7PdFJ
+	vfw7tv2bVAzq2ibBV8/5oTXeIokqRT1RYLQBzTEMh33UFWn0VNu76clkM5UXZIl0
+	XLF1dLprflTeOjgbsJLKP/iX5ESmBoWstIngqH+cwXf3G5gwbYSwOVUVQ25Q+EJp
+	OFripxE5grs31g8GOpJzeCv1WwdIuMbM6ViDE76L5M4vlb2DI+onbF4d6dG6Q+Cw
+	==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cvx3cvb25-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 17 Mar 2026 12:59:08 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62HBLoku014113;
+	Tue, 17 Mar 2026 12:59:07 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4cwjcy19fm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 17 Mar 2026 12:59:07 +0000
+Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
+	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62HCx3L615073596
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 17 Mar 2026 12:59:03 GMT
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 6338F20043;
+	Tue, 17 Mar 2026 12:59:03 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 119FC2004F;
+	Tue, 17 Mar 2026 12:59:03 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.87.85.9])
+	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Tue, 17 Mar 2026 12:59:03 +0000 (GMT)
+From: Julian Ruess <julianr@linux.ibm.com>
+Date: Tue, 17 Mar 2026 13:58:49 +0100
+Subject: [PATCH v5 1/3] vfio/pci: Rename vfio_config_do_rw() to
+ vfio_pci_config_rw_single() and export it
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR12MB8120.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 44592358-c74f-4337-cf8e-08de84201ba4
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Mar 2026 12:24:17.0336
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: HDUSL2GAH48ze3/1b/ze3tQxcsu4sJlRUZjD029H4AH2uaQWUmcXsB3ORSa2i41hFKPXvZvOnp107HZawQiSmg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4434
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Message-Id: <20260317-vfio_pci_ism-v5-1-b73248b4e576@linux.ibm.com>
+References: <20260317-vfio_pci_ism-v5-0-b73248b4e576@linux.ibm.com>
+In-Reply-To: <20260317-vfio_pci_ism-v5-0-b73248b4e576@linux.ibm.com>
+To: schnelle@linux.ibm.com, wintera@linux.ibm.com, ts@linux.ibm.com,
+        oberpar@linux.ibm.com, gbayer@linux.ibm.com,
+        Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+        Yishai Hadas <yishaih@nvidia.com>,
+        Shameer Kolothum <skolothumtho@nvidia.com>,
+        Kevin Tian <kevin.tian@intel.com>
+Cc: mjrosato@linux.ibm.com, alifm@linux.ibm.com, raspl@linux.ibm.com,
+        hca@linux.ibm.com, agordeev@linux.ibm.com, gor@linux.ibm.com,
+        julianr@linux.ibm.com, kvm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-pci@vger.kernel.org
+X-Mailer: b4 0.14.2
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=arO/yCZV c=1 sm=1 tr=0 ts=69b9501c cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VnNF1IyMAAAA:8
+ a=mooU_oynDD9EFzHbF-IA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE3MDExMiBTYWx0ZWRfX8i03ZuIQ9XxL
+ +8foNVf0Rzs198zCShlFtyqjt7BxhBxfN+9iLgs7blEjSZPZdoD3ofiLrMU0urIMhU8SLtqdDVF
+ vMN6QQ5Qp8eSwwpxySe0bxELRZNiuVQFeT6P4PG9BpB3YSkQ8aa68aZxRJiHP74z+DfHj8v12Z+
+ mX9P6zUHlNrm/bELD8H9T2VyVHlnIVm/zUF2VoSffaYtq09cuHlUDcWo1Ax8yTlLxjSkJ4dPa6b
+ tUR4q7HDt5fCu8s87YBrqQQzadTW7H3e4Pck8Jc1iH5eB+hn5iYgwv8QSnUfWsDj6iMDv9WkYZB
+ f+9FGwsTFxty+Ejy1fT6Et+Ysh80NdNC3LOUnc11WTTP2XCHTzFIYatROks0nibVZIs9eG71Nvn
+ LMJsSjoomJ4TkKk1Lt+ST2L3+LzCA5+1EH00fWY0KToy82W7zDoAzp+inX+E4AoVe4XJF5jfHzI
+ vXrvjuXzpB4Ml9dXWsA==
+X-Proofpoint-GUID: gCSg3scU304Zoo3kCWz-53A5wgvrqXxD
+X-Proofpoint-ORIG-GUID: gCSg3scU304Zoo3kCWz-53A5wgvrqXxD
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-17_01,2026-03-17_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 spamscore=0 lowpriorityscore=0 impostorscore=0
+ adultscore=0 bulkscore=0 suspectscore=0 malwarescore=0 clxscore=1015
+ phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
+ definitions=main-2603170112
 
-[Public]
+A follow-up patch adds a new variant driver for s390 ISM devices. Since
+this device uses a 256 TiB BAR 0 that is never mapped, the variant
+driver needs its own ISM_VFIO_PCI_OFFSET_MASK. To minimally mirror the
+functionality of vfio_pci_config_rw() with such a custom mask, export
+vfio_config_do_rw(). To better distinguish the now exported function
+from vfio_pci_config_rw(), rename it to vfio_pci_config_rw_single()
+emphasizing that it does a single config space read or write.
 
-Hi Vinod
+Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+Signed-off-by: Julian Ruess <julianr@linux.ibm.com>
+---
+ drivers/vfio/pci/vfio_pci_config.c | 8 +++++---
+ drivers/vfio/pci/vfio_pci_priv.h   | 4 ++++
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-Thank for reporting the error. I have submitted a new (v14) of this patch s=
-eries, please check that series.
+diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+index b4e39253f98da61a5e2b6dd0089b2f6aef4b85a0..fbb47b4ddb43d42b758b16778e6e701379d7e7db 100644
+--- a/drivers/vfio/pci/vfio_pci_config.c
++++ b/drivers/vfio/pci/vfio_pci_config.c
+@@ -1880,8 +1880,9 @@ static size_t vfio_pci_cap_remaining_dword(struct vfio_pci_core_device *vdev,
+ 	return i;
+ }
+ 
+-static ssize_t vfio_config_do_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+-				 size_t count, loff_t *ppos, bool iswrite)
++ssize_t vfio_pci_config_rw_single(struct vfio_pci_core_device *vdev,
++			      char __user *buf, size_t count, loff_t *ppos,
++			      bool iswrite)
+ {
+ 	struct pci_dev *pdev = vdev->pdev;
+ 	struct perm_bits *perm;
+@@ -1970,6 +1971,7 @@ static ssize_t vfio_config_do_rw(struct vfio_pci_core_device *vdev, char __user
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(vfio_pci_config_rw_single);
+ 
+ ssize_t vfio_pci_config_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+ 			   size_t count, loff_t *ppos, bool iswrite)
+@@ -1981,7 +1983,7 @@ ssize_t vfio_pci_config_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+ 	pos &= VFIO_PCI_OFFSET_MASK;
+ 
+ 	while (count) {
+-		ret = vfio_config_do_rw(vdev, buf, count, &pos, iswrite);
++		ret = vfio_pci_config_rw_single(vdev, buf, count, &pos, iswrite);
+ 		if (ret < 0)
+ 			return ret;
+ 
+diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
+index 27ac280f00b975989f6cbc02c11aaca01f9badf3..28a3edf65aeecfa06cd1856637cd33eec1fa3006 100644
+--- a/drivers/vfio/pci/vfio_pci_priv.h
++++ b/drivers/vfio/pci/vfio_pci_priv.h
+@@ -37,6 +37,10 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_core_device *vdev, uint32_t flags,
+ ssize_t vfio_pci_config_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+ 			   size_t count, loff_t *ppos, bool iswrite);
+ 
++ssize_t vfio_pci_config_rw_single(struct vfio_pci_core_device *vdev,
++			      char __user *buf, size_t count, loff_t *ppos,
++			      bool iswrite);
++
+ ssize_t vfio_pci_bar_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+ 			size_t count, loff_t *ppos, bool iswrite);
+ 
 
-Regards,
-Devendra
+-- 
+2.51.0
 
-> -----Original Message-----
-> From: Vinod Koul <vkoul@kernel.org>
-> Sent: Tuesday, March 17, 2026 16:33
-> To: Verma, Devendra <Devendra.Verma@amd.com>
-> Cc: bhelgaas@google.com; mani@kernel.org; dmaengine@vger.kernel.org;
-> linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Simek, Michal
-> <michal.simek@amd.com>
-> Subject: Re: [PATCH v13 0/2] Add AMD MDB Endpoint and non-LL mode
-> Support
->
-> Caution: This message originated from an External Source. Use proper
-> caution when opening attachments, clicking links, or responding.
->
->
-> On 11-03-26, 16:48, Devendra K Verma wrote:
-> > This series of patch support the following:
-> >
-> >  - AMD MDB Endpoint Support, as part of this patch following are
-> >    added:
-> >    o AMD supported device ID and vendor ID (Xilinx)
-> >    o AMD MDB specific driver data
-> >    o AMD specific VSEC capabilities to retrieve the base of
-> >      phys address of MDB side DDR
-> >    o Logic to assign the offsets to LL and data blocks if
-> >      more number of channels are enabled than configured
-> >      in the given pci_data struct.
-> >
-> >  - Addition of non-LL mode
-> >    o The IP supported non-LL mode functions
-> >    o Flexibility to choose non-LL mode via dma_slave_config
-> >      param peripheral_config, by the client for all the vendors
-> >      using HDMA IP.
-> >    o Allow IP utilization if LL mode is not available
->
-> There is trailing whitespace in patch2 and even then it fails for me on
-> dmaengine/next. Please rebase and resend
->
-
-Corrected and sent an updated series of the same patches.
-
-> --
-> ~Vinod
