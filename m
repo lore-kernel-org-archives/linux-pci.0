@@ -1,166 +1,215 @@
-Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11010070.outbound.protection.outlook.com [52.101.228.70])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEB6C35949;
-	Tue, 17 Mar 2026 23:31:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.70
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773790311; cv=fail; b=ocITYP+RaYDqKrNQPLO4LbvqsaZsiaW3/n7iWXnbDf95nDLhpCoJko6jyfSXgbDN0OHwkQkXBM6hYtxzVwjPvjfycSo+G6lrTVS4LnzmskXbRCsy/rOCDMj00MObIYtjnVr5vxW9MsR3yoVqR0IHSzeXVBQL9OHx0oJUOgqa6qM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773790311; c=relaxed/simple;
-	bh=xNvcNrmaJwdvQTsCg7aUv71kw4kH9NTTG4U3UNGC0IM=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=DR2rPjofhlvm2tIZ0GI0nz7XIJAJF9A9iJrfxz46SdZM7M/csKEH77HNYr08Ngbk/ZOCC+X8xHMc0dn1PGc1etFTs79KzFRMSDUdyGGeIL38j2Y3FFZCiABegZ8wsZGpkl6v9pnpXXOp82TTjPYfrKDw140EGTIc0gK76Ayzt0o=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b=dt9HfY2c; arc=fail smtp.client-ip=52.101.228.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0FE836404D
+	for <linux-pci@vger.kernel.org>; Tue, 17 Mar 2026 23:36:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773790585; cv=none; b=DUIvRO1xG1i6qeyEoq1xFOeJwHsFNnVjrs213K8q6akqOAjyw1lTtaA/upUVO04Qmk5b9dgg+YYiapCNhBbAIQSLfsjCc4U6OucTyTqTx26ZnPNGvBL7Wq8VL2YR43R7nHtH7ie6a4PUxtpnHfGahkeCVt+eMjMFIlIUJ8aZbkE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773790585; c=relaxed/simple;
+	bh=MkP4whV4n0WRvTN87uMxy06HdXRu3qnfT38+QSsgLP4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Q0/hH7lqUNK906dcc3n5bI33wmu2jqPDNM8P4SjOVtfHTbMZVamJPoIgPTkSKZwcaks7Ir0RuNmNRAJRPsC6wC5SaegLPfSfFPfOyfCjeXHfiDI0ocQ/mbNNz0wBOtK3rQtwc+CFUb/wnKzF6k63ioaXqdVlW2b2lH/f/hlW2hI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=lvc7e/Wu; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b="dt9HfY2c"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=aMzfHfXXW3L+hOsghbOQ9l0Td+WTxYUHOyneLR/1P2jhErr8nSpawCfk/XEVe96V1TMs7Y838foJ9T9uMZsh52vRLmfBdfgI93P+gsoRzA+fvLQ1w3xnsR4rn9/7ucPORjE0zlTkhUAsS4CK1q5YXhnziuLQPvQ6TRRjoQrF5ZKr9dr6HI3UK65rzGr04F81vzQQl+y7Hh6asFdLDUWrakywbIK8yDRz5mcjx7NNPYb43aCrJRZ0uY6kP8FPz3/SJNZQmVf45d6IHNP/AIJQIH6DU67xS8aIoaqWoXQSlGJEsWl0JrhvQoGFZ11G15NJxnXL8lZwRWVnWTYSYHcGZw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=xNvcNrmaJwdvQTsCg7aUv71kw4kH9NTTG4U3UNGC0IM=;
- b=xqnzpFzNVdqxVaxMtXuaSAGu98Vi/EZd/8lAlLO7GmRm0V8nFuo760jHCsEVxCQ8kd3s2rRCBJlj8s8OFBuKxI8CYXeJlNW3oSh+f4gtMlFuWFJ+BrntElX9FYEytnvAT0leKxPgC2lBRi4WU2Qq3qUuBvkDHatTb0usBtUm/GTbbgC0V6VO24rC2MyHT+D2NAsuI2MAw1iKIG9dn0fR0jb4KKx1LdxyLXqYizk1WTPp03opB9bihzYtMO0Qrs0ssNYFWzriEbTSK/jm2O/fi7xgzNVWSlA4GVrEmPtODBxYBlSHsUEH0xsBfnNh4UHi9EgWdPeikhFPz6uI6C/hzw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=bp.renesas.com; dmarc=pass action=none
- header.from=bp.renesas.com; dkim=pass header.d=bp.renesas.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bp.renesas.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xNvcNrmaJwdvQTsCg7aUv71kw4kH9NTTG4U3UNGC0IM=;
- b=dt9HfY2caSipuSENqclVs7obrZoqJu8XCWHXH+OIe4i9N3hH2stOKsVbrFX4TUcOK/uFVPQ+PTSb8CHMdawWwi3Ewx0pPCF4oOZCST5ILI/jkQLmYnCuFoncoj7AvMH4K6GOgQ8pvEQMebtuMZSTGtodPwRr4T7E7NjKDeju6nI=
-Received: from TY6PR01MB17377.jpnprd01.prod.outlook.com (2603:1096:405:35b::6)
- by TYWPR01MB8363.jpnprd01.prod.outlook.com (2603:1096:400:160::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Tue, 17 Mar
- 2026 23:31:45 +0000
-Received: from TY6PR01MB17377.jpnprd01.prod.outlook.com
- ([fe80::f373:26d6:86c4:6aa3]) by TY6PR01MB17377.jpnprd01.prod.outlook.com
- ([fe80::f373:26d6:86c4:6aa3%4]) with mapi id 15.20.9723.018; Tue, 17 Mar 2026
- 23:31:43 +0000
-From: John Madieu <john.madieu.xa@bp.renesas.com>
-To: "phucduc.bui@gmail.com" <phucduc.bui@gmail.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>, Biju Das
-	<biju.das.jz@bp.renesas.com>, Claudiu Beznea
-	<claudiu.beznea.uj@bp.renesas.com>, "conor+dt@kernel.org"
-	<conor+dt@kernel.org>, "devicetree@vger.kernel.org"
-	<devicetree@vger.kernel.org>, "geert+renesas@glider.be"
-	<geert+renesas@glider.be>, "john.madieu@gmail.com" <john.madieu@gmail.com>,
-	"krzk+dt@kernel.org" <krzk+dt@kernel.org>, "kwilczynski@kernel.org"
-	<kwilczynski@kernel.org>, "linux-clk@vger.kernel.org"
-	<linux-clk@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-renesas-soc@vger.kernel.org"
-	<linux-renesas-soc@vger.kernel.org>, "lpieralisi@kernel.org"
-	<lpieralisi@kernel.org>, magnus.damm <magnus.damm@gmail.com>,
-	"mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>
-Subject: RE: [PATCH v8 15/15] arm64: dts: renesas: r9a09g047e57-smarc: 
-Thread-Topic: [PATCH v8 15/15] arm64: dts: renesas: r9a09g047e57-smarc: 
-Thread-Index: AQHcsRDxxVpRghIpcUOEQGYBtm2ME7WzZwRw
-Date: Tue, 17 Mar 2026 23:31:43 +0000
-Message-ID:
- <TY6PR01MB17377BF5B5B59022FB39AEA12FF41A@TY6PR01MB17377.jpnprd01.prod.outlook.com>
-References: <20260306143423.19562-16-john.madieu.xa@bp.renesas.com>
- <20260311043831.2576-1-phucduc.bui@gmail.com>
-In-Reply-To: <20260311043831.2576-1-phucduc.bui@gmail.com>
-Accept-Language: en-US, en-GB
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=bp.renesas.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: TY6PR01MB17377:EE_|TYWPR01MB8363:EE_
-x-ms-office365-filtering-correlation-id: ab7ca5d4-053a-4de0-e026-08de847d5958
-x-ld-processed: 53d82571-da19-47e4-9cb4-625a166a4a2a,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|7416014|376014|366016|1800799024|38070700021|18002099003|56012099003|22082099003|7053199007;
-x-microsoft-antispam-message-info:
- wle3b4MnUQL3sT800S1eSs2tTPmqhrzKBfHv2oxgPywY8r6PFsCUIJP2mHRIJo/PbHWl1Gvcu1K7wV3XERcMOxp0EDw/M3y99Uqe8hPkb6dQe5irLUS1Cq/6yGyQ88NcWHGBeA0w3bNYqmJyondZQho7QmKW6jclYNvrhT5/cXwLbkSmwkUAoPypaTqFgNudZ5iCDaEcJ6/fps5MIy9Aq5e7+AfaPf++ZnzYsDnV2Ba5wC9JiM4UN9TiivHKJ0qCbJuJufcsTwWxMcx8r7oBjO94vJJz83rENdwacRCHC+70Sn6YFAQiiOuvs7TTqskk62F0rrJnku5jtOitBeOw2Z1ivXS4eZ721CkjAB0y8XOqejhnhFPlXAr40Tde711sx9+U7WvHDVhihW/0tVweYazAi9fYlaPlQ9Zf6/sQ/5pvfGDNVcDO5RnyIxAkxCuVaQ8I5Ih2Aa3bBrdnssUeJavPhLkiA1eLdK+brnB3PNH0BBui1KgXeoLTSG5wirbzTDmulsDuGC1qUR7BP/+W9B2qc1v2JGjXhYal5u7jLpU1uCH1qj8eGJvUeEcFPlwRTNMeXKAPjN6KoI0ZdmHvprkzNQkJVFmVfW7N7g9mRnu8B/cvK1YIfeNJXmB0KmfrL22SeA2LLxdE+yim8N6Ia9GOWl4EI+uSjesqylBJQ9WjXDo4jAL0n+7jJWONVnVe0DtOIoKFTZkZj8tS0IcwmebiU4t/ZRW6aobQk6uIERNngvBL+RhEj5n7qyb8BvfXeW/qxQHfgfageQlrKi+cjAyCgdkWq7YXuxxk1KKWouc=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY6PR01MB17377.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024)(38070700021)(18002099003)(56012099003)(22082099003)(7053199007);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?ZLoyCXdl/hK3dULnvZFUHm2tI97HqfDUQMZrHzD0G/B9nCdz18s6+JXtVCVN?=
- =?us-ascii?Q?4CChZfoefHjKQFoyY10jN6+nH16qz6FRFUGmtGYvbWnMZaX3w1f7Mu3RYsJ5?=
- =?us-ascii?Q?g8yBbuS7R+GCN3GhM4xJfPgPCkpTi9W+0Aa0PPJC7bnA+jHUf/wA2AxK6jMw?=
- =?us-ascii?Q?X5LvlhrDz2BzQZEKLJfwcshoZXLqPvZS2VEpfCPwDQ4bTNPf/EOpgIYL/MQd?=
- =?us-ascii?Q?XYzIPHjEoffP916Jliga3scrCiDrzerCL0jPvNJV+5/ORNtrBNMrAdd7RUb1?=
- =?us-ascii?Q?ldiGNt+0w3+LGSnVckOlram8GAD74Ehjo1jsZ2mrNLRX7kixK3UUHzISosfZ?=
- =?us-ascii?Q?VIAEBCWelxpIbeYkuoYRyv2nJxk572uP13G5iNw48caUKJd6gPeg5byhCTZp?=
- =?us-ascii?Q?Z5aBfo9vwb+i2Hu5/j92Lvc6lnAMnSyji9QREIcJAijWoNkk8I5tz/SUYjZX?=
- =?us-ascii?Q?Aki53sYsXvlvdfTcQ4iWgOZhziNHCQsYZg48kj5ljc/S87kmBGlAfkL67P/F?=
- =?us-ascii?Q?ooVMcM8m1dOOQA+WVW8cCOOjAY4Z03MscsV6rcgChOV9SX7J2wZir3YuUEGj?=
- =?us-ascii?Q?kdlxsXyW5vaNplHbgDOGLk7j3pS2BuRuKv0SCWy7B6fQKO1K0glTCL1ynbgl?=
- =?us-ascii?Q?f4Vi2SlVwLTdO6VhZGNbFqTt14smde/k1SZzUGbIWtkge4yOkHTc3noXuRmZ?=
- =?us-ascii?Q?6rsUtdq72ueo1rSoJpb4BxzRa4r45Tzssxzcx+1fwrAtBjE1NOd3CrerJGiy?=
- =?us-ascii?Q?blXB9iIXLRpmi7M0obHGvph9O6kT+0z0Ck8TJZrjIT3GLF2DNrb6pAbIxMj3?=
- =?us-ascii?Q?+vJTcsYZmoDkYHrbOszzuJH0EMXXD0AYx6lWtRCUXUcFTDNuD8R0DYzQvkm5?=
- =?us-ascii?Q?kXsT6hdxeEdlafFFPFTp+7iPwqnqs3bGSnDKPfpULiUF5E5XbhT3klzGPsIP?=
- =?us-ascii?Q?CRbbZZCjQRB1IcQmuocg6xaS0vRJyb6ARRIN/miSXVWi8zZEbznR5Dosh+My?=
- =?us-ascii?Q?YlrSQs/rZ8rmO52gx8arzV8d+RgpE0pWdkOmnbRlhjjqwfDAecgDZhIHjwDx?=
- =?us-ascii?Q?AbxzP2Kxw25ENgiBkBBGdGJHlNIPUkUueAa04NVnaYmQvZfj45f9RjtUsVfL?=
- =?us-ascii?Q?SHUSYx01XLXUwyQasAPCW44B7cG2NfSp9Sq8/4+lKuvxavyWVLchYJI7oo83?=
- =?us-ascii?Q?UrxP/Jd/++5tkTpSnRYAKeZ8NnIkC3Iewo8JKzuVaaOSTjpWQSP7MYoP/6Ch?=
- =?us-ascii?Q?Rxz8DpazV68lw/GLv4z1boSbUH/641/z9JsT56hmE5LmYzqUu27KVy8L9iDk?=
- =?us-ascii?Q?IN9GE0eCMUaLxgB6jlAPlVouETci2D7KsPc81EklLxtXxhyBXNNodPKMXBdu?=
- =?us-ascii?Q?lYuzWGqnBt1QmJLoP/haP41V87lSKXQPDpktzh8gfcWxyn+g0hmU+7nI1EVo?=
- =?us-ascii?Q?FVtmYcWyu/rz5FcaJMud7dzqOD4pu8njdAXpR/CTRQ4UVXEGlbZPgX93O7J4?=
- =?us-ascii?Q?UNriaxoAbNk3fuqM5lOsRFqtAXTmikRbzxkPcbH0eYSvNvKOvJsbhCQr2fj6?=
- =?us-ascii?Q?lGclyWYElln+3ZZG2xvoCjR53U8CErFCrfuFiJHfV0OQyOUHL5Z6ZitJAKqA?=
- =?us-ascii?Q?i4UnNBLfCA2Fop2xG90fc4G1W7vaWQqrX447jmIlTr8z4nREwhz87mdKarvG?=
- =?us-ascii?Q?YI7IgcmhBBinrg1YaLJig61i9h4LsbTFm7JKx/DcfI5V6d0HoX1hr7oxbLev?=
- =?us-ascii?Q?WbxMiOmXE97ZhJ7PmBhkBswhVDZUG2Y=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="lvc7e/Wu"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2b052562254so43865ad.0
+        for <linux-pci@vger.kernel.org>; Tue, 17 Mar 2026 16:36:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1773790583; x=1774395383; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=8R08fAS2L/TqkBdbNFXhbiB2wc1JFGzUh5S9wXtuww4=;
+        b=lvc7e/WuKaGBC03E3qC2dsAWlhQQpNr8aWFiEsG7aHARC+Xw/DRettyaan/HA3Iwot
+         ZykKbbjta3+VyoGA0/5ls9gopbEAL3fSVUfl0FPU+PBoesA/W8bSjfA/Ryw6+J9E5tTG
+         zcAkMgTEBzIyK61T9xKUkvIDJCsww0ilfUpjqLhR4q2y+LB2CWQcZXeZX3k6v4w4WZKc
+         y/P/FPpIKqmRmcsOFM+qSHOU29vGGxurwrFrIHtGlzgjtkdx0cEUGz+WQ/GEkFg/7/X8
+         Jxak6dT8SQU1IqyKNIaJFdswN2cC6/WsN6B5kuQbl6PYuw+AtBOxCr3uWtpydlFgJJ4e
+         jhig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773790583; x=1774395383;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=8R08fAS2L/TqkBdbNFXhbiB2wc1JFGzUh5S9wXtuww4=;
+        b=sumG13ZQF5tKl7dUz5KI8n0M/pc2hOlunfoGN32Rhbyqj4wZSlXiIxlfZPm9DYrZWB
+         s1QyHQL51F2jvFwONIYQ9EXpPW1/dVfMV43YuAhAgpKjmsu5dU5JsDj8DxcQRhnpaj8f
+         h+n40lQhqxVllKALKDl1b6IH81oNwu2jV5pNJRQVVtfaM71Gi6peyCwIVdZgLasUFYEf
+         38E30/hmW9lz1ZFLfRzA6UUPX2w/iayx7DbCnDcyazAHfSDB6eiooihBYeLCmtkHJB+3
+         9jAdbq8JrS7INp1ZxGOcg0pMGpl3v0M+W4dkNPotlp7ltVnFC9s3EX4QU2FVyys4p4Jj
+         YDbQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUr+SA+7s8MmDnJmSvWodYcxKfVVTMCzTBlXCx0wt84HjWUIpr0YVRry5XVK3GinIWwNbX3w3GLIKI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxrVwk/QaNHnZso5EibegyTMvwlhq4CC3shDuOAAPZURTZdnEFH
+	8HPsOXD4VmP9NLK9GrHpoaHat4caeTKkvR/QFsM91ikz108iVTwrTywH6m0PqET0Uw==
+X-Gm-Gg: ATEYQzz/gW6gYn4ZP3C9aEkneqChHMx27uP490Ap92ZSG4igsbS3OQwnrbot7acqZIz
+	zAZYVWF8OGx1fW7T20UW1OY/ObFiYbK0bQqmX9Kpf4mVv5iN8j62z8wXissaJTPVez4jssns+BU
+	Xw+qAC0RibYksocpfJynLjBGd8RbgkpSZbAdSbNv8b24n7g4b3jpvgIel5jGZyubhGw0GaKN8BL
+	DBohbz5HIgINMrbYVF0a43FDoePznFvUXrqxEe/YiQaNC5zKc+vniLUEhzUTh/DHWwTJE8RFUGX
+	BImP6y/GI9LevYvuZWrX1Fd9OO9BCNRKTuY254ypozZkdnUENmBFgO2HLiM9BkvamM6Yk6WZLa5
+	eIVxpTz8eTm0T1zBgSBeSUtxvL2EfA0V5gfEq8SZAji22QJeajt25baACYR63/cuVJ4rqk/92U1
+	3Q4+bR3sZCo+gtuWXNlq9lHeMoxXkNJi9ILZiluboVg50kQNGGjzvDK2jA7Q==
+X-Received: by 2002:a17:903:22c7:b0:2ae:c566:bd99 with SMTP id d9443c01a7336-2b06e88a5f7mr1634235ad.22.1773790582361;
+        Tue, 17 Mar 2026 16:36:22 -0700 (PDT)
+Received: from google.com (60.89.247.35.bc.googleusercontent.com. [35.247.89.60])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b06e629da3sm6015715ad.76.2026.03.17.16.36.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 Mar 2026 16:36:21 -0700 (PDT)
+Date: Tue, 17 Mar 2026 16:36:17 -0700
+From: Vipin Sharma <vipinsh@google.com>
+To: David Matlack <dmatlack@google.com>
+Cc: Alex Williamson <alex@shazbot.org>, 
+	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>, 
+	Alistair Popple <apopple@nvidia.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Ankit Agrawal <ankita@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>, 
+	Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
+	Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org, kvm@vger.kernel.org, 
+	Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, linux-mm@kvack.org, 
+	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
+	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>, Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
+	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
+	Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>, 
+	Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed <saeedm@nvidia.com>, 
+	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, Tomita Moeko <tomitamoeko@gmail.com>, 
+	Vivek Kasireddy <vivek.kasireddy@intel.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>, 
+	Zhu Yanjun <yanjun.zhu@linux.dev>
+Subject: Re: [PATCH v2 10/22] vfio/pci: Skip reset of preserved device after
+ Live Update
+Message-ID: <20260317232431.GA2795773.vipinsh@google.com>
+References: <aaDqhjdLyf1qSTSh@google.com>
+ <20260227084658.3767d801@shazbot.org>
+ <CALzav=fHy23RAzhgkdaL+JA5T2tL9FT6aPgRfXUh7i9zvYCGPA@mail.gmail.com>
+ <20260227105720.522ca97f@shazbot.org>
+ <CALzav=fjRPa_ZbXu7iFXyemcf_8Kq_dZTWT6c-A0bc6czF_Rdw@mail.gmail.com>
+ <abNOwcOTXqxCxNzt@google.com>
+ <20260316160759.GA1767448.vipinsh@google.com>
+ <CALzav=cskxLZtZ5-uRa0+aV+1Kb3fwQQJ5dS=Yes4GAHrS6GpQ@mail.gmail.com>
+ <20260316214055.GB1846904.vipinsh@google.com>
+ <CALzav=df8K0R0gJyQ=ifoznp_CMRRtyrWchbNvcw2-wpkdaBaQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: bp.renesas.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TY6PR01MB17377.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ab7ca5d4-053a-4de0-e026-08de847d5958
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Mar 2026 23:31:43.7379
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 3qtK/lu3SNSqMYaEB5gUIWUv66+mPYzR2fW/pJzvouCXsnOsZEgdLtTJJvgkgGI+0zQa5VZgB9Qou7mG2ZyNK9exsjA9U8EpCUHLd44JDgo=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYWPR01MB8363
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CALzav=df8K0R0gJyQ=ifoznp_CMRRtyrWchbNvcw2-wpkdaBaQ@mail.gmail.com>
 
-Hi Phuc,
+On Mon, Mar 16, 2026 at 03:14:18PM -0700, David Matlack wrote:
+> On Mon, Mar 16, 2026 at 2:49 PM Vipin Sharma <vipinsh@google.com> wrote:
+> >
+> > On Mon, Mar 16, 2026 at 10:18:22AM -0700, David Matlack wrote:
+> > > On Mon, Mar 16, 2026 at 9:22 AM Vipin Sharma <vipinsh@google.com> wrote:
+> > > >
+> > > > On Thu, Mar 12, 2026 at 11:39:45PM +0000, David Matlack wrote:
+> > > > > On 2026-03-09 10:32 AM, David Matlack wrote:
+> > > > > > On Fri, Feb 27, 2026 at 9:57 AM Alex Williamson <alex@shazbot.org> wrote:
+> > > > >
+> > > > > > > Sorry if I don't have the whole model in my head yet, but is exposing
+> > > > > > > the restriction to the vfio user of the device sufficient to manage the
+> > > > > > > liveupdate orchestration?  For example, a VFIO_DEVICE_INFO_CAP pushes
+> > > > > > > the knowledge to QEMU... what does QEMU do with that knowledge?  Who
+> > > > > > > imposes the policy decision to decide what support is sufficient?
+> > > > > >
+> > > > > > Hm.. good questions. I don't think we want userspace inspecting bits
+> > > > > > exposed by the kernel and trying to infer exactly what's being
+> > > > > > preserved and whether it's "good enough" to use. And such a UAPI would
+> > > > > > become tech debt once we finish development, I suspect.
+> > > > > >
+> > > > > > A better approach would be to hide this support from userspace until
+> > > > > > we decide it is ready for production use-cases.
+> > > > > >
+> > > > > > To enable development and testing, we can add an opt-in mechanism
+> > > > >
+> > > > > Here is what I am trending towards sending in v3 as the opt-in mechanism:
+> > > > >
+> > > > > diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
+> > > > > index 1e82b44bda1a..770231554221 100644
+> > > > > --- a/drivers/vfio/pci/Kconfig
+> > > > > +++ b/drivers/vfio/pci/Kconfig
+> > > > > @@ -58,6 +58,27 @@ config VFIO_PCI_ZDEV_KVM
+> > > > >  config VFIO_PCI_DMABUF
+> > > > >         def_bool y if VFIO_PCI_CORE && PCI_P2PDMA && DMA_SHARED_BUFFER
+> > > > >
+> > > > > +config VFIO_PCI_LIVEUPDATE
+> > > > > +       bool "VFIO PCI support for Live Update (EXPERIMENTAL)"
+> > > > > +       depends on LIVEUPDATE && VFIO_PCI
+> > > > > +       help
+> > > > > +         Support for preserving devices bound to vfio-pci across a Live
+> > > > > +         Update. The eventual goal is that preserved devices can run
+> > > > > +         uninterrupted during a Live Update, including DMA to preserved
+> > > > > +         memory buffers and P2P. However there are many steps still needed to
+> > > > > +         achieve this, including:
+> > > > > +
+> > > > > +          - Preservation of iommufd files
+> > > > > +          - Preservation of IOMMU driver state
+> > > > > +          - Preservation of PCI state (BAR resources, device state, ...)
+> > > > > +          - Preservation of vfio-pci driver state
+> > > > > +
+> > > > > +         This option should only be enabled by developers working on
+> > > > > +         implementing this support. Once enough support has landed in the
+> > > > > +         kernel, this option will no longer be marked EXPERIMENTAL.
+> > > > > +
+> > > > > +         If you don't know what to do here, say N.
+> > > > > +
+> > > >
+> > > > To use VFIO liveupdate, user has to do at least two things:
+> > > > 1. Enable CONFIG_LIVEUPDATE
+> > > > 2. Pass VFIO FD to a live update session.
+> > > >
+> > > > This means someone using it has to know what live update is and
+> > > > intentionally pass the VFIO FDs. Isn't act of doing this itself an
+> > > > opt-in mechanism?
+> > >
+> > > If it is, then I can leave this out. Alex?
+> > >
+> > > My thinking was: Distros are free to enable LIVEUPDATE and use it. The
+> > > support it enables today is all fully functional (albeit new).
+> > > vfio-cdev, OTOH, is not. A separate Kconfig can help express that
+> > > difference.
+> > >
+> > > Consider that LIVEUPDATE could be enabled by default in a future
+> > > release, but vfio-cdev support might not be ready yet at that point.
+> >
+> > But that also requires point 2 above i.e. userspace explicitly passing
+> > VFIO FD to liveupdate. Unless there is a capability mechanism like KVM
+> > then userspace cannot know what is exactly supported.
+> 
+> Yes that is why I propose not exposing the support to userspace at all
+> until it is ready, by compiling it out of kernel via new Kconfig. This
+> way it does not get accidentally enabled in distros or downstream
+> kernels before it is ready.
+> 
+> > Also, users who
+> > are using these APIs will already be advanced users and have to know
+> > many details about what liveupdate supports or not.
+> 
+> VMMs will be the ones preserving VFIO cdev files. I think you are
+> suggesting they should know what versions of Linux support what kind
+> of preservation? Like QEMU would know that Linux 7.1-7.4 supports
+> partial VFIO preservation and 7.5+ supports fully? That does not sound
+> like a good situation to be in.
 
-Thanks for the feedback.
+I agree, for VMM its better to just assume it is a complete preservation
+feature but it is an experimental code in kernel.
 
-> -----Original Message-----
-> From: phucduc.bui@gmail.com <phucduc.bui@gmail.com>
-> Sent: Wednesday, March 11, 2026 5:39 AM
-> To: John Madieu <john.madieu.xa@bp.renesas.com>
-> Subject: Re: [PATCH v8 15/15] arm64: dts: renesas: r9a09g047e57-smarc:
->=20
-> [You don't often get email from phucduc.bui@gmail.com. Learn why this is
-> important at https://aka.ms/LearnAboutSenderIdentification ]
->=20
-> I noticed that for gpio-hog nodes, the kernel already uses the node name
-> as the default label in /sys/kernel/debug/gpio if line-name is missing.
-> Since the node name here is already pcie-clkreq-n, the line-name property
-> seems redundant. Should we remove it to keep the DTS more concise?
->=20
+> 
+> I think it's much better to hide the support behind Kconfig until its
+> ready. That way the PRESERVE_FD ioctl just fails on kernels that do
+> not fully support (because VFIO_PCI_LIVEUPDATE is not enabled), and
+> succeeds on kernels that do fully support.
+> 
+> If someone wants to enable and use VFIO_PCI_LIVEUPDATE while it is
+> still marked experimental, they're on their own.
+> 
 
-Thanks for pointing it out. As per Biju's comment, there is a missing
--hog at the end of node name. Thus, if we keep the schema-friendly node
-name 'pcie-clkreq-n-hog', then 'line-name =3D "pcie_clkreq_n";' can still
-be useful.
-
-Regards,
-John
-
-
-> Best regards,
-> Phuc
+Sounds good. Thanks!
