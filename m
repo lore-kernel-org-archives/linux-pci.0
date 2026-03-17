@@ -1,28 +1,28 @@
-Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010071.outbound.protection.outlook.com [52.101.85.71])
+Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012062.outbound.protection.outlook.com [52.101.43.62])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A4C31C862D;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D332F19AD8B;
 	Tue, 17 Mar 2026 19:16:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.85.71
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.62
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773774995; cv=fail; b=tJ1D6RKMofr5w0OX6LQHUuoBCyp4IzfMSXVR1MiQQtFac90nzxvFa0ccd/GK50PpTbKbyGNF+EOdb/7Os3WrhO0UimeIf2O13Z2F3/HYV3VwCr4HaThDoqnZiW9tGWSqa8ESe3MRGOqokqaHwvKdE4jhWUE86i1vtzbFfGqLhDM=
+	t=1773774996; cv=fail; b=kS7iJSVaf53aZXYvuJ09Gh5ZK0sIXoPX6eOSDn5USvYVPQIEyCXcgvsWMuLG5Ppqbn7tFVYzavbSvqi3trX/pWLCsoUqY+PiTJv71ZCdXMfNNyHm5X+Cgkq92dsFSNY8rroyle2uxurO8rwql5TzehAXPJgh0h1qALCjk6PrUrE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773774995; c=relaxed/simple;
-	bh=UIOLCMzc6cPyRyxEBiWNi+YiRQPnIlO9U8QIYxioULY=;
+	s=arc-20240116; t=1773774996; c=relaxed/simple;
+	bh=XBrN7lG6xJGay0JwkA0maAxk3vmXTdtXfRbMOyhF5qg=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KsOFsXMQmsnsMbyTgFctaLSspgkcL9amQreLApIEIX8aCyQN3+tWoHcvozl0VSJ64LEuuXtWoUSjwWPbXHNYFKGvNJxH+KMoqRGh/vBw1sUsMvMxSIn36IvFDKTKqm80p7HkNUoT55aOhU6+aU5W505teexzPT7/JNzvK6dq6Wg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=N9OMAmGO; arc=fail smtp.client-ip=52.101.85.71
+	 MIME-Version:Content-Type; b=P4G/WLCekyAGjsVm5eYTUBa/UUgSn8u1zr7Z9Q6KiIp+E3aZh+X3npXkNYSwKv2FegAyCidc6lR0t1eCqMfz/ktQOU40eep4s/YtWiBbjFo+IYAb58bF0ubpdc/pFM3BTAPyD+X8Q31w24Zn42D0dACJAB1rDJujugM+psBZXcA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=SThumL/s; arc=fail smtp.client-ip=52.101.43.62
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="N9OMAmGO"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="SThumL/s"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=HQInAeNMO2izWNSNzlIE9xdEjAbQxDGpjxJaceqcv95dVPWB8LPPgWw0Mil3qM2lmuzihS/8DbPnCK48Sgo2Tdha8G3VYqczwPOPlAeAhjUbtVAk4/T0TYvZT+BbMZ0CFrT77JHTY82dnJLZDwXDFTU6X9WLajy0ZWI65zJfyvCX3fy79WUKGtqicVzbVAnBkvJ9kTVIRuqaLE84ksPPI1p65F3UA7YWaqLYBV3ytYDsSY2knXWSm4zG9WrN6u8OOwVSWhndB2YsBg5OO2dwGBsHTdNfaX8ZguplpH87CMUXGjkyBZB29YmErnpQIYCCFDSOq+c/GcFqLgh8zE2M+Q==
+ b=f+IZriv45OT2HK5OKZFRb4kFmcAk9Yj3UCwqO31xG39G/+4nATnYRB7jKRzhk82bppwAGV+C+an+7+W5r/ZsqJzZOkxoCKucUOEQUdFXw9eVnvUH0Z4BBltn7GjgiPYDygO78GE6/FF6hsfeABhlhC8wpt8py5wBqm74IpBa4zY4IuX936ts4yx4ZEmbASC7kluUB7XjtmJlfqA2Kizyci6Ka2VkHEblCBypZ/F+x03qxMwIYRm86ZlgO2ssbBs0XWCAroHkkV/RBzGYHZw0qcGhWcjZb+zD8fuzjnw61pg2AX1Rxm7Y6LDT//eXc8foLkmKSlfHXcievGPUxGcHZw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qKviejPpLxFR0KEBnmrbDk2Huubm20TRVcytIyTnug4=;
- b=ZapXMjaPkrihJJNhnj/Mpye3dFZmI7FytOIGgue9g8xCZefQRNhqWeZS67cpD7uKSlVDzO+q/SE3jGpZL+i9NNHU4T1YN7ZOtoynT10GLfPrR0zD7HeBKUlVl1BfeZyEpt6Q3dMWn9oGJdn4ZvxVXhA9oFZhh6N+fTqfF+Wyc7F3CzFfWg7oMWPiRY+hJOESJeCq67nhEoGY06jR4/2zK3i3D7ynPZKjz3jbnO0INW52FzrfKLRt/Ss+VyFEKiyUfkwAuKDICO6oemfBwe5Di8hOJCEQyYcNLYSG6SfNaKSepwVdivrLkhIAp+SoHGfffig5+8shWcK2vYPeVnlIng==
+ bh=lP2sQGIIcHZGt2MelZ+hkUOiEKCYZtquuB0qBQV5X58=;
+ b=Gpmdc3E/ngTikgpnLXDxQ6iOIvASvu9c/ZBOSZqNa7SSxicukImUf86bnHnfuFUNqudRPQQ/bZm4Dy7xHCGahDMGfeUC9qHO8HClw9TcZY3TKOSIw5BpqxUvJYUXZSIqBDpjq02ydbGSsHuR5ADDVb1G+oKh3HEN9iF7avIGXNNGU0y5BZpEZHoJCuZ235PQ2WOECBd8aeJHzdNNXtvcgDckzim7G2v6ig4n4xZA2V30MQZSS9dL98vzSDfSx+tzoWtl5G30nNYQZ4kz/jtlDK/AWnx9i0IhkzHuJGAgYL+/wXunbx3J11dds7eXDji5R90VbN3hIR9Lf9AATP/HZA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.161) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -30,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qKviejPpLxFR0KEBnmrbDk2Huubm20TRVcytIyTnug4=;
- b=N9OMAmGOwp9Iq3owIYfTcGtkwD+wb3GxUTeIBzvAnc3USfzNn4863aQ2qbdl9FR7Q2rVnXjE9quRTi8DESHzopJaezlKBK8t6XEF5cxQPTILiEY+kve16iwJ1e150EUCr1vuyzqGKS9ySH4bzfEJXAdB2W7dZL+a2XJ1GPNXqLc7ndN8xd2NLzesZdTKwES5TZrzqEAJ5DnHFZQzgNFh3XfOvGPh32oesBsKFJO8d9dQVG8MnqctVObFuyqzdFe9L0erXHDS4F1gAVUk5Vyo27ChYkewcENsQM8m4DmqzOCjbwmmceb96muUGs5dJz2rC+6yfEtEpALOVKLSvGuODQ==
-Received: from SJ0PR03CA0367.namprd03.prod.outlook.com (2603:10b6:a03:3a1::12)
- by SJ1PR12MB6171.namprd12.prod.outlook.com (2603:10b6:a03:45a::11) with
+ bh=lP2sQGIIcHZGt2MelZ+hkUOiEKCYZtquuB0qBQV5X58=;
+ b=SThumL/sbk4XYPiriQD5MgFLbtN+mAKwCH67PPWLCQ0QAgvXgnjyAl13nQxCEAQ11pe8RZtuNV7oXqWoNGXtXYQnMUb3vlivegFVOpRLBeng+5MXgHcLimLGKXWzwVt2aCIoZHRJJP6R+H6XMbPkdoUeQx0dqg2izlCD+FlDWJkBmiHmtLkTr0U8djpnoop6hsjXIXxHbFlonMGVv/kEQ/wh8K6QhIRZ1xSMhPHRKtWor3Mauwrcs9kiO7HTrojGbKVBoRFaYhKO/zLksNYPVi6whhfUDk4feRPGFS2aPVhH+MnurV98p8NEg3xwgu4d5+JNk176RfhsP6D8DqSsPQ==
+Received: from PH0PR07CA0115.namprd07.prod.outlook.com (2603:10b6:510:4::30)
+ by IA1PR12MB6018.namprd12.prod.outlook.com (2603:10b6:208:3d6::6) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.17; Tue, 17 Mar
- 2026 19:16:28 +0000
-Received: from MWH0EPF000A6730.namprd04.prod.outlook.com
- (2603:10b6:a03:3a1:cafe::12) by SJ0PR03CA0367.outlook.office365.com
- (2603:10b6:a03:3a1::12) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.24 via Frontend Transport; Tue,
- 17 Mar 2026 19:16:07 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Tue, 17 Mar
+ 2026 19:16:27 +0000
+Received: from MWH0EPF000A6735.namprd04.prod.outlook.com
+ (2603:10b6:510:4:cafe::9a) by PH0PR07CA0115.outlook.office365.com
+ (2603:10b6:510:4::30) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.25 via Frontend Transport; Tue,
+ 17 Mar 2026 19:15:57 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -49,20 +49,20 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.117.161 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.117.161) by
- MWH0EPF000A6730.mail.protection.outlook.com (10.167.249.22) with Microsoft
+ MWH0EPF000A6735.mail.protection.outlook.com (10.167.249.27) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9700.17 via Frontend Transport; Tue, 17 Mar 2026 19:16:28 +0000
-Received: from rnnvmail202.nvidia.com (10.129.68.7) by mail.nvidia.com
+ 15.20.9700.17 via Frontend Transport; Tue, 17 Mar 2026 19:16:27 +0000
+Received: from rnnvmail203.nvidia.com (10.129.68.9) by mail.nvidia.com
  (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 17 Mar
- 2026 12:16:05 -0700
-Received: from rnnvmail204.nvidia.com (10.129.68.6) by rnnvmail202.nvidia.com
- (10.129.68.7) with Microsoft SMTP Server (version=TLS1_2,
+ 2026 12:16:03 -0700
+Received: from rnnvmail204.nvidia.com (10.129.68.6) by rnnvmail203.nvidia.com
+ (10.129.68.9) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 17 Mar
- 2026 12:16:04 -0700
+ 2026 12:16:03 -0700
 Received: from Asurada-Nvidia.nvidia.com (10.127.8.9) by mail.nvidia.com
  (10.129.68.6) with Microsoft SMTP Server id 15.2.2562.20 via Frontend
- Transport; Tue, 17 Mar 2026 12:16:03 -0700
+ Transport; Tue, 17 Mar 2026 12:16:02 -0700
 From: Nicolin Chen <nicolinc@nvidia.com>
 To: <will@kernel.org>, <robin.murphy@arm.com>, <joro@8bytes.org>,
 	<bhelgaas@google.com>, <jgg@nvidia.com>
@@ -72,9 +72,9 @@ CC: <rafael@kernel.org>, <lenb@kernel.org>, <praan@google.com>,
 	<iommu@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
 	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<vsethi@nvidia.com>
-Subject: [PATCH v2 2/7] iommu: Add reset_device_done callback for hardware fault recovery
-Date: Tue, 17 Mar 2026 12:15:35 -0700
-Message-ID: <3750a106b4ab4235df842fa2b9defbc8226ebbef.1773774441.git.nicolinc@nvidia.com>
+Subject: [PATCH v2 1/7] iommu: Do not call pci_dev_reset_iommu_done() unless reset succeeds
+Date: Tue, 17 Mar 2026 12:15:34 -0700
+Message-ID: <21fa71d59c8ab787c0f3d8cf3e9fc725330fd0d5.1773774441.git.nicolinc@nvidia.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1773774441.git.nicolinc@nvidia.com>
 References: <cover.1773774441.git.nicolinc@nvidia.com>
@@ -89,104 +89,270 @@ Content-Type: text/plain
 X-NV-OnPremToCloud: ExternallySecured
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MWH0EPF000A6730:EE_|SJ1PR12MB6171:EE_
-X-MS-Office365-Filtering-Correlation-Id: af1c5e22-c0dd-48c1-8f46-08de8459b07e
+X-MS-TrafficTypeDiagnostic: MWH0EPF000A6735:EE_|IA1PR12MB6018:EE_
+X-MS-Office365-Filtering-Correlation-Id: 18ce1c58-e08d-43eb-3f9b-08de8459b016
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|7416014|36860700016|82310400026|22082099003|18002099003|56012099003;
+	BCL:0;ARA:13230040|1800799024|82310400026|7416014|36860700016|376014|18002099003|56012099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	ancfFLjTPmgjC1s9iQ97kYHzUFQvewbPLWlQW2+FhZkIOnaR+Pvs9foo6V+VlCWB3d0rX+m/Fz23hKuHq9T7OtFfrSBwmqbrLFA34b2k718qU2WrQko7bpLmYqvNlEMUB3HBFZXPqECEesEWbXOEnR1T1kSBsQknCFsgBlSXo2qJNYdQiNuHAwY+Frxmq+8ECVceJfWBF6WRhorNQI3WfS4dZdA1H8ZGxroFvTBFKbilTM9iAX7bXSB6q5NZzqjTo3qTEs8/dHK0cG9SaGDL0XQrmMf9JqePR8SIG2j8blUH1Z8+YETDPcW60GxKdnpPvuCEWzFdVodbJmzlNfZCrLHfGJn9IDGIyxdaSfdmGl2PsmhpnXNVIebc72YyfNYGvN8t1pidsyCI2uMBJnArUgs3g6ova2t+NRk84/H1FpNRaNzt3J2sZr1GlB5Sq+lEAplRIZpLbDfL5c7Q150htFuddP3PjUqfG7XCzN4gbCwxG/hOxFwgkKxHJy9qVSfIwW6EBKNxkRmBZxYb7x3RY5IhEssCKzNizvECxRl5dJ73mRlSgQ1QJYvL4iaSem91CzBcPeLxcJZk65Wv3yhP2DQsV0LC/B3Vpc2M2tTFh0LhVE4WQXVnw3uGe7Up8F+1Mx11miCF01Wi3JzLqQQgoiJS9epEmp1B11Vzhj/NtfkRtLgIw7L5u9zdzt3G1ogQhNFbj+zdiM0ra50hCy6QfcFiavXXZwdYta7MSvb6Ikv2L3ng/snVMv5nBp/LhgEns0XJtj3A4wuLLDh/uHxjkA==
+	oqsrSOtyGGWTAR5HOoGinwA+rlOsYrvqCHS3jRRTdeeo8mM14qu9tApLm+4Tsz4s0bY/viZ6oPbm61+NRAo9jtycYB8cMDHHebZVWniIu/+cs605AJA/LCx6HQ4vVWCIMTN7/va2gNW698diQlqc7wjvs6fleToORZ9v3wECbFOiQ0N4Tsk1Z9x71PtKfXkLjaGHokCmk/1aggf6xZjY5j9vdmlWIV18sovGCa6VpH7GG9WCttJOtUTI34D4X2N5EyQiyCdnmkbUiDvxe/moDhgjz6JtzlXHMfGJsaMZVcnm7+L/G7Y4ftlbk9xtTinYAumYyUqyzsdX4p5qtKXw3FsmqLF6BgbNlYl9qp42YkpNo/ZB0aNQWTZhIGCju2M55A5dbFW6igd8Ek9oo38uOP6Sim3JTeomNCouFuh0N+9ZbyFjQr/tXUan2CbJ/0iuNEwl5ybSAyK/QVTBRbKMzPWcx08HQUvcox9iMiD4MIKZbClffjqeziUuxVhFIFErHE0Zgp13hM8YvZOy9PdCEOQeCwIlL0Ue0RqWFjuJJDOMQanLFHE2oZWU7nRNC6NKboGlYpnaxjBVEKPS8ZnW4gmu07W1ldVCNoEa9PL/RFcSS306Bv/W7+fWTtOFhOwvuRl9fceHY5XHmApOKPdUP9hdoyoKxrMWfARphGYA5zn+7b07RYIwp0pWkXgKhOKmAJFDLL2c2y779ggHZXOHgJ66m1IyayW1nXRRwPM4xo9scPbS9XR6Hdb1JvBWfhXFpsog/moyufzw3DK0SEri0w==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(36860700016)(82310400026)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(7416014)(36860700016)(376014)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	5ZzJoOb6Oscgahx1SVS2nG1wMArNRkEMwgVtxP55Zph0dsicSBCpldhuz8fGikorriKk/89nPplw1ht5oeyTzVrKmD5XEhlC/pSpX7ueTqsKcKGlvZ6TzWSpY3RttJCmRbFV4nWm1XFVwNO7uUzA9F+g3UAMOFM3wCsjK94K3Qhajkqof3KsyoJu69nBEefnhsbeXKgLSyzRXQ0+q2PmKD7uy6kWyaJ1tHBQWp9Cufs9hwo0S66z5dxQX5AqGtqbNjOLxboa9MK+h2T9ln0tQ17QE8dDU4JzoiTCwY/tb+K0IoA90CFtWewXXdxGPUbJx77SnB6GFxYJ6YTmSP8tN7nTF+Yszi25aH6YJXn/Zb//3YlZfe+N0VCV/ACGsnXQRmJ7WzKDT6xwmQepjVauIEMZOgE3/CzK9vIy4uqIjmHwubMV2qyENO/x7DpZj6i1
+	qKFLFf26oqUaGKPLrAdCwlLCI04clzqIqHkGutWbukBAqI7SBHV/Ikl4t1uJeDXtaDNhYpon3hSpDzp2yUQ0Puoq/zjtc/f/wH+bqk02mmNepCfOGmiwK4eWAIiBiC6qJu6P8Ad0SvwHWtA1EMAnTgdeasryoWeWCHGiPGA/cIyYzf+UPjW5oXiSiW9zpqGHIcHbaXtbQ/QAckHbHq/39Q5RsgvjhC5Z1QRj1vF1vA+Zi0wLWrlST2T7n5LnPZfR6wYnJ//hprC8AHPd1R8Kjd0AXRNnIETV+f9jr8jfIZBuDymH9gUFThcjlGlbYtGXWvpwJHMSibsoqaB9Y0iPheD4nd4BSymNudutACE3t4y/C1Uw252Sd7fFvH5cZfol9Fo0oBwsIp2X+lG4nT7ltfy/Iw859J8I/Rgo7B+CGzkEBQvoxXF1173an2e/pgJS
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Mar 2026 19:16:28.0190
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Mar 2026 19:16:27.4026
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: af1c5e22-c0dd-48c1-8f46-08de8459b07e
+X-MS-Exchange-CrossTenant-Network-Message-Id: 18ce1c58-e08d-43eb-3f9b-08de8459b016
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	MWH0EPF000A6730.namprd04.prod.outlook.com
+	MWH0EPF000A6735.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ1PR12MB6171
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6018
 
-When an IOMMU hardware detects an error due to a faulty device (e.g. an ATS
-invalidation timeout), IOMMU drivers may quarantine the device by disabling
-specific hardware features or dropping translation capabilities.
+IOMMU drivers handle ATC cache maintenance. They may encounter ATC-related
+errors (e.g., ATC invalidation request timeout), indicating that ATC cache
+might have stale entries that can corrupt the memory. In this case, IOMMU
+driver has no choice but to block the device's ATS function and wait for a
+device recovery.
 
-To recover from these states, the IOMMU driver needs a reliable signal that
-the underlying physical hardware has been cleanly reset (e.g., via PCIe AER
-or a sysfs Function Level Reset) so as to lift the quarantine.
+The pci_dev_reset_iommu_done() called at the end of a reset function could
+serve as a reliable signal to the IOMMU subsystem that the physical device
+cache is completely clean. However, the function is called unconditionally
+even if the reset operation had actually failed, which would re-attach the
+faulty device back to a normal translation domain. And this will leave the
+system highly exposed, creating vulnerabilities for data corruption:
+    IOMMU blocks RID/ATS
+    pci_reset_function():
+        pci_dev_reset_iommu_prepare(); // Block RID/ATS
+        __reset(); // Failed (ATC is still stale)
+        pci_dev_reset_iommu_done(); // Unblock RID/ATS (ah-ha)
 
-Introduce a reset_device_done callback in struct iommu_ops. Trigger it from
-the existing pci_dev_reset_iommu_done() path to notify the underlying IOMMU
-driver that the device's internal state has been sanitized.
+The simplest fix is to use pci_dev_reset_iommu_done() only on a successful
+reset:
+    IOMMU blocks RID/ATS
+    pci_reset_function():
+        pci_dev_reset_iommu_prepare(); // Block RID/ATS
+        if (!__reset())
+            pci_dev_reset_iommu_done(); // Unblock RID/ATS
+        else
+            // Keep the device blocked by IOMMU
+
+However, this breaks the symmetric requirement of these reset APIs so that
+we have to allow a re-entry to pass a second reset attempt:
+    IOMMU blocks RID/ATS
+    pci_reset_function():
+        pci_dev_reset_iommu_prepare(); // Block RID/ATS
+        __reset(); // Failed (ATC is still stale)
+        // Keep the device blocked by IOMMU
+    Second reset:
+        pci_reset_function():
+            pci_dev_reset_iommu_prepare(); // Re-entry (!)
+
+Update the function kdocs and all the existing callers to only unblock ATS
+when the reset succeeds. Drop the WARN_ON in pci_dev_reset_iommu_prepare()
+to allow re-entries.
 
 Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 ---
- include/linux/iommu.h |  2 ++
- drivers/iommu/iommu.c | 12 ++++++++++++
- 2 files changed, 14 insertions(+)
+ drivers/iommu/iommu.c  | 16 +++++++++-----
+ drivers/pci/pci-acpi.c | 11 +++++++++-
+ drivers/pci/pci.c      | 50 +++++++++++++++++++++++++++++++++++++-----
+ drivers/pci/quirks.c   | 11 +++++++++-
+ 4 files changed, 75 insertions(+), 13 deletions(-)
 
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 54b8b48c762e8..9ba12b2164724 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -626,6 +626,7 @@ __iommu_copy_struct_to_user(const struct iommu_user_data *dst_data,
-  * @release_device: Remove device from iommu driver handling
-  * @probe_finalize: Do final setup work after the device is added to an IOMMU
-  *                  group and attached to the groups domain
-+ * @reset_device_done: Notify the driver about the completion of a device reset
-  * @device_group: find iommu group for a particular device
-  * @get_resv_regions: Request list of reserved regions for a device
-  * @of_xlate: add OF master IDs to iommu grouping
-@@ -683,6 +684,7 @@ struct iommu_ops {
- 	struct iommu_device *(*probe_device)(struct device *dev);
- 	void (*release_device)(struct device *dev);
- 	void (*probe_finalize)(struct device *dev);
-+	void (*reset_device_done)(struct device *dev);
- 	struct iommu_group *(*device_group)(struct device *dev);
- 
- 	/* Request/Free a list of reserved regions for a device */
 diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index 40a15c9360bd1..fcd2902d9e8db 100644
+index 35db517809540..40a15c9360bd1 100644
 --- a/drivers/iommu/iommu.c
 +++ b/drivers/iommu/iommu.c
-@@ -4013,11 +4013,13 @@ EXPORT_SYMBOL_GPL(pci_dev_reset_iommu_prepare);
- void pci_dev_reset_iommu_done(struct pci_dev *pdev)
- {
- 	struct iommu_group *group = pdev->dev.iommu_group;
-+	const struct iommu_ops *ops;
- 	unsigned long pasid;
- 	void *entry;
- 
- 	if (!pci_ats_supported(pdev) || !dev_has_iommu(&pdev->dev))
- 		return;
-+	ops = dev_iommu_ops(&pdev->dev);
+@@ -3938,8 +3938,10 @@ EXPORT_SYMBOL_NS_GPL(iommu_replace_group_handle, "IOMMUFD_INTERNAL");
+  * IOMMU activity while leaving the group->domain pointer intact. Later when the
+  * reset is finished, pci_dev_reset_iommu_done() can restore everything.
+  *
+- * Caller must use pci_dev_reset_iommu_prepare() with pci_dev_reset_iommu_done()
+- * before/after the core-level reset routine, to unset the resetting_domain.
++ * Caller must use pci_dev_reset_iommu_done() after a successful PCI-level reset
++ * to unset the resetting_domain. If the reset fails, caller can choose to keep
++ * the device in the resetting_domain to protect system memory using IOMMU from
++ * any bad ATS.
+  *
+  * Return: 0 on success or negative error code if the preparation failed.
+  *
+@@ -3961,9 +3963,9 @@ int pci_dev_reset_iommu_prepare(struct pci_dev *pdev)
  
  	guard(mutex)(&group->mutex);
  
-@@ -4029,6 +4031,16 @@ void pci_dev_reset_iommu_done(struct pci_dev *pdev)
- 	if (WARN_ON(!group->blocking_domain))
- 		return;
+-	/* Re-entry is not allowed */
+-	if (WARN_ON(group->resetting_domain))
+-		return -EBUSY;
++	/* Already prepared */
++	if (group->resetting_domain)
++		return 0;
  
+ 	ret = __iommu_group_alloc_blocking_domain(group);
+ 	if (ret)
+@@ -4001,7 +4003,9 @@ EXPORT_SYMBOL_GPL(pci_dev_reset_iommu_prepare);
+  * re-attaching all RID/PASID of the device's back to the domains retained in
+  * the core-level structure.
+  *
+- * Caller must pair it with a successful pci_dev_reset_iommu_prepare().
++ * This is a pairing function for pci_dev_reset_iommu_prepare(). Caller should
++ * use it on a successful PCI-level reset. Otherwise, it's suggested for caller
++ * to keep the device in the resetting_domain to protect system memory.
+  *
+  * Note that, although unlikely, there is a risk that re-attaching domains might
+  * fail due to some unexpected happening like OOM.
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index 4d0f2cb6c695b..f1a918938242c 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -16,6 +16,7 @@
+ #include <linux/pci_hotplug.h>
+ #include <linux/module.h>
+ #include <linux/pci-acpi.h>
++#include <linux/pci-ats.h>
+ #include <linux/pci-ecam.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/pm_qos.h>
+@@ -977,7 +978,15 @@ int pci_dev_acpi_reset(struct pci_dev *dev, bool probe)
+ 		ret = -ENOTTY;
+ 	}
+ 
+-	pci_dev_reset_iommu_done(dev);
 +	/*
-+	 * A PCI device might have been in an error state, so the IOMMU driver
-+	 * had to quarantine the device by disabling specific hardware feature
-+	 * or dropping translation capability. Here notify the IOMMU driver as
-+	 * a reliable signal that the faulty PCI device has been cleanly reset
-+	 * so now it can lift its quarantine and restore full functionality.
++	 * The reset might be invoked to recover a serious error. E.g. when the
++	 * ATC failed to invalidate its stale entries, which can result in data
++	 * corruption. Thus, do not unblock ATS until a successful reset.
 +	 */
-+	if (ops && ops->reset_device_done)
-+		ops->reset_device_done(&pdev->dev);
-+
- 	/* Re-attach RID domain back to group->domain */
- 	if (group->domain != group->blocking_domain) {
- 		WARN_ON(__iommu_attach_device(group->domain, &pdev->dev,
++	if (!ret || !pci_ats_supported(dev))
++		pci_dev_reset_iommu_done(dev);
++	else
++		pci_warn(dev, "Reset failed. Blocking ATS to protect memory\n");
+ 	return ret;
+ }
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8479c2e1f74f1..80c5cf6eeebdc 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4358,7 +4358,15 @@ int pcie_flr(struct pci_dev *dev)
+ 
+ 	ret = pci_dev_wait(dev, "FLR", PCIE_RESET_READY_POLL_MS);
+ done:
+-	pci_dev_reset_iommu_done(dev);
++	/*
++	 * The reset might be invoked to recover a serious error. E.g. when the
++	 * ATC failed to invalidate its stale entries, which can result in data
++	 * corruption. Thus, do not unblock ATS until a successful reset.
++	 */
++	if (!ret || !pci_ats_supported(dev))
++		pci_dev_reset_iommu_done(dev);
++	else
++		pci_warn(dev, "Reset failed. Blocking ATS to protect memory\n");
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(pcie_flr);
+@@ -4436,7 +4444,15 @@ static int pci_af_flr(struct pci_dev *dev, bool probe)
+ 
+ 	ret = pci_dev_wait(dev, "AF_FLR", PCIE_RESET_READY_POLL_MS);
+ done:
+-	pci_dev_reset_iommu_done(dev);
++	/*
++	 * The reset might be invoked to recover a serious error. E.g. when the
++	 * ATC failed to invalidate its stale entries, which can result in data
++	 * corruption. Thus, do not unblock ATS until a successful reset.
++	 */
++	if (!ret || !pci_ats_supported(dev))
++		pci_dev_reset_iommu_done(dev);
++	else
++		pci_warn(dev, "Reset failed. Blocking ATS to protect memory\n");
+ 	return ret;
+ }
+ 
+@@ -4490,7 +4506,15 @@ static int pci_pm_reset(struct pci_dev *dev, bool probe)
+ 	pci_dev_d3_sleep(dev);
+ 
+ 	ret = pci_dev_wait(dev, "PM D3hot->D0", PCIE_RESET_READY_POLL_MS);
+-	pci_dev_reset_iommu_done(dev);
++	/*
++	 * The reset might be invoked to recover a serious error. E.g. when the
++	 * ATC failed to invalidate its stale entries, which can result in data
++	 * corruption. Thus, do not unblock ATS until a successful reset.
++	 */
++	if (!ret || !pci_ats_supported(dev))
++		pci_dev_reset_iommu_done(dev);
++	else
++		pci_warn(dev, "Reset failed. Blocking ATS to protect memory\n");
+ 	return ret;
+ }
+ 
+@@ -4933,7 +4957,15 @@ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
+ 
+ 	rc = pci_parent_bus_reset(dev, probe);
+ done:
+-	pci_dev_reset_iommu_done(dev);
++	/*
++	 * The reset might be invoked to recover a serious error. E.g. when the
++	 * ATC failed to invalidate its stale entries, which can result in data
++	 * corruption. Thus, do not unblock ATS until a successful reset.
++	 */
++	if (!rc || !pci_ats_supported(dev))
++		pci_dev_reset_iommu_done(dev);
++	else
++		pci_warn(dev, "Reset failed. Blocking ATS to protect memory\n");
+ 	return rc;
+ }
+ 
+@@ -4978,7 +5010,15 @@ static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
+ 		pci_write_config_word(bridge, dvsec + PCI_DVSEC_CXL_PORT_CTL,
+ 				      reg);
+ 
+-	pci_dev_reset_iommu_done(dev);
++	/*
++	 * The reset might be invoked to recover a serious error. E.g. when the
++	 * ATC failed to invalidate its stale entries, which can result in data
++	 * corruption. Thus, do not unblock ATS until a successful reset.
++	 */
++	if (!rc || !pci_ats_supported(dev))
++		pci_dev_reset_iommu_done(dev);
++	else
++		pci_warn(dev, "Reset failed. Blocking ATS to protect memory\n");
+ 	return rc;
+ }
+ 
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 48946cca4be72..d9a03a7772916 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -30,6 +30,7 @@
+ #include <linux/ktime.h>
+ #include <linux/mm.h>
+ #include <linux/nvme.h>
++#include <linux/pci-ats.h>
+ #include <linux/platform_data/x86/apple.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/sizes.h>
+@@ -4269,7 +4270,15 @@ static int __pci_dev_specific_reset(struct pci_dev *dev, bool probe,
+ 	}
+ 
+ 	ret = i->reset(dev, probe);
+-	pci_dev_reset_iommu_done(dev);
++	/*
++	 * The reset might be invoked to recover a serious error. E.g. when the
++	 * ATC failed to invalidate its stale entries, which can result in data
++	 * corruption. Thus, do not unblock ATS until a successful reset.
++	 */
++	if (!ret || !pci_ats_supported(dev))
++		pci_dev_reset_iommu_done(dev);
++	else
++		pci_warn(dev, "Reset failed. Blocking ATS to protect memory\n");
+ 	return ret;
+ }
+ 
 -- 
 2.43.0
 
