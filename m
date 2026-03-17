@@ -1,159 +1,118 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 851F92EB874;
-	Tue, 17 Mar 2026 04:18:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4834232B9A9;
+	Tue, 17 Mar 2026 04:30:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773721137; cv=none; b=VEg6lHq4j/5G8mke8LC0w/lV8qX8P4x/rMl/ATz7QVxBmMSPNoNly4mwi5Ca1aPb5VdTq6DS9ZVPIj8EgLWjJkQsPU9BdYMFILQkBq3qnunkDM2TNCemOwA2tuRAdlH0lrM9aWG1f3aapwDOwetX/PwJHvYN9nqyybfUMW/Xu8Y=
+	t=1773721803; cv=none; b=Cml4BS77KBAvg61uCcFMThQMqRJOWKUFOMOctzrnICC3HFarcxLTsVGDZdZqr8Uw6wx2mGMkiWM2+C/V9YqqzXl6EqIFDKJbHS3cAhDtL9FjKX8RZxL7B9nLlhJYqdMdCb4NnO7Alc09E9h1p1WNJbhWPnLxgwgo2yp6JOTxCb8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773721137; c=relaxed/simple;
-	bh=aAW7xmcPapo/bUAlT3a8Nv6ct0mWRHp2J/iY7SZTN+c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZKfb+Mq8Z88ask6PWL9Q0UoTJ+4jMIdUbwG45ZI+BWRk+v1bjKY7QX5ziGHikWYAL3dWEGTgplD92SDrPdrUl/xAtK4eezpcHnD4b8RzOo0xn613arpuZCN5j1+f8XDu27GNtc/M2Dh5StCV8cs0jU63BixqCtSE0Q2wSMiqIio=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RonaWlGq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773721803; c=relaxed/simple;
+	bh=X52v0ldx2BiySSXfXiJ1VT8igCvrWnyeybx/I/10gkg=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=tbkm4Va6e9UH2iOUNHENRTvq8HP/JVeiM6zEEI0rLuElFdhseb5IHu/Pt01FlAi3UxhvDb+nL6dgXdwBNxI7Rm4Z92qTrNrlT55FjaTYMs/Dx5jDWelaBJqYweV7U+TfnRpskSJsbTqbQnowyEs+hY0Joea44vozPyxUXn0dwJc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FiSsisi0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RonaWlGq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFBC1C4CEF7;
-	Tue, 17 Mar 2026 04:18:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FiSsisi0"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 10849C4AF0E;
+	Tue, 17 Mar 2026 04:30:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773721137;
-	bh=aAW7xmcPapo/bUAlT3a8Nv6ct0mWRHp2J/iY7SZTN+c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=RonaWlGqdCAqdKJoPAT7n70KfSue7ZyHcB38BqGTjnPwp7XfAWj8yUL2HGmACfyaQ
-	 6qHE5XWcPYYH4knm6PiIHCBZqsSK0U6fsETRNIXB/IlzL25jTkZC9pvDBwjQmojkAH
-	 zMgSO4PR9ZAN3vo8aRHaj1ay97LYaJmA1QnJydbiLtagx9KvkJqAzxcpaRb10V0vx9
-	 h5HNRP7/xC3fQ53/n+dfKd/j+WCSFVQp9I5vlicZCfm9WOunp9TtUXFtxYrBD4Hdp0
-	 /3U9Dydg6DkSS+QsEIZg6d3KaGYGV8c4JAjVxMQYQNl1sH6Z7xMC73rc7Yaz0HSR2g
-	 l5hEdJ7aS57/Q==
-Date: Tue, 17 Mar 2026 09:48:43 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bartosz Golaszewski <brgl@kernel.org>
-Cc: manivannan.sadhasivam@oss.qualcomm.com, linux-serial@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org, 
-	platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org, 
-	Stephan Gerhold <stephan.gerhold@linaro.org>, Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
-	linux-acpi@vger.kernel.org, Hans de Goede <johannes.goede@oss.qualcomm.com>, 
-	Rob Herring <robh@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Jiri Slaby <jirislaby@kernel.org>, Nathan Chancellor <nathan@kernel.org>, 
-	Nicolas Schier <nicolas.schier@linux.dev>, Hans de Goede <hansg@kernel.org>, 
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Mark Pearson <mpearson-lenovo@squebb.ca>, 
-	"Derek J. Clark" <derekjohn.clark@gmail.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Bartosz Golaszewski <brgl@bgdev.pl>, 
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
-	Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Subject: Re: [PATCH v5 9/9] power: sequencing: pcie-m2: Create serdev device
- for WCN7850 bluetooth
-Message-ID: <bsc57i43nvrstrgbtxgefcee2k25uua7cmyfy5riiglwww5xtl@vwfsuvflmmy3>
-References: <20260224-pci-m2-e-v5-0-dd9b9501d33c@oss.qualcomm.com>
- <20260224-pci-m2-e-v5-9-dd9b9501d33c@oss.qualcomm.com>
- <CAMRc=MeJP-BLf3_zM9b+nz1nMOGVzyUhXemejHkV+AJREGPz_w@mail.gmail.com>
+	s=k20201202; t=1773721803;
+	bh=X52v0ldx2BiySSXfXiJ1VT8igCvrWnyeybx/I/10gkg=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=FiSsisi04CjGpPT540X5+yjxvQtyM7S0Zj7hCr/RE0DrY4RBfMX1Pq9ng+ArdhpNf
+	 IBecBnhkQgyQklz9mP7wWgXcQvHR4nKo8lFVf4z33BAFqNEavsKhsgn+UP5vmz12gZ
+	 hKvGV3aW2aPubkniqwlc3dNOy5ERati0S2RU1IuVa0qorEcAdsQpdOwg/biNpLBdLK
+	 j/YJREjWGIzLfc8Y0H3D2oIDigKWrGiuj9pQm/eSNkl7STqPvxqxSpWH6mJYmLjHAD
+	 nodctrTi3B0mIN91yXTmZjzIZDqnFx5dnTuoJybeGIBfydJ1g8HomfG/HMWVjDK+Bs
+	 lBaUGCJCEJU6g==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EECFFFB5EB8;
+	Tue, 17 Mar 2026 04:30:02 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Tue, 17 Mar 2026 09:59:54 +0530
+Subject: [PATCH v6 4/9] dt-bindings: serial: Document the graph port
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAMRc=MeJP-BLf3_zM9b+nz1nMOGVzyUhXemejHkV+AJREGPz_w@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260317-pci-m2-e-v6-4-9c898f108d3d@oss.qualcomm.com>
+References: <20260317-pci-m2-e-v6-0-9c898f108d3d@oss.qualcomm.com>
+In-Reply-To: <20260317-pci-m2-e-v6-0-9c898f108d3d@oss.qualcomm.com>
+To: Rob Herring <robh@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Jiri Slaby <jirislaby@kernel.org>, Nathan Chancellor <nathan@kernel.org>, 
+ Nicolas Schier <nicolas.schier@linux.dev>, Hans de Goede <hansg@kernel.org>, 
+ =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+ Mark Pearson <mpearson-lenovo@squebb.ca>, 
+ "Derek J. Clark" <derekjohn.clark@gmail.com>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+ Bartosz Golaszewski <brgl@bgdev.pl>, 
+ Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+ Bartosz Golaszewski <brgl@kernel.org>
+Cc: linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-kbuild@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
+ linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+ linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+ linux-pm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
+ Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
+ linux-acpi@vger.kernel.org, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+ Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1047;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=qc2byN8fzCzHCp/R/TbHmtEA/yB09rfLEQZF1FIZXLk=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpuNjHzIlkekCrgGWcamJjp5Bq6wTTkw6dTyt+H
+ X3gw2G7SNOJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCabjYxwAKCRBVnxHm/pHO
+ 9XJGB/9ZxYiHOampZxJrCmyhY9H1GJN7K3WEXr1m9d6VtZqZg+8N6b41wlGb4ITXKf4xpe24euM
+ y8z8pHsP6U3xi37uvgcjt+NgxNMXvMS1IOUZk+CYpiFXnAQXJxD1cUYFTa5PttTX1HUBmmNhQvJ
+ uEJ4H/xWRhtAyzSNhs63upcGC/ScQ3FasLHmEJRX62C5O3uxPgm2gIrlkAtOLsn/pB9JsrA+gJJ
+ DCLkdXm5HBTURYxMQBpsl682DemPNhr1h9AHZpND7zvdkL9iMOdW09Wn6hLUW8A5f26/VjObWr4
+ rGTyXjE04zLvxhEWKVgW9f/E7528wwPdoGkTuTo79WzuiZT1
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-On Wed, Feb 25, 2026 at 03:22:50AM -0800, Bartosz Golaszewski wrote:
-> On Tue, 24 Feb 2026 06:30:55 +0100, Manivannan Sadhasivam via B4 Relay
-> <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> said:
-> > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> >
-> > For supporting bluetooth over the non-discoverable UART interface of
-> > WCN7850, create the serdev device after enumerating the PCIe interface.
-> > This is mandatory since the device ID is only known after the PCIe
-> > enumeration and the ID is used for creating the serdev device.
-> >
-> > Since by default there is no OF or ACPI node for the created serdev,
-> > create a dynamic OF 'bluetooth' node with the 'compatible' property and
-> > attach it to the serdev device. This will allow the serdev device to bind
-> > to the existing bluetooth driver.
-> >
-> > Tested-by: Hans de Goede <johannes.goede@oss.qualcomm.com> # ThinkPad T14s gen6 (arm64)
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > ---
-> >
-> 
-> [snip]
-> 
-> > -static void pwrseq_pcie_m2_free_regulators(void *data)
-> > +static void pwrseq_pcie_m2_free_resources(void *data)
-> >  {
-> >  	struct pwrseq_pcie_m2_ctx *ctx = data;
-> >
-> > +	serdev_device_remove(ctx->serdev);
-> > +	bus_unregister_notifier(&pci_bus_type, &ctx->nb);
-> > +	of_changeset_revert(ctx->ocs);
-> > +	of_changeset_destroy(ctx->ocs);
-> >  	regulator_bulk_free(ctx->num_vregs, ctx->regs);
-> >  }
-> >
-> > +static int pwrseq_m2_pcie_create_bt_node(struct pwrseq_pcie_m2_ctx *ctx,
-> > +					struct device_node *parent)
-> > +{
-> > +	struct device *dev = ctx->dev;
-> > +	struct device_node *np;
-> > +	int ret;
-> > +
-> > +	ctx->ocs = devm_kzalloc(dev, sizeof(*ctx->ocs), GFP_KERNEL);
-> > +	if (!ctx->ocs)
-> > +		return -ENOMEM;
-> > +
-> > +	of_changeset_init(ctx->ocs);
-> > +
-> > +	np = of_changeset_create_node(ctx->ocs, parent, "bluetooth");
-> > +	if (!np) {
-> > +		dev_err(dev, "Failed to create bluetooth node\n");
-> > +		ret = -ENODEV;
-> > +		goto err_destroy_changeset;
-> > +	}
-> > +
-> > +	ret = of_changeset_add_prop_string(ctx->ocs, np, "compatible", "qcom,wcn7850-bt");
-> > +	if (ret) {
-> > +		dev_err(dev, "Failed to add bluetooth compatible: %d\n", ret);
-> > +		goto err_destroy_changeset;
-> > +	}
-> > +
-> > +	ret = of_changeset_apply(ctx->ocs);
-> > +	if (ret) {
-> > +		dev_err(dev, "Failed to apply changeset: %d\n", ret);
-> > +		goto err_destroy_changeset;
-> > +	}
-> > +
-> > +	ret = device_add_of_node(&ctx->serdev->dev, np);
-> > +	if (ret) {
-> > +		dev_err(dev, "Failed to add OF node: %d\n", ret);
-> > +		goto err_revert_changeset;
-> > +	}
-> > +
-> > +	return 0;
-> > +
-> > +err_revert_changeset:
-> > +	of_changeset_revert(ctx->ocs);
-> > +err_destroy_changeset:
-> > +	of_changeset_destroy(ctx->ocs);
-> > +
-> 
-> I would prefer pwrseq_pcie_m2_free_resources() to be split into separate
-> devm actions, otherwise it's not much different from simply having the
-> .remove() callback. With a split like that you'd avoid having these labels
-> here.
-> 
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-We do need these error labels since pwrseq_m2_pcie_create_bt_node() is called
-from notifier callback and a failure here doesn't cause the driver to fail. So
-the changeset will linger till the driver gets removed.
+A serial controller could be connected to an external connector like PCIe
+M.2 for controlling the serial interface of the card. Hence, document the
+OF graph port.
 
-So I don't see a real need to split pwrseq_pcie_m2_free_resources().
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+ Documentation/devicetree/bindings/serial/serial.yaml | 3 +++
+ 1 file changed, 3 insertions(+)
 
-- Mani
+diff --git a/Documentation/devicetree/bindings/serial/serial.yaml b/Documentation/devicetree/bindings/serial/serial.yaml
+index 6aa9cfae417b..96eb1de8771e 100644
+--- a/Documentation/devicetree/bindings/serial/serial.yaml
++++ b/Documentation/devicetree/bindings/serial/serial.yaml
+@@ -87,6 +87,9 @@ properties:
+     description:
+       TX FIFO threshold configuration (in bytes).
+ 
++  port:
++    $ref: /schemas/graph.yaml#/properties/port
++
+ patternProperties:
+   "^(bluetooth|bluetooth-gnss|embedded-controller|gnss|gps|mcu|onewire)$":
+     if:
 
 -- 
-மணிவண்ணன் சதாசிவம்
+2.51.0
+
+
