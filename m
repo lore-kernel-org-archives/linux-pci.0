@@ -1,222 +1,135 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A01413264D6;
-	Tue, 17 Mar 2026 06:43:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from ultrarisc.com (unknown [218.76.62.146])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id C5A5D33BBC6;
+	Tue, 17 Mar 2026 06:46:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.76.62.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773729782; cv=none; b=YqcRpVHp1nkc1XYyo7m9qHJQjxXOAkVs21CFTQsCiSNfBuw6SL1Dv67gpworaYBWn7ZYlHhQSNmw1udVjtsOHX/IU1zFluLsH+gA8Y9YxIap8ktlOQZtyqU2ayOdd09g6HFGtgmdIPGT5SwYhfh3+rPAv5LH2fFlf/ML9AH8EXQ=
+	t=1773730012; cv=none; b=X0wHKmLe3xoqU8qX6p/YSmBUd+ZdRIdAkl3WGmzAZQ9WObXDD9cvAHw2dtqiLkM6N43mnDaQcD/AMWS4smRGtRk+7Tl+v/fuqa5oWk+MKH1RECI11QFREUncnoagnyVYZklzuPvZLtbvxrxA1QTrt0EZFQaCtNYUUMR+YkfB0R8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773729782; c=relaxed/simple;
-	bh=RV36HArRQD5WpIrbL59QzOUQbECg2GUM/eOEhUB92hM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KNqhIjHkA5zdAYWXVZBRGg8Qf0LutVTgF6E+hIM7kfyaP6D2OfQTuXY7dzBKmQ87fixSovpN39rZoCcjsGw8A3CWncwwUduUizHuDOIGQ0hTSvcJnOCz40GkAk2kJpMCh1YKZaSkUiSM3KQlXNYpGBebqHJTcKsp+XeVlPp5RBs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HDLoxxDA; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773730012; c=relaxed/simple;
+	bh=Wh4r1tJxW/lcrM+5/s3mKCV9XBfeqG6hKDHxb5EPDGw=;
+	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
+	 References:Date:Message-Id; b=ONU0Jwxvd7EYjdeoHJhTSQqkBfzY02NbseRl7HJFHGk6DvoHpOTk7wWN7YiO7UFqxyDN8uL8oFsu5YzBo1RRz8TyJXjIGKP95D8pKhVfzOPv5tH1yaWPSSA1L4IfI/2VggYrgfztsgXnwjorduLI2QrHjVR8dD4kfvglwhH9D28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=none smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=D0au6Zbv; arc=none smtp.client-ip=218.76.62.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ultrarisc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HDLoxxDA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63198C4CEF7;
-	Tue, 17 Mar 2026 06:42:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773729782;
-	bh=RV36HArRQD5WpIrbL59QzOUQbECg2GUM/eOEhUB92hM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HDLoxxDAvu4KFUNvAqr4AoRhunOfAF7ryj5X+FkO/ws53gVxJpwBMbTZW5AFZUpJR
-	 4hAOlGRX4ydTnfmdQOre3kaAoseauWJfbCaMCo0fGoU21FVGE+jAB40WTbhOMC5+9T
-	 ErNhQvhjHYdHbrfbP63w/qkuLXj6EhEKuDP4RVkKvMpdaJyyJVzi31p95Kq/jmF49E
-	 6F/fNWuSiU2CpW5KhdHIT5uJn5lsaZK7fdOoizcTUyuilvHDlILIZ0TWpgfxU5eX2K
-	 FxuQW09NlZULK7mC9C9aXh1t85izuhK//XTJ6BaUuyiukIIYlxPxM5KtDX4S3h779U
-	 gXw7KOGtZcW0w==
-Date: Tue, 17 Mar 2026 12:12:49 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: manivannan.sadhasivam@oss.qualcomm.com, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, Bartosz Golaszewski <brgl@kernel.org>
-Cc: Rob Herring <robh@kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
-	Nathan Chancellor <nathan@kernel.org>, Nicolas Schier <nicolas.schier@linux.dev>, 
-	Hans de Goede <hansg@kernel.org>, Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, 
-	Mark Pearson <mpearson-lenovo@squebb.ca>, "Derek J. Clark" <derekjohn.clark@gmail.com>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
-	Bartosz Golaszewski <brgl@kernel.org>, linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kbuild@vger.kernel.org, platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
-	linux-pm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-acpi@vger.kernel.org, 
-	Hans de Goede <johannes.goede@oss.qualcomm.com>
-Subject: Re: [PATCH v6 9/9] power: sequencing: pcie-m2: Create serdev device
- for WCN7850 bluetooth
-Message-ID: <adtnsxel2lh2hgftqplvd3slfk3x5zx7xyfroxgdbmoz4qticp@lkx6iplaawoe>
-References: <20260317-pci-m2-e-v6-0-9c898f108d3d@oss.qualcomm.com>
- <20260317-pci-m2-e-v6-9-9c898f108d3d@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="D0au6Zbv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=ultrarisc.com; s=dkim; h=Received:MIME-Version:Content-Type:
+	Content-Transfer-Encoding:Subject:From:To:Cc:In-Reply-To:
+	References:Date:Message-Id; bh=gIoVGh7it5fMYUkkNLHp8OH2p11aLnm6q
+	S09VmO8Afg=; b=D0au6ZbvipQmgQNRbvlxf2uZ8Ml+cTM36jHoo5umNmfQ8QwgF
+	VfdEXq7RkCDI2C3cKihBZeQI7ETx0dZJQWQFEdrAootKoX8uGDyp65rL2HY1HNW5
+	BY+NeKxuRcv55W77ImFvfnr38gFl7fCgCN/VeOG1jqr0kdjZRB/RTQ4xO0=
+Received: from [127.0.0.1] (unknown [192.168.100.1])
+	by localhost.localdomain (Coremail) with SMTP id AQAAfwAXxSTy+LhpU0cBAA--.1123S2;
+	Tue, 17 Mar 2026 14:47:14 +0800 (CST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260317-pci-m2-e-v6-9-9c898f108d3d@oss.qualcomm.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 1/4] riscv: add UltraRISC SoC family Kconfig support
+From: Jia Wang <wangjia@ultrarisc.com>
+To: Conor Dooley <conor@kernel.org>
+Cc: Jia Wang <wangjia@ultrarisc.com>, Paul Walmsley <pjw@kernel.org>, 
+ Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
+ Alexandre Ghiti <alex@ghiti.fr>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, 
+ Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, linux-riscv@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ devicetree@vger.kernel.org
+In-Reply-To: <20260316-powdery-unbundle-b1166d13f53b@spud>
+References: <20260316-ultrarisc-pcie-v1-0-ef2946ede698@ultrarisc.com>
+ <20260316-ultrarisc-pcie-v1-1-ef2946ede698@ultrarisc.com>
+ <20260316-powdery-unbundle-b1166d13f53b@spud>
+Date: Tue, 17 Mar 2026 14:46:24 +0800
+Message-Id: <177372998464.49340.13796019002628537253.b4-reply@b4>
+X-Mailer: b4 0.15-dev
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1773729985; l=1669;
+ i=wangjia@ultrarisc.com; s=20260309; h=from:subject:message-id;
+ bh=Wh4r1tJxW/lcrM+5/s3mKCV9XBfeqG6hKDHxb5EPDGw=;
+ b=ILj7unpHtMHqWmjlLI7/tPGnunhwSsS8Xtq1iZbRucVP8vowTNh4jyI+qbH5QarPUFQzPy/4t
+ oNPEPJb4jhzCT7Eu7JSn7WY9jScPJmDP1wK6D+CRtY1UamBX4EkSEux
+X-Developer-Key: i=wangjia@ultrarisc.com; a=ed25519;
+ pk=XvYkrelqJIIzobY7j+nIg8rsfv5kzaOzuc1UPhd087U=
+X-CM-TRANSID:AQAAfwAXxSTy+LhpU0cBAA--.1123S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7tF48Xr1UAryftFyUZFWkZwb_yoW8Wr17pF
+	s5CF1rCFsxGr1fCa9aqw45urWI9F4v93y5Zr1Duw18AFs8Cry5C3s7tr13X3WDZFZ8Crna
+	gFyru3W3ua15uaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9l14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
+	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+	n2kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCY02Avz4vE-syl42xK82IYc2Ij64vIr41l4I
+	8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AK
+	xVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcV
+	AFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8I
+	cIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r
+	4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjTRNJ5oDUUUU
+X-CM-SenderInfo: pzdqwylld63zxwud2x1vfou0bp/1tbiAQAJEWm47wkAAgAAss
 
-On Tue, Mar 17, 2026 at 09:59:59AM +0530, Manivannan Sadhasivam via B4 Relay wrote:
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+On 2026-03-16 14:39 +0000, Conor Dooley wrote:
+> On Mon, Mar 16, 2026 at 03:06:57PM +0800, Jia Wang wrote:
+> > The first SoC in the UltraRISC series is UR-DP1000, containing octa
+> > UltraRISC C100 cores.
+> > 
+> > Signed-off-by: Jia Wang <wangjia@ultrarisc.com>
+> > ---
+> >  arch/riscv/Kconfig.socs | 10 ++++++++++
+> >  1 file changed, 10 insertions(+)
+> > 
+> > diff --git a/arch/riscv/Kconfig.socs b/arch/riscv/Kconfig.socs
+> > index d621b85dd63b..f49d3ccaacde 100644
+> > --- a/arch/riscv/Kconfig.socs
+> > +++ b/arch/riscv/Kconfig.socs
+> > @@ -84,6 +84,16 @@ config ARCH_THEAD
+> >  	help
+> >  	  This enables support for the RISC-V based T-HEAD SoCs.
+> >  
+> > +config ARCH_ULTRARISC
+> > +	bool "UltraRISC RISC-V SoCs"
+> > +	depends on MMU && !XIP_KERNEL
 > 
-> For supporting bluetooth over the non-discoverable UART interface of
-> WCN7850, create the serdev device after enumerating the PCIe interface.
-> This is mandatory since the device ID is only known after the PCIe
-> enumeration and the ID is used for creating the serdev device.
-> 
-> Since by default there is no OF or ACPI node for the created serdev,
-> create a dynamic OF 'bluetooth' node with the 'compatible' property and
-> attach it to the serdev device. This will allow the serdev device to bind
-> to the existing bluetooth driver.
-> 
-> Tested-by: Hans de Goede <johannes.goede@oss.qualcomm.com> # ThinkPad T14s gen6 (arm64)
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> ---
->  drivers/power/sequencing/Kconfig          |   3 +-
->  drivers/power/sequencing/pwrseq-pcie-m2.c | 178 +++++++++++++++++++++++++++++-
->  2 files changed, 177 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/power/sequencing/Kconfig b/drivers/power/sequencing/Kconfig
-> index f5fff84566ba..55aeef125e6f 100644
-> --- a/drivers/power/sequencing/Kconfig
-> +++ b/drivers/power/sequencing/Kconfig
-> @@ -37,7 +37,8 @@ config POWER_SEQUENCING_TH1520_GPU
->  
->  config POWER_SEQUENCING_PCIE_M2
->  	tristate "PCIe M.2 connector power sequencing driver"
-> -	depends on OF || COMPILE_TEST
-> +	depends on (PCI && OF) || COMPILE_TEST
-> +	select OF_DYNAMIC
->  	help
->  	  Say Y here to enable the power sequencing driver for PCIe M.2
->  	  connectors. This driver handles the power sequencing for the M.2
-> diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
-> index 3507cdcb1e7b..77357439ba81 100644
-> --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
-> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
-> @@ -12,9 +12,11 @@
->  #include <linux/of.h>
->  #include <linux/of_graph.h>
->  #include <linux/of_platform.h>
-> +#include <linux/pci.h>
->  #include <linux/platform_device.h>
->  #include <linux/pwrseq/provider.h>
->  #include <linux/regulator/consumer.h>
-> +#include <linux/serdev.h>
->  #include <linux/slab.h>
->  
->  struct pwrseq_pcie_m2_pdata {
-> @@ -30,6 +32,9 @@ struct pwrseq_pcie_m2_ctx {
->  	struct notifier_block nb;
->  	struct gpio_desc *w_disable1_gpio;
->  	struct gpio_desc *w_disable2_gpio;
-> +	struct serdev_device *serdev;
-> +	struct of_changeset *ocs;
-> +	struct device *dev;
->  };
->  
->  static int pwrseq_pcie_m2_vregs_enable(struct pwrseq_device *pwrseq)
-> @@ -172,13 +177,176 @@ static int pwrseq_pcie_m2_match(struct pwrseq_device *pwrseq,
->  	return PWRSEQ_NO_MATCH;
->  }
->  
-> -static void pwrseq_pcie_m2_free_regulators(void *data)
-> +static void pwrseq_pcie_m2_free_resources(void *data)
->  {
->  	struct pwrseq_pcie_m2_ctx *ctx = data;
->  
-> +	serdev_device_remove(ctx->serdev);
-> +	bus_unregister_notifier(&pci_bus_type, &ctx->nb);
-> +	of_changeset_revert(ctx->ocs);
-> +	of_changeset_destroy(ctx->ocs);
->  	regulator_bulk_free(ctx->num_vregs, ctx->regs);
->  }
->  
-> +static int pwrseq_m2_pcie_create_bt_node(struct pwrseq_pcie_m2_ctx *ctx,
-> +					struct device_node *parent)
-> +{
-> +	struct device *dev = ctx->dev;
-> +	struct device_node *np;
-> +	int ret;
-> +
-> +	ctx->ocs = devm_kzalloc(dev, sizeof(*ctx->ocs), GFP_KERNEL);
-> +	if (!ctx->ocs)
-> +		return -ENOMEM;
-> +
-> +	of_changeset_init(ctx->ocs);
-> +
-> +	np = of_changeset_create_node(ctx->ocs, parent, "bluetooth");
-> +	if (!np) {
-> +		dev_err(dev, "Failed to create bluetooth node\n");
-> +		ret = -ENODEV;
-> +		goto err_destroy_changeset;
-> +	}
-> +
-> +	ret = of_changeset_add_prop_string(ctx->ocs, np, "compatible", "qcom,wcn7850-bt");
-> +	if (ret) {
-> +		dev_err(dev, "Failed to add bluetooth compatible: %d\n", ret);
-> +		goto err_destroy_changeset;
-> +	}
-> +
-> +	ret = of_changeset_apply(ctx->ocs);
-> +	if (ret) {
-> +		dev_err(dev, "Failed to apply changeset: %d\n", ret);
-> +		goto err_destroy_changeset;
-> +	}
-> +
-> +	ret = device_add_of_node(&ctx->serdev->dev, np);
-> +	if (ret) {
-> +		dev_err(dev, "Failed to add OF node: %d\n", ret);
-> +		goto err_revert_changeset;
-> +	}
-> +
-> +	return 0;
-> +
-> +err_revert_changeset:
-> +	of_changeset_revert(ctx->ocs);
-> +err_destroy_changeset:
-> +	of_changeset_destroy(ctx->ocs);
-> +
-> +	return ret;
-> +}
-> +
-> +static int pwrseq_m2_pcie_notify(struct notifier_block *nb, unsigned long action,
-> +			      void *data)
-> +{
-> +	struct pwrseq_pcie_m2_ctx *ctx = container_of(nb, struct pwrseq_pcie_m2_ctx, nb);
-> +	struct pci_dev *pdev = to_pci_dev(data);
-> +	struct serdev_controller *serdev_ctrl;
-> +	struct device *dev = ctx->dev;
-> +	int ret;
-> +
-> +	/*
-> +	 * Check whether the PCI device is associated with this M.2 connector or
-> +	 * not, by comparing the OF node of the PCI device parent and the Port 0
-> +	 * (PCIe) remote node parent OF node.
-> +	 */
-> +	struct device_node *pci_parent __free(device_node) =
-> +			of_graph_get_remote_node(dev_of_node(ctx->dev), 0, 0);
-> +	if (!pci_parent || (pci_parent != pdev->dev.parent->of_node))
-> +		return NOTIFY_DONE;
-> +
-> +	switch (action) {
-> +	case BUS_NOTIFY_ADD_DEVICE:
-> +		/* Create serdev device for WCN7850 */
-> +		if (pdev->vendor == PCI_VENDOR_ID_QCOM && pdev->device == 0x1107) {
-> +			struct device_node *serdev_parent __free(device_node) =
-> +				of_graph_get_remote_node(dev_of_node(ctx->dev), 1, 1);
+> Why do you depend on "MMU && !XIP_KERNEL"?
+>
+Hi Conor,
 
-Typo. This should be:
+Thanks for the review.
 
-	of_graph_get_remote_node(dev_of_node(ctx->dev), 3, 0);
+The dependency on "MMU" was added conservatively, but the DP1000 hardware
+does not strictly require MMU. I will remove this dependency in the
+next version of the patch.
 
-Bartosz, could you please fix it while applying?
+The "!XIP_KERNEL" dependency is retained because the platform does not
+support executing the kernel directly from storage, so the kernel
+must be loaded into RAM before execution.
 
-- Mani
+Best regards,
+Jia 
+> > +	help
+> > +	 This enables support for UltraRISC SoC platform hardware,
+> > +	 including boards based on the UR-DP1000.
+> > +	 UR-DP1000 is an 8-core 64-bit RISC-V SoC that supports
+> > +	 the RV64GCBHX ISA. It supports Hardware Virtualization
+> > +	 and RISC-V RV64 ISA H(v1.0) Extension.
+> > +
+> >  config ARCH_VIRT
+> >  	bool "QEMU Virt Machine"
+> >  	select POWER_RESET
+> > 
+> > -- 
+> > 2.34.1
+> > 
 
--- 
-மணிவண்ணன் சதாசிவம்
+
