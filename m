@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BE4E36E477;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B5DE375AA2;
 	Tue, 17 Mar 2026 04:30:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773721803; cv=none; b=Gefb8AigL8ESDUKHy9YCe/0Fj7FKt7c/NOhe4/8W6lgDaNrWH6zvEnjYHpnkTKXE4lE5L5aetYMF/AtpXRAqja7RVbtS63jyUUdMkOAvfemCGYWz9nNfWMgGTtwisre8lly2C55akgze1OGttv82Gu2c23KkF1CjdopWdSGbcLk=
+	t=1773721803; cv=none; b=QAfpn5Mb7jPDV5Iqe6uYYjLTbMPyke73hyLpA+57hWmD+RAfZ3UzOi5OzUeWHW/6hUSUk8DPiwwLhSBkpHHb+1xAnM+N8Sav8S3aHfISAsSXQZWXMe9wgUP5ADecD8qBb3hKzIO2CMuivpnx2cxwXBKp2LF+8SZKe8HY+jU7sIs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773721803; c=relaxed/simple;
-	bh=JoCqd4qTmhZAw9Ra/kUSAYchs5sr6tzJ0I7Nt266T1c=;
+	bh=xvJdFB9vxMSBN+U1jZgkkmd/Zx+jTJimCm+f0cyrTkg=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=FO0qnqhU+OGqByebql6Wt4vPtL7bm0iN2RTkGs4kHONbD2mqPctE67+I1TVSNGruzexV59vF1yE5ggF9CeYDwpka80Dm0CuoJURE1EX7J5NfDW/6oJHjL5Xg18CWyTlTB0D+T7OUc1U4y0SFfuSzaOEn9mg3Vo6QRvrrcKFMPLc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AksK2gIg; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=dyJ+S/dkVZuA0+MgDQ9xVf181Qg9NN8wwUT4DGYDLFL6n5rFDOPMAtgODySJ4ctidgBLmnUSLbbjA/vqB8xcZDJR+PE+1YpDhhZHe7zIo0gOOr7pfQ8SPaU07xm9wODcIY4sqwccznEG29fnSuTiFfwKe4rCuCVsJaWL3rADIs8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SUFaHqdh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AksK2gIg"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id F2FFCC4AF09;
-	Tue, 17 Mar 2026 04:30:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SUFaHqdh"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 3AA37C2BD01;
+	Tue, 17 Mar 2026 04:30:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1773721803;
-	bh=JoCqd4qTmhZAw9Ra/kUSAYchs5sr6tzJ0I7Nt266T1c=;
+	bh=xvJdFB9vxMSBN+U1jZgkkmd/Zx+jTJimCm+f0cyrTkg=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=AksK2gIgIPyYByAvwm5WugRT610NCVqFuKYafU0bCYZ60gDnWGeXiwVHFVaL6YGSn
-	 ow/8WubzwXhqDGYFdnjaLEfYYlg4aU+ewNE46ahRmPYXzDEH1Cap6d1WSKemLhu+Yd
-	 bwrMz806TDOcyCJRmyIHxAvopcxXA3F/FThclIdlxaJFVHKgK9030FvtcCjOFhg+0r
-	 P6C8nfw7r68JrCEWlYugAWkjmBIiUYq+KeR3+8RQ2TliARhyEi3BKcg14g73oIY83g
-	 NkajgP7LXWoKW2Oin66UgAnFgYHrDbg+oKoRR9SCykp594TNrdMUrq6O9gE3MIsysM
-	 mu6PtPTZB7QMw==
+	b=SUFaHqdhG7mXWAPba66RMlMQlmuXQF/BYj1OpMxffEFOlEpBY1wfj2vh4VLQ7K8q+
+	 e457m+l3MLFFmeWupfBR6EwFKkofhHwbgssWoi8+SdpnLOzVO8AK/hJX9mvey/Dny8
+	 feQKChby9+WzRwRpFGauA6QNG1gyN/7L2exYB2VnQBp2eUZvobCu4yQlvWuWiUE8wj
+	 ZLavo9alIU2HGweKYXy3lTgbb2Nu7/7yyqNMKiXkgrcjsyrgi3Z4HhPtp4bla1IS9N
+	 XAkEOb5AXAhHN4vq67b7N9shy5lXkuntG2snItjjDoio0+ONThIoWsvvBvCp84sesS
+	 Bu8dqdLXS7MFQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE445FB5EB6;
-	Tue, 17 Mar 2026 04:30:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EFB2FB5EBA;
+	Tue, 17 Mar 2026 04:30:03 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Tue, 17 Mar 2026 09:59:53 +0530
-Subject: [PATCH v6 3/9] serdev: Do not return -ENODEV from
- of_serdev_register_devices() if external connector is used
+Date: Tue, 17 Mar 2026 09:59:57 +0530
+Subject: [PATCH v6 7/9] Bluetooth: hci_qca: Add M.2 Bluetooth device
+ support using pwrseq
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260317-pci-m2-e-v6-3-9c898f108d3d@oss.qualcomm.com>
+Message-Id: <20260317-pci-m2-e-v6-7-9c898f108d3d@oss.qualcomm.com>
 References: <20260317-pci-m2-e-v6-0-9c898f108d3d@oss.qualcomm.com>
 In-Reply-To: <20260317-pci-m2-e-v6-0-9c898f108d3d@oss.qualcomm.com>
 To: Rob Herring <robh@kernel.org>, 
@@ -67,18 +67,18 @@ Cc: linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-acpi@vger.kernel.org, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
  Hans de Goede <johannes.goede@oss.qualcomm.com>, 
- Bartosz Golaszewski <brgl@kernel.org>
+ Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1461;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1618;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=9JYNk+DMPq2LlZQfTiexJ4EeAYXDboalcaCh+TYovs0=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpuNjHCVxcR2eU20/cYNvdftr00vaJ2V7UvPmaH
- ymEVn5El6iJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCabjYxwAKCRBVnxHm/pHO
- 9ciYB/97N4zLhjZr8iceNjwbuRKrCaK0uDrMyc88oKP1joAcuT6eaUaj9C4ac965XDtFjvjgQcd
- HuwZVvPK4edCTJ07RJUPS/RII7SYHgt1Qp8I6dgYWfHD+zpYh1AtJQ8h4rZ1SL6HnMX3FPKAoOc
- +juE9NbztuXO6VsYVDmE3OPHix3rydnJf4nJKmI0Vzfdw2NZJOoUUaheS+m3P21exNVYXN4PyZr
- Fbx8q8CPiqbYDQ8A3ghk65Fy5xPFJfpoLEVq1y9Q0bRNiYFgj5OxjuT7FhchuSArGheEnntt+T4
- oiqiSZt1qADyi4zQnyeOBcuo4wbY2gNTewEHkCOn25cCPAN8
+ bh=ufAjqbjVnkw5Wp64hBIBNRpJbSZpySlLbuaUxcUM4UA=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpuNjI/fWp1VvvtoZmDOj7GoNdTjpzGVusgoyp6
+ YwFkmDMUnmJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCabjYyAAKCRBVnxHm/pHO
+ 9aZcB/4+9qsDw7oVh6OpXwS8kRCci9gubV2KHYgbpsMTh/qOeGFKG5Fdwe1IL2GKDYyC5reMVIo
+ wGPatXmtyNloYGk3guu+bmiv0/JZ+wDxt8OaoW44zH5eIcfs17pvplWqKo+oJVLzwTfUfZWy9i9
+ Rx7FGIOh79iampCMwCacZROhykXGUtdZ0pvwvF2R5ftGWPMH3QBSYSEsvL1myL3aNCaw4UkicnJ
+ ayQWrQ332UUlcdNosnKmX7rusrH1oBEEdjrSyasG/d4rMWwQfuxIGhcjqtH9oV81Cq111EnEAVT
+ i7svUUG7cmhG8BAdk30HqrnyimHxmZRApL7IonECIZwyvlUY
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -88,45 +88,46 @@ Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-If an external connector like M.2 is connected to the serdev controller
-in DT, then the serdev devices may be created dynamically by the connector
-driver. So do not return -ENODEV from of_serdev_register_devices() if the
-static nodes are not found and the graph node is used.
+Power supply to the M.2 Bluetooth device attached to the host using M.2
+connector is controlled using the 'uart' pwrseq device. So add support for
+getting the pwrseq device if the OF graph link is present. Once obtained,
+the existing pwrseq APIs can be used to control the power supplies of the
+M.2 card.
 
 Tested-by: Hans de Goede <johannes.goede@oss.qualcomm.com> # ThinkPad T14s gen6 (arm64)
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- drivers/tty/serdev/core.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/bluetooth/hci_qca.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/tty/serdev/core.c b/drivers/tty/serdev/core.c
-index bf88b95f7458..e9d044a331b0 100644
---- a/drivers/tty/serdev/core.c
-+++ b/drivers/tty/serdev/core.c
-@@ -12,6 +12,7 @@
- #include <linux/kernel.h>
+diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
+index 5b02e7c3f56d..0454c2318461 100644
+--- a/drivers/bluetooth/hci_qca.c
++++ b/drivers/bluetooth/hci_qca.c
+@@ -26,6 +26,7 @@
+ #include <linux/mod_devicetable.h>
  #include <linux/module.h>
  #include <linux/of.h>
 +#include <linux/of_graph.h>
- #include <linux/of_device.h>
- #include <linux/pm_domain.h>
- #include <linux/pm_runtime.h>
-@@ -561,7 +562,13 @@ static int of_serdev_register_devices(struct serdev_controller *ctrl)
- 		} else
- 			found = true;
- 	}
--	if (!found)
+ #include <linux/acpi.h>
+ #include <linux/platform_device.h>
+ #include <linux/pwrseq/consumer.h>
+@@ -2421,6 +2422,14 @@ static int qca_serdev_probe(struct serdev_device *serdev)
+ 	case QCA_WCN6855:
+ 	case QCA_WCN7850:
+ 	case QCA_WCN6750:
++		if (of_graph_is_present(dev_of_node(&serdev->ctrl->dev))) {
++			qcadev->bt_power->pwrseq = devm_pwrseq_get(&serdev->ctrl->dev,
++								   "uart");
++			if (IS_ERR(qcadev->bt_power->pwrseq))
++				return PTR_ERR(qcadev->bt_power->pwrseq);
++			break;
++		}
 +
-+	/*
-+	 * When the serdev controller is connected to an external connector like
-+	 * M.2 in DT, then the serdev devices may be created dynamically by the
-+	 * connector driver.
-+	 */
-+	if (!found && !of_graph_is_present(dev_of_node(&ctrl->dev)))
- 		return -ENODEV;
- 
- 	return 0;
+ 		if (!device_property_present(&serdev->dev, "enable-gpios")) {
+ 			/*
+ 			 * Backward compatibility with old DT sources. If the
 
 -- 
 2.51.0
