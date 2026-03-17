@@ -1,135 +1,114 @@
-Received: from ultrarisc.com (unknown [218.76.62.146])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C5A5D33BBC6;
-	Tue, 17 Mar 2026 06:46:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.76.62.146
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DAFB346FAB;
+	Tue, 17 Mar 2026 07:07:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773730012; cv=none; b=X0wHKmLe3xoqU8qX6p/YSmBUd+ZdRIdAkl3WGmzAZQ9WObXDD9cvAHw2dtqiLkM6N43mnDaQcD/AMWS4smRGtRk+7Tl+v/fuqa5oWk+MKH1RECI11QFREUncnoagnyVYZklzuPvZLtbvxrxA1QTrt0EZFQaCtNYUUMR+YkfB0R8=
+	t=1773731256; cv=none; b=eHEE+dCp3DfgEEdT12LcySNtU9Q2yGD9I8Up9yYAKs7qEYw4cesEg/L0+H1Hbq1NkQaT1AygsZEvyUgX2RcN2HDEDEgRPwot6BOsODnCGNBGuSkVnOoPQhEbQ1GRHndnR/2ge57TJShKMDxkTWhD2MpUrttmkOc2/zP4ybqwwxk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773730012; c=relaxed/simple;
-	bh=Wh4r1tJxW/lcrM+5/s3mKCV9XBfeqG6hKDHxb5EPDGw=;
-	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=ONU0Jwxvd7EYjdeoHJhTSQqkBfzY02NbseRl7HJFHGk6DvoHpOTk7wWN7YiO7UFqxyDN8uL8oFsu5YzBo1RRz8TyJXjIGKP95D8pKhVfzOPv5tH1yaWPSSA1L4IfI/2VggYrgfztsgXnwjorduLI2QrHjVR8dD4kfvglwhH9D28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=none smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=D0au6Zbv; arc=none smtp.client-ip=218.76.62.146
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ultrarisc.com
+	s=arc-20240116; t=1773731256; c=relaxed/simple;
+	bh=D9EpaUqvtcLalg9vu0z9KVXubLh0G2Y4S2QGVe1FmXU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ooEZe9v1UFSReRCnzriyTehMVpnv4y73qCIn+M7mO0ohWQdYV/sgcPN7tDg7A4hYpbHYlfEsnZknZXk6Hy78INBAewQJB6WZu8bD+E145xtEz9S6wV3YkaBJ1UJZrQsFAwSDL7Szgm8kC+nFZdOENdS9F42krVn7A8v2uHrCyeI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kECZo+jQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="D0au6Zbv"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=ultrarisc.com; s=dkim; h=Received:MIME-Version:Content-Type:
-	Content-Transfer-Encoding:Subject:From:To:Cc:In-Reply-To:
-	References:Date:Message-Id; bh=gIoVGh7it5fMYUkkNLHp8OH2p11aLnm6q
-	S09VmO8Afg=; b=D0au6ZbvipQmgQNRbvlxf2uZ8Ml+cTM36jHoo5umNmfQ8QwgF
-	VfdEXq7RkCDI2C3cKihBZeQI7ETx0dZJQWQFEdrAootKoX8uGDyp65rL2HY1HNW5
-	BY+NeKxuRcv55W77ImFvfnr38gFl7fCgCN/VeOG1jqr0kdjZRB/RTQ4xO0=
-Received: from [127.0.0.1] (unknown [192.168.100.1])
-	by localhost.localdomain (Coremail) with SMTP id AQAAfwAXxSTy+LhpU0cBAA--.1123S2;
-	Tue, 17 Mar 2026 14:47:14 +0800 (CST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kECZo+jQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E10B9C19424;
+	Tue, 17 Mar 2026 07:07:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773731256;
+	bh=D9EpaUqvtcLalg9vu0z9KVXubLh0G2Y4S2QGVe1FmXU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=kECZo+jQZtr/cvbmxQXZPIZ1bKB73tIOLL2u5vTYPfngdAK4xGdveXIDla97NNL1D
+	 42cTL02hYvtj/0FovFN7yRBkwKx6mnX/YBYRzHqceCC0FiMz5dfDHIsdka3osr+WxU
+	 4Cc+IwBJo3BkK+FD7qNscvaRPlACRAQG/crYa1R8pvJe5RWqJjpM1vO4NAhG7IdrXk
+	 7KbzTSXljgN3bYKlSbp47EAepF+v/X/W+lGZg79X1OXKupZIgDyY5l4TGi8YsRI84Y
+	 JgQRHIIFEjj13GVE284n1VgvwCChC3g8JEIM5m7Oh6j0f9TwEzPg6ezwYzSXAV0duz
+	 4NuQg/drPOEdw==
+Date: Tue, 17 Mar 2026 12:37:25 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
+	Pavel Machek <pavel@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, Linus Walleij <linusw@kernel.org>, 
+	Bartosz Golaszewski <brgl@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Saravana Kannan <saravanak@kernel.org>, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org, quic_vbadigan@quicinc.com, 
+	sherry.sun@nxp.com, driver-core@lists.linux.dev, devicetree@vger.kernel.org
+Subject: Re: [PATCH v8 3/3] PCI: Add support for PCIe WAKE# interrupt
+Message-ID: <t2yjuw4ca4tskzocv65m4jjmp2wfjkpymduhbv76actfybzklv@h5qavg2uzhjc>
+References: <20260313-wakeirq_support-v8-0-48a0a702518a@oss.qualcomm.com>
+ <20260313-wakeirq_support-v8-3-48a0a702518a@oss.qualcomm.com>
+ <53uy2vdzc25frf5rpwbybaor5n6jesapl2x7xusnn5zfaqnfy7@udq7ln2a42n5>
+ <be9980f3-f036-4260-980f-5d996bc034cb@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/4] riscv: add UltraRISC SoC family Kconfig support
-From: Jia Wang <wangjia@ultrarisc.com>
-To: Conor Dooley <conor@kernel.org>
-Cc: Jia Wang <wangjia@ultrarisc.com>, Paul Walmsley <pjw@kernel.org>, 
- Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
- Alexandre Ghiti <alex@ghiti.fr>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, 
- Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, linux-riscv@lists.infradead.org, 
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
- devicetree@vger.kernel.org
-In-Reply-To: <20260316-powdery-unbundle-b1166d13f53b@spud>
-References: <20260316-ultrarisc-pcie-v1-0-ef2946ede698@ultrarisc.com>
- <20260316-ultrarisc-pcie-v1-1-ef2946ede698@ultrarisc.com>
- <20260316-powdery-unbundle-b1166d13f53b@spud>
-Date: Tue, 17 Mar 2026 14:46:24 +0800
-Message-Id: <177372998464.49340.13796019002628537253.b4-reply@b4>
-X-Mailer: b4 0.15-dev
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1773729985; l=1669;
- i=wangjia@ultrarisc.com; s=20260309; h=from:subject:message-id;
- bh=Wh4r1tJxW/lcrM+5/s3mKCV9XBfeqG6hKDHxb5EPDGw=;
- b=ILj7unpHtMHqWmjlLI7/tPGnunhwSsS8Xtq1iZbRucVP8vowTNh4jyI+qbH5QarPUFQzPy/4t
- oNPEPJb4jhzCT7Eu7JSn7WY9jScPJmDP1wK6D+CRtY1UamBX4EkSEux
-X-Developer-Key: i=wangjia@ultrarisc.com; a=ed25519;
- pk=XvYkrelqJIIzobY7j+nIg8rsfv5kzaOzuc1UPhd087U=
-X-CM-TRANSID:AQAAfwAXxSTy+LhpU0cBAA--.1123S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7tF48Xr1UAryftFyUZFWkZwb_yoW8Wr17pF
-	s5CF1rCFsxGr1fCa9aqw45urWI9F4v93y5Zr1Duw18AFs8Cry5C3s7tr13X3WDZFZ8Crna
-	gFyru3W3ua15uaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9l14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
-	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
-	n2kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCY02Avz4vE-syl42xK82IYc2Ij64vIr41l4I
-	8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AK
-	xVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcV
-	AFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8I
-	cIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r
-	4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjTRNJ5oDUUUU
-X-CM-SenderInfo: pzdqwylld63zxwud2x1vfou0bp/1tbiAQAJEWm47wkAAgAAss
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <be9980f3-f036-4260-980f-5d996bc034cb@oss.qualcomm.com>
 
-On 2026-03-16 14:39 +0000, Conor Dooley wrote:
-> On Mon, Mar 16, 2026 at 03:06:57PM +0800, Jia Wang wrote:
-> > The first SoC in the UltraRISC series is UR-DP1000, containing octa
-> > UltraRISC C100 cores.
-> > 
-> > Signed-off-by: Jia Wang <wangjia@ultrarisc.com>
-> > ---
-> >  arch/riscv/Kconfig.socs | 10 ++++++++++
-> >  1 file changed, 10 insertions(+)
-> > 
-> > diff --git a/arch/riscv/Kconfig.socs b/arch/riscv/Kconfig.socs
-> > index d621b85dd63b..f49d3ccaacde 100644
-> > --- a/arch/riscv/Kconfig.socs
-> > +++ b/arch/riscv/Kconfig.socs
-> > @@ -84,6 +84,16 @@ config ARCH_THEAD
-> >  	help
-> >  	  This enables support for the RISC-V based T-HEAD SoCs.
-> >  
-> > +config ARCH_ULTRARISC
-> > +	bool "UltraRISC RISC-V SoCs"
-> > +	depends on MMU && !XIP_KERNEL
+On Mon, Mar 16, 2026 at 05:46:58PM +0530, Krishna Chaitanya Chundru wrote:
 > 
-> Why do you depend on "MMU && !XIP_KERNEL"?
->
-Hi Conor,
+> 
+> On 3/13/2026 7:28 PM, Manivannan Sadhasivam wrote:
+> > On Fri, Mar 13, 2026 at 12:38:42PM +0530, Krishna Chaitanya Chundru wrote:
+> > > According to the PCI Express specification (PCIe r7.0, Section 5.3.3.2),
+> > > two link wakeup mechanisms are defined: Beacon and WAKE#. Beacon is a
+> > > hardware-only mechanism and is invisible to software (PCIe r7.0,
+> > > Section 4.2.7.8.1). This change adds support for the WAKE# mechanism in
+> > > the PCI core.
+> > > 
+> > > According to the PCIe specification, multiple WAKE# signals can exist in
+> > > a system or each component in the hierarchy could share a single WAKE#
+> > > signal. In configurations involving a PCIe switch, each downstream port
+> > > (DSP) of the switch may be connected to a separate WAKE# line, allowing
+> > > each endpoint to signal WAKE# independently. From figure 5.4 in sec
+> > > 5.3.3.2, WAKE# can also be terminated at the switch itself. To support
+> > > this, the WAKE# should be described in the device tree node of the
+> > > endpoint/bridge. If all endpoints share a single WAKE# line, then each
+> > > endpoint node should describe the same WAKE# signal or a single WAKE# in
+> > > the Root Port node.
+> > > 
+> > > In pci_device_add(), PCI framework will search for the WAKE# in device
+> > > node, If not found, it searches in its upstream port only if upstream port
+> > > is Root Port. Once found, register for the wake IRQ in shared mode, as the
+> > > WAKE# may be shared among multiple endpoints.
+> > > 
+> > > dev_pm_set_dedicated_shared_wake_irq() associates a wakeup IRQ with a
+> > > device and requests it, but the PM core keeps the IRQ disabled by default.
+> > > The IRQ is enabled only when the device is permitted to wake the system,
+> > > i.e. during system suspend and after runtime suspend, and only when device
+> > > wakeup is enabled.
+> > > 
+> > > When the wake IRQ fires, the wakeirq handler invokes pm_runtime_resume() to
+> > > bring the device back to an active power state, such as transitioning from
+> > > D3cold to D0. Once the device is active and the link is usable, the
+> > > endpoint may generate a PME, which is then handled by the PCI core through
+> > > PME polling or the PCIe PME service driver to complete the wakeup of the
+> > > endpoint.
+> > > 
+> > > WAKE# is added in dts schema and merged based on below links.
+> > > 
+> > > Link: https://lore.kernel.org/all/20250515090517.3506772-1-krishna.chundru@oss.qualcomm.com/
+> > > Link: https://github.com/devicetree-org/dt-schema/pull/170
+> > > Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+> > No. Linus never gave this tag for *this* patch.
+> Linus gave this on v5 [1], might be a overlook.
+> 
+> [1] Re: [PATCH v5 2/2] PCI: Add support for PCIe WAKE# interrupt - Linus
+> Walleij <https://lore.kernel.org/all/CACRpkdY9HsnG=xo=swnMcVha+unmvmxR6e6Ynsj09srM_tPmWA@mail.gmail.com/>
+> 
 
-Thanks for the review.
+Oh yes. I didn't check it properly. Please ignore my comment.
 
-The dependency on "MMU" was added conservatively, but the DP1000 hardware
-does not strictly require MMU. I will remove this dependency in the
-next version of the patch.
+- Mani
 
-The "!XIP_KERNEL" dependency is retained because the platform does not
-support executing the kernel directly from storage, so the kernel
-must be loaded into RAM before execution.
-
-Best regards,
-Jia 
-> > +	help
-> > +	 This enables support for UltraRISC SoC platform hardware,
-> > +	 including boards based on the UR-DP1000.
-> > +	 UR-DP1000 is an 8-core 64-bit RISC-V SoC that supports
-> > +	 the RV64GCBHX ISA. It supports Hardware Virtualization
-> > +	 and RISC-V RV64 ISA H(v1.0) Extension.
-> > +
-> >  config ARCH_VIRT
-> >  	bool "QEMU Virt Machine"
-> >  	select POWER_RESET
-> > 
-> > -- 
-> > 2.34.1
-> > 
-
-
+-- 
+மணிவண்ணன் சதாசிவம்
