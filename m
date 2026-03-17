@@ -1,50 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 076F927FB0E;
-	Tue, 17 Mar 2026 15:26:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3300F214A64;
+	Tue, 17 Mar 2026 15:26:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773761169; cv=none; b=Mn+GWwGriqOWf6IH71vc9n0Ab7tZcPh7h9IHI6aZUu5xRIm2uiTpcNhrQyS7NYahWD8RUrGI4QgOQhrBfS7IXXFK7eHLsY7cQ1yHu9ICHV5ycQ2bMfxg3j8KxDDE9UfMVvFTN5g2X9NmEcXHhnZSjzgrScIM9fBkgMH8bBK+1zA=
+	t=1773761193; cv=none; b=SU8dp6vA37hULqiYnCv9rsCd+ogSxTpbMe0KXSbSbgJNMkzdDp1SjBLl3yzKM9WWqRZvSKJi2slJ9Z7BuVjWssKxY3ExalbnIi4b+EXeAt8/8v6qKq3uqSb3Rrvz4aKwhEKXDOScRFC5rkNMxNHodWuTwgVlQLzYy8u9T/1uBMs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773761169; c=relaxed/simple;
-	bh=U6HAOSeXpFA2xVKYhwIX8W3T28VbdLC3tfuXap/m1NI=;
+	s=arc-20240116; t=1773761193; c=relaxed/simple;
+	bh=hYXp9a2NLaQVekWjZ+4yth845DCIClXSayYXXsM3Uyc=;
 	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=ZTFGWSY3znRWA+z7jg+YJ2AWs/yssT3+vVxkvKl5f/YL2cqUq+6mLucAok57qC/ywZnMk371PB97n60W0QwVjSEhtlbw6qcOeXtUVQyij6ASecyPeuVccOAQF8bv17NlFAqvL9MUtJGDzOapFRSxytduEK8x+NT/iIwykEOuGAM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UF1h+bd/; arc=none smtp.client-ip=192.198.163.19
+	 MIME-Version:Content-Type; b=TDdyKD3CpgJcq5+C9G6ob+C6MOHbQ0A+D+VGUe1EBrUIwVQzcxlplt3IT+sWBy1CyAUpc1jEH+et6UM2NM21S71ixSiHUBgteMJug+FOj8GS8xy/ErNCOTLDd1waHeKrf1fHilDG/RE9xaXEShE5SJxF3AiSPI22UKLH9VXch8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SDGYmgmO; arc=none smtp.client-ip=198.175.65.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UF1h+bd/"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SDGYmgmO"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773761168; x=1805297168;
+  t=1773761193; x=1805297193;
   h=from:date:to:cc:subject:in-reply-to:message-id:
    references:mime-version;
-  bh=U6HAOSeXpFA2xVKYhwIX8W3T28VbdLC3tfuXap/m1NI=;
-  b=UF1h+bd/EbHoGukjg+5hBT9Wm57COakL3Hs3V6pwAUQh7DJsctbq335L
-   n+Vuwbl7ts4PQD5GefQGRf9/ANJu90E8ORJ7BCIFw27Js/bPLjDZnpNZO
-   bRkxary/qhTyEQiBsCjQvs9iLI3D/FCK4oXbIYqGwaX3879eu69PSfRtP
-   ppogAxbRqxnsc3eOgJJGdtjiW4jGPRMuOmVEAmhPqIyJ2l4F4G/bqe3/t
-   S061xbvqgMYu1pZ89Fp5Bl2Hsa1rjIZ0Pb+o8GTI8XbI3G/1noiVhOoZD
-   p1ebJoPV7Bt2f1gLD+IqDMezat1qsOq+VH0jIo7Xew6DcMbNtCmC/s032
-   w==;
-X-CSE-ConnectionGUID: Qr35Mc7lSMy32ZoxmQomTw==
-X-CSE-MsgGUID: GMS97VovSfaZufI0WRC6bA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11732"; a="73814371"
+  bh=hYXp9a2NLaQVekWjZ+4yth845DCIClXSayYXXsM3Uyc=;
+  b=SDGYmgmOhg/jH55ElbeQ/cDMqAiBtRH4GQABiLrJP2pEZV/MCmuaBVzT
+   Ttuv6r1yDnG6KgEDonGsL9+8Ta2G9O7XDqk8oZ2bqkNL590J7R2PNMnlP
+   1VI6uznO2i6IDBm81rdBpbr0schJhKaherrqsvSgxQrATQEYX/6CsCFfZ
+   l2w1c+9wTpZEOdFLKA/7JeyraVmWXzSLIFAvVBx3XpRX8icFwUnUC/2/w
+   jTmFXVCuDoz/PZte8odbVsTjKpXrzPiYOtzPuk+a7/P6EH809puqTgRYF
+   hQPzjCk8OqJSDXLHz/XZsJiR3kw6eK1n0981qQOzHuXJJryirRyzmeIHq
+   A==;
+X-CSE-ConnectionGUID: 8ftMiKTrTx27qYT06K3tJA==
+X-CSE-MsgGUID: h2+L++ymQlWXteRSVoX4rw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11732"; a="74681337"
 X-IronPort-AV: E=Sophos;i="6.23,126,1770624000"; 
-   d="scan'208";a="73814371"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2026 08:26:07 -0700
-X-CSE-ConnectionGUID: RgYiXBrtSTSlzqFAWWH6Ig==
-X-CSE-MsgGUID: MrSQlNn4RuOayo1ru5RS2w==
+   d="scan'208";a="74681337"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2026 08:26:32 -0700
+X-CSE-ConnectionGUID: ZST71INmRsKeCKApGPuKCQ==
+X-CSE-MsgGUID: m12kp4T8QlWEYWIU2Ok2MA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,126,1770624000"; 
-   d="scan'208";a="221356702"
+   d="scan'208";a="245322289"
 Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.161])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2026 08:26:01 -0700
+  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2026 08:26:25 -0700
 From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Tue, 17 Mar 2026 17:25:57 +0200 (EET)
+Date: Tue, 17 Mar 2026 17:26:22 +0200 (EET)
 To: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
     =?ISO-8859-15?Q?Pali_Roh=E1r?= <pali@kernel.org>, 
@@ -59,23 +59,23 @@ cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
     linux-arm-kernel@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, 
     linuxppc-dev@lists.ozlabs.org, 
     Jonathan Cameron <jonathan.cameron@huawei.com>
-Subject: Re: [PATCH v2 3/4] PCI: pnv_php: Simplify with scoped for each OF
+Subject: Re: [PATCH v2 4/4] PCI: rpaphp: Simplify with scoped for each OF
  child loop
-In-Reply-To: <20260317133322.266102-7-krzysztof.kozlowski@oss.qualcomm.com>
-Message-ID: <f4a8c26d-99ee-2f12-ddcf-cda2aaf0cf5b@linux.intel.com>
-References: <20260317133322.266102-5-krzysztof.kozlowski@oss.qualcomm.com> <20260317133322.266102-7-krzysztof.kozlowski@oss.qualcomm.com>
+In-Reply-To: <20260317133322.266102-8-krzysztof.kozlowski@oss.qualcomm.com>
+Message-ID: <b983a05b-2d90-2a88-4b60-49c6c5ee777d@linux.intel.com>
+References: <20260317133322.266102-5-krzysztof.kozlowski@oss.qualcomm.com> <20260317133322.266102-8-krzysztof.kozlowski@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-823548865-1773761157=:968"
+Content-Type: multipart/mixed; boundary="8323328-1763753626-1773761182=:968"
 
   This message is in MIME format.  The first part should be readable text,
   while the remaining parts are likely unreadable without MIME-aware tools.
 
---8323328-823548865-1773761157=:968
+--8323328-1763753626-1773761182=:968
 Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 
@@ -92,47 +92,36 @@ On Tue, 17 Mar 2026, Krzysztof Kozlowski wrote:
 > Changes in v2:
 > Tags
 > ---
->  drivers/pci/hotplug/pnv_php.c | 19 +++++++------------
->  1 file changed, 7 insertions(+), 12 deletions(-)
+>  drivers/pci/hotplug/rpaphp_slot.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
 >=20
-> diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.=
-c
-> index 5c020831e318..ff92a5c301b8 100644
-> --- a/drivers/pci/hotplug/pnv_php.c
-> +++ b/drivers/pci/hotplug/pnv_php.c
-> @@ -215,24 +215,19 @@ static void pnv_php_reverse_nodes(struct device_nod=
-e *parent)
->  static int pnv_php_populate_changeset(struct of_changeset *ocs,
->  =09=09=09=09      struct device_node *dn)
+> diff --git a/drivers/pci/hotplug/rpaphp_slot.c b/drivers/pci/hotplug/rpap=
+hp_slot.c
+> index 33ca19200c1b..67362e5b9971 100644
+> --- a/drivers/pci/hotplug/rpaphp_slot.c
+> +++ b/drivers/pci/hotplug/rpaphp_slot.c
+> @@ -82,7 +82,6 @@ EXPORT_SYMBOL_GPL(rpaphp_deregister_slot);
+>  int rpaphp_register_slot(struct slot *slot)
 >  {
+>  =09struct hotplug_slot *php_slot =3D &slot->hotplug_slot;
 > -=09struct device_node *child;
-> -=09int ret =3D 0;
-> +=09int ret;
-> =20
-> -=09for_each_child_of_node(dn, child) {
-> +=09for_each_child_of_node_scoped(dn, child) {
->  =09=09ret =3D of_changeset_attach_node(ocs, child);
-> -=09=09if (ret) {
-> -=09=09=09of_node_put(child);
-> -=09=09=09break;
-> -=09=09}
-> +=09=09if (ret)
-> +=09=09=09return ret;
-> =20
->  =09=09ret =3D pnv_php_populate_changeset(ocs, child);
-> -=09=09if (ret) {
-> -=09=09=09of_node_put(child);
-> -=09=09=09break;
-> -=09=09}
-> +=09=09if (ret)
-> +=09=09=09return ret;
+>  =09u32 my_index;
+>  =09int retval;
+>  =09int slotno =3D -1;
+> @@ -97,11 +96,10 @@ int rpaphp_register_slot(struct slot *slot)
+>  =09=09return -EAGAIN;
 >  =09}
 > =20
-> -=09return ret;
-> +=09return 0;
->  }
-> =20
->  static void *pnv_php_add_one_pdn(struct device_node *dn, void *data)
+> -=09for_each_child_of_node(slot->dn, child) {
+> +=09for_each_child_of_node_scoped(slot->dn, child) {
+>  =09=09retval =3D of_property_read_u32(child, "ibm,my-drc-index", &my_ind=
+ex);
+>  =09=09if (my_index =3D=3D slot->index) {
+>  =09=09=09slotno =3D PCI_SLOT(PCI_DN(child)->devfn);
+> -=09=09=09of_node_put(child);
+>  =09=09=09break;
+>  =09=09}
+>  =09}
 >=20
 
 Reviewed-by: Ilpo J=E4rvinen <ilpo.jarvinen@linux.intel.com>
@@ -140,4 +129,4 @@ Reviewed-by: Ilpo J=E4rvinen <ilpo.jarvinen@linux.intel.com>
 --=20
  i.
 
---8323328-823548865-1773761157=:968--
+--8323328-1763753626-1773761182=:968--
