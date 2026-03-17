@@ -1,366 +1,335 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 997843C871D
-	for <linux-pci@vger.kernel.org>; Tue, 17 Mar 2026 13:06:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E25F839B94E;
+	Tue, 17 Mar 2026 13:11:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773752785; cv=none; b=RjOzqa5bCtmP7sVFGhayh00oU9RjkUQ69LQIdmMfrnx/j4pdFk8mwfBTKFkukkNZQULn9yi45OqJz2ntGmefjA0SPpASLdU7SHd6j58MJQGrIY4Fm0S9TntwdTQxX+cE9JsaFkx5mD138Qpqed5JvPNpX2nTc+nHTK+TzP/mQhc=
+	t=1773753101; cv=none; b=NlPhNRg7jTLiOU7Jzkp+lCER+FuXucmsNB1lIB2l54kwsZQ83zuydKiC6RlxAX/iVK9c5s1i8BBAiH47il6EiXwycgTmSXefMB23UDgYoula4DmYaMaKk7mMn6FowWvyfZ1xBI/E354e2tuQsL8S91sP237S25NOVsgb4yzA6LY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773752785; c=relaxed/simple;
-	bh=GA5WZ9+UnKMbVk3/FvqlALydMizE/7ulE4pdZue6ul0=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=qcMng1S3/ZcZsSS1cT0HaRIDmdkAmn7Iw4IFiX88YKESCi11DVKDE0Tv78B0nuzxyTp6GUFjjMnxYaMlK85JHibQL9WKD2NxVtvL3XqF4Cw5ZHaP2lGns1cUl/H3WlMYEvQ/dN3YR5xQAg6J1NHmLFBk+dNDVY+fj8ey2aWnIks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JgjyZHye; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773753101; c=relaxed/simple;
+	bh=XphC/sm5cVJb9L02EfuN4T0tZepA1WWawu3Zl3lpiC4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MgdPSnnrf2a13w9NWhWEnNCE9knWrGB3dAxCSUgIaP9C7y83ORX6ftN4cQnH4P/7MvtvwUVGp9umU7weppSKvjeXrcbQIueVhQcceg91g5Noli3OMLAezaDRrCbB6uqmCagoaOxDjuyDLegjOAxIbXXemr5iw8+hGGdcd2c3nPo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AvMP0wT7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JgjyZHye"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CC0BC2BCAF
-	for <linux-pci@vger.kernel.org>; Tue, 17 Mar 2026 13:06:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AvMP0wT7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E2B2C4CEF7;
+	Tue, 17 Mar 2026 13:11:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773752785;
-	bh=GA5WZ9+UnKMbVk3/FvqlALydMizE/7ulE4pdZue6ul0=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc:From;
-	b=JgjyZHyeTiE8h78SdFEQQ79VMv6SEbpkYYrN6HffgO/xd4DGaMA1o2RbWW/4vMLT/
-	 Y2y3dzjb3o2NeqD2pHxTyPni2+8vZQucYxRPVJRxbIETFlFn7uJFrnvWy50oo+P7Ke
-	 /Awda2NetjQsMSaByH2Jf9mvRad0QRWn8FyCI2ysLREu1pgCFQfQI0c+hXWgd5VmXg
-	 /KcaFXuoiis6FR0aT3PLhgTC99X8YvJAZn5LmodAbgJ/F0GY5SgJUNZlalbxU3nrCH
-	 VcRIj2VCt9UbU2lU+hhDV5K2pW8dXmzTAyb88U85ePp9VNJMTPrTu9wBJWCEQTEaqu
-	 g1+xeZVgKNg4Q==
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-5a278e0f7f6so23147e87.0
-        for <linux-pci@vger.kernel.org>; Tue, 17 Mar 2026 06:06:25 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCXEm2R7wnscd9+Z2wQmdZA/halL0RReWBRnpqvhyl3jrJez6zUbay1jeBIWW/Q9gJEty4y7j8rkuKk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxOpKsg8qgc04dQxX1kBroPa+Pr1+qQ6eMlb8ROcfEwhfy7SPr5
-	shHrUicnTnqEKUnaqSpXIMjkCrjYC7son9dFfollFCwjXQL/Tc3dOAm5ksZLWwS1ttrR6UBiAkt
-	VchV5VkITyQfgvgCjYpRPmmVNWbj0ZNv0ZkTefv1mcg==
-X-Received: by 2002:a05:6512:24db:b0:5a1:44d3:7601 with SMTP id
- 2adb3069b0e04-5a162afb717mr3868690e87.20.1773752782759; Tue, 17 Mar 2026
- 06:06:22 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Tue, 17 Mar 2026 09:06:20 -0400
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Tue, 17 Mar 2026 09:06:20 -0400
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260317-pci-m2-e-v6-9-9c898f108d3d@oss.qualcomm.com>
+	s=k20201202; t=1773753100;
+	bh=XphC/sm5cVJb9L02EfuN4T0tZepA1WWawu3Zl3lpiC4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=AvMP0wT7KtZir5xHl20/Ga9rJ4mzmxrlieZIYeTWGRcCPRKOEnktbzUaW7s3G2Jkl
+	 T+ihlFedtv792G796rzrfudULsaMr4u1dKPXqJJ6GMg2RHP3D+cujnoh8JnydWoFDy
+	 PNE3vR3gUYUsUSWy4ClSwcx7ZezKow0HhZ3EsLC5f2n++y/Kq/ppgX+IzstVVevlE/
+	 sFLl+JM3ewu9ZL0Y7aJwykpAoW1w3+ObEuBnbGpFkuCn20sqjoAkpowDspO35yW+3c
+	 IIbJCDnL4e26e9D4RMsbz8IcEKjZsd+gsrsPEeIqdoa1g/g83mkoeaQfZJ1njypTKX
+	 6s+WS6C8IX5vA==
+Date: Tue, 17 Mar 2026 14:11:29 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: manivannan.sadhasivam@oss.qualcomm.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>, Will Deacon <will@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
+	Philipp Zabel <p.zabel@pengutronix.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Lukas Wunner <lukas@wunner.de>, Richard Zhu <hongxing.zhu@nxp.com>,
+	Brian Norris <briannorris@chromium.org>,
+	Wilson Ding <dingwei@marvell.com>, Frank Li <Frank.Li@nxp.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: Re: [PATCH v7 0/4] PCI: Add support for resetting the Root Ports in
+ a platform specific way
+Message-ID: <ablS8r0LzfJ_jVpD@ryzen>
+References: <20260310-pci-port-reset-v7-0-9dd00ccc25ab@oss.qualcomm.com>
+ <abFMa6DCGGLUHddA@fedora>
+ <dp2rem4gj7zhfgykvekmcrhq4ticm6m6ido6tbgflwzfcuuwkl@4wuxgle27eyx>
+ <srdn3bspgwff7f7tnst7wzg4us4buifrv7o3ylo527hmuciyl3@6ioyrl6rfhaz>
+ <abk3rU2EDKjkefUD@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260317-pci-m2-e-v6-0-9c898f108d3d@oss.qualcomm.com> <20260317-pci-m2-e-v6-9-9c898f108d3d@oss.qualcomm.com>
-Date: Tue, 17 Mar 2026 09:06:20 -0400
-X-Gmail-Original-Message-ID: <CAMRc=MeNZGr=zDVQYd1YgeUNdaenpbDEgmT6h7CuU89sHQuMcA@mail.gmail.com>
-X-Gm-Features: AaiRm532I8Vph1JG9CGlFyj5TdvDVc6_kc40vvUgmGYOmNjWZCkNvD4VOMtLLTs
-Message-ID: <CAMRc=MeNZGr=zDVQYd1YgeUNdaenpbDEgmT6h7CuU89sHQuMcA@mail.gmail.com>
-Subject: Re: [PATCH v6 9/9] power: sequencing: pcie-m2: Create serdev device
- for WCN7850 bluetooth
-To: manivannan.sadhasivam@oss.qualcomm.com
-Cc: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>, 
-	linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kbuild@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
-	linux-pm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-acpi@vger.kernel.org, 
-	Hans de Goede <johannes.goede@oss.qualcomm.com>, Rob Herring <robh@kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
-	Nathan Chancellor <nathan@kernel.org>, Nicolas Schier <nicolas.schier@linux.dev>, 
-	Hans de Goede <hansg@kernel.org>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
-	Mark Pearson <mpearson-lenovo@squebb.ca>, "Derek J. Clark" <derekjohn.clark@gmail.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
-	Bartosz Golaszewski <brgl@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/mixed; boundary="Iae7tS6iThanSYoD"
+Content-Disposition: inline
+In-Reply-To: <abk3rU2EDKjkefUD@ryzen>
 
-On Tue, 17 Mar 2026 05:29:59 +0100, Manivannan Sadhasivam via B4 Relay
-<devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> said:
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
->
-> For supporting bluetooth over the non-discoverable UART interface of
-> WCN7850, create the serdev device after enumerating the PCIe interface.
-> This is mandatory since the device ID is only known after the PCIe
-> enumeration and the ID is used for creating the serdev device.
->
-> Since by default there is no OF or ACPI node for the created serdev,
-> create a dynamic OF 'bluetooth' node with the 'compatible' property and
-> attach it to the serdev device. This will allow the serdev device to bind
-> to the existing bluetooth driver.
->
-> Tested-by: Hans de Goede <johannes.goede@oss.qualcomm.com> # ThinkPad T14s gen6 (arm64)
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> ---
->  drivers/power/sequencing/Kconfig          |   3 +-
->  drivers/power/sequencing/pwrseq-pcie-m2.c | 178 +++++++++++++++++++++++++++++-
->  2 files changed, 177 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/power/sequencing/Kconfig b/drivers/power/sequencing/Kconfig
-> index f5fff84566ba..55aeef125e6f 100644
-> --- a/drivers/power/sequencing/Kconfig
-> +++ b/drivers/power/sequencing/Kconfig
-> @@ -37,7 +37,8 @@ config POWER_SEQUENCING_TH1520_GPU
->
->  config POWER_SEQUENCING_PCIE_M2
->  	tristate "PCIe M.2 connector power sequencing driver"
-> -	depends on OF || COMPILE_TEST
-> +	depends on (PCI && OF) || COMPILE_TEST
-> +	select OF_DYNAMIC
->  	help
->  	  Say Y here to enable the power sequencing driver for PCIe M.2
->  	  connectors. This driver handles the power sequencing for the M.2
-> diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
-> index 3507cdcb1e7b..77357439ba81 100644
-> --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
-> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
-> @@ -12,9 +12,11 @@
->  #include <linux/of.h>
->  #include <linux/of_graph.h>
->  #include <linux/of_platform.h>
-> +#include <linux/pci.h>
->  #include <linux/platform_device.h>
->  #include <linux/pwrseq/provider.h>
->  #include <linux/regulator/consumer.h>
-> +#include <linux/serdev.h>
->  #include <linux/slab.h>
->
->  struct pwrseq_pcie_m2_pdata {
-> @@ -30,6 +32,9 @@ struct pwrseq_pcie_m2_ctx {
->  	struct notifier_block nb;
->  	struct gpio_desc *w_disable1_gpio;
->  	struct gpio_desc *w_disable2_gpio;
-> +	struct serdev_device *serdev;
-> +	struct of_changeset *ocs;
-> +	struct device *dev;
->  };
->
->  static int pwrseq_pcie_m2_vregs_enable(struct pwrseq_device *pwrseq)
-> @@ -172,13 +177,176 @@ static int pwrseq_pcie_m2_match(struct pwrseq_device *pwrseq,
->  	return PWRSEQ_NO_MATCH;
->  }
->
-> -static void pwrseq_pcie_m2_free_regulators(void *data)
-> +static void pwrseq_pcie_m2_free_resources(void *data)
->  {
->  	struct pwrseq_pcie_m2_ctx *ctx = data;
->
-> +	serdev_device_remove(ctx->serdev);
-> +	bus_unregister_notifier(&pci_bus_type, &ctx->nb);
-> +	of_changeset_revert(ctx->ocs);
-> +	of_changeset_destroy(ctx->ocs);
->  	regulator_bulk_free(ctx->num_vregs, ctx->regs);
->  }
->
-> +static int pwrseq_m2_pcie_create_bt_node(struct pwrseq_pcie_m2_ctx *ctx,
-> +					struct device_node *parent)
-> +{
-> +	struct device *dev = ctx->dev;
-> +	struct device_node *np;
-> +	int ret;
-> +
-> +	ctx->ocs = devm_kzalloc(dev, sizeof(*ctx->ocs), GFP_KERNEL);
-> +	if (!ctx->ocs)
-> +		return -ENOMEM;
-> +
-> +	of_changeset_init(ctx->ocs);
-> +
-> +	np = of_changeset_create_node(ctx->ocs, parent, "bluetooth");
-> +	if (!np) {
-> +		dev_err(dev, "Failed to create bluetooth node\n");
-> +		ret = -ENODEV;
-> +		goto err_destroy_changeset;
-> +	}
-> +
-> +	ret = of_changeset_add_prop_string(ctx->ocs, np, "compatible", "qcom,wcn7850-bt");
-> +	if (ret) {
-> +		dev_err(dev, "Failed to add bluetooth compatible: %d\n", ret);
-> +		goto err_destroy_changeset;
-> +	}
-> +
-> +	ret = of_changeset_apply(ctx->ocs);
-> +	if (ret) {
-> +		dev_err(dev, "Failed to apply changeset: %d\n", ret);
-> +		goto err_destroy_changeset;
-> +	}
-> +
-> +	ret = device_add_of_node(&ctx->serdev->dev, np);
-> +	if (ret) {
-> +		dev_err(dev, "Failed to add OF node: %d\n", ret);
-> +		goto err_revert_changeset;
-> +	}
-> +
-> +	return 0;
-> +
-> +err_revert_changeset:
-> +	of_changeset_revert(ctx->ocs);
-> +err_destroy_changeset:
-> +	of_changeset_destroy(ctx->ocs);
-> +
-> +	return ret;
-> +}
-> +
-> +static int pwrseq_m2_pcie_notify(struct notifier_block *nb, unsigned long action,
-> +			      void *data)
-> +{
-> +	struct pwrseq_pcie_m2_ctx *ctx = container_of(nb, struct pwrseq_pcie_m2_ctx, nb);
-> +	struct pci_dev *pdev = to_pci_dev(data);
-> +	struct serdev_controller *serdev_ctrl;
-> +	struct device *dev = ctx->dev;
-> +	int ret;
-> +
-> +	/*
-> +	 * Check whether the PCI device is associated with this M.2 connector or
-> +	 * not, by comparing the OF node of the PCI device parent and the Port 0
-> +	 * (PCIe) remote node parent OF node.
-> +	 */
-> +	struct device_node *pci_parent __free(device_node) =
-> +			of_graph_get_remote_node(dev_of_node(ctx->dev), 0, 0);
-> +	if (!pci_parent || (pci_parent != pdev->dev.parent->of_node))
-> +		return NOTIFY_DONE;
-> +
-> +	switch (action) {
-> +	case BUS_NOTIFY_ADD_DEVICE:
-> +		/* Create serdev device for WCN7850 */
-> +		if (pdev->vendor == PCI_VENDOR_ID_QCOM && pdev->device == 0x1107) {
-> +			struct device_node *serdev_parent __free(device_node) =
-> +				of_graph_get_remote_node(dev_of_node(ctx->dev), 1, 1);
-> +			if (!serdev_parent)
-> +				return NOTIFY_DONE;
-> +
-> +			serdev_ctrl = of_find_serdev_controller_by_node(serdev_parent);
-> +			if (!serdev_ctrl)
-> +				return NOTIFY_DONE;
-> +
-> +			/*
-> +			 * Bail out if the device was already attached to this
-> +			 * controller.
-> +			 */
-> +			if (serdev_ctrl->serdev)
-> +				return NOTIFY_DONE;
-> +
-> +			ctx->serdev = serdev_device_alloc(serdev_ctrl);
-> +			if (!ctx->serdev)
-> +				return NOTIFY_BAD;
 
-If you bail out here, on driver unbind you'll call serdev_device_remove() which
-uncoditionally dereferences the serdev pointer.
+--Iae7tS6iThanSYoD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-> +
-> +			ret = pwrseq_m2_pcie_create_bt_node(ctx, serdev_parent);
+On Tue, Mar 17, 2026 at 12:17:19PM +0100, Niklas Cassel wrote:
+> 
+> I will be very busy for a few weeks, so I don't have time to debug this.
+> If anyone wants to debug this on rk3588, I'm attaching the patches for
+> this new feature for rk3588 that can be applied on top of this series.
 
-If this doesn't succeed, ctx->ocs remains set to NULL (correct me if I'm wrong)
-and you end up calling of_changeset_revert() which will unconditionally
-dereference the of_changeset pointer in __of_changeset_entry_invert().
+For what it is worth, attaching an improved patch for rk3588 that does not
+require any revert.
 
-> +			if (ret) {
-> +				serdev_device_put(ctx->serdev);
-> +				return notifier_from_errno(ret);
-> +			}
-> +
-> +			ret = serdev_device_add(ctx->serdev);
-> +			if (ret) {
-> +				dev_err(dev, "Failed to add serdev for WCN7850: %d\n", ret);
-> +				of_changeset_revert(ctx->ocs);
-> +				of_changeset_destroy(ctx->ocs);
-> +				serdev_device_put(ctx->serdev);
-> +				return notifier_from_errno(ret);
-> +			}
-> +		}
-> +		break;
-> +	case BUS_NOTIFY_REMOVED_DEVICE:
-> +		/* Destroy serdev device for WCN7850 */
-> +		if (pdev->vendor == PCI_VENDOR_ID_QCOM && pdev->device == 0x1107) {
-> +			serdev_device_remove(ctx->serdev);
-> +			of_changeset_revert(ctx->ocs);
-> +			of_changeset_destroy(ctx->ocs);
-> +		}
-> +		break;
-> +	}
-> +
-> +	return NOTIFY_OK;
-> +}
-> +
-> +static bool pwrseq_pcie_m2_check_remote_node(struct device *dev, u8 port, u8 endpoint,
-> +					     const char *node)
-> +{
-> +	struct device_node *remote __free(device_node) =
-> +			of_graph_get_remote_node(dev_of_node(dev), port, endpoint);
-> +
-> +	if (remote && of_node_name_eq(remote, node))
-> +		return true;
-> +
-> +	return false;
-> +}
-> +
-> +/*
-> + * If the connector exposes a non-discoverable bus like UART, the respective
-> + * protocol device needs to be created manually with the help of the notifier
-> + * of the discoverable bus like PCIe.
-> + */
-> +static int pwrseq_pcie_m2_register_notifier(struct pwrseq_pcie_m2_ctx *ctx, struct device *dev)
-> +{
-> +	int ret;
-> +
-> +	/*
-> +	 * Register a PCI notifier for Key E connector that has PCIe as Port
-> +	 * 0/Endpoint 0 interface and Serial as Port 3/Endpoint 0 interface.
-> +	 */
-> +	if (pwrseq_pcie_m2_check_remote_node(dev, 3, 0, "serial")) {
-> +		if (pwrseq_pcie_m2_check_remote_node(dev, 0, 0, "pcie")) {
-> +			ctx->dev = dev;
-> +			ctx->nb.notifier_call = pwrseq_m2_pcie_notify;
-> +			ret = bus_register_notifier(&pci_bus_type, &ctx->nb);
-> +			if (ret)
-> +				return dev_err_probe(dev, ret,
-> +						     "Failed to register notifier for serdev\n");
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
-> @@ -218,7 +386,7 @@ static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
->
->  	ctx->num_vregs = ret;
->
-> -	ret = devm_add_action_or_reset(dev, pwrseq_pcie_m2_free_regulators, ctx);
-> +	ret = devm_add_action_or_reset(dev, pwrseq_pcie_m2_free_resources, ctx);
->  	if (ret)
->  		return ret;
->
-> @@ -233,7 +401,11 @@ static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
->  		return dev_err_probe(dev, PTR_ERR(ctx->pwrseq),
->  				     "Failed to register the power sequencer\n");
 
-If you bail out here, you will call bus_unregister_notifier() before your
-registered it. Kernel docs are not clear on whether that's a bug but it still
-looks fishy to me.
+Kind regards,
+Niklas
 
-Am I not seeing something or is the error path broken? I'm doubting myself
-here. :)
+--Iae7tS6iThanSYoD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment;
+	filename=0001-PCI-dw-rockchip-Add-support-to-reset-Root-Port-upon-.patch
 
-This is why I advised to split pwrseq_pcie_m2_free_resources() and only schedule
-individual devres actions after their allocation succeeds.
+From a69679430750d7371e65e1b209059803cea2f5de Mon Sep 17 00:00:00 2001
+From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Date: Tue, 17 Mar 2026 09:30:57 +0100
+Subject: [PATCH] PCI: dw-rockchip: Add support to reset Root Port upon link
+ down event
 
-As it is now, you're better off providing a remove() callback with NULL checks.
+The PCIe link may go down in cases like firmware crashes or unstable
+connections. When this occurs, the PCIe Root Port must be reset to restore
+the functionality. However, the current driver lacks link down handling,
+forcing users to reboot the system to recover.
 
-Bart
+This patch implements the `reset_root_port` callback for link down handling
+for Rockchip DWC PCIe host controller. In which, the RC is reset,
+reconfigured and link training initiated to recover from the link down
+event.
 
->
-> -	return 0;
-> +	/*
-> +	 * Register a notifier for creating protocol devices for
-> +	 * non-discoverable busses like UART.
-> +	 */
-> +	return pwrseq_pcie_m2_register_notifier(ctx, dev);
->  }
->
->  static const struct of_device_id pwrseq_pcie_m2_of_match[] = {
->
-> --
-> 2.51.0
->
->
->
+This also by extension fixes issues with sysfs initiated bus resets. In
+that, currently, when a sysfs initiated bus reset is issued, the endpoint
+device is non-functional after (may link up with downgraded link status).
+With the link down handling support, a sysfs initiated bus reset works as
+intended. Testing conducted on a ROCK5B board with an M.2 NVMe drive.
+
+Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+---
+ drivers/pci/controller/dwc/Kconfig            |   1 +
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c | 134 +++++++++++++++++-
+ 2 files changed, 132 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+index d0aa031397fa..ecaf79da843b 100644
+--- a/drivers/pci/controller/dwc/Kconfig
++++ b/drivers/pci/controller/dwc/Kconfig
+@@ -361,6 +361,7 @@ config PCIE_ROCKCHIP_DW_HOST
+ 	depends on OF
+ 	select PCIE_DW_HOST
+ 	select PCIE_ROCKCHIP_DW
++	select PCI_HOST_COMMON
+ 	help
+ 	  Enables support for the DesignWare PCIe controller in the
+ 	  Rockchip SoC (except RK3399) to work in host mode.
+diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+index 8db27199cfa6..988d98effcd7 100644
+--- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
++++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+@@ -24,6 +24,7 @@
+ #include <linux/reset.h>
+ 
+ #include "../../pci.h"
++#include "../pci-host-common.h"
+ #include "pcie-designware.h"
+ 
+ /*
+@@ -105,6 +106,9 @@ struct rockchip_pcie_of_data {
+ 	const struct pci_epc_features *epc_features;
+ };
+ 
++static int rockchip_pcie_rc_reset_root_port(struct pci_host_bridge *bridge,
++				       struct pci_dev *pdev);
++
+ static int rockchip_pcie_readl_apb(struct rockchip_pcie *rockchip, u32 reg)
+ {
+ 	return readl_relaxed(rockchip->apb_base + reg);
+@@ -325,6 +329,7 @@ static int rockchip_pcie_host_init(struct dw_pcie_rp *pp)
+ 
+ 	rockchip_pcie_configure_l1ss(pci);
+ 	rockchip_pcie_enable_l0s(pci);
++	pp->bridge->reset_root_port = rockchip_pcie_rc_reset_root_port;
+ 
+ 	/* Disable Root Ports BAR0 and BAR1 as they report bogus size */
+ 	dw_pcie_writel_dbi2(pci, PCI_BASE_ADDRESS_0, 0x0);
+@@ -523,6 +528,32 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.get_ltssm = rockchip_pcie_get_ltssm,
+ };
+ 
++static irqreturn_t rockchip_pcie_rc_sys_irq_thread(int irq, void *arg)
++{
++	struct rockchip_pcie *rockchip = arg;
++	struct dw_pcie *pci = &rockchip->pci;
++	struct dw_pcie_rp *pp = &pci->pp;
++	struct device *dev = pci->dev;
++	struct pci_dev *port;
++	u32 reg;
++
++	reg = rockchip_pcie_readl_apb(rockchip, PCIE_CLIENT_INTR_STATUS_MISC);
++	rockchip_pcie_writel_apb(rockchip, reg, PCIE_CLIENT_INTR_STATUS_MISC);
++
++	dev_dbg(dev, "PCIE_CLIENT_INTR_STATUS_MISC: %#x\n", reg);
++	dev_dbg(dev, "LTSSM_STATUS: %#x\n", rockchip_pcie_get_ltssm_reg(rockchip));
++
++	if (reg & PCIE_LINK_REQ_RST_NOT_INT) {
++		dev_dbg(dev, "hot reset or link-down reset\n");
++		for_each_pci_bridge(port, pp->bridge->bus) {
++			if (pci_pcie_type(port) == PCI_EXP_TYPE_ROOT_PORT)
++				pci_host_handle_link_down(port);
++		}
++	}
++
++	return IRQ_HANDLED;
++}
++
+ static irqreturn_t rockchip_pcie_ep_sys_irq_thread(int irq, void *arg)
+ {
+ 	struct rockchip_pcie *rockchip = arg;
+@@ -555,14 +586,29 @@ static irqreturn_t rockchip_pcie_ep_sys_irq_thread(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static int rockchip_pcie_configure_rc(struct rockchip_pcie *rockchip)
++static int rockchip_pcie_configure_rc(struct platform_device *pdev,
++				      struct rockchip_pcie *rockchip)
+ {
++	struct device *dev = &pdev->dev;
+ 	struct dw_pcie_rp *pp;
++	int irq, ret;
+ 	u32 val;
+ 
+ 	if (!IS_ENABLED(CONFIG_PCIE_ROCKCHIP_DW_HOST))
+ 		return -ENODEV;
+ 
++	irq = platform_get_irq_byname(pdev, "sys");
++	if (irq < 0)
++		return irq;
++
++	ret = devm_request_threaded_irq(dev, irq, NULL,
++					rockchip_pcie_rc_sys_irq_thread,
++					IRQF_ONESHOT, "pcie-sys-rc", rockchip);
++	if (ret) {
++		dev_err(dev, "failed to request PCIe sys IRQ\n");
++		return ret;
++	}
++
+ 	/* LTSSM enable control mode */
+ 	val = FIELD_PREP_WM16(PCIE_LTSSM_ENABLE_ENHANCE, 1);
+ 	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_CTRL);
+@@ -574,7 +620,17 @@ static int rockchip_pcie_configure_rc(struct rockchip_pcie *rockchip)
+ 	pp = &rockchip->pci.pp;
+ 	pp->ops = &rockchip_pcie_host_ops;
+ 
+-	return dw_pcie_host_init(pp);
++	ret = dw_pcie_host_init(pp);
++	if (ret) {
++		dev_err(dev, "failed to initialize host\n");
++		return ret;
++	}
++
++	/* unmask hot reset/link-down reset */
++	val = FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
++	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
++
++	return ret;
+ }
+ 
+ static int rockchip_pcie_configure_ep(struct platform_device *pdev,
+@@ -693,7 +749,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 
+ 	switch (data->mode) {
+ 	case DW_PCIE_RC_TYPE:
+-		ret = rockchip_pcie_configure_rc(rockchip);
++		ret = rockchip_pcie_configure_rc(pdev, rockchip);
+ 		if (ret)
+ 			goto deinit_clk;
+ 		break;
+@@ -718,6 +774,78 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	return ret;
+ }
+ 
++static int rockchip_pcie_rc_reset_root_port(struct pci_host_bridge *bridge,
++					    struct pci_dev *pdev)
++{
++	struct pci_bus *bus = bridge->bus;
++	struct dw_pcie_rp *pp = bus->sysdata;
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
++	struct device *dev = rockchip->pci.dev;
++	u32 val;
++	int ret;
++
++	dw_pcie_stop_link(pci);
++	clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
++	rockchip_pcie_phy_deinit(rockchip);
++
++	ret = reset_control_assert(rockchip->rst);
++	if (ret)
++		return ret;
++
++	ret = rockchip_pcie_phy_init(rockchip);
++	if (ret)
++		return ret;
++
++	ret = reset_control_deassert(rockchip->rst);
++	if (ret)
++		goto deinit_phy;
++
++	ret = rockchip_pcie_clk_init(rockchip);
++	if (ret)
++		goto deinit_phy;
++
++	ret = pp->ops->init(pp);
++	if (ret) {
++		dev_err(dev, "Host init failed: %d\n", ret);
++		goto deinit_clk;
++	}
++
++	/* LTSSM enable control mode */
++	val = FIELD_PREP_WM16(PCIE_LTSSM_ENABLE_ENHANCE, 1);
++	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_CTRL);
++
++	rockchip_pcie_writel_apb(rockchip,
++				 PCIE_CLIENT_SET_MODE(PCIE_CLIENT_MODE_RC),
++				 PCIE_CLIENT_GENERAL_CON);
++
++	ret = dw_pcie_setup_rc(pp);
++	if (ret) {
++		dev_err(dev, "Failed to setup RC: %d\n", ret);
++		goto deinit_clk;
++	}
++
++	/* unmask hot reset/link-down reset */
++	val = FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
++	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
++
++	ret = dw_pcie_start_link(pci);
++	if (ret)
++		goto deinit_clk;
++
++	/* Ignore errors, the link may come up later */
++	dw_pcie_wait_for_link(pci);
++	dev_dbg(dev, "Root Port reset completed\n");
++	return ret;
++
++deinit_clk:
++	clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
++deinit_phy:
++	rockchip_pcie_phy_deinit(rockchip);
++
++	return ret;
++}
++
+ static const struct rockchip_pcie_of_data rockchip_pcie_rc_of_data_rk3568 = {
+ 	.mode = DW_PCIE_RC_TYPE,
+ };
+-- 
+2.53.0
+
+
+--Iae7tS6iThanSYoD--
