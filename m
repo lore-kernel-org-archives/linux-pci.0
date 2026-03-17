@@ -1,220 +1,116 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f49.google.com (mail-ot1-f49.google.com [209.85.210.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A232A3A0EAB;
-	Tue, 17 Mar 2026 22:29:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773786602; cv=none; b=Z3PQaW2wP9YkzRqIjD6/7Z+KkU4aMtyEbIUIc2BFKXo/UIjoEjmLPvXPCh2SUpr1OV1XBkmg3hZg1Dx6NG870W1kPyIchYE28PS4dZii13x/HjG6gUg2b20zN9cpBRLXVoWT/M0DQDRLZ8DmAimQLugteaTERkmYrxbMVx/erjI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773786602; c=relaxed/simple;
-	bh=CnhOIHlyblpvsOEV8hoOhLwkcqHdhWN6Zqa9wOHKLVY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ttk4OkjuDstsdpX4sur4YEsJFUsjLqAvipeJjo3qj1vspdvGGBd5Tt5MRWVzkfRsp0LqQlX0CykCldVSH8l8jTIK+Sb2AU+iXCkDlssKtsiHuQrNJAjh+2B8/1NDQ476aLnY4k8NRpCdV6bZ199o+JbbWY3semllLkscE2ysp2Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JY1yqQr+; arc=none smtp.client-ip=198.175.65.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02A22390C82
+	for <linux-pci@vger.kernel.org>; Tue, 17 Mar 2026 22:49:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.49
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773787764; cv=pass; b=gROIsBbwIS6SZHxdVWMosqMsQYQ2qxmrKoIVVSb+HlvwkM3lo+tyXp4x52y3z7gpf8BOb/1M77rQvys+Om5XVyFsAT0O+y4e7i9YRBkwzONMkEW0Z0KoCo17DUzMTLw2TbrkAWeD6luxDIgCCZn65enZgmPDte25bCo0fcLmboM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773787764; c=relaxed/simple;
+	bh=BFec/YvDGmpF/61lUMfG6zwWthGWb6f8TAqHQNOWG3k=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=AK79tSoGnHt28huI8Vl+W+5YLKtQp4VFTVuDHpCyhiNLc7I+sPuQXRPhWL8Fnxyo/FIQ628OcCy+IKTsEKiyL9QRhVz7laE8crEJ+zWVHJ2Lz4K4ytCN8fjANXKPYlCdijmBnU5/wtWDwtOxPYBDGY/kJSBsH/rkovGtVd2pedQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RXErUpXd; arc=pass smtp.client-ip=209.85.210.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JY1yqQr+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773786599; x=1805322599;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=CnhOIHlyblpvsOEV8hoOhLwkcqHdhWN6Zqa9wOHKLVY=;
-  b=JY1yqQr+sUgDkRTFF8vFrVj8cMMY8iYlONhuAHSg5Ph1X/V3dH0S/IqO
-   3tTL1HFwA3e3eE85vY8rpSr+0QDE2ky94EjKWW/k0EnWAbalwpMFz2Red
-   Xvxyvf6/0mfsjnzpU8O70dIPF6J8IP/zle8+WBwWsQpcBFFaVV92+LQfH
-   CsohSEff041ElvhloexLASZ9iFf5uPykQNVHLf4y6Ypf7OTwfzPj+foAW
-   L0o4DbtXe7E4KszqULZDkxBXMxvSy381+2nAgczznXTfjYwKDVV2PHMXO
-   fYmpCTUqBJ1CdCgx18cJWCxCC5ti1hhDthCJAwIExeUBPYzj2xvhgiDgl
-   w==;
-X-CSE-ConnectionGUID: YiB/3BzwRDyaFIGr4n0wWA==
-X-CSE-MsgGUID: owHFRbL0SjS6JQBJ32Vixg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11732"; a="74809296"
-X-IronPort-AV: E=Sophos;i="6.23,126,1770624000"; 
-   d="scan'208";a="74809296"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2026 15:29:59 -0700
-X-CSE-ConnectionGUID: BEMfbMsJRnKCt++S2U62cA==
-X-CSE-MsgGUID: pRhFVNvwQ+Se5X5qKLOxnA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,126,1770624000"; 
-   d="scan'208";a="221486241"
-Received: from lkp-server01.sh.intel.com (HELO 63737dd503cb) ([10.239.97.150])
-  by orviesa006.jf.intel.com with ESMTP; 17 Mar 2026 15:29:51 -0700
-Received: from kbuild by 63737dd503cb with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1w2cv5-0000000026z-0bPZ;
-	Tue, 17 Mar 2026 22:29:47 +0000
-Date: Wed, 18 Mar 2026 06:29:45 +0800
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jiri Slaby <jirislaby@kernel.org>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Nicolas Schier <nicolas.schier@linux.dev>,
-	Hans de Goede <hansg@kernel.org>,
-	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Mark Pearson <mpearson-lenovo@squebb.ca>,
-	"Derek J. Clark" <derekjohn.clark@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof Kozlowski <krzk@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-kbuild@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	Stephan Gerhold <stephan.gerhold@linaro.org>,
-	Dmitry Baryshkov <lumag@kernel.org>, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v6 9/9] power: sequencing: pcie-m2: Create serdev device
- for WCN7850 bluetooth
-Message-ID: <202603180601.E8FFoQ4J-lkp@intel.com>
-References: <20260317-pci-m2-e-v6-9-9c898f108d3d@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RXErUpXd"
+Received: by mail-ot1-f49.google.com with SMTP id 46e09a7af769-7d7851e2cc4so118080a34.3
+        for <linux-pci@vger.kernel.org>; Tue, 17 Mar 2026 15:49:22 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773787762; cv=none;
+        d=google.com; s=arc-20240605;
+        b=j47YuBfypBwmbkbg/T2jZ0n998GA5RA+uLBjRmiLY3z9OT8LwQx6YeYjN/VvfXH1kt
+         upmYnTdeb8DNZaqxqwDqLCI+2SVC57x0k0FiQrPH8qkQD8/cDdPWkwmg7IZ8eehXxJcW
+         NAWD3xoPwGtsMwLC3eM2GCzMGLWasPN6WGVN8t8dAn5mVcvT9iGv6offc+6CVhu5i80X
+         HqGh3Z+ZRzZZ8l8tAhcJAQ95yDPCB8A42Ao0gqnYRB86QWU5BkXawjHfsZ1a2LRdfrr+
+         bwTCICTnfEWsRm+Xgp/YQnogGc9vyoCUIWNQVCFxjBY92kdD7bh46Nh8xahnf2lYDeQ1
+         xwAw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=BFec/YvDGmpF/61lUMfG6zwWthGWb6f8TAqHQNOWG3k=;
+        fh=O5Mbt/mBQrIHjgux7Cs7hNXUuvAFRWVYNrIC1XiqmSQ=;
+        b=UPddE0ZcE9+K2AgdTIfIaSDA+RBqbCV/HeTuo+uH/+IrmFzOS1BYE/bzoGYgmP2Hww
+         WnnLf/KR2JUyKBmTO2UwNbYiU2CMpjt7ol65DC24xrVJRVHtbHl2YDKDCMXQYV40R3Qy
+         8UD+gFOPpbk/aQD+IP3vzyw8I4pP+gKni48w3ZuUTimteTwLoD2uHbU9AvcTP8snc1NB
+         ezU1P59a4HOoQhIPu4+jsUMM162zd6jTs5QJjnirVZq8XoBHXGTEzPa5a/7zsoVgmBvl
+         A7Hfyg0KSLjPtwBmF5AeTk2l9bQN8qHnEI8nPQhCQ9/lM6K/6PR3QyA6HidT3gAkfq3y
+         ph/w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773787762; x=1774392562; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=BFec/YvDGmpF/61lUMfG6zwWthGWb6f8TAqHQNOWG3k=;
+        b=RXErUpXdke5L4yFe+QwmchpclIFpszg57ulqC1JM/s7KgHXSPpaE5Wlup/iTrAP8dj
+         zWu7C1YCo3ktWgRMhFUYTs8c/ALZ53zDUyZllMN0aIS+Z98R7gvA4ZeMkiW2x9TTT5jE
+         6Gkk8o0rIvR1HvD9xDIr3uLgRve1nBQoHSpZ1uXcqOUn487r3A29cR59Y/dvs1Ocuu3j
+         youwiF6xjMFUcU0B7f8l1EhKuumTBK74xs4c9MS4JhC257ClUfRvjrHKKZ3es17OS927
+         ReR8FC8NWkSyVOcdj2zTXDioBG+p0/DUfQN66itynkmW9f3W313Lk10sshtQ9vHKRdaV
+         1fVw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773787762; x=1774392562;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=BFec/YvDGmpF/61lUMfG6zwWthGWb6f8TAqHQNOWG3k=;
+        b=hERf8Q8BhG+cMDiB4pxwUZiu6cDFkX00zYdVRmbOqltzqIpnegASbW1ZIPWrohC98+
+         Rli23kH7n4/y1h0b5FXbegvNfO8qAZaMfvpu9sJTjPTcfJgzBVNxUK0fiUsC4CBWnHAW
+         Ziavocm+4zJjVEMo30P+QVRaZAuwMQIzTpMVNvO8lmkep/Co5q/NGO5BMj9ZcmfOfZYv
+         uOYHSg8z5Tcv2AbFMMiAeNQ9iO++ADm23fK86rfIgzp3TbyU7IA3c+gADoMzu/tO99u9
+         8xYM93NKPiUFujIQ5aeAPaxvOP++NQAtrQ7IN1AhlzB0VrDrzWkec+w6QuDra3qViA3H
+         IyHg==
+X-Forwarded-Encrypted: i=1; AJvYcCWXzwdtM4I4AfM80rHHyy53B3v2W5L20rm6Gtof5AcEeBuR9OI/E/NQr4CcINZdNURX6ECb62fAnxg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwQ0Jb0GuNJgL4Hu+TMukZeBuDO4jbf97GIZzKX/U2oKltxeI6T
+	En1b+6qxFm5PulnsJLly2OeQIHWK4WK3Jz04wYrZU3wLscr2NTPuhFqa3eCOW6eY/tcrhVhG02j
+	F+9ridtQEZEj2nP+JwitF54gMpo0jkM0=
+X-Gm-Gg: ATEYQzxyf2ydplwdnZVrI3x5j7RKTRWpG6mQAgaaxWpnfQMBFFM2JRHWViSkI4xxQwP
+	GnCQwbaeCf6fkKqpLhe/Z3Zprc6r5vVq5KiXFlu7rV/4DcH5KpqNGM4j0Y89Kp9JFeIz+oGincc
+	Gy9u6Z3SW8DbI1ZKZwMBPfmEC0GOuSxnXGjuPDI7qOHFTiej0Joj+4Ajrme4bQDxh5JDHiNif2w
+	EqMNoLTsTZHUoXI12PNLrd95BtI38ZA1ZGwrQHD8VrkCeoP8TOzbRzKEeT2ZTSYWxFe1aYFanGc
+	E5MML/Jfmqppl02j0uY=
+X-Received: by 2002:a05:6830:82e7:b0:7d7:382f:f006 with SMTP id
+ 46e09a7af769-7d7ca5a627emr722497a34.10.1773787761910; Tue, 17 Mar 2026
+ 15:49:21 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260317-pci-m2-e-v6-9-9c898f108d3d@oss.qualcomm.com>
+References: <20260223023645.344137-2-majedalkhaleefah@gmail.com> <20260224180036.361502-2-majedalkhaleefah@gmail.com>
+In-Reply-To: <20260224180036.361502-2-majedalkhaleefah@gmail.com>
+From: Majed Alkhaleefah <majedalkhaleefah@gmail.com>
+Date: Tue, 17 Mar 2026 22:49:11 +0000
+X-Gm-Features: AaiRm515a4iURi3bNvWQVpYDx-Nl5W7M1Tmg98Ix0bcgLY5xXgp7n3KZQb72GGo
+Message-ID: <CACeAfzuhqjusEdY0MDjd4uxPT8g8Lc=UQBcHgHx7oO-kZuG4MA@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: hotplug: Change return type of
+ pci_hp_add_bridge() to void
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	Scott Murray <scott@spiteful.org>
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Manivannan,
+Hello. Just wanted to ping this v2 patch. Please let me know if
+there's anything I should do. Thanks!
 
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on 559f264e403e4d58d56a17595c60a1de011c5e20]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Manivannan-Sadhasivam-via-B4-Relay/serdev-Convert-to_serdev_-helpers-to-macros-and-use-container_of_const/20260317-123910
-base:   559f264e403e4d58d56a17595c60a1de011c5e20
-patch link:    https://lore.kernel.org/r/20260317-pci-m2-e-v6-9-9c898f108d3d%40oss.qualcomm.com
-patch subject: [PATCH v6 9/9] power: sequencing: pcie-m2: Create serdev device for WCN7850 bluetooth
-config: um-randconfig-002-20260318 (https://download.01.org/0day-ci/archive/20260318/202603180601.E8FFoQ4J-lkp@intel.com/config)
-compiler: clang version 23.0.0git (https://github.com/llvm/llvm-project 4abb927bacf37f18f6359a41639a6d1b3bffffb5)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260318/202603180601.E8FFoQ4J-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202603180601.E8FFoQ4J-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   In file included from kernel/sched/rq-offsets.c:5:
-   In file included from kernel/sched/sched.h:28:
-   In file included from include/linux/cgroup_api.h:1:
-   In file included from include/linux/cgroup.h:27:
-   In file included from include/linux/kernel_stat.h:8:
-   In file included from include/linux/interrupt.h:11:
-   In file included from include/linux/hardirq.h:11:
-   In file included from arch/um/include/asm/hardirq.h:24:
-   In file included from include/linux/irq.h:20:
-   In file included from include/linux/io.h:12:
-   In file included from arch/um/include/asm/io.h:24:
-   include/asm-generic/io.h:1209:55: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-    1209 |         return (port > MMIO_UPPER_LIMIT) ? NULL : PCI_IOBASE + port;
-         |                                                   ~~~~~~~~~~ ^
-   In file included from kernel/sched/rq-offsets.c:5:
-   In file included from kernel/sched/sched.h:31:
-   In file included from include/linux/cpufreq.h:17:
->> include/linux/of.h:1652:34: error: use of undeclared identifier 'OF_RECONFIG_ATTACH_NODE'; did you mean 'OF_RECONFIG_NO_CHANGE'?
-    1652 |         return of_changeset_action(ocs, OF_RECONFIG_ATTACH_NODE, np, NULL);
-         |                                         ^~~~~~~~~~~~~~~~~~~~~~~
-         |                                         OF_RECONFIG_NO_CHANGE
-   include/linux/of.h:1627:2: note: 'OF_RECONFIG_NO_CHANGE' declared here
-    1627 |         OF_RECONFIG_NO_CHANGE = 0,
-         |         ^
->> include/linux/of.h:1658:34: error: use of undeclared identifier 'OF_RECONFIG_DETACH_NODE'; did you mean 'OF_RECONFIG_NO_CHANGE'?
-    1658 |         return of_changeset_action(ocs, OF_RECONFIG_DETACH_NODE, np, NULL);
-         |                                         ^~~~~~~~~~~~~~~~~~~~~~~
-         |                                         OF_RECONFIG_NO_CHANGE
-   include/linux/of.h:1627:2: note: 'OF_RECONFIG_NO_CHANGE' declared here
-    1627 |         OF_RECONFIG_NO_CHANGE = 0,
-         |         ^
->> include/linux/of.h:1664:34: error: use of undeclared identifier 'OF_RECONFIG_ADD_PROPERTY'
-    1664 |         return of_changeset_action(ocs, OF_RECONFIG_ADD_PROPERTY, np, prop);
-         |                                         ^~~~~~~~~~~~~~~~~~~~~~~~
->> include/linux/of.h:1670:34: error: use of undeclared identifier 'OF_RECONFIG_REMOVE_PROPERTY'
-    1670 |         return of_changeset_action(ocs, OF_RECONFIG_REMOVE_PROPERTY, np, prop);
-         |                                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~
->> include/linux/of.h:1676:34: error: use of undeclared identifier 'OF_RECONFIG_UPDATE_PROPERTY'
-    1676 |         return of_changeset_action(ocs, OF_RECONFIG_UPDATE_PROPERTY, np, prop);
-         |                                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-   1 warning and 5 errors generated.
-   make[3]: *** [scripts/Makefile.build:184: kernel/sched/rq-offsets.s] Error 1 shuffle=497447418
-   make[3]: Target 'prepare' not remade because of errors.
-   make[2]: *** [Makefile:1333: prepare0] Error 2 shuffle=497447418
-   make[2]: Target 'prepare' not remade because of errors.
-   make[1]: *** [Makefile:248: __sub-make] Error 2 shuffle=497447418
-   make[1]: Target 'prepare' not remade because of errors.
-   make: *** [Makefile:248: __sub-make] Error 2 shuffle=497447418
-   make: Target 'prepare' not remade because of errors.
-
-Kconfig warnings: (for reference only)
-   WARNING: unmet direct dependencies detected for OF_DYNAMIC
-   Depends on [n]: OF [=n]
-   Selected by [y]:
-   - POWER_SEQUENCING_PCIE_M2 [=y] && POWER_SEQUENCING [=y] && (PCI [=n] && OF [=n] || COMPILE_TEST [=y])
-
-
-vim +1652 include/linux/of.h
-
-2e8fff668dc14e Rob Herring       2023-03-29  1633  
-201c910bd6898d Pantelis Antoniou 2014-07-04  1634  #ifdef CONFIG_OF_DYNAMIC
-f6892d193fb9d6 Grant Likely      2014-11-21  1635  extern int of_reconfig_notifier_register(struct notifier_block *);
-f6892d193fb9d6 Grant Likely      2014-11-21  1636  extern int of_reconfig_notifier_unregister(struct notifier_block *);
-f5242e5a883bf1 Grant Likely      2014-11-24  1637  extern int of_reconfig_notify(unsigned long, struct of_reconfig_data *rd);
-f5242e5a883bf1 Grant Likely      2014-11-24  1638  extern int of_reconfig_get_state_change(unsigned long action,
-f5242e5a883bf1 Grant Likely      2014-11-24  1639  					struct of_reconfig_data *arg);
-f6892d193fb9d6 Grant Likely      2014-11-21  1640  
-201c910bd6898d Pantelis Antoniou 2014-07-04  1641  extern void of_changeset_init(struct of_changeset *ocs);
-201c910bd6898d Pantelis Antoniou 2014-07-04  1642  extern void of_changeset_destroy(struct of_changeset *ocs);
-201c910bd6898d Pantelis Antoniou 2014-07-04  1643  extern int of_changeset_apply(struct of_changeset *ocs);
-201c910bd6898d Pantelis Antoniou 2014-07-04  1644  extern int of_changeset_revert(struct of_changeset *ocs);
-201c910bd6898d Pantelis Antoniou 2014-07-04  1645  extern int of_changeset_action(struct of_changeset *ocs,
-201c910bd6898d Pantelis Antoniou 2014-07-04  1646  		unsigned long action, struct device_node *np,
-201c910bd6898d Pantelis Antoniou 2014-07-04  1647  		struct property *prop);
-201c910bd6898d Pantelis Antoniou 2014-07-04  1648  
-201c910bd6898d Pantelis Antoniou 2014-07-04  1649  static inline int of_changeset_attach_node(struct of_changeset *ocs,
-201c910bd6898d Pantelis Antoniou 2014-07-04  1650  		struct device_node *np)
-201c910bd6898d Pantelis Antoniou 2014-07-04  1651  {
-201c910bd6898d Pantelis Antoniou 2014-07-04 @1652  	return of_changeset_action(ocs, OF_RECONFIG_ATTACH_NODE, np, NULL);
-201c910bd6898d Pantelis Antoniou 2014-07-04  1653  }
-201c910bd6898d Pantelis Antoniou 2014-07-04  1654  
-201c910bd6898d Pantelis Antoniou 2014-07-04  1655  static inline int of_changeset_detach_node(struct of_changeset *ocs,
-201c910bd6898d Pantelis Antoniou 2014-07-04  1656  		struct device_node *np)
-201c910bd6898d Pantelis Antoniou 2014-07-04  1657  {
-201c910bd6898d Pantelis Antoniou 2014-07-04 @1658  	return of_changeset_action(ocs, OF_RECONFIG_DETACH_NODE, np, NULL);
-201c910bd6898d Pantelis Antoniou 2014-07-04  1659  }
-201c910bd6898d Pantelis Antoniou 2014-07-04  1660  
-201c910bd6898d Pantelis Antoniou 2014-07-04  1661  static inline int of_changeset_add_property(struct of_changeset *ocs,
-201c910bd6898d Pantelis Antoniou 2014-07-04  1662  		struct device_node *np, struct property *prop)
-201c910bd6898d Pantelis Antoniou 2014-07-04  1663  {
-201c910bd6898d Pantelis Antoniou 2014-07-04 @1664  	return of_changeset_action(ocs, OF_RECONFIG_ADD_PROPERTY, np, prop);
-201c910bd6898d Pantelis Antoniou 2014-07-04  1665  }
-201c910bd6898d Pantelis Antoniou 2014-07-04  1666  
-201c910bd6898d Pantelis Antoniou 2014-07-04  1667  static inline int of_changeset_remove_property(struct of_changeset *ocs,
-201c910bd6898d Pantelis Antoniou 2014-07-04  1668  		struct device_node *np, struct property *prop)
-201c910bd6898d Pantelis Antoniou 2014-07-04  1669  {
-201c910bd6898d Pantelis Antoniou 2014-07-04 @1670  	return of_changeset_action(ocs, OF_RECONFIG_REMOVE_PROPERTY, np, prop);
-201c910bd6898d Pantelis Antoniou 2014-07-04  1671  }
-201c910bd6898d Pantelis Antoniou 2014-07-04  1672  
-201c910bd6898d Pantelis Antoniou 2014-07-04  1673  static inline int of_changeset_update_property(struct of_changeset *ocs,
-201c910bd6898d Pantelis Antoniou 2014-07-04  1674  		struct device_node *np, struct property *prop)
-201c910bd6898d Pantelis Antoniou 2014-07-04  1675  {
-201c910bd6898d Pantelis Antoniou 2014-07-04 @1676  	return of_changeset_action(ocs, OF_RECONFIG_UPDATE_PROPERTY, np, prop);
-201c910bd6898d Pantelis Antoniou 2014-07-04  1677  }
-b544fc2b8606d7 Lizhi Hou         2023-08-15  1678  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+On Tue, 24 Feb 2026 at 18:01, Majed Alkhaleefah
+<majedalkhaleefah@gmail.com> wrote:
+>
+> The function pci_hp_add_bridge() currently returns an int error code.
+> However, none of its callers actually check or store the return value,
+> neither do they need to take any special action in the event of a
+> failure.
+>
+> The execution path of pci_hp_add_bridge() already contains relevant
+> error logging. Therefore, adding additional logging/error checking is
+> redundant.
+>
+> Make pci_hp_add_bridge() a void function.
+>
+> Compile-tested only.
+>
+> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Majed Alkhaleefah <majedalkhaleefah@gmail.com>
