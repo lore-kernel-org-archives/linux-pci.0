@@ -1,60 +1,64 @@
-Received: from sender4-op-o15.zoho.com (sender4-op-o15.zoho.com [136.143.188.15])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 249C12BDC05;
-	Tue, 17 Mar 2026 05:33:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.15
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773725610; cv=pass; b=oXN8IhVqR1HmDTNDnQylOmrlH7NiRMayUQRmHHKVekGRFju4//TZJevjfW/WnfTUgjNXdiyXQf323IKRs1J8AYeh6eJyd9lZUB3IA5aUpvQ2I0ev7UrOqMEKZcO0WIbeu66UABi/XeWp62ilyoH1dtB9IYGEuNekoB8DUzup2Js=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773725610; c=relaxed/simple;
-	bh=oEMHgdcLN4ZjmCvZ6oFicibDv5Sww1FGtEFGTLH3xLM=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 933C537EFEC
+	for <linux-pci@vger.kernel.org>; Tue, 17 Mar 2026 05:33:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773725613; cv=none; b=joowniT9eNEyX9vBPdstHKrNMjATOvxYlnJzC997MfwxTo/7dRTyHhzYEq0CdVDBu8X9NmkVYaaiXh+94VxWHzjHKFNQf4VKFP7o6cFvzYjlhvwoRLVvVHVUY8ziQrbSZGBqm1TvLYFckTFUXdTClVigvP5FAIHIoVyN2TF6OV4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773725613; c=relaxed/simple;
+	bh=fKFyAGN8OemXEvnaUNwgZzMf/n97+47ltunxYZGhrqk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=t2iLFmdjiO50LyYCduAxXmSNJ3GwjWcV/SvuOgGUuxNJQT8EhD6MaHOwGeZOChmztbigizK8njpBLAu6KyPC6V/43c1t05T+NK57ZC/pQgt0SpQwMWUnoGpR1TFILITavDpklNdeZGAkUmSBzMb1d2P0ND9Ni0IhrsVV3eEZ4IE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc; spf=pass smtp.mailfrom=ziyao.cc; dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b=ImJqzBha; arc=pass smtp.client-ip=136.143.188.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziyao.cc
+	 Content-Type:Content-Disposition:In-Reply-To; b=o2NI/ZbkrwvUSCRG6cYAytlfNO6gUCmKnMgzslmpU7L623gYD0MBAyWd1aRH/usq9Fh5v5OLWntm2Q74nREZKdO0mS8R3txNCpawgIi63nw5pNzTpNxFHMdDMYOqbG6dnDZ4Or/8AXDpD3ADQleKEvTpeE+qPsjsEzuzksQ8b3s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DiOcug7S; arc=none smtp.client-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b="ImJqzBha"
-ARC-Seal: i=1; a=rsa-sha256; t=1773725589; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=Qsmefrqsk7KvHZu9LJfj3ZnxXaXC8oWr1zwkioGNa6MfAlX4sPJtm2L/TmBOkUqd5/dbeG6jSseZtptEB7U7hLPIs5P3xjqn7PUEZAO2RKFXCL8adfrXpVbeaugUzyTMrmIsJ0KEE4/yJ03QUJ22fgqWTUOeswEt7Uaj2doCb0U=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1773725589; h=Content-Type:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=eyhiSFd7TnnR0Y4KPBjzhgYS3ePqfaic4BGkMyXWNsw=; 
-	b=mZP9Fh7ks1MBeclBECCuJouLSVmAo1S3kP+g3XJyaJo4EK9nSYO3mHOHz0ekBs8A0/dHe5Apu8wb1N227eM6sES3ZKWHV3Um+PPTp/Ovpy9qc5Gyj9mrDt3O3gOvj0izJOldmf0ZdA/xQs0knMttMDN2FjDp0WS+9dTUaIwb1oc=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=ziyao.cc;
-	spf=pass  smtp.mailfrom=me@ziyao.cc;
-	dmarc=pass header.from=<me@ziyao.cc>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1773725589;
-	s=zmail; d=ziyao.cc; i=me@ziyao.cc;
-	h=Date:Date:From:From:To:To:Cc:Cc:Subject:Subject:Message-ID:References:MIME-Version:Content-Type:In-Reply-To:Message-Id:Reply-To;
-	bh=eyhiSFd7TnnR0Y4KPBjzhgYS3ePqfaic4BGkMyXWNsw=;
-	b=ImJqzBhaykJ7b6/ZZttuDa2mVkhAhgDaSE6bshmKI944v399pbVfoE7pBrw+w0s7
-	3jyglFuOx3pr6RFQB9UJV8Nx9sIzKyQ0123yzbCRoTT6QXZhGKYysfsaK2IWwFHCq79
-	tuhORvK26dfLgOeQgY0foUHdkkgE5XaiFrZJ3J44=
-Received: by mx.zohomail.com with SMTPS id 1773725587000567.8249611127286;
-	Mon, 16 Mar 2026 22:33:07 -0700 (PDT)
-Date: Tue, 17 Mar 2026 05:32:54 +0000
-From: Yao Zi <me@ziyao.cc>
-To: wangjia@ultrarisc.com, Paul Walmsley <pjw@kernel.org>,
-	Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Xincheng Zhang <zhangxincheng@ultrarisc.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>
-Cc: linux-riscv@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH 4/4] PCI: dwc: Add UltraRISC DP1000 PCIe rc driver
-Message-ID: <abjnhn5sqnJv1fYY@pie>
-References: <20260316-ultrarisc-pcie-v1-0-ef2946ede698@ultrarisc.com>
- <20260316-ultrarisc-pcie-v1-4-ef2946ede698@ultrarisc.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DiOcug7S"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773725612; x=1805261612;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=fKFyAGN8OemXEvnaUNwgZzMf/n97+47ltunxYZGhrqk=;
+  b=DiOcug7S1svY23998K0I1WajHkRHMhqcibwXPjbfLbCFlTVER6r/YNVj
+   MM+9oZ1Vduq6nlvlp0yZYD/HsE0ZMTFtdbDQAaVs7G6APpAwirYScSEJU
+   QX6pjVKRKzpAtcCCAF2ABpbY0/Mza+eLt6Cfp2/1Cct0elu4FC/ndLOze
+   kC+jhg/BXJmqH7P0tJm4mLml3NKJH6U4ilnVGsKRMYFIiAC0dYp6Ykg3d
+   tknnNcKG+PV+Ovf/t8D4zGQjW5Rcrt7BYD07eoZT5Q76heK8GsirOsT9h
+   8VVE+bgyPsgVQbOYtcMZtGAUCcGQe81N3ZqkwzFoQ4dqGstqA/0xd6iwA
+   w==;
+X-CSE-ConnectionGUID: znqsgwTKSvqDAOh/vHK0kA==
+X-CSE-MsgGUID: CeNhzL6gQsS5eIlBen3L5g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11731"; a="78603175"
+X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
+   d="scan'208";a="78603175"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2026 22:33:31 -0700
+X-CSE-ConnectionGUID: 8aPpMn70TA+wL9mWeuwwWA==
+X-CSE-MsgGUID: hEmZPi+LRpGhCdaeyBnxmg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
+   d="scan'208";a="221174941"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
+  by orviesa006.jf.intel.com with ESMTP; 16 Mar 2026 22:33:28 -0700
+Date: Tue, 17 Mar 2026 13:13:00 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
+	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org, aik@amd.com,
+	bhelgaas@google.com, alistair23@gmail.com, lukas@wunner.de,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2 09/19] PCI/TSM: Support creating encrypted MMIO
+ descriptors via TDISP Report
+Message-ID: <abji3A72ogqdRiGc@yilunxu-OptiPlex-7050>
+References: <20260303000207.1836586-1-dan.j.williams@intel.com>
+ <20260303000207.1836586-10-dan.j.williams@intel.com>
+ <yq5a4imuanoa.fsf@kernel.org>
+ <abPlt8oNUOqGvbA3@yilunxu-OptiPlex-7050>
+ <20260313133658.GD1586734@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -63,53 +67,48 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260316-ultrarisc-pcie-v1-4-ef2946ede698@ultrarisc.com>
-X-ZohoMailClient: External
+In-Reply-To: <20260313133658.GD1586734@nvidia.com>
 
-On Mon, Mar 16, 2026 at 03:07:00PM +0800, Jia Wang via B4 Relay wrote:
-> From: Xincheng Zhang <zhangxincheng@ultrarisc.com>
+On Fri, Mar 13, 2026 at 10:36:58AM -0300, Jason Gunthorpe wrote:
+> On Fri, Mar 13, 2026 at 06:23:51PM +0800, Xu Yilun wrote:
 > 
-> Add DP1000 soc PCIe rc driver.
+> > My understanding is, it is the obfuscated host start pfn of this range,
+> > if this range has offset to the BAR start, this field should also be
+> > offsetted.
 > 
-> Signed-off-by: Xincheng Zhang <zhangxincheng@ultrarisc.com>
-> Signed-off-by: Jia Wang <wangjia@ultrarisc.com>
-> ---
->  drivers/pci/controller/dwc/Kconfig           |  15 ++
->  drivers/pci/controller/dwc/Makefile          |   1 +
->  drivers/pci/controller/dwc/pcie-designware.h |  22 +++
->  drivers/pci/controller/dwc/pcie-ultrarisc.c  | 202 +++++++++++++++++++++++++++
->  4 files changed, 240 insertions(+)
+> The OS must get an idea of the bar layout out of the report, so there
+> have to be restrictions on how it is formed otherwise it is
+> unparsible. IMHO the PCI spec created this very general mechanism but
+
+Yeah, now I think I've fully understood the problem. The essential thing
+is some of the MMIO ranges could be hidden from the report, at least the
+MSIX/PBA ranges must be hidden if not locked/private. This makes guest
+hard to find the bar layout out of the report.
+
+> the CPU CC specs need to constrain it to be usable by an OS.
 > 
-> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-> index d0aa031397fa..0a33891bf7ef 100644
-> --- a/drivers/pci/controller/dwc/Kconfig
-> +++ b/drivers/pci/controller/dwc/Kconfig
-> @@ -548,4 +548,19 @@ config PCIE_VISCONTI_HOST
->  	  Say Y here if you want PCIe controller support on Toshiba Visconti SoC.
->  	  This driver supports TMPV7708 SoC.
->  
-> +config PCIE_ULTRARISC
-> +	bool "UltraRISC PCIe host controller"
+> > >  		range_off = tsm_offset & (pci_resource_len(pdev, bar) - 1);
+> > > 
+> > > So that we correctly handle if the interface report is reporting a range
+> > > within a bar. The only requirement here is bar address should be aligned
+> > > to its size and mmio_reporting_offset should not add offsets in that range.
 
-Is there any reason preventing the driver being built as a module? If
-no, it would be better to change it to "tristate", to allow distribution
-to customize the configuration for image sizes, etc.
+This is the solution on CPU CC side, which requires the TSM to choose a
+mmio_reporting_offset aligned to the MAX BAR size so that the
+obfuscation won't blur the bar offset info. This is a trade off, the
+larger the bar_size, the weaker the obfuscation. Is there a worst case,
+that a device has a large bar in high address and a small bar in low
+address, the small bar address has no intersection with the
+mmio_reporting_offset. Then the obfuscated address ends up being amusing
+0xabcd012345000, which clearly leaks the mmio_reporting_offset and the
+physical BAR address...
 
-> +	depends on ARCH_ULTRARISC || COMPILE_TEST
-> +	select PCIE_DW_HOST
-> +	select PCI_MSI
-> +	default y if ARCH_ULTRARISC
-> +	help
-> +	  Enables support for the PCIe controller in the UltraRISC SoC.
-> +	  This driver supports UR-DP1000 SoC. When selected, it automatically
-> +	  enables both `PCIE_DW_HOST` and `PCI_MSI`, ensuring proper support
-> +	  for MSI-based interrupt handling in the PCIe controller.
-> +	  By default, this symbol is enabled when `ARCH_ULTRARISC` is active,
-> +	  requiring no further configuration on that platform.
-> +
-> +
->  endmenu
->  #define PORT_LOGIC_LTSSM_STATE_L0	0x11
 
-Best regards,
-Yao Zi
+And I've no idea why unlocked MSIX/PBA must be hidden? How about other
+non-TEE ranges, must be hidden or mustn't? Is there a possibility we
+enforce DSM to present all ranges, then the layout is clear to OS?
+
+> 
+> Right.
+> 
+> Jason
