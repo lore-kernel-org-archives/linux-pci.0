@@ -1,239 +1,114 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91C601D6187;
-	Tue, 17 Mar 2026 11:33:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00BA133067A;
+	Tue, 17 Mar 2026 11:47:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773747238; cv=none; b=YOBkOLGv43mPadYpXFeiWQ1RVg39xgh9RCdvPdFIMisCt/wBjaQDa/B3Dqr9seB3YP38zoOV9Xur2tQcLbkwuwiH1mhuXcywWlcZO8aniPf5EpKziW5AjFKSgYuVbeqF2L6t0V0wmm5VRu6uZy9HrGQMKmVhuxMiFoHzwQPvSrY=
+	t=1773748075; cv=none; b=IpzIUAzjz7AaJIGT9QieFZZDM27rKRAK/YpXzoaEk+iDPtrcPP3RBvbG4Wjg34Dbfk3p/IA96dHY+sImmXQY1keRND8FbnDjeJ9DyECWmXvNFwJMpfYEpwmeRWrCGizSKSVIYzqacBQKFX9chPz2lJOEzlYzxL/C+k9QDV82ACU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773747238; c=relaxed/simple;
-	bh=tdK4i+a6Z3eQ1L5u1jOJ5xYVY1M6+PO9Qehx3Yr0BTY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JqTPfqI0sD0+KFKv6C9OClTxHGVzHny9s9WwMc+wnV8NpOL3A30mDaZ+qoxxPf5HrltvG3JZ1p/URmD01UnQo4ZjGkpldjY42DtySY02IQTbavbPHppqTzUZWs1P1h7MBddQwh9rlvTisnQkoutu7Reb1bcJcGauxx+FK7yGVic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=h/Awr1WY; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1773748075; c=relaxed/simple;
+	bh=JdQasyzbMwQG4UJ6BxEFeSmYOOI5nM9Nngo91aNREe4=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=hOby9TVlMI3y/K8F/89/BDLsbw2xNjUgPgpjPmrk2WKYEw1WPRPI7/CcYmWa06MKlglG2wU/TFIfGZ6H8jIEHbK4IjMicYa5y4r8MVdix61uQhAIsDSn2lKpqhU6M6oCLLYZkapzeeGoNqbbZHjWHNorNKsPx5+QISz1fZNihaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aJUpCofq; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="h/Awr1WY"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62H9eESu983279;
-	Tue, 17 Mar 2026 11:33:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:sender:subject:to; s=pp1;
-	 bh=DxF78H4iShP3mQUjt0zgL/eZzheXlcaOOqbaH6wCOxM=; b=h/Awr1WYMeUb
-	JWFdwT/Ph+1w474gjU7a5OZJwHls+SBXmrvqp/UhbXF+pwLd/d+ikKAS1UHtCnwS
-	mSPYhGr9B+3xBrsU5kQiyq25x0tl8H55TLTax3bY+mmvY+jCzqBfXpOZdNgz/FWz
-	Ffuo5kCqPQcIierRqPH1mc6llAbAQB+Sjju+Fwm8N7K/z9OKY4SDZbY5Zknoqftm
-	grK4ikFeacWa6uK6oxABAF47mG2f27Ce/HNPS1WW5pDVF+QicwQEtlKaR8doiz65
-	aaLRAfQH3wVM4iVg/7qSkzhyKxq7TObL9NwD7Yedxn+kYmM6jzwgEscpJJ12zFDB
-	G49zjvFv5w==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cvyaubvwc-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 17 Mar 2026 11:33:39 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62HAf4Z0004737;
-	Tue, 17 Mar 2026 11:33:38 GMT
-Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4cwj0s91aw-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 17 Mar 2026 11:33:38 +0000
-Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
-	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62HBXZ5l59900246
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 17 Mar 2026 11:33:35 GMT
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 0CC232004E;
-	Tue, 17 Mar 2026 11:33:35 +0000 (GMT)
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E81642004D;
-	Tue, 17 Mar 2026 11:33:34 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.87.130.152])
-	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Tue, 17 Mar 2026 11:33:34 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.1)
-	(envelope-from <bblock@linux.ibm.com>)
-	id 1w2Sg2-00000006Wqm-2GNe;
-	Tue, 17 Mar 2026 12:33:34 +0100
-Date: Tue, 17 Mar 2026 12:33:34 +0100
-From: Benjamin Block <bblock@linux.ibm.com>
-To: Benjamin Block <lkml@mageta.org>
-Cc: Guenter Roeck <linux@roeck-us.net>,
-        Niklas Schnelle <schnelle@linux.ibm.com>,
-        Ionut Nechita <ionut.nechita@windriver.com>,
-        Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <kbusch@kernel.org>, Gerd Bayer <gbayer@linux.ibm.com>,
-        Matthew Rosato <mjrosato@linux.ibm.com>,
-        Halil Pasic <pasic@linux.ibm.com>, Farhan Ali <alifm@linux.ibm.com>,
-        Julian Ruess <julianr@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 2/2] PCI/IOV: Fix race between SR-IOV enable/disable
- and hotplug
-Message-ID: <20260317113334.GJ2161595@p1gen4-pw042f0m>
-References: <20251216-revert_sriov_lock-v3-0-dac4925a7621@linux.ibm.com>
- <20251216-revert_sriov_lock-v3-2-dac4925a7621@linux.ibm.com>
- <0ca9e675-478c-411d-be32-e2d81439288f@roeck-us.net>
- <20260317090149.GA3835708@chlorum.ategam.org>
- <20260317094656.GI2161595@p1gen4-pw042f0m>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aJUpCofq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773748074; x=1805284074;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version:content-id;
+  bh=JdQasyzbMwQG4UJ6BxEFeSmYOOI5nM9Nngo91aNREe4=;
+  b=aJUpCofqHY+HWqwh996zR8i7kSfnrK6G/UaywDrtiISkgejpu5YN/B9u
+   yxAjIvpJro1Y/zj1jChWV/pIDFiUZXhMOUly6uV35vz5ALCrasVYgLH2P
+   M9Xrt5ZD6Hbx4km5q+4WF+LQqfO9GH364Llaq35U5oQWXPwqssh5A8d+a
+   X3jvQiiOOeQ/bs5uqYGtmslvalnHnxB33l0rx25knds1hpNJ94+17IWGr
+   xQJg37yoa00DB1x2pcJ3jIE8yjCWOuYwiUjIkYvmqbac4Kqv2xN9ZrHPv
+   dc4qXV/fTFdRBB9sLto4HhMnBNbxi1r6ZSleyloq2+urEABqFKcl469Oj
+   g==;
+X-CSE-ConnectionGUID: 1kVz/8rVRH+4sKLo7W6+cw==
+X-CSE-MsgGUID: VhxcF7yxSNqXqGpwKXo5OA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11731"; a="74894413"
+X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
+   d="scan'208";a="74894413"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2026 04:47:53 -0700
+X-CSE-ConnectionGUID: xoXiTkqNTdiMkqPkFoJ4kQ==
+X-CSE-MsgGUID: JCFW171WTKSqFvCJxs7QSQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
+   d="scan'208";a="227217242"
+Received: from egrumbac-mobl6.ger.corp.intel.com (HELO localhost) ([10.245.245.161])
+  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2026 04:47:51 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Tue, 17 Mar 2026 13:47:46 +0200 (EET)
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: =?ISO-8859-2?Q?Micha=B3_Pecio?= <michal.pecio@gmail.com>, 
+    linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, 
+    LKML <linux-kernel@vger.kernel.org>, regressions@lists.linux.dev
+Subject: Re: [REGRESSION 6.14] Some PCI device BARs inacessible
+In-Reply-To: <20260316201651.GA23314@bhelgaas>
+Message-ID: <12da4009-3f6e-3fea-8d21-f8c9d66f7102@linux.intel.com>
+References: <20260316201651.GA23314@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260317094656.GI2161595@p1gen4-pw042f0m>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE3MDA5OSBTYWx0ZWRfX0y/O8j7gZMfY
- xr6mzoz4kBnapBEsFoa9+rS/iMhhH+LEEP5VODpi/lDXO6D1O2/o9VXdMA0xOth0u8J3Gj+d6n2
- Dtx2O+ac9dHmjpwOHpY+DF9orHcdlODqFM+/wfvxHTq/KscDduyJPe4VR7odHONkrCwg+ryKcFi
- JwhjNM48W1XQAnWPGUcLyN/FX2k052PmkDqkO8cfsglsqN77Y3Mnp9T2B9dVwRkXrgqNSxMx/dG
- 8X2xovD5SkEyODEaILh+LGlEbNNhyyv9x2VrD8wJ8wgP3MQI8TAob8SCCl0gGJIodSubpv0wWog
- 2yWwhgDrTEppDrezoTKH0N9AKMyCe0xeqHHR1DvHga0vQOCaCu4g5gtWbRA+nBcqahkgXcuCYWV
- xAZoNmK/yOzGikZKnwfsLUqLR2Vpog82VJlXIUl1m6c+CkKqEoLYT77iK133BUGaV1u6vwxiSXt
- qjmcPnoxzCOpAQ3RvRg==
-X-Authority-Analysis: v=2.4 cv=GIQF0+NK c=1 sm=1 tr=0 ts=69b93c13 cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=8nJEP1OIZ-IA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VnNF1IyMAAAA:8
- a=dCyHOxzCRJwJDcqN08wA:9 a=3ZKOabzyN94A:10 a=wPNLvfGTeEIA:10
- a=O8hF6Hzn-FEA:10
-X-Proofpoint-ORIG-GUID: FeMVukiHyaYtLUyA_tdgBcTbV7a4tVcH
-X-Proofpoint-GUID: FeMVukiHyaYtLUyA_tdgBcTbV7a4tVcH
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-17_01,2026-03-16_06,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 priorityscore=1501 bulkscore=0 lowpriorityscore=0 malwarescore=0
- phishscore=0 impostorscore=0 suspectscore=0 adultscore=0 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603170099
+Content-Type: multipart/mixed; BOUNDARY="8323328-1619845209-1773747867=:968"
+Content-ID: <74457b6c-5b44-7f35-8488-74f2c85f7fe9@linux.intel.com>
 
-On Tue, Mar 17, 2026 at 10:46:56AM +0100, Benjamin Block wrote:
-> On Tue, Mar 17, 2026 at 10:01:49AM +0100, Benjamin Block wrote:
-> > One quick idea: can we somehow unbind the device from any device driver
-> > in remove_store() before calling
-> > pci_stop_and_remove_bus_device_locked()?  That way we would not have any
-> > SR-IOV functions attached anymore at the point where we remove the PF,
-> > since the DD are expected to clean them up.
-> 
-> Very quick-and-dirty:
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 16eaaf749ba9..490b6c1f07d3 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -33,6 +33,8 @@
->  #include <linux/unaligned.h>
->  #include "pci.h"
->  
-> +extern void device_driver_detach(struct device *dev);
-> +
->  #ifndef ARCH_PCI_DEV_GROUPS
->  #define ARCH_PCI_DEV_GROUPS
->  #endif
-> @@ -518,8 +520,10 @@ static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
->  	if (kstrtoul(buf, 0, &val) < 0)
->  		return -EINVAL;
->  
-> -	if (val && device_remove_file_self(dev, attr))
-> +	if (val && device_remove_file_self(dev, attr)) {
-> +		device_driver_detach(dev);
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Hmm, thinking on it, this leaves open the possibility, that something re-binds
-the DD in between these two calls. Although unlikely, it might happen.
+--8323328-1619845209-1773747867=:968
+Content-Type: text/plain; CHARSET=ISO-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-ID: <5749c0c7-bac2-95bc-1be3-cdfecc78e941@linux.intel.com>
 
->  		pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
-> +	}
->  	return count;
->  }
->  static DEVICE_ATTR_IGNORE_LOCKDEP(remove, 0220, NULL,
+On Mon, 16 Mar 2026, Bjorn Helgaas wrote:
 
-I guess, I dig the hole a bit deeper.
+> [+cc Ilpo, +bcc bugzilla reporters and commenters]
+>=20
+> On Fri, Apr 18, 2025 at 10:29:26AM +0200, Micha=B3 Pecio wrote:
+> > Hi,
+> >=20
+> > This is a heads up that an apparent PCI regression has been reported
+> > and mistakenly assigned to USB in the kernel bugzilla:
+> >=20
+> > https://bugzilla.kernel.org/show_bug.cgi?id=3D220016
+> >=20
+> > Visible symptom is missing USB devices, but the whole controller fails
+> > to probe, apparently due to devm_request_mem_region() returning NULL,
+> > see drivers/usb/core/hcd-pci.c and usb_hcd_pci_probe().
+> >=20
+> > Same systems also show a similar failure with some AHCI controller.
+> > It seems specific to particular ASUS AMD motherboards.
+> >=20
+> > Somebody found that disabling CONFIG_PCI_REALLOC_ENABLE_AUTO helps.
+> >=20
+> > That's all I know, reporters can be reached via bugzilla.
+>=20
+> I see some activity in the bugzilla but no resolution.  Ilpo has done
+> a lot of work in this area since v6.14, though, so I wouldn't be
+> surprised at all if this has been fixed.=20
+>=20
+> Would anybody be interested in testing v6.19 or v7.0-rc to see if this
+> problem still exists?
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 16eaaf749ba9..d2877b805d6e 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -33,6 +33,8 @@
- #include <linux/unaligned.h>
- #include "pci.h"
- 
-+extern void device_driver_detach(struct device *dev);
-+
- #ifndef ARCH_PCI_DEV_GROUPS
- #define ARCH_PCI_DEV_GROUPS
- #endif
-@@ -518,8 +520,13 @@ static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
- 	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
- 
--	if (val && device_remove_file_self(dev, attr))
-+	if (val && device_remove_file_self(dev, attr)) {
-+		device_lock(dev);
-+		kill_device(dev);
-+		device_unlock(dev);
-+		device_driver_detach(dev);
- 		pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
-+	}
- 	return count;
- }
- static DEVICE_ATTR_IGNORE_LOCKDEP(remove, 0220, NULL,
+My plan was to look at this ticket again anyway (or has been for like a=20
+few months now but there has been higher prio items get in the way of=20
+looking the ticket up).
 
-Marking the device dead prevents re-binding after the unbind.
+(It went to lower prio bin once it was determined it was not a real
+regression but fc enabling pci=3Drealloc. Despite that, I'd still want to=
+=20
+have it fixed eventually.)
 
-Same sniff tests as before:
-
-  root@b315lp04:~# cd /sys/bus/pci/
-  root@b315lp04:/sys/bus/pci# lspci
-  0103:00:00.0 Ethernet controller: Mellanox Technologies ConnectX Family mlx5Gen Virtual Function
-  1100:00:00.0 Processing accelerators: IBM Spyre Accelerator (rev 02)
-  1100:00:00.1 Processing accelerators: IBM Spyre Accelerator Virtual Function (rev 02)
-  1180:00:00.0 Processing accelerators: IBM Spyre Accelerator (rev 02)
-  1180:00:00.1 Processing accelerators: IBM Spyre Accelerator Virtual Function (rev 02)
-  root@b315lp04:/sys/bus/pci# echo 0 > devices/1100\:00\:00.0/sriov_numvfs
-  root@b315lp04:/sys/bus/pci# echo 1 > devices/1100\:00\:00.0/sriov_numvfs
-  root@b315lp04:/sys/bus/pci# echo 1100:00:00.0 > drivers/vfio-pci/unbind
-  root@b315lp04:/sys/bus/pci# echo 1100:00:00.0 > drivers/vfio-pci/bind
-  root@b315lp04:/sys/bus/pci# echo 1 > devices/1100\:00\:00.0/sriov_numvfs
-  root@b315lp04:/sys/bus/pci# echo 1 > devices/1100\:00\:00.0/remove
-  root@b315lp04:/sys/bus/pci# lspci
-  0103:00:00.0 Ethernet controller: Mellanox Technologies ConnectX Family mlx5Gen Virtual Function
-  1180:00:00.0 Processing accelerators: IBM Spyre Accelerator (rev 02)
-  1180:00:00.1 Processing accelerators: IBM Spyre Accelerator Virtual Function (rev 02)
-  root@b315lp04:/sys/bus/pci# rmmod vfio_ccw vfio_pci vfio_pci_core vfio_iommu_type1 vfio
-  root@b315lp04:/sys/bus/pci# modprobe -a vfio_ccw vfio_pci vfio_pci_core vfio_iommu_type1 vfio
-  root@b315lp04:/sys/bus/pci# echo 1 > rescan
-  root@b315lp04:/sys/bus/pci# echo 1 > devices/1100\:00\:00.0/sriov_numvfs
-  root@b315lp04:/sys/bus/pci# echo 1 > devices/1180\:00\:00.0/sriov_numvfs
-  root@b315lp04:/sys/bus/pci# lspci
-  0103:00:00.0 Ethernet controller: Mellanox Technologies ConnectX Family mlx5Gen Virtual Function
-  1100:00:00.0 Processing accelerators: IBM Spyre Accelerator (rev 02)
-  1100:00:00.1 Processing accelerators: IBM Spyre Accelerator Virtual Function (rev 02)
-  1180:00:00.0 Processing accelerators: IBM Spyre Accelerator (rev 02)
-  1180:00:00.1 Processing accelerators: IBM Spyre Accelerator Virtual Function (rev 02)
-  root@b315lp04:/sys/bus/pci# echo 0 > devices/1180\:00\:00.0/sriov_numvfs
-  root@b315lp04:/sys/bus/pci# echo 1 > devices/1180\:00\:00.0/sriov_numvfs
-  root@b315lp04:/sys/bus/pci# echo 1180:00:00.0 > drivers/vfio-pci/unbind
-  root@b315lp04:/sys/bus/pci# echo 1180:00:00.0 > drivers/vfio-pci/bind
-  root@b315lp04:/sys/bus/pci# echo 1 > devices/1180\:00\:00.0/sriov_numvfs
-  root@b315lp04:/sys/bus/pci# echo 1 > devices/1180\:00\:00.0/remove
-  root@b315lp04:/sys/bus/pci# lspci
-  0103:00:00.0 Ethernet controller: Mellanox Technologies ConnectX Family mlx5Gen Virtual Function
-  1100:00:00.0 Processing accelerators: IBM Spyre Accelerator (rev 02)
-  1100:00:00.1 Processing accelerators: IBM Spyre Accelerator Virtual Function (rev 02)
-
-Same result: all without any Warnings/Lockdep-Splats/Kmemleak-Splats/etc.
-
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
-Sitz der Ges.: Ehningen     /     Registergericht: AmtsG Stuttgart, HRB 243294
+--=20
+ i.
+--8323328-1619845209-1773747867=:968--
