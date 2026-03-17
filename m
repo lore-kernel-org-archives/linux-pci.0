@@ -1,44 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 136643914F6;
-	Tue, 17 Mar 2026 21:29:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4223D2DECDF;
+	Tue, 17 Mar 2026 21:33:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773782950; cv=none; b=HzpJ6UP/YIvPDmUj1dbbOjKZrKqSPEn7CqpwssmoUOn1OjiAf28sK4D7rDyVZOL3fyEPwRTwgWJKeVz2NoMnlnNoI3zpMTG8P6ySB7kwIhPBbATmw1To74laC9tLNoIoMCt+HQcJjLWUT3/0yJPMAk2WHPfrgWypjHB7F7wA8Mk=
+	t=1773783228; cv=none; b=MiWrolA4w5P7kGNRGxsu0oLfmuJX1WfSnqi+Kav4InrHvtjRFWHLgVElsDmB6sRzuTMfb+Ndt2h6jTjMVaULeEIvbe05jL8ZVdBPvY+YOUNnPjX9QBmKML7u52ZvkpQNb66w+a4pa6ohw54z2AH4WATGSzmlMbrOPNWvQAB8jBs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773782950; c=relaxed/simple;
-	bh=EEPcdwfYA2i1wDNKfSw099Z5veH/DJsStfCV0MN+hNM=;
+	s=arc-20240116; t=1773783228; c=relaxed/simple;
+	bh=LMSVczSYZkFdL97kbgl+5Fz+k3dRHlOCmZyPE0Lc4nI=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=WsAoUbAQYy6KQn6zbIamEHg1F3c/knSqlxJilZB8sBsjoT4Zh/UuQd/43viMItNtgeKEP5p0Dg91SI+yWIjWMYkEUtqTHRCQYfwIX3XElYfArcj+eCbG1MTs5SCmPCkbfuFJsDtqQ39gzy/15aFbx0Q6tfiAL/aQRJxFscrtkpg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mNngK0/F; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=cZmtmQR05xhLJTRLvFfVm7PftMgqLVVtnTMKArYeiuYg+qo8jvJttq14/zDK3f5ETDHV6HmuNklBGlEErAB7GsgCS+hE4SLIfs518yiujMhiT0Wsbr1u/8jVRhn20ut13oxKuSW4oX2CEw+I0DMvduZpYxm/I6+JzBl7Lj0iMjw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BNNV5UPf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mNngK0/F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81C6EC4CEF7;
-	Tue, 17 Mar 2026 21:29:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BNNV5UPf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC0C0C4CEF7;
+	Tue, 17 Mar 2026 21:33:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773782949;
-	bh=EEPcdwfYA2i1wDNKfSw099Z5veH/DJsStfCV0MN+hNM=;
+	s=k20201202; t=1773783227;
+	bh=LMSVczSYZkFdL97kbgl+5Fz+k3dRHlOCmZyPE0Lc4nI=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=mNngK0/Fs/0IBKQ6aMEbV8XD37uWZwqxk9Xp1x3CSxJsS/UYuc7J+7WpeXQjIv9ec
-	 X8EcEeWKHBjvgKMyu88CqnlBxL2FAWqBgqJ4ozol6/VeGTI5aw1QFR1zLgeXFDVjMj
-	 Vh6uui+Fy6IJVUmetrS8GwD0rBJEg8lPlnZn8e78rGdrnEcwsHeuy895dwjCKj/iZe
-	 dJo+fNqA/n+fe+zuUf5P+uyUVtuF5G2F5N53qMXibkbEQPNAYVaY1EcNuLb40V7IK+
-	 bTXVtpbv+vjN6Jcthvxlff79woq7ce2WQMs/ChrloY0QQo6VedrOb7moFEJyJlBC9E
-	 IM6wbxpicP85A==
-Date: Tue, 17 Mar 2026 16:29:08 -0500
+	b=BNNV5UPfEu+At/lYO8cjvKhnIpxh+QdcE40ouox1WCcHFgoH+t8H2z3Av1zGdk565
+	 1maT4fRI00tyW1vNCSp9Y4/8hTFxT39ESF+3qNmlREcobc6nNsShKOV6uBoLLQqT58
+	 ZOjbbWbWZU/DjWUgSiOEJ6/MhBHdjGVdTTafU7v7a66gsVA1iOxA9zB4jYvDmv53h/
+	 y0CmuTWvyAt3vFh1Cx4d0P6VrJu8rm2VdVcUgdF9Mao1b3ft+/VRE4CqqzuftEQLOJ
+	 T7wpm/xEq7azUwly1anFdtkiI1uHY+90oym1cRsOoh6HwIj9h8F16Qvyz3KJu4X9d1
+	 bsktR+jQkUoYQ==
+Date: Tue, 17 Mar 2026 16:33:46 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Caleb James DeLisle <cjd@cjdns.fr>
-Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
-	naseefkm@gmail.com, ryder.lee@mediatek.com, bhelgaas@google.com,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
-	matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
-	ansuelsmth@gmail.com, linux-mediatek@lists.infradead.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 3/3] PCI: Skip bridge window reads when window is not
- supported
-Message-ID: <20260317212908.GA109023@bhelgaas>
+To: lirongqing <lirongqing@baidu.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, kwilczynski@kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH][v2] PCI: sysfs: Suppress FW_BUG warning when NUMA node
+ already matches
+Message-ID: <20260317213346.GA110011@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,65 +42,44 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260316155157.679533-4-cjd@cjdns.fr>
+In-Reply-To: <20260317002803.2353-1-lirongqing@baidu.com>
 
-On Mon, Mar 16, 2026 at 03:51:57PM +0000, Caleb James DeLisle wrote:
-> pci_read_bridge_io() and pci_read_bridge_mmio_pref() read bridge window
-> registers unconditionally. If the registers are hardwired to zero
-> (not implemented), both base and limit will be 0. Since (0 <= 0) is
-> true, a bogus window [mem 0x00000000-0x000fffff] or [io 0x0000-0x0fff]
-> gets created.
+On Mon, Mar 16, 2026 at 08:28:03PM -0400, lirongqing wrote:
+> From: Li RongQing <lirongqing@baidu.com>
 > 
-> pci_read_bridge_windows() already detects unsupported windows by
-> testing register writability and sets io_window/pref_window flags
-> accordingly. Check these flags at the start of pci_read_bridge_io()
-> and pci_read_bridge_mmio_pref() to skip reading registers when the
-> window is not supported.
+> The numa_node sysfs interface allows users to manually override a PCI
+> device's NUMA node assignment. Currently, every write triggers a
+> FW_BUG warning and taints the kernel, even when writing the same value
+> that is already set.
+> 
+> Check if the requested node is already assigned to the device. If it
+> matches, return success immediately without tainting the kernel or
+> printing a warning.
+> 
+> Signed-off-by: Li RongQing <lirongqing@baidu.com>
 
-The fundamental problem here is that assigned space to a bridge window
-that isn't implemented.  I wish we understood the connection between
-this "read window" path and the assignment path.
+Applied to pci/misc for v7.1, thanks!
 
-Maybe this patch fixes it because we enter pci_read_bridge_mmio_pref()
-with res->flags being NULL, and we set IORESOURCE_MEM |
-IORESOURCE_PREFETCH again, which makes it look like we can assign
-space for it?
-
-If that's the case, I think it would improve the commit log to mention
-the actual mechanism by which we avoid assigning space.
-
-> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
-> Link: https://lore.kernel.org/all/20260113210259.GA715789@bhelgaas/
-> Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
-> Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
 > ---
->  drivers/pci/probe.c | 6 ++++++
->  1 file changed, 6 insertions(+)
+> Diff with v1: invert the check and return if they are same 
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index bccc7a4bdd79..4eacb741b4ec 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -395,6 +395,9 @@ static void pci_read_bridge_io(struct pci_dev *dev, struct resource *res,
->  	unsigned long io_mask, io_granularity, base, limit;
->  	struct pci_bus_region region;
+>  drivers/pci/pci-sysfs.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 16eaaf7..dd7c9e5 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -378,6 +378,9 @@ static ssize_t numa_node_store(struct device *dev,
+>  	if (node != NUMA_NO_NODE && !node_online(node))
+>  		return -EINVAL;
 >  
-> +	if (!dev->io_window)
-> +		return;
+> +	if (node == dev->numa_node)
+> +		return count;
 > +
->  	io_mask = PCI_IO_RANGE_MASK;
->  	io_granularity = 0x1000;
->  	if (dev->io_window_1k) {
-> @@ -465,6 +468,9 @@ static void pci_read_bridge_mmio_pref(struct pci_dev *dev, struct resource *res,
->  	pci_bus_addr_t base, limit;
->  	struct pci_bus_region region;
->  
-> +	if (!dev->pref_window)
-> +		return;
-> +
->  	pci_read_config_word(dev, PCI_PREF_MEMORY_BASE, &mem_base_lo);
->  	pci_read_config_word(dev, PCI_PREF_MEMORY_LIMIT, &mem_limit_lo);
->  	base64 = (mem_base_lo & PCI_PREF_RANGE_MASK) << 16;
+>  	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
+>  	pci_alert(pdev, FW_BUG "Overriding NUMA node to %d.  Contact your vendor for updates.",
+>  		  node);
 > -- 
-> 2.39.5
+> 2.9.4
 > 
