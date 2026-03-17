@@ -1,42 +1,42 @@
 Received: from sender4-op-o15.zoho.com (sender4-op-o15.zoho.com [136.143.188.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 141781B4257;
-	Tue, 17 Mar 2026 04:56:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 249C12BDC05;
+	Tue, 17 Mar 2026 05:33:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.15
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773723403; cv=pass; b=GOETZRWQCV8685R/KfLwj9qUDdHB+SEZ++OonqSP0khh+CqJ8BnevkeT6V4+LbqD5THogjWCqalvvI8YKbRw4Ev+4qrZfgB3yJJVkNfnDbet59Lm8s+fiwO3fMCvHCR35o+t1eC2g7Jyj46n7o/xtvbtB6URRPqE2MNQmzl3eHE=
+	t=1773725610; cv=pass; b=oXN8IhVqR1HmDTNDnQylOmrlH7NiRMayUQRmHHKVekGRFju4//TZJevjfW/WnfTUgjNXdiyXQf323IKRs1J8AYeh6eJyd9lZUB3IA5aUpvQ2I0ev7UrOqMEKZcO0WIbeu66UABi/XeWp62ilyoH1dtB9IYGEuNekoB8DUzup2Js=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773723403; c=relaxed/simple;
-	bh=76xcV6JFbO7j2t608/cM7lRLXMaX/zP9dgE7PR1Y9fE=;
+	s=arc-20240116; t=1773725610; c=relaxed/simple;
+	bh=oEMHgdcLN4ZjmCvZ6oFicibDv5Sww1FGtEFGTLH3xLM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=c2B62fMoeuCGEehzURBDZiBrg6Z/UQ8dbw988zgEw9UQe7kTsAgsgxsqmWSbQfV/c7Cv+H8XglMOHJ+ygvGKvN+JWZDLiovNx/jMTShb6s6QCpr/bg6Bg+5xHHRtBoPC6eHOnu0k5vaBSxp3hfgCq321pZBwuZqmY4e+nC1ZRjU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc; spf=pass smtp.mailfrom=ziyao.cc; dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b=WPCqwGLg; arc=pass smtp.client-ip=136.143.188.15
+	 Content-Type:Content-Disposition:In-Reply-To; b=t2iLFmdjiO50LyYCduAxXmSNJ3GwjWcV/SvuOgGUuxNJQT8EhD6MaHOwGeZOChmztbigizK8njpBLAu6KyPC6V/43c1t05T+NK57ZC/pQgt0SpQwMWUnoGpR1TFILITavDpklNdeZGAkUmSBzMb1d2P0ND9Ni0IhrsVV3eEZ4IE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc; spf=pass smtp.mailfrom=ziyao.cc; dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b=ImJqzBha; arc=pass smtp.client-ip=136.143.188.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziyao.cc
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b="WPCqwGLg"
-ARC-Seal: i=1; a=rsa-sha256; t=1773723375; cv=none; 
+	dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b="ImJqzBha"
+ARC-Seal: i=1; a=rsa-sha256; t=1773725589; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=jv4W65Eez2XeH9G5ErU/Y8ESdtUVdFcY98YBU6VYVL32MAvWA/3o27T85GNglxfY2zG41dX/1h1hNF5YTjeGZ48TSDBQfbccolxYkJAAYFoT34Ex0ruvdCTbhoA52dl1xM+qj7xaeJ6Ni7I6ygbEzbFDtY+WPg3uZPvV5IddfB0=
+	b=Qsmefrqsk7KvHZu9LJfj3ZnxXaXC8oWr1zwkioGNa6MfAlX4sPJtm2L/TmBOkUqd5/dbeG6jSseZtptEB7U7hLPIs5P3xjqn7PUEZAO2RKFXCL8adfrXpVbeaugUzyTMrmIsJ0KEE4/yJ03QUJ22fgqWTUOeswEt7Uaj2doCb0U=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1773723375; h=Content-Type:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=/T2hb2zDBTYyx2qNSAdWht261iTUJecScL8CnM2TGvc=; 
-	b=A7hfPYMKt3xQ9cT30L5UCrgV51YbBzJ65/x1qGwdJKViu9iGhnyRCLOKyvaS2w+skFbalcWM4FVCcr5FF8lJ/uYt4K6HJH0xyeV+eInKQ5fI0MGPFPiYhbh/0zIde7YtlY8BULUGRE1iesyDRkQ3YvWGg6GhZAxTtSaUU86JAHw=
+	t=1773725589; h=Content-Type:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=eyhiSFd7TnnR0Y4KPBjzhgYS3ePqfaic4BGkMyXWNsw=; 
+	b=mZP9Fh7ks1MBeclBECCuJouLSVmAo1S3kP+g3XJyaJo4EK9nSYO3mHOHz0ekBs8A0/dHe5Apu8wb1N227eM6sES3ZKWHV3Um+PPTp/Ovpy9qc5Gyj9mrDt3O3gOvj0izJOldmf0ZdA/xQs0knMttMDN2FjDp0WS+9dTUaIwb1oc=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=ziyao.cc;
 	spf=pass  smtp.mailfrom=me@ziyao.cc;
 	dmarc=pass header.from=<me@ziyao.cc>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1773723375;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1773725589;
 	s=zmail; d=ziyao.cc; i=me@ziyao.cc;
 	h=Date:Date:From:From:To:To:Cc:Cc:Subject:Subject:Message-ID:References:MIME-Version:Content-Type:In-Reply-To:Message-Id:Reply-To;
-	bh=/T2hb2zDBTYyx2qNSAdWht261iTUJecScL8CnM2TGvc=;
-	b=WPCqwGLghg4ELnTN0tR7SEMkq0yPRX/HCjbLCRFxu+Qmz19wmBt0P3riww0KuAZt
-	4V8bMeGnXDyQ/GORqiRq5XpdtTklmon8PRTyzj+3OwG4bY0/BcQ1VozmHv5sZbg4lph
-	feeQ9VTh3/e1bb9HtSRuCMlB5WMO0iyMmccY1Vi0=
-Received: by mx.zohomail.com with SMTPS id 1773723374200302.13921499108164;
-	Mon, 16 Mar 2026 21:56:14 -0700 (PDT)
-Date: Tue, 17 Mar 2026 04:56:07 +0000
+	bh=eyhiSFd7TnnR0Y4KPBjzhgYS3ePqfaic4BGkMyXWNsw=;
+	b=ImJqzBhaykJ7b6/ZZttuDa2mVkhAhgDaSE6bshmKI944v399pbVfoE7pBrw+w0s7
+	3jyglFuOx3pr6RFQB9UJV8Nx9sIzKyQ0123yzbCRoTT6QXZhGKYysfsaK2IWwFHCq79
+	tuhORvK26dfLgOeQgY0foUHdkkgE5XaiFrZJ3J44=
+Received: by mx.zohomail.com with SMTPS id 1773725587000567.8249611127286;
+	Mon, 16 Mar 2026 22:33:07 -0700 (PDT)
+Date: Tue, 17 Mar 2026 05:32:54 +0000
 From: Yao Zi <me@ziyao.cc>
 To: wangjia@ultrarisc.com, Paul Walmsley <pjw@kernel.org>,
 	Palmer Dabbelt <palmer@dabbelt.com>,
@@ -51,11 +51,10 @@ To: wangjia@ultrarisc.com, Paul Walmsley <pjw@kernel.org>,
 	Conor Dooley <conor+dt@kernel.org>
 Cc: linux-riscv@lists.infradead.org, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH 3/4] dt-bindings: PCI: Add UltraRISC DP1000 PCIe
- controller
-Message-ID: <abje5wWCljOBhgHU@pie>
+Subject: Re: [PATCH 4/4] PCI: dwc: Add UltraRISC DP1000 PCIe rc driver
+Message-ID: <abjnhn5sqnJv1fYY@pie>
 References: <20260316-ultrarisc-pcie-v1-0-ef2946ede698@ultrarisc.com>
- <20260316-ultrarisc-pcie-v1-3-ef2946ede698@ultrarisc.com>
+ <20260316-ultrarisc-pcie-v1-4-ef2946ede698@ultrarisc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -64,38 +63,53 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260316-ultrarisc-pcie-v1-3-ef2946ede698@ultrarisc.com>
+In-Reply-To: <20260316-ultrarisc-pcie-v1-4-ef2946ede698@ultrarisc.com>
 X-ZohoMailClient: External
 
-On Mon, Mar 16, 2026 at 03:06:59PM +0800, Jia Wang via B4 Relay wrote:
-> From: Jia Wang <wangjia@ultrarisc.com>
+On Mon, Mar 16, 2026 at 03:07:00PM +0800, Jia Wang via B4 Relay wrote:
+> From: Xincheng Zhang <zhangxincheng@ultrarisc.com>
 > 
-> Add UltraRISC DP1000 SoC PCIe controller devicetree bindings.
+> Add DP1000 soc PCIe rc driver.
 > 
+> Signed-off-by: Xincheng Zhang <zhangxincheng@ultrarisc.com>
 > Signed-off-by: Jia Wang <wangjia@ultrarisc.com>
 > ---
->  .../bindings/pci/ultrarisc,dp1000-pcie.yaml        | 108 +++++++++++++++++++++
->  1 file changed, 108 insertions(+)
+>  drivers/pci/controller/dwc/Kconfig           |  15 ++
+>  drivers/pci/controller/dwc/Makefile          |   1 +
+>  drivers/pci/controller/dwc/pcie-designware.h |  22 +++
+>  drivers/pci/controller/dwc/pcie-ultrarisc.c  | 202 +++++++++++++++++++++++++++
+>  4 files changed, 240 insertions(+)
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/ultrarisc,dp1000-pcie.yaml b/Documentation/devicetree/bindings/pci/ultrarisc,dp1000-pcie.yaml
-> new file mode 100644
-> index 000000000000..b50ff98dd878
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/ultrarisc,dp1000-pcie.yaml
-> @@ -0,0 +1,108 @@
-> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/pci/ultrarisc,dp1000-pcie.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: UltraRISC DP1000 PCIe Host Controller
-> +
-> +description: |
-> +  UltraRISC DP1000 SoC PCIe host controller is based on the DesignWare PCIe IP.
+> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+> index d0aa031397fa..0a33891bf7ef 100644
+> --- a/drivers/pci/controller/dwc/Kconfig
+> +++ b/drivers/pci/controller/dwc/Kconfig
+> @@ -548,4 +548,19 @@ config PCIE_VISCONTI_HOST
+>  	  Say Y here if you want PCIe controller support on Toshiba Visconti SoC.
+>  	  This driver supports TMPV7708 SoC.
+>  
+> +config PCIE_ULTRARISC
+> +	bool "UltraRISC PCIe host controller"
 
-If so, you should probably refer snps,dw-pcie.yaml to avoid
-some duplication.
+Is there any reason preventing the driver being built as a module? If
+no, it would be better to change it to "tristate", to allow distribution
+to customize the configuration for image sizes, etc.
 
-Regards,
+> +	depends on ARCH_ULTRARISC || COMPILE_TEST
+> +	select PCIE_DW_HOST
+> +	select PCI_MSI
+> +	default y if ARCH_ULTRARISC
+> +	help
+> +	  Enables support for the PCIe controller in the UltraRISC SoC.
+> +	  This driver supports UR-DP1000 SoC. When selected, it automatically
+> +	  enables both `PCIE_DW_HOST` and `PCI_MSI`, ensuring proper support
+> +	  for MSI-based interrupt handling in the PCIe controller.
+> +	  By default, this symbol is enabled when `ARCH_ULTRARISC` is active,
+> +	  requiring no further configuration on that platform.
+> +
+> +
+>  endmenu
+>  #define PORT_LOGIC_LTSSM_STATE_L0	0x11
+
+Best regards,
 Yao Zi
