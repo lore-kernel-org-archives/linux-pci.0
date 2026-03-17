@@ -1,178 +1,141 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1A842391831;
-	Tue, 17 Mar 2026 21:38:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02008377029;
+	Tue, 17 Mar 2026 22:17:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773783495; cv=none; b=ARlNr58CGDddW6EqCnXx/fk2JLizJkN+s/viLMSTBLjPTbIgy0R6EQFWdb3C820rSgFrv+9d2e5IqpMxuKI8s7mqpQu8p4PF8f0L1GgYQTReEYzyIQabpGgLDQS+fffozxYTEMml/CzUT5NuRX4c7bLIsMPACw9fCsqrRrJtCfo=
+	t=1773785879; cv=none; b=oiWKy0JGViaqI70dx9590OJuY6FVi/CgSsXI52gGfvDE7JIkCV5HiUBTiqQ0lVfYXuRq8kUMfPqlJ0YvFJoRI1kHvTa/0pEY+d0sQVj7m/LOEg2+VQPdts0yEMeCcMTVW1GLgCq0ccpNNJXHw608P+6C6Sz3/qk7jnfQ0ap7hmo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773783495; c=relaxed/simple;
-	bh=IROtxSZbQxzVA3jvI9dW9jeRBXHSY1MInI2EvT1PUH0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=blSRblOIaQ+Vm6ZJ6Q2CB1Nsm2fInExfubT+mMzcM8ZEtT3mg15WXVWfziLJoFH9eiWh8SonNe4IpWfbatCweXRsY6DDDKao4Ro3p60Fyv4adnSoIIdWanX8dm+/rH8ABygeuJiUyKR2pO+yHTztzKcTokd2FksEZKu3gOa/m9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 419131477;
-	Tue, 17 Mar 2026 14:38:07 -0700 (PDT)
-Received: from [172.27.42.179] (usa-sjc-mx-foss1.foss.arm.com [172.31.20.19])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id E05563F73B;
-	Tue, 17 Mar 2026 14:38:11 -0700 (PDT)
-Message-ID: <e4b0aefa-7108-47b4-ad5d-d62d385b8f33@arm.com>
-Date: Tue, 17 Mar 2026 16:38:11 -0500
+	s=arc-20240116; t=1773785879; c=relaxed/simple;
+	bh=FNWIPBES0YKSmK+pgav9TGtnCBJV8EEE9Co9MfCjjrI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LuzcaUDRCJXSyImieGDMUSKBPP84ENhVeJvIvO7mN+kwg4SMmj1bDWZvVbvLUHa2g697IqbIKRxxDWkgrpkdRkvNfnIQsstoVa5aTuTylMk1RjgSpmfDk0pusA38B7O5DBcqgr8HMM6MzL3bpZZMrjVQ4j9rKsxgS0gyi9xBlUY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Lc+cZaHh; arc=none smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Lc+cZaHh"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773785877; x=1805321877;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=FNWIPBES0YKSmK+pgav9TGtnCBJV8EEE9Co9MfCjjrI=;
+  b=Lc+cZaHhqwABNw5JpP6esfp9Mjcm7LJ5jFm75MurN5IWP25k/CnGAGQK
+   AdFv2uOPVMf0bq3AO0CsxGTrivfnnLryCQLf7OO+E7XufcuoMEPNGHVVO
+   F1607CFW3D7aQ3DouMJhFyo7HGcUtVOE3AYHHNNgWd21up/gZCnPz9AVF
+   RJ9nR981WrjqT9hBTI+oczTYLZCWPhzFYP6HEI0oTymrAxZo6Np5SVi8z
+   ptD+sfnUDS+LRzFbBJLfaSBdyziwTVphBmFTacWCHLsL/QbIGSS/fqgm0
+   2ZFT0e4AJ5LBEHWYeb9Wr95xvE2vric/pdCS9suNl4MQXPFOhAOwVaUD2
+   A==;
+X-CSE-ConnectionGUID: HNRMyHQCRPqoGLWYZNr5Sg==
+X-CSE-MsgGUID: UmCsiPMTSu6lyGk1ha7KCQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11732"; a="100293805"
+X-IronPort-AV: E=Sophos;i="6.23,126,1770624000"; 
+   d="scan'208";a="100293805"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2026 15:17:56 -0700
+X-CSE-ConnectionGUID: 00Dw8TaWSC+6yJmQpnHcEQ==
+X-CSE-MsgGUID: fVwSoFFSRdiAqNVwH5HOiw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,126,1770624000"; 
+   d="scan'208";a="218493195"
+Received: from lkp-server01.sh.intel.com (HELO 63737dd503cb) ([10.239.97.150])
+  by fmviesa010.fm.intel.com with ESMTP; 17 Mar 2026 15:17:49 -0700
+Received: from kbuild by 63737dd503cb with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1w2cjS-0000000026D-0zP9;
+	Tue, 17 Mar 2026 22:17:46 +0000
+Date: Wed, 18 Mar 2026 06:17:31 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Nathan Chancellor <nathan@kernel.org>,
+	Nicolas Schier <nicolas.schier@linux.dev>,
+	Hans de Goede <hansg@kernel.org>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Mark Pearson <mpearson-lenovo@squebb.ca>,
+	"Derek J. Clark" <derekjohn.clark@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof Kozlowski <krzk@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: oe-kbuild-all@lists.linux.dev, linux-serial@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org,
+	Stephan Gerhold <stephan.gerhold@linaro.org>,
+	Dmitry Baryshkov <lumag@kernel.org>, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v6 9/9] power: sequencing: pcie-m2: Create serdev device
+ for WCN7850 bluetooth
+Message-ID: <202603180609.ucspJefN-lkp@intel.com>
+References: <20260317-pci-m2-e-v6-9-9c898f108d3d@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 1/3] ACPI: Refactor get_acpi_id_for_cpu() to
- acpi_get_cpu_uid() on non-x86
-To: Chengwen Feng <fengchengwen@huawei.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>,
- "Rafael J . Wysocki" <rafael@kernel.org>
-Cc: punit.agrawal@oss.qualcomm.com, guohanjun@huawei.com,
- suzuki.poulose@arm.com, ryan.roberts@arm.com, chenl311@chinatelecom.cn,
- masahiroy@kernel.org, wangyuquan1236@phytium.com.cn,
- anshuman.khandual@arm.com, heinrich.schuchardt@canonical.com,
- Eric.VanTassell@amd.com, jonathan.cameron@huawei.com,
- wangzhou1@hisilicon.com, wanghuiqiang@huawei.com, liuyonglong@huawei.com,
- linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- loongarch@lists.linux.dev, linux-riscv@lists.infradead.org,
- xen-devel@lists.xenproject.org, linux-acpi@vger.kernel.org,
- linux-perf-users@vger.kernel.org, stable@vger.kernel.org
-References: <20260313022144.40942-1-fengchengwen@huawei.com>
- <20260313022144.40942-2-fengchengwen@huawei.com>
-Content-Language: en-US
-From: Jeremy Linton <jeremy.linton@arm.com>
-In-Reply-To: <20260313022144.40942-2-fengchengwen@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260317-pci-m2-e-v6-9-9c898f108d3d@oss.qualcomm.com>
 
-Hi,
+Hi Manivannan,
 
-Lets try this again, since the last one looks like it got caught in the 
-moderation system and wasn't quite right anyway.
+kernel test robot noticed the following build errors:
 
-On 3/12/26 9:21 PM, Chengwen Feng wrote:
-> Unify CPU ACPI ID retrieval interface across architectures by
-> refactoring get_acpi_id_for_cpu() to acpi_get_cpu_uid() on
-> arm64/riscv/loongarch:
-> - Add input parameter validation
-> - Adjust interface to int acpi_get_cpu_uid(unsigned int cpu, u32 *uid)
->    (old: u32 get_acpi_id_for_cpu(unsigned int cpu), no input check)
-> 
-> This refactoring (not a pure rename) enhances interface robustness while
-> preparing for consistent ACPI Processor UID retrieval across all
-> ACPI-enabled platforms. Valid inputs retain original behavior.
-> 
-> Note: Move the ARM64-specific get_cpu_for_acpi_id() implementation to
->        arch/arm64/kernel/acpi_numa.c to fix compilation errors from
->        circular header dependencies introduced by the rename.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
-> Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
-> ---
->   arch/arm64/include/asm/acpi.h      | 16 +---------
->   arch/arm64/kernel/acpi.c           | 16 ++++++++++
->   arch/arm64/kernel/acpi_numa.c      | 14 +++++++++
->   arch/loongarch/include/asm/acpi.h  |  5 ---
->   arch/loongarch/kernel/acpi.c       |  9 ++++++
->   arch/riscv/include/asm/acpi.h      |  4 ---
->   arch/riscv/kernel/acpi.c           | 16 ++++++++++
->   arch/riscv/kernel/acpi_numa.c      |  9 ++++--
->   drivers/acpi/pptt.c                | 50 ++++++++++++++++++++++--------
->   drivers/acpi/riscv/rhct.c          |  7 ++++-
->   drivers/perf/arm_cspmu/arm_cspmu.c |  6 ++--
->   include/linux/acpi.h               | 13 ++++++++
->   12 files changed, 122 insertions(+), 43 deletions(-)
-> 
-> diff --git a/arch/arm64/include/asm/acpi.h b/arch/arm64/include/asm/acpi.h
-> index c07a58b96329..106a08556cbf 100644
-> --- a/arch/arm64/include/asm/acpi.h
-> +++ b/arch/arm64/include/asm/acpi.h
-> @@ -114,22 +114,8 @@ static inline bool acpi_has_cpu_in_madt(void)
->   }
->   
->   struct acpi_madt_generic_interrupt *acpi_cpu_get_madt_gicc(int cpu);
-> -static inline u32 get_acpi_id_for_cpu(unsigned int cpu)
-> -{
-> -	return	acpi_cpu_get_madt_gicc(cpu)->uid;
-> -}
-> -
-> -static inline int get_cpu_for_acpi_id(u32 uid)
-> -{
-> -	int cpu;
-> -
-> -	for (cpu = 0; cpu < nr_cpu_ids; cpu++)
-> -		if (acpi_cpu_get_madt_gicc(cpu) &&
-> -		    uid == get_acpi_id_for_cpu(cpu))
-> -			return cpu;
->   
-> -	return -EINVAL;
-> -}
-> +int get_cpu_for_acpi_id(u32 uid);
->   
->   static inline void arch_fix_phys_package_id(int num, u32 slot) { }
->   void __init acpi_init_cpus(void);
-> diff --git a/arch/arm64/kernel/acpi.c b/arch/arm64/kernel/acpi.c
-> index af90128cfed5..f3866606fc46 100644
-> --- a/arch/arm64/kernel/acpi.c
-> +++ b/arch/arm64/kernel/acpi.c
-> @@ -458,3 +458,19 @@ int acpi_unmap_cpu(int cpu)
->   }
->   EXPORT_SYMBOL(acpi_unmap_cpu);
->   #endif /* CONFIG_ACPI_HOTPLUG_CPU */
-> +
-> +int acpi_get_cpu_uid(unsigned int cpu, u32 *uid)
-> +{
-> +	struct acpi_madt_generic_interrupt *gicc;
-> +
-> +	if (cpu >= nr_cpu_ids)
-> +		return -EINVAL;
-If this actually happens, its probably useful to know it with a 
-pr_warn/pr_warn_once.> +
-> +	gicc = acpi_cpu_get_madt_gicc(cpu);
-> +	if (!gicc)
-I think this check is redundant because we can't have logical cpu's that 
-aren't in the cpu_possible() list, which on arm64 doesn't AFAIK have 
-holes. In the past this might have made sense if we weren't maintaining 
-a copy of the gicc structure from the MADT for each core.> +		return 
--ENODEV;
-> +
-> +	*uid = gicc->uid;
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(acpi_get_cpu_uid);
-> diff --git a/arch/arm64/kernel/acpi_numa.c b/arch/arm64/kernel/acpi_numa.c
-> index 2465f291c7e1..41d1e46a4338 100644
-> --- a/arch/arm64/kernel/acpi_numa.c
-> +++ b/arch/arm64/kernel/acpi_numa.c
-> @@ -34,6 +34,20 @@ int __init acpi_numa_get_nid(unsigned int cpu)
->   	return acpi_early_node_map[cpu];
->   }
->   
-> +int get_cpu_for_acpi_id(u32 uid)
-> +{
-> +	u32 cpu_uid;
-> +	int ret;
-> +
-> +	for (int cpu = 0; cpu < nr_cpu_ids; cpu++) {
-> +		ret = acpi_get_cpu_uid(cpu, &cpu_uid);
-This might have been a simplification, but since we are basically doing 
-a for_each_possible_cpu(cpu) and every possible cpu will have a GICC 
-entry before it becomes 'possible' there will be a UID, so all the error 
-checking AFAIK, is impossible here.> +		if (ret == 0 && uid == cpu_uid)
-> +			return cpu;
-> +	}
-> +
-> +	return -EINVAL;
-> +}
-> +
-I also moved this below acpi_get_cpu_uid() in acpi.c and I don't see the 
-a forward error issue you mentioned. It seems to me that they should be 
-kept close to each other since they are basically inverses of each other.
+[auto build test ERROR on 559f264e403e4d58d56a17595c60a1de011c5e20]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Manivannan-Sadhasivam-via-B4-Relay/serdev-Convert-to_serdev_-helpers-to-macros-and-use-container_of_const/20260317-123910
+base:   559f264e403e4d58d56a17595c60a1de011c5e20
+patch link:    https://lore.kernel.org/r/20260317-pci-m2-e-v6-9-9c898f108d3d%40oss.qualcomm.com
+patch subject: [PATCH v6 9/9] power: sequencing: pcie-m2: Create serdev device for WCN7850 bluetooth
+config: nios2-allmodconfig (https://download.01.org/0day-ci/archive/20260318/202603180609.ucspJefN-lkp@intel.com/config)
+compiler: nios2-linux-gcc (GCC) 11.5.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260318/202603180609.ucspJefN-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202603180609.ucspJefN-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   drivers/power/sequencing/pwrseq-pcie-m2.c: In function 'pwrseq_pcie_m2_free_resources':
+>> drivers/power/sequencing/pwrseq-pcie-m2.c:185:34: error: 'pci_bus_type' undeclared (first use in this function); did you mean 'pci_pcie_type'?
+     185 |         bus_unregister_notifier(&pci_bus_type, &ctx->nb);
+         |                                  ^~~~~~~~~~~~
+         |                                  pci_pcie_type
+   drivers/power/sequencing/pwrseq-pcie-m2.c:185:34: note: each undeclared identifier is reported only once for each function it appears in
+   drivers/power/sequencing/pwrseq-pcie-m2.c: In function 'pwrseq_pcie_m2_register_notifier':
+   drivers/power/sequencing/pwrseq-pcie-m2.c:340:54: error: 'pci_bus_type' undeclared (first use in this function); did you mean 'pci_pcie_type'?
+     340 |                         ret = bus_register_notifier(&pci_bus_type, &ctx->nb);
+         |                                                      ^~~~~~~~~~~~
+         |                                                      pci_pcie_type
+
+
+vim +185 drivers/power/sequencing/pwrseq-pcie-m2.c
+
+   179	
+   180	static void pwrseq_pcie_m2_free_resources(void *data)
+   181	{
+   182		struct pwrseq_pcie_m2_ctx *ctx = data;
+   183	
+   184		serdev_device_remove(ctx->serdev);
+ > 185		bus_unregister_notifier(&pci_bus_type, &ctx->nb);
+   186		of_changeset_revert(ctx->ocs);
+   187		of_changeset_destroy(ctx->ocs);
+   188		regulator_bulk_free(ctx->num_vregs, ctx->regs);
+   189	}
+   190	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
