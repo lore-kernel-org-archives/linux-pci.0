@@ -1,499 +1,239 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29BF4288D2;
-	Tue, 17 Mar 2026 11:16:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91C601D6187;
+	Tue, 17 Mar 2026 11:33:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773746217; cv=none; b=cjbXAVzxZliSpJxT73bXqz9JK5t6jxykbI19xWaH/ydtuzILpJCTpa/GRpMtqVK41+/WJjpIKGMNj1r9kGyqYWm+ELpA66UxqMG3gHLhFkn3j1uQSmQsSWCk1iCcrl+q6UVl0474Oq6OKpquKgP7ZT5ZfG+HMMtXZ5u0iPTgt8c=
+	t=1773747238; cv=none; b=YOBkOLGv43mPadYpXFeiWQ1RVg39xgh9RCdvPdFIMisCt/wBjaQDa/B3Dqr9seB3YP38zoOV9Xur2tQcLbkwuwiH1mhuXcywWlcZO8aniPf5EpKziW5AjFKSgYuVbeqF2L6t0V0wmm5VRu6uZy9HrGQMKmVhuxMiFoHzwQPvSrY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773746217; c=relaxed/simple;
-	bh=QT+lbY9/xI/ADS68SjLkZ6KxcFgasXL+Xc+GdnIFe74=;
+	s=arc-20240116; t=1773747238; c=relaxed/simple;
+	bh=tdK4i+a6Z3eQ1L5u1jOJ5xYVY1M6+PO9Qehx3Yr0BTY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ib7RnOEjhrY4aj8zElkUbLyyTOkqKDa6zu8DCo7QtGBxu/g6KCHWPrntGMyDGJRY0aJ1j3l/gwhGKGrKW5p2dVd/3S0o35xzixuPPOGNIrSRNouhfYaN1KKZv3H/Q9whDzIUamiZBM49WFRUiqgUbloSYLLg6Gjz2JCwlF0O45U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uaFwLzO8; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=JqTPfqI0sD0+KFKv6C9OClTxHGVzHny9s9WwMc+wnV8NpOL3A30mDaZ+qoxxPf5HrltvG3JZ1p/URmD01UnQo4ZjGkpldjY42DtySY02IQTbavbPHppqTzUZWs1P1h7MBddQwh9rlvTisnQkoutu7Reb1bcJcGauxx+FK7yGVic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=h/Awr1WY; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uaFwLzO8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68824C4CEF7;
-	Tue, 17 Mar 2026 11:16:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773746216;
-	bh=QT+lbY9/xI/ADS68SjLkZ6KxcFgasXL+Xc+GdnIFe74=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=uaFwLzO8bjL9By3OJ8nwOOanQikvV1XJXkwvbygj5WUi0CRTJiTdCQxfuZRogVEn/
-	 ulEcpfi18dfPQ39FA+pnZqkfL2W20ZrYqBKBgCga3RqOHUvQpuJHW8kRQnONY9Twlz
-	 zuu+rGnxN4SVmvq6DohbPbm5L/mxLA7TZyH1Esy1c3ZT6gnpLwgcHK4lEL5jYAVEPy
-	 Z1CnBd8nUcfnUE7ekyowsB35vdsaarsVi8ZVQ5w7UbTpJ838s7CkQwTg4oDKRSJ1ma
-	 y++mAlEQ6Z6Gxxnz98HcKHcIhvVQD3L3NsP3nuP7PuCCtzz8/1mTKq7gaeeC/Un7lL
-	 CRkcAQxXWww1w==
-Date: Tue, 17 Mar 2026 12:16:47 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: manivannan.sadhasivam@oss.qualcomm.com,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver O'Halloran <oohall@gmail.com>, Will Deacon <will@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
-	Philipp Zabel <p.zabel@pengutronix.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-	linux-rockchip@lists.infradead.org,
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-	Lukas Wunner <lukas@wunner.de>, Richard Zhu <hongxing.zhu@nxp.com>,
-	Brian Norris <briannorris@chromium.org>,
-	Wilson Ding <dingwei@marvell.com>, Frank Li <Frank.Li@nxp.com>
-Subject: Re: [PATCH v7 0/4] PCI: Add support for resetting the Root Ports in
- a platform specific way
-Message-ID: <abk3rU2EDKjkefUD@ryzen>
-References: <20260310-pci-port-reset-v7-0-9dd00ccc25ab@oss.qualcomm.com>
- <abFMa6DCGGLUHddA@fedora>
- <dp2rem4gj7zhfgykvekmcrhq4ticm6m6ido6tbgflwzfcuuwkl@4wuxgle27eyx>
- <srdn3bspgwff7f7tnst7wzg4us4buifrv7o3ylo527hmuciyl3@6ioyrl6rfhaz>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="h/Awr1WY"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62H9eESu983279;
+	Tue, 17 Mar 2026 11:33:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:sender:subject:to; s=pp1;
+	 bh=DxF78H4iShP3mQUjt0zgL/eZzheXlcaOOqbaH6wCOxM=; b=h/Awr1WYMeUb
+	JWFdwT/Ph+1w474gjU7a5OZJwHls+SBXmrvqp/UhbXF+pwLd/d+ikKAS1UHtCnwS
+	mSPYhGr9B+3xBrsU5kQiyq25x0tl8H55TLTax3bY+mmvY+jCzqBfXpOZdNgz/FWz
+	Ffuo5kCqPQcIierRqPH1mc6llAbAQB+Sjju+Fwm8N7K/z9OKY4SDZbY5Zknoqftm
+	grK4ikFeacWa6uK6oxABAF47mG2f27Ce/HNPS1WW5pDVF+QicwQEtlKaR8doiz65
+	aaLRAfQH3wVM4iVg/7qSkzhyKxq7TObL9NwD7Yedxn+kYmM6jzwgEscpJJ12zFDB
+	G49zjvFv5w==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cvyaubvwc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 17 Mar 2026 11:33:39 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62HAf4Z0004737;
+	Tue, 17 Mar 2026 11:33:38 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4cwj0s91aw-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 17 Mar 2026 11:33:38 +0000
+Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62HBXZ5l59900246
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 17 Mar 2026 11:33:35 GMT
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 0CC232004E;
+	Tue, 17 Mar 2026 11:33:35 +0000 (GMT)
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id E81642004D;
+	Tue, 17 Mar 2026 11:33:34 +0000 (GMT)
+Received: from p1gen4-pw042f0m (unknown [9.87.130.152])
+	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Tue, 17 Mar 2026 11:33:34 +0000 (GMT)
+Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.1)
+	(envelope-from <bblock@linux.ibm.com>)
+	id 1w2Sg2-00000006Wqm-2GNe;
+	Tue, 17 Mar 2026 12:33:34 +0100
+Date: Tue, 17 Mar 2026 12:33:34 +0100
+From: Benjamin Block <bblock@linux.ibm.com>
+To: Benjamin Block <lkml@mageta.org>
+Cc: Guenter Roeck <linux@roeck-us.net>,
+        Niklas Schnelle <schnelle@linux.ibm.com>,
+        Ionut Nechita <ionut.nechita@windriver.com>,
+        Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <kbusch@kernel.org>, Gerd Bayer <gbayer@linux.ibm.com>,
+        Matthew Rosato <mjrosato@linux.ibm.com>,
+        Halil Pasic <pasic@linux.ibm.com>, Farhan Ali <alifm@linux.ibm.com>,
+        Julian Ruess <julianr@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 2/2] PCI/IOV: Fix race between SR-IOV enable/disable
+ and hotplug
+Message-ID: <20260317113334.GJ2161595@p1gen4-pw042f0m>
+References: <20251216-revert_sriov_lock-v3-0-dac4925a7621@linux.ibm.com>
+ <20251216-revert_sriov_lock-v3-2-dac4925a7621@linux.ibm.com>
+ <0ca9e675-478c-411d-be32-e2d81439288f@roeck-us.net>
+ <20260317090149.GA3835708@chlorum.ategam.org>
+ <20260317094656.GI2161595@p1gen4-pw042f0m>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="A15YEQnAzhPrJ5mF"
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <srdn3bspgwff7f7tnst7wzg4us4buifrv7o3ylo527hmuciyl3@6ioyrl6rfhaz>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260317094656.GI2161595@p1gen4-pw042f0m>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE3MDA5OSBTYWx0ZWRfX0y/O8j7gZMfY
+ xr6mzoz4kBnapBEsFoa9+rS/iMhhH+LEEP5VODpi/lDXO6D1O2/o9VXdMA0xOth0u8J3Gj+d6n2
+ Dtx2O+ac9dHmjpwOHpY+DF9orHcdlODqFM+/wfvxHTq/KscDduyJPe4VR7odHONkrCwg+ryKcFi
+ JwhjNM48W1XQAnWPGUcLyN/FX2k052PmkDqkO8cfsglsqN77Y3Mnp9T2B9dVwRkXrgqNSxMx/dG
+ 8X2xovD5SkEyODEaILh+LGlEbNNhyyv9x2VrD8wJ8wgP3MQI8TAob8SCCl0gGJIodSubpv0wWog
+ 2yWwhgDrTEppDrezoTKH0N9AKMyCe0xeqHHR1DvHga0vQOCaCu4g5gtWbRA+nBcqahkgXcuCYWV
+ xAZoNmK/yOzGikZKnwfsLUqLR2Vpog82VJlXIUl1m6c+CkKqEoLYT77iK133BUGaV1u6vwxiSXt
+ qjmcPnoxzCOpAQ3RvRg==
+X-Authority-Analysis: v=2.4 cv=GIQF0+NK c=1 sm=1 tr=0 ts=69b93c13 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=8nJEP1OIZ-IA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VnNF1IyMAAAA:8
+ a=dCyHOxzCRJwJDcqN08wA:9 a=3ZKOabzyN94A:10 a=wPNLvfGTeEIA:10
+ a=O8hF6Hzn-FEA:10
+X-Proofpoint-ORIG-GUID: FeMVukiHyaYtLUyA_tdgBcTbV7a4tVcH
+X-Proofpoint-GUID: FeMVukiHyaYtLUyA_tdgBcTbV7a4tVcH
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-17_01,2026-03-16_06,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 priorityscore=1501 bulkscore=0 lowpriorityscore=0 malwarescore=0
+ phishscore=0 impostorscore=0 suspectscore=0 adultscore=0 clxscore=1015
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603170099
 
-
---A15YEQnAzhPrJ5mF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Wed, Mar 11, 2026 at 08:44:15PM +0530, Manivannan Sadhasivam wrote:
-> On Wed, Mar 11, 2026 at 08:09:53PM +0530, Manivannan Sadhasivam wrote:
-> > On Wed, Mar 11, 2026 at 12:05:15PM +0100, Niklas Cassel wrote:
-> > > On Tue, Mar 10, 2026 at 07:31:58PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
-> > > > Changes in v7:
-> > > > - Dropped Rockchip Root port reset patch due to reported issues. But the series
-> > > >   works on other platforms as tested by others.
-> > > 
-> > > Are you referring to
-> > > 
-> > > ## On EP side:
-> > > # echo 0 > /sys/kernel/config/pci_ep/controllers/a40000000.pcie-ep/start && \
-> > >   sleep 0.1 && echo 1 > /sys/kernel/config/pci_ep/controllers/a40000000.pcie-ep/start
-> > > 
-> > > Then running pcitest only having 7 / 16 tests passed ?
-> > > 
-> > > If so, isn't that a problem also for qcom?
-> > > 
-> > 
-> > No, tests are passing on my setup after link up.
-> > 
-> > > 
-> > > There is no chance that the patch:
-> > > "misc: pci_endpoint_test: Add AER error handlers"
-> > > improves things in this regard?
-> > > 
-> > > Or will it simply avoid the "AER: device recovery failed" print?
-> > > 
-> > 
-> > Yes, as mentioned in the commit message, it just avoids the AER recovery failure
-> > message.
-> > 
+On Tue, Mar 17, 2026 at 10:46:56AM +0100, Benjamin Block wrote:
+> On Tue, Mar 17, 2026 at 10:01:49AM +0100, Benjamin Block wrote:
+> > One quick idea: can we somehow unbind the device from any device driver
+> > in remove_store() before calling
+> > pci_stop_and_remove_bus_device_locked()?  That way we would not have any
+> > SR-IOV functions attached anymore at the point where we remove the PF,
+> > since the DD are expected to clean them up.
 > 
-> I also realized that Endpoint state is not saved in all the code paths. So the
-> pci_endpoint_test driver has to save/restore the state also. But it is still not
-> clear why that didn't help you.
+> Very quick-and-dirty:
 > 
-> Can you share the snapshot of the entire config space before and after reset
-> using 'lspci -xxxx -s "0000:01:00"'?
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 16eaaf749ba9..490b6c1f07d3 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -33,6 +33,8 @@
+>  #include <linux/unaligned.h>
+>  #include "pci.h"
+>  
+> +extern void device_driver_detach(struct device *dev);
+> +
+>  #ifndef ARCH_PCI_DEV_GROUPS
+>  #define ARCH_PCI_DEV_GROUPS
+>  #endif
+> @@ -518,8 +520,10 @@ static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
+>  	if (kstrtoul(buf, 0, &val) < 0)
+>  		return -EINVAL;
+>  
+> -	if (val && device_remove_file_self(dev, attr))
+> +	if (val && device_remove_file_self(dev, attr)) {
+> +		device_driver_detach(dev);
 
-If I don't add something like:
+Hmm, thinking on it, this leaves open the possibility, that something re-binds
+the DD in between these two calls. Although unlikely, it might happen.
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 1eced7a419eb..9d7ee39164d4 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -1059,6 +1059,9 @@ static int pci_endpoint_test_set_irq(struct pci_endpoint_test *test,
-                return ret;
-        }
+>  		pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
+> +	}
+>  	return count;
+>  }
+>  static DEVICE_ATTR_IGNORE_LOCKDEP(remove, 0220, NULL,
+
+I guess, I dig the hole a bit deeper.
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 16eaaf749ba9..d2877b805d6e 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -33,6 +33,8 @@
+ #include <linux/unaligned.h>
+ #include "pci.h"
  
-+       pr_info("saving PCI state (irq_type: %d)\n", req_irq_type);
-+       pci_save_state(pdev);
++extern void device_driver_detach(struct device *dev);
 +
-        return 0;
- }
+ #ifndef ARCH_PCI_DEV_GROUPS
+ #define ARCH_PCI_DEV_GROUPS
+ #endif
+@@ -518,8 +520,13 @@ static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
+ 	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
  
-@@ -1453,6 +1456,7 @@ static pci_ers_result_t pci_endpoint_test_error_detected(struct pci_dev *pdev,
- 
- static pci_ers_result_t pci_endpoint_test_slot_reset(struct pci_dev *pdev)
- {
-+       pci_restore_state(pdev);
-        return PCI_ERS_RESULT_RECOVERED;
- }
-
-On top of your patch.
-
-Then all the BAR tests + MSI and MSI-X tests fail.
-
-There is a huge difference in lspci -vvv output (as I guess is expected),
-including all BARs being marked as disabled.
-
-
-With the patch above. There is zero difference before/after reset, and all
-the BAR tests pass. However, MSI/MSI-X tests still fail with:
-
-# pci_endpoint_test.c:143:MSI_TEST:Expected 0 (0) == ret (-110) 
-# pci_endpoint_test.c:143:MSI_TEST:Test failed for MSI1
-
-ETIMEDOUT.
-
-This suggests that pci_endpoint_test on the host side did not receive an
-interrupt.
-
-I don't know why, but considering that lspci output is now (with the
-save+restore) identical, I assume that the problem is not related to
-the host. Unless somehow the host will use a new/different MSI address
-after the root port has been reset, and we restore the old MSI address,
-but looking at the code, dw_pcie_msi_init() is called by
-dw_pcie_setup_rc(), so I would expect the MSI address to be the same.
-
-
-I will be very busy for a few weeks, so I don't have time to debug this.
-If anyone wants to debug this on rk3588, I'm attaching the patches for
-this new feature for rk3588 that can be applied on top of this series.
-
-Personally, I'm fine with this series getting merged even though this
-new feature will only be supported by the QCOM driver.
-But, I don't understand how e.g. pci endpoint test can work on QCOM
-platforms, after the root port has been reset, without something like
-the save/restore diff above.
-
-
-Kind regards,
-Niklas
-
---A15YEQnAzhPrJ5mF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment;
-	filename=0001-Revert-PCI-dw-rockchip-Simplify-regulator-setup-with.patch
-
-From c6416291bdbe2a3964b60183492208b41208f5a0 Mon Sep 17 00:00:00 2001
-From: Niklas Cassel <cassel@kernel.org>
-Date: Tue, 17 Mar 2026 09:59:09 +0100
-Subject: [PATCH 1/2] Revert "PCI: dw-rockchip: Simplify regulator setup with
- devm_regulator_get_enable_optional()"
-
-This reverts commit c930b10f17c03858cfe19b9873ba5240128b4d1b.
----
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 23 ++++++++++++++-----
- 1 file changed, 17 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index 8db27199cfa6..bec42fe646d8 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -95,6 +95,7 @@ struct rockchip_pcie {
- 	unsigned int clk_cnt;
- 	struct reset_control *rst;
- 	struct gpio_desc *rst_gpio;
-+	struct regulator *vpcie3v3;
- 	struct irq_domain *irq_domain;
- 	const struct rockchip_pcie_of_data *data;
- 	bool supports_clkreq;
-@@ -673,15 +674,22 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 		return ret;
- 
- 	/* DON'T MOVE ME: must be enable before PHY init */
--	ret = devm_regulator_get_enable_optional(dev, "vpcie3v3");
--	if (ret < 0 && ret != -ENODEV)
--		return dev_err_probe(dev, ret,
--				     "failed to enable vpcie3v3 regulator\n");
-+	rockchip->vpcie3v3 = devm_regulator_get_optional(dev, "vpcie3v3");
-+	if (IS_ERR(rockchip->vpcie3v3)) {
-+		if (PTR_ERR(rockchip->vpcie3v3) != -ENODEV)
-+			return dev_err_probe(dev, PTR_ERR(rockchip->vpcie3v3),
-+					"failed to get vpcie3v3 regulator\n");
-+		rockchip->vpcie3v3 = NULL;
-+	} else {
-+		ret = regulator_enable(rockchip->vpcie3v3);
-+		if (ret)
-+			return dev_err_probe(dev, ret,
-+					     "failed to enable vpcie3v3 regulator\n");
+-	if (val && device_remove_file_self(dev, attr))
++	if (val && device_remove_file_self(dev, attr)) {
++		device_lock(dev);
++		kill_device(dev);
++		device_unlock(dev);
++		device_driver_detach(dev);
+ 		pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
 +	}
- 
- 	ret = rockchip_pcie_phy_init(rockchip);
- 	if (ret)
--		return dev_err_probe(dev, ret,
--				     "failed to initialize the phy\n");
-+		goto disable_regulator;
- 
- 	ret = reset_control_deassert(rockchip->rst);
- 	if (ret)
-@@ -714,6 +722,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
- deinit_phy:
- 	rockchip_pcie_phy_deinit(rockchip);
-+disable_regulator:
-+	if (rockchip->vpcie3v3)
-+		regulator_disable(rockchip->vpcie3v3);
- 
- 	return ret;
+ 	return count;
  }
+ static DEVICE_ATTR_IGNORE_LOCKDEP(remove, 0220, NULL,
+
+Marking the device dead prevents re-binding after the unbind.
+
+Same sniff tests as before:
+
+  root@b315lp04:~# cd /sys/bus/pci/
+  root@b315lp04:/sys/bus/pci# lspci
+  0103:00:00.0 Ethernet controller: Mellanox Technologies ConnectX Family mlx5Gen Virtual Function
+  1100:00:00.0 Processing accelerators: IBM Spyre Accelerator (rev 02)
+  1100:00:00.1 Processing accelerators: IBM Spyre Accelerator Virtual Function (rev 02)
+  1180:00:00.0 Processing accelerators: IBM Spyre Accelerator (rev 02)
+  1180:00:00.1 Processing accelerators: IBM Spyre Accelerator Virtual Function (rev 02)
+  root@b315lp04:/sys/bus/pci# echo 0 > devices/1100\:00\:00.0/sriov_numvfs
+  root@b315lp04:/sys/bus/pci# echo 1 > devices/1100\:00\:00.0/sriov_numvfs
+  root@b315lp04:/sys/bus/pci# echo 1100:00:00.0 > drivers/vfio-pci/unbind
+  root@b315lp04:/sys/bus/pci# echo 1100:00:00.0 > drivers/vfio-pci/bind
+  root@b315lp04:/sys/bus/pci# echo 1 > devices/1100\:00\:00.0/sriov_numvfs
+  root@b315lp04:/sys/bus/pci# echo 1 > devices/1100\:00\:00.0/remove
+  root@b315lp04:/sys/bus/pci# lspci
+  0103:00:00.0 Ethernet controller: Mellanox Technologies ConnectX Family mlx5Gen Virtual Function
+  1180:00:00.0 Processing accelerators: IBM Spyre Accelerator (rev 02)
+  1180:00:00.1 Processing accelerators: IBM Spyre Accelerator Virtual Function (rev 02)
+  root@b315lp04:/sys/bus/pci# rmmod vfio_ccw vfio_pci vfio_pci_core vfio_iommu_type1 vfio
+  root@b315lp04:/sys/bus/pci# modprobe -a vfio_ccw vfio_pci vfio_pci_core vfio_iommu_type1 vfio
+  root@b315lp04:/sys/bus/pci# echo 1 > rescan
+  root@b315lp04:/sys/bus/pci# echo 1 > devices/1100\:00\:00.0/sriov_numvfs
+  root@b315lp04:/sys/bus/pci# echo 1 > devices/1180\:00\:00.0/sriov_numvfs
+  root@b315lp04:/sys/bus/pci# lspci
+  0103:00:00.0 Ethernet controller: Mellanox Technologies ConnectX Family mlx5Gen Virtual Function
+  1100:00:00.0 Processing accelerators: IBM Spyre Accelerator (rev 02)
+  1100:00:00.1 Processing accelerators: IBM Spyre Accelerator Virtual Function (rev 02)
+  1180:00:00.0 Processing accelerators: IBM Spyre Accelerator (rev 02)
+  1180:00:00.1 Processing accelerators: IBM Spyre Accelerator Virtual Function (rev 02)
+  root@b315lp04:/sys/bus/pci# echo 0 > devices/1180\:00\:00.0/sriov_numvfs
+  root@b315lp04:/sys/bus/pci# echo 1 > devices/1180\:00\:00.0/sriov_numvfs
+  root@b315lp04:/sys/bus/pci# echo 1180:00:00.0 > drivers/vfio-pci/unbind
+  root@b315lp04:/sys/bus/pci# echo 1180:00:00.0 > drivers/vfio-pci/bind
+  root@b315lp04:/sys/bus/pci# echo 1 > devices/1180\:00\:00.0/sriov_numvfs
+  root@b315lp04:/sys/bus/pci# echo 1 > devices/1180\:00\:00.0/remove
+  root@b315lp04:/sys/bus/pci# lspci
+  0103:00:00.0 Ethernet controller: Mellanox Technologies ConnectX Family mlx5Gen Virtual Function
+  1100:00:00.0 Processing accelerators: IBM Spyre Accelerator (rev 02)
+  1100:00:00.1 Processing accelerators: IBM Spyre Accelerator Virtual Function (rev 02)
+
+Same result: all without any Warnings/Lockdep-Splats/Kmemleak-Splats/etc.
+
 -- 
-2.53.0
-
-
---A15YEQnAzhPrJ5mF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment;
-	filename=0002-PCI-dw-rockchip-Add-support-to-reset-Root-Port-upon-.patch
-
-From 47b29e709bb209b2877a072cd3a9c3e5f1b66399 Mon Sep 17 00:00:00 2001
-From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-Date: Tue, 17 Mar 2026 09:30:57 +0100
-Subject: [PATCH 2/2] PCI: dw-rockchip: Add support to reset Root Port upon
- link down event
-
-The PCIe link may go down in cases like firmware crashes or unstable
-connections. When this occurs, the PCIe Root Port must be reset to restore
-the functionality. However, the current driver lacks link down handling,
-forcing users to reboot the system to recover.
-
-This patch implements the `reset_root_port` callback for link down handling
-for Rockchip DWC PCIe host controller. In which, the RC is reset,
-reconfigured and link training initiated to recover from the link down
-event.
-
-This also by extension fixes issues with sysfs initiated bus resets. In
-that, currently, when a sysfs initiated bus reset is issued, the endpoint
-device is non-functional after (may link up with downgraded link status).
-With the link down handling support, a sysfs initiated bus reset works as
-intended. Testing conducted on a ROCK5B board with an M.2 NVMe drive.
-
-Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
----
- drivers/pci/controller/dwc/Kconfig            |   1 +
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 137 +++++++++++++++++-
- 2 files changed, 135 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index d0aa031397fa..ecaf79da843b 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -361,6 +361,7 @@ config PCIE_ROCKCHIP_DW_HOST
- 	depends on OF
- 	select PCIE_DW_HOST
- 	select PCIE_ROCKCHIP_DW
-+	select PCI_HOST_COMMON
- 	help
- 	  Enables support for the DesignWare PCIe controller in the
- 	  Rockchip SoC (except RK3399) to work in host mode.
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index bec42fe646d8..75928057acee 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -24,6 +24,7 @@
- #include <linux/reset.h>
- 
- #include "../../pci.h"
-+#include "../pci-host-common.h"
- #include "pcie-designware.h"
- 
- /*
-@@ -106,6 +107,9 @@ struct rockchip_pcie_of_data {
- 	const struct pci_epc_features *epc_features;
- };
- 
-+static int rockchip_pcie_rc_reset_root_port(struct pci_host_bridge *bridge,
-+				       struct pci_dev *pdev);
-+
- static int rockchip_pcie_readl_apb(struct rockchip_pcie *rockchip, u32 reg)
- {
- 	return readl_relaxed(rockchip->apb_base + reg);
-@@ -326,6 +330,7 @@ static int rockchip_pcie_host_init(struct dw_pcie_rp *pp)
- 
- 	rockchip_pcie_configure_l1ss(pci);
- 	rockchip_pcie_enable_l0s(pci);
-+	pp->bridge->reset_root_port = rockchip_pcie_rc_reset_root_port;
- 
- 	/* Disable Root Ports BAR0 and BAR1 as they report bogus size */
- 	dw_pcie_writel_dbi2(pci, PCI_BASE_ADDRESS_0, 0x0);
-@@ -524,6 +529,32 @@ static const struct dw_pcie_ops dw_pcie_ops = {
- 	.get_ltssm = rockchip_pcie_get_ltssm,
- };
- 
-+static irqreturn_t rockchip_pcie_rc_sys_irq_thread(int irq, void *arg)
-+{
-+	struct rockchip_pcie *rockchip = arg;
-+	struct dw_pcie *pci = &rockchip->pci;
-+	struct dw_pcie_rp *pp = &pci->pp;
-+	struct device *dev = pci->dev;
-+	struct pci_dev *port;
-+	u32 reg;
-+
-+	reg = rockchip_pcie_readl_apb(rockchip, PCIE_CLIENT_INTR_STATUS_MISC);
-+	rockchip_pcie_writel_apb(rockchip, reg, PCIE_CLIENT_INTR_STATUS_MISC);
-+
-+	dev_dbg(dev, "PCIE_CLIENT_INTR_STATUS_MISC: %#x\n", reg);
-+	dev_dbg(dev, "LTSSM_STATUS: %#x\n", rockchip_pcie_get_ltssm_reg(rockchip));
-+
-+	if (reg & PCIE_LINK_REQ_RST_NOT_INT) {
-+		dev_dbg(dev, "hot reset or link-down reset\n");
-+		for_each_pci_bridge(port, pp->bridge->bus) {
-+			if (pci_pcie_type(port) == PCI_EXP_TYPE_ROOT_PORT)
-+				pci_host_handle_link_down(port);
-+		}
-+	}
-+
-+	return IRQ_HANDLED;
-+}
-+
- static irqreturn_t rockchip_pcie_ep_sys_irq_thread(int irq, void *arg)
- {
- 	struct rockchip_pcie *rockchip = arg;
-@@ -556,14 +587,29 @@ static irqreturn_t rockchip_pcie_ep_sys_irq_thread(int irq, void *arg)
- 	return IRQ_HANDLED;
- }
- 
--static int rockchip_pcie_configure_rc(struct rockchip_pcie *rockchip)
-+static int rockchip_pcie_configure_rc(struct platform_device *pdev,
-+				      struct rockchip_pcie *rockchip)
- {
-+	struct device *dev = &pdev->dev;
- 	struct dw_pcie_rp *pp;
-+	int irq, ret;
- 	u32 val;
- 
- 	if (!IS_ENABLED(CONFIG_PCIE_ROCKCHIP_DW_HOST))
- 		return -ENODEV;
- 
-+	irq = platform_get_irq_byname(pdev, "sys");
-+	if (irq < 0)
-+		return irq;
-+
-+	ret = devm_request_threaded_irq(dev, irq, NULL,
-+					rockchip_pcie_rc_sys_irq_thread,
-+					IRQF_ONESHOT, "pcie-sys-rc", rockchip);
-+	if (ret) {
-+		dev_err(dev, "failed to request PCIe sys IRQ\n");
-+		return ret;
-+	}
-+
- 	/* LTSSM enable control mode */
- 	val = FIELD_PREP_WM16(PCIE_LTSSM_ENABLE_ENHANCE, 1);
- 	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_CTRL);
-@@ -575,7 +621,17 @@ static int rockchip_pcie_configure_rc(struct rockchip_pcie *rockchip)
- 	pp = &rockchip->pci.pp;
- 	pp->ops = &rockchip_pcie_host_ops;
- 
--	return dw_pcie_host_init(pp);
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(dev, "failed to initialize host\n");
-+		return ret;
-+	}
-+
-+	/* unmask hot reset/link-down reset */
-+	val = FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
-+	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
-+
-+	return ret;
- }
- 
- static int rockchip_pcie_configure_ep(struct platform_device *pdev,
-@@ -701,7 +757,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 
- 	switch (data->mode) {
- 	case DW_PCIE_RC_TYPE:
--		ret = rockchip_pcie_configure_rc(rockchip);
-+		ret = rockchip_pcie_configure_rc(pdev, rockchip);
- 		if (ret)
- 			goto deinit_clk;
- 		break;
-@@ -729,6 +785,81 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	return ret;
- }
- 
-+static int rockchip_pcie_rc_reset_root_port(struct pci_host_bridge *bridge,
-+					    struct pci_dev *pdev)
-+{
-+	struct pci_bus *bus = bridge->bus;
-+	struct dw_pcie_rp *pp = bus->sysdata;
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
-+	struct device *dev = rockchip->pci.dev;
-+	u32 val;
-+	int ret;
-+
-+	dw_pcie_stop_link(pci);
-+	clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
-+	rockchip_pcie_phy_deinit(rockchip);
-+
-+	ret = reset_control_assert(rockchip->rst);
-+	if (ret)
-+		return ret;
-+
-+	ret = rockchip_pcie_phy_init(rockchip);
-+	if (ret)
-+		goto disable_regulator;
-+
-+	ret = reset_control_deassert(rockchip->rst);
-+	if (ret)
-+		goto deinit_phy;
-+
-+	ret = rockchip_pcie_clk_init(rockchip);
-+	if (ret)
-+		goto deinit_phy;
-+
-+	ret = pp->ops->init(pp);
-+	if (ret) {
-+		dev_err(dev, "Host init failed: %d\n", ret);
-+		goto deinit_clk;
-+	}
-+
-+	/* LTSSM enable control mode */
-+	val = FIELD_PREP_WM16(PCIE_LTSSM_ENABLE_ENHANCE, 1);
-+	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_CTRL);
-+
-+	rockchip_pcie_writel_apb(rockchip,
-+				 PCIE_CLIENT_SET_MODE(PCIE_CLIENT_MODE_RC),
-+				 PCIE_CLIENT_GENERAL_CON);
-+
-+	ret = dw_pcie_setup_rc(pp);
-+	if (ret) {
-+		dev_err(dev, "Failed to setup RC: %d\n", ret);
-+		goto deinit_clk;
-+	}
-+
-+	/* unmask hot reset/link-down reset */
-+	val = FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
-+	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
-+
-+	ret = dw_pcie_start_link(pci);
-+	if (ret)
-+		goto deinit_clk;
-+
-+	/* Ignore errors, the link may come up later */
-+	dw_pcie_wait_for_link(pci);
-+	dev_dbg(dev, "Root Port reset completed\n");
-+	return ret;
-+
-+deinit_clk:
-+	clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
-+deinit_phy:
-+	rockchip_pcie_phy_deinit(rockchip);
-+disable_regulator:
-+	if (rockchip->vpcie3v3)
-+		regulator_disable(rockchip->vpcie3v3);
-+
-+	return ret;
-+}
-+
- static const struct rockchip_pcie_of_data rockchip_pcie_rc_of_data_rk3568 = {
- 	.mode = DW_PCIE_RC_TYPE,
- };
--- 
-2.53.0
-
-
---A15YEQnAzhPrJ5mF--
+Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
+Sitz der Ges.: Ehningen     /     Registergericht: AmtsG Stuttgart, HRB 243294
