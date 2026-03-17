@@ -1,213 +1,404 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013010.outbound.protection.outlook.com [40.107.159.10])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4129340FDA1;
-	Tue, 17 Mar 2026 23:06:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.10
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773788792; cv=fail; b=U/ZVq/VRWAwPQ/BiWMNQlFekr0uqxHD/AbH1g0C8iYF1M1SYxL1oZowJkz/vXn2TNUwqnB3MBG9kcWHhRJJxY37uuEB5Bk4l/YoT0PGGAex8ptBv3VeThqJFo+J4j1lYRlaRcadLqV3k+imFeSbLRABgvD3xPeyuAs+w0GK1Usw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773788792; c=relaxed/simple;
-	bh=lwUIB8nTMgyITA9JfD4pa1X2kpkj3PL6fYE3xAWCGFc=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94FFA3F788F;
+	Tue, 17 Mar 2026 23:09:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773788965; cv=none; b=k3SzC4oPsgqPNSvvtHq/8cWEgG8MvIfN+5KfjA/cmB/PJYlpCW5LBc0OFH1nIQTD8dF7oZT3jfxLC8M+U+9gCV7DlKhM4dpvwxuTsSy4o1O7TkIlX+XdVOGrHxp16JfOqQpjllgXwZohkoez6KwAFJKatb1guyL55Ip/jvLo0qk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773788965; c=relaxed/simple;
+	bh=6zqtt7nPxZCdqRlVG9jKtF9aaYGKpqPjqA2V84t2WmU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=IxVZwqS4gIQMnCtjhy7RE8qmF6UqEnOsPLYUSt2qitWQwJh3ZDSjpD6+fXoIEPcx/gC0QggNtu9wu+Fj7elDMKV2Z2svKcs+nDtrIw36/wHes52zG8/M4NhTo5LIjIHstucWhPaEQZb8xwINg+SwgLrZZDYjJ0w43zj9NEb+928=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=FxiDZhiN; arc=fail smtp.client-ip=40.107.159.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	 MIME-Version; b=fNAJvPP2tFlMb9wYoEHdyBnLJnYjzfP3gN5qqlN60USp/FhM4MRS8ojmSIo16HWNxREhp2xxYPPJgAKwt9q0V0d8PZ1E4xI+pG4hnDD96kskHcggWWwrHYwiN3InOacKMLnJ+A91j2R4KrvQzRyPb+hoKN0PFL6E7tBziqNt1FY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=c26ELl6e; arc=none smtp.client-ip=198.175.65.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="FxiDZhiN"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=xHrEMWt4IfRZ239bQyHZ/p+l827kY40aNR7Vw/80h5uyg1hHMb0ODpUKBUbBHMiEskJWvAhHtK9qR9RF5K84dnvhSc+qidZsxHDYz38Zy1v6aeMM04U/IBpHeUmVPZXRtQRqgNrLqzRWKBW8dAzC2bPNsm1sPw+phKdcqVoe6W8cwyUYmAq7EcLfaS3JKTRS+MhCNn0b5LYNnIZuzC9RX5Dh9jJY3kvCZjKR/1jMy6tOge5K5tRhUDnbOwXo4r0EsA5o4GHbl7GUBeIsKseTvcuDvw7WBnuNf+/4AhtpX6c6wHHYRw98wCEQFmBMiRjwgi2M9Rk/6lz9pMXK7EYVZw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=E8Hn/LMKXfQtV3rgy7V0S9c2vIPq86UUMXtQNhoA2vk=;
- b=JxkTAS2RQeju6I8uPgYsJ7vEK9YJ1XNvRe80/U7sSAxSl9+LJ3vbiQKYHTVjsZ1CMQHxv4mT/U1IcxzzGrl3cS5Suz5SWnQI+qLin6CWzPrT0EP0WM57NBdsMjXuBBVtpMUt1rXX5VW1pmoEIb0Mcom3kXADBM/u4XhXU9sjkJnV+n6NxInLvI1L6OGbNvYR/HdISDBxdRBWWwwHMBUyFjS4Y3D6OcvWuKKucUyUjGTJ1RrhRHh/jO00W4ZLhm83yOgB85Vb1FmFrXCYmk0UCeeYpIgcIFkkzinXN2lwQlnNnxogDVj5/fXLAj/tXhVTCkbBTX7lmcQokvXfs+e9Mw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=E8Hn/LMKXfQtV3rgy7V0S9c2vIPq86UUMXtQNhoA2vk=;
- b=FxiDZhiN6GicpbqBomAvjrIobbc9qM5iRhGg23oBW6gPE7tl4CMo/ThtY0qiqb3RiRJVSnbMZxqSptCueajXEGIS9Y/g18eClQO45POj3APxYjR8l5HGA+BBXybTkbykkCMPBBXiMKCtWImLwCgjobyiIIkTV+hnk2Ow5Y2zAjeDBFF4k/gO6m7VTWcIYakTbONes8Rj3ULU89kK8gnqZtSaXrPnluWzrMhzRLwLAN0lx/pnrDT8QNFdCqfOq03WtCY9RpVN9YpQLvqlJ703ErZdGG/zQVQ8JSftFRiRGoK6aOesUdjGFjsdm+IsLQjVTT2ory2mXgRajnZO2DUkuQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
- by DBBPR04MB7643.eurprd04.prod.outlook.com (2603:10a6:10:203::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.27; Tue, 17 Mar
- 2026 23:06:00 +0000
-Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
- ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
- ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9700.022; Tue, 17 Mar 2026
- 23:06:00 +0000
-From: Vladimir Oltean <vladimir.oltean@nxp.com>
-To: linux-phy@lists.infradead.org
-Cc: Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	dri-devel@lists.freedesktop.org,
-	freedreno@lists.freedesktop.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-can@vger.kernel.org,
-	linux-gpio@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="c26ELl6e"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773788963; x=1805324963;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=6zqtt7nPxZCdqRlVG9jKtF9aaYGKpqPjqA2V84t2WmU=;
+  b=c26ELl6errukagZbDGV53A/wvxQ+z7L+x3RbuBi2WQIzlUiDyrlpKtxP
+   wH7BSLYyYRQFQ5kdIaB53pEAR2bm7qefWPDnGOjWsS07SdsJ04X7Nl1dg
+   QasZGlAioVUo6PEkMS4md0eIXlD/nRpvUvHQ4NOqi/FyOfNyYcb00ipAY
+   WVOXivUa9kEjN5eH17s3Q3RwEsFuwqVY0gEns4ITuxynixpw6fGXMWOow
+   Fez2Rb7YrcoZKNVK3xLulSqHtOshy3QXbZ6Kll5ht6qmfQiEtUnRFFlSe
+   8pnr/3Ik5u5NUznD4y4UK57A5rlqC0wzWakGJyiCCVMw3X8p/J1E9GKf9
+   w==;
+X-CSE-ConnectionGUID: NS6XbcCZQJeWB1tbi3q95w==
+X-CSE-MsgGUID: fY2EAkmhQ2mUqmEwfkGTPw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11732"; a="74811591"
+X-IronPort-AV: E=Sophos;i="6.23,126,1770624000"; 
+   d="scan'208";a="74811591"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2026 16:09:21 -0700
+X-CSE-ConnectionGUID: K0hNjz6GSPmr0IuyyMDp1Q==
+X-CSE-MsgGUID: Vcz7tzfkRuKpO5MtcAl+Iw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,126,1770624000"; 
+   d="scan'208";a="226566380"
+Received: from anguy11-upstream.jf.intel.com ([10.166.9.133])
+  by orviesa003.jf.intel.com with ESMTP; 17 Mar 2026 16:09:20 -0700
+From: Tony Nguyen <anthony.l.nguyen@intel.com>
+To: davem@davemloft.net,
+	kuba@kernel.org,
+	pabeni@redhat.com,
+	edumazet@google.com,
+	andrew+netdev@lunn.ch,
+	netdev@vger.kernel.org
+Cc: Phani R Burra <phani.r.burra@intel.com>,
+	anthony.l.nguyen@intel.com,
+	larysa.zaremba@intel.com,
+	przemyslaw.kitszel@intel.com,
+	aleksander.lobakin@intel.com,
+	sridhar.samudrala@intel.com,
+	anjali.singhai@intel.com,
+	michal.swiatkowski@linux.intel.com,
+	maciej.fijalkowski@intel.com,
+	emil.s.tantilov@intel.com,
+	madhu.chittim@intel.com,
+	joshua.a.hay@intel.com,
+	jacob.e.keller@intel.com,
+	jayaprakash.shanmugam@intel.com,
+	natalia.wochtman@intel.com,
+	jiri@resnulli.us,
+	horms@kernel.org,
+	corbet@lwn.net,
+	richardcochran@gmail.com,
+	linux-doc@vger.kernel.org,
+	bhelgaas@google.com,
 	linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	linux-riscv@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-sunxi@lists.linux.dev,
-	linux-tegra@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	netdev@vger.kernel.org,
-	spacemit@lists.linux.dev,
-	UNGLinuxDriver@microchip.com,
-	Joe Perches <joe@perches.com>
-Subject: [PATCH v4 phy-next 24/24] MAINTAINERS: add regexes for linux-phy
-Date: Wed, 18 Mar 2026 01:05:00 +0200
-Message-ID: <20260317230500.2056077-25-vladimir.oltean@nxp.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260317230500.2056077-1-vladimir.oltean@nxp.com>
-References: <20260317230500.2056077-1-vladimir.oltean@nxp.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: VI1PR0102CA0041.eurprd01.prod.exchangelabs.com
- (2603:10a6:803::18) To AM9PR04MB8585.eurprd04.prod.outlook.com
- (2603:10a6:20b:438::13)
+	Bharath R <bharath.r@intel.com>,
+	Samuel Salin <Samuel.salin@intel.com>
+Subject: [PATCH net-next 03/15] libie: add PCI device initialization helpers to libie
+Date: Tue, 17 Mar 2026 16:08:51 -0700
+Message-ID: <20260317230905.847744-4-anthony.l.nguyen@intel.com>
+X-Mailer: git-send-email 2.47.1
+In-Reply-To: <20260317230905.847744-1-anthony.l.nguyen@intel.com>
+References: <20260317230905.847744-1-anthony.l.nguyen@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|DBBPR04MB7643:EE_
-X-MS-Office365-Filtering-Correlation-Id: 79462e4b-d455-47bf-f634-08de8479c11f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|19092799006|10070799003|1800799024|376014|7416014|366016|22082099003|18002099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	YespgONs2DDl7GOcblybxKGg6iHJbD8qjQ7M/RLDZ2LcEJvP+P5re7NN3orYg8lOZ8y6yNmPJYa+sN4P6teiwZ0+niMg3O+Qj7VGSVYj+AVUemPFJntcYvueai6lhGShGOqAAePfHVpW5Hd2b7UIQ5lADcn+Sq4FRqKQSPhEtACC0k0DSl/ObKQAEcCuZezKy07lRktFyHBm1WQGI2sP6HwMiJzfvZM2Qk3om9FMHMC2AvfzphySS2mgkg2WdrSAMFRS50GPNiqRZUqLrjnWWA6EWXikWNKaBoEwgNZKXlAAv7pzZtMpC/JrukGGry8Kd+DL75Re+8jZNOIoDPURQrSoG8ilgmizF1AcGSSA0j139TOqyUEO2OuXk55OEXFp+Fmv4G5y3WbzfzJ4sUXIVo/AMhJ0cUkZwuN6R74yVsB7fAJZgm395ZCNMS2zQ28atWx+QWwjK8UFNgMU5N/fLXq/uKm8okMkgJBt8C/LWjB5Nqjo+gtJ/M2nm18mENHA8HqBuqanP/1KsJSFmThAgevKu8jR33v8ZsUvYVTgIIW1UCvFirxTO6DH+cjAwlrmdwNDb4FecltaqMHEPsKDKXgH+wfLXjwFu7O8Ju7cvl0Fp8+mJNVBR40T1AMLefsPKZumcoSV2g0kbpm7FE7WwWW9GsVGp3ORqrLjsZ60FO64xotYQY5bA1YavooKOaJYMhvFQU9DpWdykdF4swI9MrTv1VIWWauJr824sIcYuBE=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(10070799003)(1800799024)(376014)(7416014)(366016)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?594FUG5RmhKOO6XFFiU6HjEcrYvACWipdketJ3hfr/2KkPusQUr6eN3tF2pq?=
- =?us-ascii?Q?swwZH+MSB6Qa92LO7jG5/vHdSKkf1DAA2ap5LLQoC27QnvdWFUm55UPOnzO/?=
- =?us-ascii?Q?doMNmw1QgkPmSC7fBWCZZ18R272IRjN0rij9wY6YDl124nIKk0eGx/R9gA+d?=
- =?us-ascii?Q?bkqKrwUpiuPiSLUtU9qPOgc8XPgW2fIk7U6nlgLGrl5+Vd09l7DrNGhN1FcI?=
- =?us-ascii?Q?b2tqGgoC2UmGYALMTL0U5hZd0Dp+FaqalVW1/go3npaJtu3wa1ZwjmyV936K?=
- =?us-ascii?Q?0qnevCH0IFxuIwMfKEPxioJQ15yq3OAhuqjiuu6Zc0PPqUk+k+/nH+dkmCvl?=
- =?us-ascii?Q?fyzfLXMOAsJX21FO7Hbds4vGqoag+9N2nkfhQj8XFGX1EuRLOCdkiplr2hTL?=
- =?us-ascii?Q?A0pzknC4g4xTfoQbF4o2FprMHW6LeaxuzvObQnr+9XrjwFvsvLG2UO4vG52n?=
- =?us-ascii?Q?p1P92TIXB8XjvBG68remkpLDPcZ4+21/0EVm5xIOYOSJsRmJ1jbVYTPkgi1Q?=
- =?us-ascii?Q?3jpb+TzQbYXMfhaG1FCRUK8fto04GLsAHIEXDx3WAL8gcPX9QdH6qVvRGmFp?=
- =?us-ascii?Q?x9xDvihB3yxgwl1HCyFzHayN2wZDX9Y3yYA3Fqnr388l+ngzrUaLoXtspClM?=
- =?us-ascii?Q?XC5vEEB4ukutkyjIROegku3OfKFworWONjZy2SJjSqaOPVoqs42GnLE/h/U0?=
- =?us-ascii?Q?NgG7Q01c3yz6A7VTA+33pP9JdFYc12GgdoIw77N2qQO8Vo/umIW8warl28tx?=
- =?us-ascii?Q?3Uxaq5f6T7zcQMV2uiWPUTGtjwbcfu5KybeooVFpZzB3mQBC0sQdIOwOwZqU?=
- =?us-ascii?Q?scFwmQvnzD+jOAv20TD5FBOW49OWw4Q0wqM3Iab5Jfri4mtpIe1xRPU2eviw?=
- =?us-ascii?Q?0uMERKJNkOlEiSZRijbswHDBUQzLO+iDivkIqiWnq6xeEWP3yjyGqIq+OdS5?=
- =?us-ascii?Q?ItW7++uqeRrIclH+AUj8iOUQzjZBSsb+adEWUB2M0Esgo9bE6vjle5H1WMyu?=
- =?us-ascii?Q?2GVBc0vHdQfjlsG7Ylgx7FaK2KyyagF3dTNEx4XP+5uKMdJt90PbvOyXeWSv?=
- =?us-ascii?Q?Ma5R4IQyx143YMq5qOHOBiF27PwpbOtb7RAyeNXqoEe4AfLLYAwXi8p8eUea?=
- =?us-ascii?Q?YgrEZu/xNgTRQyJf8B31nOiE6jkGawq1M1k05BdKhKTlYQrAyeVAKOvABBeF?=
- =?us-ascii?Q?ARh+TzOu9zYPW8PS3YMY/M2deCn4rGhqD8B0Bg7fXf6fQSU4WqsWjFn9Ugia?=
- =?us-ascii?Q?fTxefy+G3Atza7+o1LG1cKQsOTb7lWNWv1C5e1iXNZHrSMqh5ZB4IKDJOhfX?=
- =?us-ascii?Q?y+6zS1qCoCvcA08JifGindOhIiOmHL/vCOZ03zpRVxHhz0ayKP/848GPLzcQ?=
- =?us-ascii?Q?WJEeDiLBLvHqknbOVjuJbcyYaNX4zkNVZGbGbpnK5uzlyyWhLc6Xo7fmpYZo?=
- =?us-ascii?Q?RApqTA4sUv+3TUU9RoWoGSWOn9WVSJZVoeAyaN0zSf4PrVVnvwitkDYtl6zv?=
- =?us-ascii?Q?M8oEO3BxJRGoGN/RrnTY3+J5f07WV0rETfcG4OT2F7pS7sSbKs3Y8kqE5gzD?=
- =?us-ascii?Q?pYFEg6vjLtd2R4k+EQuYK0HjY9GFffbQETwOhQ9/pqQ2hFC12RxYZYInE18N?=
- =?us-ascii?Q?cU9HqTMxyX8bEoo68ACw87IvIB1u46pg/0o6aRKy9IkRYg1/sR6ABqSEoVp5?=
- =?us-ascii?Q?ztonKsnrWM1YcSaM2d59f+ffq4qEcDLXTLC6IbzLa4WEVYnhlxdFEBhC0BdY?=
- =?us-ascii?Q?auBZ1aLx4dth6tyn/kc6ap544OHglYlJ/ARKrgIXOwp1clntAUQ3mIGTlzQc?=
-X-MS-Exchange-AntiSpam-MessageData-1: 7NTM5pggdFSJZ2cCYG8wK+kUHaPXZd8bZwg=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 79462e4b-d455-47bf-f634-08de8479c11f
-X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Mar 2026 23:06:00.1618
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: iYq8izQWzR6T+6vW2KgHfT/LjN0LUr1zqCB5fJRSZCO1H5KcrLyYIv/qB3cmRPsswAjziyoG4axbKjD5PmMfsg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR04MB7643
+Content-Transfer-Encoding: 8bit
 
-Some pragmatic shortcuts are being taken by PHY consumer driver authors,
-which put a burden on the framework. A lot of these can be caught during
-review.
+From: Phani R Burra <phani.r.burra@intel.com>
 
-Make sure the linux-phy list is copied on as many keywords that regexes
-can reasonably catch.
+Add memory related support functions for drivers to access MMIO space and
+allocate/free dma buffers.
 
-Some considerations that led to this solution and not a simpler one:
-- Consumers may be located anywhere, and their file naming provides no
-  indication whatsoever that they are PHY API consumers.
-- The network PHY API has similarly sounding API: phy_start(),
-  phy_connect(), etc. Similarly, matching on "phy" would hit
-  phys_addr_t, "cryptography", etc.
-- The header files themselves need attention to avoid matching on
-  include/linux/phy.h (network PHY), include/linux/usb/phy.h,
-  drivers/net/vendor/device/phy.h, etc.
-- At least for a transitional period, I suppose developers will still
-  try to add PHY providers outside the subsystem (which is discouraged).
-
-So I used \b to try to match on actual word boundaries and I went for
-listing all markers of PHY API use as they may appear in patch contexts.
-
-Bit rot is a valid concern. I will add a test to the build automation
-that newly introduced struct and function names in include/linux/phy.h,
-include/linux/phy-props.h and drivers/phy/phy-provider.h are matched by
-the MAINTAINERS entry K: patterns.
-
-The keyword patterns were written with great help from Joe Perches
-<joe@perches.com>.
-
-Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
+Reviewed-by: Maciej Fijalkowski <maciej.fijalkowski@intel.com>
+Signed-off-by: Phani R Burra <phani.r.burra@intel.com>
+Co-developed-by: Victor Raj <victor.raj@intel.com>
+Signed-off-by: Victor Raj <victor.raj@intel.com>
+Co-developed-by: Sridhar Samudrala <sridhar.samudrala@intel.com>
+Signed-off-by: Sridhar Samudrala <sridhar.samudrala@intel.com>
+Co-developed-by: Pavan Kumar Linga <pavan.kumar.linga@intel.com>
+Signed-off-by: Pavan Kumar Linga <pavan.kumar.linga@intel.com>
+Co-developed-by: Larysa Zaremba <larysa.zaremba@intel.com>
+Signed-off-by: Larysa Zaremba <larysa.zaremba@intel.com>
+Tested-by: Bharath R <bharath.r@intel.com>
+Tested-by: Samuel Salin <Samuel.salin@intel.com>
+Signed-off-by: Tony Nguyen <anthony.l.nguyen@intel.com>
 ---
-Cc: Joe Perches <joe@perches.com>
+ drivers/net/ethernet/intel/libie/Kconfig  |   6 +
+ drivers/net/ethernet/intel/libie/Makefile |   4 +
+ drivers/net/ethernet/intel/libie/pci.c    | 190 ++++++++++++++++++++++
+ include/linux/intel/libie/pci.h           |  56 +++++++
+ 4 files changed, 256 insertions(+)
+ create mode 100644 drivers/net/ethernet/intel/libie/pci.c
+ create mode 100644 include/linux/intel/libie/pci.h
 
-v3->v4: none
-v2->v3:
-- escape forward slash in linux/phy/phy.h in regex pattern:
-  https://lore.kernel.org/linux-phy/9fd14d166e860f26febfbc9061a6dcae6a166961.camel@perches.com/
-v1->v2:
-- split into multiple regex patterns
-- use matching-only (insted of capturing) regex patterns
-- adjust commit message to reflect the Q&A from v1
----
- MAINTAINERS | 11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 55af015174a5..cd920f14abde 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10713,6 +10713,17 @@ F:	Documentation/devicetree/bindings/phy/
- F:	drivers/phy/
- F:	include/dt-bindings/phy/
- F:	include/linux/phy/
-+K:	(?:linux\/phy\/phy\.h|phy-props\.h|phy-provider\.h)
-+K:	\b(?:__)?(?:devm_)?(?:of_)?phy_(?:create|destroy|provider_(?:un)?register)\b
-+K:	\bphy_(?:create|remove)_lookup\b
-+K:	\bphy_(?:get|set)_drvdata\b
-+K:	\b(?:devm_)?(?:of_)?phy_(?:optional_)?(?:get|put)(?:_by_index)?\b
-+K:	\bphy_pm_runtime_(?:get|put)(?:_sync)?\b
-+K:	\bphy_(?:init|exit|power_(?:on|off))\b
-+K:	\bphy_(?:get|set)_(?:mode(?:_ext)?|media|speed|bus_width|max_link_rate)\b
-+K:	\bphy_(?:reset|configure|validate|calibrate)\b
-+K:	\bphy_notify_(?:connect|disconnect|state)\b
-+K:	\bstruct\s+phy(?:_ops|_attrs|_lookup|_provider)?\b
+diff --git a/drivers/net/ethernet/intel/libie/Kconfig b/drivers/net/ethernet/intel/libie/Kconfig
+index 70831c7e336e..500a95c944a8 100644
+--- a/drivers/net/ethernet/intel/libie/Kconfig
++++ b/drivers/net/ethernet/intel/libie/Kconfig
+@@ -23,3 +23,9 @@ config LIBIE_FWLOG
+ 	  for it. Firmware logging is using admin queue interface to communicate
+ 	  with the device. Debugfs is a user interface used to config logging
+ 	  and dump all collected logs.
++
++config LIBIE_PCI
++	tristate
++	help
++	  Helper functions for management of PCI resources belonging
++	  to networking devices.
+diff --git a/drivers/net/ethernet/intel/libie/Makefile b/drivers/net/ethernet/intel/libie/Makefile
+index db57fc6780ea..a28509cb9086 100644
+--- a/drivers/net/ethernet/intel/libie/Makefile
++++ b/drivers/net/ethernet/intel/libie/Makefile
+@@ -12,3 +12,7 @@ libie_adminq-y			:= adminq.o
+ obj-$(CONFIG_LIBIE_FWLOG) 	+= libie_fwlog.o
  
- GENERIC PINCTRL I2C DEMULTIPLEXER DRIVER
- M:	Wolfram Sang <wsa+renesas@sang-engineering.com>
+ libie_fwlog-y			:= fwlog.o
++
++obj-$(CONFIG_LIBIE_PCI)		+= libie_pci.o
++
++libie_pci-y			:= pci.o
+diff --git a/drivers/net/ethernet/intel/libie/pci.c b/drivers/net/ethernet/intel/libie/pci.c
+new file mode 100644
+index 000000000000..834e1f25e99e
+--- /dev/null
++++ b/drivers/net/ethernet/intel/libie/pci.c
+@@ -0,0 +1,190 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/* Copyright (C) 2025 Intel Corporation */
++
++#include <linux/intel/libie/pci.h>
++
++/**
++ * libie_find_mmio_region - find if MMIO region is present in the list
++ * @mmio_list: list that contains MMIO region info
++ * @offset: MMIO region start offset
++ * @bar_idx: BAR index where the offset to search
++ *
++ * Return: MMIO region pointer or NULL if the region info is not present.
++ */
++static struct libie_pci_mmio_region *
++libie_find_mmio_region(const struct list_head *mmio_list,
++		       resource_size_t offset, int bar_idx)
++{
++	struct libie_pci_mmio_region *mr;
++
++	list_for_each_entry(mr, mmio_list, list)
++		if (mr->bar_idx == bar_idx && mr->offset == offset)
++			return mr;
++
++	return NULL;
++}
++
++/**
++ * __libie_pci_get_mmio_addr - get the MMIO virtual address
++ * @mmio_info: contains list of MMIO regions
++ * @offset: register offset to find
++ * @num_args: number of additional arguments present
++ *
++ * This function finds the virtual address of a register offset by iterating
++ * through the non-linear MMIO regions that are mapped by the driver.
++ *
++ * Return: valid MMIO virtual address or NULL.
++ */
++void __iomem *__libie_pci_get_mmio_addr(struct libie_mmio_info *mmio_info,
++					resource_size_t offset,
++					int num_args, ...)
++{
++	struct libie_pci_mmio_region *mr;
++	int bar_idx = 0;
++	va_list args;
++
++	if (num_args) {
++		va_start(args, num_args);
++		bar_idx = va_arg(args, int);
++		va_end(args);
++	}
++
++	list_for_each_entry(mr, &mmio_info->mmio_list, list)
++		if (bar_idx == mr->bar_idx && offset >= mr->offset &&
++		    offset < mr->offset + mr->size) {
++			offset -= mr->offset;
++
++			return mr->addr + offset;
++		}
++
++	return NULL;
++}
++EXPORT_SYMBOL_NS_GPL(__libie_pci_get_mmio_addr, "LIBIE_PCI");
++
++/**
++ * __libie_pci_map_mmio_region - map PCI device MMIO region
++ * @mmio_info: struct to store the mapped MMIO region
++ * @offset: MMIO region start offset
++ * @size: MMIO region size
++ * @num_args: number of additional arguments present
++ *
++ * Return: true on success, false on memory map failure.
++ */
++bool __libie_pci_map_mmio_region(struct libie_mmio_info *mmio_info,
++				 resource_size_t offset,
++				 resource_size_t size, int num_args, ...)
++{
++	struct pci_dev *pdev = mmio_info->pdev;
++	struct libie_pci_mmio_region *mr;
++	resource_size_t pa;
++	void __iomem *va;
++	int bar_idx = 0;
++	va_list args;
++
++	if (num_args) {
++		va_start(args, num_args);
++		bar_idx = va_arg(args, int);
++		va_end(args);
++	}
++
++	mr = libie_find_mmio_region(&mmio_info->mmio_list, offset, bar_idx);
++	if (mr) {
++		pci_warn(pdev, "Mapping of BAR%u with offset %llu already exists\n",
++			 bar_idx, (unsigned long long)offset);
++		return true;
++	}
++
++	pa = pci_resource_start(pdev, bar_idx) + offset;
++	va = ioremap(pa, size);
++	if (!va) {
++		pci_err(pdev, "Failed to map BAR%u region\n", bar_idx);
++		return false;
++	}
++
++	mr = kvzalloc_obj(*mr);
++	if (!mr) {
++		iounmap(va);
++		return false;
++	}
++
++	mr->addr = va;
++	mr->offset = offset;
++	mr->size = size;
++	mr->bar_idx = bar_idx;
++
++	list_add_tail(&mr->list, &mmio_info->mmio_list);
++
++	return true;
++}
++EXPORT_SYMBOL_NS_GPL(__libie_pci_map_mmio_region, "LIBIE_PCI");
++
++/**
++ * libie_pci_unmap_fltr_regs - unmap selected PCI device MMIO regions
++ * @mmio_info: contains list of MMIO regions to unmap
++ * @fltr: returns true, if region is to be unmapped
++ */
++void libie_pci_unmap_fltr_regs(struct libie_mmio_info *mmio_info,
++			       bool (*fltr)(struct libie_mmio_info *mmio_info,
++					    struct libie_pci_mmio_region *reg))
++{
++	struct libie_pci_mmio_region *mr, *tmp;
++
++	list_for_each_entry_safe(mr, tmp, &mmio_info->mmio_list, list) {
++		if (!fltr(mmio_info, mr))
++			continue;
++		iounmap(mr->addr);
++		list_del(&mr->list);
++		kfree(mr);
++	}
++}
++EXPORT_SYMBOL_NS_GPL(libie_pci_unmap_fltr_regs, "LIBIE_PCI");
++
++/**
++ * libie_pci_unmap_all_mmio_regions - unmap all PCI device MMIO regions
++ * @mmio_info: contains list of MMIO regions to unmap
++ */
++void libie_pci_unmap_all_mmio_regions(struct libie_mmio_info *mmio_info)
++{
++	struct libie_pci_mmio_region *mr, *tmp;
++
++	list_for_each_entry_safe(mr, tmp, &mmio_info->mmio_list, list) {
++		iounmap(mr->addr);
++		list_del(&mr->list);
++		kfree(mr);
++	}
++}
++EXPORT_SYMBOL_NS_GPL(libie_pci_unmap_all_mmio_regions, "LIBIE_PCI");
++
++/**
++ * libie_pci_init_dev - enable and reserve PCI regions of the device
++ * @pdev: PCI device information
++ *
++ * Return: %0 on success, -%errno on failure.
++ */
++int libie_pci_init_dev(struct pci_dev *pdev)
++{
++	int err;
++
++	err = pcim_enable_device(pdev);
++	if (err)
++		return err;
++
++	for (int bar = 0; bar < PCI_STD_NUM_BARS; bar++)
++		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
++			err = pcim_request_region(pdev, bar, pci_name(pdev));
++			if (err)
++				return err;
++		}
++
++	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
++	if (err)
++		return err;
++
++	pci_set_master(pdev);
++
++	return 0;
++}
++EXPORT_SYMBOL_NS_GPL(libie_pci_init_dev, "LIBIE_PCI");
++
++MODULE_DESCRIPTION("Common Ethernet PCI library");
++MODULE_LICENSE("GPL");
+diff --git a/include/linux/intel/libie/pci.h b/include/linux/intel/libie/pci.h
+new file mode 100644
+index 000000000000..effd072c55c8
+--- /dev/null
++++ b/include/linux/intel/libie/pci.h
+@@ -0,0 +1,56 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/* Copyright (C) 2025 Intel Corporation */
++
++#ifndef __LIBIE_PCI_H
++#define __LIBIE_PCI_H
++
++#include <linux/pci.h>
++
++/**
++ * struct libie_pci_mmio_region - structure for MMIO region info
++ * @list: used to add a MMIO region to the list of MMIO regions in
++ *	  libie_mmio_info
++ * @addr: virtual address of MMIO region start
++ * @offset: start offset of the MMIO region
++ * @size: size of the MMIO region
++ * @bar_idx: BAR index to which the MMIO region belongs to
++ */
++struct libie_pci_mmio_region {
++	struct list_head	list;
++	void __iomem		*addr;
++	resource_size_t		offset;
++	resource_size_t		size;
++	u16			bar_idx;
++};
++
++/**
++ * struct libie_mmio_info - contains list of MMIO regions
++ * @pdev: PCI device pointer
++ * @mmio_list: list of MMIO regions
++ */
++struct libie_mmio_info {
++	struct pci_dev		*pdev;
++	struct list_head	mmio_list;
++};
++
++#define libie_pci_map_mmio_region(mmio_info, offset, size, ...)	\
++	__libie_pci_map_mmio_region(mmio_info, offset, size,		\
++				     COUNT_ARGS(__VA_ARGS__), ##__VA_ARGS__)
++
++#define libie_pci_get_mmio_addr(mmio_info, offset, ...)		\
++	__libie_pci_get_mmio_addr(mmio_info, offset,			\
++				   COUNT_ARGS(__VA_ARGS__), ##__VA_ARGS__)
++
++bool __libie_pci_map_mmio_region(struct libie_mmio_info *mmio_info,
++				 resource_size_t offset, resource_size_t size,
++				 int num_args, ...);
++void __iomem *__libie_pci_get_mmio_addr(struct libie_mmio_info *mmio_info,
++					resource_size_t offset,
++					int num_args, ...);
++void libie_pci_unmap_all_mmio_regions(struct libie_mmio_info *mmio_info);
++void libie_pci_unmap_fltr_regs(struct libie_mmio_info *mmio_info,
++			       bool (*fltr)(struct libie_mmio_info *mmio_info,
++					    struct libie_pci_mmio_region *reg));
++int libie_pci_init_dev(struct pci_dev *pdev);
++
++#endif /* __LIBIE_PCI_H */
 -- 
-2.43.0
+2.47.1
 
