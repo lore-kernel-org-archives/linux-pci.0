@@ -1,126 +1,80 @@
-Received: from mail-m128198.netease.com (mail-m128198.netease.com [103.209.128.198])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EABE1F099C;
-	Tue, 17 Mar 2026 00:52:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.209.128.198
+Received: from outbound.baidu.com (mx14.baidu.com [220.181.3.101])
+	by smtp.subspace.kernel.org (Postfix) with SMTP id 75F0A21CA02;
+	Tue, 17 Mar 2026 00:54:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.181.3.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773708755; cv=none; b=nc4iKnEY29A+1onh4cA/jUYzFmOXI4r4HNuXo15c7Fe2PAZANwFNQpN5Iqcmv71jNggoeS9162v9Yo99mZM55+UD3guSeM8qDTwKASCsAk19EzsKG7Q41uN+U/9mGhEWnkGak4rEDVXQeXIre3eaaZL6cpOqkBTVlLjvk8himXo=
+	t=1773708887; cv=none; b=nZ7CPLj0dIsOvmoQQks3FTO7T7r2Wx0KlEq2Gl2q/BXF6mT89UAFxK4Z8o3P6pd5Fj0MNiDJnKtSM1jBjtUZDW61SIRR+XTBf9OFBZ60CsvvBw1FpJdJEb7mwgN798feZf5RWdFswpBtIpHhCzHWTh8t4hjaAVjuWWusrffY66k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773708755; c=relaxed/simple;
-	bh=7sFOKiruAjUYoFRgHbb0Mw/aA/busWSf6Z3ToRfTrg0=;
-	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=QSEpPzrhT4Lzm570HgrAz9afFJtukQV/vf5PjB/EarGsIQJ8N2I2iM4w6GhQRbUXqGIeo46YkK5WUM6YrQHreX5Z+NRCiF7M7zVg3OnIqsDEMpQZZZINftMxiO3HE1v3vjdqlA1FjW94SHn5rDAkuOUthlTX711JhkpDuRzCZvs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=TwGyGPzm; arc=none smtp.client-ip=103.209.128.198
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1773708887; c=relaxed/simple;
+	bh=lLQ1C4JPE0l+4G5WJtYypCxK8XWkTXYT3bR7xphw0n8=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=n3fHdrIsVZgrBJiNjaj0qfxenn2EwH2IKLNy8cTbRx8zLj0PU+64HVnDyCfVe1ZA53kHeqDi1Dgos7xBr7kDty3dh5t/UBIR7mEJ2gmUy/ETldZN4PF1xvhm0x8w+nb423NqIct338zbR/J+Xjm4mjV0W2PzVHDH9oyb5ETt6CY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=baidu.com; spf=pass smtp.mailfrom=baidu.com; dkim=pass (2048-bit key) header.d=baidu.com header.i=@baidu.com header.b=R772xDRU; arc=none smtp.client-ip=220.181.3.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=baidu.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baidu.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="TwGyGPzm"
-Received: from [172.16.12.17] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 372d756a9;
-	Tue, 17 Mar 2026 08:47:12 +0800 (GMT+08:00)
-Cc: shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org,
- linux-kernel@vger.kernel.org, kernel@collabora.com
-Subject: Re: [PATCH RFC v5 8/8] PCI: dw-rockchip: port some suspend code from
- vendor kernel
-To: Sebastian Reichel <sebastian.reichel@collabora.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>,
- Philipp Zabel <p.zabel@pengutronix.de>, Jingoo Han <jingoohan1@gmail.com>,
- Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>
-References: <20260316-rockchip-pcie-system-suspend-v5-0-5bb5ad37d643@collabora.com>
- <20260316-rockchip-pcie-system-suspend-v5-8-5bb5ad37d643@collabora.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <924c1f61-ec19-0585-f9a4-0cab302b7755@rock-chips.com>
-Date: Tue, 17 Mar 2026 08:47:10 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+	dkim=pass (2048-bit key) header.d=baidu.com header.i=@baidu.com header.b="R772xDRU"
+X-MD-Sfrom: lirongqing@baidu.com
+X-MD-SrcIP: 172.31.50.47
+From: lirongqing <lirongqing@baidu.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <kwilczynski@kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: Li RongQing <lirongqing@baidu.com>
+Subject: [PATCH][v2] PCI: sysfs: Suppress FW_BUG warning when NUMA node already matches
+Date: Mon, 16 Mar 2026 20:28:03 -0400
+Message-ID: <20260317002803.2353-1-lirongqing@baidu.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20260316-rockchip-pcie-system-suspend-v5-8-5bb5ad37d643@collabora.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9cf942d5d009cckunm6be285ec4098d2
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQhgfH1ZOSB8fTx8fGkhPHh5WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=TwGyGPzme76z7TYhyXkptwUBxigW7rLjR+/rKAcwAQjXOkiLW9ws+3aFaSGHPddviEbcuuRkmsNZSF8BaqzVuycuKLENizCISGOMPlUr2bPwB4EcWR0bn6h22Y/9+w+I/3MJddSWpFw9bVa4neQKaHk7QvbtOeyYd8U9gcUnjcQ=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=DY0ZdZOWN3ERO3L5dX403mCw02rI92FKq9Fe2IdNFik=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain
+X-ClientProxiedBy: bjhj-exc6.internal.baidu.com (172.31.3.16) To
+ bjkjy-exc3.internal.baidu.com (172.31.50.47)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=baidu.com;
+	s=selector1; t=1773707292;
+	bh=q2JODQo8RjYR52ut57qXnSV08daiUfFnUh62OF1+fSU=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type;
+	b=R772xDRUTkmHaNuZSF5oiRCglIMIns6eQVSoNC/3XY0vlvp4rgsiRupSJVuin09KK
+	 6ZShN0OHgcQpkq+ar4IhWFFeeD56bBA0d4owub70Ei1xPP59ErZcB6Qjru0yOjyTW8
+	 T2mTRHe5wVshWVhBMN+xDgDBtszuzHb4hVQYiAwGs+nUrv01lmJjHyhpMYW828Rhr/
+	 rPh4RyJLDjOI8D7GRmxUg8gOfbducfVQ1XGyeCujw5JmCplXsvTfzStTSvtKCd/id3
+	 VctWmmr3nPIw5Oe0TMgQqJJHDWQ1cY72HtFJwMyBTbewUMjvgX/7hUNiRT3+CNWDbJ
+	 a68ho7CTnCfLQ==
 
-Hi Sebastian,
+From: Li RongQing <lirongqing@baidu.com>
 
-在 2026/03/17 星期二 3:10, Sebastian Reichel 写道:
-> Rockchip's vendor kernel does these calls before starting the actual
-> process of going into L2 state. I'm not sure about the rationale,
-> hopefully Shawn can help out with that.
-> 
-> Cc: Shawn Lin <shawn.lin@rock-chips.com>
-> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
-> ---
->   drivers/pci/controller/dwc/pcie-dw-rockchip.c | 13 +++++++++++++
->   1 file changed, 13 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> index 3be83feccecb..fbdde82c95b6 100644
-> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> @@ -74,6 +74,9 @@
->   #define  PCIE_CLKREQ_NOT_READY		FIELD_PREP_WM16(BIT(0), 0)
->   #define  PCIE_CLKREQ_PULL_DOWN		FIELD_PREP_WM16(GENMASK(13, 12), 1)
->   
-> +/* General Debug Register */
-> +#define PCIE_CLIENT_GENERAL_DEBUG	0x104
-> +
->   /* RASDES TBA information */
->   #define PCIE_CLIENT_CDM_RASDES_TBA_INFO_CMN	0x154
->   #define  PCIE_CLIENT_CDM_RASDES_TBA_L1_1	BIT(4)
-> @@ -776,6 +779,11 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->   	return ret;
->   }
->   
-> +static inline void rockchip_pcie_link_status_clear(struct rockchip_pcie *rockchip)
-> +{
-> +	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_GENERAL_DEBUG, 0x0);
-> +}
-> +
+The numa_node sysfs interface allows users to manually override a PCI
+device's NUMA node assignment. Currently, every write triggers a
+FW_BUG warning and taints the kernel, even when writing the same value
+that is already set.
 
+Check if the requested node is already assigned to the device. If it
+matches, return success immediately without tainting the kernel or
+printing a warning.
 
-Thanks for the patches.
+Signed-off-by: Li RongQing <lirongqing@baidu.com>
+---
+Diff with v1: invert the check and return if they are same 
 
-It is intended to clear the debug buffer before entering the L2 state.
-This ensures that when the link re-establishes after resume, the debug
-registers contain cleaner information, making it easier to diagnose any
-link training issues that may occur during the reconnection process.
+ drivers/pci/pci-sysfs.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-That said, this operation is not strictly necessary from a functional
-standpoint. The PCIe controller will work correctly without it. This was
-primarily a request from downstream folks to have cleaner debug
-information during bring-up and troubleshooting phases.
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 16eaaf7..dd7c9e5 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -378,6 +378,9 @@ static ssize_t numa_node_store(struct device *dev,
+ 	if (node != NUMA_NO_NODE && !node_online(node))
+ 		return -EINVAL;
+ 
++	if (node == dev->numa_node)
++		return count;
++
+ 	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
+ 	pci_alert(pdev, FW_BUG "Overriding NUMA node to %d.  Contact your vendor for updates.",
+ 		  node);
+-- 
+2.9.4
 
->   static int rockchip_pcie_suspend(struct device *dev)
->   {
->   	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
-> @@ -789,6 +797,11 @@ static int rockchip_pcie_suspend(struct device *dev)
->   
->   	rockchip->intx = rockchip_pcie_readl_apb(rockchip, PCIE_CLIENT_INTR_MASK_LEGACY);
->   
-> +	/* All sub-devices are in D3hot by PCIe stack */
-> +	dw_pcie_dbi_ro_wr_dis(pci);
-> +
-> +	rockchip_pcie_link_status_clear(rockchip);
-> +
->   	ret = dw_pcie_suspend_noirq(pci);
->   	if (ret)
->   		return ret;
-> 
