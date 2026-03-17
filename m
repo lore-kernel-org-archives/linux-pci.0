@@ -1,48 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DAFB346FAB;
-	Tue, 17 Mar 2026 07:07:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A74138D6AA;
+	Tue, 17 Mar 2026 07:26:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773731256; cv=none; b=eHEE+dCp3DfgEEdT12LcySNtU9Q2yGD9I8Up9yYAKs7qEYw4cesEg/L0+H1Hbq1NkQaT1AygsZEvyUgX2RcN2HDEDEgRPwot6BOsODnCGNBGuSkVnOoPQhEbQ1GRHndnR/2ge57TJShKMDxkTWhD2MpUrttmkOc2/zP4ybqwwxk=
+	t=1773732364; cv=none; b=Y+iiaA8CChYIk19oHSJ9qnMq51Kin6mNjcyzNRF9aGGBOZmGNS/9Mpr6bxhUNPOoC4XmhtRZwnnezROSxZAataI5FVptqJ/F4/PbxucKLXKlEKH9TvFGmM7hdPNUuyDY2e0stsyQC2gERk2kxsUPtV6py4SkvYKSen0IhXRtTho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773731256; c=relaxed/simple;
-	bh=D9EpaUqvtcLalg9vu0z9KVXubLh0G2Y4S2QGVe1FmXU=;
+	s=arc-20240116; t=1773732364; c=relaxed/simple;
+	bh=KMKAdvpD2asi94LOZ7jH4G+VPl2+Iliqwp2bhPbfUxg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ooEZe9v1UFSReRCnzriyTehMVpnv4y73qCIn+M7mO0ohWQdYV/sgcPN7tDg7A4hYpbHYlfEsnZknZXk6Hy78INBAewQJB6WZu8bD+E145xtEz9S6wV3YkaBJ1UJZrQsFAwSDL7Szgm8kC+nFZdOENdS9F42krVn7A8v2uHrCyeI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kECZo+jQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=j9vBnkJXvsxW1q3CAzA0z73mrvNJJmZSk4vqoHCwEIGkOMksWfXgoaPN0NMAKNuA0n4pECjJwvFYEx0ndavCelqj4HVx5dAAPgdyoaSsLwwkPgfgzNDD32DtSdXj5AdmVo+BXEoO5ZsdTNFVoWa0Rjia/DcVA4isxqmON5jXLE0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WpXz/bV4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kECZo+jQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E10B9C19424;
-	Tue, 17 Mar 2026 07:07:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WpXz/bV4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39822C4CEF7;
+	Tue, 17 Mar 2026 07:26:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773731256;
-	bh=D9EpaUqvtcLalg9vu0z9KVXubLh0G2Y4S2QGVe1FmXU=;
+	s=k20201202; t=1773732363;
+	bh=KMKAdvpD2asi94LOZ7jH4G+VPl2+Iliqwp2bhPbfUxg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kECZo+jQZtr/cvbmxQXZPIZ1bKB73tIOLL2u5vTYPfngdAK4xGdveXIDla97NNL1D
-	 42cTL02hYvtj/0FovFN7yRBkwKx6mnX/YBYRzHqceCC0FiMz5dfDHIsdka3osr+WxU
-	 4Cc+IwBJo3BkK+FD7qNscvaRPlACRAQG/crYa1R8pvJe5RWqJjpM1vO4NAhG7IdrXk
-	 7KbzTSXljgN3bYKlSbp47EAepF+v/X/W+lGZg79X1OXKupZIgDyY5l4TGi8YsRI84Y
-	 JgQRHIIFEjj13GVE284n1VgvwCChC3g8JEIM5m7Oh6j0f9TwEzPg6ezwYzSXAV0duz
-	 4NuQg/drPOEdw==
-Date: Tue, 17 Mar 2026 12:37:25 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
-	Pavel Machek <pavel@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, Linus Walleij <linusw@kernel.org>, 
-	Bartosz Golaszewski <brgl@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Saravana Kannan <saravanak@kernel.org>, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org, quic_vbadigan@quicinc.com, 
-	sherry.sun@nxp.com, driver-core@lists.linux.dev, devicetree@vger.kernel.org
-Subject: Re: [PATCH v8 3/3] PCI: Add support for PCIe WAKE# interrupt
-Message-ID: <t2yjuw4ca4tskzocv65m4jjmp2wfjkpymduhbv76actfybzklv@h5qavg2uzhjc>
-References: <20260313-wakeirq_support-v8-0-48a0a702518a@oss.qualcomm.com>
- <20260313-wakeirq_support-v8-3-48a0a702518a@oss.qualcomm.com>
- <53uy2vdzc25frf5rpwbybaor5n6jesapl2x7xusnn5zfaqnfy7@udq7ln2a42n5>
- <be9980f3-f036-4260-980f-5d996bc034cb@oss.qualcomm.com>
+	b=WpXz/bV4SdPFXXSpUQ05WRbcGKDUCY/81Laisbg4J3SllB96Cfg7GHRiV2025+ZYZ
+	 2y/yz1dgkT9xuXBNbevh1QEGyoX3C+cpFxuAhw4iNZnbDpdv6wP9bX4ldb76HMbskn
+	 pL/RhwY5WdLC4ElRsjBmvbjA01o2WhxA7XyjtbBUDjUfk4QmQc8uP1iDk6u0ZJ561P
+	 IVRurwb9po8NDG5e2ndDxn6DGDVpkzZCd1+xEB/p8n56YFD6vClOxDSCxiGnj31If+
+	 gtYwj6XEvwFyU7wo7W34/r/veDTz84QPc65ghTuk83N7Uj6dzOzG6zBzFFjqGOnf7X
+	 cBCVQ69c9GkZA==
+Date: Tue, 17 Mar 2026 08:26:01 +0100
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Caleb James DeLisle <cjd@cjdns.fr>
+Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org, 
+	naseefkm@gmail.com, ryder.lee@mediatek.com, bhelgaas@google.com, 
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org, 
+	krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com, 
+	angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com, linux-mediatek@lists.infradead.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] dt-bindings: PCI: mediatek: Add support for
+ EcoNet EN7528
+Message-ID: <20260317-feathered-cyber-snake-eb72fa@quoll>
+References: <20260316155157.679533-1-cjd@cjdns.fr>
+ <20260316155157.679533-2-cjd@cjdns.fr>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,64 +48,111 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <be9980f3-f036-4260-980f-5d996bc034cb@oss.qualcomm.com>
+In-Reply-To: <20260316155157.679533-2-cjd@cjdns.fr>
 
-On Mon, Mar 16, 2026 at 05:46:58PM +0530, Krishna Chaitanya Chundru wrote:
-> 
-> 
-> On 3/13/2026 7:28 PM, Manivannan Sadhasivam wrote:
-> > On Fri, Mar 13, 2026 at 12:38:42PM +0530, Krishna Chaitanya Chundru wrote:
-> > > According to the PCI Express specification (PCIe r7.0, Section 5.3.3.2),
-> > > two link wakeup mechanisms are defined: Beacon and WAKE#. Beacon is a
-> > > hardware-only mechanism and is invisible to software (PCIe r7.0,
-> > > Section 4.2.7.8.1). This change adds support for the WAKE# mechanism in
-> > > the PCI core.
-> > > 
-> > > According to the PCIe specification, multiple WAKE# signals can exist in
-> > > a system or each component in the hierarchy could share a single WAKE#
-> > > signal. In configurations involving a PCIe switch, each downstream port
-> > > (DSP) of the switch may be connected to a separate WAKE# line, allowing
-> > > each endpoint to signal WAKE# independently. From figure 5.4 in sec
-> > > 5.3.3.2, WAKE# can also be terminated at the switch itself. To support
-> > > this, the WAKE# should be described in the device tree node of the
-> > > endpoint/bridge. If all endpoints share a single WAKE# line, then each
-> > > endpoint node should describe the same WAKE# signal or a single WAKE# in
-> > > the Root Port node.
-> > > 
-> > > In pci_device_add(), PCI framework will search for the WAKE# in device
-> > > node, If not found, it searches in its upstream port only if upstream port
-> > > is Root Port. Once found, register for the wake IRQ in shared mode, as the
-> > > WAKE# may be shared among multiple endpoints.
-> > > 
-> > > dev_pm_set_dedicated_shared_wake_irq() associates a wakeup IRQ with a
-> > > device and requests it, but the PM core keeps the IRQ disabled by default.
-> > > The IRQ is enabled only when the device is permitted to wake the system,
-> > > i.e. during system suspend and after runtime suspend, and only when device
-> > > wakeup is enabled.
-> > > 
-> > > When the wake IRQ fires, the wakeirq handler invokes pm_runtime_resume() to
-> > > bring the device back to an active power state, such as transitioning from
-> > > D3cold to D0. Once the device is active and the link is usable, the
-> > > endpoint may generate a PME, which is then handled by the PCI core through
-> > > PME polling or the PCIe PME service driver to complete the wakeup of the
-> > > endpoint.
-> > > 
-> > > WAKE# is added in dts schema and merged based on below links.
-> > > 
-> > > Link: https://lore.kernel.org/all/20250515090517.3506772-1-krishna.chundru@oss.qualcomm.com/
-> > > Link: https://github.com/devicetree-org/dt-schema/pull/170
-> > > Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-> > No. Linus never gave this tag for *this* patch.
-> Linus gave this on v5 [1], might be a overlook.
-> 
-> [1] Re: [PATCH v5 2/2] PCI: Add support for PCIe WAKE# interrupt - Linus
-> Walleij <https://lore.kernel.org/all/CACRpkdY9HsnG=xo=swnMcVha+unmvmxR6e6Ynsj09srM_tPmWA@mail.gmail.com/>
-> 
+On Mon, Mar 16, 2026 at 03:51:55PM +0000, Caleb James DeLisle wrote:
+>  
+>          mediatek,pbus-csr: false
+>  
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            const: econet,en7528-pcie
+> +    then:
+> +      properties:
+> +        clocks:
+> +          maxItems: 1
+> +
+> +        clock-names:
+> +          maxItems: 1
+> +
+> +        reset: false
+> +
+> +        reset-names: false
+> +
+> +        power-domain: false
 
-Oh yes. I didn't check it properly. Please ignore my comment.
+Wrong property.
 
-- Mani
+> +
+> +        mediatek,pbus-csr: false
+> +
+> +      required:
+> +        - phys
+> +        - phy-names
+> +
+>  unevaluatedProperties: false
+>  
+>  examples:
+> @@ -436,3 +462,59 @@ examples:
+>              };
+>          };
+>      };
+> +
+> +  # EN7528
+> +  - |
+> +    #include <dt-bindings/interrupt-controller/mips-gic.h>
+> +    #include <dt-bindings/clock/en7523-clk.h>
+> +    #include <dt-bindings/reset/airoha,en7523-reset.h>
+> +
+> +    soc_3 {
 
--- 
-மணிவண்ணன் சதாசிவம்
+soc
+
+Underscores are not allowed, but honestly neither soc node is needed nor
+the example. There are already 3 examples, it's enough, especially that
+there are no new properties here.
+
+
+> +        #address-cells = <1>;
+> +        #size-cells = <1>;
+> +
+> +        pcie@1fb81000 {
+> +          compatible = "econet,en7528-pcie";
+> +          device_type = "pci";
+> +          linux,pci-domain = <0>;
+> +          #address-cells = <3>;
+> +          #size-cells = <2>;
+> +
+> +          reg = <0x1fb81000 0x1000>;
+> +          reg-names = "port0";
+> +
+> +          clocks = <&scuclk EN7523_CLK_PCIE>;
+> +          clock-names = "sys_ck0";
+> +
+> +          phys = <&pcie_phy0>;
+> +          phy-names = "pcie-phy0";
+> +
+> +          ranges = <0x01000000 0 0x00000000 0x1f600000 0 0x00010000>,
+> +                   <0x82000000 0 0x20000000 0x20000000 0 0x08000000>;
+> +
+> +          interrupt-parent = <&intc>;
+> +          interrupts = <23>;
+> +          interrupt-names = "pcie_irq";
+> +          bus-range = <0x00 0xff>;
+> +          #interrupt-cells = <1>;
+> +          interrupt-map-mask = <0 0 0 7>;
+> +          interrupt-map = <0 0 0 1 &pcie_intc 0>,
+> +              <0 0 0 2 &pcie_intc 1>,
+> +              <0 0 0 3 &pcie_intc 2>,
+> +              <0 0 0 4 &pcie_intc 3>;
+> +
+> +          pcie_intc: interrupt-controller {
+> +            interrupt-controller;
+> +            #address-cells = <0>;
+> +            #interrupt-cells = <1>;
+> +          };
+> +
+> +          slot0: pcie@0,0 {
+> +            device_type = "pci";
+> +            reg = <0x0000 0 0 0 0>;
+> +            #address-cells = <3>;
+> +            #size-cells = <2>;
+> +            ranges;
+> +          };
+> +        };
+> +    };
+> -- 
+> 2.39.5
+> 
