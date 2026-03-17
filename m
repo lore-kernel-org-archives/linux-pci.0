@@ -1,114 +1,137 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012061.outbound.protection.outlook.com [52.101.48.61])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00BA133067A;
-	Tue, 17 Mar 2026 11:47:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773748075; cv=none; b=IpzIUAzjz7AaJIGT9QieFZZDM27rKRAK/YpXzoaEk+iDPtrcPP3RBvbG4Wjg34Dbfk3p/IA96dHY+sImmXQY1keRND8FbnDjeJ9DyECWmXvNFwJMpfYEpwmeRWrCGizSKSVIYzqacBQKFX9chPz2lJOEzlYzxL/C+k9QDV82ACU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773748075; c=relaxed/simple;
-	bh=JdQasyzbMwQG4UJ6BxEFeSmYOOI5nM9Nngo91aNREe4=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=hOby9TVlMI3y/K8F/89/BDLsbw2xNjUgPgpjPmrk2WKYEw1WPRPI7/CcYmWa06MKlglG2wU/TFIfGZ6H8jIEHbK4IjMicYa5y4r8MVdix61uQhAIsDSn2lKpqhU6M6oCLLYZkapzeeGoNqbbZHjWHNorNKsPx5+QISz1fZNihaU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aJUpCofq; arc=none smtp.client-ip=192.198.163.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E4683AE1A0;
+	Tue, 17 Mar 2026 12:21:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.61
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773750103; cv=fail; b=oW6xxNAc7Wb8hRVjwO7j/6jTN3db1GrE2ULmu9InTkAWX7h9z7FCXINabxHrKDJlKSVSEgXJ97jHoeEthLCCHQrCJRSwPW9bXWQ0mPnQjdJCQhzn9Tak/bzM4oPlr+FX/S2N6YipI96jitrvE70ZY+H79XFc7+NjllpFp6U2qTQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773750103; c=relaxed/simple;
+	bh=AuCUE/15uADoSCaJGN/wU3X7Hk9wMJtRjHRJQMgZFbA=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hBIh36XVEXyksaQxlxBUO9Q75b1HNr7vouDzxh1w4UKUaftRTlL3x2A6VyVQnMX5084DvrqmLbKqySBY/kfIzr8apjW+01BwhPgJnoT1bP731r0oAq1JMRzl7o+pbhuu3d5A1IQHBKJf5hjDq7b5M8pV5pRYE6l+VU23jUJK54c=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=26tTFzcf; arc=fail smtp.client-ip=52.101.48.61
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aJUpCofq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773748074; x=1805284074;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version:content-id;
-  bh=JdQasyzbMwQG4UJ6BxEFeSmYOOI5nM9Nngo91aNREe4=;
-  b=aJUpCofqHY+HWqwh996zR8i7kSfnrK6G/UaywDrtiISkgejpu5YN/B9u
-   yxAjIvpJro1Y/zj1jChWV/pIDFiUZXhMOUly6uV35vz5ALCrasVYgLH2P
-   M9Xrt5ZD6Hbx4km5q+4WF+LQqfO9GH364Llaq35U5oQWXPwqssh5A8d+a
-   X3jvQiiOOeQ/bs5uqYGtmslvalnHnxB33l0rx25knds1hpNJ94+17IWGr
-   xQJg37yoa00DB1x2pcJ3jIE8yjCWOuYwiUjIkYvmqbac4Kqv2xN9ZrHPv
-   dc4qXV/fTFdRBB9sLto4HhMnBNbxi1r6ZSleyloq2+urEABqFKcl469Oj
-   g==;
-X-CSE-ConnectionGUID: 1kVz/8rVRH+4sKLo7W6+cw==
-X-CSE-MsgGUID: VhxcF7yxSNqXqGpwKXo5OA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11731"; a="74894413"
-X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
-   d="scan'208";a="74894413"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2026 04:47:53 -0700
-X-CSE-ConnectionGUID: xoXiTkqNTdiMkqPkFoJ4kQ==
-X-CSE-MsgGUID: JCFW171WTKSqFvCJxs7QSQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,124,1770624000"; 
-   d="scan'208";a="227217242"
-Received: from egrumbac-mobl6.ger.corp.intel.com (HELO localhost) ([10.245.245.161])
-  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2026 04:47:51 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Tue, 17 Mar 2026 13:47:46 +0200 (EET)
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: =?ISO-8859-2?Q?Micha=B3_Pecio?= <michal.pecio@gmail.com>, 
-    linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, 
-    LKML <linux-kernel@vger.kernel.org>, regressions@lists.linux.dev
-Subject: Re: [REGRESSION 6.14] Some PCI device BARs inacessible
-In-Reply-To: <20260316201651.GA23314@bhelgaas>
-Message-ID: <12da4009-3f6e-3fea-8d21-f8c9d66f7102@linux.intel.com>
-References: <20260316201651.GA23314@bhelgaas>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="26tTFzcf"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=kbRr3Gvr01QrQuRZCL9x7JXYhFL7Bbfn2GMEtjS8RjOffnoQRvhlDb54utdUDRJSO/AbCUvGkd6PQY/MkiXbsNmXZ1wQUsMjTx0UTEPbCNZ+CTnSZf6g7psrKcGj38F5HbSkyefOqxg07yYWUsMwu7hSiTP3JiZLd26KLoFmEcAxOnoL5Le2OzqcEFi8Cek5L/jqLoxpIJ903nOQ7/npvu3s29XJCaVKDIXdXFv2iO82SXzo4hKUL3t6JL3huYjurcJNDR8RmwMs+cyas91v8iuKNyWZeOthOkg0GgBxJldsvWFBqL0bb8mpUbdEBhidAd6RUGcPFaB3ws+KVK2ifQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=DlTazOwjVb+ojB+pLrAYtyPxcvaEgPH+S/kJyPYKgkA=;
+ b=xjtd/sQNgURNdTlpG2Ow5Fztx78Ypc/DPX5cTFQxoc+1uOKHXN1QGoeKqUu7q+o/AO2UClskp4SGhiNusKJ8VWKM4AmI9L+x0oYFLSgEFbidUz3YxbovedG0SiOUhpJF/SxQKh95Yo7LElFsdRBZ8iSNIWVhh0zaaDpX7E/Y7iBA83bE71CMlFhN210QILoCMnWEVBHO10AFF867jc3TzJq40f98gquT+uy1xlelpsRcsjOlluYLS/dzhQezBHKSmXE4o+JX/a9mZBOXnPU7Zdp6H71HhPfwicC6cEo/JI140tJeZlSn7KqWvcpW9/yP1ErxD1ZIBzsMjP3cylQbPg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DlTazOwjVb+ojB+pLrAYtyPxcvaEgPH+S/kJyPYKgkA=;
+ b=26tTFzcf6dlkKEcVrgZcnP7pXLi4Ud9/KYcUS44BOHTMctwuT9u92vbbTpyn5BgMPwCIgQFaaMbhzmH5vKcOrdVV9UW1WTYW9gL9psLU7MxwPwyT9VDiHRgV5QaWqIBheXjnOy7QdnzaIU13euyAaEvrGN7+E25/nWJn3q+VhNs=
+Received: from BL1PR13CA0115.namprd13.prod.outlook.com (2603:10b6:208:2b9::30)
+ by SA0PR12MB4416.namprd12.prod.outlook.com (2603:10b6:806:99::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Tue, 17 Mar
+ 2026 12:21:39 +0000
+Received: from MN1PEPF0000F0E0.namprd04.prod.outlook.com
+ (2603:10b6:208:2b9:cafe::86) by BL1PR13CA0115.outlook.office365.com
+ (2603:10b6:208:2b9::30) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9723.19 via Frontend Transport; Tue,
+ 17 Mar 2026 12:21:39 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
+Received: from satlexmb07.amd.com (165.204.84.17) by
+ MN1PEPF0000F0E0.mail.protection.outlook.com (10.167.242.38) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9700.17 via Frontend Transport; Tue, 17 Mar 2026 12:21:39 +0000
+Received: from satlexmb08.amd.com (10.181.42.217) by satlexmb07.amd.com
+ (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Tue, 17 Mar
+ 2026 07:21:38 -0500
+Received: from xhdapps-pcie2.xilinx.com (10.180.168.240) by satlexmb08.amd.com
+ (10.181.42.217) with Microsoft SMTP Server id 15.2.2562.17 via Frontend
+ Transport; Tue, 17 Mar 2026 07:21:36 -0500
+From: Devendra K Verma <devendra.verma@amd.com>
+To: <bhelgaas@google.com>, <mani@kernel.org>, <vkoul@kernel.org>
+CC: <dmaengine@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <michal.simek@amd.com>,
+	<Devendra.Verma@amd.com>
+Subject: [PATCH v14 0/2]  Add AMD MDB Endpoint and non-LL mode Support
+Date: Tue, 17 Mar 2026 17:51:33 +0530
+Message-ID: <20260317122135.130474-1-devendra.verma@amd.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323328-1619845209-1773747867=:968"
-Content-ID: <74457b6c-5b44-7f35-8488-74f2c85f7fe9@linux.intel.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MN1PEPF0000F0E0:EE_|SA0PR12MB4416:EE_
+X-MS-Office365-Filtering-Correlation-Id: 46eb66aa-86a5-412a-a962-08de841fbd9b
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|376014|1800799024|36860700016|18002099003|56012099003;
+X-Microsoft-Antispam-Message-Info:
+	B82n0SYDaSlmxVQiwK4gPAhOfTHC7mId+ydu5KfI4t0ZsqO37JgwWh+nyvMmv1PksJDhMmb7WQXiDBdEBZM6Z24We5qLZUxw3n40a75TmgmRH7xpBsJAoQKUQKMjsq2GTAT1HQT9NdVyqKOnEShG4A479r1VrOnLoBHu2xl/lyFpXUjx0+w9jPhAO8ZYKggj4dmO/hadZz7SJ+aheizUcArUwI2AQNPwxsqDRZUxOOS+E0CDHNMoqV1scTLzZgnS8isugtFJTkZoc7nQMD41+SrvzZEhRbcSqRPUl0h9ghwj4O8fdvEIoriK0LreDURbQo+cjTdg5fuxZ97VJLfhLnnmhsLJ1dPU0xStlPTN+m8D+vHJhy7OcLQ7edSAuXuDxEYxU5YLYKaD4l/FHIw+t6Yy6FEHCaRqDwdRIYULcUmzYBSmZgF9CyW5iEi5AEHdIUASeVxPXGi4K2I5UCqK/HWvmpjWQAOPcDQBRnItiwEeyv8bHr/2Nn1xCtjJM1kW8SJ7xmdZ2OwtkHFSM4egVadwBe2Js3YnNnOQvJKZHMBF0RCF4xvEyvZvW/JB4mesOSwY1KcKIDpiBLg2nrsY/mlvxtGgD0FrirZ3VlfleJDlPzp1hXO5nw39Wz/Bqu6GZLhc/lcJkeJjT5yNR0E2YTnzBZoYrRj+uD2mAeyjDzRWHVEuYovhem2C7b2rRPilYpIsfuoYUc4ClmS7FmmvmSGqtDw2Ens0sbB0CyLP/5TD8imObvry9CqLMLo1JlDPnTasKCy2C47/HtwUwhhExQ==
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(376014)(1800799024)(36860700016)(18002099003)(56012099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	/8TynYKyG09uUcD6WgynYH4FNkGWG4QNzsmFsaq63FYA6lz+okvxa7rWUc97jZg7pkp3fCXseXwncIfXC9rkzuibRjqpuQcQiw1azdCl5ZZwa2YgiapWxlMJbazAzSM/sKSG9eX+PQTEC0z+j1+weYTIKso6TKeV8sWPBJ19MRjtBPFXkS5w0gTnxZY88rxNUEVozvQbBz9OSnnnNvY2RJXZZJGoe+kgcvtiAfrm9rHNF2BGnWGCdyCopFwqN41rJ7GP+YJFrZmldwWTIy61FExBFmipp5C/UVBIZQ51LBdimoXygR3SDhP3Vay3BmYmoW6B94y7rZOvH0SxPaLWfd3WUIovcUwVdLMs8R5Rm8+m+tFxVn/y8Jzv+qRKYgdYIg36hKH0TKc6wzkmjLgjObsRn8YBra5/ISwRiQCMQBLmIEKFY/dincq/DYYwTkAO
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Mar 2026 12:21:39.2707
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 46eb66aa-86a5-412a-a962-08de841fbd9b
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	MN1PEPF0000F0E0.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4416
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+This series of patch support the following:
 
---8323328-1619845209-1773747867=:968
-Content-Type: text/plain; CHARSET=ISO-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-ID: <5749c0c7-bac2-95bc-1be3-cdfecc78e941@linux.intel.com>
+ - AMD MDB Endpoint Support, as part of this patch following are
+   added:
+   o AMD supported device ID and vendor ID (Xilinx)
+   o AMD MDB specific driver data
+   o AMD specific VSEC capabilities to retrieve the base of
+     phys address of MDB side DDR
+   o Logic to assign the offsets to LL and data blocks if
+     more number of channels are enabled than configured
+     in the given pci_data struct.
 
-On Mon, 16 Mar 2026, Bjorn Helgaas wrote:
+ - Addition of non-LL mode
+   o The IP supported non-LL mode functions
+   o Flexibility to choose non-LL mode via dma_slave_config
+     param peripheral_config, by the client for all the vendors
+     using HDMA IP.
+   o Allow IP utilization if LL mode is not available
 
-> [+cc Ilpo, +bcc bugzilla reporters and commenters]
->=20
-> On Fri, Apr 18, 2025 at 10:29:26AM +0200, Micha=B3 Pecio wrote:
-> > Hi,
-> >=20
-> > This is a heads up that an apparent PCI regression has been reported
-> > and mistakenly assigned to USB in the kernel bugzilla:
-> >=20
-> > https://bugzilla.kernel.org/show_bug.cgi?id=3D220016
-> >=20
-> > Visible symptom is missing USB devices, but the whole controller fails
-> > to probe, apparently due to devm_request_mem_region() returning NULL,
-> > see drivers/usb/core/hcd-pci.c and usb_hcd_pci_probe().
-> >=20
-> > Same systems also show a similar failure with some AHCI controller.
-> > It seems specific to particular ASUS AMD motherboards.
-> >=20
-> > Somebody found that disabling CONFIG_PCI_REALLOC_ENABLE_AUTO helps.
-> >=20
-> > That's all I know, reporters can be reached via bugzilla.
->=20
-> I see some activity in the bugzilla but no resolution.  Ilpo has done
-> a lot of work in this area since v6.14, though, so I wouldn't be
-> surprised at all if this has been fixed.=20
->=20
-> Would anybody be interested in testing v6.19 or v7.0-rc to see if this
-> problem still exists?
+Devendra K Verma (2):
+  dmaengine: dw-edma: Add AMD MDB Endpoint Support
+  dmaengine: dw-edma: Add non-LL mode
 
-My plan was to look at this ticket again anyway (or has been for like a=20
-few months now but there has been higher prio items get in the way of=20
-looking the ticket up).
+ drivers/dma/dw-edma/dw-edma-core.c    |  47 +++++-
+ drivers/dma/dw-edma/dw-edma-core.h    |   1 +
+ drivers/dma/dw-edma/dw-edma-pcie.c    | 220 +++++++++++++++++++++++---
+ drivers/dma/dw-edma/dw-hdma-v0-core.c |  64 +++++++-
+ drivers/dma/dw-edma/dw-hdma-v0-regs.h |   1 +
+ include/linux/dma/edma.h              |   1 +
+ 6 files changed, 312 insertions(+), 22 deletions(-)
 
-(It went to lower prio bin once it was determined it was not a real
-regression but fc enabling pci=3Drealloc. Despite that, I'd still want to=
-=20
-have it fixed eventually.)
+-- 
+2.43.0
 
---=20
- i.
---8323328-1619845209-1773747867=:968--
