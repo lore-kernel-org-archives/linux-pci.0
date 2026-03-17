@@ -1,51 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32BB635CB80;
-	Tue, 17 Mar 2026 09:58:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ED383A168C;
+	Tue, 17 Mar 2026 09:59:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773741508; cv=none; b=jd2ZcECJDggFC+EsjR3jRyP6RMUf8+DTQTonr2w51+nx7hl0BVrKfSAlu1WkQqUjgAdi3bEafYLOkbyZGjkfy49WSNyfAf3ll5nLJiZ+Vja7pfdVg0XiP9u4lvw8uWUZtDBheGTu2IHKlznjtVorK3TGGKTRt92qiDNtuHioDnw=
+	t=1773741579; cv=none; b=bVy9GHVT2ZRfdO8q8hVsS9CO2u3hc3esdVvOJegHc+yRYv9G7cSYeBQJaGtNNG65rHTRfWGMhK8cxrFe9gTGVXw4tgSuu3lG+pUwd9F8LgPk0Df6TDN6vO20P0ju4ZvrftgPpoRy2rYlPTJs4OjtKNUUwRjaA03QWBKoFqG3oPg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773741508; c=relaxed/simple;
-	bh=rchBqbaOIKv5oV3MU7BS8XXeDEb35evaTjYmNTF+LAw=;
+	s=arc-20240116; t=1773741579; c=relaxed/simple;
+	bh=gVUwUgBqDs6adPcRqB+ss86IvAQDohQ/29kumFGmKUA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qde0FLFMfKPWrODtoXlWeTp3nvg350i5jh4+n1qT+0Ma4zagmj+7K4xVPTIkfJCc5+1syseqxH+1S0YE9DKr2WV4y79fR+tcpSku1de/Omyi7Cz2pprSvS1uYr2tGSwtQPyBG7RCMHFt4E7hodY7yI8k0qFVGyijOvHhldrDNFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JGrHGe6v; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=IBZbSkpk1/LWwP7y1WezW0+aU5tDAr8AYmujt0Fxmr1rOpX10l0j7mct5u4n1julj//kDyVQ9OKFPHxjufrRMga2BIWJM0HyZTd5oeO1ZV30oH8IxWt4mwRnC8GzqJS2taaRNeqgiWedBnXMer441kXjQhUMSETx0M8Q2W3nEQM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P6XoaJXT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JGrHGe6v"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FA2CC4CEF7;
-	Tue, 17 Mar 2026 09:58:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P6XoaJXT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91B43C4CEF7;
+	Tue, 17 Mar 2026 09:59:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773741507;
-	bh=rchBqbaOIKv5oV3MU7BS8XXeDEb35evaTjYmNTF+LAw=;
+	s=k20201202; t=1773741578;
+	bh=gVUwUgBqDs6adPcRqB+ss86IvAQDohQ/29kumFGmKUA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JGrHGe6vr+idGi9l2EdsRoQIuTJraMun6x4OV1mBRtJvS7IRHJruIFnlbvYi1W9Eq
-	 ShdbAcxJFz5NHFUVm24V3XhElGwxX7FHWFpZGkzSpnZjApCqpB6sMyFEYziS6LhWX0
-	 zPIcnEOtsUpSteOlR42LG2yUzfpr1vlW64ejsFBWUP62w37NmhJQMlCkOdBWmCaFM7
-	 QFlKgGbfnSN88kzLQvm4zOzTRDktnLzsIw3HKphdHhhkJDOpvECboVDbqT9Pm3fxq/
-	 i9QTgd8ldobadY/7S1GKB7VHqPFG/yRW/N6DA9z2xOBB8pFzPhxXYO/0y4IV8Bu+4w
-	 I+TUEORAaE/wQ==
-Date: Tue, 17 Mar 2026 15:28:18 +0530
+	b=P6XoaJXT6UN5YwIsmpVZGaZKYDrtkqmAubqEYoIJZSkn3LaFh/4pEHLFvDC0OINP/
+	 2nvB4aFMRUkDyRIP9fubtoNtBfOiyAWK4GSE0f13cD3qlu9y8ANDVeZSeKO2TdSdgo
+	 dk89o+hgQRC3b0fNfaFTzEMOd3WU/5tQ/SKSMWiTbcGv1kvFxXpD4ckVJrI0ErBUgt
+	 MVDOq3n9u36kJk3vT79gbCfv5vx5Zt6Xye/X+bjyfZ9DU4kXL2sltMqBmJgFC2ASub
+	 +Eqw4xPjBPPVBVvCGLa0W3Z28YMZouGClvXkRuE7KDbieh1UiYj6inJWtHlzwgV0z7
+	 J5HxwR4+9MgOQ==
+Date: Tue, 17 Mar 2026 15:29:30 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Sherry Sun <sherry.sun@nxp.com>
-Cc: Hongxing Zhu <hongxing.zhu@nxp.com>, 
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, Frank Li <frank.li@nxp.com>, 
-	"bhelgaas@google.com" <bhelgaas@google.com>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>, 
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "robh@kernel.org" <robh@kernel.org>, 
-	"krzk+dt@kernel.org" <krzk+dt@kernel.org>, "conor+dt@kernel.org" <conor+dt@kernel.org>, 
-	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "festevam@gmail.com" <festevam@gmail.com>, 
-	"imx@lists.linux.dev" <imx@lists.linux.dev>, "kernel@pengutronix.de" <kernel@pengutronix.de>, 
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V8 03/13] PCI: dwc: Parse Root Port nodes in
- dw_pcie_host_init()
-Message-ID: <dcl3bdljrdzgeaybrg3dc5uaxkebkjns7pajix6mxxftao5g4m@vm3ywyyp4ujh>
-References: <20260313020823.1592389-1-sherry.sun@nxp.com>
- <20260313020823.1592389-4-sherry.sun@nxp.com>
- <ay67y5hr7sn5zzugb4swkujao3bvz3puaee4bc6qqr67eyk74t@equoecxosaen>
- <VI0PR04MB12114EC2939CCC6D0696685B49241A@VI0PR04MB12114.eurprd04.prod.outlook.com>
+To: Christian Bruel <christian.bruel@foss.st.com>
+Cc: Koichiro Den <den@valinux.co.jp>, Niklas Cassel <cassel@kernel.org>, 
+	Bjorn Helgaas <helgaas@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Kishon Vijay Abraham I <kishon@kernel.org>, Frank Li <Frank.Li@nxp.com>, Kees Cook <kees@kernel.org>, 
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+	Bhanu Seshu Kumar Valluri <bhanuseshukumar@gmail.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: endpoint: pci-epf-test: Roll back BAR mapping when
+ subrange setup fails
+Message-ID: <rkjsd37e7nmtx3qgwjbostbabknrjtw5cc2pnmzjnwaycw57vp@l3rasonrifwv>
+References: <20260316140225.1481658-1-den@valinux.co.jp>
+ <abgtiT6aI9GMEADH@ryzen>
+ <ff6spcf62gmjt7cbs3ndvqhzslmzdbyjmcbo2gj554lakcxgwd@7ri7ypxcqfj5>
+ <017a4294-a5c0-4cea-a3d5-b95f8bf0d1bb@foss.st.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -55,67 +50,74 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <VI0PR04MB12114EC2939CCC6D0696685B49241A@VI0PR04MB12114.eurprd04.prod.outlook.com>
+In-Reply-To: <017a4294-a5c0-4cea-a3d5-b95f8bf0d1bb@foss.st.com>
 
-On Tue, Mar 17, 2026 at 09:04:51AM +0000, Sherry Sun wrote:
-> > Subject: Re: [PATCH V8 03/13] PCI: dwc: Parse Root Port nodes in
-> > dw_pcie_host_init()
+On Tue, Mar 17, 2026 at 10:13:52AM +0100, Christian Bruel wrote:
+> 
+> 
+> On 3/17/26 03:57, Koichiro Den wrote:
+> > On Mon, Mar 16, 2026 at 05:19:26PM +0100, Niklas Cassel wrote:
+> > > On Mon, Mar 16, 2026 at 11:02:25PM +0900, Koichiro Den wrote:
+> > > > When the BAR subrange mapping test on DWC-based platforms fails due to
+> > > > insufficient free inbound iATU regions,
+> > > > pci_epf_test_bar_subrange_setup() returns an error (-ENOSPC) but does
+> > > > not restore the original BAR mapping. This causes subsequent test runs
+> > > > to become confusing, since the failure may leave room for the next
+> > > > subrange mapping test to pass.
+> > > > 
+> > > > Fix this by restoring the original BAR mapping when preparation of the
+> > > > subrange mapping fails, so that no side effect remains regardless of the
+> > > > test success or failure.
+> > > > 
+> > > > Fixes: 6c5e6101423b ("PCI: endpoint: pci-epf-test: Add BAR subrange mapping test support")
+> > > > Reported-by: Christian Bruel <christian.bruel@foss.st.com>
+> > > > Closes: https://lore.kernel.org/linux-pci/b2b03ebe-9482-4a13-b22f-7b44da096eed@foss.st.com/
+> > > > Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> > > > ---
+> > > >   drivers/pci/endpoint/functions/pci-epf-test.c | 6 ++++++
+> > > >   1 file changed, 6 insertions(+)
+> > > > 
+> > > > diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > > > index 14e61ebe1f11..f44c36f5cac5 100644
+> > > > --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> > > > +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > > > @@ -898,16 +898,22 @@ static void pci_epf_test_bar_subrange_setup(struct pci_epf_test *epf_test,
+> > > >   	bar->submap = submap;
+> > > >   	bar->num_submap = nsub;
+> > > >   	ret = pci_epc_set_bar(epc, epf->func_no, epf->vfunc_no, bar);
+> > > >   	if (ret) {
+> > > >   		dev_err(&epf->dev, "pci_epc_set_bar() failed: %d\n", ret);
+> > > >   		bar->submap = old_submap;
+> > > >   		bar->num_submap = old_nsub;
+> > > > +		ret = pci_epc_set_bar(epc, epf->func_no, epf->vfunc_no, bar);
+> > > > +		if (ret)
+> > > > +			dev_warn(&epf->dev,
+> > > > +				 "failed to restore the original BAR mapping: %d\n",
+> > > 
+> > > Nit:
+> > > I would use a capitalized F:
+> > > "Failed to restore ..."
+> > > 
+> > > in order to match most other prints in this file.
 > > 
-> > On Fri, Mar 13, 2026 at 10:08:13AM +0800, Sherry Sun wrote:
-> > > Add support for parsing Root Port child nodes in dw_pcie_host_init()
-> > > using pci_host_common_parse_ports(). This allows DWC-based drivers to
-> > > specify Root Port properties (like reset GPIOs) in individual Root
-> > > Port nodes rather than in the host bridge node.
-> > >
-> > > Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
-> > > ---
-> > >  drivers/pci/controller/dwc/pcie-designware-host.c | 8 ++++++++
-> > >  1 file changed, 8 insertions(+)
-> > >
-> > > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c
-> > > b/drivers/pci/controller/dwc/pcie-designware-host.c
-> > > index a74339982c24..9608f9fcd1b3 100644
-> > > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> > > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> > > @@ -20,6 +20,7 @@
-> > >  #include <linux/platform_device.h>
-> > >
-> > >  #include "../../pci.h"
-> > > +#include "../pci-host-common.h"
-> > >  #include "pcie-designware.h"
-> > >
-> > >  static struct pci_ops dw_pcie_ops;
-> > > @@ -581,6 +582,13 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
-> > >
-> > >  	pp->bridge = bridge;
-> > >
-> > > +	/* Parse Root Port nodes if present */
-> > > +	ret = pci_host_common_parse_ports(dev, bridge);
-> > > +	if (ret && ret != -ENOENT) {
+> > Agree. Bjorn or Mani, please feel free to fix this up (i.e. s/failed/Failed/)
+> > when applying, to avoid a respin for such a minor change.
 > > 
-> > Is there an incentive in the -ENOENT error code? Should the API just return 0
-> > if no ports are found?
+> > > 
+> > > Reviewed-by: Niklas Cassel <cassel@kernel.org>
 > > 
+> > Thanks again for reviewing, Niklas.
+> > 
+> > Christian, if possible, it would be very helpful if you could take a look or
+> > test this slightly polished version and add a Tested-by or Reviewed-by.
 > 
-> Hi Mani,
+> Tested-by: Christian Bruel <christian.bruel@foss.st.com>
 > 
-> Since devm_fwnode_gpiod_get() is called within pci_host_common_parse_ports(),
-> devm_fwnode_gpiod_get() will return -ENOENT if no GPIO found. That means we
-> need to check and handle the -ENOENT error anyway, we can either handle it internally
-> in pci_host_common_parse_ports() or in the upper caller. 
-> 
-> If we hide -ENOENT inside pci_host_common_parse_ports() and always return 0, we
-> lose this distinction, the caller can no longer tell the difference between "not found" and
-> "found and parsed successfully". This might be useful that different callers might want to
-> handle differently.
-> 
-> The current pattern is also consistent with some other optional resource APIs in the
-> kernel (e.g., devm_regulator_get_optional()), where -ENOENT is returned and the caller
-> decides how to handle it.
+> with the DISABLE BAR dependency
+> https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=endpoint&id=33642e9e36dc084e4fc9245a266c9843bc8303b9
 > 
 
-Sure. But since the current callers are not making use of it, I thought of just
-returning 0. It fine with me to leave it as is.
+Why is this dependency?
 
 - Mani
 
