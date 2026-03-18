@@ -1,154 +1,222 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B45F2D63E8;
-	Wed, 18 Mar 2026 17:17:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 310AD2D8768
+	for <linux-pci@vger.kernel.org>; Wed, 18 Mar 2026 17:19:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773854247; cv=none; b=kpBST7KGfpUWCc+RgTgq7r2n1l64cMdVfdC6Dv5MnLnhVIYeLa0nmrqIezWzR7QhnPMbDfmBXzcVnJtIIpD0vUBtBeMbZ4kO+AerD7uGMidSh1UTpKDy/qotIEP5Rx7zQkkCvH6PHpHAgMyZrPr/TmGycSsWGw1HN32XxORYjwM=
+	t=1773854368; cv=none; b=tRVuQvUg5GPPQAwZj/LEbmH181p6J0IUEgoeiAWZlqzPOVvoVwqa31weydEskhCmah2wEz+DlvJKupky4BoFh21BNSKkhx2+zisIhqzbB1tn1xvNQEW325MNKPN52npL5leaG/SgoTT1dm62WgvNDFEyiBohooVsY5EHJ7zXMMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773854247; c=relaxed/simple;
-	bh=HUY2/4gRri/fQKhRFzorL7GriVv5EjbW739jiuuwp0U=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=mhpXyNRN5OAYmNkPZFwPSx7f5k+WyG1HxZyVyDUL7L2nxRs08yRfz5pKjEz3N7bs+XW5VPbVhsqQ4YU/G+fVp0IwAAUi94YHtMVBi+ceKBzisCTTh2S1zPh0LPO/na3G/pf2+0w20FTNhcugUpGmFF3naXJjpMlbNzzBfN5EYIQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q/ojEgzR; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773854368; c=relaxed/simple;
+	bh=MG3X2ZEDWTa8Pq/FDrZr++pCLMneFSRczgraMiw8aa8=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=epS0sDBmdWfpIJrrzG49fk2ELOXKwvJuWNpRmInPtc3iiayb55IAr6FQ5hvRcAUQKtDpSDEz+I6W8vdbHSjpwcIgZqVwdgzFMnOy19fJjaicd8w0E3MgP4DqHYXjvueSTxsBupOyEJIL/Zz8PQ8NXqkJqjCSIg+ykNqX3ghO3Po=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Q7ShYkTh; arc=none smtp.client-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q/ojEgzR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FA09C2BC87;
-	Wed, 18 Mar 2026 17:17:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773854246;
-	bh=HUY2/4gRri/fQKhRFzorL7GriVv5EjbW739jiuuwp0U=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=q/ojEgzRMGqWsFJMKjs4TmIgH82cHym+DiGxaj2RijNg+xIYF7bCvrIFR7o5zQU18
-	 ife29DKfY0KKotPYZdhQNXoj4YEO8g53meoDP3Ti+C8V2BG4mAsFPF8/GUYQe+MlWr
-	 LW/4zb2WyOzJZT6xhQFbVOPzOV7BeW7FeHJq9g2qPi/rphmyhfUMcjNHEUzqiS633p
-	 5JPO8CgAVucJCSclLy9fVmbGHn0hfkfHLlLyoJb8xVbqtPKfS/7gIHZ8gtUWo2Mzvh
-	 W3bS516UnGNCW+VzsLi9Qfg8/0xLvyJVc9Ff6nEY3expCSodivO3kqLKv0371Tt9Xh
-	 VmwFlxz+YOYNg==
-Date: Wed, 18 Mar 2026 12:17:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Neil Armstrong <neil.armstrong@linaro.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Bartosz Golaszewski <brgl@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	linux-usb@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
-	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-	KancyJoe <kancy2333@outlook.com>
-Subject: Re: [PATCH v5 0/9] arm64: dts: qcom: Add support for the Ayaneo
- Pocket S2
-Message-ID: <20260318171725.GA51567@bhelgaas>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Q7ShYkTh"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-485409ab264so127765e9.1
+        for <linux-pci@vger.kernel.org>; Wed, 18 Mar 2026 10:19:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1773854365; x=1774459165; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=fnOtvOn7pZpUz2FQiTPP/64haRLflpFLildzQHxvHt4=;
+        b=Q7ShYkThXM89J2i0NHB8pdky5ZMaFJSbvLaEGCbtqVoKwEaszOvzhcShaN6R6sCMdK
+         GcJijpudrtou7AVWUWeZQbEFNVuHiNwtlS+sH3PnxW6uSQWBM70vOL0utG1N0AKfnMUl
+         F+G4WgIjLHrKKhS1hOxz4QrkIWGUGaD5IdABonXueoUD1Ps6c5WZ8Kdym4UoUF1pr8EC
+         juY6B2lt6syghbPE43o0KXguC/Ukx268l41TXk1276j4Qrg+I9SKbW3f3SL5eM395tsW
+         fiFN8oSUQsZ+3u0VBKZE3LSFYEdzl22XLFX/+dYjWH8agVUXVw9K9vFYdilVaFr+2HIe
+         8skg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773854365; x=1774459165;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=fnOtvOn7pZpUz2FQiTPP/64haRLflpFLildzQHxvHt4=;
+        b=hW+R+SuvGDZWiatY/PjDZ+gDUR9jJSHnJUsKl9uvF9a2/eABJz6icHWjfqmdzsNyLQ
+         5c7XAGH+fo2iR6p+9364DM/IJ53DpbuoSfWhwKvd/5Cr81L9Co0yPpdS0oJhYKkIucoT
+         KCwPWwjdTxfi+Edy23NqMkV3TqBVrmhRElj3+Cmb9mIZFGnaU83Rf8ZNJVAs65cpZF4t
+         /9R0dKW4gdyhLKrjAQp5wSenJ09fbg5C7fS//CgMndP4aszH5hCDesOyUV561MlB2uzs
+         7QYEoFYi9SEm2SR5B3hmf+Ip9vKUImwZXOn/tTo2TY7ipCSTbdk2Tc2Sz2i0pr/wYesx
+         joXg==
+X-Forwarded-Encrypted: i=1; AJvYcCW6/5ymtDHQKIGw+HFZciZF8LShVlzu6sh04SK0IksDqjjx+vVZUA+nC+RhiGvFJRwCpe2PO2CZ68I=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwE0GdgN/t0Cbj5t7YBAxDoiUpEghCj0sN/Du7onyY80VHeYqO+
+	nRpmt3WAcj161kJIxldbzKyvClMmPxmUWWBr/0l4CRuvNzTPqVwAOgiYxB8bjk4O1y8=
+X-Gm-Gg: ATEYQzyPD/NlXWgQ6pGgPFrvhl4ub7/ISz6mH+JPQzNxOKZZE2dNBdJyf9RLOvLFUa9
+	TQCBqxog9OLjBe9HKHT+LhnvPWnaC4km0iF5siCXmCmziRgqnVipmfpaM10aJTRi4B3/rxs5HEz
+	e/6RCCDFP7aupMiWYNLGgTHSeZbb3qvLlQ4docQmS5JmbLPJ+LLDSWtsWzgPSRFLPc6o2AjUZe6
+	aMwEBlaNgkNQHgZNoIyMYIkLS/sbzp8SfcWrzRLr4fRyPiKT2a6VmGdOg+MntjlSBGHHnsCXEfQ
+	aiwiBaAQ97VH1QV444FHhZIjIFAe1wTSdBr+Gd58J+f3P2KgAooy2/KCwYzd8eWB74mWjatX0JN
+	Yu1srTDvwiAVxVUzbNYn4UWI78dFBcMYTwsAqZlFm+OAoC1xgUu2BXGvqBDRBqWt+FuiyCvc4T/
+	MfwNFnNBtRXc44C/2np3bvB3xS2jw3LG62TsETqBMY3u7ywEGZvLPQ5GJiBNIrzi4ye3vSeRsWv
+	t6AyEE=
+X-Received: by 2002:a05:600c:c0c7:b0:485:526d:ea77 with SMTP id 5b1f17b1804b1-486f8b6cea2mr7358495e9.11.1773854365392;
+        Wed, 18 Mar 2026 10:19:25 -0700 (PDT)
+Received: from ?IPV6:2a01:e0a:106d:1080:ac75:790f:ef3c:2eb0? ([2a01:e0a:106d:1080:ac75:790f:ef3c:2eb0])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43b518922absm10076233f8f.18.2026.03.18.10.19.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 18 Mar 2026 10:19:25 -0700 (PDT)
+Message-ID: <1822b843-8fd7-4154-8f9b-0e38b13342c9@linaro.org>
+Date: Wed, 18 Mar 2026 18:19:23 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260220-topic-sm8650-ayaneo-pocket-s2-base-v5-0-1ad79caa1efa@linaro.org>
+User-Agent: Mozilla Thunderbird
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Reply-To: Neil Armstrong <neil.armstrong@linaro.org>
+Subject: Re: [PATCH v5 0/9] arm64: dts: qcom: Add support for the Ayaneo
+ Pocket S2
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Magnus Damm <magnus.damm@gmail.com>, Bartosz Golaszewski <brgl@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas
+ <bhelgaas@google.com>, Bjorn Andersson <andersson@kernel.org>,
+ Konrad Dybcio <konradybcio@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ linux-usb@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
+ Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+ Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+ KancyJoe <kancy2333@outlook.com>
+References: <20260318171725.GA51567@bhelgaas>
+Content-Language: en-US, fr
+Autocrypt: addr=neil.armstrong@linaro.org; keydata=
+ xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
+ GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
+ BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
+ qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
+ 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
+ AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
+ OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
+ Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
+ YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
+ GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
+ UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
+ GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
+ yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
+ QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
+ SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
+ 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
+ Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
+ oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
+ M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
+ 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
+ KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
+ 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
+ QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
+Organization: Linaro
+In-Reply-To: <20260318171725.GA51567@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, Feb 20, 2026 at 04:04:39PM +0100, Neil Armstrong wrote:
-> The Ayaneo Pocket S2 is a gaming console based on the Qualcomm
-> Snapdragon 8 Gen 3. It has an internal UFS storage, WiFi,
-> Bluetooth, gaming buttons, SDCard, 2K display and USB-C
-> connector.
+On 3/18/26 18:17, Bjorn Helgaas wrote:
+> On Fri, Feb 20, 2026 at 04:04:39PM +0100, Neil Armstrong wrote:
+>> The Ayaneo Pocket S2 is a gaming console based on the Qualcomm
+>> Snapdragon 8 Gen 3. It has an internal UFS storage, WiFi,
+>> Bluetooth, gaming buttons, SDCard, 2K display and USB-C
+>> connector.
+>>
+>> Product Page [1].
+>>
+>> The Initial linux port was done by KancyJoe (Sunflower2333)
+>> at [2].
+>>
+>> [1] https://www.ayaneo.com/goods/9344082149621
+>> [2] https://github.com/sunflower2333/linux/tree/master
+>>
+>> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+>> ---
+>> Changes in v5:
+>> - Rebased on -next
+>> - Collected tags
+>> - Rebased/renamed slot to generic based on changes from Bjorn
+>> - Link to v4: https://patch.msgid.link/20260216-topic-sm8650-ayaneo-pocket-s2-base-v4-0-802c82795431@linaro.org
+>>
+>> Changes in v4:
+>> - Renamed slot to generic, in the code as well, fixed Kconfig & commit message
+>> - Switched the UPD72020x bindings additionalProperties to true to allow devices subnodes
+>> - Collected acks
+>> - Link to v3: https://patch.msgid.link/20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-0-5b79c5d61a03@linaro.org
+>>
+>> Changes in v3:
+>> - Made renesas,upd720201-pci bindings supplies required
+>> - Fixed description and example of renesas,upd720201-pci bindings
+>> - Renamed slot to generic, added renesas,upd720201-pci entry
+>> - Used PMIC_GPIO_STRENGTH_LOW instead of numbers
+>> - Removed all output-low in pinconf
+>> - Link to v2: https://patch.msgid.link/20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-0-c55ec1b5d8bf@linaro.org
+>>
+>> Changes in v2:
+>> - Add proper regulators for the USB controller, with bindings & power ctrl
+>> - Add proper regulators for FAN
+>> - Dropped support for headset over USB-C, audio is connected to a jack port
+>> - Cleaned up Audio routing and fixed the DP endpoint index
+>> - Added i2c clk frequencies
+>> - Renamed fan node and used interrupts-extended
+>> - Dropped the usb-c self-powered
+>> - Reordered nodes alphabetically
+>> - Renamed pcieport1 to pcie1_port0
+>> - Link to v1: https://patch.msgid.link/20260121-topic-sm8650-ayaneo-pocket-s2-base-v1-0-bb3f95f1c085@linaro.org
+>>
+>> ---
+>> KancyJoe (1):
+>>        arm64: dts: qcom: add basic devicetree for Ayaneo Pocket S2 gaming console
+>>
+>> Neil Armstrong (8):
+>>        dt-bindings: usb: document the Renesas UPD720201/UPD720202 USB 3.0 xHCI Host Controller
+>>        pci: pwrctrl: slot: fix dev_err_probe() usage
+>>        pci: pwrctrl: rename pci-pwrctrl-slot as generic
+>>        pci: pwrctrl: generic: support for the UPD720201/UPD720202 USB 3.0 xHCI Host Controller
+>>        arm64: defconfig: enable pci-pwrctrl-generic as module
+>>        dt-binding: vendor-prefixes: document the Ayaneo brand
+>>        dt-bindings: arm: qcom: document the Ayaneo Pocket S2
+>>        arm64: dts: qcom: sm8650: Add sound DAI prefix for DP
 > 
-> Product Page [1].
+> I applied the drivers/pci/pwrctrl patches to pci/pwrctrl for v7.1,
+> thanks!
 > 
-> The Initial linux port was done by KancyJoe (Sunflower2333)
-> at [2].
-> 
-> [1] https://www.ayaneo.com/goods/9344082149621
-> [2] https://github.com/sunflower2333/linux/tree/master
-> 
-> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
-> ---
-> Changes in v5:
-> - Rebased on -next
-> - Collected tags
-> - Rebased/renamed slot to generic based on changes from Bjorn
-> - Link to v4: https://patch.msgid.link/20260216-topic-sm8650-ayaneo-pocket-s2-base-v4-0-802c82795431@linaro.org
-> 
-> Changes in v4:
-> - Renamed slot to generic, in the code as well, fixed Kconfig & commit message
-> - Switched the UPD72020x bindings additionalProperties to true to allow devices subnodes
-> - Collected acks
-> - Link to v3: https://patch.msgid.link/20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-0-5b79c5d61a03@linaro.org
-> 
-> Changes in v3:
-> - Made renesas,upd720201-pci bindings supplies required
-> - Fixed description and example of renesas,upd720201-pci bindings
-> - Renamed slot to generic, added renesas,upd720201-pci entry
-> - Used PMIC_GPIO_STRENGTH_LOW instead of numbers
-> - Removed all output-low in pinconf
-> - Link to v2: https://patch.msgid.link/20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-0-c55ec1b5d8bf@linaro.org
-> 
-> Changes in v2:
-> - Add proper regulators for the USB controller, with bindings & power ctrl
-> - Add proper regulators for FAN
-> - Dropped support for headset over USB-C, audio is connected to a jack port
-> - Cleaned up Audio routing and fixed the DP endpoint index
-> - Added i2c clk frequencies
-> - Renamed fan node and used interrupts-extended
-> - Dropped the usb-c self-powered
-> - Reordered nodes alphabetically
-> - Renamed pcieport1 to pcie1_port0
-> - Link to v1: https://patch.msgid.link/20260121-topic-sm8650-ayaneo-pocket-s2-base-v1-0-bb3f95f1c085@linaro.org
-> 
-> ---
-> KancyJoe (1):
->       arm64: dts: qcom: add basic devicetree for Ayaneo Pocket S2 gaming console
-> 
-> Neil Armstrong (8):
->       dt-bindings: usb: document the Renesas UPD720201/UPD720202 USB 3.0 xHCI Host Controller
->       pci: pwrctrl: slot: fix dev_err_probe() usage
->       pci: pwrctrl: rename pci-pwrctrl-slot as generic
->       pci: pwrctrl: generic: support for the UPD720201/UPD720202 USB 3.0 xHCI Host Controller
->       arm64: defconfig: enable pci-pwrctrl-generic as module
->       dt-binding: vendor-prefixes: document the Ayaneo brand
->       dt-bindings: arm: qcom: document the Ayaneo Pocket S2
->       arm64: dts: qcom: sm8650: Add sound DAI prefix for DP
+> I reordered the rename to be first (and used "git mv") and updated the
+> subject lines to match the history.
 
-I applied the drivers/pci/pwrctrl patches to pci/pwrctrl for v7.1,
-thanks!
+Thank you !
 
-I reordered the rename to be first (and used "git mv") and updated the
-subject lines to match the history.
+Neil
 
->  Documentation/devicetree/bindings/arm/qcom.yaml    |    1 +
->  .../bindings/usb/renesas,upd720201-pci.yaml        |   61 +
->  .../devicetree/bindings/vendor-prefixes.yaml       |    2 +
->  arch/arm64/boot/dts/qcom/Makefile                  |    1 +
->  .../boot/dts/qcom/sm8650-ayaneo-pocket-s2.dts      | 1551 ++++++++++++++++++++
->  arch/arm64/boot/dts/qcom/sm8650.dtsi               |   47 +-
->  arch/arm64/configs/defconfig                       |    1 +
->  drivers/pci/controller/dwc/Kconfig                 |    4 +-
->  drivers/pci/pwrctrl/Kconfig                        |   13 +-
->  drivers/pci/pwrctrl/Makefile                       |    4 +-
->  drivers/pci/pwrctrl/generic.c                      |  143 ++
->  drivers/pci/pwrctrl/slot.c                         |  140 --
->  12 files changed, 1795 insertions(+), 173 deletions(-)
-> ---
-> base-commit: df94cc5ccb88d2f6ebc0cac480a1b94162f4ff0f
-> change-id: 20260121-topic-sm8650-ayaneo-pocket-s2-base-05c348efd86d
 > 
-> Best regards,
-> -- 
-> Neil Armstrong <neil.armstrong@linaro.org>
-> 
+>>   Documentation/devicetree/bindings/arm/qcom.yaml    |    1 +
+>>   .../bindings/usb/renesas,upd720201-pci.yaml        |   61 +
+>>   .../devicetree/bindings/vendor-prefixes.yaml       |    2 +
+>>   arch/arm64/boot/dts/qcom/Makefile                  |    1 +
+>>   .../boot/dts/qcom/sm8650-ayaneo-pocket-s2.dts      | 1551 ++++++++++++++++++++
+>>   arch/arm64/boot/dts/qcom/sm8650.dtsi               |   47 +-
+>>   arch/arm64/configs/defconfig                       |    1 +
+>>   drivers/pci/controller/dwc/Kconfig                 |    4 +-
+>>   drivers/pci/pwrctrl/Kconfig                        |   13 +-
+>>   drivers/pci/pwrctrl/Makefile                       |    4 +-
+>>   drivers/pci/pwrctrl/generic.c                      |  143 ++
+>>   drivers/pci/pwrctrl/slot.c                         |  140 --
+>>   12 files changed, 1795 insertions(+), 173 deletions(-)
+>> ---
+>> base-commit: df94cc5ccb88d2f6ebc0cac480a1b94162f4ff0f
+>> change-id: 20260121-topic-sm8650-ayaneo-pocket-s2-base-05c348efd86d
+>>
+>> Best regards,
+>> -- 
+>> Neil Armstrong <neil.armstrong@linaro.org>
+>>
+
