@@ -1,196 +1,266 @@
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC0303B894E
-	for <linux-pci@vger.kernel.org>; Wed, 18 Mar 2026 13:12:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 568E93D6CB1
+	for <linux-pci@vger.kernel.org>; Wed, 18 Mar 2026 14:33:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773839580; cv=none; b=kXzlGipgp1itmj//TD9MZa3/0fIVLfuTiFJh/I17M602XcM6fY6NSdIdFsaZfeWl8fD4m0IrUbgYrIfz1+5aQm6RkkqG5rBgLGc3T2nS/S6BIWZV6l15gtJw3ZFSo+4dgA0fRdbIh6Euj51Cqin9e0UXTmEUwd4o+9BuC2A8+dY=
+	t=1773844386; cv=none; b=mayqg3VQlw2lBwSVjH4RDEOehBw2Bx4KIPLIvfz8zxKAArOoNAzWDJXBOd1YqeF/fcBdaCcRqyUe+s4zHWtKYyK6/kpDktyLLfaBIrSXmkIa3M/ACblvHB/fKZhgsuJ2Fu+N6eJHFyjFclwRhK5c1uupIooTz9za4Fp70oukHFQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773839580; c=relaxed/simple;
-	bh=OdQCTcowNhAMMHZuTr+edOMBX9ASYFb/KgzSCNzEfFM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VpdwEIcVlgEGcqMdMvF/k9Rtp9VI/DVz4eleNaY6RIlUHeMv1IiW+vTuYjZjgMYPHrvVxMn3Jw8qEzmeUpbGOJNXVWIqmzYgVTQtvp7z1QoSqDGDiiiqWBk0kQUhDcFTH+ewrH8QYMF4FNkQ4LBpeVhDkD3cDp+HnN0VIPB8OO8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NN91kXR1; arc=none smtp.client-ip=209.85.216.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1773844386; c=relaxed/simple;
+	bh=vwZ08Sg+KqqiBBuTOAO1IrXqa0Xy0nZFsVpuseXpJuA=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=DQIyZQelSyga9krBGmSEu+2bbUZMyWlRXufUA/zawHkGQhyAicJ9Xtf+oc5kuq3LJZ9UZ57DVBeBvKClsdbe3tRz+XyDsP7F7zAnPOy+Y2DQhQeJ12gvX/fITc042xetRU8+pbjTsTLrFW2MUx5UabGUNE8JArQrfO+Et8vcHSg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=clmCneaA; arc=none smtp.client-ip=192.198.163.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NN91kXR1"
-Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-35a1f549e7eso3494040a91.0
-        for <linux-pci@vger.kernel.org>; Wed, 18 Mar 2026 06:12:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1773839578; x=1774444378; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=a38AgtgrSL45qQSDWrOkOi7hxNfM+B9cZh1RZkzmCEM=;
-        b=NN91kXR1KBFUWH2LCTrwNH9CAKvd2+gcA74C1KxOg2JmLznRUAUaDS/T5+mpLKhtHU
-         5Wn33SyIlmjSVzR6BdMzvg6RCZd9mO+wWGxs5IU5yrk3UWc8BnUyoY2gtQUQKaNjanLA
-         egn8stiMUBTB6dv1teQo5Kfdjxc45Fd+iJjkUFm/0RHRMFkzlSrh6Ch5XwA+EqNJtEdm
-         gfYYZeqInlcAxOZksN3WkPCHqnMhiwe0/qumJbmvyiyHEMDbaODL7r+JNslBG9GIDSAE
-         OUI2x1F52vDHysXhi7aRe1+lbwNw4aGQZ2z8hISzQ17Gnzij8p1i95HWhL2gwLEMR8Yx
-         q2+Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773839578; x=1774444378;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=a38AgtgrSL45qQSDWrOkOi7hxNfM+B9cZh1RZkzmCEM=;
-        b=jbhRPmF0b7jNVb/NOvk9hlyAKoT+z9brzbXRtpIkoea3Iey3dvM82CcW22avHpZArC
-         aARSywWtLeme0gBirdFUZo2gPLa57rDxwiBW9vLYsMpgOk2Q9yMy3sALSMBZySPnu9Dv
-         QPYbArkJX3sDXOrSrlWOjs7nz2sE9b/SL2bjhmZ4OiUnXGpV7ydbGFWJom9aQRKZlv5m
-         qv7It6HVMSwFL53CZpF5NklyohbMphslcebYJuBSsoZyTkw+w3BjSKG2vu2/6dl24VCS
-         eSd40qYQYWzAnbWCnaKn288Lf/0ZlB18KhegN0l8YoeKuDMOTLHxfD5BpTSIk7nKJ0+y
-         ETVg==
-X-Forwarded-Encrypted: i=1; AJvYcCVJeJXLPv04yu5lQFSHJYd1OsbB4BEBq7k4S2qZa0siOElA7j0bMhKdZBTKjmyQYa0QoFSuqTeecOE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzWtAsiqjrtA/d28aGQI7g8+P97lz/v8oP1xIZhpTLSQv3WbJeB
-	05vDhAWLi9L+LZXLQBjLrg6JRqx1Na1ew1OfgbsE01ARyTfrCgM5Bs3n
-X-Gm-Gg: ATEYQzwgL4MdB9mwWfNBDgWUF51b+nnwEHObB/sQbEWWlbYG5y8KV5gtwYw9gvW4L4k
-	C1sl324QN3D8PFw+KD7JOAwBpgFr6NKSTubphyAYkYv8CTAka54rbOzUKSKfCdF+oUsCe48I3O8
-	URc9Z2VpCwuYgmP+jhILcbKSEoY1/68XfEbbdiK0CxCTDWg5dRDGGut12xzYo72Wk/jsaJZqANF
-	94BVMPHHs5lXiJSry33Uk4kQsIyofBr9OWcXaCVBP8s2VO2MVkukCjmLXaGZoa4e+u02o6lhbhC
-	fXE8kdvH9leuWlCyy2SS2UXpn3oQjwd1umCnDzgiwkoQU6JhCJTgx5QMbR1evIPbvepH+ed2PLB
-	k8FTDUQgi+S4BWglg0KSrg9mKOWmtAAT12s1vkwVlwo6p0qeYu2Xh+ebsatoC5djbT/Ugx9N5VY
-	QgJzbUH4TjGCx6Z6jVLO2d3yyD4AMClxb7gKMHQm4=
-X-Received: by 2002:a17:90b:1d52:b0:35b:982a:28c7 with SMTP id 98e67ed59e1d1-35bb9e3cf19mr3027930a91.5.1773839578116;
-        Wed, 18 Mar 2026 06:12:58 -0700 (PDT)
-Received: from DESKTOP-TIT0J8O.localdomain ([49.47.198.15])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-35bada5c760sm6280105a91.5.2026.03.18.06.12.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Mar 2026 06:12:57 -0700 (PDT)
-Date: Wed, 18 Mar 2026 17:12:49 +0400
-From: Ahmed Naseef <naseefkm@gmail.com>
-To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Caleb James DeLisle <cjd@cjdns.fr>,
-	linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
-	ryder.lee@mediatek.com, bhelgaas@google.com, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
-	krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
-	linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 3/3] PCI: Skip bridge window reads when window is not
- supported
-Message-ID: <abqk0VUyLF+iqVXw@DESKTOP-TIT0J8O.localdomain>
-References: <20260316155157.679533-4-cjd@cjdns.fr>
- <20260317212908.GA109023@bhelgaas>
- <abpFjQJ5RNcbzbmz@DESKTOP-TIT0J8O.localdomain>
- <fc927b7f-a820-d3c2-581c-ab6db562bcfb@linux.intel.com>
- <2d47f78f-22cf-78c8-8312-3ffb095d2693@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="clmCneaA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773844385; x=1805380385;
+  h=date:from:to:cc:subject:message-id;
+  bh=vwZ08Sg+KqqiBBuTOAO1IrXqa0Xy0nZFsVpuseXpJuA=;
+  b=clmCneaAAOSBiy5n3o139fGZEPAhIf1ZK+0PTbunFWTsHUPsxxE8sfTR
+   +V00MxNrCUsNWH9Gq6qr4CwwpzBr+66zbzlA6UM+RYjDn0yqqYlK6NoLt
+   21Dz7c5+gx74BIVoz2D7XvpLgpFYkmilXh1UDquhMnp71xPYmwsFQ2p9C
+   rez5o+IDyAMT5LKxbbM42mgggeUMdom/d3GuVetMw1Lx7wVHKvVomwjk2
+   spn3YBGgz+AJGcETEx0Od2G7OqRCxt8od/e2Q7c6ZzUT5uGGGLot+5lLv
+   YVcKL9su1/KEby7nuJXYL7YKeuATDiE4fhQ5GMb7o9+E8KkMWVfZiJ00R
+   Q==;
+X-CSE-ConnectionGUID: 0T09OcTNRKeSgMIE6aP7dg==
+X-CSE-MsgGUID: wVng8owlS5qCHS+3SBl3Gg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11733"; a="86256256"
+X-IronPort-AV: E=Sophos;i="6.23,127,1770624000"; 
+   d="scan'208";a="86256256"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2026 07:33:05 -0700
+X-CSE-ConnectionGUID: 1sLkpo7pS5S+s942jNrd4w==
+X-CSE-MsgGUID: hNErRLjrRAaqqfHjCNdfBg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,127,1770624000"; 
+   d="scan'208";a="222702209"
+Received: from lkp-server01.sh.intel.com (HELO 63737dd503cb) ([10.239.97.150])
+  by orviesa008.jf.intel.com with ESMTP; 18 Mar 2026 07:33:04 -0700
+Received: from kbuild by 63737dd503cb with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1w2rxE-0000000030L-2b9E;
+	Wed, 18 Mar 2026 14:33:00 +0000
+Date: Wed, 18 Mar 2026 22:32:41 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:hotplug] BUILD SUCCESS
+ 79253d6fe1cc80938160be2625d270fe5a4252ee
+Message-ID: <202603182235.fMy7oAug-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <2d47f78f-22cf-78c8-8312-3ffb095d2693@linux.intel.com>
 
-On Wed, Mar 18, 2026 at 02:18:22PM +0200, Ilpo Järvinen wrote:
-> On Wed, 18 Mar 2026, Ilpo Järvinen wrote:
-> 
-> > On Wed, 18 Mar 2026, Ahmed Naseef wrote:
-> > 
-> > > On Tue, Mar 17, 2026 at 04:29:08PM -0500, Bjorn Helgaas wrote:
-> > > > On Mon, Mar 16, 2026 at 03:51:57PM +0000, Caleb James DeLisle wrote:
-> > > > > pci_read_bridge_io() and pci_read_bridge_mmio_pref() read bridge window
-> > > > > registers unconditionally. If the registers are hardwired to zero
-> > > > > (not implemented), both base and limit will be 0. Since (0 <= 0) is
-> > > > > true, a bogus window [mem 0x00000000-0x000fffff] or [io 0x0000-0x0fff]
-> > > > > gets created.
-> > > > > 
-> > > > > pci_read_bridge_windows() already detects unsupported windows by
-> > > > > testing register writability and sets io_window/pref_window flags
-> > > > > accordingly. Check these flags at the start of pci_read_bridge_io()
-> > > > > and pci_read_bridge_mmio_pref() to skip reading registers when the
-> > > > > window is not supported.
-> > > > 
-> > > > The fundamental problem here is that assigned space to a bridge window
-> > > > that isn't implemented.  I wish we understood the connection between
-> > > > this "read window" path and the assignment path.
-> > > > 
-> > > > Maybe this patch fixes it because we enter pci_read_bridge_mmio_pref()
-> > > > with res->flags being NULL, and we set IORESOURCE_MEM |
-> > > > IORESOURCE_PREFETCH again, which makes it look like we can assign
-> > > > space for it?
-> > > 
-> > > Yes, that's exactly right.
-> > > 
-> > > > 
-> > > > If that's the case, I think it would improve the commit log to mention
-> > > > the actual mechanism by which we avoid assigning space.
-> > > > 
-> > > 
-> > > How about this:
-> > > 
-> > >   pci_read_bridge_io() and pci_read_bridge_mmio_pref() read
-> > >   bridge window registers unconditionally. If the registers
-> > >   are hardwired to zero (not implemented), both base and limit
-> > >   will be 0. Since (0 <= 0) is true, these functions set
-> > >   IORESOURCE_IO or IORESOURCE_MEM | IORESOURCE_PREFETCH on
-> > >   the bridge resource. This causes the allocator to assign
-> > >   space for the window even though the hardware can't
-> > >   implement it.
-> > > 
-> > >   pci_read_bridge_windows() already detects unsupported windows
-> > >   by testing register writability and sets io_window/pref_window
-> > >   flags accordingly. Check these flags at the start of
-> > >   pci_read_bridge_io() and pci_read_bridge_mmio_pref() to skip
-> > >   reading registers when the window is not supported, so the
-> > >   resource flags remain clear and the allocator does not assign
-> > >   space for non-existent windows.
-> > 
-> > At least to me the proposed text reads much better than the original.
-> > The original text required reading between the lines to connect the dots, 
-> > whereas this new one clearly explains what causes what.
-> 
-> Hi again,
-> 
-> Reading the code I think the entire 0 <= 0 part is a red herring 
-> when it comes to the current code, the flags are always set by the 
-> functions!
-> 
-> The code would only add IORESOURCE_UNSET | IORESOURCE_DISABLED if the 
-> base <= limit check fails but that's still wrong because it says to the 
-> resource allocation code that it can enable that bridge window if it needs 
-> to.
-> 
-> Prior to the commit 8278c6914306 ("PCI: Preserve bridge window resource 
-> type flags") the base <= limit check did play some role (maybe the 
-> original commit message was based on some older tree than the most current 
-> one).
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git hotplug
+branch HEAD: 79253d6fe1cc80938160be2625d270fe5a4252ee  PCI: rpaphp: Simplify with scoped for each OF child loop
 
-Thank you for catching that. We were testing on LTS kernel
-6.12 (downstream OpenWrt) where the commit 8278c6914306
-("PCI: Preserve bridge window resource type flags") is not
-present . In that tree the flags are still only set inside
-the base <= limit check, which is why the commit message
-focused on that path.
-  
-For current mainline, how about this for the commit message:
+elapsed time: 1011m
 
-  pci_read_bridge_io() and pci_read_bridge_mmio_pref()
-  unconditionally set resource type flags (IORESOURCE_IO
-  or IORESOURCE_MEM | IORESOURCE_PREFETCH) when reading
-  bridge window registers. For windows that are not
-  implemented in hardware, this causes the allocator to
-  assign space for a window that doesn't exist.
+configs tested: 189
+configs skipped: 2
 
-  pci_read_bridge_windows() already detects unsupported
-  windows by testing register writability and sets
-  io_window/pref_window flags accordingly. Check these
-  flags at the start of pci_read_bridge_io() and
-  pci_read_bridge_mmio_pref() to skip them entirely when
-  the window is not supported, so the resource flags
-  remain clear and the allocator does not assign space
-  for non-existent windows.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
+tested configs:
+alpha                             allnoconfig    gcc-15.2.0
+alpha                            allyesconfig    gcc-15.2.0
+alpha                               defconfig    gcc-15.2.0
+arc                              allmodconfig    clang-16
+arc                               allnoconfig    gcc-15.2.0
+arc                              allyesconfig    clang-23
+arc                                 defconfig    gcc-15.2.0
+arc                   randconfig-001-20260318    gcc-8.5.0
+arc                   randconfig-002-20260318    gcc-8.5.0
+arm                               allnoconfig    clang-23
+arm                               allnoconfig    gcc-15.2.0
+arm                              allyesconfig    clang-16
+arm                                 defconfig    gcc-15.2.0
+arm                      jornada720_defconfig    clang-23
+arm                   randconfig-001-20260318    gcc-8.5.0
+arm                   randconfig-002-20260318    gcc-8.5.0
+arm                   randconfig-003-20260318    gcc-8.5.0
+arm                   randconfig-004-20260318    gcc-8.5.0
+arm64                            allmodconfig    clang-23
+arm64                             allnoconfig    gcc-15.2.0
+arm64                               defconfig    gcc-15.2.0
+arm64                 randconfig-001-20260318    clang-23
+arm64                 randconfig-002-20260318    clang-23
+arm64                 randconfig-003-20260318    clang-23
+arm64                 randconfig-004-20260318    clang-23
+csky                             allmodconfig    gcc-15.2.0
+csky                              allnoconfig    gcc-15.2.0
+csky                                defconfig    gcc-15.2.0
+csky                  randconfig-001-20260318    clang-23
+csky                  randconfig-002-20260318    clang-23
+hexagon                          allmodconfig    clang-17
+hexagon                          allmodconfig    gcc-15.2.0
+hexagon                           allnoconfig    clang-23
+hexagon                           allnoconfig    gcc-15.2.0
+hexagon                             defconfig    gcc-15.2.0
+hexagon               randconfig-001-20260318    gcc-8.5.0
+hexagon               randconfig-002-20260318    gcc-8.5.0
+i386                             allmodconfig    clang-20
+i386                             allmodconfig    gcc-14
+i386                              allnoconfig    gcc-14
+i386                              allnoconfig    gcc-15.2.0
+i386                             allyesconfig    clang-20
+i386        buildonly-randconfig-001-20260318    gcc-14
+i386        buildonly-randconfig-002-20260318    gcc-14
+i386        buildonly-randconfig-003-20260318    gcc-14
+i386        buildonly-randconfig-004-20260318    gcc-14
+i386        buildonly-randconfig-005-20260318    gcc-14
+i386        buildonly-randconfig-006-20260318    gcc-14
+i386                                defconfig    gcc-15.2.0
+i386                  randconfig-001-20260318    gcc-14
+i386                  randconfig-002-20260318    gcc-14
+i386                  randconfig-003-20260318    gcc-14
+i386                  randconfig-004-20260318    gcc-14
+i386                  randconfig-005-20260318    gcc-14
+i386                  randconfig-006-20260318    gcc-14
+i386                  randconfig-007-20260318    gcc-14
+i386                  randconfig-011-20260318    clang-20
+i386                  randconfig-012-20260318    clang-20
+i386                  randconfig-013-20260318    clang-20
+i386                  randconfig-014-20260318    clang-20
+i386                  randconfig-015-20260318    clang-20
+i386                  randconfig-016-20260318    clang-20
+i386                  randconfig-017-20260318    clang-20
+loongarch                        allmodconfig    clang-23
+loongarch                         allnoconfig    clang-23
+loongarch                         allnoconfig    gcc-15.2.0
+loongarch                           defconfig    clang-19
+loongarch             randconfig-001-20260318    gcc-8.5.0
+loongarch             randconfig-002-20260318    gcc-8.5.0
+m68k                             allmodconfig    gcc-15.2.0
+m68k                              allnoconfig    gcc-15.2.0
+m68k                             allyesconfig    clang-16
+m68k                         apollo_defconfig    gcc-15.2.0
+m68k                                defconfig    clang-19
+microblaze                        allnoconfig    gcc-15.2.0
+microblaze                       allyesconfig    gcc-15.2.0
+microblaze                          defconfig    clang-19
+mips                             allmodconfig    gcc-15.2.0
+mips                              allnoconfig    gcc-15.2.0
+mips                             allyesconfig    gcc-15.2.0
+nios2                            allmodconfig    clang-23
+nios2                             allnoconfig    clang-23
+nios2                             allnoconfig    gcc-11.5.0
+nios2                               defconfig    clang-19
+nios2                 randconfig-001-20260318    gcc-8.5.0
+nios2                 randconfig-002-20260318    gcc-8.5.0
+openrisc                         allmodconfig    clang-23
+openrisc                          allnoconfig    clang-23
+openrisc                          allnoconfig    gcc-15.2.0
+openrisc                            defconfig    gcc-15.2.0
+parisc                           allmodconfig    gcc-15.2.0
+parisc                            allnoconfig    clang-23
+parisc                            allnoconfig    gcc-15.2.0
+parisc                           allyesconfig    clang-19
+parisc                           allyesconfig    gcc-15.2.0
+parisc                              defconfig    gcc-15.2.0
+parisc                randconfig-001-20260318    gcc-11.5.0
+parisc                randconfig-002-20260318    gcc-11.5.0
+parisc64                            defconfig    clang-19
+powerpc                          allmodconfig    gcc-15.2.0
+powerpc                           allnoconfig    clang-23
+powerpc                           allnoconfig    gcc-15.2.0
+powerpc               randconfig-001-20260318    gcc-11.5.0
+powerpc               randconfig-002-20260318    gcc-11.5.0
+powerpc                     tqm8548_defconfig    clang-23
+powerpc64             randconfig-001-20260318    gcc-11.5.0
+powerpc64             randconfig-002-20260318    gcc-11.5.0
+riscv                            allmodconfig    clang-23
+riscv                             allnoconfig    clang-23
+riscv                             allnoconfig    gcc-15.2.0
+riscv                            allyesconfig    clang-16
+riscv                               defconfig    gcc-15.2.0
+riscv                 randconfig-001-20260318    gcc-15.2.0
+riscv                 randconfig-002-20260318    gcc-15.2.0
+s390                             allmodconfig    clang-18
+s390                             allmodconfig    clang-19
+s390                              allnoconfig    clang-23
+s390                             allyesconfig    gcc-15.2.0
+s390                                defconfig    gcc-15.2.0
+s390                  randconfig-001-20260318    gcc-15.2.0
+s390                  randconfig-002-20260318    gcc-15.2.0
+sh                               allmodconfig    gcc-15.2.0
+sh                                allnoconfig    clang-23
+sh                                allnoconfig    gcc-15.2.0
+sh                               allyesconfig    clang-19
+sh                               allyesconfig    gcc-15.2.0
+sh                                  defconfig    gcc-14
+sh                    randconfig-001-20260318    gcc-15.2.0
+sh                    randconfig-002-20260318    gcc-15.2.0
+sparc                             allnoconfig    clang-23
+sparc                             allnoconfig    gcc-15.2.0
+sparc                               defconfig    gcc-15.2.0
+sparc                 randconfig-001-20260318    gcc-13.4.0
+sparc                 randconfig-002-20260318    gcc-13.4.0
+sparc64                          allmodconfig    clang-23
+sparc64                             defconfig    gcc-14
+sparc64               randconfig-001-20260318    gcc-13.4.0
+sparc64               randconfig-002-20260318    gcc-13.4.0
+um                               allmodconfig    clang-19
+um                                allnoconfig    clang-23
+um                               allyesconfig    gcc-14
+um                               allyesconfig    gcc-15.2.0
+um                                  defconfig    gcc-14
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20260318    gcc-13.4.0
+um                    randconfig-002-20260318    gcc-13.4.0
+um                           x86_64_defconfig    gcc-14
+x86_64                           allmodconfig    clang-20
+x86_64                            allnoconfig    clang-20
+x86_64                            allnoconfig    clang-23
+x86_64                           allyesconfig    clang-20
+x86_64      buildonly-randconfig-001-20260318    gcc-14
+x86_64      buildonly-randconfig-002-20260318    gcc-14
+x86_64      buildonly-randconfig-003-20260318    gcc-14
+x86_64      buildonly-randconfig-004-20260318    gcc-14
+x86_64      buildonly-randconfig-005-20260318    gcc-14
+x86_64      buildonly-randconfig-006-20260318    gcc-14
+x86_64                              defconfig    gcc-14
+x86_64                                  kexec    clang-20
+x86_64                randconfig-001-20260318    gcc-14
+x86_64                randconfig-002-20260318    gcc-14
+x86_64                randconfig-003-20260318    gcc-14
+x86_64                randconfig-004-20260318    gcc-14
+x86_64                randconfig-005-20260318    gcc-14
+x86_64                randconfig-006-20260318    gcc-14
+x86_64                randconfig-011-20260318    clang-20
+x86_64                randconfig-012-20260318    clang-20
+x86_64                randconfig-013-20260318    clang-20
+x86_64                randconfig-014-20260318    clang-20
+x86_64                randconfig-015-20260318    clang-20
+x86_64                randconfig-016-20260318    clang-20
+x86_64                randconfig-071-20260318    gcc-14
+x86_64                randconfig-072-20260318    gcc-14
+x86_64                randconfig-073-20260318    gcc-14
+x86_64                randconfig-074-20260318    gcc-14
+x86_64                randconfig-075-20260318    gcc-14
+x86_64                randconfig-076-20260318    gcc-14
+x86_64                               rhel-9.4    clang-20
+x86_64                           rhel-9.4-bpf    gcc-14
+x86_64                          rhel-9.4-func    clang-20
+x86_64                    rhel-9.4-kselftests    clang-20
+x86_64                         rhel-9.4-kunit    gcc-14
+x86_64                           rhel-9.4-ltp    gcc-14
+x86_64                          rhel-9.4-rust    clang-20
+xtensa                            allnoconfig    clang-23
+xtensa                            allnoconfig    gcc-15.2.0
+xtensa                           allyesconfig    clang-23
+xtensa                randconfig-001-20260318    gcc-13.4.0
+xtensa                randconfig-002-20260318    gcc-13.4.0
 
-Ahmed Naseef
-
-> 
-> -- 
->  i.
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
