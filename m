@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 964053C1999;
-	Wed, 18 Mar 2026 11:27:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 005FE392814;
+	Wed, 18 Mar 2026 11:27:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773833257; cv=none; b=sh71n82FroFpJ3jA5ZR5msEIA8gf6y3dBC1vuWoE7boj4KpeBytsPnRYo75RZxPqTl6S4y05QCQKs9OWRDZPlfnOTd/B9mA0VqN6l+iFdOZ6Td0LijKX2K4rNxEEDPAmq4SAd1Y8uAC1beNEu0oiTzExTcP640SX+7HlcJMlMHA=
+	t=1773833260; cv=none; b=bFp7HjeRNZSc9j0dEc5R+Z2PFDrUUkvBubIy4KD3Jci9+P7SVD6LuARkQAEqGDhWERmKX82rIasdWvC5XvmhgIT1L/gcs8u0u+fCFRVDne2t6tVumhNBd9BZKuNCIyatiNW44TaZcAa24PhPUQsUOyD59HyuvHuVz5P1U+drujA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773833257; c=relaxed/simple;
-	bh=m8R4SLbHLPhRnMGBE/o02YONs9L5eByD5sU2IOjMhYw=;
+	s=arc-20240116; t=1773833260; c=relaxed/simple;
+	bh=NRaSTkGhNSnulLHimzIqdeWJs/YNqIjAwnhWAJuFmgU=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=u4D9O+TOy9Vx0W9LAVzQbnhlz0GVjoAJFPaeI99ob0EaK7zaT0oup8+FEq2X8YHofhZAEPQzMCCaU8m5LFr4GBlxZ9qrXPh/2Mh/THpaZszH4fCUgdOg/LSyrEjTOFCpOIcOH2WqHoJY21TSZhyUO9I9u0MOjj49sp9ZF+fxYM4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R2gT5N8B; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=i/UiELd0lQUvl5jkFtf99vwxoicw47JvnjzDABf6oMbEm9rNU3RdOkwBurU2K70T+mc+sl0PvFtOxakqlw8jPDZHSN0VLShzL397OEBzlW7uSkFYZwYbMj2osQsG4ka1337fkMdKEwuthJH9MawCdBhZN+otCOW9vtA1F4VsLwc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jrNJ5e0l; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R2gT5N8B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD715C19421;
-	Wed, 18 Mar 2026 11:27:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jrNJ5e0l"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EB3BC19424;
+	Wed, 18 Mar 2026 11:27:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773833256;
-	bh=m8R4SLbHLPhRnMGBE/o02YONs9L5eByD5sU2IOjMhYw=;
+	s=k20201202; t=1773833259;
+	bh=NRaSTkGhNSnulLHimzIqdeWJs/YNqIjAwnhWAJuFmgU=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=R2gT5N8B7ymcBoR+WLdQNbRQYf/HghnFVWTX7HveoXiPqqtnIyR5e/LJqUIUerZIe
-	 g3TV84DQVoOAsN7KaZVKmdKK4KNNSYSMGQI0bPUTDjJ7He0HkoPcY6XEkaGjcdHmIS
-	 qg7Fb3BPafw/vpKg0WaSxCH2vJv/F+1fYGaT6nl9/yKplzApCjs4jWazkIPjl0/OhF
-	 nERJ52vIQOihrZY96uUTVeaWzkJREwkZ3ePrK63jGiPmFr1VZasr6lwJVS7aLwFlKC
-	 E7Y6W9gya7BoHtRJhm6FNUMutnzSrJThUc5cVtSnc3LiYEDqNigkzR5uAuCwW/yQ4x
-	 zcL7zYWm8hQnw==
+	b=jrNJ5e0lt+Y+Snacff6/ta9fdsEBV0qPSD1PQNZQkwoPYPon1rw0eQC7zye6eNtnP
+	 J/IdoCt7IXp3icZCUkrBwjWHGRbxkrDjLNZDN0RLizJlrZ/7DfotVQWKRDt2Veh4pB
+	 IDV6qaG6AwilM3ijS5UD0OBENj4wMd1mi6s2DbG+upZQ6bgvyWvRawqVCUnpg24neF
+	 WSRi931JzfcPecBLHalqyv+aBsNOfhtt7/B7SywhkOsa0e9s1GjEvMwf2dJX+hCx4P
+	 dPrqY5jM/fCV/iMGwGfdsDaYf80W7aqzzB/nviiytGB4heG8G7p+ueuvGFPO05QVjt
+	 HLXGLtmDh5wpA==
 From: Vinod Koul <vkoul@kernel.org>
 To: bhelgaas@google.com, mani@kernel.org, 
  Devendra K Verma <devendra.verma@amd.com>
 Cc: dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, 
  linux-kernel@vger.kernel.org, michal.simek@amd.com, Devendra.Verma@amd.com
-In-Reply-To: <20251212122056.8153-1-devendra.verma@amd.com>
-References: <20251212122056.8153-1-devendra.verma@amd.com>
-Subject: Re: [PATCH v7 0/2] Add AMD MDB Endpoint and non-LL mode Support
-Message-Id: <177383325446.408483.15991953985417401358.b4-ty@kernel.org>
-Date: Wed, 18 Mar 2026 16:57:34 +0530
+In-Reply-To: <20260311111834.3750297-1-devendra.verma@amd.com>
+References: <20260311111834.3750297-1-devendra.verma@amd.com>
+Subject: Re: [PATCH v13 0/2] Add AMD MDB Endpoint and non-LL mode Support
+Message-Id: <177383325715.408483.18354973261373934236.b4-ty@kernel.org>
+Date: Wed, 18 Mar 2026 16:57:37 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,7 +47,7 @@ Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.13.0
 
 
-On Fri, 12 Dec 2025 17:50:54 +0530, Devendra K Verma wrote:
+On Wed, 11 Mar 2026 16:48:32 +0530, Devendra K Verma wrote:
 > This series of patch support the following:
 > 
 >  - AMD MDB Endpoint Support, as part of this patch following are
