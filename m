@@ -1,512 +1,192 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012065.outbound.protection.outlook.com [40.93.195.65])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9FED369201;
-	Wed, 18 Mar 2026 07:04:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 706BC36A02E;
+	Wed, 18 Mar 2026 07:21:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.12
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773817462; cv=fail; b=pQpH8nVnljkwhMwL8cGQDqkWxZs/mP6Ttn1Ih58VIdGgojDdLWX9yi/sCnWhVBGnOerWa/IMesLDeIiTkAkCgnd2VOWW2rmOhdbs0hZW4ty9BrMscy07wKpbdrZ1bzfNBS1iGdG01WW3S+koYqnVn8RINqUv9a2wxHAZ8rN6agg=
+	t=1773818519; cv=fail; b=Uz3+EK4lIGPAPBW7bs/X3qsTNxcbnAjgNTxJwazpSZvoJLkmmVe3f/+MD7syxrb64oauDReDNVSwrPjZwA0Cy6n4lNHCZeU306CN9Hl3Q3aXl+HkaYhAVhtMvXWbIdk7i4ZnMW+hI1NPucts2XgqitAOYv+nrlH1cByT2r8sD74=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773817462; c=relaxed/simple;
-	bh=ynwusFOyDDd9saKDWgeF5eo9hbqBcLjopSpakeGuA48=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sZKmqQB+Y2x+0fMWeR3bS6nCiBPdpDRodzIfeFtSHMNTrL4A0u7NRAa/YjpO5LcYak9sk++gDqTX2L3bdbHaPXt5wItDHeFKO0d7JLFJXS67eOAA8GkOHCSLzb9WEWvUIwEKANaVKPfPcJx6DlDe3mg0Li51j+2S/qS63yAzfIk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=u+tFqVk9; arc=fail smtp.client-ip=40.93.195.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	s=arc-20240116; t=1773818519; c=relaxed/simple;
+	bh=ogCU1A2zySKTH+80UQh7Vl7fdCidgm9ZWo/woitb4J0=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=GsZdv3yp/2wPwoEII1u2TiMeC1Z1v8Dhr2vAx9jpF9ndnOHwBYETyLLTkuVe7R0KjT5tGslnzDbec6/sB7ylPsTxCxHR3oYl0Orx6EY5Q6r7+hn71+6TlAGaR0RLF+0SipzH//3AAPvomY8fjcDA68ANB0q+gWJVRjZOgsbHQzo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bBZk0sP+; arc=fail smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="u+tFqVk9"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bBZk0sP+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773818517; x=1805354517;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=ogCU1A2zySKTH+80UQh7Vl7fdCidgm9ZWo/woitb4J0=;
+  b=bBZk0sP+lGp9HLyEQ+MbN4Vdr5SovyPuwaLgvz113psUZkZHGnFLyBjL
+   3IxKI9UG/3LdlmEj2mH15+SR1/beN/DxuZBPOyqPbpKF1Owg1vv8wp68d
+   N5O49spp4uvy7D/1nXHO+IzuPHM4R3UAt1pEAET7Fna+0ksidmBlrrWGC
+   wjLUJWvzJWWge/VK8sKc+J7+OLjGLZjYJ1KcuoXi60GVio6lvYXglwj0U
+   hx/1R+YpwMBiZmYCvB+7XTJoMRkCGCimKGVkXBs/uaxGIP6eclvX5CrZz
+   lE/mEHqL+Awpj/RNvwFdtlsTyKRoq4FAx1lTs3eLKlDWqq+rP9Ua3NjTj
+   Q==;
+X-CSE-ConnectionGUID: +nNs1d0VSGCh/K3PhNTo4w==
+X-CSE-MsgGUID: 6Knpkj15RXu6jtlEyKPs4A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11732"; a="78765451"
+X-IronPort-AV: E=Sophos;i="6.23,127,1770624000"; 
+   d="scan'208";a="78765451"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2026 00:21:57 -0700
+X-CSE-ConnectionGUID: vptYjqxjSwuoyb4ZIgP4jg==
+X-CSE-MsgGUID: jBFwcpm3Q2Kb2dDZowrTKw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,127,1770624000"; 
+   d="scan'208";a="226996364"
+Received: from orsmsx901.amr.corp.intel.com ([10.22.229.23])
+  by orviesa004.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2026 00:21:57 -0700
+Received: from ORSMSX902.amr.corp.intel.com (10.22.229.24) by
+ ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Wed, 18 Mar 2026 00:21:56 -0700
+Received: from ORSEDG901.ED.cps.intel.com (10.7.248.11) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37 via Frontend Transport; Wed, 18 Mar 2026 00:21:56 -0700
+Received: from SN4PR2101CU001.outbound.protection.outlook.com (40.93.195.42)
+ by edgegateway.intel.com (134.134.137.111) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Wed, 18 Mar 2026 00:21:55 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=E447XjVTjgas1ucHS7990OUjWRjCz+0lwJgmDGuEDFlDk0qMwLx+5wyMFF9lRXJXZOCPj82ujRxr/dyTz/yQVzWXCb4Gnwlk5YtB4b/cuZlqnrql8L+PllCLqOkS5wwB/Or3EPw7Vozh4xzhyYo3fyK5mDvzy/+1scmvuCGf39WlcZOnjoXxQIxZ+dhMYh+CsdUuaDvpoy0ZNSzbhF5zcGpwhTngamiYsy5wQ6n4HUJLg5uWmCDgNEAdMjji45ogRptRmKOJQ9oQENKRusi0le1JS4SZ78H2b7cJe8PS9MWNe69fgk92TQ7LVfIoOE+ADE4l70PcZwMqX3q45r8NzQ==
+ b=dcShm6GAYMVSQ/M1Y+Ky66E34QOo/lN0VB+nJb9CDCKlAqREZXCfTJ67Yi4EQyCW+JrIFHmbtRF6B/kmTdQ+nDqekd8iMRc72iuJJ1fS7sUCw+NAQId/iGdIpLFQSVQ/m7N4I4zL7Z1K5v0Sy+0nS4hX3ycLWJkUs9nP8z4gHc6XseTsYdeOozezKhRTaa8Q/exaGA0O4TvdPHppwQqGKg1Mvo5+ZMGwitVhUOFoEA6bdxARMvG4Pz9+cRhAmOLS8jiY+gbaY30wIQRNd0G3B5pTOi4gzZAx08CawVSGX/vSJ0WVKRjj0omffrEPo6SNtO771d0buGos8vh/NApPlA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BFOljeGUsaX2k7g1ipfG9Z1BENX0WKMtGH7xzEPXM7A=;
- b=AKwH2eRw+Qqhm/bIYWVOQGw3YvHZBJiy0WnsXKCiW5fpB6L7NYkZJOAl6RrMdmNrFUoMIl5m4kDG562fajJsn+Tay/ULrb1mSfQx6n7tzH5ZSWuozrsO5IxDpwBMCR+fOy0fA9aeabXDpHEcbxoayjcGbil5ubSKjL+67S/bo7HDPsuiEJYIutloRv23dca/waapPRHWJCMUmsLet3BY9Fz7r8iDd5EB9xX1wsi8xpCtnmXqqcyEvgJs38Umj434FPytAjpSeRRNjml0TsHGAkOLMrL5Y9M0rGiXUTWxOPgDRRDisPlJEDOMJYwueskGNdy1/8UuJDeaRYWKej272Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BFOljeGUsaX2k7g1ipfG9Z1BENX0WKMtGH7xzEPXM7A=;
- b=u+tFqVk9AtYnea/7BAUParD5AZ0+6CYMR2WXf9ZGBHIKYzcqFlxfS4fs7c2HxqIpXr2SEE+6VUYZ3v/EnRBCYnfiaSUjK6fDL1aMym/wS1ddEhmarHnXOcn3/YZGzTIRZ1ZUJBcARdxJ9c7bS0D//wjiRoa7jUO9x78h+vrdv5s=
-Received: from IA4P220CA0012.NAMP220.PROD.OUTLOOK.COM (2603:10b6:208:558::17)
- by DM4PR12MB6254.namprd12.prod.outlook.com (2603:10b6:8:a5::17) with
+ bh=/0GClYQYFWulxljbEjy0V/HB/s/weNWYcfoCJ2ZfWF4=;
+ b=H5JTkoSl6cfGulrIUWhjUYPSrSmy6EPDg+Dep4DVcsUYpUthnP+nh+s/NWFShn0rSbsWsZxMX3V6qMmvDVSrtUlXhTIv/ylcA7vp5a1PTCW9iE4pIv+ZVuIAc81KrA0s9BY1YtWBiasNK2RoxC0HBDPJPpUVgDeAvXDzCY/nKqTMwLLfusFKKm1BVFYgopcFcHgmVKOI/PqTEX861A2/zNy/gCrw3/9q5YEsXTEN40phXckACZcRIGXHozbT626653JKLIbn53y5EHPZA4kbFOjEd1SCL2gCo5lH0fGkRoJleSlQN+9opVUfNHFUpaLrFdAp3/MPHF3l6ZFwKduSSA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from BN9PR11MB5276.namprd11.prod.outlook.com (2603:10b6:408:135::18)
+ by MN6PR11MB8145.namprd11.prod.outlook.com (2603:10b6:208:474::13) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.16; Wed, 18 Mar
- 2026 07:04:12 +0000
-Received: from BL02EPF0002992D.namprd02.prod.outlook.com
- (2603:10b6:208:558:cafe::a0) by IA4P220CA0012.outlook.office365.com
- (2603:10b6:208:558::17) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.27 via Frontend Transport; Wed,
- 18 Mar 2026 07:04:37 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
-Received: from satlexmb07.amd.com (165.204.84.17) by
- BL02EPF0002992D.mail.protection.outlook.com (10.167.249.58) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9723.19 via Frontend Transport; Wed, 18 Mar 2026 07:04:12 +0000
-Received: from satlexmb07.amd.com (10.181.42.216) by satlexmb07.amd.com
- (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Wed, 18 Mar
- 2026 02:04:11 -0500
-Received: from xhddevverma40x.xilinx.com (10.180.168.240) by
- satlexmb07.amd.com (10.181.42.216) with Microsoft SMTP Server id 15.2.2562.17
- via Frontend Transport; Wed, 18 Mar 2026 02:04:09 -0500
-From: Devendra K Verma <devendra.verma@amd.com>
-To: <bhelgaas@google.com>, <mani@kernel.org>, <vkoul@kernel.org>
-CC: <dmaengine@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <michal.simek@amd.com>,
-	<Devendra.Verma@amd.com>
-Subject: [PATCH v15 2/2] dmaengine: dw-edma: Add non-LL mode
-Date: Wed, 18 Mar 2026 12:34:03 +0530
-Message-ID: <20260318070403.1634706-3-devendra.verma@amd.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260318070403.1634706-1-devendra.verma@amd.com>
-References: <20260318070403.1634706-1-devendra.verma@amd.com>
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Wed, 18 Mar
+ 2026 07:21:54 +0000
+Received: from BN9PR11MB5276.namprd11.prod.outlook.com
+ ([fe80::f997:762f:f079:134f]) by BN9PR11MB5276.namprd11.prod.outlook.com
+ ([fe80::f997:762f:f079:134f%5]) with mapi id 15.20.9723.018; Wed, 18 Mar 2026
+ 07:21:54 +0000
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Nicolin Chen <nicolinc@nvidia.com>, "will@kernel.org" <will@kernel.org>,
+	"robin.murphy@arm.com" <robin.murphy@arm.com>, "joro@8bytes.org"
+	<joro@8bytes.org>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"jgg@nvidia.com" <jgg@nvidia.com>
+CC: "rafael@kernel.org" <rafael@kernel.org>, "lenb@kernel.org"
+	<lenb@kernel.org>, "praan@google.com" <praan@google.com>,
+	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+	"xueshuai@linux.alibaba.com" <xueshuai@linux.alibaba.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "iommu@lists.linux.dev"
+	<iommu@lists.linux.dev>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-acpi@vger.kernel.org"
+	<linux-acpi@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, Vikram Sethi <vsethi@nvidia.com>
+Subject: RE: [PATCH v2 1/7] iommu: Do not call pci_dev_reset_iommu_done()
+ unless reset succeeds
+Thread-Topic: [PATCH v2 1/7] iommu: Do not call pci_dev_reset_iommu_done()
+ unless reset succeeds
+Thread-Index: AQHctkKdJwzkvyecIkaSzCIJuG2yd7Wz4lOQ
+Date: Wed, 18 Mar 2026 07:21:53 +0000
+Message-ID: <BN9PR11MB5276706AE4E0BBE86F0F6E158C4EA@BN9PR11MB5276.namprd11.prod.outlook.com>
+References: <cover.1773774441.git.nicolinc@nvidia.com>
+ <21fa71d59c8ab787c0f3d8cf3e9fc725330fd0d5.1773774441.git.nicolinc@nvidia.com>
+In-Reply-To: <21fa71d59c8ab787c0f3d8cf3e9fc725330fd0d5.1773774441.git.nicolinc@nvidia.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: BN9PR11MB5276:EE_|MN6PR11MB8145:EE_
+x-ms-office365-filtering-correlation-id: 4944b17a-85c7-4c8f-f233-08de84bf07f2
+x-ld-processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|366016|376014|7416014|1800799024|38070700021|18002099003|56012099003|22082099003;
+x-microsoft-antispam-message-info: D4MvNI9KdJMQYgKjw3vBlZpQz+m47WvL685l+gRGT3lu3NrPMik8Bg0TxXrimWPtmJmd/0zEdkkMA1E8wbUDFUpiXxNiB+M+2151asCeUk6mTs+3akLVmfOo3UDiqp4lMkykHz9d0S/OcvAqEPLCfBWdYChW2eakIACiDPhWiLbqULurahEevXuxXkzP0sgfVOuKhH3gxuH6sod27SAkX/d6lrz2kcYEUySp6Y4lQgmwreRczjLoPtmAgoR2mcf+JRflLnuOwlIGTORdNEGjpM6rFPAInAaEOGGyvM67UWsYYOv3bgiMCSILfy9F5XQs1+f61U55GIflnh4Cq9ShwuLZKzImcwgLf0z8sJZ9smr3OhXIrVqNYKT9swvD1v5NBuYanFw9KH+7ytasK/ddJ7WdxmKuXwW0FigpzR+f5n7zgNDwUacWzSdiwx7A9MiYNPjrhhUXle0K2sFURxOQzS4KY7Er7HwZFCCmAcuhcPlnSw/NYruaWGLpnDoIGtD1AmEAEwICGFxVn+GhCUvaUShi9zqQfwn/wCXfSjb+PLoxLBwpGttQ6QXUY6pvhldJfWZD2GxwQAxhEMCviT8litGwGFPdcJAaES5XXH3Nk/XuCwRcheW4RYgAJgSYpXpDZHoHt9Cs2WKc9Ujl1Q6tyRX6VqGYdpusR6Kb3ecW3Eim7504lJXPb3UG8JEDKSQ+zVKhmN/DRB+ujv8cuBK0ZVJZJkvIpnwJDDSBctXWKf4fbJ7B5MVtMhv2M8rTqppjRbgqc64GhIeJgemeIK3UG4qUe1CtNJ75eGk+bWgtcPc=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR11MB5276.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024)(38070700021)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?HQS39qPufDXvSPTEVVbFwJA4yDm8alnv7Awjpd/FDMqYiqywUKFiOdMYMr7S?=
+ =?us-ascii?Q?FAQkjrrrnyn9MoySM/Gmrn758vSOGW5mZyIwZA67L0416zmZ2JU9KdhdozCb?=
+ =?us-ascii?Q?6zW8C6jbN6vyJhoP4a4avbBBqjJuGLa/oNYr+yKeQknVSTx14nu2cy0kD8W1?=
+ =?us-ascii?Q?e1gmP3P44R0c5tYTXZaRvX5xQKry+3ACiadJF1FNcXvcZnrU+nKVwHhz1itS?=
+ =?us-ascii?Q?gJHbc06h5fyhfrh+/L909WQJDK/H+e/Akzg/7dpDTZsyF2qknfriUbQwSrIl?=
+ =?us-ascii?Q?kPKFdRU2ybCOO39XP/OUn+X2TXTSy4VGBz/Ajuw68xKeca36Shnv92M5HH7t?=
+ =?us-ascii?Q?A840WFRRdJ7TKoLg+Jq1EarUSuR9BteetSquabxZy9v8xo3EfLpVjBfNzZv7?=
+ =?us-ascii?Q?nHHF0tVuhEJuPTdrSrnzEPyUbv3mxnGj4Enoo2CX1GSERf0yuwMdr2i38W5e?=
+ =?us-ascii?Q?arkM6qaWstM9ubT31Qj8zT7OP9TD5n2YsDqvYx5Lzgso3P1Rhu/V+7saN7IX?=
+ =?us-ascii?Q?AlY5+Bqi/lA/cO4Rfa1r2hnLOho/GUnpOd8f/zFJVbOm/pWr/IHHPzDWomdt?=
+ =?us-ascii?Q?6X5VNoxNohCN91PsMfOaWRxJiSkHGV1WWgA6teECzJo9vFWPBBqDF6bqZDOu?=
+ =?us-ascii?Q?gOf9bNV1ppJnvbg0ftZH3PvXrXB2oewLGGSYHkgxMjktcNj+r5WZ134wH2A0?=
+ =?us-ascii?Q?D3xs66h5nuP6cz1NXrOTSRp0iqVsxgBmcZ3kVgElFWjdsDMRnJLLWC76GgCl?=
+ =?us-ascii?Q?yeW4Wcmgi7/ypWkcBB/p9s1oW0mgWH9ibFHN/jLd68v/4EtWymhfU4A3Ax5i?=
+ =?us-ascii?Q?5kweH6fAiSCvL5YBmi+2NxTd75G/Iu+erpn3DDn/C56BoBIZ2XXDaOfjh4cD?=
+ =?us-ascii?Q?LgfONn52ttrDdAlXL5oOCsMvbEvpbLpXzazgm1D38w0vljqRk1WacPRVg4Ba?=
+ =?us-ascii?Q?bMbr4Dx1RCbAk33B7Venj2xdHKx2Z0s6Z6hhxtivPim8xB/2ZULCqw0zogi0?=
+ =?us-ascii?Q?Y57FeENxjuvb6NEfJAiNviubaTjQhcXZVeQ4Mv/E0xogM8A5t9Z0PXswiHOF?=
+ =?us-ascii?Q?FHoravgZs7vOcaziV9pM8CQ4ugyvsmlHkEAmNG576iqFgRXW/7QWKW3IxcwM?=
+ =?us-ascii?Q?B5vENt8tVbrYh4fkJ6eKQ3WXYhMOvzOX0WQLCWDdD9IRQaeqzyLkOXkyIAGE?=
+ =?us-ascii?Q?WHcXxx/Gpgn6YLOmI1r9Ao8FIbd+i5k3U2IecCr75ncg0m97lG1MG4Ow59Mw?=
+ =?us-ascii?Q?be1w20Ju588QY65FS+JbbutdHvfLCUWEgiV6gFzpMQSO8exvVe3RZw5jKlOC?=
+ =?us-ascii?Q?f7nfvmNfwzzPuVmJwJizmHJp4LCLvAVyCQl9JrPrXUK0RpJ5A5gVUngmiWzX?=
+ =?us-ascii?Q?mAVGm7669eGSRBhpWTQj/QZX2DV3DnNeHHB7WqvGY9+iNqJdUvnlwCrrqdce?=
+ =?us-ascii?Q?ORfVtcHQqj9AImtZtBmojEFNQ4rqUj/wl0ZgTMnRjcgwBTf4wvbzWptBRuLD?=
+ =?us-ascii?Q?mzG7//n9Y87kBM4x79sqzgwApIkKn8/y56IiZNghkare0/6vKoU4BXHo6/XB?=
+ =?us-ascii?Q?dg2zYuKg0wfEMo2CusMdEOWZxzYO6FfVcHuL0aBKYcSSheRuxjiBM+CQ/+wJ?=
+ =?us-ascii?Q?r+bGBP1nT5FvEoMh1+JcisBhxyR8t7qa/I0Dvv1UpG3h12bG+fbrXUZyhqAb?=
+ =?us-ascii?Q?7ixgU3hutONjUM5iwOB+Th439DZHGMd7K2NHCyf3RPwTl6JTXqt3QKomS5Ai?=
+ =?us-ascii?Q?sQ3NQpIb4w=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL02EPF0002992D:EE_|DM4PR12MB6254:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9680aa88-8a1f-4227-e0a7-08de84bc8f2f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|36860700016|376014|1800799024|22082099003|18002099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	ooOKjIzrNgTS/6I2e8Dswq68jWcLB6pOBDzs6HhyFu22i0alZC2r8fXIMNV1FORB38tQqK4UMdDt5ExaXTCfIFV5IPEDwRVwSXr1W4/Do/Wctj9qODOHPymh9KOjE2fL016MswgJBlI38fboMLoeovvB+ccWtpuqjHQK5YLLwiMsPKibpRn1/QJhB2ut3oxYPRyZuUnrTETlY82OEIHZNCaG4u9OPvConbGdRG689oJ1AYSiFXx4BUs5S0KlE306kBuIb0wFmmE1z14Dt8mE4tBCIIyvCf3EB0Fe3u+u9c3VVpVKBC3EBFquUljaFO+ijMJjIUpQjx/+zGex+2YdtcV8assgR+R3h2Ffo1m0n2UZl/eNw74WsaEDxdozfP9QCwD7NTxBbv3vmVRbPFAs7gpvEL+R+THB+Cv2z00xj3aonhON+UOwnpdwUyQ86EFIHfsw88p0pfzMMHEfzkY999ikOsfoTbf6k1hX8Yjk9n6FLSV16FzwXOE7RuJwNfOpO99wl/o9cR0vv3OnCw0hioGPOj45Q3gkF/XF2NjLsvcudittSdSbm/LgB95ueQXvHlMqecLKO6GKhj1dnUam8xXTgXa5rFZenYV8kkH5TO83wFb4NztLG4FMj2fouErz8xEBZMAhTLZaMi5A/lf33sX017AhQpfs9NesMRzusDEaQIUxVvbNh3rGudeYNg9UT7BoQ8aBfjOYAOX/uCUXszh/qPgbM0YMRJhXMjNdmUefPanqnxCRmk791RYqmVd/6/hXGR1CMGudLFgb7UPO9Q==
-X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(36860700016)(376014)(1800799024)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	i8b6wkcuHB2bMg6DQrHIPADTOEbT3x3rfy4c5fARBwVBUalfrlHvKya1pLH0o1TzagFScl08MMAVf7/8Y+qQYQ1EyN7Kdm1kGrUcdDsauNW2yE7Pj/rRDy4MyvRJeENSQLrGrLZPX4rnctHSvlpwoKXF95oTi5V+es6IK9K3mJyfOWhWiruq4linrdfDKcondZ30eiNs3YFeEZOy2MyDE9pla7QbEEfSAiVl1RDeFTWokmjyvedI5V/u91rLG3QssaJRbx7KD05QifzvNV6nCb5PISs/ZQMIWBnNnqp0RK7lJINaRpcOZn2qqoDr/nUB+kKnZ7q3UK8yIMkoYKXehUtOPSKAcWbbVed3xtJA2yY8Kqnc1AnaQtvGOoCNGC8JXHDr1RIZuPPcLD9gc2ZcrNsD5H5zBPTeGFqjSAE2dAw+ewNUD4Pw2Mcc/FKElSDT
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Mar 2026 07:04:12.3832
+X-Exchange-RoutingPolicyChecked: Z2HnnkN1ZXs09pBcJL3BpgeBbdOgkCz1EDj2EQyNhorysPgxLPHJGAtyzE0RVjbdhkKFSN2dG7g/pyE9T5bcDeKkEXLTxYNk9E3CDpRBwAsBOt3PMqsLlUW1znQWdWhCdKgsRrwh4KV+UROhL418TC4NhPyFDp1OY0O01OhrBmYlw3xXdoEbBa5a6rF7YXXJ570pfhY3EHLhKs2U5kwwk41afxNUKBHHaTzVIAHCGuz2P5/7BDrA+rcOYzHZ7/9BOvMHVgscLrsOuI+Sbex/Dr0Qir/pjvPz+H7e9YaSBdBp+mHyixdL9gwCSPwUsLv03d/BlqXq4SDxa7fIqX4tHQ==
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BN9PR11MB5276.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4944b17a-85c7-4c8f-f233-08de84bf07f2
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Mar 2026 07:21:53.9172
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9680aa88-8a1f-4227-e0a7-08de84bc8f2f
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	BL02EPF0002992D.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6254
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: uj7WCY604celk+ftHhOppmnhZEFLZfEePaFO8cwViz3Qe2t+2j1/MurJ7Kwcl9pT1GgB8QIgIyl8z8EpfVVjCQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN6PR11MB8145
+X-OriginatorOrg: intel.com
 
-AMD MDB IP supports Linked List (LL) mode as well as non-LL mode.
-The current code does not have the mechanisms to enable the
-DMA transactions using the non-LL mode. The following two cases
-are added with this patch:
-- For the AMD (Xilinx) only, when a valid physical base address of
-  the device side DDR is not configured, then the IP can still be
-  used in non-LL mode. For all the channels DMA transactions will
-  be using the non-LL mode only. This, the default non-LL mode,
-  is not applicable for Synopsys IP with the current code addition.
+> From: Nicolin Chen <nicolinc@nvidia.com>
+> Sent: Wednesday, March 18, 2026 3:16 AM
+>=20
+> @@ -977,7 +978,15 @@ int pci_dev_acpi_reset(struct pci_dev *dev, bool
+> probe)
+>  		ret =3D -ENOTTY;
+>  	}
+>=20
+> -	pci_dev_reset_iommu_done(dev);
+> +	/*
+> +	 * The reset might be invoked to recover a serious error. E.g. when
+> the
+> +	 * ATC failed to invalidate its stale entries, which can result in data
+> +	 * corruption. Thus, do not unblock ATS until a successful reset.
+> +	 */
+> +	if (!ret || !pci_ats_supported(dev))
+> +		pci_dev_reset_iommu_done(dev);
+> +	else
+> +		pci_warn(dev, "Reset failed. Blocking ATS to protect
+> memory\n");
+>  	return ret;
 
-- If the default mode is LL-mode, for both AMD (Xilinx) and Synosys,
-  and if user wants to use non-LL mode then user can do so via
-  configuring the peripheral_config param of dma_slave_config.
-
-Signed-off-by: Devendra K Verma <devendra.verma@amd.com>
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
----
-Changes in v15
-   Rebased the branch
-
-Changes in v14
-   Corrected trailing space error during merge.
-
-Changes in v13
-   No Changes
-
-Changes in v12
-  Simplified the logic to set the channel non_ll flag
-
-Changes in v11
-  Added error check for the following
-    If user enables LL mode when non-LL is default mode.
-    If config_param provided by user for eDMA
-  Renamed the 'non_ll' flag in dw_edma_chip to 'cfg_non_ll'
-
-Changes in v10
-  Added the peripheral_config check only for HDMA IP in
-  dw_edma_device_config().
-  Replaced the loop with single entry retrieval for non-LL
-  mode.
-  Addressed review comments and handled the burst allocation
-  by defining 'bursts_max' as per suggestions.
-
-Changes in v9
-  Fixed compilation errors related to macro name mismatch.
-
-Changes in v8
-  Cosmetic change related to comment and code.
-
-Changes in v7
-  No change
-
-Changes in v6
-  Gave definition to bits used for channel configuration.
-  Removed the comment related to doorbell.
-
-Changes in v5
-  Variable name 'nollp' changed to 'non_ll'.
-  In the dw_edma_device_config() WARN_ON replaced with dev_err().
-  Comments follow the 80-column guideline.
-
-Changes in v4
-  No change
-
-Changes in v3
-  No change
-
-Changes in v2
-  Reverted the function return type to u64 for
-  dw_edma_get_phys_addr().
-
-Changes in v1
-  Changed the function return type for dw_edma_get_phys_addr().
-  Corrected the typo raised in review.
----
- drivers/dma/dw-edma/dw-edma-core.c    | 47 +++++++++++++++++++-
- drivers/dma/dw-edma/dw-edma-core.h    |  1 +
- drivers/dma/dw-edma/dw-edma-pcie.c    | 44 ++++++++++++------
- drivers/dma/dw-edma/dw-hdma-v0-core.c | 64 ++++++++++++++++++++++++++-
- drivers/dma/dw-edma/dw-hdma-v0-regs.h |  1 +
- include/linux/dma/edma.h              |  1 +
- 6 files changed, 143 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index e7d698b352d3..bcfee4e0718a 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -223,6 +223,43 @@ static int dw_edma_device_config(struct dma_chan *dchan,
- 				 struct dma_slave_config *config)
- {
- 	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
-+	bool cfg_non_ll;
-+	int non_ll = 0;
-+
-+	chan->non_ll = false;
-+	if (chan->dw->chip->mf == EDMA_MF_HDMA_NATIVE) {
-+		if (config->peripheral_config &&
-+		    config->peripheral_size != sizeof(int)) {
-+			dev_err(dchan->device->dev,
-+				"config param peripheral size mismatch\n");
-+			return -EINVAL;
-+		}
-+
-+		/*
-+		 * When there is no valid LLP base address available then the
-+		 * default DMA ops will use the non-LL mode.
-+		 *
-+		 * Cases where LL mode is enabled and client wants to use the
-+		 * non-LL mode then also client can do so via providing the
-+		 * peripheral_config param.
-+		 */
-+		cfg_non_ll = chan->dw->chip->cfg_non_ll;
-+		if (config->peripheral_config) {
-+			non_ll = *(int *)config->peripheral_config;
-+
-+			if (cfg_non_ll && !non_ll) {
-+				dev_err(dchan->device->dev, "invalid configuration\n");
-+				return -EINVAL;
-+			}
-+		}
-+
-+		if (cfg_non_ll || non_ll)
-+			chan->non_ll = true;
-+	} else if (config->peripheral_config) {
-+		dev_err(dchan->device->dev,
-+			"peripheral config param applicable only for HDMA\n");
-+		return -EINVAL;
-+	}
- 
- 	memcpy(&chan->config, config, sizeof(*config));
- 	chan->configured = true;
-@@ -358,6 +395,7 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 	struct dw_edma_desc *desc;
- 	u64 src_addr, dst_addr;
- 	size_t fsz = 0;
-+	u32 bursts_max;
- 	u32 cnt = 0;
- 	int i;
- 
-@@ -415,6 +453,13 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 		return NULL;
- 	}
- 
-+	/*
-+	 * For non-LL mode, only a single burst can be handled
-+	 * in a single chunk unlike LL mode where multiple bursts
-+	 * can be configured in a single chunk.
-+	 */
-+	bursts_max = chan->non_ll ? 1 : chan->ll_max;
-+
- 	desc = dw_edma_alloc_desc(chan);
- 	if (unlikely(!desc))
- 		goto err_alloc;
-@@ -450,7 +495,7 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 		if (xfer->type == EDMA_XFER_SCATTER_GATHER && !sg)
- 			break;
- 
--		if (chunk->bursts_alloc == chan->ll_max) {
-+		if (chunk->bursts_alloc == bursts_max) {
- 			chunk = dw_edma_alloc_chunk(desc);
- 			if (unlikely(!chunk))
- 				goto err_alloc;
-diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
-index 71894b9e0b15..c8e3d196a549 100644
---- a/drivers/dma/dw-edma/dw-edma-core.h
-+++ b/drivers/dma/dw-edma/dw-edma-core.h
-@@ -86,6 +86,7 @@ struct dw_edma_chan {
- 	u8				configured;
- 
- 	struct dma_slave_config		config;
-+	bool				non_ll;
- };
- 
- struct dw_edma_irq {
-diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
-index 0cb5850ca411..0b30ce138503 100644
---- a/drivers/dma/dw-edma/dw-edma-pcie.c
-+++ b/drivers/dma/dw-edma/dw-edma-pcie.c
-@@ -295,6 +295,15 @@ static void dw_edma_pcie_get_xilinx_dma_data(struct pci_dev *pdev,
- 	pdata->devmem_phys_off = off;
- }
- 
-+static u64 dw_edma_get_phys_addr(struct pci_dev *pdev,
-+				 struct dw_edma_pcie_data *pdata,
-+				 enum pci_barno bar)
-+{
-+	if (pdev->vendor == PCI_VENDOR_ID_XILINX)
-+		return pdata->devmem_phys_off;
-+	return pci_bus_address(pdev, bar);
-+}
-+
- static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 			      const struct pci_device_id *pid)
- {
-@@ -303,6 +312,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 	struct dw_edma_chip *chip;
- 	int err, nr_irqs;
- 	int i, mask;
-+	bool non_ll = false;
- 
- 	struct dw_edma_pcie_data *vsec_data __free(kfree) =
- 		kmalloc_obj(*vsec_data);
-@@ -329,21 +339,24 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 
- 		/*
- 		 * There is no valid address found for the LL memory
--		 * space on the device side.
-+		 * space on the device side. In the absence of LL base
-+		 * address use the non-LL mode or simple mode supported by
-+		 * the HDMA IP.
- 		 */
- 		if (vsec_data->devmem_phys_off == DW_PCIE_XILINX_MDB_INVALID_ADDR)
--			return -ENOMEM;
-+			non_ll = true;
- 
- 		/*
- 		 * Configure the channel LL and data blocks if number of
- 		 * channels enabled in VSEC capability are more than the
- 		 * channels configured in xilinx_mdb_data.
- 		 */
--		dw_edma_set_chan_region_offset(vsec_data, BAR_2, 0,
--					       DW_PCIE_XILINX_MDB_LL_OFF_GAP,
--					       DW_PCIE_XILINX_MDB_LL_SIZE,
--					       DW_PCIE_XILINX_MDB_DT_OFF_GAP,
--					       DW_PCIE_XILINX_MDB_DT_SIZE);
-+		if (!non_ll)
-+			dw_edma_set_chan_region_offset(vsec_data, BAR_2, 0,
-+						       DW_PCIE_XILINX_MDB_LL_OFF_GAP,
-+						       DW_PCIE_XILINX_MDB_LL_SIZE,
-+						       DW_PCIE_XILINX_MDB_DT_OFF_GAP,
-+						       DW_PCIE_XILINX_MDB_DT_SIZE);
- 	}
- 
- 	/* Mapping PCI BAR regions */
-@@ -391,6 +404,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 	chip->mf = vsec_data->mf;
- 	chip->nr_irqs = nr_irqs;
- 	chip->ops = &dw_edma_pcie_plat_ops;
-+	chip->cfg_non_ll = non_ll;
- 
- 	chip->ll_wr_cnt = vsec_data->wr_ch_cnt;
- 	chip->ll_rd_cnt = vsec_data->rd_ch_cnt;
-@@ -399,7 +413,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 	if (!chip->reg_base)
- 		return -ENOMEM;
- 
--	for (i = 0; i < chip->ll_wr_cnt; i++) {
-+	for (i = 0; i < chip->ll_wr_cnt && !non_ll; i++) {
- 		struct dw_edma_region *ll_region = &chip->ll_region_wr[i];
- 		struct dw_edma_region *dt_region = &chip->dt_region_wr[i];
- 		struct dw_edma_block *ll_block = &vsec_data->ll_wr[i];
-@@ -410,7 +424,8 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 			return -ENOMEM;
- 
- 		ll_region->vaddr.io += ll_block->off;
--		ll_region->paddr = pci_bus_address(pdev, ll_block->bar);
-+		ll_region->paddr = dw_edma_get_phys_addr(pdev, vsec_data,
-+							 ll_block->bar);
- 		ll_region->paddr += ll_block->off;
- 		ll_region->sz = ll_block->sz;
- 
-@@ -419,12 +434,13 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 			return -ENOMEM;
- 
- 		dt_region->vaddr.io += dt_block->off;
--		dt_region->paddr = pci_bus_address(pdev, dt_block->bar);
-+		dt_region->paddr = dw_edma_get_phys_addr(pdev, vsec_data,
-+							 dt_block->bar);
- 		dt_region->paddr += dt_block->off;
- 		dt_region->sz = dt_block->sz;
- 	}
- 
--	for (i = 0; i < chip->ll_rd_cnt; i++) {
-+	for (i = 0; i < chip->ll_rd_cnt && !non_ll; i++) {
- 		struct dw_edma_region *ll_region = &chip->ll_region_rd[i];
- 		struct dw_edma_region *dt_region = &chip->dt_region_rd[i];
- 		struct dw_edma_block *ll_block = &vsec_data->ll_rd[i];
-@@ -435,7 +451,8 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 			return -ENOMEM;
- 
- 		ll_region->vaddr.io += ll_block->off;
--		ll_region->paddr = pci_bus_address(pdev, ll_block->bar);
-+		ll_region->paddr = dw_edma_get_phys_addr(pdev, vsec_data,
-+							 ll_block->bar);
- 		ll_region->paddr += ll_block->off;
- 		ll_region->sz = ll_block->sz;
- 
-@@ -444,7 +461,8 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 			return -ENOMEM;
- 
- 		dt_region->vaddr.io += dt_block->off;
--		dt_region->paddr = pci_bus_address(pdev, dt_block->bar);
-+		dt_region->paddr = dw_edma_get_phys_addr(pdev, vsec_data,
-+							 dt_block->bar);
- 		dt_region->paddr += dt_block->off;
- 		dt_region->sz = dt_block->sz;
- 	}
-diff --git a/drivers/dma/dw-edma/dw-hdma-v0-core.c b/drivers/dma/dw-edma/dw-hdma-v0-core.c
-index e3f8db4fe909..d2b622250430 100644
---- a/drivers/dma/dw-edma/dw-hdma-v0-core.c
-+++ b/drivers/dma/dw-edma/dw-hdma-v0-core.c
-@@ -225,7 +225,7 @@ static void dw_hdma_v0_sync_ll_data(struct dw_edma_chunk *chunk)
- 		readl(chunk->ll_region.vaddr.io);
- }
- 
--static void dw_hdma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
-+static void dw_hdma_v0_core_ll_start(struct dw_edma_chunk *chunk, bool first)
- {
- 	struct dw_edma_chan *chan = chunk->chan;
- 	struct dw_edma *dw = chan->dw;
-@@ -263,6 +263,68 @@ static void dw_hdma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
- 	SET_CH_32(dw, chan->dir, chan->id, doorbell, HDMA_V0_DOORBELL_START);
- }
- 
-+static void dw_hdma_v0_core_non_ll_start(struct dw_edma_chunk *chunk)
-+{
-+	struct dw_edma_chan *chan = chunk->chan;
-+	struct dw_edma *dw = chan->dw;
-+	struct dw_edma_burst *child;
-+	u32 val;
-+
-+	child = list_first_entry_or_null(&chunk->burst->list,
-+					 struct dw_edma_burst, list);
-+	if (!child)
-+		return;
-+
-+	SET_CH_32(dw, chan->dir, chan->id, ch_en, HDMA_V0_CH_EN);
-+
-+	/* Source address */
-+	SET_CH_32(dw, chan->dir, chan->id, sar.lsb,
-+		  lower_32_bits(child->sar));
-+	SET_CH_32(dw, chan->dir, chan->id, sar.msb,
-+		  upper_32_bits(child->sar));
-+
-+	/* Destination address */
-+	SET_CH_32(dw, chan->dir, chan->id, dar.lsb,
-+		  lower_32_bits(child->dar));
-+	SET_CH_32(dw, chan->dir, chan->id, dar.msb,
-+		  upper_32_bits(child->dar));
-+
-+	/* Transfer size */
-+	SET_CH_32(dw, chan->dir, chan->id, transfer_size, child->sz);
-+
-+	/* Interrupt setup */
-+	val = GET_CH_32(dw, chan->dir, chan->id, int_setup) |
-+			HDMA_V0_STOP_INT_MASK |
-+			HDMA_V0_ABORT_INT_MASK |
-+			HDMA_V0_LOCAL_STOP_INT_EN |
-+			HDMA_V0_LOCAL_ABORT_INT_EN;
-+
-+	if (!(dw->chip->flags & DW_EDMA_CHIP_LOCAL)) {
-+		val |= HDMA_V0_REMOTE_STOP_INT_EN |
-+		       HDMA_V0_REMOTE_ABORT_INT_EN;
-+	}
-+
-+	SET_CH_32(dw, chan->dir, chan->id, int_setup, val);
-+
-+	/* Channel control setup */
-+	val = GET_CH_32(dw, chan->dir, chan->id, control1);
-+	val &= ~HDMA_V0_LINKLIST_EN;
-+	SET_CH_32(dw, chan->dir, chan->id, control1, val);
-+
-+	SET_CH_32(dw, chan->dir, chan->id, doorbell,
-+		  HDMA_V0_DOORBELL_START);
-+}
-+
-+static void dw_hdma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
-+{
-+	struct dw_edma_chan *chan = chunk->chan;
-+
-+	if (chan->non_ll)
-+		dw_hdma_v0_core_non_ll_start(chunk);
-+	else
-+		dw_hdma_v0_core_ll_start(chunk, first);
-+}
-+
- static void dw_hdma_v0_core_ch_config(struct dw_edma_chan *chan)
- {
- 	struct dw_edma *dw = chan->dw;
-diff --git a/drivers/dma/dw-edma/dw-hdma-v0-regs.h b/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-index eab5fd7177e5..7759ba9b4850 100644
---- a/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-+++ b/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-@@ -12,6 +12,7 @@
- #include <linux/dmaengine.h>
- 
- #define HDMA_V0_MAX_NR_CH			8
-+#define HDMA_V0_CH_EN				BIT(0)
- #define HDMA_V0_LOCAL_ABORT_INT_EN		BIT(6)
- #define HDMA_V0_REMOTE_ABORT_INT_EN		BIT(5)
- #define HDMA_V0_LOCAL_STOP_INT_EN		BIT(4)
-diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
-index 270b5458aecf..61d6064fcfed 100644
---- a/include/linux/dma/edma.h
-+++ b/include/linux/dma/edma.h
-@@ -97,6 +97,7 @@ struct dw_edma_chip {
- 	enum dw_edma_map_format	mf;
- 
- 	struct dw_edma		*dw;
-+	bool			cfg_non_ll;
- };
- 
- /* Export to the platform drivers */
--- 
-2.43.0
-
+let's pass the reset status to pci_dev_reset_iommu_done() then
+put above detail inside.=20
