@@ -1,46 +1,46 @@
-Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013070.outbound.protection.outlook.com [52.101.72.70])
+Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011070.outbound.protection.outlook.com [52.101.70.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 586E23659F8;
-	Wed, 18 Mar 2026 06:28:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69BEE36493A;
+	Wed, 18 Mar 2026 06:28:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.70
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773815296; cv=fail; b=fwCPeoKcwlIWIuXWktX/Y3hdg3shnPz+PoMfnICYTPUCBpAohLXloGbGnlJeEaE7Avbd6tT2pypXdENNFKGblN/J0weV28R1SftslSIdAtN24YhPvTxmRtvbwFW0/lN1M24DcHJew/c1Wxk9GVaDNK4HBp2hPtHVJCjFz8fvB80=
+	t=1773815305; cv=fail; b=PscFhivIvPL4/F1zNI6B0PNeg89m7oV2VnqLZu9a8b79embeMMkVosjv+GnaLQe5pGT+68HnIJQgvRMac9hHX/oq3snM2G7qSNMmZOJRBjrc1+S/INnHMUKmExjSi99R2HYsCGde1TEBY5u3y2+yqaPZuiMT4eiBYZ3TLXbF67A=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773815296; c=relaxed/simple;
-	bh=FYaSlL2kDVcnNh2DHOfNnwOEq4k2FoRYHyF5pYttKnQ=;
+	s=arc-20240116; t=1773815305; c=relaxed/simple;
+	bh=3qW0DbpXhzlXNlNUU4S5ym6D0MOWzPxIToT8CpJKvmc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=j47PXgsEC3Vv6zPCZfSd7cezPOSA6Rq47sSItdf126TtF36nXNXOiXOnyjmTdM2bRrs8/648ZiszAKl60lkhWqwLaV38tKGadSol4bE/gQoWc+ntmahwv8CbcSEtfRsR8iMWgWR3JTeRSyQ3PaQOd/mONPp7Z5kspqVYO7D1G5w=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=VwJd9Ei0; arc=fail smtp.client-ip=52.101.72.70
+	 Content-Type:MIME-Version; b=usZoYW+XU8bPY195qIdVj7P+hf5pj+Is1ACeyhYOUHomHH7JnQ7wAJReGJjj06irvcvjG5GnawzXES324vj5VJtlz0oBQ7BP8JWxpxPYATVIRYBCC2n6Rn+jMeUaz5oBc1EWzb13oPRa6nrrE+ctR2rmlvzxaouze9m9259avGk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=WRLPkRRd; arc=fail smtp.client-ip=52.101.70.70
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="VwJd9Ei0"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="WRLPkRRd"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=WbEo4urcTvMmm36r4oG8srJvRn02D1lQ/jKm0OeqcUupWw3IX1Pp2RlpAf1mflaoyhe2KVHP5tyilXo/Bamm5AsFmELupnHag9N7+pCg9shTMGK7kH3HgMPRkk1/k2i2HrpDq3qXaid//w0SeaHkaNutt3gVPdZici6AaaMq9wGiYq9DOwGrYAywRz1QI81iAz/9xL9bV9Q/1ykEHqT83CGGc/J/vO/nDckl3cD13JCjhDJ4cdkuDV/pjWKBr+VYPvVpCKK39UvFB1PL4Nv+abORSOxkCw1iggEBtoZmqMw05NsG+TmfEBnJOPk6grTr9WowNlSi0dPMDHWjrj0mDg==
+ b=pcREgcVc0oeKlGcEZ/a66hjcdMXsqGa4yiVg0vWehOJJ8dF4l9TAA9+cN8HDe+KpNTbVh0Hsn3Z7fzbZSQBtr19e9QTHn5Qdu/iQMXbiRaGWcN/aZM4ZhKo1pQRzqxpN+Z+tqG3bBt+0ucvj4OWAKv8BMHdE30ZBRNynli9JHoCechcqZv+eI/GoBdkAFQ/c9GHL+4m6SlrU3F11shbFeoVZ5IqMYHRH8+7JUXxUayH8085mHTO7Ff9CtnHjSMwDdeQorbF2nqaOY8kLRDgWkcdGoxPbeWORnLZoE0U1etmzCRnI5hLBAXXo3xnfbEcyQMUrrxcDYRn1ZXas7lQ/aw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7OPH4ARTxhB422IyO2zUvCVkn5gBwZDn6toCot2Sx+Q=;
- b=Kn0FcqAECZjziElDR7EWRcrbYtUyO2PdA3zOcmqUr0fAVC6nPEb8LFphVkrF9B6ryI/l2mGCBcGVSQTKHA7oSGrBD8YhLOsgnpx6btLeKBKW2kgPzVMUssMDnzcALMYdX8K8jOUvB3+4YeRPSRscRydfj+ihiR/eXMP6nvnux0Fw8juYtfi63BBNCsZmWwnRu8ZtP5i4nm2ryYttqdM1/NaECfuz9c9axrBYYVbtyR0ue1zjd17U8SEem5D7weyTVltzqTvTd+iEc2Kx5mV74T1fkL7DGtQBtOCsP/24F7h8qeeqCFPxndCllcQi8FWjlKxUD4gUSistbcDgWqs/TA==
+ bh=+IcBE26oRN13Z1koAZGrMF0Xa6Z3GKMCnfUAz5eLY/4=;
+ b=EiR1sg+OjxpyjLbhJN6UfDM9RTadkq9JMbCriKUde1B6kzGkZr1XNVA8Mh7lftM4Jry0+8IEBECgbBS0Xt8otOuGK9U/4w8TdXb+JWKgj+vD2iuWzG87tSeqRVPH8sGr/ijXUSrzEJV5c9EGox2vJtiXqdLbbn0lkZLbNjTWhxiX+ldO/jU62JIWJPVPLzEMk6+X8fQ5FD1C/ZnHzybzKMfZU/zy7ArAgEiEbShvq0muOwMwvlVkTNPv/bqb0eKCziOziWbVCQErQkwUG5Ih6jeLUKwbd9C5YjvbghKSWfoQoJOGk0PJXqC0Gadu/z5MtTozkwrQNGRUtfR3PaOYIw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7OPH4ARTxhB422IyO2zUvCVkn5gBwZDn6toCot2Sx+Q=;
- b=VwJd9Ei0TeBPHeL/joksC0w7Ht3Ppcw9NK732n18x8GlS+hSVQsc+CKbu7Cpqnd3ZcatZwdnWkat82Eq5Lwuuj74coNLisFwH6645Yil8loRphGZd64B2BPhZY8yBjHCTGI7iUBfbNFcCnsaEY3uM0E4tUpC9EKMnoPm00mpN2/wLSd3BLQcfyV+HNmw7ujqSfbTNRlEvyGgh94gaPU2vKYMD0f/dsoxvfSAtm4BKRXu4KIwYRhPRzUC+XVwaDM7XQkAMRpomVC/a61D56AJlfMzl5JoBL9hvKhBvewbazbX+zP2SqWiJ5EsawE2pr42XJnUDVthBBbnx+Dsr3kvPw==
+ bh=+IcBE26oRN13Z1koAZGrMF0Xa6Z3GKMCnfUAz5eLY/4=;
+ b=WRLPkRRd3tGzSk1xiSIDcW7KGHcKwwDqsABMc+FdwRIL8IbFhSIzK6dEv1cih2tD1/x0cZF1e4u2eWA9RurWhCLPM/3fdvFfhSZEpj0vQcSa091LRMYu0KcQnxR2ApuALDnehotgRVmtjL+aq17TxHDCiyF2As6HFPHD3ueaJSwyYB6jZF0s/dS9mqZdwF3pSgRWhKpUpJqsrYKh231hYx1UcTTK2/tmCl64dNjm7CaVz9pefO4Os2dVICteSD9n4ERfRevZpZSyuiGVYFs4o0tc9/3L094+vkF6rATigrqIzncPlIFpI6Lsuj5eSFhRYsVMCA1EiS33n3Ekr85HVA==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
  (2603:10a6:800:315::13) by PA1PR04MB11334.eurprd04.prod.outlook.com
  (2603:10a6:102:4f2::6) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Wed, 18 Mar
- 2026 06:28:10 +0000
+ 2026 06:28:19 +0000
 Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
  ([fe80::feda:fd0e:147f:f994]) by VI0PR04MB12114.eurprd04.prod.outlook.com
  ([fe80::feda:fd0e:147f:f994%5]) with mapi id 15.20.9723.018; Wed, 18 Mar 2026
- 06:28:12 +0000
+ 06:28:21 +0000
 From: Sherry Sun <sherry.sun@nxp.com>
 To: hongxing.zhu@nxp.com,
 	l.stach@pengutronix.de,
@@ -60,9 +60,9 @@ Cc: imx@lists.linux.dev,
 	linux-arm-kernel@lists.infradead.org,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH V9 02/13] PCI: host-generic: Add common helpers for parsing Root Port properties
-Date: Wed, 18 Mar 2026 14:29:05 +0800
-Message-Id: <20260318062916.2747472-3-sherry.sun@nxp.com>
+Subject: [PATCH V9 03/13] PCI: dwc: Parse Root Port nodes in dw_pcie_host_init()
+Date: Wed, 18 Mar 2026 14:29:06 +0800
+Message-Id: <20260318062916.2747472-4-sherry.sun@nxp.com>
 X-Mailer: git-send-email 2.37.1
 In-Reply-To: <20260318062916.2747472-1-sherry.sun@nxp.com>
 References: <20260318062916.2747472-1-sherry.sun@nxp.com>
@@ -79,224 +79,95 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: VI0PR04MB12114:EE_|PA1PR04MB11334:EE_
-X-MS-Office365-Filtering-Correlation-Id: dbfc1243-bb00-42d2-fe26-08de84b787d0
+X-MS-Office365-Filtering-Correlation-Id: 6e445e64-e7f9-4d54-55b9-08de84b78cf5
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|19092799006|366016|7416014|376014|1800799024|52116014|56012099003|18002099003|22082099003|38350700014|921020;
 X-Microsoft-Antispam-Message-Info:
-	LajC1rzwxVIDt1sftYwcafqumX5/sh3RoccXolGQ1H1p42bbM5NSvRK9S5cFFMifefB6jfYAJJXPoL64+tB/A9WKGYAY6iU0IzU7qLoRzJoPwXeVuoRyn+LCbdgoYbRqDHfrYjQsJbcOWQKLHTHdL/ZU429iD2hrmJiBp5rV7Nr10qTRQFczw1x2AIQ7hX+0PdtiCTRNxV8udLZVGVHBkDtNaeDRFhjJfgFHwTzkO9++Mpb8T3Aa76uOYXuASOT42BfazPqb423CFW4+edhFEmXWGo/tPDxF7hjqeMBUpiJIvGmAUnE82yMwFpEOopWjGHkpP9Gzqj0HNO7XgSFS0qJuyA0b3EtyZXLm1L6k63VbikM0tUEKd+yYMpWXKuDEyYfueVTht7sL1V0JlFdFDEig0Roq2kj02K13yqDzMA+qJ1lKoE0Gb7/T9JhcKOj2KWg25HROgPGxjWGyLicHHzGmHAIQWfoPrhi6fd1rhXGdNrwlEDLtsP58yLq/8mVPpNHGrDjHAK6oSbU9LCHVaSjdD5FVkhCg2R9pNTYYNCc8PSX+AINm6we0rgxUdmircnv772S4L0GafRgA/6725iBFDmmz4G+k18bFQZd8ZF5Kkl1zi/WubIrRCM5Qkf+swn86WBcjGW/Tg0+tYDm5tRUjWZe6awnsSiQcGPY2Np3S/EpMFrTJf3jF0ZlKNjMMCZGwxBm9s1CDH5ExSasSjHAcFKKLxcjnLbJyQOK80bePYOwCBonPDNUQig6BkIWtzyaSRZg4hbNTNqVPpZgeUWfghvo8xgUeYlMpUM3rNZo=
+	ZaWaPICMrYJt1st0fH4In08AIHlIIK8yAHZe6yudJo1T/gCV8xxOqa8toyW+Ln+Rk13AbuPy7h/bhs8r3XRZGuzeA/YONgY3Fkl2AKmSSE7bu3IpJOdOiMf6tNh8EfdO48ijzSKkdbPPzO8YXw4Ao7d2XhfKlxgGLodE2jeuQCWYw8d8HxZZd+vjPAkoiMNPyCKME1XdZHkpftSA1aoWs6ZmIKi70BEly5ttSWrQ3ECPk51i8Nkc9BrrWHuSdYK3qippVU/w77MCg02iVVbNdx0waBpefpN095Fe1J6P7ACn8rZxz7K3nCbbnamu3FEIi+RgMlCafvQbC9YpqnbAtU6imBBEF9j/0jQO2E2FL83iOdl51VnpfaBk+ADpJSClAN0IyOgIeR+Z2VCQAZ0ntr+9ckL5gVrBfYZLJXTzgg/E4o8xAQb1j1TATISyA3u1nZdOm7XxXeWuozXyAdSmTyC3l1lbSH6K7nFDPOci8QYGAON887XcPO/9N61NJn7UCLTRA5Og0jBh8AInPPUAu5SduMuUq4mcPCwXUugUlIcYmIjPVRP4DvCgM39jYWxmD5hQS0kJP6GYGqGHDsbKHiv+J6lxsBsmy4xiawGLnzDnmE9wRjS/DJ0SICDwS0VaiREDNLiuh+bsB3eMqFqyN24emieb7U9kFRdDiknP8fX3/Bs8KNu+FAktLgxRQ7kVUz2stdrjv0K1doGZZm5AC8pBrl1XkTxqvnbrsuO6BpXrle4VD7uo9IwTlZ/bOCpluj8ObxQFVzW+itDVNcHNmnyjWaIM+ChZRdKuwJzUXjAYhrnFvwpW1qyNjnzOUUN9
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI0PR04MB12114.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(366016)(7416014)(376014)(1800799024)(52116014)(56012099003)(18002099003)(22082099003)(38350700014)(921020);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?H5yS8+S+0iC5/i2XPlXuTrWhux5vMYbaANtrpL/FkdGW8KPxujOeuwU1Hgg8?=
- =?us-ascii?Q?cZfEYlpDVl9BxwCoE8LGdFDe4KG6fQ40GJAGhnqQ2KIXdhqUGYVu4PJn8mvu?=
- =?us-ascii?Q?B58/J9pvK407ZZXyF6gVuZ4mMDeYvmcK7wa0REHw8tdKKr7JMjGpassqeEAs?=
- =?us-ascii?Q?o4uUabGBQy30gClGymEEUcRcDUllybm3177ALiP0to68ge5M/gOtWJeBBloM?=
- =?us-ascii?Q?g6JiXNBkoNJ2x/7YQcUDMic9wNLX+Ydf30mnDa0xw5CF0UYp6cDceM/uM6o8?=
- =?us-ascii?Q?axFczsq5EXV3uvgk3E08GyDglTYz8kfivsul3F9Df+qFnHOX/UmUV9p90ldS?=
- =?us-ascii?Q?qt82z8Cc1bHCgOE8XdpTUYcgU0aTK6/I3OUx8QTrP5kYMdEt9DRgr4aPr3ci?=
- =?us-ascii?Q?LoSU2lK6NQRlYmWZexVrtEBVv6+uHIGpugxNtrJHEVMcwrWK0D3CsOfNA5Je?=
- =?us-ascii?Q?s+LOqb3XmQ9YujxXNavsPKtDrGVq6iEld7EYFnu0nIotaTb6ZISuFXL39on8?=
- =?us-ascii?Q?0H8L2vQAbMumHGGICeg0DrBjxQBOdxvXt7PTko5GiGvQ8EZ2szdzWFjNlKjv?=
- =?us-ascii?Q?9QEFWizLLxFBqgstJiRn8ejHaNsOVEH9IBhlVhwMIGHhBfYos2ZFt5eyvp+E?=
- =?us-ascii?Q?U5/K83iogfSdW4NI1FwW2D5yGr4Go7868uQOJiBPZ7bk/q5h2DKJaP3zcCA2?=
- =?us-ascii?Q?tJyI1w1VrprgrgqXDEW/Ed5XYYGW0fCLmhYwfntlHHnPPMw7emkX2ucK8JDU?=
- =?us-ascii?Q?4bI7zlXBUiZT+Az5k02rEmYKwVP4BSWc90o87zhsVUT2j3+jjmY78oRVvoMS?=
- =?us-ascii?Q?J8WozTt9q1Z2Ns5SXtRSQZlfeqab2HyjoSHB+BbtH6l0svJItuWDs6yLrJa0?=
- =?us-ascii?Q?D9Ern/MySXIgitzTqki+2St5pueG9jnE4baCz56ERTufFADiZMqK/UmHattY?=
- =?us-ascii?Q?jgPRdluuwJzu0krtP+yP1JwXnBKqQLsE5Kyub0UzteHjoqsx6jyVymTRQb6k?=
- =?us-ascii?Q?5uwx+itahbMRl79zhWfiVfAQIWpy4q8LNYBO0Zj9d8SnP9H0EZ2bGtuKrQ60?=
- =?us-ascii?Q?a7aHvWpODFE/TJg9rLzOBrczoIjHtc0wqYNbHZT0NLZR9EhvLYovhAVjpwA0?=
- =?us-ascii?Q?t13J0nNpmQOnr3K1r3gFcJJ03+XJ6vM0pkjntKwFwwT9kR0IlRKJc0KMeZmq?=
- =?us-ascii?Q?LsfFoOyNTmMcnc+SAAOzgFT7wH6ju7hEIpUm+MK+76cC/wmcGsnYIufFJyRI?=
- =?us-ascii?Q?2ACepiVupWswrzH3gV1GEFC1sVGGF5ruyx92onHPUQ4ACJAqicBdkINC986o?=
- =?us-ascii?Q?eyjiHH7cn4PAWI4oXorawOn15prqOeWUfu3Phdjnxtu5ok89c8737oBm3ASf?=
- =?us-ascii?Q?TQ9pByYj06SLUYKAxSWc9vrZ4Wsd7r1ciYSn7kEFOBJTuYP8Jx+sJUG2M8gK?=
- =?us-ascii?Q?+d3OgdGRhl7UkFu6iOUgw/oHEC4ZGDDiLszaFm2mzGoeVd/efJzO8zyzj3uZ?=
- =?us-ascii?Q?ORXMZUTrx5F8yC4j5IbNwz5YH24skkfzr8PfPHw4qbhqMuoyaEcwjskWRXpl?=
- =?us-ascii?Q?/S3cigrq3NSTl+LzyKr09FT6rTKKQzpZrljSq+JY2BCTljRU6Lnw2ZlVTtnQ?=
- =?us-ascii?Q?Juvv9KiwlTqD6WJzX3KDpiciXEPpY45+QNZvsm1dtUArLtfFq9VUaPglfDNn?=
- =?us-ascii?Q?AkN33VndtCRkD9P6JkdEyqn0WrFusVX2ZshNd7qETpDYRt2FyLzP+8TedteB?=
- =?us-ascii?Q?VfMoKL/2Lw=3D=3D?=
+	=?us-ascii?Q?zM/4C7k2gpvrlo5ouNzeP6hqnUkQWXnr63IdRk/0kwrD2WQefpxkE034n7Dv?=
+ =?us-ascii?Q?h06N+2hXGCYguKOL4gOfClyH0SYURB1hai+99sGQ3lDkyE5B2rKG+4YoiFXu?=
+ =?us-ascii?Q?NQ3RuTi90k7RrhKTwM+cd/UD/IzVrI3Fyy6OZuURmELkJjCkimXaBozrMUof?=
+ =?us-ascii?Q?PacAINFvd+X6SzCSi05QMbtuCtXGYtNs8x/uUsYQzwFs2t5urQmxK8pKPTDD?=
+ =?us-ascii?Q?2DjO4iggtDwN9YigodyThqHRqpWRhySqly6sW7f68JOBC76JqQTrxpiaBW/2?=
+ =?us-ascii?Q?bgH4hZcBP1PgqIkQCMgStXuRV0IqFd3NvLkw6PvW61A4yGAniXMpn6tQ3qV5?=
+ =?us-ascii?Q?FGaVYC9NnGi8Wksu1uEeaurwFNEKTuRMj6MnHavEFT3p7PyQkw7TZw0KElVC?=
+ =?us-ascii?Q?zFYkj9SUeDQquyssnCYmgly3EmoiNx/j4dolPAaLq8sTvXIFxpVGU9YIPd4R?=
+ =?us-ascii?Q?oI1q3XZWACXheUaYFb09JtTbX/hXNI5mPZyUroUxnDiSjd2Kjoun6N/fqXE3?=
+ =?us-ascii?Q?HDe6wX/0lMzV05qqnBbl4pL+vWaLswAJd799EpjBF1ANnSA/jxLMhOGfspoF?=
+ =?us-ascii?Q?6srQI+D+5duf3lbipqHI7s1auuxWVLlqJcg37cJxzamK2lNmhu1JCg87NMNj?=
+ =?us-ascii?Q?hcsgDPK+iMA1b6Rd8ijTbT8Limh3rr89O37xAcVJo//Hy7WqRGYBivKFhqab?=
+ =?us-ascii?Q?i9PyTCJMVA4nuyWdBppcr0RfPVUG1PYIyXUpYBtoZ1kPaMOYUVZw7RRpREyQ?=
+ =?us-ascii?Q?mmJ4bNKbgYGJ6O46jrM2CG2U/tGrOR/ZWsyVvaTtjqbWClvzHaj7Oizbakt+?=
+ =?us-ascii?Q?IYtzhmIXdiuHd9TK97jnBI973G3nitt1MhGe+uk1JBhV7m1+QAy24Lt2W79O?=
+ =?us-ascii?Q?dzaI6N1qi2eykPyqagZJdIgbSQeqsRoAbK0481bVg3fJRDy8Po2rRXdiyNXw?=
+ =?us-ascii?Q?rLP5OnMZ3IpLf9RrhwkAIXNczUZKAEOVXjdkhdZR3KcjBwlfZ/YbnMkX2MiL?=
+ =?us-ascii?Q?qVhIOlthaurah4ycvcC8SSrFDt+6cHuDgEJhN0iO4wL3YA6EZTrpKJfXzGZq?=
+ =?us-ascii?Q?YuZSgjgKC47mHG3T6VpjRVTpXV0pReZpZX66hW72tvjf98uYEHr3CSmkzg4Z?=
+ =?us-ascii?Q?1NMkRIYuk5NWDuhdeiQvjDemXGfgLP0d78cpTWR1KqswOTWQ9IQUMGmcaCka?=
+ =?us-ascii?Q?/uKpQwcqq9gfludC6SVQB5ROhHDLY/evRh0SAgxYRQx3GTa0YTR9viKQvLGi?=
+ =?us-ascii?Q?sNtWWlllEbml3vzbQCbmu4W/ZdfJpBGxCILrSwwWEN7iwrARon7HLDaWFz3E?=
+ =?us-ascii?Q?A9wuEcVwlwvi2eDAg4hweVfK24PG6upgi+TRbFPokWksITjbgg3U58DFkmsC?=
+ =?us-ascii?Q?KPKnEFosjd4E8B3h4w3n+ZD3ErNp9brhT4wusZmPqMKiMaWy4ldnYYn9Ceop?=
+ =?us-ascii?Q?zLvnrc/oBycgFMbzObqS1EozUyS2L+7Rphn2mLVBRFw/MJyJaUOxiytQZR21?=
+ =?us-ascii?Q?H+/aYKPYTlbuwzwpikT/vnQxZg5ZatjVV2pht8e8LhKluEWHMvfzxqoAfhAh?=
+ =?us-ascii?Q?Ojj92uarw8siYe4iQEUkTT58UyzWXBi7FtQJy5ezjowXxnamDOWEGZBFJa15?=
+ =?us-ascii?Q?foBETojUmbMF+nMKSWOlJIo9iRh1/Zba50pb0OoJEDAq/v7RfduiYsWWrPwh?=
+ =?us-ascii?Q?dQQNMewUEdLB8QrZDg15XH8CyrquPHpptGH/h8geLJDjh2vwTfLgvVDEkehb?=
+ =?us-ascii?Q?4BqdI+W15Q=3D=3D?=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: dbfc1243-bb00-42d2-fe26-08de84b787d0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6e445e64-e7f9-4d54-55b9-08de84b78cf5
 X-MS-Exchange-CrossTenant-AuthSource: VI0PR04MB12114.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Mar 2026 06:28:12.7054
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Mar 2026 06:28:21.2607
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: c0pCL2VGEBzJ+ItxcvEOAyInz+fX7kzAJ7/JzSRCP9PRvgXhoQOuAwoFMbm4iOpSppYePfYq6rK9c+kB0CXoUw==
+X-MS-Exchange-CrossTenant-UserPrincipalName: nDQOyeE8sOg4LM59gfAQbC/5FNyXRXW+shMYFdUGIugjZotTbHVuOmMTkxrZHSkFrMuCtkSOI+ZnqRE5dCXaZw==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA1PR04MB11334
 
-Introduce generic helper functions to parse Root Port device tree nodes
-and extract common properties like reset GPIOs. This allows multiple
-PCI host controller drivers to share the same parsing logic.
-
-Define struct pci_host_port to hold common Root Port properties
-(currently only reset GPIO descriptor) and add
-pci_host_common_parse_ports() to parse Root Port nodes from device tree.
-
-Also add the 'ports' list to struct pci_host_bridge for better maintain
-parsed Root Port information.
+Add support for parsing Root Port child nodes in dw_pcie_host_init()
+using pci_host_common_parse_ports(). This allows DWC-based drivers to
+specify Root Port properties (like reset GPIOs) in individual Root Port
+nodes rather than in the host bridge node.
 
 Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
 ---
- drivers/pci/controller/pci-host-common.c | 77 ++++++++++++++++++++++++
- drivers/pci/controller/pci-host-common.h | 16 +++++
- drivers/pci/probe.c                      |  1 +
- include/linux/pci.h                      |  1 +
- 4 files changed, 95 insertions(+)
+ drivers/pci/controller/dwc/pcie-designware-host.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
-index d6258c1cffe5..0fb6991dde7b 100644
---- a/drivers/pci/controller/pci-host-common.c
-+++ b/drivers/pci/controller/pci-host-common.c
-@@ -9,6 +9,7 @@
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index a74339982c24..9608f9fcd1b3 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -20,6 +20,7 @@
+ #include <linux/platform_device.h>
  
- #include <linux/kernel.h>
- #include <linux/module.h>
-+#include <linux/gpio/consumer.h>
- #include <linux/of.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -17,6 +18,82 @@
+ #include "../../pci.h"
++#include "../pci-host-common.h"
+ #include "pcie-designware.h"
  
- #include "pci-host-common.h"
+ static struct pci_ops dw_pcie_ops;
+@@ -581,6 +582,13 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
  
-+/**
-+ * pci_host_common_delete_ports - Cleanup function for port list
-+ * @data: Pointer to the port list head
-+ */
-+void pci_host_common_delete_ports(void *data)
-+{
-+	struct list_head *ports = data;
-+	struct pci_host_port *port, *tmp;
-+
-+	list_for_each_entry_safe(port, tmp, ports, list)
-+		list_del(&port->list);
-+}
-+EXPORT_SYMBOL_GPL(pci_host_common_delete_ports);
-+
-+/**
-+ * pci_host_common_parse_port - Parse a single Root Port node
-+ * @dev: Device pointer
-+ * @bridge: PCI host bridge
-+ * @node: Device tree node of the Root Port
-+ *
-+ * Returns: 0 on success, negative error code on failure
-+ */
-+static int pci_host_common_parse_port(struct device *dev,
-+				      struct pci_host_bridge *bridge,
-+				      struct device_node *node)
-+{
-+	struct pci_host_port *port;
-+	struct gpio_desc *reset;
-+
-+	reset = devm_fwnode_gpiod_get(dev, of_fwnode_handle(node),
-+				      "reset", GPIOD_ASIS, "PERST#");
-+	if (IS_ERR(reset))
-+		return PTR_ERR(reset);
-+
-+	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
-+	if (!port)
-+		return -ENOMEM;
-+
-+	port->reset = reset;
-+	INIT_LIST_HEAD(&port->list);
-+	list_add_tail(&port->list, &bridge->ports);
-+
-+	return 0;
-+}
-+
-+/**
-+ * pci_host_common_parse_ports - Parse Root Port nodes from device tree
-+ * @dev: Device pointer
-+ * @bridge: PCI host bridge
-+ *
-+ * This function iterates through child nodes of the host bridge and parses
-+ * Root Port properties (currently only reset GPIO).
-+ *
-+ * Returns: 0 on success, -ENOENT if no ports found, other negative error codes
-+ * on failure
-+ */
-+int pci_host_common_parse_ports(struct device *dev, struct pci_host_bridge *bridge)
-+{
-+	int ret = -ENOENT;
-+
-+	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
-+		if (!of_node_is_type(of_port, "pci"))
-+			continue;
-+		ret = pci_host_common_parse_port(dev, bridge, of_port);
-+		if (ret)
-+			return ret;
+ 	pp->bridge = bridge;
+ 
++	/* Parse Root Port nodes if present */
++	ret = pci_host_common_parse_ports(dev, bridge);
++	if (ret && ret != -ENOENT) {
++		dev_err(dev, "Failed to parse Root Port nodes: %d\n", ret);
++		return ret;
 +	}
 +
-+	if (ret)
-+		return ret;
-+
-+	return devm_add_action_or_reset(dev, pci_host_common_delete_ports,
-+					&bridge->ports);
-+}
-+EXPORT_SYMBOL_GPL(pci_host_common_parse_ports);
-+
- static void gen_pci_unmap_cfg(void *ptr)
- {
- 	pci_ecam_free((struct pci_config_window *)ptr);
-diff --git a/drivers/pci/controller/pci-host-common.h b/drivers/pci/controller/pci-host-common.h
-index b5075d4bd7eb..37714bedb625 100644
---- a/drivers/pci/controller/pci-host-common.h
-+++ b/drivers/pci/controller/pci-host-common.h
-@@ -12,6 +12,22 @@
- 
- struct pci_ecam_ops;
- 
-+/**
-+ * struct pci_host_port - Generic Root Port properties
-+ * @list: List node for linking multiple ports
-+ * @reset: GPIO descriptor for PERST# signal
-+ *
-+ * This structure contains common properties that can be parsed from
-+ * Root Port device tree nodes.
-+ */
-+struct pci_host_port {
-+	struct list_head	list;
-+	struct gpio_desc	*reset;
-+};
-+
-+void pci_host_common_delete_ports(void *data);
-+int pci_host_common_parse_ports(struct device *dev, struct pci_host_bridge *bridge);
-+
- int pci_host_common_probe(struct platform_device *pdev);
- int pci_host_common_init(struct platform_device *pdev,
- 			 struct pci_host_bridge *bridge,
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index bccc7a4bdd79..65a111361072 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -671,6 +671,7 @@ static void pci_init_host_bridge(struct pci_host_bridge *bridge)
- {
- 	INIT_LIST_HEAD(&bridge->windows);
- 	INIT_LIST_HEAD(&bridge->dma_ranges);
-+	INIT_LIST_HEAD(&bridge->ports);
- 
- 	/*
- 	 * We assume we can manage these PCIe features.  Some systems may
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8861eeb4381d..ac343e8f140c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -642,6 +642,7 @@ struct pci_host_bridge {
- 	int		domain_nr;
- 	struct list_head windows;	/* resource_entry */
- 	struct list_head dma_ranges;	/* dma ranges resource list */
-+	struct list_head ports;		/* Root Port list (pci_host_port) */
- #ifdef CONFIG_PCI_IDE
- 	u16 nr_ide_streams; /* Max streams possibly active in @ide_stream_ida */
- 	struct ida ide_stream_ida;
+ 	ret = dw_pcie_host_get_resources(pp);
+ 	if (ret)
+ 		return ret;
 -- 
 2.37.1
 
