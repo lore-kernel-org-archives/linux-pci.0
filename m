@@ -1,214 +1,190 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7E87313E2B;
-	Wed, 18 Mar 2026 06:14:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDA2B8462;
+	Wed, 18 Mar 2026 06:16:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773814457; cv=none; b=aZ5wDsJh+g4gM2akTUpa4YGp76DffqISajec0RkiLd35LgFs3ZpeWLuM7naO02lm6lXjlKsN5bTGqYtROf9bCE5aPzxi9tQ2z6yjRKe1xyc4mxsUD5ehtF5JSA0ke4Mq9v4+0YUHb5bAr2q192b1El8j15v+t/7Ro3QKmr4KrKU=
+	t=1773814591; cv=none; b=IcwP1cQPlU6Fr2JeXdfrmpfV1QNOqxglz7L8E0QNycHvoMG3wXZKqqYu2IROQeozgds8o02KAIIPEUgrdtjt2HraJfMBCUXHtLGp7KbNSO9Q4axgUbAG3ABYhU52g49yDzSse+4lrUIpA89flIN1mT8sDaTNKkS4lIvdY36pDqA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773814457; c=relaxed/simple;
-	bh=DkHUnEo/Buc1iI8h0hzSm7QzwytPckEV+C7X+Kypm6E=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Rc8a/m4licOD893u1tB7dd4dkKV39CDGr5XcRlKleGBeFVetbs2CIhDTIAxLiWfwSleJGZwbrtCe0jACslJOn+v1i32UX6fgxbflJoP2grnKfdH9W+PuTBscXetoVcT/gQPcwv8vKEpQL4LvmFWpo7V85m20SJ2TvLD+J2FfDpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ThU7rf/f; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1773814591; c=relaxed/simple;
+	bh=oDnlMW+yrl3kxEDV1Uxuwpsrw8lOvDpiu3LAZZ2bpIg=;
+	h=Mime-Version:Content-Type:Date:Message-Id:From:To:Cc:Subject:
+	 References:In-Reply-To; b=i7H2eSQGZPLPk/VFgLN0W67viuvlwjgU7vLJy//fJBJpZrZckXAhc2hxUJMc0N+ThXV0/Ap524yGJr5k3WxLayl4ARZvAo28tHBqFdU1y9RZUi/E3FdW3GveEukXtjxQ1ATI0eRieECYxLmd7XRJUGHSSj4CXUUmW971z3IgA4I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=iS1zN2AE; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ThU7rf/f"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773814456; x=1805350456;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=DkHUnEo/Buc1iI8h0hzSm7QzwytPckEV+C7X+Kypm6E=;
-  b=ThU7rf/f2bbXa3igaTn3wXXepU7XKFXrsrhXxtl9Uz3btRe1TMF9S/zM
-   o+jKxEbKKf1VhIGkBtlBM5vpVuOoLiYRF0uaGG4WpI1FW1dgayx92/KQx
-   bPyzHwtMsjaDvLWYelrcwK53CLAsavpcM4RXTgHp24o+//VwcakPsqv0X
-   YHDJviOQ/Nv+ZvMco81+6iO0S2VLViXNTaLm1kk/gKB2Y/iKE39BIJP8M
-   H1r9+mn+VO4HsH4frKefcI3tOikzTVCIdYbYx1bv+SHRBsuCKKweEXrrS
-   l+5s0pJjTCf/6cgM94TgwO7CSnWUzm6LHfGnJ1Z/+3Y9wbDto751UVbvp
-   w==;
-X-CSE-ConnectionGUID: MTkhzz5ZQmS6pLbQ64+mcQ==
-X-CSE-MsgGUID: UA87a2JcQjm6A0pBwUlcaQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11732"; a="85494663"
-X-IronPort-AV: E=Sophos;i="6.23,127,1770624000"; 
-   d="scan'208";a="85494663"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2026 23:14:15 -0700
-X-CSE-ConnectionGUID: Z1FGCetaTSGF++XIxaxXEg==
-X-CSE-MsgGUID: iCZ0jeD2TnyuQZO6sIHcrg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,127,1770624000"; 
-   d="scan'208";a="222567515"
-Received: from allen-sbox.sh.intel.com (HELO [10.239.159.30]) ([10.239.159.30])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2026 23:14:11 -0700
-Message-ID: <791a46c7-3129-4438-86bd-b7677e01332a@linux.intel.com>
-Date: Wed, 18 Mar 2026 14:13:09 +0800
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="iS1zN2AE"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62I601hr3176840;
+	Wed, 18 Mar 2026 06:16:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=DifgUe
+	WpE4npuUkNsLjMpFr/mxGVgkbz/vAv+BrXPtg=; b=iS1zN2AE2pgOS9fEDNhy03
+	MhmglpDq6czo7tzl6o+xaoyqJfkk3EXeG/+jfnfHt1qMx1N5nswNWv2rxzKGoHNs
+	bC94db4scXeHUX63WB6pxxyfvQMe/oeaF4QSF865CELrGVMoQKzrnejYuBjORiMw
+	JoYf+W1kR4TJ3T5SqF5AZes5maI5la8nqpKJ+YB89KCuf0JDuexCE4/6+eV57QWe
+	1wVaCq8+qUGL3S5T2yr6lq6yEOaSnLTw4B81yBzPnX9CBXm0nAU3wNouNWMxoNmb
+	w9e3+TUKr7kSstQcxmGe7RCG0RomX6/iFHJnSjOow/Lk+CMPexGHhiD612pAoBTA
+	==
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cvx3cyw3y-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 18 Mar 2026 06:16:18 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62I5jBUb032327;
+	Wed, 18 Mar 2026 06:16:17 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4cwm7jvgw4-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 18 Mar 2026 06:16:17 +0000
+Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
+	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62I6GDLZ39059714
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 18 Mar 2026 06:16:13 GMT
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 61BC72004B;
+	Wed, 18 Mar 2026 06:16:13 +0000 (GMT)
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2963B20043;
+	Wed, 18 Mar 2026 06:16:12 +0000 (GMT)
+Received: from localhost (unknown [9.111.43.66])
+	by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 18 Mar 2026 06:16:12 +0000 (GMT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/7] iommu: Add iommu_report_device_broken() to
- quarantine a broken device
-To: Nicolin Chen <nicolinc@nvidia.com>, will@kernel.org,
- robin.murphy@arm.com, joro@8bytes.org, bhelgaas@google.com, jgg@nvidia.com
-Cc: rafael@kernel.org, lenb@kernel.org, praan@google.com,
- xueshuai@linux.alibaba.com, kevin.tian@intel.com,
- linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
- linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
- linux-pci@vger.kernel.org, vsethi@nvidia.com
-References: <cover.1773774441.git.nicolinc@nvidia.com>
- <c5390aeaeccfa86a1c79f26d2c0ff5df380940a4.1773774441.git.nicolinc@nvidia.com>
-Content-Language: en-US
-From: Baolu Lu <baolu.lu@linux.intel.com>
-In-Reply-To: <c5390aeaeccfa86a1c79f26d2c0ff5df380940a4.1773774441.git.nicolinc@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 18 Mar 2026 07:16:11 +0100
+Message-Id: <DH5OSCR30K6L.3SIBYOZ6166AC@linux.ibm.com>
+From: "Julian Ruess" <julianr@linux.ibm.com>
+To: "Niklas Schnelle" <schnelle@linux.ibm.com>,
+        "Farhan Ali"
+ <alifm@linux.ibm.com>,
+        "Julian Ruess" <julianr@linux.ibm.com>, <wintera@linux.ibm.com>,
+        <ts@linux.ibm.com>, <oberpar@linux.ibm.com>, <gbayer@linux.ibm.com>,
+        "Alex Williamson" <alex@shazbot.org>,
+        "Jason
+ Gunthorpe" <jgg@ziepe.ca>, "Yishai Hadas" <yishaih@nvidia.com>,
+        "Shameer
+ Kolothum" <skolothumtho@nvidia.com>,
+        "Kevin Tian" <kevin.tian@intel.com>
+Cc: <mjrosato@linux.ibm.com>, <raspl@linux.ibm.com>, <hca@linux.ibm.com>,
+        <agordeev@linux.ibm.com>, <gor@linux.ibm.com>, <kvm@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-s390@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v5 2/3] vfio/ism: Implement vfio_pci driver for ISM
+ devices
+X-Mailer: aerc 0.21.0-0-g5549850facc2
+References: <20260317-vfio_pci_ism-v5-0-b73248b4e576@linux.ibm.com>
+ <20260317-vfio_pci_ism-v5-2-b73248b4e576@linux.ibm.com>
+ <de08911a-8bcc-4983-9ad2-b20467ebbb7f@linux.ibm.com>
+ <ef044e7fa28e33cf865882e374957c0cd10124d1.camel@linux.ibm.com>
+In-Reply-To: <ef044e7fa28e33cf865882e374957c0cd10124d1.camel@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=arO/yCZV c=1 sm=1 tr=0 ts=69ba4332 cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=yDXdNYyLDAtsUWoxkjsA:9
+ a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE4MDA1MSBTYWx0ZWRfX0KT5g6jHbLCN
+ JS79k+9K0j2YW2GmxHMyXw6jPBJR9dGI3D+4PbIxS+N1q6PpY/JQeSzEyAFCBl27K7kCtBzwJIS
+ 4tVxIf97jF+JVqysFpV6qIhkYgEIoA4ni/qiWqAenxElysjTqMMkITzGDKkc+jpBDkVz3wEsIH+
+ n9wYhbj5U8IE1YZrUoa3TsKEqCQJihe2kDZVw7Aux0dkPS+Q33aWHAw42iwcWBAUuYbgpUVTJT6
+ Yb6F9WxsJ/8XfgedfrqP23FHXNbnfrBIsfYqYNu1kJHrKW13yQmtPHrRdG4Duw+Mp9zkUypo7pg
+ N3rEev0/p/BNbpy7JYrVi+C6QS1GPbqWTdpNr8UBC1+kIwCZPyd35nALrLtY+PQ1TbKey31p1hK
+ Wsfsxadrv3vg53Pq0ZmYQ11Qd/gcE8FzdosMLxbYlJ/EL94jd4kel/fMFHDzefr5hOde6U5qPcF
+ y0nMy21Viw8IvdPe9ag==
+X-Proofpoint-GUID: U5dQJsKgC-FeaBSVolbyzLf-1CQIDqbz
+X-Proofpoint-ORIG-GUID: U5dQJsKgC-FeaBSVolbyzLf-1CQIDqbz
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-17_05,2026-03-17_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 spamscore=0 lowpriorityscore=0 impostorscore=0
+ adultscore=0 bulkscore=0 suspectscore=0 malwarescore=0 clxscore=1015
+ phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
+ definitions=main-2603180051
 
-On 3/18/26 03:15, Nicolin Chen wrote:
-> When an IOMMU hardware detects an error due to a faulty device (e.g. an ATS
-> invalidation timeout), IOMMU drivers may quarantine the device by disabling
-> specific hardware features or dropping translation capabilities.
-> 
-> However, the core-level states of the faulty device are out of sync, as the
-> device can be still attached to a translation domain or even potentially be
-> moved to a new domain that might overwrite the driver-level quarantine.
-> 
-> Given that such an error can be likely an ISR, introduce a broken_work per
-> iommu_group, and add a helper function to allow driver to report the broken
-> device, so as to completely quarantine it in the core.
-> 
-> Use the existing pci_dev_reset_iommu_prepare() function to shift the device
-> to its resetting_domain/blocking_domain. A later pci_dev_reset_iommu_done()
-> call will clear it and move it out of the quarantine.
-> 
-> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
-> ---
->   include/linux/iommu.h |  2 ++
->   drivers/iommu/iommu.c | 59 +++++++++++++++++++++++++++++++++++++++++++
->   2 files changed, 61 insertions(+)
-> 
-> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-> index 9ba12b2164724..9b5f94e566ff9 100644
-> --- a/include/linux/iommu.h
-> +++ b/include/linux/iommu.h
-> @@ -891,6 +891,8 @@ static inline struct iommu_device *__iommu_get_iommu_dev(struct device *dev)
->   #define iommu_get_iommu_dev(dev, type, member) \
->   	container_of(__iommu_get_iommu_dev(dev), type, member)
->   
-> +void iommu_report_device_broken(struct device *dev);
-> +
->   static inline void iommu_iotlb_gather_init(struct iommu_iotlb_gather *gather)
->   {
->   	*gather = (struct iommu_iotlb_gather) {
-> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> index fcd2902d9e8db..2f297f689a3a3 100644
-> --- a/drivers/iommu/iommu.c
-> +++ b/drivers/iommu/iommu.c
-> @@ -55,6 +55,8 @@ struct iommu_group {
->   	struct list_head devices;
->   	struct xarray pasid_array;
->   	struct mutex mutex;
-> +	struct work_struct broken_work;
-> +	bool requires_reset;
->   	void *iommu_data;
->   	void (*iommu_data_release)(void *iommu_data);
->   	char *name;
-> @@ -146,6 +148,7 @@ static struct group_device *iommu_group_alloc_device(struct iommu_group *group,
->   						     struct device *dev);
->   static void __iommu_group_free_device(struct iommu_group *group,
->   				      struct group_device *grp_dev);
-> +static void iommu_group_broken_worker(struct work_struct *work);
->   static void iommu_domain_init(struct iommu_domain *domain, unsigned int type,
->   			      const struct iommu_ops *ops);
->   
-> @@ -1057,6 +1060,7 @@ struct iommu_group *iommu_group_alloc(void)
->   	if (!group)
->   		return ERR_PTR(-ENOMEM);
->   
-> +	INIT_WORK(&group->broken_work, iommu_group_broken_worker);
->   	group->kobj.kset = iommu_group_kset;
->   	mutex_init(&group->mutex);
->   	INIT_LIST_HEAD(&group->devices);
-> @@ -4031,6 +4035,7 @@ void pci_dev_reset_iommu_done(struct pci_dev *pdev)
->   	if (WARN_ON(!group->blocking_domain))
->   		return;
->   
-> +	WRITE_ONCE(group->requires_reset, false);
->   	/*
->   	 * A PCI device might have been in an error state, so the IOMMU driver
->   	 * had to quarantine the device by disabling specific hardware feature
-> @@ -4062,6 +4067,60 @@ void pci_dev_reset_iommu_done(struct pci_dev *pdev)
->   }
->   EXPORT_SYMBOL_GPL(pci_dev_reset_iommu_done);
->   
-> +static void iommu_group_broken_worker(struct work_struct *work)
-> +{
-> +	struct iommu_group *group =
-> +		container_of(work, struct iommu_group, broken_work);
-> +	struct pci_dev *pdev = NULL;
-> +	struct device *dev;
-> +
-> +	scoped_guard(mutex, &group->mutex) {
-> +		/* Do not block the device again if it has been recovered */
-> +		if (!READ_ONCE(group->requires_reset))
-> +			goto out_put;
-> +		if (list_is_singular(&group->devices)) {
-> +			/* Note: only support group with a single device */
-> +			dev = iommu_group_first_dev(group);
-> +			if (dev_is_pci(dev)) {
-> +				pdev = to_pci_dev(dev);
-> +				pci_dev_get(pdev);
-> +			}
-> +		}
+On Tue Mar 17, 2026 at 10:16 PM CET, Niklas Schnelle wrote:
+> On Tue, 2026-03-17 at 11:43 -0700, Farhan Ali wrote:
+>> <..snip..>
+>>=20
+>> On 3/17/2026 5:58 AM, Julian Ruess wrote:
+>> > static int ism_vfio_pci_probe(struct pci_dev *pdev,
+>> > +			      const struct pci_device_id *id)
+>> > +{
+>> > +	struct ism_vfio_pci_core_device *ivpcd;
+>> > +	struct zpci_dev *zdev =3D to_zpci(pdev);
+>> > +	char cache_name[20];
+>> > +	int ret;
+>> > +
+>> > +	ivpcd =3D vfio_alloc_device(ism_vfio_pci_core_device, core_device.vd=
+ev,
+>> > +				  &pdev->dev, &ism_pci_ops);
+>> > +	if (IS_ERR(ivpcd))
+>> > +		return PTR_ERR(ivpcd);
+>> > +
+>> > +	snprintf(cache_name, sizeof(cache_name), "ism_sb_fid_%08x", zdev->fi=
+d);
+>> > +	ivpcd->store_block_cache =3D
+>> > +		kmem_cache_create(cache_name, zdev->maxstbl, 0, 0, NULL);
+>> > +	if (!ivpcd->store_block_cache) {
+>> > +		vfio_put_device(&ivpcd->core_device.vdev);
+>> > +		return -ENOMEM;
+>> > +	}
+>> > +
+>> > +	dev_set_drvdata(&pdev->dev, &ivpcd->core_device);
+>> > +	ret =3D vfio_pci_core_register_device(&ivpcd->core_device);
+>> > +	if (ret) {
+>> > +		kmem_cache_destroy(ivpcd->store_block_cache);
+>> > +		vfio_put_device(&ivpcd->core_device.vdev);
+>> > +	}
+>> > +
+>> > +	return ret;
+>> > +}
+>> > +
+>> > +static void ism_vfio_pci_remove(struct pci_dev *pdev)
+>> > +{
+>> > +	struct vfio_pci_core_device *core_device;
+>> > +	struct ism_vfio_pci_core_device *ivpcd;
+>> > +
+>> > +	core_device =3D dev_get_drvdata(&pdev->dev);
+>> > +	ivpcd =3D container_of(core_device, struct ism_vfio_pci_core_device,
+>> > +			     core_device);
+>> > +
+>> > +	vfio_pci_core_unregister_device(&ivpcd->core_device);
+>> > +	vfio_put_device(&ivpcd->core_device.vdev);
+>> > +
+>> > +	kmem_cache_destroy(ivpcd->store_block_cache);
+>>=20
+>> I think the kmem_cache_destroy() should be done before we do=20
+>> vfio_put_device() (or maybe even before=20
+>> vfio_pci_core_unregister_device()) to avoid use after free similar to=20
+>> ism_vfio_pci_probe(). Sorry I missed this earlier.
+>>=20
+>> Thanks
+>>=20
+>> Farhan
+>>=20
+>
+> Good find! Wouldn't it be even cleaner to provide vfio/ism specific
+> .init and .release functions in ism_pci_ops that do the
+> kmem_cache_create() / kmem_cache_destroy() as part of init / release?
+> It seems this is done for e.g. Xe with xe_vfio_pci_init_dev()
+> and xe_vfio_pci_release_dev(). In fact wouldn't that be even necessary
+> to correctly handle the case where the above vfio_put_device() isn't
+> the last reference?
+>
+> Thanks,
+> Niklas
 
-The current mechanism is designed only for the PCIe devices within
-singleton iommu groups. How about moving the above check to
-iommu_report_device_broken() and emitting a message if it is called for
-unsupported devices?
-
-> +	}
-> +
-> +	if (pdev) {
-> +		/*
-> +		 * Quarantine the device completely. This will be cleared upon
-> +		 * a pci_dev_reset_iommu_done() call indicating the recovery.
-> +		 */
-> +		pci_dev_lock(pdev);
-> +		pci_dev_reset_iommu_prepare(pdev);
-> +		pci_dev_unlock(pdev);
-> +		pci_dev_put(pdev);
-> +	}
-> +out_put:
-> +	iommu_group_put(group);
-> +}
-> +
-> +void iommu_report_device_broken(struct device *dev)
-> +{
-> +	struct iommu_group *group = iommu_group_get(dev);
-> +
-> +	if (!group)
-> +		return;
-> +
-> +	if (READ_ONCE(group->requires_reset)) {
-> +		iommu_group_put(group);
-> +		return;
-> +	}
-> +	WRITE_ONCE(group->requires_reset, true);
-> +
-> +	/* Put the group now or later in iommu_group_broken_worker() */
-> +	if (!schedule_work(&group->broken_work))
-> +		iommu_group_put(group);
-> +}
-> +EXPORT_SYMBOL_GPL(iommu_report_device_broken);
-> +
->   #if IS_ENABLED(CONFIG_IRQ_MSI_IOMMU)
->   /**
->    * iommu_dma_prepare_msi() - Map the MSI page in the IOMMU domain
-
-Thanks,
-baolu
+Thanks guys! Yes, I think we should introduce custom .init and .release fun=
+ctions. Will change that in the next version.
