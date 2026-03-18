@@ -1,94 +1,94 @@
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A1553F2111
-	for <linux-pci@vger.kernel.org>; Wed, 18 Mar 2026 19:47:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C67C346AC6
+	for <linux-pci@vger.kernel.org>; Wed, 18 Mar 2026 19:48:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.41
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773863226; cv=pass; b=U5p8pQUqkBQYhckeYVOhRFcn6tb0XLHy0qNNUp+1WzuIitLr8DzpLhfnfpM+k1rvpBmvvF+hscrfg53cd8lYrfZQGkdRUxP7DSJCRUSrX7mpJK6XOg5RLGxJ6hk7+UaxV3RXwHFGunxQ1bMOtgNgBv1eza7OLgght8Sz/amGVvo=
+	t=1773863310; cv=pass; b=CyNSwtAUu/FCS/ceFFmmaX3UXGvNilY4Ra/yR+f1GB2b0jnsmVIr0f+MNKbDKdwqiWgQo5+H5LYRZdO4/FvNTN5LaCTVNSQD+wsUF4opomyJ7Wnpw56sipjpBS8Q9QAhEr8ZZvb21hwA+EuWiIbWZHIUdC5qHe7pQc0z7kaYuN8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773863226; c=relaxed/simple;
-	bh=wdw7cbek1kXD1UoVWXdD4fCHrDKGOkOz00GR1xyGDLA=;
+	s=arc-20240116; t=1773863310; c=relaxed/simple;
+	bh=FLa8rQzR9s19uAT/5ZIrsFfEc09f2snRTlaHdk1TKIU=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=JEl3Tq40IsvyjPCtWBGkSXvX6YhWDtTFIGh30I3GzQxrkLyA4Tv6I7HuhwDoWYsEeho4LOvJM4gHyjAoGR0F+PrKJItQMqJuGhN6vYiXc/jVeOEv7E81hch9/VhLqJUWYFkfaYlH0hU9gAGYhBqOtEbUBUqaWCfmECwtrzKrO8I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jwIFsXDZ; arc=pass smtp.client-ip=209.85.128.42
+	 To:Cc:Content-Type; b=ULTLbyiUl9pgQO7krtSgpsidz8LR3o1jjX19ZdqKwD5r1AvmgaZxTipR0lFnYBuU8OSiQXorP9iRuLO0svJJBtAwWc336TPuUmR3osYwAcSJzW8SxGV7cRlQ0+NzMlC0LAac/f+XC8KGxFCvNC97oMxJYr8Gn9WYbLV5U/RwrqQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JISMVokk; arc=pass smtp.client-ip=209.85.128.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jwIFsXDZ"
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-48540d21f7dso2163245e9.0
-        for <linux-pci@vger.kernel.org>; Wed, 18 Mar 2026 12:47:04 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1773863223; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JISMVokk"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4838c15e3cbso1827025e9.3
+        for <linux-pci@vger.kernel.org>; Wed, 18 Mar 2026 12:48:29 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773863308; cv=none;
         d=google.com; s=arc-20240605;
-        b=aLmjmV2QojxG8NVKfftbVNDeFdv7OKnimph5scEDdUOZVkMB8RLbCKtF8EU0iGwXaB
-         JjO9/JwD5zmqJE/MHTwGkUR/wbUx22b/s6H+ZyVm6VXqMF19b+5SvBrup3NcovFu/VUn
-         j9IfKKVfNcKuKbZgxPF/fD+cOAYknc4xWoSwvw/DHJhuOP6vkkDxqTakGBX7lR7MQkVC
-         /pYPLON4xCQgfC0pjW2NqaOKNnY010hPIMrleCKI8GR+gONZAhQo5s5mGYPglJyRRSP1
-         G434sOjwnl8r9kF+AXfB4Yb0C/nwf7SoIe/NZVKtpW9iV3o7yDt2sWjJLy5IM5QYnLEk
-         QeAg==
+        b=O6cQakGwKgPH6abD4RoBTCGSwJk6QXWjBUTHFRNXM8znhaDBtzqaOETy25lVXxqqd+
+         72Kk7azVGuS+bjxDJPebsK9pKtFOEo5AlpJKVE06lRdaLq+FlXIkFr6Bxh9FImVTNHRs
+         45sFoeR/tH/tgW930OyAYzHF8smKC+J6EDvk3KO47FUnmpg5OUP6oQzNd04MG4rDzzsD
+         egt213/VPsV8EWP0XHYo87eLs6bdEZu9WJYptTcqHiRHip0Fqa3ejGmTGm1rJg/hu2xu
+         1XyMeRKxaQTIWKDBIVZ+9V01hAsgVmaeoZi58hAsyKvTQVgbcK+IeKL5uMAl+qZKHF0r
+         xQNg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=zZ+yvFyJb7pO8tRyYufwJywFQ3yWc3oSOzzyu5XObJ4=;
-        fh=O/+FTw3GuZ53j4+0Da9LE7Z/MuB+WtVIt9wwj/tD9eg=;
-        b=Hmaa7YhRQ/PK0+E0VUe1ihmBVLnOQQX1t13uw0Taq9WD3lGEZbxCVF5TOavYpGektD
-         SKX7lMeimwj7BBgbRloiXY6FP2DkiJxW71LNq0hCHkeFIOxiHbijxl6A1+L/9rYLIrtP
-         Xn0HUIT/WYuBSNF8gitA4cJkIFDETeBYD4dSrfI51daiiNq6GbeX2eSadvNc5xXr7noS
-         6HUNri3ux4HYgsYym5FcgvvPbHPB2qUDhqELj9hf8x7jOMKzcZr1tYy4x7CJVUAgykTq
-         WxMgoPyxAgXnXdAOk+c+FyhL4mFV5i1f++CsJL1RBKT1oTlboM9UjBdLOs+8Q+TT4NWI
-         qvuA==;
+        bh=qEEWh99a1X8WTNi6tZLCQlme3I6QdM9wUDMHyAHkv+c=;
+        fh=n+0fylp4P5WnLtXhB0V99CN1KpIAOK2iV/5uRN1WhmM=;
+        b=iZZ+p7E9b9fGft1JiODm35DNGZcgbbhlllbKFAnBQFplFf6zv8CdPxev6isOFhi0Nz
+         XkVZIi2WX03cfXDdxDkavKO8Ns6b3X48BVuoEKSCO2nOWNnLQl7AXz0IO6mvC7fGqoxe
+         HBqHqYY7pdSVjiTqQ7tNXN45e2OFQoW/rj4NS/Lhwu/XbUBGeAF01ogy1kWGkxnaAQ9A
+         vy++M/XgdhE3Zs6fkmpQZ4ttdO596UuAfKaGtqaNT+R++VSNPoDeoD56NTmqP7kUHW8S
+         NhuQgoOypuG0Qv2JyEYh1iNZaJGGTu3E28ydx9MkiHfbu8iMkLezIMY8DmRWC7ILdhmK
+         6SkQ==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1773863223; x=1774468023; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1773863308; x=1774468108; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=zZ+yvFyJb7pO8tRyYufwJywFQ3yWc3oSOzzyu5XObJ4=;
-        b=jwIFsXDZd1icPQSx9k+rMnIhbs8Fp+hOelEKXuTbd67mwsRptHVAdPebIVmZ/uHwYz
-         FsTj/IrQXeZ359BBmie+HkXpVa1KqzqD7n0JJT8sIz1iBAGFGSKLB8dIk5W9njBrxvPX
-         WlGcttiCWKD+9SDMzv+0C9+58Z15z9ujpUZPYtdQMP/k91hBfDURu9wIjXVtcsdo+weD
-         Eq9MpFk9Ro2c2/rGHerpj+QyOVHPqX84UCVtVPna6K7MelEbfqWf/3e8UVzRNG+97W8+
-         yND1GqI5580aAASkNeo0l3PNkSWjneJAjdTCBMfTDWQ8hrXafNxRCyagnlSqCAJS2+1p
-         /Vpg==
+        bh=qEEWh99a1X8WTNi6tZLCQlme3I6QdM9wUDMHyAHkv+c=;
+        b=JISMVokk82zpY7CBSHsQIMw+3V7XeLIUZnh3S11XrflKRs35ho8iy3t9X5cm3beBYU
+         xm3t5verRqzcb1YhkpuJBcpXx1suriQXyGbS5l2+wTqV98ad4ObJhmz57WilT6ZA+Fpd
+         4o8i7A2UBofHdPu7En0VvRhl7qrhWUK+SijFXGlm+GUi6JfUX+MGIUgxpEb1QyB7o1BN
+         oZ+LdOZOD6dWC2Tm79uPA1v1TZv4pyrt7xFLVUh5B40s16Zx+dB9iQOEWH/nKPGmabUV
+         tbjwyahI/6X5H/JvW5qWMLzOINhPDuch7jKfImYx411QC/2Dt9FvlB0Tb65jCLuexIBx
+         KIGw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773863223; x=1774468023;
+        d=1e100.net; s=20251104; t=1773863308; x=1774468108;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=zZ+yvFyJb7pO8tRyYufwJywFQ3yWc3oSOzzyu5XObJ4=;
-        b=Lospw7xxHYbMbqPQpT5+pOl+Mr+5PgPJYoZLBNqE65q1h0XatWld2qaAnRQHSkbgi7
-         Ils9sShKHrlMG/BKqwm/3Venlz0kODp6/kqqFuyQKCMMjuLBvnAXqjsYKGrbLI5+y0nt
-         KcdjP7FGspq6Kw4rR79/2HHKi7xXjy7l7A7or2echZ2V6z8PfyIf/NP4wkQkGluK9vqk
-         ohdh3NewHPnbNgvUGBlWYPayjvuU9sVMKYhwDxkGL7uc466cyiDXJzfWiyWu52Jc46Ug
-         JY//TD/xGdkMuFLZtOA7BRBoyLR5GChBCghkkUzdUsxkgYlP5y9Wu2DFB7eSFc1b/Euo
-         sDdA==
-X-Forwarded-Encrypted: i=1; AJvYcCW06/XMUFQup3UR3FVTTDZ2UY+cOSbkWwd2fFxUzgeobDldenFF3Wf06EWSMp2H6mdWFa+FuO6OidA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzQG50940GwUNJ3Qx3SBZUyWN54TLy7J87FcSrht+CtPLFDNQWB
-	F4Jcxaky4eePekw5Cq8rStbB7tBxJ0n5YpGl191La2zxgSQRDluK9hpMv+BQWeOMz60DQTwfUCu
-	ZVTXvN0/qCvBxDq5A4TBr72OtgeH/+xA=
-X-Gm-Gg: ATEYQzx/5TIecz0wr0M3yf6cfJa/5L5ug3W3IOc7L7TNcc3KigDzuGC+Q8qj2ne2yHF
-	U5bZWF7k/Sa6Xnns6ldgLiecMHsYrMf+QoFSHv8f0hiRi/Ajc2QyZnT3N5X/ZqRFHRGDSMTb0Hj
-	RUH8rXlSPo2LUmeaSTOORQtiF3RdzeO399h3PAuHmiV4kdbl/D54sfwdhIkWuQIRZ0/Ujk8KpcD
-	Khxz+H1v7UJl+L7j2VT1yyT68WGNxc3INL031zMDQJwzZn/k8ANDveIufRX3EieY3LPff7KxqxN
-	5f2DGIPcdQn8ZDgeR8GxpaVNO3/q2l+O4hUthaFlCyRHoom11bjLGOrk5DQt+mzSPQn7b2NqZf8
-	6Qw==
-X-Received: by 2002:a05:6000:2004:b0:43b:5094:a9bf with SMTP id
- ffacd0b85a97d-43b527c4f31mr8413523f8f.29.1773863223212; Wed, 18 Mar 2026
- 12:47:03 -0700 (PDT)
+        bh=qEEWh99a1X8WTNi6tZLCQlme3I6QdM9wUDMHyAHkv+c=;
+        b=eVOdtZtk9znIVhjABhdIrtOj4xWCYJmZMGbg1042QBPpFfhpR4uTQCktNDfK4pamId
+         v8aJIculsSi7iuZgBOW3QZdBCdej0+Zopu9UbwoHSAWQ2WJg8xe6QN7IdIi5YBLkv/3V
+         6z3XtBjo/c0RL6Xf96pHLx+8X4jn9e4fNI5iHjGJ+03PNIvjwo19Pxh0FpWaY/F6L2M9
+         sGhM+XD1nr2Ep18Hc4q6h+m+v3ljJ37fn3ExNCPv11wda8vnWpAePGmOhN/1HRRhkFl4
+         p66yYHFhPojdybAfKtvNfsvvnyosCmFfikeDouuZELOxeMOJabPY5tVsO1B50T596SSU
+         RVJg==
+X-Forwarded-Encrypted: i=1; AJvYcCUnvFvYJnov1hJ9ygf58pHimNn6cjOctq39IDbGCxR0rVtsDM2TrJnVj/Dli8rtRsqbTEtfcI1h4f4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyJNnMb29l9A7kpqUIBT9wdJ0+4T4JAA4DRdF3gBZQfn1PIMMGl
+	y3tp/LPTpHcDy1STsVY1Hgpt2Ehs/NEl6gLO8gMAfYqTBbiN0ITIQYfdOCL84+YUbsCmZjHf7IQ
+	XvNdnmRpROYbsJc7aZQZLgj/zV57gND8=
+X-Gm-Gg: ATEYQzyvfybTfv9e4ljhlxnglH/x6nqAcxDkM4TSeqVq8uY91SwN7LDU0AdrjTOrEaq
+	xuQwvhLOXc4ApBmQ63a19rVrONZYYMHMnCqnvjN6HY45DCFUTZ7LgTdz+15kVaSteDNeCy272UK
+	PMnnsfCjPQ66j/9VgtmwY7pTsRR8K6eS+Y/nTtAcuEealFW2TtlmyaQYIzbTUoVpmQbvWxPE7yi
+	c1BcjtYfTC5M30L9olZRlUaZjqUTsCZItrX7ML4K7g8gO7EuBRjnOQaZxJAgo6168ZSa5yt7V1u
+	g+7msl+LLBRQ4DrEsvKoVyJwmVjZZ/XbATjd77YCsw28SGAHurHdgcqAYWjEs8ulizc=
+X-Received: by 2002:a05:600c:1f11:b0:485:41c4:e2e5 with SMTP id
+ 5b1f17b1804b1-486f445fad8mr75654535e9.27.1773863307397; Wed, 18 Mar 2026
+ 12:48:27 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260318124450.163471-2-prabhakar.mahadev-lad.rj@bp.renesas.com> <20260318163451.GA45978@bhelgaas>
-In-Reply-To: <20260318163451.GA45978@bhelgaas>
+References: <20260318124450.163471-4-prabhakar.mahadev-lad.rj@bp.renesas.com> <20260318163023.GA45848@bhelgaas>
+In-Reply-To: <20260318163023.GA45848@bhelgaas>
 From: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Date: Wed, 18 Mar 2026 19:46:37 +0000
-X-Gm-Features: AaiRm53vsowSxkB5--4HeT_RVVv_RKIJ1zLa_k6p-WVMbxRBxgyHI8U3GVl43Nw
-Message-ID: <CA+V-a8sTKuPnNs-shtDAt=J4n2naBoEhsTsck5-ZfJqt7wwRuA@mail.gmail.com>
-Subject: Re: [PATCH 1/5] dt-bindings: pci: renesas,r9a08g045-pcie: Add RZ/V2N support
+Date: Wed, 18 Mar 2026 19:48:01 +0000
+X-Gm-Features: AaiRm516n8YYRZ3VpTEDqe-zyE0F6jTjlgD123Nu8UmO-uhnFe2823Q784bfJqE
+Message-ID: <CA+V-a8s=em8dZ5PHHx5hrkZkJeM_4NX7SpdZYdNpeyyx4PT8dQ@mail.gmail.com>
+Subject: Re: [PATCH 3/5] PCI: rzg3s-host: Use shared reset controls for power
+ domain resets
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, Bjorn Helgaas <bhelgaas@google.com>, 
 	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
@@ -108,32 +108,22 @@ Hi Bjorn,
 
 Thank you for the review.
 
-On Wed, Mar 18, 2026 at 4:34=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
+On Wed, Mar 18, 2026 at 4:30=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
 wrote:
 >
-> Conventional capitalization for subject lines here is:
+> On Wed, Mar 18, 2026 at 12:44:48PM +0000, Prabhakar wrote:
+> > From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> >
+> > Use shared reset controls for PCIe power resets to prepare for RZ/V2H(P=
+)
+> > support, where multiple PCIe channels share the same reset line.
 >
->   dt-bindings: PCI: renesas,r9a08g045-pcie: Add ...
+> What is a "PCIe channel"?  Please use PCIe spec terminology if
+> possible.
 >
-Ok.
-
-> You can easily see this with:
->
->   git log --oneline --no-merges Documentation/devicetree/bindings/pci/
->
-Ok, I will make a note of it.
-
-> On Wed, Mar 18, 2026 at 12:44:46PM +0000, Prabhakar wrote:
-> > ...
->
-> > @@ -152,6 +158,7 @@ patternProperties:
-> >          enum:
-> >            - 0x0033
-> >            - 0x0039
-> > +          - 0x003B
->
-> Other constants in this file use lower-case hex.
-Agreed, I will switch to lowercase.
+This refers to multiple PCIe controllers (Root Ports) sharing the same
+reset line. I will update the commit message accordingly in the next
+revision.
 
 Cheers,
 Prabhakar
