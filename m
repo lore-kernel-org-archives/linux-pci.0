@@ -1,163 +1,131 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 958BD34A79F;
-	Wed, 18 Mar 2026 12:18:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F15FA3D6CD2
+	for <linux-pci@vger.kernel.org>; Wed, 18 Mar 2026 12:45:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773836313; cv=none; b=GaAPN6T6tnJHoE3dbz7GlXVC4Q9LFTw1KzSA5zufm+Yl0OGNXvncu2NSjYVoxns4WHclPgzpdBMVN8MqjVQyn0h0m/bAziH+hZxYHiWS26hbjbB5AngVo85YrlwEop1yGoIw4T70uZZ/ZblLELZOXcJQKis+8R9YDleGbxYsqT4=
+	t=1773837914; cv=none; b=Gg9se7KKsuOvbVBQQfJ3spX0bsupfBkEkRUT0EPPAKAHpWeiy2HILcWDWUAEyU0MtKLdS1LMs5JX6Vt6KQGiE7AozIuk38PwLVX678Opqhbv0cKo1HDZI78xzNmxtchm/X5pETTiKTtbf9dNR0ZcFDltluwExkRpManGRehIvfg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773836313; c=relaxed/simple;
-	bh=fKlAMln5+eXtPqBPuI/T7U2v223nK0zolTnYCh7Gbgk=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=B/svvTMM3fDKPnoQNg/LpSo8J/JxmYPgU4dsc9kx6uiHPGGXwGk6dWiMoOlUGS5sImWBQztcyQNUf15r3KDmc9hfpMUs2+faE0QIm27Cu+DO+xPSSVyJInQ0Z4vQNZbqV0B3rgnVg1RLpY8fk79WqudhDUIgD6rbKesJ9WTCuPw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=XjtJVgL3; arc=none smtp.client-ip=198.175.65.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1773837914; c=relaxed/simple;
+	bh=7h/HGlld4QUZ8/6amWHzk8Y1v7CTpf+63EYDdvnKPsc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mKQ+Iv10D4C5m+9SboQhiyegylgNP3QBkHO4QvlYzOnvPGm29myKXE8z7GFwkK5Vo82o94Uuv8SoCfhPwzCXr92KrtRk0wd/EC3QNhfzY2bC9D0Ie4fgJHj6ZJiy+jbSrWObN7VSGbsaYawvLbWvmFd0OP61omw3H1W2bWapS18=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=C+q2969g; arc=none smtp.client-ip=209.85.128.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="XjtJVgL3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773836311; x=1805372311;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=fKlAMln5+eXtPqBPuI/T7U2v223nK0zolTnYCh7Gbgk=;
-  b=XjtJVgL34cYErJOWixVLxheHS062vCqU1CRJc6rtIpG/S2ulXYXhwDka
-   Cl3qHM5AgmsZOkAE3I83gThuZgw5Kl4A/bRTZLL6wvbQBvLW4xq8ziMV6
-   yqh/KHTgxrqYQZ+slzvIy9HGIZe+BoTbd42Gguqm+mQBtMgFnTO1m8wei
-   GTLaoMDdm7kvht1uSzTx9yfPZE+HJzG1cY5SVSrPoomF6hl2asyHMpBTe
-   lmjvvgzpxEYr7dYBSsM9WKPd1VUvlrlHweBhSutJwd/bfvd145WFK3KtL
-   D303+pgfc9BmASkuT0wGjX3RqgL7QowGu/BBlISNw/lIrqysNmjDmk8TN
-   w==;
-X-CSE-ConnectionGUID: 3NBllwkVQUmhXnM7mLOu4A==
-X-CSE-MsgGUID: HPzdxXUyTAWnK3M5rSSUWQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11732"; a="85965481"
-X-IronPort-AV: E=Sophos;i="6.23,127,1770624000"; 
-   d="scan'208";a="85965481"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2026 05:18:31 -0700
-X-CSE-ConnectionGUID: P+Z6F1F5RT+Evho1irfuLQ==
-X-CSE-MsgGUID: Ista6+2aT3yV+XUX6UohtA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,127,1770624000"; 
-   d="scan'208";a="222822818"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.55])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2026 05:18:24 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Wed, 18 Mar 2026 14:18:22 +0200 (EET)
-To: Ahmed Naseef <naseefkm@gmail.com>
-cc: Bjorn Helgaas <helgaas@kernel.org>, Caleb James DeLisle <cjd@cjdns.fr>, 
-    linux-pci@vger.kernel.org, linux-mips@vger.kernel.org, 
-    ryder.lee@mediatek.com, bhelgaas@google.com, lpieralisi@kernel.org, 
-    kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org, 
-    krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com, 
-    angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com, 
-    linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org, 
-    LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 3/3] PCI: Skip bridge window reads when window is not
- supported
-In-Reply-To: <fc927b7f-a820-d3c2-581c-ab6db562bcfb@linux.intel.com>
-Message-ID: <2d47f78f-22cf-78c8-8312-3ffb095d2693@linux.intel.com>
-References: <20260316155157.679533-4-cjd@cjdns.fr> <20260317212908.GA109023@bhelgaas> <abpFjQJ5RNcbzbmz@DESKTOP-TIT0J8O.localdomain> <fc927b7f-a820-d3c2-581c-ab6db562bcfb@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C+q2969g"
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-4853c3c2fe7so3698175e9.0
+        for <linux-pci@vger.kernel.org>; Wed, 18 Mar 2026 05:45:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773837907; x=1774442707; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=8uibrI3W9d4RMuqjhPjL4rWVHNQ9ZJs9HJd7qxmHcrQ=;
+        b=C+q2969grF5WkLXMY13vy1mjIpwQybgMCbfp87o88Ot1SK+kaIe9V3vPYrDdinRg8a
+         gwpvZoFUeIBI2vrFi2BHtQnmQRuMT//5D+evRX/CP1qclJqfipf6zN59C1TLLaGo48Hp
+         HCHwkuZK5pHL86gdTf1cZGExJXz5Rc6xz073GUNfpTpDt3CPSTQ3AFXD1CF/KbwUgsiH
+         EhdCg/Xg2pky15tDkJEFqOXAgKgL8QzjiSQ71Kr5/hghHxAVwtWXDnA7DnqaMXC8gVy+
+         topYdfrpNIvsHKLYiYtle+LNXy0cx13OX+w0aqb6NnV8Bc6E7jyrNEB2UQSl7g5UOsxZ
+         K1Og==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773837907; x=1774442707;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=8uibrI3W9d4RMuqjhPjL4rWVHNQ9ZJs9HJd7qxmHcrQ=;
+        b=MFRfSBP7MjZdD88nk4JmS64cA9SSCx6eUxpQBdqphK0cmY7zT+Htr6xdVNvPtNNgcp
+         jBwOoj77PsxkIcN6AiunI+pWdaC8ztA9ppmPR+s22OEvuyPWTB2bngkpji3kAvvh81pc
+         9J710D1KQsOV8gScY3nLwnkX/5TTuAogarvhY3I832fYkdaVH4isWSMhQx5MtQXoIKKn
+         WrPm8NZxC2LR+WP/8SAyNtHjSQ8CpSySTdfiXg5kdsCzKisoXci455432UQjP9RBxDHj
+         WP4ihmx22o5005uArIJRjmsk9132kzv+SBJD4VWOTJJF3xzjmyqnyRy5WUWqXDWEyF0O
+         EIqA==
+X-Forwarded-Encrypted: i=1; AJvYcCWB34xlmRNkX7JaV8+SmuRm4w58xypV+diNg2MGe63lvqJRPtFGlULnhvUUBcY4m2VEd2IO201d2bE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx5DOZxhTORuiKfnM+VO/hW8CxPKf+WC/ReX7bFqdUpmd+MA9MN
+	ErqrIep4zUOFZe+uOiJqbzAIg4lytR/XSrVV3+GRPMTCI1zJLbKQXMaU
+X-Gm-Gg: ATEYQzzok9nXP9TwddM7nCLi29mvKNKZ29bNtxEyTSAtHeQMvtoSmJo1ObRMrYDvP0z
+	+q6Iiw1RWhPQlXjZkDF/tHtHnAP3mMn57YRfibbVB26bHv2aCYNMzPUaHF8+dCTmV2PZgttr42w
+	DCjFYmazSNxmC+8xX18LyVyJvPMt/Ktb+mN9a9I6fUAw8CjNcirxbXZCTVqgJDLlF2XBJb76DlO
+	D4DBfc6/i5FdI+SW2B9g1ah+hgYZYbipbJP2TL3dUytE5lUusVqy47gmzfn4kXx1I2jEHfJbv9S
+	rxu0Rnh6jcrQif+i5i3S/XNczKvipG4AoJ0/+MXPLgm0nWM6QZ3ezHSVYKv8U1a4+Qyy+cfuv2P
+	CKOnwY8AHVwp/DDPq5Xg4HkFDvC8DLd037xnSPWkUD7mlu96/4XhwFmGQLJ1YOFqFVsGwx142Zx
+	uMWrJAUwEvET9APtsq6BXi9KgzafrH0Eri8h14XT1h/iI7aoVbHRK7sva66tzyo18zalPd5gYxo
+	rgZsIraHWGLsJndjYVW/LEuKLUS3KVFrScvrCp7jT7KnSU=
+X-Received: by 2002:a05:600c:c8d:b0:485:2fe9:336f with SMTP id 5b1f17b1804b1-486f446d88bmr53075075e9.30.1773837906381;
+        Wed, 18 Mar 2026 05:45:06 -0700 (PDT)
+Received: from iku.example.org ([2a06:5906:61b:2d00:5f14:a98b:b4be:efbd])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43b518985f6sm7888162f8f.25.2026.03.18.05.45.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Mar 2026 05:45:05 -0700 (PDT)
+From: Prabhakar <prabhakar.csengg@gmail.com>
+X-Google-Original-From: Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+To: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Wolfram Sang <wsa+renesas@sang-engineering.com>
+Cc: John Madieu <john.madieu.xa@bp.renesas.com>,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Prabhakar <prabhakar.csengg@gmail.com>,
+	Biju Das <biju.das.jz@bp.renesas.com>,
+	Fabrizio Castro <fabrizio.castro.jz@renesas.com>,
+	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH 0/5] Add PCIe support for RZ/V2N and RZ/V2H(P) SoCs
+Date: Wed, 18 Mar 2026 12:44:45 +0000
+Message-ID: <20260318124450.163471-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-1311157423-1773836302=:971"
+Content-Transfer-Encoding: 8bit
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 
---8323328-1311157423-1773836302=:971
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Hi all,
 
-On Wed, 18 Mar 2026, Ilpo J=E4rvinen wrote:
+This series adds support for the PCIe host controllers found on the
+Renesas RZ/V2N and RZ/V2H(P) SoCs. The RZ/V2N controller is similar
+to the existing RZ/G3E variant but uses a different device ID, while
+the RZ/V2H(P) controller includes additional features for PCIe lane
+control and supports multilink operation with two independent channels.
 
-> On Wed, 18 Mar 2026, Ahmed Naseef wrote:
->=20
-> > On Tue, Mar 17, 2026 at 04:29:08PM -0500, Bjorn Helgaas wrote:
-> > > On Mon, Mar 16, 2026 at 03:51:57PM +0000, Caleb James DeLisle wrote:
-> > > > pci_read_bridge_io() and pci_read_bridge_mmio_pref() read bridge wi=
-ndow
-> > > > registers unconditionally. If the registers are hardwired to zero
-> > > > (not implemented), both base and limit will be 0. Since (0 <=3D 0) =
-is
-> > > > true, a bogus window [mem 0x00000000-0x000fffff] or [io 0x0000-0x0f=
-ff]
-> > > > gets created.
-> > > >=20
-> > > > pci_read_bridge_windows() already detects unsupported windows by
-> > > > testing register writability and sets io_window/pref_window flags
-> > > > accordingly. Check these flags at the start of pci_read_bridge_io()
-> > > > and pci_read_bridge_mmio_pref() to skip reading registers when the
-> > > > window is not supported.
-> > >=20
-> > > The fundamental problem here is that assigned space to a bridge windo=
-w
-> > > that isn't implemented.  I wish we understood the connection between
-> > > this "read window" path and the assignment path.
-> > >=20
-> > > Maybe this patch fixes it because we enter pci_read_bridge_mmio_pref(=
-)
-> > > with res->flags being NULL, and we set IORESOURCE_MEM |
-> > > IORESOURCE_PREFETCH again, which makes it look like we can assign
-> > > space for it?
-> >=20
-> > Yes, that's exactly right.
-> >=20
-> > >=20
-> > > If that's the case, I think it would improve the commit log to mentio=
-n
-> > > the actual mechanism by which we avoid assigning space.
-> > >=20
-> >=20
-> > How about this:
-> >=20
-> >   pci_read_bridge_io() and pci_read_bridge_mmio_pref() read
-> >   bridge window registers unconditionally. If the registers
-> >   are hardwired to zero (not implemented), both base and limit
-> >   will be 0. Since (0 <=3D 0) is true, these functions set
-> >   IORESOURCE_IO or IORESOURCE_MEM | IORESOURCE_PREFETCH on
-> >   the bridge resource. This causes the allocator to assign
-> >   space for the window even though the hardware can't
-> >   implement it.
-> >=20
-> >   pci_read_bridge_windows() already detects unsupported windows
-> >   by testing register writability and sets io_window/pref_window
-> >   flags accordingly. Check these flags at the start of
-> >   pci_read_bridge_io() and pci_read_bridge_mmio_pref() to skip
-> >   reading registers when the window is not supported, so the
-> >   resource flags remain clear and the allocator does not assign
-> >   space for non-existent windows.
->=20
-> At least to me the proposed text reads much better than the original.
-> The original text required reading between the lines to connect the dots,=
-=20
-> whereas this new one clearly explains what causes what.
+The series includes the following changes:
+- Add device tree bindings for the RZ/V2N and RZ/V2H(P) PCIe
+  controllers, documenting their capabilities and requirements.
+- Update the rzg3s-host driver to support the new SoCs, including
+  handling for multiple PCIe channels and shared reset controls.
 
-Hi again,
+Note, Ive created two seprate commits for bindings file for easier
+review if these needs to be merged into one please let me know.
 
-Reading the code I think the entire 0 <=3D 0 part is a red herring=20
-when it comes to the current code, the flags are always set by the=20
-functions!
+Cheers,
+Prabhakar
 
-The code would only add IORESOURCE_UNSET | IORESOURCE_DISABLED if the=20
-base <=3D limit check fails but that's still wrong because it says to the=
-=20
-resource allocation code that it can enable that bridge window if it needs=
-=20
-to.
+Lad Prabhakar (5):
+  dt-bindings: pci: renesas,r9a08g045-pcie: Add RZ/V2N support
+  dt-bindings: pci: renesas,r9a08g045-pcie: Add RZ/V2H(P) support
+  PCI: rzg3s-host: Use shared reset controls for power domain resets
+  PCI: rzg3s-host: Prepare System Controller handling for multiple PCIe
+    channels
+  PCI: rzg3s-host: Add support for RZ/V2H(P) SoC
 
-Prior to the commit 8278c6914306 ("PCI: Preserve bridge window resource=20
-type flags") the base <=3D limit check did play some role (maybe the=20
-original commit message was based on some older tree than the most current=
-=20
-one).
+ .../bindings/pci/renesas,r9a08g045-pcie.yaml  |  43 +++-
+ drivers/pci/controller/pcie-rzg3s-host.c      | 194 ++++++++++++++++--
+ 2 files changed, 211 insertions(+), 26 deletions(-)
 
---=20
- i.
+-- 
+2.53.0
 
---8323328-1311157423-1773836302=:971--
