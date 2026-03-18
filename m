@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B136127EFEE;
-	Wed, 18 Mar 2026 15:32:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BBE93EB816;
+	Wed, 18 Mar 2026 15:50:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773847942; cv=none; b=KjuWi2bvpIIG9HDECOP3ZE6lejg4eESe509JZPl55kVtzIggEtUhAn3cWSOt4hpf4ONDmJG9+uI1u2xCuTY2/f/Q8h+QeJbHbR3ZQEXIIP8QYhmSV/29RBvUe2F/GOLI84SpCGBPyvmp0miqi0e19G7aJcjxJ2hp50QjYzOGOXs=
+	t=1773849059; cv=none; b=ssn9Gup/MBoRY+FbFslWzom7u82CIVwkOSmOQYW2ykc4sEc6SbU02hv6w8atSthk+nxHQfcM123Lu5d58PrsHlBoef/dH+gtNpisy8i9+1SmP9NFLUZveygEqqRj0sSFJCpkkaUY1zStR7srOu6DsaV/UGnrtgv3LC0g8ZwuhU8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773847942; c=relaxed/simple;
-	bh=zcSDVZOm/DIOWLjP1a1OYnDj8XnY+hRZW2+iIhv+0wQ=;
+	s=arc-20240116; t=1773849059; c=relaxed/simple;
+	bh=+lnjUkf0OHEY53UwRr8h7v/oOtyDAetw7DI1iPHt9uQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PdIOXxj6hz35pbUni1kQFJX0DLN0hIM5+C5cw5hhXcijqgAvNn2/3IdIksbzdd9Eh7I9iIaRsirIeBRBKQcikhZpVZzlqBx0Y8aoBq8q154NPheekW541PSc+17mDOHtl/m3IhJ6M1y5h8EamUCc5FDTiMNU4xWGXphGx4jSUkM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HutKBBKv; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=o35tdwc1xM9zJFnFDYIR0t+sAK90+ThumG4eBfwJA02uahsbS+TUKxLb9MqMj6A8b4lB2SEmMAAhYZ28KCJetGaIxeQmrblNXhVu+wFh7FqmticMYIH9BPZXu11fj04nxeVN5oCqdTovEcW4D9yH8VXzIqriWSQeMamcMZq+ztA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M1n2O9jy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HutKBBKv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBAF1C2BC87;
-	Wed, 18 Mar 2026 15:32:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M1n2O9jy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52E07C2BCAF;
+	Wed, 18 Mar 2026 15:50:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773847942;
-	bh=zcSDVZOm/DIOWLjP1a1OYnDj8XnY+hRZW2+iIhv+0wQ=;
+	s=k20201202; t=1773849059;
+	bh=+lnjUkf0OHEY53UwRr8h7v/oOtyDAetw7DI1iPHt9uQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HutKBBKvVtTWpWIhzWm1Vf+XBqTX1mkoyxJGhDZkh2ysLmG2+CrmtNrCflKo/ibwL
-	 7y5SvIXuLCGllVBRvFpkw8CHHIFtoJntrFwLBpVovam+ZWigBAm1xMoS2cY8nqt6mS
-	 jy+fW7Qs/ylIuvpS63XkiWV+UI3pmU98Sf+9q0nUJvAkp1eyfLk3DkwHNM2ylIoM1/
-	 fZK8iu67F8XrV4m9Y92zdMhXtSegXnau7SeyGpnU6Qi2QRsrOaaF08lQ8Z6256A2Ba
-	 sk9gD5kGtG1wchboXsJU4QBkVo/IlBAwsGjFADVRLNa4fxDTOIGE5aJd6cJ2lBwoSM
-	 bO6bKobL9LBWA==
-Date: Wed, 18 Mar 2026 16:32:17 +0100
+	b=M1n2O9jyso3dRNfr2RL7B/BoUToKVIyLaPL8YERp/Gjvx3V6RZZrVmOHHRwYpvrKq
+	 HT6GYgSxGZvmeI8s05wE85MTrDk0kYKpONf6U+vyVc5KkRsSIyusrBw9J/QD05wt2a
+	 yO2dD+pvRncyx8QPa2DTHddBv72di/lHTp3xvBsshy+BqK+cckrphgENS1SlML2eNu
+	 8VRd90d/qtkDqBzglq2dKW2zzCRlxowbIt+SKpRnPTmzBZVdUAkXNd4gnrsonelGGZ
+	 gTfmwoaCU+EGnF3wSyBFgsN3WlAZRnRnP4UTv0w0FGO3Gm/P2I7HPjql5UoJR+568D
+	 i4Yc5FIj7Lt3w==
+Date: Wed, 18 Mar 2026 16:50:53 +0100
 From: Niklas Cassel <cassel@kernel.org>
 To: Christian Bruel <christian.bruel@foss.st.com>
 Cc: Manivannan Sadhasivam <mani@kernel.org>,
@@ -38,11 +38,11 @@ Cc: Manivannan Sadhasivam <mani@kernel.org>,
 	Koichiro Den <den@valinux.co.jp>, fabrice.gasnier@foss.st.com,
 	linux-pci@vger.kernel.org, linux-kselftest@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] selftests: pci_endpoint: Skip subrange map test if
- iATU allocation fails
-Message-ID: <abrFgYcgpmNwDvNg@ryzen>
+Subject: Re: [PATCH 2/3] PCI: endpoint: pci-epf-test: Handle -ENOSPC in
+ subrange map test
+Message-ID: <abrJ3X7BIU3In-bm@ryzen>
 References: <20260318-skip-bar_subrange-tests-if-enospc-v1-0-f1a49534ebea@foss.st.com>
- <20260318-skip-bar_subrange-tests-if-enospc-v1-1-f1a49534ebea@foss.st.com>
+ <20260318-skip-bar_subrange-tests-if-enospc-v1-2-f1a49534ebea@foss.st.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,39 +51,83 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260318-skip-bar_subrange-tests-if-enospc-v1-1-f1a49534ebea@foss.st.com>
+In-Reply-To: <20260318-skip-bar_subrange-tests-if-enospc-v1-2-f1a49534ebea@foss.st.com>
 
-On Wed, Mar 18, 2026 at 03:46:27PM +0100, Christian Bruel wrote:
-> Handle -ENOSPC error. If the number of available inbound ATU entries is
-> insufficient to map the subrange, skip the test instead of failing.
+On Wed, Mar 18, 2026 at 03:46:28PM +0100, Christian Bruel wrote:
+> Report pci_epc_set_bar() -ENOSPC failure with the
+> STATUS_BAR_SUBRANGE_SETUP_NOSPC status bit. This can be used to
+> skip the subrange test if there is not enough iATU resources to
+> allocate it.
 > 
 > Link: https://lore.kernel.org/linux-pci/20260317152707.GA85951@bhelgaas/T/#m87e4c24173097a0ea70195b71aab294ad8d6c283
 
-I would drop the link, it does not really add any value.
+I would drop the link.
+
 
 > Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
 > ---
->  tools/testing/selftests/pci_endpoint/pci_endpoint_test.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-> index c417fb3a198b2d92c3060938c23807cc8bea5573..8ea2fda4539d11eb22b22800a7cb8bbaa99c91ba 100644
-> --- a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-> +++ b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-> @@ -88,6 +88,8 @@ TEST_F(pci_ep_bar, BAR_SUBRANGE_TEST)
->  		SKIP(return, "Subrange map is not supported");
->  	if (ret == -ENOBUFS)
->  		SKIP(return, "BAR is reserved");
-> +	if (ret == -ENOSPC)
-> +		SKIP(return, "Not enough ATU entries to allocate subrange");
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 14e61ebe1f116ce04789b6f4c3e965296701ec53..6437f08f0cd4bd4645e380c915b7cf81e66b7c35 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -54,6 +54,7 @@
+>  #define STATUS_BAR_SUBRANGE_SETUP_FAIL		BIT(15)
+>  #define STATUS_BAR_SUBRANGE_CLEAR_SUCCESS	BIT(16)
+>  #define STATUS_BAR_SUBRANGE_CLEAR_FAIL		BIT(17)
+> +#define STATUS_BAR_SUBRANGE_SETUP_NOSPC		BIT(18)
 
-ATU is a DWC specific term.
-I would use "inbound windows" instead.
-E.g. "Not enough inbound windows to allocate subrange"
+Perhaps STATUS_BAR_SUBRANGE_SETUP_SKIP ?
+
+>  
+>  #define FLAG_USE_DMA			BIT(0)
+>  
+> @@ -903,6 +904,8 @@ static void pci_epf_test_bar_subrange_setup(struct pci_epf_test *epf_test,
+>  		dev_err(&epf->dev, "pci_epc_set_bar() failed: %d\n", ret);
+>  		bar->submap = old_submap;
+>  		bar->num_submap = old_nsub;
+> +		if (ret == -ENOSPC)
+> +			status |= STATUS_BAR_SUBRANGE_SETUP_NOSPC;
+>  		kfree(submap);
+>  		goto err;
+>  	}
+
+Here you will have both STATUS_BAR_SUBRANGE_SETUP_NOSPC and
+STATUS_BAR_SUBRANGE_SETUP_FAIL set.
+
+Usually, we only have one bit set.
 
 
-Considering that the selftests is highest up the stack, I would put this
-patch as 3/3 and not 1/3.
+Perhaps something like:
+
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 582938b7b4f1..36e5d22f79ab 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -895,6 +895,10 @@ static void pci_epf_test_bar_subrange_setup(struct pci_epf_test *epf_test,
+                bar->submap = old_submap;
+                bar->num_submap = old_nsub;
+                kfree(submap);
++               if (ret == -ENOSPC) {
++                       status |= STATUS_BAR_SUBRANGE_SETUP_SKIP;
++                       goto err_status_set;
++               }
+                goto err;
+        }
+        kfree(old_submap);
+@@ -918,6 +922,7 @@ static void pci_epf_test_bar_subrange_setup(struct pci_epf_test *epf_test,
+ 
+ err:
+        status |= STATUS_BAR_SUBRANGE_SETUP_FAIL;
++err_status_set:
+        reg->status = cpu_to_le32(status);
+ }
+
+
+
+This patch should probably be 1/3.
 
 
 Kind regards,
