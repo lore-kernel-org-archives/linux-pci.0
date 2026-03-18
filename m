@@ -1,76 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out30-119.freemail.mail.aliyun.com (out30-119.freemail.mail.aliyun.com [115.124.30.119])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74EC33C4566;
-	Wed, 18 Mar 2026 11:27:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1F143D170F;
+	Wed, 18 Mar 2026 11:45:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.119
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773833268; cv=none; b=QLdUzGgMoVXADjXYP4WL24enoYk72Z9QXF4wmgmCmgZCereWDvpMHtoaup4LBeIiO7jQikbXbdt2yUwTcspCWqGOyD7WWv4uLpFHEcFbmL05MolocdOSQFTNLaw7BWVs10whDOsnsT1QwO72jcT5EBR7IeI5MCseLHoDR9fvagk=
+	t=1773834319; cv=none; b=iGj59UHVng8cL8fkQREsFwy5dJTcyP3xHrCCNnf8p9bQcVuK9Ldk1RbAc/LQXcwimHGtR4gyOKRMv90lE2I/qia/z/Ts6sm+2hzxqBfvFMwjFdSNPxo919TabFUY28K594buFkkrGeujvMe3D3oVW70zmVxRzJU2rMTeCEWh1mw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773833268; c=relaxed/simple;
-	bh=2urEpsel31KBLi0R41Vk+HjOZ+oJYk9u5tgFyfXXJl4=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=eTnEyjQ/l/UM63U9SeDBOdXxYOyYpTg3P2r/AUjSSVcipvEpVdvbcvWM7wJru+/LyRC9UESk9G3lS01T7BgSI5v30i/dRebhBf1ZyfXmvhDHYdvy25Es7svTnamhP/Dmaa0Iei0deIi2QdIyuyjcKCUVMNOub8OmnoknQOAtMuc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RindKiYs; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773834319; c=relaxed/simple;
+	bh=7HTUqEgNoxYYlJYCimlmPf/6F++wW/C+VtXyvOM1RSU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CX8A/6htzbhbpi9y9naO95f6rRGZCZvNk2i0cHy2nYoBb4vOJQ3eJ3mwmmw20/tZff3oPoA26IQdjix+HNBkuLxu4gBNnHZx615Kpi6klrVMj0us92rTprHxQK9MWe9car3l44yF5s4IFL4m15aBc7DIS6BIFtkhcFSJXDhqMEY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=aGw88IfI; arc=none smtp.client-ip=115.124.30.119
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RindKiYs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80C0DC19421;
-	Wed, 18 Mar 2026 11:27:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773833267;
-	bh=2urEpsel31KBLi0R41Vk+HjOZ+oJYk9u5tgFyfXXJl4=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=RindKiYsqoe+toNVHlRQk0QjvJHX6si/gvB7R3EYa1N/5IKCGDfR9826th/qOlA95
-	 u/1cDsvQkZS4lAUrTi784nrH8VUSjuq6t81JglwimRZBkV6KjKMSR6OVWniAcH3+NQ
-	 nDOmFGxgLSLd8P6oopngRSH3RWTJqsJb8QXFE9+Iq+prBkckmPhELedTZaMQX+cS7f
-	 SgwVMSF5wKrx63rOaSOvmLctAdgT1q3x1rtpctZShudsfZJKjRRYBMPfWq1FwNabQL
-	 u7w3rEqFURq965cjNx4UdVGe/vy/X0wZ6kXXe1Ldau6uu/S9ka5vzRKrSTlr9UTN2I
-	 m3hhxSzaqU5zw==
-From: Vinod Koul <vkoul@kernel.org>
-To: bhelgaas@google.com, mani@kernel.org, 
- Devendra K Verma <devendra.verma@amd.com>
-Cc: dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, 
- linux-kernel@vger.kernel.org, michal.simek@amd.com, Devendra.Verma@amd.com
-In-Reply-To: <20260318070403.1634706-1-devendra.verma@amd.com>
-References: <20260318070403.1634706-1-devendra.verma@amd.com>
-Subject: Re: [PATCH v15 0/2] Add AMD MDB Endpoint and non-LL mode Support
-Message-Id: <177383326516.408483.6251922217813807618.b4-ty@kernel.org>
-Date: Wed, 18 Mar 2026 16:57:45 +0530
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="aGw88IfI"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1773834311; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=E2NdF1QMWjUu0qtpBR8177AKP0EmQ3nxJJ4E1dUpmQs=;
+	b=aGw88IfIe8VPw9tuZd1F+YdyJo7CLzhsjof6kyfCQVPqT1UsUrVswXiM9wHhKr9DnyRivJR3ZQQ0xknNr9Ngcu4UNBXu5HyXZB3SlHe+HzokLz1BWWyK0+sWdYrt/BZl9g2e+c98J2uJW8VInJrUsU3Y4gbblPemO9yvR2ZKQJs=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R111e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033032089153;MF=xueshuai@linux.alibaba.com;NM=1;PH=DS;RN=17;SR=0;TI=SMTPD_---0X.EJ6bT_1773834309;
+Received: from 30.246.163.250(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0X.EJ6bT_1773834309 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 18 Mar 2026 19:45:10 +0800
+Message-ID: <b4085354-93e4-4484-8744-d8c7e7718c57@linux.alibaba.com>
+Date: Wed, 18 Mar 2026 19:45:19 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 3/7] iommu: Add iommu_report_device_broken() to
+ quarantine a broken device
+To: Nicolin Chen <nicolinc@nvidia.com>, will@kernel.org,
+ robin.murphy@arm.com, joro@8bytes.org, bhelgaas@google.com, jgg@nvidia.com
+Cc: rafael@kernel.org, lenb@kernel.org, praan@google.com,
+ baolu.lu@linux.intel.com, kevin.tian@intel.com,
+ linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+ linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+ linux-pci@vger.kernel.org, vsethi@nvidia.com
+References: <cover.1773774441.git.nicolinc@nvidia.com>
+ <c5390aeaeccfa86a1c79f26d2c0ff5df380940a4.1773774441.git.nicolinc@nvidia.com>
+From: Shuai Xue <xueshuai@linux.alibaba.com>
+In-Reply-To: <c5390aeaeccfa86a1c79f26d2c0ff5df380940a4.1773774441.git.nicolinc@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.13.0
 
 
-On Wed, 18 Mar 2026 12:34:01 +0530, Devendra K Verma wrote:
-> This series of patch support the following:
+
+On 3/18/26 3:15 AM, Nicolin Chen wrote:
+> When an IOMMU hardware detects an error due to a faulty device (e.g. an ATS
+> invalidation timeout), IOMMU drivers may quarantine the device by disabling
+> specific hardware features or dropping translation capabilities.
 > 
->  - AMD MDB Endpoint Support, as part of this patch following are
->    added:
->    o AMD supported device ID and vendor ID (Xilinx)
->    o AMD MDB specific driver data
->    o AMD specific VSEC capabilities to retrieve the base of
->      phys address of MDB side DDR
->    o Logic to assign the offsets to LL and data blocks if
->      more number of channels are enabled than configured
->      in the given pci_data struct.
+> However, the core-level states of the faulty device are out of sync, as the
+> device can be still attached to a translation domain or even potentially be
+> moved to a new domain that might overwrite the driver-level quarantine.
 > 
-> [...]
+> Given that such an error can be likely an ISR, introduce a broken_work per
+> iommu_group, and add a helper function to allow driver to report the broken
+> device, so as to completely quarantine it in the core.
+> 
+> Use the existing pci_dev_reset_iommu_prepare() function to shift the device
+> to its resetting_domain/blocking_domain. A later pci_dev_reset_iommu_done()
+> call will clear it and move it out of the quarantine.
+> 
+> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+> ---
+>   include/linux/iommu.h |  2 ++
+>   drivers/iommu/iommu.c | 59 +++++++++++++++++++++++++++++++++++++++++++
+>   2 files changed, 61 insertions(+)
+> 
+> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+> index 9ba12b2164724..9b5f94e566ff9 100644
+> --- a/include/linux/iommu.h
+> +++ b/include/linux/iommu.h
+> @@ -891,6 +891,8 @@ static inline struct iommu_device *__iommu_get_iommu_dev(struct device *dev)
+>   #define iommu_get_iommu_dev(dev, type, member) \
+>   	container_of(__iommu_get_iommu_dev(dev), type, member)
+>   
+> +void iommu_report_device_broken(struct device *dev);
+> +
 
-Applied, thanks!
-
-[1/2] dmaengine: dw-edma: Add AMD MDB Endpoint Support
-      commit: 14eb9a1d338fdc301a2297af86818ecf716b1539
-[2/2] dmaengine: dw-edma: Add non-LL mode
-      commit: b7560798466a07d9c3fb011698e92c335ab28baf
-
-Best regards,
--- 
-~Vinod
-
-
+This declaration is inside the #ifdef CONFIG_IOMMU_API section, but
+there's no corresponding stub in the #else block. While current
+callers (arm-smmu-v3) always have CONFIG_IOMMU_API, for API
+completeness, please add a stub.
+Thanks.
+Shuai
