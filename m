@@ -1,227 +1,347 @@
-Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010037.outbound.protection.outlook.com [52.101.69.37])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 214EA1E487;
-	Wed, 18 Mar 2026 02:55:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.69.37
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773802551; cv=fail; b=k1dR4uj+ua+mqnyFDPvt+mDwTgcNyjyyFI8rZpR53c56vi0bd3RBchDLkybZwxAkNeJ2frRk04TDEKum3LuV67w1x595W6Y/ed2BWiuOvzx+Vj+YbTcLn4H89AC5ZIZObkeaQWFdpYD57b/Uijm5Pn9yJAwB6SqthSgQzI6LFOw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773802551; c=relaxed/simple;
-	bh=gbYUF70wtYDERO0Yk6ZnrhLNJoYDIuSo4OwI3Flq4B8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=FSSdEzdWE1kiPBkTXiRvrB4tIhKsLlY4JKCqRpPaNzMfvaIVzOcxWZ2aTgoFHL6xWomewOtIDyoYwiCO54DLDVde2NU5pHFSESkuW0bJKkefPYeqfLI4Jr4cN/kEok0fH4HX83Fkg+m8VcIFABr7qH4DlUBabZxNn3dOQAl4W34=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=YnAK3Tjo; arc=fail smtp.client-ip=52.101.69.37
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80D792AEF5;
+	Wed, 18 Mar 2026 03:34:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773804877; cv=none; b=Q4IuCanYJv1fHlHyoycZY08YL6Lb/q22aFSFz0c+INMb1eAniGT7s5wMml1yLvrl4ory0jey5vrvbOu/pMTpdRmM6CQAdIgdltf3QDJaiyhgwbVSysywByPloRr0PETISyaZkXCwmZ6qaOdoBQO4fT1fGIVBoAyifZWpTp//q5g=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773804877; c=relaxed/simple;
+	bh=/2/SBIzIdR3PZ4M8jjOi91iS4jaETueAP3+eBIV8ysM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JcbO2COTLABQRCkXEJuedXwrjaVt4d6ijSwayESkiRcxc7tbEHaEGqGbRwbBHrAawq03GQYE+ZrMvtxzp0pBQGoo64TTxUqsa+cwx2A1y0/c+mIAeb7IIIt3h+mVQT7Z2t1jq/E68+sToDJGcejsqpx/EP/+YoCi8j+NvqLNq74=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZB9Q99Ul; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="YnAK3Tjo"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=QGfW3P4UqUqtam70SXc0AsaY9WavgZ+/BpWViBvkFoawKrD3KDXqqeRXSaouXm2ozrbU5nuw+n9dVpuNKq+t3Sh9mLJoCfBYAxfSTFil1JYpKuKjzTsUQjjGpPn4hcLH+CtRt/Mqzd3in1XZ7aNgsBIz822f1FCOSn/CY830HNOQCvQZxQ+ee7UvCJd/eIFriM5LlX60yAQKsnOG7xkLx2cyC9HdryVLtS6qD7DtXzVcvGu5YeI2te+JQzx5LTK72ImUB1kpdako7hyOE0xCcgro3KBt3OpVQP0pHV8bGGJ/bOrzw+F5cUFkB/ZTTTBOygP9eHQPKWDr9T4wT6fuvw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=gbYUF70wtYDERO0Yk6ZnrhLNJoYDIuSo4OwI3Flq4B8=;
- b=JYlJYrofyMQEzE8+VERhBoMpmUMJntqKgP6FTJDzwmklH2J4ZJEB67OUdrbUo+S9ilXew/t0LhFZdP82ThNIWV8/6FTmVRhpjCibaYVAFT2263rGoMYJIHcGkCi4B7lYNvvjFCxJEpA59S7pypoMtPKDcSa/KYt+L/dDXrGCWP/HGHemTVEO5U6qIa5rUlKuDJRh3OcXySDRFvomdZLQm8D1d0pw+GdsTeFvw+rP7mdo78X1zPlQNQFHkVRuGVLk3btpxzEIJqQtw61ruwW+TlhrWJ3j7boMXVkXQLZXvotOTXUbdva9Wp/k1X97lN8oFhWv25ZwUIZMQp6Ar5C/2g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gbYUF70wtYDERO0Yk6ZnrhLNJoYDIuSo4OwI3Flq4B8=;
- b=YnAK3TjoTR6WpP+FhGmzY4uAAWjybImhy0jmAb8nN83+zU/50fgz8YYj2ukTU8BTeTTeXnjLqzva2JM121T+rtwT79SpazrWXLybgYg+mDRKTKVW6YYfY3EfS/j0iflJ5IS15FDzYMIaWVQErGvby17kv95YDv3VFWzZ+pK1bSgK65G3OtPiu/Uwqg1P3/odhcfY/RZ1t/uA0z62NIX07SxfMwzHyspCerfJuvI5Ibu9KJfdIWBLnP5QZTiOfecvNSu+WgvfQ0MYW8vZWAPK67Cc/Ove6jff9k1qEocplRYVuoHWsSC/22BEfD35EQ4GWHQ7V+/MqmfoXaVPRPZ3zg==
-Received: from AS8PR04MB8833.eurprd04.prod.outlook.com (2603:10a6:20b:42c::19)
- by GV2PR04MB11980.eurprd04.prod.outlook.com (2603:10a6:150:2f3::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.24; Wed, 18 Mar
- 2026 02:55:38 +0000
-Received: from AS8PR04MB8833.eurprd04.prod.outlook.com
- ([fe80::209c:44e4:a205:8e86]) by AS8PR04MB8833.eurprd04.prod.outlook.com
- ([fe80::209c:44e4:a205:8e86%4]) with mapi id 15.20.9723.018; Wed, 18 Mar 2026
- 02:55:45 +0000
-From: Hongxing Zhu <hongxing.zhu@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Frank Li <frank.li@nxp.com>, "jingoohan1@gmail.com"
-	<jingoohan1@gmail.com>, "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kwilczynski@kernel.org"
-	<kwilczynski@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>, "festevam@gmail.com"
-	<festevam@gmail.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev"
-	<imx@lists.linux.dev>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "stable@vger.kernel.org"
-	<stable@vger.kernel.org>
-Subject: RE: [PATCH v1] PCI: imx6: Add force_suspend flag to override L1SS
- suspend skip
-Thread-Topic: [PATCH v1] PCI: imx6: Add force_suspend flag to override L1SS
- suspend skip
-Thread-Index: AQHctdXR4rMaQwHMbk+Nxv/9or4V47Wy+e2AgACXyCA=
-Date: Wed, 18 Mar 2026 02:55:45 +0000
-Message-ID:
- <AS8PR04MB8833061F34B9BEFC9D19764A8C4EA@AS8PR04MB8833.eurprd04.prod.outlook.com>
-References: <20260317061256.591362-1-hongxing.zhu@nxp.com>
- <20260317172341.GA93733@bhelgaas>
-In-Reply-To: <20260317172341.GA93733@bhelgaas>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: AS8PR04MB8833:EE_|GV2PR04MB11980:EE_
-x-ms-office365-filtering-correlation-id: 9d9555ad-f727-4e51-64c3-08de8499da3e
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|19092799006|366016|376014|1800799024|7416014|22082099003|18002099003|56012099003|38070700021;
-x-microsoft-antispam-message-info:
- bV5m5eXsek7zkIol+3n3T6BNDXR2aorVeE7HnW+BTk+/sSOSzVjP9Jnf7CGZ4d34DDRjpX6dilufybJ04ta09uH23sWfuSoscvUQ6xePBbzxlprT0iRzBpXgU+JbpL4mjlIntbBc5+4CZKmnEiMLmEB78LhuFgkDiHUf4qEW4dCWgHlttRjaN2p7GSfo1QFbdxIrfq37M4sxAzQBnePl7NUG4cl79xyC/Hjfuzohf/ZTk/I4a+v4GoNbAqobeWzxKZ5e8HgrXAfvsZxWaOvdZ4P9m6GGA1todWESJUU5YQ3HDvkRNpKMfn9xuTEJdo/dW82YPVSo/K58nB1kogWKB6Cv3gw986gWoQMSr0+kPzV+p9C/+GJbucFBY7mYeuiMXjFyP+ym6GgR8zcDslci8Weef+zHKZjEEh9pAdwMMrKNZJyZPlUB/GhIh5nRC0DDa8Fe93S5RVxsDPfkRSime7wIKma2K6ajtnJ15D9Wj4UB+y5e8RBGCgjPs/2FfP0Ay/8L8AtO/J0RNULBF/DErQHcxIBdsvLFY25ZZ2u/bh12BurqePpoCIZ3qpIC0PwHjhb/FgyY+9juemR5Jc/uugO9S0qvDuqCDYncswF0Jtb4BfvfkcFPqawwsthqOL7UftTfjP3vflBOW4ADWKct5y9mukM3KQC40JT4REFyUEgPqapddQL+8E/pk4MGmP3s4vj3vc/GIQTkMvup1npuKswObRzMu1anWqTLRNI0JwFi7B8K56n4LoxfhVt6bD8jPtJBZBmi5v4KsDpQLq0lhENpedTGgxTgb0MG0BneCNg=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:zh-cn;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR04MB8833.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(366016)(376014)(1800799024)(7416014)(22082099003)(18002099003)(56012099003)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?gb2312?B?UGFPSWMzdkRoMnFpNE94aENSWERIM0liRVBHYURiak0xL2tJcjk4MnNCbnEx?=
- =?gb2312?B?TlllVmNmYzhlMFk4T0dzQlp1Qk1pTVhzMjZlUFpFM21COUlxQ2c2Q2FqaDdt?=
- =?gb2312?B?QTlmdlhGVkQwTzIrc1FPamZHQ091Qmx1UW11emhpcDh2b3RmTmhua2QvSWxX?=
- =?gb2312?B?OHZEU3dXclFFWnZkSFVxeWl1YlU2OHJGSGIzbGZBOUc2Q0ZpcGJwcDRZVWxC?=
- =?gb2312?B?QUJFa1lwMEc4ZGRoWmZNaXVjUFlpRjRwQ0lMUzJENjUvOWV6TEhOQVEyakpT?=
- =?gb2312?B?QjJpc29kZ3UrZGllQUlDbXBmaVJmaStJVjB0ME5jUWpJTmgzMkVmVU5rK0kz?=
- =?gb2312?B?bUVoY2Z5RklVd1pzNzFjUHdpKzgyTHI2ZWs0MlR3M0Zma095NENlZmxJTVZB?=
- =?gb2312?B?Y2JFNlF0VzBFN1cwVXlZemNRM2NlSEFSZ3dEblJsQ1FoU2p2a1p1OC82Zld5?=
- =?gb2312?B?dG42QUZvaEZTYVFMU2FuU0F4cGw2OG9UK21sWW5jaVdyZkZGQ3VyWGdadElD?=
- =?gb2312?B?TWx0a0gyNEJRb0hWMmJRdTZxL2JBWjFvUUpydlIzNzVpVlZ6NFFwVHB6b3R2?=
- =?gb2312?B?NFdwcE1xVXhPTXl3MkU2SGpNWHZjK0IxU3RUT0JQQi9pZWp2SUgyRUY1aFFR?=
- =?gb2312?B?UVlyaEJub2dUVU4yeGNIemJocUpJM2JpYUFmbXBhV2ZPdWpJYlhhbXhqVE1z?=
- =?gb2312?B?S0FLMWJKcEt4N2ZxN2VCVzgweTFMTU10emhSblVTTnB3WmFMSHA3WkpjTDBt?=
- =?gb2312?B?VGNNaVVBTUp5ZlhQOWQ4ZFVnNUFKaWJsTW91R1IwVmpIekdmdlhaNUsvT3VF?=
- =?gb2312?B?bVpQd2MweDk2YThyTG1VZHdMaHFzMGh5L3UvQWI5bUJ5dlhrYnpxdVZrcXQy?=
- =?gb2312?B?NzFwVXBxS1JUTXhUNFFZeEZkd2JrRTduaXQ2OXpiTFFGSVlaekpjWk5VQ1Zm?=
- =?gb2312?B?NnQwZm4wSnpWVnFRTHcrL2R1WnZOUWJmSElVTmQ4Q0xBc084T09TNGVHTXVQ?=
- =?gb2312?B?UlNpaHZMYzE2Z0FnRCtEZEtXV2VYRUgzcFJiYTQ1TFg3NFVqSzVPcVJYd3lz?=
- =?gb2312?B?bytBS0IxOE1oOUFqTWd5eDduSlordThPOVFZL0kvMGZ4L1k3RE9vZjVPL0pD?=
- =?gb2312?B?YzRKdVlCWWlHWWhVQTc0c29kL2dzaW1mZ2RqK1JOYkR0dDNZbEp1dVVWcWRD?=
- =?gb2312?B?dlNIQWQ2Ri9DT1JDVkk5RVpGc3ZuZ0tPK3BNcnp5anAwbnJDQk9IKzFvL05V?=
- =?gb2312?B?bldsbStOSDRUMTd6cnp3N09nMnR0MHE0c1BBazZRT1FuTGpmMU01YlBtdU9Z?=
- =?gb2312?B?VnZab01DU29NRWh3Tmk3WExyM0NBSXdWQ2d4T0JzakJiajBpWFBIbjZuc2Zw?=
- =?gb2312?B?MWpuQVhsQXlYVHRTQWlPYTBGeXlsNXlaUjd0ZE9vVHp6cnhOa0R2NGF1OVlw?=
- =?gb2312?B?cys5bE9pM0hsQW5qM2tLbUxQRVRueldXSElLZXMxcFgrNjlNaXMvVXc2MzFj?=
- =?gb2312?B?K2tpUlBUeDhGOXJWZzhMSFpXSEQ4SDdrZWgvVGZ5clFnMHN6MjFxaExrWXlk?=
- =?gb2312?B?VzRYNnhCZWQ1SllreGNURWFmcmJpZnl2aEt0MkVzWEpUb01YdlA5aUxaNm56?=
- =?gb2312?B?UDZaMXg4OVhGa3RPMGlsL01wVk9CUXkvckIxckJGL0lrZUI0M1YzRDJHQWVr?=
- =?gb2312?B?VW5jZkxRSmlkWDBWWWJDT3g1SXA4encxcW9ORk5zN041ajFDWkNRcVpmbDRE?=
- =?gb2312?B?dUx3cTA1cVkvaGVvQjNhSlVTSjJiMVc1QThyNHE2RWpGV2diaHJkMHNMenFH?=
- =?gb2312?B?dEJneTY0aWlwN2w5VzFTZkduYkV5SFJ3bzRCcWFGMktXc0hVdk15S3liaUFE?=
- =?gb2312?B?OWxieXZ6RzhtaExNVHVKVGdJUGhmNDNhQUFtQ0djeWZOemFwakFpSEUybGMr?=
- =?gb2312?B?RlNDcmFmYS95LzJmYjFMekIrWGlvZldCcTZELzdjM1E4OXJRR0ZZSHlkRkhr?=
- =?gb2312?B?UGtYdGVwMHJwVGNmRWszNVUwK2ZyTlp3MEtzNnRhOGxKd3FleE44VU5hbk1i?=
- =?gb2312?B?blBtR2ZwZzJ4Y1FBb2JUNG93Kzc4VE1RQVAvcEZjRVErUVpOT1JiR2d2eEwx?=
- =?gb2312?B?OUtMbEMxSTgySDVyODVtemd4clE0RnZNUTAyc2hkS2JTMUtZOFkwZDlsVjR4?=
- =?gb2312?B?V2c1YWtnT3pGc1RBQjh1VGhTTGtNK0RXcmNFb3NFTFo1QldUSU1xQU5MOHdx?=
- =?gb2312?B?Zm80cy82aTZnYkFTV0dyR2k3VGFNUnBnVmh3d2wxQnRadjZRdWxjOURkczdG?=
- =?gb2312?Q?ivnrO6ZF6t11FS/t9n?=
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZB9Q99Ul"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C11DCC19421;
+	Wed, 18 Mar 2026 03:34:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773804877;
+	bh=/2/SBIzIdR3PZ4M8jjOi91iS4jaETueAP3+eBIV8ysM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ZB9Q99UlzL+AgiMYGkaJQYJc6Tsqk4VzkVmWkpanuHFytqx63D6uHxRXQjNk2r1fe
+	 o158Y+icpZPAk1WWAPebopTfXaDSl13TGoENld0PK4AIZUi8FhfyoMXD6FwsVCKXyt
+	 dJySRTaX8v19FFXj6K0TrRKI44LPalAwwAYnWJXdBjjhvKFugnfFm3uylVPgwXAB0/
+	 D5UHgDUpML1ykLNmD4tC2FrVIoJDMwBGJq87ad4y73t6ZYpMESdds2yYwUi8ivFFAx
+	 7zCkq4I+OgM5MpxT0MVjoEYItXK/wbxnb4bBHrPM3mPsLKF4basmwFjf5fDJkoVn4Q
+	 Fp67c+axrxPEA==
+Date: Wed, 18 Mar 2026 09:04:24 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bartosz Golaszewski <brgl@kernel.org>
+Cc: manivannan.sadhasivam@oss.qualcomm.com, 
+	Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>, linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-kbuild@vger.kernel.org, platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+	linux-pm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-acpi@vger.kernel.org, 
+	Hans de Goede <johannes.goede@oss.qualcomm.com>, Rob Herring <robh@kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
+	Nathan Chancellor <nathan@kernel.org>, Nicolas Schier <nicolas.schier@linux.dev>, 
+	Hans de Goede <hansg@kernel.org>, Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, 
+	Mark Pearson <mpearson-lenovo@squebb.ca>, "Derek J. Clark" <derekjohn.clark@gmail.com>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: Re: [PATCH v6 9/9] power: sequencing: pcie-m2: Create serdev device
+ for WCN7850 bluetooth
+Message-ID: <aikoyhpzukxgiupdche55er4iddtdckc44kxkrqrzqid6hcptl@qtjbtg7drgpb>
+References: <20260317-pci-m2-e-v6-0-9c898f108d3d@oss.qualcomm.com>
+ <20260317-pci-m2-e-v6-9-9c898f108d3d@oss.qualcomm.com>
+ <CAMRc=MeNZGr=zDVQYd1YgeUNdaenpbDEgmT6h7CuU89sHQuMcA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: AS8PR04MB8833.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9d9555ad-f727-4e51-64c3-08de8499da3e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Mar 2026 02:55:45.9483
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: uWifYhyKVKExGavmIp1gJAoYtGhPkjZ8fYzDYVD/ibbvAodmm1uiI1qVtGlqIjfPIlW1qXmGLt7en3Adb1ctzA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV2PR04MB11980
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAMRc=MeNZGr=zDVQYd1YgeUNdaenpbDEgmT6h7CuU89sHQuMcA@mail.gmail.com>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIDxoZWxn
-YWFzQGtlcm5lbC5vcmc+DQo+IFNlbnQ6IDIwMjbE6jPUwjE4yNUgMToyNA0KPiBUbzogSG9uZ3hp
-bmcgWmh1IDxob25neGluZy56aHVAbnhwLmNvbT4NCj4gQ2M6IEZyYW5rIExpIDxmcmFuay5saUBu
-eHAuY29tPjsgamluZ29vaGFuMUBnbWFpbC5jb207DQo+IGwuc3RhY2hAcGVuZ3V0cm9uaXguZGU7
-IGxwaWVyYWxpc2lAa2VybmVsLm9yZzsga3dpbGN6eW5za2lAa2VybmVsLm9yZzsNCj4gbWFuaUBr
-ZXJuZWwub3JnOyByb2JoQGtlcm5lbC5vcmc7IGJoZWxnYWFzQGdvb2dsZS5jb207DQo+IHMuaGF1
-ZXJAcGVuZ3V0cm9uaXguZGU7IGtlcm5lbEBwZW5ndXRyb25peC5kZTsgZmVzdGV2YW1AZ21haWwu
-Y29tOw0KPiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3Rz
-LmluZnJhZGVhZC5vcmc7DQo+IGlteEBsaXN0cy5saW51eC5kZXY7IGxpbnV4LWtlcm5lbEB2Z2Vy
-Lmtlcm5lbC5vcmc7IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRD
-SCB2MV0gUENJOiBpbXg2OiBBZGQgZm9yY2Vfc3VzcGVuZCBmbGFnIHRvIG92ZXJyaWRlIEwxU1MN
-Cj4gc3VzcGVuZCBza2lwDQo+IA0KPiBPbiBUdWUsIE1hciAxNywgMjAyNiBhdCAwMjoxMjo1NlBN
-ICswODAwLCBSaWNoYXJkIFpodSB3cm90ZToNCj4gPiBBZGQgYSBmb3JjZV9zdXNwZW5kIGZsYWcg
-dG8gYWxsb3cgcGxhdGZvcm0gZHJpdmVycyB0byBmb3JjZSB0aGUgUENJZQ0KPiA+IGxpbmsgaW50
-byBMMiBzdGF0ZSBkdXJpbmcgc3VzcGVuZCwgZXZlbiB3aGVuIEwxU1MgKEFTUE0gTDEgU3ViLVN0
-YXRlcykNCj4gPiBpcyBlbmFibGVkLg0KPiA+DQo+ID4gQnkgZGVmYXVsdCwgdGhlIERlc2lnbldh
-cmUgUENJZSBob3N0IGNvbnRyb2xsZXIgc2tpcHMgTDIgc3VzcGVuZCB3aGVuDQo+ID4gTDFTUyBp
-cyBzdXBwb3J0ZWQgdG8gbWVldCBsb3cgcmVzdW1lIGxhdGVuY3kgcmVxdWlyZW1lbnRzIGZvciBk
-ZXZpY2VzDQo+ID4gbGlrZSBOVk1lLiBIb3dldmVyLCBzb21lIHBsYXRmb3JtcyBsaWtlIGkuTVgg
-UENJZSBuZWVkIHRvIGVudGVyIEwyDQo+ID4gc3RhdGUgZm9yIHByb3BlciBwb3dlciBtYW5hZ2Vt
-ZW50IHJlZ2FyZGxlc3Mgb2YgTDFTUyBzdXBwb3J0Lg0KPiA+DQo+ID4gRW5hYmxlIGZvcmNlX3N1
-c3BlbmQgZm9yIGkuTVggUENJZSB0byBlbnN1cmUgdGhlIGxpbmsgZW50ZXJzIEwyIGR1cmluZw0K
-PiA+IHN5c3RlbSBzdXNwZW5kLg0KPiANCj4gSSdtIGEgbGl0dGxlIGJpdCBza2VwdGljYWwgYWJv
-dXQgdGhpcy4NCj4gDQo+IFdoYXQgZXhhY3RseSBkb2VzIGEgImxvdyByZXN1bWUgbGF0ZW5jeSBy
-ZXF1aXJlbWVudCIgbWVhbj8gIElzIHRoaXMgYW4NCj4gYWN0dWFsIGZ1bmN0aW9uYWwgcmVxdWly
-ZW1lbnQgdGhhdCdzIHNwZWNpYWwgdG8gTlZNZSwgb3IgaXMgaXQganVzdCB0aGUgZGVzaXJlIGZv
-cg0KPiBsb3cgcmVzdW1lIGxhdGVuY3kgdGhhdCBldmVyeWJvZHkgaGFzIGZvciBhbGwgZGV2aWNl
-cz8NCkhpIEJqb3JuOg0KRnJvbSBteSB1bmRlcnN0YW5kaW5nLCBMMVNTIG1vZGUgaXMgY2hhcmFj
-dGVyaXplZCBieSBsb3dlciBsYXRlbmN5IHdoZW4NCmNvbXBhcmVkIHRvIEwyIG9yIEwzIG1vZGVz
-Lg0KSXQgY2FuIGJlIHVzZWQgb24gYWxsIGRldmljZXMsIGF2b2lkaW5nIGZyZXF1ZW50IHBvd2Vy
-IG9uL29mZiBjeWNsZXMuIE5WTWUgY2FuDQphbHNvIGV4dGVuZCB0aGUgc2VydmljZSBsaWZlIG9m
-IHRoZSBlcXVpcG1lbnQuDQo+IA0KPiBJcyB0aGVyZSBzb21ldGhpbmcgc3BlY2lhbCBhYm91dCBp
-Lk1YIGhlcmU/ICBXaHkgZG8gd2Ugd2FudCBpLk1YIHRvIGJlDQo+IGRpZmZlcmVudCBmcm9tIG90
-aGVyIGhvc3QgY29udHJvbGxlcnM/DQppLk1YIFBDSWUgbG9zZXMgcG93ZXIgc3VwcGx5IGR1cmlu
-ZyBEZWVwIFNsZWVwIE1vZGUgKERTTSksIHJlcXVpcmluZyBmdWxsDQpyZWluaXRpYWxpemF0aW9u
-IGFmdGVyIHN5c3RlbSB3YWtlLXVwLg0KDQpSZW1vdmluZyB0aGUgTDFTUyBjaGVjayBhbGxvd3Mg
-dGhlIHN1c3BlbmQgcHJvY2VzcyB0byBjb21wbGV0ZSBzdWNjZXNzZnVsbHkNCmFuZCBlbnN1cmVz
-IHRoZSBwY2ktPnN1c3BlbmRlZCBmbGFnIGlzIHNldCB0byB0cnVlLCB3aGljaCB0cmlnZ2VycyB0
-aGUNCnByb3BlciByZXN1bWUgc2VxdWVuY2UgZHVyaW5nIHN5c3RlbSB3YWtlLXVwIGZvciBpLk1Y
-IFBDSWVzLg0KDQpCZXN0IFJlZ2FyZHMNClJpY2hhcmQgWmh1DQo+IA0KPiA+IENjOiBzdGFibGVA
-dmdlci5rZXJuZWwub3JnDQo+ID4gRml4ZXM6IDQ3NzRmYWY4NTRmNSAoIlBDSTogZHdjOiBJbXBs
-ZW1lbnQgZ2VuZXJpYyBzdXNwZW5kL3Jlc3VtZQ0KPiA+IGZ1bmN0aW9uYWxpdHkiKQ0KPiA+IFNp
-Z25lZC1vZmYtYnk6IFJpY2hhcmQgWmh1IDxob25neGluZy56aHVAbnhwLmNvbT4NCj4gPiAtLS0N
-Cj4gPiAgZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNpLWlteDYuYyAgICAgICAgICAgICB8
-IDEgKw0KPiA+ICBkcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWRlc2lnbndhcmUtaG9z
-dC5jIHwgNCArKystDQo+ID4gIGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZGVzaWdu
-d2FyZS5oICAgICAgfCAxICsNCj4gPiAgMyBmaWxlcyBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyks
-IDEgZGVsZXRpb24oLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9jb250cm9s
-bGVyL2R3Yy9wY2ktaW14Ni5jDQo+ID4gYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2kt
-aW14Ni5jDQo+ID4gaW5kZXggODFhNzA5MzQ5NGM4Li43OTAyZDM5MTg1YTUgMTAwNjQ0DQo+ID4g
-LS0tIGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNpLWlteDYuYw0KPiA+ICsrKyBiL2Ry
-aXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaS1pbXg2LmMNCj4gPiBAQCAtMTgzMSw2ICsxODMx
-LDcgQEAgc3RhdGljIGludCBpbXhfcGNpZV9wcm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlDQo+
-ICpwZGV2KQ0KPiA+ICAJCWlmIChpbXhfY2hlY2tfZmxhZyhpbXhfcGNpZSwgSU1YX1BDSUVfRkxB
-R19TS0lQX0wyM19SRUFEWSkpDQo+ID4gIAkJCXBjaS0+cHAuc2tpcF9sMjNfcmVhZHkgPSB0cnVl
-Ow0KPiA+ICAJCXBjaS0+cHAudXNlX2F0dV9tc2cgPSB0cnVlOw0KPiA+ICsJCXBjaS0+cHAuZm9y
-Y2VfbDJfc3VzcGVuZCA9IHRydWU7DQo+ID4gIAkJcmV0ID0gZHdfcGNpZV9ob3N0X2luaXQoJnBj
-aS0+cHApOw0KPiA+ICAJCWlmIChyZXQgPCAwKQ0KPiA+ICAJCQlyZXR1cm4gcmV0Ow0KPiA+IGRp
-ZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWRlc2lnbndhcmUtaG9z
-dC5jDQo+ID4gYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWRlc2lnbndhcmUtaG9z
-dC5jDQo+ID4gaW5kZXggYTc0MzM5OTgyYzI0Li43MjAxNTRmZDRmZjAgMTAwNjQ0DQo+ID4gLS0t
-IGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNpZS1kZXNpZ253YXJlLWhvc3QuYw0KPiA+
-ICsrKyBiL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZGVzaWdud2FyZS1ob3N0LmMN
-Cj4gPiBAQCAtMTIyOSw3ICsxMjI5LDkgQEAgaW50IGR3X3BjaWVfc3VzcGVuZF9ub2lycShzdHJ1
-Y3QgZHdfcGNpZSAqcGNpKQ0KPiA+ICAJICogSWYgTDFTUyBpcyBzdXBwb3J0ZWQsIHRoZW4gZG8g
-bm90IHB1dCB0aGUgbGluayBpbnRvIEwyIGFzIHNvbWUNCj4gPiAgCSAqIGRldmljZXMgc3VjaCBh
-cyBOVk1lIGV4cGVjdCBsb3cgcmVzdW1lIGxhdGVuY3kuDQo+ID4gIAkgKi8NCj4gPiAtCWlmIChk
-d19wY2llX3JlYWR3X2RiaShwY2ksIG9mZnNldCArIFBDSV9FWFBfTE5LQ1RMKSAmDQo+IFBDSV9F
-WFBfTE5LQ1RMX0FTUE1fTDEpDQo+ID4gKwlpZiAoIXBjaS0+cHAuZm9yY2VfbDJfc3VzcGVuZCAm
-Jg0KPiA+ICsJICAgIChkd19wY2llX3JlYWR3X2RiaShwY2ksIG9mZnNldCArIFBDSV9FWFBfTE5L
-Q1RMKSAmDQo+ID4gKwkgICAgIFBDSV9FWFBfTE5LQ1RMX0FTUE1fTDEpKQ0KPiA+ICAJCXJldHVy
-biAwOw0KPiA+DQo+ID4gIAlpZiAocGNpLT5wcC5vcHMtPnBtZV90dXJuX29mZikgew0KPiA+IGRp
-ZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWRlc2lnbndhcmUuaA0K
-PiA+IGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNpZS1kZXNpZ253YXJlLmgNCj4gPiBp
-bmRleCBhZTYzODlkZDljYWEuLjUyNjEwMzZiYmU2ZSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJz
-L3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWRlc2lnbndhcmUuaA0KPiA+ICsrKyBiL2RyaXZlcnMv
-cGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gQEAgLTQ0Nyw2ICs0NDcs
-NyBAQCBzdHJ1Y3QgZHdfcGNpZV9ycCB7DQo+ID4gIAlib29sCQkJZWNhbV9lbmFibGVkOw0KPiA+
-ICAJYm9vbAkJCW5hdGl2ZV9lY2FtOw0KPiA+ICAJYm9vbCAgICAgICAgICAgICAgICAgICAgc2tp
-cF9sMjNfcmVhZHk7DQo+ID4gKwlib29sICAgICAgICAgICAgICAgICAgICBmb3JjZV9sMl9zdXNw
-ZW5kOw0KPiA+ICB9Ow0KPiA+DQo+ID4gIHN0cnVjdCBkd19wY2llX2VwX29wcyB7DQo+ID4gLS0N
-Cj4gPiAyLjM3LjENCj4gPg0K
+On Tue, Mar 17, 2026 at 09:06:20AM -0400, Bartosz Golaszewski wrote:
+> On Tue, 17 Mar 2026 05:29:59 +0100, Manivannan Sadhasivam via B4 Relay
+> <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> said:
+> > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> >
+> > For supporting bluetooth over the non-discoverable UART interface of
+> > WCN7850, create the serdev device after enumerating the PCIe interface.
+> > This is mandatory since the device ID is only known after the PCIe
+> > enumeration and the ID is used for creating the serdev device.
+> >
+> > Since by default there is no OF or ACPI node for the created serdev,
+> > create a dynamic OF 'bluetooth' node with the 'compatible' property and
+> > attach it to the serdev device. This will allow the serdev device to bind
+> > to the existing bluetooth driver.
+> >
+> > Tested-by: Hans de Goede <johannes.goede@oss.qualcomm.com> # ThinkPad T14s gen6 (arm64)
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > ---
+> >  drivers/power/sequencing/Kconfig          |   3 +-
+> >  drivers/power/sequencing/pwrseq-pcie-m2.c | 178 +++++++++++++++++++++++++++++-
+> >  2 files changed, 177 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/power/sequencing/Kconfig b/drivers/power/sequencing/Kconfig
+> > index f5fff84566ba..55aeef125e6f 100644
+> > --- a/drivers/power/sequencing/Kconfig
+> > +++ b/drivers/power/sequencing/Kconfig
+> > @@ -37,7 +37,8 @@ config POWER_SEQUENCING_TH1520_GPU
+> >
+> >  config POWER_SEQUENCING_PCIE_M2
+> >  	tristate "PCIe M.2 connector power sequencing driver"
+> > -	depends on OF || COMPILE_TEST
+> > +	depends on (PCI && OF) || COMPILE_TEST
+> > +	select OF_DYNAMIC
+> >  	help
+> >  	  Say Y here to enable the power sequencing driver for PCIe M.2
+> >  	  connectors. This driver handles the power sequencing for the M.2
+> > diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
+> > index 3507cdcb1e7b..77357439ba81 100644
+> > --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
+> > +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+> > @@ -12,9 +12,11 @@
+> >  #include <linux/of.h>
+> >  #include <linux/of_graph.h>
+> >  #include <linux/of_platform.h>
+> > +#include <linux/pci.h>
+> >  #include <linux/platform_device.h>
+> >  #include <linux/pwrseq/provider.h>
+> >  #include <linux/regulator/consumer.h>
+> > +#include <linux/serdev.h>
+> >  #include <linux/slab.h>
+> >
+> >  struct pwrseq_pcie_m2_pdata {
+> > @@ -30,6 +32,9 @@ struct pwrseq_pcie_m2_ctx {
+> >  	struct notifier_block nb;
+> >  	struct gpio_desc *w_disable1_gpio;
+> >  	struct gpio_desc *w_disable2_gpio;
+> > +	struct serdev_device *serdev;
+> > +	struct of_changeset *ocs;
+> > +	struct device *dev;
+> >  };
+> >
+> >  static int pwrseq_pcie_m2_vregs_enable(struct pwrseq_device *pwrseq)
+> > @@ -172,13 +177,176 @@ static int pwrseq_pcie_m2_match(struct pwrseq_device *pwrseq,
+> >  	return PWRSEQ_NO_MATCH;
+> >  }
+> >
+> > -static void pwrseq_pcie_m2_free_regulators(void *data)
+> > +static void pwrseq_pcie_m2_free_resources(void *data)
+> >  {
+> >  	struct pwrseq_pcie_m2_ctx *ctx = data;
+> >
+> > +	serdev_device_remove(ctx->serdev);
+> > +	bus_unregister_notifier(&pci_bus_type, &ctx->nb);
+> > +	of_changeset_revert(ctx->ocs);
+> > +	of_changeset_destroy(ctx->ocs);
+> >  	regulator_bulk_free(ctx->num_vregs, ctx->regs);
+> >  }
+> >
+> > +static int pwrseq_m2_pcie_create_bt_node(struct pwrseq_pcie_m2_ctx *ctx,
+> > +					struct device_node *parent)
+> > +{
+> > +	struct device *dev = ctx->dev;
+> > +	struct device_node *np;
+> > +	int ret;
+> > +
+> > +	ctx->ocs = devm_kzalloc(dev, sizeof(*ctx->ocs), GFP_KERNEL);
+> > +	if (!ctx->ocs)
+> > +		return -ENOMEM;
+> > +
+> > +	of_changeset_init(ctx->ocs);
+> > +
+> > +	np = of_changeset_create_node(ctx->ocs, parent, "bluetooth");
+> > +	if (!np) {
+> > +		dev_err(dev, "Failed to create bluetooth node\n");
+> > +		ret = -ENODEV;
+> > +		goto err_destroy_changeset;
+> > +	}
+> > +
+> > +	ret = of_changeset_add_prop_string(ctx->ocs, np, "compatible", "qcom,wcn7850-bt");
+> > +	if (ret) {
+> > +		dev_err(dev, "Failed to add bluetooth compatible: %d\n", ret);
+> > +		goto err_destroy_changeset;
+> > +	}
+> > +
+> > +	ret = of_changeset_apply(ctx->ocs);
+> > +	if (ret) {
+> > +		dev_err(dev, "Failed to apply changeset: %d\n", ret);
+> > +		goto err_destroy_changeset;
+> > +	}
+> > +
+> > +	ret = device_add_of_node(&ctx->serdev->dev, np);
+> > +	if (ret) {
+> > +		dev_err(dev, "Failed to add OF node: %d\n", ret);
+> > +		goto err_revert_changeset;
+> > +	}
+> > +
+> > +	return 0;
+> > +
+> > +err_revert_changeset:
+> > +	of_changeset_revert(ctx->ocs);
+> > +err_destroy_changeset:
+> > +	of_changeset_destroy(ctx->ocs);
+> > +
+> > +	return ret;
+> > +}
+> > +
+> > +static int pwrseq_m2_pcie_notify(struct notifier_block *nb, unsigned long action,
+> > +			      void *data)
+> > +{
+> > +	struct pwrseq_pcie_m2_ctx *ctx = container_of(nb, struct pwrseq_pcie_m2_ctx, nb);
+> > +	struct pci_dev *pdev = to_pci_dev(data);
+> > +	struct serdev_controller *serdev_ctrl;
+> > +	struct device *dev = ctx->dev;
+> > +	int ret;
+> > +
+> > +	/*
+> > +	 * Check whether the PCI device is associated with this M.2 connector or
+> > +	 * not, by comparing the OF node of the PCI device parent and the Port 0
+> > +	 * (PCIe) remote node parent OF node.
+> > +	 */
+> > +	struct device_node *pci_parent __free(device_node) =
+> > +			of_graph_get_remote_node(dev_of_node(ctx->dev), 0, 0);
+> > +	if (!pci_parent || (pci_parent != pdev->dev.parent->of_node))
+> > +		return NOTIFY_DONE;
+> > +
+> > +	switch (action) {
+> > +	case BUS_NOTIFY_ADD_DEVICE:
+> > +		/* Create serdev device for WCN7850 */
+> > +		if (pdev->vendor == PCI_VENDOR_ID_QCOM && pdev->device == 0x1107) {
+> > +			struct device_node *serdev_parent __free(device_node) =
+> > +				of_graph_get_remote_node(dev_of_node(ctx->dev), 1, 1);
+> > +			if (!serdev_parent)
+> > +				return NOTIFY_DONE;
+> > +
+> > +			serdev_ctrl = of_find_serdev_controller_by_node(serdev_parent);
+> > +			if (!serdev_ctrl)
+> > +				return NOTIFY_DONE;
+> > +
+> > +			/*
+> > +			 * Bail out if the device was already attached to this
+> > +			 * controller.
+> > +			 */
+> > +			if (serdev_ctrl->serdev)
+> > +				return NOTIFY_DONE;
+> > +
+> > +			ctx->serdev = serdev_device_alloc(serdev_ctrl);
+> > +			if (!ctx->serdev)
+> > +				return NOTIFY_BAD;
+> 
+> If you bail out here, on driver unbind you'll call serdev_device_remove() which
+> uncoditionally dereferences the serdev pointer.
+> 
+> > +
+> > +			ret = pwrseq_m2_pcie_create_bt_node(ctx, serdev_parent);
+> 
+> If this doesn't succeed, ctx->ocs remains set to NULL (correct me if I'm wrong)
+> and you end up calling of_changeset_revert() which will unconditionally
+> dereference the of_changeset pointer in __of_changeset_entry_invert().
+> 
+> > +			if (ret) {
+> > +				serdev_device_put(ctx->serdev);
+> > +				return notifier_from_errno(ret);
+> > +			}
+> > +
+> > +			ret = serdev_device_add(ctx->serdev);
+> > +			if (ret) {
+> > +				dev_err(dev, "Failed to add serdev for WCN7850: %d\n", ret);
+> > +				of_changeset_revert(ctx->ocs);
+> > +				of_changeset_destroy(ctx->ocs);
+> > +				serdev_device_put(ctx->serdev);
+> > +				return notifier_from_errno(ret);
+> > +			}
+> > +		}
+> > +		break;
+> > +	case BUS_NOTIFY_REMOVED_DEVICE:
+> > +		/* Destroy serdev device for WCN7850 */
+> > +		if (pdev->vendor == PCI_VENDOR_ID_QCOM && pdev->device == 0x1107) {
+> > +			serdev_device_remove(ctx->serdev);
+> > +			of_changeset_revert(ctx->ocs);
+> > +			of_changeset_destroy(ctx->ocs);
+> > +		}
+> > +		break;
+> > +	}
+> > +
+> > +	return NOTIFY_OK;
+> > +}
+> > +
+> > +static bool pwrseq_pcie_m2_check_remote_node(struct device *dev, u8 port, u8 endpoint,
+> > +					     const char *node)
+> > +{
+> > +	struct device_node *remote __free(device_node) =
+> > +			of_graph_get_remote_node(dev_of_node(dev), port, endpoint);
+> > +
+> > +	if (remote && of_node_name_eq(remote, node))
+> > +		return true;
+> > +
+> > +	return false;
+> > +}
+> > +
+> > +/*
+> > + * If the connector exposes a non-discoverable bus like UART, the respective
+> > + * protocol device needs to be created manually with the help of the notifier
+> > + * of the discoverable bus like PCIe.
+> > + */
+> > +static int pwrseq_pcie_m2_register_notifier(struct pwrseq_pcie_m2_ctx *ctx, struct device *dev)
+> > +{
+> > +	int ret;
+> > +
+> > +	/*
+> > +	 * Register a PCI notifier for Key E connector that has PCIe as Port
+> > +	 * 0/Endpoint 0 interface and Serial as Port 3/Endpoint 0 interface.
+> > +	 */
+> > +	if (pwrseq_pcie_m2_check_remote_node(dev, 3, 0, "serial")) {
+> > +		if (pwrseq_pcie_m2_check_remote_node(dev, 0, 0, "pcie")) {
+> > +			ctx->dev = dev;
+> > +			ctx->nb.notifier_call = pwrseq_m2_pcie_notify;
+> > +			ret = bus_register_notifier(&pci_bus_type, &ctx->nb);
+> > +			if (ret)
+> > +				return dev_err_probe(dev, ret,
+> > +						     "Failed to register notifier for serdev\n");
+> > +		}
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> >  static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
+> >  {
+> >  	struct device *dev = &pdev->dev;
+> > @@ -218,7 +386,7 @@ static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
+> >
+> >  	ctx->num_vregs = ret;
+> >
+> > -	ret = devm_add_action_or_reset(dev, pwrseq_pcie_m2_free_regulators, ctx);
+> > +	ret = devm_add_action_or_reset(dev, pwrseq_pcie_m2_free_resources, ctx);
+> >  	if (ret)
+> >  		return ret;
+> >
+> > @@ -233,7 +401,11 @@ static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
+> >  		return dev_err_probe(dev, PTR_ERR(ctx->pwrseq),
+> >  				     "Failed to register the power sequencer\n");
+> 
+> If you bail out here, you will call bus_unregister_notifier() before your
+> registered it. Kernel docs are not clear on whether that's a bug but it still
+> looks fishy to me.
+> 
+> Am I not seeing something or is the error path broken? I'm doubting myself
+> here. :)
+> 
+
+No, it was me who has gone bonkers with the error path. I was so delusional to
+assume that these APIs handle NULL ptrs :/
+
+> This is why I advised to split pwrseq_pcie_m2_free_resources() and only schedule
+> individual devres actions after their allocation succeeds.
+> 
+> As it is now, you're better off providing a remove() callback with NULL checks.
+> 
+
+Makes sense. I'll fix them all in next version.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
