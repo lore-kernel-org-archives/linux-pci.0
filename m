@@ -1,135 +1,134 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013001.outbound.protection.outlook.com [40.93.196.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E3DC3559DF;
-	Wed, 18 Mar 2026 17:48:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773856095; cv=none; b=FRNDfBG2gpUTnnmlr/CiKo2E3MRbQ2wX58eT8PxAzngpCYiusUE8Xp4Inqdg9l9ePUmMB3uiB9vQcTQxUNVEJYOqjhLqUIYe3fzcyvjqzJ5YRU7SCWGuF0Imfikj/Vi1L3nOvodB88DU9bV4ywI8o0q58ZMCE2TRCWRWV09giQc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773856095; c=relaxed/simple;
-	bh=EBXx7mZURjjriaHaknc92YiYxITjYget2D/5f5AFI88=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ONIKsZUGKI4cd6n6PAO+NoV8uosaL6NC2Bzkug3Hpycfn2nCHOFkJy1DmYgyWmp3iowdsPBwJ3UlZd07ulE0zlCZ/jdEzlfkax3YUDb1h7MmMUSBb9M1Tcl4cFRmpxoI7OQZwqcFX5ep98j48kyjFib5U2MVXrHBODzZSNZ741g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=brlf0DfV; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EFC719C546;
+	Wed, 18 Mar 2026 18:43:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.1
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773859386; cv=fail; b=BVXRjnYQEYD0sxKK3RGP7us8PY6dJeRHHoSIAqe/faLqVLVltEd0Qz4kM9SRc3wa7cseT20/Bc6II2RS4CpBilJlG1SlTHhptZDRVuy7SSp2IVu/4D7vUD1cQa1MrGM5CVBAHHdYJBKaJJ4CNiRlvpxYj7BaK1i+WrI39LMyKm8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773859386; c=relaxed/simple;
+	bh=gEty6HSAfjNDooVBriCrZ6Akv3jV51gZUPnD6JrVcGE=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fWhlxlaQttOGFbV2slOImWP301QFDpQjmXuqqItKuK1c15j/o8T7rebFWCQ+li3I/clDFXuFuAU4GMncJg7CdQVclilAqRT99fkTaP97vcEAqA3OfWoN3PWPatmC8besY08T8+HgPQ2/kVq0peBvTToXI2VY/JjQEXZNrCm0eHI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Q+Jonq16; arc=fail smtp.client-ip=40.93.196.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="brlf0DfV"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773856094; x=1805392094;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=EBXx7mZURjjriaHaknc92YiYxITjYget2D/5f5AFI88=;
-  b=brlf0DfVpUDBQBCb7ZsFAkbFAksbpjH8RsWXXM6azELxnHLwmiI5A+r/
-   naJOVOVNW8yqObYjU/qg48AK8/lfGz5lflmwwKKm6ABb2AUUY+HfHitzc
-   cNjSDKLkgLSSWNUEcPMLka5E+4BEuMRJP95u4kwnusIf1aq14qErqVAXZ
-   MwAduF+Ob1HnZopbeiRDcibUDqsaKwLTMDjThf2a8HyHIjFExI0eNOR0+
-   4a84XO9S7B3OGx6YHvRAm+DmniQuaOErM1iLpU97xPDkh6PdkX0b0Dhf2
-   WFk66RY3jj3ORFUQCCDZyU/V1YaZyx1pvWN9P3qJCX5jnHXb/aqf2z9u3
-   A==;
-X-CSE-ConnectionGUID: zeSLSg0SQzShIgSHbQ1Kjg==
-X-CSE-MsgGUID: gK6zAoJTR+Kai1HaWe+iTg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11733"; a="85550910"
-X-IronPort-AV: E=Sophos;i="6.23,127,1770624000"; 
-   d="scan'208";a="85550910"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2026 10:48:13 -0700
-X-CSE-ConnectionGUID: oKuGj8cqTOOym4NC7m+ULg==
-X-CSE-MsgGUID: JJ4rVujgRa6YfmmD5Ensqw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,127,1770624000"; 
-   d="scan'208";a="226835664"
-Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.81.126]) ([10.24.81.126])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2026 10:48:08 -0700
-Message-ID: <875b2f99-35b9-4a7c-b47e-bfdc543ef7a0@linux.intel.com>
-Date: Wed, 18 Mar 2026 10:48:07 -0700
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Q+Jonq16"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=jS1JaOTj8eplvC4/TgNm/4mzUXu8ADQaT3e1vsxUgnlDeA3yzuVkpsiBq0TxD9pNuwzU/U7nqsXsWc/MTxczIr1xSK7rtxUjFanORmz00UccL0RhAUsccqAipnfxVPRbyy5bYulnELtaSFsIiqaObmzYs6C36Q1JfDsOFqioS4HfD+ggZ+O2tGuhAI60ROqzSFJptcY6YT6tjTsteaCA+kVEn5C3Beq8ShkII8qS75JBQNUqZiJvxsoZU/BJo1RDmTG531UBoFAyqlgne2udANC/eI2BQxpTsY/8nbWY6hQZwsZVewG2mxZ4lLuzc9H9iM35KaELgVjls3Qi1DTo9w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=4uSjza+Pg6L4somw7c5rB62XxatgKpxn7WgFljf9SzU=;
+ b=wUob/JTv2EtbBlNNSGmJ8lHfGK684TSV8fS8lSN7NoSnx7rlpeeESXBqtZI8sOGi4DUyqxEwYu/2I1Jf54QGUz8eJrbKGG4ma3/hWKYax1nNBI2JQtyfWlgqsmM16yI6ElzgLc0WMn6qvZhjijH0qOUHamjXo1EeDvIBIcZgNsL2M/JKJdAJmfp+238KCgRz4PlDgKFq4klNIw8ls3L8eUhXe3f+/+0BxTx+JzqBdvuEP+tpHOErNlIFIG5HCNOIMTLBz5qyCssIE6b+gqr+8k4NnqU3LB+W/Bqbr7ZBqnirPX2CyUIPgUf2lEhY1h++TfDsCyfNKpm/PbuHsEV8MA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.161) smtp.rcpttodomain=linux.intel.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4uSjza+Pg6L4somw7c5rB62XxatgKpxn7WgFljf9SzU=;
+ b=Q+Jonq16UdoMfsXd5XZICAHay++Zs2LS/NPoCrntMrtY9i0R5kn6TdqI33oBQSs+a791txLdTVzwwDq/lx8InlaiVRxMphB3ffB45AGAxdYQWLB6jP1SSgfNzxyfiIGcgHAAdPEi3hxrLB1DJ6o7jvkzZVcJeCvRvqI+XZnJ6QgE9+JGu1JOSli8gGFF+ak/nKBnpd/kscnDMZ/G2u+PnqOb/Y7c/gCatUHCWZqf66H8b8YWLNYnDX5RRI2dcLLl2WOrIMrMiWnQodRJy4hqdFqhFcjE4VMys3xFKqr6r53vkvFCowvw7dQqcWKc0ceoGbbi8lrO/JnmG3JxyfO9dw==
+Received: from BYAPR08CA0002.namprd08.prod.outlook.com (2603:10b6:a03:100::15)
+ by DS4PR12MB9794.namprd12.prod.outlook.com (2603:10b6:8:2a7::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Wed, 18 Mar
+ 2026 18:43:00 +0000
+Received: from SJ5PEPF000001CE.namprd05.prod.outlook.com
+ (2603:10b6:a03:100:cafe::99) by BYAPR08CA0002.outlook.office365.com
+ (2603:10b6:a03:100::15) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.27 via Frontend Transport; Wed,
+ 18 Mar 2026 18:42:58 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ SJ5PEPF000001CE.mail.protection.outlook.com (10.167.242.38) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9723.19 via Frontend Transport; Wed, 18 Mar 2026 18:42:58 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 18 Mar
+ 2026 11:42:36 -0700
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by rnnvmail201.nvidia.com
+ (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 18 Mar
+ 2026 11:42:36 -0700
+Received: from Asurada-Nvidia (10.127.8.9) by mail.nvidia.com (10.129.68.8)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Wed, 18 Mar 2026 11:42:35 -0700
+Date: Wed, 18 Mar 2026 11:42:33 -0700
+From: Nicolin Chen <nicolinc@nvidia.com>
+To: Baolu Lu <baolu.lu@linux.intel.com>
+CC: <will@kernel.org>, <robin.murphy@arm.com>, <joro@8bytes.org>,
+	<bhelgaas@google.com>, <jgg@nvidia.com>, <rafael@kernel.org>,
+	<lenb@kernel.org>, <praan@google.com>, <xueshuai@linux.alibaba.com>,
+	<kevin.tian@intel.com>, <linux-arm-kernel@lists.infradead.org>,
+	<iommu@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<vsethi@nvidia.com>
+Subject: Re: [PATCH v2 2/7] iommu: Add reset_device_done callback for
+ hardware fault recovery
+Message-ID: <abryGd9F/IuInm/s@Asurada-Nvidia>
+References: <cover.1773774441.git.nicolinc@nvidia.com>
+ <3750a106b4ab4235df842fa2b9defbc8226ebbef.1773774441.git.nicolinc@nvidia.com>
+ <566549c9-fab1-43b5-a35b-e3c76f1c285d@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1] PCI/DPC: Fix AER error logging for DPC/EDR triggered
- events
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
- Oliver OHalloran <oohall@gmail.com>, Jon Pan-Doh <pandoh@google.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, Sizhe Liu <liusizhe5@huawei.com>
-References: <20260318172203.GA51847@bhelgaas>
-Content-Language: en-US
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <20260318172203.GA51847@bhelgaas>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <566549c9-fab1-43b5-a35b-e3c76f1c285d@linux.intel.com>
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SJ5PEPF000001CE:EE_|DS4PR12MB9794:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0c388ad5-acab-4302-6275-08de851e2d57
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|36860700016|376014|1800799024|7416014|82310400026|56012099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	CXdbGn+wkUZS63ov3DvQ9QPpsF3m+jFfMi4SLqIsVWbat79cZJlAB9Y5iDs8QVzWDyPClv8MaFus0pDxd1b5756HVdjJhk/sB4kK5dkpB4lwPFHXPFyzbO/HGunD+PvUPBeU0msMufkq8Jcg5woNlb6DZgqaGp7d0WBDDONBncAOKeGt8YSmIDJVDe9A5svo1BnC39gLwfx9MVhOWSBK16ShEYeG/mfr92FGcx6BBeLIGQVwKbx9zT/3UTP9cDm9pslFBJtVnCnFkN0GknFkt/nvyfS3VCDTSadWWV7pWMKaZTIB84mxHawyhfES4bm3HRTVzFbg45DNTiRuk8afhj4jxqutudYpcgQq2SayrASkl4QPHTc4YCU8QK0orv3ojZ0VYGmrLc97o1kF7UY1XTMUD3vimLLR6p0fNshmyzUcrLcR76p2MmOO0EjdVUJVRNOmb6Me5Pv2koU6mllYTyMpRgDxwM+RmNEX8oQOicyzTk2RhK7gotaBuehP5OWNJWtiAVqF+Wghtf+JIiAUGM6+vYZTYDqX4c7rJbAwJqUa9eNnD1Pb2S4jTPfKJpd02ETL+Wvunop/nOSUQZb/ONXH85CQo08YqMevKyUL3+AO/tCPxWGxUu5z+zQhMeJOl1OljmWEsXhrgKV79DjB81R2oYurMblDstKN+jpdoN1qFGeRMmdry2FwKpzQkcSH/fYTYMNLtp81WzH713Pb7v6bJlY9b2dy/gu0PWhypJ68kAe+ZQL9gGwW04/KJX3o9519vhpKK7vyo6tbGfpq0A==
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(376014)(1800799024)(7416014)(82310400026)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	b2C3/rpisHN6UZLUp9S+Qe1seYOqtLNO2vFe+iaWyAHFLe9Vh3lpNhhL58Erp+eJdUmtheYSGE/QxnwM+UrvCI1+OEHWsVrJN7nnnDxg/IiZp3PadJ75LVtKc/z5yiIHjNDa6ZYpFJNSF0z+7cx+J6Df/tJWvTbjb6wbBgGpShg6FaEIWE49OqgAEd7fNirnrIkPtK1tpZpbz6sBkU1KneY7nxWYpt22UNv5Y5Pw5oowJaYxSWSCM+OjOGL2B5N2NHvgxvKFpx8APuIYjf36E6fh527uI2ncFfqyHvcLhg/ulQyNkIIY6BTOeCyPXL4m8dKKe4IBXbjhpSsYNS1R+14AR1kziigt2UUKHmxpBoSVHAuRoVd+ApTQldfvS+XWBYFGbRWqRwu3oFNo/e4ND/VJE97mplpxdT7TKhAzvkDKD711ZxVmxzmfw3n6ISub
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Mar 2026 18:42:58.8013
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0c388ad5-acab-4302-6275-08de851e2d57
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	SJ5PEPF000001CE.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS4PR12MB9794
 
-Hi Bjorn,
-
-On 3/18/2026 10:22 AM, Bjorn Helgaas wrote:
-> [+cc Sizhe]
+On Wed, Mar 18, 2026 at 01:59:58PM +0800, Baolu Lu wrote:
+> On 3/18/26 03:15, Nicolin Chen wrote:
+> > +	if (ops && ops->reset_device_done)
+> > +		ops->reset_device_done(&pdev->dev);
 > 
-> On Wed, Mar 18, 2026 at 10:04:49AM -0700, Kuppuswamy Sathyanarayanan wrote:
->> aer_print_error() skips printing if ratelimit_print[i] is not set.
->> In the native AER path, ratelimit_print is initialized by
->> add_error_device() during source device discovery, and is set to 1
->> for fatal errors to bypass rate limiting since fatal errors should
->> always be logged.
->>
->> The DPC/EDR path uses the DPC-capable port as the error source and
->> reads its AER uncorrectable error status registers directly in
->> dpc_get_aer_uncorrect_severity(). Since it does not go through
->> add_error_device(), ratelimit_print[0] is left uninitialized and zero.
->> As a result, aer_print_error() silently drops all AER error messages
->> for DPC/EDR triggered events.
->>
->> Set ratelimit_print[0] to 1 to bypass rate limiting and always print
->> AER logs for fatal errors.
->>
->> Fixes: a57f2bfb4a58 ("PCI/AER: Ratelimit correctable and non-fatal error logging")
->> Co-developed-by: Goudar Manjunath Ramanagouda <manjunath.ramanagouda.goudar@intel.com>
->> Signed-off-by: Goudar Manjunath Ramanagouda <manjunath.ramanagouda.goudar@intel.com>
->> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+> Nit: dev_iommu_ops() ensures a valid iommu "ops". There is no need to
+> check "ops != NULL" here. Just
 > 
-> I think this does the same as
-> https://git.kernel.org/cgit/linux/kernel/git/pci/pci.git/commit/?id=d4d1ecff2c2d
-> which is already queued for v7.1.
+> 	if (ops->reset_device_done)
+> 		ops->reset_device_done(&pdev->dev);
 
-Thanks for the reference.
+Yes, right.
 
-Since errors in the DPC path leads to port containment, I think it is best to
-always log them for reference and debug purposes. So I think we don't need to
-export aer_print_init() from the AER driver (which can ratelimit non-fatal DPC
-error). Instead we can by default skip ratelimit for DPC errors by initializing
-ratelimit_print[0] = 1.
-
-.
-
-> 
->> ---
->>  drivers/pci/pcie/dpc.c | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
->> index fc18349614d7..7605ddd9f0ba 100644
->> --- a/drivers/pci/pcie/dpc.c
->> +++ b/drivers/pci/pcie/dpc.c
->> @@ -256,6 +256,7 @@ static int dpc_get_aer_uncorrect_severity(struct pci_dev *dev,
->>  
->>  	info->dev[0] = dev;
->>  	info->error_dev_num = 1;
->> +	info->ratelimit_print[0] = 1;
->>  
->>  	return 1;
->>  }
->> -- 
->> 2.43.0
->>
-
--- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
-
+Thanks!
+Nicolin
