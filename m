@@ -1,251 +1,202 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f53.google.com (mail-dl1-f53.google.com [74.125.82.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A38C194C98;
-	Thu, 19 Mar 2026 18:32:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DF7C3148DC
+	for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2026 19:25:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773945141; cv=none; b=pJXdx/zB0Cs0adxkzfnSozTslUX0TrDbxEoGszbwGE31yozbFIiWeR1x6BbdaNYEGz+jl7g+vZxvhHamhGoVCh3ZLXrx5/VSUzU3MwYqcdMlRVrg2n6X7gC90VHMlrDvpVCnzFsf+nOl5qJEHAVMaxhepIFGTg2XfprdvJb9i/Q=
+	t=1773948330; cv=none; b=YNxgvkoouBJgNWiUNNuCjNKTVbDv5gNeNlJ44vr0ySNPq688mw2Nde739OICudqcaex0XYXWPDwTWRdVeR67jiqowWncldW3LilulQkDem9rIMwks1iYkp/xs+fzNr35M7cnblPuHLBP1S7EY6c1rvgDdoRHnAIof+r+CO1paDw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773945141; c=relaxed/simple;
-	bh=q/AIFKBlYrlqgaIU+R+X2Kbm55lVUhw1nLQSCLmd6ew=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=EDWApP9FvLKDUyrbYkP0fXgMKLFP0p6bzhJnM1KtjsOx2K2vNn6/AqZh38yE5Hkl5ELMgyTy+3RdqSOEBUg/l96I44AMj5PW8tf7q4pAwsRv7r9Lp3hVOpu1Yy4YEeqO5rKx5cCvzxwB8uhNXAr9J0RJe/ztEmfhYVF8GuOS8Nw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SLfxJBQH; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773948330; c=relaxed/simple;
+	bh=iUslfBDUCNoekXPcVJL0Qmdad7Ch9Oo8SMzHnAFW4Ag=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=oJGlAtioQ4aVGozMIoM/dVanzKLQFvgSzojuA/jXqOk5qZF8G3GROWqU9pHERvKBALuaZ/TpHqxFgLISvQgeGGpVdsO45dKaDRvWnm3D3miMUrHAKCJEcBSH35LziGBZ62OYg4t/nMDehXGDlA+nHBDHGB9lm68Ecv2jGkFNt50=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bC7q16Lb; arc=none smtp.client-ip=74.125.82.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SLfxJBQH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2336C19424;
-	Thu, 19 Mar 2026 18:32:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773945141;
-	bh=q/AIFKBlYrlqgaIU+R+X2Kbm55lVUhw1nLQSCLmd6ew=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=SLfxJBQH3ZBwLVeaWFuXtr69z+ue66UBDBXapfmCGZU/5sePR0jM8ttItsExbkxXd
-	 fat6HASgQmW8lTt+q9Fv/u0XJTf3d3wZAiJLqrgzYHG5GWO4lK+JttBOqJXt5pwhQF
-	 w+6FlJPTdi3oKlG3m7NbTFgXf1aiA6jp7uCbZskZpkhz+sWDidVqJYVEsczF3/Cr0q
-	 5HIA6+fCuzX4SwGeOuI+h7S9iLuLC57oeWrh6xVKPtDKceG2qv5E5rx2twVSmjZBNQ
-	 hX57e6N1IjMEwU/bgDkP0m8XkKB2jG/ioYVncpqZsFKATtztVHzIe50BPghhEOmL2B
-	 /aAbuSjpDjtvg==
-Date: Thu, 19 Mar 2026 13:32:19 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Chengwen Feng <fengchengwen@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Huacai Chen <chenhuacai@kernel.org>,
-	WANG Xuerui <kernel@xen0n.name>, Paul Walmsley <pjw@kernel.org>,
-	Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H . Peter Anvin" <hpa@zytor.com>, Juergen Gross <jgross@suse.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	Len Brown <lenb@kernel.org>, Sunil V L <sunilvl@ventanamicro.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Kees Cook <kees@kernel.org>, Yanteng Si <si.yanteng@linux.dev>,
-	Sean Christopherson <seanjc@google.com>,
-	Kai Huang <kai.huang@intel.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Thomas Huth <thuth@redhat.com>,
-	Thorsten Blum <thorsten.blum@linux.dev>,
-	Kevin Loughlin <kevinloughlin@google.com>,
-	Zheyun Shen <szy0127@sjtu.edu.cn>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
-	Xin Li <xin@zytor.com>, "Ahmed S . Darwish" <darwi@linutronix.de>,
-	Sohil Mehta <sohil.mehta@intel.com>,
-	Ilkka Koskinen <ilkka@os.amperecomputing.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	James Clark <james.clark@linaro.org>,
-	Besar Wicaksono <bwicaksono@nvidia.com>, Ma Ke <make24@iscas.ac.cn>,
-	Wei Huang <wei.huang2@amd.com>,
-	Andy Gospodarek <andrew.gospodarek@broadcom.com>,
-	Somnath Kotur <somnath.kotur@broadcom.com>,
-	punit.agrawal@oss.qualcomm.com, guohanjun@huawei.com,
-	suzuki.poulose@arm.com, ryan.roberts@arm.com,
-	chenl311@chinatelecom.cn, masahiroy@kernel.org,
-	wangyuquan1236@phytium.com.cn, anshuman.khandual@arm.com,
-	heinrich.schuchardt@canonical.com, Eric.VanTassell@amd.com,
-	wangzhou1@hisilicon.com, wanghuiqiang@huawei.com,
-	liuyonglong@huawei.com, linux-pci@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, loongarch@lists.linux.dev,
-	linux-riscv@lists.infradead.org, xen-devel@lists.xenproject.org,
-	linux-acpi@vger.kernel.org, linux-perf-users@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v9 7/7] PCI/TPH: Fix get cpu steer-tag fail on ARM64
- platform
-Message-ID: <20260319183219.GA519221@bhelgaas>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bC7q16Lb"
+Received: by mail-dl1-f53.google.com with SMTP id a92af1059eb24-128b9b7e3edso1961102c88.0
+        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2026 12:25:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773948329; x=1774553129; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=poRUHSD6rTCFS1gx0Ihn5EiVXgymtADueoMvkmlPFWQ=;
+        b=bC7q16Lb/3k16llW3rpLs7GM1x8FcvJaFPaeNr0GGOS1dKceSVbUg+lV1Er1OvY5YO
+         HqQuNcK9nXhiUYaCM6XMH056sB7HFWuA6+rxNPY9Pczqiea+vksKPqgJh8aH+ka7WcED
+         qKwj5AheBz9alFBuVTAtJ0hDuH7t0NE9/H9LlnF5VJHVxt/ksJsExhTyHztHVf/N8Mqa
+         MRdXDDU4HkpbMrdi0qZUVM2quregbnqPRbTKgjNKfYqnf6ER4qtpEe4h+9ZJC/zUuvs5
+         kYjb9W3AQmHa6e2irobHjlgK+kuOQc0SiuOuIcBck64WlTNqBITC3MMnggzDi8uTsHpp
+         ACRg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773948329; x=1774553129;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:sender:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=poRUHSD6rTCFS1gx0Ihn5EiVXgymtADueoMvkmlPFWQ=;
+        b=jaK29SuMqOfULSlThla6aSiPHntzjDNMFFlWqR8wBPUWnMLW1YOn1V8v1qfTHcn4Bf
+         daXE+GQh/s2VFpN81dFubSime+5XKIQObzuSzPA67uLZALRoijS417JqSS6OxeSYmMLP
+         UuI/2wQ7j6/Ma2dvwhIMfOKr4w5g9Hc9YviHle04A0sDzENh9Mnkna+T7WmqFSmzvFdM
+         PkNddTNqnXDlodtgC9PAGM7jVTlDqjLJzP6QrdwMolhBXBfQNfuff2Owyuqy1VB8Sacx
+         Fy6AbK3GG/8B+EcLLZuU+4fDvksqtXr/GutZnRyHYSRYAmFV9qgY3GoJHgR9E/h4khWD
+         uhSQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUbn1QjSZcAI8NuxRWfQWLkJYcxUHxi4rjuBZiz3EFZ/YDg0xkMpXggWqaQu7Nx3uFf0/4e03V3Vic=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxzI47Qq0pLdfMfZJsM43sqLTQAZt68KVUAjoTWxCPZ99ErQFe6
+	bc4JMxvVqe2qN1YiRbf4nu0yTrjswUuGl689smBCbjmmJTLXnyfa1e+ciNTwig==
+X-Gm-Gg: ATEYQzxUMCE8bSX4GfMeBBDk9AEam9bYKLrOFYcJh28nVtUesmHPAyVjSfelIGeicph
+	7rrFtzFWnWhHvoW9X45xtytO9H4BQ5iU7sveGB5ntvM8ILVumfEeaCcVpv+B22y0l19G57Hx6CX
+	SghUOrgxJtgkIn/yeUboAjwAvxHGBA/QsO5hr9A1TjfIQ8ZoXRMALkKxYra4zG5+mEfERWusWXt
+	WnlhYk5APGkND66kJYAnQ81fLjGJIvw8eKhh70CwzEE5d7HTjG7QmFLt/BsN3qBOB68q//Yo05k
+	M18YAVQyttaUrgC1F/bJXdDYqRdH0FQJGXHhXqD0jhmGyawg6ZCEDKRQoLmt7GZmea8ZSfzSz27
+	uy10hthKizmIzosk8w5BMMWkQuTekJ1zsihyoLDdjkghQHlogxcRJ4OGjGOjVvS6Y1STM7Cbo4I
+	u0saBM/7JYu60xlSTGzXNXHhzQFsGTn1D91T2o9JwJ4RE/7ohDSt8E23GjlDaTDUSt2XRY+yJc
+X-Received: by 2002:a05:7022:628c:b0:128:cf5c:5352 with SMTP id a92af1059eb24-12a7266f502mr176456c88.4.1773948328573;
+        Thu, 19 Mar 2026 12:25:28 -0700 (PDT)
+Received: from ?IPV6:2600:1700:e321:62f0:da43:aeff:fecc:bfd5? ([2600:1700:e321:62f0:da43:aeff:fecc:bfd5])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-129b4127b7esm11628826c88.9.2026.03.19.12.25.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 19 Mar 2026 12:25:28 -0700 (PDT)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Message-ID: <fdf45531-3a62-49ec-bcc7-fb6dbaa01b2f@roeck-us.net>
+Date: Thu, 19 Mar 2026 12:25:24 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260319065735.45954-8-fengchengwen@huawei.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v10 0/2] PCI/IOV: Fix SR-IOV locking races and AB-BA
+ deadlock
+To: Niklas Schnelle <schnelle@linux.ibm.com>,
+ "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>,
+ linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: helgaas@kernel.org, sebott@linux.ibm.com, bblock@linux.ibm.com,
+ lkml@mageta.org, alifm@linux.ibm.com, julianr@linux.ibm.com,
+ dtatulea@nvidia.com, mani@kernel.org, lukas@wunner.de, kbusch@kernel.org,
+ ionut_n2001@yahoo.com, sunlightlinux@gmail.com,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+ intel-xe@lists.freedesktop.org, matthew.brost@intel.com,
+ michal.wajdeczko@intel.com, piotr.piorkowski@intel.com
+References: <20260318210316.61975-1-ionut.nechita@windriver.com>
+ <f17b03652a84be73c1d3a2cfea8a016dab99f8e0.camel@linux.ibm.com>
+Content-Language: en-US
+From: Guenter Roeck <linux@roeck-us.net>
+Autocrypt: addr=linux@roeck-us.net; keydata=
+ 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
+ np3900V20aS7eD9K8GTU0TGC1pyz6IVJwIE=
+In-Reply-To: <f17b03652a84be73c1d3a2cfea8a016dab99f8e0.camel@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Let's make the subject a little more specific, e.g.,
-
-  PCI/TPH: Pass ACPI Processor UID to Cache Locality _DSM
-
-On Thu, Mar 19, 2026 at 02:57:35PM +0800, Chengwen Feng wrote:
-> pcie_tph_get_cpu_st() is broken on ARM64:
-> 1. pcie_tph_get_cpu_st() passes cpu_uid to the PCI ACPI DSM method.
->    cpu_uid should be the ACPI Processor UID [1].
-> 2. In BNXT, pcie_tph_get_cpu_st() is passed a cpu_uid obtained via
->    cpumask_first(irq->cpu_mask) - the logical CPU ID of a CPU core,
->    generated and managed by kernel (e.g., [0,255] for a system  with 256
->    logical CPU cores).
-> 3. On ARM64 platforms, ACPI assigns Processor UID to cores listed in the
->    MADT table, and this UID may not match the kernel's logical CPU ID.
->    When this occurs, the mismatch results in the wrong CPU steer-tag.
-> 4. On AMD x86 the logical CPU ID is identical to the ACPI Processor UID
->    so the mismatch is not seen.
+On 3/19/26 05:31, Niklas Schnelle wrote:
+> On Wed, 2026-03-18 at 23:03 +0200, Ionut Nechita (Wind River) wrote:
+>> From: Ionut Nechita <ionut.nechita@windriver.com>
+>>
+>> Hi Bjorn,
+>>
+>> This is v10 of the fix for the SR-IOV race between driver .remove()
+>> and concurrent hotplug events.  v10 adds a second patch to fix the
+>> AB-BA deadlock between device_lock and pci_rescan_remove_lock that
+>> was reported by Guenter Roeck (via Google's AI review agent) and
+>> confirmed by Benjamin Block.
+>>
+>> The AB-BA deadlock:
+>>
+>>    CPU0 (remove_store)               CPU1 (unbind_store)
+>>    --------------------              --------------------
+>>    pci_lock_rescan_remove()
+>>                                      device_lock()
+>>                                      driver .remove()
+>>                                        sriov_del_vfs()
+>>                                          pci_lock_rescan_remove()  <-- WAITS
+>>    pci_stop_bus_device()
+>>      device_release_driver()
+>>        device_lock()                                               <-- WAITS
+>>
+>> Patch 2/2 fixes this by calling device_release_driver() in
+>> remove_store() before pci_stop_and_remove_bus_device_locked(), so
+>> that the driver is already unbound when pci_rescan_remove_lock is
+>> acquired. Both paths then take locks in the same order: device_lock
+>> first, then pci_rescan_remove_lock.
+>>
+>> Note: the concurrent unbind_store + hotplug-event case (where the
+>> hotplug handler takes pci_rescan_remove_lock before device_lock)
+>> remains a known limitation.  This is a pre-existing issue that
+>> Benjamin Block is addressing separately in:
+>>    https://lore.kernel.org/linux-pci/354b9e4a54ced67f3c89df198041df19434fe4c8.1773235561.git.bblock@linux.ibm.com/
+>>
+> --- snip ---
+>>
+>> Ionut Nechita (2):
+>>    PCI/IOV: Make pci_lock_rescan_remove() reentrant and protect
+>>      sriov_add_vfs/sriov_del_vfs
+>>    PCI: Fix AB-BA deadlock between device_lock and
+>>      pci_rescan_remove_lock in remove_store
+>>
+>>   drivers/pci/iov.c       |  9 +++++----
+>>   drivers/pci/pci-sysfs.c | 20 +++++++++++++++++++-
+>>   drivers/pci/probe.c     | 11 +++++++++--
+>>   3 files changed, 33 insertions(+), 7 deletions(-)
+>>
+>> --
+>> 2.43.0
 > 
-> Resolution:
-> 1. Use acpi_get_cpu_uid() in pcie_tph_get_cpu_st() to translate from
->    logical CPU ID to ACPI Processor UID needed for the DSM call.
-> 2. Rename pcie_tpu_get_cpu_st() parameter from cpu_uid to cpu to
->    reflect that it is a logical CPU_ID.
-
-And simplify this, e.g.,
-
-  pcie_tph_get_cpu_st() uses the Query Cache Locality Features _DSM
-  [1] to retrieve the TPH Steering Tag for memory associated with the
-  CPU identified by its "cpu_uid" parameter, a Linux logical CPU ID.
-
-  The _DSM requires a ACPI Processor UID, which pcie_tph_get_cpu_st()
-  previously assumed was the same as the Linux logical CPU ID.  This
-  is true on x86 but not on arm64, so pcie_tph_get_cpu_st() failed on
-  arm64.
-
-  Convert the Linux logical CPU ID to the ACPI Processor UID with
-  acpi_get_cpu_uid() before passing it to the _DSM.
-
-If there's a specific error message from BNXT or similar that is a
-symptom of this problem, it'd be nice to include that.  Or if the
-problem was just poor performance because the _DSM returned the wrong
-Steering Tag, you could say something like:
-
-  ... so pcie_tph_get_cpu_st() returned the wrong Steering Tag,
-  resulting in poor network performance.
-
-> [1] According to ECN_TPH-ST_Revision_20200924
->     (https://members.pcisig.com/wg/PCI-SIG/document/15470), the input
->     is defined as: "If the target is a processor, then this field
->     represents the ACPI Processor UID of the processor as specified in
->     the MADT. If the target is a processor container, then this field
->     represents the ACPI Processor UID of the processor container as
->     specified in the PPTT."
+> Hi Ionut,
 > 
-> Fixes: d2e8a34876ce ("PCI/TPH: Add Steering Tag support")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
-> Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
-
-The patch looks good to me.  Thanks for all your work on this!
-
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
->  Documentation/PCI/tph.rst |  4 ++--
->  drivers/pci/tph.c         | 16 +++++++++++-----
->  include/linux/pci-tph.h   |  4 ++--
->  3 files changed, 15 insertions(+), 9 deletions(-)
+> For your awareness, I saw that this series has some findings on
+> Google's new Sashiko AI reviewing tool[0]. At a quick glance the
+> findings seem like at least reasonable concerns to me. I'm still
+> looking at this independently also of course.
 > 
-> diff --git a/Documentation/PCI/tph.rst b/Documentation/PCI/tph.rst
-> index e8993be64fd6..b6cf22b9bd90 100644
-> --- a/Documentation/PCI/tph.rst
-> +++ b/Documentation/PCI/tph.rst
-> @@ -79,10 +79,10 @@ To retrieve a Steering Tag for a target memory associated with a specific
->  CPU, use the following function::
->  
->    int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type type,
-> -                          unsigned int cpu_uid, u16 *tag);
-> +                          unsigned int cpu, u16 *tag);
->  
->  The `type` argument is used to specify the memory type, either volatile
-> -or persistent, of the target memory. The `cpu_uid` argument specifies the
-> +or persistent, of the target memory. The `cpu` argument specifies the
->  CPU where the memory is associated to.
->  
->  After the ST value is retrieved, the device driver can use the following
-> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-> index ca4f97be7538..b67c9ad14bda 100644
-> --- a/drivers/pci/tph.c
-> +++ b/drivers/pci/tph.c
-> @@ -236,21 +236,27 @@ static int write_tag_to_st_table(struct pci_dev *pdev, int index, u16 tag)
->   * with a specific CPU
->   * @pdev: PCI device
->   * @mem_type: target memory type (volatile or persistent RAM)
-> - * @cpu_uid: associated CPU id
-> + * @cpu: associated CPU id
->   * @tag: Steering Tag to be returned
->   *
->   * Return the Steering Tag for a target memory that is associated with a
-> - * specific CPU as indicated by cpu_uid.
-> + * specific CPU as indicated by cpu.
->   *
->   * Return: 0 if success, otherwise negative value (-errno)
->   */
->  int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
-> -			unsigned int cpu_uid, u16 *tag)
-> +			unsigned int cpu, u16 *tag)
->  {
->  #ifdef CONFIG_ACPI
->  	struct pci_dev *rp;
->  	acpi_handle rp_acpi_handle;
->  	union st_info info;
-> +	u32 cpu_uid;
-> +	int ret;
-> +
-> +	ret = acpi_get_cpu_uid(cpu, &cpu_uid);
-> +	if (ret != 0)
-> +		return ret;
->  
->  	rp = pcie_find_root_port(pdev);
->  	if (!rp || !rp->bus || !rp->bus->bridge)
-> @@ -265,9 +271,9 @@ int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
->  
->  	*tag = tph_extract_tag(mem_type, pdev->tph_req_type, &info);
->  
-> -	pci_dbg(pdev, "get steering tag: mem_type=%s, cpu_uid=%d, tag=%#04x\n",
-> +	pci_dbg(pdev, "get steering tag: mem_type=%s, cpu=%d, tag=%#04x\n",
->  		(mem_type == TPH_MEM_TYPE_VM) ? "volatile" : "persistent",
-> -		cpu_uid, *tag);
-> +		cpu, *tag);
->  
->  	return 0;
->  #else
-> diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
-> index ba28140ce670..be68cd17f2f8 100644
-> --- a/include/linux/pci-tph.h
-> +++ b/include/linux/pci-tph.h
-> @@ -25,7 +25,7 @@ int pcie_tph_set_st_entry(struct pci_dev *pdev,
->  			  unsigned int index, u16 tag);
->  int pcie_tph_get_cpu_st(struct pci_dev *dev,
->  			enum tph_mem_type mem_type,
-> -			unsigned int cpu_uid, u16 *tag);
-> +			unsigned int cpu, u16 *tag);
->  void pcie_disable_tph(struct pci_dev *pdev);
->  int pcie_enable_tph(struct pci_dev *pdev, int mode);
->  u16 pcie_tph_get_st_table_size(struct pci_dev *pdev);
-> @@ -36,7 +36,7 @@ static inline int pcie_tph_set_st_entry(struct pci_dev *pdev,
->  { return -EINVAL; }
->  static inline int pcie_tph_get_cpu_st(struct pci_dev *dev,
->  				      enum tph_mem_type mem_type,
-> -				      unsigned int cpu_uid, u16 *tag)
-> +				      unsigned int cpu, u16 *tag)
->  { return -EINVAL; }
->  static inline void pcie_disable_tph(struct pci_dev *pdev) { }
->  static inline int pcie_enable_tph(struct pci_dev *pdev, int mode)
-> -- 
-> 2.17.1
-> 
+
+It is almost scary to see how many problems Sashiko is able to find.
+The AB-BA deadlock that the second patch in the series tries to fix
+was reported by a prototype version of it when running it on an LTS
+backport.
+
+Guenter
+
