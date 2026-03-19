@@ -1,276 +1,264 @@
-Received: from out30-132.freemail.mail.aliyun.com (out30-132.freemail.mail.aliyun.com [115.124.30.132])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65D412236F0;
-	Thu, 19 Mar 2026 02:56:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.132
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773889008; cv=none; b=a9WmUCcqM5n6QQ3b7NTzhin6Q5EA7RCsxrM38bAArOcT95jRfQ/lUTnq0pFCBTTfhw43sxv2Y1Q6lcJz/6qqFvA03OdE41+U4DRFidEah1PGB9NzTVeuNXgl8u8bWIiqgVAVroj1OUTH/jaU23eEKlmvi+DXHBAaWUDakrUi7J0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773889008; c=relaxed/simple;
-	bh=ekgg94jge4t3T6LNQQw0IlTcM8gZqdOJGmNhqs4bero=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Yzf4E8FgT49La/kRcBy57gQCWIWm9fwQo3bIgxiEYAatDB1r7enj4MznhOr0krkv7iy3WRRpiDEtZLT5M1GGTCUEHm80AmJTYEoMicQFAOYuewoM9Y44oBis18kKAtyT1yJrVC2Qc8D7uLZ5j0noulUglwvTj3qnx70Jemx7aMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=k5p8a+AI; arc=none smtp.client-ip=115.124.30.132
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EE4B2741C9;
+	Thu, 19 Mar 2026 03:01:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.11
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773889269; cv=fail; b=DK9wBbYRtLVRQzvH9fMcFzqjuCyOMfDjgT8RBgYgpl0k0p6sbWCUfAwo+Cy/0mxAxobL/wyNCrjvF1TwBZ/lXaUl8r4GUdZQWyk3LQc1dzNOFaL4R6xXQ0/13NkriXkL1QcCvUmczhX+Yg5IChUAJFaeZejjU/sUjbOTnfuj7BI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773889269; c=relaxed/simple;
+	bh=uA1MkwLw/ZvpBtGVluQovkyuMbojJ+68wsHyuALzqRU=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=mrT6dOgeJMi3QMjIjaPdpeYxq0j3+2ljSjTlEM3qWm3LiVrMv87Z1PzGj5n2B+KGgNZHca0+0qmlA0LCb8DEIwTUYyraUh2cIEbTppzIEoViHg+CFZ6mx2L8Qe6hubb9S1V3Q7zlvmx8td4gNrCYrRDUikO55XqL2KTleWgNdc4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ix8/tEe3; arc=fail smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="k5p8a+AI"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1773888996; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=OSY4j6v6Vry0f0VpWhFzrjV5u9/NqNAQFRbrmOpCuHY=;
-	b=k5p8a+AIJg2jLKxMnUu5xyftUmg9Ph5JxKKJxM7MjqA/sIp15Djp/w7grPjP7nSuY4mqmGzDibX8wOZT2mJSzKyE0Y2sba3iPuc9egu7M8EmNdnPbLIYbDxsVo4X3EiOzhDGG4p6/pn8VbAP7yf8yZFJmXZxvE60GtW9JCM0Y/o=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R301e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037009110;MF=xueshuai@linux.alibaba.com;NM=1;PH=DS;RN=17;SR=0;TI=SMTPD_---0X.Gp621_1773888993;
-Received: from 30.246.163.250(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0X.Gp621_1773888993 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Thu, 19 Mar 2026 10:56:34 +0800
-Message-ID: <eeee122f-54e2-4fe9-82a6-724c3f80a499@linux.alibaba.com>
-Date: Thu, 19 Mar 2026 10:56:43 +0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ix8/tEe3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773889266; x=1805425266;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=uA1MkwLw/ZvpBtGVluQovkyuMbojJ+68wsHyuALzqRU=;
+  b=Ix8/tEe3yqldxOk5P+WpfqYx9He+tsxI3ffXQjICXPS6LqBnSMdWVJb+
+   Vtmivcd0oGE7LFq3Zt7EZqKrMxzjxlVGhyc77F5osCQ/HEJ+XnfBV6B/7
+   eW1mXCZcECpDoK2mZWGiCj2Bfa6Xr3ONhI5xBfo+Io1voeadA7yK4YOpX
+   Sapt4vXdMY9LwDKwzZIoV4iCWKfbpcKdCG+9ku9qKeAymnD0NBA+QZ8J0
+   Qd0xQHhPrGDuQ600+p0y/gDfFcMrv3QShqdX4SgsTOmGRLXpfLHLUmBqz
+   btFEsRDJXjU78M20rfNA8OsnZJhRhI9cvRG2I1QEnv9FfwgB9ZKlPAtSQ
+   w==;
+X-CSE-ConnectionGUID: 91PukWusTwy8Bri9lQx3QQ==
+X-CSE-MsgGUID: YXH8ljD/Tm2y3a6IBA/knw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11733"; a="85275625"
+X-IronPort-AV: E=Sophos;i="6.23,128,1770624000"; 
+   d="scan'208";a="85275625"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2026 20:01:05 -0700
+X-CSE-ConnectionGUID: 6bfDACHgQFuxeTMqDM0mHg==
+X-CSE-MsgGUID: FZTAYe1fSZqfHbTJuNJ8qQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,128,1770624000"; 
+   d="scan'208";a="222872224"
+Received: from fmsmsx902.amr.corp.intel.com ([10.18.126.91])
+  by orviesa008.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2026 20:01:05 -0700
+Received: from FMSMSX902.amr.corp.intel.com (10.18.126.91) by
+ fmsmsx902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Wed, 18 Mar 2026 20:01:03 -0700
+Received: from fmsedg902.ED.cps.intel.com (10.1.192.144) by
+ FMSMSX902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37 via Frontend Transport; Wed, 18 Mar 2026 20:01:03 -0700
+Received: from BL0PR03CU003.outbound.protection.outlook.com (52.101.53.36) by
+ edgegateway.intel.com (192.55.55.82) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Wed, 18 Mar 2026 20:01:02 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Og+rpftkzz5yMhLXa9XC6XMBjXxZsNeI4OVBNuKp7yEii3dNNSJ0kmtZ/1RCgEpJOEqWFDZEscQlJPtFdMD6ZXGW0c6qEkMZYPtU9/iHfvACfFKji2zGqf50kW4m57HY6PqdlL5Wl+CUbRUKBvKi5pEuB/Xg6Ilt++laRmyhiCAHY+75NcN+DW2M7tFgKJ2SnNirBi3Xy3tTCCo3PC/Q94OWpaa5t1rKRgKsuXJq1j6JVFOIuSPlG8ngpkoONEf70KQAp44Zqdi3Lq2SQisfvTOyzh+HSthEFhF06rKtKfKVZGqD9d52Ei9kmBktf23AGkfrecJmCWW2gyTTcR+nbA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=keiFFnV++fbqQnBwQmVSMiP2yFWsTltn4cY20bi9DmE=;
+ b=l4exesOsM8OXuTqyfEnzmcdJ4D9yHrn9yJuyMluMGAw+18Ffv/iJWIwb91xKqtel59Z59d8qSuzse4puN8i2qulA+7r2tdpmAxSJH+iDkod/50+GAlO6RPcB1pujB//RMWlLkP0bcH9oIsHdCyM1wvR0SruMaRY5/W9DYOfyanBqIIKbyfbwQoL1La7nIN0ZnSnI7UXMaEoBYJXLxiuC3pQf2sXM9/giMMoOAyo/lHguejl6GOeJgTN07c7BPt00PQs4BlrPlL1IvJvgU4J1n/Tlkz3wv5VBsCoTX/I5TVqL4pHayzsdYd2LrIwwuL7xBh5zQBoMMqtCP9nOeAAiRA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from BN9PR11MB5276.namprd11.prod.outlook.com (2603:10b6:408:135::18)
+ by MW4PR11MB6909.namprd11.prod.outlook.com (2603:10b6:303:224::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Thu, 19 Mar
+ 2026 03:00:59 +0000
+Received: from BN9PR11MB5276.namprd11.prod.outlook.com
+ ([fe80::f997:762f:f079:134f]) by BN9PR11MB5276.namprd11.prod.outlook.com
+ ([fe80::f997:762f:f079:134f%5]) with mapi id 15.20.9745.007; Thu, 19 Mar 2026
+ 03:00:58 +0000
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Nicolin Chen <nicolinc@nvidia.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>, "joerg.roedel@amd.com"
+	<joerg.roedel@amd.com>, "jgg@nvidia.com" <jgg@nvidia.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"xueshuai@linux.alibaba.com" <xueshuai@linux.alibaba.com>
+Subject: RE: [PATCH rc] PCI: Fix nested pci_dev_reset_iommu_prepare/done()
+Thread-Topic: [PATCH rc] PCI: Fix nested pci_dev_reset_iommu_prepare/done()
+Thread-Index: AQHctyLLyEh9aH29q0aVa9nUVwPgKrW1G2tQgAAKbwCAAASzIA==
+Date: Thu, 19 Mar 2026 03:00:58 +0000
+Message-ID: <BN9PR11MB527654AC35FD1EE8CDF7E1828C4FA@BN9PR11MB5276.namprd11.prod.outlook.com>
+References: <20260318220028.1146905-1-nicolinc@nvidia.com>
+ <BN9PR11MB527657D79BF5B16943BCEC258C4FA@BN9PR11MB5276.namprd11.prod.outlook.com>
+ <abtipPYeAEpg+vbI@Asurada-Nvidia>
+In-Reply-To: <abtipPYeAEpg+vbI@Asurada-Nvidia>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: BN9PR11MB5276:EE_|MW4PR11MB6909:EE_
+x-ms-office365-filtering-correlation-id: e44c9ac9-b58a-40df-6aad-08de8563bf0e
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|376014|1800799024|366016|38070700021|83080400003|22082099003|56012099003|18002099003;
+x-microsoft-antispam-message-info: gCSsZeg8zJh2+XzJ0wk9SZTBgSC8TF1Q6atFUiqhvd1Newt2lhTu5xtrtYEjjgizbqAzDkS2XpB/6gkVFMwFCgVpySpo4fBeoSZoEFBqLN2W2uQYASfrhtmuWZ1fepxSos5oQjFTYV+er3/qH8plW2Q4JkATrbMtv6aVJHt0oU+D+ebdk9bs8+6LTtTfWZVJvdH7tcZ2yBD1cTb9rFpwObDaFWHskHwbMqPvC7F1ufdRSu8xIydDnChjTAuv8tFUWLdFhAxK4Y2C32D6suM4hAgcjWyxB+wWIthQ2+tPKQfmZEc9xpy1WE6sk/xeLMtYDuCDGPCNxVlbKUBQmSCKmxpqUWgaeXnZ3YaAxnz6GwdYJbbkkBiTTlX9GX07FhvS8ynZk6/y4MRojGuVrQQAKHkdyU3zrXjH1TblArbVW8xN68UnoCIcMRhDvWO6knj8/PE8L42chuQhUYZo55HdFIPJYQZZgPr4G1el22GWy+HOo+sKuNaLFS0+4YmN6sX2X3xX7PA4uXpBdi7HPu9Xu/j2bx8vLSRFuYAl/sYEkbPutPMs+JPHpg1zCUTlvnZ0kZr2Vin2E+/TTZ54pvuipTSYL/6Z6SVIA04Hgn4ZxCRfVRymClz5ip/EqGbCoRMwQSCatznKa35jVwwH/s+LkmQ9OOYAdflWFQxPKxAWPw8zHyQ6ZSdy5H40PTc+ZuoY1rBO79ZDDWgYb/5b6NO8GuzFfldawqSqcGUwVo7CcqNUtcmHqn3mxXdNINlB3sDOJp6iX2hWe9ymETXuW5gUfw==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR11MB5276.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(38070700021)(83080400003)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?96OY9IEF9EyEitQ92FpWBZAbQZLbW2DVpcsCrLtRVF0hkst+Hs5Vqlzm7j2n?=
+ =?us-ascii?Q?KZ/5dz6tgFJgUWVui/qr0bgdEaVZruvEz35ngTxFgd9GpeD4FCV25adkcyQV?=
+ =?us-ascii?Q?rAra3IkkwJt57DGpx3e6qvC+FplJyuENdLGosxesiWkbMWvjtRgC45FgG3TM?=
+ =?us-ascii?Q?+QBdrlVHIPKchETo/69PpyW4lZohJQsDsEJuLZo3ljAlsMFbamHjrEx4J5u/?=
+ =?us-ascii?Q?SR3QtVptrnqaU7fBxF1o6WWBVO+MKt9Y61bOUYsriH9pGk1xCY6FBE51aTwZ?=
+ =?us-ascii?Q?aHgYOyIYc9foTtGR7PYiz+ITK37QwIUbWwm2k2HNNOqGDY9uR7MxAYFtpF5t?=
+ =?us-ascii?Q?5rPnIV/UuYYIeYQS5YZieBV3pVDFRsBjID6yucyYgsqe3TWewwiaq9MPzAT9?=
+ =?us-ascii?Q?Iss6wZ1U0HhERUQHAobLCxNeR+AroAz5mbBepfaZAAwBTilWN3SbskcVha/B?=
+ =?us-ascii?Q?f9ZcmkUSQqmD99urhDQ7J4yIWFnvzR98CLD+d+A20GUP+ZjhqNVGp+Bqwttf?=
+ =?us-ascii?Q?WFl8pnjgcBIEzIc/IQXX5l3AoWhSqQdfJG5gJZAOP3ngXs3NZgWY/BFx6iDd?=
+ =?us-ascii?Q?pZmar/BxzWX3Q6mokSwPyFIFxOxZAdotJKFn8+G4h/iG8zL9zyih9U2HmMLc?=
+ =?us-ascii?Q?Mxq5AhkYlia/T1i/IG9JOFjWd1lG7Q0KeiqADjnWKoHxDa7Quh6lcXeQ/dd5?=
+ =?us-ascii?Q?h7U16xc5EOqqXBCn+dmdtVPq+benitaveV6TMgdIbdbPdAnsuAxohZuFBB2H?=
+ =?us-ascii?Q?+1ehGABQxHlfqyB8+TUJ4aMTFSIo0hUVgt83kGMLcXZLTW/rHG73irY8vLoW?=
+ =?us-ascii?Q?TACBA0xup7FpS0O8/ju5IaXdA/dmDABFnajn6pdbVSQiaZ0tGbgkSwkiKUjJ?=
+ =?us-ascii?Q?eS/WP9lcWQmrfq+qjaGZAuRlUXkQxaR9K3sbH5lAwtnJb1VhyeASSm9BGYvh?=
+ =?us-ascii?Q?RAeDXl02NNWz6hSHaMOTW1XL7odQI1EmfuPjBIRcOrnaU2nVWDS++jSgv0Vd?=
+ =?us-ascii?Q?2qY3MxQN/uxDDZLaqFdT3UeLFBpJhaLKt+a7fAZGjz9GFZ+pMygHApz2lG19?=
+ =?us-ascii?Q?rQu7vSnDU0FoazVhD7KZ1msRkRo7+Nx8htmKrUAN/6IWxXgklLE4NlQslUA2?=
+ =?us-ascii?Q?EoeLcF6UXdPCn8BICMAagvYJOsBLRla4M+DOynkdsDtEgTNQBQhPF1Voa3Nr?=
+ =?us-ascii?Q?JqkehCdAan+DVSCNtTRHdNsWHbRTA45F7TAwK9KQWcS1z+SIAxBzWrcOf3ym?=
+ =?us-ascii?Q?V3mCDy0vwAWYjXMLTWuQXWagTow2BAHOIj90bn1xcB1wIMGpT2Fii0deq+BX?=
+ =?us-ascii?Q?r0v8pgWRm62HsiNMri2M434NkskQI/RjFkhE0pIclE3rroM9LCzuJN8TzisH?=
+ =?us-ascii?Q?EujJ8S43V/DJUWWlI8NBXS++zePsGRrzxClAxNRuNhj0WH+HLEAj/Rpqh+jF?=
+ =?us-ascii?Q?vbD8Odccu5d07mc4ei1QpHjRMS9onME1Iy9Fd5z/mSHfRL+/yCBycexTwr1o?=
+ =?us-ascii?Q?D2wO9weWHvhZPEhPi2sFHzD+RNDrksmChtqFUt7MKRSObAsJZ5gh7UNo+dyX?=
+ =?us-ascii?Q?I8D/qw02Lm3n29CaAAHKwGrXH0slMxc2Lxm0hZZG50lYm0y915wSNRrK8ja2?=
+ =?us-ascii?Q?mtmKHOqqVHeap+DRgwVxGiWf1f+TZx1EymdE+eZgQgNVrAUrw+IOg8H/8Wk1?=
+ =?us-ascii?Q?CSwUPpPaL+Xt5GFwh9/VvkqCZmpxI5AWSPwerWo9jPyB1IDn1+8pu7QrxLdB?=
+ =?us-ascii?Q?TwE7phHRBw=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 7/7] iommu/arm-smmu-v3: Block ATS upon an ATC
- invalidation timeout
-To: Nicolin Chen <nicolinc@nvidia.com>, will@kernel.org,
- robin.murphy@arm.com, joro@8bytes.org, bhelgaas@google.com, jgg@nvidia.com
-Cc: rafael@kernel.org, lenb@kernel.org, praan@google.com,
- baolu.lu@linux.intel.com, kevin.tian@intel.com,
- linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
- linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
- linux-pci@vger.kernel.org, vsethi@nvidia.com
-References: <cover.1773774441.git.nicolinc@nvidia.com>
- <7e21e14faddeb0e3af692356f4fefbae2dfbebda.1773774441.git.nicolinc@nvidia.com>
-From: Shuai Xue <xueshuai@linux.alibaba.com>
-In-Reply-To: <7e21e14faddeb0e3af692356f4fefbae2dfbebda.1773774441.git.nicolinc@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+X-Exchange-RoutingPolicyChecked: O6llc2wT7tvacvcwXTMQKYiw8MRA2fjY0EF5ewuhw5lS8l42C02dbtmYu2TLoQcXn/kdGF6XPJJrqQN4BQelfhToJ+a/S4yAQ0YXUp19R6hgVihVsD/9MJjBUbPnikaKpPXaOZovcsyYtYFT1hKryKwzPSAab9n9DrEvl/CahqgzQ3cMU/eLuZ86038QnucyyBt+ua0+XQvymeHAIYazVXiqclJ4XSazlY2Y84jcyYVN1I9tbE6aPuDbI4plGk2OpOppGMhwh3kGJgnfq3yrFhycB9u+b0IhZClIXSGK5DssKeveDZRgXPbphUtFL/UJeNPImhKdTD2pNk7f1NI1eQ==
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BN9PR11MB5276.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e44c9ac9-b58a-40df-6aad-08de8563bf0e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Mar 2026 03:00:58.6804
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: LqhP1PGZXTL7k9A5XzEiNpMWGa8el0rG4Hheq8Y8ggRUHUSIzsXRj5oaVPNzt0RlAC03SrPwt/Mi7o4fHP7UAg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR11MB6909
+X-OriginatorOrg: intel.com
 
+> From: Nicolin Chen <nicolinc@nvidia.com>
+> Sent: Thursday, March 19, 2026 10:43 AM
+>=20
+> On Thu, Mar 19, 2026 at 02:22:39AM +0000, Tian, Kevin wrote:
+> > > From: Nicolin Chen <nicolinc@nvidia.com>
+> > > Sent: Thursday, March 19, 2026 6:00 AM
+> > >
+> > > Shuai found that cxl_reset_bus_function() calls pci_reset_bus_functio=
+n()
+> > > internally while both are calling pci_dev_reset_iommu_prepare/done().
+> > >
+> > > This results in a nested pci_dev_reset_iommu_prepare/done() call:
+> > >     cxl_reset_bus_function():
+> > >         pci_dev_reset_iommu_prepare(); // outer
+> > >         pci_reset_bus_function():
+> > >             pci_dev_reset_iommu_prepare(); // inner (re-entry)
+> > >             ...
+> > >             pci_dev_reset_iommu_done(); // inner
+> > >         pci_dev_reset_iommu_done(); // outer
+> > >
+> > > However, pci_dev_reset_iommu_prepare() doesn't allow a re-entry for
+> now.
+> > >
+> > > Digging further, I found that most functions in pci_dev_specific_rese=
+t()
+> > > except reset_ivb_igd() are calling pcie_flr() that has nested those t=
+wo
+> > > functions as well.
+> > >
+> > > Drop the outer callbacks in:
+> > >  - cxl_reset_bus_function()
+> > >  - pci_dev_specific_reset()
+> > >
+> > > Replace with adding the callbacks in:
+> > >  + reset_ivb_igd()
+> > >
+> >
+> > I wonder whether it's cleaner to just make pci_dev_reset_iommu_prepare(=
+)
+> > reentrant here.
+> >
+> > what this patch does requires additional attention on specific reset
+> functions.
+> >
+> > e.g. reset_hinic_vf_dev() has a special logic waiting for firmware rese=
+t
+> > done after calling pcie_flr(). With this patch the _done() notification=
+ will
+> > be triggered earlier than expectation.
+>=20
+> !
+>=20
+> > the original way is more maintainable with prepare/done equipped in
+> > the highest level reset helpers in pci_reset_fn_methods[].
+>=20
+> Yes. I agree. I will add a reset_cnt and allow re-entry.
+>=20
+> > btw the AI review tool gave a comment:
+> >
+> > https://sashiko.dev/#/patchset/20260318220028.1146905-1-
+> nicolinc%40nvidia.com
+>=20
+> My browsers on both Linux and Windows blocked this site :-/
+>=20
+> > it won't hold if my proposal is agreed. But it still applies to your qu=
+arantine
+> > series which relies on accurate report of success reset.
+>=20
+> Would you mind posting it here, if it's not too long?
+>=20
 
-
-On 3/18/26 3:15 AM, Nicolin Chen wrote:
-> Currently, when GERROR_CMDQ_ERR occurs, the arm_smmu_cmdq_skip_err() won't
-> do anything for the CMDQ_ERR_CERROR_ATC_INV_IDX.
-> 
-> When a device wasn't responsive to an ATC invalidation request, this often
-> results in constant CMDQ errors:
->    unexpected global error reported (0x00000001), this could be serious
->    CMDQ error (cons 0x0302bb84): ATC invalidate timeout
->    unexpected global error reported (0x00000001), this could be serious
->    CMDQ error (cons 0x0302bb88): ATC invalidate timeout
->    unexpected global error reported (0x00000001), this could be serious
->    CMDQ error (cons 0x0302bb8c): ATC invalidate timeout
->    ...
-> 
-> An ATC invalidation timeout indicates that the device failed to respond to
-> a protocol-critical coherency request, which means that device's internal
-> ATS state is desynchronized from the SMMU.
-> 
-> Furthermore, ignoring the timeout leaves the system in an unsafe state, as
-> the device cache may retain stale ATC entries for memory pages that the OS
-> has already reclaimed and reassigned. This might lead to data corruption.
-> 
-> Isolate the device that is confirmed to be unresponsive by a surgical STE
-> update to unset its EATS bit so as to reject any further ATS transaction,
-> which could corrupt the memory.
-> 
-> Also, set the master->ats_broken flag that is revertible after the device
-> completes a reset. This flag avoids further ATS requests and invalidations
-> from happening.
-> 
-> Finally, report this broken device to the IOMMU core to isolate the device
-> in the core level too.
-> 
-> For batched ATC_INV commands, SMMU hardware only reports a timeout at the
-> CMD_SYNC, which could follow the batch issued for multiple devices. So, it
-> isn't straightforward to identify which command in a batch resulted in the
-> timeout. Fortunately, the invs array has a sorted list of ATC entries. So,
-> the issued batch must be sorted as well. This makes it possible to bisect
-> the batch to retry the command per Stream ID and identify the master.
-
-Nit: The implementation is a linear per-SID retry, not a binary
-search / bisection. Suggest rewording to:
-
-   "retry the ATC_INV command for each unique Stream ID in the batch
-    to identify the unresponsive master"
-
-
-> 
-> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
-> ---
->   drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 92 ++++++++++++++++++++-
->   1 file changed, 89 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> index 366d812668011..418ee2f40d96d 100644
-> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> @@ -107,6 +107,8 @@ static const char * const event_class_str[] = {
->   	[3] = "Reserved",
->   };
->   
-> +static struct arm_smmu_ste *
-> +arm_smmu_get_step_for_sid(struct arm_smmu_device *smmu, u32 sid);
->   static int arm_smmu_alloc_cd_tables(struct arm_smmu_master *master);
->   
->   static void parse_driver_options(struct arm_smmu_device *smmu)
-> @@ -2495,10 +2497,43 @@ arm_smmu_atc_inv_to_cmd(int ssid, unsigned long iova, size_t size,
->   	cmd->atc.size	= log2_span;
->   }
->   
-> +static void arm_smmu_disable_eats_for_sid(struct arm_smmu_device *smmu,
-> +					  struct arm_smmu_cmdq *cmdq, u32 sid)
-> +{
-> +	struct arm_smmu_cmdq_ent ent = {
-> +		.opcode = CMDQ_OP_CFGI_STE,
-> +		.cfgi	= {
-> +			.sid = sid,
-> +			.leaf = true,
-> +		},
-> +	};
-> +	struct arm_smmu_ste *step;
-> +	u64 cmd[CMDQ_ENT_DWORDS];
-> +
-> +	step = arm_smmu_get_step_for_sid(smmu, sid);
-> +	WRITE_ONCE(step->data[1],
-> +		   READ_ONCE(step->data[1]) & cpu_to_le64(~STRTAB_STE_1_EATS));
-
-
-This non-atomic read-modify-write on step->data[1] can race with the
-normal STE installation path (arm_smmu_write_entry → entry_set →
-WRITE_ONCE).
-
-The error path runs from:
-
-   __arm_smmu_domain_inv_range()  (data path, no group->mutex)
-     → arm_smmu_cmdq_batch_retry()
-       → arm_smmu_master_disable_ats()
-         → arm_smmu_disable_eats_for_sid()   ← NO locks on STE
-
-The normal STE path runs from:
-
-   iommu_attach_device()
-     → mutex_lock(&group->mutex)
-       → arm_smmu_attach_dev()
-         → mutex_lock(&arm_smmu_asid_lock)
-           → arm_smmu_install_ste_for_dev()
-             → arm_smmu_write_entry()        ← holds both mutexes
-
-Since the error path holds neither group->mutex nor arm_smmu_asid_lock,
-the following race is possible:
-
-   CPU A (error path):             CPU B (attach path):
-   READ data[1] = X
-                                   WRITE data[1] = Y (new STE config)
-   WRITE data[1] = X & ~EATS
-                                   // Y is lost
-
-This could clobber a concurrent STE update from the attach path.
-
-
-> +
-> +	arm_smmu_cmdq_build_cmd(cmd, &ent);
-> +	arm_smmu_cmdq_issue_cmdlist(smmu, cmdq, cmd, 1, true);
-> +}
-> +
-> +static void arm_smmu_master_disable_ats(struct arm_smmu_master *master,
-> +					struct arm_smmu_cmdq *cmdq)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < master->num_streams; i++)
-> +		arm_smmu_disable_eats_for_sid(master->smmu, cmdq,
-> +					      master->streams[i].id);
-> +	WRITE_ONCE(master->ats_broken, true);
-> +	iommu_report_device_broken(master->dev);
-> +}
-> +
->   static int arm_smmu_atc_inv_master(struct arm_smmu_master *master,
->   				   ioasid_t ssid)
->   {
-> -	int i;
-> +	int i, ret;
->   	struct arm_smmu_cmdq_ent cmd;
->   	struct arm_smmu_cmdq_batch cmds;
->   
-> @@ -2514,7 +2549,10 @@ static int arm_smmu_atc_inv_master(struct arm_smmu_master *master,
->   		arm_smmu_cmdq_batch_add(master->smmu, &cmds, &cmd);
->   	}
->   
-> -	return arm_smmu_cmdq_batch_submit(master->smmu, &cmds);
-> +	ret = arm_smmu_cmdq_batch_submit(master->smmu, &cmds);
-> +	if (ret)
-> +		arm_smmu_master_disable_ats(master, cmds.cmdq);
-> +	return ret;
->   }
->   
->   /* IO_PGTABLE API */
-> @@ -2661,6 +2699,53 @@ static inline bool arm_smmu_invs_end_batch(struct arm_smmu_inv *cur,
->   	return false;
->   }
->   
-> +static void arm_smmu_invs_disable_ats(struct arm_smmu_invs *invs,
-> +				      struct arm_smmu_cmdq *cmdq,
-> +				      struct arm_smmu_device *smmu, u32 sid)
-> +{
-> +	struct arm_smmu_inv *cur;
-> +	size_t i;
-> +
-> +	arm_smmu_invs_for_each_entry(invs, i, cur) {
-> +		if (cur->master->smmu == smmu && arm_smmu_inv_is_ats(cur) &&
-> +		    cur->id == sid) {
-> +			arm_smmu_master_disable_ats(cur->master, cmdq);
-> +			break;
-> +		}
-> +	}
-> +}
-> +
-> +static void arm_smmu_cmdq_batch_retry(struct arm_smmu_device *smmu,
-> +				      struct arm_smmu_invs *invs,
-> +				      struct arm_smmu_cmdq_batch *cmds)
-> +{
-> +	u64 atc[CMDQ_ENT_DWORDS] = {0};
-> +	int i;
-> +
-> +	/* Only a timed out ATC_INV command needs a retry */
-> +	if (!invs->has_ats)
-> +		return;
-> +
-> +	for (i = 0; i < cmds->num * CMDQ_ENT_DWORDS; i += CMDQ_ENT_DWORDS) {
-> +		struct arm_smmu_cmdq *cmdq = cmds->cmdq;
-> +		u32 sid;
-> +
-> +		/* Only need to retry ATC invalidations */
-> +		if (FIELD_GET(CMDQ_0_OP, cmds->cmds[i]) != CMDQ_OP_ATC_INV)
-> +			continue;
-> +
-> +		/* Only need to retry with one ATC_INV per Stream ID (device) */
-> +		sid = FIELD_GET(CMDQ_ATC_0_SID, cmds->cmds[i]);
-> +		if (atc[0] && sid == FIELD_GET(CMDQ_ATC_0_SID, atc[0]))
-> +			continue;
-> +
-> +		atc[0] = cmds->cmds[i];
-> +		atc[1] = cmds->cmds[i + 1];
-> +		if (arm_smmu_cmdq_issue_cmdlist(smmu, cmdq, atc, 1, true))
-> +			arm_smmu_invs_disable_ats(invs, cmdq, smmu, sid);
-> +	}
-> +}
-> +
->   static void __arm_smmu_domain_inv_range(struct arm_smmu_invs *invs,
->   					unsigned long iova, size_t size,
->   					unsigned int granule, bool leaf)
-> @@ -2739,7 +2824,8 @@ static void __arm_smmu_domain_inv_range(struct arm_smmu_invs *invs,
->   
->   		if (cmds.num &&
->   		    (next == end || arm_smmu_invs_end_batch(cur, next))) {
-> -			arm_smmu_cmdq_batch_submit(smmu, &cmds);
-> +			if (arm_smmu_cmdq_batch_submit(smmu, &cmds))
-> +				arm_smmu_cmdq_batch_retry(smmu, invs, &cmds);
->   			cmds.num = 0;
->   		}
->   		cur = next;
-
+Here it is:
+--
+By removing __pci_dev_specific_reset(), the IOMMU preparation error checkin=
+g
+is now delegated to the individual device-specific reset handlers. Will thi=
+s
+cause IOMMU preparation failures to be silently ignored?
+Looking at handlers like reset_intel_82599_sfp_virtfn(), the return value o=
+f
+pcie_flr() is not checked:
+static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, bool probe)
+{
+	if (!probe)
+		pcie_flr(dev);
+	return 0;
+}
+Similarly, delay_250ms_after_flr() ignores the return value when actually
+performing the reset:
+static int delay_250ms_after_flr(struct pci_dev *dev, bool probe)
+{
+	if (probe)
+		return pcie_reset_flr(dev, PCI_RESET_PROBE);
+	pcie_reset_flr(dev, PCI_RESET_DO_RESET);
+	msleep(250);
+	return 0;
+}
+If pci_dev_reset_iommu_prepare() fails inside pcie_flr(), the function abor=
+ts
+the FLR and returns an error. However, since the quirk handlers swallow thi=
+s
+error, the PCI subsystem is falsely told that the device reset succeeded.=20
+Could this falsely reported success leave sensitive device state uncleared
+between host and guest environments? Can we ensure the return value from th=
+e
+inner reset functions is properly propagated to prevent this?
