@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC5113E95AE;
-	Thu, 19 Mar 2026 16:11:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C00063E92AF;
+	Thu, 19 Mar 2026 16:14:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773936682; cv=none; b=GuTzIku/kcTOrV+STZVJc4zCEcs1ezQ+fmydQZ7gQDm+Vyo4/PvFm8onjk7RCXPxWs9Y43YuP0NIrB3DJK93ZzQmWnbO7hRXBB6OGk/oLBzSjvVqVVdfMExuuqn5goKwTRObUqH0lIIEFJiUbO/IflKaImLHqngM7wzwjURSo74=
+	t=1773936848; cv=none; b=aX62lo8rh4wOOuxLXtd5U+BsoyJ4HMDn8NSdPd7SZ6P4gLm9z1qBvG8TFVzg+yOFoOsh/24k3b3M8oRcdLBmmQ1v+qWEVL63votVi5dYrepZ5ddanmAafPdwcE0qHL7nsLlg0tqDpCItrhdOBCO6/FYJ0FbXVS3RRyJUhQ8+vL4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773936682; c=relaxed/simple;
-	bh=vg1UumV6k5QeDyVUBGRbAYWZNFDa34Na9e5e2zZwlhs=;
+	s=arc-20240116; t=1773936848; c=relaxed/simple;
+	bh=YyGyzHhjiS6Q7JqdSeWBVWSOKYj9sWfvhHK3sunGlFs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pdsfeEDg8kOgWL7s7xH6r0EXzgnks71cOlxRvrCtjanUVIJftyYiEhXIhmRe2t69HvctyKQZyhP5PW5qFmO+RPB5O4s6Dl7i9YqM4gaC7Opv2yktMMttFEuPagLvuNWjRxfpRRCuAWxjB1wflWHxFjYsWB7ABUdGde1BNPmERdk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cj2rhpuX; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=GdOVHe8lJ6h5o77ol/cNchid5vC3gRN2BOZ5TGz1mkdQ0ceP82gUJ3r4hRhaBB3EjAj7GxR/037ifyIzC01TJEQAPXFtKo6U4QlExqkVBggCvkTC6wexwjrQjZ2t2/FmFVBWCuXZHj8daeAeVbQ8xpafMIjCehTzTt+ETaRILW8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DYAipH4u; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cj2rhpuX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B93DC2BCB0;
-	Thu, 19 Mar 2026 16:11:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DYAipH4u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A42DC19424;
+	Thu, 19 Mar 2026 16:14:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773936682;
-	bh=vg1UumV6k5QeDyVUBGRbAYWZNFDa34Na9e5e2zZwlhs=;
+	s=k20201202; t=1773936848;
+	bh=YyGyzHhjiS6Q7JqdSeWBVWSOKYj9sWfvhHK3sunGlFs=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=cj2rhpuXMDoK5LXQVXKFq+o4Gllw2HT76plU/UiNB4EYqlhsjDtc6IXH2xWq01zk2
-	 uCW/5flYeuFOoyNPV6hWib0l3AmxLQ+FMwvyADuLwudzkc/CYxbaGBIk1jIEmpw7zx
-	 uJa0Vm2FUIGi1MKFjNYm05t2Nc/6vYvTzcWK6Gr1rMyXAvsTOuGWBTaLWCcor3P7FQ
-	 acw3om1B/4lqwcZnkpWwpjblcMnjaxWxlTs0sm+jk+Rl8s8t9GbP1iVyZbTbKndHEr
-	 gDCtck8FLN0wfYCKs6ueFGr9fkxZDuIRc0UNwaDSxdzcvJZ22jGnO6AdKhO6zvTj0q
-	 /FpidMuARFboQ==
-Message-ID: <353939e0-ef52-4c8f-bf71-ff27fa2c7d7a@kernel.org>
-Date: Thu, 19 Mar 2026 17:11:17 +0100
+	b=DYAipH4uoIgq0CWL1m4H+gOpzLLaXqv+Rj20kKzzN8lg4JmOyimrjSfBazEhzM4TU
+	 t3tIaO19kH8+oqix8V5IoKTVwV6XIlYxbjevLcNPTVNZ8HaEvuxVumNS7cruF3H7DE
+	 NyBnWlhAQ2yQR8qm6biB4mH/raZhYmIAZP6CX58HhKMc5ffUUSf+QINRJugE0OYqd2
+	 zzV7tvPQW5m2cRdzd00FYwLpL1k/yOOyOtsMk2hhcKkJfMLNtet9Ot1p7cjNOumBgV
+	 2mMdm9m3o4EiF78h5QffogbBbojjXJasKbmSxn6QTSeinqgkOjR2HZPh5GmZRcoRNw
+	 rxtRYIJWe7FCQ==
+Message-ID: <a20bf111-6c5f-4ae2-b8f3-697854626c10@kernel.org>
+Date: Thu, 19 Mar 2026 17:14:03 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/5] dt-bindings: pci: Document the NVIDIA Tegra264 PCIe
- controller
+Subject: Re: [PATCH 4/5] PCI: tegra: Add Tegra264 support
 To: Thierry Reding <thierry.reding@kernel.org>,
  Bjorn Helgaas <bhelgaas@google.com>,
  Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -46,7 +45,7 @@ To: Thierry Reding <thierry.reding@kernel.org>,
 Cc: Jon Hunter <jonathanh@nvidia.com>, linux-pci@vger.kernel.org,
  devicetree@vger.kernel.org, linux-tegra@vger.kernel.org
 References: <20260319160110.2131954-1-thierry.reding@kernel.org>
- <20260319160110.2131954-4-thierry.reding@kernel.org>
+ <20260319160110.2131954-5-thierry.reding@kernel.org>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -92,141 +91,72 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
  zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
  XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <20260319160110.2131954-4-thierry.reding@kernel.org>
+In-Reply-To: <20260319160110.2131954-5-thierry.reding@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 19/03/2026 17:01, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
-> 
-> The six PCIe controllers found on Tegra264 are of two types: one is used
-> for the internal GPU and therefore is not connected to a UPHY and the
-> remaining five controllers are typically routed to a PCI slot and have
-> additional controls for the physical link.
-> 
-> While these controllers can be switched into endpoint mode, this binding
-> describes the root complex mode only.
-> 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
-> ---
->  .../bindings/pci/nvidia,tegra264-pcie.yaml    | 92 +++++++++++++++++++
->  1 file changed, 92 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml b/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml
+>  obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+>  obj-$(CONFIG_PCIE_RCAR_HOST) += pcie-rcar.o pcie-rcar-host.o
+>  obj-$(CONFIG_PCIE_RCAR_EP) += pcie-rcar.o pcie-rcar-ep.o
+> diff --git a/drivers/pci/controller/pcie-tegra264.c b/drivers/pci/controller/pcie-tegra264.c
 > new file mode 100644
-> index 000000000000..56d69de2788b
+> index 000000000000..0c8351b88941
 > --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml
-> @@ -0,0 +1,92 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/pci/nvidia,tegra264-pcie.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: NVIDIA Tegra264 PCIe controller
-> +
-> +maintainers:
-> +  - Thierry Reding <thierry.reding@gmail.com>
-> +  - Jon Hunter <jonathanh@nvidia.com>
-> +
-> +properties:
-> +  compatible:
-> +    const: nvidia,tegra264-pcie
-> +
-> +  reg:
-> +    minItems: 4
-> +    maxItems: 5
-> +
-> +  reg-names:
-> +    minItems: 4
-> +    maxItems: 5
-> +
-> +  interrupts:
-> +    minItems: 1
-> +    maxItems: 4
-> +
-> +  dma-coherent: true
-> +
-> +  nvidia,bpmp:
-> +    $ref: /schemas/types.yaml#/definitions/phandle-array
-> +    description: |
-> +      Must contain a pair of phandle (to the BPMP controller node) and
-> +      controller ID. The following are the controller IDs for each controller:
-> +
-> +      0: C0
-> +      1: C1
-> +      2: C2
-> +      3: C3
-> +      4: C4
-> +      5: C5
-> +    items:
-> +      - items:
-> +          - description: phandle to the BPMP controller node
-> +          - description: PCIe controller ID
-> +            maximum: 5
-> +
-> +unevaluatedProperties: false
+> +++ b/drivers/pci/controller/pcie-tegra264.c
+> @@ -0,0 +1,506 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +// SPDX-FileCopyrightText: Copyright (c) 2022-2025, NVIDIA CORPORATION. All rights reserved.
 
-This goes before example
+Don't use that tag, please, but standard Copyright.
 
+> +static int tegra264_pcie_probe(struct platform_device *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	struct pci_host_bridge *bridge;
+> +	struct tegra264_pcie *pcie;
+> +	struct resource_entry *bus;
+> +	struct resource *res;
+> +	int err;
 > +
-> +required:
-> +  - interrupt-map
-> +  - interrupt-map-mask
-> +  - iommu-map
-> +  - msi-map
-> +  - nvidia,bpmp
+> +	bridge = devm_pci_alloc_host_bridge(dev, sizeof(struct tegra264_pcie));
+> +	if (!bridge) {
+> +		dev_err(dev, "failed to allocate host bridge\n");
+> +		return -ENOMEM;
+> +	}
 > +
-> +allOf:
-> +  - $ref: /schemas/pci/pci-host-bridge.yaml#
-> +  - oneOf:
-> +    - description: C0 controller (no UPHY)
-
-It does not look like you tested the bindings, at least after quick
-look. Please run `make dt_binding_check` (see
-Documentation/devicetree/bindings/writing-schema.rst for instructions).
-Maybe you need to update your dtschema and yamllint. Don't rely on
-distro packages for dtschema and be sure you are using the latest
-released dtschema.
-
-> +      properties:
-> +        reg:
-> +          items:
-> +            - description: application layer registers
-> +            - description: transaction layer registers
-> +            - description: privileged transaction layer registers
-> +            - description: ECAM-compatible configuration space
+> +	pcie = pci_host_bridge_priv(bridge);
+> +	platform_set_drvdata(pdev, pcie);
+> +	pcie->bridge = bridge;
+> +	pcie->dev = dev;
 > +
-> +        reg-names:
-> +          items:
-> +            - const: xal
-> +            - const: xtl
-> +            - const: xtl-pri
-> +            - const: ecam
+> +	err = pinctrl_pm_select_default_state(dev);
+> +	if (err < 0) {
+> +		dev_err(dev, "failed to configure sideband pins: %d\n", err);
+> +		return err;
+> +	}
 > +
-> +    - description: C1-C5 controllers (with UPHY)
-> +      properties:
-> +        reg:
-> +          items:
-> +            - description: application layer registers
-> +            - description: transaction layer registers
-> +            - description: privileged transaction layer registers
-> +            - description: data link/physical layer registers
-> +            - description: ECAM-compatible configuration space
+> +	err = tegra264_pcie_parse_dt(pcie);
+> +	if (err < 0)
+> +		return dev_err_probe(dev, err, "failed to parse device tree");
 > +
-> +      items:
-> +        - const: xal
-> +        - const: xtl
-> +        - const: xtl-pri
-> +        - const: xpl
-> +        - const: ecam
+> +	pcie->xal = devm_platform_ioremap_resource_byname(pdev, "xal");
+> +	if (IS_ERR(pcie->xal)) {
+> +		err = PTR_ERR(pcie->xal);
+> +		dev_err(dev, "failed to map xal memory: %d\n", err);
+> +		return err;
 
-All of above are part of top level.
+What's with this syntax here? This is just one call return
+dev_err_probe. Looks like you are sending us some old code, instead of
+use recent drivers starting point.
 
-And speaking about example - where is it? How can you then test (verify)
-this?
-
+> +	}
+> +
+> +	pcie->xtl = devm_platform_ioremap_resource_byname(pdev, "xtl-pri");
+> +	if (IS_ERR(pcie->xtl)) {
+> +		err = PTR_ERR(pcie->xtl);
+> +		dev_err(dev, "failed to map xtl-pri memory: %d\n", err);
+> +		return err;
+> +	}
 Best regards,
 Krzysztof
