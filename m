@@ -1,126 +1,103 @@
-Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DE713126B9;
-	Thu, 19 Mar 2026 07:41:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9E7925C6EE;
+	Thu, 19 Mar 2026 08:47:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773906105; cv=none; b=pB86fcotoKd65Ow5gZN2rTqbO9HchrosRiCGPZ5nWrMGdvjhoDWFcPsp/+/ASKqudrSaESndEstl3AILGEhMNPQYdyRXBqTlbriCJEqbgCLXZpWuFAyCxYkBmb6rMFyJhEbT+ScCvPWr8NQq19DIhCw832zLxrzQPaJhTmKD53c=
+	t=1773910041; cv=none; b=DSJxS5G9xfok/yDcgZ/Rbq4WDLVJGmmou5pgWpt7d1Y8vcRM4UwE5Bz3+iHEpeHeOZ84jd6sMV3FVi13h8Le5FnDzV2fd/9JpFSEv8y34R15quGcPs5fgqXRHv65x6wm21tE8uhapII7HIUNfirXwpfiKiNn+p/Uej52Hbvm1mA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773906105; c=relaxed/simple;
-	bh=yY0ONwJT7hMWrrDF3sJ/0j/CTKM6T5BWZqrt0m+7QYU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CjCeHHJ8loWy7xr/UP7VsTOVrt8p2zhWl1JF4RObbl2fQtR+xq9nxEi5zI8oFPg3EO0kgnxwPW0Xg/PM4A6kMfIcnLa32MnGuJxdeSFoMQCp9OSg/UrbYMu80e4AB2J+C8oaVs7T1HUKJnow+uFTg//8ASbcmgMYQbXaW9PmSCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=fUA2nZtJ; arc=none smtp.client-ip=115.124.30.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1773910041; c=relaxed/simple;
+	bh=pwvwZxQZtDDSZnYJ8zrqkuvH3FZMuj6jpLZlzktWxo4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QOYXzSQRzEXTOpS47MqOLMHw8uoW0rwPiCZR810D+KNw3dGPqIMVn4eT/77C0r1YAxJuUdmJN+I74aseoaW30NiByQVeOkZWQdP164vMWV9u7aa2t2NyKkhqCiDyHYWuyW6/O8UvssjNpJMJEZaS+gilPW1UuKdRbgA17ZHzigQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xnt6CYgG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="fUA2nZtJ"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1773906101; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=aGDLL6Ar9BwuYWHlCus806lUe1cL7vSPADZrnW2oChs=;
-	b=fUA2nZtJXHUgfHxlvMo+BR9GXOv55h346/yY6jccegTECnSnYSQP3MvxTPnKrrqKepNVAtg8cVXUs1xoEjnp7aCBVXYKoQhjkLSZ+RNJPgl9AtBUfDkrL/qwNRGplzHDPxpG/6qGA5f/EQl+KItE786AcINu297s25bn+/q04Lo=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R921e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033032089153;MF=xueshuai@linux.alibaba.com;NM=1;PH=DS;RN=17;SR=0;TI=SMTPD_---0X.Hj-we_1773906099;
-Received: from 30.246.163.250(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0X.Hj-we_1773906099 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Thu, 19 Mar 2026 15:41:40 +0800
-Message-ID: <0e2d1eb5-a58d-4fe6-9a63-e10e527abd6f@linux.alibaba.com>
-Date: Thu, 19 Mar 2026 15:41:49 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xnt6CYgG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A08CAC19424;
+	Thu, 19 Mar 2026 08:47:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773910041;
+	bh=pwvwZxQZtDDSZnYJ8zrqkuvH3FZMuj6jpLZlzktWxo4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Xnt6CYgGMmfUfnixFGE4K9swNrbY3fC8suhYsT4AJgjRqnwVXqhrPL3uB/xUUwuc8
+	 sMFfFyFu6j5LPK8rspzTycLGV3Jl0kA+AikWek+n1osvog0PSsee/D/eFnK/Vx+t44
+	 ImdeqfpU0mG7rYS8j1kuyogr1zXmkER3YZy99pCgYVrxXKB37oMFj0jtqILmfhR/bH
+	 FROv35LALmFSkIet48BnZM3jTcx8MyPlJMp9OAaManIMjQQWlqgwVq4gtw5ol/YBWm
+	 eQFpidkwLxDpk98CUa1VCvYV4aUTruIxTH+o5c7WrpAYrOIVoGbOo1qBCyGiBGHe14
+	 NpFYSLPvUelzg==
+Date: Thu, 19 Mar 2026 09:47:15 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Christian Bruel <christian.bruel@foss.st.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Shuah Khan <shuah@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	fabrice.gasnier@foss.st.com, linux-pci@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] selftests: pci_endpoint: Skip subrange map test if
+ iATU allocation fails
+Message-ID: <abu4E-cQP7SBv1Gt@ryzen>
+References: <20260318-skip-bar_subrange-tests-if-enospc-v1-0-f1a49534ebea@foss.st.com>
+ <20260318-skip-bar_subrange-tests-if-enospc-v1-1-f1a49534ebea@foss.st.com>
+ <vki7ty3z5jncmzeltk7udsbynffdld4xhcm3b2yjrgx25cfqkm@4ld66m3jbjqo>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 7/7] iommu/arm-smmu-v3: Block ATS upon an ATC
- invalidation timeout
-To: Nicolin Chen <nicolinc@nvidia.com>
-Cc: will@kernel.org, robin.murphy@arm.com, joro@8bytes.org,
- bhelgaas@google.com, jgg@nvidia.com, rafael@kernel.org, lenb@kernel.org,
- praan@google.com, baolu.lu@linux.intel.com, kevin.tian@intel.com,
- linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
- linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
- linux-pci@vger.kernel.org, vsethi@nvidia.com
-References: <cover.1773774441.git.nicolinc@nvidia.com>
- <7e21e14faddeb0e3af692356f4fefbae2dfbebda.1773774441.git.nicolinc@nvidia.com>
- <eeee122f-54e2-4fe9-82a6-724c3f80a499@linux.alibaba.com>
- <abts8l0UPvGuzrzF@Asurada-Nvidia>
-From: Shuai Xue <xueshuai@linux.alibaba.com>
-In-Reply-To: <abts8l0UPvGuzrzF@Asurada-Nvidia>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <vki7ty3z5jncmzeltk7udsbynffdld4xhcm3b2yjrgx25cfqkm@4ld66m3jbjqo>
+
+On Thu, Mar 19, 2026 at 10:28:41AM +0900, Koichiro Den wrote:
+> On Wed, Mar 18, 2026 at 03:46:27PM +0100, Christian Bruel wrote:
+> > Handle -ENOSPC error. If the number of available inbound ATU entries is
+> > insufficient to map the subrange, skip the test instead of failing.
+> >
+> > Link: https://lore.kernel.org/linux-pci/20260317152707.GA85951@bhelgaas/T/#m87e4c24173097a0ea70195b71aab294ad8d6c283
+> > Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
+> > ---
+> >  tools/testing/selftests/pci_endpoint/pci_endpoint_test.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> >
+> > diff --git a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
+> > index c417fb3a198b2d92c3060938c23807cc8bea5573..8ea2fda4539d11eb22b22800a7cb8bbaa99c91ba 100644
+> > --- a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
+> > +++ b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
+> > @@ -88,6 +88,8 @@ TEST_F(pci_ep_bar, BAR_SUBRANGE_TEST)
+> >		SKIP(return, "Subrange map is not supported");
+> >	if (ret == -ENOBUFS)
+> >		SKIP(return, "BAR is reserved");
+> > +	if (ret == -ENOSPC)
+> > +		SKIP(return, "Not enough ATU entries to allocate subrange");
+>
+> Thank you for handling this!
+>
+> pci_endpoint_test_bar_subrange() can also return -ENOSPC locally:
+> https://github.com/torvalds/linux/blob/v7.0-rc4/drivers/misc/pci_endpoint_test.c#L538
+> While that is a different resource limit case, I think it would still be
+> reasonable to treat it as SKIP as well.
+
+	sub_size = bar_size / nsub;
+	if (sub_size < sizeof(u32)) {
+		ret = -ENOSPC;
+		goto out_clear;
+	}
+
+What is this test for anyway?
+
+If sub_size < 4 ?
+ return -ENOSPACE ?
+
+ENOSPC seem like a weird return for this.
+
+Wouldn't EINVAL be a better return code for this?
 
 
-
-On 3/19/26 11:26 AM, Nicolin Chen wrote:
-> On Thu, Mar 19, 2026 at 10:56:43AM +0800, Shuai Xue wrote:
->> On 3/18/26 3:15 AM, Nicolin Chen wrote:
->>> For batched ATC_INV commands, SMMU hardware only reports a timeout at the
->>> CMD_SYNC, which could follow the batch issued for multiple devices. So, it
->>> isn't straightforward to identify which command in a batch resulted in the
->>> timeout. Fortunately, the invs array has a sorted list of ATC entries. So,
->>> the issued batch must be sorted as well. This makes it possible to bisect
->>> the batch to retry the command per Stream ID and identify the master.
->>
->> Nit: The implementation is a linear per-SID retry, not a binary
->> search / bisection. Suggest rewording to:
->>
->>    "retry the ATC_INV command for each unique Stream ID in the batch
->>     to identify the unresponsive master"
-> 
-> You are right. And that sounds OK.
-> 
->>> +	step = arm_smmu_get_step_for_sid(smmu, sid);
->>> +	WRITE_ONCE(step->data[1],
->>> +		   READ_ONCE(step->data[1]) & cpu_to_le64(~STRTAB_STE_1_EATS));
->>
->>
->> This non-atomic read-modify-write on step->data[1] can race with the
->> normal STE installation path (arm_smmu_write_entry → entry_set →
->> WRITE_ONCE).
->>
->> The error path runs from:
->>
->>    __arm_smmu_domain_inv_range()  (data path, no group->mutex)
->>      → arm_smmu_cmdq_batch_retry()
->>        → arm_smmu_master_disable_ats()
->>          → arm_smmu_disable_eats_for_sid()   ← NO locks on STE
->>
->> The normal STE path runs from:
->>
->>    iommu_attach_device()
->>      → mutex_lock(&group->mutex)
->>        → arm_smmu_attach_dev()
->>          → mutex_lock(&arm_smmu_asid_lock)
->>            → arm_smmu_install_ste_for_dev()
->>              → arm_smmu_write_entry()        ← holds both mutexes
->>
->> Since the error path holds neither group->mutex nor arm_smmu_asid_lock,
->> the following race is possible:
-> 
-> Because invalidations can be in atomic context so we can't hold
-> those mutex locks.
-> 
->>    CPU A (error path):             CPU B (attach path):
->>    READ data[1] = X
->>                                    WRITE data[1] = Y (new STE config)
->>    WRITE data[1] = X & ~EATS
->>                                    // Y is lost
->>
->> This could clobber a concurrent STE update from the attach path.
-> 
-> Oh, that's true. Maybe this:
-> 	__le64 new, old = READ_ONCE(step->data[1]);
-> 	[...]
-> 	do {
-> 		new = old & cpu_to_le64(~STRTAB_STE_1_EATS);
-> 	} while (!try_cmpxchg64(&step->data[1], &old, new));
-> ?
-
-Yes, the cmpxchg loop looks correct to me.
-
-Thanks.
-Shuai
-
+Kind regards,
+Niklas
