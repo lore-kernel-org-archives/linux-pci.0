@@ -1,103 +1,197 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9E7925C6EE;
-	Thu, 19 Mar 2026 08:47:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DB543A758E
+	for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2026 08:55:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773910041; cv=none; b=DSJxS5G9xfok/yDcgZ/Rbq4WDLVJGmmou5pgWpt7d1Y8vcRM4UwE5Bz3+iHEpeHeOZ84jd6sMV3FVi13h8Le5FnDzV2fd/9JpFSEv8y34R15quGcPs5fgqXRHv65x6wm21tE8uhapII7HIUNfirXwpfiKiNn+p/Uej52Hbvm1mA=
+	t=1773910516; cv=none; b=PaVXcIjJWohnrjGiE8yoNvR6RWrDPjGKtdApIX7/n1lABuV+zBnlPMMPrszIBvVjY+gHQrEBUNKOOoXIBVVZ1TPnsAI5ceE2zQXHxle5Xg+dpGUaNEqThHASIqDrDLbZgj9c0gShZH2MVbo1f2YsMrWe0YKJYnXjw16gLROzQUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773910041; c=relaxed/simple;
-	bh=pwvwZxQZtDDSZnYJ8zrqkuvH3FZMuj6jpLZlzktWxo4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QOYXzSQRzEXTOpS47MqOLMHw8uoW0rwPiCZR810D+KNw3dGPqIMVn4eT/77C0r1YAxJuUdmJN+I74aseoaW30NiByQVeOkZWQdP164vMWV9u7aa2t2NyKkhqCiDyHYWuyW6/O8UvssjNpJMJEZaS+gilPW1UuKdRbgA17ZHzigQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xnt6CYgG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773910516; c=relaxed/simple;
+	bh=zrw23kbaB6w9Tx36goqR08XFMojlC5+6mg4vLV+ld8M=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=KpAYlHw77uArjwRlSLDiJBjcu+NW1HB2ATyluDo48XCYnMAWw/89s9MB7C8W+P8U+tn//vUMgE0LEOnRxsST7RBBLxqRcniPdaW9+IEQ+nUQs3JNictZHNVQpvm/qB2zFMwW3jCtXcXTtKtiAGK7l5JZL0pNbCVUJVOub/scpFw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=akZdPIUn; arc=none smtp.client-ip=209.85.221.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xnt6CYgG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A08CAC19424;
-	Thu, 19 Mar 2026 08:47:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773910041;
-	bh=pwvwZxQZtDDSZnYJ8zrqkuvH3FZMuj6jpLZlzktWxo4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Xnt6CYgGMmfUfnixFGE4K9swNrbY3fC8suhYsT4AJgjRqnwVXqhrPL3uB/xUUwuc8
-	 sMFfFyFu6j5LPK8rspzTycLGV3Jl0kA+AikWek+n1osvog0PSsee/D/eFnK/Vx+t44
-	 ImdeqfpU0mG7rYS8j1kuyogr1zXmkER3YZy99pCgYVrxXKB37oMFj0jtqILmfhR/bH
-	 FROv35LALmFSkIet48BnZM3jTcx8MyPlJMp9OAaManIMjQQWlqgwVq4gtw5ol/YBWm
-	 eQFpidkwLxDpk98CUa1VCvYV4aUTruIxTH+o5c7WrpAYrOIVoGbOo1qBCyGiBGHe14
-	 NpFYSLPvUelzg==
-Date: Thu, 19 Mar 2026 09:47:15 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Christian Bruel <christian.bruel@foss.st.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Shuah Khan <shuah@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	fabrice.gasnier@foss.st.com, linux-pci@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] selftests: pci_endpoint: Skip subrange map test if
- iATU allocation fails
-Message-ID: <abu4E-cQP7SBv1Gt@ryzen>
-References: <20260318-skip-bar_subrange-tests-if-enospc-v1-0-f1a49534ebea@foss.st.com>
- <20260318-skip-bar_subrange-tests-if-enospc-v1-1-f1a49534ebea@foss.st.com>
- <vki7ty3z5jncmzeltk7udsbynffdld4xhcm3b2yjrgx25cfqkm@4ld66m3jbjqo>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="akZdPIUn"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-439c9bdc1eeso422600f8f.3
+        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2026 01:55:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1773910513; x=1774515313; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=g2aJhnD/vRwXSeh3Fhk/ZXgYYRMhSjsCNQv0oxpRs+s=;
+        b=akZdPIUnHy2Bpu0VmBS89IRTh+tGrmxEp7YSD5pMx6k6Q0M7cwIawhE1dUnVfzuBZL
+         Bydk+pmdfnpAHmZOifBJxBArZG2RjTrs1oVOPUnYIyw2S7M8GEodGz800WDaQSNnYPsE
+         utHN2D+D6ybg0Nu7PdSgfP9zVeskmHXr6KmcKln7Mf6EnT6eIZMcPLTPeJvvNa1Ekc5q
+         u294kHDen4HGTcv7ujHvECi4OirHLBN+YngZlY73x8FEJ3YiGT93JbNcJCkkq7ZAS6W/
+         z/khAcM8I8zsbhQDXgEql6Lix9w6GgiD947qjdk3NJ8MXqNE0p1ibyZKcPGRewTNLCk+
+         llZA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773910513; x=1774515313;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=g2aJhnD/vRwXSeh3Fhk/ZXgYYRMhSjsCNQv0oxpRs+s=;
+        b=l7kGNdcB7LMhjc8kwTg8QM2CHHpVnYmh6G/Wlxu4QlR2FJIsrn6HTjSDzO5ydXTa9+
+         WeXnkMafiQ9pH3QyjkqciyQxsJmjyegnAhYBAASIk68Ie2oyubm6c0tUyJhMB76PKA/d
+         7tOPmteKfPz9k3n2iV+ty3bkwCsIfM8RGWXkP0bRMtkR+dDxPs3t4RKVsQ5egaThgCcK
+         mNTdRJ/En0FwaOAQ2fk533VTsjkUxpW9l40iZqMOkDqlYG02nWzLmN2PWeHpl5YR3OZq
+         xVV0tY4l8qs+XopMiqNs5R8MI2kEC3MciZEB+uc4aiIQrYdW/65bqDABfWB139cvXiXO
+         MMkA==
+X-Forwarded-Encrypted: i=1; AJvYcCUgHFLJnVCdpCaVz1yghTdbdXgSbi1S0qauiFDBUsbyRvZB31lRtdNhy5zDxNrwMtjmHz/6EOPwJOs=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxevn75XtTIZHWWHUFvTm5qbEefx+l/0QSSKbSWUZknhBp1NU+3
+	TnvHnoaKGRhsLB8m8rH7+uRAXIQfXKd6KAU5C43yRHeP4QIg20nyO19fWD+GohMvE8g=
+X-Gm-Gg: ATEYQzwT4LTRgHfGHz5UzKYYPOoMhK235lgapxV5wIwhbRXl6e458GeI6B6IpglBE00
+	Yg8Gts4/QC0N33xzy4mcgXg3LQFk+jzBLstXCbMhSGtNo3wr2TDb/UEO5xDFS7QZ8hnrZJ3ebfa
+	nf/X9TSdnR8eVYri1vbZlvO6K8whkaYc9hXKpxtcfEIJJC/fRwnPFMwtjbR32zlIPKF0JN0cMJs
+	D1yg9ULH7nns7QJgndttPbWqD3WWkQ4U/CPNM6bs7AMJMAIZrpOsu4d9+AbiN/J381aWKcYHPaj
+	quanWYjZgYQiRKWWc6NmXKav0Y9gOgzj4ppIWD/+ZU5fFTC1sEvTabtswyPdqXGEV/Ls+yDkLIU
+	zaj58gUIzP2/Go+vWj1qV7A9t5NYzg9nfkRu4wrtgIo3cIhWt15EPpK0OSkbTog3TtiGq8oQN44
+	LYM0yDskf/EzJz8r1FNEqnwpPJ2Iz99Mxjd8dG/eodp6SP
+X-Received: by 2002:a05:6000:40cb:b0:43b:4f97:9608 with SMTP id ffacd0b85a97d-43b527a7368mr11451596f8f.14.1773910512637;
+        Thu, 19 Mar 2026 01:55:12 -0700 (PDT)
+Received: from arrakeen.starnux.net ([2a01:e0a:106d:1080:52eb:f6ff:feb3:451a])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43b518588a0sm23072267f8f.16.2026.03.19.01.55.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Mar 2026 01:55:12 -0700 (PDT)
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Subject: [PATCH v6 0/5] arm64: dts: qcom: Add support for the Ayaneo Pocket
+ S2
+Date: Thu, 19 Mar 2026 09:55:06 +0100
+Message-Id: <20260319-topic-sm8650-ayaneo-pocket-s2-base-v6-0-797bf96df771@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <vki7ty3z5jncmzeltk7udsbynffdld4xhcm3b2yjrgx25cfqkm@4ld66m3jbjqo>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAOq5u2kC/5XOTW7DIBCG4atErEvFgAfjrnqPqgt+hgS1NRZYV
+ qPIdy/Jpq68cZfvLJ5vbqxSSVTZy+nGCi2ppjy20E8n5i92PBNPoTWTQmoBEvicp+R5/TIaBbd
+ XO1LmU/YfNPMqubOVuECvOkMxGB1Yg6ZCMX0/Rt7eW19SnXO5PjYXuF//xS/ABXdOxQEjeGHw9
+ TONtuTnXM7s7i9ya/aHTNlMj0geHAbj4s5Uv6YU+pCpmomuHzwGDVaondltTDhmds00Qnoj+wE
+ 7BTsTN6YUh0xsJtjQHrUWKNo/5rquP3vSoaolAgAA
+X-Change-ID: 20260121-topic-sm8650-ayaneo-pocket-s2-base-05c348efd86d
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Geert Uytterhoeven <geert+renesas@glider.be>, 
+ Magnus Damm <magnus.damm@gmail.com>, Bartosz Golaszewski <brgl@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Bjorn Andersson <andersson@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Cc: linux-usb@vger.kernel.org, devicetree@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+ linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+ Neil Armstrong <neil.armstrong@linaro.org>, 
+ Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>, 
+ Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
+ Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
+ KancyJoe <kancy2333@outlook.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3500;
+ i=neil.armstrong@linaro.org; h=from:subject:message-id;
+ bh=zrw23kbaB6w9Tx36goqR08XFMojlC5+6mg4vLV+ld8M=;
+ b=owEBbQKS/ZANAwAKAXfc29rIyEnRAcsmYgBpu7nsszJs/FqL3KMrYDOOOifv9EJW3hrIP7kVI0ui
+ uHuA9oyJAjMEAAEKAB0WIQQ9U8YmyFYF/h30LIt33NvayMhJ0QUCabu57AAKCRB33NvayMhJ0WoYD/
+ 9MFI3MCQ8UwJfOb/HO9DZgqVoTf0uRjzlLchxD1CyAp9CUoDyxcavBJ/57z0HqE4ACNfK7ebavrOlX
+ 4556xHWTIMurKfERPtQ8d9CEeAvE8aYRSwlKDmH2Nr0fvII7822w1SsAG+Eq3AXA8xc82iYEPjYqDB
+ 0wuWK8wYK2LKeYpbr/m+foyYoyOT89Sn9Kaq4GDumRVEAc7URBD3qL7xfDr+V0SWgWExwM+BP8Gr5a
+ Y35rzHBVeg5ByZFtOxl8RiGnHv3RQuvRkNcSHAaN/rTjmbRSBQyHndaddbLHMfZs9z9J5v2UvD84qK
+ z51CuHMtckrfBt/mp4633LbJSnUU6wIEEkU3cI08HjsEErOy4v0oQkzsYRRQ+kjHskM3mSQFvC4Ipr
+ cfW03ElcQqwrUo1KT5TH21WDstsCtWI82Wuz0R+fi9Lr3BBn8N9xAJsNgSbg+RCX3m2dAAR6ETxJ9H
+ E3bf6QXK2FN/svBw7lL8oeZvcE0WNWv/UjzGeLx6Y31/X0vNeIIBmJ2Ke0vWwJ2OA46/8Drm0fIs9O
+ xlKC32YG8wJzqGB7X3IjEaaqUPDzNt117bJBpIU7axXSbLHnfacXMKCI7vz0e6emAyR5UbiH0EjsYj
+ XOfsUiCI/XivfXokXW9DD+wd1qSN4W3Maoj7hZEs2TkpNB84PCncSfuxDf/A==
+X-Developer-Key: i=neil.armstrong@linaro.org; a=openpgp;
+ fpr=89EC3D058446217450F22848169AB7B1A4CFF8AE
 
-On Thu, Mar 19, 2026 at 10:28:41AM +0900, Koichiro Den wrote:
-> On Wed, Mar 18, 2026 at 03:46:27PM +0100, Christian Bruel wrote:
-> > Handle -ENOSPC error. If the number of available inbound ATU entries is
-> > insufficient to map the subrange, skip the test instead of failing.
-> >
-> > Link: https://lore.kernel.org/linux-pci/20260317152707.GA85951@bhelgaas/T/#m87e4c24173097a0ea70195b71aab294ad8d6c283
-> > Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
-> > ---
-> >  tools/testing/selftests/pci_endpoint/pci_endpoint_test.c | 2 ++
-> >  1 file changed, 2 insertions(+)
-> >
-> > diff --git a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-> > index c417fb3a198b2d92c3060938c23807cc8bea5573..8ea2fda4539d11eb22b22800a7cb8bbaa99c91ba 100644
-> > --- a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-> > +++ b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-> > @@ -88,6 +88,8 @@ TEST_F(pci_ep_bar, BAR_SUBRANGE_TEST)
-> >		SKIP(return, "Subrange map is not supported");
-> >	if (ret == -ENOBUFS)
-> >		SKIP(return, "BAR is reserved");
-> > +	if (ret == -ENOSPC)
-> > +		SKIP(return, "Not enough ATU entries to allocate subrange");
->
-> Thank you for handling this!
->
-> pci_endpoint_test_bar_subrange() can also return -ENOSPC locally:
-> https://github.com/torvalds/linux/blob/v7.0-rc4/drivers/misc/pci_endpoint_test.c#L538
-> While that is a different resource limit case, I think it would still be
-> reasonable to treat it as SKIP as well.
+The Ayaneo Pocket S2 is a gaming console based on the Qualcomm
+Snapdragon 8 Gen 3. It has an internal UFS storage, WiFi,
+Bluetooth, gaming buttons, SDCard, 2K display and USB-C
+connector.
 
-	sub_size = bar_size / nsub;
-	if (sub_size < sizeof(u32)) {
-		ret = -ENOSPC;
-		goto out_clear;
-	}
+Product Page [1].
 
-What is this test for anyway?
+The Initial linux port was done by KancyJoe (Sunflower2333)
+at [2].
 
-If sub_size < 4 ?
- return -ENOSPACE ?
+The UPD720201 binding patch has been sent separately in [3]
+and is ready to be merged. The pci/pwrctrl changes were merged
+in the pci tree.
 
-ENOSPC seem like a weird return for this.
+[1] https://www.ayaneo.com/goods/9344082149621
+[2] https://github.com/sunflower2333/linux/tree/master
+[3] https://lore.kernel.org/all/20260319-topic-sm8650-ayaneo-pocket-s2-upd-bindings-v1-1-84e4ef564022@linaro.org/
 
-Wouldn't EINVAL be a better return code for this?
+Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+---
+Changes in v6:
+- Added the review tags
+- Dropped all the pci/pwrctrl applied patches
+- Sent the UPD720201 bindings in a separate patch
+- Link to v5: https://patch.msgid.link/20260220-topic-sm8650-ayaneo-pocket-s2-base-v5-0-1ad79caa1efa@linaro.org
 
+Changes in v5:
+- Rebased on -next
+- Collected tags
+- Rebased/renamed slot to generic based on changes from Bjorn
+- Link to v4: https://patch.msgid.link/20260216-topic-sm8650-ayaneo-pocket-s2-base-v4-0-802c82795431@linaro.org
 
-Kind regards,
-Niklas
+Changes in v4:
+- Renamed slot to generic, in the code as well, fixed Kconfig & commit message
+- Switched the UPD72020x bindings additionalProperties to true to allow devices subnodes
+- Collected acks
+- Link to v3: https://patch.msgid.link/20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-0-5b79c5d61a03@linaro.org
+
+Changes in v3:
+- Made renesas,upd720201-pci bindings supplies required
+- Fixed description and example of renesas,upd720201-pci bindings
+- Renamed slot to generic, added renesas,upd720201-pci entry
+- Used PMIC_GPIO_STRENGTH_LOW instead of numbers
+- Removed all output-low in pinconf
+- Link to v2: https://patch.msgid.link/20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-0-c55ec1b5d8bf@linaro.org
+
+Changes in v2:
+- Add proper regulators for the USB controller, with bindings & power ctrl
+- Add proper regulators for FAN
+- Dropped support for headset over USB-C, audio is connected to a jack port
+- Cleaned up Audio routing and fixed the DP endpoint index
+- Added i2c clk frequencies
+- Renamed fan node and used interrupts-extended
+- Dropped the usb-c self-powered
+- Reordered nodes alphabetically
+- Renamed pcieport1 to pcie1_port0
+- Link to v1: https://patch.msgid.link/20260121-topic-sm8650-ayaneo-pocket-s2-base-v1-0-bb3f95f1c085@linaro.org
+
+---
+KancyJoe (1):
+      arm64: dts: qcom: add basic devicetree for Ayaneo Pocket S2 gaming console
+
+Neil Armstrong (4):
+      arm64: defconfig: enable pci-pwrctrl-generic as module
+      dt-binding: vendor-prefixes: document the Ayaneo brand
+      dt-bindings: arm: qcom: document the Ayaneo Pocket S2
+      arm64: dts: qcom: sm8650: Add sound DAI prefix for DP
+
+ Documentation/devicetree/bindings/arm/qcom.yaml    |    1 +
+ .../devicetree/bindings/vendor-prefixes.yaml       |    2 +
+ arch/arm64/boot/dts/qcom/Makefile                  |    1 +
+ .../boot/dts/qcom/sm8650-ayaneo-pocket-s2.dts      | 1551 ++++++++++++++++++++
+ arch/arm64/boot/dts/qcom/sm8650.dtsi               |   47 +-
+ arch/arm64/configs/defconfig                       |    1 +
+ 6 files changed, 1580 insertions(+), 23 deletions(-)
+---
+base-commit: 8e42d2514a7e8eb8d740d0ba82339dd6c0b6463f
+change-id: 20260121-topic-sm8650-ayaneo-pocket-s2-base-05c348efd86d
+
+Best regards,
+-- 
+Neil Armstrong <neil.armstrong@linaro.org>
+
