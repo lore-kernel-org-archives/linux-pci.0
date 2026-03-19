@@ -1,40 +1,32 @@
-Received: from canpmsgout09.his.huawei.com (canpmsgout09.his.huawei.com [113.46.200.224])
+Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5746039B97D;
-	Thu, 19 Mar 2026 07:13:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.224
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DE713126B9;
+	Thu, 19 Mar 2026 07:41:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773904399; cv=none; b=s4FV7qYhWzK2fvO1C8ispQVrp25j/71PuVIrYCec5Pei75a8alZbq+VSj/xK1VvY0J1w9pHRwdn8gM9VnSpczg4OIiscyhBWpVGYINp1vhmRCIgj50MrRqbkn1lGzg/dJRFIUGwxhopmiTwxjMHCtZqxs/CTM4EU1qKDs7nQ0GE=
+	t=1773906105; cv=none; b=pB86fcotoKd65Ow5gZN2rTqbO9HchrosRiCGPZ5nWrMGdvjhoDWFcPsp/+/ASKqudrSaESndEstl3AILGEhMNPQYdyRXBqTlbriCJEqbgCLXZpWuFAyCxYkBmb6rMFyJhEbT+ScCvPWr8NQq19DIhCw832zLxrzQPaJhTmKD53c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773904399; c=relaxed/simple;
-	bh=ObpxqKdd4T1HHP+LHUq29v7pjRvtkMicxQwklMl+rDM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=dq8xF1/veYqrn9XqbsFescYUGtSbk8SncJvlshK/c2VpMlskkK6yh9LbA9o0vjzWeHp4vDtyzag+lPXbvZAgow2E2REVaH582cYiiEf+EHzMcxSDYbsO3K+XAIzRrpqCTraj24IST6TvqO/UtBcpoHmd6Shf7AkMrRvXcpQPG/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=RRC8Qk+v; arc=none smtp.client-ip=113.46.200.224
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1773906105; c=relaxed/simple;
+	bh=yY0ONwJT7hMWrrDF3sJ/0j/CTKM6T5BWZqrt0m+7QYU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CjCeHHJ8loWy7xr/UP7VsTOVrt8p2zhWl1JF4RObbl2fQtR+xq9nxEi5zI8oFPg3EO0kgnxwPW0Xg/PM4A6kMfIcnLa32MnGuJxdeSFoMQCp9OSg/UrbYMu80e4AB2J+C8oaVs7T1HUKJnow+uFTg//8ASbcmgMYQbXaW9PmSCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=fUA2nZtJ; arc=none smtp.client-ip=115.124.30.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="RRC8Qk+v"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=rOgEX5LRjbf3VsJc30kly4+FTpT24EGUmpEIfFvp8FU=;
-	b=RRC8Qk+vDk32R8JHqebkm1tGtkV6aqC7Rw/5tqI1aHILlK2h2Fd3giMbyZt1JjR+/2C5nr3jN
-	LCoxznkWL7DSqvcKp14FgIYEdmkocS9XrRO5OVujVzcsJ5/bSzagK1Q0OB6Ne0iQgcMvxD/5fTO
-	P3k1x2ro3WxAtvbL88NnXM8=
-Received: from mail.maildlp.com (unknown [172.19.163.127])
-	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4fbxcD4jF6z1cyPP;
-	Thu, 19 Mar 2026 15:08:12 +0800 (CST)
-Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id 8543840363;
-	Thu, 19 Mar 2026 15:13:12 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 19 Mar 2026 15:13:10 +0800
-Message-ID: <264525a9-aa36-4848-80c0-f8cf246f93b8@huawei.com>
-Date: Thu, 19 Mar 2026 15:13:09 +0800
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="fUA2nZtJ"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1773906101; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=aGDLL6Ar9BwuYWHlCus806lUe1cL7vSPADZrnW2oChs=;
+	b=fUA2nZtJXHUgfHxlvMo+BR9GXOv55h346/yY6jccegTECnSnYSQP3MvxTPnKrrqKepNVAtg8cVXUs1xoEjnp7aCBVXYKoQhjkLSZ+RNJPgl9AtBUfDkrL/qwNRGplzHDPxpG/6qGA5f/EQl+KItE786AcINu297s25bn+/q04Lo=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R921e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033032089153;MF=xueshuai@linux.alibaba.com;NM=1;PH=DS;RN=17;SR=0;TI=SMTPD_---0X.Hj-we_1773906099;
+Received: from 30.246.163.250(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0X.Hj-we_1773906099 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Thu, 19 Mar 2026 15:41:40 +0800
+Message-ID: <0e2d1eb5-a58d-4fe6-9a63-e10e527abd6f@linux.alibaba.com>
+Date: Thu, 19 Mar 2026 15:41:49 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,143 +34,93 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 1/3] ACPI: Refactor get_acpi_id_for_cpu() to
- acpi_get_cpu_uid() on non-x86
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Catalin Marinas
-	<catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, "Rafael J .
- Wysocki" <rafael@kernel.org>, Jonathan Corbet <corbet@lwn.net>, Ingo Molnar
-	<mingo@redhat.com>, Juergen Gross <jgross@suse.com>, Boris Ostrovsky
-	<boris.ostrovsky@oracle.com>, Len Brown <lenb@kernel.org>, Sunil V L
-	<sunilvl@ventanamicro.com>, Mark Rutland <mark.rutland@arm.com>, Jonathan
- Cameron <jonathan.cameron@huawei.com>, Kees Cook <kees@kernel.org>, Yanteng
- Si <si.yanteng@linux.dev>, Sean Christopherson <seanjc@google.com>, Kai Huang
-	<kai.huang@intel.com>, Tom Lendacky <thomas.lendacky@amd.com>, Thomas Huth
-	<thuth@redhat.com>, Thorsten Blum <thorsten.blum@linux.dev>, Kevin Loughlin
-	<kevinloughlin@google.com>, Zheyun Shen <szy0127@sjtu.edu.cn>, Peter Zijlstra
-	<peterz@infradead.org>, Pawan Gupta <pawan.kumar.gupta@linux.intel.com>, Xin
- Li <xin@zytor.com>, "Ahmed S . Darwish" <darwi@linutronix.de>, Sohil Mehta
-	<sohil.mehta@intel.com>, Ilkka Koskinen <ilkka@os.amperecomputing.com>, Robin
- Murphy <robin.murphy@arm.com>, James Clark <james.clark@linaro.org>, Besar
- Wicaksono <bwicaksono@nvidia.com>, Ma Ke <make24@iscas.ac.cn>, Wei Huang
-	<wei.huang2@amd.com>, Andy Gospodarek <andrew.gospodarek@broadcom.com>,
-	Somnath Kotur <somnath.kotur@broadcom.com>, <punit.agrawal@oss.qualcomm.com>,
-	<guohanjun@huawei.com>, <suzuki.poulose@arm.com>, <ryan.roberts@arm.com>,
-	<chenl311@chinatelecom.cn>, <masahiroy@kernel.org>,
-	<wangyuquan1236@phytium.com.cn>, <anshuman.khandual@arm.com>,
-	<heinrich.schuchardt@canonical.com>, <Eric.VanTassell@amd.com>,
-	<wangzhou1@hisilicon.com>, <wanghuiqiang@huawei.com>,
-	<liuyonglong@huawei.com>, <linux-pci@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <loongarch@lists.linux.dev>,
-	<linux-riscv@lists.infradead.org>, <xen-devel@lists.xenproject.org>,
-	<linux-acpi@vger.kernel.org>, <linux-perf-users@vger.kernel.org>,
-	<stable@vger.kernel.org>
-References: <20260318213458.GA474040@bhelgaas>
-Content-Language: en-US
-From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <20260318213458.GA474040@bhelgaas>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
- kwepemk500009.china.huawei.com (7.202.194.94)
+Subject: Re: [PATCH v2 7/7] iommu/arm-smmu-v3: Block ATS upon an ATC
+ invalidation timeout
+To: Nicolin Chen <nicolinc@nvidia.com>
+Cc: will@kernel.org, robin.murphy@arm.com, joro@8bytes.org,
+ bhelgaas@google.com, jgg@nvidia.com, rafael@kernel.org, lenb@kernel.org,
+ praan@google.com, baolu.lu@linux.intel.com, kevin.tian@intel.com,
+ linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+ linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+ linux-pci@vger.kernel.org, vsethi@nvidia.com
+References: <cover.1773774441.git.nicolinc@nvidia.com>
+ <7e21e14faddeb0e3af692356f4fefbae2dfbebda.1773774441.git.nicolinc@nvidia.com>
+ <eeee122f-54e2-4fe9-82a6-724c3f80a499@linux.alibaba.com>
+ <abts8l0UPvGuzrzF@Asurada-Nvidia>
+From: Shuai Xue <xueshuai@linux.alibaba.com>
+In-Reply-To: <abts8l0UPvGuzrzF@Asurada-Nvidia>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On 3/19/2026 5:34 AM, Bjorn Helgaas wrote:
-> On Wed, Mar 18, 2026 at 02:01:49PM +0800, Chengwen Feng wrote:
->> Unify CPU ACPI ID retrieval interface across architectures by
->> refactoring get_acpi_id_for_cpu() to acpi_get_cpu_uid() on
->> arm64/riscv/loongarch:
->> - Add input parameter validation
->> - Adjust interface to int acpi_get_cpu_uid(unsigned int cpu, u32 *uid)
->>   (old: u32 get_acpi_id_for_cpu(unsigned int cpu), no input check)
+
+
+On 3/19/26 11:26 AM, Nicolin Chen wrote:
+> On Thu, Mar 19, 2026 at 10:56:43AM +0800, Shuai Xue wrote:
+>> On 3/18/26 3:15 AM, Nicolin Chen wrote:
+>>> For batched ATC_INV commands, SMMU hardware only reports a timeout at the
+>>> CMD_SYNC, which could follow the batch issued for multiple devices. So, it
+>>> isn't straightforward to identify which command in a batch resulted in the
+>>> timeout. Fortunately, the invs array has a sorted list of ATC entries. So,
+>>> the issued batch must be sorted as well. This makes it possible to bisect
+>>> the batch to retry the command per Stream ID and identify the master.
 >>
->> This refactoring (not a pure rename) enhances interface robustness while
->> preparing for consistent ACPI Processor UID retrieval across all
->> ACPI-enabled platforms. Valid inputs retain original behavior.
+>> Nit: The implementation is a linear per-SID retry, not a binary
+>> search / bisection. Suggest rewording to:
 >>
->> Note: Move the ARM64-specific get_cpu_for_acpi_id() implementation to
->>       arch/arm64/kernel/acpi.c to fix compilation errors from circular
->>       header dependencies introduced by the rename.
+>>    "retry the ATC_INV command for each unique Stream ID in the batch
+>>     to identify the unresponsive master"
+> 
+> You are right. And that sounds OK.
+> 
+>>> +	step = arm_smmu_get_step_for_sid(smmu, sid);
+>>> +	WRITE_ONCE(step->data[1],
+>>> +		   READ_ONCE(step->data[1]) & cpu_to_le64(~STRTAB_STE_1_EATS));
 >>
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
->> Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
->> ---
->>  arch/arm64/include/asm/acpi.h      | 16 +---------
->>  arch/arm64/kernel/acpi.c           | 30 ++++++++++++++++++
->>  arch/loongarch/include/asm/acpi.h  |  5 ---
->>  arch/loongarch/kernel/acpi.c       |  9 ++++++
->>  arch/riscv/include/asm/acpi.h      |  4 ---
->>  arch/riscv/kernel/acpi.c           | 16 ++++++++++
->>  arch/riscv/kernel/acpi_numa.c      |  9 ++++--
->>  drivers/acpi/pptt.c                | 50 ++++++++++++++++++++++--------
->>  drivers/acpi/riscv/rhct.c          |  7 ++++-
->>  drivers/perf/arm_cspmu/arm_cspmu.c |  6 ++--
->>  include/linux/acpi.h               | 13 ++++++++
->>  11 files changed, 122 insertions(+), 43 deletions(-)
+>>
+>> This non-atomic read-modify-write on step->data[1] can race with the
+>> normal STE installation path (arm_smmu_write_entry → entry_set →
+>> WRITE_ONCE).
+>>
+>> The error path runs from:
+>>
+>>    __arm_smmu_domain_inv_range()  (data path, no group->mutex)
+>>      → arm_smmu_cmdq_batch_retry()
+>>        → arm_smmu_master_disable_ats()
+>>          → arm_smmu_disable_eats_for_sid()   ← NO locks on STE
+>>
+>> The normal STE path runs from:
+>>
+>>    iommu_attach_device()
+>>      → mutex_lock(&group->mutex)
+>>        → arm_smmu_attach_dev()
+>>          → mutex_lock(&arm_smmu_asid_lock)
+>>            → arm_smmu_install_ste_for_dev()
+>>              → arm_smmu_write_entry()        ← holds both mutexes
+>>
+>> Since the error path holds neither group->mutex nor arm_smmu_asid_lock,
+>> the following race is possible:
 > 
-> There's a lot going on in this single patch, which makes it hard to
-> review.  I think this might make more sense as several patches:
+> Because invalidations can be in atomic context so we can't hold
+> those mutex locks.
 > 
->   - arm64: declare acpi_get_cpu_uid() in arch/arm64/include, implement
->     it, and use in drivers/perf/arm_cspmu/arm_cspmu.c
+>>    CPU A (error path):             CPU B (attach path):
+>>    READ data[1] = X
+>>                                    WRITE data[1] = Y (new STE config)
+>>    WRITE data[1] = X & ~EATS
+>>                                    // Y is lost
+>>
+>> This could clobber a concurrent STE update from the attach path.
 > 
->   - loongarch: declare acpi_get_cpu_uid() in arch/loongarch/include
->     and implement
-> 
->   - riscv: declare acpi_get_cpu_uid() in arch/riscv/include, implement
->     it, and use in rhct.c, riscv/kernel/acpi_numa.c
-> 
->   - x86: declare acpi_get_cpu_uid() in arch/x86/include, implement it,
->     and use in xen
-> 
->   - declare acpi_get_cpu_uid() in include/linux/acpi.h, remove
->     declarations from arm64, loongarch, riscv, x86
-> 
->   - convert acpi/pptt.c to use acpi_get_cpu_uid(), remove unused
->     get_acpi_id_for_cpu() from arm64, loongarch, riscv
-> 
->   - use acpi_get_cpu_uid() in tph.c
+> Oh, that's true. Maybe this:
+> 	__le64 new, old = READ_ONCE(step->data[1]);
+> 	[...]
+> 	do {
+> 		new = old & cpu_to_le64(~STRTAB_STE_1_EATS);
+> 	} while (!try_cmpxchg64(&step->data[1], &old, new));
+> ?
 
-Thanks for the detailed guidance, done in v9
+Yes, the cmpxchg loop looks correct to me.
 
-> 
-> Doc nit below.
-> 
-
-...
-
->> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
->> index 4d2f0bed7a06..035094a55f18 100644
->> --- a/include/linux/acpi.h
->> +++ b/include/linux/acpi.h
->> @@ -324,6 +324,19 @@ int acpi_unmap_cpu(int cpu);
->>  
->>  acpi_handle acpi_get_processor_handle(int cpu);
->>  
->> +#ifndef CONFIG_X86
->> +/*
->> + * acpi_get_cpu_uid() - Get ACPI Processor UID of a specified CPU from MADT table
->> + * @cpu: Logical CPU number (0-based)
->> + * @uid: Pointer to store the ACPI Processor UID (valid only on successful return)
-> 
-> This would normally go at the implementation, but it probably does
-> make sense here because each arch has its own implementation.
-> 
-> Should start with "/**" to make it kernel-doc though.
-> 
-> Wrap to fit in 78 columns, like other comments in this file.
-
-done in v9
-
-Thanks
-
-> 
->> + * Return: 0 on successful retrieval (the ACPI Processor ID is stored in *uid);
->> + *         -EINVAL if the CPU number is invalid or out of range;
->> + *         -ENODEV if the ACPI Processor UID for the specified CPU is not found.
->> + */
->> +int acpi_get_cpu_uid(unsigned int cpu, u32 *uid);
->> +#endif
-> 
+Thanks.
+Shuai
 
