@@ -1,86 +1,140 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A90DE2DFA5B;
-	Thu, 19 Mar 2026 17:15:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D76702750E6;
+	Thu, 19 Mar 2026 17:17:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773940509; cv=none; b=OPTemgyt749x37dKsPXhKQk26t1kRsci5XHM6vX4CZcYXvbL+bxxP9Nuv8a9btOqVWkaoGxkaiAwlbMHpjcb0L37zU0axLhBETDbkacfptnZMcutNjtnfofgHsSKQlMMqboTrYnR/nT3XdrzjlfdradCgfhDFmZc4EZziRIf23E=
+	t=1773940649; cv=none; b=mtvaauic8qo8kvwX+mKs5zl8lesPeffHEiBSPKr60Udpc56MwnKABQ/Ij2fIVWaKXsBvI9ataDnvdpB3w3tNQC9r4wk234OwBFIlR1e+lBJWtZHbEfKGmj+0P1eUC4HATYHCEw/8CSTWTEbn1bptFNnlZflNptp+oofL03A1wr8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773940509; c=relaxed/simple;
-	bh=UHJsWGTSlJTfY7QnX97XerQUNMUaLpd7tP4C0EEZkzg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Jgysmc9L+qDQBccbN/eoymwLldbrsbi262YHAoobvJZRp6Vzf+5qJglERs1JSWtpse6hfFEaqLa5E1QIadJODbo7F0OJHa3IwAaRfoNFALLdADBDWw67SlOaF2HTAyaPlBUyZPld7rjM2ZlR9c6qa1yY27CbAoyhp5zjcqM1UvM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=dFKmxQsx; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1773940649; c=relaxed/simple;
+	bh=s1URZtMYRdo2m24AfGzq+HczpETBJJYGDMsU+ejJkek=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=TsMEFXu/srN/SLJXs7z4x4cR/K8V8SfF7DPlI2mfET6jMVSEqyA4XS/tWH9SB3Ut2Lhqh+/3HP6KdUoPMAqojT+wqiRUvm2tdBSqdYcNtT9B8ZjCKnnugQOWAGBrgCNUSsydM0bXePZAWLms+JZ/tmEbTSCptEs41pdktyBgGDo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vITGmSga; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="dFKmxQsx"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fcC4X1zKzz1XM5kY;
-	Thu, 19 Mar 2026 17:15:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1773940495; x=1776532496; bh=UHJsWGTSlJTfY7QnX97XerQU
-	NMUaLpd7tP4C0EEZkzg=; b=dFKmxQsxM8O2hO+PntnmCfQmA2VsxQt1I9BWP45v
-	e99xashdlvnQ0iqpzna366213RNXzYUgf1v3+givoQ4OAgp6jhkArR0HgCsDDvLP
-	5u4QOdYjX9pUJlOX2DE3toANf60hlf5yDeqMcuMD1kjAv9XaSRRnHc2imlEmPZqQ
-	YiM5s2CDkWV6Mdk4AFzavdqTRL89qGFkfAxKt3lZ3gbdurzVjr4dSZvtrHFIkz0p
-	eIImjdzfLZxX4edUA95TsTfOxQ31EJmzDgr27Ispq2YeMv+HqZqSJu2XoNuEf+ZO
-	v8YxxK8gPLxPwbUnDpqGfT41WYhoPLQKKf/Ytf8IZrNWLA==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id kgNEXQsIxXTY; Thu, 19 Mar 2026 17:14:55 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fcC482cLFz1XM5kW;
-	Thu, 19 Mar 2026 17:14:48 +0000 (UTC)
-Message-ID: <ea7a5729-3df0-49ef-ab8d-47ade75cc393@acm.org>
-Date: Thu, 19 Mar 2026 10:14:47 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vITGmSga"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F9FCC2BCAF;
+	Thu, 19 Mar 2026 17:17:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773940649;
+	bh=s1URZtMYRdo2m24AfGzq+HczpETBJJYGDMsU+ejJkek=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=vITGmSgaVDGo35wP0edDRbyzFYwuN5X4rd0VjuPbprttAsBRd+5vhNnDcLSXaR6Eq
+	 CMa6IlaN6BSzu/792cXFr76CuUvzspffPNMdUDuKNmYjRSOJoluuHcRGKJijBHmqiX
+	 NuBMLA306VPdMONBe31tc9geYDlMFfEmvF+wnxuJIIG1PN36Sgple7lbcM6Ipc1JbI
+	 7yHh4Dd1bCY0EP0GEcI92Zq6lAaT7GUiUUS790Yf58ENBWeM9IZqSd7MHFoqF1RBeX
+	 byTfveamzLFTG42yrAoJqdNzeNNU5lTKD2f6WCVPqw25nq+TNY3blWpXyc6XvTbweu
+	 1GdgGF5ukjv8w==
+Date: Thu, 19 Mar 2026 12:17:28 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>, andersson@kernel.org,
+	konradybcio@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
+	conor+dt@kernel.org, jingoohan1@gmail.com, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, bhelgaas@google.com,
+	johan+linaro@kernel.org, vkoul@kernel.org, kishon@kernel.org,
+	neil.armstrong@linaro.org, abel.vesa@linaro.org, kw@linux.com,
+	linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
+	quic_krichai@quicinc.com, quic_vbadigan@quicinc.com
+Subject: Re: [PATCH v1 1/1] arm64: dts: qcom: hamoa: Move PCIe PERST and Wake
+ GPIOs to port nodes
+Message-ID: <20260319171728.GA505341@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 phy-next 09/24] ufs: exynos: stop poking into struct
- phy guts
-To: Vladimir Oltean <vladimir.oltean@nxp.com>, linux-phy@lists.infradead.org
-Cc: Vinod Koul <vkoul@kernel.org>, Neil Armstrong
- <neil.armstrong@linaro.org>, dri-devel@lists.freedesktop.org,
- freedreno@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, linux-can@vger.kernel.org,
- linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- linux-riscv@lists.infradead.org, linux-rockchip@lists.infradead.org,
- linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-sunxi@lists.linux.dev, linux-tegra@vger.kernel.org,
- linux-usb@vger.kernel.org, netdev@vger.kernel.org, spacemit@lists.linux.dev,
- UNGLinuxDriver@microchip.com, Alim Akhtar <alim.akhtar@samsung.com>,
- Peter Griffin <peter.griffin@linaro.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Krzysztof Kozlowski <krzk@kernel.org>,
- Chanho Park <chanho61.park@samsung.com>
-References: <20260309190842.927634-1-vladimir.oltean@nxp.com>
- <20260309190842.927634-10-vladimir.oltean@nxp.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260309190842.927634-10-vladimir.oltean@nxp.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <f5vqy4tfhfxeu4li33qffjzrlgqgbflidds35qdni3trdoues2@kvuzjxenrdff>
 
-On 3/9/26 12:08 PM, Vladimir Oltean wrote:
-> The Exynos host controller driver is clearly a PHY consumer (gets the
-> ufs->phy using devm_phy_get()), but pokes into the guts of struct phy
-> to get the generic_phy->power_count.
+On Thu, Mar 19, 2026 at 10:58:36AM +0530, Manivannan Sadhasivam wrote:
+> On Tue, Mar 17, 2026 at 12:13:19PM -0500, Bjorn Helgaas wrote:
+> > On Sat, Mar 14, 2026 at 07:50:50PM +0530, Manivannan Sadhasivam wrote:
+> > > On Fri, Mar 13, 2026 at 11:45:42AM -0500, Bjorn Helgaas wrote:
+> > > > On Fri, Mar 13, 2026 at 05:46:18PM +0800, Ziyue Zhang wrote:
+> > > > > Commit 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake
+> > > > > GPIOs to PCIe port nodes and add port Nodes for all PCIe ports") did not
+> > > > > convert all Hamoa‑based platforms to the new method of defining PERST and
+> > > > > Wake GPIOs in the PCIe root port nodes.
+> > > > > 
+> > > > > Without the change PCIe probe will fail. The probe failure happens because
+> > > > > the PHY stays in the controller node while the PERST/Wake GPIOs were moved
+> > > > > to the port nodes.
+> > > > > 
+> > > > > This fixes probe failures seen on the following platforms:
+> > > > >  - x1-hp-omnibook-x14
+> > > > >  - x1-microsoft-denali
+> > > > >  - x1e80100-lenovo-yoga-slim7x
+> > > > >  - x1e80100-medion-sprchrgd-14-s1
+> > > > >  - x1p42100-lenovo-thinkbook-16
+> > > > >  - x1-asus-zenbook-a14
+> > > > >  - x1-crd
+> > > > >  - x1-dell-thena
+> > > > > 
+> > > > > Fixes: 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake GPIOs to PCIe port nodes and add port Nodes for all PCIe ports")
+> > > > 
+> > > > Are you saying that DTs in the field broke because of some kernel
+> > > > change?  That's not supposed to happen.  Even though PHY, PERST, and
+> > > > Wake GPIOs should be described in Root Port nodes instead of the Root
+> > > > Complex node in *future* DTs, the kernel is still supposed to accept
+> > > > the old style with them described in the Root Complex node.
+> > > 
+> > > This is not related to the driver change. The driver correctly
+> > > parses all Root Port properties either in the Root Complex node (old
+> > > binding) or Root Port node (new binding). But commit 960609b22be5,
+> > > left converting mentioned board DTS to the new binding, leaving
+> > > those affected platforms in a half baked state i.e., some properties
+> > > in RC node and some in Root Port node. Driver cannot parse such
+> > > combinations, so it fails correctly so.
+> > 
+> > The commit log mentions probe failures on some machines.  I'd like it
+> > to be more clear about who is affected and what they need to do to fix
+> > their machines.
+> 
+> There is already a list of affected machines mentioned in the commit
+> message.
+>
+> And for fix, they just need to apply this patch. Or once this patch
+> gets merged into v7.0-rcS, v7.0 will have no issue.
+>
+> >  If it only affects developers who generated DTs based on
+> >  960609b22be5 for internal testing, we should say that so it's
+> >  clear that no end users will see any regressions or boot
+> >  failures.
+> 
+> Whoever have included commit 960609b22be5 in their kernel and using
+> the above mentioned machines will see the failure. But looks like no
+> one really tested v7.0-rcS on these machines as we haven't gotten
+> any reports so far.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Two points:
+
+  - a2fbecdbbb9d ("PCI: qcom: Add support for parsing the new Root
+    Port binding") is intended for hardware with multiple Root Ports
+    with independent PHY/reset controls.
+
+    The driver will always fall back to PHY/reset info in the host
+    bridge, so I think the only reason to do 960609b22be5 and this fix
+    is if hamoa.dtsi will also be used for hardware with multiple Root
+    Ports.  If there's no plan for multiple RPs with hamoa.dtsi,
+    reverting 960609b22be5 is another, less risky, option.
+
+  - 960609b22be5 only touches .dtsi and .dts files; it doesn't change
+    the kernel itself.
+
+    So I assume this issue only affects somebody who used v7.0-rc1 to
+    rebuild the DTB for one of those machines and then installed that
+    new DTB on their system.  That sounds like developers to me, not
+    end users.
+
+    The commit log already mentions the affected machines.  I'm
+    suggesting that it should also say something about the fact that
+    only DTBs built with 960609b22be5 are affected, i.e., DTBs built
+    with 960609b22be5 but without this fix are incompatible with the
+    kernel driver.
