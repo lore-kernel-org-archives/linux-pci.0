@@ -1,179 +1,135 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A311399376;
-	Thu, 19 Mar 2026 05:39:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A8B736BCEE;
+	Thu, 19 Mar 2026 06:57:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773898783; cv=none; b=X5YECu9UeMt55byUdK2MI4EBuAujSEjNp8Sr0bFQiYNJ7ripPbSfMbX0JS2QEl1gtxYHJ1K6YuD5ss8jlJogwymcNasNGs+IE/f9//AzcPboypWVkTK+uGs3BsOViDFZzEPfIH3y0S5v8pYMURwXWztQMUZMtrkDcHg/kGn043U=
+	t=1773903472; cv=none; b=e2evaZtguTdp4ejRH1PmUZ8Wb9CDnx2mx4suJx9HEDmmUB7hMk2ncsgBVgO+55CPA2iZyIgOtUHBpIH4LUJ8Hx6wTiWIhxwjXAi2lhRLVZdItBxozial+/v/cPTMf8iE5/nunBVu2LoIYOPOHfhboRT/oioFi/Lh8+kvnVxFvDc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773898783; c=relaxed/simple;
-	bh=1pQR8OUJn3j5iGSakSh1l85iZDBT4bbEqcZ2Pu0UxiI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oLQL1V4FmYUVtQ6Eedo4pTQvmJ8f3fU4lwNstoAsnh2xbmQn2QNLYRhEq2jARIruAHHP1WXrCnGzo3deRMTNpufHNGWG+T/dPMSspFqEW3Ur5U/4dWp0pBpjCKj7WVP513YnjCT4Xn7MJdeqmyZJj8VHRAqMV7jYHQoHHXgmsuw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LRnMBe/x; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773903472; c=relaxed/simple;
+	bh=iz7TZwcxdXoyr/RjzvKHLv6ApDciYBiHK2BNmCh75UE=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Zp1mepV/X59HkgRuWLHmQc2mPx+UfkwKf8XU5OwBNNJZdhyWeCYh1QSdzF3oCPsL4C0Jo3NIp0zDO1DK81jtlY7l9dc1U3L2jceUISfr6q4YRiL/V8FBVQltBrmrM/gnWjqm0o7KwZMJnKExqNViGlJZUTff7UAUe77yHABAljQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=tGsdcrSP; arc=none smtp.client-ip=113.46.200.220
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LRnMBe/x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A55BBC2BC9E;
-	Thu, 19 Mar 2026 05:39:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773898783;
-	bh=1pQR8OUJn3j5iGSakSh1l85iZDBT4bbEqcZ2Pu0UxiI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LRnMBe/xMYHJp8U0yp+fYe5EKBwyy3rSk7Uy7GenoSqyCDCx4g0KsLaNRSsUdaZlf
-	 I7WzWciH5bDeEvwwi3Hc7qkogYRz41lTTjEeq2v4tfjTyizCd4pV2azJYnGPxQMXND
-	 81j1CYoG/rcESBZGqpRraj1iwAViwIEpe1RKqZWh38qugCCHg3YM6hIFIcWq+84FqM
-	 h0eUXKS2o5Ay4CF4eDDHGMB/dIaDNV023dYgDJHTmbhJSaNKLBDtXrZxhU1p+r37yJ
-	 /KQIQ5hzafq45rg7Wm8oTbogazG6j9P33w5cXKaz4CvpEWFUwvDkxEhS4CWaISAMlx
-	 zqD/R8eBv4bfA==
-Date: Thu, 19 Mar 2026 11:09:30 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Andersson <andersson@kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, 
-	Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>, konradybcio@kernel.org, robh@kernel.org, krzk+dt@kernel.org, 
-	conor+dt@kernel.org, jingoohan1@gmail.com, lpieralisi@kernel.org, 
-	kwilczynski@kernel.org, bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org, 
-	kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org, kw@linux.com, 
-	linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com, 
-	quic_krichai@quicinc.com, quic_vbadigan@quicinc.com
-Subject: Re: [PATCH v1 1/1] arm64: dts: qcom: hamoa: Move PCIe PERST and Wake
- GPIOs to port nodes
-Message-ID: <4byysnjodmlphwcevw5gb2asxbwwwlf526mtpwpkfi6crjxoqb@vyuktezfu2wu>
-References: <20260313094618.1361418-1-ziyue.zhang@oss.qualcomm.com>
- <20260313164542.GA1405513@bhelgaas>
- <en5a7jrgpbn4bsmw5qwprugb2qmjkqw2x5eey6jxxu63634duz@b43rhcsqkj3o>
- <abdviJbrluDn2Vrx@baldur>
- <kqpgjzcxnazjohiop27exget6qrv37wn3csmixt5nmc6d5dkbg@n7qjo6flaabn>
- <abtgaXSv-zRysJqO@baldur>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="tGsdcrSP"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=OY+9eLOMu8D6VbbXOJYy45gDVG6RhQRdRz0wVTUZID0=;
+	b=tGsdcrSPQ6/D7kDlywRLputfdp4O3BpSi06NDZOuqDq9RwNCdUmLUny90T52M93qSR0ELt1No
+	0x3bYTk6cFBJRi0ff34XzxmQupT2nTllpT0EFZ4LwwYf9jApBTbyR8UDr6ucCdTiLKu6SG7E6Gm
+	l+Gf3n5twSKDJEGOWeOXo9w=
+Received: from mail.maildlp.com (unknown [172.19.162.144])
+	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4fbxFr4Pdkz12LGS;
+	Thu, 19 Mar 2026 14:52:16 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 6A5D340538;
+	Thu, 19 Mar 2026 14:57:47 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 19 Mar 2026 14:57:45 +0800
+From: Chengwen Feng <fengchengwen@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Catalin Marinas
+	<catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, "Rafael J .
+ Wysocki" <rafael@kernel.org>
+CC: Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
+	Huacai Chen <chenhuacai@kernel.org>, WANG Xuerui <kernel@xen0n.name>, Paul
+ Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou
+	<aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>, Thomas Gleixner
+	<tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov
+	<bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, <x86@kernel.org>,
+	"H . Peter Anvin" <hpa@zytor.com>, Juergen Gross <jgross@suse.com>, Boris
+ Ostrovsky <boris.ostrovsky@oracle.com>, Len Brown <lenb@kernel.org>, Sunil V
+ L <sunilvl@ventanamicro.com>, Mark Rutland <mark.rutland@arm.com>, Jonathan
+ Cameron <jonathan.cameron@huawei.com>, Kees Cook <kees@kernel.org>, Yanteng
+ Si <si.yanteng@linux.dev>, Sean Christopherson <seanjc@google.com>, Kai Huang
+	<kai.huang@intel.com>, Tom Lendacky <thomas.lendacky@amd.com>, Thomas Huth
+	<thuth@redhat.com>, Thorsten Blum <thorsten.blum@linux.dev>, Kevin Loughlin
+	<kevinloughlin@google.com>, Zheyun Shen <szy0127@sjtu.edu.cn>, Peter Zijlstra
+	<peterz@infradead.org>, Pawan Gupta <pawan.kumar.gupta@linux.intel.com>, Xin
+ Li <xin@zytor.com>, "Ahmed S . Darwish" <darwi@linutronix.de>, Sohil Mehta
+	<sohil.mehta@intel.com>, Ilkka Koskinen <ilkka@os.amperecomputing.com>, Robin
+ Murphy <robin.murphy@arm.com>, James Clark <james.clark@linaro.org>, Besar
+ Wicaksono <bwicaksono@nvidia.com>, Ma Ke <make24@iscas.ac.cn>, Wei Huang
+	<wei.huang2@amd.com>, Andy Gospodarek <andrew.gospodarek@broadcom.com>,
+	Somnath Kotur <somnath.kotur@broadcom.com>, <punit.agrawal@oss.qualcomm.com>,
+	<guohanjun@huawei.com>, <suzuki.poulose@arm.com>, <ryan.roberts@arm.com>,
+	<chenl311@chinatelecom.cn>, <masahiroy@kernel.org>,
+	<wangyuquan1236@phytium.com.cn>, <anshuman.khandual@arm.com>,
+	<heinrich.schuchardt@canonical.com>, <Eric.VanTassell@amd.com>,
+	<wangzhou1@hisilicon.com>, <wanghuiqiang@huawei.com>,
+	<liuyonglong@huawei.com>, <fengchengwen@huawei.com>,
+	<linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<loongarch@lists.linux.dev>, <linux-riscv@lists.infradead.org>,
+	<xen-devel@lists.xenproject.org>, <linux-acpi@vger.kernel.org>,
+	<linux-perf-users@vger.kernel.org>, <stable@vger.kernel.org>
+Subject: [PATCH v9 2/7] loongarch/acpi: Add acpi_get_cpu_uid() declaration and implementation
+Date: Thu, 19 Mar 2026 14:57:30 +0800
+Message-ID: <20260319065735.45954-3-fengchengwen@huawei.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20260319065735.45954-1-fengchengwen@huawei.com>
+References: <20260319065735.45954-1-fengchengwen@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <abtgaXSv-zRysJqO@baldur>
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-On Wed, Mar 18, 2026 at 09:42:56PM -0500, Bjorn Andersson wrote:
-> On Mon, Mar 16, 2026 at 08:50:12AM +0530, Manivannan Sadhasivam wrote:
-> > On Sun, Mar 15, 2026 at 09:53:33PM -0500, Bjorn Andersson wrote:
-> > > On Sat, Mar 14, 2026 at 07:50:50PM +0530, Manivannan Sadhasivam wrote:
-> > > > On Fri, Mar 13, 2026 at 11:45:42AM -0500, Bjorn Helgaas wrote:
-> > > > > On Fri, Mar 13, 2026 at 05:46:18PM +0800, Ziyue Zhang wrote:
-> > > > > > Commit 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake
-> > > > > > GPIOs to PCIe port nodes and add port Nodes for all PCIe ports") did not
-> > > > > > convert all Hamoa‑based platforms to the new method of defining PERST and
-> > > > > > Wake GPIOs in the PCIe root port nodes.
-> > > > > > 
-> > > > > > Without the change PCIe probe will fail. The probe failure happens because
-> > > > > > the PHY stays in the controller node while the PERST/Wake GPIOs were moved
-> > > > > > to the port nodes.
-> > > > > > 
-> > > > > > This fixes probe failures seen on the following platforms:
-> > > > > >  - x1-hp-omnibook-x14
-> > > > > >  - x1-microsoft-denali
-> > > > > >  - x1e80100-lenovo-yoga-slim7x
-> > > > > >  - x1e80100-medion-sprchrgd-14-s1
-> > > > > >  - x1p42100-lenovo-thinkbook-16
-> > > > > >  - x1-asus-zenbook-a14
-> > > > > >  - x1-crd
-> > > > > >  - x1-dell-thena
-> > > > > > 
-> > > > > > Fixes: 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake GPIOs to PCIe port nodes and add port Nodes for all PCIe ports")
-> > > > > 
-> > > > > Are you saying that DTs in the field broke because of some kernel
-> > > > > change?  That's not supposed to happen.  Even though PHY, PERST, and
-> > > > > Wake GPIOs should be described in Root Port nodes instead of the Root
-> > > > > Complex node in *future* DTs, the kernel is still supposed to accept
-> > > > > the old style with them described in the Root Complex node.
-> > > > > 
-> > > > 
-> > > > This is not related to the driver change. The driver correctly parses all Root
-> > > > Port properties either in the Root Complex node (old binding) or Root Port node
-> > > > (new binding). But commit 960609b22be5, left converting mentioned board DTS to
-> > > > the new binding, leaving those affected platforms in a half baked state i.e.,
-> > > > some properties in RC node and some in Root Port node. Driver cannot parse such
-> > > > combinations, so it fails correctly so.
-> > > > 
-> > > 
-> > > Are you saying that above listed machines has broken PCIe support in
-> > > v7.0-rc?
-> > > 
-> > 
-> > I haven't verified it, but I'm pretty sure PCIe is broken on these platforms.
-> > 
-> 
-> In line with Bjorn's request, we shouldn't have to guess.
-> 
-> > > It seems this is a (partial) revert of 960609b22be5, is this actually
-> > > fixing that change, or is it only applicable once some other changes are
-> > > applied?
-> > > 
-> > 
-> > This change is fixing the issue in the respective board DTS and is a standalone
-> > fix on top of v7.0-rc1.
-> > 
-> 
-> So 960609b22be5 was broken when I merged it?
-> 
+Add arch-specific acpi_get_cpu_uid() for loongarch:
+- Declare acpi_get_cpu_uid() in arch/loongarch/include/asm/acpi.h
+- Implement acpi_get_cpu_uid() with input parameter validation
 
-Broken on the machines mentioned in the commit message, not for all Hamoa
-platforms.
+Align loongarch with the new unified ACPI CPU UID retrieval interface,
+preparing for replacement of the legacy get_acpi_id_for_cpu() (to be
+removed in follow-up patches).
 
-> The commit message says that the commit was incomplete, in that it
-> didn't fully convert from the old to the new style, so it sounds like
-> the offending commit was incomplete - but I believe the offending commit
-> was a workaround for the new solution not being in place and this commit
-> mostly reverts the changes in the offending commit.
-> 
+Cc: stable@vger.kernel.org
+Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+---
+ arch/loongarch/include/asm/acpi.h | 1 +
+ arch/loongarch/kernel/acpi.c      | 9 +++++++++
+ 2 files changed, 10 insertions(+)
 
-So 960609b22be5 was supposed to move all the platforms from old PCIe binding to
-new for greater good, but it apparently decided to do so only for a subset of
-the platforms for some reason which  don't know. But the problem arises due to
-960609b22be5 changing the hamoa.dtsi to the new binding which also warrants the
-platform DTS to also be changed to the new binding. If we only have either dtsi
-or dts converted and not both to the new binding, the driver will get confused
-and fail. And this is what exactly happended for below machines:
-
- - x1-hp-omnibook-x14
- - x1-microsoft-denali
- - x1e80100-lenovo-yoga-slim7x
- - x1e80100-medion-sprchrgd-14-s1
- - x1p42100-lenovo-thinkbook-16
- - x1-asus-zenbook-a14
- - x1-crd
- - x1-dell-thena
-
-> In other words, it's not clear to me, from the commit message, why this
-> change is a -rc fix. Perhaps the author of the offending commit tricked
-> me to merge that one, and that's what's being fixed?
-> 
-
-I wouldn't say that the author has tricked, but he was unaware of the fact that
-changing SoC dtsi warrants change in all platforms, not a subset. I wanted to
-catch these kind of issues with DT binding validation, so I sent out a series
-earlier [1], but it got stuck. I'll push it forward.
-
-[1] https://lore.kernel.org/linux-pci/20251106-pci-binding-v2-0-bebe9345fc4b@oss.qualcomm.com
-
-> Also, is the lack of Tested-by telling us that nobody has tested any of
-> the v7.0-rc on the 8 listed Hamoa devices?
-> 
-
-Exactly. Otherwise, they would've seen the failure so obviously.
-
-> 
-> 
-> If it's actually needed, can we please have the commit message improved
-> so that we can merge it into -rc?
-> 
-
-Sure. I'll work with Ziyue to reword it properly.
-
-- Mani
-
+diff --git a/arch/loongarch/include/asm/acpi.h b/arch/loongarch/include/asm/acpi.h
+index 7376840fa9f7..8bb101b4557e 100644
+--- a/arch/loongarch/include/asm/acpi.h
++++ b/arch/loongarch/include/asm/acpi.h
+@@ -44,6 +44,7 @@ static inline u32 get_acpi_id_for_cpu(unsigned int cpu)
+ {
+ 	return acpi_core_pic[cpu_logical_map(cpu)].processor_id;
+ }
++int acpi_get_cpu_uid(unsigned int cpu, u32 *uid);
+ 
+ #endif /* !CONFIG_ACPI */
+ 
+diff --git a/arch/loongarch/kernel/acpi.c b/arch/loongarch/kernel/acpi.c
+index 1367ca759468..058f0dbe8e8f 100644
+--- a/arch/loongarch/kernel/acpi.c
++++ b/arch/loongarch/kernel/acpi.c
+@@ -385,3 +385,12 @@ int acpi_unmap_cpu(int cpu)
+ EXPORT_SYMBOL(acpi_unmap_cpu);
+ 
+ #endif /* CONFIG_ACPI_HOTPLUG_CPU */
++
++int acpi_get_cpu_uid(unsigned int cpu, u32 *uid)
++{
++	if (cpu >= nr_cpu_ids)
++		return -EINVAL;
++	*uid = acpi_core_pic[cpu_logical_map(cpu)].processor_id;
++	return 0;
++}
++EXPORT_SYMBOL_GPL(acpi_get_cpu_uid);
 -- 
-மணிவண்ணன் சதாசிவம்
+2.17.1
+
