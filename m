@@ -1,176 +1,250 @@
-Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com [209.85.167.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1A5134C145
-	for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2026 17:24:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.51
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773941068; cv=pass; b=Jl2ak0+7jyGWZYfI3STStGt1BlifJYM37Ew8g8Qp5uA5m/w6SOxUfBzZqeWrIBeMouQ+zCB0Ts+sccQty7oxSEaZVBMD63zZ96fpeVUEILBsAVISrncS6aZJDGmX48f7J2stOVGpgkpEc2Ie0hlmDMch61Sj42pGH2wtBDhHHDM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773941068; c=relaxed/simple;
-	bh=PnRXQ5r536tu9dvMTvBl5NRPrIFr2RFjQXbYpbnAzLg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=UoCtr9t3PD/GNw3Lfskl4pv+aHYIDFuFfjN5GYlGb9YfT1KQIQ9X/yAEmmrmwjcgrnuWKOZzdn1RjqcSoOqkwtP1o5b25EG3QjhgOCExii2hu2modMK2iai2ACGCgttvvWnz5rc8GMf7/JQgrfgqnbTBGq5AzmriNqtBP4niL1A=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=sB5di3FR; arc=pass smtp.client-ip=209.85.167.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C9EC3EFD1C;
+	Thu, 19 Mar 2026 17:46:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773942401; cv=none; b=XTy4NVcMcbqReFnFxrWQgTjgAQuWS8W8l86RjSy9GYMG+JiddvvMnJyH9Sew3XPaE3htvjTcDuqDKipV+GBCgsEJCQTHMJI37ZA/an9EZfdjP6lE73AjvGX+gC0NHRe8aHnPlXAXfUSX0YnzPe62OxOqomP+yRUxolkYF2Mkz80=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773942401; c=relaxed/simple;
+	bh=oYbbBUCdNMxN8aY9xh1JRb5blOS0KtnLS5UQvJq/5JE=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=Ejn+Dn5+9IQbccBuRgbbWMn86qXh85vzl+Qgro1uKV2ZNwzJgJiBvm4soOGVCi2E0r3UOBZKDb45n8IBnDDqky1QW+jDFBX/f262ZjUl0iQKP6m+gj6XOkcYVDwQcGk2W10sdrK6EA0xAQPmTjkMPLlxtENbIu24mQI74sbQ63U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s+XD7wZM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="sB5di3FR"
-Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-5a1307438ddso1157053e87.1
-        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2026 10:24:26 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1773941065; cv=none;
-        d=google.com; s=arc-20240605;
-        b=dgOWIsu4gVLqNSR9gu1lgxVlbi5IQLnBmf21b2sSV1+aABXZKTOSOIFupUTPIAEzru
-         5/9QvcwgarWdsXRlxPZDsb+MQLcQlnfx8nJWvpt7N00lsQXRa+voHfdbqEsEUMb2O2XB
-         evvzxZ46LiwYgM08WSzyHDe8hVCgNgXbasqt43r5mmr3v7Unx8hM+3AHEazBYpaznL/e
-         /SpkeDBR6JT0+U46z8EJja0QmzKdjtADhDHJ3ghDy0J9z8dwAhvzBk8FDCtX9yutQ01n
-         CREhs6gnU0MIjWFBketncDLiQeSr3+XqJbNJpI63IM7Q+Jc867HdcYgOiHXTAOD+ZuUU
-         40Aw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=bWL7Mvz3ZFb3DsvrD6klOpnMDDqkJa/pdjIb2Ow02uU=;
-        fh=DGmPmYWp8k1yeh1W3kyMpydItG4I3CkoMy95gEYFYMc=;
-        b=ISMgl8HRopeshWAZDWv3sWS7V8JPgobi4kgtONgCE/D7dzmsALw6LZZ/1Fo8kiq6ws
-         /q32SAEDmPJZJy5+302IwNDWx2/T9DJMB+J9Z15noMpUlWkwsNnRu12DtZpLanXv4/xn
-         D1Xfem3D/valr3wnhicbmh+4qAAA+nwhI0bG/MNtVHW0tRP/xZnPTSOQnmGAYScB3BLL
-         re3x91/QHk2AE9l0hz/bZqZAQGP9O5/uA5+0wpIhtTJaouSRT6dKqFPtNODZcXSr19ll
-         7KO4kgd+WYUrgykl7Ald3zx/S9CKjcA1BsPn2SAgsIK/dMPi/uu34xTt9DExHnBCGITy
-         1WIQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1773941065; x=1774545865; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=bWL7Mvz3ZFb3DsvrD6klOpnMDDqkJa/pdjIb2Ow02uU=;
-        b=sB5di3FRgJ9AXnlpTkOtdsmLaYjKyf8sZRsiZOwR5HpmHxIGL2jjU8LyMmZQnHAleu
-         ODrpsSSqH5k4tpjlbe1BqR4g0C/xT16CzNerIj6obCQ+CsbtCFO2qqBtRS0Mv+q8lt1P
-         d8PpNaiyi+hZcdIs9ovvDvAzKiuqUN4fZ5Grl5FnScr9r8uwFk1TkI6z+oS6rWvWWxMj
-         uFIiRzqoc+tCdOawOx8cT2HfgpCa7ryPk8VhHaTK1CX8oWB5nrKOomORqAQskIZerm++
-         jGKnE3uIgXTlIkpLLemWDbo/z685KXLGIkfyr0L87hpdUKENvZWhFpPXFsxm6eticyrl
-         TSqQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773941065; x=1774545865;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=bWL7Mvz3ZFb3DsvrD6klOpnMDDqkJa/pdjIb2Ow02uU=;
-        b=qLvZ/ZaRY0Teesv7j1u7soQKMC3d6KjCCBnnoNZjSir439foi6bUdM1vSioGfHbbBy
-         hTDiUJ6FtlFXWB0vMfH41YzUOQnqV8H7tmOWtGWlWkD/Rng5C9STb/i+lcJQQcbicOy/
-         uErAH3U+RKctvJ+2mT9Mr0W9DBM2EKlOrTot1qZcA27PC2xTQa9AHD8vh7o7FKwZhrm6
-         fCOvfMKFQHaYszubazpbnNt4CmppFZi8iPJqINITmh0S3B3G5Tpic/a+sd5I1N/ACCnA
-         ZLO1vmtARU118SBwRcYhZPBvWciri6xUEGpt/W2t98w/8YYXuWVY1IISWR2dvG/sMAhu
-         zzhA==
-X-Forwarded-Encrypted: i=1; AJvYcCUuO/4rX5iHTPF9+SM8jdzi9nlYKBd6BXaRF9fYqZqFNkl7PJHoIwVs2kbqilprtkkF2gX6zCjsd4k=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxGWAC87wSIu0OtjX9pAcpnkzEv7yZdOZ9aINzW0CQv4J11y+K2
-	xiRkcd1+oSOfUScjtk+2RJNoEqVyEQ89TobiF488PsknndKP/DhcCMGI5m26IyPH9kQpLQ7h8zR
-	K6Lqx7P3T0RPmZMjnG/eWqdiofdoZwo9noE+PYKyL
-X-Gm-Gg: ATEYQzyrSy4+JRaayfMS4oiNJ2gQeqAZJ6iepGiOj7DYqaaaOPvSw4pQGN/ZdoHfLMx
-	1Pu6KMdDVl+AhANuDHgXqj+Ye3bozCd+mi56iulvBpP6A75krfTUhY+Ao8YPpgltyZi4s49Eetp
-	l5YBqtKCPvXcAmN4Yvij4qzgIR7kHsbqwaciIH1RS+30uUKKGlbb2zdiuYMb7cylabnRKi7PDCf
-	A/G8lLsI9YUQrcJgkoE7omQulaWKzefGXuUcZlU/MN9N0E/nSPcMcmh/UTsWkjsPqxPstmBeYI1
-	W4fYgSQG
-X-Received: by 2002:a05:6512:4016:b0:5a2:7e5b:5a48 with SMTP id
- 2adb3069b0e04-5a27e5b5b70mr1566015e87.26.1773941064245; Thu, 19 Mar 2026
- 10:24:24 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s+XD7wZM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9987EC19424;
+	Thu, 19 Mar 2026 17:46:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773942400;
+	bh=oYbbBUCdNMxN8aY9xh1JRb5blOS0KtnLS5UQvJq/5JE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=s+XD7wZMp2TGAbweGQ0FR5ygC0x8wiAIuTHpxWpZDOOr1CH9UTyPXeupsLv6icOQE
+	 gpJyLnBCLVGzAcBaP6+jkhYR1u5ExvcjibyK6fCQJUwWTQ6HWeUUzclEuVX44w2kNe
+	 ojsKGULadySB8bt+DFgdNyFvCYmSs+GcnvA3FeUwmRV9WMzpwUftXhmgCV1yFb77qN
+	 Cf1TArn5wo5vrvCPxCCtEsbPxXQeaSY6ECtjyzX77XIv4B8ezydNEgjhA27HyyF55k
+	 Qiwzmpm5mNCbnUT0SDo1/p8CJNi4fgQ9DXsvztQFtLb3vPWxCSet03gLKYHvZ0WeWk
+	 LC1kl6MVT/2Mg==
+Date: Thu, 19 Mar 2026 12:46:39 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thierry Reding <thierry.reding@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Jon Hunter <jonathanh@nvidia.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: Re: [PATCH 4/5] PCI: tegra: Add Tegra264 support
+Message-ID: <20260319174639.GA515667@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260129212510.967611-1-dmatlack@google.com> <20260129212510.967611-11-dmatlack@google.com>
- <20260226170030.5a938c74@shazbot.org> <aaDqhjdLyf1qSTSh@google.com>
- <20260227084658.3767d801@shazbot.org> <CALzav=fHy23RAzhgkdaL+JA5T2tL9FT6aPgRfXUh7i9zvYCGPA@mail.gmail.com>
- <20260227105720.522ca97f@shazbot.org> <CALzav=fjRPa_ZbXu7iFXyemcf_8Kq_dZTWT6c-A0bc6czF_Rdw@mail.gmail.com>
- <abNOwcOTXqxCxNzt@google.com> <20260313083918.00005731@linux.microsoft.com>
- <CALzav=eGLpo5nrsHq5L8bUTC=FWZ-SgrTE1FoScrWB4p+NDgnA@mail.gmail.com> <20260319093932.000078c2@linux.microsoft.com>
-In-Reply-To: <20260319093932.000078c2@linux.microsoft.com>
-From: David Matlack <dmatlack@google.com>
-Date: Thu, 19 Mar 2026 10:23:56 -0700
-X-Gm-Features: AaiRm53rqLDO8igOEPnPEHv7Le9OPlkg99gzLBiOllDBuZj0inzOHo1IukO9vNo
-Message-ID: <CALzav=fvG+s6MYNzxhuHFmQkmTRJJASXAGs=zQWWSnSv3Y=J9A@mail.gmail.com>
-Subject: Re: [PATCH v2 10/22] vfio/pci: Skip reset of preserved device after
- Live Update
-To: Jacob Pan <jacob.pan@linux.microsoft.com>
-Cc: Alex Williamson <alex@shazbot.org>, Adithya Jayachandran <ajayachandra@nvidia.com>, 
-	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>, Alistair Popple <apopple@nvidia.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Ankit Agrawal <ankita@nvidia.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
-	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, Kevin Tian <kevin.tian@intel.com>, 
-	kexec@lists.infradead.org, kvm@vger.kernel.org, 
-	Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-mm@kvack.org, linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
-	=?UTF-8?Q?Micha=C5=82_Winiarski?= <michal.winiarski@intel.com>, 
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>, 
-	Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed <saeedm@nvidia.com>, 
-	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
-	=?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, 
-	Tomita Moeko <tomitamoeko@gmail.com>, Vipin Sharma <vipinsh@google.com>, 
-	Vivek Kasireddy <vivek.kasireddy@intel.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>, 
-	Zhu Yanjun <yanjun.zhu@linux.dev>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260319160110.2131954-5-thierry.reding@kernel.org>
 
-On Thu, Mar 19, 2026 at 9:39=E2=80=AFAM Jacob Pan <jacob.pan@linux.microsof=
-t.com> wrote:
->
-> Hi David,
->
-> On Mon, 16 Mar 2026 11:11:20 -0700
-> David Matlack <dmatlack@google.com> wrote:
->
-> > On Fri, Mar 13, 2026 at 8:39=E2=80=AFAM Jacob Pan
-> > <jacob.pan@linux.microsoft.com> wrote:
-> > > On Thu, 12 Mar 2026 23:39:45 +0000
-> > > David Matlack <dmatlack@google.com> wrote:
-> >
-> > > > +config VFIO_PCI_LIVEUPDATE
-> > > > +       bool "VFIO PCI support for Live Update (EXPERIMENTAL)"
-> > > > +       depends on LIVEUPDATE && VFIO_PCI
-> > > > +       help
-> > > > +         Support for preserving devices bound to vfio-pci across
-> > > > a Live
-> > > > +         Update. The eventual goal is that preserved devices can
-> > > > run
-> > > > +         uninterrupted during a Live Update, including DMA to
-> > > > preserved
-> > > > +         memory buffers and P2P. However there are many steps
-> > > > still needed to
-> > > > +         achieve this, including:
-> > > > +
-> > > > +          - Preservation of iommufd files
-> > > > +          - Preservation of IOMMU driver state
-> > > In the interim, what do you think about moving forward with noiommu
-> > > mode without preserving IOMMU driver state?
-> >
-> > I haven't gotten a chance to look at your noiommu patches yet, but I
-> > do think noiommu will probably be a good way to develop the VFIO and
-> > PCI support for Live Update without blocking on IOMMU driver support.
-> >
-> > > I=E2=80=99ve tested your
-> > > vfio_pci_liveupdate_kexec_test with the noiommu cdev, and it works
-> > > as expected.
-> >
-> > Would you be able to send patches to add noiommu support to VFIO
-> > selftests? That would be very helpful toward allowing us to develop
-> > and test Live Update support with noiommu.
->
-> It is included in the noiommu patchset; the only difference is that the
-> VFIO cdev name is prefixed with noiommu, which is not strictly required
-> and is done out of caution.
->
-> /dev/vfio/
-> |-- devices
-> |   `-- noiommu-vfio0
->
-> https://lore.kernel.org/linux-iommu/20260312155637.376854-10-jacob.pan@li=
-nux.microsoft.com/
+On Thu, Mar 19, 2026 at 05:01:08PM +0100, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+> 
+> Add a driver for the PCIe controller found on NVIDIA Tegra264 SoCs. The
+> driver is very small, with its main purpose being to set up the address
+> translation registers and then creating a standard PCI host using ECAM.
+> 
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
+> ---
+>  drivers/pci/controller/Kconfig         |   8 +
+>  drivers/pci/controller/Makefile        |   1 +
+>  drivers/pci/controller/pcie-tegra264.c | 506 +++++++++++++++++++++++++
+>  3 files changed, 515 insertions(+)
+>  create mode 100644 drivers/pci/controller/pcie-tegra264.c
+> 
+> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+> index e72ac6934379..36abee65eca1 100644
+> --- a/drivers/pci/controller/Kconfig
+> +++ b/drivers/pci/controller/Kconfig
+> @@ -257,6 +257,14 @@ config PCI_TEGRA
+>  	  Say Y here if you want support for the PCIe host controller found
+>  	  on NVIDIA Tegra SoCs.
 
-This one flew under my radar. I will take a look and respond there, thanks!
+Should the PCI_TEGRA menu item ("NVIDIA Tegra PCIe controller") and
+this text be clarified somehow to make them clearly separate?
+
+> +config PCIE_TEGRA264
+> +	bool "NVIDIA Tegra264 PCIe controller"
+> +	depends on ARCH_TEGRA || COMPILE_TEST
+> +	depends on PCI_MSI
+> +	help
+> +	  Say Y here if you want support for the PCIe host controller found
+> +	  on NVIDIA Tegra264 SoCs.
+
+> + * PCIe host controller driver for Tegra264 SoC
+> + *
+> + * Author: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+
+Manikanta doesn't appear in the signed-off-by or other tags above.
+Not really an issue for me; just a question of whether this is
+accurate.
+
+> +#define PCIE_LINK_UP_DELAY	10000	/* 10 msec */
+> +#define PCIE_LINK_UP_TIMEOUT	1000000	/* 1 s */
+
+Use something from drivers/pci/pci.h if possible.  If not, please add
+units suffixes to the name, e.g., it looks like these are in "_US".
+
+PCIE_LINK_WAIT_MAX_RETRIES and PCIE_LINK_WAIT_SLEEP_MS look like
+they're used in similar ways in other drivers.
+
+> +/* XAL registers */
+> +#define XAL_RC_ECAM_BASE_HI			0x00
+> +#define XAL_RC_ECAM_BASE_LO			0x04
+> +#define XAL_RC_ECAM_BUSMASK			0x08
+> +#define XAL_RC_IO_BASE_HI			0x0c
+> ...
+> +#define XTL_RC_MGMT_CLOCK_CONTROL		0x47C
+
+Inconsistent use of upper/lower-case hex with above.
+
+> +struct tegra264_pcie {
+> +	struct device *dev;
+> +	bool link_state;
+
+"link_state" being true/false doesn't read quite right because
+true/false isn't a "state".  I guess true means "link is up"?
+
+> +static int tegra264_pcie_parse_dt(struct tegra264_pcie *pcie)
+> +{
+> +	int err;
+> +
+> +	pcie->wake_gpio = devm_gpiod_get_optional(pcie->dev, "nvidia,pex-wake",
+> +						  GPIOD_IN);
+> +	if (IS_ERR(pcie->wake_gpio))
+> +		return PTR_ERR(pcie->wake_gpio);
+> +
+> +	if (pcie->wake_gpio) {
+> +		device_init_wakeup(pcie->dev, true);
+> +
+> +		err = gpiod_to_irq(pcie->wake_gpio);
+> +		if (err < 0) {
+> +			dev_err(pcie->dev, "failed to get wake IRQ: %d\n", err);
+
+Does %pe work here (and below)?
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/core-api/printk-formats.rst?id=v6.19#n96
+
+> +static void tegra264_pcie_bpmp_set_rp_state(struct tegra264_pcie *pcie)
+> +{
+> +	struct tegra_bpmp_message msg;
+> +	struct mrq_pcie_request req;
+> +	int err;
+> +
+> +	memset(&req, 0, sizeof(req));
+
+I think "struct mrq_pcie_request req = {}" is equivalent, also for
+msg.  No real preference from me.
+
+> +static void tegra264_pcie_init(struct tegra264_pcie *pcie)
+> +{
+> +	u32 value;
+> +
+> +	if (!tegra_is_silicon()) {
+> +		dev_info(pcie->dev,
+> +			 "skipping link state for PCIe #%u in simulation\n",
+> +			 pcie->ctl_id);
+> +		pcie->link_state = true;
+> +		return;
+> +	}
+> +
+> +	/* Poll every 10 msec for 1 sec to link up */
+> +	readl_poll_timeout(pcie->ecam + XTL_RC_PCIE_CFG_LINK_CONTROL_STATUS,
+> +		value, value & XTL_RC_PCIE_CFG_LINK_CONTROL_STATUS_DLL_ACTIVE,
+> +		PCIE_LINK_UP_DELAY, PCIE_LINK_UP_TIMEOUT);
+> +
+> +	if (value & XTL_RC_PCIE_CFG_LINK_CONTROL_STATUS_DLL_ACTIVE) {
+> +		/* Per PCIe r5.0, 6.6.1 wait for 100ms after DLL up */
+> +		msleep(100);
+
+Looks like possibly PCIE_RESET_CONFIG_WAIT_MS?
+
+> +		dev_info(pcie->dev, "PCIe #%u link is up (speed: %d)\n",
+> +			 pcie->ctl_id, (value & 0xf0000) >> 16);
+> +		pcie->link_state = true;
+> +		tegra264_pcie_icc_set(pcie);
+> +	} else {
+> +		dev_info(pcie->dev, "PCIe #%u link is down\n", pcie->ctl_id);
+> +
+> +		value = readl(pcie->xtl + XTL_RC_MGMT_CLOCK_CONTROL);
+> +
+> +		/** Set link state only when link fails and no hot-plug feature is present */
+
+/* (not /**), and wrap to fit in 78 columns.
+
+> +		if ((value & XTL_RC_MGMT_CLOCK_CONTROL_PEX_CLKREQ_I_N_PIN_USE_CONV_TO_PRSNT) == 0) {
+> +			dev_info(pcie->dev,
+> +				 "PCIe #%u link is down and not hotplug-capable, turning off\n",
+> +				 pcie->ctl_id);
+> +			tegra264_pcie_bpmp_set_rp_state(pcie);
+> +			pcie->link_state = false;
+> +		} else {
+> +			pcie->link_state = true;
+> +		}
+> +	}
+> +}
+> +
+> +static int tegra264_pcie_probe(struct platform_device *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	struct pci_host_bridge *bridge;
+> +	struct tegra264_pcie *pcie;
+> +	struct resource_entry *bus;
+> +	struct resource *res;
+> +	int err;
+> +
+> +	bridge = devm_pci_alloc_host_bridge(dev, sizeof(struct tegra264_pcie));
+> +	if (!bridge) {
+> +		dev_err(dev, "failed to allocate host bridge\n");
+> +		return -ENOMEM;
+
+Looks like this and others below could use:
+
+  if (!bridge)
+    return dev_err_probe(dev, -ENOMEM, "failed ...");
+
+> +static const struct dev_pm_ops tegra264_pcie_pm_ops = {
+> +	.resume_noirq = tegra264_pcie_resume_noirq,
+> +	.suspend_noirq = tegra264_pcie_suspend_noirq,
+> +};
+
+Should this use DEFINE_NOIRQ_DEV_PM_OPS() or similar to avoid warnings
+when CONFIG_PM_SLEEP, etc are not enabled?
+
+> +static const struct of_device_id tegra264_pcie_of_match[] = {
+> +	{
+> +		.compatible = "nvidia,tegra264-pcie",
+> +	},
+> +	{ /* sentinel */ }
+> +};
+> +MODULE_DEVICE_TABLE(of, tegra264_pcie_of_match);
+> +
+> +static struct platform_driver tegra264_pcie_driver = {
+> +	.probe = tegra264_pcie_probe,
+> +	.remove = tegra264_pcie_remove,
+> +	.driver = {
+> +		.name = "tegra264-pcie",
+> +		.pm = &tegra264_pcie_pm_ops,
+> +		.of_match_table = tegra264_pcie_of_match,
+> +	},
+> +};
+> +module_platform_driver(tegra264_pcie_driver);
+> +
+> +MODULE_AUTHOR("Manikanta Maddireddy <mmaddireddy@nvidia.com>");
+> +MODULE_DESCRIPTION("NVIDIA Tegra264 PCIe host controller driver");
+> +MODULE_LICENSE("GPL");
+> -- 
+> 2.52.0
+> 
