@@ -1,128 +1,187 @@
-Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9BE6402459
-	for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2026 21:25:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.53
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773955551; cv=pass; b=tu9hy82YhqEmVGBZz3xo0plK+J9qN2hwVvP/CnIWcCH+tel54ITxQ3FZBAM9upCRjkDtJPXjMnJGO7ZmP0utKLkBR/qJa5bEcfxvHCYS3qWWhD8r9oAGrxhWihEu8fq5kGIa6phY6c+g/k8qYE+Nl1b0Pk9rG1raLpKdaApInw0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773955551; c=relaxed/simple;
-	bh=0xmPzjQJZlQdvWU93j2fpUbP2wdKZDeT3xI2xGj40f8=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CCE4402B88
+	for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2026 21:26:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773955605; cv=none; b=gn+fGfAmC4lvF/JxpI6eQPFJ67jLdPuFWrDfmN16GCbKhcsBwSyomgTHB1E73YK7o+nNtBT+tRZNj44lUzU1NxEDncNcwLuhbjfxkek/D3dzq73ARYTg0dZ6Khy7Wd7fQuDwFakikaRoGO+JIxfKTAelijOMJ47N/P0B6DxMMyk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773955605; c=relaxed/simple;
+	bh=tYI4JuCClflQeNy41iDQ7edGHrk/SVWynp0v5EfnkCk=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nygn1eHvdsXhbRUcSPbNHOXaf/4br6BlsaY1+T6+2/LiO+EOxU+KeMIbQHatPfiORljlQ5cJj6zKe/mlXx+rb68GE7FRvOjr7+vvr3mly1Lw0aIBSp9E8NFQM2cnSQKtV/6h4k/0tPnndlWlamwmSXlMJXimIryV3FsChZ5sKM0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Wq9falUI; arc=pass smtp.client-ip=209.85.221.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 To:Cc:Content-Type; b=TzgIprDtfNQV1mwoYRxQO2EfE/yMzRHg5LidWtGbYo9YF67tndh/7DAgGZxyiIASNNWO3oXkfCZU1IcCy82mrq7dTinlZEQTkNU9SOkPf/vSgvNR6JBvIWVgrWSpyE6f3yEKfr5UdYFj2ZUz/znCszSw7os+riDQ6eULCPKZFbI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hbeK5MOg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Wq9falUI"
-Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-43b4121c40aso927162f8f.0
-        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2026 14:25:49 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1773955548; cv=none;
-        d=google.com; s=arc-20240605;
-        b=BhiPLoEOAvcHBLKAO1U5e6wFqOp302UWXukyiMOw23V9MeGLREckImD5DsuDoNkPqS
-         AnIGBmbJFnPtj7p94x/RS8GoS/z4/EGUE3ZrlbDJzUX+Yj1sMszqsVANEnux0n/UZUzc
-         nOqA43qmkSUKvHXqMo4o0RzHZJ/8SVAnVtJdkMAtmELRW8tGkTtZ5Gp0ba8ybKc8LQsG
-         McYZSsk3EvsvxdRBZ+1Cn9yTOJP4JOf1aF5WinKgnScxy6qA0QUnLDuLXBW6e3zfsC0F
-         W31zLD94Z/5CYQU3tHRnONrSikDrEZr8VNYxhtZqn0Be5S8oz9PcrFNRXkkowSfRIRZT
-         u/0g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=11+5iQhuoi7uXTy7W6XUR1mpsLG8FBwfMw3VmGaz2Nc=;
-        fh=8RoptJMG3WPjyfFoIdqgNc3R870/JUOgoiYae/PNrRE=;
-        b=hhZRnWWv9rbPhbavn5nfgWThnLfwBjbgVwwsq/iPlnk3G4j5rGkJF0NCKxvLl3mqDq
-         Emm7Um75jLwOO86qsUnDmxpT5U0TqGiWuhD0d+MdIkG/eK443ynRElPD8RWp56nYpPh0
-         rVKB2pOSkY1VY29sBewVENKCC65rArJjonsnLE6xweVXLX1Ivdv00IGOBRgPKwsEwBWT
-         Hui/9muKrPO7pFxX1FRjbPlr03YC8uPnFQZ6eAddF84F2XhCn4ruRSt6c+3FNpf6ZZM/
-         5nEYOK7LImk8hgdi1N30ezBneNjef2kj2K/f4rpM9Mb77yw2RDGhsg6LYlqsjOmTHBcQ
-         jf8w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1773955548; x=1774560348; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=11+5iQhuoi7uXTy7W6XUR1mpsLG8FBwfMw3VmGaz2Nc=;
-        b=Wq9falUIevYVel+9X4YXlIUkivwkt7ibVUlP1G6Z4Y9YYevRjQKuggc83KoNeR2e/L
-         4MD1xRVBwRnszzyvULbTOsUlULa1yqA8khDsuSN5EaizcXnbLc0KTBCQ0gDh0YVVvE27
-         pk+4ceTqMioTv2trH6nP9QpTz5uPuWIa+bJSjsfaUNX388Ael18mXHKAn1p58Utv8esw
-         X7CgolWRyfoOKHtobnPWXhd8YQQMfiV87oN2Ftq2VoZzyvWeimK4JgL7ud3LnwefNcQv
-         laiZDYfFkEXlTZ0G4wIxerRmnFyn62/3RacrD5NQ8micJJEdf+mcEcvsDgQR7G3nHL2i
-         wi0Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773955548; x=1774560348;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=11+5iQhuoi7uXTy7W6XUR1mpsLG8FBwfMw3VmGaz2Nc=;
-        b=pRaByRcG7J6K9d8R2CSeKjHSof/GexVWpuurxY9KAprXCaCL7cLZH10YCE0XSCvhXU
-         SR0FuFROXgm/d6/1yIibi5JZc+kzBT4cxHhWdEqZgtIuXGvXFO43iDM2vas2ebIIczhr
-         CtIWa0KszBJeNLG513/jiSQE/wnjZCiu/MzHI57Jjaf2MiLtZ4ORLI3X+2JQl0Gd40Vo
-         7g6ZfwP6abYuOEx6kGnzJsXTHvPtMs7pdNurrlRp58WOsVXyMjNZ7265qY5WtIlBTg42
-         QyRCoWnAKSAgMVtFx2ffrr083Tecko4qAmQ++E25FGdSZ5PjBIL5hoDHuYAT4z3aOzcP
-         K+NQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUB8o+tO6p3t79K48IrIZBg9PnpEm2kIOEQfKW6J6iqOw/5CKPAuuREtvsfVkbjE/tRy4aKRzjzlGY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxiXp7YakZHvLK0wl3IJvYSlR3MF9xMkhy2ziDpyM0TNscFgH2K
-	bsV6IfOZhFRfIFfxYpH75QOdgoOuisgMisLOdgZUTsdYeb7HgLed3DblBDEDdQCbhCLT+vsmqcw
-	ERYR8PHVSjeyHGRHQ9/TjgVbFcjivtFc=
-X-Gm-Gg: ATEYQzyuimHIiJKn4nag0bFNqqBJVffKKeLOpmzhgkOj8UVvLD2DxF/K2zZNWV6eOv6
-	fskxrRBmN7iGZUo1ZDj7NTvxeHvbPe4sm6d63OTvURX0TcIgQhwWqoYdSxQR6LJ1I58158XDe4O
-	7f3uImmoRO+RIGbUdfB4sJcVtkDBJlY09wDW+t+Z75eXdlq4eqgHEa5vuJ8jjv99RXHoa/bpAWL
-	ayiUonYpho8dzsLkF4QE6Zhk3OydHgY8+gwqFzOTKZwZ5BL/g49XV7hLFv7MeA1POsEUkoUG9N1
-	xT3RgB4NqWF/W5tOwSgUgpSZFL5HsUDNoxaAu0Bcb/3A73fBeUKhMTftkDkR+cVbX3wZVQ==
-X-Received: by 2002:a5d:5f86:0:b0:43b:4921:8743 with SMTP id
- ffacd0b85a97d-43b6428168dmr1457840f8f.42.1773955548067; Thu, 19 Mar 2026
- 14:25:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hbeK5MOg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C70DDC2BCB3
+	for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2026 21:26:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773955604;
+	bh=tYI4JuCClflQeNy41iDQ7edGHrk/SVWynp0v5EfnkCk=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=hbeK5MOgQC2KsNJEt0FLtnzuxHQ7Gp/Fnr3DHHv3l7l4Oy4Q3/hjF3ab1nHoKK2RT
+	 Mt/X+xOQ2elSksZDmCaSRHx0mCz3NmDzd60WX+taAX9MJL2Yz0alpse+itEafUnoDE
+	 ss4N+3tL0BdQw3NUdXgnqSk3/D4X7TlRNiuybOknNTL2L8hATWrYbJG4E/OxiXxK6v
+	 xvh/zTpJGymBQ1zlkieq2bzg2l2k9X/m6Gd8jJH4p6eBSIjMG0to4scsvEpAQXGjnv
+	 el9VpIrCQBOaTjJCYfOVVwUf50QIvxjximwwNB1ZAyfbfl+HGBD5loO5d4no+xslhZ
+	 Zt5SsipWmUBoA==
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-6644a3029b3so1876849a12.0
+        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2026 14:26:44 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCUtIHsnJYvtdz8txz9rtV+/rd9azGiBszItY96pCd1AI/yiNfv+uCz/85msXd8iDAAk2N7GV/W+c54=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzaGJoc++EqrPGhCee+qXJ68cZNHoN0YWsMw4CEujXx6WR2zX5s
+	kliSVOzvd2H2QCZJZCIMdJ3VlvnzF0LODnZ1PD//uMEbFhHV6baNZ/y7VAucJqCL81u/8bLNueT
+	WLYCB3Vi6G2H9SFTM03juqukwG4Myaw==
+X-Received: by 2002:a05:6402:1451:b0:665:e9f:901d with SMTP id
+ 4fb4d7f45d1cf-668c8f0491emr724945a12.1.1773955603221; Thu, 19 Mar 2026
+ 14:26:43 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260318124450.163471-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20260318124450.163471-3-prabhakar.mahadev-lad.rj@bp.renesas.com> <20260319-outstanding-rustling-galago-79bbce@quoll>
-In-Reply-To: <20260319-outstanding-rustling-galago-79bbce@quoll>
-From: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Date: Thu, 19 Mar 2026 21:25:22 +0000
-X-Gm-Features: AaiRm53jXekaVqxmChJ3S736fj6vkeVSf_bLa2tMBc3wXcwUkkgJMeStMSMAbkk
-Message-ID: <CA+V-a8ukASOXD+2Bdy8HNpZmTARgVEaf_+WM-sjn1jG-AFr20A@mail.gmail.com>
-Subject: Re: [PATCH 2/5] dt-bindings: pci: renesas,r9a08g045-pcie: Add
- RZ/V2H(P) support
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Philipp Zabel <p.zabel@pengutronix.de>, Geert Uytterhoeven <geert+renesas@glider.be>, 
-	Magnus Damm <magnus.damm@gmail.com>, Wolfram Sang <wsa+renesas@sang-engineering.com>, 
-	John Madieu <john.madieu.xa@bp.renesas.com>, linux-pci@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Biju Das <biju.das.jz@bp.renesas.com>, 
-	Fabrizio Castro <fabrizio.castro.jz@renesas.com>, 
-	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+References: <20260319160110.2131954-1-thierry.reding@kernel.org> <20260319160110.2131954-4-thierry.reding@kernel.org>
+In-Reply-To: <20260319160110.2131954-4-thierry.reding@kernel.org>
+From: Rob Herring <robh@kernel.org>
+Date: Thu, 19 Mar 2026 16:26:31 -0500
+X-Gmail-Original-Message-ID: <CAL_Jsq+smyMYE_oexRc9wEJgMxdUxSwg7p8Bex8q6J6PrwZZ+Q@mail.gmail.com>
+X-Gm-Features: AaiRm53lN6yYR9QpqF6KxOg0pgZSKjOGMdgukT38RLesnKDXU4n4eCCG7IjHUV8
+Message-ID: <CAL_Jsq+smyMYE_oexRc9wEJgMxdUxSwg7p8Bex8q6J6PrwZZ+Q@mail.gmail.com>
+Subject: Re: [PATCH 3/5] dt-bindings: pci: Document the NVIDIA Tegra264 PCIe controller
+To: Thierry Reding <thierry.reding@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Jon Hunter <jonathanh@nvidia.com>, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-tegra@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi Krzysztof,
+On Thu, Mar 19, 2026 at 11:01=E2=80=AFAM Thierry Reding
+<thierry.reding@kernel.org> wrote:
+>
+> From: Thierry Reding <treding@nvidia.com>
+>
+> The six PCIe controllers found on Tegra264 are of two types: one is used
+> for the internal GPU and therefore is not connected to a UPHY and the
+> remaining five controllers are typically routed to a PCI slot and have
+> additional controls for the physical link.
+>
+> While these controllers can be switched into endpoint mode, this binding
+> describes the root complex mode only.
+>
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
+> ---
+>  .../bindings/pci/nvidia,tegra264-pcie.yaml    | 92 +++++++++++++++++++
+>  1 file changed, 92 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra264=
+-pcie.yaml
+>
+> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.y=
+aml b/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml
+> new file mode 100644
+> index 000000000000..56d69de2788b
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml
+> @@ -0,0 +1,92 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/pci/nvidia,tegra264-pcie.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: NVIDIA Tegra264 PCIe controller
+> +
+> +maintainers:
+> +  - Thierry Reding <thierry.reding@gmail.com>
+> +  - Jon Hunter <jonathanh@nvidia.com>
+> +
+> +properties:
+> +  compatible:
+> +    const: nvidia,tegra264-pcie
+> +
+> +  reg:
+> +    minItems: 4
+> +    maxItems: 5
+> +
+> +  reg-names:
+> +    minItems: 4
+> +    maxItems: 5
+> +
+> +  interrupts:
+> +    minItems: 1
+> +    maxItems: 4
+> +
+> +  dma-coherent: true
+> +
+> +  nvidia,bpmp:
+> +    $ref: /schemas/types.yaml#/definitions/phandle-array
+> +    description: |
+> +      Must contain a pair of phandle (to the BPMP controller node) and
+> +      controller ID. The following are the controller IDs for each contr=
+oller:
+> +
+> +      0: C0
+> +      1: C1
+> +      2: C2
+> +      3: C3
+> +      4: C4
+> +      5: C5
+> +    items:
+> +      - items:
+> +          - description: phandle to the BPMP controller node
+> +          - description: PCIe controller ID
+> +            maximum: 5
+> +
+> +unevaluatedProperties: false
+> +
+> +required:
+> +  - interrupt-map
+> +  - interrupt-map-mask
+> +  - iommu-map
+> +  - msi-map
+> +  - nvidia,bpmp
+> +
+> +allOf:
+> +  - $ref: /schemas/pci/pci-host-bridge.yaml#
+> +  - oneOf:
+> +    - description: C0 controller (no UPHY)
+> +      properties:
+> +        reg:
+> +          items:
+> +            - description: application layer registers
+> +            - description: transaction layer registers
+> +            - description: privileged transaction layer registers
+> +            - description: ECAM-compatible configuration space
+> +
+> +        reg-names:
+> +          items:
+> +            - const: xal
+> +            - const: xtl
+> +            - const: xtl-pri
+> +            - const: ecam
+> +
+> +    - description: C1-C5 controllers (with UPHY)
+> +      properties:
+> +        reg:
+> +          items:
+> +            - description: application layer registers
+> +            - description: transaction layer registers
+> +            - description: privileged transaction layer registers
+> +            - description: data link/physical layer registers
+> +            - description: ECAM-compatible configuration space
+> +
+> +      items:
+> +        - const: xal
+> +        - const: xtl
+> +        - const: xtl-pri
+> +        - const: xpl
 
-On Thu, Mar 19, 2026 at 9:34=E2=80=AFAM Krzysztof Kozlowski <krzk@kernel.or=
-g> wrote:
->
-> On Wed, Mar 18, 2026 at 12:44:47PM +0000, Prabhakar wrote:
-> >      then:
-> >        properties:
-> >          interrupts:
-> > @@ -236,6 +239,21 @@ allOf:
-> >          reset-names:
-> >            maxItems: 1
-> >
->
-> I do not have above hunk in next from 16th March. Nothing about
-> dependencies in cover letter or changelog. What am I missing?
->
-My bad, this applies on top of next-20260317.
+Put this entry last since it is the optional one. Then you can move
+all of this to the top-level and get rid of the duplication.
 
-Cheers,
-Prabhakar
+> +        - const: ecam
+> --
+> 2.52.0
+>
