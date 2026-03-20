@@ -1,227 +1,159 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-178.mta1.migadu.com (out-178.mta1.migadu.com [95.215.58.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B94913CCFBF
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2026 15:58:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B6A33D16EE
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2026 17:24:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774022327; cv=none; b=VYKS3X/7tllbfvmV8NKhlcvIWjLv8MLZGkr7KMwkmca6sv5AFM8JMhmXfheESCHiQUgv7iwHRJHRAXXnHmya8SQrPacn6llzdKqulyfAXSaNHpqad8NyxsYjixsusMorCjCoYcOPe//5hMkNOLcRe7WZMDnaR67xmrXr0b24mLw=
+	t=1774027495; cv=none; b=euDsf9lSFx864lazRNwuCY//hr3d2K+HeUhSFOD8aM2fXhdAuPB9jBkHhPbC2Cv6VpYAyMBZ40I2s6LHHk1eI/aZ7jNpA0DHP3fp3EreqIzqDJTgc15p7efukqKA83Bxt/MKpX5s/3OSe/iiVJ0qMyEb/3Gl98JzJRrDxDNV3Vc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774022327; c=relaxed/simple;
-	bh=aiSd5OVBVjs+5Lqgol+Wge7MnZFB8HU1UxEFicnTJsA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=fsc75D3WOCEdLM9yjwq01lN/ZFnBxAuLVUnm3R5f+Ov8SOfYkZxLx7YiNgodS/XI1wGzlHBsdCSPL5MCFQVoMKG0E6agEA2BcvBEXa2kXJ1a/6UuEhS1rN5YMGkaxRevLEqIqnmhGMzdhrowKz4VNkRyBes4lMvbAGG1FcqzhaQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sJiwwkWq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774027495; c=relaxed/simple;
+	bh=ztWS/lINi8FK1uPkT1X4jXO3zWQ/ITWan3ys5erTRw8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SsEpx0aTsAVIwe8F2H8JDOpkcNf+lr/oWTBqupcGR9fvryw5uslhEO9gT0bcDLCpWMd4eDtRPe/EYW7ZYr4QwkMhgym8FMM3nS/ZW1s539L2GYowej0DYzregd2t9fKDvDS81XeYcgd5cUJe2tR0DZDhFNOjU1jYCEkzloCCC1Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kernel.doghat.io; spf=pass smtp.mailfrom=kernel.doghat.io; dkim=pass (2048-bit key) header.d=kernel.doghat.io header.i=@kernel.doghat.io header.b=IYg3KW2n; arc=none smtp.client-ip=95.215.58.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kernel.doghat.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.doghat.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sJiwwkWq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 690E9C19425
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2026 15:58:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774022327;
-	bh=aiSd5OVBVjs+5Lqgol+Wge7MnZFB8HU1UxEFicnTJsA=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=sJiwwkWqsGD9uI3P7tI08I1OFNcFBuZrkZq/6h0a5aQZ/JJotn4uYeEC9maFNwo6H
-	 LpoacLh7JeCIuplmpZJg09lODgjvLhPSg/GovK3jOPsRVOdMjKL4tEzwU6+mE2HRba
-	 ion9X+xu3H/tf/M+hO9cVrPRwyHJtlaGRGKVYbYhMgw8NK/6Ny15jIDEo8/Xt5O/LH
-	 hBX9uh1Ol5v4g3yMrxu+aHxh6OsZwGvYGzPc6N6PXWoQ4HRz7UVwPFjY/73d+2KDEU
-	 8/E2W3YQoAIviNyd1QA+8kqePAJUekZGB6t3OvMNLAUzJYa7IgdnuajH6Tidmmk1wf
-	 X67JWILRtMz0g==
-Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-6687be9791cso3004608a12.0
-        for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2026 08:58:47 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCX+fM9v0bXtRN5OsQN5tdZSSwazdRsMNpCGUzprXcBGaGEOpWkbxOewEFkiM3Lz/j0RHQt7baoRk10=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwtZ1i1LGT+Gvk49/DHhi1lgXZuGSpsaJWlFOkCykh7qrHkWRsN
-	ucS18sXFTpXCyF05vfkssq2Icxv0W+pxL3nfqWMcph0clgQhjDKuZmw/9wpCFop+jp2lb+D+w1k
-	fCkBRYQtdoFYuHFMOh3k9UoFQfrcBuw==
-X-Received: by 2002:a05:6402:50cf:b0:668:6e22:3e10 with SMTP id
- 4fb4d7f45d1cf-668c84f299fmr3104507a12.0.1774022325958; Fri, 20 Mar 2026
- 08:58:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.doghat.io header.i=@kernel.doghat.io header.b="IYg3KW2n"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.doghat.io;
+	s=key1; t=1774027490;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=u7eKUMY3p0d6zwWTo9Aew6PNXcf4M66muaacfTXp3x0=;
+	b=IYg3KW2nkDDgD+4wSRi/S2u0xKhm4xBn7SVgX72CxfQLLH2aeLFjwhDX1nsP8mcYSWWIcg
+	4CRGYmpM7VDoL6cIPQ+A2hbJkIjuSASiELwhVksBCEZxaENpP/QCaoSZtXzLj5ondV5TaQ
+	FnUUrfcdvHL09Rl/m1SI5gjs7GzXYNNbjjmpJosMjxj8y5zuF51/LeInZo5/jxHALJr/w2
+	12bpQ4XoU3BsTBoDSmCEB5wwfNxRrKecbROiZtGX+bSTbBThhhcsFy7oTQcZ2ouqtOztRq
+	9h4gILpBFwfVtoI2ldT7tvcm+hWbvtAsSFJv1wVEPnYdN6CRqkrApaqENMQALQ==
+From: John Hancock <john@kernel.doghat.io>
+To: stable@vger.kernel.org
+Cc: bhelgaas@google.com,
+	manivannan.sadhasivam@oss.qualcomm.com,
+	joro@8bytes.org,
+	linux-pci@vger.kernel.org,
+	iommu@lists.linux.dev,
+	John Hancock <john@kernel.doghat.io>
+Subject: [REGRESSION] PCI: Revert "Enable ACS after configuring IOMMU for OF platforms"
+Date: Fri, 20 Mar 2026 13:23:35 -0400
+Message-ID: <20260320172335.29778-1-john@kernel.doghat.io>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260319160110.2131954-1-thierry.reding@kernel.org>
- <20260319160110.2131954-4-thierry.reding@kernel.org> <CAL_Jsq+smyMYE_oexRc9wEJgMxdUxSwg7p8Bex8q6J6PrwZZ+Q@mail.gmail.com>
- <ab0U5bfZ2hwp-GST@orome> <CAL_JsqJuoOiBGKW=H=u9AQ=XgY+-iXS+UP7iEw5z6p57Yk_AVw@mail.gmail.com>
- <ab1Ik3HbOQsDsG-K@orome>
-In-Reply-To: <ab1Ik3HbOQsDsG-K@orome>
-From: Rob Herring <robh@kernel.org>
-Date: Fri, 20 Mar 2026 10:58:34 -0500
-X-Gmail-Original-Message-ID: <CAL_JsqLWLCyV0j5pe_EtH-393zL2Bqrz-xFBydm7pECi_8iN0A@mail.gmail.com>
-X-Gm-Features: AaiRm538DnCHUjf50GK5tgq6RwltBjLP6uKu6msBMEA6dCdN5XqSvWmjN2Y_lR8
-Message-ID: <CAL_JsqLWLCyV0j5pe_EtH-393zL2Bqrz-xFBydm7pECi_8iN0A@mail.gmail.com>
-Subject: Re: [PATCH 3/5] dt-bindings: pci: Document the NVIDIA Tegra264 PCIe controller
-To: Thierry Reding <thierry.reding@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Jon Hunter <jonathanh@nvidia.com>, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-tegra@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Fri, Mar 20, 2026 at 8:48=E2=80=AFAM Thierry Reding
-<thierry.reding@kernel.org> wrote:
->
-> On Fri, Mar 20, 2026 at 08:06:26AM -0500, Rob Herring wrote:
-> > On Fri, Mar 20, 2026 at 4:39=E2=80=AFAM Thierry Reding
-> > <thierry.reding@kernel.org> wrote:
-> > >
-> > > On Thu, Mar 19, 2026 at 04:26:31PM -0500, Rob Herring wrote:
-> > > > On Thu, Mar 19, 2026 at 11:01=E2=80=AFAM Thierry Reding
-> > > > <thierry.reding@kernel.org> wrote:
-> > > > >
-> > > > > From: Thierry Reding <treding@nvidia.com>
-> > > > >
-> > > > > The six PCIe controllers found on Tegra264 are of two types: one =
-is used
-> > > > > for the internal GPU and therefore is not connected to a UPHY and=
- the
-> > > > > remaining five controllers are typically routed to a PCI slot and=
- have
-> > > > > additional controls for the physical link.
-> > > > >
-> > > > > While these controllers can be switched into endpoint mode, this =
-binding
-> > > > > describes the root complex mode only.
-> > > > >
-> > > > > Signed-off-by: Thierry Reding <treding@nvidia.com>
-> > > > > ---
-> > > > >  .../bindings/pci/nvidia,tegra264-pcie.yaml    | 92 +++++++++++++=
-++++++
-> > > > >  1 file changed, 92 insertions(+)
-> > > > >  create mode 100644 Documentation/devicetree/bindings/pci/nvidia,=
-tegra264-pcie.yaml
-> > > > >
-> > > > > diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra26=
-4-pcie.yaml b/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.ya=
-ml
-> > > > > new file mode 100644
-> > > > > index 000000000000..56d69de2788b
-> > > > > --- /dev/null
-> > > > > +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.=
-yaml
-> > > > > @@ -0,0 +1,92 @@
-> > > > > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> > > > > +%YAML 1.2
-> > > > > +---
-> > > > > +$id: http://devicetree.org/schemas/pci/nvidia,tegra264-pcie.yaml=
-#
-> > > > > +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> > > > > +
-> > > > > +title: NVIDIA Tegra264 PCIe controller
-> > > > > +
-> > > > > +maintainers:
-> > > > > +  - Thierry Reding <thierry.reding@gmail.com>
-> > > > > +  - Jon Hunter <jonathanh@nvidia.com>
-> > > > > +
-> > > > > +properties:
-> > > > > +  compatible:
-> > > > > +    const: nvidia,tegra264-pcie
-> > > > > +
-> > > > > +  reg:
-> > > > > +    minItems: 4
-> > > > > +    maxItems: 5
-> > > > > +
-> > > > > +  reg-names:
-> > > > > +    minItems: 4
-> > > > > +    maxItems: 5
-> > > > > +
-> > > > > +  interrupts:
-> > > > > +    minItems: 1
-> > > > > +    maxItems: 4
-> > > > > +
-> > > > > +  dma-coherent: true
-> > > > > +
-> > > > > +  nvidia,bpmp:
-> > > > > +    $ref: /schemas/types.yaml#/definitions/phandle-array
-> > > > > +    description: |
-> > > > > +      Must contain a pair of phandle (to the BPMP controller nod=
-e) and
-> > > > > +      controller ID. The following are the controller IDs for ea=
-ch controller:
-> > > > > +
-> > > > > +      0: C0
-> > > > > +      1: C1
-> > > > > +      2: C2
-> > > > > +      3: C3
-> > > > > +      4: C4
-> > > > > +      5: C5
-> > > > > +    items:
-> > > > > +      - items:
-> > > > > +          - description: phandle to the BPMP controller node
-> > > > > +          - description: PCIe controller ID
-> > > > > +            maximum: 5
-> > > > > +
-> > > > > +unevaluatedProperties: false
-> > > > > +
-> > > > > +required:
-> > > > > +  - interrupt-map
-> > > > > +  - interrupt-map-mask
-> > > > > +  - iommu-map
-> > > > > +  - msi-map
-> > > > > +  - nvidia,bpmp
-> > > > > +
-> > > > > +allOf:
-> > > > > +  - $ref: /schemas/pci/pci-host-bridge.yaml#
-> > > > > +  - oneOf:
-> > > > > +    - description: C0 controller (no UPHY)
-> > > > > +      properties:
-> > > > > +        reg:
-> > > > > +          items:
-> > > > > +            - description: application layer registers
-> > > > > +            - description: transaction layer registers
-> > > > > +            - description: privileged transaction layer register=
-s
-> > > > > +            - description: ECAM-compatible configuration space
-> > > > > +
-> > > > > +        reg-names:
-> > > > > +          items:
-> > > > > +            - const: xal
-> > > > > +            - const: xtl
-> > > > > +            - const: xtl-pri
-> > > > > +            - const: ecam
-> > > > > +
-> > > > > +    - description: C1-C5 controllers (with UPHY)
-> > > > > +      properties:
-> > > > > +        reg:
-> > > > > +          items:
-> > > > > +            - description: application layer registers
-> > > > > +            - description: transaction layer registers
-> > > > > +            - description: privileged transaction layer register=
-s
-> > > > > +            - description: data link/physical layer registers
-> > > > > +            - description: ECAM-compatible configuration space
-> > > > > +
-> > > > > +      items:
-> > > > > +        - const: xal
-> > > > > +        - const: xtl
-> > > > > +        - const: xtl-pri
-> > > > > +        - const: xpl
-> > > >
-> > > > Put this entry last since it is the optional one. Then you can move
-> > > > all of this to the top-level and get rid of the duplication.
-> > >
-> > > I understand this concern and was actually on the fence about this
-> > > myself. The reason why I ultimately went with this variant is for two
-> > > reasons:
-> > >
-> > >   1. XPL does not exist for controller 0, the variant above makes tha=
-t
-> > >      very explicit. It explicitly documents that controller 0 is used
-> > >      for internal purposes and cannot be connected to an external por=
-t
-> > >      like the other five controllers.
-> >
-> > That doesn't really matter to the schema because it can never check
-> > that unless you have 2 different compatibles (and you shouldn't).
->
-> I know that, the documentation would be more for developers/users rather
-> than the validation tools.
+Commit 7a126c1b6cfa ("PCI: Enable ACS after configuring IOMMU for OF
+platforms") introduced a regression affecting AMD IOMMU group isolation
+on x86 systems, making PCIe passthrough non-functional.
 
-You can add whatever documentation you want to express that without
-needlessly complicating the schema for no validation purpose. Arguably
-if the schema is shorter, that documentation will be easier to see.
+While the commit addresses a legitimate ordering issue on OF/Device Tree
+platforms, the fix modifies pci_dma_configure(), which executes on all
+platforms regardless of firmware interface. On AMD systems with IOMMU,
+moving pci_enable_acs() from pci_acs_init() to pci_dma_configure() alters
+the point at which ACS is evaluated relative to IOMMU group assignment.
+The result is that devices which previously occupied individual, exclusive
+IOMMU groups are merged into a single group containing both passthrough
+and non-passthrough members, violating IOMMU isolation requirements.
 
-Rob
+The commit author notes that pci_enable_acs() is now called twice per
+device and that this is "presumably not an issue." On AMD IOMMU hardware
+this assumption does not hold -- the change in call ordering has
+observable and breaking consequences for group topology.
+
+It is worth noting that this is a stable/LTS series (6.12.y), where
+changes to fundamental PCI initialization ordering carry significant
+risk for production and specialized workloads that depend on stable
+IOMMU behavior across kernel updates. A regression of this nature --
+silently breaking PCIe passthrough without any configuration change on
+the part of the user -- is particularly disruptive in a series that
+users reasonably expect to be conservative.
+
+This revert restores pci_enable_acs() to pci_acs_init() and marks it
+static again, fully restoring correct IOMMU group topology on affected
+hardware.
+
+Regression introduced in: 6.12.75
+Tested on: 6.12.77 with this revert applied
+
+Hardware:
+  CPU:   AMD Ryzen Threadripper 2990WX (family 23h, Zen+)
+  IOMMU: AMD-Vi
+
+Bisect:
+  6.12.74: GOOD -- IOMMU groups correct, passthrough functional
+  6.12.75: BAD  -- IOMMU groups collapsed, passthrough broken
+  6.12.76: BAD  -- still broken
+  6.12.77: BAD  -- still broken
+
+Fixes: 7a126c1b6cfa ("PCI: Enable ACS after configuring IOMMU for OF platforms")
+Signed-off-by: John Hancock <john@kernel.doghat.io>
+---
+ drivers/pci/pci-driver.c | 8 --------
+ drivers/pci/pci.c        | 8 ++++----
+ drivers/pci/pci.h        | 1 -
+ 3 files changed, 4 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 9846ab70c..a00a2ce01 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1656,14 +1656,6 @@ static int pci_dma_configure(struct device *dev)
+ 		ret = acpi_dma_configure(dev, acpi_get_dma_attr(adev));
+ 	}
+ 
+-	/*
+-	 * Attempt to enable ACS regardless of capability because some Root
+-	 * Ports (e.g. those quirked with *_intel_pch_acs_*) do not have
+-	 * the standard ACS capability but still support ACS via those
+-	 * quirks.
+-	 */
+-	pci_enable_acs(to_pci_dev(dev));
+-
+ 	pci_put_host_bridge_device(bridge);
+ 
+ 	if (!ret && !driver->driver_managed_dma) {
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 040c0be2d..3eb878781 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1072,7 +1072,7 @@ static void pci_std_enable_acs(struct pci_dev *dev, struct pci_acs *caps)
+  * pci_enable_acs - enable ACS if hardware support it
+  * @dev: the PCI device
+  */
+-void pci_enable_acs(struct pci_dev *dev)
++static void pci_enable_acs(struct pci_dev *dev)
+ {
+ 	struct pci_acs caps;
+ 	bool enable_acs = false;
+@@ -3718,6 +3718,14 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+ void pci_acs_init(struct pci_dev *dev)
+ {
+ 	dev->acs_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
++
++	/*
++	 * Attempt to enable ACS regardless of capability because some Root
++	 * Ports (e.g. those quirked with *_intel_pch_acs_*) do not have
++	 * the standard ACS capability but still support ACS via those
++	 * quirks.
++	 */
++	pci_enable_acs(dev);
+ }
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index b9b97ec0f..b1f393a42 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -653,7 +653,6 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ }
+ 
+ void pci_acs_init(struct pci_dev *dev);
+-void pci_enable_acs(struct pci_dev *dev);
+ #ifdef CONFIG_PCI_QUIRKS
+ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_cfg);
+ int pci_dev_specific_enable_acs(struct pci_dev *dev);
