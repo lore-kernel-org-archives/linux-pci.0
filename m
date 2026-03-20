@@ -1,187 +1,302 @@
-Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010062.outbound.protection.outlook.com [52.101.69.62])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A34C36165D;
-	Fri, 20 Mar 2026 10:04:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.69.62
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774001077; cv=fail; b=JrMq2CJ2jnB/wekiWeTSD3rA7JYlJbQFne1YVs03w+bjFsyz0XYE+Ty3GTuGn039sA7douMWKGaKCMbJk7lv8ngvFAUNtnGWOnt0o82+r9unCY9x8VSHEq0pwPFLb2CsvBUvfRXUDK+VO2p++/h8jaEBWC2JzdzqyWrzfdhUh9s=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774001077; c=relaxed/simple;
-	bh=+nm5YslVN1aJGoZZPQjRZbNj0pLxLP1f+Ix7393bNI8=;
-	h=Message-ID:Date:Subject:To:CC:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=EcNdgBBorV3Hvjncjvck56QBvvtIV2WovgCuZb1b4hLojeUyweoh1euZ6dzDijOPmMkGWFyVMgfYSXEbkQxLLR4ha9WokAWWmNWNC/jlTFvf8lGtpWS1vwYq8N4tT7xhTjv4HZg602GdiCU4SkDHX1BvKqWkYhKsKnYp3QLlV0c=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=NohLOrbD; arc=fail smtp.client-ip=52.101.69.62
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DB653921FF;
+	Fri, 20 Mar 2026 10:34:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774002896; cv=none; b=SyJo/F2TDb3A6cXyjYqwpV1Lv9PoI7SWQsmG+S2MwPV3vyhITcoDyFz8Y9xkE05g8nRm8EGEf9qp253mA3S4RYpth/Zdy7xE8kjjxlPCdFlcYgiY7FzlcWXQTaNuJFcBkd91blQsZn9xrGuRBOLAkr60qMXa3Ik089HcJLHwUX0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774002896; c=relaxed/simple;
+	bh=xcsf9IaJ2gl+/grTH18EC+E/mwCcct40oHedC/0qrtY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nHT+qdepmInT1+Un3aDeChCr5aCjuSo1NXTWYu3e0T9fZOXB5jRoVrP5cRo5ejvCNlJHtsXJ+lPTmXHRDVQMShR0jpIkVd4lnFw3AR9lkNZWa2sshp1smhqkUC7IK0ic4o56aZ9Aw4jyJstJcH61OkkF2m37/7ffNJbXXzPCUpk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D4oCEw8J; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="NohLOrbD"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=j7JAjhMY61uXYmCanQ+VnTnB093G5OvuEyfUIKvp7OFF5wPogR3ZkmXzfeqA6a6Pth/RdBQ/3J9Syb6w/oACm1kw/jMBzvAgiRJnR/zm7dtWAVa2n9xjOMjARZmFEWWC6AethX5leYmCkvRskflvjS8g7ZfLhUrwS3236y6b/861MeeagSBge05i48xotlzRcuzNFH2pjUn/Esg6Aw9z05Gr3AeCu8TOUngS9fgh4W1MSeaIgoMeDQObxqp5kBowZawA/JZCymRzhntQHtGp4lXranFU8sw3GIkgStelrfhq8wL5n1DPo8F3va6XDDoi10tp12/6Io0rP3fQSvAePg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=5QBNy2JLfBOEyQys0aqJmzMmMTtt7VDxz708zYN1f0k=;
- b=Ls1GvhAszcr+vSmUvuVD9OOeRyyeNnI/UFaLZVzUBtvSfHa+jBH8E7n9xI5cSWmugCikaFuzPpJuQKucX69ZXSsSMZUVEeiRPzMG+5VhjGFLRTxzNus7PVjTV6crKL9oVnkDllRr5FGYJdon0m5LLPa88wX2k44cT6IWEOnDbr5AU+Y64DWoVJnOU486Np6QKuj5Otc0XxjqdA4cSl/ZMtEs0tZWYuZl756iNOpets5VeTJOtsF5MFKDyiJCcdCPcdNwsQMor5ikgti1ofhkEj05exdtoc/xsbdnCBDrhsHNM7FmBmfjZ6iV5z/qdUNuSA0Jnq+Eib0wSLLFWsPsUw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=fail (sender ip is
- 164.130.1.60) smtp.rcpttodomain=valinux.co.jp smtp.mailfrom=foss.st.com;
- dmarc=fail (p=none sp=none pct=100) action=none header.from=foss.st.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5QBNy2JLfBOEyQys0aqJmzMmMTtt7VDxz708zYN1f0k=;
- b=NohLOrbDno38s1bQ5BzjCAutN2bLshPGU2TqB40E6iIBNQG7t0GgJPU26tp6Zq4d8yW25uUkhmQ1Tc3jNfAOlbVHFeHwh8xY9q2d0H9nzAOBTVViiEs4aAUw5HJooRsitqWiiIOHUQxwOatZKHt5aj7/ikpLFAirJtuYKd48ebSsGhHXDZxwAg1r7Nu/3yuwYYU/hDIVDot8hnQfPSFb0lWXNqpJ9y45eMAyl767uL3zIX7Ci1AI3W8oVj9Odo28m38G9z7GJ5UDMdYfvppo+7M/2rZaPfwRrIFb6CCiOA03j7ZeunfxAgibuto1rKbxjjVLj7SvDj7TRLqX67t3Ow==
-Received: from PAZP264CA0171.FRAP264.PROD.OUTLOOK.COM (2603:10a6:102:236::33)
- by DB3PR10MB6907.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:10:42b::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.23; Fri, 20 Mar
- 2026 10:04:31 +0000
-Received: from AM4PEPF00025F98.EURPRD83.prod.outlook.com
- (2603:10a6:102:236:cafe::91) by PAZP264CA0171.outlook.office365.com
- (2603:10a6:102:236::33) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9723.23 via Frontend Transport; Fri,
- 20 Mar 2026 10:04:31 +0000
-X-MS-Exchange-Authentication-Results: spf=fail (sender IP is 164.130.1.60)
- smtp.mailfrom=foss.st.com; dkim=none (message not signed)
- header.d=none;dmarc=fail action=none header.from=foss.st.com;
-Received-SPF: Fail (protection.outlook.com: domain of foss.st.com does not
- designate 164.130.1.60 as permitted sender) receiver=protection.outlook.com;
- client-ip=164.130.1.60; helo=smtpO365.st.com;
-Received: from smtpO365.st.com (164.130.1.60) by
- AM4PEPF00025F98.mail.protection.outlook.com (10.167.16.7) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9745.0 via Frontend Transport; Fri, 20 Mar 2026 10:04:31 +0000
-Received: from STKDAG1NODE2.st.com (10.75.128.133) by smtpO365.st.com
- (10.250.44.72) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.29; Fri, 20 Mar
- 2026 11:06:50 +0100
-Received: from [10.130.77.120] (10.130.77.120) by STKDAG1NODE2.st.com
- (10.75.128.133) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.29; Fri, 20 Mar
- 2026 11:04:30 +0100
-Message-ID: <d3e8d869-1a10-4a50-a9ed-3c6bc10a6178@foss.st.com>
-Date: Fri, 20 Mar 2026 11:04:28 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] selftests: pci_endpoint: Skip subrange map test if
- iATU allocation fails
-To: Koichiro Den <den@valinux.co.jp>
-CC: Manivannan Sadhasivam <mani@kernel.org>,
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Kishon Vijay
- Abraham I" <kishon@kernel.org>, Shuah Khan <shuah@kernel.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman
-	<gregkh@linuxfoundation.org>, Niklas Cassel <cassel@kernel.org>,
-	<fabrice.gasnier@foss.st.com>, <linux-pci@vger.kernel.org>,
-	<linux-kselftest@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20260318-skip-bar_subrange-tests-if-enospc-v1-0-f1a49534ebea@foss.st.com>
- <20260318-skip-bar_subrange-tests-if-enospc-v1-1-f1a49534ebea@foss.st.com>
- <vki7ty3z5jncmzeltk7udsbynffdld4xhcm3b2yjrgx25cfqkm@4ld66m3jbjqo>
-From: Christian Bruel <christian.bruel@foss.st.com>
-Content-Language: en-US
-In-Reply-To: <vki7ty3z5jncmzeltk7udsbynffdld4xhcm3b2yjrgx25cfqkm@4ld66m3jbjqo>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D4oCEw8J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67EEEC4CEF7;
+	Fri, 20 Mar 2026 10:34:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774002896;
+	bh=xcsf9IaJ2gl+/grTH18EC+E/mwCcct40oHedC/0qrtY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=D4oCEw8JKOEF8ac3ihYtiubZh0jF7EpbWhnew95s7P3yX5gV+6W37y5D6Z2HGlhsa
+	 k6qJ8l+wEYc94zA2+qCurNpodc5AWmxMAcel0U7pnQDux0KQed+bAKBFq0NEDmLVni
+	 LPN5uwoUVirVnkU1AeH4nToX5XbXsSd8+rjSPJvOvqqzdBjYyFaIp/S42U1MmKmDCX
+	 dtJftksTKvCDHOdM37wMjN/BxOoZgVmUAYKjs9/XqhYqWyNr39ZMl6NoSyhZfaaeeu
+	 U+BQE8VxORPAQXxChWyp9Bqm5ifedpcf4/ZUG0Q3W3wsZbh4tHHobpnYjOJ/VbeFy9
+	 KJHkpdJlXkp8w==
+Date: Fri, 20 Mar 2026 11:34:53 +0100
+From: Thierry Reding <thierry.reding@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Jon Hunter <jonathanh@nvidia.com>, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH 4/5] PCI: tegra: Add Tegra264 support
+Message-ID: <ab0XT15uG0YEVjBZ@orome>
+References: <20260319160110.2131954-5-thierry.reding@kernel.org>
+ <20260319174639.GA515667@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ClientProxiedBy: ENXCAS1NODE2.st.com (10.75.128.138) To STKDAG1NODE2.st.com
- (10.75.128.133)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AM4PEPF00025F98:EE_|DB3PR10MB6907:EE_
-X-MS-Office365-Filtering-Correlation-Id: 35a30687-e8df-4ad9-5e47-08de86681497
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|82310400026|7416014|376014|1800799024|18002099003|56012099003|22082099003|13003099007;
-X-Microsoft-Antispam-Message-Info:
-	6apsNKiJ7XTGs2MIBSjF4T2y+C3HGWFG7htJbc5XQBue//mhXvldOUgqM4Okp7QqMcekzEsSpQDBvMdLMtGKFhfav8hIKbEFyPJtoy4TK1vQhbUtyWU+OkgoteDXYg8iyeESfKXeCz8ovYlAgufXeUg6sL70QsBxboDrNBk94842ZK/BZQLW0z63fIhsw8Y7UQLQoIM1EuwB0hudJeOvTJRjUIKx40kpU8QTlQN3cxMdpmblC6whERo+UZtcZ4oGA84VdahSn7fMFFioARJoeCb6usd09VAEFLdJuyyO1tzxeIH/IGB5vvLVJpEFDSNTTA9Sv8J4me2rZcKaoGBXf8yp7ApI1slXOP/skeLARgQPD/IW+QDw7q6QNZ2sE+ktDsCF/wicOMRR/fESMFOSD/xtiR8A4v7Epiqf9di9Je/E/2ErTM0wSbJhUF+yYKubaHvRStvZINHz9CFZNIUXWEmGpLJ5H/XiR9LEEDpKaBKn7KvYMYgq2D7TrUwtgD8B1Hu4Wg4gsLjyfpPRqAApvkO0W94fLNtnbZQXo99jJSJQ+VfPkgHWqlYaqvGbGmIFhFnxCtvhVw0QTvUGGGm0lqTlIs7MrOhDUZthq1QWFo/dtmNByRTwJ6jz6VhPiLqHLkoRikDVGlDxYtcJJYMnWJ3b+RkZx9vUEOSRtRutQtph3+Z7vKoroDzvBwCLInWiZXMhioec3ZbBNRYA2ij6SoViXVuAnxYBYpdU5ySSCKY=
-X-Forefront-Antispam-Report:
-	CIP:164.130.1.60;CTRY:IT;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:smtpO365.st.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700016)(82310400026)(7416014)(376014)(1800799024)(18002099003)(56012099003)(22082099003)(13003099007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	13PHM3Xn53yR0fJWrKPpPOWJUl2ZNdl4x8LM30cdl+Mbhy+bZg906O5lXWqLGGfwmEuoglZE3eIWbknX/BwVMaNWfM+gZmQl/XwYd7m5ZQQOSFRRxs2U1Q4llmLmHb3N3QMkd+wgO0H223IfhwWIVZUYY82WhZOpdcJjb72zugyhPPHH/tqgck2W8kGUEN6y3RIHrqWvCeGT14VES52hucKtNNZqNoLIEygzZ1ybhivi7uOEd/vbz8ifKK39qsY72TcT5fPQWPWxMORogLMYK8H6dTj53ktkOUtR3tOyZKOA3/6C5lXBFiFXaMitCU3A20V2ii8qrWBYrywh/nwD4ttLz35JTvDgN/YFKCXHALAEI33aCm/oCeymGiXokucw5iqZRJbR9jjQZ61qCwPX/EiMW8TizcURdBzhgRsYxCGZuQntkzyUX+03TaEY8mEO
-X-OriginatorOrg: foss.st.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2026 10:04:31.2502
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 35a30687-e8df-4ad9-5e47-08de86681497
-X-MS-Exchange-CrossTenant-Id: 75e027c9-20d5-47d5-b82f-77d7cd041e8f
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=75e027c9-20d5-47d5-b82f-77d7cd041e8f;Ip=[164.130.1.60];Helo=[smtpO365.st.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	AM4PEPF00025F98.EURPRD83.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB3PR10MB6907
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="cft2orzwoitt2zzk"
+Content-Disposition: inline
+In-Reply-To: <20260319174639.GA515667@bhelgaas>
 
-Hello Koichiro, thank you for your comment
 
-On 3/19/26 02:28, Koichiro Den wrote:
-> On Wed, Mar 18, 2026 at 03:46:27PM +0100, Christian Bruel wrote:
->> Handle -ENOSPC error. If the number of available inbound ATU entries is
->> insufficient to map the subrange, skip the test instead of failing.
->>
->> Link: https://lore.kernel.org/linux-pci/20260317152707.GA85951@bhelgaas/T/#m87e4c24173097a0ea70195b71aab294ad8d6c283
->> Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
->> ---
->>   tools/testing/selftests/pci_endpoint/pci_endpoint_test.c | 2 ++
->>   1 file changed, 2 insertions(+)
->>
->> diff --git a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
->> index c417fb3a198b2d92c3060938c23807cc8bea5573..8ea2fda4539d11eb22b22800a7cb8bbaa99c91ba 100644
->> --- a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
->> +++ b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
->> @@ -88,6 +88,8 @@ TEST_F(pci_ep_bar, BAR_SUBRANGE_TEST)
->>   		SKIP(return, "Subrange map is not supported");
->>   	if (ret == -ENOBUFS)
->>   		SKIP(return, "BAR is reserved");
->> +	if (ret == -ENOSPC)
->> +		SKIP(return, "Not enough ATU entries to allocate subrange");
-> 
-> Thank you for handling this!
-> 
-> pci_endpoint_test_bar_subrange() can also return -ENOSPC locally:
-> https://github.com/torvalds/linux/blob/v7.0-rc4/drivers/misc/pci_endpoint_test.c#L538
-> While that is a different resource limit case, I think it would still be
-> reasonable to treat it as SKIP as well.
+--cft2orzwoitt2zzk
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH 4/5] PCI: tegra: Add Tegra264 support
+MIME-Version: 1.0
 
-Regarding Niklas's feedback to use the local EINVAL instead of ENOSPC in 
-pci_endpoint_test_bar_subrange(), I prefer to leave this for you to 
-handle. That will cover this case.
+On Thu, Mar 19, 2026 at 12:46:39PM -0500, Bjorn Helgaas wrote:
+> On Thu, Mar 19, 2026 at 05:01:08PM +0100, Thierry Reding wrote:
+> > From: Thierry Reding <treding@nvidia.com>
+> >=20
+> > Add a driver for the PCIe controller found on NVIDIA Tegra264 SoCs. The
+> > driver is very small, with its main purpose being to set up the address
+> > translation registers and then creating a standard PCI host using ECAM.
+> >=20
+> > Signed-off-by: Thierry Reding <treding@nvidia.com>
+> > ---
+> >  drivers/pci/controller/Kconfig         |   8 +
+> >  drivers/pci/controller/Makefile        |   1 +
+> >  drivers/pci/controller/pcie-tegra264.c | 506 +++++++++++++++++++++++++
+> >  3 files changed, 515 insertions(+)
+> >  create mode 100644 drivers/pci/controller/pcie-tegra264.c
+> >=20
+> > diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kc=
+onfig
+> > index e72ac6934379..36abee65eca1 100644
+> > --- a/drivers/pci/controller/Kconfig
+> > +++ b/drivers/pci/controller/Kconfig
+> > @@ -257,6 +257,14 @@ config PCI_TEGRA
+> >  	  Say Y here if you want support for the PCIe host controller found
+> >  	  on NVIDIA Tegra SoCs.
+>=20
+> Should the PCI_TEGRA menu item ("NVIDIA Tegra PCIe controller") and
+> this text be clarified somehow to make them clearly separate?
 
-> 
-> If you agree and keep your current approach, then I think the SKIP message
-> might be better phrased more generically, e.g. "Insufficient resources".
+Good point. I'm adding "(Tegra20 through Tegra186)" to the PCI_TEGRA
+option description.
 
-OK I agree, the error message should be less specific to DWC 
-terminology, even though this case can currently only occur on it.
+> > +config PCIE_TEGRA264
+> > +	bool "NVIDIA Tegra264 PCIe controller"
+> > +	depends on ARCH_TEGRA || COMPILE_TEST
+> > +	depends on PCI_MSI
+> > +	help
+> > +	  Say Y here if you want support for the PCIe host controller found
+> > +	  on NVIDIA Tegra264 SoCs.
+>=20
+> > + * PCIe host controller driver for Tegra264 SoC
+> > + *
+> > + * Author: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>=20
+> Manikanta doesn't appear in the signed-off-by or other tags above.
+> Not really an issue for me; just a question of whether this is
+> accurate.
 
-> 
-> If you prefer to keep that local case as FAIL (or at least distinguish it
-> with a different SKIP message), that would likely require a bit more
-> changes overall. Note: Niklas' earlier feedback on the SKIP message would
-> still apply.
+You're right. I should've added a Signed-off-by for Manikanta. I'm
+dropping this line here, though, because there's already a MODULE_AUTHOR
+line at the end of the file.
 
-OK, as Niklas also suggested, I will not set an additional local bit 
-besides the fail bit. The question is whether we should name it SKIP or 
-NOSPC. I slightly prefer NOSPC, as this is what is used in the selftest 
-to indicate skipping.
+>=20
+> > +#define PCIE_LINK_UP_DELAY	10000	/* 10 msec */
+> > +#define PCIE_LINK_UP_TIMEOUT	1000000	/* 1 s */
+>=20
+> Use something from drivers/pci/pci.h if possible.  If not, please add
+> units suffixes to the name, e.g., it looks like these are in "_US".
+>=20
+> PCIE_LINK_WAIT_MAX_RETRIES and PCIE_LINK_WAIT_SLEEP_MS look like
+> they're used in similar ways in other drivers.
 
-thank you
+I see a bunch of implementations that use custom defines, if you don't
+mind I'll have a go and unifying this a little. Most implementations
+seem to use usleep_range(90000, 100000) with 10 retries.
 
-Christian
+>=20
+> > +/* XAL registers */
+> > +#define XAL_RC_ECAM_BASE_HI			0x00
+> > +#define XAL_RC_ECAM_BASE_LO			0x04
+> > +#define XAL_RC_ECAM_BUSMASK			0x08
+> > +#define XAL_RC_IO_BASE_HI			0x0c
+> > ...
+> > +#define XTL_RC_MGMT_CLOCK_CONTROL		0x47C
+>=20
+> Inconsistent use of upper/lower-case hex with above.
 
-> 
-> Best regards,
-> Koichiro
-> 
->>   	EXPECT_FALSE(ret) TH_LOG("Test failed for BAR%d", variant->barno);
->>   }
->>   
->>
->> -- 
->> 2.34.1
->>
+Fixed.
 
+> > +struct tegra264_pcie {
+> > +	struct device *dev;
+> > +	bool link_state;
+>=20
+> "link_state" being true/false doesn't read quite right because
+> true/false isn't a "state".  I guess true means "link is up"?
+
+I've renamed this field to "link_up" so it's less ambiguous.
+
+> > +static int tegra264_pcie_parse_dt(struct tegra264_pcie *pcie)
+> > +{
+> > +	int err;
+> > +
+> > +	pcie->wake_gpio =3D devm_gpiod_get_optional(pcie->dev, "nvidia,pex-wa=
+ke",
+> > +						  GPIOD_IN);
+> > +	if (IS_ERR(pcie->wake_gpio))
+> > +		return PTR_ERR(pcie->wake_gpio);
+> > +
+> > +	if (pcie->wake_gpio) {
+> > +		device_init_wakeup(pcie->dev, true);
+> > +
+> > +		err =3D gpiod_to_irq(pcie->wake_gpio);
+> > +		if (err < 0) {
+> > +			dev_err(pcie->dev, "failed to get wake IRQ: %d\n", err);
+>=20
+> Does %pe work here (and below)?
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/D=
+ocumentation/core-api/printk-formats.rst?id=3Dv6.19#n96
+
+It won't work in this particular case because %pe needs an ERR_PTR-
+encoded error code. For the other messages it's probably better to move
+to dev_err_probe() as Krzysztof suggested.
+
+>=20
+> > +static void tegra264_pcie_bpmp_set_rp_state(struct tegra264_pcie *pcie)
+> > +{
+> > +	struct tegra_bpmp_message msg;
+> > +	struct mrq_pcie_request req;
+> > +	int err;
+> > +
+> > +	memset(&req, 0, sizeof(req));
+>=20
+> I think "struct mrq_pcie_request req =3D {}" is equivalent, also for
+> msg.  No real preference from me.
+
+Me neither. "=3D {}" saves two extra lines, so I guess it wins.
+
+>=20
+> > +static void tegra264_pcie_init(struct tegra264_pcie *pcie)
+> > +{
+> > +	u32 value;
+> > +
+> > +	if (!tegra_is_silicon()) {
+> > +		dev_info(pcie->dev,
+> > +			 "skipping link state for PCIe #%u in simulation\n",
+> > +			 pcie->ctl_id);
+> > +		pcie->link_state =3D true;
+> > +		return;
+> > +	}
+> > +
+> > +	/* Poll every 10 msec for 1 sec to link up */
+> > +	readl_poll_timeout(pcie->ecam + XTL_RC_PCIE_CFG_LINK_CONTROL_STATUS,
+> > +		value, value & XTL_RC_PCIE_CFG_LINK_CONTROL_STATUS_DLL_ACTIVE,
+> > +		PCIE_LINK_UP_DELAY, PCIE_LINK_UP_TIMEOUT);
+> > +
+> > +	if (value & XTL_RC_PCIE_CFG_LINK_CONTROL_STATUS_DLL_ACTIVE) {
+> > +		/* Per PCIe r5.0, 6.6.1 wait for 100ms after DLL up */
+> > +		msleep(100);
+>=20
+> Looks like possibly PCIE_RESET_CONFIG_WAIT_MS?
+
+Yeah, looks about right. I'm not sure if we really need it in addition
+to the polling above, but probably okay for an extra safe margin.
+
+> > +		dev_info(pcie->dev, "PCIe #%u link is up (speed: %d)\n",
+> > +			 pcie->ctl_id, (value & 0xf0000) >> 16);
+> > +		pcie->link_state =3D true;
+> > +		tegra264_pcie_icc_set(pcie);
+> > +	} else {
+> > +		dev_info(pcie->dev, "PCIe #%u link is down\n", pcie->ctl_id);
+> > +
+> > +		value =3D readl(pcie->xtl + XTL_RC_MGMT_CLOCK_CONTROL);
+> > +
+> > +		/** Set link state only when link fails and no hot-plug feature is p=
+resent */
+>=20
+> /* (not /**), and wrap to fit in 78 columns.
+>=20
+> > +		if ((value & XTL_RC_MGMT_CLOCK_CONTROL_PEX_CLKREQ_I_N_PIN_USE_CONV_T=
+O_PRSNT) =3D=3D 0) {
+> > +			dev_info(pcie->dev,
+> > +				 "PCIe #%u link is down and not hotplug-capable, turning off\n",
+> > +				 pcie->ctl_id);
+> > +			tegra264_pcie_bpmp_set_rp_state(pcie);
+> > +			pcie->link_state =3D false;
+> > +		} else {
+> > +			pcie->link_state =3D true;
+> > +		}
+> > +	}
+> > +}
+> > +
+> > +static int tegra264_pcie_probe(struct platform_device *pdev)
+> > +{
+> > +	struct device *dev =3D &pdev->dev;
+> > +	struct pci_host_bridge *bridge;
+> > +	struct tegra264_pcie *pcie;
+> > +	struct resource_entry *bus;
+> > +	struct resource *res;
+> > +	int err;
+> > +
+> > +	bridge =3D devm_pci_alloc_host_bridge(dev, sizeof(struct tegra264_pci=
+e));
+> > +	if (!bridge) {
+> > +		dev_err(dev, "failed to allocate host bridge\n");
+> > +		return -ENOMEM;
+>=20
+> Looks like this and others below could use:
+>=20
+>   if (!bridge)
+>     return dev_err_probe(dev, -ENOMEM, "failed ...");
+
+Guess everybody wants to use this now. I tend not to like it because it
+has some issues with wrapping (because of the return, the _probe suffix
+and the error code, it tends to go beyond 80 characters, cancelling out
+many of the benefits). I see the extra benefit for cases where probe
+deferral is a possibility, so that's where I usually do use it.
+
+Anyway, I'll convert these since both you and Krzysztof requested it.
+
+> > +static const struct dev_pm_ops tegra264_pcie_pm_ops =3D {
+> > +	.resume_noirq =3D tegra264_pcie_resume_noirq,
+> > +	.suspend_noirq =3D tegra264_pcie_suspend_noirq,
+> > +};
+>=20
+> Should this use DEFINE_NOIRQ_DEV_PM_OPS() or similar to avoid warnings
+> when CONFIG_PM_SLEEP, etc are not enabled?
+
+Yes, that's a good point.
+
+Thanks,
+Thierry
+
+--cft2orzwoitt2zzk
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmm9IsoACgkQ3SOs138+
+s6ErEQ//Yhq9Tuf/TLR3gXA5rEswHhqcKO40YpFD0rJgTy/f1Y75cOceJvY41pd6
+VdGxabeXQubJ6yQ3KVV7EdfLR/bAv3Y8ZIaybaaL6ahG6xcrfjf/9O0qVosv0bvg
+xrpwnsGMG1RwRu8ca6Fk+QdOPo+9YvMaGhoUAA5Ekg8K8NTFDfTFjyLg4RiD/+50
+CCgwoQtnm9Vi+yLmq5XeQcZejpVRB/o42qvmMgfyYwDq1ueI0d+B5ZxPGBd1Ev64
+37H2xQZ8JUDQRi9c20909bLpmVnO7gGs7gX9FVYn0ccwxBRAex5gtc532t8qDLex
+HdrEn854Br/Mvg7f0/k2Wo4Fq+DyGoLGLP7+bWL8IaknPE9QJ23Bjdlw/rAwrZas
+S8RIEVrQO2tu9ZbQBHdcnIYvnhs5tkL3VAEVfFYKF7o8teCkAqcrEfs6yUPq2Zt3
+Ph/c213YahdFMjxttkiu9dbxPn6EtAaSputXqxi8oE8mxzACsmOogVCmWpB1NRFE
+UOfo473cryTDvsQy1ltnU/FbiFgznkMRyPRfJynZ8lSzTFl4MROgJ7U7jFj4VSxk
+7G7txAXQaQd/eaH7QtRlP+Xu/OI7KHmooY5lhG2r7WCuih8qDbqn9v0sAXremdtv
+HV0ZQa+GsOAG8NKx8WnrRefbD0It3Dxr0VaAKx0pv3QOWBTU3N8=
+=8MJQ
+-----END PGP SIGNATURE-----
+
+--cft2orzwoitt2zzk--
