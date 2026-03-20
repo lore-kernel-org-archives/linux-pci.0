@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41227375F92;
-	Fri, 20 Mar 2026 22:54:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 184EA372B47;
+	Fri, 20 Mar 2026 22:54:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774047297; cv=none; b=ZkQlVa2fLXX7JwtroL/M4vkfEnlEzShrTIlqhtk+ft/xeWcnnRuMRnvSZXW7jiJZNb6jaQ6MppkkJ4qgnjXvvKIT/DB+DsbqrCVeLXJoe4wZaG/9wwzdbstksjkMRilXnjKH7aBTRhjo95SvA8JlUh+jB0W+yFMsNQpPFyGPuOM=
+	t=1774047300; cv=none; b=MXUPczoWFIqjkhp6iUUNrXLmHXHrwSfGaIRZbLj90MavMul5SyQYnepe7Zv3rO3Z/BPv0U/mBAY9/+paQkfIdt1vhPeaGmqmEfC9/nJMDB+1xxEUqqXkgOQASGACGUKgbr9Ddb5527ZeS/jsULtzipTfK1i7FqorF+ALkFbIJI4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774047297; c=relaxed/simple;
-	bh=JmfM9CFrsBGhR2lqz1OMnCqVC1rtVE2VVP+QfY6Mvh4=;
+	s=arc-20240116; t=1774047300; c=relaxed/simple;
+	bh=SsmU2nqOzpuXrRR9zpJIfYdchMIHriuMuQK+TmDNHOk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OiiX7wTTYne6b21i2xFIgi2YW8HfGeWc2/UebsoTOI7T8FFtT8V+rHulJpQ+rLgMbj5mXdRWkyhz7JZ8v6BP8bNAQDAanLHzRtHCUnoNPeY1ux6VwNfRnOVXuoBpbB3hO4XDXgRa9UvqDYwrmYGYtUWInyfEv9j5/N9Ljnoae78=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gaG8xlya; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=cM9eDcoFkpm7kIjkvNo7amasmHpb2DZR0O5RPCNRDox/iT81MAp+VtwH/JYjAgO3EWRmgkKJeFv2+78P7kCNTqvEedjoKkmEXibFgXyF+I5MCCPfRMIVS80e4sOB5Iwiie/lzvgfb9U/fjFIabKzdMuzz+OLsBxm+L+/8o7ahRo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ik9ORKDG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gaG8xlya"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDD30C4CEF7;
-	Fri, 20 Mar 2026 22:54:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ik9ORKDG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D543C4CEF7;
+	Fri, 20 Mar 2026 22:54:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774047297;
-	bh=JmfM9CFrsBGhR2lqz1OMnCqVC1rtVE2VVP+QfY6Mvh4=;
+	s=k20201202; t=1774047299;
+	bh=SsmU2nqOzpuXrRR9zpJIfYdchMIHriuMuQK+TmDNHOk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=gaG8xlyatXnV0yg35xFBRC0ygPGRkKlGo3OdFh5PfRKYKSYvigPYwelCVKN7jrxva
-	 5UzgwFaeR5qcOA2alKIABzpRJ9UTmC2V7u5qSDobycAm6smb6e9BC/y5EEqZP/x77u
-	 kW5f/rCmVRmKe4PUCFG5HU2E1hBBUll2emEMLt3fZcy0g9oCQj5P7B/EsySJbw7wCe
-	 WZ8c/KKJ2FZqZUIOB2sQEnfTNlkh7a8en9bBwd2k9BZK807tPjz1XGHBhUJxVqxQCU
-	 u4yTyAKDU7DdSQ6OGiP6yGpyv4/sE1JFHAzETcvLfZM/C0CL7C6jJIwr+a0QebJx1F
-	 laLY94FbfyOsQ==
+	b=Ik9ORKDGwsLIu63iBJdAmLVAXKS/Fuciv9bQ3q7JUWZG8Xk4Cw5mCcn4wrW0Cadzu
+	 lIlmiFfDO2BNsaZAdaQYR8uCkGH+CwvuQS3BvC63QQR2zOGSYTkOZ4kyJZM1eGoZ80
+	 qrjutZL4xmzW9EZ7/EkZ4dYTEFUFDm6RqbNkxbaQb6OVMv6ta/0hISQUKL5rilH26y
+	 5/CXeEzh0mST0UBiGZM1RcNKHC6SIyL3fSW+OTxydW4SS7yyv7ruB7nHH+9/Lvij9D
+	 dDB33xISCLs4qj5rFR9MiIFkFpa6wZTfPc+svbjEJjqAsg3r5lang6wgSMmuuBcxwB
+	 aoqCnMNtnOLEQ==
 From: Thierry Reding <thierry.reding@kernel.org>
 To: Thierry Reding <thierry.reding@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -40,9 +40,9 @@ Cc: Jon Hunter <jonathanh@nvidia.com>,
 	linux-pci@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-tegra@vger.kernel.org
-Subject: [PATCH v2 4/5] PCI: tegra: Add Tegra264 support
-Date: Fri, 20 Mar 2026 23:54:36 +0100
-Message-ID: <20260320225443.2571920-5-thierry.reding@kernel.org>
+Subject: [PATCH v2 5/5] arm64: tegra: Add PCI controllers on Tegra264
+Date: Fri, 20 Mar 2026 23:54:37 +0100
+Message-ID: <20260320225443.2571920-6-thierry.reding@kernel.org>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260320225443.2571920-1-thierry.reding@kernel.org>
 References: <20260320225443.2571920-1-thierry.reding@kernel.org>
@@ -56,603 +56,322 @@ Content-Transfer-Encoding: 8bit
 
 From: Thierry Reding <treding@nvidia.com>
 
-Add a driver for the PCIe controller found on NVIDIA Tegra264 SoCs. The
-driver is very small, with its main purpose being to set up the address
-translation registers and then creating a standard PCI host using ECAM.
+A total of six PCIe controllers can be found on Tegra264. One of them is
+used internally for the integrated GPU while the other five can go to a
+variety of connectors like full PCIe slots or M.2.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
 Changes in v2:
-- specify generations applicable for PCI_TEGRA driver to avoid confusion
-- drop SPDX-FileCopyrightText tag
-- rename link_state to link_up to clarify meaning
-- replace memset() by an empty initializer
-- sanity-check only enable BAR regions
-- bring PCI link out of reset in case firmware didn't
-- use common wait times instead of defining our own
-- use core helpers to parse and print PCI link speed
-- fix multi-line comment
-- use dev_err_probe() more ubiquitously
-- fix probe sequence and error cleanup
-- use DEFINE_NOIRQ_DEV_PM_OPS() to avoid warnings for !PM_SUSPEND
-- reuse more standard registers and remove unused register definitions
-- use %pe and ERR_PTR() to print symbolic errors
-- add signed-off-by from Manikanta as the original author
-- add myself as author after significantly modifying the driver
+- order ECAM "reg" entry before others
 
- drivers/pci/controller/Kconfig         |  10 +-
- drivers/pci/controller/Makefile        |   1 +
- drivers/pci/controller/pcie-tegra264.c | 527 +++++++++++++++++++++++++
- 3 files changed, 537 insertions(+), 1 deletion(-)
- create mode 100644 drivers/pci/controller/pcie-tegra264.c
+ arch/arm64/boot/dts/nvidia/tegra264.dtsi | 248 ++++++++++++++++++++---
+ 1 file changed, 221 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index e72ac6934379..b60c6768d422 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -255,7 +255,15 @@ config PCI_TEGRA
- 	select IRQ_MSI_LIB
- 	help
- 	  Say Y here if you want support for the PCIe host controller found
--	  on NVIDIA Tegra SoCs.
-+	  on NVIDIA Tegra SoCs (Tegra20 through Tegra186).
-+
-+config PCIE_TEGRA264
-+	bool "NVIDIA Tegra264 PCIe controller"
-+	depends on ARCH_TEGRA || COMPILE_TEST
-+	depends on PCI_MSI
-+	help
-+	  Say Y here if you want support for the PCIe host controller found
-+	  on NVIDIA Tegra264 SoCs.
+diff --git a/arch/arm64/boot/dts/nvidia/tegra264.dtsi b/arch/arm64/boot/dts/nvidia/tegra264.dtsi
+index 24cc2c51a272..5e76799e01e5 100644
+--- a/arch/arm64/boot/dts/nvidia/tegra264.dtsi
++++ b/arch/arm64/boot/dts/nvidia/tegra264.dtsi
+@@ -32,7 +32,7 @@ bus@0 {
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
  
- config PCIE_RCAR_HOST
- 	bool "Renesas R-Car PCIe controller (host mode)"
-diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
-index ac8db283f0fe..d478743b5142 100644
---- a/drivers/pci/controller/Makefile
-+++ b/drivers/pci/controller/Makefile
-@@ -7,6 +7,7 @@ obj-$(CONFIG_PCI_HYPERV_INTERFACE) += pci-hyperv-intf.o
- obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
- obj-$(CONFIG_PCI_AARDVARK) += pci-aardvark.o
- obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
-+obj-$(CONFIG_PCIE_TEGRA264) += pcie-tegra264.o
- obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
- obj-$(CONFIG_PCIE_RCAR_HOST) += pcie-rcar.o pcie-rcar-host.o
- obj-$(CONFIG_PCIE_RCAR_EP) += pcie-rcar.o pcie-rcar-ep.o
-diff --git a/drivers/pci/controller/pcie-tegra264.c b/drivers/pci/controller/pcie-tegra264.c
-new file mode 100644
-index 000000000000..3ce1ad971bdb
---- /dev/null
-+++ b/drivers/pci/controller/pcie-tegra264.c
-@@ -0,0 +1,527 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * PCIe host controller driver for Tegra264 SoC
-+ *
-+ * Copyright (c) 2022-2026, NVIDIA CORPORATION. All rights reserved.
-+ */
-+
-+#include <linux/delay.h>
-+#include <linux/gpio/consumer.h>
-+#include <linux/init.h>
-+#include <linux/interconnect.h>
-+#include <linux/interrupt.h>
-+#include <linux/iopoll.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_address.h>
-+#include <linux/of_device.h>
-+#include <linux/of.h>
-+#include <linux/of_pci.h>
-+#include <linux/of_platform.h>
-+#include <linux/pci-ecam.h>
-+#include <linux/pci.h>
-+#include <linux/pinctrl/consumer.h>
-+#include <linux/platform_device.h>
-+#include <linux/pm_runtime.h>
-+
-+#include <soc/tegra/bpmp.h>
-+#include <soc/tegra/bpmp-abi.h>
-+#include <soc/tegra/fuse.h>
-+
-+#include "../pci.h"
-+
-+/* XAL registers */
-+#define XAL_RC_ECAM_BASE_HI			0x00
-+#define XAL_RC_ECAM_BASE_LO			0x04
-+#define XAL_RC_ECAM_BUSMASK			0x08
-+#define XAL_RC_IO_BASE_HI			0x0c
-+#define XAL_RC_IO_BASE_LO			0x10
-+#define XAL_RC_IO_LIMIT_HI			0x14
-+#define XAL_RC_IO_LIMIT_LO			0x18
-+#define XAL_RC_MEM_32BIT_BASE_HI		0x1c
-+#define XAL_RC_MEM_32BIT_BASE_LO		0x20
-+#define XAL_RC_MEM_32BIT_LIMIT_HI		0x24
-+#define XAL_RC_MEM_32BIT_LIMIT_LO		0x28
-+#define XAL_RC_MEM_64BIT_BASE_HI		0x2c
-+#define XAL_RC_MEM_64BIT_BASE_LO		0x30
-+#define XAL_RC_MEM_64BIT_LIMIT_HI		0x34
-+#define XAL_RC_MEM_64BIT_LIMIT_LO		0x38
-+#define XAL_RC_BAR_CNTL_STANDARD		0x40
-+#define XAL_RC_BAR_CNTL_STANDARD_IOBAR_EN	BIT(0)
-+#define XAL_RC_BAR_CNTL_STANDARD_32B_BAR_EN	BIT(1)
-+#define XAL_RC_BAR_CNTL_STANDARD_64B_BAR_EN	BIT(2)
-+
-+/* XTL registers */
-+#define XTL_RC_PCIE_CFG_LINK_STATUS		0x5a
-+
-+#define XTL_RC_MGMT_PERST_CONTROL		0x218
-+#define XTL_RC_MGMT_PERST_CONTROL_PERST_O_N	BIT(0)
-+
-+#define XTL_RC_MGMT_CLOCK_CONTROL		0x47c
-+#define XTL_RC_MGMT_CLOCK_CONTROL_PEX_CLKREQ_I_N_PIN_USE_CONV_TO_PRSNT	BIT(9)
-+
-+struct tegra264_pcie {
-+	struct device *dev;
-+	bool link_up;
-+
-+	/* I/O memory */
-+	void __iomem *xal;
-+	void __iomem *xtl;
-+	void __iomem *ecam;
-+
-+	/* bridge configuration */
-+	struct pci_config_window *cfg;
-+	struct pci_host_bridge *bridge;
-+
-+	/* wake IRQ */
-+	struct gpio_desc *wake_gpio;
-+	unsigned int wake_irq;
-+
-+	/* BPMP and bandwidth management */
-+	struct icc_path *icc_path;
-+	struct tegra_bpmp *bpmp;
-+	u32 ctl_id;
-+};
-+
-+static int tegra264_pcie_parse_dt(struct tegra264_pcie *pcie)
-+{
-+	int err;
-+
-+	pcie->wake_gpio = devm_gpiod_get_optional(pcie->dev, "nvidia,pex-wake",
-+						  GPIOD_IN);
-+	if (IS_ERR(pcie->wake_gpio))
-+		return PTR_ERR(pcie->wake_gpio);
-+
-+	if (pcie->wake_gpio) {
-+		device_init_wakeup(pcie->dev, true);
-+
-+		err = gpiod_to_irq(pcie->wake_gpio);
-+		if (err < 0) {
-+			dev_err(pcie->dev, "failed to get wake IRQ: %pe\n",
-+				ERR_PTR(err));
-+			return err;
-+		}
-+
-+		pcie->wake_irq = (unsigned int)err;
-+	}
-+
-+	return 0;
-+}
-+
-+static void tegra264_pcie_bpmp_set_rp_state(struct tegra264_pcie *pcie)
-+{
-+	struct tegra_bpmp_message msg = {};
-+	struct mrq_pcie_request req = {};
-+	int err;
-+
-+	req.cmd = CMD_PCIE_RP_CONTROLLER_OFF;
-+	req.rp_ctrlr_off.rp_controller = pcie->ctl_id;
-+
-+	msg.mrq = MRQ_PCIE;
-+	msg.tx.data = &req;
-+	msg.tx.size = sizeof(req);
-+
-+	err = tegra_bpmp_transfer(pcie->bpmp, &msg);
-+	if (err)
-+		dev_info(pcie->dev, "failed to turn off PCIe #%u: %pe\n",
-+			 pcie->ctl_id, ERR_PTR(err));
-+
-+	if (msg.rx.ret)
-+		dev_info(pcie->dev, "failed to turn off PCIe #%u: %d\n",
-+			 pcie->ctl_id, msg.rx.ret);
-+}
-+
-+static void tegra264_pcie_icc_set(struct tegra264_pcie *pcie)
-+{
-+	u32 value, speed, width, bw;
-+	int err;
-+
-+	value = readw(pcie->ecam + XTL_RC_PCIE_CFG_LINK_STATUS);
-+	speed = FIELD_GET(PCI_EXP_LNKSTA_CLS, value);
-+	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, value);
-+
-+	bw = width * (PCIE_SPEED2MBS_ENC(speed) / BITS_PER_BYTE);
-+	value = MBps_to_icc(bw);
-+
-+	err = icc_set_bw(pcie->icc_path, bw, bw);
-+	if (err < 0)
-+		dev_err(pcie->dev,
-+			"failed to request bandwidth (%u MBps): %pe\n",
-+			bw, ERR_PTR(err));
-+}
-+
-+/*
-+ * The various memory regions used by the controller (I/O, memory, ECAM) are
-+ * set up during early boot and have hardware-level protections in place. If
-+ * the DT ranges don't match what's been setup, the controller won't be able
-+ * to write the address endpoints properly, so make sure to validate that DT
-+ * and firmware programming agree on these ranges.
-+ */
-+static bool tegra264_pcie_check_ranges(struct platform_device *pdev)
-+{
-+	struct tegra264_pcie *pcie = platform_get_drvdata(pdev);
-+	struct device_node *np = pcie->dev->of_node;
-+	struct of_pci_range_parser parser;
-+	phys_addr_t phys, limit, hi, lo;
-+	struct of_pci_range range;
-+	struct resource *res;
-+	bool status = true;
-+	u32 value;
-+	int err;
-+
-+	err = of_pci_range_parser_init(&parser, np);
-+	if (err < 0)
-+		return false;
-+
-+	for_each_of_pci_range(&parser, &range) {
-+		unsigned int addr_hi, addr_lo, limit_hi, limit_lo, enable;
-+		unsigned long type = range.flags & IORESOURCE_TYPE_BITS;
-+		phys_addr_t start, end, mask;
-+		const char *region = NULL;
-+
-+		end = range.cpu_addr + range.size - 1;
-+		start = range.cpu_addr;
-+
-+		switch (type) {
-+		case IORESOURCE_IO:
-+			addr_hi = XAL_RC_IO_BASE_HI;
-+			addr_lo = XAL_RC_IO_BASE_LO;
-+			limit_hi = XAL_RC_IO_LIMIT_HI;
-+			limit_lo = XAL_RC_IO_LIMIT_LO;
-+			enable = XAL_RC_BAR_CNTL_STANDARD_IOBAR_EN;
-+			mask = SZ_64K - 1;
-+			region = "I/O";
-+			break;
-+
-+		case IORESOURCE_MEM:
-+			if (range.flags & IORESOURCE_PREFETCH) {
-+				addr_hi = XAL_RC_MEM_64BIT_BASE_HI;
-+				addr_lo = XAL_RC_MEM_64BIT_BASE_LO;
-+				limit_hi = XAL_RC_MEM_64BIT_LIMIT_HI;
-+				limit_lo = XAL_RC_MEM_64BIT_LIMIT_LO;
-+				enable = XAL_RC_BAR_CNTL_STANDARD_64B_BAR_EN;
-+				region = "prefetchable memory";
-+			} else {
-+				addr_hi = XAL_RC_MEM_32BIT_BASE_HI;
-+				addr_lo = XAL_RC_MEM_32BIT_BASE_LO;
-+				limit_hi = XAL_RC_MEM_32BIT_LIMIT_HI;
-+				limit_lo = XAL_RC_MEM_32BIT_LIMIT_LO;
-+				enable = XAL_RC_BAR_CNTL_STANDARD_32B_BAR_EN;
-+				region = "memory";
-+			}
-+
-+			mask = SZ_1M - 1;
-+			break;
-+		}
-+
-+		/* not interested in anything that's not I/O or memory */
-+		if (!region)
-+			continue;
-+
-+		/* don't check regions that haven't been enabled */
-+		value = readl(pcie->xal + XAL_RC_BAR_CNTL_STANDARD);
-+		if ((value & enable) == 0)
-+			continue;
-+
-+		hi = readl(pcie->xal + addr_hi);
-+		lo = readl(pcie->xal + addr_lo);
-+		phys = hi << 32 | lo;
-+
-+		hi = readl(pcie->xal + limit_hi);
-+		lo = readl(pcie->xal + limit_lo);
-+		limit = hi << 32 | lo | mask;
-+
-+		if (phys != start || limit != end) {
-+			dev_err(pcie->dev,
-+				"%s region mismatch: %pap-%pap -> %pap-%pap\n",
-+				region, &phys, &limit, &start, &end);
-+			status = false;
-+		}
-+	}
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ecam");
-+	if (!res)
-+		return false;
-+
-+	hi = readl(pcie->xal + XAL_RC_ECAM_BASE_HI);
-+	lo = readl(pcie->xal + XAL_RC_ECAM_BASE_LO);
-+	phys = hi << 32 | lo;
-+
-+	value = readl(pcie->xal + XAL_RC_ECAM_BUSMASK);
-+	limit = phys + ((value + 1) << 20) - 1;
-+
-+	if (phys != res->start || limit != res->end) {
-+		dev_err(pcie->dev,
-+			"ECAM region mismatch: %pap-%pap -> %pap-%pap\n",
-+			&phys, &limit, &res->start, &res->end);
-+		status = false;
-+	}
-+
-+	return status;
-+}
-+
-+static bool tegra264_pcie_link_up(struct tegra264_pcie *pcie,
-+				  enum pci_bus_speed *speed)
-+{
-+	u16 value = readw(pcie->ecam + XTL_RC_PCIE_CFG_LINK_STATUS);
-+
-+	if (value & PCI_EXP_LNKSTA_DLLLA) {
-+		if (speed)
-+			*speed = pcie_link_speed[FIELD_GET(PCI_EXP_LNKSTA_CLS,
-+							   value)];
-+
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
-+static void tegra264_pcie_init(struct tegra264_pcie *pcie)
-+{
-+	enum pci_bus_speed speed;
-+	unsigned int i;
-+	u32 value;
-+
-+	/* bring the link out of reset */
-+	value = readl(pcie->xtl + XTL_RC_MGMT_PERST_CONTROL);
-+	value |= XTL_RC_MGMT_PERST_CONTROL_PERST_O_N;
-+	writel(value, pcie->xtl + XTL_RC_MGMT_PERST_CONTROL);
-+
-+	if (!tegra_is_silicon()) {
-+		dev_info(pcie->dev,
-+			 "skipping link state for PCIe #%u in simulation\n",
-+			 pcie->ctl_id);
-+		pcie->link_up = true;
-+		return;
-+	}
-+
-+	for (i = 0; i < PCIE_LINK_WAIT_MAX_RETRIES; i++) {
-+		if (tegra264_pcie_link_up(pcie, NULL))
-+			break;
-+
-+		usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
-+	}
-+
-+	if (tegra264_pcie_link_up(pcie, &speed)) {
-+		/* Per PCIe r5.0, 6.6.1 wait for 100ms after DLL up */
-+		msleep(PCIE_RESET_CONFIG_WAIT_MS);
-+
-+		dev_info(pcie->dev, "PCIe #%u link is up (speed: %s)\n",
-+			 pcie->ctl_id, pci_speed_string(speed));
-+		tegra264_pcie_icc_set(pcie);
-+		pcie->link_up = true;
-+	} else {
-+		dev_info(pcie->dev, "PCIe #%u link is down\n", pcie->ctl_id);
-+
-+		value = readl(pcie->xtl + XTL_RC_MGMT_CLOCK_CONTROL);
-+
-+		/*
-+		 * Set link state only when link fails and no hot-plug feature
-+		 * is present.
-+		 */
-+		if ((value & XTL_RC_MGMT_CLOCK_CONTROL_PEX_CLKREQ_I_N_PIN_USE_CONV_TO_PRSNT) == 0) {
-+			dev_info(pcie->dev,
-+				 "PCIe #%u link is down and not hotplug-capable, turning off\n",
-+				 pcie->ctl_id);
-+			tegra264_pcie_bpmp_set_rp_state(pcie);
-+			pcie->link_up = false;
-+		} else {
-+			pcie->link_up = true;
-+		}
-+	}
-+}
-+
-+static int tegra264_pcie_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct pci_host_bridge *bridge;
-+	struct tegra264_pcie *pcie;
-+	struct resource_entry *bus;
-+	struct resource *res;
-+	int err;
-+
-+	bridge = devm_pci_alloc_host_bridge(dev, sizeof(struct tegra264_pcie));
-+	if (!bridge)
-+		return dev_err_probe(dev, -ENOMEM,
-+				     "failed to allocate host bridge\n");
-+
-+	pcie = pci_host_bridge_priv(bridge);
-+	platform_set_drvdata(pdev, pcie);
-+	pcie->bridge = bridge;
-+	pcie->dev = dev;
-+
-+	err = pinctrl_pm_select_default_state(dev);
-+	if (err < 0)
-+		return dev_err_probe(dev, err,
-+				     "failed to configure sideband pins\n");
-+
-+	err = tegra264_pcie_parse_dt(pcie);
-+	if (err < 0)
-+		return dev_err_probe(dev, err, "failed to parse device tree");
-+
-+	pcie->xal = devm_platform_ioremap_resource_byname(pdev, "xal");
-+	if (IS_ERR(pcie->xal))
-+		return dev_err_probe(dev, PTR_ERR(pcie->xal),
-+				     "failed to map XAL memory\n");
-+
-+	pcie->xtl = devm_platform_ioremap_resource_byname(pdev, "xtl-pri");
-+	if (IS_ERR(pcie->xtl))
-+		return dev_err_probe(dev, PTR_ERR(pcie->xtl),
-+				     "failed to map XTL-PRI memory\n");
-+
-+	bus = resource_list_first_type(&bridge->windows, IORESOURCE_BUS);
-+	if (!bus)
-+		return dev_err_probe(dev, -ENODEV,
-+				     "failed to get bus resources\n");
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ecam");
-+	if (!res)
-+		return dev_err_probe(dev, -ENXIO,
-+				     "failed to get ECAM resource\n");
-+
-+	pcie->icc_path = devm_of_icc_get(&pdev->dev, "write");
-+	if (IS_ERR(pcie->icc_path))
-+		return dev_err_probe(&pdev->dev, PTR_ERR(pcie->icc_path),
-+				     "failed to get ICC");
-+
-+	/*
-+	 * Parse BPMP property only for silicon, as interaction with BPMP is
-+	 * not needed for other platforms.
-+	 */
-+	if (tegra_is_silicon()) {
-+		pcie->bpmp = tegra_bpmp_get_with_id(dev, &pcie->ctl_id);
-+		if (IS_ERR(pcie->bpmp))
-+			return dev_err_probe(dev, PTR_ERR(pcie->bpmp),
-+					     "failed to get BPMP\n");
-+	}
-+
-+	pm_runtime_enable(dev);
-+	pm_runtime_get_sync(dev);
-+
-+	/* sanity check that programmed ranges match what's in DT */
-+	if (!tegra264_pcie_check_ranges(pdev)) {
-+		err = -EINVAL;
-+		goto put_pm;
-+	}
-+
-+	pcie->cfg = pci_ecam_create(dev, res, bus->res, &pci_generic_ecam_ops);
-+	if (IS_ERR(pcie->cfg)) {
-+		err = dev_err_probe(dev, PTR_ERR(pcie->cfg),
-+				    "failed to create ECAM\n");
-+		goto put_pm;
-+	}
-+
-+	bridge->ops = (struct pci_ops *)&pci_generic_ecam_ops.pci_ops;
-+	bridge->sysdata = pcie->cfg;
-+	pcie->ecam = pcie->cfg->win;
-+
-+	tegra264_pcie_init(pcie);
-+
-+	if (!pcie->link_up)
-+		goto free;
-+
-+	err = pci_host_probe(bridge);
-+	if (err < 0) {
-+		dev_err(dev, "failed to register host: %pe\n", ERR_PTR(err));
-+		goto free;
-+	}
-+
-+	return err;
-+
-+free:
-+	pci_ecam_free(pcie->cfg);
-+put_pm:
-+	pm_runtime_put_sync(dev);
-+	pm_runtime_disable(dev);
-+
-+	if (tegra_is_silicon())
-+		tegra_bpmp_put(pcie->bpmp);
-+
-+	return err;
-+}
-+
-+static void tegra264_pcie_remove(struct platform_device *pdev)
-+{
-+	struct tegra264_pcie *pcie = platform_get_drvdata(pdev);
-+
-+	/*
-+	 * If we undo tegra264_pcie_init() then link goes down and need
-+	 * controller reset to bring up the link again. Remove intention is
-+	 * to clean up the root bridge and re-enumerate during bind.
-+	 */
-+	pci_lock_rescan_remove();
-+	pci_stop_root_bus(pcie->bridge->bus);
-+	pci_remove_root_bus(pcie->bridge->bus);
-+	pci_unlock_rescan_remove();
-+
-+	pm_runtime_put_sync(&pdev->dev);
-+	pm_runtime_disable(&pdev->dev);
-+
-+	if (tegra_is_silicon())
-+		tegra_bpmp_put(pcie->bpmp);
-+
-+	pci_ecam_free(pcie->cfg);
-+}
-+
-+static int tegra264_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct tegra264_pcie *pcie = dev_get_drvdata(dev);
-+	int err;
-+
-+	if (pcie->wake_gpio && device_may_wakeup(dev)) {
-+		err = enable_irq_wake(pcie->wake_irq);
-+		if (err < 0)
-+			dev_err(dev, "failed to enable wake IRQ: %pe\n",
-+				ERR_PTR(err));
-+	}
-+
-+	return 0;
-+}
-+
-+static int tegra264_pcie_resume_noirq(struct device *dev)
-+{
-+	struct tegra264_pcie *pcie = dev_get_drvdata(dev);
-+	int err;
-+
-+	if (pcie->wake_gpio && device_may_wakeup(dev)) {
-+		err = disable_irq_wake(pcie->wake_irq);
-+		if (err < 0)
-+			dev_err(dev, "failed to disable wake IRQ: %pe\n",
-+				ERR_PTR(err));
-+	}
-+
-+	if (pcie->link_up == false)
-+		return 0;
-+
-+	tegra264_pcie_init(pcie);
-+
-+	return 0;
-+}
-+
-+static DEFINE_NOIRQ_DEV_PM_OPS(tegra264_pcie_pm_ops,
-+			       tegra264_pcie_suspend_noirq,
-+			       tegra264_pcie_resume_noirq);
-+
-+static const struct of_device_id tegra264_pcie_of_match[] = {
-+	{
-+		.compatible = "nvidia,tegra264-pcie",
-+	},
-+	{ /* sentinel */ }
-+};
-+MODULE_DEVICE_TABLE(of, tegra264_pcie_of_match);
-+
-+static struct platform_driver tegra264_pcie_driver = {
-+	.probe = tegra264_pcie_probe,
-+	.remove = tegra264_pcie_remove,
-+	.driver = {
-+		.name = "tegra264-pcie",
-+		.pm = &tegra264_pcie_pm_ops,
-+		.of_match_table = tegra264_pcie_of_match,
-+	},
-+};
-+module_platform_driver(tegra264_pcie_driver);
-+
-+MODULE_AUTHOR("Manikanta Maddireddy <mmaddireddy@nvidia.com>");
-+MODULE_AUTHOR("Thierry Reding <treding@nvidia.com>");
-+MODULE_DESCRIPTION("NVIDIA Tegra264 PCIe host controller driver");
-+MODULE_LICENSE("GPL");
+-		ranges = <0x00 0x00000000 0x00 0x00000000 0x01 0x00000000>;
++		ranges = <0x00 0x00000000 0x00 0x00000000 0x00 0x20000000>; /* MMIO (512 MiB) */
+ 
+ 		misc@100000 {
+ 			compatible = "nvidia,tegra234-misc";
+@@ -3356,9 +3356,10 @@ bus@8100000000 {
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+ 
+-		ranges = <0x00 0x00000000 0x81 0x00000000 0x01 0x00000000>, /* MMIO */
+-			 <0x01 0x00000000 0x00 0x20000000 0x00 0x40000000>, /* non-prefetchable memory (32-bit) */
+-			 <0x02 0x00000000 0xd0 0x00000000 0x08 0x80000000>; /* ECAM, prefetchable memory, I/O */
++		ranges = <0x00 0x00000000 0x81 0x00000000 0x00 0x20000000>, /* MMIO (512 MiB) */
++			 <0x00 0x20000000 0x00 0x20000000 0x00 0x20000000>, /* non-prefetchable memory (32-bit, 512 MiB) */
++			 <0x00 0x40000000 0x81 0x40000000 0x00 0x20000000>, /* MMIO (512 MiB) */
++			 <0xa8 0x80000000 0xa8 0x80000000 0x57 0x80000000>; /* I/O, ECAM, prefetchable memory (64-bit) */
+ 
+ 		smmu1: iommu@5000000 {
+ 			compatible = "nvidia,tegra264-smmu", "arm,smmu-v3";
+@@ -3402,23 +3403,23 @@ cmdqv2: cmdqv@6200000 {
+ 
+ 		mc: memory-controller@8020000 {
+ 			compatible = "nvidia,tegra264-mc";
+-			reg = <0x00 0x8020000 0x0 0x20000>, /* MC broadcast */
+-			      <0x00 0x8040000 0x0 0x20000>, /* MC  0 */
+-			      <0x00 0x8060000 0x0 0x20000>, /* MC  1 */
+-			      <0x00 0x8080000 0x0 0x20000>, /* MC  2 */
+-			      <0x00 0x80a0000 0x0 0x20000>, /* MC  3 */
+-			      <0x00 0x80c0000 0x0 0x20000>, /* MC  4 */
+-			      <0x00 0x80e0000 0x0 0x20000>, /* MC  5 */
+-			      <0x00 0x8100000 0x0 0x20000>, /* MC  6 */
+-			      <0x00 0x8120000 0x0 0x20000>, /* MC  7 */
+-			      <0x00 0x8140000 0x0 0x20000>, /* MC  8 */
+-			      <0x00 0x8160000 0x0 0x20000>, /* MC  9 */
+-			      <0x00 0x8180000 0x0 0x20000>, /* MC 10 */
+-			      <0x00 0x81a0000 0x0 0x20000>, /* MC 11 */
+-			      <0x00 0x81c0000 0x0 0x20000>, /* MC 12 */
+-			      <0x00 0x81e0000 0x0 0x20000>, /* MC 13 */
+-			      <0x00 0x8200000 0x0 0x20000>, /* MC 14 */
+-			      <0x00 0x8220000 0x0 0x20000>; /* MC 15 */
++			reg = <0x000 0x8020000 0x0 0x20000>, /* MC broadcast */
++			      <0x000 0x8040000 0x0 0x20000>, /* MC  0 */
++			      <0x000 0x8060000 0x0 0x20000>, /* MC  1 */
++			      <0x000 0x8080000 0x0 0x20000>, /* MC  2 */
++			      <0x000 0x80a0000 0x0 0x20000>, /* MC  3 */
++			      <0x000 0x80c0000 0x0 0x20000>, /* MC  4 */
++			      <0x000 0x80e0000 0x0 0x20000>, /* MC  5 */
++			      <0x000 0x8100000 0x0 0x20000>, /* MC  6 */
++			      <0x000 0x8120000 0x0 0x20000>, /* MC  7 */
++			      <0x000 0x8140000 0x0 0x20000>, /* MC  8 */
++			      <0x000 0x8160000 0x0 0x20000>, /* MC  9 */
++			      <0x000 0x8180000 0x0 0x20000>, /* MC 10 */
++			      <0x000 0x81a0000 0x0 0x20000>, /* MC 11 */
++			      <0x000 0x81c0000 0x0 0x20000>, /* MC 12 */
++			      <0x000 0x81e0000 0x0 0x20000>, /* MC 13 */
++			      <0x000 0x8200000 0x0 0x20000>, /* MC 14 */
++			      <0x000 0x8220000 0x0 0x20000>; /* MC 15 */
+ 			reg-names = "broadcast", "ch0", "ch1", "ch2", "ch3",
+ 				    "ch4", "ch5", "ch6", "ch7", "ch8", "ch9",
+ 				    "ch10", "ch11", "ch12", "ch13", "ch14",
+@@ -3437,12 +3438,12 @@ mc: memory-controller@8020000 {
+ 			#size-cells = <2>;
+ 
+ 			/* limit the DMA range for memory clients to [39:0] */
+-			dma-ranges = <0x0 0x0 0x0 0x0 0x100 0x0>;
++			dma-ranges = <0x000 0x0 0x000 0x0 0x100 0x0>;
+ 
+ 			emc: external-memory-controller@8800000 {
+ 				compatible = "nvidia,tegra264-emc";
+-				reg = <0x00 0x8800000 0x0 0x20000>,
+-				      <0x00 0x8890000 0x0 0x20000>;
++				reg = <0x000 0x8800000 0x0 0x20000>,
++				      <0x000 0x8890000 0x0 0x20000>;
+ 				interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>;
+ 				clocks = <&bpmp TEGRA264_CLK_EMC>,
+ 					 <&bpmp TEGRA264_CLK_DBB_UPHY0>;
+@@ -3493,6 +3494,38 @@ cmdqv4: cmdqv@b200000 {
+ 			status = "disabled";
+ 		};
+ 
++		pci@c000000 {
++			compatible = "nvidia,tegra264-pcie";
++			reg = <0xd0 0xb0000000 0x0 0x10000000>,
++			      <0x00 0x0c000000 0x0 0x00004000>,
++			      <0x00 0x0c004000 0x0 0x00001000>,
++			      <0x00 0x0c005000 0x0 0x00001000>;
++			reg-names = "ecam", "xal", "xtl", "xtl-pri";
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			linux,pci-domain = <0x00>;
++			#interrupt-cells = <0x1>;
++
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0x0 0x0 155 IRQ_TYPE_LEVEL_HIGH>,
++					<0x0 0x0 0x0 0x2 &gic 0x0 0x0 0x0 156 IRQ_TYPE_LEVEL_HIGH>,
++					<0x0 0x0 0x0 0x3 &gic 0x0 0x0 0x0 157 IRQ_TYPE_LEVEL_HIGH>,
++					<0x0 0x0 0x0 0x4 &gic 0x0 0x0 0x0 158 IRQ_TYPE_LEVEL_HIGH>;
++
++			iommu-map = <0x0 &smmu2 0x10000 0x10000>;
++			msi-map = <0x0 &its 0x210000 0x10000>;
++			dma-coherent;
++
++			ranges = <0x81000000 0x00 0x84000000 0xd0 0x84000000 0x00 0x00200000>, /* I/O */
++				 <0x82000000 0x00 0x20000000 0x00 0x20000000 0x00 0x08000000>, /* non-prefetchable memory (128 MiB) */
++				 <0xc3000000 0xd0 0xc0000000 0xd0 0xc0000000 0x07 0xc0000000>; /* prefetchable memory */
++			bus-range = <0x0 0xff>;
++
++			nvidia,bpmp = <&bpmp 0>;
++			status = "disabled";
++		};
++
+ 		i2c14: i2c@c410000 {
+ 			compatible = "nvidia,tegra264-i2c";
+ 			reg = <0x00 0x0c410000 0x0 0x10000>;
+@@ -3720,7 +3753,7 @@ bus@8800000000 {
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+ 
+-		ranges = <0x00 0x00000000 0x88 0x00000000 0x01 0x00000000>;
++		ranges = <0x00 0x00000000 0x88 0x00000000 0x00 0x20000000>; /* MMIO (512 MiB) */
+ 
+ 		smmu3: iommu@6000000 {
+ 			compatible = "nvidia,tegra264-smmu", "arm,smmu-v3";
+@@ -3765,8 +3798,169 @@ bus@a800000000 {
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+ 
+-		ranges = <0x00 0x00000000 0xa8 0x00000000 0x40 0x00000000>, /* MMIO, ECAM, prefetchable memory, I/O */
+-			 <0x80 0x00000000 0x00 0x20000000 0x00 0x40000000>; /* non-prefetchable memory (32-bit) */
++		ranges = <0x00 0x00000000 0xa8 0x00000000 0x00 0x20000000>, /* MMIO (512 MiB) */
++			 <0x00 0x20000000 0x00 0x20000000 0x00 0x60000000>, /* non-prefetchable memory (32-bit, 1536 GiB) */
++			 <0xa8 0x80000000 0xa8 0x80000000 0x57 0x80000000>; /* I/O, ECAM, prefetchable memory (64-bit) */
++
++		pci@8400000 {
++			compatible = "nvidia,tegra264-pcie";
++			reg = <0xa8 0xb0000000 0x0 0x10000000>,
++			      <0x00 0x08400000 0x0 0x00004000>,
++			      <0x00 0x08404000 0x0 0x00001000>,
++			      <0x00 0x08405000 0x0 0x00001000>,
++			      <0x00 0x08410000 0x0 0x00010000>;
++			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			linux,pci-domain = <0x01>;
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0x0 0x0 908 IRQ_TYPE_LEVEL_HIGH>, /* INTA */
++					<0x0 0x0 0x0 0x2 &gic 0x0 0x0 0x0 909 IRQ_TYPE_LEVEL_HIGH>, /* INTB */
++					<0x0 0x0 0x0 0x3 &gic 0x0 0x0 0x0 910 IRQ_TYPE_LEVEL_HIGH>, /* INTC */
++					<0x0 0x0 0x0 0x4 &gic 0x0 0x0 0x0 911 IRQ_TYPE_LEVEL_HIGH>; /* INTD */
++
++			iommu-map = <0x0 &smmu1 0x10000 0x10000>;
++			msi-map = <0x0 &its 0x110000 0x10000>;
++			dma-coherent;
++
++			ranges = <0x81000000 0x00 0x84000000 0xa8 0x84000000 0x00 0x00200000>, /* I/O */
++				 <0x82000000 0x00 0x28000000 0x00 0x28000000 0x00 0x08000000>, /* non-prefetchable memory */
++				 <0xc3000000 0xa8 0xc0000000 0xa8 0xc0000000 0x07 0xc0000000>; /* prefetchable memory */
++			bus-range = <0x00 0xff>;
++
++			nvidia,bpmp = <&bpmp 1>;
++			status = "disabled";
++		};
++
++		pci@8420000 {
++			compatible = "nvidia,tegra264-pcie";
++			reg = <0xb0 0xb0000000 0x0 0x10000000>,
++			      <0x00 0x08420000 0x0 0x00004000>,
++			      <0x00 0x08424000 0x0 0x00001000>,
++			      <0x00 0x08425000 0x0 0x00001000>,
++			      <0x00 0x08430000 0x0 0x00010000>;
++			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			linux,pci-domain = <0x02>;
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0x0 0x0 917 IRQ_TYPE_LEVEL_HIGH>, /* INTA */
++					<0x0 0x0 0x0 0x2 &gic 0x0 0x0 0x0 918 IRQ_TYPE_LEVEL_HIGH>, /* INTB */
++					<0x0 0x0 0x0 0x3 &gic 0x0 0x0 0x0 919 IRQ_TYPE_LEVEL_HIGH>, /* INTC */
++					<0x0 0x0 0x0 0x4 &gic 0x0 0x0 0x0 920 IRQ_TYPE_LEVEL_HIGH>; /* INTD */
++
++			iommu-map = <0x0 &smmu1 0x20000 0x10000>;
++			msi-map = <0x0 &its 0x120000 0x10000>;
++			dma-coherent;
++
++			ranges = <0x81000000 0x00 0x84000000 0xb0 0x84000000 0x00 0x00200000>, /* I/O */
++				 <0x82000000 0x00 0x30000000 0x00 0x30000000 0x00 0x08000000>, /* non-prefetchable memory */
++				 <0xc3000000 0xb0 0xc0000000 0xb0 0xc0000000 0x07 0xc0000000>; /* prefetchable memory */
++			bus-range = <0x00 0xff>;
++
++			nvidia,bpmp = <&bpmp 2>;
++			status = "disabled";
++		};
++
++		pci@8440000 {
++			compatible = "nvidia,tegra264-pcie";
++			reg = <0xb8 0xb0000000 0x0 0x10000000>,
++			      <0x00 0x08440000 0x0 0x00004000>,
++			      <0x00 0x08444000 0x0 0x00001000>,
++			      <0x00 0x08445000 0x0 0x00001000>,
++			      <0x00 0x08450000 0x0 0x00010000>;
++			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			linux,pci-domain = <0x03>;
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0x0 0x0 926 IRQ_TYPE_LEVEL_HIGH>, /* INTA */
++					<0x0 0x0 0x0 0x2 &gic 0x0 0x0 0x0 927 IRQ_TYPE_LEVEL_HIGH>, /* INTB */
++					<0x0 0x0 0x0 0x3 &gic 0x0 0x0 0x0 928 IRQ_TYPE_LEVEL_HIGH>, /* INTC */
++					<0x0 0x0 0x0 0x4 &gic 0x0 0x0 0x0 929 IRQ_TYPE_LEVEL_HIGH>; /* INTD */
++
++			iommu-map = <0x0 &smmu1 0x30000 0x10000>;
++			msi-map = <0x0 &its 0x130000 0x10000>;
++			dma-coherent;
++
++			ranges = <0x81000000 0x00 0x84000000 0xb8 0x84000000 0x00 0x00200000>, /* I/O */
++				 <0x82000000 0x00 0x38000000 0x00 0x38000000 0x00 0x08000000>, /* non-prefetchable memory */
++				 <0xc3000000 0xb8 0xc0000000 0xb8 0xc0000000 0x07 0xc0000000>; /* prefetchable memory */
++			bus-range = <0x00 0xff>;
++
++			nvidia,bpmp = <&bpmp 3>;
++			status = "disabled";
++		};
++
++		pci@8460000 {
++			compatible = "nvidia,tegra264-pcie";
++			reg = <0xc0 0xb0000000 0x0 0x10000000>,
++			      <0x00 0x08460000 0x0 0x00004000>,
++			      <0x00 0x08464000 0x0 0x00001000>,
++			      <0x00 0x08465000 0x0 0x00001000>,
++			      <0x00 0x08470000 0x0 0x00010000>;
++			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			linux,pci-domain = <0x04>;
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0x0 0x0 935 IRQ_TYPE_LEVEL_HIGH>, /* INTA */
++					<0x0 0x0 0x0 0x2 &gic 0x0 0x0 0x0 936 IRQ_TYPE_LEVEL_HIGH>, /* INTB */
++					<0x0 0x0 0x0 0x3 &gic 0x0 0x0 0x0 937 IRQ_TYPE_LEVEL_HIGH>, /* INTC */
++					<0x0 0x0 0x0 0x4 &gic 0x0 0x0 0x0 938 IRQ_TYPE_LEVEL_HIGH>; /* INTD */
++
++			iommu-map = <0x0 &smmu1 0x40000 0x10000>;
++			msi-map = <0x0 &its 0x140000 0x10000>;
++			dma-coherent;
++
++			ranges = <0x81000000 0x00 0x84000000 0xc0 0x84000000 0x00 0x00200000>, /* I/O */
++				 <0x82000000 0x00 0x40000000 0x00 0x40000000 0x00 0x08000000>, /* non-prefetchable memory */
++				 <0xc3000000 0xc0 0xc0000000 0xc0 0xc0000000 0x07 0xc0000000>; /* prefetchable memory */
++			bus-range = <0x00 0xff>;
++
++			nvidia,bpmp = <&bpmp 4>;
++			status = "disabled";
++		};
++
++		pci@8480000 {
++			compatible = "nvidia,tegra264-pcie";
++			reg = <0xc8 0xb0000000 0x0 0x10000000>,
++			      <0x00 0x08480000 0x0 0x00004000>,
++			      <0x00 0x08484000 0x0 0x00001000>,
++			      <0x00 0x08485000 0x0 0x00001000>,
++			      <0x00 0x08490000 0x0 0x00010000>;
++			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			linux,pci-domain = <0x05>;
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0x0 0x0 944 IRQ_TYPE_LEVEL_HIGH>, /* INTA */
++					<0x0 0x0 0x0 0x2 &gic 0x0 0x0 0x0 945 IRQ_TYPE_LEVEL_HIGH>, /* INTB */
++					<0x0 0x0 0x0 0x3 &gic 0x0 0x0 0x0 946 IRQ_TYPE_LEVEL_HIGH>, /* INTC */
++					<0x0 0x0 0x0 0x4 &gic 0x0 0x0 0x0 947 IRQ_TYPE_LEVEL_HIGH>; /* INTD */
++
++			iommu-map = <0x0 &smmu1 0x50000 0x10000>;
++			msi-map = <0x0 &its 0x150000 0x10000>;
++			dma-coherent;
++
++			ranges = <0x81000000 0x00 0x84000000 0xc8 0x84000000 0x00 0x00200000>, /* I/O */
++				 <0x82000000 0x00 0x48000000 0x00 0x48000000 0x00 0x08000000>, /* non-prefetchable memory */
++				 <0xc3000000 0xc8 0xc0000000 0xc8 0xc0000000 0x07 0xc0000000>; /* prefetchable memory */
++			bus-range = <0x00 0xff>;
++
++			nvidia,bpmp = <&bpmp 5>;
++			status = "disabled";
++		};
+ 	};
+ 
+ 	cpus {
 -- 
 2.52.0
 
