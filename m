@@ -1,138 +1,223 @@
-Received: from ultrarisc.com (unknown [218.76.62.146])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1AF6B384250;
-	Fri, 20 Mar 2026 09:37:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.76.62.146
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 603FC35F60C;
+	Fri, 20 Mar 2026 09:39:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773999455; cv=none; b=tk24kV2ozLz6Qv713/bKVyRviyfm28j6d9H6UwlfC3its1wcH+7iMLQPp7FZs+RXA6/GsVZ/XyHlJpMoTVWfx1sOGaiCPUTQBKxE2xi5j8/5OOfric2O+08lZo63qVyisdQNb7QtukS47i8W1IITI3+ZPgOIDkZAjvqpTzjWixI=
+	t=1773999595; cv=none; b=nltwG/lJhj+DFPYj5eNzJGWW7hhpbLsP0NctxtREwPp2J6LinKQfWxlYCTBnAzBcGOHxK7GCYd9lBvEPprhsfuOc8e7Hi5vJYShNhQSRdYHGr6b04FPZMZx725j2tKgGZz/lzZLnI/xCypntIafcW5wP2PLscOwSOanJaQU0izs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773999455; c=relaxed/simple;
-	bh=NdeAJwHndxZkVbweWJXMxDVFBvgZ0d6ruaeJgL3U5Xk=;
-	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=ktC2MriORxqfN/InEGiqQ8pWXIjwFkwGgN1Jh9j8Ztu4s4kclLCSHekxEL9Jc5eaexmEeMjsiXwQFYPX3WiKC0RQmQaE+R6OSZAAZi/dKc9zywxwVqB+MZCOiLOWS0H/cJcPehnQ1EOn85VcVlme1OvJGjkIfRgSXTT2zVXeLw8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=none smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=jLzX9JB7; arc=none smtp.client-ip=218.76.62.146
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ultrarisc.com
+	s=arc-20240116; t=1773999595; c=relaxed/simple;
+	bh=i+pP4V+ABRrU7y+KipWHLhEUf1H6LxI4Ze7TYBfD/lI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Qu5tnHkKYvFq1rwVRy8PESZXVAQIZ4g1z/KNghpTcTeY22ekSnNa+eLwyGE2+Ro82OPr4lIJQ79oInXfllcSPmS7DvlXmrNt70SX9sZ1FfbpRnhdbMJDsmyi18Y1vDlMosNpxWGgtI/5m7EJOCkIpC7iFmJIAU8xAsBuCMTxex4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=stetC2bp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="jLzX9JB7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=ultrarisc.com; s=dkim; h=Received:MIME-Version:Content-Type:
-	Content-Transfer-Encoding:Subject:From:To:Cc:In-Reply-To:
-	References:Date:Message-Id; bh=UoqLelab2uRRhZMugZLNRzB4MZHfmrDGO
-	eiZef67Q1I=; b=jLzX9JB7jUNIu1uG3QqxeTDTZKX2EnOd2aX/t33Z+IyL0e31F
-	sTpFimzgwnHklUEVzp69u/esjFUA7VPKvzbwdSIJg+2vyWUMsQd4xsxA+thRGEyk
-	7Ff9qDEfj6SWwAfdMxgjgjHbYtxfnbYGg+VSdhR/i7MxvEVwQnTc9I4kwM=
-Received: from [127.0.0.1] (unknown [192.168.100.1])
-	by localhost.localdomain (Coremail) with SMTP id AQAAfwAXxSR+Fb1pMbQBAA--.1433S2;
-	Fri, 20 Mar 2026 17:38:06 +0800 (CST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="stetC2bp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 852BCC4CEF7;
+	Fri, 20 Mar 2026 09:39:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773999595;
+	bh=i+pP4V+ABRrU7y+KipWHLhEUf1H6LxI4Ze7TYBfD/lI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=stetC2bpfEX8FvAm4oFQOc4VRxBmexeeFL8Ie45Tt4g9Vp4efZkF87YFB4x2k/5o5
+	 3CdD8EjOBim1rw1aZWJsp8n7kyYeOGTNj9U5XAnoISaPaxkd3WVjdX1boKf6qMIzJj
+	 GoVn9kYZOybFKPPDvEd0pF3cBu4wGm8WMp2PGwG9eEKbMhQT7TJrCB/1Hm3apSyp0b
+	 W2vBTYxaFg6u7ebj3r2g1lNFlUgvK3bssbNXZLdXsUUDU5uc4Mf8OQp8IOLiE6VwoS
+	 tiL+bP+14uaPKD0kRiOwhRGSscI4YamZDeq254EEmh/xp21cIKEP4PIzUUXjLJzxlR
+	 vx9qewFftGPxA==
+Date: Fri, 20 Mar 2026 10:39:52 +0100
+From: Thierry Reding <thierry.reding@kernel.org>
+To: Rob Herring <robh@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Jon Hunter <jonathanh@nvidia.com>, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: Re: [PATCH 3/5] dt-bindings: pci: Document the NVIDIA Tegra264 PCIe
+ controller
+Message-ID: <ab0U5bfZ2hwp-GST@orome>
+References: <20260319160110.2131954-1-thierry.reding@kernel.org>
+ <20260319160110.2131954-4-thierry.reding@kernel.org>
+ <CAL_Jsq+smyMYE_oexRc9wEJgMxdUxSwg7p8Bex8q6J6PrwZZ+Q@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 4/4] PCI: dwc: Add UltraRISC DP1000 PCIe rc driver
-From: Jia Wang <wangjia@ultrarisc.com>
-To: Yao Zi <me@ziyao.cc>
-Cc: wangjia@ultrarisc.com, Paul Walmsley <pjw@kernel.org>, 
- Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
- Alexandre Ghiti <alex@ghiti.fr>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, 
- Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, linux-riscv@lists.infradead.org, 
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
- devicetree@vger.kernel.org
-In-Reply-To: <abjnhn5sqnJv1fYY@pie>
-References: <20260316-ultrarisc-pcie-v1-0-ef2946ede698@ultrarisc.com>
- <20260316-ultrarisc-pcie-v1-4-ef2946ede698@ultrarisc.com>
- <abjnhn5sqnJv1fYY@pie>
-Date: Fri, 20 Mar 2026 17:37:17 +0800
-Message-Id: <177399943728.868832.12341696974887547910.b4-reply@b4>
-X-Mailer: b4 0.15-dev
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1773999437; l=2134;
- i=wangjia@ultrarisc.com; s=20260309; h=from:subject:message-id;
- bh=NdeAJwHndxZkVbweWJXMxDVFBvgZ0d6ruaeJgL3U5Xk=;
- b=Ae3Yhm2tB/fH01LoOqHKG2gik5SQv29ZG22KRTceRvFfRgS0vkU/5bOpjsF+st3uMWsqHgmUv
- HTNjzNkf+XbAh9je0AgaIs6VJADl0SS9/KvDWYasLrpzgDQuq/TqfDT
-X-Developer-Key: i=wangjia@ultrarisc.com; a=ed25519;
- pk=XvYkrelqJIIzobY7j+nIg8rsfv5kzaOzuc1UPhd087U=
-X-CM-TRANSID:AQAAfwAXxSR+Fb1pMbQBAA--.1433S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7CF1UKFykJr1rAw4DZF4ktFb_yoW8Zw45pa
-	yUKa1akF1xJF4aka1Sva48Ca43Jan7JrWDG39rGw13XF9xC34DW3srt3yFgF97Xr40vr1a
-	k3WYg3W7GF43Aa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9G14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4UJV
-	WxJr1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_GFv_Wrylc2xSY4AK6svPMxAIw28IcxkI7VAKI48JMx
-	C20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAF
-	wI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20x
-	vE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v2
-	0xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxV
-	W8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7sREPrc3UUUUU==
-X-CM-SenderInfo: pzdqwylld63zxwud2x1vfou0bp/1tbiAQAMEWm844oAIgACsA
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="xadlc4yvs4q6exe6"
+Content-Disposition: inline
+In-Reply-To: <CAL_Jsq+smyMYE_oexRc9wEJgMxdUxSwg7p8Bex8q6J6PrwZZ+Q@mail.gmail.com>
 
-On 2026-03-17 05:32 +0000, Yao Zi wrote:
-> On Mon, Mar 16, 2026 at 03:07:00PM +0800, Jia Wang via B4 Relay wrote:
-> > From: Xincheng Zhang <zhangxincheng@ultrarisc.com>
-> > 
-> > Add DP1000 soc PCIe rc driver.
-> > 
-> > Signed-off-by: Xincheng Zhang <zhangxincheng@ultrarisc.com>
-> > Signed-off-by: Jia Wang <wangjia@ultrarisc.com>
+
+--xadlc4yvs4q6exe6
+Content-Type: text/plain; protected-headers=v1; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH 3/5] dt-bindings: pci: Document the NVIDIA Tegra264 PCIe
+ controller
+MIME-Version: 1.0
+
+On Thu, Mar 19, 2026 at 04:26:31PM -0500, Rob Herring wrote:
+> On Thu, Mar 19, 2026 at 11:01=E2=80=AFAM Thierry Reding
+> <thierry.reding@kernel.org> wrote:
+> >
+> > From: Thierry Reding <treding@nvidia.com>
+> >
+> > The six PCIe controllers found on Tegra264 are of two types: one is used
+> > for the internal GPU and therefore is not connected to a UPHY and the
+> > remaining five controllers are typically routed to a PCI slot and have
+> > additional controls for the physical link.
+> >
+> > While these controllers can be switched into endpoint mode, this binding
+> > describes the root complex mode only.
+> >
+> > Signed-off-by: Thierry Reding <treding@nvidia.com>
 > > ---
-> >  drivers/pci/controller/dwc/Kconfig           |  15 ++
-> >  drivers/pci/controller/dwc/Makefile          |   1 +
-> >  drivers/pci/controller/dwc/pcie-designware.h |  22 +++
-> >  drivers/pci/controller/dwc/pcie-ultrarisc.c  | 202 +++++++++++++++++++++++++++
-> >  4 files changed, 240 insertions(+)
-> > 
-> > diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-> > index d0aa031397fa..0a33891bf7ef 100644
-> > --- a/drivers/pci/controller/dwc/Kconfig
-> > +++ b/drivers/pci/controller/dwc/Kconfig
-> > @@ -548,4 +548,19 @@ config PCIE_VISCONTI_HOST
-> >  	  Say Y here if you want PCIe controller support on Toshiba Visconti SoC.
-> >  	  This driver supports TMPV7708 SoC.
-> >  
-> > +config PCIE_ULTRARISC
-> > +	bool "UltraRISC PCIe host controller"
-> 
-> Is there any reason preventing the driver being built as a module? If
-> no, it would be better to change it to "tristate", to allow distribution
-> to customize the configuration for image sizes, etc.
->
-
-Thanks for the suggestion. I will update PCIE_ULTRARISC to tristate.
- 
-> > +	depends on ARCH_ULTRARISC || COMPILE_TEST
-> > +	select PCIE_DW_HOST
-> > +	select PCI_MSI
-> > +	default y if ARCH_ULTRARISC
-> > +	help
-> > +	  Enables support for the PCIe controller in the UltraRISC SoC.
-> > +	  This driver supports UR-DP1000 SoC. When selected, it automatically
-> > +	  enables both `PCIE_DW_HOST` and `PCI_MSI`, ensuring proper support
-> > +	  for MSI-based interrupt handling in the PCIe controller.
-> > +	  By default, this symbol is enabled when `ARCH_ULTRARISC` is active,
-> > +	  requiring no further configuration on that platform.
+> >  .../bindings/pci/nvidia,tegra264-pcie.yaml    | 92 +++++++++++++++++++
+> >  1 file changed, 92 insertions(+)
+> >  create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra2=
+64-pcie.yaml
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie=
+=2Eyaml b/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml
+> > new file mode 100644
+> > index 000000000000..56d69de2788b
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml
+> > @@ -0,0 +1,92 @@
+> > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> > +%YAML 1.2
+> > +---
+> > +$id: http://devicetree.org/schemas/pci/nvidia,tegra264-pcie.yaml#
+> > +$schema: http://devicetree.org/meta-schemas/core.yaml#
 > > +
+> > +title: NVIDIA Tegra264 PCIe controller
 > > +
-> >  endmenu
-> >  #define PORT_LOGIC_LTSSM_STATE_L0	0x11
-> 
-> Best regards,
-> Yao Zi
->
+> > +maintainers:
+> > +  - Thierry Reding <thierry.reding@gmail.com>
+> > +  - Jon Hunter <jonathanh@nvidia.com>
+> > +
+> > +properties:
+> > +  compatible:
+> > +    const: nvidia,tegra264-pcie
+> > +
+> > +  reg:
+> > +    minItems: 4
+> > +    maxItems: 5
+> > +
+> > +  reg-names:
+> > +    minItems: 4
+> > +    maxItems: 5
+> > +
+> > +  interrupts:
+> > +    minItems: 1
+> > +    maxItems: 4
+> > +
+> > +  dma-coherent: true
+> > +
+> > +  nvidia,bpmp:
+> > +    $ref: /schemas/types.yaml#/definitions/phandle-array
+> > +    description: |
+> > +      Must contain a pair of phandle (to the BPMP controller node) and
+> > +      controller ID. The following are the controller IDs for each con=
+troller:
+> > +
+> > +      0: C0
+> > +      1: C1
+> > +      2: C2
+> > +      3: C3
+> > +      4: C4
+> > +      5: C5
+> > +    items:
+> > +      - items:
+> > +          - description: phandle to the BPMP controller node
+> > +          - description: PCIe controller ID
+> > +            maximum: 5
+> > +
+> > +unevaluatedProperties: false
+> > +
+> > +required:
+> > +  - interrupt-map
+> > +  - interrupt-map-mask
+> > +  - iommu-map
+> > +  - msi-map
+> > +  - nvidia,bpmp
+> > +
+> > +allOf:
+> > +  - $ref: /schemas/pci/pci-host-bridge.yaml#
+> > +  - oneOf:
+> > +    - description: C0 controller (no UPHY)
+> > +      properties:
+> > +        reg:
+> > +          items:
+> > +            - description: application layer registers
+> > +            - description: transaction layer registers
+> > +            - description: privileged transaction layer registers
+> > +            - description: ECAM-compatible configuration space
+> > +
+> > +        reg-names:
+> > +          items:
+> > +            - const: xal
+> > +            - const: xtl
+> > +            - const: xtl-pri
+> > +            - const: ecam
+> > +
+> > +    - description: C1-C5 controllers (with UPHY)
+> > +      properties:
+> > +        reg:
+> > +          items:
+> > +            - description: application layer registers
+> > +            - description: transaction layer registers
+> > +            - description: privileged transaction layer registers
+> > +            - description: data link/physical layer registers
+> > +            - description: ECAM-compatible configuration space
+> > +
+> > +      items:
+> > +        - const: xal
+> > +        - const: xtl
+> > +        - const: xtl-pri
+> > +        - const: xpl
+>=20
+> Put this entry last since it is the optional one. Then you can move
+> all of this to the top-level and get rid of the duplication.
 
-Best regards,
-Jia 
+I understand this concern and was actually on the fence about this
+myself. The reason why I ultimately went with this variant is for two
+reasons:
 
+  1. XPL does not exist for controller 0, the variant above makes that
+     very explicit. It explicitly documents that controller 0 is used
+     for internal purposes and cannot be connected to an external port
+     like the other five controllers.
 
+  2. The ECAM region is part of a memory region specifically reserved
+     for configuration space, whereas all of the other regions are
+     from the controller's MMIO region. I find the DT hard to read if
+     the two are interleaved.
+
+Thierry
+
+--xadlc4yvs4q6exe6
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmm9FegACgkQ3SOs138+
+s6EIWQ//ckQncs/jfQ2lie639+yWQaYKqj+f3mfXRhxT8cmiO+3YU6I/9F1Sjxwu
+w29ijDgXiM3/DdkEXbzS0mtdBMwh1V4Zl2sDsgFD+6heyw5mFCmh2wGo2E9WWxyN
+4OTcuA+30wWJZvmh49BDnvcDnvDw7v4ENaaU4dyvePj/Vj8X4ekGslv1Ihv9Ao8y
+NG/KGJ6nsDwhIpHwsOoL88ADKrltkSsqTgxhunnqKVu+v7bGzXRIlX2+uXteRvGx
+QYU9cHLa8h589ZDZUHgylJt3Eqnew8G6tLVBvc4jMni2OdorzQQ7zyMtQRLQSvaY
+NQIzfdwuK7l/+vO5DboxCvffkWP4wHI2EDFBMHK8q2zSh+Q44Gts4sG53ITXQVlS
+l0OEZmguQ4RQDeytMv2EdkGmJYICW5qE/1CunjIQU3zBqxOMstY1sm1CdZkkx8sS
+/dF+4JF9i9ETWl3UC5T3VpWfWAfI7ADTZEU318bREXTDtpkPwHdodlSWBZFq22gK
+wmy+hjD7wG/I9fy1yJL+DhxSJBgFiDEwswvMe4pbGR34xkQjJQFcMGlSBg2YYO/N
+r1nJaa0G58QMN+MGtfA62q3u0yugRfHjtTF2gy2iwJXBELawhgGPJzzEhRwNGSBI
+I6RHRcxjnD9NkjSsPM0DTHJmoOaeclfetpFCgS0QUohaC6rGQQA=
+=2I0I
+-----END PGP SIGNATURE-----
+
+--xadlc4yvs4q6exe6--
