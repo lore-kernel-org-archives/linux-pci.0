@@ -1,53 +1,53 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC3136DCE1
-	for <linux-pci@vger.kernel.org>; Sat, 21 Mar 2026 09:45:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AF612ED16D
+	for <linux-pci@vger.kernel.org>; Sat, 21 Mar 2026 10:18:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774086348; cv=none; b=NybURW/h1uevfih+/9YUJulWX2FSfugH7GfIA6iBPQ9/f/Wu4ZJIoll8/paU9jzXB+RccUPJ3U5MTQaWUE3CmFbCIZNlimmyLbafVVOL2hfAgBHc1OF2IaRLpvWrF/R/S0H1yoOaez8HNlAwDQET9aE4HNGwTgs751hRZaB+AaM=
+	t=1774088340; cv=none; b=ppw1PdvYnvi8ddQPPQmAiV7t4ogAC0bGasMvgQV6+n6UQIX67DAH8x8/HZcCxUyepY39YhbvJpCZa2rfdyngVTlyt2ExNqxPTDxVgN2cZSS4M2btjjX2UULjDJCS/YVkAO438mhzRglpbtEPWOp45/eZ43eYhq3EJ/1hwYe6vFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774086348; c=relaxed/simple;
-	bh=Gc/pW26r+bLFNcQW4Igpa1WMxMWVLSUHGJvtQrJd9xE=;
+	s=arc-20240116; t=1774088340; c=relaxed/simple;
+	bh=28Et5Nv824cl726MlD4oJ6zdqdgOjWEgBQftxHELV7U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IeDGozL3EBvzOMX9p5ua/QQoqy+buLtEpdRD1iHjeVdwOLglg/PI60qG+WJ7ZVBTrPOM53tuYc4CXXxmnWnJRTegAJExRMafH06utikeClykL3FduFYyeF2bYxgQfCSXdie693EizOk2my4hfrym/XbZoD9jntlVAgqwV1c3TxY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GPuCtV2Y; arc=none smtp.client-ip=198.175.65.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=CN8M6gItwWKJ+qJ4TNw+WuaBxaDLIljRJlPmbjPRv7y9RGXrg/Ct942ePXstRcJ3BH4U5cdRt5ZvfN87D/or1Hw0dTOW3I1PUNZmE1oYjf7xoJH9+N74VR6dIJFMTvnjsw/31UEomh8KM/dWhZQeZ7DusAhWrvIuJpchRl9rgn4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eSyqrbxp; arc=none smtp.client-ip=192.198.163.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GPuCtV2Y"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eSyqrbxp"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774086346; x=1805622346;
+  t=1774088337; x=1805624337;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=Gc/pW26r+bLFNcQW4Igpa1WMxMWVLSUHGJvtQrJd9xE=;
-  b=GPuCtV2YLDUW227gqsDv879xi0Wr+g7zX3WgvSudSMHDvum+Re19Nouj
-   bVM6+/XFioezYVXkHO/M/9hl39ZZWt+t+qYBHkZ1FOy1id5uQYSJsCKOO
-   vbB4BhbLLwnbshXyUkL5wsoSTIIwas9noBqbLSAK2olUKMgTZsAsngeJw
-   JY4LgAQgqteDr17wS4OV8uCVIogA8i0kx4vBKEH5k9nAYHilfOZWcGgCp
-   0zvKKjvJ7CFSzSGvesQfrH2eWGYJY1WFvdsXY2seGooxmK0V6NH3hLOVG
-   2KiFgyQEpRA9AxIgtMInR7R/RR9r3UeadHTBmp8NGk5SuFIKxf30gOi+m
-   A==;
-X-CSE-ConnectionGUID: Swh8DYlXQTCM01OQQnnVwQ==
-X-CSE-MsgGUID: WLnAySB7Qki/sC/kh9Qe4w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11735"; a="75188818"
+  bh=28Et5Nv824cl726MlD4oJ6zdqdgOjWEgBQftxHELV7U=;
+  b=eSyqrbxpXY1h2FDw8VHY/uFwD95ZnkqG/Toq2GeXlhH9LddQydOfIv+k
+   2zDj5y0l88p5eKh/1QXpHgJcnKTSytGRXfEZmBSr58qr1jcxwmTUFWRzv
+   mz4hT5F7HNrAgwZuOir+cKTwzFEhx/BLEs7qPKIsFmGzNnj1P+pOsAXvg
+   meT9TGJmYydSCyZUw7oHpdubNxIgBWPRE6cd/QnlwPuqBPPTSC6JovcNA
+   CDKEgDnyBrgd6DZ/vFtia7DqljCKMjpkqVNvnux0MZK/hVaq2UdHsZbc4
+   jo6IYWHvYSZm+oqFQk700fSTbboktnmUBO5pVizbKY5WO4hXKPHRnjXXz
+   w==;
+X-CSE-ConnectionGUID: 6x/Xn8eKR7GS3BzdpVCgWw==
+X-CSE-MsgGUID: ELlfKmIKTYi0XtIbGiJ7wQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11735"; a="62722897"
 X-IronPort-AV: E=Sophos;i="6.23,133,1770624000"; 
-   d="scan'208";a="75188818"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2026 02:45:45 -0700
-X-CSE-ConnectionGUID: NYIO40y7QWKXRT35ae7z0w==
-X-CSE-MsgGUID: dGcJ8lefQ6GDjFabGWV6lQ==
+   d="scan'208";a="62722897"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2026 03:18:56 -0700
+X-CSE-ConnectionGUID: And9ipSCTYCft0eOmiWOzw==
+X-CSE-MsgGUID: 9hOQOglDTuCIBbalt/Bgmw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,133,1770624000"; 
-   d="scan'208";a="222764786"
+   d="scan'208";a="254022110"
 Received: from lkp-server02.sh.intel.com (HELO d7fefbca0d04) ([10.239.97.151])
-  by orviesa010.jf.intel.com with ESMTP; 21 Mar 2026 02:45:41 -0700
+  by orviesa002.jf.intel.com with ESMTP; 21 Mar 2026 03:18:53 -0700
 Received: from kbuild by d7fefbca0d04 with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1w3stn-000000000Yd-1BCS;
-	Sat, 21 Mar 2026 09:45:39 +0000
-Date: Sat, 21 Mar 2026 17:44:59 +0800
+	id 1w3tPq-000000000aj-1Ftq;
+	Sat, 21 Mar 2026 10:18:46 +0000
+Date: Sat, 21 Mar 2026 18:17:42 +0800
 From: kernel test robot <lkp@intel.com>
 To: Thierry Reding <thierry.reding@kernel.org>,
 	Bjorn Helgaas <helgaas@kernel.org>
@@ -63,7 +63,7 @@ Cc: oe-kbuild-all@lists.linux.dev,
 	Michal Simek <monstr@monstr.eu>,
 	Kevin Xie <kevin.xie@starfivetech.com>, linux-pci@vger.kernel.org
 Subject: Re: [PATCH] PCI: Use standard wait times for PCIe link monitoring
-Message-ID: <202603211715.0eQRORig-lkp@intel.com>
+Message-ID: <202603211832.idChNb3Y-lkp@intel.com>
 References: <20260320224044.2569907-1-thierry.reding@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -89,28 +89,28 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Thierry-Reding/PCI-Use-st
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
 patch link:    https://lore.kernel.org/r/20260320224044.2569907-1-thierry.reding%40kernel.org
 patch subject: [PATCH] PCI: Use standard wait times for PCIe link monitoring
-config: s390-randconfig-001-20260321 (https://download.01.org/0day-ci/archive/20260321/202603211715.0eQRORig-lkp@intel.com/config)
-compiler: s390-linux-gcc (GCC) 15.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260321/202603211715.0eQRORig-lkp@intel.com/reproduce)
+config: s390-randconfig-r071-20260321 (https://download.01.org/0day-ci/archive/20260321/202603211832.idChNb3Y-lkp@intel.com/config)
+compiler: clang version 23.0.0git (https://github.com/llvm/llvm-project 4abb927bacf37f18f6359a41639a6d1b3bffffb5)
+smatch: v0.5.0-9004-gb810ac53
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260321/202603211832.idChNb3Y-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202603211715.0eQRORig-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202603211832.idChNb3Y-lkp@intel.com/
 
 All errors (new ones prefixed by >>):
 
-   drivers/pci/controller/cadence/pcie-cadence-host-common.c: In function 'cdns_pcie_host_wait_for_link':
->> drivers/pci/controller/cadence/pcie-cadence-host-common.c:56:37: error: 'PCIE_LINK_WAIT_MAX_RETRIES' undeclared (first use in this function)
+>> drivers/pci/controller/cadence/pcie-cadence-host-common.c:56:30: error: use of undeclared identifier 'PCIE_LINK_WAIT_MAX_RETRIES'
       56 |         for (retries = 0; retries < PCIE_LINK_WAIT_MAX_RETRIES; retries++) {
          |                                     ^~~~~~~~~~~~~~~~~~~~~~~~~~
-   drivers/pci/controller/cadence/pcie-cadence-host-common.c:56:37: note: each undeclared identifier is reported only once for each function it appears in
->> drivers/pci/controller/cadence/pcie-cadence-host-common.c:61:30: error: 'PCIE_LINK_WAIT_US_MIN' undeclared (first use in this function)
+>> drivers/pci/controller/cadence/pcie-cadence-host-common.c:61:16: error: use of undeclared identifier 'PCIE_LINK_WAIT_US_MIN'
       61 |                 usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
          |                              ^~~~~~~~~~~~~~~~~~~~~
->> drivers/pci/controller/cadence/pcie-cadence-host-common.c:61:53: error: 'PCIE_LINK_WAIT_US_MAX' undeclared (first use in this function)
+>> drivers/pci/controller/cadence/pcie-cadence-host-common.c:61:39: error: use of undeclared identifier 'PCIE_LINK_WAIT_US_MAX'
       61 |                 usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
          |                                                     ^~~~~~~~~~~~~~~~~~~~~
+   3 errors generated.
 
 
 vim +/PCIE_LINK_WAIT_MAX_RETRIES +56 drivers/pci/controller/cadence/pcie-cadence-host-common.c
