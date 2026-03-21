@@ -1,44 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 216E622A817;
-	Sat, 21 Mar 2026 13:38:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3E5936EA8C;
+	Sat, 21 Mar 2026 14:17:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774100330; cv=none; b=D0m3EX6sjCn/BlNDaBQJoJClfEAsU+LlApstcrwMM33VBocADfvJfCpgPSNlGrsxA165nlSn1pTzYoC+KQBN6Y09JgnNqJUuSN0IowuCxvj1hKefuwKPBO2V4I9DB+HzLbizUIKnR4bDOXK2whWzqPguPEvuF7EU+GFoCCEUTMs=
+	t=1774102668; cv=none; b=WYh7exocBj2OHeekHdV2kW+7u557QOiZySDm//iMcI16rLdRIEPhTn3LKYzt3RAqm/EW9PLqqWz/kYQaE/9N9r2XSQqexqByE/m60ZAn6w9LZj9su+b0Wp5SXqhOLl0PKp0DdjRxqfzb4g7OIRFKlee7YMPkzf1J+L5bM49TTk0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774100330; c=relaxed/simple;
-	bh=XdYlom3Qx5rfTfFIDsTKcd5uelX4cS/UU3CMJNrqMDE=;
+	s=arc-20240116; t=1774102668; c=relaxed/simple;
+	bh=EjRLzIFXxpLSOjqNXm9qHnvAUFlVLBrEDeKaesBsmh8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MHEJq+nkCwEqYi7YAL7/O/Am/UqZoT8qfqsxYDgDVdHwymBXGu8ka53b/eDih8K37KY8luVk1Xx74KXFwdOx03m0kvnQOCBet0rUZcoIzoBRv5gqb4S3tqqLld2fxdUfyV//gn3cQo/IJRUG8nF//I/Xe0Y+TcXU2dSD+wgvAIw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DgiHMJRS; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ibWG71FHWYMWbfK+8N9wa61nADGqbUdLZCbj+ObbQUtLCQD90Fn3qMJvhHlRlOq4fSO6nPMitd/jybR7tKoTT6s301dYUCufQnveJ5576QnEpWvy6C6K+VMLUnBPvCDSdSyufPrZA7tFFNpgJNLNwpAhnk1rLRkH3JQilC4RfjQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jSYguq6G; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DgiHMJRS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E47BFC19421;
-	Sat, 21 Mar 2026 13:38:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jSYguq6G"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D253C19421;
+	Sat, 21 Mar 2026 14:17:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774100329;
-	bh=XdYlom3Qx5rfTfFIDsTKcd5uelX4cS/UU3CMJNrqMDE=;
+	s=k20201202; t=1774102668;
+	bh=EjRLzIFXxpLSOjqNXm9qHnvAUFlVLBrEDeKaesBsmh8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=DgiHMJRSu2ruv+rfKLyX8yncOhfETDLDFaOsjkxaTC8LQiJEtH1qYSUuRC/HlUbPi
-	 NNTsv/vVYfcu8PmusKo9MwR7XK5iudkzz9WYy9yry0Ttgrsn3VIygNMUGUpAWO495i
-	 2GY1rumtICV01JhRGA7PRYcbZdfoTJQvdkNcRR9V6nLcPOM+S7ZJ4PHR/hFQa9JS9c
-	 NYVH0eB9UAd24I/6cmO4rfNQfqx/YymGkzI1POHMM+iPU0T8pPHljs870MiiDpoFRa
-	 4iuNz13yZe8nYTYi71jfzgVfwdpwZcb5JQfFNkJrEoy0J6mZGmM3RaBRlmrYgtk73v
-	 iMMYQWq7QQYaQ==
-Date: Sat, 21 Mar 2026 19:08:36 +0530
+	b=jSYguq6G5Ga9R4ElnGtMToCRk2k75Ju45ScynQEDrTx5So9ENZAjN3SE1P6EuYblC
+	 SsO7l42HlXWQxoJpDU115iCvjGjPZ/mdFS3alXd7XqZNMWJqGyfOxGEWrU+GNPXh9M
+	 Cjd5H+9yuba/fOpzRBQA1kH72PyGBuy94WkvIlzP4pcH7IaUZAuUFNrFqCUTGS5aYk
+	 Y3uC8/OufH/geuruB9nhdFF0cspCWQOoQ8BY4fqD0Iq7VL56+DPaXsJjgXQyfLrfbC
+	 Mblqcabne3KAI/ILKfkcRkMLtVNed6o53Q00etpVh1+BwNw4dYSZD17Zir5hfy55di
+	 eqyOf+IjvJZ2A==
+Date: Sat, 21 Mar 2026 19:47:32 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Koichiro Den <den@valinux.co.jp>
-Cc: Dave Jiang <dave.jiang@intel.com>, Jon Mason <jdmason@kudzu.us>, 
-	Frank.Li@nxp.com, kishon@kernel.org, allenbh@gmail.com, kwilczynski@kernel.org, 
-	bhelgaas@google.com, jbrunet@baylibre.com, lpieralisi@kernel.org, 
-	linux-pci@vger.kernel.org, ntb@lists.linux.dev, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 00/10] PCI: endpoint: pci-epf-vntb: Document legacy
- MSI doorbell offset
-Message-ID: <rnzsnp5de4qf5w7smebkmqekpuaqckltx73rj6ha3q2nrby5yp@7hsgvdzvjkp6>
-References: <20260227084955.3184017-1-den@valinux.co.jp>
- <jne6ovpgukznu36lopk7aydv7rmcp3tl4pstn2fo46r6rt5jom@zxz27fgjom65>
- <e44ccisq4hnmy3lu3lroxc7ou6ssbr25bawbhr4tiud4pztxbw@spzprrgonwq7>
+Cc: Jingoo Han <jingoohan1@gmail.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Kishon Vijay Abraham I <kishon@kernel.org>, Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>, 
+	Allen Hubbe <allenbh@gmail.com>, Niklas Cassel <cassel@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
+	Bhanu Seshu Kumar Valluri <bhanuseshukumar@gmail.com>, Marco Crivellari <marco.crivellari@suse.com>, 
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, ntb@lists.linux.dev
+Subject: Re: [PATCH v10 1/7] PCI: endpoint: Add auxiliary resource query API
+Message-ID: <4why3747pr6avu3e6vqp2ovxtudpjnrhuq4ryb2inlhjnmwylh@yxl44amyjyqk>
+References: <20260302071427.534158-1-den@valinux.co.jp>
+ <20260302071427.534158-2-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,149 +50,113 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <e44ccisq4hnmy3lu3lroxc7ou6ssbr25bawbhr4tiud4pztxbw@spzprrgonwq7>
+In-Reply-To: <20260302071427.534158-2-den@valinux.co.jp>
 
-On Fri, Mar 20, 2026 at 11:55:23PM +0900, Koichiro Den wrote:
-> On Fri, Feb 27, 2026 at 05:57:40PM +0900, Koichiro Den wrote:
-> > On Fri, Feb 27, 2026 at 05:49:45PM +0900, Koichiro Den wrote:
-> > > This series fixes doorbell bit/vector handling for the EPF-based NTB
-> > > pair (ntb_hw_epf <-> pci-epf-*ntb). Its primary goal is to enable safe
-> > > per-db-vector handling in the NTB core and clients (e.g. ntb_transport),
-> > > without changing the on-the-wire doorbell mapping.
-> > > 
-> > > 
-> > > Background / problem
-> > > ====================
-> > > 
-> > > ntb_hw_epf historically applies an extra offset when ringing peer
-> > > doorbells: the link event uses the first interrupt slot, and doorbells
-> > > start from the third slot (i.e. a second slot is effectively unused).
-> > > pci-epf-vntb carries the matching offset on the EP side as well.
-> > > 
-> > > As long as db_vector_count()/db_vector_mask() are not implemented, this
-> > > mismatch is mostly masked. Doorbell events are effectively treated as
-> > > "can hit any QP" and the off-by-one vector numbering does not surface
-> > > clearly.
-> > > 
-> > > However, once per-vector handling is enabled, the current state becomes
-> > > problematic:
-> > > 
-> > >   - db_valid_mask exposes bits that do not correspond to real doorbells
-> > >     (link/unused slots leak into the mask).
-> > >   - ntb_db_event() is fed with 1-based/shifted vectors, while NTB core
-> > >     expects a 0-based db_vector for doorbells.
-> > >   - On pci-epf-vntb, .peer_db_set() may be called in atomic context, but
-> > >     it directly calls pci_epc_raise_irq(), which can sleep.
-> > > 
-> > > 
-> > > Why NOT fix the root offset?
-> > > ============================
-> > > 
-> > > The natural "root" fix would be to remove the historical extra offset in
-> > > the peer_db_set() doorbell paths for ntb_hw_epf and pci-epf-vntb.
-> > > Unfortunately this would lead to interoperability issues when mixing old
-> > > and new kernel versions (old/new peers). A new side would ring a
-> > > different interrupt slot than what an old peer expects, leading to
-> > > missed or misrouted doorbells, once db_vector_count()/db_vector_mask()
-> > > are implemented.
-> > > 
-> > > Therefore this series intentionally keeps the legacy offset, and instead
-> > > fixes the surrounding pieces so the mapping is documented and handled
-> > > consistently in masks, vector numbering, and per-vector reporting.
-> > > 
-> > > 
-> > > What this series does
-> > > =====================
-> > > 
-> > > - pci-epf-vntb:
-> > > 
-> > >   - Document the legacy offset.
-> > >   - Defer MSI doorbell raises to process context to avoid sleeping in
-> > >     atomic context. This becomes relevant once multiple doorbells are
-> > >     raised concurrently at a high rate.
-> > >   - Report doorbell vectors as 0-based to ntb_db_event().
-> > >   - Fix db_valid_mask and implement db_vector_count()/db_vector_mask().
-> > > 
-> > > - ntb_hw_epf:
-> > > 
-> > >   - Document the legacy offset in ntb_epf_peer_db_set().
-> > >   - Fix db_valid_mask to cover only real doorbell bits.
-> > >   - Report 0-based db_vector to ntb_db_event() (accounting for the
-> > >     unused slot).
-> > >   - Keep db_val as a bitmask and fix db_read/db_clear semantics
-> > >     accordingly.
-> > >   - Implement db_vector_count()/db_vector_mask().
-> > > 
-> > > 
-> > > Compatibility
-> > > =============
-> > > 
-> > > By keeping the legacy offset intact, this series aims to remain
-> > > compatible across mixed kernel versions. The observable changes are
-> > > limited to correct mask/vector reporting and safer execution context
-> > > handling.
-> > > 
-> > > Patches 1-5 (PCI Endpoint) and 6-10 (NTB) are independent and can be
-> > > applied separately for each tree. I am sending them together in this
-> > > series to provide the full context and to make the cross-subsystem
-> > > compatibility constraints explicit. Ideally the whole series would be
-> > > applied in a single tree, but each subset is safe to merge on its own.
-> > > 
-> > > - Patch 1-5 can apply cleanly onto pci/endpoint latest:
-> > >   f6797680fe31 ("PCI: epf-mhi: Return 0 on success instead of positive
-> > >                  jiffies from pci_epf_mhi_edma_{read/write}")
-> > > 
-> > > - Patch 6-10 can apply cleanly onto ntb-next latest:
-> > >   7b3302c687ca ("ntb_hw_amd: Fix incorrect debug message in link disable
-> > >                  path")
-> > > 
-> > > Note: I don't have a suitable hardware to test ntb_hw_epf + pci-epf-ntb
-> > > (not vNTB) bridge scenario, but I believe no changes are needed in
-> > > pci-epf-ntb.c.
-> > > 
-> > > 
-> > > Changelog
-> > > =========
-> > > 
-> > > Changes since v1:
-> > >   - Addressed feedback from Dave (add a source code comment, introduce
-> > >     enum to eliminate magic numbers)
-> > >   - Updated source code comment in Patch 2.
-> > >   - No functional changes, so retained Reviewed-by tags by Frank and Dave.
-> > >     Thank you both for the review.
-> > 
-> > Sorry, I accidentally used an incorrect series title.
-> > The correct subject should be:
-> > 
-> >   [PATCH v2 00/10] NTB: epf: Enable per-doorbell bit handling while keeping legacy offset
-> > 
-> > For reference, v1 is:
-> > https://lore.kernel.org/linux-pci/20260224133459.1741537-1-den@valinux.co.jp/
-> > 
-> > Best regards,
-> > Koichiro
+On Mon, Mar 02, 2026 at 04:14:21PM +0900, Koichiro Den wrote:
+> Endpoint controller drivers may integrate auxiliary blocks (e.g. DMA
+> engines) whose register windows and descriptor memories metadata need to
+> be exposed to a remote peer. Endpoint function drivers need a generic
+> way to discover such resources without hard-coding controller-specific
+> helpers.
 > 
-> Hi Mani (cc: Jon, Dave),
+> Add pci_epc_get_aux_resources() and the corresponding pci_epc_ops
+> get_aux_resources() callback. The API returns a list of resources
+> described by type, physical address and size, plus type-specific
+> metadata.
 > 
-> This series has been sitting for a while, so I'd like to check how to proceed.
+> Passing resources == NULL (or num_resources == 0) returns the required
+> number of entries.
 > 
-> I'm thinking of the following approach:
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> Tested-by: Niklas Cassel <cassel@kernel.org>
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
+>  drivers/pci/endpoint/pci-epc-core.c | 41 +++++++++++++++++++++++
+>  include/linux/pci-epc.h             | 52 +++++++++++++++++++++++++++++
+>  2 files changed, 93 insertions(+)
 > 
->   - get the remaining acks from the NTB side
->     (Dave already gave Reviewed-by for Patch 6/10)
->   - then route the whole series via the PCI EP tree
-> 
-> Does that sound reasonable?
-> 
-> If so, I can prepare a v3 rebased onto the latest pci/endpoint.
-> 
+> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+> index 32cf9a9bc365..d63967622505 100644
+> --- a/drivers/pci/endpoint/pci-epc-core.c
+> +++ b/drivers/pci/endpoint/pci-epc-core.c
+> @@ -157,6 +157,47 @@ const struct pci_epc_features *pci_epc_get_features(struct pci_epc *epc,
+>  }
+>  EXPORT_SYMBOL_GPL(pci_epc_get_features);
+>  
+> +/**
+> + * pci_epc_get_aux_resources() - query EPC-provided auxiliary resources
+> + * @epc: EPC device
+> + * @func_no: function number
+> + * @vfunc_no: virtual function number
+> + * @resources: output array (may be NULL to query required count)
+> + * @num_resources: size of @resources array in entries (0 when querying count)
+> + *
+> + * Some EPC backends integrate auxiliary blocks (e.g. DMA engines) whose control
+> + * registers and/or descriptor memories can be exposed to the host by mapping
+> + * them into BAR space. This helper queries the backend for such resources.
+> + *
+> + * Return:
+> + *   * >= 0: number of resources returned (or required, if @resources is NULL)
+> + *   * -EOPNOTSUPP: backend does not support auxiliary resource queries
+> + *   * other -errno on failure
+> + */
+> +int pci_epc_get_aux_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+> +			      struct pci_epc_aux_resource *resources,
+> +			      int num_resources)
+> +{
+> +	int ret;
+> +
+> +	if (!epc || !epc->ops)
+> +		return -EINVAL;
+> +
+> +	if (func_no >= epc->max_functions)
+> +		return -EINVAL;
+> +
+> +	if (!epc->ops->get_aux_resources)
+> +		return -EOPNOTSUPP;
+> +
+> +	mutex_lock(&epc->lock);
+> +	ret = epc->ops->get_aux_resources(epc, func_no, vfunc_no, resources,
+> +					  num_resources);
+> +	mutex_unlock(&epc->lock);
+> +
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_epc_get_aux_resources);
+> +
+>  /**
+>   * pci_epc_stop() - stop the PCI link
+>   * @epc: the link of the EPC device that has to be stopped
+> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+> index 63a24ebf144c..0827650acf93 100644
+> --- a/include/linux/pci-epc.h
+> +++ b/include/linux/pci-epc.h
+> @@ -61,6 +61,51 @@ struct pci_epc_map {
+>  	void __iomem	*virt_addr;
+>  };
+>  
+> +/**
+> + * enum pci_epc_aux_resource_type - auxiliary resource type identifiers
+> + * @PCI_EPC_AUX_DMA_CTRL_MMIO: Integrated DMA controller register window (MMIO)
+> + * @PCI_EPC_AUX_DMA_CHAN_DESC: Per-channel DMA descriptor
+> + * @PCI_EPC_AUX_DOORBELL_MMIO: Doorbell MMIO, that might be outside the DMA
+> + *                             controller register window
+> + *
+> + * EPC backends may expose auxiliary blocks (e.g. DMA engines) by mapping their
+> + * register windows and descriptor memories into BAR space. This enum
+> + * identifies the type of each exposable resource.
+> + */
+> +enum pci_epc_aux_resource_type {
+> +	PCI_EPC_AUX_DMA_CTRL_MMIO,
+> +	PCI_EPC_AUX_DMA_CHAN_DESC,
 
-Yes please. We have queued a lot of endpoint patches for v7.1, so it makes sense
-to route this series as a whole through PCI tree.
-
-Also as you noted, all the NTB patches need an Ack from Dave.
+I see that these resources are only used in [1], which is still in early stage.
+It'd help if you can just keep DOORBELL_MMIO resource related code in this
+series and add these resources when required.
 
 - Mani
+
+[1] https://lore.kernel.org/linux-pci/20260312165005.1148676-1-den@valinux.co.jp
 
 -- 
 மணிவண்ணன் சதாசிவம்
