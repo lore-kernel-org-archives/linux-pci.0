@@ -1,51 +1,44 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 184EA372B47;
-	Fri, 20 Mar 2026 22:54:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58A2A282F2B;
+	Sat, 21 Mar 2026 03:29:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774047300; cv=none; b=MXUPczoWFIqjkhp6iUUNrXLmHXHrwSfGaIRZbLj90MavMul5SyQYnepe7Zv3rO3Z/BPv0U/mBAY9/+paQkfIdt1vhPeaGmqmEfC9/nJMDB+1xxEUqqXkgOQASGACGUKgbr9Ddb5527ZeS/jsULtzipTfK1i7FqorF+ALkFbIJI4=
+	t=1774063777; cv=none; b=kX+yQ86xMZ9QxaYTT5AKzHIrFUciWXZyw6iuIQWsBRu1YptDlc2Jpp7HIWM8+IYTNzWxaIA+ovDK8LY3m4hmL4yCYJoXDWGojIBB+YSz4ynP8o/J1Ma6SaLpOb8PqCs/b4QIAi4UGa2Pa3Ec+kWbVGl+C6NpoCIpS7LlEzz+zIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774047300; c=relaxed/simple;
-	bh=SsmU2nqOzpuXrRR9zpJIfYdchMIHriuMuQK+TmDNHOk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cM9eDcoFkpm7kIjkvNo7amasmHpb2DZR0O5RPCNRDox/iT81MAp+VtwH/JYjAgO3EWRmgkKJeFv2+78P7kCNTqvEedjoKkmEXibFgXyF+I5MCCPfRMIVS80e4sOB5Iwiie/lzvgfb9U/fjFIabKzdMuzz+OLsBxm+L+/8o7ahRo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ik9ORKDG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774063777; c=relaxed/simple;
+	bh=slC3mdsDqffwAfHCYKYACSkngWI5jmOuKo1d6bFpBV8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=V7qqXSbdeD+KOFAvI1Aodmq0+4kPc7wurvyJ2HNJO8qgJD8iL7VzSwdAzroc+9RxTV3gzVXfWB++6ar0s6VAa/35zuHVAwQliV/zgJPRLGFW4p55MCS2ycu4qhaoGQimW6jne7SVnpUAHlhNfXfCMw6TwFUjlkQoDsQOcH7El2A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=OJz0Rc9X; arc=none smtp.client-ip=117.135.210.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ik9ORKDG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D543C4CEF7;
-	Fri, 20 Mar 2026 22:54:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774047299;
-	bh=SsmU2nqOzpuXrRR9zpJIfYdchMIHriuMuQK+TmDNHOk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Ik9ORKDGwsLIu63iBJdAmLVAXKS/Fuciv9bQ3q7JUWZG8Xk4Cw5mCcn4wrW0Cadzu
-	 lIlmiFfDO2BNsaZAdaQYR8uCkGH+CwvuQS3BvC63QQR2zOGSYTkOZ4kyJZM1eGoZ80
-	 qrjutZL4xmzW9EZ7/EkZ4dYTEFUFDm6RqbNkxbaQb6OVMv6ta/0hISQUKL5rilH26y
-	 5/CXeEzh0mST0UBiGZM1RcNKHC6SIyL3fSW+OTxydW4SS7yyv7ruB7nHH+9/Lvij9D
-	 dDB33xISCLs4qj5rFR9MiIFkFpa6wZTfPc+svbjEJjqAsg3r5lang6wgSMmuuBcxwB
-	 aoqCnMNtnOLEQ==
-From: Thierry Reding <thierry.reding@kernel.org>
-To: Thierry Reding <thierry.reding@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>
-Cc: Jon Hunter <jonathanh@nvidia.com>,
-	Mikko Perttunen <mperttunen@nvidia.com>,
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="OJz0Rc9X"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=gH
+	3UlZCCA32wzqcEC68qeE4zbrTNYQbhhoo0Ek2yBxA=; b=OJz0Rc9XJxgKIxG2jb
+	ZMfOcVunt5+Ob8x9k9Mvstrp9MylPJKfigfFSeBl6AJEvOag+8Y+mTipZTLkmN+m
+	6C/2iuypmY1BBheM3Op/8yAwxHEh7Sazz1/rm/oEV1ps6kUYLfiQJNeiM8NL+7dt
+	kuqaTi0mEUqea/CHSAMhP/8Jo=
+Received: from Precision-7960.. (unknown [])
+	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wBnh7l6EL5pi1oMAg--.45947S2;
+	Sat, 21 Mar 2026 11:28:59 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	hans.zhang@cixtech.com
+Cc: robh@kernel.org,
+	mpillai@cadence.com,
 	linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: [PATCH v2 5/5] arm64: tegra: Add PCI controllers on Tegra264
-Date: Fri, 20 Mar 2026 23:54:37 +0100
-Message-ID: <20260320225443.2571920-6-thierry.reding@kernel.org>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260320225443.2571920-1-thierry.reding@kernel.org>
-References: <20260320225443.2571920-1-thierry.reding@kernel.org>
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH v2 0/2] PCI: cadence: Add LTSSM debugfs
+Date: Sat, 21 Mar 2026 11:28:52 +0800
+Message-Id: <20260321032852.3007448-1-18255117159@163.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -53,325 +46,60 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wBnh7l6EL5pi1oMAg--.45947S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7tF4Uur4xJw43Zr17ZryUtrb_yoW8urWfpa
+	ykGrWfA3WxArW3Zan3Z3WUXFyftF97Aas7JwsF9w1xu3W3CryDJr4ftFWrXrW7GrZFqr17
+	Ar15twnrKF1SyFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0JUU73gUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBwt0Gm+EHwGMwAA3r
 
-From: Thierry Reding <treding@nvidia.com>
+Hi,
 
-A total of six PCIe controllers can be found on Tegra264. One of them is
-used internally for the integrated GPU while the other five can go to a
-variety of connectors like full PCIe slots or M.2.
+This series adds debugfs support to the Cadence PCIe controller driver,
+allowing users to read the current LTSSM state of the link for debugging
+purposes.
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
+Patch 1 introduces a new flag 'is_hpa' in the cdns_pcie structure to
+distinguish HPA (High Performance Architecture IP) platforms, which
+have a different register layout for LTSSM status.
+
+Patch 2 implements the debugfs file "ltssm_status" under a per-device
+directory. It reads the LTSSM state from the appropriate hardware register
+based on the 'is_hpa' flag and displays both a descriptive string and the
+raw value.
+
 ---
-Changes in v2:
-- order ECAM "reg" entry before others
+Changes for v2:
+- s/DW_PCIE_LTSSM_NAME/CDNS_PCIE_LTSSM_NAME/
+- S/January 2026/March 2026/
+- EXPORT_SYMBOL_GPL(cdns_pcie_debugfs_init); // Resolve the following error issues.
+  >> ERROR: modpost: "cdns_pcie_debugfs_init" [drivers/pci/controller/cadence/pcie-cadence-host-mod.ko] undefined!
+  >> ERROR: modpost: "cdns_pcie_debugfs_init" [drivers/pci/controller/cadence/pcie-cadence-ep-mod.ko] undefined!
 
- arch/arm64/boot/dts/nvidia/tegra264.dtsi | 248 ++++++++++++++++++++---
- 1 file changed, 221 insertions(+), 27 deletions(-)
+v1:
+https://patchwork.kernel.org/project/linux-pci/cover/20260315155514.127255-1-18255117159@163.com/
+---
 
-diff --git a/arch/arm64/boot/dts/nvidia/tegra264.dtsi b/arch/arm64/boot/dts/nvidia/tegra264.dtsi
-index 24cc2c51a272..5e76799e01e5 100644
---- a/arch/arm64/boot/dts/nvidia/tegra264.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra264.dtsi
-@@ -32,7 +32,7 @@ bus@0 {
- 		#address-cells = <2>;
- 		#size-cells = <2>;
- 
--		ranges = <0x00 0x00000000 0x00 0x00000000 0x01 0x00000000>;
-+		ranges = <0x00 0x00000000 0x00 0x00000000 0x00 0x20000000>; /* MMIO (512 MiB) */
- 
- 		misc@100000 {
- 			compatible = "nvidia,tegra234-misc";
-@@ -3356,9 +3356,10 @@ bus@8100000000 {
- 		#address-cells = <2>;
- 		#size-cells = <2>;
- 
--		ranges = <0x00 0x00000000 0x81 0x00000000 0x01 0x00000000>, /* MMIO */
--			 <0x01 0x00000000 0x00 0x20000000 0x00 0x40000000>, /* non-prefetchable memory (32-bit) */
--			 <0x02 0x00000000 0xd0 0x00000000 0x08 0x80000000>; /* ECAM, prefetchable memory, I/O */
-+		ranges = <0x00 0x00000000 0x81 0x00000000 0x00 0x20000000>, /* MMIO (512 MiB) */
-+			 <0x00 0x20000000 0x00 0x20000000 0x00 0x20000000>, /* non-prefetchable memory (32-bit, 512 MiB) */
-+			 <0x00 0x40000000 0x81 0x40000000 0x00 0x20000000>, /* MMIO (512 MiB) */
-+			 <0xa8 0x80000000 0xa8 0x80000000 0x57 0x80000000>; /* I/O, ECAM, prefetchable memory (64-bit) */
- 
- 		smmu1: iommu@5000000 {
- 			compatible = "nvidia,tegra264-smmu", "arm,smmu-v3";
-@@ -3402,23 +3403,23 @@ cmdqv2: cmdqv@6200000 {
- 
- 		mc: memory-controller@8020000 {
- 			compatible = "nvidia,tegra264-mc";
--			reg = <0x00 0x8020000 0x0 0x20000>, /* MC broadcast */
--			      <0x00 0x8040000 0x0 0x20000>, /* MC  0 */
--			      <0x00 0x8060000 0x0 0x20000>, /* MC  1 */
--			      <0x00 0x8080000 0x0 0x20000>, /* MC  2 */
--			      <0x00 0x80a0000 0x0 0x20000>, /* MC  3 */
--			      <0x00 0x80c0000 0x0 0x20000>, /* MC  4 */
--			      <0x00 0x80e0000 0x0 0x20000>, /* MC  5 */
--			      <0x00 0x8100000 0x0 0x20000>, /* MC  6 */
--			      <0x00 0x8120000 0x0 0x20000>, /* MC  7 */
--			      <0x00 0x8140000 0x0 0x20000>, /* MC  8 */
--			      <0x00 0x8160000 0x0 0x20000>, /* MC  9 */
--			      <0x00 0x8180000 0x0 0x20000>, /* MC 10 */
--			      <0x00 0x81a0000 0x0 0x20000>, /* MC 11 */
--			      <0x00 0x81c0000 0x0 0x20000>, /* MC 12 */
--			      <0x00 0x81e0000 0x0 0x20000>, /* MC 13 */
--			      <0x00 0x8200000 0x0 0x20000>, /* MC 14 */
--			      <0x00 0x8220000 0x0 0x20000>; /* MC 15 */
-+			reg = <0x000 0x8020000 0x0 0x20000>, /* MC broadcast */
-+			      <0x000 0x8040000 0x0 0x20000>, /* MC  0 */
-+			      <0x000 0x8060000 0x0 0x20000>, /* MC  1 */
-+			      <0x000 0x8080000 0x0 0x20000>, /* MC  2 */
-+			      <0x000 0x80a0000 0x0 0x20000>, /* MC  3 */
-+			      <0x000 0x80c0000 0x0 0x20000>, /* MC  4 */
-+			      <0x000 0x80e0000 0x0 0x20000>, /* MC  5 */
-+			      <0x000 0x8100000 0x0 0x20000>, /* MC  6 */
-+			      <0x000 0x8120000 0x0 0x20000>, /* MC  7 */
-+			      <0x000 0x8140000 0x0 0x20000>, /* MC  8 */
-+			      <0x000 0x8160000 0x0 0x20000>, /* MC  9 */
-+			      <0x000 0x8180000 0x0 0x20000>, /* MC 10 */
-+			      <0x000 0x81a0000 0x0 0x20000>, /* MC 11 */
-+			      <0x000 0x81c0000 0x0 0x20000>, /* MC 12 */
-+			      <0x000 0x81e0000 0x0 0x20000>, /* MC 13 */
-+			      <0x000 0x8200000 0x0 0x20000>, /* MC 14 */
-+			      <0x000 0x8220000 0x0 0x20000>; /* MC 15 */
- 			reg-names = "broadcast", "ch0", "ch1", "ch2", "ch3",
- 				    "ch4", "ch5", "ch6", "ch7", "ch8", "ch9",
- 				    "ch10", "ch11", "ch12", "ch13", "ch14",
-@@ -3437,12 +3438,12 @@ mc: memory-controller@8020000 {
- 			#size-cells = <2>;
- 
- 			/* limit the DMA range for memory clients to [39:0] */
--			dma-ranges = <0x0 0x0 0x0 0x0 0x100 0x0>;
-+			dma-ranges = <0x000 0x0 0x000 0x0 0x100 0x0>;
- 
- 			emc: external-memory-controller@8800000 {
- 				compatible = "nvidia,tegra264-emc";
--				reg = <0x00 0x8800000 0x0 0x20000>,
--				      <0x00 0x8890000 0x0 0x20000>;
-+				reg = <0x000 0x8800000 0x0 0x20000>,
-+				      <0x000 0x8890000 0x0 0x20000>;
- 				interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>;
- 				clocks = <&bpmp TEGRA264_CLK_EMC>,
- 					 <&bpmp TEGRA264_CLK_DBB_UPHY0>;
-@@ -3493,6 +3494,38 @@ cmdqv4: cmdqv@b200000 {
- 			status = "disabled";
- 		};
- 
-+		pci@c000000 {
-+			compatible = "nvidia,tegra264-pcie";
-+			reg = <0xd0 0xb0000000 0x0 0x10000000>,
-+			      <0x00 0x0c000000 0x0 0x00004000>,
-+			      <0x00 0x0c004000 0x0 0x00001000>,
-+			      <0x00 0x0c005000 0x0 0x00001000>;
-+			reg-names = "ecam", "xal", "xtl", "xtl-pri";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			linux,pci-domain = <0x00>;
-+			#interrupt-cells = <0x1>;
-+
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0x0 0x0 155 IRQ_TYPE_LEVEL_HIGH>,
-+					<0x0 0x0 0x0 0x2 &gic 0x0 0x0 0x0 156 IRQ_TYPE_LEVEL_HIGH>,
-+					<0x0 0x0 0x0 0x3 &gic 0x0 0x0 0x0 157 IRQ_TYPE_LEVEL_HIGH>,
-+					<0x0 0x0 0x0 0x4 &gic 0x0 0x0 0x0 158 IRQ_TYPE_LEVEL_HIGH>;
-+
-+			iommu-map = <0x0 &smmu2 0x10000 0x10000>;
-+			msi-map = <0x0 &its 0x210000 0x10000>;
-+			dma-coherent;
-+
-+			ranges = <0x81000000 0x00 0x84000000 0xd0 0x84000000 0x00 0x00200000>, /* I/O */
-+				 <0x82000000 0x00 0x20000000 0x00 0x20000000 0x00 0x08000000>, /* non-prefetchable memory (128 MiB) */
-+				 <0xc3000000 0xd0 0xc0000000 0xd0 0xc0000000 0x07 0xc0000000>; /* prefetchable memory */
-+			bus-range = <0x0 0xff>;
-+
-+			nvidia,bpmp = <&bpmp 0>;
-+			status = "disabled";
-+		};
-+
- 		i2c14: i2c@c410000 {
- 			compatible = "nvidia,tegra264-i2c";
- 			reg = <0x00 0x0c410000 0x0 0x10000>;
-@@ -3720,7 +3753,7 @@ bus@8800000000 {
- 		#address-cells = <2>;
- 		#size-cells = <2>;
- 
--		ranges = <0x00 0x00000000 0x88 0x00000000 0x01 0x00000000>;
-+		ranges = <0x00 0x00000000 0x88 0x00000000 0x00 0x20000000>; /* MMIO (512 MiB) */
- 
- 		smmu3: iommu@6000000 {
- 			compatible = "nvidia,tegra264-smmu", "arm,smmu-v3";
-@@ -3765,8 +3798,169 @@ bus@a800000000 {
- 		#address-cells = <2>;
- 		#size-cells = <2>;
- 
--		ranges = <0x00 0x00000000 0xa8 0x00000000 0x40 0x00000000>, /* MMIO, ECAM, prefetchable memory, I/O */
--			 <0x80 0x00000000 0x00 0x20000000 0x00 0x40000000>; /* non-prefetchable memory (32-bit) */
-+		ranges = <0x00 0x00000000 0xa8 0x00000000 0x00 0x20000000>, /* MMIO (512 MiB) */
-+			 <0x00 0x20000000 0x00 0x20000000 0x00 0x60000000>, /* non-prefetchable memory (32-bit, 1536 GiB) */
-+			 <0xa8 0x80000000 0xa8 0x80000000 0x57 0x80000000>; /* I/O, ECAM, prefetchable memory (64-bit) */
-+
-+		pci@8400000 {
-+			compatible = "nvidia,tegra264-pcie";
-+			reg = <0xa8 0xb0000000 0x0 0x10000000>,
-+			      <0x00 0x08400000 0x0 0x00004000>,
-+			      <0x00 0x08404000 0x0 0x00001000>,
-+			      <0x00 0x08405000 0x0 0x00001000>,
-+			      <0x00 0x08410000 0x0 0x00010000>;
-+			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			linux,pci-domain = <0x01>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0x0 0x0 908 IRQ_TYPE_LEVEL_HIGH>, /* INTA */
-+					<0x0 0x0 0x0 0x2 &gic 0x0 0x0 0x0 909 IRQ_TYPE_LEVEL_HIGH>, /* INTB */
-+					<0x0 0x0 0x0 0x3 &gic 0x0 0x0 0x0 910 IRQ_TYPE_LEVEL_HIGH>, /* INTC */
-+					<0x0 0x0 0x0 0x4 &gic 0x0 0x0 0x0 911 IRQ_TYPE_LEVEL_HIGH>; /* INTD */
-+
-+			iommu-map = <0x0 &smmu1 0x10000 0x10000>;
-+			msi-map = <0x0 &its 0x110000 0x10000>;
-+			dma-coherent;
-+
-+			ranges = <0x81000000 0x00 0x84000000 0xa8 0x84000000 0x00 0x00200000>, /* I/O */
-+				 <0x82000000 0x00 0x28000000 0x00 0x28000000 0x00 0x08000000>, /* non-prefetchable memory */
-+				 <0xc3000000 0xa8 0xc0000000 0xa8 0xc0000000 0x07 0xc0000000>; /* prefetchable memory */
-+			bus-range = <0x00 0xff>;
-+
-+			nvidia,bpmp = <&bpmp 1>;
-+			status = "disabled";
-+		};
-+
-+		pci@8420000 {
-+			compatible = "nvidia,tegra264-pcie";
-+			reg = <0xb0 0xb0000000 0x0 0x10000000>,
-+			      <0x00 0x08420000 0x0 0x00004000>,
-+			      <0x00 0x08424000 0x0 0x00001000>,
-+			      <0x00 0x08425000 0x0 0x00001000>,
-+			      <0x00 0x08430000 0x0 0x00010000>;
-+			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			linux,pci-domain = <0x02>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0x0 0x0 917 IRQ_TYPE_LEVEL_HIGH>, /* INTA */
-+					<0x0 0x0 0x0 0x2 &gic 0x0 0x0 0x0 918 IRQ_TYPE_LEVEL_HIGH>, /* INTB */
-+					<0x0 0x0 0x0 0x3 &gic 0x0 0x0 0x0 919 IRQ_TYPE_LEVEL_HIGH>, /* INTC */
-+					<0x0 0x0 0x0 0x4 &gic 0x0 0x0 0x0 920 IRQ_TYPE_LEVEL_HIGH>; /* INTD */
-+
-+			iommu-map = <0x0 &smmu1 0x20000 0x10000>;
-+			msi-map = <0x0 &its 0x120000 0x10000>;
-+			dma-coherent;
-+
-+			ranges = <0x81000000 0x00 0x84000000 0xb0 0x84000000 0x00 0x00200000>, /* I/O */
-+				 <0x82000000 0x00 0x30000000 0x00 0x30000000 0x00 0x08000000>, /* non-prefetchable memory */
-+				 <0xc3000000 0xb0 0xc0000000 0xb0 0xc0000000 0x07 0xc0000000>; /* prefetchable memory */
-+			bus-range = <0x00 0xff>;
-+
-+			nvidia,bpmp = <&bpmp 2>;
-+			status = "disabled";
-+		};
-+
-+		pci@8440000 {
-+			compatible = "nvidia,tegra264-pcie";
-+			reg = <0xb8 0xb0000000 0x0 0x10000000>,
-+			      <0x00 0x08440000 0x0 0x00004000>,
-+			      <0x00 0x08444000 0x0 0x00001000>,
-+			      <0x00 0x08445000 0x0 0x00001000>,
-+			      <0x00 0x08450000 0x0 0x00010000>;
-+			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			linux,pci-domain = <0x03>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0x0 0x0 926 IRQ_TYPE_LEVEL_HIGH>, /* INTA */
-+					<0x0 0x0 0x0 0x2 &gic 0x0 0x0 0x0 927 IRQ_TYPE_LEVEL_HIGH>, /* INTB */
-+					<0x0 0x0 0x0 0x3 &gic 0x0 0x0 0x0 928 IRQ_TYPE_LEVEL_HIGH>, /* INTC */
-+					<0x0 0x0 0x0 0x4 &gic 0x0 0x0 0x0 929 IRQ_TYPE_LEVEL_HIGH>; /* INTD */
-+
-+			iommu-map = <0x0 &smmu1 0x30000 0x10000>;
-+			msi-map = <0x0 &its 0x130000 0x10000>;
-+			dma-coherent;
-+
-+			ranges = <0x81000000 0x00 0x84000000 0xb8 0x84000000 0x00 0x00200000>, /* I/O */
-+				 <0x82000000 0x00 0x38000000 0x00 0x38000000 0x00 0x08000000>, /* non-prefetchable memory */
-+				 <0xc3000000 0xb8 0xc0000000 0xb8 0xc0000000 0x07 0xc0000000>; /* prefetchable memory */
-+			bus-range = <0x00 0xff>;
-+
-+			nvidia,bpmp = <&bpmp 3>;
-+			status = "disabled";
-+		};
-+
-+		pci@8460000 {
-+			compatible = "nvidia,tegra264-pcie";
-+			reg = <0xc0 0xb0000000 0x0 0x10000000>,
-+			      <0x00 0x08460000 0x0 0x00004000>,
-+			      <0x00 0x08464000 0x0 0x00001000>,
-+			      <0x00 0x08465000 0x0 0x00001000>,
-+			      <0x00 0x08470000 0x0 0x00010000>;
-+			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			linux,pci-domain = <0x04>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0x0 0x0 935 IRQ_TYPE_LEVEL_HIGH>, /* INTA */
-+					<0x0 0x0 0x0 0x2 &gic 0x0 0x0 0x0 936 IRQ_TYPE_LEVEL_HIGH>, /* INTB */
-+					<0x0 0x0 0x0 0x3 &gic 0x0 0x0 0x0 937 IRQ_TYPE_LEVEL_HIGH>, /* INTC */
-+					<0x0 0x0 0x0 0x4 &gic 0x0 0x0 0x0 938 IRQ_TYPE_LEVEL_HIGH>; /* INTD */
-+
-+			iommu-map = <0x0 &smmu1 0x40000 0x10000>;
-+			msi-map = <0x0 &its 0x140000 0x10000>;
-+			dma-coherent;
-+
-+			ranges = <0x81000000 0x00 0x84000000 0xc0 0x84000000 0x00 0x00200000>, /* I/O */
-+				 <0x82000000 0x00 0x40000000 0x00 0x40000000 0x00 0x08000000>, /* non-prefetchable memory */
-+				 <0xc3000000 0xc0 0xc0000000 0xc0 0xc0000000 0x07 0xc0000000>; /* prefetchable memory */
-+			bus-range = <0x00 0xff>;
-+
-+			nvidia,bpmp = <&bpmp 4>;
-+			status = "disabled";
-+		};
-+
-+		pci@8480000 {
-+			compatible = "nvidia,tegra264-pcie";
-+			reg = <0xc8 0xb0000000 0x0 0x10000000>,
-+			      <0x00 0x08480000 0x0 0x00004000>,
-+			      <0x00 0x08484000 0x0 0x00001000>,
-+			      <0x00 0x08485000 0x0 0x00001000>,
-+			      <0x00 0x08490000 0x0 0x00010000>;
-+			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			linux,pci-domain = <0x05>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0x0 0x0 944 IRQ_TYPE_LEVEL_HIGH>, /* INTA */
-+					<0x0 0x0 0x0 0x2 &gic 0x0 0x0 0x0 945 IRQ_TYPE_LEVEL_HIGH>, /* INTB */
-+					<0x0 0x0 0x0 0x3 &gic 0x0 0x0 0x0 946 IRQ_TYPE_LEVEL_HIGH>, /* INTC */
-+					<0x0 0x0 0x0 0x4 &gic 0x0 0x0 0x0 947 IRQ_TYPE_LEVEL_HIGH>; /* INTD */
-+
-+			iommu-map = <0x0 &smmu1 0x50000 0x10000>;
-+			msi-map = <0x0 &its 0x150000 0x10000>;
-+			dma-coherent;
-+
-+			ranges = <0x81000000 0x00 0x84000000 0xc8 0x84000000 0x00 0x00200000>, /* I/O */
-+				 <0x82000000 0x00 0x48000000 0x00 0x48000000 0x00 0x08000000>, /* non-prefetchable memory */
-+				 <0xc3000000 0xc8 0xc0000000 0xc8 0xc0000000 0x07 0xc0000000>; /* prefetchable memory */
-+			bus-range = <0x00 0xff>;
-+
-+			nvidia,bpmp = <&bpmp 5>;
-+			status = "disabled";
-+		};
- 	};
- 
- 	cpus {
+Hans Zhang (2):
+  PCI: cadence: Add HPA architecture flag
+  PCI: cadence: Add debugfs property to provide LTSSM status of the PCIe
+    link
+
+ Documentation/ABI/testing/debugfs-cdns-pcie   |   5 +
+ drivers/pci/controller/cadence/Kconfig        |   9 +
+ drivers/pci/controller/cadence/Makefile       |   1 +
+ drivers/pci/controller/cadence/pci-sky1.c     |   1 +
+ .../controller/cadence/pcie-cadence-debugfs.c | 214 ++++++++++++++++++
+ .../pci/controller/cadence/pcie-cadence-ep.c  |   2 +
+ .../cadence/pcie-cadence-host-hpa.c           |   8 +-
+ .../controller/cadence/pcie-cadence-host.c    |   8 +-
+ drivers/pci/controller/cadence/pcie-cadence.h | 147 ++++++++++++
+ 9 files changed, 393 insertions(+), 2 deletions(-)
+ create mode 100644 Documentation/ABI/testing/debugfs-cdns-pcie
+ create mode 100644 drivers/pci/controller/cadence/pcie-cadence-debugfs.c
+
+
+base-commit: 1c9982b4961334c1edb0745a04cabd34bc2de675
 -- 
-2.52.0
+2.34.1
 
