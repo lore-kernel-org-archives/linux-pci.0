@@ -1,46 +1,62 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46F492C11FD;
-	Sun, 22 Mar 2026 23:10:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9017C175A86;
+	Sun, 22 Mar 2026 23:37:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774221005; cv=none; b=LuD85DJWWjPjkkRcleVF+/7HChJu4ZS90HKt20Xe7tuXeC2nxaQTnmpwFbLjpTuLQyTaJXclojRex0M0Hcil/Xau+4kAaPZqGOHUM9497iyq1WuUtCgwku64AukINShqZncSpHr6DjsDK1bILFGQFhGipB/EAVPjkarKMUSnMKM=
+	t=1774222634; cv=none; b=mUOayxGd1ZfBUVeEbG1smemsrP4ZxUuWqzIUjATYxYmVukwcIf7M6dqSNqOH4tPLnYya4w+qiiH5HWbM3t0PBbBcbFvmcPOC1SgBoWOEr4XJjeqxKzGBPpO0afuvePpU3nsAeRSjptqiXvYm4UOb1WPk4Fkp3IYtguyVDoSBMTQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774221005; c=relaxed/simple;
-	bh=uU/gc7NH6waZjUqKluW+RwGApT2GspyV96WOVgY/dUU=;
+	s=arc-20240116; t=1774222634; c=relaxed/simple;
+	bh=C+cpYEwtbl8C0q9C0mMalH+TLGhOE8srxZhSJuIwx+g=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=g26JLFuwLocvXSNoUlCFA/e/UNkFZwn4tL/4+ynziFfxmuZ52J1B4YghS1CI+KlvMMsgsjzhmiyaTFfZBCILElSx25TIY/HbEUptMNxKCIhejRvuRGfJfMAWhT7hD7SFRuH5NnsTPcaDcwv9GMImZqQfun44uIH2gGEwJUZvMJA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YRITkAg4; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=iaGyXhjXCr31IXVxEMo8f0u4qbwwuIAf23hP9TPvLT10MNX5r3Y/RBgJAvprp3/98dPFeLGPEDi3oi75/jbFbHrN7svRIlNkDovNnW1kMa9Q0+ZgbCuqbi9+9dmt6OoP3hQ3r6A8WGeL/XaXqN61HlZwJknAc5YO/UcBXN7lpGw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d+7WSNmZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YRITkAg4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B6E2C19424;
-	Sun, 22 Mar 2026 23:10:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d+7WSNmZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E31D6C19424;
+	Sun, 22 Mar 2026 23:37:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774221004;
-	bh=uU/gc7NH6waZjUqKluW+RwGApT2GspyV96WOVgY/dUU=;
+	s=k20201202; t=1774222634;
+	bh=C+cpYEwtbl8C0q9C0mMalH+TLGhOE8srxZhSJuIwx+g=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YRITkAg4e52ie5vkQ91//aE+MGP8xDDqT77uMOuDKDad3W6DVicVxCKPuz5dBiD43
-	 z8LFZdzUNoEU7O5EWCyDBSCmBcEakvs7nz08D0mTb1ohxTR2/qinjmJ9Tn11VzBhtS
-	 jvGGeio0HZmZvuAijXR5hSkTINtY6LlFWRsZrhQT1wUcn/XXpoP50UeDXeF0B6ZdQe
-	 Azl64EnW6zlF5B0C2fkZVBtsvCbSBhdJbBYgfD6YGCybKIyJLZptLrlbmg7BX/qP3m
-	 27u+Uh+6h7HHHYOeZtzALs9tAlnHk+0wUI5EC+gc8iWhF+aYl9P3Z/Ml6ejaUbZ49E
-	 KNxP1rt1QA9Fg==
-Date: Sun, 22 Mar 2026 18:10:03 -0500
+	b=d+7WSNmZj4S8oSiXYk5eP5KyTbdNiEYggcm6Uj+B/1sYgR/Ce4pTRNKUoSr1Gf26q
+	 A5k+Ilqbqq7SdtpY1NBZzaCqeQZInLxHSsLlO3hj7yq8dEwlhGRo74lYFri8GjW/PT
+	 rSD9CwyrDne9Wza2FNGZtS30s8K30TxX5FaiDedQeVP7C9sP4NfWf47cD849Xp+CvZ
+	 6SXhpdtgnrmxguPMgp9+RUUJDWQyfeF4bYe7iFpkUuC/zauJtzFqqbRBXCEPPcX2Ay
+	 I9Dj54Lg86HRUtj2hxAJajZR2EN/AacRIqEx7dnNHhO6miQ1JvJuyiBA3xdXxNgH0u
+	 9R/zGQG+rUdIQ==
+Date: Sun, 22 Mar 2026 18:37:13 -0500
 From: Rob Herring <robh@kernel.org>
-To: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: krzk+dt@kernel.org, conor+dt@kernel.org, bhelgaas@google.com,
-	frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, mani@kernel.org, s.hauer@pengutronix.de,
-	kernel@pengutronix.de, festevam@gmail.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org, imx@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 2/5] dt-bindings: PCI: imx6q-pcie: Add i.MX94 and
- i.MX943 PCIe compatible strings
-Message-ID: <20260322231003.GA69234-robh@kernel.org>
-References: <20260313083443.2391254-1-hongxing.zhu@nxp.com>
- <20260313083443.2391254-3-hongxing.zhu@nxp.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Nathan Chancellor <nathan@kernel.org>,
+	Nicolas Schier <nicolas.schier@linux.dev>,
+	Hans de Goede <hansg@kernel.org>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Mark Pearson <mpearson-lenovo@squebb.ca>,
+	"Derek J. Clark" <derekjohn.clark@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Bartosz Golaszewski <brgl@kernel.org>, linux-serial@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org,
+	Stephan Gerhold <stephan.gerhold@linaro.org>,
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+	linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v6 6/9] dt-bindings: connector: m2: Add M.2 1620 LGA
+ soldered down connector
+Message-ID: <20260322233713.GA98177-robh@kernel.org>
+References: <20260317-pci-m2-e-v6-0-9c898f108d3d@oss.qualcomm.com>
+ <20260317-pci-m2-e-v6-6-9c898f108d3d@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,92 +65,46 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260313083443.2391254-3-hongxing.zhu@nxp.com>
+In-Reply-To: <20260317-pci-m2-e-v6-6-9c898f108d3d@oss.qualcomm.com>
 
-On Fri, Mar 13, 2026 at 04:34:40PM +0800, Richard Zhu wrote:
-> Add i.MX94 and i.MX943 PCIe compatible strings and fallback to
-> i.MX95 PCIe compatible string.
+On Tue, Mar 17, 2026 at 09:59:56AM +0530, Manivannan Sadhasivam wrote:
+> Lenovo Thinkpad T14s is found to have a soldered down version of M.2 1620
+> LGA connector. Though, there is no 1620 LGA form factor defined in the M.2
+> spec, it looks very similar to the M.2 Key E connector. So add the
+> "pcie-m2-1620-lga-connector" compatible with "pcie-m2-e-connector" fallback
+> to reuse the Key E binding.
+
+What is LGA?
+
+If not in the spec, is it really something generic?
+
 > 
-> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > ---
->  .../bindings/pci/fsl,imx6q-pcie-ep.yaml       | 20 +++++++++----
->  .../bindings/pci/fsl,imx6q-pcie.yaml          | 28 ++++++++++++-------
->  2 files changed, 32 insertions(+), 16 deletions(-)
+>  .../devicetree/bindings/connector/pcie-m2-e-connector.yaml       | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml
-> index 0b3526de1d62..b3b1ece6681e 100644
-> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml
-> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml
-> @@ -18,12 +18,20 @@ description: |+
+> diff --git a/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml b/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
+> index f7859aa9b634..d8cf9a9ec7d0 100644
+> --- a/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
+> +++ b/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
+> @@ -17,7 +17,14 @@ description:
 >  
 >  properties:
 >    compatible:
-> -    enum:
-> -      - fsl,imx8mm-pcie-ep
-> -      - fsl,imx8mq-pcie-ep
-> -      - fsl,imx8mp-pcie-ep
-> -      - fsl,imx8q-pcie-ep
-> -      - fsl,imx95-pcie-ep
+> -    const: pcie-m2-e-connector
 > +    oneOf:
-> +      - enum:
-> +          - fsl,imx8mm-pcie-ep
-> +          - fsl,imx8mp-pcie-ep
-> +          - fsl,imx8mq-pcie-ep
-> +          - fsl,imx8q-pcie-ep
-
-> +          - fsl,imx94-pcie-ep
-> +          - fsl,imx943-pcie-ep
-
-These should be dropped if they are compatible with imx95.
-
-> +          - fsl,imx95-pcie-ep
 > +      - items:
 > +          - enum:
-> +              - fsl,imx94-pcie-ep
-> +              - fsl,imx943-pcie-ep
-> +          - const: fsl,imx95-pcie-ep
->  
->    clocks:
->      minItems: 3
-> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
-> index 21dda8066014..fd5f7ff9c4a4 100644
-> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
-> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
-> @@ -21,16 +21,24 @@ description: |+
->  
->  properties:
->    compatible:
-> -    enum:
-> -      - fsl,imx6q-pcie
-> -      - fsl,imx6sx-pcie
-> -      - fsl,imx6qp-pcie
-> -      - fsl,imx7d-pcie
-> -      - fsl,imx8mq-pcie
-> -      - fsl,imx8mm-pcie
-> -      - fsl,imx8mp-pcie
-> -      - fsl,imx95-pcie
-> -      - fsl,imx8q-pcie
-> +    oneOf:
-> +      - enum:
-> +          - fsl,imx6q-pcie
-> +          - fsl,imx6sx-pcie
-> +          - fsl,imx6qp-pcie
-> +          - fsl,imx7d-pcie
-> +          - fsl,imx8mm-pcie
-> +          - fsl,imx8mp-pcie
-> +          - fsl,imx8mq-pcie
-> +          - fsl,imx8q-pcie
-> +          - fsl,imx94-pcie
-> +          - fsl,imx943-pcie
-> +          - fsl,imx95-pcie
+> +              - pcie-m2-1620-lga-connector
+> +          - const: pcie-m2-e-connector
 > +      - items:
 > +          - enum:
-> +              - fsl,imx94-pcie
-> +              - fsl,imx943-pcie
-> +          - const: fsl,imx95-pcie
+> +              - pcie-m2-e-connector
 >  
->    clocks:
->      minItems: 3
+>    vpcie3v3-supply:
+>      description: A phandle to the regulator for 3.3v supply.
+> 
 > -- 
-> 2.37.1
+> 2.51.0
 > 
