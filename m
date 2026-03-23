@@ -1,44 +1,53 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC7C137CD40;
-	Mon, 23 Mar 2026 21:38:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 359CF330650;
+	Mon, 23 Mar 2026 22:08:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774301935; cv=none; b=IsDLBxuY2s0hiNLmWDnSRjHzA5c4l6Fcp0diL4zbPsm3nI7QnBMZV354/yqRo7COVXeOBZaB4Ejj8HeERaXHH2TJBppkIrstWHnN2iOg7PgJ97EG6iYXX6OztNxlxPWfOZqZ5XZCvNxEhnrGjtEqOwXuW+dNnLGT+vfbEP9tNfU=
+	t=1774303740; cv=none; b=rWbTslhY+uHWo5Ewv+bmdBxnys7wMjOHWMkX082Reg1EVXkKnR9DpJLIbcftDoPFRJTmJWBHxSgsTtig58GfZFqt3zrjKheu0Vx1L2JHsK0R1r5cEto9xt8jd9is5m/IW/AhnxL7Umyp3UCt1bsKBZRZDGzvUVIO2Z3VDGInkqk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774301935; c=relaxed/simple;
-	bh=gAjYYf3hRs5vi0OKE6ikZD9bVDTcKqaoB+grQvL90TU=;
+	s=arc-20240116; t=1774303740; c=relaxed/simple;
+	bh=7+YNRg0192JPCv78lvVe/YYOAr1sQyE0YYeqhV3a2LE=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=bMpz/CvvZfKA9atnvN5nzS5BZNH53BXkruBeVeJIv6DH0CnHO/npCMPqmPPRj+TPLIv5s323qugwfusuPc5VXm9TU/BrxeRZXujHSh6hsj28FaKzKdlHYx3XEbZApl1m0TxdF250Wb6GzKacZkwqo7vLTC5wGVkVxfb3LJryXW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i9SsEylf; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=r0AYMm+GIPbFt0aPGFlqwTowenCm59JmigX5a8J/0D/GUL0ib7pBi73muCA/owdZyJma1bJxSPfFOrKASIFoRSBUTB7P4l2/NWqRlMBjtVkLnTwsp82PsMh2/4w4GSxomwM4ftwNMEX45OiNQgSDAK3oa7c+ajWe4YnQqIa7HvI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p6c6b7WN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i9SsEylf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50190C4CEF7;
-	Mon, 23 Mar 2026 21:38:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p6c6b7WN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7CD6C4CEF7;
+	Mon, 23 Mar 2026 22:08:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774301935;
-	bh=gAjYYf3hRs5vi0OKE6ikZD9bVDTcKqaoB+grQvL90TU=;
+	s=k20201202; t=1774303739;
+	bh=7+YNRg0192JPCv78lvVe/YYOAr1sQyE0YYeqhV3a2LE=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=i9SsEylfmybUGpWnTHIKaIPZbTnAyhfDzNDlpBqstx+yFvzpyb6AsTXIO1fr0zYaM
-	 PVxQPkXLPsmWkbBC8CUxGi7Ug1GALNpDFjybqmvk/7B53kKLZR7KoGA9HJgzJ9Xya4
-	 5dlc5afRO/J7dpWYhGrNTHhmBY4GG7wVW37Uz5efYhe99n7B8nk09jLqG2r1oDOWB1
-	 JSvIchf3ioKsRJ8S6xxZugbLNWN1bP+3yi3yddVewP00XFUsWu/X4rp2NZk8LQqd4i
-	 A5jRK2AvE1PNzpMpKbJ44bcMFDo9xPtJS02M66hn/Nve6BrgjupAD/SE+yjTuD0E4a
-	 8mJrCYfK6P4LA==
-Date: Mon, 23 Mar 2026 16:38:54 -0500
+	b=p6c6b7WNpOd2eeBbpZ+9+2Gsn8oNjJpqEk2RkYgUgq1lw+rXj7lyV3xUSS/Fs1CIS
+	 EUqx124nJBcjkR3Uu8YXUq3V3WcG29Bxtwo484LJIaQFr9GjafiBnbsFCRaG9LxULg
+	 wu5+MF1aIyKWHUL+pOXMNuWfo0nzegfaEcyt/Fj4LeK90B1W7TAs2lzxA28ZLPkKs7
+	 U7dkrBFu4aukb5MEnrk3StnwOweJG23d38+yVBRo++3W7W/CyiQjuEGv0tSez4uV4t
+	 CON5b+WUJSNCIFl6UfWTmP9KZVHCJc64626ftkv5JWT8AVGPaZ/J45MWlOVXTnBtTG
+	 bIOiaGwk4qPzg==
+Date: Mon, 23 Mar 2026 17:08:58 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Caleb James DeLisle <cjd@cjdns.fr>
-Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
-	naseefkm@gmail.com, ryder.lee@mediatek.com, bhelgaas@google.com,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
-	matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
-	ansuelsmth@gmail.com, linux-mediatek@lists.infradead.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] dt-bindings: PCI: mediatek: Add support for
- EcoNet EN7528
-Message-ID: <20260323213854.GA1082060@bhelgaas>
+To: Hongxing Zhu <hongxing.zhu@nxp.com>
+Cc: Frank Li <frank.li@nxp.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+	"lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+	"mani@kernel.org" <mani@kernel.org>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>,
+	"festevam@gmail.com" <festevam@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	"imx@lists.linux.dev" <imx@lists.linux.dev>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH v1] PCI: imx6: Add force_suspend flag to override L1SS
+ suspend skip
+Message-ID: <20260323220858.GA1084506@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,14 +56,110 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260320094212.696671-2-cjd@cjdns.fr>
+In-Reply-To: <AS8PR04MB8833061F34B9BEFC9D19764A8C4EA@AS8PR04MB8833.eurprd04.prod.outlook.com>
 
-On Fri, Mar 20, 2026 at 09:42:11AM +0000, Caleb James DeLisle wrote:
-> Introduce EcoNet EN7528 SoC compatible in MediaTek PCIe controller
-> binding.
-> 
-> EcoNet PCIe controller has the same configuration model as
-> Mediatek v2 but is initiallized more similarly to an MT7621
-> PCIe.
+On Wed, Mar 18, 2026 at 02:55:45AM +0000, Hongxing Zhu wrote:
+> > -----Original Message-----
+> > From: Bjorn Helgaas <helgaas@kernel.org>
+> ... [messed up quoting]
 
-s/initiallized/initialized/
+> > On Tue, Mar 17, 2026 at 02:12:56PM +0800, Richard Zhu wrote:
+> > > Add a force_suspend flag to allow platform drivers to force the PCIe
+> > > link into L2 state during suspend, even when L1SS (ASPM L1 Sub-States)
+> > > is enabled.
+> > >
+> > > By default, the DesignWare PCIe host controller skips L2 suspend when
+> > > L1SS is supported to meet low resume latency requirements for devices
+> > > like NVMe. However, some platforms like i.MX PCIe need to enter L2
+> > > state for proper power management regardless of L1SS support.
+> > >
+> > > Enable force_suspend for i.MX PCIe to ensure the link enters L2 during
+> > > system suspend.
+> > 
+> > I'm a little bit skeptical about this.
+> > 
+> > What exactly does a "low resume latency requirement" mean?  Is
+> > this an actual functional requirement that's special to NVMe, or
+> > is it just the desire for low resume latency that everybody has
+> > for all devices?
+>
+> From my understanding, L1SS mode is characterized by lower latency
+> when compared to L2 or L3 modes.
+>
+> It can be used on all devices, avoiding frequent power on/off
+> cycles. NVMe can also extend the service life of the equipment.
+
+All the above applies to all platforms, so it's not an argument for
+i.MX-specific code here.
+
+> > Is there something special about i.MX here?  Why do we want i.MX
+> > to be different from other host controllers?
+>
+> i.MX PCIe loses power supply during Deep Sleep Mode (DSM), requiring
+> full reinitialization after system wake-up.
+
+I don't know what DSM means in PCIe or how it would help justify this
+change.
+
+> Removing the L1SS check allows the suspend process to complete
+> successfully and ensures the pci->suspended flag is set to true,
+> which triggers the proper resume sequence during system wake-up for
+> i.MX PCIes.
+
+> > > Cc: stable@vger.kernel.org
+> > > Fixes: 4774faf854f5 ("PCI: dwc: Implement generic suspend/resume
+> > > functionality")
+> > > Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> > > ---
+> > >  drivers/pci/controller/dwc/pci-imx6.c             | 1 +
+> > >  drivers/pci/controller/dwc/pcie-designware-host.c | 4 +++-
+> > >  drivers/pci/controller/dwc/pcie-designware.h      | 1 +
+> > >  3 files changed, 5 insertions(+), 1 deletion(-)
+> > >
+> > > diff --git a/drivers/pci/controller/dwc/pci-imx6.c
+> > > b/drivers/pci/controller/dwc/pci-imx6.c
+> > > index 81a7093494c8..7902d39185a5 100644
+> > > --- a/drivers/pci/controller/dwc/pci-imx6.c
+> > > +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> > > @@ -1831,6 +1831,7 @@ static int imx_pcie_probe(struct platform_device
+> > *pdev)
+> > >  		if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_SKIP_L23_READY))
+> > >  			pci->pp.skip_l23_ready = true;
+> > >  		pci->pp.use_atu_msg = true;
+> > > +		pci->pp.force_l2_suspend = true;
+> > >  		ret = dw_pcie_host_init(&pci->pp);
+> > >  		if (ret < 0)
+> > >  			return ret;
+> > > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c
+> > > b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > > index a74339982c24..720154fd4ff0 100644
+> > > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> > > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > > @@ -1229,7 +1229,9 @@ int dw_pcie_suspend_noirq(struct dw_pcie *pci)
+> > >  	 * If L1SS is supported, then do not put the link into L2 as some
+> > >  	 * devices such as NVMe expect low resume latency.
+> > >  	 */
+> > > -	if (dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKCTL) &
+> > PCI_EXP_LNKCTL_ASPM_L1)
+> > > +	if (!pci->pp.force_l2_suspend &&
+> > > +	    (dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKCTL) &
+> > > +	     PCI_EXP_LNKCTL_ASPM_L1))
+> > >  		return 0;
+> > >
+> > >  	if (pci->pp.ops->pme_turn_off) {
+> > > diff --git a/drivers/pci/controller/dwc/pcie-designware.h
+> > > b/drivers/pci/controller/dwc/pcie-designware.h
+> > > index ae6389dd9caa..5261036bbe6e 100644
+> > > --- a/drivers/pci/controller/dwc/pcie-designware.h
+> > > +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> > > @@ -447,6 +447,7 @@ struct dw_pcie_rp {
+> > >  	bool			ecam_enabled;
+> > >  	bool			native_ecam;
+> > >  	bool                    skip_l23_ready;
+> > > +	bool                    force_l2_suspend;
+> > >  };
+> > >
+> > >  struct dw_pcie_ep_ops {
+> > > --
+> > > 2.37.1
+> > >
