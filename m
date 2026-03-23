@@ -1,255 +1,169 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazon11013030.outbound.protection.outlook.com [52.101.83.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BADCF2F4A0C;
-	Mon, 23 Mar 2026 18:43:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774291434; cv=none; b=Ac2FgBKxph2fZLEnhUMMc69k4Hcf5RRWIFCSzxz9aWO6TDRitZLQYYW9KEKJFnx7ny45qDCLHoOfalADdRC1asgCM33C42dfwIT46TJXkrsIfSSM5nYaL7tlJvDPl7E8wd27Vm/13WUwA15gwcmnLi1pUnBT2EOF3lBvfXOOmR4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774291434; c=relaxed/simple;
-	bh=BnDiV8ytQlshCFNFNCsjkLObdceDwr67Or+iSq8MRC0=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=X/SlYIpfGmKnvRq8GWZ6FRMoGwytS3R79NHbIgK1N7ah8Qt7/XOm6TuSFW+llZhFeUx7Dp0r1by/URpRK009MPEMOZS7RoBbbDE/63ysXzo/+HfYARrm66C1LEA2x2uo0OGiRukQjGQ5YUAJrGvctDvZO+P5kW4GARPGWmcJNPQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gwlRP2Hh; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4561332694E;
+	Mon, 23 Mar 2026 18:48:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.83.30
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774291702; cv=fail; b=p8ClTpJsOlUjgNCWYLggtCbWVf2qayFNHIuSHzaXOz5Q7z1Bat7zQCviA3EHnvesUoPQ2YjJg5vcI2hTGHZi2M3nv8SLOriY3TjkQ6ciDd3tSKoShF51pBCRbc09J0wKqSe9W/jL1LCL7BrTrT1eP6MUL1ljVcFevzOdk3hlt/g=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774291702; c=relaxed/simple;
+	bh=THhVkMmnDh6nkymzdlChh5fC4kwtiYSM6+h2DaaaE0E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=U41dy7OcHcG5KaIiNMMa4sXT8b6xPnGBWXHrxVluIzfptu/9XzIyK4cpxo4IVx/CmRW1o7f7jXj1jAs5mZzjK0RnQ7lunPx5jp3HGRH/rYa9Kqaa2yMXSaRDRhr8n5DQNyDfEV+ueJrcFhP+wlvKYeiAnUjQFU9JBs6qzUwArSU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=IAb+1NZh; arc=fail smtp.client-ip=52.101.83.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gwlRP2Hh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774291430; x=1805827430;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=BnDiV8ytQlshCFNFNCsjkLObdceDwr67Or+iSq8MRC0=;
-  b=gwlRP2HhF4QOLrnlNnRQDWV/WxYdny1S7obTIi+X1rUvRnjfb66GdS3/
-   TipAqbyVNRJbwmbJ+DNcAgZjvljtEqRnrEyC6P/NIYmNGCM6DwAmAk1jc
-   LZMCRytWgvtRHa76Br7swy5DkWwk5y/c9lEo2L/qx71j6ALph3TB82Sey
-   rf8zDIbae4EjwHwEmpEQ35SqzRaMOEZsT/N5vs1HYS+tG66YT0yvc/g2u
-   DATiZUKzo+qkM/hL2Ownkl2yQQCcl1HiiQqi2ptgkH5ZE7pyKbKaCT3Pa
-   kR5DGZy4/N5B81oEAcoVNTADQdtDT4VDw2E5Qp1klS1mD77aB7lHrnCqy
-   g==;
-X-CSE-ConnectionGUID: Nzs8be/QT3qG8LzrCx+hKA==
-X-CSE-MsgGUID: brDF7ksrQFmeDZcWWGa0xw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11738"; a="75319676"
-X-IronPort-AV: E=Sophos;i="6.23,137,1770624000"; 
-   d="scan'208";a="75319676"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2026 11:43:49 -0700
-X-CSE-ConnectionGUID: pMtp41bXQdO7UvfgROCi6g==
-X-CSE-MsgGUID: lsNIaCopSY2w13HeHCiJzA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,137,1770624000"; 
-   d="scan'208";a="228593573"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.49])
-  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2026 11:43:43 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Mon, 23 Mar 2026 20:43:34 +0200 (EET)
-To: Gerd Bayer <gbayer@linux.ibm.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>, Jay Cornwall <Jay.Cornwall@amd.com>, 
-    Felix Kuehling <Felix.Kuehling@amd.com>, 
-    Christian Borntraeger <borntraeger@linux.ibm.com>, 
-    Niklas Schnelle <schnelle@linux.ibm.com>, 
-    Gerald Schaefer <gerald.schaefer@linux.ibm.com>, 
-    Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
-    Alexander Gordeev <agordeev@linux.ibm.com>, 
-    Sven Schnelle <svens@linux.ibm.com>, Leon Romanovsky <leon@kernel.org>, 
-    Alexander Schmidt <alexs@linux.ibm.com>, linux-s390@vger.kernel.org, 
-    linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, 
-    Netdev <netdev@vger.kernel.org>, linux-rdma@vger.kernel.org, 
-    stable@vger.kernel.org
-Subject: Re: [PATCH v5 1/2] PCI: AtomicOps: Do not enable without support in
- root complex
-In-Reply-To: <20260323-fix_pciatops-v5-1-fada7233aea8@linux.ibm.com>
-Message-ID: <fc27b178-cf08-8f6a-5441-9fca908f4aa2@linux.intel.com>
-References: <20260323-fix_pciatops-v5-0-fada7233aea8@linux.ibm.com> <20260323-fix_pciatops-v5-1-fada7233aea8@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="IAb+1NZh"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=L8sq77YU4P0SmmmS4ZbBVK5ZFOT3rY40uth8eSMF1sVDlI/h5tckmREwdz62fL1Ft3gRG78SWqf3dS+nAC8ng1Vk6UszgUdALR2ZCNWSBajZVWmTCnsvIwUh3Jj4MykrFBK9qnBO0Vj1d5G0xf9PNwWKLkU+zOrhqZ/4YK/cN72UVcY7t5CT/ULErEkkeLCSlkd0z97I6SrpG0xynWB6fv5rgagxTeeKxPC4Y2Zr8qKvp3RX95bS8wCtQ2pgy5kD/myGu4VbtpR6fGObaBNceA1PsSVCJaXTfRP/uUG5gLH4PoobJ+c1GEgLC76ucSM4KBjRQeA31+95owjXDfHQ/A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=MUkGrgSMu50OzF1mxhLJCctRYdfsGr3GS9A4baxOxFA=;
+ b=chruOrMtTnOZX+jaeXlK0jw5h0sum/FBfOoUY9SwWb+oNqJRiNrlalWaFTpTnx0e7Ar+pZD7hlhxwejtLRTblAfwWBgNxF2eZ5GKreDg8YvydtcElrarPpsl/C6Wi8M4MN31sd+DqO4VYu9Xv7LOz9rH3u5s/mbdnPcpGhtYHQECA4c8qQau9kVrIM8d97lY/2mziFynIsQ3tLDDUlBLxsOBSIiBhupGPiEo2qidd+OHz3OrIEJj7t/y1NSDpcvaUt3iOGReXgm36+f1ys/bKCga0oqRQJFDfz8pUIR/6NfPe3iIEH4vP9/1uc/kEQjtmV8JDYkLwau5/qF4pXHxqQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=MUkGrgSMu50OzF1mxhLJCctRYdfsGr3GS9A4baxOxFA=;
+ b=IAb+1NZhC0S2q0wbjMQl7mjqgEhiq1+9MJOXm5QkAFOrx+dcbdrrxym5RrlAQuRRGuSUxqkYACYz1C5CKnugHjJTUzzUic06tfMDCDrl4vlGnhS3xmCkc9w9ETE3T8CEXxaYeWdQbOPgecU9eP6jfQ3YKUG7GOVfF3aIUn4w4/bEAX3R052RQORtTXq/GP29+RxujkQ5ng725aqKo1NZg5+riD5/oDBSnkbalR+qadYuOx0By3qftF3zlusUzzE9Jrb30da3UHCV1xpNX4Qn3wQNgZT9KGWBZ34bApZ3bCZxnJfoFwjVcMLXVu2LbHcGgw/S17GBPTxFQ9Hj4F3Kmg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
+ by PAXPR04MB9422.eurprd04.prod.outlook.com (2603:10a6:102:2b4::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.25; Mon, 23 Mar
+ 2026 18:48:03 +0000
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9723.030; Mon, 23 Mar 2026
+ 18:48:10 +0000
+Date: Mon, 23 Mar 2026 14:48:10 -0400
+From: Frank Li <Frank.li@nxp.com>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <allenbh@gmail.com>, Niklas Cassel <cassel@kernel.org>,
+	Bhanu Seshu Kumar Valluri <bhanuseshukumar@gmail.com>,
+	Marco Crivellari <marco.crivellari@suse.com>,
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ntb@lists.linux.dev
+Subject: Re: [PATCH v10 7/7] PCI: endpoint: pci-ep-msi: Add embedded doorbell
+ fallback
+Message-ID: <acGK6rUIyuJP6gF7@lizhi-Precision-Tower-5810>
+References: <20260302071427.534158-1-den@valinux.co.jp>
+ <20260302071427.534158-8-den@valinux.co.jp>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260302071427.534158-8-den@valinux.co.jp>
+X-ClientProxiedBy: SN7PR04CA0068.namprd04.prod.outlook.com
+ (2603:10b6:806:121::13) To PA4PR04MB9366.eurprd04.prod.outlook.com
+ (2603:10a6:102:2a9::8)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|PAXPR04MB9422:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5a9d85fc-3247-4a60-dcc6-08de890cbae9
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|19092799006|1800799024|52116014|7416014|376014|38350700014|56012099003|22082099003|18002099003|7053199007;
+X-Microsoft-Antispam-Message-Info:
+	xXvLKPAEEmJhm7AVmLhSYhnrbr/ImJk+EjfNM6usOYMiVNmsajX/l4LJa7zGU0wN+ToMjGAnIy0C+RFtYak50S5LkYDZ9uelPZ8T0gB9S80qr3kGiYAOAfbLE6cPMnBgFTxHLwhplYqs0+UmtaJpjTvGbY4Cs0CVpHTS2yobENLyHnVAYiFaTFnEW3OHJES7cuI4uf3bk4AP7sqzxG69qOm5wbp4x3y+CM8WnHQeokCfCpYs8UG7/UoSZTs7jWaM60gUcjiAbHBKsgf6J08BYOGmFlMJTujjB1zuY3L9FSLlhMDg/yWCMU8pCt4iNXTieT7KVSVxe4iMkTQxTQb1ovu/Y87IkLGP0Uo0KYpHICOSQVALVhtLNQxeqPg5WqLJHNfc5T0BGYVRiO6NHvWf/RJ7S7Z1lc9iXOBPlv9a4oVCvZnzdXVOZnxW5pRtcilD4f2sY61MTWUTfXqr2VfAnbm1V9dnQzqURH6wfd+ZuIyTKL4fJtGv/wlM73L0d3j04DXxMKuwerEWdbmckU0X696AzYBqCuF5GG1IbaWF4Q2AKAWb1Mu9qAOLar20fmO7aWVFiAAdCTCoqZBM/Zih7NdYA3uBCCDh6I3A1RurjVM2rLON3f7bwPolAlvn71KvXiNShpJhoFQP4Drwsrbu4LaMvvTKUTGNjOVuRGHTz6Z/TinHPts794pFsX+zsWWexkK4ZZULmWP30hmg35POgEyM5tgo40hac26iDb0R4sChdoaL+S3XFKhDBtjK1sxFhEhsJck534r9SHFFBArDnRXRMm1H7yEadzMk5RwiVWk=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(1800799024)(52116014)(7416014)(376014)(38350700014)(56012099003)(22082099003)(18002099003)(7053199007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?zKUJ9m/08qrvwmqfYC7oCQXc1GSgIgyBalOY2PRN3ygzeXfv5wBVHKIzQIXr?=
+ =?us-ascii?Q?42K0C76hU8qa9CdURs8o3m+iIrS04GiNaa2a5CsiyoQG8QrpdXAA2jFTSeQC?=
+ =?us-ascii?Q?rwvaUpefhN7FJ4NSDiDJKVY0vdZukfp0w3XGnuUah6ddlxiuO7W4AXGWuGTp?=
+ =?us-ascii?Q?UKoLP9q+N9bqTDsOa0Xl6HGYux6VFoWtvSzKgcjZYg+SpoqkIFCvvcFwGSzZ?=
+ =?us-ascii?Q?nx8tIeiv7QEF4DLVgDlNNKwSiLGE+7LEbe9Va5nqpHlN49kCKSb+YAgC3iqr?=
+ =?us-ascii?Q?UIc/s0Nbv/zBtyTs0j0eBqUfy0Eu1AUrLBSall0wBmOKs7KTm6ZVzrdapLkP?=
+ =?us-ascii?Q?h2IWcT8UUG2H0SOWLeNP7ZAZvWl5pJtklLhBCN1VMvnge13tgceI8G+pdWud?=
+ =?us-ascii?Q?yml3/8fRUO+21gISTAjz3KR2+4d2vTulHAfllHh+eGeu4GAbovDPx8+iHO0g?=
+ =?us-ascii?Q?qRxLyWRuE0ot/8MRCeaIgPgI9sPgbgCZgKJzXZJNv1urGA1tYIDd7tML/a9q?=
+ =?us-ascii?Q?qQj82vjMXAnZqqajo6zYrp7b/Kptv01km96xRXIEUKUk+jU98YX8YNQxlQX6?=
+ =?us-ascii?Q?Mw3c7G8oohwTi1iUEa/6DJDW+u47MBjHDQwFMiCFqPSPpnHL+6EpNXNjmifq?=
+ =?us-ascii?Q?Bt8QTn+wgluQCmdcfZmV/zaRlI40vVbUKq+Gmamdd+GQuAJ0uOFKh6mNy+Dr?=
+ =?us-ascii?Q?h1j3LOSfkMelfoUMJ8r2YiXeJFf2MgwGNSpeV+GQCHczZIMQOei7sYS4dkiy?=
+ =?us-ascii?Q?E5zNDHJwhB6AMOlsDMypJGtp64jBToeb7Jv8CS5N9V285pl/3/5qfEq0cA5w?=
+ =?us-ascii?Q?dLxo5IGXkUauyDnxvEPO8U+NQDCc5RV8Zx7IMAtOqVsXPVNN41T+QIvSP9w6?=
+ =?us-ascii?Q?73ugOdB9ZVssJzJLSeWIu6t/FvOt7t7ntw4mAYd8mj7BMST/VhSEk7BJargQ?=
+ =?us-ascii?Q?JJJecVn7NO2xhUMuSbvIc1dw5iD4LQONlfav2c1LMF0WsBJcTa0RH0dfhZHf?=
+ =?us-ascii?Q?FKrRL/DVeOu63Ov2km5ROdfShBMlfiTpK4y4YeZU4O7c8jPT6tkEPySfxXL6?=
+ =?us-ascii?Q?fOQfqPFDrOMuAwjF26Ig+w8TRdTgEW7VdDJXYepyqungZ27gm2OGkSsETmLc?=
+ =?us-ascii?Q?oZevacFCTFRS15vgTC137ch9Eoe+KrT6wevnYKGugLpuXns78Bdg/GDbfyoQ?=
+ =?us-ascii?Q?IwmDfpyzuGtenfi5zH8FrePnt0MbElZIbFp2WYei3ibbhh7L+gdGVB9I30II?=
+ =?us-ascii?Q?JULHTYMsF6KX4j7u3m9ULYGL4uKKkSDPMKf3Ag8dB9/gW3o/ruGoj+JE/k9i?=
+ =?us-ascii?Q?tWXU53+C3tJ7oc59Y/IlSlUvwokIiNR14bLuy6hy4vFS7J84k5RMqmB7uJef?=
+ =?us-ascii?Q?8elGmTAOCLhk1YeSu9iF3GhKI1OhWVP3UISOrlOcSbUgAIoiHNb3yYHm3BXN?=
+ =?us-ascii?Q?ZzqZ4Av9PVWwXUMwvGCttv7gdh+8kMsdMIEo7LvzGqUQOB9c8QpUkzJGFMOr?=
+ =?us-ascii?Q?mlGinBZEjzF1YmK+UUxqMWHAqSofsoWW1HLT68xj2Kj/HUBthMK0m3+0Qfs4?=
+ =?us-ascii?Q?tn1FuG8+DtsVxNETqSj6gkTN4N9i6Oh0p6RpAmagNfGLE8t4SquFfxPjqNQu?=
+ =?us-ascii?Q?H057Iv2xdADReBRNcjFRrPTwPikvPVl/4zRxGs91/9bvizpNRBA37rifKOnO?=
+ =?us-ascii?Q?V4wXVOu4R80w8aSnZLzVBhTUgwo+niY2pc3Z+kfLokVUpUq/?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5a9d85fc-3247-4a60-dcc6-08de890cbae9
+X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Mar 2026 18:48:10.4348
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: bWP20sGEQfMIgpl5DNwO1TV2aKMpLIFDSvUbOzgVaR6rHL3F5FbBUf7mbfJ6E2OEH59NGaJ0ybkGcWErzjFkYA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB9422
 
-On Mon, 23 Mar 2026, Gerd Bayer wrote:
-
-> When inspecting the config space of a Connect-X physical function in an
-> s390 system after it was initialized by the mlx5_core device driver, we
-> found the function to be enabled to request AtomicOps despite the
-> system's root-complex lacking support for completing them:
-> 
-> 1ed0:00:00.1 Ethernet controller: Mellanox Technologies MT2894 Family [ConnectX-6 Lx]
-> 	Subsystem: Mellanox Technologies Device 0002
->   [...]
-> 	DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-> 		 AtomicOpsCtl: ReqEn+
-> 		 IDOReq- IDOCompl- LTR- EmergencyPowerReductionReq-
-> 		 10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
-> 
-> Turns out the device driver calls pci_enable_atomic_ops_to_root() which
-> defaulted to enable AtomicOps requests even if it had no information
-> about the root-port that the PCIe device is attached to. Similarly,
-> AtomicOps requests are enabled for root-complex integrated endpoints
-> (RCiEPs) unconditionally.
-> 
-> Change the logic of pci_enable_atomic_ops_to_root() to fully traverse the
-> PCIe tree upwards, check that the bridge devices support delivering
-> AtomicOps transactions, and finally check that there is a root-port at
-> the end that does support completing AtomicOps - or that the support for
-> completing AtomicOps at the root complex is announced through some other
-> arch-specific way.
-> 
-> This announcement is implemented through the new
-> pcibios_connects_to_atomicops_capable_rc() function - with a default
-> implementation to always return "true" to leave the semantics for RCiEPs
-> intact. For s390, override pcibios_connects_to_atomicops_capable_rc() to
-> always return "false".
-> 
-> Do not change the enablement of AtomicOps requests if there is no
-> positive confirmation that the root complex can complete PCIe AtomicOps.
-> 
-> Reported-by: Alexander Schmidt <alexs@linux.ibm.com>
-> Cc: stable@vger.kernel.org
-> Fixes: 430a23689dea ("PCI: Add pci_enable_atomic_ops_to_root()")
-> Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
+On Mon, Mar 02, 2026 at 04:14:27PM +0900, Koichiro Den wrote:
+> Some endpoint platforms cannot use platform MSI / GIC ITS to implement
+> EP-side doorbells. In those cases, EPF drivers cannot provide an
+> interrupt-driven doorbell and often fall back to polling.
+>
+> Add an "embedded" doorbell backend that uses a controller-integrated
+> doorbell target (e.g. DesignWare integrated eDMA interrupt-emulation
+> doorbell).
+>
+> The backend locates the doorbell register and a corresponding Linux IRQ
+> via the EPC aux-resource API. If the doorbell register is already
+> exposed via a fixed BAR mapping, provide BAR+offset. Otherwise provide
+> the DMA address returned by dma_map_resource() (which may be an IOVA
+> when an IOMMU is enabled) so EPF drivers can map it into BAR space.
+>
+> When MSI doorbell allocation fails with -ENODEV,
+> pci_epf_alloc_doorbell() falls back to this embedded backend.
+>
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
 > ---
->  arch/s390/pci/pci.c |  5 +++++
->  drivers/pci/pci.c   | 46 +++++++++++++++++++++++++++++-----------------
->  include/linux/pci.h |  1 +
->  3 files changed, 35 insertions(+), 17 deletions(-)
-> 
-> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-> index 2a430722cbe415dd56c92fed2e513e524f46481a..a13235d3218e8ca451e25fe8d9094500fa21aa26 100644
-> --- a/arch/s390/pci/pci.c
-> +++ b/arch/s390/pci/pci.c
-> @@ -265,6 +265,11 @@ static int zpci_cfg_store(struct zpci_dev *zdev, int offset, u32 val, u8 len)
->  	return rc;
->  }
->  
-> +bool pcibios_connects_to_atomicops_capable_rc(struct pci_dev *pdev, u32 cap_mask)
-> +{
-> +	return false;
-> +}
+...
+> +	 */
+> +	if (doorbell->bar == NO_BAR) {
+> +		phys_base = addr & PAGE_MASK;
+> +		off = addr - phys_base;
+> +		map_size = PAGE_ALIGN(off + sizeof(u32));
 > +
->  resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->  				       resource_size_t size,
->  				       resource_size_t align)
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8479c2e1f74f1044416281aba11bf071ea89488a..c1143f8e6b2a0f029feb3c4390ac6f33837f6de1 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3660,6 +3660,21 @@ void pci_acs_init(struct pci_dev *dev)
->  	pci_disable_broken_acs_cap(dev);
->  }
->  
-> +
+> +		iova_base = dma_map_resource(epc->dev.parent, phys_base,
+> +					     map_size, DMA_FROM_DEVICE, 0);
 
-Extra newline.
+DB should write. Is it DMA_TO_DEVICE?
 
-> +static bool pci_is_atomicops_capable_rp(struct pci_dev *dev, u32 cap, u32 cap_mask)
-> +{
-> +	if ((!dev) ||
-
-Unnecessary parenthesis.
-
-> +	     !(pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT))
-
-This fits to one line.
-
-> +		return false;
-> +
-> +	return ((cap & cap_mask) == cap_mask);
-
-Extra parenthesis.
-
-> +}
-> +
-> +bool __weak pcibios_connects_to_atomicops_capable_rc(struct pci_dev *pdev, u32 cap_mask)
-> +{
-> +	return true;
-> +}
-> +
+Frank
+>
 >  /**
->   * pci_enable_atomic_ops_to_root - enable AtomicOp requests to root port
->   * @dev: the PCI device
-> @@ -3676,7 +3691,7 @@ void pci_acs_init(struct pci_dev *dev)
->  int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
->  {
->  	struct pci_bus *bus = dev->bus;
-> -	struct pci_dev *bridge;
-> +	struct pci_dev *bridge = NULL;
->  	u32 cap, ctl2;
->  
->  	/*
-> @@ -3714,29 +3729,26 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
->  		switch (pci_pcie_type(bridge)) {
->  		/* Ensure switch ports support AtomicOp routing */
->  		case PCI_EXP_TYPE_UPSTREAM:
-> -		case PCI_EXP_TYPE_DOWNSTREAM:
-> -			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
-> -				return -EINVAL;
-> -			break;
-> -
-> -		/* Ensure root port supports all the sizes we care about */
-> -		case PCI_EXP_TYPE_ROOT_PORT:
-> -			if ((cap & cap_mask) != cap_mask)
-> -				return -EINVAL;
-> -			break;
-> -		}
-> -
-> -		/* Ensure upstream ports don't block AtomicOps on egress */
-> -		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_UPSTREAM) {
-> +			/* Upstream ports must not block AtomicOps on egress */
->  			pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2,
->  						   &ctl2);
->  			if (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
->  				return -EINVAL;
-> +			fallthrough;
-> +		/* All switch ports need to route AtomicOps */
-> +		case PCI_EXP_TYPE_DOWNSTREAM:
-> +			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
-> +				return -EINVAL;
-> +			break;
->  		}
-> -
->  		bus = bus->parent;
->  	}
->  
-> +	/* Finally, last bridge must be root port and support requested sizes */
-> +	if (!(pci_is_atomicops_capable_rp(bridge, cap, cap_mask) ||
-> +	     pcibios_connects_to_atomicops_capable_rc(dev, cap_mask)))
-> +		return -EINVAL;
-> +
->  	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
->  				 PCI_EXP_DEVCTL2_ATOMIC_REQ);
->  	return 0;
-> @@ -3813,7 +3825,7 @@ static int __pci_request_region(struct pci_dev *pdev, int bar,
->  
->  err_out:
->  	pci_warn(pdev, "BAR %d: can't reserve %pR\n", bar,
-> -		 &pdev->resource[bar]);
-> +			&pdev->resource[bar]);
-
-Unrelated change.
-
->  	return -EBUSY;
->  }
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1c270f1d512301de4d462fe7e5097c32af5c6f8d..498f266c9838c55e9b03d03fef49a82358047f4f 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -692,6 +692,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
->  				 void *release_data);
->  
->  int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
-> +bool pcibios_connects_to_atomicops_capable_rc(struct pci_dev *pdev, u32 cap_mask);
->  
->  #define PCI_REGION_FLAG_MASK	0x0fU	/* These bits of resource flags tell us the PCI region flags */
->  
-> 
-> 
-
--- 
- i.
-
+> --
+> 2.51.0
+>
