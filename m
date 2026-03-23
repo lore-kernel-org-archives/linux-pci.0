@@ -1,166 +1,226 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from flow-b2-smtp.messagingengine.com (flow-b2-smtp.messagingengine.com [202.12.124.137])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF15E3AEF5E
-	for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2026 17:18:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA59A3C73CA;
+	Mon, 23 Mar 2026 17:23:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.137
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774286301; cv=none; b=mf9yv9agIldpVdQAHxt1Xbx0MkMppEUGWo2P6Mui8IdWrgFPsztxPTfE1NKecSxruPhfrGFIYKrac/7Fwo15LMkiKYkwii9B5B/Iw0KM+ZS4vzalahJzn8FXDiI52dVRbYriTz4b2T2asmeE2mfrnD6As08C9N0J6HKlefLfFic=
+	t=1774286614; cv=none; b=Z0/ddQ3qr4EjY976BgpBfF0s/pQnuSsVIsubjf+r0yvEEu04+g/v06vLldOoi19mftr998MvQ1tpAdb/jIpXfBYooNewJOTsodSSXMk1KdsFybrFOVKOWVLTrlbal4wc+bfhMKL4h4/Fmv+AS7R6GXqlBg73+IwY/sozNtzR5/s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774286301; c=relaxed/simple;
-	bh=SwZSBJ5dtFN1L7uizFJq7oOv2U7xSNXH+wFesahHWcM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=btLnMmNkVzgMEp1oGQMBVwsu9Sxl+L88sLOOcDmBhoCyk5pcay/uT6aONQbvXi2/i2v4ROfw+lNwLy9yD7NWkgIjrDM2LxIVv7v1tHj3Ky+XUgbevY3QJvcB2PFMnBfRsbZ4KiFem7n0sAhcnKcCGtqbrFSGsL3hJ+U494UnKkA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=H7LtVRLv; arc=none smtp.client-ip=209.85.128.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1774286614; c=relaxed/simple;
+	bh=8F5DHzbZOkiE60z+INX/R3wfwDAeDzgLhwAv/Br77fM=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=slFg596lTpC1nIF2BSH/RRGoQFVDwioNpCm1owGA8nvqo8bJEpKJe5/Furdz7JwcPox1nWt+0wz/PiXjWUeX7Ur4b9F1F1qwqhZGqNTmfnQmms3pdjXJz/6WiOlBnaTxd/aPAYV4lyy+JIxskmX5plDVLW0DMyFZfmyQaUohkGo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=squebb.ca; spf=pass smtp.mailfrom=squebb.ca; dkim=pass (2048-bit key) header.d=squebb.ca header.i=@squebb.ca header.b=d0w2WMuA; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=T39gwOEy; arc=none smtp.client-ip=202.12.124.137
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=squebb.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=squebb.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="H7LtVRLv"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-48702d51cd0so29790475e9.2
-        for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2026 10:18:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1774286296; x=1774891096; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=QEgEB+FhJamQekHHnnzeHBVC3CCx1oLXNDdzh85xf2M=;
-        b=H7LtVRLvEnB8cTx7BQFvJ5hu9u4rx5QsZxDYkmDtjyjJuafEJpVzLCAWAJURU77xBg
-         z+7IKMdc++ikOe8pM6fhMXe+h4jQrqi63lRYfnRYy6ey+ggAa76ieXCz6qP4LZWnDlWP
-         nuNwstvVAyOAnh/gY3dXQmuk/wFsG6A0ri7um0oX647bRHav456rcHtBk3oIiJz9h43W
-         DxwIV2c2+lSlTFuKuQtPDRtW8Iyji+gAvs6ZjUP5MT0oN/Tfs7PpGgeH1pXKx2D36jw3
-         dKW1OMqFO0zByNy5eLIaM05hT/8Ec4kas0wyGTEMrJ32YXgHC8fEY4CdczmrroM8pDD4
-         e0Kg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774286296; x=1774891096;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=QEgEB+FhJamQekHHnnzeHBVC3CCx1oLXNDdzh85xf2M=;
-        b=fwmWWoNgtXFjJIvvgz9J8/fqkoZEsRdZH9b1WxZXQx0/Dl0wmtzvbG1nYWy+gCrS2y
-         5Piy0j6SfYVrBN5awXMb2rNEGM3PR10FemIKyZQ6jDUikHWqN+o9ZmJzOgHQRqP1ghsn
-         W5dQUvtoYH/ORmPzLO2xYTOXVD2YKYqO+LIwPg12WBE0eiaf1Qb7eBTZgTIeU9RRolPq
-         Ua+HKYhUJc2KkkizmzgcCqj5WrUZ4nu38ObJZrnJUad+UcytkZyb2f2tvqMZyrQ0DPQi
-         5MaGtoZuMmCmBqy2PfyEluDkpgU1/2o5RxpJ2b/tHUBKhyoFy77S/u7h0gsI7eXWnUN6
-         Mojw==
-X-Forwarded-Encrypted: i=1; AJvYcCWQSjn8mHXPVQgyxRA2WUnbj9ULnynfg7AqJyKhVl8lpi6DD4qsK/FBgNd2D83hUJErzyplHBBk0ow=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw4Im5aHn8uLj58thAXkeqhA+KOJ9DMqWqs2hqAxDj9PQIQaaFV
-	MJTfOrOgue4hl2p5MXxKJYoTPRnbW5Bk+jH2WvM/HxXoYs4j3i96vTuY0SzMvEu5DDk=
-X-Gm-Gg: ATEYQzzlsWBVukCw6fCeUI8HOojShWYdwTrlyMcmgj1zAU8WceDbmcVkc02Ld3QShjf
-	Yow7BZ454KctwJ3yhR6c148S2S3wxAhlTWs7TWeaMBKyXIwPAAsqJYlXKpdBtk0s/06BrPZISc3
-	PHtMXMtRVS57k29cWF0LNBIDiZJ77mTiyoTLpLSjQXl4mK3/ljVQ9MwBNHSPdvneikO/PsEqUtf
-	5aU/ysheBqRnoAXkLKqY65Gvnw2tPgEaWWjfJy7FQdp46lOtSw9ijZIYUoaPKZChl1A0k3VSTsW
-	DMYK/hakFAOYn10QjAekC1S5dyCbe1/VDlR2Y7zgA3doFboRjwzClSLgyzxi2mHpo8W4Y9ip/9q
-	W3dZadBH2yim3Ma1rDDIfdxhMsYOEjB6mwp0U+V+3Ml4348fCAmVI56IxJQUyITvfuuPE0jxUJT
-	JzWnVEQ75ZuUT83OO5suyOljnFuhXiV24=
-X-Received: by 2002:a05:600c:c083:b0:485:3f72:324d with SMTP id 5b1f17b1804b1-486fee0481amr142927935e9.14.1774286295324;
-        Mon, 23 Mar 2026 10:18:15 -0700 (PDT)
-Received: from [10.11.12.108] ([79.115.63.77])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43b644bf1c5sm33929334f8f.14.2026.03.23.10.18.11
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 23 Mar 2026 10:18:13 -0700 (PDT)
-Message-ID: <67b32e90-1f60-4bf5-b534-b4a901d5a796@linaro.org>
-Date: Mon, 23 Mar 2026 19:18:08 +0200
+	dkim=pass (2048-bit key) header.d=squebb.ca header.i=@squebb.ca header.b="d0w2WMuA";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="T39gwOEy"
+Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
+	by mailflow.stl.internal (Postfix) with ESMTP id AEAE71300250;
+	Mon, 23 Mar 2026 13:23:29 -0400 (EDT)
+Received: from phl-imap-08 ([10.202.2.84])
+  by phl-compute-02.internal (MEProxy); Mon, 23 Mar 2026 13:23:30 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=squebb.ca; h=cc
+	:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1774286609;
+	 x=1774293809; bh=8F5DHzbZOkiE60z+INX/R3wfwDAeDzgLhwAv/Br77fM=; b=
+	d0w2WMuASvhIHc8a3ZfS0bSovZpUguTxsV12SkJzLl/HgFTO96E8OsN6d6PFrRYr
+	XHyKTm84Vlu7Tme/FZTaw0VGpuJ8bd9SIFnBq7bZWD1TgSXMwEt+Ap2P5Cr5y5rb
+	kh48eiYnLAe4C36R9y9XZ5Zg6lxDvpLGPh8KJGh1qX4WXsw8iq3GoopxXo0wdcIy
+	SKgjzMBKuf2OLoWajsbw2F4ld+LPm1ydhX7IWHymLKSmvFTHk5G5DuniFfqplcMy
+	65xiZdyuVFv3n4Cp6M4NViPWZR5xC134H6qqy1/2RPbWvmUWLHoufcPqtdKvun5t
+	+UoyEGPxVxwM8podnx9RfQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1774286609; x=
+	1774293809; bh=8F5DHzbZOkiE60z+INX/R3wfwDAeDzgLhwAv/Br77fM=; b=T
+	39gwOEyRtCyYoMOGxdB1aekPredjoXFLaW3m6i6BbkmcD3TENUY+rGnLBscpaGLD
+	pl/gY6Wad3V5npcJa+8/w3KHGhFEusITcXXc49+4OiqXWkkWqj7GgJH8XTM5yjo+
+	jKGeMvnm+u6AMx2msR1uFbO17rxuPrmWriiZvC9roJIKLpAsGlrFIxypDrEAkvQE
+	F6iQHUCna5dGO3+Oq4eQOTcYpv/U7VYXNNXsjILB4Q+VfMN88xaCKhgGUbalORTP
+	SesNWUyY8BIA+Br7/XSafGCp3A8lFxKcYM8/VZdx2BHUUeCTZCFBxS+/3nO3hbbr
+	+ysYeMBoP68cYbvX3Krdg==
+X-ME-Sender: <xms:EHfBaaVOuDeremT5Xu0AuWObJubLqQ2Wnl5vZlfNhouYJf7BwlCLnQ>
+    <xme:EHfBaRaOzMH4ETuoxDhEO01_PK1EegNYbN5kOqpTOp4DbfEiYa3UCxuGHG8QuabyD
+    S4ouWK2fowUUjV5WyYISt_lOKBh6aIkxJ0nstyLSSjysmnUY8SnNDg>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdefudelfedtucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepofggfffhvfevkfgjfhfutgfgsehtqhertdertdejnecuhfhrohhmpedfofgrrhhk
+    ucfrvggrrhhsohhnfdcuoehmphgvrghrshhonhdqlhgvnhhovhhosehsqhhuvggssgdrtg
+    grqeenucggtffrrghtthgvrhhnpefhveekjeeuueekfefhleeljeehuedugfetffdvteek
+    ffejudelffdvjeekfeehvdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmh
+    grihhlfhhrohhmpehmphgvrghrshhonhdqlhgvnhhovhhosehsqhhuvggssgdrtggrpdhn
+    sggprhgtphhtthhopedvledpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohepsghrgh
+    hlsegsghguvghvrdhplhdprhgtphhtthhopeguvghrvghkjhhohhhnrdgtlhgrrhhksehg
+    mhgrihhlrdgtohhmpdhrtghpthhtoheplhhuihiirdguvghnthiisehgmhgrihhlrdgtoh
+    hmpdhrtghpthhtohepmhgrrhgtvghlsehhohhlthhmrghnnhdrohhrghdprhgtphhtthho
+    pegsrhhglheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheptghonhhorhdoughtsehkvg
+    hrnhgvlhdrohhrghdprhgtphhtthhopehhrghnshhgsehkvghrnhgvlhdrohhrghdprhgt
+    phhtthhopehjihhrihhslhgrsgihsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehkrh
+    iikhdoughtsehkvghrnhgvlhdrohhrgh
+X-ME-Proxy: <xmx:EHfBaSqJKl4O8U5DXXnUHJ4ARuuLtgpyod5Zu0bYenGxtsS85upgIQ>
+    <xmx:EHfBaS_HCcsciKk7yEWlaATTUB0CHoip4D6Rvf83VxqBWMmapLm_VQ>
+    <xmx:EHfBaV5mRbon4XVx5UyVqJ7B0Up2zUVFC-vVEljM-RiIxKDNHEp84g>
+    <xmx:EHfBae0fWgVJV-sLFsw6aUUf4UNq6Juf-hZdi3M7ZrPWNpzYulPmdw>
+    <xmx:EXfBaaZiou-wWxJxEAUqaRa4s0NByc4B1hm1naWmg3Gc55SFVLDUw_Ug>
+Feedback-ID: ibe194615:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id 94F912CE0078; Mon, 23 Mar 2026 13:23:28 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 4/4] iommu: Get DT/ACPI parsing into the proper probe
- path
-To: Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>, Hanjun Guo
- <guohanjun@huawei.com>, Sudeep Holla <sudeep.holla@arm.com>,
- "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
- Russell King <linux@armlinux.org.uk>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Danilo Krummrich <dakr@kernel.org>, Stuart Yoder <stuyoder@gmail.com>,
- Laurentiu Tudor <laurentiu.tudor@nxp.com>, Nipun Gupta
- <nipun.gupta@amd.com>, Nikhil Agarwal <nikhil.agarwal@amd.com>,
- Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
- devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
- Charan Teja Kalla <quic_charante@quicinc.com>,
- Peter Griffin <peter.griffin@linaro.org>,
- =?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>,
- Juan Yescas <jyescas@google.com>, kernel-team@android.com
-References: <e3b191e6fd6ca9a1e84c5e5e40044faf97abb874.1740753261.git.robin.murphy@arm.com>
-Content-Language: en-US
-From: Tudor Ambarus <tudor.ambarus@linaro.org>
-In-Reply-To: <e3b191e6fd6ca9a1e84c5e5e40044faf97abb874.1740753261.git.robin.murphy@arm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-ThreadId: AJPKs3BxgghB
+Date: Mon, 23 Mar 2026 13:23:07 -0400
+From: "Mark Pearson" <mpearson-lenovo@squebb.ca>
+To: "Manivannan Sadhasivam" <mani@kernel.org>,
+ "Dmitry Baryshkov" <dmitry.baryshkov@oss.qualcomm.com>
+Cc: "Rob Herring" <robh@kernel.org>,
+ "Manivannan Sadhasivam" <manivannan.sadhasivam@oss.qualcomm.com>,
+ "Greg KH" <gregkh@linuxfoundation.org>,
+ "Jiri Slaby" <jirislaby@kernel.org>,
+ "Nathan Chancellor" <nathan@kernel.org>,
+ "Nicolas Schier" <nicolas.schier@linux.dev>,
+ "Hans de Goede" <hansg@kernel.org>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ "Derek J . Clark" <derekjohn.clark@gmail.com>,
+ "Krzysztof Kozlowski" <krzk+dt@kernel.org>,
+ "Conor Dooley" <conor+dt@kernel.org>,
+ "Marcel Holtmann" <marcel@holtmann.org>,
+ "Luiz Augusto von Dentz" <luiz.dentz@gmail.com>,
+ "Bartosz Golaszewski" <brgl@bgdev.pl>,
+ "Andy Shevchenko" <andriy.shevchenko@linux.intel.com>,
+ "Bartosz Golaszewski" <brgl@kernel.org>, linux-serial@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org,
+ "platform-driver-x86@vger.kernel.org"
+ <platform-driver-x86@vger.kernel.org>, linux-pci@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org,
+ "Stephan Gerhold" <stephan.gerhold@linaro.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Message-Id: <3faffec9-dc9d-4eec-a652-a84d30d85c96@app.fastmail.com>
+In-Reply-To: 
+ <m44mupdmg7kgco62n4evcviagqo7wwgyt3gybugbxwesd4ekjz@o24r6v4tpezc>
+References: <20260317-pci-m2-e-v6-0-9c898f108d3d@oss.qualcomm.com>
+ <20260317-pci-m2-e-v6-6-9c898f108d3d@oss.qualcomm.com>
+ <20260322233713.GA98177-robh@kernel.org>
+ <to2mrizprc3hjufqbiplpqyek7f4uutqtn4hx4gkmdgv2rykbc@ybwwjhdec4nm>
+ <CAL_JsqJXrHCJt770bJkMmAUhirSF3kHjYwSzkG7cXp7-eys8Rg@mail.gmail.com>
+ <6aef3xxjjd4nbgrfx6jc6jt6rpqmttoui6hil5zqgdpas2j6gj@ie6j72orenou>
+ <fsvmmgoe5wslmxebhrrwmdg2ldcmhzvj53gjkdfnfg2m2rz2lw@dcfboaakz7ae>
+ <bguhzabwryayyqkv4ilzwr3ixwv6bzxncblo3ircz2wm3fs52k@66zvcrfcb4oe>
+ <blhm4csjyw6r667cleljgzd6rpwagttjo5rau7wjrlnjakq2qm@ekyhc4jvwmwf>
+ <m44mupdmg7kgco62n4evcviagqo7wwgyt3gybugbxwesd4ekjz@o24r6v4tpezc>
+Subject: Re: [PATCH v6 6/9] dt-bindings: connector: m2: Add M.2 1620 LGA soldered down
+ connector
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Hi, Robin,
 
-On 2/28/25 5:46 PM, Robin Murphy wrote:
-> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> index a3b45b84f42b..1cec7074367a 100644
-> --- a/drivers/iommu/iommu.c
-> +++ b/drivers/iommu/iommu.c
-> @@ -414,9 +414,21 @@ static int iommu_init_device(struct device *dev)
->  	if (!dev_iommu_get(dev))
->  		return -ENOMEM;
->  	/*
-> -	 * For FDT-based systems and ACPI IORT/VIOT, drivers register IOMMU
-> -	 * instances with non-NULL fwnodes, and client devices should have been
-> -	 * identified with a fwspec by this point. Otherwise, we can currently
-> +	 * For FDT-based systems and ACPI IORT/VIOT, the common firmware parsing
-> +	 * is buried in the bus dma_configure path. Properly unpicking that is
-> +	 * still a big job, so for now just invoke the whole thing. The device
-> +	 * already having a driver bound means dma_configure has already run and
-> +	 * either found no IOMMU to wait for, or we're in its replay call right
-> +	 * now, so either way there's no point calling it again.
-> +	 */
-> +	if (!dev->driver && dev->bus->dma_configure) {
-> +		mutex_unlock(&iommu_probe_device_lock);
-> +		dev->bus->dma_configure(dev);
-> +		mutex_lock(&iommu_probe_device_lock);
-> +	}
 
-I was chasing the "something fishy" dev_WARN on a 6.19+ downstream
-android kernel and while looking at the IOMMU code I couldn't help
-myself and ask whether we shall prevent concurrent execution of
-dma_configure().
+On Mon, Mar 23, 2026, at 12:52 PM, Manivannan Sadhasivam wrote:
+> On Mon, Mar 23, 2026 at 06:45:15PM +0200, Dmitry Baryshkov wrote:
+>> On Mon, Mar 23, 2026 at 09:26:04PM +0530, Manivannan Sadhasivam wrote:
+>> > On Mon, Mar 23, 2026 at 05:14:30PM +0200, Dmitry Baryshkov wrote:
+>> > > On Mon, Mar 23, 2026 at 07:14:25PM +0530, Manivannan Sadhasivam w=
+rote:
+>> > > > On Mon, Mar 23, 2026 at 08:39:55AM -0500, Rob Herring wrote:
+>> > > > > On Mon, Mar 23, 2026 at 7:16=E2=80=AFAM Manivannan Sadhasivam=
+ <mani@kernel.org> wrote:
+>> > > > > >
+>> > > > > > On Sun, Mar 22, 2026 at 06:37:13PM -0500, Rob Herring wrote:
+>> > > > > > > On Tue, Mar 17, 2026 at 09:59:56AM +0530, Manivannan Sadh=
+asivam wrote:
+>> > > > > > > > Lenovo Thinkpad T14s is found to have a soldered down v=
+ersion of M.2 1620
+>> > > > > > > > LGA connector. Though, there is no 1620 LGA form factor=
+ defined in the M.2
+>> > > > > > > > spec, it looks very similar to the M.2 Key E connector.=
+ So add the
+>> > > > > > > > "pcie-m2-1620-lga-connector" compatible with "pcie-m2-e=
+-connector" fallback
+>> > > > > > > > to reuse the Key E binding.
+>> > > > > > >
+>> > > > > > > What is LGA?
+>> > > > > > >
+>> > > > > >
+>> > > > > > Land Grid Array
+>> > > > > >
+>> > > > > > > If not in the spec, is it really something generic?
+>> > > > > > >
+>> > > > > >
+>> > > > > > Good question. Yes and No! LGA is not something that Lenovo=
+ only uses. Other
+>> > > > > > vendors may also use this form factor. PCIe connectors are =
+full of innovation as
+>> > > > > > the spec gives room for hardware designers to be as innovat=
+ive as possible to
+>> > > > > > save the BOM cost.
+>> > > > >=20
+>> > > > > innovation =3D=3D incompatible changes
+>> > > > >=20
+>> > > >=20
+>> > > > Yes, I was trying to sound nice :)
+>> > > >=20
+>> > > > > > This is why I do not want to make it Lenovo specific. But i=
+f you prefer that, I
+>> > > > > > can name it as "lenovo,pcie-m2-1620-lga-connector".
+>> > > > >=20
+>> > > > > Depends if you think that s/w needs to know the differences. =
+Hard to
+>> > > > > say with a sample size of 1.
+>> > > > >=20
+>> > > >=20
+>> > > > Sure. Will add the 'lenovo' prefix then.
+>> > >=20
+>> > > Is it really Lenovo? Or is it some other module vendor, whose LGA=
+s are
+>> > > being used by Lenovo?
+>> > >=20
+>> > > I remember that DB820c also used some kind of a module for the Wi=
+Fi card
+>> > > (which might be M.2 compatible or might not, I can't find exact d=
+ocs at
+>> > > this point).
+>> > >=20
+>> >=20
+>> > I don't know. These kind of designs might be reused by several vend=
+ors. But
+>> > considering that we should not make it generic, I'd go with Lenovo =
+as that's
+>> > the only vendor we know as of now.
+>>=20
+>> ... and later we learn that other vendors use the same idea /pinout,
+>> then nothing stops us from still telling that it's a
+>> "lenovo,pcie-m2-something-lga".=20
+>>=20
+>
+> How do you possibly know whether a single vendor has introduced this f=
+orm factor
+> or reused by multiple ones? Atleast, I don't have access to such a sou=
+rce to
+> confirm.
+>
+I've not really been following this thread/patchset in detail; but want =
+me to try and check with the T14s platform team if this device is specif=
+ically made for us (Lenovo) or not?
+I doubt it is - we just don't do that usually, but I can go and ask the =
+question if it will help resolve this (with the caveat that it could hol=
+d up the review for a bit and I may not be able to get a straight answer)
 
-It seems to me that while the IOMMU subsystem is executing
-dma_configure(), the deferred probe workqueue can concurrently pick up
-the same device, enter really_probe(), set dev->driver, and execute
-dma_configure(). Is it worth protecting against this?
+My vote (for what little it's worth) would be to make it non-Lenovo spec=
+ific. Then when the same part causes issues on another vendors platform =
+I won't get asked questions about why Lenovo is breaking <other vendor> =
+:)
 
-I can try to prove it if needed, using a downstream iommu driver (sigh).
-
-Thanks!
-ta
-
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index e61927b4d41f..5f0c1a8064b5 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -461,9 +461,19 @@ static int iommu_init_device(struct device *dev)
-         * already having a driver bound means dma_configure has already run and
-         * found no IOMMU to wait for, so there's no point calling it again.
-         */
--       if (!dev->iommu->fwspec && !dev->driver && dev->bus->dma_configure) {
-+       if (!dev->iommu->fwspec && !READ_ONCE(dev->driver) &&
-+           dev->bus->dma_configure) {
-                mutex_unlock(&iommu_probe_device_lock);
--               dev->bus->dma_configure(dev);
-+
-+               /*
-+                * Serialize with really_probe(). Recheck dev->driver in case a
-+                * driver bound while we were waiting for the lock.
-+                */
-+               device_lock(dev);
-+               if (!dev->driver)
-+                       dev->bus->dma_configure(dev);
-+               device_unlock(dev);
-+
-                mutex_lock(&iommu_probe_device_lock);
-                /* If another instance finished the job for us, skip it */
-                if (!dev->iommu || dev->iommu_group)
-(END)
+Mark
