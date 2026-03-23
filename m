@@ -1,155 +1,166 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013036.outbound.protection.outlook.com [40.107.159.36])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CCB226F2AF;
-	Mon, 23 Mar 2026 17:03:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.36
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774285431; cv=fail; b=Fs9NWSM3atYR1FElPFnsnScJVEuObNXcHXadhcBcxwtthArwDlCqKfNaochMLHobH+dCzxEXAOvGdxgQfw45x/apCKq465BnEDip8DNQv5iHdXRLksoaCm0Nq+xTFpUOyEZJSkIjs8fTIV0S8251aWYp2r8RrcV6TwTTygZeQS8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774285431; c=relaxed/simple;
-	bh=ljYPRTSk20S5xHpv3Z8VAkfh+TrfPwPq/NtYxy2yaaA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=EQul9Ft1TvPtczK2odTLM+pxlNOtPNQoraBATcYF+OnMQalVK5YgDmmUT6bUAk1PHIWAuuqN9MXnXOq+gqYKSTfem0/OpbMgjG6x5Rew5tTOTbJbRVMfFdVxEk06oMltt4oxv+g4J2pMFo6ZlNn12+FW/TfvdJ2l+FPd1t/UPDo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=GSR8jqdV; arc=fail smtp.client-ip=40.107.159.36
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF15E3AEF5E
+	for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2026 17:18:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774286301; cv=none; b=mf9yv9agIldpVdQAHxt1Xbx0MkMppEUGWo2P6Mui8IdWrgFPsztxPTfE1NKecSxruPhfrGFIYKrac/7Fwo15LMkiKYkwii9B5B/Iw0KM+ZS4vzalahJzn8FXDiI52dVRbYriTz4b2T2asmeE2mfrnD6As08C9N0J6HKlefLfFic=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774286301; c=relaxed/simple;
+	bh=SwZSBJ5dtFN1L7uizFJq7oOv2U7xSNXH+wFesahHWcM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=btLnMmNkVzgMEp1oGQMBVwsu9Sxl+L88sLOOcDmBhoCyk5pcay/uT6aONQbvXi2/i2v4ROfw+lNwLy9yD7NWkgIjrDM2LxIVv7v1tHj3Ky+XUgbevY3QJvcB2PFMnBfRsbZ4KiFem7n0sAhcnKcCGtqbrFSGsL3hJ+U494UnKkA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=H7LtVRLv; arc=none smtp.client-ip=209.85.128.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="GSR8jqdV"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Hm3kEe7dJuRQf37PFm6UKYLmiumG6Q78WPvPkb4+obmEZ/i6SQbpCZ7J846Ou3xVTctn6cG+LAqrIiIhoepA0MKRK6rBp4YuZN5jT/qwfMok68KxLiv3SKHXGMEe7jJE/25qwdfzw1+LKjUvz+Cy95KRTbe6g+7NJJJfe+b/uXc8I1FXHElSV2BZp79F1kFnxNP4JccGGHsSzX5g3LGzaybSqs7K2o3040LIoMyakPwzH/yD70LI+QMcztIngkKkAT71y572X/v2DIo+Iw3eSncqfQQIo4UR3GjiQ56gEaVIk4a/eZRHdXSrdHvL43vhUDc6n1o1y91WOEYrhEWJmg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Z8AdHYodac3gG9Nzw7ng0cZerdFj5MrX3BXqehhQvG4=;
- b=kg4EfMK6suLZpWKI8y2QI1Fx4KRRo3RDUGPElPzt2pZgLRT+9/Wua5ouSOprdezkvm+mlwb7oTYemiGzMf0evb1egZrU8pONdJNzPNPT2l4QsjsfRNFh/j0nb9wwfkdq5HbT4J1SqGWQlKKrlm3WltINoyyBkhkS0vxedVIbhMr5PjrZuzZAtnGf3kGEkwisd0lXPZels01+g1yO6763YXQfCnysnqUNKNurxb1FsMo5tb+ClVNIdmW8umLUE//P3vfedDnCklzmC4rdMgz0hUTTD3qSSNLyZqLNQ+1wtaY9joUyvByoG81fAnyEV5PMv+y9TbG7Up4RYflwFHTbfA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Z8AdHYodac3gG9Nzw7ng0cZerdFj5MrX3BXqehhQvG4=;
- b=GSR8jqdVkDibK/rKtaPH2NRZuL3yWpvhrgxubHSwOFEhZQG0ReLVSeJ7Xsb27lctfahfZTJA1UI3+NeiQcfmSrLYTdZKK/fEgXy34VZQMaghKSyKgFXyqQjB9Qmf9R02GHe4xl4cb6tn+Bf9eE0emg/Ukxk0ZDhvq26RiU1natWDdz+9fPfm0ZkiD1vTKrAzPvUEP8QnTJouwGOSDgYPQhIFIAIgzIjWmdjCWenq8bFcgFo3FS85drcJcE9dMlPOY/gGWK+7suEj3Spcz9/HsDj4gd1FLC3VtOrViMWLRN2ngObBqYsqQSG7noiR2TbxtixiE1RhUy77NlfEfQmIBw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by PAWPR04MB10053.eurprd04.prod.outlook.com (2603:10a6:102:387::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.29; Mon, 23 Mar
- 2026 17:03:41 +0000
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9723.030; Mon, 23 Mar 2026
- 17:03:40 +0000
-Date: Mon, 23 Mar 2026 13:03:40 -0400
-From: Frank Li <Frank.li@nxp.com>
-To: Christian Bruel <christian.bruel@foss.st.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Shuah Khan <shuah@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Koichiro Den <den@valinux.co.jp>, Niklas Cassel <cassel@kernel.org>,
-	fabrice.gasnier@foss.st.com, linux-pci@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 3/3] selftests: pci_endpoint: Skip BAR subrange test
- on -ENOSPC
-Message-ID: <acFybL8PxlvTeCZP@lizhi-Precision-Tower-5810>
-References: <20260323-skip-bar_subrange-tests-if-enospc-v3-0-4780f296a5b4@foss.st.com>
- <20260323-skip-bar_subrange-tests-if-enospc-v3-3-4780f296a5b4@foss.st.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260323-skip-bar_subrange-tests-if-enospc-v3-3-4780f296a5b4@foss.st.com>
-X-ClientProxiedBy: PH8PR07CA0026.namprd07.prod.outlook.com
- (2603:10b6:510:2cf::21) To PA4PR04MB9366.eurprd04.prod.outlook.com
- (2603:10a6:102:2a9::8)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="H7LtVRLv"
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-48702d51cd0so29790475e9.2
+        for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2026 10:18:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1774286296; x=1774891096; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=QEgEB+FhJamQekHHnnzeHBVC3CCx1oLXNDdzh85xf2M=;
+        b=H7LtVRLvEnB8cTx7BQFvJ5hu9u4rx5QsZxDYkmDtjyjJuafEJpVzLCAWAJURU77xBg
+         z+7IKMdc++ikOe8pM6fhMXe+h4jQrqi63lRYfnRYy6ey+ggAa76ieXCz6qP4LZWnDlWP
+         nuNwstvVAyOAnh/gY3dXQmuk/wFsG6A0ri7um0oX647bRHav456rcHtBk3oIiJz9h43W
+         DxwIV2c2+lSlTFuKuQtPDRtW8Iyji+gAvs6ZjUP5MT0oN/Tfs7PpGgeH1pXKx2D36jw3
+         dKW1OMqFO0zByNy5eLIaM05hT/8Ec4kas0wyGTEMrJ32YXgHC8fEY4CdczmrroM8pDD4
+         e0Kg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774286296; x=1774891096;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=QEgEB+FhJamQekHHnnzeHBVC3CCx1oLXNDdzh85xf2M=;
+        b=fwmWWoNgtXFjJIvvgz9J8/fqkoZEsRdZH9b1WxZXQx0/Dl0wmtzvbG1nYWy+gCrS2y
+         5Piy0j6SfYVrBN5awXMb2rNEGM3PR10FemIKyZQ6jDUikHWqN+o9ZmJzOgHQRqP1ghsn
+         W5dQUvtoYH/ORmPzLO2xYTOXVD2YKYqO+LIwPg12WBE0eiaf1Qb7eBTZgTIeU9RRolPq
+         Ua+HKYhUJc2KkkizmzgcCqj5WrUZ4nu38ObJZrnJUad+UcytkZyb2f2tvqMZyrQ0DPQi
+         5MaGtoZuMmCmBqy2PfyEluDkpgU1/2o5RxpJ2b/tHUBKhyoFy77S/u7h0gsI7eXWnUN6
+         Mojw==
+X-Forwarded-Encrypted: i=1; AJvYcCWQSjn8mHXPVQgyxRA2WUnbj9ULnynfg7AqJyKhVl8lpi6DD4qsK/FBgNd2D83hUJErzyplHBBk0ow=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw4Im5aHn8uLj58thAXkeqhA+KOJ9DMqWqs2hqAxDj9PQIQaaFV
+	MJTfOrOgue4hl2p5MXxKJYoTPRnbW5Bk+jH2WvM/HxXoYs4j3i96vTuY0SzMvEu5DDk=
+X-Gm-Gg: ATEYQzzlsWBVukCw6fCeUI8HOojShWYdwTrlyMcmgj1zAU8WceDbmcVkc02Ld3QShjf
+	Yow7BZ454KctwJ3yhR6c148S2S3wxAhlTWs7TWeaMBKyXIwPAAsqJYlXKpdBtk0s/06BrPZISc3
+	PHtMXMtRVS57k29cWF0LNBIDiZJ77mTiyoTLpLSjQXl4mK3/ljVQ9MwBNHSPdvneikO/PsEqUtf
+	5aU/ysheBqRnoAXkLKqY65Gvnw2tPgEaWWjfJy7FQdp46lOtSw9ijZIYUoaPKZChl1A0k3VSTsW
+	DMYK/hakFAOYn10QjAekC1S5dyCbe1/VDlR2Y7zgA3doFboRjwzClSLgyzxi2mHpo8W4Y9ip/9q
+	W3dZadBH2yim3Ma1rDDIfdxhMsYOEjB6mwp0U+V+3Ml4348fCAmVI56IxJQUyITvfuuPE0jxUJT
+	JzWnVEQ75ZuUT83OO5suyOljnFuhXiV24=
+X-Received: by 2002:a05:600c:c083:b0:485:3f72:324d with SMTP id 5b1f17b1804b1-486fee0481amr142927935e9.14.1774286295324;
+        Mon, 23 Mar 2026 10:18:15 -0700 (PDT)
+Received: from [10.11.12.108] ([79.115.63.77])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43b644bf1c5sm33929334f8f.14.2026.03.23.10.18.11
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 23 Mar 2026 10:18:13 -0700 (PDT)
+Message-ID: <67b32e90-1f60-4bf5-b534-b4a901d5a796@linaro.org>
+Date: Mon, 23 Mar 2026 19:18:08 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|PAWPR04MB10053:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8d397bf7-cde3-412c-f099-08de88fe21ca
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|19092799006|376014|7416014|52116014|38350700014|18002099003|22082099003|7053199007|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	X+YidmmOGugmmO//vfD91DhskZmqsROAds+qR9zYyqgao9MtVx2EvEVQvgzEftPwWI1Zk58ZFMbtK9O44v4YywBlSwfnb9PBDSumFUcaxLK086nr6/4uvNeJ9rkqLjN6rV8DKKWDcv1h1TUn/1C3SpAZK//aJhvD79KzcIMIdDGsfu14lFL3+ZBrWV/Vr4khx6nOHKVxhge6LoBdZaW1+KVlSETKi89TB5ks/iSqIHARLiQfiJjUVLxmGi9fb7DAEtpNN2pR92jw1I+GFA4nVUp7vSq7ft2/kKZtHTfldwfJ5v2C6+2ET0jSGC6gWCvWiUoW2hzx6CM5sOmzZ5mPHRjs+K08UAhFKpjlUYLF69z3njIjYFQwP9rJgWTpXg1ELvh+TZDmOQJKgvvaWemAgPoDaaukJfN5JFwUhCHzpIobVIA9WOejfKG812746dKz+nsSW1EP9zykuXMqslc5vzbOLfOICsKSkuiQlFKBdyY06sE/a8VpCwkwibT0R4tTZtXwGvCRr2plcPy7VmT71iJupf4LI20IVbjCVxI8qfxYalDiYP6h6OroTsWel4o18418p0+tDD8siPV7TWP/l6zm52RydUFK5olGJR15QkJ6THXD//Mc9mguzzE1KecQAGeFQzI1AiLG77gqB78/b9MBNOonlN5Ga5UvO0h8pBufm/sp7QESebffUXCA3pvcpAeUkBY5+H60ynTt4JO1QeFn7XS/I8Cbc6OjhzSi/GrWJCl7Otkc+wHdeW53y35in4AD2+XFZNpBDhYS9jyIpisGn3Em2VpQ8EQ9aW7gRIM=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(19092799006)(376014)(7416014)(52116014)(38350700014)(18002099003)(22082099003)(7053199007)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?MrNv6xEipBUS3prU+PlmfmRjWRp5NSkL4pfb65Q6slxLBJ4N8ZOx5kM5Tx1I?=
- =?us-ascii?Q?GCQbOEsvXa9ZZTrs75pxYKd9NIAp5zGRx7oJWgMluArBFFJsXB/9vURsJN9P?=
- =?us-ascii?Q?betikLV1SN3irjAeBR5diRsJOwHp57zxsAK6A1GFXvROMfeIErgOgcSog+ZC?=
- =?us-ascii?Q?O5ilKcuV8wDg7XoKFORgEfuuVgvqofGDToqH2tHVsyzq1s1uXPt1eEHAarOc?=
- =?us-ascii?Q?IGHTB9a9gJUrX4LVzA9f1EJIw8/1NdtGiTtkQOcpDtp1UbUbiE/CBRR9J4Hv?=
- =?us-ascii?Q?ynF6SHqdBNgb1uD9Q/IsaHanhF4hBEgtDSF+EsihCMFZ4CUniMVx8QzGbr5P?=
- =?us-ascii?Q?klmIm3McpdAkt7HURRYjcGiJojtdtEwlGKlp0MSKTkpr7SR4Fe35L9hiqFkM?=
- =?us-ascii?Q?3Qt9bRLnFUnNFrrJCk/W8+KbmDo7bmFZX12t8ha908EtMPazUFv2gijlA62M?=
- =?us-ascii?Q?AOYwPJRtXvcQDcqaANZwb3poa/4rzF/ojszhuz5KgXlMCAII/BO2hEYs/ZZ5?=
- =?us-ascii?Q?P3Z6Px5OzC23UZll50XT/SoUd+oJactjAZSZMpSxj8hvgEuHc54a2nCvlrw1?=
- =?us-ascii?Q?jxi/92siCD3W8kHv8p4rj7/kY35q5fkW2uHlzyNbvouXsFH2OlZOyPRQzjAa?=
- =?us-ascii?Q?MlFXGrqbdX4Xj2wYsjGk2yc3Nr/Mi3OWNYaHPyLhHAUzbfmbETzaBi80c9Ll?=
- =?us-ascii?Q?nFjx197mi9ZC5Thy2JZ5k9+PUyZSqGt4ZICQVsneQm1gxLKhAlAgd8h0noZQ?=
- =?us-ascii?Q?NIfj8EHLISn1EF2EORCDuRYkWFisUx4ehVx6Gjm9qD7Ap0qDXTN/02xpmv11?=
- =?us-ascii?Q?iZPd1nTdiX5WqI7W8x23T9n5jbmUSoDtEGIWS3iRDfaXUMDxUYe5bjllEjrO?=
- =?us-ascii?Q?CTAkQbyf4KbTIBUnfMRwHmpB+5lsr2UTW3xnx9sriShCdICZ6EKJS2fMbzcq?=
- =?us-ascii?Q?aZDdC81Etq+DDrnSAvCY7KYk3XVWgsoGwfkgDQTSTrU7j9YJhQcRgcZbewk7?=
- =?us-ascii?Q?shPsCd816nMXpemIynZ0s9xTQD1oGzUyJ9a0coQ2us5Nu7yWgnvdoPvh//Jf?=
- =?us-ascii?Q?7yfu/AOa5be2D0A9WnNNVA3x9v+O/oLDa1Z/t+ZzYcqS5ZmPdNUMwVR5q8Rm?=
- =?us-ascii?Q?NP/1NjQP45e+FNz57+xKQTfMiRuxd6ev4Ev6GBsVagZ2lx8ih7rPsMqyza2y?=
- =?us-ascii?Q?fM/GDJWOXIhUKQPvHvDs+X3SmHCRu4otbdlO07DfeNpGupp246xsY0zMQ+GP?=
- =?us-ascii?Q?IkPaABNbWKrVWMTyFMkMMQV4sZ9V6rineTvSNUMSBNpAFSvSZL0myKNnMOZ3?=
- =?us-ascii?Q?T58xJP1H+bIeuTymtUseqxHra6tK829Ay7pZwuoWAKsWho2Ckg+DRHasstLa?=
- =?us-ascii?Q?A5Ib5Th/wFdNTAHNfnGDiAFHQl451xMB4WpcO1gDaXgSqfndKg60BjyVkgx4?=
- =?us-ascii?Q?bNOaPJ07ffReZXTZj5xxm7lmc+MeDNf4E2tCmB7cj9dPprYsExxMHpA9lIiL?=
- =?us-ascii?Q?U9kVHNMjwmKf0NUy2zAx+3ZyK6KQlgtkSkxMI+1L1XyKc9IsM4UlXw1mGOmC?=
- =?us-ascii?Q?cxbN/g8t0q+v6AncWN3R+QABCfoVj846/OkJdkGzMmxSpBPwHGRH9HRnpeuC?=
- =?us-ascii?Q?3VhYoXgtsXWeix04TigpHAJB2g71M87PkjqB21uLejel2kDlNnX/9gBlpuoU?=
- =?us-ascii?Q?oYUDabTNJ5+GaqIHnY7YuxT4IdOnhdhk3cq+ySPnKZpgUs0W?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8d397bf7-cde3-412c-f099-08de88fe21ca
-X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Mar 2026 17:03:40.5141
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: T+XNPlY9s9zHTjGUj5JFKOC/7MnFx6PTtjxQJm5vHIuUI1nPmV4jr5RtfvoEY3+EIkS1dg8ihXjBzGbsgkpzOg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAWPR04MB10053
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 4/4] iommu: Get DT/ACPI parsing into the proper probe
+ path
+To: Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, Hanjun Guo
+ <guohanjun@huawei.com>, Sudeep Holla <sudeep.holla@arm.com>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
+ Russell King <linux@armlinux.org.uk>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Danilo Krummrich <dakr@kernel.org>, Stuart Yoder <stuyoder@gmail.com>,
+ Laurentiu Tudor <laurentiu.tudor@nxp.com>, Nipun Gupta
+ <nipun.gupta@amd.com>, Nikhil Agarwal <nikhil.agarwal@amd.com>,
+ Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
+ devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+ Charan Teja Kalla <quic_charante@quicinc.com>,
+ Peter Griffin <peter.griffin@linaro.org>,
+ =?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>,
+ Juan Yescas <jyescas@google.com>, kernel-team@android.com
+References: <e3b191e6fd6ca9a1e84c5e5e40044faf97abb874.1740753261.git.robin.murphy@arm.com>
+Content-Language: en-US
+From: Tudor Ambarus <tudor.ambarus@linaro.org>
+In-Reply-To: <e3b191e6fd6ca9a1e84c5e5e40044faf97abb874.1740753261.git.robin.murphy@arm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, Mar 23, 2026 at 12:59:29PM +0100, Christian Bruel wrote:
-> Handle -ENOSPC error. Skip the test if the number of available inbound
-> windows is insufficient to map the subrange.
->
-> Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
-> Reviewed-by: Niklas Cassel <cassel@kernel.org>
-> ---
+Hi, Robin,
 
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
->  tools/testing/selftests/pci_endpoint/pci_endpoint_test.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-> index c417fb3a198b2d92c3060938c23807cc8bea5573..588d75c97ad181d2f8e84c9b86b865439152e20d 100644
-> --- a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-> +++ b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-> @@ -88,6 +88,8 @@ TEST_F(pci_ep_bar, BAR_SUBRANGE_TEST)
->  		SKIP(return, "Subrange map is not supported");
->  	if (ret == -ENOBUFS)
->  		SKIP(return, "BAR is reserved");
-> +	if (ret == -ENOSPC)
-> +		SKIP(return, "Not enough inbound windows");
->  	EXPECT_FALSE(ret) TH_LOG("Test failed for BAR%d", variant->barno);
->  }
->
->
-> --
-> 2.34.1
->
+On 2/28/25 5:46 PM, Robin Murphy wrote:
+> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> index a3b45b84f42b..1cec7074367a 100644
+> --- a/drivers/iommu/iommu.c
+> +++ b/drivers/iommu/iommu.c
+> @@ -414,9 +414,21 @@ static int iommu_init_device(struct device *dev)
+>  	if (!dev_iommu_get(dev))
+>  		return -ENOMEM;
+>  	/*
+> -	 * For FDT-based systems and ACPI IORT/VIOT, drivers register IOMMU
+> -	 * instances with non-NULL fwnodes, and client devices should have been
+> -	 * identified with a fwspec by this point. Otherwise, we can currently
+> +	 * For FDT-based systems and ACPI IORT/VIOT, the common firmware parsing
+> +	 * is buried in the bus dma_configure path. Properly unpicking that is
+> +	 * still a big job, so for now just invoke the whole thing. The device
+> +	 * already having a driver bound means dma_configure has already run and
+> +	 * either found no IOMMU to wait for, or we're in its replay call right
+> +	 * now, so either way there's no point calling it again.
+> +	 */
+> +	if (!dev->driver && dev->bus->dma_configure) {
+> +		mutex_unlock(&iommu_probe_device_lock);
+> +		dev->bus->dma_configure(dev);
+> +		mutex_lock(&iommu_probe_device_lock);
+> +	}
+
+I was chasing the "something fishy" dev_WARN on a 6.19+ downstream
+android kernel and while looking at the IOMMU code I couldn't help
+myself and ask whether we shall prevent concurrent execution of
+dma_configure().
+
+It seems to me that while the IOMMU subsystem is executing
+dma_configure(), the deferred probe workqueue can concurrently pick up
+the same device, enter really_probe(), set dev->driver, and execute
+dma_configure(). Is it worth protecting against this?
+
+I can try to prove it if needed, using a downstream iommu driver (sigh).
+
+Thanks!
+ta
+
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index e61927b4d41f..5f0c1a8064b5 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -461,9 +461,19 @@ static int iommu_init_device(struct device *dev)
+         * already having a driver bound means dma_configure has already run and
+         * found no IOMMU to wait for, so there's no point calling it again.
+         */
+-       if (!dev->iommu->fwspec && !dev->driver && dev->bus->dma_configure) {
++       if (!dev->iommu->fwspec && !READ_ONCE(dev->driver) &&
++           dev->bus->dma_configure) {
+                mutex_unlock(&iommu_probe_device_lock);
+-               dev->bus->dma_configure(dev);
++
++               /*
++                * Serialize with really_probe(). Recheck dev->driver in case a
++                * driver bound while we were waiting for the lock.
++                */
++               device_lock(dev);
++               if (!dev->driver)
++                       dev->bus->dma_configure(dev);
++               device_unlock(dev);
++
+                mutex_lock(&iommu_probe_device_lock);
+                /* If another instance finished the job for us, skip it */
+                if (!dev->iommu || dev->iommu_group)
+(END)
