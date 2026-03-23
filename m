@@ -1,213 +1,107 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF6283C2777
-	for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2026 16:45:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6559B3BF665;
+	Mon, 23 Mar 2026 16:50:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774284323; cv=none; b=Y9ihTqSfAmRbRVMn9IikGonw39kmc0Ovqltaqbok8bbFtoVhuVY3PAChjipVLpeWXGlO4IbNa2ILZo8ykVNZYwJ4otZA0nIQ/JdMHknfv7bcQu5B9U45iEKcQShaEQlCrAl69HkLDvx6m6P2pjhk/Dw8jM0Y9MZSraKdygJqsVI=
+	t=1774284641; cv=none; b=dumBk1yHQvPYBHK9k6b/k0Py3/r9ECJKDnczxpOVJ5S6/2qgczjCYb/niuFES/8xDlNY+eSXZqnnlW5WmliG9wIx3skwEWAT99G8qZ6arUsQjCkgLsm0ixfE5RVBRjWBX+F0bqg3W7wPZ5zlEa5+xk/XHzR0o7qPUMCdrmwn3QY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774284323; c=relaxed/simple;
-	bh=0AXgh7r8UHMnA9Zqa/LXkVlVLU4WWT6w2XAUUJqorWk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MSegrFJH1YBSnhRy+VN25lDhwKmubqI01Pq0V9ZFtlOtQgA5C1E3Ds0DPxsNtV0miYLuovqGp5gcPGS1vzMFqkv1lgJhDcMOGVb8CfaF4Tp7+iPGBFXKTwe2yoe5lYhNVzIp7wiKd6qGuulw6ABGZWB8uewvpGA2OITbfc7rYS0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=kXANH8GV; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=HSqn8Z2B; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1774284641; c=relaxed/simple;
+	bh=x4UyYYR8+iwWvMg2BIGbPYGIypU602o9uURawY09SJw=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=uZwRFHXn9ao4RvVgdNXkFMFIxLnmNsilF4TjlNUGGH8pTx1gyKjluRcxDwhnQWbX/JLjtRu/ARJ/uRqBazI5ZzZYDQlZ6wy7tNF3S0pi/AREz1CcWW0fUI1VG/JfVu2iLW0j6+1VtanTzOMBoNFmjZEZilNsqRyrgo1VGetjE40=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JT2AWrtU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="kXANH8GV";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="HSqn8Z2B"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62NFGfOx3476339
-	for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2026 16:45:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Kj+XAZN1TFt3Nwfgt300eR0N4IQOJ3Hc9ynUXTnwTp0=; b=kXANH8GVsr8XcV38
-	dzEshEDfmAP+C2peT7j1blXg1V7Oao0GFS6owsA1AyuZs/SjUOiO19Y/tPnMwww7
-	6l7g8LhdE2p2qfNtKyJyKPx4G2XwgwI2tuGL0kwi0vDvl0hTwzcSJgH9WwaeNRiB
-	41jb3Xit3KmDv01llheLFRbNNzwtieZGlSsCqaOKhbEyw81L2qTwBh3KwIuM9t8F
-	MyzdLmeE2pIJ8jIyq6QLMt2Vb7OtgazJG0kCKSVLpCstvJZ2e8a2FWjaehBVwIFx
-	Fqsk/NKMd5J53d8nHXySy7yPNGBbleuex4CUfdKlp8X69aFdpupVV2iQd2VbaHzi
-	RGwBBg==
-Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com [209.85.160.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d355w103r-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2026 16:45:20 +0000 (GMT)
-Received: by mail-qt1-f199.google.com with SMTP id d75a77b69052e-509044f54aaso14304871cf.1
-        for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2026 09:45:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1774284320; x=1774889120; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=Kj+XAZN1TFt3Nwfgt300eR0N4IQOJ3Hc9ynUXTnwTp0=;
-        b=HSqn8Z2BAg/zQRJ6O0AYQV20QJFZjpEAUw8dEU1x668N2oMY5WWfFDqRZ1ZMtdY5Pg
-         vGf9/AdkrGa3uT20/0vWIua4WoVGq5kvYC2KjXeXr3n5Eu4BfBYHg3vcQoGJ8XvF9dl3
-         JOrwqLyyx4be1VLNA9+zzKRZzbu1WRkP3iwYQ1ukWQSU191rgzGT/HJt5jwY4YBZqfkF
-         JAZgB7g3hEvs8KX/p/JudafHC5uo0FF/Pi5nrpiRUV73g62Q8jddpgxIwk2faxNH55eF
-         +aKMWkOp1pQ0GvUd4ExXWU3WEJs2sZDGVZLnHv7eGyZAlbQI1l+rBXrm+CLHZ/dzCr2p
-         XilA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774284320; x=1774889120;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Kj+XAZN1TFt3Nwfgt300eR0N4IQOJ3Hc9ynUXTnwTp0=;
-        b=i4aQVTdvkJRKa/DUOqqp7YgevXGYoHg4E9AhBdZ/adLtYerx80AzrLP0Zil15dHXHZ
-         fj0DDpJU/Q27p/rFYSegL5Y2ajUwZrCT5yEIIWS3N8mMWf9qkesVtJBvMGM03cJOCCvj
-         ELO5r85PjB2fwfJBVFFDZ5LJYdkz8UprkQQGzaQRbyL8gfGwwP/NSC+Ozb8yHoniced1
-         WtsB/DTyoMJgILMB32Gw0JSFkC0X9864k0fZ7gIdrpNOa3Yq7WCe+5WPMqUOtz0Cr2Z9
-         pjwOJcbbqip7cbrB3oPaPTL6h7KsK44CegZ+kNfdSoVxbvRL0TFYgQWoS5/D0u/jBzTh
-         3QtQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUDISDCeZ+aHyvzHvpw4i2XapU9QEanyq+kB6VywOJvXY7NUAbjmmf47LYBPUa2VM5H18VF+CmXhzM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxp25m2i3sAbftrPyuWvjgXPRFhq/Ze4VPjXpTm6ENW1VI2Doyd
-	47Hw/X2QZGFL9RGJssw1HhsbYTZ/KXW0vfFiLp1Cr08b5Lkj0DtmPkiPOu+zWIm2Annl2SjONe/
-	63S0ERpHyLK9mwyaHKVk8AflANopCJ+S67SbgZOhoqgUbfvbmPj9ZbLPD/qyCNdA=
-X-Gm-Gg: ATEYQzzAWqBuOLWp1Fnnf7ICTI+vFMmAEDip+8aRBWBIpc1D3hw9GVPCT6xQ3Z4wWna
-	3DD2mK8VfR2PF4ivllzHso+2FM35oMEuTL4i0qoVEN7TyR3f87dwaO3whmECAtEF3tIj1tTaHyJ
-	QEF8CDpL+QtYYoLEu9dTZ1zLaYzYIuWBoVQgAL/fJcZWALSPT3UFZTOzt/L2dDW49edRDvD2uZ7
-	tl3BHIWwBVMVSShr/oxPfmSz6dmNWPXDa1VF6o6lp+wQBTbfNgySK4S1ImvdyZWTaJKY8qC/x5T
-	texjEd9q1YZlwkJoqwSMJrlOLf4D1szjtqfw/gfonun49d23zoG0Eqw6kz6+d9M/jkKmaSoXSsK
-	dfOlQWrrMczkGUPGIwb0XO7HHNajzsVMpg+1OuPac61C5NesR3MagYs08JB/nr9s/7SDq3iCPEm
-	lPj0MbsqVs5JL1pkdyjcU9y8n+Fb1TzQeLOJ4=
-X-Received: by 2002:a05:622a:4e93:b0:509:2822:670d with SMTP id d75a77b69052e-50b373eaec2mr187521931cf.27.1774284320044;
-        Mon, 23 Mar 2026 09:45:20 -0700 (PDT)
-X-Received: by 2002:a05:622a:4e93:b0:509:2822:670d with SMTP id d75a77b69052e-50b373eaec2mr187520941cf.27.1774284319458;
-        Mon, 23 Mar 2026 09:45:19 -0700 (PDT)
-Received: from umbar.lan (2001-14ba-a073-af00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a073:af00:264b:feff:fe8b:be8a])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5a285207500sm2667386e87.41.2026.03.23.09.45.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Mar 2026 09:45:17 -0700 (PDT)
-Date: Mon, 23 Mar 2026 18:45:15 +0200
-From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Rob Herring <robh@kernel.org>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nicolas Schier <nicolas.schier@linux.dev>,
-        Hans de Goede <hansg@kernel.org>,
-        Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-        Mark Pearson <mpearson-lenovo@squebb.ca>,
-        "Derek J. Clark" <derekjohn.clark@gmail.com>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bartosz Golaszewski <brgl@kernel.org>, linux-serial@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org,
-        Stephan Gerhold <stephan.gerhold@linaro.org>,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v6 6/9] dt-bindings: connector: m2: Add M.2 1620 LGA
- soldered down connector
-Message-ID: <blhm4csjyw6r667cleljgzd6rpwagttjo5rau7wjrlnjakq2qm@ekyhc4jvwmwf>
-References: <20260317-pci-m2-e-v6-0-9c898f108d3d@oss.qualcomm.com>
- <20260317-pci-m2-e-v6-6-9c898f108d3d@oss.qualcomm.com>
- <20260322233713.GA98177-robh@kernel.org>
- <to2mrizprc3hjufqbiplpqyek7f4uutqtn4hx4gkmdgv2rykbc@ybwwjhdec4nm>
- <CAL_JsqJXrHCJt770bJkMmAUhirSF3kHjYwSzkG7cXp7-eys8Rg@mail.gmail.com>
- <6aef3xxjjd4nbgrfx6jc6jt6rpqmttoui6hil5zqgdpas2j6gj@ie6j72orenou>
- <fsvmmgoe5wslmxebhrrwmdg2ldcmhzvj53gjkdfnfg2m2rz2lw@dcfboaakz7ae>
- <bguhzabwryayyqkv4ilzwr3ixwv6bzxncblo3ircz2wm3fs52k@66zvcrfcb4oe>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JT2AWrtU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B07EFC4CEF7;
+	Mon, 23 Mar 2026 16:50:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774284641;
+	bh=x4UyYYR8+iwWvMg2BIGbPYGIypU602o9uURawY09SJw=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=JT2AWrtUMFhsc4V1mxvSKjOPzLB1zrksvFEvxUyI1nlFCGlSNmetXtLJWDaF08iZ8
+	 NEl0PGvOzh3rVmyg9rOXffF7W4mVtsYyGrAdWWJDJL7Hf/lw/FQSZISZacn1IPmvSz
+	 G9GIDcnc2pl/nU05DQ+568cLPp10/4ylp1cDlZu9Jpl+aV6P0Wcv9qk9UZub6HYTN/
+	 hj7kI6PPgpN3tg6bf+YPBa4JVjSxpQ5ax+xn/cZZGPM7+z7trSG8jg8h+pmMK2OSRg
+	 pwSHsRN+40nsF4RR5P3T9X/JwRC1fkADBHBOuKQCYcH0HiDVWci2hinsV8apGLspUL
+	 cTBZN7kLu3k9g==
+Date: Mon, 23 Mar 2026 11:50:38 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Jonathan Corbet <corbet@lwn.net>, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>,
+	Maciej Grochowski <mx2pg@pm.me>,
+	Kai-Heng Feng <kaihengf@nvidia.com>
+Subject: Re: [PATCH] Documentation: PCI: Document decoding of TLP Header in
+ AER messages
+Message-ID: <20260323165038.GA830530@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <bguhzabwryayyqkv4ilzwr3ixwv6bzxncblo3ircz2wm3fs52k@66zvcrfcb4oe>
-X-Authority-Analysis: v=2.4 cv=fq7RpV4f c=1 sm=1 tr=0 ts=69c16e20 cx=c_pps
- a=WeENfcodrlLV9YRTxbY/uA==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22 a=VwQbUJbxAAAA:8
- a=dFseMu0FTdCp80lU-T0A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=kacYvNCVWA4VmyqE58fU:22
-X-Proofpoint-ORIG-GUID: 1MIyo6tEUMkrhAfTYLCprs9GavUsooRd
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzIzMDEyNCBTYWx0ZWRfXy1nV0BSRvVgs
- saEYGTRIdHgzk/eyjF2fOiFpl8tCmeyeHDJGGXYHj2B8pJSh1soAUuqZNRuEV2pabH76eaKbKOF
- HnynP+C6+9MkEERNDaya9i5J6VkNF1QwAqvMFbkgFutji8r8hlBV4O2dCLqPkSHzzzNqIRJvrFe
- mMwMLsDlgByHF2zvOyXFx3cVMeu5CR8n9F+xw2xYfuR/HJAp6X0B4as8JJGmcAMW12ay/TRBfwa
- I5xT+K8Lfvk5TbblQEG2fJ+nk8P3b5Rjri2pTl9SOQd2Ey6V/6upb0drCyrVibD/hNH7VW4fPJ4
- PPIfjKCwLCDKf1bXNJmBFQe/I8mqwjXQf6/VSEGaYr10oU0hsJ/Cv6AhXE7kU0Juo1eOWm3Zmts
- zvuil1XSAqAAiyXCaKeLa+3AyOy28glN3KQZtJcim9YfArC6Cs/Rn/1fUS+em3fheIQeWpCBWtN
- apE8Dl96ayo5DQb+cvw==
-X-Proofpoint-GUID: 1MIyo6tEUMkrhAfTYLCprs9GavUsooRd
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-23_04,2026-03-23_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 spamscore=0 adultscore=0 clxscore=1015 impostorscore=0
- lowpriorityscore=0 suspectscore=0 priorityscore=1501 bulkscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603230124
+In-Reply-To: <bf826c41b4c1d255c7dcb16e266b52f774d944ed.1774246067.git.lukas@wunner.de>
 
-On Mon, Mar 23, 2026 at 09:26:04PM +0530, Manivannan Sadhasivam wrote:
-> On Mon, Mar 23, 2026 at 05:14:30PM +0200, Dmitry Baryshkov wrote:
-> > On Mon, Mar 23, 2026 at 07:14:25PM +0530, Manivannan Sadhasivam wrote:
-> > > On Mon, Mar 23, 2026 at 08:39:55AM -0500, Rob Herring wrote:
-> > > > On Mon, Mar 23, 2026 at 7:16 AM Manivannan Sadhasivam <mani@kernel.org> wrote:
-> > > > >
-> > > > > On Sun, Mar 22, 2026 at 06:37:13PM -0500, Rob Herring wrote:
-> > > > > > On Tue, Mar 17, 2026 at 09:59:56AM +0530, Manivannan Sadhasivam wrote:
-> > > > > > > Lenovo Thinkpad T14s is found to have a soldered down version of M.2 1620
-> > > > > > > LGA connector. Though, there is no 1620 LGA form factor defined in the M.2
-> > > > > > > spec, it looks very similar to the M.2 Key E connector. So add the
-> > > > > > > "pcie-m2-1620-lga-connector" compatible with "pcie-m2-e-connector" fallback
-> > > > > > > to reuse the Key E binding.
-> > > > > >
-> > > > > > What is LGA?
-> > > > > >
-> > > > >
-> > > > > Land Grid Array
-> > > > >
-> > > > > > If not in the spec, is it really something generic?
-> > > > > >
-> > > > >
-> > > > > Good question. Yes and No! LGA is not something that Lenovo only uses. Other
-> > > > > vendors may also use this form factor. PCIe connectors are full of innovation as
-> > > > > the spec gives room for hardware designers to be as innovative as possible to
-> > > > > save the BOM cost.
-> > > > 
-> > > > innovation == incompatible changes
-> > > > 
-> > > 
-> > > Yes, I was trying to sound nice :)
-> > > 
-> > > > > This is why I do not want to make it Lenovo specific. But if you prefer that, I
-> > > > > can name it as "lenovo,pcie-m2-1620-lga-connector".
-> > > > 
-> > > > Depends if you think that s/w needs to know the differences. Hard to
-> > > > say with a sample size of 1.
-> > > > 
-> > > 
-> > > Sure. Will add the 'lenovo' prefix then.
-> > 
-> > Is it really Lenovo? Or is it some other module vendor, whose LGAs are
-> > being used by Lenovo?
-> > 
-> > I remember that DB820c also used some kind of a module for the WiFi card
-> > (which might be M.2 compatible or might not, I can't find exact docs at
-> > this point).
-> > 
+On Mon, Mar 23, 2026 at 07:52:39AM +0100, Lukas Wunner wrote:
+> The prefix/header of the TLP that caused an error is recorded by the Root
+> Complex and emitted to the kernel log in raw hex format.  Document the
+> existence and usage of tlp-tool, which allows decoding the TLP Header
+> into human-readable form.
 > 
-> I don't know. These kind of designs might be reused by several vendors. But
-> considering that we should not make it generic, I'd go with Lenovo as that's
-> the only vendor we know as of now.
+> The TLP Header hints at the root cause of an error, yet is often ignored
+> because of its seeming opaqueness.  Instead, PCIe errors are frequently
+> worked around by a change in the kernel without fully understanding the
+> actual source of the problem.  With more documentation on available tools
+> we'll hopefully come up with better solutions.
+> 
+> There are also wireshark dissectors for TLPs, but it seems they expect a
+> complete TLP, not just the header, and they cannot grok the hex format
+> emitted by the kernel directly.  tlp-tool appears to be the most cut and
+> dried solution out there.
+> 
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Cc: Maciej Grochowski <mx2pg@pm.me>
 
-... and later we learn that other vendors use the same idea /pinout,
-then nothing stops us from still telling that it's a
-"lenovo,pcie-m2-something-lga". 
+Applied to pci/for-linus for v7.0, thanks!
 
--- 
-With best wishes
-Dmitry
+I tweaked the commit log to note that the Header Log is in the AER
+Capability, which may be in any PCIe function.
+
+> ---
+> We could also go one step further and point users to this tool
+> in a printk_once() message when the first error occurs.
+> For now, just amending the documentation is probably sufficient.
+> 
+>  Documentation/PCI/pcieaer-howto.rst | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/Documentation/PCI/pcieaer-howto.rst b/Documentation/PCI/pcieaer-howto.rst
+> index 3210c47..90fdfdd 100644
+> --- a/Documentation/PCI/pcieaer-howto.rst
+> +++ b/Documentation/PCI/pcieaer-howto.rst
+> @@ -85,6 +85,16 @@ In the example, 'Requester ID' means the ID of the device that sent
+>  the error message to the Root Port. Please refer to PCIe specs for other
+>  fields.
+>  
+> +The 'TLP Header' is the prefix/header of the TLP that caused the error
+> +in raw hex format. To decode the TLP Header into human-readable form
+> +one may use tlp-tool:
+> +
+> +https://github.com/mmpg-x86/tlp-tool
+> +
+> +Example usage::
+> +
+> +  curl -L https://git.kernel.org/linus/2ca1c94ce0b6 | rtlp-tool --aer
+> +
+>  AER Ratelimits
+>  --------------
+>  
+> -- 
+> 2.51.0
+> 
