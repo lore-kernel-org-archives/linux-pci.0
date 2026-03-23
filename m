@@ -1,571 +1,298 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021128.outbound.protection.outlook.com [52.101.125.128])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D52C3BA24F;
-	Mon, 23 Mar 2026 15:38:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774280322; cv=none; b=MnwwJhxbstHo6PYNQCvhYcvuQ36Mg3Y7/q4HFWH4pUfj9NT/B4OKbTDBgUwfkQAir/JzRDtybPVoadj3MpaMk7L+Rv9AWjjGOwXmt2abUh87QDvu8yqFCkr7T3v5g3Dm6gCzFQ9EETQytT6efu0CTKkwiUBKtG4SHfQAnfwumao=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774280322; c=relaxed/simple;
-	bh=XjZYGT3mwhQnfIQS5JPPg8DonuJKTzN2NsDCfhyYH4U=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CIfKb3VI6+1pFFfOBOlSWtlH1kDahpbFthxdIjDNq02F+99jyGeWTUJXarGkzvqdHCRXeRpaGXiQdf5yEWAegW9BjbRgW4mF+Rf9PogBfFDcEZ3YKOzPL1awk+nqypE/yeV3kJ4XduCimgSTFxMZpgXj5QrxrhsF6CXS6br1wKo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S/P3siaG; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E10AE395DB5;
+	Mon, 23 Mar 2026 15:43:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.125.128
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774280639; cv=fail; b=SN6LsbDX58Wi6DZBI4dThPAqyDTxQozrIjDt+0KyNti4VilhDzzYwku3DjIhYtL0Fkd18O7rGMBR96k+40zKsuxopu0JGR5Uex8Axeqon0EI45w/ygAkbXw+nOLBMVfEUOOJbxTuThFV6WTwnzIY1inHbUQR0/aAivCYQ6D1OEU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774280639; c=relaxed/simple;
+	bh=oV5R/CdH03FCzQdJKkIs8BZP0QY1s05FA4OXTy1Jijw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=q8PfOO4frRJcdRXqOwL04bXnhAy0tpFnobi0Y7n17QGY8lZVBfe7h1wPi+cMEzsjXbH9Kh9cMpeaZ5PLnO9cJDaAE/pVm0T/utH9/cxGFq9eRcS0eAcGQPkyzJRQ4OXRxji2m5P/BbyCpJhZlFh+I8+/9SlAmPQlOSi5qBfjEPQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=F/wj1jyF; arc=fail smtp.client-ip=52.101.125.128
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S/P3siaG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6D76C2BC9E;
-	Mon, 23 Mar 2026 15:38:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774280322;
-	bh=XjZYGT3mwhQnfIQS5JPPg8DonuJKTzN2NsDCfhyYH4U=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:Reply-To:From;
-	b=S/P3siaG7aCKIVSo1bqUArpBG+XHn3RI0kIhCciyjlhS0RvFvoDoMMPXvOutls7L+
-	 nvUKj6it85ygupV+CrwmwP6YgGmmUYbNbdMOPsg4YVlReJL62SVGUBYcW7bNbPC/gA
-	 qCm9G5Zs6ZhCt4rzOGgZhkYdlNqLfGanWW+wTQS/Oh/FThUimk4mDyAE+Zv5QFHzKF
-	 jzAfd5D3UBcIYaYSIsft2YC6rs+GYT2BO1NqXiJ8Y+tKUufsjvpuMRZNagz6JZu5ok
-	 geSotcQec0GKw3zGtM/yIfdKvyjYTbIfHp9RzFRQoW4vjMPXzHb51UKucSZhb2n93X
-	 DO8EQ1aEfKJqg==
-From: Gary Guo <gary@kernel.org>
-To: Miguel Ojeda <ojeda@kernel.org>,
-	Boqun Feng <boqun@kernel.org>,
-	Gary Guo <gary@garyguo.net>,
-	=?UTF-8?q?Bj=C3=B6rn=20Roy=20Baron?= <bjorn3_gh@protonmail.com>,
-	Benno Lossin <lossin@kernel.org>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Alice Ryhl <aliceryhl@google.com>,
-	Trevor Gross <tmgross@umich.edu>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Daniel Almeida <daniel.almeida@collabora.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Cc: rust-for-linux@vger.kernel.org,
-	driver-core@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 3/8] rust: io: use pointer types instead of address
-Date: Mon, 23 Mar 2026 15:37:55 +0000
-Message-ID: <20260323153807.1360705-4-gary@kernel.org>
-X-Mailer: git-send-email 2.51.2
-In-Reply-To: <20260323153807.1360705-1-gary@kernel.org>
-References: <20260323153807.1360705-1-gary@kernel.org>
-Reply-To: Gary Guo <gary@garyguo.net>
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="F/wj1jyF"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=gbVXt65sCDjcy/fRdusl4lL0dtw1g+7vGnFQ3CXO+qt97Hrod4UFctlbjy29rgl7V28f6zu8MPOeU7jI2Hn+EPkaQG7CltuovJH8WIojDTpFOJMwOP2b8ld1PaHWsK0vVdPVw+z26CiWinrM+8JW/h7MKhMezzbYnq+HOgTXDZc/WpRqfIlgdWdzhCkzCDqFvArb0JQl+JdDLlOvL0BS8XNojO2CpDDuFGCCV3Uub86tkKLrC2ahCAaLGGrVUdf2LG4JSEzvMekhRxoVhqQCzSS1dLBH9hFv9lmbVd2I3OJxh+F6VBed0bwB/2Wf2yY4KiV2ymMl4tNp+aK1cxDTOQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=DarHAnZPTp0LE89v+oMDz1wBrOvzh/7TTPWc/n2yniM=;
+ b=maaZ788PgEuUoLNA3Kukzsn4KDtFA/3W2yOekVPfDsQrETNxVNE+iHjEJFy7UjLfHVKpSfd2xP9k9WtgGdCqwHQtd/5ZfCY2GCdlRqESeOb3Zek0YQ020wswNHFlQAuqt0COFgCUAQikedd3Ymu4v+hJfT8Y5XE7HTnFGZbxvvfrywr6tHNc5uA71AqWWxKoiZErpRX30KsODHE8SKAqvaIDxQp0bjQDvmJGMpw+rFzJZXdy20kyhRmza+5kAsIqvDLiyadwomOIXa/JDac7kjoMB9oKgZ/ONQqTHU7S/yrjfu3IjmH7huMLjzwn/9wjKl5QPCKYqyAdGJ7R1q0kEQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DarHAnZPTp0LE89v+oMDz1wBrOvzh/7TTPWc/n2yniM=;
+ b=F/wj1jyFy+cX0z9yE3tG897MGQf+sONSVDfgTEIPqsZSpHvXbu1CD4NdxmmhwsBUftG/fL37ghfJx+8xtBQ8hvSymmAI0Z1h7POYH4AkGjrZYQHG197re/PKxmnsc/iw6oLySn5kLOv4aQVKkbfQm38t5UMcCvK0sFSh1jJIpzY=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by OS3P286MB2728.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:1ff::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.31; Mon, 23 Mar
+ 2026 15:43:55 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9723.030; Mon, 23 Mar 2026
+ 15:43:55 +0000
+Date: Tue, 24 Mar 2026 00:43:53 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>, 
+	Allen Hubbe <allenbh@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>, 
+	Jerome Brunet <jbrunet@baylibre.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Niklas Cassel <cassel@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	ntb@lists.linux.dev
+Subject: Re: [PATCH v3 00/10] PCI: endpoint: pci-epf-vntb / NTB: epf: Enable
+ per-doorbell bit handling
+Message-ID: <7jkibbdz3m3vuq2kq2xxnkt2rjdt5v7itgowc7qormtwgnf6tv@krl5brfjul5y>
+References: <20260323031544.2598111-1-den@valinux.co.jp>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260323031544.2598111-1-den@valinux.co.jp>
+X-ClientProxiedBy: TY4P286CA0104.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:380::17) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|OS3P286MB2728:EE_
+X-MS-Office365-Filtering-Correlation-Id: e989b76c-b107-4b9d-b2b5-08de88f2fd91
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|7416014|376014|10070799003|366016|921020|56012099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	ysZgIwoPIWYsAQk8HLk6Heg4a2KWvQkWixJ2+Wqql/S5MDhajB41wvL0DWM2GorqHTBp/RGF9HqBealLnEy83XuYxpo+3CMcgeOr1yDno1JgE3lQfR3jVOcK7Uow05+HOvg5/Rikf2eEHe+dUehGGiwvhudhgq7XmAd424Ncy9V7VYbqMpX+dZA8p7ukiASDOS+TvaimV0Nwvo7wOvUhgxZJR0DllNmRujWu1asO66EFpPIUlbhreg0sHNtnglmK9+1kH1C4FbPCGgUx6KRXb7ftvVACOshBa65sGz6UJYam93ELN4s3VehRQ64i1wwFcgK5r98/UtHjmv+leqvjGuIRNdmrQtcpNHwLcFZZfTH2Zp9msdXZA+knKgdei2C7vejDiLQfA6T+EIASao9ahusQJT2IHtWr9ZMdepfIHW9EOebGVI9bpF6LtzY+zRaszO1urcFZo+rLj5P0ZwH5tgkFmFXJNoyzWsk+7TE9gzxlrPhczIJas6w7VkCRYytuj9NlTkcFIyUoHOe9KzNVCF2nWXfGFSioyChHbC6hN7gIqeGygPI6CTSYybCQZQW7bYijULKtFvBDoSZ+NizXWONpCYwmq8DtCTED6kFKaLY1ml4o3wQcPO3eVYFbElB95PdB2Ub6yq2gYUKQg3DUvvT2wiaHdmI2CkSCd206Pwie9HPY3bztJpQ9ws0LP2ozS22LQ+2DhwIzmhqcIqd2dGsaF2uMdF9pdbjWvMdnJrY=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(10070799003)(366016)(921020)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?RMeeEFIloKkbMFwRaa9+JQWz/rE6hycO3iwo11zAz32/lfqKeMLc51v1KmcB?=
+ =?us-ascii?Q?YYGcqy6NmlwbE9kuu8JRSI9Sok9oMMDzOBzFpwGb6Bvgl5p7a7+Vxsab2Xxb?=
+ =?us-ascii?Q?Kx9cIID5vjc/2dvnZVX2JfrpvDs3o7BJUm/OWhfAmjx+pxCho0d6DqOSrn1W?=
+ =?us-ascii?Q?Y1vBgocGNoKt9i0gPIegwI47H75QT5lLOz2Z5Ck7cbH5otw+aC0kEaJKP9To?=
+ =?us-ascii?Q?a8o6YS4lOkZpxf6OucSnRNI3hYIpbT1EDrbbIJhO1IOHBod57gndHiBKnz1j?=
+ =?us-ascii?Q?t1GAltoTL2YxA8LjAy68qpG9dTMg7mYb90nCK0YzwGMebk7NuXC4zICMV6nA?=
+ =?us-ascii?Q?D5hntCd6++LBIwVZsKVfQT51GOn4aK0IpdxX5hVLRQiKViWvD61utmgQwf28?=
+ =?us-ascii?Q?II4XestsF0G1EtUuGYa5jT1RCOFz2nY7GWoBY8yxy0toaBJwN9LMvpI6+Zj/?=
+ =?us-ascii?Q?a4GS6npRImyzEAXugbI7k6p3MdwY517RlIi+c22oeTlLE2FlnJ+CyELCbIFd?=
+ =?us-ascii?Q?y3lFukC7acO3Bm6uAzInDBQo7wGVszLWC3ANAivh4SR7Z2oFFu2Kxp4edvEi?=
+ =?us-ascii?Q?BgEQsr+UG80yo+3XDVjnVm8EScjMn4fqFLVg06uPf02RnHMkU1SxtQxRaE8v?=
+ =?us-ascii?Q?mNqvPRfaOfy1HgD2rpumk4WMKlw6mUwitb5IfO6uQoRCs2ySR1yrL/yVNJLf?=
+ =?us-ascii?Q?5V6vUSm7QADS82i5m1meAGamcZRSKTf++S4gBzO740ThjhAEwTiQw/33x7iW?=
+ =?us-ascii?Q?kdKEBJRXoDEPzIopgg69MRra/4L6dvL0kbt5C826Mj6UbMF/dlKfprawaZmB?=
+ =?us-ascii?Q?vOGUl/yTK4Dj2Xa90sMojlMVK62jHSbrtqi5FoJd1kob5ceOH64PkXnaqfVq?=
+ =?us-ascii?Q?/kQiu6bRLyjt0+HDRr0oyXIAH7g60zKUSQvxoWN+ZoL5sSpxmGXjWnOomCva?=
+ =?us-ascii?Q?QOnA/fTyh19Bxnw5R8A+nyq0qgboJ2w3l2DLlMUrdlsgtPCetJGcfUdWLaVd?=
+ =?us-ascii?Q?axSfrzN8CwFoaPtFOEFABqOfWoojtZW5dGtXxN25fNk9sFQoo8ODD1WUOMSL?=
+ =?us-ascii?Q?csYO7KYCfuzY+AYggPbEUo9Gcqu3D+JduX6bBmQ6LEzAyAlKIx4BaCk+k5cD?=
+ =?us-ascii?Q?NuVRaELegz/fQghId9EfMAW/ipuMnPe5tgxFR8HX5bskY6ZCxg0crL0ExC9J?=
+ =?us-ascii?Q?/6yl4wZE+kSDREAdQYCpb870fNq4rm2FAM+VSwbTmIPZCtLBw0y6WavcrPyv?=
+ =?us-ascii?Q?4k9OlqXNfPT5RV8UGXloGCb+8ryhCLfx7pkoJBnLi2lqk1b2dME+ssRuBKbQ?=
+ =?us-ascii?Q?2bK9eNaKjNAAkqsb61CZgBC5JMF4StA0kp3xdxoy0wxeTK3FNR1zClGkK11/?=
+ =?us-ascii?Q?UuyDN3DNeGUDPU91sP/x0Leu2LleOW8/1VBbBaQY3ON6HfKNGh9dPW5tvyvV?=
+ =?us-ascii?Q?DSYYYkQlc1d4DyGaeK/jmvbbknmRIJSO4DvxyOV2PsOe3WzEK7J3Tyfikspu?=
+ =?us-ascii?Q?eHqVUikdXikFFG7X6aUK1TA9rM0engaKD6C8k01UXQ9pEqjlXzxBaF5KpthU?=
+ =?us-ascii?Q?FcxWEfl7A8glegrHZHPcIEEJAxPZb0M4ByPXHlXfvN6PbEzF8JjGey2L7FEB?=
+ =?us-ascii?Q?EpHb1g59qmKfYytSd8bCvoPYzeml3ENKAUfKZ17IIbXc50PTkuO1O9Xzcsbv?=
+ =?us-ascii?Q?Wj4M5QIXbWdQTZt3xX49/YUbOGO8MAsUcX5G9zm2LB9Kafh0/1xcfWt5VJzH?=
+ =?us-ascii?Q?M8dAXXMa7Cuhw2LrMxObEIgLzUFOw/bL7N9UHik0zCwiUrQoewCo?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: e989b76c-b107-4b9d-b2b5-08de88f2fd91
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Mar 2026 15:43:55.1516
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: k0q5HG/8GvzshgI4ED95QNhpDKKl38maoJnHOaZeAIKmcPmRSXJ8hP9WN4Px6EY+KQmMcnmcWX71/jpBp/jDYA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS3P286MB2728
 
-From: Gary Guo <gary@garyguo.net>
+On Mon, Mar 23, 2026 at 12:15:34PM +0900, Koichiro Den wrote:
+> This series fixes doorbell bit/vector handling for the EPF-based NTB
+> pair (ntb_hw_epf <-> pci-epf-*ntb). Its primary goal is to enable safe
+> per-db-vector handling in the NTB core and clients (e.g. ntb_transport),
+> without changing the on-the-wire doorbell mapping.
+> 
+> 
+> Background / problem
+> ====================
+> 
+> ntb_hw_epf historically applies an extra offset when ringing peer
+> doorbells: the link event uses the first interrupt slot, and doorbells
+> start from the third slot (i.e. a second slot is effectively unused).
+> pci-epf-vntb carries the matching offset on the EP side as well.
+> 
+> As long as db_vector_count()/db_vector_mask() are not implemented, this
+> mismatch is mostly masked. Doorbell events are effectively treated as
+> "can hit any QP" and the off-by-one vector numbering does not surface
+> clearly.
+> 
+> However, once per-vector handling is enabled, the current state becomes
+> problematic:
+> 
+>   - db_valid_mask exposes bits that do not correspond to real doorbells
+>     (link/unused slots leak into the mask).
+>   - ntb_db_event() is fed with 1-based/shifted vectors, while NTB core
+>     expects a 0-based db_vector for doorbells.
+>   - On pci-epf-vntb, .peer_db_set() may be called in atomic context, but
+>     it directly calls pci_epc_raise_irq(), which can sleep.
+> 
+> 
+> Why NOT fix the root offset?
+> ============================
+> 
+> The natural "root" fix would be to remove the historical extra offset in
+> the peer_db_set() doorbell paths for ntb_hw_epf and pci-epf-vntb.
+> Unfortunately this would lead to interoperability issues when mixing old
+> and new kernel versions (old/new peers). A new side would ring a
+> different interrupt slot than what an old peer expects, leading to
+> missed or misrouted doorbells, once db_vector_count()/db_vector_mask()
+> are implemented.
+> 
+> Therefore this series intentionally keeps the legacy offset, and instead
+> fixes the surrounding pieces so the mapping is documented and handled
+> consistently in masks, vector numbering, and per-vector reporting.
+> 
+> 
+> What this series does
+> =====================
+> 
+> - pci-epf-vntb:
+> 
+>   - Document the legacy offset.
+>   - Defer MSI doorbell raises to process context to avoid sleeping in
+>     atomic context. This becomes relevant once multiple doorbells are
+>     raised concurrently at a high rate.
+>   - Report doorbell vectors as 0-based to ntb_db_event().
+>   - Fix db_valid_mask and implement db_vector_count()/db_vector_mask().
+> 
+> - ntb_hw_epf:
+> 
+>   - Document the legacy offset in ntb_epf_peer_db_set().
+>   - Fix db_valid_mask to cover only real doorbell bits.
+>   - Report 0-based db_vector to ntb_db_event() (accounting for the
+>     unused slot).
+>   - Keep db_val as a bitmask and fix db_read/db_clear semantics
+>     accordingly.
+>   - Implement db_vector_count()/db_vector_mask().
+> 
+> 
+> Compatibility
+> =============
+> 
+> By keeping the legacy offset intact, this series aims to remain
+> compatible across mixed kernel versions. The observable changes are
+> limited to correct mask/vector reporting and safer execution context
+> handling.
+> 
+> Patches 1-5 (PCI Endpoint) and 6-10 (NTB) are independent and can be
+> applied separately through the respective trees. They are sent together
+> in this v3 for convenience.
+> 
+> Once the remaining acks from NTB maintainers are collected, the plan is
 
-This carries the size information with the pointer type and metadata, makes
-it possible to use I/O projections and paves the way for IO view types.
+Hi Dave,
 
-With this change, minimum size information becomes available through types;
-so `KnownSize::MIN_SIZE` can be used and `IoKnownSize` trait is no longer
-necessary. The trait is kept for compatibility and can be removed when
-users stop using it for bounds.
+When you have a chance, I'd appreciate another look at patches 6-10 (which are
+unchanged since v2). If you do not see any blockers, Acked-by would be
+greatly appreciated.
 
-PCI config space uses only offsets and not pointers like MMIO; for this
-null pointers (with proper size metadata) is used. This is okay as I/O
-trait impl and I/O projections can operate on invalid pointers, and for PCI
-config space we will only use address info and ignore the provenance.
 
-The current safety comment on `io_read`/`io_write` does not cover the topic
-about alignment, although this is guaranteed by checks in `Io`. Add it so
-it can be relied on by implementor of `IoCapable`.
+P.S. Regarding Sashiko's feedback [1], my understanding is that there are no
+blockers, but there are a few points that would be better addressed separately
+as orthogonal follow-ups:
 
-Signed-off-by: Gary Guo <gary@garyguo.net>
----
- rust/kernel/devres.rs |   2 +-
- rust/kernel/io.rs     | 129 ++++++++++++++++++------------------------
- rust/kernel/io/mem.rs |   2 +-
- rust/kernel/pci/io.rs |  82 +++++++++++++++++----------
- 4 files changed, 111 insertions(+), 104 deletions(-)
+- configfs knobs mutability and bounds checking, including (but not limited to)
+  db_count.
+  In my opinion, allowing updates after .bind() looks questionable, and
+  returning -EBUSY once bound seems more appropriate. I'm leaning toward
+  handling this as a separate hardening series.
 
-diff --git a/rust/kernel/devres.rs b/rust/kernel/devres.rs
-index 3e22c63efb98..ea86e9c62cdf 100644
---- a/rust/kernel/devres.rs
-+++ b/rust/kernel/devres.rs
-@@ -101,7 +101,7 @@ struct Inner<T> {
- /// impl<const SIZE: usize> Drop for IoMem<SIZE> {
- ///     fn drop(&mut self) {
- ///         // SAFETY: `self.0.addr()` is guaranteed to be properly mapped by `Self::new`.
--///         unsafe { bindings::iounmap(self.0.addr() as *mut c_void); };
-+///         unsafe { bindings::iounmap(self.0.as_ptr().cast()); };
- ///     }
- /// }
- ///
-diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-index 5a26b1e7e533..72902a4a343d 100644
---- a/rust/kernel/io.rs
-+++ b/rust/kernel/io.rs
-@@ -105,8 +105,8 @@ pub fn new_region(addr: usize, size: usize) -> Result<Self> {
- impl<T: ?Sized + KnownSize> MmioRaw<T> {
-     /// Returns the base address of the MMIO region.
-     #[inline]
--    pub fn addr(&self) -> usize {
--        self.addr.addr()
-+    pub fn as_ptr(&self) -> *mut T {
-+        self.addr
-     }
- 
-     /// Returns the size of the MMIO region.
-@@ -166,7 +166,7 @@ pub fn size(&self) -> usize {
- /// impl<const SIZE: usize> Drop for IoMem<SIZE> {
- ///     fn drop(&mut self) {
- ///         // SAFETY: `self.0.addr()` is guaranteed to be properly mapped by `Self::new`.
--///         unsafe { bindings::iounmap(self.0.addr() as *mut c_void); };
-+///         unsafe { bindings::iounmap(self.0.as_ptr().cast()); };
- ///     }
- /// }
- ///
-@@ -216,15 +216,17 @@ pub trait IoCapable<T> {
-     ///
-     /// # Safety
-     ///
--    /// The range `[address..address + size_of::<T>()]` must be within the bounds of `Self`.
--    unsafe fn io_read(&self, address: usize) -> T;
-+    /// - The range `[address..address + size_of::<T>()]` must be within the bounds of `Self`.
-+    /// - `address` must be aligned.
-+    unsafe fn io_read(&self, address: *mut T) -> T;
- 
-     /// Performs an I/O write of `value` at `address`.
-     ///
-     /// # Safety
-     ///
--    /// The range `[address..address + size_of::<T>()]` must be within the bounds of `Self`.
--    unsafe fn io_write(&self, value: T, address: usize);
-+    /// - The range `[address..address + size_of::<T>()]` must be within the bounds of `Self`.
-+    /// - `address` must be aligned.
-+    unsafe fn io_write(&self, value: T, address: *mut T);
- }
- 
- /// Describes a given I/O location: its offset, width, and type to convert the raw value from and
-@@ -291,23 +293,35 @@ fn offset(self) -> usize {
- /// For MMIO regions, all widths (u8, u16, u32, and u64 on 64-bit systems) are typically
- /// supported. For PCI configuration space, u8, u16, and u32 are supported but u64 is not.
- pub trait Io {
--    /// Returns the base address of this mapping.
--    fn addr(&self) -> usize;
-+    /// Type of this I/O region. For untyped I/O regions, [`Region`] type can be used.
-+    type Type: ?Sized + KnownSize;
-+
-+    /// Returns the base pointer of this mapping.
-+    ///
-+    /// This is a pointer to capture metadata. The specific meaning of the pointer depends on
-+    /// I/O backend and is not necessarily valid.
-+    fn as_ptr(&self) -> *mut Self::Type;
-+
-+    /// Returns the absolute I/O address for a given `offset`,
-+    /// performing compile-time bound checks.
-+    // Always inline to optimize out error path of `build_assert`.
-+    #[inline(always)]
-+    fn io_addr_assert<U>(&self, offset: usize) -> *mut U {
-+        build_assert!(offset_valid::<U>(offset, Self::Type::MIN_SIZE));
- 
--    /// Returns the maximum size of this mapping.
--    fn maxsize(&self) -> usize;
-+        self.as_ptr().wrapping_byte_add(offset).cast()
-+    }
- 
-     /// Returns the absolute I/O address for a given `offset`,
-     /// performing runtime bound checks.
-     #[inline]
--    fn io_addr<U>(&self, offset: usize) -> Result<usize> {
--        if !offset_valid::<U>(offset, self.maxsize()) {
-+    fn io_addr<U>(&self, offset: usize) -> Result<*mut U> {
-+        let ptr = self.as_ptr();
-+        if !offset_valid::<U>(offset, Self::Type::size(ptr)) {
-             return Err(EINVAL);
-         }
- 
--        // Probably no need to check, since the safety requirements of `Self::new` guarantee that
--        // this can't overflow.
--        self.addr().checked_add(offset).ok_or(EINVAL)
-+        Ok(ptr.wrapping_byte_add(offset).cast())
-     }
- 
-     /// Fallible 8-bit read with runtime bounds check.
-@@ -386,7 +400,7 @@ fn try_write64(&self, value: u64, offset: usize) -> Result
-     #[inline(always)]
-     fn read8(&self, offset: usize) -> u8
-     where
--        Self: IoKnownSize + IoCapable<u8>,
-+        Self: IoCapable<u8>,
-     {
-         self.read(offset)
-     }
-@@ -395,7 +409,7 @@ fn read8(&self, offset: usize) -> u8
-     #[inline(always)]
-     fn read16(&self, offset: usize) -> u16
-     where
--        Self: IoKnownSize + IoCapable<u16>,
-+        Self: IoCapable<u16>,
-     {
-         self.read(offset)
-     }
-@@ -404,7 +418,7 @@ fn read16(&self, offset: usize) -> u16
-     #[inline(always)]
-     fn read32(&self, offset: usize) -> u32
-     where
--        Self: IoKnownSize + IoCapable<u32>,
-+        Self: IoCapable<u32>,
-     {
-         self.read(offset)
-     }
-@@ -413,7 +427,7 @@ fn read32(&self, offset: usize) -> u32
-     #[inline(always)]
-     fn read64(&self, offset: usize) -> u64
-     where
--        Self: IoKnownSize + IoCapable<u64>,
-+        Self: IoCapable<u64>,
-     {
-         self.read(offset)
-     }
-@@ -422,7 +436,7 @@ fn read64(&self, offset: usize) -> u64
-     #[inline(always)]
-     fn write8(&self, value: u8, offset: usize)
-     where
--        Self: IoKnownSize + IoCapable<u8>,
-+        Self: IoCapable<u8>,
-     {
-         self.write(offset, value)
-     }
-@@ -431,7 +445,7 @@ fn write8(&self, value: u8, offset: usize)
-     #[inline(always)]
-     fn write16(&self, value: u16, offset: usize)
-     where
--        Self: IoKnownSize + IoCapable<u16>,
-+        Self: IoCapable<u16>,
-     {
-         self.write(offset, value)
-     }
-@@ -440,7 +454,7 @@ fn write16(&self, value: u16, offset: usize)
-     #[inline(always)]
-     fn write32(&self, value: u32, offset: usize)
-     where
--        Self: IoKnownSize + IoCapable<u32>,
-+        Self: IoCapable<u32>,
-     {
-         self.write(offset, value)
-     }
-@@ -449,7 +463,7 @@ fn write32(&self, value: u32, offset: usize)
-     #[inline(always)]
-     fn write64(&self, value: u64, offset: usize)
-     where
--        Self: IoKnownSize + IoCapable<u64>,
-+        Self: IoCapable<u64>,
-     {
-         self.write(offset, value)
-     }
-@@ -637,7 +651,7 @@ fn try_update<T, L, F>(&self, location: L, f: F) -> Result
-     fn read<T, L>(&self, location: L) -> T
-     where
-         L: IoLoc<T>,
--        Self: IoKnownSize + IoCapable<L::IoType>,
-+        Self: IoCapable<L::IoType>,
-     {
-         let address = self.io_addr_assert::<L::IoType>(location.offset());
- 
-@@ -670,7 +684,7 @@ fn read<T, L>(&self, location: L) -> T
-     fn write<T, L>(&self, location: L, value: T)
-     where
-         L: IoLoc<T>,
--        Self: IoKnownSize + IoCapable<L::IoType>,
-+        Self: IoCapable<L::IoType>,
-     {
-         let address = self.io_addr_assert::<L::IoType>(location.offset());
-         let io_value = value.into();
-@@ -715,7 +729,7 @@ fn write_reg<T, L, V>(&self, value: V)
-     where
-         L: IoLoc<T>,
-         V: LocatedRegister<Location = L, Value = T>,
--        Self: IoKnownSize + IoCapable<L::IoType>,
-+        Self: IoCapable<L::IoType>,
-     {
-         let (location, value) = value.into_io_op();
- 
-@@ -748,7 +762,7 @@ fn write_reg<T, L, V>(&self, value: V)
-     fn update<T, L, F>(&self, location: L, f: F)
-     where
-         L: IoLoc<T>,
--        Self: IoKnownSize + IoCapable<L::IoType> + Sized,
-+        Self: IoCapable<L::IoType>,
-         F: FnOnce(T) -> T,
-     {
-         let address = self.io_addr_assert::<L::IoType>(location.offset());
-@@ -762,41 +776,25 @@ fn update<T, L, F>(&self, location: L, f: F)
-     }
- }
- 
--/// Trait for types with a known size at compile time.
--///
--/// This trait is implemented by I/O backends that have a compile-time known size,
--/// enabling the use of infallible I/O accessors with compile-time bounds checking.
--///
--/// Types implementing this trait can use the infallible methods in [`Io`] trait
--/// (e.g., `read8`, `write32`), which require `Self: IoKnownSize` bound.
--pub trait IoKnownSize: Io {
--    /// Minimum usable size of this region.
--    const MIN_SIZE: usize;
--
--    /// Returns the absolute I/O address for a given `offset`,
--    /// performing compile-time bound checks.
--    // Always inline to optimize out error path of `build_assert`.
--    #[inline(always)]
--    fn io_addr_assert<U>(&self, offset: usize) -> usize {
--        build_assert!(offset_valid::<U>(offset, Self::MIN_SIZE));
-+// For compatibility only.
-+#[doc(hidden)]
-+pub trait IoKnownSize: Io {}
- 
--        self.addr() + offset
--    }
--}
-+impl<T: Io + ?Sized> IoKnownSize for T {}
- 
- /// Implements [`IoCapable`] on `$mmio` for `$ty` using `$read_fn` and `$write_fn`.
- macro_rules! impl_mmio_io_capable {
-     ($mmio:ident, $(#[$attr:meta])* $ty:ty, $read_fn:ident, $write_fn:ident) => {
-         $(#[$attr])*
-         impl<T: ?Sized> IoCapable<$ty> for $mmio<T> {
--            unsafe fn io_read(&self, address: usize) -> $ty {
-+            unsafe fn io_read(&self, address: *mut $ty) -> $ty {
-                 // SAFETY: By the trait invariant `address` is a valid address for MMIO operations.
-                 unsafe { bindings::$read_fn(address as *const c_void) }
-             }
- 
--            unsafe fn io_write(&self, value: $ty, address: usize) {
-+            unsafe fn io_write(&self, value: $ty, address: *mut $ty) {
-                 // SAFETY: By the trait invariant `address` is a valid address for MMIO operations.
--                unsafe { bindings::$write_fn(value, address as *mut c_void) }
-+                unsafe { bindings::$write_fn(value, address.cast()) }
-             }
-         }
-     };
-@@ -816,23 +814,15 @@ unsafe fn io_write(&self, value: $ty, address: usize) {
- );
- 
- impl<T: ?Sized + KnownSize> Io for Mmio<T> {
--    /// Returns the base address of this mapping.
--    #[inline]
--    fn addr(&self) -> usize {
--        self.0.addr()
--    }
-+    type Type = T;
- 
--    /// Returns the maximum size of this mapping.
-+    /// Returns the base address of this mapping.
-     #[inline]
--    fn maxsize(&self) -> usize {
--        self.0.size()
-+    fn as_ptr(&self) -> *mut T {
-+        self.0.as_ptr()
-     }
- }
- 
--impl<T: ?Sized + KnownSize> IoKnownSize for Mmio<T> {
--    const MIN_SIZE: usize = T::MIN_SIZE;
--}
--
- impl<T: ?Sized + KnownSize> Mmio<T> {
-     /// Converts an `MmioRaw` into an `Mmio` instance, providing the accessors to the MMIO mapping.
-     ///
-@@ -856,21 +846,14 @@ pub unsafe fn from_raw(raw: &MmioRaw<T>) -> &Self {
- pub struct RelaxedMmio<T: ?Sized>(Mmio<T>);
- 
- impl<T: ?Sized + KnownSize> Io for RelaxedMmio<T> {
--    #[inline]
--    fn addr(&self) -> usize {
--        self.0.addr()
--    }
-+    type Type = T;
- 
-     #[inline]
--    fn maxsize(&self) -> usize {
--        self.0.maxsize()
-+    fn as_ptr(&self) -> *mut T {
-+        self.0.as_ptr()
-     }
- }
- 
--impl<T: ?Sized + KnownSize> IoKnownSize for RelaxedMmio<T> {
--    const MIN_SIZE: usize = T::MIN_SIZE;
--}
--
- impl<T: ?Sized> Mmio<T> {
-     /// Returns a [`RelaxedMmio`] reference that performs relaxed I/O operations.
-     ///
-diff --git a/rust/kernel/io/mem.rs b/rust/kernel/io/mem.rs
-index a6292f4ebfa4..f87a29f90e79 100644
---- a/rust/kernel/io/mem.rs
-+++ b/rust/kernel/io/mem.rs
-@@ -284,7 +284,7 @@ pub fn new<'a>(io_request: IoRequest<'a>) -> impl PinInit<Devres<Self>, Error> +
- impl<const SIZE: usize> Drop for IoMem<SIZE> {
-     fn drop(&mut self) {
-         // SAFETY: Safe as by the invariant of `Io`.
--        unsafe { bindings::iounmap(self.io.addr() as *mut c_void) }
-+        unsafe { bindings::iounmap(self.io.as_ptr().cast()) }
-     }
- }
- 
-diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
-index e048370fb8c1..2c8f6388db70 100644
---- a/rust/kernel/pci/io.rs
-+++ b/rust/kernel/pci/io.rs
-@@ -10,11 +10,11 @@
-     io::{
-         Io,
-         IoCapable,
--        IoKnownSize,
-         Mmio,
-         MmioRaw, //
-     },
-     prelude::*,
-+    ptr::KnownSize,
-     sync::aref::ARef, //
- };
- use core::{
-@@ -60,14 +60,45 @@ pub const fn into_raw(self) -> usize {
- pub trait ConfigSpaceKind {
-     /// The size of this configuration space in bytes.
-     const SIZE: usize;
-+
-+    /// Region type for this kind of config space. This should be [`crate::io::Region<SIZE>`].
-+    type Region: ?Sized + KnownSize;
-+
-+    /// Obtain pointer with actual size information.
-+    fn null_ptr_from_size(size: ConfigSpaceSize) -> *mut Self::Region;
- }
- 
- impl ConfigSpaceKind for Normal {
-     const SIZE: usize = 256;
-+
-+    type Region = crate::io::Region<256>;
-+
-+    #[inline]
-+    #[allow(
-+        clippy::invalid_null_ptr_usage,
-+        reason = "false positive, fixed in Clippy 1.83"
-+    )]
-+    fn null_ptr_from_size(size: ConfigSpaceSize) -> *mut Self::Region {
-+        core::ptr::slice_from_raw_parts_mut(core::ptr::null_mut::<u8>(), size.into_raw())
-+            as *mut Self::Region
-+    }
- }
- 
- impl ConfigSpaceKind for Extended {
-     const SIZE: usize = 4096;
-+
-+    type Region = crate::io::Region<4096>;
-+
-+    #[inline]
-+    #[allow(
-+        clippy::invalid_null_ptr_usage,
-+        reason = "false positive, fixed in Clippy 1.83"
-+    )]
-+    fn null_ptr_from_size(_: ConfigSpaceSize) -> *mut Self::Region {
-+        // Small optimization. For a extended config space, we already know that the size
-+        // is 4096.
-+        core::ptr::slice_from_raw_parts_mut(core::ptr::null_mut::<u8>(), 4096) as *mut Self::Region
-+    }
- }
- 
- /// The PCI configuration space of a device.
-@@ -87,28 +118,28 @@ pub struct ConfigSpace<'a, S: ConfigSpaceKind = Extended> {
- macro_rules! impl_config_space_io_capable {
-     ($ty:ty, $read_fn:ident, $write_fn:ident) => {
-         impl<'a, S: ConfigSpaceKind> IoCapable<$ty> for ConfigSpace<'a, S> {
--            unsafe fn io_read(&self, address: usize) -> $ty {
-+            unsafe fn io_read(&self, address: *mut $ty) -> $ty {
-+                // CAST: The offset is cast to `i32` because the C functions expect a 32-bit
-+                // signed offset parameter. PCI configuration space size is at most 4096 bytes,
-+                // so the value always fits within `i32` without truncation or sign change.
-+                let addr = address.addr() as i32;
-                 let mut val: $ty = 0;
- 
-                 // Return value from C function is ignored in infallible accessors.
--                let _ret =
--                    // SAFETY: By the type invariant `self.pdev` is a valid address.
--                    // CAST: The offset is cast to `i32` because the C functions expect a 32-bit
--                    // signed offset parameter. PCI configuration space size is at most 4096 bytes,
--                    // so the value always fits within `i32` without truncation or sign change.
--                    unsafe { bindings::$read_fn(self.pdev.as_raw(), address as i32, &mut val) };
--
-+                // SAFETY: By the type invariant `self.pdev` is a valid address.
-+                let _ = unsafe { bindings::$read_fn(self.pdev.as_raw(), addr, &mut val) };
-                 val
-             }
- 
--            unsafe fn io_write(&self, value: $ty, address: usize) {
-+            unsafe fn io_write(&self, value: $ty, address: *mut $ty) {
-+                // CAST: The offset is cast to `i32` because the C functions expect a 32-bit
-+                // signed offset parameter. PCI configuration space size is at most 4096 bytes,
-+                // so the value always fits within `i32` without truncation or sign change.
-+                let addr = address.addr() as i32;
-+
-                 // Return value from C function is ignored in infallible accessors.
--                let _ret =
--                    // SAFETY: By the type invariant `self.pdev` is a valid address.
--                    // CAST: The offset is cast to `i32` because the C functions expect a 32-bit
--                    // signed offset parameter. PCI configuration space size is at most 4096 bytes,
--                    // so the value always fits within `i32` without truncation or sign change.
--                    unsafe { bindings::$write_fn(self.pdev.as_raw(), address as i32, value) };
-+                // SAFETY: By the type invariant `self.pdev` is a valid address.
-+                let _ = unsafe { bindings::$write_fn(self.pdev.as_raw(), addr, value) };
-             }
-         }
-     };
-@@ -120,23 +151,15 @@ unsafe fn io_write(&self, value: $ty, address: usize) {
- impl_config_space_io_capable!(u32, pci_read_config_dword, pci_write_config_dword);
- 
- impl<'a, S: ConfigSpaceKind> Io for ConfigSpace<'a, S> {
--    /// Returns the base address of the I/O region. It is always 0 for configuration space.
--    #[inline]
--    fn addr(&self) -> usize {
--        0
--    }
-+    type Type = S::Region;
- 
--    /// Returns the maximum size of the configuration space.
-+    /// Returns the base address of the I/O region. It is always 0 for configuration space.
-     #[inline]
--    fn maxsize(&self) -> usize {
--        self.pdev.cfg_size().into_raw()
-+    fn as_ptr(&self) -> *mut Self::Type {
-+        S::null_ptr_from_size(self.pdev.cfg_size())
-     }
- }
- 
--impl<'a, S: ConfigSpaceKind> IoKnownSize for ConfigSpace<'a, S> {
--    const MIN_SIZE: usize = S::SIZE;
--}
--
- /// A PCI BAR to perform I/O-Operations on.
- ///
- /// I/O backend assumes that the device is little-endian and will automatically
-@@ -219,7 +242,7 @@ unsafe fn do_release(pdev: &Device, ioptr: usize, num: i32) {
- 
-     fn release(&self) {
-         // SAFETY: The safety requirements are guaranteed by the type invariant of `self.pdev`.
--        unsafe { Self::do_release(&self.pdev, self.io.addr(), self.num) };
-+        unsafe { Self::do_release(&self.pdev, self.io.as_ptr().addr(), self.num) };
-     }
- }
- 
-@@ -267,6 +290,7 @@ pub fn iomap_region<'a>(
-     }
- 
-     /// Returns the size of configuration space.
-+    #[inline]
-     pub fn cfg_size(&self) -> ConfigSpaceSize {
-         // SAFETY: `self.as_raw` is a valid pointer to a `struct pci_dev`.
-         let size = unsafe { (*self.as_raw()).cfg_size };
--- 
-2.51.2
+- ntb_hw_epf IRQ unwind concern.
+  This is what I was trying to address in [2], which I hope will land soon.
 
+- Other lifecycle concerns.
+  These are largely tied to the current vNTB implementation and were part of
+  [3], for which I still plan to post a follow-up series that adds .remove()
+  implementation to vntb_pci_driver.
+
+[1] https://sashiko.dev/#/patchset/20260323031544.2598111-1-den%40valinux.co.jp
+[2] https://lore.kernel.org/ntb/20260304083028.1391068-1-den@valinux.co.jp/
+[3] https://lore.kernel.org/all/20260226084142.2226875-1-den@valinux.co.jp/
+
+
+Best regards,
+Koichiro
+
+> to take the whole series through the PCI EP tree. See:
+> https://lore.kernel.org/linux-pci/rnzsnp5de4qf5w7smebkmqekpuaqckltx73rj6ha3q2nrby5yp@7hsgvdzvjkp6/
+> 
+> ---
+> Changelog
+> =========
+> 
+> Changes since v2:
+>   - No functional changes.
+>   - Rebased onto current pci/endpoint
+>     e022f0c72c7f ("selftests: pci_endpoint: Skip reserved BARs").
+>     * Patch 2 needed a trivial context-only adjustment while rebasing, due
+>       to commit d799984233a5 ("PCI: endpoint: pci-epf-vntb: Stop
+>       cmd_handler work in epf_ntb_epc_cleanup").
+>   - Picked up additional Reviewed-by tags from Frank.
+>   - Fixed the incorrect v2 series title.
+> 
+> Changes since v1:
+>   - Addressed feedback from Dave (add a source code comment, introduce
+>     enum to eliminate magic numbers)
+>   - Updated source code comment in Patch 2.
+>   - No functional changes, so retained Reviewed-by tags by Frank and Dave.
+>     Thank you both for the review.
+> 
+> v2: https://lore.kernel.org/linux-pci/20260227084955.3184017-1-den@valinux.co.jp/
+> v1: https://lore.kernel.org/linux-pci/20260224133459.1741537-1-den@valinux.co.jp/
+> 
+> 
+> Best regards,
+> Koichiro
+> 
+> 
+> Koichiro Den (10):
+>   PCI: endpoint: pci-epf-vntb: Document legacy MSI doorbell offset
+>   PCI: endpoint: pci-epf-vntb: Defer pci_epc_raise_irq() out of atomic
+>     context
+>   PCI: endpoint: pci-epf-vntb: Report 0-based doorbell vector via
+>     ntb_db_event()
+>   PCI: endpoint: pci-epf-vntb: Exclude reserved slots from db_valid_mask
+>   PCI: endpoint: pci-epf-vntb: Implement db_vector_count/mask for
+>     doorbells
+>   NTB: epf: Document legacy doorbell slot offset in
+>     ntb_epf_peer_db_set()
+>   NTB: epf: Make db_valid_mask cover only real doorbell bits
+>   NTB: epf: Report 0-based doorbell vector via ntb_db_event()
+>   NTB: epf: Fix doorbell bitmask handling in db_read/db_clear
+>   NTB: epf: Implement db_vector_count/mask for doorbells
+> 
+>  drivers/ntb/hw/epf/ntb_hw_epf.c               |  89 ++++++++++-
+>  drivers/pci/endpoint/functions/pci-epf-vntb.c | 147 +++++++++++++++---
+>  2 files changed, 210 insertions(+), 26 deletions(-)
+> 
+> -- 
+> 2.51.0
+> 
+> 
