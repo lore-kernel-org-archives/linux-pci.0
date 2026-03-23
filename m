@@ -1,69 +1,62 @@
-Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013049.outbound.protection.outlook.com [40.107.162.49])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E81B43603C3;
-	Mon, 23 Mar 2026 08:15:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.49
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774253746; cv=fail; b=biEjPXzqOgK4mve6KJQpW6cFhayd3raJklM+4b9x9OIbrq+p98wRII1GpkQrhPspEHXafiWtCMb95GDjQl0yS7Y/2WUqi05cnKLyycwFhXqcnA80FNE66yEacoHxUH0Oq5FZgOt0RmIXQHeWaK4SLlsHCQsvsBGz0KTysqPQP8Q=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774253746; c=relaxed/simple;
-	bh=zHzOe1/GoDZkEiDsTbLfsgacQ6JYTzhsVDMndNy2wJc=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:CC; b=t4+q/1sCUt85f2eZwT3zMmp9fOQ4yoWpq2BFertbyuFqDDs0iwjX0wCdlijjVO7XbwPG7tPDG6/GBvUHkcbExgkb8esW2VQSe78tPIynG+o+DKApKbiddPBrnDIL7UfCErjZEqwz/uc2FFzKQA6NRfu78o7lgKJ8vZ+DKUdcfA8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=QtJVJPR+; arc=fail smtp.client-ip=40.107.162.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 162F938552C;
+	Mon, 23 Mar 2026 09:33:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774258384; cv=none; b=rXUA/3/AubVGBlF/FT1u7DN0fcZv1HxqXrwMRclSY0F27tCZLdHRQ8zT1eUSjneiBd0nzRbU55xIdzQRwJ4Zn1JL1tXzhr5HMXoS2i+yYSnwKSpAVf5vQj8V9n/U3rBi7bqragbt5aoLI2dD9E+bgTKZdtlWJmeeFgoHitETE9k=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774258384; c=relaxed/simple;
+	bh=fa+UCbtwReJTJptJMdx/NTEP96lWAeW85C7bH3Iv6iA=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=m8ZzDgFTB20vnpgXh9IBE3RaaCzzAQa+uuUlULlW911Ny5Vlq2jf3aBcQuSAzbFcQ3BfdiWAZeS7uk9loRumHPJovoFl3+cq7lX3MOMHobgJC9r+cgomBDQujA00E4O4ewAIJwbAxaNcJIhEA4FJntXVBidfIRwEIK1lN/CT9ug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=mEehhd7J; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="QtJVJPR+"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=tpOZfRHA+4vWtxyctobY9GZZ3b2qpM1b5AJ5t8KdIL72AWAdXO3zuxbolnm8I5pVlDy+t5CYCnCoKDLbn8o/6zT9sF6abZvi/4hpCc9BrDmU65LnBNHmhfwQMCAAZzDIFOv6/lDTdPwPlmH0t3Iag7lyp+1AFmnYhjuyZT5rBuEEgGcokXZYXdhi/dKdQpXUlSxgWnFVWhums7w9zyYehnojHNwU7+WDRRhGRykOwJu9rXkK0n+m158gUTtDtrfV/nOyc19sig8lJwvZLlvoXTLUCuTfk3xanfZO38vMOEilh2rGbtflKyEJKmzBv0Ht+WIkBHUft9ifb5f2ftIBJw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=+pLiv+PTig95YopWsFtd6QURAxtNRPahKylHcsEjveo=;
- b=gDxltANo7+WlkWxyCHlxbwkNN8aR2hktBlsa5y0sCrLpClV8nuONrFan75Pjpy2Qn66ttLV+onFYD9GqRB9uewyVWYyqincaTPRLeciaKjUB7/m/c1JUyf6KvhLxu8JhEjyEsa8uyAADkCr6THsdsgWGn52z3YtSi+xuEFilGPWZpCEMxkjDcXv9JcX1oEiqc9rIKojTekF2xg0Xtlbevfu8B21vUe3lbutySG4JOX80dxYQu90NZEfzUzUCSC4h0sri6lSyMW0gGGRICsOWwtUorHUmAQrb5t/lSl9Yf+xjp9Z6w5jCEzuz7vmdRMnSJvI+i8doJkgxkRtBs9KgxQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=fail (sender ip is
- 164.130.1.60) smtp.rcpttodomain=kernel.org smtp.mailfrom=foss.st.com;
- dmarc=fail (p=none sp=none pct=100) action=none header.from=foss.st.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+pLiv+PTig95YopWsFtd6QURAxtNRPahKylHcsEjveo=;
- b=QtJVJPR+H9vZCKlSQ/xLCmhLexeheBOs/x8WVpSy26Eoro+t9gs/vOrqwYpvd4CKiNhTwXov4FUZ9T9+6RTR4W4Sy2j8eFkDxskzkmR6znhVu0iH+B4Avelc8gI0cUU3Zgkd5fpKcCgdPEfVmPY+RqbDqbvaJv0wRN5GYtIcga0jZdI0EQpCSTkDsjJ49WD8pqFQ2RmZ/KLe7QUHWT8sGBfi5ikI+Et/2WCwlfIWuYcvO9BCXudNNuv6PIBdLc1TcbkXb4QWoysLlZ87gpQiZZj3g0WOmpfIfwIMeCG8H/E+3klw+CoHrdbMgpEalFODbkbTrlqaOs8KsOV0yyIELQ==
-Received: from DU2P250CA0006.EURP250.PROD.OUTLOOK.COM (2603:10a6:10:231::11)
- by VI0PR10MB8695.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:800:239::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Mon, 23 Mar
- 2026 08:15:39 +0000
-Received: from DB5PEPF00014B8B.eurprd02.prod.outlook.com
- (2603:10a6:10:231:cafe::60) by DU2P250CA0006.outlook.office365.com
- (2603:10a6:10:231::11) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9723.31 via Frontend Transport; Mon,
- 23 Mar 2026 08:15:38 +0000
-X-MS-Exchange-Authentication-Results: spf=fail (sender IP is 164.130.1.60)
- smtp.mailfrom=foss.st.com; dkim=none (message not signed)
- header.d=none;dmarc=fail action=none header.from=foss.st.com;
-Received-SPF: Fail (protection.outlook.com: domain of foss.st.com does not
- designate 164.130.1.60 as permitted sender) receiver=protection.outlook.com;
- client-ip=164.130.1.60; helo=smtpO365.st.com;
-Received: from smtpO365.st.com (164.130.1.60) by
- DB5PEPF00014B8B.mail.protection.outlook.com (10.167.8.199) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9723.19 via Frontend Transport; Mon, 23 Mar 2026 08:15:39 +0000
-Received: from STKDAG1NODE2.st.com (10.75.128.133) by smtpO365.st.com
- (10.250.44.72) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.29; Mon, 23 Mar
- 2026 09:18:14 +0100
-Received: from localhost (10.130.77.120) by STKDAG1NODE2.st.com
- (10.75.128.133) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.29; Mon, 23 Mar
- 2026 09:15:37 +0100
-From: Christian Bruel <christian.bruel@foss.st.com>
-Date: Mon, 23 Mar 2026 09:15:24 +0100
-Subject: [PATCH v2 2/3] misc: pci_endpoint_test: Handle -ENOSPC in subrange
- mapping test case
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="mEehhd7J"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62MFU1kq3961671;
+	Mon, 23 Mar 2026 09:32:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=DLefWu
+	Qx1WI+Y5vD2GhByCm3kkB0v+kz8E76A14iFbs=; b=mEehhd7JtN+n5fpdSt+4Kq
+	STliMzqaxCeX24jQ5o1EPP2eNgM8+SPz4A9kJiHro6AR6d5lwU03O46ft00KHL4f
+	XjufLVZFWnrJEqWpmtUfJgMqFZAlyeVWu4mcDCIcDKO0giZBrkRoRzgq17FDxu4c
+	68/p6tEHIB8BXCIs7Gxm9ffXorJ6o6O280MLYpOw9b9qCFjOpVPamyf8MNWWVjLN
+	fMC90JeaKhEstUvcxRoDHWzNSOLFwUSOzAFEyTA7Z5a+OmozweYCskSqX4p25I/2
+	SxVyKcxA7wf8E4ydZCZ/sEPNR49Wqha6T+zIPh2aY2aNckeFlPmyVGJk0xZi8AFA
+	==
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4d1ktxp6jt-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 23 Mar 2026 09:32:59 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62N83pE6011778;
+	Mon, 23 Mar 2026 09:32:58 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4d27vjvkvv-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 23 Mar 2026 09:32:58 +0000
+Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62N9Wskl59703638
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 23 Mar 2026 09:32:54 GMT
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 41A4E20043;
+	Mon, 23 Mar 2026 09:32:54 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 071812004D;
+	Mon, 23 Mar 2026 09:32:54 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.87.85.9])
+	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 23 Mar 2026 09:32:53 +0000 (GMT)
+From: Julian Ruess <julianr@linux.ibm.com>
+Date: Mon, 23 Mar 2026 10:32:45 +0100
+Subject: [PATCH v7 1/3] vfio/pci: Rename vfio_config_do_rw() to
+ vfio_pci_config_rw_single() and export it
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -71,79 +64,111 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-ID: <20260323-skip-bar_subrange-tests-if-enospc-v2-2-2080f878134d@foss.st.com>
-References: <20260323-skip-bar_subrange-tests-if-enospc-v2-0-2080f878134d@foss.st.com>
-In-Reply-To: <20260323-skip-bar_subrange-tests-if-enospc-v2-0-2080f878134d@foss.st.com>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-	=?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Kishon Vijay
- Abraham I" <kishon@kernel.org>, Shuah Khan <shuah@kernel.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman
-	<gregkh@linuxfoundation.org>, Koichiro Den <den@valinux.co.jp>, Niklas Cassel
-	<cassel@kernel.org>
-CC: <fabrice.gasnier@foss.st.com>, <linux-pci@vger.kernel.org>,
-	<linux-kselftest@vger.kernel.org>, <linux-kernel@vger.kernel.org>, "Christian
- Bruel" <christian.bruel@foss.st.com>
+Content-Transfer-Encoding: 8bit
+Message-Id: <20260323-vfio_pci_ism-v7-1-abf537150408@linux.ibm.com>
+References: <20260323-vfio_pci_ism-v7-0-abf537150408@linux.ibm.com>
+In-Reply-To: <20260323-vfio_pci_ism-v7-0-abf537150408@linux.ibm.com>
+To: schnelle@linux.ibm.com, wintera@linux.ibm.com, ts@linux.ibm.com,
+        oberpar@linux.ibm.com, gbayer@linux.ibm.com,
+        Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+        Yishai Hadas <yishaih@nvidia.com>,
+        Shameer Kolothum <skolothumtho@nvidia.com>,
+        Kevin Tian <kevin.tian@intel.com>
+Cc: mjrosato@linux.ibm.com, alifm@linux.ibm.com, raspl@linux.ibm.com,
+        hca@linux.ibm.com, agordeev@linux.ibm.com, gor@linux.ibm.com,
+        julianr@linux.ibm.com, kvm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-pci@vger.kernel.org
 X-Mailer: b4 0.14.2
-X-ClientProxiedBy: STKCAS1NODE1.st.com (10.75.128.134) To STKDAG1NODE2.st.com
- (10.75.128.133)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DB5PEPF00014B8B:EE_|VI0PR10MB8695:EE_
-X-MS-Office365-Filtering-Correlation-Id: 342af436-fe60-4539-8f84-08de88b45e7f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|36860700016|7416014|376014|82310400026|22082099003|56012099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	u9Y3q5W0KI3Hy8yLkcJphnGoGWzoctHZWpcEYFbErwOYKmO9k8fvX5f5h0bYQXGwyW5uWudbvcU7cxQahbm/VYjsPpsRi2p0ZEKg4RsSHWBQAsl+gV98MvdhjoJpJoAusBDfa4qx7bp2iTQ/h0rzxHs1M2gMiwX8r22Lim65s+QlDXwS6LAjTPeyB8+numCKKf/nnAATq4f9C0RwQLQ+lRX5ttO72E1yOQRXJPjedt0bEh3QCM/c1A9+Zlyi9z47e7X2kVYN48XFR4UiSOwd/U/Nx2RoEQYBP5hTmfkK7Cp8486qHkuCgN7U7kATMoZos60hg+Z4HMnl9mZdbBjs9pdmhwRl/NN+UZuNQkpimhvnWL1/I5v0gzNEMmYLqSwmMuywF4Me4UzXUU6rfu6Qi2jzuva1QxM0mLolgAnNn8pS2G4uZ0usIXzV2z78eomfbNCGcKr2DNnMPA50/nfYYI7SUHpKXfgdNlgH1BtzuoMJMFgSjCyMI6DYq3g5iEFQQ7gNea2m6WRLUDa5P1VSSjjUW5HzrVrREpcIvxuXMVQwzjyWWTnucnNnQ9w34qP+vEwcaiGcmNIjEBGwh0bvp6tfprEU5Za2p0f8CBzKd/L7fELGpO6rcCVJ1L43yGTe8FC3+oHTpU3h1oumpmOM4eEjMaG5v9cPc/iH0gIQ/t8VWFp10bkLrpYe9tmh+lEAkx3c1+qUEsRJPoIOHNWGR4Lh1kxYohxojsfEaEIa61ysqC5KuUICCexMzOI5ESGO7ElOYpYSBZ0LjHX8rfC6hw==
-X-Forefront-Antispam-Report:
-	CIP:164.130.1.60;CTRY:IT;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:smtpO365.st.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(36860700016)(7416014)(376014)(82310400026)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	zmKQOi9XkSCWfcts7kZZrdxeQLgGYLpGIUDU1iMYodIMAehxKY7WJ9wcCpe+YVHNhv7FWdMHNEMH1lcVitYQFrhjjvUZ0iaPyuSOHNjOJdnWkfNSb1137y10dv4lIw1bQJlXIxDTrIYhi9BdTfXCulBqgPLYxYMJE7bv5b0AlbvBRmaSfrH6zpdZ499eQOq7BeEmsJf2qAz/Z1ZvSzLGFTi8XxkelGNlNXqV3TKdATP+qNi3qONvsfh9FNk1Xc+YVQo/4/FC0y5A1VVi9MepCdNXBx+U69T+glNt9q4RW1pYSD6CuuYhlGEGsgt5+h75Ct2osWCEyCQpkaLLpbM9dznJnF1xTpZOhw/KUE2QYxWBFXAxMDpZGeAg5YgYRz8TZeIjZTJAVSxAEhR71ENGymPGoOh4xT3FFfy1VeRr9cX5ucVujG1ctpc4CusotfkU
-X-OriginatorOrg: foss.st.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Mar 2026 08:15:39.2919
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 342af436-fe60-4539-8f84-08de88b45e7f
-X-MS-Exchange-CrossTenant-Id: 75e027c9-20d5-47d5-b82f-77d7cd041e8f
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=75e027c9-20d5-47d5-b82f-77d7cd041e8f;Ip=[164.130.1.60];Helo=[smtpO365.st.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	DB5PEPF00014B8B.eurprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI0PR10MB8695
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=IqITsb/g c=1 sm=1 tr=0 ts=69c108cb cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=VnNF1IyMAAAA:8
+ a=mooU_oynDD9EFzHbF-IA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzIzMDA3MSBTYWx0ZWRfX1Tvd4cCR5t9L
+ ZJiXtcoBEIYWvTf3SiX4Tm9EBOzNwyTCM7GcLPtO/ellFKkuie1jnCxeCzmo6kcd283IEYjZWUN
+ lnWo8HYEwHHOR8KCZS2b8QbXLbaVXrFnvJ2Bw9O6I2IXUGXlw/Ffx6OD8ffb51qq0io4IjYlCaG
+ 35beOmDfjuAFcBqynvkHqLu0KeCFNahbQd374NLhdpmOpM2tXZ7Fv1N7SxXvxCi05t+D9IqwWqd
+ XNEuhqoPLLnpkvguEHOWcpEKm12OcigstDtFYpcWXNBAzx90y+lm17hLjVpn7xJ0bKsBUn2zfn9
+ zs0qoxiZg4As63sYxU5uDSKIT2p3/WBlnqIaFV1SLEERqR7FselRITt0l48ksfvkekH9kQD/VXV
+ uCLNtlcrxVPlDQnxyXoA05ETOY/s05gOjnMv4fX/f8mXNVEDcSvhPi2DtwOysOXbAuVr4rGuxmK
+ mGrMB6nidcRNnLnPgCA==
+X-Proofpoint-GUID: h1L3di3Uv5Jy5_bLIE1mBmkD3nnKjUdu
+X-Proofpoint-ORIG-GUID: h1L3di3Uv5Jy5_bLIE1mBmkD3nnKjUdu
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-23_02,2026-03-20_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 clxscore=1015 spamscore=0 impostorscore=0 suspectscore=0
+ phishscore=0 bulkscore=0 adultscore=0 priorityscore=1501 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603230071
 
-Return -ENOSPC when the status reports the STATUS_NO_RESOURCE bit.
-This signifies to the pci_endpoint test to skip this test.
+A follow-up patch adds a new variant driver for s390 ISM devices. Since
+this device uses a 256 TiB BAR 0 that is never mapped, the variant
+driver needs its own ISM_VFIO_PCI_OFFSET_MASK. To minimally mirror the
+functionality of vfio_pci_config_rw() with such a custom mask, export
+vfio_config_do_rw(). To better distinguish the now exported function
+from vfio_pci_config_rw(), rename it to vfio_pci_config_rw_single()
+emphasizing that it does a single config space read or write.
 
-Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
+Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+Signed-off-by: Julian Ruess <julianr@linux.ibm.com>
 ---
- drivers/misc/pci_endpoint_test.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/vfio/pci/vfio_pci_config.c | 8 +++++---
+ drivers/vfio/pci/vfio_pci_priv.h   | 4 ++++
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 55e128ed82f00ae13b6fe9768cdbe56adbe8f9da..202196adf8ad84106ab3cf72016fa791a74697ee 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -61,6 +61,7 @@
- #define STATUS_BAR_SUBRANGE_SETUP_FAIL		BIT(15)
- #define STATUS_BAR_SUBRANGE_CLEAR_SUCCESS	BIT(16)
- #define STATUS_BAR_SUBRANGE_CLEAR_FAIL		BIT(17)
-+#define STATUS_NO_RESOURCE			BIT(18)
+diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+index b4e39253f98da61a5e2b6dd0089b2f6aef4b85a0..fbb47b4ddb43d42b758b16778e6e701379d7e7db 100644
+--- a/drivers/vfio/pci/vfio_pci_config.c
++++ b/drivers/vfio/pci/vfio_pci_config.c
+@@ -1880,8 +1880,9 @@ static size_t vfio_pci_cap_remaining_dword(struct vfio_pci_core_device *vdev,
+ 	return i;
+ }
  
- #define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0x0c
- #define PCI_ENDPOINT_TEST_UPPER_SRC_ADDR	0x10
-@@ -477,7 +478,7 @@ static int pci_endpoint_test_bar_subrange_cmd(struct pci_endpoint_test *test,
+-static ssize_t vfio_config_do_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+-				 size_t count, loff_t *ppos, bool iswrite)
++ssize_t vfio_pci_config_rw_single(struct vfio_pci_core_device *vdev,
++			      char __user *buf, size_t count, loff_t *ppos,
++			      bool iswrite)
+ {
+ 	struct pci_dev *pdev = vdev->pdev;
+ 	struct perm_bits *perm;
+@@ -1970,6 +1971,7 @@ static ssize_t vfio_config_do_rw(struct vfio_pci_core_device *vdev, char __user
  
- 	status = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_STATUS);
- 	if (status & fail_bit)
--		return -EIO;
-+		return (status & STATUS_NO_RESOURCE) ? -ENOSPC : -EIO;
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(vfio_pci_config_rw_single);
  
- 	if (!(status & ok_bit))
- 		return -EIO;
+ ssize_t vfio_pci_config_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+ 			   size_t count, loff_t *ppos, bool iswrite)
+@@ -1981,7 +1983,7 @@ ssize_t vfio_pci_config_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+ 	pos &= VFIO_PCI_OFFSET_MASK;
+ 
+ 	while (count) {
+-		ret = vfio_config_do_rw(vdev, buf, count, &pos, iswrite);
++		ret = vfio_pci_config_rw_single(vdev, buf, count, &pos, iswrite);
+ 		if (ret < 0)
+ 			return ret;
+ 
+diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
+index 27ac280f00b975989f6cbc02c11aaca01f9badf3..28a3edf65aeecfa06cd1856637cd33eec1fa3006 100644
+--- a/drivers/vfio/pci/vfio_pci_priv.h
++++ b/drivers/vfio/pci/vfio_pci_priv.h
+@@ -37,6 +37,10 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_core_device *vdev, uint32_t flags,
+ ssize_t vfio_pci_config_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+ 			   size_t count, loff_t *ppos, bool iswrite);
+ 
++ssize_t vfio_pci_config_rw_single(struct vfio_pci_core_device *vdev,
++			      char __user *buf, size_t count, loff_t *ppos,
++			      bool iswrite);
++
+ ssize_t vfio_pci_bar_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+ 			size_t count, loff_t *ppos, bool iswrite);
+ 
 
 -- 
-2.34.1
+2.51.0
 
