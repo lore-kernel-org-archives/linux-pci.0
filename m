@@ -1,284 +1,164 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011009.outbound.protection.outlook.com [40.93.194.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3D0F2D77F7;
-	Mon, 23 Mar 2026 23:24:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774308278; cv=none; b=pC+Vvlq+WdqoY0kFyN/ObGId2iU80A/hRz3lfGoGK53lZUC/XHIVluO88N3q7Pu7+gtmaML6g3mO+8uZyiSD4JTCPZD0ht0OreiElLG6crdfsWmpaptjOWjome70VORQm2b4ZsREwe5CCd5Mxyv74Ojo2OFgTTNeumbj/lB17OM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774308278; c=relaxed/simple;
-	bh=VDsGEaRfO5d26C/+5+ZiCspAzBCjsj8vlq24Bcw9vEo=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=YfDrI9pgKy4LDXiUnK/0n27kr6BDhs5CYQBNfsiAHXOefklKCA0ieCP2dsLYuNXnqbxAOTMowRtm9sfB7Uy8Q3sOwDmhLQNNK2Z9TaJALKEAzXfg/g2Z7xdcMq0Ze63Tc7ZpV33iU54Y5WfOnYdKvWORvpejI5llKiO6s50UKmM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bDdIOo0z; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8DD72BE02A;
+	Mon, 23 Mar 2026 23:51:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.194.9
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774309879; cv=fail; b=duHGZ7zPh0Ql/TC33yYbP3+pbe+u48/rYVy68MHl7V4XHRuzGlf62NcXL50wl3OGlEQIKLFhPK0iUB7z+BtsTegyl7yEz+ORlb5m9aYVK75ZvIA1WxYaXkOq7ldjxkBm+KUIxkbKcilg/rYBZprfQZMt9T9819gbYkjhRNeTKMc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774309879; c=relaxed/simple;
+	bh=e8f3aM8POJbbCYYfS1e/LpKe58e+qlBSExPu2ed5Inw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=gnZT/pQQiua4BR4UAnOAgPsimS8c7QrUqaG5sV/gdtVlayQGjpJEohmIqrj/vGaFA4UMVwK/eygJIRAJ+KIek3bPW6r23hVX+Fjwk6xvBD1OLW2PoRUYAEWpkT4biAJj41n0ZneKBeqWtHV5ZAgt4+BX3JpOv+1XbyJdk/yrlrY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=ps/VWFgI; arc=fail smtp.client-ip=40.93.194.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bDdIOo0z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63DBCC4CEF7;
-	Mon, 23 Mar 2026 23:24:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774308278;
-	bh=VDsGEaRfO5d26C/+5+ZiCspAzBCjsj8vlq24Bcw9vEo=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=bDdIOo0z9hw8Jh6PLAMPsZWew2CTQbs+Y3POlmY+q6qxCryyQmkPJgHbkRQIR9oq1
-	 oW1Oj8ZxBfghkeEFk7naaek9yvDJpoOehIVMRyfv1vFMueS9/S3G9sKpmpaIhGnSzl
-	 95cbXSsSBz3or3zbxmw9ABo8fQiq9wDId+cZlDx6c3FEdAA3U9JA4aCIgUW7PhUbp3
-	 OVU5iyBmkuovAMht/ZhErL1Bx14A6KXRGRF3YtwoJ8UvOmKXccX7zsmWK9ywN1WkE6
-	 uOa6TSThn/8hdTOTggIetP/N17MwYusWzRbR0Tf4oxqa+0FaEX7gK5cjfVZMrAgWmB
-	 WbOxpAnXcwxtA==
-Date: Mon, 23 Mar 2026 18:24:37 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH v3] PCI: pciehp: Fix hotplug on Catlow Lake with
- unreliable PME status
-Message-ID: <20260323232437.GA1085990@bhelgaas>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="ps/VWFgI"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=gEVZYlKXUvZtJra2VPKC9nPliZtnqw8Dw1LyI2q7QmMnuF+M10iHo8jL2zCbGriWZWOX0tRgcDhAUEp8EntIYcS746hRZMA+NY1RW7Ll+qnOxTb7EHW6cr8CqPjietN0xaIRUTsqZm1+kLdya5WuNAd9oVZA5uoZqV3aEbOV1OVTpYWV8og7E4e61dWXRc6AcP0o3qP92HN2hTXb0dhjDoJyebwZdyeb3YTYSOpq5oN2vX8rVgVr5e0u9SNTOjEDIktg2vAYBS3Up83PQCifhzw1QDB0q+bMkGAJXM32rzrnXreysk/0A+E5lgEniPmpc7FqQUI7DyRWv4kyHU26BA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=D9Da5k6WP+86JacWrLFEK3tG8Zzl+JGl1sXrsfbnrzI=;
+ b=q/D8DB+1+Kv8OSdc7c03a1KLT7SJ6YKKfjOpbUAWFD8zLKSM8XpxP+R6MXYyGYY8lCuMUtOwItWG6zjCDVHw0t6mIO9cfxC0Mz4cLFAl+n4dWs7WkQLtoHj7bDYbVDnhYqIHizyBTnSTDwL2LD2DbkM6fdC5PpOPqcNrOjS9bl5IJzpgKJ/s7jvTBhaUV5waIDvdp+PcdogD2/U9DU1Sjjmv816Fr22fbOOq47PwP02+Kd8yFjz2MR2yrU3CIVtJO6gWpOLCb2hPmA52U5VQCdOmCvDyZd6dGt6M9MNTu2ZOZja93dz0WDHUaK5ciLme/QOguVFn6BP4VlHGX25jyg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=D9Da5k6WP+86JacWrLFEK3tG8Zzl+JGl1sXrsfbnrzI=;
+ b=ps/VWFgIn8e5chzoUrG42nTE7wdCLG3ZA5d3XdFyFyOMbWBh2kAAiF8hnfZdQxgRW6k1tboVVZSZdvD/yjTB7mA7YkzgGeCRvgvmjJc0vOyh/zgiJeprFBwLRrz/fnpPbzjQ783jhB2jjLXlEdT4veDQKiLf7cm1Vt/dguhg4YWLrQPdliwBPJ3A8P9i2q5LcdUpmsrDtr5Hy9fa2494gSrkqpZLzu/b0ORE9VKJc8fEOfpk2DRkO4xGcuUNosRM2iONsqXXVXgTDTVsqjeaHrQznWJb7IPhXyo+EWDAWeW+uFZqlnatDhiogqLQzXa/YMeL267UcNM471ADGVVVwg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by LV8PR12MB9452.namprd12.prod.outlook.com (2603:10b6:408:200::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.20; Mon, 23 Mar
+ 2026 23:51:12 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%5]) with mapi id 15.20.9745.019; Mon, 23 Mar 2026
+ 23:51:06 +0000
+Date: Mon, 23 Mar 2026 20:51:05 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Nicolin Chen <nicolinc@nvidia.com>
+Cc: "Tian, Kevin" <kevin.tian@intel.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	"will@kernel.org" <will@kernel.org>,
+	"robin.murphy@arm.com" <robin.murphy@arm.com>,
+	"joro@8bytes.org" <joro@8bytes.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rafael@kernel.org" <rafael@kernel.org>,
+	"lenb@kernel.org" <lenb@kernel.org>,
+	"praan@google.com" <praan@google.com>,
+	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+	"xueshuai@linux.alibaba.com" <xueshuai@linux.alibaba.com>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	"iommu@lists.linux.dev" <iommu@lists.linux.dev>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Vikram Sethi <vsethi@nvidia.com>
+Subject: Re: [PATCH v2 4/7] iommu/arm-smmu-v3: Mark ATC invalidate timeouts
+ via lockless bitmap
+Message-ID: <20260323235105.GV7340@nvidia.com>
+References: <cover.1773774441.git.nicolinc@nvidia.com>
+ <0c5525367cc67ccc84a675544d1d9f8462704065.1773774441.git.nicolinc@nvidia.com>
+ <BN9PR11MB52763AB181F5213FAAB4F4F08C4EA@BN9PR11MB5276.namprd11.prod.outlook.com>
+ <abr8aS/MDU9aeKu9@Asurada-Nvidia>
+ <absaKimeI_TXXxuu@google.com>
+ <BN9PR11MB5276467C1933E19E98277D378C4FA@BN9PR11MB5276.namprd11.prod.outlook.com>
+ <abtphBuLiXxSxmAy@Asurada-Nvidia>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <abtphBuLiXxSxmAy@Asurada-Nvidia>
+X-ClientProxiedBy: BLAPR03CA0154.namprd03.prod.outlook.com
+ (2603:10b6:208:32f::28) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260316220807.2433661-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|LV8PR12MB9452:EE_
+X-MS-Office365-Filtering-Correlation-Id: 1e49b6fd-1530-4970-9fab-08de89370cb9
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|376014|7416014|366016|56012099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	HLHKOQhSLHj6zwyOO+6/0WtmbNuHSljMC4NRQ40DqVj4I2VK0m9SHDUKIxnywG6bEqUC40zWwDFqIsGtGa/dxcGSmNquJd3/1xEVh/nbCR014WSPwodiaQKVTpKuXVHntvxPli5ICzOE255Njsh0MC03uJIlxGpbCPmXeKqm2cLpjt0sSY2mtsfmCWa2hvUSb4VzmNZh+lKjFrEekcPzr6CvYcCzWJTPvcPS/GB7Sp5C+SDKi/FrOlzpnw7t9jYSolts/ouoRiSpNOeC8w+PkzJgRVtoxotkq/zmlsiyE5tZuBEWCuxtLcK0pZ3QYv/yqTnQ/jzPo9tJAlFs1fMFOS2hyO8LJXZuJcD2MUYZFvJwG9atFYiJMUT5Yex3Jqapg7AijQzERF6FhAW76eV28joJTRUqa/Uk8gRNuf+MPeSYsZtM8+31/EtRSy+7z9/3ogPPRg91pjmXBcB+l4+GmjiBgnPkRuh4j/fb9vnnPg/uNeXAEqw0RFvWVeSMgaVcAL2yhLED3QpAsi8tNBpQ1zu/JOY22N8OPMPcOGG2xHX0dEUzhDqATKfmNx7UV510A+XgcW9bRKKIRrhyzDwNROyzK1/G+SzbV25ToNTFS5Y2lHoEbkzgT8AMctR+UdDuvP5VKI3JoO4p//fMAL9d3gvdmPpynRBOEreB9Q8G5bdYgQVFnHdZKef/T6teITojAtLqia+D+S/yjc8ZCj1EyusNkLJuHrc7l/M7mB5SG3E=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(366016)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?RlmDNlTw+Xa8PNt0KYnrpjD6gZsvtPWTsZP7rrO0TqUUGojaw/fkP5cT2ADA?=
+ =?us-ascii?Q?0x+2FzpzZkXF+WzXVlby8E66fABd5DKbL1DWVA4oAHedHNwfjIVIvfT+vPfP?=
+ =?us-ascii?Q?h5zqWfE0wQioDt7pBGWky226CUKEx5anJ6ws+MWquK3p8gxod6TD3wNQssiz?=
+ =?us-ascii?Q?UPPDIb0dD/hI9riRn5gsLqnPPC+29Ej8RDny5yUfH6bD4ou1waF3fQL8RACP?=
+ =?us-ascii?Q?Tamz8Hr+UkC7e4rD39yALk3HEwPYF8NpjE8bLnM24IQyt6nARvyENelafi/o?=
+ =?us-ascii?Q?o2QP/sbax0dzMlbfTZndw5eeO5tJVArAwNXL4NSEeF2emI50wMGs8qNPIqTd?=
+ =?us-ascii?Q?OIFNyuDG1Ebj7UK8RRX+BvhHmjgneYab3hPYrrwhIqzsKXndj41YcCzZ8ysZ?=
+ =?us-ascii?Q?wQK+H8KfcmthlD6/wukMMwLO9bat+233Nlni4m7fSUR8kLxdJu/3iesurTu3?=
+ =?us-ascii?Q?gFrRRIaOhuHX3+e+N1V/P3NQgC5gqXr4tZrPt+jjv4YHVy7hE+l24EM+ucm9?=
+ =?us-ascii?Q?8jgRizNgjuivtrfLS4lqNAUIvbjzzUJ++zzhj6tYACvu+TR4h+ZyeAH/9k6I?=
+ =?us-ascii?Q?auNa9bNgoZa7t2Xi5Ia6DYCgzcIjL6Of7wt9O0Q9C2ErBZJPKOOjOm3FjLEM?=
+ =?us-ascii?Q?035x+FGUKJU8h27iyk3P4mQ6LGI6HzsCBEOvbtAV2FgRjCju/CQ2TAnQecX4?=
+ =?us-ascii?Q?rdSllFLtTfPKtdeDIej6078MZ86RIpJnJ3oca1FwAlBg92/n+Zav0pSENK/z?=
+ =?us-ascii?Q?5wmMZOjri0vOpbS6QANGdsGkofeKTjtJkoRACEWRzi3v7gAYtwNJgUfTtDDI?=
+ =?us-ascii?Q?Ql9cVbP9tLFOm+h8yTdVcjXWw9hTzfQzMQ7Dqnu20rI20XJvvLx8peH72FZd?=
+ =?us-ascii?Q?OgO+AW3kYDtAwR1fOGomCF3sxHSMTPSJqjzZ9hi/q0skP5nkMHFwHSNs8NJk?=
+ =?us-ascii?Q?N58zwvXBLr4mhZnkn07mFts4NBYcTcS5up9FZfyBsmFp0GBaqBCdUR5PpxkP?=
+ =?us-ascii?Q?dPniIhFSVjLmM112CJwjCkk4DCN5dBSxfe57a699WoTHhwqbFI10bMSCymaO?=
+ =?us-ascii?Q?i64xVRmfNnKKoMT2K/bi0OcN35ZI3ZYHcHDil5ZI0KTF5SBZknVs4KppxRfM?=
+ =?us-ascii?Q?YrE7W7ei0rs0hnHwADN766/3eFZV2E/SumXn834MWQcmlC/RKHf/JRHCaIGC?=
+ =?us-ascii?Q?RAUWQQQd1Mh/7MpmuKKjNiq/KptwVzVBdxmNfJWDFVRM5GqStLpxR7PFXEn2?=
+ =?us-ascii?Q?LHI8OyFx0Ejr4zLMjH/qPy/1q+1u02Bb+xP8dtDyUnhqb3/7oH90J5SOTtKI?=
+ =?us-ascii?Q?V5CFffYFJzoo9CCrDN4yc6ZsOWEHuYUOnuCIaDu+Ov0LRmqYYVAr1gTHEP6Z?=
+ =?us-ascii?Q?/HmCZnoSEe4tBlWB1fXD1AKOVW9TSYnYOlFF9gXghvmt3BHfZrSPMD4I0zQn?=
+ =?us-ascii?Q?XjKwJavL1XN81OSOeUbSXeWt65W1uS1Hx6HvGgPyYj2lplLG6eQguQkfFPOt?=
+ =?us-ascii?Q?F5ezObige9qr2wRM2UYHLkZAJcrSo4Zt/QI8s+L30N2hkCaSxkb9vaez9L0s?=
+ =?us-ascii?Q?oMZ/rsLlS9UdaSYAxGJEju1dkP/bH/QQIQ1WjSohyekdjcx0KXffVW3naTm3?=
+ =?us-ascii?Q?ug2LxseAxN314uI9vRfDTPXMc0Y6kBA0Ny1FKEmu6gvHY/GdJ0gCASM4P1UM?=
+ =?us-ascii?Q?aNuZbBkpa2NFMkL62hRpNjhRMvRhboV5kGMvsHvmuHGh525G?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1e49b6fd-1530-4970-9fab-08de89370cb9
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Mar 2026 23:51:06.4992
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: agLvMHNcC2jBXFgxka8e1P3JTkQpLcNbZkfUfZGhKXmpTsFIq2Q2WZ/1bmsJg89c
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV8PR12MB9452
 
-[+cc Mika, author of eb34da60edee]
-
-On Mon, Mar 16, 2026 at 03:08:06PM -0700, Kuppuswamy Sathyanarayanan wrote:
-> On Intel Catlow Lake platforms, PCH PCIe root ports do not reliably
-> update PME status registers (PME Status and PME Requester_ID in the
-> Root Status register) during D3hot to D0 transitions, even though PME
-> interrupts are delivered correctly.
-
-IIUC, the Root Status update should happen on receipt of a PME Message
-and is not directly related to a D3hot to D0 transition (PCIe r7.0,
-sec 6.1.6).
-
-> This issue manifests during PCIe hotplug operations as follows:
+On Wed, Mar 18, 2026 at 08:12:04PM -0700, Nicolin Chen wrote:
+> > > VT-d is able to find out the SID of the device for which the device TLB
+> > > invalidation timed-out occured by using the SID reported in the
+> > > "Invalidation Queue Error Record Register" (VT-d Specs 11.4.9.9).
+> > 
+> > yes. but when there are multiple submissions (each with a wait descriptor)
+> > fetched/handled by the hw and then an invalidation timeout comes, all
+> > pending wait descriptors will be aborted (not just the one corresponding
+> > to the timeout). In this case all affected submitters need to re-try.
 > 
-> 1. After a hot-remove event, the PCIe port runtime suspends to D3hot.
->    pciehp_suspend() disables hotplug interrupts (HPIE) to rely on
->    PME-based wakeup.
+> This sounds similar to SMMU then.
 
-Didn't we rely on PME interrupts anyway, independent of HPIE?
+Not entirely.. smmu HW stops processing at a SYNC and waits for
+everything pending to complete, then goes on forward. If there is a HW
+reported ATC timeout then it is contained to the SYNC that followed
+the ATC invalidation. The errored sync is skipped and whatever follows
+continues forward, so it doesn't contaminate future work.
 
-eb34da60edee ("PCI: pciehp: Disable hotplug interrupt during suspend")
-cleared PCI_EXP_SLTCTL_HPIE so that when the link goes down, we
-wouldn't get a PCI_EXP_SLTSTA_DLLSC interrupt and wake the system.
+VT-d's wait descriptor with fence FN=1 sounds identical???
 
-I don't know the details of why the PCI_EXP_SLTSTA_DLLSC would cause
-that wakeup.  I would think pciehp should field that, and it should be
-able to figure out whether to bring the port out of D3hot.
+I guess if FN=0 then things start to become indeterminate what the
+wait actually waits for..
 
-Anyway, with this patch it looks like we'll leave PCI_EXP_SLTCTL_HPIE
-set, and potentially get that PCI_EXP_SLTSTA_DLLSC interrupt again?
-
-> 2. When a hot-add occurs while the port is in D3hot, a PME interrupt
->    fires as expected to wake the port.
-
-Why is a PME interrupt expected here?  I would expect a hot-add to
-cause a PCI_EXP_SLTSTA_PDC or PCI_EXP_SLTSTA_DLLSC interrupt.  Sec
-6.1.6 suggests PME interrupts are only from Root Ports.
-
-> 3. However, the PME interrupt handler finds the PME_Status and
->    PME_Requester_ID registers unpopulated, preventing identification
->    of which device triggered the PME. The handler returns IRQ_NONE,
->    leaving the port in D3hot.
-
-I guess this is pcie_pme_irq(), and it finds PCI_EXP_RTSTA_PME clear
-because of this Catlow defect?  It looks like it returns without even
-looking at PME_Requester_ID.
-
-Sec 5.3.3.1 suggests that the purpose of PME_Requester_ID is to
-facilitate quicker PME service and shorter resume time.  So maybe the
-lack of PME_Requester_ID should only be a performance issue, not a
-functional problem?
-
-If we know we got a PME interrupt, and we can wake up (maybe more
-slowly without a Requester ID), why can't we just do the wakeup
-independent of PCI_EXP_RTSTA_PME and PCI_EXP_RTSTA_PME_RQ_ID?  Are
-spurious PME interrupts a problem?
-
-> 4. Because the port remains in D3hot with HPIE disabled, the hotplug
->    event is lost and the newly inserted device is not recognized.
-> 
-> The PME interrupt delivery mechanism itself works correctly;
-> interrupts arrive reliably. The problem is purely the missing status
-> register updates. Verification via IOSF-SideBand (IOSF-SB) backdoor
-> reads confirms that these registers remain empty when the PME
-> interrupt fires. Neither BIOS nor kernel code is clearing these
-> registers.
-> 
-> This issue is present in all steppings of Catlow Lake PCH and affects
-> customers in production deployments. A public hardware errata document
-> is not yet available.
-> 
-> Work around this issue by introducing a PCI_DEV_FLAGS_PME_UNRELIABLE
-> flag for affected ports. When this flag is set, pciehp keeps hotplug
-> interrupts (HPIE) enabled during D3hot instead of disabling them and
-> relying on PME. This allows hotplug events to be delivered via direct
-> interrupts rather than through the broken PME status mechanism.
-> 
-> The port still enters D3hot for power savings during runtime suspend,
-> avoiding the power regression that would occur with pm_runtime_disable().
-> Testing confirms this approach does not impact PC6/PC10 package C-state
-> residency.
-> 
-> During system suspend/resume, the behavior is unchanged. Ports are
-> resumed unconditionally when coming out of system sleep due to
-> DPM_FLAG_SMART_SUSPEND set by pcie_portdrv_probe(), and pciehp
-> re-enables interrupts and checks slot occupation status during resume.
-> 
-> The quirk is applied only to Catlow PCH PCIe root ports (device IDs
-> 0x7a30 through 0x7a4b). Catlow CPU PCIe ports are not affected as
-> they are not hotplug-capable.
-> 
-> Suggested-by: Lukas Wunner <lukas@wunner.de>
-> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-> ---
-> 
-> Changes since v2:
->  * Switched from pm_runtime_disable() to PCI_DEV_FLAGS_PME_UNRELIABLE
->    flag approach to avoid power regression (feedback from Rafael and Lukas)
->  * Keep hotplug interrupts (HPIE) enabled during D3hot instead of
->    preventing D3hot entry entirely
->  * Port still enters D3hot for power savings; testing confirms no impact
->    on PC6 package C-state residency
->  * Modified pciehp to check pme_is_broken() before disabling/enabling
->    hotplug interrupts during suspend/resume
->  * Made quirk comment generic to cover both PME notification and status
->    update issues, with Catlow Lake specifics documented separately
-> 
-> Changes since v1:
->  * Removed hack in hotplug driver and disabled runtime PM on affected ports.
->  * Fixed the commit log and comments accordingly.
-> 
->  drivers/pci/hotplug/pciehp_core.c | 11 ++++--
->  drivers/pci/quirks.c              | 60 +++++++++++++++++++++++++++++++
->  include/linux/pci.h               |  2 ++
->  3 files changed, 71 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index 1e9158d7bac7..f854ef9551c3 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -260,13 +260,20 @@ static bool pme_is_native(struct pcie_device *dev)
->  	return pcie_ports_native || host->native_pme;
->  }
->  
-> +static bool pme_is_broken(struct pcie_device *pcie)
-> +{
-> +	struct pci_dev *pdev = pcie->port;
-> +
-> +	return !!(pdev->dev_flags & PCI_DEV_FLAGS_PME_UNRELIABLE);
-> +}
-> +
->  static void pciehp_disable_interrupt(struct pcie_device *dev)
->  {
->  	/*
->  	 * Disable hotplug interrupt so that it does not trigger
->  	 * immediately when the downstream link goes down.
->  	 */
-> -	if (pme_is_native(dev))
-> +	if (pme_is_native(dev) && !pme_is_broken(dev))
->  		pcie_disable_interrupt(get_service_data(dev));
->  }
->  
-> @@ -318,7 +325,7 @@ static int pciehp_resume(struct pcie_device *dev)
->  {
->  	struct controller *ctrl = get_service_data(dev);
->  
-> -	if (pme_is_native(dev))
-> +	if (pme_is_native(dev) && !pme_is_broken(dev))
->  		pcie_enable_interrupt(ctrl);
->  
->  	pciehp_check_presence(ctrl);
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 48946cca4be7..bfb52735c4e3 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -6380,3 +6380,63 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
->  #endif
-> +
-> +/*
-> + * Some PCIe root ports have a hardware issue where PME-based wakeup
-> + * from D3hot is unreliable. This can manifest as either PME interrupts
-> + * not being delivered, or PME status registers (PME Status and PME
-> + * Requester_ID in Root Status) not being reliably updated even when
-> + * interrupts are delivered.
-> + *
-> + * When a hotplug event occurs while the port is in D3hot, the system
-> + * relies on PME to wake the port back to D0. If PME notification or
-> + * status updates are unreliable, the PME handler either doesn't get
-> + * invoked or cannot identify the event source. This leaves the port in
-> + * D3hot with hotplug interrupts disabled, causing hotplug events to be
-> + * missed.
-> + *
-> + * Mark affected ports with PCI_DEV_FLAGS_PME_UNRELIABLE to keep
-> + * hotplug interrupts (HPIE) enabled during D3hot instead of relying on
-> + * PME-based wakeup. This allows hotplug events to be delivered via
-> + * direct interrupts while still permitting the port to enter D3hot for
-> + * power savings.
-> + *
-> + * Known affected hardware:
-> + * - Intel Catlow Lake PCH PCIe root ports: PME status registers are
-> + *   not updated during D3hot to D0 transitions, even though PME
-> + *   interrupts are delivered correctly.
-> + */
-> +static void quirk_pcie_pme_unreliable(struct pci_dev *dev)
-> +{
-> +	dev->dev_flags |= PCI_DEV_FLAGS_PME_UNRELIABLE;
-> +	pci_info(dev, "PME status unreliable, keeping hotplug interrupts enabled in D3hot\n");
-> +}
-> +/* Apply quirk to Catlow Lake PCH root ports (0x7a30 - 0x7a4b) */
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a30, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a31, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a32, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a33, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a34, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a35, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a36, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a37, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a38, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a39, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3a, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3b, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3c, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3d, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3e, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3f, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a40, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a41, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a42, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a43, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a44, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a45, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a46, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a47, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a48, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a49, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4a, quirk_pcie_pme_unreliable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4b, quirk_pcie_pme_unreliable);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1c270f1d5123..9761351c5d70 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -253,6 +253,8 @@ enum pci_dev_flags {
->  	 * integrated with the downstream devices and doesn't use real PCI.
->  	 */
->  	PCI_DEV_FLAGS_PCI_BRIDGE_NO_ALIAS = (__force pci_dev_flags_t) (1 << 14),
-> +	/* Device PME is broken or unreliable */
-> +	PCI_DEV_FLAGS_PME_UNRELIABLE = (__force pci_dev_flags_t) (1 << 15),
->  };
->  
->  enum pci_irq_reroute_variant {
-> -- 
-> 2.43.0
-> 
+Jason
