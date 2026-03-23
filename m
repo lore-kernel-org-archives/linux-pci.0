@@ -1,89 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1B6538C2A9;
-	Mon, 23 Mar 2026 10:22:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2DCE38B7D2;
+	Mon, 23 Mar 2026 10:55:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774261378; cv=none; b=jvPgAlHF2mQ/+Qa/Z68fRQG+hM9fk4AuZ9PfXoP0OOKI7iiWuAQeuNw05UIe4QiIz+0VDB2DH777NeOkAEOiuAeMdcxM+TwU53lkJNm1mU9rC+/UQOLokpmA2MPeaMQk/Bir7vg/cYlyCEa9UphbJeU9og4mb6/HFJnX9hVsu+M=
+	t=1774263327; cv=none; b=IpJNLc36J2IORigfDX8r8K3M+9CEYLZmF7FZVzL5qNiEUzTbn7fW0G8DrY8AGUlg6o8oiFG+Wj7krwJfWpDXhCw11XTRKwGcOWqIZFsiIs0JLmxL39+0lwG7Y2by5O9/7AmDgEhnIdVksuDRQk5oT/K0Nfl8RqO5LIcDmrg9Gqg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774261378; c=relaxed/simple;
-	bh=kwL2TZG3MQFr35EFwGgX9orSEW0x8Jl+Klg6gb6T7VU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hkTu6g8hAjo6oikjiiSHxCStprOplrbZjTBHmJKkKmifueubNxDv02lgXZm0uyA9vfFarmH0uSJV1Kavp5+RswF3cdgeWSGxAaziHSn+pZ/wEXt5BLzhsJEIQbeJ+x5CZWEQfaF10exIxA10/3CMTk2z6QVbWZ+kh3EN6SEbjmE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MOlHdU8H; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774263327; c=relaxed/simple;
+	bh=9W56aQ9O2mCnQ68QZ3yP7ENAZ8roACbMFM6v0WstbDc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Ghu+dAqy9ev+O3nNMmm+gOpquEFSk0kQr9DvjcukttIDuvoUhkbcEIGAO3Mc843XfC9BhpTqx6/2Esl9b5xSbsoMi9OcHhDnqorL69hL8plB7BVHKvSCUlRylPSRIMM6atyXP6gZsvcmGFU34u1NYuv5Ip9X19dEK62+Nu6v2e8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nlmGxLEH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MOlHdU8H"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0ED2C4CEF7;
-	Mon, 23 Mar 2026 10:22:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nlmGxLEH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6015C2BC87;
+	Mon, 23 Mar 2026 10:55:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774261378;
-	bh=kwL2TZG3MQFr35EFwGgX9orSEW0x8Jl+Klg6gb6T7VU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=MOlHdU8HjdXZrHUJpophZZUWOmX4XjGXgXZxbvT7qDRhYl0co/tLLvrzY60LuJTQC
-	 F/l5cFJYSPT49O7p0sHmjqwBId54LFi9uafzOV+W20uCtAGPRpe9vDanpbgVZYi51A
-	 co3ZNK2Y40L68hpZvOp4ckcZdpUOChw6n1+Y5u+CoYiYd95DW3owOk8cc6gs5Gpx/a
-	 5eKQI5OrlRHzbOU7S0b8Xj/gxSSYHZC3/FQ0BXnF+QjvNTDQzogIFQtbUQQxO3YIue
-	 jGOVrxf5xWg0+t+i+0aEJBUcu1Vf4UQMsngxxL92T6WT9sLNABRpl5CQ4iTgw46oNR
-	 NY9+2W62mwxwQ==
-Date: Mon, 23 Mar 2026 11:22:53 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Christian Bruel <christian.bruel@foss.st.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Shuah Khan <shuah@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Koichiro Den <den@valinux.co.jp>, fabrice.gasnier@foss.st.com,
-	linux-pci@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 3/3] selftests: pci_endpoint: Skip BAR subrange test
- on -ENOSPC
-Message-ID: <acEUfaPC1BfirjYc@ryzen>
-References: <20260323-skip-bar_subrange-tests-if-enospc-v2-0-2080f878134d@foss.st.com>
- <20260323-skip-bar_subrange-tests-if-enospc-v2-3-2080f878134d@foss.st.com>
+	s=k20201202; t=1774263327;
+	bh=9W56aQ9O2mCnQ68QZ3yP7ENAZ8roACbMFM6v0WstbDc=;
+	h=From:To:Cc:Subject:Date:From;
+	b=nlmGxLEHSUrmO6dGX9NfuiTACxpIM89yJRQ5e9uDl9gh/61aw5ZTMKtKe5tLdpk1r
+	 i//eTpYRvrJ7TvtTPkYeHT/1C53DUgO/gGmSrMCu4dbtkGNQLRAQViRV0ZkdlxGKM1
+	 RezVSBNrU1EaBspJcwxzMGphD+0TptcTQTPtF4oT9weKtiafWU4VfSyqSVF9Bla4Od
+	 iMqnv729/J/fXv328InJzqfMdxwXnZSHwoMFmTMpoAtKAQJdqfwsfCCOIsahBA9uIe
+	 is4SMMMn/hNGgn7nGu6vRXcXHOHamRb3+lfB4SVTaCj9AAE/N/EjxDprw3tepG/NJi
+	 Oz5RVDtd9vcSg==
+From: Arnd Bergmann <arnd@kernel.org>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
+	Chen-Yu Tsai <wenst@chromium.org>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Nam Cao <namcao@linutronix.de>,
+	Marc Zyngier <maz@kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH] PCI: mediatek-gen3: select PCI_PWRCTRL_GENERIC correctly
+Date: Mon, 23 Mar 2026 11:55:06 +0100
+Message-Id: <20260323105520.461640-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260323-skip-bar_subrange-tests-if-enospc-v2-3-2080f878134d@foss.st.com>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Mar 23, 2026 at 09:15:25AM +0100, Christian Bruel wrote:
-> Handle -ENOSPC error. Skip the test if the number of available inbound
-> windows is insufficient to map the subrange.
-> 
-> Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
-> ---
->  tools/testing/selftests/pci_endpoint/pci_endpoint_test.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-> index c417fb3a198b2d92c3060938c23807cc8bea5573..97212a0b41c930f981687086b588b056cf44ee62 100644
-> --- a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-> +++ b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-> @@ -88,6 +88,8 @@ TEST_F(pci_ep_bar, BAR_SUBRANGE_TEST)
->  		SKIP(return, "Subrange map is not supported");
->  	if (ret == -ENOBUFS)
->  		SKIP(return, "BAR is reserved");
-> +	if (ret == -ENOSPC)
-> +		SKIP(return, "Not enough BAR inbound windows");
+From: Arnd Bergmann <arnd@arndb.de>
 
-Nit: I would probably just print:
-"Not enough PCI inbound windows"
-or
-"Not enough inbound windows"
+The PCI_PWRCTRL_SLOT option was renamed to PCI_PWRCTRL_GENERIC, but a new
+user showed up using the old name, which caused a build failure when
+both conflicting patches are merged:
 
-E.g. DWC inbound iATU supports both BAR match mode and address match mode,
-so from a pure hardware perspective, I guess the inbound translation just
-matches based on the PCI TLP address (with some extra logic for this to
-automatically use the correct PCI address when using BAR match mode).
+aarch64-linux-ld: drivers/pci/controller/pcie-mediatek-gen3.o: in function `mtk_pcie_remove':
+pcie-mediatek-gen3.c:(.text+0x137c): undefined reference to `pci_pwrctrl_power_off_devices'
 
-Thus, I slightly prefer to not include 'BAR' in the print.
+Use the correct symbol as intended originally.
 
-Regardless:
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Fixes: ff124bbbca1d ("PCI/pwrctrl: generic: Rename pci-pwrctrl-slot as generic")
+Fixes: 073a7e1b7bcc ("PCI: mediatek-gen3: Integrate new pwrctrl API")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/pci/controller/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index e72ac6934379..686349e09cd3 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -222,7 +222,7 @@ config PCIE_MEDIATEK_GEN3
+ 	depends on ARCH_AIROHA || ARCH_MEDIATEK || COMPILE_TEST
+ 	depends on PCI_MSI
+ 	select IRQ_MSI_LIB
+-	select PCI_PWRCTRL_SLOT
++	select PCI_PWRCTRL_GENERIC
+ 	help
+ 	  Adds support for PCIe Gen3 MAC controller for MediaTek SoCs.
+ 	  This PCIe controller is compatible with Gen3, Gen2 and Gen1 speed,
+-- 
+2.39.5
+
