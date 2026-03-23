@@ -1,121 +1,130 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FF5138910A;
-	Mon, 23 Mar 2026 15:56:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A95A3C4551;
+	Mon, 23 Mar 2026 16:28:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774281382; cv=none; b=TykArigwVewU0KqFGlGeWgb0/Chmtvk8tgb6fM7TGLeaLZVBqlTAQPSgsOwDbfC4zN3J9/fAPgyFx/uKzVSiPd70vi3HWiQ3mvPyCXkYThSH3edSex7GCkd7s6C1ewYGLj1n2oY3ljTvx8L1zkGGdF+F/BMai0OM8sinQ3+OeZQ=
+	t=1774283294; cv=none; b=alo9LRZ8p7jfJIewe2NzjjFGPKlQAISsoVOVJ0l7PLOA65zxtK3kpVrtaFEkXLhrXObkNj25y9LUZire4cdnYio7ISRfs+f5ijnPfewfKMvFsWeQfU3l+UX7QeN+HUYPlJ7F+y5+zUJ1183zsBK7XWhgLuoEHsk/WQVKPKN3kE0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774281382; c=relaxed/simple;
-	bh=2cxH4u9j7HBt4tepb+AzkkHYs+Gdvh85t88nic+Sm+U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iG0/hI46NjOqCoG9BKHI6yDiFodA1UBQAJAk8Aw4WsofYHwfGcAIl7XuvHNE/feLLFfqj7BdvuXqpC5UjqTRaGjGb2K/nowf0UXse3+Ex7IykuK4+HigkqOpte3YJHMowhKjrSBtFzbocouGF1Gs7R74B+6OOHk/dp7cM2wd1D8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QIXp3d40; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774283294; c=relaxed/simple;
+	bh=Rx6rJH/+4cXUHoOsj6s+4/m2CZOI0NlHF61pQPHqKUM=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=JmG3C0v4HMtfNj/QAiFnme3Sula5whgAg9HOuuX/++xeix3wzNLgyxsDfvnQJTmd4c+DxBvH1oagHKDArc3TOLVULHI7klp+mL9mb6/LHhPUrCXI72YtTaYYX6GuT/m+HQhgHqdu6byX9lEXf2mQ5BFPE9E87nmBhJDvXQMP6Bw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s0xWgvw4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QIXp3d40"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79D51C4CEF7;
-	Mon, 23 Mar 2026 15:56:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s0xWgvw4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F75AC4CEF7;
+	Mon, 23 Mar 2026 16:28:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774281382;
-	bh=2cxH4u9j7HBt4tepb+AzkkHYs+Gdvh85t88nic+Sm+U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=QIXp3d40SV5BofGVa1QZR2yBEgZonN7YBoRmE4HqHjCcaYQxrzRP+kBwM70utkCIE
-	 IGOLo7Vwyy7O7XEDPgxm4BJZpkvYw44jOxazqlML755KFKHIMlRHjmmYoTQJ/oUK1l
-	 UBh15fprBBfVUy2thOu6WCDv7kApu60+QfKLJMS4iBBgQ7BUIcEOSfX78JeFLYXeP4
-	 y5NOurlhIzUoQore5U7wSDN/sZLS5kl6d6gbsTow58qPglJ1UUkn9+UB5ntuFOKoXP
-	 Bv7Tid5otVYNkaGtismC6Br2Y4zYaXDI7pC1+RkeX67wCF8DR0liQY4KUhZTq8q2+/
-	 L0NEiq2HzEXQg==
-Date: Mon, 23 Mar 2026 21:26:04 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Cc: Rob Herring <robh@kernel.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Jiri Slaby <jirislaby@kernel.org>, Nathan Chancellor <nathan@kernel.org>, 
-	Nicolas Schier <nicolas.schier@linux.dev>, Hans de Goede <hansg@kernel.org>, 
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Mark Pearson <mpearson-lenovo@squebb.ca>, 
-	"Derek J. Clark" <derekjohn.clark@gmail.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Bartosz Golaszewski <brgl@bgdev.pl>, 
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Bartosz Golaszewski <brgl@kernel.org>, 
-	linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org, 
-	platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org, 
-	Stephan Gerhold <stephan.gerhold@linaro.org>, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v6 6/9] dt-bindings: connector: m2: Add M.2 1620 LGA
- soldered down connector
-Message-ID: <bguhzabwryayyqkv4ilzwr3ixwv6bzxncblo3ircz2wm3fs52k@66zvcrfcb4oe>
-References: <20260317-pci-m2-e-v6-0-9c898f108d3d@oss.qualcomm.com>
- <20260317-pci-m2-e-v6-6-9c898f108d3d@oss.qualcomm.com>
- <20260322233713.GA98177-robh@kernel.org>
- <to2mrizprc3hjufqbiplpqyek7f4uutqtn4hx4gkmdgv2rykbc@ybwwjhdec4nm>
- <CAL_JsqJXrHCJt770bJkMmAUhirSF3kHjYwSzkG7cXp7-eys8Rg@mail.gmail.com>
- <6aef3xxjjd4nbgrfx6jc6jt6rpqmttoui6hil5zqgdpas2j6gj@ie6j72orenou>
- <fsvmmgoe5wslmxebhrrwmdg2ldcmhzvj53gjkdfnfg2m2rz2lw@dcfboaakz7ae>
+	s=k20201202; t=1774283293;
+	bh=Rx6rJH/+4cXUHoOsj6s+4/m2CZOI0NlHF61pQPHqKUM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=s0xWgvw47l62SuNbeKJi4hbZOVOzYJZvTJuNGoCLE5oqucy7IYI4nylOk+kIZZJLG
+	 ec26tYUH16OqC6Zdxj8eUY7llBi217MUnTzBCn2EIzczhhXiwBoYghoWJdC8AvfBMj
+	 XVKS+umiizK7uyQycr3WOxemjD2X3Zobdnl1pijETuVl61ONNUO6kzv9aZrUKCSctr
+	 YrZcsAII+NAfp/98wVH2MHSHKDHd2h1lHO9a4lA2zzsN9kjOX4S2qk7ZqYbS1eszB4
+	 WpdcjmAb41gFZcX9Mx9o1z8oulNyvQ64meTyMM9rHXkvHQrNiSrb2M59nm3lFz9ADM
+	 guWrtgWaj7/ZA==
+Date: Mon, 23 Mar 2026 11:28:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Chen-Yu Tsai <wenst@chromium.org>
+Cc: Bartosz Golaszewski <brgl@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Subject: Re: [PATCH v2] PCI/pwrctrl: Do not power off on pwrctrl device
+ removal
+Message-ID: <20260323162810.GA826479@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <fsvmmgoe5wslmxebhrrwmdg2ldcmhzvj53gjkdfnfg2m2rz2lw@dcfboaakz7ae>
+In-Reply-To: <20260226092234.3859740-1-wenst@chromium.org>
 
-On Mon, Mar 23, 2026 at 05:14:30PM +0200, Dmitry Baryshkov wrote:
-> On Mon, Mar 23, 2026 at 07:14:25PM +0530, Manivannan Sadhasivam wrote:
-> > On Mon, Mar 23, 2026 at 08:39:55AM -0500, Rob Herring wrote:
-> > > On Mon, Mar 23, 2026 at 7:16 AM Manivannan Sadhasivam <mani@kernel.org> wrote:
-> > > >
-> > > > On Sun, Mar 22, 2026 at 06:37:13PM -0500, Rob Herring wrote:
-> > > > > On Tue, Mar 17, 2026 at 09:59:56AM +0530, Manivannan Sadhasivam wrote:
-> > > > > > Lenovo Thinkpad T14s is found to have a soldered down version of M.2 1620
-> > > > > > LGA connector. Though, there is no 1620 LGA form factor defined in the M.2
-> > > > > > spec, it looks very similar to the M.2 Key E connector. So add the
-> > > > > > "pcie-m2-1620-lga-connector" compatible with "pcie-m2-e-connector" fallback
-> > > > > > to reuse the Key E binding.
-> > > > >
-> > > > > What is LGA?
-> > > > >
-> > > >
-> > > > Land Grid Array
-> > > >
-> > > > > If not in the spec, is it really something generic?
-> > > > >
-> > > >
-> > > > Good question. Yes and No! LGA is not something that Lenovo only uses. Other
-> > > > vendors may also use this form factor. PCIe connectors are full of innovation as
-> > > > the spec gives room for hardware designers to be as innovative as possible to
-> > > > save the BOM cost.
-> > > 
-> > > innovation == incompatible changes
-> > > 
-> > 
-> > Yes, I was trying to sound nice :)
-> > 
-> > > > This is why I do not want to make it Lenovo specific. But if you prefer that, I
-> > > > can name it as "lenovo,pcie-m2-1620-lga-connector".
-> > > 
-> > > Depends if you think that s/w needs to know the differences. Hard to
-> > > say with a sample size of 1.
-> > > 
-> > 
-> > Sure. Will add the 'lenovo' prefix then.
+On Thu, Feb 26, 2026 at 05:22:33PM +0800, Chen-Yu Tsai wrote:
+> With the move to explicit pwrctrl power on/off APIs, the caller, i.e.
+> the PCI driver should manage the power state. The pwrctrl drivers should
+> not try to clean up or power off when they are removed, as this might
+> end up disabling an already disabled regulator, causing a big warning.
+> This can be triggered if a PCI controller driver's .remove() callback
+> calls pci_pwrctrl_destroy_devices() after pci_pwrctrl_power_off_devices().
 > 
-> Is it really Lenovo? Or is it some other module vendor, whose LGAs are
-> being used by Lenovo?
+> Drop the devm cleanup parts that turn off regulators from the pwrctrl
+> drivers.
 > 
-> I remember that DB820c also used some kind of a module for the WiFi card
-> (which might be M.2 compatible or might not, I can't find exact docs at
-> this point).
+> Fixes: b921aa3f8dec ("PCI/pwrctrl: Switch to pwrctrl create, power on/off, destroy APIs")
+> Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
+> Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+
+Applied to pci/for-linus for v7.0, thanks!
+
+> ---
+> Changes since v1:
+> - Keep the release function for the PCI slot driver to free the
+>   regulators
 > 
-
-I don't know. These kind of designs might be reused by several vendors. But
-considering that we should not make it generic, I'd go with Lenovo as that's
-the only vendor we know as of now.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+> I ran into this while integrating the new pci_pwrctrl_*() API into the
+> MediaTek driver. I am sending this separately since this change is
+> unrelated and does not conflict with or depend on the other changes for
+> the driver itself.
+> 
+> I think this should be merged for fixes.
+> 
+> ---
+>  drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c | 12 ------------
+>  drivers/pci/pwrctrl/slot.c               |  1 -
+>  2 files changed, 13 deletions(-)
+> 
+> diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
+> index 0d0377283c37..c7e4beec160a 100644
+> --- a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
+> +++ b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
+> @@ -68,13 +68,6 @@ static int pwrseq_pwrctrl_power_off(struct pci_pwrctrl *pwrctrl)
+>  	return pwrseq_power_off(pwrseq->pwrseq);
+>  }
+>  
+> -static void devm_pwrseq_pwrctrl_power_off(void *data)
+> -{
+> -	struct pwrseq_pwrctrl *pwrseq = data;
+> -
+> -	pwrseq_pwrctrl_power_off(&pwrseq->pwrctrl);
+> -}
+> -
+>  static int pwrseq_pwrctrl_probe(struct platform_device *pdev)
+>  {
+>  	const struct pwrseq_pwrctrl_pdata *pdata;
+> @@ -101,11 +94,6 @@ static int pwrseq_pwrctrl_probe(struct platform_device *pdev)
+>  		return dev_err_probe(dev, PTR_ERR(pwrseq->pwrseq),
+>  				     "Failed to get the power sequencer\n");
+>  
+> -	ret = devm_add_action_or_reset(dev, devm_pwrseq_pwrctrl_power_off,
+> -				       pwrseq);
+> -	if (ret)
+> -		return ret;
+> -
+>  	pwrseq->pwrctrl.power_on = pwrseq_pwrctrl_power_on;
+>  	pwrseq->pwrctrl.power_off = pwrseq_pwrctrl_power_off;
+>  
+> diff --git a/drivers/pci/pwrctrl/slot.c b/drivers/pci/pwrctrl/slot.c
+> index 082af81efe25..b87639253ae2 100644
+> --- a/drivers/pci/pwrctrl/slot.c
+> +++ b/drivers/pci/pwrctrl/slot.c
+> @@ -63,7 +63,6 @@ static void devm_slot_pwrctrl_release(void *data)
+>  {
+>  	struct slot_pwrctrl *slot = data;
+>  
+> -	slot_pwrctrl_power_off(&slot->pwrctrl);
+>  	regulator_bulk_free(slot->num_supplies, slot->supplies);
+>  }
+>  
+> -- 
+> 2.53.0.414.gf7e9f6c205-goog
+> 
