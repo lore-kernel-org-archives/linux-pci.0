@@ -1,129 +1,199 @@
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+Received: from mail-lf1-f53.google.com (mail-lf1-f53.google.com [209.85.167.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70A46394466
-	for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2026 11:05:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774263928; cv=none; b=PQJCifO48DDkvuWgHTAHE05LV2O60zZsDFYea+0EklMptn34N0DrQbZby3g2zcdD9qMk1qXQmjd5746AXav1Sagfc7hhjqrIPBsb6TQKfR8qYnHRIzooRMLmL5z/Y2a1Vu5qGCkvuBIrB9EvgEMLy3+hfvDqb2pYa2Olk+qwtbA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774263928; c=relaxed/simple;
-	bh=dKKs0G/Wa3KBfAb/TZIyIIQz+VdKNwuAztiiDQx4WYY=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=p0EBU1D4QErs1KpaYpHL+nr9JN6/noidNwPM/4e+usgg5KmtVK35qDJkcit9xQji4JiHDx7TsAAitME2t829Wosf/U82rRsjNIj9DTKBxARAuE66yruhbF4U+68/lyCIXeixYYW3WZrCRjo9kRYzBub0eOFDwRpKyeeGQ/GpKzs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ffvxxWY9; arc=none smtp.client-ip=209.85.215.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C989E397E95
+	for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2026 11:41:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.53
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774266092; cv=pass; b=hMoIyWxy3l5RIh3TCNCul1fVFlMLgKcJxvkIibXNaQgeg6hdUbG1GfxPVKKieg6bayUdoX23Pv0ZHA8Vbv8MotS3CKq4aLXw2pQziSuAogM+7DRjym4s/ZcyKt5KFmotSHbBpPI2RUyt/LIE09ErsS+xUTMIrODswCrlk8XVId0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774266092; c=relaxed/simple;
+	bh=sj6ktFY8rGvb7MnpkIOBpJYVELEIasXN0XLZjKqtYbs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=cRx4pqxBdzlg6f7+sE2gs6oG+ud3LOIjPmFOB+Kz1wPox/HkTjRZUm3A6N5QPyCnCRS+0HMxHNWAJmJ8RNbFroXhvaIq9LJ6sJoTdjJmtUCSfupQFnSO8M2/NGLeasnDuA/vuVgz+YuOKxPrq9Vg5A2NXaIY8xjF8AhYgddmIpQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=SZnvIsLK; arc=pass smtp.client-ip=209.85.167.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ffvxxWY9"
-Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-c73e9e4cdf7so1034404a12.2
-        for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2026 04:05:26 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="SZnvIsLK"
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-5a27a90a7b6so7310e87.1
+        for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2026 04:41:29 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1774266088; cv=none;
+        d=google.com; s=arc-20240605;
+        b=WkRUMT8XUY5I+emXEq0f/vS5Y5XiQy1SWeMdM3QOehOWD8Kn+IVQJEoa8ijeJBRdiH
+         fll4QX40UL35/lDp/ZXtroNTeWSDNSg+80BSBRQVYLNJuRpqjpgrM2+sKQcuH6j9gVlY
+         JGSLVz//VkNnaYhZurgdQ8Hn0+gM82jwz6gZ1HVLjv4gayUAI90B36Kr/XofRQBhX2+d
+         gxK6dR2hdVAa65AUpY62Hf7GrzNT9jhMIMZBAsf5ScfRbBj78rWAzi6KPakFboDDEydy
+         C0rkSo3woy4icAqSH9NCTqfCsITyQDCzecxq2gkUsH+ClyNQ4Jv8gonO07aUm0D0tDFo
+         urGw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=6qaas9JqtGbwzhDv8dAGHkzZXIP7w+k14X0YonK0wTQ=;
+        fh=qJh0KOmuou6X19i3KZnQqbSAtMITuqsUmw+sBPcgs0w=;
+        b=Ip6TRVYG1FdcfyRXKtTDlW8Ea1/ZH7sXRpitPE8MtpTdBrMk10mg9wr/n/SNjqDGhP
+         ItU/P1bjB9rmAwGuVgicYYZ7tqGx03fsqqUu++RL0e1VM0o0eOmYLZj3Az7OwC4Nr3Cy
+         bZAo3p4kWZfqu9qR8iNSz1U7gAy/su7V72o88K317XJriS6EGGspLeDXQL+0AqqfrCHl
+         2F6wydktqfFDlo+/EbDItsccd4Vl03Si8JkP4wLTlDjr+5nNYQANNOEjNpWLNYgjcQiy
+         XpKkYFX6fqdmaetA07lPX+3NRDfxTObDaB4pQ+h5U3JTHSwFV3XIjNGVGCO724R+FC2d
+         a6kA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1774263926; x=1774868726; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=WjDPWCi+UxS6zX6zYKH/Qn9Bf2hHL2LIeyIwDf04qlA=;
-        b=ffvxxWY930WyhDuZU7ZQo+CbWS33+0onCu5HjvI7LtV17UzvkouRIgmJ1ZTWm/p+MX
-         aJcH9nPVxvEAz5ma67H9KcDRu3TpwKks6JRfR7XsDw55tKry8rot0Pz3WHh/AFZfsnqC
-         Hxd+cOo51yJBEHmDGiRMbP/PDlanfT7CeKW+Knrr4zxge+BQuZ9zkJzDOva369U+LBZl
-         n1FY7g9BWTGztrhDNp2LXTUk3l9ReTuO1vwjcX2Spxm2naGq5Dz7G5K+KI/ImiybTD+3
-         5To0n1SWoTzgMhLaBB/YBrLTZbdrHuEqqbcauVZ9m2jPi4rKtq43Elzqz01IpnDu+qVe
-         VRaw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774263926; x=1774868726;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=chromium.org; s=google; t=1774266088; x=1774870888; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=WjDPWCi+UxS6zX6zYKH/Qn9Bf2hHL2LIeyIwDf04qlA=;
-        b=pPoiv0UDSGJCsqQP14VdNANKF9RTMwzIF/AwxDWBPoSZp0FPdKEbCPGGYH0vqxPC5v
-         jJOAe4C7ZlC+IZNU/ECq62lfGqETN4WKvGm4UaSi+mycGyGNDhyn99m4p6KcjEW6w1up
-         eN+Y6LV9cnMR2cur5q0JZKb8587XnMg1+4+JfT1+baBAlpEOKkSewDYq0PSkQ97i94Jg
-         Ztpfl1hbN7bsocoVt+cWRhaXZr5HMp3o+iZ0x3B6q315a37oRCMfSiisPRXPHfdkHCgR
-         /5BO6wA6/yoKkvswk+upX/1hL3rjC4S09gwPvuCmXTVbIt15Z9+ZLuFdRp/jZd6SAQ9v
-         7TZg==
-X-Forwarded-Encrypted: i=1; AJvYcCU6b2F2nXSbEF8uRebBqRMmXTNaId+2zsI6ZPgimBDl3fkR0NjaySI0+wVrz+Y/9nxsj+KMJzHgbAc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzN72PAnAZnJ3q1rPwihwNKyzUCpt7A08cgTcDOnYQ/ReQ3G5db
-	m+ido6+VUsf9AOa9/qKvoUi9560LboZ2AQsibS4bqv6k62hzIn6IgOYBGtm5kFqKXELGpg==
-X-Gm-Gg: ATEYQzw8kvDuh5B9aN0kfyaMECMGe2HOC7Oq0TYplV+yqrWq0Oyt+3eFoqqvaBHaYy0
-	zMDGL1lrDlaKlPowb2GMV8WZQpfKMmKhqwoMXu10Ds4BAQ/BPRQJ5v4ip1MS9zPVP+VsMai/zRI
-	Dd/Cx4cCMXE6y7NZLJaBGClF166J3dURyf8aohoXTIzhR1FH+eaxmX3xwEX73aMF0lOGN6UF1EB
-	2+LZnHblmmC/PmqoBohb+9BnXnt5rEx1RhufmkbjIvXkPGIGJxKa1ZMKWVoOrh56oSmQLYN9guT
-	mgm/omNjQNebNMMf+ezQEPllfYQ0AJxTm/obSwfD4DNjsz+flmdDv9c4N+M8M2P7ClyX24yDTTZ
-	1V2QJ2X1a60JINQr3ym7rFqG3SgjXQRdQ8MFn/BFtlynMDr2fJIcYv8VVUt90l5U3wkDouwo+2X
-	3ifIq/x9/XWwfj4AVth6ewoohc2o7+2GT9u1Bs
-X-Received: by 2002:a05:6a20:a12b:b0:398:b619:b624 with SMTP id adf61e73a8af0-39bcea63274mr10869998637.29.1774263925537;
-        Mon, 23 Mar 2026 04:05:25 -0700 (PDT)
-Received: from junjungu-PC.localdomain ([223.167.147.240])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c744560683bsm7576673a12.30.2026.03.23.04.05.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Mar 2026 04:05:25 -0700 (PDT)
-From: Felix Gu <ustc.gu@gmail.com>
-Date: Mon, 23 Mar 2026 19:05:22 +0800
-Subject: [PATCH] PCI/pwrctrl: Fix device node leak in
- pci_pwrctrl_is_required()
+        bh=6qaas9JqtGbwzhDv8dAGHkzZXIP7w+k14X0YonK0wTQ=;
+        b=SZnvIsLKjlDsITdy+9Hpf5OGiZO8ocA+u9mW9RApNLDLYDUt5k/s8PoFG8+DEkER2D
+         fu438svTBxlS1YFQseg0tz4L1pPsYS9hVzfs3EGV+XKSuRweeQ+wLikzlHBKYe9rlrKm
+         riu+FL/FdhkifHv/pcnE2qLmd/k0iwehYMIcc=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774266088; x=1774870888;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=6qaas9JqtGbwzhDv8dAGHkzZXIP7w+k14X0YonK0wTQ=;
+        b=gAI8QHphVtVvb87uSn2nm7V7S2Er+TvzeRNcrWAjkWcVEk/iSIAcJBr8gAZTrhpmeo
+         4IW2xC7hEl5LLKw5tpFigAto9w9qzBgi6iRLXlgKkIJXy4f1zlRKEqgi/o4LWMs6X3js
+         Mm28ijRFMX16vzPBlq8DTbYxaVO9deaKVzWsAGrkpa5tFV0+PSvtvV6Gxnv8dSqFWyJA
+         njc031nYw5/BuoOJxCrr+dNEjsJdKKrdHKCQXohL/qJz38z1W8EQH0p+I/tDQ5WRlC6r
+         T0Gdfaem7QToGgh3a/sSc2s2R1vu6F8cD8nsAqChC3JEIFKTeC3reMxkRSuGfpBScKRT
+         sjdQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXn705+djEnYBHYNoApxHjpmhj6M2VIyKmEr6+9uq9jDaCgAdYO1xLaTYHRQWu3PEmsSyZr4fNfIDA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YweuZflyPuQsF6+pFdcGOK9WGd6gr7WFYMiKEPhg2YsMq2qxvvY
+	BGSydz9lPxbeYK5ImPfS6+PcS8DiDw3LRl8kht11sjPXBpMd9XLB18rjBDealb1622VQWpMJkCI
+	R8XWsmk7ijWa9ABHrrPyeFk+kJnKWxmE+PlcrmJ/5
+X-Gm-Gg: ATEYQzzZi8QBxHuKmUbtsXVBbZuXZrQaojzqRK64mSdem0ANTE0yaWBdaHhljCRdnAd
+	wxifU/wBXbAchzQ9+V0zEJC7CGTTndL4ibLtsAHHxQ6/FnoA2B4jdTOJ+DyGe2Nwv7M6+H+2q31
+	pSIJ1UiglbP2UyLJ096TBnnaFo0PbBC/3ep9X4kxD7ieuWiNNpCh1z5sR0/6J90UuC4Njswc/WI
+	QlpCNx3veN3OaZ9HbEgZuoKoPOdvoUbvE9QS9NmqtXB+ScOVFIhEzuzctZq6XjpQGcooYzCWebn
+	dSwl++jlN8NbsOn+b1VvpUW+cgTicuQz9Bjq6A==
+X-Received: by 2002:a05:6512:318d:b0:5a1:3437:84ac with SMTP id
+ 2adb3069b0e04-5a285b876c9mr4805460e87.31.1774266087955; Mon, 23 Mar 2026
+ 04:41:27 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260323-pwctrl-v1-1-f5c03a2df7fb@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAHEewWkC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDIzMDYyNj3YLy5JKiHN20VAsTgxRzY2MTE2MloOKCotS0zAqwQdGxtbUAISm
- t51gAAAA=
-X-Change-ID: 20260323-pwctrl-fe840d733443
-To: Bartosz Golaszewski <brgl@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Felix Gu <ustc.gu@gmail.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1774263924; l=1158;
- i=ustc.gu@gmail.com; h=from:subject:message-id;
- bh=dKKs0G/Wa3KBfAb/TZIyIIQz+VdKNwuAztiiDQx4WYY=;
- b=tKDL6KmyltfmBlY0kMXjM7oHz+dIX6zkAsMMU57BxYyZTdRQxaPcxh/CKwywSlea+5lz+ZnuK
- vSMtD4tzFQdBNKJuWNEUsl6vyYlz+XumZ0H8waOYmhDHVh5vwBl7yTa
-X-Developer-Key: i=ustc.gu@gmail.com; a=ed25519;
- pk=fjUXwmjchVN7Ja6KGP55IXOzFeCl9edaHoQIEUA+/hw=
+References: <20260226092234.3859740-1-wenst@chromium.org> <yvvkujtpo5fxca7yzw6w7afi64zdwuq4kdd6hdvnpqomazd62o@luhjytailsow>
+In-Reply-To: <yvvkujtpo5fxca7yzw6w7afi64zdwuq4kdd6hdvnpqomazd62o@luhjytailsow>
+From: Chen-Yu Tsai <wenst@chromium.org>
+Date: Mon, 23 Mar 2026 19:41:17 +0800
+X-Gm-Features: AQROBzDDC_YsgLPutSPicNkJG8O9a13GIhwfkf2HoJ_f9zwoBBGyNxuho0ax_ek
+Message-ID: <CAGXv+5EtkYTS==X1dUTpEyC39k11Peb0jUbUB4ojcVcFDee-PQ@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI/pwrctrl: Do not power off on pwrctrl device removal
+To: Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bartosz Golaszewski <brgl@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The for_each_endpoint_of_node() macro requires calling of_node_put() on
-the endpoint node when breaking out of the loop early.
+Ping?
 
-Add of_node_put(endpoint) before the early return to properly release
-the reference.
+What's going on with this patch? The slot driver got renamed and this
+fix is still not merged.
 
-Fixes: cf3287fb2c1f ("PCI/pwrctrl: Ensure that remote endpoint node parent has supply requirement")
-Signed-off-by: Felix Gu <ustc.gu@gmail.com>
----
- drivers/pci/pwrctrl/core.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pwrctrl/core.c b/drivers/pci/pwrctrl/core.c
-index 7754baed67f2..97cff5b8ca88 100644
---- a/drivers/pci/pwrctrl/core.c
-+++ b/drivers/pci/pwrctrl/core.c
-@@ -299,8 +299,10 @@ static bool pci_pwrctrl_is_required(struct device_node *np)
- 			struct device_node *remote __free(device_node) =
- 				of_graph_get_remote_port_parent(endpoint);
- 			if (remote) {
--				if (of_pci_supply_present(remote))
-+				if (of_pci_supply_present(remote)) {
-+					of_node_put(endpoint);
- 					return true;
-+				}
- 			}
- 		}
- 	}
-
----
-base-commit: 785f0eb2f85decbe7c1ef9ae922931f0194ffc2e
-change-id: 20260323-pwctrl-fe840d733443
-
-Best regards,
--- 
-Felix Gu <ustc.gu@gmail.com>
-
+On Thu, Feb 26, 2026 at 5:30=E2=80=AFPM Manivannan Sadhasivam <mani@kernel.=
+org> wrote:
+>
+> On Thu, Feb 26, 2026 at 05:22:33PM +0800, Chen-Yu Tsai wrote:
+> > With the move to explicit pwrctrl power on/off APIs, the caller, i.e.
+> > the PCI driver should manage the power state. The pwrctrl drivers shoul=
+d
+> > not try to clean up or power off when they are removed, as this might
+> > end up disabling an already disabled regulator, causing a big warning.
+> > This can be triggered if a PCI controller driver's .remove() callback
+> > calls pci_pwrctrl_destroy_devices() after pci_pwrctrl_power_off_devices=
+().
+> >
+> > Drop the devm cleanup parts that turn off regulators from the pwrctrl
+> > drivers.
+> >
+> > Fixes: b921aa3f8dec ("PCI/pwrctrl: Switch to pwrctrl create, power on/o=
+ff, destroy APIs")
+> > Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
+>
+> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+>
+> - Mani
+>
+> > Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+> >
+> > ---
+> > Changes since v1:
+> > - Keep the release function for the PCI slot driver to free the
+> >   regulators
+> >
+> > I ran into this while integrating the new pci_pwrctrl_*() API into the
+> > MediaTek driver. I am sending this separately since this change is
+> > unrelated and does not conflict with or depend on the other changes for
+> > the driver itself.
+> >
+> > I think this should be merged for fixes.
+> >
+> > ---
+> >  drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c | 12 ------------
+> >  drivers/pci/pwrctrl/slot.c               |  1 -
+> >  2 files changed, 13 deletions(-)
+> >
+> > diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c b/drivers/pci/pwr=
+ctrl/pci-pwrctrl-pwrseq.c
+> > index 0d0377283c37..c7e4beec160a 100644
+> > --- a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
+> > +++ b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
+> > @@ -68,13 +68,6 @@ static int pwrseq_pwrctrl_power_off(struct pci_pwrct=
+rl *pwrctrl)
+> >       return pwrseq_power_off(pwrseq->pwrseq);
+> >  }
+> >
+> > -static void devm_pwrseq_pwrctrl_power_off(void *data)
+> > -{
+> > -     struct pwrseq_pwrctrl *pwrseq =3D data;
+> > -
+> > -     pwrseq_pwrctrl_power_off(&pwrseq->pwrctrl);
+> > -}
+> > -
+> >  static int pwrseq_pwrctrl_probe(struct platform_device *pdev)
+> >  {
+> >       const struct pwrseq_pwrctrl_pdata *pdata;
+> > @@ -101,11 +94,6 @@ static int pwrseq_pwrctrl_probe(struct platform_dev=
+ice *pdev)
+> >               return dev_err_probe(dev, PTR_ERR(pwrseq->pwrseq),
+> >                                    "Failed to get the power sequencer\n=
+");
+> >
+> > -     ret =3D devm_add_action_or_reset(dev, devm_pwrseq_pwrctrl_power_o=
+ff,
+> > -                                    pwrseq);
+> > -     if (ret)
+> > -             return ret;
+> > -
+> >       pwrseq->pwrctrl.power_on =3D pwrseq_pwrctrl_power_on;
+> >       pwrseq->pwrctrl.power_off =3D pwrseq_pwrctrl_power_off;
+> >
+> > diff --git a/drivers/pci/pwrctrl/slot.c b/drivers/pci/pwrctrl/slot.c
+> > index 082af81efe25..b87639253ae2 100644
+> > --- a/drivers/pci/pwrctrl/slot.c
+> > +++ b/drivers/pci/pwrctrl/slot.c
+> > @@ -63,7 +63,6 @@ static void devm_slot_pwrctrl_release(void *data)
+> >  {
+> >       struct slot_pwrctrl *slot =3D data;
+> >
+> > -     slot_pwrctrl_power_off(&slot->pwrctrl);
+> >       regulator_bulk_free(slot->num_supplies, slot->supplies);
+> >  }
+> >
+> > --
+> > 2.53.0.414.gf7e9f6c205-goog
+> >
+>
+> --
+> =E0=AE=AE=E0=AE=A3=E0=AE=BF=E0=AE=B5=E0=AE=A3=E0=AF=8D=E0=AE=A3=E0=AE=A9=
+=E0=AF=8D =E0=AE=9A=E0=AE=A4=E0=AE=BE=E0=AE=9A=E0=AE=BF=E0=AE=B5=E0=AE=AE=
+=E0=AF=8D
