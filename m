@@ -1,43 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2168397E72;
-	Mon, 23 Mar 2026 11:44:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3ED5398902;
+	Mon, 23 Mar 2026 11:57:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774266272; cv=none; b=dF7DicLXkm+Txw0jYShAT0tmGnKK75JzpV22AbQL3/DEfvOuE9ZUnB7Hqbi4Om/pWNH/iwNqPGg8nLnrOCgBziZjw1p3U9oX+ri/050yr7l5IzUGsxx+8WUtQkE+Kag73Nlrdlq6eobrgUOjwVkdQUtJahRW8dVA6whspjqvVOQ=
+	t=1774267021; cv=none; b=snkwUMxZmci9Va3mH9pqW79CuNQQCNZkEYeFPWjJbKXyAtkKUPt9yoN97+QG3xFKuWBFFTS/pmmQSip20yhrq5azQkhtkGtPv5Jh9WGtSYSeWXOV80a+GM59raRadma730s3YWsBAw9/OQ/cH5z5De9LNi66XsvZRtstxpK+XnE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774266272; c=relaxed/simple;
-	bh=bJxSisiXuWMcG5nLHHjqGfA2WWzN2tb5HfUBt+qPwX4=;
+	s=arc-20240116; t=1774267021; c=relaxed/simple;
+	bh=DJBlhP0sPpweiQuDqLTtyjJpn0MdAi/2iD60MXs0y5A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MVbNQD+MabuC74uqpNb+/8n70cgZpBkemmehGrMCEzILAoXw2kQijxg5aeIFjmR8ZxQ/446IobDgilh7ZveXhCtZGm36/q5WhkpYdmFxG25CbQNiSdy2RpUOErIsA1mIR8Xtt6X6mVFTm2Vk/gHcmn/zPvotWC7M8vC5V59vQmU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sjnt8gVF; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=JFbMez8r/0EWMCUP4YS7TFuKdHXyfEl05jQCz6qA8dSeqRTfzaTXUGNDJ6Mw7K2N2+6MvmtpKQ4/FuEk9qzuAJb1i2qBYz363bCPHH19/rOeyDcuKVs8+MoH0e6J6BxKQRrjjVo1LCDn7dJwGak4lN9tI9G/Cn7YJd2zJp4vAKI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UAAKv8R4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sjnt8gVF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA4F5C2BC9E;
-	Mon, 23 Mar 2026 11:44:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UAAKv8R4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D29D5C4CEF7;
+	Mon, 23 Mar 2026 11:56:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774266272;
-	bh=bJxSisiXuWMcG5nLHHjqGfA2WWzN2tb5HfUBt+qPwX4=;
+	s=k20201202; t=1774267021;
+	bh=DJBlhP0sPpweiQuDqLTtyjJpn0MdAi/2iD60MXs0y5A=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Sjnt8gVFrr7BsmNjuaOoNvDQGfWU+3gylk73mA4BHHYFOxweU+Qyi48LUFGHgge5d
-	 XxLsO/UCJSIkcVAR7xQA+RTuypne90DtxUbAybj+AEYaZ9px0tVs6bKAUIGFn8LlN7
-	 gGcooe9cm4r4n1Rw6aIBiOwbv1h/GXBko7NjorC/bVOpzO1mm5TnqRg5JKLM5+iC6L
-	 /Kwo+ToKYyjrKH4aNHV3YOw2LMru+tiouTQUhfWTXHAudLNkvLJ0xW7zquxqLwOyFW
-	 hbEGq/+JArZfCD8lQhK7xh5ntpTHjZeWc6frtSxRKFJflUcYlrsirlwml1mgU1ty3I
-	 y5zIAE2ByiVOg==
-Date: Mon, 23 Mar 2026 17:14:22 +0530
+	b=UAAKv8R4Lz0rzqQ4OGVro0zQA2x0DBMAlfMroPcLlhGFgPu2lm91exoRWUxsFF98G
+	 SQlwMNtHTsrY67FWHWdC3QnpXzNU0ezSdx1N3AE8rzPMIqS7K9F6sdhwOix8tlQJ1K
+	 P8Ai6Ht1ibU/RMSSgeZ30XIv0joT3M6RBamoD3U2Bqj1L4cT0XCWJJYzUzCPNVbQ5Z
+	 cdq3BORt6qhIr1Z50iShYgYlA5K9VFT+6UxbQfYDUPi7tpBMtVc8+NJBraICmDWYMv
+	 U3Oys6GMkUxsdmAQ0uFMm2Doz/2xUBI2tVlLlNRn3sHVWa8IQaIJp93FjHOCRztqAj
+	 TAx/rjxkNSeQw==
+Date: Mon, 23 Mar 2026 17:26:47 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Chen-Yu Tsai <wenst@chromium.org>
-Cc: Bartosz Golaszewski <brgl@kernel.org>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: Re: [PATCH v2] PCI/pwrctrl: Do not power off on pwrctrl device
- removal
-Message-ID: <afooo5uvdaohuarsqnkdql4ommdnhebwdhmgqs4ysq6schsijk@yplqsx6zrkb2>
-References: <20260226092234.3859740-1-wenst@chromium.org>
- <yvvkujtpo5fxca7yzw6w7afi64zdwuq4kdd6hdvnpqomazd62o@luhjytailsow>
- <CAGXv+5EtkYTS==X1dUTpEyC39k11Peb0jUbUB4ojcVcFDee-PQ@mail.gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Neil Armstrong <neil.armstrong@linaro.org>, 
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, Chen-Yu Tsai <wenst@chromium.org>, Arnd Bergmann <arnd@arndb.de>, 
+	Rob Herring <robh@kernel.org>, Thomas Gleixner <tglx@kernel.org>, 
+	Nam Cao <namcao@linutronix.de>, Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH] PCI: mediatek-gen3: select PCI_PWRCTRL_GENERIC correctly
+Message-ID: <wlu2o3hx6yvpzs54mxsf24gmqwwudkixx7aylv4dkey744yify@eufscwyqiyhk>
+References: <20260323105520.461640-1-arnd@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,107 +49,49 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAGXv+5EtkYTS==X1dUTpEyC39k11Peb0jUbUB4ojcVcFDee-PQ@mail.gmail.com>
+In-Reply-To: <20260323105520.461640-1-arnd@kernel.org>
 
-On Mon, Mar 23, 2026 at 07:41:17PM +0800, Chen-Yu Tsai wrote:
-> Ping?
+On Mon, Mar 23, 2026 at 11:55:06AM +0100, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
 > 
-> What's going on with this patch? The slot driver got renamed and this
-> fix is still not merged.
+> The PCI_PWRCTRL_SLOT option was renamed to PCI_PWRCTRL_GENERIC, but a new
+> user showed up using the old name, which caused a build failure when
+> both conflicting patches are merged:
 > 
+> aarch64-linux-ld: drivers/pci/controller/pcie-mediatek-gen3.o: in function `mtk_pcie_remove':
+> pcie-mediatek-gen3.c:(.text+0x137c): undefined reference to `pci_pwrctrl_power_off_devices'
+> 
+> Use the correct symbol as intended originally.
+> 
+> Fixes: ff124bbbca1d ("PCI/pwrctrl: generic: Rename pci-pwrctrl-slot as generic")
+> Fixes: 073a7e1b7bcc ("PCI: mediatek-gen3: Integrate new pwrctrl API")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Bjorn, can you please pick this up for v7.0-rcS?
+Bjorn, should I squash this fix with 073a7e1b7bcc so that pci/next will build
+properly?
 
 - Mani
 
-> On Thu, Feb 26, 2026 at 5:30 PM Manivannan Sadhasivam <mani@kernel.org> wrote:
-> >
-> > On Thu, Feb 26, 2026 at 05:22:33PM +0800, Chen-Yu Tsai wrote:
-> > > With the move to explicit pwrctrl power on/off APIs, the caller, i.e.
-> > > the PCI driver should manage the power state. The pwrctrl drivers should
-> > > not try to clean up or power off when they are removed, as this might
-> > > end up disabling an already disabled regulator, causing a big warning.
-> > > This can be triggered if a PCI controller driver's .remove() callback
-> > > calls pci_pwrctrl_destroy_devices() after pci_pwrctrl_power_off_devices().
-> > >
-> > > Drop the devm cleanup parts that turn off regulators from the pwrctrl
-> > > drivers.
-> > >
-> > > Fixes: b921aa3f8dec ("PCI/pwrctrl: Switch to pwrctrl create, power on/off, destroy APIs")
-> > > Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > > Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
-> >
-> > Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-> >
-> > - Mani
-> >
-> > > Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-> > >
-> > > ---
-> > > Changes since v1:
-> > > - Keep the release function for the PCI slot driver to free the
-> > >   regulators
-> > >
-> > > I ran into this while integrating the new pci_pwrctrl_*() API into the
-> > > MediaTek driver. I am sending this separately since this change is
-> > > unrelated and does not conflict with or depend on the other changes for
-> > > the driver itself.
-> > >
-> > > I think this should be merged for fixes.
-> > >
-> > > ---
-> > >  drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c | 12 ------------
-> > >  drivers/pci/pwrctrl/slot.c               |  1 -
-> > >  2 files changed, 13 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
-> > > index 0d0377283c37..c7e4beec160a 100644
-> > > --- a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
-> > > +++ b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
-> > > @@ -68,13 +68,6 @@ static int pwrseq_pwrctrl_power_off(struct pci_pwrctrl *pwrctrl)
-> > >       return pwrseq_power_off(pwrseq->pwrseq);
-> > >  }
-> > >
-> > > -static void devm_pwrseq_pwrctrl_power_off(void *data)
-> > > -{
-> > > -     struct pwrseq_pwrctrl *pwrseq = data;
-> > > -
-> > > -     pwrseq_pwrctrl_power_off(&pwrseq->pwrctrl);
-> > > -}
-> > > -
-> > >  static int pwrseq_pwrctrl_probe(struct platform_device *pdev)
-> > >  {
-> > >       const struct pwrseq_pwrctrl_pdata *pdata;
-> > > @@ -101,11 +94,6 @@ static int pwrseq_pwrctrl_probe(struct platform_device *pdev)
-> > >               return dev_err_probe(dev, PTR_ERR(pwrseq->pwrseq),
-> > >                                    "Failed to get the power sequencer\n");
-> > >
-> > > -     ret = devm_add_action_or_reset(dev, devm_pwrseq_pwrctrl_power_off,
-> > > -                                    pwrseq);
-> > > -     if (ret)
-> > > -             return ret;
-> > > -
-> > >       pwrseq->pwrctrl.power_on = pwrseq_pwrctrl_power_on;
-> > >       pwrseq->pwrctrl.power_off = pwrseq_pwrctrl_power_off;
-> > >
-> > > diff --git a/drivers/pci/pwrctrl/slot.c b/drivers/pci/pwrctrl/slot.c
-> > > index 082af81efe25..b87639253ae2 100644
-> > > --- a/drivers/pci/pwrctrl/slot.c
-> > > +++ b/drivers/pci/pwrctrl/slot.c
-> > > @@ -63,7 +63,6 @@ static void devm_slot_pwrctrl_release(void *data)
-> > >  {
-> > >       struct slot_pwrctrl *slot = data;
-> > >
-> > > -     slot_pwrctrl_power_off(&slot->pwrctrl);
-> > >       regulator_bulk_free(slot->num_supplies, slot->supplies);
-> > >  }
-> > >
-> > > --
-> > > 2.53.0.414.gf7e9f6c205-goog
-> > >
-> >
-> > --
-> > மணிவண்ணன் சதாசிவம்
+> ---
+>  drivers/pci/controller/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+> index e72ac6934379..686349e09cd3 100644
+> --- a/drivers/pci/controller/Kconfig
+> +++ b/drivers/pci/controller/Kconfig
+> @@ -222,7 +222,7 @@ config PCIE_MEDIATEK_GEN3
+>  	depends on ARCH_AIROHA || ARCH_MEDIATEK || COMPILE_TEST
+>  	depends on PCI_MSI
+>  	select IRQ_MSI_LIB
+> -	select PCI_PWRCTRL_SLOT
+> +	select PCI_PWRCTRL_GENERIC
+>  	help
+>  	  Adds support for PCIe Gen3 MAC controller for MediaTek SoCs.
+>  	  This PCIe controller is compatible with Gen3, Gen2 and Gen1 speed,
+> -- 
+> 2.39.5
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
