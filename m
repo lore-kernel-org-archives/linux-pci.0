@@ -1,289 +1,296 @@
-Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFB9B392822
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 19:15:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.125.188.123
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774379704; cv=pass; b=MUMZ3BM2TjijrXx1pVbxT4MIZ2DOdM4xKkGn5uT83Opsdui2/FiV4RmDAGfV/Mz58XRRHyjeFUKLL6wm4AycwEiJyFY3qETXRAH9fmMynrOm20HSceoQqNmD7AABiesPEElsqetzXHVHsg8sU4ecjjPv5g/QET5fgO7z6IIbejE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774379704; c=relaxed/simple;
-	bh=mXQH2e7ey4FhEPRcJoszhO0ePG1FdnyzQZjdgRZXj+A=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=gaIeh1JuDGQvy6FQL/poGIUnn+e5u92MmALAfYMTqFogfZWu1DTLXdLE3S48oNSo+rVWwilzeHbuHFR/oa6kBZ02vk1ZrHDyrDlPDkMwatIxyH6NnM70mhlf5eO6UkXaEgu2BKImYDNVdjqSn46VF/mkbct1HDFSQcPIVrenAYo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com; spf=pass smtp.mailfrom=canonical.com; dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b=lRGmo3NE; arc=pass smtp.client-ip=185.125.188.123
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canonical.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8D842E11D2;
+	Tue, 24 Mar 2026 19:34:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774380866; cv=none; b=ZjfSv9EIpC8YBupz8J60VH0vaqT5NXbScIQ+esweZM6dPd5nt8b64fDVmVVbFoxs5mybi+TfM4W2Tg0ahz/vZSr/pxLXSl3ypb7kpvwv+Q2NNW/qfHFDJ6nUxe3/uVG7H9PAGYfASb+hGZ+oVyGqApqVCDUj9JCP8VFdijScLl8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774380866; c=relaxed/simple;
+	bh=Bc5l4pIBeiiPgT/7rux76ObCIYFem7KpEcL8vce6haw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=KUy8j/Gf9UxjaZPNIoYnMKY9FjTpdwZQw9qXrSHIiGJ8uLDOMOqlB+/5jFtf1xCXR8e1cnf1rTvnZvAFNsG04TVANvBT5N+Wo5hoN+WWzylZLlQslB69zdQku+tijSF80s+3OMGWhymK6SS+R+FVei6GspWHRRuHinRwP4r7oPY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=dLo7lh2F; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b="lRGmo3NE"
-Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com [209.85.218.69])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id B56E63F618
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 19:14:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-	s=20251003; t=1774379692;
-	bh=ngqb+DmGtwEG3FK8sIpZyt2ZJ6Tw4EzBiHu4t/MVsn4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type;
-	b=lRGmo3NENOanaizI5i0CxuJcJ2E31k1e7sB4scygqi5w085Ync+2hOaajcrdnQU88
-	 4NcbiTuCxJ9fd59kT5R3K75i9TDezETUeu7vxL0nCOwiC3PgNzn2IeoxIr+5Yimj6f
-	 +QuLClm4Iq8VphFXjgFSHk8B5qPiiMv7acTzhFWZdqcj7+haRgyAn1PaTzQGhkKDDE
-	 36yd31HTp0Qq7un2CKXwwHhkU1CSrwviHzkA+E7dP4Hz9+k8DWv80KZF3RpxKZQIN1
-	 spj1pbc5aPXuZhsKwkuC0jZZyR15F1X0FjG//4rdVicPTIKSzMJr7SHRus2cQP35Uv
-	 y04E/ydMWLqPM7y43+PgefVCmjiIeHvyWUGxw+Txpu5MPAbZCgRoZoiPPeCAeUq1Z6
-	 0X91StoXC9FHFDjtMZWe8p3QVmJcOcOl7fybueD56lFNe5XIvUIh1bhP4T2r02ZvdI
-	 2FFxklQe3uPHmNtnOsRPfCEZMHHvES+eED4jeyp7bH0MGMiFROOh9bqwsi9NsPCaIn
-	 yjhNvvmf++jRaN9dzBnPY/Upom4vHOl2w28WjqzU8CgkZUx9o6iRDwYK2e8t9BVWmN
-	 eAvnzC6fN+tqSbRrmuvsxNYAa7oYGSvFjyrFqJ73XRjjm0O0Vpyi1NIl0dZGhCkh6P
-	 p3aQmdFrSiCiel76MYX5gfjA=
-Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-b97d66528c9so25080366b.1
-        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 12:14:52 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1774379692; cv=none;
-        d=google.com; s=arc-20240605;
-        b=gRNEfzld9lgdanf/CAJ0PZ9sSnjHqkBgjnOqrPk/XITMFWMBF+BycBIpCGU9xM+bqW
-         2ss2kZhUFAEG9PbLarEU1fG9cZFa10LhGPz3PK7MrnhzLMTxLQkoRY5iygiXopZTbqp+
-         oawf01InxitW53RF7f5a2YmclPyOjZ1UThT8hQY+P73IPM0AirrlgP8CCykScLtb8k+m
-         4odUhsNyDKeeQe4VZv26BeenFVdf4bFMG52ZwdbOCFPzw/c0hkUyErzebvJelRg338cB
-         h7tBfaUua+lwOjrhLt/Kv7ETkpowUszb5r1h2fEW5y1c0U8jdBCkv/eSotv4lbsvt7P0
-         uYDg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version;
-        bh=ngqb+DmGtwEG3FK8sIpZyt2ZJ6Tw4EzBiHu4t/MVsn4=;
-        fh=5A+Ca96kcwqrq7MjwhkK50C771V4W1ldLsmFGTwwktI=;
-        b=YeystnvciSwKReYcfXaeUCeufGiQ3WDdKA06Zcwljax6tS+Lj6hug0CB7jrIPEKKFp
-         +/UAcVkBJA/a0SNnbcdARmlwbV5UjvMdjjNbn8U33x5Wd8ZF242l6KHQDCsZ+ffUaKy0
-         +ID1TcIbGs3Tg7VYl87eR87t9DrGd6QGaedjqjO5LJ5Px7mElT3c6wn2eMeiLY8AeGCY
-         iZ9Tv+bVFWOoyZrXOh3jt+p7x0mSLjLREMsdEeNQemO1YHFYs/JNsuXqlgeonfw2LoVI
-         bR5oqZzyEklSwfdM3/QOdlditppsJROIvNLfgsx4sKri7R0Vd5CwrnJ5/CG3Zwai5FuK
-         qKxQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774379692; x=1774984492;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=ngqb+DmGtwEG3FK8sIpZyt2ZJ6Tw4EzBiHu4t/MVsn4=;
-        b=T9aqoVlckmMIPxB57yHaHwIhPstPJo4/t7SFLCOqCbnI0M812VN0j/fz9rfmSIRlxR
-         cEDj+kfu2zy1n09r2UJfBOAe+RRDSZc3hZL/+GoDIWQoe/4pzFx9iCCh6Ug9om5b+GZW
-         S2UxEGlS42A92rlhugWsk8DG6Hcyu0OX4qz9sGjIkMzCbm6MKbn4/PKi+Fc5rErWp22K
-         NB29/j3HmbxQ0WDSfyxWFOEjpV4dCVGNGp16WlP7xp7apAiZXY85wDLQYYTxQCKWCi9u
-         BrKIpCnAEPzQNk4Ka7tvx+TywRHOzHOERO/fRtfm3TF6dBenLzDMvF1Xg6PQZyzx5roY
-         Z31w==
-X-Forwarded-Encrypted: i=1; AJvYcCXj/aXjoK7juoDufGwbiAPrIAndc38KWbc+puMmkcAg8Bmdy/uSYWeFiHbqStPM/lUUtDQ0yjlj8D8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzNFAiFVKUeFWi2NVflT+fqbak9KDXQ8hipXS18ckvVpmCS4ygA
-	jGqWFeH5+wfLdnqz15H8fHSGVf4YZsdiuEGR6OJKHfkzJPu7XaZq5Cmvf51CpipJSoHO3RZ3HnS
-	2ZS/SQq46ivZfcOko/lYvXublmQjkryLHMNgNywdMxlEu+SafLxUIwG7M2XRv1zJhmQIIaaGnwF
-	mq8hTAF4WVE9vN7aYzPlbo/uWknY6HWCJweFjWMj1W2jeKqLqi0GGd
-X-Gm-Gg: ATEYQzwx3dMHNNI+FNmloVhn2G2/b/7uoF/mXdFo74BFXEGWDPjqhxNm2tPm1ksojeC
-	AYzyRGEsC4ylq8qdPh2Wrqz+gAIkYAZ5SE/YFs501IZufhgGoj83yFq9d1upfiVlyb7Jc0dxGvK
-	ZxPP/UfCMlSnipWU0UIacDnO0+AooZPh58RlBWmW90XbrWnCWcdtO6B22cyhVVfIV8zK4uzWlfa
-	0KnAD9+7hTm0kKYqqwz2EgbZ0RHgTX33v/2jN8=
-X-Received: by 2002:a17:907:7fac:b0:b8f:d2a0:c283 with SMTP id a640c23a62f3a-b99ae1f7d0cmr36034466b.1.1774379692057;
-        Tue, 24 Mar 2026 12:14:52 -0700 (PDT)
-X-Received: by 2002:a17:907:7fac:b0:b8f:d2a0:c283 with SMTP id
- a640c23a62f3a-b99ae1f7d0cmr36028866b.1.1774379691469; Tue, 24 Mar 2026
- 12:14:51 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="dLo7lh2F"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62OHqFbh552077;
+	Tue, 24 Mar 2026 19:34:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=wa034R
+	kjRmkHyMwVHyN9YR1qpLJT9Dt37rUSQmpCTzw=; b=dLo7lh2FYN7STYJtHybIjS
+	Q5zR1qPu0cJSuo6Idr/jnLy4KEjYynAs8dwTn5rlUnOcj0+/ZrrZIxyJvpOc65zZ
+	Jim2c7BRZpr6C1dZ96jvzqmykM0QF/tF/tv8g2IZaYR2aaclTPY6fRb0LHgUrdfw
+	uFnYzCFEo3jF5eFckvR38InNQ8MM8AjBMGKK9apxTtP5odoLDHZ7farkalYtoUI/
+	2xpbw2YaXRvUDa3h8oZv1/l2OqwPPo6WxeACe1K0U7V9DuBGO/2sn6zeQIEcM1GY
+	pKwpK33abpl+i6jLaH8W6AUrwZLVD3DjPfRm0C5lERwLErdzzuxSCsUroHs5xttA
+	==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4d1ky04pmu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 24 Mar 2026 19:34:18 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62OIxPUI009118;
+	Tue, 24 Mar 2026 19:34:17 GMT
+Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4d26nnkk0s-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 24 Mar 2026 19:34:17 +0000
+Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
+	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62OJYGb727460110
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 24 Mar 2026 19:34:16 GMT
+Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 3112E58059;
+	Tue, 24 Mar 2026 19:34:16 +0000 (GMT)
+Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 664CD58055;
+	Tue, 24 Mar 2026 19:34:15 +0000 (GMT)
+Received: from [9.61.253.153] (unknown [9.61.253.153])
+	by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Tue, 24 Mar 2026 19:34:15 +0000 (GMT)
+Message-ID: <f171af52-87f5-4b1e-9caf-6d7b4e161534@linux.ibm.com>
+Date: Tue, 24 Mar 2026 12:34:13 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260313094618.1361418-1-ziyue.zhang@oss.qualcomm.com>
- <20260313164542.GA1405513@bhelgaas> <en5a7jrgpbn4bsmw5qwprugb2qmjkqw2x5eey6jxxu63634duz@b43rhcsqkj3o>
- <abdviJbrluDn2Vrx@baldur> <kqpgjzcxnazjohiop27exget6qrv37wn3csmixt5nmc6d5dkbg@n7qjo6flaabn>
- <abtgaXSv-zRysJqO@baldur> <4byysnjodmlphwcevw5gb2asxbwwwlf526mtpwpkfi6crjxoqb@vyuktezfu2wu>
- <CAARv3RSag8n0=ut9KGm0yALRPVTiyQ+bBBbT+3Vf1sNOCBLbGA@mail.gmail.com> <dnx4ge2e2zy2unw5jtmmhktyzlnmmhrogb5skskxewi6y7ekau@vpfdphzay7td>
-In-Reply-To: <dnx4ge2e2zy2unw5jtmmhktyzlnmmhrogb5skskxewi6y7ekau@vpfdphzay7td>
-From: Tobias Heider <tobias.heider@canonical.com>
-Date: Tue, 24 Mar 2026 20:14:39 +0100
-X-Gm-Features: AaiRm50Xa8MYmaP0uH8BT8rSPTXsqKVKZcUFfeHqOG5ZpI8OP5QNHanLv-y60Mk
-Message-ID: <CAARv3RRqXxNePX=4RqnLu7OnfjQmStynsL9RCNY19EKQOTcnLQ@mail.gmail.com>
-Subject: Re: [PATCH v1 1/1] arm64: dts: qcom: hamoa: Move PCIe PERST and Wake
- GPIOs to port nodes
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Bjorn Andersson <andersson@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>, 
-	Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>, konradybcio@kernel.org, robh@kernel.org, 
-	krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com, 
-	lpieralisi@kernel.org, kwilczynski@kernel.org, bhelgaas@google.com, 
-	johan+linaro@kernel.org, vkoul@kernel.org, kishon@kernel.org, 
-	neil.armstrong@linaro.org, abel.vesa@linaro.org, kw@linux.com, 
-	linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com, 
-	quic_krichai@quicinc.com, quic_vbadigan@quicinc.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v11 0/9] Error recovery for vfio-pci devices on s390x
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: lukas@wunner.de, alex@shazbot.org, kbusch@kernel.org, clg@redhat.com,
+        stable@vger.kernel.org, schnelle@linux.ibm.com, mjrosato@linux.ibm.com,
+        linux-s390@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>
+References: <20260316191544.2279-1-alifm@linux.ibm.com>
+Content-Language: en-US
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <20260316191544.2279-1-alifm@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzI0MDE0OSBTYWx0ZWRfX8V7bYqJMvxC9
+ iITahyh+MEIkR58YKLn4RoSTUSY+t6HwaxZ9XIe0PaLF70ysIdmFJumKmYRni4gCqwi/IE0ydhI
+ 0P0RY97qX8+zyApXMPP9qDrn8GIeMG3j4v0kFJlymHx9yWA3XbdDIYagT+FsVp1hXFXNm4uj6Gv
+ uGIi+V5xazWawYdwURhvJAZI0CBdVoTmI+TdRNUN2VX7EAIZ9JrQrpIIyWm2jhv5wvtHg8LLW8A
+ 0NA1vDg8l7PuZpnfm6tc0DcaDpbo0W1+UWGIcWsQnT10JS0NMRb/qpzGISeyV4ZItj4fNqGdSxw
+ I7QsojsBOvIho39eK0WCq3RZ80nK/L9Ds31ZOXbM28Z9qaFY5VmZTy9ZG2r/y22DfY/rLzJfagX
+ zYnlOdKvJp7G63Fogh+A4SHerDM93OQqIN8J47N/BR3+3DuXzHVmqYKf/VVhaCYLHNv8c6pBAyt
+ JkOSddqZgIuWSxKQNOQ==
+X-Authority-Analysis: v=2.4 cv=JK42csKb c=1 sm=1 tr=0 ts=69c2e73a cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VwQbUJbxAAAA:8
+ a=VnNF1IyMAAAA:8 a=VYs1Kb8SrcD_bOuB75gA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: 3BHBDvEwVUs_s58Vkjact9JfNmqaTstB
+X-Proofpoint-GUID: 3BHBDvEwVUs_s58Vkjact9JfNmqaTstB
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-24_03,2026-03-24_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 clxscore=1015 priorityscore=1501 malwarescore=0 adultscore=0
+ spamscore=0 suspectscore=0 phishscore=0 lowpriorityscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603240149
 
-On Tue, Mar 24, 2026 at 7:07=E2=80=AFAM Manivannan Sadhasivam <mani@kernel.=
-org> wrote:
->
-> On Thu, Mar 19, 2026 at 02:50:37PM +0100, Tobias Heider wrote:
-> > Resending because the previous mail ended up being HTML (sorry)
-> >
-> > On Thu, Mar 19, 2026 at 6:39=E2=80=AFAM Manivannan Sadhasivam <mani@ker=
-nel.org> wrote:
-> > >
-> > > On Wed, Mar 18, 2026 at 09:42:56PM -0500, Bjorn Andersson wrote:
-> > > > On Mon, Mar 16, 2026 at 08:50:12AM +0530, Manivannan Sadhasivam wro=
-te:
-> > > > > On Sun, Mar 15, 2026 at 09:53:33PM -0500, Bjorn Andersson wrote:
-> > > > > > On Sat, Mar 14, 2026 at 07:50:50PM +0530, Manivannan Sadhasivam=
- wrote:
-> > > > > > > On Fri, Mar 13, 2026 at 11:45:42AM -0500, Bjorn Helgaas wrote=
-:
-> > > > > > > > On Fri, Mar 13, 2026 at 05:46:18PM +0800, Ziyue Zhang wrote=
-:
-> > > > > > > > > Commit 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, =
-PERST, and Wake
-> > > > > > > > > GPIOs to PCIe port nodes and add port Nodes for all PCIe =
-ports") did not
-> > > > > > > > > convert all Hamoa=E2=80=91based platforms to the new meth=
-od of defining PERST and
-> > > > > > > > > Wake GPIOs in the PCIe root port nodes.
-> > > > > > > > >
-> > > > > > > > > Without the change PCIe probe will fail. The probe failur=
-e happens because
-> > > > > > > > > the PHY stays in the controller node while the PERST/Wake=
- GPIOs were moved
-> > > > > > > > > to the port nodes.
-> > > > > > > > >
-> > > > > > > > > This fixes probe failures seen on the following platforms=
-:
-> > > > > > > > >  - x1-hp-omnibook-x14
-> > > > > > > > >  - x1-microsoft-denali
-> > > > > > > > >  - x1e80100-lenovo-yoga-slim7x
-> > > > > > > > >  - x1e80100-medion-sprchrgd-14-s1
-> > > > > > > > >  - x1p42100-lenovo-thinkbook-16
-> > > > > > > > >  - x1-asus-zenbook-a14
-> > > > > > > > >  - x1-crd
-> > > > > > > > >  - x1-dell-thena
-> > > > > > > > >
-> > > > > > > > > Fixes: 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, =
-PERST, and Wake GPIOs to PCIe port nodes and add port Nodes for all PCIe po=
-rts")
-> > > > > > > >
-> > > > > > > > Are you saying that DTs in the field broke because of some =
-kernel
-> > > > > > > > change?  That's not supposed to happen.  Even though PHY, P=
-ERST, and
-> > > > > > > > Wake GPIOs should be described in Root Port nodes instead o=
-f the Root
-> > > > > > > > Complex node in *future* DTs, the kernel is still supposed =
-to accept
-> > > > > > > > the old style with them described in the Root Complex node.
-> > > > > > > >
-> > > > > > >
-> > > > > > > This is not related to the driver change. The driver correctl=
-y parses all Root
-> > > > > > > Port properties either in the Root Complex node (old binding)=
- or Root Port node
-> > > > > > > (new binding). But commit 960609b22be5, left converting menti=
-oned board DTS to
-> > > > > > > the new binding, leaving those affected platforms in a half b=
-aked state i.e.,
-> > > > > > > some properties in RC node and some in Root Port node. Driver=
- cannot parse such
-> > > > > > > combinations, so it fails correctly so.
-> > > > > > >
-> > > > > >
-> > > > > > Are you saying that above listed machines has broken PCIe suppo=
-rt in
-> > > > > > v7.0-rc?
-> > > > > >
-> > > > >
-> > > > > I haven't verified it, but I'm pretty sure PCIe is broken on thes=
-e platforms.
-> > > > >
-> > > >
-> > > > In line with Bjorn's request, we shouldn't have to guess.
-> > > >
-> > > > > > It seems this is a (partial) revert of 960609b22be5, is this ac=
-tually
-> > > > > > fixing that change, or is it only applicable once some other ch=
-anges are
-> > > > > > applied?
-> > > > > >
-> > > > >
-> > > > > This change is fixing the issue in the respective board DTS and i=
-s a standalone
-> > > > > fix on top of v7.0-rc1.
-> > > > >
-> > > >
-> > > > So 960609b22be5 was broken when I merged it?
-> > > >
-> > >
-> > > Broken on the machines mentioned in the commit message, not for all H=
-amoa
-> > > platforms.
-> > >
-> > > > The commit message says that the commit was incomplete, in that it
-> > > > didn't fully convert from the old to the new style, so it sounds li=
-ke
-> > > > the offending commit was incomplete - but I believe the offending c=
-ommit
-> > > > was a workaround for the new solution not being in place and this c=
-ommit
-> > > > mostly reverts the changes in the offending commit.
-> > > >
-> > >
-> > > So 960609b22be5 was supposed to move all the platforms from old PCIe =
-binding to
-> > > new for greater good, but it apparently decided to do so only for a s=
-ubset of
-> > > the platforms for some reason which  don't know. But the problem aris=
-es due to
-> > > 960609b22be5 changing the hamoa.dtsi to the new binding which also wa=
-rrants the
-> > > platform DTS to also be changed to the new binding. If we only have e=
-ither dtsi
-> > > or dts converted and not both to the new binding, the driver will get=
- confused
-> > > and fail. And this is what exactly happended for below machines:
-> > >
-> > >  - x1-hp-omnibook-x14
-> > >  - x1-microsoft-denali
-> > >  - x1e80100-lenovo-yoga-slim7x
-> > >  - x1e80100-medion-sprchrgd-14-s1
-> > >  - x1p42100-lenovo-thinkbook-16
-> > >  - x1-asus-zenbook-a14
-> > >  - x1-crd
-> > >  - x1-dell-thena
-> >
-> > I can confirm the breakage for (some of) the listed devices on Ubuntu.
-> > We are experimenting with 7.0-rcs ahead of our 26.04 release.
-> >
-> > I'll try to collect some test feedback for the fix.
-> > I'd certainly appreciate this being included as an rc fix since
-> > currently half of
-> > the x1 laptop devices are broken.
-> >
->
-> Thanks for the report. We will try to get this patch into v7.0-rcS.
->
-> It'd be appreciated if you can test this patch and give your tested-by ta=
-g.
->
-> - Mani
+Hi Bjorn,
 
-Thank you!
+Polite ping for the PCI patches in the series. I would appreciate any 
+feedback for these patches :) .
 
-Tested it myself and I have rolled this out to my ubuntu-concept testing re=
-po.
-I have tested the CRD and got user feedback that it works on at least an
-Omnibook (where we first saw the regression without the patch) and Lenovo Y=
-oga.
-Potentially more but not everyone provides feedback when things don't break=
-.
+Thanks
 
-Tested-by: Tobias Heider <tobias.heider@canonical.com>
+Farhan
 
+On 3/16/2026 12:15 PM, Farhan Ali wrote:
+> Hi,
 >
-> --
-> =E0=AE=AE=E0=AE=A3=E0=AE=BF=E0=AE=B5=E0=AE=A3=E0=AF=8D=E0=AE=A3=E0=AE=A9=
-=E0=AF=8D =E0=AE=9A=E0=AE=A4=E0=AE=BE=E0=AE=9A=E0=AE=BF=E0=AE=B5=E0=AE=AE=
-=E0=AF=8D
+> This Linux kernel patch series introduces support for error recovery for
+> passthrough PCI devices on System Z (s390x).
+>
+> Background
+> ----------
+> For PCI devices on s390x an operating system receives platform specific
+> error events from firmware rather than through AER.Today for
+> passthrough/userspace devices, we don't attempt any error recovery and
+> ignore any error events for the devices. The passthrough/userspace devices
+> are managed by the vfio-pci driver. The driver does register error handling
+> callbacks (error_detected), and on an error trigger an eventfd to
+> userspace.  But we need a mechanism to notify userspace
+> (QEMU/guest/userspace drivers) about the error event.
+>
+> Proposal
+> --------
+> We can expose this error information (currently only the PCI Error Code)
+> via a device feature. Userspace can then obtain the error information
+> via VFIO_DEVICE_FEATURE ioctl and take appropriate actions such as driving
+> a device reset.
+>
+> This is how a typical flow for passthrough devices to a VM would work:
+> For passthrough devices to a VM, the driver bound to the device on the host
+> is vfio-pci. vfio-pci driver does support the error_detected() callback
+> (vfio_pci_core_aer_err_detected()), and on an PCI error s390x recovery
+> code on the host will call the vfio-pci error_detected() callback. The
+> vfio-pci error_detected() callback will notify userspace/QEMU via an
+> eventfd, and return PCI_ERS_RESULT_CAN_RECOVER. At this point the s390x
+> error recovery on the host will skip any further action(see patch 6) and
+> let userspace drive the error recovery.
+>
+> Once userspace/QEMU is notified, it then injects this error into the VM
+> so device drivers in the VM can take recovery actions. For example for a
+> passthrough NVMe device, the VM's OS NVMe driver will access the device.
+> At this point the VM's NVMe driver's error_detected() will drive the
+> recovery by returning PCI_ERS_RESULT_NEED_RESET, and the s390x error
+> recovery in the VM's OS will try to do a reset. Resets are privileged
+> operations and so the VM will need intervention from QEMU to perform the
+> reset. QEMU will invoke the VFIO_DEVICE_RESET ioctl to now notify the
+> host that the VM is requesting a reset of the device. The vfio-pci driver
+> on the host will then perform the reset on the device to recover it.
+>
+>
+> Thanks
+> Farhan
+>
+> ChangeLog
+> ---------
+> v10 series https://lore.kernel.org/all/20260302203325.3826-1-alifm@linux.ibm.com/
+> v10 -> v11
+>      - Rebase on pci/next to handle merge conflicts with patch 1.
+>
+>      - Typo fixup in commit message (patch 4) and use guard() for mutex
+>      (patch 6).
+>
+> v9 series https://lore.kernel.org/all/20260217182257.1582-1-alifm@linux.ibm.com/
+> v9 -> v10
+>     - Change pci_slot number to u16 (patch 1).
+>
+>     - Avoid saving invalid config space state if config space is
+>     inaccessible in the device reset path. It uses the same patch as in v8
+>     with R-b from Niklas.
+>
+>     - Rebase on 7.0.0-rc2
+>
+>
+> v8 series https://lore.kernel.org/all/20260122194437.1903-1-alifm@linux.ibm.com/
+> v8 -> v9
+>     - Avoid saving PCI config space state in reset path (patch 3) (suggested by Bjorn)
+>     
+>     - Add explicit version to struct vfio_device_feature_zpci_err (patch 7).
+>
+>     - Rebase on 6.19
+>
+>
+> v7 series https://lore.kernel.org/all/20260107183217.1365-1-alifm@linux.ibm.com/
+> v7 -> v8
+>     - Rebase on 6.19-rc4
+>
+>     - Address feedback from Niklas and Julien.
+>
+>
+> v6 series https://lore.kernel.org/all/2c609e61-1861-4bf3-b019-a11c137d26a5@linux.ibm.com/
+> v6 -> v7
+>      - Rebase on 6.19-rc4
+>
+>      - Update commit message based on Niklas's suggestion (patch 3).
+>
+> v5 series https://lore.kernel.org/all/20251113183502.2388-1-alifm@linux.ibm.com/
+> v5 -> v6
+>     - Rebase on 6.18 + Lukas's PCI: Universal error recoverability of
+>     devices series (https://lore.kernel.org/all/cover.1763483367.git.lukas@wunner.de/)
+>
+>     - Re-work config space accessibility check to pci_dev_save_and_disable() (patch 3).
+>     This avoids saving the config space, in the reset path, if the device's config space is
+>     corrupted or inaccessible.
+>
+> v4 series https://lore.kernel.org/all/20250924171628.826-1-alifm@linux.ibm.com/
+> v4 -> v5
+>      - Rebase on 6.18-rc5
+>
+>      - Move bug fixes to the beginning of the series (patch 1 and 2). These patches
+>      were posted as a separate fixes series
+> https://lore.kernel.org/all/a14936ac-47d6-461b-816f-0fd66f869b0f@linux.ibm.com/
+>
+>      - Add matching pci_put_dev() for pci_get_slot() (patch 6).
+>
+> v3 series https://lore.kernel.org/all/20250911183307.1910-1-alifm@linux.ibm.com/
+> v3 -> v4
+>      - Remove warn messages for each PCI capability not restored (patch 1)
+>
+>      - Check PCI_COMMAND and PCI_STATUS register for error value instead of device id
+>      (patch 1)
+>
+>      - Fix kernel crash in patch 3
+>
+>      - Added reviewed by tags
+>
+>      - Address comments from Niklas's (patches 4, 5, 7)
+>
+>      - Fix compilation error non s390x system (patch 8)
+>
+>      - Explicitly align struct vfio_device_feature_zpci_err (patch 8)
+>
+>
+> v2 series https://lore.kernel.org/all/20250825171226.1602-1-alifm@linux.ibm.com/
+> v2 -> v3
+>     - Patch 1 avoids saving any config space state if the device is in error
+>     (suggested by Alex)
+>
+>     - Patch 2 adds additional check only for FLR reset to try other function
+>       reset method (suggested by Alex).
+>
+>     - Patch 3 fixes a bug in s390 for resetting PCI devices with multiple
+>       functions. Creates a new flag pci_slot to allow per function slot.
+>
+>     - Patch 4 fixes a bug in s390 for resource to bus address translation.
+>
+>     - Rebase on 6.17-rc5
+>
+>
+> v1 series https://lore.kernel.org/all/20250813170821.1115-1-alifm@linux.ibm.com/
+> v1 - > v2
+>     - Patches 1 and 2 adds some additional checks for FLR/PM reset to
+>       try other function reset method (suggested by Alex).
+>
+>     - Patch 3 fixes a bug in s390 for resetting PCI devices with multiple
+>       functions.
+>
+>     - Patch 7 adds a new device feature for zPCI devices for the VFIO_DEVICE_FEATURE
+>       ioctl. The ioctl is used by userspace to retriece any PCI error
+>       information for the device (suggested by Alex).
+>
+>     - Patch 8 adds a reset_done() callback for the vfio-pci driver, to
+>       restore the state of the device after a reset.
+>
+>     - Patch 9 removes the pcie check for triggering VFIO_PCI_ERR_IRQ_INDEX.
+>
+> Farhan Ali (9):
+>    PCI: Allow per function PCI slots
+>    s390/pci: Add architecture specific resource/bus address translation
+>    PCI: Avoid saving config space state if inaccessible
+>    PCI: Add additional checks for flr reset
+>    s390/pci: Update the logic for detecting passthrough device
+>    s390/pci: Store PCI error information for passthrough devices
+>    vfio-pci/zdev: Add a device feature for error information
+>    vfio: Add a reset_done callback for vfio-pci driver
+>    vfio: Remove the pcie check for VFIO_PCI_ERR_IRQ_INDEX
+>
+>   arch/s390/include/asm/pci.h       |  29 ++++++++
+>   arch/s390/pci/pci.c               |  75 +++++++++++++++++++++
+>   arch/s390/pci/pci_event.c         | 106 +++++++++++++++++-------------
+>   drivers/pci/host-bridge.c         |   8 +--
+>   drivers/pci/pci.c                 |  26 +++++++-
+>   drivers/pci/slot.c                |  31 +++++++--
+>   drivers/vfio/pci/vfio_pci_core.c  |  22 +++++--
+>   drivers/vfio/pci/vfio_pci_intrs.c |   3 +-
+>   drivers/vfio/pci/vfio_pci_priv.h  |   9 +++
+>   drivers/vfio/pci/vfio_pci_zdev.c  |  47 ++++++++++++-
+>   include/linux/pci.h               |   5 +-
+>   include/uapi/linux/vfio.h         |  17 +++++
+>   12 files changed, 307 insertions(+), 71 deletions(-)
+>
