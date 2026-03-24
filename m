@@ -1,61 +1,61 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E56F2773FF
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 05:20:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65BC2299A8F
+	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 05:20:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774329628; cv=none; b=YV4nH/nGNNFp/uieVFZBAXJCOhF0a4Mp2Fv7F+AGbqpYGQNROVHBBXRrr/xLkO9weC8dM+sZn7fZZN9UytmcAQaoY3TK7Qq/wIiGV0mNv6oXNkyklOUqDIgGHNnIhUzQISwKKLaKwCU5Y4VP5YHmdeotqGfQclviLkqUTyZVkcU=
+	t=1774329630; cv=none; b=D5HpjoF1Ui9B1B+87xjwfBhH+wlje7cLqMxTxXb6rLPT2Pau8khpWCXZ61kpylVhOaLjXfts62Rk3+w9cl7WLwildxy/xfBLOqKb2fDctZ3xdb+sxoE76kr3KCt6nSTw0FoWQCWIVUR+bgRIkp4Wj6LfUM9iZ1xN7HHQaJo20VE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774329628; c=relaxed/simple;
-	bh=/AlhRTbtRWo7GbL2ds2v9wvogDNH5q6EjWRr3V3z/rc=;
+	s=arc-20240116; t=1774329630; c=relaxed/simple;
+	bh=KExZ1uFY5D1jLsHcrlxWGkAsKI6SDYhHbGW/69FV8ac=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mJ07JpLGPbbolKbAv1dBuy+c/L0jgW0eP6knp/j3n7oQG1PGDzed9Wf28aK+b2HlK9PffaP5tqA1Wkj2IMN/mFl2W06gxiT4ZEycN41xYzM7wO0gMAjKMbVBwcZoHcPptBIi/knncTcPTwLFMHBH87m85aRvIvVrHlTTtgELLsc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=mpgiqkMk; arc=none smtp.client-ip=209.85.216.52
+	 MIME-Version; b=tDSpbmnvUEeHjFK9j0hCH9BPuU8NkJYTbYseLAadIA5J8+eudW6SScdS4monkVYHyi+3musPLua2u59R2xSRRrnXM0Bh2dyDrOZ/tj59Px2TCC2/nnALCBj1Eb4koaOe7iVnsm9NaA3DBWx3vsqNwWVPHhR2SqBF7zW/iJEXvQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=SUtEOmRy; arc=none smtp.client-ip=209.85.216.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="mpgiqkMk"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-35a07c4b17dso1815052a91.2
-        for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2026 22:20:25 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="SUtEOmRy"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-35a211df8e3so585250a91.2
+        for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2026 22:20:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1774329625; x=1774934425; darn=vger.kernel.org;
+        d=chromium.org; s=google; t=1774329629; x=1774934429; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=zcsyifPwpw7PalUEgFntf8CIjQvjzcA0RCRU1Yc2FT4=;
-        b=mpgiqkMk6AkzHkdJJfHxkQKgDj5RYp3+lqt0r/S+AlO0YvbfND26d2rMr+OA35XZUk
-         ADosFyLE0L71XTMKbmJrwEzLDMpYCHIkY3XAO96u4uoHpNqFXk1651NN3dvDN/WgS2Yv
-         AtV0FTc4znOZLSYFvLJ2GYaxz/gnlHillHQ68=
+        bh=tBBocE8wHIzrURZ8u70flcyVVr5FTdBTVpVQUI9JEgQ=;
+        b=SUtEOmRy6FpQY1Iny3LnWt1oAMv2TrjbztBzF5zT54FeRURVUyN4ho2FqGKpIg1ZWG
+         88ZFanW6lNm4uf9PbrlcFnKXsQWDSVFFSKa2yPsg3/QAYGtUvv4wyrAdw+lfNUp5abpn
+         rBgXYaNQ5zvcrysO+zOq8L7FzB4u89ljAoydw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774329625; x=1774934425;
+        d=1e100.net; s=20251104; t=1774329629; x=1774934429;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=zcsyifPwpw7PalUEgFntf8CIjQvjzcA0RCRU1Yc2FT4=;
-        b=JjNjxKhfuNqvn2xLOV6RDqvh99puNjRHclcbaUDfPJ7drIEfoBVnEph8/p01b1xlt9
-         s4fQQ2nCCRSPRVVnUVGGD9ZlXtt/lhspFxej/T35zov7yRw/fHEiMZIKFndFnLsgGWEy
-         jOWbpv4yVGyn/NL+zmmxufiG2YJ4HaljoNfMBtFp4IcQXbuoY4VnUYRncIGaA7VriOUj
-         09NfabiCvUU4DecvwATkCBf85yVUWmU8l2pqr/Pfmcl6lhSWIp6AxPvvLHHVLIh5DvcC
-         Kh0trZkXU2Dlle8fIwkPIIx2EPFByNIpvwO8NrHgIHMSLGFvSOjLTsYIu9Qf30ig+8F1
-         RH6Q==
-X-Forwarded-Encrypted: i=1; AJvYcCU+RDE3sqKZLOrQrLXyxQIsHWKowjq4GxUflzjJsjt/3F32TzMLJKrK5hjqbKc/tHkLRMDIwpY2P20=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwoRXCPkQ/dsnvoB1I4DMwSQF6cG56MhsTlyZm7PRwoiqNA746R
-	3MjFK5XdtGBP0orn0jjse841xVZ2OaoO1RrMBsCy1MBvSriMP48Ws+mvXQkZZTLktg==
-X-Gm-Gg: ATEYQzzCijyqsyF0/cPuSUiaauSr9bZMKx3hPRxsVEQrlMTl2KCE1u62WQAsKPrg1D8
-	NWgKLV1BJlcxi3umXw+A5srdC7BwVwUNyU+4I7CrQJe0y4spXXb06XMTHQcUlxeZOa/dPdYvYRQ
-	BrgH0+ScziilfHyfWKHMBlQyrHHhiVWJMe30P2ggm9XkEjbfmFHRgM//AEzibI7XMl4Qa4XXIn9
-	GZWRbP7yxmJnu7HUINhy9iFrCILejeo0szPhWD5YXyK+1zEBzzMm8qt0HKOfNQQ7bz2D9rK5aG7
-	3yhp2xiZF+kvBsc+1szFyj4p+UzNw9B8NsnlKsfZvmZ9TBKriw/820uZDP/0nzKO2UBmlXiSA+J
-	QM9eGTQagAMgsYJkFF2x0YnT30vNTTm7t1tiUM1ex5ETUSbcCHamB8Nf7Qr/m5QSoSFy8qZkuQ6
-	LTjsrX6znDb8+MPt2+auUJ+jJMw0trx3XA4V63H1UjL7ZGaDK41dqq03FISjqcxQHct6NkkiJYi
-	DE9PszKCRJ+xRgQVNA=
-X-Received: by 2002:a17:90b:510b:b0:35a:1b43:dff1 with SMTP id 98e67ed59e1d1-35bd2bf7926mr12662239a91.12.1774329625440;
-        Mon, 23 Mar 2026 22:20:25 -0700 (PDT)
+        bh=tBBocE8wHIzrURZ8u70flcyVVr5FTdBTVpVQUI9JEgQ=;
+        b=MKytG9uh+65riSTJ2c/FTYuN6R8RTgGQCud4OOpE1jlJ4SLD5b1Jn8W0JJAoprMZ3l
+         yqWFoMN8WGKVb/s/Cs5VJ6HnIDsPkhxpqecpQrQInyBZKZvZVMOD1lj5xlIttgix2MX7
+         EglqLP2z9PFYin6IPCU10OVGS8wuzylKdOuU/gj/JaQ+uD3k3YI2KiqDQindbrWin4mV
+         3PqnOp3+yTtixVuND3xnwSHW/vqJWQ4v9pD5KWfPROV7PjYKF4E/tSVlND55kyYoTl1p
+         0n808RG+Wf6+X5XzcV0TN+NkgbAXP9AKEhOYKBfC/z4wiZWw9BERHguV5X7LWlwHpd6Y
+         d//w==
+X-Forwarded-Encrypted: i=1; AJvYcCWoHXkFs1hFu6pKxmNFphVmhIvien33kwKMmu/t/Okwf9ufbSBcWPAOD8rhHtd4nLmQPqSZItFZE/0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzZwlqu4hVqlsmuXjM0bsZTqBhEfblNQKJh4i7IZW4cDoU+AcNE
+	jZk31mcL7sXM9/Q21GpkgpuLkxl9vrNasMYNlk/m30KiGO2caPX02b5ibP80+3rsDA==
+X-Gm-Gg: ATEYQzzqR2YhPkkVasTc9mJ8hPMmP8Y/fNZQCaHeuO6eKR5DuT0lZFiOCddvSCygD+w
+	XRv4yh8WAvCD0iDDX4x6zDVtRHWFtT/FOzKMCnrNJe+SJz5w12NnCJF0JRp1DcRGNIxsWSyTL12
+	JeBT1iTExmTWh5oEqTgPK5Fp+EZz34IEap2llQvDFokjH5NVxzISz2GnYGiDXqh0SR8RtGUWZSA
+	hcUjdl666Ndxq4dZqJv7lugDSNhpYBPrOSh32sZJZb2DDDi9FCLoyGexjZQ7fSbPRT7/tAhgAmp
+	RYwMrWfnNWsEqr/aJ54mjodsIKRUsjoLFKDJPrAdyUbyuEtc/AsQh1EqjrN9iVLyl/hVq0ucsR2
+	7jmhiDCPslL8iX6u14L2AuYIkWLztg9us6DWDGhzDIe0xJYzpKgNqMDAxMOlHNY9tIkgn7eR52/
+	NLZkLrPAyHjRCOFMkKCr/fUpHCMGBdST5572dYYt6qnpU6wDbK2rLPR+giXlOgsodrBCi9vYK0B
+	yPXkchYpGTZKquIuqQ=
+X-Received: by 2002:a17:90b:510a:b0:359:3426:c60a with SMTP id 98e67ed59e1d1-35bd2bd6af9mr13589107a91.4.1774329628786;
+        Mon, 23 Mar 2026 22:20:28 -0700 (PDT)
 Received: from wenstp920.tpe.corp.google.com ([2a00:79e0:201d:8:19a5:8f2f:d584:8078])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-35c03124a87sm1068647a91.3.2026.03.23.22.20.22
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-35c03124a87sm1068647a91.3.2026.03.23.22.20.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Mar 2026 22:20:24 -0700 (PDT)
+        Mon, 23 Mar 2026 22:20:28 -0700 (PDT)
 From: Chen-Yu Tsai <wenst@chromium.org>
 To: Matthias Brugger <matthias.bgg@gmail.com>,
 	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
@@ -71,9 +71,9 @@ Cc: Chen-Yu Tsai <wenst@chromium.org>,
 	linux-mediatek@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: [PATCH v6 4/7] PCI: mediatek-gen3: Add error path for resume driver callbacks
-Date: Tue, 24 Mar 2026 13:19:56 +0800
-Message-ID: <20260324052002.4072430-5-wenst@chromium.org>
+Subject: [PATCH v6 5/7] PCI: mediatek-gen3: Split out device power helpers
+Date: Tue, 24 Mar 2026 13:19:57 +0800
+Message-ID: <20260324052002.4072430-6-wenst@chromium.org>
 X-Mailer: git-send-email 2.53.0.983.g0bb29b3bc5-goog
 In-Reply-To: <20260324052002.4072430-1-wenst@chromium.org>
 References: <20260324052002.4072430-1-wenst@chromium.org>
@@ -85,44 +85,140 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The resume callback currently does teardown in the conditional block
-directly. This is going to get ugly when the pwrctrl calls are added.
+In preparation for adding full power on/off control with the pwrctrl
+API, split out the existing code that only partially deals with device
+power sequencing into separate helper functions. The existing code only
+handles PERST#.
 
-Move the teardown to a proper error cleanup path.
+This is purely moving code around, and brings no functional changes.
 
 Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
 Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
 ---
- drivers/pci/controller/pcie-mediatek-gen3.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/pci/controller/pcie-mediatek-gen3.c | 87 ++++++++++++---------
+ 1 file changed, 52 insertions(+), 35 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
-index 1b6290f2c360..22a16e4ebc76 100644
+index 22a16e4ebc76..526db8815401 100644
 --- a/drivers/pci/controller/pcie-mediatek-gen3.c
 +++ b/drivers/pci/controller/pcie-mediatek-gen3.c
-@@ -1304,14 +1304,16 @@ static int mtk_pcie_resume_noirq(struct device *dev)
- 		return err;
- 
- 	err = mtk_pcie_startup_port(pcie);
--	if (err) {
--		mtk_pcie_power_down(pcie);
--		return err;
--	}
-+	if (err)
-+		goto err_power_down;
- 
- 	mtk_pcie_irq_restore(pcie);
- 
- 	return 0;
-+
-+err_power_down:
-+	mtk_pcie_power_down(pcie);
-+	return err;
+@@ -403,6 +403,54 @@ static void mtk_pcie_enable_msi(struct mtk_gen3_pcie *pcie)
+ 	writel_relaxed(val, pcie->base + PCIE_INT_ENABLE_REG);
  }
  
- static const struct dev_pm_ops mtk_pcie_pm_ops = {
++static int mtk_pcie_devices_power_up(struct mtk_gen3_pcie *pcie)
++{
++	int err;
++	u32 val;
++
++	/*
++	 * Airoha EN7581 has a hw bug asserting/releasing PCIE_PE_RSTB signal
++	 * causing occasional PCIe link down. In order to overcome the issue,
++	 * PCIE_RSTB signals are not asserted/released at this stage and the
++	 * PCIe block is reset using en7523_reset_assert() and
++	 * en7581_pci_enable().
++	 */
++	if (!(pcie->soc->flags & SKIP_PCIE_RSTB)) {
++		/* Assert all reset signals */
++		val = readl_relaxed(pcie->base + PCIE_RST_CTRL_REG);
++		val |= PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB |
++		       PCIE_PE_RSTB;
++		writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
++
++		/*
++		 * Described in PCIe CEM specification revision 6.0.
++		 *
++		 * The deassertion of PERST# should be delayed 100ms (TPVPERL)
++		 * for the power and clock to become stable.
++		 */
++		msleep(PCIE_T_PVPERL_MS);
++
++		/* De-assert reset signals */
++		val &= ~(PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB |
++			 PCIE_PE_RSTB);
++		writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
++	}
++
++	return 0;
++}
++
++static void mtk_pcie_devices_power_down(struct mtk_gen3_pcie *pcie)
++{
++	u32 val;
++
++	if (!(pcie->soc->flags & SKIP_PCIE_RSTB)) {
++		/* Assert the PERST# pin */
++		val = readl_relaxed(pcie->base + PCIE_RST_CTRL_REG);
++		val |= PCIE_PE_RSTB;
++		writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
++	}
++}
++
+ static int mtk_pcie_startup_port(struct mtk_gen3_pcie *pcie)
+ {
+ 	struct resource_entry *entry;
+@@ -489,33 +537,9 @@ static int mtk_pcie_startup_port(struct mtk_gen3_pcie *pcie)
+ 			return err;
+ 	}
+ 
+-	/*
+-	 * Airoha EN7581 has a hw bug asserting/releasing PCIE_PE_RSTB signal
+-	 * causing occasional PCIe link down. In order to overcome the issue,
+-	 * PCIE_RSTB signals are not asserted/released at this stage and the
+-	 * PCIe block is reset using en7523_reset_assert() and
+-	 * en7581_pci_enable().
+-	 */
+-	if (!(pcie->soc->flags & SKIP_PCIE_RSTB)) {
+-		/* Assert all reset signals */
+-		val = readl_relaxed(pcie->base + PCIE_RST_CTRL_REG);
+-		val |= PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB |
+-		       PCIE_PE_RSTB;
+-		writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
+-
+-		/*
+-		 * Described in PCIe CEM specification revision 6.0.
+-		 *
+-		 * The deassertion of PERST# should be delayed 100ms (TPVPERL)
+-		 * for the power and clock to become stable.
+-		 */
+-		msleep(PCIE_T_PVPERL_MS);
+-
+-		/* De-assert reset signals */
+-		val &= ~(PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB |
+-			 PCIE_PE_RSTB);
+-		writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
+-	}
++	err = mtk_pcie_devices_power_up(pcie);
++	if (err)
++		return err;
+ 
+ 	/* Check if the link is up or not */
+ 	err = readl_poll_timeout(pcie->base + PCIE_LINK_STATUS_REG, val,
+@@ -1270,7 +1294,6 @@ static int mtk_pcie_suspend_noirq(struct device *dev)
+ {
+ 	struct mtk_gen3_pcie *pcie = dev_get_drvdata(dev);
+ 	int err;
+-	u32 val;
+ 
+ 	/* Trigger link to L2 state */
+ 	err = mtk_pcie_turn_off_link(pcie);
+@@ -1279,13 +1302,7 @@ static int mtk_pcie_suspend_noirq(struct device *dev)
+ 		return err;
+ 	}
+ 
+-	if (!(pcie->soc->flags & SKIP_PCIE_RSTB)) {
+-		/* Assert the PERST# pin */
+-		val = readl_relaxed(pcie->base + PCIE_RST_CTRL_REG);
+-		val |= PCIE_PE_RSTB;
+-		writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
+-	}
+-
++	mtk_pcie_devices_power_down(pcie);
+ 	dev_dbg(pcie->dev, "entered L2 states successfully");
+ 
+ 	mtk_pcie_irq_save(pcie);
 -- 
 2.53.0.983.g0bb29b3bc5-goog
 
