@@ -1,203 +1,179 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0505C3D34B9;
-	Tue, 24 Mar 2026 08:11:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB4CF314A83;
+	Tue, 24 Mar 2026 08:23:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774339866; cv=none; b=ozFMUvAL7bc2lD89rTA97KmcYvMiJMh/2kwGUal0OHiHU4sjXmqoWzg0NntRzidwtb5h+dKjXvgPOnzBMRkml6C1S2VTdKHC1t+XnpGKoWMmqv1KetzwqGcFiYiFL22hW4X7au2jDzNQBk0/pkb1iJhyl8UxrNYwPKhflxDTYSs=
+	t=1774340626; cv=none; b=cxEhz9YFpyc/vnFgT/fqmkzHdVA0J3bIzv95WoIQYtEtCBYZ6dSpqGRkS9rTdHmmbOYNPlZTHYEYEwWWv1Vst0V9phuO0ISAfR8xv92CMJC+bXbBNUND5yezt+MXpDDJbmyv2n1cKx2BMOwlIMCeNO4XBSnP8mgW6eUFVOHxiQk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774339866; c=relaxed/simple;
-	bh=4wYp2kvlTe7W4BVFdfA1zitcIB2NluJJLog6Tzdvkkk=;
+	s=arc-20240116; t=1774340626; c=relaxed/simple;
+	bh=YW1oumcShmJdUX2bVPw92WTp71r+w0EzqGKv/olyY1o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qq05z2uIe/Zugis3gdsGLjue2+Ul6RXnX2p7hvRbl02ow7LBfz5N69CAYgWb10B0bKWD9gDd1HuIyNhIHUPyzs47oEA7h6mvNPcmaoxa6HvzRkqOIG+vvLptHfEnLOBBmHoRUqmrC1BO8y4anZp9s1AraJky3ck5fYRwhla3cC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PZae4Bgf; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=YqvjX4uTCXpXg7yi1qNHk1D2vzcR4GQl7KN8+61nodQHyYdjTsvWyFFS1rye+vFxwOTEQCKXqP7kYTIAdlhnPm75hLmFByjJeImuWtGs/otKBqSOs2k8QgwvhxbcHSEgZjmSARnWrluJV0NwSUV2CTMZgzfI24jjYxbVu2tSB0g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=f98KC4CZ; arc=none smtp.client-ip=198.175.65.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PZae4Bgf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EF32C19424;
-	Tue, 24 Mar 2026 08:10:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774339865;
-	bh=4wYp2kvlTe7W4BVFdfA1zitcIB2NluJJLog6Tzdvkkk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PZae4BgfB4ekHL2AdGZahorV88dAVhJoMjOdIDN4kGnh2AtSx37oCw9mNW5drc5W3
-	 c5q8LipX2Wz/tPgcRJMLQ+c4fPeH2lWjIYh1d5rQxCmhgY30uJSkcalPtwMAVmPHS8
-	 4dg69Erqr1Q7OuSdpX39UeWojv7k3pNUSov7CZc1xmHknqXdZsJjeqaztUVQKJNQBj
-	 NyZYH58Zi5CfB2ejLmjdSH9I1JlGZv5aSYdp/uZ0FOYG8D7Xem52+fCYwDGBWhl0qv
-	 okDIDYpdEGrl9AvXte3SFyHxkfBXcyugJb05Y9dtw/mWicZcXuwzvH71570LBnllqJ
-	 Tpr+r8ov6Ho3A==
-Date: Tue, 24 Mar 2026 13:40:50 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
-	bhelgaas@google.com, frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org, 
-	kwilczynski@kernel.org, s.hauer@pengutronix.de, kernel@pengutronix.de, 
-	festevam@gmail.com, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	devicetree@vger.kernel.org, imx@lists.linux.dev, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v8 5/5] arm64: dts: imx943-evk: Add pcie[0,1] and
- pcie-ep[0,1] support
-Message-ID: <jd6n4ibrf734npaieshkvoejtreplkmkyc34qsr6rkdfpydkou@mjzdo6ygo2dy>
-References: <20260324023036.784466-1-hongxing.zhu@nxp.com>
- <20260324023036.784466-6-hongxing.zhu@nxp.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="f98KC4CZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1774340621; x=1805876621;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=YW1oumcShmJdUX2bVPw92WTp71r+w0EzqGKv/olyY1o=;
+  b=f98KC4CZaeyfxG72WM3q5bNculu5cr2oPVcqctGYfy2+RGPWoAJjKuYc
+   bapjY04kxd1XNghpd73P4tJGwnjvTyBa7EXb8I/E/VNTZeHB8q0Le1mCR
+   vFEo9ZsVTVfbQ86sy0+AQW+zVIwq/tsOk7WpwgLJCfdrMw1lCADbmX68F
+   dYkUDBj81E2egEg9Reg26QNnwUHva3MZyWG/TGhatvnZCaEj6qKrIZe2i
+   gyMqLM0aojP2Lh2xc3VtZh/Wjt8zL17aAx6GYZFz1alL3/RvgAiIKfuVj
+   j1ax8dwqkU1YqTcQtlH7SeKUY7UhmNFvA8t/0MQvYLMbczeFTTDLjgabZ
+   A==;
+X-CSE-ConnectionGUID: lhTINTyIQBGAVB3YCA1CPQ==
+X-CSE-MsgGUID: jCWPLS3ZSX2hrWhRxHKgVw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11738"; a="75321931"
+X-IronPort-AV: E=Sophos;i="6.23,138,1770624000"; 
+   d="scan'208";a="75321931"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2026 01:23:39 -0700
+X-CSE-ConnectionGUID: la5BPmR+SsCZF91N9qYV7w==
+X-CSE-MsgGUID: quziYg/kR1KJj/tuViZhjA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,138,1770624000"; 
+   d="scan'208";a="223500798"
+Received: from lkp-server01.sh.intel.com (HELO 3905d212be1b) ([10.239.97.150])
+  by orviesa010.jf.intel.com with ESMTP; 24 Mar 2026 01:23:35 -0700
+Received: from kbuild by 3905d212be1b with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1w4x2y-000000004DX-3E8K;
+	Tue, 24 Mar 2026 08:23:32 +0000
+Date: Tue, 24 Mar 2026 16:22:36 +0800
+From: kernel test robot <lkp@intel.com>
+To: Thierry Reding <thierry.reding@kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	Jon Hunter <jonathanh@nvidia.com>,
+	Mikko Perttunen <mperttunen@nvidia.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v2 4/5] PCI: tegra: Add Tegra264 support
+Message-ID: <202603241635.M39jGMQX-lkp@intel.com>
+References: <20260320225443.2571920-5-thierry.reding@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260324023036.784466-6-hongxing.zhu@nxp.com>
+In-Reply-To: <20260320225443.2571920-5-thierry.reding@kernel.org>
 
-On Tue, Mar 24, 2026 at 10:30:36AM +0800, Richard Zhu wrote:
-> Add pcie[0,1] and pcie-ep[0,1] support.
-> 
-> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-> ---
->  arch/arm64/boot/dts/freescale/Makefile       |  4 +
->  arch/arm64/boot/dts/freescale/imx943-evk.dts | 83 ++++++++++++++++++++
->  2 files changed, 87 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/freescale/Makefile b/arch/arm64/boot/dts/freescale/Makefile
-> index bae24b53bce6..1366e25a9efd 100644
-> --- a/arch/arm64/boot/dts/freescale/Makefile
-> +++ b/arch/arm64/boot/dts/freescale/Makefile
-> @@ -465,6 +465,10 @@ dtb-$(CONFIG_ARCH_MXC) += imx95-19x19-evk-sof.dtb
->  dtb-$(CONFIG_ARCH_MXC) += imx95-toradex-smarc-dev.dtb
->  dtb-$(CONFIG_ARCH_MXC) += imx95-tqma9596sa-mb-smarc-2.dtb
->  
-> +imx943-evk-pcie0-ep-dtbs += imx943-evk.dtb imx-pcie0-ep.dtbo
-> +imx943-evk-pcie1-ep-dtbs += imx943-evk.dtb imx-pcie1-ep.dtbo
-> +dtb-$(CONFIG_ARCH_MXC) += imx943-evk-pcie0-ep.dtb imx943-evk-pcie1-ep.dtb
-> +
->  imx95-15x15-evk-pcie0-ep-dtbs = imx95-15x15-evk.dtb imx-pcie0-ep.dtbo
->  dtb-$(CONFIG_ARCH_MXC) += imx95-15x15-evk-pcie0-ep.dtb
->  imx95-19x19-evk-pcie0-ep-dtbs += imx95-19x19-evk.dtb imx-pcie0-ep.dtbo
-> diff --git a/arch/arm64/boot/dts/freescale/imx943-evk.dts b/arch/arm64/boot/dts/freescale/imx943-evk.dts
-> index 1d834379f602..ea0100b37d5c 100644
-> --- a/arch/arm64/boot/dts/freescale/imx943-evk.dts
-> +++ b/arch/arm64/boot/dts/freescale/imx943-evk.dts
-> @@ -51,6 +51,20 @@ chosen {
->  		stdout-path = &lpuart1;
->  	};
->  
-> +	pcie_ref_clk: clock-pcie-ref {
-> +		compatible = "gpio-gate-clock";
-> +		clocks = <&xtal25m>;
-> +		#clock-cells = <0>;
-> +		enable-gpios = <&pca9670_i2c3 7 GPIO_ACTIVE_LOW>;
-> +	};
-> +
-> +	xtal25m: clock-xtal25m {
-> +		compatible = "fixed-clock";
-> +		#clock-cells = <0>;
-> +		clock-frequency = <25000000>;
-> +		clock-output-names = "xtal_25MHz";
-> +	};
-> +
->  	dmic: dmic {
->  		compatible = "dmic-codec";
->  		#sound-dai-cells = <0>;
-> @@ -72,6 +86,15 @@ reg_m2_pwr: regulator-m2-pwr {
->  		startup-delay-us = <5000>;
->  	};
->  
-> +	reg_slot_pwr: regulator-slot-pwr {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "PCIe slot-power";
-> +		regulator-min-microvolt = <3300000>;
-> +		regulator-max-microvolt = <3300000>;
-> +		gpio = <&pcal6416_i2c3_u46 0 GPIO_ACTIVE_HIGH>;
-> +		enable-active-high;
-> +	};
-> +
->  	reg_m2_wlan: regulator-wlan {
->  		compatible = "regulator-fixed";
->  		regulator-name = "WLAN_EN";
-> @@ -704,6 +727,18 @@ IMX94_PAD_GPIO_IO28__LPI2C6_SCL		0x40000b9e
->  		>;
->  	};
->  
-> +	pinctrl_pcie0: pcie0grp {
-> +		fsl,pins = <
-> +			IMX94_PAD_GPIO_IO20__PCIE1_CLKREQ_B	0x4000031e
-> +		>;
-> +	};
-> +
-> +	pinctrl_pcie1: pcie1grp {
-> +		fsl,pins = <
-> +			IMX94_PAD_GPIO_IO23__PCIE2_CLKREQ_B	0x4000031e
-> +		>;
-> +	};
-> +
->  	pinctrl_pdm: pdmgrp {
->  		fsl,pins = <
->  			IMX94_PAD_PDM_CLK__PDM_CLK			0x31e
-> @@ -878,6 +913,54 @@ IMX94_PAD_XSPI1_DQS__XSPI1_A_DQS	0x3fe
->  	};
->  };
->  
-> +&pcie0 {
-> +	pinctrl-0 = <&pinctrl_pcie0>;
-> +	pinctrl-names = "default";
-> +	clocks = <&scmi_clk IMX94_CLK_HSIO>,
-> +		 <&scmi_clk IMX94_CLK_HSIOPLL>,
-> +		 <&scmi_clk IMX94_CLK_HSIOPLL_VCO>,
-> +		 <&scmi_clk IMX94_CLK_HSIOPCIEAUX>,
-> +		 <&hsio_blk_ctl 0>,
-> +		 <&pcie_ref_clk>;
-> +	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux",
-> +		      "ref", "extref";
-> +	reset-gpio = <&pcal6416_i2c3_u46 3 GPIO_ACTIVE_LOW>;
-> +	vpcie3v3aux-supply = <&reg_m2_wlan>;
-> +	supports-clkreq;
-> +	status = "okay";
-> +};
-> +
-> +&pcie0_ep {
-> +	pinctrl-0 = <&pinctrl_pcie0>;
-> +	pinctrl-names = "default";
-> +	vpcie-supply = <&reg_m2_wlan>;
-> +	status = "disabled";
-> +};
-> +
-> +&pcie1 {
-> +	pinctrl-0 = <&pinctrl_pcie1>;
-> +	pinctrl-names = "default";
-> +	clocks = <&scmi_clk IMX94_CLK_HSIO>,
-> +		 <&scmi_clk IMX94_CLK_HSIOPLL>,
-> +		 <&scmi_clk IMX94_CLK_HSIOPLL_VCO>,
-> +		 <&scmi_clk IMX94_CLK_HSIOPCIEAUX>,
-> +		 <&hsio_blk_ctl 0>,
-> +		 <&pcie_ref_clk>;
-> +	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux",
-> +		      "ref", "extref";
-> +	reset-gpio = <&pcal6416_i2c3_u46 1 GPIO_ACTIVE_LOW>;
-> +	vpcie3v3aux-supply = <&reg_slot_pwr>;
+Hi Thierry,
 
-I'd strongly recommend you to switch to Root Port binding and make use of
-PWRCTRL_GENERIC driver to handle this supply. But this can be done later.
+kernel test robot noticed the following build errors:
 
-- Mani
+[auto build test ERROR on tegra/for-next]
+[also build test ERROR on next-20260323]
+[cannot apply to pci/next pci/for-linus drm-tegra/drm/tegra/for-next linus/master v7.0-rc5]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-> +	supports-clkreq;
-> +	status = "okay";
-> +};
-> +
-> +&pcie1_ep {
-> +	pinctrl-0 = <&pinctrl_pcie1>;
-> +	pinctrl-names = "default";
-> +	vpcie-supply = <&reg_slot_pwr>;
-> +	status = "disabled";
-> +};
-> +
->  &usb2 {
->  	dr_mode = "otg";
->  	disable-over-current;
-> -- 
-> 2.37.1
-> 
+url:    https://github.com/intel-lab-lkp/linux/commits/Thierry-Reding/soc-tegra-Update-BPMP-ABI-header/20260323-093336
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git for-next
+patch link:    https://lore.kernel.org/r/20260320225443.2571920-5-thierry.reding%40kernel.org
+patch subject: [PATCH v2 4/5] PCI: tegra: Add Tegra264 support
+config: riscv-allyesconfig (https://download.01.org/0day-ci/archive/20260324/202603241635.M39jGMQX-lkp@intel.com/config)
+compiler: clang version 16.0.6 (https://github.com/llvm/llvm-project 7cbf1a2591520c2491aa35339f227775f4d3adf6)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260324/202603241635.M39jGMQX-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202603241635.M39jGMQX-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> drivers/pci/controller/pcie-tegra264.c:302:16: error: use of undeclared identifier 'PCIE_LINK_WAIT_US_MIN'
+                   usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
+                                ^
+>> drivers/pci/controller/pcie-tegra264.c:302:39: error: use of undeclared identifier 'PCIE_LINK_WAIT_US_MAX'
+                   usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
+                                                       ^
+   drivers/pci/controller/pcie-tegra264.c:392:16: error: call to undeclared function 'tegra_bpmp_get_with_id'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+                   pcie->bpmp = tegra_bpmp_get_with_id(dev, &pcie->ctl_id);
+                                ^
+   drivers/pci/controller/pcie-tegra264.c:392:14: error: incompatible integer to pointer conversion assigning to 'struct tegra_bpmp *' from 'int' [-Wint-conversion]
+                   pcie->bpmp = tegra_bpmp_get_with_id(dev, &pcie->ctl_id);
+                              ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   4 errors generated.
+
+
+vim +/PCIE_LINK_WAIT_US_MIN +302 drivers/pci/controller/pcie-tegra264.c
+
+   278	
+   279	static void tegra264_pcie_init(struct tegra264_pcie *pcie)
+   280	{
+   281		enum pci_bus_speed speed;
+   282		unsigned int i;
+   283		u32 value;
+   284	
+   285		/* bring the link out of reset */
+   286		value = readl(pcie->xtl + XTL_RC_MGMT_PERST_CONTROL);
+   287		value |= XTL_RC_MGMT_PERST_CONTROL_PERST_O_N;
+   288		writel(value, pcie->xtl + XTL_RC_MGMT_PERST_CONTROL);
+   289	
+   290		if (!tegra_is_silicon()) {
+   291			dev_info(pcie->dev,
+   292				 "skipping link state for PCIe #%u in simulation\n",
+   293				 pcie->ctl_id);
+   294			pcie->link_up = true;
+   295			return;
+   296		}
+   297	
+   298		for (i = 0; i < PCIE_LINK_WAIT_MAX_RETRIES; i++) {
+   299			if (tegra264_pcie_link_up(pcie, NULL))
+   300				break;
+   301	
+ > 302			usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
+   303		}
+   304	
+   305		if (tegra264_pcie_link_up(pcie, &speed)) {
+   306			/* Per PCIe r5.0, 6.6.1 wait for 100ms after DLL up */
+   307			msleep(PCIE_RESET_CONFIG_WAIT_MS);
+   308	
+   309			dev_info(pcie->dev, "PCIe #%u link is up (speed: %s)\n",
+   310				 pcie->ctl_id, pci_speed_string(speed));
+   311			tegra264_pcie_icc_set(pcie);
+   312			pcie->link_up = true;
+   313		} else {
+   314			dev_info(pcie->dev, "PCIe #%u link is down\n", pcie->ctl_id);
+   315	
+   316			value = readl(pcie->xtl + XTL_RC_MGMT_CLOCK_CONTROL);
+   317	
+   318			/*
+   319			 * Set link state only when link fails and no hot-plug feature
+   320			 * is present.
+   321			 */
+   322			if ((value & XTL_RC_MGMT_CLOCK_CONTROL_PEX_CLKREQ_I_N_PIN_USE_CONV_TO_PRSNT) == 0) {
+   323				dev_info(pcie->dev,
+   324					 "PCIe #%u link is down and not hotplug-capable, turning off\n",
+   325					 pcie->ctl_id);
+   326				tegra264_pcie_bpmp_set_rp_state(pcie);
+   327				pcie->link_up = false;
+   328			} else {
+   329				pcie->link_up = true;
+   330			}
+   331		}
+   332	}
+   333	
 
 -- 
-மணிவண்ணன் சதாசிவம்
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
