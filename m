@@ -1,28 +1,28 @@
-Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013042.outbound.protection.outlook.com [40.93.201.42])
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011069.outbound.protection.outlook.com [52.101.52.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 949F9376465;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5468377ECA;
 	Tue, 24 Mar 2026 01:30:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.42
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.69
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774315841; cv=fail; b=dWghltaX4DXLBjIiALZrRkpZQDV6b2ThHgT+e5Gw+6UD/qmnoDb9W2Nh+LfzysQEaQQ4OGPgdsnWAoFc1ajvUZK6DHta5yFwAbY8q4i9awcC8l8270Uqy951WQq0eIlwqCpTkPER6oplo5vkPz8Yd9rpaRB4MNRRNWEQoIsEnhg=
+	t=1774315841; cv=fail; b=lSdxGHHwvZbiJrfEyT4A+YOhFr/lyq44+fIm946kG0pITKdfNucm2TTTg2FMdiyGTlXrPae3CnMiPdhfrFC8fV0mxc3EWPzxXgsGCchUp9Ft1iEgo7mtmK43PL7Ll9Y2GiGUo1L39IlfAUcadeuvJ+Gg8vHxFf715+4IdvC4jNs=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1774315841; c=relaxed/simple;
-	bh=p8wg8+aDEwTUPuia4htwnUVxE8GYBXeQ02CLMeq2fSk=;
+	bh=g9WXL7KFuRY2fA7MBv/iFR0IxFLNazRBX+5YYpvAiKo=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=riU0J6VkOuSLp+FPh9vWXBJmUdHw9sCzSbmLXgPIN7n6SJFo5VGBquxqvPZ9Q7jz1WyGFGBKtDioDXgr/rCjwLwoe2O94GHDyEnK4YuAThk0L4wNmUD2GCjrCfDSHDzjunb6Mp3O6elHICWnSfc45lk91iAyhPrj0XSwdx/yG6c=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=EeMXWEJz; arc=fail smtp.client-ip=40.93.201.42
+	 MIME-Version:Content-Type; b=fCjKHdgipem1xqBid/4zFE4utsBs2ep/3DMUkTT3BpwPI3nPsJE5cERXscCCMZUoIZ9VTLXtqwDpAJzrrMidpmSYLyTUxXg7g6xpo1NvHAsY0Ksm3vjsY4z2lZcPbf/Ggh1XUJJFC3lCF7xUoJsI7bFUaxTscRzGIAHUdNAvOQw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=DUs5LoWD; arc=fail smtp.client-ip=52.101.52.69
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="EeMXWEJz"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="DUs5LoWD"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=dasLjEGm6Qm7eqhwc9jRbb6DeLxMLDprp8hYLn86GON70RlQhAv9bhvLEb27JyWL4bTjjckrQm5ewYkQQOB/PkZOYkgarGgZpxM7e53hmF3ITUIA/dFs17apoGd5U7JxQNpo5w2rukDoUEXELZVY6ZR21vb2ymd3b4S+Pj6LSESD9vDN3WeKisliI5AKTRvP0AEYps4TYy+W5SHtyocIq7fa8QAu21/td3Bo+OmXTpDNSD7Ibu7EezRgCsMVGwQeYv5tv19kLpr9BffIOwmwk7r6DNAdAESdZ2BOLrzEhnIFtcTCWBFyanTzS8uVrX3Hp53iWgwFKRrsywiOtuXCPA==
+ b=c3GjdgyzWcz37vMKr25nh4kUn6IarnCR77YlSn6nMHn0BgOoLNlneiYFjmQXvf7sojxu5oYzoKpSKg0D6/e/Xg1ZufWd51lvWgyGmQqql0/tsqe8e2MpRG/KlzaWFP6knBrd29XLi55+Mpd8srhVf9aHxlpTVmbpMPhLCiamJn1/saSRh4zI5FfNLuOEYlQ2kyO41J1pe1O3RF9LNYTrdGpYJtyyonueSaS3kjmJkVXM+3WUcxqNlJxhqwPY7Uiywm3GlHxK6BnywjCRzSkqH/fw1OXjp4Q6SOIeGAiHWXbKOzzcH0VmNrMNA+Q31txFlUFYIkSEoyAeGct0hb1tKA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=W2XY9ToOTJj5LX1UxUtEFcXJ54zADajt4NNMRmgp058=;
- b=QE1hHK1ZS5PiNTLZefXreMIAl56kVQhDkSpXgcsV0KT2WtCHIpYNPzouiCGaNxehZ5Qva8+Dez3AljGOCWjznJ0mjrvKx2zIE1KbyDpBpJXZEgrAfmVsYnhtSr0mpJblap/EbgnUkeffg9kz11HY+OEuY+pG08SgtVoI0BHinthJPjT3I8rGzQXLTgoIcsO+x3Z0mS5r22AWDuMNZtUAgGIoIlFvH0iK2BGmM4pbZeXaVGyQNn7+IATSKGRVy0GRKSEadsPKALLHBhyGt2wON8dI9nRnzWqCn0aABPU4U5HVt+e9VQa2YtEnQ9emxPP+ZD+q3lC3mXGZlFHlfxJ3rA==
+ bh=vuQLh5pLubrPMi5AySEr+GMTXrsEcUFRpizADzRdajI=;
+ b=mzaLRT5TdcwaKDql9+kew4XXtyPjGNlv7yIlKdxtED28MbpdRKeOz7z37b/sb5n+pxeLKilgslJzDKyq6OHH7sob3rboxEXNbyZPqknal1a2coCa6VCc9KSiZO0B7sksI1hHscZYu34b+JPhZL2MIXahYU798mQ3Hnm8eT5U/ziRoYngUoXA1WFm6BhRGCSLaAiVFybbFcsh8PsiIMUOztAT2W6Wy/RYlot0bX+eiOA2WtdHVizGY6Jo3pA/isl8Jl60wpjZZw7z97qdf6sMQC6qLvTH4708n4iW+vsDimorNaKKA7N/A+1Q/C/BHVdCzm9GGj2YmB0sGt85stZD8Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.118.232) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -30,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=W2XY9ToOTJj5LX1UxUtEFcXJ54zADajt4NNMRmgp058=;
- b=EeMXWEJzQ0pGj0O1MfoPJq+xeyIdGtufMYySKpc608vLbypUirqz7VkDI7qroatiKd/w3R2+B3fhdWd7rvhV8dr7RN8BCPWi9qnQcCnZtdGjhz6ZC4ViU4gyvyDTWoA3PigjxuhfHpk5OXfofybT3KMNzQgR2yMn18K7m4sqyl1pmIApa2lFbHVFRnw1Rw2HXyR0IZlKI/FnKAEF78jCxmMDXt0VughptQ+/PN3Z+XpY++dgfyTICepngKiD0nKIBTX0Ot4jizDw3MvwcQLmkhdUnIJ7EQFeMq3Jfjb3/VrMcDmSxRwgJHjejWb4ru+Drt08RTcafYAhfCi/niN1WQ==
-Received: from MN2PR08CA0016.namprd08.prod.outlook.com (2603:10b6:208:239::21)
- by LV2PR12MB5727.namprd12.prod.outlook.com (2603:10b6:408:17d::7) with
+ bh=vuQLh5pLubrPMi5AySEr+GMTXrsEcUFRpizADzRdajI=;
+ b=DUs5LoWDHCgJRXk/lmGzqpSDjrtRTjCODch7HZ70IEynn6IC69+5pTmxbE89a2E3at3YTl/OtRqlYW8ddubWWqT9Hhw/Rl+esPJtgEZu3Cq4UCUydS2SGxDz4R7jMPC4qx3uopFOEIx3kMbWKpLaVz357RHUNfWM7nKl+JimvEEUj49zeVF82xMz0tMbkZXf4vT7SRnkuZNRTaIWJetYv8wDJKs7xpLJtt4IkO+d60wDzrScIUV81VDtGCL1FEwPI6mDEWe6bpZ9FmUfCx8ayi2SFN7HwyhGQ+bjxrSbKUwuX9QZyTRbmBwcFqTxGFteQht9vSi2mxxPadElmq8IDA==
+Received: from IA1P220CA0015.NAMP220.PROD.OUTLOOK.COM (2603:10b6:208:464::15)
+ by SJ0PR12MB6805.namprd12.prod.outlook.com (2603:10b6:a03:44f::5) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.20; Tue, 24 Mar
- 2026 01:30:34 +0000
-Received: from MN1PEPF0000F0DF.namprd04.prod.outlook.com
- (2603:10b6:208:239:cafe::8a) by MN2PR08CA0016.outlook.office365.com
- (2603:10b6:208:239::21) with Microsoft SMTP Server (version=TLS1_3,
+ 2026 01:30:31 +0000
+Received: from MN1PEPF0000F0E3.namprd04.prod.outlook.com
+ (2603:10b6:208:464:cafe::87) by IA1P220CA0015.outlook.office365.com
+ (2603:10b6:208:464::15) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.20.9723.31 via Frontend Transport; Tue,
- 24 Mar 2026 01:30:32 +0000
+ 24 Mar 2026 01:30:36 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -49,20 +49,20 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.118.232 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.118.232) by
- MN1PEPF0000F0DF.mail.protection.outlook.com (10.167.242.37) with Microsoft
+ MN1PEPF0000F0E3.mail.protection.outlook.com (10.167.242.41) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9723.19 via Frontend Transport; Tue, 24 Mar 2026 01:30:34 +0000
+ 15.20.9723.19 via Frontend Transport; Tue, 24 Mar 2026 01:30:30 +0000
 Received: from drhqmail201.nvidia.com (10.126.190.180) by mail.nvidia.com
  (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 23 Mar
- 2026 18:30:14 -0700
+ 2026 18:30:11 -0700
 Received: from drhqmail201.nvidia.com (10.126.190.180) by
  drhqmail201.nvidia.com (10.126.190.180) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Mon, 23 Mar 2026 18:30:13 -0700
+ 15.2.2562.20; Mon, 23 Mar 2026 18:30:11 -0700
 Received: from build-bwicaksono-noble-20251018.internal (10.127.8.11) by
  mail.nvidia.com (10.126.190.180) with Microsoft SMTP Server id 15.2.2562.20
- via Frontend Transport; Mon, 23 Mar 2026 18:30:13 -0700
+ via Frontend Transport; Mon, 23 Mar 2026 18:30:10 -0700
 From: Besar Wicaksono <bwicaksono@nvidia.com>
 To: <will@kernel.org>, <suzuki.poulose@arm.com>, <robin.murphy@arm.com>,
 	<ilkka@os.amperecomputing.com>, <jonathan.cameron@huawei.com>
@@ -73,9 +73,9 @@ CC: <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
 	<nirmoyd@nvidia.com>, <bhelgaas@google.com>, <wangyushan12@huawei.com>,
 	<shiju.jose@huawei.com>, <linux-pci@vger.kernel.org>, Besar Wicaksono
 	<bwicaksono@nvidia.com>
-Subject: [PATCH v3 3/8] perf/arm_cspmu: Add arm_cspmu_acpi_dev_get
-Date: Tue, 24 Mar 2026 01:29:47 +0000
-Message-ID: <20260324012952.1923296-4-bwicaksono@nvidia.com>
+Subject: [PATCH v3 2/8] perf/arm_cspmu: nvidia: Add Tegra410 UCF PMU
+Date: Tue, 24 Mar 2026 01:29:46 +0000
+Message-ID: <20260324012952.1923296-3-bwicaksono@nvidia.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260324012952.1923296-1-bwicaksono@nvidia.com>
 References: <20260324012952.1923296-1-bwicaksono@nvidia.com>
@@ -90,118 +90,301 @@ Content-Type: text/plain
 X-NV-OnPremToCloud: ExternallySecured
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MN1PEPF0000F0DF:EE_|LV2PR12MB5727:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0534c25f-8970-490b-c34f-08de8944f1fe
+X-MS-TrafficTypeDiagnostic: MN1PEPF0000F0E3:EE_|SJ0PR12MB6805:EE_
+X-MS-Office365-Filtering-Correlation-Id: 302dd1ff-b013-4aae-44dc-08de8944f00b
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|1800799024|36860700016|7416014|376014|18002099003|56012099003|22082099003;
+	BCL:0;ARA:13230040|82310400026|376014|7416014|36860700016|1800799024|22082099003|56012099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	rx61I6tcGhAknLbLOs5AvikZZb9dEzca6wdEnp55whl3ZfkQu9EZPo9aUNmy0FG4KzJ1Ljmc+6B+mh3FwVb7V1nqG7XW62MxWyiL+jABhW+K34Ode3I8cfF/HJzTMYUrDMPxTRMJCqR5Tp6in8ODXDaC8pw1y1BYU3ZaYBmeylIRpxsiT1z1hdV7VtFoDCmO23arj7cjXn3FMQSJoj//rDz/lZhm1tsf3sCMdBGVbD+3xX0db+PF3SAC14hx6+IBwNW/fLZFttzRfEG4SQeM0LJ56tl3jYa8qLXJUQMqbbHc5B0RSBzUgrU7Ht4/o+wO1qZFSbCP++CXXZiMU2hjXG1ogk2P2NgyACA7JnkcXejwKaEm/wc2CZAaHB7rMM6TLKGygAUQWsqJjM9OXgKFbESDj2EY8HrBmJfs1DpiipddEmlEoxBnROqmU6oLeRrNwrWhKYGeakvOF2aMXiZ+F6hs9GjCNwp3r4ZZpYOiKsu2V9jWhbkLS8LQYuLiyHMpppyfNyA3R5x3nmU1xF1EOpjdIBpIDiC9phSCCYmPkfYJgILhsh0/4lZkQN1Q9BNduUQhnINaAbzJgHJ5haJutDuNqlQCSYfH9rsCD89pT72/u6IbvtpsD6L33XGugxHdVbC+W5rvObs5qlPN3uYg2Q6lCdcieHSQggAt1XUVr9kbTxqkFvjB4CgzlrRIs0pTs5qd0a6pfDfZHJBo6aPofNJ7WRrizx4nQkOYSWznVyoiXe/pO68O1liXpvo38tvZEp2mtt/Ew2XklGOlpsDMfg==
+	rvVaXht5PG0wlu3vuZ0QfICmYFwCwHeGyrP2WxXRM0L82xQX16KTWfG/FbCkUdO8ra/kT1auAjXjWwj1UhS98gTbe5N1RvCKak1XyfM99AhpLKD3UkZfwDH5XXznCTtVZ9jlAiG2cCwIEZ2vDflewnRRSXsWdVnP7Cqp/18gMR32+5u+cQJKVwK7DObkslQ9w2F4ckSMgaPGbpu6hw6qb0KPp4xneo6E4e1UJAv3/6zQ5P4FKrgIwyX9s7mLnhtwl+ZFHITJOCrsn0fdZ1g2Aqo9fcmyQMpIIK1hZvg3U68xaK1eXUs9E/DFdIVV9giT1ZPXzGSETSf1GCVY23tQHxPwqeOWC7bbvrZy7RTa6QHNOYjw86aSSvUVrdbLg1KtXAH7LyJw9exVnwXv+O1xh2WZ/L2X8u2DeDC0nTvO/HyM91oqkJo2f8MD64rU5O7+X0BlvRH/M2A5IZEgYwnsagaKWNNoOFPtmiWjXCYKfOQv+PUtVO/UGsGLxtbm6M7nGBsYDomVebh4Q2O0OPK4X765zWlVWQLmVWfpHoVF5NT2hvXSNBDvHUj2ERNE6XexNtmPjrLWdgaVo/6HHryObnFNfPYPkZmrmxjD+QPeyNp3235sXgpcGcxljqWSvBf8pyzyM0TRTNzcwM4QJmFen3XKQTfi4q+30V8Fs4bkAqUO5kx1DAq9cGOw8KNhQC3VcksdZhjWvzBIG84vC4ABA65ZmIPdba9bMvx3XJJby4C/xsMp74wXmFvLmeETmZ09v3QW8I0S1zF3EcFrnFOULQ==
 X-Forefront-Antispam-Report:
-	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(36860700016)(7416014)(376014)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(376014)(7416014)(36860700016)(1800799024)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	+1nsKLobXbu3i2gIic5Olo75J0/UIgG48f26FdRI1JfwwBwaQXFJ1I3d/G2W4yz/g3PY6gak4CT6jAlOTQAXK5tS6NPK26fkmgiEJjiRnfzUGYUsYK8a4dx48WcJmkvtmIVcLx/WVSJIb7rCei3Bx4HKYw3dQyUPOkav/7A3jbEbceAMWZ8hwwXxRJigbq44qyhSMYeMYovKWNgwzZHMb9cOhN2mjzCYRXhCAM/Uc+iZDqynxXv6PTAXp6HsY6Lf9n+l9WO8FryvYAFL1c1qyiaidy0ynFG7FWcAKJMKd8p6h0NtY+gwOCWYKXZt6Hwibktzof8vW8WHrlNENF+VwfuVVq2zPUAIVzxMG5HePrg7j7uLdHAD6hNmzov6kaEyhvZrnBZAvK35WdmkuWaBIqxz6Q3cGvFxoZHrvqfXjmSz3t3iiDRHFfgWpLDX1tUg
+	Xq2LJpxjI/OfD0tVRs5NrnQe2z0mVFRa1zZXVjdrrASWj5c0i6VedH0xm773Idluimds2y6/AFxijs5PWyxO0My4h/2vnlqx0tMASd8qPKTdCSNJcLEKuQtHx24Vb089jc8AO0XJfVOw75SCLyFAN43GhaigoH8yayJvwDG0tj6RNVwmbbZrEVYA1C9vksLOHI8WyxYDaj1YBzkkFU1XSjBnBZwMaPTFxATyJ74N1n3LRJGS+HyNda5nM/wK6LUgMahjoNdYM0Ewl5ZM+GuOlIHmq0P8Rs8sreufMwyh+Q1EFAzr8up2wXaL6lEXhQQKBUQfSb5jjkvYN7YOmMWF4YZnpucCcD2mK+H0R3beqO1+o9nyAHypXarxooHy43zhGm7njzDcNKlt3dNcm23nkda5/NpwT3wElLlVtGMk/fwVIsT46rdPezGmTVkOYUnU
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Mar 2026 01:30:34.1984
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Mar 2026 01:30:30.9294
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0534c25f-8970-490b-c34f-08de8944f1fe
+X-MS-Exchange-CrossTenant-Network-Message-Id: 302dd1ff-b013-4aae-44dc-08de8944f00b
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	MN1PEPF0000F0DF.namprd04.prod.outlook.com
+	MN1PEPF0000F0E3.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV2PR12MB5727
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR12MB6805
 
-Add interface to get ACPI device associated with the
-PMU. This ACPI device may contain additional properties
-not covered by the standard properties.
+The Unified Coherence Fabric (UCF) contains last level cache
+and cache coherent interconnect in Tegra410 SOC. The PMU in
+this device can be used to capture events related to access
+to the last level cache and memory from different sources.
 
 Reviewed-by: Ilkka Koskinen <ilkka@os.amperecomputing.com>
 Signed-off-by: Besar Wicaksono <bwicaksono@nvidia.com>
 ---
- drivers/perf/arm_cspmu/arm_cspmu.c | 19 ++++++++++++++++++-
- drivers/perf/arm_cspmu/arm_cspmu.h | 17 ++++++++++++++++-
- 2 files changed, 34 insertions(+), 2 deletions(-)
+ Documentation/admin-guide/perf/index.rst      |   1 +
+ .../admin-guide/perf/nvidia-tegra410-pmu.rst  | 106 ++++++++++++++++++
+ drivers/perf/arm_cspmu/nvidia_cspmu.c         |  87 +++++++++++++-
+ 3 files changed, 193 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/admin-guide/perf/nvidia-tegra410-pmu.rst
 
-diff --git a/drivers/perf/arm_cspmu/arm_cspmu.c b/drivers/perf/arm_cspmu/arm_cspmu.c
-index 34430b68f602..49e8a1f38131 100644
---- a/drivers/perf/arm_cspmu/arm_cspmu.c
-+++ b/drivers/perf/arm_cspmu/arm_cspmu.c
-@@ -16,7 +16,7 @@
-  * The user should refer to the vendor technical documentation to get details
-  * about the supported events.
-  *
+diff --git a/Documentation/admin-guide/perf/index.rst b/Documentation/admin-guide/perf/index.rst
+index c407bb44b08e..aa12708ddb96 100644
+--- a/Documentation/admin-guide/perf/index.rst
++++ b/Documentation/admin-guide/perf/index.rst
+@@ -25,6 +25,7 @@ Performance monitor support
+    alibaba_pmu
+    dwc_pcie_pmu
+    nvidia-tegra241-pmu
++   nvidia-tegra410-pmu
+    meson-ddr-pmu
+    cxl
+    ampere_cspmu
+diff --git a/Documentation/admin-guide/perf/nvidia-tegra410-pmu.rst b/Documentation/admin-guide/perf/nvidia-tegra410-pmu.rst
+new file mode 100644
+index 000000000000..7b7ba5700ca1
+--- /dev/null
++++ b/Documentation/admin-guide/perf/nvidia-tegra410-pmu.rst
+@@ -0,0 +1,106 @@
++=====================================================================
++NVIDIA Tegra410 SoC Uncore Performance Monitoring Unit (PMU)
++=====================================================================
++
++The NVIDIA Tegra410 SoC includes various system PMUs to measure key performance
++metrics like memory bandwidth, latency, and utilization:
++
++* Unified Coherence Fabric (UCF)
++
++PMU Driver
++----------
++
++The PMU driver describes the available events and configuration of each PMU in
++sysfs. Please see the sections below to get the sysfs path of each PMU. Like
++other uncore PMU drivers, the driver provides "cpumask" sysfs attribute to show
++the CPU id used to handle the PMU event. There is also "associated_cpus"
++sysfs attribute, which contains a list of CPUs associated with the PMU instance.
++
++UCF PMU
++-------
++
++The Unified Coherence Fabric (UCF) in the NVIDIA Tegra410 SoC serves as a
++distributed cache, last level for CPU Memory and CXL Memory, and cache coherent
++interconnect that supports hardware coherence across multiple coherently caching
++agents, including:
++
++  * CPU clusters
++  * GPU
++  * PCIe Ordering Controller Unit (OCU)
++  * Other IO-coherent requesters
++
++The events and configuration options of this PMU device are described in sysfs,
++see /sys/bus/event_source/devices/nvidia_ucf_pmu_<socket-id>.
++
++Some of the events available in this PMU can be used to measure bandwidth and
++utilization:
++
++  * slc_access_rd: count the number of read requests to SLC.
++  * slc_access_wr: count the number of write requests to SLC.
++  * slc_bytes_rd: count the number of bytes transferred by slc_access_rd.
++  * slc_bytes_wr: count the number of bytes transferred by slc_access_wr.
++  * mem_access_rd: count the number of read requests to local or remote memory.
++  * mem_access_wr: count the number of write requests to local or remote memory.
++  * mem_bytes_rd: count the number of bytes transferred by mem_access_rd.
++  * mem_bytes_wr: count the number of bytes transferred by mem_access_wr.
++  * cycles: counts the UCF cycles.
++
++The average bandwidth is calculated as::
++
++   AVG_SLC_READ_BANDWIDTH_IN_GBPS = SLC_BYTES_RD / ELAPSED_TIME_IN_NS
++   AVG_SLC_WRITE_BANDWIDTH_IN_GBPS = SLC_BYTES_WR / ELAPSED_TIME_IN_NS
++   AVG_MEM_READ_BANDWIDTH_IN_GBPS = MEM_BYTES_RD / ELAPSED_TIME_IN_NS
++   AVG_MEM_WRITE_BANDWIDTH_IN_GBPS = MEM_BYTES_WR / ELAPSED_TIME_IN_NS
++
++The average request rate is calculated as::
++
++   AVG_SLC_READ_REQUEST_RATE = SLC_ACCESS_RD / CYCLES
++   AVG_SLC_WRITE_REQUEST_RATE = SLC_ACCESS_WR / CYCLES
++   AVG_MEM_READ_REQUEST_RATE = MEM_ACCESS_RD / CYCLES
++   AVG_MEM_WRITE_REQUEST_RATE = MEM_ACCESS_WR / CYCLES
++
++More details about what other events are available can be found in Tegra410 SoC
++technical reference manual.
++
++The events can be filtered based on source or destination. The source filter
++indicates the traffic initiator to the SLC, e.g local CPU, non-CPU device, or
++remote socket. The destination filter specifies the destination memory type,
++e.g. local system memory (CMEM), local GPU memory (GMEM), or remote memory. The
++local/remote classification of the destination filter is based on the home
++socket of the address, not where the data actually resides. The available
++filters are described in
++/sys/bus/event_source/devices/nvidia_ucf_pmu_<socket-id>/format/.
++
++The list of UCF PMU event filters:
++
++* Source filter:
++
++  * src_loc_cpu: if set, count events from local CPU
++  * src_loc_noncpu: if set, count events from local non-CPU device
++  * src_rem: if set, count events from CPU, GPU, PCIE devices of remote socket
++
++* Destination filter:
++
++  * dst_loc_cmem: if set, count events to local system memory (CMEM) address
++  * dst_loc_gmem: if set, count events to local GPU memory (GMEM) address
++  * dst_loc_other: if set, count events to local CXL memory address
++  * dst_rem: if set, count events to CPU, GPU, and CXL memory address of remote socket
++
++If the source is not specified, the PMU will count events from all sources. If
++the destination is not specified, the PMU will count events to all destinations.
++
++Example usage:
++
++* Count event id 0x0 in socket 0 from all sources and to all destinations::
++
++    perf stat -a -e nvidia_ucf_pmu_0/event=0x0/
++
++* Count event id 0x0 in socket 0 with source filter = local CPU and destination
++  filter = local system memory (CMEM)::
++
++    perf stat -a -e nvidia_ucf_pmu_0/event=0x0,src_loc_cpu=0x1,dst_loc_cmem=0x1/
++
++* Count event id 0x0 in socket 1 with source filter = local non-CPU device and
++  destination filter = remote memory::
++
++    perf stat -a -e nvidia_ucf_pmu_1/event=0x0,src_loc_noncpu=0x1,dst_rem=0x1/
+diff --git a/drivers/perf/arm_cspmu/nvidia_cspmu.c b/drivers/perf/arm_cspmu/nvidia_cspmu.c
+index e06a06d3407b..8e37cbe3bae9 100644
+--- a/drivers/perf/arm_cspmu/nvidia_cspmu.c
++++ b/drivers/perf/arm_cspmu/nvidia_cspmu.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0
+ /*
 - * Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 + * Copyright (c) 2022-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
   *
   */
  
-@@ -1132,6 +1132,23 @@ static int arm_cspmu_acpi_get_cpus(struct arm_cspmu *cspmu)
+@@ -21,6 +21,13 @@
+ #define NV_CNVL_PORT_COUNT           4ULL
+ #define NV_CNVL_FILTER_ID_MASK       GENMASK_ULL(NV_CNVL_PORT_COUNT - 1, 0)
  
- 	return 0;
++#define NV_UCF_SRC_COUNT             3ULL
++#define NV_UCF_DST_COUNT             4ULL
++#define NV_UCF_FILTER_ID_MASK        GENMASK_ULL(11, 0)
++#define NV_UCF_FILTER_SRC            GENMASK_ULL(2, 0)
++#define NV_UCF_FILTER_DST            GENMASK_ULL(11, 8)
++#define NV_UCF_FILTER_DEFAULT        (NV_UCF_FILTER_SRC | NV_UCF_FILTER_DST)
++
+ #define NV_GENERIC_FILTER_ID_MASK    GENMASK_ULL(31, 0)
+ 
+ #define NV_PRODID_MASK	(PMIIDR_PRODUCTID | PMIIDR_VARIANT | PMIIDR_REVISION)
+@@ -124,6 +131,36 @@ static struct attribute *mcf_pmu_event_attrs[] = {
+ 	NULL,
+ };
+ 
++static struct attribute *ucf_pmu_event_attrs[] = {
++	ARM_CSPMU_EVENT_ATTR(bus_cycles,            0x1D),
++
++	ARM_CSPMU_EVENT_ATTR(slc_allocate,          0xF0),
++	ARM_CSPMU_EVENT_ATTR(slc_wb,                0xF3),
++	ARM_CSPMU_EVENT_ATTR(slc_refill_rd,         0x109),
++	ARM_CSPMU_EVENT_ATTR(slc_refill_wr,         0x10A),
++	ARM_CSPMU_EVENT_ATTR(slc_hit_rd,            0x119),
++
++	ARM_CSPMU_EVENT_ATTR(slc_access_dataless,   0x183),
++	ARM_CSPMU_EVENT_ATTR(slc_access_atomic,     0x184),
++
++	ARM_CSPMU_EVENT_ATTR(slc_access_rd,         0x111),
++	ARM_CSPMU_EVENT_ATTR(slc_access_wr,         0x112),
++	ARM_CSPMU_EVENT_ATTR(slc_bytes_rd,          0x113),
++	ARM_CSPMU_EVENT_ATTR(slc_bytes_wr,          0x114),
++
++	ARM_CSPMU_EVENT_ATTR(mem_access_rd,         0x121),
++	ARM_CSPMU_EVENT_ATTR(mem_access_wr,         0x122),
++	ARM_CSPMU_EVENT_ATTR(mem_bytes_rd,          0x123),
++	ARM_CSPMU_EVENT_ATTR(mem_bytes_wr,          0x124),
++
++	ARM_CSPMU_EVENT_ATTR(local_snoop,           0x180),
++	ARM_CSPMU_EVENT_ATTR(ext_snp_access,        0x181),
++	ARM_CSPMU_EVENT_ATTR(ext_snp_evict,         0x182),
++
++	ARM_CSPMU_EVENT_ATTR(cycles, ARM_CSPMU_EVT_CYCLES_DEFAULT),
++	NULL
++};
++
+ static struct attribute *generic_pmu_event_attrs[] = {
+ 	ARM_CSPMU_EVENT_ATTR(cycles, ARM_CSPMU_EVT_CYCLES_DEFAULT),
+ 	NULL,
+@@ -152,6 +189,18 @@ static struct attribute *cnvlink_pmu_format_attrs[] = {
+ 	NULL,
+ };
+ 
++static struct attribute *ucf_pmu_format_attrs[] = {
++	ARM_CSPMU_FORMAT_EVENT_ATTR,
++	ARM_CSPMU_FORMAT_ATTR(src_loc_noncpu, "config1:0"),
++	ARM_CSPMU_FORMAT_ATTR(src_loc_cpu, "config1:1"),
++	ARM_CSPMU_FORMAT_ATTR(src_rem, "config1:2"),
++	ARM_CSPMU_FORMAT_ATTR(dst_loc_cmem, "config1:8"),
++	ARM_CSPMU_FORMAT_ATTR(dst_loc_gmem, "config1:9"),
++	ARM_CSPMU_FORMAT_ATTR(dst_loc_other, "config1:10"),
++	ARM_CSPMU_FORMAT_ATTR(dst_rem, "config1:11"),
++	NULL
++};
++
+ static struct attribute *generic_pmu_format_attrs[] = {
+ 	ARM_CSPMU_FORMAT_EVENT_ATTR,
+ 	ARM_CSPMU_FORMAT_FILTER_ATTR,
+@@ -236,6 +285,27 @@ static void nv_cspmu_set_cc_filter(struct arm_cspmu *cspmu,
+ 	writel(filter, cspmu->base0 + PMCCFILTR);
  }
-+
-+struct acpi_device *arm_cspmu_acpi_dev_get(const struct arm_cspmu *cspmu)
+ 
++static u32 ucf_pmu_event_filter(const struct perf_event *event)
 +{
-+	char hid[16] = {};
-+	char uid[16] = {};
-+	const struct acpi_apmt_node *apmt_node;
++	u32 ret, filter, src, dst;
 +
-+	apmt_node = arm_cspmu_apmt_node(cspmu->dev);
-+	if (!apmt_node || apmt_node->type != ACPI_APMT_NODE_TYPE_ACPI)
-+		return NULL;
++	filter = nv_cspmu_event_filter(event);
 +
-+	memcpy(hid, &apmt_node->inst_primary, sizeof(apmt_node->inst_primary));
-+	snprintf(uid, sizeof(uid), "%u", apmt_node->inst_secondary);
++	/* Monitor all sources if none is selected. */
++	src = FIELD_GET(NV_UCF_FILTER_SRC, filter);
++	if (src == 0)
++		src = GENMASK_ULL(NV_UCF_SRC_COUNT - 1, 0);
 +
-+	return acpi_dev_get_first_match_dev(hid, uid, -1);
++	/* Monitor all destinations if none is selected. */
++	dst = FIELD_GET(NV_UCF_FILTER_DST, filter);
++	if (dst == 0)
++		dst = GENMASK_ULL(NV_UCF_DST_COUNT - 1, 0);
++
++	ret = FIELD_PREP(NV_UCF_FILTER_SRC, src);
++	ret |= FIELD_PREP(NV_UCF_FILTER_DST, dst);
++
++	return ret;
 +}
-+EXPORT_SYMBOL_GPL(arm_cspmu_acpi_dev_get);
- #else
- static int arm_cspmu_acpi_get_cpus(struct arm_cspmu *cspmu)
- {
-diff --git a/drivers/perf/arm_cspmu/arm_cspmu.h b/drivers/perf/arm_cspmu/arm_cspmu.h
-index cd65a58dbd88..3fc5c8d77266 100644
---- a/drivers/perf/arm_cspmu/arm_cspmu.h
-+++ b/drivers/perf/arm_cspmu/arm_cspmu.h
-@@ -1,13 +1,14 @@
- /* SPDX-License-Identifier: GPL-2.0
-  *
-  * ARM CoreSight Architecture PMU driver.
-- * Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-+ * Copyright (c) 2022-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-  *
-  */
  
- #ifndef __ARM_CSPMU_H__
- #define __ARM_CSPMU_H__
- 
-+#include <linux/acpi.h>
- #include <linux/bitfield.h>
- #include <linux/cpumask.h>
- #include <linux/device.h>
-@@ -255,4 +256,18 @@ int arm_cspmu_impl_register(const struct arm_cspmu_impl_match *impl_match);
- /* Unregister vendor backend. */
- void arm_cspmu_impl_unregister(const struct arm_cspmu_impl_match *impl_match);
- 
-+#if defined(CONFIG_ACPI) && defined(CONFIG_ARM64)
-+/**
-+ * Get ACPI device associated with the PMU.
-+ * The caller is responsible for calling acpi_dev_put() on the returned device.
-+ */
-+struct acpi_device *arm_cspmu_acpi_dev_get(const struct arm_cspmu *cspmu);
-+#else
-+static inline struct acpi_device *
-+arm_cspmu_acpi_dev_get(const struct arm_cspmu *cspmu)
-+{
-+	return NULL;
-+}
-+#endif
-+
- #endif /* __ARM_CSPMU_H__ */
+ enum nv_cspmu_name_fmt {
+ 	NAME_FMT_GENERIC,
+@@ -342,6 +412,21 @@ static const struct nv_cspmu_match nv_cspmu_match[] = {
+ 		.init_data = NULL
+ 	  },
+ 	},
++	{
++	  .prodid = 0x2CF20000,
++	  .prodid_mask = NV_PRODID_MASK,
++	  .name_pattern = "nvidia_ucf_pmu_%u",
++	  .name_fmt = NAME_FMT_SOCKET,
++	  .template_ctx = {
++		.event_attr = ucf_pmu_event_attrs,
++		.format_attr = ucf_pmu_format_attrs,
++		.filter_mask = NV_UCF_FILTER_ID_MASK,
++		.filter_default_val = NV_UCF_FILTER_DEFAULT,
++		.filter2_mask = 0x0,
++		.filter2_default_val = 0x0,
++		.get_filter = ucf_pmu_event_filter,
++	  },
++	},
+ 	{
+ 	  .prodid = 0,
+ 	  .prodid_mask = 0,
 -- 
 2.43.0
 
