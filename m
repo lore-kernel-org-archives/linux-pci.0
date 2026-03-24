@@ -1,215 +1,258 @@
-Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazon11022075.outbound.protection.outlook.com [52.101.126.75])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F9E13E9F67;
-	Tue, 24 Mar 2026 11:45:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.126.75
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774352709; cv=fail; b=biRe38m21lwuLP7PWKugC5VmNREUOFb6xyJEkMXxWDKc0DGUZc5nYEQazrJzLn24AqZhr6W87128FiIbmFEupAu3s+0Fb2jdutX1//G7D8snmiNJzREhSaGs488Yy0f6BWCvAOprJCMFMN6Vs8wd3BuUyLzWcD4L3KnutLMsJpo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774352709; c=relaxed/simple;
-	bh=ceWqMsfU08wF3B58afqRvUcInEDQg+lsJRKTaA6FTJk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UyswDGOGTt7bm7GePFLR5zkP+Tew4VUHwOrwyRcOm4G0o/3I26cHE0Q1HwJ+ZNufu48WqpsngiGfQOgZwbsl1Ddy3DJNc/iuJ7OY6bBoOTvUPrWWACXkEOSUDZIw1g5qhT2O4MbSyy5Iwmad1azJB27o5PT/WW8A5j5kCt4/ZTY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=52.101.126.75
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cixtech.com
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=IyCs/YwMQqRUAX9nsAq/+nIO1fACxqvU0ZmNhU1RRvXJurrYJP+C6fh0YOmh6zreJ+11cPTswapHMNYYdrz//Ny1coe4cEweY+FWyrwXzl235tne6zFJMZwJn8a1iTFEe16kHgy5H608spnXf8SU1SyWGc613QUTs+JA/cPjJDn50ZeYKvjjKYeYFC6cId+H9rstCOfTNcM8rAhwytYW0U6nQFlVufPVLJZ0mdHEUXfzhz88LO7FvdCiimZhn5Gzbsjp7zD1jOsXaZVL4MUMM8TooYgmNoXNA7lbjQht6JANaozwCa2/EUkcmdeV4IOoUlrb/J0PFluzYDjdUbL2Ag==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7bLDa5FatlQiQDgslRUvd7a89kzDDOt8E5RHDR74RRs=;
- b=spDkp56luWT0Gg+OCBcCYJ3zfTQPZ7XeBJqTcmoQ+AHx+dRKSbBwWva9JqTNs6JP9w4x9qCmj4octRqfCxgEAPUJSDyg76P+g73bmeHMj1/8mCLgj8I6YxUXdJ+fiTrsfK/7HDh0FoqHPCcgC0FKE3LPvAoKjB7qM4LOBiYN80yGVEL4MEgHWZql2m1UYfVODioQYXpOEZu7F3c1o+33AHYzfQXpkSNu5MMVBwQGG9k6Gh0EvTI5Tm2SVCAWPQp9P9ENO/WO36TEtSJXrbgXQ9kQtnvXgwDyup9lVGppaOeFKDWAiX0nzWTMI6uqMeN09CMEHGnbzne71xezFS2Fdw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 222.71.101.198) smtp.rcpttodomain=cixtech.com smtp.mailfrom=cixtech.com;
- dmarc=bestguesspass action=none header.from=cixtech.com; dkim=none (message
- not signed); arc=none (0)
-Received: from OSTP286CA0052.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:217::13)
- by TYZPR06MB5321.apcprd06.prod.outlook.com (2603:1096:400:1f3::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.20; Tue, 24 Mar
- 2026 11:45:03 +0000
-Received: from OSA0EPF000000C7.apcprd02.prod.outlook.com
- (2603:1096:604:217:cafe::58) by OSTP286CA0052.outlook.office365.com
- (2603:1096:604:217::13) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9723.31 via Frontend Transport; Tue,
- 24 Mar 2026 11:45:00 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 222.71.101.198)
- smtp.mailfrom=cixtech.com; dkim=none (message not signed)
- header.d=none;dmarc=bestguesspass action=none header.from=cixtech.com;
-Received-SPF: Pass (protection.outlook.com: domain of cixtech.com designates
- 222.71.101.198 as permitted sender) receiver=protection.outlook.com;
- client-ip=222.71.101.198; helo=smtprelay.cixcomputing.com; pr=C
-Received: from smtprelay.cixcomputing.com (222.71.101.198) by
- OSA0EPF000000C7.mail.protection.outlook.com (10.167.240.53) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9723.19 via Frontend Transport; Tue, 24 Mar 2026 11:45:02 +0000
-Received: from nchen-desktop (unknown [172.16.64.25])
-	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 4D3D24126F80;
-	Tue, 24 Mar 2026 19:45:01 +0800 (CST)
-Date: Tue, 24 Mar 2026 19:45:00 +0800
-From: Peter Chen <peter.chen@cixtech.com>
-To: Gary Yang <gary.yang@cixtech.com>
-Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	robh@kernel.org, bhelgaas@google.com, krzk+dt@kernel.org,
-	conor+dt@kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	cix-kernel-upstream@cixtech.com
-Subject: Re: [PATCH v4 2/2] arm64: dts: cix: Add scmi powerdomain nodes for
- sky1
-Message-ID: <acJ5PLtFwZ8+E5q+@nchen-desktop>
-References: <20260313114914.1564115-1-gary.yang@cixtech.com>
- <20260313114914.1564115-3-gary.yang@cixtech.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 715E13D47C1
+	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 12:05:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774353937; cv=none; b=lIRVnxvo7/mdjvKERC5amjNUGxp2ObCI6R3aipueCbGqu1RgeouwHvV0fMbOba3gygBz9Ox+WXMb/Gkb/YS685XdTWrN3hMdBdfJFq2GhFQ4jW78Xdw35kr/pSmhSku4hJ3WxdQg8ndS+1c0GZqPvK7Q8wcfntI9mdLJ7mQYGjk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774353937; c=relaxed/simple;
+	bh=INmeiGJKMXk+0PJEej2mrgVEmYRHxRGrlBMc5p0a5aY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=PVbIq4fnmcaAqxwgmDagqEtBeYRnXmRkccIaHZX2xfuZqkacDDkas3iaIg6WDJNEQCPG9Td1zQDcNhqzhvsFioccgspbKIYAIMBFWGlm9+lQZwIYJb1csaHTkQFgf22Xe4RxM9LIth2iA2LuVQ8LK7MraHX8hsjo4EZWgSyeiVM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=eiiwG5ed; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ByGO/wZh; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="eiiwG5ed";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ByGO/wZh"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62O9wS053039644
+	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 12:05:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	E5IUEO5PyBIerJfWjfzoqFirzXsSOD9hNzXQV1mXr0E=; b=eiiwG5edacFrpRTZ
+	EtFrpYBAz2dzEh8QgxuzMve34/TbRlhIqFNx0EIQC9p4hZ2Sc1R0WIg2sTP6BzrM
+	ZMpxlfMwVzsguvbqR5NsG0MiTxuaUDz7gQK9z/PxTLu1TEuNtp0aZM+jWN5B0FTG
+	cAEb6aMA1eo/Z0VWzsnyIojgSv0Q7zlmm7vQ+g3Jors7pW4zXq4WIA+Gen1trqxO
+	8FKevj/nVzz62rhyId8j2AORT2bDOzfq1W9g4Gu+AsQMotjMluRzjhztxSKw7emf
+	qjozK5HoD7x8HTa7uMYLbYLYuYjcsGG4hg2oWm9+adG+aTQzddUtS3YHqtw1B3gb
+	YkEiWw==
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d3rf0gf85-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 12:05:32 +0000 (GMT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2b064f043adso75411155ad.0
+        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 05:05:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1774353831; x=1774958631; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=E5IUEO5PyBIerJfWjfzoqFirzXsSOD9hNzXQV1mXr0E=;
+        b=ByGO/wZhHkNCfRtNzd1cWKYIk+yqjgVvcHWz1qtlz0D2awkgtOI7dNlRXDmrU0Ag/Y
+         BpqSzHy+W85eb/bADDL83GXly35Bem0OlZARvt5kCtW7uVV7AHlwySJ49Klk1wMsou71
+         pJvHr5+zv+BPeoWe6Fhdz3mt2jSP2Dq3go/N2gwnTMpMqYQXxye/4/VjtZtqnQNqPsvH
+         aB7J/7Kfwpz79/HsOhoChNdIIMrDmJS8mE/scs6eVX/qJl4hfaZTWNrNbS5VVXQGC6Uq
+         tgMjbZC/Mw9k6/LKuIgI6kkJlJaKhPZsehOBjSgNRfJTe2aZR8wQ266lw3dsRtHAEWNt
+         /X2w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774353831; x=1774958631;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=E5IUEO5PyBIerJfWjfzoqFirzXsSOD9hNzXQV1mXr0E=;
+        b=T2uQ+ntelaOppAjfa6Bi+CYPi+RjvAQnfknSJBanWKYjNpkyLVKgpXI0qD0/IUk2/W
+         MMyC0DyNj/QSMy5LiyhiV4fgSTCPq8FU3O+KtwMNebXuGs0tjOMrVrUBwCQnib87FZM0
+         TfaB+9A6KOY3+hYMbvIj4NN3BfOgeVZUuedf/uDNuoP50eZZV7WVZxkHVwgOumsGQ93b
+         XB4U7srto67uOb1oRvEvI3WhAdQDAdvNbUr6kA4Ss9m33olPKXyNF3ymREIn2/vypOt+
+         mvpmVbb26asO2SCFRcOOxPSx6m4WqnnMnISSazmQTg49t32EcPKjMkVemgF2R86YI5xk
+         ny8A==
+X-Forwarded-Encrypted: i=1; AJvYcCWGalHEx0B1QUdMyTaCQITgXhsqUMkIlEQox08A9RjS8MpOJNPpWFd7FE09bGe+QzbsQcY3i7S01a8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw9fPVlUmso+w7rJz0y+FHI3Xz6Q5PXHZi+3L54Oiwj34dB5QXt
+	YMMTeXu3+biTLWC2LELteBlYIrwutmOLc0j4II+qJBTMcnwNyplgOZs8SRzpGNnDOs+hQEhbiFm
+	fYoVpWQdIOBSYKg0VyhsUIsJHNDSTjEfwyIBX/LjjQmmbkC73Z16ge6g7wfgk04c=
+X-Gm-Gg: ATEYQzzbZGMF/+eCJz/5e84qDxNj6BMcZz1xgfANX4JP8TarMTalt42CUce0Y6GRN52
+	36YAY96bs0mIlG1f4XLsFwUI4z7nzvkGwHw1Jo8bHNBcCs4DbbPqMSaNnwte/hV29Y5cBcQ8ml6
+	rYmpPNrTnQqXZV0+xM1VUZdtii+ApYUDA2+D5L1/HOYGfji75MM9DEFd8OKKENRJg8aXRHo8otf
+	3450xjnEGYqg+41kZUyNp1ZVFlk+/MPahyw/IarrmBoIrh7C8FhGXr9PhTj1YtP0bA8R88aDxTV
+	wfh86smAQv9Bp0Iy0H2oy3Ycrb9fBHRfPYVkF+TqY21+0POiFeTPrX9IvpPphedkbiqElRS+XvL
+	u/CbnNnGqKal3nYu1/rHJ5BcR42pMBfcdmXlyYrGIfQG5S2aBcUy0Gg==
+X-Received: by 2002:a17:903:3ba5:b0:2b0:5aab:c40a with SMTP id d9443c01a7336-2b08277aecamr143662575ad.31.1774353831147;
+        Tue, 24 Mar 2026 05:03:51 -0700 (PDT)
+X-Received: by 2002:a17:903:3ba5:b0:2b0:5aab:c40a with SMTP id d9443c01a7336-2b08277aecamr143662045ad.31.1774353830506;
+        Tue, 24 Mar 2026 05:03:50 -0700 (PDT)
+Received: from [10.218.35.45] ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b083656f65sm208995095ad.45.2026.03.24.05.03.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 24 Mar 2026 05:03:50 -0700 (PDT)
+Message-ID: <f97c6dfa-55dc-4792-95d6-4aa1bce3694d@oss.qualcomm.com>
+Date: Tue, 24 Mar 2026 17:33:42 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260313114914.1564115-3-gary.yang@cixtech.com>
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: OSA0EPF000000C7:EE_|TYZPR06MB5321:EE_
-X-MS-Office365-Filtering-Correlation-Id: 94595e17-9618-44d1-bb56-08de899ac93c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|376014|36860700016|82310400026|18002099003|56012099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	6cGnMZ4M/iTWiVaaIFdBOgnDmJGX+S6VrN25Oiv88uDO7g3o4nRExA+tVb/pSDvg+J4lXAPSBqzSGmgpYtriBGG9O9VefI4H4nUSwO3Fba3obt75lTPrM8SGHuTj8+V4JIPJYisjRSbynUO4OPGX6nLUBNTk1z67ngFrM6duUIp2/N/akv3AlnkHeCzTej6WU2RdL4DCBot4LpI0UdAS4lUMeaniEX0tTGTdMtHojPDVcSh2l54q55eCL9Bbs6MN2fXCMa9Hb1+ShZie4ADearNnc25vLOvesIrpO6IelpgRQyOjXF0vP70iPuilj7cA8Ef0utzae/8XPfWtKq94CHsK8XcJW7X2m68s5U6kbh78pG5D01CS3tp/as+6pJL3wsvleGxF7Mqj8XP7TL/dDeWzJIHcGIhN/8mV/+19+0UfKkBDMYp05AkPFQFy9IBlfIYQpB7dC4fs4zRJ/a/LX0bwrBlJZ7riw7DMiPnJVLBXzWwMO0RqOBmxvEfjsVefba2xYJMNmTVzPOCrnlq9fCq/TLiBPp9ERLMtRaugq7Tsnu3O4dMDbJqMZ8bkgnEPxKgXsalDLNWF7eOTCa0gPkT//3VqLnW65jQwu9Bo1UZoshZjeECYupdRYIfjeGO9FPYlclyFSImmmwM0N6jDmhSMROCLGeg/oA9kE2LMQy/jVqDaFcw4W5a0IfN86ys/2b3myjiJEGU4yRzRYW7KtzfVEwApWj3vYDO7/TELaiqHR6N+SiHKD19xY9Dc7C8vNwslyL0pbkhcJxiVu4r2uw==
-X-Forefront-Antispam-Report:
-	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(36860700016)(82310400026)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	8Z8loxmIfqF6ZeVp8D7FPIU/ufmfBabBkKXNcjtoZEEtDX9cBbCgIB45lQmcsfXRjzdzWmr2pVPAjHoi+adDxNp9cz9bji5gaFc7sDvxZF2HAAOa8H2RZS4bUMyRextHbJDR91GaM6HTRAU5wgHflcMgSAaV7GVhOu1E137jjaM/SUQvzrYxtrV4QJrT2VODirgmPymTYsd8lWriAeZyFLIOs9iJsdH7/U3rs0azjRDQ6iv4lr07AZfE96xvdS8XYGEooNMLOCmVllxzojRne3XKJzrHOH0fLOixIQd7M+Ai+f+NV42J9Nkq/kYtcdH51KyDsaZjuImAbCx5Vi2J5dl6ot6rl0c3Qa7VuUMy27fJKfMdtwzOT6Gqy5OTFYMVUdQXzOXO8fNSc5edmMXIl+Lx4xJ2A/w9gcvdgK8ukSU1K0H7E0BMtynrZIVPv46u
-X-OriginatorOrg: cixtech.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Mar 2026 11:45:02.4934
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 94595e17-9618-44d1-bb56-08de899ac93c
-X-MS-Exchange-CrossTenant-Id: 0409f77a-e53d-4d23-943e-ccade7cb4811
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=0409f77a-e53d-4d23-943e-ccade7cb4811;Ip=[222.71.101.198];Helo=[smtprelay.cixcomputing.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	OSA0EPF000000C7.apcprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYZPR06MB5321
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 3/3] PCI: Add support for PCIe WAKE# interrupt
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
+        Pavel Machek <pavel@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Danilo Krummrich <dakr@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Bartosz Golaszewski <brgl@bgdev.pl>, Linus Walleij <linusw@kernel.org>,
+        Bartosz Golaszewski <brgl@kernel.org>, Rob Herring <robh@kernel.org>,
+        Saravana Kannan <saravanak@kernel.org>, linux-pm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-gpio@vger.kernel.org, quic_vbadigan@quicinc.com,
+        sherry.sun@nxp.com, driver-core@lists.linux.dev,
+        devicetree@vger.kernel.org
+References: <20260313-wakeirq_support-v8-0-48a0a702518a@oss.qualcomm.com>
+ <20260313-wakeirq_support-v8-3-48a0a702518a@oss.qualcomm.com>
+ <4n5heks4oymfz75wiajyc5zuzzulmwyfj2couudbi7gi67h2rk@smpnmyhdjkns>
+Content-Language: en-US
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <4n5heks4oymfz75wiajyc5zuzzulmwyfj2couudbi7gi67h2rk@smpnmyhdjkns>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzI0MDA5NiBTYWx0ZWRfX5eckMh39RcyU
+ gYkJZolcYCpXR4JQXqQRGCAul8k6UaV1wrkIhoL0m+4k/TxGt9DZrFTcO8Afr9GhfjA1mAuXgVT
+ wiem5AThf5Mq84uqhot6AZw8tulPZ0wLX/X5bDh4X3K64Dyln0dDHCwPGHntaxIkPceRhKVUx8O
+ R3Xj1XctJGyhMO/cHPYjqYBfJPRK9o6aUzLvnw2GrkOPSeBswKxLT/T2zysYy8w5zbGMqlJqJeo
+ 32BnzsmlsyE9mJkYaE/lLix0vRw80FhcP2NI9ovsmSOlc6m0sG5xrCyCGM5khjd6nKijc/m3a9n
+ KeIQGAy5EuVXKyyJHz3kAzxZd8PfJsC8AIDtwasOCTFCdAyzf/fKA5uLd+lCNOWgpn/pId9VauA
+ 2J4BkAIzRcfzlBpNa+NXYH5MjgoRSkNx+YknxQmVDVKWq7hef9TUkevhm7pNIMk80VDLxsnilNn
+ epkcvAo6uVs8OuEhg6Q==
+X-Authority-Analysis: v=2.4 cv=Ua9ciaSN c=1 sm=1 tr=0 ts=69c27e0c cx=c_pps
+ a=JL+w9abYAAE89/QcEU+0QA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=NEAV23lmAAAA:8 a=KKAkSRfTAAAA:8
+ a=rFA5VEQNUbPbIC_WhckA:9 a=QEXdDO2ut3YA:10 a=324X-CrmTo6CU4MGRt3R:22
+ a=cvBusfyB2V15izCimMoJ:22
+X-Proofpoint-ORIG-GUID: wPWGEa-lqX1g2dVQsxcQcD3pr-qrjO-5
+X-Proofpoint-GUID: wPWGEa-lqX1g2dVQsxcQcD3pr-qrjO-5
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-24_02,2026-03-23_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 lowpriorityscore=0 malwarescore=0 phishscore=0 bulkscore=0
+ spamscore=0 suspectscore=0 clxscore=1015 impostorscore=0 adultscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603240096
 
-On 26-03-13 19:49:14, Gary Yang wrote:
-> Add a second SCMI channel using SMC transport to communicate with TF-A
-> for power domain management on the Sky1 SoC.
-> 
-> Signed-off-by: Gary Yang <gary.yang@cixtech.com>
 
-Applied, thanks.
 
-Peter
-> ---
->  arch/arm64/boot/dts/cix/sky1-power.h | 33 ++++++++++++++++++++++++++++
->  arch/arm64/boot/dts/cix/sky1.dtsi    | 21 ++++++++++++++++++
->  2 files changed, 54 insertions(+)
->  create mode 100644 arch/arm64/boot/dts/cix/sky1-power.h
-> 
-> diff --git a/arch/arm64/boot/dts/cix/sky1-power.h b/arch/arm64/boot/dts/cix/sky1-power.h
-> new file mode 100644
-> index 000000000000..53f4a3af36b3
-> --- /dev/null
-> +++ b/arch/arm64/boot/dts/cix/sky1-power.h
-> @@ -0,0 +1,33 @@
-> +/* SPDX-License-Identifier: GPL-2.0-only */
-> +/*
-> + * Copyright 2026 Cix Technology Group Co., Ltd.
-> + */
-> +
-> +#ifndef __SKY1_POWER_H__
-> +#define __SKY1_POWER_H__
-> +
-> +/* The Rich OS need flow the macro */
-> +#define SKY1_PD_AUDIO		0
-> +#define SKY1_PD_PCIE_CTRL0	1
-> +#define SKY1_PD_PCIE_DUMMY	2
-> +#define SKY1_PD_PCIEHUB		3
-> +#define SKY1_PD_MMHUB		4
-> +#define SKY1_PD_MMHUB_SMMU	5
-> +#define SKY1_PD_DPU0		6
-> +#define SKY1_PD_DPU1		7
-> +#define SKY1_PD_DPU2		8
-> +#define SKY1_PD_DPU3		9
-> +#define SKY1_PD_DPU4		10
-> +#define SKY1_PD_VPU_TOP		11
-> +#define SKY1_PD_VPU_CORE0	12
-> +#define SKY1_PD_VPU_CORE1	13
-> +#define SKY1_PD_VPU_CORE2	14
-> +#define SKY1_PD_VPU_CORE3	15
-> +#define SKY1_PD_NPU_CORE0	16
-> +#define SKY1_PD_NPU_CORE1	17
-> +#define SKY1_PD_NPU_CORE2	18
-> +#define SKY1_PD_NPU_TOP		19
-> +#define SKY1_PD_ISP0		20
-> +#define SKY1_PD_GPU		21
-> +
-> +#endif
-> diff --git a/arch/arm64/boot/dts/cix/sky1.dtsi b/arch/arm64/boot/dts/cix/sky1.dtsi
-> index 64b76905cbff..495ea91a63f5 100644
-> --- a/arch/arm64/boot/dts/cix/sky1.dtsi
-> +++ b/arch/arm64/boot/dts/cix/sky1.dtsi
-> @@ -6,6 +6,7 @@
->  
->  #include <dt-bindings/interrupt-controller/arm-gic.h>
->  #include <dt-bindings/clock/cix,sky1.h>
-> +#include "sky1-power.h"
->  
->  / {
->  	interrupt-parent = <&gic>;
-> @@ -168,6 +169,19 @@ scmi_clk: protocol@14 {
->  				#clock-cells = <1>;
->  			};
->  		};
-> +
-> +		ap_to_tfa_scmi: scmi-1 {
-> +			compatible = "arm,scmi-smc";
-> +			arm,smc-id = <0xc2000001>;
-> +			#address-cells = <1>;
-> +			#size-cells = <0>;
-> +			shmem = <&ap_tfa_scmi_mem>;
-> +
-> +			smc_devpd: protocol@11 {
-> +				reg = <0x11>;
-> +				#power-domain-cells = <1>;
-> +			};
-> +		};
->  	};
->  
->  	pmu-a520 {
-> @@ -428,6 +442,7 @@ pcie_x8_rc: pcie@a010000 {
->  			#size-cells = <2>;
->  			bus-range = <0xc0 0xff>;
->  			device_type = "pci";
-> +			power-domains = <&smc_devpd SKY1_PD_PCIE_CTRL0>;
->  			#interrupt-cells = <1>;
->  			interrupt-map-mask = <0 0 0 0x7>;
->  			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 407 IRQ_TYPE_LEVEL_HIGH 0>,
-> @@ -572,6 +587,12 @@ iomuxc_s5: pinctrl@16007000 {
->  			compatible = "cix,sky1-pinctrl-s5";
->  			reg = <0x0 0x16007000 0x0 0x1000>;
->  		};
-> +
-> +		ap_tfa_scmi_mem: shmem@84380000 {
-> +			compatible = "arm,scmi-shmem";
-> +			reg = <0x0 0x84380000 0x0 0x80>;
-> +			reg-io-width = <4>;
-> +		};
->  	};
->  
->  	timer {
-> -- 
-> 2.49.0
-> 
+On 3/17/2026 12:56 PM, Manivannan Sadhasivam wrote:
+> On Fri, Mar 13, 2026 at 12:38:42PM +0530, Krishna Chaitanya Chundru wrote:
+>> According to the PCI Express specification (PCIe r7.0, Section 5.3.3.2),
+>> two link wakeup mechanisms are defined: Beacon and WAKE#. Beacon is a
+>> hardware-only mechanism and is invisible to software (PCIe r7.0,
+>> Section 4.2.7.8.1). This change adds support for the WAKE# mechanism in
+>> the PCI core.
+>>
+>> According to the PCIe specification, multiple WAKE# signals can exist in
+>> a system or each component in the hierarchy could share a single WAKE#
+>> signal. In configurations involving a PCIe switch, each downstream port
+>> (DSP) of the switch may be connected to a separate WAKE# line, allowing
+>> each endpoint to signal WAKE# independently. From figure 5.4 in sec
+>> 5.3.3.2, WAKE# can also be terminated at the switch itself. To support
+>> this, the WAKE# should be described in the device tree node of the
+>> endpoint/bridge. If all endpoints share a single WAKE# line, then each
+>> endpoint node should describe the same WAKE# signal or a single WAKE# in
+>> the Root Port node.
+>>
+>> In pci_device_add(), PCI framework will search for the WAKE# in device
+>> node, If not found, it searches in its upstream port only if upstream port
+>> is Root Port. Once found, register for the wake IRQ in shared mode, as the
+>> WAKE# may be shared among multiple endpoints.
+>>
+>> dev_pm_set_dedicated_shared_wake_irq() associates a wakeup IRQ with a
+>> device and requests it, but the PM core keeps the IRQ disabled by default.
+>> The IRQ is enabled only when the device is permitted to wake the system,
+>> i.e. during system suspend and after runtime suspend, and only when device
+>> wakeup is enabled.
+>>
+>> When the wake IRQ fires, the wakeirq handler invokes pm_runtime_resume() to
+>> bring the device back to an active power state, such as transitioning from
+>> D3cold to D0. Once the device is active and the link is usable, the
+>> endpoint may generate a PME, which is then handled by the PCI core through
+>> PME polling or the PCIe PME service driver to complete the wakeup of the
+>> endpoint.
+>>
+>> WAKE# is added in dts schema and merged based on below links.
+>>
+>> Link: https://lore.kernel.org/all/20250515090517.3506772-1-krishna.chundru@oss.qualcomm.com/
+>> Link: https://github.com/devicetree-org/dt-schema/pull/170
+>> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+>> ---
+>>   drivers/pci/of.c       | 74 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>>   drivers/pci/pci.c      | 10 +++++++
+>>   drivers/pci/pci.h      |  2 ++
+>>   drivers/pci/probe.c    |  2 ++
+>>   drivers/pci/remove.c   |  1 +
+>>   include/linux/of_pci.h |  4 +++
+>>   include/linux/pci.h    |  2 ++
+>>   7 files changed, 95 insertions(+)
+>>
+>> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+>> index 9f8eb5df279ed28db7a3b2fd29c65da9975c2efa..b7199d3598b31b62245716c178a5a73565efc89e 100644
+>> --- a/drivers/pci/of.c
+>> +++ b/drivers/pci/of.c
+>> @@ -7,6 +7,7 @@
+>>   #define pr_fmt(fmt)	"PCI: OF: " fmt
+>>   
+>>   #include <linux/cleanup.h>
+>> +#include <linux/gpio/consumer.h>
+>>   #include <linux/irqdomain.h>
+>>   #include <linux/kernel.h>
+>>   #include <linux/pci.h>
+>> @@ -15,6 +16,7 @@
+>>   #include <linux/of_address.h>
+>>   #include <linux/of_pci.h>
+>>   #include <linux/platform_device.h>
+>> +#include <linux/pm_wakeirq.h>
+>>   #include "pci.h"
+>>   
+>>   #ifdef CONFIG_PCI
+>> @@ -586,6 +588,78 @@ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+>>   	return irq_create_of_mapping(&oirq);
+>>   }
+>>   EXPORT_SYMBOL_GPL(of_irq_parse_and_map_pci);
+>> +
+>> +static void pci_configure_wake_irq(struct pci_dev *pdev, struct gpio_desc *wake)
+>> +{
+>> +	int ret, wake_irq;
+>> +
+>> +	wake_irq = gpiod_to_irq(wake);
+>> +	if (wake_irq < 0) {
+>> +		pci_err(pdev, "Failed to get wake irq: %d\n", wake_irq);
+>> +		return;
+>> +	}
+>> +
+>> +	device_init_wakeup(&pdev->dev, true);
+> Just set wakeup only if dev_pm_set_dedicated_shared_wake_irq() succeeds.
+ack.
+>> +
+>> +	/*
+>> +	 * dev_pm_set_dedicated_shared_wake_irq() associates a wakeup IRQ with the
+>> +	 * device and requests it, but the PM core keeps it disabled by default.
+>> +	 * The IRQ is enabled only when the device is allowed to wake the system
+>> +	 * (during system suspend and after runtime suspend), and only if device
+>> +	 * wakeup is enabled.
+>> +	 *
+>> +	 * When the wake IRQ fires, the wakeirq handler invokes pm_runtime_resume()
+>> +	 * to bring the device back to an active power state (e.g. from D3cold to D0).
+>> +	 * Once the device is active and the link is usable, the endpoint may signal
+>> +	 * a PME, which is then handled by the PCI core (either via PME polling or the
+>> +	 * PCIe PME service driver) to wakeup particular endpoint.
+>> +	 */
+>> +	ret = dev_pm_set_dedicated_shared_wake_irq(&pdev->dev, wake_irq,
+>> +						   IRQ_TYPE_EDGE_FALLING);
+> Isn't WAKE# a level triggered signal?
+Ack. I will change IRQ_TYPE_EDGE_FALLING to IRQ_TYPE_LEVEL_LOW.
+>> +	if (ret < 0) {
+>> +		pci_err(pdev, "Failed to set wake IRQ: %d\n", ret);
+> s/wake/WAKE#
+ack.
 
--- 
+- Krishna Chaitanya.
+> - Mani
+>
 
-Best regards,
-Peter
