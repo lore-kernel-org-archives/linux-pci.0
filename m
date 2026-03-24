@@ -1,147 +1,121 @@
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+Received: from mail-vk1-f173.google.com (mail-vk1-f173.google.com [209.85.221.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9569D3E3C7E
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 17:06:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B12C39E198
+	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 17:06:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774371962; cv=none; b=jsXP15sSJgLz9eIFt8Yh92LyFmoiNSFF57ljv4BqjcthJjLHu3CTgc4I2Bz4BznJpXxmr8Jw/Stz8kbW4ng9LAoVl1ygicgpPqi8aIp3wWPpn2zKZum6rGBweDb+r69wOmjkyqFwT6Op8Ahn+XAXSeu07GBA2JHzVM+lJb3dmE4=
+	t=1774372003; cv=none; b=VmfZUP6MitAOlHqsAgE/+o/CwkgEzkG2/ZNIk1DqHgIqDjhDZ1vZNURyfDqu/h0XggYHJa2zqYmkg+ZflAnVO/6ATx2rTAc3uBX7/zHeFv7AVd0RAmOo3d0S/ynLt0Cr78IXjcfSlqyhh+7XOqUra4PtJKgpz0f2fZRAvTTiU+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774371962; c=relaxed/simple;
-	bh=5Sv9xAJZpaaT64nid3Je6B7u2J/2/RXvcmlIiaS9WJs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MjTU6+KMND49MN5b2Pamw9EA3iD3qeke0oOhsZqXZ7kbghF2AjKhgmxN7QtlD50ej6fcUQRXvdsCOwT8xjO69FqWuzEECr4BpQ99f1YxFcFwG9yIXZOttr+6ywuxhAO57exG32Lx30sCoxd/2D60wI46pZRgby8kgjjuiMIPi+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=F+ocCLqH; arc=none smtp.client-ip=209.85.216.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="F+ocCLqH"
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-35c05d7e0e9so774236a91.1
-        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 10:06:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1774371961; x=1774976761; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=oHY3J33g6ujwnRTqJrGO/jD1PTpcRqvXhZiCbNP/dps=;
-        b=F+ocCLqHYAl+5Nc+4oVSi7m0MB45HhMwwGram+xxk+ok4l5Rgi55wO5VdXordRD9n3
-         JqHAZNOJ3l5EmfJDXbH9R3Zs6GcE8DVzMsqQciMx5+ccLWQulqC51YKSLjC031syfrLR
-         8LRl8tIr8z2MTLzw/wb7/S+QzhUNxoNYlb5k7OFDYTKid7ZJwMH0TxTrZ0uSf2U+HMDf
-         eCpbLo1ex6VU/MjzjpkFwcn0kHW+nvSCnTZ2pfYPs3EjtXKvZDr6D5msjGik81+r2mtz
-         zokKo3/2k5YytK/jpjzakodzAOIhLsQ8dJcPgCgHQU2kqCNu0fvm+zHQglERoWcLPK0b
-         O7tw==
+	s=arc-20240116; t=1774372003; c=relaxed/simple;
+	bh=3GEJwPfpmz1HAcFqPqDcCHr7DP7fs2OA9k1TBgcroIs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=R+HJRkdt3bI/AUpJWJG/ekEXKDBFGc84zJvyNUJj2wk9oFOHpURsS3zltYiEkZRvV+em6czUHaZaghRX2AilrDW5oo/Zj9nWy/BEqtMYQws1NCOP2aEvOL8uEGZxvFhm3vRy6oGbQVFRDzJNFC+BaJzj3w4EB9odrdVes7SCBFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-vk1-f173.google.com with SMTP id 71dfb90a1353d-5675d609621so4230739e0c.2
+        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 10:06:41 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774371961; x=1774976761;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=oHY3J33g6ujwnRTqJrGO/jD1PTpcRqvXhZiCbNP/dps=;
-        b=o3HhGnWYn9KXXGTSty7amyROSp1JrXX72SKGGI3ZeZkD3SQKcg1x2lmr8siodBr4bI
-         WQGIYmis32QJbCYhAuDOTmuz4MhiRRblghvcfVcrYKtmKfDfcJxdjq2KkNGUsOy36bNB
-         +cf5E1Lre9woO7qEMKMqMsb4caiY7D7WsoCV1wxQ6goti6ymVZ5YL7x8ReYM2LBl5QX+
-         POrCwCvN5soZOjeNl/Zu2wakM8sEaKkwXPQy8+MSZV8uwlsWGuCaNfiJB7ymZj2Lnp4x
-         CaQCRAzX3vJE4AwlWW8l4Al63LZ1vD+oLdqnX6CEhy98Dqnbnzc09KKTt/N/ct7+bFBq
-         nqQg==
-X-Forwarded-Encrypted: i=1; AJvYcCUIX6f/fQ7oBsMX5Q07bHDIjKB1wweWvlKr8DBumPV2lr1t9khT3zdA8L4GEXa1zWbTXSVjAcJNMKk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyZzTTfcu+PhBSq/SAn3tH38kO4U3QscAkZJgpxmaQMPrPyD3QV
-	S7lqZkD2c7idHzQHlSs6SEuo5xmJIUrVTkKU2tJlnAtW+z10/d48AmBO+0cfGEVYOA==
-X-Gm-Gg: ATEYQzxD6L4V+DMTp6p62/MQ6OoQkcT9b0ERWFkggj0V6h4Ou5crR8w7lgeXDtyHcXJ
-	CS8RwN7El+xU3+WYFJDJevygLBZA0jnGejevvxn/SNEkICRu9wdUmlcefPdiMlD37K4toobDcIw
-	TVlsMtYgytH3/JUEE2YfRpshoAJdYUSgg9DauzHjsr29ZuWsnKsfs1D5g0RsexFGq86MVf+Smci
-	gQsP+umJ59uhzggGu6mCQaali8+Of6tDMyP4nxMVJNzDLD6C/6FJ86pIvsYPMO+tJwGAN8eC0Jv
-	0Q6XTYPI6ZjirDHCzRU6qK+p+wHxoUvwSfPmmSi65nalQtloEnCz5qC0IIu/GMTXqRmaQZItsOC
-	focHrqQjMSu8YFs8CroKWlKjwTJ0B6sRcDZa6OLlBUJF1EhZH5cXzIYFFLryk7Fr83LPSrGrCE1
-	LQc1J/DOX8sUFsKjEkqcc9iO1HeqeoIxMp9LugbPFlGfo0rBhiAmTSiH8/wDQvXA==
-X-Received: by 2002:a17:90b:2249:b0:35b:a53a:7d0b with SMTP id 98e67ed59e1d1-35c0dd3ae00mr92968a91.20.1774371960194;
-        Tue, 24 Mar 2026 10:06:00 -0700 (PDT)
-Received: from google.com (239.23.105.34.bc.googleusercontent.com. [34.105.23.239])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-35c03172a8asm3524836a91.15.2026.03.24.10.05.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Mar 2026 10:05:59 -0700 (PDT)
-Date: Tue, 24 Mar 2026 17:05:55 +0000
-From: David Matlack <dmatlack@google.com>
-To: Yi Liu <yi.l.liu@intel.com>
-Cc: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Arnd Bergmann <arnd@arndb.de>,
-	Askar Safin <safinaskar@gmail.com>,
-	"Borislav Petkov (AMD)" <bp@alien8.de>,
-	Chris Li <chrisl@kernel.org>,
-	Dapeng Mi <dapeng1.mi@linux.intel.com>,
-	David Rientjes <rientjes@google.com>,
-	Feng Tang <feng.tang@linux.alibaba.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
-	Kees Cook <kees@kernel.org>, Kevin Tian <kevin.tian@intel.com>,
-	kexec@lists.infradead.org, kvm@vger.kernel.org,
-	Leon Romanovsky <leon@kernel.org>,
-	Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-mm@kvack.org, linux-pci@vger.kernel.org,
-	Li RongQing <lirongqing@baidu.com>, Lukas Wunner <lukas@wunner.de>,
-	Marco Elver <elver@google.com>,
-	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	"Paul E. McKenney" <paulmck@kernel.org>,
-	Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
-	"Peter Zijlstra (Intel)" <peterz@infradead.org>,
-	Pranjal Shrivastava <praan@google.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Raghavendra Rao Ananta <rananta@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	William Tu <witu@nvidia.com>, Zhu Yanjun <yanjun.zhu@linux.dev>
-Subject: Re: [PATCH v3 08/24] vfio/pci: Retrieve preserved device files after
- Live Update
-Message-ID: <acLEczJW3sGpeL5b@google.com>
-References: <20260323235817.1960573-1-dmatlack@google.com>
- <20260323235817.1960573-9-dmatlack@google.com>
- <815947ee-2603-47f0-9b03-f523601eae86@intel.com>
+        d=1e100.net; s=20251104; t=1774372000; x=1774976800;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=imA4hBFgRxEV6K6PxesH3aFI8Gk9es7sFYCGiASF9lc=;
+        b=MWSfw/KSkk79woHXsrdfK8b6+C6SEZTF4HEt2beWVBcRXAXwTtm7q8Bd0cV4yV9YGJ
+         v26b9Mq2m6F7Hex7U6119VZyWdQresiqqisIFE5QlB41Q6Ujz8NMzIW63s42CmgJeOdk
+         bMoGDhCegehpazV4BkakL/GPvySpLq3sd/Dj0GwhB3MFVozcSKdPBBWCG+yIFe1J8yRo
+         dS+LgS0CkWhzouir+El2Cpv1bnUyf/imS/j80neVWC+446YblawKUZXNEd8Ov/bdY666
+         Wq2HDKxA0nuE10CG9+GTqI86h8H4XwPbv7lC4Ds53uPEqyE+oPDeXAvQKT8YrRH1yn5m
+         EE+g==
+X-Gm-Message-State: AOJu0Ywl8E2raWgUWpVaZIDdkcYRzlCmdt2wtJol/DoU2ztmGVzcwSYU
+	4ZyCu+1pH7HH/Ngk7TCurZZmxjxqbuao0W9+xqN5m0XtvRf28qTDf8dYOUerGYH2goc=
+X-Gm-Gg: ATEYQzzZAs2cZxQ7Q789FEJueABBLHrtYgV7Q4NNRM3RXD/7SyBbfFzVHpVBRj11Tc+
+	ud6BdUYTzL4tjlEwxhOMvjcFgHti7S4eXsfBYWhbfcO3qvMtzjJKxwSA2DBoPskcwoCendfRlx0
+	ZVU/6/PMhywRtroG3JbbvRJaTcze38KeWUv4+UdgV7rFpFReklNirkafvMhOmvCDt/QnR+cEaOI
+	nTOOTGXrXMX5i3P2ls6YSIIP13GoXVSKhCZx2WvwdHHP6a6FfRg5qxFUZR/HzI3EsjSGkw0s9ks
+	i08Q8tQVhu1VBr0+AguRTvg7QichL83sUxXODA6zL8Twpl7TeA69OX2c+w23W1uGbbGS6Ed59Ap
+	VRWn2ZCD7imXMz4UhZKVECGQ5uYDX9JEGxdrpYM0ScPS7u6nrDs2+rxPi1pZayvk0RoTJW8XVuF
+	76pVFauLRmfEuree2sFCYgHzN+qmwicU62nn/qXgkvlToeztsIaFzyIhwLERvY5pmY
+X-Received: by 2002:a05:6122:4899:b0:56b:7cf0:cf67 with SMTP id 71dfb90a1353d-56d2210575dmr398668e0c.15.1774372000430;
+        Tue, 24 Mar 2026 10:06:40 -0700 (PDT)
+Received: from mail-vk1-f178.google.com (mail-vk1-f178.google.com. [209.85.221.178])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-56ce54d6b6asm14620086e0c.4.2026.03.24.10.06.35
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 24 Mar 2026 10:06:36 -0700 (PDT)
+Received: by mail-vk1-f178.google.com with SMTP id 71dfb90a1353d-56b6c7c8d00so3452524e0c.3
+        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 10:06:35 -0700 (PDT)
+X-Received: by 2002:a05:6122:1da4:b0:56b:5978:22f5 with SMTP id
+ 71dfb90a1353d-56d220a8b85mr416671e0c.12.1774371994638; Tue, 24 Mar 2026
+ 10:06:34 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <815947ee-2603-47f0-9b03-f523601eae86@intel.com>
+References: <20260324165633.4583-1-ilpo.jarvinen@linux.intel.com> <20260324165633.4583-6-ilpo.jarvinen@linux.intel.com>
+In-Reply-To: <20260324165633.4583-6-ilpo.jarvinen@linux.intel.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 24 Mar 2026 18:06:22 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdXX16=pih34yehj=3bJkg2H3ivGUj_34JDg31ABheLE5Q@mail.gmail.com>
+X-Gm-Features: AQROBzA3vydAXwvxX7mNaSzU55R-3eBg9lznDuFtNbFYtRdYd66gsLQKONTytjo
+Message-ID: <CAMuHMdXX16=pih34yehj=3bJkg2H3ivGUj_34JDg31ABheLE5Q@mail.gmail.com>
+Subject: Re: [PATCH 05/10] am68k/PCI: Remove unnecessary second application of align
+To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, 
+	Guenter Roeck <linux@roeck-us.net>, linux-alpha@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-m68k@lists.linux-m68k.org, 
+	linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, 
+	linux-sh@vger.kernel.org, Russell King <linux@armlinux.org.uk>, 
+	Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Helge Deller <deller@gmx.de>, 
+	Michael Ellerman <mpe@ellerman.id.au>, Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
+	Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, 
+	"H. Peter Anvin" <hpa@zytor.com>, Chris Zankel <chris@zankel.net>, Max Filippov <jcmvbkbc@gmail.com>, 
+	Madhavan Srinivasan <maddy@linux.ibm.com>, Yoshinori Sato <ysato@users.sourceforge.jp>, 
+	Rich Felker <dalias@libc.org>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
+	linux-kernel@vger.kernel.org, Greg Ungerer <gerg@linux-m68k.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 2026-03-24 09:08 PM, Yi Liu wrote:
-> On 3/24/26 07:58, David Matlack wrote:
-> > From: Vipin Sharma <vipinsh@google.com>
-> > 
-> > Enable userspace to retrieve preserved VFIO device files from VFIO after
-> > a Live Update by implementing the retrieve() and finish() file handler
-> > callbacks.
-> > 
-> > Use an anonymous inode when creating the file, since the retrieved
-> > device file is not opened through any particular cdev inode, and the
-> > cdev inode does not matter in practice.
-> 
-> do we have a list of struct file fields that do not matter?
+CC gerg
 
-My understanding is that VFIO only cares about these fields in struct
-file:
-
- - private_data: Pointer to struct vfio_device_file
- - f_op: Pointer to vfio_device_fops
- - f_mapping: Pointer to vfio_device->inode->i_mapping
-
-This is based on cross-referencing VFIO_GROUP_GET_DEVICE_FD (which uses
-an anonymous inode) and the cdev code.
-
-> > +err_free_device_file:
-> > +	kvfree(df);
-> 
-> any reason to use kvfree()?
-
-No this can be kfree(). Will fix in v4.
+On Tue, 24 Mar 2026 at 17:59, Ilpo J=C3=A4rvinen
+<ilpo.jarvinen@linux.intel.com> wrote:
+>
+> Aligning res->start by align inside pcibios_align_resource() is
+> unnecessary because caller of pcibios_align_resource() is
+> __find_resource_space() that aligns res->start with align before
+> calling pcibios_align_resource().
+>
+> Aligning by align in case of IORESOURCE_IO && start & 0x300 cannot ever
+> result in changing start either because 0x300 bits would have not
+> survived the earlier alignment if align was large enough to have an
+> impact.
+>
+> Thus, remove the duplicated aligning from pcibios_align_resource().
+>
+> Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
+> ---
+>  arch/m68k/kernel/pcibios.c | 2 --
+>  1 file changed, 2 deletions(-)
+>
+> diff --git a/arch/m68k/kernel/pcibios.c b/arch/m68k/kernel/pcibios.c
+> index 1415f6e4e5ce..7e286ee1976b 100644
+> --- a/arch/m68k/kernel/pcibios.c
+> +++ b/arch/m68k/kernel/pcibios.c
+> @@ -36,8 +36,6 @@ resource_size_t pcibios_align_resource(void *data, cons=
+t struct resource *res,
+>         if ((res->flags & IORESOURCE_IO) && (start & 0x300))
+>                 start =3D (start + 0x3ff) & ~0x3ff;
+>
+> -       start =3D (start + align - 1) & ~(align - 1);
+> -
+>         return start;
+>  }
+>
+> --
+> 2.39.5
