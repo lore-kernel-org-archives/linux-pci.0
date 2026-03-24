@@ -1,43 +1,47 @@
-Received: from mail-24418.protonmail.ch (mail-24418.protonmail.ch [109.224.244.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BAA1215F6B
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 05:53:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.224.244.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F6F31A6819;
+	Tue, 24 Mar 2026 05:59:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774331626; cv=none; b=GMe67zo3b9Ekm3KCcggyaNTexk4Ch4PqYBoMk+p3eb3pR3XbILh+oAfrxcyaIJS4UbcgSd1iaMN3OjBeo6S0UDKvSM8Tpu8WTQy1RyHV19R1x8Hvj77RsmTwmbwkSoh7v7x2OuX615vfLUnwtzRfwxsOQdbyJcQ4uV0hEnzPI10=
+	t=1774331983; cv=none; b=fHpUyFoSPXjvn9FTCwDmEdHfLzaTSO1A05f+oosCNR33yDaCc51abJGF4g0kFQiJBm/f4I7bVVwgwae0Ha0w5gLicO6aneoj+BD0zR4TW61i3caek+gZVsyenLNz2hajFSnS5oYeAsp2q3khnNvjZOTT5hzy/htfl4jvSlZts2Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774331626; c=relaxed/simple;
-	bh=7Kwr5ahwc1SLBh98Koj2kpTyp8J0ZK6K8uIETiGkRfM=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Qn67E4aDEuONpVfutCq7gkdKDYxy8Kk+6ETtuXXXd0uOAq6D/5dVnyb0HKAGDjNw2FTlSGTZYC3ooPSn/4uWeDvbF4ckpLhVjzD11i3MpVKF8XiETeTEAucFT+Qq9Q9/37WJ/2Yb2cIKu2IGkb5y/VyGkarygYogvLhecxD1ems=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me; spf=pass smtp.mailfrom=pm.me; dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b=S2JvZLfC; arc=none smtp.client-ip=109.224.244.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pm.me
+	s=arc-20240116; t=1774331983; c=relaxed/simple;
+	bh=ofK4Z+3ftFUTvJJazDhIQZbIdvWUtQmmTWYDW3/HgXI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UJt8IOnn0fJN7YyAZQZqCqsiAY1FU1bBA2WxccQLt7YDIi+j61wfJyWMa+433WLF1+enkX0nmxH0niCOYEQkSY90sNtyNDfBkVU23d6M0XWNTkXAW7PRaPjrYgQB5I2XXVEaOmRhY1WnJ68FGsP3bsu3rkTlosmvBEG10TmByEI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zt4VSAuv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b="S2JvZLfC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pm.me;
-	s=protonmail3; t=1774331616; x=1774590816;
-	bh=lZYMDkNctrcYm24rTUbHsJxXF75rTtX+72u0W3PoQhU=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=S2JvZLfC9aScP7BePsT5X5FdmhhDOANGiL98+2FxzrCDRuDjCEpbcqY5DfKbxGJRk
-	 GRa4o987FSGZ3SHIIM467BPp7+u4wK1XcMJ8/Uz4gCgSOrch1WzD3WSk1bR3dP8eJ8
-	 q6SLRJN5/8fFPol4ieCPMJ+j7+tsaZ+cEkR+8qxx/ft5d1WXHspa3FMW91pGQTX6L1
-	 ediLO+5ZQlv9O/kHpU317yAb7DdNg/s2eGdDMpz2TF642RzZhORjjQTKhrLIca+Z/A
-	 fMIf4NzG/8OnaLPvHV+fgTSmiZuMnl3i39o/jVOhgyFBr4crK4yx1Ms3VIiKj5Kb4C
-	 xJhSHNCVMqYGg==
-Date: Tue, 24 Mar 2026 05:53:30 +0000
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zt4VSAuv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 879F9C19424;
+	Tue, 24 Mar 2026 05:59:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774331982;
+	bh=ofK4Z+3ftFUTvJJazDhIQZbIdvWUtQmmTWYDW3/HgXI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Zt4VSAuv4R6aJoIxAxIvCtxhChwkaT961lGZmXOa71KTTqqyOidMrbYpgF6WO/y2d
+	 xu+y4Sl41M+91xBgARpl0hF+3/iji+tatt9/B+CsfzTXUHjPc4UjBAxxUXP1QNIDG2
+	 n3RfKttHFQYC/9AbKal1d7QKnKq56xLsNEaL1ylwg30KIJrHlh0IDGu5uES1MVYUUP
+	 /vmuoFyFkIbfzT3Nub91bZt0QPAVtQN+wnac50nojh/D+7XmZ12fpl3qZcLjgsrJYd
+	 aChzlJ1XtGYl8INKNtOTGHrOaJ9wux8MIhW30ElkdAc4qpf1zcV/YTuOn6ZFZ5JDtC
+	 yzWLP0uK4l+DA==
+Date: Tue, 24 Mar 2026 11:29:26 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
 To: Bjorn Helgaas <helgaas@kernel.org>
-From: mx2pg@pm.me
-Cc: Lukas Wunner <lukas@wunner.de>, Jonathan Corbet <corbet@lwn.net>, linux-pci@vger.kernel.org, linux-doc@vger.kernel.org, Mika Westerberg <mika.westerberg@linux.intel.com>, Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>, Kai-Heng Feng <kaihengf@nvidia.com>
-Subject: Re: [PATCH] Documentation: PCI: Document decoding of TLP Header in AER messages
-Message-ID: <jlpBGxAZL6_8dQI417NowB0RVfrnwcnuaNvBlTN035buqP4dRBJaaX3fwqtYxZu2evmcNCAJVzj2suZKDA5iriUSrpj_ziWQVWxZS3nEkEg=@pm.me>
-In-Reply-To: <20260323165038.GA830530@bhelgaas>
-References: <20260323165038.GA830530@bhelgaas>
-Feedback-ID: 168671048:user:proton
-X-Pm-Message-ID: 49e3d4638ab22c96b083138dc14f35e22e4ba111
+Cc: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>, andersson@kernel.org, 
+	konradybcio@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	jingoohan1@gmail.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
+	bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org, kishon@kernel.org, 
+	neil.armstrong@linaro.org, abel.vesa@linaro.org, kw@linux.com, 
+	linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com, 
+	quic_krichai@quicinc.com, quic_vbadigan@quicinc.com
+Subject: Re: [PATCH v1 1/1] arm64: dts: qcom: hamoa: Move PCIe PERST and Wake
+ GPIOs to port nodes
+Message-ID: <lct4q52piv64zudohkrfetm3q7x27ey5j7efjfdjmsxw45pvxd@vlxvsromas3u>
+References: <f5vqy4tfhfxeu4li33qffjzrlgqgbflidds35qdni3trdoues2@kvuzjxenrdff>
+ <20260319171728.GA505341@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,145 +49,120 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260319171728.GA505341@bhelgaas>
 
-  One thing worth calling out: starting with PCIe 6.0, Flit Mode is        =
-                                                                           =
-                                       =20
-  mandatory at 64.0 GT/s and supported at all PCIe link speeds, so a       =
-                                                                           =
-                                       =20
-  Flit-capable PCIe 6.x link may operate below 64.0 GT/s and still be      =
-                                                                           =
-                                       =20
-  in Flit Mode.  The raw TLP Header bytes do not encode the framing =
-=E2=80=94                                                                  =
-                                                      =20
-  the same four bytes decode to entirely different packet types in  =20
-  non-Flit vs Flit framing.  The negotiated mode can be read from the      =
-                                                                           =
-                                       =20
-  Flit Mode Status bit in Link Status 2, or via lspci -vv on a recent      =
-                                                                           =
-                                       =20
-  pciutils build.                                                   =20
-                                                                           =
-                                                                           =
-                                       =20
-  tlp-tool defaults to non-Flit, which is correct for the vast majority    =
-                                                                           =
-                                       =20
-  of hardware deployed today.  That will change: as PCIe 6.x adoption =20
-  grows, a significant share of TLP debugging will involve Flit Mode       =
-                                                                           =
-                                       =20
-  links, and this is already a concern among switch and device vendors     =
-                                                                           =
-                                       =20
-  working through the transition.  Users on Flit Mode links must pass      =
-                                                                           =
-                                       =20
-  --flit:                                                                  =
-                                                                           =
-                                       =20
-                                                                           =
-                                                                           =
-                                       =20
-    # non-Flit link (default, most common today)                           =
-                                                                           =
-                                       =20
-    curl -L https://git.kernel.org/linus/2ca1c94ce0b6 | rtlp-tool --aer    =
-                                                                           =
-                                       =20
-                                                                      =20
-    # Flit Mode link                                                       =
-                                                                           =
-                                       =20
-    curl -L https://git.kernel.org/linus/2ca1c94ce0b6 | rtlp-tool --aer --f=
-lit
-                                                                           =
-  =20
-  It may be worth a one-liner in the Documentation patch:                  =
-                                                                           =
-                                       =20
-                                                        =20
-    For PCIe 6.x links with Flit Mode negotiated (check Flit Mode Status   =
-                                                                           =
-                                       =20
-    in Link Status 2, or lspci -vv), pass --flit to rtlp-tool.             =
-                                                                           =
-                                       =20
-  =20
-  Maciej    =20
-
-
-
-On Monday, March 23rd, 2026 at 9:50 AM, Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
-
-> On Mon, Mar 23, 2026 at 07:52:39AM +0100, Lukas Wunner wrote:
-> > The prefix/header of the TLP that caused an error is recorded by the Ro=
-ot
-> > Complex and emitted to the kernel log in raw hex format.  Document the
-> > existence and usage of tlp-tool, which allows decoding the TLP Header
-> > into human-readable form.
+On Thu, Mar 19, 2026 at 12:17:28PM -0500, Bjorn Helgaas wrote:
+> On Thu, Mar 19, 2026 at 10:58:36AM +0530, Manivannan Sadhasivam wrote:
+> > On Tue, Mar 17, 2026 at 12:13:19PM -0500, Bjorn Helgaas wrote:
+> > > On Sat, Mar 14, 2026 at 07:50:50PM +0530, Manivannan Sadhasivam wrote:
+> > > > On Fri, Mar 13, 2026 at 11:45:42AM -0500, Bjorn Helgaas wrote:
+> > > > > On Fri, Mar 13, 2026 at 05:46:18PM +0800, Ziyue Zhang wrote:
+> > > > > > Commit 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake
+> > > > > > GPIOs to PCIe port nodes and add port Nodes for all PCIe ports") did not
+> > > > > > convert all Hamoa‑based platforms to the new method of defining PERST and
+> > > > > > Wake GPIOs in the PCIe root port nodes.
+> > > > > > 
+> > > > > > Without the change PCIe probe will fail. The probe failure happens because
+> > > > > > the PHY stays in the controller node while the PERST/Wake GPIOs were moved
+> > > > > > to the port nodes.
+> > > > > > 
+> > > > > > This fixes probe failures seen on the following platforms:
+> > > > > >  - x1-hp-omnibook-x14
+> > > > > >  - x1-microsoft-denali
+> > > > > >  - x1e80100-lenovo-yoga-slim7x
+> > > > > >  - x1e80100-medion-sprchrgd-14-s1
+> > > > > >  - x1p42100-lenovo-thinkbook-16
+> > > > > >  - x1-asus-zenbook-a14
+> > > > > >  - x1-crd
+> > > > > >  - x1-dell-thena
+> > > > > > 
+> > > > > > Fixes: 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake GPIOs to PCIe port nodes and add port Nodes for all PCIe ports")
+> > > > > 
+> > > > > Are you saying that DTs in the field broke because of some kernel
+> > > > > change?  That's not supposed to happen.  Even though PHY, PERST, and
+> > > > > Wake GPIOs should be described in Root Port nodes instead of the Root
+> > > > > Complex node in *future* DTs, the kernel is still supposed to accept
+> > > > > the old style with them described in the Root Complex node.
+> > > > 
+> > > > This is not related to the driver change. The driver correctly
+> > > > parses all Root Port properties either in the Root Complex node (old
+> > > > binding) or Root Port node (new binding). But commit 960609b22be5,
+> > > > left converting mentioned board DTS to the new binding, leaving
+> > > > those affected platforms in a half baked state i.e., some properties
+> > > > in RC node and some in Root Port node. Driver cannot parse such
+> > > > combinations, so it fails correctly so.
+> > > 
+> > > The commit log mentions probe failures on some machines.  I'd like it
+> > > to be more clear about who is affected and what they need to do to fix
+> > > their machines.
+> > 
+> > There is already a list of affected machines mentioned in the commit
+> > message.
 > >
-> > The TLP Header hints at the root cause of an error, yet is often ignore=
-d
-> > because of its seeming opaqueness.  Instead, PCIe errors are frequently
-> > worked around by a change in the kernel without fully understanding the
-> > actual source of the problem.  With more documentation on available too=
-ls
-> > we'll hopefully come up with better solutions.
+> > And for fix, they just need to apply this patch. Or once this patch
+> > gets merged into v7.0-rcS, v7.0 will have no issue.
 > >
-> > There are also wireshark dissectors for TLPs, but it seems they expect =
-a
-> > complete TLP, not just the header, and they cannot grok the hex format
-> > emitted by the kernel directly.  tlp-tool appears to be the most cut an=
-d
-> > dried solution out there.
-> >
-> > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> > Cc: Maciej Grochowski <mx2pg@pm.me>
->=20
-> Applied to pci/for-linus for v7.0, thanks!
->=20
-> I tweaked the commit log to note that the Header Log is in the AER
-> Capability, which may be in any PCIe function.
->=20
-> > ---
-> > We could also go one step further and point users to this tool
-> > in a printk_once() message when the first error occurs.
-> > For now, just amending the documentation is probably sufficient.
-> >
-> >  Documentation/PCI/pcieaer-howto.rst | 10 ++++++++++
-> >  1 file changed, 10 insertions(+)
-> >
-> > diff --git a/Documentation/PCI/pcieaer-howto.rst b/Documentation/PCI/pc=
-ieaer-howto.rst
-> > index 3210c47..90fdfdd 100644
-> > --- a/Documentation/PCI/pcieaer-howto.rst
-> > +++ b/Documentation/PCI/pcieaer-howto.rst
-> > @@ -85,6 +85,16 @@ In the example, 'Requester ID' means the ID of the d=
-evice that sent
-> >  the error message to the Root Port. Please refer to PCIe specs for oth=
-er
-> >  fields.
-> >
-> > +The 'TLP Header' is the prefix/header of the TLP that caused the error
-> > +in raw hex format. To decode the TLP Header into human-readable form
-> > +one may use tlp-tool:
-> > +
-> > +https://github.com/mmpg-x86/tlp-tool
-> > +
-> > +Example usage::
-> > +
-> > +  curl -L https://git.kernel.org/linus/2ca1c94ce0b6 | rtlp-tool --aer
-> > +
-> >  AER Ratelimits
-> >  --------------
-> >
-> > --
-> > 2.51.0
-> >
+> > >  If it only affects developers who generated DTs based on
+> > >  960609b22be5 for internal testing, we should say that so it's
+> > >  clear that no end users will see any regressions or boot
+> > >  failures.
+> > 
+> > Whoever have included commit 960609b22be5 in their kernel and using
+> > the above mentioned machines will see the failure. But looks like no
+> > one really tested v7.0-rcS on these machines as we haven't gotten
+> > any reports so far.
 > 
+> Two points:
+> 
+>   - a2fbecdbbb9d ("PCI: qcom: Add support for parsing the new Root
+>     Port binding") is intended for hardware with multiple Root Ports
+>     with independent PHY/reset controls.
+> 
+
+Not really. The commit was a prerequisite for adding multi-Root Port
+controllers, but the intention is also to move the Root Port resources to Root
+Port node and not stuff everything in the Host Bridge node.
+
+>     The driver will always fall back to PHY/reset info in the host
+>     bridge, so I think the only reason to do 960609b22be5 and this fix
+>     is if hamoa.dtsi will also be used for hardware with multiple Root
+>     Ports.  If there's no plan for multiple RPs with hamoa.dtsi,
+>     reverting 960609b22be5 is another, less risky, option.
+> 
+
+That will leave things in a messy state. Our intention is to move Root Port
+resources to Root Port nodes for all SoCs irrespective of whether they support
+multi-RPs or not.
+
+>   - 960609b22be5 only touches .dtsi and .dts files; it doesn't change
+>     the kernel itself.
+> 
+>     So I assume this issue only affects somebody who used v7.0-rc1 to
+>     rebuild the DTB for one of those machines and then installed that
+>     new DTB on their system.  That sounds like developers to me, not
+>     end users.
+> 
+
+Unfortunately, DTB is still not treated as a firmware like ACPI. And the fact
+that we build the DTBs with the kernel, causes the DTBs to be updated whenever
+an end user or a developer builds the kernel .deb package using 'make deb-pkg'
+and installs then package using 'dpkg -i'.
+
+And most of the users of these affected machines are pretty much both end users
+and developers who know how to build the kernel themselves, so they won't be
+updating the kernel through their distro update.
+
+>     The commit log already mentions the affected machines.  I'm
+>     suggesting that it should also say something about the fact that
+>     only DTBs built with 960609b22be5 are affected, i.e., DTBs built
+>     with 960609b22be5 but without this fix are incompatible with the
+>     kernel driver.
+
+Sure.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
