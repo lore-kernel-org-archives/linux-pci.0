@@ -1,163 +1,225 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com [209.85.167.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3CF03563F6
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 07:49:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774338575; cv=none; b=YSsRKGX0xyDqfTF4x0Y9Rta0/pv4JXqGbry4qLRCderKkBnqyeXVEbAZfjw+z189EHDGohMXSnyjY7o4W7MhK7o2tuPGHYR/dSHmiweviVRWhYshqaJWCIXFPmLnlJPHRJYmZpdMV1SWQKg/1zAU3dxTK5TOIoo+dm0HVVzzTSk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774338575; c=relaxed/simple;
-	bh=W2oLhAEL17w3es0YuJ0OK7GjWfVlwSZ9xozpBpnvASY=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=TA5XvRB/I7SICRkDWngKlHO3W7NUIjHj/0b/oo/wU+Oq0gtZVigvqIlqmD+jBzcrqZa+qxPV0f/Yl/sI6A9QvEoY3LIxPftkOsLHS9JMOOs4KpdZCFg3UYhrPZlSazR7PSiFeg+GJBaX4e4zGtVr9iGnsRsMFb8jF/Pc+ddwJPk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=bQ7/gJ65; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ftpzT7Bt; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5615B322533
+	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 07:52:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.51
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774338777; cv=pass; b=clbkaJW3nExK/OFjYel8Hink6vR+5g6OWLhQG7+ZdbD6vEzK4LiLsLZIruNKbKEt8TfoIxqlrEh5/hHAkKVI80h5Af4/EbloedI99RGLcghi01VgUBW8RN5QHfbUxW2CrP7b+MO4Sd2pSFbNka9ewkTzBbsVFVvaz93QgZ6sfBQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774338777; c=relaxed/simple;
+	bh=USBh+tVheLxmbx53BLl5BUi7fvlJIIwzAaAzfKH9GYE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=us8xPVTkRACdcmD6lS4hEc0M7IjSjGDU7/rDRpPvTXuEYedwD4oNo5lhXTdFoo8+O8eS4WRoKfKSCmaGx0Wu5zsJCDoZ1GJ0BVITxZNAVRQ5E2BRnSTWAvVfsxxj2u1lgB9gFvqbeUf41lYAQ3npq+mrndgjeFoZNMhb3q+YhpM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=iRY9wiXL; arc=pass smtp.client-ip=209.85.167.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="bQ7/gJ65";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ftpzT7Bt"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62O3dDIW362500
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 07:49:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	2cyJ+xo5J5uXO5RSDiJtrPj/qdCmHyoKNI/w9qldPyo=; b=bQ7/gJ65rZpY/3zQ
-	bm4iOWvzXNgKPrvlm5mlRzozCdqYJ989reLMknoDBwQBvVb+RYl0RQm0EbiOZVg+
-	EQf/mHoFAOx0A9DJREHr6A9q96N5AGUtSRseLwqwwwuNSb5XxBJeroxTGI9g9DSd
-	3i4JhIcgoc8aazFcPyfc4P3M//AKR+r8VnS2HdQ2xvoOdVSjlcNWQmQYbf0fSKkS
-	VlPS/89tuzsHevKKQptthWtupN3moOB2wYADRexohxFkm7yhfZL85QtPtMbTWSpJ
-	r84SlYLdAemxzz8N36Q3K/J1K6OvgPlwHyNr5jKxYv5QHBnMC/gRVwaDp0pe88EI
-	8P3BVg==
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d33k34577-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 07:49:25 +0000 (GMT)
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-35641c14663so6589386a91.2
-        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 00:49:25 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="iRY9wiXL"
+Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-59dea72099eso4560958e87.0
+        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 00:52:46 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1774338764; cv=none;
+        d=google.com; s=arc-20240605;
+        b=KOAZ1GtCSrl2zkPBxtw1RX4GwsNnrYm73i0pGjBQ6snj1RSOkxevBEcancue12azPL
+         ngb6V4TuZn4g9FIlXhljVF3IoW+a3FFO58MoHxEEBOCMLiGtMr9GSEduTZrs41AkbHrd
+         omKWAyKXXmBGM2b4d2IRB9B5c5W/XMJxWCxBo9MXyV7ktNYi92X5OEaCcX1TAo/o7UHV
+         1DIPTo4Q/IWy5QAhqfigw4aSjqio6RlS2QR6KlzJ3emqcO2K2aa/Q+Jx1X+P2Dnx1luy
+         /5YdlMFewE8KIu079WBRQQ2YBMsqNXD7PaN8NdR9fH+YVjMTjYTzAIciYcCqeXoiyBFG
+         9uyA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=Tdt0USiBYnG3KyHcZx8kRYdTQ0jrISnlapnNZB8jd5g=;
+        fh=imaI9M9h/Dz5ibXviN7Owb3vavFghcNORR4nNrZpgG8=;
+        b=JmXhfObibYtS76x1a10vu7SRiu1NfNReg1PHzStEDEVM7mObIfY6bFfuiHl8baeMBi
+         l+N82IP08FHoS7lXfZ0k/Q/sjQdlidKgBxtgUB3fl1jfD7E3KOA0dbfetlN4sjGGCcL1
+         DwvZZC2tvYZS+r4eGLJgaaTexJeCcouWvIyOIQTaCvVNnNdXdhth6C5NFQfhxi2DkxRt
+         Qhhu37eJYPTrP5TjhbM7J++FV4Uwe8VbmxDP8HaiiUxqYg0XUSuSFO3XClyIfX+WO3PZ
+         ppp7LQIKjJAUBFqjvXzdycIfvpspi5DzbH+108Yiz8uXT6iUEV1PV62UxwFbk09uSc6Q
+         sOdQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1774338564; x=1774943364; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+        d=chromium.org; s=google; t=1774338764; x=1774943564; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=2cyJ+xo5J5uXO5RSDiJtrPj/qdCmHyoKNI/w9qldPyo=;
-        b=ftpzT7BtvqL5hQBXHOZYQBEG5RO4n0fit8Q0tK70T9jfEnxDiz7m1yO0XbrPL6BEHl
-         IercNPRYuwhMyESSUtXhodbyMth8VzD2jFljkNbtF3/yuIHjULsPK8+9vhjwef1HKpqM
-         I1jKFhTR6dyQaCSF9eud5UCvFI+bqiZeYzriU2lhZ87RlgsD05oS5/FXbLVPhdxe6V9z
-         8wIyhuOe3DMnzP5Guhsm7vezntTX8zm4tw+fwLi7/c09eCZKvovS4PU9HLkmYMPJ5Ptj
-         acagPhVUFRsGxZY/J2p9ZsnQrkHBCjAMdacOUS9mhQLK7RMZVoY0iNBoGiyYK43Ol1bl
-         b7xA==
+        bh=Tdt0USiBYnG3KyHcZx8kRYdTQ0jrISnlapnNZB8jd5g=;
+        b=iRY9wiXL/qG+ILoZm/GL9d69b7QDCkxBs/Ob+UZrDbdf9KiMgIIFOVrgjqU0DXM5oT
+         9Acn4Y0abE6SW+c3A8TAyNMHoFC2wwV+3PqaF0R7WCo6bZKaWV7FQGAuFTKSxMrz+q2f
+         gFLffwoTmvHTCwLT3KRRPh1OV+TjhRlXdwHyY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774338564; x=1774943364;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
+        d=1e100.net; s=20251104; t=1774338764; x=1774943564;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=2cyJ+xo5J5uXO5RSDiJtrPj/qdCmHyoKNI/w9qldPyo=;
-        b=g2dbY9Ip8eCGYuarCJiw2/TPA3/cG/8zzSOFJqdbt+sSFxaXbZBINO+pd9pnSaBrSB
-         8BhmRq2OORdfORpqU2b0aFnszhQ4rMlMVaR4A2edtWbTUKqlC8ZQ7b3XCHNmzE35HlCN
-         77KVZkOLZjdlsVYW2yyL5z6XjfShkT82506K4Jg3jZTpeFh2hCQbj98cu/mjO09SBBo7
-         rlGqhL7iNaHpq5mySYfq4ia/JDB02iaArz2UxUgyvM1HTukvBkHb+BLr9QNSL+MEeVI8
-         MzyQhjh1XYVXCNkEJn8EQMveGtzzkbrd6IBzuxTn4Mzw5j7MV5rIk437xpbibBDoe+JK
-         jfCg==
-X-Forwarded-Encrypted: i=1; AJvYcCU00d1Rgq8mDAoV2+EHd/I1mvIpKdaAqPyF/p5X4FBElpOz3Jw8R7qY6+0FXorCc4U2QfwkR4AIlks=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyn4tSLnkO0ThxBbuVThY0mQzvNsC6GmCkBejcebi1eMG2hK1Jt
-	Igs4Kr39Rf4FtHzDF/j7DZpiABQuGl2v2oP+ZyaGQYeTv9Hg5V5dSHgt3JEKQubC86gEIR8aYTf
-	i7uSgaeVXHbHe0+0utkGxO60kuOVurDZHHW6hjAYjnIIAV0Gsq6RDBWFOU6JHSgk=
-X-Gm-Gg: ATEYQzz4XgLK79R5cpJk1NT075FTjQgGYt1bKxKyXR5SugSfDEhZa9oA7+l1/cIMioo
-	Uk+2iRN5T2qstdOXsbDs59ONqYgAhMUE1Tv3OIQm/Vjj5CJlf5tQLoDVAHMoKE9CRwA7SCWwT0Z
-	OXiFhO59IybrX3JRnmhqqqK5VyZWBUnl5t7AITwQCUIxliGMqY98j+UIK167yVoBrv8Lg0xjJnD
-	0B3Oko6+khea47Q/VoYMEUCGDzOnHoJ6WLUHhc9ZMsAjzqpBs2+uk5vt3lOiXvqwL/IZ0L92vvm
-	kxLDzYCMshziCU6fj8w+XAQ1uPqnNxmWDyXVjgLOMxXeHayk5j+28fgVbhFwrgptDJe2S/4z0E0
-	YqkLtvznrP+O782qNWppuimU=
-X-Received: by 2002:a17:90a:6c82:b0:35b:e51b:1936 with SMTP id 98e67ed59e1d1-35be51b1952mr5318992a91.16.1774338564259;
-        Tue, 24 Mar 2026 00:49:24 -0700 (PDT)
-X-Received: by 2002:a17:90a:6c82:b0:35b:e51b:1936 with SMTP id 98e67ed59e1d1-35be51b1952mr5318965a91.16.1774338563741;
-        Tue, 24 Mar 2026 00:49:23 -0700 (PDT)
-Received: from [192.168.1.102] ([117.193.214.249])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-35c03206dcfsm1441552a91.13.2026.03.24.00.49.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Mar 2026 00:49:23 -0700 (PDT)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Chen-Yu Tsai <wenst@chromium.org>
-Cc: Bartosz Golaszewski <brgl@bgdev.pl>, linux-pci@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20260324052002.4072430-1-wenst@chromium.org>
-References: <20260324052002.4072430-1-wenst@chromium.org>
-Subject: Re: [PATCH v6 0/7] PCI: mediatek-gen3: add power control support
-Message-Id: <177433855940.26248.5285712170276296674.b4-ty@b4>
-Date: Tue, 24 Mar 2026 13:19:19 +0530
+        bh=Tdt0USiBYnG3KyHcZx8kRYdTQ0jrISnlapnNZB8jd5g=;
+        b=RHtHmmnXZ9Fvi5qBaVTGoAClOZhBRRpPmX/0V3pwMCtGg7Gf9IiwbzNrxRgQi5bxIc
+         QEx8Zz2dO0FXQ5AfS+tleqPfAMfb064hqVVAk+a8+a1PLxWaauR9Os6QccWN+j4guKxZ
+         OxbeW7Qs4aqoP2belof600gxQVhhNUjNVSXNeXkHdLWgxD9ObPC52+mqeIaDAro6ODkn
+         d7Zl+6pWZjEbcajFYQg4w4jdJq2VennfORBu4v91bVfif2zAwFOx1zz9aTNwBA8noBCK
+         1MnIUUDjR4K7vU9/wWHmNTgqNxUaw3R/nkP9vD//5DHjM2wS4FD4u2nEjjnqcONz2iK4
+         k3qA==
+X-Forwarded-Encrypted: i=1; AJvYcCVN2sLUTMPS6nNJQ3sGO+ES6FD9yknp9W/JShdd1XNLr4d1mAzXytjuNZpXDReSmfpbVWE12NHSugY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyAp1Q66UM//GaGb+w4eKC8sh/tKjf9mDg6mydhFT30i4drh0Da
+	+0fQq2GHs1e5EB84xAEIKUt37LO37aFvwmZ0W0MDSHXm1kcb4BsJ0s5P6TYZvyPjwsopaZsbknL
+	QerZtw+wCRyPQwUj3XC/iKqKjIQubkFJKYmm+rGmq
+X-Gm-Gg: ATEYQzzJytVkoEz1IBaaaYoCEF3e4pBzaL09q0GW3E4tZ7TUTTaGR1Ac15sZG52aIcZ
+	Tx9gJWLXHMa/K+5xGxJ2gYOZRx/Y6qCGy2tkbe2yedghRl+X5IgJZZFrdZtEOkWwpNbpE5+K2Ct
+	szbTDuODG4DbuyTMMYGbG++WCFDOE4jKMtogZfTUhZN+sy9gYrRxeui09/xuCdFxIUAZgvBhb6o
+	BjG5Oks6pPWQnVbz/lC+e7/nRbbbTa4YZMvcPsDIAU0OgY5SPZP4fnlMaj7KSRBfr6nAu7ytejH
+	KYRoE9LimtoPqkCKmuyjHoAyQ3gXQKQnWtFlFg==
+X-Received: by 2002:a05:6512:31c1:b0:5a1:2f0d:f31b with SMTP id
+ 2adb3069b0e04-5a285b54193mr4742075e87.21.1774338764160; Tue, 24 Mar 2026
+ 00:52:44 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.15.0
-X-Authority-Analysis: v=2.4 cv=CYYFJbrl c=1 sm=1 tr=0 ts=69c24205 cx=c_pps
- a=0uOsjrqzRL749jD1oC5vDA==:117 a=13ILl30Z8QjaXWZz8Pan+w==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
- a=VwQbUJbxAAAA:8 a=kFJ3RX7tyYxcrSALf5wA:9 a=QEXdDO2ut3YA:10
- a=mQ_c8vxmzFEMiUWkPHU9:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzI0MDA2MiBTYWx0ZWRfXw0CyR6xHDoYO
- 6BCtHapSrd4RjBoYjXubRf0SG0TOkyy/vcdVpUk90zxRhE9iyTmNIDi8jx4bUCBmQjycwfxFy9h
- eZT9D1lYBoF9+ZPDDco8OX4gu+kk3hDPtK/UyBJB04tanghmA0gsKq2041rdQxTvTsgkPkNSgzS
- Osvsi1yQP+zrVjrvtU0urUqrV+NyGHqOPMq5yulUrLDGZ/3VH8Xm2vPFCKLGxYicS6mevcp/X9J
- fKusMueMYOsxZESbqXhGwfFP3nrdWvXCvLXIwhVXbIlnTF82wBlWbhoBq9cHMDyab9jZXl2E4Xx
- AKmb/BwIjOsIK/CWlRg72ecnToy34EZbODqjsn3imEGq5h2hNepZr4vWBF8rse/v1KGYg1urRlj
- 3QAv7f/m1cY1q6WLMH7IZXIeu08j/fAWmOTF614B1ikHpMX+p4LSxv0zpaJ203q6nwmvYcpgPRJ
- aJQNhD7SYalHYAJxuUQ==
-X-Proofpoint-GUID: -BVOh3V0JUxzeNqt7R_sJ-m_ACAatV_w
-X-Proofpoint-ORIG-GUID: -BVOh3V0JUxzeNqt7R_sJ-m_ACAatV_w
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-24_02,2026-03-23_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 clxscore=1015 spamscore=0 phishscore=0 lowpriorityscore=0
- adultscore=0 malwarescore=0 bulkscore=0 impostorscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603240062
+References: <20260324052002.4072430-1-wenst@chromium.org> <ojgwqrosft5x75y3yxdawrb72k4z3chc3m6uh4mkdv7dhta3ef@qcvotm36w3ly>
+In-Reply-To: <ojgwqrosft5x75y3yxdawrb72k4z3chc3m6uh4mkdv7dhta3ef@qcvotm36w3ly>
+From: Chen-Yu Tsai <wenst@chromium.org>
+Date: Tue, 24 Mar 2026 15:52:33 +0800
+X-Gm-Features: AQROBzBm128UvbPNSaArneOenUHOuQf6cRKv0b34bJ0-HKCYO262piej0nwDdag
+Message-ID: <CAGXv+5E4V-zC8hfzZgXLL+Wbnw4jFfs0pvovU0xKeDmN17mwUw@mail.gmail.com>
+Subject: Re: [PATCH v6 0/7] PCI: mediatek-gen3: add power control support
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
+	Ryder Lee <ryder.lee@mediatek.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, linux-pci@vger.kernel.org, 
+	linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, Mar 24, 2026 at 3:44=E2=80=AFPM Manivannan Sadhasivam <mani@kernel.=
+org> wrote:
+>
+> On Tue, Mar 24, 2026 at 01:19:52PM +0800, Chen-Yu Tsai wrote:
+> > Hi folks,
+> >
+> > This is v6 of my MediaTek PCIe gen3 controller driver power control
+> > support series. This series is based on next-20260323, with the
+> > commit a2b2ca0c2477 ("Merge branch 'pci/controller/mediatek-gen3'")
+> > reverted to drop the older version.
+> >
+> > This series is ready to be merged. Please drop the older version and us=
+e
+> > this one instead.
+> >
+> > Changes since v5:
+> > - Link to v5: https://lore.kernel.org/all/20260311075223.3303497-1-wens=
+t@chromium.org/
+> > - Adapt to PCI_PWRCTRL_SLOT -> PCI_PWRCTRL_GENERIC Kconfig symbol name =
+change
+> >
+> > Changes since v4:
+> > - Link to v4: https://lore.kernel.org/all/20260310091947.2742004-1-wens=
+t@chromium.org/
+> > - Patch 1
+> >   - Expanded tabs in commit message
+> > - Patch 5
+> >   - s/mtk_pcie_device_power_(up|down)/mtk_pcie_devices_power_(up|down)/
+> > - Patch 6
+> >   - Adapted to mtk_pcie_devices_power_down() name change
+> > - Patch 7
+> >   - Fixed label typo causing build break
+> >   - Replaced "exploded" with "populated" in commit message, and added
+> >     more explanation about what "populated onto the mainboard" means.
+> >
+> > Changes since v3:
+> > - Link to v3: https://lore.kernel.org/all/20260302053109.1117091-1-wens=
+t@chromium.org/
+> > - Added two patches to move kernel setup code before controller setup
+> >   code, and controller setup code before device setup code, as requeste=
+d
+> >   by Bjorn
+> > - Dropped dts patches as they are already merged
+> >
+> > I kept all the existing reviewed-by tags, since the changes to the
+> > existing patches aren't that big.
+> >
+> > Changes since v2:
+> > - Link to v2: https://lore.kernel.org/all/20260226092234.3859740-1-wens=
+t@chromium.org/
+> > - Made PCIE_MEDIATEK_GEN3 select PCI_PWRCTRL_SLOT, following existing
+> >   examples
+> >
+> > I do wonder why the existing ones don't select PCI_PWRCTRL instead.
+> > As there are multiple providers, and now even the M.2 power sequencing
+> > driver, I think either we enable the common ones by default, or let
+> > the user pick and choose.
+> >
+>
+> I agree with you. I've sent a patch [1] to select these drivers in defcon=
+fig to
+> make the users life easier. But in the meantime, let's have this dependen=
+cy
+> as-is, otherwise, until my defconfig patch lands, there is no guarantee t=
+hat
+> these drivers will get selected by default.
+
+I would probably just make PCI_PWRCTRL_GENERIC default m or y.
+
+Or make CONFIG_PCI (and probably CONFIG_USB later on) imply
+CONFIG_POWER_SEQUENCING_PCIE_M2.
+
+ChenYu
 
 
-On Tue, 24 Mar 2026 13:19:52 +0800, Chen-Yu Tsai wrote:
-> This is v6 of my MediaTek PCIe gen3 controller driver power control
-> support series. This series is based on next-20260323, with the
-> commit a2b2ca0c2477 ("Merge branch 'pci/controller/mediatek-gen3'")
-> reverted to drop the older version.
-> 
-> This series is ready to be merged. Please drop the older version and use
-> this one instead.
-> 
-> [...]
-
-Applied, thanks!
-
-[1/7] PCI: mediatek-gen3: Clean up mtk_pcie_parse_port() with dev_err_probe()
-      commit: 71f526831e9d7db53a7b01717bfb725759b1d06f
-[2/7] PCI: mediatek-gen3: Move mtk_pcie_setup_irq() out of mtk_pcie_setup()
-      commit: 0c7398cbd5d0c0d9952b6bcf1fb738e252ea0f50
-[3/7] PCI: mediatek-gen3: Move controller setup steps before PERST# control
-      commit: 67b1ff043b0ddd88e0a6af6c4c3590a54b60eb93
-[4/7] PCI: mediatek-gen3: Add error path for resume driver callbacks
-      commit: 76190e45623aefd6a84450af5c84e793f4f6a796
-[5/7] PCI: mediatek-gen3: Split out device power helpers
-      commit: b8cbed2f4d783f4d9f3edc5dc6d2aac848de3709
-[6/7] PCI: mediatek-gen3: Disable device if further setup fails
-      commit: fded9d718161f1c8da7a8464b87a028292ad5573
-[7/7] PCI: mediatek-gen3: Integrate new pwrctrl API
-      commit: edb2f4b495fbf1b148df0deee147ea5c320f56a3
-
-Best regards,
--- 
-Manivannan Sadhasivam <mani@kernel.org>
-
+> I'll change these dependencies after v7.1-rc1.
+>
+> - Mani
+>
+> [1] https://lore.kernel.org/linux-arm-msm/20260324073931.23739-1-manivann=
+an.sadhasivam@oss.qualcomm.com
+>
+> > Changes since v1:
+> > - Link to v1: https://lore.kernel.org/all/20260224071258.2654521-1-wens=
+t@chromium.org/
+> > - commit message for patch 3 was rewritten
+> > Jianjun Wang was dropped from the recipients as the email was
+> > bouncing.
+> >
+> > This series adds power control support to the MediaTek PCIe gen3
+> > controller driver. This allows proper modeling of WiFi and NVMe
+> > adapters in the device tree and control over their power supplies.
+> >
+> > Patch 1 through 6 are cleanups and minor improvements to the driver.
+> >
+> > Patch 7 adds power control support using the new pwrctrl API to the
+> > PCIe controller driver.
+> >
+> >
+> > Thanks
+> > ChenYu
+> >
+> > [1] https://lore.kernel.org/linux-pci/20260224-pci-m2-e-v5-0-dd9b9501d3=
+3c@oss.qualcomm.com/
+> >
+> > Chen-Yu Tsai (7):
+> >   PCI: mediatek-gen3: Clean up mtk_pcie_parse_port() with
+> >     dev_err_probe()
+> >   PCI: mediatek-gen3: Move mtk_pcie_setup_irq() out of mtk_pcie_setup()
+> >   PCI: mediatek-gen3: Move controller setup steps before PERST# control
+> >   PCI: mediatek-gen3: Add error path for resume driver callbacks
+> >   PCI: mediatek-gen3: Split out device power helpers
+> >   PCI: mediatek-gen3: Disable device if further setup fails
+> >   PCI: mediatek-gen3: Integrate new pwrctrl API
+> >
+> >  drivers/pci/controller/Kconfig              |   1 +
+> >  drivers/pci/controller/pcie-mediatek-gen3.c | 223 +++++++++++---------
+> >  2 files changed, 129 insertions(+), 95 deletions(-)
+> >
+> > --
+> > 2.53.0.983.g0bb29b3bc5-goog
+> >
+>
+> --
+> =E0=AE=AE=E0=AE=A3=E0=AE=BF=E0=AE=B5=E0=AE=A3=E0=AF=8D=E0=AE=A3=E0=AE=A9=
+=E0=AF=8D =E0=AE=9A=E0=AE=A4=E0=AE=BE=E0=AE=9A=E0=AE=BF=E0=AE=B5=E0=AE=AE=
+=E0=AF=8D
