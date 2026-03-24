@@ -1,68 +1,68 @@
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011032.outbound.protection.outlook.com [40.107.208.32])
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013029.outbound.protection.outlook.com [40.93.196.29])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7104921CC58;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77718239567;
 	Tue, 24 Mar 2026 01:30:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.32
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.29
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774315852; cv=fail; b=dzSqPI5nOgDUeKSxfbyY0whFsDNEjsCmC1/Qk9RLpezNdrSlRDXWg/M6SNySaFMQODJ+jdvBswnagUwUa9N7jq6SPVuplxi9nq0r9ubVqfP6kWA7EqdL1J7kgIP9CRqYNUmvxVNiF0RLZoATkeeKI86aElhDlaHd1VWH1FUe+CU=
+	t=1774315852; cv=fail; b=SE6tbvKqBCy4CKEGCqMhzlKixr1PnKV4E//ooDY0Mh/77LWUdO6qNcCuLxFmb7gey8G6n+neHVJMIsOP3Sja1FXLHpmatfiCtDDrdI5OqTc9pJg0TH2jVbpKZZh0gdJvjNEGtg49d5aW47U8BlGyZy8pX3JiYdAwm5kE+9ggIyk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1774315852; c=relaxed/simple;
-	bh=gul9uVclujkVyo86GcG+TAaA17VqcHaPHjlxIBy5YFw=;
+	bh=Es/4zZNnMxkRotgkfaeLrG0QgAVhCWfS2Kfs2jdN0cc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lMdx08qzfBlwjGh1W4fO8E4d9EWi1LiFEaWhfFFfpn8S6tBw/YPZwRrGrsjgoKbyij1n7Zlvx5yKFS22DaMvhkHggDDyE20LraDtuCaEEML1OQ46K+Hduy2RctVa9Il6fy55AvK41NSDzWdR0XDTHa17Z6DRRR4ogsKl3tkN1Zo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=QrACZ9Z6; arc=fail smtp.client-ip=40.107.208.32
+	 MIME-Version:Content-Type; b=jDqVtFu3VkR58Hp3elVHEwtCHZRRi2oLJr5omP0RRJlee5fw1rCcmYail1Ck+TsU0eXS1bEErbRtgfb1UVm64OV6xmuf1WLygXoK9AZtSX/33b5hTBBVLdGDFgl46uX88tRin+z95JSaUw9jCQuS2MqE/AqWsQ2bCiK3+C5RPJU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=JZ6Knq12; arc=fail smtp.client-ip=40.93.196.29
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="QrACZ9Z6"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="JZ6Knq12"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=jGJLrftOB1neZUmFHuW7iQ8KoE8Z+995bGkXIqf6zM/8aloMKoahH0k0Px/qgZQ6YGwsh/c4Q1V0xy7zNeYKb3u6fQLUQW3DPmSSYd4M499lUnQMtmuewMeELJyEfcF0wfyJ7lqNFG4xzuBACubUqjNVJyPL5rrN/rQ0X3hPf86xTddf4r+wTD9Q4nlBhDRGE4NMvQ69CSp2dnDBI/Yp4aQ3FgqsXrvZ4n9l5/Q+wJXDgQ5Tlkt0+2EeE+JmFITmy66XM7F7bTrUnlHgP3rGGdV+FASBGadBoRPDKn1cv4ceel8fk4dtl/w5XkR6l1kCFMEjs4YhDeFIIlZ3MiWVLA==
+ b=FK+r1yvnhciGU/TDjBlIkLBV4FZLfFu+yyndZgrje2bRjZ2NnSLfVDSwi16QXwvrmrklYG7+RcPwbOmzzlHA7AWFqLd7uSKSUqo3Ax28EyktDJlSDZdGMEZ/neQasoCwJtbVoDy2ttow+DXDyTOEqpjeM2fhHswca8ki1TKycyRDTcnaYBofmcNKVXCM3p6yqDgiNbHhxwF0ke0+zgTNdkZZIDxv62fNur3kgLxL8D5ZQiJFh9DTxZw45Cm05Q20fkhZawAD1e7SvMQigvW4jm7Xww2rzoN7u68FQBA1HnOn7SNqdbDAfezZ8gaG5Q7bJPYl5De/04Kb/EmUwZBX6Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=uZOOkppL1ziIdW00NoMwt+w9lNpDFTZASROKYukwCy4=;
- b=NQ+hZlC9P1b/u99St0STXjlWD7U3dZ0T9SY3i+0Guf41WJB0i7wfNk0eN2d8uzGmgV6orWi2nWiwN9nqiuifybLQDLZqL60d9HKbX4uB3iFyMSudT/MfP9arZuWtItkioFRAk/BfpFKUtVB5N+atU4e/7dnT3Gmn1Pkvf1vPL+koeckjHdM2xn1lLzKl1WOvX4sEL4YRyw2KB4kcV1nDAm6ZPuKT5ZBeoZHG3E//VAlsYaTu0Gr9Tl+OeZokbiONGH3iwwJVXzaNIiR8Z2GrXdsXpZvWLRJ2/l3hSfntmsk1+haWMPckKDtdE6P30KQ8cgoqKfY9JtViOasFrt1Aqg==
+ bh=es83l2r4nDUrD2m5uzrgFlia0E01r+50Dvvc62h3UNg=;
+ b=rj74VwyLmaTt/SRKDR56NkcztK1ZvbnIXn2X+vlLoKXvMS3ivxO5n2TXTmS84cmY1L+Aybs8SWSbRALipJTsokwEAelhPjhwMpUaUbGJQ6OqH5QWRGg3TKsYmMyMkdVPmLbV/FgQyH4+jRJAlXjWcaqBanJSFvRtu5wcPb7Kc84uzGryAyOrOrlAMgiWSRNODLFjmzyxDYEzCyoMNaNkbhnUoWaW++NdTXrg79/oSLKdJVhsV+ZOPoWYtsbN+R2IQ9RLyWRbAOdmxKHXK9ZJg+rwkL5cSM54BYKZxw2eCNsOOGWF/fODY5MqHIRcDuCXzeCMSBY8ov7bPiBwkBycjw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.118.232) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
+ 216.228.118.233) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uZOOkppL1ziIdW00NoMwt+w9lNpDFTZASROKYukwCy4=;
- b=QrACZ9Z6pPOeUwqElFOfUMOvfYEZCkgZlL++odUmEu2JJfyDtGW8N41bLpoGaoO3KNXyGSrLy7hieXxVw8co6ErrAiTdOBbcjLsRa4mCIO+r3NCKR9tUgmUS1y2Gm7Dzfzt0S6S277tUNDSPMxUp+738XP832SC2KBd/4BSbaEOqaFFOdBaawsYVc1A5YuJ3+N+oEaJCYjdQ1a/zFtmEU3AIgmQQJxZlzH2We6B2ZO3jyd2Ug8xWNkk52x2DxtXQ8R26ZQLV8taC4ql4TmOLpNQeJxTyOtQQoi/z9FqQli3lr+wGSNOxYC/TQLqXSWe5u+gWCr80/PnTGrcaeeBsiA==
-Received: from BL1PR13CA0441.namprd13.prod.outlook.com (2603:10b6:208:2c3::26)
- by LV2PR12MB5824.namprd12.prod.outlook.com (2603:10b6:408:176::19) with
+ bh=es83l2r4nDUrD2m5uzrgFlia0E01r+50Dvvc62h3UNg=;
+ b=JZ6Knq12UnVJgUoYuEpc4e1yt7zdyI+1MIKTpAV8ubUnf7XDHXZC+Zw3+fG4LctWThsRSwZHuB0bmlpus5ZZ2KOlELDZWcGDbTGLkCONrOssYjHVpB7rcmQ7rYI9euf7xImIiiYLidmlyRZJKLjlwIKNcnCLDxWu1xODh7WUUeeO4Fsl84nayzOHfEPGg95AV5jehH6rn5zXQVdWUTakV9/lvi9fWVFLn3QC/hJ2z72Ieji4Akfqlfyqg+EsI6c92ZqABaBo+FoyXto0e/O4fspJiNqXSDrncitW/eVxIHmtaEd11rqwOaDdZhXzIU1D2UiNC5DARiWGArkWYTWD6A==
+Received: from BN9PR03CA0886.namprd03.prod.outlook.com (2603:10b6:408:13c::21)
+ by DS0PR12MB8018.namprd12.prod.outlook.com (2603:10b6:8:149::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.20; Tue, 24 Mar
- 2026 01:30:40 +0000
-Received: from MN1PEPF0000F0E4.namprd04.prod.outlook.com
- (2603:10b6:208:2c3:cafe::5) by BL1PR13CA0441.outlook.office365.com
- (2603:10b6:208:2c3::26) with Microsoft SMTP Server (version=TLS1_3,
+ 2026 01:30:38 +0000
+Received: from BN3PEPF0000B075.namprd04.prod.outlook.com
+ (2603:10b6:408:13c:cafe::cf) by BN9PR03CA0886.outlook.office365.com
+ (2603:10b6:408:13c::21) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.20.9723.31 via Frontend Transport; Tue,
- 24 Mar 2026 01:30:36 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
+ 24 Mar 2026 01:30:33 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.233)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.118.232) by
- MN1PEPF0000F0E4.mail.protection.outlook.com (10.167.242.42) with Microsoft
+ 216.228.118.233 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.233; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.233) by
+ BN3PEPF0000B075.mail.protection.outlook.com (10.167.243.120) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9723.19 via Frontend Transport; Tue, 24 Mar 2026 01:30:40 +0000
-Received: from drhqmail203.nvidia.com (10.126.190.182) by mail.nvidia.com
- (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
+ 15.20.9723.19 via Frontend Transport; Tue, 24 Mar 2026 01:30:38 +0000
+Received: from drhqmail202.nvidia.com (10.126.190.181) by mail.nvidia.com
+ (10.127.129.6) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 23 Mar
- 2026 18:30:18 -0700
+ 2026 18:30:20 -0700
 Received: from drhqmail201.nvidia.com (10.126.190.180) by
- drhqmail203.nvidia.com (10.126.190.182) with Microsoft SMTP Server
+ drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Mon, 23 Mar 2026 18:30:18 -0700
+ 15.2.2562.20; Mon, 23 Mar 2026 18:30:20 -0700
 Received: from build-bwicaksono-noble-20251018.internal (10.127.8.11) by
  mail.nvidia.com (10.126.190.180) with Microsoft SMTP Server id 15.2.2562.20
- via Frontend Transport; Mon, 23 Mar 2026 18:30:17 -0700
+ via Frontend Transport; Mon, 23 Mar 2026 18:30:19 -0700
 From: Besar Wicaksono <bwicaksono@nvidia.com>
 To: <will@kernel.org>, <suzuki.poulose@arm.com>, <robin.murphy@arm.com>,
 	<ilkka@os.amperecomputing.com>, <jonathan.cameron@huawei.com>
@@ -73,9 +73,9 @@ CC: <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
 	<nirmoyd@nvidia.com>, <bhelgaas@google.com>, <wangyushan12@huawei.com>,
 	<shiju.jose@huawei.com>, <linux-pci@vger.kernel.org>, Besar Wicaksono
 	<bwicaksono@nvidia.com>
-Subject: [PATCH v3 5/8] perf/arm_cspmu: nvidia: Add Tegra410 PCIE-TGT PMU
-Date: Tue, 24 Mar 2026 01:29:49 +0000
-Message-ID: <20260324012952.1923296-6-bwicaksono@nvidia.com>
+Subject: [PATCH v3 6/8] perf: add NVIDIA Tegra410 CPU Memory Latency PMU
+Date: Tue, 24 Mar 2026 01:29:50 +0000
+Message-ID: <20260324012952.1923296-7-bwicaksono@nvidia.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260324012952.1923296-1-bwicaksono@nvidia.com>
 References: <20260324012952.1923296-1-bwicaksono@nvidia.com>
@@ -90,510 +90,852 @@ Content-Type: text/plain
 X-NV-OnPremToCloud: ExternallySecured
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MN1PEPF0000F0E4:EE_|LV2PR12MB5824:EE_
-X-MS-Office365-Filtering-Correlation-Id: d74ae709-4626-409c-3048-08de8944f5b1
+X-MS-TrafficTypeDiagnostic: BN3PEPF0000B075:EE_|DS0PR12MB8018:EE_
+X-MS-Office365-Filtering-Correlation-Id: 05f50deb-3912-4bcf-6bf7-08de8944f45e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|36860700016|1800799024|7416014|376014|22082099003|56012099003|18002099003;
+	BCL:0;ARA:13230040|82310400026|1800799024|36860700016|7416014|376014|18002099003|22082099003|56012099003;
 X-Microsoft-Antispam-Message-Info:
-	DXk92KBY11dsCIibrmdFE+Jl17P2z85iWD7lSNqqSi/PSI3zTaESUx0VeMvB+2d9oR/09C3BBTwsSYtaDOtaWT2XMW/RcyG4Qd3iD30PdM9JQS+bNR0VbJBej2wAQr7umuFw3q32J0038R7J8YHpAiNGogKz5B4TOQMV+JmG/J7mezT8+SOa0QO8BeUitwTDRnJ5vc178MRQoCZz1QXnBgG2LuZ3j5UkM9IIROFeQBkLw4FaBN0COhd0F1OhmrG0x24d23uj9EAggy0g9dYra+hwGtWpZO6iwMaqqwJlUN35wRk41wuwCBmHezpWdtYHJXKmas/gl8Jvjd+CHC6BLOKrY7JDEfkNmuL2yAFOTG4hRpK795GM+q7lhk7PfwH4DRv9U4838N5hnNQxXj4zDg4ySLpMeg5yDNI9yvtEv4uvktTLQzw2jmGJ907aZFCjKqeZOVy6VQ8qwGxa4bH5Hyp/AqvRnBNRYfX2XKalvtq33UIsku2ge/Q2Hs1jNWsH+FpQONXZ2ROuz7/4OGEsz2JMad53FjgpKBPWb038TgPwLpeGKQ5EmkoJYBleSh1eEXb5rIW2QlstjyQatRHJ4q6+3sqdkzNGokmmk0VIxxc++zGeQsP1rb07G21ysLySMC/6cu2st+l3nFY93FYnS2AtvepT1CYEZoy817dMpWOodJU/F/i4tH0yEYyx8UEYX6kjq8/4WmJrVhmfHgDtq3CqfgB4fD3cquOTLZKHpyXFwDh7W79RWl7MusnyhfmnQdDi8mkjI0kL7qOZypNDIw==
+	iqpX6uwju+WisV9wLeJCuKFOOE/LOkO9KxA6XB+bu1q99pbv3uAknUyoWPAz4KspEax0IFTv4M78dqfGa8Zz0JiBCdbeMA9jRrswse1umYU8iZ4JbM7Da9ij9VacewevuAZjt28D48orLjA/JYbLl4N4F0gEZCH7ESvSjqK7zedeqV074yNaahv0WKq24SiujsD6i49fQSxrcjRbRSVAfW5rZ6OLAym2Jpdh9YL99P3ZT5aRTi1cv5pvHvZonm9ae+hWN32f4AuCwV2ZmRNcjmEqkRSAWg9nm9BBgygDeLc5UzCiwcFoARzQlt8ZtnNrJRxWPhnoacreRfreWx3Uv02dEquyAGUVu/zbFvKZunYe8Us00mHAo6oI0Xp9KnOMBYvQCm+dW2S9JoenKXhPX94XH8aC8QBqSUDKdjzyJh++PjqB51HvgPremioTOzIK8ep04iJmKxPveL4YhK9Bai8pZtIVvNB1dz7uPAbjNCLwCPIjY707hfQIEg4RYv4MZionbPeqXWbTrCWdgWBEMdfu+qwmxLe37ZzC2wizvF+ZBOs6vcQq2bvEZu63az0R8NDqdZURxLQ7zNNQ8LJRoxRNUJMnoTmxx6PP/t7pEDTzmaZqKRXC3pDRWfuNxFN4tRbuuSXR8W6W2EzgwfFe/OIKWhJyJC8aZmAVUZUgIZDgjZqYAL8+cmVws51GRAtSXa+U+w9pvTgm/5wiU6nkJw3YNo00I4hxgRuGA2s41u18fCgEGphyHdYhgDBPju+rjPd2DMb/PP/Iee6vS/8CTQ==
 X-Forefront-Antispam-Report:
-	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(36860700016)(1800799024)(7416014)(376014)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(36860700016)(7416014)(376014)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	3/Fj1ZmCMlPK6PXaurdWybLXzvutnZJgSQtcuUNd517bi255Az6aBbjwlZHE/mmFaX5cOOO/Wzp79X4wdEMEtNS+dsJzWQBv71wtoYukGCt2V7MWz7wKGsmzUsLBIvB5VZAY9WkESjBN53vBffbQBCmaP4uXxbX5cKQYbGG/HCbve31OQIYkKfmetYhh0yFYwwgKTf418vTFeO135J55fIZI6o4DN73Y96SVWHEcWjhT6fBDsTrROeUev4MXOjkSXONbcyC0VPGH2QqI0xRNt5EsLEFYrgZfORHrY5ZsEtKN/vZY/VnZODXNuQtM0EoM2IYjaB+Sf45HOvLSbnhBtGLc+gdtOj0pkgn2L/v3VIFeCgTMAteovmvYO1yeKnK+hpCECICgRIfcznaZmlMgMnTPS28DrW/S2WqnV9s1IgSUwzseo12bWjIXWesgS6NJ
+	t7/cb5teAz+KiPU14A/C9mknhwlBpLfXhkg2wu0BdkDvAuesPCkjRhKHvTdpBExwF011THx3mqiUewmhqsxEfE/recCNDfurggagDZcLTVZIEw+mv2S0Z0Q0im6ILeegle1p+UorqSymTgDx556GQsapT5xfi2NswOw9AZTAo/wPai6XfTC/5UX+1ZBZe9ZburRP47f0JqUbLDTChEcQ23yA0HEQrIaovHY2L4DvzxKyiKnS9IRy6zrl1hWNbVYw4TDRims0YKKs6RnUf23CsGZ2O6BEsmoD0IrNGjmUT1XpO9qmZYYaVqx68JmEJUCt/DS5v9mMbUWgJ1jVtBQyYiIuS9u7aRo0ALpWbbzmialTqbVGT4e/pXOh7ijy3mCJzJbI4dudCGgOVLsiRBigUyRurgTlVGbnH93ge+oD1szOstpWwQKbrZHwDF9KOcxj
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Mar 2026 01:30:40.4729
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Mar 2026 01:30:38.1976
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: d74ae709-4626-409c-3048-08de8944f5b1
+X-MS-Exchange-CrossTenant-Network-Message-Id: 05f50deb-3912-4bcf-6bf7-08de8944f45e
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.233];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	MN1PEPF0000F0E4.namprd04.prod.outlook.com
+	BN3PEPF0000B075.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV2PR12MB5824
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB8018
 
-Adds PCIE-TGT PMU support in Tegra410 SOC. This PMU is
-instanced in each root complex in the SOC and it captures
-traffic originating from any source towards PCIE BAR and CXL
-HDM range. The traffic can be filtered based on the
-destination root port or target address range.
+Adds CPU Memory (CMEM) Latency PMU support in Tegra410 SOC.
+The PMU is used to measure latency between the edge of the
+Unified Coherence Fabric to the local system DRAM.
 
 Reviewed-by: Ilkka Koskinen <ilkka@os.amperecomputing.com>
 Signed-off-by: Besar Wicaksono <bwicaksono@nvidia.com>
 ---
- .../admin-guide/perf/nvidia-tegra410-pmu.rst  |  77 +++++
- drivers/perf/arm_cspmu/nvidia_cspmu.c         | 321 ++++++++++++++++++
- 2 files changed, 398 insertions(+)
+ .../admin-guide/perf/nvidia-tegra410-pmu.rst  |  25 +
+ drivers/perf/Kconfig                          |   7 +
+ drivers/perf/Makefile                         |   1 +
+ drivers/perf/nvidia_t410_cmem_latency_pmu.c   | 736 ++++++++++++++++++
+ 4 files changed, 769 insertions(+)
+ create mode 100644 drivers/perf/nvidia_t410_cmem_latency_pmu.c
 
 diff --git a/Documentation/admin-guide/perf/nvidia-tegra410-pmu.rst b/Documentation/admin-guide/perf/nvidia-tegra410-pmu.rst
-index b8cfbb80be1c..c065764d41fe 100644
+index c065764d41fe..9945c43f6a7a 100644
 --- a/Documentation/admin-guide/perf/nvidia-tegra410-pmu.rst
 +++ b/Documentation/admin-guide/perf/nvidia-tegra410-pmu.rst
-@@ -7,6 +7,7 @@ metrics like memory bandwidth, latency, and utilization:
- 
+@@ -8,6 +8,7 @@ metrics like memory bandwidth, latency, and utilization:
  * Unified Coherence Fabric (UCF)
  * PCIE
-+* PCIE-TGT
+ * PCIE-TGT
++* CPU Memory (CMEM) Latency
  
  PMU Driver
  ----------
-@@ -212,6 +213,11 @@ Example usage:
+@@ -344,3 +345,27 @@ Example usage:
+   0x10000 to 0x100FF on socket 0's PCIE RC-1::
  
-     perf stat -a -e nvidia_pcie_pmu_0_rc_4/event=0x4,src_bdf=0x0180,src_bdf_en=0x1/
+     perf stat -a -e nvidia_pcie_tgt_pmu_0_rc_1/event=0x1,dst_addr_base=0x10000,dst_addr_mask=0xFFF00,dst_addr_en=0x1/
++
++CPU Memory (CMEM) Latency PMU
++-----------------------------
++
++This PMU monitors latency events of memory read requests from the edge of the
++Unified Coherence Fabric (UCF) to local CPU DRAM:
++
++  * RD_REQ counters: count read requests (32B per request).
++  * RD_CUM_OUTS counters: accumulated outstanding request counter, which track
++    how many cycles the read requests are in flight.
++  * CYCLES counter: counts the number of elapsed cycles.
++
++The average latency is calculated as::
++
++   FREQ_IN_GHZ = CYCLES / ELAPSED_TIME_IN_NS
++   AVG_LATENCY_IN_CYCLES = RD_CUM_OUTS / RD_REQ
++   AVERAGE_LATENCY_IN_NS = AVG_LATENCY_IN_CYCLES / FREQ_IN_GHZ
++
++The events and configuration options of this PMU device are described in sysfs,
++see /sys/bus/event_source/devices/nvidia_cmem_latency_pmu_<socket-id>.
++
++Example usage::
++
++  perf stat -a -e '{nvidia_cmem_latency_pmu_0/rd_req/,nvidia_cmem_latency_pmu_0/rd_cum_outs/,nvidia_cmem_latency_pmu_0/cycles/}'
+diff --git a/drivers/perf/Kconfig b/drivers/perf/Kconfig
+index 638321fc9800..26e86067d8f9 100644
+--- a/drivers/perf/Kconfig
++++ b/drivers/perf/Kconfig
+@@ -311,4 +311,11 @@ config MARVELL_PEM_PMU
+ 	  Enable support for PCIe Interface performance monitoring
+ 	  on Marvell platform.
  
-+.. _NVIDIA_T410_PCIE_PMU_RC_Mapping_Section:
++config NVIDIA_TEGRA410_CMEM_LATENCY_PMU
++	tristate "NVIDIA Tegra410 CPU Memory Latency PMU"
++	depends on ARM64 && ACPI
++	help
++	  Enable perf support for CPU memory latency counters monitoring on
++	  NVIDIA Tegra410 SoC.
 +
-+Mapping the RC# to lspci segment number
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ endmenu
+diff --git a/drivers/perf/Makefile b/drivers/perf/Makefile
+index ea52711a87e3..4aa6aad393c2 100644
+--- a/drivers/perf/Makefile
++++ b/drivers/perf/Makefile
+@@ -35,3 +35,4 @@ obj-$(CONFIG_DWC_PCIE_PMU) += dwc_pcie_pmu.o
+ obj-$(CONFIG_ARM_CORESIGHT_PMU_ARCH_SYSTEM_PMU) += arm_cspmu/
+ obj-$(CONFIG_MESON_DDR_PMU) += amlogic/
+ obj-$(CONFIG_CXL_PMU) += cxl_pmu.o
++obj-$(CONFIG_NVIDIA_TEGRA410_CMEM_LATENCY_PMU) += nvidia_t410_cmem_latency_pmu.o
+diff --git a/drivers/perf/nvidia_t410_cmem_latency_pmu.c b/drivers/perf/nvidia_t410_cmem_latency_pmu.c
+new file mode 100644
+index 000000000000..acb8f5571522
+--- /dev/null
++++ b/drivers/perf/nvidia_t410_cmem_latency_pmu.c
+@@ -0,0 +1,736 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * NVIDIA Tegra410 CPU Memory (CMEM) Latency PMU driver.
++ *
++ * Copyright (c) 2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
++ */
 +
- Mapping the RC# to lspci segment number can be non-trivial; hence a new NVIDIA
- Designated Vendor Specific Capability (DVSEC) register is added into the PCIE config space
- for each RP. This DVSEC has vendor id "10de" and DVSEC id of "0x4". The DVSEC register
-@@ -267,3 +273,74 @@ Example output::
-   000d:40:00.0: Bus=40, Segment=0d, RP=01, RC=04, Socket=01
-   000d:c0:00.0: Bus=c0, Segment=0d, RP=02, RC=04, Socket=01
-   000e:00:00.0: Bus=00, Segment=0e, RP=00, RC=05, Socket=01
++#include <linux/acpi.h>
++#include <linux/bitops.h>
++#include <linux/cpumask.h>
++#include <linux/device.h>
++#include <linux/interrupt.h>
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/perf_event.h>
++#include <linux/platform_device.h>
 +
-+PCIE-TGT PMU
-+------------
++#define NUM_INSTANCES    14
 +
-+This PMU is located in the SOC fabric connecting the PCIE root complex (RC) and
-+the memory subsystem. It monitors traffic targeting PCIE BAR and CXL HDM ranges.
-+There is one PCIE-TGT PMU per PCIE RC in the SoC. Each RC in Tegra410 SoC can
-+have up to 16 lanes that can be bifurcated into up to 8 root ports (RP). The PMU
-+provides RP filter to count PCIE BAR traffic to each RP and address filter to
-+count access to PCIE BAR or CXL HDM ranges. The details of the filters are
-+described in the following sections.
++/* Register offsets. */
++#define CMEM_LAT_CG_CTRL         0x800
++#define CMEM_LAT_CTRL            0x808
++#define CMEM_LAT_STATUS          0x810
++#define CMEM_LAT_CYCLE_CNTR      0x818
++#define CMEM_LAT_MC0_REQ_CNTR    0x820
++#define CMEM_LAT_MC0_AOR_CNTR    0x830
++#define CMEM_LAT_MC1_REQ_CNTR    0x838
++#define CMEM_LAT_MC1_AOR_CNTR    0x848
++#define CMEM_LAT_MC2_REQ_CNTR    0x850
++#define CMEM_LAT_MC2_AOR_CNTR    0x860
 +
-+Mapping the RC# to lspci segment number is similar to the PCIE PMU. Please see
-+:ref:`NVIDIA_T410_PCIE_PMU_RC_Mapping_Section` for more info.
++/* CMEM_LAT_CTRL values. */
++#define CMEM_LAT_CTRL_DISABLE    0x0ULL
++#define CMEM_LAT_CTRL_ENABLE     0x1ULL
++#define CMEM_LAT_CTRL_CLR        0x2ULL
 +
-+The events and configuration options of this PMU device are available in sysfs,
-+see /sys/bus/event_source/devices/nvidia_pcie_tgt_pmu_<socket-id>_rc_<pcie-rc-id>.
++/* CMEM_LAT_CG_CTRL values. */
++#define CMEM_LAT_CG_CTRL_DISABLE    0x0ULL
++#define CMEM_LAT_CG_CTRL_ENABLE     0x1ULL
 +
-+The events in this PMU can be used to measure bandwidth and utilization:
++/* CMEM_LAT_STATUS register field. */
++#define CMEM_LAT_STATUS_CYCLE_OVF      BIT(0)
++#define CMEM_LAT_STATUS_MC0_AOR_OVF    BIT(1)
++#define CMEM_LAT_STATUS_MC0_REQ_OVF    BIT(3)
++#define CMEM_LAT_STATUS_MC1_AOR_OVF    BIT(4)
++#define CMEM_LAT_STATUS_MC1_REQ_OVF    BIT(6)
++#define CMEM_LAT_STATUS_MC2_AOR_OVF    BIT(7)
++#define CMEM_LAT_STATUS_MC2_REQ_OVF    BIT(9)
 +
-+  * rd_req: count the number of read requests to PCIE.
-+  * wr_req: count the number of write requests to PCIE.
-+  * rd_bytes: count the number of bytes transferred by rd_req.
-+  * wr_bytes: count the number of bytes transferred by wr_req.
-+  * cycles: count the clock cycles of SOC fabric connected to the PCIE interface.
++/* Events. */
++#define CMEM_LAT_EVENT_CYCLES    0x0
++#define CMEM_LAT_EVENT_REQ       0x1
++#define CMEM_LAT_EVENT_AOR       0x2
 +
-+The average bandwidth is calculated as::
++#define CMEM_LAT_NUM_EVENTS           0x3
++#define CMEM_LAT_MASK_EVENT           0x3
++#define CMEM_LAT_MAX_ACTIVE_EVENTS    32
 +
-+   AVG_RD_BANDWIDTH_IN_GBPS = RD_BYTES / ELAPSED_TIME_IN_NS
-+   AVG_WR_BANDWIDTH_IN_GBPS = WR_BYTES / ELAPSED_TIME_IN_NS
++#define CMEM_LAT_ACTIVE_CPU_MASK        0x0
++#define CMEM_LAT_ASSOCIATED_CPU_MASK    0x1
 +
-+The average request rate is calculated as::
++static unsigned long cmem_lat_pmu_cpuhp_state;
 +
-+   AVG_RD_REQUEST_RATE = RD_REQ / CYCLES
-+   AVG_WR_REQUEST_RATE = WR_REQ / CYCLES
-+
-+The PMU events can be filtered based on the destination root port or target
-+address range. Filtering based on RP is only available for PCIE BAR traffic.
-+Address filter works for both PCIE BAR and CXL HDM ranges. These filters can be
-+found in sysfs, see
-+/sys/bus/event_source/devices/nvidia_pcie_tgt_pmu_<socket-id>_rc_<pcie-rc-id>/format/.
-+
-+Destination filter settings:
-+
-+* dst_rp_mask: bitmask to select the root port(s) to monitor. E.g. "dst_rp_mask=0xFF"
-+  corresponds to all root ports (from 0 to 7) in the PCIE RC. Note that this filter is
-+  only available for PCIE BAR traffic.
-+* dst_addr_base: BAR or CXL HDM filter base address.
-+* dst_addr_mask: BAR or CXL HDM filter address mask.
-+* dst_addr_en: enable BAR or CXL HDM address range filter. If this is set, the
-+  address range specified by "dst_addr_base" and "dst_addr_mask" will be used to filter
-+  the PCIE BAR and CXL HDM traffic address. The PMU uses the following comparison
-+  to determine if the traffic destination address falls within the filter range::
-+
-+    (txn's addr & dst_addr_mask) == (dst_addr_base & dst_addr_mask)
-+
-+  If the comparison succeeds, then the event will be counted.
-+
-+If the destination filter is not specified, the RP filter will be configured by default
-+to count PCIE BAR traffic to all root ports.
-+
-+Example usage:
-+
-+* Count event id 0x0 to root port 0 and 1 of PCIE RC-0 on socket 0::
-+
-+    perf stat -a -e nvidia_pcie_tgt_pmu_0_rc_0/event=0x0,dst_rp_mask=0x3/
-+
-+* Count event id 0x1 for accesses to PCIE BAR or CXL HDM address range
-+  0x10000 to 0x100FF on socket 0's PCIE RC-1::
-+
-+    perf stat -a -e nvidia_pcie_tgt_pmu_0_rc_1/event=0x1,dst_addr_base=0x10000,dst_addr_mask=0xFFF00,dst_addr_en=0x1/
-diff --git a/drivers/perf/arm_cspmu/nvidia_cspmu.c b/drivers/perf/arm_cspmu/nvidia_cspmu.c
-index 61fde84ea343..bac83e424d6d 100644
---- a/drivers/perf/arm_cspmu/nvidia_cspmu.c
-+++ b/drivers/perf/arm_cspmu/nvidia_cspmu.c
-@@ -42,6 +42,24 @@
- #define NV_PCIE_V2_FILTER2_DST       GENMASK_ULL(NV_PCIE_V2_DST_COUNT - 1, 0)
- #define NV_PCIE_V2_FILTER2_DEFAULT   NV_PCIE_V2_FILTER2_DST
- 
-+#define NV_PCIE_TGT_PORT_COUNT       8ULL
-+#define NV_PCIE_TGT_EV_TYPE_CC       0x4
-+#define NV_PCIE_TGT_EV_TYPE_COUNT    3ULL
-+#define NV_PCIE_TGT_EV_TYPE_MASK     GENMASK_ULL(NV_PCIE_TGT_EV_TYPE_COUNT - 1, 0)
-+#define NV_PCIE_TGT_FILTER2_MASK     GENMASK_ULL(NV_PCIE_TGT_PORT_COUNT, 0)
-+#define NV_PCIE_TGT_FILTER2_PORT     GENMASK_ULL(NV_PCIE_TGT_PORT_COUNT - 1, 0)
-+#define NV_PCIE_TGT_FILTER2_ADDR_EN  BIT(NV_PCIE_TGT_PORT_COUNT)
-+#define NV_PCIE_TGT_FILTER2_ADDR     GENMASK_ULL(15, NV_PCIE_TGT_PORT_COUNT)
-+#define NV_PCIE_TGT_FILTER2_DEFAULT  NV_PCIE_TGT_FILTER2_PORT
-+
-+#define NV_PCIE_TGT_ADDR_COUNT       8ULL
-+#define NV_PCIE_TGT_ADDR_STRIDE      20
-+#define NV_PCIE_TGT_ADDR_CTRL        0xD38
-+#define NV_PCIE_TGT_ADDR_BASE_LO     0xD3C
-+#define NV_PCIE_TGT_ADDR_BASE_HI     0xD40
-+#define NV_PCIE_TGT_ADDR_MASK_LO     0xD44
-+#define NV_PCIE_TGT_ADDR_MASK_HI     0xD48
-+
- #define NV_GENERIC_FILTER_ID_MASK    GENMASK_ULL(31, 0)
- 
- #define NV_PRODID_MASK	(PMIIDR_PRODUCTID | PMIIDR_VARIANT | PMIIDR_REVISION)
-@@ -185,6 +203,15 @@ static struct attribute *pcie_v2_pmu_event_attrs[] = {
- 	NULL
- };
- 
-+static struct attribute *pcie_tgt_pmu_event_attrs[] = {
-+	ARM_CSPMU_EVENT_ATTR(rd_bytes,		0x0),
-+	ARM_CSPMU_EVENT_ATTR(wr_bytes,		0x1),
-+	ARM_CSPMU_EVENT_ATTR(rd_req,		0x2),
-+	ARM_CSPMU_EVENT_ATTR(wr_req,		0x3),
-+	ARM_CSPMU_EVENT_ATTR(cycles, NV_PCIE_TGT_EV_TYPE_CC),
-+	NULL
++struct cmem_lat_pmu_hw_events {
++	struct perf_event *events[CMEM_LAT_MAX_ACTIVE_EVENTS];
++	DECLARE_BITMAP(used_ctrs, CMEM_LAT_MAX_ACTIVE_EVENTS);
 +};
 +
- static struct attribute *generic_pmu_event_attrs[] = {
- 	ARM_CSPMU_EVENT_ATTR(cycles, ARM_CSPMU_EVT_CYCLES_DEFAULT),
- 	NULL,
-@@ -238,6 +265,15 @@ static struct attribute *pcie_v2_pmu_format_attrs[] = {
- 	NULL
- };
- 
-+static struct attribute *pcie_tgt_pmu_format_attrs[] = {
-+	ARM_CSPMU_FORMAT_ATTR(event, "config:0-2"),
-+	ARM_CSPMU_FORMAT_ATTR(dst_rp_mask, "config:3-10"),
-+	ARM_CSPMU_FORMAT_ATTR(dst_addr_en, "config:11"),
-+	ARM_CSPMU_FORMAT_ATTR(dst_addr_base, "config1:0-63"),
-+	ARM_CSPMU_FORMAT_ATTR(dst_addr_mask, "config2:0-63"),
-+	NULL
++struct cmem_lat_pmu {
++	struct pmu pmu;
++	struct device *dev;
++	const char *name;
++	const char *identifier;
++	void __iomem *base_broadcast;
++	void __iomem *base[NUM_INSTANCES];
++	cpumask_t associated_cpus;
++	cpumask_t active_cpu;
++	struct hlist_node node;
++	struct cmem_lat_pmu_hw_events hw_events;
 +};
 +
- static struct attribute *generic_pmu_format_attrs[] = {
- 	ARM_CSPMU_FORMAT_EVENT_ATTR,
- 	ARM_CSPMU_FORMAT_FILTER_ATTR,
-@@ -477,6 +513,267 @@ static int pcie_v2_pmu_validate_event(struct arm_cspmu *cspmu,
- 	return 0;
- }
- 
-+struct pcie_tgt_addr_filter {
-+	u32 refcount;
-+	u64 base;
-+	u64 mask;
-+};
++#define to_cmem_lat_pmu(p) \
++	container_of(p, struct cmem_lat_pmu, pmu)
 +
-+struct pcie_tgt_data {
-+	struct pcie_tgt_addr_filter addr_filter[NV_PCIE_TGT_ADDR_COUNT];
-+	void __iomem *addr_filter_reg;
-+};
 +
-+#if defined(CONFIG_ACPI) && defined(CONFIG_ARM64)
-+static int pcie_tgt_init_data(struct arm_cspmu *cspmu)
++/* Get event type from perf_event. */
++static inline u32 get_event_type(struct perf_event *event)
++{
++	return (event->attr.config) & CMEM_LAT_MASK_EVENT;
++}
++
++/* PMU operations. */
++static int cmem_lat_pmu_get_event_idx(struct cmem_lat_pmu_hw_events *hw_events,
++				struct perf_event *event)
++{
++	unsigned int idx;
++
++	idx = find_first_zero_bit(hw_events->used_ctrs, CMEM_LAT_MAX_ACTIVE_EVENTS);
++	if (idx >= CMEM_LAT_MAX_ACTIVE_EVENTS)
++		return -EAGAIN;
++
++	set_bit(idx, hw_events->used_ctrs);
++
++	return idx;
++}
++
++static bool cmem_lat_pmu_validate_event(struct pmu *pmu,
++				 struct cmem_lat_pmu_hw_events *hw_events,
++				 struct perf_event *event)
 +{
 +	int ret;
-+	struct acpi_device *adev;
-+	struct pcie_tgt_data *data;
-+	struct list_head resource_list;
-+	struct resource_entry *rentry;
-+	struct nv_cspmu_ctx *ctx = to_nv_cspmu_ctx(cspmu);
-+	struct device *dev = cspmu->dev;
 +
-+	data = devm_kzalloc(dev, sizeof(struct pcie_tgt_data), GFP_KERNEL);
-+	if (!data)
-+		return -ENOMEM;
++	if (is_software_event(event))
++		return true;
 +
-+	adev = arm_cspmu_acpi_dev_get(cspmu);
-+	if (!adev) {
-+		dev_err(dev, "failed to get associated PCIE-TGT device\n");
-+		return -ENODEV;
++	/* Reject groups spanning multiple HW PMUs. */
++	if (event->pmu != pmu)
++		return false;
++
++	ret = cmem_lat_pmu_get_event_idx(hw_events, event);
++	if (ret < 0)
++		return false;
++
++	return true;
++}
++
++/* Make sure the group of events can be scheduled at once on the PMU. */
++static bool cmem_lat_pmu_validate_group(struct perf_event *event)
++{
++	struct perf_event *sibling, *leader = event->group_leader;
++	struct cmem_lat_pmu_hw_events fake_hw_events;
++
++	if (event->group_leader == event)
++		return true;
++
++	memset(&fake_hw_events, 0, sizeof(fake_hw_events));
++
++	if (!cmem_lat_pmu_validate_event(event->pmu, &fake_hw_events, leader))
++		return false;
++
++	for_each_sibling_event(sibling, leader) {
++		if (!cmem_lat_pmu_validate_event(event->pmu, &fake_hw_events, sibling))
++			return false;
 +	}
 +
-+	INIT_LIST_HEAD(&resource_list);
-+	ret = acpi_dev_get_memory_resources(adev, &resource_list);
-+	if (ret < 0) {
-+		dev_err(dev, "failed to get PCIE-TGT device memory resources\n");
-+		acpi_dev_put(adev);
-+		return ret;
++	return cmem_lat_pmu_validate_event(event->pmu, &fake_hw_events, event);
++}
++
++static int cmem_lat_pmu_event_init(struct perf_event *event)
++{
++	struct cmem_lat_pmu *cmem_lat_pmu = to_cmem_lat_pmu(event->pmu);
++	struct hw_perf_event *hwc = &event->hw;
++	u32 event_type = get_event_type(event);
++
++	if (event->attr.type != event->pmu->type ||
++	    event_type >= CMEM_LAT_NUM_EVENTS)
++		return -ENOENT;
++
++	/*
++	 * Sampling, per-process mode, and per-task counters are not supported
++	 * since this PMU is shared across all CPUs.
++	 */
++	if (is_sampling_event(event) || event->attach_state & PERF_ATTACH_TASK) {
++		dev_dbg(cmem_lat_pmu->pmu.dev,
++				"Can't support sampling and per-process mode\n");
++		return -EOPNOTSUPP;
 +	}
 +
-+	rentry = list_first_entry_or_null(
-+		&resource_list, struct resource_entry, node);
-+	if (rentry) {
-+		data->addr_filter_reg = devm_ioremap_resource(dev, rentry->res);
-+		ret = 0;
-+	}
-+
-+	if (IS_ERR(data->addr_filter_reg)) {
-+		dev_err(dev, "failed to get address filter resource\n");
-+		ret = PTR_ERR(data->addr_filter_reg);
-+	}
-+
-+	acpi_dev_free_resource_list(&resource_list);
-+	acpi_dev_put(adev);
-+
-+	ctx->data = data;
-+
-+	return ret;
-+}
-+#else
-+static int pcie_tgt_init_data(struct arm_cspmu *cspmu)
-+{
-+	return -ENODEV;
-+}
-+#endif
-+
-+static struct pcie_tgt_data *pcie_tgt_get_data(struct arm_cspmu *cspmu)
-+{
-+	struct nv_cspmu_ctx *ctx = to_nv_cspmu_ctx(cspmu);
-+
-+	return ctx->data;
-+}
-+
-+/* Find the first available address filter slot. */
-+static int pcie_tgt_find_addr_idx(struct arm_cspmu *cspmu, u64 base, u64 mask,
-+	bool is_reset)
-+{
-+	int i;
-+	struct pcie_tgt_data *data = pcie_tgt_get_data(cspmu);
-+
-+	for (i = 0; i < NV_PCIE_TGT_ADDR_COUNT; i++) {
-+		if (!is_reset && data->addr_filter[i].refcount == 0)
-+			return i;
-+
-+		if (data->addr_filter[i].base == base &&
-+			data->addr_filter[i].mask == mask)
-+			return i;
-+	}
-+
-+	return -ENODEV;
-+}
-+
-+static u32 pcie_tgt_pmu_event_filter(const struct perf_event *event)
-+{
-+	u32 filter;
-+
-+	filter = (event->attr.config >> NV_PCIE_TGT_EV_TYPE_COUNT) &
-+		NV_PCIE_TGT_FILTER2_MASK;
-+
-+	return filter;
-+}
-+
-+static bool pcie_tgt_pmu_addr_en(const struct perf_event *event)
-+{
-+	u32 filter = pcie_tgt_pmu_event_filter(event);
-+
-+	return FIELD_GET(NV_PCIE_TGT_FILTER2_ADDR_EN, filter) != 0;
-+}
-+
-+static u32 pcie_tgt_pmu_port_filter(const struct perf_event *event)
-+{
-+	u32 filter = pcie_tgt_pmu_event_filter(event);
-+
-+	return FIELD_GET(NV_PCIE_TGT_FILTER2_PORT, filter);
-+}
-+
-+static u64 pcie_tgt_pmu_dst_addr_base(const struct perf_event *event)
-+{
-+	return event->attr.config1;
-+}
-+
-+static u64 pcie_tgt_pmu_dst_addr_mask(const struct perf_event *event)
-+{
-+	return event->attr.config2;
-+}
-+
-+static int pcie_tgt_pmu_validate_event(struct arm_cspmu *cspmu,
-+				   struct perf_event *new_ev)
-+{
-+	u64 base, mask;
-+	int idx;
-+
-+	if (!pcie_tgt_pmu_addr_en(new_ev))
-+		return 0;
-+
-+	/* Make sure there is a slot available for the address filter. */
-+	base = pcie_tgt_pmu_dst_addr_base(new_ev);
-+	mask = pcie_tgt_pmu_dst_addr_mask(new_ev);
-+	idx = pcie_tgt_find_addr_idx(cspmu, base, mask, false);
-+	if (idx < 0)
++	if (event->cpu < 0) {
++		dev_dbg(cmem_lat_pmu->pmu.dev, "Can't support per-task counters\n");
 +		return -EINVAL;
++	}
++
++	/*
++	 * Make sure the CPU assignment is on one of the CPUs associated with
++	 * this PMU.
++	 */
++	if (!cpumask_test_cpu(event->cpu, &cmem_lat_pmu->associated_cpus)) {
++		dev_dbg(cmem_lat_pmu->pmu.dev,
++				"Requested cpu is not associated with the PMU\n");
++		return -EINVAL;
++	}
++
++	/* Enforce the current active CPU to handle the events in this PMU. */
++	event->cpu = cpumask_first(&cmem_lat_pmu->active_cpu);
++	if (event->cpu >= nr_cpu_ids)
++		return -EINVAL;
++
++	if (!cmem_lat_pmu_validate_group(event))
++		return -EINVAL;
++
++	hwc->idx = -1;
++	hwc->config = event_type;
 +
 +	return 0;
 +}
 +
-+static void pcie_tgt_pmu_config_addr_filter(struct arm_cspmu *cspmu,
-+	bool en, u64 base, u64 mask, int idx)
++static u64 cmem_lat_pmu_read_status(struct cmem_lat_pmu *cmem_lat_pmu,
++				   unsigned int inst)
 +{
-+	struct pcie_tgt_data *data;
-+	struct pcie_tgt_addr_filter *filter;
-+	void __iomem *filter_reg;
-+
-+	data = pcie_tgt_get_data(cspmu);
-+	filter = &data->addr_filter[idx];
-+	filter_reg = data->addr_filter_reg + (idx * NV_PCIE_TGT_ADDR_STRIDE);
-+
-+	if (en) {
-+		filter->refcount++;
-+		if (filter->refcount == 1) {
-+			filter->base = base;
-+			filter->mask = mask;
-+
-+			writel(lower_32_bits(base), filter_reg + NV_PCIE_TGT_ADDR_BASE_LO);
-+			writel(upper_32_bits(base), filter_reg + NV_PCIE_TGT_ADDR_BASE_HI);
-+			writel(lower_32_bits(mask), filter_reg + NV_PCIE_TGT_ADDR_MASK_LO);
-+			writel(upper_32_bits(mask), filter_reg + NV_PCIE_TGT_ADDR_MASK_HI);
-+			writel(1, filter_reg + NV_PCIE_TGT_ADDR_CTRL);
-+		}
-+	} else {
-+		filter->refcount--;
-+		if (filter->refcount == 0) {
-+			writel(0, filter_reg + NV_PCIE_TGT_ADDR_CTRL);
-+			writel(0, filter_reg + NV_PCIE_TGT_ADDR_BASE_LO);
-+			writel(0, filter_reg + NV_PCIE_TGT_ADDR_BASE_HI);
-+			writel(0, filter_reg + NV_PCIE_TGT_ADDR_MASK_LO);
-+			writel(0, filter_reg + NV_PCIE_TGT_ADDR_MASK_HI);
-+
-+			filter->base = 0;
-+			filter->mask = 0;
-+		}
-+	}
++	return readq(cmem_lat_pmu->base[inst] + CMEM_LAT_STATUS);
 +}
 +
-+static void pcie_tgt_pmu_set_ev_filter(struct arm_cspmu *cspmu,
-+				const struct perf_event *event)
++static u64 cmem_lat_pmu_read_cycle_counter(struct perf_event *event)
 +{
-+	bool addr_filter_en;
-+	int idx;
-+	u32 filter2_val, filter2_offset, port_filter;
-+	u64 base, mask;
++	const unsigned int instance = 0;
++	u64 status;
++	struct cmem_lat_pmu *cmem_lat_pmu = to_cmem_lat_pmu(event->pmu);
++	struct device *dev = cmem_lat_pmu->dev;
 +
-+	filter2_val = 0;
-+	filter2_offset = PMEVFILT2R + (4 * event->hw.idx);
++	/*
++	 * Use the reading from first instance since all instances are
++	 * identical.
++	 */
++	status = cmem_lat_pmu_read_status(cmem_lat_pmu, instance);
++	if (status & CMEM_LAT_STATUS_CYCLE_OVF)
++		dev_warn(dev, "Cycle counter overflow\n");
 +
-+	addr_filter_en = pcie_tgt_pmu_addr_en(event);
-+	if (addr_filter_en) {
-+		base = pcie_tgt_pmu_dst_addr_base(event);
-+		mask = pcie_tgt_pmu_dst_addr_mask(event);
-+		idx = pcie_tgt_find_addr_idx(cspmu, base, mask, false);
-+
-+		if (idx < 0) {
-+			dev_err(cspmu->dev,
-+				"Unable to find a slot for address filtering\n");
-+			writel(0, cspmu->base0 + filter2_offset);
-+			return;
-+		}
-+
-+		/* Configure address range filter registers.*/
-+		pcie_tgt_pmu_config_addr_filter(cspmu, true, base, mask, idx);
-+
-+		/* Config the counter to use the selected address filter slot. */
-+		filter2_val |= FIELD_PREP(NV_PCIE_TGT_FILTER2_ADDR, 1U << idx);
-+	}
-+
-+	port_filter = pcie_tgt_pmu_port_filter(event);
-+
-+	/* Monitor all ports if no filter is selected. */
-+	if (!addr_filter_en && port_filter == 0)
-+		port_filter = NV_PCIE_TGT_FILTER2_PORT;
-+
-+	filter2_val |= FIELD_PREP(NV_PCIE_TGT_FILTER2_PORT, port_filter);
-+
-+	writel(filter2_val, cspmu->base0 + filter2_offset);
++	return readq(cmem_lat_pmu->base[instance] + CMEM_LAT_CYCLE_CNTR);
 +}
 +
-+static void pcie_tgt_pmu_reset_ev_filter(struct arm_cspmu *cspmu,
-+				     const struct perf_event *event)
++static u64 cmem_lat_pmu_read_req_counter(struct perf_event *event)
 +{
-+	bool addr_filter_en;
-+	u64 base, mask;
-+	int idx;
++	unsigned int i;
++	u64 status, val = 0;
++	struct cmem_lat_pmu *cmem_lat_pmu = to_cmem_lat_pmu(event->pmu);
++	struct device *dev = cmem_lat_pmu->dev;
 +
-+	addr_filter_en = pcie_tgt_pmu_addr_en(event);
-+	if (!addr_filter_en)
++	/* Sum up the counts from all instances. */
++	for (i = 0; i < NUM_INSTANCES; i++) {
++		status = cmem_lat_pmu_read_status(cmem_lat_pmu, i);
++		if (status & CMEM_LAT_STATUS_MC0_REQ_OVF)
++			dev_warn(dev, "MC0 request counter overflow\n");
++		if (status & CMEM_LAT_STATUS_MC1_REQ_OVF)
++			dev_warn(dev, "MC1 request counter overflow\n");
++		if (status & CMEM_LAT_STATUS_MC2_REQ_OVF)
++			dev_warn(dev, "MC2 request counter overflow\n");
++
++		val += readq(cmem_lat_pmu->base[i] + CMEM_LAT_MC0_REQ_CNTR);
++		val += readq(cmem_lat_pmu->base[i] + CMEM_LAT_MC1_REQ_CNTR);
++		val += readq(cmem_lat_pmu->base[i] + CMEM_LAT_MC2_REQ_CNTR);
++	}
++
++	return val;
++}
++
++static u64 cmem_lat_pmu_read_aor_counter(struct perf_event *event)
++{
++	unsigned int i;
++	u64 status, val = 0;
++	struct cmem_lat_pmu *cmem_lat_pmu = to_cmem_lat_pmu(event->pmu);
++	struct device *dev = cmem_lat_pmu->dev;
++
++	/* Sum up the counts from all instances. */
++	for (i = 0; i < NUM_INSTANCES; i++) {
++		status = cmem_lat_pmu_read_status(cmem_lat_pmu, i);
++		if (status & CMEM_LAT_STATUS_MC0_AOR_OVF)
++			dev_warn(dev, "MC0 AOR counter overflow\n");
++		if (status & CMEM_LAT_STATUS_MC1_AOR_OVF)
++			dev_warn(dev, "MC1 AOR counter overflow\n");
++		if (status & CMEM_LAT_STATUS_MC2_AOR_OVF)
++			dev_warn(dev, "MC2 AOR counter overflow\n");
++
++		val += readq(cmem_lat_pmu->base[i] + CMEM_LAT_MC0_AOR_CNTR);
++		val += readq(cmem_lat_pmu->base[i] + CMEM_LAT_MC1_AOR_CNTR);
++		val += readq(cmem_lat_pmu->base[i] + CMEM_LAT_MC2_AOR_CNTR);
++	}
++
++	return val;
++}
++
++static u64 (*read_counter_fn[CMEM_LAT_NUM_EVENTS])(struct perf_event *) = {
++	[CMEM_LAT_EVENT_CYCLES] = cmem_lat_pmu_read_cycle_counter,
++	[CMEM_LAT_EVENT_REQ] = cmem_lat_pmu_read_req_counter,
++	[CMEM_LAT_EVENT_AOR] = cmem_lat_pmu_read_aor_counter,
++};
++
++static void cmem_lat_pmu_event_update(struct perf_event *event)
++{
++	u32 event_type;
++	u64 prev, now;
++	struct hw_perf_event *hwc = &event->hw;
++
++	if (hwc->state & PERF_HES_STOPPED)
 +		return;
 +
-+	base = pcie_tgt_pmu_dst_addr_base(event);
-+	mask = pcie_tgt_pmu_dst_addr_mask(event);
-+	idx = pcie_tgt_find_addr_idx(cspmu, base, mask, true);
++	event_type = hwc->config;
 +
-+	if (idx < 0) {
-+		dev_err(cspmu->dev,
-+			"Unable to find the address filter slot to reset\n");
++	do {
++		prev = local64_read(&hwc->prev_count);
++		now = read_counter_fn[event_type](event);
++	} while (local64_cmpxchg(&hwc->prev_count, prev, now) != prev);
++
++	local64_add(now - prev, &event->count);
++
++	hwc->state |= PERF_HES_UPTODATE;
++}
++
++static void cmem_lat_pmu_start(struct perf_event *event, int pmu_flags)
++{
++	event->hw.state = 0;
++}
++
++static void cmem_lat_pmu_stop(struct perf_event *event, int pmu_flags)
++{
++	event->hw.state |= PERF_HES_STOPPED;
++}
++
++static int cmem_lat_pmu_add(struct perf_event *event, int flags)
++{
++	struct cmem_lat_pmu *cmem_lat_pmu = to_cmem_lat_pmu(event->pmu);
++	struct cmem_lat_pmu_hw_events *hw_events = &cmem_lat_pmu->hw_events;
++	struct hw_perf_event *hwc = &event->hw;
++	int idx;
++
++	if (WARN_ON_ONCE(!cpumask_test_cpu(smp_processor_id(),
++					   &cmem_lat_pmu->associated_cpus)))
++		return -ENOENT;
++
++	idx = cmem_lat_pmu_get_event_idx(hw_events, event);
++	if (idx < 0)
++		return idx;
++
++	hw_events->events[idx] = event;
++	hwc->idx = idx;
++	hwc->state = PERF_HES_STOPPED | PERF_HES_UPTODATE;
++
++	if (flags & PERF_EF_START)
++		cmem_lat_pmu_start(event, PERF_EF_RELOAD);
++
++	/* Propagate changes to the userspace mapping. */
++	perf_event_update_userpage(event);
++
++	return 0;
++}
++
++static void cmem_lat_pmu_del(struct perf_event *event, int flags)
++{
++	struct cmem_lat_pmu *cmem_lat_pmu = to_cmem_lat_pmu(event->pmu);
++	struct cmem_lat_pmu_hw_events *hw_events = &cmem_lat_pmu->hw_events;
++	struct hw_perf_event *hwc = &event->hw;
++	int idx = hwc->idx;
++
++	cmem_lat_pmu_stop(event, PERF_EF_UPDATE);
++
++	hw_events->events[idx] = NULL;
++
++	clear_bit(idx, hw_events->used_ctrs);
++
++	perf_event_update_userpage(event);
++}
++
++static void cmem_lat_pmu_read(struct perf_event *event)
++{
++	cmem_lat_pmu_event_update(event);
++}
++
++static inline void cmem_lat_pmu_cg_ctrl(struct cmem_lat_pmu *cmem_lat_pmu,
++										u64 val)
++{
++	writeq(val, cmem_lat_pmu->base_broadcast + CMEM_LAT_CG_CTRL);
++}
++
++static inline void cmem_lat_pmu_ctrl(struct cmem_lat_pmu *cmem_lat_pmu, u64 val)
++{
++	writeq(val, cmem_lat_pmu->base_broadcast + CMEM_LAT_CTRL);
++}
++
++static void cmem_lat_pmu_enable(struct pmu *pmu)
++{
++	bool disabled;
++	struct cmem_lat_pmu *cmem_lat_pmu = to_cmem_lat_pmu(pmu);
++
++	disabled = bitmap_empty(cmem_lat_pmu->hw_events.used_ctrs,
++							CMEM_LAT_MAX_ACTIVE_EVENTS);
++
++	if (disabled)
 +		return;
++
++	/* Enable all the counters. */
++	cmem_lat_pmu_cg_ctrl(cmem_lat_pmu, CMEM_LAT_CG_CTRL_ENABLE);
++	cmem_lat_pmu_ctrl(cmem_lat_pmu, CMEM_LAT_CTRL_ENABLE);
++}
++
++static void cmem_lat_pmu_disable(struct pmu *pmu)
++{
++	int idx;
++	struct cmem_lat_pmu *cmem_lat_pmu = to_cmem_lat_pmu(pmu);
++
++	/* Disable all the counters. */
++	cmem_lat_pmu_ctrl(cmem_lat_pmu, CMEM_LAT_CTRL_DISABLE);
++
++	/*
++	 * The counters will start from 0 again on restart.
++	 * Update the events immediately to avoid losing the counts.
++	 */
++	for_each_set_bit(idx, cmem_lat_pmu->hw_events.used_ctrs,
++						CMEM_LAT_MAX_ACTIVE_EVENTS) {
++		struct perf_event *event = cmem_lat_pmu->hw_events.events[idx];
++
++		if (!event)
++			continue;
++
++		cmem_lat_pmu_event_update(event);
++
++		local64_set(&event->hw.prev_count, 0ULL);
 +	}
 +
-+	pcie_tgt_pmu_config_addr_filter(cspmu, false, base, mask, idx);
++	cmem_lat_pmu_ctrl(cmem_lat_pmu, CMEM_LAT_CTRL_CLR);
++	cmem_lat_pmu_cg_ctrl(cmem_lat_pmu, CMEM_LAT_CG_CTRL_DISABLE);
 +}
 +
-+static u32 pcie_tgt_pmu_event_type(const struct perf_event *event)
++/* PMU identifier attribute. */
++
++static ssize_t cmem_lat_pmu_identifier_show(struct device *dev,
++					 struct device_attribute *attr,
++					 char *page)
 +{
-+	return event->attr.config & NV_PCIE_TGT_EV_TYPE_MASK;
++	struct cmem_lat_pmu *cmem_lat_pmu = to_cmem_lat_pmu(dev_get_drvdata(dev));
++
++	return sysfs_emit(page, "%s\n", cmem_lat_pmu->identifier);
 +}
 +
-+static bool pcie_tgt_pmu_is_cycle_counter_event(const struct perf_event *event)
++static struct device_attribute cmem_lat_pmu_identifier_attr =
++	__ATTR(identifier, 0444, cmem_lat_pmu_identifier_show, NULL);
++
++static struct attribute *cmem_lat_pmu_identifier_attrs[] = {
++	&cmem_lat_pmu_identifier_attr.attr,
++	NULL
++};
++
++static struct attribute_group cmem_lat_pmu_identifier_attr_group = {
++	.attrs = cmem_lat_pmu_identifier_attrs,
++};
++
++/* Format attributes. */
++
++#define NV_PMU_EXT_ATTR(_name, _func, _config)			\
++	(&((struct dev_ext_attribute[]){				\
++		{							\
++			.attr = __ATTR(_name, 0444, _func, NULL),	\
++			.var = (void *)_config				\
++		}							\
++	})[0].attr.attr)
++
++static struct attribute *cmem_lat_pmu_formats[] = {
++	NV_PMU_EXT_ATTR(event, device_show_string, "config:0-1"),
++	NULL
++};
++
++static const struct attribute_group cmem_lat_pmu_format_group = {
++	.name = "format",
++	.attrs = cmem_lat_pmu_formats,
++};
++
++/* Event attributes. */
++
++static ssize_t cmem_lat_pmu_sysfs_event_show(struct device *dev,
++				struct device_attribute *attr, char *buf)
 +{
-+	u32 event_type = pcie_tgt_pmu_event_type(event);
++	struct perf_pmu_events_attr *pmu_attr;
 +
-+	return event_type == NV_PCIE_TGT_EV_TYPE_CC;
++	pmu_attr = container_of(attr, typeof(*pmu_attr), attr);
++	return sysfs_emit(buf, "event=0x%llx\n", pmu_attr->id);
 +}
 +
- enum nv_cspmu_name_fmt {
- 	NAME_FMT_GENERIC,
- 	NAME_FMT_SOCKET,
-@@ -618,6 +915,28 @@ static const struct nv_cspmu_match nv_cspmu_match[] = {
- 		.reset_ev_filter = nv_cspmu_reset_ev_filter,
- 	  }
- 	},
-+	{
-+	  .prodid = 0x10700000,
-+	  .prodid_mask = NV_PRODID_MASK,
-+	  .name_pattern = "nvidia_pcie_tgt_pmu_%u_rc_%u",
-+	  .name_fmt = NAME_FMT_SOCKET_INST,
-+	  .template_ctx = {
-+		.event_attr = pcie_tgt_pmu_event_attrs,
-+		.format_attr = pcie_tgt_pmu_format_attrs,
-+		.filter_mask = 0x0,
-+		.filter_default_val = 0x0,
-+		.filter2_mask = NV_PCIE_TGT_FILTER2_MASK,
-+		.filter2_default_val = NV_PCIE_TGT_FILTER2_DEFAULT,
-+		.init_data = pcie_tgt_init_data
-+	  },
-+	  .ops = {
-+		.is_cycle_counter_event = pcie_tgt_pmu_is_cycle_counter_event,
-+		.event_type = pcie_tgt_pmu_event_type,
-+		.validate_event = pcie_tgt_pmu_validate_event,
-+		.set_ev_filter = pcie_tgt_pmu_set_ev_filter,
-+		.reset_ev_filter = pcie_tgt_pmu_reset_ev_filter,
-+	  }
++#define NV_PMU_EVENT_ATTR(_name, _config)	\
++	PMU_EVENT_ATTR_ID(_name, cmem_lat_pmu_sysfs_event_show, _config)
++
++static struct attribute *cmem_lat_pmu_events[] = {
++	NV_PMU_EVENT_ATTR(cycles, CMEM_LAT_EVENT_CYCLES),
++	NV_PMU_EVENT_ATTR(rd_req, CMEM_LAT_EVENT_REQ),
++	NV_PMU_EVENT_ATTR(rd_cum_outs, CMEM_LAT_EVENT_AOR),
++	NULL
++};
++
++static const struct attribute_group cmem_lat_pmu_events_group = {
++	.name = "events",
++	.attrs = cmem_lat_pmu_events,
++};
++
++/* Cpumask attributes. */
++
++static ssize_t cmem_lat_pmu_cpumask_show(struct device *dev,
++			    struct device_attribute *attr, char *buf)
++{
++	struct pmu *pmu = dev_get_drvdata(dev);
++	struct cmem_lat_pmu *cmem_lat_pmu = to_cmem_lat_pmu(pmu);
++	struct dev_ext_attribute *eattr =
++		container_of(attr, struct dev_ext_attribute, attr);
++	unsigned long mask_id = (unsigned long)eattr->var;
++	const cpumask_t *cpumask;
++
++	switch (mask_id) {
++	case CMEM_LAT_ACTIVE_CPU_MASK:
++		cpumask = &cmem_lat_pmu->active_cpu;
++		break;
++	case CMEM_LAT_ASSOCIATED_CPU_MASK:
++		cpumask = &cmem_lat_pmu->associated_cpus;
++		break;
++	default:
++		return 0;
++	}
++	return cpumap_print_to_pagebuf(true, buf, cpumask);
++}
++
++#define NV_PMU_CPUMASK_ATTR(_name, _config)			\
++	NV_PMU_EXT_ATTR(_name, cmem_lat_pmu_cpumask_show,	\
++				(unsigned long)_config)
++
++static struct attribute *cmem_lat_pmu_cpumask_attrs[] = {
++	NV_PMU_CPUMASK_ATTR(cpumask, CMEM_LAT_ACTIVE_CPU_MASK),
++	NV_PMU_CPUMASK_ATTR(associated_cpus, CMEM_LAT_ASSOCIATED_CPU_MASK),
++	NULL
++};
++
++static const struct attribute_group cmem_lat_pmu_cpumask_attr_group = {
++	.attrs = cmem_lat_pmu_cpumask_attrs,
++};
++
++/* Per PMU device attribute groups. */
++
++static const struct attribute_group *cmem_lat_pmu_attr_groups[] = {
++	&cmem_lat_pmu_identifier_attr_group,
++	&cmem_lat_pmu_format_group,
++	&cmem_lat_pmu_events_group,
++	&cmem_lat_pmu_cpumask_attr_group,
++	NULL
++};
++
++static int cmem_lat_pmu_cpu_online(unsigned int cpu, struct hlist_node *node)
++{
++	struct cmem_lat_pmu *cmem_lat_pmu =
++		hlist_entry_safe(node, struct cmem_lat_pmu, node);
++
++	if (!cpumask_test_cpu(cpu, &cmem_lat_pmu->associated_cpus))
++		return 0;
++
++	/* If the PMU is already managed, there is nothing to do */
++	if (!cpumask_empty(&cmem_lat_pmu->active_cpu))
++		return 0;
++
++	/* Use this CPU for event counting */
++	cpumask_set_cpu(cpu, &cmem_lat_pmu->active_cpu);
++
++	return 0;
++}
++
++static int cmem_lat_pmu_cpu_teardown(unsigned int cpu, struct hlist_node *node)
++{
++	unsigned int dst;
++
++	struct cmem_lat_pmu *cmem_lat_pmu =
++		hlist_entry_safe(node, struct cmem_lat_pmu, node);
++
++	/* Nothing to do if this CPU doesn't own the PMU */
++	if (!cpumask_test_and_clear_cpu(cpu, &cmem_lat_pmu->active_cpu))
++		return 0;
++
++	/* Choose a new CPU to migrate ownership of the PMU to */
++	dst = cpumask_any_and_but(&cmem_lat_pmu->associated_cpus,
++				  cpu_online_mask, cpu);
++	if (dst >= nr_cpu_ids)
++		return 0;
++
++	/* Use this CPU for event counting */
++	perf_pmu_migrate_context(&cmem_lat_pmu->pmu, cpu, dst);
++	cpumask_set_cpu(dst, &cmem_lat_pmu->active_cpu);
++
++	return 0;
++}
++
++static int cmem_lat_pmu_get_cpus(struct cmem_lat_pmu *cmem_lat_pmu,
++				unsigned int socket)
++{
++	int cpu;
++
++	for_each_possible_cpu(cpu) {
++		if (cpu_to_node(cpu) == socket)
++			cpumask_set_cpu(cpu, &cmem_lat_pmu->associated_cpus);
++	}
++
++	if (cpumask_empty(&cmem_lat_pmu->associated_cpus)) {
++		dev_dbg(cmem_lat_pmu->dev,
++			"No cpu associated with PMU socket-%u\n", socket);
++		return -ENODEV;
++	}
++
++	return 0;
++}
++
++static int cmem_lat_pmu_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct acpi_device *acpi_dev;
++	struct cmem_lat_pmu *cmem_lat_pmu;
++	char *name, *uid_str;
++	int ret, i;
++	u32 socket;
++
++	acpi_dev = ACPI_COMPANION(dev);
++	if (!acpi_dev)
++		return -ENODEV;
++
++	uid_str = acpi_device_uid(acpi_dev);
++	if (!uid_str)
++		return -ENODEV;
++
++	ret = kstrtou32(uid_str, 0, &socket);
++	if (ret)
++		return ret;
++
++	cmem_lat_pmu = devm_kzalloc(dev, sizeof(*cmem_lat_pmu), GFP_KERNEL);
++	name = devm_kasprintf(dev, GFP_KERNEL, "nvidia_cmem_latency_pmu_%u", socket);
++	if (!cmem_lat_pmu || !name)
++		return -ENOMEM;
++
++	cmem_lat_pmu->dev = dev;
++	cmem_lat_pmu->name = name;
++	cmem_lat_pmu->identifier = acpi_device_hid(acpi_dev);
++	platform_set_drvdata(pdev, cmem_lat_pmu);
++
++	cmem_lat_pmu->pmu = (struct pmu) {
++		.parent		= &pdev->dev,
++		.task_ctx_nr	= perf_invalid_context,
++		.pmu_enable	= cmem_lat_pmu_enable,
++		.pmu_disable	= cmem_lat_pmu_disable,
++		.event_init	= cmem_lat_pmu_event_init,
++		.add		= cmem_lat_pmu_add,
++		.del		= cmem_lat_pmu_del,
++		.start		= cmem_lat_pmu_start,
++		.stop		= cmem_lat_pmu_stop,
++		.read		= cmem_lat_pmu_read,
++		.attr_groups	= cmem_lat_pmu_attr_groups,
++		.capabilities	= PERF_PMU_CAP_NO_EXCLUDE |
++					PERF_PMU_CAP_NO_INTERRUPT,
++	};
++
++	/* Map the address of all the instances. */
++	for (i = 0; i < NUM_INSTANCES; i++) {
++		cmem_lat_pmu->base[i] = devm_platform_ioremap_resource(pdev, i);
++		if (IS_ERR(cmem_lat_pmu->base[i])) {
++			dev_err(dev, "Failed map address for instance %d\n", i);
++			return PTR_ERR(cmem_lat_pmu->base[i]);
++		}
++	}
++
++	/* Map broadcast address. */
++	cmem_lat_pmu->base_broadcast = devm_platform_ioremap_resource(pdev,
++										NUM_INSTANCES);
++	if (IS_ERR(cmem_lat_pmu->base_broadcast)) {
++		dev_err(dev, "Failed map broadcast address\n");
++		return PTR_ERR(cmem_lat_pmu->base_broadcast);
++	}
++
++	ret = cmem_lat_pmu_get_cpus(cmem_lat_pmu, socket);
++	if (ret)
++		return ret;
++
++	ret = cpuhp_state_add_instance(cmem_lat_pmu_cpuhp_state,
++				       &cmem_lat_pmu->node);
++	if (ret) {
++		dev_err(&pdev->dev, "Error %d registering hotplug\n", ret);
++		return ret;
++	}
++
++	cmem_lat_pmu_cg_ctrl(cmem_lat_pmu, CMEM_LAT_CG_CTRL_ENABLE);
++	cmem_lat_pmu_ctrl(cmem_lat_pmu, CMEM_LAT_CTRL_CLR);
++	cmem_lat_pmu_cg_ctrl(cmem_lat_pmu, CMEM_LAT_CG_CTRL_DISABLE);
++
++	ret = perf_pmu_register(&cmem_lat_pmu->pmu, name, -1);
++	if (ret) {
++		dev_err(&pdev->dev, "Failed to register PMU: %d\n", ret);
++		cpuhp_state_remove_instance(cmem_lat_pmu_cpuhp_state,
++					    &cmem_lat_pmu->node);
++		return ret;
++	}
++
++	dev_dbg(&pdev->dev, "Registered %s PMU\n", name);
++
++	return 0;
++}
++
++static void cmem_lat_pmu_device_remove(struct platform_device *pdev)
++{
++	struct cmem_lat_pmu *cmem_lat_pmu = platform_get_drvdata(pdev);
++
++	perf_pmu_unregister(&cmem_lat_pmu->pmu);
++	cpuhp_state_remove_instance(cmem_lat_pmu_cpuhp_state,
++				    &cmem_lat_pmu->node);
++}
++
++static const struct acpi_device_id cmem_lat_pmu_acpi_match[] = {
++	{ "NVDA2021" },
++	{ }
++};
++MODULE_DEVICE_TABLE(acpi, cmem_lat_pmu_acpi_match);
++
++static struct platform_driver cmem_lat_pmu_driver = {
++	.driver = {
++		.name = "nvidia-t410-cmem-latency-pmu",
++		.acpi_match_table = ACPI_PTR(cmem_lat_pmu_acpi_match),
++		.suppress_bind_attrs = true,
 +	},
- 	{
- 	  .prodid = 0,
- 	  .prodid_mask = 0,
-@@ -710,6 +1029,8 @@ static int nv_cspmu_init_ops(struct arm_cspmu *cspmu)
- 
- 	/* NVIDIA specific callbacks. */
- 	SET_OP(validate_event, impl_ops, match, NULL);
-+	SET_OP(event_type, impl_ops, match, NULL);
-+	SET_OP(is_cycle_counter_event, impl_ops, match, NULL);
- 	SET_OP(set_cc_filter, impl_ops, match, nv_cspmu_set_cc_filter);
- 	SET_OP(set_ev_filter, impl_ops, match, nv_cspmu_set_ev_filter);
- 	SET_OP(reset_ev_filter, impl_ops, match, NULL);
++	.probe = cmem_lat_pmu_probe,
++	.remove = cmem_lat_pmu_device_remove,
++};
++
++static int __init cmem_lat_pmu_init(void)
++{
++	int ret;
++
++	ret = cpuhp_setup_state_multi(CPUHP_AP_ONLINE_DYN,
++				      "perf/nvidia/cmem_latency:online",
++				      cmem_lat_pmu_cpu_online,
++				      cmem_lat_pmu_cpu_teardown);
++	if (ret < 0)
++		return ret;
++
++	cmem_lat_pmu_cpuhp_state = ret;
++
++	return platform_driver_register(&cmem_lat_pmu_driver);
++}
++
++static void __exit cmem_lat_pmu_exit(void)
++{
++	platform_driver_unregister(&cmem_lat_pmu_driver);
++	cpuhp_remove_multi_state(cmem_lat_pmu_cpuhp_state);
++}
++
++module_init(cmem_lat_pmu_init);
++module_exit(cmem_lat_pmu_exit);
++
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("NVIDIA Tegra410 CPU Memory Latency PMU driver");
++MODULE_AUTHOR("Besar Wicaksono <bwicaksono@nvidia.com>");
 -- 
 2.43.0
 
