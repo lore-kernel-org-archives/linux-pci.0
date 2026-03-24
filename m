@@ -1,168 +1,224 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11FEC37BE6F;
-	Tue, 24 Mar 2026 17:07:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71B483A1691
+	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 17:40:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774372059; cv=none; b=uPsb1uyfND+pJeGjA8gsbkU1dbU6swC+HFbmTTWqxJxsOrDcUxtvU6E6qRGCKXkroBi5/wC93aUGuwZxKeE4RRlrpSs178W0SchMZWUTUs6plzM7aJqlpDx6d7OSwJ1QTIuVKJCeHvuiVZMFjZnNlh/FFnmb2HAWpmAJPuCjK7E=
+	t=1774374003; cv=none; b=LMLKYCBcNiAwTbWupK869snAsW3suAcjVC1EnrhMc41eA4+ICeXE5qDIvI32rjBUdPFZoWBftz7bKJoUJIF2rY4s3weFZ+EjtZX8Z+ADHZETSh8G7vbVoOZKwLiyTBMb5Fv5HkD4va9KFzQBAdcxXWBbHXe6DC2A1HSgoYBsols=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774372059; c=relaxed/simple;
-	bh=AGYlylnlSsCLS69ApRan4I8w6WUxlpyQvLSi84VbGf4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dUrqnB1mwlKErFBQ+WPsSo+X3fRp1uTrLesaA2pfwmfpZqBOD707xBN9GQSjY9wvsBwrrIw3hO5QsDilgpz+XiynKSCbRbqe6Dp2VPgwCTrdRBlUj7XEZT1ZRPVGmuB3GPsIhbwI99qo9EudFgmGFRs8TrI3lnUs1bOgIxoLDiU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=UUNcZotw; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1774374003; c=relaxed/simple;
+	bh=sZ9R9A6EyluvGAUCUqlygxCnnXACQl62uyvQhMVFpEE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=go/ZTVNQTXFPYUcR6WrAfcGy7AZB3NoiO9qzUocS2uC0oGu5i0b6HKdfjF+VlLuOaWQztCODxoPYS0kIzvXJUmBZNVK9tz82faNbKcHlv9ywhgvKbgUOijCoe6jCANMuwd5ujRDGWlcpm5kTDY6uPbmzuG92QGX5EVu4ucHXvOw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TgSFwAvw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="UUNcZotw"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62O5eHsp4120967;
-	Tue, 24 Mar 2026 17:07:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:sender:subject:to; s=pp1;
-	 bh=uxTqQzn37zq82dyIWyZSBRTBU/irP5Ew+hiSH8++MUU=; b=UUNcZotwXPtc
-	ul+XeZcsT7JRizh2OYlz1VafGDPFo/Dxsk9zEhNyu3PS6UvCytB7Ar3c0lhlWwRp
-	OE9RbIYV4MMdISKN2+mTbBqZ2b2WhpI+NCke1JLGKWRvWgY3CrTtChF1Qu+4wKI/
-	wsz/VmQ43hLKVhcm3PWOKSODLSQdLNh8I4tuQuM9T5VVqc54JUe+PNVbiXRatwtg
-	fknIbXtoaAt9HQV3/tr498UH1Tipl3Qi4JRDvGe9G58lTlBpB4wfNzUj78glwPN3
-	xeSS4eqFMWduZPWtsG4zfT3b4gw4cisTdi21m7Sse6yHscOva9uNDfyEk39UedfU
-	hVPZUqs7Eg==
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4d1kw9vr67-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 24 Mar 2026 17:07:18 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62OFVmZ9005996;
-	Tue, 24 Mar 2026 17:07:17 GMT
-Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4d261yk23e-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 24 Mar 2026 17:07:16 +0000
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62OH7BIa45089256
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 24 Mar 2026 17:07:11 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 1FCB72004B;
-	Tue, 24 Mar 2026 17:07:11 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 08D1820043;
-	Tue, 24 Mar 2026 17:07:11 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.52.223.163])
-	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Tue, 24 Mar 2026 17:07:10 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.1)
-	(envelope-from <bblock@linux.ibm.com>)
-	id 1w55Di-000000094zn-2xqM;
-	Tue, 24 Mar 2026 18:07:10 +0100
-Date: Tue, 24 Mar 2026 18:07:10 +0100
-From: Benjamin Block <bblock@linux.ibm.com>
-To: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
-Cc: schnelle@linux.ibm.com, alifm@linux.ibm.com, bhelgaas@google.com,
-        dtatulea@nvidia.com, helgaas@kernel.org,
-        intel-xe@lists.freedesktop.org, ionut_n2001@yahoo.com,
-        julianr@linux.ibm.com, kbusch@kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux@roeck-us.net, lkml@mageta.org,
-        lukas@wunner.de, mani@kernel.org, matthew.brost@intel.com,
-        michal.wajdeczko@intel.com, piotr.piorkowski@intel.com,
-        sebott@linux.ibm.com, stable@vger.kernel.org, sunlightlinux@gmail.com
-Subject: Re: [PATCH v10 0/2] PCI/IOV: Fix SR-IOV locking races and AB-BA
- deadlock
-Message-ID: <20260324170710.GA252856@p1gen4-pw042f0m>
-References: <f17b03652a84be73c1d3a2cfea8a016dab99f8e0.camel@linux.ibm.com>
- <20260319202755.16081-1-ionut.nechita@windriver.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TgSFwAvw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5180AC2BC9E
+	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 17:40:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774374003;
+	bh=sZ9R9A6EyluvGAUCUqlygxCnnXACQl62uyvQhMVFpEE=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=TgSFwAvwC7c0S6t29Y+Hbk/4xniNeHVNvn5ca2RnKwvoV9vzKxs8sg1syP4BsljaV
+	 2+QwzQTrOhZ+odEmy1qCG+4HVIEN8A/epUNf6bXxsC29q+Dm7y0QSF1sopf5qYnRa8
+	 jHiUE0VHWSivrWSww1XU7pwHI+PXkGKl0Lb5SbkxrSoRuj7dnUOj98Q+FAgrYVM53n
+	 9iVBP6IoRXrd6kIw9g8jpvi03WIZISoyeg3++wSGg711xT76UQJRPu/Dae5evd05uh
+	 5akGqdPcz5Yeufs2tL5r2oah7if6B7QUUAnWfUGyVey6RTCEPgGwXMDYoBWNtosGRq
+	 9Qv3xehnocjGQ==
+Received: by mail-oi1-f177.google.com with SMTP id 5614622812f47-45f053b7b90so880606b6e.0
+        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 10:40:03 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCVGmlDgb7kO4uhRftUOu+MKKQzgQaGqhrCYS+qr6UYZzpqPVAsIhZMZJLZf4sMkeQv90i295sk1SSE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxbTMVcnfEAXZnMPQbRe4BcrbkPcFTdVj/6Q2hqQSStIUqy4+bM
+	mJClIr+Y13ENdlARbZIESt45tULmTd/sXeNiDwcLPVsUJfdy9uQcX8D5m8DUKbXgZ3+jsoRyuRW
+	O71SR5qCyaIY3MdVVRS9xyEkxeGJNoF0=
+X-Received: by 2002:a05:6808:144e:b0:467:880:7454 with SMTP id
+ 5614622812f47-46a5c5a3227mr224727b6e.18.1774374002202; Tue, 24 Mar 2026
+ 10:40:02 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260319202755.16081-1-ionut.nechita@windriver.com>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-ORIG-GUID: rY4fF4ZcHAzawRmmUo057d8sT-U_YyZN
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzI0MDEzMCBTYWx0ZWRfX1bWxugcuXBai
- E41K0wNRWoRBPEiVTuTOhEcE9wVlKL2/pg7193xc+rvSLYJkzqmW/aWJOa9cJ6M3xg9f6ugz3Y8
- u/j8L3kR/WTS46CsN2edHYoYJqzfn0t+Fb3zLtJKeeAyBFsaULTSbiMivaO1RX4mBjcF9Qk9kYG
- X0Z7zKsKJEd7wfqQUX9ZSFJs25xlX0S/Fsb1xe8ZbK3Qui5eu0lbNhvUesSrfamVhX8iw3fuN5X
- v5qFrhW9hrqJ3qumA1RI7x3VSow1TjBqe533/xJ7aINrIrX+Q/MPdY6twziEVwCGR+Q/AyDgkJD
- HhjqUL2gIikTP3Im1q/B0NexVz5m1WugfjpQRsp3BJL9mV9ac0/m8bLUPxq83/sIeVR2mTEyzcj
- JteAZwhkTB7tOv1ttyFiOA6y3KmEIjov1bPb7iFCfBvMVjCkz7tip6xNKtvupQ4+X+ocDLmsixh
- gqBhsA8J+six0MJcb6w==
-X-Proofpoint-GUID: mayWfXcezXzQ0RCPJmiJH_6HnV5S1zrz
-X-Authority-Analysis: v=2.4 cv=OsZCCi/t c=1 sm=1 tr=0 ts=69c2c4c6 cx=c_pps
- a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
- a=x-Aaag0WYKWWV6Rne_cA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-24_03,2026-03-24_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 adultscore=0 clxscore=1011 phishscore=0 suspectscore=0
- lowpriorityscore=0 priorityscore=1501 bulkscore=0 spamscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603240130
+References: <20260313-synology_microp_initial-v3-0-ad6ac463a201@posteo.de>
+ <20260313-synology_microp_initial-v3-3-ad6ac463a201@posteo.de>
+ <CAJZ5v0jxHO2EH5NeEsMkxGz5xqVL00tO-W1JpaVd=GhwgQ3T=A@mail.gmail.com>
+ <e8ffc9902c0af24ce6fde2d8712ea588b36e9194.camel@posteo.de>
+ <CAJZ5v0jHQ7sHJ8SV25p2gQugC-a8f9oVFarS17NXwPzGOJUD0Q@mail.gmail.com> <f32aba79b98b357487c44e1952e536051fcd7a51.camel@posteo.de>
+In-Reply-To: <f32aba79b98b357487c44e1952e536051fcd7a51.camel@posteo.de>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Tue, 24 Mar 2026 18:39:51 +0100
+X-Gmail-Original-Message-ID: <CAJZ5v0guwtAepn2eS_fGik6iCEYWn3vt2s5oAGnnL_u62-YbpQ@mail.gmail.com>
+X-Gm-Features: AQROBzBgz9X_18TNZxhGoIzxIF6ZRQ4p9BklVyTGwPgiiSXx52mPCcekAjItT7o
+Message-ID: <CAJZ5v0guwtAepn2eS_fGik6iCEYWn3vt2s5oAGnnL_u62-YbpQ@mail.gmail.com>
+Subject: Re: [PATCH v3 3/7] acpi: add acpi_of_match_device_ids
+To: Markus Probst <markus.probst@posteo.de>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Lee Jones <lee@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Miguel Ojeda <ojeda@kernel.org>, 
+	Boqun Feng <boqun@kernel.org>, Gary Guo <gary@garyguo.net>, 
+	=?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+	Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+	Danilo Krummrich <dakr@kernel.org>, Igor Korotin <igor.korotin.linux@gmail.com>, 
+	Daniel Almeida <daniel.almeida@collabora.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>, 
+	Robert Moore <robert.moore@intel.com>, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org, 
+	driver-core@lists.linux.dev, linux-pci@vger.kernel.org, 
+	linux-leds@vger.kernel.org, linux-acpi@vger.kernel.org, 
+	acpica-devel@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Mar 19, 2026 at 10:27:55PM +0200, Ionut Nechita (Wind River) wrote:
-> On Thu, 19 Mar 2026 13:31:39 +0100, Niklas Schnelle wrote:
-> > For your awareness, I saw that this series has some findings on
-> > Google's new Sashiko AI reviewing tool[0]. At a quick glance the
-> > findings seem like at least reasonable concerns to me. I'm still
-> > looking at this independently also of course.
-> 
---8<--
-> 3) TOCTOU Race Condition / Lock Window Vulnerability
->    — a driver can rebind between device_release_driver() and
->      pci_stop_and_remove_bus_device_locked()
-> 
->    This is theoretically valid but practically impossible. The
->    window is a few instructions wide. For this race to trigger:
-> 
->    a) device_remove_file_self() has already removed the "remove"
->       sysfs attribute, signaling the device is being torn down
->    b) a bind_store or udev probe would need to fire in exactly
->       that window
->    c) the newly bound driver's probe() would need to call
->       pci_enable_sriov() and block on pci_rescan_remove_lock
-> 
->    This is the same pattern used elsewhere in the kernel (e.g.,
->    the existing remove_store already had no synchronization between
->    device_remove_file_self() and pci_stop_and_remove_bus_device_locked()
->    — the patch just adds one more call in between).
-> 
->    If this is a real concern, it would need to be addressed as a
->    separate improvement, not as a blocker for this fix.
+On Tue, Mar 24, 2026 at 5:26=E2=80=AFPM Markus Probst <markus.probst@posteo=
+.de> wrote:
+>
+> On Tue, 2026-03-24 at 17:01 +0100, Rafael J. Wysocki wrote:
+> > On Tue, Mar 24, 2026 at 4:30=E2=80=AFPM Markus Probst <markus.probst@po=
+steo.de> wrote:
+> > >
+> > > On Mon, 2026-03-23 at 20:57 +0100, Rafael J. Wysocki wrote:
+> > > > On Fri, Mar 13, 2026 at 8:03=E2=80=AFPM Markus Probst via B4 Relay
+> > > > <devnull+markus.probst.posteo.de@kernel.org> wrote:
+> > > > >
+> > > > > From: Markus Probst <markus.probst@posteo.de>
+> > > > >
+> > > > > Add a function to match acpi devices against of_device_ids. This =
+will be
+> > > > > used in the following commit ("mfd: match acpi devices against PR=
+P0001")
+> > > > > to match mfd sub-devices against a of compatible string.
+> > > >
+> > > > Please always spell ACPI in capitals in patch subjects, comments,
+> > > > changelogs, etc.  It is not a regular word.
+> > > Ok.
+> > > >
+> > > > > Signed-off-by: Markus Probst <markus.probst@posteo.de>
+> > > > > ---
+> > > > >  drivers/acpi/bus.c      | 7 +++++++
+> > > > >  include/acpi/acpi_bus.h | 2 ++
+> > > > >  2 files changed, 9 insertions(+)
+> > > > >
+> > > > > diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
+> > > > > index f6707325f582..5ddcc56edc87 100644
+> > > > > --- a/drivers/acpi/bus.c
+> > > > > +++ b/drivers/acpi/bus.c
+> > > > > @@ -1044,6 +1044,13 @@ int acpi_match_device_ids(struct acpi_devi=
+ce *device,
+> > > > >  }
+> > > > >  EXPORT_SYMBOL(acpi_match_device_ids);
+> > > > >
+> > > >
+> > > > Missing kerneldoc.
+> > > The same amount of kerneldoc as `acpi_match_device_ids`, if I am not
+> > > mistaken.
+> > > >
+> > > > > +int acpi_of_match_device_ids(struct acpi_device *device,
+> > > > > +                         const struct of_device_id *ids)
+> > > > > +{
+> > > > > +       return __acpi_match_device(device, NULL, ids, NULL, NULL)=
+ ? 0 : -ENOENT;
+> > > > > +}
+> > > > > +EXPORT_SYMBOL(acpi_of_match_device_ids);
+> > > >
+> > > > Are you aware of the consensus that using PRP0001 in production
+> > > > platform firmware will be regarded as invalid?
+> > > >
+> > > > Because of that, it is not an option for a driver to avoid providin=
+g
+> > > > ACPI match data on a platform that uses ACPI.
+> > > First of all, the driver that would have made use of it has been
+> > > restructed to not use mfd subdevices. It would not be affected anymor=
+e
+> > > through this patch set.
+> >
+> > So what exactly would be affected by it?
+> I won't have a use for myself anymore, but I still think the patch is
+> useful. Anyway,
+>
+> MFD Devices without an assigned ACPI ID, if they are present on devices
+> with ACPI platform firmware.
+>
+> >
+> > > Not sure if I should still send it as its own patch series though.
+> That is why I asked this question (see 1. sentence in the paragraph
+> above).
+>
+> > >
+> > > The device of the driver has no ACPI ID allocated by the manufacturer=
+,
+> > > as it is only used on a proprietary Linux OS (with their own modified
+> > > kernel).
+> >
+> > Do I understand correctly that there is an ACPI platform firmware on
+> > the board, but it doesn't enumerate the given device properly (that
+> > is, as an ACPI device object with a specific device ID)?
+> There is only a serial device in the ACPI platform firmware.
+> The device connected to the bus isn't specified.
+> >
+> > In which case there probably is a driver that can find that device
+> > somehow (it has hardcoded resources or similar).
+> Yes, that driver has `filp_open("/dev/ttyS1")` hardcoded.
+> >
+> > > The driver would have only been useful via device tree or an ACPI
+> > > Overlay.
+> >
+> > Do you mean a custom SSDT loaded via configfs or something else?
+> Yes, in my case via initrd.
+>
+> >
+> > > Obviously, I don't have a PNP or ACPI Vendor ID, so I can't
+> > > assign one. The parent/main driver does only have a of compatible id.
+> > > As it needs to use PRP0001 anyway on ACPI, I thought it makes more
+> > > sense to also use PRP0001 there instead of matching it with a _ADR
+> > > which is "a grey area in the ACPI specification".
+> >
+> > You can't match a device with _ADR.  By itself, _ADR doesn't provide
+> > you with any information on the device in question, it only helps to
+> > connect it to some information that can be collected by other means.
+> > The role of it, at least in principle, is to allow some device objects
+> > in the ACPI hierarchy to be associated with devices enumerated by
+> > other means (like on a PCI bus).
+>
+> This patch affects mfd devices. A bus device can via mfd register child
+> devices and those child devices will be matched to a fwnode if
+> available.
 
-I haven't had time to fully review all this yet, but one quick comment: after
-the first idea to unbind the device driver I also realized we could have a
-race here between unbinding, and then possibly re-binding. We could probably
-prevent that by marking the device as dead:
+That only works because the parent can be recognized and properly
+enumerated, so it is parent-relative.
 
-+	if (val && device_remove_file_self(dev, attr)) {
-+		device_lock(dev);
-+		kill_device(dev);
-+		device_unlock(dev);
+> According to commit 98a3be44ffa67b812de7aa7aed9f2331edcfb1a5, there is
+> a board on the market with a sub-device that will be matched using _ADR
+> [1].
 
-This doesn't modify the reference count or anything, but only sets the private
-member of the `struct device` `dead` to true. This can't be undone using the
-device core's public API, and once set, a device can not be bound to a new
-device-driver.
+With the help of a quirk though.
 
-This should prevent any such race AFAICS. The unbind is protected by the
-device-mutex, so once the flag is set, and the unbind is done, this device
-will stay unbound.
+> [1]
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit=
+/?id=3D98a3be44ffa67b812de7aa7aed9f2331edcfb1a5
+>
+> >
+> > The enumeration with the help of PRP0001 only works if there is a
+> > device object in the ACPI hierarchy and its _HID is PRP0001 or its
+> > _CID list contains PRP0001, there is a _DSD under it and a
+> > "compatible" property is returned by that _DSD.  Who's going to
+> > provide all of that for the given device?
+> A ACPI Overlay would do that.
+>
+> >
+> > Moreover, if the device has some resources that the kernel needs to
+> > know about, there should be a _CRS under the device object in question
+> > and the resources should be listed there.  Or how are the resources
+> > going to be found otherwise?
+> Resources in mfd are usually handled by the parent device, not the mfd
+> child device. But yes, it would be using _CRS if any.
 
-It's not really "pretty" though.
+So this is kind of a valid use case, but since you don't need it any
+more, I'd rather not put it in without a clear need.
 
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
-Sitz der Ges.: Ehningen     /     Registergericht: AmtsG Stuttgart, HRB 243294
+Also, it's not a huge deal for a vendor to allocate a proper ACPI
+device ID for a piece of hardware.  It just involves some due
+diligence.
