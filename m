@@ -1,35 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F6F31A6819;
-	Tue, 24 Mar 2026 05:59:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EA763B8D5C;
+	Tue, 24 Mar 2026 06:07:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774331983; cv=none; b=fHpUyFoSPXjvn9FTCwDmEdHfLzaTSO1A05f+oosCNR33yDaCc51abJGF4g0kFQiJBm/f4I7bVVwgwae0Ha0w5gLicO6aneoj+BD0zR4TW61i3caek+gZVsyenLNz2hajFSnS5oYeAsp2q3khnNvjZOTT5hzy/htfl4jvSlZts2Q=
+	t=1774332472; cv=none; b=rfASdkaG4OOJ7SDtFTJUnyAf1ZWSuQ+Qd/zK05pEaumuINVDU8ABcFcUCFPox+XZ80Pw1k+GXDV3T+JPbHmhQHyV0edi/8KjN3APWovkb7Solbc9GZFMilOER0RMVFEanms4la9FucbXMIrOrAcBmV5EiXT3FmXBPci0FJRbFD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774331983; c=relaxed/simple;
-	bh=ofK4Z+3ftFUTvJJazDhIQZbIdvWUtQmmTWYDW3/HgXI=;
+	s=arc-20240116; t=1774332472; c=relaxed/simple;
+	bh=CbrBDMvrxeaN6eqoq4nlJm50oGW9GYqdyJhdu9KIQjc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UJt8IOnn0fJN7YyAZQZqCqsiAY1FU1bBA2WxccQLt7YDIi+j61wfJyWMa+433WLF1+enkX0nmxH0niCOYEQkSY90sNtyNDfBkVU23d6M0XWNTkXAW7PRaPjrYgQB5I2XXVEaOmRhY1WnJ68FGsP3bsu3rkTlosmvBEG10TmByEI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zt4VSAuv; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=XKMJ90yy3FYJFdG6hee7S3G/UkJlPQl1Talvn9HgbS82qIRZUB9+oQiBXEvniFh3lfqtasb0ruM9OHTR5G+18oJAdeb4XbSRizmWLG9b7UbwNoC2trXCsEOGqj4mygZ83xu4O3BONzAeYGvUrKB3hXrbGscVjx8bicmeeclc/O8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J8FFdrjp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zt4VSAuv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 879F9C19424;
-	Tue, 24 Mar 2026 05:59:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J8FFdrjp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66789C2BCB6;
+	Tue, 24 Mar 2026 06:07:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774331982;
-	bh=ofK4Z+3ftFUTvJJazDhIQZbIdvWUtQmmTWYDW3/HgXI=;
+	s=k20201202; t=1774332472;
+	bh=CbrBDMvrxeaN6eqoq4nlJm50oGW9GYqdyJhdu9KIQjc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Zt4VSAuv4R6aJoIxAxIvCtxhChwkaT961lGZmXOa71KTTqqyOidMrbYpgF6WO/y2d
-	 xu+y4Sl41M+91xBgARpl0hF+3/iji+tatt9/B+CsfzTXUHjPc4UjBAxxUXP1QNIDG2
-	 n3RfKttHFQYC/9AbKal1d7QKnKq56xLsNEaL1ylwg30KIJrHlh0IDGu5uES1MVYUUP
-	 /vmuoFyFkIbfzT3Nub91bZt0QPAVtQN+wnac50nojh/D+7XmZ12fpl3qZcLjgsrJYd
-	 aChzlJ1XtGYl8INKNtOTGHrOaJ9wux8MIhW30ElkdAc4qpf1zcV/YTuOn6ZFZ5JDtC
-	 yzWLP0uK4l+DA==
-Date: Tue, 24 Mar 2026 11:29:26 +0530
+	b=J8FFdrjpIm66Ud6FZQmqgFoLE3tQOuVgS10sKNaKTr0Oi+Zg8yPtGHldalvpKl1aR
+	 5ork1c0yk7RzktocuBMmHVdiPxTvRSOMHDnSVUD8q+CiRdeYAE7E+LHWWxtgItjr6r
+	 qLaT84wB7VJ8mLRYoFLy8oxLfwaTOXsyupgexMedPclhYyLFV/zXtPzzNrmYpssapW
+	 E+CUcUBlxBxFBD5llM++URWYBUwjMCVhTEU+JIm5telWaOtHQrMxX6y9nRi5n/+g4p
+	 mL+FUC8m6F8gYC1i8NL3j9x3qEJVtm/iPgD1FbmZwkkbmFiNLu4e+aSnxQgOx6alvM
+	 8do02E7SokWxg==
+Date: Tue, 24 Mar 2026 11:37:35 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>, andersson@kernel.org, 
+To: Tobias Heider <tobias.heider@canonical.com>
+Cc: Bjorn Andersson <andersson@kernel.org>, 
+	Bjorn Helgaas <helgaas@kernel.org>, Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>, 
 	konradybcio@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
 	jingoohan1@gmail.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
 	bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org, kishon@kernel.org, 
@@ -39,9 +40,15 @@ Cc: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>, andersson@kernel.org,
 	quic_krichai@quicinc.com, quic_vbadigan@quicinc.com
 Subject: Re: [PATCH v1 1/1] arm64: dts: qcom: hamoa: Move PCIe PERST and Wake
  GPIOs to port nodes
-Message-ID: <lct4q52piv64zudohkrfetm3q7x27ey5j7efjfdjmsxw45pvxd@vlxvsromas3u>
-References: <f5vqy4tfhfxeu4li33qffjzrlgqgbflidds35qdni3trdoues2@kvuzjxenrdff>
- <20260319171728.GA505341@bhelgaas>
+Message-ID: <dnx4ge2e2zy2unw5jtmmhktyzlnmmhrogb5skskxewi6y7ekau@vpfdphzay7td>
+References: <20260313094618.1361418-1-ziyue.zhang@oss.qualcomm.com>
+ <20260313164542.GA1405513@bhelgaas>
+ <en5a7jrgpbn4bsmw5qwprugb2qmjkqw2x5eey6jxxu63634duz@b43rhcsqkj3o>
+ <abdviJbrluDn2Vrx@baldur>
+ <kqpgjzcxnazjohiop27exget6qrv37wn3csmixt5nmc6d5dkbg@n7qjo6flaabn>
+ <abtgaXSv-zRysJqO@baldur>
+ <4byysnjodmlphwcevw5gb2asxbwwwlf526mtpwpkfi6crjxoqb@vyuktezfu2wu>
+ <CAARv3RSag8n0=ut9KGm0yALRPVTiyQ+bBBbT+3Vf1sNOCBLbGA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,116 +58,115 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260319171728.GA505341@bhelgaas>
+In-Reply-To: <CAARv3RSag8n0=ut9KGm0yALRPVTiyQ+bBBbT+3Vf1sNOCBLbGA@mail.gmail.com>
 
-On Thu, Mar 19, 2026 at 12:17:28PM -0500, Bjorn Helgaas wrote:
-> On Thu, Mar 19, 2026 at 10:58:36AM +0530, Manivannan Sadhasivam wrote:
-> > On Tue, Mar 17, 2026 at 12:13:19PM -0500, Bjorn Helgaas wrote:
-> > > On Sat, Mar 14, 2026 at 07:50:50PM +0530, Manivannan Sadhasivam wrote:
-> > > > On Fri, Mar 13, 2026 at 11:45:42AM -0500, Bjorn Helgaas wrote:
-> > > > > On Fri, Mar 13, 2026 at 05:46:18PM +0800, Ziyue Zhang wrote:
-> > > > > > Commit 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake
-> > > > > > GPIOs to PCIe port nodes and add port Nodes for all PCIe ports") did not
-> > > > > > convert all Hamoa‑based platforms to the new method of defining PERST and
-> > > > > > Wake GPIOs in the PCIe root port nodes.
-> > > > > > 
-> > > > > > Without the change PCIe probe will fail. The probe failure happens because
-> > > > > > the PHY stays in the controller node while the PERST/Wake GPIOs were moved
-> > > > > > to the port nodes.
-> > > > > > 
-> > > > > > This fixes probe failures seen on the following platforms:
-> > > > > >  - x1-hp-omnibook-x14
-> > > > > >  - x1-microsoft-denali
-> > > > > >  - x1e80100-lenovo-yoga-slim7x
-> > > > > >  - x1e80100-medion-sprchrgd-14-s1
-> > > > > >  - x1p42100-lenovo-thinkbook-16
-> > > > > >  - x1-asus-zenbook-a14
-> > > > > >  - x1-crd
-> > > > > >  - x1-dell-thena
-> > > > > > 
-> > > > > > Fixes: 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake GPIOs to PCIe port nodes and add port Nodes for all PCIe ports")
-> > > > > 
-> > > > > Are you saying that DTs in the field broke because of some kernel
-> > > > > change?  That's not supposed to happen.  Even though PHY, PERST, and
-> > > > > Wake GPIOs should be described in Root Port nodes instead of the Root
-> > > > > Complex node in *future* DTs, the kernel is still supposed to accept
-> > > > > the old style with them described in the Root Complex node.
-> > > > 
-> > > > This is not related to the driver change. The driver correctly
-> > > > parses all Root Port properties either in the Root Complex node (old
-> > > > binding) or Root Port node (new binding). But commit 960609b22be5,
-> > > > left converting mentioned board DTS to the new binding, leaving
-> > > > those affected platforms in a half baked state i.e., some properties
-> > > > in RC node and some in Root Port node. Driver cannot parse such
-> > > > combinations, so it fails correctly so.
-> > > 
-> > > The commit log mentions probe failures on some machines.  I'd like it
-> > > to be more clear about who is affected and what they need to do to fix
-> > > their machines.
-> > 
-> > There is already a list of affected machines mentioned in the commit
-> > message.
+On Thu, Mar 19, 2026 at 02:50:37PM +0100, Tobias Heider wrote:
+> Resending because the previous mail ended up being HTML (sorry)
+> 
+> On Thu, Mar 19, 2026 at 6:39 AM Manivannan Sadhasivam <mani@kernel.org> wrote:
 > >
-> > And for fix, they just need to apply this patch. Or once this patch
-> > gets merged into v7.0-rcS, v7.0 will have no issue.
+> > On Wed, Mar 18, 2026 at 09:42:56PM -0500, Bjorn Andersson wrote:
+> > > On Mon, Mar 16, 2026 at 08:50:12AM +0530, Manivannan Sadhasivam wrote:
+> > > > On Sun, Mar 15, 2026 at 09:53:33PM -0500, Bjorn Andersson wrote:
+> > > > > On Sat, Mar 14, 2026 at 07:50:50PM +0530, Manivannan Sadhasivam wrote:
+> > > > > > On Fri, Mar 13, 2026 at 11:45:42AM -0500, Bjorn Helgaas wrote:
+> > > > > > > On Fri, Mar 13, 2026 at 05:46:18PM +0800, Ziyue Zhang wrote:
+> > > > > > > > Commit 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake
+> > > > > > > > GPIOs to PCIe port nodes and add port Nodes for all PCIe ports") did not
+> > > > > > > > convert all Hamoa‑based platforms to the new method of defining PERST and
+> > > > > > > > Wake GPIOs in the PCIe root port nodes.
+> > > > > > > >
+> > > > > > > > Without the change PCIe probe will fail. The probe failure happens because
+> > > > > > > > the PHY stays in the controller node while the PERST/Wake GPIOs were moved
+> > > > > > > > to the port nodes.
+> > > > > > > >
+> > > > > > > > This fixes probe failures seen on the following platforms:
+> > > > > > > >  - x1-hp-omnibook-x14
+> > > > > > > >  - x1-microsoft-denali
+> > > > > > > >  - x1e80100-lenovo-yoga-slim7x
+> > > > > > > >  - x1e80100-medion-sprchrgd-14-s1
+> > > > > > > >  - x1p42100-lenovo-thinkbook-16
+> > > > > > > >  - x1-asus-zenbook-a14
+> > > > > > > >  - x1-crd
+> > > > > > > >  - x1-dell-thena
+> > > > > > > >
+> > > > > > > > Fixes: 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake GPIOs to PCIe port nodes and add port Nodes for all PCIe ports")
+> > > > > > >
+> > > > > > > Are you saying that DTs in the field broke because of some kernel
+> > > > > > > change?  That's not supposed to happen.  Even though PHY, PERST, and
+> > > > > > > Wake GPIOs should be described in Root Port nodes instead of the Root
+> > > > > > > Complex node in *future* DTs, the kernel is still supposed to accept
+> > > > > > > the old style with them described in the Root Complex node.
+> > > > > > >
+> > > > > >
+> > > > > > This is not related to the driver change. The driver correctly parses all Root
+> > > > > > Port properties either in the Root Complex node (old binding) or Root Port node
+> > > > > > (new binding). But commit 960609b22be5, left converting mentioned board DTS to
+> > > > > > the new binding, leaving those affected platforms in a half baked state i.e.,
+> > > > > > some properties in RC node and some in Root Port node. Driver cannot parse such
+> > > > > > combinations, so it fails correctly so.
+> > > > > >
+> > > > >
+> > > > > Are you saying that above listed machines has broken PCIe support in
+> > > > > v7.0-rc?
+> > > > >
+> > > >
+> > > > I haven't verified it, but I'm pretty sure PCIe is broken on these platforms.
+> > > >
+> > >
+> > > In line with Bjorn's request, we shouldn't have to guess.
+> > >
+> > > > > It seems this is a (partial) revert of 960609b22be5, is this actually
+> > > > > fixing that change, or is it only applicable once some other changes are
+> > > > > applied?
+> > > > >
+> > > >
+> > > > This change is fixing the issue in the respective board DTS and is a standalone
+> > > > fix on top of v7.0-rc1.
+> > > >
+> > >
+> > > So 960609b22be5 was broken when I merged it?
+> > >
 > >
-> > >  If it only affects developers who generated DTs based on
-> > >  960609b22be5 for internal testing, we should say that so it's
-> > >  clear that no end users will see any regressions or boot
-> > >  failures.
-> > 
-> > Whoever have included commit 960609b22be5 in their kernel and using
-> > the above mentioned machines will see the failure. But looks like no
-> > one really tested v7.0-rcS on these machines as we haven't gotten
-> > any reports so far.
+> > Broken on the machines mentioned in the commit message, not for all Hamoa
+> > platforms.
+> >
+> > > The commit message says that the commit was incomplete, in that it
+> > > didn't fully convert from the old to the new style, so it sounds like
+> > > the offending commit was incomplete - but I believe the offending commit
+> > > was a workaround for the new solution not being in place and this commit
+> > > mostly reverts the changes in the offending commit.
+> > >
+> >
+> > So 960609b22be5 was supposed to move all the platforms from old PCIe binding to
+> > new for greater good, but it apparently decided to do so only for a subset of
+> > the platforms for some reason which  don't know. But the problem arises due to
+> > 960609b22be5 changing the hamoa.dtsi to the new binding which also warrants the
+> > platform DTS to also be changed to the new binding. If we only have either dtsi
+> > or dts converted and not both to the new binding, the driver will get confused
+> > and fail. And this is what exactly happended for below machines:
+> >
+> >  - x1-hp-omnibook-x14
+> >  - x1-microsoft-denali
+> >  - x1e80100-lenovo-yoga-slim7x
+> >  - x1e80100-medion-sprchrgd-14-s1
+> >  - x1p42100-lenovo-thinkbook-16
+> >  - x1-asus-zenbook-a14
+> >  - x1-crd
+> >  - x1-dell-thena
 > 
-> Two points:
+> I can confirm the breakage for (some of) the listed devices on Ubuntu.
+> We are experimenting with 7.0-rcs ahead of our 26.04 release.
 > 
->   - a2fbecdbbb9d ("PCI: qcom: Add support for parsing the new Root
->     Port binding") is intended for hardware with multiple Root Ports
->     with independent PHY/reset controls.
-> 
-
-Not really. The commit was a prerequisite for adding multi-Root Port
-controllers, but the intention is also to move the Root Port resources to Root
-Port node and not stuff everything in the Host Bridge node.
-
->     The driver will always fall back to PHY/reset info in the host
->     bridge, so I think the only reason to do 960609b22be5 and this fix
->     is if hamoa.dtsi will also be used for hardware with multiple Root
->     Ports.  If there's no plan for multiple RPs with hamoa.dtsi,
->     reverting 960609b22be5 is another, less risky, option.
-> 
-
-That will leave things in a messy state. Our intention is to move Root Port
-resources to Root Port nodes for all SoCs irrespective of whether they support
-multi-RPs or not.
-
->   - 960609b22be5 only touches .dtsi and .dts files; it doesn't change
->     the kernel itself.
-> 
->     So I assume this issue only affects somebody who used v7.0-rc1 to
->     rebuild the DTB for one of those machines and then installed that
->     new DTB on their system.  That sounds like developers to me, not
->     end users.
+> I'll try to collect some test feedback for the fix.
+> I'd certainly appreciate this being included as an rc fix since
+> currently half of
+> the x1 laptop devices are broken.
 > 
 
-Unfortunately, DTB is still not treated as a firmware like ACPI. And the fact
-that we build the DTBs with the kernel, causes the DTBs to be updated whenever
-an end user or a developer builds the kernel .deb package using 'make deb-pkg'
-and installs then package using 'dpkg -i'.
+Thanks for the report. We will try to get this patch into v7.0-rcS.
 
-And most of the users of these affected machines are pretty much both end users
-and developers who know how to build the kernel themselves, so they won't be
-updating the kernel through their distro update.
-
->     The commit log already mentions the affected machines.  I'm
->     suggesting that it should also say something about the fact that
->     only DTBs built with 960609b22be5 are affected, i.e., DTBs built
->     with 960609b22be5 but without this fix are incompatible with the
->     kernel driver.
-
-Sure.
+It'd be appreciated if you can test this patch and give your tested-by tag.
 
 - Mani
 
