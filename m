@@ -1,177 +1,171 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF73F2D94BA;
-	Tue, 24 Mar 2026 23:22:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95B5643147;
+	Tue, 24 Mar 2026 23:46:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774394537; cv=none; b=W8I84dPxKpkrFOVEVIoY40/lQ5TYPTWCn3oo02YFipaq2NXgdTjT1CjvP91MMimqs/bdM+8d+TwGSMeXXUzB7+y5NYvc32ZW6bxaNVUIHqkkPdv+MW9LrtqhiwkBDAd1SVIJ3LteaWKdabIo4PYTanHLLV9yoyiwHC5xZel4meg=
+	t=1774395994; cv=none; b=nBWs+AKmWqlUNv7ux09z2jSWOkID/JFvUHl+52+PyXGvVyeMYDOxzt1knwAAV7TRApIwOEo7Gmu3aLIhKMOJU1eEAzS0EH4fuWZKVrIL6srCa+pXNcssRhNMSrV9qARLlaDsyzTEUbW78GSUDr2N58uy6mEz4n9E28552wtyqfA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774394537; c=relaxed/simple;
-	bh=S9WB4pvdHfrf5K12QW1uu3ZYSu6mXVOjEocICQU4DSA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NgVp0QBJI9v7PgDxl1cOV/QyqFU2GoN6qyim9F1LkSIBCmcPMMab7VH1/nZtJsqurxSR6PvMUad9Tgzy380BOxPPYiDpwIzNcRoiUXsh3JdhXbOdhXuYdIfJr+BG2MWbKNtcldzMIs5KR0nUw4i72CuSZVj5inrvqO3ObQrgT8c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=XegxrPf1; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1774395994; c=relaxed/simple;
+	bh=rHKn8cGTgDOUNqf7Jwz1D4ap7UnfSGX0411eXRcgkVA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=dfVY9kG8nd3GzDHhDR2rJnO2AwCV1QfFA1shJa7U4fvNM8xLlGFQ816h6884hNriRo/mf6Oh407+PWcVidGDnXwwgcbQrgYlY+ySMIz1ToDn1FgGDwwMihnmNaae4cRXk1HEpBTGTYFUUIpFhYuUaSGMBuy4Xd0uaG69VcQG64g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mc2KPmw5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="XegxrPf1"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62OCR4hF2665123;
-	Tue, 24 Mar 2026 23:22:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=EzQkng
-	kuH+HoIy5opF+pjmX6/+7wevWMlpELxi/I3BU=; b=XegxrPf1s72xeLZmrOF61a
-	yv9O0PDqoE6RQo9Gz9iumBtiL9jq2a0CkxRMeTC15EFEDaWgswRq0u2WrfwJIxGv
-	T/9NlsD8QiObFR0t0R4jnUqG11HiLeLFFRQPx3mhZbFdeQaGQWDxl5f4ydmRmr8T
-	3oartlVm2GiUp8iiUlcFupP5Adov6B47Rj3Ku9AWwQAiqgPRD6xbhEydQlzys09+
-	NoOxzgc31eAWIqR0qCOxQmkoe8syCUmpBkDBXF1Lht0nOA4E7PgxBpu2dFOiUFku
-	LGM1GvoRX6VsuiV7Mt8h0PIZ3uQPtzlM4v/TM0KYaY8wuF1BRM4Qicco9C3uhgjw
-	==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4d1ktuwcvn-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 24 Mar 2026 23:22:10 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62OJhvJN026864;
-	Tue, 24 Mar 2026 23:22:09 GMT
-Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4d275kv5y4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 24 Mar 2026 23:22:09 +0000
-Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
-	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62ONM8cY55509432
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 24 Mar 2026 23:22:08 GMT
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id EA97E5805D;
-	Tue, 24 Mar 2026 23:22:07 +0000 (GMT)
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 236AD58043;
-	Tue, 24 Mar 2026 23:22:07 +0000 (GMT)
-Received: from [9.61.253.153] (unknown [9.61.253.153])
-	by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Tue, 24 Mar 2026 23:22:07 +0000 (GMT)
-Message-ID: <9c675fe3-2a2e-4dea-b306-c9ef1712bec1@linux.ibm.com>
-Date: Tue, 24 Mar 2026 16:22:05 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mc2KPmw5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 275B3C19424;
+	Tue, 24 Mar 2026 23:46:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774395994;
+	bh=rHKn8cGTgDOUNqf7Jwz1D4ap7UnfSGX0411eXRcgkVA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=mc2KPmw5o6+KffewdJb0bX6DyDSnqRrxB6n9DxL5S+eO7Ob8VBObn2GNHs13FeEb/
+	 dTndCW/HE1Afu3cAUMuhQYRiM8FBZW2Jm7s5CX2Eb/bwAZbiVQKXgjlB5tpdgr9VWQ
+	 DDlxnQoi25lC1IfGkHKSxbAoXtQX+v+MGUdnaSIyEWfhDDsOQqbI3pn06mdlqIUK2e
+	 iE9URDYa4feJAr0A78xHl3861dRiKhKIejA1q4pMmvLepQz4ykJXVLc4Bob4ZzSbX3
+	 HdWNc3uShWlhAYM8cahGQEiQyoOV1NTF1jWzQ3K1ZhQWFGb5IvP67HF6MXM+AcR7ON
+	 vrrhOJ+SY/+bQ==
+Date: Tue, 24 Mar 2026 18:46:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH v3] PCI: pciehp: Fix hotplug on Catlow Lake with
+ unreliable PME status
+Message-ID: <20260324234632.GA1164233@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v11 4/9] PCI: Add additional checks for flr reset
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, lukas@wunner.de, alex@shazbot.org,
-        kbusch@kernel.org, clg@redhat.com, stable@vger.kernel.org,
-        schnelle@linux.ibm.com, mjrosato@linux.ibm.com,
-        Benjamin Block <bblock@linux.ibm.com>
-References: <20260324224936.GA1157694@bhelgaas>
-Content-Language: en-US
-From: Farhan Ali <alifm@linux.ibm.com>
-In-Reply-To: <20260324224936.GA1157694@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: Lruv3rkZWaqSkdLFc7x6DbkkFetiXgb7
-X-Authority-Analysis: v=2.4 cv=aMr9aL9m c=1 sm=1 tr=0 ts=69c31ca2 cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=Y2IxJ9c9Rs8Kov3niI8_:22 a=VwQbUJbxAAAA:8
- a=VnNF1IyMAAAA:8 a=C1eItPSzQBTT7hoOHSgA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzI0MDE4MCBTYWx0ZWRfX0jRG7RgQrb8W
- FiCTUUupN+saU5KrR5gwv0G8wiVXt59KosFrvJRez31/0hlIs9cjRv+xO4grBKrtJd+yYyK6pU3
- 1r38C03A2DGpoKGmar2AzCKfrXxjCPmh84/YQI9S+YI24CIdep0F9aa2ambAm7oeyAZOMPp3aqk
- 2oy2xCm3e1/FYVu/q2j1EpycZU4EqjXyjlJinWd4BzyBepRSIV3CoOhy+JQgf+40F8IuQeenCRC
- 0+bxhkLbRyrIDtmIaXWVs2TIH47oOEI1UYqAr9k2bSE8tRoCZGjwL9IxUoatGxr4PQ8fYq+jpL6
- GtyTNeGmVvTo2VoIutlIj0p4Y4SgHgXMKEdExFow+tBSmfA2cBpi3vMrWREQ8si3ZoTq2Fcclf8
- fOtXiaBrBNG1nKgkA366nkzeAAELoAYN/TdDFCv6XjE+r3GedbBOGHg1niD57s628lQNo7JyNjL
- oMAE4HBP29kU+SJ5HGQ==
-X-Proofpoint-GUID: Lruv3rkZWaqSkdLFc7x6DbkkFetiXgb7
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-24_04,2026-03-24_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 lowpriorityscore=0 adultscore=0 impostorscore=0 malwarescore=0
- suspectscore=0 phishscore=0 priorityscore=1501 bulkscore=0 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603240180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ca15feda-5d63-405d-a4c4-00cbb9991fed@linux.intel.com>
 
+On Tue, Mar 24, 2026 at 02:45:25PM -0700, Kuppuswamy Sathyanarayanan wrote:
+> On 3/23/2026 4:24 PM, Bjorn Helgaas wrote:
+> > On Mon, Mar 16, 2026 at 03:08:06PM -0700, Kuppuswamy Sathyanarayanan wrote:
+> >> On Intel Catlow Lake platforms, PCH PCIe root ports do not reliably
+> >> update PME status registers (PME Status and PME Requester_ID in the
+> >> Root Status register) during D3hot to D0 transitions, even though PME
+> >> interrupts are delivered correctly.
+> > 
+> > IIUC, the Root Status update should happen on receipt of a PME Message
+> > and is not directly related to a D3hot to D0 transition (PCIe r7.0,
+> > sec 6.1.6).
+> 
+> You're correct. PME status register updates occur on PME Message
+> reception, not during power state transitions.
+> 
+> I used "D3hot to D0 transitions" as shorthand for the full sequence: port
+> in D3hot detects hotplug event -> generates PME Message -> should update
+> Root Status -> PME interrupt -> port wakes to D0.
+> 
+> On Catlow Lake, the PME interrupt is delivered but the Root Status
+> registers (PME_Status and PME_Requester_ID) are not updated when the port
+> generates these PME Messages. This causes pcie_pme_irq() to return
+> IRQ_NONE, leaving the port in D3hot.
+> 
+> I'll clarify the commit message to avoid this misleading shorthand.
+> Something like below:
+> 
+> On Intel Catlow Lake platforms, PCH PCIe root ports do not reliably
+> update PME status registers (PME Status and PME Requester_ID in the
+> Root Status register) when receiving PME Messages while in D3hot state,
+> even though PME interrupts are delivered correctly
 
-On 3/24/2026 3:49 PM, Bjorn Helgaas wrote:
-> On Mon, Mar 16, 2026 at 12:15:39PM -0700, Farhan Ali wrote:
->> If a device is in an error state, then any reads of device registers can
->> return error value. Add additional checks to validate if a device is in an
->> error state before doing an flr reset.
-> s/flr/FLR/ (also in subject)
->
-> Also please extend the subject to say something specific about the
-> "additional checks".  E.g.,
->
->    PCI: Fail FLR when config space inaccessible
+Seems OK if Catlow updates PME Status and PME Requester_ID when it's
+*not* in D3hot.  If Catlow *never* updates those registers, I'd drop
+the reference to D3hot.
 
-This makes sense, will update the subject.
+> >> This issue manifests during PCIe hotplug operations as follows:
+> >>
+> >> 1. After a hot-remove event, the PCIe port runtime suspends to D3hot.
+> >>    pciehp_suspend() disables hotplug interrupts (HPIE) to rely on
+> >>    PME-based wakeup.
+> > 
+> > Didn't we rely on PME interrupts anyway, independent of HPIE?
+> 
+> I don't think they are independent. If HPIE is enabled, hotplug interrupt
+> will be triggered as direct interrupt and we don't have to reply on PME
+> for wakeup.
 
+I'm trying to figure out the difference between hotplug interrupts and
+PME interrupts.  It seems like they should be separable, but this
+patch and eb34da60edee seem to conflate them somehow.
 
->
->> Cc: stable@vger.kernel.org
->> Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
->> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
->> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
->> ---
->>   drivers/pci/pci.c | 7 +++++++
->>   1 file changed, 7 insertions(+)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 373421f4b9d8..8e4d924f4e88 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -4371,12 +4371,19 @@ EXPORT_SYMBOL_GPL(pcie_flr);
->>    */
->>   int pcie_reset_flr(struct pci_dev *dev, bool probe)
->>   {
->> +	u32 reg;
->> +
->>   	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
->>   		return -ENOTTY;
->>   
->>   	if (!(dev->devcap & PCI_EXP_DEVCAP_FLR))
->>   		return -ENOTTY;
->>   
->> +	if (pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &reg)) {
->> +		pci_warn(dev, "Device unable to do an FLR\n");
->> +		return -ENOTTY;
->> +	}
-> I guess the point of this is to detect devices that are inaccessible?
-> The same sort of thing as in pci_dev_save_and_disable() from patch
-> 3/9?  But we use "dev->error_state == pci_channel_io_perm_failure"
-> instead?
->
-> No matter what we do, this has the same race as in patch 3/9.  And I
-> think using dev->error_state also depends on AER being enabled, which
-> cuts out many PCIe devices.
->
-> I think using the same exact code as in pci_dev_save_and_disable()
-> would be more straightforward.  And also the same sort of wording in
-> the message, e.g., "Device config space inaccessible; unable to FLR"
-> or similar.  I foresee many of these messages in my future, and it
-> will be helpful to have a specific clue about why FLR failed :)
+AFAICT, pme.c always relies on PME interrupts, not on HPIE.  And
+pciehp depends on HPIE interrupts, not on PME interrupts.
 
-I will update the message :) and update the code to use the same check 
-at patch 3 here (will move the check to a common function).
+Oooh, I think I see -- I forgot that PME and HPIE share the same
+interrupt (sec 6.7.3.4).  So I suppose PCI_EXP_SLTSTA_DLLSC looks like
+a spurious PME interrupt to pme.c.  Please mention this in the commit
+log somehow to remind me when I forget this again.
 
-Thanks
+> > eb34da60edee ("PCI: pciehp: Disable hotplug interrupt during suspend")
+> > cleared PCI_EXP_SLTCTL_HPIE so that when the link goes down, we
+> > wouldn't get a PCI_EXP_SLTSTA_DLLSC interrupt and wake the system.
+> > 
+> > I don't know the details of why the PCI_EXP_SLTSTA_DLLSC would cause
+> > that wakeup.  I would think pciehp should field that, and it should be
+> > able to figure out whether to bring the port out of D3hot.
+> > 
+> > Anyway, with this patch it looks like we'll leave PCI_EXP_SLTCTL_HPIE
+> > set, and potentially get that PCI_EXP_SLTSTA_DLLSC interrupt again?
+> 
+> I have tested this patch on Catlow Lake. Enabling HPIE does not result in
+> spurious wakeups as mentioned in Mika's patch.
 
-Farhan
+This apparent behavior difference (some machines have spurious
+wakeups, maybe because some trigger PCI_EXP_SLTSTA_DLLSC and others
+don't?) is what makes me a little queasy because we don't rely on
+anything solid to tell the difference.
 
+> Mika, any comments?
+> 
+> >> 2. When a hot-add occurs while the port is in D3hot, a PME interrupt
+> >>    fires as expected to wake the port.
+> > 
+> > Why is a PME interrupt expected here?  I would expect a hot-add to
+> > cause a PCI_EXP_SLTSTA_PDC or PCI_EXP_SLTSTA_DLLSC interrupt.  Sec
+> > 6.1.6 suggests PME interrupts are only from Root Ports.
+> > 
+> >> 3. However, the PME interrupt handler finds the PME_Status and
+> >>    PME_Requester_ID registers unpopulated, preventing identification
+> >>    of which device triggered the PME. The handler returns IRQ_NONE,
+> >>    leaving the port in D3hot.
+> > 
+> > I guess this is pcie_pme_irq(), and it finds PCI_EXP_RTSTA_PME clear
+> > because of this Catlow defect?  It looks like it returns without even
+> > looking at PME_Requester_ID.
+> 
+> Yes, it returns after checking for PCI_EXP_RTSTA_PME. I tried modifying
+> it to proceed without the status check, but it still failed when reading
+> PME_Requester_ID (also not updated). So I mentioned both registers.
 
->
->>   	if (probe)
->>   		return 0;
->>   
->> -- 
->> 2.43.0
->>
+Not a big deal; it's a little harder to correlate the commit log that
+mentions PME_Requester_ID with the current code that doesn't look at
+it.
+
+> > Sec 5.3.3.1 suggests that the purpose of PME_Requester_ID is to
+> > facilitate quicker PME service and shorter resume time.  So maybe the
+> > lack of PME_Requester_ID should only be a performance issue, not a
+> > functional problem?
+> > 
+> > If we know we got a PME interrupt, and we can wake up (maybe more
+> > slowly without a Requester ID), why can't we just do the wakeup
+> > independent of PCI_EXP_RTSTA_PME and PCI_EXP_RTSTA_PME_RQ_ID?  Are
+> > spurious PME interrupts a problem?
+> 
+> Yes, I think we can call pcie_pme_walk_bus() even when PCI_EXP_RTSTA_PME
+> is clear for ports with the quirk. This would work but be slower without
+> the Requester_ID hint.
+
+I don't care at all about the performance for a non-compliant device.
+IMO simplicity of the code is way more important, and pme_is_broken()
+is in a pretty visible place.
