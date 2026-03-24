@@ -1,179 +1,193 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB4CF314A83;
-	Tue, 24 Mar 2026 08:23:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774340626; cv=none; b=cxEhz9YFpyc/vnFgT/fqmkzHdVA0J3bIzv95WoIQYtEtCBYZ6dSpqGRkS9rTdHmmbOYNPlZTHYEYEwWWv1Vst0V9phuO0ISAfR8xv92CMJC+bXbBNUND5yezt+MXpDDJbmyv2n1cKx2BMOwlIMCeNO4XBSnP8mgW6eUFVOHxiQk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774340626; c=relaxed/simple;
-	bh=YW1oumcShmJdUX2bVPw92WTp71r+w0EzqGKv/olyY1o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YqvjX4uTCXpXg7yi1qNHk1D2vzcR4GQl7KN8+61nodQHyYdjTsvWyFFS1rye+vFxwOTEQCKXqP7kYTIAdlhnPm75hLmFByjJeImuWtGs/otKBqSOs2k8QgwvhxbcHSEgZjmSARnWrluJV0NwSUV2CTMZgzfI24jjYxbVu2tSB0g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=f98KC4CZ; arc=none smtp.client-ip=198.175.65.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D0A2387347
+	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 08:26:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.174
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774340802; cv=pass; b=O7Jv8RtQbmdRmM+GqMjvveWKMQq5Z+u27mb/dLT7HfOKE0iZOqMMuv1dpxQqlnDpxl2MHtcxP3mY8TLGmSudpVorXmaocHEerndI8P7GH+EFTFKbwmWCUr6ixm4zFyOii7KIM/4vVI2HnZK48WrceDKc/rD2rigVqZGfku84kqU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774340802; c=relaxed/simple;
+	bh=94bk+RX23wjGN7VtefTczkJJ5K4UJ1xlqZuQgsqLUJk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=I/FhqhWnKugkKIPMHdFZDS+AnfSwmZy6E6cODPiYc0XE44jX0IO1WlxnE54hni9tI0/iZqvidbVKeVxJhjOwxld2SfhAVckf3ms/19yI2f/Wi8EWvz7pRCgD5UcO/kQ8t30NdwurbhQbafQtYDN8h5DPvURlwvMHfoeSaef/ehE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=kjDl4hle; arc=pass smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="f98KC4CZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774340621; x=1805876621;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=YW1oumcShmJdUX2bVPw92WTp71r+w0EzqGKv/olyY1o=;
-  b=f98KC4CZaeyfxG72WM3q5bNculu5cr2oPVcqctGYfy2+RGPWoAJjKuYc
-   bapjY04kxd1XNghpd73P4tJGwnjvTyBa7EXb8I/E/VNTZeHB8q0Le1mCR
-   vFEo9ZsVTVfbQ86sy0+AQW+zVIwq/tsOk7WpwgLJCfdrMw1lCADbmX68F
-   dYkUDBj81E2egEg9Reg26QNnwUHva3MZyWG/TGhatvnZCaEj6qKrIZe2i
-   gyMqLM0aojP2Lh2xc3VtZh/Wjt8zL17aAx6GYZFz1alL3/RvgAiIKfuVj
-   j1ax8dwqkU1YqTcQtlH7SeKUY7UhmNFvA8t/0MQvYLMbczeFTTDLjgabZ
-   A==;
-X-CSE-ConnectionGUID: lhTINTyIQBGAVB3YCA1CPQ==
-X-CSE-MsgGUID: jCWPLS3ZSX2hrWhRxHKgVw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11738"; a="75321931"
-X-IronPort-AV: E=Sophos;i="6.23,138,1770624000"; 
-   d="scan'208";a="75321931"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2026 01:23:39 -0700
-X-CSE-ConnectionGUID: la5BPmR+SsCZF91N9qYV7w==
-X-CSE-MsgGUID: quziYg/kR1KJj/tuViZhjA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,138,1770624000"; 
-   d="scan'208";a="223500798"
-Received: from lkp-server01.sh.intel.com (HELO 3905d212be1b) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 24 Mar 2026 01:23:35 -0700
-Received: from kbuild by 3905d212be1b with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1w4x2y-000000004DX-3E8K;
-	Tue, 24 Mar 2026 08:23:32 +0000
-Date: Tue, 24 Mar 2026 16:22:36 +0800
-From: kernel test robot <lkp@intel.com>
-To: Thierry Reding <thierry.reding@kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Jon Hunter <jonathanh@nvidia.com>,
-	Mikko Perttunen <mperttunen@nvidia.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v2 4/5] PCI: tegra: Add Tegra264 support
-Message-ID: <202603241635.M39jGMQX-lkp@intel.com>
-References: <20260320225443.2571920-5-thierry.reding@kernel.org>
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="kjDl4hle"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2a7a9b8ed69so9240015ad.2
+        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 01:26:36 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1774340795; cv=none;
+        d=google.com; s=arc-20240605;
+        b=dVAe+9Yco953UC9DCBVh0r4OQty2aw0G1IXhxNt5nCqUdv8OWw6dPXV5il5fe5jhwJ
+         IHNN2h6Plo9rJlTxmGByG7/NmwhjUhj2CmFpH41KWnya/Ge9fq+98+VwQ9iXQllf98wc
+         13DMH4cyFYkG9owOD53LNWHFjG+qkguoCYsfB1p4/ZPsu84i9apZLK2f983Z1RbzeNmM
+         TD40sPpB2MRTHUrR1bCcRxBSF2SF7kmb5md8Tud02psyyeozmYom2Cey1JlxyYuynidD
+         vZnuh3Sw7csaxUpkJbWkEcTdNcur/ddr1IQ78pJOwqvEeCLz3TxIl2N9c5D7qO8I/ldv
+         phEw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=iGgmaJxj2IZXFux6HiJZXoAsX/3q5eAbJg/qUyr5Vmg=;
+        fh=bSZJd6Xg+1KaDV0KScIAqisCUNoWd4d32Cmz0hEv7A8=;
+        b=NCXYuVH7k5ZHZ7kCRqsqRXyfAzG7lR8aqfIY2YmVG3mBTXNTmS7GTQ2Zcmp5+vAkjA
+         5hinnDLqfiDq6qDl2bgjtOjFG+KFZe/woZln/Ukv3Sw2L5IUB+zOC7lBgEW51NVraQsg
+         HsxsxzR9VdCQDxR4o6LkX9m17OyXNL3U71dh96E+k1dAJ12L9MJdyhWiGh4C9NTbYq4h
+         Sbxi8o4uawM86IDC6mm3hLpb/fYeQglniJ2U4W+zgwwDwgba7+0JJzWcGPRMIPFGMicq
+         wjJ8vzRawzWvSq5YHW5qfG95EM1loDyhDc80pI34eSZpLys5FDN+qEQE/TQtrVYIJl4j
+         9BXw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1774340795; x=1774945595; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=iGgmaJxj2IZXFux6HiJZXoAsX/3q5eAbJg/qUyr5Vmg=;
+        b=kjDl4hlePBv6Go6081HGpNOFdjyJpR90LLD3AsOA296KwNiPWjMs9QHaVr5TNrykF+
+         BiDsV5pX0KN3+7PM58gUZQ4XjNxhrbkWbX/zKqT9ASe5GSGvieU7L7eXR0zTODXJ38rl
+         /5Dd44s2N+wLzFQZsqu8DTmaTbH3BbSdgRMFY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774340795; x=1774945595;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=iGgmaJxj2IZXFux6HiJZXoAsX/3q5eAbJg/qUyr5Vmg=;
+        b=WHZID5kmF0OK4TznjO00+jBO7fib5625JjLcZt0FnR1BIN1lWxSbG+bPD0NiSIbJ1q
+         BViwHo9BVeDmQG8qO4AWcSvRj0SifoTeoEWaV+c7teeabOS314ccuA9UA90uNSWuCvV8
+         O2UWafLYDOi6X8WDcnsXoSJkznitowjleqJQsM13Fh36VI677cpo7+XZkLTFVKQ/tfDv
+         vKhrZLkoQI/bfnWLgjyYyOdKN3SLw1bcQ3ZvKySfZhwWS9I4wcAC9zeU3E/GFXkcXFKa
+         QPvz6zOOD7vwcs/WGs8V/a0lONDbkItYMIiEfmPhiUrUmE1Sc/Tw+CSeF4bAmP0Daivl
+         L6tA==
+X-Forwarded-Encrypted: i=1; AJvYcCVBH7kMeguZjde/kX98GZnHqE7kz6YDuReCn6w5vvg2nRiR/psAUwagAjAdMqM2Ql+MvwfUKMhEkTs=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyLtTstuSq2KTbeB2t9Jr12fW8kluYgkgYhESiRnyfvzchmdO5G
+	2OKji3u7fgzPCbfT4Gkj/Fnoh6mAUysUoRZuBdI6xCOr1Oktom4pMsAXikzTM3nwwPM5us2dwJG
+	fTEFybgszIT1VWG0YfuxL53cDgxEjAoUc7Rt7DFqx
+X-Gm-Gg: ATEYQzwc/mndTc4e9ZYJNcc0/IagncFvl1gXKsgAW8g55qP2V5aXs/X71ZNqdtqQXT7
+	SUkv7oaR+ZqLmW1RBTfM181r+mfnd4GEuKKncSn7JbcgKeg8Q7g26hqZj1igYnFGfTW2TtoqeaJ
+	QBmaupvM/h25HTjRYMmWxgrtwkqtEQrGkFSTiJpxZUD7rWXN7BbV6NB1hfT6yIrfwZADAfI8SEZ
+	90pl5pRY346gWcFd1j3CIW1LnFfczIqZJuue4Mn+iqxCBKw3gFDRSIQU7lbltQSNvIEI3mvzwYY
+	4eyc/HpMrHoxSyPJUG3x91sAPe7frzX9GsCGjw==
+X-Received: by 2002:a17:902:f64f:b0:2b0:ac1e:9720 with SMTP id
+ d9443c01a7336-2b0ac1e9aabmr3301315ad.23.1774340795512; Tue, 24 Mar 2026
+ 01:26:35 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260320225443.2571920-5-thierry.reding@kernel.org>
+References: <20260324052002.4072430-1-wenst@chromium.org> <ojgwqrosft5x75y3yxdawrb72k4z3chc3m6uh4mkdv7dhta3ef@qcvotm36w3ly>
+ <CAGXv+5E4V-zC8hfzZgXLL+Wbnw4jFfs0pvovU0xKeDmN17mwUw@mail.gmail.com> <jduc7ozg27bvrfxwpmswhxg4savnrkjcj5tqlluvmq5s6qiqnd@nrq6b36g25wq>
+In-Reply-To: <jduc7ozg27bvrfxwpmswhxg4savnrkjcj5tqlluvmq5s6qiqnd@nrq6b36g25wq>
+From: Chen-Yu Tsai <wenst@chromium.org>
+Date: Tue, 24 Mar 2026 16:26:22 +0800
+X-Gm-Features: AaiRm53L7-tohEy9tkTEmWIGpQ_r6cXSvnDVT5CV84nam-7MkSk5kPI4V-F5z1Y
+Message-ID: <CAGXv+5ExO7h9VpXC=oV=bnb6k+vRA_OJH3tmPWVpxqs_hy=QJg@mail.gmail.com>
+Subject: Re: [PATCH v6 0/7] PCI: mediatek-gen3: add power control support
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
+	Ryder Lee <ryder.lee@mediatek.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, linux-pci@vger.kernel.org, 
+	linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi Thierry,
+On Tue, Mar 24, 2026 at 4:01=E2=80=AFPM Manivannan Sadhasivam <mani@kernel.=
+org> wrote:
+>
+> On Tue, Mar 24, 2026 at 03:52:33PM +0800, Chen-Yu Tsai wrote:
+> > On Tue, Mar 24, 2026 at 3:44=E2=80=AFPM Manivannan Sadhasivam <mani@ker=
+nel.org> wrote:
+> > >
+> > > On Tue, Mar 24, 2026 at 01:19:52PM +0800, Chen-Yu Tsai wrote:
+> > > > Hi folks,
+> > > >
+> > > > This is v6 of my MediaTek PCIe gen3 controller driver power control
+> > > > support series. This series is based on next-20260323, with the
+> > > > commit a2b2ca0c2477 ("Merge branch 'pci/controller/mediatek-gen3'")
+> > > > reverted to drop the older version.
+> > > >
+> > > > This series is ready to be merged. Please drop the older version an=
+d use
+> > > > this one instead.
+> > > >
+> > > > Changes since v5:
+> > > > - Link to v5: https://lore.kernel.org/all/20260311075223.3303497-1-=
+wenst@chromium.org/
+> > > > - Adapt to PCI_PWRCTRL_SLOT -> PCI_PWRCTRL_GENERIC Kconfig symbol n=
+ame change
+> > > >
+> > > > Changes since v4:
+> > > > - Link to v4: https://lore.kernel.org/all/20260310091947.2742004-1-=
+wenst@chromium.org/
+> > > > - Patch 1
+> > > >   - Expanded tabs in commit message
+> > > > - Patch 5
+> > > >   - s/mtk_pcie_device_power_(up|down)/mtk_pcie_devices_power_(up|do=
+wn)/
+> > > > - Patch 6
+> > > >   - Adapted to mtk_pcie_devices_power_down() name change
+> > > > - Patch 7
+> > > >   - Fixed label typo causing build break
+> > > >   - Replaced "exploded" with "populated" in commit message, and add=
+ed
+> > > >     more explanation about what "populated onto the mainboard" mean=
+s.
+> > > >
+> > > > Changes since v3:
+> > > > - Link to v3: https://lore.kernel.org/all/20260302053109.1117091-1-=
+wenst@chromium.org/
+> > > > - Added two patches to move kernel setup code before controller set=
+up
+> > > >   code, and controller setup code before device setup code, as requ=
+ested
+> > > >   by Bjorn
+> > > > - Dropped dts patches as they are already merged
+> > > >
+> > > > I kept all the existing reviewed-by tags, since the changes to the
+> > > > existing patches aren't that big.
+> > > >
+> > > > Changes since v2:
+> > > > - Link to v2: https://lore.kernel.org/all/20260226092234.3859740-1-=
+wenst@chromium.org/
+> > > > - Made PCIE_MEDIATEK_GEN3 select PCI_PWRCTRL_SLOT, following existi=
+ng
+> > > >   examples
+> > > >
+> > > > I do wonder why the existing ones don't select PCI_PWRCTRL instead.
+> > > > As there are multiple providers, and now even the M.2 power sequenc=
+ing
+> > > > driver, I think either we enable the common ones by default, or let
+> > > > the user pick and choose.
+> > > >
+> > >
+> > > I agree with you. I've sent a patch [1] to select these drivers in de=
+fconfig to
+> > > make the users life easier. But in the meantime, let's have this depe=
+ndency
+> > > as-is, otherwise, until my defconfig patch lands, there is no guarant=
+ee that
+> > > these drivers will get selected by default.
+> >
+> > I would probably just make PCI_PWRCTRL_GENERIC default m or y.
+> >
+> > Or make CONFIG_PCI (and probably CONFIG_USB later on) imply
+> > CONFIG_POWER_SEQUENCING_PCIE_M2.
+> >
+>
+> The problem is, these drivers are mostly targeted for DT systems as of no=
+w. If
+> we select it by default for all archs, it will bloat the image size for o=
+ther
+> archs that don't need these drivers. That's why I wanted to enable these =
+in arch
+> defconfig.
 
-kernel test robot noticed the following build errors:
+How about
 
-[auto build test ERROR on tegra/for-next]
-[also build test ERROR on next-20260323]
-[cannot apply to pci/next pci/for-linus drm-tegra/drm/tegra/for-next linus/master v7.0-rc5]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Thierry-Reding/soc-tegra-Update-BPMP-ABI-header/20260323-093336
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git for-next
-patch link:    https://lore.kernel.org/r/20260320225443.2571920-5-thierry.reding%40kernel.org
-patch subject: [PATCH v2 4/5] PCI: tegra: Add Tegra264 support
-config: riscv-allyesconfig (https://download.01.org/0day-ci/archive/20260324/202603241635.M39jGMQX-lkp@intel.com/config)
-compiler: clang version 16.0.6 (https://github.com/llvm/llvm-project 7cbf1a2591520c2491aa35339f227775f4d3adf6)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260324/202603241635.M39jGMQX-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202603241635.M39jGMQX-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
->> drivers/pci/controller/pcie-tegra264.c:302:16: error: use of undeclared identifier 'PCIE_LINK_WAIT_US_MIN'
-                   usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
-                                ^
->> drivers/pci/controller/pcie-tegra264.c:302:39: error: use of undeclared identifier 'PCIE_LINK_WAIT_US_MAX'
-                   usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
-                                                       ^
-   drivers/pci/controller/pcie-tegra264.c:392:16: error: call to undeclared function 'tegra_bpmp_get_with_id'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-                   pcie->bpmp = tegra_bpmp_get_with_id(dev, &pcie->ctl_id);
-                                ^
-   drivers/pci/controller/pcie-tegra264.c:392:14: error: incompatible integer to pointer conversion assigning to 'struct tegra_bpmp *' from 'int' [-Wint-conversion]
-                   pcie->bpmp = tegra_bpmp_get_with_id(dev, &pcie->ctl_id);
-                              ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   4 errors generated.
-
-
-vim +/PCIE_LINK_WAIT_US_MIN +302 drivers/pci/controller/pcie-tegra264.c
-
-   278	
-   279	static void tegra264_pcie_init(struct tegra264_pcie *pcie)
-   280	{
-   281		enum pci_bus_speed speed;
-   282		unsigned int i;
-   283		u32 value;
-   284	
-   285		/* bring the link out of reset */
-   286		value = readl(pcie->xtl + XTL_RC_MGMT_PERST_CONTROL);
-   287		value |= XTL_RC_MGMT_PERST_CONTROL_PERST_O_N;
-   288		writel(value, pcie->xtl + XTL_RC_MGMT_PERST_CONTROL);
-   289	
-   290		if (!tegra_is_silicon()) {
-   291			dev_info(pcie->dev,
-   292				 "skipping link state for PCIe #%u in simulation\n",
-   293				 pcie->ctl_id);
-   294			pcie->link_up = true;
-   295			return;
-   296		}
-   297	
-   298		for (i = 0; i < PCIE_LINK_WAIT_MAX_RETRIES; i++) {
-   299			if (tegra264_pcie_link_up(pcie, NULL))
-   300				break;
-   301	
- > 302			usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
-   303		}
-   304	
-   305		if (tegra264_pcie_link_up(pcie, &speed)) {
-   306			/* Per PCIe r5.0, 6.6.1 wait for 100ms after DLL up */
-   307			msleep(PCIE_RESET_CONFIG_WAIT_MS);
-   308	
-   309			dev_info(pcie->dev, "PCIe #%u link is up (speed: %s)\n",
-   310				 pcie->ctl_id, pci_speed_string(speed));
-   311			tegra264_pcie_icc_set(pcie);
-   312			pcie->link_up = true;
-   313		} else {
-   314			dev_info(pcie->dev, "PCIe #%u link is down\n", pcie->ctl_id);
-   315	
-   316			value = readl(pcie->xtl + XTL_RC_MGMT_CLOCK_CONTROL);
-   317	
-   318			/*
-   319			 * Set link state only when link fails and no hot-plug feature
-   320			 * is present.
-   321			 */
-   322			if ((value & XTL_RC_MGMT_CLOCK_CONTROL_PEX_CLKREQ_I_N_PIN_USE_CONV_TO_PRSNT) == 0) {
-   323				dev_info(pcie->dev,
-   324					 "PCIe #%u link is down and not hotplug-capable, turning off\n",
-   325					 pcie->ctl_id);
-   326				tegra264_pcie_bpmp_set_rp_state(pcie);
-   327				pcie->link_up = false;
-   328			} else {
-   329				pcie->link_up = true;
-   330			}
-   331		}
-   332	}
-   333	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+    imply CONFIG_POWER_SEQUENCING_PCIE_M2 if OF
