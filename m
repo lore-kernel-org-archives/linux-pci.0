@@ -1,121 +1,168 @@
-Received: from mail-vk1-f173.google.com (mail-vk1-f173.google.com [209.85.221.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B12C39E198
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 17:06:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11FEC37BE6F;
+	Tue, 24 Mar 2026 17:07:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774372003; cv=none; b=VmfZUP6MitAOlHqsAgE/+o/CwkgEzkG2/ZNIk1DqHgIqDjhDZ1vZNURyfDqu/h0XggYHJa2zqYmkg+ZflAnVO/6ATx2rTAc3uBX7/zHeFv7AVd0RAmOo3d0S/ynLt0Cr78IXjcfSlqyhh+7XOqUra4PtJKgpz0f2fZRAvTTiU+4=
+	t=1774372059; cv=none; b=uPsb1uyfND+pJeGjA8gsbkU1dbU6swC+HFbmTTWqxJxsOrDcUxtvU6E6qRGCKXkroBi5/wC93aUGuwZxKeE4RRlrpSs178W0SchMZWUTUs6plzM7aJqlpDx6d7OSwJ1QTIuVKJCeHvuiVZMFjZnNlh/FFnmb2HAWpmAJPuCjK7E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774372003; c=relaxed/simple;
-	bh=3GEJwPfpmz1HAcFqPqDcCHr7DP7fs2OA9k1TBgcroIs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=R+HJRkdt3bI/AUpJWJG/ekEXKDBFGc84zJvyNUJj2wk9oFOHpURsS3zltYiEkZRvV+em6czUHaZaghRX2AilrDW5oo/Zj9nWy/BEqtMYQws1NCOP2aEvOL8uEGZxvFhm3vRy6oGbQVFRDzJNFC+BaJzj3w4EB9odrdVes7SCBFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-vk1-f173.google.com with SMTP id 71dfb90a1353d-5675d609621so4230739e0c.2
-        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 10:06:41 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774372000; x=1774976800;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=imA4hBFgRxEV6K6PxesH3aFI8Gk9es7sFYCGiASF9lc=;
-        b=MWSfw/KSkk79woHXsrdfK8b6+C6SEZTF4HEt2beWVBcRXAXwTtm7q8Bd0cV4yV9YGJ
-         v26b9Mq2m6F7Hex7U6119VZyWdQresiqqisIFE5QlB41Q6Ujz8NMzIW63s42CmgJeOdk
-         bMoGDhCegehpazV4BkakL/GPvySpLq3sd/Dj0GwhB3MFVozcSKdPBBWCG+yIFe1J8yRo
-         dS+LgS0CkWhzouir+El2Cpv1bnUyf/imS/j80neVWC+446YblawKUZXNEd8Ov/bdY666
-         Wq2HDKxA0nuE10CG9+GTqI86h8H4XwPbv7lC4Ds53uPEqyE+oPDeXAvQKT8YrRH1yn5m
-         EE+g==
-X-Gm-Message-State: AOJu0Ywl8E2raWgUWpVaZIDdkcYRzlCmdt2wtJol/DoU2ztmGVzcwSYU
-	4ZyCu+1pH7HH/Ngk7TCurZZmxjxqbuao0W9+xqN5m0XtvRf28qTDf8dYOUerGYH2goc=
-X-Gm-Gg: ATEYQzzZAs2cZxQ7Q789FEJueABBLHrtYgV7Q4NNRM3RXD/7SyBbfFzVHpVBRj11Tc+
-	ud6BdUYTzL4tjlEwxhOMvjcFgHti7S4eXsfBYWhbfcO3qvMtzjJKxwSA2DBoPskcwoCendfRlx0
-	ZVU/6/PMhywRtroG3JbbvRJaTcze38KeWUv4+UdgV7rFpFReklNirkafvMhOmvCDt/QnR+cEaOI
-	nTOOTGXrXMX5i3P2ls6YSIIP13GoXVSKhCZx2WvwdHHP6a6FfRg5qxFUZR/HzI3EsjSGkw0s9ks
-	i08Q8tQVhu1VBr0+AguRTvg7QichL83sUxXODA6zL8Twpl7TeA69OX2c+w23W1uGbbGS6Ed59Ap
-	VRWn2ZCD7imXMz4UhZKVECGQ5uYDX9JEGxdrpYM0ScPS7u6nrDs2+rxPi1pZayvk0RoTJW8XVuF
-	76pVFauLRmfEuree2sFCYgHzN+qmwicU62nn/qXgkvlToeztsIaFzyIhwLERvY5pmY
-X-Received: by 2002:a05:6122:4899:b0:56b:7cf0:cf67 with SMTP id 71dfb90a1353d-56d2210575dmr398668e0c.15.1774372000430;
-        Tue, 24 Mar 2026 10:06:40 -0700 (PDT)
-Received: from mail-vk1-f178.google.com (mail-vk1-f178.google.com. [209.85.221.178])
-        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-56ce54d6b6asm14620086e0c.4.2026.03.24.10.06.35
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 24 Mar 2026 10:06:36 -0700 (PDT)
-Received: by mail-vk1-f178.google.com with SMTP id 71dfb90a1353d-56b6c7c8d00so3452524e0c.3
-        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 10:06:35 -0700 (PDT)
-X-Received: by 2002:a05:6122:1da4:b0:56b:5978:22f5 with SMTP id
- 71dfb90a1353d-56d220a8b85mr416671e0c.12.1774371994638; Tue, 24 Mar 2026
- 10:06:34 -0700 (PDT)
+	s=arc-20240116; t=1774372059; c=relaxed/simple;
+	bh=AGYlylnlSsCLS69ApRan4I8w6WUxlpyQvLSi84VbGf4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dUrqnB1mwlKErFBQ+WPsSo+X3fRp1uTrLesaA2pfwmfpZqBOD707xBN9GQSjY9wvsBwrrIw3hO5QsDilgpz+XiynKSCbRbqe6Dp2VPgwCTrdRBlUj7XEZT1ZRPVGmuB3GPsIhbwI99qo9EudFgmGFRs8TrI3lnUs1bOgIxoLDiU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=UUNcZotw; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="UUNcZotw"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62O5eHsp4120967;
+	Tue, 24 Mar 2026 17:07:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:sender:subject:to; s=pp1;
+	 bh=uxTqQzn37zq82dyIWyZSBRTBU/irP5Ew+hiSH8++MUU=; b=UUNcZotwXPtc
+	ul+XeZcsT7JRizh2OYlz1VafGDPFo/Dxsk9zEhNyu3PS6UvCytB7Ar3c0lhlWwRp
+	OE9RbIYV4MMdISKN2+mTbBqZ2b2WhpI+NCke1JLGKWRvWgY3CrTtChF1Qu+4wKI/
+	wsz/VmQ43hLKVhcm3PWOKSODLSQdLNh8I4tuQuM9T5VVqc54JUe+PNVbiXRatwtg
+	fknIbXtoaAt9HQV3/tr498UH1Tipl3Qi4JRDvGe9G58lTlBpB4wfNzUj78glwPN3
+	xeSS4eqFMWduZPWtsG4zfT3b4gw4cisTdi21m7Sse6yHscOva9uNDfyEk39UedfU
+	hVPZUqs7Eg==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4d1kw9vr67-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 24 Mar 2026 17:07:18 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62OFVmZ9005996;
+	Tue, 24 Mar 2026 17:07:17 GMT
+Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4d261yk23e-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 24 Mar 2026 17:07:16 +0000
+Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
+	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62OH7BIa45089256
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 24 Mar 2026 17:07:11 GMT
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 1FCB72004B;
+	Tue, 24 Mar 2026 17:07:11 +0000 (GMT)
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 08D1820043;
+	Tue, 24 Mar 2026 17:07:11 +0000 (GMT)
+Received: from p1gen4-pw042f0m (unknown [9.52.223.163])
+	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Tue, 24 Mar 2026 17:07:10 +0000 (GMT)
+Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.1)
+	(envelope-from <bblock@linux.ibm.com>)
+	id 1w55Di-000000094zn-2xqM;
+	Tue, 24 Mar 2026 18:07:10 +0100
+Date: Tue, 24 Mar 2026 18:07:10 +0100
+From: Benjamin Block <bblock@linux.ibm.com>
+To: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
+Cc: schnelle@linux.ibm.com, alifm@linux.ibm.com, bhelgaas@google.com,
+        dtatulea@nvidia.com, helgaas@kernel.org,
+        intel-xe@lists.freedesktop.org, ionut_n2001@yahoo.com,
+        julianr@linux.ibm.com, kbusch@kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux@roeck-us.net, lkml@mageta.org,
+        lukas@wunner.de, mani@kernel.org, matthew.brost@intel.com,
+        michal.wajdeczko@intel.com, piotr.piorkowski@intel.com,
+        sebott@linux.ibm.com, stable@vger.kernel.org, sunlightlinux@gmail.com
+Subject: Re: [PATCH v10 0/2] PCI/IOV: Fix SR-IOV locking races and AB-BA
+ deadlock
+Message-ID: <20260324170710.GA252856@p1gen4-pw042f0m>
+References: <f17b03652a84be73c1d3a2cfea8a016dab99f8e0.camel@linux.ibm.com>
+ <20260319202755.16081-1-ionut.nechita@windriver.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260324165633.4583-1-ilpo.jarvinen@linux.intel.com> <20260324165633.4583-6-ilpo.jarvinen@linux.intel.com>
-In-Reply-To: <20260324165633.4583-6-ilpo.jarvinen@linux.intel.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 24 Mar 2026 18:06:22 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdXX16=pih34yehj=3bJkg2H3ivGUj_34JDg31ABheLE5Q@mail.gmail.com>
-X-Gm-Features: AQROBzA3vydAXwvxX7mNaSzU55R-3eBg9lznDuFtNbFYtRdYd66gsLQKONTytjo
-Message-ID: <CAMuHMdXX16=pih34yehj=3bJkg2H3ivGUj_34JDg31ABheLE5Q@mail.gmail.com>
-Subject: Re: [PATCH 05/10] am68k/PCI: Remove unnecessary second application of align
-To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, 
-	Guenter Roeck <linux@roeck-us.net>, linux-alpha@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-m68k@lists.linux-m68k.org, 
-	linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, 
-	linux-sh@vger.kernel.org, Russell King <linux@armlinux.org.uk>, 
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Helge Deller <deller@gmx.de>, 
-	Michael Ellerman <mpe@ellerman.id.au>, Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
-	Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, 
-	"H. Peter Anvin" <hpa@zytor.com>, Chris Zankel <chris@zankel.net>, Max Filippov <jcmvbkbc@gmail.com>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Yoshinori Sato <ysato@users.sourceforge.jp>, 
-	Rich Felker <dalias@libc.org>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
-	linux-kernel@vger.kernel.org, Greg Ungerer <gerg@linux-m68k.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260319202755.16081-1-ionut.nechita@windriver.com>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-ORIG-GUID: rY4fF4ZcHAzawRmmUo057d8sT-U_YyZN
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzI0MDEzMCBTYWx0ZWRfX1bWxugcuXBai
+ E41K0wNRWoRBPEiVTuTOhEcE9wVlKL2/pg7193xc+rvSLYJkzqmW/aWJOa9cJ6M3xg9f6ugz3Y8
+ u/j8L3kR/WTS46CsN2edHYoYJqzfn0t+Fb3zLtJKeeAyBFsaULTSbiMivaO1RX4mBjcF9Qk9kYG
+ X0Z7zKsKJEd7wfqQUX9ZSFJs25xlX0S/Fsb1xe8ZbK3Qui5eu0lbNhvUesSrfamVhX8iw3fuN5X
+ v5qFrhW9hrqJ3qumA1RI7x3VSow1TjBqe533/xJ7aINrIrX+Q/MPdY6twziEVwCGR+Q/AyDgkJD
+ HhjqUL2gIikTP3Im1q/B0NexVz5m1WugfjpQRsp3BJL9mV9ac0/m8bLUPxq83/sIeVR2mTEyzcj
+ JteAZwhkTB7tOv1ttyFiOA6y3KmEIjov1bPb7iFCfBvMVjCkz7tip6xNKtvupQ4+X+ocDLmsixh
+ gqBhsA8J+six0MJcb6w==
+X-Proofpoint-GUID: mayWfXcezXzQ0RCPJmiJH_6HnV5S1zrz
+X-Authority-Analysis: v=2.4 cv=OsZCCi/t c=1 sm=1 tr=0 ts=69c2c4c6 cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
+ a=x-Aaag0WYKWWV6Rne_cA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-24_03,2026-03-24_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 adultscore=0 clxscore=1011 phishscore=0 suspectscore=0
+ lowpriorityscore=0 priorityscore=1501 bulkscore=0 spamscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603240130
 
-CC gerg
+On Thu, Mar 19, 2026 at 10:27:55PM +0200, Ionut Nechita (Wind River) wrote:
+> On Thu, 19 Mar 2026 13:31:39 +0100, Niklas Schnelle wrote:
+> > For your awareness, I saw that this series has some findings on
+> > Google's new Sashiko AI reviewing tool[0]. At a quick glance the
+> > findings seem like at least reasonable concerns to me. I'm still
+> > looking at this independently also of course.
+> 
+--8<--
+> 3) TOCTOU Race Condition / Lock Window Vulnerability
+>    — a driver can rebind between device_release_driver() and
+>      pci_stop_and_remove_bus_device_locked()
+> 
+>    This is theoretically valid but practically impossible. The
+>    window is a few instructions wide. For this race to trigger:
+> 
+>    a) device_remove_file_self() has already removed the "remove"
+>       sysfs attribute, signaling the device is being torn down
+>    b) a bind_store or udev probe would need to fire in exactly
+>       that window
+>    c) the newly bound driver's probe() would need to call
+>       pci_enable_sriov() and block on pci_rescan_remove_lock
+> 
+>    This is the same pattern used elsewhere in the kernel (e.g.,
+>    the existing remove_store already had no synchronization between
+>    device_remove_file_self() and pci_stop_and_remove_bus_device_locked()
+>    — the patch just adds one more call in between).
+> 
+>    If this is a real concern, it would need to be addressed as a
+>    separate improvement, not as a blocker for this fix.
 
-On Tue, 24 Mar 2026 at 17:59, Ilpo J=C3=A4rvinen
-<ilpo.jarvinen@linux.intel.com> wrote:
->
-> Aligning res->start by align inside pcibios_align_resource() is
-> unnecessary because caller of pcibios_align_resource() is
-> __find_resource_space() that aligns res->start with align before
-> calling pcibios_align_resource().
->
-> Aligning by align in case of IORESOURCE_IO && start & 0x300 cannot ever
-> result in changing start either because 0x300 bits would have not
-> survived the earlier alignment if align was large enough to have an
-> impact.
->
-> Thus, remove the duplicated aligning from pcibios_align_resource().
->
-> Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
-> ---
->  arch/m68k/kernel/pcibios.c | 2 --
->  1 file changed, 2 deletions(-)
->
-> diff --git a/arch/m68k/kernel/pcibios.c b/arch/m68k/kernel/pcibios.c
-> index 1415f6e4e5ce..7e286ee1976b 100644
-> --- a/arch/m68k/kernel/pcibios.c
-> +++ b/arch/m68k/kernel/pcibios.c
-> @@ -36,8 +36,6 @@ resource_size_t pcibios_align_resource(void *data, cons=
-t struct resource *res,
->         if ((res->flags & IORESOURCE_IO) && (start & 0x300))
->                 start =3D (start + 0x3ff) & ~0x3ff;
->
-> -       start =3D (start + align - 1) & ~(align - 1);
-> -
->         return start;
->  }
->
-> --
-> 2.39.5
+I haven't had time to fully review all this yet, but one quick comment: after
+the first idea to unbind the device driver I also realized we could have a
+race here between unbinding, and then possibly re-binding. We could probably
+prevent that by marking the device as dead:
+
++	if (val && device_remove_file_self(dev, attr)) {
++		device_lock(dev);
++		kill_device(dev);
++		device_unlock(dev);
+
+This doesn't modify the reference count or anything, but only sets the private
+member of the `struct device` `dead` to true. This can't be undone using the
+device core's public API, and once set, a device can not be bound to a new
+device-driver.
+
+This should prevent any such race AFAICS. The unbind is protected by the
+device-mutex, so once the flag is set, and the unbind is done, this device
+will stay unbound.
+
+It's not really "pretty" though.
+
+-- 
+Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
+Sitz der Ges.: Ehningen     /     Registergericht: AmtsG Stuttgart, HRB 243294
