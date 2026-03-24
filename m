@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C039130595C
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 19:34:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B082B23D281
+	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 19:37:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774380887; cv=none; b=LTNtOp508RW0Xb3X23VJEiLK9qJgeNNwVrWMAhlL6NwtrPZGdZPWlKQJHOLMc9EiWiWFl5/L8KI9IZaPjvqAnzgWk+qMjK8ytoT44/gOjyOL+QxfWJmwYEqsxgiVvX0DddY6AJeMrrMwFUYu+xfUIeWxzVxpkq0D/qI3UMZeXhA=
+	t=1774381069; cv=none; b=GjLBO1tbiTlxMwlfRJPztigarwtxsnnLgfM6EdzXKd4wuvn6gHQGA0+yYvagU2CSVnlSp36kleXf8ajVtbx+FXVDpXnGtPRsxu675jMdFBhMTMm30u3dd3wd3sFeKTTmf7ph2BNAWkPS4+O1r0Ndb0O28b+pKSz6b7paNsndGcM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774380887; c=relaxed/simple;
-	bh=R8I4mdhtlC1Y2rsYo7HXdjeN+ixJqbw10kbyE8reKig=;
+	s=arc-20240116; t=1774381069; c=relaxed/simple;
+	bh=FSMbDfBQchxcTGQjhWPZ05ODXKaW0VAxUcIbKCRCGqs=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=sbZmlf280PzHWAHzxrI1mISrvgSla9Du2jNTU2UUHZhY3cwfpcBZo9MIbY0yTSMncUPTA9GGuHaI0ckYQVrd8yBkb5IzzyhktWhh1bi++jwGULbIF6X3KQ+ItkerYxSCQNaNJ2RZZBnljsUOFDT+QOTbyIjDGkJzDuTh0a05tQg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VIobglsX; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=ONbaoB4EgmX4SnfqZvCzobw4okJJy8Y12ILzZ3qPSPwBnpTLkINBfGpVzPp7armOGd5SRwB/Tuk/QPLeGx6KeXmaxpOUU86IztX7w5RfvwZ65vOsFM94apNonjE9pY/YWeVvOoiiiLkj8FE7Zf7tL9oD3H1+ZrwTVovQKeMaPic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mJEuEmU0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VIobglsX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47733C19424;
-	Tue, 24 Mar 2026 19:34:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mJEuEmU0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74674C19424;
+	Tue, 24 Mar 2026 19:37:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774380887;
-	bh=R8I4mdhtlC1Y2rsYo7HXdjeN+ixJqbw10kbyE8reKig=;
+	s=k20201202; t=1774381069;
+	bh=FSMbDfBQchxcTGQjhWPZ05ODXKaW0VAxUcIbKCRCGqs=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=VIobglsXliT085fJ7tTtsNbvortGGRFcanYJOJ5yzPvJxjzlAKbDvW7Bnlc1rRVo5
-	 /NP01GkFOWl+pJnNxtZIaNau+od5syO0Aw+9yMOF0D4tqV9Yxvo3bBhKHi9VOCpQyy
-	 vGKjr1KhPobO6upQAfkAOM0/BE5jn1hG/clWZWOj2HcDtY3AYmWLW+mqTzfhZSvAqU
-	 doz33itB2g0+Yu9IlbfX1dyT+qsGsvGf1WknWCrbc1qtp3tqRXGi1VvsH59uLiZ4eO
-	 Hdpa2re8nrpody5agAj/EmDko203caTcAPlOdvP6Lcy0X0aWQKyCrFqnEEMwxi1NVi
-	 VlXS3mEPOHyEg==
-Date: Tue, 24 Mar 2026 14:34:45 -0500
+	b=mJEuEmU0owy6a2jdKYB8/R9rQU8F4zXiwbP8QDPHGsOOTKVIgdHFju1XuLLaXdXGM
+	 gU30O+8h/l9fksp4pppehaocDR9Gs6i4atxEukrk2iZyv0pbnc2CoAQwdty8J8gfKr
+	 Qo9toOvHDQ3aEWsYoUer4AudPSFRRrpL1YVfqEvsgi1nHC/JvKja811h2dszHPexAO
+	 w5Y97WcTxEnQrnqPCRW+1q2639lIGViRuxE3aAm5pwhbTQh/L50cmnd2ScIThkSNFO
+	 TXfRixrw+17rDFz09P9ZnIrXwu9h9vuu4NM2hN9vcsZBXja3KYud5M8HAOBW2t0pjW
+	 ioY6iHLowdpTw==
+Date: Tue, 24 Mar 2026 14:37:48 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Simon Richter <Simon.Richter@hogyros.de>
 Cc: linux-pci@vger.kernel.org, intel-xe@lists.freedesktop.org,
 	dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH v3 0/5] Bridges without VGA support
-Message-ID: <20260324193445.GA1149183@bhelgaas>
+Subject: Re: [PATCH v3 1/5] vgaarb: pass vga_get_uninterruptible() errors to
+ userspace
+Message-ID: <20260324193748.GA1149226@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,35 +42,48 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260307173538.763188-1-Simon.Richter@hogyros.de>
+In-Reply-To: <20260307173538.763188-2-Simon.Richter@hogyros.de>
 
-On Sun, Mar 08, 2026 at 02:35:33AM +0900, Simon Richter wrote:
-> Hi,
-> 
-> reformatted the descriptions to follow the style guide, removed unlikely()
-> from return code checks.
-> 
-> Companion patch for i915/xe is v3 of
-> 
->   https://patchwork.freedesktop.org/series/161721/
-> 
-> which can be applied independently and should probably go in before the
-> __must_check patches at least.
-> 
-> Not sure if these should have a Cc stable. If yes, there is a backport of
-> the i915/xe patch as well (what patchwork calls "v4").
-> 
-> Simon Richter (5):
->   vgaarb: pass vga_get_uninterruptible() errors to userspace
->   vgaarb: pass errors from pci_set_vga_state() up
->   vgaarb: mark vga_get() and wrappers as __must_check
->   pci: check if VGA decoding was really activated
->   pci: mark pci_set_vga_state() as __must_check
-> 
->  drivers/pci/pci.c      |  6 ++++++
->  drivers/pci/vgaarb.c   | 20 +++++++++++++++++---
->  include/linux/pci.h    |  4 ++--
->  include/linux/vgaarb.h | 15 ++++++++-------
->  4 files changed, 33 insertions(+), 12 deletions(-)
+On Sun, Mar 08, 2026 at 02:35:34AM +0900, Simon Richter wrote:
+> If VGA routing cannot be established, vga_get_uninterruptible() returns an
+> error and does not increment the lock count. Pass the error on, and don't
+> call vga_put() when userspace closes the handle.
 
-Applied to pci/vga for v7.1, thanks!
+I applied this, but I'm a little confused about the "don't call
+vga_put() when userspace closes the handle" part.  Does that happen in
+this patch and I'm just missing it?  This patch changes the "lock"
+case, and the only vga_put() call I see is in the "unlock" case.
+
+> Signed-off-by: Simon Richter <Simon.Richter@hogyros.de>
+> ---
+>  drivers/pci/vgaarb.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+> index d9383bf541e7..22b2b6ebdefd 100644
+> --- a/drivers/pci/vgaarb.c
+> +++ b/drivers/pci/vgaarb.c
+> @@ -1134,6 +1134,7 @@ static ssize_t vga_arb_write(struct file *file, const char __user *buf,
+>  	char kbuf[64], *curr_pos;
+>  	size_t remaining = count;
+>  
+> +	int err;
+>  	int ret_val;
+>  	int i;
+>  
+> @@ -1165,7 +1166,11 @@ static ssize_t vga_arb_write(struct file *file, const char __user *buf,
+>  			goto done;
+>  		}
+>  
+> -		vga_get_uninterruptible(pdev, io_state);
+> +		err = vga_get_uninterruptible(pdev, io_state);
+> +		if (err) {
+> +			ret_val = err;
+> +			goto done;
+> +		}
+>  
+>  		/* Update the client's locks lists */
+>  		for (i = 0; i < MAX_USER_CARDS; i++) {
+> -- 
+> 2.47.3
+> 
