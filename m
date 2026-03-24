@@ -1,185 +1,289 @@
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011023.outbound.protection.outlook.com [40.107.208.23])
+Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BE393DA7EC;
-	Tue, 24 Mar 2026 19:11:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.23
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFB9B392822
+	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 19:15:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.125.188.123
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774379516; cv=fail; b=ZB/rvNfOmLfO425A3/hfDo+urcmDiWtpHEpcONGiwh4Zh9ZrKczlNvkHrgaH70lya01cRp2yQcd1czI6He3BswM79V10e1oN2Efkv61LOulT7GHpnaZKCvDaTMZnhKsqKk9a4YxdPJFfem2yhLAGiX5PeFIbkrY0+t3uNGmkkfc=
+	t=1774379704; cv=pass; b=MUMZ3BM2TjijrXx1pVbxT4MIZ2DOdM4xKkGn5uT83Opsdui2/FiV4RmDAGfV/Mz58XRRHyjeFUKLL6wm4AycwEiJyFY3qETXRAH9fmMynrOm20HSceoQqNmD7AABiesPEElsqetzXHVHsg8sU4ecjjPv5g/QET5fgO7z6IIbejE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774379516; c=relaxed/simple;
-	bh=MZfOquNYjL8fMb9Ddp53OVkci72XxOpCnMmBVDlWqwU=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=C4hQD9nQGJKV8pwympmkgatZKKfMoPacG4BLKudTq5e9B77UEqg4GK7LcRCS3HJdOzDXJFI2DyyH2ztBbT01W3BFW5QaRJ3DPsruyvIr6oaR+lpbLz9SRuWyTkkulbJ3JDe1bwFp52aX7/YPDdmDy4WbsMY28FFDBCNwnXB8KVk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=C/DHt1oA; arc=fail smtp.client-ip=40.107.208.23
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1774379704; c=relaxed/simple;
+	bh=mXQH2e7ey4FhEPRcJoszhO0ePG1FdnyzQZjdgRZXj+A=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=gaIeh1JuDGQvy6FQL/poGIUnn+e5u92MmALAfYMTqFogfZWu1DTLXdLE3S48oNSo+rVWwilzeHbuHFR/oa6kBZ02vk1ZrHDyrDlPDkMwatIxyH6NnM70mhlf5eO6UkXaEgu2BKImYDNVdjqSn46VF/mkbct1HDFSQcPIVrenAYo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com; spf=pass smtp.mailfrom=canonical.com; dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b=lRGmo3NE; arc=pass smtp.client-ip=185.125.188.123
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canonical.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="C/DHt1oA"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=AQx9V6xpB7sXyEPuKNxMH1I32Led9aSvC3Ph6WJj6Jyqa+ockQzxT3uLcU8ys4X/IJXfU1hw+vmtGZpX4gO+dzc9sihkkguvwmtA1VGZqlRW8qPua/Y6MvRzkmVffPDsqo4C+TA1zij6piZXk1KpuxX2pKxYnAREt5Wf9uxKrPponqXpC0S3BdSGz2+Xt71H2VoSCSmYZwrveTr93KdniLDYoF9AotOfGZ+5NBJytzYMt9fXLOwicyIj/6/pHm/iWfdSNVU1iXwkqkHwNFbejcqN/3+8Nl6dVRf5ENSSpIisK0Y2TA0pEaCMRTW4I+zWEAcUJUKKbyzWEB8hOvKqtQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Epk2Yrf3XP4s7MhfXN6Gg5cGelFKtM65iLjB6Sq3XQo=;
- b=jw4ssA9x/F5V2jKi0tY7Vw7JMWKBVXFItFxg5sVvU7Re2hIC+nNtwSZweFjDyMZcloPYgLd8jeUcn42O1lm2eVbxi71OwqLXvhQCXH3VtGc/pdjNJ6RRGLSfBt3ulEiou4p1hHFQdEc868Xog7UlqPXImkCGuM3EYTuR0hO/2QAdysdHLETWT9ig68feYtLKvwaK1BaIqhDR5sem8jGRMmQEZtzPNd3UuqEilGcCSXHdHRufGJaO6IWfCNqrNo+kE3+VPEgBJCKlzuchsJpGPS0ysX4H8O4u3NSRIYP4jRP3hEXe/MozMUV7NYiwz3qJD931qd+WWKqxcTOmxNfIlg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Epk2Yrf3XP4s7MhfXN6Gg5cGelFKtM65iLjB6Sq3XQo=;
- b=C/DHt1oALZtSDiUlicqrmt7xSxpg9g7r2sMOzwvrF6z0K/25PLbJkLhytmDXaS0HfmM9Hf174nPZwfg7yqqhsjCKPeANPi7XvSfvTZE5REoa1GOahHQl8MtVaLWs3TpPYyKF2JO48wQ9RJGucZUMH6KWdHc9eTrqjxqQWWKjvAq+CSriEMvT1bbi82AqelxBExKJXmX10gPlqR6YqVE1kcLThUqlVmTsbWuBXN8+ebsod5WpM0gvTTZjdALiXij1uol9VFs8z7rzagyhXAb5SmaJknC3spzWFG2bEQnA+DxDBidLP3dJSxwkyW7Lin6YkZdFynwjdCD99oEZR0NmVg==
-Received: from DM6PR08CA0041.namprd08.prod.outlook.com (2603:10b6:5:1e0::15)
- by DS7PR12MB5790.namprd12.prod.outlook.com (2603:10b6:8:75::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Tue, 24 Mar
- 2026 19:11:43 +0000
-Received: from DS3PEPF000099DE.namprd04.prod.outlook.com
- (2603:10b6:5:1e0:cafe::fd) by DM6PR08CA0041.outlook.office365.com
- (2603:10b6:5:1e0::15) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9723.31 via Frontend Transport; Tue,
- 24 Mar 2026 19:11:36 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- DS3PEPF000099DE.mail.protection.outlook.com (10.167.17.200) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9723.19 via Frontend Transport; Tue, 24 Mar 2026 19:11:43 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 24 Mar
- 2026 12:11:21 -0700
-Received: from mmaddireddy-ubuntu.nvidia.com (10.126.230.35) by
- rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Tue, 24 Mar 2026 12:11:15 -0700
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
-	<mani@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
-	<conor+dt@kernel.org>, <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-	<kishon@kernel.org>, <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
-	<Frank.Li@nxp.com>, <den@valinux.co.jp>, <hongxing.zhu@nxp.com>,
-	<jingoohan1@gmail.com>, <vidyas@nvidia.com>, <cassel@kernel.org>,
-	<18255117159@163.com>
-CC: <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH v8 9/9] PCI: tegra194: Use aspm-l1-entry-delay-ns DT property for L1 entrance latency
-Date: Wed, 25 Mar 2026 00:40:00 +0530
-Message-ID: <20260324191000.1095768-10-mmaddireddy@nvidia.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260324191000.1095768-1-mmaddireddy@nvidia.com>
-References: <20260324191000.1095768-1-mmaddireddy@nvidia.com>
+	dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b="lRGmo3NE"
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com [209.85.218.69])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id B56E63F618
+	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 19:14:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+	s=20251003; t=1774379692;
+	bh=ngqb+DmGtwEG3FK8sIpZyt2ZJ6Tw4EzBiHu4t/MVsn4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type;
+	b=lRGmo3NENOanaizI5i0CxuJcJ2E31k1e7sB4scygqi5w085Ync+2hOaajcrdnQU88
+	 4NcbiTuCxJ9fd59kT5R3K75i9TDezETUeu7vxL0nCOwiC3PgNzn2IeoxIr+5Yimj6f
+	 +QuLClm4Iq8VphFXjgFSHk8B5qPiiMv7acTzhFWZdqcj7+haRgyAn1PaTzQGhkKDDE
+	 36yd31HTp0Qq7un2CKXwwHhkU1CSrwviHzkA+E7dP4Hz9+k8DWv80KZF3RpxKZQIN1
+	 spj1pbc5aPXuZhsKwkuC0jZZyR15F1X0FjG//4rdVicPTIKSzMJr7SHRus2cQP35Uv
+	 y04E/ydMWLqPM7y43+PgefVCmjiIeHvyWUGxw+Txpu5MPAbZCgRoZoiPPeCAeUq1Z6
+	 0X91StoXC9FHFDjtMZWe8p3QVmJcOcOl7fybueD56lFNe5XIvUIh1bhP4T2r02ZvdI
+	 2FFxklQe3uPHmNtnOsRPfCEZMHHvES+eED4jeyp7bH0MGMiFROOh9bqwsi9NsPCaIn
+	 yjhNvvmf++jRaN9dzBnPY/Upom4vHOl2w28WjqzU8CgkZUx9o6iRDwYK2e8t9BVWmN
+	 eAvnzC6fN+tqSbRrmuvsxNYAa7oYGSvFjyrFqJ73XRjjm0O0Vpyi1NIl0dZGhCkh6P
+	 p3aQmdFrSiCiel76MYX5gfjA=
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-b97d66528c9so25080366b.1
+        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 12:14:52 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1774379692; cv=none;
+        d=google.com; s=arc-20240605;
+        b=gRNEfzld9lgdanf/CAJ0PZ9sSnjHqkBgjnOqrPk/XITMFWMBF+BycBIpCGU9xM+bqW
+         2ss2kZhUFAEG9PbLarEU1fG9cZFa10LhGPz3PK7MrnhzLMTxLQkoRY5iygiXopZTbqp+
+         oawf01InxitW53RF7f5a2YmclPyOjZ1UThT8hQY+P73IPM0AirrlgP8CCykScLtb8k+m
+         4odUhsNyDKeeQe4VZv26BeenFVdf4bFMG52ZwdbOCFPzw/c0hkUyErzebvJelRg338cB
+         h7tBfaUua+lwOjrhLt/Kv7ETkpowUszb5r1h2fEW5y1c0U8jdBCkv/eSotv4lbsvt7P0
+         uYDg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version;
+        bh=ngqb+DmGtwEG3FK8sIpZyt2ZJ6Tw4EzBiHu4t/MVsn4=;
+        fh=5A+Ca96kcwqrq7MjwhkK50C771V4W1ldLsmFGTwwktI=;
+        b=YeystnvciSwKReYcfXaeUCeufGiQ3WDdKA06Zcwljax6tS+Lj6hug0CB7jrIPEKKFp
+         +/UAcVkBJA/a0SNnbcdARmlwbV5UjvMdjjNbn8U33x5Wd8ZF242l6KHQDCsZ+ffUaKy0
+         +ID1TcIbGs3Tg7VYl87eR87t9DrGd6QGaedjqjO5LJ5Px7mElT3c6wn2eMeiLY8AeGCY
+         iZ9Tv+bVFWOoyZrXOh3jt+p7x0mSLjLREMsdEeNQemO1YHFYs/JNsuXqlgeonfw2LoVI
+         bR5oqZzyEklSwfdM3/QOdlditppsJROIvNLfgsx4sKri7R0Vd5CwrnJ5/CG3Zwai5FuK
+         qKxQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774379692; x=1774984492;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=ngqb+DmGtwEG3FK8sIpZyt2ZJ6Tw4EzBiHu4t/MVsn4=;
+        b=T9aqoVlckmMIPxB57yHaHwIhPstPJo4/t7SFLCOqCbnI0M812VN0j/fz9rfmSIRlxR
+         cEDj+kfu2zy1n09r2UJfBOAe+RRDSZc3hZL/+GoDIWQoe/4pzFx9iCCh6Ug9om5b+GZW
+         S2UxEGlS42A92rlhugWsk8DG6Hcyu0OX4qz9sGjIkMzCbm6MKbn4/PKi+Fc5rErWp22K
+         NB29/j3HmbxQ0WDSfyxWFOEjpV4dCVGNGp16WlP7xp7apAiZXY85wDLQYYTxQCKWCi9u
+         BrKIpCnAEPzQNk4Ka7tvx+TywRHOzHOERO/fRtfm3TF6dBenLzDMvF1Xg6PQZyzx5roY
+         Z31w==
+X-Forwarded-Encrypted: i=1; AJvYcCXj/aXjoK7juoDufGwbiAPrIAndc38KWbc+puMmkcAg8Bmdy/uSYWeFiHbqStPM/lUUtDQ0yjlj8D8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzNFAiFVKUeFWi2NVflT+fqbak9KDXQ8hipXS18ckvVpmCS4ygA
+	jGqWFeH5+wfLdnqz15H8fHSGVf4YZsdiuEGR6OJKHfkzJPu7XaZq5Cmvf51CpipJSoHO3RZ3HnS
+	2ZS/SQq46ivZfcOko/lYvXublmQjkryLHMNgNywdMxlEu+SafLxUIwG7M2XRv1zJhmQIIaaGnwF
+	mq8hTAF4WVE9vN7aYzPlbo/uWknY6HWCJweFjWMj1W2jeKqLqi0GGd
+X-Gm-Gg: ATEYQzwx3dMHNNI+FNmloVhn2G2/b/7uoF/mXdFo74BFXEGWDPjqhxNm2tPm1ksojeC
+	AYzyRGEsC4ylq8qdPh2Wrqz+gAIkYAZ5SE/YFs501IZufhgGoj83yFq9d1upfiVlyb7Jc0dxGvK
+	ZxPP/UfCMlSnipWU0UIacDnO0+AooZPh58RlBWmW90XbrWnCWcdtO6B22cyhVVfIV8zK4uzWlfa
+	0KnAD9+7hTm0kKYqqwz2EgbZ0RHgTX33v/2jN8=
+X-Received: by 2002:a17:907:7fac:b0:b8f:d2a0:c283 with SMTP id a640c23a62f3a-b99ae1f7d0cmr36034466b.1.1774379692057;
+        Tue, 24 Mar 2026 12:14:52 -0700 (PDT)
+X-Received: by 2002:a17:907:7fac:b0:b8f:d2a0:c283 with SMTP id
+ a640c23a62f3a-b99ae1f7d0cmr36028866b.1.1774379691469; Tue, 24 Mar 2026
+ 12:14:51 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-NVConfidentiality: public
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS3PEPF000099DE:EE_|DS7PR12MB5790:EE_
-X-MS-Office365-Filtering-Correlation-Id: 09cf1db1-24b7-4f45-2677-08de89d92fec
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|82310400026|1800799024|376014|7416014|921020|22082099003|56012099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	XfAyPtEnZ2KHFmGM9ai/Izo5jHCDmgzLhEK6qKQkf7ACr3a5e6zQHZ2dsAQSqRMUgGd6rHiSyRARn97Tg+1sam1Cqq3dDuzu2Pb6xO0XO4mbmkoGjOVclkw+qnTTQ2k9tOwtd+Hg8ntUghDaZNXf4oimg17qBUfva8H/H2uk6Fz0KPYZ0H+wYmSVqu6wzZjBFKu1aOXmX2AOxrhX1HFx4cVFYWCsiW5sr/oUwKH/nXcKbYTwkmJbE/YiZxYnC3BGwr8BBWktUy/yfwKrONjrC4hKcAXsjZwFGgpMRscPdTEqNO5u71qxKSADQHUKdouvOnZvpHtScujznOUR6uQqdmIZiy71LCjLaF1rA0+1QAam5EGSQLphZshbq/fbSkGGWYYyMoM9rczL+7PoyJGYnLUKJuwim0nXAAlbJGcwEkgJeru0WMRRmEMndh6FhRGz8aQUP7FCsL0ak6z9aLG7J1EtTwIbV1wgrJucFYVi9gz38UAokMXAR7GzF8VR8egO6+puQcs+QHjwjGAjO9DZ/Y6P9mik2cUl5ZKwwXOeusClk9piKL1O1JrWnpuJ80+ZTiG1vSPMymlsggp/2SnKBrBaty57bgbjQ6GfCckVUHv4+9My5UPqfezzGjE2dQWER0jJW3IDnlE8BB+5NgiaKV/M6WeVn0V2A5mnO1aFDLJN4sNYYyy2gW6LqG3YL5oCtWIErjx/M0YuWEOYBPi2pp1UWRD3Ay9okouXCHemId/MI4lFZ0AmUL/73ygzMGoAeP8spRcKuo2u+kG7VmTGXciHPTyOeR0Fi9R7Tswxcbggb0osq8cUOV4kUP4XFjTu
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(82310400026)(1800799024)(376014)(7416014)(921020)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	E7YR6oEkC3zgoyn8mCKRV5X/x8zdeueUGW8o6BRdB1Jg/WdD1YJ6TiAj5zeBcFiLqTbd10Ui3x1VojbT5sQsTU/grZu2itq1MUyr6arTLgsoK8KxWQnpq5MPAhUDafMtkOZ95LgXP/nAsU9ASH8hzcD5ac8NsNix3/w5i70gybZ3f8wPCeAf7Ac9cNlFXysEhXwV9/Nb9YtE4x5dlzOV/cmBKP/FCR/zw0GpZw3Ju11pT70RNPAV6kSTy0bKWeOfLaPVKz4NkPITrmxnpmFzq6WekUANtf7Us8yAIkDzaXypOKnwzK8+agEhVJZbPpAEfYTOB3VdjuBzBcor0RM139zDZacWePGlVxdR5CBBLwzDtDs7cFKy4tLvvnjSg8OQHBzkIM10rnFhfumNKJ0JxU/cgC9bMhyou535wUigbpX8+q+Fhb0DCjNDfYz8lqZJ
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Mar 2026 19:11:43.6646
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 09cf1db1-24b7-4f45-2677-08de89d92fec
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	DS3PEPF000099DE.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB5790
+References: <20260313094618.1361418-1-ziyue.zhang@oss.qualcomm.com>
+ <20260313164542.GA1405513@bhelgaas> <en5a7jrgpbn4bsmw5qwprugb2qmjkqw2x5eey6jxxu63634duz@b43rhcsqkj3o>
+ <abdviJbrluDn2Vrx@baldur> <kqpgjzcxnazjohiop27exget6qrv37wn3csmixt5nmc6d5dkbg@n7qjo6flaabn>
+ <abtgaXSv-zRysJqO@baldur> <4byysnjodmlphwcevw5gb2asxbwwwlf526mtpwpkfi6crjxoqb@vyuktezfu2wu>
+ <CAARv3RSag8n0=ut9KGm0yALRPVTiyQ+bBBbT+3Vf1sNOCBLbGA@mail.gmail.com> <dnx4ge2e2zy2unw5jtmmhktyzlnmmhrogb5skskxewi6y7ekau@vpfdphzay7td>
+In-Reply-To: <dnx4ge2e2zy2unw5jtmmhktyzlnmmhrogb5skskxewi6y7ekau@vpfdphzay7td>
+From: Tobias Heider <tobias.heider@canonical.com>
+Date: Tue, 24 Mar 2026 20:14:39 +0100
+X-Gm-Features: AaiRm50Xa8MYmaP0uH8BT8rSPTXsqKVKZcUFfeHqOG5ZpI8OP5QNHanLv-y60Mk
+Message-ID: <CAARv3RRqXxNePX=4RqnLu7OnfjQmStynsL9RCNY19EKQOTcnLQ@mail.gmail.com>
+Subject: Re: [PATCH v1 1/1] arm64: dts: qcom: hamoa: Move PCIe PERST and Wake
+ GPIOs to port nodes
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Bjorn Andersson <andersson@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>, 
+	Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>, konradybcio@kernel.org, robh@kernel.org, 
+	krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com, 
+	lpieralisi@kernel.org, kwilczynski@kernel.org, bhelgaas@google.com, 
+	johan+linaro@kernel.org, vkoul@kernel.org, kishon@kernel.org, 
+	neil.armstrong@linaro.org, abel.vesa@linaro.org, kw@linux.com, 
+	linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com, 
+	quic_krichai@quicinc.com, quic_vbadigan@quicinc.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Program ASPM L1 entrance latency from the optional aspm-l1-entry-delay-ns
-device tree property instead of of_data. Convert the value from nanoseconds
-to the hardware encoding (log2(us) + 1, 3-bit field). If the property is
-absent, default to 7 (maximum latency).
+On Tue, Mar 24, 2026 at 7:07=E2=80=AFAM Manivannan Sadhasivam <mani@kernel.=
+org> wrote:
+>
+> On Thu, Mar 19, 2026 at 02:50:37PM +0100, Tobias Heider wrote:
+> > Resending because the previous mail ended up being HTML (sorry)
+> >
+> > On Thu, Mar 19, 2026 at 6:39=E2=80=AFAM Manivannan Sadhasivam <mani@ker=
+nel.org> wrote:
+> > >
+> > > On Wed, Mar 18, 2026 at 09:42:56PM -0500, Bjorn Andersson wrote:
+> > > > On Mon, Mar 16, 2026 at 08:50:12AM +0530, Manivannan Sadhasivam wro=
+te:
+> > > > > On Sun, Mar 15, 2026 at 09:53:33PM -0500, Bjorn Andersson wrote:
+> > > > > > On Sat, Mar 14, 2026 at 07:50:50PM +0530, Manivannan Sadhasivam=
+ wrote:
+> > > > > > > On Fri, Mar 13, 2026 at 11:45:42AM -0500, Bjorn Helgaas wrote=
+:
+> > > > > > > > On Fri, Mar 13, 2026 at 05:46:18PM +0800, Ziyue Zhang wrote=
+:
+> > > > > > > > > Commit 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, =
+PERST, and Wake
+> > > > > > > > > GPIOs to PCIe port nodes and add port Nodes for all PCIe =
+ports") did not
+> > > > > > > > > convert all Hamoa=E2=80=91based platforms to the new meth=
+od of defining PERST and
+> > > > > > > > > Wake GPIOs in the PCIe root port nodes.
+> > > > > > > > >
+> > > > > > > > > Without the change PCIe probe will fail. The probe failur=
+e happens because
+> > > > > > > > > the PHY stays in the controller node while the PERST/Wake=
+ GPIOs were moved
+> > > > > > > > > to the port nodes.
+> > > > > > > > >
+> > > > > > > > > This fixes probe failures seen on the following platforms=
+:
+> > > > > > > > >  - x1-hp-omnibook-x14
+> > > > > > > > >  - x1-microsoft-denali
+> > > > > > > > >  - x1e80100-lenovo-yoga-slim7x
+> > > > > > > > >  - x1e80100-medion-sprchrgd-14-s1
+> > > > > > > > >  - x1p42100-lenovo-thinkbook-16
+> > > > > > > > >  - x1-asus-zenbook-a14
+> > > > > > > > >  - x1-crd
+> > > > > > > > >  - x1-dell-thena
+> > > > > > > > >
+> > > > > > > > > Fixes: 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, =
+PERST, and Wake GPIOs to PCIe port nodes and add port Nodes for all PCIe po=
+rts")
+> > > > > > > >
+> > > > > > > > Are you saying that DTs in the field broke because of some =
+kernel
+> > > > > > > > change?  That's not supposed to happen.  Even though PHY, P=
+ERST, and
+> > > > > > > > Wake GPIOs should be described in Root Port nodes instead o=
+f the Root
+> > > > > > > > Complex node in *future* DTs, the kernel is still supposed =
+to accept
+> > > > > > > > the old style with them described in the Root Complex node.
+> > > > > > > >
+> > > > > > >
+> > > > > > > This is not related to the driver change. The driver correctl=
+y parses all Root
+> > > > > > > Port properties either in the Root Complex node (old binding)=
+ or Root Port node
+> > > > > > > (new binding). But commit 960609b22be5, left converting menti=
+oned board DTS to
+> > > > > > > the new binding, leaving those affected platforms in a half b=
+aked state i.e.,
+> > > > > > > some properties in RC node and some in Root Port node. Driver=
+ cannot parse such
+> > > > > > > combinations, so it fails correctly so.
+> > > > > > >
+> > > > > >
+> > > > > > Are you saying that above listed machines has broken PCIe suppo=
+rt in
+> > > > > > v7.0-rc?
+> > > > > >
+> > > > >
+> > > > > I haven't verified it, but I'm pretty sure PCIe is broken on thes=
+e platforms.
+> > > > >
+> > > >
+> > > > In line with Bjorn's request, we shouldn't have to guess.
+> > > >
+> > > > > > It seems this is a (partial) revert of 960609b22be5, is this ac=
+tually
+> > > > > > fixing that change, or is it only applicable once some other ch=
+anges are
+> > > > > > applied?
+> > > > > >
+> > > > >
+> > > > > This change is fixing the issue in the respective board DTS and i=
+s a standalone
+> > > > > fix on top of v7.0-rc1.
+> > > > >
+> > > >
+> > > > So 960609b22be5 was broken when I merged it?
+> > > >
+> > >
+> > > Broken on the machines mentioned in the commit message, not for all H=
+amoa
+> > > platforms.
+> > >
+> > > > The commit message says that the commit was incomplete, in that it
+> > > > didn't fully convert from the old to the new style, so it sounds li=
+ke
+> > > > the offending commit was incomplete - but I believe the offending c=
+ommit
+> > > > was a workaround for the new solution not being in place and this c=
+ommit
+> > > > mostly reverts the changes in the offending commit.
+> > > >
+> > >
+> > > So 960609b22be5 was supposed to move all the platforms from old PCIe =
+binding to
+> > > new for greater good, but it apparently decided to do so only for a s=
+ubset of
+> > > the platforms for some reason which  don't know. But the problem aris=
+es due to
+> > > 960609b22be5 changing the hamoa.dtsi to the new binding which also wa=
+rrants the
+> > > platform DTS to also be changed to the new binding. If we only have e=
+ither dtsi
+> > > or dts converted and not both to the new binding, the driver will get=
+ confused
+> > > and fail. And this is what exactly happended for below machines:
+> > >
+> > >  - x1-hp-omnibook-x14
+> > >  - x1-microsoft-denali
+> > >  - x1e80100-lenovo-yoga-slim7x
+> > >  - x1e80100-medion-sprchrgd-14-s1
+> > >  - x1p42100-lenovo-thinkbook-16
+> > >  - x1-asus-zenbook-a14
+> > >  - x1-crd
+> > >  - x1-dell-thena
+> >
+> > I can confirm the breakage for (some of) the listed devices on Ubuntu.
+> > We are experimenting with 7.0-rcs ahead of our 26.04 release.
+> >
+> > I'll try to collect some test feedback for the fix.
+> > I'd certainly appreciate this being included as an rc fix since
+> > currently half of
+> > the x1 laptop devices are broken.
+> >
+>
+> Thanks for the report. We will try to get this patch into v7.0-rcS.
+>
+> It'd be appreciated if you can test this patch and give your tested-by ta=
+g.
+>
+> - Mani
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-Changes V8: Use aspm-l1-entry-delay-ns instead of of_data
-Changes V1 -> V7: None
+Thank you!
 
- drivers/pci/controller/dwc/pcie-tegra194.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+Tested it myself and I have rolled this out to my ubuntu-concept testing re=
+po.
+I have tested the CRD and got user feedback that it works on at least an
+Omnibook (where we first saw the regression without the patch) and Lenovo Y=
+oga.
+Potentially more but not everyone provides feedback when things don't break=
+.
 
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index 3278353b2c29..a856a48362df 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -18,6 +18,7 @@
- #include <linux/interrupt.h>
- #include <linux/iopoll.h>
- #include <linux/kernel.h>
-+#include <linux/log2.h>
- #include <linux/module.h>
- #include <linux/of.h>
- #include <linux/of_pci.h>
-@@ -272,6 +273,7 @@ struct tegra_pcie_dw {
- 	u32 aspm_cmrt;
- 	u32 aspm_pwr_on_t;
- 	u32 aspm_l0s_enter_lat;
-+	u32 aspm_l1_enter_lat;
- 
- 	struct regulator *pex_ctl_supply;
- 	struct regulator *slot_ctl_3v3;
-@@ -710,6 +712,8 @@ static void init_host_aspm(struct tegra_pcie_dw *pcie)
- 	val = dw_pcie_readl_dbi(pci, PCIE_PORT_AFR);
- 	val &= ~PORT_AFR_L0S_ENTRANCE_LAT_MASK;
- 	val |= (pcie->aspm_l0s_enter_lat << PORT_AFR_L0S_ENTRANCE_LAT_SHIFT);
-+	val &= ~PORT_AFR_L1_ENTRANCE_LAT_MASK;
-+	val |= (pcie->aspm_l1_enter_lat << PORT_AFR_L1_ENTRANCE_LAT_SHIFT);
- 	val |= PORT_AFR_ENTER_ASPM;
- 	dw_pcie_writel_dbi(pci, PCIE_PORT_AFR, val);
- }
-@@ -1110,6 +1114,7 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
- {
- 	struct platform_device *pdev = to_platform_device(pcie->dev);
- 	struct device_node *np = pcie->dev->of_node;
-+	u32 val;
- 	int ret;
- 
- 	pcie->dbi_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-@@ -1136,6 +1141,15 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
- 		dev_info(pcie->dev,
- 			 "Failed to read ASPM L0s Entrance latency: %d\n", ret);
- 
-+	/* Default to max latency of 7. */
-+	pcie->aspm_l1_enter_lat = 7;
-+	ret = of_property_read_u32(np, "aspm-l1-entry-delay-ns", &val);
-+	if (!ret) {
-+		u32 us = max(val / 1000, 1U);
-+
-+		pcie->aspm_l1_enter_lat = min(ilog2(us) + 1, 7U);
-+	}
-+
- 	ret = of_property_read_u32(np, "num-lanes", &pcie->num_lanes);
- 	if (ret < 0) {
- 		dev_err(pcie->dev, "Failed to read num-lanes: %d\n", ret);
--- 
-2.34.1
+Tested-by: Tobias Heider <tobias.heider@canonical.com>
 
+>
+> --
+> =E0=AE=AE=E0=AE=A3=E0=AE=BF=E0=AE=B5=E0=AE=A3=E0=AF=8D=E0=AE=A3=E0=AE=A9=
+=E0=AF=8D =E0=AE=9A=E0=AE=A4=E0=AE=BE=E0=AE=9A=E0=AE=BF=E0=AE=B5=E0=AE=AE=
+=E0=AF=8D
