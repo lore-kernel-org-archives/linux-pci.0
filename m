@@ -1,78 +1,71 @@
-Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011027.outbound.protection.outlook.com [40.93.194.27])
+Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010009.outbound.protection.outlook.com [52.101.61.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5077D3F87FE
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 12:36:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.194.27
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 260371DF980
+	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 12:38:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.9
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774355819; cv=fail; b=MXJn3u24F6XF0LoFuQZGRtrWC3XAP7Q/e17fvUnV3EO6b3r52ET2R0H+RKA1c7ssvOXKoAMMtH/ogu0MLN6uTBqI9f7e54B+NqI+3bMcqc4xRomX9hte58gC3AWJkJnXHWg5jAt4H2O5A9usi+4n0ONSeMvRkrL4fMizpzKkddo=
+	t=1774355920; cv=fail; b=LxEbv80YI55PSyM5kOlxkp5zSFjsmIdxJi6lFp4PUVIqeSC8Ftaib/xQtxhXms1aJec87vpcPrSnFv+kU4woGQFOCi05QYF4hYc/LuyUQzMXISodiovr/NKNSZgOuzr1WSYBEpXLgv92LIPAJMUBAM8fwGFqPmuFz6n21MnOUzA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774355819; c=relaxed/simple;
-	bh=3Kg9AQN2j3P6zeNd3wjGC0jNeFEyLx2XvMKNRmBOc5c=;
+	s=arc-20240116; t=1774355920; c=relaxed/simple;
+	bh=u8dbFgJF67Xb+DYAhVwHmmA5j1vdPHlsFJBhk9KRofc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=GJuq7if4lAIzUyHvpZSH9JhEtvfPr5cTO4yI9yh9Sumv0CKKbBPzq5s4EWxn8CpA6PUM5BpPGmPHWBNybK76EOW33YbMEWrgKTzBgocRX/YpB70ai7hHI+7OnbunIVQCbhdQigqtdZmXxHjE99VzIeG29h0L6vkMOFtAUww7OTM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=GpcPkE8h; arc=fail smtp.client-ip=40.93.194.27
+	 Content-Disposition:In-Reply-To:MIME-Version; b=MxbcrY1UyyVu1TzR2aQjGNp63G5QpmlU7p2dqw2JX6xxWEk8KzxSJ9T4TJxOHHWkWoWR+jWs4mT3RIUMhCLq/NTHhFWqZ4ke/Z0hedyW3kp8lv9KrSObpC0ch0faN7McdQA91ICySD4O2C00Cgkc4Z3dF/3VsTxuMCHjUZ1Q7GU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=h8ZWnwa1; arc=fail smtp.client-ip=52.101.61.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="GpcPkE8h"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="h8ZWnwa1"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=r5spRFw5bsaYifoWg5RL5eacnZN3wJjCNU/Qz+9Ia+ksJIEbSCMKl6oWQmVA22QzCO+JsXKSHLGvbsLLeqMUQvndxws8NDb8VcDl00fRZo0l2qKOorZkHKJ1Kg5b0bw8N8wcFEvzqGVyOFxg/VdXgTBzuKMdW5+abOctQr1bhSGe1MfO2lUax703aCKW3UfoD1lOWxKVcPfBY6PPyrNP8SuXCgxBEtmxUowBNq8cc7SYG7SBYth4qoewvCq2ggICX0FUyWHJclA165r/+miK5Us0jhWybRh9SlzM8XHT7KleKjECs2YiaTFd6hhgl8PHm5dJI/Smh1oTJR6J8H7hpA==
+ b=WNeLTMPzRnlxALKbHZuzfMMH+PMeTwvgH8bwrleKg1AX45m3/6UqsCRm+6kdk3iFx1C4KVpUltkHRzhtAkjK6sW8Wm07p9CtK8BgWsqYguqdXQbmihRhYVzpMMErv4IVsKkc8TsBBwoV1veV+MiCkZOXgyz/yqppIAuhqdnkO58cGKgLvHpaB8OFo0VyAjBO+vF/Ie6rrfYqbQoZezP3nYsY/AaiHorXai+p1zg01AHsCdBMleyKgwXQNslxhd5Puanr5n2Ex2yJn1HX9xBg97pqAe2+iqi9gQ83Cehy2DpH9OovtbqE0xCO8hCWNOzaEQwFGkcMnlQbccM79KsTPQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ujXx1pnEImhNsPDF+usWrvf05LfyxWZk/iaSIE0RMH0=;
- b=djiOL/SlFhus4QvTkFZEkI6KERq8jxfADQEma+l/0ppdL+VWa+bEv5oKMmEiJSHsjD9lFanUOOzcgKUVW79xA96fyAjlB5cTTjHaMJ0R6DJylA3Kc1mEScxugBDnmlTXRxV3QaDz2ooLnSHjZk6xyI10ufUEZycsfv1dRroEBDXJWqI9PvLQ3uWVtnVsDmti9s1It9FR4Tve1N3Xv9W1uFCutpC1X5sLuALdde2f3yGhykKaqR5J3SiKJbVIN2gxldrgoOFpkPcTmTsYDZpvTMK56l895Sp9fi5x1X9R+DCPqPPzWp7Jh3ydy34PYcP4JTaON8Y0gbHcLoqcJZGWZw==
+ bh=e5EtwlLMd5qtjMJofyhrzw+5uIo101dGhGT4OGgzqZw=;
+ b=CMkEFqADK2fu8oGMv0Q92LLlyTz5D3m0Wl8hn80p1zXB47IRG1tC26+9n1zS7Uz7TSCQNvk8HcqSsho5VNfdezSHadfgKygNijwm11z7PnuVNTr+75O6r5zorLSgUieszeozYn0s0BjkT2Mn1oybJaGMF4813idjyAQ6RbT9hiIF3qJNQ7+X15y6ssMbmDTTdNEkkXEj+Xy8fSQ3vWvN/sKfYJBAajWwQHhd+anA83LI2mlDvSVG2YUM7uY9GPNzIWeXG/vFtPECQnotYSCw93tR65s0ZgnXXqfc/2SLBBXYpzxSENeb+ec1MoTPBD0h4v6RdxMAJ3osBlz2jjseHw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ujXx1pnEImhNsPDF+usWrvf05LfyxWZk/iaSIE0RMH0=;
- b=GpcPkE8hC3DPaEtrkQ7KJvw+tnxBnTr4nMvk9EkWGhBKyz25GPbCridncSYUbH/jwGQLMyhfu9Q6pHHeyt+VnPd1j4GvWQRAD26Im+Ix3bSlSAVptjLCU7+kgvRIzyLgFBzFAUWL+nwek+zDs9dO01vYLuPqNeiy3POUus4GI+cryYniOm0D30MTcl5EkqrTy9ijer+IhEUyDaDHReqR0FXKt5v9KCXTy9fsDuxQknT7Mt9UCemoADh2hdKMnOuLzhL6yijn36/BcJOIbRXooHaeSpZEwiAZKS/nxyGlrKfbwOP1v9w5DD56qngN0vnZNpBKHOKIc3VtjUuFcmqn+A==
+ bh=e5EtwlLMd5qtjMJofyhrzw+5uIo101dGhGT4OGgzqZw=;
+ b=h8ZWnwa1poD7vqj1034z7BNxw5SMg/DzbgzR6DIbBJrJoN3dXHh53+Jo0a6MUdAFo5ekCrUC0Kb09S8iFlKkW+vtXHZHKP2MkgLHBQpD3RAN+gP4rwrYMcJGTbTdfJhhdiuUHcuacG5ypy4pzYayvuPsN0Bpuf+ag1vXQ7HX79a7w87NSAN5FKsDtSbHX9w1TYKhAwb3hFMQwZ0D5NpqfYvfM8zFWpe3Yt6ekAwcJicrZf1sAFAG8duX6tADxQx7L/XBEW9u21KDXA+UzJStrVqiuhNjoi5aByktouAE55wdieOFRazvRpo/wgqh4lJSBRFlc9Ft51iH9Bg+Xt6CQw==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
- by DS0PR12MB6582.namprd12.prod.outlook.com (2603:10b6:8:d2::14) with
+ by MN2PR12MB4472.namprd12.prod.outlook.com (2603:10b6:208:267::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.20; Tue, 24 Mar
- 2026 12:36:52 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.15; Tue, 24 Mar
+ 2026 12:38:36 +0000
 Received: from LV8PR12MB9620.namprd12.prod.outlook.com
  ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
  ([fe80::299d:f5e0:3550:1528%5]) with mapi id 15.20.9745.019; Tue, 24 Mar 2026
- 12:36:52 +0000
-Date: Tue, 24 Mar 2026 09:36:49 -0300
+ 12:38:36 +0000
+Date: Tue, 24 Mar 2026 09:38:35 -0300
 From: Jason Gunthorpe <jgg@nvidia.com>
 To: Dan Williams <dan.j.williams@intel.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, linux-coco@lists.linux.dev,
-	linux-pci@vger.kernel.org, aik@amd.com, aneesh.kumar@kernel.org,
-	yilun.xu@linux.intel.com, bhelgaas@google.com, alistair23@gmail.com,
-	lukas@wunner.de, Christoph Hellwig <hch@lst.de>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Roman Kisel <romank@linux.microsoft.com>,
-	Samuel Ortiz <sameo@rivosinc.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>
-Subject: Re: [PATCH v2 03/19] device core: Introduce confidential device
- acceptance
-Message-ID: <20260324123649.GY7340@nvidia.com>
+Cc: Xu Yilun <yilun.xu@linux.intel.com>,
+	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
+	linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, aik@amd.com, bhelgaas@google.com,
+	alistair23@gmail.com, lukas@wunner.de,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2 09/19] PCI/TSM: Support creating encrypted MMIO
+ descriptors via TDISP Report
+Message-ID: <20260324123835.GZ7340@nvidia.com>
 References: <20260303000207.1836586-1-dan.j.williams@intel.com>
- <20260303000207.1836586-4-dan.j.williams@intel.com>
- <2026031230-mastiff-create-7593@gregkh>
- <69b38e7427a61_b2b610073@dwillia2-mobl4.notmuch>
- <20260313133235.GC1586734@nvidia.com>
- <69b46bd7935d9_b2b6100b7@dwillia2-mobl4.notmuch>
- <20260313202421.GG1586734@nvidia.com>
- <69b4baab2b950_b2b610013@dwillia2-mobl4.notmuch>
- <20260323181413.GP7340@nvidia.com>
- <69c1f469f2814_51621100bc@dwillia2-mobl4.notmuch>
+ <20260303000207.1836586-10-dan.j.williams@intel.com>
+ <yq5a4imuanoa.fsf@kernel.org>
+ <abPlt8oNUOqGvbA3@yilunxu-OptiPlex-7050>
+ <20260313133658.GD1586734@nvidia.com>
+ <abji3A72ogqdRiGc@yilunxu-OptiPlex-7050>
+ <69c2046287d35_7ee3100ed@dwillia2-mobl4.notmuch>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <69c1f469f2814_51621100bc@dwillia2-mobl4.notmuch>
-X-ClientProxiedBy: BN0PR07CA0003.namprd07.prod.outlook.com
- (2603:10b6:408:141::15) To LV8PR12MB9620.namprd12.prod.outlook.com
+In-Reply-To: <69c2046287d35_7ee3100ed@dwillia2-mobl4.notmuch>
+X-ClientProxiedBy: BL0PR0102CA0058.prod.exchangelabs.com
+ (2603:10b6:208:25::35) To LV8PR12MB9620.namprd12.prod.outlook.com
  (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -81,258 +74,77 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|DS0PR12MB6582:EE_
-X-MS-Office365-Filtering-Correlation-Id: ca647b00-9a30-4469-ad87-08de89a206ae
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|MN2PR12MB4472:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6ed05a4e-d389-47dc-1718-08de89a24481
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|366016|376014|1800799024|18002099003|56012099003|22082099003;
+	BCL:0;ARA:13230040|366016|1800799024|7416014|376014|22082099003|18002099003|56012099003;
 X-Microsoft-Antispam-Message-Info:
-	cyO9SJhoNscPEjSrsVGCsg3Q1eAb8ks6tmjppYspF1h9nK00Fmbg9q32ASMKSvL/vQKukcxLK6JDyvFoUQEV5dWZzQ8dO5uKqUZEoR3Ay/Nf4O9OLmT+nZScZiA6cA16LvEBg3vWYCglQhkEynwAeLgu/4hUPLEsxJsTPaX+9ljZG6zbjQ7E4WxxPzURdl0i1j5zyVHZsqB6zXQ09bOsrGBlcbud2dXeY7GklhaHN9S65joCWXpvjR6psQaDEylB8he00IFGPxOREvIeYQ2J/g5g7vIaYdvvJWyLBlPazl5G+pK6ijnsHbZwLxPUS1GSku7MPKna7kx3digILacpIhPuqdyJtnR3fLKbn2txLJ/j9LFwnCVrYSiXnh3K2N5uuY+tqb9JVtHou+sQGxnVwA1e5gbPja/cK/gblLJ6y3tXVAiypKcHfBWHX2xLbgTdi6nULiVkkYyy+s8wDOQdgqHqJNTwcWEVo0kyp45izB8Iz8aiaD+WJZhJmc+/mf6GAD5K6KV5xj4aeDc5GUPwqviBuBldzbcawg+/vM8hlH8D9V61zQAKj+HIkGJry9BU+T+faRnVYAyBYR77CsGP0apHwh8/rSMjUG5pG1nRQscNSc/JAXCtYZLQKI6z9U+jAmMuqMCAN9YpgOdlke65MDXw/bizO+khHhwzNZxF5WNxvJOyyuOzYUORMHg9PT85UVRvvZB/7xOh+NS65SvgniZ51bF9ag2ENNJUjssoFyU=
+	eDYv61mSu7Etgu/ZGsjL+27OnNEw1MotsWjoVSeRkMaOE/h4RkNDq9FyaeRSku825fY1LaDbA7+j6xJyKPQN5ik8s3xhhL+A2ZtHgRryYGTNnJAbbpu/PP1NzqvDzgGSKhynpmaJp9oBlotmPuLG2uzvNpsomG0DLFBfpRPj7IsPfTM8yfOSH9PmrkB29TXZiQpexTwGB5TDGbdtELSD7XfmYqUfj+H3iHz5dvevNiXYkSTXtje1XLLca56T8y7VE1KXwVmS/TtrzTDJN0iV1cPOOHsN6D1/JvK0vjPlY6YA05spnDgCR02E3h+d2RIWrBgyAFEjiT1+UM8+Hd/tNPOX04tzNce4vVmpluwcyp7Q60LUmZZpuW0S8Gvy2g8kidZ9P+fiG19WGw+QNrLajlgHWk0VEZwPcft+FDuEUqEfvDW79H+cOt3fj2gIRhL9IQ2XTuywLO5hxM/a5CH3+uSpon7Eb+k1n8lDGmXab8kH1igJ0b0Jhh/TVvGpklZwM+CRtzGqah9hrWTMyFxuN1lC6HRRavDyYuuYl8z9Y1vRv2psHgr2wNHw/DnCwAyJYI2y6w52Bo78QqNiu4NRE/0rNS6jg8zque0ekHISKehqL+EX1r1IEar25p/XwTJEKNEN+tZy1YMfaQKPKqj7322jYMb52u7LhfA3fCoVz5utjS+boGiE6ybv/k59xUnrm3uVXpF38IYBCchzQpKrTzzw5orrVFLLlMWTd7wLPwI=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(366016)(376014)(1800799024)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?0bIXe8XM+51RdjdFrbbmS4R2eCgcWDw/D4CX4He1bWYD2qVLoc5qgoW7NbkM?=
- =?us-ascii?Q?cK45XN3CUUkHVILQOd0kQay44e/aIQFiQVbuhUVX7pA4B1/p5HzBEwE7Jsj7?=
- =?us-ascii?Q?b5c5UzpL8Nu1jzplbzxw8X1akrx9BuOoNp+UgGNSbigTk4DiybwvZN4J+NOw?=
- =?us-ascii?Q?F344O5kj8aBUMA3jkaL2HhG3rXkMNaO8gehJ5Hs08JfSqMKoAvQ7fm4LFYzm?=
- =?us-ascii?Q?M9s8nJ9lAN/aWxDBqjvDYa0PCGRiuo3u8NXQaw/qi1YDuLvwoF1CPyWFYWe2?=
- =?us-ascii?Q?IU5m9aQUFqq5CQLfawraK+hed+2aeCH/Fbb6dH0CnMXXMYc0X3JkHQUlB5dT?=
- =?us-ascii?Q?CLPixdWeSconVPJFUfi7zjMNgSkjnFBrJvA6ya5LKVAZ+0Z0tBZrMJkd2CEn?=
- =?us-ascii?Q?6NnSIZaaPE1IuXcpqhC+aXZ3ztUZit0lS1ZAlZQXsoIbtYRVcoEJTodmZvNO?=
- =?us-ascii?Q?Z9E2hH+TTpzQb+KsNFXNLsJJVo22FamWd6k4BlRE4OELpJJOQLwbrJNG/UYm?=
- =?us-ascii?Q?+5nLfbLtLBPD1wRgukTgt4NxGUjK8FneujTUsGnej7AahSKd+eWKqVR88oWV?=
- =?us-ascii?Q?AFhSHSIMlCYSvUlG0RmLMoxM8TKBxQcyrlecdphGxDOPvTfL2E1kD4yiVz+F?=
- =?us-ascii?Q?uTH3cPCeLa7y7FyNEsjueGnp8HNns7NPNEYoKNCCWPrvZoQe1IakPjzOgQ3y?=
- =?us-ascii?Q?3ZrKgFxj67rrKYGHlqvU8LKPP8Y55aReSXs49n/X3SlWSPjzg9W2vu8MO5rw?=
- =?us-ascii?Q?MCQDGuO8Fed3Qm+P2eZAR+ML8HTBoznK1HmMuzENiAnR//yiH9XviDyWUfO+?=
- =?us-ascii?Q?s0oUyRvAxBzaVufeN8T+K+e8hQMUkCOaJLkQb67cWWPLTxPMrqGBbmzIsfis?=
- =?us-ascii?Q?FhcfTmqvds+cT4e7ZIcWWiOLNWTcmtmZYAeSGGW5/jh6b9jk/O3OLz7b/7rZ?=
- =?us-ascii?Q?4S1mlz06rAN0/nT8Lm8PsVPgqdmWZEL6luK65+MvBuarBRmSdI7UNt7hKbHC?=
- =?us-ascii?Q?oewnPAlK+vyeOHPDTtEpxYKD02RrVf+UsXmCfiU9/gYVd4eSWEJbo9jYtVaY?=
- =?us-ascii?Q?u7PhVSGbyaPvn8hvoYjts2opXtQsHXCZQi7LlWzpwNo60T6naV59whR0K0Vc?=
- =?us-ascii?Q?ajovsagJxNZivAtUGARuBB8i/IH0ADFwNrTsxXWETGFt6c6lXYhmHIXWIcYS?=
- =?us-ascii?Q?jR3VznuUwktpYrW2e94haJUmO4S+uvdyDnWYQzgC4wFzs9GA5JWVR/nCBJg7?=
- =?us-ascii?Q?aDXFZit18/femACGAETpY55Ag8lmKjR5CwBhNgR4tOnqLmepV696SGxdRtyV?=
- =?us-ascii?Q?900Awdzo1mR0QrdBlyOzF1NMIoTH7h2CoqwWuGZoouGQTwy6cojZ/XBGDXSO?=
- =?us-ascii?Q?CVf0GilQCJq9kEE9bwJXLr6PWJ7FVlEIqgDtockiLD/L5uG2EDZ3oenqQQYw?=
- =?us-ascii?Q?mlWwTuaHGGz+PzewGyR6BCqe8N4XuXh6pYe48dqYQBmW1YVH6WKOWW+3CmPa?=
- =?us-ascii?Q?bISqzXxsxK6X8ZBKv9dSAYP1Yv06DmBOQ/NbgDLz9F9Vxpe2OFw6TK+evL7q?=
- =?us-ascii?Q?cZOF78jykF4EFe/MTkQ77vVrhKA9smlVPrDsZSwU5oiw2ixsALVGsYzRp+TI?=
- =?us-ascii?Q?ildqeiYAKj73Q91X6T9HdWKTpGym9qtaXZsi4Hp9Ltv3flIv2NlvkDGL1c8N?=
- =?us-ascii?Q?AIfLmUlSL/2aDYxwQlCa+rU5OeSmgs7pbVjZvREAeQ43b+o9?=
+	=?us-ascii?Q?CZ0jh5ImO7hTLKf5ODlbfIo5cUfNt0N7jVxrVCpCbZik9YwQKNvbE4qCfxK0?=
+ =?us-ascii?Q?7KXb8JVQ5YisA8vFec3m+AKEhJFvwEiiEtz1Io4/4jE0yoOvnxtRa6pQ7CEK?=
+ =?us-ascii?Q?KbOneDnOZNgtOsl8ENggQQ4XX3yK0vvydWdo2phykxvkE8D6hF8ivbcJR0gU?=
+ =?us-ascii?Q?S6ICcaJjyJ7w2uGz1us9Jx7bF8Oo6l4NKkOVfhzS6lGvvvitnKSkc65ejD4g?=
+ =?us-ascii?Q?U/fsRck4o44BIP1wvADF6d/YdDIwhhKWgTAkFQmfxn3sD6rena1mbMSGvX6+?=
+ =?us-ascii?Q?Vojw7j+aRk6cyb7mqqyvOfkT91A+Z9P5PuvGwsTf0vElq+OnppUJ2nM47ZfM?=
+ =?us-ascii?Q?telMhOyvUyC1B8//YQ6h+ylDUutcXh5mKvG/L0c0cpmW8f5bLM0waYAYf6xn?=
+ =?us-ascii?Q?4UC8yzekt5o/qY4ejq1YvyILdC8mynMNkDVLd6kBYloMt31vGM4yPWCr6Sbz?=
+ =?us-ascii?Q?kG/st5OozTDQSRrplk3ZSr3ICRs/otfJYhHoCCqZSZWm8lHVFgZtNd0jSijW?=
+ =?us-ascii?Q?2xlv9E2sfx2r4PQtizJON69sD4aQ2zCJbjKx2W7LOEZ3mejarmNREfbpV/M1?=
+ =?us-ascii?Q?kLDMBDdmPa/KC9O9o2YHglqhLH3BBfh1ePIoSRbP0Q0JGUTqjgW1iau4j/F6?=
+ =?us-ascii?Q?wjVYewF0wCpI6LrD3T65l7es+1gzgcEl2dMrGQp/sn3IKuhtrS4LkTY/CrLt?=
+ =?us-ascii?Q?eR8ok/3ckK6a2wcOprauY+ovE6ueE/sRfs3/8HgvJg7glSNG70AOgBkPmuuz?=
+ =?us-ascii?Q?ESZVFP5z2iSAHRYZj5e9P4wpjg/EboZLdTxRZX1DqZnof3h2Q9AkI/2dPXCJ?=
+ =?us-ascii?Q?hRsdynXzewT6jsqDkqCDHYNnwu7EvE4Wjbfc4GP5XxgcLXQYnPnq07OGeVFv?=
+ =?us-ascii?Q?pOrJSiDGTcgfZee8mazrfH1FBJL7L82pMvtQBN5nTpj9FbzU09lcWBj+dT7G?=
+ =?us-ascii?Q?yGeZZ3Z+yUEGYYJvgin/K9WHBCCfcxEBUSPGm8voDFGjLqN1Ljn1nKYDUheq?=
+ =?us-ascii?Q?fPQKmUnOLCwGwztKiNYl0PNJPFRcFn25AY+4t1L6PEKFXn18Zt0BxTKDSn5/?=
+ =?us-ascii?Q?UgyMx1PoQBTCtNkQXvHjfwjNI7Fu7gVRsBlY3ySIpl2Bzbgm/XAIyxkyTz/Z?=
+ =?us-ascii?Q?foq427gC2Q8GfaQyoJKjI6l/h1IWAuwJhpFTclINhqSISJZNQu5tOjJ9iSYk?=
+ =?us-ascii?Q?MsZxaOUu1n0AgAtPK86ftFRlAykCM/2K6PC485Tjq+wiCSsvooHVoe6rO/OW?=
+ =?us-ascii?Q?4gOcxKn8ij0a1z+qq9Ac7rJ8393l9Mq66AaKLhI97sRl9GjfNzaoVomom/ED?=
+ =?us-ascii?Q?vu7I0Iv0NP0qWhaKZTxdOLQW0Brpj9ahSC2wPLzIglglIhjsNPx/JHKlxLip?=
+ =?us-ascii?Q?FXf+8gdgTH4FMt10aSDMagqkEN96/IPkpe5b/aNQ9YWyecv2G6bJwk6uvWYS?=
+ =?us-ascii?Q?8RtjbO9qCkooGgmuDqcE87Zz5WovCxqP1N6xU5I+mcKyYWdtej0qzXsrN6lz?=
+ =?us-ascii?Q?18CqcZV684E+WZZETH87lZEEeMF0yAKFZAXLWci8DVIH/b+Id++jO8JcQrRv?=
+ =?us-ascii?Q?wdcfD04x2EgGPHfOkztj4jVK9ZkIWbwaX9eFx7zZYkPOugpmR4rSzc9/NYkv?=
+ =?us-ascii?Q?4InkTJy/t2Rb+PGflviGosEsb4Chi84O4mqN96q38XCUJ3wPfvdGGMAF+BoO?=
+ =?us-ascii?Q?uMMnbL1V6rzl6GKZIvrVP4TJ/ywAJFoeg2ffLrWvR3jL3DaK?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ca647b00-9a30-4469-ad87-08de89a206ae
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6ed05a4e-d389-47dc-1718-08de89a24481
 X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Mar 2026 12:36:52.5701
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Mar 2026 12:38:36.1986
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ru96RnMEYHOfQXShhCASe+wFEOKtNF/XrdVE4G1UWIRxbBos+qsA3syP34/zTQQw
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6582
+X-MS-Exchange-CrossTenant-UserPrincipalName: whaYnZfHarruXbW6w6eW+WmjamvGkRPzHFzaQnnEiJJjZPU2kxSNrW2HiLu6Ojwc
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4472
 
-On Mon, Mar 23, 2026 at 07:18:17PM -0700, Dan Williams wrote:
-> Jason Gunthorpe wrote:
-> > On Fri, Mar 13, 2026 at 06:32:27PM -0700, Dan Williams wrote:
-> > 
-> > > The problem is that for all the buses that do not currently have a
-> > > "device authorization" concept only userspace can decide that a device
-> > > should skip bind by default. For that, I propose module autoprobe policy
-> > > [1]. Not yet convinced the kernel needs its own per-device "no bind"
-> > > policy.
-> > 
-> > I think it is just part of the broader definition of the level that
-> > extends into the iommu and so on. It makes sense to have this kind of
-> > no-binding security level, IMHO.
+On Mon, Mar 23, 2026 at 08:26:26PM -0700, Dan Williams wrote:
+> Xu Yilun wrote:
+> [..] 
+> > And I've no idea why unlocked MSIX/PBA must be hidden? How about other
+> > non-TEE ranges, must be hidden or mustn't? Is there a possibility we
+> > enforce DSM to present all ranges, then the layout is clear to OS?
 > 
-> Easy to include for completeness.
-> 
-> In a CC VM userspace can set "$module autoprobe=0" to get a control
-> point to set @trust to zero, but @trust otherwise defaults to 1. This
-> allows for userspace policy to generically distrust devices, but without
-> needing to build a new mechanism to specify which devices start life at
-> trust == 0 (i.e.  "device filter" proposal previously NAK'd).
+> Just to close this question, this was discussed at the last device
+> security call. Indeed the expectation is that Linux will assume that all
+> ranges besides MSIX/PBA must be present in the report, and that offset
+> is always aligned. If / when an implementation violates that expectation
+> they can help write the Linux quirk for that case or otherwise fix their
+> implementation.
 
-I feel like starting with trust=0 is much cleaner than using
-autoprobe. Especially since it would be nice that when you do
-ultimately set trust!=0 then you do want the kernel to do the normal
-autoprobe flow.
+I don't think you can quirk it.
 
-Double so because I would like the iommu drivers to respond to trust 0
-by fully blocking the device 100% of the time without holes, so to
-make that work I would like to see the struct device report trust 0
-the moment the iommu framework attaches the iommu.
-
-How you decide the starting trust value for device during system boot
-is definately something we need to discuss properly..
-
-I liked your idea of using built in driver match, so if there is a
-simple command line paramater that says 'only built in is trusted'
-then we'd default all devices to untrusted and during device probe
-check if any built in driver is matching and auto-set trust to X based
-on the commandline parameter.
-
-With the idea that only devices required to get to the initrd are
-built in. Then the initrd userspace has the policy to bring more
-devices into trusted!=0 to get to the root file system, then the
-rootfs has more policy for further devices, and so on.
-
-Probably this would ultimately escalate into annotations in the
-modinfo about default policies for various drivers.
-
-A kernel default policy of trusting everything without a "trust ops"
-(see below) may also be quite reasonable, however boot ordering the
-trust ops might be really tricky...
-
-> > > > The DMA API just wants a flag in the struct device that says if the
-> > > > device can access encrypted memory or only decrypted.
-> > > 
-> > > You mean separate "trusted to access private" and "currently enabled to
-> > > access private" properties? I am trying to think of a situation where
-> > > "dev->trust >= 3" and a flag saying "disable bouncing for encrypted
-> > > memory" would ever disagree.
-> > 
-> > I'm steering the trust level toward more of an acceptance criteria.
-> > If the trust level is you have access to private memory but the device
-> > can't actually do that then fail the trust level change.
-> > 
-> > Same for the reverse, if the trust level says no private memory and the
-> > device is T=1 then fail the trust level change.
-> 
-> Ok, so the uapi for PCI/TDISP would be:
-> 
-> echo $tsm > $pdev/tsm/lock
-> <gather evidence, validate with relying party>
-> echo 3 > $pdev/trust
-> 
-> ...where that @trust attribute is a generic device semantic, but in the
-> case of PCI device connected to a given TSM it invokes the TSM hypercall
-> to transition the device to the RUN state and the TSM local call to
-> unblock DMA to private memory.
-
-Maybe, but I was thinking the transition through run/locked would be
-done through TSM uAPIs too. trust setting in the kernel just confirms
-the device is in the right state.
-
-But I haven't thought of a reason why the final switch to RUN couldn't
-happen like this either.
-
-> So, userspace can generically understand what privileges come with which
-> trust levels, but the mechanism to get those privileges remains bus
-> specific.
-
-Yes
-
-> > If we fall out of RUN then the level auto-resets back to 0 and
-> > userspace has to go around and fix it again. (ignoring driver RAS)
-> 
-> Yes, at the moment that the bus detects that an event like SPDM session
-> loss, IDE link loss, TDISP ERROR state entry has occurred it can
-> downgrade trust and notify. That notification fits well with netlink
-> because all of those events are downstream of evidence validation.
-
-Which is also why it would be nice to be consistent and rely on
-trust=0 to isolate the device in all cases, not a mixture of
-autoprobe.
-
-> The complication vs benefit tradeoff is indeed not mathing, but wanted
-> to do justice to Aneesh's proposal and the suitability of the sysfs
-> uapi.
-
-I think if you want something like this then it is better to target
-the root - remove the ability for concurrent userspace to wrongly
-operate the TSM entirely. Ie use a cdev, make it so going to LOCKED
-isolates access to only this cdev fd and require only this cdev fd to
-go to RUN. Then these kinds of bugs don't exist.
-
-> > It brings it into the whole 'measure the device and then decide what
-> > to do with it' framework. The trust level is still the generic ack
-> > that the device is allowed the participate in the system with whatever
-> > level of security.
-> 
-> Some thought experiments to confirm alignment...
-> 
-> 'Generic ack' is a synchronous mechanism for the bus to evaluate. So if
-> @trust appears for any device, and by consequence alongside @authorized
-> for a thunderbolt device, it should be the case that these operations
-> are equivalent:
-> 
-> # echo 1 > $dev/trust
-> # echo 1 > $dev/authorized
-> 
-> ...and the result is cross-reflected for comptability:
-> 
-> # echo 1 > $dev/trust
-> # cat $dev/authorized
-> 1
-> 
-> Consequently this:
-> 
-> # echo 2 > $dev/trust
-> 
-> ...would be equivalent to authorizing the device and unblocking ATS (if
-> such a thing existed).
-
-Yes, I don't know anything about thunderbolt, but this seems
-reasonable. You could also do as you suggested for TDISP that trust!=0
-auto-authorizes.
-
-Basically the 'trust' generic framework sits on top of some "trust
-ops" that will be provided by the security module that is affiliated
-with the struct device (ie thunderbolt, TSM TDISP, TSM Link IDE, etc,
-etc)
-
-Then it becomes a general synchronization point where on one side the
-"tust ops" can ack that the level is acceptable and consistent with
-the system when on the other side generic compoments like IOMMU,
-driver binding, etc can respond to it and change their behavior.
-
-> For bare metal PCI device security the TSM 'connection' needs to be
-> established in order to enable device evidence collection.
-> 
-> echo $tsm > $pdev/tsm/connect
-> <validate device evidence>
-> echo 2 > $pdev/trust
->
-> Now, I question whether 5 trust levels instead of 4. This would be to
-> explicitly only trust devices where the TSM has established physical
-> link encryption, or the TSM has asserted that the link is protected by
-> other means. So the trust levels are:
-
-I probably wouldn't use an int for the uAPI, but yes picking the
-initial levels is important. As above since this is a clearing point
-between two different worlds it needs to be defined in some way both
-sides can understand what it means for them.
-
-> 0 disconnected: bus does not attach drivers
-> 1 limited: core code deploys hostile device mitigations like disable
->            ATS, CC force shared memory bouncing.
-> 2 DMA: full DMA access, driver responsible for protecting against
->        adverarial devices.
-> 3 Link: mitigations against physical integrity and snooping attacks
->         deployed
-> 4 TCB: full device interface validation via a protocol like TDISP,
->        CC private memory access granted.
-
-This seems reasonable to me, the 3/4 distinction is not meaningful for
-the iommu&dev side, but it does provide a good check point for the
-"trust ops". If userspace ack's that it expects physical security and
-the kernel says it isn't physically secure (or becomes insecure later)
-then it should fail.
-
-> Where the native Rust library based SPDM driver only offers trust level
-> 2, bare metal TSMs can support trust level 3, and the TSM interfaces in
-> CC VMs can support trust level 4.
-
-I'm not sure that the SPDM driver even provides a "trust ops" right? I
-would guess that 0/1/2 are simply built in always available if trust ops are
-NULL and 3/4 require positive reply from the ops to accept it.
-
-So #3 needs a "trust ops" linked to enabling link IDE.. If this is
-done in-kernel the link IDE module is providing the trust ops and just
-using SPDM as a library to establish the link IDE keys?
+Implementations can always follow this requirement by setting the
+offset to 0. If they cannot compute a proper aligned offset then this
+is what they must do.
 
 Jason
