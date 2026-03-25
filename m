@@ -1,384 +1,193 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2DA3359A7E;
-	Wed, 25 Mar 2026 18:06:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774462007; cv=none; b=Q9/i+UVhtTDpxQp+aO8W5cNOby0exVu03NWtQhy0YQ34e99HLZbOdfI6tIdHUqGT6QVYvTM3g7odig4I6zM6sb0MNA+pT/N18nVT3F8j/g/qeKpJHpKrr79xYOFbuWnIE8AVJjPZ4ea46AquMUwbrBcAZABjMpjwtATWWYIC26E=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774462007; c=relaxed/simple;
-	bh=ZhsPfNLw+3rVrbtw+RyN3TZVqWmEdB0zpgHlSaDJDMQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ombsVmkHaJMHBI2lvfC/eGLV0Rd7uE618iAivUAmSHZ9j8UV5DA6DtjHkyGeAhtX4Uw3oahsTSG9ZaHKpOh+sg89gtQ6eiSksKj2U0rXnNPQQ/WzugX0C5A81yjejBL1ygxh9AEYBZZSSv5X4ylZ0WsvcwAVrDvtxr9kl65WaZQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=GpPEvqG5; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E09C5316902
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2026 18:25:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.52
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774463112; cv=pass; b=tm/31A1ZEJ73cWycZ6KOOYViJgGip4XUeHHJKkczpOY5oBRtWwy4xiybyztxwQsVdB+kv0KSR1e5EKYfIp8wQteFTqLmcK78r24bk5SjTX9YtSR6ILkfSPvIO0jM68pO7RnfSxVTEaCK49u07nsf+CnO8W3MuTMdQb6clDeTCHM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774463112; c=relaxed/simple;
+	bh=octYghLj3lL8jmmagJjWza5YBb4cgg47jWgO1cXXGP0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=HeAjpnp9+JlmM7MXtcFX+1vt0BUp1w83yTEHUw97Rt9cjSOcmYdrZsjBE5AEIm/U5UZGfs7n3MGfZ5ercSxDH16Bb0/RXu4SnQzveNXAsqSNLA/Ks+ldVcCeQ0tKOx9oTFacE1JbwnWZw9Q6BxdV8yMICyLHCjXZkBgbRvxiAtU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=s4QFoPDN; arc=pass smtp.client-ip=209.85.208.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="GpPEvqG5"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62PE6oLv1391689;
-	Wed, 25 Mar 2026 18:06:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=fdEQp8
-	katShdKrsH1pY2hORdVs1P+QQoNUm2z6HDVXg=; b=GpPEvqG5EY3Wuk/lAOBjwP
-	Y/3wb4KApdQDiq2CIi6zqnxNkEFeVY727GOmxyWvyLeGoLZ/GyPKvk5NxprxYNIj
-	K9mpP8yguiCyEgBjBPbBpxa/zYLmQyOfFaRXBHpvLv8OiNPFAUk+rs+xbMmFXSOv
-	4GDGJ4gahbaKlC6lqi+Ddo6KfD9XaHuhjPsKJG8A/XJ8zxHK/4n64flZcZCRYkRJ
-	YYzP02z8O6iFme+ybuoixYKOMMTt9ZkpGkU9E8HdDIWg1LNtPTeISl0NaKm/bL6b
-	lZJVUgEO1RzaQTi4YCamE/L8vLL1FxJmo7yiBw8lqQ5WjrxlgDRidGT+ddjkBR+Q
-	==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4d1kwa1t12-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 25 Mar 2026 18:06:39 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62PFuQ9U026864;
-	Wed, 25 Mar 2026 18:06:38 GMT
-Received: from smtprelay06.wdc07v.mail.ibm.com ([172.16.1.73])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4d275kyks7-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 25 Mar 2026 18:06:38 +0000
-Received: from smtpav02.wdc07v.mail.ibm.com (smtpav02.wdc07v.mail.ibm.com [10.39.53.229])
-	by smtprelay06.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62PI6aMp25756362
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 25 Mar 2026 18:06:36 GMT
-Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id D0B565805B;
-	Wed, 25 Mar 2026 18:06:36 +0000 (GMT)
-Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id ADF0458058;
-	Wed, 25 Mar 2026 18:06:35 +0000 (GMT)
-Received: from [9.61.243.197] (unknown [9.61.243.197])
-	by smtpav02.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Wed, 25 Mar 2026 18:06:35 +0000 (GMT)
-Message-ID: <14b68366-9942-4487-8388-1120d243f6f2@linux.ibm.com>
-Date: Wed, 25 Mar 2026 11:06:35 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="s4QFoPDN"
+Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-66a33f61d80so203173a12.0
+        for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2026 11:25:10 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1774463109; cv=none;
+        d=google.com; s=arc-20240605;
+        b=aPLfil3MkP1NtB89UsNzYY+D9feVOYE4zZuLWLu6nlcs133flGP9DtvK4QRT0hIOmT
+         4xoDbm4dNFN0X5mjnFzrlBBYdyebK4/GxHED/vs2IiyaXdVoK1RtO51VmjruWadfVbyN
+         pufWp+Egn2X0MWavfmqWYpQ0+uB7y6weXUX/35BpqhTzAbHOoUMn85oBHmI38hExY9h0
+         vDGqoN9umf1uaLadRQQ3OBYCRbHguK8ZE7mHVNNpq7cXS7E52IoGwzM8wlRmJ3GRFfmZ
+         NLWTNCZMWW1TpYMxO1G/5tDgT+C6is01Jf9qB6//U/hmts+WX1MpRp+s1b1JWhkUtbex
+         TtsA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=+vWMfDOSQfWlw8ZoOH44pVZOnW6Fijg7msvIoLlglLw=;
+        fh=SDA+7AKovG5A9ttWcWtxcnEwR/I/7aCiOikjxVyArGA=;
+        b=j0h+NvrrgCKRpm634L3s1LQt13CpsC1IQr5SCHLRpHHuTT9zyzRB4VXE1fhHNJt/S6
+         6qfKytw/olO6s2oWjz3Kthum6gNygZlLUnibZ5/XhT+3gd86OyMSqUQOaroUUH6ECIYT
+         dpTh4Ckgwzoz412uGzssX1yGNwk3txvbDWBe31CSzeMnY3/Q1M8gC2nMsarkbbnmdNYP
+         rpOhMf6OK9rLYNp1TahXibv/kdeuoIW0vD4B35IGR4fU/2QXf1Wr0P6XdlcTENxjwZj/
+         DK8TIedVN6hQVS/HfTFRNNe14rLpldahlYjV4Egv78pSkrk+Of99CL3bbwtz1vIh3Sed
+         tx/Q==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774463109; x=1775067909; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=+vWMfDOSQfWlw8ZoOH44pVZOnW6Fijg7msvIoLlglLw=;
+        b=s4QFoPDNg3q0+s/2ZxSh4Mbot7kZkSdzixhvu3RXKCdRn6BvB3hbAUeh6H3w6YMJK/
+         ZI9QdLOlQ20cYjXNkX7tHWCIKaXEY7AoLKMu9AR9Iwl+S6RCmO7cLtVSd2lPrWiXWn2S
+         d5zg2G2Q51Vj+VVcmawrNn4Yl1TUAn1mEfTH9wKIGt0VrGiodTJvT+nS6oE4AEacw52K
+         Ij///jx6OtzUiPVWfBJQ3JIuvQOWABIzAu9/NYYmOaOrtTeyLbYF8pR48hEAR4WkbZ/2
+         3ldxLoiQZ2majG0+8JTS0jxgT8iOU21fbGL7yEfxr06MLf9l4nCVgVgOCku8or/iU8dt
+         7HaQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774463109; x=1775067909;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=+vWMfDOSQfWlw8ZoOH44pVZOnW6Fijg7msvIoLlglLw=;
+        b=Wt3sTCN3BizMLTabS82LejAv0IaR1A6vAY60DmEgALT0xhC8zCS/Sjfh2Ob/zcV71U
+         pXPwUYzaJZgAdUGmM+zXZjNl6yEg2tUW4CrD7iUknQhZbb6BxLOZ1IgOKCKSU8AZdioz
+         teBNLdwSp8VG0KweP9W29PqFWTQHtVd+TkvUScZS0oUGQ2KEMUUEol6HXwd3lxRKoNCl
+         PLd2Krm3USsrI7+7S2lVzPIrx4WRgQuK5snknfWo5yWrjyiz90YPSgKxi/rvcKcQpZzG
+         NrlzKZ2s1dPaA4/+9u9U/tI1B8fhM/fpOoZi1i0H0hMcvEyjrCOt4BUJRq9NpGxtWgUV
+         1Xfw==
+X-Forwarded-Encrypted: i=1; AJvYcCXmZCjiHOQk2bUg5iMi3JUSWWirdKoDHWCXRg3+mxWcjxDmuXlJIAEWE9bAuUrJu02kLZbsbNWotrc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwxAlcHU3PlhEA44dtjsFWBCnXulJQ7qzt1FFtli5Hltaw6uYru
+	pUY7VsvvElBcC4UDELkF4b72By2wfwivU0SvTuNCLcHdKfafjbm5lfcauvcywag4dIi2nRw511F
+	x/b1c9XUb3Z7TrRO3nv85S9wkhKfoiXw=
+X-Gm-Gg: ATEYQzzBhdKlv4Fh3gKzxMtEFTGVH6/Fe+LK2yKLJEoJVqS0m3f0sWcKwUX/8wB740N
+	XSDi8BTagSnJNxRh6rbiYbCvV/hFZFbQ/oWSqiRrB1ucv9DvHc7IhscmZdHEfkM0I4GBMFOsvFa
+	7+V63Vdx1JLqMPPsrn4+AcwMvSmAuQW/6TuwcEF2wxnUvYQqjaJGh/hBvFtiIfmtYXGpDUXN+Jt
+	ScrQe5Fpbe686CENFPxpwPr63m9aCWBh4yB7Ns68l8qNemdcugn5FWrahbURlAy8jM8/XkvbIhf
+	qge9VA==
+X-Received: by 2002:a05:6402:1d4e:b0:669:d9a4:cd4b with SMTP id
+ 4fb4d7f45d1cf-66a8262af14mr3212998a12.11.1774463108886; Wed, 25 Mar 2026
+ 11:25:08 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v11 6/9] s390/pci: Store PCI error information for
- passthrough devices
-To: Alex Williamson <alex@shazbot.org>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, helgaas@kernel.org, lukas@wunner.de,
-        kbusch@kernel.org, clg@redhat.com, stable@vger.kernel.org,
-        schnelle@linux.ibm.com, mjrosato@linux.ibm.com
-References: <20260316191544.2279-1-alifm@linux.ibm.com>
- <20260316191544.2279-7-alifm@linux.ibm.com>
- <20260325110158.6ec66502@shazbot.org>
-Content-Language: en-US
-From: Farhan Ali <alifm@linux.ibm.com>
-In-Reply-To: <20260325110158.6ec66502@shazbot.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: qc6F_qkvlk3hosx6hfs7r7lhhx6HtB1_
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzI1MDEyOSBTYWx0ZWRfX+QDyDDJGozBi
- 3gwxiE5AjWprsf8bsQOwWtm9CCrjJAqSRBszkK6BJKwXE2e+qGmVksdwkc1ADypMqfHfqswyt/M
- VzQxBelYX8xgy4VuqNhVK5Cgbj7QYNDGWbznuXzLPRfZg8/bdoTP2VX3UogkSqrrp+rLup2/37e
- JH2KweP6Ep/nXNKwd8nTLkuxVf5VgFk/kdiOEcXROx4hwe5CbXb8RKBrIDb/3mrJcTK3yifs7zs
- nvtTlgrBtEamENn7Ho93NbcB5kb1rJoIRTDtJkpJJi2ZpIcCrpCz1SC+rjJEFQJuarHtz1O43KG
- 1n004XVgOYxq6rmavU51cx+ZjzeNcayDo3HtDCBhzv09p7p5TVly2jcUKUZevEvtH9i9MJT96Z/
- v0COxiTBEvt5EYKVqEK+vjoJlwB1Q8YKekaNcbnWVsVAJMk3yHFZKyw0M1XuWCr0EcV65hOB6Tt
- 43mFajkU0aKAK/Hg7iQ==
-X-Proofpoint-GUID: qc6F_qkvlk3hosx6hfs7r7lhhx6HtB1_
-X-Authority-Analysis: v=2.4 cv=OsZCCi/t c=1 sm=1 tr=0 ts=69c4242f cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
- a=SGFtWckBUhEtGJVWfPsA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-25_05,2026-03-24_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 adultscore=0 clxscore=1015 phishscore=0 suspectscore=0
- lowpriorityscore=0 priorityscore=1501 bulkscore=0 spamscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603250129
+References: <87bc37ee-234c-4568-b72e-955c130a6838@arm.com> <f7tfshf7riljjibuqge4ubfjmludubpyh3ppdf6lasurzdzbtj@sw4xxagfhnn3>
+ <5d88fb5b-e771-4ea6-8d2c-c5cfd21e5860@arm.com> <qwanhqrpztzkudik5fmberhabnzaly7v53677dohqzj5nq4wi2@6ndpiubyxcbi>
+ <DGZXF3LPSRK6.2QYN63QTKUQAX@kernel.org> <cp5uktfqdf6zs53qsye57ior2ikmssgevxxdtevkzpisaif22h@7mrxspkuibow>
+ <DH09EDBW3X6T.2996UB1CFCAW2@kernel.org> <55c28218-1638-4b90-a9cd-a177fb5abcb6@arm.com>
+ <acNgUoWWMCi1oLU4@google.com> <DHBYL7Y262J2.263EOC2JNN4RK@kernel.org> <acP9-AfUQ7zp3kMS@google.com>
+In-Reply-To: <acP9-AfUQ7zp3kMS@google.com>
+From: Anand Moon <linux.amoon@gmail.com>
+Date: Wed, 25 Mar 2026 23:54:51 +0530
+X-Gm-Features: AQROBzC57btNYqd28tboSY034eYP0IcSkF3_Hl9bgfxidfp7h8unSgphUiRekA8
+Message-ID: <CANAwSgR7ABawrnSG6CievYT-BZ447TaFC_kqCYc+oqxkD6Uxjg@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: dw-rockchip: Enable async probe by default
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Danilo Krummrich <dakr@kernel.org>, Robin Murphy <robin.murphy@arm.com>, 
+	Manivannan Sadhasivam <mani@kernel.org>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, 
+	Niklas Cassel <cassel@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>, 
+	Hans Zhang <18255117159@163.com>, Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>, linux-pci@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, Grimmauld <grimmauld@grimmauld.de>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	driver-core@lists.linux.dev, Lukas Wunner <lukas@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+Hi Dmitry/ Robin,
 
-On 3/25/2026 10:01 AM, Alex Williamson wrote:
-> On Mon, 16 Mar 2026 12:15:41 -0700
-> Farhan Ali <alifm@linux.ibm.com> wrote:
+On Wed, 25 Mar 2026 at 20:57, Dmitry Torokhov <dmitry.torokhov@gmail.com> w=
+rote:
 >
->> For a passthrough device we need co-operation from user space to recover
->> the device. This would require to bubble up any error information to user
->> space.  Let's store this error information for passthrough devices, so it
->> can be retrieved later.
->>
->> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
->> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
->> ---
->>   arch/s390/include/asm/pci.h      | 28 ++++++++++
->>   arch/s390/pci/pci.c              |  1 +
->>   arch/s390/pci/pci_event.c        | 94 +++++++++++++++++++-------------
->>   drivers/vfio/pci/vfio_pci_zdev.c |  2 +
->>   4 files changed, 87 insertions(+), 38 deletions(-)
->>
->> diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
->> index ec8a772bf526..383f6483b656 100644
->> --- a/arch/s390/include/asm/pci.h
->> +++ b/arch/s390/include/asm/pci.h
->> @@ -118,6 +118,31 @@ struct zpci_bus {
->>   	enum pci_bus_speed	max_bus_speed;
->>   };
->>   
->> +/* Content Code Description for PCI Function Error */
->> +struct zpci_ccdf_err {
->> +	u32 reserved1;
->> +	u32 fh;                         /* function handle */
->> +	u32 fid;                        /* function id */
->> +	u32 ett         :  4;           /* expected table type */
->> +	u32 mvn         : 12;           /* MSI vector number */
->> +	u32 dmaas       :  8;           /* DMA address space */
->> +	u32 reserved2   :  6;
->> +	u32 q           :  1;           /* event qualifier */
->> +	u32 rw          :  1;           /* read/write */
->> +	u64 faddr;                      /* failing address */
->> +	u32 reserved3;
->> +	u16 reserved4;
->> +	u16 pec;                        /* PCI event code */
->> +} __packed;
->> +
->> +#define ZPCI_ERR_PENDING_MAX 4
->> +struct zpci_ccdf_pending {
->> +	u8 count;
->> +	u8 head;
->> +	u8 tail;
->> +	struct zpci_ccdf_err err[ZPCI_ERR_PENDING_MAX];
->> +};
->> +
->>   /* Private data per function */
->>   struct zpci_dev {
->>   	struct zpci_bus *zbus;
->> @@ -193,6 +218,8 @@ struct zpci_dev {
->>   	struct iommu_domain *s390_domain; /* attached IOMMU domain */
->>   	struct kvm_zdev *kzdev;
->>   	struct mutex kzdev_lock;
->> +	struct zpci_ccdf_pending pending_errs;
->> +	struct mutex pending_errs_lock;
->>   	spinlock_t dom_lock;		/* protect s390_domain change */
->>   };
->>   
->> @@ -331,6 +358,7 @@ void zpci_debug_exit_device(struct zpci_dev *);
->>   int zpci_report_error(struct pci_dev *, struct zpci_report_error_header *);
->>   int zpci_clear_error_state(struct zpci_dev *zdev);
->>   int zpci_reset_load_store_blocked(struct zpci_dev *zdev);
->> +void zpci_cleanup_pending_errors(struct zpci_dev *zdev);
->>   
->>   #ifdef CONFIG_NUMA
->>   
->> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
->> index 87077e510266..bc253cc52056 100644
->> --- a/arch/s390/pci/pci.c
->> +++ b/arch/s390/pci/pci.c
->> @@ -915,6 +915,7 @@ struct zpci_dev *zpci_create_device(u32 fid, u32 fh, enum zpci_state state)
->>   	mutex_init(&zdev->state_lock);
->>   	mutex_init(&zdev->fmb_lock);
->>   	mutex_init(&zdev->kzdev_lock);
->> +	mutex_init(&zdev->pending_errs_lock);
->>   
->>   	return zdev;
->>   
->> diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
->> index de504925f709..5b24f3a9fe23 100644
->> --- a/arch/s390/pci/pci_event.c
->> +++ b/arch/s390/pci/pci_event.c
->> @@ -17,23 +17,6 @@
->>   #include "pci_bus.h"
->>   #include "pci_report.h"
->>   
->> -/* Content Code Description for PCI Function Error */
->> -struct zpci_ccdf_err {
->> -	u32 reserved1;
->> -	u32 fh;				/* function handle */
->> -	u32 fid;			/* function id */
->> -	u32 ett		:  4;		/* expected table type */
->> -	u32 mvn		: 12;		/* MSI vector number */
->> -	u32 dmaas	:  8;		/* DMA address space */
->> -	u32		:  6;
->> -	u32 q		:  1;		/* event qualifier */
->> -	u32 rw		:  1;		/* read/write */
->> -	u64 faddr;			/* failing address */
->> -	u32 reserved3;
->> -	u16 reserved4;
->> -	u16 pec;			/* PCI event code */
->> -} __packed;
->> -
->>   /* Content Code Description for PCI Function Availability */
->>   struct zpci_ccdf_avail {
->>   	u32 reserved1;
->> @@ -75,6 +58,41 @@ static bool is_driver_supported(struct pci_driver *driver)
->>   	return true;
->>   }
->>   
->> +static void zpci_store_pci_error(struct pci_dev *pdev,
->> +				 struct zpci_ccdf_err *ccdf)
->> +{
->> +	struct zpci_dev *zdev = to_zpci(pdev);
->> +	int i;
->> +
->> +	mutex_lock(&zdev->pending_errs_lock);
->> +	if (zdev->pending_errs.count >= ZPCI_ERR_PENDING_MAX) {
->> +		pr_err("%s: Maximum number (%d) of pending error events queued",
->> +		       pci_name(pdev), ZPCI_ERR_PENDING_MAX);
->> +		mutex_unlock(&zdev->pending_errs_lock);
->> +		return;
->> +	}
->> +
->> +	i = zdev->pending_errs.tail % ZPCI_ERR_PENDING_MAX;
->> +	memcpy(&zdev->pending_errs.err[i], ccdf, sizeof(struct zpci_ccdf_err));
->> +	zdev->pending_errs.tail++;
->> +	zdev->pending_errs.count++;
->> +	mutex_unlock(&zdev->pending_errs_lock);
->> +}
->> +
->> +void zpci_cleanup_pending_errors(struct zpci_dev *zdev)
->> +{
->> +	struct pci_dev *pdev = NULL;
->> +
->> +	guard(mutex)(&zdev->pending_errs_lock);
->> +	pdev = pci_get_slot(zdev->zbus->bus, zdev->devfn);
->> +	if (zdev->pending_errs.count)
->> +		pr_info("%s: Unhandled PCI error events count=%d",
->> +			pci_name(pdev), zdev->pending_errs.count);
->> +	memset(&zdev->pending_errs, 0, sizeof(struct zpci_ccdf_pending));
->> +	pci_dev_put(pdev);
->> +}
->> +EXPORT_SYMBOL_GPL(zpci_cleanup_pending_errors);
->> +
->>   static pci_ers_result_t zpci_event_notify_error_detected(struct pci_dev *pdev,
->>   							 struct pci_driver *driver)
->>   {
->> @@ -169,7 +187,8 @@ static pci_ers_result_t zpci_event_do_reset(struct pci_dev *pdev,
->>    * and the platform determines which functions are affected for
->>    * multi-function devices.
->>    */
->> -static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
->> +static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev,
->> +							  struct zpci_ccdf_err *ccdf)
->>   {
->>   	pci_ers_result_t ers_res = PCI_ERS_RESULT_DISCONNECT;
->>   	struct zpci_dev *zdev = to_zpci(pdev);
->> @@ -188,13 +207,6 @@ static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
->>   	}
->>   	pdev->error_state = pci_channel_io_frozen;
->>   
->> -	if (needs_mediated_recovery(pdev)) {
->> -		pr_info("%s: Cannot be recovered in the host because it is a pass-through device\n",
->> -			pci_name(pdev));
->> -		status_str = "failed (pass-through)";
->> -		goto out_unlock;
->> -	}
->> -
->>   	driver = to_pci_driver(pdev->dev.driver);
->>   	if (!is_driver_supported(driver)) {
->>   		if (!driver) {
->> @@ -210,12 +222,23 @@ static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
->>   		goto out_unlock;
->>   	}
->>   
->> +	if (needs_mediated_recovery(pdev))
->> +		zpci_store_pci_error(pdev, ccdf);
->> +
->>   	ers_res = zpci_event_notify_error_detected(pdev, driver);
->>   	if (ers_result_indicates_abort(ers_res)) {
->>   		status_str = "failed (abort on detection)";
->>   		goto out_unlock;
->>   	}
->>   
->> +	if (needs_mediated_recovery(pdev)) {
->> +		pr_info("%s: Leaving recovery of pass-through device to user-space\n",
->> +			pci_name(pdev));
->> +		ers_res = PCI_ERS_RESULT_RECOVERED;
->> +		status_str = "in progress";
->> +		goto out_unlock;
->> +	}
->> +
->>   	if (ers_res != PCI_ERS_RESULT_NEED_RESET) {
->>   		ers_res = zpci_event_do_error_state_clear(pdev, driver);
->>   		if (ers_result_indicates_abort(ers_res)) {
->> @@ -260,25 +283,20 @@ static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
->>    * @pdev: PCI function for which to report
->>    * @es: PCI channel failure state to report
->>    */
->> -static void zpci_event_io_failure(struct pci_dev *pdev, pci_channel_state_t es)
->> +static void zpci_event_io_failure(struct pci_dev *pdev, pci_channel_state_t es,
->> +				  struct zpci_ccdf_err *ccdf)
->>   {
->>   	struct pci_driver *driver;
->>   
->>   	pci_dev_lock(pdev);
->>   	pdev->error_state = es;
->> -	/**
->> -	 * While vfio-pci's error_detected callback notifies user-space QEMU
->> -	 * reacts to this by freezing the guest. In an s390 environment PCI
->> -	 * errors are rarely fatal so this is overkill. Instead in the future
->> -	 * we will inject the error event and let the guest recover the device
->> -	 * itself.
->> -	 */
->> +
->>   	if (needs_mediated_recovery(pdev))
->> -		goto out;
->> +		zpci_store_pci_error(pdev, ccdf);
->>   	driver = to_pci_driver(pdev->dev.driver);
->>   	if (driver && driver->err_handler && driver->err_handler->error_detected)
->>   		driver->err_handler->error_detected(pdev, pdev->error_state);
->> -out:
->> +
->>   	pci_dev_unlock(pdev);
->>   }
->>   
->> @@ -324,12 +342,12 @@ static void __zpci_event_error(struct zpci_ccdf_err *ccdf)
->>   		break;
->>   	case 0x0040: /* Service Action or Error Recovery Failed */
->>   	case 0x003b:
->> -		zpci_event_io_failure(pdev, pci_channel_io_perm_failure);
->> +		zpci_event_io_failure(pdev, pci_channel_io_perm_failure, ccdf);
->>   		break;
->>   	default: /* PCI function left in the error state attempt to recover */
->> -		ers_res = zpci_event_attempt_error_recovery(pdev);
->> +		ers_res = zpci_event_attempt_error_recovery(pdev, ccdf);
->>   		if (ers_res != PCI_ERS_RESULT_RECOVERED)
->> -			zpci_event_io_failure(pdev, pci_channel_io_perm_failure);
->> +			zpci_event_io_failure(pdev, pci_channel_io_perm_failure, ccdf);
->>   		break;
->>   	}
->>   	pci_dev_put(pdev);
->> diff --git a/drivers/vfio/pci/vfio_pci_zdev.c b/drivers/vfio/pci/vfio_pci_zdev.c
->> index a7bc23ce8483..2be37eab9279 100644
->> --- a/drivers/vfio/pci/vfio_pci_zdev.c
->> +++ b/drivers/vfio/pci/vfio_pci_zdev.c
->> @@ -168,6 +168,8 @@ void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev)
->>   
->>   	zdev->mediated_recovery = false;
->>   
->> +	zpci_cleanup_pending_errors(zdev);
->> +
->>   	if (!vdev->vdev.kvm)
->>   		return;
->>   
-> It begins to look here like the mediated_recovery should be protected
-> by pending_errs_lock and perhaps there should be
-> zpci_{start,stop}_mediated_recovery() where we set and clear the flag
-> under mutex, while also clearing pending errors in the latter case.
-> The various needs_mediated_recovery tests could be pulled in to test
-> under mutex as well.  Thanks,
+> On Wed, Mar 25, 2026 at 04:13:03PM +0100, Danilo Krummrich wrote:
+> > On Wed Mar 25, 2026 at 5:13 AM CET, Dmitry Torokhov wrote:
+> > > That means that you are kicking the majority devices (for now) into
+> > > deferral path. I do not think this is optimal.
+> >
+> > That's not necessary, we'd only need to kick those into the deferral pa=
+th that
+> > have PROBE_FORCE_SYNCHRONOUS, no?
 >
-> Alex
+> Yes, it may limit the fallout, but as I explained in my other email
+> there seem to be a serious disconnect on what synchronous and
+> asynchronous probing mean.
+>
+> I wonder, don't we get issues with phylib in other cases? Don't we ever
+> have a module resulting in creating a phy device triggering loading
+> another module on the same thread? Won't that result in a warning also?
+>
+> Thanks.
+>
+> --
+> Dmitry
 
-Thanks Alex for taking a look at the patches. I agree having the 
-mediated_recovery flag being protected by the mutex will be a better 
-approach. Will add the interfaces you suggested.
+In comparing the Orange Pi 5 Plus and Radxa Rock 5B schematics,
+I noticed a key difference in regulator implementation for pcie2x1l2 node.
+While the Orange Pi uses a dedicated GPIO (GPIO3_B4) for ethernet_power_en,
+
+Reference: orangepi=E2=80=915=E2=80=91plus schematics
+[1] https://drive.google.com/file/d/1cVT7lSLlgtIvHh4PllijP5E4zz7pxCyh/view
+
+On the Rock 5B ties the LAN_EXT_CORE regulator directly to the VCC_3V3_S3
+PMIC rail without a control GPIO.
+
+For LAN_EXT_CORE regulator POW_EXT_SWR/ENSWREG is defined
+as enabled by this regulator, but with no GPIO pin linked to toggle.
+
+Reference: Radxa Rock 5B schematics
+[2] https://dl.radxa.com/rock5/5b+/docs/hw/radxa_rock5bp_v1.2_schematic.pdf
+
+Because the Rock 5B lacks that GPIO toggle, the existing dummy regulator
+definition is redundant.
+
+By stripping out the dummy node and pointing the PCIe supply
+directly to the PMIC rail,
+
+If somebody could verify these DTS changes
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-rock-5b-5bp-5t.dtsi
+b/arch/arm64/boot/dts/rockchip/rk3588-rock-5b-5bp-5t.dtsi
+index 668b19c05f7e..cf7d9d516d0e 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-rock-5b-5bp-5t.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588-rock-5b-5bp-5t.dtsi
+@@ -81,15 +81,6 @@ vcc3v3_pcie2x1l0: regulator-vcc3v3-pcie2x1l0 {
+                status =3D "disabled";
+        };
+
+-       vcc3v3_pcie2x1l2: regulator-vcc3v3-pcie2x1l2 {
+-               compatible =3D "regulator-fixed";
+-               regulator-name =3D "vcc3v3_pcie2x1l2";
+-               regulator-min-microvolt =3D <3300000>;
+-               regulator-max-microvolt =3D <3300000>;
+-               startup-delay-us =3D <5000>;
+-               vin-supply =3D <&vcc_3v3_s3>;
+-       };
+-
+        vcc3v3_pcie30: regulator-vcc3v3-pcie30 {
+                compatible =3D "regulator-fixed";
+                enable-active-high;
+@@ -480,7 +471,7 @@ &pcie2x1l2 {
+        pinctrl-0 =3D <&pcie2_2_rst>, <&pcie20x1m0_clkreqn>;
+        supports-clkreq;
+        reset-gpios =3D <&gpio3 RK_PB0 GPIO_ACTIVE_HIGH>;
+-       vpcie3v3-supply =3D <&vcc3v3_pcie2x1l2>;
++       vpcie3v3-supply =3D <&vcc_3v3_s3>;
+        status =3D "okay";
+ };
 
 Thanks
-
-Farhan
-
-
+-Anand
