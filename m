@@ -1,121 +1,66 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFE0E29D28F
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 23:52:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C7A018AFE;
+	Wed, 25 Mar 2026 00:54:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774396325; cv=none; b=sH89sU74ubhoWMq9m1OLplMztC9uxN2os/cDW8HusqTZ7eDqulpiNLavtMj3doa3yUoeLTJcqFDV4FAoqCjkMlcDeFNi19zx2KPgFHaQ6PaeclQqy2KOh4q2QC9Barj1PklfN2N5lq3U+XFZtyMM0SMnAp0vugBc3LsA18I26JI=
+	t=1774400046; cv=none; b=DlnI5LFX6xbosGztlltHD+b4EZJQXJp7QTO3gFpmpHsk6lxaiVdTqZYFTsgNhuUue4tFqaFGXgS+reIwr7oyLh6vMdqtK8CxkWzu/f8skCdCrRSLrxL4VibvDRtRDK/XcnTmffAanPGQJmVCi07k5cWazytjOj8SO53MfFUkvyA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774396325; c=relaxed/simple;
-	bh=O5GME2cuVxChwrcJ1TC22wMeIZDwNl2gWemTSjB0vcc=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=o0O16KyEXc1Vv1i/1UUeYhTuYrRzCydvf9qG+J40nUXVXmmbbs0TaYJgV/XWzHe/AIShZRB82TH0ik3rYz7lQWxNHAE9cRAUoLdoYhBSIceso/5FZedV2J6A/0a3skSMuP3Le19ZevWok7lJrhJFmoIHyXQq/GTTHyv/qYc9TPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=CdOCU4Nn; arc=none smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1774400046; c=relaxed/simple;
+	bh=dRfWufNAJCcOhh0AhmUSfHoYAd4HMIuJBmV7zbhHIv8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OVvN659fG1aoK2Q84hryIyBvzIO0mWNk7o0u+NK1dnJJ2ZYyAazAvg4rAV/Uj7luQ1dnutopVUTwIbidErhfhvVhZn2kvv1BWv4YSQFxtpQc/5OUYh2dmuCILOgSkwimnhNk1RY+M6EGNflj8kY/nxRkkHKxtA950ub5nz5UDUk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AUbP/vJT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="CdOCU4Nn"
-Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62OLL7XT1433028
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 16:52:04 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=s2048-2025-q2; bh=GTcNfaIvTV9CCY4TmT
-	n6enDItgoZyUnkmTMnvSeTAAU=; b=CdOCU4NndSVgN7zKgckJpgtavyWE3HGGBo
-	w0ZNInhRdhfx+BxwqlhVlGDGV4taks4QDuIJG5B5A+TVmUmih4moBce6gRIXlZ9R
-	nlH9QI+MQOc0sEbqFwRMi78q6Jcm8EBjfWkMgojEMU4v4knh7rmzpDMOFuTYMM9I
-	twBFxtrnbnnCymOojZFLr3UrKRg3mkhv4OTXwdFfcxJICeogrS5eANvzgjjMQkIK
-	+q6K0fkL1zMPFCYURkJLNPtbHygVneLNgy7NjiP7l//Pdeo6bjqVxQ8YHTvLizIE
-	6f+ZI5WJeroXRgpfiYSwBrWxyM6aZkfBjWmCXPKGF6TuYUXjuuzA==
-Received: from maileast.thefacebook.com ([163.114.135.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4d42eysha9-2
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 16:52:04 -0700 (PDT)
-Received: from twshared22445.03.snb1.facebook.com (2620:10d:c0a8:1c::1b) by
- mail.thefacebook.com (2620:10d:c0a9:6f::237c) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.35; Tue, 24 Mar 2026 23:51:52 +0000
-Received: by devbig259.ftw1.facebook.com (Postfix, from userid 664516)
-	id B181C1D7CEBE; Tue, 24 Mar 2026 16:46:15 -0700 (PDT)
-From: Zhiping Zhang <zhipingz@meta.com>
-To: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-        Bjorn
- Helgaas <bhelgaas@google.com>, <linux-rdma@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <dri-devel@lists.freedesktop.org>, Keith Busch <kbusch@kernel.org>,
-        Yochai
- Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>, Zhiping Zhang <zhipingz@meta.com>
-Subject: [RFC v2 0/2] Retrieve tph from dmabuf for PCIe P2P memory access
-Date: Tue, 24 Mar 2026 16:46:01 -0700
-Message-ID: <20260324234615.3731237-1-zhipingz@meta.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AUbP/vJT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68BF3C19424;
+	Wed, 25 Mar 2026 00:54:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774400045;
+	bh=dRfWufNAJCcOhh0AhmUSfHoYAd4HMIuJBmV7zbhHIv8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=AUbP/vJT3ju85md9fr2qXnnguARCnC6pYHEWEpWgxdy3mERVlbgDcDeN0tTsdggeF
+	 KxflKX2yJwN7hFAEkp8hMd8eaVm5AUgnfY2+97Ty1E7yBjuR/Wl5PRZYCNeSrtPb3f
+	 /kxaCN8j1pDIOkvGRsFvzPTB0rCZzuPhn1Y9rVwhKmm2HqQhOhNkCPN+H6l6VKgg/i
+	 F9aG7r+Zu6Vfd4IUxNNp/DhFsEzIJ0BfxyIKb7z6ooH8gC2QhBxJYrECUxjAJGpvLG
+	 js2BbpJNCjvSNmdhCNS+CrcA9r6yute3EqWKFLWaS7GtuxH1Z1n9edAI/rn63JdOE/
+	 msh13CzeR4YhA==
+Date: Tue, 24 Mar 2026 19:54:04 -0500
+From: "Rob Herring (Arm)" <robh@kernel.org>
+To: Richard Zhu <hongxing.zhu@nxp.com>
+Cc: kernel@pengutronix.de, linux-kernel@vger.kernel.org, krzk+dt@kernel.org,
+	l.stach@pengutronix.de, s.hauer@pengutronix.de, imx@lists.linux.dev,
+	devicetree@vger.kernel.org, festevam@gmail.com, frank.li@nxp.com,
+	linux-arm-kernel@lists.infradead.org, lpieralisi@kernel.org,
+	linux-pci@vger.kernel.org, conor+dt@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH v8 2/5] dt-bindings: PCI: imx6q-pcie: Add i.MX94 and
+ i.MX943 PCIe compatible strings
+Message-ID: <177440004361.2302904.12708290351428536062.robh@kernel.org>
+References: <20260324023036.784466-1-hongxing.zhu@nxp.com>
+ <20260324023036.784466-3-hongxing.zhu@nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Authority-Analysis: v=2.4 cv=adxsXBot c=1 sm=1 tr=0 ts=69c323a4 cx=c_pps
- a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
- a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
- a=tpM8CJlwf7uhpglF1g9U:22 a=zJhtDeQ-gK41YlDc0VgA:9
-X-Proofpoint-ORIG-GUID: KSFq0-ZdOYQ7K4JkXczckkYuq-Gbkwi0
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzI0MDE4NCBTYWx0ZWRfX9PrOzKgR+ytk
- IjwxSNPxqQKPtuIb0yhvWBVqdU90BFk2YBNLgfRI1IJWdNlpuJRDgVS4gjpkI9nOD9tJJo5/eJR
- 6yggKRODyG3qiahcdf8HTr01Stjuop9Laz5NIEiuGqpIuN/n9xgHVYqiOMPWmXW448jR33IHzS1
- L1fqPHSXA/OeMOI96mmLe75DUunrhSLrLX40wkSes2drHyOvoHn7WhK5NqErKOGBQnkBbFjGdw+
- UoeGlxSZMyINdNpsfTnKnVNP7DU6C+i1Rkz42Eg7OqMtMxoENPRdIU6hXu58yZdPqHHhTbW1XKZ
- 2SVZwnnbWzpVuqr1xL59CDD8UA7TdV8HVCuMmFumRIGd6xaubY40D+CdlaFSZJ1cpD7yQRuTT0u
- 2IB3PfXfXi8vKzyUfjEguc/0qfwcFigDZUys24T40HUsuExRt9exmq4KjLHCvkT7E6yFc8NLWGT
- SK/kTqIc/tUC36VeU8Q==
-X-Proofpoint-GUID: KSFq0-ZdOYQ7K4JkXczckkYuq-Gbkwi0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-24_04,2026-03-24_01,2025-10-01_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260324023036.784466-3-hongxing.zhu@nxp.com>
 
-Currently, the steering tag can be used for a CPU on the motherboard; the
-ACPI check is in place to query and obtain the supported tph settings. He=
-re
-we intend to use the tph info to improve RDMA NIC memory access on a vfio=
--based
-accelerator device via PCIe peer-to-peer. When an application registers a
-RDMA memory region with DMABUF for the RDMA NIC to access the device memo=
-ry,
-the tph info of the memory region can be retrieved and used to set the
-steering tag / process hint (ph). Additional instructions or hints can be
-passed to the GPU or accelerator device for advanced memory operations,
-such as, read cache selection.
 
-Note this RFC is for the discussion on the direction and is not intended =
-to be
-a complete implementation. If no objection, we will convert it to a Patch=
- set.
+On Tue, 24 Mar 2026 10:30:33 +0800, Richard Zhu wrote:
+> Add i.MX94 and i.MX943 PCIe compatible strings and fallback to
+> i.MX95 PCIe compatible string.
+> 
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> ---
+>  .../bindings/pci/fsl,imx6q-pcie-ep.yaml       | 18 ++++++++-----
+>  .../bindings/pci/fsl,imx6q-pcie.yaml          | 26 ++++++++++++-------
+>  2 files changed, 28 insertions(+), 16 deletions(-)
+> 
 
-Changes v1 -> v2:
-- Encode steering tag and ph in vfio_device_feature_dma_buf flags field
-  instead of adding new uapi struct fields, to preserve ABI compatibility
-- Fix subject prefixes: "Vfio:" -> "vfio:", "RMDA MLX5:" -> "RDMA/mlx5:"
-- Fix raw steering tag vs st_index mismatch: get_tph() now returns a raw
-  steering tag, and the mlx5 consumer converts it to an st_index via the
-  new mlx5_st_alloc_index_by_tag() API
-- Fix @tph doc typo to @steering_tag in dma-buf.h
-- Remove unused variable, fix parameter alignment, fix trailing semicolon
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
 
-Zhiping Zhang (2):
-  vfio: add callback to get tph info for dmabuf
-  RDMA/mlx5: get tph for p2p access when registering dmabuf mr
-
- drivers/infiniband/hw/mlx5/mr.c               | 34 +++++++++++++++++++
- .../net/ethernet/mellanox/mlx5/core/lib/st.c  | 23 +++++++++----
- drivers/vfio/pci/vfio_pci_dmabuf.c            | 26 ++++++++++++--
- include/linux/dma-buf.h                       | 30 ++++++++++++++++
- include/linux/mlx5/driver.h                   |  7 ++++
- include/uapi/linux/vfio.h                     |  9 +++--
- 6 files changed, 118 insertions(+), 11 deletions(-)
-
---
-2.52.0
