@@ -1,152 +1,85 @@
-Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11021077.outbound.protection.outlook.com [40.107.74.77])
+Received: from out30-133.freemail.mail.aliyun.com (out30-133.freemail.mail.aliyun.com [115.124.30.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66D9D324705;
-	Wed, 25 Mar 2026 08:44:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.77
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774428288; cv=fail; b=Ed1ixKf7zutQX5QvgpDF/8proPAFANXV2VBreE1pdlLDrIrwbW18dxq5gcQPR83T14G8N1Eveow6iPU7awIVQut7NQoTxaJQOXF+6gIJmMNtAHNrGOfxHME9h2OFhLdmB2GUAhAVZpjt7ZD/dmrO5aaPU9y2Bch0kBB6BYAfRh0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774428288; c=relaxed/simple;
-	bh=F4EMJxAsfnrvc1vULDSYK5VR50a1qAXMT4OM4XsbqKw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=TXqy6d4Jcp6dWw+tGjvlR/Iw/7EY/AnxUs+LAhmKKUz4LBVHaKUzJwd1jF2w07pn5aD1SR9PA4s3SQJozP6A3vqzcDXGOV0R8Z5h57F0F0SWnztJ9heoX+wwaB/Kq/h9+V3ps/XpzGf9JVVYQyaXpV1X5bBhhyVdke9gnwfN7Vc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=ZfTCxOMb; arc=fail smtp.client-ip=40.107.74.77
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 374CD30F540;
+	Wed, 25 Mar 2026 08:49:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.133
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774428569; cv=none; b=jy9xJ5LdPAVM0A8Kfa7aDfa6naaK59Mjbt5g1uBNduSM9qhKe++b3a5VvTtdgF8SAd62IAVpp0fBJidQCiBSdawHt7WNCHgJFzF+NVmHbUuScquEfpanowot7Fr4dO7fxMku/mjxYKMhxprxSZcNDtSwGrVwjiK8K024rGh8/N8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774428569; c=relaxed/simple;
+	bh=vbsDOnuRRH+yz6iNyr6GiInQ5JzUZ7epCZjm+wQHdIo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nFZb3UYo1Reqe9QLVpUEiu5RVHnL4mDkBPRjpJRnXLu+oGecTPIW4n7wnCeCcybUwNweKt/wAoj55XPdn8ARiJWuQEFTFW7FpjkFTrT488lIFugxtj7IQOPaNR0tj1uGOj4VK4SAqUOdG5Ipm63AOSSkj5RjmQgHXFCXPffG+rU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=rprY/Edk; arc=none smtp.client-ip=115.124.30.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="ZfTCxOMb"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=GlBma/+/vgnNExS/zhI6gbkmBJrNUHrU25/EU9WVtv+Zpce/4T1e62IJttkOymvCoYVlyINQ86SU1t3WHOc/uZmrgxGTcXauylMidNB3Ad0EC1EdIHLJtHQvOOpOQDCm7RcXS+xYMdSxpv3tuainX2YHr2spbN7BfiPV/BxMem8wB388RPcJ/rLhtxaIbXDln6O9fWVSj2SR9ZuliekCuJl79WmjXsaQtVRb1sPCbf/xNk36hcY5bZMYzuR+3/uzbXlvpvY263A4h+XwORAg85fGEfbjrAbWr8rH7LA/EaPFceEWHzD7s+WyDVfQG4kZR0W43YRKROrOIb3VaDjzjQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ZUJ0icJSVSbeDpSXhYo20gCqF0L9/aCgCyMyAqjv/rE=;
- b=FAhmqPfqGtL7dev23QqQ0THNPZsKtbEm0IYqNCwiQXJCV8Gp4oc/CvypqPH8HQip3akmSxT3APoICJF6gi+Yk4MdlQtYpoSN6oII9BcYwb7ig+qcgyC+YpJXwFJ+vaS8Uv6Sfio4n3djinaNKkGO/xMrjuYKK+Imtu3OxY15DEMLhOKOwXT484x2jGOjuAIqlTq+DesVk6Noi6io+SMvomVClWrp1bnDF+Ir3JaM8GIeUp5VzdAzO3F5ylY9wnstYMcpqM4V4bDjqsCKWf5/qFDfz6hsw+SxJ/OLbjt3sgunDNFwksGjKf4Us+uzRGNmDknFSYrN7Ibu5mga16LacA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ZUJ0icJSVSbeDpSXhYo20gCqF0L9/aCgCyMyAqjv/rE=;
- b=ZfTCxOMbNP2/eiMUM0tF0HdDgKrvkevRDbB1nNl2hUQV7Dk0VGnzTxt9JvDjTxSYCBSzUpdQB1byLDFMcdNLiY4s6AvM+SwRIg7LPpvd070GvSmjUSgs98IImA2VdU5eG2MSMDOqbuh3tl/k45ULtiGu3UAU0TC6J1cQsdWOn1M=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by OS7P286MB6382.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:41c::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.20; Wed, 25 Mar
- 2026 08:44:44 +0000
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9745.019; Wed, 25 Mar 2026
- 08:44:44 +0000
-Date: Wed, 25 Mar 2026 17:44:43 +0900
-From: Koichiro Den <den@valinux.co.jp>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>, 
-	Allen Hubbe <allenbh@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>, 
-	Jerome Brunet <jbrunet@baylibre.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, ntb@lists.linux.dev
-Subject: Re: [PATCH v3 00/10] PCI: endpoint: pci-epf-vntb / NTB: epf: Enable
- per-doorbell bit handling
-Message-ID: <zyt2fx46zvg5i6mfntaslyeyftuishvw6xy4keditk7ftvpvku@yva4ihwas6pg>
-References: <20260323031544.2598111-1-den@valinux.co.jp>
- <7jkibbdz3m3vuq2kq2xxnkt2rjdt5v7itgowc7qormtwgnf6tv@krl5brfjul5y>
- <acN_aZNICP15ybZZ@ryzen>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <acN_aZNICP15ybZZ@ryzen>
-X-ClientProxiedBy: TYCP286CA0174.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:3c6::15) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:38f::10)
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="rprY/Edk"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1774428563; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=L7FxpCSEgItetYVbIylj2g057qmecEqP72q04ygIl7s=;
+	b=rprY/EdkQ5VQMxwNY6JVj0Oxdi8ewEE4r4XjnhwYxQYI44J1bm1DAsM/V7NxLR6hqS5SCkKGUEi01z1TGecNegi5zwULiXySqb5eRt9c2hsmppK6ezZMBeAlm0LrPkHcoVCV9naLQTNVxn4RdgS9uGy0v8YIR9hv5GIHiLmkXE8=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R101e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037033178;MF=kanie@linux.alibaba.com;NM=1;PH=DS;RN=13;SR=0;TI=SMTPD_---0X.h2CV5_1774428561;
+Received: from 30.178.66.196(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0X.h2CV5_1774428561 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 25 Mar 2026 16:49:22 +0800
+Message-ID: <fe2fbe7e-b606-4ceb-a631-95e9424e5624@linux.alibaba.com>
+Date: Wed, 25 Mar 2026 16:49:21 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|OS7P286MB6382:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0c749240-fcc7-44de-032f-08de8a4ac38a
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|10070799003|1800799024|7416014|376014|366016|18002099003|56012099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	k53dhrlOnIYOcABZmnkuvIDszz0XdoGvgeCGNY7yqHd26PYOcjwm9rLhZyzNY+aUKJDc12pRMdX9xKUvGq9KDBKElCVT0SfsXogDVIUlMr1YobVcvHBPIqS5++R7KxFP7M9KHKTBS5SQC0Krg5OJFPJFQIUKHC8J+G9nie8GgV8gG9BJM+8L4ZKgs59tnZE2sBTWLIx0bfyFW0SAse/2muvuN26cSlO0Y8H2Q6VMlm5hLz5MgXkIvdXK8QLJS0Ly7+2vZna6DQGVeF3s4TzI+UORrN0esRd8Il5j0fFsX7DCukJJKh0xlchxeYVo521SKj9PnbMI7z1GqHU392zmXz/EGdfvYtgsVent6WeWWF7ddrYyXeOg42UrLwvkM7Kwy4E7yuM2Nsj0JVDr06H3wSUdXl8gtCV+hTxtQj/8HdYnUVMlM7Nf8lWg4LsPKxrzg82jeWhnfWbsRB+S+4Wq/19bGPi290OW4fTSyCeOnd4CPXgcl3ZBOi3sG53of3Ym2daDdRRH8c7NpAOU4Uv2hjWM7xpD5zesXibSANzezqapp7rXQM1aMX4kHnbYShk59c7GX5YhZD8ywJgHto5LW6Mp8cIVDjDDc8qLQTD+t5UP/4p6s4sXRXQRQbAtUJ6+XEbUlPXagUZz1qXg+UukSlm7jMxaddMmsCaSHPDYBt1C/+gtU8lcP/W3PPj5NAi8DegOmDAXGvAm1D8GOEZ+zzAbicbe3ClxuOGb934/N1U=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(1800799024)(7416014)(376014)(366016)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?tTSrymr+TwoF7tpsPgOgpAcLW7+zvU9b6bnDoCOniX/J4MHvxv/NL2vi9xSb?=
- =?us-ascii?Q?RCgMFMwRVMQvray3MtS7tzaZ22MpH+7JPYm7Eb0Ik+Z0cFIfxls/6eujRILb?=
- =?us-ascii?Q?ko5YFWcwojXO8ldmkw59uObflazMx0wm6DcavaWAKlHKVUheWdiNBkvXFuO6?=
- =?us-ascii?Q?QEv4E8DCr3UChb50z9eHFvFDcYaPGcFsR1t3Mi7HjPr7wGkOJLL6sJElFECP?=
- =?us-ascii?Q?6IDHeRyOPgBM3MwS3WV1PzDF9cXjayeyuz/nWaqdfzNam0FyhGPtf/zDLq25?=
- =?us-ascii?Q?qj0ef8uvlgpmxwuqCpO2LKjwHqRlmbxMXuZquMmCCOTnGMlRCEXzRt8zIMgL?=
- =?us-ascii?Q?GnLcO35b4YS+yHHBcXr5wvviJDuxkEbx+eEjG2UlG8TbU44zyZ6j7JIsOSyb?=
- =?us-ascii?Q?x7Gb0QfUOgOQQrzoridlBfkFdle47BQP0DcOkzWGrOIIU/XxGJu0wr8OqfWS?=
- =?us-ascii?Q?epbfM2jcgr3sGEm8HfgsDU3tu/cJR6oHi+6ogb63XOnk230it5kV96GJiOyK?=
- =?us-ascii?Q?39xbFD93DiIby4V0+VssnG2copX+6fA12Tg7q2F/f04QrQP+SZOgJ58MvRyt?=
- =?us-ascii?Q?JIY0Lv7emlD0yJ98hp3/fXU+lY233FQoNgLgSt14616r9CwfQF57juK4k1Oo?=
- =?us-ascii?Q?X7FFtUw4lZt2EItP+7wfUqnFeaTzbU4BejxVdLxf3YBOrgEAnpaypaXE6an8?=
- =?us-ascii?Q?ujigc/pKDIkSDt548FyZP4OCEsvMKVQ+In3DGaNQE0CR3yx2g3YTYjTihwz3?=
- =?us-ascii?Q?R41xlDnClEf/UERCNcB0se77kgzhxSMK2xtBYlDvzziQdOBdmoYK8j8fee1s?=
- =?us-ascii?Q?+1RFhnRbQlA9DEIIyfQeKbQA5RI4IIxATa4OlXby5VyVbwa0xzqd2d40gUWT?=
- =?us-ascii?Q?TmV3wJ5i3wNSNv46zqYSN4dj1f+077t2e09CmRu3ZnV0BOFAPePw/8VDNkGL?=
- =?us-ascii?Q?Xd/4GKCJyUq3V901bcgiJyrQ/02dGHgJ5fMAx5/TW6GBt7j3nWfFTe626uTz?=
- =?us-ascii?Q?05fbjzvSSTJlMG6/zXBgLnUdDTSHx9PzMR4QhlubHeeCLR2ukpegvBBRjF84?=
- =?us-ascii?Q?OUhZCdJ+dT2+cgVNMGznzfXNo9LuJpLhJ5+cGdVTc23hhxbN3EcNhKszCgAM?=
- =?us-ascii?Q?B5h9/3ldaAdThyhbHW2CsmkKROUblZTXDrhAL4YgbSkUQGK8EqFMvoNXl8bZ?=
- =?us-ascii?Q?MOj5f06m/DQE5/3TWCn/cCEoep4QequWjwdv+aOB+af4GMuaUBM+naUI3W8n?=
- =?us-ascii?Q?SnJdbvTbsH7wQBwc3eWPgzxjC/StmiFIxqm/kvHN/hyPG24KaSs/b0VWhEjc?=
- =?us-ascii?Q?gKVMdhPItjmyex1NRfevbTXFepoY2zf2vhQ5LUNbnM1xC0GWw0EMrXkkSMD3?=
- =?us-ascii?Q?xo7gz7fxdkz8l1WlKbRpGXMW+IYHOzr5/OVhNVVyg4+TFbDsFqTA6h28IzLn?=
- =?us-ascii?Q?fkzySzWcsUFH1lPeM1oXnLsOc8Zo75DR0LhtX6fcefKaklcIB8VUYUQrDcnw?=
- =?us-ascii?Q?pHnaAlOyDSuERKPeFtLPOCUp3EVXDL5dXFWPGfnt+D8fQEDVv/lWiLcTukmh?=
- =?us-ascii?Q?mwFj3twUKcIkwXKTA07MQPxkvVffS0cFL72ekZL6Xc3+lr4t1aMz4quzk2Rj?=
- =?us-ascii?Q?GnkTLGGAJvuQvDpmZcPstI5jdGGU7UQt9k3J40Qgj9m4w1+j2iB96BkP+wf0?=
- =?us-ascii?Q?t5GrMnb2Ck4C7A+jkMdToEC4NZetvhsHbwNs//Xu4PezopPOucngnrilwcgE?=
- =?us-ascii?Q?ChGpkkijZXUgAztLG3mvbPk/cpWuJg6eNkfzCT6P787xYAvtAiu3?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0c749240-fcc7-44de-032f-08de8a4ac38a
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Mar 2026 08:44:44.6626
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: PHaincK4g12G1E3gOWyPGHnShGz52UszEF3D45Tb9HuCeraml9pXWFxjruC3DLaxfZndEAmVdM5lI1+ZUWTYpg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS7P286MB6382
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] genirq/msi: Introduce update hwsize helper
+To: Thomas Gleixner <tglx@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, Marc Zyngier <maz@kernel.org>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ Inochi Amaoto <inochiama@gmail.com>, Nam Cao <namcao@linutronix.de>,
+ Shradha Gupta <shradhagupta@linux.microsoft.com>,
+ Randy Dunlap <rdunlap@infradead.org>
+Cc: Xunlei Pang <xlpang@linux.alibaba.com>, oliver.yang@linux.alibaba.com,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+References: <20260324014754.4973-1-kanie@linux.alibaba.com>
+ <20260324014754.4973-2-kanie@linux.alibaba.com> <87jyv0fhox.ffs@tglx>
+From: Guixin Liu <kanie@linux.alibaba.com>
+In-Reply-To: <87jyv0fhox.ffs@tglx>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Wed, Mar 25, 2026 at 07:23:37AM +0100, Niklas Cassel wrote:
-> Hello Koichiro,
-> 
-> On Tue, Mar 24, 2026 at 12:43:53AM +0900, Koichiro Den wrote:
-> > 
-> > - configfs knobs mutability and bounds checking, including (but not limited to)
-> >   db_count.
-> >   In my opinion, allowing updates after .bind() looks questionable, and
-> >   returning -EBUSY once bound seems more appropriate. I'm leaning toward
-> >   handling this as a separate hardening series.
-> 
-> This is in line with what we did for pci-epf-test, see commit:
-> ffcc4850a161 ("PCI: endpoint: pci-epf-test: Allow overriding default BAR sizes")
-> 
-> but we return EOPNOTSUPP instead of EBUSY.
 
-Yes, I remember you were discussing this with Mani in another thread. For
-consistency, we should use -EOPNOTSUPP here as well. Thanks for the reminder.
 
-Best regards,
-Koichiro
+在 2026/3/25 16:15, Thomas Gleixner 写道:
+> On Tue, Mar 24 2026 at 09:47, Guixin Liu wrote:
+>> +int msi_domain_update_hwsize(struct device *dev, unsigned int domid,
+>> +			     unsigned int hwsize_new)
+>> +{
+>> +	struct msi_domain_info *info;
+>> +	struct irq_domain *domain;
+>> +
+>> +	if (hwsize_new > MSI_XA_DOMAIN_SIZE)
+>> +		return -EINVAL;
+>> +	if (!hwsize_new)
+>> +		hwsize_new = MSI_XA_DOMAIN_SIZE;
+>> +
+>> +	domain = msi_get_device_domain(dev, domid);
+>> +	if (!domain)
+>> +		return -ENODEV;
+>> +
+>> +	info = domain->host_data;
+>> +	if (hwsize_new != info->hwsize)
+>> +		info->hwsize = hwsize_new;
+> This is incorrect because the underlying irqdomain has been created with
+> the original hardware size. So just fiddling with info->hwsize results
+> in inconsistent state.
+I found that hwsize only affects the range checking when allocating and
+releasing intterrupts after the irq_domain is established,
+and the kernel does not allocate related resources based on it.
+Cloud you plz tell me specifically where the inconsistency is? thanks.
 
-> 
-> 
-> Kind regards,
-> Niklas
+Best Regards,
+Guixin Liu
+
