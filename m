@@ -1,150 +1,239 @@
-Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012051.outbound.protection.outlook.com [52.101.66.51])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC8AD30DED1;
-	Wed, 25 Mar 2026 11:57:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.51
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774439862; cv=fail; b=F/4qchTS9dcJJ55lkjsUhsQIPLX8qhZfKsFUsW87ngVeqJB6ccsORqcqX8+m2cokTYel/DRVPdIQd005iacDWqLydRpKwKkTr64MU/QWtNZFuQOaIEOyYcoavRCnJn2rX+nuA5IQzl4qPsMTTlxCa9m9E9XJKFsL3UG4+zvrIEk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774439862; c=relaxed/simple;
-	bh=cmFCg14aIOrsp9YqHLUFfcdR0ddKLw/xENfR7EBqn6E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=IZ7norZRfrEG0QzMnfaARBjwhBGnlmL6EuatrK8PYIpD6uJvgKCc3QHXRAk3dgkSp6iZhKGlPN81WJI3fFighjn18DhLlyc1PpABp4u+vr1i89XPGLuy/WJhjmzh+8IaFyw73pr0qQgag08mN7zDpbA7YIGAQctQ6kU12fJmhIc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=EiQ7QhjI; arc=fail smtp.client-ip=52.101.66.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BCB830DED1;
+	Wed, 25 Mar 2026 11:58:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774439920; cv=none; b=UAPTgjCET4YPLhq/UEDZw1EHDqQDrZdYxqw2vWqiDLRlnmqMvg2QaDvYSvKaWnxUfmceMNvU51nODzIRJh3hEAxU/4vtomPd0rf3gPQ2xAdPRi1DDu0GMy6nWo6DuyHGAnjH3uJptcj6ceeoeTPR1NWSzAHry5C2TL1GzkfHYZk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774439920; c=relaxed/simple;
+	bh=UAUxvHk33ET8fFMVzE0Lu0h6czNMoJdojwa93qgED3w=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=oQBeFPn66sbpGpE8SV/kIUcpTB4cOGzjz5S/VlmKMN2TaZDgHjFk5/iD+5YikgJYj9kri6/D7R3FZdOxVcQ52LD7FtQsxUpZJIoBASbKSOgih43wSEzuLqnVNkMfACxyvcxw4csVIugyD7dsTIm0SVSD8Fsb1cLuKpCGGBXSBhY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kOSpeSGE; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="EiQ7QhjI"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=iE7KrCvPNjlIMWriz+VIv8px5Zv75wKeteSvNoiD1JNwqJZCCNAL/fGJpCamcJb1hrzBXUTvqeW2FkydfIHQ9GO/uGcBI09mwHkr1XsupGP5yx9f+JEtUaEdRN4CaEMzoufNO18qReVDJlBJyItsGliu+UnKSIbSXIJ0F3XVK96Mfa/bPBsJpMH/FnPHhPsIHnBuDLyZgdmYFr+RNBqvI71db8CxKmr7rLYOknvbJY/DF5C5Epf1PSnD7uVqVYUNh5JH5HFCQnbq8XD2jyuerMg2hMKHU9ddlb/6lE3YDd5HjLNzc+kfc6FJG47JKMjtaSZLdMev0rwt33qufikD3w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=cmFCg14aIOrsp9YqHLUFfcdR0ddKLw/xENfR7EBqn6E=;
- b=i7kTE0umVr+uCpwQqcnIRdaOdf3f/PqhAvfFxHaq4zC3hEwenlNYJaGtzunVqzH2PEIrXUnTbFlFOr82PebS6T8zCMztFjqKVoB6s+A3s59Whvl6vF2Xybmze8aBrahOmHKdNVeHyJeZNo/MH/sDgsovCGbXSb3eAi2OJ0wxz855fw0XgjdWjIe9b3XWuLbqNK69qpPzLtjoFU9WFcwfCVtqgfTBj+81Ml+/msQUHL2frhVw4xW7UJwTgL4WrnF5u6sMKNUOuxlf9wb8Bct0HQUgtKhV5A2CW9ssv7Ts79GMo95HWaz69CNDfhglkuPzSfRUp6T8uMfbM1dYfk3ycg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=cmFCg14aIOrsp9YqHLUFfcdR0ddKLw/xENfR7EBqn6E=;
- b=EiQ7QhjIGBHWTNJZ3cM1+8bBO5nUKPFALiWY3ExVWmQl1Z7nKof0hVZUQ1axTkUO8pPt3GdJeaPdsosBGwemsTsGXfogZaT8wZLOSKFrLwHPki5kFkkwHrNrhIGnBauHQErH6LSjeVCmDJA4+jgkaNO03zQa4JlF1j977w9LXVuRXhtn7/xdPbTyxyeXyc0fcQAtcnth6UV2LAK0nWD/TINg1+b3YRfL32iQjDk8mHN9Xov9+Mb4aLRkpdYWQGhgoBJDcwEw6G8JqQe7asnopkAHXAMD607I5gIZaaY9lPq6ok9zIC2c/ixTIEIx5wTprcVvGdXiOKLCNhugPNwdnQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
- by AM8PR04MB7331.eurprd04.prod.outlook.com (2603:10a6:20b:1c7::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.20; Wed, 25 Mar
- 2026 11:57:36 +0000
-Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
- ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
- ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9723.030; Wed, 25 Mar 2026
- 11:57:36 +0000
-Date: Wed, 25 Mar 2026 13:57:31 +0200
-From: Vladimir Oltean <vladimir.oltean@nxp.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
-	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-	linux-can@vger.kernel.org, linux-gpio@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, linux-riscv@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-sunxi@lists.linux.dev, linux-tegra@vger.kernel.org,
-	linux-usb@vger.kernel.org, netdev@vger.kernel.org,
-	spacemit@lists.linux.dev, UNGLinuxDriver@microchip.com,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: Re: [PATCH v5 phy-next 10/27] scsi: ufs: qcom: keep parallel track
- of PHY power state
-Message-ID: <20260325115731.genmq2yew2p4dvbs@skbuf>
-References: <20260319223241.1351137-1-vladimir.oltean@nxp.com>
- <20260319223241.1351137-11-vladimir.oltean@nxp.com>
- <ezrcjjwtg5n76w4m65l27szu5mywx66ti3xuprkfcp3x6quvbf@2rew4zrnnbt2>
- <20260325114309.3k7xkfrffpxp5xq4@skbuf>
- <vu3cxpynr5mu2fzkrtmjcwijc5jz323wlnbc3r7lp2wxqmhydx@z5xhgf4myw2d>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <vu3cxpynr5mu2fzkrtmjcwijc5jz323wlnbc3r7lp2wxqmhydx@z5xhgf4myw2d>
-X-ClientProxiedBy: WA2P291CA0021.POLP291.PROD.OUTLOOK.COM
- (2603:10a6:1d0:1e::29) To AM9PR04MB8585.eurprd04.prod.outlook.com
- (2603:10a6:20b:438::13)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kOSpeSGE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1774439919; x=1805975919;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=UAUxvHk33ET8fFMVzE0Lu0h6czNMoJdojwa93qgED3w=;
+  b=kOSpeSGE3t4jLqOOJobMp1nKEJFRLQ8pGOnuKApO2xMsQxwFwUjGv+Ih
+   Y/nEJrsPcQ9X4x2LQuZsQyTPESzgwwzxDJOmFxKDrBWfIV/bTXbNoPSby
+   h3lk+kYyfCKgtKaEG5rVZZN3BdVQVjp/I4oGmMASMdd5+zveH5SkE91Um
+   HIV3Zfcn5At28+4KHNFQbz2en3J9Xod3zXmRvCA2UYYcKwOKpN6fEr9/Y
+   hcHCDPXT3lIlvrpks//3LPbkb+e5GjcdSHIV0jztCYPL11VK+AzmTsfgv
+   wmXP8iAVo8IF78c8m+0tFo43O5ukYcpkJLa0zWq4NzBgm1xgSgcP9bSRf
+   A==;
+X-CSE-ConnectionGUID: iuU+Wu3uQbCiUbFcOA2TdQ==
+X-CSE-MsgGUID: eizVfLNpT+aO9Ktz66hB+Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11739"; a="85783692"
+X-IronPort-AV: E=Sophos;i="6.23,140,1770624000"; 
+   d="scan'208";a="85783692"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2026 04:58:38 -0700
+X-CSE-ConnectionGUID: e9x9KLkLRCGMb+/0WVwbRA==
+X-CSE-MsgGUID: Fvf5VaN5To+tsiDq3wlImA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,140,1770624000"; 
+   d="scan'208";a="223866279"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.125])
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2026 04:58:29 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Wed, 25 Mar 2026 13:58:26 +0200 (EET)
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Farhan Ali <alifm@linux.ibm.com>, linux-s390@vger.kernel.org, 
+    LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org, 
+    Lukas Wunner <lukas@wunner.de>, alex@shazbot.org, kbusch@kernel.org, 
+    clg@redhat.com, stable@vger.kernel.org, schnelle@linux.ibm.com, 
+    mjrosato@linux.ibm.com
+Subject: Re: [PATCH v11 2/9] s390/pci: Add architecture specific resource/bus
+ address translation
+In-Reply-To: <20260324230641.GA1162880@bhelgaas>
+Message-ID: <328a79ef-7b73-582f-f36b-5139ff04e24d@linux.intel.com>
+References: <20260324230641.GA1162880@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|AM8PR04MB7331:EE_
-X-MS-Office365-Filtering-Correlation-Id: 46e1f118-c396-4740-51c6-08de8a65b4be
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|366016|19092799006|1800799024|10070799003|56012099003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	IoZA7Yrlz/oL4780ip4y5mVba2IlYCaP6Smft6r2tF7zhyQ7Cvo0NHk4wVtd1gAgQ7Ft5awHf+JddSAiQPJPvnF5AayEEG7iS62dizV5bBzYxVGEMrZ8IBs8xRVoK43NICWFEm3x3tUGVNhL5nLLflkjdTCEyezqVlltleqjg5a2YTp4IuC2Zg5+CX26kKPSeMOgkQUjET3gDo+P5QRGOpVPKiuL0u90plnKfbtEknbVoH+ahzSz5u7C9g9O4xKEHIkcs7jCixq4pQ4YSHJ7Mi4J63rPe1KBBxqPI6GCYpbAUm4ButyjewkGZdZ4VzUSPOYVNhx9gAHvsx03Vprut5Z4+BclcYnDlCEYV397D9XGuSb9d7UpMJURxaJKrMjgafiHygT6us8mgMWqw+1NVYGtVBOwEKxkW1rlqfXbiZVDkRrq6/Hw0IMin9TvoT+M69Xt9mwd+iJfmBo04l91W+TOB2CoysK3zc6VrxQNXoOyRYrzoKvQaDrSja9Kq19tSFQQMDwcp3uFWcawjvQZynj1g8JUwgRoPIQn6AsIdKCvcvb/n98oTCr2MccRkr9Og7v0t1xTB4H4vv1ZiTrYWmWrjx+Y5+/14lAR+4oHDH1qJMa0taw51dmTKPEd04UC4FS5lXnkWjcKBeKPnfBNQhgcMJ+6m/VmiqrBTN6GgP2CIsHiYSyMPMtFjR+bu3UmhukXr1mfoGGWK+X9O/+e6Bn1xoaGC9SYTDEdALhU1p0=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(19092799006)(1800799024)(10070799003)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?H8bXtPpsiaS0QFwRBaSe+8t4gr8HCUz/rqs3SagV2Mc61pB5+Z/0ZIKE4zjl?=
- =?us-ascii?Q?vVFaFQljnxfiRTYZ+SZZGX4GEn8T+mYqxmt+NHIMGYBP1U4KE5tFM9DENojv?=
- =?us-ascii?Q?2BPs2bjE65uKnsclh0t7cva1HkghbwUjtU8dlLLg2mAqUHkb1q1zcX31TsyS?=
- =?us-ascii?Q?SmL8lMoFIkQnXN4audsz287JF4/l4mnUv9e0PAh/PQX4sRuf3g6uGsQ41HUe?=
- =?us-ascii?Q?rWEDe4UzhrBvk5ODkLAQHPZFb/Ug1flyWnrAI9J/DYamaT+tt3ViXVkaU+Sh?=
- =?us-ascii?Q?8XhvR+7/wcJa54huKekal+DBJWvnB+Zk+w4h3IH4gU6bZMqH4Xa3uZVlV+da?=
- =?us-ascii?Q?yqh1Vmaf3hyNNRdmDZigq086GMsJz8bT6eR8YPxR6Z2YXaAS42cL9PxKfSXY?=
- =?us-ascii?Q?Fd12ImQIN33mPo63VKDD7i4ijsAXDsowq5JyOZo7S5iX8ya6+VnYNBpLNmNG?=
- =?us-ascii?Q?3gbbBXOGza7Sbo4k7terffTaAptvBIL8hs8q+hMBZGMMMygVQ6DTaHvjxf4w?=
- =?us-ascii?Q?Pq9ZFFGA3pSvctJoYSCLlaarfxNnBO+aKzyUcw6IYef8Ydqbk28Fomc5dCXW?=
- =?us-ascii?Q?M2aX2sQrW7x/wkv9GwxdEbcIBCM9xF52DMUwBBjAjIlPzavt4C41RvSOdiQ1?=
- =?us-ascii?Q?3qRB1/ard4mKd9EljMXfIobSpN7e5kyiH7mXwKP9X38raI77RnE0IzZhZ0IB?=
- =?us-ascii?Q?a10UXpjrBrEjvle80euqbxiYQB21hP823NXwUo2zO5BFvbWqfnLw3ovIYjv/?=
- =?us-ascii?Q?PMGJ0zuDp5Qrj1BkhgtPCra5NtuAy4mOUP/HQSyx/KgQ8Pi5UDWHPOr6uMVF?=
- =?us-ascii?Q?fsqKZQLrNm/zlYaItNjNLlOibCwigoQxBDKCEY8q9uYMcP3I8KUgtwkLzx/W?=
- =?us-ascii?Q?GuuFFAfMmLqMRJv6a2iGQrAHaOyZPsR+44Js3z6ecoWzUqFclLjWuLHUtX0M?=
- =?us-ascii?Q?24AJdLXaP486H+nVq4wgHmHg4iHXCz7UaA77ed3FCR7cNBp//4lTiyzl4jea?=
- =?us-ascii?Q?U+LGRW4u/+qgNAZ/pgzDf5RehrqnVd+JMmwjc2lu8UwEeyL4DLJwNbKn/HjA?=
- =?us-ascii?Q?gtcTgGCUJ7QuPMf3ucELKjmZfgao2zUa3rZTeF9agCxmVX60f2FIx/lTC6aR?=
- =?us-ascii?Q?8QB1EtKwHt4TV3iNVPqxhGgGhlW71Gy4AiYfLSMz1859ukN9PKOr/rJDmCAH?=
- =?us-ascii?Q?eCxg8pwlzJ3Z1GF2VlbGHLSGdqMhgXhsgHx5AbmLtYmdNNDc0Zha76jk09Lc?=
- =?us-ascii?Q?j1VYsW1jJzAlVJElJwN8AW3mRZKDcXwEgyYgv5byOPUpnQtGy4cB0YNv1oZR?=
- =?us-ascii?Q?Z3pv0jVRpHhmw7+WAC4oKOvmqsE5uY70gz+NwuLcZFcuE9h3c2oJsC1SsSHm?=
- =?us-ascii?Q?CYMbeB9/eHlacYHZnYmwixA8Xjlh3m9txMk9BM0THrx/q47hWKgoWyT+rSth?=
- =?us-ascii?Q?HK9YpxvwrE8XL3tPLdZcgvMhftxlKVy36eYYqHldGEdEY1na58Kb8Q/ruflr?=
- =?us-ascii?Q?wW6zWmPGBcfDL2QH92RAU71bP9fg5EPF8rne0fG/NYyEvOK4L8zsyo2i4QBR?=
- =?us-ascii?Q?R0UP2YJbc6u7568qNadlXwvIbqM7yxSb11lQP/HWNdWOOYkqjO4JX72ajY5K?=
- =?us-ascii?Q?IJuc11wpGd0D8Br+VXSejU3IfA6KPkfnXX4PB+ph8rMhfGMmAT0CwReEomfT?=
- =?us-ascii?Q?PXWZdRZVGjL8RkDz1OkOpmCTxWh651vvtyqN/aoFhI8cz+u2CZV/l3hUZYVD?=
- =?us-ascii?Q?tKbT0MtaxvmbnxqyLeB7zISHKWAmUiROY9C9xQ8K1mz9gW+GEs+Ck8zm0IoA?=
-X-MS-Exchange-AntiSpam-MessageData-1: lHYTgBURCo07Dg==
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 46e1f118-c396-4740-51c6-08de8a65b4be
-X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Mar 2026 11:57:36.5157
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: X7v1y9qYxV8YT6EmZZKzHl3RX3sYDXvGJBEFp7J2LnQloCllziPvFVFuycDyeeC/OVyg+qV4+4xEbw7wlq4dBQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8PR04MB7331
+Content-Type: text/plain; charset=US-ASCII
 
-On Wed, Mar 25, 2026 at 05:21:14PM +0530, Manivannan Sadhasivam wrote:
-> I believe I added the power_count check for phy_exit(). But since that got
-> moved, the check becomes no longer necessary.
+On Tue, 24 Mar 2026, Bjorn Helgaas wrote:
 
-FYI, the power_count keeps track of the balance of phy_power_on() and
-phy_power_off() calls, whereas it is the init_count keeps track of
-phy_init() and phy_exit() calls. They are only related to the extent
-that you must respect the phy_init() -> phy_power_on() -> phy_power_off()
--> phy_exit() sequence. But in any case, both should be considered
-PHY-internal fields. The "Order of API calls" section from
-Documentation/driver-api/phy/phy.rst mentions the order that I just
-described above, and consumers should just ensure they follow that.
+> [+cc Ilpo just for awareness; I assume there's nothing Linux can
+> actually *do* with s390 PCI resources?]
+
+I'm somewhat aware they've this speciality (and besides that, I'm 
+waiting for this change in order to proceed with the series to detect 
+which resources are properly setup when we enumerate them which got 
+reverted earlier).
+
+An additional thought related to this, there's IORESOURCE_PCI_FIXED 
+results in skipping most of the resource fitting and assignment code, so 
+if nothing really should touch these resources, perhaps that flag might be 
+of some help.
+
+-- 
+ i.
+
+> On Mon, Mar 16, 2026 at 12:15:37PM -0700, Farhan Ali wrote:
+> > On s390 today we overwrite the PCI BAR resource address to either an
+> > artificial cookie address or MIO address. However this address is different
+> > from the bus address of the BARs programmed by firmware. The artificial
+> > cookie address was created to index into an array of function handles
+> > (zpci_iomap_start). The MIO (mapped I/O) addresses are provided by firmware
+> > but maybe different from the bus addresses. This creates an issue when
+> > trying to convert the BAR resource address to bus address using the generic
+> > pcibios_resource_to_bus().
+> > 
+> > Implement an architecture specific pcibios_resource_to_bus() function to
+> > correctly translate PCI BAR resource addresses to bus addresses for s390.
+> > Similarly add architecture specific pcibios_bus_to_resource function to do
+> > the reverse translation.
+> 
+> 1) It's not clear to me *why* we need these arch-specific versions.
+> We went to a lot of trouble to make these interfaces generic, and I'll
+> be really sad if they have to be arch-specific again.  I don't see any
+> direct uses of these in the series.  In any case, some reference to
+> the user and the actual problem this solves would help.
+> 
+> 2) I'm kind of concerned that the "unusual" s390 PCI resources will be
+> unintelligible to people who are used to reading lspci or dmesg logs
+> from non-s390 systems, and they might confuse the PCI core resource
+> assignment code.  I guess there's not really a concept of a PCI host
+> bridge on s390, there's no bus hierarchy, and no visible PCI-to-PCI
+> bridges, so no windows?  Can you use PCIe switches at all?
+>
+> 3) Maybe this patch should be reordered to be closer to the patch that
+> needs these?  I don't think it's related to the "PCI: Avoid saving
+> config space state if inaccessible" and PCI: Add additional checks for
+> flr reset" patches.
+> 
+> > Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> > Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+> > ---
+> >  arch/s390/pci/pci.c       | 74 +++++++++++++++++++++++++++++++++++++++
+> >  drivers/pci/host-bridge.c |  8 ++---
+> >  2 files changed, 78 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> > index 2a430722cbe4..87077e510266 100644
+> > --- a/arch/s390/pci/pci.c
+> > +++ b/arch/s390/pci/pci.c
+> > @@ -272,6 +272,80 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+> >  	return 0;
+> >  }
+> >  
+> > +void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
+> > +			     struct resource *res)
+> > +{
+> > +	struct zpci_bus *zbus = bus->sysdata;
+> > +	struct zpci_bar_struct *zbar;
+> > +	struct zpci_dev *zdev;
+> > +
+> > +	region->start = res->start;
+> > +	region->end = res->end;
+> > +
+> > +	for (int i = 0; i < ZPCI_FUNCTIONS_PER_BUS; i++) {
+> > +		int j = 0;
+> > +
+> > +		zbar = NULL;
+> > +		zdev = zbus->function[i];
+> > +		if (!zdev)
+> > +			continue;
+> > +
+> > +		for (j = 0; j < PCI_STD_NUM_BARS; j++) {
+> > +			if (zdev->bars[j].res->start == res->start &&
+> > +			    zdev->bars[j].res->end == res->end &&
+> > +			    res->flags & IORESOURCE_MEM) {
+> > +				zbar = &zdev->bars[j];
+> > +				break;
+> > +			}
+> > +		}
+> > +
+> > +		if (zbar) {
+> > +			/* only MMIO is supported */
+> > +			region->start = zbar->val & PCI_BASE_ADDRESS_MEM_MASK;
+> > +			if (zbar->val & PCI_BASE_ADDRESS_MEM_TYPE_64)
+> > +				region->start |= (u64)zdev->bars[j + 1].val << 32;
+> > +
+> > +			region->end = region->start + (1UL << zbar->size) - 1;
+> > +			return;
+> > +		}
+> > +	}
+> > +}
+> > +
+> > +void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+> > +			     struct pci_bus_region *region)
+> > +{
+> > +	struct zpci_bus *zbus = bus->sysdata;
+> > +	struct zpci_dev *zdev;
+> > +	resource_size_t start, end;
+> > +
+> > +	res->start = region->start;
+> > +	res->end = region->end;
+> > +
+> > +	for (int i = 0; i < ZPCI_FUNCTIONS_PER_BUS; i++) {
+> > +		zdev = zbus->function[i];
+> > +		if (!zdev || !zdev->has_resources)
+> > +			continue;
+> > +
+> > +		for (int j = 0; j < PCI_STD_NUM_BARS; j++) {
+> > +			if (!zdev->bars[j].size)
+> > +				continue;
+> > +
+> > +			/* only MMIO is supported */
+> > +			start = zdev->bars[j].val & PCI_BASE_ADDRESS_MEM_MASK;
+> > +			if (zdev->bars[j].val & PCI_BASE_ADDRESS_MEM_TYPE_64)
+> > +				start |= (u64)zdev->bars[j + 1].val << 32;
+> > +
+> > +			end = start + (1UL << zdev->bars[j].size) - 1;
+> > +
+> > +			if (start == region->start && end == region->end) {
+> > +				res->start = zdev->bars[j].res->start;
+> > +				res->end = zdev->bars[j].res->end;
+> > +				return;
+> > +			}
+> > +		}
+> > +	}
+> > +}
+> > +
+> >  void __iomem *ioremap_prot(phys_addr_t phys_addr, size_t size,
+> >  			   pgprot_t prot)
+> >  {
+> > diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> > index be5ef6516cff..aed031b8a9f3 100644
+> > --- a/drivers/pci/host-bridge.c
+> > +++ b/drivers/pci/host-bridge.c
+> > @@ -49,8 +49,8 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_set_host_bridge_release);
+> >  
+> > -void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
+> > -			     struct resource *res)
+> > +void __weak pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
+> > +				    struct resource *res)
+> >  {
+> >  	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
+> >  	struct resource_entry *window;
+> > @@ -74,8 +74,8 @@ static bool region_contains(struct pci_bus_region *region1,
+> >  	return region1->start <= region2->start && region1->end >= region2->end;
+> >  }
+> >  
+> > -void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+> > -			     struct pci_bus_region *region)
+> > +void __weak pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+> > +				    struct pci_bus_region *region)
+> >  {
+> >  	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
+> >  	struct resource_entry *window;
+> > -- 
+> > 2.43.0
+> > 
+> 
