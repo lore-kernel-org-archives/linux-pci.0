@@ -1,49 +1,58 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 230D3352C35;
-	Wed, 25 Mar 2026 06:23:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE18C13635C;
+	Wed, 25 Mar 2026 06:36:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774419823; cv=none; b=DtoYo2oRc1CX0rIBHeqsooQF5o80TCAAXH7OAPGzjFYI9x1ZI5TiXlV1OZueiWGThCPyKuJr2ZZPqtWv1F5xp5sX5EINDG4QSOVN6Ry/xjncrygBdFBzw8SV/dGbjkGYaz3KDOKIEXaxaw3tcqScPRletzsKx1XE7GmX57H0Wsk=
+	t=1774420610; cv=none; b=BBqopwqDyYwjOhnAiOgn8krxPOY1DU85wNjLXiMBCtFYAvAZ2+26KkM7JmQdb1YdZzLkRwOKvCwuBnAg1xxB1cKXL9LopIQFVaiOgspqcBB6V6r6vwSbyKAC517/6S4xh47/1PNMjCoCYIt+XmAxYpt704h1b0chOg9pGdllH/s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774419823; c=relaxed/simple;
-	bh=9Ys9kLszkYFD7JrLh+1mZnnRESLdkc+zF9YL65ZJBIE=;
+	s=arc-20240116; t=1774420610; c=relaxed/simple;
+	bh=yR8vbOL+OgIKnrJPYbc3VTIiKUaBBS7srWl0b1K6Az0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Q0LsyefjHnr2qXGGMS4iTH8PnIxPvGQxZTx+sOj4iFJSRBdOJ6nV/LgzephZYn68TizyQcI44J+q5+MKocQ0z44sqcS9aTDJsSYCx7FIg3z0vCgacglBRQJg/9r9KqiKkYDCRvYpqGrRWSTH2dQEtn/eRxgotAvLqGOhsYBMZqk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tB7pVIEO; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tB7pVIEO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F06DEC4CEF7;
-	Wed, 25 Mar 2026 06:23:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774419822;
-	bh=9Ys9kLszkYFD7JrLh+1mZnnRESLdkc+zF9YL65ZJBIE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tB7pVIEOFeVSGcy2azcUUZ6dRdiJOUbhCVjoHFeaMNrG5Pihra+GBs6hV0PCIY9Oe
-	 TkfRjRhs5aQtMB6lzdWf+4b9637Y8hRP25+yvCSqltp8Gyv/8o/MT2isbPvO5g6Amm
-	 E+RYCsiQ2NoKyROst7+mkFKNEJmyXpsuB8WQ5FNhLTmKH5NPJFsT978489EeohrOuL
-	 aE1PI7STX+KxmNuAKVYdEU19GHDYB07o5/Rz1EODBPJ2a4qfdrlHidwOGs7YteVEzC
-	 3nhblbmheeOPVvT9urmidpzYfUgZIqxEcHr8mjNpsxpD+hT2dPZY1GW5FTkke5yy3l
-	 7YV8lD5VZEs4A==
-Date: Wed, 25 Mar 2026 07:23:37 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <allenbh@gmail.com>,
+	 Content-Type:Content-Disposition:In-Reply-To; b=d8a+u2iRNLKqboqo9K6XGN3+Z33BNciS5innhJ2onpqUgAIpYQTf+1Ps4VXDPrs3s3nbN4IdtcoE5t8X6qrV+1q5hIKgLwJu0qRnRogVOmXOlaX+w9yUIgg/qff6xaqhlb6pwSDXhFPlZRvmXIMEczDU8t/4i6uH58v4QLXwEeA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout1.hostsharing.net (Postfix) with ESMTPS id 043DB3AF;
+	Wed, 25 Mar 2026 07:36:45 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id CB4F36033925; Wed, 25 Mar 2026 07:36:45 +0100 (CET)
+Date: Wed, 25 Mar 2026 07:36:45 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Danilo Krummrich <dakr@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
 	Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
-	Jerome Brunet <jbrunet@baylibre.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	ntb@lists.linux.dev
-Subject: Re: [PATCH v3 00/10] PCI: endpoint: pci-epf-vntb / NTB: epf: Enable
- per-doorbell bit handling
-Message-ID: <acN_aZNICP15ybZZ@ryzen>
-References: <20260323031544.2598111-1-den@valinux.co.jp>
- <7jkibbdz3m3vuq2kq2xxnkt2rjdt5v7itgowc7qormtwgnf6tv@krl5brfjul5y>
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>, Niklas Cassel <cassel@kernel.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Hans Zhang <18255117159@163.com>,
+	Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Anand Moon <linux.amoon@gmail.com>,
+	Grimmauld <grimmauld@grimmauld.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	driver-core@lists.linux.dev
+Subject: Re: [PATCH v3] PCI: dw-rockchip: Enable async probe by default
+Message-ID: <acOCfYR3ii8RoKLz@wunner.de>
+References: <20260226101032.1042-1-linux.amoon@gmail.com>
+ <177260693908.10259.13055467642416391434.b4-ty@kernel.org>
+ <87bc37ee-234c-4568-b72e-955c130a6838@arm.com>
+ <f7tfshf7riljjibuqge4ubfjmludubpyh3ppdf6lasurzdzbtj@sw4xxagfhnn3>
+ <5d88fb5b-e771-4ea6-8d2c-c5cfd21e5860@arm.com>
+ <DGZJBMG2Y738.2MU5LXVGEDD47@kernel.org>
+ <acNYJ2dyPaEzabYL@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,23 +61,35 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <7jkibbdz3m3vuq2kq2xxnkt2rjdt5v7itgowc7qormtwgnf6tv@krl5brfjul5y>
+In-Reply-To: <acNYJ2dyPaEzabYL@google.com>
 
-Hello Koichiro,
+On Tue, Mar 24, 2026 at 08:44:22PM -0700, Dmitry Torokhov wrote:
+> I think the bigger question is why PCI does something different from
+> every other bus? Why doesn't it rely on driver core to bind devices to
+> driver?
 
-On Tue, Mar 24, 2026 at 12:43:53AM +0900, Koichiro Den wrote:
-> 
-> - configfs knobs mutability and bounds checking, including (but not limited to)
->   db_count.
->   In my opinion, allowing updates after .bind() looks questionable, and
->   returning -EBUSY once bound seems more appropriate. I'm leaning toward
->   handling this as a separate hardening series.
+This was introduced in 2013 with commit 4f535093cf8f ("PCI: Put pci_dev
+in device tree as early as possible").  Corresponding patch submission:
 
-This is in line with what we did for pci-epf-test, see commit:
-ffcc4850a161 ("PCI: endpoint: pci-epf-test: Allow overriding default BAR sizes")
+https://lore.kernel.org/all/1358803252-20639-12-git-send-email-yinghai@kernel.org/
 
-but we return EOPNOTSUPP instead of EBUSY.
+The rationale in the commit message for performing device registration
+earlier is that devices would otherwise not be found by for_each_pci_dev().
+I don't know why that was a problem at the time.  The patch is the last
+one in the series, so there's no other patch succeeding and thus
+depending on it, which could provide a clue why this was necessary.
 
+Needless to say, changing the behavior now risks regressions.
 
-Kind regards,
-Niklas
+The author of the patch is apparently no longer around.  Last activity
+on the mailing list was in October 2017.  Access to kernel.org infra
+persists though, so maybe he's still reachable:
+
+https://git.kernel.org/pub/scm/docs/kernel/pgpkeys.git/plain/keys/A7C92F7A39BD11DA.asc
+
+I'm not defending the patch, merely trying to explain the history
+as far as it is possible.
+
+Thanks,
+
+Lukas
