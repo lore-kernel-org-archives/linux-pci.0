@@ -1,153 +1,174 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFEDB3CEB85;
-	Wed, 25 Mar 2026 12:06:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 617A323C512;
+	Wed, 25 Mar 2026 13:31:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774440381; cv=none; b=enb83HUOEJZa7qJqcmMsAu/muV8oHgc+HeByi7eR8zC8lXG3FGUUXZsTWL+M8Ym2zbdBi3PpSis2hjS82zZIQDlTwi9A57XJhUkq3Lp2K89hZcy+6d87aJocv37lqwvAsblejTOx2ovwYuHN6CbKxqbUodfrMJxAjkkBEW9smMk=
+	t=1774445512; cv=none; b=DiztGS4tZgBUqtOhte5VlLASw3A8w7vxqejfblVa2lrWAZi2hjAn1yXRMYjNX07tHciGDQ5H0aYUyTzwWNXQqQ3X20pwAdYFyvcYB/940djcMl2puCSfGWk9AqtYtzDhR74GGmDCySRTupAfwnNE2niU39DjyAq6671A+lambbc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774440381; c=relaxed/simple;
-	bh=ueF0hrvRluFMJ/+IsNDv2TY9qAQLpZVCChvf6GImWMk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UePQYMMHUF/w8im0JJRCGP8h++AX33oeb2sMfRAch2CTvkZnnX/RQjpaJe9ZCqUtZXTY0mBolr4AD1TseUHjJwYkCH6lLc9I1+/U2YuwnLyfOaxQY85cECeCrvYVBPxO38SFSHrowpm/K9TT9JRrjTml+7m9OlhyIieIf77S+dw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b64J3S/9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774445512; c=relaxed/simple;
+	bh=Xp06g/JyrGjiIf6S/4KzRoPbggPcb32EOw0bMnd70mg=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=fodmscwkS7V9l6JUgu8y9DcQM77Pu+/snSzvDnFWRMrsv/V4AIxON208PPJWcUQrqPUBmG+44qQCZ7SJxihioNbJsEXZn2BH618h2F98pyre4SKPUKr7Wer8UHCfpUhuLMetX1nrPiewKmfntfzZ9eKH0sfhkWQQOcMZhMMJLVk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=P3KKqkrR; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b64J3S/9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFB30C4CEF7;
-	Wed, 25 Mar 2026 12:06:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774440381;
-	bh=ueF0hrvRluFMJ/+IsNDv2TY9qAQLpZVCChvf6GImWMk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=b64J3S/9wMpdMbsb28lUju0wP16mAjZXdtTfStiNijzPEkHs1QwjQqNJn9Vm96m4G
-	 SesNnOOhFr1Av4MG+5BeUKnlWQbTn7LgkfIEGssQYGwMJXp7uc7C3mqUl+mJqux3Mz
-	 7GVqbaVqgjEGvz6Dkath/TBSnChu4Yci0FfgPm2vMcRNKaevXioRglINXVrTJZU9MW
-	 NstZ4onOipYfdbdsAS/lY7IdpfwvbAM5L8zb11Se6dTjuxRPVKptHkfpZpHB14zIix
-	 egtrB549HcgGNnuMLCUyzdeVWiCIdft3TDwdf/Teh6A6NpfuRpF0LvSmjfIaruYB8r
-	 /NaH//k6jNhlQ==
-Date: Wed, 25 Mar 2026 17:36:08 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Mark Pearson <mpearson-lenovo@squebb.ca>
-Cc: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
-	Rob Herring <robh@kernel.org>, Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	Greg KH <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
-	Nathan Chancellor <nathan@kernel.org>, Nicolas Schier <nicolas.schier@linux.dev>, 
-	Hans de Goede <hansg@kernel.org>, Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, 
-	"Derek J . Clark" <derekjohn.clark@gmail.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Bartosz Golaszewski <brgl@bgdev.pl>, 
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Bartosz Golaszewski <brgl@kernel.org>, 
-	linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org, 
-	"platform-driver-x86@vger.kernel.org" <platform-driver-x86@vger.kernel.org>, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org, 
-	Stephan Gerhold <stephan.gerhold@linaro.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH v6 6/9] dt-bindings: connector: m2: Add M.2 1620 LGA
- soldered down connector
-Message-ID: <cvqdbqnzjmzoowxkvz2lyv4avropu5jw7h2r6zng3ecf245hgg@fsysjqflqd35>
-References: <20260317-pci-m2-e-v6-6-9c898f108d3d@oss.qualcomm.com>
- <20260322233713.GA98177-robh@kernel.org>
- <to2mrizprc3hjufqbiplpqyek7f4uutqtn4hx4gkmdgv2rykbc@ybwwjhdec4nm>
- <CAL_JsqJXrHCJt770bJkMmAUhirSF3kHjYwSzkG7cXp7-eys8Rg@mail.gmail.com>
- <6aef3xxjjd4nbgrfx6jc6jt6rpqmttoui6hil5zqgdpas2j6gj@ie6j72orenou>
- <fsvmmgoe5wslmxebhrrwmdg2ldcmhzvj53gjkdfnfg2m2rz2lw@dcfboaakz7ae>
- <bguhzabwryayyqkv4ilzwr3ixwv6bzxncblo3ircz2wm3fs52k@66zvcrfcb4oe>
- <blhm4csjyw6r667cleljgzd6rpwagttjo5rau7wjrlnjakq2qm@ekyhc4jvwmwf>
- <m44mupdmg7kgco62n4evcviagqo7wwgyt3gybugbxwesd4ekjz@o24r6v4tpezc>
- <3faffec9-dc9d-4eec-a652-a84d30d85c96@app.fastmail.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="P3KKqkrR"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62P7Dgba3395859;
+	Wed, 25 Mar 2026 13:31:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=ws98jf
+	qp8fT8UnB+vgUnR2tXV+A3dsfVNfiI/qBkFX0=; b=P3KKqkrRWmoXkplxF9yQR4
+	Ol89mEE2aLLQDsOMOiPdyZueaEsH0fnG1FpHr1ZfqINAR7xv2mQYCIsMgYY6H0zr
+	3Fe7jKQmCzfdmoJRWV65M6rtUsMH69Wh9yp0709Cq+5ugCjCFp9ozIayf/qIn9O4
+	9KRpsZRZS3x+XqAXObW6lVRabK2PS9o6KHbM2O4p8F765BXPY0/BN5RqG0YNbzBe
+	+YpwVA/4saE9LZlxWeN/vWcxxyFcTKbptxGlQuNsvcJuF4P7tmRcRWkKaKPNcfek
+	ftI7bnXa8A/HXNK+Ki61u0TcbBFQOJgsn2G0hCMpUJ3o6BTNrDZY89dm7xYcxFdg
+	==
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4d1ky07r73-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 25 Mar 2026 13:31:46 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62PBSWZr011824;
+	Wed, 25 Mar 2026 13:31:45 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4d27vk6g1w-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 25 Mar 2026 13:31:45 +0000
+Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
+	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62PDVfCO36045292
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 25 Mar 2026 13:31:41 GMT
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 9628420043;
+	Wed, 25 Mar 2026 13:31:41 +0000 (GMT)
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 43B982004D;
+	Wed, 25 Mar 2026 13:31:41 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.87.85.9])
+	by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 25 Mar 2026 13:31:41 +0000 (GMT)
+From: Julian Ruess <julianr@linux.ibm.com>
+Date: Wed, 25 Mar 2026 14:31:23 +0100
+Subject: [PATCH v8 1/3] vfio/pci: Rename vfio_config_do_rw() to
+ vfio_pci_config_rw_single() and export it
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <3faffec9-dc9d-4eec-a652-a84d30d85c96@app.fastmail.com>
+Message-Id: <20260325-vfio_pci_ism-v8-1-ddc504cde914@linux.ibm.com>
+References: <20260325-vfio_pci_ism-v8-0-ddc504cde914@linux.ibm.com>
+In-Reply-To: <20260325-vfio_pci_ism-v8-0-ddc504cde914@linux.ibm.com>
+To: schnelle@linux.ibm.com, wintera@linux.ibm.com, ts@linux.ibm.com,
+        oberpar@linux.ibm.com, gbayer@linux.ibm.com,
+        Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+        Yishai Hadas <yishaih@nvidia.com>,
+        Shameer Kolothum <skolothumtho@nvidia.com>,
+        Kevin Tian <kevin.tian@intel.com>
+Cc: mjrosato@linux.ibm.com, alifm@linux.ibm.com, raspl@linux.ibm.com,
+        hca@linux.ibm.com, agordeev@linux.ibm.com, gor@linux.ibm.com,
+        julianr@linux.ibm.com, kvm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-pci@vger.kernel.org
+X-Mailer: b4 0.14.2
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzI1MDA5NSBTYWx0ZWRfX3Ylqq9b3qI4o
+ ipuWaza0ugWrvCG30qtA+I/5Mf7Q741czyy1Yi/1UJp0hLz3JISJQbQwhOlZTpSZfHE9H1EmOuG
+ vO1Z6oAHIQu2Sa/ge+t1F+Wp53SNQ4LvIA3DfJaqeH0g6790VsKgseQFeSKza4jEhFEOFHGP8DJ
+ x0wc3c95WO0tq5W8yLQBBDIjGnrCuIOZ5UyqXlIr+Gx9Fob7t5VZBl0+ZKdLL4wB2bIRkJwFAlK
+ qQJonYDh/CM0Qjv4M9nqFp5fjdHZrNaQnbtHbW7gmJ0Is0J5WauqrOO+juQVpuHYPM7J09DklIH
+ GOojMpDe9eS2jG8VGxaC5gOuXuvTvE0+be7BN05J+J4+TFJERVLSs4nA7apjnMsjHe+G2jj4aaW
+ 1MvjL5kUP0yhaoPJf9bFrDCW4E6g8DXYJPUL6uJdMofP37kZf6MgN3a7ME6gFt7ebLOxcAZdAn1
+ cp2gS3OsT9X1hRSNsVA==
+X-Authority-Analysis: v=2.4 cv=JK42csKb c=1 sm=1 tr=0 ts=69c3e3c2 cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VnNF1IyMAAAA:8
+ a=mooU_oynDD9EFzHbF-IA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: rjunKXmwxRwQiY9T4-exEQ1rJLhAMUOZ
+X-Proofpoint-GUID: rjunKXmwxRwQiY9T4-exEQ1rJLhAMUOZ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-25_04,2026-03-24_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 clxscore=1015 priorityscore=1501 malwarescore=0 adultscore=0
+ spamscore=0 suspectscore=0 phishscore=0 lowpriorityscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603250095
 
-On Mon, Mar 23, 2026 at 01:23:07PM -0400, Mark Pearson wrote:
-> 
-> 
-> On Mon, Mar 23, 2026, at 12:52 PM, Manivannan Sadhasivam wrote:
-> > On Mon, Mar 23, 2026 at 06:45:15PM +0200, Dmitry Baryshkov wrote:
-> >> On Mon, Mar 23, 2026 at 09:26:04PM +0530, Manivannan Sadhasivam wrote:
-> >> > On Mon, Mar 23, 2026 at 05:14:30PM +0200, Dmitry Baryshkov wrote:
-> >> > > On Mon, Mar 23, 2026 at 07:14:25PM +0530, Manivannan Sadhasivam wrote:
-> >> > > > On Mon, Mar 23, 2026 at 08:39:55AM -0500, Rob Herring wrote:
-> >> > > > > On Mon, Mar 23, 2026 at 7:16 AM Manivannan Sadhasivam <mani@kernel.org> wrote:
-> >> > > > > >
-> >> > > > > > On Sun, Mar 22, 2026 at 06:37:13PM -0500, Rob Herring wrote:
-> >> > > > > > > On Tue, Mar 17, 2026 at 09:59:56AM +0530, Manivannan Sadhasivam wrote:
-> >> > > > > > > > Lenovo Thinkpad T14s is found to have a soldered down version of M.2 1620
-> >> > > > > > > > LGA connector. Though, there is no 1620 LGA form factor defined in the M.2
-> >> > > > > > > > spec, it looks very similar to the M.2 Key E connector. So add the
-> >> > > > > > > > "pcie-m2-1620-lga-connector" compatible with "pcie-m2-e-connector" fallback
-> >> > > > > > > > to reuse the Key E binding.
-> >> > > > > > >
-> >> > > > > > > What is LGA?
-> >> > > > > > >
-> >> > > > > >
-> >> > > > > > Land Grid Array
-> >> > > > > >
-> >> > > > > > > If not in the spec, is it really something generic?
-> >> > > > > > >
-> >> > > > > >
-> >> > > > > > Good question. Yes and No! LGA is not something that Lenovo only uses. Other
-> >> > > > > > vendors may also use this form factor. PCIe connectors are full of innovation as
-> >> > > > > > the spec gives room for hardware designers to be as innovative as possible to
-> >> > > > > > save the BOM cost.
-> >> > > > > 
-> >> > > > > innovation == incompatible changes
-> >> > > > > 
-> >> > > > 
-> >> > > > Yes, I was trying to sound nice :)
-> >> > > > 
-> >> > > > > > This is why I do not want to make it Lenovo specific. But if you prefer that, I
-> >> > > > > > can name it as "lenovo,pcie-m2-1620-lga-connector".
-> >> > > > > 
-> >> > > > > Depends if you think that s/w needs to know the differences. Hard to
-> >> > > > > say with a sample size of 1.
-> >> > > > > 
-> >> > > > 
-> >> > > > Sure. Will add the 'lenovo' prefix then.
-> >> > > 
-> >> > > Is it really Lenovo? Or is it some other module vendor, whose LGAs are
-> >> > > being used by Lenovo?
-> >> > > 
-> >> > > I remember that DB820c also used some kind of a module for the WiFi card
-> >> > > (which might be M.2 compatible or might not, I can't find exact docs at
-> >> > > this point).
-> >> > > 
-> >> > 
-> >> > I don't know. These kind of designs might be reused by several vendors. But
-> >> > considering that we should not make it generic, I'd go with Lenovo as that's
-> >> > the only vendor we know as of now.
-> >> 
-> >> ... and later we learn that other vendors use the same idea /pinout,
-> >> then nothing stops us from still telling that it's a
-> >> "lenovo,pcie-m2-something-lga". 
-> >> 
-> >
-> > How do you possibly know whether a single vendor has introduced this form factor
-> > or reused by multiple ones? Atleast, I don't have access to such a source to
-> > confirm.
-> >
-> I've not really been following this thread/patchset in detail; but want me to try and check with the T14s platform team if this device is specifically made for us (Lenovo) or not?
-> I doubt it is - we just don't do that usually, but I can go and ask the question if it will help resolve this (with the caveat that it could hold up the review for a bit and I may not be able to get a straight answer)
-> 
+A follow-up patch adds a new variant driver for s390 ISM devices. Since
+this device uses a 256 TiB BAR 0 that is never mapped, the variant
+driver needs its own ISM_VFIO_PCI_OFFSET_MASK. To minimally mirror the
+functionality of vfio_pci_config_rw() with such a custom mask, export
+vfio_config_do_rw(). To better distinguish the now exported function
+from vfio_pci_config_rw(), rename it to vfio_pci_config_rw_single()
+emphasizing that it does a single config space read or write.
 
-I can drop this specific patch in the meantime.
+Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+Signed-off-by: Julian Ruess <julianr@linux.ibm.com>
+---
+ drivers/vfio/pci/vfio_pci_config.c | 8 +++++---
+ drivers/vfio/pci/vfio_pci_priv.h   | 4 ++++
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-> My vote (for what little it's worth) would be to make it non-Lenovo specific. Then when the same part causes issues on another vendors platform I won't get asked questions about why Lenovo is breaking <other vendor> :)
-> 
-
-Even if Lenovo prefix is used, it won't break other vendors. Just that we will
-end up adding more compatibles.
-
-Anyhow, I'll wait for your reply and drop this patch for next revision.
-
-- Mani
+diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+index b4e39253f98da61a5e2b6dd0089b2f6aef4b85a0..a10ed733f0e3af89c185f8b93192ba6b004f05ed 100644
+--- a/drivers/vfio/pci/vfio_pci_config.c
++++ b/drivers/vfio/pci/vfio_pci_config.c
+@@ -1880,8 +1880,9 @@ static size_t vfio_pci_cap_remaining_dword(struct vfio_pci_core_device *vdev,
+ 	return i;
+ }
+ 
+-static ssize_t vfio_config_do_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+-				 size_t count, loff_t *ppos, bool iswrite)
++ssize_t vfio_pci_config_rw_single(struct vfio_pci_core_device *vdev,
++				  char __user *buf, size_t count, loff_t *ppos,
++				  bool iswrite)
+ {
+ 	struct pci_dev *pdev = vdev->pdev;
+ 	struct perm_bits *perm;
+@@ -1970,6 +1971,7 @@ static ssize_t vfio_config_do_rw(struct vfio_pci_core_device *vdev, char __user
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(vfio_pci_config_rw_single);
+ 
+ ssize_t vfio_pci_config_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+ 			   size_t count, loff_t *ppos, bool iswrite)
+@@ -1981,7 +1983,7 @@ ssize_t vfio_pci_config_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+ 	pos &= VFIO_PCI_OFFSET_MASK;
+ 
+ 	while (count) {
+-		ret = vfio_config_do_rw(vdev, buf, count, &pos, iswrite);
++		ret = vfio_pci_config_rw_single(vdev, buf, count, &pos, iswrite);
+ 		if (ret < 0)
+ 			return ret;
+ 
+diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
+index 27ac280f00b975989f6cbc02c11aaca01f9badf3..fca9d0dfac90f8eaaf2d281dd2213111c46d76a1 100644
+--- a/drivers/vfio/pci/vfio_pci_priv.h
++++ b/drivers/vfio/pci/vfio_pci_priv.h
+@@ -37,6 +37,10 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_core_device *vdev, uint32_t flags,
+ ssize_t vfio_pci_config_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+ 			   size_t count, loff_t *ppos, bool iswrite);
+ 
++ssize_t vfio_pci_config_rw_single(struct vfio_pci_core_device *vdev,
++				  char __user *buf, size_t count, loff_t *ppos,
++				  bool iswrite);
++
+ ssize_t vfio_pci_bar_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+ 			size_t count, loff_t *ppos, bool iswrite);
+ 
 
 -- 
-மணிவண்ணன் சதாசிவம்
+2.51.0
+
