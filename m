@@ -1,156 +1,153 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C41FA3D1CC5;
-	Wed, 25 Mar 2026 12:04:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFEDB3CEB85;
+	Wed, 25 Mar 2026 12:06:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774440258; cv=none; b=P2v1fyuvHYZEgeEF45LZM8trlPVOlnCrNUogC1rZR+1eJxH0WfTmpD6QIsG9kB9ra2utXZFv9aueys4pav7LpjR4Tm/JTToldnAWj4JnF6XAzA9AMbEFlu7waJ5Dxt/oeBpZE7i6g4d7Mjiex+ymRGJ1KsASSrNB3i/9c74GDl0=
+	t=1774440381; cv=none; b=enb83HUOEJZa7qJqcmMsAu/muV8oHgc+HeByi7eR8zC8lXG3FGUUXZsTWL+M8Ym2zbdBi3PpSis2hjS82zZIQDlTwi9A57XJhUkq3Lp2K89hZcy+6d87aJocv37lqwvAsblejTOx2ovwYuHN6CbKxqbUodfrMJxAjkkBEW9smMk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774440258; c=relaxed/simple;
-	bh=pthnvpb4bRgKrgjRM/7gqeUF0giUw3hMBAx3mtd0Tfk=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=FG/JBs0B+p2xp2vzHKLH5azwwM13MkXQQNND2K7ovQQiD4P8F2jYoHTByHSg9y20vt07ha5eTrHldBCv738CnXdVnzz1NOD+NJ12y7W5FbKHdW46Uhw0TjQaNbbNuizIXaymwXOQXw6u0Ju3/Hohxg0+KwBRFJ3mRhE9jHYBaYk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=J7tmz/ea; arc=none smtp.client-ip=192.198.163.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1774440381; c=relaxed/simple;
+	bh=ueF0hrvRluFMJ/+IsNDv2TY9qAQLpZVCChvf6GImWMk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UePQYMMHUF/w8im0JJRCGP8h++AX33oeb2sMfRAch2CTvkZnnX/RQjpaJe9ZCqUtZXTY0mBolr4AD1TseUHjJwYkCH6lLc9I1+/U2YuwnLyfOaxQY85cECeCrvYVBPxO38SFSHrowpm/K9TT9JRrjTml+7m9OlhyIieIf77S+dw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b64J3S/9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="J7tmz/ea"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774440257; x=1805976257;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=pthnvpb4bRgKrgjRM/7gqeUF0giUw3hMBAx3mtd0Tfk=;
-  b=J7tmz/eaTd05OL5Uk7c6f1Kz8pD8vJdRkgQWOqDIGV0pFDBcdRBCkn5L
-   CHF0T6xDxbbPlkkMcFQ5srdSF3zl6wg/kncaLmsQAOzReECtzOOSn9tHA
-   inEXGYEhqWoW7sxM7rBars5x1z7pJHS9y2ujTi3YG6RW47526m7HdSFNK
-   uc0J5+6qPA05S8bFz5l0rUjFhsYQD3Q+EHHd1TdX9Z5/Rrb4XBiLBqEu/
-   u5yJRH0WjjoSCRThOZjnWjA2bPXqdVGwbajeUIsS5WETRkPM/TElJxRS3
-   1xKJJYjeyEjD9TvZy6SnkpcjaF94s7DRIOuUW23s462znQhMdhy7V+6hw
-   g==;
-X-CSE-ConnectionGUID: +a+RKR8dQuelGRD2RspvTQ==
-X-CSE-MsgGUID: x8N4ddhjS82VENnpV3ctWw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11739"; a="79381329"
-X-IronPort-AV: E=Sophos;i="6.23,140,1770624000"; 
-   d="scan'208";a="79381329"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2026 05:04:15 -0700
-X-CSE-ConnectionGUID: GDVCGG5yQPG4XMQBFBjvAw==
-X-CSE-MsgGUID: 2mzDZ70tTHGJhYkLqZAkRA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,140,1770624000"; 
-   d="scan'208";a="255160046"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.125])
-  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2026 05:04:07 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Wed, 25 Mar 2026 14:04:03 +0200 (EET)
-To: linux-pci@vger.kernel.org
-cc: Bjorn Helgaas <bhelgaas@google.com>, Guenter Roeck <linux@roeck-us.net>, 
-    linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-    linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org, 
-    linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-    linux-s390@vger.kernel.org, linux-sh@vger.kernel.org, 
-    Russell King <linux@armlinux.org.uk>, 
-    Geert Uytterhoeven <geert@linux-m68k.org>, 
-    Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
-    "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-    Helge Deller <deller@gmx.de>, Michael Ellerman <mpe@ellerman.id.au>, 
-    Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
-    Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, 
-    "H. Peter Anvin" <hpa@zytor.com>, Chris Zankel <chris@zankel.net>, 
-    Max Filippov <jcmvbkbc@gmail.com>, 
-    Madhavan Srinivasan <maddy@linux.ibm.com>, 
-    Yoshinori Sato <ysato@users.sourceforge.jp>, Rich Felker <dalias@libc.org>, 
-    John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
-    Nicholas Piggin <npiggin@gmail.com>, 
-    "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, x86@kernel.org, 
-    LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 09/10] PCI: Align head space better
-In-Reply-To: <20260324165633.4583-10-ilpo.jarvinen@linux.intel.com>
-Message-ID: <3a51ad39-558f-860d-4920-9f757b7d5131@linux.intel.com>
-References: <20260324165633.4583-1-ilpo.jarvinen@linux.intel.com> <20260324165633.4583-10-ilpo.jarvinen@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b64J3S/9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFB30C4CEF7;
+	Wed, 25 Mar 2026 12:06:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774440381;
+	bh=ueF0hrvRluFMJ/+IsNDv2TY9qAQLpZVCChvf6GImWMk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=b64J3S/9wMpdMbsb28lUju0wP16mAjZXdtTfStiNijzPEkHs1QwjQqNJn9Vm96m4G
+	 SesNnOOhFr1Av4MG+5BeUKnlWQbTn7LgkfIEGssQYGwMJXp7uc7C3mqUl+mJqux3Mz
+	 7GVqbaVqgjEGvz6Dkath/TBSnChu4Yci0FfgPm2vMcRNKaevXioRglINXVrTJZU9MW
+	 NstZ4onOipYfdbdsAS/lY7IdpfwvbAM5L8zb11Se6dTjuxRPVKptHkfpZpHB14zIix
+	 egtrB549HcgGNnuMLCUyzdeVWiCIdft3TDwdf/Teh6A6NpfuRpF0LvSmjfIaruYB8r
+	 /NaH//k6jNhlQ==
+Date: Wed, 25 Mar 2026 17:36:08 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Mark Pearson <mpearson-lenovo@squebb.ca>
+Cc: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
+	Rob Herring <robh@kernel.org>, Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+	Greg KH <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
+	Nathan Chancellor <nathan@kernel.org>, Nicolas Schier <nicolas.schier@linux.dev>, 
+	Hans de Goede <hansg@kernel.org>, Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, 
+	"Derek J . Clark" <derekjohn.clark@gmail.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Bartosz Golaszewski <brgl@bgdev.pl>, 
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Bartosz Golaszewski <brgl@kernel.org>, 
+	linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org, 
+	"platform-driver-x86@vger.kernel.org" <platform-driver-x86@vger.kernel.org>, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org, 
+	Stephan Gerhold <stephan.gerhold@linaro.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH v6 6/9] dt-bindings: connector: m2: Add M.2 1620 LGA
+ soldered down connector
+Message-ID: <cvqdbqnzjmzoowxkvz2lyv4avropu5jw7h2r6zng3ecf245hgg@fsysjqflqd35>
+References: <20260317-pci-m2-e-v6-6-9c898f108d3d@oss.qualcomm.com>
+ <20260322233713.GA98177-robh@kernel.org>
+ <to2mrizprc3hjufqbiplpqyek7f4uutqtn4hx4gkmdgv2rykbc@ybwwjhdec4nm>
+ <CAL_JsqJXrHCJt770bJkMmAUhirSF3kHjYwSzkG7cXp7-eys8Rg@mail.gmail.com>
+ <6aef3xxjjd4nbgrfx6jc6jt6rpqmttoui6hil5zqgdpas2j6gj@ie6j72orenou>
+ <fsvmmgoe5wslmxebhrrwmdg2ldcmhzvj53gjkdfnfg2m2rz2lw@dcfboaakz7ae>
+ <bguhzabwryayyqkv4ilzwr3ixwv6bzxncblo3ircz2wm3fs52k@66zvcrfcb4oe>
+ <blhm4csjyw6r667cleljgzd6rpwagttjo5rau7wjrlnjakq2qm@ekyhc4jvwmwf>
+ <m44mupdmg7kgco62n4evcviagqo7wwgyt3gybugbxwesd4ekjz@o24r6v4tpezc>
+ <3faffec9-dc9d-4eec-a652-a84d30d85c96@app.fastmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-1062646629-1774440243=:976"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <3faffec9-dc9d-4eec-a652-a84d30d85c96@app.fastmail.com>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Mon, Mar 23, 2026 at 01:23:07PM -0400, Mark Pearson wrote:
+> 
+> 
+> On Mon, Mar 23, 2026, at 12:52 PM, Manivannan Sadhasivam wrote:
+> > On Mon, Mar 23, 2026 at 06:45:15PM +0200, Dmitry Baryshkov wrote:
+> >> On Mon, Mar 23, 2026 at 09:26:04PM +0530, Manivannan Sadhasivam wrote:
+> >> > On Mon, Mar 23, 2026 at 05:14:30PM +0200, Dmitry Baryshkov wrote:
+> >> > > On Mon, Mar 23, 2026 at 07:14:25PM +0530, Manivannan Sadhasivam wrote:
+> >> > > > On Mon, Mar 23, 2026 at 08:39:55AM -0500, Rob Herring wrote:
+> >> > > > > On Mon, Mar 23, 2026 at 7:16 AM Manivannan Sadhasivam <mani@kernel.org> wrote:
+> >> > > > > >
+> >> > > > > > On Sun, Mar 22, 2026 at 06:37:13PM -0500, Rob Herring wrote:
+> >> > > > > > > On Tue, Mar 17, 2026 at 09:59:56AM +0530, Manivannan Sadhasivam wrote:
+> >> > > > > > > > Lenovo Thinkpad T14s is found to have a soldered down version of M.2 1620
+> >> > > > > > > > LGA connector. Though, there is no 1620 LGA form factor defined in the M.2
+> >> > > > > > > > spec, it looks very similar to the M.2 Key E connector. So add the
+> >> > > > > > > > "pcie-m2-1620-lga-connector" compatible with "pcie-m2-e-connector" fallback
+> >> > > > > > > > to reuse the Key E binding.
+> >> > > > > > >
+> >> > > > > > > What is LGA?
+> >> > > > > > >
+> >> > > > > >
+> >> > > > > > Land Grid Array
+> >> > > > > >
+> >> > > > > > > If not in the spec, is it really something generic?
+> >> > > > > > >
+> >> > > > > >
+> >> > > > > > Good question. Yes and No! LGA is not something that Lenovo only uses. Other
+> >> > > > > > vendors may also use this form factor. PCIe connectors are full of innovation as
+> >> > > > > > the spec gives room for hardware designers to be as innovative as possible to
+> >> > > > > > save the BOM cost.
+> >> > > > > 
+> >> > > > > innovation == incompatible changes
+> >> > > > > 
+> >> > > > 
+> >> > > > Yes, I was trying to sound nice :)
+> >> > > > 
+> >> > > > > > This is why I do not want to make it Lenovo specific. But if you prefer that, I
+> >> > > > > > can name it as "lenovo,pcie-m2-1620-lga-connector".
+> >> > > > > 
+> >> > > > > Depends if you think that s/w needs to know the differences. Hard to
+> >> > > > > say with a sample size of 1.
+> >> > > > > 
+> >> > > > 
+> >> > > > Sure. Will add the 'lenovo' prefix then.
+> >> > > 
+> >> > > Is it really Lenovo? Or is it some other module vendor, whose LGAs are
+> >> > > being used by Lenovo?
+> >> > > 
+> >> > > I remember that DB820c also used some kind of a module for the WiFi card
+> >> > > (which might be M.2 compatible or might not, I can't find exact docs at
+> >> > > this point).
+> >> > > 
+> >> > 
+> >> > I don't know. These kind of designs might be reused by several vendors. But
+> >> > considering that we should not make it generic, I'd go with Lenovo as that's
+> >> > the only vendor we know as of now.
+> >> 
+> >> ... and later we learn that other vendors use the same idea /pinout,
+> >> then nothing stops us from still telling that it's a
+> >> "lenovo,pcie-m2-something-lga". 
+> >> 
+> >
+> > How do you possibly know whether a single vendor has introduced this form factor
+> > or reused by multiple ones? Atleast, I don't have access to such a source to
+> > confirm.
+> >
+> I've not really been following this thread/patchset in detail; but want me to try and check with the T14s platform team if this device is specifically made for us (Lenovo) or not?
+> I doubt it is - we just don't do that usually, but I can go and ask the question if it will help resolve this (with the caveat that it could hold up the review for a bit and I may not be able to get a straight answer)
+> 
 
---8323328-1062646629-1774440243=:976
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+I can drop this specific patch in the meantime.
 
-On Tue, 24 Mar 2026, Ilpo J=C3=A4rvinen wrote:
+> My vote (for what little it's worth) would be to make it non-Lenovo specific. Then when the same part causes issues on another vendors platform I won't get asked questions about why Lenovo is breaking <other vendor> :)
+> 
 
-> When a bridge window contains big and small resource(s), the small
-> resource(s) may not amount to the half of the size of the big resource
-> which would allow calculate_head_align() to shrink the head alignment.
-> This results in always placing the small resource(s) after the big
-> resource.
->=20
-> In general, it would be good to be able to place the small resource(s)
-> before the big resource to achieve better utilization of the address
-> space. In the cases where the large resource can only fit at the end
-> of the window, it is even required.
->=20
-> However, carrying the information over from pbus_size_mem() and
-> calculate_head_align() to __pci_assign_resource() and
-> pcibios_align_resource() is not easy with the current data structures.
->=20
-> A somewhat hacky way to move the non-aligning tail part to the head is
-> possible within pcibios_align_resource(). The free space between the
-> start of the free space span and the aligned start address can be
-> compared with the non-aligning remainder of the size. If the free space
-> is larger than the remainder, placing the remainder before the start
-> address is possible. This relocation should generally work, because PCI
-> resources consist only power-of-2 atoms.
->=20
-> Various arch requirements may still need to override the relocation, so
-> the relocation is only applied selectively in such cases.
->=20
-> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=3D221205
-> Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
-> ---
->  arch/arm/kernel/bios32.c         |  3 +++
->  arch/m68k/kernel/pcibios.c       |  4 ++++
->  arch/mips/pci/pci-generic.c      |  3 +++
->  arch/mips/pci/pci-legacy.c       |  2 ++
->  arch/parisc/kernel/pci.c         |  3 +++
->  arch/powerpc/kernel/pci-common.c |  2 ++
->  arch/sh/drivers/pci/pci.c        |  2 ++
->  arch/x86/pci/i386.c              |  2 ++
->  arch/xtensa/kernel/pci.c         |  2 ++
->  drivers/pci/setup-res.c          | 39 +++++++++++++++++++++++++++++++-
->  include/linux/pci.h              |  5 ++++
->  kernel/resource.c                |  2 +-
->  12 files changed, 67 insertions(+), 2 deletions(-)
+Even if Lenovo prefix is used, it won't break other vendors. Just that we will
+end up adding more compatibles.
 
-> diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-> index 7a0522316ee3..994c3bd36ef2 100644
-> --- a/arch/sh/drivers/pci/pci.c
-> +++ b/arch/sh/drivers/pci/pci.c
-> @@ -185,6 +185,8 @@ resource_size_t pcibios_align_resource(void *data, co=
-nst struct resource *res,
->  =09=09 */
->  =09=09if (start & 0x300)
->  =09=09=09start =3D (start + 0x3ff) & ~0x3ff;
-> +=09} else (res->flags & IORESOURCE_MEM) {
+Anyhow, I'll wait for your reply and drop this patch for next revision.
 
-I'll be adding the missing if into this in v2 (found by sashiko). It seems=
-=20
-lkp didn't test this so it was not caught earlier.
+- Mani
 
-> +=09=09start =3D pci_align_resource(dev, res, empty_res, size, align);
->  =09}
-> =20
->  =09return start;
-
---=20
- i.
-
---8323328-1062646629-1774440243=:976--
+-- 
+மணிவண்ணன் சதாசிவம்
