@@ -1,61 +1,52 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A73183CF059
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2026 11:43:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1F1B3CF69F;
+	Wed, 25 Mar 2026 11:51:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774439013; cv=none; b=EFdoMLa99RavtV7kff89EWss9BwLju7W+YCHMFelScHO+SwzGR0FsWLJ7PnV5q8pS0QJAp33Nu6Zrvz7Kx+y961+WlE6n3VxAarNRyuDqtCctOjAlOgdMATcDhX1Bx1WTddCgTVnlNrh43uQrr/VnJqM/6+LFJQsSdv5PuRc7RI=
+	t=1774439487; cv=none; b=LtIFpnEq+fdW55N0lJ5KjLHwqz87QXBw7t2gi7SzQ7WC814dygtZXndhoCn1Bx2/SXsCq5ud5BI74XpT/UP/TgOirNOtaunKyg83c8Uy2R+Fbbo1JcMIAyT+Hcv8Ajr3Bye/+MsXhiJzOd6dMbKfTJ02KTrq3Ea4R5ysytVFEX0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774439013; c=relaxed/simple;
-	bh=QbIceMlA4lobVchoyY3Beq01Q1lYhp7hHttZ3qKrNx8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=KaDS0ORIjQDG0bMHD8dCsN6UqVTw6Qyhj1AmC8K1wIx+T35rp6RvF4havN6cPwIEPSxVKpwoxLPXbhU3iKK8zB9DrGcvtp+wi12ZFoUAhLaz86hOmvkoLNr6FUQxjXv6kzaf8o2/5AxbgqCnY+F5EhHQkDIHmi/S4qHDwvjzbOk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dblGg+9a; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1774439487; c=relaxed/simple;
+	bh=ijQZYkQ8huX8bzZfiuwKK5l/O+taUFGXBf7mUcCwX/o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pgOg2gNFWYMdKBukorfVPT0egm7iZMc+USBbiVREq5qDEdcDrbeYPC6pdtyvYlAWfcnLf3KVYdmhKXHOHEwesGnjA0PunUqH46app9F39WhIdP3Cbk7REtG3OQV3wggnjt633paRVfin0oILpi3CKmgdwUudOG/CCcXXxgba4CI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F8VoBQpQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dblGg+9a"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774439011; x=1805975011;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=QbIceMlA4lobVchoyY3Beq01Q1lYhp7hHttZ3qKrNx8=;
-  b=dblGg+9a+mbfUCjJEmD9XrVLtIKBIDwHj4QjT5qvWxWq/ia5f7yBM81B
-   aXv+fyTX59+6XagNYYeOXDML4jBfVEEM1IVSXfqa4pt3CnaxcIDU0wuub
-   +vVgaOraXxfPL4SlQABNqOTiI3DT2KReE3GurdsQA8/VeinY/qSx0lNUS
-   VFOcbVCqNmUINel2wzW0TTJop3PAvDsYwGTq0ptJ/ERXst8l0ZeBddR3O
-   z6hQfoni2CmfkN46HaTqleFQUBs6G1gc4wnNrKBxbPvsaOROYIFp6bFqx
-   p5yaFKAY0J4cPENQy2cZk+nmFRLpkt1PJ8QkCqm2jWTJT/i9nFD1TeLqx
-   A==;
-X-CSE-ConnectionGUID: 6jALhJsPQ7OlSTJjMLCgQQ==
-X-CSE-MsgGUID: Qc+hrsyxSRuWgVhEnR52Eg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11739"; a="93049759"
-X-IronPort-AV: E=Sophos;i="6.23,140,1770624000"; 
-   d="scan'208";a="93049759"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2026 04:43:31 -0700
-X-CSE-ConnectionGUID: H428qD0oSj6u7/A2u+skpA==
-X-CSE-MsgGUID: ErgEsXyqSnurQiLjfh9GjA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,140,1770624000"; 
-   d="scan'208";a="247686403"
-Received: from lkp-server01.sh.intel.com (HELO 3905d212be1b) ([10.239.97.150])
-  by fmviesa002.fm.intel.com with ESMTP; 25 Mar 2026 04:43:29 -0700
-Received: from kbuild by 3905d212be1b with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1w5Mdy-000000006kb-28wu;
-	Wed, 25 Mar 2026 11:43:26 +0000
-Date: Wed, 25 Mar 2026 19:43:10 +0800
-From: kernel test robot <lkp@intel.com>
-To: Simon Richter <Simon.Richter@hogyros.de>
-Cc: oe-kbuild-all@lists.linux.dev, linux-pci@vger.kernel.org,
- Bjorn Helgaas <helgaas@kernel.org>
-Subject: [pci:vga 3/5] drivers/gpu/drm/i915/display/intel_vga.c:68:9:
- warning: ignoring return value of 'vga_get_uninterruptible' declared with
- attribute 'warn_unused_result'
-Message-ID: <202603251922.YzNmC76O-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F8VoBQpQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F905C2BCB2;
+	Wed, 25 Mar 2026 11:51:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774439486;
+	bh=ijQZYkQ8huX8bzZfiuwKK5l/O+taUFGXBf7mUcCwX/o=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=F8VoBQpQxXDFHPLwjgn+FimF064VYiGnb02ISTZuo7sMCK/Or3p4aIxqTZnuLA+uL
+	 /r3T+Vz7lEc5yc54KjVTpnI+VbV4XN+l9Nl46axhDOOVHgzVdpo/UGmLK8hQXPEUNR
+	 ynBx5dd5yG3uJQWeeWTgH1cW2In1W0YVJ8QoBnAUk6K4WIL8a0REi+e01oXpRwalXe
+	 gSeFc6w+k+DbJNNIa/GojyKKWjfTcx03289D4/2LfiEs6Mel5pKCUogETaR2OKLgYy
+	 1ahoOxct2eimH12qdt9HBRcDZVXFXVZm9/7QyfTkESgul2vKzgUyr+V1bDmNBkVBYO
+	 nsJxO9bsBzs0w==
+Date: Wed, 25 Mar 2026 17:21:14 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Vladimir Oltean <vladimir.oltean@nxp.com>
+Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org, 
+	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org, linux-can@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-media@vger.kernel.org, linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, linux-rockchip@lists.infradead.org, 
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-sunxi@lists.linux.dev, 
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, netdev@vger.kernel.org, 
+	spacemit@lists.linux.dev, UNGLinuxDriver@microchip.com, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Nitin Rawat <quic_nitirawa@quicinc.com>
+Subject: Re: [PATCH v5 phy-next 10/27] scsi: ufs: qcom: keep parallel track
+ of PHY power state
+Message-ID: <vu3cxpynr5mu2fzkrtmjcwijc5jz323wlnbc3r7lp2wxqmhydx@z5xhgf4myw2d>
+References: <20260319223241.1351137-1-vladimir.oltean@nxp.com>
+ <20260319223241.1351137-11-vladimir.oltean@nxp.com>
+ <ezrcjjwtg5n76w4m65l27szu5mywx66ti3xuprkfcp3x6quvbf@2rew4zrnnbt2>
+ <20260325114309.3k7xkfrffpxp5xq4@skbuf>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -63,107 +54,54 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260325114309.3k7xkfrffpxp5xq4@skbuf>
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git vga
-head:   aac641c7e5feb2d966a07f7f5da5ddecb5f07e13
-commit: c75d295afc77223a889bed578e4a686e000c1691 [3/5] PCI/VGA: Mark vga_ge=
-t() and wrappers as __must_check
-config: i386-randconfig-003-20260325 (https://download.01.org/0day-ci/archi=
-ve/20260325/202603251922.YzNmC76O-lkp@intel.com/config)
-compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
-reproduce (this is a W=3D1 build): (https://download.01.org/0day-ci/archive=
-/20260325/202603251922.YzNmC76O-lkp@intel.com/reproduce)
+On Wed, Mar 25, 2026 at 01:43:09PM +0200, Vladimir Oltean wrote:
+> On Tue, Mar 24, 2026 at 11:00:10AM +0530, Manivannan Sadhasivam wrote:
+> > On Fri, Mar 20, 2026 at 12:32:24AM +0200, Vladimir Oltean wrote:
+> > > As explained in the similar ufs-exynos.c change, PHY consumer drivers
+> > > should not look at the phy->power_count, because in the general case
+> > > there might also be other consumers who have called phy_power_on() too,
+> > > so the fact that the power_count is non-zero does not mean that we did.
+> > > 
+> > > Moreover, struct phy will become opaque soon, so the qcom UFS driver
+> > > will not be able to apply this pattern. Keep parallel track of the PHY
+> > > power state, instead of looking at a field which will become unavailable
+> > > (phy->power_count).
+> > > 
+> > > About treating the phy_power_off() return code: from an API perspective,
+> > > this should have probably returned void, otherwise consumers would be
+> > > stuck in a state they can't escape. The provider, phy-qcom-qmp-ufs.c,
+> > > does return 0 in its power_off() implementation. I consider it safe to
+> > > discard potential errors from phy_power_off() instead of complicating
+> > > the phy_powered_on logic.
+> > > 
+> > 
+> > You could even simplify the code by getting rid of the 'phy_powered_on' check
+> > altogether. There is no real need to track the PHY power state in this driver.
+> > It is safe to call phy_power_off() without any checks.
+> > 
+> > - Mani
+> 
+> Ok.. as the author of commit 7bac65687510 ("scsi: ufs: qcom: Power off
+> the PHY if it was already powered on in ufs_qcom_power_up_sequence()"),
+> I assume you have hardware to test. Would you mind writing a patch that
+> I could pick up to replace this one with?
+> 
 
-If you fix the issue in a separate patch/commit (i.e. not just a new versio=
-n of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202603251922.YzNmC76O-lkp@i=
-ntel.com/
+Sure, will do.
 
-All warnings (new ones prefixed by >>):
+> I suppose that the power_count test is somehow no longer necessary after
+> commit 77d2fa54a945 ("scsi: ufs: qcom : Refactor phy_power_on/off
+> calls"), but frankly I don't see it - the ufshcd state machine is a bit
+> too complicated for me to just statically analyze.
 
-   drivers/gpu/drm/i915/display/intel_vga.c: In function 'intel_vga_disable=
-':
->> drivers/gpu/drm/i915/display/intel_vga.c:68:9: warning: ignoring return =
-value of 'vga_get_uninterruptible' declared with attribute 'warn_unused_res=
-ult' [-Wunused-result]
-      68 |         vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
-         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   drivers/gpu/drm/i915/display/intel_vga.c: In function 'intel_vga_reset_i=
-o_mem':
-   drivers/gpu/drm/i915/display/intel_vga.c:93:9: warning: ignoring return =
-value of 'vga_get_uninterruptible' declared with attribute 'warn_unused_res=
-ult' [-Wunused-result]
-      93 |         vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
-         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+I believe I added the power_count check for phy_exit(). But since that got
+moved, the check becomes no longer necessary.
 
+- Mani
 
-vim +68 drivers/gpu/drm/i915/display/intel_vga.c
-
-0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  43 =20
-4fb8783165b7c6 Jani Nikula   2019-10-01  44  /* Disable the VGA plane that =
-we never use */
-4b6e05c43b7542 Ville Syrj=C3=A4l=C3=A4 2024-09-06  45  void intel_vga_disab=
-le(struct intel_display *display)
-4fb8783165b7c6 Jani Nikula   2019-10-01  46  {
-4b6e05c43b7542 Ville Syrj=C3=A4l=C3=A4 2024-09-06  47  	struct pci_dev *pde=
-v =3D to_pci_dev(display->drm->dev);
-4b6e05c43b7542 Ville Syrj=C3=A4l=C3=A4 2024-09-06  48  	i915_reg_t vga_reg =
-=3D intel_vga_cntrl_reg(display);
-0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  49  	enum pipe pipe;
-0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  50  	u32 tmp;
-4fb8783165b7c6 Jani Nikula   2019-10-01  51  	u8 sr1;
-4fb8783165b7c6 Jani Nikula   2019-10-01  52 =20
-0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  53  	tmp =3D intel_de_re=
-ad(display, vga_reg);
-0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  54  	if (tmp & VGA_DISP_=
-DISABLE)
-a3af0140663dc3 Emil Velikov  2021-06-04  55  		return;
-a3af0140663dc3 Emil Velikov  2021-06-04  56 =20
-0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  57  	if (display->platfo=
-rm.cherryview)
-0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  58  		pipe =3D REG_FIELD=
-_GET(VGA_PIPE_SEL_MASK_CHV, tmp);
-0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  59  	else if (has_vga_pi=
-pe_sel(display))
-0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  60  		pipe =3D REG_FIELD=
-_GET(VGA_PIPE_SEL_MASK, tmp);
-0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  61  	else
-0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  62  		pipe =3D PIPE_A;
-0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  63 =20
-0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  64  	drm_dbg_kms(display=
-->drm, "Disabling VGA plane on pipe %c\n",
-0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  65  		    pipe_name(pipe=
-));
-0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  66 =20
-4fb8783165b7c6 Jani Nikula   2019-10-01  67  	/* WaEnableVGAAccessThroughIO=
-Port:ctg,elk,ilk,snb,ivb,vlv,hsw */
-4fb8783165b7c6 Jani Nikula   2019-10-01 @68  	vga_get_uninterruptible(pdev,=
- VGA_RSRC_LEGACY_IO);
-f0bb41fad02e03 Jani Nikula   2022-02-02  69  	outb(0x01, VGA_SEQ_I);
-f0bb41fad02e03 Jani Nikula   2022-02-02  70  	sr1 =3D inb(VGA_SEQ_D);
-f0bb41fad02e03 Jani Nikula   2022-02-02  71  	outb(sr1 | VGA_SR01_SCREEN_OF=
-F, VGA_SEQ_D);
-4fb8783165b7c6 Jani Nikula   2019-10-01  72  	vga_put(pdev, VGA_RSRC_LEGACY=
-_IO);
-4fb8783165b7c6 Jani Nikula   2019-10-01  73  	udelay(300);
-4fb8783165b7c6 Jani Nikula   2019-10-01  74 =20
-4b6e05c43b7542 Ville Syrj=C3=A4l=C3=A4 2024-09-06  75  	intel_de_write(disp=
-lay, vga_reg, VGA_DISP_DISABLE);
-4b6e05c43b7542 Ville Syrj=C3=A4l=C3=A4 2024-09-06  76  	intel_de_posting_re=
-ad(display, vga_reg);
-4fb8783165b7c6 Jani Nikula   2019-10-01  77  }
-4fb8783165b7c6 Jani Nikula   2019-10-01  78 =20
-
-:::::: The code at line 68 was first introduced by commit
-:::::: 4fb8783165b7c6fb4b52428dbb80da8554e5fd1e drm/i915/display: abstract =
-all vgaarb access to intel_vga.[ch]
-
-:::::: TO: Jani Nikula <jani.nikula@intel.com>
-:::::: CC: Jani Nikula <jani.nikula@intel.com>
-
---=20
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+-- 
+மணிவண்ணன் சதாசிவம்
