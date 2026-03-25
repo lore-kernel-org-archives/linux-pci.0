@@ -1,45 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C7A018AFE;
-	Wed, 25 Mar 2026 00:54:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A49C326F476;
+	Wed, 25 Mar 2026 01:24:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774400046; cv=none; b=DlnI5LFX6xbosGztlltHD+b4EZJQXJp7QTO3gFpmpHsk6lxaiVdTqZYFTsgNhuUue4tFqaFGXgS+reIwr7oyLh6vMdqtK8CxkWzu/f8skCdCrRSLrxL4VibvDRtRDK/XcnTmffAanPGQJmVCi07k5cWazytjOj8SO53MfFUkvyA=
+	t=1774401894; cv=none; b=YEcQJOnhnbBJWOsJqSX4Y8FqCLZ1lT3Ng/1MJgqyF8wVBIjsfYcL9ensjzxyERJSoYXi4DwHr9hKrAoWpoyf3xvmGjcXT86PmX6XUQrfBvr7tnpswwSZ/1sq3g683OqMOJPby85IvaAIT9lrAxyHX2zPRLirRnerlLUMovtBV2Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774400046; c=relaxed/simple;
-	bh=dRfWufNAJCcOhh0AhmUSfHoYAd4HMIuJBmV7zbhHIv8=;
+	s=arc-20240116; t=1774401894; c=relaxed/simple;
+	bh=WtH6jejJPTSPrq9rLpaDxloisIgclTk0Shm03kvs/ig=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OVvN659fG1aoK2Q84hryIyBvzIO0mWNk7o0u+NK1dnJJ2ZYyAazAvg4rAV/Uj7luQ1dnutopVUTwIbidErhfhvVhZn2kvv1BWv4YSQFxtpQc/5OUYh2dmuCILOgSkwimnhNk1RY+M6EGNflj8kY/nxRkkHKxtA950ub5nz5UDUk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AUbP/vJT; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=YXX3WyoMUlGq4M2d110sB5zz3ixYLwY0+c+gRqgJlMiUWPUOyLZealzAjs2KhKcuT7Mqf7WvM4tKM4VV0rT+UYKcKc030xwhNtlxxytECBLgI426dlpEtQkovg1FlVtl1J3T4S0xu04mH/R2JRH8HhvaGxvTuLpMlF+6IBefQ18=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PsOwB6Pl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AUbP/vJT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68BF3C19424;
-	Wed, 25 Mar 2026 00:54:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PsOwB6Pl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51013C19424;
+	Wed, 25 Mar 2026 01:24:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774400045;
-	bh=dRfWufNAJCcOhh0AhmUSfHoYAd4HMIuJBmV7zbhHIv8=;
+	s=k20201202; t=1774401894;
+	bh=WtH6jejJPTSPrq9rLpaDxloisIgclTk0Shm03kvs/ig=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AUbP/vJT3ju85md9fr2qXnnguARCnC6pYHEWEpWgxdy3mERVlbgDcDeN0tTsdggeF
-	 KxflKX2yJwN7hFAEkp8hMd8eaVm5AUgnfY2+97Ty1E7yBjuR/Wl5PRZYCNeSrtPb3f
-	 /kxaCN8j1pDIOkvGRsFvzPTB0rCZzuPhn1Y9rVwhKmm2HqQhOhNkCPN+H6l6VKgg/i
-	 F9aG7r+Zu6Vfd4IUxNNp/DhFsEzIJ0BfxyIKb7z6ooH8gC2QhBxJYrECUxjAJGpvLG
-	 js2BbpJNCjvSNmdhCNS+CrcA9r6yute3EqWKFLWaS7GtuxH1Z1n9edAI/rn63JdOE/
-	 msh13CzeR4YhA==
-Date: Tue, 24 Mar 2026 19:54:04 -0500
+	b=PsOwB6PlE3u/GyyMJBJrnWjKoWIdBuvbozn46aQfR0NbXVEv0SRKQ1Lwl6Zd24Snp
+	 UT98DwbnFyiheVqnAkCvdtkwoW6xoVjU2VJb71y63dZ5mbNNqSNGxe3V/yZ7hzP6WB
+	 QigaA3AEUZZUz7ZdhvAw0iJg81W4rmowY1XRvdGmlZgcX2WRTI1sAYoa5jgw6oyBkz
+	 6BtpTlV4C96HbL9DcFEGuvxV+i6U0McxGI+E0jX76kS3+rgxZnRg7k4U1ToXmV11GP
+	 jn640QHRjXH1GYTfUkoK5yKsI4b2hr96Hv3/km9bsnkTlFpI7Le0a1k0eL5NjAVkjJ
+	 WNQNi0BzVBTAQ==
+Date: Tue, 24 Mar 2026 20:24:53 -0500
 From: "Rob Herring (Arm)" <robh@kernel.org>
-To: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: kernel@pengutronix.de, linux-kernel@vger.kernel.org, krzk+dt@kernel.org,
-	l.stach@pengutronix.de, s.hauer@pengutronix.de, imx@lists.linux.dev,
-	devicetree@vger.kernel.org, festevam@gmail.com, frank.li@nxp.com,
-	linux-arm-kernel@lists.infradead.org, lpieralisi@kernel.org,
-	linux-pci@vger.kernel.org, conor+dt@kernel.org,
-	kwilczynski@kernel.org, mani@kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH v8 2/5] dt-bindings: PCI: imx6q-pcie: Add i.MX94 and
- i.MX943 PCIe compatible strings
-Message-ID: <177440004361.2302904.12708290351428536062.robh@kernel.org>
-References: <20260324023036.784466-1-hongxing.zhu@nxp.com>
- <20260324023036.784466-3-hongxing.zhu@nxp.com>
+To: Thierry Reding <thierry.reding@kernel.org>
+Cc: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	devicetree@vger.kernel.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Jon Hunter <jonathanh@nvidia.com>,
+	Mikko Perttunen <mperttunen@nvidia.com>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>
+Subject: Re: [PATCH v2 3/5] dt-bindings: pci: Document the NVIDIA Tegra264
+ PCIe controller
+Message-ID: <177440189257.2451552.18196101830235626115.robh@kernel.org>
+References: <20260320225443.2571920-1-thierry.reding@kernel.org>
+ <20260320225443.2571920-4-thierry.reding@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,18 +51,31 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260324023036.784466-3-hongxing.zhu@nxp.com>
+In-Reply-To: <20260320225443.2571920-4-thierry.reding@kernel.org>
 
 
-On Tue, 24 Mar 2026 10:30:33 +0800, Richard Zhu wrote:
-> Add i.MX94 and i.MX943 PCIe compatible strings and fallback to
-> i.MX95 PCIe compatible string.
+On Fri, 20 Mar 2026 23:54:35 +0100, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
 > 
-> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> The six PCIe controllers found on Tegra264 are of two types: one is used
+> for the internal GPU and therefore is not connected to a UPHY and the
+> remaining five controllers are typically routed to a PCI slot and have
+> additional controls for the physical link.
+> 
+> While these controllers can be switched into endpoint mode, this binding
+> describes the root complex mode only.
+> 
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
 > ---
->  .../bindings/pci/fsl,imx6q-pcie-ep.yaml       | 18 ++++++++-----
->  .../bindings/pci/fsl,imx6q-pcie.yaml          | 26 ++++++++++++-------
->  2 files changed, 28 insertions(+), 16 deletions(-)
+> Changes in v2:
+> - move ECAM region first and unify C0 vs. C1-C5
+> - move unevaluatedProperties to right before the examples
+> - add description to clarify the two types of controllers
+> - add examples for C0 and C1-C5
+> 
+>  .../bindings/pci/nvidia,tegra264-pcie.yaml    | 149 ++++++++++++++++++
+>  1 file changed, 149 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml
 > 
 
 Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
