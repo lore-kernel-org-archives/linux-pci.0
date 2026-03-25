@@ -1,109 +1,52 @@
-Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FA8E285066
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2026 20:06:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D7C4F4F1;
+	Wed, 25 Mar 2026 20:08:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774469214; cv=none; b=BxGc/7h51APcnxEwhMIjGzakegRzKJbpe8H8gyf9+jhrOavPNVoLK/mmWQ0lnsq1NxIKOzUiR5Ngp1zTH8I6ZZfh4FgRn5Z5ZzVFNXEAYNAwuTWRkC3nuPxsOwNZjTr64iSaOZOTO8ARotftCklyj0LM+GMvoU9hlo+eS5osDMU=
+	t=1774469317; cv=none; b=Utloc6mUignDphi2XTgUiPBJhnRaSo6d6GMq8RX3wyRWoFnvtzGltqZIW6PFfMj+ArU9K+lwKdANLnCslBQ7tO2QN0wETW4hv0kqepWGjAi1COU6hoSSOt71P6CGl43qWvqMghWDk7sSB2QXfanZUGwVF10GO/paL3/KLIHEW04=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774469214; c=relaxed/simple;
-	bh=QWkkdA+pFF8rjilsaUm1i/vpWu+c/k23cgJdC8WUDOw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VeV0962gHrcRXsRWYvMuhW+38SFLml+zG/CEhDhsSEHLK0DDigOdyCvs+YrHfbn3A0eR9uYJF0HMX1F0pqp3u5svAjqwTupqwx1e6I2FvuH0MBlwqDiBP53PR4jRQ606ZXOhC0alC1hZxu6LrmnmStY3lyfbROVJ3kCC2puCtAM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=XOmpIf3w; arc=none smtp.client-ip=209.85.215.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1774469317; c=relaxed/simple;
+	bh=u0Cd5omrwW3YhsWw9m4ecHl9huofQib83nNWmHHNvaM=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=g/ZEWvVUvtDougtFY+CmzeCM7/05Ly55P1SWq/v52HNPdueXyWrNL42CbJbIsPmZGUrwzLUg4LE03FoWbrrS3Ob3Ep/HIj7yuS86ZY4Dn3dd75w2LjkQV+LVFPr+AQvsw0EZjmi9H5lyFA/YHFTMPwhauj+xuFtUI26i92YtHnI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z9Kn5rjL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="XOmpIf3w"
-Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-c742723c863so183683a12.0
-        for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2026 13:06:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1774469213; x=1775074013; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=+fZRp4AJi5cb/F6jA80ZrndPdXYxEQL1IK9u8/P+m9k=;
-        b=XOmpIf3wx3OAbYuBhazQbr1ZVOYiuW+8XsO0/K8RYWS3pqy/6NzSJ5O/zdVru6DhcX
-         TN6TGjZnxbzAHb449USGJQVZniTerw0en2lgBy3FjoXYn0yAjHyngXhNjCR82oB3iiht
-         gfGhIRTHxeS9ZrUjf6Lr+jDGi5pJA//Jg1aa6+rgnMwl0FD0kx++MMoKWg6pjEvs4ES5
-         FwzwIixpP2SiehviX4OWfOpTkR2ae0/WarXcOTsbL/obTaljzRiwBU9Oh5K9PunnEmBi
-         wgLr3NLM5/3w6YM131plNM2nDc2A7DgzxLS+xfohjZ4x8siHv+E7wnBG6STMqu4yfXsp
-         PYzg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774469213; x=1775074013;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+fZRp4AJi5cb/F6jA80ZrndPdXYxEQL1IK9u8/P+m9k=;
-        b=Q+jGuRJPnz/BVMmugub6AoUPU81CxrflLOoo6kJpRdVCyPUtJTPvdfXQchYwMrPdJK
-         adfxw0kYcJ9VpjxXtW3j/RPKRVqpsYG2MrIhhg8cdvqIi8mBkSnEIcZI/opMoYp9u0Rr
-         kZMYW1GHSJmTE9ozm8DKIGswPIC592z3sw9WXMNkoailYaH0+qsm9RG7jCuqIJCqMM3b
-         dDhxbXq1nSiQhQPjmB+i/6MHZ9nVRmH4NU8ekZ27FqCNfRStFTF/Rspz//uq2bioUdIt
-         TK+IuSQi2qkB0gowLmPSDq0mN5/xlq9AMnjSwuVZnZ13x4MyVJ5NK76o9VUQnbQCZTdc
-         7aLA==
-X-Forwarded-Encrypted: i=1; AJvYcCUt5PK8ksAtvgoYfcqXWkdEDTsVEkAtiHKRXStTYVCZJsMswWClnePXksH1gkwbmEmRB1kus3H9p30=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yza8uSPbrqkE+ZaExiNhdk24TKCIHWLJcBTQNKUD7AKoXmHCpYl
-	tLS+fkN88ycotRmaORlbn5OK8VG9fOiMCXJIX0v+Xef3uzpcWQRYsnMiEl9oRAg9RA==
-X-Gm-Gg: ATEYQzyGWayyore4Le/jvtKKnbonydOLv6T6ypfXu6AqjDwa9YPXyfp8KRv4TOLVlxm
-	eHuRrVbzjpUpqwB84xfjXfqhhqoHXTPkry74Cd5uckD4X19vL/Ocpc21HkmTJDIUhE8V5Cw7yPj
-	E+ZDNhSgpYWnEMcOhYmGmRSRK6/nyO0wfiba5sLDE0cItqVpH/eKKaIuDB1Tb0TjhcMIWrT8RSd
-	IO322AyT/zRM3eoZJBWQtTNvCdNCeBYbCBXtinokrZiNcs0YDYj0a4l/4XQ4HBgw8OIVPduSkSM
-	ayBppl/lN1SvjnlDXaVNR+zTgPXT4hrnyIpcvFotzCzPfG8eTJ0zETHL1u+iQTE6y41+jm/Ymw4
-	2Nx+lJqDD21DgnNmIdd1UeA3FsU2X5Lh4xbFIp4UEJJUk69pLdnuJ2T/5cg+KOIKiKNrsqQ+ZxX
-	5LUOq3Veec+HSzB0hcc7HrVkYCrSBl/d0iIbvclHDrQZIDCwcXZ0YfknFQokWumg==
-X-Received: by 2002:a05:6a20:8ca6:b0:398:b3bd:de58 with SMTP id adf61e73a8af0-39c4aed5082mr3746836637.65.1774469212632;
-        Wed, 25 Mar 2026 13:06:52 -0700 (PDT)
-Received: from google.com (239.23.105.34.bc.googleusercontent.com. [34.105.23.239])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c7673819da1sm305751a12.11.2026.03.25.13.06.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Mar 2026 13:06:51 -0700 (PDT)
-Date: Wed, 25 Mar 2026 20:06:47 +0000
-From: David Matlack <dmatlack@google.com>
-To: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Arnd Bergmann <arnd@arndb.de>,
-	Askar Safin <safinaskar@gmail.com>,
-	"Borislav Petkov (AMD)" <bp@alien8.de>,
-	Chris Li <chrisl@kernel.org>,
-	Dapeng Mi <dapeng1.mi@linux.intel.com>,
-	David Rientjes <rientjes@google.com>,
-	Feng Tang <feng.tang@linux.alibaba.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
-	Kees Cook <kees@kernel.org>, Kevin Tian <kevin.tian@intel.com>,
-	kexec@lists.infradead.org, kvm@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z9Kn5rjL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06011C4CEF7;
+	Wed, 25 Mar 2026 20:08:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774469317;
+	bh=u0Cd5omrwW3YhsWw9m4ecHl9huofQib83nNWmHHNvaM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=Z9Kn5rjLrhwK1kdqyaXdq9wyvg4ZxB1tPZ9jrqFS7RwJK2jJUBL+K3GypmqN49WUc
+	 7DF+RGwWI5JuMyhsC0VEXPeh93v1wJO7JvfeAJO0ldnRt6wJfPjLvSBUQai2E9Z94y
+	 rYO+BbiXWGd1o+13OdefEL0nuHWpvX+F0iemDZ2+CKOk6mHrz7Le9Q+mA03UxWfvFO
+	 VB5JM9Ml5U+22RVNF76VLqtK+gMk2Oz4adIOgGsd3tIKIV+b0RbOP1CEW5SPVZZMvh
+	 FGpia0iUKWLj+azTSqC1objNUboZrH/JXpm/l94LrGqBGhna07ebvTkNnVrNiN6EjE
+	 Vh7QS5w2CLHOg==
+Date: Wed, 25 Mar 2026 15:08:35 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gerd Bayer <gbayer@linux.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jay Cornwall <Jay.Cornwall@amd.com>,
+	Felix Kuehling <Felix.Kuehling@amd.com>,
+	Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Sven Schnelle <svens@linux.ibm.com>,
 	Leon Romanovsky <leon@kernel.org>,
-	Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-mm@kvack.org, linux-pci@vger.kernel.org,
-	Li RongQing <lirongqing@baidu.com>, Lukas Wunner <lukas@wunner.de>,
-	Marco Elver <elver@google.com>,
-	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	"Paul E. McKenney" <paulmck@kernel.org>,
-	Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
-	"Peter Zijlstra (Intel)" <peterz@infradead.org>,
-	Pranjal Shrivastava <praan@google.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Raghavendra Rao Ananta <rananta@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>,
-	Zhu Yanjun <yanjun.zhu@linux.dev>
-Subject: Re: [PATCH v3 02/24] PCI: Add API to track PCI devices preserved
- across Live Update
-Message-ID: <acRAV7IK6RW8h_QM@google.com>
-References: <20260323235817.1960573-1-dmatlack@google.com>
- <20260323235817.1960573-3-dmatlack@google.com>
+	Alexander Schmidt <alexs@linux.ibm.com>, linux-s390@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v6 1/2] PCI: AtomicOps: Do not enable without support in
+ root complex
+Message-ID: <20260325200835.GA1290451@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -112,95 +55,179 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260323235817.1960573-3-dmatlack@google.com>
+In-Reply-To: <20260325-fix_pciatops-v6-1-10bf19d76dd1@linux.ibm.com>
 
-On 2026-03-23 11:57 PM, David Matlack wrote:
-
-> +static void pci_flb_finish(struct liveupdate_flb_op_args *args)
+On Wed, Mar 25, 2026 at 04:16:17PM +0100, Gerd Bayer wrote:
+> When inspecting the config space of a Connect-X physical function in an
+> s390 system after it was initialized by the mlx5_core device driver, we
+> found the function to be enabled to request AtomicOps despite the
+> system's root-complex lacking support for completing them:
+> 
+> 1ed0:00:00.1 Ethernet controller: Mellanox Technologies MT2894 Family [ConnectX-6 Lx]
+> 	Subsystem: Mellanox Technologies Device 0002
+>   [...]
+> 	DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
+> 		 AtomicOpsCtl: ReqEn+
+> 		 IDOReq- IDOCompl- LTR- EmergencyPowerReductionReq-
+> 		 10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
+> 
+> Turns out the device driver calls pci_enable_atomic_ops_to_root() which
+> defaulted to enable AtomicOps requests even if it had no information
+> about the root-port that the PCIe device is attached to. Similarly,
+> AtomicOps requests are enabled for root complex integrated endpoints
+> (RCiEPs) unconditionally.
+> 
+> Change the logic of pci_enable_atomic_ops_to_root() to fully traverse the
+> PCIe tree upwards, check that the bridge devices support delivering
+> AtomicOps transactions, and finally check that there is a root port at
+> the end that does support completing AtomicOps - or that the support for
+> completing AtomicOps at the root complex is announced through some other
+> arch specific way.
+> 
+> Introduce a new pcibios_connects_to_atomicops_capable_rc() function to
+> implement the check - and default to always "true". This leaves the
+> semantics for today's RCiEPs intact. Pass in the device in question and
+> the requested capabilities for future expansions.
+> For s390, override pcibios_connects_to_atomicops_capable_rc() to
+> always return "false".
+> 
+> Do not change the enablement of AtomicOps requests if there is no
+> positive confirmation that the root complex can complete PCIe AtomicOps.
+> 
+> Reported-by: Alexander Schmidt <alexs@linux.ibm.com>
+> Cc: stable@vger.kernel.org
+> Fixes: 430a23689dea ("PCI: Add pci_enable_atomic_ops_to_root()")
+> Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
+> ---
+>  arch/s390/pci/pci.c |  5 +++++
+>  drivers/pci/pci.c   | 48 +++++++++++++++++++++++++++++++-----------------
+>  include/linux/pci.h |  1 +
+>  3 files changed, 37 insertions(+), 17 deletions(-)
+> 
+> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> index 2a430722cbe415dd56c92fed2e513e524f46481a..a0bef77082a153a258fbe4abb1070b22e020888e 100644
+> --- a/arch/s390/pci/pci.c
+> +++ b/arch/s390/pci/pci.c
+> @@ -265,6 +265,11 @@ static int zpci_cfg_store(struct zpci_dev *zdev, int offset, u32 val, u8 len)
+>  	return rc;
+>  }
+>  
+> +bool pcibios_connects_to_atomicops_capable_rc(struct pci_dev *dev, u32 cap_mask)
 > +{
-> +	kho_restore_free(args->obj);
+> +	return false;
 > +}
 > +
-> +static struct liveupdate_flb_ops pci_liveupdate_flb_ops = {
-> +	.preserve = pci_flb_preserve,
-> +	.unpreserve = pci_flb_unpreserve,
-> +	.retrieve = pci_flb_retrieve,
-> +	.finish = pci_flb_finish,
-> +	.owner = THIS_MODULE,
-> +};
-...
-> +static int pci_liveupdate_flb_get_incoming(struct pci_ser **serp)
+>  resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>  				       resource_size_t size,
+>  				       resource_size_t align)
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8479c2e1f74f1044416281aba11bf071ea89488a..006aa589926cb290de43f152100ddaf9961407d1 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3660,6 +3660,19 @@ void pci_acs_init(struct pci_dev *dev)
+>  	pci_disable_broken_acs_cap(dev);
+>  }
+>  
+> +static bool pci_is_atomicops_capable_rp(struct pci_dev *dev, u32 cap, u32 cap_mask)
 > +{
-> +	int ret;
+> +	if (!dev || !(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT))
+> +		return false;
 > +
-> +	ret = liveupdate_flb_get_incoming(&pci_liveupdate_flb, (void **)serp);
+> +	return (cap & cap_mask) == cap_mask;
+> +}
 > +
-> +	/* Live Update is not enabled. */
-> +	if (ret == -EOPNOTSUPP)
-> +		return ret;
+> +bool __weak pcibios_connects_to_atomicops_capable_rc(struct pci_dev *dev, u32 cap_mask)
+> +{
+> +	return true;
+> +}
 > +
-> +	/* Live Update is enabled, but there is no incoming FLB data. */
-> +	if (ret == -ENODATA)
-> +		return ret;
-> +
+>  /**
+>   * pci_enable_atomic_ops_to_root - enable AtomicOp requests to root port
+>   * @dev: the PCI device
+> @@ -3676,8 +3689,9 @@ void pci_acs_init(struct pci_dev *dev)
+>  int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
+>  {
+>  	struct pci_bus *bus = dev->bus;
+> -	struct pci_dev *bridge;
+> -	u32 cap, ctl2;
+> +	struct pci_dev *bridge = NULL;
+> +	u32 cap = 0;
+> +	u32 ctl2;
+>  
+>  	/*
+>  	 * Per PCIe r5.0, sec 9.3.5.10, the AtomicOp Requester Enable bit
+> @@ -3714,29 +3728,29 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
+>  		switch (pci_pcie_type(bridge)) {
+>  		/* Ensure switch ports support AtomicOp routing */
+>  		case PCI_EXP_TYPE_UPSTREAM:
+> -		case PCI_EXP_TYPE_DOWNSTREAM:
+> -			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
+> -				return -EINVAL;
+> -			break;
+> -
+> -		/* Ensure root port supports all the sizes we care about */
+> -		case PCI_EXP_TYPE_ROOT_PORT:
+> -			if ((cap & cap_mask) != cap_mask)
+> -				return -EINVAL;
+> -			break;
+> -		}
+> -
+> -		/* Ensure upstream ports don't block AtomicOps on egress */
+> -		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_UPSTREAM) {
+> +			/* Upstream ports must not block AtomicOps on egress */
+>  			pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2,
+>  						   &ctl2);
+>  			if (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
+>  				return -EINVAL;
+> +			fallthrough;
+> +		/* All switch ports need to route AtomicOps */
+> +		case PCI_EXP_TYPE_DOWNSTREAM:
+> +			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
+> +				return -EINVAL;
+> +			break;
+>  		}
+> -
+>  		bus = bus->parent;
+>  	}
+>  
 > +	/*
-> +	 * Live Update is enabled and there is incoming FLB data, but none of it
-> +	 * matches pci_liveupdate_flb.compatible.
-> +	 *
-> +	 * This could mean that no PCI FLB data was passed by the previous
-> +	 * kernel, but it could also mean the previous kernel used a different
-> +	 * compatibility string (i.e.a different ABI). The latter deserves at
-> +	 * least a WARN_ON_ONCE() but it cannot be distinguished from the
-> +	 * former.
+> +	 * Finally, last bridge must be root port and support requested sizes
+> +	 * or firmware asserts support
 > +	 */
-> +	if (ret == -ENOENT) {
-> +		pr_info_once("PCI: No incoming FLB data detected during Live Update");
-> +		return ret;
-> +	}
-> +
-> +	/*
-> +	 * There is incoming FLB data that matches pci_liveupdate_flb.compatible
-> +	 * but it cannot be retrieved. Proceed with standard initialization as
-> +	 * if there was not incoming PCI FLB data.
-> +	 */
-> +	WARN_ONCE(ret, "PCI: Failed to retrieve incoming FLB data during Live Update");
-> +	return ret;
-> +}
-> +
-> +u32 pci_liveupdate_incoming_nr_devices(void)
-> +{
-> +	struct pci_ser *ser;
-> +
-> +	if (pci_liveupdate_flb_get_incoming(&ser))
-> +		return 0;
-> +
-> +	return ser->nr_devices;
-> +}
-> +
-> +void pci_liveupdate_setup_device(struct pci_dev *dev)
-> +{
-> +	struct pci_ser *ser;
-> +
-> +	if (pci_liveupdate_flb_get_incoming(&ser))
-> +		return;
-> +
-> +	if (!pci_ser_find(ser, dev))
-> +		return;
-> +
-> +	dev->liveupdate_incoming = true;
-> +}
+> +	if (!(pci_is_atomicops_capable_rp(bridge, cap, cap_mask) ||
+> +	      pcibios_connects_to_atomicops_capable_rc(dev, cap_mask)))
+> +		return -EINVAL;
 
-There is an inerent race between callers of
-liveupdate_flb_get_incoming() and liveupdate_flb_ops.finish(). There is
-no way for callers to protect themselves against the finish() callback
-running and freeing the incoming FLB after liveupdate_flb_get_incoming()
-returns. Sashiko flagged this as well [1].
+Sashiko says:
 
-After some off list discussion with Pasha and Sami, the proposal to fix
-this is to have liveupdate_flb_get_incoming() increment the reference
-count on the incoming FLB. We will add a liveupdate_flb_put_incoming()
-to drop the reference when the caller is done using the incoming FLB.
+  Since the generic weak implementation of
+  pcibios_connects_to_atomicops_capable_rc() unconditionally returns
+  true, the logical OR expression pci_is_atomicops_capable_rp(...) ||
+  true will always evaluate to true. This makes the entire if
+  condition evaluate to false.
 
-I plan to include a patch for this in v4.
+  Because of this, it appears -EINVAL is never returned here, and any
+  standard endpoint behind a Root Port will successfully be granted
+  AtomicOps even if the Root Port lacks the capability in its
+  PCI_EXP_DEVCAP2 register.
 
-[1] https://sashiko.dev/#/patchset/20260323235817.1960573-1-dmatlack%40google.com?patch=7974
+> +
+>  	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
+>  				 PCI_EXP_DEVCTL2_ATOMIC_REQ);
+>  	return 0;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 1c270f1d512301de4d462fe7e5097c32af5c6f8d..ef90604c39859ea8e61e5392d0bdaa1b0e43874b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -692,6 +692,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+>  				 void *release_data);
+>  
+>  int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+> +bool pcibios_connects_to_atomicops_capable_rc(struct pci_dev *dev, u32 cap_mask);
+>  
+>  #define PCI_REGION_FLAG_MASK	0x0fU	/* These bits of resource flags tell us the PCI region flags */
+>  
+> 
+> -- 
+> 2.51.0
+> 
