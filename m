@@ -1,239 +1,160 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011009.outbound.protection.outlook.com [52.101.70.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BCB830DED1;
-	Wed, 25 Mar 2026 11:58:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774439920; cv=none; b=UAPTgjCET4YPLhq/UEDZw1EHDqQDrZdYxqw2vWqiDLRlnmqMvg2QaDvYSvKaWnxUfmceMNvU51nODzIRJh3hEAxU/4vtomPd0rf3gPQ2xAdPRi1DDu0GMy6nWo6DuyHGAnjH3uJptcj6ceeoeTPR1NWSzAHry5C2TL1GzkfHYZk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774439920; c=relaxed/simple;
-	bh=UAUxvHk33ET8fFMVzE0Lu0h6czNMoJdojwa93qgED3w=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=oQBeFPn66sbpGpE8SV/kIUcpTB4cOGzjz5S/VlmKMN2TaZDgHjFk5/iD+5YikgJYj9kri6/D7R3FZdOxVcQ52LD7FtQsxUpZJIoBASbKSOgih43wSEzuLqnVNkMfACxyvcxw4csVIugyD7dsTIm0SVSD8Fsb1cLuKpCGGBXSBhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kOSpeSGE; arc=none smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86E803D16E2;
+	Wed, 25 Mar 2026 12:01:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.9
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774440102; cv=fail; b=VNkXKaqM/bs+XVFtmeMMBvgQc/CvTgH5566DHwa/0sFsIt/JFpQs4CDqkRV66M3o1f4iGRvrgdiUgLWeZX2gnyOZ2Tkq4vXcuYz5f44PPdKTAC1eAshRCEMRwxnZPjXSX8Kf+TNamHDpPS78NgiXZkPOFIvUTeqi4LqH11detY0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774440102; c=relaxed/simple;
+	bh=bD7/HF24zKgnTWfvev0x/cUoxzSw93efU3aTxhBBUVM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=XeRuj5iU9RPmx1jBpNNtJm5Xs7YOAH6KQjgWonTiycCKE+x6hlDiAd2Vf2QguBD6Y/xQrzJ9RSPn6yA+wNAT4mFv8pdO2VkHLmcMuqBhU68xRcGrBKZw+2uY9v+mGeV2M+3m7MU/NU1ODBnhPrvu5b0KvsLXWO3/4BhRvo5QR7U=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=J7wS3kOI; arc=fail smtp.client-ip=52.101.70.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kOSpeSGE"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774439919; x=1805975919;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=UAUxvHk33ET8fFMVzE0Lu0h6czNMoJdojwa93qgED3w=;
-  b=kOSpeSGE3t4jLqOOJobMp1nKEJFRLQ8pGOnuKApO2xMsQxwFwUjGv+Ih
-   Y/nEJrsPcQ9X4x2LQuZsQyTPESzgwwzxDJOmFxKDrBWfIV/bTXbNoPSby
-   h3lk+kYyfCKgtKaEG5rVZZN3BdVQVjp/I4oGmMASMdd5+zveH5SkE91Um
-   HIV3Zfcn5At28+4KHNFQbz2en3J9Xod3zXmRvCA2UYYcKwOKpN6fEr9/Y
-   hcHCDPXT3lIlvrpks//3LPbkb+e5GjcdSHIV0jztCYPL11VK+AzmTsfgv
-   wmXP8iAVo8IF78c8m+0tFo43O5ukYcpkJLa0zWq4NzBgm1xgSgcP9bSRf
-   A==;
-X-CSE-ConnectionGUID: iuU+Wu3uQbCiUbFcOA2TdQ==
-X-CSE-MsgGUID: eizVfLNpT+aO9Ktz66hB+Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11739"; a="85783692"
-X-IronPort-AV: E=Sophos;i="6.23,140,1770624000"; 
-   d="scan'208";a="85783692"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2026 04:58:38 -0700
-X-CSE-ConnectionGUID: e9x9KLkLRCGMb+/0WVwbRA==
-X-CSE-MsgGUID: Fvf5VaN5To+tsiDq3wlImA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,140,1770624000"; 
-   d="scan'208";a="223866279"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.125])
-  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2026 04:58:29 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Wed, 25 Mar 2026 13:58:26 +0200 (EET)
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Farhan Ali <alifm@linux.ibm.com>, linux-s390@vger.kernel.org, 
-    LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org, 
-    Lukas Wunner <lukas@wunner.de>, alex@shazbot.org, kbusch@kernel.org, 
-    clg@redhat.com, stable@vger.kernel.org, schnelle@linux.ibm.com, 
-    mjrosato@linux.ibm.com
-Subject: Re: [PATCH v11 2/9] s390/pci: Add architecture specific resource/bus
- address translation
-In-Reply-To: <20260324230641.GA1162880@bhelgaas>
-Message-ID: <328a79ef-7b73-582f-f36b-5139ff04e24d@linux.intel.com>
-References: <20260324230641.GA1162880@bhelgaas>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="J7wS3kOI"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=kttRFgI2/iylIRsj5YKB10FAyWAymytV5Lq2Au/ItdO/sXFz8Ow659hb8KKMq+gHsxYaakF/46S7IaN/3KDvO/5kyPTzlAx+JQRVhCIFRO+EFWxmXy9RjS3wr05ooQvgLdEBR4lyG9MItZZPiomX4sp+Da4DZigG6GfO9hBwczfJTuxw+hT/eW8FoNSc04UPMN2RL5jtEX1n1CkghV/zxGYua9ZHEN+wDhHz5jnQ2rSv06nT/DFcrzpeBzLagtSSqX5CO76TgT/myxzMgWrLYmxGpYppKg1WMhY+OxFuUoXZ9bRSenrtN9qBMyx3Gm8K63RDCZAAmQn+rTlDfNo1jA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=YXXBntpqyuvabK9QKfgQGbDJFMmQc0BuxpCyE+N0g9M=;
+ b=LrQ3k0K7bQbLI7Ga/VdoS9zgSx0tF/y38T2czp4oQfSdl50dc1Bbj35Id8ErsxEFGUAZ3aUtRKGy9L/Nxq/IsFesr4kUloiYWhJXZYsDgHOKMM2QInNDDdK+6p9jWSbDIQkkyWgttVkLBz4Su06qJn45bnVYwqsss+NMRS2YRlijnuUpfw0AlXxrVnvqXuIw88tsNLBhvvKIDkjoT86Sv/CeS8mcfHZzA+C7tmoBHPPjiQE7do2lwMtrvDlPScc6taJeAgXUXVEjBF88cSgelNRuW276dFNy9exbssWFnhiV35VBQwVHomgtWnKX+lSIvBr09/gpjSSmQMYyMaiLYQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=YXXBntpqyuvabK9QKfgQGbDJFMmQc0BuxpCyE+N0g9M=;
+ b=J7wS3kOIzOp/PM1Yoou83qDqv3RnBDES7+thUv0J/24R3LLR10nSMH9la88tBzqfn8aMvhoh/Fth2vqnZUhdNydapTA9hesLUSFZjoncUjWs+LE+FjJMnVVxBe/JkmMvL5F3lhA0Ak/TxLUmBgyeIP4gdk0Qvd4xkvBz5ZGktJwAIGEHKiVf169FqLaIHUUUk/A9EDg4vbRDMSWQCos9KeHmaaGo3qyNZr0cwK4vKIvQFTSPpC+EKroRKgLqr2bT8xNcbmAZs20jB2tNF4CP8lkGOjUHTfaAaMC/PGbNjAq1A7WayuEduk5jVOkpEpNgdWzWoNsOxmW9VzvUPlOZug==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from PAXPR04MB8253.eurprd04.prod.outlook.com (2603:10a6:102:1bf::7)
+ by PAXPR04MB8989.eurprd04.prod.outlook.com (2603:10a6:102:20c::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.31; Wed, 25 Mar
+ 2026 12:01:36 +0000
+Received: from PAXPR04MB8253.eurprd04.prod.outlook.com
+ ([fe80::2b4e:8130:4419:d633]) by PAXPR04MB8253.eurprd04.prod.outlook.com
+ ([fe80::2b4e:8130:4419:d633%3]) with mapi id 15.20.9745.019; Wed, 25 Mar 2026
+ 12:01:36 +0000
+Date: Wed, 25 Mar 2026 14:01:29 +0200
+From: Ioana Ciornei <ioana.ciornei@nxp.com>
+To: Danilo Krummrich <dakr@kernel.org>
+Cc: Russell King <linux@armlinux.org.uk>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Nipun Gupta <nipun.gupta@amd.com>, Nikhil Agarwal <nikhil.agarwal@amd.com>, 
+	"K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, 
+	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Armin Wolf <W_Armin@gmx.de>, 
+	Bjorn Andersson <andersson@kernel.org>, Mathieu Poirier <mathieu.poirier@linaro.org>, 
+	Vineeth Vijayan <vneethv@linux.ibm.com>, Peter Oberparleiter <oberpar@linux.ibm.com>, 
+	Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
+	Alexander Gordeev <agordeev@linux.ibm.com>, Christian Borntraeger <borntraeger@linux.ibm.com>, 
+	Sven Schnelle <svens@linux.ibm.com>, Harald Freudenberger <freude@linux.ibm.com>, 
+	Holger Dengler <dengler@linux.ibm.com>, Mark Brown <broonie@kernel.org>, 
+	"Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, 
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Eugenio =?utf-8?B?UMSCwqlyZXo=?= <eperezma@redhat.com>, 
+	Alex Williamson <alex@shazbot.org>, Juergen Gross <jgross@suse.com>, 
+	Stefano Stabellini <sstabellini@kernel.org>, Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>, 
+	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, linux-kernel@vger.kernel.org, driver-core@lists.linux.dev, 
+	linuxppc-dev@lists.ozlabs.org, linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org, 
+	platform-driver-x86@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-remoteproc@vger.kernel.org, 
+	linux-s390@vger.kernel.org, linux-spi@vger.kernel.org, virtualization@lists.linux.dev, 
+	kvm@vger.kernel.org, xen-devel@lists.xenproject.org, 
+	linux-arm-kernel@lists.infradead.org, Gui-Dong Han <hanguidong02@gmail.com>
+Subject: Re: [PATCH 02/12] bus: fsl-mc: use generic driver_override
+ infrastructure
+Message-ID: <cvcetxkxjq2tz6n2vsofhyzove3qdi2e4r6rq6yxou3joejk2h@rmt5ygav7ssu>
+References: <20260324005919.2408620-1-dakr@kernel.org>
+ <20260324005919.2408620-3-dakr@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260324005919.2408620-3-dakr@kernel.org>
+X-ClientProxiedBy: AM8P189CA0012.EURP189.PROD.OUTLOOK.COM
+ (2603:10a6:20b:218::17) To PAXPR04MB8253.eurprd04.prod.outlook.com
+ (2603:10a6:102:1bf::7)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PAXPR04MB8253:EE_|PAXPR04MB8989:EE_
+X-MS-Office365-Filtering-Correlation-Id: 444f69f3-3f50-4dac-40a4-08de8a664393
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|7416014|1800799024|19092799006|366016|56012099003|7053199007|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	YauE1OL9qVz6Ghkd3J4iiweYC+KTDcwgtVBRc6SzyGeDcIvAqr9GqhVgU2IK4k2+zD1XxZPGsKYLsEqiaS8RfvJO+yGdO9WoswEWIvqsqEFASVmWheIaYF6Je+a++RK8CPtKoUmtGv0bPuHQKh69kpeVWHxQA8bfzVd9gd2G4mJHqF2R/yvxG+kaFflL98lVbOhBJZVh46//CdTR5tE+vo9FZKLdM/PRl0QIa3bNJbT1IaRCJM+wNaaqNBIzvTqtbT98uIsOogkVCldOOrVdOIf3BEt28eAOqFMZ+TV6ETNq7EP8+961S1GpXqtc3J70y71lXxATEDMw4M7LruoJUvQCiEtLcFoE1s1XQG91q/Nj6FXkloupIpOwpO473+cAm5hHdWM8Lk7DN4mhymvIm8xrXzQomkVk0NxAwKEqKbG1hLhuQNb9GFMLvFeZE7wHopHrdCggnTb1OInKne9bPE5qCv6pjzjBvuCNuCasTBGwOUxQunyzQ3hhubR4Y5OBTIbDBTi+2fWt6pSW58kN8BCEXnWy5UvBhChefiek3+SDDzHh8IC6jKp5Z97r8VmNAfpxZw2XP05S5Ns/ZXQeLnXH57l5nV+ceXhGsEnYLBhJBHqGuDr3dTgOpwloRdJVUaA27Kw+UJgstnRgDw4BljSRQ1rbyIFnP2TZ5QuxCAsf0Q+eVAioW0X7cYqdNsEmIbHoBc2xrdOVB3nvcWTPoD2bk6N4r430UGOrsCSf/nI=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB8253.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(19092799006)(366016)(56012099003)(7053199007)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?wCOZvBxNyCZSbHbedjI2V2n4mKP/k/5gUrgXOwWGXKwOn843BAEy0H3Lu4Jf?=
+ =?us-ascii?Q?t44F1A4mUDlyXUpBILTQsalQEZqPTb+cgccdo7yvS+9mDAmiACTuVKmRxjl7?=
+ =?us-ascii?Q?M9InKZa5Am5jYZR+Y6nl4ZdHDTt+hCMDHFlOxI8riOBJRZnOAJTz6yzIxFaW?=
+ =?us-ascii?Q?NuMDAuy0o8Seeb2//8zVOsrPkVe3gADXMwB6++DuHMeIgAiNc+QyX8DkXR5q?=
+ =?us-ascii?Q?aXO5ih1Tyr4trPF30eexsGtUxbZX/V34UnBKtUiXaYtMXX9HbRMMTpbk92Gt?=
+ =?us-ascii?Q?W3VVjo6p1M/5FsoqIX6FIBBE04QhKDSZIjs2/bYt7tHIfc+gW/pXT3ErP3Pg?=
+ =?us-ascii?Q?Qt23L/3abciooF+nRzpRJO+oiAGqlsGlj8DFB3f4iExSOluU3feBUrelvZWZ?=
+ =?us-ascii?Q?FxSnZY09HaUgZUBPbbvoMIt3wbRpiW5bmvMMr940BU+Q3A16vVDypKtcz3NV?=
+ =?us-ascii?Q?BU0Ai/kGVJmc8saIbewJrV7vIIOx9ablRosiAQQpIPpLGSNdnB/PM5htvMOd?=
+ =?us-ascii?Q?tY3Cqz+BLDwhYnCGEBFjg52OnkE8ZrA8OpAQPUXis7s9E/fs7Es7xl2IyPKX?=
+ =?us-ascii?Q?V7kOH3wgDFGeIdk7u4bQcFKCuIWl7nqfG/FWiXnb8NouOGV5DjHiFcog3DG9?=
+ =?us-ascii?Q?D3NwL0JdIPZlmBs+gt4O4kPQNcuuailEOeHJZWjQjdbP3DajBo3zTqnqaA4O?=
+ =?us-ascii?Q?gcbrXQjGO/JlVf7IAR7Xj9as5QqU/RiCVFD2Kf4P9AqJrbGbb7paHfrs+ghk?=
+ =?us-ascii?Q?B5dSKXfEUK9B9FDjyJ93sA3zJphdWq8KRjLbs0MF24LtTWFyB/a1sPoQfaY7?=
+ =?us-ascii?Q?1zjFk06ZXuV00pBCIc7/0lmVkFqzmc81hUg6Ezs4fYmUMbzjyImSJkNC/Sqs?=
+ =?us-ascii?Q?WohdgnB6eAaLAyYHxSO9ChXnD2BFaDtkPBzhNiyCIoT78MxbQPbT2auRlzDC?=
+ =?us-ascii?Q?v+jj3XxnIFr/JFs1Qcq8L6SZ4dYzvAQrfNQbx8aCfUpQhn/Hm0OoXMY1eXdQ?=
+ =?us-ascii?Q?2YtNVHLe5xsnkRrmnSasZ/8Vhs0RclkimVYpMzvWd+2VhUKS1HNh+0PGXCLe?=
+ =?us-ascii?Q?aW2prGUn9xxanWMbaMLFsxrRFF0jdUZNStlj455tQaK/4JyvBzmTFz+GYGv0?=
+ =?us-ascii?Q?SKKHB5GUNuTYcMNxcbmcbn4DNkC2IyYPpM2R/Z6FTxYHx1MTZnpWN/WrIrst?=
+ =?us-ascii?Q?hpTDu1KHxUK3hzNP1zioROI0d1O3u2bHMyK6Oe0dISAyEbs+/swDAEQuQSJM?=
+ =?us-ascii?Q?oMJZ6UFrgjS3+94++VT/pbI7PFmWnZiEIOnCkYqGC9Ip6y6KIcMc6Na6G5+p?=
+ =?us-ascii?Q?oK2MFDEYv0QtNh92FmTJn/Q3Laz5Qm7zQahprTiJbJYTHxmHwhwGruDzKrLx?=
+ =?us-ascii?Q?Dtwe5YakcFHXbUyqLxoipZvV6ysWEsbAM2nO1VYpddukv9PWHPrxRQm8l5A7?=
+ =?us-ascii?Q?0tyBj3eFzm9quJ+hx/7kBMUz87EFfDU0j82a8ylOOTuRtMqApXfhMjI7kEzB?=
+ =?us-ascii?Q?u+H9bPwh+nLvLbW9uXZj5JjZaAy23me2qngR1rLKYU8CiT8GwTcSYRwWw54W?=
+ =?us-ascii?Q?p+dVtKlYG+ALObSrmAromuRz7Yxo9Dhfv2pIVyJ46WHdX6+8yYfBZQijauNP?=
+ =?us-ascii?Q?E+YNOs80TCBLXN3dW0tPjl711h0vaRrW5uqL5qfhEkGoQyn/iuS4IB//Jo1u?=
+ =?us-ascii?Q?k6YfWxq4S/jk9UJRRJ2uNOSdmAu29mvcMsK+yqML/1LIa1SBVvmCnZM3ZcZp?=
+ =?us-ascii?Q?GB9hLE4kFg=3D=3D?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 444f69f3-3f50-4dac-40a4-08de8a664393
+X-MS-Exchange-CrossTenant-AuthSource: PAXPR04MB8253.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Mar 2026 12:01:36.0520
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Chgczccg4htJAVG6e4L1PTVeI+yR3WIw7pB21S+3KjxkMI90qw6f2G+r96bnAJFWq8f6hC+FMUaXR7ipTyy5SA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB8989
 
-On Tue, 24 Mar 2026, Bjorn Helgaas wrote:
-
-> [+cc Ilpo just for awareness; I assume there's nothing Linux can
-> actually *do* with s390 PCI resources?]
-
-I'm somewhat aware they've this speciality (and besides that, I'm 
-waiting for this change in order to proceed with the series to detect 
-which resources are properly setup when we enumerate them which got 
-reverted earlier).
-
-An additional thought related to this, there's IORESOURCE_PCI_FIXED 
-results in skipping most of the resource fitting and assignment code, so 
-if nothing really should touch these resources, perhaps that flag might be 
-of some help.
-
--- 
- i.
-
-> On Mon, Mar 16, 2026 at 12:15:37PM -0700, Farhan Ali wrote:
-> > On s390 today we overwrite the PCI BAR resource address to either an
-> > artificial cookie address or MIO address. However this address is different
-> > from the bus address of the BARs programmed by firmware. The artificial
-> > cookie address was created to index into an array of function handles
-> > (zpci_iomap_start). The MIO (mapped I/O) addresses are provided by firmware
-> > but maybe different from the bus addresses. This creates an issue when
-> > trying to convert the BAR resource address to bus address using the generic
-> > pcibios_resource_to_bus().
-> > 
-> > Implement an architecture specific pcibios_resource_to_bus() function to
-> > correctly translate PCI BAR resource addresses to bus addresses for s390.
-> > Similarly add architecture specific pcibios_bus_to_resource function to do
-> > the reverse translation.
+On Tue, Mar 24, 2026 at 01:59:06AM +0100, Danilo Krummrich wrote:
+> When a driver is probed through __driver_attach(), the bus' match()
+> callback is called without the device lock held, thus accessing the
+> driver_override field without a lock, which can cause a UAF.
 > 
-> 1) It's not clear to me *why* we need these arch-specific versions.
-> We went to a lot of trouble to make these interfaces generic, and I'll
-> be really sad if they have to be arch-specific again.  I don't see any
-> direct uses of these in the series.  In any case, some reference to
-> the user and the actual problem this solves would help.
+> Fix this by using the driver-core driver_override infrastructure taking
+> care of proper locking internally.
 > 
-> 2) I'm kind of concerned that the "unusual" s390 PCI resources will be
-> unintelligible to people who are used to reading lspci or dmesg logs
-> from non-s390 systems, and they might confuse the PCI core resource
-> assignment code.  I guess there's not really a concept of a PCI host
-> bridge on s390, there's no bus hierarchy, and no visible PCI-to-PCI
-> bridges, so no windows?  Can you use PCIe switches at all?
->
-> 3) Maybe this patch should be reordered to be closer to the patch that
-> needs these?  I don't think it's related to the "PCI: Avoid saving
-> config space state if inaccessible" and PCI: Add additional checks for
-> flr reset" patches.
+> Note that calling match() from __driver_attach() without the device lock
+> held is intentional. [1]
 > 
-> > Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> > Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
-> > ---
-> >  arch/s390/pci/pci.c       | 74 +++++++++++++++++++++++++++++++++++++++
-> >  drivers/pci/host-bridge.c |  8 ++---
-> >  2 files changed, 78 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-> > index 2a430722cbe4..87077e510266 100644
-> > --- a/arch/s390/pci/pci.c
-> > +++ b/arch/s390/pci/pci.c
-> > @@ -272,6 +272,80 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-> >  	return 0;
-> >  }
-> >  
-> > +void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
-> > +			     struct resource *res)
-> > +{
-> > +	struct zpci_bus *zbus = bus->sysdata;
-> > +	struct zpci_bar_struct *zbar;
-> > +	struct zpci_dev *zdev;
-> > +
-> > +	region->start = res->start;
-> > +	region->end = res->end;
-> > +
-> > +	for (int i = 0; i < ZPCI_FUNCTIONS_PER_BUS; i++) {
-> > +		int j = 0;
-> > +
-> > +		zbar = NULL;
-> > +		zdev = zbus->function[i];
-> > +		if (!zdev)
-> > +			continue;
-> > +
-> > +		for (j = 0; j < PCI_STD_NUM_BARS; j++) {
-> > +			if (zdev->bars[j].res->start == res->start &&
-> > +			    zdev->bars[j].res->end == res->end &&
-> > +			    res->flags & IORESOURCE_MEM) {
-> > +				zbar = &zdev->bars[j];
-> > +				break;
-> > +			}
-> > +		}
-> > +
-> > +		if (zbar) {
-> > +			/* only MMIO is supported */
-> > +			region->start = zbar->val & PCI_BASE_ADDRESS_MEM_MASK;
-> > +			if (zbar->val & PCI_BASE_ADDRESS_MEM_TYPE_64)
-> > +				region->start |= (u64)zdev->bars[j + 1].val << 32;
-> > +
-> > +			region->end = region->start + (1UL << zbar->size) - 1;
-> > +			return;
-> > +		}
-> > +	}
-> > +}
-> > +
-> > +void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
-> > +			     struct pci_bus_region *region)
-> > +{
-> > +	struct zpci_bus *zbus = bus->sysdata;
-> > +	struct zpci_dev *zdev;
-> > +	resource_size_t start, end;
-> > +
-> > +	res->start = region->start;
-> > +	res->end = region->end;
-> > +
-> > +	for (int i = 0; i < ZPCI_FUNCTIONS_PER_BUS; i++) {
-> > +		zdev = zbus->function[i];
-> > +		if (!zdev || !zdev->has_resources)
-> > +			continue;
-> > +
-> > +		for (int j = 0; j < PCI_STD_NUM_BARS; j++) {
-> > +			if (!zdev->bars[j].size)
-> > +				continue;
-> > +
-> > +			/* only MMIO is supported */
-> > +			start = zdev->bars[j].val & PCI_BASE_ADDRESS_MEM_MASK;
-> > +			if (zdev->bars[j].val & PCI_BASE_ADDRESS_MEM_TYPE_64)
-> > +				start |= (u64)zdev->bars[j + 1].val << 32;
-> > +
-> > +			end = start + (1UL << zdev->bars[j].size) - 1;
-> > +
-> > +			if (start == region->start && end == region->end) {
-> > +				res->start = zdev->bars[j].res->start;
-> > +				res->end = zdev->bars[j].res->end;
-> > +				return;
-> > +			}
-> > +		}
-> > +	}
-> > +}
-> > +
-> >  void __iomem *ioremap_prot(phys_addr_t phys_addr, size_t size,
-> >  			   pgprot_t prot)
-> >  {
-> > diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> > index be5ef6516cff..aed031b8a9f3 100644
-> > --- a/drivers/pci/host-bridge.c
-> > +++ b/drivers/pci/host-bridge.c
-> > @@ -49,8 +49,8 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
-> >  }
-> >  EXPORT_SYMBOL_GPL(pci_set_host_bridge_release);
-> >  
-> > -void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
-> > -			     struct resource *res)
-> > +void __weak pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
-> > +				    struct resource *res)
-> >  {
-> >  	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
-> >  	struct resource_entry *window;
-> > @@ -74,8 +74,8 @@ static bool region_contains(struct pci_bus_region *region1,
-> >  	return region1->start <= region2->start && region1->end >= region2->end;
-> >  }
-> >  
-> > -void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
-> > -			     struct pci_bus_region *region)
-> > +void __weak pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
-> > +				    struct pci_bus_region *region)
-> >  {
-> >  	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
-> >  	struct resource_entry *window;
-> > -- 
-> > 2.43.0
-> > 
-> 
+> Link: https://lore.kernel.org/driver-core/DGRGTIRHA62X.3RY09D9SOK77P@kernel.org/ [1]
+> Reported-by: Gui-Dong Han <hanguidong02@gmail.com>
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220789
+> Fixes: 1f86a00c1159 ("bus/fsl-mc: add support for 'driver_override' in the mc-bus")
+> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+
+Tested-by: Ioana Ciornei <ioana.ciornei@nxp.com>
+Signed-off-by: Ioana Ciornei <ioana.ciornei@nxp.com>
+
