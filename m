@@ -1,177 +1,206 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB718334C28;
-	Wed, 25 Mar 2026 18:40:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FA8E285066
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2026 20:06:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774464032; cv=none; b=SJvovSfzLKOmBDFlF5kFxmVwulObRtkNRgDju9JPCVNXF1impLnKG8N4Y+amJfIw0HlpYY3V9G0icEvSdhuMnm8EcH1J3imvTv14ketNyVQ3CsWLNFOlOabCycXGXRlBNxI0njpNn/dXlMsJnMGNRB4m0NumFQsbjYzRwh+JEJw=
+	t=1774469214; cv=none; b=BxGc/7h51APcnxEwhMIjGzakegRzKJbpe8H8gyf9+jhrOavPNVoLK/mmWQ0lnsq1NxIKOzUiR5Ngp1zTH8I6ZZfh4FgRn5Z5ZzVFNXEAYNAwuTWRkC3nuPxsOwNZjTr64iSaOZOTO8ARotftCklyj0LM+GMvoU9hlo+eS5osDMU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774464032; c=relaxed/simple;
-	bh=uZU/sq3kwemAB6OlVPIuUswJ9ao28UtYmsERBug7Pko=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DNSTTQIWq+pru00IBMjdf86m5j3edFovR0uP/kYMoGZqszZ3+Zaz0Dfs6ALtGyfiLsWpmpvHvJG2DJdPN+YjmeTeq2Lkwnlsnsrd9HzDyNTE/g79xrx0vGHlDVlY1wwbMVoJNig4s+9Db70PPoH4EdDwyKdpT0IsNqpgqAACOqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=YzO5xJyI; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1774469214; c=relaxed/simple;
+	bh=QWkkdA+pFF8rjilsaUm1i/vpWu+c/k23cgJdC8WUDOw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VeV0962gHrcRXsRWYvMuhW+38SFLml+zG/CEhDhsSEHLK0DDigOdyCvs+YrHfbn3A0eR9uYJF0HMX1F0pqp3u5svAjqwTupqwx1e6I2FvuH0MBlwqDiBP53PR4jRQ606ZXOhC0alC1hZxu6LrmnmStY3lyfbROVJ3kCC2puCtAM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=XOmpIf3w; arc=none smtp.client-ip=209.85.215.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="YzO5xJyI"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62P76j2J3556089;
-	Wed, 25 Mar 2026 18:40:24 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=50R0Y3
-	aQnOi7rXaM2ZMgBycF1kOCzVB9lOicETk5WAw=; b=YzO5xJyIPGWmoDHugsY7/9
-	49ylLlhTZr3iq13DvK9l7N1RX2eG8MDwAhPhpiGlnh2/tZSwY8eD4irTVdNOSYbv
-	J+DQp+dp3Pi3eGzGnmTxCQrqpD+9ZIyen6njWNBBI4rHGGLtk2leqTSjPSboGQSe
-	LS2o14qOwtRciEt07HnbNMw5Tj1ihsr5t2fUJl8mTtZJDRjpqbW0A5gZ/HdnhnMo
-	qURNZzbWYRUDTi3GCukoK9m7LW/pxpVTeV/WejNl/heIV62pOCQPcUb/fFlyE72/
-	/Nz7nbve3kJz5bDE8qRk8X0VNMqcZMELaRJDZf7kkcG21IMdPhzC+8cWaFORHM7Q
-	==
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4d1kums4jt-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 25 Mar 2026 18:40:23 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62PFjew5008745;
-	Wed, 25 Mar 2026 18:40:23 GMT
-Received: from smtprelay04.wdc07v.mail.ibm.com ([172.16.1.71])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4d26nnqtq9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 25 Mar 2026 18:40:23 +0000
-Received: from smtpav02.wdc07v.mail.ibm.com (smtpav02.wdc07v.mail.ibm.com [10.39.53.229])
-	by smtprelay04.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62PIeMBZ60162352
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 25 Mar 2026 18:40:22 GMT
-Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 010745805C;
-	Wed, 25 Mar 2026 18:40:22 +0000 (GMT)
-Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id C49CC5805B;
-	Wed, 25 Mar 2026 18:40:20 +0000 (GMT)
-Received: from [9.61.243.197] (unknown [9.61.243.197])
-	by smtpav02.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Wed, 25 Mar 2026 18:40:20 +0000 (GMT)
-Message-ID: <2c6e8399-73df-4552-9603-218b9b42c4bc@linux.ibm.com>
-Date: Wed, 25 Mar 2026 11:40:20 -0700
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="XOmpIf3w"
+Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-c742723c863so183683a12.0
+        for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2026 13:06:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1774469213; x=1775074013; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=+fZRp4AJi5cb/F6jA80ZrndPdXYxEQL1IK9u8/P+m9k=;
+        b=XOmpIf3wx3OAbYuBhazQbr1ZVOYiuW+8XsO0/K8RYWS3pqy/6NzSJ5O/zdVru6DhcX
+         TN6TGjZnxbzAHb449USGJQVZniTerw0en2lgBy3FjoXYn0yAjHyngXhNjCR82oB3iiht
+         gfGhIRTHxeS9ZrUjf6Lr+jDGi5pJA//Jg1aa6+rgnMwl0FD0kx++MMoKWg6pjEvs4ES5
+         FwzwIixpP2SiehviX4OWfOpTkR2ae0/WarXcOTsbL/obTaljzRiwBU9Oh5K9PunnEmBi
+         wgLr3NLM5/3w6YM131plNM2nDc2A7DgzxLS+xfohjZ4x8siHv+E7wnBG6STMqu4yfXsp
+         PYzg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774469213; x=1775074013;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+fZRp4AJi5cb/F6jA80ZrndPdXYxEQL1IK9u8/P+m9k=;
+        b=Q+jGuRJPnz/BVMmugub6AoUPU81CxrflLOoo6kJpRdVCyPUtJTPvdfXQchYwMrPdJK
+         adfxw0kYcJ9VpjxXtW3j/RPKRVqpsYG2MrIhhg8cdvqIi8mBkSnEIcZI/opMoYp9u0Rr
+         kZMYW1GHSJmTE9ozm8DKIGswPIC592z3sw9WXMNkoailYaH0+qsm9RG7jCuqIJCqMM3b
+         dDhxbXq1nSiQhQPjmB+i/6MHZ9nVRmH4NU8ekZ27FqCNfRStFTF/Rspz//uq2bioUdIt
+         TK+IuSQi2qkB0gowLmPSDq0mN5/xlq9AMnjSwuVZnZ13x4MyVJ5NK76o9VUQnbQCZTdc
+         7aLA==
+X-Forwarded-Encrypted: i=1; AJvYcCUt5PK8ksAtvgoYfcqXWkdEDTsVEkAtiHKRXStTYVCZJsMswWClnePXksH1gkwbmEmRB1kus3H9p30=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yza8uSPbrqkE+ZaExiNhdk24TKCIHWLJcBTQNKUD7AKoXmHCpYl
+	tLS+fkN88ycotRmaORlbn5OK8VG9fOiMCXJIX0v+Xef3uzpcWQRYsnMiEl9oRAg9RA==
+X-Gm-Gg: ATEYQzyGWayyore4Le/jvtKKnbonydOLv6T6ypfXu6AqjDwa9YPXyfp8KRv4TOLVlxm
+	eHuRrVbzjpUpqwB84xfjXfqhhqoHXTPkry74Cd5uckD4X19vL/Ocpc21HkmTJDIUhE8V5Cw7yPj
+	E+ZDNhSgpYWnEMcOhYmGmRSRK6/nyO0wfiba5sLDE0cItqVpH/eKKaIuDB1Tb0TjhcMIWrT8RSd
+	IO322AyT/zRM3eoZJBWQtTNvCdNCeBYbCBXtinokrZiNcs0YDYj0a4l/4XQ4HBgw8OIVPduSkSM
+	ayBppl/lN1SvjnlDXaVNR+zTgPXT4hrnyIpcvFotzCzPfG8eTJ0zETHL1u+iQTE6y41+jm/Ymw4
+	2Nx+lJqDD21DgnNmIdd1UeA3FsU2X5Lh4xbFIp4UEJJUk69pLdnuJ2T/5cg+KOIKiKNrsqQ+ZxX
+	5LUOq3Veec+HSzB0hcc7HrVkYCrSBl/d0iIbvclHDrQZIDCwcXZ0YfknFQokWumg==
+X-Received: by 2002:a05:6a20:8ca6:b0:398:b3bd:de58 with SMTP id adf61e73a8af0-39c4aed5082mr3746836637.65.1774469212632;
+        Wed, 25 Mar 2026 13:06:52 -0700 (PDT)
+Received: from google.com (239.23.105.34.bc.googleusercontent.com. [34.105.23.239])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c7673819da1sm305751a12.11.2026.03.25.13.06.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Mar 2026 13:06:51 -0700 (PDT)
+Date: Wed, 25 Mar 2026 20:06:47 +0000
+From: David Matlack <dmatlack@google.com>
+To: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ankit Agrawal <ankita@nvidia.com>, Arnd Bergmann <arnd@arndb.de>,
+	Askar Safin <safinaskar@gmail.com>,
+	"Borislav Petkov (AMD)" <bp@alien8.de>,
+	Chris Li <chrisl@kernel.org>,
+	Dapeng Mi <dapeng1.mi@linux.intel.com>,
+	David Rientjes <rientjes@google.com>,
+	Feng Tang <feng.tang@linux.alibaba.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
+	Kees Cook <kees@kernel.org>, Kevin Tian <kevin.tian@intel.com>,
+	kexec@lists.infradead.org, kvm@vger.kernel.org,
+	Leon Romanovsky <leon@kernel.org>,
+	Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	linux-mm@kvack.org, linux-pci@vger.kernel.org,
+	Li RongQing <lirongqing@baidu.com>, Lukas Wunner <lukas@wunner.de>,
+	Marco Elver <elver@google.com>,
+	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>,
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	"Paul E. McKenney" <paulmck@kernel.org>,
+	Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
+	"Peter Zijlstra (Intel)" <peterz@infradead.org>,
+	Pranjal Shrivastava <praan@google.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Raghavendra Rao Ananta <rananta@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Vipin Sharma <vipinsh@google.com>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>,
+	Zhu Yanjun <yanjun.zhu@linux.dev>
+Subject: Re: [PATCH v3 02/24] PCI: Add API to track PCI devices preserved
+ across Live Update
+Message-ID: <acRAV7IK6RW8h_QM@google.com>
+References: <20260323235817.1960573-1-dmatlack@google.com>
+ <20260323235817.1960573-3-dmatlack@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v11 4/9] PCI: Add additional checks for flr reset
-To: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, lukas@wunner.de, kbusch@kernel.org,
-        clg@redhat.com, stable@vger.kernel.org, schnelle@linux.ibm.com,
-        mjrosato@linux.ibm.com, Benjamin Block <bblock@linux.ibm.com>
-References: <20260316191544.2279-5-alifm@linux.ibm.com>
- <20260324224936.GA1157694@bhelgaas> <20260325102504.56140878@shazbot.org>
-Content-Language: en-US
-From: Farhan Ali <alifm@linux.ibm.com>
-In-Reply-To: <20260325102504.56140878@shazbot.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: PhwFkBj36F4v8uM00_tb2YPUYYejpGLK
-X-Proofpoint-ORIG-GUID: PhwFkBj36F4v8uM00_tb2YPUYYejpGLK
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzI1MDEzMyBTYWx0ZWRfX5TjbkQkMclNQ
- H2nQ98cuo8WEchIdqKtjhC6Fq4n598u3bH+LgEHs6+sn9PVTXXcWRcsvP2PA4S7NCiUoFCIds3T
- NRzVbp5nMwEUKOt9w4JQlNc6P5+5wDiahq3kDH/aPQdoHOSMHU3dWvwrNKlWqtPj76g833c12oj
- nCcD/+Z658xfzMxxlS22jl+T/fyW5JEESxM+SXmyXDSrZugA7OT3WC/+AlDlUGqGqqslTIxrVtN
- 2iAYXQLhdaj6Q5hYne8d8oL/niNIuBRSG2cwIwp37gSqIVD/Xp1O6/UxsRG+Txc6+/3QjIkmVZb
- oa5Aq8HGB7Aqj7TF3bLyEht2h6O83HILk72ea255zuXqMRERFEAq5AR+fW/iC2j9AHyLwGCadln
- MfQXDrCUyisFs13qD4UOqUS+BBkA8ockaNJ8mAXeQcFoLc/0BKbWi5ybkOYzAucRNWN9xr8y715
- mtwp83d63F3QF3PWFuA==
-X-Authority-Analysis: v=2.4 cv=KbXfcAYD c=1 sm=1 tr=0 ts=69c42c17 cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8
- a=VnNF1IyMAAAA:8 a=yOeL3KzSd5q1tlI96GIA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-25_05,2026-03-24_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 impostorscore=0 malwarescore=0 adultscore=0 clxscore=1015
- priorityscore=1501 bulkscore=0 lowpriorityscore=0 phishscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603250133
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260323235817.1960573-3-dmatlack@google.com>
 
+On 2026-03-23 11:57 PM, David Matlack wrote:
 
-On 3/25/2026 9:25 AM, Alex Williamson wrote:
-> On Tue, 24 Mar 2026 17:49:36 -0500
-> Bjorn Helgaas <helgaas@kernel.org> wrote:
->
->> On Mon, Mar 16, 2026 at 12:15:39PM -0700, Farhan Ali wrote:
->>> If a device is in an error state, then any reads of device registers can
->>> return error value. Add additional checks to validate if a device is in an
->>> error state before doing an flr reset.
->> s/flr/FLR/ (also in subject)
->>
->> Also please extend the subject to say something specific about the
->> "additional checks".  E.g.,
->>
->>    PCI: Fail FLR when config space inaccessible
->>
->>> Cc: stable@vger.kernel.org
->>> Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
->>> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
->>> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
->>> ---
->>>   drivers/pci/pci.c | 7 +++++++
->>>   1 file changed, 7 insertions(+)
->>>
->>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>> index 373421f4b9d8..8e4d924f4e88 100644
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -4371,12 +4371,19 @@ EXPORT_SYMBOL_GPL(pcie_flr);
->>>    */
->>>   int pcie_reset_flr(struct pci_dev *dev, bool probe)
->>>   {
->>> +	u32 reg;
->>> +
->>>   	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
->>>   		return -ENOTTY;
->>>   
->>>   	if (!(dev->devcap & PCI_EXP_DEVCAP_FLR))
->>>   		return -ENOTTY;
->>>   
->>> +	if (pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &reg)) {
->>> +		pci_warn(dev, "Device unable to do an FLR\n");
->>> +		return -ENOTTY;
->>> +	}
->> I guess the point of this is to detect devices that are inaccessible?
->> The same sort of thing as in pci_dev_save_and_disable() from patch
->> 3/9?  But we use "dev->error_state == pci_channel_io_perm_failure"
->> instead?
->>
->> No matter what we do, this has the same race as in patch 3/9.  And I
->> think using dev->error_state also depends on AER being enabled, which
->> cuts out many PCIe devices.
->>
->> I think using the same exact code as in pci_dev_save_and_disable()
->> would be more straightforward.  And also the same sort of wording in
->> the message, e.g., "Device config space inaccessible; unable to FLR"
->> or similar.  I foresee many of these messages in my future, and it
->> will be helpful to have a specific clue about why FLR failed :)
-> I think pci_af_flr() and pci_pm_reset() are all subject to this as
-> well, some of the device specific resets too.  Maybe we need a common
-> helper with a string provided so we can differentiate the callers, even
-> if we don't make all the conversions in this series.  Thanks,
->
-> Alex
+> +static void pci_flb_finish(struct liveupdate_flb_op_args *args)
+> +{
+> +	kho_restore_free(args->obj);
+> +}
+> +
+> +static struct liveupdate_flb_ops pci_liveupdate_flb_ops = {
+> +	.preserve = pci_flb_preserve,
+> +	.unpreserve = pci_flb_unpreserve,
+> +	.retrieve = pci_flb_retrieve,
+> +	.finish = pci_flb_finish,
+> +	.owner = THIS_MODULE,
+> +};
+...
+> +static int pci_liveupdate_flb_get_incoming(struct pci_ser **serp)
+> +{
+> +	int ret;
+> +
+> +	ret = liveupdate_flb_get_incoming(&pci_liveupdate_flb, (void **)serp);
+> +
+> +	/* Live Update is not enabled. */
+> +	if (ret == -EOPNOTSUPP)
+> +		return ret;
+> +
+> +	/* Live Update is enabled, but there is no incoming FLB data. */
+> +	if (ret == -ENODATA)
+> +		return ret;
+> +
+> +	/*
+> +	 * Live Update is enabled and there is incoming FLB data, but none of it
+> +	 * matches pci_liveupdate_flb.compatible.
+> +	 *
+> +	 * This could mean that no PCI FLB data was passed by the previous
+> +	 * kernel, but it could also mean the previous kernel used a different
+> +	 * compatibility string (i.e.a different ABI). The latter deserves at
+> +	 * least a WARN_ON_ONCE() but it cannot be distinguished from the
+> +	 * former.
+> +	 */
+> +	if (ret == -ENOENT) {
+> +		pr_info_once("PCI: No incoming FLB data detected during Live Update");
+> +		return ret;
+> +	}
+> +
+> +	/*
+> +	 * There is incoming FLB data that matches pci_liveupdate_flb.compatible
+> +	 * but it cannot be retrieved. Proceed with standard initialization as
+> +	 * if there was not incoming PCI FLB data.
+> +	 */
+> +	WARN_ONCE(ret, "PCI: Failed to retrieve incoming FLB data during Live Update");
+> +	return ret;
+> +}
+> +
+> +u32 pci_liveupdate_incoming_nr_devices(void)
+> +{
+> +	struct pci_ser *ser;
+> +
+> +	if (pci_liveupdate_flb_get_incoming(&ser))
+> +		return 0;
+> +
+> +	return ser->nr_devices;
+> +}
+> +
+> +void pci_liveupdate_setup_device(struct pci_dev *dev)
+> +{
+> +	struct pci_ser *ser;
+> +
+> +	if (pci_liveupdate_flb_get_incoming(&ser))
+> +		return;
+> +
+> +	if (!pci_ser_find(ser, dev))
+> +		return;
+> +
+> +	dev->liveupdate_incoming = true;
+> +}
 
-Yeah I was planning on implementing a common function in the next 
-revision. Will include a string parameter to differentiate the callers. 
-And yeah I prefer not to update pci_af_flr() or pci_pm_reset() as part 
-of this series since I don't have the devices to test those paths.
+There is an inerent race between callers of
+liveupdate_flb_get_incoming() and liveupdate_flb_ops.finish(). There is
+no way for callers to protect themselves against the finish() callback
+running and freeing the incoming FLB after liveupdate_flb_get_incoming()
+returns. Sashiko flagged this as well [1].
 
-Thanks
+After some off list discussion with Pasha and Sami, the proposal to fix
+this is to have liveupdate_flb_get_incoming() increment the reference
+count on the incoming FLB. We will add a liveupdate_flb_put_incoming()
+to drop the reference when the caller is done using the incoming FLB.
 
-Farhan
+I plan to include a patch for this in v4.
 
-
+[1] https://sashiko.dev/#/patchset/20260323235817.1960573-1-dmatlack%40google.com?patch=7974
