@@ -1,196 +1,201 @@
-Received: from mail-dl1-f52.google.com (mail-dl1-f52.google.com [74.125.82.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-10631.protonmail.ch (mail-10631.protonmail.ch [79.135.106.31])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A736A19C540
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2026 04:13:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA5B31D5CC6
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2026 05:18:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.135.106.31
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774412008; cv=none; b=OqPk+PwPVQ5mT3NLvhf/Ws5JibdNXMv3JzCGaNc+Bz1BMCYk2pCvgjNVqgvQ/rNTKdLcW0wZLisiIWkWhwo3gzsnAmmHCszfuEFCPm0ZZsnekPLwgoWpx99uObKLvV8az0TYg2V+6hqSwJ/K9idRwkw0Qi3Uj6clVwg2Lj5f0k8=
+	t=1774415917; cv=none; b=uEY1vz+Jp1Pqovji33YzC+0wsskupCdTENX3jAsoP8trZ5f7W+K/YERPcIlrJ4gqbU2Ni5UIm1PbeHWybFa8eiVha7DrTrmz7BDp+gitK/yQheMP0Rd5jkNfxHL5AHTAyxMgJrtipiZCPgWCK9Xj3RNS7/c65fjXLC0ju6mOkGo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774412008; c=relaxed/simple;
-	bh=YWJtRNIJC9eKjyIJLS3+9nz0cFYlkBsezKB5NPwjwvA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DU8M1VKsqhaw2KiAG3JGlhs1EprNXxmZ0k3ZXFHL9PxXYvMFVcyCXRisYoD2HhpcpPCpRr4QLSRgqp6Ze8c1wng0WICaYQlGvSgClLESzXWefe+SkIIWPaoHU5R2dgDQZIF+8Xq57Yg3UDt1voJWc2wmHU1puslSGAPZhnTyCwo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UQfMxbmT; arc=none smtp.client-ip=74.125.82.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1774415917; c=relaxed/simple;
+	bh=1M0nJmFTScNHwMtYF08ehKjSh6gmwxwOpth64QH/dKg=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=RHJdLF/pAv085cAvif7ahpgT/qmbKUUyXdxxQAr5AQNmqhmn3bs8Ds3RYGzzEGN2oACZm0C2tGtu/C+Jr8xQZjHci1eUBd5QpfuDWtXZ9qdHX+IATgdpZi95zULK1PaFqcmMmSRzfjmiufaCxlK80JTefNjE5IwVVY5cQdZN57M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me; spf=pass smtp.mailfrom=pm.me; dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b=dDIEx7yS; arc=none smtp.client-ip=79.135.106.31
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pm.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UQfMxbmT"
-Received: by mail-dl1-f52.google.com with SMTP id a92af1059eb24-12a693cdf29so518369c88.0
-        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2026 21:13:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1774412006; x=1775016806; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=A1zx9FotWDsXciTr6vSKC3+KwJ/ZkglPq04NJzxyt/k=;
-        b=UQfMxbmTrLV6eq+Zt9gmka9m+t8q+z8ZRCAYdsprOeurEdoLf8JnuYsFFVGgCP0u80
-         baVPFhsV1saSqBD8V97wtaxlx7nk0+/3P1cV6GcsonqQ5viOIjo+lTuW5LAR/rs0F4iz
-         vJcYlOT4lzjutaPIvtkQZ62JB1DoFdLQD3rpvUaTfw2oNXZwJHkVJBzb+6dJxqGS1rjm
-         tzwDqxawRKAGM4ng9Zf2DsFhuM3vyV1r9XS5Fy2maHOQJ/WDBuvfp5SAKoZOJ/mSNSjt
-         BDLh72FCChkaJg1cVlRNXL4ZVY3Vql+d8VoLDueWjsVFswkl3m9YlB3gZ8Dul5vmY/8a
-         uwmA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774412006; x=1775016806;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=A1zx9FotWDsXciTr6vSKC3+KwJ/ZkglPq04NJzxyt/k=;
-        b=ET798ZiEU5GzVQRT01n95TqPe2a70tBr7fx2iTeh0WYbuOohD/KfWj9hfycHFCe8Zt
-         DZcIsehZhqER81UtTQQMZjAvOtzeiDvEgsCKhAHK9sE0tSttUNe2xswVqpNYSliePkG8
-         +gmgutOgWlTfZ/g8/1H3KYAc5XhDVdXomMaw6+vqtA0ERH31ZtMnnLCsfi3tw2OIdY0J
-         5gLcYN+qidd2WAfuMhZ3Z6TPlWHzkDrAiqLvFHj7FNKZYkZWPs5ARuQ5PWh+GY6hxxpo
-         szRj9NKSPW6J+tIr1qw+YML9u0utalfyNVVmKNEYto7IYXrkgDb/+8utnVPBuPAYB+rE
-         jLcA==
-X-Forwarded-Encrypted: i=1; AJvYcCXp0RPDpdlnq9ryJdoYmoP9ZENtu1CJ73vAKo5v5FypYPQTM9uWcqI5jOKtypnT1B1TIG/d7zDngqs=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxyb4OhN3wY7BeoMxL/3LnpRNqI5Hg0DX3n4d8qfKgJLpeBbBo5
-	3kgTxCOlplTxK64yLOuCgFw2tKc4/ddSR1XGXD7OGArxR+QWdxeuH/Az
-X-Gm-Gg: ATEYQzzKXn5GDePXT0DOB6O0WKCCHZn940S2HVSZJDnNhtYfLu64D9UAMuQLiMWkxsI
-	svKq/k/FhDUPbllGHn7AMHHsTgiHn1m2W1VJdG4HGQ/W+0KhUzhbMkIitJmjB5htPl5wJ+QIphJ
-	9pX1QCleTd1yGg95tOfyLzMLsV7s7KKPrS/e0mGDwB4USN62gspd58BtkqR8mQj1MYT7MYXtNjx
-	sQHhxgOfyIXyjRGJSBZ5O0xT7wY0YQOG08TZ7uUKvhbaFNgn3hsOo0or2OVIfJHhcxRgxRGH4qu
-	IIWxqpeklkgZEb9r97pnOMCUKOENAxhrZ624DcGP17n+aamiQV20+5ttio/PrIVW9XO0y6uOLw3
-	+wP+58ejg2IgoHiPTPolCSrHIvDw8BWhrk6nHy4CQOoCiJ84yLZn8FBHqrTQG4uQStoTphR6eHY
-	XzpQyT5z1C/koGuO1P/f8kruZKYn+/8wQjWm5IHQv/1OvlxmKfJD07V62Ms8izBlvEoJQeBEC0i
-	/s=
-X-Received: by 2002:a05:7022:418b:b0:128:f1fd:78be with SMTP id a92af1059eb24-12a9684c64cmr1091744c88.5.1774412005575;
-        Tue, 24 Mar 2026 21:13:25 -0700 (PDT)
-Received: from google.com ([2a00:79e0:2ebe:8:a686:fd7f:70d3:9156])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-12a733b4a39sm12292420c88.3.2026.03.24.21.13.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Mar 2026 21:13:24 -0700 (PDT)
-Date: Tue, 24 Mar 2026 21:13:20 -0700
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: Danilo Krummrich <dakr@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Heiko Stuebner <heiko@sntech.de>, Niklas Cassel <cassel@kernel.org>, 
-	Shawn Lin <shawn.lin@rock-chips.com>, Hans Zhang <18255117159@163.com>, 
-	Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, Wilfred Mallawa <wilfred.mallawa@wdc.com>, 
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org, Anand Moon <linux.amoon@gmail.com>, 
-	Grimmauld <grimmauld@grimmauld.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, driver-core@lists.linux.dev, Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v3] PCI: dw-rockchip: Enable async probe by default
-Message-ID: <acNgUoWWMCi1oLU4@google.com>
-References: <20260226101032.1042-1-linux.amoon@gmail.com>
- <177260693908.10259.13055467642416391434.b4-ty@kernel.org>
- <87bc37ee-234c-4568-b72e-955c130a6838@arm.com>
- <f7tfshf7riljjibuqge4ubfjmludubpyh3ppdf6lasurzdzbtj@sw4xxagfhnn3>
- <5d88fb5b-e771-4ea6-8d2c-c5cfd21e5860@arm.com>
- <qwanhqrpztzkudik5fmberhabnzaly7v53677dohqzj5nq4wi2@6ndpiubyxcbi>
- <DGZXF3LPSRK6.2QYN63QTKUQAX@kernel.org>
- <cp5uktfqdf6zs53qsye57ior2ikmssgevxxdtevkzpisaif22h@7mrxspkuibow>
- <DH09EDBW3X6T.2996UB1CFCAW2@kernel.org>
- <55c28218-1638-4b90-a9cd-a177fb5abcb6@arm.com>
+	dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b="dDIEx7yS"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pm.me;
+	s=protonmail3; t=1774415907; x=1774675107;
+	bh=qHmLk4Tgb19/N3vXmqwwPWWdp2pOoFTugeb3iP0Ybj0=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=dDIEx7ySnla48xB8tnv0e+rjcCmezsMJX8QaJeSr3CMubzDS927/UQS2Le6RST379
+	 YTMZGFdQu12bbAE8RWciqHBer5IL7YEyejD5RRLYJeuO7TsOmPTFf3K5QWIO4vgSWu
+	 4+MJa/jM/bI5o1qNJOAvfb/m+ZlIpTrMj60MrozQGs8XEqw0Q6AGrhprGDhWFECsj1
+	 iOfKXBn+6yDKFBVkDlcOqwRLO7kPJrbuy5eCv1PG1cgM+pKD6NxemJicp/13Ry8uRv
+	 dXurUNrtkzSgNrkzNUSj6FPYJvspb7lMvYgPT4l8Uik3xlPnB7TyvDxe5Q07tA8Aa3
+	 CZl0HYYZj5A4Q==
+Date: Wed, 25 Mar 2026 05:18:22 +0000
+To: =?utf-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+From: mx2pg@pm.me
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>, Jonathan Corbet <corbet@lwn.net>, linux-pci@vger.kernel.org, linux-doc@vger.kernel.org, Mika Westerberg <mika.westerberg@linux.intel.com>, Kai-Heng Feng <kaihengf@nvidia.com>
+Subject: Re: [PATCH] Documentation: PCI: Document decoding of TLP Header in AER messages
+Message-ID: <qThoJTmv00RudWODUQ5g4z3mWX5_Axa-Wa8h8hEr6jwleKuBrXUMEkvzNhvThpsySu9wsnKLuK6XedmboMzDFOZqj_uMFmAOKMb6jgHQciQ=@pm.me>
+In-Reply-To: <0ca0e817-7c28-011d-5738-f5856d267337@linux.intel.com>
+References: <20260323165038.GA830530@bhelgaas> <jlpBGxAZL6_8dQI417NowB0RVfrnwcnuaNvBlTN035buqP4dRBJaaX3fwqtYxZu2evmcNCAJVzj2suZKDA5iriUSrpj_ziWQVWxZS3nEkEg=@pm.me> <0ca0e817-7c28-011d-5738-f5856d267337@linux.intel.com>
+Feedback-ID: 168671048:user:proton
+X-Pm-Message-ID: 955b9558e4c5a760401e1c8a10bd254827ea8cad
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <55c28218-1638-4b90-a9cd-a177fb5abcb6@arm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Mar 12, 2026 at 12:48:36PM +0000, Robin Murphy wrote:
-> On 2026-03-11 9:09 pm, Danilo Krummrich wrote:
-> > On Wed Mar 11, 2026 at 1:28 PM CET, Manivannan Sadhasivam wrote:
-> > > On Wed, Mar 11, 2026 at 12:46:03PM +0100, Danilo Krummrich wrote:
-> > > > On Wed Mar 11, 2026 at 6:24 AM CET, Manivannan Sadhasivam wrote:
-> > > > > I have a contrary view here. If just a single driver or lib doesn't handle async
-> > > > > probe, it cannot just force other drivers to not take the advantage of async
-> > > > > probe. As I said above, enabling async probe easily saves a few hunderd ms or
-> > > > > even more if there are more than one Root Port or Root Complex in an SoC.
-> > > > 
-> > > > Then the driver or lib has to be fixed / improved first or the driver core has
-> > > > to be enabled to deal with a case where PROBE_FORCE_SYNCHRONOUS is requested
-> > > > from an async path, etc.
-> > > > 
-> > > > In any case, applying the patch and breaking things (knowingly?) doesn't seem
-> > > > like the correct approach.
-> > > > 
-> > > > > I strongly agree with you here that the underlying issue should be fixed. But
-> > > > > the real impact to end users is not this splat, but not having the boot time
-> > > > > optimization that this patch brings in. As an end user, one would want their
-> > > > > systems to boot quickly and they wouldn't bother much about a harmless warning
-> > > > > splat appearing in the dmesg log.
-> > > > 
-> > > > You mean quickly booting into a "harmless" potential deadlock condition the
-> > > > warning splat tries to make people aware of? :)
-> > > > 
-> > > 
-> > > Hmm, I overlooked the built-as-module part where the deadlock could be possible
-> > > as indicated by the comment about the WARN_ON_ONCE().
-> > > 
-> > > But what is the path forward here? Do you want the phylib to fix the
-> > > request_module() call or fix the driver core instead?
-> > 
-> > Here are a few thoughts.
-> > 
-> > In general, I think the best would be to get rid of the (affected)
-> > PROBE_FORCE_SYNCHRONOUS cases.
-> > 
-> > Now, I guess this can be pretty hard for a PCI controller driver, as you can't
-> > really predict what ends up being probed from you async context, i.e. it could
-> > even be some other bus controller and things could even propagate further.
-> > 
-> > Not sure how big of a deal it is in practice though, there are not a lot of
-> > PROBE_FORCE_SYNCHRONOUS drivers (left), but note that specifying neither
-> > PROBE_FORCE_SYNCHRONOUS nor PROBE_PREFER_ASYNCHRONOUS currently results in
-> > synchronous by default.
-> > 
-> > (Also, quite some other PCI controller drivers do set PROBE_PREFER_ASYNCHRONOUS
-> > and apparently got lucky with it.)
-> > 
-> >  From a driver-core perspective I think we're rather limited on what we can do;
-> > we are already in async context at this point and can't magically go back to
-> > initcall context.
-> > 
-> > So, the only thing I can think of is to kick off work on a workqueue, which in
-> > the end would be the same as the deferred probe handling.
-> 
-> Hmm, in fact, isn't the deferred probe mechanism itself actually quite
-> appropriate? A suitable calling context isn't the most obvious "resource
-> provider" to wait for, but ultimately it's still a case of "we don't
-> have everything we need right now, but it's worth trying again soon".
-> I may have missed some subtleties, but my instinct is that it could
-> perhaps be as simple as something like this (completely untested).
-> 
-> Cheers,
-> Robin.
-> 
-> ----->8-----
-> 
-> diff --git a/drivers/base/dd.c b/drivers/base/dd.c
-> index bea8da5f8a3a..3c4a0207ae3f 100644
-> --- a/drivers/base/dd.c
-> +++ b/drivers/base/dd.c
-> @@ -954,6 +954,16 @@ static int __device_attach_driver(struct device_driver *drv, void *_data)
->  	if (data->check_async && async_allowed != data->want_async)
->  		return 0;
-> +	/*
-> +	 * Bus drivers may probe asynchronously, but be adding a child device
-> +	 * whose driver still wants a synchronous probe. In this case, just
-> +	 * defer it, to be triggered by the parent driver probe succeeding.
-> +	 */
-> +	if (!async_allowed && current_is_async()) {
-> +		driver_deferred_probe_add(dev);
-> +		return 0;
-> +	}
+Thanks Lukas for the suggestion and Ilpo for the caveat on
+Link Status 2.
 
-That means that you are kicking the majority devices (for now) into
-deferral path. I do not think this is optimal.
+I'll add auto-detection of the (Flit) suffix (7e077e6707b3,
+v6.15+) to --aer mode so mixed flit / non-flit TLPs in the same
+log are each parsed with the correct framing -- no --flit needed.
+For --lspci I'll also pick up Flit+ from LnkSta2: per device.
 
-Does phy really need to request modules synchronously (and on its own)?
-Why can't it rely on udev to load the modules and signal when phy
-devices are ready?
+The --flit flag stays as a global override for inputs without
+auto-detection markers.  This will be a patch release (v0.5.1) --
+fully backward compatible.
 
-Seems like a deficiency on PHY subsystem that is stuck in times long
-past.
+Maciej
 
-Thanks.
 
--- 
-Dmitry
+
+On Tuesday, March 24th, 2026 at 4:18 AM, Ilpo J=C3=A4rvinen <ilpo.jarvinen@=
+linux.intel.com> wrote:
+
+> On Tue, 24 Mar 2026, mx2pg@pm.me wrote:
+>=20
+> >   One thing worth calling out: starting with PCIe 6.0, Flit Mode is
+> >   mandatory at 64.0 GT/s and supported at all PCIe link speeds, so a
+> >   Flit-capable PCIe 6.x link may operate below 64.0 GT/s and still be
+> >   in Flit Mode.  The raw TLP Header bytes do not encode the framing =
+=E2=80=94
+> >   the same four bytes decode to entirely different packet types in
+> >   non-Flit vs Flit framing.  The negotiated mode can be read from the
+> >   Flit Mode Status bit in Link Status 2, or via lspci -vv on a recent
+> >   pciutils build.
+>=20
+> There's one caveat in using Link Status 2 Flit Mode Status bit, it can
+> only be used as the indicator when the Link is Up, which may come into
+> picture in troubleshooting scenarios.
+>=20
+> The kernel code tries to hide that by indicating the Flit mode explicitly
+> in the log message it prints out.
+>=20
+> Sadly, TLP Logging on DPC side was botched in the PCIe spec so it doesn't
+> indicate the Flit/non-Flit mode information explicitly (in contrast to AE=
+R
+> that has a flag that tells in which mode the TLP Log was captured). To
+> workaround that limitation, kernel has to save of the Link Status 2
+> contents and hope the information is not stale when DPC has brought the
+> Link Down (it seems relatively likely to remain valid but it's still
+> fundamentally racy way to get the Flit/non-Flit information).
+>=20
+> --
+>  i.
+>=20
+> >   tlp-tool defaults to non-Flit, which is correct for the vast majority
+> >   of hardware deployed today.  That will change: as PCIe 6.x adoption
+> >   grows, a significant share of TLP debugging will involve Flit Mode
+> >   links, and this is already a concern among switch and device vendors
+> >   working through the transition.  Users on Flit Mode links must pass
+> >   --flit:
+> >
+> >     # non-Flit link (default, most common today)
+> >     curl -L https://git.kernel.org/linus/2ca1c94ce0b6 | rtlp-tool --aer
+> >
+> >     # Flit Mode link
+> >     curl -L https://git.kernel.org/linus/2ca1c94ce0b6 | rtlp-tool --aer=
+ --flit
+> >
+> >   It may be worth a one-liner in the Documentation patch:
+> >
+> >     For PCIe 6.x links with Flit Mode negotiated (check Flit Mode Statu=
+s
+> >     in Link Status 2, or lspci -vv), pass --flit to rtlp-tool.
+> >
+> >   Maciej
+> >
+> >
+> >
+> > On Monday, March 23rd, 2026 at 9:50 AM, Bjorn Helgaas <helgaas@kernel.o=
+rg> wrote:
+> >
+> > > On Mon, Mar 23, 2026 at 07:52:39AM +0100, Lukas Wunner wrote:
+> > > > The prefix/header of the TLP that caused an error is recorded by th=
+e Root
+> > > > Complex and emitted to the kernel log in raw hex format.  Document =
+the
+> > > > existence and usage of tlp-tool, which allows decoding the TLP Head=
+er
+> > > > into human-readable form.
+> > > >
+> > > > The TLP Header hints at the root cause of an error, yet is often ig=
+nored
+> > > > because of its seeming opaqueness.  Instead, PCIe errors are freque=
+ntly
+> > > > worked around by a change in the kernel without fully understanding=
+ the
+> > > > actual source of the problem.  With more documentation on available=
+ tools
+> > > > we'll hopefully come up with better solutions.
+> > > >
+> > > > There are also wireshark dissectors for TLPs, but it seems they exp=
+ect a
+> > > > complete TLP, not just the header, and they cannot grok the hex for=
+mat
+> > > > emitted by the kernel directly.  tlp-tool appears to be the most cu=
+t and
+> > > > dried solution out there.
+> > > >
+> > > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> > > > Cc: Maciej Grochowski <mx2pg@pm.me>
+> > >
+> > > Applied to pci/for-linus for v7.0, thanks!
+> > >
+> > > I tweaked the commit log to note that the Header Log is in the AER
+> > > Capability, which may be in any PCIe function.
+> > >
+> > > > ---
+> > > > We could also go one step further and point users to this tool
+> > > > in a printk_once() message when the first error occurs.
+> > > > For now, just amending the documentation is probably sufficient.
+> > > >
+> > > >  Documentation/PCI/pcieaer-howto.rst | 10 ++++++++++
+> > > >  1 file changed, 10 insertions(+)
+> > > >
+> > > > diff --git a/Documentation/PCI/pcieaer-howto.rst b/Documentation/PC=
+I/pcieaer-howto.rst
+> > > > index 3210c47..90fdfdd 100644
+> > > > --- a/Documentation/PCI/pcieaer-howto.rst
+> > > > +++ b/Documentation/PCI/pcieaer-howto.rst
+> > > > @@ -85,6 +85,16 @@ In the example, 'Requester ID' means the ID of t=
+he device that sent
+> > > >  the error message to the Root Port. Please refer to PCIe specs for=
+ other
+> > > >  fields.
+> > > >
+> > > > +The 'TLP Header' is the prefix/header of the TLP that caused the e=
+rror
+> > > > +in raw hex format. To decode the TLP Header into human-readable fo=
+rm
+> > > > +one may use tlp-tool:
+> > > > +
+> > > > +https://github.com/mmpg-x86/tlp-tool
+> > > > +
+> > > > +Example usage::
+> > > > +
+> > > > +  curl -L https://git.kernel.org/linus/2ca1c94ce0b6 | rtlp-tool --=
+aer
+> > > > +
+> > > >  AER Ratelimits
+> > > >  --------------
+> > > >
+> > > > --
+> > > > 2.51.0
+> > > >
+> > >
+> >
