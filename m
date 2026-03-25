@@ -1,167 +1,179 @@
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011021.outbound.protection.outlook.com [40.93.194.21])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B37893CFF42
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2026 11:54:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED83236166B
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2026 11:56:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.194.21
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774439683; cv=pass; b=iyAdLjFGkfO059saxYioAaQVOGha4TTOLSMzWzPxhWWcfoDqBBiUAyc5fzZuCueuFOfeExS89fPwOlfZfl8IWpoMOjmQR0C8yqcXpY/j76sYI9y6FcYui+OdjHeti0TJAo41T5NhgTIvOsLMg4RBG52TKkDLUiGXs1ZSOuhh6JQ=
+	t=1774439776; cv=fail; b=aF9Iup6V7UO2t35RNfo2IoUEWUB974zkP2Qck26viC1d4JfDKgUBdo2TbjrO72KPYeEBL02MjyepR30KpkdIwWD3flNTiarEitvVyymB2fQ/U8+TDkNwMP6xT3SHVj0+BlBtLghBpgWgNkjRDK80TL3jKEOzkNFTdVfmpktXv9I=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774439683; c=relaxed/simple;
-	bh=0MrcNmicBRchhkdmfDJ8rKh5Sk2NMVxCsAhKDXICGBY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Yo/792iURZDfKMGbo8ulkZropt/8aL1EfVjCVkqiUYBz2D7gf+4Md40NxoR3xw9r7TVuw5HVNC2lqM48rEVsBMDiGdaHYwun1xtxoXNUjTjRsuptq61AobGGz9spQGuCHN2P9enyp3F7eokDcB+f4FsFxsjeSiup9fmlTnDOT7Q=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LnHRw1jp; arc=pass smtp.client-ip=209.85.221.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1774439776; c=relaxed/simple;
+	bh=3f0Nx0yDdqgAJYwoy6cUKgfwqYCmWBSbViqgUCW/eug=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=tmTNdgZ/hrMzSOtJYkb5YYKndsNZQKr6xHRPn+zJmMr0FiM6m7eqehGts85U0Or66ousR7mcoRAcFQxpRJhNhwDpEVbehmxkZgODO5FrtOdycvr3NlxADw7r/k2Jv+mMzxam+qkbZpCqQHGjLulPalf+YtptWp91qm1jGkjs1YA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=ldRm4Q8J; arc=fail smtp.client-ip=40.93.194.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LnHRw1jp"
-Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-43b4915161fso4754965f8f.2
-        for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2026 04:54:41 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1774439680; cv=none;
-        d=google.com; s=arc-20240605;
-        b=Hg9oZ4GX7FKiTPX5QegWNslp3xavoEry8SbhacaWgUFN2hjnHoL8liDbYm6pwbIsuc
-         0q9zKMG+zWd1szk8RYZByTJVQHTiBokoh2V9B7N1quTnupJVVGdtglj4V7RAYTR+n6sk
-         ZHsTQkh59CvndMkPwtfGB1Y6+j4x6U4G2n297YySQA7RBvDhs7sGHjXls+Fl8H4vCYvk
-         UEYkMVETXT0HpxsGvJTl8Pvl4gi9cnUtxBz0i8FG46MARz2kNh0oY0dvPBXpgBf3C5u2
-         AhPiN4KgdOgCY/yw7tyMfeaTwZ0BdHuiBZvNCGE2v+PFsNY3vPw03thcw24XrQovQA6V
-         uPXg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=NTtiC/H6aEdIPYVK6aeTMwBZxiD7QRg2sxYnmAcsygw=;
-        fh=W8vG8JV+fCUvgAPwt2o4qhSqOkhXhS/hsezhMiu5Sf8=;
-        b=AOCT6X4JNwUk87hGfqIdSLtBM0s8s1AdNJh/vMLFtcXpX34vMQt+srNqEXk7Q4fZZE
-         +atyYbqlv3gLMSdnSBMQU+boshMQ12ngxnGtAeNDde1OD1VrXxDn8uxr5iNf86d4/zhU
-         IFtiDu8ODuVR1KnCWlIvhq1taGXSHZTJ3LICDV23+HSeF3CQ2VFk5IPXeJJLBpUeQ8o+
-         CSutSb0x3DMw2jCcSpXGkuX0e3ScIjs0fqO9Tt03CBVNsFkyIDaY5VqwxgMCedj552PU
-         vnPVv2NbQmjVKqiQW1CoNxN59jR8+6AWaSeu4kXTxlokep/oEAqJ2LWkxJNvGhEpUh6m
-         ZdAQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1774439680; x=1775044480; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=NTtiC/H6aEdIPYVK6aeTMwBZxiD7QRg2sxYnmAcsygw=;
-        b=LnHRw1jpt+J9xTzRv1r1iLrPWnz5wzfWKLV4MV69ZmXAtUXYmMOw3cqkseXOQtE/ky
-         QJ/cedw4xkmEZuNkoF6nLlK76x1NH3yzueuzl0Jp1kOidwMPYy+/wL9Y1a2eGIxVfbR/
-         D0M+C37vPjnUyt1xTLxzZToS0UWu1PnSv9eqxEI9RDvn9hvM4M1oI68xO4vlDNKfmUMk
-         W2+HbU0EAqF2w/TDD/GwjK0qKkdP5rgfO/gHOq1yTXEmP70LybTkrUG3ssF61dvVpaUL
-         rIlJJWZ+pjNtpfRNGxr0PUv3iJYep0JAHQEhe6W5FNGYQR+G2T2AO0F/fDL9tM0DUwAB
-         r3lQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774439680; x=1775044480;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=NTtiC/H6aEdIPYVK6aeTMwBZxiD7QRg2sxYnmAcsygw=;
-        b=oXH997Vw7LoqHBjJ6TexGiZdI+6JB3IuPEhlcKiu7lEBXKYS9h29TRZsg8vOlAub7S
-         2fJGQ3a7zC74ktX5sYmTG4Wodvm7Abilu+9i/vpUOOaM40C1TsYdKBRLPdPIYJp0Jenm
-         gOQ+J6r1kV+xRWQ6H0kEdsmcAbAWkWlX6/GDTgx2I1GhEUT2ChDlWBxAStpLYhxwquG+
-         8WvuUZBy2FLF1Neag4geQbiBSRivbUo+t0yYwXGvAur9IbsHVoTiJ7lG1yo/XJh8bb2w
-         f7W9kd7KynyxHaDiJ9FxYYSv3GnvHtS/Bg2hv8fJCilmtP0myK5zL9zVH438lD+9/Rxf
-         7+pA==
-X-Forwarded-Encrypted: i=1; AJvYcCWiKjRni5AllyDkiZf/pcPcYDO0H8wUf/Pq4BeQIYlX+g4VvytOW/5+9x7/uuDpdNksBKzQI/qMwBE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwhYwM5lhVvYs7wYlFsb24jY8v1YJ/j0MEW0oM+uavByydQu2xE
-	Z9dKMzDkQjO9J0fz4zUjbBmXW2RZ52o17SH1F5LTUpBcbfzJweVLctRzpU0Bnkp0rnVtFNgu82P
-	jXO6v6gkK6hkyQZ7rCIEaZ0DSjywqFwY=
-X-Gm-Gg: ATEYQzxgEemXVQARHrTdDfycypIdwss5qiasjJoxAW2UHpl+JAPuQo9Q8Zti8fyyWN8
-	W6/BfFsPdS9dgKcsAJadF7R8x9SAcVSANdjMN55JzE2j6OKCzFWAgKK2lPL5coE9px/DSsQb/mF
-	XK6gucnphY1v8YqdLhaYx2V2dxRsqOAJ5b0PiqYv5vN0wo0HwWxgJt12BJym+1s2m1bMx0SHTJP
-	gRR528xg6jP2JijY3Q/2hTpWmT4USI1UaEnaJ53Fjwu6Per10LbHjBSrriwqVAQ3kiYngf7L1Fn
-	NWKRSvf4mTVsvmtFwv6jJYjAAXt3vWKXeHE/RaAURJzPIilZR5RWZrUU5IsyVUvqYjRN
-X-Received: by 2002:a05:6000:144f:b0:43b:42af:75e with SMTP id
- ffacd0b85a97d-43b88a1c6e6mr4638167f8f.44.1774439680037; Wed, 25 Mar 2026
- 04:54:40 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="ldRm4Q8J"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=GVRzpyqXgsQ/mRMUwmbM2vX26MRZchQQMLtghxjKmdcQMpZet4kaquHbYbpqlXmDbga32dSXSpBQR4xEDs1gwHxN2q16xTh5kmGhV+EQhUP9VeKArGBeZ4mK2N3kFe6PJz2OBTGdRFZnKka2+VhZLHIbv4RCi9aHizw1VeLlMM/vw3apvT4UQcDnVVHXwIEXMTajEHCS/Z3MJpT++H6rz/Awa+KEUguqJk3nyMx7qbmlYj55T0Jk+kvZCXPMioAvQxwRO32dgEbfEsdbXtpZ4fX8MGCJ2uzHxiKWAXRPM6wSTHq4uaeZk9ADTZNil7yVm8XHmWxo87XSQL0t/PTmDA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=1lUhp1wVfiadVx1gbfN9SOqWH6qiVwvYby8mkMqYkg4=;
+ b=gfRs5sVjFfWZQpkDVAu/kE28QHgi4ArUU8VK493eL9TWiFr2adsvN1dX3yPWObOWB2djN9lkCKMla9o37kpt1xW9SitQVZ8HYs4yRbGPqCDDhsVJMuk5bB7rS/xmFdH3tzmVnOrNa/mMaZDgasn0odr3A/JbwhFLJ/xwqSwfInqrBPYvaAxw+qRa5PEhG2dZ4itRZ+vNiyUhW89VgTEojnOm0BaQm+w4vGtGy8Tnud7d5g24Dl+wDlgRnyYPdqwYgCOPYkxZ39/YLXwLp4yOd/9Sb71fA6fdni1YAVkctXvfYOsif9MCCG0JtVy+65bd8rdw+TPcWlp1nwsFUV732A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=1lUhp1wVfiadVx1gbfN9SOqWH6qiVwvYby8mkMqYkg4=;
+ b=ldRm4Q8J8PL7q/KDTBauK3VtYJJQhwsUoFnO1MpguyLMUCF6gvbeBJEHng/KoQA15/eSwMlNVcC6idIO8u77+uZG71isLmeawAkPZLkKF4QmFxCTxMaNn/ZjqQT0Wtuv+RpKs3C1fwLhjsDp723RsDWYXhKj4Mbp3kRA7x9p35TMZIQrgiDy8aUvUwrkvXBoXJ+J4SR6ClRZZHIpLx8PB0LajB1COEEWjE5ILo2YCtx8BZ71OjG5xDcy8Tu6kPode88xslJRgq8eXT3zd7MneqT96ZXLcOSLTuvxBzWBAGUoKovgmnfiyTm+XqH3tUhje+ob+zAE9OofCgfc8bhVjQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by LV8PR12MB9230.namprd12.prod.outlook.com (2603:10b6:408:186::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.20; Wed, 25 Mar
+ 2026 11:56:08 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%5]) with mapi id 15.20.9745.019; Wed, 25 Mar 2026
+ 11:56:08 +0000
+Date: Wed, 25 Mar 2026 08:56:07 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, linux-coco@lists.linux.dev,
+	linux-pci@vger.kernel.org, aik@amd.com, aneesh.kumar@kernel.org,
+	yilun.xu@linux.intel.com, bhelgaas@google.com, alistair23@gmail.com,
+	lukas@wunner.de, Christoph Hellwig <hch@lst.de>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Roman Kisel <romank@linux.microsoft.com>,
+	Samuel Ortiz <sameo@rivosinc.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>
+Subject: Re: [PATCH v2 03/19] device core: Introduce confidential device
+ acceptance
+Message-ID: <20260325115607.GB67624@nvidia.com>
+References: <2026031230-mastiff-create-7593@gregkh>
+ <69b38e7427a61_b2b610073@dwillia2-mobl4.notmuch>
+ <20260313133235.GC1586734@nvidia.com>
+ <69b46bd7935d9_b2b6100b7@dwillia2-mobl4.notmuch>
+ <20260313202421.GG1586734@nvidia.com>
+ <69b4baab2b950_b2b610013@dwillia2-mobl4.notmuch>
+ <20260323181413.GP7340@nvidia.com>
+ <69c1f469f2814_51621100bc@dwillia2-mobl4.notmuch>
+ <20260324123649.GY7340@nvidia.com>
+ <69c360d2107ca_7ee310052@dwillia2-mobl4.notmuch>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <69c360d2107ca_7ee310052@dwillia2-mobl4.notmuch>
+X-ClientProxiedBy: MN2PR06CA0018.namprd06.prod.outlook.com
+ (2603:10b6:208:23d::23) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260318124450.163471-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20260318124450.163471-5-prabhakar.mahadev-lad.rj@bp.renesas.com> <c2c56940-e14d-44fb-9b9a-9aff70998bd7@tuxon.dev>
-In-Reply-To: <c2c56940-e14d-44fb-9b9a-9aff70998bd7@tuxon.dev>
-From: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Date: Wed, 25 Mar 2026 11:54:14 +0000
-X-Gm-Features: AQROBzCVUCaqQkG9OKxvNMfyAeiAVuBU-qZHdIwjDOsY515WjKNxFvBFEZYatKQ
-Message-ID: <CA+V-a8tv7JG6TJY2FfQweNd04G6Vm-k8P7tYNbajqca_yZ6vrA@mail.gmail.com>
-Subject: Re: [PATCH 4/5] PCI: rzg3s-host: Prepare System Controller handling
- for multiple PCIe channels
-To: Claudiu Beznea <claudiu.beznea@tuxon.dev>
-Cc: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Philipp Zabel <p.zabel@pengutronix.de>, Geert Uytterhoeven <geert+renesas@glider.be>, 
-	Magnus Damm <magnus.damm@gmail.com>, Wolfram Sang <wsa+renesas@sang-engineering.com>, 
-	John Madieu <john.madieu.xa@bp.renesas.com>, linux-pci@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Biju Das <biju.das.jz@bp.renesas.com>, 
-	Fabrizio Castro <fabrizio.castro.jz@renesas.com>, 
-	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|LV8PR12MB9230:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6ae81cb7-535d-4fe9-eafc-08de8a65805f
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|7416014|366016|1800799024|56012099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	qFd6m0FGj+xDBZoqQ+1+Y4AAhgwJwbNZ9v5hEhLB24CRDPxk7VE75tr3ZD5vIFVdL9dYzb8gWhzhOH58fmDgZnsUGrLcWYFdOPyCRs7L2Ltyboest3fUmHNSbETyugOzwW3ZiRcGNdNvXxqhEPQMbu8tlxj4P793PtJLCmWWOd4q1tCUAz1QsNXvoxgvf5McrG/Jnlrmp374/7tuGyzZVXAasV9c9LJk7hV177WQXEyIVTsLjOiqGzKdi+j2cHW1bVlH0FtE6LX1F95x0TBvB3BYFreIJTgpFliOQWEW6hC57W9UtUmsLSRJoVGN7AUhyaNTVsadnzYKx06zPZSOa43jvPRkY180Kg4EGgU5LZfmOtewsaE9h2VEvUuXh3tAP5NHv/Qki4shzL5uLBoziPWQhLgRpWcjsySfhEsKl16Lm74OpIEYWQ5tvqhNzF1ZanJbYmP6xQ49DCXPx6ZWFC3RQf/KusDTAxLktbALWQC8ztj68pXY+YAtHgLaUlp692pgmq493KyOeIAGwLd7h/ipzq8NPq7U6jvcJMnaA2TAMMPONdvhMB+48oGsehm5Gc48Wg6xEna7KY0VngpVJhbhrjAjgvb+2Mur9qC6XtNQ16U45Roh3QlTXkEsple5LFJqcWL/O9FimTy4WhjZR5dQLWYUqfCxIjOaDzqStEG/l+bMCG/ncCLFfzoMsiVwKXBMxSNxU6GRITC/fpgaWkL+hhMjFzC4+Svjh20UduA=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?jh8sSyY254oXnbERBprk8H0/c0Z/VxCSlbxf/fi2g0CoevjHpY1qoE+B6SgZ?=
+ =?us-ascii?Q?OT4dnJdtxPXqA5C7P4P7l+wWRXqWjCWTwkFQWNcjlSq6BM4n5/aAzNYHRenG?=
+ =?us-ascii?Q?tuFhH4aTNry4sUDhyWLtY0p1dkTCzPCsNuJK2VMtzwYehxiRGucHIiCheuM3?=
+ =?us-ascii?Q?h0vVbUfeDPmgblceGtMfu3rnfnxHRJLqQ7yGgklvLhFVEyeMYEepyaLtradV?=
+ =?us-ascii?Q?Y4wfpUzHnH3B0f8wXUOpjIuAvt7a2MiJ7lSYj1GbMlHvL7JX0UM40R5cDmJu?=
+ =?us-ascii?Q?pz2ZZC5U+4ZVJMwHW2zmM7hGMD0J0SsGCxTDYPH+SgeUB06nbhhKYATcLqfM?=
+ =?us-ascii?Q?La4g2wTuup2oLMmRz0WV9/q3FJJMeFKs7MXAh6fQfExyWwkK5cI21cdjD6sr?=
+ =?us-ascii?Q?6wuuQ1NjljNjjZUQc2k127XprlStSZYXEzKzee0TgLj9dUIxMOuGlbC7y3Qy?=
+ =?us-ascii?Q?5vcuiK9NH3ZqMzcq35tHYW9ZbdoAdj+wrGsGA04wsvsH4F3fonn98PTedogk?=
+ =?us-ascii?Q?REMeh99ZV9G8IY8Q8gIwcJtKHVgKVZxyGFIWy9aFlkkIMWGYu5yJiYLs4FpP?=
+ =?us-ascii?Q?tDIJ4QMs2COa6d674+QtItkOsbE5qhxE3DPyehoX4MlLP7279J9zwf1aWoQb?=
+ =?us-ascii?Q?CJf9HCp4Rik+WwCcnax8dpViq8g+jGUmiELy8bfLANWX2XtTMwIxQQc6uFqF?=
+ =?us-ascii?Q?zGBq+2TtHr3j+9CTExBz4dKdqA+2UI6er33yKN3IZJtQ6WD3Lw7qi/yCzV0g?=
+ =?us-ascii?Q?ob0Lrnagvy4xUx6/bX0C0+/U8vnmIMMxtnaPNnjKgZfU9Bdi8w9mWRTvR+3A?=
+ =?us-ascii?Q?144Ok2aQeGtME0EqXRU00Tvkcr2Erb/RV54HUSjiP2j+Qe2yaPDeOGEq1VPk?=
+ =?us-ascii?Q?Ff7qCrEvow6blN+sVjYU4Sygrcg8Mj2095xpCMoohhH2OjLN3nhb88SBzw8H?=
+ =?us-ascii?Q?FRgmDpPycdx5xQ1ljusbCa6Jge9JrBiliYgWi+7c2cpTMNMYaFDMws6fCCTu?=
+ =?us-ascii?Q?ASHO44Hp/Pebv0JNxcQXXlyJ2nfLdDQi7uDNoWYjvaNznW2TO4IyK9rQ89+q?=
+ =?us-ascii?Q?JQ4T+MIEm7+PPqoXfuuerPU5wVmJbSj+3tZZtvZjyH1uXBtJswFy1XsY2etC?=
+ =?us-ascii?Q?3pjIVwWMOUU5P7AltkZrrEN/IrZ8yolJ5WAAfJWynLL+rnWLlQepmggM1hzK?=
+ =?us-ascii?Q?+4oNQL1jYFqD33txzZgY53RzHQtqGrZ77CM6SDx/zOoRf9cANiq/MHKO6uX0?=
+ =?us-ascii?Q?poS1RTb72tj4Lw+0a15zXiJXsddU62phm48fBi/RLWBFP7BoDDyrw3NTn/Ja?=
+ =?us-ascii?Q?xh6GfQir3iHtl7BsMACOv15YtKNZw/LaQ4inLxpgvE5wKdNtxyQuFogSkdqy?=
+ =?us-ascii?Q?cZn1ZeZEl6gNdbPkta4aUBNmjbCzgnRtWhuY0UEE4KdK/WJY/eV0+fRmPy+U?=
+ =?us-ascii?Q?oT4MlnApJpbPuSJr1OgYkvl6/VqlGd9fnhAzmmITpXhHDrh/EKw7YbL0wXiV?=
+ =?us-ascii?Q?Zkvyacj7JGI4gewgzKD8EEdi0j2oDugx0CHGUy13iN8UxWpyB2d3YLAbfdrV?=
+ =?us-ascii?Q?WmHtaQddgSB+6zXLt2/d+PUWQHGAroK4804CYfrJbawi3B6MYz7dv9dNfnzY?=
+ =?us-ascii?Q?uwXDaZsjW/qNlNo1MZlvlJw5jm68TT/1SjaPyZ0aNzeErCUzQpjBT2YhW/mJ?=
+ =?us-ascii?Q?FNuKeFyhEpeFWo1FyoL5pJZHwIHWQqjnrorleWbIwmFNgeJT?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6ae81cb7-535d-4fe9-eafc-08de8a65805f
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Mar 2026 11:56:08.5979
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: TVOfoHMp6DczrUcsidCaDw/p2RcknhsJ2mijjSD3M+LGNu6ycF/XNwDi4l30gotE
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV8PR12MB9230
 
-Hi Claudiu,
+On Tue, Mar 24, 2026 at 09:13:06PM -0700, Dan Williams wrote:
+> Jason Gunthorpe wrote:
+> [..] 
+> > I feel like starting with trust=0 is much cleaner than using
+> > autoprobe. Especially since it would be nice that when you do
+> > ultimately set trust!=0 then you do want the kernel to do the normal
+> > autoprobe flow.
+> > 
+> > Double so because I would like the iommu drivers to respond to trust 0
+> > by fully blocking the device 100% of the time without holes, so to
+> > make that work I would like to see the struct device report trust 0
+> > the moment the iommu framework attaches the iommu.
+> > 
+> > How you decide the starting trust value for device during system boot
+> > is definately something we need to discuss properly..
+> > 
+> > I liked your idea of using built in driver match, so if there is a
+> > simple command line paramater that says 'only built in is trusted'
+> > then we'd default all devices to untrusted and during device probe
+> > check if any built in driver is matching and auto-set trust to X based
+> > on the commandline parameter.
+> 
+> I do agree that forcing trust=0 at the beginning of time is attractive
+> and theoretically clean. I am concerned about subsystems that are not
+> prepared for driver attach failures. For example, I would not expect to
+> need to set trust for auxiliary bus devices if the host device is
+> trusted.
 
-Thank you for the review.
+Yeah, IDK here either. Maybe it is some per-bus opt int.
 
-On Wed, Mar 25, 2026 at 10:19=E2=80=AFAM Claudiu Beznea
-<claudiu.beznea@tuxon.dev> wrote:
->
-> Hi, Prabhakar,
->
-> On 3/18/26 14:44, Prabhakar wrote:
-> > From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> >
-> > Prepare the driver to handle multiple PCIe channels with distinct Syste=
-m
-> > Controller register sets, as required by RZ/V2H(P). The current design
-> > stores a single sysc_info structure per SoC, which is insufficient for
-> > multi-channel configurations.
-> >
-> > Introduce channel identifiers and extend struct rzg3s_pcie_soc_data to
-> > hold a sysc_info array indexed per PCIe channel. Add a channel field to
-> > struct rzg3s_pcie_host and select the appropriate System Controller
-> > information during probe based on the channel.
-> >
-> > Keep existing single-channel SoCs functionally unchanged while
-> > preparing the driver for RZ/V2H(P) multi-channel support.
-> >
-> > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> > ---
-> >   drivers/pci/controller/pcie-rzg3s-host.c | 48 ++++++++++++++++-------=
--
-> >   1 file changed, 33 insertions(+), 15 deletions(-)
-> >
-> > diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/con=
-troller/pcie-rzg3s-host.c
-> > index c61e011f8302..a629e861bbd0 100644
-> > --- a/drivers/pci/controller/pcie-rzg3s-host.c
-> > +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-> > @@ -241,6 +241,18 @@ struct rzg3s_pcie_msi {
-> >       int irq;
-> >   };
-> >
-> > +/**
-> > + * enum rzg3s_pcie_channel_id - RZ/G3S PCIe channel IDs
-> > + * @RZG3S_PCIE_CHANNEL_ID_0: PCIe channel 0
-> > + * @RZG3S_PCIE_CHANNEL_ID_1: PCIe channel 1
-> > + * @RZG3S_PCIE_CHANNEL_ID_MAX: Max PCIe channels
-> > + */
-> > +enum rzg3s_pcie_channel_id {
-> > +     RZG3S_PCIE_CHANNEL_ID_0,
-> > +     RZG3S_PCIE_CHANNEL_ID_1,
->
-> Just saying... based on Bjorn feedback on patch 3/5 the names used here w=
-ould
-> have to be adjusted accordingly. Maybe controller_id? Same for the other =
-patches.
->
-Agreed, I will rename it.
+I think the most important thing is we get a clean story for devices
+to be isolated by the iommu until user space ack's them.
 
-Cheers,
-Prabhakar
+> Right, the potential to see in-between states concerns me because TSM
+> uAPIs would have fully enabled the device to wreak havoc, meanwhile
+> dev->trust is still showing the device at some lower level of trust. So
+> I think trust modification needs to be synchronous with privileges
+> granted/revoked.
+
+If an iommu is present then the device will still be blocked even
+though it is in RUN, I'm not sure this synchronicity is so important.
+
+Jason
