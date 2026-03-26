@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EAAF3B3C14;
-	Thu, 26 Mar 2026 08:06:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 026A9384222;
+	Thu, 26 Mar 2026 08:06:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774512401; cv=none; b=rt6yJZ59xUpG/qRydOHXvxUSMBjcJWNEvGxEguRWK86KwyACV0O7egoVdG83jfa7cjDLM0XCGYvCrNbx3ttov/ZN47693fUnm+iCQxOC9Xit0hHrZhxNTRziVj5zil5xLaHw0VVMQe+B7wP02VY0vjBqH+sonqR2bd1a+CYEGZM=
+	t=1774512401; cv=none; b=kyivMnUFtiJTSpPwVCzGSxMKM4VIA+4fy/dsxkvh2Z6VeIouAEQjbHInro53t0aWQ7IQGHthPQ0EZyWo6CPBPzKTT6JLDxEvwkdyklIBo2UF2BK+neIYVxpL0F2p8QQpC2jpP6xOb40dZiWtN/0pAjcD5PmecCz+tAuEoVbV+KI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1774512401; c=relaxed/simple;
-	bh=cUxQWPcUIxqHU9aDbacGWrwTw3HZXVXOi2watGla2fs=;
+	bh=4ElZ70nPvlA5elMccGJEIatlJln9cC89vMOCeZptGYc=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Lg7sYqTeOYwaS0/K2FVTXQtAmy65gOWKbO2Q4O6ijuhq1YeLuy0ofH8PW3LNPoaYF4EWT+u8FN54LnNc/E5wxqtMxN0Jy80nFqbrUGBHDPRRqR7doC+xdq74YQSXPduTge/RADAS4Tk/unxcz5TP4lCukh+OfG1ivx5lyoAls00=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a03kFoVJ; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=soI3K9BgUTy0vRDDSButBOZsChm6NQsqd/WVD5PGhXOhw+zAvEFBUNdSOIhsKe5uu1DL1LrseEcORgGb6bsD9fnC2qsr+TsQGdk48FMRSv+zzWiWAKiL/X/xCia598J+KkQd8Cam3G8nd3KA1cntbfum2tvOhLLpRbpk75owXM0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gc86cfew; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a03kFoVJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 03C9BC2BCB4;
-	Thu, 26 Mar 2026 08:06:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gc86cfew"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A5383C2BCC6;
+	Thu, 26 Mar 2026 08:06:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774512401;
-	bh=cUxQWPcUIxqHU9aDbacGWrwTw3HZXVXOi2watGla2fs=;
+	s=k20201202; t=1774512400;
+	bh=4ElZ70nPvlA5elMccGJEIatlJln9cC89vMOCeZptGYc=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=a03kFoVJeGxzVGsMk5IIu/GPKWipAOjxMkGQ318jubu2CkqJ/KzlBw7IIQuEsy/63
-	 j0F5Jzyrqdd7bghTEgbnQHjeV+3U0z+ccDW3iaQ1AS1JyNdxqYT5AtSxuWV0gstByU
-	 eadJh6uAVMgKvYqCr6NUvT1vLe7RvCFzCVIUrIwkix14UEkjTRDI7j8NZMVYgoRbgz
-	 hsnkWJDtqf2UCQpDqHJg356wAYtayysHnhflD6t3mxC3kooBXMF+CPxg3xE0vbYxeB
-	 GOw4X+yrmfVbVc6blCNhhGnJfk5030ZTynjwdRw2cuH++6ckdnB6KdlANkiiP1sg7L
-	 PYPdW8ryDaAhg==
+	b=Gc86cfewGJKycobuexuDpcsxMRn3W1xG2u0ua1YvDlCauqFh7ug1oI/0+kKz9BscX
+	 V4Al4lYAlTqSElijd+IP7WD2UKtAj0SYDnb7yxoN20ooDt5sa1klyHLp+NSn6M8h+V
+	 uGmklA8AQkfDr06j890pPruDl3oMv1Gc574OL6Cgk9XYGiQLpVFmUYNmJ9dZgR0WLK
+	 IFdeJUN1lFZW1PA8cXQ9PGYQdyG0rNHOhakELJE3s1NFJRa3Y7LbsjIg6mS7pdehVx
+	 hKtZL3GujBw1bM/8IrIFE48dec1bkx0shHIzr04Nk+sF/pVaKkMg6WQes2omf80IoH
+	 HpocZWm1oDJTA==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE26D106F2FA;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99248106F2F3;
 	Thu, 26 Mar 2026 08:06:40 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Thu, 26 Mar 2026 13:36:36 +0530
-Subject: [PATCH v7 8/8] power: sequencing: pcie-m2: Create serdev device
- for WCN7850 bluetooth
+Date: Thu, 26 Mar 2026 13:36:33 +0530
+Subject: [PATCH v7 5/8] dt-bindings: connector: Add PCIe M.2 Mechanical Key
+ E connector
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260326-pci-m2-e-v7-8-43324a7866e6@oss.qualcomm.com>
+Message-Id: <20260326-pci-m2-e-v7-5-43324a7866e6@oss.qualcomm.com>
 References: <20260326-pci-m2-e-v7-0-43324a7866e6@oss.qualcomm.com>
 In-Reply-To: <20260326-pci-m2-e-v7-0-43324a7866e6@oss.qualcomm.com>
 To: Rob Herring <robh@kernel.org>, 
@@ -65,19 +65,18 @@ Cc: linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-pm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
  Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
  linux-acpi@vger.kernel.org, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- Hans de Goede <johannes.goede@oss.qualcomm.com>
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.15.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=10866;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=8239;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=idB7rpvSBQMtS24fVx41QmdeqC1DW1juy8+wOcFwZck=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpxOkN71mkppldChBzZHIYnAftETujoQqLBzvT9
- 82WUo5Q3O+JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCacTpDQAKCRBVnxHm/pHO
- 9flfB/97yEJg/LD7zs2qnTskC+l6aF3wo98whG0oqt3OCuFGWf7q/W1B9q0aHG9Vsw14VUXUrQO
- ibYjfB5wv4MyQQn4mCZ/I0v8CKLQ3wWRgOomiTJZ9Rc4Pt3F9ey3AZ55jPv35AnWeG+YePTt0j+
- LBjXQoZjWTCBkc1D3yiUhrgGz+H72mpIiRb/JskTOwbd7kwEWx2cfhRpTLAslBBF3gpIfrzYFAS
- T2TzZMc0vk2nCTqOuqpn1+bnm+//1khi2Y7I6A1dw+pCnUu7MYSqr4ksYPMvqSrJPnhW2kbmN5c
- KtCbV9aKK1C6s1rnfquu8/8OMACZHy15Q0iuqUcSlQObXX0V
+ bh=slhKwJysU03VOabgWllbdo/9+CasPWvvWWbRPmMU8Iw=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpxOkNpfiNlrcUD/nA8Hs2SeqKsUnqiWp9NCgqJ
+ 2aoxNQx9GqJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCacTpDQAKCRBVnxHm/pHO
+ 9S6mCACgacV0mPyQuXRwv/xYMOwIPS7a4P7C8CQjR0vQiXyMuAmmv5LPV9I0mqfQYxMysYT/wTX
+ tLgGTKU4rZ9guFDxpTdwbHkcq0r74/cCx8+kwHyC5P2UDU/ZYC7o4HeZW1d87P8pLCXCCJB8qlO
+ hAOA4OsMI0I2v8cPE3TbCbKjhN2jPTOKyWehqSWcV4rYL+ro/k1xdgJ6EJ7kOPr399td6FjKl1k
+ DPGdJfPJiJEf92XzCo7vUOiCBKz4+vVKRqAwKARFJ7m5NsHCK2DhYzF0assIG6yShQ26EijiFmf
+ t9G43nNWYyYfNyfOQk1gsk6NCbkW1o4L8PdB1pen5T0Zo0uX
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -87,355 +86,228 @@ Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-For supporting bluetooth over the non-discoverable UART interface of
-WCN7850, create the serdev device after enumerating the PCIe interface.
-This is mandatory since the device ID is only known after the PCIe
-enumeration and the ID is used for creating the serdev device.
+Add the devicetree binding for PCIe M.2 Mechanical Key E connector defined
+in the PCI Express M.2 Specification, r4.0, sec 5.1.2. This connector
+provides interfaces like PCIe or SDIO to attach the WiFi devices to the
+host machine, USB or UART+PCM interfaces to attach the Bluetooth (BT)
+devices. Spec also provides an optional interface to connect the UIM card,
+but that is not covered in this binding.
 
-Since by default there is no OF or ACPI node for the created serdev,
-create a dynamic OF 'bluetooth' node with the 'compatible' property and
-attach it to the serdev device. This will allow the serdev device to bind
-to the existing bluetooth driver.
+The connector provides a primary power supply of 3.3v, along with an
+optional 1.8v VIO supply for the Adapter I/O buffer circuitry operating at
+1.8v sideband signaling.
 
-Tested-by: Hans de Goede <johannes.goede@oss.qualcomm.com> # ThinkPad T14s gen6 (arm64)
+The connector also supplies optional signals in the form of GPIOs for fine
+grained power management.
+
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- drivers/power/sequencing/Kconfig          |   3 +-
- drivers/power/sequencing/pwrseq-pcie-m2.c | 253 ++++++++++++++++++++++++++++--
- 2 files changed, 240 insertions(+), 16 deletions(-)
+ .../bindings/connector/pcie-m2-e-connector.yaml    | 184 +++++++++++++++++++++
+ MAINTAINERS                                        |   1 +
+ 2 files changed, 185 insertions(+)
 
-diff --git a/drivers/power/sequencing/Kconfig b/drivers/power/sequencing/Kconfig
-index f5fff84566ba..1ec142525a4a 100644
---- a/drivers/power/sequencing/Kconfig
-+++ b/drivers/power/sequencing/Kconfig
-@@ -37,7 +37,8 @@ config POWER_SEQUENCING_TH1520_GPU
- 
- config POWER_SEQUENCING_PCIE_M2
- 	tristate "PCIe M.2 connector power sequencing driver"
--	depends on OF || COMPILE_TEST
-+	depends on (PCI && OF) || COMPILE_TEST
-+	select OF_DYNAMIC if OF
- 	help
- 	  Say Y here to enable the power sequencing driver for PCIe M.2
- 	  connectors. This driver handles the power sequencing for the M.2
-diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
-index 3507cdcb1e7b..a75ca4fda2eb 100644
---- a/drivers/power/sequencing/pwrseq-pcie-m2.c
-+++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
-@@ -12,9 +12,11 @@
- #include <linux/of.h>
- #include <linux/of_graph.h>
- #include <linux/of_platform.h>
-+#include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/pwrseq/provider.h>
- #include <linux/regulator/consumer.h>
-+#include <linux/serdev.h>
- #include <linux/slab.h>
- 
- struct pwrseq_pcie_m2_pdata {
-@@ -30,6 +32,9 @@ struct pwrseq_pcie_m2_ctx {
- 	struct notifier_block nb;
- 	struct gpio_desc *w_disable1_gpio;
- 	struct gpio_desc *w_disable2_gpio;
-+	struct serdev_device *serdev;
-+	struct of_changeset *ocs;
-+	struct device *dev;
- };
- 
- static int pwrseq_pcie_m2_vregs_enable(struct pwrseq_device *pwrseq)
-@@ -172,11 +177,202 @@ static int pwrseq_pcie_m2_match(struct pwrseq_device *pwrseq,
- 	return PWRSEQ_NO_MATCH;
- }
- 
--static void pwrseq_pcie_m2_free_regulators(void *data)
-+static int pwrseq_m2_pcie_create_bt_node(struct pwrseq_pcie_m2_ctx *ctx,
-+					struct device_node *parent)
- {
--	struct pwrseq_pcie_m2_ctx *ctx = data;
-+	struct device *dev = ctx->dev;
-+	struct device_node *np;
-+	int ret;
- 
--	regulator_bulk_free(ctx->num_vregs, ctx->regs);
-+	ctx->ocs = kzalloc_obj(*ctx->ocs);
-+	if (!ctx->ocs)
-+		return -ENOMEM;
+diff --git a/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml b/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
+new file mode 100644
+index 000000000000..f7859aa9b634
+--- /dev/null
++++ b/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
+@@ -0,0 +1,184 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/connector/pcie-m2-e-connector.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+	of_changeset_init(ctx->ocs);
++title: PCIe M.2 Mechanical Key E Connector
 +
-+	np = of_changeset_create_node(ctx->ocs, parent, "bluetooth");
-+	if (!np) {
-+		dev_err(dev, "Failed to create bluetooth node\n");
-+		ret = -ENODEV;
-+		goto err_destroy_changeset;
-+	}
++maintainers:
++  - Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 +
-+	ret = of_changeset_add_prop_string(ctx->ocs, np, "compatible", "qcom,wcn7850-bt");
-+	if (ret) {
-+		dev_err(dev, "Failed to add bluetooth compatible: %d\n", ret);
-+		goto err_destroy_changeset;
-+	}
++description:
++  A PCIe M.2 E connector node represents a physical PCIe M.2 Mechanical Key E
++  connector. Mechanical Key E connectors are used to connect Wireless
++  Connectivity devices including combinations of Wi-Fi, BT, NFC to the host
++  machine over interfaces like PCIe/SDIO, USB/UART+PCM, and I2C.
 +
-+	ret = of_changeset_apply(ctx->ocs);
-+	if (ret) {
-+		dev_err(dev, "Failed to apply changeset: %d\n", ret);
-+		goto err_destroy_changeset;
-+	}
++properties:
++  compatible:
++    const: pcie-m2-e-connector
 +
-+	ret = device_add_of_node(&ctx->serdev->dev, np);
-+	if (ret) {
-+		dev_err(dev, "Failed to add OF node: %d\n", ret);
-+		goto err_revert_changeset;
-+	}
++  vpcie3v3-supply:
++    description: A phandle to the regulator for 3.3v supply.
 +
-+	return 0;
++  vpcie1v8-supply:
++    description: A phandle to the regulator for VIO 1.8v supply.
 +
-+err_revert_changeset:
-+	of_changeset_revert(ctx->ocs);
-+err_destroy_changeset:
-+	of_changeset_destroy(ctx->ocs);
-+	kfree(ctx->ocs);
-+	ctx->ocs = NULL;
++  i2c-parent:
++    $ref: /schemas/types.yaml#/definitions/phandle
++    description: I2C interface
 +
-+	return ret;
-+}
++  clocks:
++    description: 32.768 KHz Suspend Clock (SUSCLK) input from the host system to
++      the M.2 card. Refer, PCI Express M.2 Specification r4.0, sec 3.1.12.1 for
++      more details.
++    maxItems: 1
 +
-+static int pwrseq_pcie_m2_create_serdev(struct pwrseq_pcie_m2_ctx *ctx)
-+{
-+	struct serdev_controller *serdev_ctrl;
-+	struct device *dev = ctx->dev;
-+	int ret;
++  w-disable1-gpios:
++    description: GPIO output to W_DISABLE1# signal. This signal is used by the
++      host system to disable WiFi radio in the M.2 card. Refer, PCI Express M.2
++      Specification r4.0, sec 3.1.12.3 for more details.
++    maxItems: 1
 +
-+	struct device_node *serdev_parent __free(device_node) =
-+		of_graph_get_remote_node(dev_of_node(ctx->dev), 3, 0);
-+	if (!serdev_parent)
-+		return 0;
++  w-disable2-gpios:
++    description: GPIO output to W_DISABLE2# signal. This signal is used by the
++      host system to disable BT radio in the M.2 card. Refer, PCI Express M.2
++      Specification r4.0, sec 3.1.12.3 for more details.
++    maxItems: 1
 +
-+	serdev_ctrl = of_find_serdev_controller_by_node(serdev_parent);
-+	if (!serdev_ctrl)
-+		return 0;
++  viocfg-gpios:
++    description: GPIO input to IO voltage configuration (VIO_CFG) signal. The
++      card drives this signal to indicate to the host system whether the card
++      supports an independent IO voltage domain for sideband signals. Refer,
++      PCI Express M.2 Specification r4.0, sec 3.1.15.1 for more details.
++    maxItems: 1
 +
-+	/* Bail out if the device was already attached to this controller */
-+	if (serdev_ctrl->serdev) {
-+		serdev_controller_put(serdev_ctrl);
-+		return 0;
-+	}
++  uart-wake-gpios:
++    description: GPIO input to UART_WAKE# signal. The card asserts this signal
++      to wake the host system and initiate UART interface communication. Refer,
++      PCI Express M.2 Specification r4.0, sec 3.1.8.1 for more details.
++    maxItems: 1
 +
-+	ctx->serdev = serdev_device_alloc(serdev_ctrl);
-+	if (!ctx->serdev) {
-+		ret = -ENOMEM;
-+		goto err_put_ctrl;
-+	}
++  sdio-wake-gpios:
++    description: GPIO input to SDIO_WAKE# signal. The card asserts this signal
++      to wake the host system and initiate SDIO interface communication. Refer,
++      PCI Express M.2 Specification r4.0, sec 3.1.7 for more details.
++    maxItems: 1
 +
-+	ret = pwrseq_m2_pcie_create_bt_node(ctx, serdev_parent);
-+	if (ret)
-+		goto err_free_serdev;
++  sdio-reset-gpios:
++    description: GPIO output to SDIO_RESET# signal. This signal is used by the
++      host system to reset SDIO interface of the M.2 card. Refer, PCI Express
++      M.2 Specification r4.0, sec 3.1.7 for more details.
++    maxItems: 1
 +
-+	ret = serdev_device_add(ctx->serdev);
-+	if (ret) {
-+		dev_err(dev, "Failed to add serdev for WCN7850: %d\n", ret);
-+		goto err_free_dt_node;
-+	}
++  vendor-porta-gpios:
++    description: GPIO for the first vendor specific signal (VENDOR_PORTA). This
++      signal's functionality is defined by the card manufacturer and may be
++      used for proprietary features. Refer the card vendor's documentation for
++      details.
++    maxItems: 1
 +
-+	serdev_controller_put(serdev_ctrl);
++  vendor-portb-gpios:
++    description: GPIO for the second vendor specific signal (VENDOR_PORTB). This
++      signal's functionality is defined by the card manufacturer and may be
++      used for proprietary features. Refer the card vendor's documentation for
++      details.
++    maxItems: 1
 +
-+	return 0;
++  vendor-portc-gpios:
++    description: GPIO for the third vendor specific signal (VENDOR_PORTC). This
++      signal's functionality is defined by the card manufacturer and may be
++      used for proprietary features. Refer the card vendor's documentation for
++      details.
++    maxItems: 1
 +
-+err_free_dt_node:
-+	device_remove_of_node(&ctx->serdev->dev);
-+	of_changeset_revert(ctx->ocs);
-+	of_changeset_destroy(ctx->ocs);
-+	kfree(ctx->ocs);
-+	ctx->ocs = NULL;
-+err_free_serdev:
-+	serdev_device_put(ctx->serdev);
-+	ctx->serdev = NULL;
-+err_put_ctrl:
-+	serdev_controller_put(serdev_ctrl);
++  ports:
++    $ref: /schemas/graph.yaml#/properties/ports
++    description: OF graph bindings modeling the interfaces exposed on the
++      connector. Since a single connector can have multiple interfaces, every
++      interface has an assigned OF graph port number as described below.
 +
-+	return ret;
-+}
++    properties:
++      port@0:
++        $ref: /schemas/graph.yaml#/properties/port
++        description: PCIe interface for Wi-Fi
 +
-+static void pwrseq_pcie_m2_remove_serdev(struct pwrseq_pcie_m2_ctx *ctx)
-+{
-+	if (ctx->serdev) {
-+		device_remove_of_node(&ctx->serdev->dev);
-+		serdev_device_remove(ctx->serdev);
-+		ctx->serdev = NULL;
-+	}
++      port@1:
++        $ref: /schemas/graph.yaml#/properties/port
++        description: SDIO interface for Wi-Fi
 +
-+	if (ctx->ocs) {
-+		of_changeset_revert(ctx->ocs);
-+		of_changeset_destroy(ctx->ocs);
-+		kfree(ctx->ocs);
-+		ctx->ocs = NULL;
-+	}
-+}
++      port@2:
++        $ref: /schemas/graph.yaml#/properties/port
++        description: USB 2.0 interface for BT
 +
-+static int pwrseq_m2_pcie_notify(struct notifier_block *nb, unsigned long action,
-+			      void *data)
-+{
-+	struct pwrseq_pcie_m2_ctx *ctx = container_of(nb, struct pwrseq_pcie_m2_ctx, nb);
-+	struct pci_dev *pdev = to_pci_dev(data);
-+	int ret;
++      port@3:
++        $ref: /schemas/graph.yaml#/properties/port
++        description: UART interface for BT
 +
-+	/*
-+	 * Check whether the PCI device is associated with this M.2 connector or
-+	 * not, by comparing the OF node of the PCI device parent and the Port 0
-+	 * (PCIe) remote node parent OF node.
-+	 */
-+	struct device_node *pci_parent __free(device_node) =
-+			of_graph_get_remote_node(dev_of_node(ctx->dev), 0, 0);
-+	if (!pci_parent || (pci_parent != pdev->dev.parent->of_node))
-+		return NOTIFY_DONE;
++      port@4:
++        $ref: /schemas/graph.yaml#/properties/port
++        description: PCM/I2S interface
 +
-+	switch (action) {
-+	case BUS_NOTIFY_ADD_DEVICE:
-+		/* Create serdev device for WCN7850 */
-+		if (pdev->vendor == PCI_VENDOR_ID_QCOM && pdev->device == 0x1107) {
-+			ret = pwrseq_pcie_m2_create_serdev(ctx);
-+			if (ret)
-+				return notifier_from_errno(ret);
-+		}
-+		break;
-+	case BUS_NOTIFY_REMOVED_DEVICE:
-+		/* Destroy serdev device for WCN7850 */
-+		if (pdev->vendor == PCI_VENDOR_ID_QCOM && pdev->device == 0x1107)
-+			pwrseq_pcie_m2_remove_serdev(ctx);
++    anyOf:
++      - anyOf:
++          - required:
++              - port@0
++          - required:
++              - port@1
++      - anyOf:
++          - required:
++              - port@2
++          - required:
++              - port@3
 +
-+		break;
-+	}
++required:
++  - compatible
++  - vpcie3v3-supply
 +
-+	return NOTIFY_OK;
-+}
++additionalProperties: false
 +
-+static bool pwrseq_pcie_m2_check_remote_node(struct device *dev, u8 port, u8 endpoint,
-+					     const char *node)
-+{
-+	struct device_node *remote __free(device_node) =
-+			of_graph_get_remote_node(dev_of_node(dev), port, endpoint);
++examples:
++  # PCI M.2 Key E connector for Wi-Fi/BT with PCIe/UART interfaces
++  - |
++    #include <dt-bindings/gpio/gpio.h>
 +
-+	if (remote && of_node_name_eq(remote, node))
-+		return true;
++    connector {
++        compatible = "pcie-m2-e-connector";
++        vpcie3v3-supply = <&vreg_wcn_3p3>;
++        vpcie1v8-supply = <&vreg_l15b_1p8>;
++        i2c-parent = <&i2c0>;
++        w-disable1-gpios = <&tlmm 115 GPIO_ACTIVE_LOW>;
++        w-disable2-gpios = <&tlmm 116 GPIO_ACTIVE_LOW>;
++        viocfg-gpios = <&tlmm 117 GPIO_ACTIVE_HIGH>;
++        uart-wake-gpios = <&tlmm 118 GPIO_ACTIVE_LOW>;
++        sdio-wake-gpios = <&tlmm 119 GPIO_ACTIVE_LOW>;
++        sdio-reset-gpios = <&tlmm 120 GPIO_ACTIVE_LOW>;
 +
-+	return false;
-+}
++        ports {
++            #address-cells = <1>;
++            #size-cells = <0>;
 +
-+/*
-+ * If the connector exposes a non-discoverable bus like UART, the respective
-+ * protocol device needs to be created manually with the help of the notifier
-+ * of the discoverable bus like PCIe.
-+ */
-+static int pwrseq_pcie_m2_register_notifier(struct pwrseq_pcie_m2_ctx *ctx, struct device *dev)
-+{
-+	int ret;
++            port@0 {
++                reg = <0>;
++                #address-cells = <1>;
++                #size-cells = <0>;
 +
-+	/*
-+	 * Register a PCI notifier for Key E connector that has PCIe as Port
-+	 * 0/Endpoint 0 interface and Serial as Port 3/Endpoint 0 interface.
-+	 */
-+	if (pwrseq_pcie_m2_check_remote_node(dev, 3, 0, "serial")) {
-+		if (pwrseq_pcie_m2_check_remote_node(dev, 0, 0, "pcie")) {
-+			ctx->dev = dev;
-+			ctx->nb.notifier_call = pwrseq_m2_pcie_notify;
-+			ret = bus_register_notifier(&pci_bus_type, &ctx->nb);
-+			if (ret)
-+				return dev_err_probe(dev, ret,
-+						     "Failed to register notifier for serdev\n");
-+		}
-+	}
++                endpoint@0 {
++                    reg = <0>;
++                    remote-endpoint = <&pcie4_port0_ep>;
++                };
++            };
 +
-+	return 0;
- }
- 
- static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
-@@ -190,6 +386,7 @@ static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
- 	if (!ctx)
- 		return -ENOMEM;
- 
-+	platform_set_drvdata(pdev, ctx);
- 	ctx->of_node = of_node_get(dev->of_node);
- 	ctx->pdata = device_get_match_data(dev);
- 	if (!ctx->pdata)
-@@ -206,21 +403,21 @@ static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
- 		return dev_err_probe(dev, ret,
- 				     "Failed to get all regulators\n");
- 
-+	ctx->num_vregs = ret;
++            port@3 {
++                reg = <3>;
++                #address-cells = <1>;
++                #size-cells = <0>;
 +
- 	ctx->w_disable1_gpio = devm_gpiod_get_optional(dev, "w-disable1", GPIOD_OUT_HIGH);
--	if (IS_ERR(ctx->w_disable1_gpio))
--		return dev_err_probe(dev, PTR_ERR(ctx->w_disable1_gpio),
-+	if (IS_ERR(ctx->w_disable1_gpio)) {
-+		ret = dev_err_probe(dev, PTR_ERR(ctx->w_disable1_gpio),
- 				     "Failed to get the W_DISABLE_1# GPIO\n");
-+		goto err_free_regulators;
-+	}
- 
- 	ctx->w_disable2_gpio = devm_gpiod_get_optional(dev, "w-disable2", GPIOD_OUT_HIGH);
--	if (IS_ERR(ctx->w_disable2_gpio))
--		return dev_err_probe(dev, PTR_ERR(ctx->w_disable2_gpio),
-+	if (IS_ERR(ctx->w_disable2_gpio)) {
-+		ret = dev_err_probe(dev, PTR_ERR(ctx->w_disable2_gpio),
- 				     "Failed to get the W_DISABLE_2# GPIO\n");
--
--	ctx->num_vregs = ret;
--
--	ret = devm_add_action_or_reset(dev, pwrseq_pcie_m2_free_regulators, ctx);
--	if (ret)
--		return ret;
-+		goto err_free_regulators;
-+	}
- 
- 	config.parent = dev;
- 	config.owner = THIS_MODULE;
-@@ -229,11 +426,36 @@ static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
- 	config.targets = ctx->pdata->targets;
- 
- 	ctx->pwrseq = devm_pwrseq_device_register(dev, &config);
--	if (IS_ERR(ctx->pwrseq))
--		return dev_err_probe(dev, PTR_ERR(ctx->pwrseq),
-+	if (IS_ERR(ctx->pwrseq)) {
-+		ret = dev_err_probe(dev, PTR_ERR(ctx->pwrseq),
- 				     "Failed to register the power sequencer\n");
-+		goto err_free_regulators;
-+	}
-+
-+	/*
-+	 * Register a notifier for creating protocol devices for
-+	 * non-discoverable busses like UART.
-+	 */
-+	ret = pwrseq_pcie_m2_register_notifier(ctx, dev);
-+	if (ret)
-+		goto err_free_regulators;
- 
- 	return 0;
-+
-+err_free_regulators:
-+	regulator_bulk_free(ctx->num_vregs, ctx->regs);
-+
-+	return ret;
-+}
-+
-+static void pwrseq_pcie_m2_remove(struct platform_device *pdev)
-+{
-+	struct pwrseq_pcie_m2_ctx *ctx = platform_get_drvdata(pdev);
-+
-+	bus_unregister_notifier(&pci_bus_type, &ctx->nb);
-+	pwrseq_pcie_m2_remove_serdev(ctx);
-+
-+	regulator_bulk_free(ctx->num_vregs, ctx->regs);
- }
- 
- static const struct of_device_id pwrseq_pcie_m2_of_match[] = {
-@@ -255,6 +477,7 @@ static struct platform_driver pwrseq_pcie_m2_driver = {
- 		.of_match_table = pwrseq_pcie_m2_of_match,
- 	},
- 	.probe = pwrseq_pcie_m2_probe,
-+	.remove = pwrseq_pcie_m2_remove,
- };
- module_platform_driver(pwrseq_pcie_m2_driver);
++                endpoint@0 {
++                    reg = <0>;
++                    remote-endpoint = <&uart14_ep>;
++                };
++            };
++        };
++    };
+diff --git a/MAINTAINERS b/MAINTAINERS
+index a38fe0ed7144..bd72ce52f00c 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -21029,6 +21029,7 @@ PCIE M.2 POWER SEQUENCING
+ M:	Manivannan Sadhasivam <mani@kernel.org>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
++F:	Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
+ F:	Documentation/devicetree/bindings/connector/pcie-m2-m-connector.yaml
+ F:	drivers/power/sequencing/pwrseq-pcie-m2.c
  
 
 -- 
