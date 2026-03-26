@@ -1,288 +1,175 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11011024.outbound.protection.outlook.com [52.101.65.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E19B3AEF58;
-	Thu, 26 Mar 2026 08:06:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774512401; cv=none; b=ciubWUSrznWY8uoo/ft0ywR7jDWTdRAHrNkb8nDvn7larZyw2IuRosNrqQnyZdnnzrm9SL/Vg3YSK1CPVKF0hwmF33tzTLLTamlmAzp4a6RcL0T7yQw0jNElW3Fjg2po3cEKheW9MK9arZbrgDSX5t9yJnTCTtUUkQ5gz0/6kxw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774512401; c=relaxed/simple;
-	bh=QPg5ucT2J9JR6E3rS7caTqzm372tAM2YlgwRdg7/hwg=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=MKaiSzj8oT6OmqUO/9Dhf6Lnu58lTCpZpScdser/ecWsHQC4sSe1kSzmZRIOD365cmRbhhkFG0IalAsg0Gicvek6Y8exZ9cSYPPTtvwCsIse7Z054G0wKODjyDh2rQIcKwpE2GtUpVSXpczN4S1g6024ELWGfzEEnJop29adxPU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mdUouJFO; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32E1338E130;
+	Thu, 26 Mar 2026 08:17:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.65.24
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774513054; cv=fail; b=E6Ts3SetCIekwoIlIs1p01mqVqm9brNvOiZEF2FZQavcBpvci3LTqsvUsTvM+itXfzV38GLOcWEZdY/hL+gBEon+PAgxhxgJml1oxAApSSDRHKWq9EcW3dGC8mr8QS7AQdQQH5DS1wlqb/88tmbiB8d2Zh8Dzdy4e5qQXbHeBds=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774513054; c=relaxed/simple;
+	bh=tO/MuIihZp9NO7wxGyzSmD+EbcUHj+9UM6fvlfMOso8=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=Ag3h5lHKq6n1RIu+n6DtHb8YBoiSGx1K3jqHqhNaDL3zdjQ8fGVQOG4Ie4l2/ZejKuQ88hsuZG8NtZklYKf6WovuuNy8H214ksvjj0DMpuejYw6B7tbrxK9NIb1fJkRDXRbSXeOAl5si9peTDH/wfLtEeHhP0tpkxu9M+mTQDu8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=fxmQ8cv1; arc=fail smtp.client-ip=52.101.65.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mdUouJFO"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id E41F6C2BC87;
-	Thu, 26 Mar 2026 08:06:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774512401;
-	bh=QPg5ucT2J9JR6E3rS7caTqzm372tAM2YlgwRdg7/hwg=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=mdUouJFOe7iVby+PU1+ECWuAy6xXL4uRrYoOlf2oK9U68N9lM0OlJfevgSOMFfrMx
-	 x5FKszNh2kFIBPGd2yFGfb8nriW4UE7SPk9R+gjKm8ndGP2bu3J0l1qAEwPzP2W5DO
-	 0CNi4DiOvewbTJQ0a6QTgkmviXyrqwOR8w6QviSGTebdqDw1oJcAVrNyMYHtcPj2+g
-	 WINP5kMJIjkiaDEyuxci+0zroEGoBQtd73rFLU9KTaPz7VM74BY/Ao/qthBcFpwgIK
-	 7SC4Vk81T7ey/Ky+B0rZ5PsB5mBHvK35CdV2s9s6JwPiJDgWQM54m9TV/OCeDfHPNl
-	 5q6ej8qzEChhQ==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DACB1106F2F4;
-	Thu, 26 Mar 2026 08:06:40 +0000 (UTC)
-From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Thu, 26 Mar 2026 13:36:35 +0530
-Subject: [PATCH v7 7/8] power: sequencing: pcie-m2: Add support for PCIe
- M.2 Key E connectors
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="fxmQ8cv1"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=A+2Cjc/J0ZsyN0xeXh/Y+faLG/Hzr5if70EUq0raWf+pwS4QHFrwyHYf0St8AOpUrOtyT4yUMoWephBZ63vxeAqZFBMTJGYAe3FCtmclzXHU89V9PTh46YmrY//uSdB5QSKsAG0xMc5a+j/zjNxMmvvtg+TCc6pmZm66xcGjW5T/p3VNLXgWNEuc0r+W16gpVnKUF7Q4SHDjP4UkPt6NnHldQYqpI2u7x3oneTOPNkCohwgQqL89k7xGwi+a8trHS+Lv7Rxn3cXNrNgz0dJja2hSmsRZRP2f27zcr4tqw0g928xgYYwcFfxI58w//VSAUi0wKnsMZ9RrGOQ0guqwSQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=tO/MuIihZp9NO7wxGyzSmD+EbcUHj+9UM6fvlfMOso8=;
+ b=IpSg3sBxjZd7GoRaVEdLswK3zvKeV0oFH8qQXL1806ERadIHIlkFUgFAqqqOXopPFUAavqHAlQTAMLRRvUfBCRVRl0sDp2sD1Jpx4KnUctgnkX82yiwQlNRFuOX0rk5MfjIyz8Z8b/hVgVD4YYEOpMHqr8AWl7mDZxSwsE5SnHGDGCV6VM4bHZ03rIGK5i26u57Qmd26TKICoNEQzrxDqzZzCyUgPYaacGuu6UBGyxxrQfMCNaJMWbyYjGHK3S0MpkHbQLKRLV7eapWVWj2CSpdRZi6VnQtqDZQIY/e/U5AY9O1stt73N23ZtuIdLIes0ipG7bttF6dp6HkD550qxA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tO/MuIihZp9NO7wxGyzSmD+EbcUHj+9UM6fvlfMOso8=;
+ b=fxmQ8cv1y+m/TUxP0Vxyl05boik7gvf70SD4TEREemL5E1N4Ut9GUw8Zi/Yiu+voKdCl8vNRJWlqDGHDptf6MHEaXB7s7VaF3I0euUvkF8UE5HYoL6oT/+qOonpS/lT72qQ3Jen2ZLTL45oGZxt/aDKUeZ6NTrVqE8k21YJDqcpPlGJ38joTPGeLWWFTcgF6y1+EUyTf4WdGyNWvQymdo0mwPNzlsajbfxAOPTDqSz3XCEnSIFQlRJ7b54XCrA9gFIJ7M+AMB6RkDvE62aJIFrsuVFrmZpAOhHq9Tw889IaRhj3YiGlnd7qHGNjymFxp7WJIwyLFlJ9nhdB1OwUTTQ==
+Received: from AS8PR04MB8833.eurprd04.prod.outlook.com (2603:10a6:20b:42c::19)
+ by VI0PR04MB12187.eurprd04.prod.outlook.com (2603:10a6:800:335::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.20; Thu, 26 Mar
+ 2026 08:17:29 +0000
+Received: from AS8PR04MB8833.eurprd04.prod.outlook.com
+ ([fe80::209c:44e4:a205:8e86]) by AS8PR04MB8833.eurprd04.prod.outlook.com
+ ([fe80::209c:44e4:a205:8e86%4]) with mapi id 15.20.9745.019; Thu, 26 Mar 2026
+ 08:17:29 +0000
+From: Hongxing Zhu <hongxing.zhu@nxp.com>
+To: Franz Schnyder <fra.schnyder@gmail.com>
+CC: Franz Schnyder <franz.schnyder@toradex.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev"
+	<imx@lists.linux.dev>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, Francesco Dolcini <francesco@dolcini.it>,
+	Manivannan Sadhasivam <mani@kernel.org>, Frank Li <frank.li@nxp.com>
+Subject: RE: Clear CLKREQ# override breaks functionality
+Thread-Topic: Clear CLKREQ# override breaks functionality
+Thread-Index: AQHcvPaW5M6/3a/UD0WxZ+IlTXMzwbXAdF3A
+Date: Thu, 26 Mar 2026 08:17:29 +0000
+Message-ID:
+ <AS8PR04MB8833063C53B769C0ACB086958C56A@AS8PR04MB8833.eurprd04.prod.outlook.com>
+References: <jfefktil6ywvugvbxdplbvry6g5efka5g4bpr2dwhha2mtrkm5@6gkcmj2glvwo>
+In-Reply-To: <jfefktil6ywvugvbxdplbvry6g5efka5g4bpr2dwhha2mtrkm5@6gkcmj2glvwo>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: AS8PR04MB8833:EE_|VI0PR04MB12187:EE_
+x-ms-office365-filtering-correlation-id: 42aa0c9c-e669-4f01-fbad-08de8b101f27
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|1800799024|376014|19092799006|366016|38070700021|22082099003|56012099003|18002099003;
+x-microsoft-antispam-message-info:
+ KuA+GecoLEcSlke+OvLQ1bWOWQ3IPIkCEcKMHPjnmTfGu3Md4NwMfzsztb6EBzSBE05l59+zusI2cDMCvQ4x9U+PpsacpeCKuRFbIoqIcBSAES4R1ex+thjm/FiY+MtDQICUo1A2ioRMwm0IlhElhZbX90zdL2CY7rU+kitQ6a7Jo3DfJWjF18BajQD5YDsKvVjseUu62+HrX2LmQpSl3+tmAS88kO5GjqDbjWFAkbq+xG1ziZptg9bLxjI5M6jVoc8K83Onj9zrImlUAkTX8nSPrSxftPGR6ARE+X/vfikYeHYbhYjgJ/Tk5Jh5oZSt+1tXkGm/OwEuzEKJIVMbMslZksTFpwrpse24eiZfTrK3jZFHL6Wol3kMmm74+xnXRUo9ek+pXE5gUD6eY+XlgSorAmjFEBFRJWw2yJNuDD87wpr7GY4H+1bea19elLQzkGylykf1GOxnICMUnSYdgUxS9TKmFWGH9fgxuHgIyUAc7jnQNfSPFb3Jvd3pVMBHuPwh4vi5wfUw3HscypnkJe91aAYSc3jHknH1VDUh+wjmCu1qQIKuk/givbeCVIVX1xBOgP7Uku96eWMKX8Lkmelcom//83dhopKl/9yK3aMt/0QSZdcMNlQCA5Bqj/faBqYXXb8LHeCNvdtKj2wLtU6fEh1TQpUbQBddS1S3dnDYFO36US/O9aZLWwhDkrvuGFyN7c43vtOUj//f701Owhu/ZRf9Dz7wMdcAmP/MMNqLyfbxP5U3gvw1ETC4cj1478XFpCKcnccXjxveCal9OOGFB9RMM7s3DXipeEYyLGw=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:zh-cn;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR04MB8833.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(19092799006)(366016)(38070700021)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?gb2312?B?VzlpR3pYTGprdHg3cE5UZStIL3BqZ01CZEMzbzdWYlE1clM0OUp0dURsNnRl?=
+ =?gb2312?B?eHJxSTdEelJ4TDRzZS9EWXRCb044clJXcVk3U2NUV3VkQ3NWUjExSGNjSld5?=
+ =?gb2312?B?ckV3ZER2V3hTVEV1OVk4VmlWbytkbVBjMnpsTUFCQ01aL2p1SmN4dk1OYnpI?=
+ =?gb2312?B?ZXI4akh3QVhNT3NiQzdLUWhhYlBtQ000bHJyOEJuZXpNQ29QWFpwaGgvUFdt?=
+ =?gb2312?B?K3VXSnBUdEQ3czVoOCtBVDhoQlBJMUhWaEpiQ1FoYmFaZWpiMklwT3RLY1Ir?=
+ =?gb2312?B?bmNqQk9KSlludzJibms4SkgvYjIvV3VSY21JTFphaW5tWndRem9sNnIyVmVv?=
+ =?gb2312?B?WXZHMGJVQ3BBVlpVZWJLWWh3ak9zRmdNRUs1TFB0dVExdUFUMFRkUnZnQkMy?=
+ =?gb2312?B?aXlvSW1ZaUZLektpNVJSM2h1OVh4TlNibnZIN1BkZW8vQndrTk9XMndSc0Qx?=
+ =?gb2312?B?Zk1KaGZwdUQ1amoxVFQ2TDZPbDlINFFxYURaN1N5ZmdmUmZKMUZYNHB5NHFk?=
+ =?gb2312?B?RE9YUGNVTWw0cFZTbnR2cFNZaHdvSndueTkxY3hYY05TNXI1MVdMUDN0QnlS?=
+ =?gb2312?B?MWR6Mmpac2VJZzNZZ2ZJQ2d4NkJiaW9zQlRQazIxM0dZSGNkVVY2RkdCSm9E?=
+ =?gb2312?B?amhHR3FRZXVxd09nRm9VSlJITTkwQUY4ckFHUW83NzNCNWlMSm9EMmFVMlFl?=
+ =?gb2312?B?OUVqSW9zaFkzdnB2clNzZ25WTFkvMmd1blFqK3V1bG9uNGtIamducnMwWUFD?=
+ =?gb2312?B?NFYrSi9UZ2xaSjBoaWlXb3BoVDA0M00rUitvSmgzMnhVU1IyQ1lYeGFoajBK?=
+ =?gb2312?B?SUtPK3NHdFBtN2RpR3BOa2kwc200VWhyY285dkNuMUZUMjBCT2FBS2Y3UEJX?=
+ =?gb2312?B?Rjl3Q3pDNWtBa29IMnU2VXFuQjlVbHJORitVK2hiNGZvKzZTbFY5bjd6bmtL?=
+ =?gb2312?B?UkRYZ0NxakU4VUxvUS9kazB6aTM1U0hDSkE2ZUhFdnZBSmNYbEtCZVFnMXhD?=
+ =?gb2312?B?T2xtREFwSWh5YUluOXRQemRTVGdFdHQwS2grcWpkWjE0YnlKU0hTL05oUXBk?=
+ =?gb2312?B?WGZRRFY4TE5vZE5naVcreElpNW5oQk9YMXd2NGpqOUx3S0JqelhrVFRDSTZP?=
+ =?gb2312?B?OEF3Q2VCV0NPTHZEUnNLNStPV2NRdW0rb3djeTRjdnE4UHhUTW9oYkc5RG1v?=
+ =?gb2312?B?aVI0S2xlcDdDczZ3WnNLTlpCN0RIYjRobVA3cis0WXBkQVdSeU1FTVNnaG9O?=
+ =?gb2312?B?ZFEvekh5bGRHMEUxTmVRY2J2WHFZTUUwMStUbStibkp0RjhCU2E3cDdsWHdx?=
+ =?gb2312?B?NnNpVW5sVFoxTHU4aW1BT0hKNWFBZVhBT0k4clJyejR5NTAvOWU0N1ZRKy9R?=
+ =?gb2312?B?MDZrcnJyaURvTEc0NE53ZmRRTTlTWGpCL2xicHRjdEpQb2dRYXNKcVRvY3ZX?=
+ =?gb2312?B?SWkwV05QZGF3aGRnbUZjTko1dDdONHMrWUYrc0F0dGwrRzgxcC8wUW1iR1BD?=
+ =?gb2312?B?cDNobVdIbHI0NzBOSkxqVksrVkQveFlkU2JsRVZuQ1hud3BNWjJVWXlJbFRO?=
+ =?gb2312?B?Ly9VNyswUEFGdmhHcHFlcU1zdHFUbnRCVmpoS2MvYjVZTHErNFdVQytERXpW?=
+ =?gb2312?B?RDc4aEE5b0ovSStRVHlkOTJ3cm9GRDE0VFp6Mno4dGV5akF4eHZ2VlBlTVh0?=
+ =?gb2312?B?MzJxZlFMbWtlYTN0VktuV3AwcSs5T1kxbFBRSFBKdFEzek9JOXhoTlZKYnVX?=
+ =?gb2312?B?alYzVGxsVTFXekhUQVcvdmlIUE9PSmNzUzBNTkJJaEZaK0wxazVpb2dJZTRm?=
+ =?gb2312?B?MHc2SmpQUzRaVW1LKzAyT2hsREh2aENkWkhYcndMSjNVeWlrUThpYndrWGQ5?=
+ =?gb2312?B?Tnk0R0VVay9UdER1WVQ0aHVWa2pnSTJML0xpL1lTL2hYTU14NndLalZvOXNV?=
+ =?gb2312?B?emNTbWg4eHJOYzhHY2VkcGh5TTRzSFgyWk1OTFlKSktwaDdOaDZlTmlzYWh4?=
+ =?gb2312?B?OVZLOFk5MVE4UnBwVzRmYXB5cUJ3aWw0bTNBRmhOTEhlWkFNVk1kTFpBOVR1?=
+ =?gb2312?B?dXdUZTNvNXBRVDl1R2Frc3hrOFJXaVJESGoxcW53L2V0Y002MEJKN1NValAr?=
+ =?gb2312?B?TnhwQlQ0dWw0dEVybzlDL2JaaExJVzJ4WXVVK1IwTUt4NEJjQldEVlVRNkFz?=
+ =?gb2312?B?bjhlKzdZNGNXRUkzSHpwYWxGQXMvT2RKMkgxTXdLTFNxTjdtdlJUeTVBZWV3?=
+ =?gb2312?B?SVVSeDZRT3NTZnd0Z2phcXpjc0J2elVXQWhRUEVmQWxRL2c1b2UzeHl3Q3Yr?=
+ =?gb2312?Q?vPtr34XsGEzUG0jGeg?=
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260326-pci-m2-e-v7-7-43324a7866e6@oss.qualcomm.com>
-References: <20260326-pci-m2-e-v7-0-43324a7866e6@oss.qualcomm.com>
-In-Reply-To: <20260326-pci-m2-e-v7-0-43324a7866e6@oss.qualcomm.com>
-To: Rob Herring <robh@kernel.org>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Jiri Slaby <jirislaby@kernel.org>, Nathan Chancellor <nathan@kernel.org>, 
- Nicolas Schier <nicolas.schier@linux.dev>, Hans de Goede <hansg@kernel.org>, 
- =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
- Mark Pearson <mpearson-lenovo@squebb.ca>, 
- "Derek J. Clark" <derekjohn.clark@gmail.com>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
- Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
- Bartosz Golaszewski <brgl@bgdev.pl>, 
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
- Bartosz Golaszewski <brgl@kernel.org>
-Cc: linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-kbuild@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
- linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
- linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
- linux-pm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
- Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
- linux-acpi@vger.kernel.org, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- Hans de Goede <johannes.goede@oss.qualcomm.com>
-X-Mailer: b4 0.15.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=6901;
- i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=HRGptE1JIyA395dlxkM3raRO8gPG2oSfeqDUBhjL6YY=;
- b=kA0DAAoBVZ8R5v6RzvUByyZiAGnE6Q2hXkEob2zwJaf4tJlYmf+8mDScgkgd22Ujhq84tXZHo
- IkBMwQAAQoAHRYhBGelQyqBSMvYpFgnl1WfEeb+kc71BQJpxOkNAAoJEFWfEeb+kc710RYIAJdV
- OwNYBVHVoy340ClaeQUqbv3iuxJutNdyMvn2I3K6Otq8/3Te+1dtfB8VGt4uysULp4Js49LvewG
- L9cgRMIwX1J+zcxbdtSieXfE0LOp3F4ZBz3UlIA0KPvSHxbn297ojpePAK8pteYhoSyve1uKjEt
- tjDDALlqDHBy7NVcEEMt+5l+Gc471FWutJrjqaNiZt0aKrMNMAf5CMZze8WKyI7MB9E05WrDKcO
- 5ujoWawieDxUob74VuzWB6iMVudd5JAWbbcwairLzWqTTwkltPO3mhC3D/s4gsXzaGCiLNFG42d
- Cxg/cgaF8oIreBPDXwiTfSpIbUjWVtzLNTM44fg=
-X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
-X-Endpoint-Received: by B4 Relay for
- manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
-X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Reply-To: manivannan.sadhasivam@oss.qualcomm.com
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: AS8PR04MB8833.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 42aa0c9c-e669-4f01-fbad-08de8b101f27
+X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Mar 2026 08:17:29.1540
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 8RaAO1eT6sWV+zqiSsuQhKmDXSa2yBB825MM1Ao3+96wGM/Fs48p1VhKs98q5Bu7QjpaB5y3ZcbNv4cUNDqsGw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI0PR04MB12187
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-
-Add support for handling the power sequence of the PCIe M.2 Key E
-connectors. These connectors are used to attach the Wireless Connectivity
-devices to the host machine including combinations of WiFi, BT, NFC using
-interfaces such as PCIe/SDIO for WiFi, USB/UART for BT and I2C for NFC.
-
-Currently, this driver supports only the PCIe interface for WiFi and UART
-interface for BT. The driver also only supports driving the 3.3v/1.8v power
-supplies and W_DISABLE{1/2}# GPIOs. The optional signals of the Key E
-connectors are not currently supported.
-
-Tested-by: Hans de Goede <johannes.goede@oss.qualcomm.com> # ThinkPad T14s gen6 (arm64)
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
----
- drivers/power/sequencing/pwrseq-pcie-m2.c | 107 ++++++++++++++++++++++++++++--
- 1 file changed, 101 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
-index d31a7dd8b35c..3507cdcb1e7b 100644
---- a/drivers/power/sequencing/pwrseq-pcie-m2.c
-+++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
-@@ -5,10 +5,13 @@
-  */
- 
- #include <linux/device.h>
-+#include <linux/delay.h>
-+#include <linux/gpio/consumer.h>
- #include <linux/mod_devicetable.h>
- #include <linux/module.h>
- #include <linux/of.h>
- #include <linux/of_graph.h>
-+#include <linux/of_platform.h>
- #include <linux/platform_device.h>
- #include <linux/pwrseq/provider.h>
- #include <linux/regulator/consumer.h>
-@@ -25,16 +28,18 @@ struct pwrseq_pcie_m2_ctx {
- 	struct regulator_bulk_data *regs;
- 	size_t num_vregs;
- 	struct notifier_block nb;
-+	struct gpio_desc *w_disable1_gpio;
-+	struct gpio_desc *w_disable2_gpio;
- };
- 
--static int pwrseq_pcie_m2_m_vregs_enable(struct pwrseq_device *pwrseq)
-+static int pwrseq_pcie_m2_vregs_enable(struct pwrseq_device *pwrseq)
- {
- 	struct pwrseq_pcie_m2_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
- 
- 	return regulator_bulk_enable(ctx->num_vregs, ctx->regs);
- }
- 
--static int pwrseq_pcie_m2_m_vregs_disable(struct pwrseq_device *pwrseq)
-+static int pwrseq_pcie_m2_vregs_disable(struct pwrseq_device *pwrseq)
- {
- 	struct pwrseq_pcie_m2_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
- 
-@@ -43,18 +48,84 @@ static int pwrseq_pcie_m2_m_vregs_disable(struct pwrseq_device *pwrseq)
- 
- static const struct pwrseq_unit_data pwrseq_pcie_m2_vregs_unit_data = {
- 	.name = "regulators-enable",
--	.enable = pwrseq_pcie_m2_m_vregs_enable,
--	.disable = pwrseq_pcie_m2_m_vregs_disable,
-+	.enable = pwrseq_pcie_m2_vregs_enable,
-+	.disable = pwrseq_pcie_m2_vregs_disable,
- };
- 
--static const struct pwrseq_unit_data *pwrseq_pcie_m2_m_unit_deps[] = {
-+static const struct pwrseq_unit_data *pwrseq_pcie_m2_unit_deps[] = {
- 	&pwrseq_pcie_m2_vregs_unit_data,
- 	NULL
- };
- 
-+static int pwrseq_pci_m2_e_uart_enable(struct pwrseq_device *pwrseq)
-+{
-+	struct pwrseq_pcie_m2_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
-+
-+	return gpiod_set_value_cansleep(ctx->w_disable2_gpio, 0);
-+}
-+
-+static int pwrseq_pci_m2_e_uart_disable(struct pwrseq_device *pwrseq)
-+{
-+	struct pwrseq_pcie_m2_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
-+
-+	return gpiod_set_value_cansleep(ctx->w_disable2_gpio, 1);
-+}
-+
-+static const struct pwrseq_unit_data pwrseq_pcie_m2_e_uart_unit_data = {
-+	.name = "uart-enable",
-+	.deps = pwrseq_pcie_m2_unit_deps,
-+	.enable = pwrseq_pci_m2_e_uart_enable,
-+	.disable = pwrseq_pci_m2_e_uart_disable,
-+};
-+
-+static int pwrseq_pci_m2_e_pcie_enable(struct pwrseq_device *pwrseq)
-+{
-+	struct pwrseq_pcie_m2_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
-+
-+	return gpiod_set_value_cansleep(ctx->w_disable1_gpio, 0);
-+}
-+
-+static int pwrseq_pci_m2_e_pcie_disable(struct pwrseq_device *pwrseq)
-+{
-+	struct pwrseq_pcie_m2_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
-+
-+	return gpiod_set_value_cansleep(ctx->w_disable1_gpio, 1);
-+}
-+
-+static const struct pwrseq_unit_data pwrseq_pcie_m2_e_pcie_unit_data = {
-+	.name = "pcie-enable",
-+	.deps = pwrseq_pcie_m2_unit_deps,
-+	.enable = pwrseq_pci_m2_e_pcie_enable,
-+	.disable = pwrseq_pci_m2_e_pcie_disable,
-+};
-+
- static const struct pwrseq_unit_data pwrseq_pcie_m2_m_pcie_unit_data = {
- 	.name = "pcie-enable",
--	.deps = pwrseq_pcie_m2_m_unit_deps,
-+	.deps = pwrseq_pcie_m2_unit_deps,
-+};
-+
-+static int pwrseq_pcie_m2_e_pwup_delay(struct pwrseq_device *pwrseq)
-+{
-+	/*
-+	 * FIXME: This delay is only required for some Qcom WLAN/BT cards like
-+	 * WCN7850 and not for all devices. But currently, there is no way to
-+	 * identify the device model before enumeration.
-+	 */
-+	msleep(50);
-+
-+	return 0;
-+}
-+
-+static const struct pwrseq_target_data pwrseq_pcie_m2_e_uart_target_data = {
-+	.name = "uart",
-+	.unit = &pwrseq_pcie_m2_e_uart_unit_data,
-+	.post_enable = pwrseq_pcie_m2_e_pwup_delay,
-+};
-+
-+static const struct pwrseq_target_data pwrseq_pcie_m2_e_pcie_target_data = {
-+	.name = "pcie",
-+	.unit = &pwrseq_pcie_m2_e_pcie_unit_data,
-+	.post_enable = pwrseq_pcie_m2_e_pwup_delay,
- };
- 
- static const struct pwrseq_target_data pwrseq_pcie_m2_m_pcie_target_data = {
-@@ -62,11 +133,21 @@ static const struct pwrseq_target_data pwrseq_pcie_m2_m_pcie_target_data = {
- 	.unit = &pwrseq_pcie_m2_m_pcie_unit_data,
- };
- 
-+static const struct pwrseq_target_data *pwrseq_pcie_m2_e_targets[] = {
-+	&pwrseq_pcie_m2_e_pcie_target_data,
-+	&pwrseq_pcie_m2_e_uart_target_data,
-+	NULL
-+};
-+
- static const struct pwrseq_target_data *pwrseq_pcie_m2_m_targets[] = {
- 	&pwrseq_pcie_m2_m_pcie_target_data,
- 	NULL
- };
- 
-+static const struct pwrseq_pcie_m2_pdata pwrseq_pcie_m2_e_of_data = {
-+	.targets = pwrseq_pcie_m2_e_targets,
-+};
-+
- static const struct pwrseq_pcie_m2_pdata pwrseq_pcie_m2_m_of_data = {
- 	.targets = pwrseq_pcie_m2_m_targets,
- };
-@@ -125,6 +206,16 @@ static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
- 		return dev_err_probe(dev, ret,
- 				     "Failed to get all regulators\n");
- 
-+	ctx->w_disable1_gpio = devm_gpiod_get_optional(dev, "w-disable1", GPIOD_OUT_HIGH);
-+	if (IS_ERR(ctx->w_disable1_gpio))
-+		return dev_err_probe(dev, PTR_ERR(ctx->w_disable1_gpio),
-+				     "Failed to get the W_DISABLE_1# GPIO\n");
-+
-+	ctx->w_disable2_gpio = devm_gpiod_get_optional(dev, "w-disable2", GPIOD_OUT_HIGH);
-+	if (IS_ERR(ctx->w_disable2_gpio))
-+		return dev_err_probe(dev, PTR_ERR(ctx->w_disable2_gpio),
-+				     "Failed to get the W_DISABLE_2# GPIO\n");
-+
- 	ctx->num_vregs = ret;
- 
- 	ret = devm_add_action_or_reset(dev, pwrseq_pcie_m2_free_regulators, ctx);
-@@ -150,6 +241,10 @@ static const struct of_device_id pwrseq_pcie_m2_of_match[] = {
- 		.compatible = "pcie-m2-m-connector",
- 		.data = &pwrseq_pcie_m2_m_of_data,
- 	},
-+	{
-+		.compatible = "pcie-m2-e-connector",
-+		.data = &pwrseq_pcie_m2_e_of_data,
-+	},
- 	{ }
- };
- MODULE_DEVICE_TABLE(of, pwrseq_pcie_m2_of_match);
-
--- 
-2.51.0
-
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBGcmFueiBTY2hueWRlciA8ZnJh
+LnNjaG55ZGVyQGdtYWlsLmNvbT4NCj4gU2VudDogMjAyNsTqM9TCMjbI1SAxNjowMA0KPiBUbzog
+SG9uZ3hpbmcgWmh1IDxob25neGluZy56aHVAbnhwLmNvbT4NCj4gQ2M6IEZyYW56IFNjaG55ZGVy
+IDxmcmFuei5zY2hueWRlckB0b3JhZGV4LmNvbT47DQo+IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5v
+cmc7IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsNCj4gaW14QGxpc3RzLmxp
+bnV4LmRldjsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgRnJhbmNlc2NvIERvbGNpbmkN
+Cj4gPGZyYW5jZXNjb0Bkb2xjaW5pLml0PjsgTWFuaXZhbm5hbiBTYWRoYXNpdmFtIDxtYW5pQGtl
+cm5lbC5vcmc+OyBGcmFuaw0KPiBMaSA8ZnJhbmsubGlAbnhwLmNvbT4NCj4gU3ViamVjdDogQ2xl
+YXIgQ0xLUkVRIyBvdmVycmlkZSBicmVha3MgZnVuY3Rpb25hbGl0eQ0KPiANCj4gSGkgUmljaGFy
+ZCwNCj4gDQo+IFdoaWxlIGludGVncmF0aW5nIHRoZSBgc3VwcG9ydHMtY2xrcmVxYCBEVCBwcm9w
+ZXJ0eSBvbiBvdXIgaU1YOTUtYmFzZWQNCj4gU29NLCB3ZSBoYWQgZmFpbHVyZXMgaW4gb3VyIENJ
+IG9uIG9uZSBvZiB0aGUgdHdvIE0uMiBQQ0llIHNsb3RzIG9uIG91cg0KPiBkZXZlbG9wbWVudCBi
+b2FyZC4NCj4gVGhlIGZhaWxpbmcgc2xvdCB1c2VzIGEgY2FyZCB0aGF0IGRvZXMgbm90IGFkdmVy
+dGlzZSBMMSBQTSBzdWJzdGF0ZXMuDQo+IFRoaXMgaXNzdWUgY29tZXMgZnJvbSBjb21taXQgYTE1
+MmE5MGY1MzkwICgiUENJOiBpbXg2OiBDbGVhciBDTEtSRVEjDQo+IG92ZXJyaWRlIGlmICdzdXBw
+b3J0cy1jbGtyZXEnIERUIHByb3BlcnR5IGlzIGF2YWlsYWJsZSIpLCB3aGljaCBjbGVhcnMgdGhl
+DQo+IENMS1JFUSMgb3ZlcnJpZGUgYmFzZWQgb25seSBvbiB0aGUgRFQgcHJvcGVydHkuDQo+IA0K
+PiBJdCBzZWVtcyB0aGF0IGNsZWFyaW5nIHRoZSBDTEtSRVEjIG92ZXJyaWRlIHNob3VsZCBoYXBw
+ZW4gb25seSB3aGVuIHRoZQ0KPiBkcml2ZXIga25vd3MgdGhhdCB0aGUgZG93bnN0cmVhbSBkZXZp
+Y2UgYWR2ZXJ0aXNlcyBMMSBQTSBTdWJzdGF0ZXMuDQo+IE90aGVyd2lzZSBDTEtSRVEjIHNob3Vs
+ZCByZW1haW4gYXNzZXJ0ZWQgdG8ga2VlcCBjb21wYXRpYmlsaXR5IHdpdGggY2FyZHMNCj4gdGhh
+dCBkbyBub3Qgc3VwcG9ydCBMMSBQTSBTdWJzdGF0ZXMuDQo+IA0KPiBUaG91Z2h0cz8NCkhpIEZy
+YW56Og0KTm8sIENMS1JFUSMgaXMgbm90IGRlcGVuZGVudCBvbiBMMSBQTSBTdWJzdGF0ZXMgY2Fw
+YWJpbGl0aWVzLg0KDQpBY2NvcmRpbmcgdG8gdGhlIFBDSSBFeHByZXNzIENhcmQgRWxlY3Ryb21l
+Y2hhbmljYWwgU3BlY2lmaWNhdGlvbiByNi4wLA0KU2VjdGlvbiAyIChBdXhpbGlhcnkgU2lnbmFs
+cyk6DQoNCiJDTEtSRVEjIChvcHRpb25hbCkgc2lnbmFsIGlzIGFuIG9wZW4gZHJhaW4sIGFjdGl2
+ZSBsb3cgc2lnbmFsIHRoYXQgaXMgZHJpdmVuDQpsb3cgYnkgdGhlIGNhcmQgdG8gcmVxdWVzdCB0
+aGF0IHRoZSBQQ0kgRXhwcmVzcyByZWZlcmVuY2UgY2xvY2sgYmUgYXZhaWxhYmxlDQooYWN0aXZl
+IGNsb2NrIHN0YXRlKSB0byBhbGxvdyB0aGUgUENJIEV4cHJlc3MgaW50ZXJmYWNlIHRvIHNlbmQv
+cmVjZWl2ZSBkYXRhLiINCg0KV2hlbiB0aGUgJ3N1cHBvcnRzLWNsa3JlcScgcHJvcGVydHkgaXMg
+cHJlc2VudCwgaXQgaW5kaWNhdGVzIHRoYXQgdGhlIGVuZHBvaW50DQpkZXZpY2Ugc3VwcG9ydHMg
+Q0xLUkVRIyBzaWduYWxpbmcgYW5kIHdpbGwgYWN0aXZlbHkgZHJpdmUgdGhlIHNpZ25hbCBsb3cg
+d2hlbg0KaXQgbmVlZHMgdGhlIHJlZmVyZW5jZSBjbG9jay4NCg0KVGhlcmVmb3JlLCB0aGUgUkMg
+KFJvb3QgQ29tcGxleCkgY29udHJvbGxlciBjYW4gc2FmZWx5IGNsZWFyIGFueSBDTEtSRVEjDQph
+Y3RpdmUtbG93IG92ZXJyaWRlIHNldHRpbmdzLCBhbGxvd2luZyB0aGUgZW5kcG9pbnQgdG8gY29u
+dHJvbCB0aGUgY2xvY2sNCnJlcXVlc3QgdGhyb3VnaCBwcm9wZXIgQ0xLUkVRIyBzaWduYWxpbmcu
+DQoNCklmIHRoZSBlbmRwb2ludCBkZXZpY2VzIG9uIHlvdXIgcGxhdGZvcm0gY2FuJ3QgZHJpdmUg
+dGhlIENMS1JFUSMgc2lnbmFsIHRvDQpsb3csIHJlbW92ZSAnc3VwcG9ydHMtY2xrcmVxJyBwcm9w
+ZXJ0eSBmcm9tIHlvdXIgYm9hcmQncyBkZXZpY2UgdHJlZSBmaWxlLg0KDQpCZXN0IFJlZ2FyZHMN
+ClJpY2hhcmQgWmh1DQo+IA0KPiBLaW5kIFJlZ2FyZHMNCj4gDQo+IEZyYW56DQo=
