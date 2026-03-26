@@ -1,187 +1,115 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f41.google.com (mail-qv1-f41.google.com [209.85.219.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AF67394799;
-	Thu, 26 Mar 2026 16:19:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEF0A33F370
+	for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 16:36:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774541999; cv=none; b=Pt17Ym0TTJg0WF63ESf6hP0F6aRLugnspj4p4VT2WXGNPGmifrCozeaPpNbjzh+K5/3bAeUXjR+E4MZ8+QPM51cFx2jA0zzg7dcDM26KFXne1a/cRXzo3NGFEGh8FH9eUYvgY8emqG4TLkXGxohLFC+wZpbVhlSomfnTSIl9jEk=
+	t=1774543015; cv=none; b=LU60G5EqicnVUBO8DXc8fhoQT7UPF4DqGkyRJVs+3ZqSLgnd5NwIFWoeKaNAMBU2TcSEl2Ch6pxR++MM2ySjkIXgffRpmQmmd/TdxApn3kXoStYh80xi34e0pYcUAoqTwEGIcxy2VP0yzIO2j6kRGQu59mWywufEsuT4woyAkpE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774541999; c=relaxed/simple;
-	bh=HUtRwEpymq8y1tHT5IuCcbjZ8WgelRutIBJgFxgBfwY=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=Nh3GDQ1K/Dlmns3pEiP7iu5pALHQQQhqqwlq4K48jB7ip6yfWThZYwov4EesUDfSL4MEqNqEBP5B/CYHZeoMUnTbWR//heA28XYyZndZi2OYNfN/TsVFu9kqqFYrq4AxmByJIiuSRGk+NOrdcNICw+FFIHK9xIFJuOBkVd/v0x4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F8mHPbZM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774543015; c=relaxed/simple;
+	bh=AJfO0MJr3HdxXPcf0hgHJTsN0WVxdNOK8YB/u1hEqI0=;
+	h=Message-ID:Subject:From:To:Date:Content-Type:MIME-Version; b=pBuVbKGsE1SGDbMzIW+u93oEXhUG8Bul2yqKuD9LCNvzEuzlXn05IdxHwVK3S4AVprDyaRl0lcQ2amXOXd2ETiUy0qk3JLjvIeepRMYez4s38Jn9cKBamg4/TE+7I7p9FLwy/rGMFZOKY9zqiEHiQ9qNW51a5BgpsMbHoOKxBxg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ieee.org; spf=pass smtp.mailfrom=ieee.org; dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b=DbmqTbeI; arc=none smtp.client-ip=209.85.219.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ieee.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ieee.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F8mHPbZM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58181C116C6;
-	Thu, 26 Mar 2026 16:19:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774541998;
-	bh=HUtRwEpymq8y1tHT5IuCcbjZ8WgelRutIBJgFxgBfwY=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=F8mHPbZMLywhR2KPKiO47GUlQve1aWTvrP9jUY2zHBn/GgXJAJ8kIosO6KRmT2xPy
-	 0IOXnbxBuiHeZMvRl+TjIGCZL+xLIklcHleCk7JhPz7DuyprdCRvXeIavUjsvsJn3u
-	 2Q1RhEo14xk900QBnukOrxjvVlgBCi/2LncSYTzSdhsFA5hJ9IBKJY83E/k7nfnIj+
-	 5lTlIF6wm86KROEBrkkqhHauUmxF3ByqGulkPiq2SUiGMalg+b2lo7okZjYoEqA7SE
-	 DQIUYImcIBQS+JZCWgUDtLEZ0SBKAUGmugBagt425A+Pxg6+wxIOHa2m/AYEY0slHj
-	 ZzEGDAJHfpMMw==
-Date: Thu, 26 Mar 2026 11:19:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>,
-	Richard Zhu <hongxing.zhu@nxp.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Cc: Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>, Marc Zyngier <maz@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Saravana Kannan <saravanak@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>, Juergen Gross <jgross@suse.com>,
-	Stefano Stabellini <sstabellini@kernel.org>,
-	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-	Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>,
-	Rob Herring <robh@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Prakash Gupta <prakash.gupta@oss.qualcomm.com>,
-	Vikash Garodia <vikash.garodia@oss.qualcomm.com>,
-	linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, imx@lists.linux.dev,
-	xen-devel@lists.xenproject.org, linux-arm-msm@vger.kernel.org,
-	Charan Teja Kalla <charan.kalla@oss.qualcomm.com>
-Subject: Re: [PATCH v11 2/3] of: Factor arguments passed to of_map_id() into
- a struct
-Message-ID: <20260326161957.GA1324845@bhelgaas>
+	dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b="DbmqTbeI"
+Received: by mail-qv1-f41.google.com with SMTP id 6a1803df08f44-89c68b0763aso12989556d6.0
+        for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 09:36:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ieee.org; s=google; t=1774543012; x=1775147812; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:date:to:from
+         :subject:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=AJfO0MJr3HdxXPcf0hgHJTsN0WVxdNOK8YB/u1hEqI0=;
+        b=DbmqTbeIz0uheQiXaflGQpWhVY+v6Agk0cFrSphXfxSX8xi1PYtmtdxx9q8sILGVgB
+         3KWqUIbMz5z1+kcIwj2WW15yla0sZeQ6kp8B+pIkrF/ZnDoa4b7Hx/wy2s2P2J9vOe9r
+         ceOTT6viVQm99LrUzWYC1nigfVzAJc5iZi9aQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774543012; x=1775147812;
+        h=mime-version:user-agent:content-transfer-encoding:date:to:from
+         :subject:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=AJfO0MJr3HdxXPcf0hgHJTsN0WVxdNOK8YB/u1hEqI0=;
+        b=LEy5NGTF37XBGsdPJqk4etxMbI4wAvRbi+zXwS+ok6NP6hMgsZqJGm4doRZKBJj5R9
+         Jj5OVgQH+dZV5XDQFKvHDUVLobGy87qQO1AcgJh4jNOFo1GsCahSo4od8SPGXmT+0ITD
+         fXdcdbaYZ90xPbnydT75m2BbJDuwMU0Zc1fb/F0Q6AKRJFzOu3xJjataToPb3hieqFRL
+         Oa1c6M6X4ITDaPQZJb5aMWO0hMtIKIyaWBIVDPUP95l4oar8g2IfDQ9uxzS8o6F/WnsL
+         zPDtTMz/ww4F/Qety/enifXGO5MulEXs6oky67DdvJ47/VbLGby7B/uA6NMOumoX6cok
+         bU2g==
+X-Gm-Message-State: AOJu0YwOMvabbAuDQPZymGP9i7GUV5Ay0e7G7pDpGQmiF9geO+bNlY9C
+	SQLxQINs0f+R6SfIXPtvkoUbvremeYBeb+4pWLgon+DAS4s4cP/HJnnMN3qggu7AzSwdd5KxQjO
+	CJtdjcCvpXlXVLGpRuIuud0kwr+9rVmIpR4HtVaod93nMdifWhIB16baJ1dfH5V8b3kGELupmSs
+	6ExX6TtG1UmCs70KRLAjYcoNhMlw1G1ME7sZDSVGU=
+X-Gm-Gg: ATEYQzxqiGwNE5LnVYAOjPkiHgP11EeKVwGnM9YVi73/E0CAbKHz6se42AQhbzEHfDd
+	DD4sQ0VTE088blgf8IPBu8hfkUdsMdSrv+mx6U4WL7hc6JDyDuXKPly6NEC6lJOI0j+pe2FYzpn
+	EWhrqWrvtUQJQuMunTLrJGbpIOt1H/l1oWh9BJI9g6fjhigXb8QGOhNKqjkPZXIijuNayh+wQvq
+	IqIM43wkkBtxmcB6oagQcOClwjXShloz+nRmIy9eC5IBPVchH+5cy/JY/bqfEwlWcbqlGoqgqIB
+	M/uMyM0nyAPe7ZuwY0i45OfXYrKIE8pfzvclWQmeWtcG89hWsovJ34/8uwONZqZyq+xZKqNwzxk
+	GdsNBbctg4TaN/hi+Yjr0vI5DVJkEaqAtfrXT2EqfJnW6E9yl2qIPFHxGWq8SzQR+9sPQ/ti/CF
+	LPFtYBxixfzjH+DL3ZGZ4GcwDYLRMM1v/O7Q==
+X-Received: by 2002:a05:6214:5705:b0:89c:610f:fb82 with SMTP id 6a1803df08f44-89cc4b35bcdmr113233066d6.63.1774543011485;
+        Thu, 26 Mar 2026 09:36:51 -0700 (PDT)
+Received: from [192.168.153.215] ([73.29.38.247])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-89cd5857987sm30208886d6.2.2026.03.26.09.36.50
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 26 Mar 2026 09:36:50 -0700 (PDT)
+Message-ID: <a177e7cf1e638c874a7b2e9e68027094bca68041.camel@ieee.org>
+Subject: ReBAR over Thunderbolt
+From: Cristian Cocos <cristi@ieee.org>
+To: linux-pci@vger.kernel.org
+Date: Thu, 26 Mar 2026 12:36:50 -0400
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.0 (by Flathub.org) 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260325-parse_iommu_cells-v11-2-1fefa5c0e82c@oss.qualcomm.com>
 
-[cc->to: Richard, Lucas for pci-imx6.c question]
+[This has been previously posted on the linux-hotplug list, though it
+has been suggested that I post it here as well.]
 
-On Wed, Mar 25, 2026 at 04:38:23PM +0530, Vijayanand Jitta wrote:
-> From: Charan Teja Kalla <charan.kalla@oss.qualcomm.com>
-> 
-> Change of_map_id() to take a pointer to struct of_phandle_args
-> instead of passing target device node and translated IDs separately.
-> Update all callers accordingly.
-> 
-> Add an explicit filter_np parameter to of_map_id() and of_map_msi_id()
-> to separate the filter input from the output. Previously, the target
-> parameter served dual purpose: as an input filter (if non-NULL, only
-> match entries targeting that node) and as an output (receiving the
-> matched node with a reference held). Now filter_np is the explicit
-> input filter and arg->np is the pure output.
-> 
-> Previously, of_map_id() would call of_node_put() on the matched node
-> when a filter was provided, making reference ownership inconsistent.
-> Remove this internal of_node_put() call so that of_map_id() now always
-> transfers ownership of the matched node reference to the caller via
-> arg->np. Callers are now consistently responsible for releasing this
-> reference with of_node_put(arg->np) when done.
-> ...
+The short story is that ReBAR does not work in eGPU hotplug(!)
+scenarios: hotplugged Thunderbolt eGPUs are forced onto a 256MB BAR
+regardless of the system's ReBAR capabilities, and this because during
+hotplug the Linux kernel does not consult the ReBAR capability. As
+eGPUs are becoming more and more popular, accommodating eGPU hotplug
+scenarios has become imperative.
 
-Not actually part of *this* patch, and AFAICS this patch is correct
-as-is, but is it necessary to have different logic around
-of_node_put() for imx_pcie_add_lut_by_rid() and
-apple_pcie_enable_device()?
+The longer story:
 
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -1137,6 +1137,8 @@ static void imx_pcie_remove_lut(struct imx_pcie *imx_pcie, u16 rid)
->  
->  static int imx_pcie_add_lut_by_rid(struct imx_pcie *imx_pcie, u32 rid)
->  {
-> +	struct of_phandle_args iommu_spec = {};
-> +	struct of_phandle_args msi_spec = {};
->  	struct device *dev = imx_pcie->pci->dev;
->  	struct device_node *target;
->  	u32 sid_i, sid_m;
-> @@ -1144,7 +1146,12 @@ static int imx_pcie_add_lut_by_rid(struct imx_pcie *imx_pcie, u32 rid)
->  	u32 sid = 0;
->  
->  	target = NULL;
-> -	err_i = of_map_iommu_id(dev->of_node, rid, &target, &sid_i);
-> +	err_i = of_map_iommu_id(dev->of_node, rid, &iommu_spec);
-> +	if (!err_i) {
-> +		target = iommu_spec.np;
-> +		sid_i = iommu_spec.args[0];
-> +	}
-> +
->  	if (target) {
->  		of_node_put(target);
+The current Thunderbolt eGPU *hotplug* sequence of events is this: BAR
+2's hardware register powers up at 256 MB =E2=80=94 the default size progra=
+mmed
+into the BAR's address decoder by Intel at the factory. The PCIe
+Resizable BAR capability advertises support for up to 16 GB, but it's
+passive =E2=80=94 software must explicitly exercise it. When a Thunderbolt =
+eGPU
+is hotplugged at runtime, the kernel's PCI subsystem enumerates the new
+device, reads the BAR at its 256 MB default, sizes the bridge windows
+to match, and assigns addresses =E2=80=94 all before any driver loads. The
+ReBAR capability is never consulted(!) during this process.
 
-Here it's conditional on "target" even though of_node_put() checks
-internally for non-NULL, so it would be safe without the conditional
-here.
+A workaround is available for cold-plug scenarios only, and is
+achieved by means of the **thunderbolt.host_reset=3D0** kernel parameter:
+this preserves the BIOS's PCIe tunnel and BAR assignments from POST
+(where the BIOS *does* exercise ReBAR). This delivers the full 16 GB
+BAR but, as just mentioned, only works for cold-plug(!) scenarios =E2=80=94=
+ if
+the eGPU is power-cycled at runtime, the new tunnel gets the 256 MB
+default.
 
->  	} else {
-> @@ -1156,8 +1163,11 @@ static int imx_pcie_add_lut_by_rid(struct imx_pcie *imx_pcie, u32 rid)
->  		err_i = -EINVAL;
->  	}
->  
-> -	target = NULL;
-> -	err_m = of_map_msi_id(dev->of_node, rid, &target, &sid_m);
-> +	err_m = of_map_msi_id(dev->of_node, rid, NULL, &msi_spec);
-> +	if (!err_m) {
-> +		target = msi_spec.np;
-> +		sid_m = msi_spec.args[0];
-> +	}
->  
->  	/*
->  	 *   err_m      target
+The proper fix would be for the kernel's PCI hotplug resource
+assignment to *first* check for ReBAR capability during enumeration,
+resize the BAR to the largest supported size that fits within available
+bridge headroom, and *then* commit bridge windows and assign addresses.
+This is essentially what the BIOS does during POST. It hasn't been
+implemented yet because eGPU-over-Thunderbolt-with-ReBAR is (was?) a
+niche use case.
 
-And here (outside the diff context) we also call of_node_put()
-conditionally:
-
-  ...
-  else if (target)
-    of_node_put(target);
-
-> diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
-> index a0937b7b3c4d..c2cffc0659f4 100644
-> --- a/drivers/pci/controller/pcie-apple.c
-> +++ b/drivers/pci/controller/pcie-apple.c
-> @@ -755,6 +755,7 @@ static int apple_pcie_enable_device(struct pci_host_bridge *bridge, struct pci_d
->  {
->  	u32 sid, rid = pci_dev_id(pdev);
->  	struct apple_pcie_port *port;
-> +	struct of_phandle_args iommu_spec = {};
->  	int idx, err;
->  
->  	port = apple_pcie_get_port(pdev);
-> @@ -764,10 +765,12 @@ static int apple_pcie_enable_device(struct pci_host_bridge *bridge, struct pci_d
->  	dev_dbg(&pdev->dev, "added to bus %s, index %d\n",
->  		pci_name(pdev->bus->self), port->idx);
->  
-> -	err = of_map_iommu_id(port->pcie->dev->of_node, rid, NULL, &sid);
-> +	err = of_map_iommu_id(port->pcie->dev->of_node, rid, &iommu_spec);
->  	if (err)
->  		return err;
->  
-> +	of_node_put(iommu_spec.np);
-
-Here we call of_node_put() unconditionally.
-
-I think it would be much nicer if imx_pcie_add_lut_by_rid() used the
-same style as apple_pcie_enable_device() and did the of_node_put()
-unconditionally.  That would untangle the function a bit and make it
-easier to analyze.
-
-> +	sid = iommu_spec.args[0];
->  	mutex_lock(&port->pcie->lock);
->  
->  	idx = bitmap_find_free_region(port->sid_map, port->sid_map_sz, 0);
+Seeing as eGPU-over-Thunderbolt is poised to become mainstream, this
+can no longer be considered a niche use case.
