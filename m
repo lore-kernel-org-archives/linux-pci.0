@@ -1,97 +1,99 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B36C71CEAC2
-	for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 17:13:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DF003559D3
+	for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 17:19:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774545225; cv=none; b=mcndM6qzHmH2hvO/xz+Vn43k5MClKTe5FrpMgJCjNsgb34ihRVgotYWO7urbonXXssCEdbX9Ej3I3gbgtlyVdpF/Sugm7VNAlIXlk9DeMtgjbmIOr8ouiUjO1VfBHfFfmtQFkL2A/UG8kr5DgpKh+NuXfh090qEomZXlFZpKTDM=
+	t=1774545559; cv=none; b=JNVSTf795jEZpu8nlTnFVIC1o/NJq8QdOKMy4VcJ+BBN99PcHzDUyaWqEgzJdCfG+masSCgl5jr53SmhCPTRjaOfrjDxyuSRLPzH5ViG20ktyngC1Vug49ztYIsCPe/PeXB4kyC5XvsDRICJZ/dDHx4NKNM0dssfVc233uw21Wg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774545225; c=relaxed/simple;
-	bh=sxilZYXZitHxtUfBkc3ckXJkLUBUcuamR7gTWm/dfPk=;
+	s=arc-20240116; t=1774545559; c=relaxed/simple;
+	bh=euLHU9LJSjnuVv3KVwXZVLQKkTH5tfAXTjDgcT3R8+U=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=nyhk2nHzSTAb0XEwamFjyujjfMO0aeRH3sydCMO3cCDaDNTWVY6mA47BdXvseticksOE9EfNnaiRiIlNoAtz8fjIsM9ncE4NMFBz21PhC9YOSDDPhw76O9DudhvBKLA7sNHezegirmNfO79I4CAEDz2KxmeOFXPsoChvKQJuZUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=io7EaE35; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=glLqlqmW; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=V/xX8dRXmW9PMop8N9YxkrSlGbEJYbeuab8yBH+05LdZ8K2ierYTou7li4mGZSkP/CCreE74aiCutUdagHvA35WscrI/mWbq/cNfBKC/KihE0LPY+xDpQooLTVJRZMeNtVCRgOFtMv7byiNDa0i1FWCk6ByHjV//fN7oAsLFLmo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=h6Vu8yoq; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=IFxYN5nn; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="io7EaE35";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="glLqlqmW"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62QF9fq53849938
-	for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 17:13:44 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="h6Vu8yoq";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="IFxYN5nn"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62QFAuIl792859
+	for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 17:19:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	g84aE0YMGYbvHRps1aTbmfM8XvrjQiSe0TEOY9hRXHs=; b=io7EaE35XqZcbdqP
-	PotM+4RUaphRC50ljzIhBMMybKI6p1y82Jh2f0hHFrN1yOLB1VDg9zn0rCdMbFEm
-	pFVf50bBCrwMPTqWFrIU1nfR9RVc6YZSwLPpScPxsLoz1ZonypEoIxgIzFRvDT7X
-	3MyR19X6nNt6MnzzwmeQRsJYV0FTTjkq2qNe7fFsu7Ype/hOrK08A+0C0OaGaU1S
-	gEijcyh+qRbUZq7GtAKYexY7QMMx9h4bG/TGPnwnw53aACA+4/FgthOYPxLGCE0H
-	froEfd6C5zyDOPiNHz3tgpK1o7h+ENGn5aJG7pjbQApKvg5o2L69DyltE3D9vqR3
-	ziDCsQ==
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d4q76utj3-1
+	Ww9RyXfzw3HcfsJFywuqNamT6krJul8stvWokNyJt1U=; b=h6Vu8yoqbBzY3uPy
+	50M/5YiGSx1F4dSdXrMRCDR77IF5jUuhNVp6CE+C4dT3LghVZDN663ByPszboVm9
+	nnXDbFt7wRXl1XNFsOO5h+xPdQ+k/oZloLDpJ1qxvxZu/oILt8GSYMPnBvUDbbpS
+	AKuaFHVHypfIEjxCvnufAKuCtoq/z/bQc+iCKOsSkbLZg03hmJBq/DQp426HP6A4
+	F7fWtb+3OXSKaGeD+Y2hvB3gEnU1qHObnamSkkqTSkCxK0mJ8tWQuczZX0Q0ADWF
+	qqgXI6PkH6S3mfXXbx78yusMFPJbVa5PGrtfXynn4wE8vjBet38Y9rwZMOcu78A5
+	6bVzoQ==
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d53eqhayv-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 17:13:44 +0000 (GMT)
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2b0601ff3d9so18462025ad.2
-        for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 10:13:43 -0700 (PDT)
+	for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 17:19:17 +0000 (GMT)
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-c629a3276e9so2302371a12.2
+        for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 10:19:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1774545223; x=1775150023; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1774545556; x=1775150356; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:date:message-id:subject
          :references:in-reply-to:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=g84aE0YMGYbvHRps1aTbmfM8XvrjQiSe0TEOY9hRXHs=;
-        b=glLqlqmWxx71xMEU8JT0OrpZxdN0clfg3vfiwYuiVkgngYxr/hK5JcV3NIdFTl0hOK
-         btf3dk9FbB7MxLeg94OVWA8jvchnG+bjWGOa112AuLpL7HS9P9rnbSL7j8QQTG//hMIP
-         8UMNCakUD3x0ZCFEPAxVuVp+yQfYLlfdLexq6iVROh6rKi4LF8dPS5xvLLYvHd7+RHDa
-         MVrTUTlqO5dLpQce6c04Ap7cYuz0y5EFyiliKEfozWnYsgvfnsv4kIfgID8vCgZHHdhe
-         Bywwu/9oJ/fUaUHkk+dyC48t8bvIlaeyNpKH67eQKEmRMJLzel7BMsHIJZLe2NbpEf6F
-         wqdg==
+        bh=Ww9RyXfzw3HcfsJFywuqNamT6krJul8stvWokNyJt1U=;
+        b=IFxYN5nn34sKC26nyflIK4Prfi85CDiaTQYG8B0+nOQlNoXU4yBoUBNcBhXt51lZQv
+         LykkWp42wjHb3pWeaBcKQOPBCXbaUUeMYulN6D7m3cY/okEKBBdOMnkBYpHmVq08HlFF
+         YWIXwJiCF30X8niusYUbhicVTb2rEsEOlQTICx6gW1nIY1vKdupFqX/omj6k3weW9m+R
+         DmeC6NovQt93K+UzeJTux2WAYlTqGWbONW9X0DDo+zwpJf8PvBbsqfbNYcLQcg6Tqu9r
+         avUpQOelKSSUHVEB7o5kmKJztmFBWuYyjnG25EuCgptmqKUdi5nPK9Q8nL55VKCnqzVt
+         +ZiA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774545223; x=1775150023;
+        d=1e100.net; s=20251104; t=1774545556; x=1775150356;
         h=content-transfer-encoding:mime-version:date:message-id:subject
          :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=g84aE0YMGYbvHRps1aTbmfM8XvrjQiSe0TEOY9hRXHs=;
-        b=BVusWAZGVXpwuCNURaa++L1ze5SdneHLGbYk1xCL6TsLsG2jY6o1qCfHJbFbE1PYC8
-         9kqhPRM/w9FfHpU9T8Nj2zmdItKydLR0oknjsDt/xZHt5ukn0Wci/wF4UZLwK7Wu+LSU
-         XZ9rLj77IOqd8orJ/KII69l4p078FLvtJjU8+jEicgYzbLZkU8KpaBlk7lwo5VR1NNnF
-         rrxw6phCRzEVuVVjJRPV9tenSuL6qnKPIzX9h+0kVRUunIAo31zFNe3wgwvz+H88EnT9
-         fWZ9+fg3Ap4rhaWzVp+1D9SOd95xI2uRwiwQkod58wNVxC5fGWuqCDo/VaVK2fVBAdve
-         GXew==
-X-Forwarded-Encrypted: i=1; AJvYcCUQcY4S424yENGC8juCerMtqb1xRuWKRnHfO3qPK/s6u6ocbr/Qw94gkrDc/afEJwZqj04gbf2+vCA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzKa7FlRV3pKFHNp0MOUIa+cIEfVRocPgsJ321oOEAQ7vq3jMfI
-	u72UMvp9YQddg/mHT2+41lz+CtLrW5oE0nGvX4eDHXPmx5pmLM4ZkAM1GnC0GJqE5n3DC1thdpo
-	fbxKoBcpyNq5PpwyGS2sdVQHoCgFsR0d40FlG9KEpAVJPFjBbTo3pIeDbo1IlCCA=
-X-Gm-Gg: ATEYQzwDyy4gfqVJ5ROxNwvR6yZa9wSsVFuy7AWNQ2zOcmQncSzpcOnJWuE5c3oJkSJ
-	THWU06ceNgMSb/V0nD4tzWq4mHUNvCUCLSA3QNt+61ZJ+GEylSn0zFGxwf/8DqyBAp/D83HQTuG
-	7c3oHWP3PAuuNqDgpkfQJ0Vk8FFghaKW2Sgc9U66qPm7V+3d+GA8nQkHHgqpP5mPDDAYfhqZtVy
-	sKOllNJzBW8JFc8mCgSGCfbk9LfJqDCdvsa/WiQTqxtu6mF6AEHczUcyLRxNrXhuO4lMNw4rd1c
-	y055f959HTtvg/USVgsBoUPEhAldE05OBdRIO2M175D3FqoiPy7lrz6Rl8cLhNkuPz/kvX7fyWQ
-	N9zR9L5qdundrGc7Epoc5PME=
-X-Received: by 2002:a17:902:d549:b0:2b0:c3c9:cf15 with SMTP id d9443c01a7336-2b0c3c9d4c2mr27646085ad.15.1774545223299;
-        Thu, 26 Mar 2026 10:13:43 -0700 (PDT)
-X-Received: by 2002:a17:902:d549:b0:2b0:c3c9:cf15 with SMTP id d9443c01a7336-2b0c3c9d4c2mr27645785ad.15.1774545222738;
-        Thu, 26 Mar 2026 10:13:42 -0700 (PDT)
+        bh=Ww9RyXfzw3HcfsJFywuqNamT6krJul8stvWokNyJt1U=;
+        b=lYR0mVLle7JxL/aJVVNOCsvNZzXcGmfWvTz1AFx4knKfyMYGSWg1/nimTJBWCaR79j
+         r2R8dQUDDk/RY2sZK+w8P93zBiCU93Ry2vid2TM7N1ehL/sM3LPKu/4r9TXQfAIrb9RL
+         aQc7AIV2SkDC+RzoWpwZtc4A/j9wHf4zNUGpiPjBjSGkBw2XUt/XljupxX3eF6wYtZHF
+         vo6kY9gmPVRyMu55E707JkHgdEzQZIb3LIkYvAnjCs4s4q4pdXuU4gEdPcQv+mSw2ARL
+         OWUPbT2Vg54yUiFX8v8ok4I4pjGTqSANJDsDhD26jwiv/TuEfyO5slk6VYyHAb4MznpB
+         Gwtg==
+X-Forwarded-Encrypted: i=1; AJvYcCWgf8d8RnvCcdsG01ePa5sfTU7sgrlOe+saEmC1zjEnclVBTw/8m3UU2oYHMJjzEVYpRUNPqNpDYYM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwL031QLQpxvPO8APcUvCdafgZtLai+N526zCTx/n66fdMi88XQ
+	SKNTNPcLK6uCufhBBvOFCh1cRfPTuEuPh8JEOcBsWYvNT2U2cDU8Q+os4X2KVD6g9g9f2nDCvgS
+	Uhf7/WG1b3Rl/Bnk1B42f8OZOIoG+apbS2U3AfoQ3DNxFtuMh5Ss7wU2D0ltPD+9t65MDcWk=
+X-Gm-Gg: ATEYQzzA+Zwusor/3G6+sZPExn/+mGMdwvyA9wQtHeGrWPf8sRUDxlv4C4Xri1q1WHS
+	P90yOZUECEkUp/gIjQ3C22H57TGhh5J/b07DLNR99ZVO2oYQgAF33BAZWfZl8kXfVlR1egT0u6Y
+	Dislh1t0wyO+MgCxsPAZJyQIIM2Udiy/QSAeBlXSwyFXbTB5U14N7wFThCNw5WQb1foEsEBl4X5
+	kYzrPPHgrBqmSXCSwcagR05pq39qqy7iZ/dlY/9KfgorNPsFyktTBBprlpPj2pbLC0yIurzLDgP
+	yYu8J9jylx/siRVV4Zd2/joZkNNrNgwnkLwKQ7iy0yEkB7TxdrjfX31LV6TZg6Xx4jzKq98WQe1
+	0izme5PQYsf45ZuBYVXDdHoA=
+X-Received: by 2002:a05:6a20:2e82:b0:39b:da83:91ab with SMTP id adf61e73a8af0-39c4ae2ea72mr6809521637.63.1774545556303;
+        Thu, 26 Mar 2026 10:19:16 -0700 (PDT)
+X-Received: by 2002:a05:6a20:2e82:b0:39b:da83:91ab with SMTP id adf61e73a8af0-39c4ae2ea72mr6809488637.63.1774545555717;
+        Thu, 26 Mar 2026 10:19:15 -0700 (PDT)
 Received: from [192.168.1.102] ([117.213.101.231])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b0bc881e9csm38301735ad.42.2026.03.26.10.13.37
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c76739334e6sm2661617a12.18.2026.03.26.10.19.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Mar 2026 10:13:41 -0700 (PDT)
+        Thu, 26 Mar 2026 10:19:15 -0700 (PDT)
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
-To: hongxing.zhu@nxp.com, l.stach@pengutronix.de, Frank.Li@nxp.com,
-        bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
-        robh@kernel.org, s.hauer@pengutronix.de, festevam@gmail.com,
-        Sherry Sun <sherry.sun@nxp.com>
-Cc: imx@lists.linux.dev, kernel@pengutronix.de, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20260306030456.1032815-1-sherry.sun@nxp.com>
-References: <20260306030456.1032815-1-sherry.sun@nxp.com>
-Subject: Re: [PATCH] PCI: imx6: Separate PERST# assertion from core reset
- functions
-Message-Id: <177454521726.456360.10206150589096386820.b4-ty@b4>
-Date: Thu, 26 Mar 2026 22:43:37 +0530
+To: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
+        Niklas Cassel <cassel@kernel.org>, Koichiro Den <den@valinux.co.jp>
+Cc: ntb@lists.linux.dev, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+In-Reply-To: <20260306031443.1911860-1-den@valinux.co.jp>
+References: <20260306031443.1911860-1-den@valinux.co.jp>
+Subject: Re: [PATCH v2 0/3] NTB: Allow drivers to provide DMA mapping
+ device
+Message-Id: <177454555116.460009.16357964565477922352.b4-ty@b4>
+Date: Thu, 26 Mar 2026 22:49:11 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -101,50 +103,50 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.15.0
-X-Authority-Analysis: v=2.4 cv=NOPYOk6g c=1 sm=1 tr=0 ts=69c56948 cx=c_pps
- a=cmESyDAEBpBGqyK7t0alAg==:117 a=pjPfvbXasfe8cMZvnaMi6g==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzI2MDEyMyBTYWx0ZWRfXxbnrdb7faMJ9
+ kfMVBKUDFaBFxQ1g8o/172d+a9PPCp5xheDvSX0I459ISdNESJ3hMer2TYySXOlg6y+dl93LaIy
+ UZHcxqWjTbr+glXm09ADmqFpOFraRud+sD+V7TnySq4d5ADnQAaxE6JjLwIVGMJNMBR1Nt5U+05
+ xmOmKkNhKuoQM5x47cOE1QwLZfY6fv2LQq4nKuXo7SeLcg6tUJL5RiAORM+/dDNuwcrLvUNzglD
+ z7q4JLzoEqDvIvEki8krRZZpAMKB73pE56LOgod2cDgJmit1mRQvNsIUUNMX8Zn7pubU43DYENY
+ Yjugz40TmnJYVoYWC3T8gEWHPQPEOAai9TxZgznUeYRrt1LPbghYkehabdRd8k0lum2Fgu2I5Xx
+ 50BgKGkG8rCItrLzXyX2ulxmRThEw0X/2Re6vEHwedKkPhF07QuMetPZqadx3bzTKT8ydfdAjWo
+ 26tkjdMLQzv1ahhBBSA==
+X-Proofpoint-GUID: qTPvKUBtlMn9Y4a_-DLx9iICT2PbA4tB
+X-Authority-Analysis: v=2.4 cv=S4bUAYsP c=1 sm=1 tr=0 ts=69c56a95 cx=c_pps
+ a=Oh5Dbbf/trHjhBongsHeRQ==:117 a=pjPfvbXasfe8cMZvnaMi6g==:17
  a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
- a=VwQbUJbxAAAA:8 a=mEf8EMz-nW-Ju7kaI7MA:9 a=QEXdDO2ut3YA:10
- a=1OuFwYUASf3TG4hYMiVC:22
-X-Proofpoint-ORIG-GUID: WHP4k-1M2hmlNvTLztV-30YOdEjxQ5V1
-X-Proofpoint-GUID: WHP4k-1M2hmlNvTLztV-30YOdEjxQ5V1
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzI2MDEyMiBTYWx0ZWRfX1IY1126y9U2A
- Fk7NaZColaSHYA+EK45StKlH7iipKrT23oxiXqM6eTrIId1sG3Yn9p0az9pHpb0LgKTdsRbS3Yn
- +jS9bI2p1rs3EeXtJDHncYe5YFkcvH3GajHxZLF150Gldn9elXAJ9psYQ1l0SoYWy1CpCXr9WBJ
- pf56T30RYU60InEREb7xc0pMgrbKeMIp4fPyiIdloTbqdWkat2X7ZkRvkG+cKMLMAdPsiXhsO9M
- UFXLJ/j+7lpjCPoPWAhRVW/6GnEu6mOmBdVH4OK9F6tjPZavnkzOI6fvULBck88VrA2gnDCgjpc
- S5e/y5WBpGh5kcpUNaNFj4koT3nNwD1KLBAqA8c4DcxKD/XfmLN1zNwCwCAAutsmIzKHMd+QHrl
- zr3EGY2E0jPLs0jvhzc54040ugj7Kyii4nXvn+iRopisntnbAU+M76C/bVs+j2zXxI+HdHZGmk8
- 2itT4LLkLeLZGj/CieQ==
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=VwQbUJbxAAAA:8 a=l7Ugaa1-BWrJxlqRz38A:9 a=QEXdDO2ut3YA:10
+ a=_Vgx9l1VpLgwpw_dHYaR:22
+X-Proofpoint-ORIG-GUID: qTPvKUBtlMn9Y4a_-DLx9iICT2PbA4tB
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-03-26_03,2026-03-26_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 spamscore=0 clxscore=1015 priorityscore=1501 lowpriorityscore=0
- impostorscore=0 malwarescore=0 bulkscore=0 phishscore=0 suspectscore=0
+ priorityscore=1501 malwarescore=0 lowpriorityscore=0 bulkscore=0 phishscore=0
+ spamscore=0 impostorscore=0 clxscore=1015 adultscore=0 suspectscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603260122
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603260123
 
 
-On Fri, 06 Mar 2026 11:04:56 +0800, Sherry Sun wrote:
-> The imx_pcie_assert_core_reset() and imx_pcie_deassert_core_reset()
-> functions are primarily intended to reset the RC controller itself, not
-> the remote PCIe endpoint devices. However, the PERST# GPIO control was
-> previously embedded within these functions, which conflates two distinct
-> reset operations.
+On Fri, 06 Mar 2026 12:14:40 +0900, Koichiro Den wrote:
+> Some NTB implementations are backed by a "virtual" PCI device, while the
+> actual DMA mapping context (IOMMU domain) belongs to a different device.
 > 
-> Move the PERST# GPIO handling into a dedicated function
-> imx_pcie_assert_perst(). This makes the code more maintainable and
-> prepares for parsing the reset-gpios property according to the new
-> Root Port DT binding in subsequent patches.
+> One example is vNTB, where the NTB device is represented as a virtual
+> PCI endpoint function, but DMA operations must be performed against the
+> EPC parent device, which owns the IOMMU context.
 > 
 > [...]
 
 Applied, thanks!
 
-[1/1] PCI: imx6: Separate PERST# assertion from core reset functions
-      commit: 180ea823bb45eb71dd5ed0dc0b78633accd21096
+[1/3] NTB: core: Add .get_dma_dev() callback to ntb_dev_ops
+      commit: af43a3a0c0ad524a69a7921efd0a04d50c03090b
+[2/3] NTB: ntb_transport: Use ntb_get_dma_dev() for DMA buffers
+      commit: c2fbbb8b341c58d24c7b114fae4cadd55a4660f1
+[3/3] PCI: endpoint: pci-epf-vntb: Implement .get_dma_dev()
+      commit: 185596ad93f545bcab2fea0dad6420c0c3cb386f
 
 Best regards,
 -- 
