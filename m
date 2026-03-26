@@ -1,330 +1,142 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F10D9257845;
-	Thu, 26 Mar 2026 12:53:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0511D29B20D
+	for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 12:56:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774529620; cv=none; b=d7XeHNR6iZEa6q+O04nG12jywWufnmsFKLySRx0+TKaNo35/QEiNyac3+aWxiPmdqXVGd2HsD68aQOSoUUTEo2nHMWkedIGG3fixnb5RKWwJRchmWmTQQxWiD8xQlDLco9a57ENTGAKThUTdkgD4K70JTRdN1YYC88iYGMa5h/I=
+	t=1774529773; cv=none; b=FyYr8hFwo4SRck0mijgodemMMgYKXoqkTWM5fv76dfrWw+5LMe1pYlV4ECSsUAGIz+/wIhkYLiiqVzgl9QDT1T69iVCWO3jUMdiuMbAiylBbsn2ROOLgd3ns36nzmDe3Yukm1UzD2eHQA2hzd8QrfytVnds8ePN/Y3wX5sqDXu8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774529620; c=relaxed/simple;
-	bh=80KiVgwReRwySXtrCxSXvGlSJLiGm8VdqBp48VE8RXE=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=mx29tY+3a9SpYlQ1r/SDjUUWJ34UoElrhVZ6QTnYExQxunkNu4KdS78oOxUjskpxeNvn/+DGtMTDR1ezNi2sDLxt3PZnDwfLWOr7ddm6q5Fa4+CfVs3yf2WZ1TtTXxSUyikTIiztgkpVshdL+KfS8oIGiFItfsukUnnFEGHt2FQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KClnAzCx; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774529773; c=relaxed/simple;
+	bh=AOyK9K7He9jaWEQcI0TLML2gpG/QGkSkNBxuQXYT1yc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=VBt/tA1PQDZ69fpc7lymuAD5yPlK9THzJidaCXcSkyOyoiEuvKYVG2C9FKxNf4fs4gbv5gjL+rIMtwSOTe5PKz7ncVLza3g2OgUasMdqNg/yYfEwBiTm+q7kKqk/poGsTAoqPRJn6Oj0kkzVjs4WDOjf9x6BZ+beyNGys5bGtos=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev; spf=pass smtp.mailfrom=tuxon.dev; dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b=KQhxWVqm; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxon.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KClnAzCx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35CD6C116C6;
-	Thu, 26 Mar 2026 12:53:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774529619;
-	bh=80KiVgwReRwySXtrCxSXvGlSJLiGm8VdqBp48VE8RXE=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=KClnAzCxSv+EQRetCB5KwH/v+L2cAZO7rp0oDqXm/16Nd0SXns8+MEcgcUay4GU+N
-	 ow4RGYTWZHWfULdkozox8Eni0kWW5EFDofH8sYMbOI9ERhmmEMkb8V1QDujoD39j65
-	 F2Lq6uA4hH9W2x/VvuR9aOnDO1h4YU1gXI6yc9f597YFKGckoUmCnbdTLfpIe/r9Nu
-	 sX30sPd179VmmGeTd9/WmW+K52YxA7SGcDKaPIHQrIM341DyjhaNow0tMm5Ywa8/3N
-	 pawGzHsKKKPSiZqMyGxE+0+6QMUExvBwAbQimk1qvlLikic7dO9ue/kxM7OaZBBgqI
-	 8FEkGNajLViSw==
-From: Andreas Hindborg <a.hindborg@kernel.org>
-To: Gary Guo <gary@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, Boqun Feng
- <boqun@kernel.org>, Gary Guo <gary@garyguo.net>, =?utf-8?Q?Bj=C3=B6rn?= Roy
- Baron
- <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, Alice Ryhl
- <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, Danilo Krummrich
- <dakr@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>, Daniel Almeida
- <daniel.almeida@collabora.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Cc: rust-for-linux@vger.kernel.org, driver-core@lists.linux.dev,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/8] rust: io: generalize `MmioRaw` to pointer to
- arbitrary type
-In-Reply-To: <20260323153807.1360705-2-gary@kernel.org>
-References: <20260323153807.1360705-1-gary@kernel.org>
- <5t7h2K-OzntmDmVbwyRSJCfuCaWFNs8bmYJMd8dOrRTuDwmTSrbBdgPily9gdXK_ylxKdR1REa6Oa2puVmTHPg==@protonmail.internalid>
- <20260323153807.1360705-2-gary@kernel.org>
-Date: Thu, 26 Mar 2026 13:53:30 +0100
-Message-ID: <87qzp6ycol.fsf@t14s.mail-host-address-is-not-set>
+	dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b="KQhxWVqm"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-486fb112c09so9564895e9.1
+        for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 05:56:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=tuxon.dev; s=google; t=1774529770; x=1775134570; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=v53LCrPXAsR6yI+88VBtN+4JZC9PqA7W1DCpmW7oQMM=;
+        b=KQhxWVqmIDKZj8pG7iMOWyg01iAWIJGnIXDPbSc6mez85fbhulOa2RfJStsIfd6irK
+         +8lwYtZlzdL0gU7qZ53QUXfPbgAFP6dfXE79KezzfGq7S8W6y4ABqoSS0db2Q/J7Cag5
+         /7F/uWyyp+jVLrNR9msAaMYwgxNEZ9xYFJmIoOQaMocPtLipWpMRvDx+VgGtdN+FGGXM
+         dR69jS4u5fdxISlSdAHLf3V+vym9tyfApJARZSjRSL4aNQfpWV5fBEOzDnEBEMEyvtbA
+         k3XsHx5/TuvBOBiBtgr5SGM87HuoE9dDXfAiHtsduian3PpW6BtuDtQMm3cn9lrqG3AW
+         4vBA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774529770; x=1775134570;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=v53LCrPXAsR6yI+88VBtN+4JZC9PqA7W1DCpmW7oQMM=;
+        b=ih1pehTBN2iYTv1R4oFD226Pe0AdPDzLCh67sa4W2jsYjxb8OSQpMTBiFZrmz3ravT
+         QMWxlANUQNtFdBm/ZSgt0Gg92y8Yq0pOnC5poMvnMo4UvbHdOv+H9A60HrM7Qfg8pFMZ
+         eXn47gJpwFnsFe3pENun5ARbh7pNikbjIlVFhXSAsD14l5+Ufpo4sUQy/HVqqwHfowpq
+         dM8o3UeH1yOXjLQqm277VBV4swUlDfpMQx8qJD/S9Tm4N9FVN+HZQO7ci/h12hNeBLP3
+         bDTBC9X2uuey8wX1hvNuvJ4VvHpJaMXN9x22Re+tbLFyUZn/tlWg1lfrMjIJP0N7VwYR
+         jtmQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUZKGEDRzHT9dKY/1s/plo+rrbaRuBud1tXYlkE/TS45S24Tr264MjauU2JkCo0YO5TZsvRWGHrpUg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxkQwnVEsV5ehkfAtXxvyvD+BfdkXbXmHS1cF6tOtr5Nu64+hUI
+	5eF+tSHaMbC82koI9+DyLyD/NL7rlt9LvjcmHx7TsHTjzM38h3QD0/+8e/GRinCZJZk=
+X-Gm-Gg: ATEYQzy0LjzJTU/e1ZqZLfvRp733bsUdrWZCnrO699NZgfuEbhc/mUy1R0GpS1EvsMH
+	fNyvJcujFI9cBY5BWioIH75d4obvWf1nrN5Edwo4Q7OFLFSGsY15srzuoX36s0+TTZUSI8/1alv
+	XENeiCZtLx4y9ZMNjEnmBQ4kgzFOvr/6QnBoqiZx0Pb5wOlfwJ97UmXMTQJFfHzUTTF0f/rR2PM
+	raB5vtrKGud1sy0ofNUabOC8X0wZteETUWuoZm0CboPJjcVxzebtb+wjYl8g361s5l8ZJygxGlO
+	PbRCoUfrPe0kEpSY/W3FrJTAKGHHKi07lbGQq9WzG6uz3uPEcOOI9APAjymmkSffzWSw8iyt8C5
+	zn4Rf8AfEiQdxO9UJC+AGiBqWIFOBduvSK0Ik12vNh7wNag/xAzB6LFC1PqFmyE3m++IS5z7tsd
+	8owVC96gJihl5FI+wYrEO66P9EYgucPhc=
+X-Received: by 2002:a05:600c:3490:b0:486:f8e9:add5 with SMTP id 5b1f17b1804b1-48716042c08mr111608235e9.19.1774529770172;
+        Thu, 26 Mar 2026 05:56:10 -0700 (PDT)
+Received: from [192.168.50.4] ([82.78.167.216])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48722c789ecsm28316645e9.4.2026.03.26.05.56.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 26 Mar 2026 05:56:09 -0700 (PDT)
+Message-ID: <693acd52-987e-4018-ae02-386dbd430462@tuxon.dev>
+Date: Thu, 26 Mar 2026 14:56:07 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 5/5] PCI: rzg3s-host: Add support for RZ/V2H(P) SoC
+To: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Cc: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Philipp Zabel <p.zabel@pengutronix.de>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Magnus Damm <magnus.damm@gmail.com>,
+ Wolfram Sang <wsa+renesas@sang-engineering.com>,
+ John Madieu <john.madieu.xa@bp.renesas.com>, linux-pci@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Biju Das <biju.das.jz@bp.renesas.com>,
+ Fabrizio Castro <fabrizio.castro.jz@renesas.com>,
+ Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+References: <20260318124450.163471-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20260318124450.163471-6-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <605e8d4c-09e7-4d11-acdb-7829a85eacc3@tuxon.dev>
+ <CA+V-a8s_Kv5WwocsKy_qBEtZ=0gzN-YbAz3pYjubf_qZVLhBew@mail.gmail.com>
+Content-Language: en-US
+From: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+In-Reply-To: <CA+V-a8s_Kv5WwocsKy_qBEtZ=0gzN-YbAz3pYjubf_qZVLhBew@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-"Gary Guo" <gary@kernel.org> writes:
+Hi, Prabhakar,
 
-> From: Gary Guo <gary@garyguo.net>
->
-> Conceptually, `MmioRaw` is just `__iomem *`, so it should work for any
-> types. The existing use case where it represents a region of compile-time
-> known minimum size and run-time known actual size is moved to a custom
-> dynamic-sized type `Region<SIZE>` instead. The `maxsize` method is also
-> renamed to `size` to reflect that it is the actual size (not a bound) of
-> the region.
->
-> Signed-off-by: Gary Guo <gary@garyguo.net>
-> ---
->  rust/kernel/devres.rs |  7 ++--
->  rust/kernel/io.rs     | 84 +++++++++++++++++++++++++++++++++----------
->  rust/kernel/io/mem.rs |  4 +--
->  rust/kernel/pci/io.rs |  4 +--
->  4 files changed, 74 insertions(+), 25 deletions(-)
->
-> diff --git a/rust/kernel/devres.rs b/rust/kernel/devres.rs
-> index 9e5f93aed20c..65a4082122af 100644
-> --- a/rust/kernel/devres.rs
-> +++ b/rust/kernel/devres.rs
-> @@ -71,14 +71,15 @@ struct Inner<T> {
->  ///         IoKnownSize,
->  ///         Mmio,
->  ///         MmioRaw,
-> -///         PhysAddr, //
-> +///         PhysAddr,
-> +///         Region, //
->  ///     },
->  ///     prelude::*,
->  /// };
->  /// use core::ops::Deref;
->  ///
->  /// // See also [`pci::Bar`] for a real example.
-> -/// struct IoMem<const SIZE: usize>(MmioRaw<SIZE>);
-> +/// struct IoMem<const SIZE: usize>(MmioRaw<Region<SIZE>>);
->  ///
->  /// impl<const SIZE: usize> IoMem<SIZE> {
->  ///     /// # Safety
-> @@ -93,7 +94,7 @@ struct Inner<T> {
->  ///             return Err(ENOMEM);
->  ///         }
->  ///
-> -///         Ok(IoMem(MmioRaw::new(addr as usize, SIZE)?))
-> +///         Ok(IoMem(MmioRaw::new_region(addr as usize, SIZE)?))
+On 3/25/26 13:53, Lad, Prabhakar wrote:
+>> from [1]:
+>> "For example, if rzg3s_pcie_resets_prepare_and_get() returns -EPROBE_DEFER,
+>> the static variable is never decremented. On subsequent probe retries,
+>> the variable will be artificially inflated, eventually causing the bounds
+>> check to fail and returning a permanent -EINVAL. This would also prevent
+>> driver unbind and rebind from working correctly."
+>>
+> The other alternative would be the below, where we wouldn't need to
+> use the num-lanes property but would need a comparison with the DT
+> compatible,
 
-Should this be `addr.addr()` ?
+Or move rzv2h_num_total_lanes outside of rzv2h_pcie_setup_lanes() and reset it 
+on failure path.
 
->  ///     }
->  /// }
->  ///
-> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index fcc7678fd9e3..d7f2145fa9b9 100644
-> --- a/rust/kernel/io.rs
-> +++ b/rust/kernel/io.rs
-> @@ -6,7 +6,8 @@
->
->  use crate::{
->      bindings,
-> -    prelude::*, //
-> +    prelude::*,
-> +    ptr::KnownSize, //
->  };
->
->  pub mod mem;
-> @@ -31,39 +32,85 @@
->  /// `CONFIG_PHYS_ADDR_T_64BIT`, and it can be a u64 even on 32-bit architectures.
->  pub type ResourceSize = bindings::resource_size_t;
->
-> +/// Untyped I/O region.
-> +///
-> +/// This type can be used when an I/O region without known type information has a compile-time known
-> +/// minimum size (and a runtime known actual size).
-> +///
-> +/// The `SIZE` generic parameter indicate the minimum size of the region.
-> +#[repr(transparent)]
-> +pub struct Region<const SIZE: usize = 0> {
-> +    inner: [u8],
-> +}
+> 
+> +       for_each_compatible_node(np, NULL, "renesas,r9a09g057-pcie") {
+
+If it's possible I would avoid spreading compatibles though the file but instead 
+use driver data where possible.
+
+Thank you,
+Claudiu
+
+> +               if (of_device_is_available(np))
+> +                       count++;
+> +       }
+> +       if (!count)
+> +               return 0;
 > +
-> +impl<const SIZE: usize> KnownSize for Region<SIZE> {
-> +    #[inline(always)]
-> +    fn size(p: *const Self) -> usize {
-> +        (p as *const [u8]).len()
-
-Is `as` the only way to cast fat pointers?
-
-> +    }
-> +}
-> +
->  /// Raw representation of an MMIO region.
->  ///
-> +/// `MmioRaw<T>` is equivalent to `T __iomem *` in C.
-> +///
->  /// By itself, the existence of an instance of this structure does not provide any guarantees that
->  /// the represented MMIO region does exist or is properly mapped.
->  ///
->  /// Instead, the bus specific MMIO implementation must convert this raw representation into an
->  /// `Mmio` instance providing the actual memory accessors. Only by the conversion into an `Mmio`
->  /// structure any guarantees are given.
-> -pub struct MmioRaw<const SIZE: usize = 0> {
-> -    addr: usize,
-> -    maxsize: usize,
-> +pub struct MmioRaw<T: ?Sized> {
-> +    /// Pointer is in I/O address space.
-> +    ///
-> +    /// The provenance does not matter, only the address and metadata do.
-> +    addr: *mut T,
->  }
->
-> -impl<const SIZE: usize> MmioRaw<SIZE> {
-> -    /// Returns a new `MmioRaw` instance on success, an error otherwise.
-> -    pub fn new(addr: usize, maxsize: usize) -> Result<Self> {
-> -        if maxsize < SIZE {
-> +// SAFETY: `MmioRaw` is just an address, so is thread-safe.
-> +unsafe impl<T: ?Sized> Send for MmioRaw<T> {}
-> +// SAFETY: `MmioRaw` is just an address, so is thread-safe.
-> +unsafe impl<T: ?Sized> Sync for MmioRaw<T> {}
-> +
-> +impl<T> MmioRaw<T> {
-> +    /// Create a `MmioRaw` from address.
-> +    #[inline]
-> +    pub fn new(addr: usize) -> Self {
-> +        Self {
-> +            addr: core::ptr::without_provenance_mut(addr),
-> +        }
-> +    }
-> +}
-> +
-> +impl<const SIZE: usize> MmioRaw<Region<SIZE>> {
-> +    /// Create a `MmioRaw` representing a I/O region with given size.
-> +    ///
-> +    /// The size is checked against the minimum size specified via const generics.
-> +    #[inline]
-> +    pub fn new_region(addr: usize, size: usize) -> Result<Self> {
-> +        if size < SIZE {
->              return Err(EINVAL);
->          }
->
-> -        Ok(Self { addr, maxsize })
-> +        let addr = core::ptr::slice_from_raw_parts_mut::<u8>(
-> +            core::ptr::without_provenance_mut(addr),
-> +            size,
-> +        ) as *mut Region<SIZE>;
-> +        Ok(Self { addr })
->      }
-> +}
->
-> +impl<T: ?Sized + KnownSize> MmioRaw<T> {
->      /// Returns the base address of the MMIO region.
->      #[inline]
->      pub fn addr(&self) -> usize {
-> -        self.addr
-> +        self.addr.addr()
->      }
->
-> -    /// Returns the maximum size of the MMIO region.
-> +    /// Returns the size of the MMIO region.
->      #[inline]
-> -    pub fn maxsize(&self) -> usize {
-> -        self.maxsize
-> +    pub fn size(&self) -> usize {
-> +        KnownSize::size(self.addr)
->      }
->  }
->
-> @@ -89,12 +136,13 @@ pub fn maxsize(&self) -> usize {
->  ///         Mmio,
->  ///         MmioRaw,
->  ///         PhysAddr,
-> +///         Region,
->  ///     },
->  /// };
->  /// use core::ops::Deref;
->  ///
->  /// // See also `pci::Bar` for a real example.
-> -/// struct IoMem<const SIZE: usize>(MmioRaw<SIZE>);
-> +/// struct IoMem<const SIZE: usize>(MmioRaw<Region<SIZE>>);
->  ///
->  /// impl<const SIZE: usize> IoMem<SIZE> {
->  ///     /// # Safety
-> @@ -109,7 +157,7 @@ pub fn maxsize(&self) -> usize {
->  ///             return Err(ENOMEM);
->  ///         }
->  ///
-> -///         Ok(IoMem(MmioRaw::new(addr as usize, SIZE)?))
-> +///         Ok(IoMem(MmioRaw::new_region(addr as usize, SIZE)?))
-
-Should be `addr.addr()`.
-
->  ///     }
->  /// }
->  ///
-> @@ -139,7 +187,7 @@ pub fn maxsize(&self) -> usize {
->  /// # }
->  /// ```
->  #[repr(transparent)]
-> -pub struct Mmio<const SIZE: usize = 0>(MmioRaw<SIZE>);
-> +pub struct Mmio<const SIZE: usize = 0>(MmioRaw<Region<SIZE>>);
->
->  /// Checks whether an access of type `U` at the given `offset`
->  /// is valid within this region.
-> @@ -767,7 +815,7 @@ fn addr(&self) -> usize {
->      /// Returns the maximum size of this mapping.
->      #[inline]
->      fn maxsize(&self) -> usize {
-> -        self.0.maxsize()
-> +        self.0.size()
->      }
->  }
->
-> @@ -782,7 +830,7 @@ impl<const SIZE: usize> Mmio<SIZE> {
->      ///
->      /// Callers must ensure that `addr` is the start of a valid I/O mapped memory region of size
->      /// `maxsize`.
-> -    pub unsafe fn from_raw(raw: &MmioRaw<SIZE>) -> &Self {
-> +    pub unsafe fn from_raw(raw: &MmioRaw<Region<SIZE>>) -> &Self {
->          // SAFETY: `Mmio` is a transparent wrapper around `MmioRaw`.
->          unsafe { &*core::ptr::from_ref(raw).cast() }
->      }
-> diff --git a/rust/kernel/io/mem.rs b/rust/kernel/io/mem.rs
-> index 7dc78d547f7a..9117d417f99c 100644
-> --- a/rust/kernel/io/mem.rs
-> +++ b/rust/kernel/io/mem.rs
-> @@ -231,7 +231,7 @@ fn deref(&self) -> &Self::Target {
->  /// [`IoMem`] always holds an [`MmioRaw`] instance that holds a valid pointer to the
->  /// start of the I/O memory mapped region.
->  pub struct IoMem<const SIZE: usize = 0> {
-> -    io: MmioRaw<SIZE>,
-> +    io: MmioRaw<super::Region<SIZE>>,
->  }
->
->  impl<const SIZE: usize> IoMem<SIZE> {
-> @@ -266,7 +266,7 @@ fn ioremap(resource: &Resource) -> Result<Self> {
->              return Err(ENOMEM);
->          }
->
-> -        let io = MmioRaw::new(addr as usize, size)?;
-> +        let io = MmioRaw::new_region(addr as usize, size)?;
-
-`addr.addr()`?
-
->          let io = IoMem { io };
->
->          Ok(io)
-> diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
-> index ae78676c927f..0335b5068f69 100644
-> --- a/rust/kernel/pci/io.rs
-> +++ b/rust/kernel/pci/io.rs
-> @@ -148,7 +148,7 @@ impl<'a, S: ConfigSpaceKind> IoKnownSize for ConfigSpace<'a, S> {
->  /// memory mapped PCI BAR and its size.
->  pub struct Bar<const SIZE: usize = 0> {
->      pdev: ARef<Device>,
-> -    io: MmioRaw<SIZE>,
-> +    io: MmioRaw<crate::io::Region<SIZE>>,
->      num: i32,
->  }
->
-> @@ -184,7 +184,7 @@ pub(super) fn new(pdev: &Device, num: u32, name: &CStr) -> Result<Self> {
->              return Err(ENOMEM);
->          }
->
-> -        let io = match MmioRaw::new(ioptr, len as usize) {
-> +        let io = match MmioRaw::new_region(ioptr, len as usize) {
-
-Should this be `len.try_into()?`?
-
-
-Best regards,
-Andreas Hindborg
-
+> +       /* If both PCIe channels are enabled configure the LINK_MASTER
+> in x2 lane mode.
+> +        * If only one channel is enabled check the port index and if
+> port1 is enabled
+> +        * configure the LINK_MASTER in x2 lane mode, otherwise keep
+> it in x4 lane mode.
+> +        */
+> +       if (count == RZV2H_MAX_PCIE_PORTS ||
+> +           (count == 1 && host->channel == 1))
+> +               host->link_mode = RZV2H_PCIE_MODE_DUAL_X2;
+> +       else
+> +               host->link_mode = RZV2H_PCIE_MODE_SINGLE_X4;
 
