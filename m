@@ -1,126 +1,149 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A33439EF1C;
-	Thu, 26 Mar 2026 18:16:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE7543A3803;
+	Thu, 26 Mar 2026 18:24:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774548986; cv=none; b=rQJg/yIjuPb6jlQutKT9VXrDM12cbTlRJo0OaQkRASCjfBATgAHMPkJvXDiDWLqBtzP2/SGdR0QJg+LtbaOXTfoDQwj9u6gkBQlJsNGA3BqhoUUo+ZKPejQYRVcnpXqmftrWFqwuXF8y9jzOamTsPyB5besmuSESfxPBG6sFeZw=
+	t=1774549442; cv=none; b=i7AmEuSdgWGH0hh+P0+2vBTi+JMrdHGIFbv4S7H06XDXke2z9kR34cg0YalaMc7HgY0IINv2UYDj7BjmNUsHeIz/SUWaiX+S4ijMneWvkVL/COgyfxuqiSnsg3QxH86vD5gpb5Evblg0JjcH68/jov/0gWjJY2c3IR+isfxnmso=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774548986; c=relaxed/simple;
-	bh=43VqNhtITmRTb0E71wFtuKVyxafRya6of6b3L56zIuM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=kRfO6rY2Unl4nf7foTDa8VlovACf7ESFmeLvQCoS86fJQEoZcy3pfp0q2F3w7EgGRolCnafJwf+pTqbUYpsLDUelb6wW7nboAy1yjuYQZV/qllDHkmVsAjTuNnv5hyzai+/ZlqKPx3Yvxs4sIZ96bFaft7s7Bqyxv+NzLwrbP14=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rH9ZhPho; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774549442; c=relaxed/simple;
+	bh=uAk+pjEaMh+nT4wwJQBe0ub0p3rD0eHGiODDm8RKEAY=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=h1T2zaMYZFlUcOHeq5aGKKoWOG2a5Adry0HKQxxOTcv4qf0NBAzU2fCzUWdwBodiC0XOnK1ZItSh0hd52vNzRH20JQt2RXN0E5jZLZasKNQtWetW5Ls/ARqvkxHYmvgP/LZfqFOlsSbaBAHdlypElmu8Z1hb26KWTmMoiNf+50w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XUzctKT5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rH9ZhPho"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B186C116C6;
-	Thu, 26 Mar 2026 18:16:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XUzctKT5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98AF6C116C6;
+	Thu, 26 Mar 2026 18:23:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774548985;
-	bh=43VqNhtITmRTb0E71wFtuKVyxafRya6of6b3L56zIuM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=rH9ZhPhoyZPAUHGu42qfHJzQoyDXiaLHk6u2TDy7jxtMKoyFyr1etgM02j2RMJag2
-	 +iwu/QLH6SDpzrX2Rwk7Xf0D6UaUv0Ye7LUU1K4BrOo4hIU5IkQT+aOp2QxQMFS4LN
-	 Sm/C7ZPguXcDl6fWI5t8T1BYmS/AirzbSCbMC4v3AtXUqoEUsbX80tNGQMYwKTFXAj
-	 8J0GdOJCo649nUq3toORH7UXb0O2mTBwPoR2YLTayka8sROxFdMkqb6K66rqL+ieDD
-	 X/OwHRNfv1L6odykUi95poRDrpG0rOAWuK8xO8B1T+sfP/rfAn6ckYa8+jwX+T1tkY
-	 XXnHox9MEju3w==
-Date: Thu, 26 Mar 2026 13:16:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Hans Zhang <18255117159@163.com>
-Cc: lpieralisi@kernel.org, jingoohan1@gmail.com, mani@kernel.org,
-	kwilczynski@kernel.org, bhelgaas@google.com,
-	florian.fainelli@broadcom.com, jim2101024@gmail.com,
-	robh@kernel.org, ilpo.jarvinen@linux.intel.com,
-	linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-renesas-soc@vger.kernel.org, claudiu.beznea.uj@bp.renesas.com,
-	linux-mediatek@lists.infradead.org, linux-tegra@vger.kernel.org,
-	linux-omap@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	shawn.lin@rock-chips.com
-Subject: Re: [PATCH v9 1/5] PCI: Add pcie_get_link_speed() helper for safe
- array access
-Message-ID: <20260326181624.GA1331242@bhelgaas>
+	s=k20201202; t=1774549441;
+	bh=uAk+pjEaMh+nT4wwJQBe0ub0p3rD0eHGiODDm8RKEAY=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+	b=XUzctKT5rMuAloImHakMBDiY0jo1D02aLAz9PKhAYBCCQozAy9ZuF4cW24Us4bxHH
+	 RX40m47lVZBQM/JUwR3p3I9/PqHw4CA0szbvA0TN5JlPyuHwDvAv4Wb15AnRrK2p3J
+	 m5dMIpkfjCqse5hEusV9inOEpC1hi8yDx/jnr3kYYSsRCj5Us5K+4IKcxV5I1y2Vap
+	 mAPlTdh03watV3YH+KCqXo/qynewnHh2hDhR07WRL9WFsYfO2BEefSseFj/HcWrzUk
+	 pHBng94J3J9cS71VZNejbA6EDr6lPohgIou3RlnffIJXTLy9MOT2Riwlri9i/ZO8yF
+	 NJqLb8S9rO/Fw==
+From: Andreas Hindborg <a.hindborg@kernel.org>
+To: Gary Guo <gary@garyguo.net>, Gary Guo <gary@kernel.org>, Miguel Ojeda
+ <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, Gary Guo
+ <gary@garyguo.net>, =?utf-8?Q?Bj=C3=B6rn?= Roy Baron
+ <bjorn3_gh@protonmail.com>, Benno
+ Lossin <lossin@kernel.org>, Alice Ryhl <aliceryhl@google.com>, Trevor
+ Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, Daniel Almeida <daniel.almeida@collabora.com>, Bjorn
+ Helgaas <bhelgaas@google.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>
+Cc: rust-for-linux@vger.kernel.org, driver-core@lists.linux.dev,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/8] rust: io: generalize `Mmio` to arbitrary type
+In-Reply-To: <DHCSCWVI38X2.2K7DBY0YPBS5N@garyguo.net>
+References: <20260323153807.1360705-1-gary@kernel.org>
+ <_GdG2BR4qqT-8cwpiurteKJJr58WPTCsM6UyCU0NsA1DK6yTNMiSGOBZlm79OMaLm_tIMM7feHDx7mKljWea4A==@protonmail.internalid>
+ <20260323153807.1360705-3-gary@kernel.org>
+ <87o6kayc5t.fsf@t14s.mail-host-address-is-not-set>
+ <bhB8A8DQ2KuT2rRe-Niqt5dPHRePikSsZfFL2XCGm9ABnQEpzHCN7f_1CfKvSOhXffGqseuceJL6XoBlwA_8aQ==@protonmail.internalid>
+ <DHCSCWVI38X2.2K7DBY0YPBS5N@garyguo.net>
+Date: Thu, 26 Mar 2026 19:23:48 +0100
+Message-ID: <87bjgaxxe3.fsf@t14s.mail-host-address-is-not-set>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260313165522.123518-2-18255117159@163.com>
+Content-Type: text/plain
 
-On Sat, Mar 14, 2026 at 12:55:18AM +0800, Hans Zhang wrote:
-> The pcie_link_speed[] array is indexed by PCIe generation numbers
-> (1 = 2.5 GT/s, 2 = 5 GT/s, ...).  Several drivers use it directly,
-> which can lead to out-of-bounds accesses if an invalid generation
-> number is used.
-> 
-> Introduce a helper function pcie_get_link_speed() that returns the
-> corresponding enum pci_bus_speed value for a given generation number,
-> or PCI_SPEED_UNKNOWN if the generation is out of range.  This will
-> allow us to safely handle invalid values after the range check is
-> removed from of_pci_get_max_link_speed().
-> 
-> Signed-off-by: Hans Zhang <18255117159@163.com>
-> ---
->  drivers/pci/pci.h   |  2 ++
->  drivers/pci/probe.c | 16 ++++++++++++++++
->  2 files changed, 18 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 13d998fbacce..409aca7d737a 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -108,6 +108,8 @@ struct pcie_tlp_log;
->  				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
->  
->  extern const unsigned char pcie_link_speed[];
-> +unsigned char pcie_get_link_speed(unsigned int speed);
-> +
->  extern bool pci_early_dump;
->  
->  extern struct mutex pci_rescan_remove_lock;
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index bccc7a4bdd79..d6592898330c 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -783,6 +783,22 @@ const unsigned char pcie_link_speed[] = {
->  };
->  EXPORT_SYMBOL_GPL(pcie_link_speed);
->  
-> +/**
-> + * pcie_link_speed_value - Get speed value from PCIe generation number
+"Gary Guo" <gary@garyguo.net> writes:
 
-Wrong name here (pcie_link_speed_value vs pcie_get_link_speed)
-(pointed out by Sashiko).
+> On Thu Mar 26, 2026 at 1:04 PM GMT, Andreas Hindborg wrote:
+>> "Gary Guo" <gary@kernel.org> writes:
+>>
+>>> From: Gary Guo <gary@garyguo.net>
+>>>
+>>> Currently, `io::Mmio` always represent an untyped region of a compile-time
+>>> known minimum size, which is roughly equivalent to `void __iomem*` (but
+>>> with bound checks). However, it is useful to also be to represent I/O
+>>> memory of a specific type, e.g. `u32 __iomem*` or `struct foo __iomem*`.
+>>>
+>>> Thus, make `Mmio` generic on arbitrary `T`, where `T` is a sized type, or a
+>>> DST that implements `KnownSize`. Similar to the `MmioRaw` change, the
+>>> existing behaviour is preserved in the form of `Mmio<Region<SIZE>>`. This
+>>> change brings the MMIO closer to the DMA coherent allocation types that we
+>>> have, which is already typed.
+>>>
+>>> To be able to implement `IoKnownSize`, add a `MIN_SIZE` constant to
+>>> `KnownSize` trait to represent compile-time known minimum size of a
+>>> specific type.
+>>>
+>>> Signed-off-by: Gary Guo <gary@garyguo.net>
+>>> ---
+>>>  rust/kernel/devres.rs      |  2 +-
+>>>  rust/kernel/io.rs          | 63 ++++++++++++++++++++++----------------
+>>>  rust/kernel/io/mem.rs      |  4 +--
+>>>  rust/kernel/io/poll.rs     |  6 ++--
+>>>  rust/kernel/io/register.rs | 19 +++++++-----
+>>>  rust/kernel/pci/io.rs      |  2 +-
+>>>  rust/kernel/ptr.rs         |  7 +++++
+>>>  7 files changed, 64 insertions(+), 39 deletions(-)
+>>>
+>>> diff --git a/rust/kernel/devres.rs b/rust/kernel/devres.rs
+>>> index 65a4082122af..3e22c63efb98 100644
+>>> --- a/rust/kernel/devres.rs
+>>> +++ b/rust/kernel/devres.rs
+>>> @@ -106,7 +106,7 @@ struct Inner<T> {
+>>>  /// }
+>>>  ///
+>>>  /// impl<const SIZE: usize> Deref for IoMem<SIZE> {
+>>> -///    type Target = Mmio<SIZE>;
+>>> +///    type Target = Mmio<Region<SIZE>>;
+>>>  ///
+>>>  ///    fn deref(&self) -> &Self::Target {
+>>>  ///         // SAFETY: The memory range stored in `self` has been properly mapped in `Self::new`.
+>>> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+>>> index d7f2145fa9b9..5a26b1e7e533 100644
+>>> --- a/rust/kernel/io.rs
+>>> +++ b/rust/kernel/io.rs
+>>> @@ -44,6 +44,8 @@ pub struct Region<const SIZE: usize = 0> {
+>>>  }
+>>>
+>>>  impl<const SIZE: usize> KnownSize for Region<SIZE> {
+>>> +    const MIN_SIZE: usize = SIZE;
+>>> +
+>>>      #[inline(always)]
+>>>      fn size(p: *const Self) -> usize {
+>>>          (p as *const [u8]).len()
+>>> @@ -169,7 +171,7 @@ pub fn size(&self) -> usize {
+>>>  /// }
+>>>  ///
+>>>  /// impl<const SIZE: usize> Deref for IoMem<SIZE> {
+>>> -///    type Target = Mmio<SIZE>;
+>>> +///    type Target = Mmio<Region<SIZE>>;
+>>>  ///
+>>>  ///    fn deref(&self) -> &Self::Target {
+>>>  ///         // SAFETY: The memory range stored in `self` has been properly mapped in `Self::new`.
+>>> @@ -187,7 +189,7 @@ pub fn size(&self) -> usize {
+>>>  /// # }
+>>>  /// ```
+>>>  #[repr(transparent)]
+>>> -pub struct Mmio<const SIZE: usize = 0>(MmioRaw<Region<SIZE>>);
+>>> +pub struct Mmio<T: ?Sized>(MmioRaw<T>);
+>>
+>> Why not have the `KnownSize` bound here? I think that would be more clear.
+>>
+>
+> There's no need to put bounds on structs unless you need them for `Drop` or use
+> of assoc types.
 
-> + * @speed: PCIe speed (1-based: 1 = 2.5GT, 2 = 5GT, ...)
-> + *
-> + * Returns the speed value (e.g., PCIE_SPEED_2_5GT) if @speed is valid,
-> + * otherwise returns PCI_SPEED_UNKNOWN.
-> + */
-> +unsigned char pcie_get_link_speed(unsigned int speed)
+I understand there is no technical need, but it would help communicating
+how the code is intended to work. Unless I am mistaken, T will always be
+`KnownSize`, right?
 
-Sashiko also pointed out that the commit log says this returns "enum
-pci_bus_speed", while here we return unsigned char (which is also the
-type of pcie_link_speed[x]).
 
-https://sashiko.dev/#/patchset/20260313165522.123518-1-18255117159%40163.com
+Best regards,
+Andreas Hindborg
 
-> +{
-> +	if (speed >= ARRAY_SIZE(pcie_link_speed))
-> +		return PCI_SPEED_UNKNOWN;
-> +
-> +	return pcie_link_speed[speed];
-> +}
-> +EXPORT_SYMBOL_GPL(pcie_get_link_speed);
-> +
->  const char *pci_speed_string(enum pci_bus_speed speed)
->  {
->  	/* Indexed by the pci_bus_speed enum */
-> -- 
-> 2.34.1
-> 
+
