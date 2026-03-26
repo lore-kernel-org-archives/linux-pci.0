@@ -1,115 +1,287 @@
-Received: from mail-qv1-f41.google.com (mail-qv1-f41.google.com [209.85.219.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEF0A33F370
-	for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 16:36:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A91F4035CD;
+	Thu, 26 Mar 2026 16:40:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774543015; cv=none; b=LU60G5EqicnVUBO8DXc8fhoQT7UPF4DqGkyRJVs+3ZqSLgnd5NwIFWoeKaNAMBU2TcSEl2Ch6pxR++MM2ySjkIXgffRpmQmmd/TdxApn3kXoStYh80xi34e0pYcUAoqTwEGIcxy2VP0yzIO2j6kRGQu59mWywufEsuT4woyAkpE=
+	t=1774543204; cv=none; b=mJPOPdO8twPDzSqtwwy74+gCJnqE1Up6ToPA6vLThG99qYeQRjctwX+She/+zcil7neKm6ayEBqniWqNH9YhV1sY9TLJ7gyvcwJTemBJULYuAgFRitudfLW7e5j2cdcfvFHqElQPbB2Sd0KD4cZyRHbmjHbRjVRUB36FW1zV1hU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774543015; c=relaxed/simple;
-	bh=AJfO0MJr3HdxXPcf0hgHJTsN0WVxdNOK8YB/u1hEqI0=;
-	h=Message-ID:Subject:From:To:Date:Content-Type:MIME-Version; b=pBuVbKGsE1SGDbMzIW+u93oEXhUG8Bul2yqKuD9LCNvzEuzlXn05IdxHwVK3S4AVprDyaRl0lcQ2amXOXd2ETiUy0qk3JLjvIeepRMYez4s38Jn9cKBamg4/TE+7I7p9FLwy/rGMFZOKY9zqiEHiQ9qNW51a5BgpsMbHoOKxBxg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ieee.org; spf=pass smtp.mailfrom=ieee.org; dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b=DbmqTbeI; arc=none smtp.client-ip=209.85.219.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ieee.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ieee.org
+	s=arc-20240116; t=1774543204; c=relaxed/simple;
+	bh=v9OxL3z6qKsfDWe7vgJygT5T/5mg3FeLB6gOdPjSyDk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=AzwpW9huwKCjMnbMx3SFlL/M+7ZOzAVIYiZIp77Ap2h3AnY5WOw8Nd21+fB8oNIbiYvZDI3fyUfmtALHBhNFXAhdw/keQyHSTjceuEgewNng0cLINE/XjNKoZGEWYLal2r9dt95wh02nEQdVXfMFx5QpDoASVkvyDcz33meQqXs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pisLqagj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b="DbmqTbeI"
-Received: by mail-qv1-f41.google.com with SMTP id 6a1803df08f44-89c68b0763aso12989556d6.0
-        for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 09:36:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ieee.org; s=google; t=1774543012; x=1775147812; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:date:to:from
-         :subject:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=AJfO0MJr3HdxXPcf0hgHJTsN0WVxdNOK8YB/u1hEqI0=;
-        b=DbmqTbeIz0uheQiXaflGQpWhVY+v6Agk0cFrSphXfxSX8xi1PYtmtdxx9q8sILGVgB
-         3KWqUIbMz5z1+kcIwj2WW15yla0sZeQ6kp8B+pIkrF/ZnDoa4b7Hx/wy2s2P2J9vOe9r
-         ceOTT6viVQm99LrUzWYC1nigfVzAJc5iZi9aQ=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774543012; x=1775147812;
-        h=mime-version:user-agent:content-transfer-encoding:date:to:from
-         :subject:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=AJfO0MJr3HdxXPcf0hgHJTsN0WVxdNOK8YB/u1hEqI0=;
-        b=LEy5NGTF37XBGsdPJqk4etxMbI4wAvRbi+zXwS+ok6NP6hMgsZqJGm4doRZKBJj5R9
-         Jj5OVgQH+dZV5XDQFKvHDUVLobGy87qQO1AcgJh4jNOFo1GsCahSo4od8SPGXmT+0ITD
-         fXdcdbaYZ90xPbnydT75m2BbJDuwMU0Zc1fb/F0Q6AKRJFzOu3xJjataToPb3hieqFRL
-         Oa1c6M6X4ITDaPQZJb5aMWO0hMtIKIyaWBIVDPUP95l4oar8g2IfDQ9uxzS8o6F/WnsL
-         zPDtTMz/ww4F/Qety/enifXGO5MulEXs6oky67DdvJ47/VbLGby7B/uA6NMOumoX6cok
-         bU2g==
-X-Gm-Message-State: AOJu0YwOMvabbAuDQPZymGP9i7GUV5Ay0e7G7pDpGQmiF9geO+bNlY9C
-	SQLxQINs0f+R6SfIXPtvkoUbvremeYBeb+4pWLgon+DAS4s4cP/HJnnMN3qggu7AzSwdd5KxQjO
-	CJtdjcCvpXlXVLGpRuIuud0kwr+9rVmIpR4HtVaod93nMdifWhIB16baJ1dfH5V8b3kGELupmSs
-	6ExX6TtG1UmCs70KRLAjYcoNhMlw1G1ME7sZDSVGU=
-X-Gm-Gg: ATEYQzxqiGwNE5LnVYAOjPkiHgP11EeKVwGnM9YVi73/E0CAbKHz6se42AQhbzEHfDd
-	DD4sQ0VTE088blgf8IPBu8hfkUdsMdSrv+mx6U4WL7hc6JDyDuXKPly6NEC6lJOI0j+pe2FYzpn
-	EWhrqWrvtUQJQuMunTLrJGbpIOt1H/l1oWh9BJI9g6fjhigXb8QGOhNKqjkPZXIijuNayh+wQvq
-	IqIM43wkkBtxmcB6oagQcOClwjXShloz+nRmIy9eC5IBPVchH+5cy/JY/bqfEwlWcbqlGoqgqIB
-	M/uMyM0nyAPe7ZuwY0i45OfXYrKIE8pfzvclWQmeWtcG89hWsovJ34/8uwONZqZyq+xZKqNwzxk
-	GdsNBbctg4TaN/hi+Yjr0vI5DVJkEaqAtfrXT2EqfJnW6E9yl2qIPFHxGWq8SzQR+9sPQ/ti/CF
-	LPFtYBxixfzjH+DL3ZGZ4GcwDYLRMM1v/O7Q==
-X-Received: by 2002:a05:6214:5705:b0:89c:610f:fb82 with SMTP id 6a1803df08f44-89cc4b35bcdmr113233066d6.63.1774543011485;
-        Thu, 26 Mar 2026 09:36:51 -0700 (PDT)
-Received: from [192.168.153.215] ([73.29.38.247])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-89cd5857987sm30208886d6.2.2026.03.26.09.36.50
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Mar 2026 09:36:50 -0700 (PDT)
-Message-ID: <a177e7cf1e638c874a7b2e9e68027094bca68041.camel@ieee.org>
-Subject: ReBAR over Thunderbolt
-From: Cristian Cocos <cristi@ieee.org>
-To: linux-pci@vger.kernel.org
-Date: Thu, 26 Mar 2026 12:36:50 -0400
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.0 (by Flathub.org) 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pisLqagj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BD1BC116C6;
+	Thu, 26 Mar 2026 16:40:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774543203;
+	bh=v9OxL3z6qKsfDWe7vgJygT5T/5mg3FeLB6gOdPjSyDk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=pisLqagj3vB7EHVWtrYeETBb1Gl8iQLkOtglrdUeLgotRTEpoTq6BAXEW845d4eTN
+	 DbK7B6mnUv8MXwuZy+l8Ewm1Bp4/wszn0Itp3iNaoURdrX4Vzb+EMTyANgbZJpqO3+
+	 Y641c7/ZpyRQV9qxCKNZmtH/wN1HWyA7PAFtaH/hUtCqlIJKajhEIgUGJlQoOvZKJ3
+	 rP/VpkLPjhOnP6NMR2/N4iMdpN4DFyZxnqRQnK/c8/XChTyXH8pv6P0BGsONKLOFSU
+	 QhDYiEU+YTg6LoechbtMk8kIA8WLWnwdnAeRqyKMIvrDYLDp35X3k32Bmf3LoSi0Bf
+	 EE4YkDDj60FvA==
+Date: Thu, 26 Mar 2026 11:40:02 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gerd Bayer <gbayer@linux.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jay Cornwall <Jay.Cornwall@amd.com>,
+	Felix Kuehling <Felix.Kuehling@amd.com>,
+	Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Sven Schnelle <svens@linux.ibm.com>,
+	Leon Romanovsky <leon@kernel.org>,
+	Alexander Schmidt <alexs@linux.ibm.com>, linux-s390@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
+	stable@vger.kernel.org, Gerd Bayer <gerd.bayer@de.ibm.com>
+Subject: Re: [PATCH v6 1/2] PCI: AtomicOps: Do not enable without support in
+ root complex
+Message-ID: <20260326164002.GA1325368@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4183b471777efa949ce6f7b860c81282e91666ef.camel@linux.ibm.com>
 
-[This has been previously posted on the linux-hotplug list, though it
-has been suggested that I post it here as well.]
+On Thu, Mar 26, 2026 at 10:51:19AM +0100, Gerd Bayer wrote:
+> On Wed, 2026-03-25 at 15:08 -0500, Bjorn Helgaas wrote:
+> > On Wed, Mar 25, 2026 at 04:16:17PM +0100, Gerd Bayer wrote:
+> > > When inspecting the config space of a Connect-X physical function in an
+> > > s390 system after it was initialized by the mlx5_core device driver, we
+> > > found the function to be enabled to request AtomicOps despite the
+> > > system's root-complex lacking support for completing them:
+> > > 
+> > > 1ed0:00:00.1 Ethernet controller: Mellanox Technologies MT2894 Family [ConnectX-6 Lx]
+> > > 	Subsystem: Mellanox Technologies Device 0002
+> > >   [...]
+> > > 	DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
+> > > 		 AtomicOpsCtl: ReqEn+
+> > > 		 IDOReq- IDOCompl- LTR- EmergencyPowerReductionReq-
+> > > 		 10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
+> > > 
+> > > Turns out the device driver calls pci_enable_atomic_ops_to_root() which
+> > > defaulted to enable AtomicOps requests even if it had no information
+> > > about the root-port that the PCIe device is attached to. Similarly,
+> > > AtomicOps requests are enabled for root complex integrated endpoints
+> > > (RCiEPs) unconditionally.
+> > > 
+> > > Change the logic of pci_enable_atomic_ops_to_root() to fully traverse the
+> > > PCIe tree upwards, check that the bridge devices support delivering
+> > > AtomicOps transactions, and finally check that there is a root port at
+> > > the end that does support completing AtomicOps - or that the support for
+> > > completing AtomicOps at the root complex is announced through some other
+> > > arch specific way.
+> > > 
+> > > Introduce a new pcibios_connects_to_atomicops_capable_rc() function to
+> > > implement the check - and default to always "true". This leaves the
+> > > semantics for today's RCiEPs intact. Pass in the device in question and
+> > > the requested capabilities for future expansions.
+> > > For s390, override pcibios_connects_to_atomicops_capable_rc() to
+> > > always return "false".
+> > > 
+> > > Do not change the enablement of AtomicOps requests if there is no
+> > > positive confirmation that the root complex can complete PCIe AtomicOps.
+> > > 
+> > > Reported-by: Alexander Schmidt <alexs@linux.ibm.com>
+> > > Cc: stable@vger.kernel.org
+> > > Fixes: 430a23689dea ("PCI: Add pci_enable_atomic_ops_to_root()")
+> > > Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
+> > > ---
+> > >  arch/s390/pci/pci.c |  5 +++++
+> > >  drivers/pci/pci.c   | 48 +++++++++++++++++++++++++++++++-----------------
+> > >  include/linux/pci.h |  1 +
+> > >  3 files changed, 37 insertions(+), 17 deletions(-)
+> > > 
+> > > diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> > > index 2a430722cbe415dd56c92fed2e513e524f46481a..a0bef77082a153a258fbe4abb1070b22e020888e 100644
+> > > --- a/arch/s390/pci/pci.c
+> > > +++ b/arch/s390/pci/pci.c
+> > > @@ -265,6 +265,11 @@ static int zpci_cfg_store(struct zpci_dev *zdev, int offset, u32 val, u8 len)
+> > >  	return rc;
+> > >  }
+> > >  
+> > > +bool pcibios_connects_to_atomicops_capable_rc(struct pci_dev *dev, u32 cap_mask)
+> > > +{
+> > > +	return false;
+> > > +}
+> > > +
+> > >  resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+> > >  				       resource_size_t size,
+> > >  				       resource_size_t align)
+> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > index 8479c2e1f74f1044416281aba11bf071ea89488a..006aa589926cb290de43f152100ddaf9961407d1 100644
+> > > --- a/drivers/pci/pci.c
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -3660,6 +3660,19 @@ void pci_acs_init(struct pci_dev *dev)
+> > >  	pci_disable_broken_acs_cap(dev);
+> > >  }
+> > >  
+> > > +static bool pci_is_atomicops_capable_rp(struct pci_dev *dev, u32 cap, u32 cap_mask)
+> > > +{
+> > > +	if (!dev || !(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT))
+> > > +		return false;
+> > > +
+> > > +	return (cap & cap_mask) == cap_mask;
+> > > +}
+> > > +
+> > > +bool __weak pcibios_connects_to_atomicops_capable_rc(struct pci_dev *dev, u32 cap_mask)
+> > > +{
+> > > +	return true;
+> > > +}
+> > > +
+> > >  /**
+> > >   * pci_enable_atomic_ops_to_root - enable AtomicOp requests to root port
+> > >   * @dev: the PCI device
+> > > @@ -3676,8 +3689,9 @@ void pci_acs_init(struct pci_dev *dev)
+> > >  int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
+> > >  {
+> > >  	struct pci_bus *bus = dev->bus;
+> > > -	struct pci_dev *bridge;
+> > > -	u32 cap, ctl2;
+> > > +	struct pci_dev *bridge = NULL;
+> > > +	u32 cap = 0;
+> > > +	u32 ctl2;
+> > >  
+> > >  	/*
+> > >  	 * Per PCIe r5.0, sec 9.3.5.10, the AtomicOp Requester Enable bit
+> > > @@ -3714,29 +3728,29 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
+> > >  		switch (pci_pcie_type(bridge)) {
+> > >  		/* Ensure switch ports support AtomicOp routing */
+> > >  		case PCI_EXP_TYPE_UPSTREAM:
+> > > -		case PCI_EXP_TYPE_DOWNSTREAM:
+> > > -			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
+> > > -				return -EINVAL;
+> > > -			break;
+> > > -
+> > > -		/* Ensure root port supports all the sizes we care about */
+> > > -		case PCI_EXP_TYPE_ROOT_PORT:
+> > > -			if ((cap & cap_mask) != cap_mask)
+> > > -				return -EINVAL;
+> > > -			break;
+> > > -		}
+> > > -
+> > > -		/* Ensure upstream ports don't block AtomicOps on egress */
+> > > -		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_UPSTREAM) {
+> > > +			/* Upstream ports must not block AtomicOps on egress */
+> > >  			pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2,
+> > >  						   &ctl2);
+> > >  			if (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
+> > >  				return -EINVAL;
+> > > +			fallthrough;
+> > > +		/* All switch ports need to route AtomicOps */
+> > > +		case PCI_EXP_TYPE_DOWNSTREAM:
+> > > +			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
+> > > +				return -EINVAL;
+> > > +			break;
+> > >  		}
+> > > -
+> > >  		bus = bus->parent;
+> > >  	}
+> > >  
+> > > +	/*
+> > > +	 * Finally, last bridge must be root port and support requested sizes
+> > > +	 * or firmware asserts support
+> > > +	 */
+> > > +	if (!(pci_is_atomicops_capable_rp(bridge, cap, cap_mask) ||
+> > > +	      pcibios_connects_to_atomicops_capable_rc(dev, cap_mask)))
+> > > +		return -EINVAL;
+> > 
+> > Sashiko says:
+> > 
+> >   Since the generic weak implementation of
+> >   pcibios_connects_to_atomicops_capable_rc() unconditionally returns
+> >   true, the logical OR expression pci_is_atomicops_capable_rp(...) ||
+> >   true will always evaluate to true. This makes the entire if
+> >   condition evaluate to false.
+> > 
+> >   Because of this, it appears -EINVAL is never returned here, and any
+> >   standard endpoint behind a Root Port will successfully be granted
+> >   AtomicOps even if the Root Port lacks the capability in its
+> >   PCI_EXP_DEVCAP2 register.
+> 
+> I've made the generic implementation of
+> pcibios_connects_to_atomicops_capable_rc() default to return "true" to
+> preserve the current code's handling of RCiEPs: Since they are not
+> attached to a root port, their dev->bus->parent is NULL and the entire
+> while-loop is bypassed - before this patch and after. (Sashiko was
+> pointing at that being regressed with v4.)
 
-The short story is that ReBAR does not work in eGPU hotplug(!)
-scenarios: hotplugged Thunderbolt eGPUs are forced onto a 256MB BAR
-regardless of the system's ReBAR capabilities, and this because during
-hotplug the Linux kernel does not consult the ReBAR capability. As
-eGPUs are becoming more and more popular, accommodating eGPU hotplug
-scenarios has become imperative.
+The v4 patch definitely changed the behavior for RCiEPs: the current
+v7.0-rc1 code always enables AtomicOps for RCiEPs, and the v4 patch
+never enables AtomicOps for RCiEPs.  But I'm not sure this is a
+regression.  It definitely *could* break an RCiEP, but AFAIK we have
+no information about whether the RC supports AtomicOps, so enabling
+them and telling the driver that AtomicOps work might be a lie.
 
-The longer story:
+IIUC, the motivation for this series was to avoid enabling AtomicOps
+on s390 where there is no visible Root Port, and you have platform
+knowledg that whatever is upstream from the endpoint in fact does not
+support them.
 
-The current Thunderbolt eGPU *hotplug* sequence of events is this: BAR
-2's hardware register powers up at 256 MB =E2=80=94 the default size progra=
-mmed
-into the BAR's address decoder by Intel at the factory. The PCIe
-Resizable BAR capability advertises support for up to 16 GB, but it's
-passive =E2=80=94 software must explicitly exercise it. When a Thunderbolt =
-eGPU
-is hotplugged at runtime, the kernel's PCI subsystem enumerates the new
-device, reads the BAR at its 256 MB default, sizes the bridge windows
-to match, and assigns addresses =E2=80=94 all before any driver loads. The
-ReBAR capability is never consulted(!) during this process.
+I think we should avoid enabling AtomicOps unless we know for certain
+that the completer (Root Port or RC) supports them.  To me that sounds
+like:
 
-A workaround is available for cold-plug scenarios only, and is
-achieved by means of the **thunderbolt.host_reset=3D0** kernel parameter:
-this preserves the BIOS's PCIe tunnel and BAR assignments from POST
-(where the BIOS *does* exercise ReBAR). This delivers the full 16 GB
-BAR but, as just mentioned, only works for cold-plug(!) scenarios =E2=80=94=
- if
-the eGPU is power-cycled at runtime, the new tunnel gets the 256 MB
-default.
+  1) Never enable AtomicOps for RCiEPs.
 
-The proper fix would be for the kernel's PCI hotplug resource
-assignment to *first* check for ReBAR capability during enumeration,
-resize the BAR to the largest supported size that fits within available
-bridge headroom, and *then* commit bridge windows and assign addresses.
-This is essentially what the BIOS does during POST. It hasn't been
-implemented yet because eGPU-over-Thunderbolt-with-ReBAR is (was?) a
-niche use case.
+  2) Only enable AtomicOps for endpoints below a Root Port that
+  supports AtomicOps.
 
-Seeing as eGPU-over-Thunderbolt is poised to become mainstream, this
-can no longer be considered a niche use case.
+This could be two separate patches, where the second would fix the
+s390 issue reported by Alexander.
+
+If we come across RCiEPs that need AtomicOps and we somehow know that
+the RC supports them, we can add a quirk or something to take
+advantage of it.
+
+We are still hand-waving about peer-to-peer transactions; we don't
+even try to account for that because we don't know what peer might be
+the completer.
+
+> The whole point of pcibios_connects_to_atomicops_capable_rc() is to
+> allow different architectures to implement a discriminator outside of
+> PCIe's structure - potentially depending on CPU model or more.
+> 
+> The only point I wonder about: Should
+> pcibios_connects_to_atomicops_capable_rc() default to return "false"
+> and deliberately change the behavior for today's RCiEP's (if there are
+> any...)?
+> 
+> > 
+> > > +
+> > >  	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
+> > >  				 PCI_EXP_DEVCTL2_ATOMIC_REQ);
+> > >  	return 0;
+> > > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > > index 1c270f1d512301de4d462fe7e5097c32af5c6f8d..ef90604c39859ea8e61e5392d0bdaa1b0e43874b 100644
+> > > --- a/include/linux/pci.h
+> > > +++ b/include/linux/pci.h
+> > > @@ -692,6 +692,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+> > >  				 void *release_data);
+> > >  
+> > >  int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+> > > +bool pcibios_connects_to_atomicops_capable_rc(struct pci_dev *dev, u32 cap_mask);
+> > >  
+> > >  #define PCI_REGION_FLAG_MASK	0x0fU	/* These bits of resource flags tell us the PCI region flags */
+> > >  
+> > > 
+> > > -- 
+> > > 2.51.0
+> > > 
+> 
+> Thanks,
+> Gerd
