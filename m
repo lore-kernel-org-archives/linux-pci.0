@@ -1,130 +1,167 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E1823BFE3E;
-	Thu, 26 Mar 2026 09:59:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 106943CB2E6;
+	Thu, 26 Mar 2026 10:00:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774519166; cv=none; b=J7R6y59nF7Lkg8fpoZ8Y87AVswYAmFJ8nYEDouugEhXM+9Z+1n325XAUq1UlyF6wymYVgHCVaFwkFQ0cifOtajFzJrUAUa4/ZpecHa2Ezgijw0rcCMUISZ8P4mPSTrPCi+/upeI6cTeX1gYt00kfWIKUnAQWbma19s4McciiumM=
+	t=1774519229; cv=none; b=eVNuNSvKKsYKU8bXlth80yC8o985xKWD2XCOjyoEUJvcTFKT+A/BOYqpE2iVA6G/CiUFFv8GPIxvaEzQ1fQx2dfAfuhsAhivriWkxzNKg6ZRKTkrpmv1pn1FYwboKOmNipv2t89dYOemT+YC/xgfHSdj0M/Ff3BAHua/uix+PLQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774519166; c=relaxed/simple;
-	bh=MkRcNEdrvJBr/GoedrVC/jPsWd3bpX/nebOjtb/kFD0=;
+	s=arc-20240116; t=1774519229; c=relaxed/simple;
+	bh=YpjKz+MXrEJKD/amzHLZygjzl2q1zYJTn/2+9zrnFbk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GfazJNjNF0kB5fYlgBAepuvebXeHvOFpg7awZYQQjrV1wkMZweQqiANuTgexFD4G4mfIVDX9Q04wzo8G8apvez1c+T18eOAp+tzk03C5G/ofIVhNmEMNIH7GDF/IZnG7KCV7K3ZexII5BbBIwGL7fomisYxmE4zTGRfZGPfZVlk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eOKLAkCC; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Lphtx27Pxfg1PvOn1e9HAkqjruzv7nI4O1cX9Xkwwa/u8cz4UhvlLcY6u/bx0XaWtJvKKswvV0MFJtXtRGA+8PPmrq3dGrhuGs3l+pw5AgTF7dBDCsy6eMUHt5HiOMJxWQmmMY8zrKD/P4Wv7Zj4kNYrmrqRMDQAnz0/z/NMB00=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HbnZB+J2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eOKLAkCC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EE27C116C6;
-	Thu, 26 Mar 2026 09:59:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HbnZB+J2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1692C19423;
+	Thu, 26 Mar 2026 10:00:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774519165;
-	bh=MkRcNEdrvJBr/GoedrVC/jPsWd3bpX/nebOjtb/kFD0=;
+	s=k20201202; t=1774519228;
+	bh=YpjKz+MXrEJKD/amzHLZygjzl2q1zYJTn/2+9zrnFbk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=eOKLAkCChWZPQD2L7G5HNcRGiGGXcX3FJqM5KN8PiOXsbHd7GIpxkqp9+mpT036Dd
-	 MDpXeOYPFtbIIddBuuKNCNiEwmFComkn9tJV5od996nxbnF600yFBiXsOfe7P7JQQe
-	 INdPrN0SDD4wLxsLZxEGgKIdYPir8L16TPlsBI7V2+A7MVQpLrxsEIL9gJhiPAHeSN
-	 5S+Mxlphy84XNVIKkfFz0vmbTNE9OgAdC1ZhMGUMaw4QsThFqBE0lbyfayotkLi2RL
-	 kJCP2n2wM6c4x9NvTRF01VJuxsGZUkfGgnX9RgCvJgruzrafRGTJmss8jTAnMVWlVA
-	 18NLo/S+M++LQ==
-Date: Thu, 26 Mar 2026 10:59:18 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>, Robin Murphy <robin.murphy@arm.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>
-Cc: Frank Li <Frank.li@nxp.com>, Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <allenbh@gmail.com>,
-	Bhanu Seshu Kumar Valluri <bhanuseshukumar@gmail.com>,
-	Marco Crivellari <marco.crivellari@suse.com>,
-	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-	Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ntb@lists.linux.dev, iommu@lists.linux.dev
-Subject: Re: [PATCH v10 7/7] PCI: endpoint: pci-ep-msi: Add embedded doorbell
- fallback
-Message-ID: <acUDdigoIj_uusgI@ryzen>
-References: <20260302071427.534158-1-den@valinux.co.jp>
- <20260302071427.534158-8-den@valinux.co.jp>
- <acGK6rUIyuJP6gF7@lizhi-Precision-Tower-5810>
- <ksr6hlcwmrkrgrql5jqhtpkaihsugtsztfhxxjbq3au6kz3ksu@mk7hhmwabgsi>
- <acOJcMt7E8PLHAD6@ryzen>
- <ec62kljt36zh2autlth5jivdqlojbpdo2gbs43ayob7hobcpre@bpos6hqyuwkv>
- <acQTxJ75lq4tkszi@ryzen>
- <i4jgdqzliz2mae6jnl5pycasjy4h5x27negpxdxabhu7so7vcs@mvk6qbkw3j7r>
+	b=HbnZB+J2EUiWTIcTl5ux6o4nmsX0zdPCeKA9X2E2pqwVjLqHXljiFGkZePyN9Uo5k
+	 UQq2HnTy4Jh6bUXew9Nk6dQR9OcIPSjXV3O6fT5jnjvr4okYPP59GBAoIc0X+HX6C3
+	 rZ2BSOZhNu0rhiapGbswtE+4dWW3abszZ2TernYS1U7Y9mktHT9zFxsq7DnzcKKfvQ
+	 exvsjEcmDHQwwcxLWLVoeYE8/tR2Bszae26Tuve04yoL5qmJaiHH7jWMAgdVDqlCow
+	 fAUsK3OrU+CclrDswok0HGiZaDO6fTtArHEIvjD062Lk03TVEQorQXzibIR4NKtEsb
+	 MRpiZiCbzgwqQ==
+Date: Thu, 26 Mar 2026 11:00:24 +0100
+From: Thierry Reding <thierry.reding@kernel.org>
+To: Mikko Perttunen <mperttunen@nvidia.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Jon Hunter <jonathanh@nvidia.com>, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v2 2/5] firmware: tegra: bpmp: Add
+ tegra_bpmp_get_with_id() function
+Message-ID: <acUDq3bt7P2vL5tg@orome>
+References: <20260320225443.2571920-1-thierry.reding@kernel.org>
+ <20260320225443.2571920-3-thierry.reding@kernel.org>
+ <24777801.6Emhk5qWAg@senjougahara>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="pu5ew2iy2ugqzuez"
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <i4jgdqzliz2mae6jnl5pycasjy4h5x27negpxdxabhu7so7vcs@mvk6qbkw3j7r>
-
-On Thu, Mar 26, 2026 at 05:49:13PM +0900, Koichiro Den wrote:
-> > 
-> > The transaction is a write from
-> > PCIe bus -> PCIe controller iATU -> internal bus -> IOMMU -> PCIe controller
-> > (the same controller as initiated the transaction).
-> 
-> Yes, I think we're on the same page about this path itself.
-> 
-> On my R-Car S4 setup, changing this to DMA_TO_DEVICE consistently triggers an
-> IOMMU fault, so at least on this platform the local path used for the doorbell
-> mapping is IOMMU-visible. That is the case this dma_map_resource() is intended
-> to cover.
-> 
-> For that path, my understanding is that the doorbell access ends up as a local
-> write on the EP side, so it needs write permission, hence DMA_FROM_DEVICE.
-> 
-> > Would be interesting why this is not working like normal (when using buffers):
-> > "For Networking drivers, it’s a rather simple affair.
-> > For transmit packets, map/unmap them with the DMA_TO_DEVICE direction specifier.
-> > For receive packets, just the opposite, map/unmap them with the DMA_FROM_DEVICE
-> > direction specifier."
-> 
-> I think the closer analogy is RX: the data comes from outside, but the device
-> writes to the target, so it needs write permission.
-
-I think it is from the PoV from the IOMMU, is the transaction a Read by a device
-or a Write by a device?
-
-For a NIC driver:
-For a RX packet, the data is coming from the device to the memory.
-device is doing a transaction to memory.
-For a TX packet, the data is going from the memory to the device.
-
-In our case, the data is coming from the device, to a device.
-
-Almost like a P2P DMA, but in our case, both devices are the same, so
-using the P2P DMA API like pci_p2pdma_add_resource() seems unnecessary.
-
-So should it be DMA_BIDIRECTIONAL ? :)
-
-I understand that for the R-Car S4 Spider IOMMU, it is sufficient to map
-it as DMA_FROM_DEVICE. I just want to be sure that on some other IOMMU,
-they might consider it sufficient to map this as DMA_TO_DEVICE (because
-it is also a transaction going to a device).
-
-I just want to make sure that the code works on more than one IOMMU.
-
-Perhaps some IOMMU experts could help chime in.
+In-Reply-To: <24777801.6Emhk5qWAg@senjougahara>
 
 
-Note that I am happy to merge the code as is, as it obviously works on the
-only platform that this has been tested on (R-Car S4 Spider), and if other
-platform tries to run this test case, if their IOMMU works differently, it
-will scream and they will report it to the list. So all good.
+--pu5ew2iy2ugqzuez
+Content-Type: text/plain; protected-headers=v1; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v2 2/5] firmware: tegra: bpmp: Add
+ tegra_bpmp_get_with_id() function
+MIME-Version: 1.0
 
-I'm mostly want to know how the DMA-API is supposed to be used in this
-specific scenario (device doing a write transaction to the same device).
+On Wed, Mar 25, 2026 at 11:28:41AM +0900, Mikko Perttunen wrote:
+> On Saturday, March 21, 2026 7:54=E2=80=AFAM Thierry Reding wrote:
+> > From: Thierry Reding <treding@nvidia.com>
+> >=20
+> > Some device tree bindings need to specify a parameter along with a BPMP
+> > phandle reference to designate the ID associated with a given controller
+> > that needs to interoperate with BPMP. Typically this is specified as an
+> > extra cell in the nvidia,bpmp property, so add a helper to parse this ID
+> > while resolving the phandle reference.
+> >=20
+> > Signed-off-by: Thierry Reding <treding@nvidia.com>
+> > ---
+> >  drivers/firmware/tegra/bpmp.c | 34 ++++++++++++++++++++++++++++++++++
+> >  include/soc/tegra/bpmp.h      |  1 +
+> >  2 files changed, 35 insertions(+)
+> >=20
+> > diff --git a/drivers/firmware/tegra/bpmp.c b/drivers/firmware/tegra/bpm=
+p.c
+> > index e74bba7ccc44..753472b53bd8 100644
+> > --- a/drivers/firmware/tegra/bpmp.c
+> > +++ b/drivers/firmware/tegra/bpmp.c
+> > @@ -32,6 +32,40 @@ channel_to_ops(struct tegra_bpmp_channel *channel)
+> >  	return bpmp->soc->ops;
+> >  }
+> > =20
+> > +struct tegra_bpmp *tegra_bpmp_get_with_id(struct device *dev, unsigned=
+ int=20
+> *id)
+> > +{
+> > +	struct platform_device *pdev;
+> > +	struct of_phandle_args args;
+> > +	struct tegra_bpmp *bpmp;
+> > +	int err;
+> > +
+> > +	err =3D __of_parse_phandle_with_args(dev->of_node, "nvidia,bpmp", NUL=
+L,
+> > +					   1, 0, &args);
+> > +	if (err < 0)
+> > +		return ERR_PTR(err);
+> > +
+> > +	pdev =3D of_find_device_by_node(args.np);
+> > +	if (!pdev) {
+> > +		bpmp =3D ERR_PTR(-ENODEV);
+> > +		goto put;
+> > +	}
+> > +
+> > +	bpmp =3D platform_get_drvdata(pdev);
+> > +	if (!bpmp) {
+> > +		bpmp =3D ERR_PTR(-EPROBE_DEFER);
+> > +		put_device(&pdev->dev);
+> > +		goto put;
+> > +	}
+> > +
+> > +	if (id)
+> > +		*id =3D args.args[0];
+> > +
+> > +put:
+> > +	of_node_put(args.np);
+> > +	return bpmp;
+> > +}
+> > +EXPORT_SYMBOL_GPL(tegra_bpmp_get_with_id);
+> > +
+> >  struct tegra_bpmp *tegra_bpmp_get(struct device *dev)
+> >  {
+> >  	struct platform_device *pdev;
+> > diff --git a/include/soc/tegra/bpmp.h b/include/soc/tegra/bpmp.h
+> > index f5e4ac5b8cce..424188c100d9 100644
+> > --- a/include/soc/tegra/bpmp.h
+> > +++ b/include/soc/tegra/bpmp.h
+> > @@ -127,6 +127,7 @@ struct tegra_bpmp_message {
+> > =20
+> >  #if IS_ENABLED(CONFIG_TEGRA_BPMP)
+> >  struct tegra_bpmp *tegra_bpmp_get(struct device *dev);
+> > +struct tegra_bpmp *tegra_bpmp_get_with_id(struct device *dev, unsigned=
+ int=20
+> *id);
+>=20
+> Should add a stub function in the #else branch, as well.
 
+Good point. Done.
 
-Kind regards,
-Niklas
+Thierry
+
+--pu5ew2iy2ugqzuez
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmnFA7UACgkQ3SOs138+
+s6Em5w/+KkKgYHMUISCj532bdIof02gpfGfp/DB5EFjFjW6ST6rASh5Q2g272YNw
+n9nD8AxA3Z89OZgoAl5pqZ6AFFghe2eK2I7yGV3rxcIoxGvBF37Yl9caQp+YO+H5
+2FBj6MSmBN8Rf/4IMZavXfxjCfvrfHU01qYUL73bPtQAzKaWGW4Opc284LIi/STw
+vRoqqpAtxRdqtMvA81z24BQ0n5UyDiUJmvy/QMoNea8wRwVkVp2mmltx1foJ1PZA
+ze7OxaOe2dVj4dsfJYd7D0rDf9k1Wp9XG065Zvn1orsAfj8s3bqPT4nFz8mggxID
+jSCNFdp8PtWwwNOWr90Z0rBrBX/uI2E77q3phWHWqQ41JFK0EHAunBQ/pAJ82d5T
+STSApB7hquaMv3QEf2gryrCHu2r+nbBD7QrP4hQpH/MvxLu8mJ86zimmsQEvdc4h
+lczoADmSIen5E4MuF+bTvguVvCbAsHyuUIZ45LhIZTWH8FjQkY0OaT0gy4x/2mBc
+QVRjucIInQDtKfQtcv925RYzwkmCTnI6O135v8kyGEIxmBXA9uOUcmV6cn6luhbJ
+cnkrcT8o2XO4QIT5Qh7Y+guVlsvz+T4aN0pWUmMecxJJCtJ9X7b298tUJtyTzEVU
+1A2Gsa10bUeMTQL0WUHhNkBRrftScKT/xjjpOq0ClmVRc44wSPE=
+=qh4a
+-----END PGP SIGNATURE-----
+
+--pu5ew2iy2ugqzuez--
