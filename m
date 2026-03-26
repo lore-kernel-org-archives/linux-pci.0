@@ -1,55 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D213330B22
-	for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 07:32:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C27334C128
+	for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 07:43:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774510358; cv=none; b=mRIuOWhzzVtHSboAWf4n9Ft70mMSxhkxmw6KtMrtfQPTg4zcuN8zv50oHL/BQj57CzxRMu9vIE2zMDI4jFhxCeepQrjD7GKUdEPrlDbwLozhA6YVqSti83Nvn9uZWkcm+DoIIkx5vASAy0tghqcLy7v2P27LQS42OqjwE2/gBCc=
+	t=1774510987; cv=none; b=PjOysyi35W0FtGs4NM+F9X4CYJDdOvVxQFtAKZwZhdB51XZh5rD3PBqfibFpG5/4CrPVANBAWdvCygPhtlYsmElKn6aj83mFQ2Zv6CEJj752gKC/aNSn5F1IgLpVQKAkA9wAt1Ba6+NLQKIn9IZNXQZk2CTfQSjo6givipympo4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774510358; c=relaxed/simple;
-	bh=Wo3zFcURiI7dG2Y9mrgTs/mTsdHdXCE/vxpbT/+wxp4=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=FtIl/xYO8HzW/t5PBq7KzDggIg772SkEpEXiM4xJn/4d+i53sn/nx+68Kc0b5W/VVmDKzjj0a6MQdOgArsvItm2SwZgivrzoeoogyhtP/+aC5IwmjFVBJjV6by2lH0IVhHTA+cGCiYES0WJVLRx3EV08dYMxERkJ2pem+ieQv/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MAn/UMEf; arc=none smtp.client-ip=198.175.65.11
+	s=arc-20240116; t=1774510987; c=relaxed/simple;
+	bh=ZKnyypHoPifpJqYV+Mrwy85paZutfUe7Lk5RTmlVKHk=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=PoRyOrG5cl9zHgC+3Wcpx8zPVTne8gp4NoombJXsF/P6Y1f21HjuwyoelMjb+q4KRb5UQPu2OUpVpMp0WTm9qPzJ1+2RJtg+HkgX9stkmSiKWrR3AXdad87ItoPeds2FqEMzGjvC6nxi4Ju0Ctg/doKLpDn719fVVlth4f6mwxY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fJ/FQtBp; arc=none smtp.client-ip=192.198.163.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MAn/UMEf"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fJ/FQtBp"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774510358; x=1806046358;
+  t=1774510986; x=1806046986;
   h=date:from:to:cc:subject:message-id;
-  bh=Wo3zFcURiI7dG2Y9mrgTs/mTsdHdXCE/vxpbT/+wxp4=;
-  b=MAn/UMEf4CV770vDItovymVuSfZbLAbUBZ2PJm9G0H1fskT0u8JOMRIY
-   bZIKHoKQafBMYLcdoZS5gxvv7tnuxP1D1COXzhVrIpAoplfFlZjEuBA7J
-   bj13czxKA+8JpfE5/phKaQyOJAHaUYyWbT2ZdFd1toj+ASBGesvzGyo4F
-   NZ4qjpIlBfF09NOGzEHJMFWtK5YbRyySxYR7gsc9174a6OcAdoS0h88x5
-   vNENMtu4E9ZxbuAj3nGpgFCnz314R1+h/Mjhw5gl3cgXFjBYtir9iM8nW
-   l/PFQevaVxLG/eYRz5RBPs/TPlmU4il8n53y13TkLKUxQRoXEeb3BNpRZ
-   g==;
-X-CSE-ConnectionGUID: +LG+N9oOSACr0VrByoMy0A==
-X-CSE-MsgGUID: T50ql10YR5md28Uxmw2TZw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11740"; a="85866756"
+  bh=ZKnyypHoPifpJqYV+Mrwy85paZutfUe7Lk5RTmlVKHk=;
+  b=fJ/FQtBpBcGDKlWCe8d5Cye3AGbYkSkzvusD5pR7OXwseO9VR2OJ9gnY
+   8h2mpLJLGh5Hm4l4PoKI+VBAngFGgdbULPszfUhOjMcp4CXvge3aLOMml
+   1hbXgk4lEQC43kwv680k0/qTTraRCG5A9jCs7xGFKRw/nIfvwBKJin2IL
+   tuSgAye9w23vvNb5YPDIljAdyfAH3RvzrP4lAlizPv+sys/blOcm3lwG+
+   0cTml0nqXqpC5TnupQynoXZ8/xzPMcHklhhVfm4m4P3YHlLmSeXUU+zM2
+   H0V2r5Z4Ktm64J6zvN8IF4vC3yYmFsEAxAp/Fvc/WBQd153Ji25ol0OVg
+   Q==;
+X-CSE-ConnectionGUID: h66o0Z+vTvuP8T+Gi5xfIA==
+X-CSE-MsgGUID: 2d0KW4LXQiSWv2fY6I6X8w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11740"; a="78157052"
 X-IronPort-AV: E=Sophos;i="6.23,141,1770624000"; 
-   d="scan'208";a="85866756"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Mar 2026 00:32:37 -0700
-X-CSE-ConnectionGUID: V0wWUrYbRDiE5F3SxhG8Ng==
-X-CSE-MsgGUID: CKkq3/RFTBqkadkLi/UMRw==
+   d="scan'208";a="78157052"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Mar 2026 00:43:04 -0700
+X-CSE-ConnectionGUID: cy0cZtpqRsCiYffgsvdhzA==
+X-CSE-MsgGUID: tl6Z5ghtTTGMQsFSyPTuZQ==
 X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,141,1770624000"; 
+   d="scan'208";a="248355422"
 Received: from lkp-server01.sh.intel.com (HELO 3905d212be1b) ([10.239.97.150])
-  by fmviesa003.fm.intel.com with ESMTP; 26 Mar 2026 00:32:35 -0700
+  by fmviesa001.fm.intel.com with ESMTP; 26 Mar 2026 00:43:02 -0700
 Received: from kbuild by 3905d212be1b with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1w5fCj-000000008Z3-1ZEn;
-	Thu, 26 Mar 2026 07:32:33 +0000
-Date: Thu, 26 Mar 2026 15:32:04 +0800
+	id 1w5fMq-000000008aD-0au9;
+	Thu, 26 Mar 2026 07:43:00 +0000
+Date: Thu, 26 Mar 2026 15:42:21 +0800
 From: kernel test robot <lkp@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:vga] BUILD SUCCESS
- 21b082bd2a45704a6f7e69c190c8287a3d011ea9
-Message-ID: <202603261556.FG6wb509-lkp@intel.com>
+Subject: [pci:controller/mediatek-gen3] BUILD SUCCESS
+ 1a152e21940a18caf7c9d0d753a46d2ffa3f5010
+Message-ID: <202603261513.cfcXdnNS-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -57,10 +59,10 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git vga
-branch HEAD: 21b082bd2a45704a6f7e69c190c8287a3d011ea9  PCI/VGA: Mark pci_set_vga_state() as __must_check
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/mediatek-gen3
+branch HEAD: 1a152e21940a18caf7c9d0d753a46d2ffa3f5010  PCI: mediatek-gen3: Integrate new pwrctrl API
 
-elapsed time: 749m
+elapsed time: 759m
 
 configs tested: 158
 configs skipped: 2
