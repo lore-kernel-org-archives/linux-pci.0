@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5399F407567;
-	Thu, 26 Mar 2026 16:13:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A61DE29D29F;
+	Thu, 26 Mar 2026 16:16:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774541624; cv=none; b=jri1FNspTYkj7SfLhQMYPhxkNRw9t8f/XKolGsa1rg/M13c2Ljt7l77mmQxQqLG5IDBk/dqa2NCP+iFID0qIAMys3OSPumSF8+Bw0mIpxo7Y4eA0gvLRDpzHFfO97RBCWGPyjWZa5x2AjnEwy1BuwQwLFgk56ZAGhrnOOXe5Wow=
+	t=1774541761; cv=none; b=jen3ZVH5fOt2odGO5wHBwgOQhpthjGm6aCu8XFzJfWmCADC4oFUpkIdVFtlWf8EwA5scgG3g9U+VEi1VhXtKPjwRYij9Af4ubOh7ziEm/o9v99XEUIiX0+R0Xk/yCo044kiaBVxLD2LWD3c42rLYCtt5DityzgTZ+vZKqiEx0f0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774541624; c=relaxed/simple;
-	bh=2FivwWdAEPbyRYFOc3ia6/y4NhlckpliW1NAWvLYC+Y=;
+	s=arc-20240116; t=1774541761; c=relaxed/simple;
+	bh=JameW4ladWrxC5pFev9BgCn4v4NhZUd6ZyGSaPwx+Uk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=u1a76oB3J9eJbstjEEFc+SZpdKxdYFVgA/NAQEizJJgvfl0opSVhyjDXWjoKOjq/DL9x302tG6ye9O37cscz0qF1KokGFxLUVpti7zvxU6OXQ33PRCooilVXVRFaj2h9EqK+BgbCykwnfKBKikLXaXp2si2VJ/FT4ggG6km0k3o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uHSQfnsB; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=HZffJxWT5fLm5Ed5CP/w25B8AXhpgu9oyuIsIJXft0ccpFaczwMMt7UlirjUQZws/sNvD/iz006jV/yjP+/fqVdf7RsnIWihCyDRRmnYcDD5o51h1jk4nvV4UKvuJtQzHP9T9TVMZWncxVlbZQ5vybpmoMVXRqRWwHBIiE5NKnA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hY1YDLNn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uHSQfnsB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E120BC19423;
-	Thu, 26 Mar 2026 16:13:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hY1YDLNn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1FEAC116C6;
+	Thu, 26 Mar 2026 16:15:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774541623;
-	bh=2FivwWdAEPbyRYFOc3ia6/y4NhlckpliW1NAWvLYC+Y=;
+	s=k20201202; t=1774541761;
+	bh=JameW4ladWrxC5pFev9BgCn4v4NhZUd6ZyGSaPwx+Uk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=uHSQfnsBawnvlESfik6M5ZSnlSFopJTN0QGEomrgTzLoqqaiilEz7Ul9F9cOCBBl4
-	 yJNCmGv/FO4+ceppYfeQuDc0g3BYjNN1nHgytpl05Xdm0MyOo2t0H2XC9CHvm2TnbN
-	 c9UoG/E3TgHTkQxem0gzbDqXHFMvXcIVEXyiDVeXVllmdEOhjpVbGxTG39Fzk1dzPi
-	 PFqIJCC8Y2FHCk3toQDc5kt/8XM3VXbfzQBzeCTLQ4pZfvJkHgd5ZHLEMXKy9gy7Ph
-	 pbb5ymtRULswxQ/IGSnogNSmkpgU2xUctc6PEarCQOu/2CZw6GB3djjFpUm2LkcJiS
-	 a37lD/qcNEGqA==
-Date: Thu, 26 Mar 2026 21:43:30 +0530
+	b=hY1YDLNnxT5UrkfSI/3QmtXREcG01zVBNYsazDkSFm0Zykdkz9mUMjTICsLh4AvqD
+	 nAzx4+AXB3A1St+nmJ9kGWNXU21k23SgqTQOv+oSwUb6FYYDGDdZRyDBaa1ej8f72c
+	 XATH//JfaJQb8zy0+r9hjFnVlcf2pZQn4BimXeVKPsKRIWQwQ5KGBmJsFAIEfwRDWZ
+	 o5x1V24V0uy4rzRuuelqbYCsikgBrW1D7EjNCk/beEFdfZBiLCql9TT6e8f8ZiOv3A
+	 zKhePq6XsPLWqrF6CwdBSS6MyriEjqZTc/XCGihwM3UVgO2Rv20MWtUkjyYNKxj9UP
+	 VuEJTnfZ+ZEVA==
+Date: Thu, 26 Mar 2026 21:45:49 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Florian Eckert <fe@dev.tdt.de>
 Cc: Chuanhua Lei <lchuanhua@maxlinear.com>, 
@@ -34,10 +34,10 @@ Cc: Chuanhua Lei <lchuanhua@maxlinear.com>,
 	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
 	Johan Hovold <johan+linaro@kernel.org>, Sajid Dalvi <sdalvi@google.com>, 
 	Ajay Agarwal <ajayagarwal@google.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/5] PCI: intel-gw: Add start_link callback function
-Message-ID: <jbjoym5wutdacmfhjstu2ek7k4pqdj4bqii4jszilju5d53z3h@vfdtqihgfaam>
+Subject: Re: [PATCH 4/5] PCI: intel-gw: Remove atu base assignment
+Message-ID: <eu7z775hpux7vo4p2nzzmyqw6fpvehpuabxs7zfjqhhv4hcsnu@d4dns7uuwu2d>
 References: <20260317-pcie-intel-gw-v1-0-7fe13726ad4f@dev.tdt.de>
- <20260317-pcie-intel-gw-v1-3-7fe13726ad4f@dev.tdt.de>
+ <20260317-pcie-intel-gw-v1-4-7fe13726ad4f@dev.tdt.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,76 +47,53 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260317-pcie-intel-gw-v1-3-7fe13726ad4f@dev.tdt.de>
+In-Reply-To: <20260317-pcie-intel-gw-v1-4-7fe13726ad4f@dev.tdt.de>
 
-On Tue, Mar 17, 2026 at 11:12:51AM +0100, Florian Eckert wrote:
-> The pcie-intel-gw driver has no start_link callback function. This commit
-> adds the missing callback function so that the driver works again and does
-> not abort with an error during probing.
+On Tue, Mar 17, 2026 at 11:12:52AM +0100, Florian Eckert wrote:
+> In the current implementation, only one PCIe bridge is recognised. This
+> change removes the assignment of the ATU base address during host setup.
+> Instead, the ATU base address is read from the device tree. To do this,
+> the 'atu' range of the DTS entry must be changed for PCIe.
+> 
+> Old DTS entry for PCIe:
+> reg = <0xd1000000 0x1000>,
+> 	<0xd3000000 0x20000>,
+> 	<0xd0c41000.0x1000>;
+> reg-names = "dbi", "config", "app";
+> 
+> New DTS entry for PCIe
+> reg = <0xd1000000 0x1000>,
+> 	<0xd10c0000 0x1000>,
+> 	<0xd3000000 0x20000>,
+> 	<0xd0c41000.0x1000>;
+> reg-names = "dbi", "atu", "config", "app";
 > 
 
-So the driver was broken due to the below commits? If so, please share some
-failure logs as well.
+You just broke the DT backwards compatibility here. What if the driver is used
+with an old DT that doesn't provide this 'atu' entry? The driver will break.
+Moreover, this entry should be added to the DT binding first before any driver
+change.
 
 - Mani
 
-> Fixes: c5097b9869a1 ("Revert "PCI: dwc: Wait for link up only if link is started"")
-> Fixes: da56a1bfbab5 ("PCI: dwc: Wait for link up only if link is started")
 > Signed-off-by: Florian Eckert <fe@dev.tdt.de>
 > ---
->  drivers/pci/controller/dwc/pcie-intel-gw.c | 23 +++++++++++------------
->  1 file changed, 11 insertions(+), 12 deletions(-)
+>  drivers/pci/controller/dwc/pcie-intel-gw.c | 2 --
+>  1 file changed, 2 deletions(-)
 > 
 > diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/controller/dwc/pcie-intel-gw.c
-> index 6110a8adb8732dbbd5e9e2db68a0606ccf032ae1..6bd25f8da605032bfdb97596fb3a1f6a03e88bfc 100644
+> index 6bd25f8da605032bfdb97596fb3a1f6a03e88bfc..cec972d5aa9107d4708338bd7349415a31f0e688 100644
 > --- a/drivers/pci/controller/dwc/pcie-intel-gw.c
 > +++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
-> @@ -285,6 +285,16 @@ static void intel_pcie_turn_off(struct intel_pcie *pcie)
->  	pcie_rc_cfg_wr_mask(pcie, PCI_COMMAND, PCI_COMMAND_MEMORY, 0);
->  }
+> @@ -311,8 +311,6 @@ static int intel_pcie_host_setup(struct intel_pcie *pcie)
+>  		goto clk_err;
+>  	}
 >  
-> +static int intel_pcie_start_link(struct dw_pcie *pci)
-> +{
-> +	struct intel_pcie *pcie = dev_get_drvdata(pci->dev);
-> +
-> +	intel_pcie_device_rst_deassert(pcie);
-> +	intel_pcie_ltssm_enable(pcie);
-> +
-> +	return 0;
-> +}
-> +
->  static int intel_pcie_host_setup(struct intel_pcie *pcie)
->  {
->  	int ret;
-> @@ -310,20 +320,8 @@ static int intel_pcie_host_setup(struct intel_pcie *pcie)
->  	intel_pcie_ltssm_disable(pcie);
->  	intel_pcie_link_setup(pcie);
->  	intel_pcie_init_n_fts(pci);
+> -	pci->atu_base = pci->dbi_base + 0xC0000;
 > -
-> -	ret = dw_pcie_setup_rc(&pci->pp);
-> -	if (ret)
-> -		goto phy_err;
-> -
->  	dw_pcie_upconfig_setup(pci);
->  
-> -	intel_pcie_device_rst_deassert(pcie);
-> -	intel_pcie_ltssm_enable(pcie);
-> -
-> -	ret = dw_pcie_wait_for_link(pci);
-> -	if (ret)
-> -		goto phy_err;
-> -
->  	intel_pcie_core_irq_enable(pcie);
->  
->  	return 0;
-> @@ -386,6 +384,7 @@ static int intel_pcie_rc_init(struct dw_pcie_rp *pp)
->  }
->  
->  static const struct dw_pcie_ops intel_pcie_ops = {
-> +	.start_link = intel_pcie_start_link,
->  };
->  
->  static const struct dw_pcie_host_ops intel_pcie_dw_ops = {
+>  	ret = phy_init(pcie->phy);
+>  	if (ret)
+>  		goto phy_err;
 > 
 > -- 
 > 2.47.3
