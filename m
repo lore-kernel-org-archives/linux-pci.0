@@ -1,55 +1,54 @@
-Received: from LO0P265CU003.outbound.protection.outlook.com (mail-uksouthazon11022080.outbound.protection.outlook.com [52.101.96.80])
+Received: from LO0P265CU003.outbound.protection.outlook.com (mail-uksouthazon11022091.outbound.protection.outlook.com [52.101.96.91])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 660C33FEB18;
-	Thu, 26 Mar 2026 14:31:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.96.80
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D04433587DE;
+	Thu, 26 Mar 2026 14:32:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.96.91
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774535501; cv=fail; b=MLaIbvnewE/eBIaPCd8JN8c5MflYAdp81Hh9pscKBpJNrGj1HTzrc3I07s2GtWz95f8gh2WZwuC64n+IZ2BSDmZbIyrN+BcJ8dUcfJYLn+YQytxco3wBAhxxL3yjnEUXLgT5SNGnhbfLY9kpdQIRsWr4ePiEhb8mR5iFOw1zv2w=
+	t=1774535572; cv=fail; b=TkQMgf7Ny2bx1LJLW2dZfQrhuzr7qjPUBiE2VkXxOeqM9b7yxKnJoek95hZi9hBdQhUqj3SVUBTASZvqFK9MYFqNt4Id/kL21nQIwSrDnp30OSZg4IWLB9dKgs5J1m35sIwSmqVedULLcYsHI47q0iTraOjbNgVDAMjk6ggUOdg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774535501; c=relaxed/simple;
-	bh=Lqs49/Vn9MPTczxpkBBmoB5rwugkzuGYXP52H1Mug54=;
+	s=arc-20240116; t=1774535572; c=relaxed/simple;
+	bh=Dxo06wUc9ylyEJEKuydTAR+3AptLXESdyf12lqpUmaY=;
 	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=GJu5mNRf1r8oAbU7yimQaiClonHHVDPXDTmEUzB8vpMjvm+38Kep1c+nCxHfbVfeaxoxAVtuiXVoPQ/roKue5TKu58ol/vm9SgGqYrfPlDaDzJBSqsvrme4UJH4XaoKjTpGczprIlW5cuZ7L2w8FjmBkMC3gZ2vBXzivJHlMPM4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=zDMdq0ZS; arc=fail smtp.client-ip=52.101.96.80
+	 In-Reply-To:MIME-Version; b=JfOwqt4nw5b0J/zva4D48VmblBVBTtJJPlZjI/Rk9Y/Mvau49lux8gXuF1cD74Qg6z7p4zMzBZuo7r8T5qXpwMgrP/cMpf+bDvuS4TDy91y/GTsg4sBFHmHny4n2CNvjRK1Dg1VMOJJ7urTFtyn+REb/SKkLeeYrkA11TYAEOhc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=zBp74hVf; arc=fail smtp.client-ip=52.101.96.91
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="zDMdq0ZS"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="zBp74hVf"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Ec2XmeOno/dsdY+ntOTsKOWEb0aBiFEu9KidzWOC2KyjIfCOCaYNeP704TrAgBn4FtPbHtbr+hGM0o6rEJ5yA/Yx0qAroAYJPMteCiiZ9BzF3Y0v3aiQXVpNFtUz0RATTYnG8J8eKWaedlR0f5iqn7ii+5Cz7PKuxwWxRuyUFKy0k+t2WwUIXCwUI0JK6HebT3gzUNNUm0Y9QAMLKxdWmHk4V74jSRw5L8OI0Vg3UWpkq6ZObmV4gQGfj8vhhlCRNoqIMR7yZSNE/x5COf7CDH1Wu4hR7qvVzqaNVzTXb1R/e4fj0iM/xQjaeGCKT4wUbx6Runc/giFTjSdzHmnpgg==
+ b=RKtuonAsiVhkXdOs4Mnqej5shtOD3NjT2jTXz38XDKyOpp7w/xQDkCw26gFTcODD4FXdSWuuXkgT60R35wz1l4wQC9macKc41wizsU4gS77it+9DLwJtIfUC3WdwxuI29TxpV4rXR7C7B/rIMQnxWkpITZk6VdTG2mNzkdDySyBLinnkiqr6kAv7WXQXdHYdfIXxfPDtHGnSiarWL3xtSHPljXkqv1bSJNG4H03foMpnqm1pAaxsQ4pVzNbwqty0m9JRSWsoZUXiI1zZUwFcW5CtguOhcSiG/t+GxWCDMZsanBj+WCDzCYvX0IFWRQrsjDiSLNNJgLnO+Z0IU1Sa+Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=r4MljMmpky+Ozx+IFgyaqLFgKTNbkn2uCXLsmBUHdts=;
- b=JHnOKeskeNLsh3s35Bb7bYfVAhR0wI6cvM+ULvhufLRuje76OvQReZIv3tJ1u1Z7M0oP7JC/G0VZtPw4ee9vkr4N1I0M1aAFNhwsYhTbmuQ3Qs7RoLwVczvOIKas8Il/TiUo1KWYOkf/cTuWzIJ7LE/6WrsJGgp/M+6G43Mm6aohoCj1qV4lNMSht+S0y3o8h7m9LXcrxQj10b4WtkJla+28/3GTxxo32yPCQH20QaPBpxqAop5dJEFFhntHLbZuUDk0c/abKPYbbnKfgaTsK49h5ppiC2Gr82qn3RkJ/WJCPadwATY4M6jSifmKJudYFjdudrdtSvIQB5CMhxYt7g==
+ bh=ZcLWnF9zwlREze8qZI2/QTjg/LRrqpWfeAVa7b23zNQ=;
+ b=WIuQZTynu1jWl1culxd9YhQB2BTDURoSmRqDvCSSlXR7gIQ16kAxDGaylwuBmbZew8CLZumUxn6xczZ2XaAb8yO/zlakf7CA3ZZqTlfmJ17VLrhTvH2+Tt3iHfUaJIQyIIKato+8kTI5fBNXDFTOK+86Tue4EOPGqWeOO10hAFuyfiPZzkOYUBnxjQlmrE8fteAw6YXvmtWYw9ERY2WGOpVhlnQrAXlJEZhuHUx/qiPAEthqG/CvwKRG3CiYfzJOfy8AQFGx9Fz8m6OTIZunjCN/5jOg5P1ji8jXfAoMn/8iWuGayfsjFBua+61z55ITt8Y6zRYQpsLPzZES3hQhzQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
  dkim=pass header.d=garyguo.net; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=r4MljMmpky+Ozx+IFgyaqLFgKTNbkn2uCXLsmBUHdts=;
- b=zDMdq0ZSsIt1Z2eAtsMAirsXeGFCnytNgNDmRlND96EGMDO4jqj4QQGPrN4pOQ9cZVdXH5mMFVocuWuQ2+gXrmAB+lYjwgj1hP11ma8F8uv/uRh7pvJe0huHYhtPitguHNRYBSOvOhnElOxxDegtiT2BsJKE3lGEj3sTQTzx5xQ=
+ bh=ZcLWnF9zwlREze8qZI2/QTjg/LRrqpWfeAVa7b23zNQ=;
+ b=zBp74hVf3PVLXxfsZfQsViDOkyY5SokRIH49lTgyBLci+K1tRvj/0pf0EAExXs2DM7kRpS1snjGVwT1piao5r+LNWt1Cz78+L4BxUy6tjNUJhk8MmL2LTQW8VlyqiA2OQm6JDDYEYwUSf+nK6B2Nnq8rDtDAY9gWt4jaPbCTNBM=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=garyguo.net;
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LOYP265MB2206.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:114::7) with
+ by CW1P265MB7427.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:217::9) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.22; Thu, 26 Mar
- 2026 14:31:36 +0000
+ 2026 14:32:46 +0000
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986%5]) with mapi id 15.20.9745.022; Thu, 26 Mar 2026
- 14:31:36 +0000
+ 14:32:46 +0000
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
-Date: Thu, 26 Mar 2026 14:31:35 +0000
-Message-Id: <DHCSC0M3P2NE.ZF90M8QI0QTF@garyguo.net>
+Date: Thu, 26 Mar 2026 14:32:45 +0000
+Message-Id: <DHCSCWVI38X2.2K7DBY0YPBS5N@garyguo.net>
 Cc: <rust-for-linux@vger.kernel.org>, <driver-core@lists.linux.dev>,
  <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/8] rust: io: generalize `MmioRaw` to pointer to
- arbitrary type
+Subject: Re: [PATCH 2/8] rust: io: generalize `Mmio` to arbitrary type
 From: "Gary Guo" <gary@garyguo.net>
 To: "Andreas Hindborg" <a.hindborg@kernel.org>, "Gary Guo"
  <gary@kernel.org>, "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng"
@@ -63,10 +62,10 @@ To: "Andreas Hindborg" <a.hindborg@kernel.org>, "Gary Guo"
  =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 X-Mailer: aerc 0.21.0
 References: <20260323153807.1360705-1-gary@kernel.org>
- <5t7h2K-OzntmDmVbwyRSJCfuCaWFNs8bmYJMd8dOrRTuDwmTSrbBdgPily9gdXK_ylxKdR1REa6Oa2puVmTHPg==@protonmail.internalid> <20260323153807.1360705-2-gary@kernel.org> <87qzp6ycol.fsf@t14s.mail-host-address-is-not-set>
-In-Reply-To: <87qzp6ycol.fsf@t14s.mail-host-address-is-not-set>
-X-ClientProxiedBy: LO4P123CA0334.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:18c::15) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ <_GdG2BR4qqT-8cwpiurteKJJr58WPTCsM6UyCU0NsA1DK6yTNMiSGOBZlm79OMaLm_tIMM7feHDx7mKljWea4A==@protonmail.internalid> <20260323153807.1360705-3-gary@kernel.org> <87o6kayc5t.fsf@t14s.mail-host-address-is-not-set>
+In-Reply-To: <87o6kayc5t.fsf@t14s.mail-host-address-is-not-set>
+X-ClientProxiedBy: LO4P123CA0414.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:189::23) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -75,177 +74,160 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LOYP265MB2206:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8092208e-8efe-40e7-8cb4-08de8b4462a2
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|CW1P265MB7427:EE_
+X-MS-Office365-Filtering-Correlation-Id: 1881593f-5ea8-4c20-8b2f-08de8b448c84
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|10070799003|366016|1800799024|7416014|376014|921020|56012099003|22082099003|18002099003;
+	BCL:0;ARA:13230040|376014|366016|10070799003|7416014|1800799024|921020|56012099003|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	Al5aCqVl6L1TXA/rgX2qZKLdsdBicHbT2c9W+wODNSxwvIoRJGH/QG7sjZo1Ux1Zbr5Qbo8OksrMzh07DmeRf0LqGiKkxnMtt34YVQNU5aJ659mQaHiDjfzIyCjd0qQKHrOvb2zQ9KGwdQUbDPYm8dhCK+13SsgOc9907xUGJsxJ30SGsTa8Vf/iEualgaIy06ApwB9bq2+mdlN+SKehiS2PeFCvL80M5hg0u6C5Wddz38hFItJNHNY7WYkkAvCQlxBeUGmVzWoSXvT+NUSXCJtu0R56sW6Rr6GcVMfcW9NUN1WQ0NsZlrjJG7zR/KJPPU0FLnBuXO/VQ9DOTAznWSaP1rIRKk8jR/Yhc/bhcakNV/y424LupUkRnstOjjqM0H+GZ5mh1BL9f2SzmqQUkh875d3tvx2iVjSLZfvDAXbFv95FeJQdhxn3vDMNVd9zoP22nDRQEOzhGI+QdYWmUcHbEo2y8LuBA3gXbTXk5deVv+3jcMLOjBVfF0ksk5oCGsP1oNMPHDtuy15/Rx9VsLVWuNXWryrQT8WKNJCMf1TcGQv9PKEoMwdDJtgedw7pNCbkx0Xa4DEFexl22PuOTREfnP4rgJBeO8mC5FZ87L34xrnJKGcKOmrQts6/c6TAL1sCV+dyOmKcYY48TdFGl9bA+t68vf6uT6zaQsic2wO0+cclAg5a505DKwPqncg7LGjXNNGPqDgL7yf3T47FQBAsu9l28Uo6E/6tuMUbhn4M48fOBtEGvj6dom6niGBMf70yUFQZ/YhuHpZK18jIFg==
+	7IzpuAnsg7Mem4yueHua+Ctl+HmisbqTM2wJ2Iu9X/bf6jb2e4fip25vkV3rv6DX/nVXDXh2OQJxjet0Ni9u/G6j4p0QteuL0pHRtfGznbldjRxp7Z/NoCBXPzIymBaTD9yvI+dwEtlSCuHTwEyXLWvkeKV7fpOZNbKnQU1v5GkU2Nigq1J7nj5OAH7+Tn9+OXwUsLl/6xwkk+qdhH4LPdVJAijJrPTgdzFxs3zQFBQJAbyk/aSIngl7DUGYZFu8PUTcbzZKM6HN/GoQIGEhNSrCLrOXONgpMBNtPCOBNkbxoTUjkZXfnO3y+kEaYwKzdwmLrEGzIe26gWBI/1UwfAmt9ObhfR3pa3c+vyK0GzjZpdXGFiHQ5aUzqcSeFCKYLewHum5xVp9mGGwbr/uqjajz898c9TIbzNEkvTBCGRg8jf6PqsogSwgnf7qQ/m/o1Vvie9aO4rHAkrL938FGpwJOypn/B0t2esbOMZ1TzxHlMgIlOc8XOBZkm9NfBUY+GjZh2aK35Wfn2YfxqO1lNqzaDcM7JGtyUGoIX3NQd2iUzNWX0U2Rag+3TEIfo7hwq8FrupHWnsD/Cfe3yC+AfOOB3x+UEIWSNE6jk2l+ToCrMIYoMhzUP0YFQxp5ALdPGWQ5VTykxxruRIOOCi1Szkg9Glu3Sz/NBwE8c69rG4kQ2Ac6rHHHGDmJyZ0X9y0KpJNpZeMzKUoIlOp7HX+tlZ2trqNVFvX3lu0f4n8m+ggBXms9FowJRS9UDIy3N57RwUYNmVvXGF4fQsj35J/gDw==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(366016)(1800799024)(7416014)(376014)(921020)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(10070799003)(7416014)(1800799024)(921020)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?MGVKUFRPVVQva2cxd3JGckhZWGYzQ1FQUFlrYzZBaWdSV0lReENVNFR6QmVQ?=
- =?utf-8?B?TFFjS2xuclRZbGI0UXpPUS9Lb3d0NGEvSUwxVFNsREUxbFA4b2RuZTl1MUFO?=
- =?utf-8?B?SjU3UlRuVngxcmpTbEZiMTc0K2ZUN29kNjRRQ0hkSW0zaTBoMjRhYnJ2VWVK?=
- =?utf-8?B?Q3FHYm45MTdlZ241M1UzU2U1Rm9JTGtST2hQNVl3UDhOT1M4Sm5DMFIyWHor?=
- =?utf-8?B?OEJyS2JoQlErR2JYVXRGZys2cHpPZEZSVHFIQmR5Q3Q4aHU2Wlg3N29RR2Vl?=
- =?utf-8?B?QitjMFB5MjduNnRYYnVFMksrRW1oakVxZFFDZFJ2YTlvbmVKcy9OU2t3SWxj?=
- =?utf-8?B?UitNWGxBVG53ZDV6WGJQRVlBcWRPMlloeTFhR3lqNjlrbzlHN2ZPVXJoMzlG?=
- =?utf-8?B?TWNvc3BYNUVpYWNTQmVPQUpRLzgrdSt3ZHY2SFJiaGZlSm8zSVNMeEVneERi?=
- =?utf-8?B?bXliOXNyT2lLdWVzWndxNHQwL3pJcUJCUHpoMGlkYWphS0UrcVd4QUJlVmpt?=
- =?utf-8?B?QzdKRjBHWGRXOERjZzM1akJud1BrYWx4Vk12cXVkSmd4SWlxa3hFbDNwVjZk?=
- =?utf-8?B?Z0U3UWJaSGszaXBubmxGSTJNbUphdlFvbnZOMXR5UVM5eEcvNmZ1UEVZVUgr?=
- =?utf-8?B?cEhsaTNQalMycTB5VXlGa1I5czV5dUtBQ2Fzd3B3aE9nT1NFY3ZMb1ovWnly?=
- =?utf-8?B?dXVoZFo3eTByb2hsR3BjMWlyS2FNRStzK29lcVpUUjBnYzRJbEhJNjFkNkY0?=
- =?utf-8?B?UnBWeVpTKzVkdmgzWDIrRXFMSjdobHVZdytyUU8xNHNxaFJVU2R5S1JrVXFy?=
- =?utf-8?B?WjVKTmkvb2dhclBHWHNRQW8xZW9EWmN4YTNidy9CUy9HaTR0STdzdDFlOUZh?=
- =?utf-8?B?M3cxTU42eGR2K1VTYUl3K3BrNG9YVGxaVWJNMTQyTUN0QVpOQ1MyVzErN1Y5?=
- =?utf-8?B?VnBGZ3RhMTduTUZIY2IxVXdrL0N1QnEyQld6ZUliN2ErV3JPalhzbVdRRFVp?=
- =?utf-8?B?MnBEREx4ZHppajZ4K1N1VFhYMDlKMExKSklwMmZzVEpzOU1FN2dOcWxIZis1?=
- =?utf-8?B?V1huVVc3UUFQelIwdTNUMjZLdHpRSlkrTVcvOVZ3TXRTQUtGYUo5RS9IZi9C?=
- =?utf-8?B?WldIdmh3dW9idUVwV2RtY2daVWpOOUp6TEk5Mysyc3BBSjBhbTBGRFFmWVh2?=
- =?utf-8?B?YTFCbit1QkNiQjlSdDdaMHlZQ3UyTEpVc05yTXlwRFBSN0VrRWNzT21vUjRT?=
- =?utf-8?B?dUZXVkxEazUramo1OWxBcUdqTlJUNDFTYytYTmdBdU50bnlqSmI2S2JEcEVi?=
- =?utf-8?B?aGdmdEhGVEhYRERIU1pSVitSbGpMRythSXVoWGtGRDBtUkpzWVNFS2JlVVd1?=
- =?utf-8?B?U0UwOE1waHE0eUN6eHVIMElkbXkvanl3ZkY5ckxOSTd4d3paTjNFQ0xkRXRn?=
- =?utf-8?B?UFJpNzYvZFMzNW4zOXlibjhRVGdSSUhRbFRxMXN0cEF1VVZ2Zmp6OHRvRHlH?=
- =?utf-8?B?aEtnNXJJTGUzZDIvaVUrcnp2RitvNFk5S0VWT3E5eGR1V1Z4WThmT1E3WU1q?=
- =?utf-8?B?M0twam0vbUZYMHdmd2VkYWxZRHhqVlZyVlFPME1wT2RrUnNYcm01QjhsY2tN?=
- =?utf-8?B?Z3E0YU52Mllob0R2cG5zWFR3QXVtRjB2eklkTVR1WjBSR3A1SnJnNmo4K1Jm?=
- =?utf-8?B?WU8rMkZVZCtFRzlxd1VmT2JTanhDVytRK3BYLy9XWjBXRlRDRkR3S2VjdDhP?=
- =?utf-8?B?Qi9WOVN4czVVTmVybThHRVBnZWE4alZRK0I0bWVTU3hsSTZ0NDMvak5GWGlK?=
- =?utf-8?B?ZHJ6MTMvLy81SDJXR2JCZFI4WGlGSHpHZnlMK2p6ME9veVI3NjFySmdreTZJ?=
- =?utf-8?B?QjVNamZ6TXZrTFlMK0xHN0tDRnBtUnpRUDNaZDRvVHQyTU1ickN3R0Z2WTFU?=
- =?utf-8?B?anNvQ2ZRRytxSEJIV2lxMHlDREkrVFJpeHpWT2w3ZDlKekdkbzNjbGJrM0Ni?=
- =?utf-8?B?c1cyWUdYVlh3dzRSK2xRcGVTWmZRaW5Cam5NdTdJQ2loSE5Mdng2b05pd1ky?=
- =?utf-8?B?RU9vREFmMnVoYytuZTFWUjl2Tit1N3pTS1VnNm43aXRDWDVOdTdUcHdQOWMw?=
- =?utf-8?B?dlZjOWsvTkgwMFNCUDVNdHlpUThYRWtTWTRIcGNrZTZWTmY3WnAySXp5M2tm?=
- =?utf-8?B?Q1pJbFVBTjhTVENoVkgyS1RSMTlDMUw0aE5HYTFqOTk2MlhudHRGbFZma0gz?=
- =?utf-8?B?aVBvSjJkRWpwa0o5OTBQanV0cUJQclNhM2xRWjRlRGJGRmJFZytWOG1FV0Vx?=
- =?utf-8?B?S1MyZldTQUpoY2RNRTRwV3ljenc5YXNCa3diUU1WNmRjSDlVZHduQT09?=
+	=?utf-8?B?dS9MMGpNdm9oMjVCUlNXdWk1QkpuVXlvU3RXR0xEY21Ha3BJVXpHR3RPSk42?=
+ =?utf-8?B?TGttZ3lVYnhoUkIzbGxHRmlFV0NmMkhhbm9vbUx3VnZYSDB1ZnlpN2Q3YldQ?=
+ =?utf-8?B?aWhVOWV2L0J4bjV4YnVPb1U5L3J4V1JqTmlLS0xUVno2WXNaWjE2d1BDM2dM?=
+ =?utf-8?B?TWN2UWl0c0UvUUJXS3ZzV0tEYTE5VmUzaEI5K3RyeGREaDl2MFFhMEFESW02?=
+ =?utf-8?B?RzFscTV2VVRoSHNMaHRrdmE0TkVscWNZSzJDTGxjcjRtazgxN3NWZDVkZVZU?=
+ =?utf-8?B?aWdyQjlaMnRydjUzUTZmeVlzUzVNWGkveXNwbUtDMnVzY2pyUlB6SVV6NUtW?=
+ =?utf-8?B?ZXRiNVQrVkN2ZEFWbUdMZ05tZ0M0eUQ5RERZeW1wU2pLeFowdmdFVXd2MDk2?=
+ =?utf-8?B?NTQ2NVM2Vk9wWkdmM1JWZGNza3NXNUtMOGg0YXh3SGQ4WjVEanY5S2hhdnFM?=
+ =?utf-8?B?aUh2ZlQwNHd5NVh1ODJ0aFlaeU1zSHVBelFnVGxwUlRLK0lKSmdIcnVwT2Y3?=
+ =?utf-8?B?Qk54Z2V2RWU2MldwZXREQ1VmZG9LV253THJUT3haR21QYTNtcGVRUEp1RlBq?=
+ =?utf-8?B?RlNiZ1duTUFtQ0hTY2U5RER0ZU96UDZQSnArUGVuYXZHZUtWQ2hLVmxwaU12?=
+ =?utf-8?B?RCtMN3lOVHg0TEVWTEgwUmVjemo5dzdnRFZ0SnhGNWRVMVVkTk9qaUdKc2Rz?=
+ =?utf-8?B?M3UvcFplQzhCMEx4clBYN0dncnZ4TERiTXRocEtVczJ2ZSt5ajE4T1d2MWU4?=
+ =?utf-8?B?TDJnSnhOUnd5VGpISWljc3E2WkJlM1VtTXdWSjFIUDA2WnlDbGtveVJ3TTBZ?=
+ =?utf-8?B?c0dKdGF3UlJ6dVF0bW1MNS9yNXQrMmYwdkdXL2tyQlZaQzBQMFpaK3hNQXVs?=
+ =?utf-8?B?ampvMDFHM1p3ZUxXd1B5MW9kcHZoMWV2SVRBNiszYVQzYjBXSmJTbU9QTk5F?=
+ =?utf-8?B?M0kxMWtyTHY5bHBGY1Uxd3haTlhwaU1lNGdXWjdiSkZhRnVnME5vclhoVTZQ?=
+ =?utf-8?B?YUZhUXJCZHpCMzRjV0pmSHkrL1JXS25UbTZKSmpTUzIxNVprbENGS0Y2c3Rh?=
+ =?utf-8?B?VWIrdnV2Rm5BeVVhWjQ3dzJORWwvZ2JKekdUQ2xqNlk3UGFjRFdaSkR3UVVN?=
+ =?utf-8?B?WFdOZjVQeVIwZXVLZmdRMEpsT25HZm5kVVhHZVR0aEhVYVU5L2J4c2RhQ0x0?=
+ =?utf-8?B?ZXZybVQ4RnZDeTQzMGdIY3FZOGNkTURKSkx2L2J1c0VaYU1IMUtOY0tuSmNE?=
+ =?utf-8?B?NSt3OHBwb0NtcVFqeFBUUGI0V0ZzV3B6emZRdklJZFlxNUV4aitVY0hLMDZO?=
+ =?utf-8?B?ZGdjQWpkZ2VqVzhaWk9ONUZEQkpSbys4VnRxUkJ4ZWQ4WkdlbVQvRklOaFJi?=
+ =?utf-8?B?bTJEUFJUSmxJMEpnS05WRE1jcUljTnlOUHc0Um00WUF1ZkdpVXExN2lkbHh2?=
+ =?utf-8?B?Vkh0TzZzRCtEdXBsT29DS09NRFBOYk1ZMEx4OEd6UVBaTVBuSXlDT3pvK2pL?=
+ =?utf-8?B?Q0pYMmNDT1FsTlZNS2M2bTRKemh3OVM4OWh5M3J6OGVxMHNuVitqbUIrQVha?=
+ =?utf-8?B?bXo4NUViQ3NhdzdROWlrVkwxOGhKWmMvNXJ4ZmVabHAvbzdyV09YbEdJU29a?=
+ =?utf-8?B?dUFGZm1ibkRGSStnbGt5NzhMYUpJeS8rWmdvZ1JBTDc1ZUlmaXZLRWhxSkR2?=
+ =?utf-8?B?d3VId2N6Znl2T0xCTGI4ME9UNVBwUjk2S0RVN0d1c2grOXh5M1ZVMC8wNndM?=
+ =?utf-8?B?T0hVWHUwVzEwNlpoNk9pV1lRdnJyTmZPYmVaTStRNEUwOWdxYWI2a0RxeFhW?=
+ =?utf-8?B?WEV4Z0RpN2orTjhzWGVhejdCMzEzdW16SEtBV1B0VE4xRkc5Y3JiVEdmN0p6?=
+ =?utf-8?B?UUx3VWlDeWlGWVJOVW5VL2VEN0hBK2FsZmZkeW5ETXdMOU5WYmxOTktsM1NN?=
+ =?utf-8?B?eDdBWjU1c1JsbDlMRTQ1cHNrL1didWhYZEZpR1hwN0l2TUVwT0FlUFpucGly?=
+ =?utf-8?B?Y1FMZlJ6RHNHWXN2R3ByUjhaUWJNQnIvMS9CZElhazNyQzhGM2VObjg3V08v?=
+ =?utf-8?B?OHlVMHVYaENMQTFCWVVjS291OFpiOVBqNUNYTWYwbkQxNkFUVkZYZDRGUXp4?=
+ =?utf-8?B?U2l2aHBvYzZlQlFRdXV1M3pWYmdjVmZOb2hiQnUrVFBCZmd3KzFmWnd5MUZ2?=
+ =?utf-8?B?dllwNUZkOG03eXR2dGNkaE5KVE91aTdkNzM5RjR1Q05zNGpzaFUvK1p5a3BZ?=
+ =?utf-8?B?dGVOdjhLd3Y4WG9KczIxUWQ3K0JlNjlBMzF2Ujh3OXhocS93bVJrR3ZYQjhX?=
+ =?utf-8?B?bEg3WEF2Q1o0UXllYVJmMVorUmZobnVvWnk4OTA1YkFFbXNBekJSZz09?=
 X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8092208e-8efe-40e7-8cb4-08de8b4462a2
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1881593f-5ea8-4c20-8b2f-08de8b448c84
 X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Mar 2026 14:31:36.3125
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Mar 2026 14:32:46.5683
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: PeYrgfmCisWYs3Wf5n3GfjpbI8l/IOnnNMrQYY3JTr6Utd+5BjcFfPm/7ReWADvQdFBMIAWuLy9HjNw/uV34jw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LOYP265MB2206
+X-MS-Exchange-CrossTenant-UserPrincipalName: LIuMAmTKSs3RrAnd/cxZH2890mRdgXjlfIBj8+TAcsbfb7k2nSMxhOd2GhekcUHiWWXPvcXpT5jy0R5BnkZFnA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CW1P265MB7427
 
-On Thu Mar 26, 2026 at 12:53 PM GMT, Andreas Hindborg wrote:
+On Thu Mar 26, 2026 at 1:04 PM GMT, Andreas Hindborg wrote:
 > "Gary Guo" <gary@kernel.org> writes:
 >
 >> From: Gary Guo <gary@garyguo.net>
 >>
->> Conceptually, `MmioRaw` is just `__iomem *`, so it should work for any
->> types. The existing use case where it represents a region of compile-tim=
-e
->> known minimum size and run-time known actual size is moved to a custom
->> dynamic-sized type `Region<SIZE>` instead. The `maxsize` method is also
->> renamed to `size` to reflect that it is the actual size (not a bound) of
->> the region.
+>> Currently, `io::Mmio` always represent an untyped region of a compile-ti=
+me
+>> known minimum size, which is roughly equivalent to `void __iomem*` (but
+>> with bound checks). However, it is useful to also be to represent I/O
+>> memory of a specific type, e.g. `u32 __iomem*` or `struct foo __iomem*`.
+>>
+>> Thus, make `Mmio` generic on arbitrary `T`, where `T` is a sized type, o=
+r a
+>> DST that implements `KnownSize`. Similar to the `MmioRaw` change, the
+>> existing behaviour is preserved in the form of `Mmio<Region<SIZE>>`. Thi=
+s
+>> change brings the MMIO closer to the DMA coherent allocation types that =
+we
+>> have, which is already typed.
+>>
+>> To be able to implement `IoKnownSize`, add a `MIN_SIZE` constant to
+>> `KnownSize` trait to represent compile-time known minimum size of a
+>> specific type.
 >>
 >> Signed-off-by: Gary Guo <gary@garyguo.net>
 >> ---
->>  rust/kernel/devres.rs |  7 ++--
->>  rust/kernel/io.rs     | 84 +++++++++++++++++++++++++++++++++----------
->>  rust/kernel/io/mem.rs |  4 +--
->>  rust/kernel/pci/io.rs |  4 +--
->>  4 files changed, 74 insertions(+), 25 deletions(-)
+>>  rust/kernel/devres.rs      |  2 +-
+>>  rust/kernel/io.rs          | 63 ++++++++++++++++++++++----------------
+>>  rust/kernel/io/mem.rs      |  4 +--
+>>  rust/kernel/io/poll.rs     |  6 ++--
+>>  rust/kernel/io/register.rs | 19 +++++++-----
+>>  rust/kernel/pci/io.rs      |  2 +-
+>>  rust/kernel/ptr.rs         |  7 +++++
+>>  7 files changed, 64 insertions(+), 39 deletions(-)
 >>
 >> diff --git a/rust/kernel/devres.rs b/rust/kernel/devres.rs
->> index 9e5f93aed20c..65a4082122af 100644
+>> index 65a4082122af..3e22c63efb98 100644
 >> --- a/rust/kernel/devres.rs
 >> +++ b/rust/kernel/devres.rs
->> @@ -71,14 +71,15 @@ struct Inner<T> {
->>  ///         IoKnownSize,
->>  ///         Mmio,
->>  ///         MmioRaw,
->> -///         PhysAddr, //
->> +///         PhysAddr,
->> +///         Region, //
->>  ///     },
->>  ///     prelude::*,
->>  /// };
->>  /// use core::ops::Deref;
->>  ///
->>  /// // See also [`pci::Bar`] for a real example.
->> -/// struct IoMem<const SIZE: usize>(MmioRaw<SIZE>);
->> +/// struct IoMem<const SIZE: usize>(MmioRaw<Region<SIZE>>);
->>  ///
->>  /// impl<const SIZE: usize> IoMem<SIZE> {
->>  ///     /// # Safety
->> @@ -93,7 +94,7 @@ struct Inner<T> {
->>  ///             return Err(ENOMEM);
->>  ///         }
->>  ///
->> -///         Ok(IoMem(MmioRaw::new(addr as usize, SIZE)?))
->> +///         Ok(IoMem(MmioRaw::new_region(addr as usize, SIZE)?))
->
-> Should this be `addr.addr()` ?
-
-This (and other occurence) are all existing use of casts introduced probabl=
-y
-before we enabled strict provenance APIs. These should be fixed separately.
-
->
->>  ///     }
+>> @@ -106,7 +106,7 @@ struct Inner<T> {
 >>  /// }
 >>  ///
+>>  /// impl<const SIZE: usize> Deref for IoMem<SIZE> {
+>> -///    type Target =3D Mmio<SIZE>;
+>> +///    type Target =3D Mmio<Region<SIZE>>;
+>>  ///
+>>  ///    fn deref(&self) -> &Self::Target {
+>>  ///         // SAFETY: The memory range stored in `self` has been prope=
+rly mapped in `Self::new`.
 >> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
->> index fcc7678fd9e3..d7f2145fa9b9 100644
+>> index d7f2145fa9b9..5a26b1e7e533 100644
 >> --- a/rust/kernel/io.rs
 >> +++ b/rust/kernel/io.rs
->> @@ -6,7 +6,8 @@
+>> @@ -44,6 +44,8 @@ pub struct Region<const SIZE: usize =3D 0> {
+>>  }
 >>
->>  use crate::{
->>      bindings,
->> -    prelude::*, //
->> +    prelude::*,
->> +    ptr::KnownSize, //
->>  };
->>
->>  pub mod mem;
->> @@ -31,39 +32,85 @@
->>  /// `CONFIG_PHYS_ADDR_T_64BIT`, and it can be a u64 even on 32-bit arch=
-itectures.
->>  pub type ResourceSize =3D bindings::resource_size_t;
->>
->> +/// Untyped I/O region.
->> +///
->> +/// This type can be used when an I/O region without known type informa=
-tion has a compile-time known
->> +/// minimum size (and a runtime known actual size).
->> +///
->> +/// The `SIZE` generic parameter indicate the minimum size of the regio=
-n.
->> +#[repr(transparent)]
->> +pub struct Region<const SIZE: usize =3D 0> {
->> +    inner: [u8],
->> +}
+>>  impl<const SIZE: usize> KnownSize for Region<SIZE> {
+>> +    const MIN_SIZE: usize =3D SIZE;
 >> +
->> +impl<const SIZE: usize> KnownSize for Region<SIZE> {
->> +    #[inline(always)]
->> +    fn size(p: *const Self) -> usize {
->> +        (p as *const [u8]).len()
+>>      #[inline(always)]
+>>      fn size(p: *const Self) -> usize {
+>>          (p as *const [u8]).len()
+>> @@ -169,7 +171,7 @@ pub fn size(&self) -> usize {
+>>  /// }
+>>  ///
+>>  /// impl<const SIZE: usize> Deref for IoMem<SIZE> {
+>> -///    type Target =3D Mmio<SIZE>;
+>> +///    type Target =3D Mmio<Region<SIZE>>;
+>>  ///
+>>  ///    fn deref(&self) -> &Self::Target {
+>>  ///         // SAFETY: The memory range stored in `self` has been prope=
+rly mapped in `Self::new`.
+>> @@ -187,7 +189,7 @@ pub fn size(&self) -> usize {
+>>  /// # }
+>>  /// ```
+>>  #[repr(transparent)]
+>> -pub struct Mmio<const SIZE: usize =3D 0>(MmioRaw<Region<SIZE>>);
+>> +pub struct Mmio<T: ?Sized>(MmioRaw<T>);
 >
-> Is `as` the only way to cast fat pointers?
+> Why not have the `KnownSize` bound here? I think that would be more clear=
+.
+>
 
-Yes. There's no way currently stable way to guarantee a matching metadata w=
-ith
-traits.
+There's no need to put bounds on structs unless you need them for `Drop` or=
+ use
+of assoc types.
 
 Best,
 Gary
 
 >
->> +    }
->> +}
->> +
+> Best regards,
+> Andreas Hindborg
 
