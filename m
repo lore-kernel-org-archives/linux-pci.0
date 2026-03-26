@@ -1,177 +1,162 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013013.outbound.protection.outlook.com [40.107.201.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6E1A3358BE
-	for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 22:55:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.145.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2593E348440
+	for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 23:38:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.13
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774565759; cv=fail; b=Y+zjTY4r0qiOgmsSiR4NWWP/waCE8jwxZC4xrel/3pHokhtHHeS4/uB6kL1bIPBVA1JxIJMjN2fyuyJYEahU9RdRUaeXJv3J8gprYFjAffQDkUmyZOYWPnNXzrGm7LFnGBhlimyPgJCtZhkhjs4LNuul9nM+ATBLfhv/84/52+Q=
+	t=1774568333; cv=fail; b=OBOzlDd06cJqIkiuSGzKpKNK+g5Mp/9mrXYIaCy4LuxHkGpgxWKG/U/7oSXTkcYxffpMaccyxI2PD1wrXt/UenSC2FKFPxYxo+urlsQMDAMVRRu2UyeE0fFDNu6pKj/7VI3XxWjxlfdj4zQ1/hW1nDUbP8mu4sKP+kz/ZDVW+wI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774565759; c=relaxed/simple;
-	bh=BdyUGS9qVrZC2M4zs7j3VJuPzuCzCdpvDKaUG3wf5J8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=a5TKORBIHI/IdxBEWLh0Z0btgauVIt4vIQoRIoEzsj5CgWuu7uIpzqwRaskFgkKDQ9jwR0gtjnTk5vAGl5LyFBmXAPlYPUwtweZyNtbllcR2Lx/AzmX9ExxUhD74Rq6uqla8pu3IEPdGr83CBfq5wDFywHeXgFMkW+JukFHs3oQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=S+c8kVnG; arc=fail smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1774568333; c=relaxed/simple;
+	bh=mNBdUuL3spsfpCzfY9R3RR13P105NhA/2hEfErNIZgk=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=W9VGIF2tQaVRT4QchZACJetO/WZ59xzZg6gFtsl5fpJOvBGYriCytgI6hGPGpOy+DCRQPQ4M1dOcRDflSiHtjslfZDOFclm4HtTkTa++8z3CBRhTr6mAIyqeNpZTWlV0IwuoEHQtSfLsoW2CPscy1d5ifbrHQH+FXWQ57zKEvLA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=MuG7oKXT; arc=fail smtp.client-ip=40.107.201.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="S+c8kVnG"
-Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62QJ6v1k3537767
-	for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 15:55:57 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=gWmaYzOqDIhtbUb8Zs5Nf1ednm4S50xRfwW0Jz6U+w0=; b=S+c8kVnGsspV
-	a654lLZZ0b8EsEWQ7eZrMsM3U42hl5QQn43gPcbCwg1iIRVkzVp2dRFBMOENsKwv
-	SFukOMCLHJB+BVExRhe9tAQ85TnRLm8BMieG/xu8T5GxAF4nxZYBRBXXNSu81mfz
-	72IHHjWgJ7wrMUq4HLUK01uWKkwfjjbYiSew0OJdVYtTd9jpySKJMO9QYnD5wD1F
-	hO4pop4o2ClGk5kOI5qvHHOrYSB5X7rKufRQLoSTlAVCrJgs3+MLzJEtviKWKK4E
-	rl7jpexzUWHR2QNxm3b2slr+Jfm5udNi6cLbkjrHBtc/MhaQw/bPV2OzMvUx4TNz
-	3tP95BR8hg==
-Received: from mail-oi1-f197.google.com (mail-oi1-f197.google.com [209.85.167.197])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4d51u79e54-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 15:55:57 -0700 (PDT)
-Received: by mail-oi1-f197.google.com with SMTP id 5614622812f47-46335278e7bso6244080b6e.0
-        for <linux-pci@vger.kernel.org>; Thu, 26 Mar 2026 15:55:57 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1774565756; cv=none;
-        d=google.com; s=arc-20240605;
-        b=bWl1MPZl7EOYYCfoOZFWj/T5tS0zcL4fxKWxsgioiRe7QwMUklE1PBDNVpmliYyfs0
-         5eIvPShcZbTzwiTw4m8nqj23bXLwj/azhUJJ98A0cGO93aqwUdYMjXFAXjGs/Z/P9EHG
-         vGzwagtCXjZ+BXBcwypHWvWes2WfiNvez58KhwXEWzjt4aK+LHFOcBWIEi/ILj4uaSgf
-         YHq7qtZz4XoWNmeLIRuMiunNsQyx50360awu/k+EP9I90Hn7BmtG9hyitIH45fapm9OI
-         NyKgl+0+o1xf6UUlPw3uU3JlHp4b15PfjHHJ2/y63B1wKmnJ9mMlowpV6yD2jmZ3fx3W
-         YePw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version;
-        bh=VGlyvxOOFksgPXoMLERC1kCayld4eO3E5k/3hyTOpHg=;
-        fh=LU2kAide0UgDR4k1tp3usvn7kAqWo6o8SZpa5q0mcUU=;
-        b=DiYBSn1wxts7ZvmZRN+aWfW/ONkCJ9Oi5IsMKz8GOEtfyUbZcEsX74iIhdy7HBOGeU
-         mS+s5Ox5CZ8/rgttaMgKYBr4pkJFUC8gQxTQ4q8567cDzE/8Ssj+BI3eY+++8YbWhNjD
-         XbqZbTtC8pq3iyldKrVcvw3mNlbjKsXyR17BkWQUcWTBS+QtaBrM5cWe+4RCIGuHKa4v
-         iobccbmAra1O1n7bkc/iD+tLa/+rn1ES3CLiSy2wJce6HxrfkqzoS3QZwJDF6V6HmEo+
-         DR3Z5vORdf/O/XlKpJb9NbU2XJtCqR9lvo1deAZjdD6iXQkfIsY1xn+OIRd42VhF4k98
-         5CGw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774565756; x=1775170556;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=VGlyvxOOFksgPXoMLERC1kCayld4eO3E5k/3hyTOpHg=;
-        b=eo3/e8owvWa9HqSWivevlO1kFhJCoha0QtmdB0JlKcHdCB52YHJwA+cg5FUyFHu+ND
-         0PCkAKChc49eYj2fDmYjFX5WJPZ8v1OKa14rG7F0syr7GyyjvZ/XTFyRJvOOCGf6Xd4C
-         hHvV6YIqN6f0Q+FnrZc3M4Rij9C+JZ01UGRe2XWm42CERsGeuov/ovK3iP+ArOF8Nqhp
-         CwBe8tHZ7nsvE+txRG1e/exDESCgeNV1m1H2Hvnr1uGTGIIySBBbYJe1sUp2/FwWtQ75
-         RxS8Bfm3PAncBk1KSZD2y2y4woPuz7yvS4KmORn1P14LFNaPT8qbQyXzgQ+vuoDiW1KI
-         jnyA==
-X-Forwarded-Encrypted: i=1; AJvYcCWX77PNAHQR9iYTbkPhCtVVjSThhuQXYupiXDJrcJL0ykQrJQQPVm8KBmc6B0XvNytCN5Rk0MFtKxg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwSo75z54TxlM21i3bbaF3dCtxiju1ab9S9VCFsyIxVJTOMh0BM
-	RSXHnPuADAsgg2XEY77NhwTE8DWOfrgARL0cy2+BLfDVR8WoEg35Wqtt1+KYu4zZvhbfnIZy2iO
-	aODcn/W8xcC1R6OYRwMpTniIKkSM28LprlLFPvk72gmDXCInnGiDdwZOKupPat53WX+dw6RYEyj
-	lrW2zSasvUKNoKVF5N1Far4Ow+7JodMIjtoms=
-X-Gm-Gg: ATEYQzxoHGNBAudpSxXOuIRhjJECCG0a9AnPg51OJBhwqcZ+XCaelalmMiaVGpHjrM9
-	WYeNZGd/PnQDzY6UGgkBCC9Nkmp11HbqCY2QwheYPcebKVSMoNuUMV3twEtgFkICwEuH3kqrKbf
-	ptuGhXaAWu0wWmbCjId39Q3knKfeDIgHbRGUJg3VbUV9Jg3mb4zBFX4keouov0bIE/lzA+txVEo
-	FtuPVTqcryFZDmUYwFo+w==
-X-Received: by 2002:a05:6808:1b20:b0:45e:fd68:3dd7 with SMTP id 5614622812f47-46a7aa42abemr1548513b6e.32.1774565756387;
-        Thu, 26 Mar 2026 15:55:56 -0700 (PDT)
-X-Received: by 2002:a05:6808:1b20:b0:45e:fd68:3dd7 with SMTP id
- 5614622812f47-46a7aa42abemr1548497b6e.32.1774565755966; Thu, 26 Mar 2026
- 15:55:55 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="MuG7oKXT"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=rNStMGbX7QqDzv/LVJ8F7qFNFYCWSJueuqphkxH4AHNiGfEzVlosJQiqOZUrjkPhQwJO8QawCsc7Qn8OQA1tZIR30gPA/kAZpYUYEUgX0w7sgX5ff/zPK5nE6KJRVzl4J2eDVd34CafGaH2sQluUhmctw0uFBcEIDdnneuyOdU7fhGAYQpUlXrD8MGKuCxZthu+2Himbg2ZwaYnDoEO7IAF5XIBwYTJpCzY+x4V123EIPtrc3iXAM7loiZj49oB8Aw8j37WA7BEGICHg69kxWFsvOWw7c2o71Ts8h+NjZeVBvB8EhVX3lH6wq6i3zET3rvdiPafJhoe4JN8z7CW3IA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=cc+iWjynn7avlAfEl3qwGCEu6IvhOZaebJ0eF1tOT1s=;
+ b=BvPh4SP8R9JG7DAlfkRhcd5QrMPBbAuN8TVac+LPzMX3eSgy5E0JfLP1JwOKIN7DdJSduNe5CaDyjrsyplzXUNLAq3pnBjvaky+ujIolOXf8x0fzIX39dU+fXzhB/KDazAuPYYqvfmBK+Wjv7ta5763os/+WB1YzQsZrCfA0bz2MSnmHEw3YFX6DKVKw0F0tQtFCfyOA/Rh67vKU6m3bHQsi/307S8sT/WWkbVlvrYN8EmE74nxCAIZCswiIuM0cMuJF/DzgHaWtHlghZkb6j7xDtmvr3CF/8Qu/bMHVQP5/UXxz3csa2l/MsS6svBY14nQaMtctc6FW3QqOL7MLrg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=cc+iWjynn7avlAfEl3qwGCEu6IvhOZaebJ0eF1tOT1s=;
+ b=MuG7oKXTbJg4OKQNBW2729kjzDvmP1TuOcbc/LTntdNhQS3BjFX/wbwB9kIT7LELRTXVVstmFrVvUZHBnue6IBSSaR9dWi6d91rg1KoCovymShTYgMfoDl9Q5ULgvQoT0q2VK2dhp6h8ngTMbgK3G5vgYtfFY6d0SL8AXwPcDgU=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from CH3PR12MB9194.namprd12.prod.outlook.com (2603:10b6:610:19f::7)
+ by DS5PPF266051432.namprd12.prod.outlook.com (2603:10b6:f:fc00::648) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.7; Thu, 26 Mar
+ 2026 23:38:48 +0000
+Received: from CH3PR12MB9194.namprd12.prod.outlook.com
+ ([fe80::1e6b:ca8b:7715:6fee]) by CH3PR12MB9194.namprd12.prod.outlook.com
+ ([fe80::1e6b:ca8b:7715:6fee%6]) with mapi id 15.20.9769.004; Thu, 26 Mar 2026
+ 23:38:48 +0000
+Message-ID: <fa1c6e1e-068c-46d7-a623-58c225bb03f4@amd.com>
+Date: Fri, 27 Mar 2026 10:38:15 +1100
+User-Agent: Mozilla Thunderbird Beta
+Subject: Re: [PATCH v2 09/19] PCI/TSM: Support creating encrypted MMIO
+ descriptors via TDISP Report
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: Xu Yilun <yilun.xu@linux.intel.com>,
+ "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
+ Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
+ linux-pci@vger.kernel.org, gregkh@linuxfoundation.org, bhelgaas@google.com,
+ alistair23@gmail.com, lukas@wunner.de, Arnd Bergmann <arnd@arndb.de>
+References: <20260303000207.1836586-1-dan.j.williams@intel.com>
+ <20260303000207.1836586-10-dan.j.williams@intel.com>
+ <yq5a4imuanoa.fsf@kernel.org> <abPlt8oNUOqGvbA3@yilunxu-OptiPlex-7050>
+ <228298b7-76bc-4ffb-bec0-0c35fd487c4c@amd.com>
+ <20260323182014.GR7340@nvidia.com>
+From: Alexey Kardashevskiy <aik@amd.com>
+Content-Language: en-US
+In-Reply-To: <20260323182014.GR7340@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SY5P300CA0078.AUSP300.PROD.OUTLOOK.COM
+ (2603:10c6:10:247::6) To CH3PR12MB9194.namprd12.prod.outlook.com
+ (2603:10b6:610:19f::7)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260324234615.3731237-1-zhipingz@meta.com> <20260324234615.3731237-2-zhipingz@meta.com>
- <20260325082534.GN814676@unreal> <acW2BwQKaUbS3eL9@kbusch-mbp>
-In-Reply-To: <acW2BwQKaUbS3eL9@kbusch-mbp>
-From: Zhiping Zhang <zhipingz@meta.com>
-Date: Thu, 26 Mar 2026 15:55:44 -0700
-X-Gm-Features: AQROBzDisNUSNgd3TlIskyBeYU1qigTy8IXoqXl2UWp2Iq9LIcNA3h_mkSfPwow
-Message-ID: <CAH3zFs1nbAKpYxwzMcwpC_Sdy+3tE0n0wUzxJ411gV-q1O++qQ@mail.gmail.com>
-Subject: Re: [RFC v2 1/2] vfio: add callback to get tph info for dmabuf
-To: Keith Busch <kbusch@kernel.org>
-Cc: Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-rdma@vger.kernel.org,
-        linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, Yochai Cohen <yochai@nvidia.com>,
-        Yishai Hadas <yishaih@nvidia.com>, Bjorn Helgaas <helgaas@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-ORIG-GUID: iIjBq37o4ahcfNmUgNKH7WsNRdEGzvXV
-X-Authority-Analysis: v=2.4 cv=cIvtc1eN c=1 sm=1 tr=0 ts=69c5b97d cx=c_pps
- a=WJcna6AvsNCxL/DJwPP1KA==:117 a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=crHB47gyY4rKiduisYu9:22
- a=VwQbUJbxAAAA:8 a=NFdbOB6VLuGm633tFYQA:9 a=QEXdDO2ut3YA:10
- a=_Y9Zt4tPzoBS9L09Snn2:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzI2MDE2NCBTYWx0ZWRfXwF43npQp8cGk
- dldh5IALlGNrH/73+Y9C2mgnCtonmHagnrASo1ubXWvsiBxXoE5vKBF39p9bbMRE47H2hEDXnhV
- g3bOpy5+ZaPz4oLlrh/nx4DtjNyl9tbcx/Cyt4F4NaDAvqro4P1tBGkpIF+yX4oGlhzG5siiN2D
- leu8hnpQ5SJmewO4hUzFSjGENpBALklAJzWfgvOMpm1OWRYorGqhbCVLqFbfaab0TJtb8qElDsx
- EH7POwid8EMsHT2qiRpRh5Gj8XiciQVRP0EARKArwXgWsXo0pXX0DIKsWPjp8t722u+0LsEDtHX
- cCXby6WkXneD2MM5+IKyOprAsk/bqunPL2Qzn9NaF9FslbXuFHwTImHiU3zLObrO/X0sVy2TPAb
- dE762TqBQwY0eDOIzPV3U61Dz0F8Padr2tz+/qChW53rg1Fg9KlUFDGND1WLcMuJFnCCd3hE5V+
- JCELHhoMq7WUhAHn1Cg==
-X-Proofpoint-GUID: iIjBq37o4ahcfNmUgNKH7WsNRdEGzvXV
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-26_03,2026-03-26_01,2025-10-01_01
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH3PR12MB9194:EE_|DS5PPF266051432:EE_
+X-MS-Office365-Filtering-Correlation-Id: d524d8d3-c8e2-4463-b8fa-08de8b90d42d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|18002099003|22082099003|56012099003;
+X-Microsoft-Antispam-Message-Info:
+	LqdhkYsv5h9/uNmz4FiJc721zhRxMrW1qlJNSQO/NZmmEOykxKZ29W3yBYBJ+FV9ZtYZnZShiWACFVTbIQdePt/QFXcSs0XG+QWfXTlqGut3i0d8OEQIfywu+gMclRwFSs/pwFUDqRr+0zS2pX0g8xJPtAtWm4gCqrDk+3/S4xa8izIvjHOlS5+QyMudWIIkeIOR3XvBZhzFHETZSDe4cQ4lBt2S3rl4q2jYTgGXFeKZOysKnFgJiOVugXQCaA+923P120DZJIRkIDDgoqxJ8eQ0xYrDfk+O3Z70TJbEQs1BcpZHsITAVVfk1Vl/Knxopp2FUUjC+VR30K/UEBtlBwYodf289vDaKkAxogG7BFq0WpDZPIVTAmvMa1w7FU8zRQBm5cR5VBhLc2qve1Q7JL0ibY+xMMH3pJNquKb2tCk5Py4OOeVRaOG+HzIHYCSTL2D72EgDt/f2Cu+ObexKxjX4zA2IsClaLSwBX8n//uVUhIbDIO0O8A3inTwHqTv/KycV7UgiScl6vDp7tW2dCVdB3s21IFi+fObB+HX2vs4h+jp7jP5erDRMBn75H+QTZV88RGygvE16baeZ9xMxm3GdCPEy+kWM/YGCmk79MwreUQ1dDd5Y6xalR3sjZLlRzxfAj2tvbTXI8xC6c/4ig82vTqOk093Vb5jLdj1TRrPH16ryr6c68GB7VvcqjfjRG/r/sOPAoop9VjGEIBv/Ni15I83HO8itZGYi86dG0hs=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR12MB9194.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?N2lQMXd0VTAzbFBoYVgzSE1qM0k0cEJhQzN5NHVEai9lRWRnOVROeE05eHMr?=
+ =?utf-8?B?QTMxMVNobVFKdXpXSHFMc0U3S3hUY2YxbTh4Tm5Bb1JOSi80ckF4UlhreE5s?=
+ =?utf-8?B?cERPa2RMQXIzb1BjUUFrZkFFbkFoQ0hxaC82cUlFNUhUTlhRL1hmUGMwMkgx?=
+ =?utf-8?B?V2FrT3lqSndaalhQaVEwdkwwd0pGN1djcGxnU3NZYk91SnN2N3Q4UDZnZ1NP?=
+ =?utf-8?B?dFM0anNqYmlwRHBUeGZpTXY5eHJMeitxS1FMMk9FNml5dGpkemR3cXZ2dGNq?=
+ =?utf-8?B?SWlsTTE4OXRXNkhETnc0WDRTaFZpakpkRGY0b3FiUGVMQUNNWXJqNW5oMkQv?=
+ =?utf-8?B?cGxRZHBCbE9JWnY5QTRPd2dIVTh5d2ExelpwZXZJVzE5N3E3czhPc2ZOSzZP?=
+ =?utf-8?B?eFM2R09NOUdHdWk2ZnRqZkFBMFJHTi9kbFpDbVBLRmJFTGZnRHU2NTg5Ympk?=
+ =?utf-8?B?bnJlSUd5WlhSek9YVW1OMzAvSkU3Sk5lN05oRVUxK3lpMWRBS0xsYUFQQm5j?=
+ =?utf-8?B?Yng0VEdrdUczeVc4SDlTTndvM2k4R0R1QXN0aDYyRDdCWE1wV3FGT1N2R1lj?=
+ =?utf-8?B?TDR3TnVnWnl5Y2ozbEFHY3RkNTNJeWxLRW5EbmxwNHNaVG81UUFWNmVKMmho?=
+ =?utf-8?B?eHFob0kvOWJRdG1VZzZaZWt1aGNaSmVHM2lNUmlid05VTkkxRkY5VFlScThQ?=
+ =?utf-8?B?eFpnZlZaUGsyOFZyS0h3ZWsvSSsveUtJUlVCUWRTQ2xFaDV5YUlENzdsR1cv?=
+ =?utf-8?B?UjA0dm1vNVFKZDJ0Z1owZnhwcVFKaVU4ZzFnMFFsQ0hvTEpIZXpESVBCeG50?=
+ =?utf-8?B?bnJJT0dUM2xDY2w4MDVRdFZqMHNwNXh4MWtZb3BTM2JtZS9HK1RVbVlOMG5N?=
+ =?utf-8?B?MWNDWFp2Z1Z1Ni9YNFZhUm0zVjJEOXAwL3IzNDB2TWpRT0N3Q2pLSllkQlNl?=
+ =?utf-8?B?L21Pc1lLUXpDTTVOUUg1QUFJVWoyYjIxbnpRVENRK1R0aVZIeWJyNzBIc21q?=
+ =?utf-8?B?QUZ2d3RZeXZQQnd6WXNseUlzeExsNWF4Y2hSMmFyL1hyc3RQN2xRUnJqc0hj?=
+ =?utf-8?B?VE1LbDMxQlNPKytsNVV4Y1p1OE8wUUdYS3BQLzAwcS9xZlBuQkVvZkZSNDFF?=
+ =?utf-8?B?Ym5sMUZ3cm51M3RSVS95VnpVTnpQWTZwUUpFcjJ6R3hQYVdFN1RzWnlhbjhz?=
+ =?utf-8?B?QS9TQVRVRlNmWFFHTW41cnliV2lvaEtWTHpQRDJhWHJWcmN2N3FvSllpdjZH?=
+ =?utf-8?B?VzFEcWVjKzRsaElnbFVHOW9HT1E2cDZSdDVZaUhHTi91N3B1cnVmUVZNa1Rs?=
+ =?utf-8?B?TG91NDkrWitKdVUvR1hBSDlyN01xSTFvc0ZMemlpdFR3NkYzNzU3SzIzdmNX?=
+ =?utf-8?B?WTF2WmIvQ2Fzdm5XZHYzL1JsWG9nN2lTa2djWEU1RFBuYXlTY2Y0RDBVK1Ew?=
+ =?utf-8?B?cEVmS0xhZkUwZ0ZtNjQ1RGhMK1BXUGhraFBvbEFxL2xRY3ZTc1pBV2ZodkRL?=
+ =?utf-8?B?QmdidzNTNlM3ajRFRWg5WTJFWnUyZk04VG13MmVmcmpUYnduOW9LWWthTjh0?=
+ =?utf-8?B?Q2xjZ0hsNlM4aXJxM3V0OHRsaTVCU05od1V4WjA5MDlJMld1c05DTWZIOFZP?=
+ =?utf-8?B?NXUveHpuM3E1NVNEcVJvZ0Y2NXAvN2ZBYmczZG51SjN6K0JWMm5sSkZQRE05?=
+ =?utf-8?B?QmRocjB1RnJhQk5LVXBEQlBaVXZOdGx1YmRTc1YveVZFa24zaUYrT1ZuSkRE?=
+ =?utf-8?B?eUZkanRHb3liaThsNnZKVFk0TE1kNmxJdkRLWW9ET1A1Y2RScGhhWUU1SzlL?=
+ =?utf-8?B?YlJRQ2o2VkRaK2Q2TjF2QzQ3Ynp6aXFKV1c3M3hHbUROQkdNTDBUUlR5TCty?=
+ =?utf-8?B?OTMzMmRFb0JVWlQ3b2hteHlTNU9YY0phQ00rZXVuTHliaU9vdDBiOUZ2VzZa?=
+ =?utf-8?B?a3ZxdVp1OGFmYkdOMUVxSnIrS2NvWkUwL1ZGSHA2V29lQzdSZGM0cHFVOWhi?=
+ =?utf-8?B?YzRMVU1oZmxBdWhQSmxOUWtwUGpyWEp5WGpYdzV1dEwrOEtMM0sweUNtNXZp?=
+ =?utf-8?B?ZE05RUZUMm5RVDIveUNDRm9KR3IxajRhYkZMN2lFTm9kSktOMDNueVBrZHNo?=
+ =?utf-8?B?SWYzKzNRcW50eDR3c0plOFd3SUdJVnY3U3FyU25CajBreFNqOFFzcXplYXB3?=
+ =?utf-8?B?VnlUMVdzNWpqQkpOWE1abk9GYmlIUjBsS2xUbi9oNEdsNlZBemVleStGU2cr?=
+ =?utf-8?B?WmtmbHlMdHljUG9FRmRwWllWWHV4bDVTVzNINjRsS3VzSkVNNkJlcFBQRzYw?=
+ =?utf-8?B?UnpycWJxZFNya09hckhEZEFsQmdtQXo3TFpjajIwM3hoU2VvQVZndz09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d524d8d3-c8e2-4463-b8fa-08de8b90d42d
+X-MS-Exchange-CrossTenant-AuthSource: CH3PR12MB9194.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Mar 2026 23:38:48.6526
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: dsqnz04qkR3YsEbGYpiPp916lQMfY9ng0QEdsUJ3LXt22w9gvcBzoHknVmP9a7+CxCLJiJq629OzBZD//Jf10w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS5PPF266051432
 
-On Thu, Mar 26, 2026 at 3:41=E2=80=AFPM Keith Busch <kbusch@kernel.org> wro=
-te:
->
-> >
-> On Wed, Mar 25, 2026 at 10:25:34AM +0200, Leon Romanovsky wrote:
-> > On Tue, Mar 24, 2026 at 04:46:02PM -0700, Zhiping Zhang wrote:
-> > >  struct vfio_device_feature_dma_buf {
-> > >     __u32   region_index;
-> > >     __u32   open_flags;
-> > > -   __u32   flags;
-> > > -   __u32   nr_ranges;
-> > > +   __u32   flags;
-> > > +#define VFIO_DMABUF_FL_TPH         (1U << 0) /* TPH info is present =
-*/
-> > > +#define VFIO_DMABUF_TPH_PH_SHIFT   1         /* bits 1-2: PH (2-bit)=
- */
-> > > +#define VFIO_DMABUF_TPH_PH_MASK    0x6U
-> > > +#define VFIO_DMABUF_TPH_ST_SHIFT   16        /* bits 16-31: steering=
- tag */
-> > > +#define VFIO_DMABUF_TPH_ST_MASK            0xffff0000U
-> >
-> > This extension of flags is basically kills future extension of this
-> > struct for anything that includes TPH.
-> >
-> > Add new
-> > enum vfio_device_feature_dma_buf_flags {
-> >     VFIO_DMABUF_FL_TPH  =3D 1 << 0
-> > }
 
-yes we can do that.
 
-> >
-> > > +   __u32   nr_ranges;
-> >
-> > add your "__u16 steering_tag" and "__u8 ph" fields here.
->
-That is what I did in V1, Leon.
+On 24/3/26 05:20, Jason Gunthorpe wrote:
+> On Mon, Mar 16, 2026 at 04:19:30PM +1100, Alexey Kardashevskiy wrote:
+> 
+>> and btw this only works if the entity generating the MMIO reporting
+>> offset (==TSM) knows about BARs sizes, which is not the case for AMD
+>> - the FW has no access to the config space (so the HV needs to feed
+>> this to the FW? may be). Thanks,
+> 
+> Then your platform just shouldn't use the mmio offset feature. Set it
+> to 0 always.
 
-> You're suggesting that Ziping append the new fields to the end of this
-> struct? I don't think we can modify the layout of a uapi.
->
-> If we can't carve the space for this out of the existing unused flags
-> field, I think we'd have to introduce a new vfio device feature that
-> basically copies VFIO_DEVICE_FEATURE_DMA_BUF with the extra hints
-> fields.
->
-if not using the fields in the flag, then we probably have to
-introduce a new vfio
-device feature.
+pcie r7, Table 11-16 TDI Report Structure, MMIO_RANGE:
 
-> > >     struct vfio_region_dma_range dma_ranges[] __counted_by(nr_ranges);
-> > >  };
+"Each MMIO Range of the TDI is reported with the MMIO reporting offset added."
+
+My english struggles here - can the above be interpreted as "Each reported MMIO Range ..."?
+
+as if it is each (except msix), then I know where msix is and can amend the report inside the VM if msix is not locked. Thanks,
+
+
+-- 
+Alexey
+
