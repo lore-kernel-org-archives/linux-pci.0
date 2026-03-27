@@ -1,176 +1,130 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f43.google.com (mail-dl1-f43.google.com [74.125.82.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA0583624B5;
-	Fri, 27 Mar 2026 10:02:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774605733; cv=none; b=UPxyC2UEnAsbojIcwNykqO7b165rAY+L6XLKIE2DljIFZPF3JZDg+PDf5s1UgUQz1SvLrUUIzfy1A1POWaRETJXOptTBoA68D8S3uQAI86IuqvTZf3TldTFmqDIOH/9QCVOik7PHWZQUO9Nw9XIhNkxuABaso7Qd6KYCKBhk+BE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774605733; c=relaxed/simple;
-	bh=citg6UK5xGrbIZUXDCMUwgVhJpESGJkLDB1K3gO7BVk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rbrWPj69qnJ/v7KzarAEmDwQYQvKoWxme2BiP2m40AFkjMM0MS1tIF/5zEhBPgXoY8V4clQ3/P9icD9cBcLTyP7FHc4Ut74d4dzSUwHZR4Mjn1ESNqWRmtONDpUuKSxWOA6qjluQR7VZiF2CQLPexnZGVHRI//gLRBZ5nhejwgU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e2K1/75m; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 872E73A9D9D
+	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 10:11:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.43
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774606279; cv=pass; b=YA4kKx8FTNbXDPkIp/T320FEp9c0wUMeLkKP6S3SBQL45+dMbYRWyM6FxVSU1xFz/7k9UF2Lt/8ULEnv35mCohMYVDnQ0ZgPH6lWtpI9GxO20p2VQ8dJFpgMexo75JEfWrTlmkw9tNxU1J7mD3lYpIcz9TMA34BljslOEc38jrM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774606279; c=relaxed/simple;
+	bh=+uFnV8BoYScCWs0H3DAkHtcerzqW4bAA76yB8kYBKYM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=vEWDYKApqANb0Vp58a+xZ6ss9ZwhwPa+T0WMmVBggSAA2vaRnCNyJsNCOBUUPShfnOkxmXqgQXgZaW0tw/VCQXWMtd/yTOAIEZVDiVIdyG4ZrjtmtVVPBox0HENVzPGTSEFazJkg9kdSUXWEf3HGR3RJtad6wElLwFh6rN2R1Fc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OGN+jX2D; arc=pass smtp.client-ip=74.125.82.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e2K1/75m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0616BC19423;
-	Fri, 27 Mar 2026 10:02:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774605733;
-	bh=citg6UK5xGrbIZUXDCMUwgVhJpESGJkLDB1K3gO7BVk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=e2K1/75mtAG9egDpp5J9iMWjZvi9dmiZiS5aaGP2rZlNBYuYUaymN6IYMnexQJuPA
-	 L8eB8VIyKeUlAVt3PpPdRH3uTs/gHPxiq8mPkWov/GTmfcmLeKENMJSuQLp9coCOdV
-	 dalQ4qS0P02x2jnrgbkKq5zEbMvS7x+ZMWd7+b+PTGG5ZVAXN1foJ1HCyQoFs+SThU
-	 NqsM6RwEcbUQ1qe9lYXKeEK40Lf1S3donDOJCbdiH+WhngTN1lVFkC5sDutaGwOvsl
-	 im9OlLC5iH5+VHeqMdrl4SM7zxtTafUXaZvjZBSHPTslFpsXyn+UO4nGkc5TwgJuf9
-	 fNjaWTWzwsg4g==
-Date: Fri, 27 Mar 2026 15:32:01 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Florian Eckert <fe@dev.tdt.de>
-Cc: Chuanhua Lei <lchuanhua@maxlinear.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Johan Hovold <johan+linaro@kernel.org>, Sajid Dalvi <sdalvi@google.com>, 
-	Ajay Agarwal <ajayagarwal@google.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/5] PCI: intel-gw: Enable clock before phy init
-Message-ID: <yzmx2pjsmacpeflukzzuvlc4qmgr6p23f2xqcfjhielyakw4zh@5uqgtksqgkam>
-References: <20260317-pcie-intel-gw-v1-0-7fe13726ad4f@dev.tdt.de>
- <20260317-pcie-intel-gw-v1-2-7fe13726ad4f@dev.tdt.de>
- <acem5jvxct2izfwgqdtf52tijntkh6lz2eyeydsmfxzpue744i@nbzoe3ysilo6>
- <f8a998cfb826d7b6d4b7a057f9ac6747@dev.tdt.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OGN+jX2D"
+Received: by mail-dl1-f43.google.com with SMTP id a92af1059eb24-12a70b4de9bso119111c88.3
+        for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 03:11:18 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1774606277; cv=none;
+        d=google.com; s=arc-20240605;
+        b=NCx+rtdi1wiL4dh0pZaibrK8cvZRUJ+1DZ8WhcvHw06fSFZTwC20lm0EQqyupSQklL
+         oN5417Cq+lCIOVLeKi5U4ZXDH/+19i81bWlzcHjHoRr9RJjLszICkgHeQagtL9yRC47C
+         DVNahCGZWjXqtqpb0Z9lPRexCNOpI2SAnBVwa9NqWOlO9kR/Jz4hMP/IhTerMGq7xtZR
+         WzidL9DlNzkRQUq8Bo75UXRVJOGj9ctxpC82BVAFZy19993e/9sAkv9XvFRFQUd6fDdi
+         xh/EwlpIgzptDP/hIHr0hF0sE5UmJ4I2zyD7QOo+RH+jmwjW1lFQLIgdJTdS+/tQXZO+
+         SMng==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=+uFnV8BoYScCWs0H3DAkHtcerzqW4bAA76yB8kYBKYM=;
+        fh=YWd8gjqwAHyiICBupNW6Hj0kNYNBxR7H7pyoAETq+8w=;
+        b=dINAr9GYCi6WOi8XmlzrlRqNd+RNfLcz9Vu6KeGccQK3k+eYXXaXnN5WTbpeipqKui
+         85W/sL9/8/j6zqFI9OD/f3t1/JHSPa/R4zlbixx0vifbQsPFNFOGVQwrh3sDUfwNg+dH
+         bmWa9RF5AF4wgqMC1ZezhUAnDT1TtX1LCq7PasmQ5KwHFXK25WBx5aBgqlqaVFEE3mw1
+         eZjdVYDhoZAYBEhYlecJGpGhEMj1uLN83FOIEzYZpp9ZoxcM93o31q5R4beNfkDwAHOp
+         ap5wRLLhnZhC2lWSeo/oul+5jnDz7yY82sYSutOjxJWR9z8im1vr8TtpfPs1g2oiBMUG
+         sYeA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774606277; x=1775211077; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=+uFnV8BoYScCWs0H3DAkHtcerzqW4bAA76yB8kYBKYM=;
+        b=OGN+jX2DFxKdVlVCdMRX+GuUtXxlrXaQ6vdzlptBo5S0IqQJTSYbN9MlIivnFDqpP0
+         NVup844o9FsQhtFlRXvKwQl9w9CnrjF9PoYjpp4Bao4tcCpjKSNF8CR/q2f5mAw2Bkr6
+         peTaWlajhOGT6gwlC7LATrzk//cz2f7GRmwVhL7AkCBMqg1lc6tmO8IqJ4VN+uwLJdYG
+         xvK5VMwrqBdsaRIo3NRG1QLjHMMciAVh13yLTY+qnYDmWoR/TYx+9yOzvtZsqsTalUtY
+         EzyS5UW4rqVQe8dY51Yc5hNN7RbV4+Mj2wBsjNMXQEiCCfeqFnGwJqYkHpE+z04p1rVr
+         75lg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774606277; x=1775211077;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=+uFnV8BoYScCWs0H3DAkHtcerzqW4bAA76yB8kYBKYM=;
+        b=aPLDaKmA0vBtoRRsF/vtVtbX5dmJ2Ig+UjfRb0GAV8D1MCQZBVNQYYnFfg9Bf4Hg3t
+         xMZGae+sNiAGThPTSDrsO0CkZWnKxTCapNN6dFtvRDwSclxWWgm+PryHY6T2WOozmpUu
+         F2mu3ucI7/YJlz9b2bt2MBHBAXkvFglPQ6hjnMSgyLTk5sxHmJ343ihJpWb9c1kDuPyk
+         ZTudcDzS3vQY+SZXRkIbHpGyR4feq4Lp6UvnIzVSGUZi40N6ODdCSOAegj7AIHIHZdTU
+         RBobh/5aO9tdTYSD/1y7cAIc9wJhs7awEXuncYMKANr1tR5yT6KUsL5YfIvnUeOspoxB
+         Zcqw==
+X-Forwarded-Encrypted: i=1; AJvYcCWPm2wTZOGC6wv/xqJW5eaXNualCviIqufGuHdPwPRgEYVDkznvCie8VL1pEaRy3kGHx0bjxUXko14=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx3EhOyrNANMKVVfn5Gr4ULMPfGrMfNGhGIa8XmP94JNFCaczd+
+	cIXczwv7U1Xt3L9bbfbgTRf8bJRYCEFsKWibgUkVmmaPHmVWXiUFDngaQrvU3xf9hiqhKDWIc1O
+	TPHkhqxmfF5cd4wElezWNcb2rPN28c0I=
+X-Gm-Gg: ATEYQzyNaeHILRoW9/nRTjZg7y1XLgqf8rVE+gF34/iOA1lz9Qgc964sivbBCD8lu9j
+	QpPzX+v30TTslF/1cNaVhYEqFxNG2RLHmQ4rNAdGuSNbUZHmcLco6sHbcO4JYbVyXFO8tmTRf0j
+	6Zu80tMcJ+N/twccau12lvu2pEPoJYqbbLiJhqK5uItUrMLOhLAEYvHOSuYwX0Ly+WyR2r2g1WR
+	Qpbz0sg4f8a9RFiw9gqhBZpJ0qEemDHrL6+pefw255zVlprUl4kvJdRbKYqzGoKckhe+zmTM/7I
+	Ilue08xjydDzghKxytnwcJh7qUfXnHFboD7KW00pA1z69avGpD4fSOY1L/fT9/kfWOK6bTDgBpP
+	Ae17/bqDCvxt0fnE8HMWx1WE=
+X-Received: by 2002:a05:693c:2c07:b0:2c1:778:d888 with SMTP id
+ 5a478bee46e88-2c185e6c137mr515564eec.4.1774606277404; Fri, 27 Mar 2026
+ 03:11:17 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <f8a998cfb826d7b6d4b7a057f9ac6747@dev.tdt.de>
+References: <20260323153807.1360705-1-gary@kernel.org> <U_v6wkMtfgu8yfV2Nh5Im8t1w4KZ7mdbG3VQciT2g3DULhsKBXJgIz2psuj76-V94TPNtUry3J727gLTbUByug==@protonmail.internalid>
+ <20260323153807.1360705-4-gary@kernel.org> <87ldfey8nh.fsf@t14s.mail-host-address-is-not-set>
+ <DHCSEZH8M3JU.3LB4M2ERBJSYX@garyguo.net>
+In-Reply-To: <DHCSEZH8M3JU.3LB4M2ERBJSYX@garyguo.net>
+From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+Date: Fri, 27 Mar 2026 11:11:04 +0100
+X-Gm-Features: AQROBzAc4vO9OJHfJtMaQN5CiuyoS_KQK7JMXrfbHVTl0wLJ7I2VVbDBNfr8YhI
+Message-ID: <CANiq72nmM_L2qSZtrvPN1bt9OzMiKu7NUZQXM=TknhbCOU=wuA@mail.gmail.com>
+Subject: Re: [PATCH 3/8] rust: io: use pointer types instead of address
+To: Gary Guo <gary@garyguo.net>, Tamir Duberstein <tamird@kernel.org>
+Cc: Andreas Hindborg <a.hindborg@kernel.org>, Gary Guo <gary@kernel.org>, 
+	Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
+	=?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+	Benno Lossin <lossin@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
+	Trevor Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Daniel Almeida <daniel.almeida@collabora.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	rust-for-linux@vger.kernel.org, driver-core@lists.linux.dev, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Mar 27, 2026 at 08:42:21AM +0100, Florian Eckert wrote:
-> Hello Mani,
-> 
-> Thanks for your review.
-> 
-> On 2026-03-26 17:08, Manivannan Sadhasivam wrote:
-> > On Tue, Mar 17, 2026 at 11:12:50AM +0100, Florian Eckert wrote:
-> > > To ensure that the boot sequence is correct, the dwc pcie core clock
-> > > must
-> > > be switched on before phy init call.
-> > > 
-> > > This changes are based on patched kernel sources of the MaxLinear SDK,
-> > > which can be found at https://github.com/maxlinear/linux
-> > > 
-> > 
-> > How can we treat Maxlinear kernel source as a reference for Intel
-> > driver?
-> > Atleast, you need to provide some info onto why this should be trusted
-> > as a
-> > reference like used a product etc...
-> 
-> As far as I know, this driver is only used by Maxlinear’s URX851 and URX850
-> SoCs. However, the chip was originally developed by Intel when they
-> acquired Lantiq’s home networking division in 2015 [1] for this SoCs.
-> In 2020 the home network division was sold to Maxlinear [2].
-> 
-> Since then, Maxlinear has been responsible for the driver. However, their
-> SDK is outdated and based on kernel 5.15. Other than that, not much is
-> happening! Even the developers listed as maintainers can no longer be
-> reached. When it came to the patch set, the email couldn't be delivered to
-> the responsible developer 'Chuanhua Lei <lchuanhua@maxlinear.com>' either.
-> The email bounced back.
-> 
-> The company I work for is using the chip and is currently in the process of
-> extracting the key components from the SDK so that the SoC can work again
-> with
-> a mainline kernel again.
-> 
+On Thu, Mar 26, 2026 at 3:35=E2=80=AFPM Gary Guo <gary@garyguo.net> wrote:
+>
+> This is a `*mut T` -> `*const c_void` cast which needs
+> `cast_const().cast::<c_void>` which I think is less readable than just `a=
+s`.
+>
+> It's also existing code that I haven't touched in this commit.
 
-Ok, thanks for the background.
+I agree it is usually best to change it independently.
 
-- Mani
+In any case, regarding the suggestion, the latter form is more
+restricted, which is what we wanted when we enabled the Clippy lints,
+no? Cc'ing Tamir.
 
-> [1] https://www.intc.com/news-events/press-releases/detail/364/intel-to-acquire-lantiq-advancing-the-connected-home
-> [2] https://investors.maxlinear.com/press-releases/detail/395/maxlinear-to-acquire-intels-home-gateway-platform
-> 
-> > > Signed-off-by: Florian Eckert <fe@dev.tdt.de>
-> > > ---
-> > >  drivers/pci/controller/dwc/pcie-intel-gw.c | 16 ++++++++--------
-> > >  1 file changed, 8 insertions(+), 8 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c
-> > > b/drivers/pci/controller/dwc/pcie-intel-gw.c
-> > > index 3a85bd0ef1b7f9414ce19fe56d82a78e34e9b648..6110a8adb8732dbbd5e9e2db68a0606ccf032ae1
-> > > 100644
-> > > --- a/drivers/pci/controller/dwc/pcie-intel-gw.c
-> > > +++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
-> > > @@ -292,13 +292,9 @@ static int intel_pcie_host_setup(struct
-> > > intel_pcie *pcie)
-> > > 
-> > >  	intel_pcie_core_rst_assert(pcie);
-> > >  	intel_pcie_device_rst_assert(pcie);
-> > > -
-> > > -	ret = phy_init(pcie->phy);
-> > > -	if (ret)
-> > > -		return ret;
-> > > -
-> > >  	intel_pcie_core_rst_deassert(pcie);
-> > > 
-> > > +	/* Controller clock must be provided earlier than PHY */
-> > >  	ret = clk_prepare_enable(pcie->core_clk);
-> > >  	if (ret) {
-> > >  		dev_err(pcie->pci.dev, "Core clock enable failed: %d\n", ret);
-> > > @@ -307,13 +303,17 @@ static int intel_pcie_host_setup(struct
-> > > intel_pcie *pcie)
-> > > 
-> > >  	pci->atu_base = pci->dbi_base + 0xC0000;
-> > > 
-> > > +	ret = phy_init(pcie->phy);
-> > > +	if (ret)
-> > > +		goto phy_err;
-> > 
-> > You just messed up the whole error path. This one should branch to
-> > err_disable_core_clk that disables core_clk and deasserts reset.
-> > 
-> > > +
-> > >  	intel_pcie_ltssm_disable(pcie);
-> > >  	intel_pcie_link_setup(pcie);
-> > >  	intel_pcie_init_n_fts(pci);
-> > > 
-> > >  	ret = dw_pcie_setup_rc(&pci->pp);
-> > >  	if (ret)
-> > > -		goto app_init_err;
-> > > +		goto phy_err;
-> > 
-> > And this to err_phy_exit that does phy_exit().
-> > 
-> > > 
-> > >  	dw_pcie_upconfig_setup(pci);
-> > > 
-> > > @@ -322,13 +322,13 @@ static int intel_pcie_host_setup(struct
-> > > intel_pcie *pcie)
-> > > 
-> > >  	ret = dw_pcie_wait_for_link(pci);
-> > >  	if (ret)
-> > > -		goto app_init_err;
-> > > +		goto phy_err;
-> > > 
-> > >  	intel_pcie_core_irq_enable(pcie);
-> > > 
-> > >  	return 0;
-> > > 
-> > 
-> > Here, you should add shuffle phy_exit() accordingly.
-> 
-> I'll take another look at that.
-> 
-> Thanks
-> 
-> - Florian
+I agree it is definitely less readable when one is not accustomed to
+the `cast` methods (e.g. which one is supposed to be used for what
+etc.), i.e. `as` is just obvious. On the other hand, it also makes
+more explicit that we are doing a "bigger jump", i.e. both const and
+type, which is why `as` is "worse" in that it allows for more things
+to happen at once.
 
--- 
-மணிவண்ணன் சதாசிவம்
+Cheers,
+Miguel
