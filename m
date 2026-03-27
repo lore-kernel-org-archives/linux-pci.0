@@ -1,183 +1,228 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B510C2ED154;
-	Fri, 27 Mar 2026 14:17:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEDAF3F65E7
+	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 14:31:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774621077; cv=none; b=iT+r7a7EP+GZMO3fG4+KIJMv1Cq8og0cpd9c9SIHTfgt6lCp9JrvsDzuWo66VH+OwiOMzAtbi/+VPm9FADXYTMoYHQYB75ARbZdYopwj2VzvHyhUnNTAMPZQUGELR1szt6PYFVxMhg2w+uo25CmYc0NJ9agt5icP7ZVZuUKj4Ng=
+	t=1774621915; cv=none; b=to9Tm4Pk3ryn/Mnwa7fRGyqeZj44563f//EkRQEHvcJdJ67yB+qUU8fVy52xhwh7ihdsnVOW75T3ZZRoH/hJfrPQjXg7ifkVVaUYgRldtSgzY53cppdsEIy4DU6PgSxe84z8dGqCZzmr25NI5CM7fZJJ7pSI0gSmfS8nGerKEhs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774621077; c=relaxed/simple;
-	bh=tCfI5ViRKd25ZAkoswd7ai3JNE2ASmV6H4SeeBO1p7A=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=NBF5tt5sF5oKAz9LB6yxBTBtbYUlti+Sh0wff8TmP5YdCoWA0Nfv5WNZhWT6tyWQgdOOZLI8plkSq3JiU0+zYBYmVyJb9rF6RvRHavFr5e3WvKR3HqW2c8YPxV63NYhzT/QRoWg3wLW/bPRZ4vE8KeJpS5ekk0eRAcrxnjc5tpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HYA2+A5K; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774621915; c=relaxed/simple;
+	bh=UQP38PD4XRwRvq5Rc5XTxdlOmJ71d5vjOyRdfVuwc1M=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=gbTmHe5GfOVuC+Gabwsp1i9uRSw16pNk39LEzcs6bKuwf4gleoqQCaUBofJkTU9alPt0eXIvKYhnMfvEPuGInto/zb/RwDUUIH8Rk7kFWzXPUc7KvquMfUpnRszFr1FZ8E0RVf8yxxera+6MOe1tApRwJpWcBfZCYLYJC43LOI0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=PcFtAyGh; arc=none smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HYA2+A5K"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B768C19423;
-	Fri, 27 Mar 2026 14:17:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774621077;
-	bh=tCfI5ViRKd25ZAkoswd7ai3JNE2ASmV6H4SeeBO1p7A=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=HYA2+A5K/FHbuvSJh8kHR4ylNmoJ+pnVoDO2riEtUGsnp1X0jYN5NxM42001Fxl0f
-	 B/JneYXZHmmm7oFbzaUQEKXoMspbjx9ATL8g/CrFkXGI6KUm8ntOiTwUlteuQIcAxi
-	 DauuUhQ57am/TxEs8tKLrOR4GPNWo0zoKT1yH2lEzzmB/2h8u/MQFWSBS+p+IKyvv8
-	 7aPEa3VtHDJtx5b5u0MJ83HMvyKUwVl0aRo/v4AwrMvzUSiJXZrsK0z1lvMj47yRd4
-	 Fe9RMsHQvPIbcqn09EJX1Koxc3eyApXZbKtDE20OLahv1e8NndaCmvmHst0eialdSr
-	 vAcYZwi7M2ujA==
-Date: Fri, 27 Mar 2026 09:17:56 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Andersson <andersson@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Tobias Heider <tobias.heider@canonical.com>,
-	Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>, konradybcio@kernel.org,
-	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
-	jingoohan1@gmail.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
-	bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org,
-	kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org,
-	kw@linux.com, linux-arm-msm@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-phy@lists.infradead.org,
-	qiang.yu@oss.qualcomm.com, quic_krichai@quicinc.com,
-	quic_vbadigan@quicinc.com
-Subject: Re: [PATCH v1 1/1] arm64: dts: qcom: hamoa: Move PCIe PERST and Wake
- GPIOs to port nodes
-Message-ID: <20260327141756.GA1381857@bhelgaas>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="PcFtAyGh"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1774621914; x=1806157914;
+  h=date:from:to:cc:subject:message-id;
+  bh=UQP38PD4XRwRvq5Rc5XTxdlOmJ71d5vjOyRdfVuwc1M=;
+  b=PcFtAyGhL9Lb++lBVKOsprmsYfKRp1OQ2J+Aaw9J3/9NEVQFF006LqgN
+   jEtwXx8rPyIY+RUkl6esHfuxgxJX2QoVB9LYrDaZdB+ZMKY6hKciWQHD6
+   PGxc6gEjjUIQGkNKuN2g4RTNlsat39AN0S/CEasIQEK+q2T+VyM40lfd0
+   WgL6cOa92N1S5nJ79Cmr0u6X7R+0lMOGCDZXtFEcYQKhP6SKMYuwag2vr
+   wuqwVI8OWcKp0w1HMr5MdoG5RE/s0x+2OoQYv2wbHyrXT2kQ6ga1klTy4
+   3bHZlkodk+7IZFIGyCrlCyIQMwiqEmPWiUFHPLyj5DlG7Lk8Be3QKkNzT
+   w==;
+X-CSE-ConnectionGUID: 7uWGLGzGQMqSl+/u3U3Y9Q==
+X-CSE-MsgGUID: oOzEWPhSSJylpLXvsxsJHg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="78290490"
+X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
+   d="scan'208";a="78290490"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 07:31:42 -0700
+X-CSE-ConnectionGUID: Awjbtp+/TvuQV5Hl1f9ahw==
+X-CSE-MsgGUID: t5rzNUj5ReG3bg6NTTkGYw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
+   d="scan'208";a="220934606"
+Received: from lkp-server01.sh.intel.com (HELO 3905d212be1b) ([10.239.97.150])
+  by fmviesa010.fm.intel.com with ESMTP; 27 Mar 2026 07:31:40 -0700
+Received: from kbuild by 3905d212be1b with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1w68Dq-00000000AMT-0v87;
+	Fri, 27 Mar 2026 14:31:38 +0000
+Date: Fri, 27 Mar 2026 22:31:14 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:controller/max-link-speed] BUILD SUCCESS
+ c8b610341914cb62899e31b41f724b5c4831a645
+Message-ID: <202603272206.4n9dD42o-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAARv3RRqXxNePX=4RqnLu7OnfjQmStynsL9RCNY19EKQOTcnLQ@mail.gmail.com>
 
-[->to: Bjorn A.]
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/max-link-speed
+branch HEAD: c8b610341914cb62899e31b41f724b5c4831a645  PCI: of: Remove max-link-speed generation validation
 
-On Tue, Mar 24, 2026 at 08:14:39PM +0100, Tobias Heider wrote:
-> On Tue, Mar 24, 2026 at 7:07 AM Manivannan Sadhasivam <mani@kernel.org> wrote:
-> > On Thu, Mar 19, 2026 at 02:50:37PM +0100, Tobias Heider wrote:
-> > > On Thu, Mar 19, 2026 at 6:39 AM Manivannan Sadhasivam <mani@kernel.org> wrote:
-> > > > On Wed, Mar 18, 2026 at 09:42:56PM -0500, Bjorn Andersson wrote:
-> > > > > On Mon, Mar 16, 2026 at 08:50:12AM +0530, Manivannan Sadhasivam wrote:
-> > > > > > On Sun, Mar 15, 2026 at 09:53:33PM -0500, Bjorn Andersson wrote:
-> > > > > > > On Sat, Mar 14, 2026 at 07:50:50PM +0530, Manivannan Sadhasivam wrote:
-> > > > > > > > On Fri, Mar 13, 2026 at 11:45:42AM -0500, Bjorn Helgaas wrote:
-> > > > > > > > > On Fri, Mar 13, 2026 at 05:46:18PM +0800, Ziyue Zhang wrote:
-> > > > > > > > > > Commit 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake
-> > > > > > > > > > GPIOs to PCIe port nodes and add port Nodes for all PCIe ports") did not
-> > > > > > > > > > convert all Hamoa‑based platforms to the new method of defining PERST and
-> > > > > > > > > > Wake GPIOs in the PCIe root port nodes.
-> > > > > > > > > >
-> > > > > > > > > > Without the change PCIe probe will fail. The probe failure happens because
-> > > > > > > > > > the PHY stays in the controller node while the PERST/Wake GPIOs were moved
-> > > > > > > > > > to the port nodes.
-> > > > > > > > > >
-> > > > > > > > > > This fixes probe failures seen on the following platforms:
-> > > > > > > > > >  - x1-hp-omnibook-x14
-> > > > > > > > > >  - x1-microsoft-denali
-> > > > > > > > > >  - x1e80100-lenovo-yoga-slim7x
-> > > > > > > > > >  - x1e80100-medion-sprchrgd-14-s1
-> > > > > > > > > >  - x1p42100-lenovo-thinkbook-16
-> > > > > > > > > >  - x1-asus-zenbook-a14
-> > > > > > > > > >  - x1-crd
-> > > > > > > > > >  - x1-dell-thena
-> > > > > > > > > >
-> > > > > > > > > > Fixes: 960609b22be5 ("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake GPIOs to PCIe port nodes and add port Nodes for all PCIe ports")
-> > > > > > > > >
-> > > > > > > > > Are you saying that DTs in the field broke because of some kernel
-> > > > > > > > > change?  That's not supposed to happen.  Even though PHY, PERST, and
-> > > > > > > > > Wake GPIOs should be described in Root Port nodes instead of the Root
-> > > > > > > > > Complex node in *future* DTs, the kernel is still supposed to accept
-> > > > > > > > > the old style with them described in the Root Complex node.
-> > > > > > > > >
-> > > > > > > >
-> > > > > > > > This is not related to the driver change. The driver correctly parses all Root
-> > > > > > > > Port properties either in the Root Complex node (old binding) or Root Port node
-> > > > > > > > (new binding). But commit 960609b22be5, left converting mentioned board DTS to
-> > > > > > > > the new binding, leaving those affected platforms in a half baked state i.e.,
-> > > > > > > > some properties in RC node and some in Root Port node. Driver cannot parse such
-> > > > > > > > combinations, so it fails correctly so.
-> > > > > > > >
-> > > > > > >
-> > > > > > > Are you saying that above listed machines has broken PCIe support in
-> > > > > > > v7.0-rc?
-> > > > > > >
-> > > > > >
-> > > > > > I haven't verified it, but I'm pretty sure PCIe is broken on these platforms.
-> > > > > >
-> > > > >
-> > > > > In line with Bjorn's request, we shouldn't have to guess.
-> > > > >
-> > > > > > > It seems this is a (partial) revert of 960609b22be5, is this actually
-> > > > > > > fixing that change, or is it only applicable once some other changes are
-> > > > > > > applied?
-> > > > > > >
-> > > > > >
-> > > > > > This change is fixing the issue in the respective board DTS and is a standalone
-> > > > > > fix on top of v7.0-rc1.
-> > > > > >
-> > > > >
-> > > > > So 960609b22be5 was broken when I merged it?
-> > > > >
-> > > >
-> > > > Broken on the machines mentioned in the commit message, not for all Hamoa
-> > > > platforms.
-> > > >
-> > > > > The commit message says that the commit was incomplete, in that it
-> > > > > didn't fully convert from the old to the new style, so it sounds like
-> > > > > the offending commit was incomplete - but I believe the offending commit
-> > > > > was a workaround for the new solution not being in place and this commit
-> > > > > mostly reverts the changes in the offending commit.
-> > > > >
-> > > >
-> > > > So 960609b22be5 was supposed to move all the platforms from old PCIe binding to
-> > > > new for greater good, but it apparently decided to do so only for a subset of
-> > > > the platforms for some reason which  don't know. But the problem arises due to
-> > > > 960609b22be5 changing the hamoa.dtsi to the new binding which also warrants the
-> > > > platform DTS to also be changed to the new binding. If we only have either dtsi
-> > > > or dts converted and not both to the new binding, the driver will get confused
-> > > > and fail. And this is what exactly happended for below machines:
-> > > >
-> > > >  - x1-hp-omnibook-x14
-> > > >  - x1-microsoft-denali
-> > > >  - x1e80100-lenovo-yoga-slim7x
-> > > >  - x1e80100-medion-sprchrgd-14-s1
-> > > >  - x1p42100-lenovo-thinkbook-16
-> > > >  - x1-asus-zenbook-a14
-> > > >  - x1-crd
-> > > >  - x1-dell-thena
-> > >
-> > > I can confirm the breakage for (some of) the listed devices on Ubuntu.
-> > > We are experimenting with 7.0-rcs ahead of our 26.04 release.
-> > >
-> > > I'll try to collect some test feedback for the fix.
-> > > I'd certainly appreciate this being included as an rc fix since
-> > > currently half of
-> > > the x1 laptop devices are broken.
-> > >
-> >
-> > Thanks for the report. We will try to get this patch into v7.0-rcS.
-> >
-> > It'd be appreciated if you can test this patch and give your tested-by tag.
-> >
-> > - Mani
-> 
-> Thank you!
-> 
-> Tested it myself and I have rolled this out to my ubuntu-concept testing repo.
-> I have tested the CRD and got user feedback that it works on at least an
-> Omnibook (where we first saw the regression without the patch) and Lenovo Yoga.
-> Potentially more but not everyone provides feedback when things don't break.
-> 
-> Tested-by: Tobias Heider <tobias.heider@canonical.com>
+elapsed time: 1117m
 
-I don't see this patch upstream yet.  It's a fix for 960609b22be5
-("arm64: dts: qcom: hamoa: Move PHY, PERST, and Wake GPIOs to PCIe
-port nodes and add port Nodes for all PCIe ports"), which looks like
-it was merged by Bjorn A., so I assume the fix will go the same route?
+configs tested: 151
+configs skipped: 6
 
-Just want to make sure it's not waiting on me :)
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                             allnoconfig    gcc-15.2.0
+alpha                            allyesconfig    gcc-15.2.0
+alpha                               defconfig    gcc-15.2.0
+arc                              allmodconfig    gcc-15.2.0
+arc                               allnoconfig    gcc-15.2.0
+arc                              allyesconfig    gcc-15.2.0
+arc                                 defconfig    gcc-15.2.0
+arc                   randconfig-001-20260327    gcc-11.5.0
+arc                   randconfig-002-20260327    gcc-8.5.0
+arm                               allnoconfig    clang-23
+arm                              allyesconfig    gcc-15.2.0
+arm                                 defconfig    clang-23
+arm                   randconfig-001-20260327    gcc-8.5.0
+arm                   randconfig-002-20260327    clang-23
+arm                   randconfig-003-20260327    clang-18
+arm                   randconfig-004-20260327    gcc-11.5.0
+arm64                            allmodconfig    clang-19
+arm64                             allnoconfig    gcc-15.2.0
+arm64                               defconfig    gcc-15.2.0
+arm64                 randconfig-001-20260327    clang-23
+arm64                 randconfig-002-20260327    clang-18
+arm64                 randconfig-003-20260327    gcc-9.5.0
+arm64                 randconfig-004-20260327    clang-23
+csky                             allmodconfig    gcc-15.2.0
+csky                              allnoconfig    gcc-15.2.0
+csky                                defconfig    gcc-15.2.0
+csky                  randconfig-001-20260327    gcc-15.2.0
+csky                  randconfig-002-20260327    gcc-15.2.0
+hexagon                          allmodconfig    clang-17
+hexagon                           allnoconfig    clang-23
+hexagon                             defconfig    clang-23
+hexagon               randconfig-001-20260327    clang-23
+hexagon               randconfig-002-20260327    clang-19
+i386                              allnoconfig    gcc-14
+i386                             allyesconfig    gcc-14
+i386        buildonly-randconfig-001-20260327    clang-20
+i386        buildonly-randconfig-002-20260327    clang-20
+i386        buildonly-randconfig-003-20260327    gcc-14
+i386        buildonly-randconfig-004-20260327    clang-20
+i386        buildonly-randconfig-005-20260327    clang-20
+i386        buildonly-randconfig-006-20260327    gcc-14
+i386                                defconfig    clang-20
+i386                  randconfig-001-20260327    clang-20
+i386                  randconfig-002-20260327    clang-20
+i386                  randconfig-003-20260327    gcc-14
+i386                  randconfig-004-20260327    clang-20
+i386                  randconfig-005-20260327    clang-20
+i386                  randconfig-006-20260327    clang-20
+i386                  randconfig-007-20260327    gcc-14
+i386                  randconfig-011-20260327    clang-20
+i386                  randconfig-012-20260327    gcc-14
+i386                  randconfig-013-20260327    gcc-12
+i386                  randconfig-014-20260327    gcc-12
+i386                  randconfig-015-20260327    clang-20
+i386                  randconfig-016-20260327    gcc-14
+i386                  randconfig-017-20260327    gcc-14
+loongarch                        allmodconfig    clang-19
+loongarch                         allnoconfig    clang-23
+loongarch                           defconfig    clang-19
+loongarch             randconfig-001-20260327    gcc-15.2.0
+loongarch             randconfig-002-20260327    clang-23
+m68k                             allmodconfig    gcc-15.2.0
+m68k                              allnoconfig    gcc-15.2.0
+m68k                             allyesconfig    gcc-15.2.0
+m68k                                defconfig    gcc-15.2.0
+m68k                          hp300_defconfig    gcc-15.2.0
+microblaze                        allnoconfig    gcc-15.2.0
+microblaze                       allyesconfig    gcc-15.2.0
+microblaze                          defconfig    gcc-15.2.0
+mips                              allnoconfig    gcc-15.2.0
+mips                             allyesconfig    gcc-15.2.0
+nios2                            allmodconfig    gcc-11.5.0
+nios2                             allnoconfig    gcc-11.5.0
+nios2                               defconfig    gcc-11.5.0
+nios2                 randconfig-001-20260327    gcc-9.5.0
+nios2                 randconfig-002-20260327    gcc-8.5.0
+openrisc                         allmodconfig    gcc-15.2.0
+openrisc                          allnoconfig    gcc-15.2.0
+openrisc                            defconfig    gcc-15.2.0
+parisc                            allnoconfig    gcc-15.2.0
+parisc                           allyesconfig    gcc-15.2.0
+parisc                              defconfig    gcc-15.2.0
+parisc                randconfig-001-20260327    gcc-8.5.0
+parisc                randconfig-002-20260327    gcc-8.5.0
+parisc64                            defconfig    gcc-15.2.0
+powerpc                          allmodconfig    gcc-15.2.0
+powerpc                           allnoconfig    gcc-15.2.0
+powerpc               randconfig-001-20260327    gcc-8.5.0
+powerpc               randconfig-002-20260327    clang-18
+powerpc64             randconfig-001-20260327    clang-23
+powerpc64             randconfig-002-20260327    clang-23
+riscv                            allmodconfig    clang-23
+riscv                             allnoconfig    gcc-15.2.0
+riscv                            allyesconfig    clang-16
+riscv                               defconfig    clang-23
+riscv                 randconfig-001-20260327    clang-23
+riscv                 randconfig-002-20260327    clang-23
+s390                             allmodconfig    clang-18
+s390                              allnoconfig    clang-23
+s390                             allyesconfig    gcc-15.2.0
+s390                                defconfig    clang-23
+s390                  randconfig-001-20260327    clang-23
+s390                  randconfig-002-20260327    gcc-12.5.0
+sh                               allmodconfig    gcc-15.2.0
+sh                                allnoconfig    gcc-15.2.0
+sh                               allyesconfig    gcc-15.2.0
+sh                                  defconfig    gcc-15.2.0
+sh                    randconfig-001-20260327    gcc-14.3.0
+sh                    randconfig-002-20260327    gcc-13.4.0
+sparc                             allnoconfig    gcc-15.2.0
+sparc                               defconfig    gcc-15.2.0
+sparc                 randconfig-001-20260327    gcc-14.3.0
+sparc                 randconfig-002-20260327    gcc-13.4.0
+sparc64                          allmodconfig    clang-23
+sparc64                             defconfig    clang-20
+sparc64               randconfig-001-20260327    clang-23
+sparc64               randconfig-002-20260327    clang-23
+um                               allmodconfig    clang-19
+um                                allnoconfig    clang-23
+um                               allyesconfig    gcc-14
+um                                  defconfig    clang-23
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20260327    gcc-14
+um                    randconfig-002-20260327    clang-23
+um                           x86_64_defconfig    clang-23
+x86_64                           allmodconfig    clang-20
+x86_64                            allnoconfig    clang-20
+x86_64                           allyesconfig    clang-20
+x86_64      buildonly-randconfig-001-20260327    clang-20
+x86_64      buildonly-randconfig-002-20260327    clang-20
+x86_64      buildonly-randconfig-003-20260327    gcc-14
+x86_64      buildonly-randconfig-004-20260327    clang-20
+x86_64      buildonly-randconfig-005-20260327    gcc-14
+x86_64      buildonly-randconfig-006-20260327    gcc-14
+x86_64                              defconfig    gcc-14
+x86_64                randconfig-001-20260327    clang-20
+x86_64                randconfig-002-20260327    clang-20
+x86_64                randconfig-003-20260327    gcc-14
+x86_64                randconfig-004-20260327    clang-20
+x86_64                randconfig-005-20260327    gcc-14
+x86_64                randconfig-006-20260327    gcc-14
+x86_64                randconfig-071-20260327    clang-20
+x86_64                randconfig-072-20260327    clang-20
+x86_64                randconfig-073-20260327    clang-20
+x86_64                randconfig-074-20260327    gcc-13
+x86_64                randconfig-075-20260327    clang-20
+x86_64                randconfig-076-20260327    clang-20
+x86_64                          rhel-9.4-rust    clang-20
+xtensa                            allnoconfig    gcc-15.2.0
+xtensa                randconfig-001-20260327    gcc-14.3.0
+xtensa                randconfig-002-20260327    gcc-10.5.0
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
