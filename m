@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 232CD23507C;
-	Fri, 27 Mar 2026 10:00:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA0583624B5;
+	Fri, 27 Mar 2026 10:02:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774605658; cv=none; b=G88gmYAPw5BlI1t9qja10Ng6ThuQsd58RRuzDx1SSx6uu2amksg3qPjt9lxCWtqL/t8r41HFtQXJaJvhr5Rb8vCBnZxjMhuGKyqGd44kACQNYlw3wEeoW/QY8V3xW4ku7ow47fD9LOdmVemVAk8oOyM4QvDXGBlXOlTxtqHOSJM=
+	t=1774605733; cv=none; b=UPxyC2UEnAsbojIcwNykqO7b165rAY+L6XLKIE2DljIFZPF3JZDg+PDf5s1UgUQz1SvLrUUIzfy1A1POWaRETJXOptTBoA68D8S3uQAI86IuqvTZf3TldTFmqDIOH/9QCVOik7PHWZQUO9Nw9XIhNkxuABaso7Qd6KYCKBhk+BE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774605658; c=relaxed/simple;
-	bh=71ZSkkH9f9V2ZjEgnBaYBgJOSJ1dO5IHdD3WsiiQWjU=;
+	s=arc-20240116; t=1774605733; c=relaxed/simple;
+	bh=citg6UK5xGrbIZUXDCMUwgVhJpESGJkLDB1K3gO7BVk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e5ZFEhbcxE6CWPzqNKDk42c8+lTdcAXSjG8lDLJ6JfCwK4IEYWQGV+hE1/mSbaHCTXhkRaN0U8lG93vrN51P0NUctkW/rrOH8ySFM3c0xGTsoHZsdObvpCT46bYCr9UY8PuZdR+orBwOj0X9oufApOfiLqHydet9AkNBh0oGssg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iAyKKYjA; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=rbrWPj69qnJ/v7KzarAEmDwQYQvKoWxme2BiP2m40AFkjMM0MS1tIF/5zEhBPgXoY8V4clQ3/P9icD9cBcLTyP7FHc4Ut74d4dzSUwHZR4Mjn1ESNqWRmtONDpUuKSxWOA6qjluQR7VZiF2CQLPexnZGVHRI//gLRBZ5nhejwgU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e2K1/75m; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iAyKKYjA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 332C1C2BC87;
-	Fri, 27 Mar 2026 10:00:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e2K1/75m"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0616BC19423;
+	Fri, 27 Mar 2026 10:02:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774605657;
-	bh=71ZSkkH9f9V2ZjEgnBaYBgJOSJ1dO5IHdD3WsiiQWjU=;
+	s=k20201202; t=1774605733;
+	bh=citg6UK5xGrbIZUXDCMUwgVhJpESGJkLDB1K3gO7BVk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=iAyKKYjANMHlTxWLA3EZMDsV3qmFoHZC8UiiE8rw+wbkxvLThNdSt/A2MxbdCJox0
-	 PrHLLreRFcunss2MAgM5kRIgASYVQ7+5RCQZ6tlgYntyDFOmwTxXW7CMbo8BcBAZkk
-	 XW7ZCgjRABu/kdShwyTMRgWe0Clzh4CgZm06KKe8t4B6xxOVAZLqRmJaOCRMbZs1Bd
-	 mewC5hi0u1LCRpHLf4C8pc+OUjONnXktmyhLq0IPagDS6tkQsdTkFUgC+OLR86b0xT
-	 fEMZAwW/3dHZcpbqvsRshxY8YgBYaGvrWqr0LkhAX+LN3MxbKR/0Ms+pAvBxJ1CI2B
-	 f2lujzAur2VXg==
-Date: Fri, 27 Mar 2026 15:30:45 +0530
+	b=e2K1/75mtAG9egDpp5J9iMWjZvi9dmiZiS5aaGP2rZlNBYuYUaymN6IYMnexQJuPA
+	 L8eB8VIyKeUlAVt3PpPdRH3uTs/gHPxiq8mPkWov/GTmfcmLeKENMJSuQLp9coCOdV
+	 dalQ4qS0P02x2jnrgbkKq5zEbMvS7x+ZMWd7+b+PTGG5ZVAXN1foJ1HCyQoFs+SThU
+	 NqsM6RwEcbUQ1qe9lYXKeEK40Lf1S3donDOJCbdiH+WhngTN1lVFkC5sDutaGwOvsl
+	 im9OlLC5iH5+VHeqMdrl4SM7zxtTafUXaZvjZBSHPTslFpsXyn+UO4nGkc5TwgJuf9
+	 fNjaWTWzwsg4g==
+Date: Fri, 27 Mar 2026 15:32:01 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Florian Eckert <fe@dev.tdt.de>
 Cc: Chuanhua Lei <lchuanhua@maxlinear.com>, 
@@ -34,12 +34,12 @@ Cc: Chuanhua Lei <lchuanhua@maxlinear.com>,
 	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
 	Johan Hovold <johan+linaro@kernel.org>, Sajid Dalvi <sdalvi@google.com>, 
 	Ajay Agarwal <ajayagarwal@google.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/5] PCI: intel-gw: Move interrupt enable to own function
-Message-ID: <p2ja5pon76y4bls556fxyr72yn5brwx2aa6j7vw32csfibe6lm@uh25ohl6l5qq>
+Subject: Re: [PATCH 2/5] PCI: intel-gw: Enable clock before phy init
+Message-ID: <yzmx2pjsmacpeflukzzuvlc4qmgr6p23f2xqcfjhielyakw4zh@5uqgtksqgkam>
 References: <20260317-pcie-intel-gw-v1-0-7fe13726ad4f@dev.tdt.de>
- <20260317-pcie-intel-gw-v1-1-7fe13726ad4f@dev.tdt.de>
- <wbzulv5xewnqntx4kdgeldebiumshqmk6kdqsrtbgfzzvkiz46@jr6nd6jwzy2k>
- <9c5177895f402c0f8ee83e3e7add0688@dev.tdt.de>
+ <20260317-pcie-intel-gw-v1-2-7fe13726ad4f@dev.tdt.de>
+ <acem5jvxct2izfwgqdtf52tijntkh6lz2eyeydsmfxzpue744i@nbzoe3ysilo6>
+ <f8a998cfb826d7b6d4b7a057f9ac6747@dev.tdt.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,67 +49,128 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <9c5177895f402c0f8ee83e3e7add0688@dev.tdt.de>
+In-Reply-To: <f8a998cfb826d7b6d4b7a057f9ac6747@dev.tdt.de>
 
-On Fri, Mar 27, 2026 at 09:18:49AM +0100, Florian Eckert wrote:
+On Fri, Mar 27, 2026 at 08:42:21AM +0100, Florian Eckert wrote:
 > Hello Mani,
 > 
-> On 2026-03-26 15:00, Manivannan Sadhasivam wrote:
-> > On Tue, Mar 17, 2026 at 11:12:49AM +0100, Florian Eckert wrote:
-> > > To improve the readability of the code, move the interrupt enable
-> > > instructions to a separate function. That is already done for the
-> > > disable interrupt instruction.
+> Thanks for your review.
+> 
+> On 2026-03-26 17:08, Manivannan Sadhasivam wrote:
+> > On Tue, Mar 17, 2026 at 11:12:50AM +0100, Florian Eckert wrote:
+> > > To ensure that the boot sequence is correct, the dwc pcie core clock
+> > > must
+> > > be switched on before phy init call.
 > > > 
+> > > This changes are based on patched kernel sources of the MaxLinear SDK,
+> > > which can be found at https://github.com/maxlinear/linux
+> > > 
+> > 
+> > How can we treat Maxlinear kernel source as a reference for Intel
+> > driver?
+> > Atleast, you need to provide some info onto why this should be trusted
+> > as a
+> > reference like used a product etc...
+> 
+> As far as I know, this driver is only used by Maxlinear’s URX851 and URX850
+> SoCs. However, the chip was originally developed by Intel when they
+> acquired Lantiq’s home networking division in 2015 [1] for this SoCs.
+> In 2020 the home network division was sold to Maxlinear [2].
+> 
+> Since then, Maxlinear has been responsible for the driver. However, their
+> SDK is outdated and based on kernel 5.15. Other than that, not much is
+> happening! Even the developers listed as maintainers can no longer be
+> reached. When it came to the patch set, the email couldn't be delivered to
+> the responsible developer 'Chuanhua Lei <lchuanhua@maxlinear.com>' either.
+> The email bounced back.
+> 
+> The company I work for is using the chip and is currently in the process of
+> extracting the key components from the SDK so that the SoC can work again
+> with
+> a mainline kernel again.
+> 
+
+Ok, thanks for the background.
+
+- Mani
+
+> [1] https://www.intc.com/news-events/press-releases/detail/364/intel-to-acquire-lantiq-advancing-the-connected-home
+> [2] https://investors.maxlinear.com/press-releases/detail/395/maxlinear-to-acquire-intels-home-gateway-platform
+> 
 > > > Signed-off-by: Florian Eckert <fe@dev.tdt.de>
 > > > ---
-> > >  drivers/pci/controller/dwc/pcie-intel-gw.c | 11 ++++++++---
-> > >  1 file changed, 8 insertions(+), 3 deletions(-)
+> > >  drivers/pci/controller/dwc/pcie-intel-gw.c | 16 ++++++++--------
+> > >  1 file changed, 8 insertions(+), 8 deletions(-)
 > > > 
 > > > diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c
 > > > b/drivers/pci/controller/dwc/pcie-intel-gw.c
-> > > index c21906eced61896c8a8307dbd6b72d229f9a5c5f..3a85bd0ef1b7f9414ce19fe56d82a78e34e9b648
+> > > index 3a85bd0ef1b7f9414ce19fe56d82a78e34e9b648..6110a8adb8732dbbd5e9e2db68a0606ccf032ae1
 > > > 100644
 > > > --- a/drivers/pci/controller/dwc/pcie-intel-gw.c
 > > > +++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
-> > > @@ -196,6 +196,13 @@ static void
-> > > intel_pcie_device_rst_deassert(struct intel_pcie *pcie)
-> > >  	gpiod_set_value_cansleep(pcie->reset_gpio, 0);
-> > >  }
+> > > @@ -292,13 +292,9 @@ static int intel_pcie_host_setup(struct
+> > > intel_pcie *pcie)
 > > > 
-> > > +static void intel_pcie_core_irq_enable(struct intel_pcie *pcie)
-> > > +{
-> > > +	pcie_app_wr(pcie, PCIE_APP_IRNEN, 0);
-> > > +	pcie_app_wr(pcie, PCIE_APP_IRNCR, PCIE_APP_IRN_INT);
-> > > +	pcie_app_wr(pcie, PCIE_APP_IRNEN, PCIE_APP_IRN_INT);
+> > >  	intel_pcie_core_rst_assert(pcie);
+> > >  	intel_pcie_device_rst_assert(pcie);
+> > > -
+> > > -	ret = phy_init(pcie->phy);
+> > > -	if (ret)
+> > > -		return ret;
+> > > -
+> > >  	intel_pcie_core_rst_deassert(pcie);
+> > > 
+> > > +	/* Controller clock must be provided earlier than PHY */
+> > >  	ret = clk_prepare_enable(pcie->core_clk);
+> > >  	if (ret) {
+> > >  		dev_err(pcie->pci.dev, "Core clock enable failed: %d\n", ret);
+> > > @@ -307,13 +303,17 @@ static int intel_pcie_host_setup(struct
+> > > intel_pcie *pcie)
+> > > 
+> > >  	pci->atu_base = pci->dbi_base + 0xC0000;
+> > > 
+> > > +	ret = phy_init(pcie->phy);
+> > > +	if (ret)
+> > > +		goto phy_err;
 > > 
-> > I'm confused. Previous code changed PCIE_APP_IRNEN register by writing
-> > to
-> > PCIE_APP_IRN_INT field. But this function is now changing PCIE_APP_IRNEN
-> > and
-> > PCIE_APP_IRNCR registers.
+> > You just messed up the whole error path. This one should branch to
+> > err_disable_core_clk that disables core_clk and deasserts reset.
+> > 
+> > > +
+> > >  	intel_pcie_ltssm_disable(pcie);
+> > >  	intel_pcie_link_setup(pcie);
+> > >  	intel_pcie_init_n_fts(pci);
+> > > 
+> > >  	ret = dw_pcie_setup_rc(&pci->pp);
+> > >  	if (ret)
+> > > -		goto app_init_err;
+> > > +		goto phy_err;
+> > 
+> > And this to err_phy_exit that does phy_exit().
+> > 
+> > > 
+> > >  	dw_pcie_upconfig_setup(pci);
+> > > 
+> > > @@ -322,13 +322,13 @@ static int intel_pcie_host_setup(struct
+> > > intel_pcie *pcie)
+> > > 
+> > >  	ret = dw_pcie_wait_for_link(pci);
+> > >  	if (ret)
+> > > -		goto app_init_err;
+> > > +		goto phy_err;
+> > > 
+> > >  	intel_pcie_core_irq_enable(pcie);
+> > > 
+> > >  	return 0;
+> > > 
+> > 
+> > Here, you should add shuffle phy_exit() accordingly.
 > 
-> First, all pending interrupts are cleared and disabled, just as this is done
-> in the disable function 'intel_pcie_core_irq_disable()' [1].
+> I'll take another look at that.
 > 
-> After that, all relevant interrupts are enabled. The `PCIE_APP_IRNEN`
-> definition contains all the relevant interrupts that are of interest [2].
+> Thanks
 > 
-> As I unfortunately don’t have any documentation for this IP core, I suspect
-> that the intention is to set the IP core for interrupt handling to a
-> specific
-> state.
-> 
-> Perhaps the problem was that the IP core did not reinitialize the interrupt
-> register properly after a power cycle. In my view, it can’t do any harm to
-> switch the interrupt register off and then on again to set the Interrupts to
-> a specific state. They do the same in their SDK [4]. Maxlinear is the only
-> company that uses this IP core.
-> 
-
-Ok, fair enough. But you need to add the above info to the commit message
-including the reference to driver snippet in Maxlinear repo.
-
-- Mani
+> - Florian
 
 -- 
 மணிவண்ணன் சதாசிவம்
