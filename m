@@ -1,159 +1,126 @@
-Received: from mxout70.expurgate.net (mxout70.expurgate.net [194.37.255.70])
+Received: from sender4-op-o15.zoho.com (sender4-op-o15.zoho.com [136.143.188.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5878D3D412F
-	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 08:18:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.37.255.70
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774599539; cv=none; b=tUBwFYdqck694u1AiS3VuVNRCAaMqn6hzfCi26RSAU5xyP1KP/Eter5vWi2qE1GnGdiICNDCTKfZBNJ8kwr8N6hqwn5xo5hoEUf2vdRtgsprmPRD37xLmtbr1iNxzRyrKrSugib9SIvlTHSA3bkLO0ptjXnyvZ8AAUpCn8HWOA4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774599539; c=relaxed/simple;
-	bh=eJSKjKWyEjmZxEGniHi1bSDl6xtS4hrUMvGqDs3JRqg=;
-	h=MIME-Version:Content-Type:Date:From:To:Cc:Subject:In-Reply-To:
-	 References:Message-ID; b=dHEqCX6VrP+yjCAWGqdFYoBqSyll9FFgMSZpmEuoS8+FNm++I3meDu3TvYf1YR7STngwRIwY/8inUUCssJtOc5PqEnyA0CmWZNHGtWnfYkjbaLOEXZmzsnljBQ9/jXPXCIR5eSV2YCR3aQboMA+tssxO48I6hO3STyzJJmeNvWY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=r7fQKk9Q; arc=none smtp.client-ip=194.37.255.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev.tdt.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 408713CD8A1;
+	Fri, 27 Mar 2026 08:20:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.15
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774599614; cv=pass; b=OhGByL/jwkxFqFnX3E59yeRKwl93zmaTZS5wvse/1U7ZD1zaSg6CUvAyu/JZqcQLQ1PfjVq7apFPAJVrVALrbgkenFHFLLgdqNqljOXfTmkxG8L+e2lWbMsdshBhBTpN9IZdk8draoGDgY/a5NhMggSNkfIakXAK326U0+EQugM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774599614; c=relaxed/simple;
+	bh=NAk///Aw8jnMJibnfd+DHj7yL9L0lAgV6rkqS0kNNN8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Bu9BxGy8NhHNeLVYVjiavDI19j4rPFSNz8fUo/q6XFhxyA54TlIRrsrX0FRPsB2NqAEiHGsfKngKjk0c30S+Nyvl4l7RTTbgofJyl+HruHmxfZss1jzMSJJTjtAK/EY5N9ENCH7pND7s2w0VWSskYoDo2xIxavjVzASzv0LSg6s=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc; spf=pass smtp.mailfrom=ziyao.cc; dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b=UwjFhgFS; arc=pass smtp.client-ip=136.143.188.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziyao.cc
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="r7fQKk9Q"
-Received: from [194.37.255.9] (helo=mxout.expurgate.net)
-	by relay.expurgate.net with smtp (Exim 4.92)
-	(envelope-from <prvs=6560217375=fe@dev.tdt.de>)
-	id 1w62P4-00EevT-Ps
-	for linux-pci@vger.kernel.org; Fri, 27 Mar 2026 09:18:50 +0100
-Received: from [195.243.126.94] (helo=securemail.tdt.de)
-	by relay.expurgate.net with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <fe@dev.tdt.de>)
-	id 1w62P4-002pBd-Cp
-	for linux-pci@vger.kernel.org; Fri, 27 Mar 2026 09:18:50 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev.tdt.de;
-	s=z1-selector1; t=1774599530;
-	bh=zrXleFLq4Xl5zu1d9fBXJdi1W05baQSk+AxyDiWH7+U=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=r7fQKk9QWg2zHrhqa5NsMdBYTmcXcJ8+KlCQUL6NXCyknyDdUF2YYxS+C8tU3O6wz
-	 GMXX62YnjeFpx2bJZUF6/lJKmTsoySUxwpDIMpuLBspcVC7UFWOxqQQGg34q1MZo01
-	 h8nWudaiX0/9wFsEViTXmY13WjRiPZkKpiM2mXjgtl2paqqkxA4lmkSixjpeCAahyE
-	 MAeqrbCxDs2Z61MyC7vSuUltIbs+HarwAFCrT7NbyxRIGzatdZ98ELLHmAO7qj1eqI
-	 Z3hqMqIdakBIjZRLQkNhL3Uq5sJ225ludujMLZMBFskLFzhyov5jerK7KmyVDHKAM0
-	 8hzWX4xuiNTJQ==
-Received: from securemail.tdt.de (localhost [127.0.0.1])
-	by securemail.tdt.de (Postfix) with ESMTP id 0AE41240041
-	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 09:18:50 +0100 (CET)
-Received: from mail.dev.tdt.de (unknown [10.2.4.42])
-	by securemail.tdt.de (Postfix) with ESMTP id E6915240036;
-	Fri, 27 Mar 2026 09:18:49 +0100 (CET)
-Received: from mail.dev.tdt.de (localhost [IPv6:::1])
-	by mail.dev.tdt.de (Postfix) with ESMTP id 830ED23A9F;
-	Fri, 27 Mar 2026 09:18:49 +0100 (CET)
+	dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b="UwjFhgFS"
+ARC-Seal: i=1; a=rsa-sha256; t=1774599588; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=gf9b3WuIDMVSWCLQxPJFilTQIPOfDBeNwv/uX3xOx7nFTkD/3Ycd5r3tkacUzA6Q+6Hw9iHFLMtWsdXuh3WTiPkuAp2hnuk+9xAr3M9n2w6Moc0jHA8HUSsOuJ+fHCklWinK/It5UrzXdVLRI3OokLud11AoyRS0brrzwS0755I=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1774599588; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=okohqEoU1Mjfy3ZF+aKNpubORuXnkox4yr9vAlK52Cg=; 
+	b=l3TxXJYBFxil711KtmFPvv0EzZ5JKR4Qljo7bV9cBjNqxVTgZxIcI6IuZJi7sAaWlw05iKQMFRTcQQlF91XWwYF2ZhXNyrzsyImdxYnmwdcPnPxhyoBp5nEUszles5aODujL3mWjAJwaRnsVY6SrMGsOvpMxxvMsn5/P64i7s1E=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=ziyao.cc;
+	spf=pass  smtp.mailfrom=me@ziyao.cc;
+	dmarc=pass header.from=<me@ziyao.cc>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1774599588;
+	s=zmail; d=ziyao.cc; i=me@ziyao.cc;
+	h=Date:Date:From:From:To:To:Cc:Cc:Subject:Subject:Message-ID:References:MIME-Version:Content-Type:Content-Transfer-Encoding:In-Reply-To:Message-Id:Reply-To;
+	bh=okohqEoU1Mjfy3ZF+aKNpubORuXnkox4yr9vAlK52Cg=;
+	b=UwjFhgFScYw5fXeGL5/9ZD0/SMKoL+cY5GrBoq9oIRekfw+0sStR6o+Euxahaoan
+	M9GBA1wNTor7SOgkXINfYkirBxMsa5zVhKxbB2SZXLpd0LoY7boQeyjVImaC7JuQCf3
+	+0WjQUslHfYKZij4IL9KmgFnfJM9zz/7bmxRwyn4=
+Received: by mx.zohomail.com with SMTPS id 1774599586363555.7214675351182;
+	Fri, 27 Mar 2026 01:19:46 -0700 (PDT)
+Date: Fri, 27 Mar 2026 08:19:37 +0000
+From: Yao Zi <me@ziyao.cc>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Hans Zhang <18255117159@163.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Chen Wang <unicorn_wang@outlook.com>,
+	Manikandan K Pillai <mpillai@cadence.com>,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	Inochi Amaoto <inochiama@gmail.com>, Han Gao <rabenda.cn@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] PCI: sg2042: Avoid L0s and L1 on Sophgo 2042 PCIe
+ Root Ports
+Message-ID: <acY9kUDAuexKy19C@pie>
+References: <20260227181925.52475-1-me@ziyao.cc>
+ <20260227181925.52475-3-me@ziyao.cc>
+ <wykv2qz7lt3v67n3hjjqlprjbhlv7eur5wiw2reagvu2sq3dhc@4y5x2yok4kho>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Fri, 27 Mar 2026 09:18:49 +0100
-From: Florian Eckert <fe@dev.tdt.de>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Chuanhua Lei <lchuanhua@maxlinear.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Johan Hovold <johan+linaro@kernel.org>,
-	Sajid Dalvi <sdalvi@google.com>,
-	Ajay Agarwal <ajayagarwal@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/5] PCI: intel-gw: Move interrupt enable to own function
-In-Reply-To: <wbzulv5xewnqntx4kdgeldebiumshqmk6kdqsrtbgfzzvkiz46@jr6nd6jwzy2k>
-References: <20260317-pcie-intel-gw-v1-0-7fe13726ad4f@dev.tdt.de>
- <20260317-pcie-intel-gw-v1-1-7fe13726ad4f@dev.tdt.de>
- <wbzulv5xewnqntx4kdgeldebiumshqmk6kdqsrtbgfzzvkiz46@jr6nd6jwzy2k>
-Message-ID: <9c5177895f402c0f8ee83e3e7add0688@dev.tdt.de>
-X-Sender: fe@dev.tdt.de
-User-Agent: Roundcube Webmail/1.3.17
-Content-Transfer-Encoding: quoted-printable
-X-purgate-ID: 151534::1774599530-5CFFFF63-D34EF506/0/0
-X-purgate-type: clean
-X-purgate: clean
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <wykv2qz7lt3v67n3hjjqlprjbhlv7eur5wiw2reagvu2sq3dhc@4y5x2yok4kho>
+X-ZohoMailClient: External
 
-Hello Mani,
+On Thu, Mar 26, 2026 at 10:15:16PM +0530, Manivannan Sadhasivam wrote:
+> On Fri, Feb 27, 2026 at 06:19:25PM +0000, Yao Zi wrote:
+> > Since commit f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM
+> > states for devicetree platforms") force enable ASPM on all device tree
+> > platform, the SG2042 root port breaks as it advertises L0s and L1
+> > capabilities without supporting it.
+> > 
+> > Provide a platform-specific initialization hook to override the L0s and
+> > L1 support advertised in LNKCAP register of SG2042 Root Ports, so it
+> > doesn't try to enable those states.
+> > 
+> > Fixes: 4e27aca4881a ("riscv: sophgo: dts: add PCIe controllers for SG2042")
+> > Co-authored-by: Inochi Amaoto <inochiama@gmail.com>
+> > Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
+> > Signed-off-by: Yao Zi <me@ziyao.cc>
+> > ---
+> >  drivers/pci/controller/cadence/pcie-sg2042.c | 20 ++++++++++++++++++++
+> >  1 file changed, 20 insertions(+)
+> > 
+> > diff --git a/drivers/pci/controller/cadence/pcie-sg2042.c b/drivers/pci/controller/cadence/pcie-sg2042.c
+> > index 0c50c74d03ee..3142f82bd393 100644
+> > --- a/drivers/pci/controller/cadence/pcie-sg2042.c
+> > +++ b/drivers/pci/controller/cadence/pcie-sg2042.c
+> > @@ -32,6 +32,25 @@ static struct pci_ops sg2042_pcie_child_ops = {
+> >  	.write		= pci_generic_config_write,
+> >  };
+> >  
+> > +static int sg2042_pcie_disable_l0s_l1(struct cdns_pcie_rc *rc)
+> > +{
+> > +	struct cdns_pcie *pcie = &rc->pcie;
+> > +	u32 pcie_lnkcap_off;
+> > +	u32 lnkcap;
+> > +
+> > +	pcie_lnkcap_off = CDNS_PCIE_RP_CAP_OFFSET + PCI_EXP_LNKCAP;
+> > +
+> > +	lnkcap = cdns_pcie_rp_readw(pcie, pcie_lnkcap_off);
+> > +	lnkcap &= ~PCI_EXP_LNKCAP_ASPMS;
+> > +	cdns_pcie_rp_writew(pcie, pcie_lnkcap_off, lnkcap);
+> > +
+> 
+> cadence-host driver already has cdns_pcie_host_init_root_port() to initialize
+> the Root Port. Since your intention is to modify the LNKCAP field, which belongs
+> to the Root Port, you should do that in cdns_pcie_host_init_root_port() instead.
+> I see no sg2042 specific registers used in this patch, so just set a flag in
+> this driver like 'broken_aspm' and clear PCI_EXP_LNKCAP_ASPMS if set in
+> cdns_pcie_host_init_root_port().
 
-On 2026-03-26 15:00, Manivannan Sadhasivam wrote:
-> On Tue, Mar 17, 2026 at 11:12:49AM +0100, Florian Eckert wrote:
->> To improve the readability of the code, move the interrupt enable
->> instructions to a separate function. That is already done for the
->> disable interrupt instruction.
->>=20
->> Signed-off-by: Florian Eckert <fe@dev.tdt.de>
->> ---
->>  drivers/pci/controller/dwc/pcie-intel-gw.c | 11 ++++++++---
->>  1 file changed, 8 insertions(+), 3 deletions(-)
->>=20
->> diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c=20
->> b/drivers/pci/controller/dwc/pcie-intel-gw.c
->> index=20
->> c21906eced61896c8a8307dbd6b72d229f9a5c5f..3a85bd0ef1b7f9414ce19fe56d82=
-a78e34e9b648=20
->> 100644
->> --- a/drivers/pci/controller/dwc/pcie-intel-gw.c
->> +++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
->> @@ -196,6 +196,13 @@ static void intel_pcie_device_rst_deassert(struct=
-=20
->> intel_pcie *pcie)
->>  	gpiod_set_value_cansleep(pcie->reset_gpio, 0);
->>  }
->>=20
->> +static void intel_pcie_core_irq_enable(struct intel_pcie *pcie)
->> +{
->> +	pcie_app_wr(pcie, PCIE_APP_IRNEN, 0);
->> +	pcie_app_wr(pcie, PCIE_APP_IRNCR, PCIE_APP_IRN_INT);
->> +	pcie_app_wr(pcie, PCIE_APP_IRNEN, PCIE_APP_IRN_INT);
->=20
-> I'm confused. Previous code changed PCIE_APP_IRNEN register by writing=20
-> to
-> PCIE_APP_IRN_INT field. But this function is now changing=20
-> PCIE_APP_IRNEN and
-> PCIE_APP_IRNCR registers.
+Okay, it makes sense. Will do it in v3.
 
-First, all pending interrupts are cleared and disabled, just as this is=20
-done
-in the disable function 'intel_pcie_core_irq_disable()' [1].
+> - Mani
+> 
+> -- 
+> மணிவண்ணன் சதாசிவம்
 
-After that, all relevant interrupts are enabled. The `PCIE_APP_IRNEN`
-definition contains all the relevant interrupts that are of interest=20
-[2].
-
-As I unfortunately don=E2=80=99t have any documentation for this IP core,=
- I=20
-suspect
-that the intention is to set the IP core for interrupt handling to a=20
-specific
-state.
-
-Perhaps the problem was that the IP core did not reinitialize the=20
-interrupt
-register properly after a power cycle. In my view, it can=E2=80=99t do an=
-y harm=20
-to
-switch the interrupt register off and then on again to set the=20
-Interrupts to
-a specific state. They do the same in their SDK [4]. Maxlinear is the=20
-only
-company that uses this IP core.
-
-- Florian
-
-[1]=20
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/d=
-rivers/pci/controller/dwc/pcie-intel-gw.c?h=3Dmaster#n199
-[2]=20
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/d=
-rivers/pci/controller/dwc/pcie-intel-gw.c?h=3Dmaster#n52
-[3]=20
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/d=
-rivers/pci/controller/dwc/pcie-intel-gw.c?h=3Dmaster#n321
-[4]=20
-https://github.com/maxlinear/linux/blob/updk_9.1.90/drivers/pci/controlle=
-r/dwc/pcie-intel-gw.c#L431
+Regards,
+Yao Zi
