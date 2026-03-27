@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA71B34DB4B;
-	Fri, 27 Mar 2026 16:22:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6972334A789;
+	Fri, 27 Mar 2026 16:22:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774628559; cv=none; b=HyvFry/w8zl82BQksroaWDErIZdduBWr0CZQHg/ac6yAlHPbWxarCkvbzc6a+s9fayEJcD8yXA61CPv9ELX+BnsDYwrXaCtVTqo9LsyqQIJNk9nQQmcLnAL8+NUamuVCC3n/Eo0PMHrvjyq1EtLSbSYoUEBpx6+v+aLI6CDLbd8=
+	t=1774628562; cv=none; b=sgUwKS4HCqrnQEbw5EQxrAKD4z1cu0hKxRkpIzDy9RneoFms4V8SJ6iP61m2Wd5IZY6Jgkf7qWGvLnZmsN+hoDm/eD47kgd9mGszGM/Hn+R8L4eW6rCSBG0pBqAOgrTH5OWSSgRmoDjxHm5DDibjFqr/UlSAVy1YT94Mvvf70og=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774628559; c=relaxed/simple;
-	bh=tn87qbpi3uJdSP6hJiwGmQFrzB7vH6TbAKN6CQKakWs=;
+	s=arc-20240116; t=1774628562; c=relaxed/simple;
+	bh=kpGbvHoaXkXL7UPtDLh0r6IDkgZKESQJe+SKEMtuWqs=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=gLdHaZi3OIfHA9qe8OJh9CjmPj59wpOv1WkgbFAR0e74APLeiYaFilcbff1tW16lMrC3TZ7PfeeshZnMMAnt1Q0WEqU4gYXl0udB514niSjTqYk3uOT1NcQmA/a7zaCEFFu9gOOsjECZkYJy9tEucEyIdbdCESXFl2rjwUATyno=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BtqQAND4; arc=none smtp.client-ip=198.175.65.14
+	 MIME-Version; b=gLYfMULFXX6uwlMGzmZaYMEcl4w3ZdiBlM5xK7tS5nB2emhCcJ7ZBEeLafFIjDpmLXS6OTUJKrfR4PYWOTV6XxRKfhp5fl7TAN1Cbyb6sj5ryMMni5QrQAGhB9IWtlnsZn3dLtABjNWR7rWGplWtEZjoof6nVqD08tOLooDyXeo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gD3cKNzD; arc=none smtp.client-ip=198.175.65.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BtqQAND4"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gD3cKNzD"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774628557; x=1806164557;
+  t=1774628561; x=1806164561;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=tn87qbpi3uJdSP6hJiwGmQFrzB7vH6TbAKN6CQKakWs=;
-  b=BtqQAND4QBLjA0dv4hbJFPy4KoGdSMxqI6IoKj31yISSbz+I4WcGxL7J
-   AqrD1zUZhgo/XgEns0wJaYuet/2EbpF8iSF4bW3QnNKhe2cs6DFLNoXF2
-   dj9akjrg7mEanCtptbpehEcywENMVeT/bF7J/KItsLEJQcRgz4fMIFDyn
-   CULf7VCBjr1QvgI83ERsEO0ZL3ae/ft0fVBZjF318eUpvfoq07A0JHQxk
-   DsX7z4t706mlGwLh540whvXGfH/BXkKLhtECz/GKqgwSFChJ9KQfkqpbh
-   vDa+KIxwYI/VHOr/KSnabQAkBrSClmIb+sSlSaNqgIIwe6wcSJG/scHru
+  bh=kpGbvHoaXkXL7UPtDLh0r6IDkgZKESQJe+SKEMtuWqs=;
+  b=gD3cKNzDF+RbYhh5t44mdyIJnpKnXKwd37xqy1EGMEAlMSctd24C7/lJ
+   X9NHY8OXilEnYCBdFuQ28OfiAxIcXgp39ty1AeVw70fY64fh+epo/yTId
+   GQ+yR9WnBNm0p7x9bC+r6LAm2RlLfqN5hXEPRgeghY88p7aVxfwmxt3DF
+   7fmRXPtQ/w94TzIB+NOa6z/zwqPRpoKqhgwExPUMD4KFVs7PCtvZoT73N
+   YuAo5F1lyRO3ub2axTJnL6Z9ByT2oLXkEWWY3J8qXMisfUs3jYcVpcHpp
+   Jv4h+8sxMblaVclqQmpW7uchfrRAZWEBLKB1ysgXmwIZkUHKrcKTEvP0n
    Q==;
-X-CSE-ConnectionGUID: ZH/2QFkRT0m3HSejyTjR0A==
-X-CSE-MsgGUID: j5IQSO10Ro+w0+hvkXJkGw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="79565486"
+X-CSE-ConnectionGUID: maLePqYFSEetb3+6qQ+p4Q==
+X-CSE-MsgGUID: zdBW4plWRyOaIz/+J0zXxw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="79565497"
 X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
-   d="scan'208";a="79565486"
+   d="scan'208";a="79565497"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 09:22:37 -0700
-X-CSE-ConnectionGUID: n5MuiketTTKylM0c7VmCRw==
-X-CSE-MsgGUID: FsBQH4yORziItrEV7TBWJQ==
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 09:22:40 -0700
+X-CSE-ConnectionGUID: 8cAe9lgUQYOSEy9qJyUBwQ==
+X-CSE-MsgGUID: eh2NIIVNT4uURSnlVSCYtQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
-   d="scan'208";a="220516112"
+   d="scan'208";a="220516125"
 Received: from yilunxu-optiplex-7050.sh.intel.com ([10.239.159.165])
-  by fmviesa006.fm.intel.com with ESMTP; 27 Mar 2026 09:22:34 -0700
+  by fmviesa006.fm.intel.com with ESMTP; 27 Mar 2026 09:22:37 -0700
 From: Xu Yilun <yilun.xu@linux.intel.com>
 To: linux-coco@lists.linux.dev,
 	linux-pci@vger.kernel.org,
@@ -61,9 +61,9 @@ Cc: chao.gao@intel.com,
 	xiaoyao.li@intel.com,
 	vishal.l.verma@intel.com,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 01/31] x86/tdx: Move all TDX error defines into <asm/shared/tdx_errno.h>
-Date: Sat, 28 Mar 2026 00:01:02 +0800
-Message-Id: <20260327160132.2946114-2-yilun.xu@linux.intel.com>
+Subject: [PATCH v2 02/31] x86/virt/tdx: Move bit definitions of TDX_FEATURES0 to public header
+Date: Sat, 28 Mar 2026 00:01:03 +0800
+Message-Id: <20260327160132.2946114-3-yilun.xu@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
 References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
@@ -75,163 +75,52 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Move bit definitions of TDX_FEATURES0 to TDX core public header.
 
-Today there are two separate locations where TDX error codes are defined:
-         arch/x86/include/asm/tdx.h
-         arch/x86/kvm/vmx/tdx_errno.h
+Kernel users get TDX_FEATURES0 bitmap via tdx_get_sysinfo(). It is
+reasonable to also public the definitions of each bit. TDX Connect (a
+new TDX feature to enable Trusted I/O virtualization) will add new bits
+and check them in separate kernel modules.
 
-They have some overlap that is already defined similarly. Reduce the
-duplication and prepare to introduce some helpers for these error codes in
-the central place by unifying them. Join them at:
-        asm/shared/tdx_errno.h
-...and update the headers that contained the duplicated definitions to
-include the new unified header.
+Take the opportunity to change its type to BIT_ULL since TDX_FEATURES0
+is explicitly defined as 64-bit in both TDX Module Specification and
+TDX core code.
 
-"asm/shared" is used for sharing TDX code between the early compressed
-code and the normal kernel code. While the compressed code for the guest
-doesn't use these error code header definitions today, it does make the
-types of calls that return the values they define. So place the defines in
-"shared" location so that it can, but leave such cleanups for future
-changes.
-
-Also, adjust BITUL() -> _BITULL() to address 32 bit build errors after the
-move.
-
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-[enhance log]
-Signed-off-by: Rick Edgecombe <rick.p.edgecombe@intel.com>
-Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
-Reviewed-by: Chao Gao <chao.gao@intel.com>
+Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
 ---
- arch/x86/include/asm/shared/tdx.h             |  1 +
- .../vmx => include/asm/shared}/tdx_errno.h    | 28 +++++++++++++++----
- arch/x86/include/asm/tdx.h                    | 21 --------------
- arch/x86/kvm/vmx/tdx.h                        |  1 -
- 4 files changed, 23 insertions(+), 28 deletions(-)
- rename arch/x86/{kvm/vmx => include/asm/shared}/tdx_errno.h (64%)
+ arch/x86/include/asm/tdx.h  | 4 ++++
+ arch/x86/virt/vmx/tdx/tdx.h | 3 ---
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/arch/x86/include/asm/shared/tdx.h b/arch/x86/include/asm/shared/tdx.h
-index 8bc074c8d7c6..6a1646fc2b2f 100644
---- a/arch/x86/include/asm/shared/tdx.h
-+++ b/arch/x86/include/asm/shared/tdx.h
-@@ -4,6 +4,7 @@
- 
- #include <linux/bits.h>
- #include <linux/types.h>
-+#include <asm/shared/tdx_errno.h>
- 
- #define TDX_HYPERCALL_STANDARD  0
- 
-diff --git a/arch/x86/kvm/vmx/tdx_errno.h b/arch/x86/include/asm/shared/tdx_errno.h
-similarity index 64%
-rename from arch/x86/kvm/vmx/tdx_errno.h
-rename to arch/x86/include/asm/shared/tdx_errno.h
-index 6ff4672c4181..8bf6765cf082 100644
---- a/arch/x86/kvm/vmx/tdx_errno.h
-+++ b/arch/x86/include/asm/shared/tdx_errno.h
-@@ -1,14 +1,15 @@
- /* SPDX-License-Identifier: GPL-2.0 */
--/* architectural status code for SEAMCALL */
--
--#ifndef __KVM_X86_TDX_ERRNO_H
--#define __KVM_X86_TDX_ERRNO_H
-+#ifndef _ASM_X86_SHARED_TDX_ERRNO_H
-+#define _ASM_X86_SHARED_TDX_ERRNO_H
-+#include <asm/trapnr.h>
- 
-+/* Upper 32 bit of the TDX error code encodes the status */
- #define TDX_SEAMCALL_STATUS_MASK		0xFFFFFFFF00000000ULL
- 
- /*
-- * TDX SEAMCALL Status Codes (returned in RAX)
-+ * TDX Status Codes (returned in RAX)
-  */
-+#define TDX_SUCCESS				0ULL
- #define TDX_NON_RECOVERABLE_VCPU		0x4000000100000000ULL
- #define TDX_NON_RECOVERABLE_TD			0x4000000200000000ULL
- #define TDX_NON_RECOVERABLE_TD_NON_ACCESSIBLE	0x6000000500000000ULL
-@@ -17,6 +18,7 @@
- #define TDX_OPERAND_INVALID			0xC000010000000000ULL
- #define TDX_OPERAND_BUSY			0x8000020000000000ULL
- #define TDX_PREVIOUS_TLB_EPOCH_BUSY		0x8000020100000000ULL
-+#define TDX_RND_NO_ENTROPY			0x8000020300000000ULL
- #define TDX_PAGE_METADATA_INCORRECT		0xC000030000000000ULL
- #define TDX_VCPU_NOT_ASSOCIATED			0x8000070200000000ULL
- #define TDX_KEY_GENERATION_FAILED		0x8000080000000000ULL
-@@ -28,6 +30,20 @@
- #define TDX_EPT_ENTRY_STATE_INCORRECT		0xC0000B0D00000000ULL
- #define TDX_METADATA_FIELD_NOT_READABLE		0xC0000C0200000000ULL
- 
-+/*
-+ * SW-defined error codes.
-+ *
-+ * Bits 47:40 == 0xFF indicate Reserved status code class that never used by
-+ * TDX module.
-+ */
-+#define TDX_ERROR			_BITULL(63)
-+#define TDX_NON_RECOVERABLE		_BITULL(62)
-+#define TDX_SW_ERROR			(TDX_ERROR | GENMASK_ULL(47, 40))
-+#define TDX_SEAMCALL_VMFAILINVALID	(TDX_SW_ERROR | _ULL(0xFFFF0000))
-+
-+#define TDX_SEAMCALL_GP			(TDX_SW_ERROR | X86_TRAP_GP)
-+#define TDX_SEAMCALL_UD			(TDX_SW_ERROR | X86_TRAP_UD)
-+
- /*
-  * TDX module operand ID, appears in 31:0 part of error code as
-  * detail information
-@@ -37,4 +53,4 @@
- #define TDX_OPERAND_ID_SEPT			0x92
- #define TDX_OPERAND_ID_TD_EPOCH			0xa9
- 
--#endif /* __KVM_X86_TDX_ERRNO_H */
-+#endif /* _ASM_X86_SHARED_TDX_ERRNO_H */
 diff --git a/arch/x86/include/asm/tdx.h b/arch/x86/include/asm/tdx.h
-index 6b338d7f01b7..e040e0467ae4 100644
+index e040e0467ae4..65c4da396450 100644
 --- a/arch/x86/include/asm/tdx.h
 +++ b/arch/x86/include/asm/tdx.h
-@@ -9,29 +9,8 @@
+@@ -127,6 +127,10 @@ static __always_inline u64 sc_retry(sc_func_t func, u64 fn,
+ int tdx_cpu_enable(void);
+ int tdx_enable(void);
+ const char *tdx_dump_mce_info(struct mce *m);
++
++/* Bit definitions of TDX_FEATURES0 metadata field */
++#define TDX_FEATURES0_NO_RBP_MOD	BIT_ULL(18)
++
+ const struct tdx_sys_info *tdx_get_sysinfo(void);
  
- #include <asm/errno.h>
- #include <asm/ptrace.h>
--#include <asm/trapnr.h>
- #include <asm/shared/tdx.h>
+ int tdx_guest_keyid_alloc(void);
+diff --git a/arch/x86/virt/vmx/tdx/tdx.h b/arch/x86/virt/vmx/tdx/tdx.h
+index 82bb82be8567..c641b4632826 100644
+--- a/arch/x86/virt/vmx/tdx/tdx.h
++++ b/arch/x86/virt/vmx/tdx/tdx.h
+@@ -84,9 +84,6 @@ struct tdmr_info {
+ 	DECLARE_FLEX_ARRAY(struct tdmr_reserved_area, reserved_areas);
+ } __packed __aligned(TDMR_INFO_ALIGNMENT);
  
--/*
-- * SW-defined error codes.
-- *
-- * Bits 47:40 == 0xFF indicate Reserved status code class that never used by
-- * TDX module.
-- */
--#define TDX_ERROR			_BITUL(63)
--#define TDX_NON_RECOVERABLE		_BITUL(62)
--#define TDX_SW_ERROR			(TDX_ERROR | GENMASK_ULL(47, 40))
--#define TDX_SEAMCALL_VMFAILINVALID	(TDX_SW_ERROR | _UL(0xFFFF0000))
+-/* Bit definitions of TDX_FEATURES0 metadata field */
+-#define TDX_FEATURES0_NO_RBP_MOD	BIT(18)
 -
--#define TDX_SEAMCALL_GP			(TDX_SW_ERROR | X86_TRAP_GP)
--#define TDX_SEAMCALL_UD			(TDX_SW_ERROR | X86_TRAP_UD)
--
--/*
-- * TDX module SEAMCALL leaf function error codes
-- */
--#define TDX_SUCCESS		0ULL
--#define TDX_RND_NO_ENTROPY	0x8000020300000000ULL
--
- #ifndef __ASSEMBLER__
- 
- #include <uapi/asm/mce.h>
-diff --git a/arch/x86/kvm/vmx/tdx.h b/arch/x86/kvm/vmx/tdx.h
-index 45b5183ccb36..ce2720a028ad 100644
---- a/arch/x86/kvm/vmx/tdx.h
-+++ b/arch/x86/kvm/vmx/tdx.h
-@@ -3,7 +3,6 @@
- #define __KVM_X86_VMX_TDX_H
- 
- #include "tdx_arch.h"
--#include "tdx_errno.h"
- 
- #ifdef CONFIG_KVM_INTEL_TDX
- #include "common.h"
+ /*
+  * Do not put any hardware-defined TDX structure representations below
+  * this comment!
 -- 
 2.25.1
 
