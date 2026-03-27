@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0228371CFD;
-	Fri, 27 Mar 2026 16:23:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B66F1373C02;
+	Fri, 27 Mar 2026 16:23:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774628600; cv=none; b=fEcpbB60p1xY+MwF3DwwrzqoVfqG4kA0oved2i+HAp9ZtSoN3ox/IB8et9Pb9UCThbW5YAQC3Mtt3JalsaFzsDtjJiIL+Fmo02/N7cNKDBRNWqgQGJowStVFRXul4DW1Gmmjx/8YuKjtMJA+FRxWLaQUbCnAa7l4RcA4/PkL5Ng=
+	t=1774628602; cv=none; b=kMyAyMtmRfIS1z+Suv06Ypx5dAIm7+gAZjFUxX4Kfe/3fYhbTX3ZGNRXpiwmgJuVlyHuwHD7xFBLxzSunk+N9OoUsGBDzzHGh/8dbyIybx6EgHn+tlsgjr6yMNIZlOm/O7AXZPIPy34R9wgWaxE88ok5OE0fKvnQuM8JwOYSpTY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774628600; c=relaxed/simple;
-	bh=RtbDb463am0ETHo/8RtK51kAaPZf1IlC30Of1RwsQQ0=;
+	s=arc-20240116; t=1774628602; c=relaxed/simple;
+	bh=WGFPbx7sgPfDQCJrPwMdxh2FwqrprHEWOswcgWAGZe0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ABQQoQZMZsw+XAyIsY2owoRbpiUe5Cq+RX86WXeYJ39lszpdYnTsa/up7IBnrmt0iVg7Pc5fU4En9qhHU8NcCVIhoA/E2ZWWdla16dPj31ul48FQObpo7ZgTuJwbtw4tUxbjVUioLTvuuT0G8TpTGVq6nna379TDc03zazIQ7FA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nHpz8zr0; arc=none smtp.client-ip=198.175.65.14
+	 MIME-Version; b=C6Z/Eh37+S84AnYuJBDmPUN9nAui1YhKulQx74ZYMxKeHrNM+n0Bv+gXFYnXVydMW1tjHITM/R/aGf6lew3OPXaoenjbplWQqkNfVxW/f5i+n0JdsCtgCTn2Xpd/4Bg3R0KGFGhMdobQ3hLq8IeSr7Fn64hU0EBK13eeBEzTs98=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GV8be0Ij; arc=none smtp.client-ip=198.175.65.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nHpz8zr0"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GV8be0Ij"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774628597; x=1806164597;
+  t=1774628601; x=1806164601;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=RtbDb463am0ETHo/8RtK51kAaPZf1IlC30Of1RwsQQ0=;
-  b=nHpz8zr0bWUolDn8goqbTE4CBVTfwNp3K3hwFp7OB1HJat/t6cIs3C38
-   EIAUUCC8J4k9gjNxD00z/g7Jb32ltjJ/kCd66J/ZKSKIv68gCYwwQX/rm
-   uU4bIxIODQBJ3kF46U1UKfF9Owe7ExGS1uQrT2+F8gyGC46ZsGF9hTMwX
-   x+77W9OmhrvAHTZ+9OlueBBDf6gXEaqbVHOg61CViNrgQEZ149OZEdpYN
-   jqdbNMkW6lUpTCgExF/XQISu++jiNpKd0bpKbvyxrLZOPreR00VOaZwwu
-   y3QvqwYNkXgpYHeB+171/rZhu1jYVsGmAgzh8PqVHNwKhcylzrhf1BsHp
-   A==;
-X-CSE-ConnectionGUID: RoKFU9JATo6mbahaFY405w==
-X-CSE-MsgGUID: 57qmkzDrR7i8I9tuyxjgRQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="79565557"
+  bh=WGFPbx7sgPfDQCJrPwMdxh2FwqrprHEWOswcgWAGZe0=;
+  b=GV8be0IjvNWMi5nCPKo9F9Ke9VfCO2nN//gkipA/uHQlCUgNGjH6M4wd
+   vhlNRGnLcGRG7aKxXgS25ltEwEjinntWpu9mE2QfQLs66w2rPmdOBOUOJ
+   FyQxiF8CTTbqWPF8eSLJIdo/Y0MriFpq1aOtyncTGSZALVbM37Bargbwn
+   WlrV3ipwPxCPgTpfO4d9Uex+JUGTrlwDq53UdJsWidrYpWHl/Yxvu97X3
+   3m7iirmSsFm1S7Lr7NHB4EVh+zX/U+lWsnmI8agdd/6FaDZ1VzuGvWon4
+   LIjRMUXpnzG5GDd/60kFNHT/4mnLRpQGjG8RCx3adovKTmFMY/j1N/IqG
+   g==;
+X-CSE-ConnectionGUID: EMa/TsdSQpmLCxcYfqtmqg==
+X-CSE-MsgGUID: t3PD/HiWT2KLe0pMUT2ktQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="79565575"
 X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
-   d="scan'208";a="79565557"
+   d="scan'208";a="79565575"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 09:23:17 -0700
-X-CSE-ConnectionGUID: Bb7IBTbCSyyXuI5HkgFb0g==
-X-CSE-MsgGUID: z3taUSlXSEmCvY8q9njN9w==
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 09:23:21 -0700
+X-CSE-ConnectionGUID: J1a8EKhESLywQV8Ib29x2g==
+X-CSE-MsgGUID: pVo962/CTmOwIowi7PFdnw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
-   d="scan'208";a="220516211"
+   d="scan'208";a="220516225"
 Received: from yilunxu-optiplex-7050.sh.intel.com ([10.239.159.165])
-  by fmviesa006.fm.intel.com with ESMTP; 27 Mar 2026 09:23:14 -0700
+  by fmviesa006.fm.intel.com with ESMTP; 27 Mar 2026 09:23:18 -0700
 From: Xu Yilun <yilun.xu@linux.intel.com>
 To: linux-coco@lists.linux.dev,
 	linux-pci@vger.kernel.org,
@@ -61,9 +61,9 @@ Cc: chao.gao@intel.com,
 	xiaoyao.li@intel.com,
 	vishal.l.verma@intel.com,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 12/31] x86/virt/tdx: Enable the Extensions after basic TDX Module init
-Date: Sat, 28 Mar 2026 00:01:13 +0800
-Message-Id: <20260327160132.2946114-13-yilun.xu@linux.intel.com>
+Subject: [PATCH v2 13/31] x86/virt/tdx: Extend tdx_clflush_page() to handle compound pages
+Date: Sat, 28 Mar 2026 00:01:14 +0800
+Message-Id: <20260327160132.2946114-14-yilun.xu@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
 References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
@@ -75,46 +75,36 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The detailed initialization flow for TDX Module Extensions has been
-fully implemented. Enable the flow after basic TDX Module
-initialization.
+Use page_size() to correctly flush the range that a compound page
+covers.
 
-Theoretically, the Extensions can be initialized later when the first
-usage of the Extension-SEAMCALL comes. That would save or postpone the
-usage of ~50M memory. But it isn't worth the complexity, the needs for
-Extensions are vast but the savings are little for a typical TDX capable
-system (about 0.001% of memory). So just enable it along with the basic
-TDX.
+Recall that TDX Module requires VMM to provide IOMMU metadata known as
+IOMMU_MT, which contains some multi-order pages. Like all other
+metadata, TDX Module will convert these multi-order pages to private so
+VMM should flush the shared cache beforehand. Extend tdx_clflush_page()
+to handle this case.
+
+The usage of tdx_clflush_page() for IOMMU_MT will be introduced later,
+but the change stands as a valid improvement on its own.
 
 Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
 ---
- arch/x86/virt/vmx/tdx/tdx.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ arch/x86/virt/vmx/tdx/tdx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/arch/x86/virt/vmx/tdx/tdx.c b/arch/x86/virt/vmx/tdx/tdx.c
-index 4134f92425da..0e1ad793e648 100644
+index 0e1ad793e648..e7d47fbe7057 100644
 --- a/arch/x86/virt/vmx/tdx/tdx.c
 +++ b/arch/x86/virt/vmx/tdx/tdx.c
-@@ -1580,7 +1580,7 @@ static int tdx_ext_mem_setup(struct tdx_page_array *ext_mem)
- 	return 0;
+@@ -1510,7 +1510,7 @@ static int init_tdmrs(struct tdmr_info_list *tdmr_list)
+  */
+ static void tdx_clflush_page(struct page *page)
+ {
+-	clflush_cache_range(page_to_virt(page), PAGE_SIZE);
++	clflush_cache_range(page_to_virt(page), page_size(page));
  }
  
--static int __maybe_unused init_tdx_ext(void)
-+static int init_tdx_ext(void)
- {
- 	struct tdx_page_array *ext_mem = NULL;
- 	unsigned int nr_pages;
-@@ -1705,6 +1705,10 @@ static int init_tdx_module(void)
- 	if (ret)
- 		goto err_reset_pamts;
- 
-+	ret = init_tdx_ext();
-+	if (ret)
-+		goto err_reset_pamts;
-+
- 	pr_info("%lu KB allocated for PAMT\n", tdmrs_count_pamt_kb(&tdx_tdmr_list));
- 
- out_put_tdxmem:
+ static void tdx_clflush_page_array(struct tdx_page_array *array)
 -- 
 2.25.1
 
