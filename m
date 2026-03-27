@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F2803E3C47;
-	Fri, 27 Mar 2026 16:23:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AE2B3F54D0;
+	Fri, 27 Mar 2026 16:23:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774628614; cv=none; b=UIgD1/i4C7UbK3I9BCZB/+t263MTwi6ILeCNuzxD0gxyP6edpQvfrxVGVCKxZOy7BOoB7LFV8+m5kfVijX8Tj+XQf8b5BZ7VDXj4xFCTRoJrLaukscJR6KyF6l8AnSPVGmHsx50t4J+KsDlHXuRdsvFl87LKr3pkuKwlMtZ2CXg=
+	t=1774628618; cv=none; b=aEdcy2UUohYJ7vIr/NGfpJombAbkuUh0jLsqklRH+sJ4obhPsjMf+vvE0KlfS+bCp9ewhM2HoA6XkB8LREsDRKBkmatSORjthp0kOwYQgWoyT25FIrzof4ffrws32zXAYhbgZREu91QV7N/UVxrYNNJEzhp9n2XX3OJCZqZ4Di4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774628614; c=relaxed/simple;
-	bh=dzQVPWIaSxETgDXevSN0G82bnXnd5YoCZ3n3bdcc8Zw=;
+	s=arc-20240116; t=1774628618; c=relaxed/simple;
+	bh=Yw2arDmH4MgdmE+FoKrycqUBPwKxZLL2Da+EzWHNEjE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=EZ2sUBBRUPtaL/ntkjGqlLpR4DMQ825UdX/OA8FKuGeEujZWwCEBOx43wmDDjIG5ZhOM2ODzzuWgR3JC2e+QjNnnQQcmP6KaITwLGwYfAUL7hSBoCSLiSfgkcRA+eMgvNOdHlEbPCJWyJ6CyZJJXG6tea93hb9nDdGAq/bdbExs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WsXxciyg; arc=none smtp.client-ip=198.175.65.14
+	 MIME-Version; b=AsyQbobnExCA3v1zUlUzCPYOwqouMDWkrma7P+vcavRLhUaSW2Ddq/8iJtae0JhF0y6GqVF2TT72W5N0KYBfm8yifEUCdSPBCy77KLYJIC3HbJb42dMe5c+Q7AL9UqRBiq34TOZ3VdffSw6HtKd6SVwo352PcZtk7rasf5N0OVs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lTRGge+t; arc=none smtp.client-ip=198.175.65.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WsXxciyg"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lTRGge+t"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774628612; x=1806164612;
+  t=1774628616; x=1806164616;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=dzQVPWIaSxETgDXevSN0G82bnXnd5YoCZ3n3bdcc8Zw=;
-  b=WsXxciygjX9xR/+mY+NXBXcRPhCU0tsVvRvLG0IOcT3GkN9mCf+9ETds
-   QTbbpjDHVKSg78Cghpd/smS8qN87g10vOwfJDFxQ2HMN7R1Voa2XE606R
-   eo7w+hoQ/3AouX2M5HlUc87sw98drd2JlXoKvergXxxrq888cpxux32BS
-   UJoTyq+Lmuoy5vOyPAUPgFGSN9+EKrxcBJHLdwkKeKY17oz6cjBS2UZfB
-   pOYd2mt7qD+uaTZaRXCReLpAdDfcdrDPQ3hbyhXI/1OVP7xLiMxFC7jep
-   wnLACv3a3OKPzQOK7pcrhBe/cggbbatuFCVPK3m9230BPm4KzL7WcQCMW
-   w==;
-X-CSE-ConnectionGUID: BRXUEIN9SW26+Ec5n5CIKQ==
-X-CSE-MsgGUID: kszwnvuMQA+Hz5IMcItovw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="79565600"
+  bh=Yw2arDmH4MgdmE+FoKrycqUBPwKxZLL2Da+EzWHNEjE=;
+  b=lTRGge+tzqKYuhJEbM9GHlTcPH31e+jeAjxtd70B5oOH6v1isTJhj3B1
+   Ub8mrfgSD9150GNm4Rb/J0XT2S+KNnMsEr7C7fWnOo8TrbY+8HNOahfI1
+   lnJeOUg+59tYuNoUqqPIMkf09yb5xwz5aETlvrgnZGBxEKJnvkwgt1H+w
+   tOY7VVpsywCYRNIzYHCo7hpKrzOStK0wV2wCo5zhZp3ZPaSL5awaqwKCp
+   rIP65x1muGAulY1ie7ozPHCu3Z17/AN8urzqdsJj7oLVfhvMT6Q3awFFW
+   /bs2uSuwKsBUIuz/P/8zRhLPoNHXALEQrIKrSAB9dzcaqEVqtjTVm392d
+   g==;
+X-CSE-ConnectionGUID: 6wM+xWjLQr67XmYzX61TPQ==
+X-CSE-MsgGUID: hVbxGcS7QHekOE2/X4HKpw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="79565611"
 X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
-   d="scan'208";a="79565600"
+   d="scan'208";a="79565611"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 09:23:32 -0700
-X-CSE-ConnectionGUID: hr8btrkQS3K/8jDTuCM4eQ==
-X-CSE-MsgGUID: VKoD1c00RHeRl0xVyucjlA==
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 09:23:36 -0700
+X-CSE-ConnectionGUID: OzketJJZS/OmPIQa/DKplQ==
+X-CSE-MsgGUID: dFqNlNTTQrixRH4N3fGZcQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
-   d="scan'208";a="220516261"
+   d="scan'208";a="220516280"
 Received: from yilunxu-optiplex-7050.sh.intel.com ([10.239.159.165])
-  by fmviesa006.fm.intel.com with ESMTP; 27 Mar 2026 09:23:29 -0700
+  by fmviesa006.fm.intel.com with ESMTP; 27 Mar 2026 09:23:32 -0700
 From: Xu Yilun <yilun.xu@linux.intel.com>
 To: linux-coco@lists.linux.dev,
 	linux-pci@vger.kernel.org,
@@ -61,9 +61,9 @@ Cc: chao.gao@intel.com,
 	xiaoyao.li@intel.com,
 	vishal.l.verma@intel.com,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 16/31] coco/tdx-host: Support Link TSM for TDX host
-Date: Sat, 28 Mar 2026 00:01:17 +0800
-Message-Id: <20260327160132.2946114-17-yilun.xu@linux.intel.com>
+Subject: [PATCH v2 17/31] acpi: Add KEYP support to fw_table parsing
+Date: Sat, 28 Mar 2026 00:01:18 +0800
+Message-Id: <20260327160132.2946114-18-yilun.xu@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
 References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
@@ -75,214 +75,125 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Register a Link TSM instance to support host side TSM operations for
-TDISP, when the TDX Connect support bit is set by TDX Module in
-tdx_feature0.
+From: Dave Jiang <dave.jiang@intel.com>
 
-This is the main purpose of an independent tdx-host module out of TDX
-core. Recall that a TEE Security Manager (TSM) is a platform agent that
-speaks the TEE Device Interface Security Protocol (TDISP) to PCIe
-devices and manages private memory resources for the platform. An
-independent tdx-host module allows for device-security enumeration and
-initialization flows to be deferred from other TDX Module initialization
-requirements. Crucially, when / if TDX Module init moves earlier in x86
-initialization flow this driver is still guaranteed to run after IOMMU
-and PCI init (i.e. subsys_initcall() vs device_initcall()).
+KEYP ACPI table can be parsed using the common fw_table handlers. Add
+additional support to detect and parse the table.
 
-The ability to unload the module, or unbind the driver is also useful
-for debug and coarse grained transitioning between PCI TSM operation and
-PCI CMA operation (native kernel PCI device authentication).
-
-For now only verify TDX Connect support in TDX Module and enable TDX
-Module Extentions. The TSM support are basic boilerplate with operation
-flows to be added later.
-
-Co-developed-by: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+Co-developed-by: Xu Yilun <yilun.xu@linux.intel.com>
 Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
 ---
- drivers/virt/coco/tdx-host/Kconfig    |   5 +
- drivers/virt/coco/tdx-host/tdx-host.c | 138 +++++++++++++++++++++++++-
- 2 files changed, 141 insertions(+), 2 deletions(-)
+ include/linux/acpi.h     |  3 +++
+ include/linux/fw_table.h |  1 +
+ drivers/acpi/tables.c    | 12 +++++++++++-
+ lib/fw_table.c           |  9 +++++++++
+ 4 files changed, 24 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/virt/coco/tdx-host/Kconfig b/drivers/virt/coco/tdx-host/Kconfig
-index d35d85ef91c0..32add81b7d56 100644
---- a/drivers/virt/coco/tdx-host/Kconfig
-+++ b/drivers/virt/coco/tdx-host/Kconfig
-@@ -8,3 +8,8 @@ config TDX_HOST_SERVICES
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 4d2f0bed7a06..e5b51bd46600 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -247,6 +247,9 @@ int acpi_table_parse_madt(enum acpi_madt_type id,
+ int __init_or_acpilib
+ acpi_table_parse_cedt(enum acpi_cedt_type id,
+ 		      acpi_tbl_entry_handler_arg handler_arg, void *arg);
++int __init_or_acpilib
++acpi_table_parse_keyp(enum acpi_keyp_type id,
++		      acpi_tbl_entry_handler_arg handler_arg, void *arg);
  
- 	  Say y or m if enabling support for confidential virtual machine
- 	  support (CONFIG_INTEL_TDX_HOST). The module is called tdx_host.ko.
-+
-+config TDX_CONNECT
-+	def_bool y
-+	depends on TDX_HOST_SERVICES
-+	depends on PCI_TSM
-diff --git a/drivers/virt/coco/tdx-host/tdx-host.c b/drivers/virt/coco/tdx-host/tdx-host.c
-index c77885392b09..5ea35a514865 100644
---- a/drivers/virt/coco/tdx-host/tdx-host.c
-+++ b/drivers/virt/coco/tdx-host/tdx-host.c
-@@ -8,9 +8,13 @@
- #include <linux/device/faux.h>
- #include <linux/module.h>
- #include <linux/mod_devicetable.h>
-+#include <linux/pci.h>
-+#include <linux/pci-tsm.h>
-+#include <linux/tsm.h>
- 
- #include <asm/cpu_device_id.h>
- #include <asm/tdx.h>
-+#include <asm/tdx_global_metadata.h>
- 
- static const struct x86_cpu_id tdx_host_ids[] = {
- 	X86_MATCH_FEATURE(X86_FEATURE_TDX_HOST_PLATFORM, NULL),
-@@ -18,14 +22,144 @@ static const struct x86_cpu_id tdx_host_ids[] = {
+ int acpi_parse_mcfg (struct acpi_table_header *header);
+ void acpi_table_print_madt_entry (struct acpi_subtable_header *madt);
+diff --git a/include/linux/fw_table.h b/include/linux/fw_table.h
+index 9bd605b87c4c..293252cb0b7e 100644
+--- a/include/linux/fw_table.h
++++ b/include/linux/fw_table.h
+@@ -36,6 +36,7 @@ union acpi_subtable_headers {
+ 	struct acpi_prmt_module_header prmt;
+ 	struct acpi_cedt_header cedt;
+ 	struct acpi_cdat_header cdat;
++	struct acpi_keyp_common_header keyp;
  };
- MODULE_DEVICE_TABLE(x86cpu, tdx_host_ids);
  
-+/*
-+ * The global pointer is for features which won't be affected by tdx_sysinfo
-+ * change after TDX Module update, e.g. TDX Connect, so could cache it. A
-+ * counterexample is the TDX Module version.
-+ */
-+static const struct tdx_sys_info *tdx_sysinfo;
-+
-+struct tdx_tsm_link {
-+	struct pci_tsm_pf0 pci;
-+};
-+
-+static struct tdx_tsm_link *to_tdx_tsm_link(struct pci_tsm *tsm)
-+{
-+	return container_of(tsm, struct tdx_tsm_link, pci.base_tsm);
-+}
-+
-+static int tdx_tsm_link_connect(struct pci_dev *pdev)
-+{
-+	return -ENXIO;
-+}
-+
-+static void tdx_tsm_link_disconnect(struct pci_dev *pdev)
-+{
-+}
-+
-+static struct pci_tsm *tdx_tsm_link_pf0_probe(struct tsm_dev *tsm_dev,
-+					      struct pci_dev *pdev)
-+{
-+	int rc;
-+
-+	struct tdx_tsm_link *tlink __free(kfree) = kzalloc_obj(*tlink);
-+	if (!tlink)
-+		return NULL;
-+
-+	rc = pci_tsm_pf0_constructor(pdev, &tlink->pci, tsm_dev);
-+	if (rc)
-+		return NULL;
-+
-+	return &no_free_ptr(tlink)->pci.base_tsm;
-+}
-+
-+static void tdx_tsm_link_pf0_remove(struct pci_tsm *tsm)
-+{
-+	struct tdx_tsm_link *tlink = to_tdx_tsm_link(tsm);
-+
-+	pci_tsm_pf0_destructor(&tlink->pci);
-+	kfree(tlink);
-+}
-+
-+static struct pci_tsm *tdx_tsm_link_fn_probe(struct tsm_dev *tsm_dev,
-+					     struct pci_dev *pdev)
-+{
-+	int rc;
-+
-+	struct pci_tsm *pci_tsm __free(kfree) = kzalloc_obj(*pci_tsm);
-+	if (!pci_tsm)
-+		return NULL;
-+
-+	rc = pci_tsm_link_constructor(pdev, pci_tsm, tsm_dev);
-+	if (rc)
-+		return NULL;
-+
-+	return no_free_ptr(pci_tsm);
-+}
-+
-+static struct pci_tsm *tdx_tsm_link_probe(struct tsm_dev *tsm_dev,
-+					  struct pci_dev *pdev)
-+{
-+	if (is_pci_tsm_pf0(pdev))
-+		return tdx_tsm_link_pf0_probe(tsm_dev, pdev);
-+
-+	return tdx_tsm_link_fn_probe(tsm_dev, pdev);
-+}
-+
-+static void tdx_tsm_link_remove(struct pci_tsm *tsm)
-+{
-+	if (is_pci_tsm_pf0(tsm->pdev)) {
-+		tdx_tsm_link_pf0_remove(tsm);
-+		return;
-+	}
-+
-+	/* for sub-functions */
-+	kfree(tsm);
-+}
-+
-+static struct pci_tsm_ops tdx_tsm_link_ops = {
-+	.probe = tdx_tsm_link_probe,
-+	.remove = tdx_tsm_link_remove,
-+	.connect = tdx_tsm_link_connect,
-+	.disconnect = tdx_tsm_link_disconnect,
-+};
-+
-+static void unregister_link_tsm(void *link)
-+{
-+	tsm_unregister(link);
-+}
-+
-+static int __maybe_unused tdx_connect_init(struct device *dev)
-+{
-+	struct tsm_dev *link;
-+	int ret;
-+
-+	if (!IS_ENABLED(CONFIG_TDX_CONNECT))
-+		return 0;
-+
-+	if (!(tdx_sysinfo->features.tdx_features0 & TDX_FEATURES0_TDXCONNECT))
-+		return 0;
-+
-+	link = tsm_register(dev, &tdx_tsm_link_ops);
-+	if (IS_ERR(link))
-+		return dev_err_probe(dev, PTR_ERR(link),
-+				     "failed to register TSM\n");
-+
-+	return devm_add_action_or_reset(dev, unregister_link_tsm, link);
-+}
-+
-+static int tdx_host_probe(struct faux_device *fdev)
-+{
-+	/* TODO: do tdx_connect_init() when it is fully implemented. */
-+	return 0;
-+}
-+
-+static struct faux_device_ops tdx_host_ops = {
-+	.probe = tdx_host_probe,
-+};
-+
- static struct faux_device *fdev;
+ int acpi_parse_entries_array(char *id, unsigned long table_size,
+diff --git a/drivers/acpi/tables.c b/drivers/acpi/tables.c
+index 4286e4af1092..8dc60632faf3 100644
+--- a/drivers/acpi/tables.c
++++ b/drivers/acpi/tables.c
+@@ -299,6 +299,16 @@ acpi_table_parse_cedt(enum acpi_cedt_type id,
+ }
+ EXPORT_SYMBOL_ACPI_LIB(acpi_table_parse_cedt);
  
- static int __init tdx_host_init(void)
- {
--	if (!x86_match_cpu(tdx_host_ids) || !tdx_get_sysinfo())
-+	if (!x86_match_cpu(tdx_host_ids))
-+		return -ENODEV;
++int __init_or_acpilib
++acpi_table_parse_keyp(enum acpi_keyp_type id,
++		      acpi_tbl_entry_handler_arg handler_arg, void *arg)
++{
++	return __acpi_table_parse_entries(ACPI_SIG_KEYP,
++					  sizeof(struct acpi_table_keyp), id,
++					  NULL, handler_arg, arg, 0);
++}
++EXPORT_SYMBOL_ACPI_LIB(acpi_table_parse_keyp);
 +
-+	tdx_sysinfo = tdx_get_sysinfo();
-+	if (!tdx_sysinfo)
- 		return -ENODEV;
+ int __init acpi_table_parse_entries(char *id, unsigned long table_size,
+ 				    int entry_id,
+ 				    acpi_tbl_entry_handler handler,
+@@ -408,7 +418,7 @@ static const char table_sigs[][ACPI_NAMESEG_SIZE] __nonstring_array __initconst
+ 	ACPI_SIG_PSDT, ACPI_SIG_RSDT, ACPI_SIG_XSDT, ACPI_SIG_SSDT,
+ 	ACPI_SIG_IORT, ACPI_SIG_NFIT, ACPI_SIG_HMAT, ACPI_SIG_PPTT,
+ 	ACPI_SIG_NHLT, ACPI_SIG_AEST, ACPI_SIG_CEDT, ACPI_SIG_AGDI,
+-	ACPI_SIG_NBFT, ACPI_SIG_SWFT, ACPI_SIG_MPAM};
++	ACPI_SIG_NBFT, ACPI_SIG_SWFT, ACPI_SIG_MPAM, ACPI_SIG_KEYP};
  
--	fdev = faux_device_create(KBUILD_MODNAME, NULL, NULL);
-+	fdev = faux_device_create(KBUILD_MODNAME, NULL, &tdx_host_ops);
- 	if (!fdev)
- 		return -ENODEV;
+ #define ACPI_HEADER_SIZE sizeof(struct acpi_table_header)
+ 
+diff --git a/lib/fw_table.c b/lib/fw_table.c
+index 16291814450e..147e3895e94c 100644
+--- a/lib/fw_table.c
++++ b/lib/fw_table.c
+@@ -20,6 +20,7 @@ enum acpi_subtable_type {
+ 	ACPI_SUBTABLE_PRMT,
+ 	ACPI_SUBTABLE_CEDT,
+ 	CDAT_SUBTABLE,
++	ACPI_SUBTABLE_KEYP,
+ };
+ 
+ struct acpi_subtable_entry {
+@@ -41,6 +42,8 @@ acpi_get_entry_type(struct acpi_subtable_entry *entry)
+ 		return entry->hdr->cedt.type;
+ 	case CDAT_SUBTABLE:
+ 		return entry->hdr->cdat.type;
++	case ACPI_SUBTABLE_KEYP:
++		return entry->hdr->keyp.type;
+ 	}
+ 	return 0;
+ }
+@@ -61,6 +64,8 @@ acpi_get_entry_length(struct acpi_subtable_entry *entry)
+ 		__le16 length = (__force __le16)entry->hdr->cdat.length;
+ 
+ 		return le16_to_cpu(length);
++	case ACPI_SUBTABLE_KEYP:
++		return entry->hdr->keyp.length;
+ 	}
+ 	}
+ 	return 0;
+@@ -80,6 +85,8 @@ acpi_get_subtable_header_length(struct acpi_subtable_entry *entry)
+ 		return sizeof(entry->hdr->cedt);
+ 	case CDAT_SUBTABLE:
+ 		return sizeof(entry->hdr->cdat);
++	case ACPI_SUBTABLE_KEYP:
++		return sizeof(entry->hdr->keyp);
+ 	}
+ 	return 0;
+ }
+@@ -95,6 +102,8 @@ acpi_get_subtable_type(char *id)
+ 		return ACPI_SUBTABLE_CEDT;
+ 	if (strncmp(id, ACPI_SIG_CDAT, 4) == 0)
+ 		return CDAT_SUBTABLE;
++	if (strncmp(id, ACPI_SIG_KEYP, 4) == 0)
++		return ACPI_SUBTABLE_KEYP;
+ 	return ACPI_SUBTABLE_COMMON;
+ }
  
 -- 
 2.25.1
