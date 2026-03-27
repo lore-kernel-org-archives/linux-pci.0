@@ -1,147 +1,128 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f43.google.com (mail-dl1-f43.google.com [74.125.82.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 881703F8DF6
-	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 17:54:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC7163FEB33
+	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 17:59:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774634053; cv=none; b=VvBrzvwdQBsqDLKmEp3cwkh82rGPzZzEQsQJo07wofgkChoAqTllJBvyDkD9FM2EEn5pFqLXFiVfGJlw804jb2hEqDvsAB7P0Zu3U0GQ5Utk2lZcuLW1i2e8uwwvDhKXEP3WFrfxFu9FAuCh0VgeOIHZHaqNoI/SH3UgySkMJLc=
+	t=1774634347; cv=none; b=tSEJo/De+xY4wOHFhH5o5zjhqffyZ7nWQrxIwUrpX9STZ78sgoLhgEzxX2SSH9qZsxwUJ/QpaN3V3Mlr9GrvDS6H/njYsYJEcEWWEV1eJWUMgFmUTcQIQL/WjyTAkWikTDQ7A2Uzghnmvg3UpAWZPpmXf6kIVp1HUgZB+YpT55I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774634053; c=relaxed/simple;
-	bh=WuNMyda9U1RNqACcqfwBtwE+VdnXa9nklsb3K1Bmrgc=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=gJV6tlXyzR1qRXkYf5QDnxF+09OzljCOkDkmL97HVdulj6V9XFuqXBJDw2OTWXghxlvRdZQOXaLszlqwSodN0qL3l2QtBdW8xe416JDV8p9GvIEQaonFtFA1qcd7Gag2ooxhizoFlzIIvwQoVpKEn0BkR2SniJRW3pIdYTVCKdY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kIJWC8bC; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1774634347; c=relaxed/simple;
+	bh=QR7NFO1I9gA2J4q6XWdIg5wHFe02t3xldWwUsW+yLp8=;
+	h=Content-Type:MIME-Version:Subject:From:To:Cc:Date:Message-ID; b=A7Atda2OHboLpUzd3tG9V/7EqexPvzUu5RZcwJHiXFSR+X48wr1NaYZH8eNl3SWu8gXWt57z4lbODQNdLn2s096c1YNHwJtv6j3tM7vRDSdi+wnwyLzmRREjpOh/ItdhnOYeAlqvh8lKb431l0IFWAbqDTfWhdCHnPFDyOUiJqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernelci.org; spf=none smtp.mailfrom=kernelci.org; dkim=pass (2048-bit key) header.d=kernelci-org.20230601.gappssmtp.com header.i=@kernelci-org.20230601.gappssmtp.com header.b=exq2DL9P; arc=none smtp.client-ip=74.125.82.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernelci.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=kernelci.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kIJWC8bC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774634053; x=1806170053;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=WuNMyda9U1RNqACcqfwBtwE+VdnXa9nklsb3K1Bmrgc=;
-  b=kIJWC8bCF3O++LFJ/odYgYX1VfNZngkzCgiW3Rp2qmgGOr1VelPD7Ge2
-   4g+N78u8qQnuRalhsmx8oD2Qu4bl3z8ulHtNm/ZSZNrgWCk5JeB2eeHtT
-   Gj5wRv3I1UZIYubZSiixRapsraWUmIrUyDRxPrTGm3+VVxOkjAkt8m4Ay
-   AfnYzttXphLwwXoPfEpEcpDlZmbKJDnmOJnhbY+OjzATdLfHjXRr3HBif
-   qNHqQlMmTaqv+C2LkLSkptGGKzSRUviOFFg8HTR475QeO58+ukD1W+tvm
-   NPlI1gB/PqgmkeJM4Z2N8TWQGmRGpHriGN7RGYCUjkwqjTduVQXvgiH9q
-   Q==;
-X-CSE-ConnectionGUID: t/CkWR1BSeyDRe8u6g3tJg==
-X-CSE-MsgGUID: qCGsX8gPSZaO2vyu6+9JXQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11742"; a="86332261"
-X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
-   d="scan'208";a="86332261"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 10:54:12 -0700
-X-CSE-ConnectionGUID: X1FmjMPOTHSBNw6u1tqPhA==
-X-CSE-MsgGUID: jsOo6B6YTDa49jOI/bmSjA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
-   d="scan'208";a="263334435"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.186])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 10:54:10 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Fri, 27 Mar 2026 19:54:06 +0200 (EET)
-To: =?ISO-8859-2?Q?Michal_Babi=E8ka?= <michal.babka@gmail.com>
-cc: linux-pci@vger.kernel.org
-Subject: Re: [WARNING: UNSCANNABLE EXTRACTION FAILED][BUG] Apple Mac mini
- 2018 + Thunderbolt 3 eGPU: PCI bridge window / BAR allocation failure prevents
- NVIDIA and AMD GPUs from initializing
-In-Reply-To: <CAF4axAei9zwKrWrcoHQE65D2xY=mWS0onRAGxyjX0p2a+jXmUQ@mail.gmail.com>
-Message-ID: <da0ede48-3197-e3df-a83a-4e0028b5f5c5@linux.intel.com>
-References: <CAF4axAei9zwKrWrcoHQE65D2xY=mWS0onRAGxyjX0p2a+jXmUQ@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=kernelci-org.20230601.gappssmtp.com header.i=@kernelci-org.20230601.gappssmtp.com header.b="exq2DL9P"
+Received: by mail-dl1-f43.google.com with SMTP id a92af1059eb24-1279eced0b9so3633822c88.0
+        for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 10:59:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernelci-org.20230601.gappssmtp.com; s=20230601; t=1774634345; x=1775239145; darn=vger.kernel.org;
+        h=message-id:date:reply-to:cc:to:from:subject
+         :content-transfer-encoding:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=xLYLmy8VW9I5DLU1uXkxzY27rJilsjPQMGLpz2LRUCQ=;
+        b=exq2DL9PPh52JU2TL8A8J9TDubySoGvG7WQRTeWkaKaeDXDLdnfSr8p9Z4EGDnUAtu
+         +Z57o/pbHNRbCQ/fPs9uxf4q3HXNUqI43wxEnvtpHa4l8EQNyCaqNggl7qJjx1eq5K1B
+         bbkPK7DHgk1iYqOPi8Ks/8YtU7u6RinD3mRYkdHOrdYi6/SBInQCrnfkYHbIbktb9ofN
+         70miRfGvQtb4jVkvAH3bYNHVPwjBoWMBdK5WgSGKgfTffzWKP84FJAsmP+j6z2Z2AUNs
+         60y4zqnjSOoowNgTBiV2UXQ++WLZEz+GQXRtyueZ2/6rcW2wuPabrtrxIf05pgAR6u6f
+         HXkw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774634345; x=1775239145;
+        h=message-id:date:reply-to:cc:to:from:subject
+         :content-transfer-encoding:mime-version:x-gm-gg:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=xLYLmy8VW9I5DLU1uXkxzY27rJilsjPQMGLpz2LRUCQ=;
+        b=p19LKynKK/zUZD0JQ7sZr/3xIS+JYbdV91sKYwby8PqpjaAwUv1YPjt/KTRDZuT9Sr
+         bVffjAOKNpU5n4KKCDrqgctNpGnVI8I3wszSmpzCqHu1yiFVP3/v1SCOusV8isIM8c4B
+         KLgqkdhX1Y8AL3zLKZQlcZg+InjZYxFfYJQ7UBXvMMh4VPzrp+RkOdUu/UQ3ojgv2dyN
+         iC+8MavcdqCggoMoQF44qFfkJE0G36Y5kMNYri818cVqjJM6zkSgF92U3Ctx2w6t8+j/
+         177ZpYQGtIsT+Oru4Tfq0NpNVUM8t/l6XchgJP/4LQVjrBa/15iFpYTe9u+Z9mpeq3fS
+         SnZQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUZvKjkO/0ywyqtzQVIsL1tp4TxzrcvGFfXqkeDYXTvidVWGNrUyTcyywxGKoJd1TlXjNMq75Oc+bM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwwsM8xr9AWZIIXejOtXTb52XRaDUEweu+E2amFhFVEJVHvPp8X
+	FXgQC/7FEZRXj4IsXT0xl6zx6EBix+Ytmi+wnJeqKyg2gC11bIKcKz8CRXe9R9paddeW7Ij7Lf9
+	6H1Am
+X-Gm-Gg: ATEYQzzQ4AXenK+G3uxlcOXMkskMrJj9HF72SD4IxRLaEl3IfZORTEYYhfcqhBlNMZ2
+	RqCPb5gZ63sBVSrnwOAhqreCUmFkR+y3PJOwFTwGpVjy1uNxpv0zmQ5/4n46+qXinPM1dfIkvio
+	8m0yfERiwS8zYEFCYR5+c/AhR+e24b0vhWy6ghbCjFd0KNknH52ZcJHpiridQM6SiX7oC8z0SH7
+	jgj6BWRYC4thTPLFA9EpHW7oK3OavCXKSiGHDaCKXqGvqEXqNOMIpYJV+g3xlnr3B6Du3vOZb3d
+	D11pNLoXuVwOaAHI/wYAMvynEVAGZYUClD3dH8jJXstp+9PKMhkHJXj16bqEhoqmBoNARYVUiXH
+	hBv9V/PbmxRHJc+AicDDdyPYEtRhYq0B13GkSg9qVL0fdPTTpILd4CTmm0Eu826vmxwn83zHlEI
+	B1OtpH8xRaQSL2jqFe
+X-Received: by 2002:a05:7022:b8a:b0:123:330b:3a0 with SMTP id a92af1059eb24-12ab28617bamr1964111c88.14.1774634344871;
+        Fri, 27 Mar 2026 10:59:04 -0700 (PDT)
+Received: from 0d12152ffbcd ([20.38.40.137])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-12aa6513e9bsm9937442c88.0.2026.03.27.10.59.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 27 Mar 2026 10:59:03 -0700 (PDT)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-579266839-1774634046=:1037"
+Content-Transfer-Encoding: 7bit
+Subject: [REGRESSION] linux-pci/next: (build) ignoring return value of
+ function
+ declared with 'warn_unused_resul...
+From: KernelCI bot <bot@kernelci.org>
+To: kernelci-results@groups.io
+Cc: gus@collabora.com, linux-pci@vger.kernel.org
+Reply-To: kernelci@lists.linux.dev
+Date: Fri, 27 Mar 2026 17:59:03 -0000
+Message-ID: <177463434349.1554.5266992356487229955@0d12152ffbcd>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
 
---8323328-579266839-1774634046=:1037
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-On Tue, 24 Mar 2026, Michal Babi=C4=8Dka wrote:
 
-> Hello,
->=20
-> I am reporting a reproducible PCI resource allocation problem on an
-> Apple Mac mini 2018 with a Thunderbolt 3 eGPU enclosure.
->=20
-> Hardware:
->=20
-> Apple Mac mini 2018
-> Razer Core X Chroma
-> NVIDIA GPU tested
-> AMD Radeon Vega 64 tested
-> Zorin OS 18 Pro
-> kernels tested: 6.12.x and 6.17.x
->=20
-> Problem summary:
-> The eGPU enclosure and GPU are detected and enumerated on the PCI bus,
-> but GPU initialization fails because PCI bridge windows / BAR
-> resources are not assigned correctly.
->=20
-> This reproduces with multiple GPU vendors in the same enclosure on the
-> same host, which suggests a PCI / Thunderbolt bridge resource
-> allocation problem on this platform rather than a vendor-specific
-> driver issue.
->=20
-> Expected behavior:
-> The kernel should assign valid PCI bridge windows and BAR resources so
-> the GPU can initialize successfully and become usable.
->=20
-> Actual behavior:
-> The GPU is visible on the PCI bus, but bridge windows and BAR
-> resources are incomplete or invalid, leaving the device unusable.
->=20
-> Observed errors include:
->=20
-> bridge window [mem size ...]: can't assign; no space
-> NVRM: BAR1 is 0M @ 0x0
-> RmInitAdapter failed
-> NVIDIA initialization fails
-> AMD shows similar behavior in the same enclosure on the same host
->=20
-> Kernel command line used for the latest debug boot:
-> BOOT_IMAGE=3D/boot/vmlinuz-6.17.0-19-generic
-> root=3DUUID=3Df0048c61-b4fe-4edb-9af5-bc756f9e2e7d ro quiet splash
-> "dyndbg=3Dfile drivers/pci/* +p" vt.handoff=3D7
->=20
-> I also confirmed that dynamic debug for drivers/pci was enabled.
->=20
-> I collected and attached two archives:
->=20
-> egpu-logs.tar.gz
-> egpu-logs-dyndbg.tar.gz
->=20
-> These archives contain:
->=20
-> full dmesg
-> dmesg extract
-> lspci -nnvvv
-> lspci tree
-> per-device lspci dumps for the relevant bridges and GPU
-> /proc/iomem
-> journalctl -b
-> nvidia-smi output
->=20
-> Please let me know which specific logs or excerpts would be most useful.
 
-Did you have any logs with pci=3Drealloc. There are those claiming conflict=
-s=20
-resulting in clipping bridge windows from their original size so I'm=20
-skeptical this case will work well without kernel rearranging the bridge=20
-windows.
+Hello,
 
---=20
- i.
+New build issue found on linux-pci/next:
 
---8323328-579266839-1774634046=:1037--
+---
+ ignoring return value of function declared with 'warn_unused_result' attribute [-Werror,-Wunused-result] in drivers/gpu/drm/i915/display/intel_vga.o (drivers/gpu/drm/i915/display/intel_vga.c) [logspec:kbuild,kbuild.compiler.error]
+---
+
+- dashboard: https://d.kernelci.org/i/maestro:c2145292d80ae85fd003068675e73a3d1f95c35e
+- giturl: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
+- commit HEAD:  50451816531d66141cafe2347f9a896bd4dcb2b3
+
+
+Please include the KernelCI tag when submitting a fix:
+
+Reported-by: kernelci.org bot <bot@kernelci.org>
+
+
+Log excerpt:
+=====================================================
+/tmp/kci/linux/drivers/gpu/drm/i915/display/intel_vga.c:68:2: error: ignoring return value of function declared with 'warn_unused_result' attribute [-Werror,-Wunused-result]
+   68 |         vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/kci/linux/drivers/gpu/drm/i915/display/intel_vga.c:93:2: error: ignoring return value of function declared with 'warn_unused_result' attribute [-Werror,-Wunused-result]
+   93 |         vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~
+2 errors generated.
+
+=====================================================
+
+
+# Builds where the incident occurred:
+
+## x86_64_defconfig on (x86_64):
+- compiler: clang-21
+- config: None
+- dashboard: https://d.kernelci.org/build/maestro:69c6b8d23712df3240c2a959
+
+
+#kernelci issue maestro:c2145292d80ae85fd003068675e73a3d1f95c35e
+
+--
+This is an experimental report format. Please send feedback in!
+Talk to us at kernelci@lists.linux.dev
+
+Made with love by the KernelCI team - https://kernelci.org
