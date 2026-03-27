@@ -1,57 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD9D73D669C
-	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 08:29:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C7643D6CA9
+	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 08:35:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774600155; cv=none; b=M15O0mB3Y9Zhm2W+wLd6MRLNZyKPTEv/M3k6UIeWT8eFt2Lm87IlcN35pMhzYCiC8Q31j4M/2Hd554asP/pmbC6TYkCF8IsNAOos7hVpcoIM49yx+UuWu9V4zgrO4Z1iTSbeu2srelcZZRwRQxJPQGtOXDeDF5sAZqvPJg2+k1E=
+	t=1774600515; cv=none; b=qjrgis06+DzmBbazGa/r+lBpOJqz8Yk2fHjjhbCSEBk1GuU+MmW5Vn5IDU0ECtNxdNWxIU/WaeejQFannn2I3A8LvuwMG6zCypvY49YT9kX5qDeBajcAwKWa9O2pSvr0puVBFwTU4nb83gzfTSM+RAuHsh2nXH5YjFbPKJspamQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774600155; c=relaxed/simple;
-	bh=JdsVu+lIx9cTgpTI8LPNbKyJROwY6ulQK9jd3Z4G8tE=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=rEqAuOjBjxxy1O6HXVSNi5oC23OvFjL2+rTfMAFZ3oYGXGCdzNawvnNJHsQk+DQ7/JdrXWHpVDsIC4KG0mTnx4IvUGfThXlRHbGdxF3aFFAjvyY96InTdQH4pS8PdWCEmAFBNYYpSt2OSQmXk2fUZgmPTP5O7wHyaUZ6vNG4/r4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nr01Wudr; arc=none smtp.client-ip=198.175.65.13
+	s=arc-20240116; t=1774600515; c=relaxed/simple;
+	bh=PkfRe2E8DM44qzcC3YTHs77lWLe7qeHXTegbc25m6vE=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=PKfs/7gkdOv5PIVebX8aMtR8DBmxjlWiq8gLTpfzkFmj4YKywKQhzpuzTSvIfLUzl3deDgHPMVXvq3JysBboq6bnevLd3LF2fcCWTVZ4Z1KregdoVon02SoYETskQ21YPuin2ODttlhYyT1lWvBGJqHGRpZ6Or5gvM2ASjjw4t8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OZf9Zu6h; arc=none smtp.client-ip=198.175.65.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nr01Wudr"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OZf9Zu6h"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774600154; x=1806136154;
+  t=1774600515; x=1806136515;
   h=date:from:to:cc:subject:message-id;
-  bh=JdsVu+lIx9cTgpTI8LPNbKyJROwY6ulQK9jd3Z4G8tE=;
-  b=nr01WudrJhqTRvz9HQAp5/P0qZzUS4X5H3kKk6UtN6UhylNx655T4kDl
-   5hciLCLbGOjoye1VAm6GYFvy4eFpPzzoUIpJ+jh7r6TLxhR5ZR+gQpVPe
-   rjSXuOuIoTyhORiLgk9176dLVgOgKALyQvlT4J2h8Si3BCeha6ijsgGPs
-   8nE6PEBSnNuvMzJ43oDf9WXRAdQ9f6sEVvtMqO8ir5rHjHHki2ZsQrlD8
-   bzaprSohdt5q/6F+v6GikLR1MTdlCaPTuchUoLgT6ii4Pju18J+h19QTN
-   eVlLVhC1My1cdy7bF6Zap/y7Q8zUH6eTpnkjur6t7FIhMwXqixu1HoRTf
-   g==;
-X-CSE-ConnectionGUID: od4i7t+TR32zs68coo35rA==
-X-CSE-MsgGUID: xtDzSSRATiyieBzw3Trqxg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="86746528"
+  bh=PkfRe2E8DM44qzcC3YTHs77lWLe7qeHXTegbc25m6vE=;
+  b=OZf9Zu6hpxZ2HrGVH0SFs/FzVKVvx5UioIc7fiXD9dQQwAIZ57F808Ml
+   N8LAPrnXYFtM+JeH2CoqGW5Kua1uYDL+SI89pANjMFgc9m4rElxkfHCr4
+   fRdsIQ2pVxr2H8B2OxM99LdvfquBpUMrZvPRoLfEF2qSoKBzsltPcq9VI
+   q1PsOuZA9Pxj26l9z9tMvXVsKfvYzeS5YzSRANT0SkpwNwSiGtEGu5+X7
+   hNdnAjcmAXipp1j0m1CbzW2waIypKPOFrOkDJRbQn0jUsE8qBjlvp1KX2
+   roTGgsc5oeX1I2cLH9TZTnBJDe8rGwr4/VaEP8djOPmwYZhQdBqLxnbue
+   w==;
+X-CSE-ConnectionGUID: TAYn/xiFRNOqkZySn5eizg==
+X-CSE-MsgGUID: +929D225SFO/8NE7QaJrfA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="98287512"
 X-IronPort-AV: E=Sophos;i="6.23,143,1770624000"; 
-   d="scan'208";a="86746528"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 01:29:13 -0700
-X-CSE-ConnectionGUID: v8oOZggeQ/KNivpCLbvvtw==
-X-CSE-MsgGUID: XttClV4lTImSIEPrKAHT7w==
+   d="scan'208";a="98287512"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 01:35:14 -0700
+X-CSE-ConnectionGUID: i7IRvIykRfC38JVV81Ah0w==
+X-CSE-MsgGUID: j1GMa9KASMmTLWwF3zYDvA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,143,1770624000"; 
-   d="scan'208";a="220859697"
+   d="scan'208";a="225258470"
 Received: from lkp-server01.sh.intel.com (HELO 3905d212be1b) ([10.239.97.150])
-  by fmviesa010.fm.intel.com with ESMTP; 27 Mar 2026 01:29:12 -0700
+  by orviesa008.jf.intel.com with ESMTP; 27 Mar 2026 01:35:12 -0700
 Received: from kbuild by 3905d212be1b with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1w62Z3-000000009yL-2qM4;
-	Fri, 27 Mar 2026 08:29:09 +0000
-Date: Fri, 27 Mar 2026 16:29:00 +0800
+	id 1w62es-000000009z9-1oxf;
+	Fri, 27 Mar 2026 08:35:10 +0000
+Date: Fri, 27 Mar 2026 16:34:23 +0800
 From: kernel test robot <lkp@intel.com>
 To: Manivannan Sadhasivam <mani@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/dwc-qcom] BUILD SUCCESS
- 33a76fc3c3e61386524479b99f35423bd3d9a895
-Message-ID: <202603271652.TQzNoAKK-lkp@intel.com>
+Subject: [pci:controller/cadence-sky1] BUILD SUCCESS
+ 99d986686331ba3fd58dffb312e282d2bf81ee72
+Message-ID: <202603271614.w6kNHMaq-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,12 +59,12 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-qcom
-branch HEAD: 33a76fc3c3e61386524479b99f35423bd3d9a895  PCI: qcom: Advertise Hotplug Slot Capability with no Command Completion support
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/cadence-sky1
+branch HEAD: 99d986686331ba3fd58dffb312e282d2bf81ee72  PCI: sky1: Use boolean true for is_rc field
 
-elapsed time: 754m
+elapsed time: 760m
 
-configs tested: 150
+configs tested: 146
 configs skipped: 1
 
 The following configs have been built successfully.
@@ -80,7 +80,6 @@ arc                              allyesconfig    clang-23
 arc                                 defconfig    gcc-15.2.0
 arc                   randconfig-001-20260327    gcc-8.5.0
 arc                   randconfig-002-20260327    gcc-8.5.0
-arm                               allnoconfig    clang-23
 arm                               allnoconfig    gcc-15.2.0
 arm                              allyesconfig    clang-16
 arm                                 defconfig    gcc-15.2.0
@@ -96,13 +95,11 @@ csky                             allmodconfig    gcc-15.2.0
 csky                              allnoconfig    gcc-15.2.0
 csky                                defconfig    gcc-15.2.0
 hexagon                          allmodconfig    gcc-15.2.0
-hexagon                           allnoconfig    clang-23
 hexagon                           allnoconfig    gcc-15.2.0
 hexagon                             defconfig    gcc-15.2.0
 hexagon               randconfig-001-20260327    gcc-8.5.0
 hexagon               randconfig-002-20260327    gcc-8.5.0
 i386                             allmodconfig    clang-20
-i386                              allnoconfig    gcc-14
 i386                              allnoconfig    gcc-15.2.0
 i386                             allyesconfig    clang-20
 i386                                defconfig    gcc-15.2.0
@@ -121,7 +118,6 @@ i386                  randconfig-015-20260327    gcc-14
 i386                  randconfig-016-20260327    gcc-14
 i386                  randconfig-017-20260327    gcc-14
 loongarch                        allmodconfig    clang-23
-loongarch                         allnoconfig    clang-23
 loongarch                         allnoconfig    gcc-15.2.0
 loongarch                           defconfig    clang-19
 loongarch             randconfig-001-20260327    gcc-8.5.0
