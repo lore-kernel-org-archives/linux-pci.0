@@ -1,152 +1,207 @@
-Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012061.outbound.protection.outlook.com [40.107.200.61])
+Received: from mxout70.expurgate.net (mxout70.expurgate.net [194.37.255.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7AE33BED26
-	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 07:37:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.200.61
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774597045; cv=fail; b=GXS9jP/h0Kek0UCEBP2JotT9/126Z957B2SeLUU3HzuQ2iK8z8OJU14WXIKnP9tLsGUSOskj72/xUBoKTcJ03hLd1oz59V5w6kYPG+xdhwTmaQbd0VnWJHKuljuuMWcY39h7UzASErq5vGpeeEOofnEb7kZ79YEGwM8ZLL3t1K8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774597045; c=relaxed/simple;
-	bh=6BPp6HxN3Kqj167eOlEiKeuEkOlwaAJ6d1ivvJIIcog=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=HrU0V2oqXvXFPeQD9GpnPJZU7eZOBMFbQ4ppaczSV4uGhBXOL6uFYouJ5DkXMZdPW6jizapYLO5GpoUp10KkSQU9hZmwxlTq2Y0bBqbaI/BqnO2Kxv2ZXjCo1qNIx6vAk/m91JaIrtnA8eB239F6gphCy+I8Oi6XMURrz0Vyg90=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=D4GwhPrM; arc=fail smtp.client-ip=40.107.200.61
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8462C1CAB3
+	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 07:42:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.37.255.70
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774597359; cv=none; b=XVNr6CnYd+eefIjFM1dhhlUsh4WHvJVlkzHzSdu+eGdlpst7k/9E8NPTbc+xju4vsWu//76Ou4H0e56ITS0JCbLIWFY73AO2f9WHkasUriVQrY10ruT9IcFw0S0Vjsb3K5npk8cibHz/5YjPl1rYChOxb9+EAFI4f6P1uGzXFSw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774597359; c=relaxed/simple;
+	bh=XJlK+D21/7efIS07ERGMElEao6HZF1RtPKAC41sHEDY=;
+	h=MIME-Version:Content-Type:Date:From:To:Cc:Subject:In-Reply-To:
+	 References:Message-ID; b=b4RFYY701BNaZPldQV4beS16ZkgiWdf5SR6YQilpj+3BxHieyZnks5afCnVIW42ZuXVwQwcttxD8kBDUOObWZtXfZplJba10YkHI9TZepzxUcA4kpC1+Rw2U7s0qCqKrcZp9g6AvvXlqFgZJKXoUbUfvii1h7dPrH+E8I3ml5QU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=dnXshSLV; arc=none smtp.client-ip=194.37.255.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev.tdt.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="D4GwhPrM"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=qFUXIlBlCIb6X9XKQi1rxR92hyU1HdfG4ZHIDORks7lSXx9nfJ0cWIovU1IrMrGfZ+Hhak7bB0Ev7/YKnCl6L6fZagxXeprisUrRMkU++yxW3ulu70e9CbGSDuJ09wuZV9arYoqjJggDrU7JxcdzVkAT1OQCJi04kHMG2T2ZbNBdpap4L60sKrDnISS/FEAWr7N+qgFfvtbTUxRen+5+7Bka6Wc1ZF9Kvt7lHTi2mZ/6nPdGuEjM3Loa0S40GHiuGOzLgrOH5qxk+FdUMjJ8h+1i2M9CsJlgrX6U7JXh9eUJd0nNAaOQBDrEIRZEwSrTuDCN7Y/1oUY9UUTaPHzQ4g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=wYM9Ycz1bOS6zSa0Hz0ctO1Whbbo9SEifOTsETwTMvc=;
- b=SaGq0CW7xKN2FfvSQqAHI3pD2+zSGMl1JA15u9DgIyXg4a9i0rf3n78jQ9puVLn5DCpRoLKdWPzEV8sT3Jr0M7TeKL4eg6w9twMyO8BbWmodhCb2CagrDiLnsISW+IjbKJSLFBLVhoYGZkUFU+wa01mxhIuU4zlNIUT/XfpWj98UCsbwFESXTjdbHxHmZlehvkAPYuwJDMpTLtnRV8x2AKwrVy071Pu0YAAoj5hIsmWLWjpBJeihREYtt2QFm1iYpqVkjr32hrLYRnOrtlF/e7PCDML4VNdirZ+Xe8ZBRGUinN6z5p+guP37I/7VwxZJ1Tj1/z0FGSJDLotZM0GPrQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=wYM9Ycz1bOS6zSa0Hz0ctO1Whbbo9SEifOTsETwTMvc=;
- b=D4GwhPrM/CIo1YNDJxlAkvM6jb4wlzzVoEXSqI/LizTOuQiUcOrhxdJ7sd9tqP+FZigJAnocEmahe+ChQo8hmbhAaCUVPUOF/WKRdoIswjKpD84Fk2QCXqwoYGtsmpoEoPsbA89h3NoYeWbD5MhHTkaI7wgu0oRZwgEYUrXg0o8=
-Received: from DM6PR02CA0068.namprd02.prod.outlook.com (2603:10b6:5:177::45)
- by DM4PR12MB6012.namprd12.prod.outlook.com (2603:10b6:8:6c::5) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9769.10; Fri, 27 Mar 2026 07:37:14 +0000
-Received: from DM2PEPF00003FC7.namprd04.prod.outlook.com
- (2603:10b6:5:177:cafe::80) by DM6PR02CA0068.outlook.office365.com
- (2603:10b6:5:177::45) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9745.23 via Frontend Transport; Fri,
- 27 Mar 2026 07:37:14 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
-Received: from satlexmb07.amd.com (165.204.84.17) by
- DM2PEPF00003FC7.mail.protection.outlook.com (10.167.23.24) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9745.21 via Frontend Transport; Fri, 27 Mar 2026 07:37:14 +0000
-Received: from fedora.amd.com (10.180.168.240) by satlexmb07.amd.com
- (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Fri, 27 Mar
- 2026 02:37:13 -0500
-From: Zhu Lingshan <lingshan.zhu@amd.com>
-To: <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Zhu Lingshan <lingshan.zhu@amd.com>
-Subject: [PATCH] PCI: Skip devices with RRS Vendor ID(0x0001) on root bus
-Date: Fri, 27 Mar 2026 15:36:59 +0800
-Message-ID: <20260327073659.6160-1-lingshan.zhu@amd.com>
-X-Mailer: git-send-email 2.53.0
+	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="dnXshSLV"
+Received: from [194.37.255.9] (helo=mxout.expurgate.net)
+	by relay.expurgate.net with smtp (Exim 4.92)
+	(envelope-from <prvs=6560217375=fe@dev.tdt.de>)
+	id 1w61pp-00Crgd-Nn
+	for linux-pci@vger.kernel.org; Fri, 27 Mar 2026 08:42:25 +0100
+Received: from [195.243.126.94] (helo=securemail.tdt.de)
+	by relay.expurgate.net with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <fe@dev.tdt.de>)
+	id 1w61pp-00ESAY-9m
+	for linux-pci@vger.kernel.org; Fri, 27 Mar 2026 08:42:25 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev.tdt.de;
+	s=z1-selector1; t=1774597343;
+	bh=7RaolsCunBVTFhZ3LbX7+wICpbiFEhlTeVpC6rsJlR4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=dnXshSLVa4J1rW9ysfw7KThIBOPGRiXcy2lfthvaTJR8zRlIMI34cu1sATTNDv/iI
+	 JwYhuCGNUcdxsnxvaakf4l44C1MRgOZM/bxJPOEfz+vXvX50sXcYo2qfzkIt15P+QO
+	 JrQrhdQASk1Bj2tWHHDYAsP09g8CBGNud9XfB49YX6BDvTNQ+Llcerft2EQfOavHu3
+	 EHy7rg/bFRJJDKdqv5V5VmD6yzIa38sPJhg9NPyA8whODrqjL0dX+IWfqWL9RX0i1Y
+	 lm5FDAnNW6r0bMcWHP/WtUvlOi8QS2eF8DkkGkTtjNARSAkLJ/ngDRueI+9W/A2qeW
+	 H6RptgjyWEADQ==
+Received: from securemail.tdt.de (localhost [127.0.0.1])
+	by securemail.tdt.de (Postfix) with ESMTP id AA039240040
+	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 08:42:23 +0100 (CET)
+Received: from mail.dev.tdt.de (unknown [10.2.4.42])
+	by securemail.tdt.de (Postfix) with ESMTP id 9684D240036;
+	Fri, 27 Mar 2026 08:42:23 +0100 (CET)
+Received: from mail.dev.tdt.de (localhost [IPv6:::1])
+	by mail.dev.tdt.de (Postfix) with ESMTP id B1A812072D;
+	Fri, 27 Mar 2026 08:42:21 +0100 (CET)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: satlexmb07.amd.com (10.181.42.216) To satlexmb07.amd.com
- (10.181.42.216)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM2PEPF00003FC7:EE_|DM4PR12MB6012:EE_
-X-MS-Office365-Filtering-Correlation-Id: bc5d4aa4-42a6-4187-f7a8-08de8bd3aa70
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|1800799024|36860700016|376014|18002099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	bKhGQY/jE2i8HcsCNR34yayNL+nRHGP3u2vTBav652vgPu8offPMg9CS04BNuTSrIrPnZZtdUy+8DkQXROsrMC3RiBr3ayRNiw5xip+LAWV2FaM+uAmYMvMxC93f/X2fg5cFO0Dsm4LK2B3KxjnYwRZZ1u/TO3yweFFZAVD61/LQ2zbgmbVMJzWmv4JvV8ISO4J0uRVKDdLQLwhkaAGrloQX8wvNcHqMp4MG0+ilBapnzN/a3R75OoPxZc/aL2kKN3WkuiToNNZ5z1r7JuQ6XBtjBgN+FVTjmu6gp2eYtp/Ygb4XHjy0FVSmu+i/mmhU4HtPdTTX0NNFC/iWkkxhcVIIEFNmp2B+sr2LWUBybLKhmjoUDnV7yX604ZVobQQNA+YKtiTZLknSnjBqaPSHs5KzVa141RzAZwQ6gYIpsBCjPBHjuwrRGTkmGcvTf+5nYW/8VdvOCbWr+ArQ9v9IyGn1vv3fSyH7q9scNpNDxijecrA9njcLTCU5J88CswCprAEfWqscwabNOxKy/xD8+7k/icCckFYCqFG9IjOPhZFzhxjYqjQXrkKPshNnlQMoa5TYxjl7ERiZWJotbpAaUghU85A7cqmgHMeC2wpEfJ45HlMNfxrQWkezoQaHQ81m6QeV4WjNM68E8nQ4XCRIKJJN+hBPbbhhJEKYZ/UpBBzlXg2vKb3Dp+uur7+7Xf6PKdEdoXg3+HVO7NQhLv7p9yCs+hcJ2c2nq76b/rrIiSVccR9k7g86UDo7pEw/rq/rHS463b8B4O9IuxPpldfeOQ==
-X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(36860700016)(376014)(18002099003)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	xpFmIZtwYDcVNExmJLMf3VptwioSmRHgyfypA/11HyhX180XnCEjalggeiRdQbLIOdTVPkN3QDoUhtq6f7snm0eIIHFkdA16EMB6KC7FL+36dH+qYrAOKTlKne1J6MQoEj3EouWvTyaFUn3PoWUidL/Bya6SDKk+9L66Pz/OIBoE7/S+1IktjqLx5UOIF85kF5qk0o4vKpFzLgi5JPuzIi916dt+B3S6LsE/Dn8d2f2Ldw2QSeJOZSSv6aoDsF2bNEHrzRfZX942jgHlUcVR5JCuVGYS216xItRtD3miF8fkSGMA6fI43Iz2Y+yZ2iO2lCXUIj/v3I89tT/+3S8fT1dMOYVko59oDaeBpduz/KSKcSNdXlyHhSqcLdBUzHv3D3ZPxIjSq16a85DnF+1SMDvXX2lcfShpQkUiolE6q2c7t/5DPAy2H2VXEAQ62N/L
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Mar 2026 07:37:14.6321
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: bc5d4aa4-42a6-4187-f7a8-08de8bd3aa70
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	DM2PEPF00003FC7.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6012
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Fri, 27 Mar 2026 08:42:21 +0100
+From: Florian Eckert <fe@dev.tdt.de>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Chuanhua Lei <lchuanhua@maxlinear.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Johan Hovold <johan+linaro@kernel.org>,
+	Sajid Dalvi <sdalvi@google.com>,
+	Ajay Agarwal <ajayagarwal@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/5] PCI: intel-gw: Enable clock before phy init
+In-Reply-To: <acem5jvxct2izfwgqdtf52tijntkh6lz2eyeydsmfxzpue744i@nbzoe3ysilo6>
+References: <20260317-pcie-intel-gw-v1-0-7fe13726ad4f@dev.tdt.de>
+ <20260317-pcie-intel-gw-v1-2-7fe13726ad4f@dev.tdt.de>
+ <acem5jvxct2izfwgqdtf52tijntkh6lz2eyeydsmfxzpue744i@nbzoe3ysilo6>
+Message-ID: <f8a998cfb826d7b6d4b7a057f9ac6747@dev.tdt.de>
+X-Sender: fe@dev.tdt.de
+User-Agent: Roundcube Webmail/1.3.17
+Content-Transfer-Encoding: quoted-printable
+X-purgate: clean
+X-purgate-ID: 151534::1774597345-072C4842-D7F5E124/0/0
+X-purgate-type: clean
 
-PCIe Request Retry Status (RRS) is a link-layer mechanism where a
-downstream device responds with RRS to indicate it is not ready.
+Hello Mani,
 
-With RRS Software Visibility enabled, the Root Port translates
-RRS into Vendor ID 0x0001 (reserved by PCI SIG) for the driver.
+Thanks for your review.
 
-Devices on the root bus, for example the root port itself,
-have no upstream PCIe link and can never legitimately return RRS.
+On 2026-03-26 17:08, Manivannan Sadhasivam wrote:
+> On Tue, Mar 17, 2026 at 11:12:50AM +0100, Florian Eckert wrote:
+>> To ensure that the boot sequence is correct, the dwc pcie core clock=20
+>> must
+>> be switched on before phy init call.
+>>=20
+>> This changes are based on patched kernel sources of the MaxLinear SDK,
+>> which can be found at https://github.com/maxlinear/linux
+>>=20
+>=20
+> How can we treat Maxlinear kernel source as a reference for Intel=20
+> driver?
+> Atleast, you need to provide some info onto why this should be trusted=20
+> as a
+> reference like used a product etc...
 
-This patch skips any devices with RRS Vendor ID 0x0001
-on the root bus instead of entering the RRS retry loop.
+As far as I know, this driver is only used by Maxlinear=E2=80=99s URX851 =
+and=20
+URX850
+SoCs. However, the chip was originally developed by Intel when they
+acquired Lantiq=E2=80=99s home networking division in 2015 [1] for this S=
+oCs.
+In 2020 the home network division was sold to Maxlinear [2].
 
-Signed-off-by: Zhu Lingshan <lingshan.zhu@amd.com>
----
- drivers/pci/probe.c | 21 ++++++++++++++++++++-
- 1 file changed, 20 insertions(+), 1 deletion(-)
+Since then, Maxlinear has been responsible for the driver. However,=20
+their
+SDK is outdated and based on kernel 5.15. Other than that, not much is
+happening! Even the developers listed as maintainers can no longer be
+reached. When it came to the patch set, the email couldn't be delivered=20
+to
+the responsible developer 'Chuanhua Lei <lchuanhua@maxlinear.com>'=20
+either.
+The email bounced back.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index bccc7a4bdd79..2fad89ca594c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2578,8 +2578,27 @@ bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
- 	    *l == 0x0000ffff || *l == 0xffff0000)
- 		return false;
- 
--	if (pci_bus_rrs_vendor_id(*l))
-+	if (pci_bus_rrs_vendor_id(*l)) {
-+		/*
-+		 * RRS (Request Retry Status) is a PCIe link-layer mechanism
-+		 * where a downstream device sends a RRS completion status, and the
-+		 * Root Port (with RRS Software Visibility enabled) translates
-+		 * it to Vendor ID 0x0001 for the driver, indicating the
-+		 * device is not ready.
-+		 *
-+		 * Therefore, RRS is a root port feature, and devices on the root bus,
-+		 * for example the root port itself have no upstream PCIe link,
-+		 * so they can never legitimately return RRS.
-+		 */
-+		if (pci_is_root_bus(bus)) {
-+			pr_err("pci %04x:%02x:%02x.%d: invalid Vendor ID %04x (RRS, reserved by PCI SIG) on root bus, buggy device\n",
-+				pci_domain_nr(bus), bus->number,
-+				PCI_SLOT(devfn), PCI_FUNC(devfn),
-+				*l & 0xffff);
-+			return false;
-+		}
- 		return pci_bus_wait_rrs(bus, devfn, l, timeout);
-+	}
- 
- 	return true;
- }
--- 
-2.53.0
+The company I work for is using the chip and is currently in the process=20
+of
+extracting the key components from the SDK so that the SoC can work=20
+again with
+a mainline kernel again.
 
+[1]=20
+https://www.intc.com/news-events/press-releases/detail/364/intel-to-acqui=
+re-lantiq-advancing-the-connected-home
+[2]=20
+https://investors.maxlinear.com/press-releases/detail/395/maxlinear-to-ac=
+quire-intels-home-gateway-platform
+
+>> Signed-off-by: Florian Eckert <fe@dev.tdt.de>
+>> ---
+>>  drivers/pci/controller/dwc/pcie-intel-gw.c | 16 ++++++++--------
+>>  1 file changed, 8 insertions(+), 8 deletions(-)
+>>=20
+>> diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c=20
+>> b/drivers/pci/controller/dwc/pcie-intel-gw.c
+>> index=20
+>> 3a85bd0ef1b7f9414ce19fe56d82a78e34e9b648..6110a8adb8732dbbd5e9e2db68a0=
+606ccf032ae1=20
+>> 100644
+>> --- a/drivers/pci/controller/dwc/pcie-intel-gw.c
+>> +++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
+>> @@ -292,13 +292,9 @@ static int intel_pcie_host_setup(struct=20
+>> intel_pcie *pcie)
+>>=20
+>>  	intel_pcie_core_rst_assert(pcie);
+>>  	intel_pcie_device_rst_assert(pcie);
+>> -
+>> -	ret =3D phy_init(pcie->phy);
+>> -	if (ret)
+>> -		return ret;
+>> -
+>>  	intel_pcie_core_rst_deassert(pcie);
+>>=20
+>> +	/* Controller clock must be provided earlier than PHY */
+>>  	ret =3D clk_prepare_enable(pcie->core_clk);
+>>  	if (ret) {
+>>  		dev_err(pcie->pci.dev, "Core clock enable failed: %d\n", ret);
+>> @@ -307,13 +303,17 @@ static int intel_pcie_host_setup(struct=20
+>> intel_pcie *pcie)
+>>=20
+>>  	pci->atu_base =3D pci->dbi_base + 0xC0000;
+>>=20
+>> +	ret =3D phy_init(pcie->phy);
+>> +	if (ret)
+>> +		goto phy_err;
+>=20
+> You just messed up the whole error path. This one should branch to
+> err_disable_core_clk that disables core_clk and deasserts reset.
+>=20
+>> +
+>>  	intel_pcie_ltssm_disable(pcie);
+>>  	intel_pcie_link_setup(pcie);
+>>  	intel_pcie_init_n_fts(pci);
+>>=20
+>>  	ret =3D dw_pcie_setup_rc(&pci->pp);
+>>  	if (ret)
+>> -		goto app_init_err;
+>> +		goto phy_err;
+>=20
+> And this to err_phy_exit that does phy_exit().
+>=20
+>>=20
+>>  	dw_pcie_upconfig_setup(pci);
+>>=20
+>> @@ -322,13 +322,13 @@ static int intel_pcie_host_setup(struct=20
+>> intel_pcie *pcie)
+>>=20
+>>  	ret =3D dw_pcie_wait_for_link(pci);
+>>  	if (ret)
+>> -		goto app_init_err;
+>> +		goto phy_err;
+>>=20
+>>  	intel_pcie_core_irq_enable(pcie);
+>>=20
+>>  	return 0;
+>>=20
+>=20
+> Here, you should add shuffle phy_exit() accordingly.
+
+I'll take another look at that.
+
+Thanks
+
+- Florian
