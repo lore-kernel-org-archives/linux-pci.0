@@ -1,168 +1,164 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52A443AA1B2;
-	Fri, 27 Mar 2026 10:29:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFA0F348895;
+	Fri, 27 Mar 2026 11:16:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774607354; cv=none; b=keG8S0eKOtsDy0M2UMRN9cCH5OcCbjOkusojCHtgdeKcW9FhoH+u0IPEBCsJqhHaAv7amQ9xRm2zpXgk/+9+fSyfA4TzzY/NuPwhj+n/DSykYbUyTunllF5QF5vzAQYZQjuRoVllfnAwPsr+yX6KVyp6JdEV1ZixPBetu9pYYeY=
+	t=1774610185; cv=none; b=E9flIi/giAYbZYTAY1vMdN8CnoN2bmF+acpxJSuvJj4cnvUIY2YyN0LIidtY1ade4d1jO6m1B+QdPv7ngCtMR3Joouhl1OROoG1wXx5I31jCA17YrivFgScmtmLdBbwMhcS6hugr7OhoZLmq5va8CkmizWI3eYBOuVa/BoWm8YY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774607354; c=relaxed/simple;
-	bh=AQrZsYS87uRLSAUzR2yt6e8HOvPMEsktxMC+0rqw0oY=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=nVuYhg6gY5IMwE6tnlqy3yOoA4E2e+6tsyvnzitFBWc03tx1m2so0L45gAxs8Zxl1htN/84Xhr/YxkkpcsfiaD8d361Cf0Y3qlcWJ8tyr7BV1N+GDH5FpD7d1TrGotUtEoLjDsijTUnJx6ZXbBSUx3FxUSGSvKEnY6dvn/TuKW8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SX0nzWlZ; arc=none smtp.client-ip=192.198.163.8
+	s=arc-20240116; t=1774610185; c=relaxed/simple;
+	bh=dITTYn31D61hi72T+XQ1efHkmXEWvLF2AXvLqvThnMg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pcUrcOPBU6M6WoHxYtfu7BcLGFi4czQ2aJ/+kjrdGzBSysj7sd3MXZlfwo9+JtcMPJn1oJX68wtzCjVunyAcywHR0jMc90uFfqfwXc9/Ex5soK5UJd5yR7MNj7WFNe10Zvb45bamzCIiWwv5bCXeDEq8HizCxXF/CNiF+txoH+U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fAdqVlcJ; arc=none smtp.client-ip=198.175.65.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SX0nzWlZ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fAdqVlcJ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774607353; x=1806143353;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=AQrZsYS87uRLSAUzR2yt6e8HOvPMEsktxMC+0rqw0oY=;
-  b=SX0nzWlZIY0Lg4fyXJy1hem2uUevSvI1nbx91bp0jZYYqRr93GaLksaE
-   L6XLJWuLACGbs/Obo0LLfiusLKSxmX5HOfj2BR/OfzI5RUmPnAEbJxWGx
-   H8arvWKQ7iOn+koxe3/GEJt4fFT8S6HWH9xg10wBXdgqPJanVKkEt1Qyx
-   /7B2xb2jl7faADXEGMBpdI28tH79/++kh/ol8X0TPBLWYG1sA2mCqBcZa
-   QJQsSA1iMaFdyaMsTkz2wpp39pZGfRPODNn6QqAM5cXjkgXj8CJ1e7gn9
-   0Li0W7WV2EDfk6lWNjEzVO4kFjsRIUYdrV6xXvg6gkCesf5RAzv+5UkW8
-   Q==;
-X-CSE-ConnectionGUID: +KbLwjXESSqMmEPH1Yg2iA==
-X-CSE-MsgGUID: k3BStIGXSgiyo9+iueWvgA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="93259306"
+  t=1774610180; x=1806146180;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=dITTYn31D61hi72T+XQ1efHkmXEWvLF2AXvLqvThnMg=;
+  b=fAdqVlcJyNKw73bocszenSkiyDVpmw+dZJ9XUA+09IwwjefyisQ7yDk0
+   LFDapvnf1uXxQVZ//hlFqB5wdo65F10gtKubPyxEQWQ5BpixrGpbsJK54
+   I3odvq+qXCTCYE55AUT2IK3mEBQfFjgnG0cY3ZhCXY1n8FrKRDual87Xe
+   kqQiMk02xJoMcw9djwls1BzCb8bcx044Fun7QHyePh3XjG6emteBIfeM9
+   Vxur8c591o+CoYRVmsGZeUWkCUtQVrYTpPz69voOarhDe05dlv8O2ian4
+   8lzUCDjIMofvj1qvPrwxWsyqCsGYT2jKyezsVH1Ay8SNcoSfw61UWd8ud
+   g==;
+X-CSE-ConnectionGUID: KBlGRYltRPuHmbT5N0DJqg==
+X-CSE-MsgGUID: AUhebAi8SI6mL8WwK9tnIQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="79541234"
 X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
-   d="scan'208";a="93259306"
+   d="scan'208";a="79541234"
 Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 03:29:11 -0700
-X-CSE-ConnectionGUID: tBARr7F7SaCXrVZYlacT+g==
-X-CSE-MsgGUID: 6iZuzsYWQBOngO/GpRvA3A==
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 04:16:19 -0700
+X-CSE-ConnectionGUID: wXBkLUkrQyGrnsWl0Xp5ZA==
+X-CSE-MsgGUID: kviLYhDxRqyPe85BXO7KUQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
-   d="scan'208";a="263218208"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.186])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 03:29:01 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Fri, 27 Mar 2026 12:28:56 +0200 (EET)
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, 
-    Guenter Roeck <linux@roeck-us.net>, linux-alpha@vger.kernel.org, 
-    linux-arm-kernel@lists.infradead.org, linux-m68k@lists.linux-m68k.org, 
-    linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org, 
-    linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, 
-    linux-sh@vger.kernel.org, Russell King <linux@armlinux.org.uk>, 
-    Geert Uytterhoeven <geert@linux-m68k.org>, 
-    Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
-    "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-    Helge Deller <deller@gmx.de>, Michael Ellerman <mpe@ellerman.id.au>, 
-    Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
-    Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, 
-    "H. Peter Anvin" <hpa@zytor.com>, Chris Zankel <chris@zankel.net>, 
-    Max Filippov <jcmvbkbc@gmail.com>, 
-    Madhavan Srinivasan <maddy@linux.ibm.com>, 
-    Yoshinori Sato <ysato@users.sourceforge.jp>, Rich Felker <dalias@libc.org>, 
-    John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
-    LKML <linux-kernel@vger.kernel.org>, Xifer <xiferdev@gmail.com>
-Subject: Re: [PATCH 00/10] PCI: Improve head free space usage
-In-Reply-To: <20260326192520.GA1337681@bhelgaas>
-Message-ID: <7207cde7-d47e-f79c-afe9-9b1daa79140c@linux.intel.com>
-References: <20260326192520.GA1337681@bhelgaas>
+   d="scan'208";a="263226033"
+Received: from black.igk.intel.com ([10.91.253.5])
+  by orviesa001.jf.intel.com with ESMTP; 27 Mar 2026 04:16:18 -0700
+Received: by black.igk.intel.com (Postfix, from userid 1001)
+	id 7B14698; Fri, 27 Mar 2026 12:16:16 +0100 (CET)
+Date: Fri, 27 Mar 2026 12:16:16 +0100
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: pciehp: Fix hotplug on Catlow Lake with
+ unreliable PME status
+Message-ID: <20260327111616.GC3552@black.igk.intel.com>
+References: <20260323232437.GA1085990@bhelgaas>
+ <ca15feda-5d63-405d-a4c4-00cbb9991fed@linux.intel.com>
+ <20260325061131.GY2275908@black.igk.intel.com>
+ <5d6d94b4-458f-473c-84df-c6fab7805dbe@linux.intel.com>
+ <20260326061200.GA3552@black.igk.intel.com>
+ <3a97fb38-70c7-4ca9-8c49-4c95e1623c91@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-307680389-1774607336=:1037"
-
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---8323328-307680389-1774607336=:1037
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Disposition: inline
+In-Reply-To: <3a97fb38-70c7-4ca9-8c49-4c95e1623c91@linux.intel.com>
 
-On Thu, 26 Mar 2026, Bjorn Helgaas wrote:
+Hey,
 
-> [+cc Xifer; thanks very much for reporting and testing!]
->=20
-> On Tue, Mar 24, 2026 at 06:56:23PM +0200, Ilpo J=C3=A4rvinen wrote:
-> > Hi all,
-> >=20
-> > This series attempts to take advantage of free head space (the free
-> > space before the aligned start address) in order to generally produce a
-> > tighter packing of the resources/bridge windows.
-> >=20
-> > The recent changes to the resource fitting algorithm caused resource
-> > allocation failures in some cases where a bridge window that is sized
-> > to be gapless could no longer be assigned. The previous algorithm left
-> > a huge gaps which allowed it to place the remainder (non-aligning part
-> > of the size) before the start address of used for the gapless fit,
-> > whereas the new gapless approach always had to place the remainder
-> > after the aligning part of the resources. There is not always space
-> > for the remainder triggering those failures (e.g., when the aligning
-> > part must be placed at the top of the window).
-> >=20
-> > This series attempts to allow placing the remainder once again before
-> > the aligning part, but now without leaving huge gaps to retain the
-> > benefits of the gapless bridge windows. The approach is somewhat hacky
-> > but should work thanks to PCI resources fundamentally consisting only
-> > power-of-two atoms.
-> >=20
-> > There maybe cases where architecture would not want to do such
-> > relocation. This series adds the relocation to arch
-> > pcibios_align_resource() functions to allow all of them taking
-> > advantage of the better resource packing but if somebody objects doing
-> > this relocation for a particular arch, I can remove it, please just let
-> > me know (this relocation doesn't seem critical unless there are
-> > regressions).
-> >=20
-> > Ilpo J=C3=A4rvinen (10):
-> >   resource: Add __resource_contains_unbound() for internal contains
-> >     checks
-> >   resource: Pass full extent of empty space to resource_alignf CB
-> >   resource: Rename 'tmp' variable to 'full_avail'
-> >   ARM/PCI: Remove unnecessary second application of align
-> >   am68k/PCI: Remove unnecessary second application of align
-> >   MIPS: PCI: Remove unnecessary second application of align
-> >   parisc/PCI: Cleanup align handling
-> >   PCI: Rename window_alignment() to pci_min_window_alignment()
-> >   PCI: Align head space better
-> >   PCI: Fix alignment calculation for resource size larger than align
-> >=20
-> >  arch/alpha/kernel/pci.c          |  1 +
-> >  arch/arm/kernel/bios32.c         |  9 ++++---
-> >  arch/m68k/kernel/pcibios.c       |  8 +++++--
-> >  arch/mips/pci/pci-generic.c      |  8 ++++---
-> >  arch/mips/pci/pci-legacy.c       |  3 +++
-> >  arch/parisc/kernel/pci.c         | 17 ++++++++------
-> >  arch/powerpc/kernel/pci-common.c |  6 ++++-
-> >  arch/s390/pci/pci.c              |  1 +
-> >  arch/sh/drivers/pci/pci.c        |  6 ++++-
-> >  arch/x86/pci/i386.c              |  5 +++-
-> >  arch/xtensa/kernel/pci.c         |  3 +++
-> >  drivers/pci/pci.h                |  3 +++
-> >  drivers/pci/setup-bus.c          | 15 ++++++++----
-> >  drivers/pci/setup-res.c          | 40 +++++++++++++++++++++++++++++++-
-> >  drivers/pcmcia/rsrc_nonstatic.c  |  3 ++-
-> >  include/linux/ioport.h           | 22 +++++++++++++++---
-> >  include/linux/pci.h              | 12 +++++++---
-> >  kernel/resource.c                | 33 +++++++++++++-------------
-> >  18 files changed, 149 insertions(+), 46 deletions(-)
->=20
-> I added Xifer's tested-by, fixed the "am68k" and missing "if"
-> typos, and applied these to pci/resource for v7.1.
->=20
-> Ilpo, if you post a v2 with more changes, I'll update to it.  I
-> applied the series now to get a head start on 0-day building and into
-> next.
+On Thu, Mar 26, 2026 at 02:23:50PM -0700, Kuppuswamy Sathyanarayanan wrote:
+> Hi Mika,
+> 
+> On 3/25/2026 11:12 PM, Mika Westerberg wrote:
+> > On Wed, Mar 25, 2026 at 02:12:48PM -0700, Kuppuswamy Sathyanarayanan wrote:
+> >>
+> >>
+> >> On 3/24/2026 11:11 PM, Mika Westerberg wrote:
+> >>> On Tue, Mar 24, 2026 at 02:45:25PM -0700, Kuppuswamy Sathyanarayanan wrote:
+> >>>>> eb34da60edee ("PCI: pciehp: Disable hotplug interrupt during suspend")
+> >>>>> cleared PCI_EXP_SLTCTL_HPIE so that when the link goes down, we
+> >>>>> wouldn't get a PCI_EXP_SLTSTA_DLLSC interrupt and wake the system.
+> >>>>>
+> >>>>> I don't know the details of why the PCI_EXP_SLTSTA_DLLSC would cause
+> >>>>> that wakeup.  I would think pciehp should field that, and it should be
+> >>>>> able to figure out whether to bring the port out of D3hot.
+> >>>>>
+> >>>>> Anyway, with this patch it looks like we'll leave PCI_EXP_SLTCTL_HPIE
+> >>>>> set, and potentially get that PCI_EXP_SLTSTA_DLLSC interrupt again?
+> >>>>
+> >>>> I have tested this patch on Catlow Lake. Enabling HPIE does not result in
+> >>>> spurious wakeups as mentioned in Mika's patch.
+> >>>>
+> >>>> Mika, any comments?
+> >>>
+> >>> What do you have connected to the slot?
+> >>
+> >> A network card.
+> > 
+> > Okay.
+> > 
+> > Out of interest how do you hotplug it? :)
+> 
+> We physically remove and insert the card.
 
-Thanks.
+Got it.
 
-I don't have anything in addition to those.
+> >>> IIRC the interrupt triggers when presence change toggles (due to the link
+> >>> going down).
+> >>>
+> >>
+> >> I have tested the s3 mode. I was able to see message related to system entering
+> >> suspend and then coming back again after (after user intervention). I also noted
+> >> pcie_disable_interrupt() called before suspend and pcie_enable_interrupt() called
+> >> after resume.
+> > 
+> > In case of S3 the BIOS also configures the hardware before entering
+> > suspend. On client at least it's suspend-to-idle and any interrupt will
+> > bring the CPU and the system out of it. It could be that that's the reason
+> > you don't see any issue if this is server system and it goes into full S3?
+> > 
+> 
+> Looking at the kernel logs, the system is actually using suspend-to-idle 
+> (s2idle), not full S3:
+> 
+>   PM: suspend entry (s2idle)
+> 
+> So this is the same suspend mode where you observed the spurious wakeup issue.
+> Interestingly, we're not seeing the problem on Catlow Lake with HPIE enabled.
+> 
+> I am trying to understand the wakeup sequence in your case. IIUC, before the
+> system enters suspend, it will put the device and port in D3hot, right? So link
+> down should happen before the system goes to sleep or idle. At what point does
+> the spurious DLLSC interrupt occur that causes the unwanted wakeup?
 
---=20
- i.
+I think in case of tunneled PCIe it is presence detect that toggles and
+triggers the interrupt if left enabled.
 
---8323328-307680389-1774607336=:1037--
+The flow is something like this (from my memory):
+
+1. User enters s2idle.
+2. PM core suspends devices.
+3. PCI core suspends the devices behind the root port and then the root
+   port itself. This makes the root port be in D3hot and the link below it
+   is still in L1.
+4. PCI/ACPI turns of the power resource attached to the root port. This
+   puts the link into L2/3 ready and then PERST# is asserted in which case
+   the tunnels are gone and presence detect changes and the link enters L2
+   and the root port enters D3cold.
+
+In your case does the root port enter D3cold? Does it have power resource?
+Or it stays in D3hot? We should not put any hotplug ports into low power
+states if they don't have HotPlugSupportInD3 property as described here:
+
+https://learn.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports#identifying-pcie-root-ports-supporting-hot-plug-in-d3
+
+There is some BIOS support needed for the D3cold. We have that in client
+but I have not been dealing with the server so not familiar how things are
+done there. I would think power savings are not that important in big iron.
