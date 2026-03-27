@@ -1,201 +1,157 @@
-Received: from mxout70.expurgate.net (mxout70.expurgate.net [194.37.255.70])
+Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011064.outbound.protection.outlook.com [52.101.57.64])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B0AD3314D2
-	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 11:44:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.37.255.70
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774611882; cv=none; b=FqLHiE/DYJs7a7Q5gJ0AsEDytBDOmM7fQSWL/MEG4mnbLdVOMWWsQMIljgjrGSWxnzENEyMwlFORwAgAW1tBAHAKDUbuOfT/haZRssF2EaOyZ+rQeH30aHejn/ReV9SAu+7pqst8U6YOvz3cbYAcSiYyE0HlxUegeC50plIpV/s=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774611882; c=relaxed/simple;
-	bh=4D/kZeewpzn4zOovfW8JUpPIYDYTqAEPpCC85jXHm/Y=;
-	h=MIME-Version:Content-Type:Date:From:To:Cc:Subject:In-Reply-To:
-	 References:Message-ID; b=hnHemfGlMY4sc83+88oiQRUvxnGuqrDa9oHnHcdgI0mKH7Yb7tgto34SW2C2Fq6Vgt6c44s70dHWjkLhbr50RyKnazH2krufxX3h+RIGEOERykFbJvvbugthm/LToS9hAOsDw/1SbhhXRjKZwU5tTHC/RlrXvNEqCOflNadA93w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=wLEIbWdF; arc=none smtp.client-ip=194.37.255.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev.tdt.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45A4A3815F9
+	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 11:49:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.57.64
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774612168; cv=fail; b=PIbJhLzIod0fkDSHQw8iNIUReTY2XlD/8QNWjpt+O8bNJzfyrZZOjmXMqjwhkOOZXEbshWBiRAQxIqPbKef4Wht1TyeQM9RwF8A/x1hwWSNPw588nekJ0B5jJagxzhYaz4/q985fQpxD2W3CnDUmw1CfDHsbA++jLkP0OgksJiw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774612168; c=relaxed/simple;
+	bh=DQfvGhIdT+4lHayEDollJAXXAIoHzd6V/Sih6dKbkLU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=jaXRgKQFzbHmbo2RdUYXQUo09YXxm5dhNBAfEt4l+hi6c/tQZy83tJDWxJ1uZiA2Ns62EBgNW/EhSkqvXWGHB011TQ7k6VKkNFxnGQWOLUVfD6copr9T3aI88EnjAaL3ebGXWbD6QDfwq6GVj+MJSTENw4PHNy2Gyr5qSOVkZvo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=lJTyQ2dq; arc=fail smtp.client-ip=52.101.57.64
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="wLEIbWdF"
-Received: from [194.37.255.9] (helo=mxout.expurgate.net)
-	by relay.expurgate.net with smtp (Exim 4.92)
-	(envelope-from <prvs=6560217375=fe@dev.tdt.de>)
-	id 1w65cE-00Dyi1-Cx
-	for linux-pci@vger.kernel.org; Fri, 27 Mar 2026 12:44:38 +0100
-Received: from [195.243.126.94] (helo=securemail.tdt.de)
-	by relay.expurgate.net with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <fe@dev.tdt.de>)
-	id 1w65cD-003nVS-VZ
-	for linux-pci@vger.kernel.org; Fri, 27 Mar 2026 12:44:38 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev.tdt.de;
-	s=z1-selector1; t=1774611875;
-	bh=zeLPVeK1p8gUPFy9rd03JeCEtujAj1OdYPOzqrPErkY=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=wLEIbWdFmU6kElgt39umvFIMF+CTfEFrMhYi/NzP/FZegvnODa4JwUYip30AZEmS9
-	 Bu3rMVnYYkUYNAcklaTBt8R/Tr7Q4ov02LgXQH19bDUBGSU7cLynQGYH1mzDcgNJBI
-	 LOF9vMJkj6uX3mEdA7ktBWbONIsnJ+BQ2lPwzw7/qquBvZk2Zf2dF9Qu+Glb8xR9/k
-	 vuh2PSEEUiCm6NnPuFW1dDVqr9pTO6Qz0Gc46MQtyMCX45Khzcf7RjshCtAxH6V8rW
-	 rXoaKYG0pJu2hZlj8GdSe3yemUBpP316Q4xfv/r1h7rJkkSdvyc+6B5euBqiTredz3
-	 cueIGnE+GEunQ==
-Received: from securemail.tdt.de (localhost [127.0.0.1])
-	by securemail.tdt.de (Postfix) with ESMTP id 2B42B240041
-	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 12:44:35 +0100 (CET)
-Received: from mail.dev.tdt.de (unknown [10.2.4.42])
-	by securemail.tdt.de (Postfix) with ESMTP id 19A12240036;
-	Fri, 27 Mar 2026 12:44:35 +0100 (CET)
-Received: from mail.dev.tdt.de (localhost [IPv6:::1])
-	by mail.dev.tdt.de (Postfix) with ESMTP id 7184D23B12;
-	Fri, 27 Mar 2026 12:44:34 +0100 (CET)
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="lJTyQ2dq"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=B9CJSEdqwRVNSsgc7obe79ZIv9jbLZ8HxP/BDxxr2aO9NdAtR6RPvuB+qU3Z8ME/2sKzjd8WwEmy+t0Zi3w9dopA4KqzCj47vJP5YNEKe8GDL+f39UJffPK6QHvNYWP+JG7ffj0dEU37pTWNWXS5r78Y7ieTTpBGhvoorK6ZcFZ/5QB1K6DaPgT6fgA8i2p3pR7RhM3lEGuCB049+NCkChdE8o5rrcUQaTGSrsYvVsNxPP0jMvYYW/Q/tlo6rz5zCjMvVd1r8kryUIOzG4jpi9TPkBuXH/xLSCEigrkdCflQjd1wcogkEuzI1D0fObsHX6C2hHmW3BbeYvrAaLDEqw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=jvR7KIvoIuKWZm/04H0d9BB9HYm5brF0ad3qZPBHxds=;
+ b=aYVLidaczf9Jplytb8xaYr+Dd+gyuJSZ30GtL9wdITiMesmEp+3Y8wsKPuBIw+lOsn5yAFa15wJmatog7KEzNxc9KzMm30Im+5brdTNd002G+ljWlyKrJEH3wDEiiSJ7nBlPvKIge3FU2GHTZ/Cq30EWpd8C8o3VoIiKbu8YmBwdBOUIkEXgo720dteWWYfHtMzJvMUIw5CwD6OWwhyXCwvaeET7Uyr5R7QTOYTtQwvkStWTaSGRGJr36+m1OdjEPaZ8Zt/jU+/o5ZjcgsK8xqBI488tNtSFsK4LpJleG3azs/ehjUxmEIKNVh2epB58yoBruwB56rtJQAxlqNpwDQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jvR7KIvoIuKWZm/04H0d9BB9HYm5brF0ad3qZPBHxds=;
+ b=lJTyQ2dqrhY2q6D+0ib017WTVfoEg8qn82K7H9oHFQQKUlyzqf7WNxeZELuFt5iyQWO6hXzxAvoQDU4mZZQcvnrxOfxKKG71L8V7GojaG4XvWB41Lv9JOpRr3t0ZxYt/3l1sWrbNk/EW3qnqjURm0otEeaVjuBAmy40xYkGROL2JF5AZ6MV0KO/Nd/YE7WXPiG8IDrffz6VxrlKGBIRL/xh1P2JkAjO4klGy09p11pCxEcMgrrspPvZBgcqfLND9HeVK03y3lRnatSiFv4YifhBNG2LPy3TvoNVPNgh+DBrH5H1JBELftfeWXFL/n9mQCONDK5n5qtcHIpumXiG27Q==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by DSVPR12MB999150.namprd12.prod.outlook.com (2603:10b6:8:388::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.10; Fri, 27 Mar
+ 2026 11:49:23 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%5]) with mapi id 15.20.9769.006; Fri, 27 Mar 2026
+ 11:49:23 +0000
+Date: Fri, 27 Mar 2026 08:49:21 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Alexey Kardashevskiy <aik@amd.com>
+Cc: Xu Yilun <yilun.xu@linux.intel.com>,
+	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
+	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	bhelgaas@google.com, alistair23@gmail.com, lukas@wunner.de,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2 09/19] PCI/TSM: Support creating encrypted MMIO
+ descriptors via TDISP Report
+Message-ID: <20260327114921.GL67624@nvidia.com>
+References: <20260303000207.1836586-1-dan.j.williams@intel.com>
+ <20260303000207.1836586-10-dan.j.williams@intel.com>
+ <yq5a4imuanoa.fsf@kernel.org>
+ <abPlt8oNUOqGvbA3@yilunxu-OptiPlex-7050>
+ <228298b7-76bc-4ffb-bec0-0c35fd487c4c@amd.com>
+ <20260323182014.GR7340@nvidia.com>
+ <fa1c6e1e-068c-46d7-a623-58c225bb03f4@amd.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <fa1c6e1e-068c-46d7-a623-58c225bb03f4@amd.com>
+X-ClientProxiedBy: BLAPR03CA0002.namprd03.prod.outlook.com
+ (2603:10b6:208:32b::7) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Fri, 27 Mar 2026 12:44:34 +0100
-From: Florian Eckert <fe@dev.tdt.de>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Chuanhua Lei <lchuanhua@maxlinear.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Johan Hovold <johan+linaro@kernel.org>,
-	Sajid Dalvi <sdalvi@google.com>,
-	Ajay Agarwal <ajayagarwal@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/5] PCI: intel-gw: Remove atu base assignment
-In-Reply-To: <eu7z775hpux7vo4p2nzzmyqw6fpvehpuabxs7zfjqhhv4hcsnu@d4dns7uuwu2d>
-References: <20260317-pcie-intel-gw-v1-0-7fe13726ad4f@dev.tdt.de>
- <20260317-pcie-intel-gw-v1-4-7fe13726ad4f@dev.tdt.de>
- <eu7z775hpux7vo4p2nzzmyqw6fpvehpuabxs7zfjqhhv4hcsnu@d4dns7uuwu2d>
-Message-ID: <55d7a2bee58cc44ca162072b0762b3ac@dev.tdt.de>
-X-Sender: fe@dev.tdt.de
-User-Agent: Roundcube Webmail/1.3.17
-Content-Transfer-Encoding: quoted-printable
-X-purgate-ID: 151534::1774611878-05AC9842-AF735EA4/0/0
-X-purgate: clean
-X-purgate-type: clean
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|DSVPR12MB999150:EE_
+X-MS-Office365-Filtering-Correlation-Id: 384df2a6-5df1-4cc1-0386-08de8bf6e390
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|366016|1800799024|18002099003|56012099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	X3Dt5V/7PzG1XytzL4y5CYAMtZgpqDE1WjTXRtg46bfT2v93EYMFIyrrnXR9nExNbOt7HGLJM2nIVpWdtjl+77Y33dYSOWmbedOXxYh5V3GFSr/3X4hr7uJmx3VyvB3G3AUFwleCYK8MF8DGYlWF6XXLHzzhpPJVc/TUo/VYrV6FZNmJRUjpeIAJlXv7L+Bm+cOzAvBz1E/+bVA6BPg4AO3bOY8f19orqhgfK1F2chP5I+SWougDQQCaGaJAfgG2YI95IFpnu9A5la+3rsoNaZ0Bc5e62ET+OfpxOQXpzSY1ySNTTg3Dzrg8B/yI8p2rVdExO5EIM9FQFryoi2tjC3EEhbaeJ0+qQl1heT6P4EOHZ1sCcbRZB/dXVFB1AGtYj2qLRh7Y7diaz+OaW6gYp/Z+PfAJmoJN7QKvrbTyDV4aopb2P/Ms2pjMklkzkHhlhZLovx+jDYdEq/zqATj6bpSLvdNVnde9bG/A/nrXgFzghLZMLGomLBnaX8wGk7rGpD/VPVL8fvOLfxUefg2OxnJRPvtG5G0rN0hWLOs5SQ6a4UQVpED4XU0lTBmvLlqx18lbKAuCZCNVbRM6gcI/DIGtEVCX6gWGoePhCvdDp2yyGt5uhD7CLh6QHO2zidXFfGv7jRy/t7tJTYLOXcnh3t+8bkViaDBzpe6LIb4y9RQgtXMNrnnU6iX2tqyHXYXZ6ya3c46+Wa6OrUI0PxQFYMKV8jXk+MchYl/sfwMInBE=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?MJoFt06++8lqrAWxDImfec7LJALPUC7ZnQnuO+dtR/QAuIEWQiGhR6xNg1nY?=
+ =?us-ascii?Q?7CVEG4EqvwljnE5f1J/juB/TL2ox+wFDHPmlOwR2Cj7P9kvPBcFxdqs/msN4?=
+ =?us-ascii?Q?SLyxxiaUbrAjhnBfYJPvBZHvDfcneEbnbg9qswezZXMvBa9EkCqJgCQ57ufY?=
+ =?us-ascii?Q?LPgMe2EYBJ3SdqNh8zKxOvhUAx11QhqhDPNchjHJ/TNRTbgVFaSiOerXLAG/?=
+ =?us-ascii?Q?cnvlbxf7aHVm5ZQAu+BzpBypOdLt5Hnf6BppkxxM19g7q6AgMpsuzzA6qsUA?=
+ =?us-ascii?Q?H4xzECBqsDiMRdIio6wjkjjJzK/EFNFFhE2lcQv3fmeJmZX8qxPfZObSJA5H?=
+ =?us-ascii?Q?8PLynOtu25PABKo3UN4mzPKEE9o4hMNk0kaR2tsINrQ9WHAVbWDLw8W/WHoQ?=
+ =?us-ascii?Q?4oOm6cnyECiMTjGY7gRUQIGh9euAMP1yS3mPvqNwDVMmzHP1sSkCsNvWTqQb?=
+ =?us-ascii?Q?XyFCcdKsZNF/tc3xb6OFr7h1JD3/o0hKQ//78w1+vllQl71LB1IxNn4V1wJ9?=
+ =?us-ascii?Q?yQK51yg/bnacK/izGNgXaMX1ABZir4c0TSf+jL7uIyssVhu7xjbHZCrrIMZY?=
+ =?us-ascii?Q?5m9ywNTu18+I1m3LuKK7Ned32RyoOTF1+S9Yu2VNNA5DKu0nmIKI1Pjlh0sd?=
+ =?us-ascii?Q?qKhmX/DJFXhmClh4aLbut2xxAbzUySMYjRu5JeNaucXfsP08JvnDFFRHsleB?=
+ =?us-ascii?Q?nmUPDnOrbXx2xd2C1rWVjodngYt1EBsqbzUTmTwuSEddZnnTQVljehsJ7KpN?=
+ =?us-ascii?Q?Bp8jjHs8TWbT5xwedW/NTbFCbmOUO6AtwcWx8ISgJn9LBvtbOsSGbCeqAuEe?=
+ =?us-ascii?Q?s3W8HhDTIAeBzceW4uHtQtcNa/OCL8RD5O/63ZUbd+J62PCP0FmW7K7m8BNc?=
+ =?us-ascii?Q?nKux0OUhEqU9NyZi4vKNVPhUqX/tUCjXG2TTVYvbYL8STJTxs9w8Sq6nLAha?=
+ =?us-ascii?Q?6AzbJOlU2Co/sXi6chgyj9ApBF3kM6hQ4+3jj21nwSQjFHPbEx29tTthI/Y0?=
+ =?us-ascii?Q?ZbDbhl4iztOIw9qjy7dnGAZiVvY6dJZu4y6XVAu4NfF/gzrh5RfhOwLzo/ne?=
+ =?us-ascii?Q?qw9mKXipoV2adqyPaxYfUCL2UJbgibeJopFCsMknqf/x6QwaZeAMD4y8VmaT?=
+ =?us-ascii?Q?TnmtU8QPocFcSRVvPBj9DxGtGf/DktYDSgpC2vo7m/1rrP1SDzJvpVH//2NT?=
+ =?us-ascii?Q?yLak58d2IHtXtQ4y8VJnDbpwJZFHFsZDj/VhmE276OYxcw1efYjVjXjkHSFQ?=
+ =?us-ascii?Q?ZaAwMLgZmD481h75/4DWEwyLpTxQUGCpXrKzGORERFQX+TyNEW9iX1CHv0ix?=
+ =?us-ascii?Q?G5FKK5+UJ55CN4NHbWUO6q2Cgp8uzMZYPX5jYRFizXa74+l38kboaKr1v2NO?=
+ =?us-ascii?Q?6Rxn7CCtsqOb5fYNd/ydDGKMdc0fgm4SpN8H1B2toxeACTQ67C7qBnx/zQp+?=
+ =?us-ascii?Q?vjc+p6+noIBuzrAbvZTRBCUGzhww0xfkH53tqDuQXlzRJE1SmpGTHyAzpfMI?=
+ =?us-ascii?Q?T0YU+V+6+Rd9VGYtf0hBaNy5W1xxHsnrfpOdqdpxeAPlKgTfk8ldPh2ovlih?=
+ =?us-ascii?Q?4bCye7RN5BYA81wTU+lxGK2MxUhSfK6u6uVP4qj+JcVxFVRJ+VErOf4nmNPI?=
+ =?us-ascii?Q?fOar9Qyzy7agXSNwRSi1+NgFhzSNSXVjech3exrUgVfA+5Xl4CL3WZsI7Z7U?=
+ =?us-ascii?Q?mBFel2hNcIF/vBO6ZvBt+HCYpWhmDWhKADKEmnPzIFwwh68K?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 384df2a6-5df1-4cc1-0386-08de8bf6e390
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Mar 2026 11:49:23.5543
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: gHbojizaPx/XEjSE86sssjNhuTrHqARB5JUpB8JoW8AkbY/gQZ1JC51DQAsIMFyB
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DSVPR12MB999150
 
-On 2026-03-26 17:15, Manivannan Sadhasivam wrote:
-> On Tue, Mar 17, 2026 at 11:12:52AM +0100, Florian Eckert wrote:
->> In the current implementation, only one PCIe bridge is recognised.=20
->> This
->> change removes the assignment of the ATU base address during host=20
->> setup.
->> Instead, the ATU base address is read from the device tree. To do=20
->> this,
->> the 'atu' range of the DTS entry must be changed for PCIe.
->>=20
->> Old DTS entry for PCIe:
->> reg =3D <0xd1000000 0x1000>,
->> 	<0xd3000000 0x20000>,
->> 	<0xd0c41000.0x1000>;
->> reg-names =3D "dbi", "config", "app";
->>=20
->> New DTS entry for PCIe
->> reg =3D <0xd1000000 0x1000>,
->> 	<0xd10c0000 0x1000>,
->> 	<0xd3000000 0x20000>,
->> 	<0xd0c41000.0x1000>;
->> reg-names =3D "dbi", "atu", "config", "app";
->>=20
->=20
-> You just broke the DT backwards compatibility here. What if the driver=20
-> is used
-> with an old DT that doesn't provide this 'atu' entry? The driver will=20
-> break.
-> Moreover, this entry should be added to the DT binding first before any=
-=20
-> driver
-> change.
+On Fri, Mar 27, 2026 at 10:38:15AM +1100, Alexey Kardashevskiy wrote:
+> 
+> 
+> On 24/3/26 05:20, Jason Gunthorpe wrote:
+> > On Mon, Mar 16, 2026 at 04:19:30PM +1100, Alexey Kardashevskiy wrote:
+> > 
+> > > and btw this only works if the entity generating the MMIO reporting
+> > > offset (==TSM) knows about BARs sizes, which is not the case for AMD
+> > > - the FW has no access to the config space (so the HV needs to feed
+> > > this to the FW? may be). Thanks,
+> > 
+> > Then your platform just shouldn't use the mmio offset feature. Set it
+> > to 0 always.
+> 
+> pcie r7, Table 11-16 TDI Report Structure, MMIO_RANGE:
+> 
+> "Each MMIO Range of the TDI is reported with the MMIO reporting offset added."
+> 
+> My english struggles here - can the above be interpreted as "Each reported MMIO Range ..."?
+> 
+> as if it is each (except msix), then I know where msix is and can
+> amend the report inside the VM if msix is not locked. Thanks,
 
-When I looked at the driver=E2=80=99s history, I found a note in a commit=
- that=20
-the driver
-is only used internally by Maxlinear [1]. The maintainer
-'Lei Chuan Hua <lchuanhua@maxlinear.com>' from Maxlinear was still=20
-active at
-that time. He mentioned this on the LKML [2].
+To do this you must be convert between the offset'd and phys_addr_t
+versions otherwise you have no idea where the translated ones fall
+within the BAR, so you can't figure out if msix is covered or not.
 
-Therefore, backward compatibility shouldn=E2=80=99t be necessary.
-
-Unfortunately, it=E2=80=99s already been three months since I last looked=
- into=20
-this issue.
-But as far as I can remember I have to read the 'atu' resource from DTS=20
-and so have
-to remove this line so the driver does work again.
-
-Because the resource is already initialized by the dwc core during the=20
-function
-call 'dw_pcie_get_resources()'on line 141 [3]. This function is called=20
-in the DWC
-host core [4]. This raises the question of why the driver is doing this=20
-itself at
-all, when the core already handles it for us.
-
-Additional, I have noticed that it seems to be bad practice to include=20
-this
-resource information in the source code. This information should instead=20
-be
-loaded via the DTS see commit [5].
-
-If backwards compatibility isn't an issue, then the DWC core should=20
-handle
-loading the 'atu' resource from the DTS.
-
-Is that how you see it too?
-
-
-Thanks for your time and review
-
-- Florian
-
-[1]=20
-https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/d=
-rivers/pci/controller/dwc?h=3Dmaster&id=3D07ae413e169da3697e633dd4489db0d=
-681a04460
-[2]=20
-https://lore.kernel.org/all/BY3PR19MB507667CE7531D863E1E5F8AEBDD82@BY3PR1=
-9MB5076.namprd19.prod.outlook.com/
-[3]=20
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/d=
-rivers/pci/controller/dwc/pcie-designware.c#n141
-[4]=20
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/d=
-rivers/pci/controller/dwc/pcie-designware-host.c#n544
-[5]=20
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit=
-/Documentation/devicetree/bindings/pci?id=3Df500a2f1282750fb344ce535d7807=
-1cf1493efd1
-
->> Signed-off-by: Florian Eckert <fe@dev.tdt.de>
->> ---
->>  drivers/pci/controller/dwc/pcie-intel-gw.c | 2 --
->>  1 file changed, 2 deletions(-)
->>=20
->> diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c=20
->> b/drivers/pci/controller/dwc/pcie-intel-gw.c
->> index=20
->> 6bd25f8da605032bfdb97596fb3a1f6a03e88bfc..cec972d5aa9107d4708338bd7349=
-415a31f0e688=20
->> 100644
->> --- a/drivers/pci/controller/dwc/pcie-intel-gw.c
->> +++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
->> @@ -311,8 +311,6 @@ static int intel_pcie_host_setup(struct intel_pcie=
-=20
->> *pcie)
->>  		goto clk_err;
->>  	}
->>=20
->> -	pci->atu_base =3D pci->dbi_base + 0xC0000;
->> -
->>  	ret =3D phy_init(pcie->phy);
->>  	if (ret)
->>  		goto phy_err;
->>=20
->> --
->> 2.47.3
->>=20
+Jason
