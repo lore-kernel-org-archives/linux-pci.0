@@ -1,63 +1,222 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f73.google.com (mail-pj1-f73.google.com [209.85.216.73])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3F7F273803;
-	Fri, 27 Mar 2026 20:39:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AB112D0620
+	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 21:17:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774643993; cv=none; b=b15dhEabdZSiriwu81Xlh51Ze9ojmLsk+aFOS6BkOksH4QpdiqLNxtji4itmX5gDY1MlXfbh6Qmo9GLE0eZ0Utu6YJt7QFWKT16HBTPVRMElk9OxbRkGkOMzSpboOdGOcWbwRHJX8uBDpLYHt/ZqGMz8XYsFlAKDw+qnQnVMtHI=
+	t=1774646222; cv=none; b=UwZLCn9fA63+ie+bplasiZzx824QqS1VL+E3o+ELhk0pYoYiM/SrXiC+gmCxf0rm+ATwhu+5QM3VJHcNNvpbNXP01nSTwatgvI0N53lxigAktz845k4xUYdKQgRhvl6X2v1z1UzS8zQZCeODCjd3gNgyYci4vewTLyTOCs6pnqQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774643993; c=relaxed/simple;
-	bh=/TGD0xZjPHyEgJu0uIV/kdH6fmP6xCkcwLgxrss4DP4=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=GH6BsrNHheOmYL0m6cqauwxQp4QbY6KVY3N+IRvDQY/YnNaUjTmUt4V0gjHYzUkLOsOJkysQt7AMG7YQwJ6y1YXD1zXoF/IB99Fq8N1CeKFaPQgM35NOStLKsDlf5Np4pDIRzCpBY98ySdcHwQrjCPGJreJkzofXFwZyvcLP8OM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fjpjStuW; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774646222; c=relaxed/simple;
+	bh=GsELgrNxz8NysXFVGpuJJb49OBemyS6+o7WjbjUqBrQ=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=ZAad4l8fnjiMN9RkDoZG3AI9f20H3CZNU2iibHxIJTYMF7cWGBDvYtm2fjJXzYw47MipXx6vQwjNSTJgGpBNcO8ZiaSHKgaUfRaHh1DMH5ZFD4OZ//SSdoz3JCi5KyJI9dMTjaxkKJNpKKjuh7ZqXIWmS+rSYI0Et/NQFO1RVv4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=jerDzyr8; arc=none smtp.client-ip=209.85.216.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fjpjStuW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 789F0C2BC86;
-	Fri, 27 Mar 2026 20:39:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774643993;
-	bh=/TGD0xZjPHyEgJu0uIV/kdH6fmP6xCkcwLgxrss4DP4=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=fjpjStuW5X1ltymQ1npn6YvJYfdL2vLtpo2Si3giuN6Luz2nONQQ5nfkojNoaPnqZ
-	 sv4k0hHsjibE0OQvBpJ5AXgJIdEkS8AlWDJjYilfNAS53/+EXboxEYVyjlzsABiZqC
-	 GNIH2BvQH3jlP4TvyHUzFYH11AqO0LakJ57ypqj+Bmpr550u69oKZBFomqms1E4tTx
-	 IqozHQNT3vGm2vi7GVh2oB25BRbSBkPXWDe/YPIJP7XK8V0gvb1mRXjDoG8NxJZcOS
-	 bdNfRxUbBssr5Pmk8685t/dOrkTRG1pehm2+dHaY3npWt/hde4YekoRptx2bNqgTdl
-	 GGMnHtR9sgk0g==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 7D1183806928;
-	Fri, 27 Mar 2026 20:39:40 +0000 (UTC)
-Subject: Re: [GIT PULL] PCI fixes for v7.0
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20260327143601.GA1460168@bhelgaas>
-References: <20260327143601.GA1460168@bhelgaas>
-X-PR-Tracked-List-Id: <linux-pci.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20260327143601.GA1460168@bhelgaas>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git pci-v7.0-fixes-5
-X-PR-Tracked-Commit-Id: 05f643d6f7e699198ccc47e634de3879a8ec26a3
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 8af4fad545fa4df358c8e4d12f269e460717e514
-Message-Id: <177464397910.3654421.9379105741760362525.pr-tracker-bot@kernel.org>
-Date: Fri, 27 Mar 2026 20:39:39 +0000
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Lukas Wunner <lukas@wunner.de>, Mika Westerberg <mika.westerberg@linux.intel.com>, Maciej Grochowski <mx2pg@pm.me>, Felix Gu <ustc.gu@gmail.com>, Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, Chen-Yu Tsai <wenst@chromium.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="jerDzyr8"
+Received: by mail-pj1-f73.google.com with SMTP id 98e67ed59e1d1-35c0bd3a968so2508436a91.0
+        for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 14:17:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1774646220; x=1775251020; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=trO8rmzZPr0RQOymFCLZQOIxeJZ/gPQu+3jTXW69zB0=;
+        b=jerDzyr8g1/PV3aJWcODRsQNtUbIg8oGt2n+6fr8SH6Hf8BPdCZwNUQ1aMMPtfdEyK
+         FyEfAqAUbYaBZ6yztd/MscakCNR0Z1QGP1oLXmtDtQziASzCawx+zUHo9PqfatBj69+w
+         Z+S6UNVtM3BeOLmLFuohDBrlLg0CgfvlB13yOGzEYTSHnL7Ccnklv6gW6eFQq2MiyV3h
+         iYu060dZls0BwXizp3cpCrk6qg7sXTJkzF7kDe16idjvX5vNFXcmFablAcFQ+HN7UZ6B
+         EbsObRyCDPbh6dk3X/EO9nu0QC9tqsKgWO8+ZNeo+wz161l1iqv+l049BLOmh9SZUIvL
+         fkbA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774646220; x=1775251020;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=trO8rmzZPr0RQOymFCLZQOIxeJZ/gPQu+3jTXW69zB0=;
+        b=mV1Sshpu5AX9dXpFHJSN2PKIO2KJr/2YPN097cpI/sOdF320nxrIcDwcTkQonTeR/D
+         2C/6/5aP6OK1a4WKyGMgoBuHGZupi018P2nGpq/i45I7w08HoCjkiBVubDuqgs/uOwft
+         eX7bRbJh3y707BzNmFo8RrBgy1XxTRhMNw2T+yJJPYNwmiwiVo/uAY2EWXSoqKgIJZDw
+         dYoe/RdGWtCtIeag2hoDUkGo5/X2qIlsVc2MRiKXkY6RBpKXf2SXZTmqNJxUJjFS5gRd
+         1ttDJZv0Q5l+Gh41Uvrm8IjpdJlomQ1lR/YapvEub0/0FRsR/xijIErfsFh8w2CqSauC
+         gzFw==
+X-Forwarded-Encrypted: i=1; AJvYcCVBeWr+s4zlQ0iTli7EGs5wdL6PWayObDeCOnemP8RE7uQYfOpAsVJfwrOxxQ+pkfgICLnqLd19918=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzYnZ5RMYNzKuzEKUVnsNbR3NdteUQL4bRZxlwP+S4DEEty+t58
+	KcEXawKQ4Q6ep+k7Fvep+X6iaHB+l2Gj+i/cmbN67fee87TXY9cLvvMvTgCOh+bMc+l1vlj9K46
+	fCF7SyqFX2lvzgA==
+X-Received: from pjbpv14.prod.google.com ([2002:a17:90b:3c8e:b0:35c:2b6d:7890])
+ (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:90b:4cc6:b0:35b:e4f8:7cb0 with SMTP id 98e67ed59e1d1-35c300c19c4mr3887836a91.21.1774646220375;
+ Fri, 27 Mar 2026 14:17:00 -0700 (PDT)
+Date: Fri, 27 Mar 2026 21:16:40 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.53.0.1018.g2bb0e51243-goog
+Message-ID: <20260327211649.3816010-1-dmatlack@google.com>
+Subject: [PATCH v2] PCI: Disable ATS via quirk before notifying IOMMU drivers
+From: David Matlack <dmatlack@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Lobakin <aleksander.lobakin@intel.com>, 
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+	Bartosz Pawlowski <bartosz.pawlowski@intel.com>, David Woodhouse <dwmw2@infradead.org>, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	Lu Baolu <baolu.lu@linux.intel.com>, Raghavendra Rao Ananta <rananta@google.com>, 
+	David Matlack <dmatlack@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-The pull request you sent on Fri, 27 Mar 2026 09:36:01 -0500:
+Ensure that PCI devices with ATS disabled via quirk have it disabled
+before IOMMU drivers are notified about the device rather than after.
+Fix this by converting the existing quirks from final to early fixups
+and changing the quirk logic to set a new no_ats bit in struct pci_dev
+that prevents pci_dev.ats_cap from ever gettting set.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git pci-v7.0-fixes-5
+This change ensures that pci_ats_supported() takes quirks into account
+during iommu_ops.probe_device(), when IOMMU drivers are first notified
+about devices. It also ensures that pci_ats_supported() returns the same
+value when the device is released in iommu_ops.release_device().
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/8af4fad545fa4df358c8e4d12f269e460717e514
+Notably, the Intel IOMMU driver uses pci_ats_supported() in
+probe/release to determine whether to add/remove a device from a data
+structure, which easily leads to a use-after-free without this fix.
 
-Thank you!
+This change also makes disabling ATS via quirk behave the same way as
+the pci=noats command line option, in that pci_ats_init() bails
+immediately and never intializes pci_dev.ats_cap.
 
+Fixes: a18615b1cfc0 ("PCI: Disable ATS for specific Intel IPU E2000 devices")
+Closes: https://lore.kernel.org/linux-iommu/aYUQ_HkDJU9kjsUl@google.com/
+Signed-off-by: David Matlack <dmatlack@google.com>
+---
+v2:
+ - Update the commit message with reasons why this is being fixed in the
+   PCI core, rather than applying a point fix to the Intel IOMMU driver
+   (Andy)
+ - Condense the pci_ats_disabled() and dev->no_ats checks into a single
+   line in pci_ats_init()
+ - Reorder the no_ats bitfield to be after ats_stu since there is likely
+   u8-sized gap there for alignment purposes
+
+v1: https://lore.kernel.org/linux-pci/20260223184017.688212-1-dmatlack@google.com/
+
+Cc: Raghavendra Rao Ananta <rananta@google.com>
+Cc: David Woodhouse <dwmw2@infradead.org>
+Cc: Lu Baolu <baolu.lu@linux.intel.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+
+ drivers/pci/ats.c    |  2 +-
+ drivers/pci/quirks.c | 50 ++++++++++++++++++++++----------------------
+ include/linux/pci.h  |  1 +
+ 3 files changed, 27 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index ec6c8dbdc5e9..ceb6f5d3cb10 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -21,7 +21,7 @@ void pci_ats_init(struct pci_dev *dev)
+ {
+ 	int pos;
+ 
+-	if (pci_ats_disabled())
++	if (pci_ats_disabled() || dev->no_ats)
+ 		return;
+ 
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 48946cca4be7..2c7e11830e45 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5653,7 +5653,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0422, quirk_no_ext_tags);
+ static void quirk_no_ats(struct pci_dev *pdev)
+ {
+ 	pci_info(pdev, "disabling ATS\n");
+-	pdev->ats_cap = 0;
++	pdev->no_ats = 1;
+ }
+ 
+ /*
+@@ -5676,25 +5676,25 @@ static void quirk_amd_harvest_no_ats(struct pci_dev *pdev)
+ }
+ 
+ /* AMD Stoney platform GPU */
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x98e4, quirk_amd_harvest_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x98e4, quirk_amd_harvest_no_ats);
+ /* AMD Iceland dGPU */
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x6900, quirk_amd_harvest_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x6900, quirk_amd_harvest_no_ats);
+ /* AMD Navi10 dGPU */
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7310, quirk_amd_harvest_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7312, quirk_amd_harvest_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7318, quirk_amd_harvest_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7319, quirk_amd_harvest_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x731a, quirk_amd_harvest_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x731b, quirk_amd_harvest_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x731e, quirk_amd_harvest_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x731f, quirk_amd_harvest_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7310, quirk_amd_harvest_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7312, quirk_amd_harvest_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7318, quirk_amd_harvest_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7319, quirk_amd_harvest_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x731a, quirk_amd_harvest_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x731b, quirk_amd_harvest_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x731e, quirk_amd_harvest_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x731f, quirk_amd_harvest_no_ats);
+ /* AMD Navi14 dGPU */
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7340, quirk_amd_harvest_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7341, quirk_amd_harvest_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7347, quirk_amd_harvest_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x734f, quirk_amd_harvest_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7340, quirk_amd_harvest_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7341, quirk_amd_harvest_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7347, quirk_amd_harvest_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x734f, quirk_amd_harvest_no_ats);
+ /* AMD Raven platform iGPU */
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x15d8, quirk_amd_harvest_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x15d8, quirk_amd_harvest_no_ats);
+ 
+ /*
+  * Intel IPU E2000 revisions before C0 implement incorrect endianness
+@@ -5705,15 +5705,15 @@ static void quirk_intel_e2000_no_ats(struct pci_dev *pdev)
+ 	if (pdev->revision < 0x20)
+ 		quirk_no_ats(pdev);
+ }
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1451, quirk_intel_e2000_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1452, quirk_intel_e2000_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1453, quirk_intel_e2000_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1454, quirk_intel_e2000_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1455, quirk_intel_e2000_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1457, quirk_intel_e2000_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1459, quirk_intel_e2000_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x145a, quirk_intel_e2000_no_ats);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x145c, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1451, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1452, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1453, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1454, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1455, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1457, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1459, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x145a, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x145c, quirk_intel_e2000_no_ats);
+ #endif /* CONFIG_PCI_ATS */
+ 
+ /* Freescale PCIe doesn't support MSI in RC mode */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1c270f1d5123..850100f209e3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -539,6 +539,7 @@ struct pci_dev {
+ 	};
+ 	u16		ats_cap;	/* ATS Capability offset */
+ 	u8		ats_stu;	/* ATS Smallest Translation Unit */
++	unsigned int	no_ats:1;	/* ATS disabled via quirk */
+ #endif
+ #ifdef CONFIG_PCI_PRI
+ 	u16		pri_cap;	/* PRI Capability offset */
+
+base-commit: 7df48e36313029e4c0907b2023905dd7213fd678
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.53.0.1018.g2bb0e51243-goog
+
