@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B66F1373C02;
-	Fri, 27 Mar 2026 16:23:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8068035B645;
+	Fri, 27 Mar 2026 16:23:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774628602; cv=none; b=kMyAyMtmRfIS1z+Suv06Ypx5dAIm7+gAZjFUxX4Kfe/3fYhbTX3ZGNRXpiwmgJuVlyHuwHD7xFBLxzSunk+N9OoUsGBDzzHGh/8dbyIybx6EgHn+tlsgjr6yMNIZlOm/O7AXZPIPy34R9wgWaxE88ok5OE0fKvnQuM8JwOYSpTY=
+	t=1774628606; cv=none; b=s/qK5pUoJNJ9WE3jnNM2yuwiybl2u6dvj6dMGhFuYF8N2p6qaDqzqLVJnl1EvmMn9qiDOFCNCvypw+sigmYzuL2weefi2ql6PxfXYYnLCy2vF1/IXTKi9VV3klzNUUZXNq4VfvRLSrlF9EOpHQpgdJX2bIXDzJqWx0nXp1B3HRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774628602; c=relaxed/simple;
-	bh=WGFPbx7sgPfDQCJrPwMdxh2FwqrprHEWOswcgWAGZe0=;
+	s=arc-20240116; t=1774628606; c=relaxed/simple;
+	bh=NUtWTN+YsNz/G7G+LqClLzUTJJRtWG7YocdGIa0hACU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=C6Z/Eh37+S84AnYuJBDmPUN9nAui1YhKulQx74ZYMxKeHrNM+n0Bv+gXFYnXVydMW1tjHITM/R/aGf6lew3OPXaoenjbplWQqkNfVxW/f5i+n0JdsCtgCTn2Xpd/4Bg3R0KGFGhMdobQ3hLq8IeSr7Fn64hU0EBK13eeBEzTs98=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GV8be0Ij; arc=none smtp.client-ip=198.175.65.14
+	 MIME-Version; b=k78cSMuS/K1kAC/0Mq+4XVl0ROGLzbvUKyUYbQWOPAWiwYJuwqlYcKrhj27wuzaPKizsr2EcveUviMbiUOH3KQkNwS+U/En4cLdltOXbn3Dg2u6so95qQo9JEfmURFZn8syDqEIeso924zq7/E12j+v5TUKOqYTPultzLq86hKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Y9u41UTu; arc=none smtp.client-ip=198.175.65.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GV8be0Ij"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Y9u41UTu"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774628601; x=1806164601;
+  t=1774628605; x=1806164605;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=WGFPbx7sgPfDQCJrPwMdxh2FwqrprHEWOswcgWAGZe0=;
-  b=GV8be0IjvNWMi5nCPKo9F9Ke9VfCO2nN//gkipA/uHQlCUgNGjH6M4wd
-   vhlNRGnLcGRG7aKxXgS25ltEwEjinntWpu9mE2QfQLs66w2rPmdOBOUOJ
-   FyQxiF8CTTbqWPF8eSLJIdo/Y0MriFpq1aOtyncTGSZALVbM37Bargbwn
-   WlrV3ipwPxCPgTpfO4d9Uex+JUGTrlwDq53UdJsWidrYpWHl/Yxvu97X3
-   3m7iirmSsFm1S7Lr7NHB4EVh+zX/U+lWsnmI8agdd/6FaDZ1VzuGvWon4
-   LIjRMUXpnzG5GDd/60kFNHT/4mnLRpQGjG8RCx3adovKTmFMY/j1N/IqG
+  bh=NUtWTN+YsNz/G7G+LqClLzUTJJRtWG7YocdGIa0hACU=;
+  b=Y9u41UTuVNNg2UhB1hFh8Cnlc8v4lYYYfEESXOeLCq6sian18rCLKk5j
+   MqwAaYvbvjpS9wbhK9gp+KssM7EyatntSL9o0u4mzofVv1zqcvX+tBxCi
+   1ntTijbyTXt28fooIFPNb8xn6e/DcStXvC6iSVNKHn/RQw8Z7TQsTWQxs
+   3xmx1Em34Q9mlA0BibVS0Atl20Oi2pZRGwHlK5kncXc3tK4Ossuh/FnIs
+   9D0ntMnbHH5NHoS/OP7oTaVsv0oHPkX/bhvluujMIUh+eIqg9RvCbBQWd
+   8xhRk/Hlp6tSgvG5YtXJXXpZQ1PSfq/itnT1bLwLI6HTYFynktn3fgFHV
    g==;
-X-CSE-ConnectionGUID: EMa/TsdSQpmLCxcYfqtmqg==
-X-CSE-MsgGUID: t3PD/HiWT2KLe0pMUT2ktQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="79565575"
+X-CSE-ConnectionGUID: kZD+/wvEQRKWC9dML8Ke9w==
+X-CSE-MsgGUID: dYSDFBk2SAS0n9bKzYu+yw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="79565584"
 X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
-   d="scan'208";a="79565575"
+   d="scan'208";a="79565584"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 09:23:21 -0700
-X-CSE-ConnectionGUID: J1a8EKhESLywQV8Ib29x2g==
-X-CSE-MsgGUID: pVo962/CTmOwIowi7PFdnw==
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 09:23:24 -0700
+X-CSE-ConnectionGUID: bd88HM/eRFevey5pYm38Xw==
+X-CSE-MsgGUID: Mgpwnhy6Qc+U3vXdgdZwpg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
-   d="scan'208";a="220516225"
+   d="scan'208";a="220516236"
 Received: from yilunxu-optiplex-7050.sh.intel.com ([10.239.159.165])
-  by fmviesa006.fm.intel.com with ESMTP; 27 Mar 2026 09:23:18 -0700
+  by fmviesa006.fm.intel.com with ESMTP; 27 Mar 2026 09:23:21 -0700
 From: Xu Yilun <yilun.xu@linux.intel.com>
 To: linux-coco@lists.linux.dev,
 	linux-pci@vger.kernel.org,
@@ -61,9 +61,9 @@ Cc: chao.gao@intel.com,
 	xiaoyao.li@intel.com,
 	vishal.l.verma@intel.com,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 13/31] x86/virt/tdx: Extend tdx_clflush_page() to handle compound pages
-Date: Sat, 28 Mar 2026 00:01:14 +0800
-Message-Id: <20260327160132.2946114-14-yilun.xu@linux.intel.com>
+Subject: [PATCH v2 14/31] PCI/TSM: Report active IDE streams per host bridge
+Date: Sat, 28 Mar 2026 00:01:15 +0800
+Message-Id: <20260327160132.2946114-15-yilun.xu@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
 References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
@@ -75,36 +75,237 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Use page_size() to correctly flush the range that a compound page
-covers.
+From: Dan Williams <dan.j.williams@intel.com>
 
-Recall that TDX Module requires VMM to provide IOMMU metadata known as
-IOMMU_MT, which contains some multi-order pages. Like all other
-metadata, TDX Module will convert these multi-order pages to private so
-VMM should flush the shared cache beforehand. Extend tdx_clflush_page()
-to handle this case.
+The first attempt at an ABI for this failed to account for naming
+collisions across host bridges:
 
-The usage of tdx_clflush_page() for IOMMU_MT will be introduced later,
-but the change stands as a valid improvement on its own.
+Commit a4438f06b1db ("PCI/TSM: Report active IDE streams")
 
-Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
+Revive this ABI with a per host bridge link that appears at first stream
+creation for a given host bridge and disappears after the last stream is
+removed.
+
+For systems with many host bridge objects it allows:
+
+    ls /sys/class/tsm/tsmN/pci*/stream*
+
+...to find all the host bridges with active streams without first iterating
+over all host bridges. Yilun notes that is handy to have this short cut [1]
+and from an administrator perspective it helps with inventory for
+constrained stream resources.
+
+Link: http://lore.kernel.org/aXLtILY85oMU5qlb@yilunxu-OptiPlex-7050 [1]
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- arch/x86/virt/vmx/tdx/tdx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ Documentation/ABI/testing/sysfs-class-tsm | 13 +++
+ include/linux/pci-ide.h                   |  2 +
+ include/linux/tsm.h                       |  3 +
+ drivers/pci/ide.c                         |  4 +
+ drivers/virt/coco/tsm-core.c              | 97 +++++++++++++++++++++++
+ 5 files changed, 119 insertions(+)
 
-diff --git a/arch/x86/virt/vmx/tdx/tdx.c b/arch/x86/virt/vmx/tdx/tdx.c
-index 0e1ad793e648..e7d47fbe7057 100644
---- a/arch/x86/virt/vmx/tdx/tdx.c
-+++ b/arch/x86/virt/vmx/tdx/tdx.c
-@@ -1510,7 +1510,7 @@ static int init_tdmrs(struct tdmr_info_list *tdmr_list)
-  */
- static void tdx_clflush_page(struct page *page)
- {
--	clflush_cache_range(page_to_virt(page), PAGE_SIZE);
-+	clflush_cache_range(page_to_virt(page), page_size(page));
- }
+diff --git a/Documentation/ABI/testing/sysfs-class-tsm b/Documentation/ABI/testing/sysfs-class-tsm
+index 2949468deaf7..1ddb8f357961 100644
+--- a/Documentation/ABI/testing/sysfs-class-tsm
++++ b/Documentation/ABI/testing/sysfs-class-tsm
+@@ -7,3 +7,16 @@ Description:
+ 		signals when the PCI layer is able to support establishment of
+ 		link encryption and other device-security features coordinated
+ 		through a platform tsm.
++
++What:		/sys/class/tsm/tsmN/pciDDDD:BB
++Contact:	linux-pci@vger.kernel.org
++Description:
++		(RO) When a PCIe host bridge has established a secure connection
++		via a TSM to an endpoint, this symlink appears. It facilitates a
++		TSM instance scoped view of PCIe Link Encryption and Secure
++		Session resource consumption across host bridges. The symlink
++		appears when a host bridge has 1 or more IDE streams established
++		with this TSM, and disappears when that number returns to 0. See
++		Documentation/ABI/testing/sysfs-devices-pci-host-bridge for the
++		description of the pciDDDD:BB/streamH.R.E symlink and the
++		pciDDDD:BB/available_secure_streams attribute.
+diff --git a/include/linux/pci-ide.h b/include/linux/pci-ide.h
+index ae07d9f699c0..381a1bf22a95 100644
+--- a/include/linux/pci-ide.h
++++ b/include/linux/pci-ide.h
+@@ -82,6 +82,7 @@ struct pci_ide_regs {
+  * @host_bridge_stream: allocated from host bridge @ide_stream_ida pool
+  * @stream_id: unique Stream ID (within Partner Port pairing)
+  * @name: name of the established Selective IDE Stream in sysfs
++ * @tsm_dev: For TSM established IDE, the TSM device context
+  *
+  * Negative @stream_id values indicate "uninitialized" on the
+  * expectation that with TSM established IDE the TSM owns the stream_id
+@@ -93,6 +94,7 @@ struct pci_ide {
+ 	u8 host_bridge_stream;
+ 	int stream_id;
+ 	const char *name;
++	struct tsm_dev *tsm_dev;
+ };
  
- static void tdx_clflush_page_array(struct tdx_page_array *array)
+ /*
+diff --git a/include/linux/tsm.h b/include/linux/tsm.h
+index 381c53244c83..7f72a154b6b2 100644
+--- a/include/linux/tsm.h
++++ b/include/linux/tsm.h
+@@ -123,4 +123,7 @@ int tsm_report_unregister(const struct tsm_report_ops *ops);
+ struct tsm_dev *tsm_register(struct device *parent, struct pci_tsm_ops *ops);
+ void tsm_unregister(struct tsm_dev *tsm_dev);
+ struct tsm_dev *find_tsm_dev(int id);
++struct pci_ide;
++int tsm_ide_stream_register(struct pci_ide *ide);
++void tsm_ide_stream_unregister(struct pci_ide *ide);
+ #endif /* __TSM_H */
+diff --git a/drivers/pci/ide.c b/drivers/pci/ide.c
+index be74e8f0ae21..b35e8aba7ecb 100644
+--- a/drivers/pci/ide.c
++++ b/drivers/pci/ide.c
+@@ -11,6 +11,7 @@
+ #include <linux/pci_regs.h>
+ #include <linux/slab.h>
+ #include <linux/sysfs.h>
++#include <linux/tsm.h>
+ 
+ #include "pci.h"
+ 
+@@ -372,6 +373,9 @@ void pci_ide_stream_release(struct pci_ide *ide)
+ 	if (ide->partner[PCI_IDE_EP].enable)
+ 		pci_ide_stream_disable(pdev, ide);
+ 
++	if (ide->tsm_dev)
++		tsm_ide_stream_unregister(ide);
++
+ 	if (ide->partner[PCI_IDE_RP].setup)
+ 		pci_ide_stream_teardown(rp, ide);
+ 
+diff --git a/drivers/virt/coco/tsm-core.c b/drivers/virt/coco/tsm-core.c
+index 98dcf7d836df..ece7cd7ea9d8 100644
+--- a/drivers/virt/coco/tsm-core.c
++++ b/drivers/virt/coco/tsm-core.c
+@@ -4,10 +4,12 @@
+ #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+ 
+ #include <linux/tsm.h>
++#include <linux/pci.h>
+ #include <linux/device.h>
+ #include <linux/module.h>
+ #include <linux/cleanup.h>
+ #include <linux/pci-tsm.h>
++#include <linux/pci-ide.h>
+ 
+ static struct class *tsm_class;
+ static DEFINE_IDA(tsm_ida);
+@@ -104,6 +106,100 @@ void tsm_unregister(struct tsm_dev *tsm_dev)
+ }
+ EXPORT_SYMBOL_GPL(tsm_unregister);
+ 
++static DEFINE_XARRAY(tsm_ide_streams);
++static DEFINE_MUTEX(tsm_ide_streams_lock);
++
++/* tracker for the bridge symlink when the bridge has any streams */
++struct tsm_ide_stream {
++	struct tsm_dev *tsm_dev;
++	struct pci_host_bridge *bridge;
++	struct kref kref;
++};
++
++static struct tsm_ide_stream *create_streams(struct tsm_dev *tsm_dev,
++					    struct pci_host_bridge *bridge)
++{
++	int rc;
++
++	struct tsm_ide_stream *streams __free(kfree) =
++		kzalloc(sizeof(*streams), GFP_KERNEL);
++	if (!streams)
++		return NULL;
++
++	streams->tsm_dev = tsm_dev;
++	streams->bridge = bridge;
++	kref_init(&streams->kref);
++	rc = xa_insert(&tsm_ide_streams, (unsigned long)bridge, streams,
++		       GFP_KERNEL);
++	if (rc)
++		return NULL;
++
++	rc = sysfs_create_link(&tsm_dev->dev.kobj, &bridge->dev.kobj,
++			       dev_name(&bridge->dev));
++	if (rc) {
++		xa_erase(&tsm_ide_streams, (unsigned long)bridge);
++		return NULL;
++	}
++
++	return no_free_ptr(streams);
++}
++
++int tsm_ide_stream_register(struct pci_ide *ide)
++{
++	struct tsm_ide_stream *streams;
++	struct pci_dev *pdev = ide->pdev;
++	struct pci_tsm *tsm = pdev->tsm;
++	struct tsm_dev *tsm_dev = tsm->tsm_dev;
++	struct pci_host_bridge *bridge = pci_find_host_bridge(pdev->bus);
++
++	guard(mutex)(&tsm_ide_streams_lock);
++	streams = xa_load(&tsm_ide_streams, (unsigned long)bridge);
++	if (streams)
++		kref_get(&streams->kref);
++	else
++		streams = create_streams(tsm_dev, bridge);
++
++	if (!streams)
++		return -ENOMEM;
++	ide->tsm_dev = tsm_dev;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(tsm_ide_stream_register);
++
++static void destroy_streams(struct kref *kref)
++{
++	struct tsm_ide_stream *streams =
++		container_of(kref, struct tsm_ide_stream, kref);
++	struct tsm_dev *tsm_dev = streams->tsm_dev;
++	struct pci_host_bridge *bridge = streams->bridge;
++
++	lockdep_assert_held(&tsm_ide_streams_lock);
++	sysfs_remove_link(&tsm_dev->dev.kobj, dev_name(&bridge->dev));
++	xa_erase(&tsm_ide_streams, (unsigned long)bridge);
++	kfree(streams);
++}
++
++void tsm_ide_stream_unregister(struct pci_ide *ide)
++{
++	struct tsm_ide_stream *streams;
++	struct tsm_dev *tsm_dev = ide->tsm_dev;
++	struct pci_dev *pdev = ide->pdev;
++	struct pci_host_bridge *bridge = pci_find_host_bridge(pdev->bus);
++
++	guard(mutex)(&tsm_ide_streams_lock);
++	streams = xa_load(&tsm_ide_streams, (unsigned long)bridge);
++	/* catch API abuse */
++	if (dev_WARN_ONCE(&tsm_dev->dev,
++			  !streams || streams->tsm_dev != tsm_dev,
++			  "no IDE streams associated with %s\n",
++			  dev_name(&bridge->dev)))
++		return;
++	kref_put(&streams->kref, destroy_streams);
++	ide->tsm_dev = NULL;
++}
++EXPORT_SYMBOL_GPL(tsm_ide_stream_unregister);
++
+ static void tsm_release(struct device *dev)
+ {
+ 	struct tsm_dev *tsm_dev = container_of(dev, typeof(*tsm_dev), dev);
+@@ -126,6 +222,7 @@ module_init(tsm_init)
+ static void __exit tsm_exit(void)
+ {
+ 	class_destroy(tsm_class);
++	xa_destroy(&tsm_ide_streams);
+ }
+ module_exit(tsm_exit)
+ 
 -- 
 2.25.1
 
