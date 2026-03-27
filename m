@@ -1,157 +1,168 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8517F1CAA79
-	for <linux-pci@vger.kernel.org>; Fri, 27 Mar 2026 10:15:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52A443AA1B2;
+	Fri, 27 Mar 2026 10:29:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774606517; cv=none; b=eIrPKmwx4wqSuJnRyVQb0Qt3gFQVYqIMrSekd9Wx5Cvww8S4bmNh9QLpv5OYEiqdsU/nl/tCRbAE7moFRksoPwMBJQBJndRd7cmn1/rJBTGSeryrfQWrGZAgCuJaswpGCUMaquL/FkYq2zlehloijPYK6lAnqiZGkuXmy5jDcw4=
+	t=1774607354; cv=none; b=keG8S0eKOtsDy0M2UMRN9cCH5OcCbjOkusojCHtgdeKcW9FhoH+u0IPEBCsJqhHaAv7amQ9xRm2zpXgk/+9+fSyfA4TzzY/NuPwhj+n/DSykYbUyTunllF5QF5vzAQYZQjuRoVllfnAwPsr+yX6KVyp6JdEV1ZixPBetu9pYYeY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774606517; c=relaxed/simple;
-	bh=8cwG8UhSGv6gLOmG1eM9KwhEsKQ4xoFm1WIgfrOg+6E=;
+	s=arc-20240116; t=1774607354; c=relaxed/simple;
+	bh=AQrZsYS87uRLSAUzR2yt6e8HOvPMEsktxMC+0rqw0oY=;
 	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=sPSXp5gnvFyXNKVqNTD8u1VzjrH0lbEko9qMjj2YLansCw7rDQzQmaV4hALuNZj72VH3dgB4IiK/Ws9rvzgbSL1jpdA8/dnTCpmgZ9y7SjAyPWTHeRRGVXwz0EMN1eoAkSwbBeQv5dsxNnPvYFhXps8AhBUMiWt5AwuXc3AZ2/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IIDgzxP7; arc=none smtp.client-ip=198.175.65.17
+	 MIME-Version:Content-Type; b=nVuYhg6gY5IMwE6tnlqy3yOoA4E2e+6tsyvnzitFBWc03tx1m2so0L45gAxs8Zxl1htN/84Xhr/YxkkpcsfiaD8d361Cf0Y3qlcWJ8tyr7BV1N+GDH5FpD7d1TrGotUtEoLjDsijTUnJx6ZXbBSUx3FxUSGSvKEnY6dvn/TuKW8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SX0nzWlZ; arc=none smtp.client-ip=192.198.163.8
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IIDgzxP7"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SX0nzWlZ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774606516; x=1806142516;
+  t=1774607353; x=1806143353;
   h=from:date:to:cc:subject:in-reply-to:message-id:
    references:mime-version;
-  bh=8cwG8UhSGv6gLOmG1eM9KwhEsKQ4xoFm1WIgfrOg+6E=;
-  b=IIDgzxP7q7UcErvlp5MthVzg13wXfdYB5a59hgAiEhJza0pTEynRGr8P
-   JRHzWDui2RJnKpK7ZHUai/mOoCj0ZqajUUqnvyKk+PLkykg3UOUsGryvd
-   snHSvgPTJ8p1t9jU/i3r5b7TE01kihOEt8oIH+6FDkUavwV89ELrJgio/
-   ndgWgDicHC+SusBZlX5kT5PCr29d1Udj8MwgiKcanaJkvOYoeBM/u54NH
-   1951qHpcTsmVh+KCw0hI4u1ZXYwZfHO80nH56eJpwaFbz67sX0Pl87iXB
-   s1DQ7GdlGJqnPR+lfZ1ZGncUYcaRj1ro/zx4J0jXR/T5k1hIfNKKuEmAd
-   A==;
-X-CSE-ConnectionGUID: ePnXyKFOSHmzxeKp697FmQ==
-X-CSE-MsgGUID: 1EMURWpKTPuZVTgqKp9h+w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="75644227"
-X-IronPort-AV: E=Sophos;i="6.23,143,1770624000"; 
-   d="scan'208";a="75644227"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 03:15:16 -0700
-X-CSE-ConnectionGUID: YgH3BNwQRHGQOq1CEmYxSA==
-X-CSE-MsgGUID: kZ9vWu7qRUqTwdeZ9rC4aQ==
+  bh=AQrZsYS87uRLSAUzR2yt6e8HOvPMEsktxMC+0rqw0oY=;
+  b=SX0nzWlZIY0Lg4fyXJy1hem2uUevSvI1nbx91bp0jZYYqRr93GaLksaE
+   L6XLJWuLACGbs/Obo0LLfiusLKSxmX5HOfj2BR/OfzI5RUmPnAEbJxWGx
+   H8arvWKQ7iOn+koxe3/GEJt4fFT8S6HWH9xg10wBXdgqPJanVKkEt1Qyx
+   /7B2xb2jl7faADXEGMBpdI28tH79/++kh/ol8X0TPBLWYG1sA2mCqBcZa
+   QJQsSA1iMaFdyaMsTkz2wpp39pZGfRPODNn6QqAM5cXjkgXj8CJ1e7gn9
+   0Li0W7WV2EDfk6lWNjEzVO4kFjsRIUYdrV6xXvg6gkCesf5RAzv+5UkW8
+   Q==;
+X-CSE-ConnectionGUID: +KbLwjXESSqMmEPH1Yg2iA==
+X-CSE-MsgGUID: k3BStIGXSgiyo9+iueWvgA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="93259306"
+X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
+   d="scan'208";a="93259306"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 03:29:11 -0700
+X-CSE-ConnectionGUID: tBARr7F7SaCXrVZYlacT+g==
+X-CSE-MsgGUID: 6iZuzsYWQBOngO/GpRvA3A==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,143,1770624000"; 
-   d="scan'208";a="220878425"
+X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
+   d="scan'208";a="263218208"
 Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.186])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 03:15:13 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 03:29:01 -0700
 From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Fri, 27 Mar 2026 12:15:10 +0200 (EET)
-To: Cristian Cocos <cristi@ieee.org>
-cc: linux-pci@vger.kernel.org
-Subject: Re: ReBAR over Thunderbolt
-In-Reply-To: <a177e7cf1e638c874a7b2e9e68027094bca68041.camel@ieee.org>
-Message-ID: <9cfa81e1-373c-cfdf-89a1-5d7c169f3577@linux.intel.com>
-References: <a177e7cf1e638c874a7b2e9e68027094bca68041.camel@ieee.org>
+Date: Fri, 27 Mar 2026 12:28:56 +0200 (EET)
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, 
+    Guenter Roeck <linux@roeck-us.net>, linux-alpha@vger.kernel.org, 
+    linux-arm-kernel@lists.infradead.org, linux-m68k@lists.linux-m68k.org, 
+    linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org, 
+    linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, 
+    linux-sh@vger.kernel.org, Russell King <linux@armlinux.org.uk>, 
+    Geert Uytterhoeven <geert@linux-m68k.org>, 
+    Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
+    "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+    Helge Deller <deller@gmx.de>, Michael Ellerman <mpe@ellerman.id.au>, 
+    Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
+    Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, 
+    "H. Peter Anvin" <hpa@zytor.com>, Chris Zankel <chris@zankel.net>, 
+    Max Filippov <jcmvbkbc@gmail.com>, 
+    Madhavan Srinivasan <maddy@linux.ibm.com>, 
+    Yoshinori Sato <ysato@users.sourceforge.jp>, Rich Felker <dalias@libc.org>, 
+    John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
+    LKML <linux-kernel@vger.kernel.org>, Xifer <xiferdev@gmail.com>
+Subject: Re: [PATCH 00/10] PCI: Improve head free space usage
+In-Reply-To: <20260326192520.GA1337681@bhelgaas>
+Message-ID: <7207cde7-d47e-f79c-afe9-9b1daa79140c@linux.intel.com>
+References: <20260326192520.GA1337681@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-1896109958-1774606510=:1037"
+Content-Type: multipart/mixed; boundary="8323328-307680389-1774607336=:1037"
 
   This message is in MIME format.  The first part should be readable text,
   while the remaining parts are likely unreadable without MIME-aware tools.
 
---8323328-1896109958-1774606510=:1037
-Content-Type: text/plain; charset=UTF-8
+--8323328-307680389-1774607336=:1037
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-On Thu, 26 Mar 2026, Cristian Cocos wrote:
+On Thu, 26 Mar 2026, Bjorn Helgaas wrote:
 
-> [This has been previously posted on the linux-hotplug list, though it
-> has been suggested that I post it here as well.]
+> [+cc Xifer; thanks very much for reporting and testing!]
 >=20
-> The short story is that ReBAR does not work in eGPU hotplug(!)
-> scenarios: hotplugged Thunderbolt eGPUs are forced onto a 256MB BAR
-> regardless of the system's ReBAR capabilities, and this because during
-> hotplug the Linux kernel does not consult the ReBAR capability. As
-> eGPUs are becoming more and more popular, accommodating eGPU hotplug
-> scenarios has become imperative.
+> On Tue, Mar 24, 2026 at 06:56:23PM +0200, Ilpo J=C3=A4rvinen wrote:
+> > Hi all,
+> >=20
+> > This series attempts to take advantage of free head space (the free
+> > space before the aligned start address) in order to generally produce a
+> > tighter packing of the resources/bridge windows.
+> >=20
+> > The recent changes to the resource fitting algorithm caused resource
+> > allocation failures in some cases where a bridge window that is sized
+> > to be gapless could no longer be assigned. The previous algorithm left
+> > a huge gaps which allowed it to place the remainder (non-aligning part
+> > of the size) before the start address of used for the gapless fit,
+> > whereas the new gapless approach always had to place the remainder
+> > after the aligning part of the resources. There is not always space
+> > for the remainder triggering those failures (e.g., when the aligning
+> > part must be placed at the top of the window).
+> >=20
+> > This series attempts to allow placing the remainder once again before
+> > the aligning part, but now without leaving huge gaps to retain the
+> > benefits of the gapless bridge windows. The approach is somewhat hacky
+> > but should work thanks to PCI resources fundamentally consisting only
+> > power-of-two atoms.
+> >=20
+> > There maybe cases where architecture would not want to do such
+> > relocation. This series adds the relocation to arch
+> > pcibios_align_resource() functions to allow all of them taking
+> > advantage of the better resource packing but if somebody objects doing
+> > this relocation for a particular arch, I can remove it, please just let
+> > me know (this relocation doesn't seem critical unless there are
+> > regressions).
+> >=20
+> > Ilpo J=C3=A4rvinen (10):
+> >   resource: Add __resource_contains_unbound() for internal contains
+> >     checks
+> >   resource: Pass full extent of empty space to resource_alignf CB
+> >   resource: Rename 'tmp' variable to 'full_avail'
+> >   ARM/PCI: Remove unnecessary second application of align
+> >   am68k/PCI: Remove unnecessary second application of align
+> >   MIPS: PCI: Remove unnecessary second application of align
+> >   parisc/PCI: Cleanup align handling
+> >   PCI: Rename window_alignment() to pci_min_window_alignment()
+> >   PCI: Align head space better
+> >   PCI: Fix alignment calculation for resource size larger than align
+> >=20
+> >  arch/alpha/kernel/pci.c          |  1 +
+> >  arch/arm/kernel/bios32.c         |  9 ++++---
+> >  arch/m68k/kernel/pcibios.c       |  8 +++++--
+> >  arch/mips/pci/pci-generic.c      |  8 ++++---
+> >  arch/mips/pci/pci-legacy.c       |  3 +++
+> >  arch/parisc/kernel/pci.c         | 17 ++++++++------
+> >  arch/powerpc/kernel/pci-common.c |  6 ++++-
+> >  arch/s390/pci/pci.c              |  1 +
+> >  arch/sh/drivers/pci/pci.c        |  6 ++++-
+> >  arch/x86/pci/i386.c              |  5 +++-
+> >  arch/xtensa/kernel/pci.c         |  3 +++
+> >  drivers/pci/pci.h                |  3 +++
+> >  drivers/pci/setup-bus.c          | 15 ++++++++----
+> >  drivers/pci/setup-res.c          | 40 +++++++++++++++++++++++++++++++-
+> >  drivers/pcmcia/rsrc_nonstatic.c  |  3 ++-
+> >  include/linux/ioport.h           | 22 +++++++++++++++---
+> >  include/linux/pci.h              | 12 +++++++---
+> >  kernel/resource.c                | 33 +++++++++++++-------------
+> >  18 files changed, 149 insertions(+), 46 deletions(-)
 >=20
-> The longer story:
+> I added Xifer's tested-by, fixed the "am68k" and missing "if"
+> typos, and applied these to pci/resource for v7.1.
 >=20
-> The current Thunderbolt eGPU *hotplug* sequence of events is this: BAR
-> 2's hardware register powers up at 256 MB =E2=80=94 the default size prog=
-rammed
-> into the BAR's address decoder by Intel at the factory. The PCIe
-> Resizable BAR capability advertises support for up to 16 GB, but it's
-> passive =E2=80=94 software must explicitly exercise it. When a Thunderbol=
-t eGPU
-> is hotplugged at runtime, the kernel's PCI subsystem enumerates the new
-> device, reads the BAR at its 256 MB default, sizes the bridge windows
-> to match, and assigns addresses =E2=80=94 all before any driver loads. Th=
-e
-> ReBAR capability is never consulted(!) during this process.
+> Ilpo, if you post a v2 with more changes, I'll update to it.  I
+> applied the series now to get a head start on 0-day building and into
+> next.
 
-Hi,
+Thanks.
 
-The intel GPU drivers do attempt to perform the resize at probe time,=20
-though it's often not successful.
-
-You haven't indicated what kernel you run nor provided any logs, but there=
-=20
-have been some improvements to this in general in the recent kernels. And=
-=20
-then there's also this patch which relates to thunderbolt cases (which was=
-=20
-only accepted yesterday):
-
-https://lore.kernel.org/linux-pci/20260219153951.68869-1-ilpo.jarvinen@linu=
-x.intel.com
-
-> A workaround is available for cold-plug scenarios only, and is
-> achieved by means of the **thunderbolt.host_reset=3D0** kernel parameter:
-> this preserves the BIOS's PCIe tunnel and BAR assignments from POST
-> (where the BIOS *does* exercise ReBAR). This delivers the full 16 GB
-> BAR but, as just mentioned, only works for cold-plug(!) scenarios =E2=80=
-=94 if
-> the eGPU is power-cycled at runtime, the new tunnel gets the 256 MB
-> default.
->=20
-> The proper fix would be for the kernel's PCI hotplug resource
-> assignment to *first* check for ReBAR capability during enumeration,
-> resize the BAR to the largest supported size that fits within available
-> bridge headroom, and *then* commit bridge windows and assign addresses.
-
-That's being worked on. But it's not as easy as you depict it as kernel=20
-needs to be also able to fallback to some intermediate size if the largest=
-=20
-supported size fails.
-
-Thanks to how size calculations and assignment are done at different=20
-phases of the algorithm, it's not as easy to fallback to something else as=
-=20
-you indicate as the secondary failures would still persist from the=20
-attempt with the largest window. So effectively, the entire sizing has to=
-=20
-be recalculated.
-
-> This is essentially what the BIOS does during POST. It hasn't been
-> implemented yet because eGPU-over-Thunderbolt-with-ReBAR is (was?) a
-> niche use case.
->=20
-> Seeing as eGPU-over-Thunderbolt is poised to become mainstream, this
-> can no longer be considered a niche use case.
-
-We don't consider it unimportant usecase. It's just the resource fitting=20
-and assignment algorithm is very complex and hard to improve, because=20
-something usually breaks when trying to improve it. Thus, the progress is=
-=20
-slow and everything has to be done carefully (when things break badly in=20
-this area, system doesn't even come up so there's not much room for=20
-error).
+I don't have anything in addition to those.
 
 --=20
  i.
 
---8323328-1896109958-1774606510=:1037--
+--8323328-307680389-1774607336=:1037--
