@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D25A36BCFD;
-	Fri, 27 Mar 2026 16:23:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0228371CFD;
+	Fri, 27 Mar 2026 16:23:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774628595; cv=none; b=uim0lkKR+bUUZ9mZPNd0ZIIo0TGCCXCFwciCenH5uxH1c6GzspHeCbWfiokFgs0VqSVCThdDx5OEZSfCmo8BZY0hvP2HQWYeAMHiKhcclJomtCNObkh5CAtJ1xCUC+mBgDq4XOKZ6Bg3JpziGAnKNifseQc0vsGD8IGApk3yy/M=
+	t=1774628600; cv=none; b=fEcpbB60p1xY+MwF3DwwrzqoVfqG4kA0oved2i+HAp9ZtSoN3ox/IB8et9Pb9UCThbW5YAQC3Mtt3JalsaFzsDtjJiIL+Fmo02/N7cNKDBRNWqgQGJowStVFRXul4DW1Gmmjx/8YuKjtMJA+FRxWLaQUbCnAa7l4RcA4/PkL5Ng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774628595; c=relaxed/simple;
-	bh=z5CL/0DGGrz7pQMCfp9DD/99lRybVld0TfABDp+3gMk=;
+	s=arc-20240116; t=1774628600; c=relaxed/simple;
+	bh=RtbDb463am0ETHo/8RtK51kAaPZf1IlC30Of1RwsQQ0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=W71jCwErjXUa+ItNWyY3cSR+YyLGy1HDzf92lqR8w2R02ofR+PKGDTGtsBeQE95XyjydODoxRmEG4O4OtARSZESko5kTeG5Eps7GcWtyZZr3tWw9zILqWHv1fR1ZlvdlsBm3kxNy6IQ45AAoYdQCqka+PBf+g92hLGTYizsOQJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GfViFb8a; arc=none smtp.client-ip=198.175.65.14
+	 MIME-Version; b=ABQQoQZMZsw+XAyIsY2owoRbpiUe5Cq+RX86WXeYJ39lszpdYnTsa/up7IBnrmt0iVg7Pc5fU4En9qhHU8NcCVIhoA/E2ZWWdla16dPj31ul48FQObpo7ZgTuJwbtw4tUxbjVUioLTvuuT0G8TpTGVq6nna379TDc03zazIQ7FA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nHpz8zr0; arc=none smtp.client-ip=198.175.65.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GfViFb8a"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nHpz8zr0"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774628593; x=1806164593;
+  t=1774628597; x=1806164597;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=z5CL/0DGGrz7pQMCfp9DD/99lRybVld0TfABDp+3gMk=;
-  b=GfViFb8aUHoyYwhxZNtaocQ3sjQdWtAbnRUJc1snC8VsmaY/nd1B5IiL
-   ZOvMMY5FidSdBECKU6geySpyHzNBGsRkNZEzBM6wI9HaQkckvxT7/XGTa
-   vgMWsBGs7Sq3iAh/ST8AlcBMBzHO2XjaqD4lqkREaQEYrtTLLAlI1cvnQ
-   /NSM7tKurWbKHWv+mHiD/lFhVSkjO0OuKQnfgtrcETyOhcddDWRBXBa99
-   OG9uu767Klc/4nbCl+SJHejpDgRfZS/1UISKQzmMkkB2ToLVATPmX3WUz
-   USIWAGo/EkFktijL+hI7x+wE3GT3rDlg0+/I2InkZMG59Iw3ps00CmpIe
-   Q==;
-X-CSE-ConnectionGUID: OoKRgvbcQBW1pOLX8eLdLA==
-X-CSE-MsgGUID: 7hxR6OkMSaiOszx05MH3lQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="79565554"
+  bh=RtbDb463am0ETHo/8RtK51kAaPZf1IlC30Of1RwsQQ0=;
+  b=nHpz8zr0bWUolDn8goqbTE4CBVTfwNp3K3hwFp7OB1HJat/t6cIs3C38
+   EIAUUCC8J4k9gjNxD00z/g7Jb32ltjJ/kCd66J/ZKSKIv68gCYwwQX/rm
+   uU4bIxIODQBJ3kF46U1UKfF9Owe7ExGS1uQrT2+F8gyGC46ZsGF9hTMwX
+   x+77W9OmhrvAHTZ+9OlueBBDf6gXEaqbVHOg61CViNrgQEZ149OZEdpYN
+   jqdbNMkW6lUpTCgExF/XQISu++jiNpKd0bpKbvyxrLZOPreR00VOaZwwu
+   y3QvqwYNkXgpYHeB+171/rZhu1jYVsGmAgzh8PqVHNwKhcylzrhf1BsHp
+   A==;
+X-CSE-ConnectionGUID: RoKFU9JATo6mbahaFY405w==
+X-CSE-MsgGUID: 57qmkzDrR7i8I9tuyxjgRQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="79565557"
 X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
-   d="scan'208";a="79565554"
+   d="scan'208";a="79565557"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 09:23:13 -0700
-X-CSE-ConnectionGUID: BK74wRU+T86K0QGGrRTlww==
-X-CSE-MsgGUID: V54k45S2Ro+2cOJ3jO7Q6g==
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 09:23:17 -0700
+X-CSE-ConnectionGUID: Bb7IBTbCSyyXuI5HkgFb0g==
+X-CSE-MsgGUID: z3taUSlXSEmCvY8q9njN9w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,144,1770624000"; 
-   d="scan'208";a="220516201"
+   d="scan'208";a="220516211"
 Received: from yilunxu-optiplex-7050.sh.intel.com ([10.239.159.165])
-  by fmviesa006.fm.intel.com with ESMTP; 27 Mar 2026 09:23:10 -0700
+  by fmviesa006.fm.intel.com with ESMTP; 27 Mar 2026 09:23:14 -0700
 From: Xu Yilun <yilun.xu@linux.intel.com>
 To: linux-coco@lists.linux.dev,
 	linux-pci@vger.kernel.org,
@@ -61,9 +61,9 @@ Cc: chao.gao@intel.com,
 	xiaoyao.li@intel.com,
 	vishal.l.verma@intel.com,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 11/31] x86/virt/tdx: Make TDX Module initialize Extensions
-Date: Sat, 28 Mar 2026 00:01:12 +0800
-Message-Id: <20260327160132.2946114-12-yilun.xu@linux.intel.com>
+Subject: [PATCH v2 12/31] x86/virt/tdx: Enable the Extensions after basic TDX Module init
+Date: Sat, 28 Mar 2026 00:01:13 +0800
+Message-Id: <20260327160132.2946114-13-yilun.xu@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
 References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
@@ -75,120 +75,46 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-After providing all required memory to TDX Module, initialize the
-Extensions via TDH.EXT.INIT, and then Extension-SEAMCALLs can be used.
+The detailed initialization flow for TDX Module Extensions has been
+fully implemented. Enable the flow after basic TDX Module
+initialization.
 
-The initialization of Extensions touches the required memory (previously
-provided by TDH.EXT.MEM.ADD) in private manner. If failed, flush cache
-before freeing these memory, to avoid private cache write back damages
-the shared pages.
+Theoretically, the Extensions can be initialized later when the first
+usage of the Extension-SEAMCALL comes. That would save or postpone the
+usage of ~50M memory. But it isn't worth the complexity, the needs for
+Extensions are vast but the savings are little for a typical TDX capable
+system (about 0.001% of memory). So just enable it along with the basic
+TDX.
 
-TDX should use movdir64b to clear private pages when reclaiming them on
-older platforms with the X86_BUG_TDX_PW_MCE erratum. For simplicity,
-don't expect this errata on any TDX Extensions supported platform. So
-TDX Extensions & all features that require TDX Extensions (e.g. TDX
-Connect) will not call the clearing helpers.
-
-Note the "ext_required" global metadata specifies if TDH.EXT.INIT call
-is needed. If 0, the Extensions are already working, so skip the SEAMCALL.
-
-Co-developed-by: Zhenzhong Duan <zhenzhong.duan@intel.com>
-Signed-off-by: Zhenzhong Duan <zhenzhong.duan@intel.com>
 Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
 ---
- arch/x86/virt/vmx/tdx/tdx.h |  1 +
- arch/x86/virt/vmx/tdx/tdx.c | 45 +++++++++++++++++++++++++++++++++++++
- 2 files changed, 46 insertions(+)
+ arch/x86/virt/vmx/tdx/tdx.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/virt/vmx/tdx/tdx.h b/arch/x86/virt/vmx/tdx/tdx.h
-index 31ccdfcf518c..a26fe94c07ff 100644
---- a/arch/x86/virt/vmx/tdx/tdx.h
-+++ b/arch/x86/virt/vmx/tdx/tdx.h
-@@ -60,6 +60,7 @@
- #define TDH_VP_WR			43
- #define TDH_SYS_CONFIG_V0		45
- #define TDH_SYS_CONFIG			SEAMCALL_LEAF_VER(TDH_SYS_CONFIG_V0, 1)
-+#define TDH_EXT_INIT			60
- #define TDH_EXT_MEM_ADD			61
- 
- /* TDX page types */
 diff --git a/arch/x86/virt/vmx/tdx/tdx.c b/arch/x86/virt/vmx/tdx/tdx.c
-index 5fae17c13191..4134f92425da 100644
+index 4134f92425da..0e1ad793e648 100644
 --- a/arch/x86/virt/vmx/tdx/tdx.c
 +++ b/arch/x86/virt/vmx/tdx/tdx.c
-@@ -1519,6 +1519,23 @@ static void tdx_clflush_page_array(struct tdx_page_array *array)
- 		tdx_clflush_page(array->pages[array->offset + i]);
+@@ -1580,7 +1580,7 @@ static int tdx_ext_mem_setup(struct tdx_page_array *ext_mem)
+ 	return 0;
  }
  
-+/* Initialize the TDX Module Extensions then Extension-SEAMCALLs can be used */
-+static int tdx_ext_init(void)
-+{
-+	struct tdx_module_args args = {};
-+	u64 r;
-+
-+	do {
-+		r = seamcall(TDH_EXT_INIT, &args);
-+		cond_resched();
-+	} while (r == TDX_INTERRUPTED_RESUMABLE);
-+
-+	if (r != TDX_SUCCESS)
-+		return -EFAULT;
-+
-+	return 0;
-+}
-+
- static int tdx_ext_mem_add(struct tdx_page_array *ext_mem)
+-static int __maybe_unused init_tdx_ext(void)
++static int init_tdx_ext(void)
  {
- 	struct tdx_module_args args = {
-@@ -1572,6 +1589,17 @@ static int __maybe_unused init_tdx_ext(void)
- 	if (!(tdx_sysinfo.features.tdx_features0 & TDX_FEATURES0_EXT))
- 		return 0;
+ 	struct tdx_page_array *ext_mem = NULL;
+ 	unsigned int nr_pages;
+@@ -1705,6 +1705,10 @@ static int init_tdx_module(void)
+ 	if (ret)
+ 		goto err_reset_pamts;
  
-+	/*
-+	 * With this errata, TDX should use movdir64b to clear private pages
-+	 * when reclaiming them. See tdx_quirk_reset_paddr().
-+	 *
-+	 * Don't expect this errata on any TDX Extensions supported platform.
-+	 * All features require TDX Extensions (including TDX Extensions
-+	 * itself) will never call tdx_quirk_reset_paddr().
-+	 */
-+	if (boot_cpu_has_bug(X86_BUG_TDX_PW_MCE))
-+		return -ENXIO;
++	ret = init_tdx_ext();
++	if (ret)
++		goto err_reset_pamts;
 +
- 	nr_pages = tdx_sysinfo.ext.memory_pool_required_pages;
- 	/*
- 	 * memory_pool_required_pages == 0 means no need to add more pages,
-@@ -1587,6 +1615,20 @@ static int __maybe_unused init_tdx_ext(void)
- 			goto out_ext_mem;
- 	}
+ 	pr_info("%lu KB allocated for PAMT\n", tdmrs_count_pamt_kb(&tdx_tdmr_list));
  
-+	/*
-+	 * ext_required == 0 means no need to call TDH.EXT.INIT, the Extensions
-+	 * are already working.
-+	 */
-+	if (tdx_sysinfo.ext.ext_required) {
-+		ret = tdx_ext_init();
-+		/*
-+		 * Some pages may have been touched by the TDX module.
-+		 * Flush cache before returning these pages to kernel.
-+		 */
-+		if (ret)
-+			goto out_flush;
-+	}
-+
- 	/* Extension memory is never reclaimed once assigned */
- 	tdx_page_array_ctrl_leak(ext_mem);
- 
-@@ -1595,6 +1637,9 @@ static int __maybe_unused init_tdx_ext(void)
- 
- 	return 0;
- 
-+out_flush:
-+	if (ext_mem)
-+		wbinvd_on_all_cpus();
- out_ext_mem:
- 	tdx_page_array_free(ext_mem);
- 
+ out_put_tdxmem:
 -- 
 2.25.1
 
