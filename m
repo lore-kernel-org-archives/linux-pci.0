@@ -1,52 +1,43 @@
-Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0499E13C8E8;
-	Sat, 28 Mar 2026 13:38:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3FA52FFDEA;
+	Sat, 28 Mar 2026 14:11:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774705083; cv=none; b=t4cq6tykRLLOz8JbobQ1C9U1W2rtrz3p3FMJYrisdVMp9PzPoKLwZYLnsWoPOh4wmz6hImg4WjY16QUcmPxj/Z41vu2ofDjSoCqDtIBIQtSveyvUE05n+TWZtiBazK5apugrNxu8yWOqefppMLa1+SgOzUACHzLj+NBNTixbk5Q=
+	t=1774707083; cv=none; b=vAKvSlvpLBgrObipTgS4FbxvujMItQ9BbGrWz4EQdvNrE7dzO4pUUu6UGjyW+RrCIy61P1rOmJ6OXLje2Hf/aw82SA2dE0zdIGngYuYzbygwH29Ypk0ZtsJTIm0M62vDGkUMxxO7EjGhDXNcueKg73iT+B2aHEnRQWq3372Kb3U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774705083; c=relaxed/simple;
-	bh=y7EktVPKrbpXnzb03QrFWrQ09ZfBeJjI/6fJuqcRu20=;
+	s=arc-20240116; t=1774707083; c=relaxed/simple;
+	bh=rGoZpzdSWZaBJQNSlTX86fArMCUueK1ZkiH6zVSRw/0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Wqlp5NKD/wcsWIfiBhalaXK0Ks2HUm7PCsQkgUeauC0NUP5fbWyamOeQ/JORp6gfcwMolyi5wA/crDv9+DF6U/MqzehCZJIfd47QoifDqQAK21fhOlktRD62PZV4Irr0HeNZsblh82zCvTGTO+yn7Zdr3EgWwFUm2t24wYqx/ys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=nqikSHl2; arc=none smtp.client-ip=82.195.75.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="nqikSHl2"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
-	s=smtpauto.stravinsky; h=X-Debian-User:In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=cTnJoJp4JSSYOR+xDGISIrqz9KLc+P5P1xJH7djkdEk=; b=nqikSHl26avalNQQc0AF6gG/+v
-	PqmBklBAKVmAvW69+DdHPNoDoV3Zm63NxBIayqWuOwb/eQn46wZ4PmRi2xJ3m9oDc9FLUl4b6K3qn
-	czRp9nnXEl3XiiobXBHRlPePGUxUGi9XwwSqaQZLv1i56ITL6TBC8hzAS6MuHW5X9zOiZTDlmKOEi
-	pSKGjFKmZJEDUZ/pTV1S+sDRQRBXpYxjYivCsJ6sB1WHiQeq+iNNhWs6YiNPcwKUBZBbTi0aKruHl
-	kKUZ0GCTgeW9kYAtzXxNsWW4Y+iaeLMvrdC7gxooM2ES92eFEPkGx0camBl6+KhUImDQKPHOJwCWT
-	5md7/8XQ==;
-Received: from authenticated user
-	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.94.2)
-	(envelope-from <carnil@debian.org>)
-	id 1w6TrL-00BRga-HE; Sat, 28 Mar 2026 13:37:51 +0000
-Received: by eldamar.lan (Postfix, from userid 1000)
-	id 69D67BE2EE7; Sat, 28 Mar 2026 14:37:50 +0100 (CET)
-Date: Sat, 28 Mar 2026 14:37:50 +0100
-From: Salvatore Bonaccorso <carnil@debian.org>
-To: bernd@bschu.de, Lukas Wunner <lukas@wunner.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+	 Content-Type:Content-Disposition:In-Reply-To; b=Qz+iTY+ra9f5ONGKv918t9JJKHIG3SnGv7xxsej6hrzAOPZKyCU8ttCfF/YGVW/m2sVc8WpshVOQWVpb0gN5i3qC79wcXfWrs0VB+kg7lBB0lsbGRaBNlSh2kWuilzC1xRnON+66hWNM1fS5nV3KeDHPrKLDOzMaXUUUmjlGKBA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id 79D5FC19;
+	Sat, 28 Mar 2026 15:11:11 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 3BACE6028F47; Sat, 28 Mar 2026 15:11:11 +0100 (CET)
+Date: Sat, 28 Mar 2026 15:11:11 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Salvatore Bonaccorso <carnil@debian.org>
+Cc: bernd@bschu.de, Bjorn Helgaas <bhelgaas@google.com>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Mario Limonciello <mario.limonciello@amd.com>
-Cc: 1131025@bugs.debian.org, regressions@lists.linux.dev,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	1131025@bugs.debian.org, regressions@lists.linux.dev,
 	stable@vger.kernel.org, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [6.12.y regression] Regression with 58130e7ce6cb ("PCI/ERR: Ensure
- error recoverability at all times"): echo vfio-pci >driver_override does not
- work for DVB Adapter
-Message-ID: <acfZrlP0Ua_5D3U4@eldamar.lan>
+Subject: Re: [6.12.y regression] Regression with 58130e7ce6cb ("PCI/ERR:
+ Ensure error recoverability at all times"): echo vfio-pci >driver_override
+ does not work for DVB Adapter
+Message-ID: <acfhf-odtr0yw_py@wunner.de>
 References: <177373189751.7987.7156982489427825197.reportbug@obelix-trixie.bs.de>
+ <acfZrlP0Ua_5D3U4@eldamar.lan>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -55,102 +46,56 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <177373189751.7987.7156982489427825197.reportbug@obelix-trixie.bs.de>
-Messsage-ID: <177470500712.1307944.17082968691510345174@eldamar.lan>
-X-Debian-User: carnil
+In-Reply-To: <acfZrlP0Ua_5D3U4@eldamar.lan>
 
-Control: forwarded -1 https://lore.kernel.org/regressions/177470500712.1307944.17082968691510345174@eldamar.lan
+On Sat, Mar 28, 2026 at 02:37:50PM +0100, Salvatore Bonaccorso wrote:
+> Bernd Schumacher reported in Debian (report and report from bisection
+> in https://bugs.debian.org/1131025) a 6.12.y specific regression of
+> 58130e7ce6cb ("PCI/ERR: Ensure error recoverability at all times"):
 
-Hi,
+Thanks for the report and sorry for the breakage.
 
-Bernd Schumacher reported in Debian (report and report from bisection
-in https://bugs.debian.org/1131025) a 6.12.y specific regression of
-58130e7ce6cb ("PCI/ERR: Ensure error recoverability at all times"):
+According to the Debian bug report, the issue only occurs on
+v6.12-stable.  It does not affect v6.18 and v6.19.
 
-On Tue, Mar 17, 2026 at 08:18:17AM +0100, Bernd Schumacher wrote:
->    * What led up to the situation?
-> I have a kvm with linux-image-6.1.0-43-amd64 running vdr and femon.
-> On the host I do echovfio-pci >/sys/bus/pci/devices/0000:$PCI/driver_override.
-> Then I give the DVB Adapter to the kvm.
-> 
-> It works, if I boot linux-image-6.12.63+deb13-amd64 on the host.
-> If it works dmesg on the kvm says:
-> 05:00.0 Multimedia controller: Digital Devices GmbH Octopus DVB Adapter
-> dmesg:
-> [    2.443770] dvbdev: DVB: registering new adapter (DDBridge)
-> [    2.443772] dvbdev: DVB: registering new adapter (DDBridge)
-> ...
-> [    2.694180] ddbridge 0000:05:00.0: attach tuner input 0 adr 60
-> [    2.694183] ddbridge 0000:05:00.0: DVB: registering adapter 0 frontend 0 (STV090x Multistandard)...
-> ...
-> [    2.738542] ddbridge 0000:05:00.0: attach tuner input 1 adr 63
-> [    2.738545] ddbridge 0000:05:00.0: DVB: registering adapter 1 frontend 0 (STV090x Multistandard)...
-> 
-> 
-> It does not work, if I boot linux-image-6.12.73+deb13-amd64 on thehost.
-> If it does not work dmesg on th kvm says:
-> [    2.413879] ddbridge 0000:05:00.0: detected Digital Devices Cine S2 V6 DVB adapter
-> [    2.413901] ddbridge 0000:05:00.0: cannot read registers
-> [    2.414569] ddbridge 0000:05:00.0: fail
-> 
-> If I run femon it says:
-> femon: opening frontend failed: No such file or directory
+I note that v6.12-stable commit 58130e7ce6cb differs from upstream
+commit a2f1e22390ac in that the call to pci_save_state() is at the
+top of pci_bus_add_device(), not in the middle of the function after
+pci_bridge_d3_update().
 
-https://bugs.debian.org/1131025#29 contains the bisect log:
+@Bernd, could you test whether moving the call to pci_save_state()
+as in the small patch below resolves the issue on v6.12-stable?
 
-| git bisect log says:
-| 
-| git bisect start
-| # Status: warte auf guten und schlechten Commit
-| # good: [567bd8cbc2fe6b28b78864cbbbc41b0d405eb83c] Linux 6.12.63
-| git bisect good 567bd8cbc2fe6b28b78864cbbbc41b0d405eb83c
-| # Status: warte auf schlechten Commit, 1 guter Commit bekannt
-| # bad: [5fb0303f6cb6a89bcfb19bd7a68cb793c86e78b2] Linux 6.12.73
-| git bisect bad 5fb0303f6cb6a89bcfb19bd7a68cb793c86e78b2
-| # good: [b1dd6860167667008c3b6f27628d071dc3daaf04] smb/client: fix
-| NT_STATUS_UNABLE_TO_FREE_VM value
-| git bisect good b1dd6860167667008c3b6f27628d071dc3daaf04
-| # good: [1baa43ebca626aa607a03b1c0023ebac5374e62d] octeontx2-af: Fix
-| error handling
-| git bisect good 1baa43ebca626aa607a03b1c0023ebac5374e62d
-| # good: [3845bd336a406cb7c609b515e6ee4c8818053f69] net/sched: act_ife:
-| convert comma to semicolon
-| git bisect good 3845bd336a406cb7c609b515e6ee4c8818053f69
-| # bad: [2901d799a26d949ccf648a6c176a0091a7f1c0ed] ALSA: hda/realtek:
-| Fix headset mic for TongFang X6AR55xU
-| git bisect bad 2901d799a26d949ccf648a6c176a0091a7f1c0ed
-| # bad: [b9b97e6aeb534315f9646b2090d1a5024c6a4e82] procfs: avoid
-| fetching build ID while holding VMA lock
-| git bisect bad b9b97e6aeb534315f9646b2090d1a5024c6a4e82
-| # good: [b8ea101959ab1a46c92be46c238283b0fe60252e] pmdomain: imx:
-| gpcv2: Fix the imx8mm gpu hang due to wrong adb400 reset
-| git bisect good b8ea101959ab1a46c92be46c238283b0fe60252e
-| # good: [dfc3ab6bd64860f8022d69903be299d09be86e11] mm, shmem: prevent
-| infinite loop on truncate race
-| git bisect good dfc3ab6bd64860f8022d69903be299d09be86e11
-| # bad: [9bcc47343ee0ef346aa7b2b460c8ff56bd882fe7] ublk: fix deadlock
-| when reading partition table
-| git bisect bad 9bcc47343ee0ef346aa7b2b460c8ff56bd882fe7
-| # good: [ff48c9312d042bfbe826ca675e98acc6c623211c] KVM: Don't clobber
-| irqfd routing type when deassigning irqfd
-| git bisect good ff48c9312d042bfbe826ca675e98acc6c623211c
-| # bad: [d288ba832d92d16f7db0f6996ffbde2e79190ffe] tools/power
-| turbostat: fix GCC9 build regression
-| git bisect bad d288ba832d92d16f7db0f6996ffbde2e79190ffe
-| # bad: [58130e7ce6cb6e1f73221e412fef6c85ee561425] PCI/ERR: Ensure error
-| recoverability at all times
-| git bisect bad 58130e7ce6cb6e1f73221e412fef6c85ee561425
-| # first bad commit: [58130e7ce6cb6e1f73221e412fef6c85ee561425] PCI/ERR:
-| Ensure error recoverability at all times
+If it does, then the upstream commit was backported to v6.12 in an
+incorrect manner.  If it does not, I need to dig deeper.
 
-And https://bugs.debian.org/1131025#43 confirms again the single
-revert fixing the issue.
+Thanks!
 
-#regzbot introduced: 58130e7ce6cb6e1f73221e412fef6c85ee561425
-#regzbot link: https://bugs.debian.org/1131025
+Lukas
 
-Anything else we can provide to identify the issue present in 6.12.y
-kernels?
+-- >8 --
 
-Regards,
-Salvatore
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 429c0c8ce93d..bdb3e10f947a 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -331,9 +331,6 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 	struct device_node *dn = dev->dev.of_node;
+ 	int retval;
+ 
+-	/* Save config space for error recoverability */
+-	pci_save_state(dev);
+-
+ 	/*
+ 	 * Can not put in pci_device_add yet because resources
+ 	 * are not assigned yet for some devices.
+@@ -346,6 +343,9 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 	pci_proc_attach_device(dev);
+ 	pci_bridge_d3_update(dev);
+ 
++	/* Save config space for error recoverability */
++	pci_save_state(dev);
++
+ 	dev->match_driver = !dn || of_device_is_available(dn);
+ 	retval = device_attach(&dev->dev);
+ 	if (retval < 0 && retval != -EPROBE_DEFER)
