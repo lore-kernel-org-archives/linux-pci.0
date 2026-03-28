@@ -1,225 +1,252 @@
-Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03FC4C2FD;
-	Sat, 28 Mar 2026 02:22:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FD1EB67E
+	for <linux-pci@vger.kernel.org>; Sat, 28 Mar 2026 07:29:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774664528; cv=none; b=WKHkmR7Ns6nA4n+y/0iRbgk2x9bEvDNCSXTQPuvpmIzFGmbhE4JstBEhGJUpf/R1c4KG69Q4oxRLwzSsTatM7UKC9KruXaVHSsqXhOuLHh3S3URvnrUM+deEfobY4E0LjszEfUfXN6zuyK4GrUBshe5In051h/brvuS5EiUE9qo=
+	t=1774682999; cv=none; b=jBfVv/zM648sRAgXoG28nhqUJIO20KVEuSxuG51evb+fhzGPG7MTK5pzjKfvyx8pgJ7L04xzY0PZicBi9aq/q2PnjRTXvl7ZaPR/+nd7Q3Wnu8KxZvb0MiLnLEF7rLGPlGta9F25GaNhQR9JXGiyxh/ZOjXJTyvSGS/0DfPpPN0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774664528; c=relaxed/simple;
-	bh=ilKV3fBIfOdo+efVbzrEw7HNYJHL5ePWB8l7pDMop2g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=D+/qJLw1wwjBZ40P/aI6IJ5sATLeoB/kwxus0PNUSCEpuq5IuPHTT1L3eR/d7oceU+QRAVRZV5Bmfl+rpZcqeJoy48SU15tW552u/mbz6x4kqL1Hxfvgeq6W2vximhdVUUYPvTQ8jT8P0HrV+mBGEOvk+46BCPdmCFfYibRQA+c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=2JF+WD79; arc=none smtp.client-ip=113.46.200.220
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1774682999; c=relaxed/simple;
+	bh=KrFt4AH6ugG7GHfnWSNqs4ecDUg+teITl6vrhJWAVZU=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=VEtzrRIbaMmJDrysivqAhOpnEIKknabXPTTZTHGjOxvzWP2vrQ3JzAuwGOB6hmyDZT4naVWqBDbsr+tonI/kaxTqdwsBhpVsNcEf2yxWr/mVvY6dGGNu2jI94tgXZSi1Xuifc8UkOX68haDmWUhckEGXl+8wjz+xcgRByS349is=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=daumyWEE; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="2JF+WD79"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=1OkLiW8Ed78xDJTW8wn1LfvAVL5T6iaxi219R/4j/pQ=;
-	b=2JF+WD79kpjFM25pn6LCZ/yf1qTkA1lCV4qAW3Hli7RNh88wNlL/rQrdh3W/cX8hNZxHZ2lkE
-	H8a4NvDibeihCShBjV0YH5znkUSkE+HPMlmAkPBcdlkb6oHMDLEHmW+jExzY7dk/sMbRagOAkdE
-	jipw2J80WKKr6DZU8huwfzA=
-Received: from mail.maildlp.com (unknown [172.19.162.140])
-	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4fjLjW052Kz12LDV;
-	Sat, 28 Mar 2026 10:16:31 +0800 (CST)
-Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id C6AF52025F;
-	Sat, 28 Mar 2026 10:21:56 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Sat, 28 Mar 2026 10:21:56 +0800
-Message-ID: <04859df4-6fa4-4b2b-aef1-621f3c053c2e@huawei.com>
-Date: Sat, 28 Mar 2026 10:21:55 +0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="daumyWEE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1774682998; x=1806218998;
+  h=date:from:to:cc:subject:message-id;
+  bh=KrFt4AH6ugG7GHfnWSNqs4ecDUg+teITl6vrhJWAVZU=;
+  b=daumyWEEVCWNi5QQ6ps1kTFID82tIY0qYNFBhbR20fMAnfg4P1ag2Drp
+   LLZ8pMxuEiOI2/hf+g5IO3DHLbFW3+tiE23kr4V1/u56vCIE0WQKKSdvL
+   AiVLjFUkp6AwmeuL/WVDuoa+cl8Dw9YAgWkUoUCJltMfMHrpCAZiVALun
+   wePzuU1JluxW6AHDtxYZbRIw0MEVImn2TCna2LkbhkhMsdSp3jGpfVhGl
+   KmW4zSA9+6laJDyoJkf8eluEU2Ji27ZP9+CzzT3pR9b6c6RhjG5+8hhX2
+   YlK0el75wa1cQzuBSQJuE0N5F/gFVzaBbKFGD4DQ4JwYrhC46USoBHviw
+   Q==;
+X-CSE-ConnectionGUID: IWaj4dKSRGuZG2RwbOIZ+w==
+X-CSE-MsgGUID: vXJpysDaSGGr7Gjy5VISpg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11742"; a="75629952"
+X-IronPort-AV: E=Sophos;i="6.23,145,1770624000"; 
+   d="scan'208";a="75629952"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Mar 2026 00:29:58 -0700
+X-CSE-ConnectionGUID: HdbKy/9yQ26yVqOJJelcuA==
+X-CSE-MsgGUID: PMe36GVCRdiG1q1J+XXRNg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,145,1770624000"; 
+   d="scan'208";a="263467765"
+Received: from lkp-server01.sh.intel.com (HELO 3905d212be1b) ([10.239.97.150])
+  by orviesa001.jf.intel.com with ESMTP; 28 Mar 2026 00:29:56 -0700
+Received: from kbuild by 3905d212be1b with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1w6O7F-00000000BAv-0qdH;
+	Sat, 28 Mar 2026 07:29:53 +0000
+Date: Sat, 28 Mar 2026 15:29:40 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:endpoint] BUILD SUCCESS
+ 70becc1a9b453ce04f97507585afc2cf47e67b11
+Message-ID: <202603281525.hI1v5WHM-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC v2 1/2] vfio: add callback to get tph info for dmabuf
-To: Zhiping Zhang <zhipingz@meta.com>, Jason Gunthorpe <jgg@ziepe.ca>, Leon
- Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-rdma@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <dri-devel@lists.freedesktop.org>, Keith Busch
-	<kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>, Yishai Hadas
-	<yishaih@nvidia.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>
-References: <20260324234615.3731237-1-zhipingz@meta.com>
- <20260324234615.3731237-2-zhipingz@meta.com>
-Content-Language: en-US
-From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <20260324234615.3731237-2-zhipingz@meta.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
- kwepemk500009.china.huawei.com (7.202.194.94)
 
-Hi Zhiping,
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git endpoint
+branch HEAD: 70becc1a9b453ce04f97507585afc2cf47e67b11  PCI: endpoint: pci-epf-vntb: Implement .get_dma_dev()
 
-On 3/25/2026 7:46 AM, Zhiping Zhang wrote:
-> This patch adds a callback to get the tph info on DMA buffer exporters.
-> The tph info includes both the steering tag and the process hint (ph).
-> 
-> The steering tag and ph are encoded in the flags field of
-> vfio_device_feature_dma_buf instead of adding new fields to the uapi
-> struct, to preserve ABI compatibility.
-> 
-> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
-> ---
->  drivers/vfio/pci/vfio_pci_dmabuf.c | 26 ++++++++++++++++++++++++--
->  include/linux/dma-buf.h            | 30 ++++++++++++++++++++++++++++++
->  include/uapi/linux/vfio.h          |  9 +++++++--
->  3 files changed, 61 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> index 478beafc6ac3..c45cb3884b85 100644
-> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> @@ -17,6 +17,8 @@ struct vfio_pci_dma_buf {
->  	struct phys_vec *phys_vec;
->  	struct p2pdma_provider *provider;
->  	u32 nr_ranges;
-> +	u16 steering_tag;
-> +	u8 ph;
->  	u8 revoked : 1;
->  };
-> 
-> @@ -60,6 +62,15 @@ vfio_pci_dma_buf_map(struct dma_buf_attachment *attachment,
->  				       priv->size, dir);
->  }
-> 
-> +static int vfio_pci_dma_buf_get_tph(struct dma_buf *dmabuf, u16 *steering_tag,
-> +				    u8 *ph)
-> +{
-> +	struct vfio_pci_dma_buf *priv = dmabuf->priv;
-> +	*steering_tag = priv->steering_tag;
-> +	*ph = priv->ph;
+elapsed time: 731m
 
-If the dmabuf exporter don't provide st&ph, this ops should return error
+configs tested: 175
+configs skipped: 2
 
-> +	return 0;
-> +}
-> +
->  static void vfio_pci_dma_buf_unmap(struct dma_buf_attachment *attachment,
->  				   struct sg_table *sgt,
->  				   enum dma_data_direction dir)
-> @@ -90,6 +101,7 @@ static const struct dma_buf_ops vfio_pci_dmabuf_ops = {
->  	.unpin = vfio_pci_dma_buf_unpin,
->  	.attach = vfio_pci_dma_buf_attach,
->  	.map_dma_buf = vfio_pci_dma_buf_map,
-> +	.get_tph = vfio_pci_dma_buf_get_tph,
->  	.unmap_dma_buf = vfio_pci_dma_buf_unmap,
->  	.release = vfio_pci_dma_buf_release,
->  };
-> @@ -228,7 +240,10 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
->  	if (copy_from_user(&get_dma_buf, arg, sizeof(get_dma_buf)))
->  		return -EFAULT;
-> 
-> -	if (!get_dma_buf.nr_ranges || get_dma_buf.flags)
-> +	if (!get_dma_buf.nr_ranges ||
-> +	    (get_dma_buf.flags & ~(VFIO_DMABUF_FL_TPH |
-> +				   VFIO_DMABUF_TPH_PH_MASK |
-> +				   VFIO_DMABUF_TPH_ST_MASK)))
->  		return -EINVAL;
-> 
->  	/*
-> @@ -285,7 +300,14 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
->  		ret = PTR_ERR(priv->dmabuf);
->  		goto err_dev_put;
->  	}
-> -
-> +	if (get_dma_buf.flags & VFIO_DMABUF_FL_TPH) {
-> +		priv->steering_tag = (get_dma_buf.flags &
-> +				      VFIO_DMABUF_TPH_ST_MASK) >>
-> +				     VFIO_DMABUF_TPH_ST_SHIFT;
-> +		priv->ph = (get_dma_buf.flags &
-> +			    VFIO_DMABUF_TPH_PH_MASK) >>
-> +			   VFIO_DMABUF_TPH_PH_SHIFT;
-> +	}
->  	/* dma_buf_put() now frees priv */
->  	INIT_LIST_HEAD(&priv->dmabufs_elm);
->  	down_write(&vdev->memory_lock);
-> diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
-> index 133b9e637b55..26705c83ad80 100644
-> --- a/include/linux/dma-buf.h
-> +++ b/include/linux/dma-buf.h
-> @@ -113,6 +113,36 @@ struct dma_buf_ops {
->  	 */
->  	void (*unpin)(struct dma_buf_attachment *attach);
-> 
-> +	/**
-> +	 * @get_tph:
-> +	 *
-> +	 * Get the TPH (TLP Processing Hints) for this DMA buffer.
-> +	 *
-> +	 * This callback allows DMA buffer exporters to provide TPH including
-> +	 * both the steering tag and the process hints (ph), which can be used
-> +	 * to optimize peer-to-peer (P2P) memory access. The TPH info is typically
-> +	 * used in scenarios where:
-> +	 * - A PCIe device (e.g., RDMA NIC) needs to access memory on another
-> +	 *   PCIe device (e.g., GPU),
-> +	 * - The system supports TPH and can use steering tags / ph to optimize
-> +	 *   cache placement and memory access patterns,
-> +	 * - The memory is exported via DMABUF for cross-device sharing.
-> +	 *
-> +	 * @dmabuf: [in] The DMA buffer for which to retrieve TPH
-> +	 * @steering_tag: [out] Pointer to store the 16-bit TPH steering tag value
-> +	 * @ph: [out] Pointer to store the 8-bit TPH processing-hint value
-> +	 *
-> +	 * Returns:
-> +	 * * 0 - Success, steering tag stored in @steering_tag
-> +	 * * -EOPNOTSUPP - TPH steering tags not supported for this buffer
-> +	 * * -EINVAL - Invalid parameters
-> +	 *
-> +	 * This callback is optional. If not implemented, the buffer does not
-> +	 * support TPH.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-It seemed already impl...
+tested configs:
+alpha                             allnoconfig    gcc-15.2.0
+alpha                            allyesconfig    gcc-15.2.0
+alpha                               defconfig    gcc-15.2.0
+arc                              allmodconfig    clang-16
+arc                               allnoconfig    gcc-15.2.0
+arc                              allyesconfig    clang-23
+arc                                 defconfig    gcc-15.2.0
+arc                   randconfig-001-20260328    gcc-15.2.0
+arc                   randconfig-002-20260328    gcc-15.2.0
+arm                               allnoconfig    gcc-15.2.0
+arm                              allyesconfig    clang-16
+arm                                 defconfig    gcc-15.2.0
+arm                   randconfig-001-20260328    gcc-15.2.0
+arm                   randconfig-002-20260328    gcc-15.2.0
+arm                   randconfig-003-20260328    gcc-15.2.0
+arm                   randconfig-004-20260328    gcc-15.2.0
+arm64                            allmodconfig    clang-23
+arm64                             allnoconfig    gcc-15.2.0
+arm64                               defconfig    gcc-15.2.0
+arm64                 randconfig-001-20260328    gcc-14.3.0
+arm64                 randconfig-002-20260328    gcc-14.3.0
+arm64                 randconfig-003-20260328    gcc-14.3.0
+arm64                 randconfig-004-20260328    gcc-14.3.0
+csky                             allmodconfig    gcc-15.2.0
+csky                              allnoconfig    gcc-15.2.0
+csky                                defconfig    gcc-15.2.0
+csky                  randconfig-001-20260328    gcc-14.3.0
+csky                  randconfig-002-20260328    gcc-14.3.0
+hexagon                          allmodconfig    gcc-15.2.0
+hexagon                           allnoconfig    gcc-15.2.0
+hexagon                             defconfig    gcc-15.2.0
+hexagon               randconfig-001-20260328    gcc-11.5.0
+hexagon               randconfig-002-20260328    gcc-11.5.0
+i386                             allmodconfig    clang-20
+i386                              allnoconfig    gcc-15.2.0
+i386                             allyesconfig    clang-20
+i386        buildonly-randconfig-001-20260328    clang-20
+i386        buildonly-randconfig-002-20260328    clang-20
+i386        buildonly-randconfig-003-20260328    clang-20
+i386        buildonly-randconfig-004-20260328    clang-20
+i386        buildonly-randconfig-005-20260328    clang-20
+i386        buildonly-randconfig-006-20260328    clang-20
+i386                                defconfig    gcc-15.2.0
+i386                  randconfig-001-20260328    clang-20
+i386                  randconfig-002-20260328    clang-20
+i386                  randconfig-003-20260328    clang-20
+i386                  randconfig-004-20260328    clang-20
+i386                  randconfig-005-20260328    clang-20
+i386                  randconfig-006-20260328    clang-20
+i386                  randconfig-007-20260328    clang-20
+i386                  randconfig-011-20260328    gcc-13
+i386                  randconfig-012-20260328    gcc-13
+i386                  randconfig-013-20260328    gcc-13
+i386                  randconfig-014-20260328    gcc-13
+i386                  randconfig-015-20260328    gcc-13
+i386                  randconfig-016-20260328    gcc-13
+i386                  randconfig-017-20260328    gcc-13
+loongarch                        allmodconfig    clang-23
+loongarch                         allnoconfig    gcc-15.2.0
+loongarch                           defconfig    clang-19
+loongarch             randconfig-001-20260328    gcc-11.5.0
+loongarch             randconfig-002-20260328    gcc-11.5.0
+m68k                             allmodconfig    gcc-15.2.0
+m68k                              allnoconfig    gcc-15.2.0
+m68k                             allyesconfig    clang-16
+m68k                                defconfig    clang-19
+microblaze                        allnoconfig    gcc-15.2.0
+microblaze                       allyesconfig    gcc-15.2.0
+microblaze                          defconfig    clang-19
+mips                             allmodconfig    gcc-15.2.0
+mips                              allnoconfig    gcc-15.2.0
+mips                             allyesconfig    gcc-15.2.0
+mips                     cu1000-neo_defconfig    gcc-15.2.0
+mips                           ip27_defconfig    gcc-15.2.0
+nios2                            allmodconfig    clang-23
+nios2                             allnoconfig    clang-23
+nios2                               defconfig    clang-19
+nios2                 randconfig-001-20260328    gcc-11.5.0
+nios2                 randconfig-002-20260328    gcc-11.5.0
+openrisc                         allmodconfig    clang-23
+openrisc                          allnoconfig    clang-23
+openrisc                            defconfig    gcc-15.2.0
+parisc                           allmodconfig    gcc-15.2.0
+parisc                            allnoconfig    clang-23
+parisc                           allyesconfig    clang-19
+parisc                           allyesconfig    gcc-15.2.0
+parisc                              defconfig    gcc-15.2.0
+parisc                randconfig-001-20260328    gcc-10.5.0
+parisc                randconfig-002-20260328    gcc-10.5.0
+parisc64                            defconfig    clang-19
+powerpc                     akebono_defconfig    clang-23
+powerpc                          allmodconfig    gcc-15.2.0
+powerpc                           allnoconfig    clang-23
+powerpc               randconfig-001-20260328    gcc-10.5.0
+powerpc               randconfig-002-20260328    gcc-10.5.0
+powerpc64             randconfig-001-20260328    gcc-10.5.0
+powerpc64             randconfig-002-20260328    gcc-10.5.0
+riscv                            allmodconfig    clang-23
+riscv                             allnoconfig    clang-23
+riscv                            allyesconfig    clang-16
+riscv                               defconfig    gcc-15.2.0
+riscv                 randconfig-001-20260328    clang-23
+riscv                 randconfig-002-20260328    clang-23
+s390                             allmodconfig    clang-18
+s390                             allmodconfig    clang-19
+s390                              allnoconfig    clang-23
+s390                             allyesconfig    gcc-15.2.0
+s390                                defconfig    gcc-15.2.0
+s390                  randconfig-001-20260328    clang-23
+s390                  randconfig-002-20260328    clang-23
+sh                               allmodconfig    gcc-15.2.0
+sh                                allnoconfig    clang-23
+sh                               allyesconfig    clang-19
+sh                               allyesconfig    gcc-15.2.0
+sh                                  defconfig    gcc-14
+sh                    randconfig-001-20260328    clang-23
+sh                    randconfig-002-20260328    clang-23
+sh                           se7705_defconfig    gcc-15.2.0
+sparc                             allnoconfig    clang-23
+sparc                               defconfig    gcc-15.2.0
+sparc                 randconfig-001-20260328    gcc-14
+sparc                 randconfig-002-20260328    gcc-14
+sparc64                          allmodconfig    clang-23
+sparc64                             defconfig    gcc-14
+sparc64               randconfig-001-20260328    gcc-14
+sparc64               randconfig-002-20260328    gcc-14
+um                               allmodconfig    clang-19
+um                                allnoconfig    clang-23
+um                               allyesconfig    gcc-15.2.0
+um                                  defconfig    gcc-14
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20260328    gcc-14
+um                    randconfig-002-20260328    gcc-14
+um                           x86_64_defconfig    clang-23
+um                           x86_64_defconfig    gcc-14
+x86_64                           allmodconfig    clang-20
+x86_64                            allnoconfig    clang-23
+x86_64                           allyesconfig    clang-20
+x86_64      buildonly-randconfig-001-20260328    clang-20
+x86_64      buildonly-randconfig-002-20260328    clang-20
+x86_64      buildonly-randconfig-003-20260328    clang-20
+x86_64      buildonly-randconfig-004-20260328    clang-20
+x86_64      buildonly-randconfig-005-20260328    clang-20
+x86_64      buildonly-randconfig-006-20260328    clang-20
+x86_64                              defconfig    gcc-14
+x86_64                                  kexec    clang-20
+x86_64                randconfig-001-20260328    gcc-14
+x86_64                randconfig-002-20260328    gcc-14
+x86_64                randconfig-003-20260328    gcc-14
+x86_64                randconfig-004-20260328    gcc-14
+x86_64                randconfig-005-20260328    gcc-14
+x86_64                randconfig-006-20260328    gcc-14
+x86_64                randconfig-011-20260328    clang-20
+x86_64                randconfig-012-20260328    clang-20
+x86_64                randconfig-013-20260328    clang-20
+x86_64                randconfig-014-20260328    clang-20
+x86_64                randconfig-015-20260328    clang-20
+x86_64                randconfig-016-20260328    clang-20
+x86_64                randconfig-071-20260328    gcc-12
+x86_64                randconfig-072-20260328    gcc-12
+x86_64                randconfig-073-20260328    gcc-12
+x86_64                randconfig-074-20260328    gcc-12
+x86_64                randconfig-075-20260328    gcc-12
+x86_64                randconfig-076-20260328    gcc-12
+x86_64                               rhel-9.4    clang-20
+x86_64                           rhel-9.4-bpf    gcc-14
+x86_64                          rhel-9.4-func    clang-20
+x86_64                    rhel-9.4-kselftests    clang-20
+x86_64                         rhel-9.4-kunit    gcc-14
+x86_64                           rhel-9.4-ltp    gcc-14
+x86_64                          rhel-9.4-rust    clang-20
+xtensa                            allnoconfig    clang-23
+xtensa                           allyesconfig    clang-23
+xtensa                randconfig-001-20260328    gcc-14
+xtensa                randconfig-002-20260328    gcc-14
 
-> +	 *
-> +	 */
-> +	int (*get_tph)(struct dma_buf *dmabuf, u16 *steering_tag, u8 *ph);
-> +
->  	/**
->  	 * @map_dma_buf:
->  	 *
-> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> index bb7b89330d35..e2a8962641d2 100644
-> --- a/include/uapi/linux/vfio.h
-> +++ b/include/uapi/linux/vfio.h
-> @@ -1505,8 +1505,13 @@ struct vfio_region_dma_range {
->  struct vfio_device_feature_dma_buf {
->  	__u32	region_index;
->  	__u32	open_flags;
-> -	__u32   flags;
-> -	__u32   nr_ranges;
-> +	__u32	flags;
-> +#define VFIO_DMABUF_FL_TPH		(1U << 0) /* TPH info is present */
-> +#define VFIO_DMABUF_TPH_PH_SHIFT	1         /* bits 1-2: PH (2-bit) */
-> +#define VFIO_DMABUF_TPH_PH_MASK	0x6U
-> +#define VFIO_DMABUF_TPH_ST_SHIFT	16        /* bits 16-31: steering tag */
-> +#define VFIO_DMABUF_TPH_ST_MASK		0xffff0000U
-> +	__u32	nr_ranges;
->  	struct vfio_region_dma_range dma_ranges[] __counted_by(nr_ranges);
->  };
-
-Another question:
-1\ PCIE protocol define 8bit and 16bit ST
-2\ In host-device ST impl, the ACPI will provide 8bit and 16bit ST, the choice of which
-   one to use depends on the minimum supported range of the device and the RP.
-3\ So in this P2P scene, although exporter (e.g. GPU) support 16bit ST, but the consumer
-   (e.g. RDMA NIC) only support 8bit this may lead to mis-match
-
-> 
-> --
-> 2.52.0
-> 
-> 
-> 
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
