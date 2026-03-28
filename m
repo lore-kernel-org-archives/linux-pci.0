@@ -1,46 +1,66 @@
-Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACA39341050;
-	Sat, 28 Mar 2026 19:14:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B58A733A70F;
+	Sat, 28 Mar 2026 19:58:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774725258; cv=none; b=YBKO9PIKpHlVrcpcEJmqgZnh3JJWmKFzhmtM3pVE+eIxEURGM6rGe8GgmOWTWMocxShu9EfIXe7Sw/zNPi6uGqAwuzSELJRGl1WMDEwhwdR44WpWkInVre9dLEPyYGBVKIusrbNRp0sKqBVApoq/gscy4PdffpVi5HHXZ3wWCp8=
+	t=1774727939; cv=none; b=nNEhZ3UEjUXFiGH0WNmOSNM3RBieg7Y8+7xCeit5nFtC0VFbjsNuAbdpkkO7N0tG95Gzed+8VOpsxkPXU+Ra3aMFuiTSfpmtdoMaWxEXx5j5mfSBmlLd+3TAttFExLLBLAfuyOypeGZvaOTcPxGPVUWEXymSILawtRYGuhoDCnY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774725258; c=relaxed/simple;
-	bh=wX8AQeZzuPnlJESJ4AJHNDw8vSwoPPygn8/7lDKLpjQ=;
+	s=arc-20240116; t=1774727939; c=relaxed/simple;
+	bh=cy9GXw5t/wXh0caSG/6pf6d4N6q2KotxV8ZwIQvq7ac=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=R1p8BvCDjetcHXTSHo6W6uVvlswDUSYYa+k/DfiOA3p8xMERGPqle82cBY+We0nocpkEHYli+TTzNWatN9Ir+q5Ysb2DwB37XiA7d/oe6ev3MCD/3kO5RUIfehegn4GvAl9w9rKdWhC5j2aGiIAPa47Mxs4tAcQ01okVFGHuc+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout3.hostsharing.net (Postfix) with ESMTPS id F035CC14;
-	Sat, 28 Mar 2026 20:14:14 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id BAC8D600D150; Sat, 28 Mar 2026 20:14:14 +0100 (CET)
-Date: Sat, 28 Mar 2026 20:14:14 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bernd Schumacher <bernd@bschu.de>
-Cc: Salvatore Bonaccorso <carnil@debian.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Mario Limonciello <mario.limonciello@amd.com>,
-	1131025@bugs.debian.org, regressions@lists.linux.dev,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	 Content-Type:Content-Disposition:In-Reply-To; b=RL47iDO12HoEj9DFkwuYJnUJafk6ounna3l5kkNbGeu8PHno3xKqZalsGUZiUPGRTheLF9fqacemsfAek9toJzzpFqK10aGFxzZ0V1RuDegiDJFP25c6Wc2g/ga3EBohQzKn1qTw4Yx8DDURNoeqnErvqmN3s1yPVCchZNf1Goc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Uj4tr5e+; arc=none smtp.client-ip=192.198.163.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Uj4tr5e+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1774727937; x=1806263937;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=cy9GXw5t/wXh0caSG/6pf6d4N6q2KotxV8ZwIQvq7ac=;
+  b=Uj4tr5e+6XUQVC5IGbGg+AGMQJ0xKmaW2jQpiaMWFldYAQO+9PP0XOHO
+   f9W8+OhlUWhu8cA9a+Xh6cZoZuAPpsdEEdCFN+JyKAJzGkxAzr+O/bOIV
+   8vYvVg+nplS87pWebDrKkx3CjEo2Zx4cjGxZzKDlvnco8NyNkZ787UoNh
+   4hHoVh9iRLp+75NRWa9di3/LA0Fxft6yVRazyXXW6dDGE5H5UVd/BwR8Z
+   0MP+98GpEBEjTL7uEZhIY6HVENKxRhUwV+q8MLkDTGJ3PanaPk1PvIq0I
+   JusKkwQRmbUWmZrTTNpIK1I/AXxpAg1WYUF9HYf6v71k62nYfk6OmgTOC
+   w==;
+X-CSE-ConnectionGUID: ERB0ybCtTBC7RJ988MwbLg==
+X-CSE-MsgGUID: gKUwAl0mTDya07awSe+oMA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11742"; a="87158408"
+X-IronPort-AV: E=Sophos;i="6.23,146,1770624000"; 
+   d="scan'208";a="87158408"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Mar 2026 12:58:57 -0700
+X-CSE-ConnectionGUID: d45D8WvkQKSEh8Z+cmPkvw==
+X-CSE-MsgGUID: WC6z1TObQiWYd85xGEhUxQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,146,1770624000"; 
+   d="scan'208";a="227246231"
+Received: from lkp-server01.sh.intel.com (HELO 3905d212be1b) ([10.239.97.150])
+  by fmviesa004.fm.intel.com with ESMTP; 28 Mar 2026 12:58:53 -0700
+Received: from kbuild by 3905d212be1b with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1w6Zo3-00000000BjB-0aGI;
+	Sat, 28 Mar 2026 19:58:51 +0000
+Date: Sun, 29 Mar 2026 03:58:16 +0800
+From: kernel test robot <lkp@intel.com>
+To: Xu Yilun <yilun.xu@linux.intel.com>, linux-coco@lists.linux.dev,
+	linux-pci@vger.kernel.org, dan.j.williams@intel.com, x86@kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, chao.gao@intel.com, dave.jiang@intel.com,
+	baolu.lu@linux.intel.com, yilun.xu@linux.intel.com,
+	yilun.xu@intel.com, zhenzhong.duan@intel.com, kvm@vger.kernel.org,
+	rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com,
+	kas@kernel.org, xiaoyao.li@intel.com, vishal.l.verma@intel.com,
 	linux-kernel@vger.kernel.org
-Subject: Re: [6.12.y regression] Regression with 58130e7ce6cb ("PCI/ERR:
- Ensure error recoverability at all times"): echo vfio-pci >driver_override
- does not work for DVB Adapter
-Message-ID: <acgohjvBpVcR7HcK@wunner.de>
-References: <177373189751.7987.7156982489427825197.reportbug@obelix-trixie.bs.de>
- <acfZrlP0Ua_5D3U4@eldamar.lan>
- <acfhf-odtr0yw_py@wunner.de>
- <74bcd84500e5efcca035624f325e400dd8a21f44.camel@bschu.de>
+Subject: Re: [PATCH v2 19/31] iommu/vt-d: Reserve the MSB domain ID bit for
+ the TDX module
+Message-ID: <202603290317.BVIn0aoy-lkp@intel.com>
+References: <20260327160132.2946114-20-yilun.xu@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,22 +69,31 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <74bcd84500e5efcca035624f325e400dd8a21f44.camel@bschu.de>
+In-Reply-To: <20260327160132.2946114-20-yilun.xu@linux.intel.com>
 
-On Sat, Mar 28, 2026 at 05:16:08PM +0100, Bernd Schumacher wrote:
-> Thank you for your patch. But ...
-> Applying the patch to v6.12.73 did not help. (same errors).
+Hi Xu,
 
-Hm, could you provide full dmesg output please with
-"dyndbg=file drivers/pci/* +p" added to the kernel command line
-(the double quotes need to be included on the command line).
-Be sure to set CONFIG_DYNAMIC_DEBUG=y in .config when compiling
-the kernel.
+kernel test robot noticed the following build warnings:
 
-Ideally both for a non-working kernel such as 6.12.73 and for a
-working kernel such as 6.12.63.  That should make it easier to
-root-cause the issue.
+[auto build test WARNING on 11439c4635edd669ae435eec308f4ab8a0804808]
 
-Thank you!
+url:    https://github.com/intel-lab-lkp/linux/commits/Xu-Yilun/x86-tdx-Move-all-TDX-error-defines-into-asm-shared-tdx_errno-h/20260328-151524
+base:   11439c4635edd669ae435eec308f4ab8a0804808
+patch link:    https://lore.kernel.org/r/20260327160132.2946114-20-yilun.xu%40linux.intel.com
+patch subject: [PATCH v2 19/31] iommu/vt-d: Reserve the MSB domain ID bit for the TDX module
+config: x86_64-defconfig (https://download.01.org/0day-ci/archive/20260329/202603290317.BVIn0aoy-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260329/202603290317.BVIn0aoy-lkp@intel.com/reproduce)
 
-Lukas
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202603290317.BVIn0aoy-lkp@intel.com/
+
+All warnings (new ones prefixed by >>, old ones prefixed by <<):
+
+>> WARNING: modpost: vmlinux: section mismatch in reference: alloc_iommu.cold+0x49 (section: .text.unlikely) -> acpi_table_parse_keyp (section: .init.text)
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
