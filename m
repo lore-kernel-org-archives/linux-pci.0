@@ -1,113 +1,105 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BDA536D4EA;
-	Sun, 29 Mar 2026 15:50:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B6B0313552;
+	Sun, 29 Mar 2026 16:22:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774799447; cv=none; b=XEz9oEzntMMkkY8cehpi5GrEOSn4Ql4S/SUkkdibjudlzhtqMHn95WrHb/uJCY3H0QC5XBWxeZqBt60guGfQ0gUaZni8VgVfNBvb+op5+MSZKTZhdWCX4sDKbTM+Yjw1LROnPbfE2ywWE+ElXEllgZvyyaEA5KDf7PF38eGDv8o=
+	t=1774801358; cv=none; b=pzaPLarlDLM6p8wgYS6SBjpSGcWEzRTBRsOVoc4m/AF519WzpH23FrWfXvCU4U7+d4GeF+Cz4kQC99UkYrz0cdZ2owiXv7xduIF8ygCv+PI61ZI6WTZuEQxJcf4oBE4dI0xMyRcQ4eMC/SFNSso1QogCfizl4npQEMe0FtV3ahM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774799447; c=relaxed/simple;
-	bh=pZ1YjtlNztckGR9ehBsAHqay77Yd8balGELRv/rE/m0=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=GtudlyPtjyralWs1EE4RjppzoChcxyGYaeJeAatQjl3rfSLuQUZuDcg2CI6JzBnGvARfwMvh6akQ6P31PMYtlWB085x5lsuV65xTtKiKrmHnugrQA1QXYuWQLVy9Imj6Fk9RBjzB3hWWTCh5070UN8BukqH9fhGJZ8upnxrlTLE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G5QhtjCS; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G5QhtjCS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84F98C116C6;
-	Sun, 29 Mar 2026 15:50:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774799446;
-	bh=pZ1YjtlNztckGR9ehBsAHqay77Yd8balGELRv/rE/m0=;
-	h=From:To:Cc:Subject:Date:From;
-	b=G5QhtjCSnWIbLTSURYAqsSq//35U9CvraJrRSbM+NzNOTZ2kXrTozWPPUM1/+BMBR
-	 v+Fj6KmgDK63sTdEHWO7MdB2Xo7qRKaMQQypsil4zi83LYy1ozK45wlv16kx8BWW4E
-	 R+NkDdpe6pKVPy1YLtnjSopFgS2yKZfZHDON9AiHuFfGEh5kT7IGjYGTqnzMiuZZAF
-	 vosaM2dwemXTzVfggDKBxAS4dgp4KP9wvF43/jptI8GoQXePPR779SIq6fjI9ArAVZ
-	 N0hVXm57FVgypTPHcnu+0XWK3WxqlD5zc56aUdjsnzJh8MhACExYAwLrJBqx1huemf
-	 JjC2CNHy8feNQ==
-From: Thierry Reding <thierry.reding@kernel.org>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: [GIT PULL] PCI: tegra: Changes for v7.1-rc1
-Date: Sun, 29 Mar 2026 17:50:39 +0200
-Message-ID: <20260329155040.1448158-1-thierry.reding@kernel.org>
-X-Mailer: git-send-email 2.52.0
-Content-Type: text/plain; charset="utf-8"
+	s=arc-20240116; t=1774801358; c=relaxed/simple;
+	bh=KZiCfpy9O2foCamZAq+523MBEjBL3TBg0Dr5ng5vm4c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PdJjd4LU6WB7JqMXajbwIz1jYgiyW+5mJFeFiROuOnHIdgBl0QCinjy2xEjhRfd+ekP12Ct8JUIVi3n4szngIvJ8eXauf+rAot9EMdF+Utg1hWZ7Td9I3LkMSED1qDlLyUpSYhQbbKX1QFMS3OVaOvbELsfhOpRundz3UsiqcJQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id D067CC1C;
+	Sun, 29 Mar 2026 18:22:27 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 793626014951; Sun, 29 Mar 2026 18:22:27 +0200 (CEST)
+Date: Sun, 29 Mar 2026 18:22:27 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Bernd Schumacher <bernd@bschu.de>
+Cc: Salvatore Bonaccorso <carnil@debian.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	1131025@bugs.debian.org, regressions@lists.linux.dev,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [6.12.y regression] Regression with 58130e7ce6cb ("PCI/ERR:
+ Ensure error recoverability at all times"): echo vfio-pci >driver_override
+ does not work for DVB Adapter
+Message-ID: <aclRwznwq6KpA2qA@wunner.de>
+References: <177373189751.7987.7156982489427825197.reportbug@obelix-trixie.bs.de>
+ <acfZrlP0Ua_5D3U4@eldamar.lan>
+ <acfhf-odtr0yw_py@wunner.de>
+ <74bcd84500e5efcca035624f325e400dd8a21f44.camel@bschu.de>
+ <acgohjvBpVcR7HcK@wunner.de>
+ <5f9386146f426e2847550681cb7188471205607f.camel@bschu.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5f9386146f426e2847550681cb7188471205607f.camel@bschu.de>
 
-From: Thierry Reding <thierry.reding@gmail.com>
+On Sun, Mar 29, 2026 at 03:52:15PM +0200, Bernd Schumacher wrote:
+> [   20.660351] vfio-pci 0000:07:00.0: vgaarb: pci_notify
+> [   20.660357] vfio-pci 0000:07:00.0: runtime IRQ mapping not provided by arch
+> [   20.660547] vfio-pci 0000:07:00.0: restore config 0x14: 0x00000000 -> 0xffffffff
+> [   20.660615] vfio-pci 0000:07:00.0: save config 0x00: 0x0003dd01
+> [   20.660620] vfio-pci 0000:07:00.0: save config 0x04: 0x00100000
+> [   20.660626] vfio-pci 0000:07:00.0: save config 0x08: 0x04800000
+> [   20.660631] vfio-pci 0000:07:00.0: save config 0x0c: 0x00000010
+> [   20.660636] vfio-pci 0000:07:00.0: save config 0x10: 0xfc500004
+> [   20.660642] vfio-pci 0000:07:00.0: save config 0x14: 0xffffffff
+> [   20.660647] vfio-pci 0000:07:00.0: save config 0x18: 0x00000000
+> [   20.660652] vfio-pci 0000:07:00.0: save config 0x1c: 0x00000000
+> [   20.660657] vfio-pci 0000:07:00.0: save config 0x20: 0x00000000
+> [   20.660662] vfio-pci 0000:07:00.0: save config 0x24: 0x00000000
+> [   20.660667] vfio-pci 0000:07:00.0: save config 0x28: 0x00000000
+> [   20.660670] vfio-pci 0000:07:00.0: vgaarb: pci_notify
+> [   20.660672] vfio-pci 0000:07:00.0: save config 0x2c: 0x0020dd01
+> [   20.660677] vfio-pci 0000:07:00.0: save config 0x30: 0x00000000
+> [   20.660682] vfio-pci 0000:07:00.0: save config 0x34: 0x00000050
+> [   20.660687] vfio-pci 0000:07:00.0: save config 0x38: 0x00000000
+> [   20.660689] vfio-pci 0000:12:00.0: vgaarb: pci_notify
+> [   20.660692] vfio-pci 0000:07:00.0: save config 0x3c: 0x000001ff
 
-Hi Lorenzo, Bjorn,
+The above is from the non-working kernel version 6.12.73.  The BAR at
+offset 0x14 in config space is restored and saved with a value of
+"all ones" here (0xffffffff).
 
-The following changes since commit 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f:
+The working kernel version 6.12.63 is using "all zeroes" instead
+(0x00000000).
 
-  Linux 7.0-rc1 (2026-02-22 13:18:59 -0800)
+I'm guessing that the initial pci_save_state() that the offending
+commit inserted into device enumeration already saves the incorrect
+0xffffffff value and that is subsequently restored by vfio-pci after
+resetting the device through a D0 -> D3hot -> D0 transition.
 
-are available in the Git repository at:
+On the working kernel, the pci_restore_state() performed by vfio-pci
+probably becomes a no-op because no pci_save_state() was performed
+beforehand.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git tags/tegra-for-7.1-pci
+Question is where the incorrect BAR value is coming from.  This could
+actually be a resource allocation issue that happens to manifest itself
+as a passthrough failure.  It's not visible in the dmesg output because
+it is truncated.
 
-for you to fetch changes up to a0c0906bb09ee2f64690b3b8ffb458b4dbbcb26e:
+Could you repeat this and add log_buf_len=16M to the kernel command line
+so that the dmesg output isn't truncated?
 
-  PCI: tegra: Add Tegra264 support (2026-03-28 15:00:05 +0100)
+Thanks!
 
-This is v3 of the Tegra264 PCI patches that can be found here:
-
-  https://lore.kernel.org/linux-pci/20260326135855.2795149-1-thierry.reding@kernel.org/
-
-This looks ready now, but if there's any more feedback, I will happily
-respin these driver patches.
-
-Note that the shortlog and the diffstat below include the dependencies
-from the Tegra tree, and that subset will go in through the ARM SoC tree
-as well. Effectively what's new in this pull request is just the two PCI
-patches, the rest is only included here to resolve the build time
-dependencies.
-
-Thanks,
-Thierry
-
-----------------------------------------------------------------
-PCI: tegra: Changes for v7.1-rc1
-
-This set of patches uses standard wait times for PCIe link monitoring
-and build on top of that to add Tegra264 support. It also includes all
-the Tegra-specific build-dependencies.
-
-----------------------------------------------------------------
-Thierry Reding (8):
-      firmware: tegra: bpmp: Rename Tegra239 to Tegra238
-      soc/tegra: Update BPMP ABI header
-      firmware: tegra: bpmp: Add tegra_bpmp_get_with_id() function
-      dt-bindings: pci: Document the NVIDIA Tegra264 PCIe controller
-      Merge branch for-7.1/dt-bindings into for-7.1/pci
-      Merge branch for-7.1/firmware into for-7.1/pci
-      PCI: Use standard wait times for PCIe link monitoring
-      PCI: tegra: Add Tegra264 support
-
- .../bindings/pci/nvidia,tegra264-pcie.yaml         |  149 +
- drivers/firmware/tegra/bpmp.c                      |   34 +
- drivers/pci/controller/Kconfig                     |   10 +-
- drivers/pci/controller/Makefile                    |    1 +
- .../controller/cadence/pcie-cadence-host-common.c  |    6 +-
- .../pci/controller/cadence/pcie-cadence-lga-regs.h |    5 -
- drivers/pci/controller/mobiveil/pcie-mobiveil.c    |    4 +-
- drivers/pci/controller/mobiveil/pcie-mobiveil.h    |    5 -
- drivers/pci/controller/pci-aardvark.c              |    7 +-
- drivers/pci/controller/pcie-tegra264.c             |  522 +++
- drivers/pci/controller/pcie-xilinx-nwl.c           |    9 +-
- drivers/pci/controller/plda/pcie-starfive.c        |    9 +-
- drivers/pci/pci.h                                  |    2 +
- include/soc/tegra/bpmp-abi.h                       | 4573 ++++++++++++++++----
- include/soc/tegra/bpmp.h                           |    8 +
- 15 files changed, 4412 insertions(+), 932 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml
- create mode 100644 drivers/pci/controller/pcie-tegra264.c
+Lukas
