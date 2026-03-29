@@ -1,184 +1,171 @@
-Received: from mail-qt1-f169.google.com (mail-qt1-f169.google.com [209.85.160.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E3CB292B54
-	for <linux-pci@vger.kernel.org>; Sun, 29 Mar 2026 19:49:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E9D52C11CF
+	for <linux-pci@vger.kernel.org>; Sun, 29 Mar 2026 20:03:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774813753; cv=none; b=Mu7V2azpjOwgnu5jGYoZfOSKd93jFIfQpubiNLFp+MQJKt5SmL0n2cINr91b7z6yMsTjsfAvXSDzFBn29qM0w+0Ctll52SYS8fkYq9joagykLn6ae096dYY8UKyY/FiiAPOaUvGcP/UYQR+f61wcpE2J8zY84HFT3+nlwYx8X8o=
+	t=1774814634; cv=none; b=BdO58edLqJh8g2qzBHjxtVnRUdgM7242piFVSL6vyRrzPKMk0OTbE4ERLWV3WvNTDC2DnuIIGFg2vAfc7pgByLUWx8xXIeBCLVZu2EKxSaU4OuIsK7NoRAsyvurLcQufk4f4yMZ0b+6qVdZpzqz6CdfnpQX1FIIlXS4FOOsEXcM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774813753; c=relaxed/simple;
-	bh=0KEYkGLqpe9dKH8hCwqvNDucOCURnBBEIofXJEGbIM4=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=V+yfgNAjWyNk63UP+gBrRECPbKYWvtzCxH3T1m6Po9TncLKxWvaZs3DMGBO1Rv4pPyWUz7xZyzgPVzZYKpDbGM9LgHzfLOMXH5DSAjyhaKGEDAkz5HQcyK0WV0GuUIVAlmHjXvbz9yjHTjFCBS5ronAf+7/Xc7naaUpyExJ7vuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ieee.org; spf=pass smtp.mailfrom=ieee.org; dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b=XyXH4wLj; arc=none smtp.client-ip=209.85.160.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ieee.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ieee.org
+	s=arc-20240116; t=1774814634; c=relaxed/simple;
+	bh=q/qB0hRSdc8iLgrZTYUS7uvy+vi1WvhhaqNLFnacfJU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=rbN2VicIBnnDBVXgxPS0e1aN9mf6HvA98/YniMKLiSy+6jdRWnvcJNRwLi2kyHIh/lvnOceMrRXMY86QUkNV4q1N3Hbpcsqc5HCm+a/r6WoZ+bBRVIK++OgkSC6p/meANhNjIlUsujYfwp4Js+uE2CY2vWs+PqOpmANzQdv1ex4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=I63oxAiC; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b="XyXH4wLj"
-Received: by mail-qt1-f169.google.com with SMTP id d75a77b69052e-50bc115f206so9523211cf.3
-        for <linux-pci@vger.kernel.org>; Sun, 29 Mar 2026 12:49:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ieee.org; s=google; t=1774813749; x=1775418549; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=0KEYkGLqpe9dKH8hCwqvNDucOCURnBBEIofXJEGbIM4=;
-        b=XyXH4wLjaB4o5tHzRS/NXLQ3OCXTzgKHSA5GAxdjwi3gGJZ3SyDzb/pfYKvvUl7hDI
-         hJ6nntb/GRMEpcbj0YS+7AlFo2get+GPDa/LeTAs2HWu8A2iC/0yvhcam5kRxUWxK5qJ
-         J0/tig0Lsnu5Xl29R4Ii0WaRwktqZmQu2cI/g=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774813749; x=1775418549;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=0KEYkGLqpe9dKH8hCwqvNDucOCURnBBEIofXJEGbIM4=;
-        b=fiWUT08ahNa6MHyDqXvbwvZJk5bnBbgcInh7mej65Z6JajCI8mhqg2pziBMJaHnSWP
-         HnDwWI8EvasbYe4WI/OB5gHJqPomkIch3/aYz937P5lp63cD1gPFI0+VX86G4HWZH+fA
-         f7vcNHdA+3HaVpYtuHCFgDLu1JHvBlCmoLbW9lV0zjUv1a6tGc+Sa4oXMVgcGiFibSoA
-         2AqrmNxboDzNbxwTgqhDLPc67DAfl6oX/iie9BeKR1joKIhejgedpmg5zSmnSs5L7vJh
-         ipRBgQfiMmEFATD4xDkgLPzBzQ2xhtjVU5irgnLHjXEZUrG+QJwpw7N7qfPCkEL8iy20
-         06TA==
-X-Gm-Message-State: AOJu0Yx+8lX927pHAhkCoRkNRfCcqpbtSpfb1GcPacGCkL9rJyXFWIZs
-	X0JHDvw06rqYyV8nNege4mF2T308EwACrpvcCvjX4PgLB2rTTxIieXDCT7phdx60s0dvwJtXW0v
-	w9fxy2A==
-X-Gm-Gg: ATEYQzyTgRL6KTlBVhjzgMwGY0SkD/uCX89RAfCYvrWr4rqOAkavN5FruhORW7u3KFg
-	vYP5tAp9SJYq3kHzP25XEtFcI5OwJ1QhV+yR2n45GHWsUtJkjl8SrnIvUah3KV0GWpB2ysuevta
-	sHtd7lO0l4T4UsRRX1ANi987bvJob4tkoADRWVAJBQSaDvm4cdPm/CGpm62hkpNkSVQmGgalmWA
-	dUoFsKGVI2p2cnaT/V1SChhknUbnnAKN/fhGJbxWbcsleFtxLMiON6ilCzHz/q1MAg/0qrT0GR3
-	+YGYjA7DQ+gnlV52Lp0nk+j7kK8EQ361JXDX4vQvA6ZRjkHT6j5WlPjBfLYquLrMwDEsc/c4xcC
-	5qN685kJpjBm+BGp8AVBGUBARTCEEtebYcycfEw0WwwPZiJBIYC7U5mE95nCvHiNgGD3HHH93xZ
-	mhGzTPBWpTytUrQsAEiTQexRY=
-X-Received: by 2002:a05:622a:4a19:b0:50b:4226:924f with SMTP id d75a77b69052e-50ba37f01e8mr135548781cf.2.1774813748964;
-        Sun, 29 Mar 2026 12:49:08 -0700 (PDT)
-Received: from [192.168.153.215] ([73.29.38.247])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-50bb2dd640dsm53198311cf.19.2026.03.29.12.49.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 29 Mar 2026 12:49:08 -0700 (PDT)
-Message-ID: <ca6bc981ef3ed980f9301489ebfa3904df9cdaf3.camel@ieee.org>
-Subject: Re: ReBAR over Thunderbolt
-From: Cristian Cocos <cristi@ieee.org>
-To: Ilpo =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc: linux-pci@vger.kernel.org
-Date: Sun, 29 Mar 2026 15:49:07 -0400
-In-Reply-To: <9cfa81e1-373c-cfdf-89a1-5d7c169f3577@linux.intel.com>
-References: <a177e7cf1e638c874a7b2e9e68027094bca68041.camel@ieee.org>
-	 <9cfa81e1-373c-cfdf-89a1-5d7c169f3577@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.0 (by Flathub.org) 
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="I63oxAiC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1774814632; x=1806350632;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=q/qB0hRSdc8iLgrZTYUS7uvy+vi1WvhhaqNLFnacfJU=;
+  b=I63oxAiCnbaIzxWtBouAWPfHA/KMVe/Ul4C14xsX6wQTY7gIfzZeI6ny
+   uz9K6IN4ik7DRJfBVTHuo2aq0L5Yx3bDGbxCEYO6GZXFWsnN5iBR+IlIP
+   MQCwVD/8TcJGM6iARkbGvmFZMBd9kMsAGotu4FP0fsNU7aYK6Y3YNO4Pt
+   3ogi2rttz8J6AorQtt4anc6UICigGeCols4lHwZ97Ju8FXqTpQnn+0H1b
+   oZplwD/Ex2TPQLPgczX0x8gRrJXhGp9LXoQx6mDQT2EnxdeqoCiHVWhJR
+   /uf2Rl57uN1y4gr6UpkHYKwVSA7MOUUQODXeXLi0ON6K/aSIoR8kc/CVK
+   Q==;
+X-CSE-ConnectionGUID: OAqD/+NuTf25vFbyUptdRw==
+X-CSE-MsgGUID: EG9iMO+XQRyWOp4r5mMX5A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11743"; a="75708667"
+X-IronPort-AV: E=Sophos;i="6.23,148,1770624000"; 
+   d="scan'208";a="75708667"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Mar 2026 13:03:51 -0700
+X-CSE-ConnectionGUID: 8xNt/3fWSzmEU6QOZpoiWg==
+X-CSE-MsgGUID: Xc7xvKgWRpqexbOk/sMx2A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,148,1770624000"; 
+   d="scan'208";a="229927052"
+Received: from lkp-server01.sh.intel.com (HELO 283bf2e1b94a) ([10.239.97.150])
+  by orviesa003.jf.intel.com with ESMTP; 29 Mar 2026 13:03:49 -0700
+Received: from kbuild by 283bf2e1b94a with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1w6wMM-0000000007H-2vro;
+	Sun, 29 Mar 2026 20:03:46 +0000
+Date: Mon, 30 Mar 2026 04:02:59 +0800
+From: kernel test robot <lkp@intel.com>
+To: Simon Richter <Simon.Richter@hogyros.de>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>
+Subject: [pci:vga 3/5] drivers/gpu/drm/i915/display/intel_vga.c:68:2:
+ error: ignoring return value of function declared with 'warn_unused_result'
+ attribute
+Message-ID: <202603300336.G53JumVL-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Correction to my previous email: the laptop computer used ("host") in
-the Thunderbolt ReBAR hotplug experiment is not Framework Laptop 16
-(AMD Ryzen 7 7840HS), but LG Gram (Intel Core i7-1360P). Apologies.
+Hi Simon,
 
-On Fri, 2026-03-27 at 12:15 +0200, Ilpo J=C3=A4rvinen wrote:
-> On Thu, 26 Mar 2026, Cristian Cocos wrote:
->=20
-> > [This has been previously posted on the linux-hotplug list, though
-> > it
-> > has been suggested that I post it here as well.]
-> >=20
-> > The short story is that ReBAR does not work in eGPU hotplug(!)
-> > scenarios: hotplugged Thunderbolt eGPUs are forced onto a 256MB BAR
-> > regardless of the system's ReBAR capabilities, and this because
-> > during
-> > hotplug the Linux kernel does not consult the ReBAR capability. As
-> > eGPUs are becoming more and more popular, accommodating eGPU
-> > hotplug
-> > scenarios has become imperative.
-> >=20
-> > The longer story:
-> >=20
-> > The current Thunderbolt eGPU *hotplug* sequence of events is this:
-> > BAR
-> > 2's hardware register powers up at 256 MB =E2=80=94 the default size
-> > programmed
-> > into the BAR's address decoder by Intel at the factory. The PCIe
-> > Resizable BAR capability advertises support for up to 16 GB, but
-> > it's
-> > passive =E2=80=94 software must explicitly exercise it. When a Thunderb=
-olt
-> > eGPU
-> > is hotplugged at runtime, the kernel's PCI subsystem enumerates the
-> > new
-> > device, reads the BAR at its 256 MB default, sizes the bridge
-> > windows
-> > to match, and assigns addresses =E2=80=94 all before any driver loads. =
-The
-> > ReBAR capability is never consulted(!) during this process.
->=20
-> Hi,
->=20
-> The intel GPU drivers do attempt to perform the resize at probe time,
-> though it's often not successful.
->=20
-> You haven't indicated what kernel you run nor provided any logs, but
-> there=20
-> have been some improvements to this in general in the recent kernels.
-> And=20
-> then there's also this patch which relates to thunderbolt cases
-> (which was=20
-> only accepted yesterday):
->=20
-> https://lore.kernel.org/linux-pci/20260219153951.68869-1-
-> ilpo.jarvinen@linux.intel.com
->=20
-> > A workaround is available for cold-plug scenarios only, and is
-> > achieved by means of the **thunderbolt.host_reset=3D0** kernel
-> > parameter:
-> > this preserves the BIOS's PCIe tunnel and BAR assignments from POST
-> > (where the BIOS *does* exercise ReBAR). This delivers the full 16
-> > GB
-> > BAR but, as just mentioned, only works for cold-plug(!) scenarios =E2=
-=80=94
-> > if
-> > the eGPU is power-cycled at runtime, the new tunnel gets the 256 MB
-> > default.
-> >=20
-> > The proper fix would be for the kernel's PCI hotplug resource
-> > assignment to *first* check for ReBAR capability during
-> > enumeration,
-> > resize the BAR to the largest supported size that fits within
-> > available
-> > bridge headroom, and *then* commit bridge windows and assign
-> > addresses.
->=20
-> That's being worked on. But it's not as easy as you depict it as
-> kernel=20
-> needs to be also able to fallback to some intermediate size if the
-> largest=20
-> supported size fails.
->=20
-> Thanks to how size calculations and assignment are done at different=20
-> phases of the algorithm, it's not as easy to fallback to something
-> else as=20
-> you indicate as the secondary failures would still persist from the=20
-> attempt with the largest window. So effectively, the entire sizing
-> has to=20
-> be recalculated.
->=20
-> > This is essentially what the BIOS does during POST. It hasn't been
-> > implemented yet because eGPU-over-Thunderbolt-with-ReBAR is (was?)
-> > a
-> > niche use case.
-> >=20
-> > Seeing as eGPU-over-Thunderbolt is poised to become mainstream,
-> > this
-> > can no longer be considered a niche use case.
->=20
-> We don't consider it unimportant usecase. It's just the resource
-> fitting=20
-> and assignment algorithm is very complex and hard to improve, because
-> something usually breaks when trying to improve it. Thus, the
-> progress is=20
-> slow and everything has to be done carefully (when things break badly
-> in=20
-> this area, system doesn't even come up so there's not much room for=20
-> error).
+First bad commit (maybe !=3D root cause):
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git vga
+head:   21b082bd2a45704a6f7e69c190c8287a3d011ea9
+commit: dc582b5ed4b749335b947258d4874df628726632 [3/5] PCI/VGA: Mark vga_ge=
+t() and wrappers as __must_check
+config: x86_64-randconfig-011-20260329 (https://download.01.org/0day-ci/arc=
+hive/20260330/202603300336.G53JumVL-lkp@intel.com/config)
+compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f022=
+7cb60147a26a1eeb4fb06e3b505e9c7261)
+reproduce (this is a W=3D1 build): (https://download.01.org/0day-ci/archive=
+/20260330/202603300336.G53JumVL-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new versio=
+n of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202603300336.G53JumVL-lkp@i=
+ntel.com/
+
+All errors (new ones prefixed by >>):
+
+>> drivers/gpu/drm/i915/display/intel_vga.c:68:2: error: ignoring return va=
+lue of function declared with 'warn_unused_result' attribute [-Werror,-Wunu=
+sed-result]
+      68 |         vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
+         |         ^~~~~~~~~~~~~~~~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/gpu/drm/i915/display/intel_vga.c:93:2: error: ignoring return va=
+lue of function declared with 'warn_unused_result' attribute [-Werror,-Wunu=
+sed-result]
+      93 |         vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
+         |         ^~~~~~~~~~~~~~~~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~
+   2 errors generated.
+
+
+vim +/warn_unused_result +68 drivers/gpu/drm/i915/display/intel_vga.c
+
+0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  43 =20
+4fb8783165b7c6 Jani Nikula   2019-10-01  44  /* Disable the VGA plane that =
+we never use */
+4b6e05c43b7542 Ville Syrj=C3=A4l=C3=A4 2024-09-06  45  void intel_vga_disab=
+le(struct intel_display *display)
+4fb8783165b7c6 Jani Nikula   2019-10-01  46  {
+4b6e05c43b7542 Ville Syrj=C3=A4l=C3=A4 2024-09-06  47  	struct pci_dev *pde=
+v =3D to_pci_dev(display->drm->dev);
+4b6e05c43b7542 Ville Syrj=C3=A4l=C3=A4 2024-09-06  48  	i915_reg_t vga_reg =
+=3D intel_vga_cntrl_reg(display);
+0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  49  	enum pipe pipe;
+0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  50  	u32 tmp;
+4fb8783165b7c6 Jani Nikula   2019-10-01  51  	u8 sr1;
+4fb8783165b7c6 Jani Nikula   2019-10-01  52 =20
+0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  53  	tmp =3D intel_de_re=
+ad(display, vga_reg);
+0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  54  	if (tmp & VGA_DISP_=
+DISABLE)
+a3af0140663dc3 Emil Velikov  2021-06-04  55  		return;
+a3af0140663dc3 Emil Velikov  2021-06-04  56 =20
+0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  57  	if (display->platfo=
+rm.cherryview)
+0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  58  		pipe =3D REG_FIELD=
+_GET(VGA_PIPE_SEL_MASK_CHV, tmp);
+0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  59  	else if (has_vga_pi=
+pe_sel(display))
+0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  60  		pipe =3D REG_FIELD=
+_GET(VGA_PIPE_SEL_MASK, tmp);
+0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  61  	else
+0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  62  		pipe =3D PIPE_A;
+0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  63 =20
+0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  64  	drm_dbg_kms(display=
+->drm, "Disabling VGA plane on pipe %c\n",
+0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  65  		    pipe_name(pipe=
+));
+0c80d60ae63461 Ville Syrj=C3=A4l=C3=A4 2025-04-17  66 =20
+4fb8783165b7c6 Jani Nikula   2019-10-01  67  	/* WaEnableVGAAccessThroughIO=
+Port:ctg,elk,ilk,snb,ivb,vlv,hsw */
+4fb8783165b7c6 Jani Nikula   2019-10-01 @68  	vga_get_uninterruptible(pdev,=
+ VGA_RSRC_LEGACY_IO);
+f0bb41fad02e03 Jani Nikula   2022-02-02  69  	outb(0x01, VGA_SEQ_I);
+f0bb41fad02e03 Jani Nikula   2022-02-02  70  	sr1 =3D inb(VGA_SEQ_D);
+f0bb41fad02e03 Jani Nikula   2022-02-02  71  	outb(sr1 | VGA_SR01_SCREEN_OF=
+F, VGA_SEQ_D);
+4fb8783165b7c6 Jani Nikula   2019-10-01  72  	vga_put(pdev, VGA_RSRC_LEGACY=
+_IO);
+4fb8783165b7c6 Jani Nikula   2019-10-01  73  	udelay(300);
+4fb8783165b7c6 Jani Nikula   2019-10-01  74 =20
+4b6e05c43b7542 Ville Syrj=C3=A4l=C3=A4 2024-09-06  75  	intel_de_write(disp=
+lay, vga_reg, VGA_DISP_DISABLE);
+4b6e05c43b7542 Ville Syrj=C3=A4l=C3=A4 2024-09-06  76  	intel_de_posting_re=
+ad(display, vga_reg);
+4fb8783165b7c6 Jani Nikula   2019-10-01  77  }
+4fb8783165b7c6 Jani Nikula   2019-10-01  78 =20
+
+:::::: The code at line 68 was first introduced by commit
+:::::: 4fb8783165b7c6fb4b52428dbb80da8554e5fd1e drm/i915/display: abstract =
+all vgaarb access to intel_vga.[ch]
+
+:::::: TO: Jani Nikula <jani.nikula@intel.com>
+:::::: CC: Jani Nikula <jani.nikula@intel.com>
+
+--=20
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
