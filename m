@@ -1,119 +1,196 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5DEA3939D2;
-	Mon, 30 Mar 2026 10:35:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C1D33C13FB;
+	Mon, 30 Mar 2026 10:47:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774866936; cv=none; b=TuAtnSLpeotI3rY55DPPWODEwfuGkvSIFFGqJIfP584b4KB8h3dQH4N9v+dtb7PhTQcA8OSLo1zqjkd/p/AIj6fkoBHpb45bRzmpnLdojRD8mqgjPtMMWEtB2gPAguxz7wcum2/fYPMjCyJh0dszw7bzYnFysjQ3a5WgCU0vKgo=
+	t=1774867623; cv=none; b=l1TfxaaxZzoXzrPjdl0RtmXH5TOvza9TFlcfO7QshR/9gn7cIdds5Td7eA0MF6P6YGRRZrKIb/2bQP7pv2j395ViOEIvO1Zwdil9plZlecCgGloQuuSORb2UncK7d1cpgNob8sxzr1eN4jTHcjumYugyirvrat6iWtbI6sWT3IE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774866936; c=relaxed/simple;
-	bh=vUl3C+hLMk6pb/LBrY02ABcydDGLrD4LLOEIrXmobl8=;
-	h=Date:Content-Type:MIME-Version:From:Cc:To:In-Reply-To:References:
-	 Message-Id:Subject; b=suXjfyG1g/knfp8hi1HoQU7/HNDgeN0BA7pULR3U1A6jLlzf7ow97suWHTxL5JWk07IsUnqUBVgAitm6MeGs1jWZ4HGv7UVKgK9iZWhhOVmkRoyBZIZL1xy0c4eJLyjUeQA1/sp+b0KlDdVMj1+iovcKBY0LAxkpN2CavNViGZE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FtPSG4sK; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774867623; c=relaxed/simple;
+	bh=JTmWijjJqe8MuLp6ucrTKNqj9bocCIOLRm/Wv8fhfIg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=P3zfmtYuTYH9tlt2Ovur8HOs93Ew5QiQyXpdMu5A7nJm1m3fu0FiwerZHDi5j6gayPxsNirXn7/6b9CmRlR9QUQ0v1p+U4POtjFIllxMvDa36WSupWHF76hcYKiCKWezycqLQm8Vuu+0zsNkyuJE7pWxYFAPMYYpD9/1mbsIpY0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lvWsTYfi; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FtPSG4sK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0E62C4CEF7;
-	Mon, 30 Mar 2026 10:35:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774866936;
-	bh=vUl3C+hLMk6pb/LBrY02ABcydDGLrD4LLOEIrXmobl8=;
-	h=Date:From:Cc:To:In-Reply-To:References:Subject:From;
-	b=FtPSG4sKIDnR1qGdX7ktB2CO7G885okKWr7bd5Hch8sQzfvEmavAfgj/dZGAgBA0X
-	 xDGKysPrSfmhGcuyrGolItFHcvixwIxCgx3FqAqMqTdGUu0vB7N8i7orWClEVs4yn9
-	 eV0IFkeGpS/jj7cg5tzxsJBvABxCA4R+QMUqmwMIcDCmuK+DbVXI7nFAiAPNmjTHBF
-	 Cr9s2aYJofkpCzr/S+PkyIXCYoNY4wXn/fRBrkZzIpjEstx7NV10rm+uGDkb6V2Cjh
-	 eRLLl+sRhplnWK4+cT51M+mtkCT+2Zp9zLMYCN2RVhfT3Sn/1zUUTWem4u2yJ5HIh1
-	 9XCFD8RQ2XS6w==
-Date: Mon, 30 Mar 2026 05:35:31 -0500
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lvWsTYfi"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1774867622; x=1806403622;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=JTmWijjJqe8MuLp6ucrTKNqj9bocCIOLRm/Wv8fhfIg=;
+  b=lvWsTYfieVKVS+sNkqxKHjJVAc5uDeNgMh92K2RsHbT1cbB4UQgATQqU
+   NLPQhN1Oj2gvOQkH+fJOzeWrW8wxT55pZqzI20CibWDii2JBraEqokmrK
+   k7/ZjfpfDaIS0bwuFnFXQyVoMPOPRqlt8KoqmBqKVNwC7wqacNGuTI9bW
+   tbgmzHYI27KOiWbkwjhmgjtKF6THxwEFXtTRhQYX8AoLYNXYqFP14tk8b
+   SJA1fOZDNYetOFZfd/Hs1+PIWLV4nnfBB0CVuglTmjwGkN/lgrAAdwPg+
+   /2tkx7Y25+g/qeKCJBB3TLltY3LmENT1S7T3jlJxxLPMrujwTpH82DTbB
+   g==;
+X-CSE-ConnectionGUID: JSo/1k+SQAqyfxfVNvvs4w==
+X-CSE-MsgGUID: 2GrT1BIhTM27pwi0AWXP8Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11743"; a="75968242"
+X-IronPort-AV: E=Sophos;i="6.23,149,1770624000"; 
+   d="scan'208";a="75968242"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2026 03:47:02 -0700
+X-CSE-ConnectionGUID: qQE/yCadTj2iWhNU8MQADg==
+X-CSE-MsgGUID: TuxXC+usRCKcPWY2UwC09w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,149,1770624000"; 
+   d="scan'208";a="223153707"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
+  by fmviesa008.fm.intel.com with ESMTP; 30 Mar 2026 03:46:58 -0700
+Date: Mon, 30 Mar 2026 18:25:52 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: "Edgecombe, Rick P" <rick.p.edgecombe@intel.com>
+Cc: "Williams, Dan J" <dan.j.williams@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>,
+	"x86@kernel.org" <x86@kernel.org>, "Gao, Chao" <chao.gao@intel.com>,
+	"Xu, Yilun" <yilun.xu@intel.com>,
+	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+	"kas@kernel.org" <kas@kernel.org>,
+	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+	"Jiang, Dave" <dave.jiang@intel.com>,
+	"Li, Xiaoyao" <xiaoyao.li@intel.com>,
+	"Verma, Vishal L" <vishal.l.verma@intel.com>,
+	"Duan, Zhenzhong" <zhenzhong.duan@intel.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 03/31] x86/virt/tdx: Add tdx_page_array helpers for
+ new TDX Module objects
+Message-ID: <acpPsPivfllpWfv1@yilunxu-OptiPlex-7050>
+References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
+ <20260327160132.2946114-4-yilun.xu@linux.intel.com>
+ <1dd0b8f4d1ad5cd07b5139ed8c944e1e1d004661.camel@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: "Rob Herring (Arm)" <robh@kernel.org>
-Cc: Johan Hovold <johan+linaro@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, devicetree@vger.kernel.org, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, linux-kernel@vger.kernel.org, 
- Ajay Agarwal <ajayagarwal@google.com>, Rahul Tanwar <rtanwar@maxlinear.com>, 
- linux-pci@vger.kernel.org, Sajid Dalvi <sdalvi@google.com>, 
- Eckert.Florian@googlemail.com, ms@dev.tdt.de, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-To: Florian Eckert <fe@dev.tdt.de>
-In-Reply-To: <20260330-pcie-intel-gw-v2-6-8bd07367a298@dev.tdt.de>
-References: <20260330-pcie-intel-gw-v2-0-8bd07367a298@dev.tdt.de>
- <20260330-pcie-intel-gw-v2-6-8bd07367a298@dev.tdt.de>
-Message-Id: <177486693168.1789868.5556229534817952250.robh@kernel.org>
-Subject: Re: [PATCH v2 6/7] dt-bindings: PCI: intel,lgm-pcie: Make atu
- resource mandatory
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1dd0b8f4d1ad5cd07b5139ed8c944e1e1d004661.camel@intel.com>
 
-
-On Mon, 30 Mar 2026 11:07:16 +0200, Florian Eckert wrote:
-> The ATU information is already set in the dwc core if it is specified in
-> the DTS. The driver uses its own value here [1]. This information is
-> hardware specific and should therefore be maintained in the DTS rather
-> than in the source.
+> On Sat, 2026-03-28 at 00:01 +0800, Xu Yilun wrote:
+> > Add struct tdx_page_array definition for new TDX Module object
+> > types - HPA_ARRAY_T and HPA_LIST_INFO. 
 > 
-> Backwards compatibility is not an issue here [5], as the driver is
-> exclusively used by Maxlinear.
+> This is unfortunate. I see you agree in the comments.
+
+Yes, basically they are defining the same concept, behave mostly the same
+but some differences...
+
 > 
-> Old DTS entry for PCIe:
+> > 
+> > They are used as input/output
+> > parameters in newly defined SEAMCALLs. Also define some helpers to
+> > allocate, setup and free tdx_page_array.
+> > 
+> > HPA_ARRAY_T and HPA_LIST_INFO are similar in most aspects. They both
+> > represent a list of pages for TDX Module accessing. There are several
+> > use cases for these 2 structures:
+> > 
+> >  - As SEAMCALL inputs. They are claimed by TDX Module as control pages.
+> >    Control pages are private pages for TDX Module to hold its internal
+> >    control structures or private data. TDR, TDCS, TDVPR... are existing
+> >    control pages, just not added via tdx_page_array.
+> >  - As SEAMCALL outputs. They were TDX Module control pages and now are
+> >    released.
+> >  - As SEAMCALL inputs. They are just temporary buffers for exchanging
+> >    data blobs in one SEAMCALL. TDX Module will not hold them for long
+> >    time.
 > 
-> reg = <0xd1000000 0x1000>,
->       <0xd3000000 0x20000>,
->       <0xd0c41000.0x1000>;
-> reg-names = "dbi", "config", "app";
+> This is kind of verbose for what it seems to be trying to say. It's just that
+
+I assume if you feel the explanation of "what is control page" is off
+track. I added it cause the term firstly appears in x86 (only in KVM
+TDX previously), and people ask the definition:
+
+https://lore.kernel.org/all/cfcfb160-fcd2-4a75-9639-5f7f0894d14b@intel.com/
+
+> these types can be input or output params. The TDX module could hold on to the
+> pages for a long time, or just transiently.
+
+Mm.. I'm trying to ramp up on the kernel API level flow:
+
+For control pages, it would be hold by TDX Module long time, so host
+inputs the page array, later TDX Module outputs the page array back.
+Host need to verify the outputs.
+
+For shared pages, TDX Module's accessing is transient in one SEAMCALL,
+so only as input, TDX Module never needs to output the array.
+
+I think the verboseness makes the following pseudo code easier to
+understand.
+
+> For that latter part I think you are
+> trying to say sometimes they need flushing and sometimes they don't?
+
+Yeah.
+control pages => long term => host verifies and releases => flush on release
+shared pages => transient => no verify and releases => no flush
+
+Maybe I should mention the flushing is already covered by releasing
+kAPI.
 > 
-> New DTS entry for PCIe:
+> > 
+> > The 2 structures both need a 'root page' which contains a list of HPAs.
+> > They collapse the HPA of the root page and the number of valid HPAs
+> > into a 64 bit raw value for SEAMCALL parameters. The root page is
+> > always a medium for passing data pages, TDX Module never keeps the
+> > root page.
+> > 
+> > A main difference is HPA_ARRAY_T requires singleton mode when
+> > containing just 1 functional page (page0). In this mode the root page is
+> > not needed and the HPA field of the raw value directly points to the
+> > page0. But in this patch, root page is always allocated for user
+> > friendly kAPIs.
 > 
-> reg = <0xd1000000 0x1000>,
->       <0xd10c0000 0x1000>,
->       <0xd3000000 0x20000>,
->      <0xd0c41000.0x1000>;
-> reg-names = "dbi", "atu", "config", "app";
+> "singleton mode"? What is it? If it's the case of not needing populate loop, it
+
+It is the SEAMCALL level detail for HPA_ARRAY_T. It is literally as
+explained above - the HPA field should be filled by page0, not root page.
+
+> probably deserves more explanation. I'm not sure, but the populate loop seems to
+> drive a lot of the struct design?
+
+The caller is not aware of singleton mode. Actually, I'm trying to make
+the tdx_page_array independent of HPA_ARRAY_T or HPA_LIST_INFO details
+when allocating/populating, root page is still populated even not needed
+for singleton mode. The differences only happen when collaping the struct
+into u64 SEAMCALL parameters.
+
 > 
-> [1] https://elixir.bootlin.com/linux/v6.19.10/source/drivers/pci/controller/dwc/pcie-intel-gw.c#L301
-> [2] https://lore.kernel.org/all/BY3PR19MB507667CE7531D863E1E5F8AEBDD82@BY3PR19MB5076.namprd19.prod.outlook.com/
+> > 
+> > Another small difference is HPA_LIST_INFO contains a 'first entry' field
+> > which could be filled by TDX Module. This simplifies host by providing
+> > the same structure when re-invoke the interrupted SEAMCALL. No need for
+> > host to touch this field.
 > 
-> Signed-off-by: Florian Eckert <fe@dev.tdt.de>
-> ---
->  Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
+> Not clear what this is talking about. But I'm starting to wonder if we should be
+> so bold to claim that the differences between the types really simplify the
+> host. 
 
-My bot found errors running 'make dt_binding_check' on your patch:
+I'm talking about another SEAMCALL level detail. Sometimes TDX Module
+got interrupted in the middle of page array processing, it needs an
+anchor to resuming from where it stops, TDX Module record the anchor
+in the 'first entry'.
 
-yamllint warnings/errors:
+By illustrating these SEAMCALL level differences, I want to explain
+they don't impact the general SW flow and kAPI cares about them
+internally.
 
-dtschema/dtc warnings/errors:
-Lexical error: Documentation/devicetree/bindings/pci/intel-gw-pcie.example.dts:28.37-43 Unexpected 'config'
-Error: Documentation/devicetree/bindings/pci/intel-gw-pcie.example.dts:28.37-43 syntax error
-FATAL ERROR: Unable to parse input tree
-make[2]: *** [scripts/Makefile.dtbs:140: Documentation/devicetree/bindings/pci/intel-gw-pcie.example.dtb] Error 1
-make[2]: *** Waiting for unfinished jobs....
-make[1]: *** [/builds/robherring/dt-review-ci/linux/Makefile:1601: dt_binding_check] Error 2
-make: *** [Makefile:248: __sub-make] Error 2
+Yes in POC code we do write dedicated code for each type, but it ends up
+with plenty of similar logics on caller side about root page
+manipulation. By now, the differences are not much, but I think we
+should not write copies for every type, we should stop new types.
 
-doc reference errors (make refcheckdocs):
+Please allow me to stop here, will continue later...
 
-See https://patchwork.kernel.org/project/devicetree/patch/20260330-pcie-intel-gw-v2-6-8bd07367a298@dev.tdt.de
-
-The base for the series is generally the latest rc1. A different dependency
-should be noted in *this* patch.
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit after running the above command yourself. Note
-that DT_SCHEMA_FILES can be set to your schema file to speed up checking
-your schema. However, it must be unset to test all examples with your schema.
-
+Thanks. 
