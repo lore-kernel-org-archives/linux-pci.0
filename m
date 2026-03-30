@@ -1,216 +1,139 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011025.outbound.protection.outlook.com [52.101.62.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 891883D3CE5;
-	Mon, 30 Mar 2026 13:10:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774876215; cv=none; b=XYx3dCy/UKIQBr8Lk3OZgy9DPtqRp4EzOhqMbwYDPSY43+jN/68DOva22aCdCY+ObSI6g8smyqIAZaldNn/OTtHa3UFoewZbUr41jNnYrapcJkx0TfPaG7phyBnd1Ngoyt+QvzTKF+y72D0DfgpDxKqGhTTpU1vJuIo2A8jT4Jo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774876215; c=relaxed/simple;
-	bh=pEzu946U0T2iItoXe0YjWLg8MJNt4vqOxymBFtXMGZs=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=hL8H9ewn2F3m471xZrfYH+rY4qeVice7sgrlJeIzlbFomWkrIV7b+OhzwuabKisILWcE6eHJgzjnfiOe7qLrlint8f5W1cITPlD3R0+eznNOG+Qm3uOcL4UMlao4BtIzpBUufyFo/DgagWfbhbvqLvvR/PFEm+8M9tFoTuyg/28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=aIoIb2ae; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9DA53D3D05;
+	Mon, 30 Mar 2026 13:11:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.25
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774876300; cv=fail; b=J7S4p+8AQWPxrhFIvcbmXqsK7dDyZLVZ1p9EJi16MVNkvrTrUEUniYkV0TFl5/iTwmt9f5M7+oU/y/Ry1K3Q1MHzO9wOq2OnfZybY+I0so/KUoUo1aUgxv3JK4JVAyu3swB3iZuGn5eoZvLsW9uCRWvCp5zDC4LeKm5d2heMogg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774876300; c=relaxed/simple;
+	bh=OumQ4JHqqIIjSSwRQuklKbUkjGiZYBG0X/ddc384aGo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=uxYDN2C2PIC5fazyqZ/r/HuLbZnM2HjEViE8ZtZq9EnfYIRNjMRHJzcqhDyIiLHURhrLM06/mkG1vjPKjrWtLKguPE2HXl7rmQ6VK9alfxMHmdUN5VpXQVsKFntFl/mFkVhJpA3GCxkTDuVoWnq6BnT2+MqNtGDimUrhWR9079M=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=cnPpZ0kP; arc=fail smtp.client-ip=52.101.62.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="aIoIb2ae"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62TJKd4X4032815;
-	Mon, 30 Mar 2026 13:10:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=2qsAr6
-	zDUNL29w2hCtlM13yliWWfgwr21psCtOIf3VQ=; b=aIoIb2aebt9HopI3FdM6O0
-	FvpmXtoQklRYT6NxvLWNpXbNSvVMKbfhB3duSWxWS/nRHM04em5fGuB6oHq/01Ad
-	XejgG0nlGCJJf3+ODmFC8RZC14nJSl1mPbhihVOdL1rJW3+ghVRdNlyS+0ty+bI3
-	F7TYivq5EHNsaxf2Dfkllhij1xf/BWk1lDxdO2s//v/lnTRGRNoCq5WTaUTRR/MZ
-	yOZS4DMGXIO0w+hipaOepaXgLfol3BEvsrQ3iMWGPnVTwG606geS8If1fVsnAUfC
-	GWa3J5lxWUfzJkHFoZ8Qay1xIzb05Ceh7Ch+2GKAj2JCnFmEvWRYofqxC0h3h5bQ
-	==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4d66mrxhsj-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 30 Mar 2026 13:10:07 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62U9VCDR021722;
-	Mon, 30 Mar 2026 13:10:06 GMT
-Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4d6sasd44t-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 30 Mar 2026 13:10:06 +0000
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-	by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62UDA35O25952556
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 30 Mar 2026 13:10:03 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E6DB72004B;
-	Mon, 30 Mar 2026 13:10:02 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id AA60B2004E;
-	Mon, 30 Mar 2026 13:10:02 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.87.85.9])
-	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Mon, 30 Mar 2026 13:10:02 +0000 (GMT)
-From: Gerd Bayer <gbayer@linux.ibm.com>
-Date: Mon, 30 Mar 2026 15:09:45 +0200
-Subject: [PATCH v7 2/3] PCI: AtomicOps: Do not enable without support in
- root port
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="cnPpZ0kP"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=eJ0gfs+U/+YomrZxOMZ1zRIOceL/8ujxn+7Xr9r+WR4FEb78ntzKblXHGK0MtFCSdks1nJJiF2id4W6eSxesXZplXiGfa3a5kuHLeifWpMpi/ti3onFoKlxLH7HqK1Eqjz9HjfK+8LFMzKWBmwLNTfWdgQ7OyqcfAgV8sksxCBfFvUtMDtLDR4+xKgSnat99Mw6IrGtyN0RyT0/5CtWkWIyXWKrtNe7p2Ueoq9aHvCnayoNW52hrxUC7sjtO+1MO6OT5jOqDY2F/5iuvCZITLbIoA3iNSSfKCw5MQE6PEKCNA10pKviSzLpKUR8q9janXaAYh/vjMmTmxe8XNwaaHQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=krs1Rq2WOz55avZr0ZDq333Yqh9Jvbv4qRbBCNTePKc=;
+ b=dS/GJhfPkPCbwzVFtxdIDEuhsPLE4SMAhv1c3ptZ+nkJ5RyfA5f21caBvh22rNcnoycOzK6q/N3KikBn+mGTjUkliRm9Hrcl2MG8DH4k3I2M/MAzUufUR800iOZdsOcS/01+KkEyjEevAN7ArnpSiTzeWVEz7N68A5KO/E6pMtJh10RUVmf6FpR/wd3Sjw/YiZKxCDxPLng6IFqLha9AsxesThfQNbGnALIoaw03LN/lCydyFWz/TC5yBTkdL+qP4oOU98+a3i4CLQjBb/xy0U6lKSTkb3bNnI1nRA0lgeLNsYxEk1Ryo+zEgWTLzskT0KG+b0uFKSR61myr7aQ9pA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=krs1Rq2WOz55avZr0ZDq333Yqh9Jvbv4qRbBCNTePKc=;
+ b=cnPpZ0kPEHS5z++kEC54vu2Mv0oXO733kYcL5QV0zVfuatRro01qNK/Xr5zNhZwKuNJ9/fOv3cI8ql0/YVruPio5WJDXtgQCTAn9WB3USNLGAgWV3FRWJDBaOuAviFlfmZW7pK3Dh9bnhHaHcNJH9yAVK7oJz88n6HuMpQ6RFAFr4w6jOid4sHMu1CWGi3eGCbwHvuCnZXqvmWu/7/KYP2Hp5dsmTIwuEcawo+y59Vw7Hl+FRj2Cr0dhEIrkWj1ZErBkZFZee5lTH1rOG71dWHoXengJvU9H+r6khXjoj/VVxQ6Z+py/G4I3mITDr+ycqPU34+5u7KobGotqaUnHZg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by DS0PR12MB8525.namprd12.prod.outlook.com (2603:10b6:8:159::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.15; Mon, 30 Mar
+ 2026 13:11:29 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%5]) with mapi id 15.20.9769.014; Mon, 30 Mar 2026
+ 13:11:28 +0000
+Date: Mon, 30 Mar 2026 10:11:27 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Wei Wang <wei.w.wang@hotmail.com>
+Cc: bhelgaas@google.com, jonathan.cameron@huawei.com,
+	dan.carpenter@linaro.org, akpm@linux-foundation.org, bp@alien8.de,
+	rdunlap@infradead.org, alex@shazbot.org, kevin.tian@intel.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v6 3/6] PCI: Consolidate delimiter handling into
+ pci_dev_str_match()
+Message-ID: <20260330131127.GQ310919@nvidia.com>
+References: <SEZPR01MB439931D7320F6C476D181C1EDC44A@SEZPR01MB4399.apcprd01.prod.exchangelabs.com>
+ <SEZPR01MB4399FA7D597B0A619C6F9A7EDC44A@SEZPR01MB4399.apcprd01.prod.exchangelabs.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <SEZPR01MB4399FA7D597B0A619C6F9A7EDC44A@SEZPR01MB4399.apcprd01.prod.exchangelabs.com>
+X-ClientProxiedBy: BL1PR13CA0075.namprd13.prod.outlook.com
+ (2603:10b6:208:2b8::20) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260330-fix_pciatops-v7-2-f601818417e8@linux.ibm.com>
-References: <20260330-fix_pciatops-v7-0-f601818417e8@linux.ibm.com>
-In-Reply-To: <20260330-fix_pciatops-v7-0-f601818417e8@linux.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jay Cornwall <Jay.Cornwall@amd.com>,
-        Felix Kuehling <Felix.Kuehling@amd.com>,
-        =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        Niklas Schnelle <schnelle@linux.ibm.com>
-Cc: Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>,
-        Sven Schnelle <svens@linux.ibm.com>, Leon Romanovsky <leon@kernel.org>,
-        Alexander Schmidt <alexs@linux.ibm.com>, linux-s390@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
-        Gerd Bayer <gbayer@linux.ibm.com>, stable@vger.kernel.org
-X-Mailer: b4 0.14.2
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Authority-Analysis: v=2.4 cv=J6enLQnS c=1 sm=1 tr=0 ts=69ca762f cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VnNF1IyMAAAA:8
- a=VwQbUJbxAAAA:8 a=_mftJHerZaGdetTijZQA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzMwMDEwMCBTYWx0ZWRfX1mbUbnKn2x+v
- MHZwBxBfsyIcPD8VR2ULzTm2hS0Cz17WGF920ac5GzufgVv+NAHaLuUXXDPdHj5thVgyXdKbFRw
- Q0wlwVSScsHoTFabp6ndj2ViKtDmwX7T1QHOlSEjYY6XyfU123kdaAfTab+uRIjAAXwdMH0ea52
- ygIpEGQUaNkSM+Zubz/G9Uo+i7l+3ap7cJJg3Dv1E6ROdrpgQPjrRlHLvajVjCX8BNoXYMzrRDn
- pXjnZl1rkLf+eOQucEFfwBGHeBqwgYX2JeLt/W69bh5Zz//FHHQIm1B9a5g73EfJoLv0RaMbcZE
- BEES2gzETQV+Kl7KZihCux6juWrzWUqtubLkhJHEdCDmCu38elFHE7+4G9z6eB45h9PF2LNzB1q
- 9taUlqMJhV3erENURstKX0lCNj9aEyMihjAJl7A/1+xqVK5ubsWuAWpJmVdRgmWj6RTb52ET2op
- lADjQUE3LeM68FD8fjg==
-X-Proofpoint-GUID: B_4ybmFZb-ydMJRx7ujbF-JVpktvhKZS
-X-Proofpoint-ORIG-GUID: CXzppuWT8MI_Pcw6JBvY2DWShiLK31Zh
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-29_05,2026-03-28_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 clxscore=1015 adultscore=0 priorityscore=1501 bulkscore=0
- phishscore=0 malwarescore=0 lowpriorityscore=0 spamscore=0 impostorscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603300100
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|DS0PR12MB8525:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6ea1edef-8983-4789-4dd3-08de8e5ddaad
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|366016|1800799024|22082099003|56012099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	O3VZxK+PIqPjWc2FD7RZ8U+6Ts94//ct9D7kIpksM3OX6r48btCkhbx28ns/ktuf0JbtT4w/QlPnh+uk8SZMXpCnMAnwv84+g7JU8yJt+3Jcxcg6P7uleaEgf66viSJ87Jt/u2OlHsjlURZU7Oyw76aLGWZZ1+zk/hGD9/NBb66/ixsROvwgjOsTBuQEAI7/3OXqPp+WCE3wHT+1SObexsVX0cbD92GmwDGEBYvpZthFM4aOx5Hn1T1N7tQzOji822etTHKt+NiC+n0XWAZ8CCaxRLNxz0Wkt5Fd+YhpuaRxL+R6alc9ukHVP1Vsivib3BQov4mL63truQK4rz+0pZwLiRzCQPmnEehJcuJISh5Um00SJUJnBsTCyl23j14wEXgpW0hmSAuwakHT2F0PwOY7RYp36aL/UskvdMKrQh8WsgULZyWK0SLO5ATeggyWH/IjUs+Uk/9T7Ql4Di3L5WJPukrZtGizs9uCWCmuba9HTA2gvS7SVOCxtz+Q3MSmMJCsHhCUYusurRAQgNatwqqFlQua1nkUzB9+SuWudMZKkzAQ/G9S+dxkYvoFT6ZA+E1+IufNLg40eSKUgbsay/TIZKD+Gq+6cBNyMtZmwkYoqqjTDk+/eNsr98gPLWmrsqZbE0OWtZZB9yd3150JulLfCBuSbYQPaGaQPOeE22xHpkcouSySB9C03s9siIwWADjDcDg3e9aemXRttjvDTtZhCZdcMuJMTSOZ8HWBIMo=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?oZMn6jaBLPWiK5S0+j0iZRFeZ7MCqH5i3EwTrRgZTViNT1LDaXkVWP0t3CeF?=
+ =?us-ascii?Q?F3V5LRcytGTkymTfS+5XOfzCJVWrEEphL+2m8/fch2SO0dKaOaN0PYppU8Hu?=
+ =?us-ascii?Q?zboVJJrDJ3cS+RELFU2MgARrFJVclPqFbURpJ98j46+gQMZjtRWsr9JvhSG7?=
+ =?us-ascii?Q?rGLREtOd0ZzotjbUJHy70x0ZyiYt0t64M+pcdROs5Rav+Ixj9M0QmqYCR5cy?=
+ =?us-ascii?Q?Dq2zBnjaEegpIiQbP0n4uWyQCP5MlnybFPNbtxzmLp5SIJl/SskYqkYDPA6k?=
+ =?us-ascii?Q?y1y14u4LE9lateJDW7foFNDzLg91944e/SqfJBOoTW3B1qG+TCoi0OfSVX+Y?=
+ =?us-ascii?Q?IncUMiBWWbiDwfX0DjdrJ+V7a0ONYy/RcczRPro+gJy0Vii/0fKJR9upmhTK?=
+ =?us-ascii?Q?zoscvRdeFWqvuJv22NdOn+l1dKGBmj4j1id70Vxqy0kkXmYyYwfmUtkCL7bU?=
+ =?us-ascii?Q?xPUjYsHOJEAXB1RyBEbuKYsJWwi/MYaHI/f3WXQhrqRGHv/6b+wVrv9plpmU?=
+ =?us-ascii?Q?apU6ajsFniQtX238MwytB9VKN416gzb26u+PSfRi1B+Xg/gIQyhewHZDgZSm?=
+ =?us-ascii?Q?qoEXfO4GNx6SBr6GTFDluUwYWrvIWJYt4qKdlwX+XKodZBCSYcvkxqcQURvm?=
+ =?us-ascii?Q?kLW/mepWqtOUvzPllfSU9ykP7vQPbA1c+wAV5LpD/m9f4AOlJKMj1JBzpRuE?=
+ =?us-ascii?Q?MjHEXYtzJo7v4WRytcLOe3X5DSG29Kjn6yqyLTZZE8FDnzjZmvhfaz0qcVmb?=
+ =?us-ascii?Q?4ar4rSXgfvEPpdM2wuXGy4tDX7mHNzRyf+PYd/HDKePhcLD5qfShB3mJ7zqd?=
+ =?us-ascii?Q?+uVOHNrFMF4bWZb+BLKcWKjiAUwthoA+iFWMq/yB7mQQuJi64UXss4pVDB2h?=
+ =?us-ascii?Q?ST5snuZpIJuMUwC9EvynneDpNoLUauaxVDfwztMofTBMgdXsC/zxlgzvpOLw?=
+ =?us-ascii?Q?rH/nsRkOgxVmHb9ThfsXJva/MPfmhMJe8TL26c4IEKQ/o5re0RSMctOpmgjj?=
+ =?us-ascii?Q?O5louKKZPDPYhvjLEzB6CQUQ58dLVywpw6RYNsuUSKNpYp0Izm837r7Ys3g+?=
+ =?us-ascii?Q?I+hdkGOe9ezz+iiimU1hzw7uewXOTMmSOMr5nUt0dHu1uOmWOtDI92kdo07M?=
+ =?us-ascii?Q?IyMbtSdxwMPuP1NcJdSWr857XG65CAOE+SUFCa730X1R0aJoxRm/v82mbLFW?=
+ =?us-ascii?Q?1yd0WzxuLXeZiIAavFdtbBrLCCDlDxj76odbKUCkwi7OR/Zulh4vBxWsLt8T?=
+ =?us-ascii?Q?iuCKDs8vEzrfxhkL6e5aBtH69wLiN0/zR5zJgz2RYxhaLTzLGMUiNNXL6WX2?=
+ =?us-ascii?Q?QSw7wFdQJK02HBSY4p2aj8tdODPDoPi/D/etv+6Pv0Dz/7qFE3jEq//m7O3B?=
+ =?us-ascii?Q?dOI8M1avBcuY4j5t65EQWKJwJsPXQEntUslQNIgSuXhfwPQyf1x/gwCS9sLq?=
+ =?us-ascii?Q?u5RRW3ZT/GeAqVKgutI81WW5zR3OPDYsE1NAGEL/l4reO+nB6verMLoZwNWO?=
+ =?us-ascii?Q?FFz8ycz0xv4ooX1FXSj172ymP62yZPBwZ2p2GC6o9OLtwbTann9wvDww1KrI?=
+ =?us-ascii?Q?ux8qyMkkSQTjoxcgzvfsi0ho1pKsHmaeM8LFAwqWIOFO1V2U2LX/4Dkr4lKL?=
+ =?us-ascii?Q?m3r5l2s+bkRjgTAuFF7Zvfh8lsUDbtEiD2IRpFNzn5RAUu2Es9VlcXYz321D?=
+ =?us-ascii?Q?iMhOKuLCTqB+v1AFjeBUr506jA+UPMumePNS81eDv4G/xgoI?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6ea1edef-8983-4789-4dd3-08de8e5ddaad
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Mar 2026 13:11:28.8186
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: qPcqV99tWBsqUDpuJ6dGpV3fQOQkw57XeBpsjA2Wxu/fugeMQHFZ3rMmoHr9q/1X
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB8525
 
-When inspecting the config space of a Connect-X physical function in an
-s390 system after it was initialized by the mlx5_core device driver, we
-found the function to be enabled to request AtomicOps despite the
-system's root-complex lacking support for completing them:
+On Thu, Mar 12, 2026 at 05:06:34PM +0800, Wei Wang wrote:
+> Callers of pci_dev_str_match() manually checked for the ';' or ','
+> delimiter and advanced the parameter pointer past it. Move this common
+> logic into pci_dev_str_match() so callers no longer need to duplicate it.
+> 
+> When no delimiter is found (end of parameter list or malformed entry),
+> pci_dev_str_match() now returns -ENODEV to indicate that no further entries
+> can be parsed, preserving the previous caller behavior of stopping parsing.
+> 
+> Signed-off-by: Wei Wang <wei.w.wang@hotmail.com>
+> ---
+>  drivers/pci/pci.c | 46 ++++++++++++++++++++++++----------------------
+>  1 file changed, 24 insertions(+), 22 deletions(-)
 
-1ed0:00:00.1 Ethernet controller: Mellanox Technologies MT2894 Family [ConnectX-6 Lx]
-	Subsystem: Mellanox Technologies Device 0002
-  [...]
-	DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-		 AtomicOpsCtl: ReqEn+
-		 IDOReq- IDOCompl- LTR- EmergencyPowerReductionReq-
-		 10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
+Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 
-Turns out the device driver calls pci_enable_atomic_ops_to_root() which
-defaulted to enable AtomicOps requests even if it had no information
-about the root port that the PCIe device is attached to.
-
-Change the logic of pci_enable_atomic_ops_to_root() to fully traverse the
-PCIe tree upwards, check that the bridge devices support delivering
-AtomicOps transactions, and finally check that there is a root port at
-the end that does support completing AtomicOps.
-
-Reported-by: Alexander Schmidt <alexs@linux.ibm.com>
-Cc: stable@vger.kernel.org
-Fixes: 430a23689dea ("PCI: Add pci_enable_atomic_ops_to_root()")
-Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
----
- drivers/pci/pci.c | 39 ++++++++++++++++++++++-----------------
- 1 file changed, 22 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 135e5b591df405e87e7f520a618d7e2ccba55ce1..57af00ecdc97086a32c063ff86f8a39087ad1f5e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3660,6 +3660,14 @@ void pci_acs_init(struct pci_dev *dev)
- 	pci_disable_broken_acs_cap(dev);
- }
- 
-+static bool pci_is_atomicops_capable_rp(struct pci_dev *dev, u32 cap, u32 cap_mask)
-+{
-+	if (!dev || !(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT))
-+		return false;
-+
-+	return (cap & cap_mask) == cap_mask;
-+}
-+
- /**
-  * pci_enable_atomic_ops_to_root - enable AtomicOp requests to root port
-  * @dev: the PCI device
-@@ -3676,8 +3684,9 @@ void pci_acs_init(struct pci_dev *dev)
- int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
- {
- 	struct pci_bus *bus = dev->bus;
--	struct pci_dev *bridge;
--	u32 cap, ctl2;
-+	struct pci_dev *bridge = NULL;
-+	u32 cap = 0;
-+	u32 ctl2;
- 
- 	/*
- 	 * Per PCIe r5.0, sec 9.3.5.10, the AtomicOp Requester Enable bit
-@@ -3713,29 +3722,25 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
- 		switch (pci_pcie_type(bridge)) {
- 		/* Ensure switch ports support AtomicOp routing */
- 		case PCI_EXP_TYPE_UPSTREAM:
--		case PCI_EXP_TYPE_DOWNSTREAM:
--			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
--				return -EINVAL;
--			break;
--
--		/* Ensure root port supports all the sizes we care about */
--		case PCI_EXP_TYPE_ROOT_PORT:
--			if ((cap & cap_mask) != cap_mask)
--				return -EINVAL;
--			break;
--		}
--
--		/* Ensure upstream ports don't block AtomicOps on egress */
--		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_UPSTREAM) {
-+			/* Upstream ports must not block AtomicOps on egress */
- 			pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2,
- 						   &ctl2);
- 			if (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
- 				return -EINVAL;
-+			fallthrough;
-+		/* All switch ports need to route AtomicOps */
-+		case PCI_EXP_TYPE_DOWNSTREAM:
-+			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
-+				return -EINVAL;
-+			break;
- 		}
--
- 		bus = bus->parent;
- 	}
- 
-+	/* Finally, last bridge must be root port and support requested sizes */
-+	if (!(pci_is_atomicops_capable_rp(bridge, cap, cap_mask)))
-+		return -EINVAL;
-+
- 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
- 				 PCI_EXP_DEVCTL2_ATOMIC_REQ);
- 	return 0;
-
--- 
-2.51.0
-
+Jason
