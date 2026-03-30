@@ -1,97 +1,77 @@
-Received: from mail-oa1-f53.google.com (mail-oa1-f53.google.com [209.85.160.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2A253E958F
-	for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 22:34:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32B6B3E9F89;
+	Mon, 30 Mar 2026 22:54:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774910100; cv=none; b=fa87Xk7RC7dSlmUkuFyxYpEXDqXI4XStz3iVOdyfmf5tTrsBJOPt9LcW8bKyol1BVYv/nv0Rs/axgyOrrHRMYhkKka6xt6pkivEogfcT5fE63xjurDDkDF0PhTBdMfek6NcQAxGZf3nfZkfNmiXa8n8aebf5NZ9ja//ttmSfgS8=
+	t=1774911280; cv=none; b=SxZ41tOOywz4/Frrz2eqIrX9ifsn+cZyHhZQnJf/E/ZVC95Mg4ciVDw/J3McOHHd1pWb0JGwvbeXjkcD1zvOVKQDswXB5pkFTG0GRN8c4T2U+Lv6tGJyh8QlpRS+2Xc+OO0OEsMA1B9xH2p8Wad06BYtKIpdooa1xskm3QGjYC4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774910100; c=relaxed/simple;
-	bh=njYxOmFhF0kKZxmCluaJeRNQJOvHXtTT/LYX+fA/Jes=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jxtM+1sddf/5xqAeeQQT2ULkKdKLeiUozxKv+VyWco9FzwXsDbsbtnr0MB8sLlg71jrQ4mS9zNbwNLCLilTnVFb4HShG+HOGZnkD9bElnsfQQbJhL9dpj9riglPN5DMe2ZT5SNrP+++/vaHn+qV7WwxzzPeLTUWMBLbWeVZOFc8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=kTRG2gg8; arc=none smtp.client-ip=209.85.160.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1774911280; c=relaxed/simple;
+	bh=D72YCLwgexObNKWUs+QMeapQr6cp2LwytErV3nWFNrI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=VUdV3JGbCwrp0sNwIHvpy3ZfaSryr2NacbSaAvPKQFbeItXWj6ZoDgsO6ELHcELTzNpegglv54h7wg0MAdyhyNklf4yh12/XZWCsTIerk887nCHf238AMGnhd9JRFvqnskchF145I/PgRXn/PPndUT6ozUSgDOIUAA6tNOEN3Uk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B8syhKKs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="kTRG2gg8"
-Received: by mail-oa1-f53.google.com with SMTP id 586e51a60fabf-4043b27ddeaso3253162fac.1
-        for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 15:34:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1774910091; x=1775514891; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=MMpjIoYB4wkYY1B4Qvo8YM+LGvG/wS7KH0HgKJnMSKw=;
-        b=kTRG2gg8CnwYIFxacyb4+gQ77RG3JAoGjXfqaKIW8I/iavRsMuuYj06F2f76nmTpEU
-         rKPHun1rBmDqbD0XJaHyfowQ6QpIcZTcg1RUf70KX5tCRdH7hnyJf7npg6nV9V3oaFbg
-         Eo+WsAAtUkFdXTk8N8Eh6ylrsueoW3eE1FN+lOmXn4UzujnXLRN5Y2FJwxETKYst3hOJ
-         0sTXbgEhOWLj3+WfvobD1KoN3Mu4D9bnLknuCmdBiRugQP4SdVnShtG78K6HPnV88WwJ
-         KAs5Kt8ZlyGrphlmcID4nThxVA0RvBHOgu7xKZiO9qi2Ph2uYUqPef2KyGH4zvXDmwP7
-         Bobg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774910091; x=1775514891;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=MMpjIoYB4wkYY1B4Qvo8YM+LGvG/wS7KH0HgKJnMSKw=;
-        b=VHCBsFECa4An8leStI9xxKbC1LdGWbfKPd2pRzN99pHGiRECw8d5Kh54Ohy/dh48+Y
-         iHD0nARalr1hLjsQcovDwTjbC1pCFWHwYTFdtgObEWrE0uyZMhuUbLzLqEkyBYUB2f+7
-         SXuT/LeTBBEq0ObElnEWRC0F2q7m9EHAfXk8tgr/8vmgJfEWJpTqG3dtH/dhvztLQFWB
-         0bFp5PS2lMy9C7UqVMgHW0iy+NoMzO925a/icDVfNXfFJmAcPIfFJL7U2p9mLpxKwMDu
-         sluUul1PzLHp8bUaCd9g5xFHh7I6Vf0KLAD2pJHm3TKX0HteRIZaGfiltIxXZvmbalZB
-         Y1iQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXVcaMndJUdBAtor1Y3tK93gKuVCxCAF13KbsJrivbJVN3dA2cxqS3L5qAU4k3+k/wrWhQepxqP3So=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzfVTGW62SNVLhVbMywTw9yLx+gJKvho0Riy5RaIk3zNnG1ZO6z
-	wi3wIL2w3J12FByDzdqju3sgmbTCP7dlkz6aHYbOXK/SnWn9xouneheABmNbihE24HlQIr/0kxv
-	slLFw
-X-Gm-Gg: ATEYQzy7v0JoYJI+n4CRpqEr/YHhC7/ZEppAGHhFsGvJw81KMPX8/PyMSr/snxJ7Zvs
-	j08SpFhgJRv99QrTrX0qL80kRvBSoqiU3cnuZMpKV+B0qkRNo20H0nx/n0eiAimUILlkqJv+2e3
-	Y//dOijxuuKN+wU2WNRd3SSYZPk6ddTSlVhlnBxyNFyAggX+UQ3gBusuDz1fBmfxUy7AzmPOhVt
-	aOA5S87tFAj371q9Cy45nM8EvQ9CSUKDBwurKomdhfrnargFJH/kgonY7krrRK09ETG3v8svL4p
-	G2CXBIt2FALV3+cN/j6BupJGBFPFMsmlR9Fu7RdLuENLxLsCL7kGC+dvSoGVAnQ2/aAla4PWp9B
-	Yr22LxDGAmoEBRHPdqTSuH5KxZ5Pzk3gdI9s4f1sguAj4DPmozEYbumJ0+T8ckm5mSsKQDW3OPI
-	Ev+NpgWWaR+176lycOXL1MbjGSHKCUH/Aci+rurbkU5dZNpcHk/wh3acv8Bdzbt/VXEVMb7Q==
-X-Received: by 2002:a05:620a:2991:b0:8cf:cfdf:733e with SMTP id af79cd13be357-8d01c689577mr1767721685a.32.1774909592771;
-        Mon, 30 Mar 2026 15:26:32 -0700 (PDT)
-Received: from ziepe.ca (mctnnbsa70w-159-2-73-22.dhcp-dynamic.fibreop.nb.bellaliant.net. [159.2.73.22])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-8d028090f43sm711572985a.45.2026.03.30.15.26.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 30 Mar 2026 15:26:32 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1w7L43-00000005H5o-0vBI;
-	Mon, 30 Mar 2026 19:26:31 -0300
-Date: Mon, 30 Mar 2026 19:26:31 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Gerd Bayer <gbayer@linux.ibm.com>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Selvin Xavier <selvin.xavier@broadcom.com>,
-	Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B8syhKKs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F35DFC4CEF7;
+	Mon, 30 Mar 2026 22:54:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774911279;
+	bh=D72YCLwgexObNKWUs+QMeapQr6cp2LwytErV3nWFNrI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=B8syhKKsyFZJp5ViyX++4WrxJjf/s9SAF7iygNRC2lm40WrFlLGTAnr0hFbEHEWpg
+	 ia0nmVOXtkUh3vhlhox571th3beaW/qiZ0UhWghrTL0ijZ1lHdbckIr1aHU9zAe5G0
+	 CvsSlIKv0lEt3fPrjfgSEPOeIVkS1hIVMfwLKgsEWB5ljchs42iEpW0WypBa1aNJds
+	 nbeHvJqpoSsA0leiKgJIfEu3KmnUNxL6DcREVydRzDquesl/x/Xq6CUf44WrwNt74U
+	 7/bdEe0ptuFtBXnFOID+jZrpG5MRU/isthWqPdqX6EOggBOF7qrB3M+2MOfD0eEOQv
+	 QGKQ7dkrgXF1g==
+Date: Mon, 30 Mar 2026 17:54:37 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Matlack <dmatlack@google.com>
+Cc: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ankit Agrawal <ankita@nvidia.com>, Arnd Bergmann <arnd@arndb.de>,
+	Askar Safin <safinaskar@gmail.com>,
+	"Borislav Petkov (AMD)" <bp@alien8.de>,
+	Chris Li <chrisl@kernel.org>,
+	Dapeng Mi <dapeng1.mi@linux.intel.com>,
+	David Rientjes <rientjes@google.com>,
+	Feng Tang <feng.tang@linux.alibaba.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
+	Kees Cook <kees@kernel.org>, Kevin Tian <kevin.tian@intel.com>,
+	kexec@lists.infradead.org, kvm@vger.kernel.org,
 	Leon Romanovsky <leon@kernel.org>,
-	Michal Kalderon <mkalderon@marvell.com>,
+	Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	linux-mm@kvack.org, linux-pci@vger.kernel.org,
+	Li RongQing <lirongqing@baidu.com>, Lukas Wunner <lukas@wunner.de>,
+	Marco Elver <elver@google.com>,
+	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>,
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	"Paul E. McKenney" <paulmck@kernel.org>,
+	Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
+	"Peter Zijlstra (Intel)" <peterz@infradead.org>,
+	Pranjal Shrivastava <praan@google.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Raghavendra Rao Ananta <rananta@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
 	Saeed Mahameed <saeedm@nvidia.com>,
-	Tariq Toukan <tariqt@nvidia.com>, Mark Bloch <mbloch@nvidia.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jay Cornwall <Jay.Cornwall@amd.com>,
-	Felix Kuehling <Felix.Kuehling@amd.com>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Niklas Schnelle <schnelle@linux.ibm.com>,
-	Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	Alexander Schmidt <alexs@linux.ibm.com>, linux-s390@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-rdma@vger.kernel.org
-Subject: Re: [PATCH v7 1/3] PCI: AtomicOps: Do not enable requests by RCiEPs
-Message-ID: <20260330222631.GF246076@ziepe.ca>
-References: <20260330-fix_pciatops-v7-1-f601818417e8@linux.ibm.com>
- <20260330214253.GA92498@bhelgaas>
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Vipin Sharma <vipinsh@google.com>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>,
+	Zhu Yanjun <yanjun.zhu@linux.dev>
+Subject: Re: [PATCH v3 02/24] PCI: Add API to track PCI devices preserved
+ across Live Update
+Message-ID: <20260330225437.GA111390@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -100,25 +80,202 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260330214253.GA92498@bhelgaas>
+In-Reply-To: <acWne_ZCcF4YQN25@google.com>
 
-On Mon, Mar 30, 2026 at 04:42:53PM -0500, Bjorn Helgaas wrote:
-> [+to amdgpu, bnxe_re, mlx5 IB, qedr, mlx5 maintainers]
+On Thu, Mar 26, 2026 at 09:39:07PM +0000, David Matlack wrote:
+> On 2026-03-25 06:12 PM, Bjorn Helgaas wrote:
+> > On Mon, Mar 23, 2026 at 11:57:54PM +0000, David Matlack wrote:
+> > > Add an API to enable the PCI subsystem to participate in a Live Update
+> > > and track all devices that are being preserved by drivers. Since this
+> > > support is still under development, hide it behind a new Kconfig
+> > > PCI_LIVEUPDATE that is marked experimental.
+> ...
+
+> > This sets "dev->liveupdate_incoming = false", and the only place we
+> > check that is in pci_liveupdate_retrieve().  In particular, there's
+> > nothing in the driver bind/unbind paths that seems related.  I guess
+> > pci_liveupdate_finish() just means the driver can't call
+> > pci_liveupdate_retrieve() any more?
 > 
-> On Mon, Mar 30, 2026 at 03:09:44PM +0200, Gerd Bayer wrote:
-> > Since root complex integrated end points (RCiEPs) attach to a bus that
-> > has no bridge device describing the root port, the capability to
-> > complete AtomicOps requests cannot be determined with PCIe methods.
+> liveupdate_incoming is used by VFIO in patch 10:
+> 
+>   https://lore.kernel.org/kvm/20260323235817.1960573-11-dmatlack@google.com/
+> 
+> Fundamentally, I think drivers will need to know that the device they
+> are dealing with was preserved across the Live Update so they can react
+> accordingly and this is how they know. This feels like an appropriate
+> responsibility to delegate to the PCI core since it can be common across
+> all PCI devices, rather than requiring drivers to store their own state
+> about which devices were preserved. I suspect PCI core will also use
+> liveupdate_incoming in the future (e.g. to avoid assigning new BARs) as
+> we implement more of the device preservation.
+
+Yes.  It's easier to review if this is added at the point where it is
+used.
+
+> And in case you are also wondering about liveupdate_outgoing, I forsee
+> that being used for things like skipping disabling bus mastering in
+> pci_device_shutdown().
+> 
+> I think it would be a good idea to try to split this patch up, so there
+> is more breathing room to explain this context in the commit messages.
+
+Sounds good.
+
+> > > +	 * Don't both accounting for VFs that could be created after this
+> > > +	 * since preserving VFs is not supported yet. Also don't account
+> > > +	 * for devices that could be hot-plugged after this since preserving
+> > > +	 * hot-plugged devices across Live Update is not yet an expected
+> > > +	 * use-case.
 > > 
-> > Change default of pci_enable_atomic_ops_to_root() to not enable
-> > AtomicOps requests on RCiEPs.
+> > s/Don't both accounting/Don't bother accounting/ ? not sure of intent
 > 
-> I know I suggested this because there's nothing explicit that tells us
-> whether the RC supports atomic ops from RCiEPs [1].  But I'm concerned
-> that GPUs, infiniband HCAs, and NICs that use atomic ops may be
-> implemented as RCiEPs and would be broken by this.
+> "Don't bother" was the intent.
+> 
+> > I suspect the important thing here is that this allocates space for
+> > preserving X devices, and each subsequent pci_liveupdate_preserve()
+> > call from a driver uses up one of those slots.
+> > 
+> > My guess is this is just an allocation issue and from that point of
+> > view there's no actual problem with enabling VFs or hot-adding devices
+> > after this point; it's just that pci_liveupdate_preserve() will fail
+> > after X calls.
+> 
+> Yes that is correct.
 
-AFAIK none of the NICs are integrated into root complexes in their
-topology model..
+Mentioning VFs in the comment is a slight misdirection when the actual
+concern is just about the number of devices.
 
-Jason
+> I see that a lot of your comments are about these WARN_ONs so do you
+> have any general guidance on how I should be handling them?
+
+If it's practical to arrange it so we dereference a NULL pointer or
+similar, that's my preference because it doesn't take extra code and
+it's impossible to ignore.  Sometimes people add "if (!ptr) return
+-EINVAL;" to internal functions where "ptr" should never be NULL.  IMO
+cases like that should just use assume "ptr" is valid and use it.
+Likely not a practical strategy in your case.
+
+> > > +	if (pci_WARN_ONCE(dev, !dev_ser, "Cannot find preserved device!"))
+> > 
+> > Seems like an every-time sort of message if this indicates a driver bug?
+> > 
+> > It's enough of a hassle to convince myself that pci_WARN_ONCE()
+> > returns the value that caused the warning that I would prefer:
+> > 
+> >   if (!dev_ser) {
+> >     pci_warn(...) or pci_WARN_ONCE(...)
+> >     return;
+> >   }
+> 
+> For "this should really never happen" warnings, which is the case here,
+> my preference is to use WARN_ON_ONCE() since you only need to see it
+> happen once to know there is a bug somewhere, and logging every time can
+> lead to overwhelmingly interleaved logs if it happens too many times.
+
+I'm objecting more to using the return value of pci_WARN_ONCE() than
+the warning itself.  It's not really obvious what WARN_ONCE() should
+return and kind of a hassle to figure it out, so I think it's clearer
+in this case to test dev_ser directly.
+
+> > > +	for (i = ser->nr_devices; i > 0; i--) {
+> > > +		struct pci_dev_ser *prev = &ser->devices[i - 1];
+> > > +		int cmp = pci_dev_ser_cmp(&new, prev);
+> > > +
+> > > +		/*
+> > > +		 * This should never happen unless there is a kernel bug or
+> > > +		 * corruption that causes the state in struct pci_ser to get out
+> > > +		 * of sync with struct pci_dev.
+> > 
+> > Huh.  Same comment as above.  I don't think this is telling me
+> > anything useful.  I guess what happened is we're trying to preserve X
+> > and X is already in "ser", but we should have returned -EBUSY above
+> > for that case.  If we're just saying memory corruption could cause
+> > bugs, I think that's pointless.
+> > 
+> > Actually I'm not even sure we should check for this.
+> > 
+> > > +		 */
+> > > +		if (WARN_ON_ONCE(!cmp))
+> > > +			return -EBUSY;
+> 
+> This is another "this should really never happen" check. I could just
+> return without warning but this is a sign that something is very wrong
+> somewhere in the kernel and it is trivial to just add WARN_ON_ONCE() so
+> that it gets flagged in dmesg. In my experience that can be very helpful
+> to track down logic bugs during developemt and rare race conditions at
+> scale in production environments.
+
+OK.  Maybe just remove the comment.  It's self-evident that
+WARN_ON_ONCE() is a "shouldn't happen" situation, and I don't think
+the comment contains useful information.
+
+> > > +u32 pci_liveupdate_incoming_nr_devices(void)
+> > > +{
+> > > +	struct pci_ser *ser;
+> > > +
+> > > +	if (pci_liveupdate_flb_get_incoming(&ser))
+> > > +		return 0;
+> > 
+> > Seems slightly overcomplicated to return various error codes from
+> > pci_liveupdate_flb_get_incoming(), only to throw them away here and
+> > special-case the "return 0".  I think you *could* set
+> > "ser->nr_devices" to zero at entry to
+> > pci_liveupdate_flb_get_incoming() and make this just:
+> > 
+> >   pci_liveupdate_flb_get_incoming(&ser);
+> >   return ser->nr_devices;
+> 
+> pci_liveupdate_flb_get_incoming() fetches the preserved pci_ser struct
+> from LUO (the struct that the previous kernel allocated and populated).
+> If pci_liveupdate_flb_get_incoming() returns an error, it means there
+> was no struct pci_ser preserved by the previous kernel (or at least not
+> that the current kernel is compatible with), so we return 0 here to
+> indicate that 0 devices were preserved.
+
+Right.  Here's what I was thinking:
+
+  pci_liveupdate_flb_get_incoming(...)
+  {
+    struct pci_ser *ser = *serp;
+
+    ser->nr_devices = 0;
+
+    ret = liveupdate_flb_get_incoming(...);
+    ...
+    if (ret == -ENOENT) {
+      pr_info_once("PCI: No incoming FLB data detected during Live Update");
+      return;
+    }
+
+    WARN_ONCE(ret, "PCI: Failed to retrieve incoming ...");
+  }
+
+  u32 pci_liveupdate_incoming_nr_devices(void)
+  {
+    pci_liveupdate_flb_get_incoming(&ser);
+    return ser->nr_devices;
+  }
+
+> > > +++ b/include/linux/kho/abi/pci.h
+> > 
+> > It seems like most of include/linux/ is ABI, so does kho/abi/ need to
+> > be separated out in its own directory?
+> 
+> include/linux/kho/abi/ contains all of the structs, enums, etc. that are
+> handed off between kernels during a Live Update. If almost anything
+> changes in this directory, it breaks our ability to upgrade/downgrade
+> via Live Update. That's why it's split off into its own directory.
+> 
+> include/linux/ is not part of the Live Update ABI. Changes to those
+> headers to not affect our ability to upgrade/downgrade via Live Update.
+> 
+> > It's kind of unusual for the hierarchy to be this deep, especially
+> > since abi/ is the only thing in include/linux/kho/.
+> 
+> Yes I agree, but that is outside the scope of this patchset I think.
+> This directory already exists.
+
+Agreed.
+
+Bjorn
