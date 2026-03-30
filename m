@@ -1,353 +1,199 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+Received: from flow-a6-smtp.messagingengine.com (flow-a6-smtp.messagingengine.com [103.168.172.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05C52299A84;
-	Mon, 30 Mar 2026 19:33:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2035B377023;
+	Mon, 30 Mar 2026 20:10:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774899239; cv=none; b=tKKJ6q3XbKrt02AGyfg0tBGXrq3AzRA7EQ5Zlgu3z4VT2wfhKzBNeJXea5lOHZTrEzcWn6O7oCnBxzg9LxI9TdVswyDXwxr9tqEw5KEWhr4A62JoqCHGYvfLR0RQcyFCYPD2KdXxQcxR+JeKe82Tu6r0tsUt+nL+svMlWqRm1YA=
+	t=1774901459; cv=none; b=LCPETV2n5/rjlrwqONXv261RW3EwDFyEWnflEdGWillT7Q8uwGyYN2SNAgIQska92mUPzu2WCZhgOiB2ie0gM2GZmhXuqqSnWwQcOnJMeE8TyNpvnZQNJAt88FvpHVpU07/t2C+XeOiTsJQC67067qatBjEQ2Q6KkLr0xXcP9U8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774899239; c=relaxed/simple;
-	bh=14W3FkkKF2FOF/YcWpKfpYqjRdWn4aylvVNQ2yfGZUQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=MX2JZl/bdnnO/lyPAjbW4s9YqIOx5nERXPk67n2F4jjm63KpDsvfR2fRt90xR8R++uuo7x+HmmjvqEhj7ULvmRBVa3r8MnsbErGAHldKAYj6rZro9ScW3ixATLxKmJY7TOUR3kuBeYLYAgqlqq9uauyslEuAp+BFEtlFG8LOe5A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dL1dOGKd; arc=none smtp.client-ip=198.175.65.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1774901459; c=relaxed/simple;
+	bh=HVnPKL4GDfzYYaqgylKaMGdGqe750h3OqeetAX+ZooI=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=PoaEIn0DzqB0t7yHe2UAlQtSucETMbF9FA330BOLAVdxbcpdb7PWKudtV25Y3SLTrkMJR+X0IGwZ0UtLWWyBkl+uZ9hlVLA/md0TLQ7u0MYCPhsVEZD8a/2+bOSeWHb3xFlyoB2H8An+498MY4uCWhIdUYKwrNQWzNM/pRqOvRA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=p3Q7z9HD; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=CAP30Hzc; arc=none smtp.client-ip=103.168.172.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dL1dOGKd"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774899237; x=1806435237;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=14W3FkkKF2FOF/YcWpKfpYqjRdWn4aylvVNQ2yfGZUQ=;
-  b=dL1dOGKd907BKhfxXYgHnpofOpgvzBfkA+8lLMpF00yo4OyfqKcpz3SJ
-   QFHYGvUM5+K8us7pg1AxhpIVB+fe2wJJn4BNEHUlgpyyCWCTXpZnDTiG7
-   tQs5PbBgAiYxmAliCAvZ62sDh0LRnUlChlvWhSYvyJaCVDr1PEI0JdkWM
-   33z4L0dj1vZ+V786fNrWHTnaNvUzLFT2pZPUI171zWBXpfAdbkFBuVpvk
-   OYTfYyZbplRSRgwBrtnMu68JfYa1Mkl/1hDSXN6V3CDpe3RZM59L+ivNz
-   Ms3dhSjvAKLshAyQTbiYZghOm5wOYudlEEQJV3rHd8sXpe8GRxJsGkQg/
-   w==;
-X-CSE-ConnectionGUID: B6nEiE65R2eeAIbXK2FnqQ==
-X-CSE-MsgGUID: hLKUj+gKQOGK+cGUB0m+5A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11744"; a="98512079"
-X-IronPort-AV: E=Sophos;i="6.23,150,1770624000"; 
-   d="scan'208";a="98512079"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2026 12:33:56 -0700
-X-CSE-ConnectionGUID: NDXhw5oDR9+3UBAKvLIbVg==
-X-CSE-MsgGUID: VsJiOegxSN+d40MeDqd5KA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,150,1770624000"; 
-   d="scan'208";a="225158174"
-Received: from ettammin-mobl3.ger.corp.intel.com (HELO fdefranc-mobl3.intel.com) ([10.245.246.49])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2026 12:33:52 -0700
-From: "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>
-To: linux-cxl@vger.kernel.org
-Cc: Davidlohr Bueso <dave@stgolabs.net>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	"Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>
-Subject: [RFC PATCH v3] cxl/core: Work around CXL Port PM Init failure when ACS SV enabled
-Date: Mon, 30 Mar 2026 21:33:41 +0200
-Message-ID: <20260330193347.25072-1-fabio.m.de.francesco@linux.intel.com>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="p3Q7z9HD";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="CAP30Hzc"
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailflow.phl.internal (Postfix) with ESMTP id 32B1F1380404;
+	Mon, 30 Mar 2026 16:10:56 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-01.internal (MEProxy); Mon, 30 Mar 2026 16:10:56 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1774901456;
+	 x=1774908656; bh=l6vFZymkQIpCjGyZZ0waTIjtR5dYu9l/RauB0EHs2cg=; b=
+	p3Q7z9HDaMO9l49KzGyd6QCozBDRkYMrNAMT016WX/fHIPodDvJbWxfN7o7Rq7vD
+	ssq4dL3KEVXFE49rB8recUd5fVpSerRill0EPB9eG2k4c2akGO+Qp/G8D31RmPbX
+	7TlkrNox2UjWyTlfcttMC7E71kdY+trnef5Hm61drgcfUPakTcCNL6kKwNKjRSBV
+	U1uiNaG+fKZAZmTv0+H0872Gvi06OSqLLzx0vsDX2qjVrQBFMlsZacR2mbGsDkc/
+	gT6xVnpGv8MRHmzJBZo58FBd6w5IU+6ogcmojJLtPY3KydD8fWurT3VIXthGtQVM
+	kQSao6bXLTSzYllu1/tldQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1774901456; x=
+	1774908656; bh=l6vFZymkQIpCjGyZZ0waTIjtR5dYu9l/RauB0EHs2cg=; b=C
+	AP30HzcjqUcGAYtq0Vy0npz+WQZ0xoM+V3KrqPMrmRQ5BSmU53GGUiyx5E4wI6yA
+	FyTr5/p4paazsu/Iipz8yYZU+1phMDKI7hagtD986FHeu0o1F4zYmBZsEakuW92m
+	weI9ASAX8aFEL8Rs0Uec3ctb/HnJ1MgKC92d8MBdvS6OH7G3ewGRc0+tfGddZ4Gk
+	WxhrjWBcLoGs93zMy/odTXwHEJHh5W5FS+Et9LrpEfOcBRgJ0bBAStrIpl6DkWE0
+	Q7ETKFm9iu5onjWSvKFXn0ELTMMUBd/OPVAOOtwXaNWNshQ6cuB1Amc/2nwRZfpT
+	eHg87urYI5Ec6Lkq0sXvA==
+X-ME-Sender: <xms:z9jKafG3C1ppH9T_m6ALHXE4Xg8LRK7hBmf8rBxsDTwjV0YmtGN7zQ>
+    <xme:z9jKafRfVIq8DMXZsvpeUjwD446zuGALRlY6oTA_zptsdyXkE-2d-NbNcA082cKf0
+    ss8FY21mgRpxHw-PTPA5PC2K5vCU9145ou0r7AQwqll0ampOmU>
+X-ME-Received: <xmr:z9jKaX5EMTRV_NaboCc_h79atFYxCsQIiTsRvvS3id2SmTFWS4FBTgmuiO8>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdeffeelledtucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepfffhvfevuffkjghfofggtgfgsehtjeertdertddvnecuhfhrohhmpeetlhgvgicu
+    hghilhhlihgrmhhsohhnuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtffrrg
+    htthgvrhhnpeekheejieetffefueeiteejtdejffdvleelvdeuvdffvdefteeghfevkeeu
+    vdefvdenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecuvehluhhsthgvrhfuihiivg
+    eptdenucfrrghrrghmpehmrghilhhfrhhomheprghlvgigsehshhgriigsohhtrdhorhhg
+    pdhnsggprhgtphhtthhopeehuddpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohepug
+    grkhhrsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehjghhgseiiihgvphgvrdgtrgdp
+    rhgtphhtthhopehlihhnuhigsegrrhhmlhhinhhugidrohhrghdruhhkpdhrtghpthhtoh
+    epghhrvghgkhhhsehlihhnuhigfhhouhhnuggrthhiohhnrdhorhhgpdhrtghpthhtohep
+    rhgrfhgrvghlsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehiohgrnhgrrdgtihhorh
+    hnvghisehngihprdgtohhmpdhrtghpthhtohepnhhiphhunhdrghhuphhtrgesrghmugdr
+    tghomhdprhgtphhtthhopehnihhkhhhilhdrrghgrghrfigrlhesrghmugdrtghomhdprh
+    gtphhtthhopehkhihssehmihgtrhhoshhofhhtrdgtohhm
+X-ME-Proxy: <xmx:z9jKaXPahdSu6NAxzDLCWHFq0SjTPnbaOV6q1JEVDN1n0TGZgvSOLg>
+    <xmx:z9jKaYs_pZi1AKnrgY4kd6IlWW19DwfnZAklgCAjMJf5o-edI-wG2g>
+    <xmx:z9jKaebkSHmk2-FfV3M99S1E_Kbm3scLKfLmyO_zzcLIBxoGL3vJxQ>
+    <xmx:z9jKacg_NAD9M03CgHB8mak7EEebVzjqapJHxaBa4zGAHu1ISFIb7w>
+    <xmx:0NjKafrBqSu7i3ficH69WDNrAzczvh4pW1jhPhZmK7WHcIBXnovlo-fr>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 30 Mar 2026 16:10:52 -0400 (EDT)
+Date: Mon, 30 Mar 2026 14:10:50 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: "Danilo Krummrich" <dakr@kernel.org>
+Cc: "Jason Gunthorpe" <jgg@ziepe.ca>, "Russell King" <linux@armlinux.org.uk>,
+ "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>,
+ "Ioana Ciornei" <ioana.ciornei@nxp.com>,
+ "Nipun Gupta" <nipun.gupta@amd.com>,
+ "Nikhil Agarwal" <nikhil.agarwal@amd.com>,
+ "K. Y. Srinivasan" <kys@microsoft.com>,
+ "Haiyang Zhang" <haiyangz@microsoft.com>, "Wei Liu" <wei.liu@kernel.org>,
+ "Dexuan Cui" <decui@microsoft.com>, "Long Li" <longli@microsoft.com>,
+ "Bjorn Helgaas" <bhelgaas@google.com>, "Armin Wolf" <W_Armin@gmx.de>,
+ "Bjorn Andersson" <andersson@kernel.org>,
+ "Mathieu Poirier" <mathieu.poirier@linaro.org>,
+ "Vineeth Vijayan" <vneethv@linux.ibm.com>,
+ "Peter Oberparleiter" <oberpar@linux.ibm.com>,
+ "Heiko Carstens" <hca@linux.ibm.com>,
+ "Vasily Gorbik" <gor@linux.ibm.com>,
+ "Alexander Gordeev" <agordeev@linux.ibm.com>,
+ "Christian Borntraeger" <borntraeger@linux.ibm.com>,
+ "Sven Schnelle" <svens@linux.ibm.com>,
+ "Harald Freudenberger" <freude@linux.ibm.com>,
+ "Holger Dengler" <dengler@linux.ibm.com>,
+ "Mark Brown" <broonie@kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>,
+ "Jason Wang" <jasowang@redhat.com>,
+ "Xuan Zhuo" <xuanzhuo@linux.alibaba.com>,
+ Eugenio =?UTF-8?B?UMOpcmV6?= <eperezma@redhat.com>,
+ "Juergen Gross" <jgross@suse.com>,
+ "Stefano Stabellini" <sstabellini@kernel.org>,
+ "Oleksandr Tyshchenko" <oleksandr_tyshchenko@epam.com>,
+ "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
+ <linux-kernel@vger.kernel.org>, <driver-core@lists.linux.dev>,
+ <linuxppc-dev@lists.ozlabs.org>, <linux-hyperv@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <platform-driver-x86@vger.kernel.org>,
+ <linux-arm-msm@vger.kernel.org>, <linux-remoteproc@vger.kernel.org>,
+ <linux-s390@vger.kernel.org>, <linux-spi@vger.kernel.org>,
+ <virtualization@lists.linux.dev>, <kvm@vger.kernel.org>,
+ <xen-devel@lists.xenproject.org>, <linux-arm-kernel@lists.infradead.org>,
+ "Gui-Dong Han" <hanguidong02@gmail.com>, alex@shazbot.org
+Subject: Re: [PATCH 05/12] PCI: use generic driver_override infrastructure
+Message-ID: <20260330141050.2cb47bd9@shazbot.org>
+In-Reply-To: <DHGATG6LJOM1.2AI7BYQ2O4DFU@kernel.org>
+References: <20260324005919.2408620-1-dakr@kernel.org>
+	<20260324005919.2408620-6-dakr@kernel.org>
+	<DHGATG6LJOM1.2AI7BYQ2O4DFU@kernel.org>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Compute Express Link (CXL) Specification Revision 4.0, Version 1.0, Section
-8.1.5.1 - CXL Port Extension Status, Implementation Note, describes a
-scenario where a CXL downstream port may fail PM initialization:
+On Mon, 30 Mar 2026 19:38:41 +0200
+"Danilo Krummrich" <dakr@kernel.org> wrote:
 
-"Certain conditions such as Link Down, Secondary Bus Reset, or Downstream
-Port Containment reset the Downstream Component’s bus number. If the
-Component generates the CREDIT_RTN IP2PM message with Requester Bus=0, the
-Downstream Port may reject the IP2PM message if software has enabled ACS
-Source Validation. In this scenario, Power Management initialization may
-fail to complete and another Secondary Bus Reset alone will not facilitate
-recovery".
+> (Cc: Jason)
+> 
+> On Tue Mar 24, 2026 at 1:59 AM CET, Danilo Krummrich wrote:
+> > diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> > index d43745fe4c84..460852f79f29 100644
+> > --- a/drivers/vfio/pci/vfio_pci_core.c
+> > +++ b/drivers/vfio/pci/vfio_pci_core.c
+> > @@ -1987,9 +1987,8 @@ static int vfio_pci_bus_notifier(struct notifier_block *nb,
+> >  	    pdev->is_virtfn && physfn == vdev->pdev) {
+> >  		pci_info(vdev->pdev, "Captured SR-IOV VF %s driver_override\n",
+> >  			 pci_name(pdev));
+> > -		pdev->driver_override = kasprintf(GFP_KERNEL, "%s",
+> > -						  vdev->vdev.ops->name);
+> > -		WARN_ON(!pdev->driver_override);
+> > +		WARN_ON(device_set_driver_override(&pdev->dev,
+> > +						   vdev->vdev.ops->name));  
+> 
+> Technically, this is a change in behavior. If vdev->vdev.ops->name is NULL, it
+> will trigger the WARN_ON(), whereas before it would have just written "(null)"
+> into driver_override.
 
-Implement the recommended workaround for this scenario, which involves
-saving and disabling the ACS Source Validation and Bus Master Enable bits,
-issuing a secondary bus reset, waiting for PM init to complete, and then
-restoring those bits.
+It's worse than that.  Looking at the implementation in [1], we have:
 
-This is an RFC because it checks for PM init failures in ports enumeration,
-where an SBR might not be very welcome. Maybe other call sites are more
-appropriate for this workaround?
-
-Signed-off-by: Fabio M. De Francesco <fabio.m.de.francesco@linux.intel.com>
----
-
-Changes for v3: 
-        - match the naming, capitalization, and indentation of two 
-          definitions with the others in pci_regs.h (Bjorn)
-            
-Changes for v2: 
-        - change subject label from the mistaken PCI (relic of an old 
-          solution which was later discarded) to cxl/core
-        - restore the class storage of sbr_masked() to static (another
-          relic of the old solution)
-
- drivers/cxl/core/pci.c        | 171 ++++++++++++++++++++++++++++++++++
- drivers/cxl/core/port.c       |  19 ++++
- drivers/cxl/cxlpci.h          |   3 +
- include/uapi/linux/pci_regs.h |   2 +
- 4 files changed, 195 insertions(+)
-
-diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-index f96ce884a213..1e75bd35b0f6 100644
---- a/drivers/cxl/core/pci.c
-+++ b/drivers/cxl/core/pci.c
-@@ -869,3 +869,174 @@ int cxl_port_get_possible_dports(struct cxl_port *port)
- 
- 	return ctx.count;
- }
-+
-+struct pci_saved_flags {
-+	u16 pci_command;
-+	u16 acs_ctrl;
-+};
-+
-+/*
-+ * pci_disable_acs_bme - disable ACS Source Validation and BME
-+ * @pdev: downstream port
-+ * @saved: pointer to pci_saved_acs_bme struct, for saving bit values
-+ *
-+ * Save the current ACS Source Validation and Bus Master Enable (BME)
-+ * bits before disabling them.
-+ */
-+static void pci_disable_acs_bme(struct pci_dev *pdev,
-+				struct pci_saved_flags *saved)
++static inline int device_set_driver_override(struct device *dev, const char *s)
 +{
-+	int pos;
-+	u16 field;
-+
-+	pos = pdev->acs_cap;
-+	if (!pos)
-+		return;
-+
-+	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &field);
-+	saved->acs_ctrl = field;
-+
-+	if (field & PCI_ACS_SV)
-+		pci_write_config_word(pdev, pos + PCI_ACS_CTRL,
-+				      field & ~PCI_ACS_SV);
-+
-+	pci_read_config_word(pdev, PCI_COMMAND, &field);
-+	saved->pci_command = field;
-+
-+	if (field & PCI_COMMAND_MASTER)
-+		pci_clear_master(pdev);
++	return __device_set_driver_override(dev, s, strlen(s));
 +}
-+
-+/*
-+ * pci_enable_acs_bme - enable ACS Source Validation and BME
-+ * @pdev: downstream port
-+ * @saved: pointer to pci_saved_acs_bme struct, for restoring bit values
-+ *
-+ * Restore the previously saved ACS Source Validation and Bus Master
-+ * Enable (BME) bits.
-+ */
-+static void pci_enable_acs_bme(struct pci_dev *pdev,
-+			       struct pci_saved_flags *saved)
-+{
-+	int pos;
-+	u16 field;
-+
-+	pos = pdev->acs_cap;
-+	if (!pos)
-+		return;
-+
-+	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &field);
-+	if (saved->acs_ctrl & PCI_ACS_SV)
-+		pci_write_config_word(pdev, pos + PCI_ACS_CTRL,
-+				      field | PCI_ACS_SV);
-+
-+	pci_read_config_word(pdev, PCI_COMMAND, &field);
-+	if (saved->pci_command & PCI_COMMAND_MASTER)
-+		pci_set_master(pdev);
-+}
-+
-+/**
-+ * cxl_port_pm_init_is_complete - check if the downstream port has completed PM
-+ * init
-+ *
-+ * @pdev: downstream port
-+ *
-+ * Check if the Port Power Management Initialization Complete bit is set in the
-+ * Downstream Port's CXL DVSEC Port Extended Status register.
-+ *
-+ * Returns true if PM init is complete, false otherwise.
-+ */
-+bool cxl_port_pm_init_is_complete(struct pci_dev *pdev)
-+{
-+	int pm_init_complete;
-+	u16 status;
-+	u16 dvsec;
-+
-+	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-+					  PCI_DVSEC_CXL_PORT);
-+	if (!dvsec)
-+		return false;
-+
-+	pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_PORT_EXT_STATUS,
-+			     &status);
-+	pm_init_complete = FIELD_GET(PCI_DVSEC_CXL_PORT_EXT_STATUS_PM_INIT_COMP,
-+				     status);
-+
-+	return !!pm_init_complete;
-+}
-+
-+static void mask_sbr(struct pci_dev *pdev)
-+{
-+	int dvsec;
-+	u16 reg;
-+
-+	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-+					  PCI_DVSEC_CXL_PORT);
-+	if (!dvsec)
-+		return;
-+
-+	pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_PORT_CTL, &reg);
-+
-+	pci_write_config_word(pdev, dvsec + PCI_DVSEC_CXL_PORT_CTL,
-+			      reg & ~PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR);
-+}
-+
-+static void unmask_sbr(struct pci_dev *pdev)
-+{
-+	int dvsec;
-+	u16 reg;
-+
-+	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-+					  PCI_DVSEC_CXL_PORT);
-+	if (!dvsec)
-+		return;
-+
-+	pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_PORT_CTL, &reg);
-+
-+	pci_write_config_word(pdev, dvsec + PCI_DVSEC_CXL_PORT_CTL,
-+			      reg | PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR);
-+}
-+
-+/**
-+ * cxl_port_retry_failed_pm_init - retry a downstream port's failed PM init
-+ *
-+ * @pdev: downstream port
-+ *
-+ * Retry a downstream CXL port's failed PM init according to CXL Erratum for
-+ * Section 8.1.5.1 - Port Power Management Initialization Complete.
-+ *
-+ * This entails saving and disabling the ACS Source Validation and Bus Master
-+ * enable bits, and unmasking and masking the SBR, before doing a secondary bus
-+ * reset and then restoring and re-enabling those bits.
-+ *
-+ * return: 0 on success, errors otherwise.
-+ */
-+int cxl_port_retry_failed_pm_init(struct pci_dev *pdev)
-+{
-+	struct pci_saved_flags saved;
-+	int ret;
-+
-+	if (!is_cxl_port(pdev->dev.parent))
-+		return -EINVAL;
-+
-+	pci_disable_acs_bme(pdev, &saved);
-+	unmask_sbr(pdev);
-+
-+	/* Generate Secondary Bus Reset */
-+	ret = pci_reset_bus(pdev);
-+	if (ret)
-+		dev_dbg(&pdev->dev, "Bus reset failed: %d\n", ret);
-+
-+	/*
-+	 * Wait until the Port Power Management Initialization
-+	 * Complete bit is set in the Downstream Port. CXL Spec 4.0
-+	 * Section 8.1.5.1 of the CXL spec specifies 100 ms as the
-+	 * max time needed for the PM Init Complete bit to be set.
-+	 */
-+	msleep(100);
-+
-+	mask_sbr(pdev);
-+	pci_enable_acs_bme(pdev, &saved);
-+
-+	return ret;
-+}
-diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
-index b69c2529744c..62fabcdf0faf 100644
---- a/drivers/cxl/core/port.c
-+++ b/drivers/cxl/core/port.c
-@@ -1829,12 +1829,31 @@ int devm_cxl_enumerate_ports(struct cxl_memdev *cxlmd)
- retry:
- 	for (iter = dev; iter; iter = grandparent(iter)) {
- 		struct device *dport_dev = grandparent(iter);
-+		struct pci_dev *dport_pdev = to_pci_dev(dport_dev);
- 		struct device *uport_dev;
- 		struct cxl_dport *dport;
+
+So if name is NULL, we oops in strlen() before we even hit the -EINVAL
+and WARN_ON().
+
+I don't believe we have any vfio-pci variant drivers where the name is
+NULL, but kasprintf() handling NULL as "(null)" was a consideration in
+this design, that even if there is no name the device is sequestered
+with a driver_override that won't match an actual driver.
+
+> I assume that vfio_pci_core drivers are expected to set the name in struct
+> vfio_device_ops in the first place and this code (silently) relies on this
+> invariant?
+
+We do expect that, but it was previously safe either way to make sure
+VFs are only bound to the same ops driver or barring that, at least
+don't perform a standard driver match.  The last thing we want to
+happen automatically is for a user owned PF to create SR-IOV VFs that
+automatically bind to native kernel drivers.
  
- 		if (is_cxl_host_bridge(dport_dev))
- 			return 0;
- 
-+		/*
-+		 * Check the downstream port's PM init status, and if it has
-+		 * failed retry PM init according to CXL Spec. 4.0 Sect. 8.1.5.1
-+		 * - Implementation Note
-+		 */
-+		if (!cxl_port_pm_init_is_complete(dport_pdev)) {
-+			dev_dbg(&cxlmd->dev,
-+				"PM init failed for %s, retrying PM init\n",
-+				dev_name(dport_dev));
-+
-+			cxl_port_retry_failed_pm_init(dport_pdev);
-+
-+			if (!cxl_port_pm_init_is_complete(dport_pdev))
-+				dev_dbg(&cxlmd->dev,
-+					"PM init failed retry for %s\n",
-+					dev_name(dport_dev));
-+		}
-+
- 		uport_dev = dport_dev->parent;
- 		if (!uport_dev) {
- 			dev_warn(dev, "at %s no parent for dport: %s\n",
-diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
-index 0cf64218aa16..0458096be2c4 100644
---- a/drivers/cxl/cxlpci.h
-+++ b/drivers/cxl/cxlpci.h
-@@ -101,4 +101,7 @@ static inline void devm_cxl_port_ras_setup(struct cxl_port *port)
- }
- #endif
- 
-+bool cxl_port_pm_init_is_complete(struct pci_dev *pdev);
-+int cxl_port_retry_failed_pm_init(struct pci_dev *pdev);
-+
- #endif /* __CXL_PCI_H__ */
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index ec1c54b5a310..6e0b81b2351b 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -1369,6 +1369,8 @@
- 
- /* CXL r4.0, 8.1.5: Extensions DVSEC for Ports */
- #define PCI_DVSEC_CXL_PORT				3
-+#define  PCI_DVSEC_CXL_PORT_EXT_STATUS			0x0A
-+#define   PCI_DVSEC_CXL_PORT_EXT_STATUS_PM_INIT_COMP	_BITUL(0)
- #define  PCI_DVSEC_CXL_PORT_CTL				0x0c
- #define   PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR		0x00000001
- 
--- 
-2.53.0
+> Alex, Jason: Should we keep this hunk above as is and check for a proper name in
+> struct vfio_device_ops in vfio_pci_core_register_device() with a subsequent
+> patch?
+
+Given the oops, my preference would be to roll it in here.  This change
+is what makes it a requirement that name cannot be NULL, where this was
+safely handled with kasprintf().  Thanks,
+
+Alex
+
+
+[1] https://lore.kernel.org/all/20260302002729.19438-2-dakr@kernel.org/
+
+> 
+> >  	} else if (action == BUS_NOTIFY_BOUND_DRIVER &&
+> >  		   pdev->is_virtfn && physfn == vdev->pdev) {
+> >  		struct pci_driver *drv = pci_dev_driver(pdev);  
 
