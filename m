@@ -1,53 +1,53 @@
 Received: from mxout70.expurgate.net (mxout70.expurgate.net [194.37.255.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4A563B27CA;
-	Mon, 30 Mar 2026 09:07:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47E193B27EE;
+	Mon, 30 Mar 2026 09:07:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.37.255.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774861658; cv=none; b=t6jDzjNK/Hm0faHPOvVqajhAG/VgZUYNRnGz3lABIsCL048gYAXeZqvk2edu8VBmzKoJs9RcdSSlwIY9NGxwMBky99Kf64XR+AONnq0nNIgcjqK1KRaE55HP/3iqPzsqLk3SicojgJmRgdy1LS8uVr5XcjvbjOQT+ZQvbE0aUuM=
+	t=1774861659; cv=none; b=DRGeUoqm62qmxmDQDoqIBkDRUqnPKhRzBeXK1NVLOyER2B6Gvx+scOhw0kjOyDaPVU3I9E7qhSdeZaDYkvlFEQKuZVvtU1XKicxLpqDvCaD3KVy+3l7kpcAYft7gOrbAn0eDdB+KcgAoAOZwxHGdrAo97Ow5vuEL4K1Xi3HDlRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774861658; c=relaxed/simple;
-	bh=kV1x/p8n2gNW/1XlpGwWYQrKNSFJXbcxq7jcYJjHsbQ=;
-	h=From:Subject:Date:Message-ID:MIME-Version:Content-Type:To:Cc; b=nvx67Xh5ACyrhLMqB6Wtax3QmSHXCFu0XLZhFBHFmXVAXSwOburBYhuOsMcCRgNT7JGbrMqQjaqu9BpBrSFi8C0Y2SEJEn6Vq4wxLqtWArbaSFYVgP2R1+nzbwpqw8IyWdZPKdezuqlALd7NFTn60SspdlDYLu7B17oIxdY24hg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=kc7dYnMD; arc=none smtp.client-ip=194.37.255.70
+	s=arc-20240116; t=1774861659; c=relaxed/simple;
+	bh=44idu4lYBdKXyDCFc9AO6ve7cpsNsJ7WQmMRL/XaSSA=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
+	 In-Reply-To:To:Cc; b=VT60gQyAqo+REvCLuu4vCOqnCTKMHDSO4DtBjk4wTnQYG2sUXG04OOZc5wFyUslYTNKoyfIO5ULu4VIMMZbNbVji1j4F5Kl2A6vDylpVh7EBMQTRoHekefIy/3audyy775+N33l2epeJk+qgRZZLAJrVViwhY99z6QRh9EUYO0c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=vAS07I3H; arc=none smtp.client-ip=194.37.255.70
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev.tdt.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="kc7dYnMD"
+	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="vAS07I3H"
 Received: from [194.37.255.9] (helo=mxout.expurgate.net)
 	by relay.expurgate.net with smtp (Exim 4.92)
 	(envelope-from <prvs=65635f912b=fe@dev.tdt.de>)
-	id 1w78ap-008YcU-QI; Mon, 30 Mar 2026 11:07:31 +0200
+	id 1w78aq-008YeP-GA; Mon, 30 Mar 2026 11:07:32 +0200
 Received: from [195.243.126.94] (helo=securemail.tdt.de)
 	by relay.expurgate.net with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
 	(Exim 4.92)
 	(envelope-from <fe@dev.tdt.de>)
-	id 1w78ap-00Axko-6T; Mon, 30 Mar 2026 11:07:31 +0200
+	id 1w78ap-009iaO-Uj; Mon, 30 Mar 2026 11:07:31 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev.tdt.de;
-	s=z1-selector1; t=1774861650;
-	bh=7pM4hlhtYfXww5JQG6DsXa/+dbsmLcxeWYuej1fsOP8=;
-	h=From:Subject:Date:To:Cc:From;
-	b=kc7dYnMD3WSxhWU2qdkzSnqx1XMVbUU/8qgXmOz6HXZ+ZxuJTV19S/gB/CZTEreSE
-	 ucYrgEgNjwgvsF5Sm30Wv3DU8mAc+sZ1c5HoZVPAtGbgH1VrIoNqWbmUZnZM6qjlo/
-	 rrBKGcsTI6l0YkBQ0/FElz0W8Zgqbk06gUt82ft1nRzNhqjJMDfXkoKwtEXyZpOYn0
-	 OrfFJAxL3eJYu/6X6ukOhxkCc7EdOwWR7BHuOVnRbRdLzdclVMVWv0ngRkVQVzQlao
-	 +LRlZ+SjJblKUYnIttGmYH7B1I6iqdvaVmqlHVcyN24Wejv42KkQCOMJm+Sp8f0zLw
-	 0mXkGknv7kVuw==
+	s=z1-selector1; t=1774861651;
+	bh=Lo8WEUkHygeOqbMVPhJFGYFHIJXRE1Uzi8HNns3bkEw=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
+	b=vAS07I3HaPpi0MC8vRKNLCCWN2U6M5z/8BPTxwgWzPhoCDkdTQYRtQUdPsQq5EEDq
+	 7u4e02n76XY3ajnK1YDON6eMTsHbdFRY+9k4+3IizEEJUxTl7fxvX4rgQeQBQzszkk
+	 fOufYlok8C2pZ+HJOI43qhrc+z3qwTznCZKKoNK/odj17ImIcE/FjNERupgid8+yRx
+	 H5esvO2tXlpzeVM/INpKx7b6gbDwuXQc2AaVxyyHq29zmxxAt52D1U+VbccNtSolrp
+	 QCdX7mXeYLDTTqZegkG3U7LPzyhNDg5/koX/l4ljf9RiT9b3ag8WDDYzPd5g16NP+e
+	 ZkyfdZUZ4Gifw==
 Received: from securemail.tdt.de (localhost [127.0.0.1])
-	by securemail.tdt.de (Postfix) with ESMTP id B02F6240041;
-	Mon, 30 Mar 2026 11:07:30 +0200 (CEST)
+	by securemail.tdt.de (Postfix) with ESMTP id 8AD7C240036;
+	Mon, 30 Mar 2026 11:07:31 +0200 (CEST)
 Received: from mail.dev.tdt.de (unknown [10.2.4.42])
-	by securemail.tdt.de (Postfix) with ESMTP id 9D1A5240036;
-	Mon, 30 Mar 2026 11:07:30 +0200 (CEST)
+	by securemail.tdt.de (Postfix) with ESMTP id 80E7D240045;
+	Mon, 30 Mar 2026 11:07:31 +0200 (CEST)
 Received: from [10.2.3.40] (unknown [10.2.3.40])
-	by mail.dev.tdt.de (Postfix) with ESMTPSA id 565362040A;
-	Mon, 30 Mar 2026 11:07:30 +0200 (CEST)
+	by mail.dev.tdt.de (Postfix) with ESMTPSA id 5D5E02040A;
+	Mon, 30 Mar 2026 11:07:31 +0200 (CEST)
 From: Florian Eckert <fe@dev.tdt.de>
-Subject: [PATCH v2 0/7] PCI: intel-gw: Fixes to make the driver working
- again
-Date: Mon, 30 Mar 2026 11:07:10 +0200
-Message-ID: <20260330-pcie-intel-gw-v2-0-8bd07367a298@dev.tdt.de>
+Date: Mon, 30 Mar 2026 11:07:16 +0200
+Subject: [PATCH v2 6/7] dt-bindings: PCI: intel,lgm-pcie: Make atu resource
+ mandatory
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -56,10 +56,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAD49ymkC/3WMQQrDIBAAvxL2XIOrbSQ95R8lhxDXZKGYoGJbg
- n+vzb3HGZg5IFJginBvDgiUOfLmK6hLA/M6+YUE28qgpOqkRiP2mavziZ5ieYmb7KVC1K4nhNr
- sgRy/z99jrLxyTFv4nPuMP/vvlFFIYRyhNqqb7NUNlnKbbGotwVhK+QK+QSlgqwAAAA==
-X-Change-ID: 20260317-pcie-intel-gw-50902113f9e1
+Message-ID: <20260330-pcie-intel-gw-v2-6-8bd07367a298@dev.tdt.de>
+References: <20260330-pcie-intel-gw-v2-0-8bd07367a298@dev.tdt.de>
+In-Reply-To: <20260330-pcie-intel-gw-v2-0-8bd07367a298@dev.tdt.de>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
 	=?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
 	Manivannan Sadhasivam <mani@kernel.org>,
@@ -74,63 +73,80 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	devicetree@vger.kernel.org, Florian Eckert <fe@dev.tdt.de>,
 	Eckert.Florian@googlemail.com, ms@dev.tdt.de
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1774861650; l=1997;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1774861650; l=2279;
  i=fe@dev.tdt.de; s=20260205; h=from:subject:message-id;
- bh=kV1x/p8n2gNW/1XlpGwWYQrKNSFJXbcxq7jcYJjHsbQ=;
- b=BRDgttkR6UdS5jPjRXbvxOwTYIFgn3p5D7/HCL3fsZWg1av9vvPRQcOT+kZhKlUV/TZbvMUuX
- VL5GF/NONAOAxrUmvEbz7hmDNwRpAQZvm7zeu0KsJO2SJwfw5Zh3RCQ
+ bh=44idu4lYBdKXyDCFc9AO6ve7cpsNsJ7WQmMRL/XaSSA=;
+ b=6a+kh0mrGISPBeBV/cRAwP8gS1HnnlsT0AWSdGXFxEO18dzeS8qY2onc1qUgtozQ9Uoeo0n+s
+ flstiyub/yWCgJKA0My87ZAtUKMOtJqQkxL0lz0Z3fWChoNPmSrCaEh
 X-Developer-Key: i=fe@dev.tdt.de; a=ed25519;
  pk=q7Pvv3Au2sAVRhBz5UF7ZqUPNxUwXQ78Jdqu8E6Negk=
-X-purgate: clean
-X-purgate-ID: 151534::1774861651-052C8842-63FB2240/0/0
 X-purgate-type: clean
+X-purgate-ID: 151534::1774861652-ECECE842-7064A64C/0/0
+X-purgate: clean
 
-This patch series fixes the 'intel-gw' driver to work again with the
-current pcie framework. The following changes are:
+The ATU information is already set in the dwc core if it is specified in
+the DTS. The driver uses its own value here [1]. This information is
+hardware specific and should therefore be maintained in the DTS rather
+than in the source.
 
-* Move interrupt 'enable' to its own function to improve readability,
-  and add additinal register writes just as the Maxlinear kernel does in
-  their SDK.
-* Enable clock for the PHY before PHY init call.
-* Add missing 'start_link' callback that was added to the PCIe dwc
-  framework.
-* Read ATU base assignment from the DTS rather than specifying it in the
-  source of the driver.
-* Remove unused preprocessor define.
-* Mark driver as orphaned as the maitainer's email no longer works
+Backwards compatibility is not an issue here [5], as the driver is
+exclusively used by Maxlinear.
+
+Old DTS entry for PCIe:
+
+reg = <0xd1000000 0x1000>,
+      <0xd3000000 0x20000>,
+      <0xd0c41000.0x1000>;
+reg-names = "dbi", "config", "app";
+
+New DTS entry for PCIe:
+
+reg = <0xd1000000 0x1000>,
+      <0xd10c0000 0x1000>,
+      <0xd3000000 0x20000>,
+     <0xd0c41000.0x1000>;
+reg-names = "dbi", "atu", "config", "app";
+
+[1] https://elixir.bootlin.com/linux/v6.19.10/source/drivers/pci/controller/dwc/pcie-intel-gw.c#L301
+[2] https://lore.kernel.org/all/BY3PR19MB507667CE7531D863E1E5F8AEBDD82@BY3PR19MB5076.namprd19.prod.outlook.com/
 
 Signed-off-by: Florian Eckert <fe@dev.tdt.de>
 ---
-Changes in v2:
-- Added additional information to the commit descriptions
-- Add additional patch to mark driver as orphaned as the maintainer's
-  email no longer works.
-- Fix wrong error path for enable clock before phy init.
-- Add new patch to update the devicetree documentation for the 'atu'
-  resource
-- Add additional recipients responsible for documenting the dervicetree
-  bindings.
-- Link to v1: https://lore.kernel.org/r/20260317-pcie-intel-gw-v1-0-7fe13726ad4f@dev.tdt.de
+ Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
----
-Florian Eckert (7):
-      PCI: intel-gw: Remove unused define
-      PCI: intel-gw: Move interrupt enable to own function
-      PCI: intel-gw: Enable clock before phy init
-      PCI: intel-gw: Add start_link callback function
-      PCI: intel-gw: Remove atu base assignment
-      dt-bindings: PCI: intel,lgm-pcie: Make atu resource mandatory
-      MAINTAINERS: Remove bouncing intel-gw maintainer
+diff --git a/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml b/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+index 54e2890ae6314ac6847fc23f49440d05d66d87d4..e4b781f57e8ae84a3ffc33635a421e1a5761587e 100644
+--- a/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+@@ -29,12 +29,14 @@ properties:
+   reg:
+     items:
+       - description: Controller control and status registers.
++      - description: Internal Address Translation Unit (iATU) registers.
+       - description: PCIe configuration registers.
+       - description: Controller application registers.
+ 
+   reg-names:
+     items:
+       - const: dbi
++      - const: atu
+       - const: config
+       - const: app
+ 
+@@ -94,9 +96,10 @@ examples:
+       #address-cells = <3>;
+       #size-cells = <2>;
+       reg = <0xd0e00000 0x1000>,
++            <0xd0ec0000 0x1000>,
+             <0xd2000000 0x800000>,
+             <0xd0a41000 0x1000>;
+-      reg-names = "dbi", "config", "app";
++      reg-names = "dbi", "atu", config", "app";
+       linux,pci-domain = <0>;
+       max-link-speed = <4>;
+       bus-range = <0x00 0x08>;
 
- .../devicetree/bindings/pci/intel-gw-pcie.yaml     |  5 ++-
- MAINTAINERS                                        |  3 +-
- drivers/pci/controller/dwc/pcie-intel-gw.c         | 49 ++++++++++++----------
- 3 files changed, 31 insertions(+), 26 deletions(-)
----
-base-commit: f338e77383789c0cae23ca3d48adcc5e9e137e3c
-change-id: 20260317-pcie-intel-gw-50902113f9e1
-
-Best regards,
 -- 
-Florian Eckert <fe@dev.tdt.de>
+2.47.3
 
