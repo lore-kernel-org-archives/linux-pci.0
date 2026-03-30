@@ -1,186 +1,144 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f174.google.com (mail-qk1-f174.google.com [209.85.222.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92C982FFDE3
-	for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 14:33:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F7E83290A9
+	for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 14:49:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774881210; cv=none; b=NBn/7U8lVIUeMWqp8d+BRdrm6758yPBSS6iw4+UVzofmIU6oifFBFM24kSFM5cQcha8kKMq3GAQfPvbly8Lg6Px329JSzj76REjprHsQnOSlYfsxMqm0dTvo0ilCM343nkaXa8//zehxFNHl2rcHXyLb3oB1171U8z2jeHrECZU=
+	t=1774882178; cv=none; b=NLaISYrxaQJhzOJp/ypYk+9Kv4KWZ5GXVYUGzIpUjSmL9EoJNjQ5E+1XqLjWWIJQ1kpKJ2Cec1ancgGEvEMhahg7aG/I/BNEwODLDehD/2j/xcaYHLHMz/oXtkIgX43rSCQi5q8F28sthBdpt/oTpL9mAuIXi6Cgp7Kv3b4CeiA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774881210; c=relaxed/simple;
-	bh=EJDYmWiip0C6AEVDsb5lFb2OSfd3udanPdD09BGg9OM=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=hx+R95BgaHqJtMp6aDAM91UuTe6K/xpwB949ehXpQafMBBKr+7pfxzAuT+0Iuy9EOZQP9m26mG0dSc2BOYvkcajXitl4NU9dYVit8xPukt4ob1mHNQT45pv828/j6uvDfpEmcWcFTj1cL+DBqZAhhbMKFHrFc0FR1UCqJRofHf0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=H3goL3e8; arc=none smtp.client-ip=198.175.65.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1774882178; c=relaxed/simple;
+	bh=vl8O2R6691EXUtiEM6WZdymHuL7V1zcKmzD+/lkOIfU=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=isaSgPhwFASCCMyzIs55JnSP3+icv0rJzkZSztBwE//3nSLnZhUNbhxyVyJtbBvP/5lP6VW39UhfnWQefH8BDWoOAXR6dZXx84dnhwDOU/tz8ltXafSIHSGFczI5UkcStVZls2r/yZwHq1UPHdu5wOEGhtr2RvQ0Z0oTuoN/wos=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ieee.org; spf=pass smtp.mailfrom=ieee.org; dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b=SODBN7gm; arc=none smtp.client-ip=209.85.222.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ieee.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ieee.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="H3goL3e8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774881208; x=1806417208;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version:content-id;
-  bh=EJDYmWiip0C6AEVDsb5lFb2OSfd3udanPdD09BGg9OM=;
-  b=H3goL3e8L36cWIw0dyMOEZnQ1Jrj2YHAseG5zofK+ZdKpklVJYQEHL/a
-   IgYaL2fFdOvSu9vBSiQt4AE6CTeDAQ5krz5URahSAQWToIIzeJ/iikkJh
-   xdnynHdT4IJMZVjs0Bml9ZzxH6D7BeTvB6ECJ4TR5GhPRaCrXk5ZjFFhS
-   ojPW98lH4GllQwleW/Dd7grn09Up5OYH+y/ZdMT/aRNMlDYX//no34yqM
-   Z1YT1mMhxrvB1IYdZvGgVAwuOdWwEtShuaZtp/HnH6aBa7Fj88ROTu/31
-   MIMVvCoa1wj+uK5M3oSyT3Hke8ig0/BTik/KcMkTrO8VEF+iVAjVD4E5C
-   A==;
-X-CSE-ConnectionGUID: 7gJwlJ6BSH6sHpZWGiEHtQ==
-X-CSE-MsgGUID: gGgxun8ZSBOvVggh0LUs1g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11743"; a="98484571"
-X-IronPort-AV: E=Sophos;i="6.23,150,1770624000"; 
-   d="scan'208";a="98484571"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2026 07:33:28 -0700
-X-CSE-ConnectionGUID: 7qoeVi9PQoW8qSXwvdWASg==
-X-CSE-MsgGUID: fOnn8wntQzCdPBfZuXKwJg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,150,1770624000"; 
-   d="scan'208";a="226326602"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.153])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2026 07:33:25 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Mon, 30 Mar 2026 17:33:22 +0300 (EEST)
-To: Thorsten Leemhuis <regressions@leemhuis.info>, 
-    =?ISO-8859-15?Q?Jonas_H=F6glund?= <firefly@firefly.nu>
-cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-    regressions@lists.linux.dev
-Subject: Re: [REGRESSION] amdgpu with Thunderbolt eGPU bracket fails since
- new bridge window alignment calculation code
-In-Reply-To: <ec9af6c3-755b-488a-8400-cef9eeeac509@leemhuis.info>
-Message-ID: <740b10c4-a54a-f776-d564-d3c977d90ba6@linux.intel.com>
-References: <a5f23340-2b84-4734-be11-f5a97c188195@app.fastmail.com> <ec9af6c3-755b-488a-8400-cef9eeeac509@leemhuis.info>
+	dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b="SODBN7gm"
+Received: by mail-qk1-f174.google.com with SMTP id af79cd13be357-8cd7c372929so495429285a.0
+        for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 07:49:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ieee.org; s=google; t=1774882174; x=1775486974; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=CIFnVccMuHwr9dEag2kDinb3ZQcKveHam1hNdbO26w0=;
+        b=SODBN7gmmel6D0lC5ChdZmKtzyJIJhFlcWt77C7+vZiR6o2TXmLcQeXzUlgB2Zp5NU
+         JnKpYsb4Gn2dvkHXMRpECZQFjS8smHFbY+tgqeOiWuAP8YEzqcaoSgLaU/QkN+xry9yg
+         tY0j+DyziyencSCz8/GT70atIEPXe5x1uNVNw=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774882174; x=1775486974;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=CIFnVccMuHwr9dEag2kDinb3ZQcKveHam1hNdbO26w0=;
+        b=HLFKdX2THnUWKTIZFx6D1HSFfpfH9wa3pOIoeC41HMH3dHGtKcqc9Zc8Lkf0X2ytFw
+         uC5kwiRC4xNUt6auJIzbHyB+9xdMftpTXKWsvCNluRKwVynvKcpFAzmbJ3VWT0l/sqLF
+         8NBXqbcpspw1Jru1zixKLd3tL3jaSMVw8oXW3gAWL7dmxvuyrGFoiw29XrbU4QLSUDdG
+         DRoJey1bbYVStz25F7feUp5hFIqNpZwJETCuxOZcg9pk4sGXu0Pjx/IY21qxIqK5/xUs
+         Upo/QoH1CWkFGUNNxNp7CdI9cbHeTWjippWp8qvwnR3ayayGIPIKUSAZzUyEpd5dFYZl
+         igaA==
+X-Gm-Message-State: AOJu0YwOK9HOvBKwpg0rTPfA0togHv0kJBdO1PZp7fVZBR6R3g6JuIwP
+	NSayFKY/t76MQrWK18NuOS1i5YceHUzK9IZpE4hVWIMwKxaH5/yFwBLlMPpGnNu+5fg6fBfwaD3
+	z2jw4wg==
+X-Gm-Gg: ATEYQzzfRI3e0LDTml+OXi2a4/D9YKkIk6AUTvYGI7oaWAJiMAtnXv83rYhqu87Z94x
+	5zVSabn0Gce8sY8cJr7WEWF/WTmnmScs9EOUH1VAOhPfqsODNzmyA0P4nO8JLY48uSwTBwiZ/ie
+	2tgvVsCuMPuHXmovpmzv6hTADl1Ndw5ikEoBnodolmgS4TuSeAJfTb6YuStoGg0Xe8XKkzdOvX3
+	xn5KfxkLAYuySEKLQpTdT+2PD+IbSyrbWl8jEpArDBsc4oTn78cHpAjpEYqz3/i2OR8Wj1W1fS0
+	uG6VCzaBfJYSHt1ykSicqCbSFzk+bIxBESWg75hCASd0qosTKfCG8cnPFQ1x6KQWh9iKAPwxwyX
+	p0dOzqLKsChhj5U6++zoeu68HT1ucukVAwH3Ppx+IyR/nAA9p3itpCDVlqWnizTc4aDkyLfJYGA
+	I5uVvzF7G4/PoXsc/S5Yumnp8L5lzC9SbJGg==
+X-Received: by 2002:a05:620a:708d:b0:8cd:9a1d:4fb with SMTP id af79cd13be357-8d01c5dff66mr1583239185a.10.1774882173892;
+        Mon, 30 Mar 2026 07:49:33 -0700 (PDT)
+Received: from [192.168.153.215] ([73.29.38.247])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-8d02803f1b6sm631056885a.22.2026.03.30.07.49.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 30 Mar 2026 07:49:33 -0700 (PDT)
+Message-ID: <c0b1932ca75fc5eebb3aad97b76f88a9607875e3.camel@ieee.org>
+Subject: Re: ReBAR over Thunderbolt
+From: Cristian Cocos <cristi@ieee.org>
+To: Ilpo =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: linux-pci@vger.kernel.org
+Date: Mon, 30 Mar 2026 10:49:32 -0400
+In-Reply-To: <2f6838fa-dd7f-848d-4788-8b04a23b5753@linux.intel.com>
+References: <a177e7cf1e638c874a7b2e9e68027094bca68041.camel@ieee.org>
+	  <9cfa81e1-373c-cfdf-89a1-5d7c169f3577@linux.intel.com>
+	 <46877507be26e594e42ccf8aa9daaac2656dbd1d.camel@ieee.org>
+	 <2f6838fa-dd7f-848d-4788-8b04a23b5753@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.0 (by Flathub.org) 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323328-550039827-1774878051=:968"
-Content-ID: <b364258d-96bc-40d4-f95e-6a49701fe2e2@linux.intel.com>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---8323328-550039827-1774878051=:968
-Content-Type: text/plain; CHARSET=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-ID: <9a77dced-5a63-1f76-e93c-dc34e9d6399c@linux.intel.com>
-
-On Mon, 30 Mar 2026, Thorsten Leemhuis wrote:
-
-> [adding author and committer to list of recipients while dropping stable
-> from CC, as the problem seems to happen in mainline, too]
+On Mon, 2026-03-30 at 16:23 +0300, Ilpo J=C3=A4rvinen wrote:
+> > [=C2=A0 292.204936] pcieport 0000:02:00.0: bridge window [mem
+> > 0x6000000000-
+> > 0x60f04fffff 64bit pref]: was not released (still contains assigned
+> > resources)
+> > [=C2=A0 292.204937] pcieport 0000:00:07.0: bridge window [mem
+> > 0x6000000000-
+> > 0x60ffffffff 64bit pref]: was not released (still contains assigned
+> > resources)
 >=20
-> On 3/28/26 00:02, Jonas H=F6glund wrote:
-> >=20
-> > I have an AMD GPU in an external Thunderbolt enclosure that recently
-> > stopped working with the latest longterm kernel release.  The GPU in
-> > question is an AMD RX 6750 XT.
-> >=20
-> >     [...]
-> >     amdgpu 0000:3e:00.0: amdgpu: vm size is 262144 GB, 4 levels, block =
-size is 9-bit, fragment size is 9-bit
-> >     amdgpu 0000:3e:00.0: BAR 2 [mem 0x74200000-0x743fffff 64bit pref]: =
-releasing
-> >     amdgpu 0000:3e:00.0: amdgpu: Problem resizing BAR0 (-16).
-> >     amdgpu 0000:3e:00.0: BAR 2 [mem 0x74200000-0x743fffff 64bit pref]: =
-assigned
-> >     amdgpu 0000:3e:00.0: amdgpu: VRAM: 12272M 0x0000008000000000 - 0x00=
-000082FEFFFFFF (12272M used)
-> >     amdgpu 0000:3e:00.0: amdgpu: GART: 512M 0x0000000000000000 - 0x0000=
-00001FFFFFFF
-> >     resource: resource sanity check: requesting [mem 0x0000000000000000=
--0xffffffffffffffff], which spans more than PCI Bus 0000:00 [mem 0x000a0000=
--0x000bffff window]
-> >     ------------[ cut here ]------------
-> >     WARNING: CPU: 7 PID: 2260 at arch/x86/mm/pat/memtype.c:720 memtype_=
-reserve_io+0xfd/0x110
-> >     [...]
-> >=20
-> > Searching for the issue I found this very similar report from last year=
-:
-> > https://lkml.org/lkml/2025/6/9/88
-> >=20
-> > so I suppose this might be a re-regression of the same issue(?).
-
-I'm skeptical it's exactly the same issue even if the end result is the=20
-same.
-
-The resource fitting algorithm has been in a state of constant flux due to=
-=20
-various fixes and improvements into it over all the recent two years.
-Unfortunately, fixing one thing (or even moving towards fixing an issue)=20
-may break another thing due to how different resource interact.
-
-> > I checked out latest longterm (v6.18.20) and bisected, which took me to
-> > commit b855d99 (upstream commit 3958bf16), which is
-> > "PCI: Stop over-estimating bridge window size".
+> These 2 lines indicate where the reason likely lies. BAR resize
+> attempted to release these windows but there are some sibling
+> resources that prevent the resize from succeeding. I cannot see what
+> those resources are from these excerpts.
 >=20
-> Ilpo, Bjorn: Jonas in a subthread later confirmed that this problem
-> happens with 7.0-rc5, too, so it's likely something for you.
+> Basically, the resize walks upwards in the PCI hierarchy and tries to
+> free any bridge window it encounters in order to allow them to be
+> sized freely (enlarged). The device whose BAR is being resized has
+> its resources released prior to the resize commencing, but any other
+> device under any of those bridge windows are not and they pin their
+> bridge windows in-place (it won't be possible to release them in the
+> general case as some of those devices may be in use at this point).
 >=20
-> Side note: I noticed the "PCI: Improve head free space usage" series
-> referred to the commit in question; wondering if that is related:
-> https://lore.kernel.org/all/20260324165633.4583-1-ilpo.jarvinen@linux.int=
-el.com/
+> It may be possible to workaround this problem by manually removing
+> the sibling devices that pin the relevant bridge windows, performing
+> resize through sysfs manually, and then rescanning (but with GPUs it
+> may be problematic if it's the primary GPU).
 
-That "PCI: Improve head free space usage" series is certainly fixing two=20
-known corner case with the commit 3958bf16e2fe ("PCI: Stop over-estimating=
-=20
-bridge window size") but with only heavily filtered logs, I'm unable to=20
-confirm if it applies to this case as well.
+Thank you. Your suggestion does indeed work! The resize succeeds after
+removing the three empty TB downstream ports that were pinning the
+bridge windows. The BAR went from 256 MB to 16 GB. However, it appears
+that the re-probe after rebinding hits an amdgpu driver bug: Failed to
+create device file mem_info_preempt_used (EEXIST from stale sysfs),
+which cascades to sw_init of IP block <gmc_v12_0> failed -17 =E2=86=92 NULL
+deref in amdgpu_discovery_fini.
 
-From=20the limited logs, I suspect this is primarily a BAR resize rollback=
-=20
-failure which leaves the resources into a state worse than they were prior=
-=20
-to the resize. The commit 337b1b566db0 ("PCI: Fix restoring BARs on BAR=20
-resize rollback path") attempts to rectify that. The entire series is here=
-=20
-(not all of it went to stable):
+Be that as it may, I do see a workaround happening via a udev rule or
+systemd service that removes the three empty ports immediately after TB
+hotplug and before amdgpu binds. However, I can't help but feel that it
+is the kernel that should handle this sort of situations without any
+user side involvement. The problem (and please take this as a
+suggestion) seems to be that the kernel's PCI resource allocator
+speculatively assigns those three empty (see topology excerpt below)
+ports large prefetchable bridge windows "just in case" a device appears
+behind them later. That's what eats up the 4 GB root port window. If
+the allocator didn't hand out speculative windows to empty ports =E2=80=94 =
+or,
+even better, if it checked ReBAR capabilities on the one port that does
+have a device and gave it priority =E2=80=94 the resize would work without
+removing anything.
 
-https://lore.kernel.org/all/20251113162628.5946-1-ilpo.jarvinen@linux.intel=
-=2Ecom/T/#m9b0e316c94f7abc0686e58f902d05ff35aeac3ac
+Laptop (Raptor Lake-P SoC)
+  =E2=94=94=E2=94=80 00:07.0  Integrated TB4 root port          =E2=86=90 l=
+aptop
+       =E2=94=94=E2=94=80 02:00.0  8086:5786 Switch Upstream     =E2=86=90 =
+Razer Core X V2
+            =E2=94=9C=E2=94=80 03:00.0  Switch Downstream =E2=86=92 GPU pat=
+h (04=E2=86=9205=E2=86=9206:00.0)
+            =E2=94=9C=E2=94=80 03:01.0  Switch Downstream =E2=86=92 empty
+            =E2=94=9C=E2=94=80 03:02.0  Switch Downstream =E2=86=92 empty
+            =E2=94=94=E2=94=80 03:03.0  Switch Downstream =E2=86=92 empty
 
-The fixes to that series are here:
+Again, please take this suggestion for what it's worth (i.e. my $.02),
+and many thanks for your attention to this matter.
 
-5528fd38f230 ("PCI: Fix Resizable BAR restore order")
-08d9eae76b85 ("PCI: Fix BAR resize rollback path overwriting ret")
-
-(I'm sorry how complex this all is.)
-
---=20
- i.
-
-> > After the bisect I tried reverting the commit on top of v6.18.20 (going
-> > back to the old way of calculating alignment), and this is sufficient
-> > for the eGPU to dock properly again.
-> >=20
-> > I've attached a longer excerpt of the kernel logs from a failing boot
-> > (let me know if a full dmesg would be helpful and I can find somewhere
-> > to upload it).  I've also attached an excerpt when connecting the eGPU
-> > in a "good" case, since I figured the memory adress ranges could be
-> > useful.
-> >=20
-> >=20
-> > Hardware:
-> >   Machine: Dell XPS 13 9310 (0991)
-> >   GPU: AMD RX 6750 XT
-> >   Dock: EXP GDC TH3P4G3
-> >=20
-> > Distribution: NixOS
-> > Architecture: x86-64
-> >=20
-> > #regzbot introduced: b855d99
-> >=20
-> > Let me know if any additional information would be helpful.
-> >=20
-> > Thanks,
-> > Jonas
->=20
---8323328-550039827-1774878051=:968--
+Cristian
