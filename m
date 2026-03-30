@@ -1,103 +1,429 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35CE536404D
-	for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 06:32:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8B9737D121;
+	Mon, 30 Mar 2026 06:39:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774852365; cv=none; b=o5mLq8nfntzOl60W2h6qsbdFMj8nJVNsDLkrFz1p0oAIyuncj/OpOe22LBiMX10t5YW2vM56qGdzq8G6zS8Ee6NcXZQhrQtiGbVQrl0nphSKTef9ml/1XjFudfWDphs0+Bey+3nDEcJ8ZqzQ25jKH4Mu71S6nv2QLhsRXeFyvBQ=
+	t=1774852779; cv=none; b=C/q6r/XuEGShAKNaRpTTkkgFv9xwieh2GhVEFfXoLmsMZubptWb2W90+MbnaTFQ5Dxuj2EyC+TcmnX8casCRJBLeWAnfYra64B2uYLB4I1Y53eHNIct+ULdmf68+K+rHncD2cK8/ScZNfXI6kTOTfLZo0oQck5Tc/Qzd8ejOB1Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774852365; c=relaxed/simple;
-	bh=xEwmlZq3D6O8mgk3EElXlb8le3nX0/6C57zHo/hfV/0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=L+odUGv0PyI4p58BfokGpEEkMppmyI0gsZyG99gsm/I/DAjmK76FRY1ReqP1vNJdMgkUk4Aope4uDnQ7j80dC/4GPOKhl1YqujOASouAlIFR5GV/AqCHRXqyPgEZHC7+08MRhV3lLiclL6L/pfJiUMfLyzjd13hELtWpwhKbxkM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=lCsFoY2/; arc=none smtp.client-ip=80.241.56.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1774852779; c=relaxed/simple;
+	bh=tmYiyZorA0z4TjfSrT93Sw2Vmxyiubwxlrt4sweRxmw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=l6oWnrn5SUSvvENkTEWvJMjIbyaiCJmZnAFcdkiTQrTpCwhuBjEzEr0JTp6WmlaaAVsbZyYpawsf8eoJl12KU9vaQOa0lPEa/TnMqrNSXVCo1X77lFQSbSrg/SoKhzj8wwnfhnn8COfcRSimC1eqImQm4jgzt4qXf+6t+oAu/HQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Rhcsv21U; arc=none smtp.client-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="lCsFoY2/"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4fkhHz2S4Yz9twV;
-	Mon, 30 Mar 2026 08:32:31 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1774852351;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=D2ECkB4mOSlmWvMXRknxyN+wK1aHs3Stn2HSImKd9F8=;
-	b=lCsFoY2/dNW6hlSHuK7yrDdFgJBAKkCBvgX74WSUhyc+5kgVUWl7kBqUbI5TvPHeouHGeT
-	XLBkKF9ngRc+6pC0IobwsLhrm2BT7C0JvRzgCFFVvMKDp7aGqOtOxaz3U9NPRtcO4XwLi+
-	2ScXEKq9Y2xs99qt+UQBcmpThi3H++Q003MlIkgv0hrIBr5uNwcRa/y2pGGjP90Mk2QpRg
-	vml7y3sR91XtyTvUUZuBF/sjhKxtKUB9x4p49JxuXhWFJTZP3GdHxwkFHeVbblSuKT5pJW
-	nUP6gGP4v8MnjCTgtbQjqjEPgTN6bX277z9/n+CXPTUde1kS6/mlA1oUYzR4OA==
-Message-ID: <e2b13d94-3f0c-4c2f-87b9-209f1ac04f23@mailbox.org>
-Date: Mon, 30 Mar 2026 08:32:28 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Rhcsv21U"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1774852777; x=1806388777;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=tmYiyZorA0z4TjfSrT93Sw2Vmxyiubwxlrt4sweRxmw=;
+  b=Rhcsv21UbiYMjBJsLwrvAIm+OM8yIcX37UqOjQUyIXhApQDwcrBpZxj3
+   0kSN3QgmngJOzSCYBZspUPdjJ59PEnWaaLhV5os75WlSybt9sy9xvXfVU
+   CsRbzaxHO4z8EHxvzuBj3Yw9DOYooBiLxdacA9J6yZt0ydIE7MQPTZ8Dx
+   3uc2M5IA1DegQvNjU0a74HWkO8AzzIoWP61NxV7eaAUn71EuSEcRE9c48
+   ndaR/Ds2HluK/LvKseYN7E6CoAKGn/AVT9n/LW5fYMu3HwDo8xpUSRT3/
+   ZfAaeCwwbbGtJ1iQBBTMUf/cJYFczq9rwIxGWWpJea6V0eaJS1Ot5RqWv
+   Q==;
+X-CSE-ConnectionGUID: huXMy3gpRKWFmkYVTM5x8A==
+X-CSE-MsgGUID: n8V19QxaSCuZGcAHQU7KvQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11743"; a="79700630"
+X-IronPort-AV: E=Sophos;i="6.23,149,1770624000"; 
+   d="scan'208";a="79700630"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Mar 2026 23:39:30 -0700
+X-CSE-ConnectionGUID: tAKsGNzHRwmgAAMe9qbaWg==
+X-CSE-MsgGUID: zmsKSNbKRtOa7FlX6Xlgkg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,149,1770624000"; 
+   d="scan'208";a="222646418"
+Received: from weba0957.iind.intel.com (HELO WEBA0932.iind.intel.com) ([10.224.186.34])
+  by fmviesa007.fm.intel.com with ESMTP; 29 Mar 2026 23:39:23 -0700
+From: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+To: linux-bluetooth@vger.kernel.org
+Cc: linux-pci@vger.kernel.org,
+	bhelgaas@google.com,
+	ravishankar.srivatsa@intel.com,
+	chethan.tumkur.narayan@intel.com,
+	Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+Subject: [PATCH v1] Bluetooth: btintel_pcie:Support Product level reset.
+Date: Mon, 30 Mar 2026 12:08:41 +0530
+Message-ID: <20260330063842.1121545-1-chandrashekar.devegowda@intel.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] PCI/AER: Stop ruling out unbound devices as error source
-To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
- Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org
-References: <734338c2e8b669db5a5a3b45d34131b55ffebfca.1774605029.git.lukas@wunner.de>
-Content-Language: en-US
-From: Stefan Roese <stefan.roese@mailbox.org>
-In-Reply-To: <734338c2e8b669db5a5a3b45d34131b55ffebfca.1774605029.git.lukas@wunner.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MBO-RS-ID: 0d1365e5608b1ab5bd3
-X-MBO-RS-META: kz7zti7iux89zom9i7139ty3r94syf3m
+Content-Transfer-Encoding: 8bit
 
-On 3/27/26 10:56, Lukas Wunner wrote:
-> When searching for the error source, the AER driver rules out devices
-> whose enable_cnt is zero.  This was introduced in 2009 by commit
-> 28eb27cf0839 ("PCI AER: support invalid error source IDs") without
-> providing a rationale.
-> 
-> Drivers typically call pci_enable_device() on probe, hence the enable_cnt
-> check essentially filters out unbound devices.  At the time of the commit,
-> drivers had to opt in to AER by calling pci_enable_pcie_error_reporting()
-> and so any AER-enabled device could be assumed to be bound to a driver.
-> The check thus made sense because it allowed skipping config space
-> accesses to devices which were known not to be the error source.
-> 
-> But since 2022, AER is universally enabled on all devices when they are
-> enumerated, cf. commit f26e58bf6f54 ("PCI/AER: Enable error reporting when
-> AER is native").
-> 
-> Errors may very well be reported by unbound devices, e.g. due to link
-> instability.  By ruling them out as error source, errors reported by them
-> are neither logged nor cleared.  When they do get bound and another error
-> occurs, the earlier error is reported together with the new error, which
-> may confuse users.  Stop doing so.
-> 
-> Fixes: f26e58bf6f54 ("PCI/AER: Enable error reporting when AER is native")
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> Cc: stable@vger.kernel.org # v6.0+
-> ---
->   drivers/pci/pcie/aer.c | 2 --
->   1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index 4299c55..384d026 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -1039,8 +1039,6 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
->   	 *      3) There are multiple errors and prior ID comparing fails;
->   	 * We check AER status registers to find possible reporter.
->   	 */
-> -	if (atomic_read(&dev->enable_cnt) == 0)
-> -		return false;
+When driver encounters a TOP exception, ACPI methods will be called
+for Product level reset since Wifi and BT share the same TOP, BT driver
+will first reprobe the wifi driver and then reprobe BT.
 
-Reviewed-by: Stefan Roese <stefan.roese@mailbox.org>
+Tested by:
+1) Simulating TOP exception: sudo hcitool cmd 3f 4d 0A 00
+And verified that the device went through PLDR by checking the ACPI
+debug logs.
+2) Toggle of sysfs attribute for BT reset for FLR i.e
+echo 1 > /sys/class/bluetooth/hci0/reset
 
-Thanks,
-Stefan
+Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+---
+ drivers/bluetooth/btintel.c      |   6 +-
+ drivers/bluetooth/btintel.h      |   7 ++
+ drivers/bluetooth/btintel_pcie.c | 163 +++++++++++++++++++++++++++++--
+ drivers/bluetooth/btintel_pcie.h |   6 ++
+ 4 files changed, 171 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/bluetooth/btintel.c b/drivers/bluetooth/btintel.c
+index dcaaa4ca02b9..4426327ebc61 100644
+--- a/drivers/bluetooth/btintel.c
++++ b/drivers/bluetooth/btintel.c
+@@ -67,9 +67,10 @@ static struct {
+ 	u32        fw_build_num;
+ } coredump_info;
+ 
+-static const guid_t btintel_guid_dsm =
++const guid_t btintel_guid_dsm =
+ 	GUID_INIT(0xaa10f4e0, 0x81ac, 0x4233,
+ 		  0xab, 0xf6, 0x3b, 0x2a, 0xc5, 0x0e, 0x28, 0xd9);
++EXPORT_SYMBOL_GPL(btintel_guid_dsm);
+ 
+ int btintel_check_bdaddr(struct hci_dev *hdev)
+ {
+@@ -2624,7 +2625,7 @@ static void btintel_set_ppag(struct hci_dev *hdev, struct intel_version_tlv *ver
+ 	kfree_skb(skb);
+ }
+ 
+-static int btintel_acpi_reset_method(struct hci_dev *hdev)
++int btintel_acpi_reset_method(struct hci_dev *hdev)
+ {
+ 	int ret = 0;
+ 	acpi_status status;
+@@ -2663,6 +2664,7 @@ static int btintel_acpi_reset_method(struct hci_dev *hdev)
+ 	kfree(buffer.pointer);
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(btintel_acpi_reset_method);
+ 
+ static void btintel_set_dsm_reset_method(struct hci_dev *hdev,
+ 					 struct intel_version_tlv *ver_tlv)
+diff --git a/drivers/bluetooth/btintel.h b/drivers/bluetooth/btintel.h
+index 0e9ca99aaaae..70d812ad36a2 100644
+--- a/drivers/bluetooth/btintel.h
++++ b/drivers/bluetooth/btintel.h
+@@ -79,6 +79,8 @@ struct intel_tlv {
+ #define BTINTEL_HWID_SCP2	0x20	/* Scorpius Peak2 - Nova Lake */
+ #define BTINTEL_HWID_BZRIW	0x22	/* BlazarIW - Wildcat Lake */
+ 
++extern const guid_t btintel_guid_dsm;
++
+ struct intel_version_tlv {
+ 	u32	cnvi_top;
+ 	u32	cnvr_top;
+@@ -289,6 +291,7 @@ int btintel_bootloader_setup_tlv(struct hci_dev *hdev,
+ int btintel_shutdown_combined(struct hci_dev *hdev);
+ void btintel_hw_error(struct hci_dev *hdev, u8 code);
+ void btintel_print_fseq_info(struct hci_dev *hdev);
++int btintel_acpi_reset_method(struct hci_dev *hdev);
+ #else
+ 
+ static inline int btintel_check_bdaddr(struct hci_dev *hdev)
+@@ -422,4 +425,8 @@ static inline void btintel_hw_error(struct hci_dev *hdev, u8 code)
+ static inline void btintel_print_fseq_info(struct hci_dev *hdev)
+ {
+ }
++static inline int btintel_acpi_reset_method(struct hci_dev *hdev)
++{
++	return -ENODEV;
++}
+ #endif
+diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
+index 05f82bc3f0d7..abac1ae5df8f 100644
+--- a/drivers/bluetooth/btintel_pcie.c
++++ b/drivers/bluetooth/btintel_pcie.c
+@@ -15,6 +15,7 @@
+ #include <linux/wait.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
++#include <linux/acpi.h>
+ 
+ #include <linux/unaligned.h>
+ #include <linux/devcoredump.h>
+@@ -100,6 +101,22 @@ enum {
+ 	BTINTEL_PCIE_D3
+ };
+ 
++enum {
++	BTINTEL_PCIE_DSM_SET_RESET_TIMING = 1,
++	BTINTEL_PCIE_DSM_GET_RESET_TIMING = 2,
++	BTINTEL_PCIE_DSM_BT_PLDR_CONFIG = 3,
++	BTINTEL_PCIE_DSM_GET_RESET_TYPE = 4,
++	BTINTEL_PCIE_DSM_DYNAMIC_PLDR = 5,
++	BTINTEL_PCIE_DSM_GET_RESET_METHOD = 6,
++	BTINTEL_PCIE_DSM_SET_PLDR_DELAY = 7,
++};
++
++enum btintel_dsm_internal_product_reset_mode {
++	BTINTEL_PCIE_DSM_PLDR_MODE_EN_PROD_RESET	= BIT(0),
++	BTINTEL_PCIE_DSM_PLDR_MODE_EN_WIFI_FLR		= BIT(1),
++	BTINTEL_PCIE_DSM_PLDR_MODE_EN_BT_OFF_ON		= BIT(2),
++};
++
+ /* Structure for dbgc fragment buffer
+  * @buf_addr_lsb: LSB of the buffer's physical address
+  * @buf_addr_msb: MSB of the buffer's physical address
+@@ -126,6 +143,11 @@ struct btintel_pcie_dbgc_ctxt {
+ 	struct btintel_pcie_dbgc_ctxt_buf bufs[BTINTEL_PCIE_DBGC_BUFFER_COUNT];
+ };
+ 
++/* structure for reset and recovery
++ * @pdev: The pci_dev for controller
++ * @work: work struct for reset
++ * @reset type: Reset can be FLR or PLDR
++ */
+ struct btintel_pcie_removal {
+ 	struct pci_dev *pdev;
+ 	struct work_struct work;
+@@ -2254,6 +2276,112 @@ static void btintel_pcie_inc_recovery_count(struct pci_dev *pdev,
+ }
+ 
+ static int btintel_pcie_setup_hdev(struct btintel_pcie_data *data);
++static void btintel_pcie_reset(struct hci_dev *hdev);
++
++static int btintel_pcie_acpi_reset_method(struct btintel_pcie_data *data)
++{
++	union acpi_object *obj, argv4;
++	acpi_handle handle;
++	int ret;
++	struct pldr_mode {
++		u16	cmd_type;
++		u16	cmd_payload;
++	} __packed;
++
++	/* set 1 for _PRR mode
++	 * Product Reset (PLDR Abort flow)
++	 */
++	static const struct pldr_mode mode = {
++		.cmd_type = 1,
++		.cmd_payload = BTINTEL_PCIE_DSM_PLDR_MODE_EN_PROD_RESET |
++			       BTINTEL_PCIE_DSM_PLDR_MODE_EN_WIFI_FLR,
++	};
++	struct hci_dev *hdev = data->hdev;
++
++	handle = ACPI_HANDLE(GET_HCIDEV_DEV(data->hdev));
++	if (!handle) {
++		bt_dev_dbg(data->hdev, "No support for bluetooth device in ACPI firmware");
++		return -EACCES;
++	}
++
++	if (!acpi_has_method(handle, "_PRR")) {
++		bt_dev_dbg(data->hdev, "No support for _PRR ACPI method, falling back to FLR");
++		btintel_pcie_reset(data->hdev);
++		return -ENODEV;
++	}
++
++	argv4.buffer.type = ACPI_TYPE_BUFFER;
++	argv4.buffer.length = sizeof(mode);
++	argv4.buffer.pointer = (void *)&mode;
++
++	obj = acpi_evaluate_dsm(handle, &btintel_guid_dsm, 0,
++				BTINTEL_PCIE_DSM_DYNAMIC_PLDR, &argv4);
++	if (!obj) {
++		bt_dev_err(data->hdev, "Failed to call dsm to set reset method");
++		return -EIO;
++	}
++	ACPI_FREE(obj);
++
++	pci_dev_lock(data->pdev);
++	pci_save_state(data->pdev);
++	ret = btintel_acpi_reset_method(hdev);
++	if (ret)
++		bt_dev_err(data->hdev, "ACPI _PRR reset failed (%d),PLDR incomplete",
++			   ret);
++	pci_restore_state(data->pdev);
++	pci_dev_unlock(data->pdev);
++	return ret;
++}
++
++static void btintel_pcie_perform_pldr(struct btintel_pcie_removal *removal)
++{
++	struct pci_dev *pdev = removal->pdev;
++	struct pci_dev *wifi = NULL;
++	struct pci_bus *bus;
++	struct btintel_pcie_data *data;
++	/* on integrated we have to look up by ID (same bus) */
++	static const struct pci_device_id wifi_device_ids[] = {
++	#define WIFI_DEV(_id) { PCI_DEVICE(PCI_VENDOR_ID_INTEL, _id) }
++		WIFI_DEV(0xA840), /* LNL */
++		WIFI_DEV(0xE440), /* PTL-P */
++		WIFI_DEV(0xE340), /* PTL-H */
++		WIFI_DEV(0xD340), /* NVL-H */
++		WIFI_DEV(0x6E70), /* NVL-S */
++		WIFI_DEV(0x4D40), /* WCL */
++		WIFI_DEV(0xD240), /* RZL-H */
++		WIFI_DEV(0x6C40), /* RZL-M */
++		{}
++	};
++	struct pci_dev *tmp = NULL;
++
++	data = pci_get_drvdata(pdev);
++
++	bus = pdev->bus;
++	if (!bus)
++		return;
++
++	/* If ACPI reset fell back to FLR or failed, skip reprobe to avoid
++	 * racing with the FLR work already scheduled.
++	 */
++	if (btintel_pcie_acpi_reset_method(data))
++		return;
++
++	list_for_each_entry(tmp, &bus->devices, bus_list) {
++		if (pci_match_id(wifi_device_ids, tmp)) {
++			wifi = pci_dev_get(tmp);
++			break;
++		}
++	}
++
++	if (wifi) {
++		if (device_reprobe(&wifi->dev))
++			BT_ERR("WiFi reprobe failed for BDF:%s", pci_name(wifi));
++		pci_dev_put(wifi);
++	}
++
++	if (device_reprobe(&pdev->dev))
++		BT_ERR("BT reprobe failed for BDF:%s", pci_name(pdev));
++}
+ 
+ static void btintel_pcie_removal_work(struct work_struct *wk)
+ {
+@@ -2266,9 +2394,13 @@ static void btintel_pcie_removal_work(struct work_struct *wk)
+ 	pci_lock_rescan_remove();
+ 
+ 	if (!pdev->bus)
+-		goto error;
++		goto out;
+ 
+ 	data = pci_get_drvdata(pdev);
++	if (!data) {
++		BT_WARN("PCI driver data is NULL, aborting removal work");
++		goto out;
++	}
+ 
+ 	btintel_pcie_disable_interrupts(data);
+ 	btintel_pcie_synchronize_irqs(data);
+@@ -2276,12 +2408,16 @@ static void btintel_pcie_removal_work(struct work_struct *wk)
+ 	flush_work(&data->rx_work);
+ 
+ 	bt_dev_dbg(data->hdev, "Release bluetooth interface");
++	if (data->reset_type == BTINTEL_PCIE_IOSF_PRR_PLDR) {
++		btintel_pcie_perform_pldr(removal);
++		goto out;
++	}
+ 	btintel_pcie_release_hdev(data);
+ 
+ 	err = pci_reset_function(pdev);
+ 	if (err) {
+ 		BT_ERR("Failed resetting the pcie device (%d)", err);
+-		goto error;
++		goto out;
+ 	}
+ 
+ 	btintel_pcie_enable_interrupts(data);
+@@ -2291,7 +2427,7 @@ static void btintel_pcie_removal_work(struct work_struct *wk)
+ 	if (err) {
+ 		BT_ERR("Failed to enable bluetooth hardware after reset (%d)",
+ 		       err);
+-		goto error;
++		goto out;
+ 	}
+ 
+ 	btintel_pcie_reset_ia(data);
+@@ -2301,9 +2437,9 @@ static void btintel_pcie_removal_work(struct work_struct *wk)
+ 	err = btintel_pcie_setup_hdev(data);
+ 	if (err) {
+ 		BT_ERR("Failed registering hdev (%d)", err);
+-		goto error;
++		goto out;
+ 	}
+-error:
++out:
+ 	pci_dev_put(pdev);
+ 	pci_unlock_rescan_remove();
+ 	kfree(removal);
+@@ -2339,15 +2475,19 @@ static void btintel_pcie_hw_error(struct hci_dev *hdev, u8 code)
+ 	struct pci_dev *pdev = dev_data->pdev;
+ 	time64_t retry_window;
+ 
+-	if (code == 0x13) {
+-		bt_dev_err(hdev, "Encountered top exception");
+-		return;
+-	}
++	btintel_pcie_dump_debug_registers(hdev);
+ 
+ 	data = btintel_pcie_get_recovery(pdev, &hdev->dev);
+ 	if (!data)
+ 		return;
+ 
++	if (code == 0x13)
++		dev_data->reset_type = BTINTEL_PCIE_IOSF_PRR_PLDR;
++	else
++		dev_data->reset_type = BTINTEL_PCIE_IOSF_PRR_FLR;
++
++	bt_dev_err(hdev, "Encountered exception err:0x%x triggering: %s", code,
++		   dev_data->reset_type == BTINTEL_PCIE_IOSF_PRR_PLDR ? "PLDR" : "FLR");
+ 	retry_window = ktime_get_boottime_seconds() - data->last_error;
+ 
+ 	if (retry_window < BTINTEL_PCIE_RESET_WINDOW_SECS &&
+@@ -2503,6 +2643,10 @@ static int btintel_pcie_probe(struct pci_dev *pdev,
+ 
+ 	data->boot_stage_cache = 0x00;
+ 	data->img_resp_cache = 0x00;
++	/* FLR can be invoked by echoing to debugfs path, so explicitly
++	 * initialized
++	 */
++	data->reset_type = BTINTEL_PCIE_IOSF_PRR_FLR;
+ 
+ 	err = btintel_pcie_config_pcie(pdev, data);
+ 	if (err)
+@@ -2701,6 +2845,7 @@ static int btintel_pcie_resume(struct device *dev)
+ 	if (data->pm_sx_event == PM_EVENT_FREEZE ||
+ 	    data->pm_sx_event == PM_EVENT_HIBERNATE) {
+ 		set_bit(BTINTEL_PCIE_CORE_HALTED, &data->flags);
++		data->reset_type = BTINTEL_PCIE_IOSF_PRR_FLR;
+ 		btintel_pcie_reset(data->hdev);
+ 		return 0;
+ 	}
+diff --git a/drivers/bluetooth/btintel_pcie.h b/drivers/bluetooth/btintel_pcie.h
+index e3d941ffef4a..856673fb2bd7 100644
+--- a/drivers/bluetooth/btintel_pcie.h
++++ b/drivers/bluetooth/btintel_pcie.h
+@@ -144,6 +144,11 @@ enum msix_mbox_int_causes {
+ 	BTINTEL_PCIE_CSR_MBOX_STATUS_MBOX4 = BIT(3), /* cause MBOX4 */
+ };
+ 
++enum btintel_pcie_reset_type {
++	BTINTEL_PCIE_IOSF_PRR_FLR = 0,
++	BTINTEL_PCIE_IOSF_PRR_PLDR = 1,
++};
++
+ #define BTINTEL_PCIE_MSIX_NON_AUTO_CLEAR_CAUSE	BIT(7)
+ 
+ /* Minimum and Maximum number of MSI-X Vector
+@@ -514,6 +519,7 @@ struct btintel_pcie_data {
+ 	struct txq	txq;
+ 	struct rxq	rxq;
+ 	u32	alive_intr_ctxt;
++	enum btintel_pcie_reset_type	reset_type;
+ 	struct btintel_pcie_dbgc	dbgc;
+ 	struct btintel_pcie_dump_header dmp_hdr;
+ 	u8	pm_sx_event;
+-- 
+2.43.0
 
