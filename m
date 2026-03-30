@@ -1,93 +1,152 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from mail-m49220.qiye.163.com (mail-m49220.qiye.163.com [45.254.49.220])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD39C39E180;
-	Mon, 30 Mar 2026 08:28:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B56E13AEF24;
+	Mon, 30 Mar 2026 08:36:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774859309; cv=none; b=QQPKIVey5uDGBdW5l7S/uV6IG9YrC6947FD1CFVU+weW0TQvgme+/ae0/X1gt0o99643JlxA9cFJlHqe02gg3dnGygNO59MeVYQgqZtN91ma+7TYt7MaiMT8n/B+6XZr7zvQu1UuBv/N/PV4jMao2eSEjEbciIr5lt2EHpO9uyY=
+	t=1774859770; cv=none; b=hhA6unORdVhF1evFDBgZgcsP8JPwscwhcFspepFCQwvOB17W99HmZNuusdlNrktl3+wjFLy3aLAgvk8RIqewmYjw7ICpsTDXpBeTyjdY6CrJWjbqFqrqv3P7898PuyYsAScBvp9R1C6O5yMiUzk3CBG7bSbJiCtvKmmfqu2u3C4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774859309; c=relaxed/simple;
-	bh=l2bHC8LwINvO+IZl5D/cdzklvOqQJAZ3NWR5QW2XcC0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ntI+p6c+P1x7iMVXgJgzQPTFXlIc/Wa9kE4OIhiIYwcf09ju/UAGsHVRcs9oCq2UPNIRoht8xOUtKEtI8V1jv6q+xP2rq+F+3INasycRentfFYWcd501Nitd9rhwZQ7P6MGWyfp5Gq0uCVBqfKkd85SFqiVU4j28dlcjGo3QmhQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dB0lIU49; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1774859770; c=relaxed/simple;
+	bh=iHpY9fAXXIjP8wRbTiDeVHAB5cyvHsuMPHAh5cQ7ZiM=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=shB4nXbF9cedalXYW23hmIMJZFMOhVkbni4dRCRjGXOV51iKWyyF4Po+9eHbQXyZ3DrJNKT05G0jpkzcvUykSmsTFozcrh31FJA0Pynz9j06ZV3XsIEb6KLmleR/I8KN+Byp1uuh86a7oiXg5YUcr6Sjl0hvxQNfeIzX+dKrnQQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=LsvAZ1Nf; arc=none smtp.client-ip=45.254.49.220
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dB0lIU49"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774859307; x=1806395307;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=l2bHC8LwINvO+IZl5D/cdzklvOqQJAZ3NWR5QW2XcC0=;
-  b=dB0lIU49IOupKZrMiJtajUwWXhEYxVof0L3MRfThsUv+XnW6HxRMnKrw
-   bHBXLvUJg1jbsoT3sDM+F9GI5OfW6E7vzrw9T3X47lnEVZKXpm2N6L5/Y
-   lE2gMQRKDohAVW/ovVSZ9l77wbVm82W3ym9lFv5ZKAAT5FQOCwuF7BWeh
-   s/r/fiAbnoWtE85nO5nqTR6lJAIX6R5FDOrFqE5wyIoLdPdriylscg+ML
-   Cx5NMYrnNHDjzLEyYZ5XRRyMRe3hfCQg+MVPZ5kGHkaAj3UrJuM2wLJiy
-   I+WK4eavpLQXkoyYjChICXyZGJ9bZr4/9C0TctHCrCD1XomOQLw61gJ0C
-   g==;
-X-CSE-ConnectionGUID: pnEy1YcyQqawQG4dy2wsjg==
-X-CSE-MsgGUID: kUve1cxhRdixBCb+CJLdfA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11743"; a="75023584"
-X-IronPort-AV: E=Sophos;i="6.23,149,1770624000"; 
-   d="scan'208";a="75023584"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2026 01:28:27 -0700
-X-CSE-ConnectionGUID: Yjis9Aw/T8CvuiGSt6vczQ==
-X-CSE-MsgGUID: G0CulPKMSymqjBYrprB7sA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,149,1770624000"; 
-   d="scan'208";a="227603436"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by fmviesa004.fm.intel.com with ESMTP; 30 Mar 2026 01:28:24 -0700
-Date: Mon, 30 Mar 2026 16:07:18 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: "Edgecombe, Rick P" <rick.p.edgecombe@intel.com>
-Cc: "Williams, Dan J" <dan.j.williams@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>,
-	"x86@kernel.org" <x86@kernel.org>, "Gao, Chao" <chao.gao@intel.com>,
-	"Xu, Yilun" <yilun.xu@intel.com>,
-	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-	"kas@kernel.org" <kas@kernel.org>,
-	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
-	"Jiang, Dave" <dave.jiang@intel.com>,
-	"Li, Xiaoyao" <xiaoyao.li@intel.com>,
-	"Verma, Vishal L" <vishal.l.verma@intel.com>,
-	"Duan, Zhenzhong" <zhenzhong.duan@intel.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 02/31] x86/virt/tdx: Move bit definitions of
- TDX_FEATURES0 to public header
-Message-ID: <acovNqeS5c74pVgL@yilunxu-OptiPlex-7050>
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-3-yilun.xu@linux.intel.com>
- <4228c004ebd59f9737fb39c6c9815bf6e7711acc.camel@intel.com>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="LsvAZ1Nf"
+Received: from [172.16.12.17] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 38ce06cc6;
+	Mon, 30 Mar 2026 16:35:54 +0800 (GMT+08:00)
+Message-ID: <e9e8495e-6674-1d8a-a55f-618967c9dbf8@rock-chips.com>
+Date: Mon, 30 Mar 2026 16:35:53 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4228c004ebd59f9737fb39c6c9815bf6e7711acc.camel@intel.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.1
+Cc: shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+ mayank.rana@oss.qualcomm.com, quic_vbadigan@quicinc.com,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kwilczynski@kernel.org>,
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jingoo Han <jingoohan1@gmail.com>
+Subject: Re: [PATCH v3 3/3] PCI: qcom: Program T_POWER_ON
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+References: <20260311-t_power_on_fux-v3-0-9b1f1d09c6f3@oss.qualcomm.com>
+ <20260311-t_power_on_fux-v3-3-9b1f1d09c6f3@oss.qualcomm.com>
+ <04fdfe0b-5867-0a94-75ec-44cec913756d@rock-chips.com>
+ <6e843004-62ec-46e2-a7c7-5e0ad18d4954@oss.qualcomm.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <6e843004-62ec-46e2-a7c7-5e0ad18d4954@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9d3de29d0109cckunmd1408ba6e4d82e
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQhlLSlZNThkeSkweGk9CTh1WFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=LsvAZ1Nf7zRa2Di/7Q73ua6eEdKQ/0r6Yrk51EYbjxkZYe8cjnKx+LUyWwCx0+sHTqq3KnyYiOR5QDo6fTc5MqDoET+t1YpgU/AiTCQSrbOZ44+JIUrG7FVFsE/QmyOPD/XnM4Q4iRwQvNq3sZkiXBxgX8iZLvkc9fqQvL2TH7w=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=JXSvhKyX5vdc6cd+UrhRNh4Cy38xxoLfH9FMX96t05c=;
+	h=date:mime-version:subject:message-id:from;
 
-On Fri, Mar 27, 2026 at 11:45:39PM +0000, Edgecombe, Rick P wrote:
-> On Sat, 2026-03-28 at 00:01 +0800, Xu Yilun wrote:
-> > Move bit definitions of TDX_FEATURES0 to TDX core public header.
+在 2026/03/30 星期一 16:16, Krishna Chaitanya Chundru 写道:
 > 
-> Patch seems reasonable, but not sure about the "public header" language. Maybe
-> more widely accessibly header? Or a better name?
 > 
+> On 3/13/2026 8:19 AM, Shawn Lin wrote:
+>> 在 2026/03/11 星期三 20:40, Krishna Chaitanya Chundru 写道:
+>>> Some platforms have incorrect T_POWER_ON value programmed in hardware.
+>>> Generally these will be corrected by bootloaders, but not all targets
+>>> support bootloaders to program correct values due to that
+>>> LTR_L1.2_THRESHOLD value calculated by aspm driver can be wrong, which
+>>> can result in improper L1.2 exit behavior and if AER happens to be
+>>> supported and enabled, the error may be *reported* via AER.
+>>>
+>>> Parse "t-power-on-us" property from each root port node and program them
+>>> as part of host initialization using dw_pcie_program_t_power_on() before
+>>> link training.
+>>>
+>>> This property in added to the dtschema here[1].
+>>>
+>>> Signed-off-by: Krishna Chaitanya Chundru 
+>>> <krishna.chundru@oss.qualcomm.com>
+>>> Link[1]: 
+>>> https://lore.kernel.org/all/20260205093346.667898-1-krishna.chundru@oss.qualcomm.com/ 
+>>>
+>>> ---
+>>>   drivers/pci/controller/dwc/pcie-qcom.c | 13 +++++++++++++
+>>>   1 file changed, 13 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c 
+>>> b/drivers/pci/controller/dwc/pcie-qcom.c
+>>> index 
+>>> 67a16af69ddc75fca1b123e70715e692a91a9135..63d5628e988d3c07f42099c0d86e6b80fd54ce32 
+>>> 100644
+>>> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+>>> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+>>> @@ -269,6 +269,7 @@ struct qcom_pcie_perst {
+>>>   struct qcom_pcie_port {
+>>>       struct list_head list;
+>>>       struct phy *phy;
+>>> +    u32 l1ss_t_power_on;
+>>
+>> u16?
+>>
+>>>       struct list_head perst;
+>>>   };
+>>>   @@ -1283,6 +1284,14 @@ static int qcom_pcie_phy_power_on(struct 
+>>> qcom_pcie *pcie)
+>>>       return 0;
+>>>   }
+>>>   +static void qcom_pcie_configure_ports(struct qcom_pcie *pcie)
+>>> +{
+>>> +    struct qcom_pcie_port *port;
+>>> +
+>>> +    list_for_each_entry(port, &pcie->ports, list)
+>>> +        dw_pcie_program_t_power_on(pcie->pci, port->l1ss_t_power_on);
+>>> +}
+>>> +
+>>>   static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
+>>>   {
+>>>       struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>>> @@ -1317,6 +1326,8 @@ static int qcom_pcie_host_init(struct 
+>>> dw_pcie_rp *pp)
+>>>       dw_pcie_remove_capability(pcie->pci, PCI_CAP_ID_MSIX);
+>>>       dw_pcie_remove_ext_capability(pcie->pci, PCI_EXT_CAP_ID_DPC);
+>>>   +    qcom_pcie_configure_ports(pcie);
+>>> +
+>>>       qcom_pcie_perst_deassert(pcie);
+>>>         if (pcie->cfg->ops->config_sid) {
+>>> @@ -1759,6 +1770,8 @@ static int qcom_pcie_parse_port(struct 
+>>> qcom_pcie *pcie, struct device_node *node
+>>>       if (ret)
+>>>           return ret;
+>>>   +    of_property_read_u32(node, "t-power-on-us", 
+>>> &port->l1ss_t_power_on);
+>>
+>> Ditto?
+> the property has -us and doesn't have $ref to indicate if it is u32 or 
+> u16, by default it is u32 property only.
+> can we can't keep it as u16 even if have always less than u16.
 
-Yes, I try to make it more explicit, is it better:
+It came from dw_pcie_program_t_power_on(u16 t_power_on) which
+take u16, so the value will be truncated anyway. Well, it's up to you,
+just a bypass comment. :)
 
-    x86/virt/tdx: Move TDX_FEATURES0 bit defines to arch x86 header
-
-    Move TDX_FEATURES0 bit definitions to arch x86 header.
-
-    ...
+> 
+> - Krishna Chaitanya.
+>>> +
+>>>       port->phy = phy;
+>>>       INIT_LIST_HEAD(&port->list);
+>>>       list_add_tail(&port->list, &pcie->ports);
+>>>
+> 
+> 
