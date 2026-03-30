@@ -1,104 +1,119 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 334173BAD84;
-	Mon, 30 Mar 2026 10:19:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5DEA3939D2;
+	Mon, 30 Mar 2026 10:35:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774865940; cv=none; b=PjdF9FeL8Jaqo8vO6sqBh3w6DL520ZOX1Y6OZiaw0cFmhL3sgn2jnTkFDbSGiaSf9T/Ajux6b2AzpD0z8tbk2YWHXLXEZ1i5y7EXZTCgWwfGeHItGQk7w+KsQxkCNpPMd/Qz5guooqpR1/m4L1QBXhwJNWTHOkP0w3O+Vs9UvNw=
+	t=1774866936; cv=none; b=TuAtnSLpeotI3rY55DPPWODEwfuGkvSIFFGqJIfP584b4KB8h3dQH4N9v+dtb7PhTQcA8OSLo1zqjkd/p/AIj6fkoBHpb45bRzmpnLdojRD8mqgjPtMMWEtB2gPAguxz7wcum2/fYPMjCyJh0dszw7bzYnFysjQ3a5WgCU0vKgo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774865940; c=relaxed/simple;
-	bh=zkPIFYlcvlNBwRpjkVxQHKinU444u5TIQ3o5lO3cjw4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jQLt/KVYnGZ0+Nf2HFZWinytp//pyZ3AdooOTqrTTsBD78IZWBV8BOvDCo619KK9h9AsOtAEbHHYEH2hrHFX99RbNKEZj7n1t+fmppZNfnr/v81bxg5kWc4h9jcnve1xJXp434jyqDsFypKUlku+0DVYO4ssTrgCOjuuGGLV4Hc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mUFoVZC8; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774866936; c=relaxed/simple;
+	bh=vUl3C+hLMk6pb/LBrY02ABcydDGLrD4LLOEIrXmobl8=;
+	h=Date:Content-Type:MIME-Version:From:Cc:To:In-Reply-To:References:
+	 Message-Id:Subject; b=suXjfyG1g/knfp8hi1HoQU7/HNDgeN0BA7pULR3U1A6jLlzf7ow97suWHTxL5JWk07IsUnqUBVgAitm6MeGs1jWZ4HGv7UVKgK9iZWhhOVmkRoyBZIZL1xy0c4eJLyjUeQA1/sp+b0KlDdVMj1+iovcKBY0LAxkpN2CavNViGZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FtPSG4sK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mUFoVZC8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D7C5C4CEF7;
-	Mon, 30 Mar 2026 10:18:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FtPSG4sK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0E62C4CEF7;
+	Mon, 30 Mar 2026 10:35:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774865940;
-	bh=zkPIFYlcvlNBwRpjkVxQHKinU444u5TIQ3o5lO3cjw4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mUFoVZC8BT1abPQSVnwCo6KS/5EN1PEfjba+c1Plp7X8QHOibbkg4xN9DTDdknSPj
-	 TPpYZ+91NJut/Gv5uOiDwUSvKqC27NJdvQhVewydS3Y2FM9s8xlLFVd5UFAjJZdL+6
-	 BYgrQpculCEb85wKPXecIjQvOieHuFBruJz8jyRbW+sUrlbMqwhAwXqKvn3RlXT62S
-	 5l78j+fxjTqNRDLlFsa5GzNaCobxmacRLJ8HuScxl1OsVBE2G0cw7wYt3hBr8CMoA6
-	 TYqUq8KJagKnoL/Q5W05nSgNtBj7ogoC1TJ6AdVvJ/HYdaUsLHUcYg+8jrNpsthpEz
-	 /Gm+wjW1iKHCw==
-Date: Mon, 30 Mar 2026 15:48:51 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Hongxing Zhu <hongxing.zhu@nxp.com>
-Cc: Frank Li <frank.li@nxp.com>, 
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>, 
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "robh@kernel.org" <robh@kernel.org>, 
-	"bhelgaas@google.com" <bhelgaas@google.com>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, 
-	"kernel@pengutronix.de" <kernel@pengutronix.de>, "festevam@gmail.com" <festevam@gmail.com>, 
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev" <imx@lists.linux.dev>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, 
-	Qiang Yu <qiang.yu@oss.qualcomm.com>
-Subject: Re: [PATCH v2] PCI: imx6: Don't remove MSI capability For
- i.MX7D/i.MX8M
-Message-ID: <5nom7wnhrr57jvb6komumg3fjkbavsq5ecz2pd43rc5tsmnqev@ag6ld453s2lu>
-References: <20260319091823.446030-1-hongxing.zhu@nxp.com>
- <kqv3x4qocp7rkas5oedlpzd43h3ez7dg26hqnfgubbjdhhxlwe@rfnsicbv7qba>
- <AS8PR04MB8833AE3B8D106CE446EF89E58C52A@AS8PR04MB8833.eurprd04.prod.outlook.com>
+	s=k20201202; t=1774866936;
+	bh=vUl3C+hLMk6pb/LBrY02ABcydDGLrD4LLOEIrXmobl8=;
+	h=Date:From:Cc:To:In-Reply-To:References:Subject:From;
+	b=FtPSG4sKIDnR1qGdX7ktB2CO7G885okKWr7bd5Hch8sQzfvEmavAfgj/dZGAgBA0X
+	 xDGKysPrSfmhGcuyrGolItFHcvixwIxCgx3FqAqMqTdGUu0vB7N8i7orWClEVs4yn9
+	 eV0IFkeGpS/jj7cg5tzxsJBvABxCA4R+QMUqmwMIcDCmuK+DbVXI7nFAiAPNmjTHBF
+	 Cr9s2aYJofkpCzr/S+PkyIXCYoNY4wXn/fRBrkZzIpjEstx7NV10rm+uGDkb6V2Cjh
+	 eRLLl+sRhplnWK4+cT51M+mtkCT+2Zp9zLMYCN2RVhfT3Sn/1zUUTWem4u2yJ5HIh1
+	 9XCFD8RQ2XS6w==
+Date: Mon, 30 Mar 2026 05:35:31 -0500
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <AS8PR04MB8833AE3B8D106CE446EF89E58C52A@AS8PR04MB8833.eurprd04.prod.outlook.com>
+From: "Rob Herring (Arm)" <robh@kernel.org>
+Cc: Johan Hovold <johan+linaro@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, devicetree@vger.kernel.org, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, linux-kernel@vger.kernel.org, 
+ Ajay Agarwal <ajayagarwal@google.com>, Rahul Tanwar <rtanwar@maxlinear.com>, 
+ linux-pci@vger.kernel.org, Sajid Dalvi <sdalvi@google.com>, 
+ Eckert.Florian@googlemail.com, ms@dev.tdt.de, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+To: Florian Eckert <fe@dev.tdt.de>
+In-Reply-To: <20260330-pcie-intel-gw-v2-6-8bd07367a298@dev.tdt.de>
+References: <20260330-pcie-intel-gw-v2-0-8bd07367a298@dev.tdt.de>
+ <20260330-pcie-intel-gw-v2-6-8bd07367a298@dev.tdt.de>
+Message-Id: <177486693168.1789868.5556229534817952250.robh@kernel.org>
+Subject: Re: [PATCH v2 6/7] dt-bindings: PCI: intel,lgm-pcie: Make atu
+ resource mandatory
 
-On Mon, Mar 30, 2026 at 09:02:57AM +0000, Hongxing Zhu wrote:
-> > -----Original Message-----
-> > From: Manivannan Sadhasivam <mani@kernel.org>
-> > Sent: 2026年3月30日 15:23
-> > To: Hongxing Zhu <hongxing.zhu@nxp.com>
-> > Cc: Frank Li <frank.li@nxp.com>; l.stach@pengutronix.de; lpieralisi@kernel.org;
-> > kwilczynski@kernel.org; robh@kernel.org; bhelgaas@google.com;
-> > s.hauer@pengutronix.de; kernel@pengutronix.de; festevam@gmail.com;
-> > linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
-> > imx@lists.linux.dev; linux-kernel@vger.kernel.org; stable@vger.kernel.org;
-> > Qiang Yu <qiang.yu@oss.qualcomm.com>
-> > Subject: Re: [PATCH v2] PCI: imx6: Don't remove MSI capability For
-> > i.MX7D/i.MX8M
-> > 
-> > + Qiang
-> > 
-> > On Thu, Mar 19, 2026 at 05:18:23PM +0800, Richard Zhu wrote:
-> > > The MSI trigger mechanism for endpoint devices connected to i.MX7D,
-> > > i.MX8MM, and i.MX8MQ PCIe root complex ports depends on the MSI
-> > > capability register settings in the root complex. Removing the MSI
-> > > capability breaks MSI functionality for these endpoints.
-> > >
-> > 
-> > What is the relation between Root Port MSI and endpoint MSI? Endpoint MSIs
-> > should be routed to the platform MSI controller (DWC i.MSI-RX or External like
-> > GIC-ITS) independent of the Root Port MSI state.
-> Hi Mani:
-> Thank for your kindly concern.
-> The MSI controller (DWC i.MSI-RX) on i.MX7D, i.MX8MM, and i.MX8MQ platforms
-> requires the RC's MSI capability to remain enabled. Removing it breaks MSI
-> routing from endpoints to the platform MSI controller.
+
+On Mon, 30 Mar 2026 11:07:16 +0200, Florian Eckert wrote:
+> The ATU information is already set in the dwc core if it is specified in
+> the DTS. The driver uses its own value here [1]. This information is
+> hardware specific and should therefore be maintained in the DTS rather
+> than in the source.
+> 
+> Backwards compatibility is not an issue here [5], as the driver is
+> exclusively used by Maxlinear.
+> 
+> Old DTS entry for PCIe:
+> 
+> reg = <0xd1000000 0x1000>,
+>       <0xd3000000 0x20000>,
+>       <0xd0c41000.0x1000>;
+> reg-names = "dbi", "config", "app";
+> 
+> New DTS entry for PCIe:
+> 
+> reg = <0xd1000000 0x1000>,
+>       <0xd10c0000 0x1000>,
+>       <0xd3000000 0x20000>,
+>      <0xd0c41000.0x1000>;
+> reg-names = "dbi", "atu", "config", "app";
+> 
+> [1] https://elixir.bootlin.com/linux/v6.19.10/source/drivers/pci/controller/dwc/pcie-intel-gw.c#L301
+> [2] https://lore.kernel.org/all/BY3PR19MB507667CE7531D863E1E5F8AEBDD82@BY3PR19MB5076.namprd19.prod.outlook.com/
+> 
+> Signed-off-by: Florian Eckert <fe@dev.tdt.de>
+> ---
+>  Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
 > 
 
-I understand that MSI is broken on your hardware, but I was trying to understand
-'why' specifically. Because, Root Port MSI capability doesn't have anything to
-do with the endpoint MSIs. And since you mentioned that this issue happens only
-on one platform, could be that the hardware designers have mistakenly wired the
-Root Port's 'MSI Enable' to iMSI-RX's enable signal or something similar?
+My bot found errors running 'make dt_binding_check' on your patch:
 
-If so, we can introduce a flag 'dw_pcie_rp::keep_rp_msi_en' or something
-similar, set it for affected SoCs and skip the capability removal in
-pcie-designware-host.c
+yamllint warnings/errors:
 
-- Mani
+dtschema/dtc warnings/errors:
+Lexical error: Documentation/devicetree/bindings/pci/intel-gw-pcie.example.dts:28.37-43 Unexpected 'config'
+Error: Documentation/devicetree/bindings/pci/intel-gw-pcie.example.dts:28.37-43 syntax error
+FATAL ERROR: Unable to parse input tree
+make[2]: *** [scripts/Makefile.dtbs:140: Documentation/devicetree/bindings/pci/intel-gw-pcie.example.dtb] Error 1
+make[2]: *** Waiting for unfinished jobs....
+make[1]: *** [/builds/robherring/dt-review-ci/linux/Makefile:1601: dt_binding_check] Error 2
+make: *** [Makefile:248: __sub-make] Error 2
 
--- 
-மணிவண்ணன் சதாசிவம்
+doc reference errors (make refcheckdocs):
+
+See https://patchwork.kernel.org/project/devicetree/patch/20260330-pcie-intel-gw-v2-6-8bd07367a298@dev.tdt.de
+
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
+
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
+
+pip3 install dtschema --upgrade
+
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
+
