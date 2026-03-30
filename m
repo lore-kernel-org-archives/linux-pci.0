@@ -1,44 +1,97 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f53.google.com (mail-oa1-f53.google.com [209.85.160.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDAE33E1237;
-	Mon, 30 Mar 2026 22:30:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2A253E958F
+	for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 22:34:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774909804; cv=none; b=BEe+aH9Csq+mr/j+wnahCn4IEIl8xMQqhEedhZ/MHTIWSuGi6HjxUnIUPR86k1ajBSe7FYAUaV5wzfnj63Uvv1bUVpV4OH/Io9geKZTGcUQW1LXYHEigW/zoqSeAzeacMovmGl3XabMfuiu84M/atNdr87FOLIvcsJLJHzjC6eM=
+	t=1774910100; cv=none; b=fa87Xk7RC7dSlmUkuFyxYpEXDqXI4XStz3iVOdyfmf5tTrsBJOPt9LcW8bKyol1BVYv/nv0Rs/axgyOrrHRMYhkKka6xt6pkivEogfcT5fE63xjurDDkDF0PhTBdMfek6NcQAxGZf3nfZkfNmiXa8n8aebf5NZ9ja//ttmSfgS8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774909804; c=relaxed/simple;
-	bh=jxcZzJmtHdWLL8FThM+LMzcWiHOr2Xk7LoP2K9faT0w=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=WRVtaee/22tbIN7WGRDRHZqHknukVkrwlYQdGY5Dvl7EAjvQ1pxLapQAcpCeOtv1s1/2X3tBLWZqMO+lZnWpUyQXfNCo4vM6AQs7liv2+w/NCg7OQpdqv8MTiwQe/9g6Knq2EACvkMhfQGrqQmNvwpYwB+JxjDQOMQlKGF/zDLw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EoDQWFsD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774910100; c=relaxed/simple;
+	bh=njYxOmFhF0kKZxmCluaJeRNQJOvHXtTT/LYX+fA/Jes=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jxtM+1sddf/5xqAeeQQT2ULkKdKLeiUozxKv+VyWco9FzwXsDbsbtnr0MB8sLlg71jrQ4mS9zNbwNLCLilTnVFb4HShG+HOGZnkD9bElnsfQQbJhL9dpj9riglPN5DMe2ZT5SNrP+++/vaHn+qV7WwxzzPeLTUWMBLbWeVZOFc8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=kTRG2gg8; arc=none smtp.client-ip=209.85.160.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EoDQWFsD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AB1CC4CEF7;
-	Mon, 30 Mar 2026 22:30:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774909803;
-	bh=jxcZzJmtHdWLL8FThM+LMzcWiHOr2Xk7LoP2K9faT0w=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=EoDQWFsDwvABymFJZucJrrs6CY98BwAsyQYy43Tc/BIEjK28lTAs5BS2yrdhpoAE6
-	 YZK55RFY4Qd10lSO/mw6tRyI/GFUuxJjFPyeWRQfyVaTBHnk4t1lOEAsX0UjQY0Av3
-	 y92TigpLrhkhHT9Cq7GSnba/gn4Q9ipPsPvL0mX6LX4lsPP8+iKiUm6/Zi+jMbEEqK
-	 UvEmjz0KaFQNoSMnumFNbqPPvK9ZnR3EECI5yH76/2vn1IgWMzTQhD2zasNzaCfSd6
-	 nPIxtYqnpWXBi4A9hCnr8AxZ/FCzh5Gim4rSRlhoc28pbA1tjiDlnhnXc+35ZHIkos
-	 WsrwSglYevWxA==
-Date: Mon, 30 Mar 2026 17:30:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Matlack <dmatlack@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Alexander Lobakin <aleksander.lobakin@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Bartosz Pawlowski <bartosz.pawlowski@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Lu Baolu <baolu.lu@linux.intel.com>,
-	Raghavendra Rao Ananta <rananta@google.com>
-Subject: Re: [PATCH v2] PCI: Disable ATS via quirk before notifying IOMMU
- drivers
-Message-ID: <20260330223002.GA111329@bhelgaas>
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="kTRG2gg8"
+Received: by mail-oa1-f53.google.com with SMTP id 586e51a60fabf-4043b27ddeaso3253162fac.1
+        for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 15:34:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1774910091; x=1775514891; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=MMpjIoYB4wkYY1B4Qvo8YM+LGvG/wS7KH0HgKJnMSKw=;
+        b=kTRG2gg8CnwYIFxacyb4+gQ77RG3JAoGjXfqaKIW8I/iavRsMuuYj06F2f76nmTpEU
+         rKPHun1rBmDqbD0XJaHyfowQ6QpIcZTcg1RUf70KX5tCRdH7hnyJf7npg6nV9V3oaFbg
+         Eo+WsAAtUkFdXTk8N8Eh6ylrsueoW3eE1FN+lOmXn4UzujnXLRN5Y2FJwxETKYst3hOJ
+         0sTXbgEhOWLj3+WfvobD1KoN3Mu4D9bnLknuCmdBiRugQP4SdVnShtG78K6HPnV88WwJ
+         KAs5Kt8ZlyGrphlmcID4nThxVA0RvBHOgu7xKZiO9qi2Ph2uYUqPef2KyGH4zvXDmwP7
+         Bobg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774910091; x=1775514891;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=MMpjIoYB4wkYY1B4Qvo8YM+LGvG/wS7KH0HgKJnMSKw=;
+        b=VHCBsFECa4An8leStI9xxKbC1LdGWbfKPd2pRzN99pHGiRECw8d5Kh54Ohy/dh48+Y
+         iHD0nARalr1hLjsQcovDwTjbC1pCFWHwYTFdtgObEWrE0uyZMhuUbLzLqEkyBYUB2f+7
+         SXuT/LeTBBEq0ObElnEWRC0F2q7m9EHAfXk8tgr/8vmgJfEWJpTqG3dtH/dhvztLQFWB
+         0bFp5PS2lMy9C7UqVMgHW0iy+NoMzO925a/icDVfNXfFJmAcPIfFJL7U2p9mLpxKwMDu
+         sluUul1PzLHp8bUaCd9g5xFHh7I6Vf0KLAD2pJHm3TKX0HteRIZaGfiltIxXZvmbalZB
+         Y1iQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXVcaMndJUdBAtor1Y3tK93gKuVCxCAF13KbsJrivbJVN3dA2cxqS3L5qAU4k3+k/wrWhQepxqP3So=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzfVTGW62SNVLhVbMywTw9yLx+gJKvho0Riy5RaIk3zNnG1ZO6z
+	wi3wIL2w3J12FByDzdqju3sgmbTCP7dlkz6aHYbOXK/SnWn9xouneheABmNbihE24HlQIr/0kxv
+	slLFw
+X-Gm-Gg: ATEYQzy7v0JoYJI+n4CRpqEr/YHhC7/ZEppAGHhFsGvJw81KMPX8/PyMSr/snxJ7Zvs
+	j08SpFhgJRv99QrTrX0qL80kRvBSoqiU3cnuZMpKV+B0qkRNo20H0nx/n0eiAimUILlkqJv+2e3
+	Y//dOijxuuKN+wU2WNRd3SSYZPk6ddTSlVhlnBxyNFyAggX+UQ3gBusuDz1fBmfxUy7AzmPOhVt
+	aOA5S87tFAj371q9Cy45nM8EvQ9CSUKDBwurKomdhfrnargFJH/kgonY7krrRK09ETG3v8svL4p
+	G2CXBIt2FALV3+cN/j6BupJGBFPFMsmlR9Fu7RdLuENLxLsCL7kGC+dvSoGVAnQ2/aAla4PWp9B
+	Yr22LxDGAmoEBRHPdqTSuH5KxZ5Pzk3gdI9s4f1sguAj4DPmozEYbumJ0+T8ckm5mSsKQDW3OPI
+	Ev+NpgWWaR+176lycOXL1MbjGSHKCUH/Aci+rurbkU5dZNpcHk/wh3acv8Bdzbt/VXEVMb7Q==
+X-Received: by 2002:a05:620a:2991:b0:8cf:cfdf:733e with SMTP id af79cd13be357-8d01c689577mr1767721685a.32.1774909592771;
+        Mon, 30 Mar 2026 15:26:32 -0700 (PDT)
+Received: from ziepe.ca (mctnnbsa70w-159-2-73-22.dhcp-dynamic.fibreop.nb.bellaliant.net. [159.2.73.22])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-8d028090f43sm711572985a.45.2026.03.30.15.26.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 30 Mar 2026 15:26:32 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1w7L43-00000005H5o-0vBI;
+	Mon, 30 Mar 2026 19:26:31 -0300
+Date: Mon, 30 Mar 2026 19:26:31 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Gerd Bayer <gbayer@linux.ibm.com>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	Selvin Xavier <selvin.xavier@broadcom.com>,
+	Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
+	Leon Romanovsky <leon@kernel.org>,
+	Michal Kalderon <mkalderon@marvell.com>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Tariq Toukan <tariqt@nvidia.com>, Mark Bloch <mbloch@nvidia.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jay Cornwall <Jay.Cornwall@amd.com>,
+	Felix Kuehling <Felix.Kuehling@amd.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Sven Schnelle <svens@linux.ibm.com>,
+	Alexander Schmidt <alexs@linux.ibm.com>, linux-s390@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-rdma@vger.kernel.org
+Subject: Re: [PATCH v7 1/3] PCI: AtomicOps: Do not enable requests by RCiEPs
+Message-ID: <20260330222631.GF246076@ziepe.ca>
+References: <20260330-fix_pciatops-v7-1-f601818417e8@linux.ibm.com>
+ <20260330214253.GA92498@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,162 +100,25 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260327211649.3816010-1-dmatlack@google.com>
+In-Reply-To: <20260330214253.GA92498@bhelgaas>
 
-On Fri, Mar 27, 2026 at 09:16:40PM +0000, David Matlack wrote:
-> Ensure that PCI devices with ATS disabled via quirk have it disabled
-> before IOMMU drivers are notified about the device rather than after.
-> Fix this by converting the existing quirks from final to early fixups
-> and changing the quirk logic to set a new no_ats bit in struct pci_dev
-> that prevents pci_dev.ats_cap from ever gettting set.
+On Mon, Mar 30, 2026 at 04:42:53PM -0500, Bjorn Helgaas wrote:
+> [+to amdgpu, bnxe_re, mlx5 IB, qedr, mlx5 maintainers]
 > 
-> This change ensures that pci_ats_supported() takes quirks into account
-> during iommu_ops.probe_device(), when IOMMU drivers are first notified
-> about devices. It also ensures that pci_ats_supported() returns the same
-> value when the device is released in iommu_ops.release_device().
+> On Mon, Mar 30, 2026 at 03:09:44PM +0200, Gerd Bayer wrote:
+> > Since root complex integrated end points (RCiEPs) attach to a bus that
+> > has no bridge device describing the root port, the capability to
+> > complete AtomicOps requests cannot be determined with PCIe methods.
+> > 
+> > Change default of pci_enable_atomic_ops_to_root() to not enable
+> > AtomicOps requests on RCiEPs.
 > 
-> Notably, the Intel IOMMU driver uses pci_ats_supported() in
-> probe/release to determine whether to add/remove a device from a data
-> structure, which easily leads to a use-after-free without this fix.
-> 
-> This change also makes disabling ATS via quirk behave the same way as
-> the pci=noats command line option, in that pci_ats_init() bails
-> immediately and never intializes pci_dev.ats_cap.
-> 
-> Fixes: a18615b1cfc0 ("PCI: Disable ATS for specific Intel IPU E2000 devices")
-> Closes: https://lore.kernel.org/linux-iommu/aYUQ_HkDJU9kjsUl@google.com/
-> Signed-off-by: David Matlack <dmatlack@google.com>
+> I know I suggested this because there's nothing explicit that tells us
+> whether the RC supports atomic ops from RCiEPs [1].  But I'm concerned
+> that GPUs, infiniband HCAs, and NICs that use atomic ops may be
+> implemented as RCiEPs and would be broken by this.
 
-Applied to pci/enumeration for v7.1, thank you!
+AFAIK none of the NICs are integrated into root complexes in their
+topology model..
 
-> ---
-> v2:
->  - Update the commit message with reasons why this is being fixed in the
->    PCI core, rather than applying a point fix to the Intel IOMMU driver
->    (Andy)
->  - Condense the pci_ats_disabled() and dev->no_ats checks into a single
->    line in pci_ats_init()
->  - Reorder the no_ats bitfield to be after ats_stu since there is likely
->    u8-sized gap there for alignment purposes
-> 
-> v1: https://lore.kernel.org/linux-pci/20260223184017.688212-1-dmatlack@google.com/
-> 
-> Cc: Raghavendra Rao Ananta <rananta@google.com>
-> Cc: David Woodhouse <dwmw2@infradead.org>
-> Cc: Lu Baolu <baolu.lu@linux.intel.com>
-> Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> 
->  drivers/pci/ats.c    |  2 +-
->  drivers/pci/quirks.c | 50 ++++++++++++++++++++++----------------------
->  include/linux/pci.h  |  1 +
->  3 files changed, 27 insertions(+), 26 deletions(-)
-> 
-> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-> index ec6c8dbdc5e9..ceb6f5d3cb10 100644
-> --- a/drivers/pci/ats.c
-> +++ b/drivers/pci/ats.c
-> @@ -21,7 +21,7 @@ void pci_ats_init(struct pci_dev *dev)
->  {
->  	int pos;
->  
-> -	if (pci_ats_disabled())
-> +	if (pci_ats_disabled() || dev->no_ats)
->  		return;
->  
->  	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 48946cca4be7..2c7e11830e45 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -5653,7 +5653,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0422, quirk_no_ext_tags);
->  static void quirk_no_ats(struct pci_dev *pdev)
->  {
->  	pci_info(pdev, "disabling ATS\n");
-> -	pdev->ats_cap = 0;
-> +	pdev->no_ats = 1;
->  }
->  
->  /*
-> @@ -5676,25 +5676,25 @@ static void quirk_amd_harvest_no_ats(struct pci_dev *pdev)
->  }
->  
->  /* AMD Stoney platform GPU */
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x98e4, quirk_amd_harvest_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x98e4, quirk_amd_harvest_no_ats);
->  /* AMD Iceland dGPU */
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x6900, quirk_amd_harvest_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x6900, quirk_amd_harvest_no_ats);
->  /* AMD Navi10 dGPU */
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7310, quirk_amd_harvest_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7312, quirk_amd_harvest_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7318, quirk_amd_harvest_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7319, quirk_amd_harvest_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x731a, quirk_amd_harvest_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x731b, quirk_amd_harvest_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x731e, quirk_amd_harvest_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x731f, quirk_amd_harvest_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7310, quirk_amd_harvest_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7312, quirk_amd_harvest_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7318, quirk_amd_harvest_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7319, quirk_amd_harvest_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x731a, quirk_amd_harvest_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x731b, quirk_amd_harvest_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x731e, quirk_amd_harvest_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x731f, quirk_amd_harvest_no_ats);
->  /* AMD Navi14 dGPU */
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7340, quirk_amd_harvest_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7341, quirk_amd_harvest_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7347, quirk_amd_harvest_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x734f, quirk_amd_harvest_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7340, quirk_amd_harvest_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7341, quirk_amd_harvest_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7347, quirk_amd_harvest_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x734f, quirk_amd_harvest_no_ats);
->  /* AMD Raven platform iGPU */
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x15d8, quirk_amd_harvest_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x15d8, quirk_amd_harvest_no_ats);
->  
->  /*
->   * Intel IPU E2000 revisions before C0 implement incorrect endianness
-> @@ -5705,15 +5705,15 @@ static void quirk_intel_e2000_no_ats(struct pci_dev *pdev)
->  	if (pdev->revision < 0x20)
->  		quirk_no_ats(pdev);
->  }
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1451, quirk_intel_e2000_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1452, quirk_intel_e2000_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1453, quirk_intel_e2000_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1454, quirk_intel_e2000_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1455, quirk_intel_e2000_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1457, quirk_intel_e2000_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1459, quirk_intel_e2000_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x145a, quirk_intel_e2000_no_ats);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x145c, quirk_intel_e2000_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1451, quirk_intel_e2000_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1452, quirk_intel_e2000_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1453, quirk_intel_e2000_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1454, quirk_intel_e2000_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1455, quirk_intel_e2000_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1457, quirk_intel_e2000_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1459, quirk_intel_e2000_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x145a, quirk_intel_e2000_no_ats);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x145c, quirk_intel_e2000_no_ats);
->  #endif /* CONFIG_PCI_ATS */
->  
->  /* Freescale PCIe doesn't support MSI in RC mode */
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1c270f1d5123..850100f209e3 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -539,6 +539,7 @@ struct pci_dev {
->  	};
->  	u16		ats_cap;	/* ATS Capability offset */
->  	u8		ats_stu;	/* ATS Smallest Translation Unit */
-> +	unsigned int	no_ats:1;	/* ATS disabled via quirk */
->  #endif
->  #ifdef CONFIG_PCI_PRI
->  	u16		pri_cap;	/* PRI Capability offset */
-> 
-> base-commit: 7df48e36313029e4c0907b2023905dd7213fd678
-> -- 
-> 2.53.0.1018.g2bb0e51243-goog
-> 
+Jason
