@@ -1,393 +1,220 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D775C3D3D1B
-	for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 13:23:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FD80236453
+	for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 13:31:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774877028; cv=none; b=FSkcLjxBiqDL4mtM7UMGmU7YiqSDGjQ3frqsR3/ufiXFyZBxVw4AHj8KmXM0KBIKRBLkpd4qwEgtLhxLYA9HXZeqhQ2ih44WawTUCtOjwIeu2Y1hpWfHoTQcb/o30plTfT3ibZVNH6KY9B5kLSaq2pZlhO7WTUkmtFb9g72UEWw=
+	t=1774877508; cv=none; b=Hf0NjJ3Mf7bKuuYxzkbheJw5bIh4SoGZCtvnxfI0bs/ibDwDzd3/dotCZjCctGHqSAaEA3P4Jr1YNmzMkTB5CVFrhSowhnr4GzHmNCMqmQuPi0TJEJpcMqUykKICvUaHAxl1vpOtGTKbg7WyMQnR4CpXMCQZ53U/UMK+jAhdMhg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774877028; c=relaxed/simple;
-	bh=B8Khx6Vw/ZGtGl7pwfHbN0sgYlhMejRKCulR7rGTqIw=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=Rdm4pHBACAejxFEJvugSqRoEQ0kvEoPjzpY2uWzVR0tke0wBDx13zCn++hVJl2Pia/1Y0Zt0oLR5i3+xZ52YeElyjXtEPQ3HX728RiuI7AWBqa9G44L7PlzPQmJOCMey7dbbIswzFneROoY45gquZlS4zb06gioCHmkje38LPLE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Xr9BCUMc; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1774877508; c=relaxed/simple;
+	bh=woCJP45a6EA21SxJu6STX2rgJi9X1G42iPDRT5kx8pc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=oGMnRTzorjspFHkzW4yasQzHyALmxLS9tZoMv4NwwP7JNWpgT7vFtA60w/k+k1BVigsxcusbmy/JYHaXmEbQrIWwCjQ5Jfwuuwk9+++RkxFMCr/pN53AW/9krjddm0KJxTgdaVWaYPWWohhHfISy31dQZX6rK8Z5PZcLvlBJoU4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=WsVY/+pW; arc=none smtp.client-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Xr9BCUMc"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774877025; x=1806413025;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=B8Khx6Vw/ZGtGl7pwfHbN0sgYlhMejRKCulR7rGTqIw=;
-  b=Xr9BCUMcm69Q2/tseVV7mQaYmvf70d3PLapqXH0nN7tZuj2lJnr8ut4m
-   nVM2h5qq8exjDe1dGKUg0TpnKLEcCx9zSrVcwpNR3AOAa80Wu3Z57+4hI
-   lcN8egUnGRJObcawrzWHzotj4SKW8ecxtXAmqlXw/utEEOk9LSpI5FQA3
-   NlYOdvgS82dEjWQC2CrYAs9EpM1+ok3y1jHRCQ/G0/Xn0+OPTvLweNnAb
-   t85StjFVJFu0kWE+nJMoBENlfGCnDAWyETcc+eK30xW5sHTmZ3wSVgPfg
-   sTAmsbzJYTjvv4Hu6zVuWDzmNCQPJaYY7hHguTov2KwMfJtrYtI9UeWNg
-   g==;
-X-CSE-ConnectionGUID: BNH4JYTIT4+vyrIZNVq46w==
-X-CSE-MsgGUID: TBAHm0azQbCAYmcquf4pGg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11743"; a="75046089"
-X-IronPort-AV: E=Sophos;i="6.23,150,1770624000"; 
-   d="scan'208";a="75046089"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2026 06:23:45 -0700
-X-CSE-ConnectionGUID: CKKqauxZSPGchAJyZVhHXw==
-X-CSE-MsgGUID: uLwcZ9rdRv+rUN8vRdQR/Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,150,1770624000"; 
-   d="scan'208";a="223178958"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.153])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2026 06:23:43 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Mon, 30 Mar 2026 16:23:40 +0300 (EEST)
-To: Cristian Cocos <cristi@ieee.org>
-cc: linux-pci@vger.kernel.org
-Subject: Re: ReBAR over Thunderbolt
-In-Reply-To: <46877507be26e594e42ccf8aa9daaac2656dbd1d.camel@ieee.org>
-Message-ID: <2f6838fa-dd7f-848d-4788-8b04a23b5753@linux.intel.com>
-References: <a177e7cf1e638c874a7b2e9e68027094bca68041.camel@ieee.org>  <9cfa81e1-373c-cfdf-89a1-5d7c169f3577@linux.intel.com> <46877507be26e594e42ccf8aa9daaac2656dbd1d.camel@ieee.org>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="WsVY/+pW"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-486fba7ce4cso45255505e9.3
+        for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 06:31:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1774877506; x=1775482306; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=jYIEqXC79JFDsMuBE9uscqcAqN7ideMUIHhPBH738yQ=;
+        b=WsVY/+pWT09fXuWibY6v/EBES2IYeU2ypLkfr/yf2DkHGafdaEY0od3XH7JbUHVeYQ
+         RXgqJGgV5Imf0FCtSx0eHJO3v1hCLvYfztLAnVnyrfYyTlROLZ3W6IVpYLEBK9KZMY7v
+         UNpzA5sAuxZADsldPtUXIXDY0NdFwHVUZs4hzhJ4EDSrugPnrORzyQ6XWed2Fo7kIjws
+         znfFzkyn8j4uqXwGAgdUit71oSpA/7T3D7HSXzZdCGthlxAzKpMZIPV5gAu/EGpTHOD+
+         NLVUEWXFz07sVA7HbkHGsEg54Cwa8bBqMgdeApOIX8GLuA47HRdzNf1y3tOmDPmv4Itz
+         EddA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774877506; x=1775482306;
+        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=jYIEqXC79JFDsMuBE9uscqcAqN7ideMUIHhPBH738yQ=;
+        b=O2rgrYjzAwhD/lGvV9DRXV8FlIXAS3HFxdCJSaVabGFatLNKKWtVnloM/q54pWbce/
+         F5K8T3LcuINWUsWbkSJvn0aOwrSdC8uEFOAZF9LdkEh//OBnNwFtuo5Kn/9mEtZki2R4
+         EXyeO9r4mQsI6VIuNfGpi+ZSjX81DJQluoiPb/anIkPk7PJDAQ2SDjgjO9ZIjZCMVCEV
+         J8UvGosj40x36YzQ7uMlGx8ms7nC+xylKDYaFP6Q63Knh4hPibV0V5rSohmVsaw6gdQN
+         4ppkzFI8YrSYd4U5sRzMIBXKIgMR9AjpFGZ9ulEYwulOI6xCVjDRRpxA2l6ytfxDpTwK
+         IqiQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVyK9KtiAbxBZImSbDIlKsypUW8qoPwc7d8doFcAYD2VDg4PxCNHtMLRfxAVsTp4MYUFT9n09q3VQk=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw7Kg6j/ZJbqi/6DviYuZ24GzDQ35gCD2+/bnZdTlg+reXCgTkL
+	+7RdicG74TDRHBWmFRCsdwC5nBFpGbQZGY1uqOyPEv6QRRJsk62d1uT3J3NVL6xdGB4=
+X-Gm-Gg: ATEYQzx+2y0W7/JOPEV7vIrnGauXQD+/RgMq8LQT7VniRxxI762TqA6oY9ON2xM5Vy/
+	SC82j83Kdw3k/dBYnkWlkChVllRxvVyHlcXYVvldI8ZFw3EccEsm8J+aTJxkxEbk+9Ef80Mo291
+	0Ikscmbj86y2nZkcPUDkx+4v9e6M5NRL88nACsMqyTbCNsZWtseQBltgyHtmJ4cprrA4IlW8DGV
+	PWKsKYkeniAtDb9coipsFbiYKFLjIbinv9B2Gf9B7+TIF1hAj01dSxRVS/h95RmgwgevTnoSRmY
+	YeymdPCcOcrtpQ3YYYExRrPVjetSI0aD1itmaov9DPjn5UQc26Swpp/9uzAmIN2xLZ8U1w7I1rn
+	IDHCypjtL7Ero9RiZwXZ+pZWHlWJ767cPR2ZxEw7UULtpK9yJDIIvok1h2d3ZOz0iSmzisgfjxJ
+	RPRfPNV5JYkV9Z5jAEkCT4o7RmhA==
+X-Received: by 2002:a05:600c:c178:b0:487:59c:2bb8 with SMTP id 5b1f17b1804b1-48727ef16bamr212768095e9.27.1774877505632;
+        Mon, 30 Mar 2026 06:31:45 -0700 (PDT)
+Received: from [192.168.0.20] ([212.21.133.10])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48722c6b495sm537578025e9.2.2026.03.30.06.31.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 30 Mar 2026 06:31:45 -0700 (PDT)
+Message-ID: <4af194d0-f1d7-4acf-aeef-cf3bb3a4b10e@suse.com>
+Date: Mon, 30 Mar 2026 16:31:43 +0300
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-801996061-1774877020=:968"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 03/31] x86/virt/tdx: Add tdx_page_array helpers for new
+ TDX Module objects
+To: Xu Yilun <yilun.xu@linux.intel.com>, linux-coco@lists.linux.dev,
+ linux-pci@vger.kernel.org, dan.j.williams@intel.com, x86@kernel.org
+Cc: chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com,
+ yilun.xu@intel.com, zhenzhong.duan@intel.com, kvm@vger.kernel.org,
+ rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com, kas@kernel.org,
+ xiaoyao.li@intel.com, vishal.l.verma@intel.com, linux-kernel@vger.kernel.org
+References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
+ <20260327160132.2946114-4-yilun.xu@linux.intel.com>
+From: Nikolay Borisov <nik.borisov@suse.com>
+Content-Language: en-US
+Autocrypt: addr=nik.borisov@suse.com; keydata=
+ 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
+In-Reply-To: <20260327160132.2946114-4-yilun.xu@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
 
---8323328-801996061-1774877020=:968
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-On Sat, 28 Mar 2026, Cristian Cocos wrote:
+On 27.03.26 г. 18:01 ч., Xu Yilun wrote:
+<snip>
 
-> Here below is the log excerpt annotated with section headers as
-> promised. Full raw log file to be provided upon request.
->=20
-> =3D=3D=3D ReBAR Hotplug Resize Failure on Thunderbolt 4 =3D=3D=3D
-> Hardware: AMD RX 9060 XT (Navi 44, PCI 1002:7590, 16 GB VRAM) in Razer
-> Core X V2 eGPU
-> Host: Framework Laptop 16 (AMD Ryzen 7 7840HS), TB4 via USB4 root port
-> Kernel: linux-zen 6.19.8.zen1-1-zen (Arch)
-> Driver: amdgpu (rebar=3D0 NOT set =E2=80=94 allowing resize attempt)
-> Boot: eGPU disconnected at boot, then hotplugged after login
->=20
-> PCI topology:
->   00:07.0 (root port) =E2=86=92 02:00.0 (TB switch) =E2=86=92 03:00.0 (DS=
- port)
->     =E2=86=92 04:00.0 (AMD switch) =E2=86=92 05:00.0 (AMD switch) =E2=86=
-=92 06:00.0 (GPU)
->=20
-> Note: When this GPU is connected at boot with BIOS "OS Native Resource
-> Balance" disabled AND thunderbolt.host_reset=3D0 on the kernel cmdline,
-> the firmware pre-assigns a full 16 GB BAR and the driver uses it
-> without needing to resize. The hotplug path below shows where the
-> kernel's runtime resize fails.
->=20
-> =3D=3D=3D Relevant dmesg lines (BAR discovery, resize attempt, failure) =
-=3D=3D=3D
->=20
-> --- Initial BAR discovery during TB hotplug enumeration ---
-> [  289.893050] pci 0000:06:00.0: BAR 0 [mem 0x00000000-0x0fffffff 64bit
-> pref]
-> [  289.893057] pci 0000:06:00.0: BAR 2 [mem 0x00000000-0x001fffff 64bit
-> pref]
-> [  289.893062] pci 0000:06:00.0: BAR 4 [io  0x0000-0x00ff]
-> [  289.893067] pci 0000:06:00.0: BAR 5 [mem 0x00000000-0x0007ffff]
->=20
-> --- Bridge window assignment (root port allocates 4 GB prefetchable) --
-> -
-> [  289.895531] pci 0000:02:00.0: bridge window [mem 0x10000000-
-> 0x204fffff 64bit pref] to [bus 03-2b] add_size 600000 add_align
-> 10000000
-> [  289.895535] pci 0000:02:00.0: bridge window [mem 0x00100000-
-> 0x005fffff] to [bus 03-2b] add_size 600000 add_align 100000
-> [  292.204937] pcieport 0000:00:07.0: bridge window [mem 0x6000000000-
-> 0x60ffffffff 64bit pref]: was not released (still contains assigned
-> resources)
->=20
-> --- Initial BAR assignment (256 MB) ---
-> [  289.895644] pci 0000:06:00.0: BAR 0 [mem 0x6000000000-0x600fffffff
-> 64bit pref]: assigned
-> [  289.895663] pci 0000:06:00.0: BAR 2 [mem 0x6010000000-0x60101fffff
-> 64bit pref]: assigned
-> [  289.895681] pci 0000:06:00.0: BAR 5 [mem 0x60000000-0x6007ffff]:
-> assigned
->=20
-> --- amdgpu driver loads, releases BARs for resize ---
-> [  292.191384] amdgpu 0000:06:00.0: amdgpu: Fetched VBIOS from ROM BAR
-> [  292.204930] amdgpu 0000:06:00.0: BAR 0 [mem 0x6000000000-
-> 0x600fffffff 64bit pref]: releasing
-> [  292.204932] amdgpu 0000:06:00.0: BAR 2 [mem 0x6010000000-
-> 0x60101fffff 64bit pref]: releasing
-> [  292.204933] pcieport 0000:05:00.0: bridge window [mem 0x6000000000-
-> 0x60101fffff 64bit pref]: releasing
-> [  292.204934] pcieport 0000:04:00.0: bridge window [mem 0x6000000000-
-> 0x60101fffff 64bit pref]: releasing
-> [  292.204935] pcieport 0000:03:00.0: bridge window [mem 0x6000000000-
-> 0x60101fffff 64bit pref]: releasing
+> +/**
+> + * tdx_page_array_ctrl_leak() - Leak data pages and free the container
+> + * @array: The tdx_page_array to be leaked.
+> + *
+> + * Call this function when failed to reclaim the control pages. Free the root
+> + * page and the holding structures, but orphan the data pages, to prevent the
+> + * host from re-allocating and accessing memory that the hardware may still
+> + * consider private.
+> + */
+> +void tdx_page_array_ctrl_leak(struct tdx_page_array *array)
+> +{
+> +	if (!array)
+> +		return;
+> +
+> +	kfree(array->pages);
+> +	kfree(array->root);
+> +	kfree(array);
+> +}
+> +EXPORT_SYMBOL_GPL(tdx_page_array_ctrl_leak);
 
-> [  292.204936] pcieport 0000:02:00.0: bridge window [mem 0x6000000000-
-> 0x60f04fffff 64bit pref]: was not released (still contains assigned
-> resources)
-> [  292.204937] pcieport 0000:00:07.0: bridge window [mem 0x6000000000-
-> 0x60ffffffff 64bit pref]: was not released (still contains assigned
-> resources)
+This instantly raises a red flag if by design an API has the ability to 
+simply leak memory. Under what conditions this might be required, can't 
+we do something to gracefully handle the case when pages cannot be freed 
+instantly, i.e queued freeing or some such ? Simply leaking them is a 
+big NO.
 
-Hi,
+> +
+> +static bool tdx_page_array_validate_release(struct tdx_page_array *array,
+> +					    unsigned int offset,
 
-These 2 lines indicate where the reason likely lies. BAR resize attempted=
-=20
-to release these windows but there are some sibling resourcers that=20
-prevent the resize from succeeding. I cannot see what those resources are=
-=20
-from these excerpts.
+This function is only ever called with offset of 0, if it's intended to 
+be used later then I'd rather see this argument added in an explicit 
+patch with rationale why it's needed.
 
-Basically, the resize walks upwards in the PCI hierarchy and tries to free=
-=20
-any bridge window it encounters in order to allow them to be sized freely=
-=20
-(enlarged). The device whose BAR is being resized has its resources=20
-released prior to the resize commencing, but any other device under any of=
-=20
-those bridge windows are not and they pin their bridge windows in-place=20
-(it won't be possible to release them in the general case as some of=20
-those devices may be in use at this point).
+> +					    unsigned int nr_released,
+> +					    u64 released_hpa)
+> +{
+> +	unsigned int nents;
+> +
+> +	if (offset >= array->nr_pages)
+> +		return false;
+> +
+> +	nents = umin(array->nr_pages - offset, TDX_PAGE_ARRAY_MAX_NENTS);
+> +
+> +	if (nents != nr_released) {
+> +		pr_err("%s nr_released [%d] doesn't match page array nents [%d]\n",
+> +		       __func__, nr_released, nents);
+> +		return false;
+> +	}
+> +
+> +	/*
+> +	 * Unfortunately TDX has multiple page allocation protocols, check the
+> +	 * "singleton" case required for HPA_ARRAY_T.
+> +	 */
+> +	if (page_to_phys(array->pages[0]) == released_hpa &&
+> +	    array->nr_pages == 1)
+> +		return true;
+> +
+> +	/* Then check the "non-singleton" case */
+> +	if (virt_to_phys(array->root) == released_hpa) {
+> +		u64 *entries = array->root;
+> +		int i;
+> +
+> +		for (i = 0; i < nents; i++) {
+> +			struct page *page = array->pages[offset + i];
+> +			u64 val = page_to_phys(page);
+> +
+> +			if (val != entries[i]) {
+> +				pr_err("%s entry[%d] [0x%llx] doesn't match page hpa [0x%llx]\n",
+> +				       __func__, i, entries[i], val);
+> +				return false;
+> +			}
+> +		}
+> +
+> +		return true;
+> +	}
+> +
+> +	pr_err("%s failed to validate, released_hpa [0x%llx], root page hpa [0x%llx], page0 hpa [%#llx], number pages %u\n",
+> +	       __func__, released_hpa, virt_to_phys(array->root),
+> +	       page_to_phys(array->pages[0]), array->nr_pages);
+> +
+> +	return false;
+> +}
 
-It may be possible to workaround this problem by manually removing the=20
-sibling devices that pin the relevant bridge windows, performing resize=20
-through sysfs manually, and then rescanning (but with GPUs it may be=20
-problematic if it's the primary GPU).
 
-Providing a large enough pci=3Dhpmmioprefsize=3Dxx parameter might be able =
-to=20
-make the bridge windows big enough from boot (possibly combining it=20
-with pci=3Drealloc may be required as well). But it could also make things=
-=20
-worse (as realloc algorithm lacks safeguards to detect when the resource=20
-fit was worse than the original). And it could be you run out of iomem=20
-space with large hpmmioprefsize as it's not targetted specifically to the=
-=20
-bridge window of interest.
-
---=20
- i.
-
-> --- 16 GB resize request fails at every bridge level ---
-> [  292.204953] pcieport 0000:03:00.0: bridge window [mem size
-> 0x400200000 64bit pref]: can't assign; no space
-> [  292.204954] pcieport 0000:03:00.0: bridge window [mem size
-> 0x400200000 64bit pref]: failed to assign
-> [  292.204955] pcieport 0000:03:00.0: bridge window [io  size 0x1000]:
-> can't assign; no space
-> [  292.204956] pcieport 0000:03:00.0: bridge window [io  size 0x1000]:
-> failed to assign
-> [  292.204956] pcieport 0000:03:01.0: bridge window [io  size 0x1000]:
-> can't assign; no space
-> [  292.204957] pcieport 0000:03:01.0: bridge window [io  size 0x1000]:
-> failed to assign
-> [  292.204958] pcieport 0000:03:02.0: bridge window [io  size 0x1000]:
-> can't assign; no space
-> [  292.204958] pcieport 0000:03:02.0: bridge window [io  size 0x1000]:
-> failed to assign
-> [  292.204959] pcieport 0000:03:03.0: bridge window [io  size 0x1000]:
-> can't assign; no space
-> [  292.204960] pcieport 0000:03:03.0: bridge window [io  size 0x1000]:
-> failed to assign
-> [  292.204961] pcieport 0000:03:00.0: bridge window [mem size
-> 0x400200000 64bit pref]: can't assign; no space
-> [  292.204962] pcieport 0000:03:00.0: bridge window [mem size
-> 0x400200000 64bit pref]: failed to assign
-> [  292.204962] pcieport 0000:03:00.0: bridge window [io  size 0x1000]:
-> can't assign; no space
-> [  292.204963] pcieport 0000:03:00.0: bridge window [io  size 0x1000]:
-> failed to assign
-> [  292.204964] pcieport 0000:03:01.0: bridge window [io  size 0x1000]:
-> can't assign; no space
-> [  292.204964] pcieport 0000:03:01.0: bridge window [io  size 0x1000]:
-> failed to assign
-> [  292.204965] pcieport 0000:03:02.0: bridge window [io  size 0x1000]:
-> can't assign; no space
-> [  292.204965] pcieport 0000:03:02.0: bridge window [io  size 0x1000]:
-> failed to assign
-> [  292.204966] pcieport 0000:03:03.0: bridge window [io  size 0x1000]:
-> can't assign; no space
-> [  292.204967] pcieport 0000:03:03.0: bridge window [io  size 0x1000]:
-> failed to assign
-> [  292.204968] pcieport 0000:04:00.0: bridge window [mem size
-> 0x400200000 64bit pref]: can't assign; no space
-> [  292.204969] pcieport 0000:04:00.0: bridge window [mem size
-> 0x400200000 64bit pref]: failed to assign
-> [  292.204973] pcieport 0000:04:00.0: bridge window [io  size 0x1000]:
-> can't assign; no space
-> [  292.204974] pcieport 0000:04:00.0: bridge window [io  size 0x1000]:
-> failed to assign
-> [  292.204976] pcieport 0000:04:00.0: bridge window [mem size
-> 0x400200000 64bit pref]: can't assign; no space
-> [  292.204976] pcieport 0000:04:00.0: bridge window [mem size
-> 0x400200000 64bit pref]: failed to assign
-> [  292.204977] pcieport 0000:04:00.0: bridge window [io  size 0x1000]:
-> can't assign; no space
-> [  292.204978] pcieport 0000:04:00.0: bridge window [io  size 0x1000]:
-> failed to assign
-> [  292.204979] pcieport 0000:05:00.0: bridge window [mem size
-> 0x400200000 64bit pref]: can't assign; no space
-> [  292.204980] pcieport 0000:05:00.0: bridge window [mem size
-> 0x400200000 64bit pref]: failed to assign
-> [  292.204980] pcieport 0000:05:00.0: bridge window [io  size 0x1000]:
-> can't assign; no space
-> [  292.204981] pcieport 0000:05:00.0: bridge window [io  size 0x1000]:
-> failed to assign
-> [  292.204982] pcieport 0000:05:00.0: bridge window [mem size
-> 0x400200000 64bit pref]: can't assign; no space
-> [  292.204982] pcieport 0000:05:00.0: bridge window [mem size
-> 0x400200000 64bit pref]: failed to assign
-> [  292.204983] pcieport 0000:05:00.0: bridge window [io  size 0x1000]:
-> can't assign; no space
-> [  292.204984] pcieport 0000:05:00.0: bridge window [io  size 0x1000]:
-> failed to assign
-> [  292.204985] amdgpu 0000:06:00.0: BAR 0 [mem size 0x400000000 64bit
-> pref]: can't assign; no space
-> [  292.204986] amdgpu 0000:06:00.0: BAR 0 [mem size 0x400000000 64bit
-> pref]: failed to assign
-> [  292.204987] amdgpu 0000:06:00.0: BAR 2 [mem size 0x00200000 64bit
-> pref]: can't assign; no space
-> [  292.204987] amdgpu 0000:06:00.0: BAR 2 [mem size 0x00200000 64bit
-> pref]: failed to assign
-> [  292.204988] amdgpu 0000:06:00.0: BAR 0 [mem size 0x400000000 64bit
-> pref]: can't assign; no space
-> [  292.204989] amdgpu 0000:06:00.0: BAR 0 [mem size 0x400000000 64bit
-> pref]: failed to assign
-> [  292.204990] amdgpu 0000:06:00.0: BAR 2 [mem size 0x00200000 64bit
-> pref]: can't assign; no space
-> [  292.204990] amdgpu 0000:06:00.0: BAR 2 [mem size 0x00200000 64bit
-> pref]: failed to assign
->=20
-> --- Fallback: old 256 MB values restored ---
-> [  292.205079] amdgpu 0000:06:00.0: BAR 2 [mem 0x6010000000-
-> 0x60101fffff 64bit pref]: old value restored
-> [  292.205095] amdgpu 0000:06:00.0: BAR 0 [mem 0x6000000000-
-> 0x600fffffff 64bit pref]: old value restored
-> [  292.205096] amdgpu 0000:06:00.0: amdgpu: Not enough PCI address
-> space for a large BAR.
-> [  292.205100] amdgpu 0000:06:00.0: amdgpu: VRAM: 16304M
-> 0x0000008000000000 - 0x00000083FAFFFFFF (16304M used)
-> [  292.205102] amdgpu 0000:06:00.0: amdgpu: GART: 512M
-> 0x0000000000000000 - 0x000000001FFFFFFF
-> [  292.205113] [drm] Detected VRAM RAM=3D16304M, BAR=3D256M
->=20
-> =3D=3D=3D END =3D=3D=3D
->=20
-> On Fri, 2026-03-27 at 12:15 +0200, Ilpo J=C3=A4rvinen wrote:
-> > On Thu, 26 Mar 2026, Cristian Cocos wrote:
-> >=20
-> > > [This has been previously posted on the linux-hotplug list, though
-> > > it
-> > > has been suggested that I post it here as well.]
-> > >=20
-> > > The short story is that ReBAR does not work in eGPU hotplug(!)
-> > > scenarios: hotplugged Thunderbolt eGPUs are forced onto a 256MB BAR
-> > > regardless of the system's ReBAR capabilities, and this because
-> > > during
-> > > hotplug the Linux kernel does not consult the ReBAR capability. As
-> > > eGPUs are becoming more and more popular, accommodating eGPU
-> > > hotplug
-> > > scenarios has become imperative.
-> > >=20
-> > > The longer story:
-> > >=20
-> > > The current Thunderbolt eGPU *hotplug* sequence of events is this:
-> > > BAR
-> > > 2's hardware register powers up at 256 MB =E2=80=94 the default size
-> > > programmed
-> > > into the BAR's address decoder by Intel at the factory. The PCIe
-> > > Resizable BAR capability advertises support for up to 16 GB, but
-> > > it's
-> > > passive =E2=80=94 software must explicitly exercise it. When a Thunde=
-rbolt
-> > > eGPU
-> > > is hotplugged at runtime, the kernel's PCI subsystem enumerates the
-> > > new
-> > > device, reads the BAR at its 256 MB default, sizes the bridge
-> > > windows
-> > > to match, and assigns addresses =E2=80=94 all before any driver loads=
-=2E The
-> > > ReBAR capability is never consulted(!) during this process.
-> >=20
-> > Hi,
-> >=20
-> > The intel GPU drivers do attempt to perform the resize at probe time,
-> > though it's often not successful.
-> >=20
-> > You haven't indicated what kernel you run nor provided any logs, but
-> > there=20
-> > have been some improvements to this in general in the recent kernels.
-> > And=20
-> > then there's also this patch which relates to thunderbolt cases
-> > (which was=20
-> > only accepted yesterday):
-> >=20
-> > https://lore.kernel.org/linux-pci/20260219153951.68869-1-
-> > ilpo.jarvinen@linux.intel.com
-> >=20
-> > > A workaround is available for cold-plug scenarios only, and is
-> > > achieved by means of the **thunderbolt.host_reset=3D0** kernel
-> > > parameter:
-> > > this preserves the BIOS's PCIe tunnel and BAR assignments from POST
-> > > (where the BIOS *does* exercise ReBAR). This delivers the full 16
-> > > GB
-> > > BAR but, as just mentioned, only works for cold-plug(!) scenarios =E2=
-=80=94
-> > > if
-> > > the eGPU is power-cycled at runtime, the new tunnel gets the 256 MB
-> > > default.
-> > >=20
-> > > The proper fix would be for the kernel's PCI hotplug resource
-> > > assignment to *first* check for ReBAR capability during
-> > > enumeration,
-> > > resize the BAR to the largest supported size that fits within
-> > > available
-> > > bridge headroom, and *then* commit bridge windows and assign
-> > > addresses.
-> >=20
-> > That's being worked on. But it's not as easy as you depict it as
-> > kernel=20
-> > needs to be also able to fallback to some intermediate size if the
-> > largest=20
-> > supported size fails.
-> >=20
-> > Thanks to how size calculations and assignment are done at different=20
-> > phases of the algorithm, it's not as easy to fallback to something
-> > else as=20
-> > you indicate as the secondary failures would still persist from the=20
-> > attempt with the largest window. So effectively, the entire sizing
-> > has to=20
-> > be recalculated.
-> >=20
-> > > This is essentially what the BIOS does during POST. It hasn't been
-> > > implemented yet because eGPU-over-Thunderbolt-with-ReBAR is (was?)
-> > > a
-> > > niche use case.
-> > >=20
-> > > Seeing as eGPU-over-Thunderbolt is poised to become mainstream,
-> > > this
-> > > can no longer be considered a niche use case.
-> >=20
-> > We don't consider it unimportant usecase. It's just the resource
-> > fitting=20
-> > and assignment algorithm is very complex and hard to improve, because
-> > something usually breaks when trying to improve it. Thus, the
-> > progress is=20
-> > slow and everything has to be done carefully (when things break badly
-> > in=20
-> > this area, system doesn't even come up so there's not much room for=20
-> > error).
->=20
---8323328-801996061-1774877020=:968--
+> +<snip>
