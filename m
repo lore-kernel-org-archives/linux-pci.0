@@ -1,429 +1,209 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011022.outbound.protection.outlook.com [52.101.70.22])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8B9737D121;
-	Mon, 30 Mar 2026 06:39:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774852779; cv=none; b=C/q6r/XuEGShAKNaRpTTkkgFv9xwieh2GhVEFfXoLmsMZubptWb2W90+MbnaTFQ5Dxuj2EyC+TcmnX8casCRJBLeWAnfYra64B2uYLB4I1Y53eHNIct+ULdmf68+K+rHncD2cK8/ScZNfXI6kTOTfLZo0oQck5Tc/Qzd8ejOB1Q=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774852779; c=relaxed/simple;
-	bh=tmYiyZorA0z4TjfSrT93Sw2Vmxyiubwxlrt4sweRxmw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=l6oWnrn5SUSvvENkTEWvJMjIbyaiCJmZnAFcdkiTQrTpCwhuBjEzEr0JTp6WmlaaAVsbZyYpawsf8eoJl12KU9vaQOa0lPEa/TnMqrNSXVCo1X77lFQSbSrg/SoKhzj8wwnfhnn8COfcRSimC1eqImQm4jgzt4qXf+6t+oAu/HQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Rhcsv21U; arc=none smtp.client-ip=198.175.65.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6A7224E4B4;
+	Mon, 30 Mar 2026 07:11:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.22
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774854677; cv=fail; b=mbudOo8DYNF3Ja3VSC1EQaiuauzF+K/thGvoaEZvL4hRePMdWAawZ3e1AehKpgXuxwgeA7hF53+b3oC51Tjy/Iiid8NN7hWaNn5JSFzQ+fXIf30pe8ADwTvVPhkttgXhMl1dTs0Aka2MB/B+N4wzFysP43qSIbGWHJc/31k895Y=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774854677; c=relaxed/simple;
+	bh=m3gxNNt/V7FqVqSNTuJH6iLiMABhBX2D5Ic0ZG9gguw=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=Pa6MC12bU+3JeV9fJmYybSbWkhB7gW88rbDn9Nxuw+2BQEbSX5tEQ1wngkAfSgtKNvF+9/1bNSF0gYvXAOybGuvmty3nsmposp66fC+GW3t/0iUj908tPicvH/yyfRbfqtrViSV/BWBW8QtBVJ8TGzw8P+YmT1TGXTBZ3WKDg+U=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=N+/vmpNR; arc=fail smtp.client-ip=52.101.70.22
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Rhcsv21U"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774852777; x=1806388777;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=tmYiyZorA0z4TjfSrT93Sw2Vmxyiubwxlrt4sweRxmw=;
-  b=Rhcsv21UbiYMjBJsLwrvAIm+OM8yIcX37UqOjQUyIXhApQDwcrBpZxj3
-   0kSN3QgmngJOzSCYBZspUPdjJ59PEnWaaLhV5os75WlSybt9sy9xvXfVU
-   CsRbzaxHO4z8EHxvzuBj3Yw9DOYooBiLxdacA9J6yZt0ydIE7MQPTZ8Dx
-   3uc2M5IA1DegQvNjU0a74HWkO8AzzIoWP61NxV7eaAUn71EuSEcRE9c48
-   ndaR/Ds2HluK/LvKseYN7E6CoAKGn/AVT9n/LW5fYMu3HwDo8xpUSRT3/
-   ZfAaeCwwbbGtJ1iQBBTMUf/cJYFczq9rwIxGWWpJea6V0eaJS1Ot5RqWv
-   Q==;
-X-CSE-ConnectionGUID: huXMy3gpRKWFmkYVTM5x8A==
-X-CSE-MsgGUID: n8V19QxaSCuZGcAHQU7KvQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11743"; a="79700630"
-X-IronPort-AV: E=Sophos;i="6.23,149,1770624000"; 
-   d="scan'208";a="79700630"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Mar 2026 23:39:30 -0700
-X-CSE-ConnectionGUID: tAKsGNzHRwmgAAMe9qbaWg==
-X-CSE-MsgGUID: zmsKSNbKRtOa7FlX6Xlgkg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,149,1770624000"; 
-   d="scan'208";a="222646418"
-Received: from weba0957.iind.intel.com (HELO WEBA0932.iind.intel.com) ([10.224.186.34])
-  by fmviesa007.fm.intel.com with ESMTP; 29 Mar 2026 23:39:23 -0700
-From: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
-To: linux-bluetooth@vger.kernel.org
-Cc: linux-pci@vger.kernel.org,
-	bhelgaas@google.com,
-	ravishankar.srivatsa@intel.com,
-	chethan.tumkur.narayan@intel.com,
-	Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
-Subject: [PATCH v1] Bluetooth: btintel_pcie:Support Product level reset.
-Date: Mon, 30 Mar 2026 12:08:41 +0530
-Message-ID: <20260330063842.1121545-1-chandrashekar.devegowda@intel.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="N+/vmpNR"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=C+aw1K9bk9UzRD2fk5FNfV85iaoVZMrq4WZc8h+MmZcxDfJCm0NIuKj1yNVtd1EycmZ1GFddD/viGoAcuzUltY05DzJI8P/P9nPmSwsBLLUdk+6JAxEDxhlJOkMeOQV2rwTgRyEqCltl0ywDlQC9dcbOH3W5YWKaQqHnJSLfKtLtlxr0dHQp08pTVTzoQFrX/GG/RH2L82o7xg4IURJwmyIZ0C1DyRbN3Z9IcftPoulbB+Vc6kUk7pFDGguF+4oS+lf5/E0efnNrKIGGT8yZRFa2BUM/aQ3ojXR+3KO8sdqVZ/tvQICp1O4mBKmplrj2kw2MwF7svPxFaMql8znJrg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=m3gxNNt/V7FqVqSNTuJH6iLiMABhBX2D5Ic0ZG9gguw=;
+ b=GM3TnoeOZ3TVtzTtLKawWErUtMYRvxl+RioDLi0Givx3a8CgE9rJnXDh2yEc1kdyR9pQXZwf5kovKvIAJGFQjUqpPPBdOlfDe4v7g4FZCTErg6qQ4v7WBpHGQfXuWqWqL1UpYsMGzxfsXlOkSkOqL8/6GFeBOjnnE1f4rcJq3AcfAhO2V3dDvaGOla/xY68N/tLLmLLHqFehPazNPFeUlJPvr55arjLTveLZl2FxYKOIbe/0/GP8pn9UBpZyxv41Kh9GvJ4Q4nOE2Cgi73CCyAb/8b7tUogWXh/wmPXxL32VqTxgIjFfAM3bT6D5JHSO4uFYDP0xYOFIz623LrwcpQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=m3gxNNt/V7FqVqSNTuJH6iLiMABhBX2D5Ic0ZG9gguw=;
+ b=N+/vmpNR91P0GbGXok7j74LyQi24dXQh29Eo6/81v+Pv+M7cTL8algJOBVBXV81q73bBmU8lU64KrlifZfLSXN72I+BEZi0RXum24y4RcPeYrnNEWsgfJkjwPHQFs2Mfq3sjjXFvKENuoQBgfW929qFO73+IgqmlHBWn4beVXaoei/QQbBLzDJXwGgI/7gyw5EzFpygP54Aaq8/j2/e1jEYFC5kMk3ghou8ffncvlBncg7a+Q7GuRoj6bIoVIVHCwdStLOORJsmPfjLOoXvmxI+Ze7DTP+WxA5yUlwx4yQABvHvzlYQtF/U3vGFznixFqgNye4xGvNv+VVtWZmeQZQ==
+Received: from AS8PR04MB8833.eurprd04.prod.outlook.com (2603:10a6:20b:42c::19)
+ by PA4PR04MB7552.eurprd04.prod.outlook.com (2603:10a6:102:ec::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.28; Mon, 30 Mar
+ 2026 07:11:12 +0000
+Received: from AS8PR04MB8833.eurprd04.prod.outlook.com
+ ([fe80::209c:44e4:a205:8e86]) by AS8PR04MB8833.eurprd04.prod.outlook.com
+ ([fe80::209c:44e4:a205:8e86%4]) with mapi id 15.20.9745.027; Mon, 30 Mar 2026
+ 07:11:12 +0000
+From: Hongxing Zhu <hongxing.zhu@nxp.com>
+To: Frank Li <frank.li@nxp.com>
+CC: "l.stach@pengutronix.de" <l.stach@pengutronix.de>, "lpieralisi@kernel.org"
+	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+	"mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>, "s.hauer@pengutronix.de"
+	<s.hauer@pengutronix.de>, "kernel@pengutronix.de" <kernel@pengutronix.de>,
+	"festevam@gmail.com" <festevam@gmail.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev"
+	<imx@lists.linux.dev>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "stable@vger.kernel.org"
+	<stable@vger.kernel.org>
+Subject: RE: [PATCH v2] PCI: imx6: Don't remove MSI capability For
+ i.MX7D/i.MX8M
+Thread-Topic: [PATCH v2] PCI: imx6: Don't remove MSI capability For
+ i.MX7D/i.MX8M
+Thread-Index: AQHct4Eimn8S6FzOSEeZOEeRWCABYLW15xAAgAwsvvCAAIkPAIAEFJUg
+Date: Mon, 30 Mar 2026 07:11:12 +0000
+Message-ID:
+ <AS8PR04MB8833E299F4939CFA26280BAD8C52A@AS8PR04MB8833.eurprd04.prod.outlook.com>
+References: <20260319091823.446030-1-hongxing.zhu@nxp.com>
+ <abwFVpxrriV7Bt2L@lizhi-Precision-Tower-5810>
+ <AS8PR04MB883306406390FCB4106C3A978C57A@AS8PR04MB8833.eurprd04.prod.outlook.com>
+ <acau0qZNUqEQmGKS@lizhi-Precision-Tower-5810>
+In-Reply-To: <acau0qZNUqEQmGKS@lizhi-Precision-Tower-5810>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: AS8PR04MB8833:EE_|PA4PR04MB7552:EE_
+x-ms-office365-filtering-correlation-id: 006a7071-aacc-483a-c53a-08de8e2b8660
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|366016|19092799006|1800799024|376014|7416014|38070700021|56012099003|22082099003|18002099003;
+x-microsoft-antispam-message-info:
+ BjeoSqFaiythD5SZpXl9Ep+TlWYiEHzFH6ont4JM/SD6sWHrPpwoR39zX47H7JxBFhIzhWpjjItFDDy/LxD8d7uWerFjRZNB4yoCmAT5/DhraTcA4zgjl7JdwLUZrb7DxZoP/8zoPiYPlCAGNC5e7GF0VLn86FHLUBIXoTsZEwmeScLVEMkm7sdxI1GH2i98348mPx3GByqM1sAp8YypT6BlCCScwfak9asyfFWif+7XY9CGkKlY5u/AqnmCTcj4xAGPFqdKyxpHFHs/gpGdirtdDLhdB0Y3Yhfn8gLqoag1zY+6q6Ez9zOI6VJsKjlaReuGVujs3IlpYKT9LapB9WbKBXbdS8fD+nxgY2Zaesj+s1HbvwkYVpUGj/+AP7mlPtPE+5oFaUmEyu2fTWljlQf38LYfcix+mODoCqotMGnf66hnq4MIWvzXL1EHoPM9KXa71y+IFy0ZmB/vPlt9cs7IsQCE5/ET6nuDk/nK9+xgw5xAHm9DuOxihEm3Esh0woinmP9JDHwl0bKU00G/vFZnmG/uw7Xvf6Be2G/RiQR7AEHrg0X4qtrtANk/NC1WYuzdmTe8Z6znl+EsZJWHL/agCHCNUnmNyLIgV+SA0SVTazj3yZJWxpVxOEdPDh3k44/Vx/tbqEAkuE2zbBhxJpjVgTvUYNlL7chbIXeXSNwoUh0dKYBrmHWGFzKy3BBOUZTgMpxMdTUzK2dkIuhOjt4tvIoGRDN3Zntybgr7JYkc4Gm5BQDWEPDpf2fSBgLFhiYFDm9/xmMcyrmJk8bcdl0hNqlOd8EwS1halw+mLaQ=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR04MB8833.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(1800799024)(376014)(7416014)(38070700021)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?eU5PTWg3RDZVOG9ZaUFSUGhwbVZ1bkEzK1lacDN0SnVoaUJlS1NJOUgvS1ly?=
+ =?utf-8?B?Wi91aDR2cmIrZlNyblFwbjlhVEdKN2lONG5kK0EzT1M3ZXpjL1lVaytvUnNE?=
+ =?utf-8?B?TEhydHh2clQ3eS9hTjdiMmcxalJyYWkyYStPU0c3WjZNVHlMRmxTZG9tUEZI?=
+ =?utf-8?B?VHA0TS84RFhzK05wQUg5YjUwTVlDcTJQb1g2Y1JuS2pHa3Q3Q0lzb1RUZ1Rq?=
+ =?utf-8?B?b1k3dEF5MFVrTDh3K2lXbXRJTExLdUVuZWxQVk0wSmhPeVZCbGlzUDRuYytW?=
+ =?utf-8?B?Vi9BRDYwVVZTeHpic0RHeHB6TCtmNTRlK1hmWEd2QThWTUxndjk1VWZFNDIv?=
+ =?utf-8?B?SnhVNjdDYzJlZkJGdHVOZkZ5d05MY3hWQWVlbDFYYkYyOVo5bFdnSGEyVVRU?=
+ =?utf-8?B?NXBWSkJzUk0reHdJOGRSbXRocVY4UW9hb0pzN1grSXRBa2RuTGlqdGhVTTVh?=
+ =?utf-8?B?My9KYytFWW1pY1NHVUxMS1ZtZnVXY1R1MFNYc0ExV2JDRVNJN1lpejkyaS9N?=
+ =?utf-8?B?UndWVDBOdE5hRGJ5RFBQSFJGbTBYMzNtM2hCZWtwbVB2UDI1Y2pVeFFPVGsz?=
+ =?utf-8?B?OGVldE11U016Nk5qUXdwM3hMZm1rREkvcE1xVHBDUWZDNkVSQlNHVm9LMGx6?=
+ =?utf-8?B?QkpkTkZVem9uS1NZczF6UGhuU09ROTRhYmlRZTRYNEpJK3RXTytNcXhuZWh3?=
+ =?utf-8?B?dmF4OUZnRzhxdWxaQXVNcXUrRTJ3MU5wRHlCWU4yU0JqVnpTbmZDY0c5dmU1?=
+ =?utf-8?B?b1lJK0oveFFUeHllVGhDSFlHUHlkSEZvQ2JCU1ArVVM1Q2wraVplVXlWaS9u?=
+ =?utf-8?B?Mlg0cDg4a0tEajd5WEJ4UStkMG9HZjloT2d5VWVWS25FZVUvdGh4Sm5zUTdi?=
+ =?utf-8?B?VEdJYklFQ2c3OFM1RE9KdGNXbDdCNjkxVUVWaloxdjc3Smp2VGpMQWUvZzBV?=
+ =?utf-8?B?VWE0TG5oS2hvVHpCdldBQnhoS1lzMFlpTHJGSlVMS1dJOEJqNGcvSzdEQy9K?=
+ =?utf-8?B?d3pmck1tclhVOGcrWGQ3ZlFIMUlhbENSMTNoWUw1Q1NMQ3NNWThQUWRLMFZj?=
+ =?utf-8?B?cFdoTVlLdFlJT2RrMHF5YUowMUtnamcxVHJMTFV6czJzZEE4ODFKL2VJTS9P?=
+ =?utf-8?B?Q3FVTVgrVm91bVdUa2FpaXFTRXowRG9zWGx5T0xmd1ZjVEpLZEV5Q1RJQWdn?=
+ =?utf-8?B?aGZDd3ZKQTIxVXRCMTY4UTRDOEtuSHNkZ2FEZWxtVDNpT3dYM0taQmhoaGNx?=
+ =?utf-8?B?dVp5T2VLQm40SHBjemNPMnJLRFVUY2EwSVRlNW5nZnRJYVJ3VjV3L1Z5SnRN?=
+ =?utf-8?B?NDVEamFMYmpiYU5IeS9ncHl2V3lTUWpNRU16YnZCWDBGamU4Q1FSZmRHZGRs?=
+ =?utf-8?B?bTNaTWt1bU0wWHJJYjV1cytjNnlScS9LUUhzQmZvVlg5SSt5RUc5Zm9RbHJB?=
+ =?utf-8?B?dmZDVXFEV0xSaTZkMllnVHhyWllURkl4VWpXc3BPZS9HdEUyQnVYS1dzR0J1?=
+ =?utf-8?B?MFRYaHVoMkRHaWpEM3JJd3k3bXZPUVNqbWlEN2ZGY2VmSGl2YWxyL1lxOEQx?=
+ =?utf-8?B?OFJIbjJXdGtjRjRjb1Z6c0MrdmdwOTJlNHJ6TXhaa1dGSmdUZjRKK3JVem1L?=
+ =?utf-8?B?QlFDU0xROWFjbmNUbGE2TU1yVXIvQU1jay9mb25BRE9EdnhhTDZULzhLdUJC?=
+ =?utf-8?B?UHZ5WlNyK2d6OWpWVE91VFdTdk9sQkVZdWhoWGszNVVnTG1od1Zrek5nUUxl?=
+ =?utf-8?B?bUdSbHdRRTZwVFBTd1NCejFsd1V1WHRKZlZ5d1I2U2tITlhLczVTRWk1U0Nn?=
+ =?utf-8?B?RmJDQmtIMFQwWUh1NWMyYnhGQWYrMVdtZHRmUmF1K05DRFBsRWU4dEVJWUly?=
+ =?utf-8?B?d214OFJCNWpXcjNLN2pVUDQrYWQwd2Zld1BOZ1d4VFVud1dvZDkrSk9XWDZO?=
+ =?utf-8?B?YVZxRVZ0NSt1VVRmVVlMZU1SMy9UVmFlOHI2dFNXZnZOMjhUWjh3RmYzbUZw?=
+ =?utf-8?B?a201ekt6K0Nna0xrVmk2QWs3SXVXVjdFYUhCVEpsOHFITlZlU3dUMjlkcXg3?=
+ =?utf-8?B?eGl5MVdIU2wreE5jbnpDR1ZwK1BnSjJPRDhKRVQ5ZjNTQU5ZQjYzYmZiczl4?=
+ =?utf-8?B?cjdKQkFZRFF6Ri9vUVNLY21TM0xRSC9XQUZHcFpCOUNaUHZLMGlaTlQwc0Iv?=
+ =?utf-8?B?cHI4UGU4K0Q1d2s5STRTR1prSXlUTkZQZGlXT2drVlhQSWJ4eGtRMDQrSm5s?=
+ =?utf-8?B?RlE0bkpJVWppTjNFWWZjd1Jma2trQ1lGQVZ5L29JSVYxNngxL3lOT3FmQUFm?=
+ =?utf-8?B?ajllckYrK3lsOG1RSnpyTE1sWTYvckcxd3R5UFlnZ2tWL2I1U3EwZz09?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: AS8PR04MB8833.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 006a7071-aacc-483a-c53a-08de8e2b8660
+X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Mar 2026 07:11:12.2070
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: wx3WH8PMn7hvUEok5Y0V1hkRsmQEwutLr86v5Og8xACW1JcgMl47wkx1j1aXnur5LI3yUSa0XhC9/7Nq9XKjzA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR04MB7552
 
-When driver encounters a TOP exception, ACPI methods will be called
-for Product level reset since Wifi and BT share the same TOP, BT driver
-will first reprobe the wifi driver and then reprobe BT.
-
-Tested by:
-1) Simulating TOP exception: sudo hcitool cmd 3f 4d 0A 00
-And verified that the device went through PLDR by checking the ACPI
-debug logs.
-2) Toggle of sysfs attribute for BT reset for FLR i.e
-echo 1 > /sys/class/bluetooth/hci0/reset
-
-Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
----
- drivers/bluetooth/btintel.c      |   6 +-
- drivers/bluetooth/btintel.h      |   7 ++
- drivers/bluetooth/btintel_pcie.c | 163 +++++++++++++++++++++++++++++--
- drivers/bluetooth/btintel_pcie.h |   6 ++
- 4 files changed, 171 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/bluetooth/btintel.c b/drivers/bluetooth/btintel.c
-index dcaaa4ca02b9..4426327ebc61 100644
---- a/drivers/bluetooth/btintel.c
-+++ b/drivers/bluetooth/btintel.c
-@@ -67,9 +67,10 @@ static struct {
- 	u32        fw_build_num;
- } coredump_info;
- 
--static const guid_t btintel_guid_dsm =
-+const guid_t btintel_guid_dsm =
- 	GUID_INIT(0xaa10f4e0, 0x81ac, 0x4233,
- 		  0xab, 0xf6, 0x3b, 0x2a, 0xc5, 0x0e, 0x28, 0xd9);
-+EXPORT_SYMBOL_GPL(btintel_guid_dsm);
- 
- int btintel_check_bdaddr(struct hci_dev *hdev)
- {
-@@ -2624,7 +2625,7 @@ static void btintel_set_ppag(struct hci_dev *hdev, struct intel_version_tlv *ver
- 	kfree_skb(skb);
- }
- 
--static int btintel_acpi_reset_method(struct hci_dev *hdev)
-+int btintel_acpi_reset_method(struct hci_dev *hdev)
- {
- 	int ret = 0;
- 	acpi_status status;
-@@ -2663,6 +2664,7 @@ static int btintel_acpi_reset_method(struct hci_dev *hdev)
- 	kfree(buffer.pointer);
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(btintel_acpi_reset_method);
- 
- static void btintel_set_dsm_reset_method(struct hci_dev *hdev,
- 					 struct intel_version_tlv *ver_tlv)
-diff --git a/drivers/bluetooth/btintel.h b/drivers/bluetooth/btintel.h
-index 0e9ca99aaaae..70d812ad36a2 100644
---- a/drivers/bluetooth/btintel.h
-+++ b/drivers/bluetooth/btintel.h
-@@ -79,6 +79,8 @@ struct intel_tlv {
- #define BTINTEL_HWID_SCP2	0x20	/* Scorpius Peak2 - Nova Lake */
- #define BTINTEL_HWID_BZRIW	0x22	/* BlazarIW - Wildcat Lake */
- 
-+extern const guid_t btintel_guid_dsm;
-+
- struct intel_version_tlv {
- 	u32	cnvi_top;
- 	u32	cnvr_top;
-@@ -289,6 +291,7 @@ int btintel_bootloader_setup_tlv(struct hci_dev *hdev,
- int btintel_shutdown_combined(struct hci_dev *hdev);
- void btintel_hw_error(struct hci_dev *hdev, u8 code);
- void btintel_print_fseq_info(struct hci_dev *hdev);
-+int btintel_acpi_reset_method(struct hci_dev *hdev);
- #else
- 
- static inline int btintel_check_bdaddr(struct hci_dev *hdev)
-@@ -422,4 +425,8 @@ static inline void btintel_hw_error(struct hci_dev *hdev, u8 code)
- static inline void btintel_print_fseq_info(struct hci_dev *hdev)
- {
- }
-+static inline int btintel_acpi_reset_method(struct hci_dev *hdev)
-+{
-+	return -ENODEV;
-+}
- #endif
-diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
-index 05f82bc3f0d7..abac1ae5df8f 100644
---- a/drivers/bluetooth/btintel_pcie.c
-+++ b/drivers/bluetooth/btintel_pcie.c
-@@ -15,6 +15,7 @@
- #include <linux/wait.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
-+#include <linux/acpi.h>
- 
- #include <linux/unaligned.h>
- #include <linux/devcoredump.h>
-@@ -100,6 +101,22 @@ enum {
- 	BTINTEL_PCIE_D3
- };
- 
-+enum {
-+	BTINTEL_PCIE_DSM_SET_RESET_TIMING = 1,
-+	BTINTEL_PCIE_DSM_GET_RESET_TIMING = 2,
-+	BTINTEL_PCIE_DSM_BT_PLDR_CONFIG = 3,
-+	BTINTEL_PCIE_DSM_GET_RESET_TYPE = 4,
-+	BTINTEL_PCIE_DSM_DYNAMIC_PLDR = 5,
-+	BTINTEL_PCIE_DSM_GET_RESET_METHOD = 6,
-+	BTINTEL_PCIE_DSM_SET_PLDR_DELAY = 7,
-+};
-+
-+enum btintel_dsm_internal_product_reset_mode {
-+	BTINTEL_PCIE_DSM_PLDR_MODE_EN_PROD_RESET	= BIT(0),
-+	BTINTEL_PCIE_DSM_PLDR_MODE_EN_WIFI_FLR		= BIT(1),
-+	BTINTEL_PCIE_DSM_PLDR_MODE_EN_BT_OFF_ON		= BIT(2),
-+};
-+
- /* Structure for dbgc fragment buffer
-  * @buf_addr_lsb: LSB of the buffer's physical address
-  * @buf_addr_msb: MSB of the buffer's physical address
-@@ -126,6 +143,11 @@ struct btintel_pcie_dbgc_ctxt {
- 	struct btintel_pcie_dbgc_ctxt_buf bufs[BTINTEL_PCIE_DBGC_BUFFER_COUNT];
- };
- 
-+/* structure for reset and recovery
-+ * @pdev: The pci_dev for controller
-+ * @work: work struct for reset
-+ * @reset type: Reset can be FLR or PLDR
-+ */
- struct btintel_pcie_removal {
- 	struct pci_dev *pdev;
- 	struct work_struct work;
-@@ -2254,6 +2276,112 @@ static void btintel_pcie_inc_recovery_count(struct pci_dev *pdev,
- }
- 
- static int btintel_pcie_setup_hdev(struct btintel_pcie_data *data);
-+static void btintel_pcie_reset(struct hci_dev *hdev);
-+
-+static int btintel_pcie_acpi_reset_method(struct btintel_pcie_data *data)
-+{
-+	union acpi_object *obj, argv4;
-+	acpi_handle handle;
-+	int ret;
-+	struct pldr_mode {
-+		u16	cmd_type;
-+		u16	cmd_payload;
-+	} __packed;
-+
-+	/* set 1 for _PRR mode
-+	 * Product Reset (PLDR Abort flow)
-+	 */
-+	static const struct pldr_mode mode = {
-+		.cmd_type = 1,
-+		.cmd_payload = BTINTEL_PCIE_DSM_PLDR_MODE_EN_PROD_RESET |
-+			       BTINTEL_PCIE_DSM_PLDR_MODE_EN_WIFI_FLR,
-+	};
-+	struct hci_dev *hdev = data->hdev;
-+
-+	handle = ACPI_HANDLE(GET_HCIDEV_DEV(data->hdev));
-+	if (!handle) {
-+		bt_dev_dbg(data->hdev, "No support for bluetooth device in ACPI firmware");
-+		return -EACCES;
-+	}
-+
-+	if (!acpi_has_method(handle, "_PRR")) {
-+		bt_dev_dbg(data->hdev, "No support for _PRR ACPI method, falling back to FLR");
-+		btintel_pcie_reset(data->hdev);
-+		return -ENODEV;
-+	}
-+
-+	argv4.buffer.type = ACPI_TYPE_BUFFER;
-+	argv4.buffer.length = sizeof(mode);
-+	argv4.buffer.pointer = (void *)&mode;
-+
-+	obj = acpi_evaluate_dsm(handle, &btintel_guid_dsm, 0,
-+				BTINTEL_PCIE_DSM_DYNAMIC_PLDR, &argv4);
-+	if (!obj) {
-+		bt_dev_err(data->hdev, "Failed to call dsm to set reset method");
-+		return -EIO;
-+	}
-+	ACPI_FREE(obj);
-+
-+	pci_dev_lock(data->pdev);
-+	pci_save_state(data->pdev);
-+	ret = btintel_acpi_reset_method(hdev);
-+	if (ret)
-+		bt_dev_err(data->hdev, "ACPI _PRR reset failed (%d),PLDR incomplete",
-+			   ret);
-+	pci_restore_state(data->pdev);
-+	pci_dev_unlock(data->pdev);
-+	return ret;
-+}
-+
-+static void btintel_pcie_perform_pldr(struct btintel_pcie_removal *removal)
-+{
-+	struct pci_dev *pdev = removal->pdev;
-+	struct pci_dev *wifi = NULL;
-+	struct pci_bus *bus;
-+	struct btintel_pcie_data *data;
-+	/* on integrated we have to look up by ID (same bus) */
-+	static const struct pci_device_id wifi_device_ids[] = {
-+	#define WIFI_DEV(_id) { PCI_DEVICE(PCI_VENDOR_ID_INTEL, _id) }
-+		WIFI_DEV(0xA840), /* LNL */
-+		WIFI_DEV(0xE440), /* PTL-P */
-+		WIFI_DEV(0xE340), /* PTL-H */
-+		WIFI_DEV(0xD340), /* NVL-H */
-+		WIFI_DEV(0x6E70), /* NVL-S */
-+		WIFI_DEV(0x4D40), /* WCL */
-+		WIFI_DEV(0xD240), /* RZL-H */
-+		WIFI_DEV(0x6C40), /* RZL-M */
-+		{}
-+	};
-+	struct pci_dev *tmp = NULL;
-+
-+	data = pci_get_drvdata(pdev);
-+
-+	bus = pdev->bus;
-+	if (!bus)
-+		return;
-+
-+	/* If ACPI reset fell back to FLR or failed, skip reprobe to avoid
-+	 * racing with the FLR work already scheduled.
-+	 */
-+	if (btintel_pcie_acpi_reset_method(data))
-+		return;
-+
-+	list_for_each_entry(tmp, &bus->devices, bus_list) {
-+		if (pci_match_id(wifi_device_ids, tmp)) {
-+			wifi = pci_dev_get(tmp);
-+			break;
-+		}
-+	}
-+
-+	if (wifi) {
-+		if (device_reprobe(&wifi->dev))
-+			BT_ERR("WiFi reprobe failed for BDF:%s", pci_name(wifi));
-+		pci_dev_put(wifi);
-+	}
-+
-+	if (device_reprobe(&pdev->dev))
-+		BT_ERR("BT reprobe failed for BDF:%s", pci_name(pdev));
-+}
- 
- static void btintel_pcie_removal_work(struct work_struct *wk)
- {
-@@ -2266,9 +2394,13 @@ static void btintel_pcie_removal_work(struct work_struct *wk)
- 	pci_lock_rescan_remove();
- 
- 	if (!pdev->bus)
--		goto error;
-+		goto out;
- 
- 	data = pci_get_drvdata(pdev);
-+	if (!data) {
-+		BT_WARN("PCI driver data is NULL, aborting removal work");
-+		goto out;
-+	}
- 
- 	btintel_pcie_disable_interrupts(data);
- 	btintel_pcie_synchronize_irqs(data);
-@@ -2276,12 +2408,16 @@ static void btintel_pcie_removal_work(struct work_struct *wk)
- 	flush_work(&data->rx_work);
- 
- 	bt_dev_dbg(data->hdev, "Release bluetooth interface");
-+	if (data->reset_type == BTINTEL_PCIE_IOSF_PRR_PLDR) {
-+		btintel_pcie_perform_pldr(removal);
-+		goto out;
-+	}
- 	btintel_pcie_release_hdev(data);
- 
- 	err = pci_reset_function(pdev);
- 	if (err) {
- 		BT_ERR("Failed resetting the pcie device (%d)", err);
--		goto error;
-+		goto out;
- 	}
- 
- 	btintel_pcie_enable_interrupts(data);
-@@ -2291,7 +2427,7 @@ static void btintel_pcie_removal_work(struct work_struct *wk)
- 	if (err) {
- 		BT_ERR("Failed to enable bluetooth hardware after reset (%d)",
- 		       err);
--		goto error;
-+		goto out;
- 	}
- 
- 	btintel_pcie_reset_ia(data);
-@@ -2301,9 +2437,9 @@ static void btintel_pcie_removal_work(struct work_struct *wk)
- 	err = btintel_pcie_setup_hdev(data);
- 	if (err) {
- 		BT_ERR("Failed registering hdev (%d)", err);
--		goto error;
-+		goto out;
- 	}
--error:
-+out:
- 	pci_dev_put(pdev);
- 	pci_unlock_rescan_remove();
- 	kfree(removal);
-@@ -2339,15 +2475,19 @@ static void btintel_pcie_hw_error(struct hci_dev *hdev, u8 code)
- 	struct pci_dev *pdev = dev_data->pdev;
- 	time64_t retry_window;
- 
--	if (code == 0x13) {
--		bt_dev_err(hdev, "Encountered top exception");
--		return;
--	}
-+	btintel_pcie_dump_debug_registers(hdev);
- 
- 	data = btintel_pcie_get_recovery(pdev, &hdev->dev);
- 	if (!data)
- 		return;
- 
-+	if (code == 0x13)
-+		dev_data->reset_type = BTINTEL_PCIE_IOSF_PRR_PLDR;
-+	else
-+		dev_data->reset_type = BTINTEL_PCIE_IOSF_PRR_FLR;
-+
-+	bt_dev_err(hdev, "Encountered exception err:0x%x triggering: %s", code,
-+		   dev_data->reset_type == BTINTEL_PCIE_IOSF_PRR_PLDR ? "PLDR" : "FLR");
- 	retry_window = ktime_get_boottime_seconds() - data->last_error;
- 
- 	if (retry_window < BTINTEL_PCIE_RESET_WINDOW_SECS &&
-@@ -2503,6 +2643,10 @@ static int btintel_pcie_probe(struct pci_dev *pdev,
- 
- 	data->boot_stage_cache = 0x00;
- 	data->img_resp_cache = 0x00;
-+	/* FLR can be invoked by echoing to debugfs path, so explicitly
-+	 * initialized
-+	 */
-+	data->reset_type = BTINTEL_PCIE_IOSF_PRR_FLR;
- 
- 	err = btintel_pcie_config_pcie(pdev, data);
- 	if (err)
-@@ -2701,6 +2845,7 @@ static int btintel_pcie_resume(struct device *dev)
- 	if (data->pm_sx_event == PM_EVENT_FREEZE ||
- 	    data->pm_sx_event == PM_EVENT_HIBERNATE) {
- 		set_bit(BTINTEL_PCIE_CORE_HALTED, &data->flags);
-+		data->reset_type = BTINTEL_PCIE_IOSF_PRR_FLR;
- 		btintel_pcie_reset(data->hdev);
- 		return 0;
- 	}
-diff --git a/drivers/bluetooth/btintel_pcie.h b/drivers/bluetooth/btintel_pcie.h
-index e3d941ffef4a..856673fb2bd7 100644
---- a/drivers/bluetooth/btintel_pcie.h
-+++ b/drivers/bluetooth/btintel_pcie.h
-@@ -144,6 +144,11 @@ enum msix_mbox_int_causes {
- 	BTINTEL_PCIE_CSR_MBOX_STATUS_MBOX4 = BIT(3), /* cause MBOX4 */
- };
- 
-+enum btintel_pcie_reset_type {
-+	BTINTEL_PCIE_IOSF_PRR_FLR = 0,
-+	BTINTEL_PCIE_IOSF_PRR_PLDR = 1,
-+};
-+
- #define BTINTEL_PCIE_MSIX_NON_AUTO_CLEAR_CAUSE	BIT(7)
- 
- /* Minimum and Maximum number of MSI-X Vector
-@@ -514,6 +519,7 @@ struct btintel_pcie_data {
- 	struct txq	txq;
- 	struct rxq	rxq;
- 	u32	alive_intr_ctxt;
-+	enum btintel_pcie_reset_type	reset_type;
- 	struct btintel_pcie_dbgc	dbgc;
- 	struct btintel_pcie_dump_header dmp_hdr;
- 	u8	pm_sx_event;
--- 
-2.43.0
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBGcmFuayBMaSA8ZnJhbmsubGlA
+bnhwLmNvbT4NCj4gU2VudDogMjAyNuW5tDPmnIgyOOaXpSAwOjIzDQo+IFRvOiBIb25neGluZyBa
+aHUgPGhvbmd4aW5nLnpodUBueHAuY29tPg0KPiBDYzogbC5zdGFjaEBwZW5ndXRyb25peC5kZTsg
+bHBpZXJhbGlzaUBrZXJuZWwub3JnOyBrd2lsY3p5bnNraUBrZXJuZWwub3JnOw0KPiBtYW5pQGtl
+cm5lbC5vcmc7IHJvYmhAa2VybmVsLm9yZzsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsNCj4gcy5oYXVl
+ckBwZW5ndXRyb25peC5kZTsga2VybmVsQHBlbmd1dHJvbml4LmRlOyBmZXN0ZXZhbUBnbWFpbC5j
+b207DQo+IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMu
+aW5mcmFkZWFkLm9yZzsNCj4gaW14QGxpc3RzLmxpbnV4LmRldjsgbGludXgta2VybmVsQHZnZXIu
+a2VybmVsLm9yZzsgc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENI
+IHYyXSBQQ0k6IGlteDY6IERvbid0IHJlbW92ZSBNU0kgY2FwYWJpbGl0eSBGb3INCj4gaS5NWDdE
+L2kuTVg4TQ0KPiANCj4gT24gRnJpLCBNYXIgMjcsIDIwMjYgYXQgMDg6MTI6MjlBTSArMDAwMCwg
+SG9uZ3hpbmcgWmh1IHdyb3RlOg0KPiA+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4g
+PiA+IEZyb206IEZyYW5rIExpIDxmcmFuay5saUBueHAuY29tPg0KPiA+ID4gU2VudDogMjAyNuW5
+tDPmnIgxOeaXpSAyMjoxNw0KPiA+ID4gVG86IEhvbmd4aW5nIFpodSA8aG9uZ3hpbmcuemh1QG54
+cC5jb20+DQo+ID4gPiBDYzogbC5zdGFjaEBwZW5ndXRyb25peC5kZTsgbHBpZXJhbGlzaUBrZXJu
+ZWwub3JnOw0KPiA+ID4ga3dpbGN6eW5za2lAa2VybmVsLm9yZzsgbWFuaUBrZXJuZWwub3JnOyBy
+b2JoQGtlcm5lbC5vcmc7DQo+ID4gPiBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBzLmhhdWVyQHBlbmd1
+dHJvbml4LmRlOw0KPiBrZXJuZWxAcGVuZ3V0cm9uaXguZGU7DQo+ID4gPiBmZXN0ZXZhbUBnbWFp
+bC5jb207IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7DQo+ID4gPiBsaW51eC1hcm0ta2VybmVs
+QGxpc3RzLmluZnJhZGVhZC5vcmc7DQo+ID4gPiBpbXhAbGlzdHMubGludXguZGV2OyBsaW51eC1r
+ZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPiA+ID4gc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KPiA+
+ID4gU3ViamVjdDogUmU6IFtQQVRDSCB2Ml0gUENJOiBpbXg2OiBEb24ndCByZW1vdmUgTVNJIGNh
+cGFiaWxpdHkgRm9yDQo+ID4gPiBpLk1YN0QvaS5NWDhNDQo+ID4gPg0KPiA+ID4gT24gVGh1LCBN
+YXIgMTksIDIwMjYgYXQgMDU6MTg6MjNQTSArMDgwMCwgUmljaGFyZCBaaHUgd3JvdGU6DQo+ID4g
+PiA+IFRoZSBNU0kgdHJpZ2dlciBtZWNoYW5pc20gZm9yIGVuZHBvaW50IGRldmljZXMgY29ubmVj
+dGVkIHRvDQo+ID4gPiA+IGkuTVg3RCwgaS5NWDhNTSwgYW5kIGkuTVg4TVEgUENJZSByb290IGNv
+bXBsZXggcG9ydHMgZGVwZW5kcyBvbg0KPiA+ID4gPiB0aGUgTVNJIGNhcGFiaWxpdHkgcmVnaXN0
+ZXIgc2V0dGluZ3MgaW4gdGhlIHJvb3QgY29tcGxleC4gUmVtb3ZpbmcNCj4gPiA+ID4gdGhlIE1T
+SSBjYXBhYmlsaXR5IGJyZWFrcyBNU0kgZnVuY3Rpb25hbGl0eSBmb3IgdGhlc2UgZW5kcG9pbnRz
+Lg0KPiA+ID4gPg0KPiA+ID4gPiBQcmVzZXJ2ZSB0aGUgTVNJIGNhcGFiaWxpdHkgZm9yIGkuTVg3
+RC9pLk1YOE0gUENJZSByb290IGNvbXBsZXggdG8NCj4gPiA+ID4gbWFpbnRhaW4gTVNJIGZ1bmN0
+aW9uYWxpdHkuDQo+ID4gPiA+DQo+ID4gPiA+IENjOiBzdGFibGVAdmdlci5rZXJuZWwub3JnDQo+
+ID4gPiA+IEZpeGVzOiBmNWNkOGE5MjljODI1ICgiUENJOiBkd2M6IFJlbW92ZSBNU0kvTVNJWCBj
+YXBhYmlsaXR5IGZvcg0KPiA+ID4gPiBSb290IFBvcnQgaWYgaU1TSS1SWCBpcyB1c2VkIGFzIE1T
+SSBjb250cm9sbGVyIikNCj4gPiA+DQo+ID4gPiBJIHRoaW5rIGl0J2QgYmV0dGVyIGFkZCBhbm90
+aGVyIHZhcmlibGUgdG8gY2hlY2sgaW4gZjVjZDhhOTI5YzgyNSBpZg0KPiA+ID4gKHBwLT5oYXNf
+bXNpX2N0cmwgJiYgIXBwLT54eHhfYnJva2VuKSBvciBkaXJlY3QgdXNlIElQIHZlcnNpb24sDQo+
+ID4gPiB3aGljaCBhbHJlYWR5IGF1dG8gZGV0ZWN0ZWQuDQo+ID4gPg0KPiA+ID4gUHJldmlvdXMg
+cGF0Y2ggaGF2ZSBub3QgY29uc2lkZXIgdGhpcyBvbGQgdmVyc2lvbiBjb250cm9sbGVyLg0KPiA+
+IEhpIEZyYW5rOg0KPiA+IEZyb20gd2hhdCBJJ3ZlIG9ic2VydmVkLCB0aGlzIGJlaGF2aW9yIHNl
+ZW1zIHRpZWQgdG8gdGhlIHNwZWNpZmljDQo+ID4gY29udHJvbGxlciBkZXNpZ24uIEZvciBleGFt
+cGxlLCBuZWl0aGVyIHRoZSBpLk1YNlEgbm9yIHRoZSBpLk1YNlNYIGV4aGliaXQNCj4gdGhpcyBp
+c3N1ZS4NCj4gDQo+IFllcywgc2hvdWxkIHJlbmFtZSBoYXNfbXNpX2N0cmwgLT4gZGlzYWJsZV9t
+c2lfY3RybC4gU2V0IGl0IGFjY29yZGluZyB0bw0KPiBkaWZmZXJlbmNlIGNvbmRpdGlvbiwgc3Vj
+aCBhcyBoYXNfbXNpX2N0cmwgb3Igc2tpcCBpdCBmb3IgcHJvYmxlbSBwbGF0Zm9ybQ0KPiBzdWNo
+IGFzIGkuTVg4TU0gYW5kIGkuTVg4TVEuDQo+IA0KPiBEaXNhYmxlIGl0IGFuZCBvdmVyd3JpdGUg
+bGF0ZXIgd2lsbCBjYXVzZSBjb25mdXNlLg0KPg0KSG93IGFib3V0IGFkZGluZyBhIGJvb2xlYW4g
+ZmllbGQgdG8gZHdfcGNpZV9ycCBzdHJ1Y3QgdG8gaW5kaWNhdGUgcGxhdGZvcm1zDQp0aGF0IHNo
+b3VsZCBwcmVzZXJ2ZSB0aGUgTVNJIGNhcGFiaWxpdHkgZHVyaW5nIGluaXRpYWxpemF0aW9uLg0K
+DQpzdHJ1Y3QgZHdfcGNpZV9ycCB7DQogICAgICAgIGJvb2wgICAgICAgICAgICAgICAgICAgIHVz
+ZV9pbXNpX3J4OjE7DQorICAgICAgIGJvb2wgICAgICAgICAgICAgICAgICAgIHByZXNlcnZlX21z
+aV9jYXA7ICAvKiBEb24ndCByZW1vdmUgTVNJIGNhcGFiaWxpdHkgaWYgdHJ1ZSAqLw0KICAgICAg
+ICBib29sICAgICAgICAgICAgICAgICAgICBjZmcwX2lvX3NoYXJlZDoxOw0KICAgICAgICB1NjQg
+ICAgICAgICAgICAgICAgICAgICBjZmcwX2Jhc2U7DQogICAgICAgIHZvaWQgX19pb21lbSAgICAg
+ICAgICAgICp2YV9jZmcwX2Jhc2U7DQo+ID4NCj4gPiBUaGUgaW50ZW50aW9uIG9mIGNvbW1pdCBm
+NWNkOGE5MjljODI1IGlzIHRvIHJlbW92ZSB0aGUgTVNJIGNhcGFiaWxpdHkNCj4gPiBmcm9tIHRo
+ZSBSb290IENvbXBsZXggKFJDKS4gRnJvbSB0aGUgYXV0aG9yJ3MgcGVyc3BlY3RpdmUsIHRoaXMg
+Y2hhbmdlDQo+ID4gc2hvdWxkIG5vdCBhZmZlY3QgdGhlICBFbmRwb2ludCdzIChFUCkgTVNJIGZ1
+bmN0aW9uYWxpdHkuDQo+IA0KPiBZZXMsIHlvdXIgcGF0Y2ggZml4ICBSQyAgbW9kZT8NCk15IHBh
+dGNoIGZpeGVzIHRoZSBFUCBNU0kgYnJva2VuIGlzc3VlIGFmdGVyIHJlbW92aW5nIFJDJ3MgTVNJ
+IGNhcGFiaWxpdHkuDQoNCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCj4gDQo+IEZyYW5rDQo+
+ID4NCj4gPiBJJ20gbm90IHN1cmUgZG8gdGhpcyBjaGVjayAocHAtPmhhc19tc2lfY3RybCAmJiAh
+cHAtPm1zaV9icm9rZW4pIGlzDQo+IHByb3BlciBvciBub3QuDQo+ID4gQmVzdCBSZWdhcmRzDQo+
+ID4gUmljaGFyZCBaaHUNCj4gPiA+ID4NCg==
