@@ -1,104 +1,111 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA07F33B97B;
-	Mon, 30 Mar 2026 17:14:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE1043DDDA3;
+	Mon, 30 Mar 2026 17:38:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774890875; cv=none; b=MODXg194kJywyUsaPHN1zOSbJN8wyK7ECt6rljo578asin8c6uLeCGi+GtTZYM8JfSrNxNoEGenjq/kTA0J7cJGZnoRIsN3aNCkAC8KbGObSS0ta/5Q0KdoTIad1FOeIBwOQjBeSxXCEysnD4feAFImhLvIQ4nUuMUCbaoP9Frg=
+	t=1774892332; cv=none; b=LkbEgkd3oYeTgAdP3a+TledJGBDEkkFkdCC3u0LX6FiMRENwPCI1wr/g0VlHl6HEonO7NJKpASu1Rpf0jClPjD/r8w05Ih95V9hzZ/DjI9+yxSRUgR/iTxwGNpYhAkHwySHaoJdyEiIJycbXYkB9CH0cIQZndNAhjkLypOR+RS8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774890875; c=relaxed/simple;
-	bh=q9h/syO7kNCfJ58ERVsTRXaw2C0cY3Gdps0OmK3fpio=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=UIhrtoCP72W/aiV9oIo2XNiFThWB0RKN5M5+SWpZiHAmZbF+zbcMMU16RoRIKDInwSW9Farz/8lt1k1dwiMLxP1nJPO91WpCNxzLjAOWB8bFv9GP1dAfl6BMN74vfLk02ZFPM1h7duoxHSFcDfzn/56Yr7OaEy8WTduiZx0xlmU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SFHmgSuF; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774892332; c=relaxed/simple;
+	bh=/8RwifExta3hi9wb0UAvoCzja5DI/LlE9XUZDEKtDlU=;
+	h=Content-Type:Date:Message-Id:From:Subject:Cc:To:Mime-Version:
+	 References:In-Reply-To; b=SD8/xN6VvQvaqrPz4qfgFA7f66EYFReohMjCkweFjH6MvN3fnm090XKAjsbU3JPrdnHUPk+NJ79ISrUX+5fuZMtNyd2BaYa5JuSOgsiIL6QsTw4+A5K57JMivfJlh2eXmh1HXIEnwOKknpQKb7Gj4xj90Bg3eU+1OtFq9Vk1KiA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S56YWHrx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SFHmgSuF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF868C4CEF7;
-	Mon, 30 Mar 2026 17:14:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S56YWHrx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39967C2BCB5;
+	Mon, 30 Mar 2026 17:38:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774890874;
-	bh=q9h/syO7kNCfJ58ERVsTRXaw2C0cY3Gdps0OmK3fpio=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=SFHmgSuFT1Wgn8xn5rmuDSa5zbAEcQUo7HP1DpZcKVNC5dxQzQAKIC8JgnCbVhCrD
-	 lppTGF5CdH5gcQEGYZzn5JiWWy+MpbHjx56AW7N5O7/l93BF0AcQbF/WnN6/T4HWz4
-	 v4h2S8rFlfUBG9k+OnHkw87XuD+f9TJY9tWfhUVkFi9azrNULsj69wcX2OlxvO5axC
-	 DYfoY5EccTq8i/G0Zm/SK3PhT2Wr7ELKrC3XIbirvvUpWyuQ/wKWItHMsZwIFv8nvR
-	 vZ9KD7XPDPyMPWZ0yE1PdzG1cvWVdkT4f/lG13Xuj6mHKhunPJF/iciyaT902zDjck
-	 RT3VzJcned09w==
-Date: Mon, 30 Mar 2026 12:14:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: kernelci@lists.linux.dev
-Cc: kernelci-results@groups.io, gus@collabora.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [REGRESSION] =?utf-8?Q?linux-pci=2Fnex?=
- =?utf-8?Q?t=3A_=28build=29_ignoring_return_value_of_=E2=80=98vga=5Fget=5F?=
- =?utf-8?Q?uninterruptible=E2=80=99?= declared with a...
-Message-ID: <20260330171433.GA84073@bhelgaas>
+	s=k20201202; t=1774892332;
+	bh=/8RwifExta3hi9wb0UAvoCzja5DI/LlE9XUZDEKtDlU=;
+	h=Date:From:Subject:Cc:To:References:In-Reply-To:From;
+	b=S56YWHrxhwHLS+EfSzEoW6H9YreN8wrQZ/7HEDAWqAjDAvn6rNoi6jXsbwo3fyTXv
+	 TjHIGPt2qRPbkCCC5yCfSjAbtAw6BzXCZXCaq/yn658JrR6/xBRJ7/mYaDQNBA9Pmv
+	 wsEtOTKeR8oMh9VC6LyR87wz4W/9tT1+Zpl9oixkuOSdi9YZxoGPEs7WRJpEIUF6YP
+	 QT3eMcBSThXdTkmokN7Q16p5we5dG5K2/LjDkgP9NUYvkxjgwB7vubbfIKhxuyu2dj
+	 oq30Tych+FNSMtuze99IC0ZOa+AcROHbp3uZujJVXn+3TGN1ylZ7O8WH21Mk5oRMNX
+	 /gBaIKRkeOGJg==
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 30 Mar 2026 19:38:41 +0200
+Message-Id: <DHGATG6LJOM1.2AI7BYQ2O4DFU@kernel.org>
+From: "Danilo Krummrich" <dakr@kernel.org>
+Subject: Re: [PATCH 05/12] PCI: use generic driver_override infrastructure
+Cc: "Russell King" <linux@armlinux.org.uk>, "Greg Kroah-Hartman"
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ "Ioana Ciornei" <ioana.ciornei@nxp.com>, "Nipun Gupta"
+ <nipun.gupta@amd.com>, "Nikhil Agarwal" <nikhil.agarwal@amd.com>, "K. Y.
+ Srinivasan" <kys@microsoft.com>, "Haiyang Zhang" <haiyangz@microsoft.com>,
+ "Wei Liu" <wei.liu@kernel.org>, "Dexuan Cui" <decui@microsoft.com>, "Long
+ Li" <longli@microsoft.com>, "Bjorn Helgaas" <bhelgaas@google.com>, "Armin
+ Wolf" <W_Armin@gmx.de>, "Bjorn Andersson" <andersson@kernel.org>, "Mathieu
+ Poirier" <mathieu.poirier@linaro.org>, "Vineeth Vijayan"
+ <vneethv@linux.ibm.com>, "Peter Oberparleiter" <oberpar@linux.ibm.com>,
+ "Heiko Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>,
+ "Alexander Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger"
+ <borntraeger@linux.ibm.com>, "Sven Schnelle" <svens@linux.ibm.com>, "Harald
+ Freudenberger" <freude@linux.ibm.com>, "Holger Dengler"
+ <dengler@linux.ibm.com>, "Mark Brown" <broonie@kernel.org>, "Michael S.
+ Tsirkin" <mst@redhat.com>, "Jason Wang" <jasowang@redhat.com>, "Xuan Zhuo"
+ <xuanzhuo@linux.alibaba.com>, =?utf-8?q?Eugenio_P=C3=A9rez?=
+ <eperezma@redhat.com>, "Juergen Gross" <jgross@suse.com>, "Stefano
+ Stabellini" <sstabellini@kernel.org>, "Oleksandr Tyshchenko"
+ <oleksandr_tyshchenko@epam.com>, "Christophe Leroy (CS GROUP)"
+ <chleroy@kernel.org>, <linux-kernel@vger.kernel.org>,
+ <driver-core@lists.linux.dev>, <linuxppc-dev@lists.ozlabs.org>,
+ <linux-hyperv@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <platform-driver-x86@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
+ <linux-remoteproc@vger.kernel.org>, <linux-s390@vger.kernel.org>,
+ <linux-spi@vger.kernel.org>, <virtualization@lists.linux.dev>,
+ <kvm@vger.kernel.org>, <xen-devel@lists.xenproject.org>,
+ <linux-arm-kernel@lists.infradead.org>, "Danilo Krummrich"
+ <dakr@kernel.org>, "Gui-Dong Han" <hanguidong02@gmail.com>
+To: "Alex Williamson" <alex@shazbot.org>, "Jason Gunthorpe" <jgg@ziepe.ca>
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <177463434509.1554.4896275539353552635@0d12152ffbcd>
+Mime-Version: 1.0
+References: <20260324005919.2408620-1-dakr@kernel.org>
+ <20260324005919.2408620-6-dakr@kernel.org>
+In-Reply-To: <20260324005919.2408620-6-dakr@kernel.org>
 
-On Fri, Mar 27, 2026 at 05:59:05PM -0000, KernelCI bot wrote:
-> 
-> 
-> 
-> 
-> Hello,
-> 
-> New build issue found on linux-pci/next:
-> 
-> ---
->  ignoring return value of ‘vga_get_uninterruptible’ declared with attribute ‘warn_unused_result’ [-Werror=unused-result] in drivers/gpu/drm/i915/display/intel_vga.o (drivers/gpu/drm/i915/display/intel_vga.c) [logspec:kbuild,kbuild.compiler.error]
-> ---
-> 
-> - dashboard: https://d.kernelci.org/i/maestro:f670fdf443306495220d2cea8670ce85a80aed1e
-> - giturl: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
-> - commit HEAD:  50451816531d66141cafe2347f9a896bd4dcb2b3
+(Cc: Jason)
 
-Dropped the commits related to this, see
-https://lore.kernel.org/all/20260330161802.GA79047@bhelgaas
+On Tue Mar 24, 2026 at 1:59 AM CET, Danilo Krummrich wrote:
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index d43745fe4c84..460852f79f29 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -1987,9 +1987,8 @@ static int vfio_pci_bus_notifier(struct notifier_bl=
+ock *nb,
+>  	    pdev->is_virtfn && physfn =3D=3D vdev->pdev) {
+>  		pci_info(vdev->pdev, "Captured SR-IOV VF %s driver_override\n",
+>  			 pci_name(pdev));
+> -		pdev->driver_override =3D kasprintf(GFP_KERNEL, "%s",
+> -						  vdev->vdev.ops->name);
+> -		WARN_ON(!pdev->driver_override);
+> +		WARN_ON(device_set_driver_override(&pdev->dev,
+> +						   vdev->vdev.ops->name));
 
-> 
-> 
-> Please include the KernelCI tag when submitting a fix:
-> 
-> Reported-by: kernelci.org bot <bot@kernelci.org>
-> 
-> 
-> Log excerpt:
-> =====================================================
-> /tmp/kci/linux/drivers/gpu/drm/i915/display/intel_vga.c:68:9: error: ignoring return value of ‘vga_get_uninterruptible’ declared with attribute ‘warn_unused_result’ [-Werror=unused-result]
->    68 |         vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
->       |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> /tmp/kci/linux/drivers/gpu/drm/i915/display/intel_vga.c: In function ‘intel_vga_reset_io_mem’:
-> /tmp/kci/linux/drivers/gpu/drm/i915/display/intel_vga.c:93:9: error: ignoring return value of ‘vga_get_uninterruptible’ declared with attribute ‘warn_unused_result’ [-Werror=unused-result]
->    93 |         vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
->       |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> cc1: all warnings being treated as errors
-> 
-> =====================================================
-> 
-> 
-> # Builds where the incident occurred:
-> 
-> ## x86_64_defconfig+kselftest on (x86_64):
-> - compiler: gcc-14
-> - config: None
-> - dashboard: https://d.kernelci.org/build/maestro:69c6b9023712df3240c2a985
-> 
-> 
-> #kernelci issue maestro:f670fdf443306495220d2cea8670ce85a80aed1e
-> 
-> --
-> This is an experimental report format. Please send feedback in!
-> Talk to us at kernelci@lists.linux.dev
-> 
-> Made with love by the KernelCI team - https://kernelci.org
+Technically, this is a change in behavior. If vdev->vdev.ops->name is NULL,=
+ it
+will trigger the WARN_ON(), whereas before it would have just written "(nul=
+l)"
+into driver_override.
+
+I assume that vfio_pci_core drivers are expected to set the name in struct
+vfio_device_ops in the first place and this code (silently) relies on this
+invariant?
+
+Alex, Jason: Should we keep this hunk above as is and check for a proper na=
+me in
+struct vfio_device_ops in vfio_pci_core_register_device() with a subsequent
+patch?
+
+>  	} else if (action =3D=3D BUS_NOTIFY_BOUND_DRIVER &&
+>  		   pdev->is_virtfn && physfn =3D=3D vdev->pdev) {
+>  		struct pci_driver *drv =3D pci_dev_driver(pdev);
