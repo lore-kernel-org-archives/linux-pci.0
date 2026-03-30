@@ -1,155 +1,148 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012026.outbound.protection.outlook.com [40.93.195.26])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE3853B6350;
-	Mon, 30 Mar 2026 13:10:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.26
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774876209; cv=fail; b=WLepoVw3ougFbbeQaOidhc14eH6nFW1LXGStKHKYOzNX2mCNO5/5nz3auJHlgudiEbzy++CMmZvuRs+KZ89l9wMQRcpKl8Sezqbl/bf3SJeLtUvYSIM4Am7dsgH3PXg6Lnw7I1uDlHarpfpFsTkvIVkTrK/A4f5BQENQdInAJ4w=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774876209; c=relaxed/simple;
-	bh=JSGvRZhbUbhIqbp4G1IdsTJAodmfv0qM6q/sOfuYl2Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=SQhksIuaqgpqwNhinwwKj5pcqC9fHgX2fXQWzAhlHn7lgqMzrlzPBIn6lQyl+Hg7/vxYVIFMB6VNyUhcRJbVVqHDhE28w2FkhTGtK1o44Ai+EDIMotOHPiXY6Rv/LmRWHWE1hamZHXGACxQPINR7A4b5wiLUCW7GKWaWBiSG2kc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=aGJZ2J9I; arc=fail smtp.client-ip=40.93.195.26
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 260B53D333F;
+	Mon, 30 Mar 2026 13:10:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774876213; cv=none; b=qHvOQX44tohTxTViaCE8CBsTSUihVi7ME/Lm7gJvfpLq4/x6fBmE1G/moOPSPtKoGS22QD7xRNWFlgdNy7GYMowKifanoUPALTdpq8g3PAYiP3bLEzYpzhaYz1Jyd/U7BPdPptqxVLRVuiz2/BtLeEW4TiurxY+YpERObmwazNM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774876213; c=relaxed/simple;
+	bh=+z0ds1dEkDsjD2TbiG1J1ECIKxoY5I0HhGpLfURiclQ=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=U6N64RkF3eC7iGirr7L40XZRjhR4B1W4Yrt1+7ZshddW2cNEnRwrPsa4uHAgRhdFSB8eajiOwTy0SrVFX8VnXeWS9BcFnN0JYi7RxW8SdEhTrdfz42zZhNGI1RPKRqfEXE4+stsC/NX+JcmfSroZPeMB2L2qsO0oN4gJkWY3l8I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=U9k3SEGC; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="aGJZ2J9I"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=fRtEBFzwC6B8NTiUYtUXMX1Pe/NoZ6PTcCfgAkpJKQAqSmUSTrWtYur2N7A3Cz0ws9Hs8+vWE7hB3srd308A8UKpVz0ibhgDZ1t2Pu/2zY1ms4EjD0UhsOAcQDlCtKE44YktjKxHjiBYH9bo6ZzrH9lpMsoTHJT7Eze6i+AQmuEKWvDmSsIlTqDGtZssMEl0gvWe5iIYmGCg4CkS8rFrzMQaNF++KQ+BPqosoj+iYq2FBFx6yky3ZnESMWvvr5lL5u3zkrHeySW5haYzRSe21IzGKEQAH1XOCuINXk0Y9nWpgo9+fmY96XUbDeYjrRYCw2GemwPOjodqZUZVW6Gkmw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=1Y/bBwuPjnlcZxBxnr8Fl6WeKrbbgdqJZlevGAELM2w=;
- b=hdxrr/fiwL1pd5jS20v4xbsUMoGiynXX1Q0wnoOr7SaQlfKFfwUoFzNH8bVKIsVBo8khnBeq1ttX3gRo2e8KJJVQeVHOpjgN2J3mwF/MDdQwjDLN+T1iyA5uIFijBaulUVC8nmvIhHqa62Y228r/guJufdVrl+9Djbirq4zMICUD1DaSytDksalhV+bjB9+N1wC1+4JuxB4K3u0TjD9ghNHmaAOjOdKw7ctjD0gurBtVDP7iBxO/ze9+gu+3fsiGca8a8HRz9bejS/J68cjy3hkPubT867H9pQJA2/SjDNtA2IurVVkHFgrQIG/+Tqc+KoVDDr/rkoiia9x0FzneRw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1Y/bBwuPjnlcZxBxnr8Fl6WeKrbbgdqJZlevGAELM2w=;
- b=aGJZ2J9IkHgv7h70/DorinSB3fwfa93XP94TyyuqU0AAUEChiccn233ozOWHBdHsVzlDm41/xohNUNQqDkJnwPxkD69wkj7SsqwShhFqaj2Hgz6iKumNmNYay0y1X85afxW2bEReJ3xci29wc2l7zOyJ1kqqPDAKnFAwPY4akabHRxNKpKSnOgtxI1T0LYT0WyKzqXITEWep8fojKuFG3G3q5pHJUU5ziiw1dfJwVP4DIB6p34i6I7QbnFetXMjbVhq/tHS3lTDW1kBTHTbiwnbvOBztjX6lKjPpHUujPbk4AFkQesQB+UoXocRM+Ta7pD1JV57fPzvenb1J3RwlXg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
- by SA0PR12MB4366.namprd12.prod.outlook.com (2603:10b6:806:72::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.15; Mon, 30 Mar
- 2026 13:10:02 +0000
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::299d:f5e0:3550:1528%5]) with mapi id 15.20.9769.014; Mon, 30 Mar 2026
- 13:10:02 +0000
-Date: Mon, 30 Mar 2026 10:10:01 -0300
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: Wei Wang <wei.w.wang@hotmail.com>
-Cc: bhelgaas@google.com, jonathan.cameron@huawei.com,
-	dan.carpenter@linaro.org, akpm@linux-foundation.org, bp@alien8.de,
-	rdunlap@infradead.org, alex@shazbot.org, kevin.tian@intel.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v6 2/6] Documentation/kernel-parameters: Add multi-device
- config_acs example
-Message-ID: <20260330131001.GP310919@nvidia.com>
-References: <SEZPR01MB439931D7320F6C476D181C1EDC44A@SEZPR01MB4399.apcprd01.prod.exchangelabs.com>
- <SEZPR01MB4399C75BE115DA5214014880DC44A@SEZPR01MB4399.apcprd01.prod.exchangelabs.com>
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <SEZPR01MB4399C75BE115DA5214014880DC44A@SEZPR01MB4399.apcprd01.prod.exchangelabs.com>
-X-ClientProxiedBy: YT4PR01CA0243.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:b01:10f::28) To LV8PR12MB9620.namprd12.prod.outlook.com
- (2603:10b6:408:2a1::19)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="U9k3SEGC"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62U0jCiT462561;
+	Mon, 30 Mar 2026 13:10:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=CHeSzO
+	4goq394woaZUo2vkt/fxPpeKAgtzg8EVdB714=; b=U9k3SEGCyHG5yQb7QvISk3
+	5GHtl1iCyzCoWlnunTc0+O9IB9zfY+PrUCUuvC+rtmaC+AEb/wx0QJAmb8NlJ6fw
+	IhrClLOTT2+XshHlnwQMxa5008uTuSaAEjCTXu5BYyzAtZDdr2p+hhGLfvQtEPyh
+	UWGxtgCOP9ybe//Zh/OKQ/oWhDXuSow3uh6lQ3sRaoHMsJi6Gnek5mGyokLTXR31
+	6iMhyF6qMD2/G66tQdHPPIVXRL3SjpAfzXvXLq8RrUctGGc+26YUl1d6jfCLgw36
+	2HarZWGsMUx/jfAFcaBvW6gaxixjiyecwK/4APOQmJSfmxyNE5TNoyAfnvfPszsA
+	==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4d66nnevwa-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 30 Mar 2026 13:10:07 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62UBFMQD008703;
+	Mon, 30 Mar 2026 13:10:06 GMT
+Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4d6v11cqy9-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 30 Mar 2026 13:10:06 +0000
+Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
+	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62UDA2SD42664208
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 30 Mar 2026 13:10:02 GMT
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id A628F2004B;
+	Mon, 30 Mar 2026 13:10:02 +0000 (GMT)
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 68C032004D;
+	Mon, 30 Mar 2026 13:10:02 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.87.85.9])
+	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 30 Mar 2026 13:10:02 +0000 (GMT)
+From: Gerd Bayer <gbayer@linux.ibm.com>
+Date: Mon, 30 Mar 2026 15:09:44 +0200
+Subject: [PATCH v7 1/3] PCI: AtomicOps: Do not enable requests by RCiEPs
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|SA0PR12MB4366:EE_
-X-MS-Office365-Filtering-Correlation-Id: dcb8a561-4b09-4a65-07c4-08de8e5da757
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|366016|1800799024|22082099003|18002099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	CI13Ho1PHFreuO4gUJUi4LdF016kOmFOu4FStIruJS5mRcmZSJuvRMnO4QhpWAQj36cKa94gLVHxAohG8jhQmt+SFtiRp20NIUkgKA8xCDDrYEFSKI9YJPo3xY4v6TDHJfEF4qs1av2zwYpe0WdeycPg0pPz2LWVcghq2X+fwOtalyAFhYxkJpt8rnXYu+2b23SLbnOjvPFhvAA4uMIyajwmMzywBdJ6chi9Irkp5d23ytooJHegs2vTqEiFMkcAAJqutWpO5h5cpXHUz1bne/W4fIqIXIm1gmTjhYMuHzMaoCEEWC3C/kEN8pBrG6mL2TZlPX8xF0HXYC2B5QHA7UOdNjdYr3RstCPW5iTs3HGNXRAqfyPKPsCmw+oDlWknOqQmXyrIA75G/m7bVF0hT1GIFqBBJToaFGoK19WwfUx48TtGfLCJYzS8M5bTqmWsKJg8nnsDSW9N+RblIPhaluwbEE/+TzRUmneiuEmGwPbp4QxWUp06HvUND5YJ1BXjDArAN1neCIQp0sVo5zQaGdgL4PHHCytB6zOZFR3wLZBppfITbsF1OZxtHTfeH2dnaoiGRt6uDPMxnyRDzuBgnl2n0IYfJqef8gVErkq4f0udqhDa4LVCNK2azfBHcpuXPBuAMrUjX6o7t9j5ELF/GoEgJuu4vbMZHwDo0WXyRAyqo4CoAt6NQ9ssh6G25jWWrLNaawJ8s3KugQJscFOZhQYCe6jeUc9F7A4N+oyyWp8=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?R1ZpWk1aTUxoWVJibm51VzhEeXV2L1hmUThPbUQzeENwT0RscHk1VVgrcDg0?=
- =?utf-8?B?YUxEc25KaFlrdkJIOFordmtEQTh4MXZybHZDSlVVbzBPMmw4czROank5RitH?=
- =?utf-8?B?dmk1WVJoalJTTDBZVXJCOURDeFNJV1NobTJ5citNQmFyR1RXeHl5QjlmTXJF?=
- =?utf-8?B?Y1pEazhIaXFjb0Q5U1J3TVN3NmJWNGRmS3V4ZzRwMHhnMDhNY2N4REVpZlVC?=
- =?utf-8?B?R2djN3V3ZHYxWnBLbmZ4dTY0WVdVeW9RZ3lTNmNCUEpTTTZkWnJUdnN1Nkli?=
- =?utf-8?B?ZjdTZURGUFZkNTB5SGh3ZlNIMW1DNlZMekRVWE5QTGZHU09icUlBQmpUUkFk?=
- =?utf-8?B?VnN2NFNLcjZJQzNDMXNsT2hiY2s4TUxyam9wdmhMTTFmOW0zTWQxWEFPUEhY?=
- =?utf-8?B?ODNQKzloWEVUSTNxUmU1OU5aMFQ2dlVNMUJlNFFHTUpMSnhDdFh5eEIwaDRy?=
- =?utf-8?B?WDg3UnJzT0NYREpQRDZlajVvU2V2RW0zS1hlMDIrWVlNYktiL1ZSY0ZyT083?=
- =?utf-8?B?NzA0UlFlTzg2SE5KWFpVR0RrSjdyQWtWZEpCcmxOdUQ5a29GdldETGw1a3F5?=
- =?utf-8?B?WmJrYWYwakpLZ1M5RnZzNVlWYTE1YzJHZUtSd0h4eWthbUtiSGMwaXBmazdY?=
- =?utf-8?B?NEtnaVAwL2xXOFUrMEQyUDQ2anVDZ0lPeWZlV0gxQTNTYTZQNzdpMWk3QmhT?=
- =?utf-8?B?bEp0MERqb25Gc2lQSmJQbTF6QUlUa3krdy8zYnFKN1dES0tPWDVTamtrL0hV?=
- =?utf-8?B?YTM5cnFzTDJiNkJETXFNSVNXQXJxMEI2SE9YSEszOHJZbEE5OWg4T3NDUWVt?=
- =?utf-8?B?VHBraWxFNHpSaGNScUsxZFAwOGxzT082VEhiWm9ORi9zMk1QYnNNSGk0YldZ?=
- =?utf-8?B?RnhOdjh3a3VraUZPUEsrdW8weDNaSkdGd0lpamh5OUNrdmRRb01RVlFsVVI0?=
- =?utf-8?B?T2JPajhYQXY5eldQQlJOWGoya2I0MHR6TjZZaEI1WlRaVGg3NzE0cktKWVF4?=
- =?utf-8?B?dm41RlQxdEFTc2FuZWY2WG56aVVhcG8xcmtuWXBKa0JYTGFiK0tSS1Uxa2l4?=
- =?utf-8?B?Y0NxSzNrZ2Z5UXpROU9LT0xTSWxqRlRFRks0MUVhOGZ2SzFwSGpJcTlLWWlp?=
- =?utf-8?B?L3Z5NmhscG01Yk92emg4KytRNk00Q0xIZHl2aXRlc3JOYjZJSS9MNWVIamZN?=
- =?utf-8?B?S3lYU2hUOWtMY0NreWlSOWxUVXFhTVNhMnVVNVVZQ0p4YklLSTNISzd1ZHA0?=
- =?utf-8?B?bkd1NHBVZHdhdnlkcXpwMTdjeUNmYitKdTZiaU9paUZuNmJjUncvdFE5U3dU?=
- =?utf-8?B?U0ovcFB2SDlpNno4bTFxRmR5b1FwbjMyT0tWYWFkN1lCWlAzd3QvSUhzY25N?=
- =?utf-8?B?U01iRXc2V2gvKzluL2NTbnFsVGp0cXJnZ2dWZTZ3emg0Mm9VT3FHV0NtZXNB?=
- =?utf-8?B?Y3J2bExUVmlHQytZWmJUUFdwMHVUTFJCbnFLdXk4R3UrSkxUMUZhQVRRUldi?=
- =?utf-8?B?Qmxtc1NBZEx0dXMrWEkxb29zWDRicGdpK0Z4MEhtUUZKMEFmU0xkWXdSNm4r?=
- =?utf-8?B?dTBlVnI1KzRjNXFMMGJaS3hoc2xLYmVZN3NSOUlLV21Ja2JsVUN4dkQvc2Nr?=
- =?utf-8?B?UzUyLzc2OXVQNElER0ErZ2lIOVMrWGxqOWdhdGE3RDlrSDZLVXU1V2FoejZS?=
- =?utf-8?B?MWxWRVM4ckIzdjZETUU2WWxoV2ZCbk5iRzFLZmlBOVlIamdDSEVGaFYzV2RG?=
- =?utf-8?B?VGlBVDlvcTkrSFdhNTNRZThrRGpydnFvbDYxZlBQNFVXeVhjaGhubGVLZ09X?=
- =?utf-8?B?MjRDWm44eEJGTDdIL3g4M09SR3M5V1dKbjZYd1ZXRy9wU3NlWnM2MnF0dFBK?=
- =?utf-8?B?YmdGcElWSm9DeXZoQkZFVE93SXRtWWgyK3pCbDkvQVJ0aWhaN25DTmFtb3Yz?=
- =?utf-8?B?eVdvcmNlMG95YmlVQTdnd2h0ZHAvNGx3RDBHeW5PSGdHK3J2ZjZzRzdRa0cz?=
- =?utf-8?B?Sis3T1d1YWlRM2EzTm1BVHlUcjc1RWdQWG53ZlJRWlo0cFhCbHhqTTZwRUhv?=
- =?utf-8?B?QzJYeDgxYVhYd09rc2RzNGova2pxdVJYdS95eWhNdWhSRTE0Q1V3R3BFR1JP?=
- =?utf-8?B?RllmdEdJZlVoSm1vYURUaXh0SVZpb3R5bE5xczB5Y3dKd3VKQ1dXWEpqNFll?=
- =?utf-8?B?VTRmOG5DNVRYaTJPaDE5Rkpyb3JMQURMUzc1Q2gxRU1jN3EzM21qWm90Wjda?=
- =?utf-8?B?N29SVUJWanlUanBmRVRMeTBFbXhSdi92ZWxIbHB4eWZVV2lYUTNUMmZMTmJV?=
- =?utf-8?Q?jqYbslcrEUGUZR6RZD?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: dcb8a561-4b09-4a65-07c4-08de8e5da757
-X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Mar 2026 13:10:02.6423
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Lh4LCRzyLLtkBQZIiBjjyQrjtijidNlLMm8832xn2X8rRGtkPbW8N7XIIhXkP27y
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4366
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260330-fix_pciatops-v7-1-f601818417e8@linux.ibm.com>
+References: <20260330-fix_pciatops-v7-0-f601818417e8@linux.ibm.com>
+In-Reply-To: <20260330-fix_pciatops-v7-0-f601818417e8@linux.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jay Cornwall <Jay.Cornwall@amd.com>,
+        Felix Kuehling <Felix.Kuehling@amd.com>,
+        =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Niklas Schnelle <schnelle@linux.ibm.com>
+Cc: Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>, Leon Romanovsky <leon@kernel.org>,
+        Alexander Schmidt <alexs@linux.ibm.com>, linux-s390@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
+        Gerd Bayer <gbayer@linux.ibm.com>
+X-Mailer: b4 0.14.2
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-GUID: nR_7MWUNmRcBNJwufyVy4G_yWkey58SG
+X-Authority-Analysis: v=2.4 cv=KslAGGWN c=1 sm=1 tr=0 ts=69ca762f cx=c_pps
+ a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=VnNF1IyMAAAA:8
+ a=l8ywxVsZnL7a6Sv94yEA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzMwMDEwMCBTYWx0ZWRfX2sq8oqfMVQA+
+ YeBcz7oajtbLWPeE9dkM/BaFYthp6zT+ff9iEmmOX9AsLPLOf8TXoicBR8gPeDxDDsk5qyG5Frb
+ VYL2l3eO0/k9pnW7LICm0O+TqhI9UXcWctZuOshqgoqipqfECUH8e830QOZRSBiZvo2UMm25Jhs
+ YOc7AKGL0BPBIC8D2N7dkf7yqxl3iWX37t3KPrUu/u6G32QWM4bxrVimZ2AT17/IKoCR9LAvQoR
+ ezfqlbZgXCLCew2how5IZUefljiZaXfdiiuMmrzrCqoE6oqsNvPIv2meOCOv1OsUV74F0zI4yKx
+ cKOHkNypn0M+al4GxQEGlUVFA1t4D5Da7KUf4zjrIvG5VoAfUI1s11heAaFizpajFSSQB5cAB5i
+ G+rb4kv2yrDtwr6ZXOn00uV/UnggzT6TAvEI3b3x1PKGsjfyrTYeZkv+nWXcUpYz/Y0VBFvBHqd
+ Fm9OovqYqPLfnXxpTpw==
+X-Proofpoint-ORIG-GUID: P-slp7YBInZbi8orMA2p2Lc-oqwdirtq
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-29_05,2026-03-28_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 lowpriorityscore=0 priorityscore=1501 suspectscore=0
+ phishscore=0 adultscore=0 bulkscore=0 impostorscore=0 clxscore=1015
+ spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
+ definitions=main-2603300100
 
-On Thu, Mar 12, 2026 at 05:06:33PM +0800, Wei Wang wrote:
-> The config_acs parameter allows configuring ACS settings for multiple PCI
-> devices by separating entries with semicolons. The current documentation
-> only illustrates applying one configuration pattern to all devices, but
-> does not show how to specify multiple devices with different ACS settings
-> in a single parameter. Add an example demonstrating multi-device usage
-> with distinct ACS configurations.
-> 
-> Some bootloaders interpret ';' as a command separator, which can cause
-> the parameter to be split as multiple commands. Document that the entire
-> parameter may need to be quoted to avoid bootloader parsing issues. This
-> avoids confusing bootloader errors such as ‘can't find command <BDF>’
-> when passing multiple device entries.
-> 
-> Signed-off-by: Wei Wang <wei.w.wang@hotmail.com>
-> ---
->  Documentation/admin-guide/kernel-parameters.txt | 9 +++++++--
->  1 file changed, 7 insertions(+), 2 deletions(-)
+Since root complex integrated end points (RCiEPs) attach to a bus that
+has no bridge device describing the root port, the capability to
+complete AtomicOps requests cannot be determined with PCIe methods.
 
-Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
+Change default of pci_enable_atomic_ops_to_root() to not enable
+AtomicOps requests on RCiEPs.
 
-Jason
+Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
+---
+ drivers/pci/pci.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8479c2e1f74f1044416281aba11bf071ea89488a..135e5b591df405e87e7f520a618d7e2ccba55ce1 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3692,15 +3692,14 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
+ 
+ 	/*
+ 	 * Per PCIe r4.0, sec 6.15, endpoints and root ports may be
+-	 * AtomicOp requesters.  For now, we only support endpoints as
+-	 * requesters and root ports as completers.  No endpoints as
++	 * AtomicOp requesters.  For now, we only support (legacy) endpoints
++	 * as requesters and root ports as completers.  No endpoints as
+ 	 * completers, and no peer-to-peer.
+ 	 */
+ 
+ 	switch (pci_pcie_type(dev)) {
+ 	case PCI_EXP_TYPE_ENDPOINT:
+ 	case PCI_EXP_TYPE_LEG_END:
+-	case PCI_EXP_TYPE_RC_END:
+ 		break;
+ 	default:
+ 		return -EINVAL;
+
+-- 
+2.51.0
+
