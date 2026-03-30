@@ -1,226 +1,186 @@
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C5703A4522
-	for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 14:23:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92C982FFDE3
+	for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 14:33:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774880606; cv=none; b=fIZ25lCeHzxFNo7Q0tfVbB4g3aM+5MysGmtDzjPXAs5djNtHYYi/h/m9RT/M6mZLOtpyrZr7QGuHWsF9KqePsIgHVH1yTzIItxEQsYK9m0AEwvPDhvreWYjh6LbMub2S1nPoZl3w2cyZFBhmt1HWibdjlQG6nAEbA8iqFz08Ajc=
+	t=1774881210; cv=none; b=NBn/7U8lVIUeMWqp8d+BRdrm6758yPBSS6iw4+UVzofmIU6oifFBFM24kSFM5cQcha8kKMq3GAQfPvbly8Lg6Px329JSzj76REjprHsQnOSlYfsxMqm0dTvo0ilCM343nkaXa8//zehxFNHl2rcHXyLb3oB1171U8z2jeHrECZU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774880606; c=relaxed/simple;
-	bh=2t8eCwKvWcyTG6BLF1k6kvidUmENGblJrAN4O0/8Zp0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nGzz3qUfsl0vrVrDewIzH4CNb78xpN4e/fHQY/LY3uP7TYYo2RKiSGNeVg4Y6DukTPVPR0tqdmRQ/1q7CeE/NxSJ69oDeU+ojl3qEvnJDi361uFid+No4kzIbq0aiwwFxmNTKLQ1xe4UoEZLl7ptgC2KKT1AX/gjpeLRb+5W+zI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=O/kPA1Yw; arc=none smtp.client-ip=209.85.221.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1774881210; c=relaxed/simple;
+	bh=EJDYmWiip0C6AEVDsb5lFb2OSfd3udanPdD09BGg9OM=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=hx+R95BgaHqJtMp6aDAM91UuTe6K/xpwB949ehXpQafMBBKr+7pfxzAuT+0Iuy9EOZQP9m26mG0dSc2BOYvkcajXitl4NU9dYVit8xPukt4ob1mHNQT45pv828/j6uvDfpEmcWcFTj1cL+DBqZAhhbMKFHrFc0FR1UCqJRofHf0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=H3goL3e8; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="O/kPA1Yw"
-Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-43b9d3ebed5so3181448f8f.1
-        for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 07:23:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1774880604; x=1775485404; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZM+5dyHe83nqy+4nGn8DT9A5VxOBbDn6eu5qTwyUTxM=;
-        b=O/kPA1YwSoqOj4SEgSDjUAHLimLwIOg2iuwrU5mcRofiUQU2AnDATMVdUMbpIkdwae
-         RAmhs2zmT5MpWaCP5jx0jGCGDR0B8nU+fA1JNqrncWboW+pjIPThgyNHOv4eHUzRHJ3y
-         RpxODaTWyOaNoYMyi7PFf3tcsRf+Qotb8o2kihnc+MCbe1X4KRlZBuwSI2PbyeluuReF
-         Jp4GXxdTiz9wJzjFptrNEWwTys1vYSF4awEIDt33+HKvdmcq/TZ8xZbzLQEgJH+FpiBt
-         JehbX14foBbn+5+3puqWM7Z01R72lJXTO5gs7U1sJOQpufUtYBAO7wiTRqbgt8mh6z5h
-         aQWw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774880604; x=1775485404;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ZM+5dyHe83nqy+4nGn8DT9A5VxOBbDn6eu5qTwyUTxM=;
-        b=XgKosHwT5BHqc1p+OhkoQXSiBSD3ChalBLMGKt5zfJA0ec/UM+R61YjMQgENYD9uBO
-         njMTjI6vLpFZchsg5WcfTnO+WVMTJadu2it1GzwRmZNb+eYlOm1xOj7Fsr+L7YnEWkYi
-         omK1DCNcdg2m0rjK6MQDfBvXEw5aAalk2dY8zlO8CGCovvyEFAusZ+JiwRGM7W0gEMUg
-         nYXeLkLaB0RwOYn1XdMervWHQV1p6ddZwJke0MjvtURoNSaMSbR1tkNODu8yjn+gidjU
-         E8K8lhh/OOPCXlp6RFXo074A5k6onXXTD+ZxCnR32sNdx1qr7FWRRNAfWcwHT6UCbBqg
-         6KHw==
-X-Forwarded-Encrypted: i=1; AJvYcCXrN8pBfXujWkijFbJKKd+yBRxE04fpZthEbTv+OOXJVGYMr/5q/DyBB8qT89Mo+7g0hGkM8TFkovo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyiJI5s7BMlj5hOXCSLkqOvH3Y5v7i8Er6itRIhVSYuMXwJv1fD
-	kIBabHGTkzyTTDID9/K4VoyNS2+rBP7F+9uFDi43EoeugFO872Z+AByq2ZPBL+kQ5SA=
-X-Gm-Gg: ATEYQzxezI0wGYI5UfXkwW27UQ1ZdNbGeKTw55a2YFSCdqevPCpFwwQMD4Y2Mg6qBSH
-	8au+DejZDw7rKjgmCmHWF1TjJiDRhEVNhoR0YOInZAf7A3vNQpvnWuTgWhIMF447ITGdd04eIR9
-	tWzHzVYN8n5OGTK530n+uqo2hW/vsB1Sud7PJeIIw/CMD1kmget5Ye+ojx/mnTIdnFR5ijtyuUl
-	mMhyG5ekRfovbflTCRIoN7g1xU6jg5qdMO1Zi9S4INBG6kjnLNIez+uyy2qK5u9mSIvSWNfyhBj
-	tRRYqiEPSdCw8LcBgvNLacAAx65ny0lXWxci4eMeklQRUrZMobWGXOx5iSneWtsMme26O2ndcuZ
-	/dVdFZ46C4ZKV8zj6UkgYLJbanbSYjkXevYRL7BH3FfM2FeoqG/EKrqrvRubwUbfY96ufN5itwf
-	HKkEBp0v8AZp6I1X0IPqEpyKrBxw==
-X-Received: by 2002:a5d:5f85:0:b0:43b:4ec7:f90b with SMTP id ffacd0b85a97d-43b9ea9b2cbmr21194998f8f.27.1774880603519;
-        Mon, 30 Mar 2026 07:23:23 -0700 (PDT)
-Received: from [192.168.0.20] ([212.21.133.10])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43cf90424fcsm14278058f8f.32.2026.03.30.07.23.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 30 Mar 2026 07:23:22 -0700 (PDT)
-Message-ID: <a68bb3d5-0f93-428f-ac8c-f3400d1fc028@suse.com>
-Date: Mon, 30 Mar 2026 17:23:21 +0300
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="H3goL3e8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1774881208; x=1806417208;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version:content-id;
+  bh=EJDYmWiip0C6AEVDsb5lFb2OSfd3udanPdD09BGg9OM=;
+  b=H3goL3e8L36cWIw0dyMOEZnQ1Jrj2YHAseG5zofK+ZdKpklVJYQEHL/a
+   IgYaL2fFdOvSu9vBSiQt4AE6CTeDAQ5krz5URahSAQWToIIzeJ/iikkJh
+   xdnynHdT4IJMZVjs0Bml9ZzxH6D7BeTvB6ECJ4TR5GhPRaCrXk5ZjFFhS
+   ojPW98lH4GllQwleW/Dd7grn09Up5OYH+y/ZdMT/aRNMlDYX//no34yqM
+   Z1YT1mMhxrvB1IYdZvGgVAwuOdWwEtShuaZtp/HnH6aBa7Fj88ROTu/31
+   MIMVvCoa1wj+uK5M3oSyT3Hke8ig0/BTik/KcMkTrO8VEF+iVAjVD4E5C
+   A==;
+X-CSE-ConnectionGUID: 7gJwlJ6BSH6sHpZWGiEHtQ==
+X-CSE-MsgGUID: gGgxun8ZSBOvVggh0LUs1g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11743"; a="98484571"
+X-IronPort-AV: E=Sophos;i="6.23,150,1770624000"; 
+   d="scan'208";a="98484571"
+Received: from orviesa007.jf.intel.com ([10.64.159.147])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2026 07:33:28 -0700
+X-CSE-ConnectionGUID: 7qoeVi9PQoW8qSXwvdWASg==
+X-CSE-MsgGUID: fOnn8wntQzCdPBfZuXKwJg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,150,1770624000"; 
+   d="scan'208";a="226326602"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.153])
+  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2026 07:33:25 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Mon, 30 Mar 2026 17:33:22 +0300 (EEST)
+To: Thorsten Leemhuis <regressions@leemhuis.info>, 
+    =?ISO-8859-15?Q?Jonas_H=F6glund?= <firefly@firefly.nu>
+cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+    regressions@lists.linux.dev
+Subject: Re: [REGRESSION] amdgpu with Thunderbolt eGPU bracket fails since
+ new bridge window alignment calculation code
+In-Reply-To: <ec9af6c3-755b-488a-8400-cef9eeeac509@leemhuis.info>
+Message-ID: <740b10c4-a54a-f776-d564-d3c977d90ba6@linux.intel.com>
+References: <a5f23340-2b84-4734-be11-f5a97c188195@app.fastmail.com> <ec9af6c3-755b-488a-8400-cef9eeeac509@leemhuis.info>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 06/31] x86/virt/tdx: Read global metadata for TDX
- Module Extensions/Connect
-To: Xu Yilun <yilun.xu@linux.intel.com>, linux-coco@lists.linux.dev,
- linux-pci@vger.kernel.org, dan.j.williams@intel.com, x86@kernel.org
-Cc: chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com,
- yilun.xu@intel.com, zhenzhong.duan@intel.com, kvm@vger.kernel.org,
- rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com, kas@kernel.org,
- xiaoyao.li@intel.com, vishal.l.verma@intel.com, linux-kernel@vger.kernel.org
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-7-yilun.xu@linux.intel.com>
-From: Nikolay Borisov <nik.borisov@suse.com>
-Content-Language: en-US
-Autocrypt: addr=nik.borisov@suse.com; keydata=
- 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
-In-Reply-To: <20260327160132.2946114-7-yilun.xu@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/mixed; BOUNDARY="8323328-550039827-1774878051=:968"
+Content-ID: <b364258d-96bc-40d4-f95e-6a49701fe2e2@linux.intel.com>
 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
+--8323328-550039827-1774878051=:968
+Content-Type: text/plain; CHARSET=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-ID: <9a77dced-5a63-1f76-e93c-dc34e9d6399c@linux.intel.com>
 
-On 27.03.26 г. 18:01 ч., Xu Yilun wrote:
-> Add reading of the global metadata for TDX Module Extensions & TDX
-> Connect. Add them in a batch as TDX Connect is currently the only user
-> of TDX Module Extensions and no way to initialize TDX Module Extensions
-> without firstly enabling TDX Connect.
-> 
-> TDX Module Extensions & TDX Connect are optional features enumerated by
-> TDX_FEATURES0. Check the TDX_FEATURES0 before reading these metadata to
-> avoid failing the whole TDX initialization.
-> 
-> Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
-> ---
->   arch/x86/include/asm/tdx.h                  |  2 ++
->   arch/x86/include/asm/tdx_global_metadata.h  | 14 ++++++++
->   arch/x86/virt/vmx/tdx/tdx_global_metadata.c | 36 +++++++++++++++++++++
->   3 files changed, 52 insertions(+)
-> 
-> diff --git a/arch/x86/include/asm/tdx.h b/arch/x86/include/asm/tdx.h
-> index d5f1d7b7d1e7..d7605235aa9b 100644
-> --- a/arch/x86/include/asm/tdx.h
-> +++ b/arch/x86/include/asm/tdx.h
-> @@ -129,7 +129,9 @@ int tdx_enable(void);
->   const char *tdx_dump_mce_info(struct mce *m);
->   
->   /* Bit definitions of TDX_FEATURES0 metadata field */
-> +#define TDX_FEATURES0_TDXCONNECT	BIT_ULL(6)
->   #define TDX_FEATURES0_NO_RBP_MOD	BIT_ULL(18)
-> +#define TDX_FEATURES0_EXT		BIT_ULL(39)
->   
->   const struct tdx_sys_info *tdx_get_sysinfo(void);
->   
-> diff --git a/arch/x86/include/asm/tdx_global_metadata.h b/arch/x86/include/asm/tdx_global_metadata.h
-> index 060a2ad744bf..e7948bca671a 100644
-> --- a/arch/x86/include/asm/tdx_global_metadata.h
-> +++ b/arch/x86/include/asm/tdx_global_metadata.h
-> @@ -34,11 +34,25 @@ struct tdx_sys_info_td_conf {
->   	u64 cpuid_config_values[128][2];
->   };
->   
-> +struct tdx_sys_info_ext {
-> +	u16 memory_pool_required_pages;
-> +	u8 ext_required;
-> +};
-> +
-> +struct tdx_sys_info_connect {
-> +	u16 ide_mt_page_count;
-> +	u16 spdm_mt_page_count;
-> +	u16 iommu_mt_page_count;
-> +	u16 spdm_max_dev_info_pages;
-> +};
-> +
->   struct tdx_sys_info {
->   	struct tdx_sys_info_features features;
->   	struct tdx_sys_info_tdmr tdmr;
->   	struct tdx_sys_info_td_ctrl td_ctrl;
->   	struct tdx_sys_info_td_conf td_conf;
-> +	struct tdx_sys_info_ext ext;
-> +	struct tdx_sys_info_connect connect;
->   };
->   
->   #endif
-> diff --git a/arch/x86/virt/vmx/tdx/tdx_global_metadata.c b/arch/x86/virt/vmx/tdx/tdx_global_metadata.c
-> index 13ad2663488b..a07f1e7b18e8 100644
-> --- a/arch/x86/virt/vmx/tdx/tdx_global_metadata.c
-> +++ b/arch/x86/virt/vmx/tdx/tdx_global_metadata.c
-> @@ -85,6 +85,36 @@ static int get_tdx_sys_info_td_conf(struct tdx_sys_info_td_conf *sysinfo_td_conf
->   	return ret;
->   }
->   
-> +static int get_tdx_sys_info_ext(struct tdx_sys_info_ext *sysinfo_ext)
-> +{
-> +	int ret = 0;
-> +	u64 val;
-> +
-> +	if (!ret && !(ret = read_sys_metadata_field(0x3100000100000000, &val)))
+On Mon, 30 Mar 2026, Thorsten Leemhuis wrote:
 
-nit: This is likely generated by a script/llm because I see no other 
-explanation why !ret is being checked here...
+> [adding author and committer to list of recipients while dropping stable
+> from CC, as the problem seems to happen in mainline, too]
+>=20
+> On 3/28/26 00:02, Jonas H=F6glund wrote:
+> >=20
+> > I have an AMD GPU in an external Thunderbolt enclosure that recently
+> > stopped working with the latest longterm kernel release.  The GPU in
+> > question is an AMD RX 6750 XT.
+> >=20
+> >     [...]
+> >     amdgpu 0000:3e:00.0: amdgpu: vm size is 262144 GB, 4 levels, block =
+size is 9-bit, fragment size is 9-bit
+> >     amdgpu 0000:3e:00.0: BAR 2 [mem 0x74200000-0x743fffff 64bit pref]: =
+releasing
+> >     amdgpu 0000:3e:00.0: amdgpu: Problem resizing BAR0 (-16).
+> >     amdgpu 0000:3e:00.0: BAR 2 [mem 0x74200000-0x743fffff 64bit pref]: =
+assigned
+> >     amdgpu 0000:3e:00.0: amdgpu: VRAM: 12272M 0x0000008000000000 - 0x00=
+000082FEFFFFFF (12272M used)
+> >     amdgpu 0000:3e:00.0: amdgpu: GART: 512M 0x0000000000000000 - 0x0000=
+00001FFFFFFF
+> >     resource: resource sanity check: requesting [mem 0x0000000000000000=
+-0xffffffffffffffff], which spans more than PCI Bus 0000:00 [mem 0x000a0000=
+-0x000bffff window]
+> >     ------------[ cut here ]------------
+> >     WARNING: CPU: 7 PID: 2260 at arch/x86/mm/pat/memtype.c:720 memtype_=
+reserve_io+0xfd/0x110
+> >     [...]
+> >=20
+> > Searching for the issue I found this very similar report from last year=
+:
+> > https://lkml.org/lkml/2025/6/9/88
+> >=20
+> > so I suppose this might be a re-regression of the same issue(?).
 
-> +		sysinfo_ext->memory_pool_required_pages = val;
-> +	if (!ret && !(ret = read_sys_metadata_field(0x3100000100000001, &val)))
-> +		sysinfo_ext->ext_required = val;
-> +
-> +	return ret;
-> +}
-> +
-> +static int get_tdx_sys_info_connect(struct tdx_sys_info_connect *sysinfo_connect)
-> +{
-> +	int ret = 0;
-> +	u64 val;
-> +
-> +	if (!ret && !(ret = read_sys_metadata_field(0x3000000100000001, &val)))
+I'm skeptical it's exactly the same issue even if the end result is the=20
+same.
 
-Ditto
-<snip>
+The resource fitting algorithm has been in a state of constant flux due to=
+=20
+various fixes and improvements into it over all the recent two years.
+Unfortunately, fixing one thing (or even moving towards fixing an issue)=20
+may break another thing due to how different resource interact.
+
+> > I checked out latest longterm (v6.18.20) and bisected, which took me to
+> > commit b855d99 (upstream commit 3958bf16), which is
+> > "PCI: Stop over-estimating bridge window size".
+>=20
+> Ilpo, Bjorn: Jonas in a subthread later confirmed that this problem
+> happens with 7.0-rc5, too, so it's likely something for you.
+>=20
+> Side note: I noticed the "PCI: Improve head free space usage" series
+> referred to the commit in question; wondering if that is related:
+> https://lore.kernel.org/all/20260324165633.4583-1-ilpo.jarvinen@linux.int=
+el.com/
+
+That "PCI: Improve head free space usage" series is certainly fixing two=20
+known corner case with the commit 3958bf16e2fe ("PCI: Stop over-estimating=
+=20
+bridge window size") but with only heavily filtered logs, I'm unable to=20
+confirm if it applies to this case as well.
+
+From=20the limited logs, I suspect this is primarily a BAR resize rollback=
+=20
+failure which leaves the resources into a state worse than they were prior=
+=20
+to the resize. The commit 337b1b566db0 ("PCI: Fix restoring BARs on BAR=20
+resize rollback path") attempts to rectify that. The entire series is here=
+=20
+(not all of it went to stable):
+
+https://lore.kernel.org/all/20251113162628.5946-1-ilpo.jarvinen@linux.intel=
+=2Ecom/T/#m9b0e316c94f7abc0686e58f902d05ff35aeac3ac
+
+The fixes to that series are here:
+
+5528fd38f230 ("PCI: Fix Resizable BAR restore order")
+08d9eae76b85 ("PCI: Fix BAR resize rollback path overwriting ret")
+
+(I'm sorry how complex this all is.)
+
+--=20
+ i.
+
+> > After the bisect I tried reverting the commit on top of v6.18.20 (going
+> > back to the old way of calculating alignment), and this is sufficient
+> > for the eGPU to dock properly again.
+> >=20
+> > I've attached a longer excerpt of the kernel logs from a failing boot
+> > (let me know if a full dmesg would be helpful and I can find somewhere
+> > to upload it).  I've also attached an excerpt when connecting the eGPU
+> > in a "good" case, since I figured the memory adress ranges could be
+> > useful.
+> >=20
+> >=20
+> > Hardware:
+> >   Machine: Dell XPS 13 9310 (0991)
+> >   GPU: AMD RX 6750 XT
+> >   Dock: EXP GDC TH3P4G3
+> >=20
+> > Distribution: NixOS
+> > Architecture: x86-64
+> >=20
+> > #regzbot introduced: b855d99
+> >=20
+> > Let me know if any additional information would be helpful.
+> >=20
+> > Thanks,
+> > Jonas
+>=20
+--8323328-550039827-1774878051=:968--
