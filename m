@@ -1,95 +1,93 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 478C0397E60
-	for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 19:19:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0B2E397E7D;
+	Mon, 30 Mar 2026 19:28:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774898391; cv=none; b=nZGWnobSkQAPWFaM4V6ItvRAHvgnykWmPbmb697lFk4DgZFbArEZMtH5eJ3USbP6ad39g7T6Uictwdje78u2Oz2KB/f2dvyxnUFZXFjG519wBElTJosaoUKMwch/QOHTiX5fnsqd+IScvwgtUFLOSnxrFuzvXQHbl9X99GojWK4=
+	t=1774898903; cv=none; b=SUu1/rGlve08OwSuts7XQULRkI/iXzLfdCOXSvIKYJWKzEc6bWXsgJSILBJa1XE+XMsqIa5l41bcqqdpqEIuU2qhAmimxsxEfeNxPeP8g5P+RmuVLVF6L/aWl6xYpiUmqg6n8Rwo8ucaGQbt+UMsyjKvJWNzDEVSsEYe3he0XuA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774898391; c=relaxed/simple;
-	bh=f2moM282vPvyLgsGb1zIT4CivF0cYkAINWw6P3Qsu3M=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=e21MizCwwFgcr7YI4mxIttGPCepbUwuEj8pCtxEZFlyzhy63vj9Woa+Rputqso8Vw72zbnRJCNVECgT14CXKLEIMKMHAw/NVsDxS/kyNuazYgRvFqvXnuabz5PLWR0T0a9ELgdsqt0zVarfy0+tlFGD6YJn2huZHft8zmDr6aLw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ofwVknvc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774898903; c=relaxed/simple;
+	bh=dAGFeP4nP8HMvhgV9SKrun5aegYvL/MhIs1kziaPbwQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pSxknhruD6iQIVVKAxSY+IWQPBb5AGuLf7rWHBZFci/vofuofvmRHQ/vp5jG2yyptQ9yQnUHKC1x/35Ymx0wf6r5gweBwSakqiARRFPrfIMrq96QgtqpZP5wqvlFzBTe2emO7HPfC1l6ahBgRolsnpkY9gF/4jp1lsXP6Z+tvSU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LM7R+O1c; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ofwVknvc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B17FC2BC9E;
-	Mon, 30 Mar 2026 19:19:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LM7R+O1c"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 124EFC2BCB1;
+	Mon, 30 Mar 2026 19:28:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774898391;
-	bh=f2moM282vPvyLgsGb1zIT4CivF0cYkAINWw6P3Qsu3M=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=ofwVknvcK53YQ8AnfEsD07hNUQYx9UMoC2QRm+p2b4iBIOkITweay5u2bpDph774S
-	 fgYrhxg2/6b3p9sTyU5QSgY2RS3bHfpEA4f9+SSMhxRUDkvty3b8pj8t+RnPcGDC4x
-	 SRL5Yj4Hm6GuzRSnPVZCfsciJxC0xKL+09ajChWnc+G7+r54MQwMkpEJlWT1u1y0AH
-	 AhtG/Jxna1HCSVyof0WxnHt14ATr4QbqYtnHB06lKxZs4WfWZArIYbbXbvLdFS9ttz
-	 iIFwcg9JxJq1giOE1undMWFh0zxXoXiD2cnZ6ha8oyTWr5Z8POQWev3LMWcfUrjvTf
-	 lE3+jWGhyEuyA==
-Date: Mon, 30 Mar 2026 14:19:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org,
-	Stefan Roese <sr@denx.de>
-Subject: Re: [PATCH] PCI/AER: Stop ruling out unbound devices as error source
-Message-ID: <20260330191949.GA90884@bhelgaas>
+	s=k20201202; t=1774898903;
+	bh=dAGFeP4nP8HMvhgV9SKrun5aegYvL/MhIs1kziaPbwQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LM7R+O1cwF7GVHPmmRaJuQUZthf2zr17D/KgWgi5IdV+4A0iFSuPD/hMp467QJgGS
+	 FRDIFg4oCBsm0abLrorViWZaAQ+BIBPPIDt3LXp6i4RAjS88nDToHaIsPpnz+nXDLb
+	 LTZAA65y6onKLJKFNjh1HCWj3bmMP4YFyApgcLPSAyb8LV/tiNCoyzsb2wx9wl+wS1
+	 1nXpTbGhB+TpEfWCXT5HypC1IJw0Fujfl7INrBvtzu8vQRYPz5MT0JVxmSAlMkb7Oe
+	 cJwHAx96O5/sSgmHkXNA7OgfjQBkqSdebTzx4hn8zMUnFGShpvRBhJiJhvmdF1Htrh
+	 bsIWOlOQ17zkg==
+Date: Mon, 30 Mar 2026 14:28:19 -0500
+From: Rob Herring <robh@kernel.org>
+To: manivannan.sadhasivam@oss.qualcomm.com
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Nathan Chancellor <nathan@kernel.org>,
+	Nicolas Schier <nicolas.schier@linux.dev>,
+	Hans de Goede <hansg@kernel.org>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Mark Pearson <mpearson-lenovo@squebb.ca>,
+	"Derek J. Clark" <derekjohn.clark@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Bartosz Golaszewski <brgl@kernel.org>, linux-serial@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org,
+	Stephan Gerhold <stephan.gerhold@linaro.org>,
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+	linux-acpi@vger.kernel.org,
+	Hans de Goede <johannes.goede@oss.qualcomm.com>
+Subject: Re: [PATCH v7 1/8] serdev: Convert to_serdev_*() helpers to macros
+ and use container_of_const()
+Message-ID: <20260330192819.GA3107726-robh@kernel.org>
+References: <20260326-pci-m2-e-v7-0-43324a7866e6@oss.qualcomm.com>
+ <20260326-pci-m2-e-v7-1-43324a7866e6@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <734338c2e8b669db5a5a3b45d34131b55ffebfca.1774605029.git.lukas@wunner.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260326-pci-m2-e-v7-1-43324a7866e6@oss.qualcomm.com>
 
-On Fri, Mar 27, 2026 at 10:56:43AM +0100, Lukas Wunner wrote:
-> When searching for the error source, the AER driver rules out devices
-> whose enable_cnt is zero.  This was introduced in 2009 by commit
-> 28eb27cf0839 ("PCI AER: support invalid error source IDs") without
-> providing a rationale.
+On Thu, Mar 26, 2026 at 01:36:29PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > 
-> Drivers typically call pci_enable_device() on probe, hence the enable_cnt
-> check essentially filters out unbound devices.  At the time of the commit,
-> drivers had to opt in to AER by calling pci_enable_pcie_error_reporting()
-> and so any AER-enabled device could be assumed to be bound to a driver.
-> The check thus made sense because it allowed skipping config space
-> accesses to devices which were known not to be the error source.
+> If these helpers receive the 'const struct device' pointer, then the const
+> qualifier will get dropped, leading to below warning:
 > 
-> But since 2022, AER is universally enabled on all devices when they are
-> enumerated, cf. commit f26e58bf6f54 ("PCI/AER: Enable error reporting when
-> AER is native").
+> warning: passing argument 1 of ‘to_serdev_device_driver’ discards 'const'
+> qualifier from pointer target type [-Wdiscarded-qualifiers]
 > 
-> Errors may very well be reported by unbound devices, e.g. due to link
-> instability.  By ruling them out as error source, errors reported by them
-> are neither logged nor cleared.  When they do get bound and another error
-> occurs, the earlier error is reported together with the new error, which
-> may confuse users.  Stop doing so.
+> This is not an issue as of now, but with the future commits adding serdev
+> device based driver matching, this warning will get triggered. Hence,
+> convert these helpers to macros so that the qualifier get preserved and
+> also use container_of_const() as container_of() is deprecated.
 > 
-> Fixes: f26e58bf6f54 ("PCI/AER: Enable error reporting when AER is native")
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> Cc: stable@vger.kernel.org # v6.0+
-
-Applied to pci/aer for v7.1, thanks!
-
+> Tested-by: Hans de Goede <johannes.goede@oss.qualcomm.com> # ThinkPad T14s gen6 (arm64)
+> Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > ---
->  drivers/pci/pcie/aer.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index 4299c55..384d026 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -1039,8 +1039,6 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
->  	 *      3) There are multiple errors and prior ID comparing fails;
->  	 * We check AER status registers to find possible reporter.
->  	 */
-> -	if (atomic_read(&dev->enable_cnt) == 0)
-> -		return false;
->  
->  	/* Check if AER is enabled */
->  	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
-> -- 
-> 2.51.0
-> 
+>  include/linux/serdev.h | 15 +++------------
+>  1 file changed, 3 insertions(+), 12 deletions(-)
+
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
