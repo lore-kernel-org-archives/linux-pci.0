@@ -1,385 +1,236 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013069.outbound.protection.outlook.com [40.107.159.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3956158DCF;
-	Mon, 30 Mar 2026 08:59:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774861186; cv=none; b=oKxdUtdozbYSEK6R45byQA9tUCrjhdXN6nftZtqI+aAYshAgnJeatW53wd5rWd2LGd7ur3vqxblWIl6zF6pTLUC4feN2TeJB7WMUreXkzItzGC1fV2JmeC1+CtRvkbQZitZqx6/D8mxESIrvw//u5O4z29CLVKbKyZ84HsHXO+A=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774861186; c=relaxed/simple;
-	bh=giilVXXGkIuHlzuop8wJXfCCBPgtzG3AIY5OihAqbFc=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=NhIUJgdwKzHbPl0Mfa570tDuWntt2FzcFx3Ck2/zNavoZCYCUnfSROuTxjECw7R3zeUJA+GhlGJLlG78tlWx1s7i9Z0KMTFoEfeLt5vhXOYKAx6fHWoTpsNWXwY621yN2mRfKEZN5JXV3BgGbBme01qbUAizfvMnOVC8ZHuwiyQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=GcKciWWr; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 052373AA4F0;
+	Mon, 30 Mar 2026 09:03:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.69
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774861387; cv=fail; b=pH9EEMBTbVgoWM3UcruD3n71moMS+ypThff09F9lBKEd9K2yZK09ruBi+wzDn2Ih1KVjiLArTdY3XLSs3mLXn6YF0tlKRiOt5yoJPJnDCicK549pvdFui8EcigWuOO9neF9ELfASpxoG5tsfDVkUXnSpT0R6KciW1ovuaA2dvL4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774861387; c=relaxed/simple;
+	bh=7x51OBE8nr3QT9BojSXfrp0/kv2vp6fcxwsrpUp9HI8=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=W8k703Ml5Z09DvYpEyduvYjqcOp0kjTlshv0rVCIZQ1RrrgltC/xXN0zMp/xioxhEWtD7ZcHhu5BLp5S+Obs6caJNqeNOPeE8CNgM01M2t0Jh2wPTPoXmVOXv0sAcw7XBoml5CtI/XvfXXQLlTcAM0yLqHR4zNw6MUPp3W33T10=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=I58u61wr; arc=fail smtp.client-ip=40.107.159.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="GcKciWWr"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62TJtdcu4101669;
-	Mon, 30 Mar 2026 08:59:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=k792O7
-	qTJqaxyo1o2gXXm95mAwWzi3w6ipuEO0MpZVI=; b=GcKciWWrKASWoFyyiBf1vG
-	ZLVV4lCObeEwbt2t4qaTQ8qDUQ/cNs17gLvoz+LpxLpdwT4WyuxCHHgtGElvuXg/
-	DUx/SV4txfjVsSmMvkyy961i+bIFUSeZEa4md2Tt53rHFO5h+sLqXbT8up1W4jat
-	k0Koawmm8TJNXtiMQAG7FVuPxDU8szoPT8dD6JmVtGCrahynqkIkrIksLJgJcVyb
-	FGC13pv448RUnCWHherSEMTR47lY34X+cHDGUEns2H5mSxs0r+zJXVyDrTFhlWdK
-	NIHJHoHA2hMSj/G0i1zb1c/A8/k+kEtUxqlikhf+OFPMjdFMFVcVnDfVDEzDYz5g
-	==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4d66q2x1hd-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 30 Mar 2026 08:59:33 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62U6R8jA008732;
-	Mon, 30 Mar 2026 08:59:32 GMT
-Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4d6v11bwxf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 30 Mar 2026 08:59:32 +0000
-Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
-	by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62U8xT5x29360496
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 30 Mar 2026 08:59:29 GMT
-Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 42B012004D;
-	Mon, 30 Mar 2026 08:59:29 +0000 (GMT)
-Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E7D012004B;
-	Mon, 30 Mar 2026 08:59:28 +0000 (GMT)
-Received: from [9.52.210.163] (unknown [9.52.210.163])
-	by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Mon, 30 Mar 2026 08:59:28 +0000 (GMT)
-Message-ID: <b858ebd652fa067e33efafc43d381a83c0ab3270.camel@linux.ibm.com>
-Subject: Re: [PATCH v6 1/2] PCI: AtomicOps: Do not enable without support in
- root complex
-From: Gerd Bayer <gbayer@linux.ibm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Jay Cornwall
- <Jay.Cornwall@amd.com>,
-        Felix Kuehling <Felix.Kuehling@amd.com>,
-        Christian
- Borntraeger <borntraeger@linux.ibm.com>,
-        Niklas Schnelle	
- <schnelle@linux.ibm.com>,
-        Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>,
-        Sven Schnelle
- <svens@linux.ibm.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Alexander Schmidt
- <alexs@linux.ibm.com>, linux-s390@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
-        stable@vger.kernel.org, Gerd Bayer <gerd.bayer@de.ibm.com>
-Date: Mon, 30 Mar 2026 10:59:28 +0200
-In-Reply-To: <20260326164002.GA1325368@bhelgaas>
-References: <20260326164002.GA1325368@bhelgaas>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="I58u61wr"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Fbca7smuzViMpXafiPFucokt+rtTTxjQ47wzJd8n+NMo91TI/reCvFgmSqwldsis6LBeF+wYupnUwBDxYzM8SGEgo1TYLCz3Nq8Bk5b8x0fZMU8cf7TK/3dSgEKW64iW9CGLd4OzVyIG/mAFv4u+XKLROCL6rO6vEBOrr3EocnHsCot6C6x1+rlJRH/ebuTFdBTVVmKbQs3feuhnmz7IslDnubi241TvnGm4fxCfHO3fUxQtt8F5DG1qp9/d5xDcj6bZPvqGEAebt6zQtRltzsddnU9kdI9MDVKul4dbRDWMkz83nJezZzi2zLyLx93xDZjHImqUCNp9hjfSVCUhlQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=7x51OBE8nr3QT9BojSXfrp0/kv2vp6fcxwsrpUp9HI8=;
+ b=C828RywbatSG9eiqHt5u5pc2KzoYcUcqQWdynBOYx2qfO9ehnPQWEqXbxznMuYk2rfbwfMmIHginf0x9VOZGWyk/kYmKHCkyKxX4tOkQRIt2+uKtn/XomTWmKvTsBwGQld4yEmFCKeY2PWmuyn7VnAgsyT2Jk6glhbh1SwiJ2IGp87vx8LLyLJSV6w3IoFWCWbnwXq+DD18CaQ8EntgpqGOw7Hezk2+jjI1+o/S3JIp38YT/+/lAMuYqPwu99RrWG857SXBHkL7DFddG5KbHest6wn3vpajDF/chLuz9sKDBEngL6N1G3cIXKRNHXp9cB1UMNisrR6C0YFFIHG7TMA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7x51OBE8nr3QT9BojSXfrp0/kv2vp6fcxwsrpUp9HI8=;
+ b=I58u61wrliDPjvaqpG0f0/+GsfpHKEbqFsWPR2LwRZi+tnjP6wAcUr1SU4t06tH0rVuBQES/+WP/1enb5CM3bGq9s2Idku1HrFrFnrTn1mcO0zqSUNZseT0RCJXseZaCU8IKMOyWfJiD9uBjsU5Z6vSIG0ysXD7kUk0wBDg9Kyc2Vkwk85eIK6qG48U52t9+lS0EXgi2xxk0lGRSAzVhgN8HE5jBFT4h6WvY13fI3R5LJ1J2Tq9TJgIODWyBcR1ThbNTl29MJvtyZcKYbvqsSIhV8jF+L6AhKc3Sd8AAXPcvw88XLyN3Qsrd89q6HF5yxJIIBr4gMjy7+cDkwJ6b8g==
+Received: from AS8PR04MB8833.eurprd04.prod.outlook.com (2603:10a6:20b:42c::19)
+ by GVXPR04MB10683.eurprd04.prod.outlook.com (2603:10a6:150:21f::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.28; Mon, 30 Mar
+ 2026 09:02:58 +0000
+Received: from AS8PR04MB8833.eurprd04.prod.outlook.com
+ ([fe80::209c:44e4:a205:8e86]) by AS8PR04MB8833.eurprd04.prod.outlook.com
+ ([fe80::209c:44e4:a205:8e86%4]) with mapi id 15.20.9745.027; Mon, 30 Mar 2026
+ 09:02:58 +0000
+From: Hongxing Zhu <hongxing.zhu@nxp.com>
+To: Manivannan Sadhasivam <mani@kernel.org>
+CC: Frank Li <frank.li@nxp.com>, "l.stach@pengutronix.de"
+	<l.stach@pengutronix.de>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "robh@kernel.org"
+	<robh@kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "kernel@pengutronix.de"
+	<kernel@pengutronix.de>, "festevam@gmail.com" <festevam@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev"
+	<imx@lists.linux.dev>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "stable@vger.kernel.org"
+	<stable@vger.kernel.org>, Qiang Yu <qiang.yu@oss.qualcomm.com>
+Subject: RE: [PATCH v2] PCI: imx6: Don't remove MSI capability For
+ i.MX7D/i.MX8M
+Thread-Topic: [PATCH v2] PCI: imx6: Don't remove MSI capability For
+ i.MX7D/i.MX8M
+Thread-Index: AQHct4Eimn8S6FzOSEeZOEeRWCABYLXGvO6AgAAZemA=
+Date: Mon, 30 Mar 2026 09:02:57 +0000
+Message-ID:
+ <AS8PR04MB8833AE3B8D106CE446EF89E58C52A@AS8PR04MB8833.eurprd04.prod.outlook.com>
+References: <20260319091823.446030-1-hongxing.zhu@nxp.com>
+ <kqv3x4qocp7rkas5oedlpzd43h3ez7dg26hqnfgubbjdhhxlwe@rfnsicbv7qba>
+In-Reply-To: <kqv3x4qocp7rkas5oedlpzd43h3ez7dg26hqnfgubbjdhhxlwe@rfnsicbv7qba>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: AS8PR04MB8833:EE_|GVXPR04MB10683:EE_
+x-ms-office365-filtering-correlation-id: d10026d6-3c48-40b4-4bb2-08de8e3b234d
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|7416014|376014|366016|1800799024|19092799006|38070700021|22082099003|18002099003|56012099003;
+x-microsoft-antispam-message-info:
+ TUqqQp6M64XwLYiT4TB/bi1bHzBpG2/4CvhQcy4Ty8aWeeXf1XeKIW4rVryceYC9eUQprKlC7sy6lFbK0NpqJnUzEnktEFSAeOetflgGX0t3PtVN50FSJzsekHVR3GKbQUH9/QuOYmxN5FsPogWfIzN39T89A21Qcht9a95KJSZXWYmt+Mp3npkjz5t4yK20mIcgMmoq3fnY6azgvS+7FdQmpExSoIvxVXgNCkBT3wiSzK1PfC+oXzRVtXuO4Sa8RX5YyWCEir6T2EJ9zhuha45cvnNDR/3qOW93BAB/0aW2h2jUQ1LRNWEMytaM+YlygaNBnXqTc4vD5gjGpp4PAXg8emPOdevttaEgLc4H9NHdspifEXUqY8u2fWg5g+MeFKN4cth5enQoXcRCaGpO0wl0sLrEt4qO2Vflc1yZKg2j/mWoPRmJ9YaPmem+vxxiFBDJ1mvnVH3uiMRkEZdDhQdFKWL8SrELAmDopeSCXyyPjzbx2Df3t8+l6d5gK32n4Bs81NISbHr0b4m76+IOgwiLqoSBM6mtTbwVSNOxpqOeb+oEhCQeSx0Z3Wk5lHNjBXyJsT6eQT3lTxUuIG6tSE6W3Kcf9uaMcQQF6cmWucttiknlyDZLPF55rOFFO6rVQBk/9iRX6HtHRIkwWd2uNsfwDPAH5cTdYqnJsCe8pHx7N3tsUjZcFVhqWROeKFxgQzFJuDJ8p1ZYh7FshKiVdYmb7d2Q5/HBDmw1/pUz7at7OzKJ6XyC7tboCRA3lqSbMZ6AD2unODQYrVMPS3cyUN9ya2BHgX2JSnb4MPhH1WM=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR04MB8833.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024)(19092799006)(38070700021)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?RDZkZXFZNGdNbW50dzIyWmIzK0NtWHgxZUgzMGovZ01rMTI0YUtIMlplTm1y?=
+ =?utf-8?B?dit4RE5ZRDliZlArbmlpMmtqL3NsUHQwVzA2N1JQSFdMTDZBUHExOU5hS3FZ?=
+ =?utf-8?B?VG9aNW5UV2R0c2hGdzJvenY1bEZFaEo2ZEgzd0JYellJaHNEeTZ4RFExYWtv?=
+ =?utf-8?B?SDV5SWRqcDk4Y25tcmZleG1FeHhxeVhuWkdWUnRLdmVmeDJzelJKYWR2ZzUx?=
+ =?utf-8?B?VkRkbW1GQXFNalFHblZtNWlpMTdJS1Z0alhabCt5QWQ4L1BXSzdhTC9jQ05o?=
+ =?utf-8?B?VENDU2hCcHkraDczc0RkUlY5Tkk0YnpPMVBGem5IQmhJTHdHNkt5Vmg2Y1Zq?=
+ =?utf-8?B?dWlWallsNGdmY3R2UGtYMi83aWl0VndUazlSY2JidWZ5c2UyVkZtdzNLL0RP?=
+ =?utf-8?B?dVhPMjNFeHg5QXl0N29KZFowMWFhV0gvMk13SHNVYWFaTGQ1bDNmTUY4RWV4?=
+ =?utf-8?B?SXZDT3VDOUJ3ZkxVcWNRT3NIRUorRlZPbkFtRFNDVFBMVHU3bnBhSW5VQjJZ?=
+ =?utf-8?B?ZkNPRkVxa1c0YWtkbmFUelh5bktOWWZsU1BZL1FSNDFFYjZUdkkxVmJxbmFM?=
+ =?utf-8?B?OGZYZmcxa2hIOW4yWFJIRkpFSnM3ODRPWG9iK1R3NlhlcXFWSGFXMndIVlp0?=
+ =?utf-8?B?Um5lekxWN3FLQWdReXZ5Y3ZkQTVuVC8zK1lkeklNcTNENSs3eVBtMDRlT0RZ?=
+ =?utf-8?B?L1ZhRmhjR2gzUUtOeDZSQU1mbWx4TUw3MnFmWTJkQjRGU1NmZ1Z1cEF6YVlM?=
+ =?utf-8?B?Nk00eHk0RGhhd3RrMVdON1pJU3VtYmk0WXRLbnVyb04ybVJaVjZVamdHNGFK?=
+ =?utf-8?B?STkvTE1HblNVVGRPOHpnMEpTQ29RaHhDam81QU44eHJtSHJwU1JvK3kvSFhY?=
+ =?utf-8?B?ZEt5bDRCOFc1b2NtSlM4OTJmSDgxNzZ2T1ZqQmpXYUlhVGoyZmFZM1J0SjlO?=
+ =?utf-8?B?STBlSFNjRmRydEtZUFBDWWEzV3pPTzhVK0gyaXJ6bXI2MThRY1RqZ0wvZGE2?=
+ =?utf-8?B?TktuWXIwQ25Sb0VRcU9pZEgyeDBZUE1vSWd2bFFJNlFDb3NMaVVPa3FtME9R?=
+ =?utf-8?B?Wm0yNVJ4K09MblRuSGMvb1BrcW0vVnlJdHBIUisydzZtTDBzM1hDWDdNZW1J?=
+ =?utf-8?B?YjNIa2U3ODIzNFpjL0NRbzFIaGJSRmhhZFRJaHBYVTRXbGNPczZHZGJxUUtv?=
+ =?utf-8?B?SzZEQU9EUXd4OHRWcG0rOW5KanNUVnB1c2N5R2lRTlQ2dURkTDhSWlE3UDRa?=
+ =?utf-8?B?bUdueXdNSFlZQjVuTktSRUFJbHZBNW1rOVRqelh2YzZjOEZxa1NVMWRKTEdy?=
+ =?utf-8?B?MGpOa2RGUWZjckhyTTVEVzNzUHIycXZqVXhveXgydXVtOGRPMmFWZG9HcHhO?=
+ =?utf-8?B?KytmSi9qaDZsUzE4UDRLRnNWZDFHaDBxV1JUZVFsYlA1WlF2TVJvblZoSTFV?=
+ =?utf-8?B?dXZPblRndlVOanI0azZwYTN3Rm45bWJVMmZNWFNTMVQzZE1tMWNTaE5mZUVo?=
+ =?utf-8?B?ajVFQ1QySUhYVENRQ21PenlISmtiSVFETzJNcWhFeGxEY1VOS1FFdUViQms4?=
+ =?utf-8?B?a3lGTUZRS1FVNVBDR2VkYjZTUGNmZjZlOERocXhRWHdVWXN1SHo4b2ZYTW85?=
+ =?utf-8?B?RmdsQ1dOajNZckpYOWlESkw4KzZaUG82aTQxaE5TcUYvR0NibGZyT1Y1MGJ2?=
+ =?utf-8?B?NDh3RWkrSmEvcWlwa0NPUmxwV1N4cXJSV2JqS2hBd2djUG5jalVkamdOSG5B?=
+ =?utf-8?B?QVMzcXptSk1oRFQwU3Q3REFnL1BGaTU3TEwwem5vYTRyNjlTcmNYY2pBNlhM?=
+ =?utf-8?B?cEJ1WU9ZWU9adGZyZzQ5d1Y1dDZxNlhudHhiYUFzbnJIUDdkbnF2c211WDJl?=
+ =?utf-8?B?Q1dqS3BKUXhwSnJ5MngzeWZzZ2EzTHVKcWZqbm1XTDJ5Y21Kc3Z1Y2dTQTZ6?=
+ =?utf-8?B?Sk1IOWNURUg1OUh4WWVVNm5Odzdjc1ZPbHhUeGRFbGRHSllXaVBOOVpjU2Rt?=
+ =?utf-8?B?c0dtR2JwVDV0eTF4U2c4ZDZQWkVuQkZHRmkyajVqTFJ3bWhUU0NDalAyczhP?=
+ =?utf-8?B?bHFReDhzeHZDRllWUk9ub1Z0c01FUmVaMzVpNU9Wb0ZXVHkxbkFXdzI5YnNz?=
+ =?utf-8?B?aFFqcHdhcXVFNUtnN3R3eUNHdnNYRTFvb24wUThFRStCQ2Y3cnRhU2RtcEhu?=
+ =?utf-8?B?ZEF2UDlqMnJYMVZuRWV3QXdybndLT2F1by9WR3ZXQWNNM2tQWU5CMTh4UXRQ?=
+ =?utf-8?B?cDNTSi85Y1U3L2tUZGUrdDlRMXZZQVhiM1Bzb1NjTnUwS2d1KzFPbTJsZkU1?=
+ =?utf-8?B?VjhQczBVUVhYRDVnM1pUS004Qit0MlI2eDZzZWZ1bG53Tzd3VXJ4Zz09?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-GUID: 8801-oVXRFUo1z80j49SlCDZHkOHnxqw
-X-Authority-Analysis: v=2.4 cv=frzRpV4f c=1 sm=1 tr=0 ts=69ca3b76 cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
- a=VwQbUJbxAAAA:8 a=DF3YyuCdIVBqkp6MlwEA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: gkqxAUfufMUhyx0qPWi-92SNYRfuzxim
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzMwMDA2OCBTYWx0ZWRfX7s8l1gJSp1/d
- wKD2SeRvbLJA3NYu+8uicsGBpO03ZIqK/sP65UVFLBy6o9X0jmGnsBh+4JwcmrUbSKRTbmcfJLy
- iKS9kzAdb/qUmkITQlCVIbPaVF10PiOaTrOdMdFF7PhNCfpvnpO2WOTPSh+Jg6zaMS90VJf/U8c
- trVsrQ4op0VfZ3wItplJR50DaNxqX1Y/6H4OpMDLw+YTHf71qiXgrmoKOKoEKHmO5XL2JH1pa7r
- k4TDu64XsR49l7wz/SlaImrWUmQG7FMJ2AWo4OA9117W3oPIadzCsCWEryt4M6GRhNeqj1LEtDn
- RqweZRFUwNhRpQrnY6I8tBKYA9nZAjdvXGajh1CRmrPlHNxCsGzB+ZsFjkuEVQ85YxoM/sM2Cig
- 8ngEs8YihFZ+Nt0UQv+HTpm7NPNLm5fSW05EGTIpmlTMs/ZgFJ9yYs8Hr/6Epmy7Nd52x7nqbpp
- zjGvnBhKKaa58zdHpjg==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-29_05,2026-03-28_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 spamscore=0 priorityscore=1501 malwarescore=0 clxscore=1015
- lowpriorityscore=0 bulkscore=0 adultscore=0 suspectscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603300068
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: AS8PR04MB8833.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d10026d6-3c48-40b4-4bb2-08de8e3b234d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Mar 2026 09:02:57.9651
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: dxpET96/HJyZiYkVGPGu6u4W7S7SVOaL6GKPJjkkBfBhdPNz7nx6uaKcF+Ki5VXSp9pBLp7L0GjiYGmPEJEK6g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVXPR04MB10683
 
-On Thu, 2026-03-26 at 11:40 -0500, Bjorn Helgaas wrote:
-> On Thu, Mar 26, 2026 at 10:51:19AM +0100, Gerd Bayer wrote:
-> > On Wed, 2026-03-25 at 15:08 -0500, Bjorn Helgaas wrote:
-> > > On Wed, Mar 25, 2026 at 04:16:17PM +0100, Gerd Bayer wrote:
-> > > > When inspecting the config space of a Connect-X physical function i=
-n an
-> > > > s390 system after it was initialized by the mlx5_core device driver=
-, we
-> > > > found the function to be enabled to request AtomicOps despite the
-> > > > system's root-complex lacking support for completing them:
-> > > >=20
-> > > > 1ed0:00:00.1 Ethernet controller: Mellanox Technologies MT2894 Fami=
-ly [ConnectX-6 Lx]
-> > > > 	Subsystem: Mellanox Technologies Device 0002
-> > > >   [...]
-> > > > 	DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-> > > > 		 AtomicOpsCtl: ReqEn+
-> > > > 		 IDOReq- IDOCompl- LTR- EmergencyPowerReductionReq-
-> > > > 		 10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
-> > > >=20
-> > > > Turns out the device driver calls pci_enable_atomic_ops_to_root() w=
-hich
-> > > > defaulted to enable AtomicOps requests even if it had no informatio=
-n
-> > > > about the root-port that the PCIe device is attached to. Similarly,
-> > > > AtomicOps requests are enabled for root complex integrated endpoint=
-s
-> > > > (RCiEPs) unconditionally.
-> > > >=20
-> > > > Change the logic of pci_enable_atomic_ops_to_root() to fully traver=
-se the
-> > > > PCIe tree upwards, check that the bridge devices support delivering
-> > > > AtomicOps transactions, and finally check that there is a root port=
- at
-> > > > the end that does support completing AtomicOps - or that the suppor=
-t for
-> > > > completing AtomicOps at the root complex is announced through some =
-other
-> > > > arch specific way.
-> > > >=20
-> > > > Introduce a new pcibios_connects_to_atomicops_capable_rc() function=
- to
-> > > > implement the check - and default to always "true". This leaves the
-> > > > semantics for today's RCiEPs intact. Pass in the device in question=
- and
-> > > > the requested capabilities for future expansions.
-> > > > For s390, override pcibios_connects_to_atomicops_capable_rc() to
-> > > > always return "false".
-> > > >=20
-> > > > Do not change the enablement of AtomicOps requests if there is no
-> > > > positive confirmation that the root complex can complete PCIe Atomi=
-cOps.
-> > > >=20
-> > > > Reported-by: Alexander Schmidt <alexs@linux.ibm.com>
-> > > > Cc: stable@vger.kernel.org
-> > > > Fixes: 430a23689dea ("PCI: Add pci_enable_atomic_ops_to_root()")
-> > > > Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
-> > > > ---
-> > > >  arch/s390/pci/pci.c |  5 +++++
-> > > >  drivers/pci/pci.c   | 48 +++++++++++++++++++++++++++++++----------=
--------
-> > > >  include/linux/pci.h |  1 +
-> > > >  3 files changed, 37 insertions(+), 17 deletions(-)
-> > > >=20
-> > > > diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-> > > > index 2a430722cbe415dd56c92fed2e513e524f46481a..a0bef77082a153a258f=
-be4abb1070b22e020888e 100644
-> > > > --- a/arch/s390/pci/pci.c
-> > > > +++ b/arch/s390/pci/pci.c
-> > > > @@ -265,6 +265,11 @@ static int zpci_cfg_store(struct zpci_dev *zde=
-v, int offset, u32 val, u8 len)
-> > > >  	return rc;
-> > > >  }
-> > > > =20
-> > > > +bool pcibios_connects_to_atomicops_capable_rc(struct pci_dev *dev,=
- u32 cap_mask)
-> > > > +{
-> > > > +	return false;
-> > > > +}
-> > > > +
-> > > >  resource_size_t pcibios_align_resource(void *data, const struct re=
-source *res,
-> > > >  				       resource_size_t size,
-> > > >  				       resource_size_t align)
-> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > > index 8479c2e1f74f1044416281aba11bf071ea89488a..006aa589926cb290de4=
-3f152100ddaf9961407d1 100644
-> > > > --- a/drivers/pci/pci.c
-> > > > +++ b/drivers/pci/pci.c
-> > > > @@ -3660,6 +3660,19 @@ void pci_acs_init(struct pci_dev *dev)
-> > > >  	pci_disable_broken_acs_cap(dev);
-> > > >  }
-> > > > =20
-> > > > +static bool pci_is_atomicops_capable_rp(struct pci_dev *dev, u32 c=
-ap, u32 cap_mask)
-> > > > +{
-> > > > +	if (!dev || !(pci_pcie_type(dev) =3D=3D PCI_EXP_TYPE_ROOT_PORT))
-> > > > +		return false;
-> > > > +
-> > > > +	return (cap & cap_mask) =3D=3D cap_mask;
-> > > > +}
-> > > > +
-> > > > +bool __weak pcibios_connects_to_atomicops_capable_rc(struct pci_de=
-v *dev, u32 cap_mask)
-> > > > +{
-> > > > +	return true;
-> > > > +}
-> > > > +
-> > > >  /**
-> > > >   * pci_enable_atomic_ops_to_root - enable AtomicOp requests to roo=
-t port
-> > > >   * @dev: the PCI device
-> > > > @@ -3676,8 +3689,9 @@ void pci_acs_init(struct pci_dev *dev)
-> > > >  int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mas=
-k)
-> > > >  {
-> > > >  	struct pci_bus *bus =3D dev->bus;
-> > > > -	struct pci_dev *bridge;
-> > > > -	u32 cap, ctl2;
-> > > > +	struct pci_dev *bridge =3D NULL;
-> > > > +	u32 cap =3D 0;
-> > > > +	u32 ctl2;
-> > > > =20
-> > > >  	/*
-> > > >  	 * Per PCIe r5.0, sec 9.3.5.10, the AtomicOp Requester Enable bit
-> > > > @@ -3714,29 +3728,29 @@ int pci_enable_atomic_ops_to_root(struct pc=
-i_dev *dev, u32 cap_mask)
-> > > >  		switch (pci_pcie_type(bridge)) {
-> > > >  		/* Ensure switch ports support AtomicOp routing */
-> > > >  		case PCI_EXP_TYPE_UPSTREAM:
-> > > > -		case PCI_EXP_TYPE_DOWNSTREAM:
-> > > > -			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
-> > > > -				return -EINVAL;
-> > > > -			break;
-> > > > -
-> > > > -		/* Ensure root port supports all the sizes we care about */
-> > > > -		case PCI_EXP_TYPE_ROOT_PORT:
-> > > > -			if ((cap & cap_mask) !=3D cap_mask)
-> > > > -				return -EINVAL;
-> > > > -			break;
-> > > > -		}
-> > > > -
-> > > > -		/* Ensure upstream ports don't block AtomicOps on egress */
-> > > > -		if (pci_pcie_type(bridge) =3D=3D PCI_EXP_TYPE_UPSTREAM) {
-> > > > +			/* Upstream ports must not block AtomicOps on egress */
-> > > >  			pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2,
-> > > >  						   &ctl2);
-> > > >  			if (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
-> > > >  				return -EINVAL;
-> > > > +			fallthrough;
-> > > > +		/* All switch ports need to route AtomicOps */
-> > > > +		case PCI_EXP_TYPE_DOWNSTREAM:
-> > > > +			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
-> > > > +				return -EINVAL;
-> > > > +			break;
-> > > >  		}
-> > > > -
-> > > >  		bus =3D bus->parent;
-> > > >  	}
-> > > > =20
-> > > > +	/*
-> > > > +	 * Finally, last bridge must be root port and support requested s=
-izes
-> > > > +	 * or firmware asserts support
-> > > > +	 */
-> > > > +	if (!(pci_is_atomicops_capable_rp(bridge, cap, cap_mask) ||
-> > > > +	      pcibios_connects_to_atomicops_capable_rc(dev, cap_mask)))
-> > > > +		return -EINVAL;
-> > >=20
-> > > Sashiko says:
-> > >=20
-> > >   Since the generic weak implementation of
-> > >   pcibios_connects_to_atomicops_capable_rc() unconditionally returns
-> > >   true, the logical OR expression pci_is_atomicops_capable_rp(...) ||
-> > >   true will always evaluate to true. This makes the entire if
-> > >   condition evaluate to false.
-> > >=20
-> > >   Because of this, it appears -EINVAL is never returned here, and any
-> > >   standard endpoint behind a Root Port will successfully be granted
-> > >   AtomicOps even if the Root Port lacks the capability in its
-> > >   PCI_EXP_DEVCAP2 register.
-> >=20
-> > I've made the generic implementation of
-> > pcibios_connects_to_atomicops_capable_rc() default to return "true" to
-> > preserve the current code's handling of RCiEPs: Since they are not
-> > attached to a root port, their dev->bus->parent is NULL and the entire
-> > while-loop is bypassed - before this patch and after. (Sashiko was
-> > pointing at that being regressed with v4.)
->=20
-> The v4 patch definitely changed the behavior for RCiEPs: the current
-> v7.0-rc1 code always enables AtomicOps for RCiEPs, and the v4 patch
-> never enables AtomicOps for RCiEPs.  But I'm not sure this is a
-> regression.  It definitely *could* break an RCiEP, but AFAIK we have
-> no information about whether the RC supports AtomicOps, so enabling
-> them and telling the driver that AtomicOps work might be a lie.
->=20
-> IIUC, the motivation for this series was to avoid enabling AtomicOps
-> on s390 where there is no visible Root Port, and you have platform
-> knowledg that whatever is upstream from the endpoint in fact does not
-> support them.
->=20
-> I think we should avoid enabling AtomicOps unless we know for certain
-> that the completer (Root Port or RC) supports them.  To me that sounds
-> like:
->=20
->   1) Never enable AtomicOps for RCiEPs.
->=20
->   2) Only enable AtomicOps for endpoints below a Root Port that
->   supports AtomicOps.
->=20
-> This could be two separate patches, where the second would fix the
-> s390 issue reported by Alexander.
-
-That sounds like a plan. Working on a v7 - keeping the reference
-updates as a third patch of the series.
-
-> If we come across RCiEPs that need AtomicOps and we somehow know that
-> the RC supports them, we can add a quirk or something to take
-> advantage of it.
-
-Leave that as an execise for later.
-
-> We are still hand-waving about peer-to-peer transactions; we don't
-> even try to account for that because we don't know what peer might be
-> the completer.
-
-Anyway, I'm wondering what the adoption of AtomicOps looks like. Not
-much turned up in my searches.
-
-> > The whole point of pcibios_connects_to_atomicops_capable_rc() is to
-> > allow different architectures to implement a discriminator outside of
-> > PCIe's structure - potentially depending on CPU model or more.
-> >=20
-> > The only point I wonder about: Should
-> > pcibios_connects_to_atomicops_capable_rc() default to return "false"
-> > and deliberately change the behavior for today's RCiEP's (if there are
-> > any...)?
-> >=20
-> > >=20
-> > > > +
-> > > >  	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
-> > > >  				 PCI_EXP_DEVCTL2_ATOMIC_REQ);
-> > > >  	return 0;
-> > > > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > > > index 1c270f1d512301de4d462fe7e5097c32af5c6f8d..ef90604c39859ea8e61=
-e5392d0bdaa1b0e43874b 100644
-> > > > --- a/include/linux/pci.h
-> > > > +++ b/include/linux/pci.h
-> > > > @@ -692,6 +692,7 @@ void pci_set_host_bridge_release(struct pci_hos=
-t_bridge *bridge,
-> > > >  				 void *release_data);
-> > > > =20
-> > > >  int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
-> > > > +bool pcibios_connects_to_atomicops_capable_rc(struct pci_dev *dev,=
- u32 cap_mask);
-> > > > =20
-> > > >  #define PCI_REGION_FLAG_MASK	0x0fU	/* These bits of resource flags=
- tell us the PCI region flags */
-> > > > =20
-> > > >=20
-> > > > --=20
-> > > > 2.51.0
-> > > >=20
-> >=20
-> > Thanks,
-> > Gerd
-
-Thanks,
-Gerd
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBNYW5pdmFubmFuIFNhZGhhc2l2
+YW0gPG1hbmlAa2VybmVsLm9yZz4NCj4gU2VudDogMjAyNuW5tDPmnIgzMOaXpSAxNToyMw0KPiBU
+bzogSG9uZ3hpbmcgWmh1IDxob25neGluZy56aHVAbnhwLmNvbT4NCj4gQ2M6IEZyYW5rIExpIDxm
+cmFuay5saUBueHAuY29tPjsgbC5zdGFjaEBwZW5ndXRyb25peC5kZTsgbHBpZXJhbGlzaUBrZXJu
+ZWwub3JnOw0KPiBrd2lsY3p5bnNraUBrZXJuZWwub3JnOyByb2JoQGtlcm5lbC5vcmc7IGJoZWxn
+YWFzQGdvb2dsZS5jb207DQo+IHMuaGF1ZXJAcGVuZ3V0cm9uaXguZGU7IGtlcm5lbEBwZW5ndXRy
+b25peC5kZTsgZmVzdGV2YW1AZ21haWwuY29tOw0KPiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3Jn
+OyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7DQo+IGlteEBsaXN0cy5saW51
+eC5kZXY7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IHN0YWJsZUB2Z2VyLmtlcm5lbC5v
+cmc7DQo+IFFpYW5nIFl1IDxxaWFuZy55dUBvc3MucXVhbGNvbW0uY29tPg0KPiBTdWJqZWN0OiBS
+ZTogW1BBVENIIHYyXSBQQ0k6IGlteDY6IERvbid0IHJlbW92ZSBNU0kgY2FwYWJpbGl0eSBGb3IN
+Cj4gaS5NWDdEL2kuTVg4TQ0KPiANCj4gKyBRaWFuZw0KPiANCj4gT24gVGh1LCBNYXIgMTksIDIw
+MjYgYXQgMDU6MTg6MjNQTSArMDgwMCwgUmljaGFyZCBaaHUgd3JvdGU6DQo+ID4gVGhlIE1TSSB0
+cmlnZ2VyIG1lY2hhbmlzbSBmb3IgZW5kcG9pbnQgZGV2aWNlcyBjb25uZWN0ZWQgdG8gaS5NWDdE
+LA0KPiA+IGkuTVg4TU0sIGFuZCBpLk1YOE1RIFBDSWUgcm9vdCBjb21wbGV4IHBvcnRzIGRlcGVu
+ZHMgb24gdGhlIE1TSQ0KPiA+IGNhcGFiaWxpdHkgcmVnaXN0ZXIgc2V0dGluZ3MgaW4gdGhlIHJv
+b3QgY29tcGxleC4gUmVtb3ZpbmcgdGhlIE1TSQ0KPiA+IGNhcGFiaWxpdHkgYnJlYWtzIE1TSSBm
+dW5jdGlvbmFsaXR5IGZvciB0aGVzZSBlbmRwb2ludHMuDQo+ID4NCj4gDQo+IFdoYXQgaXMgdGhl
+IHJlbGF0aW9uIGJldHdlZW4gUm9vdCBQb3J0IE1TSSBhbmQgZW5kcG9pbnQgTVNJPyBFbmRwb2lu
+dCBNU0lzDQo+IHNob3VsZCBiZSByb3V0ZWQgdG8gdGhlIHBsYXRmb3JtIE1TSSBjb250cm9sbGVy
+IChEV0MgaS5NU0ktUlggb3IgRXh0ZXJuYWwgbGlrZQ0KPiBHSUMtSVRTKSBpbmRlcGVuZGVudCBv
+ZiB0aGUgUm9vdCBQb3J0IE1TSSBzdGF0ZS4NCkhpIE1hbmk6DQpUaGFuayBmb3IgeW91ciBraW5k
+bHkgY29uY2Vybi4NClRoZSBNU0kgY29udHJvbGxlciAoRFdDIGkuTVNJLVJYKSBvbiBpLk1YN0Qs
+IGkuTVg4TU0sIGFuZCBpLk1YOE1RIHBsYXRmb3Jtcw0KcmVxdWlyZXMgdGhlIFJDJ3MgTVNJIGNh
+cGFiaWxpdHkgdG8gcmVtYWluIGVuYWJsZWQuIFJlbW92aW5nIGl0IGJyZWFrcyBNU0kNCnJvdXRp
+bmcgZnJvbSBlbmRwb2ludHMgdG8gdGhlIHBsYXRmb3JtIE1TSSBjb250cm9sbGVyLg0KDQpCZXN0
+IFJlZ2FyZHMNClJpY2hhcmQgWmh1DQo+IA0KPiBJJ20ganVzdCB0cnlpbmcgdG8gdW5kZXJzdGFu
+ZCB0aGUgaXNzdWUgaGVyZS4NCj4gDQo+IC0gTWFuaQ0KPiANCj4gPiBQcmVzZXJ2ZSB0aGUgTVNJ
+IGNhcGFiaWxpdHkgZm9yIGkuTVg3RC9pLk1YOE0gUENJZSByb290IGNvbXBsZXggdG8NCj4gPiBt
+YWludGFpbiBNU0kgZnVuY3Rpb25hbGl0eS4NCj4gPg0KPiA+IENjOiBzdGFibGVAdmdlci5rZXJu
+ZWwub3JnDQo+ID4gRml4ZXM6IGY1Y2Q4YTkyOWM4MjUgKCJQQ0k6IGR3YzogUmVtb3ZlIE1TSS9N
+U0lYIGNhcGFiaWxpdHkgZm9yIFJvb3QNCj4gPiBQb3J0IGlmIGlNU0ktUlggaXMgdXNlZCBhcyBN
+U0kgY29udHJvbGxlciIpDQo+ID4gU2lnbmVkLW9mZi1ieTogUmljaGFyZCBaaHUgPGhvbmd4aW5n
+LnpodUBueHAuY29tPg0KPiA+IC0tLQ0KPiA+IHYyIGNoYW5nZXM6DQo+ID4gQ0Mgc3RhYmxlIHRy
+ZWUuDQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaS1pbXg2LmMg
+fCAxNSArKysrKysrKysrKysrKy0NCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDE0IGluc2VydGlvbnMo
+KyksIDEgZGVsZXRpb24oLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9jb250
+cm9sbGVyL2R3Yy9wY2ktaW14Ni5jDQo+ID4gYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9w
+Y2ktaW14Ni5jDQo+ID4gaW5kZXggMjBkYWZkMjcxMGEzLi4wYjBkNmEyMTA0MDYgMTAwNjQ0DQo+
+ID4gLS0tIGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNpLWlteDYuYw0KPiA+ICsrKyBi
+L2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaS1pbXg2LmMNCj4gPiBAQCAtNDEsNiArNDEs
+NyBAQA0KPiA+ICAjZGVmaW5lIElNWDhNUV9HUFJfUENJRV9DTEtfUkVRX09WRVJSSURFCUJJVCgx
+MSkNCj4gPiAgI2RlZmluZSBJTVg4TVFfR1BSX1BDSUVfVlJFR19CWVBBU1MJCUJJVCgxMikNCj4g
+PiAgI2RlZmluZSBJTVg4TVFfR1BSMTJfUENJRTJfQ1RSTF9ERVZJQ0VfVFlQRQlHRU5NQVNLKDEx
+LCA4KQ0KPiA+ICsjZGVmaW5lIElNWDhNTV9QQ0lFX01TSV9DQVBfT0ZGU0VUCQkweDUwDQo+ID4N
+Cj4gPiAgI2RlZmluZSBJTVg5NV9QQ0lFX1BIWV9HRU5fQ1RSTAkJCTB4MA0KPiA+ICAjZGVmaW5l
+IElNWDk1X1BDSUVfUkVGX1VTRV9QQUQJCQlCSVQoMTcpDQo+ID4gQEAgLTExNyw2ICsxMTgsNyBA
+QCBlbnVtIGlteF9wY2llX3ZhcmlhbnRzIHsNCj4gPiAgI2RlZmluZSBJTVhfUENJRV9GTEFHX0hB
+U19MVVQJCQlCSVQoMTApDQo+ID4gICNkZWZpbmUgSU1YX1BDSUVfRkxBR184R1RfRUNOX0VSUjA1
+MTU4NgkJQklUKDExKQ0KPiA+ICAjZGVmaW5lIElNWF9QQ0lFX0ZMQUdfU0tJUF9MMjNfUkVBRFkJ
+CUJJVCgxMikNCj4gPiArI2RlZmluZSBJTVhfUENJRV9GTEFHX0tFRVBfTVNJX0NBUAkJQklUKDEz
+KQ0KPiA+DQo+ID4gICNkZWZpbmUgaW14X2NoZWNrX2ZsYWcocGNpLCB2YWwpCShwY2ktPmRydmRh
+dGEtPmZsYWdzICYgdmFsKQ0KPiA+DQo+ID4gQEAgLTk3NiwxMCArOTc4LDE3IEBAIHN0YXRpYyBp
+bnQgaW14X3BjaWVfc3RhcnRfbGluayhzdHJ1Y3QgZHdfcGNpZQ0KPiA+ICpwY2kpICB7DQo+ID4g
+IAlzdHJ1Y3QgaW14X3BjaWUgKmlteF9wY2llID0gdG9faW14X3BjaWUocGNpKTsNCj4gPiAgCXN0
+cnVjdCBkZXZpY2UgKmRldiA9IHBjaS0+ZGV2Ow0KPiA+IC0JdTggb2Zmc2V0ID0gZHdfcGNpZV9m
+aW5kX2NhcGFiaWxpdHkocGNpLCBQQ0lfQ0FQX0lEX0VYUCk7DQo+ID4gKwl1OCBvZmZzZXQ7DQo+
+ID4gIAl1MzIgdG1wOw0KPiA+ICAJaW50IHJldDsNCj4gPg0KPiA+ICsJaWYgKGlteF9wY2llLT5k
+cnZkYXRhLT5mbGFncyAmIElNWF9QQ0lFX0ZMQUdfS0VFUF9NU0lfQ0FQKSB7DQo+ID4gKwkJb2Zm
+c2V0ID0gZHdfcGNpZV9maW5kX2NhcGFiaWxpdHkocGNpLCBQQ0lfQ0FQX0lEX1BNKTsNCj4gPiAr
+CQlkd19wY2llX2RiaV9yb193cl9lbihwY2kpOw0KPiA+ICsJCWR3X3BjaWVfd3JpdGViX2RiaShw
+Y2ksIG9mZnNldCArIDEsDQo+IElNWDhNTV9QQ0lFX01TSV9DQVBfT0ZGU0VUKTsNCj4gPiArCQlk
+d19wY2llX2RiaV9yb193cl9kaXMocGNpKTsNCj4gPiArCX0NCj4gPiArDQo+ID4gIAlpZiAoIShp
+bXhfcGNpZS0+ZHJ2ZGF0YS0+ZmxhZ3MgJg0KPiA+ICAJICAgIElNWF9QQ0lFX0ZMQUdfU1BFRURf
+Q0hBTkdFX1dPUktBUk9VTkQpKSB7DQo+ID4gIAkJaW14X3BjaWVfbHRzc21fZW5hYmxlKGRldik7
+DQo+ID4gQEAgLTk5MSw2ICsxMDAwLDcgQEAgc3RhdGljIGludCBpbXhfcGNpZV9zdGFydF9saW5r
+KHN0cnVjdCBkd19wY2llICpwY2kpDQo+ID4gIAkgKiBzdGFydGVkIGluIEdlbjIgbW9kZSwgdGhl
+cmUgaXMgYSBwb3NzaWJpbGl0eSB0aGUgZGV2aWNlcyBvbiB0aGUNCj4gPiAgCSAqIGJ1cyB3aWxs
+IG5vdCBiZSBkZXRlY3RlZCBhdCBhbGwuICBUaGlzIGhhcHBlbnMgd2l0aCBQQ0llIHN3aXRjaGVz
+Lg0KPiA+ICAJICovDQo+ID4gKwlvZmZzZXQgPSBkd19wY2llX2ZpbmRfY2FwYWJpbGl0eShwY2ks
+IFBDSV9DQVBfSURfRVhQKTsNCj4gPiAgCWR3X3BjaWVfZGJpX3JvX3dyX2VuKHBjaSk7DQo+ID4g
+IAl0bXAgPSBkd19wY2llX3JlYWRsX2RiaShwY2ksIG9mZnNldCArIFBDSV9FWFBfTE5LQ0FQKTsN
+Cj4gPiAgCXRtcCAmPSB+UENJX0VYUF9MTktDQVBfU0xTOw0KPiA+IEBAIC0xODk3LDYgKzE5MDcs
+NyBAQCBzdGF0aWMgY29uc3Qgc3RydWN0IGlteF9wY2llX2RydmRhdGEgZHJ2ZGF0YVtdID0gew0K
+PiA+ICAJW0lNWDdEXSA9IHsNCj4gPiAgCQkudmFyaWFudCA9IElNWDdELA0KPiA+ICAJCS5mbGFn
+cyA9IElNWF9QQ0lFX0ZMQUdfU1VQUE9SVFNfU1VTUEVORCB8DQo+ID4gKwkJCSBJTVhfUENJRV9G
+TEFHX0tFRVBfTVNJX0NBUCB8DQo+ID4gIAkJCSBJTVhfUENJRV9GTEFHX0hBU19BUFBfUkVTRVQg
+fA0KPiA+ICAJCQkgSU1YX1BDSUVfRkxBR19TS0lQX0wyM19SRUFEWSB8DQo+ID4gIAkJCSBJTVhf
+UENJRV9GTEFHX0hBU19QSFlfUkVTRVQsDQo+ID4gQEAgLTE5MDksNiArMTkyMCw3IEBAIHN0YXRp
+YyBjb25zdCBzdHJ1Y3QgaW14X3BjaWVfZHJ2ZGF0YSBkcnZkYXRhW10gPSB7DQo+ID4gIAlbSU1Y
+OE1RXSA9IHsNCj4gPiAgCQkudmFyaWFudCA9IElNWDhNUSwNCj4gPiAgCQkuZmxhZ3MgPSBJTVhf
+UENJRV9GTEFHX0hBU19BUFBfUkVTRVQgfA0KPiA+ICsJCQkgSU1YX1BDSUVfRkxBR19LRUVQX01T
+SV9DQVAgfA0KPiA+ICAJCQkgSU1YX1BDSUVfRkxBR19IQVNfUEhZX1JFU0VUIHwNCj4gPiAgCQkJ
+IElNWF9QQ0lFX0ZMQUdfU1VQUE9SVFNfU1VTUEVORCwNCj4gPiAgCQkuZ3ByID0gImZzbCxpbXg4
+bXEtaW9tdXhjLWdwciIsDQo+ID4gQEAgLTE5MjMsNiArMTkzNSw3IEBAIHN0YXRpYyBjb25zdCBz
+dHJ1Y3QgaW14X3BjaWVfZHJ2ZGF0YSBkcnZkYXRhW10gPSB7DQo+ID4gIAlbSU1YOE1NXSA9IHsN
+Cj4gPiAgCQkudmFyaWFudCA9IElNWDhNTSwNCj4gPiAgCQkuZmxhZ3MgPSBJTVhfUENJRV9GTEFH
+X1NVUFBPUlRTX1NVU1BFTkQgfA0KPiA+ICsJCQkgSU1YX1BDSUVfRkxBR19LRUVQX01TSV9DQVAg
+fA0KPiA+ICAJCQkgSU1YX1BDSUVfRkxBR19IQVNfUEhZRFJWIHwNCj4gPiAgCQkJIElNWF9QQ0lF
+X0ZMQUdfSEFTX0FQUF9SRVNFVCwNCj4gPiAgCQkuZ3ByID0gImZzbCxpbXg4bW0taW9tdXhjLWdw
+ciIsDQo+ID4gLS0NCj4gPiAyLjM3LjENCj4gPg0KPiANCj4gLS0NCj4g4K6u4K6j4K6/4K614K6j
+4K+N4K6j4K6p4K+NIOCumuCupOCuvuCumuCuv+CuteCuruCvjQ0K
