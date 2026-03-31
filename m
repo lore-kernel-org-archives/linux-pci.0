@@ -1,116 +1,120 @@
-Received: from mail-dy1-f173.google.com (mail-dy1-f173.google.com [74.125.82.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1036225417
-	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 10:11:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.173
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774951877; cv=pass; b=WH4oa202GNvGhdM5btNcnVKFh0E2lCxJvV0adebcw1aqtNaC8Ilp8ZOqUNZnYqXMHs77heScTuef7sOt5KVHQOxs0cmzdXwDFFwMFx+BtxN9K41DgqfSxMXqQGiOHBu+QfP3i971cPCt647Bi+UAQJXMLQXESBdN9aFkrQjyhns=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774951877; c=relaxed/simple;
-	bh=BuB9OAdchbjZ2fJnCBi8+LXdUDK8kDhBZoLPIaO+/7o=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=jgWuRjkooqnwOD+k/JChz0mquhlDe3G5hTUooqLRfcpxAB4AAOgvE0ZiBHDzTx3sDooWhxVnAhydR6A19hSgqZs2vBT2TA7pl2OTL6naIu/d5WmFzBmRsE/n8a5V2Ap+saYSVlHfQLPzTHsjuTnvnV/ejNkgDHgTtSbpOQwAeng=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gLPAX4bZ; arc=pass smtp.client-ip=74.125.82.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 931603A6B77;
+	Tue, 31 Mar 2026 10:32:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774953167; cv=none; b=H99T3aw0mAGV/e6lnDzs8od6/777sm4MHs15J16QOPwNok4Xyijtv9jR2CCx+cTW+uyQTrIQ+WDJRuOtJgKweu3glA3D31Ni4JHAGmb/yqYhlqE+aMrHbURLvYWQRsFhLiMfbB1Z5o38L/o/F6JC4okXULLCkGi8vMa97+Jez9I=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774953167; c=relaxed/simple;
+	bh=le09LlhpQMm2HEfzI07BhG5k3bOF1ETqPDTNe0QTR0E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=J3XpPnveNmyWWh8JzzX6VDOrxZ9Dq6PtI2hL9cGjlVUfaQcwYNEQiRpAbiIcA6SxUkQh46t4IKaLPZ9lERcYyfcJLzyQ0jB1L4w3/wwyLzQlp9jZqFlEAbuLR1rHxMWjPz6y4SrAnevKhGOwZznteoY1zhN5uBbUdU+bJctXk/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nWT5aGGd; arc=none smtp.client-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gLPAX4bZ"
-Received: by mail-dy1-f173.google.com with SMTP id 5a478bee46e88-2c6f5574d07so49786eec.0
-        for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 03:11:15 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1774951875; cv=none;
-        d=google.com; s=arc-20240605;
-        b=jcnWMp2ErQvbfbsoEHjFZ4Epk0+gb1YYUzWkdl9llClyZVDuRGHxPFSMu2wWtrVnw6
-         HfwnpqTU6Aw++hDWR7TUv5eBjlGdqkx33c6KveJaOPfZHiCZ149HD8UU1U7NJ7fT8liA
-         JslhLdh3HnuYgag4H1cOj9hg8k6f5jzeDQLSZCMsp6SAxWZfpj9c5wmJTQUlLVN/6tp0
-         1UO72fE5bl6GSq4hDYri91qTksvByGVMJeyk4clGs2GNhHuCwncdPyQouREGySU+InSn
-         AUW3xSWziaSh747fSvvBSgFbuhzOpaUuajWw4fJluE+DXALx57Ok3Wih63B17AMyW1JE
-         sFTA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=BuB9OAdchbjZ2fJnCBi8+LXdUDK8kDhBZoLPIaO+/7o=;
-        fh=G274MwQLyAvQZx8zDE4GGgwNzOLp5u0HR1kiWJWkiwI=;
-        b=eunx3k3rWCRyUzZ0Xxb5swThESTRPGMn21cPvZ1wW0n/JXpaD2IRnKsGV8Gk2Q96Bx
-         AyqGH/QpMAPBQeD5npeEasqVlZdpo43ekcnECnnLirSMjJ/DCWMxR8wcgc2QqAseCCJ2
-         dnYGhppYjKiEkUtEP4pPsIjfr/RQq4t6RT1OWuJNF+p/MtQi40nOhTCGcGQ2vwHdEX3e
-         CRNAyRGKxkkpoc0mTIcAKbmHJtd0PpB1U4+emR7NQIWJS74Bw++2H8cRq5e0Oum94rVh
-         7eFjHcrnZg5++QdbFvOhTQtMRD3V5enrkKdypb7j+xshtMYrwNr7s4S5evsBk/Reqcx9
-         AjpA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1774951875; x=1775556675; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=BuB9OAdchbjZ2fJnCBi8+LXdUDK8kDhBZoLPIaO+/7o=;
-        b=gLPAX4bZLbFDe3BIjvh5WgrKtT0qiVHFwz77EYihWbT+/wS88EkaOi/k9qahFqDuuy
-         +/lG8jZqDIRN1FLDJKrp3gwNmxeI/YuhDW3ZDQEaqGHNnZC+rV5xPMfXl1ERodmAPrmt
-         wzXyZKtRY4IibVuRmGYKAFbGKxSVYVo/3DfCA/rPYisZPFgB6A0AbpmUvjO6+teO32zK
-         91vhUc4uH5zxJP+vtaudDq5bRBG0CRsHV085wicgYmOi+R1AuBBxT34kRcVgkpCown1V
-         psxK+v/3/BDxFMMpsuPhfVW/WDNsp8Z0SQIFg9vyc/VeeiVfNv/fOv29JbZen0cNP7xO
-         3iEA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774951875; x=1775556675;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=BuB9OAdchbjZ2fJnCBi8+LXdUDK8kDhBZoLPIaO+/7o=;
-        b=AHxDaVHF6khBqvSeX3rz+2oM2d6SRpsWqlfIz7gclG7lz7JBN/zs6SMHYVZTW4mMuk
-         nzGhEm8QS+u/R6pvF1fxlC/eeYBDq0Z5UEN6rh2EUNgQCkm9lhfRFi+yuzrPswedg9gm
-         HsIVlw1Hm0v4fOZX4dJjHD9wTJTjLWcoTMgGs9PkjZVng8yoBBUtKD63jrT65oZyhpr1
-         DyPMXHzM7Kb2GyHlrP8Xbn6dtj27RuK/dCismEHQA1rBNCO670tNRpl4Iva6W3cObhIH
-         SRVlS/69diFG/x67mSaJm2Mnb+pcjuBzcdBFdc43C93lKABgFu0kc389r4eoMyiAlHLk
-         5dwQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWnX8jkvMUoELFG+Fw6kAhA6KF1zgTDtuRuICDij7euAhCAOXdJ4qbHUn68tDlmecAQcevx3LC+rBQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YygfBJnL5NPYQmZZLEoUVPMizvwqZ7rg/C1gi9cZRdYak2JMkRO
-	RqN5YU1M9POilCItfAtOqNZ08UweMGc4Yx9BX272OXmUVdfW450CeWyh1dvu/ml+6n7aSn9rTId
-	SzzztFo4EZTDvVKxC3hbekWwmqg+OIZQ=
-X-Gm-Gg: ATEYQzy1SoSF5/oySBWfF/FzBNHF5GbHH/TrUWdF2aXLGNIjcqMkgobZunuPYvGFGnF
-	Juvsn5RfsRCCBVcqAtlTSoRX/81aNsLIFZ1n6BGii4VtwgyXoam0PeVMVVORGVh3EHvjlVLcoId
-	TPhDVQ7fVGqtkjoQJT8XFoH6qgbb9AaYT5aw9s7o5ZNJMIVW3JzPoG63kDjpCH7L2OwDaL0CIU4
-	DNntkqBs5XirASXpEqp5G4MJhX9NrV42m73sreZLn1nKZ+jsWOSMYE4plUIeA5THbaPAha0duYr
-	W2r9Jbbfgl0d6ZXQNrNTqEeLFUCK7J8061gGVT9KOZo3bFozaJictb7bU9/v+Mb/xosClR6oOeZ
-	CGq5myprAot/wIEIyF8OmM30=
-X-Received: by 2002:a05:693c:3008:b0:2be:298c:a11 with SMTP id
- 5a478bee46e88-2c185edf989mr4029939eec.3.1774951874996; Tue, 31 Mar 2026
- 03:11:14 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nWT5aGGd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1774953166; x=1806489166;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=le09LlhpQMm2HEfzI07BhG5k3bOF1ETqPDTNe0QTR0E=;
+  b=nWT5aGGd6lUGyN5c+XO/sMNJBsFurN2ZN4UW/PcK/GvH9kWOai/dvTOd
+   HXTE/6KOui9NMEzbU20Na1capf/FEJPPJZPUKNIl8/2ypod6Fyd40okss
+   rqXFote7nj69yub6+3GtnJ0jfELoZw6omYjJ7ZX5mawi2aYVdP/cR5/Ji
+   cvaXyYTVyB05fChZi/M+sP32EMkNPTJTSZm/xSzeYuTk2TpdzXH8uSKew
+   gfVDsT6Qsi2UBSK4MzkWUwZ0JVPsx7PY54bVKgFpAnw4d3CrV89uT17yE
+   QHqf/7DiwsqrGOeRi5CGND5QVTaJHfl15f9/ngQ5qHXw7KRhA6P+cSbMZ
+   g==;
+X-CSE-ConnectionGUID: wAxzgU9zRLOS6er/aa5I4Q==
+X-CSE-MsgGUID: vIaRWO0XT5mLR8M8Cn3YWg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11744"; a="86656040"
+X-IronPort-AV: E=Sophos;i="6.23,151,1770624000"; 
+   d="scan'208";a="86656040"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 03:32:45 -0700
+X-CSE-ConnectionGUID: zS2ZeGFaQQ6qRc6JbqTn5Q==
+X-CSE-MsgGUID: hJN/JewWQaCNv6905GI5/w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,151,1770624000"; 
+   d="scan'208";a="219684521"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
+  by fmviesa009.fm.intel.com with ESMTP; 31 Mar 2026 03:32:41 -0700
+Date: Tue, 31 Mar 2026 18:11:32 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: "Edgecombe, Rick P" <rick.p.edgecombe@intel.com>
+Cc: "Gao, Chao" <chao.gao@intel.com>, "Xu, Yilun" <yilun.xu@intel.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"kas@kernel.org" <kas@kernel.org>,
+	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+	"Li, Xiaoyao" <xiaoyao.li@intel.com>,
+	"Williams, Dan J" <dan.j.williams@intel.com>,
+	"Jiang, Dave" <dave.jiang@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Duan, Zhenzhong" <zhenzhong.duan@intel.com>,
+	"Verma, Vishal L" <vishal.l.verma@intel.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>
+Subject: Re: [PATCH v2 03/31] x86/virt/tdx: Add tdx_page_array helpers for
+ new TDX Module objects
+Message-ID: <acud1HzZX9IUUHWH@yilunxu-OptiPlex-7050>
+References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
+ <20260327160132.2946114-4-yilun.xu@linux.intel.com>
+ <1dd0b8f4d1ad5cd07b5139ed8c944e1e1d004661.camel@intel.com>
+ <acqbDVnd6gNJWmBi@yilunxu-OptiPlex-7050>
+ <f163ab3b7c939a7d19864dfde9897ca3b424c60b.camel@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260211032935.2705841-1-alistair.francis@wdc.com>
- <20260211032935.2705841-23-alistair.francis@wdc.com> <20260303150040.00007458@huawei.com>
- <CAKmqyKM6CBucDEo0aKZVWrKtozbT_ddk0PaZFtHyEMMMx558JA@mail.gmail.com>
-In-Reply-To: <CAKmqyKM6CBucDEo0aKZVWrKtozbT_ddk0PaZFtHyEMMMx558JA@mail.gmail.com>
-From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date: Tue, 31 Mar 2026 12:11:02 +0200
-X-Gm-Features: AQROBzDcDwr7GVEqtGjVwGa12fqkwc3LQ0Ho8hFkYoop4Cj9bvScGclhoV9SimU
-Message-ID: <CANiq72nOt1E8=GYdh2T5BWNvG7J8sZRF+60taghoxKm8fkadHg@mail.gmail.com>
-Subject: Re: [RFC v3 22/27] lib: rspdm: Support SPDM certificate validation
-To: Alistair Francis <alistair23@gmail.com>
-Cc: Jonathan Cameron <jonathan.cameron@huawei.com>, bhelgaas@google.com, lukas@wunner.de, 
-	rust-for-linux@vger.kernel.org, akpm@linux-foundation.org, 
-	linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, alex.gaynor@gmail.com, benno.lossin@proton.me, 
-	boqun.feng@gmail.com, a.hindborg@kernel.org, gary@garyguo.net, 
-	bjorn3_gh@protonmail.com, tmgross@umich.edu, ojeda@kernel.org, 
-	wilfred.mallawa@wdc.com, aliceryhl@google.com, 
-	Alistair Francis <alistair@alistair23.me>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f163ab3b7c939a7d19864dfde9897ca3b424c60b.camel@intel.com>
 
-On Tue, Mar 31, 2026 at 5:30=E2=80=AFAM Alistair Francis <alistair23@gmail.=
-com> wrote:
->
-> Yep, same thing. My way is the Rust-y way to do it
+On Mon, Mar 30, 2026 at 11:57:11PM +0000, Edgecombe, Rick P wrote:
+> On Mon, 2026-03-30 at 23:47 +0800, Xu Yilun wrote:
+> > > pages is going to be an array of struct pointers, and root is a single page
+> > > of
+> > > PA's that gets re-used to copy and pass the PA's to the TDX module. Why do
+> > > we
+> > > need both? Like just keep an array of PA's that would be the same size as
+> > > the
+> > > struct page array. And not need the populate loop? 
+> > 
+> > We need Linux language, struct page *, for alloc and free. Also need
+> > TDX Module language - PA list - for SEAMCALLs. So IIUC, the page to PA
+> > populating won't disappear on allocation, the PA to page populating
+> > would appear on free.
+> 
+> Not sure what you mean by this.
 
-Hmm... In what way? I would say it is the other way around.
+I mean host use struct page * for memory allocation and free. If we only
+keep the PA list, we still need to convert PAs back to struct page * and
+free.
 
-Clippy should be flagging this, too.
+> 
+> > 
+> > Besides, host may need to vmap and access the (shared) pages.
+> 
+> Some code someday may need to convert a PA to another format? Is that it?
 
-Cheers,
-Miguel
+No, I don't convert a PA to something else. PA list is only for
+SEAMCALLs.
+
+Now we use vm_map_ram(array->pages, ...) to map the shared pages,
+that's another reason I want to keep the struct page ** in
+struct tdx_page_array.
+
+Anyway we use struct page ** for kernel memory management in several
+cases, keeping the struct page ** avoids PA -> page populating.
+
+> Doesn't seem like big problem.
+> 
+> But I'm not sure about this idea yet.
