@@ -1,21 +1,22 @@
 Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 413D4391833;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F83333B6E3;
 	Tue, 31 Mar 2026 17:57:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774979839; cv=none; b=UUJTfGkoRsYzFn1Yv/Lg+0ncpES09ndAlZLM0NfRlOqCH4tz0GZaBpFiiySarbI+HrqMaw0RaioaptWLqVniJeP3Rt1SHjcjYfmA465RaWGp8CvAaVWXGA89ZDMdTPOah/ZKr03ew84xkYxS9QCB6tJl60ACdNu4yFjyxnsMwLM=
+	t=1774979839; cv=none; b=CkewO/pjAxEMp3m/pR0NJt4/L6ibt/wVsfeNIEJYBMrszc6rIzbxzyP9BA+iZjVGeWk01zaYDseBea6BWHMT1dwmNa/kdkZ9s82yynK4fqzM0VuJKARKVo6cQ1tc1coCL2CPgnMIlt4CgA42V7eMNxtDMdTfbVUn3BxTM1iCKyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1774979839; c=relaxed/simple;
-	bh=zOv/9RphY8o5rG3kxKtLeEGTPsN0fRlOfNUMTN4h4F8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CJVnieENr//zpkTjfTZcX6Zl5/odeJW5GUXHkHx2PHRrL6HLQPayBjFhHGHNH/VbZCsIIQiMbkJyo9+2p34XdH9MUddsymqDrxoS+B1VzvIfoTKbgmvzbeHYky8r067sVYRalTP6CAc4pHeuSOnmz1IvbAuOD1LiLo7kXj91P08=
+	bh=0dXOCc2EyLPPDQsyb8K7thSsKu2KeZEGb65KV4d/SRE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=GlXHzIZO0/EwASvfCvIMBY3cwXlSC2I7uU6C8T3iGqA2vV+mAV+++6wcnKw4KQpLe3iHuT31TrqS5rfWd8aA0KffF6YMvDq5T+M9utoQhfjnOu5mIP7m8cCjVZPfpDUt1p8JxHlaSVTJzkT2l5O0dEynmZx29S2BPHzN2pBijVM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
 Received: from localhost.localdomain (unknown [223.166.95.230])
-	by APP-01 (Coremail) with SMTP id qwCowABH8GvrCsxpCP3GCw--.20050S2;
-	Wed, 01 Apr 2026 01:57:00 +0800 (CST)
+	by APP-01 (Coremail) with SMTP id qwCowABH8GvrCsxpCP3GCw--.20050S4;
+	Wed, 01 Apr 2026 01:57:01 +0800 (CST)
 From: Han Gao <gaohan@iscas.ac.cn>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	=?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>,
@@ -34,11 +35,14 @@ Cc: linux-pci@vger.kernel.org,
 	Icenowy Zheng <zhengxingda@iscas.ac.cn>,
 	Inochi Amaoto <inochiama@gmail.com>,
 	Vivian Wang <wangruikang@iscas.ac.cn>,
-	Yao Zi <me@ziyao.cc>
-Subject: [PATCH 0/2] PCI: Allow disabling port services on broken root ports
-Date: Wed,  1 Apr 2026 01:56:56 +0800
-Message-ID: <20260331175658.1015829-1-gaohan@iscas.ac.cn>
+	Yao Zi <me@ziyao.cc>,
+	stable@vger.kernel.org
+Subject: [PATCH 2/2] PCI: Add quirk to disable PCIe port services on Sophgo SG2042
+Date: Wed,  1 Apr 2026 01:56:58 +0800
+Message-ID: <20260331175658.1015829-3-gaohan@iscas.ac.cn>
 X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260331175658.1015829-1-gaohan@iscas.ac.cn>
+References: <20260331175658.1015829-1-gaohan@iscas.ac.cn>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,53 +50,76 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qwCowABH8GvrCsxpCP3GCw--.20050S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7JryxXF1ktFykZF18tF4DCFg_yoW8JryfpF
-	WrWF9YyrWfKryUKwsrX3WUCFy3WF4kAryrC34DGw47urW3AryrXF9rtF93tFsrGr4xAa4Y
-	vr95C3W5uFyDZFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9214x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r1I6r4UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVCY1x0267AKxVW8Jr
-	0_Cr1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-	6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
-	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E
-	8cxan2IY04v7MxkF7I0En4kS14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFV
-	Cjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWl
-	x4CE17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r
-	1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_
-	JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYx
-	BIdaVFxhVjvjDU0xZFpf9x0pRHUDLUUUUU=
-X-CM-SenderInfo: xjdrxt3q6l2u1dvotugofq/1tbiBwkDDGnL4t55SwABss
+X-CM-TRANSID:qwCowABH8GvrCsxpCP3GCw--.20050S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxJr4fXw1rAr17XrykAr48tFb_yoW8uw17pF
+	s8GF9ayr4FgFyUGw4kZw1kuF9xua1vy34FkrZ3Wa9IvF1ay3s5XFsrtr9IyF47WFsrXFW5
+	Xwn8Cws8Wa4DWFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UM2
+	8EF7xvwVC2z280aVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVCY1x0267AKxVW8Jr0_Cr1U
+	M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
+	v20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
+	F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2
+	IY04v7MxkF7I0En4kS14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY
+	6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17
+	CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF
+	0xvE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMI
+	IF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnI
+	WIevJa73UjIFyTuYvjTRNiSHDUUUU
+X-CM-SenderInfo: xjdrxt3q6l2u1dvotugofq/1tbiDAgDDGnL4tWXegAAsz
 
-Some PCIe root ports break MSI delivery to downstream devices when
-native port services (AER, PME, bwctrl, etc.) are active. The existing
-pcie_ports=compat kernel parameter works around this globally, but
-affects all ports on the system.
+SG2042's PCIe root ports [1f1c:2042] fail to deliver MSI interrupts to
+downstream devices when native port services are enabled. Devices under
+an affected root port receive zero interrupts despite successful vector
+allocation, causing driver timeouts (e.g. amdgpu fence fallback timer
+expired on all rings).
 
-This series adds a per-device mechanism to skip port service probing:
-  1. Introduce PCI_DEV_FLAGS_NO_PORT_SERVICES flag and wire it into
-     the PCIe port driver
-  2. Apply it via quirk to Sophgo SG2042 root ports [1f1c:2042], which
-     fail to deliver MSI interrupts when port services are enabled
+Set PCI_DEV_FLAGS_NO_PORT_SERVICES on SG2042 root ports to prevent the
+port service driver from probing, restoring correct MSI delivery.
 
-SG2042's PCIe root ports only support MSI, not MSI-X. The MSI
-controller provides only 32 vectors shared across all devices behind
-each root port. When native port services claim vectors from this
-limited pool, downstream devices are starved of interrupts, resulting
-in zero interrupts delivered and driver timeouts (e.g. amdgpu fence
-fallback timer expired on all rings).
+Fixes: 1c72774df028 ("PCI: sg2042: Add Sophgo SG2042 PCIe driver")
+Cc: stable@vger.kernel.org
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ drivers/pci/quirks.c    | 12 ++++++++++++
+ include/linux/pci_ids.h |  2 ++
+ 2 files changed, 14 insertions(+)
 
-Han Gao (2):
-  PCI: Add per-device flag to disable native PCIe port services
-  PCI: Add quirk to disable PCIe port services on Sophgo SG2042
-
- drivers/pci/pcie/portdrv.c |  3 +++
- drivers/pci/quirks.c       | 12 ++++++++++++
- include/linux/pci.h        |  2 ++
- include/linux/pci_ids.h    |  2 ++
- 4 files changed, 19 insertions(+)
-
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 48946cca4be7..bbde482ff7cb 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -6380,3 +6380,15 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
+ #endif
++
++/*
++ * SG2042's PCIe root ports do not correctly deliver MSI interrupts to
++ * downstream devices when native PCIe port services are enabled. All
++ * services including bwctrl must be disabled, equivalent to pcie_ports=compat.
++ */
++static void quirk_sg2042_no_port_services(struct pci_dev *dev)
++{
++	pci_info(dev, "SG2042: disabling native PCIe port services\n");
++	dev->dev_flags |= PCI_DEV_FLAGS_NO_PORT_SERVICES;
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SOPHGO, 0x2042, quirk_sg2042_no_port_services);
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 406abf629be2..9663be526dd0 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2630,6 +2630,8 @@
+ 
+ #define PCI_VENDOR_ID_CXL		0x1e98
+ 
++#define PCI_VENDOR_ID_SOPHGO		0x1f1c
++
+ #define PCI_VENDOR_ID_TEHUTI		0x1fc9
+ #define PCI_DEVICE_ID_TEHUTI_3009	0x3009
+ #define PCI_DEVICE_ID_TEHUTI_3010	0x3010
 -- 
 2.47.3
 
