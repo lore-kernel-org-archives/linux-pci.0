@@ -1,80 +1,80 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2BBC36897F
-	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 02:38:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE11728CF4A
+	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 03:30:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.52
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774924685; cv=pass; b=fz4/+uCpwOEEE4sna4invWeXaUPpNNa8fj1APkWcp2sIMChRL1h9pekJ44VkN+l/8/88VLN/3N/94CA0BW3icGFwBWMm4/tkqHUYCq4vMng+UQn9PjElWxuPx7d0pvsOyE5B33ilCY0P4gcrnftyq8ObB3yITd9GGpqa7ph+sIU=
+	t=1774927810; cv=pass; b=q8/Lu45ooTbZqy0flgbDiZy7M7pt+JCSuErK5lQ+UW502bKaRGvgBGD3dgZVdvQ9STSdcUuDxMwJ88z535JogVABllZb2ze4f5SD/MoRBhhFcdwEnG9zT5fvMcoxdiOWdooONIhP0up3DYkrHPUYR1BZNkcGGljJuhXD4AjalOU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774924685; c=relaxed/simple;
-	bh=3O0p8gbyC04aSiE5qtRnr5SGUIQPg8EU7YEKdZoABrU=;
+	s=arc-20240116; t=1774927810; c=relaxed/simple;
+	bh=Vqz0wbjll/hAJPEOie6RM4KJSz7Fs7lEo3U/R+kG3UI=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=a2iFo1ZQOJGQKkXQ6+bkAL1m9K+qEH33tRvJtaunXZjnNBo1IBFnWCS2iEqne/q2DZqJxOsmcyt+DGQ4zsFJbGe5KwTZJYM+iZhuvqymkDyT+dCU7r31WJVIQqtuSyhpMhVpfUvCrwrdHrmBo1f3pbemZkv3cB70DCYK8Lb/t74=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TMK+36xJ; arc=pass smtp.client-ip=209.85.208.42
+	 To:Cc:Content-Type; b=ZOv4yLlI8Yfdl6npiqFMwLttwt9WfhRWH9WSRBAClkreDb361GTlInpq7uTCRl3H2CAFEZRmvRsKUbpCI4enGTCfP1QzM0vH5aYmA49+QyllBqR+YLAKp/Ug7FUNK0AoEoCfbMzmXZ/VXzISQs/DDCkdVfco/8iuWjzl7Y0PL7Q=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qL3DKFk+; arc=pass smtp.client-ip=209.85.208.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TMK+36xJ"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-66bf6aa4858so2528142a12.2
-        for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 19:38:03 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1774924682; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qL3DKFk+"
+Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-66bb7e098b1so1948586a12.3
+        for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 20:30:08 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1774927807; cv=none;
         d=google.com; s=arc-20240605;
-        b=IhuR56aGjE3Z1l+uQCzenDqiJ3ANCMDU52qTgrzENLx8I+lVQNirnvMoAuPzZdLQHk
-         eZYFtbMx4JtY6+477gykLgJbpEmYHAgOApzrNCuqlKMHD4/r73MpQcJ7DSPmis9CeNmv
-         MBLHJYMxkTsRI5aGW7YKONmGxwSEau8mAofdWJk/q5Q/jaKzYnhRlPAdcR4/KDjXm0T/
-         HSQiB0WSIH3cwJ1xiAvwh2zMgygXhDaTOyS4Nvs9cDemDg45NhtFBlf0b9+h4N2mG8ax
-         Kkh9/4/9UMlpOa/xt0kBleAkUJzXO0mE6lvOHbQq9hbFGMpU1mTqEjcGPintUqusGX1u
-         n3eQ==
+        b=kry0jN3yY8ZkqZWi/lEDTVqe9P0KWnT8aghm9ZJzJ3N4GgVgUHmC8PJUKmTlHd3ONa
+         37WjLnLtedx9jlhG0Hpv6OwRmc2oefMofgOfZeLDaCEdWp5909C0O8YGPkT91xxvLe3j
+         VttDmsSD9HbCOA1QlptbcrFkxbFiJqTHHsyoAembl9tX0kJ9oKNFaAdHSSdH8l0gpTqb
+         hNYuAjdrBgVPWj8MsDsZw1eNYGuW3vSwcA9EqHyX93E+ktKLASdDbaPgdRm0Yuui9zP5
+         5sFDpYMCUipxie0sHyOmKunB1XsJQ0KExsGuKUAcsg39C0h8JoO9XlTtW8v/to9PqKl1
+         THcA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=KFHuMJVlBuh2yoHdO7VZ4M0IDoIO0zvBf7TOsOf0Xf0=;
-        fh=9m7l/llpgEdwNPHTp7EaBYDfMVZF3tjomsAyZWjfx4w=;
-        b=IbxyU0HtkzEIdEK0mInbLHVGUQSjQsxfeXrgu4OQWsqQJ7VhSJFRqo799YZJffwW+z
-         PPLdk+Gp3saUM4lIlwoBmhpPlNJju+g8aotGNMIIIlE92rxcieJHs2F70egNqRiaWkrW
-         Ygv9IRJflpASOW5Hz3R7jRhNfetdYmAuWXfaKEqSlbsbGkuDol3wWgReLvsmiZqMyA/n
-         MxEV2p0QkDaf0QWXHy5K2BU2+LFrFPN8dbiCm781MVhN0UGY2AHLoeuHcgUfMKF7Uft2
-         8XRC0lDCNSyDryc0QxYYhJX+uUhvrvCU2N8Sf5YtrIXwc3eH2TwvwWsz9x/nEWTkCZHK
-         zdEA==;
+        bh=Fbhm8CzZ4y2XM5LEjJUdYiChU7X46Cm6Ehudfb4QOfU=;
+        fh=j/AYXpoJuso8iMVgG7rABDXSUQ8qALk5XoVkBGsuQZI=;
+        b=iyADUSXE3wZC5yMYgtBTBwrhvCAOl4zvjL5sykRUlfHCTy6wiOo1QeQ+E1VYQY6BFN
+         TSGNECb+YgW7+9z9tO0UM3aXrPugcZwIki6txHxnCz5qYfjfSutuzIj3mRJdx6k6Km05
+         NBDLbacDnyWwkIKFG9YEVkW8UMHi/DTemSrmsDRhLTWk4GgTpJscE8uHRi9M143cuif0
+         8XZ0QH3ZHhpBb7tjtJDIWqqQ4Mnh9H7xYkWe8FrSYoO5Dsl4VpU5exPfgOgpI0nBqO4v
+         cZ4qFwoS2cc11PD+r1tR/GXXMblq5hTlXC08r4JwS37jlv6F7K+ZjHYqrvTWnpvZHqQq
+         DbDQ==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1774924682; x=1775529482; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1774927807; x=1775532607; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=KFHuMJVlBuh2yoHdO7VZ4M0IDoIO0zvBf7TOsOf0Xf0=;
-        b=TMK+36xJTQdwXkOhydP7ppIX5gOl8uSEVF2Jt0ovUMh0Ez8aWg57NbGb8NCcAgvgFs
-         /CK0zHGg00B4j5XCQKgALjti7pVBnHzc2YvDuUV2iBKMULsEZ2UJSTJlNFKTBs+Q36Ex
-         bbvghmMhrWZP1XbQgHAZMsPOyPYiqcjZM6nOBPRGsgJmu209Y3FsEPCx3fTAsRCmzKeY
-         Jro3P5mtj1ZwCE9EzKkuo2prAfP5fUbTm8BnhF9z3kFvnTA/LCVIaOH+pKCZj8W03QES
-         xQSNtkgSBAry9YTWZaSe6ztpiojqkX0Ro+5UxYkntKcTflfp0imbCScF/9+4L57vPiKh
-         yrxQ==
+        bh=Fbhm8CzZ4y2XM5LEjJUdYiChU7X46Cm6Ehudfb4QOfU=;
+        b=qL3DKFk+AhxNLVrweVLdebsnnRL9yHRQeoFEHbsvv1taablyE0qarKkxBnvyyTohil
+         FPUvBCQhQGD038uilYe2wdk8ltY0bLN24EHzpAD7lt2E+BGM4BSnyr1OV0oZxmIM9hzu
+         ieIwmT0HCSSt4efkdPce+/r3JoIcPr7Ge4Vx2oIuj1sYidoJPOcZa1Py1B0vbQNgqJCV
+         36b+0pp7T7bZcBYWPRxeylvpvThyzgfyEp/gQNCBILusQyVwBzumnwSXCojJLHCw1BEk
+         fYP53d3nwguQ72eQZe/dYgX/7ByXbfVfFIxT/USqvJWU6hFt63Ny3gjiefeIQ72VmlGT
+         GGoQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774924682; x=1775529482;
+        d=1e100.net; s=20251104; t=1774927807; x=1775532607;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=KFHuMJVlBuh2yoHdO7VZ4M0IDoIO0zvBf7TOsOf0Xf0=;
-        b=DWvjysJRMhyqbBE/vY62yddz7xAMLVDEi9YU9GRYZReZd/MIAIuQv7XqVm4aalF89+
-         bwNLd2vUnwM8eIrR0+6tsPX7tQnMuHgl/doLX+Ib0KTounlsG/ycnlhJwy+ApAP0dtUu
-         zH1mH557et7pzaCIec2850JUK9nbIEqlUl/ku0pDjDHjjIKPpMTxf7WuDLe2vnvl9CjT
-         58F34tGJs4DKMIEy7Q95JgRCEuLP7vdqmlXwOVEegsr28VxRUj4LUQxT/07kBZ+bssRj
-         KI5e1de9emR61QUplK/mBVxtgrr5y5TnmH1vaRjh/kFdFEeniLdGyrtnzEFoXWUuj4bM
-         2Vjw==
-X-Forwarded-Encrypted: i=1; AJvYcCVyQoX2EY6IaOXuv+CYd+CNIJ5DA/QsR6df1AMgYFAR5dbDt4ZwDcPgORjQxw0TM3lI1JAW4pTl4RE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz96hgVrUKZ2OSZtpsOR7aGuPCC/THPBpmU+aAl3uHLLtvG0PeM
-	kjNOKHx7Q9AJUQSQMm5a7UI9oOYyI1o/LAk+cVIMvuDy9tNRqfrMz5pUpxrKvfXnlSJxioy4nHs
-	GBuZsJbzLyzSpO6yze6tRNwKwDRu1Hp0=
-X-Gm-Gg: ATEYQzz/JVo4MU6tIFMo2ElGD9zdYBbJqQhf50cn5e5W8wFVPlgD1qeHRxaxA3A3MPe
-	MH4ob8wdAXDaMZZ81qHFYs6QaNTBiCcTV00sbm7zUrcaGuuLLcnkPIrwbiQX981FybPyqOoobhq
-	6T0UO07NhdCQ26mKJY1670YxgWMUYtcVHXcTURdMseMMiCBPt7qU2nOqimm1ftbwaA5ThDBoDaT
-	NofvqTg8+Ub8TCtzxTVII0o6UFwrisk2AtYuL2MwlRnqNNKbs+4rEXDgSch5DSk3chkYRHGgdiM
-	KdbnqdDFQK9NMvXWhf/9mXmwbhYFMYQYlPNObg==
-X-Received: by 2002:a17:906:794b:b0:b98:235b:4dfa with SMTP id
- a640c23a62f3a-b9b509709c9mr894318466b.47.1774924681812; Mon, 30 Mar 2026
- 19:38:01 -0700 (PDT)
+        bh=Fbhm8CzZ4y2XM5LEjJUdYiChU7X46Cm6Ehudfb4QOfU=;
+        b=srxrhoE0iIj1rK9VhmGIetoDlJj2eUdgr6tX+Ar99gvzzGeO+OjvpAa8eMBS6rwdJG
+         VUEMze/gUrZRRBLg1wHxvRhCbg9Zeda8183jGJrlRzXvibLOPNnZN9XV7eDXRLTTaIUQ
+         2hrPw2Ur2Mxvtdayfcy8grRXf23X25Kxms194H86mBOjT8cJM2UJ55ykfEV4fQqXNHqu
+         c+yHmvD9mXbkXZY8CR2Knhlt1w0XV/IRD8ruTwdmPhwNSCOqjvMsNJ8w5ssC0b5HMsR4
+         2OvhjQJR66alIMRCfVOt4hYBkC2RdL/luWzoUvaoDUReJ/VEfUQZHteToSPA2QbmpYQ0
+         Zzcg==
+X-Forwarded-Encrypted: i=1; AJvYcCXZkk/mstcVViT1IclRmLBnIfq0T8TNRiZeLLBIGcmbx9AbjB35vO72z5gVAIYqXKBHWFGWDLVqDoM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzwOmQyCBpKEM5TScCVo1h9H95sM131HOgmu9vdSa6K7UJcs768
+	i+KEmyLts4xBryXxRQCUuhV9GgLkQJzNSmrK4C++6n9gTo+f/iBLrkJanvl+p9jU96qG3cEdeFK
+	y5v2flSkmb+a/LMsXyl3YWkWYj4kDUoo=
+X-Gm-Gg: ATEYQzxZznentFLd7KubUegklUDV17+1IeeRfawXd8Mq6BUaNAyDFwem+f1+KBNQzx2
+	trodq2/33IMM4myeTfFt9LIlPkF/jmEgxlb4OW5RlLsVqITFgwxc6l7ABKcJpdbzI+PXC9bdoyB
+	Dkxd9RqFI/o68BRJMGpZD1r4TQQjMyJXeBU+6M3gbo0iSZFTstOc7iPB6QCTw6gPASvACnT2dlh
+	wEqKIxZMXMb3jJfXRUyvYRUIUncApaErsI6oH5S+pnJ2S67HL4E+RTYTtotEoYVMkub0gN90oNB
+	Hg4t22P5h1hIpZWu176CBntvxcEY9gt6Z2te6Q==
+X-Received: by 2002:a17:906:208f:b0:b98:132e:ca97 with SMTP id
+ a640c23a62f3a-b9b5094c6femr664652066b.47.1774927806887; Mon, 30 Mar 2026
+ 20:30:06 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -82,13 +82,13 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260211032935.2705841-1-alistair.francis@wdc.com>
- <20260211032935.2705841-17-alistair.francis@wdc.com> <20260303145139.00007b80@huawei.com>
-In-Reply-To: <20260303145139.00007b80@huawei.com>
+ <20260211032935.2705841-23-alistair.francis@wdc.com> <20260303150040.00007458@huawei.com>
+In-Reply-To: <20260303150040.00007458@huawei.com>
 From: Alistair Francis <alistair23@gmail.com>
-Date: Tue, 31 Mar 2026 12:37:34 +1000
-X-Gm-Features: AQROBzDvfyQkz7dCTjFVT9yLINPsH6Bdd8fr7GqVZvK1CQBo93IixVOEHYc74Q0
-Message-ID: <CAKmqyKNrP6Ap-0Jy-uaYKM=7W3Fiz8WtdG=JWV4ACv=2weS5EQ@mail.gmail.com>
-Subject: Re: [RFC v3 16/27] lib: rspdm: Support SPDM get_certificate
+Date: Tue, 31 Mar 2026 13:29:40 +1000
+X-Gm-Features: AQROBzBc83sivh6UcNOP_l8RUTr7K-DmfbPtqXOhOGreZW7lZXTka_jt4qB4WZ8
+Message-ID: <CAKmqyKM6CBucDEo0aKZVWrKtozbT_ddk0PaZFtHyEMMMx558JA@mail.gmail.com>
+Subject: Re: [RFC v3 22/27] lib: rspdm: Support SPDM certificate validation
 To: Jonathan Cameron <jonathan.cameron@huawei.com>
 Cc: bhelgaas@google.com, lukas@wunner.de, rust-for-linux@vger.kernel.org, 
 	akpm@linux-foundation.org, linux-pci@vger.kernel.org, 
@@ -100,285 +100,149 @@ Cc: bhelgaas@google.com, lukas@wunner.de, rust-for-linux@vger.kernel.org,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Mar 4, 2026 at 12:51=E2=80=AFAM Jonathan Cameron
+On Wed, Mar 4, 2026 at 1:00=E2=80=AFAM Jonathan Cameron
 <jonathan.cameron@huawei.com> wrote:
 >
-> On Wed, 11 Feb 2026 13:29:23 +1000
+> On Wed, 11 Feb 2026 13:29:29 +1000
 > alistair23@gmail.com wrote:
 >
 > > From: Alistair Francis <alistair@alistair23.me>
 > >
-> > Support the GET_CERTIFICATE SPDM command.
+> > Support validating the SPDM certificate chain.
 > >
 > > Signed-off-by: Alistair Francis <alistair@alistair23.me>
 >
-> Minor things inline. The endian handling in general needs
-> some care + possibly some tests.
+> Only minor thing inline + observation on the code that I think we want to=
+ remove
+> for now wrt to checking the root cert.
 >
 > > diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
-> > index 2606b825c494..1e5656144611 100644
+> > index 1e5656144611..728b920beace 100644
 > > --- a/lib/rspdm/state.rs
 > > +++ b/lib/rspdm/state.rs
-> > @@ -26,8 +26,9 @@
-> >      SPDM_REQ, SPDM_RSP_MIN_CAPS, SPDM_SLOTS, SPDM_VER_10, SPDM_VER_11,=
- SPDM_VER_12,
-> >  };
 >
-> >  impl SpdmState {
-> >      pub(crate) fn new(
-> >          dev: *mut bindings::device,
-> > @@ -620,4 +629,118 @@ pub(crate) fn get_digests(&mut self) -> Result<()=
-, Error> {
+> > @@ -743,4 +746,92 @@ pub(crate) fn get_certificate(&mut self, slot: u8)=
+ -> Result<(), Error> {
 > >
 > >          Ok(())
 > >      }
 > > +
-> > +    fn get_cert_exchange(
-> > +        &mut self,
-> > +        request_buf: &mut [u8],
-> > +        response_vec: &mut KVec<u8>,
-> > +        rsp_sz: usize,
-> > +    ) -> Result<&mut GetCertificateRsp, Error> {
-> > +        // SAFETY: `request` is repr(C) and packed, so we can convert =
-it to a slice
-> > +        let response_buf =3D unsafe { from_raw_parts_mut(response_vec.=
-as_mut_ptr(), rsp_sz) };
+> > +    pub(crate) fn validate_cert_chain(&mut self, slot: u8) -> Result<(=
+), Error> {
+> > +        let cert_chain_buf =3D &self.certs[slot as usize];
+> > +        let cert_chain_len =3D cert_chain_buf.len();
+> > +        let header_len =3D 4 + self.hash_len;
 > > +
-> > +        let rc =3D self.spdm_exchange(request_buf, response_buf)?;
+> > +        let mut offset =3D header_len;
+> > +        let mut prev_cert: Option<*mut bindings::x509_certificate> =3D=
+ None;
 > > +
-> > +        if rc < (core::mem::size_of::<GetCertificateReq>() as i32) {
-> > +            pr_err!("Truncated certificate response\n");
-> > +            to_result(-(bindings::EIO as i32))?;
-> > +        }
+> > +        while offset < cert_chain_len {
+> > +            let cert_len =3D unsafe {
+> > +                bindings::x509_get_certificate_length(
+> > +                    &cert_chain_buf[offset..] as *const _ as *const u8=
+,
+> > +                    cert_chain_len - offset,
+> > +                )
+> > +            };
 > > +
-> > +        // SAFETY: `rc` is the length of data read, which will be smal=
-ler
-> > +        // then the capacity of the vector
-> > +        unsafe { response_vec.inc_len(rc as usize) };
-> > +
-> > +        let response: &mut GetCertificateRsp =3D Untrusted::new_mut(re=
-sponse_vec).validate_mut()?;
-> > +
-> > +        if rc
-> > +            < (core::mem::size_of::<GetCertificateRsp>() + response.po=
-rtion_length as usize) as i32
->
-> As below, I'd keep the type matching the spec and have the little endian =
-to cpu conversion out here.
->
->
-> > +        {
-> > +            pr_err!("Truncated certificate response\n");
-> > +            to_result(-(bindings::EIO as i32))?;
-> > +        }
-> > +
-> > +        Ok(response)
-> > +    }
-> > +
-> > +    pub(crate) fn get_certificate(&mut self, slot: u8) -> Result<(), E=
-rror> {
-> > +        let mut request =3D GetCertificateReq::default();
-> > +        request.version =3D self.version;
-> > +        request.param1 =3D slot;
-> > +
-> > +        let req_sz =3D core::mem::size_of::<GetCertificateReq>();
-> > +        let rsp_sz =3D ((core::mem::size_of::<GetCertificateRsp>() + 0=
-xffff) as u32)
->
-> Similar to earlier comment, do we have U16_MAX or similar available?
->
-> > +            .min(self.transport_sz) as usize;
-> > +
-> > +        request.offset =3D 0;
->
-> That's the default, so worth setting here?
-
-I like being explicit :)
-
->
-> > +        request.length =3D (rsp_sz - core::mem::size_of::<GetCertifica=
-teRsp>()).to_le() as u16;
->
-> Why store it in a u16 if it is le16?
-
-core::mem::size_of gives us a usize. So this ensures it's little
-endian then casts it to a u16.
-
-We could cast it to a __le16. u16 is a standard Rust type (compared to
-__le16 which is a internal kernel type), so I prefer u16 as it matches
-other Rust implementations.
-
->
-> > +
-> > +        // SAFETY: `request` is repr(C) and packed, so we can convert =
-it to a slice
-> > +        let request_buf =3D unsafe { from_raw_parts_mut(&mut request a=
-s *mut _ as *mut u8, req_sz) };
-> > +
-> > +        let mut response_vec: KVec<u8> =3D KVec::with_capacity(rsp_sz,=
- GFP_KERNEL)?;
-> > +
-> > +        let response =3D self.get_cert_exchange(request_buf, &mut resp=
-onse_vec, rsp_sz)?;
-> > +
-> > +        let total_cert_len =3D
-> > +            ((response.portion_length + response.remainder_length) & 0=
-xFFFF) as usize;
-> > +
-> > +        let mut certs_buf: KVec<u8> =3D KVec::new();
-> > +
-> > +        certs_buf.extend_from_slice(
-> > +            &response_vec[8..(8 + response.portion_length as usize)],
-> > +            GFP_KERNEL,
-> > +        )?;
-> > +
-> > +        let mut offset: usize =3D response.portion_length as usize;
-> > +        let mut remainder_length =3D response.remainder_length as usiz=
-e;
-> > +
-> > +        while remainder_length > 0 {
-> > +            request.offset =3D offset.to_le() as u16;
->
-> Similar to other places, why not just make the type __le16
-> and avoid need to cast.
-
-Same as above
-
->
-> > +            request.length =3D (remainder_length
-> > +                .min(rsp_sz - core::mem::size_of::<GetCertificateRsp>(=
-)))
-> > +            .to_le() as u16;
->
-> Likewise.
-
-and above
-
->
-> > +
-> > +            let request_buf =3D
-> > +                unsafe { from_raw_parts_mut(&mut request as *mut _ as =
-*mut u8, req_sz) };
-> > +
-> > +            let response =3D self.get_cert_exchange(request_buf, &mut =
-response_vec, rsp_sz)?;
-> > +
-> > +            if response.portion_length =3D=3D 0
-> > +                || (response.param1 & 0xF) !=3D slot
-> > +                || offset as u16 + response.portion_length + response.=
-remainder_length
-> > +                    !=3D total_cert_len as u16
-> > +            {
-> > +                pr_err!("Malformed certificate response\n");
-> > +                to_result(-(bindings::EPROTO as i32))?;
+> > +            if cert_len < 0 {
+> > +                pr_err!("Invalid certificate length\n");
+> > +                to_result(cert_len as i32)?;
 > > +            }
 > > +
-> > +            certs_buf.extend_from_slice(
-> > +                &response_vec[8..(8 + response.portion_length as usize=
-)],
-> > +                GFP_KERNEL,
-> > +            )?;
-> > +            offset +=3D response.portion_length as usize;
-> > +            remainder_length =3D response.remainder_length as usize;
-> > +        }
-> > +
-> > +        let header_length =3D core::mem::size_of::<SpdmCertChain>() + =
-self.hash_len;
-> > +
-> > +        let ptr =3D certs_buf.as_mut_ptr();
-> > +        // SAFETY: `SpdmCertChain` is repr(C) and packed, so we can co=
-nvert it from a slice
-> > +        let ptr =3D ptr.cast::<SpdmCertChain>();
-> > +        // SAFETY: `ptr` came from a reference and the cast above is v=
-alid.
-> > +        let certs: &mut SpdmCertChain =3D unsafe { &mut *ptr };
-> > +
-> > +        if total_cert_len < header_length
-> > +            || total_cert_len !=3D usize::from_le(certs.length as usiz=
-e)
->
-> That's a confusing bit of casting as you are interpretting an __le16 as a=
- usize
-> before doing the endian conversion?  Seems unlikely to get what you want
-> on a big endian machine.
+> > +            let _is_leaf_cert =3D if offset + cert_len as usize =3D=3D=
+ cert_chain_len {
+> > +                true
+> > +            } else {
+> > +                false
+> > +            };
+> Same as the following?
+>                let _is_leaf_cert =3D offset + cert_len as usize =3D=3D ce=
+rt_chain_len;
 
-Yeah, I think this is wrong
+Yep, same thing. My way is the Rust-y way to do it
+
+Although _is_leaf_cert is unused, so I'll just remove it
 
 >
-> > +            || total_cert_len !=3D certs_buf.len()
-> > +        {
-> > +            pr_err!("Malformed certificate chain in slot {slot}\n");
-> > +            to_result(-(bindings::EPROTO as i32))?;
-> > +        }
-> > +
-> > +        self.certs[slot as usize].clear();
-> > +        self.certs[slot as usize].extend_from_slice(&certs_buf, GFP_KE=
-RNEL)?;
-> > +
-> > +        Ok(())
-> > +    }
-> >  }
-> > diff --git a/lib/rspdm/validator.rs b/lib/rspdm/validator.rs
-> > index 2150a23997db..a8bc3378676f 100644
-> > --- a/lib/rspdm/validator.rs
-> > +++ b/lib/rspdm/validator.rs
-> > @@ -17,8 +17,9 @@
-> >  };
 >
-> >  #[repr(C, packed)]
-> > @@ -364,3 +365,62 @@ fn validate(unvalidated: &mut Unvalidated<KVec<u8>=
->) -> Result<Self, Self::Err>
-> >          Ok(rsp)
-> >      }
-> >  }
+> > +
+> > +            let cert_ptr =3D unsafe {
+> > +                from_err_ptr(bindings::x509_cert_parse(
+> > +                    &cert_chain_buf[offset..] as *const _ as *const c_=
+void,
+> > +                    cert_len as usize,
+> > +                ))?
+> > +            };
+> > +            let cert =3D unsafe { *cert_ptr };
+> > +
+> > +            if cert.unsupported_sig || cert.blacklisted {
+> > +                to_result(-(bindings::EKEYREJECTED as i32))?;
+> > +            }
+> > +
+> > +            if let Some(prev) =3D prev_cert {
+> > +                // Check against previous certificate
+> > +                let rc =3D unsafe { bindings::public_key_verify_signat=
+ure((*prev).pub_, cert.sig) };
+> > +
+> > +                if rc < 0 {
+> > +                    pr_err!("Signature validation error\n");
+> > +                    to_result(rc)?;
+> > +                }
+> > +            } else {
+> > +                // Check aginst root keyring
+> So this is the check that Dan and Jason are proposing we drop (for now).
 >
-> > +#[repr(C, packed)]
-> > +pub(crate) struct GetCertificateRsp {
-> > +    pub(crate) version: u8,
-> > +    pub(crate) code: u8,
-> > +    pub(crate) param1: u8,
-> > +    pub(crate) param2: u8,
-> > +
-> > +    pub(crate) portion_length: u16,
-> > +    pub(crate) remainder_length: u16,
-> > +
-> > +    pub(crate) cert_chain: __IncompleteArrayField<u8>,
-> > +}
-> > +
-> > +impl Validate<&mut Unvalidated<KVec<u8>>> for &mut GetCertificateRsp {
-> > +    type Err =3D Error;
-> > +
-> > +    fn validate(unvalidated: &mut Unvalidated<KVec<u8>>) -> Result<Sel=
-f, Self::Err> {
-> > +        let raw =3D unvalidated.raw_mut();
-> > +        if raw.len() < mem::size_of::<GetCertificateRsp>() {
-> > +            return Err(EINVAL);
-> > +        }
-> > +
-> > +        let ptr =3D raw.as_mut_ptr();
-> > +        // CAST: `GetCertificateRsp` only contains integers and has `r=
-epr(C)`.
-> > +        let ptr =3D ptr.cast::<GetCertificateRsp>();
-> > +        // SAFETY: `ptr` came from a reference and the cast above is v=
-alid.
-> > +        let rsp: &mut GetCertificateRsp =3D unsafe { &mut *ptr };
-> > +
-> > +        rsp.portion_length =3D rsp.portion_length.to_le();
-> > +        rsp.remainder_length =3D rsp.remainder_length.to_le();
->
-> Why to_le()?  I can understand from_le() but then I'm a bit dubious about=
- the
-> types. My gut feeling is that the validate code should leave these in lit=
-tle
-> endian and we should convert them only at time of use.
+> Works for me as easy to bring back later and lets us move forward
+> in the meantime. As long as userspace gets nothing to indicate
+> that we have in any way checked this root cert we are making no false cla=
+ims.
 
-Fixed
+Will do!
 
 Alistair
 
 >
+> > +                let key =3D unsafe {
+> > +                    from_err_ptr(bindings::find_asymmetric_key(
+> > +                        self.keyring,
+> > +                        (*cert.sig).auth_ids[0],
+> > +                        (*cert.sig).auth_ids[1],
+> > +                        (*cert.sig).auth_ids[2],
+> > +                        false,
+> > +                    ))?
+> > +                };
 > > +
-> > +        Ok(rsp)
+> > +                let rc =3D unsafe { bindings::verify_signature(key, ce=
+rt.sig) };
+> > +                unsafe { bindings::key_put(key) };
+> > +
+> > +                if rc < 0 {
+> > +                    pr_err!("Root signature validation error\n");
+> > +                    to_result(rc)?;
+> > +                }
+> > +            }
+> > +
+> > +            if let Some(prev) =3D prev_cert {
+> > +                unsafe { bindings::x509_free_certificate(prev) };
+> > +            }
+> > +
+> > +            prev_cert =3D Some(cert_ptr);
+> > +            offset +=3D cert_len as usize;
+> > +        }
+> > +
+> > +        if let Some(prev) =3D prev_cert {
+> > +            if let Some(validate) =3D self.validate {
+> > +                let rc =3D unsafe { validate(self.dev, slot, prev) };
+> > +                to_result(rc)?;
+> > +            }
+> > +
+> > +            self.leaf_key =3D unsafe { Some((*prev).pub_) };
+> > +        }
+> > +
+> > +        Ok(())
 > > +    }
-> > +}
+> >  }
+>
 >
