@@ -1,128 +1,112 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com [209.85.167.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8893C41B37D;
-	Tue, 31 Mar 2026 15:51:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774972279; cv=none; b=H/a6VC2iOiVwp+1ayxSF7y5okZDBjq7aQdTLW+wdjUfYN8ebKrnAti2TwXV/Mb2wWbDV3AyPcOTxdzqQIUTGDoua7NzUgW7opUnnmLAaBWm7QXOCjx0qXp0veGAfwOy4jiiG0+2QcSl7mRZB8x1aCmW0lHGiMKAh4y/mx5M6yK8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774972279; c=relaxed/simple;
-	bh=Nge5zor6zpLsko98SNlgKwkLdBZ67zYKvW4fhw7iRFI=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=iAN2zocg46mE1s9wL/DKACEashVuJr86fLSVoC9Mkmv0tWRuest4jgaFvFXL+Y7h4z9A3hfrNgldgpB8PPCVqqQr7IfFvxKvvKi2IE0aXjwWdnP+0MNLGyJLcS80GqmLzCEM0f5hOBHTlxH4z3UP0dFdeocXQdj4LX0sOYHHDMg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jPPVnCRl; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C63E73D8110
+	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 16:02:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.54
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774972951; cv=pass; b=OorfsYCGsNfppBWwEqQNLSfcnj7aPFLZKVrn61+ilYiMyZ2keOJ1z2/VdBNVifdfnD4twWHKftbgisJW8qAseywyHCcfm5xp+kzY8RRYClyHvm73J/p65kwGPqMmpcaJ4/gJ/W+qW5mtaW95zIiQrm3bqeEISwIlF74KYu63eMM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774972951; c=relaxed/simple;
+	bh=WZtQxxLzyCHf/DgmHeqOesM7hpOg4ow3SPr9YUGqw5s=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ED0SUj6LC9Hy7f7DBgn8ZdPIBNm5ENCRftaW44RXSTPf49Fiz5R1IHwq7m6Wl7aQL3J3S+AmQkruGVpg0t3wjSk/2vEck0AFHJzZS70ldY6c5e2S0cU+3uahrgjo/i4+5o7FsCnxJImPk+xj/Lqf/nKn/sV5DFucn3HQars6i1E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=SwGZp8W9; arc=pass smtp.client-ip=209.85.167.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jPPVnCRl"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774972276; x=1806508276;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=Nge5zor6zpLsko98SNlgKwkLdBZ67zYKvW4fhw7iRFI=;
-  b=jPPVnCRl3+uoiRh+4DgQvV86Ct1cBMK5Eq9riRtLf5ynwETwAs/xPLNS
-   vHUtLgsnSno/c58W4rANBoF6O+V4wT3AyTUpwRL9qBeD5ZnURhUWTWCz9
-   51IZVfzVR32MjE/vjcZRvU8kYerekzLHWZWMmTkZ0v6GUGzWU2JuTN55w
-   GJHySzkENll/g0YKzOQvaV4pHBuhjqEz1WMQVyYgFXPoRXq4QQSt/aBQy
-   y0hjhZj01hRlapoRekY6Dg2vbc473HahP8SOy9Qzp5Xk9Jwh51zWuVjB+
-   L+WmFoDez6QEQ0B5EcwwiOLpEB1fNC6ZdAuRJTm/mae43oeeSmJtzol4C
-   A==;
-X-CSE-ConnectionGUID: M9ul4KnxR3CvXu0TAzb5sQ==
-X-CSE-MsgGUID: sMz40s9cQkKy2j7ou+OgKA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11745"; a="75162616"
-X-IronPort-AV: E=Sophos;i="6.23,152,1770624000"; 
-   d="scan'208";a="75162616"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 08:51:14 -0700
-X-CSE-ConnectionGUID: Erx6h0j4SBaLVonmWZa8AQ==
-X-CSE-MsgGUID: i5Ax2DCyQZGon6IlICWnbQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,152,1770624000"; 
-   d="scan'208";a="230465746"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.6])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 08:50:56 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Tue, 31 Mar 2026 18:50:52 +0300 (EEST)
-To: Danilo Krummrich <dakr@kernel.org>
-cc: Russell King <linux@armlinux.org.uk>, 
-    Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-    "Rafael J. Wysocki" <rafael@kernel.org>, 
-    Ioana Ciornei <ioana.ciornei@nxp.com>, Nipun Gupta <nipun.gupta@amd.com>, 
-    Nikhil Agarwal <nikhil.agarwal@amd.com>, 
-    "K. Y. Srinivasan" <kys@microsoft.com>, 
-    Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, 
-    Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, 
-    Bjorn Helgaas <bhelgaas@google.com>, Armin Wolf <W_Armin@gmx.de>, 
-    Bjorn Andersson <andersson@kernel.org>, 
-    Mathieu Poirier <mathieu.poirier@linaro.org>, 
-    Vineeth Vijayan <vneethv@linux.ibm.com>, 
-    Peter Oberparleiter <oberpar@linux.ibm.com>, 
-    Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
-    Alexander Gordeev <agordeev@linux.ibm.com>, 
-    Christian Borntraeger <borntraeger@linux.ibm.com>, 
-    Sven Schnelle <svens@linux.ibm.com>, 
-    Harald Freudenberger <freude@linux.ibm.com>, 
-    Holger Dengler <dengler@linux.ibm.com>, Mark Brown <broonie@kernel.org>, 
-    "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, 
-    Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
-    =?ISO-8859-15?Q?Eugenio_P=E9rez?= <eperezma@redhat.com>, 
-    Alex Williamson <alex@shazbot.org>, Juergen Gross <jgross@suse.com>, 
-    Stefano Stabellini <sstabellini@kernel.org>, 
-    Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>, 
-    "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
-    LKML <linux-kernel@vger.kernel.org>, driver-core@lists.linux.dev, 
-    linuxppc-dev@lists.ozlabs.org, linux-hyperv@vger.kernel.org, 
-    linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
-    linux-arm-msm@vger.kernel.org, linux-remoteproc@vger.kernel.org, 
-    linux-s390@vger.kernel.org, linux-spi@vger.kernel.org, 
-    virtualization@lists.linux.dev, kvm@vger.kernel.org, 
-    xen-devel@lists.xenproject.org, linux-arm-kernel@lists.infradead.org, 
-    Gui-Dong Han <hanguidong02@gmail.com>
-Subject: Re: [PATCH 06/12] platform/wmi: use generic driver_override
- infrastructure
-In-Reply-To: <f819b7d8-5c80-4463-9afa-933a2ddc8ab3@kernel.org>
-Message-ID: <dc11f3fd-a5c7-16e9-8417-6dddb63129fa@linux.intel.com>
-References: <20260324005919.2408620-1-dakr@kernel.org> <20260324005919.2408620-7-dakr@kernel.org> <f15629e4-ef8f-b1b6-0158-064f40f111da@linux.intel.com> <f819b7d8-5c80-4463-9afa-933a2ddc8ab3@kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="SwGZp8W9"
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-5a1443780c4so38869e87.0
+        for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 09:02:29 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1774972948; cv=none;
+        d=google.com; s=arc-20240605;
+        b=NI8D6p0S9TlQXQV8T3kblBV/MIZBfuG41pGV7rquYPdwAfpnkIGaOUY42eNOmsmIVC
+         dmkfa9HWjJaEp2Btcuonvp+pU3Zda+dA23Bl0wbOJGAPvybtKqMLkFI0mllmuELVuVgi
+         S0QqEcgBbcNT66QRdtfxYDaE6SzeEkquuTZ4LWXPaYo57ZWGU7WzrmiteVIpV0oydxJl
+         RG3kXgR832YFIaHJit2iAqhB2mJQvugXLafWUojitD0etTF1xowiaJGK4r/THGZYkgko
+         ft1RjehInL/DUyoSHr3ZSN7xEzdhglFGCxt3Xx0W2VXip23irUghW1sJubr8sx4QX5dS
+         l1Aw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=wrD6nvT3KRKZi4VALNwq3h0HwShxHcdoRnQ5K+G8udE=;
+        fh=nBnPKa0MdhlhDPnl62eW5H8UG5tI29V2+Qp1Dhygf60=;
+        b=fnv54+qNr3RZdO436SZZMuarPTwwrw6I6uoY5juie3NNUqYscQGgNVqCCwheSWBVSx
+         YPnoxaA7g5cWphK0+7z9ERE2Uy+IdiDeQZoPqI0MKZua9LM/VtdUcB9RLKt7icglvrz1
+         G4JfOBSAcX6UTfMpmMqBqLREQGsfy8cgmMfEd/axnk00auChJysG62ecQkAB76rbvvAd
+         MhsD7unVW0YNfG18OdK8ebRAeksA8iKC2HB5gfK25ieePBL89EcMe72kG6hph0aFbPOC
+         OFyEzQ0a8AKqDPusPiIvZzwDwUXgBwWF2+ZabqUFVgrxUpXpiHpc5c4OXnq8HoaYtNg4
+         720A==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1774972948; x=1775577748; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=wrD6nvT3KRKZi4VALNwq3h0HwShxHcdoRnQ5K+G8udE=;
+        b=SwGZp8W9lJORAB2DnB8pLIX3sgx2UKo/jOtusSDP6qXVTh9I30U6Z+vHf/j4nqJY/t
+         Y1qETmX/zjMLP4o3zzZl5GhJvQcBt9B0gk+hc5ePfq/XtmNHb4GI+ME7cznDcFY/+Pzc
+         Hc6QbzlPsFFYCO81Q26j3IuiDnSRkYQguTcYZjIqs/FoZPPAXmBp2Bf9u5YIcMcBRXtO
+         pnQ6U5q2BtZsKClPmu6S2KNCv43lmKAsjCDJYqCtMjzzrqhCHwObyWydrlqMG/UqwMp7
+         Gle/lhsEdWB7s9BkTEPFwGBA2TWrxfcTvZ/duiKf2EjUAyYDOlQAFSgpBIqARbt85R+H
+         jAgw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774972948; x=1775577748;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=wrD6nvT3KRKZi4VALNwq3h0HwShxHcdoRnQ5K+G8udE=;
+        b=PTIuNu+sWZRzpsvoEVOLo/0Pm/Nt0ZHf2f+HFgdJUSg8M2xp1qjlWI1AOFIEn4dDIo
+         A5nD2TTPNy6nZGunezlEjxHvrpXTs2lXtNqnmFdxcl7lZW6I2vr87GyZwI//BOGx2gHO
+         gqUhN5w5tD7TiyZbiez6NZ7oWeVbyTaodAtFmUEwYXou4eLN/bwALtuR5x9yBejVJp2O
+         CU+kTKKhLJahtkhzgtWslp8DNtm+QMJO5NjkT9l5cYVQujh5ZF3pScPSLgDWspW+ecy6
+         cOFhZH4qN5bZSXDDw4FN7Vc0ZaF1HGeJ4fDsSSZaG5cV6Up0MRViICa7haLKw6L0zLxF
+         IKhw==
+X-Forwarded-Encrypted: i=1; AJvYcCXZJQq1g6zElDEUg2ALqstqoljcvJcbmiPuOTEgOSrFdCHX/ZPAIyp/83SaW7dG7e5wBT2pXaReanM=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx2qVKRFGX0RKp4gmEC2LHK8StFHlcTD5KQGYJXLrgV/PScYVwR
+	25VKR8flw+S5QhbQ00FBOxguU9McSAHh/Hev9bXz/WKC+unbbAiD1CI3Y/TcSytVUS4HssJ5BAH
+	eIJZ+5Nu93hTSVucP8PXUjDJ/MEeFFfVCLa94GVws
+X-Gm-Gg: ATEYQzxAh2/lv9qxwmNCMDKorBdwn3sZeKImaBp1UzKC8dBY9MC4bUD9XscaLYRdN8r
+	FIgMuqnO30y1IkDeZ5J6x5BEPeox4z3WRGbasPQu+ejNi5Bh39NULHhmr2xX+jpIH8PjqaXVI4y
+	MdImDTWWUNvKTnJKhNvEJs6X6V7PDEYehh6GnxWPbsgi1msVrE5F7nH74c1gUeaIP6p95eB/J2f
+	JItCQp7+91iakD7Z8nur4CCt/j75Mu3OGDKN1MoorEpzgeu1fZSi65+opix1CdhL7G/wGhWW4m6
+	pbDPFMc5
+X-Received: by 2002:a05:6512:61c3:20b0:5a1:5994:2773 with SMTP id
+ 2adb3069b0e04-5a2baaf0e36mr1048359e87.14.1774972946010; Tue, 31 Mar 2026
+ 09:02:26 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-2141551316-1774972252=:989"
+References: <20260327211649.3816010-1-dmatlack@google.com>
+In-Reply-To: <20260327211649.3816010-1-dmatlack@google.com>
+From: David Matlack <dmatlack@google.com>
+Date: Tue, 31 Mar 2026 09:01:53 -0700
+X-Gm-Features: AQROBzBq0aIeqm2fBl0knok4yA9hrwjIKJSZaJ22yE0ZJ_GkQ8NeCmNeXNLWWlM
+Message-ID: <CALzav=c7CuJmRjW0-KVk013r4pZZ_CsRtApn0rw9py9cTE-K+w@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: Disable ATS via quirk before notifying IOMMU drivers
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Lobakin <aleksander.lobakin@intel.com>, 
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+	Bartosz Pawlowski <bartosz.pawlowski@intel.com>, David Woodhouse <dwmw2@infradead.org>, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	Lu Baolu <baolu.lu@linux.intel.com>, Raghavendra Rao Ananta <rananta@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Fri, Mar 27, 2026 at 2:17=E2=80=AFPM David Matlack <dmatlack@google.com>=
+ wrote:
 
---8323328-2141551316-1774972252=:989
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+>  /* AMD Raven platform iGPU */
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x15d8, quirk_amd_harvest_no_=
+ats);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x15d8, quirk_amd_harvest_no_=
+ats);
 
-On Tue, 31 Mar 2026, Danilo Krummrich wrote:
+Sashiko found a bug here that would leave ATS enabled on this device:
 
-> On 3/31/26 5:02 PM, Ilpo J=C3=A4rvinen wrote:
-> > I tried applying this to platform-drivers tree but it failed to compile=
- so=20
-> > I ended up dropping the changed.
->=20
-> As the cover letter mentions, it sits on top of v7.0-rc5, did you conside=
-r this?
-
-I noticed it but I just assumed you were working on top of that, not that=
-=20
-there's something past -rc1 that is required.
-
-> I can also pick it up via the driver-core tree.
-
-If there's some post -rc1 material this depends, it's probably better that=
-=20
-way.
-
-Acked-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
-
---=20
- i.
-
---8323328-2141551316-1774972252=:989--
+  https://sashiko.dev/#/patchset/20260327211649.3816010-1-dmatlack%40google=
+.com?patch=3D12646
