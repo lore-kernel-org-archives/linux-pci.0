@@ -1,46 +1,58 @@
-Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 369CA37D10D;
-	Tue, 31 Mar 2026 18:58:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22E2E35DA60;
+	Tue, 31 Mar 2026 19:01:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774983494; cv=none; b=ZwyD9RUSYEibj/rjAgD2Q9ryMbWlOwDGwzRUqnf+E4zezY6YGZ2IDlKyjJySAbt5c+poM03MZe28kI1/uniTKILpN8IbAB+M7KJHeBeKUrlBSmNnOAiPwnXVLTVeLT0NeT+93JLxo7ulmswKcuyAODXWQW0ptVDUV3cYUmZngWI=
+	t=1774983665; cv=none; b=nAAiD/X8dqx24uD1o+F3FGO6CEp3vBvV5i8FdMGGOTl1A4p28Fz1G+eLtlSQzXnkGZC4hbHEdYsS4NjEsFpIU8AHNcJaSFdokpaM2qdl8hw0BfFyAWFiwM40cwJSBbQbn6UplLyf3fM8nciZe9P+zu2g1bcST5EqSMaLZ/W+V7M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774983494; c=relaxed/simple;
-	bh=R9tENQJj5RpB7yiX+vDr+ilXcYesSJp5Vks3izvT3Hw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ki7BnU05Dl0m9uKsHxAxhNaVs2DK01DmcME9oRlM5cc+MKtPj6yFCieX6Prxb/GlsoWR1umrwPaPJREPx9VZpELdQ64PtUbVewjRaiTQkkONfEC69lqMQ1JS8iK3UzsgnCYcCyui/FPy8bPA6vT9FGQtrBONWk29q81RLw8s4xQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout1.hostsharing.net (Postfix) with ESMTPS id 28B51361;
-	Tue, 31 Mar 2026 20:58:03 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 16AC560293F2; Tue, 31 Mar 2026 20:58:03 +0200 (CEST)
-Date: Tue, 31 Mar 2026 20:58:03 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Han Gao <gaohan@iscas.ac.cn>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@baylibre.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Kees Cook <kees@kernel.org>, Chen Wang <unicorn_wang@outlook.com>,
-	Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org,
-	sophgo@lists.linux.dev, linux-kernel@vger.kernel.org,
-	linux-riscv@lists.infradead.org, Han Gao <rabenda.cn@gmail.com>,
-	Icenowy Zheng <zhengxingda@iscas.ac.cn>,
-	Inochi Amaoto <inochiama@gmail.com>,
-	Vivian Wang <wangruikang@iscas.ac.cn>, Yao Zi <me@ziyao.cc>
-Subject: Re: [PATCH 0/2] PCI: Allow disabling port services on broken root
- ports
-Message-ID: <acwZOxbEJoAJrvGb@wunner.de>
-References: <20260331175658.1015829-1-gaohan@iscas.ac.cn>
+	s=arc-20240116; t=1774983665; c=relaxed/simple;
+	bh=KSLOd98K1CK+1Z7brXY8QL31QPyNcPrQH0DGa7ob15s=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=dCLZpmh2u1JYn7jNXQGUtbXQIKJyuyQFQvSlO0O6ccpp9sIF89A5iaUYaWxG4KDgd62itBQY/POerAnJMpDVynZv9as21oWLT70FkY+SXrvrIaQ42eem0D5CEH5TEMs3ngy1ZKtyx2J8HwTDTptew8/H7uQLjWYOf9fOXPYJ3FE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qns8qZSd; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qns8qZSd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8235EC19423;
+	Tue, 31 Mar 2026 19:01:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774983664;
+	bh=KSLOd98K1CK+1Z7brXY8QL31QPyNcPrQH0DGa7ob15s=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=Qns8qZSd7O23U5meg+0akBEqFL5LkPGd3h0FJ+I5UZ01RjHWerLmVaxDp4rd0DZBS
+	 yQgnl/RzPKtJ77WCcFNGMSXoObHClC1nDdsGB/oww5ccTocv7zUspVW0pjJQZ04i5e
+	 UDlafcv0mfTryjVcYjiMMp0qmBlWeTPA1wTg+qg4AsrSjVtZ069gHRYItQuNDSBxFz
+	 3ThXl7oD79dY4QGtjn9VSfN6i9e0DjjdYr07NPRm282rSxKGip/QTRyo89qgCKSsRq
+	 wD3v8FVw+dtdilOvl3DwzsONBOiDjN6NxqUdiRZ6HPiOnsVouqhlM+WNsU46l3US5n
+	 ZojjiHskKGllA==
+Date: Tue, 31 Mar 2026 14:01:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Kuehling, Felix" <felix.kuehling@amd.com>
+Cc: Gerd Bayer <gbayer@linux.ibm.com>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	Selvin Xavier <selvin.xavier@broadcom.com>,
+	Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+	Michal Kalderon <mkalderon@marvell.com>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Tariq Toukan <tariqt@nvidia.com>, Mark Bloch <mbloch@nvidia.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jay Cornwall <Jay.Cornwall@amd.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Sven Schnelle <svens@linux.ibm.com>,
+	Alexander Schmidt <alexs@linux.ibm.com>, linux-s390@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-rdma@vger.kernel.org
+Subject: Re: [PATCH v7 1/3] PCI: AtomicOps: Do not enable requests by RCiEPs
+Message-ID: <20260331190103.GA150932@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,37 +61,94 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260331175658.1015829-1-gaohan@iscas.ac.cn>
+In-Reply-To: <688a8e59-3188-4c9e-a8ed-d53b7d965e10@amd.com>
 
-On Wed, Apr 01, 2026 at 01:56:56AM +0800, Han Gao wrote:
-> SG2042's PCIe root ports only support MSI, not MSI-X. The MSI
-> controller provides only 32 vectors shared across all devices behind
-> each root port. When native port services claim vectors from this
-> limited pool, downstream devices are starved of interrupts, resulting
-> in zero interrupts delivered and driver timeouts (e.g. amdgpu fence
-> fallback timer expired on all rings).
-
-Have you considered setting the pci_dev::no_msi flag on the Root Ports
-to force them to use INTx interrupts instead of MSI?  That would seem
-like a cleaner solution.  There are already several devices for which
-the flag is set in drivers/pci/quirks.c, see quirk_no_msi().
-
-> Some PCIe root ports break MSI delivery to downstream devices when
-> native port services (AER, PME, bwctrl, etc.) are active. The existing
-> pcie_ports=compat kernel parameter works around this globally, but
-> affects all ports on the system.
+On Tue, Mar 31, 2026 at 02:39:26PM -0400, Kuehling, Felix wrote:
+> On 2026-03-31 14:09, Bjorn Helgaas wrote:
+> > On Mon, Mar 30, 2026 at 08:01:57PM -0400, Kuehling, Felix wrote:
+> > > On 2026-03-30 17:42, Bjorn Helgaas wrote:
+> > > > [+to amdgpu, bnxe_re, mlx5 IB, qedr, mlx5 maintainers]
+> > > > 
+> > > > On Mon, Mar 30, 2026 at 03:09:44PM +0200, Gerd Bayer wrote:
+> > > > > Since root complex integrated end points (RCiEPs) attach to a bus that
+> > > > > has no bridge device describing the root port, the capability to
+> > > > > complete AtomicOps requests cannot be determined with PCIe methods.
+> > > > > 
+> > > > > Change default of pci_enable_atomic_ops_to_root() to not enable
+> > > > > AtomicOps requests on RCiEPs.
+> > > > I know I suggested this because there's nothing explicit that tells us
+> > > > whether the RC supports atomic ops from RCiEPs [1].  But I'm concerned
+> > > > that GPUs, infiniband HCAs, and NICs that use atomic ops may be
+> > > > implemented as RCiEPs and would be broken by this.
+> > > FWIW, on AMD APUs our driver doesn't call pci_enable_atomic_ops_to_root. It
+> > > just assumes that the GPU can do atomic accesses because it doesn't actually
+> > > go through PCIe: https://elixir.bootlin.com/linux/v6.19.10/source/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c#L4785
+> > What does this mean for the other branch that *does* use
+> > pci_enable_atomic_ops_to_root()?  Can any of those devices be RCiEPs?
 > 
-> This series adds a per-device mechanism to skip port service probing:
->   1. Introduce PCI_DEV_FLAGS_NO_PORT_SERVICES flag and wire it into
->      the PCIe port driver
->   2. Apply it via quirk to Sophgo SG2042 root ports [1f1c:2042], which
->      fail to deliver MSI interrupts when port services are enabled
+> Most AMD GPUs are not integrated endpoints. APUs are integrated. There are
+> A+A GPUs where the GPUs are separate from the CPU but part of the same
+> coherent data fabric as the CPU (adev->gmc.xbmi.connected_to_cpu == true).
+> Those may also be considered RCiEPs. (I'm not sure about that, is there an
+> easy way to check with lspci?) We may need to include that in the same
+> branch as APUs.
 
-I think we should try to minimize such workarounds or at least make them
-as non-intrusive as possible, so please try the no_msi approach instead.
+Yep, for RCiEPs, "lspci -v" should say something like this:
 
-I also don't see why the stable designation is needed TBH.
+  Capabilities: [64] Express Root Complex Integrated Endpoint
 
-Thanks,
+Dmesg logs from recent kernels would also include it like this:
 
-Lukas
+  pci 0000:00:02.0: [8086:5916] type 00 class 0x030000 PCIe Root Complex Integrated Endpoint
+
+An RCiEP would be on the root bus; it would not be below a Root Port.
+
+> You can see that we did that for a new generation of A+A GPU here: https://gitlab.freedesktop.org/agd5f/linux/-/blob/amd-staging-drm-next/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c?ref_type=heads#L3920.
+> We'd need to confirm that the same works for MI200 A+A GPUs as well.
+
+> > > > These drivers use pci_enable_atomic_ops_to_root():
+> > > > 
+> > > >     amdgpu
+> > > >     bnxt_re (infiniband)
+> > > >     mlx5 (infinband)
+> > > >     qedr (infiniband)
+> > > >     mlx5 (ethernet)
+> > > > 
+> > > > Maybe we should assume that because RCiEPs are directly integrated
+> > > > into the RC, the RCiEP would only allow AtomicOp Requester Enable to
+> > > > be set if the RC supports atomic ops?
+> > > > 
+> > > > I don't like making assumptions like that, but it'd be worse to break
+> > > > these devices.
+> > > > 
+> > > > [1] https://lore.kernel.org/all/20260326164002.GA1325368@bhelgaas
+> > > > 
+> > > > > Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
+> > > > > ---
+> > > > >    drivers/pci/pci.c | 5 ++---
+> > > > >    1 file changed, 2 insertions(+), 3 deletions(-)
+> > > > > 
+> > > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > > > index 8479c2e1f74f1044416281aba11bf071ea89488a..135e5b591df405e87e7f520a618d7e2ccba55ce1 100644
+> > > > > --- a/drivers/pci/pci.c
+> > > > > +++ b/drivers/pci/pci.c
+> > > > > @@ -3692,15 +3692,14 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
+> > > > >    	/*
+> > > > >    	 * Per PCIe r4.0, sec 6.15, endpoints and root ports may be
+> > > > > -	 * AtomicOp requesters.  For now, we only support endpoints as
+> > > > > -	 * requesters and root ports as completers.  No endpoints as
+> > > > > +	 * AtomicOp requesters.  For now, we only support (legacy) endpoints
+> > > > > +	 * as requesters and root ports as completers.  No endpoints as
+> > > > >    	 * completers, and no peer-to-peer.
+> > > > >    	 */
+> > > > >    	switch (pci_pcie_type(dev)) {
+> > > > >    	case PCI_EXP_TYPE_ENDPOINT:
+> > > > >    	case PCI_EXP_TYPE_LEG_END:
+> > > > > -	case PCI_EXP_TYPE_RC_END:
+> > > > >    		break;
+> > > > >    	default:
+> > > > >    		return -EINVAL;
+> > > > > 
+> > > > > -- 
+> > > > > 2.51.0
+> > > > > 
