@@ -1,229 +1,216 @@
-Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013051.outbound.protection.outlook.com [52.101.72.51])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C6353DBD68;
-	Tue, 31 Mar 2026 08:51:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.51
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774947104; cv=fail; b=gGLqZQg44UQ4ROM0rFnjn6FWDjTrMKhstbj/S2dOkiCIYBfsC1yPwiwSucg6PDsHgzeJ+0k4o/nm/lVottuwCpjedtD5mZUuBoORMk6enA47jvBzDT+MRJkuaYNFyLbMrwLn7QwRyiuTdrU9LikrHaiM71SmhrMcL+tA+zIdptA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774947104; c=relaxed/simple;
-	bh=f6DlHgtfCH7vARDUavWWzaERVDNzpuc9gbffAMHBaMg=;
-	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=VM/GzRKB887+uR3D9bQDwuFQtqxZegIVZi+cWMr2RU2OwuFBtSGOz/Ky5PK60c9YGh6Sw6WeeypmbZvZpPHTB6+/mweG+RlmiwBZsHTjci+YJyZM4ie3/e01Mw7cRs8HG5kDLGJAO5Eewea7csqhAoBfMwpvljmwo/PK41hC3Ec=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=PByHfIoB; arc=fail smtp.client-ip=52.101.72.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1FF83DCDA4
+	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 09:10:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774948232; cv=none; b=D3uMkJ/CevFwrEzKFyX2cbPPBmkyX5xDxxmeZtLwGViqt93PhbNjHRQk+LrJg41cBlUWwKMam+jxbIgZKrUwL1m9z/ShFr2JUFCQC5yVVAMSBepgOTPj7elJRduTkTLBsxIJiO8o/3iTXeJF4273Bmh+1pMEDNxBAHrHxQM88gM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774948232; c=relaxed/simple;
+	bh=+fcgrokixlEbcf+aOsmiZdoomim6YGRO5kT5k3+jI7I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DgEKU+IkF2RKK2883erj3boaCCPh9FUx+yOXeDcmlc7lGQvaTKxkszuXuPq7dRv0yBnpgsAyMRKIdtOZTBDFdW3/fvd5C6hBNpDz2Fw2BPQDXgF832HWHUpCzL9RLRKV81Hu/DYKj5iUm9vCLslq/+u43sA26oO09iReLEDUqIg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=i+BvmIya; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=jjzj3mS1; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="PByHfIoB"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=AqIOKbz0182To0k7iLTOCfBagFe3XwIfhFvXVR45hfpVqtBAe9X7xo+ngxebI2yXNHUfWY/x+Kjk/m7KHUidmj9af60bUdHMmSxt8fpbV0VDUHBQ6hfN2PqfiA6psJ3wKdyHOFgvr3gdch9uCnFHC007/EpClgOWbMu0sJBLfFhJ7OwnXJG/ApgUVhzQCKfSmVk1Vlk+FnOQEr8tMh3H3DCbr+SIKtqKtS/PdbMY9dW0EPoHdhIS69DFJXDMC0Tgi8xk3MbtKki3JgJOEQCjm/aAI4eJbKFuEtWp9MQ+tz1WCC5ZZwfdo4EN/AGouNTwWuTkX8y7etD1oYyHcirmbg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4nlAq0sErq8j6lFkQ/QG1cZ7OEglX2oyCECUl3r9THg=;
- b=pXuynBieN/ihG/Yg0Y2NsrKSren7qMFvrIeb1FRktrvy9aHVKhl5MBw4tj/hmCm9VrDO1sUbgd2Aox28peMLEuXvjO+BSJkDadnYcUn9E3RBblLMBsQVAmm+5B58+RfzdXR1UsgHm1qChTIuBPxdIpxbweEsHBAbXSxjDAeObRGm9ZoG9+dP1G0dmo6o7HwQwTf2pzaxIq+3gaMskUvpnAQO6MHeqx/a6Q1lc6RxgmoaHAD/Auf+Fnns7CNUA7lmi9J4DWLwjnvDBe4H/Klxbz4lwkWz3HnMvGbcsZSMkRzOXrSkZb4RyHMAA6h7JdE9uHCnG+A5Z8cvsj/zKjEWQA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4nlAq0sErq8j6lFkQ/QG1cZ7OEglX2oyCECUl3r9THg=;
- b=PByHfIoBvQstfeTz1fN3cbbA7miQQaHLtkQc78xpHrpmGWq7iio6y7rFUGpoJ5LSbEUnQatWhspD92UHIis4rhu3WJnJmoaIvXJDeryETf737VwxSaWGPEqPWOlf3tYFwdhpGO3k7OEO1PWPJ9uDvJwHe+bpm0dd2FVdObL2PxkjhW04W6mz6V8GOxEV0+BpNcTOf8i0MqFd2sadIbZ+r9BbviGRCMEI/mmXuqZ51X5/ZfMCn/vYP3OVZAwJ8XxInDMvyGhiNNxRl9qK4RMDvUB2BS+d7dMJvoDeV8enoHsNpHWUO5Nh1VXNyDyZRbsERbqRr3M0xgE7RwgKgiBePw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from AS8PR04MB8833.eurprd04.prod.outlook.com (2603:10a6:20b:42c::19)
- by PAXPR04MB9220.eurprd04.prod.outlook.com (2603:10a6:102:228::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.28; Tue, 31 Mar
- 2026 08:51:33 +0000
-Received: from AS8PR04MB8833.eurprd04.prod.outlook.com
- ([fe80::209c:44e4:a205:8e86]) by AS8PR04MB8833.eurprd04.prod.outlook.com
- ([fe80::209c:44e4:a205:8e86%4]) with mapi id 15.20.9745.027; Tue, 31 Mar 2026
- 08:51:33 +0000
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: frank.li@nxp.com,
-	l.stach@pengutronix.de,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	robh@kernel.org,
-	bhelgaas@google.com,
-	s.hauer@pengutronix.de,
-	kernel@pengutronix.de,
-	festevam@gmail.com
-Cc: linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	imx@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	Richard Zhu <hongxing.zhu@nxp.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v3] PCI: imx6: Don't remove MSI capability for i.MX7D/i.MX8M
-Date: Tue, 31 Mar 2026 16:52:52 +0800
-Message-Id: <20260331085252.1243108-1-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.37.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SI2P153CA0003.APCP153.PROD.OUTLOOK.COM
- (2603:1096:4:140::20) To AS8PR04MB8833.eurprd04.prod.outlook.com
- (2603:10a6:20b:42c::19)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="i+BvmIya";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="jjzj3mS1"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62V914Cm2761401
+	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 09:10:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=fcs5ftBhXtYRcqqz+HI3Ln1If1xisAux+zA
+	c7yob4so=; b=i+BvmIyaeE18u15CE/47Qr73cjIGc8PTRv4o79eFGzPG2yvFM6m
+	rKR4wsLmVtIinwoDhT9cl5qlLrpXDVMnNsUttiZfIoC1jaHNrdEBKOYFLO/aiZul
+	OQn1X2FeP6ZAkrzjuJdtRZz1RENybJsJU4cxd6/Sjm/CKrZnNijdnJm+e8Uo5rLF
+	VBOcUv3bPL3z3QD6rrZeeMtpjChRm0cqA1PL2MLqZqrt8IzIiX+r9putRxu0Suhr
+	UYvhaY2CVZ3rLolNTYTa7PF1qJrBqAkijjEjpnlCPluyhw3cNRnql8qRqtMNW8sh
+	ewDj2ZkYvotiJ8iRpjQKlblSBamiSXwTFlA==
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d8b930168-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 09:10:29 +0000 (GMT)
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-c73c065dd15so3476161a12.0
+        for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 02:10:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1774948229; x=1775553029; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=fcs5ftBhXtYRcqqz+HI3Ln1If1xisAux+zAc7yob4so=;
+        b=jjzj3mS1NGrRYeTnU7zTB5PZ+3lYBhnE+iAO6cjX0UQHudV6sBm/kiq9eoiDapYEEY
+         U9u1ol9Tc9V6PjAhWWXbnM8Ibgf4wmUQ/W6j1jFu6taDSjroxWX0esrKDDSIX+DMUnFd
+         FuNKd6fhms1js0Nw2GWdTqARPWXAKpdYulpkJz5Bkn+/hI74UmZWeEpm52sPWKnetOmd
+         kYYlg+IWaoLD8Rtvcuu6SWMH2fMp/oTytpdCxu/mAZUy08FNntpdOQ37ccOBKTPDWWms
+         +btYW9rIPM0JVRABPpOudWZpZ7hcjiDmnHefxqA+JwZgKtVaWQkfekeQ4yll0qVqfxvK
+         JEYA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774948229; x=1775553029;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=fcs5ftBhXtYRcqqz+HI3Ln1If1xisAux+zAc7yob4so=;
+        b=bO7c4tX8XgwszCE8GqW6K6PXG05L0FmFlojOO40hXEIx24UyoA8nn/E5hiKnKPMQQt
+         u8QsiCNnWN1QhIjwzut7MSh37XDMkAkP2jDev4Nq6caxNqQkMRu5BrYK2h9KdfxSDE9R
+         yAIcAlkWYfNQBs2Quz7ikeiUhSr7MADrm6K5UCATAj6b2NOJcuoc5V18PFh5i3jaqRrP
+         rw+RnBrjnauXzUP2cxeT79KnEUhd7v5nS+eg8eMxaaKW33JUFsEyaBefdnWsK+EC/8CJ
+         Sm00wVLmD/fX2AznKHUwO9IhIh1YUEbr3yHMfMgYn3z/GJH2DsnKwbyN5Q0v9VKIz0tu
+         PbJA==
+X-Forwarded-Encrypted: i=1; AJvYcCX+tmBQL5N6qZwUHguoZLxS7fr9wEAKnkTjf0krLkKqcYzWbBNIrlxdNKmIqppv940bSeBPwBSl2F8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx8u5UFa/ipzziVxPLJAGv5U4g2muY6PighWtgVwa8DgFq7QVTk
+	g1itjROiptW4u5maht9h04uD6N2sPIlZCUGxCzlWZGzydWfW3XxsNEip7Coi4ks0BR7Uz3cwlSy
+	PwV1qPEZ2xX/teCHwDYeTidxE6jkO4Q7mT+U03fbdelJPM413HxBSDcXV2d+a3iM=
+X-Gm-Gg: ATEYQzzU7NURYF9x1KXOpGmvJhpSwfwj990UktqzLATQTMWHNQv5i/YHEITe4hWQjF0
+	rcPeuxR4Z3V6huP6ZZ7BbCO3vJpehz6rlD0J/otopcBTtmJTLjIv0/O8dNb2zZoG1WmFTjKuIUR
+	sIgPSgWW4CE7WUv9ug21wLbLDNNkCTXJoDTlzN+OCfnXjf+H7jtWw9t8D5cPJlnXTmsgOVzFZdk
+	fUhG9vwMITQZ/PXtCaVdeF8+8XCWsUxb981MAI28JCOB/qY+eICqt4/Dhn/4WQm/fNBEgNNj5o6
+	vMmd7aCyuwaecXvAlS2P7l2Y6YKnprQomBtZHP9uZcZ55quWBAIskg2s88nztsI0RgqEae6D+5j
+	ue8RfvZC+itj4v57ZMYS561LagRayELl6TyXhB74=
+X-Received: by 2002:a05:6a20:7d9c:b0:38b:de3d:d542 with SMTP id adf61e73a8af0-39c87aea147mr17138846637.51.1774948229248;
+        Tue, 31 Mar 2026 02:10:29 -0700 (PDT)
+X-Received: by 2002:a05:6a20:7d9c:b0:38b:de3d:d542 with SMTP id adf61e73a8af0-39c87aea147mr17138802637.51.1774948228605;
+        Tue, 31 Mar 2026 02:10:28 -0700 (PDT)
+Received: from work ([117.193.210.140])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82cdaa4c3basm1567941b3a.37.2026.03.31.02.10.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 31 Mar 2026 02:10:28 -0700 (PDT)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: stable@vger.kernel.org
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, robin.murphy@arm.com,
+        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+        John Hancock <john@kernel.doghat.io>, bjorn.forsman@gmail.com,
+        Linux kernel regressions list <regressions@lists.linux.dev>
+Subject: [PATCH] Revert "PCI: Enable ACS after configuring IOMMU for OF platforms"
+Date: Tue, 31 Mar 2026 14:40:09 +0530
+Message-ID: <20260331091009.19536-1-manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AS8PR04MB8833:EE_|PAXPR04MB9220:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8df983d5-4bd5-442a-b83a-08de8f02b594
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|52116014|376014|1800799024|19092799006|56012099003|18002099003|38350700014|921020;
-X-Microsoft-Antispam-Message-Info:
-	GTbacI69yHDh9cb/M4tqfDVM0XY+UIEClTXO1grkSm5kMaY8XoPZJ9Am8iuL5p8NBpzoHaNRH+DeTg2F1rjBEizRuNyZZSSsy5rEuREpkE/Xe6ebu5o2mApr8NMu5KaaBVbySjhfzep/cMTqOIzMbh2JiGV0YHRLbASOJBhZXtNIV7lO/5pl6YpHyqH6H6Zk89hiKZTxxT9L9GlvW8/4fv6M8dP7GSft23GOYBCswwoR4X/DlEEGmuOZOsypgZqmmp80qziuyRdPIuQHuEFFwiqwP6EKFwE3NNAanFoUxZaEzYAJjIHyXvWe3aQ6+mdwpsL71ovHZKuuIhPZvHthqM/u+GQqaWJqzgR1uxaMUWxh33rRrySd1rikw2UyLi8Vp1WP2XpVZ6NRT0Cp4MDXizStpaUj5l93x6AfhJ9UBlVxd0pBhWBkMSutjkAaIUjcDOGxPu+0QC98iTUhEqXT56HgXzAf3tuIpeSb9Weh2+Q/bBva0ic+jOpEry6+6QQMEidHtchOFixt+79hRXwRpn3O46fdDRT181HxzWQNPAxXpCcpfqvz33RsAPBwve4qhXKhdmaMKBDu9nFOOXYk0P4jVGcu4eD+TmZq5j/Ahh2V5UsCqD0Bfme22JEuaoKfOC8k+Cb/1Fw9oRZUFVOKgmd/fSRK5bVVgpinGH06/boAhZvfDTATl7AhDVK6z5uWUdInhMSKEql/2BYN25N6EaiVB7pHo2YlUldf3v+Lwn2qY6mag7djaxvu1xJBE6ewpucN+WrZwL+MPtLgNUM7+g9++4jrZPIs2NMoZDXKWKqygqtDrImHOLoLFudw/ds3
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR04MB8833.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(52116014)(376014)(1800799024)(19092799006)(56012099003)(18002099003)(38350700014)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?PeX+hVZ/eFwWbvB9TtgwJtNg8206lmermNQlldVL4gIv/pFhzPnA3X6vuAVF?=
- =?us-ascii?Q?irSvtJoYqHG995qSD4ZiMksJi9NjIeeQFrJNuVwWRUw/wPE6Z+cCw6+/PYFD?=
- =?us-ascii?Q?Zmz+JBKf7t8GJ1OewDk1aqI4EeYleU7IOMN2WSewdxs8yqKFJ2uU41/zaTeO?=
- =?us-ascii?Q?skOmcQ64Thc7iyiRYly1N5fu/WIAlzDWP+Ai3hxxsaOn20iVIBv+Y7NpTeoa?=
- =?us-ascii?Q?WC916NShJH/xE+F74HdxE6x17NhImC99Iozv7c9yHMpb+ikgmhU+CH7AFsnT?=
- =?us-ascii?Q?qY2RgMEEgjr9W2Q6aLUg5zqcFtKX/TBHbze97pqtH+6MT7MdfePKOpz3fXDf?=
- =?us-ascii?Q?ebzJ9aOU60Y4Du0lPhXDoaZVr8lJRD5q90HeyEk4qBpOybZhz6CNoNuHJeDB?=
- =?us-ascii?Q?KWNR7A/eAKV8QRd6iVMF14YlL+AbRyGXhsZYww44qmBMPblTv2eXLwFBMDhK?=
- =?us-ascii?Q?EK24y4i8T3KSy8znyUVWZAvHotTes57xesmUAnojL3sa6HGD0HZUYfPABo+u?=
- =?us-ascii?Q?WYSIG3/QZKwM3wyq36mIRgoBtbZrurc3fO+8bEWCNGYvQKp8C/YRCa0NN8vb?=
- =?us-ascii?Q?q66oJXSwx7vMxy8cHQBGgU7JRHctVLShaZGJczaljr/52NhEIMZqfhpv8yEx?=
- =?us-ascii?Q?A0U9a1XniZl1o2Rbt9r/zgHLcPDNWPfnzkLo5tvHFgscDMbXRLHL1b9sGpec?=
- =?us-ascii?Q?sc6M7v+gQktIJj1C4O9mSbIADWpsrAAMFAPrg10riDRKPdpz9GbFYphqqjAX?=
- =?us-ascii?Q?kxb1ZVS/y8PV+tVGgWK9CdwpNPOXTUs7qicil5TjrocwJAl6pmFmGP5Zr1q7?=
- =?us-ascii?Q?/rv9UD35pmV6ps5EBreF+MT0kcsUcw13P0knxf/6dopthWbrxZyHX/O9AXV2?=
- =?us-ascii?Q?6cikOIkgk/J6moCEKGzV1+xZLSjcZGMt72DWb+DGTTpqOBVbH7F5UrKNncMJ?=
- =?us-ascii?Q?Utn+8GlrWE5NEWH0PxgF2m05CDGED6+qihijtaKAnnGel0rmbUSezY1pM3vu?=
- =?us-ascii?Q?/4ujL0MVp7ZSo9YMV5kZ+6GZmgFYCRG/vKcOnGoiWf5O6fUQ4kyeXdpmBc2W?=
- =?us-ascii?Q?wLtO56r/v0FMObXGt3jMe7Ie+cDrl4OwzJrmUlm2oGPWR9jV9dFVU1FDN0gh?=
- =?us-ascii?Q?CB+Yqdgl9d/3QmQXMT6UiSdzLCyenByvqeHc3qYlrQzjhG0CbKzK8wARAZ4F?=
- =?us-ascii?Q?1bB8ge479mnYyKDZOnGXLLyJeC0TruQH/ZC5Ys5V4OJcf2yppQTggGSrk3Dp?=
- =?us-ascii?Q?8ugcZM7YkLqF1dgJ7rBacBbF2DSxAQhA5lMBtfDhy0zoYrBR5gAFWe6GTA4H?=
- =?us-ascii?Q?YXdZ8h4wnvO9sHV1rC94GrPwrRzLN3GcqHq+LXd8HEpHeHR3aRX/2iiRNbDG?=
- =?us-ascii?Q?HJnBh1fGl09KVmSB0o8Bc/KAg/n7iOuQXFJUlyO0/FG7moOCA5kavVNFJc9n?=
- =?us-ascii?Q?uUolvJ3LZXVR+TJdlRzUhjoqT9ZYkdFRqwEuoQ3IR52HbYHvqTo9TbbjwjBC?=
- =?us-ascii?Q?tpIzFCyMXUJ/HaBq1/PhgWeZhZIIQrazf1TknGqy5UFXSCvYM7bZCvloZBUL?=
- =?us-ascii?Q?L1O17zkKkIMSWkkIo0AVbkh/Dqkd/nQWrFKO7zvlqUTDkBIrTBILjINaRO/K?=
- =?us-ascii?Q?fy80Zr8q9WS7zdmO2+r7HPY96qYCYqIL40sElqjEgx3vnPM5ArfaNoCQEW8s?=
- =?us-ascii?Q?fiN7YsKsGNLo5to04ypdrupy3Rq0SBxFqEU9D8OIxG4b7sLyaTfYENoPp6d+?=
- =?us-ascii?Q?W69BmqZaIg=3D=3D?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8df983d5-4bd5-442a-b83a-08de8f02b594
-X-MS-Exchange-CrossTenant-AuthSource: AS8PR04MB8833.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Mar 2026 08:51:33.4494
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: +ngt9ggx4EsotuZDBWeDEu9pBD/mfxskOFZOYGk5nAzF0U02agE5edL8Rqkvp/5ND7gNx+tJ2Tso57E2i8NlAQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB9220
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzMxMDA4NyBTYWx0ZWRfX9wg8Dff2B9NG
+ 9x6DsTN88jIql0rwhBRfG+umbgDMHyY4OAJdGDmFP6JHE62q+gwJHXhWShc/T/COjDJcP5feJoa
+ IFBIuXvN1ujF1x2RV9zOvgLjVzzn/Lo8lk9PWZdF7UDa/65KwSVD8Lzm9+Qp4o0lWQ2t1EuSwRq
+ /Wt4e5B4mJQtgVkdl3RLvMqnEpLHrBSkIqxm0Tl0NHT9ATsrrOYt8zrD9uHDTgQKzsYOExTerMa
+ G/LsqXxrHIavW3Ezg2mbSRKyGLyXKasPOjBb5GjM8FeHv5a/7Yx4W10docxx0uLT3bkXMP3okUi
+ pIqYHVlRccXW8xS3i0AIUEEmry3V5RFCoyNr/NCgYONJDJIzmCLNd+kBbdc+y0hxkpHf5xIqiOG
+ +hv6jwwZgVbAHNpCU0VoSLV9tFuk7NVkZriSXbPpGDuSB7HskFDW/R23gdIzXaCsJwPvr/m1st5
+ OCf3cKKdfM5JIInk53w==
+X-Proofpoint-ORIG-GUID: O3flhZmCuXNoLs4fslKPQE8f0TSVY78I
+X-Proofpoint-GUID: O3flhZmCuXNoLs4fslKPQE8f0TSVY78I
+X-Authority-Analysis: v=2.4 cv=NLjYOk6g c=1 sm=1 tr=0 ts=69cb8f86 cx=c_pps
+ a=rz3CxIlbcmazkYymdCej/Q==:117 a=vr9TklybbRi32TvS4M0W1g==:17
+ a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22 a=VwQbUJbxAAAA:8
+ a=lAgNKBcoAAAA:8 a=pGLkceISAAAA:8 a=EUspDBNiAAAA:8 a=hAXPUp1672zZkZ7mbzMA:9
+ a=bFCP_H2QrGi7Okbo017w:22 a=drE6d5tx1tjNRBs8zHOc:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-31_02,2026-03-28_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 suspectscore=0 impostorscore=0 spamscore=0 phishscore=0
+ priorityscore=1501 malwarescore=0 clxscore=1015 lowpriorityscore=0
+ bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
+ definitions=main-2603310087
 
-The MSI trigger mechanism for endpoint devices connected to i.MX7D,
-i.MX8MM, and i.MX8MQ PCIe root complex ports depends on the MSI
-capability register settings in the root complex. Removing the MSI
-capability breaks MSI functionality for these endpoints.
+This reverts commit b20b659c2c6a072560b360feda81ae52176034df.
 
-Add keep_rp_msi_en flag to indicate platforms (i.MX7D, i.MX8MM, i.MX8MQ)
-that should preserve the MSI capability during initialization.
+The original commit attempted to enable ACS in pci_dma_configure() prior
+to IOMMU group assignment in iommu_init_device() to fix the ACS enablement
+issue for OF platforms. But that assumption doesn't hold true for kernel
+versions prior to v6.15, because on these older kernels,
+pci_dma_configure() is called *after* iommu_init_device(). So the IOMMU
+groups are already created before the ACS gets enabled. This causes the
+devices that should have been split into separate groups by ACS, getting
+merged into one group, thereby breaking the IOMMU isolation as reported on
+the AMD machines.
 
-Cc: stable@vger.kernel.org
-Fixes: f5cd8a929c825 ("PCI: dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI controller")
-Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+So revert the offending commit to restore the IOMMU group assignment on
+those affected machines. It should be noted that ACS has never really
+worked on kernel versions prior to v6.15, so the revert doesn't make any
+difference for OF platforms.
+
+Reported-by: John Hancock <john@kernel.doghat.io>
+Reported-by: bjorn.forsman@gmail.com
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=221234
+Fixes: b20b659c2c6a ("PCI: Enable ACS after configuring IOMMU for OF platforms")
+Cc: Linux kernel regressions list <regressions@lists.linux.dev>
+Link: https://lore.kernel.org/regressions/2c30f181-ffc6-4d63-a64e-763cf4528f48@leemhuis.info
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
-v3 changes:
-Use a flag 'dw_pcie_rp::keep_rp_msi_en' to identify SoCs that require MSI
-capability preservation, and skip the capability removal in
-pcie-designware-host.c accordingly.
 
-v2 changes:
-CC stable tree.
----
- drivers/pci/controller/dwc/pci-imx6.c             | 7 +++++++
- drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
- drivers/pci/controller/dwc/pcie-designware.h      | 1 +
- 3 files changed, 9 insertions(+), 1 deletion(-)
+This revert is targeted for v5.15 stable kernel.
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 20dafd2710a3..fde173770933 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -117,6 +117,8 @@ enum imx_pcie_variants {
- #define IMX_PCIE_FLAG_HAS_LUT			BIT(10)
- #define IMX_PCIE_FLAG_8GT_ECN_ERR051586		BIT(11)
- #define IMX_PCIE_FLAG_SKIP_L23_READY		BIT(12)
-+/* Preserve MSI capability for platforms that require it */
-+#define IMX_PCIE_FLAG_KEEP_MSI_CAP		BIT(13)
- 
- #define imx_check_flag(pci, val)	(pci->drvdata->flags & val)
- 
-@@ -1820,6 +1822,8 @@ static int imx_pcie_probe(struct platform_device *pdev)
- 	} else {
- 		if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_SKIP_L23_READY))
- 			pci->pp.skip_l23_ready = true;
-+		if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_KEEP_MSI_CAP))
-+			pci->pp.keep_rp_msi_en = true;
- 		pci->pp.use_atu_msg = true;
- 		ret = dw_pcie_host_init(&pci->pp);
- 		if (ret < 0)
-@@ -1897,6 +1901,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
- 	[IMX7D] = {
- 		.variant = IMX7D,
- 		.flags = IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
-+			 IMX_PCIE_FLAG_KEEP_MSI_CAP |
- 			 IMX_PCIE_FLAG_HAS_APP_RESET |
- 			 IMX_PCIE_FLAG_SKIP_L23_READY |
- 			 IMX_PCIE_FLAG_HAS_PHY_RESET,
-@@ -1909,6 +1914,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
- 	[IMX8MQ] = {
- 		.variant = IMX8MQ,
- 		.flags = IMX_PCIE_FLAG_HAS_APP_RESET |
-+			 IMX_PCIE_FLAG_KEEP_MSI_CAP |
- 			 IMX_PCIE_FLAG_HAS_PHY_RESET |
- 			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
- 		.gpr = "fsl,imx8mq-iomuxc-gpr",
-@@ -1923,6 +1929,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
- 	[IMX8MM] = {
- 		.variant = IMX8MM,
- 		.flags = IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
-+			 IMX_PCIE_FLAG_KEEP_MSI_CAP |
- 			 IMX_PCIE_FLAG_HAS_PHYDRV |
- 			 IMX_PCIE_FLAG_HAS_APP_RESET,
- 		.gpr = "fsl,imx8mm-iomuxc-gpr",
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index a74339982c24..7b5558561e15 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -1171,7 +1171,7 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
- 	 * the MSI and MSI-X capabilities of the Root Port to allow the drivers
- 	 * to fall back to INTx instead.
- 	 */
--	if (pp->use_imsi_rx) {
-+	if (pp->use_imsi_rx && !pp->keep_rp_msi_en) {
- 		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSI);
- 		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSIX);
+ drivers/pci/pci-driver.c |  8 --------
+ drivers/pci/pci.c        | 10 +++++++++-
+ drivers/pci/pci.h        |  1 -
+ 3 files changed, 9 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index ecbe382b56be..08c985478b8f 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1616,14 +1616,6 @@ static int pci_dma_configure(struct device *dev)
+ 		ret = acpi_dma_configure(dev, acpi_get_dma_attr(adev));
  	}
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index ae6389dd9caa..b12c5334552c 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -421,6 +421,7 @@ struct dw_pcie_host_ops {
  
- struct dw_pcie_rp {
- 	bool			use_imsi_rx:1;
-+	bool			keep_rp_msi_en:1;
- 	bool			cfg0_io_shared:1;
- 	u64			cfg0_base;
- 	void __iomem		*va_cfg0_base;
+-	/*
+-	 * Attempt to enable ACS regardless of capability because some Root
+-	 * Ports (e.g. those quirked with *_intel_pch_acs_*) do not have
+-	 * the standard ACS capability but still support ACS via those
+-	 * quirks.
+-	 */
+-	pci_enable_acs(to_pci_dev(dev));
+-
+ 	pci_put_host_bridge_device(bridge);
+ 	return ret;
+ }
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d1474b2129ab..2d4f3080e4dd 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -936,7 +936,7 @@ static void pci_std_enable_acs(struct pci_dev *dev)
+  * pci_enable_acs - enable ACS if hardware support it
+  * @dev: the PCI device
+  */
+-void pci_enable_acs(struct pci_dev *dev)
++static void pci_enable_acs(struct pci_dev *dev)
+ {
+ 	if (!pci_acs_enable)
+ 		goto disable_acs_redir;
+@@ -3609,6 +3609,14 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+ void pci_acs_init(struct pci_dev *dev)
+ {
+ 	dev->acs_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
++
++	/*
++	 * Attempt to enable ACS regardless of capability because some Root
++	 * Ports (e.g. those quirked with *_intel_pch_acs_*) do not have
++	 * the standard ACS capability but still support ACS via those
++	 * quirks.
++	 */
++	pci_enable_acs(dev);
+ }
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index d9d7a79e3563..4a8f499d278b 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -562,7 +562,6 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ }
+ 
+ void pci_acs_init(struct pci_dev *dev);
+-void pci_enable_acs(struct pci_dev *dev);
+ #ifdef CONFIG_PCI_QUIRKS
+ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
+ int pci_dev_specific_enable_acs(struct pci_dev *dev);
 -- 
-2.37.1
+2.51.0
 
