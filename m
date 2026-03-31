@@ -1,115 +1,117 @@
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [185.244.194.184])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B844298CA3;
-	Tue, 31 Mar 2026 08:32:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.244.194.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5DD43BE649;
+	Tue, 31 Mar 2026 08:38:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774945944; cv=none; b=lnE7dj/Afa/WjFZTY7QlEr2GgwQVFTZD0MN7zb7Hi+BFpPEEhIdRZBZ9eiyz+AvysIfXXIDdArxWTEfPMKV2g+ztuXY1gCrc+PomBEz/vhZwtmmtSAtZBFzYWpqHQSRQn3DADt8e3GWu5UvnQydRxJgp2q8GRd1g9RFTh0MLdAY=
+	t=1774946282; cv=none; b=bHVOjvKVxzi7H9xJyfWuE4vOAlZtqV6ir+sJzPuri5sc3YpnUgTjtiUaZ58pZl53eTOJpm8S6qk8wUK2nT9w1TIgVu0aj2I9S4xy3sxdkMB3fJUs2xDIrdw0OnYiuQcfQXfYfCbDTsUNivNbzvs7cE16adAq7No2n45UCIAYLsI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774945944; c=relaxed/simple;
-	bh=7IpDhYtokFqYLVQDcX7rImeQMvBoK4UVJ7DW/xKkzo0=;
-	h=Message-ID:Date:MIME-Version:Subject:Cc:References:From:To:
-	 In-Reply-To:Content-Type; b=cCmdocmNNGeWbPx4CIAl9XKGi9mO8MtZe3uJTel8ySEi8uyjmyRevqnnNiWJNeDWtlBbWxiDPaPjdesVCRZU6grbeYHY0cXHhjiVMMnERA09EYlJyKV242WyYLzQL2VThucOwOd0WMfIqShd4ZpGHwXrqkwCtTuiUDvly45nH1Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=HHjDoJEd; arc=none smtp.client-ip=185.244.194.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	s=arc-20240116; t=1774946282; c=relaxed/simple;
+	bh=lkgsi7G8x5At2O5V1snIySUQ9gANaxTJ3/quUuCINCg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eLQSo5WdBGnlKPkKEOJLjF1rsTtlNFSUIdIB0arzu1jm6GcIiJ4f5tCVLtAYHq1WOjdR8zeb4aGF6PQO2C2h1JFkLlRVm4k0cSJ+V2ZFAcKbFkz87VlS4cZIQTG2xNoYxII/ZHNx5AdMZptakMDoudo8j1SmuXCzzbA6QBNdHQ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eYOeSSSF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="HHjDoJEd"
-Received: from relay01-mors.netcup.net (localhost [127.0.0.1])
-	by relay01-mors.netcup.net (Postfix) with ESMTPS id 4flLjX00M9z94Mf;
-	Tue, 31 Mar 2026 10:23:28 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
-	s=key2; t=1774945408;
-	bh=7IpDhYtokFqYLVQDcX7rImeQMvBoK4UVJ7DW/xKkzo0=;
-	h=Date:Subject:Cc:References:From:To:In-Reply-To:From;
-	b=HHjDoJEdph0AOjNAJz6dRmcPp7j73Yw/SygLwr3KxeMnVxwLc9VsCQh0w4LcWCCWi
-	 VsgvlWu3XrVLSFjNzTfYiiJKm2onnZvMyFhsbq3OzU2FkXvB22yNPp7IX6//ZcEp1Z
-	 mW3HYHKdaPdSi+jnGq98nc3Z4DNdgGbZsSnWgps+HVoviJp13FenAEe7XO4/dB2oeN
-	 bHV4jgQn6Ovd9RLt6VdvQglzD7bDz3qAdJaZDCKeKhUpCzKjQ9xoOD82mD/zBgvWFZ
-	 sBnI4M/fvKCAEL18quf+WqzkE3DmYJWvjEYKokw2P31yQewY6Mp6ifpWcUdXDT/qRr
-	 PETy68xPencCQ==
-Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
-	by relay01-mors.netcup.net (Postfix) with ESMTPS id 4flLjW6PLWz7xN0;
-	Tue, 31 Mar 2026 10:23:27 +0200 (CEST)
-Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4flLjV6RNSz8svf;
-	Tue, 31 Mar 2026 10:23:26 +0200 (CEST)
-Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
-	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 3520C635FD;
-	Tue, 31 Mar 2026 10:23:26 +0200 (CEST)
-Authentication-Results: mxe9fb;
-        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
-Received-SPF: pass (mxe9fb: connection is authenticated)
-Message-ID: <99426bd8-32e5-4246-9d3b-772e136bc078@leemhuis.info>
-Date: Tue, 31 Mar 2026 10:23:25 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eYOeSSSF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08CB8C19423;
+	Tue, 31 Mar 2026 08:38:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774946282;
+	bh=lkgsi7G8x5At2O5V1snIySUQ9gANaxTJ3/quUuCINCg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=eYOeSSSFW0WXX4mmb2MsptPkJdbl34XCp/M4zjYe56EoUT29R9MHtfTXKQPdaNTCC
+	 km+65bU1EFEOKw5dFVpsTcaiMT//g3eVQ5wQFTIo/I7oJ/THNQwpC5I8OveBHsLJSv
+	 3TLow+1Vv81z+6ZpRvaJ+yJWkL2V+tUPyY4nPDYssx0+yV1YmWFpME3575WC2Pv8mV
+	 GFTL9SNY7QSYH4J+O7uv1C5fcawUeC5d6HW7UF+4i8Box0HYi2vuZ4MBWER521nK0Q
+	 SenJKH1W+1P9Rtm0e28iNy23S+AdcNCUTs9CjfxLv0EdzgY1EGenaxFTOtyUWS9Nz4
+	 6i/D/wPac9ByA==
+Date: Tue, 31 Mar 2026 11:37:58 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Keith Busch <kbusch@kernel.org>
+Cc: Zhiping Zhang <zhipingz@meta.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-rdma@vger.kernel.org,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, Yochai Cohen <yochai@nvidia.com>,
+	Yishai Hadas <yishaih@nvidia.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [RFC v2 1/2] vfio: add callback to get tph info for dmabuf
+Message-ID: <20260331083758.GA814676@unreal>
+References: <20260324234615.3731237-1-zhipingz@meta.com>
+ <20260324234615.3731237-2-zhipingz@meta.com>
+ <20260325082534.GN814676@unreal>
+ <acW2BwQKaUbS3eL9@kbusch-mbp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [REGRESSION] PCI: Revert "Enable ACS after configuring IOMMU for
- OF platforms"
-Cc: John Hancock <john@kernel.doghat.io>, stable@vger.kernel.org,
- bhelgaas@google.com, manivannan.sadhasivam@oss.qualcomm.com,
- joro@8bytes.org, linux-pci@vger.kernel.org, iommu@lists.linux.dev,
- Manivannan Sadhasivam <mani@kernel.org>, Robin Murphy <robin.murphy@arm.com>
-References: <20260320172335.29778-1-john@kernel.doghat.io>
- <o7nnlvtkmatzafs44um6h5wnqo755msiukfn6kbu2zxdhe45ws@mde5lt2ufusz>
- <fad11c37-5bfb-44fd-b0bf-2a2d15b3382c@arm.com>
- <ovfco6pqzw734flu7navat36avt6yfosruouduhmbti7umunus@ijmu6nhz56l5>
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-Content-Language: de-DE, en-US
-To: Greg KH <gregkh@linuxfoundation.org>, Sasha Levin <sashal@kernel.org>
-In-Reply-To: <ovfco6pqzw734flu7navat36avt6yfosruouduhmbti7umunus@ijmu6nhz56l5>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-PPP-Message-ID: <177494540663.2020972.9530421463839943276@mxe9fb.netcup.net>
-X-NC-CID: 3xzz847nKWelt8aC5ygN7tpAEHCa5Hi/PfXCYrf6D4kpXqVsB7M=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <acW2BwQKaUbS3eL9@kbusch-mbp>
 
-On 3/23/26 16:13, Manivannan Sadhasivam wrote:
-> On Mon, Mar 23, 2026 at 03:06:16PM +0000, Robin Murphy wrote:
->> On 23/03/2026 1:54 pm, Manivannan Sadhasivam wrote:
->>> On Fri, Mar 20, 2026 at 01:23:35PM -0400, John Hancock wrote:
->>>> Commit 7a126c1b6cfa ("PCI: Enable ACS after configuring IOMMU for OF
->>>> platforms") introduced a regression affecting AMD IOMMU group isolation
->>>> on x86 systems, making PCIe passthrough non-functional.
->>> [...]
->>> Ouch! Sorry for the breakage.
->>> [...]
->>> I still haven't investigated this failure deeply, but it is also worth noting
->>> that this regression only happens with v6.12 and earlier stable kernels as
->>> mentioned in [1].
->> Oops, indeed, relying on pci_dma_configure() to be called prior to group
->> assignment in iommu_init_device() only works since bcb81ac6ae3c ("iommu: Get
->> DT/ACPI parsing into the proper probe path") added that call path in 6.15 -
->> thus the backport probably doesn't actually work for OF platforms either.
+On Thu, Mar 26, 2026 at 04:41:11PM -0600, Keith Busch wrote:
+> On Wed, Mar 25, 2026 at 10:25:34AM +0200, Leon Romanovsky wrote:
+> > On Tue, Mar 24, 2026 at 04:46:02PM -0700, Zhiping Zhang wrote:
+> > >  struct vfio_device_feature_dma_buf {
+> > >  	__u32	region_index;
+> > >  	__u32	open_flags;
+> > > -	__u32   flags;
+> > > -	__u32   nr_ranges;
+> > > +	__u32	flags;
+> > > +#define VFIO_DMABUF_FL_TPH		(1U << 0) /* TPH info is present */
+> > > +#define VFIO_DMABUF_TPH_PH_SHIFT	1         /* bits 1-2: PH (2-bit) */
+> > > +#define VFIO_DMABUF_TPH_PH_MASK	0x6U
+> > > +#define VFIO_DMABUF_TPH_ST_SHIFT	16        /* bits 16-31: steering tag */
+> > > +#define VFIO_DMABUF_TPH_ST_MASK		0xffff0000U
+> > 
+> > This extension of flags is basically kills future extension of this
+> > struct for anything that includes TPH.
+> > 
+> > Add new
+> > enum vfio_device_feature_dma_buf_flags {
+> >     VFIO_DMABUF_FL_TPH  = 1 << 0
+> > }
+> > 
+> > > +	__u32	nr_ranges;
+> > 
+> > add your "__u16 steering_tag" and "__u8 ph" fields here.
 > 
-> Ah, that makes sense. Thanks for finding the root cause. It might be very
-> obvious to you, but still... ;)
+> You're suggesting that Ziping append the new fields to the end of this
+> struct? I don't think we can modify the layout of a uapi.
+
+He needs to add before flex array. This struct is submitted by the user
+and kernel can easily calculate the position of that array.
+
+Something like this:
+diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
+index b1d658b8f7b51..d78d915992232 100644
+--- a/drivers/vfio/pci/vfio_pci_dmabuf.c
++++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+@@ -237,7 +237,11 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+        if (get_dma_buf.region_index >= VFIO_PCI_ROM_REGION_INDEX)
+                return -ENODEV;
+
+-       dma_ranges = memdup_array_user(&arg->dma_ranges, get_dma_buf.nr_ranges,
++       if (!tph_supplied)
++               dma_ranges = memdup_array_user(old_dma_ranges_pos, get_dma_buf.nr_ranges,
++                                      sizeof(*dma_ranges));
++       else
++               dma_ranges = memdup_array_user(&arg->dma_ranges, get_dma_buf.nr_ranges,
+                                       sizeof(*dma_ranges));
+        if (IS_ERR(dma_ranges))
+                return PTR_ERR(dma_ranges);
+~
+
+
+Thanks
+
 > 
->> Dropping this from 6.12.y and earlier stable branches seems like the correct
->> action to me (but not a mainline revert, obviously). ACS had essentially
->> *never* worked properly on OF platforms prior to 6.15, but that was more
->> down to fundamental design flaws in the OF-based IOMMU probe path (dating
->> back to 4.12) rather than any easily-fixable bug as such, so realistically I
->> think we just leave it that way.
-> 
-> That's my opinion as well. I guess I need to send reverts for rest of the older
-> stable kernels as well.
-
-Mani, did you send those reverts? I could not find any on lore. And the
-one at the start of the thread likely won't work, as it doesn't state
-that c41e2fb67e26b0 ("PCI: Enable ACS after configuring IOMMU for OF
-platforms") needs to be reverted for 6.12.y and all earlier series. So
-to speed things up:
-
-Greg, Sasha, could you maybe simply revert that backported commit
-directly in 6.12.y and all earlier series?
-
-Ciao, Thorsten
+> If we can't carve the space for this out of the existing unused flags
+> field, I think we'd have to introduce a new vfio device feature that
+> basically copies VFIO_DEVICE_FEATURE_DMA_BUF with the extra hints
+> fields.
+>  
+> > >  	struct vfio_region_dma_range dma_ranges[] __counted_by(nr_ranges);
+> > >  };
