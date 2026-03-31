@@ -1,117 +1,36 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 301103D6493
-	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 07:55:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8E1E3D75AA;
+	Tue, 31 Mar 2026 08:05:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774943719; cv=none; b=ZKEnGMsflN5QY4rG+OL4afaz5gvKdePp1fsp2oWTTBN3ktFe1rMU1ZZIyy6vLB7+HnoVs4WjjYM5Kx5y3gn9xdcJ8Wdx062fhss6ZmLo3yBo0bJt++aS0HtvRepPdyNKZ649ETmuU6+hjxp8IlgmY0malSqKemQ5K70IK6Iqt3E=
+	t=1774944314; cv=none; b=VswY97TFjK4VZ0PfoupWD8+bTJlbajB8hNsMzvrbwvIoO1xTeG9WINvuqIAe35LhFCWP5SFd1iNrIKB75RzjbdsKrXZ1HU3iIF8DLeOBWDqHGLXEGO0t1jGeABL9YposlRj27+JGVIiYM0L26UhUhKqVTPHBBz4ekLZ6kqH7Oio=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774943719; c=relaxed/simple;
-	bh=bfENr2Ga1hRaN0a0ouKuR0lDxkpzobWYOnT0p2/YsIk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rhMlXFX5mors8B1Cp5jDxT7NnU7TWpX/Jj/mrLRZO+YGznaDl1rTPsXGPxaHdOnhy6Qh5XfBnmRg2sY+qBEfG5deWFsng9CT7wtfAG9jRZ08lJk/Knah1m349NGOtd7ZdYOoGFhNBagB9SPWyHyzryW5wnfEuk5aqVSf/Vev2SA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=MGzR7lBx; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=foP/aPAE; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1774944314; c=relaxed/simple;
+	bh=0cZvuCg3q6ttJ602GNWrFjr3BNZ7oOzIO1zMeJHR2W8=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=iS6x/bebf/Xm+lub9F/4dXiNFtOco4Ti78SSylHQGBzjcy94dJCzrRfh/PMG2hfNaNIVpE0rpHHVaAPSGwb4mo1JIdK4vGjTuyz9QW2RduBIIeJIfZr+ifyrvw1aFujCYYWIOFMGz62tng7s+JXN7Ukw3Zhi9fnTo6glXkerNGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FCzoos7K; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="MGzR7lBx";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="foP/aPAE"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62V5KCFM1841331
-	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 07:55:17 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	1LskRipLbvIkLFYDOw44HC9Gz57IWPaNBdNoRbXgq44=; b=MGzR7lBx1mzi7Ss9
-	yuDUm9ra9bdvpSxHeBBynCFY6poaNaYv8U0I71JGO94QOGCwXODFPQzdsJ12B71d
-	nCd2AUXEy0qBH6zz9epBApG1hobev+3XzPDA6FBRz/piz9wlQMHkDlFvFxVh/w4b
-	Ahg0JgZeZ293hdKTeRNVBDnF19uPw9L5dtXqSovsBzi111NzRU17ad9Oc/hSf5g6
-	OVZxst64/Nyb2QUVbXN48XS1a4j8Aj+rQj28K+7BsGX4Gl3A+jLA9xOno+bvwCBL
-	Ix51xCpU3JzPKjpCp/q5DH2EUxty4zKGg5Qlu93eAS7LXo/6/kcEeVPpOc3+jdec
-	jEN5yA==
-Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com [209.85.160.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d80rshxr9-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 07:55:17 +0000 (GMT)
-Received: by mail-qt1-f199.google.com with SMTP id d75a77b69052e-5090cc6a7d2so176383551cf.2
-        for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 00:55:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1774943716; x=1775548516; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1LskRipLbvIkLFYDOw44HC9Gz57IWPaNBdNoRbXgq44=;
-        b=foP/aPAEU08fvqJ38UwRxnsgQwUmrVGwCteXtVPgGglqUDKEko2hiKzrPK5aoxgJsb
-         5LhEF6kt/DL9PeBwp+uYsFFx/AzeYGNUW4uq77xo2A2zXh6IlNfKbej+4YbXxd7ys0Ca
-         AxOdWZKprFRhsCgTdE08iiMJJphi5OhrQEkcOieHkM3ZZzAQBhR8cbY+0OaFtZoTA4f4
-         Rw4ATQoPaEcK5TGNaqUv4f44pvB876cp/feS5eLO//ZMkrD9YPyl1zQ/xFXxK7CeneNj
-         bZzulv/aJ9HlOmMTABR+hIFbf/F5hypNHgMFhf2oniS9OusUNspuRwHnroXQR+D3sv1j
-         npQA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774943716; x=1775548516;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=1LskRipLbvIkLFYDOw44HC9Gz57IWPaNBdNoRbXgq44=;
-        b=e5Nw14Za50NGb9rufQSIX0ydO2cRQkShiIyzI762FAQ5qdC7lKW6vLZPqVKohCiwFS
-         g2pi/inn631EIZiSlqXwjM9PvjZGI6ARpb7xI34ASJgowtd/MknDkdC978oT2NGKka9n
-         Supj73Os5765H3IQz5w10LimWB9G59MMH8oXDMaNeE9UhzAOGX73Uq6HJL5PySbgmX8T
-         yHYjjtLo+eQsyvO0wErdQwczdwHPwkUYpgwXCGoIR3x8VWaTnirvkDAqcULqmF3CNcwA
-         RfilHBfSPk/WfBdjSc/TN/9QiQLgLH9u5NW+pZMVjDsYkYw802QiWSLx5z5PjCc0DvCq
-         f0BQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWzA2/IoxDlSTHH//SBWGSzCbdQnhinxK9TxQO55Amy0QCKF4qBxFW08sK3pCT004t+m5yfhYszJKw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxwPK3PROoSzlrNoa5nk3RMMwp5oPbHT6UvfI8nxTv8xlLGKmHE
-	OgqKN9eq7FUwkru7IiXbQbJqXLwDref5ixwnEMdEFeCjJpDz5f49PSoROWumgVvMWm50QZSzx0D
-	/k+i8TLo2h2pGEGJs05J4eVuVJXCXkb+1Z6cryO5cnGZ++g3uxzkX94/6xB8L5j4=
-X-Gm-Gg: ATEYQzxIvHpOxhn/2gwoGKwWQp2z0daC/GA6KZHbuDRuB8PbmMQcDgK+LfH+rKC/k+x
-	yGIVMVZvgjeA9rhQHgKykuOJrF2tNoHhKUi3h5QSP7kJ0dqNqR3n9cRyLtCue+0U0ILdLbIDsSP
-	gQ6NcOaDkh9Art53vxjzsb6GpYNoOMINwEhDIJPSb9CX7rzpaLtNcv/bDDp/fLy6puraN8FCdOC
-	ZcxKGfuKiB4SWOdVpt7lhGpP7qavRYIZpPlkRE9ED3SKG+yuhVRXqNJFM2owIi50VV7yL8FBxPS
-	Z5JAo7rpj4LtRQ0qSbUmeTFYU7ubZTQt059vpPjsFbSlPvz2OaAK28qfjkgkj9Hb2t5pkg9m8eR
-	2URIUG/xhto/LlTzfbfdYB9N+yRkI+mOSvYVSl0ytAV5by0Bp5A==
-X-Received: by 2002:a05:622a:5917:b0:50b:460b:650e with SMTP id d75a77b69052e-50ba38e7652mr188112111cf.49.1774943716569;
-        Tue, 31 Mar 2026 00:55:16 -0700 (PDT)
-X-Received: by 2002:a05:622a:5917:b0:50b:460b:650e with SMTP id d75a77b69052e-50ba38e7652mr188111811cf.49.1774943716067;
-        Tue, 31 Mar 2026 00:55:16 -0700 (PDT)
-Received: from brgl-qcom.home ([2a01:cb1d:dc:7e00:29fb:516:a90f:8dda])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4887c8a546esm12724395e9.5.2026.03.31.00.55.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 31 Mar 2026 00:55:15 -0700 (PDT)
-From: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-To: Rob Herring <robh@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nicolas Schier <nicolas.schier@linux.dev>,
-        Hans de Goede <hansg@kernel.org>,
-        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-        Mark Pearson <mpearson-lenovo@squebb.ca>,
-        "Derek J. Clark" <derekjohn.clark@gmail.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bartosz Golaszewski <brgl@kernel.org>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
-        linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-kbuild@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        linux-pm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>,
-        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-        linux-acpi@vger.kernel.org,
-        Hans de Goede <johannes.goede@oss.qualcomm.com>
-Subject: Re: (subset) [PATCH v7 0/8] Add support for handling PCIe M.2 Key E connectors in devicetree
-Date: Tue, 31 Mar 2026 09:55:12 +0200
-Message-ID: <177494370819.4807.18152210084249335606.b4-ty@oss.qualcomm.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260326-pci-m2-e-v7-0-43324a7866e6@oss.qualcomm.com>
-References: <20260326-pci-m2-e-v7-0-43324a7866e6@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FCzoos7K"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 1CB97C19423;
+	Tue, 31 Mar 2026 08:05:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774944313;
+	bh=0cZvuCg3q6ttJ602GNWrFjr3BNZ7oOzIO1zMeJHR2W8=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=FCzoos7KwR2XiL6eV7xsgFdw8oOSiCpWHBmuW1sxFNsvg0qrafmh0rt9lZtDq/fa2
+	 IsS5q/zO5sWxkh2t+2gdXTFGs82j27RKcoEIk4Snsf+XEvUNPWY+FSvLsAztVNGXEP
+	 KzSsPIQgY6EOAe5LxkBZrTxTqTU9QhA/IqzH1qfIxZh65CEfIshDXVlUV+xpNUG6Yy
+	 RQ9Vosstm9TlaYsGRD+YT63j0BuU0rC1KYPh0ND+N3Kd9alLt2kAVHXoXClRT2dimO
+	 cJ2wsDRGVGunc7HRiRCg+UTWwkJp8NGn5LTM568oLfVZVOJBE991pj4OO+HpMQfklz
+	 2BR7qDR71sfRw==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13D05FF60DC;
+	Tue, 31 Mar 2026 08:05:13 +0000 (UTC)
+From: Pawel Laszczak via B4 Relay <devnull+pawell.cadence.com@kernel.org>
+Date: Tue, 31 Mar 2026 10:19:11 +0200
+Subject: [PATCH] usb: cdnsp: Add support for device-only configuration
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -119,61 +38,352 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: 9M-MatdSgxZfh-iKb5z_OQGqWtK0eQWC
-X-Authority-Analysis: v=2.4 cv=VInQXtPX c=1 sm=1 tr=0 ts=69cb7de5 cx=c_pps
- a=WeENfcodrlLV9YRTxbY/uA==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22 a=VwQbUJbxAAAA:8
- a=EUspDBNiAAAA:8 a=nTh72EtQ-9J6yJQhtbMA:9 a=QEXdDO2ut3YA:10
- a=kacYvNCVWA4VmyqE58fU:22
-X-Proofpoint-ORIG-GUID: 9M-MatdSgxZfh-iKb5z_OQGqWtK0eQWC
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzMxMDA3NCBTYWx0ZWRfX8VpLV0K2hhvG
- sJK7kXiz9i1o7OUlmc4qfRwl3RxGNreB8dmWoiEW2tVhFS2OhFeHCyfRlYX9nfZ5xv/MKazWuF8
- VbzadR9RfdJoBI72Kcm5a1znvN6A7irQ3xQiVxisDf6UrrO7Jru3+7U9JpcIelgPZPvYV/oBRxr
- zKONhBSHQORAKs4H32iEDlkpmDF+Yp37hbEeL27aQjSZmu0sknv/pIiuzhXtBEGIDJIziTL+YCT
- e5F+oO5M0ln8GJ+3NkMcE83RrUMMiahHvqJ1rqvA8NqcWpYA/zJS2y6SX+xp5kzkztJ1oSK6jXw
- wGSqwT0oFYZbBG5VV+hH5w63+m2/St5dUGerTRx7dYkV2jf92EWV8LuhPn6nYJLqH3pONukNjy9
- B5i5VT1PbVSlY60f5E2Dui5SIYszYdKIbBQpKBGV9333SwTSrNcbc1/BdSYBHomHJpm3jaUPkHm
- zhw+7WJ4U0Km7Zeq/GA==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-31_02,2026-03-28_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 malwarescore=0 clxscore=1015 priorityscore=1501 spamscore=0
- impostorscore=0 lowpriorityscore=0 phishscore=0 bulkscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603310074
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260331-device_only-v1-1-00378b80365c@cadence.com>
+X-B4-Tracking: v=1; b=H4sIAH6Dy2kC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIzMDY2ND3RSgouTU+Py8nEpdQ0ujFFNjSxNjgyRTJaCOgqLUtMwKsGnRsbW
+ 1APSz3sJdAAAA
+To: Peter Chen <peter.chen@kernel.org>, Roger Quadros <rogerq@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-pci@vger.kernel.org, pawell@cadence.com
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1774945165; l=10845;
+ i=pawell@cadence.com; h=from:subject:message-id;
+ bh=6OIqgxMFmEPIY1lz/0pWr94nNNQg9qsP83S9iKkdml4=;
+ b=8R1w9k86i+MQEe4egtg5LnSARTaFCOOp61gbJ9RI8d9XrRsdnLCiD5tODDOFppJOfxsFkr/OC
+ hIy6gF7zdCQBM3Z9P1d1h1yhRoXys4k3MpQglaU8kiFRfJw6AsyS/wq
+X-Developer-Key: i=pawell@cadence.com; a=ed25519;
+ pk=EUPBvLO9CDg7j6defeDl2iqi+z5Ivqu4Z46aiqe7dYc=
+X-Endpoint-Received: by B4 Relay for pawell@cadence.com/default with
+ auth_id=707
+X-Original-From: Pawel Laszczak <pawell@cadence.com>
+Reply-To: pawell@cadence.com
 
+From: Pawel Laszczak <pawell@cadence.com>
 
-On Thu, 26 Mar 2026 13:36:28 +0530, Manivannan Sadhasivam wrote:
-> This series is the continuation of the series [1] that added the initial support
-> for the PCIe M.2 connectors. This series extends it by adding support for Key E
-> connectors. These connectors are used to connect the Wireless Connectivity
-> devices such as WiFi, BT, NFC and GNSS devices to the host machine over
-> interfaces such as PCIe/SDIO, USB/UART and NFC. This series adds support for
-> connectors that expose PCIe interface for WiFi and UART interface for BT. Other
-> interfaces are left for future improvements.
-> 
-> [...]
+This patch introduces support for operating the Cadence USBSSP (cdnsp)
+controller in a peripheral-only mode, bypassing the Dual-Role Device (DRD)
+logic.
 
-Applied, thanks!
+The change in BAR indexing (from BAR 2 to BAR 1) is a direct
+consequence of switching from 64-bit to 32-bit addressing in the
+Peripheral-only configuration.
 
-[1/8] serdev: Convert to_serdev_*() helpers to macros and use container_of_const()
-      https://git.kernel.org/brgl/c/e7fef85039ccdba67d97b2a09f313aceeb6691c8
-[2/8] serdev: Add an API to find the serdev controller associated with the devicetree node
-      https://git.kernel.org/brgl/c/a2b4814190af5944b276c5fd708d95ea146106b3
-[3/8] serdev: Do not return -ENODEV from of_serdev_register_devices() if external connector is used
-      https://git.kernel.org/brgl/c/92fa16ecad07dddc5703f7e2ff342441b04c45af
-[4/8] dt-bindings: serial: Document the graph port
-      https://git.kernel.org/brgl/c/1785c7bc1495e4e22377edffaf0ff8c3c697647d
-[5/8] dt-bindings: connector: Add PCIe M.2 Mechanical Key E connector
-      https://git.kernel.org/brgl/c/5970c1dafb8adbeab5f6d9a22a4ad5b1c0067888
-[7/8] power: sequencing: pcie-m2: Add support for PCIe M.2 Key E connectors
-      https://git.kernel.org/brgl/c/0d38285a12a283e12cd589ad5bb46c6f4a8cc647
-[8/8] power: sequencing: pcie-m2: Create serdev device for WCN7850 bluetooth
-      https://git.kernel.org/brgl/c/3f736aecbdc8e4faf2ed82c981812a6bfc76ea98
+Tested on PCI platform with Device-only configuration. Platform-side
+changes are included to support the PCI glue layer's property injection.
+
+Signed-off-by: Pawel Laszczak <pawell@cadence.com>
+---
+NOTE: This patch depends on Peter Chen's series "usb: cdns3: Add 
+USBSSP platform driver support", which was recently accepted by 
+Greg into the usb-testing branch (commit 6076388ca1ed).
+---
+ drivers/usb/cdns3/cdns3-plat.c | 24 ++++++++++++---------
+ drivers/usb/cdns3/cdnsp-pci.c  | 47 ++++++++++++++++++++++++++++++++++--------
+ drivers/usb/cdns3/core.c       |  3 ++-
+ drivers/usb/cdns3/core.h       |  5 ++++-
+ drivers/usb/cdns3/drd.c        | 16 ++++++++++++--
+ include/linux/pci_ids.h        |  1 +
+ 6 files changed, 73 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/usb/cdns3/cdns3-plat.c b/drivers/usb/cdns3/cdns3-plat.c
+index 71c612e27b73..33746e672cda 100644
+--- a/drivers/usb/cdns3/cdns3-plat.c
++++ b/drivers/usb/cdns3/cdns3-plat.c
+@@ -75,6 +75,7 @@ static int cdns3_plat_probe(struct platform_device *pdev)
+ 	if (cdns->pdata && cdns->pdata->override_apb_timeout)
+ 		cdns->override_apb_timeout = cdns->pdata->override_apb_timeout;
+ 
++	cdns->no_drd = device_property_read_bool(dev, "no_drd");
+ 	platform_set_drvdata(pdev, cdns);
+ 
+ 	ret = platform_get_irq_byname(pdev, "host");
+@@ -107,21 +108,23 @@ static int cdns3_plat_probe(struct platform_device *pdev)
+ 
+ 	cdns->dev_regs	= regs;
+ 
+-	cdns->otg_irq = platform_get_irq_byname(pdev, "otg");
+-	if (cdns->otg_irq < 0)
+-		return dev_err_probe(dev, cdns->otg_irq,
+-				     "Failed to get otg IRQ\n");
++	if (!cdns->no_drd) {
++		cdns->otg_irq = platform_get_irq_byname(pdev, "otg");
++		if (cdns->otg_irq < 0)
++			return dev_err_probe(dev, cdns->otg_irq,
++					     "Failed to get otg IRQ\n");
+ 
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "otg");
+-	if (!res) {
+-		dev_err(dev, "couldn't get otg resource\n");
+-		return -ENXIO;
++		res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "otg");
++		if (!res) {
++			dev_err(dev, "couldn't get otg resource\n");
++			return -ENXIO;
++		}
++
++		cdns->otg_res = *res;
+ 	}
+ 
+ 	cdns->phyrst_a_enable = device_property_read_bool(dev, "cdns,phyrst-a-enable");
+ 
+-	cdns->otg_res = *res;
+-
+ 	cdns->wakeup_irq = platform_get_irq_byname_optional(pdev, "wakeup");
+ 	if (cdns->wakeup_irq == -EPROBE_DEFER)
+ 		return cdns->wakeup_irq;
+@@ -158,6 +161,7 @@ static int cdns3_plat_probe(struct platform_device *pdev)
+ 		goto err_cdns_init;
+ 
+ 	cdns->gadget_init = cdns3_plat_gadget_init;
++
+ 	ret = cdns_core_init_role(cdns);
+ 	if (ret)
+ 		goto err_cdns_init;
+diff --git a/drivers/usb/cdns3/cdnsp-pci.c b/drivers/usb/cdns3/cdnsp-pci.c
+index 432007cfe695..e20c59ceb8a4 100644
+--- a/drivers/usb/cdns3/cdnsp-pci.c
++++ b/drivers/usb/cdns3/cdnsp-pci.c
+@@ -19,6 +19,7 @@
+ 
+ struct cdnsp_wrap {
+ 	struct platform_device *plat_dev;
++	struct property_entry prop[3];
+ 	struct resource dev_res[6];
+ 	int devfn;
+ };
+@@ -29,10 +30,15 @@ struct cdnsp_wrap {
+ #define RES_HOST_ID		3
+ #define RES_DEV_ID		4
+ #define RES_DRD_ID		5
+-
++/* DRD PCI configuration - 64-bit addressing */
++/* First PCI function */
+ #define PCI_BAR_HOST		0
+-#define PCI_BAR_OTG		0
+ #define PCI_BAR_DEV		2
++/* Second PCI function */
++#define PCI_BAR_OTG		0
++/* Device only PCI configuration - 32-bit addressing */
++/* First PCI function */
++#define PCI_BAR_ONLY_DEV	1
+ 
+ #define PCI_DEV_FN_HOST_DEVICE	0
+ #define PCI_DEV_FN_OTG		1
+@@ -65,6 +71,7 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+ 	struct cdnsp_wrap *wrap;
+ 	struct resource *res;
+ 	struct pci_dev *func;
++	bool no_drd = false;
+ 	int ret = 0;
+ 
+ 	/*
+@@ -75,11 +82,14 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+ 		    pdev->devfn != PCI_DEV_FN_OTG))
+ 		return -EINVAL;
+ 
++	if (pdev->device == PCI_DEVICE_ID_CDNS_UDC_USBSSP)
++		no_drd = true;
++
+ 	func = cdnsp_get_second_fun(pdev);
+-	if (!func)
++	if (!func && !no_drd)
+ 		return -EINVAL;
+ 
+-	if (func->class == PCI_CLASS_SERIAL_USB_XHCI ||
++	if ((func && func->class == PCI_CLASS_SERIAL_USB_XHCI) ||
+ 	    pdev->class == PCI_CLASS_SERIAL_USB_XHCI) {
+ 		ret = -EINVAL;
+ 		goto put_pci;
+@@ -93,7 +103,7 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+ 
+ 	pci_set_master(pdev);
+ 
+-	if (pci_is_enabled(func)) {
++	if (func && pci_is_enabled(func)) {
+ 		wrap = pci_get_drvdata(func);
+ 	} else {
+ 		wrap = kzalloc_obj(*wrap);
+@@ -106,10 +116,13 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+ 	res = wrap->dev_res;
+ 
+ 	if (pdev->devfn == PCI_DEV_FN_HOST_DEVICE) {
++		int bar_dev = no_drd ? PCI_BAR_ONLY_DEV : PCI_BAR_DEV;
++
+ 		/* Function 0: host(BAR_0) + device(BAR_2). */
+ 		dev_dbg(&pdev->dev, "Initialize Device resources\n");
+-		res[RES_DEV_ID].start = pci_resource_start(pdev, PCI_BAR_DEV);
+-		res[RES_DEV_ID].end = pci_resource_end(pdev, PCI_BAR_DEV);
++
++		res[RES_DEV_ID].start = pci_resource_start(pdev, bar_dev);
++		res[RES_DEV_ID].end = pci_resource_end(pdev, bar_dev);
+ 		res[RES_DEV_ID].name = "dev";
+ 		res[RES_DEV_ID].flags = IORESOURCE_MEM;
+ 		dev_dbg(&pdev->dev, "USBSSP-DEV physical base addr: %pa\n",
+@@ -145,9 +158,20 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+ 		wrap->dev_res[RES_IRQ_OTG_ID].flags = IORESOURCE_IRQ;
+ 	}
+ 
+-	if (pci_is_enabled(func)) {
++	if (no_drd || pci_is_enabled(func)) {
++		u8 idx = 0;
++
+ 		/* set up platform device info */
+ 		pdata.override_apb_timeout = CHICKEN_APB_TIMEOUT_VALUE;
++		if (no_drd) {
++			wrap->prop[idx++] = PROPERTY_ENTRY_STRING("dr_mode", "peripheral");
++			wrap->prop[idx++] = PROPERTY_ENTRY_BOOL("no_drd");
++		} else {
++			wrap->prop[idx++] = PROPERTY_ENTRY_STRING("dr_mode", "otg");
++			wrap->prop[idx++] = PROPERTY_ENTRY_BOOL("usb-role-switch");
++		}
++
++		wrap->prop[idx] = (struct property_entry){ };
+ 		memset(&plat_info, 0, sizeof(plat_info));
+ 		plat_info.parent = &pdev->dev;
+ 		plat_info.fwnode = pdev->dev.fwnode;
+@@ -158,6 +182,7 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+ 		plat_info.dma_mask = pdev->dma_mask;
+ 		plat_info.data = &pdata;
+ 		plat_info.size_data = sizeof(pdata);
++		plat_info.properties = wrap->prop;
+ 		wrap->devfn = pdev->devfn;
+ 		/* register platform device */
+ 		wrap->plat_dev = platform_device_register_full(&plat_info);
+@@ -185,13 +210,17 @@ static void cdnsp_pci_remove(struct pci_dev *pdev)
+ 	if (wrap->devfn == pdev->devfn)
+ 		platform_device_unregister(wrap->plat_dev);
+ 
+-	if (!pci_is_enabled(func))
++	if (!func || !pci_is_enabled(func))
+ 		kfree(wrap);
+ 
+ 	pci_dev_put(func);
+ }
+ 
+ static const struct pci_device_id cdnsp_pci_ids[] = {
++	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_UDC_USBSSP),
++	  .class = PCI_CLASS_SERIAL_USB_DEVICE },
++	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_UDC_USBSSP),
++	  .class = PCI_CLASS_SERIAL_USB_CDNS },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_USBSSP),
+ 	  .class = PCI_CLASS_SERIAL_USB_DEVICE },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_USBSSP),
+diff --git a/drivers/usb/cdns3/core.c b/drivers/usb/cdns3/core.c
+index 10f00b6c3c83..72f7acba6258 100644
+--- a/drivers/usb/cdns3/core.c
++++ b/drivers/usb/cdns3/core.c
+@@ -71,7 +71,8 @@ static void cdns_role_stop(struct cdns *cdns)
+ static void cdns_exit_roles(struct cdns *cdns)
+ {
+ 	cdns_role_stop(cdns);
+-	cdns_drd_exit(cdns);
++	if (!cdns->no_drd)
++		cdns_drd_exit(cdns);
+ }
+ 
+ /**
+diff --git a/drivers/usb/cdns3/core.h b/drivers/usb/cdns3/core.h
+index dc8c4137de15..6abe231f4559 100644
+--- a/drivers/usb/cdns3/core.h
++++ b/drivers/usb/cdns3/core.h
+@@ -80,9 +80,11 @@ struct cdns3_platform_data {
+  * @pdata: platform data from glue layer
+  * @lock: spinlock structure
+  * @xhci_plat_data: xhci private data structure pointer
++ * @gadget_init: pointer to gadget initialization function
+  * @override_apb_timeout: hold value of APB timeout. For value 0 the default
+  *                        value in CHICKEN_BITS_3 will be preserved.
+- * @gadget_init: pointer to gadget initialization function
++ * @no_drd: DRD register block is inaccessible - driver handles only
++ *          device mode.
+  */
+ struct cdns {
+ 	struct device			*dev;
+@@ -122,6 +124,7 @@ struct cdns {
+ 	struct xhci_plat_priv		*xhci_plat_data;
+ 	int (*gadget_init)(struct cdns *cdns);
+ 	u32                             override_apb_timeout;
++	bool				no_drd;
+ };
+ 
+ int cdns_hw_role_switch(struct cdns *cdns);
+diff --git a/drivers/usb/cdns3/drd.c b/drivers/usb/cdns3/drd.c
+index 84fb38a5723a..38f3051c2188 100644
+--- a/drivers/usb/cdns3/drd.c
++++ b/drivers/usb/cdns3/drd.c
+@@ -107,7 +107,7 @@ void cdns_clear_vbus(struct cdns *cdns)
+ {
+ 	u32 reg;
+ 
+-	if (cdns->version != CDNSP_CONTROLLER_V2)
++	if (cdns->version != CDNSP_CONTROLLER_V2 || cdns->no_drd)
+ 		return;
+ 
+ 	reg = readl(&cdns->otg_cdnsp_regs->override);
+@@ -120,7 +120,7 @@ void cdns_set_vbus(struct cdns *cdns)
+ {
+ 	u32 reg;
+ 
+-	if (cdns->version != CDNSP_CONTROLLER_V2)
++	if (cdns->version != CDNSP_CONTROLLER_V2 || cdns->no_drd)
+ 		return;
+ 
+ 	reg = readl(&cdns->otg_cdnsp_regs->override);
+@@ -234,6 +234,9 @@ int cdns_drd_gadget_on(struct cdns *cdns)
+ 	u32 ready_bit;
+ 	int ret, val;
+ 
++	if (cdns->no_drd)
++		return 0;
++
+ 	/* switch OTG core */
+ 	writel(OTGCMD_DEV_BUS_REQ | reg, &cdns->otg_regs->cmd);
+ 
+@@ -265,6 +268,9 @@ void cdns_drd_gadget_off(struct cdns *cdns)
+ {
+ 	u32 val;
+ 
++	if (cdns->no_drd)
++		return;
++
+ 	/*
+ 	 * Driver should wait at least 10us after disabling Device
+ 	 * before turning-off Device (DEV_BUS_DROP).
+@@ -392,6 +398,12 @@ int cdns_drd_init(struct cdns *cdns)
+ 	u32 state, reg;
+ 	int ret;
+ 
++	if (cdns->no_drd) {
++		cdns->version  = CDNSP_CONTROLLER_V2;
++		cdns->dr_mode = USB_DR_MODE_PERIPHERAL;
++		return 0;
++	}
++
+ 	regs = devm_ioremap_resource(cdns->dev, &cdns->otg_res);
+ 	if (IS_ERR(regs))
+ 		return PTR_ERR(regs);
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 406abf629be2..a931fb201402 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2424,6 +2424,7 @@
+ #define PCI_DEVICE_ID_CDNS_USBSS	0x0100
+ #define PCI_DEVICE_ID_CDNS_USB		0x0120
+ #define PCI_DEVICE_ID_CDNS_USBSSP	0x0200
++#define PCI_DEVICE_ID_CDNS_UDC_USBSSP	0x0400
+ 
+ #define PCI_VENDOR_ID_ARECA		0x17d3
+ #define PCI_DEVICE_ID_ARECA_1110	0x1110
+
+---
+base-commit: 5196f2c98340297e1fdd36555285e991ceddf776
+change-id: 20260331-device_only-192d539430b5
 
 Best regards,
 -- 
-Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Pawel Laszczak <pawell@cadence.com>
+
+
