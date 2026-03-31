@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B3493A7F54;
-	Tue, 31 Mar 2026 17:34:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D27432E143;
+	Tue, 31 Mar 2026 17:37:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774978462; cv=none; b=ipqGDqR6V/HbyZ1O3Z9xvhWgrghDrm57+hofXKUXA+W7w7cB9h9Bn4ZyzwdzvucgvhwIzgHzjlkTNyVoe66TQcMvrwVMkqN800QEamxQugO1F9pTfRV3A4+qJWG7wDOEz1CwelgVXJq02beZVEeBsXGGFLR6N+F3p+SdOM9dnFY=
+	t=1774978650; cv=none; b=l6kS9QWRAMhZU+cj4rSoa0UGifwJEc+ro243X4POOB72GgxE0vt6ba+pFUF1FpS4kBSPacGuE704B2b6nStV220fsNxegYWFSnFA3INfwUmHAm5ubNB6k7tGgCKB+IQczBFKCZTpnB3sdzp3UtPb2IAL7VlJrth9mi8nyU8J/Lo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774978462; c=relaxed/simple;
-	bh=O2ovCaGzulr+alJNfIBomcRjjrSaCQ5KJ336Qrdjy88=;
+	s=arc-20240116; t=1774978650; c=relaxed/simple;
+	bh=WpksPXyIw99SXHP6XfvYRIkFqPTyrE4cKVEoLSPOGjg=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=DqgTDBwr+daOqUEWNwlN30FUfGmvv+QlzIuWzMr4vSzoCk4WcLW3McJggnMaqHjlqLXDncZhYXHf5JPfaRViod5X250J1c54EbIHTV80yXn2hhZKjZGjNWNLqKnlW7W2HVLo/7TU/Myl3NTKX5AD2/nOM6BOXQuncF1p8wNWr6s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JJNXQzHM; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=IBmSMptGbItx4o1xBAbQtOR91FXzLHeVhM3Ldj27Fk09BSLmZp3TpDeWeBzQARiuKHhFeB9INpb5cvHy9NyneMuDQZ7QZWqthaJGf9l0i+VsFdgNP5FGTawfVHuoQTU/QOmp2Skf8Wg9l9Zv70Ka5PgUxzv+oyKQ7jR5cD1Q7kI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gG8740+2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JJNXQzHM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70A7FC19423;
-	Tue, 31 Mar 2026 17:34:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gG8740+2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC550C19424;
+	Tue, 31 Mar 2026 17:37:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774978461;
-	bh=O2ovCaGzulr+alJNfIBomcRjjrSaCQ5KJ336Qrdjy88=;
+	s=k20201202; t=1774978649;
+	bh=WpksPXyIw99SXHP6XfvYRIkFqPTyrE4cKVEoLSPOGjg=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=JJNXQzHM4/3ueMwYJPc+WIYhqdbz1jA81WIj6sie+vX4+x6Eu9D+QuKHAnF2IgCUh
-	 CNG+fUs4pKJ/5+OWN5HbDCE6R1d9bUHUouGbLM33Ht+FPIuFxMg6Lo/UKhzheCGDVu
-	 eAP06qq9zeQ0xdO+vSNzbL0IltKRoLo53c/5zIm2ptjnfNaxsRh/B3AjYYAyWKrnva
-	 PpkgMBmUYVVd6Z0AQqOqrDNJEshtrR9ro9yzQ2a0i3SFJAKlHV9lPUzamFUeypnScg
-	 k35H9CMGFikAHaBF3hi4NZZjJNJPTRX35vT2qt35iSWv556+gb2B7NpyvN/0vyFl/u
-	 y6Z0SWzw/huJw==
-Date: Tue, 31 Mar 2026 12:34:20 -0500
+	b=gG8740+2jWsBB00A/DGIMlZt4K6JOxU/WvIpb+wuD8JausTJEDb406FlA5+BejckJ
+	 L1FgnjFO2WC9OvEWzMnTKEtsWanbjPH/VLFpePdQhsJsutw2Vr9tEFlAFQX/2wmNbL
+	 x5jHIwDjqzf+oegOQptAITdZYTUXDLzKzqR/pM5skk9ss7t2sIBV2UaIY+SqhmgW4C
+	 2QOm+qD3krGLt6g2p7/ZiaQVNhRyNYaWtU+/XuS/QUeaJTut6DGtygKO3DpoVxY/yk
+	 TVzjAHFWTVooRrgLPvwNqNVhOgUQJ9CKM+Fg0QY26EOX51zaq8TsmsCse5XvJSAO/l
+	 DF/LWj63WXKCw==
+Date: Tue, 31 Mar 2026 12:37:28 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Tony Nguyen <anthony.l.nguyen@intel.com>
 Cc: davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
@@ -39,9 +39,9 @@ Cc: davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
 	Vinicius Costa Gomes <vinicius.gomes@intel.com>,
 	Jacob Keller <jacob.e.keller@intel.com>,
 	Avigail Dahan <avigailx.dahan@intel.com>
-Subject: Re: [PATCH net-next 02/15] igc: Let the PCI core deal with the PM
- resume flow
-Message-ID: <20260331173420.GA143778@bhelgaas>
+Subject: Re: [PATCH net-next 01/15] igc: Call netif_queue_set_napi() with
+ rtnl locked
+Message-ID: <20260331173728.GA146742@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,67 +50,75 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260330230248.646900-3-anthony.l.nguyen@intel.com>
+In-Reply-To: <20260330230248.646900-2-anthony.l.nguyen@intel.com>
 
-On Mon, Mar 30, 2026 at 04:02:31PM -0700, Tony Nguyen wrote:
+On Mon, Mar 30, 2026 at 04:02:30PM -0700, Tony Nguyen wrote:
 > From: Mika Westerberg <mika.westerberg@linux.intel.com>
 > 
-> Currently igc driver calls pci_set_power_state() and pci_restore_state()
-> and the like to bring the device back from low power states. However,
-> PCI core handles all this on behalf of the driver. Furthermore with PTM
-> enabled the PCI core re-enables it on resume but the driver calls
-> pci_restore_state() which ends up disabling it again.
+> When runtime resuming igc we get:
 > 
-> For this reason let the PCI core handle the common PM resume flow.
+>   [  516.161666] RTNL: assertion failed at ./include/net/netdev_lock.h (72)
 > 
+> Happens because commit 310ae9eb2617 ("net: designate queue -> napi
+> linking as "ops protected"") added check for this. For this reason drop
+> the special case for runtime PM from __igc_resume(). This makes it take
+> rtnl lock unconditionally.
+
+Taking the rtnl lock unconditionally certainly makes the code nicer,
+but the commit log only mentions the "avoid the warning" benefit, not
+the actual reason this is safe to do.
+
 > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
 > Acked-by: Vinicius Costa Gomes <vinicius.gomes@intel.com>
 > Reviewed-by: Jacob Keller <jacob.e.keller@intel.com>
 > Tested-by: Avigail Dahan <avigailx.dahan@intel.com>
 > Signed-off-by: Tony Nguyen <anthony.l.nguyen@intel.com>
-
-I love it, thanks a lot for doing this!
-
 > ---
->  drivers/net/ethernet/intel/igc/igc_main.c | 6 ------
->  1 file changed, 6 deletions(-)
+>  drivers/net/ethernet/intel/igc/igc_main.c | 12 +++++-------
+>  1 file changed, 5 insertions(+), 7 deletions(-)
 > 
 > diff --git a/drivers/net/ethernet/intel/igc/igc_main.c b/drivers/net/ethernet/intel/igc/igc_main.c
-> index 98024b46789f..0e785af0a3a3 100644
+> index 72bc5128d8b8..98024b46789f 100644
 > --- a/drivers/net/ethernet/intel/igc/igc_main.c
 > +++ b/drivers/net/ethernet/intel/igc/igc_main.c
-> @@ -7544,9 +7544,6 @@ static int __igc_resume(struct device *dev)
->  	struct igc_hw *hw = &adapter->hw;
->  	u32 err, val;
+> @@ -7536,7 +7536,7 @@ static void igc_deliver_wake_packet(struct net_device *netdev)
+>  	netif_rx(skb);
+>  }
 >  
-> -	pci_set_power_state(pdev, PCI_D0);
-> -	pci_restore_state(pdev);
-> -
->  	if (!pci_device_is_present(pdev))
->  		return -ENODEV;
->  	err = pci_enable_device_mem(pdev);
-
-__igc_shutdown() calls pci_disable_device() in the suspend paths,
-which disables bus mastering.  There are only a relative handful of
-drivers that do this, mostly for NICs, so I'm not sure if it's really
-necessary or if it's been cargo-culted.
-
-Here in the resume path we call pci_enable_device_mem(),
-pci_set_master(), and conditionally call pci_disable_link_state().  I
-suspect all those are unnecessary because pci_pm_resume() should have
-called pci_restore_state() before we get here.
-
-> @@ -7556,9 +7553,6 @@ static int __igc_resume(struct device *dev)
+> -static int __igc_resume(struct device *dev, bool rpm)
+> +static int __igc_resume(struct device *dev)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+>  	struct net_device *netdev = pci_get_drvdata(pdev);
+> @@ -7581,11 +7581,9 @@ static int __igc_resume(struct device *dev, bool rpm)
+>  	wr32(IGC_WUS, ~0);
+>  
+>  	if (netif_running(netdev)) {
+> -		if (!rpm)
+> -			rtnl_lock();
+> +		rtnl_lock();
+>  		err = __igc_open(netdev, true);
+> -		if (!rpm)
+> -			rtnl_unlock();
+> +		rtnl_unlock();
+>  		if (!err)
+>  			netif_device_attach(netdev);
 >  	}
->  	pci_set_master(pdev);
+> @@ -7595,12 +7593,12 @@ static int __igc_resume(struct device *dev, bool rpm)
 >  
-> -	pci_enable_wake(pdev, PCI_D3hot, 0);
-> -	pci_enable_wake(pdev, PCI_D3cold, 0);
-> -
->  	if (igc_is_device_id_i226(hw))
->  		pci_disable_link_state(pdev, PCIE_LINK_STATE_L1_2);
+>  static int igc_resume(struct device *dev)
+>  {
+> -	return __igc_resume(dev, false);
+> +	return __igc_resume(dev);
+>  }
 >  
+>  static int igc_runtime_resume(struct device *dev)
+>  {
+> -	return __igc_resume(dev, true);
+> +	return __igc_resume(dev);
+>  }
+>  
+>  static int igc_suspend(struct device *dev)
 > -- 
 > 2.47.1
 > 
