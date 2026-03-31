@@ -1,211 +1,155 @@
-Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012045.outbound.protection.outlook.com [40.107.200.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DBE63A543F
-	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 11:00:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774954830; cv=none; b=ux00qNPk+g2tEayGW43Nmr8q4GFCjGYzzv0OO+Hj6y5Y+CSvO1QXq/PiBz1tN1+Ry0n6+OejVe4XGm5BAsaO34touSvALDAgc7BZ0X96AbA9kNk86RE4jl5zzrg9w5Fjh+3LqtlaqJBMH8o1RQKWFITd6SAVv3ot1qAQb3Bxhic=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774954830; c=relaxed/simple;
-	bh=hGiALNHuqe9lChW6zej1kx4xR06ikgMYVbl+kBtn1Rw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iopXO2zpKMCenVphewB1igQMVSLHJxVObAwdUeS/WotmBLquLRN/YMSKjy07xiTOX8SeffGE5UjT9nyxsvFNFJ8O1iXcr+usFBZeAoL5PzBvyj/X3emuihNoMKYzPFoNma8Or0NasV2N3h0o9rAlsbMZ+UivUdLvizbVNtLrvZg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=M7l6MSKJ; arc=none smtp.client-ip=209.85.221.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29ACD3750B6;
+	Tue, 31 Mar 2026 12:08:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.200.45
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774958905; cv=fail; b=cII9e7noAV8QBFd95XAu/FQ7Bjrwr+eKdL9pJC7JC/CAfZT4F1zEtGFF7ar/vLK6KaBRqtV6L4WNew0TM6kJ8zSKaC1vG3hVFB11Pa2slxQmReKu72jMSsBodZ1+Iyg9ygDQe7EJddqczh+sojwyCYc3ejyZ2P1rTscmw03tqzI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774958905; c=relaxed/simple;
+	bh=iqlZ6W2juleQc6ub69VW6/gWWjCIkBO0cubcqr7hL/Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=jjsbXV57QYkWsn8HpIB8O66JTDs5tHYg37Ta6FTbNJSFhBCnEZFx81ajToSOtWvT7DLqNp2lp2XIXcipbdYU1EnQBqk9upBtC9oItGCnZQwyRDsOgN+cZaT9F0/LT1zSa3Gp8Fwrkr66/fB+RwNa5o2PBhz5hs5bTNKid/hrRGA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=sSNXBJRC; arc=fail smtp.client-ip=40.107.200.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="M7l6MSKJ"
-Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-43d02a71526so962361f8f.3
-        for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 04:00:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1774954827; x=1775559627; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=4It0WZmVl5/qXPN0CzryvWQuSnTLqQkkeu2Hra/fxBs=;
-        b=M7l6MSKJwPvH/Azf4ahwMjNY2YgvUnWtX9myBz8fW6USCVlmrbyVfBAUjNtdJ8h2bD
-         WzGY1FB9sZXTYQqBJOlHXFztE5H4H9zo1alPc11YhWnTTfM0/YJ3QQCVSnafgfy17lJV
-         rP170h9gDcToOCjWsEpXt7d35JYIoLTIFS6RFkqk32op6RoBlVHLL2Ty6uXV3RWDvLs7
-         /akWkMy4Zu4eDY5rFC1ANGmt/x6If0C6oYGg086JBTbKcrAJFD1ABXK1hJyHEn/5ChUF
-         SHpjuTrmIZevq9SxEEJJUrW1cwmttZKvpmovX1gUCeL3USRYxNs5A+gjsrqnqA1Mkb0e
-         Jk1g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774954827; x=1775559627;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4It0WZmVl5/qXPN0CzryvWQuSnTLqQkkeu2Hra/fxBs=;
-        b=C94SqCgbJaG5vZBhvn2IRRaLtmJyaaYi43v1B97fJddLWgZd+I9fX8DqnKChK99ait
-         28fsjcrb3RSQF46pNNqd51uvZVLw6fJPVjs2jyzT3uILD2tw3h/aAeQmUBWUuHhUUiqX
-         t0b00Zu5hcmz2OYAniXMlTIaZPg3b0RLAzrOwlZ8SE5JsY9dtb/y93ThO6y/OeXHhLqt
-         VjT6Mfi/jP0gAWNVR6AUjEapxa53tUgwSkz292lidjVs4AH1XP8GCH2rPGbqN4x64n1r
-         wtO8kXNCMe58hEnM72F8Jqa/7vH3JjBrPMDu9DwIr5XaRh7jKuiB4zjdxvp/0ZrvauKC
-         Kp3w==
-X-Forwarded-Encrypted: i=1; AJvYcCXOHPpnpo+3x4cwrF8abzjAyCjEYmXsYksiXX+rWJ3GH9tQ9bYg3gKYRWky1RqSk5/J/0eNA8aOOPU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy8KwN+fNOPz26nlEsKZ0fwZQEHPkzEaz00R02a3mxsszSLkG2V
-	itFgV4et1c+cz4/vDg5Wl3qG31hn2wN7SE3aLR5tuP9DA+wLom9IUJlHZnLi41lgPC4=
-X-Gm-Gg: ATEYQzwtq1QMr4Z1YaeMJ3/c0D92iwON0XTFyzibHvPCXixA35eAEw2f9ISIOAsm/sd
-	+D4tuJlRYjBlf8ojUKg6HI9/9jka45oz8Ag5kpvsDnHHEv/96ZLOj/BozWCpxlWtcVwx6fXpe/p
-	EZaOkV2Lqe7NYjq2Kv465VksCXvalaByq4zm9rfkCwXAR9JT/RgKKCsjFkVcmelfyl4QEUWIZgq
-	E61xYQ+QtKvSNW4wIk1N3zO/BiWG/eztdwwI90+gjrbv+t0h9ZijC++fWhsC52jidFvh+cRDR+8
-	Pr6mu5P30bum1eYT/1/YfhwXVbfdByDQSlEFYvvwJzgXIX/MjrHLUd17SPYOaCIhXuXAaGA27bb
-	8Y4WoO+9a8v6Ge3SASDAxX7dUeGcn3OesOX1duTw49AZ3PKMwyG/z+B7w9dSAp/ImAGNW67ZISn
-	tTLOZntc3f45VCRWR6je1CuXtAaA==
-X-Received: by 2002:a05:6000:2505:b0:43b:962b:5314 with SMTP id ffacd0b85a97d-43b9e9e8f39mr27390891f8f.19.1774954827290;
-        Tue, 31 Mar 2026 04:00:27 -0700 (PDT)
-Received: from [192.168.0.20] ([212.21.133.10])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43cf21ebef9sm27611019f8f.13.2026.03.31.04.00.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 31 Mar 2026 04:00:26 -0700 (PDT)
-Message-ID: <d9f09a41-9d10-4778-b49a-d54504020636@suse.com>
-Date: Tue, 31 Mar 2026 14:00:25 +0300
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="sSNXBJRC"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=bUS6xNE3XpZLEJ3AxaHhy7pfe1BCne3lL2iv37miGwQpJ+HO1rbQfHKh2zGB3Uf/vN0fFYkqSpbkiZROqIe1J/1izJfhDq4We6VOkiGw1pW33agkFGElOe57Y+EsfDPLj0IU38mI8opU4DeTgEqbRrX9O6BXAoWEEDth+TNJsRP6jAq0tf/c/YTuurncIFtaN5N+l2B93ZEcvJ8NkE1g7Rwmhf6JuznT96k+NPnPWsnMwreC7AyoRQqRGSr8a23zAXQB92H7n7wEjqZInZC/17N7mIopxUMopcFK/6nO+RT8WHB0BgysvtpJQGcxnoNUKHcq3fH2qyzehAgcG85BcA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=AMuiR5FANByCN2kHwFzhr8xHmsKqH7ZwueFZJt//iU0=;
+ b=hX8E8DzEIG+GyE/B+Ghtfl+d6h/StZk3vPAYVPyCkLMEVrfSoPHZx9xNq2LLgPdim+EGTi0iOB1qhWY2rlDi+rAuxZQ48wB/zyZhG1FuRozdBxA1AIsZEcE1BMzsREhCTHZZqDC6yJVx+0U6+FggFyc2OiIaw+TS6hHjrshRviYo2FVw5vsYdb1kbZ9/UrDeTJGGmUaTfcAzyd9GecEEw6OLnt8W4czYj49UNw4C9YY2aD3fxWnMI5zakN2lVQsYF5RDmUUG5k3AK7kKnMaHCibGua2gGDjj15e5Llgcf3DL/gJ7wiyN2TSwv9GyOeEcIuOPObf63n03EpQqOqAuYg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AMuiR5FANByCN2kHwFzhr8xHmsKqH7ZwueFZJt//iU0=;
+ b=sSNXBJRClnnDQEadsZ4VjXxrd+QlR8jsiZvL/zB0FxXFO46CXobvWYyc+pTFMJCPWajDNHieUVS9Xh54Jl1KLA7wmnk9xeLAtOXXxfXxnQ5qFUEVCvfl+l4frqW/e4/rgTuz5D9K1TzW0Hurs8Q8hEDyWTZb8fhyhaAmCBrC++YQR3NT78Rg3MPTGVWPio1y3BEAHOMpMLb910fPNpu6SDgRBBI8mKMS3+W0hMf4DENVhcO390QHrW9wTqiE9in8B7AM74XyGk9endwE7sknQ5Kgc/PRht/woseRqLNUUsumMG0AKM3sw8XC6IAZpdaOISVmxGeKtOUv0MKSA/qNIg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by DM4PR12MB8560.namprd12.prod.outlook.com (2603:10b6:8:189::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.12; Tue, 31 Mar
+ 2026 12:08:18 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%5]) with mapi id 15.20.9769.014; Tue, 31 Mar 2026
+ 12:08:17 +0000
+Date: Tue, 31 Mar 2026 09:08:16 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: "Tian, Kevin" <kevin.tian@intel.com>
+Cc: Nicolin Chen <nicolinc@nvidia.com>, "will@kernel.org" <will@kernel.org>,
+	"robin.murphy@arm.com" <robin.murphy@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"joro@8bytes.org" <joro@8bytes.org>,
+	"praan@google.com" <praan@google.com>,
+	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+	"miko.lenczewski@arm.com" <miko.lenczewski@arm.com>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	"iommu@lists.linux.dev" <iommu@lists.linux.dev>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Williams, Dan J" <dan.j.williams@intel.com>,
+	"jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+	Vikram Sethi <vsethi@nvidia.com>,
+	"linux-cxl@vger.kernel.org" <linux-cxl@vger.kernel.org>
+Subject: Re: [PATCH v3 3/3] iommu/arm-smmu-v3: Allow ATS to be always on
+Message-ID: <20260331120816.GW310919@nvidia.com>
+References: <cover.1772833963.git.nicolinc@nvidia.com>
+ <0e8d1ee1557c54943dd15ff836576de4c3aa58b6.1772833963.git.nicolinc@nvidia.com>
+ <BN9PR11MB52760A7F20A1CC2BC0DB018A8C53A@BN9PR11MB5276.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <BN9PR11MB52760A7F20A1CC2BC0DB018A8C53A@BN9PR11MB5276.namprd11.prod.outlook.com>
+X-ClientProxiedBy: MN0P221CA0012.NAMP221.PROD.OUTLOOK.COM
+ (2603:10b6:208:52a::22) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 10/31] x86/virt/tdx: Add extra memory to TDX Module for
- Extensions
-To: Xu Yilun <yilun.xu@linux.intel.com>, linux-coco@lists.linux.dev,
- linux-pci@vger.kernel.org, dan.j.williams@intel.com, x86@kernel.org
-Cc: chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com,
- yilun.xu@intel.com, zhenzhong.duan@intel.com, kvm@vger.kernel.org,
- rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com, kas@kernel.org,
- xiaoyao.li@intel.com, vishal.l.verma@intel.com, linux-kernel@vger.kernel.org
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-11-yilun.xu@linux.intel.com>
-From: Nikolay Borisov <nik.borisov@suse.com>
-Content-Language: en-US
-Autocrypt: addr=nik.borisov@suse.com; keydata=
- xsFNBGcrpvIBEAD5cAR5+qu30GnmPrK9veWX5RVzzbgtkk9C/EESHy9Yz0+HWgCVRoNyRQsZ
- 7DW7vE1KhioDLXjDmeu8/0A8u5nFMqv6d1Gt1lb7XzSAYw7uSWXLPEjFBtz9+fBJJLgbYU7G
- OpTKy6gRr6GaItZze+r04PGWjeyVUuHZuncTO7B2huxcwIk9tFtRX21gVSOOC96HcxSVVA7X
- N/LLM2EOL7kg4/yDWEhAdLQDChswhmdpHkp5g6ytj9TM8bNlq9I41hl/3cBEeAkxtb/eS5YR
- 88LBb/2FkcGnhxkGJPNB+4Siku7K8Mk2Y6elnkOctJcDvk29DajYbQnnW4nhfelZuLNupb1O
- M0912EvzOVI0dIVgR+xtosp66bYTOpX4Xb0fylED9kYGiuEAeoQZaDQ2eICDcHPiaLzh+6cc
- pkVTB0sXkWHUsPamtPum6/PgWLE9vGI5s+FaqBaqBYDKyvtJfLK4BdZng0Uc3ijycPs3bpbQ
- bOnK9LD8TYmYaeTenoNILQ7Ut54CCEXkP446skUMKrEo/HabvkykyWqWiIE/UlAYAx9+Ckho
- TT1d2QsmsAiYYWwjU8igXBecIbC0uRtF/cTfelNGrQwbICUT6kJjcOTpQDaVyIgRSlUMrlNZ
- XPVEQ6Zq3/aENA8ObhFxE5PLJPizJH6SC89BMKF3zg6SKx0qzQARAQABzSZOaWtvbGF5IEJv
- cmlzb3YgPG5pay5ib3Jpc292QHN1c2UuY29tPsLBkQQTAQoAOxYhBDuWB8EJLBUZCPjT3SRn
- XZEnyhfsBQJnK6byAhsDBQsJCAcCAiICBhUKCQgLAgQWAgMBAh4HAheAAAoJECRnXZEnyhfs
- XbIQAJxuUnelGdXbSbtovBNm+HF3LtT0XnZ0+DoR0DemUGuA1bZAlaOXGr5mvVbTgaoGUQIJ
- 3Ejx3UBEG7ZSJcfJobB34w1qHEDO0pN9orGIFT9Bic3lqhawD2r85QMcWwjsZH5FhyRx7P2o
- DTuUClLMO95GuHYQngBF2rHHl8QMJPVKsR18w4IWAhALpEApxa3luyV7pAAqKllfCNt7tmed
- uKmclf/Sz6qoP75CvEtRbfAOqYgG1Uk9A62C51iAPe35neMre3WGLsdgyMj4/15jPYi+tOUX
- Tc7AAWgc95LXyPJo8069MOU73htZmgH4OYy+S7f+ArXD7h8lTLT1niff2bCPi6eiAQq6b5CJ
- Ka4/27IiZo8tm1XjLYmoBmaCovqx5y5Xt2koibIWG3ZGD2I+qRwZ0UohKRH6kKVHGcrmCv0J
- YO8yIprxgoYmA7gq21BpTqw3D4+8xujn/6LgndLKmGESM1FuY3ymXgj5983eqaxicKpT9iq8
- /a1j31tms4azR7+6Dt8H4SagfN6VbJ0luPzobrrNFxUgpjR4ZyQQ++G7oSRdwjfIh1wuCF6/
- mDUNcb6/kA0JS9otiC3omfht47yQnvod+MxFk1lTNUu3hePJUwg1vT1te3vO5oln8lkUo9BU
- knlYpQ7QA2rDEKs+YWqUstr4pDtHzwQ6mo0rqP+zzsFNBGcrpvIBEADGYTFkNVttZkt6e7yA
- LNkv3Q39zQCt8qe7qkPdlj3CqygVXfw+h7GlcT9fuc4kd7YxFys4/Wd9icj9ZatGMwffONmi
- LnUotIq2N7+xvc4Xu76wv+QJpiuGEfCDB+VdZOmOzUPlmMkcJc/EDSH4qGogIYRu72uweKEq
- VfBI43PZIGpGJ7TjS3THX5WVI2YNSmuwqxnQF/iVqDtD2N72ObkBwIf9GnrOgxEyJ/SQq2R0
- g7hd6IYk7SOKt1a8ZGCN6hXXKzmM6gHRC8fyWeTqJcK4BKSdX8PzEuYmAJjSfx4w6DoxdK5/
- 9sVrNzaVgDHS0ThH/5kNkZ65KNR7K2nk45LT5Crjbg7w5/kKDY6/XiXDx7v/BOR/a+Ryo+lM
- MffN3XSnAex8cmIhNINl5Z8CAvDLUtItLcbDOv7hdXt6DSyb65CdyY8JwOt6CWno1tdjyDEG
- 5ANwVPYY878IFkOJLRTJuUd5ltybaSWjKIwjYJfIXuoyzE7OL63856MC/Os8PcLfY7vYY2LB
- cvKH1qOcs+an86DWX17+dkcKD/YLrpzwvRMur5+kTgVfXcC0TAl39N4YtaCKM/3ugAaVS1Mw
- MrbyGnGqVMqlCpjnpYREzapSk8XxbO2kYRsZQd8J9ei98OSqgPf8xM7NCULd/xaZLJUydql1
- JdSREId2C15jut21aQARAQABwsF2BBgBCgAgFiEEO5YHwQksFRkI+NPdJGddkSfKF+wFAmcr
- pvICGwwACgkQJGddkSfKF+xuuxAA4F9iQc61wvAOAidktv4Rztn4QKy8TAyGN3M8zYf/A5Zx
- VcGgX4J4MhRUoPQNrzmVlrrtE2KILHxQZx5eQyPgixPXri42oG5ePEXZoLU5GFRYSPjjTYmP
- ypyTPN7uoWLfw4TxJqWCGRLsjnkwvyN3R4161Dty4Uhzqp1IkNhl3ifTDYEvbnmHaNvlvvna
- 7+9jjEBDEFYDMuO/CA8UtoVQXjy5gtOhZZkEsptfwQYc+E9U99yxGofDul7xH41VdXGpIhUj
- 4wjd3IbgaCiHxxj/M9eM99ybu5asvHyMo3EFPkyWxZsBlUN/riFXGspG4sT0cwOUhG2ZnExv
- XXhOGKs/y3VGhjZeCDWZ+0ZQHPCL3HUebLxW49wwLxvXU6sLNfYnTJxdqn58Aq4sBXW5Un0Q
- vfbd9VFV/bKFfvUscYk2UKPi9vgn1hY38IfmsnoS8b0uwDq75IBvup9pYFyNyPf5SutxhFfP
- JDjakbdjBoYDWVoaPbp5KAQ2VQRiR54lir/inyqGX+dwzPX/F4OHfB5RTiAFLJliCxniKFsM
- d8eHe88jWjm6/ilx4IlLl9/MdVUGjLpBi18X7ejLz3U2quYD8DBAGzCjy49wJ4Di4qQjblb2
- pTXoEyM2L6E604NbDu0VDvHg7EXh1WwmijEu28c/hEB6DwtzslLpBSsJV0s1/jE=
-In-Reply-To: <20260327160132.2946114-11-yilun.xu@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|DM4PR12MB8560:EE_
+X-MS-Office365-Filtering-Correlation-Id: 361a4fed-d852-4610-0bb3-08de8f1e3177
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|1800799024|366016|22082099003|56012099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	96xgR8Kn3bP1Gpg9ayb5bQ+SgZu0NTCpksW+HIX5Ljz4RHIz/jVKug5C8I8xtmpH3csyDMORl8VTXQkRENWUDGD5et7SRDdYH0UNgDfEPIn9t2OYo9igxCEGwWIn92EKWD8MKmPb9zWbUsYM3jN8WFXP+Tz6wJMIG3yRYPxPoMvgsjaGYOnyWfewaLC+AUdtkGDIE5fxgVhVGVWnuppdQs3V9+J3j0nmxD9YfIkb/o3YDV0o02qiBJ93m/64uTOO3Cu9TmTIkobyFIMxrfYGefmvxiNgfe3oq6QRpM3QRtyFQ8sBtMiHh38hC1C2PAgYkDYE92HI1wWQN7wjCYwm4GC4tqT1m3muCf3HT20CEg5FmAcNAUcHlkBOr2G8jFvkJII1gzvANM8S4XF8amu3WmD/s3tx/Go3zz1A1ugY8aZzOhvrqL00vGlS0VMp2UnvYry5YGEGKKzeWHxaNPzDPDGSq8XYZz2Du0vJybPCAiERXcIboYerc3Cp+A1623zIM9a6m5l2skDMMnUj404CkHHS+2zYSkOif3ZUk/dbOtqO/FScH5QVTixZJal44ymMJq8SF4lcol9yU1f1J/gp48OQcOj0HVeZiSUuupFUq+4k8QA/OWeMvOb5W0btYhsiBUby3nRjxb96L8D38chddh6TqPXiGf1DWBcRqCd+hEmNI/XwQLgfmNsqzn3vNPWrNKKF5Bzn2WITVMtEWaeYYTjsn9bzijT0P34E0HQvzVg=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(1800799024)(366016)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?HOp/VAUYCMWLsya9kpsd8Fikr99V0m60PNBPxcD1HZlsUo2iPMzpvcpHd6KU?=
+ =?us-ascii?Q?7zFBdGEmap2CHir2GmMQ3T7puGYWGtzQ6JREcnne47rtDnGKM53FzcQkVYle?=
+ =?us-ascii?Q?//6GIeU8f1+QbXZuDjVCaB4h52frKCA1reyI1S+JZmUbX1o5rb484RY6aMJf?=
+ =?us-ascii?Q?InowfXQ2RWCxN3/1NV4sL4U1cU2F+rHtOIimv5iLibmquW5XoVcdbBTuqpAE?=
+ =?us-ascii?Q?EfXmkCpoUTgSMt5TsQ6bxJWs3n9jx+dBO4ayPZmWUdsIl+OsiUZTGtWduEt4?=
+ =?us-ascii?Q?YitBUxT+z9dgeqvWW4oRWZiAzbT6aliRGaFSqZRR6ga+EMxCFl8+PwSDAYJw?=
+ =?us-ascii?Q?C23GE0UpWFft61O+Hz/Ol4lImWWE2+UfSU9Fc7RUCC3CHhx1Br6l79vuY2qR?=
+ =?us-ascii?Q?q/Dkv53Jy5RemQtgsNj7rkFfTzkZcIP+aRjGSZxJ/0fycknCdIWvCK+btQND?=
+ =?us-ascii?Q?SYlE3mKbxEU/mmFud5ma3ZC/q2YmTrwy6ns6Ub1ALZQ7Ge12torrUGPb0jVd?=
+ =?us-ascii?Q?MAuMYVjzwVemn4YzOr1ZyGbIukSC0gpLzmPnTcwyHCZQgOr3x5K+dJD/jQ0G?=
+ =?us-ascii?Q?bICtjQqBOvgaOHusLjOryoG+TKaGPNielQ7N86+vSsCv7byqAhuYxdLc4xeC?=
+ =?us-ascii?Q?Ezjl+wpZ2MW6jm8fkrngyx9VQlKflO6XIQCnEBzSZDEsVhvq2uBCY/C6HnGx?=
+ =?us-ascii?Q?OnlTYh/k0cdlmo4RrRC8n8j3EfKTKhlkRohUxvpB0fDGbTg7ef/POIN8DBrD?=
+ =?us-ascii?Q?0G+6S8AGc4XFYgSpywCXdqCyYvD02UuDUzmu303CoId+1joVLI2MwJ1VRqwI?=
+ =?us-ascii?Q?gh6iHZ3hX4FwGHUCYKJjswhk2ItVvSYeAM/Lh+9FQz/3QHLp1uyrze4uFZxn?=
+ =?us-ascii?Q?1N20NdlVzAW0e6cIOsGLbjcw8nVrDRwaQziR6MvL7KVJJozYUI3A5nVGjwRX?=
+ =?us-ascii?Q?G9ykQUlAKdbwRlkpRzHd8RhCKrs905WaVt8r7az3Wxtxyt65OpPkM3GSzXfr?=
+ =?us-ascii?Q?8R2HRtHmn4gXOb6JQrXAt5SuR6tRff8PRWw101JBL1LyfdZvwvGMxwB5O9ej?=
+ =?us-ascii?Q?2ndhYMyQF6IDyuj9rS8dNIrfT9lffK+dCnHFvHypTOLLoTXM5ZnqpNNSWAW/?=
+ =?us-ascii?Q?HkSCJoF+VkeAVRUYWP9BdPUB/pyRBr9NAWdkjtd24SKfe7oJEMYxBAL1PdIO?=
+ =?us-ascii?Q?EiP32DK1+f/ARj7W1W/SKpnxID33OMrqKN91PGfigs9ideUZKzP+AIIfMYNg?=
+ =?us-ascii?Q?3K7gTxQ7CAlnw99zPbakdQiuJl1W00cqj2VCH3cJj0lRN5Zov4Lco5aleLh9?=
+ =?us-ascii?Q?HVnmA8VGpWagrX3zqnxkRKK4JN+VuI23YtdkTykQLu42KxFBQ4qA/zUzlkwq?=
+ =?us-ascii?Q?zYVIEePTk0c6SQP2ZNDS+XJnLBMAkjfF2KNyRoZkQzPccXv8sVzcivftVPdz?=
+ =?us-ascii?Q?XoN4X54w7DG8qmty/8YUmF5mGByPOm7xFT+6l5//JJwkH/KJQ7gpvspAljhe?=
+ =?us-ascii?Q?gXn5377VLRL2tRAAvOsVcypRPYxUC02UoWOXhLTWcQDDyjEFMq+0VWgGZkIh?=
+ =?us-ascii?Q?go5yHcMwgzbeXvKY4hsDTBo9+d7RRaSRVx6pNEY7Vbr2oZhLhmYIndxWvo0E?=
+ =?us-ascii?Q?cq+7FST4MqVjGE3XvPbLKF3arPDq1fX/1s5SEpR4UZXtEHFnZAz1nrp/NyVE?=
+ =?us-ascii?Q?Pd3FzZlWaeUQOdtQ20EDZUzNEIKwWlOVpg0jW3aZaMrrGzje?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 361a4fed-d852-4610-0bb3-08de8f1e3177
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Mar 2026 12:08:17.7646
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: xKsDbKju1lC3qArWrKXPtkAZq+mQXk3IGbKF0Ti/m6fEI7d3MWG7d9vP+yiho5jO
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB8560
 
+On Tue, Mar 31, 2026 at 08:40:17AM +0000, Tian, Kevin wrote:
+> > From: Nicolin Chen <nicolinc@nvidia.com>
+> > Sent: Saturday, March 7, 2026 7:41 AM
+> > 
+> > +
+> > +	master->ats_always_on = true;
+> > +
+> > +	ret = arm_smmu_alloc_cd_tables(master);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +out_prepare:
+> > +	pci_prepare_ats(pdev, stu);
+> > +	return 0;
+> 
+> is there a problem leaving ats_always_on being true while
+> allocating cd tables fails?
 
+I would expect this error flow unwinds back up to failing device
+probe?
 
-On 27.03.26 г. 18:01 ч., Xu Yilun wrote:
-> Adding more memory to TDX Module is the first step to enable Extensions.
-> 
-> Currently, TDX Module memory use is relatively static. But, some new
-> features (called "TDX Module Extensions") need to use memory more
-> dynamically. While 'static' here means the kernel provides necessary
-> amount of memory to TDX Module for its basic functionalities, 'dynamic'
-> means extra memory is needed only if new optional features are to be
-> enabled. So add a new memory feeding process backed by a new SEAMCALL
-> TDH.EXT.MEM.ADD.
-> 
-> The process is mostly the same as adding PAMT. The kernel queries TDX
-> Module how much memory needed, allocates it, hands it over, and never
-> gets it back.
-> 
-> TDH.EXT.MEM.ADD uses tdx_page_array to provide control (private) pages
-> to TDX Module. Introduce a tdx_clflush_page_array() helper to flush
-> shared cache before SEAMCALL, to avoid shared cache write back damages
-> these private pages.
-> 
-> For now, TDX Module Extensions consume relatively large amount of
-> memory (~50MB). Use contiguous page allocation to avoid permanently
-> fragment too much memory. Print this readout value on TDX Module
-> Extensions initialization for visibility.
-> 
-> Co-developed-by: Zhenzhong Duan <zhenzhong.duan@intel.com>
-> Signed-off-by: Zhenzhong Duan <zhenzhong.duan@intel.com>
-> Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
-> ---
->   arch/x86/virt/vmx/tdx/tdx.h |  1 +
->   arch/x86/virt/vmx/tdx/tdx.c | 92 ++++++++++++++++++++++++++++++++++++-
->   2 files changed, 91 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/x86/virt/vmx/tdx/tdx.h b/arch/x86/virt/vmx/tdx/tdx.h
-> index 870bb75da3ba..31ccdfcf518c 100644
-> --- a/arch/x86/virt/vmx/tdx/tdx.h
-> +++ b/arch/x86/virt/vmx/tdx/tdx.h
-> @@ -60,6 +60,7 @@
->   #define TDH_VP_WR			43
->   #define TDH_SYS_CONFIG_V0		45
->   #define TDH_SYS_CONFIG			SEAMCALL_LEAF_VER(TDH_SYS_CONFIG_V0, 1)
-> +#define TDH_EXT_MEM_ADD			61
->   
->   /* TDX page types */
->   #define	PT_NDA		0x0
-> diff --git a/arch/x86/virt/vmx/tdx/tdx.c b/arch/x86/virt/vmx/tdx/tdx.c
-> index 4fb56bb442f0..5fae17c13191 100644
-> --- a/arch/x86/virt/vmx/tdx/tdx.c
-> +++ b/arch/x86/virt/vmx/tdx/tdx.c
-> @@ -560,7 +560,7 @@ static int tdx_alloc_pages_contig(unsigned int nr_pages, struct page **pages,
->    * Similar to tdx_page_array_alloc(), after allocating with this
->    * function, call tdx_page_array_populate() to populate the tdx_page_array.
->    */
-> -static __maybe_unused struct tdx_page_array *
-> +static struct tdx_page_array *
->   tdx_page_array_alloc_contig(unsigned int nr_pages)
->   {
->   	return tdx_page_array_alloc(nr_pages, tdx_alloc_pages_contig, NULL);
-> @@ -643,7 +643,7 @@ EXPORT_SYMBOL_GPL(tdx_page_array_create_iommu_mt);
->   #define HPA_LIST_INFO_PFN		GENMASK_U64(51, 12)
->   #define HPA_LIST_INFO_LAST_ENTRY	GENMASK_U64(63, 55)
->   
-> -static u64 __maybe_unused hpa_list_info_assign_raw(struct tdx_page_array *array)
-> +static u64 hpa_list_info_assign_raw(struct tdx_page_array *array)
->   {
->   	return FIELD_PREP(HPA_LIST_INFO_FIRST_ENTRY, 0) |
->   	       FIELD_PREP(HPA_LIST_INFO_PFN,
-> @@ -1513,6 +1513,94 @@ static void tdx_clflush_page(struct page *page)
->   	clflush_cache_range(page_to_virt(page), PAGE_SIZE);
->   }
->   
-> +static void tdx_clflush_page_array(struct tdx_page_array *array)
-> +{
-> +	for (int i = 0; i < array->nents; i++)
-
-shouldn't the actual number of entries be adjusted as per offset, 
-similarly to how 'nents' in tdx_page_array_validate_release is calculated?
-
-
-<snip>
+Jason
