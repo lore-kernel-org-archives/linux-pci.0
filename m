@@ -1,248 +1,182 @@
-Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE11728CF4A
-	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 03:30:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.52
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774927810; cv=pass; b=q8/Lu45ooTbZqy0flgbDiZy7M7pt+JCSuErK5lQ+UW502bKaRGvgBGD3dgZVdvQ9STSdcUuDxMwJ88z535JogVABllZb2ze4f5SD/MoRBhhFcdwEnG9zT5fvMcoxdiOWdooONIhP0up3DYkrHPUYR1BZNkcGGljJuhXD4AjalOU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774927810; c=relaxed/simple;
-	bh=Vqz0wbjll/hAJPEOie6RM4KJSz7Fs7lEo3U/R+kG3UI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZOv4yLlI8Yfdl6npiqFMwLttwt9WfhRWH9WSRBAClkreDb361GTlInpq7uTCRl3H2CAFEZRmvRsKUbpCI4enGTCfP1QzM0vH5aYmA49+QyllBqR+YLAKp/Ug7FUNK0AoEoCfbMzmXZ/VXzISQs/DDCkdVfco/8iuWjzl7Y0PL7Q=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qL3DKFk+; arc=pass smtp.client-ip=209.85.208.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBE89288D0;
+	Tue, 31 Mar 2026 03:32:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774927950; cv=none; b=ZMBEtgARG48HNem+XBelCV8WC41XayV51hN0n3U1ktQzeM3+QjiCeJoTHafEJMZWoZgByQWOopWshj0XZqfiKyAW+T9Sj5v3eq+gMiSdmYxzJ1OBHB2cJGCsuH1LLdf9dRCQiLfy4v9c2P77c/B7e4M2KopPPhZf8qziNQYkklc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774927950; c=relaxed/simple;
+	bh=uPC6t3Ah4j7XoqiNVRQrTJhNDOCiTbFxwuOpGbLtyls=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ijg5sWB2IqCO5inzfKvanr35oQqmH57ds77Brph54OnbaVnTTStil0LAZAWP2Hjo5A9CCW/kl5OhOv60Ph4ephTXTsjQnQhMjghuWWjKDBc20y4hDFpc6EvL55WetqcQ15ijrlEcL8cJaLsgPlm/xiSbuP/IosVlltW6ACOZZnQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lbkzO576; arc=none smtp.client-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qL3DKFk+"
-Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-66bb7e098b1so1948586a12.3
-        for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 20:30:08 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1774927807; cv=none;
-        d=google.com; s=arc-20240605;
-        b=kry0jN3yY8ZkqZWi/lEDTVqe9P0KWnT8aghm9ZJzJ3N4GgVgUHmC8PJUKmTlHd3ONa
-         37WjLnLtedx9jlhG0Hpv6OwRmc2oefMofgOfZeLDaCEdWp5909C0O8YGPkT91xxvLe3j
-         VttDmsSD9HbCOA1QlptbcrFkxbFiJqTHHsyoAembl9tX0kJ9oKNFaAdHSSdH8l0gpTqb
-         hNYuAjdrBgVPWj8MsDsZw1eNYGuW3vSwcA9EqHyX93E+ktKLASdDbaPgdRm0Yuui9zP5
-         5sFDpYMCUipxie0sHyOmKunB1XsJQ0KExsGuKUAcsg39C0h8JoO9XlTtW8v/to9PqKl1
-         THcA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Fbhm8CzZ4y2XM5LEjJUdYiChU7X46Cm6Ehudfb4QOfU=;
-        fh=j/AYXpoJuso8iMVgG7rABDXSUQ8qALk5XoVkBGsuQZI=;
-        b=iyADUSXE3wZC5yMYgtBTBwrhvCAOl4zvjL5sykRUlfHCTy6wiOo1QeQ+E1VYQY6BFN
-         TSGNECb+YgW7+9z9tO0UM3aXrPugcZwIki6txHxnCz5qYfjfSutuzIj3mRJdx6k6Km05
-         NBDLbacDnyWwkIKFG9YEVkW8UMHi/DTemSrmsDRhLTWk4GgTpJscE8uHRi9M143cuif0
-         8XZ0QH3ZHhpBb7tjtJDIWqqQ4Mnh9H7xYkWe8FrSYoO5Dsl4VpU5exPfgOgpI0nBqO4v
-         cZ4qFwoS2cc11PD+r1tR/GXXMblq5hTlXC08r4JwS37jlv6F7K+ZjHYqrvTWnpvZHqQq
-         DbDQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1774927807; x=1775532607; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Fbhm8CzZ4y2XM5LEjJUdYiChU7X46Cm6Ehudfb4QOfU=;
-        b=qL3DKFk+AhxNLVrweVLdebsnnRL9yHRQeoFEHbsvv1taablyE0qarKkxBnvyyTohil
-         FPUvBCQhQGD038uilYe2wdk8ltY0bLN24EHzpAD7lt2E+BGM4BSnyr1OV0oZxmIM9hzu
-         ieIwmT0HCSSt4efkdPce+/r3JoIcPr7Ge4Vx2oIuj1sYidoJPOcZa1Py1B0vbQNgqJCV
-         36b+0pp7T7bZcBYWPRxeylvpvThyzgfyEp/gQNCBILusQyVwBzumnwSXCojJLHCw1BEk
-         fYP53d3nwguQ72eQZe/dYgX/7ByXbfVfFIxT/USqvJWU6hFt63Ny3gjiefeIQ72VmlGT
-         GGoQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774927807; x=1775532607;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Fbhm8CzZ4y2XM5LEjJUdYiChU7X46Cm6Ehudfb4QOfU=;
-        b=srxrhoE0iIj1rK9VhmGIetoDlJj2eUdgr6tX+Ar99gvzzGeO+OjvpAa8eMBS6rwdJG
-         VUEMze/gUrZRRBLg1wHxvRhCbg9Zeda8183jGJrlRzXvibLOPNnZN9XV7eDXRLTTaIUQ
-         2hrPw2Ur2Mxvtdayfcy8grRXf23X25Kxms194H86mBOjT8cJM2UJ55ykfEV4fQqXNHqu
-         c+yHmvD9mXbkXZY8CR2Knhlt1w0XV/IRD8ruTwdmPhwNSCOqjvMsNJ8w5ssC0b5HMsR4
-         2OvhjQJR66alIMRCfVOt4hYBkC2RdL/luWzoUvaoDUReJ/VEfUQZHteToSPA2QbmpYQ0
-         Zzcg==
-X-Forwarded-Encrypted: i=1; AJvYcCXZkk/mstcVViT1IclRmLBnIfq0T8TNRiZeLLBIGcmbx9AbjB35vO72z5gVAIYqXKBHWFGWDLVqDoM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzwOmQyCBpKEM5TScCVo1h9H95sM131HOgmu9vdSa6K7UJcs768
-	i+KEmyLts4xBryXxRQCUuhV9GgLkQJzNSmrK4C++6n9gTo+f/iBLrkJanvl+p9jU96qG3cEdeFK
-	y5v2flSkmb+a/LMsXyl3YWkWYj4kDUoo=
-X-Gm-Gg: ATEYQzxZznentFLd7KubUegklUDV17+1IeeRfawXd8Mq6BUaNAyDFwem+f1+KBNQzx2
-	trodq2/33IMM4myeTfFt9LIlPkF/jmEgxlb4OW5RlLsVqITFgwxc6l7ABKcJpdbzI+PXC9bdoyB
-	Dkxd9RqFI/o68BRJMGpZD1r4TQQjMyJXeBU+6M3gbo0iSZFTstOc7iPB6QCTw6gPASvACnT2dlh
-	wEqKIxZMXMb3jJfXRUyvYRUIUncApaErsI6oH5S+pnJ2S67HL4E+RTYTtotEoYVMkub0gN90oNB
-	Hg4t22P5h1hIpZWu176CBntvxcEY9gt6Z2te6Q==
-X-Received: by 2002:a17:906:208f:b0:b98:132e:ca97 with SMTP id
- a640c23a62f3a-b9b5094c6femr664652066b.47.1774927806887; Mon, 30 Mar 2026
- 20:30:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lbkzO576"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1774927948; x=1806463948;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=uPC6t3Ah4j7XoqiNVRQrTJhNDOCiTbFxwuOpGbLtyls=;
+  b=lbkzO576EbWh0S8hq2969mf/jAF5JtaI1fYBkOotmv5tDSiiBvygPzKB
+   tpat4BvdPylO6Kk/81ELkvhZn1o4O0R5/ESZSdPCF1i3UB0mPDyUy//o9
+   rBcOgDPISuYOgcYvH7/a73jY7lYXDvIwU0psmWUTiFzHrVk/uEaJ9INl9
+   ecjfJnnLS7YUcKJFo2al7E0Z6xeT8jbOzGnCJq83I0rDVrzviVxlB19/y
+   IurjB9ViZaW3sSsdqzb5g1BbLeGZtsn7BfozmIhHlyPIc2timv1gFN7D3
+   T31/K17luZvnj9Q6L8uBpnOXyA5PPzP9bQZhdNlMXHspcU8VLZNvDrirp
+   Q==;
+X-CSE-ConnectionGUID: eus3jMksSXOT16PUzAcGQQ==
+X-CSE-MsgGUID: PkdahUvUSLu9xZNvWZviRA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11744"; a="79790944"
+X-IronPort-AV: E=Sophos;i="6.23,151,1770624000"; 
+   d="scan'208";a="79790944"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2026 20:32:27 -0700
+X-CSE-ConnectionGUID: bhnledyGR6aHGm8BU8tweQ==
+X-CSE-MsgGUID: i9Ijzv1gSomcENSmyY4L+A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,151,1770624000"; 
+   d="scan'208";a="221834925"
+Received: from allen-sbox.sh.intel.com (HELO [10.239.159.30]) ([10.239.159.30])
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2026 20:32:24 -0700
+Message-ID: <d309de55-a1ec-4c99-b464-9ae9c0d9e027@linux.intel.com>
+Date: Tue, 31 Mar 2026 11:31:00 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260211032935.2705841-1-alistair.francis@wdc.com>
- <20260211032935.2705841-23-alistair.francis@wdc.com> <20260303150040.00007458@huawei.com>
-In-Reply-To: <20260303150040.00007458@huawei.com>
-From: Alistair Francis <alistair23@gmail.com>
-Date: Tue, 31 Mar 2026 13:29:40 +1000
-X-Gm-Features: AQROBzBc83sivh6UcNOP_l8RUTr7K-DmfbPtqXOhOGreZW7lZXTka_jt4qB4WZ8
-Message-ID: <CAKmqyKM6CBucDEo0aKZVWrKtozbT_ddk0PaZFtHyEMMMx558JA@mail.gmail.com>
-Subject: Re: [RFC v3 22/27] lib: rspdm: Support SPDM certificate validation
-To: Jonathan Cameron <jonathan.cameron@huawei.com>
-Cc: bhelgaas@google.com, lukas@wunner.de, rust-for-linux@vger.kernel.org, 
-	akpm@linux-foundation.org, linux-pci@vger.kernel.org, 
-	linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	alex.gaynor@gmail.com, benno.lossin@proton.me, boqun.feng@gmail.com, 
-	a.hindborg@kernel.org, gary@garyguo.net, bjorn3_gh@protonmail.com, 
-	tmgross@umich.edu, ojeda@kernel.org, wilfred.mallawa@wdc.com, 
-	aliceryhl@google.com, Alistair Francis <alistair@alistair23.me>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] PCI: Disable ATS via quirk before notifying IOMMU
+ drivers
+To: David Matlack <dmatlack@google.com>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Lobakin <aleksander.lobakin@intel.com>,
+ Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+ Bartosz Pawlowski <bartosz.pawlowski@intel.com>,
+ David Woodhouse <dwmw2@infradead.org>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, Raghavendra Rao Ananta <rananta@google.com>
+References: <20260327211649.3816010-1-dmatlack@google.com>
+Content-Language: en-US
+From: Baolu Lu <baolu.lu@linux.intel.com>
+In-Reply-To: <20260327211649.3816010-1-dmatlack@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Mar 4, 2026 at 1:00=E2=80=AFAM Jonathan Cameron
-<jonathan.cameron@huawei.com> wrote:
->
-> On Wed, 11 Feb 2026 13:29:29 +1000
-> alistair23@gmail.com wrote:
->
-> > From: Alistair Francis <alistair@alistair23.me>
-> >
-> > Support validating the SPDM certificate chain.
-> >
-> > Signed-off-by: Alistair Francis <alistair@alistair23.me>
->
-> Only minor thing inline + observation on the code that I think we want to=
- remove
-> for now wrt to checking the root cert.
->
-> > diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
-> > index 1e5656144611..728b920beace 100644
-> > --- a/lib/rspdm/state.rs
-> > +++ b/lib/rspdm/state.rs
->
-> > @@ -743,4 +746,92 @@ pub(crate) fn get_certificate(&mut self, slot: u8)=
- -> Result<(), Error> {
-> >
-> >          Ok(())
-> >      }
-> > +
-> > +    pub(crate) fn validate_cert_chain(&mut self, slot: u8) -> Result<(=
-), Error> {
-> > +        let cert_chain_buf =3D &self.certs[slot as usize];
-> > +        let cert_chain_len =3D cert_chain_buf.len();
-> > +        let header_len =3D 4 + self.hash_len;
-> > +
-> > +        let mut offset =3D header_len;
-> > +        let mut prev_cert: Option<*mut bindings::x509_certificate> =3D=
- None;
-> > +
-> > +        while offset < cert_chain_len {
-> > +            let cert_len =3D unsafe {
-> > +                bindings::x509_get_certificate_length(
-> > +                    &cert_chain_buf[offset..] as *const _ as *const u8=
-,
-> > +                    cert_chain_len - offset,
-> > +                )
-> > +            };
-> > +
-> > +            if cert_len < 0 {
-> > +                pr_err!("Invalid certificate length\n");
-> > +                to_result(cert_len as i32)?;
-> > +            }
-> > +
-> > +            let _is_leaf_cert =3D if offset + cert_len as usize =3D=3D=
- cert_chain_len {
-> > +                true
-> > +            } else {
-> > +                false
-> > +            };
-> Same as the following?
->                let _is_leaf_cert =3D offset + cert_len as usize =3D=3D ce=
-rt_chain_len;
+On 3/28/26 05:16, David Matlack wrote:
+> Ensure that PCI devices with ATS disabled via quirk have it disabled
+> before IOMMU drivers are notified about the device rather than after.
+> Fix this by converting the existing quirks from final to early fixups
+> and changing the quirk logic to set a new no_ats bit in struct pci_dev
+> that prevents pci_dev.ats_cap from ever gettting set.
+> 
+> This change ensures that pci_ats_supported() takes quirks into account
+> during iommu_ops.probe_device(), when IOMMU drivers are first notified
+> about devices. It also ensures that pci_ats_supported() returns the same
+> value when the device is released in iommu_ops.release_device().
+> 
+> Notably, the Intel IOMMU driver uses pci_ats_supported() in
+> probe/release to determine whether to add/remove a device from a data
+> structure, which easily leads to a use-after-free without this fix.
 
-Yep, same thing. My way is the Rust-y way to do it
+Can you please shed more light on the above issue? In my investigation,
+iommu_ops.probe_device() is always called after the no_ats quirk,
+regardless of whether this patch is applied.
 
-Although _is_leaf_cert is unused, so I'll just remove it
+The diff of the changes I made for testing is as follows:
 
->
->
-> > +
-> > +            let cert_ptr =3D unsafe {
-> > +                from_err_ptr(bindings::x509_cert_parse(
-> > +                    &cert_chain_buf[offset..] as *const _ as *const c_=
-void,
-> > +                    cert_len as usize,
-> > +                ))?
-> > +            };
-> > +            let cert =3D unsafe { *cert_ptr };
-> > +
-> > +            if cert.unsupported_sig || cert.blacklisted {
-> > +                to_result(-(bindings::EKEYREJECTED as i32))?;
-> > +            }
-> > +
-> > +            if let Some(prev) =3D prev_cert {
-> > +                // Check against previous certificate
-> > +                let rc =3D unsafe { bindings::public_key_verify_signat=
-ure((*prev).pub_, cert.sig) };
-> > +
-> > +                if rc < 0 {
-> > +                    pr_err!("Signature validation error\n");
-> > +                    to_result(rc)?;
-> > +                }
-> > +            } else {
-> > +                // Check aginst root keyring
-> So this is the check that Dan and Jason are proposing we drop (for now).
->
-> Works for me as easy to bring back later and lets us move forward
-> in the meantime. As long as userspace gets nothing to indicate
-> that we have in any way checked this root cert we are making no false cla=
-ims.
+diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
+index 442271a1b92a..c024964ac53b 100644
+--- a/drivers/iommu/intel/iommu.c
++++ b/drivers/iommu/intel/iommu.c
+@@ -3271,6 +3271,8 @@ static struct iommu_device 
+*intel_iommu_probe_device(struct device *dev)
+                                 info->pfsid = pci_dev_id(pci_physfn(pdev));
+                         info->ats_qdep = pci_ats_queue_depth(pdev);
+                 }
++               pci_info(pdev, "ATS %s\n", info->ats_supported ?
++                        "supported" : "not supported");
+                 if (sm_supported(iommu)) {
+                         if (pasid_supported(iommu)) {
+                                 int features = pci_pasid_features(pdev);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 48946cca4be7..c63616d108b7 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5714,6 +5714,8 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 
+0x1457, quirk_intel_e2000_no_ats);
+  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1459, 
+quirk_intel_e2000_no_ats);
+  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x145a, 
+quirk_intel_e2000_no_ats);
+  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x145c, 
+quirk_intel_e2000_no_ats);
++
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0b25, quirk_no_ats);
+  #endif /* CONFIG_PCI_ATS */
 
-Will do!
+  /* Freescale PCIe doesn't support MSI in RC mode */
 
-Alistair
 
->
-> > +                let key =3D unsafe {
-> > +                    from_err_ptr(bindings::find_asymmetric_key(
-> > +                        self.keyring,
-> > +                        (*cert.sig).auth_ids[0],
-> > +                        (*cert.sig).auth_ids[1],
-> > +                        (*cert.sig).auth_ids[2],
-> > +                        false,
-> > +                    ))?
-> > +                };
-> > +
-> > +                let rc =3D unsafe { bindings::verify_signature(key, ce=
-rt.sig) };
-> > +                unsafe { bindings::key_put(key) };
-> > +
-> > +                if rc < 0 {
-> > +                    pr_err!("Root signature validation error\n");
-> > +                    to_result(rc)?;
-> > +                }
-> > +            }
-> > +
-> > +            if let Some(prev) =3D prev_cert {
-> > +                unsafe { bindings::x509_free_certificate(prev) };
-> > +            }
-> > +
-> > +            prev_cert =3D Some(cert_ptr);
-> > +            offset +=3D cert_len as usize;
-> > +        }
-> > +
-> > +        if let Some(prev) =3D prev_cert {
-> > +            if let Some(validate) =3D self.validate {
-> > +                let rc =3D unsafe { validate(self.dev, slot, prev) };
-> > +                to_result(rc)?;
-> > +            }
-> > +
-> > +            self.leaf_key =3D unsafe { Some((*prev).pub_) };
-> > +        }
-> > +
-> > +        Ok(())
-> > +    }
-> >  }
->
->
+The related kernel messages are shown below:
+
+# dmesg | grep "0000:00:01.0"
+[   15.834944] pci 0000:00:01.0: [8086:0b25] type 00 class 0x088000 PCIe 
+Root Complex Integrated Endpoint
+[   15.836382] pci 0000:00:01.0: BAR 0 [mem 
+0x1e0fff980000-0x1e0fff99ffff 64bit pref]
+[   15.836655] pci 0000:00:01.0: BAR 2 [mem 
+0x1e0fff900000-0x1e0fff93ffff 64bit pref]
+[   15.837904] pci 0000:00:01.0: calling 
+quirk_igfx_skip_te_disable+0x0/0xe0 @ 1
+[   15.838614] pci 0000:00:01.0: quirk_igfx_skip_te_disable+0x0/0xe0 
+took 0 usecs
+[   21.205177] pci 0000:00:01.0: calling  quirk_no_ats+0x0/0x40 @ 1
+[   21.206767] pci 0000:00:01.0: disabling ATS
+[   21.207916] pci 0000:00:01.0: quirk_no_ats+0x0/0x40 took 1122 usecs
+[   21.305357] pci 0000:00:01.0: DMAR: ATS not supported
+[   21.306925] pci 0000:00:01.0: Adding to iommu group 4
+[   42.564912] idxd 0000:00:01.0: Intel(R) Accelerator Device (v200)
+[   42.568653] probe of 0000:00:01.0 returned 0 after 87413 usecs
+
+
+Anything I missed?
+
+Thanks,
+baolu
+
+> 
+> This change also makes disabling ATS via quirk behave the same way as
+> the pci=noats command line option, in that pci_ats_init() bails
+> immediately and never intializes pci_dev.ats_cap.
+> 
+> Fixes: a18615b1cfc0 ("PCI: Disable ATS for specific Intel IPU E2000 devices")
+> Closes:https://lore.kernel.org/linux-iommu/aYUQ_HkDJU9kjsUl@google.com/
+> Signed-off-by: David Matlack<dmatlack@google.com>
+> ---
+> v2:
+>   - Update the commit message with reasons why this is being fixed in the
+>     PCI core, rather than applying a point fix to the Intel IOMMU driver
+>     (Andy)
+>   - Condense the pci_ats_disabled() and dev->no_ats checks into a single
+>     line in pci_ats_init()
+>   - Reorder the no_ats bitfield to be after ats_stu since there is likely
+>     u8-sized gap there for alignment purposes
+> 
+> v1:https://lore.kernel.org/linux-pci/20260223184017.688212-1- 
+> dmatlack@google.com/
+> 
+> Cc: Raghavendra Rao Ananta<rananta@google.com>
+> Cc: David Woodhouse<dwmw2@infradead.org>
+> Cc: Lu Baolu<baolu.lu@linux.intel.com>
+> Cc: Andy Shevchenko<andriy.shevchenko@linux.intel.com>
+> 
+>   drivers/pci/ats.c    |  2 +-
+>   drivers/pci/quirks.c | 50 ++++++++++++++++++++++----------------------
+>   include/linux/pci.h  |  1 +
+>   3 files changed, 27 insertions(+), 26 deletions(-)
+
