@@ -1,223 +1,170 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3E603FFADE;
-	Tue, 31 Mar 2026 15:02:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69C721DF748;
+	Tue, 31 Mar 2026 15:19:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774969379; cv=none; b=gKFKM2U7cL0wVfHr1VACyM8vJXJeBNWR0ZQFXbxzdKMMf4Iopv/ZMJ5yVIOuB08tonWaEWbuX82OHvbDOiVb8VwqKh/pE0eaSnNAnxl/URo2y9b4Fj6S0IrN+v5Mf7oikXyxdlVFZeJrWhNCu10NVwWo+3JzZS3SbgUE/QFDENQ=
+	t=1774970378; cv=none; b=SLsXuWuLc0dWcL+qgI6HyP7E9Dq5pl7oY6xjRd2WdQgaN3FOtvbmNQWuya0dfGWOezwoVtmX+QuhWgWTU64rBM1eFJgsRL7x1I2YmJmVZND6TvkmcEdMtrOJf9O083f829zQMSuo3rP4X/7ZNotfPTUgwSjVaTA2lEDuWcL3Y7M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774969379; c=relaxed/simple;
-	bh=lKc0nR0+3UMuWZyWz6l9MjXgdkdLagd8O+NJe9KaxV4=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=Lx/7ecs92D1hikmR3vFhX7VxOxmrB/fyYBABeF61Dyom9t4LoeVm0IC4wiQKz+lkFIAV+lo9+FQQ68yAzj1rzFFDc6dVcWjM9+NxK7go1pQ0AeFjepxtkCARijy/qLXP5exlskO9v/DkEjleguXHfVQRUPnNGpXqA3kwykWBzaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KglO/3Mo; arc=none smtp.client-ip=192.198.163.9
+	s=arc-20240116; t=1774970378; c=relaxed/simple;
+	bh=+5nwryV+ht3ZXO8SXJR1QEUNIxWsjRf7y7BMh8hN8JQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=u+9LOJ7cHpxUl1q+cqS0Xxs0hiJLkcROGw6a/cHo0LXyQyLurZVI0adGggJLN96cOE9um/RhmHEB96TyjAEnO2cEoxq7sBU1sy2dO/tSpH8vVbNQN8XNWLpwHhWIRNzAPdUHkzxhHfKDz4D8XWfWK3PMmMfVtOPOP7vPN/M9nPU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KaPf5Tnf; arc=none smtp.client-ip=192.198.163.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KglO/3Mo"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KaPf5Tnf"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774969378; x=1806505378;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=lKc0nR0+3UMuWZyWz6l9MjXgdkdLagd8O+NJe9KaxV4=;
-  b=KglO/3MoKB03HCMY9nz1ITGz+Qa37xd8SnZOvQMODqf0t8PNlmVMg/tp
-   QHBLVF698m5kmyc4YsjSCJpM0zmzjqFET/6ucwoyhUGqtoxAGxL0CWpug
-   DZNg95KYp69URRRBJxX5PN+iPe44nv0wCkh+AtZc0SeY7atamrggNfKBS
-   we35ntCa8D8eT48w1TOuvPHzKmMY7J/9lpAlEbYdUYYHXpEcniUTfk8Lw
-   zZvCqmTAbmHxLG1uAAb6nCdkFFyHk/zMWLKOZyRLS4oNfMAmUUQ7sX8UU
-   luF3N0D/ouUGbSvHlmWfS4QOt6bdhmrlIQ9+fBTUCoZQWGmXuDZ3j/dYa
-   w==;
-X-CSE-ConnectionGUID: lI8GtGyzTBCrHEwicmhDjg==
-X-CSE-MsgGUID: DJRoOitSTMCDj6sHxM/BrQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11745"; a="86682260"
+  t=1774970377; x=1806506377;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=+5nwryV+ht3ZXO8SXJR1QEUNIxWsjRf7y7BMh8hN8JQ=;
+  b=KaPf5TnfQiP6OyFc0RkdO/1qHKHdJcMpDe4VGkD4/KO2mPMm2ryjYTTi
+   qfYKNfsuGnSRwKe1Gtnj2USek+3QoNUwLexMvh2J7TVDpYy+pY6fPBcEK
+   +cFOwLwnSiERqDQy8vqGH30HgNFsIxKnyPtErb0vONSd97r7+QFKn3xgH
+   xaFl9XGaKWGhEkuviN51jSQznmLv/blDCzdgs0DugOQEe/jmbi+UNmrjr
+   ZmI+0bEtk8Pf8yYXhcf8yQZ26/Fv62HoQbVmjNi4ORV2dIYV7zmpibp+M
+   PRmJh4XvFMK3bCMPXEpb8Zevupr+BjgFOMa4Kv/xFb3Te7QC1XNkCTEvV
+   Q==;
+X-CSE-ConnectionGUID: Jchwg2spQ2iUVPQRStKuBQ==
+X-CSE-MsgGUID: vvX6F7zWRcWeUUq0fz1uKw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11745"; a="75881733"
 X-IronPort-AV: E=Sophos;i="6.23,152,1770624000"; 
-   d="scan'208";a="86682260"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 08:02:53 -0700
-X-CSE-ConnectionGUID: JHiKH3CWRemnPBHhcWS24A==
-X-CSE-MsgGUID: Gcx1iYgWQJaJHg3SKbkrBg==
+   d="scan'208";a="75881733"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 08:19:36 -0700
+X-CSE-ConnectionGUID: 3vc6NVspThOQw0nsEQ4k1w==
+X-CSE-MsgGUID: q3CkgsV6TxWDvUcYLZ90ew==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,152,1770624000"; 
-   d="scan'208";a="221527611"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.6])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 08:02:37 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Tue, 31 Mar 2026 18:02:33 +0300 (EEST)
-To: Danilo Krummrich <dakr@kernel.org>
-cc: Russell King <linux@armlinux.org.uk>, 
-    Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-    "Rafael J. Wysocki" <rafael@kernel.org>, 
-    Ioana Ciornei <ioana.ciornei@nxp.com>, Nipun Gupta <nipun.gupta@amd.com>, 
-    Nikhil Agarwal <nikhil.agarwal@amd.com>, 
-    "K. Y. Srinivasan" <kys@microsoft.com>, 
-    Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, 
-    Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, 
-    Bjorn Helgaas <bhelgaas@google.com>, Armin Wolf <W_Armin@gmx.de>, 
-    Bjorn Andersson <andersson@kernel.org>, 
-    Mathieu Poirier <mathieu.poirier@linaro.org>, 
-    Vineeth Vijayan <vneethv@linux.ibm.com>, 
-    Peter Oberparleiter <oberpar@linux.ibm.com>, 
-    Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
-    Alexander Gordeev <agordeev@linux.ibm.com>, 
-    Christian Borntraeger <borntraeger@linux.ibm.com>, 
-    Sven Schnelle <svens@linux.ibm.com>, 
-    Harald Freudenberger <freude@linux.ibm.com>, 
-    Holger Dengler <dengler@linux.ibm.com>, Mark Brown <broonie@kernel.org>, 
-    "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, 
-    Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
-    =?ISO-8859-15?Q?Eugenio_P=E9rez?= <eperezma@redhat.com>, 
-    Alex Williamson <alex@shazbot.org>, Juergen Gross <jgross@suse.com>, 
-    Stefano Stabellini <sstabellini@kernel.org>, 
-    Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>, 
-    "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
-    LKML <linux-kernel@vger.kernel.org>, driver-core@lists.linux.dev, 
-    linuxppc-dev@lists.ozlabs.org, linux-hyperv@vger.kernel.org, 
-    linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
-    linux-arm-msm@vger.kernel.org, linux-remoteproc@vger.kernel.org, 
-    linux-s390@vger.kernel.org, linux-spi@vger.kernel.org, 
-    virtualization@lists.linux.dev, kvm@vger.kernel.org, 
-    xen-devel@lists.xenproject.org, linux-arm-kernel@lists.infradead.org, 
-    Gui-Dong Han <hanguidong02@gmail.com>
-Subject: Re: [PATCH 06/12] platform/wmi: use generic driver_override
- infrastructure
-In-Reply-To: <20260324005919.2408620-7-dakr@kernel.org>
-Message-ID: <f15629e4-ef8f-b1b6-0158-064f40f111da@linux.intel.com>
-References: <20260324005919.2408620-1-dakr@kernel.org> <20260324005919.2408620-7-dakr@kernel.org>
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
+  by fmviesa003.fm.intel.com with ESMTP; 31 Mar 2026 08:19:33 -0700
+Date: Tue, 31 Mar 2026 22:58:23 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: "Edgecombe, Rick P" <rick.p.edgecombe@intel.com>
+Cc: "Williams, Dan J" <dan.j.williams@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>,
+	"x86@kernel.org" <x86@kernel.org>, "Gao, Chao" <chao.gao@intel.com>,
+	"Xu, Yilun" <yilun.xu@intel.com>,
+	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+	"kas@kernel.org" <kas@kernel.org>,
+	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+	"Jiang, Dave" <dave.jiang@intel.com>,
+	"Li, Xiaoyao" <xiaoyao.li@intel.com>,
+	"Verma, Vishal L" <vishal.l.verma@intel.com>,
+	"Duan, Zhenzhong" <zhenzhong.duan@intel.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 11/31] x86/virt/tdx: Make TDX Module initialize
+ Extensions
+Message-ID: <acvhD/XeCbB4ea0C@yilunxu-OptiPlex-7050>
+References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
+ <20260327160132.2946114-12-yilun.xu@linux.intel.com>
+ <5cbed31cdfcc7e43f283abc275848370239a3d40.camel@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5cbed31cdfcc7e43f283abc275848370239a3d40.camel@intel.com>
 
-On Tue, 24 Mar 2026, Danilo Krummrich wrote:
-
-> When a driver is probed through __driver_attach(), the bus' match()
-> callback is called without the device lock held, thus accessing the
-> driver_override field without a lock, which can cause a UAF.
+> >  static int tdx_ext_mem_add(struct tdx_page_array *ext_mem)
+> >  {
+> >  	struct tdx_module_args args = {
+> > @@ -1572,6 +1589,17 @@ static int __maybe_unused init_tdx_ext(void)
+> >  	if (!(tdx_sysinfo.features.tdx_features0 & TDX_FEATURES0_EXT))
+> >  		return 0;
+> >  
+> > +	/*
+> > +	 * With this errata, TDX should use movdir64b to clear private pages
+> > +	 * when reclaiming them. See tdx_quirk_reset_paddr().
+> > +	 *
+> > +	 * Don't expect this errata on any TDX Extensions supported platform.
+> > +	 * All features require TDX Extensions (including TDX Extensions
+> > +	 * itself) will never call tdx_quirk_reset_paddr().
+> > +	 */
+> > +	if (boot_cpu_has_bug(X86_BUG_TDX_PW_MCE))
+> > +		return -ENXIO;
 > 
-> Fix this by using the driver-core driver_override infrastructure taking
-> care of proper locking internally.
-> 
-> Note that calling match() from __driver_attach() without the device lock
-> held is intentional. [1]
-> 
-> Link: https://lore.kernel.org/driver-core/DGRGTIRHA62X.3RY09D9SOK77P@kernel.org/ [1]
-> Reported-by: Gui-Dong Han <hanguidong02@gmail.com>
-> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220789
-> Fixes: 12046f8c77e0 ("platform/x86: wmi: Add driver_override support")
-> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
-> ---
->  drivers/platform/wmi/core.c | 36 +++++-------------------------------
->  include/linux/wmi.h         |  4 ----
->  2 files changed, 5 insertions(+), 35 deletions(-)
-> 
-> diff --git a/drivers/platform/wmi/core.c b/drivers/platform/wmi/core.c
-> index b8e6b9a421c6..750e3619724e 100644
-> --- a/drivers/platform/wmi/core.c
-> +++ b/drivers/platform/wmi/core.c
-> @@ -842,39 +842,11 @@ static ssize_t expensive_show(struct device *dev,
->  }
->  static DEVICE_ATTR_RO(expensive);
->  
-> -static ssize_t driver_override_show(struct device *dev, struct device_attribute *attr,
-> -				    char *buf)
-> -{
-> -	struct wmi_device *wdev = to_wmi_device(dev);
-> -	ssize_t ret;
-> -
-> -	device_lock(dev);
-> -	ret = sysfs_emit(buf, "%s\n", wdev->driver_override);
-> -	device_unlock(dev);
-> -
-> -	return ret;
-> -}
-> -
-> -static ssize_t driver_override_store(struct device *dev, struct device_attribute *attr,
-> -				     const char *buf, size_t count)
-> -{
-> -	struct wmi_device *wdev = to_wmi_device(dev);
-> -	int ret;
-> -
-> -	ret = driver_set_override(dev, &wdev->driver_override, buf, count);
-> -	if (ret < 0)
-> -		return ret;
-> -
-> -	return count;
-> -}
-> -static DEVICE_ATTR_RW(driver_override);
-> -
->  static struct attribute *wmi_attrs[] = {
->  	&dev_attr_modalias.attr,
->  	&dev_attr_guid.attr,
->  	&dev_attr_instance_count.attr,
->  	&dev_attr_expensive.attr,
-> -	&dev_attr_driver_override.attr,
->  	NULL
->  };
->  ATTRIBUTE_GROUPS(wmi);
-> @@ -943,7 +915,6 @@ static void wmi_dev_release(struct device *dev)
->  {
->  	struct wmi_block *wblock = dev_to_wblock(dev);
->  
-> -	kfree(wblock->dev.driver_override);
->  	kfree(wblock);
->  }
->  
-> @@ -952,10 +923,12 @@ static int wmi_dev_match(struct device *dev, const struct device_driver *driver)
->  	const struct wmi_driver *wmi_driver = to_wmi_driver(driver);
->  	struct wmi_block *wblock = dev_to_wblock(dev);
->  	const struct wmi_device_id *id = wmi_driver->id_table;
-> +	int ret;
->  
->  	/* When driver_override is set, only bind to the matching driver */
-> -	if (wblock->dev.driver_override)
-> -		return !strcmp(wblock->dev.driver_override, driver->name);
-> +	ret = device_match_driver_override(dev, driver);
-> +	if (ret >= 0)
-> +		return ret;
->  
->  	if (id == NULL)
->  		return 0;
-> @@ -1076,6 +1049,7 @@ static struct class wmi_bus_class = {
->  static const struct bus_type wmi_bus_type = {
->  	.name = "wmi",
->  	.dev_groups = wmi_groups,
-> +	.driver_override = true,
->  	.match = wmi_dev_match,
->  	.uevent = wmi_dev_uevent,
->  	.probe = wmi_dev_probe,
-> diff --git a/include/linux/wmi.h b/include/linux/wmi.h
-> index 75cb0c7cfe57..14fb644e1701 100644
-> --- a/include/linux/wmi.h
-> +++ b/include/linux/wmi.h
-> @@ -18,16 +18,12 @@
->   * struct wmi_device - WMI device structure
->   * @dev: Device associated with this WMI device
->   * @setable: True for devices implementing the Set Control Method
-> - * @driver_override: Driver name to force a match; do not set directly,
-> - *		     because core frees it; use driver_set_override() to
-> - *		     set or clear it.
->   *
->   * This represents WMI devices discovered by the WMI driver core.
->   */
->  struct wmi_device {
->  	struct device dev;
->  	bool setable;
-> -	const char *driver_override;
->  };
->  
->  /**
-> 
+> I don't know if we are going to want to sprinkle these over every new feature
+> until the end of time. If this feature will only show up on the platforms with
+> this erratum, then I say we just drop the check.
 
-Hi,
+Make sense.
 
-I tried applying this to platform-drivers tree but it failed to compile so 
-I ended up dropping the changed.
+> 
+> > +
+> >  	nr_pages = tdx_sysinfo.ext.memory_pool_required_pages;
+> >  	/*
+> >  	 * memory_pool_required_pages == 0 means no need to add more pages,
+> > @@ -1587,6 +1615,20 @@ static int __maybe_unused init_tdx_ext(void)
+> >  			goto out_ext_mem;
+> >  	}
+> >  
+> > +	/*
+> > +	 * ext_required == 0 means no need to call TDH.EXT.INIT, the Extensions
+> > +	 * are already working.
+> 
+> How does this scenario happen exactly? And why not check it above at the
+> beginning? Before the allocation, so it doesn't need to free.
+> 
+> Is there a scenario where the memory needs to be given, but the extension is
+> already inited?
 
--- 
- i.
+mm.. you are right. It leads to something absurd.
 
+I checked with TDX Module team again. The correct understanding is:
+
+ - TDX_FEATURES0_EXT bit shows Extensions is supported.
+ - optional feature bits are selected on TDH_SYS_CONFIG
+ - If one of the optional feature (e.g. TDX CONNECT) requires Extention,
+   memory_pool_required_pages > 0 && ext_required == 1. Otherwise no
+   need to initialize Extension.
+
+So yes, I should check memory_pool_required_pages && ext_required at the
+beginning.
+
+> 
+> > +	 */
+> > +	if (tdx_sysinfo.ext.ext_required) {
+> > +		ret = tdx_ext_init();
+> > +		/*
+> > +		 * Some pages may have been touched by the TDX module.
+> > +		 * Flush cache before returning these pages to kernel.
+> > +		 */
+> > +		if (ret)
+> > +			goto out_flush;
+> > +	}
+> > +
+> >  	/* Extension memory is never reclaimed once assigned */
+> >  	tdx_page_array_ctrl_leak(ext_mem);
+> >  
+> > @@ -1595,6 +1637,9 @@ static int __maybe_unused init_tdx_ext(void)
+> >  
+> >  	return 0;
+> >  
+> > +out_flush:
+> > +	if (ext_mem)
+> 
+> For the error path we don't need to be efficient. But also why does it assume
+> tdx_ext_init() can touch the pages, but tdx_ext_mem_add() can't?
+
+The tdx_ext_mem_add() only collects memory, tdx_ext_init() does the
+actual initialization for Extensions and touches the memory. But the
+detail of when touching the pages is not specified in SPEC, do you think
+host doesn't have to tell the difference, just flush when any one of
+ext-SEAMCALLs is called?
+
+> 
+> 
+> > +		wbinvd_on_all_cpus();
+> >  out_ext_mem:
+> >  	tdx_page_array_free(ext_mem);
+> >  
+> 
