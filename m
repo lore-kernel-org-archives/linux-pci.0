@@ -1,69 +1,51 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69C721DF748;
-	Tue, 31 Mar 2026 15:19:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41EC84035D3;
+	Tue, 31 Mar 2026 15:21:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774970378; cv=none; b=SLsXuWuLc0dWcL+qgI6HyP7E9Dq5pl7oY6xjRd2WdQgaN3FOtvbmNQWuya0dfGWOezwoVtmX+QuhWgWTU64rBM1eFJgsRL7x1I2YmJmVZND6TvkmcEdMtrOJf9O083f829zQMSuo3rP4X/7ZNotfPTUgwSjVaTA2lEDuWcL3Y7M=
+	t=1774970513; cv=none; b=cHQfXMbGhiFoTcOgsXqAT5iBbxpRxiKQEipTlW+WP4Z7IWX4dQpQ0wQScEplptH55CXpczW568lIdhWZ/UWXmGvRUmdQc8P+zx+uPVUGd1QEOKBiKc0GRuxe1LgTbPZ3IBa3Mc8W0nW8Us6hW1elOadNGZMAEnmDt9B/cTA9Q4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774970378; c=relaxed/simple;
-	bh=+5nwryV+ht3ZXO8SXJR1QEUNIxWsjRf7y7BMh8hN8JQ=;
+	s=arc-20240116; t=1774970513; c=relaxed/simple;
+	bh=5v9OyPvgtc1RqMsoJE+1aCJ6/rVCcLvQlIrIuGvvSTI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=u+9LOJ7cHpxUl1q+cqS0Xxs0hiJLkcROGw6a/cHo0LXyQyLurZVI0adGggJLN96cOE9um/RhmHEB96TyjAEnO2cEoxq7sBU1sy2dO/tSpH8vVbNQN8XNWLpwHhWIRNzAPdUHkzxhHfKDz4D8XWfWK3PMmMfVtOPOP7vPN/M9nPU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KaPf5Tnf; arc=none smtp.client-ip=192.198.163.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=YHdCXPXdvjXEnz97wNpWTTIFBom0yUvlux4ML0O5jYYzJGSoGyOBmmb+NVZGG6hz9y8rEGKX8bZkkWfGefTo4Efv8YAHMJTP+q6B6S5tKn6XR+GWV7LBjO6/9ru7gXzQUm9voCmkHLOSuiTujnFSKZh5LVYUsNYu+hUfco47Vy8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L1V49APZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KaPf5Tnf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774970377; x=1806506377;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=+5nwryV+ht3ZXO8SXJR1QEUNIxWsjRf7y7BMh8hN8JQ=;
-  b=KaPf5TnfQiP6OyFc0RkdO/1qHKHdJcMpDe4VGkD4/KO2mPMm2ryjYTTi
-   qfYKNfsuGnSRwKe1Gtnj2USek+3QoNUwLexMvh2J7TVDpYy+pY6fPBcEK
-   +cFOwLwnSiERqDQy8vqGH30HgNFsIxKnyPtErb0vONSd97r7+QFKn3xgH
-   xaFl9XGaKWGhEkuviN51jSQznmLv/blDCzdgs0DugOQEe/jmbi+UNmrjr
-   ZmI+0bEtk8Pf8yYXhcf8yQZ26/Fv62HoQbVmjNi4ORV2dIYV7zmpibp+M
-   PRmJh4XvFMK3bCMPXEpb8Zevupr+BjgFOMa4Kv/xFb3Te7QC1XNkCTEvV
-   Q==;
-X-CSE-ConnectionGUID: Jchwg2spQ2iUVPQRStKuBQ==
-X-CSE-MsgGUID: vvX6F7zWRcWeUUq0fz1uKw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11745"; a="75881733"
-X-IronPort-AV: E=Sophos;i="6.23,152,1770624000"; 
-   d="scan'208";a="75881733"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 08:19:36 -0700
-X-CSE-ConnectionGUID: 3vc6NVspThOQw0nsEQ4k1w==
-X-CSE-MsgGUID: q3CkgsV6TxWDvUcYLZ90ew==
-X-ExtLoop1: 1
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by fmviesa003.fm.intel.com with ESMTP; 31 Mar 2026 08:19:33 -0700
-Date: Tue, 31 Mar 2026 22:58:23 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: "Edgecombe, Rick P" <rick.p.edgecombe@intel.com>
-Cc: "Williams, Dan J" <dan.j.williams@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>,
-	"x86@kernel.org" <x86@kernel.org>, "Gao, Chao" <chao.gao@intel.com>,
-	"Xu, Yilun" <yilun.xu@intel.com>,
-	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-	"kas@kernel.org" <kas@kernel.org>,
-	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
-	"Jiang, Dave" <dave.jiang@intel.com>,
-	"Li, Xiaoyao" <xiaoyao.li@intel.com>,
-	"Verma, Vishal L" <vishal.l.verma@intel.com>,
-	"Duan, Zhenzhong" <zhenzhong.duan@intel.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 11/31] x86/virt/tdx: Make TDX Module initialize
- Extensions
-Message-ID: <acvhD/XeCbB4ea0C@yilunxu-OptiPlex-7050>
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-12-yilun.xu@linux.intel.com>
- <5cbed31cdfcc7e43f283abc275848370239a3d40.camel@intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L1V49APZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A18C7C19423;
+	Tue, 31 Mar 2026 15:21:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774970512;
+	bh=5v9OyPvgtc1RqMsoJE+1aCJ6/rVCcLvQlIrIuGvvSTI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=L1V49APZjtqm8evpFPAkKJ1MYnFNfCfFxnPHV6oRPNpxA5rJvb8bsNGy9Bn06+85Z
+	 cPOmeL7f7uLosC3ZshJzkMTsQEJtCzXVrPFXe+/GiUrdX6mDtjkElm7Z+HPBhtCKuU
+	 2ZB5TS8KGdOe1SjY8qsViU6ALmrMUKpO6w901AuZUcdafjhNTIj7EsmhjxzifISSl5
+	 1LpL9W8U3DuQJa9lmKYb5p2dbztwzmPy4/LgAJguoCy+iOODc0fj5g+OXSrcbZJfdT
+	 44CrAunQk8gmO424Rjraz7ScHSaqbjoJN+1IuqMFO6zMQcUeU/Nw2wweB48+aDshHE
+	 mUkRo3wKQ2rcQ==
+Date: Tue, 31 Mar 2026 10:21:50 -0500
+From: Rob Herring <robh@kernel.org>
+To: Florian Eckert <fe@dev.tdt.de>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Johan Hovold <johan+linaro@kernel.org>,
+	Sajid Dalvi <sdalvi@google.com>,
+	Ajay Agarwal <ajayagarwal@google.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Rahul Tanwar <rtanwar@maxlinear.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	Eckert.Florian@googlemail.com, ms@dev.tdt.de
+Subject: Re: [PATCH v2 6/7] dt-bindings: PCI: intel,lgm-pcie: Make atu
+ resource mandatory
+Message-ID: <20260331152150.GA1255126-robh@kernel.org>
+References: <20260330-pcie-intel-gw-v2-0-8bd07367a298@dev.tdt.de>
+ <20260330-pcie-intel-gw-v2-6-8bd07367a298@dev.tdt.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -72,99 +54,59 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <5cbed31cdfcc7e43f283abc275848370239a3d40.camel@intel.com>
+In-Reply-To: <20260330-pcie-intel-gw-v2-6-8bd07367a298@dev.tdt.de>
 
-> >  static int tdx_ext_mem_add(struct tdx_page_array *ext_mem)
-> >  {
-> >  	struct tdx_module_args args = {
-> > @@ -1572,6 +1589,17 @@ static int __maybe_unused init_tdx_ext(void)
-> >  	if (!(tdx_sysinfo.features.tdx_features0 & TDX_FEATURES0_EXT))
-> >  		return 0;
-> >  
-> > +	/*
-> > +	 * With this errata, TDX should use movdir64b to clear private pages
-> > +	 * when reclaiming them. See tdx_quirk_reset_paddr().
-> > +	 *
-> > +	 * Don't expect this errata on any TDX Extensions supported platform.
-> > +	 * All features require TDX Extensions (including TDX Extensions
-> > +	 * itself) will never call tdx_quirk_reset_paddr().
-> > +	 */
-> > +	if (boot_cpu_has_bug(X86_BUG_TDX_PW_MCE))
-> > +		return -ENXIO;
+On Mon, Mar 30, 2026 at 11:07:16AM +0200, Florian Eckert wrote:
+> The ATU information is already set in the dwc core if it is specified in
+> the DTS. The driver uses its own value here [1]. This information is
+> hardware specific and should therefore be maintained in the DTS rather
+> than in the source.
 > 
-> I don't know if we are going to want to sprinkle these over every new feature
-> until the end of time. If this feature will only show up on the platforms with
-> this erratum, then I say we just drop the check.
-
-Make sense.
-
+> Backwards compatibility is not an issue here [5], as the driver is
+> exclusively used by Maxlinear.
 > 
-> > +
-> >  	nr_pages = tdx_sysinfo.ext.memory_pool_required_pages;
-> >  	/*
-> >  	 * memory_pool_required_pages == 0 means no need to add more pages,
-> > @@ -1587,6 +1615,20 @@ static int __maybe_unused init_tdx_ext(void)
-> >  			goto out_ext_mem;
-> >  	}
-> >  
-> > +	/*
-> > +	 * ext_required == 0 means no need to call TDH.EXT.INIT, the Extensions
-> > +	 * are already working.
+> Old DTS entry for PCIe:
 > 
-> How does this scenario happen exactly? And why not check it above at the
-> beginning? Before the allocation, so it doesn't need to free.
+> reg = <0xd1000000 0x1000>,
+>       <0xd3000000 0x20000>,
+>       <0xd0c41000.0x1000>;
+> reg-names = "dbi", "config", "app";
 > 
-> Is there a scenario where the memory needs to be given, but the extension is
-> already inited?
-
-mm.. you are right. It leads to something absurd.
-
-I checked with TDX Module team again. The correct understanding is:
-
- - TDX_FEATURES0_EXT bit shows Extensions is supported.
- - optional feature bits are selected on TDH_SYS_CONFIG
- - If one of the optional feature (e.g. TDX CONNECT) requires Extention,
-   memory_pool_required_pages > 0 && ext_required == 1. Otherwise no
-   need to initialize Extension.
-
-So yes, I should check memory_pool_required_pages && ext_required at the
-beginning.
-
+> New DTS entry for PCIe:
 > 
-> > +	 */
-> > +	if (tdx_sysinfo.ext.ext_required) {
-> > +		ret = tdx_ext_init();
-> > +		/*
-> > +		 * Some pages may have been touched by the TDX module.
-> > +		 * Flush cache before returning these pages to kernel.
-> > +		 */
-> > +		if (ret)
-> > +			goto out_flush;
-> > +	}
-> > +
-> >  	/* Extension memory is never reclaimed once assigned */
-> >  	tdx_page_array_ctrl_leak(ext_mem);
-> >  
-> > @@ -1595,6 +1637,9 @@ static int __maybe_unused init_tdx_ext(void)
-> >  
-> >  	return 0;
-> >  
-> > +out_flush:
-> > +	if (ext_mem)
+> reg = <0xd1000000 0x1000>,
+>       <0xd10c0000 0x1000>,
+>       <0xd3000000 0x20000>,
+>      <0xd0c41000.0x1000>;
+> reg-names = "dbi", "atu", "config", "app";
 > 
-> For the error path we don't need to be efficient. But also why does it assume
-> tdx_ext_init() can touch the pages, but tdx_ext_mem_add() can't?
+> [1] https://elixir.bootlin.com/linux/v6.19.10/source/drivers/pci/controller/dwc/pcie-intel-gw.c#L301
+> [2] https://lore.kernel.org/all/BY3PR19MB507667CE7531D863E1E5F8AEBDD82@BY3PR19MB5076.namprd19.prod.outlook.com/
+> 
+> Signed-off-by: Florian Eckert <fe@dev.tdt.de>
+> ---
+>  Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml b/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+> index 54e2890ae6314ac6847fc23f49440d05d66d87d4..e4b781f57e8ae84a3ffc33635a421e1a5761587e 100644
+> --- a/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+> @@ -29,12 +29,14 @@ properties:
+>    reg:
+>      items:
+>        - description: Controller control and status registers.
+> +      - description: Internal Address Translation Unit (iATU) registers.
+>        - description: PCIe configuration registers.
+>        - description: Controller application registers.
+>  
+>    reg-names:
+>      items:
+>        - const: dbi
+> +      - const: atu
 
-The tdx_ext_mem_add() only collects memory, tdx_ext_init() does the
-actual initialization for Extensions and touches the memory. But the
-detail of when touching the pages is not specified in SPEC, do you think
-host doesn't have to tell the difference, just flush when any one of
-ext-SEAMCALLs is called?
+Put this at the end and add 'minItems: 3' and you avoid any ABI issues.
 
-> 
-> 
-> > +		wbinvd_on_all_cpus();
-> >  out_ext_mem:
-> >  	tdx_page_array_free(ext_mem);
-> >  
-> 
+>        - const: config
+>        - const: app
+>  
