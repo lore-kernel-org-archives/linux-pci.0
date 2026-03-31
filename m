@@ -1,66 +1,66 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7B4E3A9DA0
-	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 10:38:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DBE63A543F
+	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 11:00:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774953501; cv=none; b=tu3piUxzJcEWM9F8OWvOCLDqE/gJwmrs/uac/IU2WIEmAsTkvMvMhY7pzws4YtMFyUJkYlRBXO4A0AIVPmlUa5oJhRCqJ8AbtZsWXFen9CW5TZ3cc1w0KFgeLDZCW/nsAkz75d2Dr1DzQCpcftn+dqMYEhEBQqOMFnOizKD+yr8=
+	t=1774954830; cv=none; b=ux00qNPk+g2tEayGW43Nmr8q4GFCjGYzzv0OO+Hj6y5Y+CSvO1QXq/PiBz1tN1+Ry0n6+OejVe4XGm5BAsaO34touSvALDAgc7BZ0X96AbA9kNk86RE4jl5zzrg9w5Fjh+3LqtlaqJBMH8o1RQKWFITd6SAVv3ot1qAQb3Bxhic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774953501; c=relaxed/simple;
-	bh=EchK1OhTgSh8S7cgMHy7fOb1l+kJpOBAiQ+NkOjsT/I=;
+	s=arc-20240116; t=1774954830; c=relaxed/simple;
+	bh=hGiALNHuqe9lChW6zej1kx4xR06ikgMYVbl+kBtn1Rw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kZ/v9WJGS4r+aEM2mJGLfAfwXxnCIwuvTa2DY/rb2lwQZUQJc18BHtZcvybv7MQZeHE06NF+3fK+ZurCZfpNgXthYy+A+nGzDI7mn4Gi7UG6I/dXUwiqNi4Zbukg0Vgz1waWY/Rpt4kaWadZ123knaufxtfWlJy935lg3SLLilc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=c3NS/ahf; arc=none smtp.client-ip=209.85.128.53
+	 In-Reply-To:Content-Type; b=iopXO2zpKMCenVphewB1igQMVSLHJxVObAwdUeS/WotmBLquLRN/YMSKjy07xiTOX8SeffGE5UjT9nyxsvFNFJ8O1iXcr+usFBZeAoL5PzBvyj/X3emuihNoMKYzPFoNma8Or0NasV2N3h0o9rAlsbMZ+UivUdLvizbVNtLrvZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=M7l6MSKJ; arc=none smtp.client-ip=209.85.221.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="c3NS/ahf"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4852b81c73aso47156175e9.3
-        for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 03:38:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="M7l6MSKJ"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-43d02a71526so962361f8f.3
+        for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 04:00:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1774953498; x=1775558298; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1774954827; x=1775559627; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:autocrypt:content-language
          :from:references:cc:to:subject:user-agent:mime-version:date
          :message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=j1GwY5PsDoqBTLy6YsGXd3gbj61OJIiAY2NVv6n/DA0=;
-        b=c3NS/ahfG27c9ix2wu7ycDtUlNtNBE3J4sQb05btFMaVz6NRrioAm2XPsqPXaiMf0W
-         osZD1kvwg4TutNUZb+Oz6MJMPh0HaEULzFsyZPOOar2lU/rw86x5dzqo+q0rwi88Qns1
-         SnBgNVF+LQaLTQggQsewqI8KPzm/Q7bGSg3qN6iX8vkag5jhK2Hdi27y3MVhHtwqlIxl
-         JSh9SCZzo6e9ydfGMCW6BqYTFCC2bS8HlmrDP8YPW9YlP1Kzoam4cw9bG0LccOy8VKIF
-         U+eYydvGKSce/+5u0pbs7L/m41AoL6DmzzYpAeh89+21/TPDgVQm8arKsSEgv7j78keK
-         0lNQ==
+        bh=4It0WZmVl5/qXPN0CzryvWQuSnTLqQkkeu2Hra/fxBs=;
+        b=M7l6MSKJwPvH/Azf4ahwMjNY2YgvUnWtX9myBz8fW6USCVlmrbyVfBAUjNtdJ8h2bD
+         WzGY1FB9sZXTYQqBJOlHXFztE5H4H9zo1alPc11YhWnTTfM0/YJ3QQCVSnafgfy17lJV
+         rP170h9gDcToOCjWsEpXt7d35JYIoLTIFS6RFkqk32op6RoBlVHLL2Ty6uXV3RWDvLs7
+         /akWkMy4Zu4eDY5rFC1ANGmt/x6If0C6oYGg086JBTbKcrAJFD1ABXK1hJyHEn/5ChUF
+         SHpjuTrmIZevq9SxEEJJUrW1cwmttZKvpmovX1gUCeL3USRYxNs5A+gjsrqnqA1Mkb0e
+         Jk1g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774953498; x=1775558298;
+        d=1e100.net; s=20251104; t=1774954827; x=1775559627;
         h=content-transfer-encoding:in-reply-to:autocrypt:content-language
          :from:references:cc:to:subject:user-agent:mime-version:date
          :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=j1GwY5PsDoqBTLy6YsGXd3gbj61OJIiAY2NVv6n/DA0=;
-        b=fcXEeXYoMdl/5eJuqsjzcxvECVaXjfQGmxXkaCb9GexPnl0q94U78BsR+aaDh2TpSa
-         25SkGovA71ytxkbOrgJexZSSCK+dYFtnClazRo9GgZ4qh1PXTU8Rq09V/G+tc+HCgA9H
-         NsMC0ufZ3edH/3Yyfb2s8UazD4/9Zan/iGfTBXhD6lNT9QCW9JKYfWWdSpLpt5blz3U9
-         s5C59Ewfje2iXJGaGv1WYIkvl6niy/aEh6VRZSt4ZwolOXaik93uu7hQvExwzWXGJCAU
-         mGMX0iuPWeTiUVs9K58ywHSWajLST+7WjguFor/TSlTJGdxKkphtCtOFc91do1OwGvTo
-         9DAw==
-X-Forwarded-Encrypted: i=1; AJvYcCV6AtS0OK6icMjyNUWpNRrw84rFPLohX+afoFcI3L9iz6WZOrL6OQrV984HwaJhJW939EWiqX8h9dQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx/ZPO3l7Pmkipo9001zlJuJMIO6mjmF55Q5K3pi1UirauE1rvZ
-	0IP8NCY8NUPv28ZdUSxKRnYpX+Wf22CDjP/yRbrb8CHtXF5G7n/0+qArKtEGycJo2E4=
-X-Gm-Gg: ATEYQzyz1MLOYO8/kkpMe2YcyHIq+6uKL+2keQXw8V3692BfKtj6p1+h80aNbtpU3fY
-	HSKoTYaxDgQZ8uOTP8ieIIxdMWqNYmhepw/GZnB/DOmhy4Vwc7GeX9LyfrSN1UE2zPOTCrYssoM
-	d5ABql0hPRkycUwnTauILN+LGIIZH0zRI+4omnd/hBurjsdn454J7Y0ALF582C1MoFz2qLPNbRV
-	VkzE9L/zbD+TmG8Mo6QDGc/RsmjJ5dwpy/5bS5dVL2xZpNGjgOmy3DjyPpXtyGUMXCk41zfyRx9
-	SYz+/0psondii5My+4mm23aoEhf006zQ/8pe1AcbHicMcj6/HSWEOwyHlurXghIAMiZW6m2aGnP
-	LBg5EU6BJ6vzE6frp6BJ9nS8irVuoIIvjKYC/wxNcm/kYGO5yHuZ+1xiP35Wg6a3D32z14chcbf
-	9fEgqVGfMaGHpn0qlUaKFRFGB7bA==
-X-Received: by 2002:a05:600c:a00e:b0:488:7b85:b16c with SMTP id 5b1f17b1804b1-4887b85b27dmr34221595e9.29.1774953498161;
-        Tue, 31 Mar 2026 03:38:18 -0700 (PDT)
+        bh=4It0WZmVl5/qXPN0CzryvWQuSnTLqQkkeu2Hra/fxBs=;
+        b=C94SqCgbJaG5vZBhvn2IRRaLtmJyaaYi43v1B97fJddLWgZd+I9fX8DqnKChK99ait
+         28fsjcrb3RSQF46pNNqd51uvZVLw6fJPVjs2jyzT3uILD2tw3h/aAeQmUBWUuHhUUiqX
+         t0b00Zu5hcmz2OYAniXMlTIaZPg3b0RLAzrOwlZ8SE5JsY9dtb/y93ThO6y/OeXHhLqt
+         VjT6Mfi/jP0gAWNVR6AUjEapxa53tUgwSkz292lidjVs4AH1XP8GCH2rPGbqN4x64n1r
+         wtO8kXNCMe58hEnM72F8Jqa/7vH3JjBrPMDu9DwIr5XaRh7jKuiB4zjdxvp/0ZrvauKC
+         Kp3w==
+X-Forwarded-Encrypted: i=1; AJvYcCXOHPpnpo+3x4cwrF8abzjAyCjEYmXsYksiXX+rWJ3GH9tQ9bYg3gKYRWky1RqSk5/J/0eNA8aOOPU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy8KwN+fNOPz26nlEsKZ0fwZQEHPkzEaz00R02a3mxsszSLkG2V
+	itFgV4et1c+cz4/vDg5Wl3qG31hn2wN7SE3aLR5tuP9DA+wLom9IUJlHZnLi41lgPC4=
+X-Gm-Gg: ATEYQzwtq1QMr4Z1YaeMJ3/c0D92iwON0XTFyzibHvPCXixA35eAEw2f9ISIOAsm/sd
+	+D4tuJlRYjBlf8ojUKg6HI9/9jka45oz8Ag5kpvsDnHHEv/96ZLOj/BozWCpxlWtcVwx6fXpe/p
+	EZaOkV2Lqe7NYjq2Kv465VksCXvalaByq4zm9rfkCwXAR9JT/RgKKCsjFkVcmelfyl4QEUWIZgq
+	E61xYQ+QtKvSNW4wIk1N3zO/BiWG/eztdwwI90+gjrbv+t0h9ZijC++fWhsC52jidFvh+cRDR+8
+	Pr6mu5P30bum1eYT/1/YfhwXVbfdByDQSlEFYvvwJzgXIX/MjrHLUd17SPYOaCIhXuXAaGA27bb
+	8Y4WoO+9a8v6Ge3SASDAxX7dUeGcn3OesOX1duTw49AZ3PKMwyG/z+B7w9dSAp/ImAGNW67ZISn
+	tTLOZntc3f45VCRWR6je1CuXtAaA==
+X-Received: by 2002:a05:6000:2505:b0:43b:962b:5314 with SMTP id ffacd0b85a97d-43b9e9e8f39mr27390891f8f.19.1774954827290;
+        Tue, 31 Mar 2026 04:00:27 -0700 (PDT)
 Received: from [192.168.0.20] ([212.21.133.10])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4887e822078sm32745645e9.9.2026.03.31.03.38.16
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43cf21ebef9sm27611019f8f.13.2026.03.31.04.00.25
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 31 Mar 2026 03:38:17 -0700 (PDT)
-Message-ID: <730feb0b-7022-4d22-9ead-3efc4b4ab4ab@suse.com>
-Date: Tue, 31 Mar 2026 13:38:16 +0300
+        Tue, 31 Mar 2026 04:00:26 -0700 (PDT)
+Message-ID: <d9f09a41-9d10-4778-b49a-d54504020636@suse.com>
+Date: Tue, 31 Mar 2026 14:00:25 +0300
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -68,8 +68,8 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 08/31] x86/virt/tdx: Configure TDX Module with optional
- TDX Connect feature
+Subject: Re: [PATCH v2 10/31] x86/virt/tdx: Add extra memory to TDX Module for
+ Extensions
 To: Xu Yilun <yilun.xu@linux.intel.com>, linux-coco@lists.linux.dev,
  linux-pci@vger.kernel.org, dan.j.williams@intel.com, x86@kernel.org
 Cc: chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com,
@@ -77,7 +77,7 @@ Cc: chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com,
  rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com, kas@kernel.org,
  xiaoyao.li@intel.com, vishal.l.verma@intel.com, linux-kernel@vger.kernel.org
 References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-9-yilun.xu@linux.intel.com>
+ <20260327160132.2946114-11-yilun.xu@linux.intel.com>
 From: Nikolay Borisov <nik.borisov@suse.com>
 Content-Language: en-US
 Autocrypt: addr=nik.borisov@suse.com; keydata=
@@ -123,55 +123,89 @@ Autocrypt: addr=nik.borisov@suse.com; keydata=
  JDjakbdjBoYDWVoaPbp5KAQ2VQRiR54lir/inyqGX+dwzPX/F4OHfB5RTiAFLJliCxniKFsM
  d8eHe88jWjm6/ilx4IlLl9/MdVUGjLpBi18X7ejLz3U2quYD8DBAGzCjy49wJ4Di4qQjblb2
  pTXoEyM2L6E604NbDu0VDvHg7EXh1WwmijEu28c/hEB6DwtzslLpBSsJV0s1/jE=
-In-Reply-To: <20260327160132.2946114-9-yilun.xu@linux.intel.com>
+In-Reply-To: <20260327160132.2946114-11-yilun.xu@linux.intel.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
 
 
 On 27.03.26 г. 18:01 ч., Xu Yilun wrote:
-> TDX Module supports optional TDX features (e.g. TDX Connect & TDX Module
-> Extensions) that won't be enabled by default. It extends TDH.SYS.CONFIG
-> for host to choose to enable them on bootup.
+> Adding more memory to TDX Module is the first step to enable Extensions.
 > 
-> Call TDH.SYS.CONFIG with a new bitmap input parameter to specify which
-> features to enable. The bitmap uses the same definitions as
-> TDX_FEATURES0. But note not all bits in TDX_FEATURES0 are valid for
-> configuration, e.g. TDX Module Extensions is a service that supports TDX
-> Connect, it is implicitly enabled when TDX Connect is enabled. Setting
-> TDX_FEATURES0_EXT in the bitmap has no effect.
+> Currently, TDX Module memory use is relatively static. But, some new
+> features (called "TDX Module Extensions") need to use memory more
+> dynamically. While 'static' here means the kernel provides necessary
+> amount of memory to TDX Module for its basic functionalities, 'dynamic'
+> means extra memory is needed only if new optional features are to be
+> enabled. So add a new memory feeding process backed by a new SEAMCALL
+> TDH.EXT.MEM.ADD.
 > 
-> TDX Module advances the version of TDH.SYS.CONFIG for the change, so
-> use the latest version (v1) for optional feature enabling. But
-> supporting existing Modules which only support v0 is still necessary
-> until they are deprecated, enumerate via TDX_FEATURES0 to decide which
-> version to use.
+> The process is mostly the same as adding PAMT. The kernel queries TDX
+> Module how much memory needed, allocates it, hands it over, and never
+> gets it back.
 > 
-> TDX Module updates global metadata when optional features are enabled.
-> Host should update the cached tdx_sysinfo to reflect these changes.
+> TDH.EXT.MEM.ADD uses tdx_page_array to provide control (private) pages
+> to TDX Module. Introduce a tdx_clflush_page_array() helper to flush
+> shared cache before SEAMCALL, to avoid shared cache write back damages
+> these private pages.
+> 
+> For now, TDX Module Extensions consume relatively large amount of
+> memory (~50MB). Use contiguous page allocation to avoid permanently
+> fragment too much memory. Print this readout value on TDX Module
+> Extensions initialization for visibility.
 > 
 > Co-developed-by: Zhenzhong Duan <zhenzhong.duan@intel.com>
 > Signed-off-by: Zhenzhong Duan <zhenzhong.duan@intel.com>
 > Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
 > ---
->   arch/x86/virt/vmx/tdx/tdx.h |  3 ++-
->   arch/x86/virt/vmx/tdx/tdx.c | 16 +++++++++++++++-
->   2 files changed, 17 insertions(+), 2 deletions(-)
+>   arch/x86/virt/vmx/tdx/tdx.h |  1 +
+>   arch/x86/virt/vmx/tdx/tdx.c | 92 ++++++++++++++++++++++++++++++++++++-
+>   2 files changed, 91 insertions(+), 2 deletions(-)
 > 
 > diff --git a/arch/x86/virt/vmx/tdx/tdx.h b/arch/x86/virt/vmx/tdx/tdx.h
-> index e5a9331df451..870bb75da3ba 100644
+> index 870bb75da3ba..31ccdfcf518c 100644
 > --- a/arch/x86/virt/vmx/tdx/tdx.h
 > +++ b/arch/x86/virt/vmx/tdx/tdx.h
-> @@ -58,7 +58,8 @@
->   #define TDH_PHYMEM_CACHE_WB		40
->   #define TDH_PHYMEM_PAGE_WBINVD		41
+> @@ -60,6 +60,7 @@
 >   #define TDH_VP_WR			43
-> -#define TDH_SYS_CONFIG			45
-> +#define TDH_SYS_CONFIG_V0		45
-> +#define TDH_SYS_CONFIG			SEAMCALL_LEAF_VER(TDH_SYS_CONFIG_V0, 1)
+>   #define TDH_SYS_CONFIG_V0		45
+>   #define TDH_SYS_CONFIG			SEAMCALL_LEAF_VER(TDH_SYS_CONFIG_V0, 1)
+> +#define TDH_EXT_MEM_ADD			61
+>   
+>   /* TDX page types */
+>   #define	PT_NDA		0x0
+> diff --git a/arch/x86/virt/vmx/tdx/tdx.c b/arch/x86/virt/vmx/tdx/tdx.c
+> index 4fb56bb442f0..5fae17c13191 100644
+> --- a/arch/x86/virt/vmx/tdx/tdx.c
+> +++ b/arch/x86/virt/vmx/tdx/tdx.c
+> @@ -560,7 +560,7 @@ static int tdx_alloc_pages_contig(unsigned int nr_pages, struct page **pages,
+>    * Similar to tdx_page_array_alloc(), after allocating with this
+>    * function, call tdx_page_array_populate() to populate the tdx_page_array.
+>    */
+> -static __maybe_unused struct tdx_page_array *
+> +static struct tdx_page_array *
+>   tdx_page_array_alloc_contig(unsigned int nr_pages)
+>   {
+>   	return tdx_page_array_alloc(nr_pages, tdx_alloc_pages_contig, NULL);
+> @@ -643,7 +643,7 @@ EXPORT_SYMBOL_GPL(tdx_page_array_create_iommu_mt);
+>   #define HPA_LIST_INFO_PFN		GENMASK_U64(51, 12)
+>   #define HPA_LIST_INFO_LAST_ENTRY	GENMASK_U64(63, 55)
+>   
+> -static u64 __maybe_unused hpa_list_info_assign_raw(struct tdx_page_array *array)
+> +static u64 hpa_list_info_assign_raw(struct tdx_page_array *array)
+>   {
+>   	return FIELD_PREP(HPA_LIST_INFO_FIRST_ENTRY, 0) |
+>   	       FIELD_PREP(HPA_LIST_INFO_PFN,
+> @@ -1513,6 +1513,94 @@ static void tdx_clflush_page(struct page *page)
+>   	clflush_cache_range(page_to_virt(page), PAGE_SIZE);
+>   }
+>   
+> +static void tdx_clflush_page_array(struct tdx_page_array *array)
+> +{
+> +	for (int i = 0; i < array->nents; i++)
 
-Since newer versions of tdx module apis are backwards compatible with 
-older ones, and v0 are actually deprecated why have both definitions?
+shouldn't the actual number of entries be adjusted as per offset, 
+similarly to how 'nents' in tdx_page_array_validate_release is calculated?
 
 
 <snip>
