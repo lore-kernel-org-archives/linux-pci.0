@@ -1,80 +1,80 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1FF83DCDA4
-	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 09:10:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 494AC3ED13F
+	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 09:13:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774948232; cv=none; b=D3uMkJ/CevFwrEzKFyX2cbPPBmkyX5xDxxmeZtLwGViqt93PhbNjHRQk+LrJg41cBlUWwKMam+jxbIgZKrUwL1m9z/ShFr2JUFCQC5yVVAMSBepgOTPj7elJRduTkTLBsxIJiO8o/3iTXeJF4273Bmh+1pMEDNxBAHrHxQM88gM=
+	t=1774948398; cv=none; b=J/cHT4Sx+IYnkMI4gfwE+8vf3aAkr6jQi6Wu8S5+W3dsZOg7CU3Mi5rGZ9gqtOgO6FWSgm+iuZ/G8F7iZoWeinL2ue3Ceq5m41oHBH265LCtmploiSIVm67UkvYhLCTLzbwnc5zIs/oCpHiCi/yyX1aLTvN9MU1IoY3EiCxYpxg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774948232; c=relaxed/simple;
-	bh=+fcgrokixlEbcf+aOsmiZdoomim6YGRO5kT5k3+jI7I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DgEKU+IkF2RKK2883erj3boaCCPh9FUx+yOXeDcmlc7lGQvaTKxkszuXuPq7dRv0yBnpgsAyMRKIdtOZTBDFdW3/fvd5C6hBNpDz2Fw2BPQDXgF832HWHUpCzL9RLRKV81Hu/DYKj5iUm9vCLslq/+u43sA26oO09iReLEDUqIg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=i+BvmIya; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=jjzj3mS1; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1774948398; c=relaxed/simple;
+	bh=HMS/kiTT0EphGAkmZl0wKbCjbDHW6VeoLhCBKAXNnXM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=c7rt4IBtixVONDXfBSImSwRi89vPm5jwu5acjKPPSvx/MrbBGRIHurus/yA+bYEnMp1mormVd/EOO92IZPjkXAyR/uSrFTmUOzHzG7SWNasYRMtCLlg7EKjbXuZUCKOXyYJkFOuSesPIPUY+4IibZPtfJGK18XOxZeJw5Dy8mWQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=QeHlKM3J; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=kOsMqFYK; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="i+BvmIya";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="jjzj3mS1"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62V914Cm2761401
-	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 09:10:30 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="QeHlKM3J";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="kOsMqFYK"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62V69bRo1091985
+	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 09:13:16 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=fcs5ftBhXtYRcqqz+HI3Ln1If1xisAux+zA
-	c7yob4so=; b=i+BvmIyaeE18u15CE/47Qr73cjIGc8PTRv4o79eFGzPG2yvFM6m
-	rKR4wsLmVtIinwoDhT9cl5qlLrpXDVMnNsUttiZfIoC1jaHNrdEBKOYFLO/aiZul
-	OQn1X2FeP6ZAkrzjuJdtRZz1RENybJsJU4cxd6/Sjm/CKrZnNijdnJm+e8Uo5rLF
-	VBOcUv3bPL3z3QD6rrZeeMtpjChRm0cqA1PL2MLqZqrt8IzIiX+r9putRxu0Suhr
-	UYvhaY2CVZ3rLolNTYTa7PF1qJrBqAkijjEjpnlCPluyhw3cNRnql8qRqtMNW8sh
-	ewDj2ZkYvotiJ8iRpjQKlblSBamiSXwTFlA==
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d8b930168-1
+	:subject:to; s=qcppdkim1; bh=D38zhW0VILV4j4J3w9UTb84asghozlWF+eh
+	bzg3K3+g=; b=QeHlKM3J36TQqCS8rIOPt3xKrBb0cOucxUhc+kaoylprjuHMgAn
+	IKCWNu0HrglLJmNSabmh26iq2i5K78TduFUZGcIL0RITeBczledezotg/2Rle59v
+	3oR+aCai4+uSZg89OVWgl4fMz6xOEKe6w+iAKqvfRz0ldeuMw9VSDjAPtx2sHwhJ
+	BQXY8EoTIb/KwK5XSTiWZ3K5R5HNPkgWPAWxYRctTebfg1XWZXA/7/bFgOZGv2xV
+	93hMGNd+b3CEUGw5rDG5BMJmtUScPxzxAzPCk6rLIfhWeJKneoKqIyVKQ1EVdUi0
+	YrYf5bZShp/DPjHN0zvZNPFMJaltBCObUxw==
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d7trd3y3g-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 09:10:29 +0000 (GMT)
-Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-c73c065dd15so3476161a12.0
-        for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 02:10:29 -0700 (PDT)
+	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 09:13:15 +0000 (GMT)
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-35c0cbe0f64so15920177a91.0
+        for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 02:13:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1774948229; x=1775553029; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1774948395; x=1775553195; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=fcs5ftBhXtYRcqqz+HI3Ln1If1xisAux+zAc7yob4so=;
-        b=jjzj3mS1NGrRYeTnU7zTB5PZ+3lYBhnE+iAO6cjX0UQHudV6sBm/kiq9eoiDapYEEY
-         U9u1ol9Tc9V6PjAhWWXbnM8Ibgf4wmUQ/W6j1jFu6taDSjroxWX0esrKDDSIX+DMUnFd
-         FuNKd6fhms1js0Nw2GWdTqARPWXAKpdYulpkJz5Bkn+/hI74UmZWeEpm52sPWKnetOmd
-         kYYlg+IWaoLD8Rtvcuu6SWMH2fMp/oTytpdCxu/mAZUy08FNntpdOQ37ccOBKTPDWWms
-         +btYW9rIPM0JVRABPpOudWZpZ7hcjiDmnHefxqA+JwZgKtVaWQkfekeQ4yll0qVqfxvK
-         JEYA==
+        bh=D38zhW0VILV4j4J3w9UTb84asghozlWF+ehbzg3K3+g=;
+        b=kOsMqFYK4Y4GP1hCZnIG/Eyj/QZMG1p1o1MqpyROPUDUBsPb6eLJ0tGKlh6Bf1KThh
+         q9F6xJcPQUR14kHy4FaSXfXdcY7xSjup7+Pbqav+z2zZU9DudSixgWCAVLUJpumaLwnB
+         BrcrIJY1RRcImgwM5pdtYBZ36BBngTc8P2XYAGMlkMPsVqBlaYci6KhFt0LYLLPTdivC
+         dkR98ETgYWOmm5neQ0w7bnBHYlhvIdERhWLqZf+gg2Ar9NihuHE5PcJMdxC6BUw7nKIw
+         zUIlZbl77akjxrDrszPoWsuo4E2gQlesSrfda51UzrvOIIlSsBQm0PSz2SeGBK3aeiZj
+         xF+w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774948229; x=1775553029;
+        d=1e100.net; s=20251104; t=1774948395; x=1775553195;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=fcs5ftBhXtYRcqqz+HI3Ln1If1xisAux+zAc7yob4so=;
-        b=bO7c4tX8XgwszCE8GqW6K6PXG05L0FmFlojOO40hXEIx24UyoA8nn/E5hiKnKPMQQt
-         u8QsiCNnWN1QhIjwzut7MSh37XDMkAkP2jDev4Nq6caxNqQkMRu5BrYK2h9KdfxSDE9R
-         yAIcAlkWYfNQBs2Quz7ikeiUhSr7MADrm6K5UCATAj6b2NOJcuoc5V18PFh5i3jaqRrP
-         rw+RnBrjnauXzUP2cxeT79KnEUhd7v5nS+eg8eMxaaKW33JUFsEyaBefdnWsK+EC/8CJ
-         Sm00wVLmD/fX2AznKHUwO9IhIh1YUEbr3yHMfMgYn3z/GJH2DsnKwbyN5Q0v9VKIz0tu
-         PbJA==
-X-Forwarded-Encrypted: i=1; AJvYcCX+tmBQL5N6qZwUHguoZLxS7fr9wEAKnkTjf0krLkKqcYzWbBNIrlxdNKmIqppv940bSeBPwBSl2F8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx8u5UFa/ipzziVxPLJAGv5U4g2muY6PighWtgVwa8DgFq7QVTk
-	g1itjROiptW4u5maht9h04uD6N2sPIlZCUGxCzlWZGzydWfW3XxsNEip7Coi4ks0BR7Uz3cwlSy
-	PwV1qPEZ2xX/teCHwDYeTidxE6jkO4Q7mT+U03fbdelJPM413HxBSDcXV2d+a3iM=
-X-Gm-Gg: ATEYQzzU7NURYF9x1KXOpGmvJhpSwfwj990UktqzLATQTMWHNQv5i/YHEITe4hWQjF0
-	rcPeuxR4Z3V6huP6ZZ7BbCO3vJpehz6rlD0J/otopcBTtmJTLjIv0/O8dNb2zZoG1WmFTjKuIUR
-	sIgPSgWW4CE7WUv9ug21wLbLDNNkCTXJoDTlzN+OCfnXjf+H7jtWw9t8D5cPJlnXTmsgOVzFZdk
-	fUhG9vwMITQZ/PXtCaVdeF8+8XCWsUxb981MAI28JCOB/qY+eICqt4/Dhn/4WQm/fNBEgNNj5o6
-	vMmd7aCyuwaecXvAlS2P7l2Y6YKnprQomBtZHP9uZcZ55quWBAIskg2s88nztsI0RgqEae6D+5j
-	ue8RfvZC+itj4v57ZMYS561LagRayELl6TyXhB74=
-X-Received: by 2002:a05:6a20:7d9c:b0:38b:de3d:d542 with SMTP id adf61e73a8af0-39c87aea147mr17138846637.51.1774948229248;
-        Tue, 31 Mar 2026 02:10:29 -0700 (PDT)
-X-Received: by 2002:a05:6a20:7d9c:b0:38b:de3d:d542 with SMTP id adf61e73a8af0-39c87aea147mr17138802637.51.1774948228605;
-        Tue, 31 Mar 2026 02:10:28 -0700 (PDT)
+        bh=D38zhW0VILV4j4J3w9UTb84asghozlWF+ehbzg3K3+g=;
+        b=WODvTLyFAS24WLwScmgII6xqxoZwODnZA7h6dKJynWxEOh2KMUmlgqN0B89nFcgFL9
+         LTDCYTZ4yeY4lW75ugPYl00YTYxm383t2ZdLnhTwnKbBqDb2ZO/3v93FvyLFpgDOpZBd
+         2LuO9y2FTxyY7ryqYX2qUiKmWTXeKXeDjACY3aud4QPtlD4L/eTu9eMWNCJ5NxZ8rf3c
+         jPSY6YsT/ffD+gIvfShv60xa3Yt3u7ihzpwZ/nvnTykCErzJqWjlE/buDW81OrnZ4Q7/
+         D97cymRdhDNVq65iKKwsQYLYSZe0buqUYP621gqpK65DZf/UuocsClmzm/kRVTx6lgcL
+         V4Pw==
+X-Forwarded-Encrypted: i=1; AJvYcCW0FZsGW+vA56efbWzzrg7nMAxS8l5kn39GApDU3tKv/jNB9VFQKSkMDYNDnNyzmeI3Srfwkx8XsnY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzd7Innn3igIL5bXzVeRh4jx2iEMU2LZjf9nPd8Stuf/0uR0hmz
+	+/kD0UVdxBAWZ2JpQ1t+SN+t/sCNewWs5kz6xXjZe80hMn0ZmAgAcwzI6uUjgeZphJB9IRraFxy
+	69oP6KRM9y1Fcz9ghk/GBLpPhzwVwxgauk0qKc27Hmj3CNNEVtJ03IVQYcd4b0SQ=
+X-Gm-Gg: ATEYQzwcwFJ3KHo3w0u140Vx4A0UhhzHwiHmj2Sd3hzP7nan3t3oXAIKwG+ah16omrt
+	ErlRe4yU/JmxRQVqS/TzVwV54LsNQ0Bjhr746T4/uTQzjuElHbWulUUNALfk6kiyg7KBXa6y0Sv
+	+cCSnNzyuktdz8+XeYYyR/PHrfHZZA4moAcMhkT3XYMSCHTMmJ47qPsljEdxTg8ijNgjcS9/nIS
+	OZhCgBp/bmO5yVjUOkehZWFNU2f5dgZB7PKJHZ4YyHylQWvZVhrhYDGzbRx2XxYLJcOi9GFJTY7
+	4e6kVl5cEHUi0JEOjvyoZ/8RBb9GlE7x2bk/LyC2ziZ1fVtYM/i13QZYfXcGY9qzKNW57cqLTyK
+	VaIwrXlhoBIFg8+ZBYR3cHvw+wnbbnmE3TqFQ7Mk=
+X-Received: by 2002:a17:90b:48d2:b0:358:f0d0:1a19 with SMTP id 98e67ed59e1d1-35c2ffffaa2mr14258428a91.12.1774948395087;
+        Tue, 31 Mar 2026 02:13:15 -0700 (PDT)
+X-Received: by 2002:a17:90b:48d2:b0:358:f0d0:1a19 with SMTP id 98e67ed59e1d1-35c2ffffaa2mr14258399a91.12.1774948394510;
+        Tue, 31 Mar 2026 02:13:14 -0700 (PDT)
 Received: from work ([117.193.210.140])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82cdaa4c3basm1567941b3a.37.2026.03.31.02.10.25
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-35dbe9379f3sm986527a91.9.2026.03.31.02.13.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 31 Mar 2026 02:10:28 -0700 (PDT)
+        Tue, 31 Mar 2026 02:13:14 -0700 (PDT)
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 To: stable@vger.kernel.org
 Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
@@ -83,8 +83,8 @@ Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
         John Hancock <john@kernel.doghat.io>, bjorn.forsman@gmail.com,
         Linux kernel regressions list <regressions@lists.linux.dev>
 Subject: [PATCH] Revert "PCI: Enable ACS after configuring IOMMU for OF platforms"
-Date: Tue, 31 Mar 2026 14:40:09 +0530
-Message-ID: <20260331091009.19536-1-manivannan.sadhasivam@oss.qualcomm.com>
+Date: Tue, 31 Mar 2026 14:43:06 +0530
+Message-ID: <20260331091306.25210-1-manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -93,33 +93,32 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzMxMDA4NyBTYWx0ZWRfX9wg8Dff2B9NG
- 9x6DsTN88jIql0rwhBRfG+umbgDMHyY4OAJdGDmFP6JHE62q+gwJHXhWShc/T/COjDJcP5feJoa
- IFBIuXvN1ujF1x2RV9zOvgLjVzzn/Lo8lk9PWZdF7UDa/65KwSVD8Lzm9+Qp4o0lWQ2t1EuSwRq
- /Wt4e5B4mJQtgVkdl3RLvMqnEpLHrBSkIqxm0Tl0NHT9ATsrrOYt8zrD9uHDTgQKzsYOExTerMa
- G/LsqXxrHIavW3Ezg2mbSRKyGLyXKasPOjBb5GjM8FeHv5a/7Yx4W10docxx0uLT3bkXMP3okUi
- pIqYHVlRccXW8xS3i0AIUEEmry3V5RFCoyNr/NCgYONJDJIzmCLNd+kBbdc+y0hxkpHf5xIqiOG
- +hv6jwwZgVbAHNpCU0VoSLV9tFuk7NVkZriSXbPpGDuSB7HskFDW/R23gdIzXaCsJwPvr/m1st5
- OCf3cKKdfM5JIInk53w==
-X-Proofpoint-ORIG-GUID: O3flhZmCuXNoLs4fslKPQE8f0TSVY78I
-X-Proofpoint-GUID: O3flhZmCuXNoLs4fslKPQE8f0TSVY78I
-X-Authority-Analysis: v=2.4 cv=NLjYOk6g c=1 sm=1 tr=0 ts=69cb8f86 cx=c_pps
- a=rz3CxIlbcmazkYymdCej/Q==:117 a=vr9TklybbRi32TvS4M0W1g==:17
+X-Proofpoint-GUID: zq6B4tZ5GeP2kuY7CsBPyg7YQghhdHhl
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzMxMDA4NiBTYWx0ZWRfX9N06lOVtumFr
+ b98mRuQHoQQ3MdcOzu3w73SaQGXHZl794fLuUinzl6rfD8VstmXI0Y+8GcFoRsiS9CPcm/4Ms+c
+ wbtCjVC7s1+7Qr6l2PE4IhRshA5HoDb4g5MEeuPp6s60UfAhbGQ0zztRGzHmo30JUWGGtDqms4a
+ jTIw2a7WaM7Ba2ecHyg4kFYfRF+JHoYUG+5CGzNbgUtl2BnCIcD+Bfeu3A6Klope0hFmMctLtzn
+ D/+yt/E4yHlZ1NC8CDB91r3uZcIepAy5XTRoy15vJPh3D+9RIWmNjwzWB9uE5SYIMyoaIDq94wb
+ h6m6voUo60xkk4iNrID0LIHHXQ7KYnkxSz5RC9ZHuB9vQhVMMyxlNvv9ukE5Bs+4a0ZaxEXGkEX
+ fAn1XcgFM81BdYmjNrvUIqpVKOIQkugb3O4CF3oqKMyJeiERJfDls2fDAkf/b8reXcJbeIa447V
+ 3BiPOAvY10IHFpiNqLg==
+X-Proofpoint-ORIG-GUID: zq6B4tZ5GeP2kuY7CsBPyg7YQghhdHhl
+X-Authority-Analysis: v=2.4 cv=H8/WAuYi c=1 sm=1 tr=0 ts=69cb902b cx=c_pps
+ a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=vr9TklybbRi32TvS4M0W1g==:17
  a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22 a=VwQbUJbxAAAA:8
+ a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22 a=VwQbUJbxAAAA:8
  a=lAgNKBcoAAAA:8 a=pGLkceISAAAA:8 a=EUspDBNiAAAA:8 a=hAXPUp1672zZkZ7mbzMA:9
- a=bFCP_H2QrGi7Okbo017w:22 a=drE6d5tx1tjNRBs8zHOc:22
+ a=uKXjsCUrEbL0IQVhDsJ9:22 a=drE6d5tx1tjNRBs8zHOc:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-03-31_02,2026-03-28_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 suspectscore=0 impostorscore=0 spamscore=0 phishscore=0
- priorityscore=1501 malwarescore=0 clxscore=1015 lowpriorityscore=0
- bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
- definitions=main-2603310087
+ adultscore=0 priorityscore=1501 bulkscore=0 spamscore=0 lowpriorityscore=0
+ clxscore=1015 impostorscore=0 phishscore=0 suspectscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603310086
 
-This reverts commit b20b659c2c6a072560b360feda81ae52176034df.
+This reverts commit 573497f350b3cdb526c8c38955ddd287c5d4cc53.
 
 The original commit attempted to enable ACS in pci_dma_configure() prior
 to IOMMU group assignment in iommu_init_device() to fix the ACS enablement
@@ -145,7 +144,7 @@ Link: https://lore.kernel.org/regressions/2c30f181-ffc6-4d63-a64e-763cf4528f48@l
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
 
-This revert is targeted for v5.15 stable kernel.
+This revert is targeted for v5.10 stable kernel.
 
  drivers/pci/pci-driver.c |  8 --------
  drivers/pci/pci.c        | 10 +++++++++-
@@ -153,10 +152,10 @@ This revert is targeted for v5.15 stable kernel.
  3 files changed, 9 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index ecbe382b56be..08c985478b8f 100644
+index de500afdcf97..fe15e59e7c56 100644
 --- a/drivers/pci/pci-driver.c
 +++ b/drivers/pci/pci-driver.c
-@@ -1616,14 +1616,6 @@ static int pci_dma_configure(struct device *dev)
+@@ -1601,14 +1601,6 @@ static int pci_dma_configure(struct device *dev)
  		ret = acpi_dma_configure(dev, acpi_get_dma_attr(adev));
  	}
  
@@ -172,10 +171,10 @@ index ecbe382b56be..08c985478b8f 100644
  	return ret;
  }
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index d1474b2129ab..2d4f3080e4dd 100644
+index 82bde2a92cf6..c25bb6bbc6d9 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -936,7 +936,7 @@ static void pci_std_enable_acs(struct pci_dev *dev)
+@@ -894,7 +894,7 @@ static void pci_std_enable_acs(struct pci_dev *dev)
   * pci_enable_acs - enable ACS if hardware support it
   * @dev: the PCI device
   */
@@ -184,7 +183,7 @@ index d1474b2129ab..2d4f3080e4dd 100644
  {
  	if (!pci_acs_enable)
  		goto disable_acs_redir;
-@@ -3609,6 +3609,14 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+@@ -3548,6 +3548,14 @@ bool pci_acs_path_enabled(struct pci_dev *start,
  void pci_acs_init(struct pci_dev *dev)
  {
  	dev->acs_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
@@ -200,10 +199,10 @@ index d1474b2129ab..2d4f3080e4dd 100644
  
  /**
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index d9d7a79e3563..4a8f499d278b 100644
+index 5079800f56ce..c2fd92a9ee1a 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -562,7 +562,6 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+@@ -547,7 +547,6 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
  }
  
  void pci_acs_init(struct pci_dev *dev);
