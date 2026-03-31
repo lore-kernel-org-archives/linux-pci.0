@@ -1,222 +1,236 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from flow-b4-smtp.messagingengine.com (flow-b4-smtp.messagingengine.com [202.12.124.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 982513A381D;
-	Tue, 31 Mar 2026 19:16:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.12
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774984585; cv=fail; b=qquDzk996tJCtky9AQyXsqFlxY2UzM3HxqIC5TXAT70ibk5Mfwz0Fy2w+hZdkU4AkuJv8UzLInBMD8FhYHvY8fzTZegnFfvqVKf1FMoJqjBwVg9UiZqKTXb+AET1LYJCzLQhGslnGmdF1Jd0esoKO320UJbfYbxyvZkyh5cyRKk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774984585; c=relaxed/simple;
-	bh=Q3lOdM7JZeIpzzKbrv36vvHTymCrZPStwFJtJbI1mkI=;
-	h=From:Date:To:CC:Message-ID:In-Reply-To:References:Subject:
-	 Content-Type:MIME-Version; b=tqu00HiYDlW2VbJ7ZO7i+o/Nbny1PFqCLflkNaVLe/T3NEEnPU6y5MhaTKRUcr1ODocPWoSk/CO0w/LBN+AagkSvUqtpY0u+pvHLdGEAdi8ZK6NVtbNLdGSKdv33Mih0FYD4IGEu9DaGj0OM0xYY0YIpLjCPUdRdmM3893rZnw8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HGNA3cZs; arc=fail smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B02CB331209;
+	Tue, 31 Mar 2026 19:18:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.139
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774984729; cv=none; b=fB2PHm0w/TrZqQt82UuzNECJTDId9la+fgheacyKNNzyBQ8K4jYBo5vl0S07XVOhm7WdsMGKGGcY9UGFmpdZCQigucmfa83rGjaqTvgFhDNAZeine/X4AiuN/BtyuiSlhmiDTZExFtK1Upkl2pV6PkXzPAdMe1kCCre4RSsDGO0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774984729; c=relaxed/simple;
+	bh=eJC1dGMKA7WWnvIcrQkw8YE6B7Kq4iS3s/Ohm6s3FTI=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=q7cyVZixgrTANTH2w906VJGg7cBfHcSHigcgxxc0v8SASIzl9UXZex9tliDTPYItbEkd9bDeOK/Z5jOc+Z/fuhiSLbOt8Ye5KtwcboWl4QPcRRGZ0cMe/nKISVAowILWu0udKvqwCdEQrN9TZXVdR49sMPWltSBEGVl5ATH0a20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=Jix2YZqP; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=qPkl0NIe; arc=none smtp.client-ip=202.12.124.139
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HGNA3cZs"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774984584; x=1806520584;
-  h=from:date:to:cc:message-id:in-reply-to:references:
-   subject:content-transfer-encoding:mime-version;
-  bh=Q3lOdM7JZeIpzzKbrv36vvHTymCrZPStwFJtJbI1mkI=;
-  b=HGNA3cZs94AOh0sDxvmi/Pk+O34qpsHWXgvkyzeLcyFXNaHbPyhdrN+o
-   mieETC+aAUFlMjVHbXRWeM177kIN3WR30zICWuCCd6y/LS0B7cIkVn0bP
-   rZ/iA0BAi6ApJXKI98I13+NFT4wqY/7JVkoorNymW/XAEPJARLkP2ZCO/
-   FIfKpHRbd8DdXIcEukUVObL9Kj49DIZIv4UjKl9Us97TbUAPt4hZIKVQG
-   0G3NWD/zRKKkO/ZN4vHZEZMDZSdseLDZDpBCgeErSzzbq1Os1TAXJvJ33
-   mGjKXxGiCpMS3aQG+VGzkjYW+85jTMpyYl43rpu6auFZHIuOFwEcGSMYN
-   A==;
-X-CSE-ConnectionGUID: 396ifkDWSQWgI2/SU/tu6w==
-X-CSE-MsgGUID: 8Hn7OeJdTRWFbzN9+8+fGg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11745"; a="87472509"
-X-IronPort-AV: E=Sophos;i="6.23,152,1770624000"; 
-   d="scan'208";a="87472509"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 12:16:23 -0700
-X-CSE-ConnectionGUID: NLpmHGgGRnCLjOl5VUgobw==
-X-CSE-MsgGUID: +D9WH3SHRe2UQtRBNO1ajw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,152,1770624000"; 
-   d="scan'208";a="226700605"
-Received: from fmsmsx903.amr.corp.intel.com ([10.18.126.92])
-  by orviesa007.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 12:16:23 -0700
-Received: from FMSMSX902.amr.corp.intel.com (10.18.126.91) by
- fmsmsx903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Tue, 31 Mar 2026 12:16:22 -0700
-Received: from fmsedg901.ED.cps.intel.com (10.1.192.143) by
- FMSMSX902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37 via Frontend Transport; Tue, 31 Mar 2026 12:16:22 -0700
-Received: from CY7PR03CU001.outbound.protection.outlook.com (40.93.198.46) by
- edgegateway.intel.com (192.55.55.81) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Tue, 31 Mar 2026 12:16:21 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=m4FoClKO1tGdRyGkN8hZTuaafr75gIV6KYg3hDLbnuZaWT9c7PHHi+YLD4+KnetAqb97qFgo9XrlTLOulN19HvwGke2V+mnsTRsHzn0fU9KaboMfr4YNutJXb1xMsG6gzqDo3r7s92WdGR4t0cAcGxjqZ1l2Do1YQCdGaxDlwb+Q0bupgDeOaXfztZMcWCgyNrOF1cySNCPpoWyBW+tYQx0Yk2xZGrza1mvd13CHthYiaUCLw4qgmzojVJlpm/0EX8d88z6ATD+ES2s9WXVprj+4eyahHmDjg8wQQVVCjeqvT2QBetWS7NWMC0xiQiDslkF7Z7zs7g0m6blmBiEaLQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=V6h3b+bRrIxBU1+wH2uelf/wdaE+orYmxarFDiwyYX8=;
- b=DNcJdA9CTfVSVcN8w7v+Vge/PcK4VT5x3qod+V8NPjgLjf9yEuthOILu1COP0Nn8FbTHcPLpjs9dYVKXx8p4L3aMz7mu8OdfrJFyYiy9IBSRkF7hBpJMCj5dC+DAv0exuqqpYG9feYUK5L+KomL5StMKLdlzuNqCfa0XAOy3Gm7ceMojjKlt4+H6B/9KFzuMeso87jkUnIXD8ueuhRRGnS/KCHZjWAUqVE5jfQyRLv1CvVt9Kk81YXCJJ4OMiA1D1/B+oGSt+W/89f4/VA3QQw7Qea7PYJDNwTZlV5p448TvRKRmXGmiTK+pbbVG3/ZdAYSxQw6aO0VC53X/oYBxGA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
- by CY5PR11MB6115.namprd11.prod.outlook.com (2603:10b6:930:2c::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.16; Tue, 31 Mar
- 2026 19:16:18 +0000
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::1ff:1e09:994b:21ff]) by PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::1ff:1e09:994b:21ff%3]) with mapi id 15.20.9769.014; Tue, 31 Mar 2026
- 19:16:18 +0000
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 31 Mar 2026 12:16:14 -0700
-To: "Bowman, Terry" <terry.bowman@amd.com>, Dan Williams
-	<dan.j.williams@intel.com>, <dave@stgolabs.net>,
-	<jonathan.cameron@huawei.com>, <dave.jiang@intel.com>,
-	<alison.schofield@intel.com>, <bhelgaas@google.com>, <shiju.jose@huawei.com>,
-	<ming.li@zohomail.com>, <Smita.KoralahalliChannabasappa@amd.com>,
-	<rrichter@amd.com>, <dan.carpenter@linaro.org>,
-	<PradeepVineshReddy.Kodamati@amd.com>, <lukas@wunner.de>,
-	<Benjamin.Cheatham@amd.com>, <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	<linux-cxl@vger.kernel.org>, <vishal.l.verma@intel.com>, <alucerop@amd.com>,
-	<ira.weiny@intel.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Message-ID: <69cc1d7ee3088_1b0cc6100c3@dwillia2-mobl4.notmuch>
-In-Reply-To: <e2583442-55a8-460b-90a0-7b56db0722dd@amd.com>
-References: <20260302203648.2886956-1-terry.bowman@amd.com>
- <20260302203648.2886956-11-terry.bowman@amd.com>
- <69c9d4b8e08f1_17890410047@dwillia2-mobl4.notmuch>
- <e2583442-55a8-460b-90a0-7b56db0722dd@amd.com>
-Subject: Re: [PATCH v16 10/10] cxl: Enable CXL protocol error reporting
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: MW4PR03CA0015.namprd03.prod.outlook.com
- (2603:10b6:303:8f::20) To PH8PR11MB8107.namprd11.prod.outlook.com
- (2603:10b6:510:256::6)
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="Jix2YZqP";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="qPkl0NIe"
+Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
+	by mailflow.stl.internal (Postfix) with ESMTP id D592A130008E;
+	Tue, 31 Mar 2026 15:18:43 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-05.internal (MEProxy); Tue, 31 Mar 2026 15:18:45 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1774984723;
+	 x=1774991923; bh=e2GLgeMPntSzKQd7unYxJVNrGT++Ey/+j0e558YaVKo=; b=
+	Jix2YZqPgfjz22R+GBZTSkmM/A+yTGqbP2D7RrPJTBlHCtwUy2TreQYJzy0FYt4E
+	mn6iGMSZZUAvgOUzmgtxkvDhEQqNq9so/LsT2uXs0WUjbk/iVyGgezKLdcntmYCJ
+	j1mTHgBbF1XmhYE9OLcmwaqRwm079G64C6NXLlTJGqXGDGeTuyvQuKL+LrxHsVyt
+	h07JL26/s5vAaqvA+uFn5EtvqWaXeuVPLWaay4hdvRDT/GeDy5zchULu+Xf5bCKw
+	aMCGUFvWJ4r5sa9ylZo53CH1LtcUihVM+4twawyn4uPT0avFIdaMYMGGz87cRj5W
+	75pcl2tsTe5q72qXomhEng==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1774984723; x=
+	1774991923; bh=e2GLgeMPntSzKQd7unYxJVNrGT++Ey/+j0e558YaVKo=; b=q
+	Pkl0NIe505sDev2vE+9dEjJ2QQvY24shKDHRjyi5iJrJ3lhJmCH83R7Ej6uIsdKx
+	Ah2qPK0lawqj3n8MX9UbaZlR8zOv0eboHPEu2zTV9Ar46wm3SvS5yBG219IjmBDw
+	/8aE106Yb9iAY8X18cayks75OdeneZOPyq2pnCyvpFrGdunxzgrlbZPAQhHCnM3H
+	MhJM8//IeSYiIyV967PwBaCx9UybPaAajGdNOPqf34786RvJS1R2NeBhzECYdV9r
+	Hhp4kbOPpgzUg+fw9gf2jEWED5P2y3OiIotVEJPhPvUaSmHyFEthzrD5syHkfCDz
+	oj1hrBx1gCRLurULKhEqQ==
+X-ME-Sender: <xms:Eh7MaYVXhSLS49doWxNbldxcSkPJQ2lBgD6S-cXj9ML6P8DuIhi54A>
+    <xme:Eh7MaY3CTvPt8pC-6__rnVlJHk3AMpws04d9x1eLmygsx9xxcOKA3tvfX2RGrzeid
+    3eITD6bgIngUTpBItaVYS7mKstrqZdkyduHlmJydVKX9r92pk1CAA>
+X-ME-Received: <xmr:Eh7MaWAMOBeQDrW_EEEiAtExZoJg9HXrtPbMbrU13INIpg2pRTwgJd0Tapg>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgddutddvucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceurghi
+    lhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurh
+    epfffhvfevuffkjghfofggtgfgsehtjeertdertddvnecuhfhrohhmpeetlhgvgicuhghi
+    lhhlihgrmhhsohhnuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtffrrghtth
+    gvrhhnpedvkeefjeekvdduhfduhfetkedugfduieettedvueekvdehtedvkefgudegveeu
+    ueenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrlh
+    gvgiesshhhrgiisghothdrohhrghdpnhgspghrtghpthhtohephedupdhmohguvgepshhm
+    thhpohhuthdprhgtphhtthhopegurghkrheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoh
+    epjhhgghesiihivghpvgdrtggrpdhrtghpthhtoheplhhinhhugiesrghrmhhlihhnuhig
+    rdhorhhgrdhukhdprhgtphhtthhopehgrhgvghhkhheslhhinhhugihfohhunhgurghtih
+    honhdrohhrghdprhgtphhtthhopehrrghfrggvlheskhgvrhhnvghlrdhorhhgpdhrtghp
+    thhtohepihhorghnrgdrtghiohhrnhgvihesnhigphdrtghomhdprhgtphhtthhopehnih
+    hpuhhnrdhguhhpthgrsegrmhgurdgtohhmpdhrtghpthhtohepnhhikhhhihhlrdgrghgr
+    rhifrghlsegrmhgurdgtohhmpdhrtghpthhtohepkhihshesmhhitghrohhsohhfthdrtg
+    homh
+X-ME-Proxy: <xmx:Eh7MaXq2mlnlOelEQan96Ie-hgy-LAK8CHBHQdkG7r27nkHcaWiIbg>
+    <xmx:Eh7Mab_KIxvqr4OxQc5evz-T_S8zOMbzrx08jzw5C5b7mvco3Iesuw>
+    <xmx:Eh7MaefX2P0crsZiJ44xT0eYo0t5zG2qKmdKMy8HHuopFTELtHeNKg>
+    <xmx:Eh7MaRJs8ye8aup8P2JAiOncajQ7Ro6xy3heBDnJcGy9BvoI7oIX_g>
+    <xmx:Ex7MaSUwhQGLpsFOIWtvVzTCvrLLbvifdUNGQI9PxQ_RqFwZ-CC-1T0v>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 31 Mar 2026 15:18:38 -0400 (EDT)
+Date: Tue, 31 Mar 2026 13:18:37 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: "Danilo Krummrich" <dakr@kernel.org>, "Jason Gunthorpe" <jgg@ziepe.ca>
+Cc: "Russell King" <linux@armlinux.org.uk>,
+ "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>,
+ "Ioana Ciornei" <ioana.ciornei@nxp.com>,
+ "Nipun Gupta" <nipun.gupta@amd.com>,
+ "Nikhil Agarwal" <nikhil.agarwal@amd.com>,
+ "K. Y. Srinivasan" <kys@microsoft.com>,
+ "Haiyang Zhang" <haiyangz@microsoft.com>, "Wei Liu" <wei.liu@kernel.org>,
+ "Dexuan Cui" <decui@microsoft.com>, "Long Li" <longli@microsoft.com>,
+ "Bjorn Helgaas" <bhelgaas@google.com>, "Armin Wolf" <W_Armin@gmx.de>,
+ "Bjorn Andersson" <andersson@kernel.org>,
+ "Mathieu Poirier" <mathieu.poirier@linaro.org>,
+ "Vineeth Vijayan" <vneethv@linux.ibm.com>,
+ "Peter Oberparleiter" <oberpar@linux.ibm.com>,
+ "Heiko Carstens" <hca@linux.ibm.com>,
+ "Vasily Gorbik" <gor@linux.ibm.com>,
+ "Alexander Gordeev" <agordeev@linux.ibm.com>,
+ "Christian Borntraeger" <borntraeger@linux.ibm.com>,
+ "Sven Schnelle" <svens@linux.ibm.com>,
+ "Harald Freudenberger" <freude@linux.ibm.com>,
+ "Holger Dengler" <dengler@linux.ibm.com>,
+ "Mark Brown" <broonie@kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>,
+ "Jason Wang" <jasowang@redhat.com>,
+ "Xuan Zhuo" <xuanzhuo@linux.alibaba.com>,
+ Eugenio =?UTF-8?B?UMOpcmV6?= <eperezma@redhat.com>,
+ "Juergen Gross" <jgross@suse.com>,
+ "Stefano Stabellini" <sstabellini@kernel.org>,
+ "Oleksandr Tyshchenko" <oleksandr_tyshchenko@epam.com>,
+ "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
+ <linux-kernel@vger.kernel.org>, <driver-core@lists.linux.dev>,
+ <linuxppc-dev@lists.ozlabs.org>, <linux-hyperv@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <platform-driver-x86@vger.kernel.org>,
+ <linux-arm-msm@vger.kernel.org>, <linux-remoteproc@vger.kernel.org>,
+ <linux-s390@vger.kernel.org>, <linux-spi@vger.kernel.org>,
+ <virtualization@lists.linux.dev>, <kvm@vger.kernel.org>,
+ <xen-devel@lists.xenproject.org>, <linux-arm-kernel@lists.infradead.org>,
+ "Gui-Dong Han" <hanguidong02@gmail.com>, alex@shazbot.org
+Subject: Re: [PATCH 05/12] PCI: use generic driver_override infrastructure
+Message-ID: <20260331131837.6a9fe9ec@shazbot.org>
+In-Reply-To: <DHGTLY0FJWD2.2VLT6NQWF97YY@kernel.org>
+References: <20260324005919.2408620-1-dakr@kernel.org>
+	<20260324005919.2408620-6-dakr@kernel.org>
+	<DHGATG6LJOM1.2AI7BYQ2O4DFU@kernel.org>
+	<20260330141050.2cb47bd9@shazbot.org>
+	<DHGT9XCG8Y96.3IB1EI6FF1ZDZ@kernel.org>
+	<DHGTLY0FJWD2.2VLT6NQWF97YY@kernel.org>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|CY5PR11MB6115:EE_
-X-MS-Office365-Filtering-Correlation-Id: cfb6687b-0ac8-435c-7925-08de8f59fc39
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|7416014|376014|921020|18002099003|56012099003|22082099003;
-X-Microsoft-Antispam-Message-Info: Fgl1AiZmXj/ohCC94iajP5GUd6FJ4B+TJLoZsHpsFSd0BoHcsvMwOn/fAHN/affoVUev/6vp9D0DGK1mjG+7+3ytIlzk3/RoU4gBnXSCmMDHGBLdF6Ixuzt+sy1PurlHnC4V9HWUtaX0tsXvtG5+4GU2/lWFwB4AKqL/PlD5bjJ2eeeGKjaT6wx2BuApt/NqwtBH6+r631lHnCcwE2kkAfeH22Diya3jdb8gFit6qoCqPXuPUedIT+Qpy1BfXktqw3er5GKIVo5HUmXTFLZhdiZ7yndMIf5VMrjewyno4bfcztqZCWJUz9dUMkByv2/sOoWCLMzN+pwuI5bN/r5ayVr7y9t4jYJ9+jfOIBKxMmkVz1lBdkUnUi4wWYYnNFgaSVkeHWwlmWvYT7g6oSmqxHv1KifxsIeZzaO10j5PfusKfivAgtTBmLvLql+nNIScxmi932lt1X2uz3n1qa2ML4W7WZ2qGxUQK4rDNBMiBj6Z/E1rjB9nHrzx1oKhz+6GbNYmgAucJihJDqmaaPzQrrg7CJgeXPHqf9FkvrzELkEg3aRE/y16zILUtgZE34uh4cdZ0kiIoIO2hEx7ziG6DgPFqRU18heU0AEfAT69e2TPe4Y+rjFAAI6uaop3HJzdQQGZzEt03eLD0r7l8cPQyhNmkq3k3ka5adVBAmcdCGWA8CipEqP+0HXmCBRB66eHYtMhr77bREx6gNLV3M/HB3CECoWkEE19ZvLYk3Ive83XTgyy75IMWCyPlYeQoFNZNFgepxcS5qN9VKt1Qo9jaUBL61DfmsjBo/TpiT33pa0=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014)(921020)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Q3gwcWxJQ0tJSWhIczFpOGlpRnFVTnhjYmIxZEFWWURiOWRHZnhERmtnZ3p5?=
- =?utf-8?B?TUUyOXhnaFBaUkd2dzBmaSs4WDRUU3l3OVRubVBWTk5EZUpHN2lrRVlKNWdF?=
- =?utf-8?B?eEE2M3V5S25ZamY5bU9tUS93dVFNZUtHOUdIdnNUd21RelpvS3VSbTlRL0FY?=
- =?utf-8?B?ektPTlB2K2NKNW82RnpkMFIyN2VuVkVjZWFVQ2x6WndUNzgwUUlvTldnU1Q1?=
- =?utf-8?B?NTBBNUZhaHJQOFRVZTA0U242YVdwSUVjcWE5K0JGaGZJbzV6YkRHQlJNRWNR?=
- =?utf-8?B?RFliNVd4TVZYNWhwYXdZTjN0cnVkRTBNUjd2ZVI5cTZFTUVYNXFDTC9RNnc1?=
- =?utf-8?B?c09DeFR4Z0pldGpuQ3ZLTEF5Z2E2Z3FuU2ErOTBWS00rdTc4aW9oY0pmdDI1?=
- =?utf-8?B?Z1ZKbzJBQTF5MjRkelhEYTBJM2ltSmZ5elFQQ2RvM2dJUmFTOUwxUEVidm9N?=
- =?utf-8?B?cnhGNjlEcUcrMk5HK3pyNjVlN1d4K0ZCVmxaOHhldlZ3NGdKWnBSSWI1TjI2?=
- =?utf-8?B?b1M0ZFdGRWJ6bHJBUjZxN2JFcXU2SGxPS0NaR0IzMElrcmVVbmdzVTFob0cr?=
- =?utf-8?B?N1B3Z0h3ZkZVS0tSVklLS1RobW1tdmkrMWs0SDlPT1JXWGVEM3QyOFJXUHJE?=
- =?utf-8?B?Vm1wMjVQRDFWNzF2UGxGNnBabkhuOUtXcTNaeVZvNjJtaGtKR0hNcmtmQVNw?=
- =?utf-8?B?VmhSWWZOR0lTY0tTcXpNaDFMSit2TTZsSzR2ek5vR3RsVzZhUFpSSGpWYlhX?=
- =?utf-8?B?a0ZKMElUTVZFNHo0QXdyTUNLSG5uc2tMdWEzMWNUeW9STzgwSGpJODJVeVdh?=
- =?utf-8?B?SGt1VWRWOUhjY0FrRGVuNTZqTzM3ODN4bFlKdWlSNVE4VFJpMlk0M3JFNk9J?=
- =?utf-8?B?UlNlYXJDRGY2b2xpbWdwZmxQbC80ZDVVcXdYalRwcEh3b011WWNCVFA4YXNC?=
- =?utf-8?B?V055cmVGOU92VE5saU15d2laTEQ5NXRJeml2YlNHdlpQWlZnR1V6QndUUkJH?=
- =?utf-8?B?ZlpUUzI1TmI1L0dQblRJaE0ySTRjS05IdUxrV3pGTExWZXVYRHFNWVJpMnd1?=
- =?utf-8?B?eVRnTzkxa3ozcDVOdGZKUHBvZ0tUcEZxbWh5dmdpWWlRY21WRUxFKzVBRjJq?=
- =?utf-8?B?bEhZWThLU01aUmY1bjhPMEdHeGZ6MGRIejdML25qYnNJNGF4LzZZVTR0bUFE?=
- =?utf-8?B?MSt6WlJHQjBSdWsvWWJPeVJiakl0K3FCZVJEcmFtQlNmeTFpZ0w2MnBxYTl5?=
- =?utf-8?B?RU4razJacHc5VVY1d01oR1hDK05HYS9ZMHljVnI4WDVJZ2hNMW1SY2xvNE9T?=
- =?utf-8?B?K2VDeEN6SXZyMGRGLzhkK2VIc2JDVGFlMVkveHo0cHQ4dXAwRXpQcitBSUEv?=
- =?utf-8?B?dCs3c0NuVjBCZFhjV1A1dXVuUGE5QXJJVzNwRnJrTGQwRWNoQTdCT2dnNi8x?=
- =?utf-8?B?S21uaEwyZDBaZzgwQkpwMzR6VHZzTEJFb2tLa0Jaa29LYjc5dFBqVHRoOGNR?=
- =?utf-8?B?V3NxS2UvNlVlKzR4UTgzWEs0WnlCVGN2WlRUV0ZLMklHQmFZVnZzMkxiZTNI?=
- =?utf-8?B?aVF6ZDVwcVlvUjZCcWk0K2F0Wjk4bkg3bjJMSWxaY1JvWVJscGJlNHdkVWNp?=
- =?utf-8?B?bDllVFhhVWEwRkNnOXNteTRCUnBIY042NWJ0THBXRHFwdjVtbmVsNGZiOXI2?=
- =?utf-8?B?a1Mxd2xLckJFVktpbmdtY1Baa3JOLzQxRzNOenAzOFAxR1pNbDBWMHdKd2Zx?=
- =?utf-8?B?Tkk5T2w4eUZYNXkraGluNEV1TkFmcTZyaGs0UGtEQmhOVmdrUTNPNndnVnBr?=
- =?utf-8?B?aCtyaU55OXVVR2dUOExrTWdDcHBqTlBOdi9Ec2lVYTh3YUxuaDU5bm83WGhr?=
- =?utf-8?B?QzVTTXR1aUU3a3R2VVAzQkZtT0tucG5PZTFLcmJFaVZKbmN4cmtkUHBWWFdV?=
- =?utf-8?B?K0pWdDZUM3RYU1k4VTF5YWM0NW9JNDY1SUVvTExiQWZ2MXFqWHV4VDZCQVBv?=
- =?utf-8?B?VHNsRzZSRWFiSXRKS3o0aGlSYWx6YmtsVXc0MTZ0U3NxQTN6WmxlQ2dTTWhx?=
- =?utf-8?B?aHFhdGREMjZqanRBNmFnTHkvV0t2bHBta245ZGxISHJvbjM4RmlUNitVUTRp?=
- =?utf-8?B?TGt3emRjRlJRRFlKcm1OK2FCNVg0LytLbklIcnZtOSt2amVtSUFpQlYyNzVP?=
- =?utf-8?B?R1c5T0pvWTJQN3BBZmdWWWhrUk51OFBqakNIb3E2VWttVjk1ZUkzUFRpcjJX?=
- =?utf-8?B?eFRyNDlKTlBlQVNYSGNkUWsvajR2Vzg2a0xBa3VKcVUycWRKMWtneE1CUmZH?=
- =?utf-8?B?eWErNTVXU0ttbk5QeFZneTZ3b3lPM1V6OElIY3d6TFBtaWJVTENzRWxpOWxw?=
- =?utf-8?Q?YvfcmczmSSyDaTM4=3D?=
-X-Exchange-RoutingPolicyChecked: qgdn+tozTTv/kIZvzh/QUosbzMzonWYiqOb4IoGitFucuEUCLFK7TU+yBUAnwBKHCcai03XT71oB4yV1MMh0ewO5gCNBWJvKvwAth4c8J/bD54pZehf7LzWnjlbQQsj/g+7uKvLPFm3thpjslnTGIJ1Qcvdhs1LyMQKUD5xHJO517Pxn2pzRhQcnt0M0hsxTQEaeAni99LyeRRZaBRJOF/uM6q2OTZtDuXpRtAunObj2lGUK8gqydX1t6OL9X9MhBi70RU4visOvTZK1tmPdpga5N1HwdsbNE2SrLYm4NeBuV6KIJ1544pN+H7THIGKgwPbUK6fu3jpf7ndJOawXBQ==
-X-MS-Exchange-CrossTenant-Network-Message-Id: cfb6687b-0ac8-435c-7925-08de8f59fc39
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Mar 2026 19:16:18.1585
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: U7bFVFwFjTAHyxJ9YxM/Eaf/muHjokmb1HMAJNqL6f/EnpCAiUbZNFfBG3mB38EtIf55OPYlVw6tcc6XXPSOmTJzDkkRF5F4GsvnsDBJuqM=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY5PR11MB6115
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Bowman, Terry wrote:
-> On 3/29/2026 8:41 PM, Dan Williams wrote:
-> > Terry Bowman wrote:
-> >> CXL protocol errors are not enabled for all CXL devices after boot. These
-> >> must be enabled inorder to process CXL protocol errors.
-> >>
-> >> Introduce cxl_unmask_proto_interrupts() to call pci_aer_unmask_internal_errors().
-> >> pci_aer_unmask_internal_errors() expects the pdev->aer_cap is initialized.
-> >> But, dev->aer_cap is not initialized for CXL Upstream Switch Ports and CXL
-> >> Downstream Switch Ports. Initialize the dev->aer_cap if necessary. Enable AER
-> >> correctable internal errors and uncorrectable internal errors for all CXL
-> >> devices.
-> >>
-> >> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-> >> Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-> >> Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-> >> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
-> >> Reviewed-by: Ben Cheatham <benjamin.cheatham@amd.com>
-> >>
-> >> ---
-> >>  drivers/cxl/core/port.c |  2 ++
-> >>  drivers/cxl/core/ras.c  | 22 ++++++++++++++++++++++
-> >>  drivers/cxl/cxlpci.h    |  4 ++++
-> >>  3 files changed, 28 insertions(+)
-> >>
-> >> diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
-> >> index 27271402915f..c33d58fb7264 100644
-> >> --- a/drivers/cxl/core/port.c
-> >> +++ b/drivers/cxl/core/port.c
-> >> @@ -1852,6 +1852,8 @@ int devm_cxl_enumerate_ports(struct cxl_memdev *cxlmd)
+On Tue, 31 Mar 2026 10:22:14 +0200
+"Danilo Krummrich" <dakr@kernel.org> wrote:
+
+> On Tue Mar 31, 2026 at 10:06 AM CEST, Danilo Krummrich wrote:
+> > On Mon Mar 30, 2026 at 10:10 PM CEST, Alex Williamson wrote:  
+> >> On Mon, 30 Mar 2026 19:38:41 +0200
+> >> "Danilo Krummrich" <dakr@kernel.org> wrote:
 > >>  
-> >>  			rc = cxl_add_ep(dport, &cxlmd->dev);
+> >>> (Cc: Jason)
+> >>> 
+> >>> On Tue Mar 24, 2026 at 1:59 AM CET, Danilo Krummrich wrote:  
+> >>> > diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> >>> > index d43745fe4c84..460852f79f29 100644
+> >>> > --- a/drivers/vfio/pci/vfio_pci_core.c
+> >>> > +++ b/drivers/vfio/pci/vfio_pci_core.c
+> >>> > @@ -1987,9 +1987,8 @@ static int vfio_pci_bus_notifier(struct notifier_block *nb,
+> >>> >  	    pdev->is_virtfn && physfn == vdev->pdev) {
+> >>> >  		pci_info(vdev->pdev, "Captured SR-IOV VF %s driver_override\n",
+> >>> >  			 pci_name(pdev));
+> >>> > -		pdev->driver_override = kasprintf(GFP_KERNEL, "%s",
+> >>> > -						  vdev->vdev.ops->name);
+> >>> > -		WARN_ON(!pdev->driver_override);
+> >>> > +		WARN_ON(device_set_driver_override(&pdev->dev,
+> >>> > +						   vdev->vdev.ops->name));    
+> >>> 
+> >>> Technically, this is a change in behavior. If vdev->vdev.ops->name is NULL, it
+> >>> will trigger the WARN_ON(), whereas before it would have just written "(null)"
+> >>> into driver_override.  
+> >>
+> >> It's worse than that.  Looking at the implementation in [1], we have:
+> >>
+> >> +static inline int device_set_driver_override(struct device *dev, const char *s)
+> >> +{
+> >> +	return __device_set_driver_override(dev, s, strlen(s));
+> >> +}
+> >>
+> >> So if name is NULL, we oops in strlen() before we even hit the -EINVAL
+> >> and WARN_ON().  
+> >
+> > This was changed in v2 [2] and the actual code in-tree is
+> >
+> > 	static inline int device_set_driver_override(struct device *dev, const char *s)
+> > 	{
+> > 		return __device_set_driver_override(dev, s, s ? strlen(s) : 0);
+> > 	}
+> >
+> > so it does indeed return -EINVAL for a NULL pointer.
+
+Ok, good.
+
+> >> I don't believe we have any vfio-pci variant drivers where the name is
+> >> NULL, but kasprintf() handling NULL as "(null)" was a consideration in
+> >> this design, that even if there is no name the device is sequestered
+> >> with a driver_override that won't match an actual driver.
 > >>  
-> >> +			cxl_unmask_proto_interrupts(cxlmd->cxlds->dev);
-> >> +
-> > 
-> > Why here? devm_cxl_port_ras_setup() will just redo it, right?
+> >>> I assume that vfio_pci_core drivers are expected to set the name in struct
+> >>> vfio_device_ops in the first place and this code (silently) relies on this
+> >>> invariant?  
+> >>
+> >> We do expect that, but it was previously safe either way to make sure
+> >> VFs are only bound to the same ops driver or barring that, at least
+> >> don't perform a standard driver match.  The last thing we want to
+> >> happen automatically is for a user owned PF to create SR-IOV VFs that
+> >> automatically bind to native kernel drivers.
+> >>    
+> >>> Alex, Jason: Should we keep this hunk above as is and check for a proper name in
+> >>> struct vfio_device_ops in vfio_pci_core_register_device() with a subsequent
+> >>> patch?  
+> >>
+> >> Given the oops, my preference would be to roll it in here.  This change
+> >> is what makes it a requirement that name cannot be NULL, where this was
+> >> safely handled with kasprintf().  
+> >
+> > Again, no oops here. :)
+> >
+> > I still think it makes more sense to fail early in
+> > vfio_pci_core_register_device(), rather than silently accept "(null)" in
+> > driver_override. It also doesn't seem unreasonable with only the WARN_ON(), but
+> > I can also just add vdev->vdev.ops->name ?: "(null)".  
 > 
-> No, I found this change is needed otherwise injection fails.
+> (Or just skip the call if !vdev->vdev.ops->name, as a user will read "(null)"
+> from sysfs either way.)
 
-Sounds like something worth fixing rather than sprinkling an out of
-place workaround. Port resource acquisition should stay logically
-grouped. I am also missing where this masking is restored on exit?
+Hmm, I suppose they would, but there's a fundamental difference between
+driver_override being set to "(null)" vs being NULL and only
+interpreted as "(null)" via show.  The former would prevent ID table
+matching, the latter would not.  The former is what was intended here,
+without realizing both look the same through sysfs and present a
+difficult debugging challenge.
 
-I have asked about your test scripts in the past [1]. Those scripts need
-to be integrated into cxl_test proper, or at least contributed on the
-side such that anyone can clone the tests and run them. It needs to be
-the case that incremental refactoring work can move with confidence by
-simply running the tests. 
+Given no oops for strlen() now and no known in-kernel drivers with a
+NULL name, I can post a patch that rejects a NULL name in the ops
+structure in vfio_pci_core_register_device(), avoiding the entire
+situation.
 
-[1]: http://lore.kernel.org/68815a66459e4_134cc710012@dwillia2-xfh.jf.intel.com.notmuch
+For this,
+
+Acked-by: Alex Williamson <alex@shazbot.org>
+
+Thanks,
+Alex
