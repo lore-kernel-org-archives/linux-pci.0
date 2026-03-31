@@ -1,324 +1,309 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C8071AAE28
-	for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 00:50:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.145.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 636C236606D;
+	Tue, 31 Mar 2026 02:11:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.20
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774918204; cv=fail; b=gTpAeTpWW+egFvE8XTBSt2NNvOKNEZmSb+3g6eq6ksRsy5tNO3tBOZu1kTvX1eHEuIuvW+54ih/B0PXyfQ7UJDriDktMKwBqKPXrZ5WbDL05XovOKsLxGyV5G9TkUDLyr+kV/U/h4Pr5jkXcCsCG+VSnDqnPddt3yozUGXrpVD8=
+	t=1774923112; cv=fail; b=l/RRMYCYMG3Ln1fKB+EJOBrQlOk5nbv9sBtei8fcfFgihCAH6nTbwJ2WANlrYlu1JBdMMmxQaGVkFQErh22fxM/CS7sM8qwY8056X+0M6LYaCbsYQbzaoAmHZZSkLtRmwIpUOk3kzb6LO7WC7m9BPpDxYSXTIB3H3qEa2yO+jkg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774918204; c=relaxed/simple;
-	bh=L9wxjJkVn9DCD3Je0oXdQaiq061HikX6e+NC7GqD39M=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=NceyfXILl45fgxUzaUJjK50zN9Az3NJrxUr4GNl/UV/+vHmzxKdMYGoHLziN6w5c2H6zrmjMAEOtQCSuMa5e6y24xqEGXT+Y9Ec+lgZqfumcxYZVGBqJ4E/MQ7tTNw9TjuYl+YFa8Kee8XIwknDpz4tJO/ZesBaMwQfozjqqoaU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=hmtSJqlW; arc=fail smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1774923112; c=relaxed/simple;
+	bh=CwSsDXjFhyewk9/CF7dlDS0ImY9t2QnFQWQLFEd1R3s=;
+	h=From:Date:To:CC:Message-ID:In-Reply-To:References:Subject:
+	 Content-Type:MIME-Version; b=YvFjHkIMPkR3w0i8qjgJ2euSut4yBi2aFUjI8F5F9TRZQTNsVQO2M088cthgnnTDGiDOL+0d/LnnVldw+g3Qfb5rtXL3CEA23kTu9d9Bb/Kqs7YOthfzk7W+84E3ZRApvf0t9xfa8AOsXr+EURSXRoYrR8hd/slwp71mOLuTzb8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NsT4AnIt; arc=fail smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="hmtSJqlW"
-Received: from pps.filterd (m0044012.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62ULJkaQ3729754
-	for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 17:50:01 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=G9PUQuU9Xd7OgZlLFFg33R8o/sQFjvSbJ31P2p7vH2c=; b=hmtSJqlWLivr
-	FpTCzdmZ1sdgK0lw6T1On9MlFTNr/uNvKi/cXLpsRpNesknsvaBMgIL79u+XmQ4X
-	OvONh8klorX+4pLd8y8kkhUDUQTnOoHsKZW+iV8xX7MGNxRD5b2L9dy2O8krlqFT
-	T4CSD5bI4B7RrT4qwqBKOb4ybQ//NBf86XefGKXCzg+XsF/ie0yV8UBASZD+WhiY
-	gHfb9ugRF/OC6V2rmi2H21Z8NJ7kJVUQ3wl8TD8HczsB5w6HeFYEojFVp/BfWvYQ
-	hI+l07YKBq3lwSAlJXh0h1OGR0o8bpFCEz5x3yz03g+scWTCs0skkJpFTqyKTDiT
-	LC6Prj3gjA==
-Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com [209.85.210.70])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4d6xq3sgfh-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 17:50:01 -0700 (PDT)
-Received: by mail-ot1-f70.google.com with SMTP id 46e09a7af769-7d7c848c866so8014987a34.0
-        for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2026 17:50:01 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1774918200; cv=none;
-        d=google.com; s=arc-20240605;
-        b=ZHGcYKjyENOGTfnT3HmfvQLg52nFaLvPljgMOvHkBYp1ZY8fYgxm9p//e8XRzYPytH
-         1rgnFCoyqDnt6NN0ElFVKw/yB5uXGpGJi4e7nZeoQoot00AkeD4B/Y4XLKk2cOEG0YMG
-         wsktvtdOnfeupEJz0+Uc4gL1FQBhTVKY3owLwLj3G0oq6nzsOS1JRmf2hxew8HjPhoBp
-         J8MJXcG+4zfukdZz+2DKWHcJibSdb0P8SYzEILmie//ksyR9ldaxFDyubQMbPkLre8hx
-         1Ehm0boDo1ueg9yK2D55nN1lR6cOB3XQpgWKiMTWED587LSL2PZDX+i7BDe2ZQyiZ+Pd
-         7fMw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version;
-        bh=TOfgVd4WxlQKE+hK9yudL6ZnSayBQl5VVP5wHI64dXg=;
-        fh=aElIoE42+eCD0Meo9tehe6yJ3LlShuk2iF0R8622gaM=;
-        b=P3eVyzuhyE+tI22Jcr1TxjyfsrL+1LygXvhQ6iiJGAU0F38d9rMe7kcycwCyIhFK/p
-         daqb+AnrtB1JhipEaooGdkQb4tqFy78oz1xFS6GiuO6lbTqHVRuQJeT7cymyM2jv7FPO
-         /FOMBHoQ85ySPMr+lsu1MhiHssPKZBCZIUKvDPESDhJwZk7dU//EjcFtGknOfWZ7kLYN
-         bbEZ6++qdTrV2ijblzDQkE3x0zPA5956zYSfvh8R9RaFI8hQDFBBQ6mZUIYlTydBV0Xp
-         E9LKpsTKFIQkpwR9GGvcy8zq1lwV8+kMQUrk75UopaoN9pzCZdC/41pgR7MHtOMDMOoD
-         Ty+w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774918200; x=1775523000;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=TOfgVd4WxlQKE+hK9yudL6ZnSayBQl5VVP5wHI64dXg=;
-        b=EDg4YWCe9sZOX/ocykHjLztjLiV78+ffMJm2lmCQjYtGAYAtvsIIOfO3iq1GCf4XMt
-         FAowrB+vOoqmM7p2WawQmo2g6HOmqTYj9OCRu/SnX2g/GVgFCKBvzSpOuKQh/32ub0Xg
-         hxueXAQ8qwVWuYHGusziNVdlZT/vmVIOhByV+YJ9BEYhxgg4qeM4X7XBkJtWTB8yZjfs
-         gnC1DHZeZb8A8tYadA+gj6t1Kou63BS+vpYQ/xmT4nlBqf2C4TKbh0kJPuxCYrpa9Y/w
-         e/uK9vCig4DQcpXay5KUTyXie4f/9pg7VJN3GwDLwASz8DzSZn0mIt4LNbW2fyIb7B+9
-         efTg==
-X-Forwarded-Encrypted: i=1; AJvYcCVQ01kAnx81JEIzdVaCxHbRf0jj2ueSlOggdRNLxwjUzlhGdI2AZn1pLP95MkdLd55zivMbxkoo+ms=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzb/813GG3My4vmr03eyOFZaDnHgoMMnCC67OTBYx04Q/6hPXPc
-	EMDszq6s0rxGY14pjKAF2JlCuxQYfG6P21CX2I270I86lRAgfMWtVVHhIMTbQ4q9BesUcuuWmcL
-	hmZaVio+LEslycuAhRDO3Zv2HZ6h/5EctZIvzB/AKcGaSMYIbTy+hsv7mPU/shf/ZrCLBXDdr4j
-	fiKKdlWPzXW2m1PQzuCYyMbd+VHVRqPuaITow=
-X-Gm-Gg: ATEYQzyl+7RY021nzk7WyTEuO+3E8uDNgRX8nxM5Is3V6D3BBYErGZQCpFSz6dnvc5U
-	JYykzTTxwXJewFSEyCuZ4NntlXGq1v4oM4V+zU72rshjhLzOgQM7Yz0eBC4bElQ6BQ3FYfCcj4H
-	lYgKpue+RMa8C5Mt585nENtaVzpv923KkWAY5HleyJwwEcnXtRpCtIry9JhLdV4v19Vz8I9RFRF
-	Xjgi1+crGs1zZI+q/M=
-X-Received: by 2002:a05:6830:6d4f:b0:7d7:d4ee:c02d with SMTP id 46e09a7af769-7d9faebd4e9mr8218630a34.21.1774918200479;
-        Mon, 30 Mar 2026 17:50:00 -0700 (PDT)
-X-Received: by 2002:a05:6830:6d4f:b0:7d7:d4ee:c02d with SMTP id
- 46e09a7af769-7d9faebd4e9mr8218613a34.21.1774918200006; Mon, 30 Mar 2026
- 17:50:00 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NsT4AnIt"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1774923110; x=1806459110;
+  h=from:date:to:cc:message-id:in-reply-to:references:
+   subject:content-transfer-encoding:mime-version;
+  bh=CwSsDXjFhyewk9/CF7dlDS0ImY9t2QnFQWQLFEd1R3s=;
+  b=NsT4AnIt0F6a4lsvsaubSXCGfT24aevh/rUO1ENzk0esreXXE2vGlB8I
+   1TPZju/Ba8HewR97QS7CUw2/UOuzhrdyzndayZ74vDe6/kZBRCZUYVwhY
+   cMP5Ue/tuTV5eaJGQxLrTPYFY1HdZoGr5xdqzFXxTTgHbq+/pR2TAmie1
+   hZVrJPZG8DRCdX/wkyATlZU8WkqPJhD3m3mYBcJ9XX38ttMR1lRflKjjC
+   1hZApd2WVa761xibvxRqb+KBGN3tlLpSrGbwUAGg1zkssv7H+U72qkuOH
+   akJNZ9h2or4EWZub1YEN1kP/JyDFCCqpP1q8s09hZM/p7lNKTb5ev9Qzx
+   g==;
+X-CSE-ConnectionGUID: C4kBkho0RjeoJGvy+D4Cvg==
+X-CSE-MsgGUID: JNURfvSvSjSkU4eAVJKNFg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11744"; a="75642463"
+X-IronPort-AV: E=Sophos;i="6.23,151,1770624000"; 
+   d="scan'208";a="75642463"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2026 19:11:50 -0700
+X-CSE-ConnectionGUID: DjHBBIFGSAKFddBr3C7sOw==
+X-CSE-MsgGUID: rgIp4PkqRmmTex5Dg8X2qw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,151,1770624000"; 
+   d="scan'208";a="230687272"
+Received: from orsmsx901.amr.corp.intel.com ([10.22.229.23])
+  by orviesa004.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2026 19:11:49 -0700
+Received: from ORSMSX902.amr.corp.intel.com (10.22.229.24) by
+ ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Mon, 30 Mar 2026 19:11:49 -0700
+Received: from ORSEDG901.ED.cps.intel.com (10.7.248.11) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37 via Frontend Transport; Mon, 30 Mar 2026 19:11:49 -0700
+Received: from CY3PR05CU001.outbound.protection.outlook.com (40.93.201.9) by
+ edgegateway.intel.com (134.134.137.111) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Mon, 30 Mar 2026 19:11:48 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Iyify6awCLKjR8QUIl3d4SPtDNI0Esu3E/O29gyrFOnC2+dNPxI35IlOlAaq45AVVL19GjB3HXKKN9V3iGUf/onn9QWBtER2oGaIwzYkqgQ7VC76N0sH+BkHbiHn3rmArgvtK3U4X3qLHWWSxmO/s0EX2/TX0TSQeUFAoq+fsB6gcMZ/aKKv1MarE+eMst+szQs7pZ0gk5YrIBsKUqFHGcIXZWLvYehFHDdYL7xCuq4sn5EzKCwEZsQyPyKKTZmjJCc/39mhpUAYF0JY1om/obP/HbqTzXVbZAfXPvp7owAjiC2UVr1fLhZq1Q2hVRD20bXxmrY7uJxNGX69Y2cQjA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=EF/FmTQVr/k78qVy8aWef0qDRFv8/CCeK0aXzA8FqlM=;
+ b=KRoN1RNfMpkA6cgwJozjlnghYvqt7YctgPwhhn0SQiyNpatG/3Yd9xDrC7Ze3rGCgSL+4V292hrm7bJ9UlT98jjwxNu+eiN99gc5Jn3WgGen/MpYgRhylv2xgb3WANRFjAb2BRalfnpMABLMC2TgQ9O9U2Ud1llIXMkSp98akPYCaP2D/nKBtwtH18jvZ8z9HLxrePs7UrH2AJMair9D86XRPqv87u4WvKO/5MYWKRr+ChK9KBdwiu2OUJ5gxT5VgvnkTuaSFfbkbPO0tIrbW5hAwoy8jjVLhaJOlc9fbUH3xM1iexFGd9INY/1fV5myNwTZTGIHWN0pdIMpWOiu8w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
+ by SA1PR11MB9633.namprd11.prod.outlook.com (2603:10b6:806:4dc::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.15; Tue, 31 Mar
+ 2026 02:11:42 +0000
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::1ff:1e09:994b:21ff]) by PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::1ff:1e09:994b:21ff%3]) with mapi id 15.20.9769.014; Tue, 31 Mar 2026
+ 02:11:41 +0000
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 30 Mar 2026 19:11:39 -0700
+To: "Bowman, Terry" <terry.bowman@amd.com>, Dan Williams
+	<dan.j.williams@intel.com>, <dave@stgolabs.net>,
+	<jonathan.cameron@huawei.com>, <dave.jiang@intel.com>,
+	<alison.schofield@intel.com>, <bhelgaas@google.com>, <shiju.jose@huawei.com>,
+	<ming.li@zohomail.com>, <Smita.KoralahalliChannabasappa@amd.com>,
+	<rrichter@amd.com>, <dan.carpenter@linaro.org>,
+	<PradeepVineshReddy.Kodamati@amd.com>, <lukas@wunner.de>,
+	<Benjamin.Cheatham@amd.com>, <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	<linux-cxl@vger.kernel.org>, <vishal.l.verma@intel.com>, <alucerop@amd.com>,
+	<ira.weiny@intel.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Message-ID: <69cb2d5ba3111_178904100b7@dwillia2-mobl4.notmuch>
+In-Reply-To: <e840b60f-2fec-4645-95d5-27c14ae33853@amd.com>
+References: <20260302203648.2886956-1-terry.bowman@amd.com>
+ <20260302203648.2886956-8-terry.bowman@amd.com>
+ <69c9ccbc3d1cb_178904100cf@dwillia2-mobl4.notmuch>
+ <e840b60f-2fec-4645-95d5-27c14ae33853@amd.com>
+Subject: Re: [PATCH v16 07/10] cxl: Update error handlers to support CXL Port
+ devices
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: MW4PR03CA0279.namprd03.prod.outlook.com
+ (2603:10b6:303:b5::14) To PH8PR11MB8107.namprd11.prod.outlook.com
+ (2603:10b6:510:256::6)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260324234615.3731237-1-zhipingz@meta.com> <20260324234615.3731237-2-zhipingz@meta.com>
- <04859df4-6fa4-4b2b-aef1-621f3c053c2e@huawei.com>
-In-Reply-To: <04859df4-6fa4-4b2b-aef1-621f3c053c2e@huawei.com>
-From: Zhiping Zhang <zhipingz@meta.com>
-Date: Mon, 30 Mar 2026 17:49:49 -0700
-X-Gm-Features: AQROBzDnJHaZAUclxmUw4Fi3GhjHKGCAE6QyCPHZcIf2necy4jORB1gzd3l2wJA
-Message-ID: <CAH3zFs2ia80jkLRTUdExd4wQM4tK_FSgGTgZumDWpL-gjoDERg@mail.gmail.com>
-Subject: Re: [RFC v2 1/2] vfio: add callback to get tph info for dmabuf
-To: fengchengwen <fengchengwen@huawei.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-rdma@vger.kernel.org,
-        linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, Keith Busch <kbusch@kernel.org>,
-        Yochai Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Authority-Analysis: v=2.4 cv=eqzSD4pX c=1 sm=1 tr=0 ts=69cb1a39 cx=c_pps
- a=7uPEO8VhqeOX8vTJ3z8K6Q==:117 a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=PAz_-FQ8hEVmOPYdF0yf:22
- a=i0EeH86SAAAA:8 a=VabnemYjAAAA:8 a=o_g7sp7U41fvUp2KB-EA:9 a=QEXdDO2ut3YA:10
- a=EXS-LbY8YePsIyqnH6vw:22 a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzMxMDAwNSBTYWx0ZWRfX1pS/+zryED+e
- 7dCUlYvcjXwEz0e1YkL781b5BKxsv2T6mh0JprfTxqjZgl08kMfMxBnr662Dn/VEEGLvX/Y1Tnn
- 47sRJ7ebB8vf+YZMYaCLqlJqyStvVY5I1TZAoUk8KZFY3uOe7IPDfThruxv7ufRMj0XBCVBwQgn
- xQR9NMSSjWF1xtWoH+asES9G0eYgBfJ4zjkCvby/SyAwLWtE/nNoARhTu8l4ScY2gvuG4N8jR5r
- psfAZfJhJpSUhWK/48CUtFifdprRyA5Irf7YS0zz74Fu8+xnhCSVy6h+dq9x5iY6pIav7YmgcIJ
- KayMU4/p7l4IoPdCJbdXk6OMw1EW30CRsaxQzUoCVj46sxpYgWrGWHq8rpDPy206ZL1VYSupP9p
- z+DW3pdTlDL7xAyZ6w5m0hKLJXyJgW3OtinEKOW/Wf7hd0MghpQwZCTvsKtHcUoTH0FaXenYoNM
- GMednoyoWH/6+CCxsBA==
-X-Proofpoint-GUID: jGFeaAZSOwZX0uyEvHLrRUuFBD6KtANB
-X-Proofpoint-ORIG-GUID: jGFeaAZSOwZX0uyEvHLrRUuFBD6KtANB
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-30_02,2026-03-28_01,2025-10-01_01
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|SA1PR11MB9633:EE_
+X-MS-Office365-Filtering-Correlation-Id: 953193e5-90da-4243-3e8c-08de8ecad978
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|7416014|376014|1800799024|921020|18002099003|22082099003|56012099003;
+X-Microsoft-Antispam-Message-Info: 7QFFJNKdb2n3XLtrFUcI1qODU9RWnxVpmf/PT/4BkN/1YFDxZP6vHErOp8PUtsy+9bu/zlGYB0hMUplwuLChaBX3w3l/0yXgzgvjNOr/s1yL2sj3+mq0osFFafGkPOnV519tACyyIm/X1Ey3D1h80xwpVh/dQ6BIL+FQJxNd9Oj102aqsaPPrPn1fWGf91Re6YkdrRjZ/0AGMlqQFuf+pjVtehDtAzYxPBpB6zNGDhIbzNyDCVUvabD9Ikpt2s35pN6YzYk6mrvFT2jwQWdmETT3upUhJZlISs80QQMaAmPNbmmDBhWyPHe3TBs6xEG0CPgvlxFz7XQpbPLtrPRp08lzwEz9/Urc7Yd9ZDgU3hGE6c2IG5yqIB/kz3qi1xnT0nRxl5gXwoiUxE2czhfJVLg1NHiJTs/bapgQNd6sfj1QuXARIH6n2WOWnzFFVXpmlrP0zA9hhwVXf+iZMfU45M295MBbmiHneMM/OiktDwyHfTYg8rrPDklTf29bnDmedtRFmsJpurYygcl7GoTuaIExYSlOoM3T07myJcMPx9fFsMSxzC+zeEF11jP0uAoYE62/++rnByngg3kzGgZ+7Z/u28cXDAnXniZRUVXgAN+vOj54lq+jG/U+jc2MCrhehgNzHwEYQYhkwNpEwJkphUGKlo07/EFlkkZI4EScPV07MO75Ri2byEeuXg/o7geVGUPzcYkavNOGPK8bEkObjFLP20XTKBuPnpSL5Rm1Nl8m9QF75dtCSML/VXJAr8GsHqmI7SzTD6iikq4wk1I44A==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(921020)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Y3pFbUJBUVhLNkMxMEg0eUxEa2QzQ3NkTE51RXVMTE9jU3djLzlTdmV3dHpN?=
+ =?utf-8?B?U1NKckpnU1lpMnZCSHFYaXkwTVlyQktKbEV2N21hTmtHVnc0aWRxTlBGdUQv?=
+ =?utf-8?B?L1lrU2h4cXA1ZmFNY09Kb3FRZnFwcTRuZ0piUnZveFhnVTVzbyt2SWVyVzlS?=
+ =?utf-8?B?NS9EUHBqMEU3YlpMVEpRSWNOeUlmc3l0SmhGQWlISmY2RlMrMWIwYkhKQnRu?=
+ =?utf-8?B?T3NQd3NlVHB4Zzd6cEhQU1BLcVJTQ0FCaHF3UDlndDg3a0VWYU84dElrbENY?=
+ =?utf-8?B?N2VTTXJ0d3lqNDFrbkJZYjhPd2R5Ti9OTDVvVmc4V01aOWRvOVd3cUU0dDlE?=
+ =?utf-8?B?QWt1bS81WGpJTEErd2hGZFdaLzM1Tlh1cHZqS05vSEl0cno4MGhzUTBseVRj?=
+ =?utf-8?B?MUpGenpWZ0x0TVlGaklQcDJPREoxcmFHVHl0TkRhTkIwa051WFFERjZnejI5?=
+ =?utf-8?B?OW9vUnB5eS9NYzdpeEZ1YjFBT0t3QldSTzM3QXV5M1dkdXNGOVJPU2Rwck1l?=
+ =?utf-8?B?cHo0TWR4MmpoSlMzK05halZLbzlwKy93N1VyTVN4SkkvNTh5QSs0Q0NFczZ3?=
+ =?utf-8?B?L0J3TmtGc0YwcW5UT3h3L2VHcUE1V1dzdktyOFlZdElnaitLbXZ0am10c0hn?=
+ =?utf-8?B?U1NXbTZEeDEvZ2VGaVpJRXI5Q2lwVzEwMFp6N1k0amVoRXA1UTJrZ1FzVmdB?=
+ =?utf-8?B?QWlwcnJuL0xpaTN2ZndJbUtlNW1ydTg4TC9WZWhJMGJBVUJLQWdXZm84c3FV?=
+ =?utf-8?B?TmVlV1ZDWmF5Y29VMzdKaVRIOWdhMktZQmgrWlRsSUE3dDNObmFYRUQ3em9X?=
+ =?utf-8?B?Ui9HTkwzS2VPYm45aWdsdGt2M21UdDNjN3ZRSHd2VzBtdFRWY3BUUlYyT3FN?=
+ =?utf-8?B?YTZENmltZ25MTEVJdjN4eUEyZDNOUFhyQzdUUnREbnB0SFM4Y1U3THNGeENW?=
+ =?utf-8?B?ZFhqcXk4UDVLT1BPK3d5MWZic242aW40SHNyM0JLT29WUWpHWkVWLy95QzJp?=
+ =?utf-8?B?UTFRK29wak5KQlgvdWtkVzRiUHd6VDR6bWVBS2dQbUgwZ1M0VGRheTM2dkcz?=
+ =?utf-8?B?OEVFSUM2dnJtRFpOeHJqZTNOZTAxMGZQdDNnYmMrblN5eGplWnVyWUpUTTdE?=
+ =?utf-8?B?bEtYNFJmakZ0UXVwN011OWpjSjZjTytZSlBPT0dGdkhSa0xmQVFZYWlFWkJ4?=
+ =?utf-8?B?S1lnVmJNaE5MalphUytqZlZQTENvVVE0TUdmWHdOWk5xN09la25YZUcvbjRl?=
+ =?utf-8?B?c3REaDMvNFR3K2htaGJodHpGSVA3d2NVc3ltRTExQ0VXOFpqUkpjV3VpUFAx?=
+ =?utf-8?B?cFF1amdzSktNT2Q1d1cvczR6aHZUVTRVbWk4MFdkQVdnSmMxSnNGRXJFQXg1?=
+ =?utf-8?B?Z2xvYk45MjVCb3dOenptS0s2ZzVjTElxdURjUTBpV1pnS2dDcERqRDVyc2RF?=
+ =?utf-8?B?Q2hvaEUzeCtpbjhhaGkvY3RYUkswbEhUYjMreXNXUFZ1UFJHQytlQ3g4ZW42?=
+ =?utf-8?B?Qm4wYkFPMDVLckZIei8zb1J1Z1lneFhsYndaSHc4NkRPMVhOZjBjblFqNlh0?=
+ =?utf-8?B?a2tRU0w1aWJIYTBoOWN6UCtRQ0VKcDZnOEhncTNqVlNUaWpRcEdxeGI5MHpz?=
+ =?utf-8?B?OU9oSmloVEJYWllzMW1ZOUFjbE1HZzJXckwwSmR2cHoyMHFCY2taWWhYMlgy?=
+ =?utf-8?B?S0gyT3dPZXNqNWRTMEVkaWhaL2U0d3FyaEVhRzZ2RjlUcHB0dFRoR3I1TUtU?=
+ =?utf-8?B?N3RNVnNaNzA1c3lWQnlpS3pRN2Y2UEc4OHVLc2Npd1ZoUjNHZjdLUHBIRWUw?=
+ =?utf-8?B?dGUzRzhvL1lsMUYyV0pTeGdWWTVFRFBWZkY4OVNNb1FoY1lNb0ZHeFMycUQy?=
+ =?utf-8?B?MzNPZmlXZjhYaHRydmNxVjVFVlVoenB4dklJekIwaTVIRFdBOGI4UHcwWXg4?=
+ =?utf-8?B?VDViU2ZRTjdLWEVZZVhoZE9wTWFJdFhkcmw0UzJTcTFWV0dyUU1WMWVUSG03?=
+ =?utf-8?B?ZWhSa0hJQmlRRVgzUGFqNWVaa3I4NTVCNEtKNnJCTVlXWkhSK1hPTnZ1bzJ2?=
+ =?utf-8?B?akNJVzMrL3Y4bXJpZnAvUklPNXF6UzhoeVZUeDB0NS9Nb1dtc3NNRUtpN21s?=
+ =?utf-8?B?SjZoNkNrWmZYbk9tREQxY0s2SDhxWTFtTmRJcjk1MnQrK2tYUUtKVUdKeWxZ?=
+ =?utf-8?B?bmdIaWNmY1IvNjM1S2FCVGkvVDJ0aE5yVGErY0hxdktRd3BpTzVMN0F3ZzNt?=
+ =?utf-8?B?cm9uWjQzMGwxZldQQzJsZ3NqWVl4OFEyQ1V4SjdHb2lyWitDR3pkQjl0MlRZ?=
+ =?utf-8?B?MFJxb2p1dldOMjN0cjVGY2w5QUkyVkE5NUpkMGttUWRZYTZlcXdPTCtxSkpK?=
+ =?utf-8?Q?DHhnUzOUTPQCQiKc=3D?=
+X-Exchange-RoutingPolicyChecked: ZukBkl+KLbMM/V+AEB3MlnBLBS/UvkQUyEp0gfnUxBc9abNS7XCc2AUbqBqjEDIQffNXCst2AiQPcq4kbDNaZT7JXgkRAMD40Vs8L7Nlx2Az/dPZR69pAH08ynWeU8uli0cOnC/ARs9ZZw5zssGK2Pch37WTS61Sc7CtMt6oodpgBDQOJeUR7UE7/EKc40ql9OWHgWn9kiYEDi/VIsz6AHEeaJKO8w5xxGofqJog06F8L45bL1jG5ZVeFu9Oo3elhdywNZsilupOiEtWnZw4eDJbACyD6OIl+eBvQT4ZXNq8kgHemk0frHGoYikXNXSMWu9MC/96PH0g8uwcCOI+uw==
+X-MS-Exchange-CrossTenant-Network-Message-Id: 953193e5-90da-4243-3e8c-08de8ecad978
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Mar 2026 02:11:41.7925
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: CF+1y4qvhLV4V4OGrqk1wIGCChIQo5TA2BkEZjfkDtyPE+TBLMyndz2i9Y5fbTe4OWlYRrPNJLoYKT+FofL1wYvSPZG6KHWFUCPUV5foPBI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR11MB9633
+X-OriginatorOrg: intel.com
 
-On Fri, Mar 27, 2026 at 7:22=E2=80=AFPM fengchengwen <fengchengwen@huawei.c=
-om> wrote:
->
-> >
-> Hi Zhiping,
->
-> On 3/25/2026 7:46 AM, Zhiping Zhang wrote:
-> > This patch adds a callback to get the tph info on DMA buffer exporters.
-> > The tph info includes both the steering tag and the process hint (ph).
-> >
-> > The steering tag and ph are encoded in the flags field of
-> > vfio_device_feature_dma_buf instead of adding new fields to the uapi
-> > struct, to preserve ABI compatibility.
-> >
-> > Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
-> > ---
-> >  drivers/vfio/pci/vfio_pci_dmabuf.c | 26 ++++++++++++++++++++++++--
-> >  include/linux/dma-buf.h            | 30 ++++++++++++++++++++++++++++++
-> >  include/uapi/linux/vfio.h          |  9 +++++++--
-> >  3 files changed, 61 insertions(+), 4 deletions(-)
-> >
-> > diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio=
-_pci_dmabuf.c
-> > index 478beafc6ac3..c45cb3884b85 100644
-> > --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-> > +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> > @@ -17,6 +17,8 @@ struct vfio_pci_dma_buf {
-> >       struct phys_vec *phys_vec;
-> >       struct p2pdma_provider *provider;
-> >       u32 nr_ranges;
-> > +     u16 steering_tag;
-> > +     u8 ph;
-> >       u8 revoked : 1;
-> >  };
-> >
-> > @@ -60,6 +62,15 @@ vfio_pci_dma_buf_map(struct dma_buf_attachment *atta=
-chment,
-> >                                      priv->size, dir);
-> >  }
-> >
-> > +static int vfio_pci_dma_buf_get_tph(struct dma_buf *dmabuf, u16 *steer=
-ing_tag,
-> > +                                 u8 *ph)
-> > +{
-> > +     struct vfio_pci_dma_buf *priv =3D dmabuf->priv;
-> > +     *steering_tag =3D priv->steering_tag;
-> > +     *ph =3D priv->ph;
->
-> If the dmabuf exporter don't provide st&ph, this ops should return error
+Bowman, Terry wrote:
+> On 3/29/2026 8:07 PM, Dan Williams wrote:
+> > Terry Bowman wrote:
+> >> CXL Protocol trace logging is called for Endpoints in cxl_handle_ras() and
+> >> cxl_handle_cor_ras(). Trace logging support for CXL Port devices is missing.
+> >>
+> >> CXL Endpoint trace logging utilizes a separate trace routine than CXL Port
+> >> device handling. Using is_cxl_memdev(), determine if the device is a CXL EP
+> >> or one of the CXL Port devices.
+> >>
+> >> Update cxl_handle_ras() and cxl_handle_cor_ras() to call the CXL Port trace
+> >> logging function. Change cxl_handle_ras() return values to be pci_ers_result_t
+> >> type.
+> >>
+> >> Check for invalid ras_base and add log messages if NULL.
+> >>
+> >> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+> >>
+> >> ---
+> >>
+> >> Changes in v15 -> v16:
+> >> - New commit
+> >> ---
+> >>  drivers/cxl/core/core.h | 10 ++++++----
+> >>  drivers/cxl/core/ras.c  | 36 +++++++++++++++++++++++++-----------
+> >>  2 files changed, 31 insertions(+), 15 deletions(-)
+> >>
+> >> diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
+> >> index 76d2593e68c6..984cc37be186 100644
+> >> --- a/drivers/cxl/core/core.h
+> >> +++ b/drivers/cxl/core/core.h
+> >> @@ -6,6 +6,7 @@
+> >>  
+> >>  #include <cxl/mailbox.h>
+> >>  #include <linux/rwsem.h>
+> >> +#include <linux/pci.h>
+> >>  
+> >>  extern const struct device_type cxl_nvdimm_bridge_type;
+> >>  extern const struct device_type cxl_nvdimm_type;
+> >> @@ -181,7 +182,8 @@ static inline struct device *dport_to_host(struct cxl_dport *dport)
+> >>  #ifdef CONFIG_CXL_RAS
+> >>  int cxl_ras_init(void);
+> >>  void cxl_ras_exit(void);
+> >> -bool cxl_handle_ras(struct device *dev, u64 serial, void __iomem *ras_base);
+> >> +pci_ers_result_t cxl_handle_ras(struct device *dev, u64 serial,
+> >> +				void __iomem *ras_base);
+> > 
+> > This change is unrelated to the conversion to call different tracepoint
+> > handlers.
+> > 
+> >>  void cxl_handle_cor_ras(struct device *dev, u64 serial,
+> >>  			void __iomem *ras_base);
+> >>  void cxl_dport_map_rch_aer(struct cxl_dport *dport);
+> >> @@ -195,10 +197,10 @@ static inline int cxl_ras_init(void)
+> >>  	return 0;
+> >>  }
+> >>  static inline void cxl_ras_exit(void) { }
+> >> -static inline bool cxl_handle_ras(struct device *dev, u64 serial,
+> >> -				  void __iomem *ras_base)
+> >> +static inline pci_ers_result_t cxl_handle_ras(struct device *dev, u64 serial,
+> >> +					      void __iomem *ras_base)
+> >>  {
+> >> -	return false;
+> >> +	return PCI_ERS_RESULT_NONE;
+> >>  }
+> >>  static inline void cxl_handle_cor_ras(struct device *dev, u64 serial,
+> >>  				      void __iomem *ras_base) { }
+> >> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
+> >> index 48d3ef7cbb92..254144d19764 100644
+> >> --- a/drivers/cxl/core/ras.c
+> >> +++ b/drivers/cxl/core/ras.c
+> >> @@ -291,15 +291,22 @@ void cxl_handle_cor_ras(struct device *dev, u64 serial, void __iomem *ras_base)
+> >>  	void __iomem *addr;
+> >>  	u32 status;
+> >>  
+> >> -	if (!ras_base)
+> >> +	if (!ras_base) {
+> >> +		pr_err_ratelimited("%s: CXL RAS registers aren't mapped\n",
+> >> +				   dev_name(dev));
+> > 
+> > What does this new error print have to do with trace logging?
+> 
+> The error print will be logged when the trace is absent. This is an indication 
+> to the user why the expected trace is missing and will help in debugging where
+> there is no other details otherwise.
 
-That is a good call, let me address that in the new revision.
+Imagine you have a device that does not support the RAS capbality. How
+do we even get to this far into the code without that detail having
+already been reported? For something discovered statically at init time
+why does the kernel need to warn over and over again?
 
->
-> > +     return 0;
-> > +}
-> > +
-> >  static void vfio_pci_dma_buf_unmap(struct dma_buf_attachment *attachme=
-nt,
-> >                                  struct sg_table *sgt,
-> >                                  enum dma_data_direction dir)
-> > @@ -90,6 +101,7 @@ static const struct dma_buf_ops vfio_pci_dmabuf_ops =
-=3D {
-> >       .unpin =3D vfio_pci_dma_buf_unpin,
-> >       .attach =3D vfio_pci_dma_buf_attach,
-> >       .map_dma_buf =3D vfio_pci_dma_buf_map,
-> > +     .get_tph =3D vfio_pci_dma_buf_get_tph,
-> >       .unmap_dma_buf =3D vfio_pci_dma_buf_unmap,
-> >       .release =3D vfio_pci_dma_buf_release,
-> >  };
-> > @@ -228,7 +240,10 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_=
-core_device *vdev, u32 flags,
-> >       if (copy_from_user(&get_dma_buf, arg, sizeof(get_dma_buf)))
-> >               return -EFAULT;
-> >
-> > -     if (!get_dma_buf.nr_ranges || get_dma_buf.flags)
-> > +     if (!get_dma_buf.nr_ranges ||
-> > +         (get_dma_buf.flags & ~(VFIO_DMABUF_FL_TPH |
-> > +                                VFIO_DMABUF_TPH_PH_MASK |
-> > +                                VFIO_DMABUF_TPH_ST_MASK)))
-> >               return -EINVAL;
-> >
-> >       /*
-> > @@ -285,7 +300,14 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_=
-core_device *vdev, u32 flags,
-> >               ret =3D PTR_ERR(priv->dmabuf);
-> >               goto err_dev_put;
-> >       }
-> > -
-> > +     if (get_dma_buf.flags & VFIO_DMABUF_FL_TPH) {
-> > +             priv->steering_tag =3D (get_dma_buf.flags &
-> > +                                   VFIO_DMABUF_TPH_ST_MASK) >>
-> > +                                  VFIO_DMABUF_TPH_ST_SHIFT;
-> > +             priv->ph =3D (get_dma_buf.flags &
-> > +                         VFIO_DMABUF_TPH_PH_MASK) >>
-> > +                        VFIO_DMABUF_TPH_PH_SHIFT;
-> > +     }
-> >       /* dma_buf_put() now frees priv */
-> >       INIT_LIST_HEAD(&priv->dmabufs_elm);
-> >       down_write(&vdev->memory_lock);
-> > diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
-> > index 133b9e637b55..26705c83ad80 100644
-> > --- a/include/linux/dma-buf.h
-> > +++ b/include/linux/dma-buf.h
-> > @@ -113,6 +113,36 @@ struct dma_buf_ops {
-> >        */
-> >       void (*unpin)(struct dma_buf_attachment *attach);
-> >
-> > +     /**
-> > +      * @get_tph:
-> > +      *
-> > +      * Get the TPH (TLP Processing Hints) for this DMA buffer.
-> > +      *
-> > +      * This callback allows DMA buffer exporters to provide TPH inclu=
-ding
-> > +      * both the steering tag and the process hints (ph), which can be=
- used
-> > +      * to optimize peer-to-peer (P2P) memory access. The TPH info is =
-typically
-> > +      * used in scenarios where:
-> > +      * - A PCIe device (e.g., RDMA NIC) needs to access memory on ano=
-ther
-> > +      *   PCIe device (e.g., GPU),
-> > +      * - The system supports TPH and can use steering tags / ph to op=
-timize
-> > +      *   cache placement and memory access patterns,
-> > +      * - The memory is exported via DMABUF for cross-device sharing.
-> > +      *
-> > +      * @dmabuf: [in] The DMA buffer for which to retrieve TPH
-> > +      * @steering_tag: [out] Pointer to store the 16-bit TPH steering =
-tag value
-> > +      * @ph: [out] Pointer to store the 8-bit TPH processing-hint value
-> > +      *
-> > +      * Returns:
-> > +      * * 0 - Success, steering tag stored in @steering_tag
-> > +      * * -EOPNOTSUPP - TPH steering tags not supported for this buffer
-> > +      * * -EINVAL - Invalid parameters
-> > +      *
-> > +      * This callback is optional. If not implemented, the buffer does=
- not
-> > +      * support TPH.
->
-> It seemed already impl...
+So no, I am not seeing a need to spam the log for this, especially since
+cxl_handle_cor_ras() has never needed this in the past.
 
-Yup, it's supposed to be implemented.
+> >>  		return;
+> >> +	}
+> >>  
+> >>  	addr = ras_base + CXL_RAS_CORRECTABLE_STATUS_OFFSET;
+> >>  	status = readl(addr);
+> >> -	if (status & CXL_RAS_CORRECTABLE_STATUS_MASK) {
+> >> -		writel(status & CXL_RAS_CORRECTABLE_STATUS_MASK, addr);
+> >> +	if (!(status & CXL_RAS_CORRECTABLE_STATUS_MASK))
+> >> +		return;
+> > 
+> > No need for this thrash if the tracepoint is kept unified... more below.
+> > 
+> >> +	writel(status & CXL_RAS_CORRECTABLE_STATUS_MASK, addr);
+> >> +	if (is_cxl_memdev(dev))
+> > 
+> > Wait, the whole point of patch 3 was to make this tracepoint generic.
+> > 
+> > The format string in tracepoints are not supposed to be ABI. Incremental
+> > fixup below. Now, there is a difference between "not supposed to be ABI"
+> > and "whoops someone had a dependency". We can always come back and
+> > restore the old format string if someone screams. It would also be nice
+> > to delete trace_cxl_port_aer_correctable_error(). That one might be more
+> > dicey from an ABI regression standpoint, but worth it if you only need
+> > one tracepoint for all CXL protocol errors regardless of source.
+> > 
+> 
+> Would you like that logic moved to the trace routine? The trace routine would 
+> require additional changes to determine if the device is a PCI device. This is
+> required inorder to format the displayed strings. The Endpoint displays 'memdev'
+> which doesn't apply to non-Endpoint devices.
 
->
-> > +      *
-> > +      */
-> > +     int (*get_tph)(struct dma_buf *dmabuf, u16 *steering_tag, u8 *ph);
-> > +
-> >       /**
-> >        * @map_dma_buf:
-> >        *
-> > diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> > index bb7b89330d35..e2a8962641d2 100644
-> > --- a/include/uapi/linux/vfio.h
-> > +++ b/include/uapi/linux/vfio.h
-> > @@ -1505,8 +1505,13 @@ struct vfio_region_dma_range {
-> >  struct vfio_device_feature_dma_buf {
-> >       __u32   region_index;
-> >       __u32   open_flags;
-> > -     __u32   flags;
-> > -     __u32   nr_ranges;
-> > +     __u32   flags;
-> > +#define VFIO_DMABUF_FL_TPH           (1U << 0) /* TPH info is present =
-*/
-> > +#define VFIO_DMABUF_TPH_PH_SHIFT     1         /* bits 1-2: PH (2-bit)=
- */
-> > +#define VFIO_DMABUF_TPH_PH_MASK      0x6U
-> > +#define VFIO_DMABUF_TPH_ST_SHIFT     16        /* bits 16-31: steering=
- tag */
-> > +#define VFIO_DMABUF_TPH_ST_MASK              0xffff0000U
-> > +     __u32   nr_ranges;
-> >       struct vfio_region_dma_range dma_ranges[] __counted_by(nr_ranges);
-> >  };
->
-> Another question:
-> 1\ PCIE protocol define 8bit and 16bit ST
-> 2\ In host-device ST impl, the ACPI will provide 8bit and 16bit ST, the c=
-hoice of which
->    one to use depends on the minimum supported range of the device and th=
-e RP.
-> 3\ So in this P2P scene, although exporter (e.g. GPU) support 16bit ST, b=
-ut the consumer
->    (e.g. RDMA NIC) only support 8bit this may lead to mis-match
->
+No, as I showed below, just change the format string to drop the
+assumption that the device is a 'struct cxl_memdev'.
 
-Hmm, let me check how we can address this mis-match issue. One option
-is to add an
-additional parameter and fail the get_tph call when a mis-match is found.
+I will wrap this diff I pasted earlier into a fixup patch.
 
-> >
-> > --
-> > 2.52.0
-> >
-> >
-> >
->
+> > -	TP_printk("memdev=%s host=%s serial=%lld: status: '%s'",
+> > -		  __get_str(memdev), __get_str(host), __entry->serial,
+> > +	TP_printk("device=%s host=%s serial=%lld: status: '%s'",
+> > +		  __get_str(dev), __get_str(host), __entry->serial,
+> >  		  show_ce_errs(__entry->status)
+> >  	)
+> >  );
