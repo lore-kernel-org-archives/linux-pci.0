@@ -1,118 +1,98 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07D7443DA5D;
-	Tue, 31 Mar 2026 17:44:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 413D4391833;
+	Tue, 31 Mar 2026 17:57:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774979049; cv=none; b=qETJhKomhcnktZzP4ysHDa26muFcVjetTdVmxVzUP8cAolpAFYsFgnrQCkJ81mS+6tSmyjlb/LLVi/VPzJqzcYsb/Gv+/7jwP5dS8kGBggRo4pZVa6TC1kQUvD6lmam2fzUOf+IntTCSlVS44bQ8Kn3Xh48otRjvTvEoBmubRfM=
+	t=1774979839; cv=none; b=UUJTfGkoRsYzFn1Yv/Lg+0ncpES09ndAlZLM0NfRlOqCH4tz0GZaBpFiiySarbI+HrqMaw0RaioaptWLqVniJeP3Rt1SHjcjYfmA465RaWGp8CvAaVWXGA89ZDMdTPOah/ZKr03ew84xkYxS9QCB6tJl60ACdNu4yFjyxnsMwLM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774979049; c=relaxed/simple;
-	bh=2BnY2lciShhql8E6J7zoo6irH4k/8CncSpOVcnrGZI8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gAK3/ZNi+9BkL1Rf/7iTykOXQ741HigDohlBkgpF9iLAcjTjwQ7P3KQdEsxPIWSSosgPcCa8uyBW0JufoaJHvHBoyXaHevK8A2Z/Di2T8grhgBYzi7fX55hQmWGFubhn1YWfTj1E4kKX0fSrw06vQ/MmN0Oh7ioXuP+hmdsQ7qU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=j9+xhrID; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="j9+xhrID"
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62VAm1Zq726020;
-	Tue, 31 Mar 2026 17:44:00 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=/XfIou
-	oBIfJj614uLcM73w3mxF76QqsN7eDk0tK+ebM=; b=j9+xhrIDQM5ndTMWjrMI/n
-	XsgJF1Y3AFadrFwfVsbT96pqYcQJJEMGfWvwT3oCvlk5kBe8NISDCh3q7bXA8G4Z
-	cJiLaU/byoWGIpaC3rWkb5eIfTi3CMsLvYVP8zwO/mQ1AWOLtajcdMp8Auv/Liju
-	sfOvndMjWbYEZ+pnUCgJhQcKL15lZF23I/TfJyaMcGpt4fD9jL5nn+c7LvRmGvcO
-	TrBpJe45xRbfQwqVhPzOvs2X5mkgohAgj1qrFEwa4zWI+BPlnZvamhJaIT1RRcNs
-	cfV3jt2BtBydn1QXWIPARO6cK60Od0PwVHJD2upyaJdDyRjQ1FeT4+cIke8uvK2A
-	==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4d65dcc53s-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 31 Mar 2026 17:44:00 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62VGYhI2008703;
-	Tue, 31 Mar 2026 17:43:59 GMT
-Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4d6v11hysn-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 31 Mar 2026 17:43:59 +0000
-Received: from smtpav06.wdc07v.mail.ibm.com (smtpav06.wdc07v.mail.ibm.com [10.39.53.233])
-	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62VHhwJt11076130
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 31 Mar 2026 17:43:58 GMT
-Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 082045803F;
-	Tue, 31 Mar 2026 17:43:58 +0000 (GMT)
-Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id C0FC45804E;
-	Tue, 31 Mar 2026 17:43:56 +0000 (GMT)
-Received: from [9.61.9.136] (unknown [9.61.9.136])
-	by smtpav06.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Tue, 31 Mar 2026 17:43:56 +0000 (GMT)
-Message-ID: <5fbdc438-3b5d-4a3d-bb4d-cc71a215ce93@linux.ibm.com>
-Date: Tue, 31 Mar 2026 13:43:56 -0400
+	s=arc-20240116; t=1774979839; c=relaxed/simple;
+	bh=zOv/9RphY8o5rG3kxKtLeEGTPsN0fRlOfNUMTN4h4F8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CJVnieENr//zpkTjfTZcX6Zl5/odeJW5GUXHkHx2PHRrL6HLQPayBjFhHGHNH/VbZCsIIQiMbkJyo9+2p34XdH9MUddsymqDrxoS+B1VzvIfoTKbgmvzbeHYky8r067sVYRalTP6CAc4pHeuSOnmz1IvbAuOD1LiLo7kXj91P08=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost.localdomain (unknown [223.166.95.230])
+	by APP-01 (Coremail) with SMTP id qwCowABH8GvrCsxpCP3GCw--.20050S2;
+	Wed, 01 Apr 2026 01:57:00 +0800 (CST)
+From: Han Gao <gaohan@iscas.ac.cn>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	=?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Kees Cook <kees@kernel.org>,
+	Han Gao <gaohan@iscas.ac.cn>,
+	Chen Wang <unicorn_wang@outlook.com>,
+	Manivannan Sadhasivam <mani@kernel.org>
+Cc: linux-pci@vger.kernel.org,
+	sophgo@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	linux-riscv@lists.infradead.org,
+	Han Gao <rabenda.cn@gmail.com>,
+	Icenowy Zheng <zhengxingda@iscas.ac.cn>,
+	Inochi Amaoto <inochiama@gmail.com>,
+	Vivian Wang <wangruikang@iscas.ac.cn>,
+	Yao Zi <me@ziyao.cc>
+Subject: [PATCH 0/2] PCI: Allow disabling port services on broken root ports
+Date: Wed,  1 Apr 2026 01:56:56 +0800
+Message-ID: <20260331175658.1015829-1-gaohan@iscas.ac.cn>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v12 6/7] vfio/pci: Add a reset_done callback for vfio-pci
- driver
-To: Farhan Ali <alifm@linux.ibm.com>, linux-s390@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: helgaas@kernel.org, lukas@wunner.de, alex@shazbot.org, clg@redhat.com,
-        kbusch@kernel.org, schnelle@linux.ibm.com,
-        Julian Ruess <julianr@linux.ibm.com>
-References: <20260330174011.1161-1-alifm@linux.ibm.com>
- <20260330174011.1161-7-alifm@linux.ibm.com>
-Content-Language: en-US
-From: Matthew Rosato <mjrosato@linux.ibm.com>
-In-Reply-To: <20260330174011.1161-7-alifm@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=RsjI7SmK c=1 sm=1 tr=0 ts=69cc07e0 cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VnNF1IyMAAAA:8
- a=r1p2_3pzAAAA:8 a=S9AbbzVI5GFJ9J-4nxIA:9 a=QEXdDO2ut3YA:10
- a=r_pkcD-q9-ctt7trBg_g:22
-X-Proofpoint-GUID: aT5JIYmdlMO_wjmwOHpMK8SjbBvtrWFJ
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzMxMDE2NiBTYWx0ZWRfX+6JW8YDTSP/q
- 12ywkbj6FIJtbWFaHp273FyZfWqZ+TV5/DXxn9+VToJix2ZeWSLQi0B6sZAAOsDW4c1DvS7lcqS
- UL9Di/T5Mjjhtfdo0NNv7xz/BQV2aiYTzZPOgr0tyeyGGwJTDcJ/jmbH0dOvJwtdGj39lMZ99tZ
- pVeCqgxKVFj7/eosNtuiOtc4rvMcRQG1Uwxqr7pNyHAM+o6xc+EqUNGlpmDYoiFj1DWGxgghIjQ
- D7LSddaff/HRwjTUBvSV0cu66Pnzpcn0AD8r+mO+m/eepVRNXMK4fevLwymtKEE9C4hg8Dxsw0j
- AWnypYAYsXy1gH6gMNwuvxdcTRCqDjXPJVa4mA9XwUeNXD6jxtM8wsIGO7qbN7D9/J9+OnI4WiR
- xb2XAjwSI/QhacJFeV33/E9dDVwZGxQw0nypZjj1lXBT0yO4qaYmy7iaDDh5k9P1IsxiAUIrn5D
- 68AhIsB+lxaL+dnL6bw==
-X-Proofpoint-ORIG-GUID: aT5JIYmdlMO_wjmwOHpMK8SjbBvtrWFJ
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-31_03,2026-03-31_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 bulkscore=0 priorityscore=1501 lowpriorityscore=0
- suspectscore=0 malwarescore=0 spamscore=0 clxscore=1015 phishscore=0
- adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
- definitions=main-2603310166
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:qwCowABH8GvrCsxpCP3GCw--.20050S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7JryxXF1ktFykZF18tF4DCFg_yoW8JryfpF
+	WrWF9YyrWfKryUKwsrX3WUCFy3WF4kAryrC34DGw47urW3AryrXF9rtF93tFsrGr4xAa4Y
+	vr95C3W5uFyDZFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9214x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r1I6r4UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVCY1x0267AKxVW8Jr
+	0_Cr1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
+	6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
+	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E
+	8cxan2IY04v7MxkF7I0En4kS14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFV
+	Cjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWl
+	x4CE17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r
+	1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_
+	JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYx
+	BIdaVFxhVjvjDU0xZFpf9x0pRHUDLUUUUU=
+X-CM-SenderInfo: xjdrxt3q6l2u1dvotugofq/1tbiBwkDDGnL4t55SwABss
 
-On 3/30/26 1:40 PM, Farhan Ali wrote:
-> On error recovery for a PCI device bound to vfio-pci driver, we want to
-> recover the state of the device to its last known saved state. The callback
-> restores the state of the device to its initial saved state.
-> 
-> Reviewed-by: Julian Ruess <julianr@linux.ibm.com>
-> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
-> Acked-by: Alex Williamson <alex@shazbot.org>
+Some PCIe root ports break MSI delivery to downstream devices when
+native port services (AER, PME, bwctrl, etc.) are active. The existing
+pcie_ports=compat kernel parameter works around this globally, but
+affects all ports on the system.
 
-Reviewed-by: Matthew Rosato <mjrosato@linux.ibm.com>
+This series adds a per-device mechanism to skip port service probing:
+  1. Introduce PCI_DEV_FLAGS_NO_PORT_SERVICES flag and wire it into
+     the PCIe port driver
+  2. Apply it via quirk to Sophgo SG2042 root ports [1f1c:2042], which
+     fail to deliver MSI interrupts when port services are enabled
 
+SG2042's PCIe root ports only support MSI, not MSI-X. The MSI
+controller provides only 32 vectors shared across all devices behind
+each root port. When native port services claim vectors from this
+limited pool, downstream devices are starved of interrupts, resulting
+in zero interrupts delivered and driver timeouts (e.g. amdgpu fence
+fallback timer expired on all rings).
+
+Han Gao (2):
+  PCI: Add per-device flag to disable native PCIe port services
+  PCI: Add quirk to disable PCIe port services on Sophgo SG2042
+
+ drivers/pci/pcie/portdrv.c |  3 +++
+ drivers/pci/quirks.c       | 12 ++++++++++++
+ include/linux/pci.h        |  2 ++
+ include/linux/pci_ids.h    |  2 ++
+ 4 files changed, 19 insertions(+)
+
+-- 
+2.47.3
 
