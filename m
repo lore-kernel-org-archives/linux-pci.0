@@ -1,83 +1,223 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FA2A3FE64D;
-	Tue, 31 Mar 2026 14:44:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3E603FFADE;
+	Tue, 31 Mar 2026 15:02:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774968290; cv=none; b=aXl/lFY/E1X83OtPIgritFuYD+MyE/lGK/JMNgW19nPyXvuLh5jq6zEanPXw7zKW2eqHM4F8iL0eKeMSbuOK8VC7nPY7279VXgHftXwjT3aWKow3rCpnBJZ7Px9VFHCms4sl/nrfy4Ds/EzZE9CG+wYaPbSvOU2ZGrRu+1DYgoI=
+	t=1774969379; cv=none; b=gKFKM2U7cL0wVfHr1VACyM8vJXJeBNWR0ZQFXbxzdKMMf4Iopv/ZMJ5yVIOuB08tonWaEWbuX82OHvbDOiVb8VwqKh/pE0eaSnNAnxl/URo2y9b4Fj6S0IrN+v5Mf7oikXyxdlVFZeJrWhNCu10NVwWo+3JzZS3SbgUE/QFDENQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774968290; c=relaxed/simple;
-	bh=8y8lSa7CSo0yjIg2RbhfKq1IRtqkRUqU6B5Id20s2ss=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XuJePRtGaVYsuvW3u++6vZgF6tVlGVmDRRVQlT7m2B4Ox+qLulaZnNHy0Omshq0tIbiRhq0CyU0S0XVVuIDZHg4502YPISFf7WZtWjLIe7gmPaJYh0ZXKcx8BYWkt9ZZ6lDRKNRcQ7dxmf/bf6ptsB9kij21jb6uD/F4UEtzlTk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZZJOnDk+; arc=none smtp.client-ip=198.175.65.18
+	s=arc-20240116; t=1774969379; c=relaxed/simple;
+	bh=lKc0nR0+3UMuWZyWz6l9MjXgdkdLagd8O+NJe9KaxV4=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=Lx/7ecs92D1hikmR3vFhX7VxOxmrB/fyYBABeF61Dyom9t4LoeVm0IC4wiQKz+lkFIAV+lo9+FQQ68yAzj1rzFFDc6dVcWjM9+NxK7go1pQ0AeFjepxtkCARijy/qLXP5exlskO9v/DkEjleguXHfVQRUPnNGpXqA3kwykWBzaA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KglO/3Mo; arc=none smtp.client-ip=192.198.163.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZZJOnDk+"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KglO/3Mo"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774968289; x=1806504289;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=8y8lSa7CSo0yjIg2RbhfKq1IRtqkRUqU6B5Id20s2ss=;
-  b=ZZJOnDk+O1S0u+YvPm3O2tpLZ2h3N7HXg0yQOR8a9bGxcw3f3DdQwMkX
-   P9OX1fZ1XT7s8P66oRxpFcaZoOUUOahs8kUY5UOsFoXaTQ/f1zzK10GQl
-   ZcmuWJkwYxR3PAPe4OU1G0vZIJCPJiVkyQ0QMv+uKIVVXMXD50RJaYyQt
-   2MpXz9whrSxfty2nhHuI8eCtUQs9g0OHCX95s8ayiQblMYPbjRySnexXi
-   /tt+Fzi1pfqCGGKYTcIlOg6PkwZWmR+omN7d1ThK5Swj/nxZ2+QAPbojX
-   ibTR/1osIBCV86r8L95dGify0Q5gHjSa0SkgHaH160hd7LniUR4i/7v2R
+  t=1774969378; x=1806505378;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=lKc0nR0+3UMuWZyWz6l9MjXgdkdLagd8O+NJe9KaxV4=;
+  b=KglO/3MoKB03HCMY9nz1ITGz+Qa37xd8SnZOvQMODqf0t8PNlmVMg/tp
+   QHBLVF698m5kmyc4YsjSCJpM0zmzjqFET/6ucwoyhUGqtoxAGxL0CWpug
+   DZNg95KYp69URRRBJxX5PN+iPe44nv0wCkh+AtZc0SeY7atamrggNfKBS
+   we35ntCa8D8eT48w1TOuvPHzKmMY7J/9lpAlEbYdUYYHXpEcniUTfk8Lw
+   zZvCqmTAbmHxLG1uAAb6nCdkFFyHk/zMWLKOZyRLS4oNfMAmUUQ7sX8UU
+   luF3N0D/ouUGbSvHlmWfS4QOt6bdhmrlIQ9+fBTUCoZQWGmXuDZ3j/dYa
    w==;
-X-CSE-ConnectionGUID: nvC1GuD4SWawl8SD4UCDDw==
-X-CSE-MsgGUID: YMssRZd0SGmWtR6g4By2uw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11745"; a="76000230"
+X-CSE-ConnectionGUID: lI8GtGyzTBCrHEwicmhDjg==
+X-CSE-MsgGUID: DJRoOitSTMCDj6sHxM/BrQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11745"; a="86682260"
 X-IronPort-AV: E=Sophos;i="6.23,152,1770624000"; 
-   d="scan'208";a="76000230"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 07:44:49 -0700
-X-CSE-ConnectionGUID: GCa0CERBQdG2oYzBiv5Opw==
-X-CSE-MsgGUID: w90x08fRT9atJ74Ui7T77w==
+   d="scan'208";a="86682260"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 08:02:53 -0700
+X-CSE-ConnectionGUID: JHiKH3CWRemnPBHhcWS24A==
+X-CSE-MsgGUID: Gcx1iYgWQJaJHg3SKbkrBg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,152,1770624000"; 
-   d="scan'208";a="226250497"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa009.jf.intel.com with ESMTP; 31 Mar 2026 07:44:45 -0700
-Date: Tue, 31 Mar 2026 22:23:35 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Nikolay Borisov <nik.borisov@suse.com>
-Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
-	dan.j.williams@intel.com, x86@kernel.org, chao.gao@intel.com,
-	dave.jiang@intel.com, baolu.lu@linux.intel.com, yilun.xu@intel.com,
-	zhenzhong.duan@intel.com, kvm@vger.kernel.org,
-	rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com,
-	kas@kernel.org, xiaoyao.li@intel.com, vishal.l.verma@intel.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 06/31] x86/virt/tdx: Read global metadata for TDX
- Module Extensions/Connect
-Message-ID: <acvY5yJ1vZwDDiLh@yilunxu-OptiPlex-7050>
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-7-yilun.xu@linux.intel.com>
- <a68bb3d5-0f93-428f-ac8c-f3400d1fc028@suse.com>
+   d="scan'208";a="221527611"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.6])
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 08:02:37 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Tue, 31 Mar 2026 18:02:33 +0300 (EEST)
+To: Danilo Krummrich <dakr@kernel.org>
+cc: Russell King <linux@armlinux.org.uk>, 
+    Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+    "Rafael J. Wysocki" <rafael@kernel.org>, 
+    Ioana Ciornei <ioana.ciornei@nxp.com>, Nipun Gupta <nipun.gupta@amd.com>, 
+    Nikhil Agarwal <nikhil.agarwal@amd.com>, 
+    "K. Y. Srinivasan" <kys@microsoft.com>, 
+    Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, 
+    Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, 
+    Bjorn Helgaas <bhelgaas@google.com>, Armin Wolf <W_Armin@gmx.de>, 
+    Bjorn Andersson <andersson@kernel.org>, 
+    Mathieu Poirier <mathieu.poirier@linaro.org>, 
+    Vineeth Vijayan <vneethv@linux.ibm.com>, 
+    Peter Oberparleiter <oberpar@linux.ibm.com>, 
+    Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
+    Alexander Gordeev <agordeev@linux.ibm.com>, 
+    Christian Borntraeger <borntraeger@linux.ibm.com>, 
+    Sven Schnelle <svens@linux.ibm.com>, 
+    Harald Freudenberger <freude@linux.ibm.com>, 
+    Holger Dengler <dengler@linux.ibm.com>, Mark Brown <broonie@kernel.org>, 
+    "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, 
+    Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
+    =?ISO-8859-15?Q?Eugenio_P=E9rez?= <eperezma@redhat.com>, 
+    Alex Williamson <alex@shazbot.org>, Juergen Gross <jgross@suse.com>, 
+    Stefano Stabellini <sstabellini@kernel.org>, 
+    Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>, 
+    "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
+    LKML <linux-kernel@vger.kernel.org>, driver-core@lists.linux.dev, 
+    linuxppc-dev@lists.ozlabs.org, linux-hyperv@vger.kernel.org, 
+    linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
+    linux-arm-msm@vger.kernel.org, linux-remoteproc@vger.kernel.org, 
+    linux-s390@vger.kernel.org, linux-spi@vger.kernel.org, 
+    virtualization@lists.linux.dev, kvm@vger.kernel.org, 
+    xen-devel@lists.xenproject.org, linux-arm-kernel@lists.infradead.org, 
+    Gui-Dong Han <hanguidong02@gmail.com>
+Subject: Re: [PATCH 06/12] platform/wmi: use generic driver_override
+ infrastructure
+In-Reply-To: <20260324005919.2408620-7-dakr@kernel.org>
+Message-ID: <f15629e4-ef8f-b1b6-0158-064f40f111da@linux.intel.com>
+References: <20260324005919.2408620-1-dakr@kernel.org> <20260324005919.2408620-7-dakr@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a68bb3d5-0f93-428f-ac8c-f3400d1fc028@suse.com>
+Content-Type: text/plain; charset=US-ASCII
 
-> > +static int get_tdx_sys_info_ext(struct tdx_sys_info_ext *sysinfo_ext)
-> > +{
-> > +	int ret = 0;
-> > +	u64 val;
-> > +
-> > +	if (!ret && !(ret = read_sys_metadata_field(0x3100000100000000, &val)))
+On Tue, 24 Mar 2026, Danilo Krummrich wrote:
+
+> When a driver is probed through __driver_attach(), the bus' match()
+> callback is called without the device lock held, thus accessing the
+> driver_override field without a lock, which can cause a UAF.
 > 
-> nit: This is likely generated by a script/llm because I see no other
-> explanation why !ret is being checked here...
+> Fix this by using the driver-core driver_override infrastructure taking
+> care of proper locking internally.
+> 
+> Note that calling match() from __driver_attach() without the device lock
+> held is intentional. [1]
+> 
+> Link: https://lore.kernel.org/driver-core/DGRGTIRHA62X.3RY09D9SOK77P@kernel.org/ [1]
+> Reported-by: Gui-Dong Han <hanguidong02@gmail.com>
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220789
+> Fixes: 12046f8c77e0 ("platform/x86: wmi: Add driver_override support")
+> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+> ---
+>  drivers/platform/wmi/core.c | 36 +++++-------------------------------
+>  include/linux/wmi.h         |  4 ----
+>  2 files changed, 5 insertions(+), 35 deletions(-)
+> 
+> diff --git a/drivers/platform/wmi/core.c b/drivers/platform/wmi/core.c
+> index b8e6b9a421c6..750e3619724e 100644
+> --- a/drivers/platform/wmi/core.c
+> +++ b/drivers/platform/wmi/core.c
+> @@ -842,39 +842,11 @@ static ssize_t expensive_show(struct device *dev,
+>  }
+>  static DEVICE_ATTR_RO(expensive);
+>  
+> -static ssize_t driver_override_show(struct device *dev, struct device_attribute *attr,
+> -				    char *buf)
+> -{
+> -	struct wmi_device *wdev = to_wmi_device(dev);
+> -	ssize_t ret;
+> -
+> -	device_lock(dev);
+> -	ret = sysfs_emit(buf, "%s\n", wdev->driver_override);
+> -	device_unlock(dev);
+> -
+> -	return ret;
+> -}
+> -
+> -static ssize_t driver_override_store(struct device *dev, struct device_attribute *attr,
+> -				     const char *buf, size_t count)
+> -{
+> -	struct wmi_device *wdev = to_wmi_device(dev);
+> -	int ret;
+> -
+> -	ret = driver_set_override(dev, &wdev->driver_override, buf, count);
+> -	if (ret < 0)
+> -		return ret;
+> -
+> -	return count;
+> -}
+> -static DEVICE_ATTR_RW(driver_override);
+> -
+>  static struct attribute *wmi_attrs[] = {
+>  	&dev_attr_modalias.attr,
+>  	&dev_attr_guid.attr,
+>  	&dev_attr_instance_count.attr,
+>  	&dev_attr_expensive.attr,
+> -	&dev_attr_driver_override.attr,
+>  	NULL
+>  };
+>  ATTRIBUTE_GROUPS(wmi);
+> @@ -943,7 +915,6 @@ static void wmi_dev_release(struct device *dev)
+>  {
+>  	struct wmi_block *wblock = dev_to_wblock(dev);
+>  
+> -	kfree(wblock->dev.driver_override);
+>  	kfree(wblock);
+>  }
+>  
+> @@ -952,10 +923,12 @@ static int wmi_dev_match(struct device *dev, const struct device_driver *driver)
+>  	const struct wmi_driver *wmi_driver = to_wmi_driver(driver);
+>  	struct wmi_block *wblock = dev_to_wblock(dev);
+>  	const struct wmi_device_id *id = wmi_driver->id_table;
+> +	int ret;
+>  
+>  	/* When driver_override is set, only bind to the matching driver */
+> -	if (wblock->dev.driver_override)
+> -		return !strcmp(wblock->dev.driver_override, driver->name);
+> +	ret = device_match_driver_override(dev, driver);
+> +	if (ret >= 0)
+> +		return ret;
+>  
+>  	if (id == NULL)
+>  		return 0;
+> @@ -1076,6 +1049,7 @@ static struct class wmi_bus_class = {
+>  static const struct bus_type wmi_bus_type = {
+>  	.name = "wmi",
+>  	.dev_groups = wmi_groups,
+> +	.driver_override = true,
+>  	.match = wmi_dev_match,
+>  	.uevent = wmi_dev_uevent,
+>  	.probe = wmi_dev_probe,
+> diff --git a/include/linux/wmi.h b/include/linux/wmi.h
+> index 75cb0c7cfe57..14fb644e1701 100644
+> --- a/include/linux/wmi.h
+> +++ b/include/linux/wmi.h
+> @@ -18,16 +18,12 @@
+>   * struct wmi_device - WMI device structure
+>   * @dev: Device associated with this WMI device
+>   * @setable: True for devices implementing the Set Control Method
+> - * @driver_override: Driver name to force a match; do not set directly,
+> - *		     because core frees it; use driver_set_override() to
+> - *		     set or clear it.
+>   *
+>   * This represents WMI devices discovered by the WMI driver core.
+>   */
+>  struct wmi_device {
+>  	struct device dev;
+>  	bool setable;
+> -	const char *driver_override;
+>  };
+>  
+>  /**
 > 
 
-Yes, the file was generated by script at the beginning.
+Hi,
+
+I tried applying this to platform-drivers tree but it failed to compile so 
+I ended up dropping the changed.
+
+-- 
+ i.
+
