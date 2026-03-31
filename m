@@ -1,154 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22E2E35DA60;
-	Tue, 31 Mar 2026 19:01:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 597883A3E9F;
+	Tue, 31 Mar 2026 19:01:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774983665; cv=none; b=nAAiD/X8dqx24uD1o+F3FGO6CEp3vBvV5i8FdMGGOTl1A4p28Fz1G+eLtlSQzXnkGZC4hbHEdYsS4NjEsFpIU8AHNcJaSFdokpaM2qdl8hw0BfFyAWFiwM40cwJSBbQbn6UplLyf3fM8nciZe9P+zu2g1bcST5EqSMaLZ/W+V7M=
+	t=1774983666; cv=none; b=UFU+9/nYNgCkMSFTfQtEJ113Bkdi/feG8YerutiL7W2vnDxms+8ATpmbRQvZrLgyDdP4DW/Rz/gGjNerije6FvFpGM/InvrKueuJZCKEvMS07fwXrP+J/zFKgaP1buln5ZLwATUBe63T+7cxSc5ewsVpCdz09oWZCXB5Pys1qpQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774983665; c=relaxed/simple;
-	bh=KSLOd98K1CK+1Z7brXY8QL31QPyNcPrQH0DGa7ob15s=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=dCLZpmh2u1JYn7jNXQGUtbXQIKJyuyQFQvSlO0O6ccpp9sIF89A5iaUYaWxG4KDgd62itBQY/POerAnJMpDVynZv9as21oWLT70FkY+SXrvrIaQ42eem0D5CEH5TEMs3ngy1ZKtyx2J8HwTDTptew8/H7uQLjWYOf9fOXPYJ3FE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qns8qZSd; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774983666; c=relaxed/simple;
+	bh=3uHrsF3qZfNn9H8Vl0JvpMLblR94CJB11jyUyCdYt+Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OWdMIwAahpN5RceiG4wZDMlmkwwET3sSp5Ck4H3y5oRMHpgs7kE30+ULmsMSWg+IqffbqQpfYrTPyvNqlCtolVK968nbYWSbrsFDzEAVpJGvf5fRApUFoNgjQpH1d+VfsyamSb+WI55FAYiwIByr1XmxK0RrrmDvk2CoW8wxd+w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Qroe8Hr+; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qns8qZSd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8235EC19423;
-	Tue, 31 Mar 2026 19:01:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774983664;
-	bh=KSLOd98K1CK+1Z7brXY8QL31QPyNcPrQH0DGa7ob15s=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=Qns8qZSd7O23U5meg+0akBEqFL5LkPGd3h0FJ+I5UZ01RjHWerLmVaxDp4rd0DZBS
-	 yQgnl/RzPKtJ77WCcFNGMSXoObHClC1nDdsGB/oww5ccTocv7zUspVW0pjJQZ04i5e
-	 UDlafcv0mfTryjVcYjiMMp0qmBlWeTPA1wTg+qg4AsrSjVtZ069gHRYItQuNDSBxFz
-	 3ThXl7oD79dY4QGtjn9VSfN6i9e0DjjdYr07NPRm282rSxKGip/QTRyo89qgCKSsRq
-	 wD3v8FVw+dtdilOvl3DwzsONBOiDjN6NxqUdiRZ6HPiOnsVouqhlM+WNsU46l3US5n
-	 ZojjiHskKGllA==
-Date: Tue, 31 Mar 2026 14:01:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Kuehling, Felix" <felix.kuehling@amd.com>
-Cc: Gerd Bayer <gbayer@linux.ibm.com>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Selvin Xavier <selvin.xavier@broadcom.com>,
-	Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-	Michal Kalderon <mkalderon@marvell.com>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Tariq Toukan <tariqt@nvidia.com>, Mark Bloch <mbloch@nvidia.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jay Cornwall <Jay.Cornwall@amd.com>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Niklas Schnelle <schnelle@linux.ibm.com>,
-	Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	Alexander Schmidt <alexs@linux.ibm.com>, linux-s390@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-rdma@vger.kernel.org
-Subject: Re: [PATCH v7 1/3] PCI: AtomicOps: Do not enable requests by RCiEPs
-Message-ID: <20260331190103.GA150932@bhelgaas>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Qroe8Hr+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1774983665; x=1806519665;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=3uHrsF3qZfNn9H8Vl0JvpMLblR94CJB11jyUyCdYt+Y=;
+  b=Qroe8Hr+rG30xpeVTVpp+EJdciEyDL7tIBLjE4TsNIxMZC8wiKpacuhV
+   ANv6gNBEnQsWLNzlHVXyEL/1B1Rnd7KE7WA4n5zQV5vG3CF03xRex4V5z
+   4+vtKtwfVBseO/Oqg4ObXYRyfPiqZO1q7grt31hUR3j6Q7F7qeQm00/9H
+   WP+nfxxnBUmI+yosyk8rTX5YfY00FnvNwn9Hhnj+RdbRu51l31/Wf2IG7
+   DmUz097QVrf2gNmj3dBziKtswog7fuLD+sps75pKQiS9s5faa3CHEZ1sd
+   z3nsxY6IQv4r4ChgaoS1kIKMIDXwVWDYxj2sf9AYLm0FmfgUoazahbDA4
+   A==;
+X-CSE-ConnectionGUID: mBnej+hYRgewv+E/8dKl5Q==
+X-CSE-MsgGUID: 8pYxFpOZTV6/+jB7eTGozA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11745"; a="75902219"
+X-IronPort-AV: E=Sophos;i="6.23,152,1770624000"; 
+   d="scan'208";a="75902219"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 12:01:05 -0700
+X-CSE-ConnectionGUID: A7llO41NQSyugjNg6Rseig==
+X-CSE-MsgGUID: rcMlSJZbRa6BaM772mg2uA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,152,1770624000"; 
+   d="scan'208";a="249663436"
+Received: from rvuia-mobl.ger.corp.intel.com (HELO localhost) ([10.245.245.209])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 12:01:01 -0700
+Date: Tue, 31 Mar 2026 22:00:59 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: David Matlack <dmatlack@google.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Alexander Lobakin <aleksander.lobakin@intel.com>,
+	Bartosz Pawlowski <bartosz.pawlowski@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Lu Baolu <baolu.lu@linux.intel.com>,
+	Raghavendra Rao Ananta <rananta@google.com>
+Subject: Re: [PATCH v2] PCI: Disable ATS via quirk before notifying IOMMU
+ drivers
+Message-ID: <acwZ6zYo5bjp2t3l@ashevche-desk.local>
+References: <CALzav=c7CuJmRjW0-KVk013r4pZZ_CsRtApn0rw9py9cTE-K+w@mail.gmail.com>
+ <20260331183852.GA150014@bhelgaas>
+ <CALzav=daA0ut2FE-Y07WtYoj45afVte=kh=SNegQ=wGyD+tWvQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <688a8e59-3188-4c9e-a8ed-d53b7d965e10@amd.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CALzav=daA0ut2FE-Y07WtYoj45afVte=kh=SNegQ=wGyD+tWvQ@mail.gmail.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Tue, Mar 31, 2026 at 02:39:26PM -0400, Kuehling, Felix wrote:
-> On 2026-03-31 14:09, Bjorn Helgaas wrote:
-> > On Mon, Mar 30, 2026 at 08:01:57PM -0400, Kuehling, Felix wrote:
-> > > On 2026-03-30 17:42, Bjorn Helgaas wrote:
-> > > > [+to amdgpu, bnxe_re, mlx5 IB, qedr, mlx5 maintainers]
-> > > > 
-> > > > On Mon, Mar 30, 2026 at 03:09:44PM +0200, Gerd Bayer wrote:
-> > > > > Since root complex integrated end points (RCiEPs) attach to a bus that
-> > > > > has no bridge device describing the root port, the capability to
-> > > > > complete AtomicOps requests cannot be determined with PCIe methods.
-> > > > > 
-> > > > > Change default of pci_enable_atomic_ops_to_root() to not enable
-> > > > > AtomicOps requests on RCiEPs.
-> > > > I know I suggested this because there's nothing explicit that tells us
-> > > > whether the RC supports atomic ops from RCiEPs [1].  But I'm concerned
-> > > > that GPUs, infiniband HCAs, and NICs that use atomic ops may be
-> > > > implemented as RCiEPs and would be broken by this.
-> > > FWIW, on AMD APUs our driver doesn't call pci_enable_atomic_ops_to_root. It
-> > > just assumes that the GPU can do atomic accesses because it doesn't actually
-> > > go through PCIe: https://elixir.bootlin.com/linux/v6.19.10/source/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c#L4785
-> > What does this mean for the other branch that *does* use
-> > pci_enable_atomic_ops_to_root()?  Can any of those devices be RCiEPs?
+On Tue, Mar 31, 2026 at 11:46:22AM -0700, David Matlack wrote:
+> On Tue, Mar 31, 2026 at 11:38 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Tue, Mar 31, 2026 at 09:01:53AM -0700, David Matlack wrote:
+> > > On Fri, Mar 27, 2026 at 2:17 PM David Matlack <dmatlack@google.com> wrote:
+
+...
+
+> Yes I would like to work on another version. I have 3 things I want to
+> investigate/fix:
 > 
-> Most AMD GPUs are not integrated endpoints. APUs are integrated. There are
-> A+A GPUs where the GPUs are separate from the CPU but part of the same
-> coherent data fabric as the CPU (adev->gmc.xbmi.connected_to_cpu == true).
-> Those may also be considered RCiEPs. (I'm not sure about that, is there an
-> easy way to check with lspci?) We may need to include that in the same
-> branch as APUs.
+>  * Fix the bug Sashiko found with early vs. header fixups.
 
-Yep, for RCiEPs, "lspci -v" should say something like this:
+>  * Investigate whether no_ats be a u8 instead of unsigned int to avoid
+> increasing sizeof(struct pci_dev).
 
-  Capabilities: [64] Express Root Complex Integrated Endpoint
+Use `pahole`, it will check the layout and suggests correctly what's going on
+there. It's not a fuzzy AI :-)
 
-Dmesg logs from recent kernels would also include it like this:
+>  * Investigate Boalu's finding. Maybe this issue is specific to VF
+> creation, and changing the order of calls there would be a better
+> solution.
 
-  pci 0000:00:02.0: [8086:5916] type 00 class 0x030000 PCIe Root Complex Integrated Endpoint
+-- 
+With Best Regards,
+Andy Shevchenko
 
-An RCiEP would be on the root bus; it would not be below a Root Port.
 
-> You can see that we did that for a new generation of A+A GPU here: https://gitlab.freedesktop.org/agd5f/linux/-/blob/amd-staging-drm-next/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c?ref_type=heads#L3920.
-> We'd need to confirm that the same works for MI200 A+A GPUs as well.
-
-> > > > These drivers use pci_enable_atomic_ops_to_root():
-> > > > 
-> > > >     amdgpu
-> > > >     bnxt_re (infiniband)
-> > > >     mlx5 (infinband)
-> > > >     qedr (infiniband)
-> > > >     mlx5 (ethernet)
-> > > > 
-> > > > Maybe we should assume that because RCiEPs are directly integrated
-> > > > into the RC, the RCiEP would only allow AtomicOp Requester Enable to
-> > > > be set if the RC supports atomic ops?
-> > > > 
-> > > > I don't like making assumptions like that, but it'd be worse to break
-> > > > these devices.
-> > > > 
-> > > > [1] https://lore.kernel.org/all/20260326164002.GA1325368@bhelgaas
-> > > > 
-> > > > > Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
-> > > > > ---
-> > > > >    drivers/pci/pci.c | 5 ++---
-> > > > >    1 file changed, 2 insertions(+), 3 deletions(-)
-> > > > > 
-> > > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > > > index 8479c2e1f74f1044416281aba11bf071ea89488a..135e5b591df405e87e7f520a618d7e2ccba55ce1 100644
-> > > > > --- a/drivers/pci/pci.c
-> > > > > +++ b/drivers/pci/pci.c
-> > > > > @@ -3692,15 +3692,14 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
-> > > > >    	/*
-> > > > >    	 * Per PCIe r4.0, sec 6.15, endpoints and root ports may be
-> > > > > -	 * AtomicOp requesters.  For now, we only support endpoints as
-> > > > > -	 * requesters and root ports as completers.  No endpoints as
-> > > > > +	 * AtomicOp requesters.  For now, we only support (legacy) endpoints
-> > > > > +	 * as requesters and root ports as completers.  No endpoints as
-> > > > >    	 * completers, and no peer-to-peer.
-> > > > >    	 */
-> > > > >    	switch (pci_pcie_type(dev)) {
-> > > > >    	case PCI_EXP_TYPE_ENDPOINT:
-> > > > >    	case PCI_EXP_TYPE_LEG_END:
-> > > > > -	case PCI_EXP_TYPE_RC_END:
-> > > > >    		break;
-> > > > >    	default:
-> > > > >    		return -EINVAL;
-> > > > > 
-> > > > > -- 
-> > > > > 2.51.0
-> > > > > 
