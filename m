@@ -1,130 +1,71 @@
-Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out30-97.freemail.mail.aliyun.com (out30-97.freemail.mail.aliyun.com [115.124.30.97])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA6DD175A75
-	for <linux-pci@vger.kernel.org>; Wed,  1 Apr 2026 01:48:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.48
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775008112; cv=pass; b=n2WWMnRQwdrvcWI/sVBArtHDntkhCNXbbyE2gFp4qSU1n6GYmpn3jrEjRL3JGinkkoZ4X/TyOiXVvPRGWxscTJiQBhAgs70vFGNvppaaUnVqpFeihPoMRRy2w6e064L+PPZu3z3b0BSu9NJ6vzks61BU1cII7VnTlxd4r9v83mQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775008112; c=relaxed/simple;
-	bh=4HZTJ/K0tXpJ59NwQFrVHgQrpFf581z+InFkKZjHpxs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=OZAYZ+GTbabYXQT3w21zPcfR2/Uu82ieQ6PwI1qZ6df62JeXD+J2/F1HwNzXrwgz7SWG4X+lA6zjK1OBmLoaK4qOlvb8EsKEFUT6AAiaUlJWJxRwdMtdoijTFxQ+Oz+rOcNfjYSt3e0A+svQKvDyyQmmjOJ1q97hJvx3ICjOegs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZCgme1dX; arc=pass smtp.client-ip=209.85.218.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BA34175A6B;
+	Wed,  1 Apr 2026 01:55:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.97
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775008518; cv=none; b=GNsFA6iJ9J938RyMha6W+4znAjUAwS/SKr29M86mJNmzp1deGIsIhU7SmV07DSZt+F5ohKAEeD67mtjoS5Oz05BFQJkDC0y8tYgLyaJeOXtPBTdryXBHMuuTh17y1p4SO83qgGrvc5Yj9A26fGffsgXDcckZ3JkmndezDfwtXVo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775008518; c=relaxed/simple;
+	bh=q50Bz65E+OyJ9vDk1N9jM1vlWen+ne5EUNUrgXUwgJY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=e+xfYYa5Fv7JREk6InJccbjrRUkXhisSpyNwuwFx2q/Tu4A8AdwjXtx+UT5gcvZd4D2cnIhjpU1qZORkxwmPzBoCrEMKsQ4s2CTgZmn+6VClMY4Cx10JwRMYDCqBqZy+HiX1xCEG5BTQ8Gg8o090tW57sN56nTCC0GxVucWwHQk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=NOWj6NiB; arc=none smtp.client-ip=115.124.30.97
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZCgme1dX"
-Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-b936331786dso713701866b.3
-        for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 18:48:30 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1775008109; cv=none;
-        d=google.com; s=arc-20240605;
-        b=ZK+Uk8otxhvJu7y4z7+1ebOZGQSx7p9G1K4rgIeqaYDjBIQcnCD4Om/QYwsrp83rj9
-         VA5N8fzkbyhLiH/u0JZHMgHXzKaC/A1VelnqDXmu72qjvFdnkYZ3DGaoB8nnNs3vXrSa
-         4uW8LwZDR/gShSSAr/+s+F4vE2oF3OgE3kH/kIgbDi0zQ2jwIQQDqO8DRcAHL2Tdv4J0
-         GOkjaWpMdZCBNM3Xxrts16l8Kjz4eRCH+gkORUNh7qvwD3QvKZbwXkesvr8ckRkIvZ9K
-         NQXqqSQ9RjCdqTJfyd9vAs2/z6I2j5uSugxNYGpChmLE7aOcDkAP93crNSupbYFMEqH1
-         jKvg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=4HZTJ/K0tXpJ59NwQFrVHgQrpFf581z+InFkKZjHpxs=;
-        fh=DS2WZYbyWL7alU0YldMaIGnyeUU1GuqtZ/NOq7N3SPQ=;
-        b=fJKhzIz8BGqBjOMHotZalFUvlVm9K9EECEKfDaivBHO9Q+lmOVnR9iUNvJvOcWXkse
-         L7S5RAnJ9AapOLBsUGk/Vx181UTnIUbyYrbms6MR5c9YxMbJEwGTyt2PIzsXH3ZuJBA7
-         XwAM4po0urhLw2JOPLtqL2M72PMKfD9PB1gJAJunI2OskqXiyoJYOk6pJomV62n8ETyV
-         6oLj17omq3mSafTOCmpPSrMCF2KUZHsnKQJG5XiDjuOIGsnclG7gtk3jNIFmttP73hbI
-         IjoSkWfFUq2C60bGjGcapoKJhLMYGMN6PBfW4vOCOFrp7xetmmd8WTA96cHBQM2CSRbf
-         zlpw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1775008109; x=1775612909; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4HZTJ/K0tXpJ59NwQFrVHgQrpFf581z+InFkKZjHpxs=;
-        b=ZCgme1dX9AyJySVRw0PgeaWcSiMrEGEV93Qgoxz7uOY2YLbX2EBWLzTiYaWOXSCKpk
-         OWXyTz/P/97MrnWAOyqVxhMKZK9XbGfwa4HvaR9JPRv++U4FVT0MqaZx9V611Md/JMN7
-         7ibtOoGaE/FQV/UsqNxcb81AsjM3wTnBRJsQ05cidHUngE8XgkX9fhSRd9+sXyVfilkl
-         V1FxanHPYk62rHAWJY7kN5tMFUV8suhIZRadgvEgGf5U1MJzGr4z71UxcUzAFsB8JP5C
-         cf1rhKluqfVC5KGMShgV8G3+lJnzb5+pmZZJPv2I+AzoTphrob0wZLtGQlKtHbckXm2i
-         zy3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775008109; x=1775612909;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=4HZTJ/K0tXpJ59NwQFrVHgQrpFf581z+InFkKZjHpxs=;
-        b=fRAiJ+GrRZ9Rz3qCXW5IPwg2WRtaDk49VNWuwE7HsQ5jgPfokPEol+ljLTx26YuNZE
-         DMACAEA2h5lJn71q1UZ1TGeYDcMezKkGRiTPvSLQ8YrlgOAVk6lJyr6DenQajxNaJtZ8
-         3eC2ZEA0HENJAblKEeUzosbjyDX19HnlK698xBQhCXLzz2zv7QJjqJM3VVsu9oAU/d41
-         dxoVpSFQOcDL/Ys0ibDVjEadt/6SBu3EmS04UUOIV0YwOz8dSgLL7QMjLnzDiQl8ML3p
-         hLCpARc58T/mEfgx+20GHoiMzmD8UiwM/qrK+oKsTZcL3U9zupmACuwQbnSgRMHqQmu0
-         sihA==
-X-Forwarded-Encrypted: i=1; AJvYcCWBnh7VhCYw33rBLvgO2zzPw3ttoPlrwKARItMztB7cyTffrH1TdSAShi6dT579ypCw/l6ZekEx3ls=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyXQy3Ebmm4Cz2uJjAAm8zsZKJP3yNClrU0YIRK1/laAvfbCuZ0
-	EtGpp9/z94byI7TdESNOGoeEY6QVwGBKAvP8+3Xf5kq/FZDT/OcRxU7tAqR/7bt4c+kk8BhFNFj
-	FHf6+Vhx875CVzgHRidzzRimu9GrfBy0=
-X-Gm-Gg: ATEYQzwL5vR/drZ0imtBIHNFFgyWITeKG5cSvlQFIpp91ZW71/EIWO2foIUwKZouLU7
-	hi9Zs4czkHm1cm2exJN5GPAYXzHVTe+zT39IODmAYiqXdFOt3KvpjK7I7yh0gfc6zpZtl5mRcim
-	qpuexwU0pcN5V/Nhylm4Kju+EtPRSiJsjJ7czlRJrnTE5qlEs49HdEiNmU20ziHDReUwbw+iHoq
-	qi83Pl5PN+8ykGk4fUxjB5Vjtt8tphlpRMcWNQbX/jbsZtlK2BgYQ9/ULwpQktMVXzrSHnlwyGG
-	3iUuqZnKLahAGrnVifYvJ8VTWKaOQSTxDqQH3Q==
-X-Received: by 2002:a17:907:160f:b0:b97:98e9:1b17 with SMTP id
- a640c23a62f3a-b9c13b5bb0fmr102635666b.28.1775008108998; Tue, 31 Mar 2026
- 18:48:28 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="NOWj6NiB"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1775008512; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=etQknAdonqm8UWH0ocwzl5DXIHYZ47qOaMPkJRg7jIs=;
+	b=NOWj6NiB9lHDbjmZvcCt+/GLnHv+rSKBrXzp+PfSAPpXtI0fcVpYmsaeBt3TLBOZ/rA6g4pbSOZCUT1Dg6BTyo3askrxS9gTzLBdtynHsUV2/GdQi8GdmojM0k8bbIcaZ38ltzpg/M4tSxMB/Vl4vMlI7nx9m7NvGQ+rIT1bkmw=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R241e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=xueshuai@linux.alibaba.com;NM=1;PH=DS;RN=19;SR=0;TI=SMTPD_---0X061LQV_1775008509;
+Received: from 30.246.177.235(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0X061LQV_1775008509 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 01 Apr 2026 09:55:10 +0800
+Message-ID: <32ad70fc-c07e-47c0-8511-fed3bc3fc76f@linux.alibaba.com>
+Date: Wed, 1 Apr 2026 09:55:21 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260211032935.2705841-1-alistair.francis@wdc.com>
- <20260211032935.2705841-23-alistair.francis@wdc.com> <20260303150040.00007458@huawei.com>
- <CAKmqyKM6CBucDEo0aKZVWrKtozbT_ddk0PaZFtHyEMMMx558JA@mail.gmail.com> <CANiq72nOt1E8=GYdh2T5BWNvG7J8sZRF+60taghoxKm8fkadHg@mail.gmail.com>
-In-Reply-To: <CANiq72nOt1E8=GYdh2T5BWNvG7J8sZRF+60taghoxKm8fkadHg@mail.gmail.com>
-From: Alistair Francis <alistair23@gmail.com>
-Date: Wed, 1 Apr 2026 11:48:02 +1000
-X-Gm-Features: AQROBzBOwFmUEqf32on5JrU8aXHIhvBHljtpfJBqW29uemU4k1ri6P4DAEIz0EI
-Message-ID: <CAKmqyKPa5fDmo1A6OzF0ROn7iTrBrhV1Q2L=1Wkb=o27f5fDSQ@mail.gmail.com>
-Subject: Re: [RFC v3 22/27] lib: rspdm: Support SPDM certificate validation
-To: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Cc: Jonathan Cameron <jonathan.cameron@huawei.com>, bhelgaas@google.com, lukas@wunner.de, 
-	rust-for-linux@vger.kernel.org, akpm@linux-foundation.org, 
-	linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, alex.gaynor@gmail.com, benno.lossin@proton.me, 
-	boqun.feng@gmail.com, a.hindborg@kernel.org, gary@garyguo.net, 
-	bjorn3_gh@protonmail.com, tmgross@umich.edu, ojeda@kernel.org, 
-	wilfred.mallawa@wdc.com, aliceryhl@google.com, 
-	Alistair Francis <alistair@alistair23.me>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/3] ACPI: APEI: GHES: Add
+ devm_ghes_register_vendor_record_notifier()
+To: Kai-Heng Feng <kaihengf@nvidia.com>, rafael@kernel.org
+Cc: jonathan.cameron@huawei.com, helgaas@kernel.org, guohanjun@huawei.com,
+ linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+ linux-pci@vger.kernel.org, acpica-devel@lists.linux.dev,
+ linux-hardening@vger.kernel.org, Shiju Jose <shiju.jose@huawei.com>,
+ Tony Luck <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>,
+ Mauro Carvalho Chehab <mchehab@kernel.org>, Len Brown <lenb@kernel.org>,
+ Robert Moore <robert.moore@intel.com>,
+ "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>,
+ Breno Leitao <leitao@debian.org>, Jason Tian <jason@os.amperecomputing.com>
+References: <20260330094203.38022-1-kaihengf@nvidia.com>
+ <20260330094203.38022-2-kaihengf@nvidia.com>
+From: Shuai Xue <xueshuai@linux.alibaba.com>
+In-Reply-To: <20260330094203.38022-2-kaihengf@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Mar 31, 2026 at 8:11=E2=80=AFPM Miguel Ojeda
-<miguel.ojeda.sandonis@gmail.com> wrote:
->
-> On Tue, Mar 31, 2026 at 5:30=E2=80=AFAM Alistair Francis <alistair23@gmai=
-l.com> wrote:
-> >
-> > Yep, same thing. My way is the Rust-y way to do it
->
-> Hmm... In what way? I would say it is the other way around.
 
-I think it's Rust-ier as it uses the fact that
- * if statements can be used as expressions, which is a cool feature of Rus=
-t
- * Rust is explicit about comparisons being bools (no `if (value)` for exam=
-ple)
 
-So I find the if statement expression returning explicit bools very
-Rust-y and easier to read
+On 3/30/26 5:41 PM, Kai-Heng Feng wrote:
+> Add a device-managed wrapper around ghes_register_vendor_record_notifier()
+> so drivers can avoid manual cleanup on device removal or probe failure.
+> 
+> Cc: Shiju Jose <shiju.jose@huawei.com>
+> Cc: Jonathan Cameron <jonathan.cameron@huawei.com>
+> Signed-off-by: Kai-Heng Feng <kaihengf@nvidia.com>
 
-Alistair
+LGTM.
 
->
-> Clippy should be flagging this, too.
->
-> Cheers,
-> Miguel
+Reviewed-by: Shuai Xue <xueshuai@linux.alibaba.com>
+
+Thanks.
+Shuai
