@@ -1,110 +1,182 @@
-Received: from master.debian.org (master.debian.org [82.195.75.110])
+Received: from mxout70.expurgate.net (mxout70.expurgate.net [194.37.255.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AE02348883;
-	Wed,  1 Apr 2026 13:10:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.110
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E41D643CEE6;
+	Wed,  1 Apr 2026 13:49:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.37.255.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775049013; cv=none; b=I7UmVojTU6620FYbNRsGkTA1TEB/6QYgSMMt1C2h8gyTMpyPQuA/Wo+i1TiMdGYyZEy2nVR5i2xxACA/TrQ5BVZuV/N9BdAgMfsjqvvbKL9Xro3u1NrO5tN28oFBdDoH6NlYyQ/f9LLh76Eackfv464RHB77Xh4VDvEGlIl1mNg=
+	t=1775051384; cv=none; b=MctrnhsvRd9A2+6qiCe6ATScYEVaev99h+INxA333SdnAe10xgSTWFWOTBBd9yOG1jIJ4whwgQWWhf8gxCOVjtg0PFPu6VZzQb7JjQLRDkXxZeL3aaadGLKcAidnqC6v4L0yIvsu/Aqu3Al+zl1bgih2OEuyWdmn9bST/JtoQLo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775049013; c=relaxed/simple;
-	bh=8AqE06BtIHM26cpry7sh/8rDMddZ5jdzj7W8UqW7xLo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TnR2h+5ZOH3plfZX3q5/lmMo+Wez+RHBJ57c25sGejpONKd3gw9V8/RXTibH0i3BDDNulzftWSWnbtNjAs+9QF9G2LOLYId6LU9rWCMmxlDoPtPrUzCNL4p0cUBJW6bweG07RwP7N8goeFXFnbwtt+axgy5pTyvKNJG8xc0yjBY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=master.debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=XVGeYd97; arc=none smtp.client-ip=82.195.75.110
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=master.debian.org
+	s=arc-20240116; t=1775051384; c=relaxed/simple;
+	bh=wnicqEeHIcqp5ZnGqJTdM7J1jA0zUu3BuP2FzYEpCj0=;
+	h=MIME-Version:Content-Type:Date:From:To:Cc:Subject:In-Reply-To:
+	 References:Message-ID; b=tLgYGrNDplB1mSS2TjTUSm8aUoGCq8yJmER5Acjk8zWqLqMCULU6MnNCHMPdkS7buKSSc65EMBfyhsXeaGVDXS6iCIRKUe91wM95YakdLgeTbWApynoVG9al/oru7aSJaC34VSZLrfpLCxE8Ii4Vgua4oZ1MD8lCQqPQE4sV6JA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=QXD80xXj; arc=none smtp.client-ip=194.37.255.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev.tdt.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="XVGeYd97"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
-	s=smtpauto.master; h=In-Reply-To:Content-Type:MIME-Version:References:
-	Message-ID:Subject:Cc:To:From:Date:Reply-To:Content-Transfer-Encoding:
-	Content-ID:Content-Description;
-	bh=8AqE06BtIHM26cpry7sh/8rDMddZ5jdzj7W8UqW7xLo=; b=XVGeYd97QFkzva2ukg+FXypfMD
-	lwMyjsG325Y4xPuX3f+KBx2G7GayjOwifam+pg6lZ+DsrZEc9RJV6pfzChiDVLOKPr5g1miZmvIqe
-	32ce40wV0MNPYgN9c5DEKoO0KIr8GkUXZnwLByWttw53P+g3z6HJpOrgpdyC43JApLU4aULHucua1
-	PlR5jmT3/Dt+VhJzrVs0wEquI/sYCcgX1hL9QZzL48ACzr7JYiP8EDqofNmuSjpRITPJYY6ib9yc+
-	DAlpNYus3C6fpmLYfw3lJIdY6tErTHaJK0Nx/iJ6YjJI7cgj/wyJtDe4lL2yJAlGFsOFAtHTB6goG
-	jUQCG/Qw==;
-Received: from ukleinek by master.debian.org with local (Exim 4.96)
-	(envelope-from <ukleinek@master.debian.org>)
-	id 1w7vKd-007UG2-0w;
-	Wed, 01 Apr 2026 13:10:03 +0000
-Date: Wed, 1 Apr 2026 15:10:02 +0200
-From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <ukleinek@debian.org>
-To: Bernd Schumacher <bernd@bschu.de>, 1131025@bugs.debian.org
-Cc: Lukas Wunner <lukas@wunner.de>, 
-	Salvatore Bonaccorso <carnil@debian.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Mario Limonciello <mario.limonciello@amd.com>, 
-	regressions@lists.linux.dev, stable@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: Bug#1131025: [6.12.y regression] Regression with 58130e7ce6cb
- ("PCI/ERR: Ensure error recoverability at all times"): echo vfio-pci
- >driver_override does not work for DVB Adapter
-Message-ID: <ac0Y85OShbK6mHEV@monoceros>
-References: <177373189751.7987.7156982489427825197.reportbug@obelix-trixie.bs.de>
- <acfZrlP0Ua_5D3U4@eldamar.lan>
- <acfhf-odtr0yw_py@wunner.de>
- <74bcd84500e5efcca035624f325e400dd8a21f44.camel@bschu.de>
- <acgohjvBpVcR7HcK@wunner.de>
- <5f9386146f426e2847550681cb7188471205607f.camel@bschu.de>
- <aclRwznwq6KpA2qA@wunner.de>
- <177373189751.7987.7156982489427825197.reportbug@obelix-trixie.bs.de>
- <ecf9b2dd96ff97cc035ba297266b8dd05eea88da.camel@bschu.de>
+	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="QXD80xXj"
+Received: from [194.37.255.9] (helo=mxout.expurgate.net)
+	by relay.expurgate.net with smtp (Exim 4.92)
+	(envelope-from <prvs=65659f006e=fe@dev.tdt.de>)
+	id 1w7vwx-005MN0-3I; Wed, 01 Apr 2026 15:49:39 +0200
+Received: from [195.243.126.94] (helo=securemail.tdt.de)
+	by relay.expurgate.net with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <fe@dev.tdt.de>)
+	id 1w7vww-00490O-FA; Wed, 01 Apr 2026 15:49:38 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev.tdt.de;
+	s=z1-selector1; t=1775051378;
+	bh=fI1MXVmfBBplFMrNS9AHS7FUoW6UH37o/7iySpxDqLY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=QXD80xXjmv8zRKKTemd5Oo1nyFUtxLSfSM8fu/3kq3G3gAA3/td479zV2BROwA7Ev
+	 M5uJyY2MB5l95RjD3AWt66Q0DjJ6oiDRH0ydZZCoUMvgVVWFL7+1DV4v4rzHQrfEvd
+	 iCH1SSOyLxDKFSwIdcf6flYlczUM4PvsNJR8SJcaHyMKbkcoqjN90ZeTRsPjLmBJX1
+	 gXprSW9Idf16Ht7m0VMDmgbdnvYUA2cb9eFO5cuNbJ6arlzANHsJgeb8VFO8VMaZ77
+	 24XMxSAp4CjMwC59cGSiSZtOLv2AmoKq0BIEB07adfzJ2lJGO5PHnzssmrkG2r8lXr
+	 DjCRbRFD2KxQg==
+Received: from securemail.tdt.de (localhost [127.0.0.1])
+	by securemail.tdt.de (Postfix) with ESMTP id 06297240041;
+	Wed,  1 Apr 2026 15:49:38 +0200 (CEST)
+Received: from mail.dev.tdt.de (unknown [10.2.4.42])
+	by securemail.tdt.de (Postfix) with ESMTP id DC41A240036;
+	Wed,  1 Apr 2026 15:49:37 +0200 (CEST)
+Received: from mail.dev.tdt.de (localhost [IPv6:::1])
+	by mail.dev.tdt.de (Postfix) with ESMTP id 978A723BFD;
+	Wed,  1 Apr 2026 15:49:37 +0200 (CEST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="ovruitqvpmpuucsl"
-Content-Disposition: inline
-In-Reply-To: <ecf9b2dd96ff97cc035ba297266b8dd05eea88da.camel@bschu.de>
-
-
---ovruitqvpmpuucsl
-Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Wed, 1 Apr 2026 15:49:37 +0200 (CEST)
+From: Florian Eckert <fe@dev.tdt.de>
+To: Rob Herring <robh@kernel.org>
+Cc: linux-pci@vger.kernel.org, Eckert.Florian@googlemail.com,
+	Rahul Tanwar <rtanwar@maxlinear.com>, linux-kernel@vger.kernel.org,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Sajid Dalvi <sdalvi@google.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Ajay Agarwal <ajayagarwal@google.com>, devicetree@vger.kernel.org,
+	Johan Hovold <johan+linaro@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, ms@dev.tdt.de,
+	=?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Subject: Re: [PATCH v3 7/7] dt-bindings: PCI: intel,lgm-pcie: Add atu
+ resource
+In-Reply-To: <CAL_JsqL2JW6zecCJGhFiJYraSGRNJGRsZ+oWJ+=4JWY5GD9SPQ@mail.gmail.com>
+References: <20260401-pcie-intel-gw-v3-0-63b008c5b7b2@dev.tdt.de>
+ <20260401-pcie-intel-gw-v3-7-63b008c5b7b2@dev.tdt.de>
+ <177503985369.3634917.6461713197883659054.robh@kernel.org>
+ <CAL_JsqL2JW6zecCJGhFiJYraSGRNJGRsZ+oWJ+=4JWY5GD9SPQ@mail.gmail.com>
+Message-ID: <5dd6db90e7cd5b2e75dbb85dab202dde@dev.tdt.de>
+X-Sender: fe@dev.tdt.de
+User-Agent: Roundcube Webmail/1.3.17
 Content-Transfer-Encoding: quoted-printable
-Subject: Re: Bug#1131025: [6.12.y regression] Regression with 58130e7ce6cb
- ("PCI/ERR: Ensure error recoverability at all times"): echo vfio-pci
- >driver_override does not work for DVB Adapter
-MIME-Version: 1.0
+X-purgate: clean
+X-purgate-type: clean
+X-purgate-ID: 151534::1775051379-F97366CA-F08873F8/0/0
 
-On Mon, Mar 30, 2026 at 08:14:53AM +0200, Bernd Schumacher wrote:
-> Am Sonntag, dem 29.03.2026 um 18:22 +0200 schrieb Lukas Wunner:
-> > Could you repeat this and add log_buf_len=3D16M to the kernel command
-> > line
-> > so that the dmesg output isn't truncated?
+
+
+On 2026-04-01 15:07, Rob Herring wrote:
+> On Wed, Apr 1, 2026 at 5:37=E2=80=AFAM Rob Herring (Arm) <robh@kernel.o=
+rg>=20
+> wrote:
+>>=20
+>>=20
+>> On Wed, 01 Apr 2026 11:31:43 +0200, Florian Eckert wrote:
+>> > The 'atu' information is already set in the dwc core, if it is speci=
+fied
+>> > in the devicetree. The driver uses its own default, if not set in th=
+e
+>> > devicetree. This information is hardware specific and should therefo=
+re be
+>> > maintained in the devicetree rather than in the source.
+>> >
+>> > To be backward compatibile, this field is not mandatory. If 'atu'
+>> > resource is not specified in the devicetree, the driver=E2=80=99s de=
+fault value
+>> > is used.
+>> >
+>> > Old DTS entry for PCIe:
+>> >
+>> > reg =3D <0xd1000000 0x1000>,
+>> >       <0xd3000000 0x20000>,
+>> >       <0xd0c41000.0x1000>;
+>> > reg-names =3D "dbi", "config", "app";
+>> >
+>> > New DTS entry for PCIe:
+>> >
+>> > reg =3D <0xd1000000 0x1000>,
+>> >       <0xd10c0000 0x1000>,
+>> >       <0xd3000000 0x20000>,
+>> >      <0xd0c41000.0x1000>;
+>> > reg-names =3D "dbi", "atu", "config", "app";
 >=20
-> I have now added=A0to /etc/default/grub:
-> GRUB_CMDLINE_LINUX=3D"\"dyndbg=3Dfile log_buf_len=3D16M drivers/pci/* +p\=
-""
-> attached is the dmesg result for 6.12.73
+> This is also wrong. But the diff of the example shows the old vs. new,
+> so there's really no reason for any of this in the commit msg.
 
-This looks wrong. Please make this:
+Got it. Thanks for pointing that out. I=E2=80=99ve already removed it for=
+ the
+next cycle for the v4.
 
-GRUB_CMDLINE_LINUX=3D"\"dyndbg=3Dfile drivers/pci/* +p\" log_buf_len=3D16M"=
-=20
+--
+Florian
 
-Best regards
-Uwe
-
-
---ovruitqvpmpuucsl
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmnNGScACgkQj4D7WH0S
-/k6bwQf/Qz+FCTFFiiHGjzCnjbZfBVStR6oAqUY9T2dYtGtjGbPTGAVl1qe8tE+t
-jQ3rJZMZtlZu2hqD05Ghk3sGwMooKyq+6y15VCsOg4/nhBNcMx1bakfhBbVX44tU
-qY1CqvgB7ePfHNG/z+ER64j1J6/17ahEhqVQtrobwEl0e6eIU/DS6n8urgdhoEoA
-SMqyiUeM+JsWMw123MbU2gbYNfPFGl4QD60FJYMrpiulz27gaXEpyb0VemT9fe8q
-7f1Jy//IzEaNQ/uT+9gLXsXY8mXfyCZShhrBNruD8l9p5f9QTW9ZeV4zLDV+lN+z
-tcIVjKnNwkmkv5E+pvAk9PtckgoWiQ==
-=jR9w
------END PGP SIGNATURE-----
-
---ovruitqvpmpuucsl--
+>> >
+>> > Signed-off-by: Florian Eckert <fe@dev.tdt.de>
+>> > ---
+>> >  Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml | 6 +++++-
+>> >  1 file changed, 5 insertions(+), 1 deletion(-)
+>> >
+>>=20
+>> My bot found errors running 'make dt_binding_check' on your patch:
+>>=20
+>> yamllint warnings/errors:
+>>=20
+>> dtschema/dtc warnings/errors:
+>> /builds/robherring/dt-review-ci/linux/Documentation/devicetree/binding=
+s/pci/intel-gw-pcie.example.dtb:=20
+>> pcie@d0e00000 (intel,lgm-pcie): reg-names:1: 'config' was expected
+>>         from schema $id:=20
+>> http://devicetree.org/schemas/pci/intel-gw-pcie.yaml
+>> /builds/robherring/dt-review-ci/linux/Documentation/devicetree/binding=
+s/pci/intel-gw-pcie.example.dtb:=20
+>> pcie@d0e00000 (intel,lgm-pcie): reg-names:2: 'app' was expected
+>>         from schema $id:=20
+>> http://devicetree.org/schemas/pci/intel-gw-pcie.yaml
+>> /builds/robherring/dt-review-ci/linux/Documentation/devicetree/binding=
+s/pci/intel-gw-pcie.example.dtb:=20
+>> pcie@d0e00000 (intel,lgm-pcie): reg-names:3: 'atu' was expected
+>>         from schema $id:=20
+>> http://devicetree.org/schemas/pci/intel-gw-pcie.yaml
+>>=20
+>> doc reference errors (make refcheckdocs):
+>>=20
+>> See=20
+>> https://patchwork.kernel.org/project/devicetree/patch/20260401-pcie-in=
+tel-gw-v3-7-63b008c5b7b2@dev.tdt.de
+>>=20
+>> The base for the series is generally the latest rc1. A different=20
+>> dependency
+>> should be noted in *this* patch.
+>>=20
+>> If you already ran 'make dt_binding_check' and didn't see the above
+>> error(s), then make sure 'yamllint' is installed and dt-schema is up=20
+>> to
+>> date:
+>>=20
+>> pip3 install dtschema --upgrade
+>>=20
+>> Please check and re-submit after running the above command yourself.=20
+>> Note
+>> that DT_SCHEMA_FILES can be set to your schema file to speed up=20
+>> checking
+>> your schema. However, it must be unset to test all examples with your=20
+>> schema.
+>>=20
+>>=20
