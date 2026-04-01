@@ -1,126 +1,143 @@
-Received: from mail-lf1-f44.google.com (mail-lf1-f44.google.com [209.85.167.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDF07381AFF
-	for <linux-pci@vger.kernel.org>; Wed,  1 Apr 2026 05:00:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.44
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775019658; cv=pass; b=iWt+HbbyL/ef0Jju2zbAxuZa+ctqFSaWeNFeGlu0W26BCGEstc7NRXg9gf/n0qwhSbJj+f/TkdwJ5XwjmyIvlDRBemErKTtmYqvf7Q1PZAVbUqGPXNuzBn/wFflarhMmbM+s+OdP/Ajx/rklXOg26K6PqugG7PgfYK6vZO7B0BY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775019658; c=relaxed/simple;
-	bh=OqQ601QbL/y+YrmVBidvwxw5csxIEjRfbUIlqPG+O5M=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=n3hdYxWRe6rRKbVGap7IuzbKvFsC5qmT9MEWwQ3YMp5UXchCV116qZKZ81l2rD2tWqxrMqsObzpNCEW2+dv4U42KMxBdWVe8m4Reuc+DC6SjE4AVhTesaloRUbNuq4u0GJuJh1kZ3bB2MKBaorMA12lwpQIIgj9Wfb/nP683/UY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=IECvBvtg; arc=pass smtp.client-ip=209.85.167.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2584F367F5B
+	for <linux-pci@vger.kernel.org>; Wed,  1 Apr 2026 07:07:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775027274; cv=none; b=aFva579kfr+uNtHx7AHUzDyyHJ+W7UpO35Vs09Hmi3aQGllBKES+e3R99l7IQ1MZQDFKMyXoMyKdFVr3YYeppEF478Q1aksvU6xyZ+uK7BBVVVTKwSGlxziv9U7pBnOdVZ58g4rV4aQdaU0SlEznF8SSN2XG0uJdhVE5yPd7qsk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775027274; c=relaxed/simple;
+	bh=2vEu0FMYjbU3hCQR7oBHMixia2zkpzxyg0rkOUGp7fs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XyiJu0Ov600p2IXCM77REiinwGwFUbWfc91PrB56FMHmGhPsO3KtiUBWnlEKFq2gW6t1gaHTqRzaVtevz7xYRA4EUa0OsEMsLGNedhX2vf4jywhvGYWOy+IJnqaO+3RNYZ5Hcd+mNzOgxFviSRqZMdIpwBgYJaRNToqD/2wIm1c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=NxQCeHfe; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Emo7kXVK; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="IECvBvtg"
-Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-5a1443780c4so565612e87.0
-        for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 22:00:55 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1775019654; cv=none;
-        d=google.com; s=arc-20240605;
-        b=ewKONDC4bkpoDYvSEZoKqRVR05Uj3xfLVuuhVinPOjNApdDsr4KcEejbBFx6oktFDF
-         cmMHPNeAoa5zovTWmLw8Ey7YKPEHfXgGcT64o1AIfFJ/OGiBqymoG/KIXfgbgI9TYioO
-         6/hGefK+kIxUlmReWI9s4lkxzcGByxnNUOef76xPeG8tcYWe+grF3joozgB2gugmfp5y
-         ujuYchAXbVXxf03Gpzx+5wtEtUOy/m7ZcuX1ZV05xPHqBN+XICXJpVujYsVHj11YtSU3
-         KUOSnVNEk9fnrItntJIH1trkv2K/2Hk4e+L8VPnH3F6vh5/H5yQqpzG9iLW4zSD5cj9V
-         kf7w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=OqQ601QbL/y+YrmVBidvwxw5csxIEjRfbUIlqPG+O5M=;
-        fh=qXSjn4nSVX/gvu11Brp4JLEBMRYivRGzDs8GEXRr9WQ=;
-        b=HGbbBjUJoT1P7zN0UoL+jnyyi5eukF4IN9TaXvDE73iOBzwRwgHoYsz1s7OsfKlKqL
-         EV8zRs8gPGVHhnNUXhOmaFiu004BJTNelEUoZgjIrf32gPjyM3Q9KnroTvZl99RendGa
-         ab1Ib/jNTCcULdiqVg/0f61hmPIoDUTmI+89Y1TAeCBQHtZQvy3UI9k4GzlN8IeaMZyn
-         7/35oHtaYxZIHO06SDZ4YBUkGb0BvLVug7g4o4FgxFL3EyYmPTYPlFOQ6yL3hDGyvxoc
-         i33g80jSEkFEsMu28xBxBMEaDdX3J4bFdVuZhJ0HpWrvb6R6DNpKBmVl9N0ZpzhXvEJ2
-         7t1Q==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="NxQCeHfe";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Emo7kXVK"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63144Cs41579572
+	for <linux-pci@vger.kernel.org>; Wed, 1 Apr 2026 07:07:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=22A+Sj5chUc1iyVqke9i/KwfXM4BVovOzih
+	XMiqpqQI=; b=NxQCeHfeNLOCx9istPa04KOfV0L7++Z5drnpxa+rK4BKxN/bo8L
+	MdvhBKm7g7YIW9OrBZKF0BR9Ns5JhDmZthaJPrdZpRNrMqTlpNinCGfB7F8BXkt3
+	OTeosUc1hjaef7vOFG015DdKMbsCoHNhgasgjX+Qcdsg9kKY5O+AizQMU+Encrvz
+	/wJh+AJRkYipbyGjvzAIfwIP+/rnXspi7NPCCEC6qfifqB8hF5z1qTHVhWko6aZH
+	Y18R+jUrlpN3CG79JXt0UVWR3XzdH0sPtoomVgRRQk+LDfgmDprOxamLkJe1Nipm
+	vj7Nv76PULg8AEXv5lCkgQOsoECjts4iTvQ==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d8mr2t931-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 01 Apr 2026 07:07:51 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-358e425c261so8099024a91.3
+        for <linux-pci@vger.kernel.org>; Wed, 01 Apr 2026 00:07:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1775019654; x=1775624454; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OqQ601QbL/y+YrmVBidvwxw5csxIEjRfbUIlqPG+O5M=;
-        b=IECvBvtgajJ4DrZgVl7s5vpVy3QH7nCqLjNpSeWL9ZqxY/18csVQR8lYdHVmSnchPX
-         HEJTUblMsyOlCiQTKEPpLMGrI8R6QyS0EU3qCcv3mX0dw65sY2Yb4LTVy+7dlVrGBG/g
-         kcqtf2T88qtuq3KkVmVxKPW1s870wQw5llKG4=
+        d=oss.qualcomm.com; s=google; t=1775027268; x=1775632068; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=22A+Sj5chUc1iyVqke9i/KwfXM4BVovOzihXMiqpqQI=;
+        b=Emo7kXVKHfGIvuTymLrps6hca5bKSk69ZSbyJji3VX34sayeIRytZ+p9rBWiC9NKbk
+         oGXfOE950RjgBhSRuAIje9GwipCh31heEg/xtCOq0TKC5/IWmzNDy5jbfiZqhpjXo/ZQ
+         Hzysh8o66NPEFYmYMDgz+1qQwhcgJm1n7yN1G826youEebOYb6PcF1qc/pizjXU4YkpR
+         EoUR/oQYiAquZzU1OYTQDlmEzGiE7GvwSOoiqG0lUPpwsKjOjTAZImQqQZWWHTo1q9pd
+         +JHN9a7VrboEM6TiQVuJuJZGDFJj9YkO65ptBCav8hZ3N71tb3H5aCUUaFA0iy44QXe8
+         eDVA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775019654; x=1775624454;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=OqQ601QbL/y+YrmVBidvwxw5csxIEjRfbUIlqPG+O5M=;
-        b=lz+YkGrYNLWVtxJbc19EXp8KnNKoHhjJXYUowqas7keIwh3763yBy3nbj6vyhKpa8r
-         KzqIq7lasgQWVXoJPso5y9RvyUuN9U++3PzYRz3Mod47XlLx29E4zYtPNEdTRgK2kit1
-         o5KHOmFzxzii022gOuvnEnuyezQGLPcNzcNJV4/TnU3Jzroa9W+jvXTX5lSoW2KIr6yV
-         GcmGCllnfskUYCSb0xuaXmGvMJvPfpSL/+ih+UWtQaI4YLScWnV8ZZzChyHYcdmANKXT
-         2Fn6lLu70FseKkwI0U+dnejtxnVrVl79VlAaUrfOHcLQ2rmrD0yseyN0B7MjRiKUqd3H
-         IVDA==
-X-Forwarded-Encrypted: i=1; AJvYcCWsFU88GeH1wQ/tkUJlOU60bW6BWjf7ghgV2nAd5qCtT7lxL9BXMgIJHGyi1mlP22ruKdbBMcQaPEY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzK6Fo0oO1f11uXJw71Y9EKINcrTHBu/FZRkHfvt1VZboEdlQGR
-	B9Y0Z7dpRhPrtNVdHVuO3RwaoeP9brV2UO6p61ZyJktlGPP9RlxYERxts/xymxlSNizkdWxO22G
-	khf+yS0i97SNhERCkTh0Z9rOnuYNnIQmNfEXJKK4Y
-X-Gm-Gg: ATEYQzy+5PPRtaFi2mpVHPtZ8cOTDw2pKtkxA479G6FZbomXLHuPFccE77tdwz8QD7E
-	rsf8RmWwb0plHY1E2/YgBvPNV4mkQ+3NDAHO128ccMak2x/opmGjwxTH2ks0HiowGBt1sAil0dx
-	DL378hSdadB4Zulcnx785+slk/0VVkD+PlRZXCAjX/9vWVnAVcNvdY+lr/0Ea1F2JvhumnC2fQ1
-	GOwwOy+sswhQb0Xqs49ceZosvt2G8a4VTw2IFwnkdjZBdVsO5xqpXhhLVS/SW7xWSq3oMKYs0Aq
-	OmRjca2+S96aFGB4lIAfpxqdTrAYVGtL+Oxnkw==
-X-Received: by 2002:a05:6512:3ba1:b0:5a1:4e53:c68b with SMTP id
- 2adb3069b0e04-5a2baacc775mr2863990e87.2.1775019653869; Tue, 31 Mar 2026
- 22:00:53 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1775027268; x=1775632068;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=22A+Sj5chUc1iyVqke9i/KwfXM4BVovOzihXMiqpqQI=;
+        b=S6xJOT8OUH+9PfSwCrLC6O0QzmDglC7W9Oq23QZXpykpaDL1+RuAPJMFNNjlXz5Xtn
+         V1ARfoC/cDXQKw6PwlHONV105+pvx/yWcDrZI8yUSUuevyWfCjVtqyoMo+MFKOjXYWTp
+         XQYF2uWkVAbW+dcDU74yzH6RTxifpbjnOGcu5RP8vZCDLkP4A9cXO9x4v8Lw9vEez5B2
+         O9HOMECW5WTEYnUOfJtaKmUsFBz0pIxYQy+fFUBUNTHyiY8j+ruo8j/p7PZp6QgCwqLL
+         0vNMrbsH/PmOxY+/yTmnTmG+R3FHdN+KB2n06mK6cwiaDnkaQgTkUAWLEdgndC0fXj0N
+         cm0w==
+X-Gm-Message-State: AOJu0Yz0YZ6e1uoKEDR7GmMT3eGKmiIhRGxQ/cVO75O6JEPXUZhMmnuj
+	ZsVG+SGl3uIa9UqZqlb0wswNSdBijmaDZiOnyyRM8IitNoXbRaQMQz572YDchJtiUan2E/I9rvC
+	IEnapUWBc0wKhl83cCTD1XgjtYmVTIJPNTDdXcYc0dUb6TWJxkkIrQ4Ev9VvQsqg=
+X-Gm-Gg: ATEYQzze2ymTdUBx8O47/gqOSq1+VYu/NSQLMPpCK9k9gYuZ+sV1O9X4s713Xkyb3qr
+	mP3ER1Z1sla1P7zaTFwjXG0fuk+/nzHwAd6iS0skGJl3LrIB0rJKKSAc6hFhbvO0p7HvyMTKPz5
+	F1HBi5fFtTKEev4TjmtXnBVoUKmSDi/62eR03yeRNTzMrwCPSoTi3w8M/NpG74nHjYA9/+ABkzE
+	qH/9TkpAEUSSrzVlx+8vcQhTYYvOMQZ4c6miOP7CyySlxIZk/++Z6gAjwLYZM5FBsdT0yX/ceV6
+	06qP5TiQbq7jKkQ+MTyuW+QFOpPBJZZ9fbIO7Y4jh8ssQzzqYUY9pKSrGC/+5celiL5LX/C1VuW
+	TmnvdUvzaRGjpsPZp94fvxvkRfUOxzL/mF+/p
+X-Received: by 2002:a17:90b:33d2:b0:35b:e4d8:bb10 with SMTP id 98e67ed59e1d1-35dc6fae012mr2416067a91.14.1775027267917;
+        Wed, 01 Apr 2026 00:07:47 -0700 (PDT)
+X-Received: by 2002:a17:90b:33d2:b0:35b:e4d8:bb10 with SMTP id 98e67ed59e1d1-35dc6fae012mr2416032a91.14.1775027267407;
+        Wed, 01 Apr 2026 00:07:47 -0700 (PDT)
+Received: from work ([120.60.63.102])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-35dbe6e2fc9sm3956464a91.15.2026.04.01.00.07.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 01 Apr 2026 00:07:47 -0700 (PDT)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: brgl@kernel.org, robh@kernel.org
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-serial@vger.kernel.org,
+        mani@kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Subject: [PATCH 0/3] Pwrseq/serdev fixes
+Date: Wed,  1 Apr 2026 12:37:32 +0530
+Message-ID: <20260401070735.107162-1-manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260401031917.9108-1-jian.yang@mediatek.com>
-In-Reply-To: <20260401031917.9108-1-jian.yang@mediatek.com>
-From: Chen-Yu Tsai <wenst@chromium.org>
-Date: Wed, 1 Apr 2026 13:00:42 +0800
-X-Gm-Features: AQROBzCjsi0xnmIJgMsX3J2duHUIVsuutzrB8RxL3Ea321MAwxUsjyebvjmh5A4
-Message-ID: <CAGXv+5EJ5rUVdnJZKwLj_NLQVtn+8TE4+gEqt1=LQrD28pA-eQ@mail.gmail.com>
-Subject: Re: [PATCH v1] PCI: mediatek-gen3: Align PERST# sequence with PCIe
- CEM specification
-To: Jian Yang <jian.yang@mediatek.com>, Manivannan Sadhasivam <mani@kernel.org>
-Cc: Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
-	Ryder Lee <ryder.lee@mediatek.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-	linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	Project_Global_Chrome_Upstream_Group@mediatek.com, chuanjia.liu@mediatek.com, 
-	yonglong.wu@mediatek.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Authority-Analysis: v=2.4 cv=B+O0EetM c=1 sm=1 tr=0 ts=69ccc447 cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=zTATW481NYPnotdwU90osA==:17
+ a=A5OVakUREuEA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22 a=fsC5vgmolQPFgTpzX2QA:9
+ a=rl5im9kqc5Lf4LNbBjHf:22
+X-Proofpoint-ORIG-GUID: RYCWVpfquvzi__S4Q0axygaIoqTDkk-X
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDAxMDA2MSBTYWx0ZWRfX4FKnGPoMka+a
+ A3/4NsowrPX3FWq8UNrTmUiDpt0MsHZQk6YPTVWrJ7BMPzqZr8FLy9KCbP1gruLxqOakXDRr15/
+ qpkF+1PuP94xzk8OGFBa7/fc8J8FX/tzZvGrrUMkgoPqGHULcH8Tr7L6GG+bMGsynlK6XLOkKLk
+ hi0euyAny0LZo3L4rmaobJuzfsg7iuQChoLGyCGrc8O6ZzJebgcFdV0d66P2qciM/D/3RN64hUd
+ wyepQ79nacwSkydTXf3004YgO4TZx3PZGlZfi47s9Z39x+Bo2Pzusnm9/nc9MjTdJyQUuWXTyDM
+ r/9IJ21Z+xQnoEzaMowIQbtAMQ9aUiADl+AZGaQfD+msDQR9M9GZFxbHZlUCNtJXPi03gYLDqFP
+ 0vWxpMl0oJ/sp9YpSIh5WoRUjRnPV8zZ4iJK0PgVGyf59D5xSHVCMTqaZ9RCQUtJRpoutbcSm44
+ deGe/kVRgVZSqCDyPow==
+X-Proofpoint-GUID: RYCWVpfquvzi__S4Q0axygaIoqTDkk-X
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-01_02,2026-03-31_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 impostorscore=0 adultscore=0 malwarescore=0
+ lowpriorityscore=0 spamscore=0 clxscore=1015 suspectscore=0 phishscore=0
+ bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
+ definitions=main-2604010061
 
-On Wed, Apr 1, 2026 at 11:19=E2=80=AFAM Jian Yang <jian.yang@mediatek.com> =
-wrote:
->
-> Fix the control sequence of PERST# during system bootup/shutdown to
-> meet the requirement from PCIe CEM specification. There are two major
-> changes in this patch:
->
-> 1. Some of MediaTek's chip will stop generating REFCLK if the
-> PCIE_PHY_RSTB signal of PCIe controller is asserted. We have to
-> adjust the startup sequence as follows to ensure that PERST# will be
-> de-asserted after the REFCLK is stable:
-> Assert PHY reset and PERST# -> delay 10ms -> De-assert PHY reset ->
-> delay 100ms -> De-assert PERST#
->
-> 2. Add 'shutdown' callback to control the timing of PERST# and power
-> during the system shutdown phase, ensuring that PERST# is active
-> before the power on connector is removed.
->
-> Signed-off-by: Jian Yang <jian.yang@mediatek.com>
+Hi Bartosz,
 
-Seems correct to me.
+This series fixes build issues reported by kernel test robot on the recently
+merged M.2 Key E pwrseq series.
 
-Reviewed-by: Chen-Yu Tsai <wenst@chromium.org>
+Patches 2 and 3 can be squashed with offending commits, while patch 1 should be
+applied separately.
 
-If possible, I think we would want this merged this cycle together
-with the other pwrctrl changes.
+- Mani 
+
+Manivannan Sadhasivam (3):
+  serdev: Add missing stubs for serdev APIs when CONFIG_SERIAL_DEV_BUS
+    is not selected
+  serdev: Add CONFIG_SERIAL_DEV_BUS guard for
+    of_find_serdev_controller_by_node() API
+  power: sequencing: pcie-m2: Guard the helper functions making use of
+    PCI bus notifier
+
+ drivers/power/sequencing/pwrseq-pcie-m2.c |  9 +++++
+ include/linux/serdev.h                    | 46 +++++++++++++++++------
+ 2 files changed, 43 insertions(+), 12 deletions(-)
+
+-- 
+2.51.0
+
