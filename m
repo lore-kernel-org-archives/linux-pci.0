@@ -1,71 +1,70 @@
-Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013005.outbound.protection.outlook.com [40.93.201.5])
+Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010052.outbound.protection.outlook.com [52.101.61.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA086391834;
-	Wed,  1 Apr 2026 07:30:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1020391846;
+	Wed,  1 Apr 2026 07:30:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.52
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775028642; cv=fail; b=KXC9XTAMnOJOJBk/7GuM/2h2M6tgFbk4kNxs4ndBwZaqsswC9nNT7PPZafXCJYDzkMTK7BLx3mVcxt6hveOUjxX1shpOY5aE4VAUonFGwGF0/OuT102zw7+KW+5QxqpnH+BjN2ZJyDMnP5Gq4Ry0aykGg5NYnsuZB4IArFSWN/8=
+	t=1775028644; cv=fail; b=c+Zf/HCu4+ju8twvQ/O3uMGxj8bHkINdjY0+yK6f6WEkgTnj2bcKU8CEYxD/r69HKg9HMUeNZWponiGjpCcn4PlN/xsn/tMNdhRQZv+S85SBBbUGS9fmxfOVxTiJx1Xgavw+uirBnMEYDhHjyS2ZUz61zt4o0/WJ6OR7nAthCtQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775028642; c=relaxed/simple;
-	bh=jNZAfKqhOMlUoJpOlWiJScp28OaPyI2i78phpqAhsRM=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uwQfAmDiImyN2lFshmttcRwzMYmOtMG9noHHTGOc9C6zzwzZq+QHXtGw/kkUpfFRdCyNcbLkjZlIcpB8+s1AHFTwpq43NbRrGje9xEnSpZADhJqmaUF6UT1A+CjaF2e2z7rkGgdQ12cc7C0eM2gzOhleSYcERMw5fxcV+3g9tkM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=C7uA3xbG; arc=fail smtp.client-ip=40.93.201.5
+	s=arc-20240116; t=1775028644; c=relaxed/simple;
+	bh=qcFFxcWG0NhHUzgrQT0jOSlFsnKdIgf8sVBVc4dp43o=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=X3AwjBJKqjncZkOlXJ/SxDFNAyS09aJ6Av0kLaBcf8hfIhLC1WkNFB4PiEGQFzmhoRCj73eqxYJFTyrLikHv9sz22OZmQKSCSwIOmroVIGZ9RQDtub6r5+si/ZYfEri4FCzJzdVVX1SP6GW8Q17CXf3snikhg8M+yBI7ENGZM90=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=tfbMmd0z; arc=fail smtp.client-ip=52.101.61.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="C7uA3xbG"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="tfbMmd0z"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=mpKuFoTTlzomWiDl2ESic474u5ZvlmuYHLEJs93v4hBMI1xe7wULiYvbltqqZuQ0+uopLumAbs+ktdKSZw97XutLeAaWHBpGFUQ39mWsDtGUoAMcK/5SrnCg5Q5M0aOEYyiVsf4nPhztmyCwXw3lGEpJPGrKpfwTHPTndHc/EbsnPGauInUFKqoqmwGmvWhv5f2sxOHL3pM/ZAexgBwM6fJvSdw5clPZMuDy3rSzKkimxIcgSHIqa5BNVRM0YjjY5S2neq6NR1/vsZnFXDdXkQM3r73MJT1xPX1TY/xsZO42xMyhamiqnj6sTtJXwJsIHBbdCIs2qzx20hvfdqtn9g==
+ b=ClDq4NOSVMFP6D/LrzJ/vygwk7HwXPZ7scD+HUxbpPsqoDZ7JbiF5R/TyuP0t/dgzE3OacdUFJ7ybYOZcAqxoQtFq2SutvawKH6qol4XmjHuIbx5vLl7AzZkQcMnptzg2GwFXUzscaLLUB0Ea2LLV/YN8N1SFHTz4ojdTU6i+EBzZXoTq2A81VE9O57FyBP/kUwl2tU8Ly2vuqHvg0UBVmlDnuaWaoiuv1rHDSFOY/FGE4Sfd6mrwf4uNGzzXf2Z17D3YlIrNADwQ0IdKaJIISJNb0xPEjc16VQEf0IIutw8acvNIZJrxF3Pm++2iW2kbFbxcvaa6j/Wt7PqxFJtgw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/8OEV205hOziypl1nmJRGmEg0Pk/aozqrUUWMUkOv9w=;
- b=CwLwHV3zhKwNjYZrOn44wgZiYb8VEvtwF7aR9CdGk97KxE50ouUJnZdml+tx6XlJJ3/zWYHiSqA4/Kf0qbqaLUqGDhYInMMNeoRd0glXLEbHQ+DESrOgDUdcBET2ptw9oGOceZJWxqQnu32gHeSd46shxmP13KjDv8XITuANLQ1lijO8PmuNERCpONWyTd9tvc7Gtz1tF5cPYz9DB5W+Cjo5hr7sa3uzG0ulX5RewIFlZ4J54VeGNiwABeuMrtMxchhczd+9U7NSBIkeXBc/ZvnzCGI8uielTIuPRpCJ8OjNVcrmrieC/VFrVsLuz6YgPpbi2O+aRSHKLqmpOdlg7w==
+ bh=VlF6efqO94EOn+exWK7nCLhphKh5ZtiuSGL0d03ELm0=;
+ b=r33uQsxtYJ1xDEgDZEQcTlsd5crraLhb00u15YskMR3jimbQg0anJpI2Q2h6FhgJLP4OFpXKQ2OLun7/KwKPBSF5YnW5exe80b5/oADcRC4QOm3xvhaICiZhOgn/G8Fz7E53NdLeNr4B6gjRUJHwr8SXLZXNN55XGOdr2hg3+g2pTicUaTszVsAvUjBlCgZGK5EGmVH+v2nnPaUoYUAfqfDrsKnj8Tgp9iQIEykj7bTaLUk7F6Wg/g8xFWAd0ZO6PP5D88lnW2PjFVJZEBzO2Q59yDjEsdiRtiswH46+5rZAgxWcDW2boqwIlymv/167aPOyVkAoBLKxD1vO8NHq1g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.21.195) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
+ 198.47.21.194) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
  dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/8OEV205hOziypl1nmJRGmEg0Pk/aozqrUUWMUkOv9w=;
- b=C7uA3xbGLzUG5rmqVIlCvVyhVm7Dwi5QYsU8hvovXaeVsrDg2UYXeeyiqwMCkdn+5iI6+WvM7e5SD6d5aWuCbHEphzimgFXKk9ka1vAbfoFdnWdtFWYvo3sfZ0LsB6PMgvUAh/x+nEfMVE3cyifQn1JKp/wJ03Iu6Jq/mxW8E0o=
-Received: from BL1P223CA0012.NAMP223.PROD.OUTLOOK.COM (2603:10b6:208:2c4::17)
- by MW5PR10MB5826.namprd10.prod.outlook.com (2603:10b6:303:19b::17) with
+ bh=VlF6efqO94EOn+exWK7nCLhphKh5ZtiuSGL0d03ELm0=;
+ b=tfbMmd0zSunwWJdP0WdGyYF/U7a29NlxxY+09cOs/5z92VcdpHz1pfJU2+Uer0XeZiMbr9GM+HeSEU7pC3DYfYnLzu/NLuCBiDbIZqN16QX1b4x9AZ+a27jRM6XGF/kNuwknBQLjHeCIq6bNiTqH/S0kbBfUoWfq5S0rnG2QtRs=
+Received: from BYAPR03CA0030.namprd03.prod.outlook.com (2603:10b6:a02:a8::43)
+ by DM3PR10MB7969.namprd10.prod.outlook.com (2603:10b6:0:45::10) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.15; Wed, 1 Apr
- 2026 07:30:37 +0000
-Received: from BL02EPF00021F68.namprd02.prod.outlook.com
- (2603:10b6:208:2c4:cafe::2b) by BL1P223CA0012.outlook.office365.com
- (2603:10b6:208:2c4::17) with Microsoft SMTP Server (version=TLS1_3,
+ 2026 07:30:38 +0000
+Received: from SJ5PEPF000001E8.namprd05.prod.outlook.com
+ (2603:10b6:a02:a8:cafe::9b) by BYAPR03CA0030.outlook.office365.com
+ (2603:10b6:a02:a8::43) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.20.9745.30 via Frontend Transport; Wed,
- 1 Apr 2026 07:30:31 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.195)
+ 1 Apr 2026 07:30:38 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.194)
  smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
  action=none header.from=ti.com;
 Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.21.195 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.21.195; helo=flwvzet201.ext.ti.com; pr=C
-Received: from flwvzet201.ext.ti.com (198.47.21.195) by
- BL02EPF00021F68.mail.protection.outlook.com (10.167.249.4) with Microsoft
+ 198.47.21.194 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.21.194; helo=flwvzet200.ext.ti.com; pr=C
+Received: from flwvzet200.ext.ti.com (198.47.21.194) by
+ SJ5PEPF000001E8.mail.protection.outlook.com (10.167.242.196) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9769.17 via Frontend Transport; Wed, 1 Apr 2026 07:30:36 +0000
-Received: from DFLE211.ent.ti.com (10.64.6.69) by flwvzet201.ext.ti.com
- (10.248.192.32) with Microsoft SMTP Server (version=TLS1_2,
+ 15.20.9769.17 via Frontend Transport; Wed, 1 Apr 2026 07:30:37 +0000
+Received: from DFLE202.ent.ti.com (10.64.6.60) by flwvzet200.ext.ti.com
+ (10.248.192.31) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 1 Apr
- 2026 02:30:33 -0500
-Received: from DFLE207.ent.ti.com (10.64.6.65) by DFLE211.ent.ti.com
- (10.64.6.69) with Microsoft SMTP Server (version=TLS1_2,
+ 2026 02:30:28 -0500
+Received: from DFLE203.ent.ti.com (10.64.6.61) by DFLE202.ent.ti.com
+ (10.64.6.60) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 1 Apr
- 2026 02:30:33 -0500
-Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DFLE207.ent.ti.com
- (10.64.6.65) with Microsoft SMTP Server (version=TLS1_2,
+ 2026 02:30:28 -0500
+Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DFLE203.ent.ti.com
+ (10.64.6.61) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Wed, 1 Apr 2026 02:30:33 -0500
+ Transport; Wed, 1 Apr 2026 02:30:28 -0500
 Received: from a0507033-hp.dhcp.ti.com (a0507033-hp.dhcp.ti.com [172.24.231.225])
-	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 6317UN3Q3832504;
-	Wed, 1 Apr 2026 02:30:28 -0500
+	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 6317UN3P3832504;
+	Wed, 1 Apr 2026 02:30:24 -0500
 From: Aksh Garg <a-garg7@ti.com>
 To: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
 	<mani@kernel.org>, <kwilczynski@kernel.org>, <bhelgaas@google.com>,
@@ -73,12 +72,10 @@ To: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
 	<lukas@wunner.de>, <cassel@kernel.org>, <alistair@alistair23.me>
 CC: <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
 	<s-vadapalli@ti.com>, <danishanwar@ti.com>, <srk@ti.com>, <a-garg7@ti.com>
-Subject: [PATCH v2 1/4] PCI/DOE: Move common definitions to the header file
-Date: Wed, 1 Apr 2026 13:00:19 +0530
-Message-ID: <20260401073022.215805-2-a-garg7@ti.com>
+Subject: [PATCH v2 0/4] PCI: Add DOE support for endpoint
+Date: Wed, 1 Apr 2026 13:00:18 +0530
+Message-ID: <20260401073022.215805-1-a-garg7@ti.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260401073022.215805-1-a-garg7@ti.com>
-References: <20260401073022.215805-1-a-garg7@ti.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -90,123 +87,71 @@ Content-Type: text/plain
 X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL02EPF00021F68:EE_|MW5PR10MB5826:EE_
-X-MS-Office365-Filtering-Correlation-Id: d8bf949e-ab45-4752-5275-08de8fc09115
+X-MS-TrafficTypeDiagnostic: SJ5PEPF000001E8:EE_|DM3PR10MB7969:EE_
+X-MS-Office365-Filtering-Correlation-Id: e9afb874-e26a-44c4-317f-08de8fc091a7
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|82310400026|1800799024|36860700016|921020|56012099003|18002099003|22082099003;
+	BCL:0;ARA:13230040|82310400026|36860700016|376014|1800799024|7416014|921020|56012099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	QnYsR+k0hTGagduKICOj88AEPCVtSkNg/6NyjjoF5tKaneWlhHVYIpM0jpHlEByCD3sBaYpMe4QgKcbkGzgNMZ3PRxQ8zXvGfb3DqhxgAHseY1u7Y83Ez3Zv+2IhF48wOFzsP2vpg2XZ8qDa91+d7AQ3VYo8CkqIx0UV/dzulpOZc0DIa+88MTtXklUdTrzqHMBQYNXvIMXvEgT3k4LLSFPtHNZV/JdGRJgi82N/oN8iZGwGMuKF747nVSvoonzI26myoZnvAfYzrPq0jf6IFagsHmmTpKbwCEEj3hBtVjuVy/16bOy2/K23OMULUO/uBzJRQ2JGqImE0OL0v6tD3rT2ok4RFF+7kzztMEDZIhP9QfN6Q+36YaWw6NzsdAIGz/ht1gDXJozZOdPyoZGkQ2nXVZ7a8eD+zHtojQijJzlk/3KB7saUPJymzvdbc8EynItjIakvzACEm8QbaFktdijwidzWUMJZd22Dl614HodGR8QBeNDgIiRsfqw1O+E+bJTKP6uOZ4U6PkPIVbtonjQFoOrQ2VpdPMgJvmMZa+yXAEQoPoY5WIe7s2RE/y5Ly2JxPHXuoVBJxrLvvYOT0Z08HBW5e9lY1WB3a5lwYdn9Uf4kIWOOnwMEBUZtNSqzIas9oAHKoYIYF60cYskGx8VznAE6eKT73jRU39t864gXklx5cJzCaJrO1k5TKq+zaSAXwYWQL24WQKyqoz1PYmV+XUQOExw3yrlSmrnLh+rVkDTpx0Fc9E2ctdiU6yjtKqpzgTTM6v9tSn1ypVEu2hNvB8Tci629FRNG3tP+q319RitiE1PyNQphsGB9uIoo
+	m4Fj1ssFLzs7t0t9oPzZLv+OCD3ydz/YVizA01zjzSfRCNCWmjNV+q+X3DeC6ZoGTLkJ29rWX3fcwq8WFh1mtZGEKxusT+U14hmS9ac1nwDCxmcf5E2uiqXq47ZLD3MI4sfIXhPFtthWc1VykZdlq99+XeDPrWB+0bI1jyNbO9yQ0JqhZJxn2MlULvUA/zLAMXe6LWyTTg9BHZR8kSzUc1/X6yME0aRQlY5KkJ2TaH6FZ9dpUxKJdlccP5R715+wTY5Cs/h/htryAorZE3rM1VyTo7Ly9aLwMLwSPty7wT6A0A8ygx5LkbO1zD5Mvmfn20oL94cELs+vn11fiA8Fii2VS9OOYzO2b5X2rK7IqcTQ15jkv9rKXlctYbM+pjMGmAWilzsxpNSvNYgxPHNaUI0dvQqXE3nCxkYUY6HeFlkwbJso5qyNlWUQVt8Ajqw8YdeF0YGk/yvVsn2elrUn+uN+mCL615thFgjuFgc0GkBWtB373eMKrxLnfnf9GT9yEorXWsi3hfV8nRorH2s15xD8vKodvCtMtKZhAjKe1+2WYJaJycR0FiU2w703PsDEFLLNt5oxvlIJuCJZ3GSmjILFnwPHd4szBUO6eWYyg9SejZh4ogV4ghLVSU2W7hFhdVWBLm0hJXLSbvUtdkOdbdKZxg0tVew3b1jynopfCVK2yaZ9gIGwQRm1RPkRwREPrCkvHI9ysfkPRg32rvWI2s/OawyIVMkpPEnAM8Q7anelT++J4HcTRHU0d/btBWtL98aUpLqsp+f2ghg0V6k6pEGHAp2WsGlhHzp+9TUGt249qaDH9E2lIKVwEQTr8jVk
 X-Forefront-Antispam-Report:
-	CIP:198.47.21.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet201.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(376014)(7416014)(82310400026)(1800799024)(36860700016)(921020)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:198.47.21.194;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet200.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(82310400026)(36860700016)(376014)(1800799024)(7416014)(921020)(56012099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	aS6LAhxRx53RNyPfSfj+XoB83Xfcz4CHv8JocbC0PRB2AufYftbtlMB08V/X5fwljFheIh0NBkYYAbKQ/iRLho4e9S5cCnkteGEjavBpwfMRG6jOnb08K9EOy6/KVZwFwV11H8B0wadVr0H9uzH9D4XzhrkA9lhTH8BbCROqNMpjEpBTZpyqpAtDDiBywRFeDM0xzwQgzdPZe0Lp8GwsFryreepb2kAvv/MISBrZBnvCmaYLiavwyqBLuNm9iM7YQMQXvtNskqeowZ91YNqvxyzu3uYHGBp/r7gl406p+x7RPjir98ejNgIQtqBgCuHcgoOWvel4fFxGJI6HS/0aTSVusV/sWJI5aAE0tVe2swgTPSmRZmhV/SRwWPeoH6eoYNvAId06MHTsP0iAY54+hAPMcCqRB0Ifi/yVbkjLqsFZnvwjv5mbA0JLspNMMhF/
+	+Tg+jzM+dpEDt6Tjz0eoH8ZkCuNuNOwnu2G/uPgnT0OCzV8Jg41lYf0ayZw37LkBV2twhiBjvw1Ase/8wfvTKDLVaccZlUlppj77iAqgECgRV3sD/prrD1DuicNnp361DkSFYiVCpcl4hOdDiibR6n2S57ouJJlwb4joZ5mOX3YisgZ/9uuna6Y4ExbCh9WIwvSDsRf1x0OA6Y2HSbazSemoFBRq0C2mXUaYFANewwZN+288yZV7VZ9TYhco2GUSEA+M4BNteA9NneQYtft/zfPHY902ntiSQRj9Y8iCIRYwLNZHZ+WsLGzfTeRS1kty8sA8b657nWjmZZTr7YWpLgvJsEChJNdnJSgxDn5F8yTkBJZWAKI6kEVst409NAIJ1BaYlGfLPG/Hn5mAKSi2HBam/ohp6L2kLNPLEyWqOqvOIvfmIOM0+9O/eZnbatjq
 X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Apr 2026 07:30:36.2531
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Apr 2026 07:30:37.2091
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: d8bf949e-ab45-4752-5275-08de8fc09115
+X-MS-Exchange-CrossTenant-Network-Message-Id: e9afb874-e26a-44c4-317f-08de8fc091a7
 X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.195];Helo=[flwvzet201.ext.ti.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.194];Helo=[flwvzet200.ext.ti.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BL02EPF00021F68.namprd02.prod.outlook.com
+	SJ5PEPF000001E8.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW5PR10MB5826
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM3PR10MB7969
 
-Move common macros and structures from drivers/pci/doe.c to
-drivers/pci/pci.h to allow reuse across root complex and
-endpoint DOE implementations.
+This patch series introduces the framework for supporting the Data
+Object Exchange (DOE) feature for PCIe endpoint devices. Please refer
+to the documentation added in patch 4 for details on the feature and
+implementation architecture.
 
-PCI_DOE_MAX_LENGTH macro can be used outside the PCI core as well,
-hence move the macro to include/linux/pci-doe.h.
+The implementation provides a common framework for all PCIe endpoint
+controllers, not specific to any particular SoC vendor.
 
-These changes prepare the groundwork for the DOE endpoint implementation
-that will reuse these common definitions.
+This patch series is the non-RFC version of the RFC series at 
+https://lore.kernel.org/all/20260213123603.420941-1-a-garg7@ti.com/
 
-Co-developed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
-Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
-Signed-off-by: Aksh Garg <a-garg7@ti.com>
----
+The changes since v1 are documented in the respective patch description.
 
-Changes since v1:
-- Moved the common macros that need not be visible outside the PCI core
-  to drivers/pci/pci.h instead to include/linux/pci-doe.h as suggested
-  by Lukas Wunner
-- Removed the redundant empty inlines guarded with CONFIG_PCI_DOE in
-  include/linux/pci-doe.h.
+A new patch (patch 3) have been introduced in the series. This patch
+moves the burden of initializing and setting-up the DOE mailbox from
+controller driver to EPC core driver, avoiding the duplication of code
+across the controller drivers. This patch adds APIs to the EPC core
+driver, which simply needs to be called by the controller driver during
+probe/cleanup if it supports DOE capability.
 
-v1: https://lore.kernel.org/all/20260213123603.420941-3-a-garg7@ti.com/
+Aksh Garg (4):
+  PCI/DOE: Move common definitions to the header file
+  PCI: endpoint: Add DOE mailbox support for endpoint functions
+  PCI: endpoint: Add API for DOE initialization and setup in EPC core
+  Documentation: PCI: Add documentation for DOE endpoint support
 
- drivers/pci/doe.c       | 11 -----------
- drivers/pci/pci.h       |  9 +++++++++
- include/linux/pci-doe.h |  3 +++
- 3 files changed, 12 insertions(+), 11 deletions(-)
+ Documentation/PCI/endpoint/index.rst          |   1 +
+ .../PCI/endpoint/pci-endpoint-doe.rst         | 318 ++++++++++
+ drivers/pci/doe.c                             |  11 -
+ drivers/pci/endpoint/Kconfig                  |  14 +
+ drivers/pci/endpoint/Makefile                 |   1 +
+ drivers/pci/endpoint/pci-ep-doe.c             | 552 ++++++++++++++++++
+ drivers/pci/endpoint/pci-epc-core.c           |  71 +++
+ drivers/pci/pci.h                             |  47 ++
+ include/linux/pci-doe.h                       |   8 +
+ include/linux/pci-epc.h                       |  24 +
+ 10 files changed, 1036 insertions(+), 11 deletions(-)
+ create mode 100644 Documentation/PCI/endpoint/pci-endpoint-doe.rst
+ create mode 100644 drivers/pci/endpoint/pci-ep-doe.c
 
-diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
-index 7b41da4ec11a..e8d9e95644b3 100644
---- a/drivers/pci/doe.c
-+++ b/drivers/pci/doe.c
-@@ -28,12 +28,6 @@
- #define PCI_DOE_TIMEOUT HZ
- #define PCI_DOE_POLL_INTERVAL	(PCI_DOE_TIMEOUT / 128)
- 
--#define PCI_DOE_FLAG_CANCEL	0
--#define PCI_DOE_FLAG_DEAD	1
--
--/* Max data object length is 2^18 dwords */
--#define PCI_DOE_MAX_LENGTH	(1 << 18)
--
- /**
-  * struct pci_doe_mb - State for a single DOE mailbox
-  *
-@@ -63,11 +57,6 @@ struct pci_doe_mb {
- #endif
- };
- 
--struct pci_doe_feature {
--	u16 vid;
--	u8 type;
--};
--
- /**
-  * struct pci_doe_task - represents a single query/response
-  *
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 13d998fbacce..66b7ec80f46f 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -681,6 +681,15 @@ struct pci_sriov {
- 	bool		drivers_autoprobe; /* Auto probing of VFs by driver */
- };
- 
-+/* DOE Mailbox state flags */
-+#define PCI_DOE_FLAG_CANCEL	0
-+#define PCI_DOE_FLAG_DEAD	1
-+
-+struct pci_doe_feature {
-+	u16 vid;
-+	u8 type;
-+};
-+
- #ifdef CONFIG_PCI_DOE
- void pci_doe_init(struct pci_dev *pdev);
- void pci_doe_destroy(struct pci_dev *pdev);
-diff --git a/include/linux/pci-doe.h b/include/linux/pci-doe.h
-index bd4346a7c4e7..abb9b7ae8029 100644
---- a/include/linux/pci-doe.h
-+++ b/include/linux/pci-doe.h
-@@ -19,6 +19,9 @@ struct pci_doe_mb;
- #define PCI_DOE_FEATURE_CMA 1
- #define PCI_DOE_FEATURE_SSESSION 2
- 
-+/* Max data object length is 2^18 dwords */
-+#define PCI_DOE_MAX_LENGTH		(1 << 18)
-+
- struct pci_doe_mb *pci_find_doe_mailbox(struct pci_dev *pdev, u16 vendor,
- 					u8 type);
- 
 -- 
 2.34.1
 
