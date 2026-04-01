@@ -1,120 +1,126 @@
-Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f44.google.com (mail-lf1-f44.google.com [209.85.167.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F16511DF73C;
-	Wed,  1 Apr 2026 04:11:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775016702; cv=none; b=YURBzCAdsO14TS9JxEUbTMOGJ+2antjno9dFx7Nmv7m7Efv8hNs0bBcDJUHbJmjqVTuMX+EG1XZ7Fg7exXuZwgFxEjmkO/22jrTR+KmVO7JfpyP/5AlyhUxCX8R9CSndy2g/P3mhp6NY7JHK0p2GVs5iiTkfzY68w9TqOn2w2nU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775016702; c=relaxed/simple;
-	bh=sAWy1Ivi16Z/gQza1WVmjo4POjr+K6avx4D7/qC3ChA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mtdCbnzDKO/wuErf0UDxZsAyzgCqVuuApXTYHJOH66iapPunE+vScu/F/2AurwAHuZeM2IeEb4tZQQjrAZgfoKANFMT82MTI8Sz5FV5LCs9AaaBkTwiLr20ockI+k9VLWG9HWM882t8Ipkx3UYvsbH425lrfz+B6o6l54Dqyc24=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout2.hostsharing.net (Postfix) with ESMTPS id 28A5A10610;
-	Wed, 01 Apr 2026 06:11:37 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 16C5D6006954; Wed,  1 Apr 2026 06:11:37 +0200 (CEST)
-Date: Wed, 1 Apr 2026 06:11:37 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Alex Williamson <alex@shazbot.org>
-Cc: Bernd Schumacher <bernd@bschu.de>,
-	Salvatore Bonaccorso <carnil@debian.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Mario Limonciello <mario.limonciello@amd.com>,
-	1131025@bugs.debian.org, regressions@lists.linux.dev,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: Re: [6.12.y regression] Regression with 58130e7ce6cb ("PCI/ERR:
- Ensure error recoverability at all times"): echo vfio-pci >driver_override
- does not work for DVB Adapter
-Message-ID: <acya-Q8_pMRRLI6j@wunner.de>
-References: <177373189751.7987.7156982489427825197.reportbug@obelix-trixie.bs.de>
- <acfZrlP0Ua_5D3U4@eldamar.lan>
- <acfhf-odtr0yw_py@wunner.de>
- <74bcd84500e5efcca035624f325e400dd8a21f44.camel@bschu.de>
- <acgohjvBpVcR7HcK@wunner.de>
- <5f9386146f426e2847550681cb7188471205607f.camel@bschu.de>
- <aclRwznwq6KpA2qA@wunner.de>
- <ecf9b2dd96ff97cc035ba297266b8dd05eea88da.camel@bschu.de>
- <acvHjo8PKdyHshSE@wunner.de>
- <20260331170149.3ee222aa@shazbot.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDF07381AFF
+	for <linux-pci@vger.kernel.org>; Wed,  1 Apr 2026 05:00:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.44
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775019658; cv=pass; b=iWt+HbbyL/ef0Jju2zbAxuZa+ctqFSaWeNFeGlu0W26BCGEstc7NRXg9gf/n0qwhSbJj+f/TkdwJ5XwjmyIvlDRBemErKTtmYqvf7Q1PZAVbUqGPXNuzBn/wFflarhMmbM+s+OdP/Ajx/rklXOg26K6PqugG7PgfYK6vZO7B0BY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775019658; c=relaxed/simple;
+	bh=OqQ601QbL/y+YrmVBidvwxw5csxIEjRfbUIlqPG+O5M=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=n3hdYxWRe6rRKbVGap7IuzbKvFsC5qmT9MEWwQ3YMp5UXchCV116qZKZ81l2rD2tWqxrMqsObzpNCEW2+dv4U42KMxBdWVe8m4Reuc+DC6SjE4AVhTesaloRUbNuq4u0GJuJh1kZ3bB2MKBaorMA12lwpQIIgj9Wfb/nP683/UY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=IECvBvtg; arc=pass smtp.client-ip=209.85.167.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="IECvBvtg"
+Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-5a1443780c4so565612e87.0
+        for <linux-pci@vger.kernel.org>; Tue, 31 Mar 2026 22:00:55 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1775019654; cv=none;
+        d=google.com; s=arc-20240605;
+        b=ewKONDC4bkpoDYvSEZoKqRVR05Uj3xfLVuuhVinPOjNApdDsr4KcEejbBFx6oktFDF
+         cmMHPNeAoa5zovTWmLw8Ey7YKPEHfXgGcT64o1AIfFJ/OGiBqymoG/KIXfgbgI9TYioO
+         6/hGefK+kIxUlmReWI9s4lkxzcGByxnNUOef76xPeG8tcYWe+grF3joozgB2gugmfp5y
+         ujuYchAXbVXxf03Gpzx+5wtEtUOy/m7ZcuX1ZV05xPHqBN+XICXJpVujYsVHj11YtSU3
+         KUOSnVNEk9fnrItntJIH1trkv2K/2Hk4e+L8VPnH3F6vh5/H5yQqpzG9iLW4zSD5cj9V
+         kf7w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=OqQ601QbL/y+YrmVBidvwxw5csxIEjRfbUIlqPG+O5M=;
+        fh=qXSjn4nSVX/gvu11Brp4JLEBMRYivRGzDs8GEXRr9WQ=;
+        b=HGbbBjUJoT1P7zN0UoL+jnyyi5eukF4IN9TaXvDE73iOBzwRwgHoYsz1s7OsfKlKqL
+         EV8zRs8gPGVHhnNUXhOmaFiu004BJTNelEUoZgjIrf32gPjyM3Q9KnroTvZl99RendGa
+         ab1Ib/jNTCcULdiqVg/0f61hmPIoDUTmI+89Y1TAeCBQHtZQvy3UI9k4GzlN8IeaMZyn
+         7/35oHtaYxZIHO06SDZ4YBUkGb0BvLVug7g4o4FgxFL3EyYmPTYPlFOQ6yL3hDGyvxoc
+         i33g80jSEkFEsMu28xBxBMEaDdX3J4bFdVuZhJ0HpWrvb6R6DNpKBmVl9N0ZpzhXvEJ2
+         7t1Q==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1775019654; x=1775624454; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=OqQ601QbL/y+YrmVBidvwxw5csxIEjRfbUIlqPG+O5M=;
+        b=IECvBvtgajJ4DrZgVl7s5vpVy3QH7nCqLjNpSeWL9ZqxY/18csVQR8lYdHVmSnchPX
+         HEJTUblMsyOlCiQTKEPpLMGrI8R6QyS0EU3qCcv3mX0dw65sY2Yb4LTVy+7dlVrGBG/g
+         kcqtf2T88qtuq3KkVmVxKPW1s870wQw5llKG4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1775019654; x=1775624454;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=OqQ601QbL/y+YrmVBidvwxw5csxIEjRfbUIlqPG+O5M=;
+        b=lz+YkGrYNLWVtxJbc19EXp8KnNKoHhjJXYUowqas7keIwh3763yBy3nbj6vyhKpa8r
+         KzqIq7lasgQWVXoJPso5y9RvyUuN9U++3PzYRz3Mod47XlLx29E4zYtPNEdTRgK2kit1
+         o5KHOmFzxzii022gOuvnEnuyezQGLPcNzcNJV4/TnU3Jzroa9W+jvXTX5lSoW2KIr6yV
+         GcmGCllnfskUYCSb0xuaXmGvMJvPfpSL/+ih+UWtQaI4YLScWnV8ZZzChyHYcdmANKXT
+         2Fn6lLu70FseKkwI0U+dnejtxnVrVl79VlAaUrfOHcLQ2rmrD0yseyN0B7MjRiKUqd3H
+         IVDA==
+X-Forwarded-Encrypted: i=1; AJvYcCWsFU88GeH1wQ/tkUJlOU60bW6BWjf7ghgV2nAd5qCtT7lxL9BXMgIJHGyi1mlP22ruKdbBMcQaPEY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzK6Fo0oO1f11uXJw71Y9EKINcrTHBu/FZRkHfvt1VZboEdlQGR
+	B9Y0Z7dpRhPrtNVdHVuO3RwaoeP9brV2UO6p61ZyJktlGPP9RlxYERxts/xymxlSNizkdWxO22G
+	khf+yS0i97SNhERCkTh0Z9rOnuYNnIQmNfEXJKK4Y
+X-Gm-Gg: ATEYQzy+5PPRtaFi2mpVHPtZ8cOTDw2pKtkxA479G6FZbomXLHuPFccE77tdwz8QD7E
+	rsf8RmWwb0plHY1E2/YgBvPNV4mkQ+3NDAHO128ccMak2x/opmGjwxTH2ks0HiowGBt1sAil0dx
+	DL378hSdadB4Zulcnx785+slk/0VVkD+PlRZXCAjX/9vWVnAVcNvdY+lr/0Ea1F2JvhumnC2fQ1
+	GOwwOy+sswhQb0Xqs49ceZosvt2G8a4VTw2IFwnkdjZBdVsO5xqpXhhLVS/SW7xWSq3oMKYs0Aq
+	OmRjca2+S96aFGB4lIAfpxqdTrAYVGtL+Oxnkw==
+X-Received: by 2002:a05:6512:3ba1:b0:5a1:4e53:c68b with SMTP id
+ 2adb3069b0e04-5a2baacc775mr2863990e87.2.1775019653869; Tue, 31 Mar 2026
+ 22:00:53 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260331170149.3ee222aa@shazbot.org>
+References: <20260401031917.9108-1-jian.yang@mediatek.com>
+In-Reply-To: <20260401031917.9108-1-jian.yang@mediatek.com>
+From: Chen-Yu Tsai <wenst@chromium.org>
+Date: Wed, 1 Apr 2026 13:00:42 +0800
+X-Gm-Features: AQROBzCjsi0xnmIJgMsX3J2duHUIVsuutzrB8RxL3Ea321MAwxUsjyebvjmh5A4
+Message-ID: <CAGXv+5EJ5rUVdnJZKwLj_NLQVtn+8TE4+gEqt1=LQrD28pA-eQ@mail.gmail.com>
+Subject: Re: [PATCH v1] PCI: mediatek-gen3: Align PERST# sequence with PCIe
+ CEM specification
+To: Jian Yang <jian.yang@mediatek.com>, Manivannan Sadhasivam <mani@kernel.org>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
+	Ryder Lee <ryder.lee@mediatek.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+	linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, 
+	Project_Global_Chrome_Upstream_Group@mediatek.com, chuanjia.liu@mediatek.com, 
+	yonglong.wu@mediatek.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Mar 31, 2026 at 05:01:49PM -0600, Alex Williamson wrote:
-> On Tue, 31 Mar 2026 15:09:34 +0200 Lukas Wunner <lukas@wunner.de> wrote:
-> > On Mon, Mar 30, 2026 at 08:14:53AM +0200, Bernd Schumacher wrote:
-> > > [    0.318903] pci 0000:07:00.0: [dd01:0003] type 00 class 0x048000 PCIe Endpoint
-> > > [    0.318939] pci 0000:07:00.0: BAR 0 [mem 0xfffffffffc500000-0xfffffffffc50ffff 64bit]  
-> > 
-> > BIOS initially sets the BAR address to an incorrect value (the top 32 bits
-> > should be all zeroes instead of all ones)...
-> > 
-> > > [    0.339685] pci 0000:07:00.0: BAR 0 [mem 0xfffffffffc500000-0xfffffffffc50ffff 64bit]: can't claim; no compatible bridge window  
-> > [...]
-> > > [    0.311065] pci 0000:02:03.0: [1022:57a3] type 01 class 0x060400 PCIe Switch Downstream Port
-> > > [    0.311107] pci 0000:02:03.0: PCI bridge to [bus 07]
-> > > [    0.311118] pci 0000:02:03.0:   bridge window [mem 0xfc500000-0xfc5fffff]  
-> > 
-> > ... this doesn't fit into the window of the bridge above the DVB card,
-> > which has the top 32 bits set to all zeroes...
-> > 
-> > > [    0.357346] pci 0000:07:00.0: BAR 0 [mem 0xfc500000-0xfc50ffff 64bit]: assigned  
-> > 
-> > ... the kernel fixes the incorrect BAR, but it seems there's an ordering
-> > issue such that pci_save_state() is called beforehand.  It's weird that
-> > this doen't occur with newer kernels and it would be good to understand why.
-> > I'm not seeing the ordering issue despite staring at the code for a while.
-> 
-> Do we know this isn't occurring on newer kernels?
+On Wed, Apr 1, 2026 at 11:19=E2=80=AFAM Jian Yang <jian.yang@mediatek.com> =
+wrote:
+>
+> Fix the control sequence of PERST# during system bootup/shutdown to
+> meet the requirement from PCIe CEM specification. There are two major
+> changes in this patch:
+>
+> 1. Some of MediaTek's chip will stop generating REFCLK if the
+> PCIE_PHY_RSTB signal of PCIe controller is asserted. We have to
+> adjust the startup sequence as follows to ensure that PERST# will be
+> de-asserted after the REFCLK is stable:
+> Assert PHY reset and PERST# -> delay 10ms -> De-assert PHY reset ->
+> delay 100ms -> De-assert PERST#
+>
+> 2. Add 'shutdown' callback to control the timing of PERST# and power
+> during the system shutdown phase, ensuring that PERST# is active
+> before the power on connector is removed.
+>
+> Signed-off-by: Jian Yang <jian.yang@mediatek.com>
 
-Yes, the reporter tested 6.19.8 and the issue does not occur there:
-https://bugs.debian.org/1131025
+Seems correct to me.
 
-> AIUI, we're saving the state via the call chain invoked by
-> subsys_initcall(pcibios_init), but I think we're doing the resource
-> fixes in fs_initcall(pcibios_assign_resources).  That suggests that
-> the saved state would have the bogus BAR values.
+Reviewed-by: Chen-Yu Tsai <wenst@chromium.org>
 
-Hm, seems like a valid observation.
-
-But a call to pci_bus_add_devices() is generally preceded by a call to
-pci_assign_unassigned_root_bus_resources(), see e.g. pci_host_probe()
-or acpi_pci_root_add().  The latter is what's usually used on x86,
-whereas pcibios_init() (actually I think you meant pci_subsys_init())
-is for legacy PCI initialization on x86.
-
-Perhaps you're right and the correction of the BAR value happens in
-the fs_initcall.  We should be able to confirm that once the reporter
-has tested the debug patch I provided, which inserts a dump_stack()
-in the BAR correction codepath as well as in pci_save_state().
-
-> If we toss PM runtime into that mix, pci_pm_default_resume_early() will
-> call pci_restore_state() however pci_save_state() in that file is
-> mostly wrapped around pci_dev->state_saved guards.
-
-The state_saved guards only serve the purpose of recognizing whether
-the driver called pci_save_state() on suspend.  If it did not,
-the PCI core calls pci_save_state().
-
-Thanks for taking a look!
-
-Lukas
+If possible, I think we would want this merged this cycle together
+with the other pwrctrl changes.
