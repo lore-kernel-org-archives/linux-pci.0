@@ -1,53 +1,52 @@
 Received: from mxout70.expurgate.net (mxout70.expurgate.net [194.37.255.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3981C3CF032;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 399093CF046;
 	Wed,  1 Apr 2026 09:31:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.37.255.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775035917; cv=none; b=TWj2U8hNV3xCWqTxWpCPgr1Tviy+KsBCQxLcf9SNbjck6nc1z7FOQVpk9RkaKpC8OBgZqTJZvk8tifLuzElpZy9KTT0axoOhABvLSQhilJiNeOgcAoKNUMGN8j6jGb/G+nY09Z639E0Kc+duy8zEyILwN2tHiFl6nxrkMy4KCRs=
+	t=1775035918; cv=none; b=HetohPlnfm3km/DRFnb8hrUJTNpKkHZCpRes5KnLKzv2q68P4sig4s+A2URYQGS7EzOnJa9QROxCnWqfHODMBzoG5GHdg1rj06row0KT3fXUzv5++MfNK8ybFbwr9hO9qDppjokS+UrrFiWyWVbSCutdA9z+UTPpOgROKHxLIsA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775035917; c=relaxed/simple;
-	bh=nvgQstFC/8C3uAxwX6l6w10NoGOWBnOys1OW4EEIVmI=;
+	s=arc-20240116; t=1775035918; c=relaxed/simple;
+	bh=1QhwwO0tMMhb5/PF/9cK8bvzkNyUt/Wf2sydrtsZXUc=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:Cc; b=X2cAFN6wZQbUhUED8k0C6Vq0yuyT5/F5EAfyR5qXuiflMaVqh7YBdcW3m/63OFgL7sqBOAaxSMxb2tGZBg1JOE6Ae2Qb/0SvSK6fZnZnVtUu+0rf+9EuYDa+sTNN0g5GCON8Fm0Ujyn66gqnIUSEN2es6CL9FOApIxV13PcIIWo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=kaQ4vWmu; arc=none smtp.client-ip=194.37.255.70
+	 In-Reply-To:To:Cc; b=oGOOmUPToeVunW7atHh7VXP2dmkONOGH5HEkbWY2BSFfRFBNcfQHgY7OkdfkC524u1tUCBDNyEMxqZLhhQ4jRfYLv9ERo6sorQfPYVvhznj5Q0DaMUyhjTLBO0/B54U3lITEKd3m8M4+BZadAIpLSiERLZu+ON3YJNUYb4cLbq8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=gOwDpT4q; arc=none smtp.client-ip=194.37.255.70
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev.tdt.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="kaQ4vWmu"
+	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="gOwDpT4q"
 Received: from [194.37.255.9] (helo=mxout.expurgate.net)
 	by relay.expurgate.net with smtp (Exim 4.92)
 	(envelope-from <prvs=65659f006e=fe@dev.tdt.de>)
-	id 1w7rvM-001T0Q-Uz; Wed, 01 Apr 2026 11:31:45 +0200
+	id 1w7rvM-001Szr-PT; Wed, 01 Apr 2026 11:31:44 +0200
 Received: from [195.243.126.94] (helo=securemail.tdt.de)
 	by relay.expurgate.net with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
 	(Exim 4.92)
 	(envelope-from <fe@dev.tdt.de>)
-	id 1w7rvM-00CBFL-DM; Wed, 01 Apr 2026 11:31:44 +0200
+	id 1w7rvM-00CBEM-7W; Wed, 01 Apr 2026 11:31:44 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev.tdt.de;
-	s=z1-selector1; t=1775035904;
-	bh=zKqMM7YfjGBHZcHoyCc72DeTKbYkA+Ky6K4OQtPbCik=;
+	s=z1-selector1; t=1775035903;
+	bh=3A2J+2MFklTaE6h9BZznlvghg/HLXg4vKOLkKJTaKbc=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=kaQ4vWmuLNDUAQXOXmk89JgWVVYNM9R7aEtRqjkG4+R88x83er4656CELakt1xK0q
-	 fNfDbrFGdOxkTTAkfUvLCCoM4vYCDQ5KnQAzGKqnapaMlRuXflrio6WdhKZIXbsVid
-	 Sam4mpUWr22SrF3cE4R5c0gjT1timx6WCDXQLgB9WUQCrNySWIfkgvQoPgORkqtqZk
-	 wyrmqI8F2497vTNsGT+px97MV042LOtUBfWpKG9EBRVbqid/M97mXQ4cxssSrmw+T/
-	 r+dHXcop16JmGCGpOP33aqsqHaIkWcZdGmH46x26M+wMyW67YoTCOO9R751A2ivwhi
-	 hpyQX19RaxB6g==
+	b=gOwDpT4qmA/i4sziFVLw/dUcUMkyGbY5MvhMTnFBSqctDw1rKckGyyuazrHPysRFq
+	 Jum4m8g/jW/f1VT9S9DfkgHxTKMpRO8saVKIXpv3gGrVzm1uL2CjdayAtQbLih6qXI
+	 uJd8snCMnj1M2JugfKlOjbLkL+i5NCdl3qc6LESKrvgo+7OnyKAw5HWMLSBk75OPwN
+	 ch/ZfVDWkL+bc6C65IkUa3ISVrUFSLO96/+H7MeSFgQ8FVigcPWy9bReGMC58PxG3h
+	 U0ExqbKsoHuvrrJ4iY/rT74BBOVoFcEYdzwSXJEXCbQ4I6Wc6cduNQxWBiUHBiKdk6
+	 5+5BhNsAQ145g==
 Received: from securemail.tdt.de (localhost [127.0.0.1])
-	by securemail.tdt.de (Postfix) with ESMTP id 0CC90240036;
-	Wed,  1 Apr 2026 11:31:44 +0200 (CEST)
+	by securemail.tdt.de (Postfix) with ESMTP id C62E6240046;
+	Wed,  1 Apr 2026 11:31:43 +0200 (CEST)
 Received: from mail.dev.tdt.de (unknown [10.2.4.42])
-	by securemail.tdt.de (Postfix) with ESMTP id 02315240040;
-	Wed,  1 Apr 2026 11:31:44 +0200 (CEST)
+	by securemail.tdt.de (Postfix) with ESMTP id BB256240041;
+	Wed,  1 Apr 2026 11:31:43 +0200 (CEST)
 Received: from [10.2.3.40] (unknown [10.2.3.40])
-	by mail.dev.tdt.de (Postfix) with ESMTPSA id B921B23C6F;
+	by mail.dev.tdt.de (Postfix) with ESMTPSA id 956B123C7E;
 	Wed,  1 Apr 2026 11:31:43 +0200 (CEST)
 From: Florian Eckert <fe@dev.tdt.de>
-Date: Wed, 01 Apr 2026 11:31:42 +0200
-Subject: [PATCH v3 6/7] PCI: intel-gw: Move driver atu base assignment to
- probe function
+Date: Wed, 01 Apr 2026 11:31:41 +0200
+Subject: [PATCH v3 5/7] PCI: intel-gw: Add start_link callback function
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -55,7 +54,8 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-ID: <20260401-pcie-intel-gw-v3-6-63b008c5b7b2@dev.tdt.de>
+Content-Transfer-Encoding: 7bit
+Message-ID: <20260401-pcie-intel-gw-v3-5-63b008c5b7b2@dev.tdt.de>
 References: <20260401-pcie-intel-gw-v3-0-63b008c5b7b2@dev.tdt.de>
 In-Reply-To: <20260401-pcie-intel-gw-v3-0-63b008c5b7b2@dev.tdt.de>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -72,129 +72,97 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	devicetree@vger.kernel.org, Florian Eckert <fe@dev.tdt.de>,
 	Eckert.Florian@googlemail.com, ms@dev.tdt.de
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1775035902; l=3975;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1775035902; l=3153;
  i=fe@dev.tdt.de; s=20260205; h=from:subject:message-id;
- bh=Uirz/FKs+IwSVaGspwLzgInnY3C/WWrZXZmhIyMs3ww=;
- b=Jd98K2cRrkn4RSEm8cX9bkhkxxtSviuDs0QJhUoGiv2tzARq8fkFSRyRdICAdWJn4AD6usr7B
- Wy6UjdjsZ5xBu+GurJoRvAzsv/iS3AJR0qedRX04b8HeC7hymNs0rEQ
+ bh=1QhwwO0tMMhb5/PF/9cK8bvzkNyUt/Wf2sydrtsZXUc=;
+ b=R0SlFWwKBmTvsj+uWe29f0bFOcUZ3aaui1f4slpL69Yzhec/iV1C5JcYguj/tAZlOBzsHgrGw
+ 7AuOwZbgUEwDlrkbIPmFBCUa9PP2Xb0GGRi17WpPBktl8qKpFNldbfH
 X-Developer-Key: i=fe@dev.tdt.de; a=ed25519;
  pk=q7Pvv3Au2sAVRhBz5UF7ZqUPNxUwXQ78Jdqu8E6Negk=
-Content-Transfer-Encoding: quoted-printable
 X-purgate-type: clean
 X-purgate: clean
-X-purgate-ID: 151534::1775035904-4A7C8233-E0A53BA3/0/0
+X-purgate-ID: 151534::1775035904-4B7CE233-00E17F81/0/0
 
-If no ATU resource is defined in the devicetree, then driver=C2=B4s defau=
-lt
-value '0x300000' [1] is set. This is done during probing in the function
-'dw_pcie_get_resources()' [2] by dwc core.
+The pcie-intel-gw driver has no start_link callback function. This commit
+adds the missing callback function so that the driver works again and does
+not abort with the following error messages during probing.
 
-The driver overwrites this again when its own init callback
-'pp->ops->init()' [3] function 'intel_pcie_host_setup()' [4] is called.
-This is done, because the 'atu_base' value for this IP is '0xC0000'
-rather than '0x300000'.
+[    2.512015] intel-gw-pcie d1000000.pcie: host bridge /soc/pcie@d1000000 ranges:
+[    2.517868] intel-gw-pcie d1000000.pcie:      MEM 0x00dc000000..0x00ddffffff -> 0x00dc000000
+[    2.528450] intel-combo-phy d0c00000.combo-phy: Set combo mode: combophy[1]: mode: PCIe single lane mode
+[    2.551619] intel-gw-pcie d1000000.pcie: No outbound iATU found
+[    2.556060] intel-gw-pcie d1000000.pcie: Cannot initialize host
+[    2.561901] intel-gw-pcie d1000000.pcie: probe with driver intel-gw-pcie failed with error -22
+[    2.571041] intel-gw-pcie c1100000.pcie: host bridge /soc/pcie@c1100000 ranges:
+[    2.577736] intel-gw-pcie c1100000.pcie:      MEM 0x00ce000000..0x00cfffffff -> 0x00ce000000
+[    2.588299] intel-combo-phy c0c00000.combo-phy: Set combo mode: combophy[3]: mode: PCIe single lane mode
+[    2.611471] intel-gw-pcie c1100000.pcie: No outbound iATU found
+[    2.615934] intel-gw-pcie c1100000.pcie: Cannot initialize host
+[    2.621759] intel-gw-pcie c1100000.pcie: probe with driver intel-gw-pcie failed with error -22
 
-callstack:
-intel_pcie_probe()
-  dw_pcie_host_init()
-    dw_pcie_host_get_resources()
-      dw_pcie_get_resources() [2]
-    pp->ops->init =3D intel_pcie_rc_init() [3]
-                      intel_pcie_host_setup() [4]
-
-However, this is a problem because, the callback 'pp->ops->init' is calle=
-d
-after 'dw_pcie_get_resources()' in dwc core (see callstack). The 'atu_bas=
-e'
-must be set before, so that this value is not set by dwc core. Therefor
-the assignment of 'atu_base' is moved to driver=C2=B4s probe function.
-
-While we=E2=80=99re at it, the change also adds the option to load ATU in=
-formation
-from the device tree. For reasons of backwards compatibility, this is not
-mandatory. If =E2=80=98atu=E2=80=99 is still not specified in the devicet=
-ree, then driver=E2=80=99s
-default value is still used and set in driver=C2=B4s probe function. If t=
-he 'atu'
-resource is present in the devicetree, then dwc core loads it via the
-function 'dw_pcie_get_resources()' and not in the driver=C2=B4s probe fun=
-ction.
-
-[1] https://elixir.bootlin.com/linux/v6.19.10/source/drivers/pci/controll=
-er/dwc/pcie-designware.h#L292
-[2] https://elixir.bootlin.com/linux/v6.19.10/source/drivers/pci/controll=
-er/dwc/pcie-designware.c#L150
-[3] https://elixir.bootlin.com/linux/v6.19.10/source/drivers/pci/controll=
-er/dwc/pcie-designware-host.c#L589
-[4] https://elixir.bootlin.com/linux/v6.19.10/source/drivers/pci/controll=
-er/dwc/pcie-intel-gw.c#L301
-
+Fixes: c5097b9869a1 ("Revert "PCI: dwc: Wait for link up only if link is started"")
+Fixes: da56a1bfbab5 ("PCI: dwc: Wait for link up only if link is started")
 Signed-off-by: Florian Eckert <fe@dev.tdt.de>
 ---
- drivers/pci/controller/dwc/pcie-intel-gw.c | 28 ++++++++++++++++++++++++=
-++--
- 1 file changed, 26 insertions(+), 2 deletions(-)
+ drivers/pci/controller/dwc/pcie-intel-gw.c | 24 +++++++++++-------------
+ 1 file changed, 11 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/con=
-troller/dwc/pcie-intel-gw.c
-index afd933050c92ee31c477e0b1738ab1136bdcfbf6..59b11e45944e199aac0f599f9=
-6d6cc90e2104708 100644
+diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/controller/dwc/pcie-intel-gw.c
+index 6d9499d954674a26a74bff56b7fb5759767424c0..afd933050c92ee31c477e0b1738ab1136bdcfbf6 100644
 --- a/drivers/pci/controller/dwc/pcie-intel-gw.c
 +++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
-@@ -310,8 +310,6 @@ static int intel_pcie_host_setup(struct intel_pcie *p=
-cie)
- 		goto clk_err;
- 	}
-=20
--	pci->atu_base =3D pci->dbi_base + 0xC0000;
--
- 	ret =3D phy_init(pcie->phy);
- 	if (ret)
- 		goto phy_err;
-@@ -395,6 +393,7 @@ static int intel_pcie_probe(struct platform_device *p=
-dev)
- 	struct device *dev =3D &pdev->dev;
- 	struct intel_pcie *pcie;
- 	struct dw_pcie_rp *pp;
-+	struct resource *res;
- 	struct dw_pcie *pci;
+@@ -284,6 +284,16 @@ static void intel_pcie_turn_off(struct intel_pcie *pcie)
+ 	pcie_rc_cfg_wr_mask(pcie, PCI_COMMAND, PCI_COMMAND_MEMORY, 0);
+ }
+ 
++static int intel_pcie_start_link(struct dw_pcie *pci)
++{
++	struct intel_pcie *pcie = dev_get_drvdata(pci->dev);
++
++	intel_pcie_device_rst_deassert(pcie);
++	intel_pcie_ltssm_enable(pcie);
++
++	return 0;
++}
++
+ static int intel_pcie_host_setup(struct intel_pcie *pcie)
+ {
  	int ret;
-=20
-@@ -419,6 +418,31 @@ static int intel_pcie_probe(struct platform_device *=
-pdev)
- 	pci->ops =3D &intel_pcie_ops;
- 	pp->ops =3D &intel_pcie_dw_ops;
-=20
-+	/*
-+	 * If the 'atu' resource is not available in the devicetree,
-+	 * then use the driver default value for backward compatibility.
-+	 * The 'atu' should always be set in the devicetree, as this is
-+	 * hardware specific setting that should not be defined in the
-+	 * source.
-+	 */
-+	res =3D platform_get_resource_byname(pdev, IORESOURCE_MEM, "atu");
-+	if (!res) {
-+		res =3D platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-+		pci->dbi_base =3D devm_pci_remap_cfg_resource(pci->dev, res);
-+		if (IS_ERR(pci->dbi_base))
-+			return PTR_ERR(pci->dbi_base);
-+		pci->dbi_phys_addr =3D res->start;
-+		pci->atu_base =3D devm_ioremap(dev, res->start + 0xC0000, SZ_4K);
-+		if (!pci->atu_base) {
-+			dev_err(dev, "failed to remap ATU space\n");
-+			return -ENOMEM;
-+
-+		}
-+		pci->atu_size =3D SZ_4K;
-+		pci->atu_phys_addr =3D res->start + 0xC0000;
-+		dev_warn(dev, "devicetree ATU resource is missing; driver`s default va=
-lue is being used\n");
-+	}
-+
- 	ret =3D dw_pcie_host_init(pp);
- 	if (ret) {
- 		dev_err(dev, "Cannot initialize host\n");
+@@ -310,25 +320,12 @@ static int intel_pcie_host_setup(struct intel_pcie *pcie)
+ 	intel_pcie_link_setup(pcie);
+ 	intel_pcie_init_n_fts(pci);
+ 
+-	ret = dw_pcie_setup_rc(&pci->pp);
+-	if (ret)
+-		goto err;
+-
+ 	dw_pcie_upconfig_setup(pci);
+ 
+-	intel_pcie_device_rst_deassert(pcie);
+-	intel_pcie_ltssm_enable(pcie);
+-
+-	ret = dw_pcie_wait_for_link(pci);
+-	if (ret)
+-		goto err;
+-
+ 	intel_pcie_core_irq_enable(pcie);
+ 
+ 	return 0;
+ 
+-err:
+-	phy_exit(pcie->phy);
+ phy_err:
+ 	clk_disable_unprepare(pcie->core_clk);
+ clk_err:
+@@ -386,6 +383,7 @@ static int intel_pcie_rc_init(struct dw_pcie_rp *pp)
+ }
+ 
+ static const struct dw_pcie_ops intel_pcie_ops = {
++	.start_link = intel_pcie_start_link,
+ };
+ 
+ static const struct dw_pcie_host_ops intel_pcie_dw_ops = {
 
---=20
+-- 
 2.47.3
 
