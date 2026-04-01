@@ -1,162 +1,131 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from fout-a5-smtp.messagingengine.com (fout-a5-smtp.messagingengine.com [103.168.172.148])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8264D3033CC;
-	Wed,  1 Apr 2026 21:37:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B442BA932;
+	Wed,  1 Apr 2026 22:04:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.148
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775079461; cv=none; b=XXHz20OUKPwvGJbJcau5AJ0Es/sfXMd3RtTz7JhE3sFNbSlJ1VzfQRdXKs5gazDS+051lc2hBbMFXqA3ZM8zhuKYCvwJIAlAIxj5b4699hRtO1uG+78BHr8dXilvGl+FCPkNl/+pIhJDHpUw1mHI4wtaHYJVft0dDL2MlNBFUFQ=
+	t=1775081088; cv=none; b=s5+YQuVo+6eJQgEorBJiR3z7NSjkAn8KTp2D3zZrwENH1SaauBogTWXy9gvvoty7IJsQuuLOs7nLBhRkPQjXNoeoye275y09f9RMJBE8BAphIrXHlGQNWGkElQnZt+DLbhzaxk8nmTQp59sn0MXtcCycGdH2/h+glWUQnxjNK3U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775079461; c=relaxed/simple;
-	bh=GRHB1ChFXIwHXmODkukj0axN/JDNhc3RkWyL4u6TFyU=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=ntAcu9kntPkIH3xG6xtl6t1GTGV0AlFwiKD0O1s2ulZNhiDjzUZudJ3cs1MTmXcG6Z4Mv6V8lvG35Ua34wN5OijjjIWCa8MmkjuN1gIKGu5dsDvN5uP6rJNjxUi2CxkrMbe9QkxcCiSSdB4a878sSyj1Gk162nGQut25NUAPcGM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fDr8vvMh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775081088; c=relaxed/simple;
+	bh=nJOvaNy7j6rvTOxcVafJpBYJp/0tPwEzuBoNXIR/zRA=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=UFBPUPTDEHafi8TncxxvscEQjexFp3tHr0dFmlPomLxFUNuklaTQbpnYm8sOUYMFfAcUkr2YOTVtsoVhxWUqGn3KarSXXH5Tyx4y2njDhg0aYA5klNphVxAcAObWikde+ChzKPtrGHojm66Gm085L3wZEtlmShec0AI1DHwENrg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=nZyhmzjl; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=uXaTuolM; arc=none smtp.client-ip=103.168.172.148
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fDr8vvMh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34B30C4CEF7;
-	Wed,  1 Apr 2026 21:37:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775079461;
-	bh=GRHB1ChFXIwHXmODkukj0axN/JDNhc3RkWyL4u6TFyU=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=fDr8vvMhw060FqzypDUPl3cT3RTYC1RLQGZlNpY7hW2MLKGJRB47Hlga6VmpMh4eJ
-	 +APuMV/nJBpVfrLbbRe2coy73au693PpzME65gbghGRuqIa5Uoc5eKae+B/30kYpaO
-	 uQD80Ug7FuLvUojTS7VsA3bJvFZb36S7nYE/4jQ/KeXSA0XCeLULMqO9Pp9YjHX0oo
-	 kREGJsbPh0imj/oAytVR+ObKreOZtS8xRaC7iAzSRQAVlht2ii7bI3Q3DiELLRK3vZ
-	 kET14AyQLtftRu5XBRJBNOUjEMoK6n0dIX3MJ7zbk0KmeC7irK70ag0Msy1/GhBEPB
-	 SMzg69hOo8VyQ==
-Date: Wed, 1 Apr 2026 16:37:39 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Devilliv Kelly <kelly.devilliv@outlook.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"myron.stowe" <myron.stowe@redhat.com>,
-	"keith.busch" <keith.busch@intel.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [RESEND] Handle MPS mismatch for Switch Downstream Ports
-Message-ID: <20260401213739.GA235798@bhelgaas>
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="nZyhmzjl";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="uXaTuolM"
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailfout.phl.internal (Postfix) with ESMTP id CE307EC0283;
+	Wed,  1 Apr 2026 18:04:44 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-04.internal (MEProxy); Wed, 01 Apr 2026 18:04:44 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1775081084;
+	 x=1775167484; bh=9IL6MYddNSgjsTDnmWtOw+9dnQBGMdnLa6tOppVniio=; b=
+	nZyhmzjlzYpN31Sb53GozZK7YfFnFNK719ZxNlGQpgQLDoI4RRoI8M339F5zBIgP
+	DGPmSvmLWrglk3g8lJVWJUSs94/QAkYpMwo77H54Nt/fezDHc1/2+oyo29mkrfEs
+	l2bsZfBqayxh+z8V8ucQHXw1wY5Vvmy24jT9FNKoWitx+3abeisvjQ0mpjMxSvA+
+	pl7oGOsFmkMcNMcIuIJ8H5aF/CFS3wgp4eHadqWA0LmBVC3vU8jpPQjgbrGju75Z
+	ZXaEI10pr96bbPqSeIWw5d6gw2qVPFNWSCex6tGfXeF1im5lLYKdktpdxsJKVex0
+	eNfvRJBbGZPM2RnxLi9TJg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1775081084; x=
+	1775167484; bh=9IL6MYddNSgjsTDnmWtOw+9dnQBGMdnLa6tOppVniio=; b=u
+	XaTuolMv4eO5R6eaSVldRiUT6ZufrCvo6UXZLk7JsR7OA+ZNLv1GgS43j344H0gB
+	aez5B8w950iz7ehmhTYx1YzmvVWwKRfBEqp+YeYX4cnTrCjsL4pTZYMpVW9eafU4
+	vq057RlDFfrMpgCVv/Uf7EJpMM6yK2N+gNr3RutaMt9SZq8VhLWPiApovSpExdgH
+	6pM4MISBIofo4qRC82ZqWFOz5qluF6kPoRcZ2UNK4PZO9xo2PD9d7erzL0diDdrP
+	68Ns7TP40GBZ22AvFzvWT15d5IpMYwwf7O/khQCqYKhOl25GqxSt4cwUjllQfEAd
+	k8unY8cW200lxENP0iFZg==
+X-ME-Sender: <xms:fJbNaU1cA-DrL3ZrIxpXxSBFV86qY82W51CjXscUnVabfU2rOS9HCw>
+    <xme:fJbNabOp-Zu0KLqDp76KmbqlhuIYDfeLqCbsQyqp1haJnuk2eX1q4XzyyLMYWB8wY
+    OHiHeX9hePeeZBOYIqojCW83PP-pNmx4icOPJC__KNliX2WiFznCw>
+X-ME-Received: <xmr:fJbNaYtfEovz3-lvZUqMo_Jg2b3A2-GCwMlg4ayyDtGi4KU3xIMIIaNQ7jI>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdegvdekucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceurghi
+    lhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurh
+    epfffhvfevuffkjghfofggtgfgsehtjeertdertddvnecuhfhrohhmpeetlhgvgicuhghi
+    lhhlihgrmhhsohhnuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtffrrghtth
+    gvrhhnpedvkeefjeekvdduhfduhfetkedugfduieettedvueekvdehtedvkefgudegveeu
+    ueenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrlh
+    gvgiesshhhrgiisghothdrohhrghdpnhgspghrtghpthhtohepvddupdhmohguvgepshhm
+    thhpohhuthdprhgtphhtthhopehjuhhlihgrnhhrsehlihhnuhigrdhisghmrdgtohhmpd
+    hrtghpthhtohepshgthhhnvghllhgvsehlihhnuhigrdhisghmrdgtohhmpdhrtghpthht
+    ohepfihinhhtvghrrgeslhhinhhugidrihgsmhdrtghomhdprhgtphhtthhopehtsheslh
+    hinhhugidrihgsmhdrtghomhdprhgtphhtthhopehosggvrhhprghrsehlihhnuhigrdhi
+    sghmrdgtohhmpdhrtghpthhtohepghgsrgihvghrsehlihhnuhigrdhisghmrdgtohhmpd
+    hrtghpthhtohepjhhgghesiihivghpvgdrtggrpdhrtghpthhtohephihishhhrghihhes
+    nhhvihguihgrrdgtohhmpdhrtghpthhtohepshhkohhlohhthhhumhhthhhosehnvhhiug
+    hirgdrtghomh
+X-ME-Proxy: <xmx:fJbNaXIrKupSjGaE0EVXTtYjTi7paGiz_38baDpv29YwA3QIVReMmg>
+    <xmx:fJbNaXOcE32pvkQHxsAd0OYSfsBOn7ueIA9ehs3C5eXPkyDRDQyj7A>
+    <xmx:fJbNabDkWy0cSgWO78JnOh5OtfWgSap92ZwhLu-OeX6y14sRTOJw2Q>
+    <xmx:fJbNafXbQlaNB9YEADTkl2S_Cqnja8EtNDRIxA-MW6xDg1UjaAcCUg>
+    <xmx:fJbNaZzWyfJe69skIzkSNHXLMFfyvjvvEmL-sO8C0MOqSe-Yt7GrogRv>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 1 Apr 2026 18:04:43 -0400 (EDT)
+Date: Wed, 1 Apr 2026 16:04:41 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Julian Ruess <julianr@linux.ibm.com>
+Cc: schnelle@linux.ibm.com, wintera@linux.ibm.com, ts@linux.ibm.com,
+ oberpar@linux.ibm.com, gbayer@linux.ibm.com, Jason Gunthorpe
+ <jgg@ziepe.ca>, Yishai Hadas <yishaih@nvidia.com>, Shameer Kolothum
+ <skolothumtho@nvidia.com>, Kevin Tian <kevin.tian@intel.com>,
+ mjrosato@linux.ibm.com, alifm@linux.ibm.com, raspl@linux.ibm.com,
+ hca@linux.ibm.com, agordeev@linux.ibm.com, gor@linux.ibm.com,
+ kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-s390@vger.kernel.org, linux-pci@vger.kernel.org, alex@shazbot.org
+Subject: Re: [PATCH v8 2/3] vfio/ism: Implement vfio_pci driver for ISM
+ devices
+Message-ID: <20260401160441.406fe25a@shazbot.org>
+In-Reply-To: <20260325-vfio_pci_ism-v8-2-ddc504cde914@linux.ibm.com>
+References: <20260325-vfio_pci_ism-v8-0-ddc504cde914@linux.ibm.com>
+	<20260325-vfio_pci_ism-v8-2-ddc504cde914@linux.ibm.com>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <SEZPR01MB538982EC382C61697D0986E08453A@SEZPR01MB5389.apcprd01.prod.exchangelabs.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Thanks for the report, and sorry we missed your original email; I
-couldn't find it in the lore archives, so maybe it got lost in
-transit.
+On Wed, 25 Mar 2026 14:31:24 +0100
+Julian Ruess <julianr@linux.ibm.com> wrote:
+> diff --git a/drivers/vfio/pci/ism/main.c b/drivers/vfio/pci/ism/main.c
+> new file mode 100644
+> index 0000000000000000000000000000000000000000..00bc81f7225f806eac1b99c4520ab5a68137885e
+> --- /dev/null
+> +++ b/drivers/vfio/pci/ism/main.c
+> @@ -0,0 +1,408 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * vfio-ISM driver for s390
+> + *
+> + * Copyright IBM Corp.
+> + */
+> +
+> +#include "../vfio_pci_priv.h"
+> +#include "linux/slab.h"
 
-On Tue, Mar 31, 2026 at 04:10:56AM +0000, Devilliv Kelly wrote:
-> Background
-> ===========
-> Commit 9f0e89359775 ("PCI: Match Root Port's MPS to endpoint's MPSS as
-> necessary") added logic to reduce a Root Port's MPS when an endpoint's
-> MPSS is smaller than the Root Port's current MPS setting. This ensures
-> hot-added devices can work correctly.
-> 
-> However, this logic only applies to ROOT_PORT type bridges:
-> 
->     mpss = 128 << dev->pcie_mpss;
->     if (mpss < p_mps && pci_pcie_type(bridge) == PCI_EXP_TYPE_ROOT_PORT) {
->         pcie_set_mps(bridge, mpss);
->         ...
->     }
-> 
-> This leaves Switch Downstream Ports unhandled, which can cause issues
-> when the Switch reports an incorrect or unexpected MPS value after
-> secondary bus reset.
-> 
-> Problem Description
-> ===================
-> We encountered a scenario where a PCIe Switch Downstream Port reports
-> an MPS value larger than what the endpoint can support:
-> 
->   Topology:
->   16:00.0 - Switch Upstream Port (MPS = 512 bytes, correct)
->     └── 17:00.0 - Switch Downstream Port (MPS = 2048 bytes after secondary bus reset)
->             └── 18:00.0 - Endpoint device (DevCap MaxPayload = 512 bytes)
-> 
-> After a secondary bus reset, the Switch Downstream Port's MPS unexpectedly
-> became 2048 bytes. When the kernel enumerates the endpoint device (18:00.0),
-> it attempts to set the endpoint's MPS to 2048 to match the upstream bridge,
-> but this fails because the endpoint only supports a maximum of 512 bytes.
-> 
-> Kernel log shows:
->   pci 0000:18:00.0: can't set Max Payload Size to 2048; if necessary,
->   use "pci=pcie_bus_safe" and report a bug
+Convention says this should be:
 
-Can you please collect the complete dmesg log when booted with
-the 'dyndbg="file drivers/pci/* +p"' kernel parameter?  (The double
-quotes are a necessary part of the parameter)
++#include <linux/slab.h>
+ #include "../vfio_pci_priv.h"
+-#include "linux/slab.h"
+ 
+Without objection, I'll make the change and push this to next tomorrow.
+Thanks,
 
-How do you initiate the reset and which device is being reset?  What
-caused the subsequent enumeration?
-
-My guess is you used setpci to set the Secondary Bus Reset bit in the
-16:00.0 Bridge Control register?  And maybe you used a sysfs "rescan"
-file to enumerate the endpoint?
-
-If you used a sysfs reset interface or a driver called
-pci_reset_function(), the kernel should have saved and restored config
-space so the 17:00.0 MPS shouldn't change unexpectedly.  Also, the
-kernel would only let you set SBR in 16:00.0 if there was a single
-device on bus 17, and switches typically have multiple downstream
-ports.
-
-> This results in NMI errors when the endpoint attempts DMA transactions:
->   Uhhuh. NMI received for unknown reason 2c on CPU 0.
->   Dazed and confused, but trying to continue
-> 
-> Root Cause
-> ==========
-> The pci_configure_mps() function only adjusts the upstream bridge's MPS
-> when the bridge is a ROOT_PORT. For DOWNSTREAM_PORT types (Switch ports),
-> the kernel attempts to set the endpoint's MPS to the bridge's value
-> without checking if the endpoint can support it.
-> 
-> While the Switch firmware should ideally configure correct MPS values,
-> the kernel should be robust enough to handle such cases and ensure
-> proper MPS configuration for reliable operation.
-
-Agreed.  I think the SBR *should* reset MPS to the default value of
-000b (128 bytes), but maybe this switch doesn't work that way.
-Regardless, I agree that Linux should handle this better.
-
-> Current Behavior
-> ================
-> 1. Endpoint's MPSS < Bridge's MPS
-> 2. Bridge is DOWNSTREAM_PORT (not ROOT_PORT)
-> 3. Kernel skips bridge MPS adjustment
-> 4. pcie_set_mps(dev, p_mps) fails because p_mps > dev's capability
-> 5. Device may not function correctly
-> 
-> Workaround
-> ==========
-> The issue can be worked around by using the kernel parameter:
->   pci=pcie_bus_safe
-> 
-> However, this affects the entire system and may reduce performance
-> for other devices.
-> 
-> Questions for Discussion
-> ========================
-> 1. Was there a specific reason for restricting this logic to ROOT_PORT
->    only? The commit message mentions avoiding impact on "other unrelated
->    sub-topologies," but Switch Downstream Ports typically only have one
->    endpoint below them.
-> 
-> 2. Should we also consider propagating MPS changes up through multiple
->    Switch levels in the hierarchy?
-> 
-> References
-> ==========
-> - Commit 9f0e89359775: PCI: Match Root Port's MPS to endpoint's MPSS as necessary
-> - Commit 27d868b5e6cf: PCI: Set MPS to match upstream bridge
-> - https://bugzilla.kernel.org/show_bug.cgi?id=200527 (original ROOT_PORT fix)
-> 
-> Kelly Devilliv
+Alex
