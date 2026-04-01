@@ -1,53 +1,53 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F5111A683D;
-	Wed,  1 Apr 2026 03:45:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E004E1DE3DC;
+	Wed,  1 Apr 2026 04:10:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775015142; cv=none; b=pVVUFS4o9GqKPXLTXUcuSq7oKm+wlGR4y4Rse/zBZ8/X6RlAbfEOTc/1Hqs8MSBi2c5oMWX1w0Y9JLdtsapSpBmnnQ9Zlg6Qyht7MDUinsa3mvg2xLtEXMtzgw8OhG16Rj6nLJkGfDMRQppQKx29Ii+/i+QSQFXq6YE8uMW93WU=
+	t=1775016644; cv=none; b=l4csMBuD66GiFgmMOE0i5rVOLcPR3k/yrxBqIZTIeqcYvo9VYsULNFudEITgaS+DyVD+XB4zFsZonSPV3WJVgXLB5iyPPRXhkjT8EFmyQPZ0Ejpd/4/b72DeUcvnfDMfdEGkukURyZAnLx0QOF3gVwrxvJOZo/1ZThMuqqRZPzQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775015142; c=relaxed/simple;
-	bh=ypzChen/APZaYREYqY0FTxXaNoFqzn+YyqaLO/85AEM=;
+	s=arc-20240116; t=1775016644; c=relaxed/simple;
+	bh=M3OXStmL1cePRFOkz0tJjaQlJFUPvHusToITRj48o48=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TkJJVOO95dYnSclQFucd8Q//BgbGlUyBRcmLICC4ztw75WOXDfzsa9zXbI0iizWtTpVGdHmV8QH32YFfc9XTBhOLgZrsjCjUruWUnOAdhLwrZlaIwa9XqA5JxAByYwbVbhof1LsU8TdNPSfKfoxF1ei+8sDapCcsu1VjvdHCw3I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Cfw0ElOw; arc=none smtp.client-ip=198.175.65.19
+	 Content-Type:Content-Disposition:In-Reply-To; b=pCjBA+S/IT8mdNbyWlasVVz3pl7IXaDYnDetFHwIvSwGcBNvqPIFlR7zS3lKLa6n2inP5MdVD31KmrPKoX0GZd1B7FPra5a5TZuyVO1E864OAvjkByXXD6uIHVG2Icoooatql/3l1b4rfQLatfayTbKxLOmBgBAoa0hNQbOyL7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bB+QicMr; arc=none smtp.client-ip=192.198.163.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Cfw0ElOw"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bB+QicMr"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775015140; x=1806551140;
+  t=1775016642; x=1806552642;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=ypzChen/APZaYREYqY0FTxXaNoFqzn+YyqaLO/85AEM=;
-  b=Cfw0ElOwmGA7cwpqpVtcxv0a8u52FN5dCPWYVUR+Vy3iZFfdgRWIjjPs
-   rGGTL4lUxb4RRlR4ZwqKF07jWt4eHUU7Cy3+U5E9fKsfLGq+9cWcD01Ob
-   k3s6dqupUvbTMbL1NqtRyqojKP0T+xs2gXUqg9KQMaGAepV3Zp/fpWlAD
-   QrVnvMBX2S9YKt43Q9v+Ysc3FjCFM/zARg44NQ9rxbtXjErtKch1sXcro
-   t/cRevG5gF2KoKKfGKGnAAuiKxK32pSHjyr5SFXlX92ufaLucjuQmXm8Z
-   iRi9FLD7lIQ0a8MEHZ+EcV2LHisLYb4wgQNlpEAY4pIRV5jxNWb9m3ffl
+  bh=M3OXStmL1cePRFOkz0tJjaQlJFUPvHusToITRj48o48=;
+  b=bB+QicMrBL8GZ00p25kuxWgyN4/LPAVW8S7bpUCFrwsOONhONTIYu0vN
+   VbMupIiqO+ESimwRDJlF0moM4LYZwYD2bRIlBZeT/nw+XAl/qvD0wqdqz
+   TULszGqvUwTyzkyQuKkooNmuYZUEjQauoC3nJBrm7uhjrN3AEEHh9BG3p
+   giQs6T3qnbbmFvOyenDx0qXXJaspoqNfTVjIVeNWuNBp37dnAnKlmLRTw
+   FPc0jgH8VvvnyWlDYzF6aktRoZlL6GmthWVu/gq9kOqJ6CsENECQ61uay
+   UeSe3lEp54D9+qnzcl79H1zbFnVqdGWgXE4ks9V8MCKL/4InYjmzUnNuz
    g==;
-X-CSE-ConnectionGUID: PniGJ3PASdC3KLXjVQxUeQ==
-X-CSE-MsgGUID: JhaZoIvfRqCFvb1UyTrZ7A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11745"; a="75927024"
+X-CSE-ConnectionGUID: XyOWmbc9S+ajlR4pQ6ZMPw==
+X-CSE-MsgGUID: I+cOpM/+RAm0Nn/ZHFaZlw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11745"; a="78638794"
 X-IronPort-AV: E=Sophos;i="6.23,153,1770624000"; 
-   d="scan'208";a="75927024"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 20:45:39 -0700
-X-CSE-ConnectionGUID: Xr/oDAxrSRK913lgv8Q1cA==
-X-CSE-MsgGUID: YmgKI/o0QhmnasCBknDZlA==
+   d="scan'208";a="78638794"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 21:10:41 -0700
+X-CSE-ConnectionGUID: uqtPI94cS4OAafsD3P2hKw==
+X-CSE-MsgGUID: JUIOx9YFSrijQbjR1Ypalw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,153,1770624000"; 
-   d="scan'208";a="249771239"
+   d="scan'208";a="230976723"
 Received: from lkp-server01.sh.intel.com (HELO 283bf2e1b94a) ([10.239.97.150])
-  by fmviesa001.fm.intel.com with ESMTP; 31 Mar 2026 20:45:36 -0700
+  by orviesa004.jf.intel.com with ESMTP; 31 Mar 2026 21:10:36 -0700
 Received: from kbuild by 283bf2e1b94a with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1w7mWL-000000004l0-00pL;
-	Wed, 01 Apr 2026 03:45:33 +0000
-Date: Wed, 1 Apr 2026 11:45:17 +0800
+	id 1w7muX-000000004m2-3ahq;
+	Wed, 01 Apr 2026 04:10:33 +0000
+Date: Wed, 1 Apr 2026 12:10:07 +0800
 From: kernel test robot <lkp@intel.com>
 To: Florian Eckert <fe@dev.tdt.de>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -60,12 +60,12 @@ To: Florian Eckert <fe@dev.tdt.de>,
 	Krzysztof Kozlowski <krzk@kernel.org>,
 	Conor Dooley <conor+dt@kernel.org>,
 	Rahul Tanwar <rtanwar@maxlinear.com>
-Cc: oe-kbuild-all@lists.linux.dev, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	Florian Eckert <fe@dev.tdt.de>, Eckert.Florian@googlemail.com,
-	ms@dev.tdt.de
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org, Florian Eckert <fe@dev.tdt.de>,
+	Eckert.Florian@googlemail.com, ms@dev.tdt.de
 Subject: Re: [PATCH v2 4/7] PCI: intel-gw: Add start_link callback function
-Message-ID: <202604011153.Qo18yHpp-lkp@intel.com>
+Message-ID: <202604011157.4RiSNWVi-lkp@intel.com>
 References: <20260330-pcie-intel-gw-v2-4-8bd07367a298@dev.tdt.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -87,21 +87,21 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Florian-Eckert/PCI-intel-
 base:   f338e77383789c0cae23ca3d48adcc5e9e137e3c
 patch link:    https://lore.kernel.org/r/20260330-pcie-intel-gw-v2-4-8bd07367a298%40dev.tdt.de
 patch subject: [PATCH v2 4/7] PCI: intel-gw: Add start_link callback function
-config: sparc-randconfig-002-20260401 (https://download.01.org/0day-ci/archive/20260401/202604011153.Qo18yHpp-lkp@intel.com/config)
-compiler: sparc64-linux-gcc (GCC) 8.5.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260401/202604011153.Qo18yHpp-lkp@intel.com/reproduce)
+config: arm64-randconfig-001-20260401 (https://download.01.org/0day-ci/archive/20260401/202604011157.4RiSNWVi-lkp@intel.com/config)
+compiler: clang version 18.1.8 (https://github.com/llvm/llvm-project 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260401/202604011157.4RiSNWVi-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202604011153.Qo18yHpp-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202604011157.4RiSNWVi-lkp@intel.com/
 
 All warnings (new ones prefixed by >>):
 
-   drivers/pci/controller/dwc/pcie-intel-gw.c: In function 'intel_pcie_host_setup':
->> drivers/pci/controller/dwc/pcie-intel-gw.c:329:1: warning: label 'err' defined but not used [-Wunused-label]
-    err:
-    ^~~
+>> drivers/pci/controller/dwc/pcie-intel-gw.c:329:1: warning: unused label 'err' [-Wunused-label]
+     329 | err:
+         | ^~~~
+   1 warning generated.
 
 
 vim +/err +329 drivers/pci/controller/dwc/pcie-intel-gw.c
