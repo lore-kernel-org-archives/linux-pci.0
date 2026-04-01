@@ -1,185 +1,155 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1C0E32D0E3;
-	Wed,  1 Apr 2026 03:19:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F5111A683D;
+	Wed,  1 Apr 2026 03:45:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775013577; cv=none; b=HdqaVVm7qcA6Ih2saDXdXC5IzJ8nb+AKH2e8rYTJ6fQqrbA+5eW1oCNmlIxNsU/RFXWXnwZyLd0lebAbCj+FsZLjqYu1pjJGQaElLBfGqKNR2DcxpuTN5tgFSjZ0Y4ajp/10Q+saU3FXnkkuw9M/2vr2FgS9tr8pP7tPhYK1VVU=
+	t=1775015142; cv=none; b=pVVUFS4o9GqKPXLTXUcuSq7oKm+wlGR4y4Rse/zBZ8/X6RlAbfEOTc/1Hqs8MSBi2c5oMWX1w0Y9JLdtsapSpBmnnQ9Zlg6Qyht7MDUinsa3mvg2xLtEXMtzgw8OhG16Rj6nLJkGfDMRQppQKx29Ii+/i+QSQFXq6YE8uMW93WU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775013577; c=relaxed/simple;
-	bh=RmtmV6p6Qd+mGsPuu/nT7q0ZFlpVWt7dc6HLjnmQmsQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=eHDySEf+VocM9hvu6e7lvHTlAt3doJq8Dxl6moZr8vpiwS1TbwuDXfXViGf9TYAoXWGmcs4xulp/uwF3m6h75KoyRKoTCXzMb5sVUf9ElZsdaD8yRpQ8t+dtgCgGTBc6Iqz5tDrPh151IWHg08xV8l1A49GDWACkcwctLNsgsqM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=TE27jW/I; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1775015142; c=relaxed/simple;
+	bh=ypzChen/APZaYREYqY0FTxXaNoFqzn+YyqaLO/85AEM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TkJJVOO95dYnSclQFucd8Q//BgbGlUyBRcmLICC4ztw75WOXDfzsa9zXbI0iizWtTpVGdHmV8QH32YFfc9XTBhOLgZrsjCjUruWUnOAdhLwrZlaIwa9XqA5JxAByYwbVbhof1LsU8TdNPSfKfoxF1ei+8sDapCcsu1VjvdHCw3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Cfw0ElOw; arc=none smtp.client-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="TE27jW/I"
-X-UUID: 94f56a122d7911f19a16598d5ca7f8ec-20260401
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=fJgKS+xYGiuhM4C+jM+iQKuLmgPvl+plPrkSGwo6cRo=;
-	b=TE27jW/I0mntBGLlvtKAZeX3Ckx1mUHM+lg3X91qfTDpC0FAJjxeWoPCHJfXVm1o7C+uP8XpGESNc1zeGjACth6CHzNpsSS4mKLSsbmGnqbZaD4EmRjWwZG4wXXR6ZLPMMQNL6MMhoaxDeMy94Esx9tZ6I09JcIRTKqYdHq7hxo=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:550ac3da-97e9-4342-84cb-8b997c2ef74d,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:e7bac3a,CLOUDID:7c2a75a7-e101-400a-acb5-0dbb5a913469,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|836|888|898,TC:-5,Content:0|15|5
-	0,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OSA
-	:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 94f56a122d7911f19a16598d5ca7f8ec-20260401
-Received: from mtkmbs09n1.mediatek.inc [(172.21.101.35)] by mailgw02.mediatek.com
-	(envelope-from <jian.yang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1851126888; Wed, 01 Apr 2026 11:19:23 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Wed, 1 Apr 2026 11:19:22 +0800
-Received: from mhfsdcap04.gcn.mediatek.inc (10.17.3.154) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Wed, 1 Apr 2026 11:19:21 +0800
-From: Jian Yang <jian.yang@mediatek.com>
-To: Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno
-	<angelogioacchino.delregno@collabora.com>, Ryder Lee
-	<ryder.lee@mediatek.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan
- Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas
-	<bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>,
-	<Project_Global_Chrome_Upstream_Group@mediatek.com>,
-	<jian.yang@mediatek.com>, <chuanjia.liu@mediatek.com>,
-	<yonglong.wu@mediatek.com>
-Subject: [PATCH v1] PCI: mediatek-gen3: Align PERST# sequence with PCIe CEM specification
-Date: Wed, 1 Apr 2026 11:16:42 +0800
-Message-ID: <20260401031917.9108-1-jian.yang@mediatek.com>
-X-Mailer: git-send-email 2.46.0
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Cfw0ElOw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1775015140; x=1806551140;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=ypzChen/APZaYREYqY0FTxXaNoFqzn+YyqaLO/85AEM=;
+  b=Cfw0ElOwmGA7cwpqpVtcxv0a8u52FN5dCPWYVUR+Vy3iZFfdgRWIjjPs
+   rGGTL4lUxb4RRlR4ZwqKF07jWt4eHUU7Cy3+U5E9fKsfLGq+9cWcD01Ob
+   k3s6dqupUvbTMbL1NqtRyqojKP0T+xs2gXUqg9KQMaGAepV3Zp/fpWlAD
+   QrVnvMBX2S9YKt43Q9v+Ysc3FjCFM/zARg44NQ9rxbtXjErtKch1sXcro
+   t/cRevG5gF2KoKKfGKGnAAuiKxK32pSHjyr5SFXlX92ufaLucjuQmXm8Z
+   iRi9FLD7lIQ0a8MEHZ+EcV2LHisLYb4wgQNlpEAY4pIRV5jxNWb9m3ffl
+   g==;
+X-CSE-ConnectionGUID: PniGJ3PASdC3KLXjVQxUeQ==
+X-CSE-MsgGUID: JhaZoIvfRqCFvb1UyTrZ7A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11745"; a="75927024"
+X-IronPort-AV: E=Sophos;i="6.23,153,1770624000"; 
+   d="scan'208";a="75927024"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2026 20:45:39 -0700
+X-CSE-ConnectionGUID: Xr/oDAxrSRK913lgv8Q1cA==
+X-CSE-MsgGUID: YmgKI/o0QhmnasCBknDZlA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,153,1770624000"; 
+   d="scan'208";a="249771239"
+Received: from lkp-server01.sh.intel.com (HELO 283bf2e1b94a) ([10.239.97.150])
+  by fmviesa001.fm.intel.com with ESMTP; 31 Mar 2026 20:45:36 -0700
+Received: from kbuild by 283bf2e1b94a with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1w7mWL-000000004l0-00pL;
+	Wed, 01 Apr 2026 03:45:33 +0000
+Date: Wed, 1 Apr 2026 11:45:17 +0800
+From: kernel test robot <lkp@intel.com>
+To: Florian Eckert <fe@dev.tdt.de>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	Johan Hovold <johan+linaro@kernel.org>,
+	Sajid Dalvi <sdalvi@google.com>,
+	Ajay Agarwal <ajayagarwal@google.com>,
+	Krzysztof Kozlowski <krzk@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Rahul Tanwar <rtanwar@maxlinear.com>
+Cc: oe-kbuild-all@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	Florian Eckert <fe@dev.tdt.de>, Eckert.Florian@googlemail.com,
+	ms@dev.tdt.de
+Subject: Re: [PATCH v2 4/7] PCI: intel-gw: Add start_link callback function
+Message-ID: <202604011153.Qo18yHpp-lkp@intel.com>
+References: <20260330-pcie-intel-gw-v2-4-8bd07367a298@dev.tdt.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260330-pcie-intel-gw-v2-4-8bd07367a298@dev.tdt.de>
 
-Fix the control sequence of PERST# during system bootup/shutdown to
-meet the requirement from PCIe CEM specification. There are two major
-changes in this patch:
+Hi Florian,
 
-1. Some of MediaTek's chip will stop generating REFCLK if the
-PCIE_PHY_RSTB signal of PCIe controller is asserted. We have to
-adjust the startup sequence as follows to ensure that PERST# will be
-de-asserted after the REFCLK is stable:
-Assert PHY reset and PERST# -> delay 10ms -> De-assert PHY reset ->
-delay 100ms -> De-assert PERST#
+kernel test robot noticed the following build warnings:
 
-2. Add 'shutdown' callback to control the timing of PERST# and power
-during the system shutdown phase, ensuring that PERST# is active
-before the power on connector is removed.
+[auto build test WARNING on f338e77383789c0cae23ca3d48adcc5e9e137e3c]
 
-Signed-off-by: Jian Yang <jian.yang@mediatek.com>
----
- drivers/pci/controller/pcie-mediatek-gen3.c | 39 +++++++++++++++++++--
- 1 file changed, 36 insertions(+), 3 deletions(-)
+url:    https://github.com/intel-lab-lkp/linux/commits/Florian-Eckert/PCI-intel-gw-Remove-unused-define/20260401-051352
+base:   f338e77383789c0cae23ca3d48adcc5e9e137e3c
+patch link:    https://lore.kernel.org/r/20260330-pcie-intel-gw-v2-4-8bd07367a298%40dev.tdt.de
+patch subject: [PATCH v2 4/7] PCI: intel-gw: Add start_link callback function
+config: sparc-randconfig-002-20260401 (https://download.01.org/0day-ci/archive/20260401/202604011153.Qo18yHpp-lkp@intel.com/config)
+compiler: sparc64-linux-gcc (GCC) 8.5.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260401/202604011153.Qo18yHpp-lkp@intel.com/reproduce)
 
-diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
-index a94fdbaf47fe..66d177918565 100644
---- a/drivers/pci/controller/pcie-mediatek-gen3.c
-+++ b/drivers/pci/controller/pcie-mediatek-gen3.c
-@@ -62,6 +62,7 @@
- #define PCIE_PHY_RSTB			BIT(1)
- #define PCIE_BRG_RSTB			BIT(2)
- #define PCIE_PE_RSTB			BIT(3)
-+#define PCIE_BRG_RST_RDY_MS		10
- 
- #define PCIE_LTSSM_STATUS_REG		0x150
- #define PCIE_LTSSM_STATE_MASK		GENMASK(28, 24)
-@@ -133,6 +134,7 @@
- #define MAX_NUM_PHY_RESETS		3
- 
- #define PCIE_MTK_RESET_TIME_US		10
-+#define PCIE_MTK_PDN_PERST_TIME_MS	5
- 
- /* Time in ms needed to complete PCIe reset on EN7581 SoC */
- #define PCIE_EN7581_RESET_TIME_MS	100
-@@ -430,6 +432,21 @@ static int mtk_pcie_devices_power_up(struct mtk_gen3_pcie *pcie)
- 		return err;
- 	}
- 
-+	/*
-+	 * Some of MediaTek's chips won't output REFCLK when PCIE_PHY_RSTB is
-+	 * asserted, we have to de-assert MAC & PHY & BRG reset signals first
-+	 * to allow the REFCLK to be stable. While PCIE_BRG_RSTB is asserted,
-+	 * there is a short period during which the PCIe internal register
-+	 * cannot be accessed, so we need to wait 10ms here.
-+	 */
-+	msleep(PCIE_BRG_RST_RDY_MS);
-+
-+	if (!(pcie->soc->flags & SKIP_PCIE_RSTB)) {
-+		/* De-assert MAC, PHY and BRG reset signals */
-+		val &= ~(PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB);
-+		writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
-+	}
-+
- 	/*
- 	 * Described in PCIe CEM specification revision 6.0.
- 	 *
-@@ -439,9 +456,8 @@ static int mtk_pcie_devices_power_up(struct mtk_gen3_pcie *pcie)
- 	msleep(PCIE_T_PVPERL_MS);
- 
- 	if (!(pcie->soc->flags & SKIP_PCIE_RSTB)) {
--		/* De-assert reset signals */
--		val &= ~(PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB |
--			 PCIE_PE_RSTB);
-+		/* De-assert PERST# signal */
-+		val &= ~PCIE_PE_RSTB;
- 		writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
- 	}
- 
-@@ -459,6 +475,14 @@ static void mtk_pcie_devices_power_down(struct mtk_gen3_pcie *pcie)
- 		writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
- 	}
- 
-+	/*
-+	 * Described in PCIe CEM specification revision 6.0.
-+	 *
-+	 * The PERST# gose active before the power on the connector is removed.
-+	 * Wait a while to ensure the voltage transition of PERST# is completed.
-+	 */
-+	msleep(PCIE_MTK_PDN_PERST_TIME_MS);
-+
- 	pci_pwrctrl_power_off_devices(pcie->dev);
- }
- 
-@@ -1266,6 +1290,14 @@ static void mtk_pcie_remove(struct platform_device *pdev)
- 	mtk_pcie_irq_teardown(pcie);
- }
- 
-+static void mtk_pcie_shutdown(struct platform_device *pdev)
-+{
-+	struct mtk_gen3_pcie *pcie = platform_get_drvdata(pdev);
-+
-+	mtk_pcie_devices_power_down(pcie);
-+	mtk_pcie_power_down(pcie);
-+}
-+
- static void mtk_pcie_irq_save(struct mtk_gen3_pcie *pcie)
- {
- 	int i;
-@@ -1404,6 +1436,7 @@ MODULE_DEVICE_TABLE(of, mtk_pcie_of_match);
- static struct platform_driver mtk_pcie_driver = {
- 	.probe = mtk_pcie_probe,
- 	.remove = mtk_pcie_remove,
-+	.shutdown = mtk_pcie_shutdown,
- 	.driver = {
- 		.name = "mtk-pcie-gen3",
- 		.of_match_table = mtk_pcie_of_match,
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202604011153.Qo18yHpp-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   drivers/pci/controller/dwc/pcie-intel-gw.c: In function 'intel_pcie_host_setup':
+>> drivers/pci/controller/dwc/pcie-intel-gw.c:329:1: warning: label 'err' defined but not used [-Wunused-label]
+    err:
+    ^~~
+
+
+vim +/err +329 drivers/pci/controller/dwc/pcie-intel-gw.c
+
+6cbd614d1f7c81 Florian Eckert 2026-03-30  296  
+733770d4a2bea0 Fan Fei        2021-12-22  297  static int intel_pcie_host_setup(struct intel_pcie *pcie)
+ed22aaaede44f6 Dilip Kota     2019-12-09  298  {
+ed22aaaede44f6 Dilip Kota     2019-12-09  299  	int ret;
+733770d4a2bea0 Fan Fei        2021-12-22  300  	struct dw_pcie *pci = &pcie->pci;
+ed22aaaede44f6 Dilip Kota     2019-12-09  301  
+733770d4a2bea0 Fan Fei        2021-12-22  302  	intel_pcie_core_rst_assert(pcie);
+733770d4a2bea0 Fan Fei        2021-12-22  303  	intel_pcie_device_rst_assert(pcie);
+733770d4a2bea0 Fan Fei        2021-12-22  304  	intel_pcie_core_rst_deassert(pcie);
+ed22aaaede44f6 Dilip Kota     2019-12-09  305  
+1927e1ec66a6ee Florian Eckert 2026-03-30  306  	/* Controller clock must be provided earlier than PHY */
+733770d4a2bea0 Fan Fei        2021-12-22  307  	ret = clk_prepare_enable(pcie->core_clk);
+ed22aaaede44f6 Dilip Kota     2019-12-09  308  	if (ret) {
+733770d4a2bea0 Fan Fei        2021-12-22  309  		dev_err(pcie->pci.dev, "Core clock enable failed: %d\n", ret);
+ed22aaaede44f6 Dilip Kota     2019-12-09  310  		goto clk_err;
+ed22aaaede44f6 Dilip Kota     2019-12-09  311  	}
+ed22aaaede44f6 Dilip Kota     2019-12-09  312  
+1cc9a559993a4a Rob Herring    2020-11-05  313  	pci->atu_base = pci->dbi_base + 0xC0000;
+1cc9a559993a4a Rob Herring    2020-11-05  314  
+1927e1ec66a6ee Florian Eckert 2026-03-30  315  	ret = phy_init(pcie->phy);
+1927e1ec66a6ee Florian Eckert 2026-03-30  316  	if (ret)
+1927e1ec66a6ee Florian Eckert 2026-03-30  317  		goto phy_err;
+1927e1ec66a6ee Florian Eckert 2026-03-30  318  
+733770d4a2bea0 Fan Fei        2021-12-22  319  	intel_pcie_ltssm_disable(pcie);
+733770d4a2bea0 Fan Fei        2021-12-22  320  	intel_pcie_link_setup(pcie);
+1cc9a559993a4a Rob Herring    2020-11-05  321  	intel_pcie_init_n_fts(pci);
+ce06bf570390fb Serge Semin    2022-06-24  322  
+1cc9a559993a4a Rob Herring    2020-11-05  323  	dw_pcie_upconfig_setup(pci);
+1cc9a559993a4a Rob Herring    2020-11-05  324  
+4db57fd92a7d2d Florian Eckert 2026-03-30  325  	intel_pcie_core_irq_enable(pcie);
+ed22aaaede44f6 Dilip Kota     2019-12-09  326  
+ed22aaaede44f6 Dilip Kota     2019-12-09  327  	return 0;
+ed22aaaede44f6 Dilip Kota     2019-12-09  328  
+1927e1ec66a6ee Florian Eckert 2026-03-30 @329  err:
+1927e1ec66a6ee Florian Eckert 2026-03-30  330  	phy_exit(pcie->phy);
+1927e1ec66a6ee Florian Eckert 2026-03-30  331  phy_err:
+733770d4a2bea0 Fan Fei        2021-12-22  332  	clk_disable_unprepare(pcie->core_clk);
+ed22aaaede44f6 Dilip Kota     2019-12-09  333  clk_err:
+733770d4a2bea0 Fan Fei        2021-12-22  334  	intel_pcie_core_rst_assert(pcie);
+ed22aaaede44f6 Dilip Kota     2019-12-09  335  
+ed22aaaede44f6 Dilip Kota     2019-12-09  336  	return ret;
+ed22aaaede44f6 Dilip Kota     2019-12-09  337  }
+ed22aaaede44f6 Dilip Kota     2019-12-09  338  
+
 -- 
-2.45.2
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
