@@ -1,71 +1,117 @@
-Received: from out30-97.freemail.mail.aliyun.com (out30-97.freemail.mail.aliyun.com [115.124.30.97])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BA34175A6B;
-	Wed,  1 Apr 2026 01:55:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.97
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EB14359A6C;
+	Wed,  1 Apr 2026 02:31:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775008518; cv=none; b=GNsFA6iJ9J938RyMha6W+4znAjUAwS/SKr29M86mJNmzp1deGIsIhU7SmV07DSZt+F5ohKAEeD67mtjoS5Oz05BFQJkDC0y8tYgLyaJeOXtPBTdryXBHMuuTh17y1p4SO83qgGrvc5Yj9A26fGffsgXDcckZ3JkmndezDfwtXVo=
+	t=1775010683; cv=none; b=rtKqJTjhHSeProgRZEAtd4MH0tUPYNfZdoIhf6wDvq5+sYOwhBvBLCK9+ZFerXbR5zTYP4kGMw0TXbIxAFwfqhfSVsKCEAVFrpE4XD6VQtFFOaOOpwwwsoYWwopfUavYJiaYJ2BhthvovbPPGaBw8yBjGwF3nTXo8pDGsxAiMrc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775008518; c=relaxed/simple;
-	bh=q50Bz65E+OyJ9vDk1N9jM1vlWen+ne5EUNUrgXUwgJY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=e+xfYYa5Fv7JREk6InJccbjrRUkXhisSpyNwuwFx2q/Tu4A8AdwjXtx+UT5gcvZd4D2cnIhjpU1qZORkxwmPzBoCrEMKsQ4s2CTgZmn+6VClMY4Cx10JwRMYDCqBqZy+HiX1xCEG5BTQ8Gg8o090tW57sN56nTCC0GxVucWwHQk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=NOWj6NiB; arc=none smtp.client-ip=115.124.30.97
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1775010683; c=relaxed/simple;
+	bh=jhj6OALAW/j0S9U6dZ34SrH2T2P3LLykjrR1LMlE1dw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=WkvkmiXJyjfL7HA1Iwm94dAtZs3uoGbpP4o0fhXpcCZ7C6NpDzrYKui1/2Fr/i9PtNopRWsSls4RKAKyEu0w/JIIY1OlVuNqJ5S3jLWQrkcgh+mVYrOJXSF06kDBbhcdmbm0Rsm81UxQ6LdNKxQWARVtQfLDKoECcVtYsItz15U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=lhJQtSk3; arc=none smtp.client-ip=220.197.31.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="NOWj6NiB"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1775008512; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=etQknAdonqm8UWH0ocwzl5DXIHYZ47qOaMPkJRg7jIs=;
-	b=NOWj6NiB9lHDbjmZvcCt+/GLnHv+rSKBrXzp+PfSAPpXtI0fcVpYmsaeBt3TLBOZ/rA6g4pbSOZCUT1Dg6BTyo3askrxS9gTzLBdtynHsUV2/GdQi8GdmojM0k8bbIcaZ38ltzpg/M4tSxMB/Vl4vMlI7nx9m7NvGQ+rIT1bkmw=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R241e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=xueshuai@linux.alibaba.com;NM=1;PH=DS;RN=19;SR=0;TI=SMTPD_---0X061LQV_1775008509;
-Received: from 30.246.177.235(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0X061LQV_1775008509 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Wed, 01 Apr 2026 09:55:10 +0800
-Message-ID: <32ad70fc-c07e-47c0-8511-fed3bc3fc76f@linux.alibaba.com>
-Date: Wed, 1 Apr 2026 09:55:21 +0800
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="lhJQtSk3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=MY
+	HPlhgTLcl6zJ4QtPRY8XxdvLYMofLuhFyrxcXVLoY=; b=lhJQtSk3heZIAUac4r
+	CE3Hz6h0gK6fei8sktwBZcLtQZX8DEku9fi0APkHozyrFRGxYpH5oviRuJHy7Vus
+	JqNk8F2cv4wVtZQsNoUo+p3lUyjOGB8gfSR3Yx3IWXIX16lg1UgdLzlj1lWU14PJ
+	ECREAttzIrsiVKsutIFmsPNLw=
+Received: from Precision-7960.. (unknown [])
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wA36OZZg8xpxfdkCg--.32151S2;
+	Wed, 01 Apr 2026 10:30:50 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: lpieralisi@kernel.org,
+	jingoohan1@gmail.com,
+	mani@kernel.org,
+	kwilczynski@kernel.org,
+	bhelgaas@google.com
+Cc: robh@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH] PCI: dwc: Fix type mismatch for kstrtou32_from_user return value
+Date: Wed,  1 Apr 2026 10:30:48 +0800
+Message-Id: <20260401023048.4182452-1-18255117159@163.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/3] ACPI: APEI: GHES: Add
- devm_ghes_register_vendor_record_notifier()
-To: Kai-Heng Feng <kaihengf@nvidia.com>, rafael@kernel.org
-Cc: jonathan.cameron@huawei.com, helgaas@kernel.org, guohanjun@huawei.com,
- linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
- linux-pci@vger.kernel.org, acpica-devel@lists.linux.dev,
- linux-hardening@vger.kernel.org, Shiju Jose <shiju.jose@huawei.com>,
- Tony Luck <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>,
- Mauro Carvalho Chehab <mchehab@kernel.org>, Len Brown <lenb@kernel.org>,
- Robert Moore <robert.moore@intel.com>,
- "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>,
- Breno Leitao <leitao@debian.org>, Jason Tian <jason@os.amperecomputing.com>
-References: <20260330094203.38022-1-kaihengf@nvidia.com>
- <20260330094203.38022-2-kaihengf@nvidia.com>
-From: Shuai Xue <xueshuai@linux.alibaba.com>
-In-Reply-To: <20260330094203.38022-2-kaihengf@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wA36OZZg8xpxfdkCg--.32151S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7KryxWryxuF4xCw13Xry5Jwb_yoW8trWxpa
+	yrCryYyF4rtr13WF98AayDZa4fA397ur98G39Fkw1I9w17KrWav34rKas0yFyfGrW0yr1D
+	Ka1Fg3s09FnrJrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piJ73kUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBuEKGnMg1tc5QAA33
 
+kstrtou32_from_user() returns int, but the return value was stored in
+a u32 variable 'val', risking sign loss. Use a dedicated int variable
+to correctly handle the return code.
 
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ .../controller/dwc/pcie-designware-debugfs.c  | 21 +++++++++++--------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
-On 3/30/26 5:41 PM, Kai-Heng Feng wrote:
-> Add a device-managed wrapper around ghes_register_vendor_record_notifier()
-> so drivers can avoid manual cleanup on device removal or probe failure.
-> 
-> Cc: Shiju Jose <shiju.jose@huawei.com>
-> Cc: Jonathan Cameron <jonathan.cameron@huawei.com>
-> Signed-off-by: Kai-Heng Feng <kaihengf@nvidia.com>
+diff --git a/drivers/pci/controller/dwc/pcie-designware-debugfs.c b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+index 0d1340c9b364..9461be074490 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-debugfs.c
++++ b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+@@ -208,10 +208,11 @@ static ssize_t lane_detect_write(struct file *file, const char __user *buf,
+ 	struct dw_pcie *pci = file->private_data;
+ 	struct dwc_pcie_rasdes_info *rinfo = pci->debugfs->rasdes_info;
+ 	u32 lane, val;
++	int ret;
+ 
+-	val = kstrtou32_from_user(buf, count, 0, &lane);
+-	if (val)
+-		return val;
++	ret = kstrtou32_from_user(buf, count, 0, &lane);
++	if (ret)
++		return ret;
+ 
+ 	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset + SD_STATUS_L1LANE_REG);
+ 	val &= ~(LANE_SELECT);
+@@ -347,10 +348,11 @@ static ssize_t counter_enable_write(struct file *file, const char __user *buf,
+ 	struct dw_pcie *pci = pdata->pci;
+ 	struct dwc_pcie_rasdes_info *rinfo = pci->debugfs->rasdes_info;
+ 	u32 val, enable;
++	int ret;
+ 
+-	val = kstrtou32_from_user(buf, count, 0, &enable);
+-	if (val)
+-		return val;
++	ret = kstrtou32_from_user(buf, count, 0, &enable);
++	if (ret)
++		return ret;
+ 
+ 	mutex_lock(&rinfo->reg_event_lock);
+ 	set_event_number(pdata, pci, rinfo);
+@@ -408,10 +410,11 @@ static ssize_t counter_lane_write(struct file *file, const char __user *buf,
+ 	struct dw_pcie *pci = pdata->pci;
+ 	struct dwc_pcie_rasdes_info *rinfo = pci->debugfs->rasdes_info;
+ 	u32 val, lane;
++	int ret;
+ 
+-	val = kstrtou32_from_user(buf, count, 0, &lane);
+-	if (val)
+-		return val;
++	ret = kstrtou32_from_user(buf, count, 0, &lane);
++	if (ret)
++		return ret;
+ 
+ 	mutex_lock(&rinfo->reg_event_lock);
+ 	set_event_number(pdata, pci, rinfo);
 
-LGTM.
+base-commit: 9147566d801602c9e7fc7f85e989735735bf38ba
+-- 
+2.34.1
 
-Reviewed-by: Shuai Xue <xueshuai@linux.alibaba.com>
-
-Thanks.
-Shuai
