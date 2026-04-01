@@ -1,168 +1,205 @@
-Received: from mxout70.expurgate.net (mxout70.expurgate.net [194.37.255.70])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 399093CF046;
-	Wed,  1 Apr 2026 09:31:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.37.255.70
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775035918; cv=none; b=HetohPlnfm3km/DRFnb8hrUJTNpKkHZCpRes5KnLKzv2q68P4sig4s+A2URYQGS7EzOnJa9QROxCnWqfHODMBzoG5GHdg1rj06row0KT3fXUzv5++MfNK8ybFbwr9hO9qDppjokS+UrrFiWyWVbSCutdA9z+UTPpOgROKHxLIsA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775035918; c=relaxed/simple;
-	bh=1QhwwO0tMMhb5/PF/9cK8bvzkNyUt/Wf2sydrtsZXUc=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:Cc; b=oGOOmUPToeVunW7atHh7VXP2dmkONOGH5HEkbWY2BSFfRFBNcfQHgY7OkdfkC524u1tUCBDNyEMxqZLhhQ4jRfYLv9ERo6sorQfPYVvhznj5Q0DaMUyhjTLBO0/B54U3lITEKd3m8M4+BZadAIpLSiERLZu+ON3YJNUYb4cLbq8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=gOwDpT4q; arc=none smtp.client-ip=194.37.255.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev.tdt.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A17432ED39;
+	Wed,  1 Apr 2026 10:13:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.8
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775038427; cv=fail; b=GfM4pxD+Q3PeVpxTyxHuX0spou5noH1R0lHXxXZRGI9fo05UH83zzRkLBJtB3ASQewI70V5gcj6KoCtZH2EhZ3Lq/gM60iPlvqYg6svh3Rug1z6FsajXAz4ySZ1ZgjO7oW4UP63IlCqLSO2QTTzgAiVV5OM5i4r8FQanPhTy6Y0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775038427; c=relaxed/simple;
+	bh=zzdIKhdkA9t6o2GiDcVk2RS++w7ZUaSDm6MnKi1YkCY=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=WbhwsKrP67dBMrHZEEopu1HcGIklkIPlvGVXuSEE9tcfjUt+rC57r6vOeakTZcrZ09Q105IeVZf4riT7SyCJj+Falsq0qi7p/9mv2vlTYtwL/A7dnOqTg+Tq3GjP98VWKVJl0TXr7YVxetX/sxzYgKY/vRMOD311gV6yYnq6ypk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YffwSEsc; arc=fail smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="gOwDpT4q"
-Received: from [194.37.255.9] (helo=mxout.expurgate.net)
-	by relay.expurgate.net with smtp (Exim 4.92)
-	(envelope-from <prvs=65659f006e=fe@dev.tdt.de>)
-	id 1w7rvM-001Szr-PT; Wed, 01 Apr 2026 11:31:44 +0200
-Received: from [195.243.126.94] (helo=securemail.tdt.de)
-	by relay.expurgate.net with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <fe@dev.tdt.de>)
-	id 1w7rvM-00CBEM-7W; Wed, 01 Apr 2026 11:31:44 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev.tdt.de;
-	s=z1-selector1; t=1775035903;
-	bh=3A2J+2MFklTaE6h9BZznlvghg/HLXg4vKOLkKJTaKbc=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=gOwDpT4qmA/i4sziFVLw/dUcUMkyGbY5MvhMTnFBSqctDw1rKckGyyuazrHPysRFq
-	 Jum4m8g/jW/f1VT9S9DfkgHxTKMpRO8saVKIXpv3gGrVzm1uL2CjdayAtQbLih6qXI
-	 uJd8snCMnj1M2JugfKlOjbLkL+i5NCdl3qc6LESKrvgo+7OnyKAw5HWMLSBk75OPwN
-	 ch/ZfVDWkL+bc6C65IkUa3ISVrUFSLO96/+H7MeSFgQ8FVigcPWy9bReGMC58PxG3h
-	 U0ExqbKsoHuvrrJ4iY/rT74BBOVoFcEYdzwSXJEXCbQ4I6Wc6cduNQxWBiUHBiKdk6
-	 5+5BhNsAQ145g==
-Received: from securemail.tdt.de (localhost [127.0.0.1])
-	by securemail.tdt.de (Postfix) with ESMTP id C62E6240046;
-	Wed,  1 Apr 2026 11:31:43 +0200 (CEST)
-Received: from mail.dev.tdt.de (unknown [10.2.4.42])
-	by securemail.tdt.de (Postfix) with ESMTP id BB256240041;
-	Wed,  1 Apr 2026 11:31:43 +0200 (CEST)
-Received: from [10.2.3.40] (unknown [10.2.3.40])
-	by mail.dev.tdt.de (Postfix) with ESMTPSA id 956B123C7E;
-	Wed,  1 Apr 2026 11:31:43 +0200 (CEST)
-From: Florian Eckert <fe@dev.tdt.de>
-Date: Wed, 01 Apr 2026 11:31:41 +0200
-Subject: [PATCH v3 5/7] PCI: intel-gw: Add start_link callback function
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YffwSEsc"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1775038425; x=1806574425;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=zzdIKhdkA9t6o2GiDcVk2RS++w7ZUaSDm6MnKi1YkCY=;
+  b=YffwSEscMRg2Cw/48M1lV0l5G4z5EwwQNN5zk1H+tbO1DQIVSZ3AqUHP
+   9riV2EoIH6Y+ObbYbqKvkdhDn3zG1uHaDqhsvyt8TPeLSDBADRjQDtCsc
+   2sfEC78IrFh4Cnd0hdIDdJnO7MRBPiKVsxwBvdkj6Hb0aDdsV/MtXCSHo
+   1m7c+m++kqD68S5c83IJeooYS3DxakQ6yDOrc5gkdfxvxMJl/e1jwkKQ4
+   LgsNNbNVvU3mXXE3edunJYqGu3Oke7aR194OXsrIoKnYj3b8V36OJZTeM
+   OzbSoJKTFSWFefeQpWwNjMFpGR6qtAh5VIA/w2u1UhzdXvxtv8jUNIaRz
+   g==;
+X-CSE-ConnectionGUID: 5K2K30ptRxepNc3xAMX/Cw==
+X-CSE-MsgGUID: hQqom6ivQTCIqrJhzyYxJg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11745"; a="93652966"
+X-IronPort-AV: E=Sophos;i="6.23,153,1770624000"; 
+   d="scan'208";a="93652966"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2026 03:13:45 -0700
+X-CSE-ConnectionGUID: BucldYwISRuETdotLLzfpg==
+X-CSE-MsgGUID: 4749AEy8SxiNpEqzt/bURw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,153,1770624000"; 
+   d="scan'208";a="257123364"
+Received: from fmsmsx902.amr.corp.intel.com ([10.18.126.91])
+  by orviesa002.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2026 03:13:45 -0700
+Received: from FMSMSX902.amr.corp.intel.com (10.18.126.91) by
+ fmsmsx902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Wed, 1 Apr 2026 03:13:44 -0700
+Received: from fmsedg902.ED.cps.intel.com (10.1.192.144) by
+ FMSMSX902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37 via Frontend Transport; Wed, 1 Apr 2026 03:13:44 -0700
+Received: from CO1PR03CU002.outbound.protection.outlook.com (52.101.46.24) by
+ edgegateway.intel.com (192.55.55.82) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Wed, 1 Apr 2026 03:13:41 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=oRfoVwaOSSsgqwCp9/Iitw3MYhyj60heZbQ4dldHXz2kA5TBxojMSBGXDMr9IezU6/xVQ1N7ARvX3Pera0iBIxjeu6NFjcws26KG69QG+UNJpDaD/hYUFUf2s7d/31UDiOXHzRZGyP0/GXt9719llrmUsxUWtQQ1+c4e3QBsWq2WwiCPoj56OPGNTvjtdMqn4OsLie8GAxo23V2eqyAHz8O35UFWUFYIdmmGPL2ArRvWKpGqrCyA6yRXtobuizkd9to5iUK0akImU7nFZ2ECY+Y5gFxuRsBwNwS1FnHAS8T5rF3WOY715SWrUAo8yqP8qtxWhT9uZmMvVbJd90fGiA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=zzdIKhdkA9t6o2GiDcVk2RS++w7ZUaSDm6MnKi1YkCY=;
+ b=HfWPgjiEQOaIk+m9EzE7etITHgCXlr5d981ajeNv9dCHJyLPjyZ59CsuXrGFAfsZJkQDOJsyFNSX1PYiyoz8xiiy91gYSbp7MY0NKAaFv07HZeatKbg21Q5Id7JZFkQA/KFjV4Qteq0LQFnUuNZ8TdPNy6aEqoxSb7zJ3Rkw+osAt9hPxheX2M8kW+FCz5RKo9VKS8CYbfVN5JfzazF7oXTxlr/T/5VlQqPxYeVT4aKCaA5L3Lybdoz+6FJBMuhUY12N7vKZ/jvf6HmV5NKsquAEzEyCqkLky8IMHm/kXMMHygTfoM4U/PigOYruFCJZYeJY+pLYkbi99bQa7HlwqA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from DM6PR11MB2650.namprd11.prod.outlook.com (2603:10b6:5:c4::18) by
+ CY5PR11MB6236.namprd11.prod.outlook.com (2603:10b6:930:23::9) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9769.8; Wed, 1 Apr 2026 10:13:33 +0000
+Received: from DM6PR11MB2650.namprd11.prod.outlook.com
+ ([fe80::ec1e:bdbd:ecd8:4c86]) by DM6PR11MB2650.namprd11.prod.outlook.com
+ ([fe80::ec1e:bdbd:ecd8:4c86%6]) with mapi id 15.20.9769.004; Wed, 1 Apr 2026
+ 10:13:33 +0000
+From: "Huang, Kai" <kai.huang@intel.com>
+To: "Williams, Dan J" <dan.j.williams@intel.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-coco@lists.linux.dev"
+	<linux-coco@lists.linux.dev>, "yilun.xu@linux.intel.com"
+	<yilun.xu@linux.intel.com>, "x86@kernel.org" <x86@kernel.org>
+CC: "Gao, Chao" <chao.gao@intel.com>, "Edgecombe, Rick P"
+	<rick.p.edgecombe@intel.com>, "Xu, Yilun" <yilun.xu@intel.com>, "Jiang, Dave"
+	<dave.jiang@intel.com>, "dave.hansen@linux.intel.com"
+	<dave.hansen@linux.intel.com>, "baolu.lu@linux.intel.com"
+	<baolu.lu@linux.intel.com>, "Duan, Zhenzhong" <zhenzhong.duan@intel.com>,
+	"kas@kernel.org" <kas@kernel.org>, "Verma, Vishal L"
+	<vishal.l.verma@intel.com>, "Li, Xiaoyao" <xiaoyao.li@intel.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 08/31] x86/virt/tdx: Configure TDX Module with optional
+ TDX Connect feature
+Thread-Topic: [PATCH v2 08/31] x86/virt/tdx: Configure TDX Module with
+ optional TDX Connect feature
+Thread-Index: AQHcvgciEO9ja9+YTEeNEsKQg5wh6rXKBFOA
+Date: Wed, 1 Apr 2026 10:13:33 +0000
+Message-ID: <d563b85664271c4d8510f66222c8a05d77d396e1.camel@intel.com>
+References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
+	 <20260327160132.2946114-9-yilun.xu@linux.intel.com>
+In-Reply-To: <20260327160132.2946114-9-yilun.xu@linux.intel.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+user-agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: DM6PR11MB2650:EE_|CY5PR11MB6236:EE_
+x-ms-office365-filtering-correlation-id: d10fafb1-f52b-4df0-b391-08de8fd754ce
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|366016|1800799024|376014|38070700021|22082099003|18002099003|56012099003;
+x-microsoft-antispam-message-info: lf4ewAAE8SRollhBk96VKcMzH3polZzbo9Z4FV7dW6amA9442ljJJG1G788/BnpTXEgn88RUaeW6F2EOcGPhDWKGh7Tac3FhsFw3wH4UU5WD/lIUnrbiXBmo6uPz/w/DJ6+KMom6dnFIY7e7FLyY6solVn6gghhDaEtJRL7SG6oRyxAYCTuRe3+QAJuArwoN7DGznBzmVgBBVQi/VblkiYMh4gxwce2T2xQnEcEA1tbP4XLo5wrpmGuJEYNygjiNanFRu+nDLb6KLD2hL1oStdwnowKzam23FGw9AKnJm8Zq2kA9AnQxOx080mBv0qCePhQVNZCiTW6y7qG2qSLgpshOzSlfDB21LzFASafKfhKbfMyqcwP99HWBMaQ3GLIyArOqJoYzqd3vslE00V1fvV1nA818PppYvXWF88RmQbC2UFl2U/LPgu4LLxLyyTA3TYeULQB8UuB03SsjQkFAhz7aSgdd1Q1Exj+I0EBUoC2m9hRhtI5ZiinDYqQ1UwHZnCoXUltZ3wMRFC0O0HD9NoFdot51NnMnqaBU1EujLLgcEHYi92LSxHzFzJJNyVquAwOW6fclJIlYaBnZ4JrV9V4tWMOosnMLmovgTKYpQ2DA4bP3gshJFRqff1FfGKOW3ilOWq2kMr8y2UBoWDQdCyqSzIioiRRCmk3n1ZQJ0XsLEk2WmfEoOfW0kPoV2X/3tyhfT8tYiNCzyuAFmRkepvA3y5YVym0mM2TqrroWO0LkIbBXxKjd4XaViffNn7wVNs5x11zlM67oOHBIU9K4DxrEpIYwi2GvFBeBDp8Ltow=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR11MB2650.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(38070700021)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?WWJlbW5IMHFERkw3SE1Ga1N4MnN2L3I3MHY0YUplRmUrSk40ZHkwR1ZaZmow?=
+ =?utf-8?B?WnRtTnpxVjhzQ25FRkNLOVcxT09vbERjb1dLUmZUTkxwUFZUazI2VTRqQWRU?=
+ =?utf-8?B?NWk5WHVWMmtGbzBVUzlDVHlDMWxZcTZ5UnQzOHZOSE50Z2JqdmRxQTBTSkM4?=
+ =?utf-8?B?aTlJNkpJM0Z4VUMvOGN3cVd4MjdYNGJXbjdYT1lNRFhHdDRKUHo0bE5LR1h4?=
+ =?utf-8?B?aDM4R2dLaUR4cVBmeEc3bDZOU3lUODlsUVpKdEdnTFRCUTJTOHdHR29sazdY?=
+ =?utf-8?B?OGZ6SG9xUThXUXRwcU9wLzRkbGtqRXJKalMzRHRTNlVqaVMrd1dwb0ZxcTNJ?=
+ =?utf-8?B?RGdrajd5QzFhVkJqR1hpaDIySXNZYVpoTWdEZzlQQXowWVhuMGdJR2U5SmZq?=
+ =?utf-8?B?eHhPSDRPNDRvem9XZktHMGRISzhFSi9NMjQyVjJQcEpPQngyRUR6VmhEWmcz?=
+ =?utf-8?B?OGhVVXBiM1FHcTNqWWcyZGFUektlVENGS3BrRVJoTEVENVV0ekRxWHRzeE02?=
+ =?utf-8?B?cU9ycDRrKzZYQVZOOWx0MnAyRnJESFJzalBIb1A2UjNaQjk4NnZodmhITHli?=
+ =?utf-8?B?aHNqMFdET2JOdEF6bVZmZE01dWdVR1habi9STWZYWkRwSy9wUXhDTEF6b1Zk?=
+ =?utf-8?B?SkdMMmhxc3ozREFnQnJGUWRWZGdwOTN0bzhRZEVmU2t6NTg3cGY0N0QzamVY?=
+ =?utf-8?B?dEhMdDlvNHVXWEF3UjhDRUZiR20zZStidGF0eVJTZ1I4citDWklDNHo3SG5H?=
+ =?utf-8?B?cExpM094VHV2U05Ecml1MnVBTm82c1ViTzBOdU9uTkpYRVFGZDlnVWNnZXpE?=
+ =?utf-8?B?d2pJbG5aVzRzZmhWQ0tzZGdRc1FHdzkrN3ZFRmJoVVBrS1NmTWRZRkhFUG9D?=
+ =?utf-8?B?Q0VNVlBLdkZWODlRbDlBcEJBSEh5YUxoV0xaamcweXlSKzJjRllYejRnamxC?=
+ =?utf-8?B?dGgrQnNSQWMwTW11c29qQlZoVGJLU1Mzamk5Mll2UkVhdzA5d1kyRlZvNWdt?=
+ =?utf-8?B?Szd6alllVTg5a2JzRWZBQ0JHMGp2MU0vZm94eGkwQjZ6RFgxSXJTUmRqSnNK?=
+ =?utf-8?B?ekwxQS96dVVFcUc2SmFJdENnNUZFelpYNU81enUzeW1hSStUUjVXMkhlUXZw?=
+ =?utf-8?B?bkZGNEZNU0RQUjBBbTRCclowZjJiZDdGRVNVTWIrZFE5VVRTSXQ0TWtUL3JX?=
+ =?utf-8?B?aVVYY0hPbEhVR1RvMGVFdWNaUXR0OFlrN2JxR2Z3RHdoc1ZhdSthME5GMWdz?=
+ =?utf-8?B?a2xtUm8yQ1R6QWYyczFLV1hTOXA4TVpIdlBRYTBYNW5wWDNwdU14VmVGekNq?=
+ =?utf-8?B?OFQxRHJtRWZ5T2tqV2tnUFJjMVhJbEpTU1RPa2k5bU1taGd5VmVFa0pVSTdW?=
+ =?utf-8?B?TWdwcTA2R2Z0ckt1R2RaNDMwRk1Sb3YwaE9hZ0NsU1pKSFVRY1gxNGJyRUpH?=
+ =?utf-8?B?WmYyRW9wZE1kZFRIZlVoUmhJU3NzUStiK044MjdZem93eEdVR2RGcmxneG80?=
+ =?utf-8?B?VXU3UXhUQnF2SlozN3VCTkdQSHVzT2g5VlVuQWZIbnlOeXl4RFVOOXJhd2NF?=
+ =?utf-8?B?YnVIcklJTlBqOEQ2M3c5UWxsR3JQdWRuNWNuaGJLaWtPOFUxZEIwWVdqYlBV?=
+ =?utf-8?B?c0hSMHNlek5YL0hFZjFzWm9zcW14RG1tOWJpVjU4dTRSb09LMHdkVmNLWUt6?=
+ =?utf-8?B?RGtRc3Z0VC93SXVBSnFNWDFQcnVoRE9Mbi9SSlZyNUw4TUlrUVMzUUZaTUFL?=
+ =?utf-8?B?ZzJuWmNkR2JIa1ZGUmN6YnZXOWRDRFQ5eldCMlRMQVpWVzlLLzhyTHQ5MUVQ?=
+ =?utf-8?B?OTE3QkVhUUlyNm5kY3k4Wk9jdkMwNXN4L0RXUlk5dEFxYUU1blNpdjZ2RUM3?=
+ =?utf-8?B?c3BmdVM2WXJXeFkzSkxoYlhvd2JKbWUyR3NCZjIzdldRWWQ3UmpXbTFhT3BX?=
+ =?utf-8?B?RnRnV01IZnpFNjlicVVWTCtvWGtiQkt0ZVd6ZG1ENW1xTTBUcjNmZUdtTHJH?=
+ =?utf-8?B?WFUvK0FFbEtOa3RvRlZhazlvMU5YR2Q5MmVPS2NKUmZhYTE2TkFidU5uVFhI?=
+ =?utf-8?B?L2FCZEdDQlpBQ1NRMHZqRUxSc3I3eW1EcitqMG9xcEc3RWJya2FQSTVCTTJU?=
+ =?utf-8?B?SWRzenJaUnNxd1ZwWllUU2hPdlFlU3BwNjQ3ajFSbWVSMEErSElDZC9IU0JU?=
+ =?utf-8?B?WklLWnhrc0ZiN0xBRlNCanlGejFFRW5STkoyTkppdEhYZUtYcFpTSGJRVDJD?=
+ =?utf-8?B?Rm9kaUpGd25nWXB2YU0yRlFHUWEwdVRkUGF5UzdrdHMwWk5qZXBKSG9iZy90?=
+ =?utf-8?B?d3JpeEd3NWQwMkZmRUVrSnpwQjlKdWRuOHVObDdpUFlPK2tBL213dz09?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <40A157F6075B2D49A5D83FF41500A2F4@namprd11.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-ID: <20260401-pcie-intel-gw-v3-5-63b008c5b7b2@dev.tdt.de>
-References: <20260401-pcie-intel-gw-v3-0-63b008c5b7b2@dev.tdt.de>
-In-Reply-To: <20260401-pcie-intel-gw-v3-0-63b008c5b7b2@dev.tdt.de>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Johan Hovold <johan+linaro@kernel.org>,
-	Sajid Dalvi <sdalvi@google.com>,
-	Ajay Agarwal <ajayagarwal@google.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Rahul Tanwar <rtanwar@maxlinear.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org, Florian Eckert <fe@dev.tdt.de>,
-	Eckert.Florian@googlemail.com, ms@dev.tdt.de
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1775035902; l=3153;
- i=fe@dev.tdt.de; s=20260205; h=from:subject:message-id;
- bh=1QhwwO0tMMhb5/PF/9cK8bvzkNyUt/Wf2sydrtsZXUc=;
- b=R0SlFWwKBmTvsj+uWe29f0bFOcUZ3aaui1f4slpL69Yzhec/iV1C5JcYguj/tAZlOBzsHgrGw
- 7AuOwZbgUEwDlrkbIPmFBCUa9PP2Xb0GGRi17WpPBktl8qKpFNldbfH
-X-Developer-Key: i=fe@dev.tdt.de; a=ed25519;
- pk=q7Pvv3Au2sAVRhBz5UF7ZqUPNxUwXQ78Jdqu8E6Negk=
-X-purgate-type: clean
-X-purgate: clean
-X-purgate-ID: 151534::1775035904-4B7CE233-00E17F81/0/0
+X-Exchange-RoutingPolicyChecked: Nh8WSbldPqrqf9SqZSue0scnb21Yt6qGceXXJhNFNQddJZMqiFje33lbfOyxOtLZfmKiJcYHzVZwrQ+LwZSAwLFf7dkIJXb7Qfl2GoegppqNnsyfkzyrEn3jQn6apqvd/KJ35UF0LJM1JwjF1RThxn51Vwb4lojoQvci0dAR/whF/9fDCspvB90ez+Ubo2/JUciZZYk5Y8WYZniaB5qYFZVXDoixUIhrFG9VgdXNXuuzIk10aEd5IZ6ztZKRRBiSEwzqJXCtbaatMNCK5NevJCu6Yot/lHrmGjsGbQmUysjO4BVonDgAzXQ14lbe9yVtHE9HNshrLyZne0xNANPNiw==
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR11MB2650.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d10fafb1-f52b-4df0-b391-08de8fd754ce
+X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Apr 2026 10:13:33.6186
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 6bq+zoA+EwO0mF6K2tcAqHNVINjtZs54CGV/5A/EXfjCYQt7DpS0Mq4MxGDa6ZYb1SQjzERaOKhHZbKZzxDnsA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY5PR11MB6236
+X-OriginatorOrg: intel.com
 
-The pcie-intel-gw driver has no start_link callback function. This commit
-adds the missing callback function so that the driver works again and does
-not abort with the following error messages during probing.
-
-[    2.512015] intel-gw-pcie d1000000.pcie: host bridge /soc/pcie@d1000000 ranges:
-[    2.517868] intel-gw-pcie d1000000.pcie:      MEM 0x00dc000000..0x00ddffffff -> 0x00dc000000
-[    2.528450] intel-combo-phy d0c00000.combo-phy: Set combo mode: combophy[1]: mode: PCIe single lane mode
-[    2.551619] intel-gw-pcie d1000000.pcie: No outbound iATU found
-[    2.556060] intel-gw-pcie d1000000.pcie: Cannot initialize host
-[    2.561901] intel-gw-pcie d1000000.pcie: probe with driver intel-gw-pcie failed with error -22
-[    2.571041] intel-gw-pcie c1100000.pcie: host bridge /soc/pcie@c1100000 ranges:
-[    2.577736] intel-gw-pcie c1100000.pcie:      MEM 0x00ce000000..0x00cfffffff -> 0x00ce000000
-[    2.588299] intel-combo-phy c0c00000.combo-phy: Set combo mode: combophy[3]: mode: PCIe single lane mode
-[    2.611471] intel-gw-pcie c1100000.pcie: No outbound iATU found
-[    2.615934] intel-gw-pcie c1100000.pcie: Cannot initialize host
-[    2.621759] intel-gw-pcie c1100000.pcie: probe with driver intel-gw-pcie failed with error -22
-
-Fixes: c5097b9869a1 ("Revert "PCI: dwc: Wait for link up only if link is started"")
-Fixes: da56a1bfbab5 ("PCI: dwc: Wait for link up only if link is started")
-Signed-off-by: Florian Eckert <fe@dev.tdt.de>
----
- drivers/pci/controller/dwc/pcie-intel-gw.c | 24 +++++++++++-------------
- 1 file changed, 11 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/controller/dwc/pcie-intel-gw.c
-index 6d9499d954674a26a74bff56b7fb5759767424c0..afd933050c92ee31c477e0b1738ab1136bdcfbf6 100644
---- a/drivers/pci/controller/dwc/pcie-intel-gw.c
-+++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
-@@ -284,6 +284,16 @@ static void intel_pcie_turn_off(struct intel_pcie *pcie)
- 	pcie_rc_cfg_wr_mask(pcie, PCI_COMMAND, PCI_COMMAND_MEMORY, 0);
- }
- 
-+static int intel_pcie_start_link(struct dw_pcie *pci)
-+{
-+	struct intel_pcie *pcie = dev_get_drvdata(pci->dev);
-+
-+	intel_pcie_device_rst_deassert(pcie);
-+	intel_pcie_ltssm_enable(pcie);
-+
-+	return 0;
-+}
-+
- static int intel_pcie_host_setup(struct intel_pcie *pcie)
- {
- 	int ret;
-@@ -310,25 +320,12 @@ static int intel_pcie_host_setup(struct intel_pcie *pcie)
- 	intel_pcie_link_setup(pcie);
- 	intel_pcie_init_n_fts(pci);
- 
--	ret = dw_pcie_setup_rc(&pci->pp);
--	if (ret)
--		goto err;
--
- 	dw_pcie_upconfig_setup(pci);
- 
--	intel_pcie_device_rst_deassert(pcie);
--	intel_pcie_ltssm_enable(pcie);
--
--	ret = dw_pcie_wait_for_link(pci);
--	if (ret)
--		goto err;
--
- 	intel_pcie_core_irq_enable(pcie);
- 
- 	return 0;
- 
--err:
--	phy_exit(pcie->phy);
- phy_err:
- 	clk_disable_unprepare(pcie->core_clk);
- clk_err:
-@@ -386,6 +383,7 @@ static int intel_pcie_rc_init(struct dw_pcie_rp *pp)
- }
- 
- static const struct dw_pcie_ops intel_pcie_ops = {
-+	.start_link = intel_pcie_start_link,
- };
- 
- static const struct dw_pcie_host_ops intel_pcie_dw_ops = {
-
--- 
-2.47.3
-
+DQo+IA0KPiBURFggTW9kdWxlIHVwZGF0ZXMgZ2xvYmFsIG1ldGFkYXRhIHdoZW4gb3B0aW9uYWwg
+ZmVhdHVyZXMgYXJlIGVuYWJsZWQuDQo+IEhvc3Qgc2hvdWxkIHVwZGF0ZSB0aGUgY2FjaGVkIHRk
+eF9zeXNpbmZvIHRvIHJlZmxlY3QgdGhlc2UgY2hhbmdlcy4NCj4gDQo+IA0KWy4uLl0NCg0KPiAg
+c3RhdGljIGludCBjb25maWdfdGR4X21vZHVsZShzdHJ1Y3QgdGRtcl9pbmZvX2xpc3QgKnRkbXJf
+bGlzdCwgdTY0IGdsb2JhbF9rZXlpZCkNCj4gIHsNCj4gIAlzdHJ1Y3QgdGR4X21vZHVsZV9hcmdz
+IGFyZ3MgPSB7fTsNCj4gKwl1NjQgc2VhbWNhbGxfZm4gPSBUREhfU1lTX0NPTkZJR19WMDsNCj4g
+IAl1NjQgKnRkbXJfcGFfYXJyYXk7DQo+ICAJc2l6ZV90IGFycmF5X3N6Ow0KPiAgCWludCBpLCBy
+ZXQ7DQo+IEBAIC0xMzc3LDcgKzEzNzgsMTUgQEAgc3RhdGljIGludCBjb25maWdfdGR4X21vZHVs
+ZShzdHJ1Y3QgdGRtcl9pbmZvX2xpc3QgKnRkbXJfbGlzdCwgdTY0IGdsb2JhbF9rZXlpZCkNCj4g
+IAlhcmdzLnJjeCA9IF9fcGEodGRtcl9wYV9hcnJheSk7DQo+ICAJYXJncy5yZHggPSB0ZG1yX2xp
+c3QtPm5yX2NvbnN1bWVkX3RkbXJzOw0KPiAgCWFyZ3MucjggPSBnbG9iYWxfa2V5aWQ7DQo+IC0J
+cmV0ID0gc2VhbWNhbGxfcHJlcnIoVERIX1NZU19DT05GSUcsICZhcmdzKTsNCj4gKw0KPiArCWlm
+ICh0ZHhfc3lzaW5mby5mZWF0dXJlcy50ZHhfZmVhdHVyZXMwICYgVERYX0ZFQVRVUkVTMF9URFhD
+T05ORUNUKSB7DQo+ICsJCWFyZ3MucjkgfD0gVERYX0ZFQVRVUkVTMF9URFhDT05ORUNUOw0KPiAr
+CQlhcmdzLnIxMSA9IGt0aW1lX2dldF9yZWFsX3NlY29uZHMoKTsNCj4gKwkJLyogVGhlc2UgcGFy
+YW1ldGVycyByZXF1aXJlcyB2ZXJzaW9uID49IDEgKi8NCj4gKwkJc2VhbWNhbGxfZm4gPSBUREhf
+U1lTX0NPTkZJRzsNCj4gKwl9DQo+ICsNCj4gKwlyZXQgPSBzZWFtY2FsbF9wcmVycihzZWFtY2Fs
+bF9mbiwgJmFyZ3MpOw0KPiAgDQo+ICAJLyogRnJlZSB0aGUgYXJyYXkgYXMgaXQgaXMgbm90IHJl
+cXVpcmVkIGFueW1vcmUuICovDQo+ICAJa2ZyZWUodGRtcl9wYV9hcnJheSk7DQo+IEBAIC0xNTM3
+LDYgKzE1NDYsMTEgQEAgc3RhdGljIGludCBpbml0X3RkeF9tb2R1bGUodm9pZCkNCj4gIAlpZiAo
+cmV0KQ0KPiAgCQlnb3RvIGVycl9mcmVlX3BhbXRzOw0KPiAgDQo+ICsJLyogY29uZmlndXJhdGlv
+biB0byB0ZHggbW9kdWxlIG1heSBjaGFuZ2UgdGR4X3N5c2luZm8sIHVwZGF0ZSBpdCAqLw0KPiAr
+CXJldCA9IGdldF90ZHhfc3lzX2luZm8oJnRkeF9zeXNpbmZvKTsNCj4gKwlpZiAocmV0KQ0KPiAr
+CQlnb3RvIGVycl9yZXNldF9wYW10czsNCj4gKw0KDQpIb3cgYWJvdXQgcHV0IHRoaXMgaW50byBj
+b25maWdfdGR4X21vZHVsZSgpPw0KDQpJbiB0aGlzIHdheSB5b3UgY2FuIG9ubHkgdXBkYXRlIGds
+b2JhbCBtZXRhZGF0YSB3aGVuIHRoZXJlJ3MgbmV3IGZlYXR1cmUNCmJlaW5nIG9wdGVkIGluLCBh
+bmQgYXQgdGhlIG1lYW50aW1lLCBhdm9pZCBtYWtpbmcgaW5pdF90ZHhfbW9kdWxlKCkgbW9yZQ0K
+Y29tcGxpY2F0ZWQuDQo=
