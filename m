@@ -1,139 +1,155 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from fout-b8-smtp.messagingengine.com (fout-b8-smtp.messagingengine.com [202.12.124.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C17933F211C;
-	Thu,  2 Apr 2026 16:38:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DD6C3CBE89
+	for <linux-pci@vger.kernel.org>; Thu,  2 Apr 2026 16:51:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775147922; cv=none; b=FbaFtfGcVj5hvu0EG91QWcIvhLRWtwJl71zVKo3h0adLC/nRqeOPpU4dAIxIztuRAyk0C42wysbW9f3CN+LZVc+aVHQjA1p6DvNQ9UXaaMr2k5zqnGieb32BIcUE3neka4AooLfCB+qZZ97KhJCLQSYUr9AHsm+O/4p853czvK4=
+	t=1775148709; cv=none; b=f9eKK8f5BfreVNsbYonNgUc87Cj8onJZEp3jgJi1EfrnpjhQFIy0MFn5w8mZdFn9Qb+BLFRiRG2G5X8batRt7Bcxf3NHwgjDe3IVk8UBGh1z0wZ8deTeudQcq0oLpOklV0ZDPyhJvl0oCMYCNAERBuDicxNSVpJioajfiXykEOg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775147922; c=relaxed/simple;
-	bh=SS+BtVdttMvo6X20fLR3JClq/W5wC0bvQxoXCy/55dc=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=ltqt2wDRJoBK05JjK+J50RfPayuCabZr4F35/tbp8WHV2iKyDBBKZ1MwYlOlmFXbKe2ZHdoNHZC10f0d3BlPCf3UjRAjjgEJuyo6E5klux5X1MqMCtbfge3LptRFCzx0jD5WpsXSi6ZI0fJ5AGQq1oegr6SenPZSJaib+qEJbhw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U3vICxvM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775148709; c=relaxed/simple;
+	bh=w4MnztjoIzaFoBzYmfwjuTLVfV12VLRPbuLHQQGUG4Q=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=Li6VIJ7qkFQ7zRFqwaoLkc+RqvB+dwWTSMFXXiH7deD7RzhC1zWQ9tfdxn4LqBVv8EtAdSzYDA+Em1sdbP/Yuc5XqGeDNXvCyGwHIdKEZBcRVuWUyyltx8MfGSVCDaWQ1JZqQotLXc4554BEwuO44gD4X4CsLi0OelC1fejgJNc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=firefly.nu; spf=none smtp.mailfrom=firefly.nu; dkim=pass (2048-bit key) header.d=firefly.nu header.i=@firefly.nu header.b=ZI8lGMJA; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Ohgx22/w; arc=none smtp.client-ip=202.12.124.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=firefly.nu
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=firefly.nu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U3vICxvM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDE30C116C6;
-	Thu,  2 Apr 2026 16:38:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775147922;
-	bh=SS+BtVdttMvo6X20fLR3JClq/W5wC0bvQxoXCy/55dc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=U3vICxvMqgBh7amR+oCizO3AJ7YOv3bxzO8OCsh6ZNB5XW45uHJ/8h8WJx54f1P91
-	 xDmPSvdX9WiW9SuHdR2YUbGunbzjakgfC9lpI1iEHTaYHIZ3/27UQhAdF5d8lWlB1x
-	 Pd5ZE1JHkCSZ9qd9lw5ug60ehF3zJp/hs6R1OwWeq/rWlnIZq277RkUEVs2UadCRmq
-	 K58kn3MHghtAlrqMVicW2YdHuCFzNec/LSZEHYXCPZmAh/+BkYJmoaCfBR6PS8wfU8
-	 uWou+k7OQkgxGJ5V+67qVIGW3r+gVfCohHAvry1cjRT3YXi9BZAFZ34kvNTES8g39K
-	 D+hKMQ+afiejw==
-Date: Thu, 2 Apr 2026 11:38:40 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gerd Bayer <gbayer@linux.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jay Cornwall <Jay.Cornwall@amd.com>,
-	Felix Kuehling <Felix.Kuehling@amd.com>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Niklas Schnelle <schnelle@linux.ibm.com>,
-	Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	Leon Romanovsky <leon@kernel.org>,
-	Alexander Schmidt <alexs@linux.ibm.com>, linux-s390@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v7 0/3] PCI: AtomicOps: Fix
- pci_enable_atomic_ops_to_root()
-Message-ID: <20260402163840.GA279690@bhelgaas>
+	dkim=pass (2048-bit key) header.d=firefly.nu header.i=@firefly.nu header.b="ZI8lGMJA";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Ohgx22/w"
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailfout.stl.internal (Postfix) with ESMTP id F29761D0005E;
+	Thu,  2 Apr 2026 12:51:41 -0400 (EDT)
+Received: from phl-imap-10 ([10.202.2.85])
+  by phl-compute-01.internal (MEProxy); Thu, 02 Apr 2026 12:51:42 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=firefly.nu; h=cc
+	:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1775148701;
+	 x=1775235101; bh=VatEIaM91TIfMEkMVx8bZLCwgYoThhMDFQTClOYx0NY=; b=
+	ZI8lGMJAwQrTPadszyTHUHr3VOE00qq/Tn4pd2ct5UjcN+eMZXx109uIS4Md86TY
+	PWauBP4yYMVAQ/XAI/w8Z2BIw75uNqrvkvfh2y5O2M6sSx92uR4WRjJvcq+Iw7A/
+	Njndct/HDjKdvR51Io/ePshl6VkcnrTQKA/Q08Wnexi1154gIEjWH2R5Go9ILvnf
+	Lq1ULv5micXYzKiyGhqmCBvwTP9VfTuUUbA5JckYYCb0buuFdymf5aJveD5QKM4P
+	mPFXDqECE2IrvVemHrfiyFVvErMDV/Z4djZLJSY5ZqqZyltwOh6bZpyHTK3BMz7L
+	bFUbBTjYVJJVcuLkZFO4uw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1775148701; x=
+	1775235101; bh=VatEIaM91TIfMEkMVx8bZLCwgYoThhMDFQTClOYx0NY=; b=O
+	hgx22/wsPllK4JXJjdzVkHmUnI5PHe87DNcugNrHrSU1u8udJOgE7jB5NlmvvAGm
+	URx6B3vItnS1tez7b7iYniDW1WcQNjO9NGWKTmk4MVRfzkbn5CCG0goZZagMR58G
+	1ABEmcOOAa6LfLpwkCtH49RaSFuYil167BfWuvVCazVqQh43W/esEdnUdnIAGNbS
+	og185IUAqrb97eloqPMtw8s9OZVURdMwBM1zrKmh8T3QOlj24A/nTrwBE4K19dUD
+	B9/anI4VUqGruZ5SUI9d9fGzKvMPdWE9e2uSqykLVBjkGqdrs0H/re6vukZ9nopw
+	m9rfMma8GKbcHPyRv3AnA==
+X-ME-Sender: <xms:nJ7OaRp0flrzE17SdQfh1hq2OtZMGJgFzKs3buZFr2va3pt2K6IDpg>
+    <xme:nJ7OaeeerZM0PE-i2WlazrCKD6XvBX43mZZ9yMyBT_CljovcpoMHgk1zrpSdmqwbS
+    yPWr6o4aHOF5EXyBfOTC7AHM7btOQ5Q6kXZlR6c0-TJ9Wwu58CP7s8>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdeiheeiucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceurghi
+    lhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurh
+    epofggfffhvfevkfgjfhfutgfgsehtqhertdertdejnecuhfhrohhmpeflohhnrghsucfj
+    nphglhhunhguuceofhhirhgvfhhlhiesfhhirhgvfhhlhidrnhhuqeenucggtffrrghtth
+    gvrhhnpeetfeffjedtjedtvedtffejvdfgkefghfefgfejfedtvdfhjeetudeuvdffvdek
+    teenucffohhmrghinhepkhgvrhhnvghlrdhorhhgpdhfihhrvghflhihrdhnuhenucevlh
+    hushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehfihhrvghflhih
+    sehfihhrvghflhihrdhnuhdpnhgspghrtghpthhtohephedpmhhouggvpehsmhhtphhouh
+    htpdhrtghpthhtohepsghhvghlghgrrghssehgohhoghhlvgdrtghomhdprhgtphhtthho
+    pehrvghgrhgvshhsihhonhhssehlvggvmhhhuhhishdrihhnfhhopdhrtghpthhtohepih
+    hlphhordhjrghrvhhinhgvnheslhhinhhugidrihhnthgvlhdrtghomhdprhgtphhtthho
+    pehrvghgrhgvshhsihhonhhssehlihhsthhsrdhlihhnuhigrdguvghvpdhrtghpthhtoh
+    eplhhinhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrgh
+X-ME-Proxy: <xmx:nJ7OaWero6YGluKyyk3mvPhdZ1BZtBsRoERnz1Sza15qfhyA5V05FQ>
+    <xmx:nJ7OaT7GE0yjV_zwRCNj9wc1QCxRPrzf2GeB2m9YeMTQPWyXBVYjBw>
+    <xmx:nJ7OaRV3cvbCTP_a6En_9DTHvmy1hbI6p3pfcI8suld7ixE4K00Hag>
+    <xmx:nJ7Oaa4BA6dnxyhp75qkqhxt6iPoqcXdejgAzcXhKi3cj42XUnwb-w>
+    <xmx:nZ7OafNl4YprRfzlmTdQGsnPmWYM_m_wdDOTSA_sPZCyQog1pOOzLcLQ>
+Feedback-ID: i8f9147e2:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id 97F3B21600A5; Thu,  2 Apr 2026 12:51:40 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260330-fix_pciatops-v7-0-f601818417e8@linux.ibm.com>
+X-ThreadId: AAr4zjfPh1Rc
+Date: Thu, 02 Apr 2026 16:51:20 +0000
+From: =?UTF-8?Q?Jonas_H=C3=B6glund?= <firefly@firefly.nu>
+To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: "Thorsten Leemhuis" <regressions@leemhuis.info>,
+ "Bjorn Helgaas" <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ regressions@lists.linux.dev
+Message-Id: <ac71d5ee-5895-417e-a7af-51cdecec8b67@app.fastmail.com>
+In-Reply-To: <4a7704af-4c30-3050-e8a6-cb1fa3fd7ec9@linux.intel.com>
+References: <a5f23340-2b84-4734-be11-f5a97c188195@app.fastmail.com>
+ <ec9af6c3-755b-488a-8400-cef9eeeac509@leemhuis.info>
+ <740b10c4-a54a-f776-d564-d3c977d90ba6@linux.intel.com>
+ <52614de3-9658-4390-8e0e-689963f364a4@app.fastmail.com>
+ <4a7704af-4c30-3050-e8a6-cb1fa3fd7ec9@linux.intel.com>
+Subject: Re: [REGRESSION] amdgpu with Thunderbolt eGPU bracket fails since new bridge
+ window alignment calculation code
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Mar 30, 2026 at 03:09:43PM +0200, Gerd Bayer wrote:
-> Hi Bjorn et al.
-> 
-> On s390, AtomicOp Requests are enabled on a PCI function that supports
-> them, despite the helper being ignorant about the root port's capability
-> to supporting their completion.
-> 
-> Patch 1: Do not enable AtomicOps Requests on RCiEPs
-> Patch 2: Fix the logic in pci_enable_atomic_ops_to_root()
-> Patch 3: Update references to PCIe spec in that function.
-> 
-> I did test that the issue is fixed with these patches. Also, I verified
-> that on a Mellanox/Nvidia ConnectX-6 adapter plugged straight into the
-> root port of a x86 system still gets AtomicOp Requests enabled.
-> 
-> Due to a lack of the required hardware, I did not test this with any PCIe
-> switches between root port and endpoint. So test exposure in other
-> environments is highly appreciated.
-> 
-> Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
+On Mon, 30 Mar 2026, at 16:32, Ilpo J=C3=A4rvinen wrote:
+> On Mon, 30 Mar 2026, Jonas H=C3=B6glund wrote:
+>>=20
+>> Unless I misread something, they should both be included in the recen=
+tly
+>> tagged 7.0.0-rc6--I'll try building it and see if the issue is resolv=
+ed.
+>>=20
+>> I'll reply once I've tested 7.0.0-rc6.
+>
+> Hi again,
+>
+> Now that I look more into the logs that probably won't help. For some=20
+> reason, it seems that resize is not even attempted and the errno is=20
+> -EINVAL which is a bit unexpected.
+>
+> I'm starting to wonder that the problem fixed by this patch once again=
+ is=20
+> showing its ugly head (it's currently in pci/resource branch, so it wo=
+n't=20
+> appear until 7.1-rc1):
+>
+> https://lore.kernel.org/linux-pci/20260326200427.GA1340256@bhelgaas/
 
-Thanks, applied to pci/atomics for v7.1 with minor rework of 2/3.
+Seems your hunch was right--I've now gotten around to testing with
+7.0-rc6 as well as the pci/resource branch.  The problem persists in the
+former whereas it seems docking succeeds in the latter.
 
-> ---
-> Changes in v7:
-> - Prepend series with a patch to explicitly exclude RCiEPs from
->   enablement of AtomicOps Requests
-> - Limit the core patch 2 to enforce a full check of the entire
->   PCIe hierarchy for support of AtomicOps capabilities.
-> - Rebase to v7.0-rc6
-> - Link to v6: https://lore.kernel.org/r/20260325-fix_pciatops-v6-0-10bf19d76dd1@linux.ibm.com
-> 
-> Changes in v6:
-> - Incorporate Ilpo's editorial comments.
-> - Correct logic in pci_is_atomicops_capable_rp() (annotated by Sashiko)
-> - Link to v5: https://lore.kernel.org/r/20260323-fix_pciatops-v5-0-fada7233aea8@linux.ibm.com
-> 
-> Changes in v5:
-> - Introduce new pcibios_connects_to_atomicops_capable_rc() so arch's can
->   declare AtomicOps support outside of PCIe config space. Defaults to
->   "true" - except s390.
-> - rebase to 7.0-rc5
-> - Link to v4: https://lore.kernel.org/r/20260313-fix_pciatops-v4-0-93bc70a63935@linux.ibm.com
-> 
-> Changes in v4:
-> - drop patch 1 - it will become the base of a new series
-> - previous patch 2, now 1: reword commit message
-> - add a new patch to update references to PCI spec within
->   pci_enable_atomic_ops_to_root()
-> - rebase to latest master
-> - Link to v3: https://lore.kernel.org/r/20260306-fix_pciatops-v3-0-99d12bcafb19@linux.ibm.com
-> 
-> Changes in v3:
-> - rebase to 7.0-rc2
-> - gentle ping
-> - add netdev and rdma lists for awareness
-> - Link to v2: https://lore.kernel.org/r/20251216-fix_pciatops-v2-0-d013e9b7e2ee@linux.ibm.com
-> 
-> Changes in v2:
-> - rebase to 6.19-rc1
-> - otherwise unchanged to v1
-> - Link to v1: https://lore.kernel.org/r/20251110-fix_pciatops-v1-0-edc58a57b62e@linux.ibm.com
-> 
-> ---
-> Gerd Bayer (3):
->       PCI: AtomicOps: Do not enable requests by RCiEPs
->       PCI: AtomicOps: Do not enable without support in root port
->       PCI: AtomicOps: Update references to PCIe spec
-> 
->  drivers/pci/pci.c | 48 ++++++++++++++++++++++++++----------------------
->  1 file changed, 26 insertions(+), 22 deletions(-)
-> ---
-> base-commit: 7aaa8047eafd0bd628065b15757d9b48c5f9c07d
-> change-id: 20251106-fix_pciatops-7e8608eccb03
-> 
-> Best regards,
-> -- 
-> Gerd Bayer <gbayer@linux.ibm.com>
-> 
+
+> I still don't understand why pbus_select_window() would return NULL in=20
+> this case but it looks the most likely candidate where -EINVAL could c=
+ome=20
+> from (I still don't understand what cleared resource's flags if that's=
+ the=20
+> case but it still seems the best explanation).
+>
+> Please take logs from this point on with dyndbg=3D"file drivers/pci/*.=
+c +p"=20
+> on the kernel's command line so there's little bit of extra info (and=20
+> check you are building with CONFIG_DYNAMIC_DEBUG).
+
+Here are dmesg logs (with the appropriate dyndbg cmdline flag) for both
+cases, in case it's useful:
+
+https://up.firefly.nu/pub/amdgpu-egpu-crash-7.0.0-rc6.dmesg.txt
+https://up.firefly.nu/pub/amdgpu-egpu-good-pci-resource.dmesg.txt
+
+
+That's good enough on my end, knowing the issue is addressed already
+upstream and slated for 7.1.  I'm happy to test anything else if it'd
+be useful (for eventual backports or so), but otherwise I think I'll
+just pick thoes patches from the pci/resource tree for now.
+
+
+Thanks,
+Jonas
