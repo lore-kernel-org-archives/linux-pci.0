@@ -1,184 +1,289 @@
-Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012019.outbound.protection.outlook.com [40.107.209.19])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA7123191CF
-	for <linux-pci@vger.kernel.org>; Thu,  2 Apr 2026 11:09:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.19
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775128149; cv=fail; b=IfO1oQujTw7HRDrtUAAe39gHBCd9NVvp5fdGF8DAyyh0S+YTEunrLjamF0fRQjG7D5bYov0RbHvX2z9uMCitvEfrY5PdZwSSPml3kkfCfdlec5gIGm/A5V4pdiK5AfmZbj4WUfHl1Y/VZiXLgo7sbN2qtp33Wb8MxDkYT0Pdfhs=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775128149; c=relaxed/simple;
-	bh=CGvgwPiuAGe54Kij1hM7AMvUOHIGSuPHXcahDDaoUsU=;
-	h=Message-ID:Date:From:To:Subject:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=C4eZSAFyoqqrzSAdLTySa8GkbDIEJIViXDZA0igQ1jHiiMw3WwaCFY9kU4NZsz57vUeQaRc8HqG+xjLFtvtRr5plpO6SCtjQmCAfspTSvbKg7COehe6cZNff6pSKGHgsYeZ6ag0u3xMLzTQ1XFA1Qj5h1HiFA92TmsSPESONWLg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=1S1FdX5T; arc=fail smtp.client-ip=40.107.209.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57E3A3D3332
+	for <linux-pci@vger.kernel.org>; Thu,  2 Apr 2026 11:29:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775129398; cv=none; b=sQ9utwLPZJZbW+6K2fLeLs+WW4S8cbuXhxel6gaZwfH7lr+T3mBu/nON35hG/rzRjGaupRglcPSsuUcKyz5o5f+EOKP2lODUuw1RI9arDBmre/V7qN3PeVxhqMAW6M6xqaqMirp2qg3+p5aISfYfz+09MSPScfQkJjqze8HHSqs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775129398; c=relaxed/simple;
+	bh=8HPlO9h6syLezPB7tv8QuwjjhDGwxOtjBCDDTl2STnY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HJ2vMsPcly7hxDYDySF9ZVVS+CscRBS5+cnryyGPH5F75f2LeHDFXD4mJ36UlqsmAu2IFo23QMyiu3U7G1hfgZStX5kl3bMhk90VC+sAbMrebSXYrViluJonzrCketa8SZTTZB4rqcNmtZUheeQRzJy4sJJpAh2TTYje1+JnHhQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=XyenKcge; arc=none smtp.client-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="1S1FdX5T"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=e6/Vb2GQ0C3T18xzu7vVuumFvqRrJB+3KE74rId+EtoSasz7i9aW54pvaz4Mt3AgcejsV/ilQe7VM4ZC0AZ5z7/urQT8qkKMoQmgw83PBI6NHDXx8KbCsoqcam676WDAjFW7xhww7Vf7fQYUNsb12CJKuYLZtPKOObfeh41ltOcZ6lVYy3xiKwlG3BM+8zWAtWVkQlYjRiPEx2BJlDPjZcjOwhQT5/p1XZa2o6A1gsb+/xHSyOiyol+O8Uvecr4ycoFWko8YxAL5hLOn4alVSaTzHpp1i763ddropwp3ikdJDB/fOMxWeQ3EFwIGhvpt9EHTOKFruXIK8OSLLcGxYw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=pGJ/1Dt4Sh4TtfxxXF8D02Ba8revepSYHvDvRRplFiU=;
- b=SGaxcFAKJLR8I5z2Fwc/oacTm/jbfXp/L3RSnQ47rcdnT/A3QcExMF9HXodVFP0UfOuVbKcsS+FKpVHz6h24/3onLbcRYEWLDEaho/XJOAGkLWukMhFQuzOQ670sj/wpVQTl28t7usQi1eADYhkwIsraDQLb2mkw1v1psCY96RXJ+DYRacBykll2hS3mPKMHobU/SnBMKKlbkgZqKx6Cf+c2Kp/00a+5f7ibTSD+cRYdPn0o3LYKA3GT74mP8tznJagvXdjTW3bQKaJsENF8BgFsnd79Tlj5ZaQr4QXfJRVj4uFA2B6asaBlRq9CJ0tsbv3rWl1VwiASQHw7iyLjog==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pGJ/1Dt4Sh4TtfxxXF8D02Ba8revepSYHvDvRRplFiU=;
- b=1S1FdX5TrFllNFojvXZ7ttg+FYVmK9fKzwzok5M3EUzoJMR7Dbj+2/VGZi4EXpkz7VVqfuf9gZuiVgs0fGUW0h2ArGWkMQ4Ubn2XB3Ssbckl2TKDueBf5QNmdGzLXeHvTbJQv9qkug/u+1nqIZkZbz8N1TksZQaeA53j6D8r2pE=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from DS7PR12MB8292.namprd12.prod.outlook.com (2603:10b6:8:e2::21) by
- CH3PR12MB8329.namprd12.prod.outlook.com (2603:10b6:610:12e::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.19; Thu, 2 Apr
- 2026 11:09:06 +0000
-Received: from DS7PR12MB8292.namprd12.prod.outlook.com
- ([fe80::7b29:2260:340f:35cc]) by DS7PR12MB8292.namprd12.prod.outlook.com
- ([fe80::7b29:2260:340f:35cc%4]) with mapi id 15.20.9769.018; Thu, 2 Apr 2026
- 11:09:06 +0000
-Message-ID: <3c74a644-3f01-4586-ac0b-4ba36bca12d8@amd.com>
-Date: Thu, 2 Apr 2026 19:08:44 +0800
-User-Agent: Mozilla Thunderbird
-From: lingshan.zhu@amd.com
-To: Zhu Lingshan <lingshan.zhu@amd.com>, bhelgaas@google.com,
- linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Skip devices with RRS Vendor ID(0x0001) on root bus
-References: <20260327073659.6160-1-lingshan.zhu@amd.com>
-In-Reply-To: <20260327073659.6160-1-lingshan.zhu@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: KL1PR02CA0018.apcprd02.prod.outlook.com
- (2603:1096:820:c::23) To CY8PR12MB8299.namprd12.prod.outlook.com
- (2603:10b6:930:6c::21)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="XyenKcge"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4887ca8e529so5493785e9.0
+        for <linux-pci@vger.kernel.org>; Thu, 02 Apr 2026 04:29:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1775129386; x=1775734186; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=tT7D8o4V9+zDHS/oQifH2ZnOFQaAuku/SG4Se+wsZAk=;
+        b=XyenKcge2tAq7YuyN1wuPG23vN+4Jv23MRzxi1T6e4WY9DvfuDwffZZS4T42+yabS/
+         KKh1RR3GczW6qMGa/iuc94u2etxHKxgGxNihio+pSQ34fD/hnD5KXO8eySPrX70kW7NW
+         EwHpLl68vuN/A8e+E3J3rXsqx1kVVf1+D8PMP2jlXkJdgYbDYo9bNeuSUQ8KabKa63CT
+         pa0lDV4bkg3DQFgOjSSTEtq4RDSJtW8JsYApryx3UtI9/bwmPoHnrpb/BPwzhG7ANVEe
+         bCIhwOMh+8imLvSYBWdF0II9bVp7QOiSFQvwnjSkxzcVvWoM5rw6yDF21ytm7Jvm9QRu
+         woOQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1775129386; x=1775734186;
+        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tT7D8o4V9+zDHS/oQifH2ZnOFQaAuku/SG4Se+wsZAk=;
+        b=mimM8+aUCRaG9R1RoUSG+XImfUOpI7dlSVwlrIFDEdT0hn9YvxlOfn2X1oxAbs2Syz
+         3YNVSMbr1FDakhzZibTxzEkWpnFdCFhESI/9fcme8ldu94S+IXjd7iFsLwG0B7uUHzIx
+         eg+BvpESnQ4xE9RSf3Rf4gczCoiTccAOE7P0h2wx+U2654zXnmAAlYKNdGaC9BvL1cJ3
+         MW0eDAmlHIe8Nvh4S2GLI/LVjmOIZ7vmonukphIc5Ho0SGiXMsv4Bq7TXLP3XnTWaXUD
+         uLiwO8sntJaYCcNnDmeSDbbSW163pV0lqDlYl8aSxts6v7xxGWv5iWF6aA6Quz0W4MVL
+         ipqg==
+X-Forwarded-Encrypted: i=1; AJvYcCXa7N96fsYYu8Sp6iv+ec+Luh5BNqGV/uC1ZfHcvRcsjXBaMZ8ypfFwUS1MbC+vxfJ2FagSYHItuMg=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy9+1jh3FjGgHgT7P6/LHHJOddILrCkUJRaaE6iETN9Ikmu36Wn
+	VGkY1DZCtQqkYNyvKnY6K2lgT+dGP6pkzfmFJ5Of8/lpZWU5lIq2cmSOlrbwg1NgBfY=
+X-Gm-Gg: ATEYQzy/KfTNks4GyJ9hoJw+lBU+ZCnmtudjbEsZyH4MpDbjKX81Bjg+oHGW4sHqhyB
+	egiOzRDj1RmC54HfhJe1AKpiLSu0vYh/xusSRkawqO344LAbC4RjJz0uZKiZshzrqStMLWSVgpF
+	V9AmI/RsOoMBkoWUShAnDwSB8wZchVK3xcPJKk6yPncSOTlW17Wh+hcV0KTlkhqPRpe5EMSJ81f
+	x83otPsem4hlXyBR+rUqMtZmogMnNRiJs+O3ydcoqmIAtxVfi0gPTC7UcPXCVNeBx3JFsQJN/Qh
+	2i7vIbhDbmR0hymlEXwtbUGq9JMKzWKlDI/p5fBa4gEmNBJRhZbuiJFKRpWsK/UVjqmGidaeHE+
+	7seYGiudkSdOnjS4wi+tyPokPtgJR5Tiyg8PlBnYo6ue0nhzwqvjck5aPkOBP2bLvEKUhZu0OnK
+	owRGiNMMkP2Cx6g5bqzfgwpIRPkQ==
+X-Received: by 2002:a05:600c:8483:b0:487:22ad:403e with SMTP id 5b1f17b1804b1-4888e0cf3a0mr32634805e9.14.1775129386217;
+        Thu, 02 Apr 2026 04:29:46 -0700 (PDT)
+Received: from [192.168.0.20] ([212.21.133.10])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4888a705ebdsm74104865e9.10.2026.04.02.04.29.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 02 Apr 2026 04:29:45 -0700 (PDT)
+Message-ID: <51f2be5a-47d2-4a06-92bb-368aaed73530@suse.com>
+Date: Thu, 2 Apr 2026 14:29:44 +0300
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS7PR12MB8292:EE_|CH3PR12MB8329:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4123d526-cdb6-4537-7763-08de90a8391e
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|376014|1800799024|18002099003|22082099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	4i2WHqW/3T8Ghjb9+dJ9AuLAJupyQkZK+o8rM0dT9RLZaWzX/glcWIuLm5EsnrtiufmrGgYjWAFxHGxcQWhzwP2NrAXKV/SNGCZt06oeO86R8MlaATDOF8uaei5DpWjVvoXwOxmEyhEAwnnSlkGW1ONsl6xVhd31KUrAgj7C7WLrJA2AN6cjd7sLnVkThOIgFPjnsfOiW4yIRs23nnW4yLiEyke6HR20FK0lb5+x7Dpvns2JL5kAUm6G1gxH/3+/XnKdceILX6xqHr/OfkGYUYwCr8Pdwb6H8NaimBL3PWHT2Dwr/E4GnU4+8/zeBdznNSCxhp8xh8aFNv2RDc2VUOnhQYl1aybd6oNAxHbRFOlOofDuHtG5911/tzE7s6Bl7duELI1HpO8npg/rdkL6WcepaL15N+gT42UhqP7g68L2zKUMP0arhYGTwSLsDUmATZ5StJQ4i8xuSfAQUBgWikrn6tNTqg23ZfrxTrRy3gL2As+vDlc3G7EwVuncmY99dVBDL1Go8ceh6JqhAsAKHyKIXe28QY0Jn+Ur61sqDP/vI3RcgVM6Zt/P5fRkIrpn8g3n+Vx0jQpLkg1lr8TuC9gsEj45pIfUG8L2GRmZAGHZ+rCmLCt1AwaHj+Xz9d8QpmmUV44h6S1byRezNAYwTcA6RqzQVBJlugo9DldrqzCrKWg7XZJgkTYZfeu5KdfATeBysUV8LJsun8USDq3uHseQvQZ/YqI/kiX6+1lfmQo=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR12MB8292.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?UHdobi9pS2ZETzNCNTJ1dlpxV3BFUVJZMGNzak1hbFVJaHlDbFROQjR5M1d2?=
- =?utf-8?B?Sm9Jb1pVcGh2eCtTRmQ3V3hsbVdqSFRFVG56MHBray9vWDBVZ1hqYnFwNnJm?=
- =?utf-8?B?UVp1S3dDQzBQTVBjang0VUczNk55d0k5akNaUndtd0VRRjVEU2orRjRSUzdP?=
- =?utf-8?B?a0FweTZRV2N6S3cyUDVCTUxUMU96VVdVZFY2eGxOdmVMbHZSSnYwODA3b05D?=
- =?utf-8?B?UE1VbUVBNTFacWloWUlkT2I4NE12OTdabVVzUk0ySzAxMW5KUDY2cGhESWkx?=
- =?utf-8?B?TGdubmhrWnJHbzNSZmh5S2xrUXV5R0ZVRmg2dFRJMGJORVV0NWlnMTJuMDZL?=
- =?utf-8?B?Y1ZHdjlEYmY0bVV3NVN3aVdMWVF5bkR0dExIQS81akRDL01pV3IrVVVwbGFS?=
- =?utf-8?B?YjF5WWRncTRkQkluejdTWkxvaWtUaENjd05ZcTl2Y0V0aHhKZTY1VGcvYUtS?=
- =?utf-8?B?WFdGeGNVRGlyd1hVd3FUVVUyaU43cURaeVVSQ3U2dGVvSDJLTit2KzJFNjNH?=
- =?utf-8?B?NDRxQU1UOG9uWVJ4Z2kzVE0zV1B6TUVscjFIRit6TWpFbjJJdDVjQmV1N1Fm?=
- =?utf-8?B?RXJEdWM0R216Sll6VVhPMDlmZ1FkTGE4dlhlWVplS0VBZXRIdlVDaDh1TWJk?=
- =?utf-8?B?TXpJMXByaSs3Z2FjNFdUMElLc1pZVzl6WFZNNFN5dHEwMTF4ZFJNZFBIcGRX?=
- =?utf-8?B?WXJCNnJQNHcwY1Q0YmtaQnVXWHRDOFdRT3dBZGc1QTk5U1QvQlBDQnJGaUFw?=
- =?utf-8?B?bzYxMEhhcHlVUVgxSDIxMkZIVnFheENUenIxRmpkTnRFUEJIRHlFdGpJQmRh?=
- =?utf-8?B?dXlRT0FCbGp4V1hZTzBsT0JMam1RMkVNUWtqMmdVYm9iNW51WEZMSmQyNmVz?=
- =?utf-8?B?Y1RsK0lHUnJLbGErSkVpT2NkYVl1UDlDZUVrT1lMN3duSUUxWnkrSjhNUmlP?=
- =?utf-8?B?NENkMk8zSU5SNS81dGhiZlpYK24zRUVOYklhNDNNcG1SYVVaRERqNlhWdmFm?=
- =?utf-8?B?d2VxbnZTcFFSWDJCcmdoSnMwSWJiWkd0ZnFlM09JQWg0WGlEamFQSDFHbnJT?=
- =?utf-8?B?elBDeVRYUEUwNUJTdjJWYm5TNzVwMjZySGJVcHBBaTc4V3BQWmg2eW5KRFNl?=
- =?utf-8?B?L0drR0pnNUQ0R1hpM29ycnIxVVJweFZPa1ZmSG0vWnhCNThJRGt1WVJrTkJm?=
- =?utf-8?B?a01RMTlrbkRRbTdPM3ZmNjI1TWN4ZU1NOFVhblNsL1liakNKTWRTdXZZcVgy?=
- =?utf-8?B?b2xCb0NqNFJQbmR2ODZlVFlqL2YyZVJvSXc4SXlaSDFTZXF5VW1Ld0p5b09B?=
- =?utf-8?B?Q1gxQ0pZbEcwMzlKZ1pydHhUQUJNU1RvUXgwRG1ZOXdMUTM4WHFwaytVYnE3?=
- =?utf-8?B?UGVvK2VBK1lXSjFCYnJmakdQcHBtMWJnR0ZPY3JHbjhpYlZuWkEySDBLRzRu?=
- =?utf-8?B?Rkdkd1IxMGE3T0ZHeXhNR0dBY1UyS3VrY2xVbEZYeWtMNExtL0R4Wm1zSHhh?=
- =?utf-8?B?UGo3dGFnUWpFLzByMW9RVVgzTmh1Tll4d1JCRVN2U2hpUDFGRko5cGlLSGdW?=
- =?utf-8?B?SndPSHhObHQ1U2NGSnk5dlBvL1E5V0pqWlZpTjFvMkZxaFhaRGJEK1hJcUVp?=
- =?utf-8?B?TVQrankwcDJhRTJZZ1VNdjlWU21pWTAwZ05vQ2NGY21Gc1lhck8rY2FFMTd2?=
- =?utf-8?B?MHhyR3pIeWpMUDZDVStQWTREV2wrTFFZVUhqcEl1K0JnWHpGR3FVejNyR1hR?=
- =?utf-8?B?U1Z3VFpFREdaZXRPeXg0b1hpN2V0ZndUampTcTZvNWF4NWxlOGM3TEVheEVY?=
- =?utf-8?B?amRGUmhCbDd3N2VPSmM1Q2kzQmtvS3ZldnY5cVVDVHZabzBOSVdVTXdsNVc3?=
- =?utf-8?B?UkJWd0xvSVBQYmZDUXBBMFpHaWpuYTc5UTFjOHE5N2FyRzFITllCVjhYVTdK?=
- =?utf-8?B?UExWQkxOM1RQMkwxUFhhemtNbEpoRy9UTExNK0FmOW01ZnNoR2s2SHNlT3lW?=
- =?utf-8?B?SFdMRkEyL1JWTERBSHZEM3FVa1kydis0YzVVQTJjZnQ5Y3hBaW1IYmJoTkdh?=
- =?utf-8?B?ZnRYVXRFMkU3eWorY0NVMmswSVIyZU90UkV6T2w2VXduSzAyYXdzc3dmNEVB?=
- =?utf-8?B?V2xhS1NJQmhyMndiOEhIZVNsSTd6YVRNNnVaOUN6cjFFTkNBUjZjZ09BTzFF?=
- =?utf-8?B?VndvZFJ4ZjhWTENpVHM0bW9oU2FrNTNBQnptL2ZLdE5nRWw4dGVSa2ZTdTRj?=
- =?utf-8?B?OHZWNklLMkh1NXdIOGpaellBMXc4cTFpL0xubnFkdk51b1lvdHZmcGxUMklT?=
- =?utf-8?Q?lFTdnzQvUleiswYVAV?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4123d526-cdb6-4537-7763-08de90a8391e
-X-MS-Exchange-CrossTenant-AuthSource: CY8PR12MB8299.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Apr 2026 11:09:05.9137
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 8x5OGDPkb+FNS3wcL+Z+oIyi9mnNn95BM2GC5rVkrGg2C7IvtsedZOXCLz9DjhcPcKVEKtJkrhdcn98wrGLI6w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8329
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 27/31] coco/tdx-host: Implement SPDM session setup
+To: Xu Yilun <yilun.xu@linux.intel.com>, linux-coco@lists.linux.dev,
+ linux-pci@vger.kernel.org, dan.j.williams@intel.com, x86@kernel.org
+Cc: chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com,
+ yilun.xu@intel.com, zhenzhong.duan@intel.com, kvm@vger.kernel.org,
+ rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com, kas@kernel.org,
+ xiaoyao.li@intel.com, vishal.l.verma@intel.com, linux-kernel@vger.kernel.org
+References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
+ <20260327160132.2946114-28-yilun.xu@linux.intel.com>
+From: Nikolay Borisov <nik.borisov@suse.com>
+Content-Language: en-US
+Autocrypt: addr=nik.borisov@suse.com; keydata=
+ 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
+In-Reply-To: <20260327160132.2946114-28-yilun.xu@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Gentle Ping
 
-Thanks
-Zhu Lingshan
 
-On 3/27/26 3:36 PM, Zhu Lingshan <lingshan.zhu@amd.com> wrote:
-> PCIe Request Retry Status (RRS) is a link-layer mechanism where a
-> downstream device responds with RRS to indicate it is not ready.
+On 27.03.26 г. 18:01 ч., Xu Yilun wrote:
+> From: Zhenzhong Duan <zhenzhong.duan@intel.com>
 > 
-> With RRS Software Visibility enabled, the Root Port translates
-> RRS into Vendor ID 0x0001 (reserved by PCI SIG) for the driver.
+> Implementation for a most straightforward SPDM session setup, using all
+> default session options. Retrieve device info data from TDX Module which
+> contains the SPDM negotiation results.
 > 
-> Devices on the root bus, for example the root port itself,
-> have no upstream PCIe link and can never legitimately return RRS.
+> TDH.SPDM.CONNECT/DISCONNECT are TDX Module Extension introduced
+> SEAMCALLs which can run for longer periods and interruptible. But there
+> is resource constraints that limit how many SEAMCALLs of this kind can
+> run simultaneously. The current situation is One SEAMCALL at a time.
+> Otherwise TDX_OPERAND_BUSY is returned. To avoid "broken indefinite"
+> retry, a tdx_ext_lock is used to guard these SEAMCALLs.
 > 
-> This patch skips any devices with RRS Vendor ID 0x0001
-> on the root bus instead of entering the RRS retry loop.
-> 
-> Signed-off-by: Zhu Lingshan <lingshan.zhu@amd.com>
+> Co-developed-by: Xu Yilun <yilun.xu@linux.intel.com>
+> Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
+> Signed-off-by: Zhenzhong Duan <zhenzhong.duan@intel.com>
 > ---
->  drivers/pci/probe.c | 21 ++++++++++++++++++++-
->  1 file changed, 20 insertions(+), 1 deletion(-)
+>   arch/x86/include/asm/shared/tdx_errno.h |   2 +
+>   drivers/virt/coco/tdx-host/tdx-host.c   | 301 +++++++++++++++++++++++-
+>   2 files changed, 299 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index bccc7a4bdd79..2fad89ca594c 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2578,8 +2578,27 @@ bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
->  	    *l == 0x0000ffff || *l == 0xffff0000)
->  		return false;
->  
-> -	if (pci_bus_rrs_vendor_id(*l))
-> +	if (pci_bus_rrs_vendor_id(*l)) {
-> +		/*
-> +		 * RRS (Request Retry Status) is a PCIe link-layer mechanism
-> +		 * where a downstream device sends a RRS completion status, and the
-> +		 * Root Port (with RRS Software Visibility enabled) translates
-> +		 * it to Vendor ID 0x0001 for the driver, indicating the
-> +		 * device is not ready.
-> +		 *
-> +		 * Therefore, RRS is a root port feature, and devices on the root bus,
-> +		 * for example the root port itself have no upstream PCIe link,
-> +		 * so they can never legitimately return RRS.
-> +		 */
-> +		if (pci_is_root_bus(bus)) {
-> +			pr_err("pci %04x:%02x:%02x.%d: invalid Vendor ID %04x (RRS, reserved by PCI SIG) on root bus, buggy device\n",
-> +				pci_domain_nr(bus), bus->number,
-> +				PCI_SLOT(devfn), PCI_FUNC(devfn),
-> +				*l & 0xffff);
-> +			return false;
-> +		}
->  		return pci_bus_wait_rrs(bus, devfn, l, timeout);
+> diff --git a/arch/x86/include/asm/shared/tdx_errno.h b/arch/x86/include/asm/shared/tdx_errno.h
+> index 8bf6765cf082..7db04fe30378 100644
+> --- a/arch/x86/include/asm/shared/tdx_errno.h
+> +++ b/arch/x86/include/asm/shared/tdx_errno.h
+> @@ -29,6 +29,8 @@
+>   #define TDX_EPT_WALK_FAILED			0xC0000B0000000000ULL
+>   #define TDX_EPT_ENTRY_STATE_INCORRECT		0xC0000B0D00000000ULL
+>   #define TDX_METADATA_FIELD_NOT_READABLE		0xC0000C0200000000ULL
+> +#define TDX_SPDM_SESSION_KEY_REQUIRE_REFRESH	0xC0000F4500000000ULL
+> +#define TDX_SPDM_REQUEST			0xC0000F5700000000ULL
+>   
+>   /*
+>    * SW-defined error codes.
+> diff --git a/drivers/virt/coco/tdx-host/tdx-host.c b/drivers/virt/coco/tdx-host/tdx-host.c
+> index 06f3d194e0a8..4d127b7c2591 100644
+> --- a/drivers/virt/coco/tdx-host/tdx-host.c
+> +++ b/drivers/virt/coco/tdx-host/tdx-host.c
+> @@ -14,6 +14,7 @@
+>   #include <linux/pci-doe.h>
+>   #include <linux/pci-tsm.h>
+>   #include <linux/tsm.h>
+> +#include <linux/vmalloc.h>
+>   
+>   #include <asm/cpu_device_id.h>
+>   #include <asm/tdx.h>
+> @@ -32,8 +33,43 @@ MODULE_DEVICE_TABLE(x86cpu, tdx_host_ids);
+>    */
+>   static const struct tdx_sys_info *tdx_sysinfo;
+>   
+> +#define TDISP_FUNC_ID		GENMASK(15, 0)
+> +#define TDISP_FUNC_ID_SEGMENT		GENMASK(23, 16)
+> +#define TDISP_FUNC_ID_SEG_VALID		BIT(24)
+> +
+> +static inline u32 tdisp_func_id(struct pci_dev *pdev)
+> +{
+> +	u32 func_id;
+> +
+> +	func_id = FIELD_PREP(TDISP_FUNC_ID_SEGMENT, pci_domain_nr(pdev->bus));
+> +	if (func_id)
+> +		func_id |= TDISP_FUNC_ID_SEG_VALID;
+
+This check implies pci_domain_nr returning 0 is considered invalid. 
+Other callers in the kernel seem to not care, they just use the domain 
+nr, so is this check spurious or intentional ?
+
+> +	func_id |= FIELD_PREP(TDISP_FUNC_ID,
+> +			      PCI_DEVID(pdev->bus->number, pdev->devfn));
+> +
+> +	return func_id;
+> +}
+> +
+> +struct spdm_config_info_t {
+> +	u32 vmm_spdm_cap;
+> +#define SPDM_CAP_HBEAT          BIT(13)
+> +#define SPDM_CAP_KEY_UPD        BIT(14)
+
+nit: move those defines above the struct definition, they just break the 
+reading flow as it is.
+
+> +	u8 spdm_session_policy;
+> +	u8 certificate_slot_mask;
+> +	u8 raw_bitstream_requested;
+> +} __packed;
+> +
+>   struct tdx_tsm_link {
+>   	struct pci_tsm_pf0 pci;
+> +	u32 func_id;
+> +	struct page *in_msg;
+> +	struct page *out_msg;
+> +
+> +	u64 spdm_id;
+> +	struct page *spdm_conf;
+> +	struct tdx_page_array *spdm_mt;
+> +	unsigned int dev_info_size;
+> +	void *dev_info_data;
+>   };
+>   
+>   static struct tdx_tsm_link *to_tdx_tsm_link(struct pci_tsm *tsm)
+
+<snip>
+
+> +
+> +static void *tdx_dup_array_data(struct tdx_page_array *array,
+> +				unsigned int data_size)
+> +{
+> +	unsigned int npages = (data_size + PAGE_SIZE - 1) / PAGE_SIZE;
+
+nit: There's DIV_ROUND_UP
+
+> +	void *data, *dup_data;
+> +
+> +	if (npages > array->nr_pages)
+> +		return NULL;
+> +
+> +	data = vm_map_ram(array->pages, npages, -1);
+> +	if (!data)
+> +		return NULL;
+> +
+> +	dup_data = kmemdup(data, data_size, GFP_KERNEL);
+> +	vm_unmap_ram(data, npages);
+> +
+> +	return dup_data;
+> +}
+> +
+
+<snip>
+
+> +
+> +DEFINE_FREE(tdx_spdm_session_teardown, struct tdx_tsm_link *,
+> +	    if (!IS_ERR_OR_NULL(_T)) tdx_spdm_session_teardown(_T))
+> +
+>   static int tdx_tsm_link_connect(struct pci_dev *pdev)
+>   {
+> -	return -ENXIO;
+> +	struct tdx_tsm_link *tlink = to_tdx_tsm_link(pdev->tsm);
+> +
+> +	struct tdx_tsm_link *tlink_spdm __free(tdx_spdm_session_teardown) =
+> +		tdx_spdm_session_setup(tlink);
+
+Is the free() really needed here, either the session is correctly setup 
+and tlink_spdm is returned. But if session_setup() files then what about 
+calling spdm_session_disconnect() on an unestablished session?
+
+
+> +	if (IS_ERR(tlink_spdm)) {
+> +		pci_err(pdev, "fail to setup spdm session\n");
+> +		return PTR_ERR(tlink_spdm);
 > +	}
->  
->  	return true;
->  }
-> 
+> +
+> +	retain_and_null_ptr(tlink_spdm);
+> +
+> +	return 0;
+>   }
+>   
+
+<snip>
+
