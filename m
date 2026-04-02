@@ -1,97 +1,182 @@
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C230A248896;
-	Thu,  2 Apr 2026 18:33:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775154787; cv=none; b=HQA73tZVeTCEwMhc5ND0OFIi9TVU52c+0dE906IDIV/xv+sxsCbOZ4fm/5vQDlMX/ITFZaUUW0kBP9E5OGykDkd/vWm6GZMirWrS/pDGoqJMbF0sT0vtMV8M/mMTTym0DI4s6iWf6u+e7s5NZO/rdtt/q6Q8Iu+4Wo3TecS87RQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775154787; c=relaxed/simple;
-	bh=+h1S6IY/LtS6nxa6y8su80IJrFMDgvebuxUTacdGUDM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YuihQxFf4g1MXEwPqSyD8xGYzwW2usTzYTgLGrFMixAHwvOvvwvLdTltHcVMyg4mTk8jEV2OckfIewdixh1OT1hA3cUSrHzEkNDzH2zIsNQ2hr1ihgQK05GroCc+YU9DhlQaUjhBRhPetyva8QVcNApk7U2/5P3Vduh/8qtI3+Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
-X-CSE-ConnectionGUID: jFfU/CcpTiu7OpgY2IVAaQ==
-X-CSE-MsgGUID: yDG8MbmLSH+gGNnoJiOQLA==
-Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie6.idc.renesas.com with ESMTP; 03 Apr 2026 03:33:04 +0900
-Received: from ubuntu.adwin.renesas.com (unknown [10.226.92.32])
-	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 19AB7400068F;
-	Fri,  3 Apr 2026 03:33:00 +0900 (JST)
-From: John Madieu <john.madieu.xa@bp.renesas.com>
-To: claudiu.beznea.uj@bp.renesas.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org
-Cc: robh@kernel.org,
-	john.madieu@gmail.com,
-	bhelgaas@google.com,
-	linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	John Madieu <john.madieu.xa@bp.renesas.com>
-Subject: [PATCH v2] PCI: rzg3s-host: Treat link-down as -ENODEV instead of error
-Date: Thu,  2 Apr 2026 20:23:53 +0200
-Message-ID: <20260402182354.12515-1-john.madieu.xa@bp.renesas.com>
-X-Mailer: git-send-email 2.43.0
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11020092.outbound.protection.outlook.com [52.101.201.92])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10B1913FEE;
+	Thu,  2 Apr 2026 18:49:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.92
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775155773; cv=fail; b=p0OiyIjvENh1RyLA6mdvC/xoMSIFID3mU4CrihDKZvEiwHe52sr1qWtS20fP8I/pMieheflAON0y0VbiD11RzNyfEvoJdcAg8OgfMA74pqMUzi2Wa3zAtQeyp+RSohvE0MAHWUIWJThOIHtXPTsCCauHxtpNNpe7pmghdxuQFOI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775155773; c=relaxed/simple;
+	bh=cjBAteypZZligV8rxpCStTjdsd3Y1JloU5xHOF4dgAE=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=QQwct9DksUTQVbelfeZ/ReyyyUCdxlD83NjDHW+YSuRY60Nec4WPqyx010bXyNQCAU75+Mv0CJa4wNtkT6D35oFF7j+jRSRgbPchGniReqBfm0/bh5c+ZOzFHu6wJccThGfoLfZOC++i/usXk22Ooa/1nihBwmXGHv3g4mkd14w=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=microsoft.com; dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b=VTnpKIq5; arc=fail smtp.client-ip=52.101.201.92
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microsoft.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="VTnpKIq5"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=QKX5LkpVCgi53R5tY83scYWQqA1wTGuPb5eEhj9YG6TUV9QapKocYyFfasewybaXMJMkHmFkgSkIU2hdgLQkhS7apWJD8c9yb3nly4Q8q4wdHpT12Ajj1KNd+LhU2QVNajAI/05ow5KLSGOiwmXkVZoa7HfBm/VrxQDAV0It8PS+6U5j8Hrn1Hf+8OhrbS1vwXzyRBUBrvctpKQOL/3+DTyrCDRB/3yPozT2L0NEYwassgyeA6jg1yFkS7hrIo/PosAX8rXCpOo/h67cn9AGexxu6aWhoc8hZowOMqYN/X6BUuJ6wk1m8oWNBnKs/RQELMBWrKC4BJRw78FQnkwpEg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Mu0Jq9y4DvwLYip+tmR90/Sboo6ZKO5c+IZXPo0fHT8=;
+ b=Ol0htvpaPz1j3NXT21wY2tb3maVNCjOCGw/DuSRSEDXXgOMuAFKE98t5SywgYzI2KVkoIHY0sSxJNhXz8hR2HNK39xsmADvOQ6yS4q6/ljcsg63dxcN6az9yKdNaxKZUHc+eTqCxgfsfsxNq94Q3XGMLjHYbvPVgQ+0bv5vaJ5nHLDiV+CQJa0y1NP3DPcXdQyHCpQg4d2MN+f1+loEQ3SBHlhVIHVBRDB+gR2Jaj7gu/Dgsqm7HX5m5tuxEUtqm/WjOGVVXGU7dkFscSSpgTmQyv6td5dggpwhxQqeNk/UaRWoiS6XUdsTUdqFS9xRn7QDhPsxGVeTB45bAZItpyw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Mu0Jq9y4DvwLYip+tmR90/Sboo6ZKO5c+IZXPo0fHT8=;
+ b=VTnpKIq56nqnd2IIze7XTj65jr9jqm9xM6tSM7BL540XSY/3hKWjedv30gJZb2r1+2KIjwnQiaAzL2xw/IgFK01Dlt1o/91Ted9ikrIYgtlfD1BZ7elCQ1xow2nlcB0wbls8P/u6VPZb/+mURVZ+GgeKnGpnKJo2af/lSlpJY7g=
+Received: from SA1PR21MB6921.namprd21.prod.outlook.com (2603:10b6:806:4a7::11)
+ by SA1PR21MB6272.namprd21.prod.outlook.com (2603:10b6:806:4ac::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.15; Thu, 2 Apr
+ 2026 18:49:28 +0000
+Received: from SA1PR21MB6921.namprd21.prod.outlook.com
+ ([fe80::51cf:497c:e5df:f6d]) by SA1PR21MB6921.namprd21.prod.outlook.com
+ ([fe80::51cf:497c:e5df:f6d%2]) with mapi id 15.20.9769.014; Thu, 2 Apr 2026
+ 18:49:28 +0000
+From: Dexuan Cui <DECUI@microsoft.com>
+To: Michael Kelley <mhklinux@outlook.com>, Matthew Ruffell
+	<matthew.ruffell@canonical.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>, Haiyang Zhang
+	<haiyangz@microsoft.com>, Jake Oshins <jakeo@microsoft.com>,
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, KY Srinivasan
+	<kys@microsoft.com>, "linux-hyperv@vger.kernel.org"
+	<linux-hyperv@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, Long Li <longli@microsoft.com>,
+	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "mani@kernel.org"
+	<mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>, "wei.liu@kernel.org"
+	<wei.liu@kernel.org>
+Subject: RE: [PATCH] PCI: hv: Allocate MMIO from above 4GB for the config
+ window
+Thread-Topic: [PATCH] PCI: hv: Allocate MMIO from above 4GB for the config
+ window
+Thread-Index:
+ AQHci0NePIGSa/9NGkCUvIR93cd3gLVdwUXwgADOvQCAABBuYIAAnjqAgAALUwCAbTsFEA==
+Date: Thu, 2 Apr 2026 18:49:28 +0000
+Message-ID:
+ <SA1PR21MB6921BADC87FF09BA8231800DBF51A@SA1PR21MB6921.namprd21.prod.outlook.com>
+References:
+ <SN6PR02MB4157545DAFDCCE0028439DB2D497A@SN6PR02MB4157.namprd02.prod.outlook.com>
+ <20260123053909.95584-1-matthew.ruffell@canonical.com>
+ <SN6PR02MB41573CD2EA6CD82A0C238F66D494A@SN6PR02MB4157.namprd02.prod.outlook.com>
+In-Reply-To:
+ <SN6PR02MB41573CD2EA6CD82A0C238F66D494A@SN6PR02MB4157.namprd02.prod.outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=4d1d8d16-9b07-46b6-8a12-10b2e002d5f7;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2026-04-02T18:23:13Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Tag=10,
+ 3, 0, 1;
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microsoft.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA1PR21MB6921:EE_|SA1PR21MB6272:EE_
+x-ms-office365-filtering-correlation-id: 0073102a-9e9d-4923-0eb7-08de90e891ea
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|1800799024|366016|7416014|376014|38070700021|22082099003|18002099003|56012099003;
+x-microsoft-antispam-message-info:
+ ODcceD75LddH4NS6vVObezD+/EjlexO7zDRFhQ9BTNvStWud+gwkkwfh2X6HzMWCGZwRL3jgmyd32Fp+EP02hz8Q/f1DCQHQGTFAD33sOmEB3hYGKE4ivBVw8argAAlvrggftHIHKMyrDvZ/f0N0cSwa/BUN45z3dqay2Js4bl8x9PT01bPq/OhW8VuO8GHVuWzBD/oah2zQ3uphVmILt4bcszMTLpRygndNOE8bYtfH8Lmgv5uLCCOhHGr25pfEhnq/HDFtO3sT9snh/g7CzJOHYDm9585Aw44O2b1eIGzGHugmjI3OlR7AS0HPhaqGMRjqrxvyL83J1Zm6aNCICh0R6+GWzpy4kHG5x4Q+yZhI62hoU/I/4E3akWu15CCS0j8lvn653F+ictVpT4jr/9JsBzId6NxFUeX4lt589WBXWuPO5gGkt2k5osRiddNWUJbUeAT6+SBcSzsVK9e4Ckc4OcxSP0Gb6b1vEJ0Kk+vZwsNLH42OYlMHegVWaMQ44rD+zadWJmPB960stPbIrClH3k2CrnxRF+BobBfIMKGiUnMIkRT1rJqmyLItmXhB9Ou4vYF4gUK0VDAakl04VQjNCkhGx1t3acwxVj3kh7G73iCicYilBa0vNpK24V6tH5Y7YdoXixfZbxJG9i6i5rukgOj5QlWjEDLBdCk6CjwG4gDzhd/RjKWmGe3UwgQii3FPlu2r9PT63qWrWUV8O/J3lEBZkbB/d1cVHqP/U1hOECreoT6KWB1cCMaFH8za
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR21MB6921.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(38070700021)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?I2p86R9YdtHvGoDeD5XqEPps7nk9AVguu8AU/cyH3zXwXFzmA9cTB9dj5aoC?=
+ =?us-ascii?Q?Al/AwADOJUYFnovlrEa0GCj0g6jZcitLZMZV4Lb3g+Ww+Akj8HLJG17j8tmQ?=
+ =?us-ascii?Q?s67AOh13bxLpqwv4XTaMQHd2IILZ1YdESdH9mnj7bZpvtZG4rfwktXyGL6yT?=
+ =?us-ascii?Q?rQIO4UwyTvErORQXLNpCIPUjuXtpXCTAcgxIdjcGzrcYoenE024fbi0Poo+2?=
+ =?us-ascii?Q?cmI0zmaso0VNn0vcNZD93UHbi+sN/6j0w0L94ENHktyq/EOOCJEjOXrSDFMo?=
+ =?us-ascii?Q?g92kjtElJMMTi6973XL+wC8Z1l9t2bLWQQEAZ2sregYlm8ftTbbpXFMR1ep4?=
+ =?us-ascii?Q?V0q9CrSxZASfKPy5lPbGy4iL6N7mFLJ30b68V/x36jsdCVMb5fWmp/A8KqXs?=
+ =?us-ascii?Q?rwdlWMA7OClxHozqxh3Y1zZbfS70FEeoLLLjdpnr7ER1tOCe0EMjF8yL65HM?=
+ =?us-ascii?Q?MzdbSy70SQLUlzs7ASdPgctJ80ET81gCoPWpH5P8DEakRNzF+5ab/5Az8I8Z?=
+ =?us-ascii?Q?cq6Xs94mXryFP/WBn8+A5K0pRhF4hGGaM1ik4jpFUoTFgb88+Qb9hkhO/Pio?=
+ =?us-ascii?Q?98tUCGj9FNJlCuITU5zr2ne7UcZ9aM09lCw5tASHEG6FHx/jnIAA0d7iQw1O?=
+ =?us-ascii?Q?aw/5Xt2mSds9mrcyRDnfTOvF7lbGZh0464rt03MinG49omaFMlF/g5Kb+qOQ?=
+ =?us-ascii?Q?UUoSR+XKOUxCOpPEMKTt/yEJMFV0pUF9nyccdm0eSDq6BFZEK96+gGNQQE5a?=
+ =?us-ascii?Q?F/f3LZBIB41LuCF+roeBxdLYy9/1zOgtmJJOF7bxwHtGC58V2YdCdR1fGfiM?=
+ =?us-ascii?Q?YwP5shs8BTd3SOgI45t/4aGpC3sju78qqYV//RL4lhq+YCHoca4NvXCZt2wJ?=
+ =?us-ascii?Q?XmKQwqUYsU9vyLbsNam2FsGsmburvejfGaQ7mUrQlkkxrCBkYkP/ERtdjs5I?=
+ =?us-ascii?Q?+dCiVUWk16FOnr8fzGK7gTiXb5NW2G3CokFdP8te8a6D1dhfH4GRO8bQYRbE?=
+ =?us-ascii?Q?dYOgQSSw5+/TRCMISCW6SPFkDmFZPaVFkntObXbnU/jEOZq3ITngi1iHRamj?=
+ =?us-ascii?Q?wyc/miXwA+ft01IdQ4uXj0Ze7v91sLdWNI6LMtq8hQ1J7lhZlaMxsw3DjNys?=
+ =?us-ascii?Q?1wkLzIXkvZ5JKeX4RJaeZ5A2GDgoWzS6N8Y7Qvt+Dt/bF1gLGX7tUL5IjM3h?=
+ =?us-ascii?Q?ntopn8k6/z4CWKZTL+iIKbqlQe+eyi6bC6mpAw8euPM3AWkdR2hRfTDc7Cwp?=
+ =?us-ascii?Q?7/E/R9Cjvn/MBGcZOXTr0Bfinja9jof5E2E4pEnkMAeiEEflV8nsYb3n76X6?=
+ =?us-ascii?Q?2vEfw7uJOQQj5tFWcYpww0eNplWbAJOoeCDosTHAu5/+HcjsN9oHx1+LjbXm?=
+ =?us-ascii?Q?4J4/ME4rxezsGTx3B/P5znSzziLz3J/F+KebeSs07IRgjuOvxpJMn5iryhkL?=
+ =?us-ascii?Q?uyHT1WsnOqmkNL22LgV8zumMPZmnku07ioeZGQmuW0d8u5xGBFZjqruMobyn?=
+ =?us-ascii?Q?2iHepTo6My+Y2Aou95xndGa788r2KZXaQwIT6GunVOYs7Gz9acpU/pEWunLp?=
+ =?us-ascii?Q?gIUSi/GARYchDi7JFcTxoIP6UWfCdeR2IEW3nsnhGDd8EIoe9GwJUNgD0aJJ?=
+ =?us-ascii?Q?bwmqOAR0NchdA7+g/H2HrEiqCmcNGAkJrr2iWnoIIFBVxtzOxuaK9uJC3HXJ?=
+ =?us-ascii?Q?ISFrUuYU0tMg1Y/gOy6IfbZABTB8Eod0Z7XN+XVL+1qDiAqX?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR21MB6921.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0073102a-9e9d-4923-0eb7-08de90e891ea
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Apr 2026 18:49:28.7446
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: vpAnx81dBVHXNQcOrl3XmVbDKT5jywHXFeF17Pt4v30f4Bwbnwrn6gC4Us4974QleYNTqcpLctb5U2Ps4pGfIg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR21MB6272
 
-rzg3s_pcie_host_init() failing to establish a PCIe link does not
-necessarily indicate a hardware or driver error; it may simply mean no
-card is inserted. Demote the message from dev_err_probe() to dev_info()
-and return -ENODEV so the driver defers gracefully rather than printing
-a spurious error.
+> From: Michael Kelley <mhklinux@outlook.com>
+> Sent: Thursday, January 22, 2026 10:39 PM
+>  ...
+> This is good info, and definitely a clue. So to be clear, the problem rep=
+ros
+> only when kexec_load() is used. With kexec_file_load(), it does not repro=
+. Is
+> that right?
 
-Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
----
+Yes and no. The answer depends on the combination of the version of
+kdump-tools, and the architecture (x86-64 vs. ARM64), and the hypercall
+(KEXEC_LOAD vs. KEXEC_FILE_LOAD)  and the Linux kernel version (there
+have been patches fixing and breaking kdump over the past several years...)
 
-Changes in v2:
- - Dropped Rb tag from Geert as patch structure changed
- - Moved link-down handling into rzg3s_pcie_host_init() instead of
-   masking all errors in rzg3s_pcie_host_setup() (Claudiu)
- - Kept dev_err_probe() for real init failures, only suppress for
-   -ENODEV (link down)
+Please see the reply I posted about 2 hours ago for all the details.=20
 
-v1:
-  - https://lore.kernel.org/all/20260401143347.8463-1-john.madieu.xa@bp.renesas.com/
+> I saw a similar distinction when working on commit 304386373007,
+> though in the opposite direction!
+I think this happens because you're using Ubuntu 20.04:
 
- drivers/pci/controller/pcie-rzg3s-host.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+> https://lwn.net/ml/linux-kernel/SN6PR02MB41572155B6D139C499814EB7D4F12@SN=
+6PR02MB4157.namprd02.prod.outlook.com/
+> To further complicate matters, the kexec on Oracle Linux 9.4 seems to
+> have a bug when the -c option forces the use of kexec_load() instead
+> of kexec_file_load(). As an experiment, I modified the kdumpctl shell
+> script to add the "-c" option to kexec, but in that case the value "0x0"
+> is passed as the framebuffer address, which is wrong.
 
-diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-index d86e7516dcc2..0acc21981ee9 100644
---- a/drivers/pci/controller/pcie-rzg3s-host.c
-+++ b/drivers/pci/controller/pcie-rzg3s-host.c
-@@ -1384,8 +1384,11 @@ static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
- 				 PCIE_LINK_WAIT_SLEEP_MS * MILLI,
- 				 PCIE_LINK_WAIT_SLEEP_MS * MILLI *
- 				 PCIE_LINK_WAIT_MAX_RETRIES);
--	if (ret)
-+	if (ret) {
-+		dev_info(host->dev, "PCIe link down!\n");
-+		ret = -ENODEV;
- 		goto config_deinit_post;
-+	}
- 
- 	val = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT2);
- 	dev_info(host->dev, "PCIe link status [0x%x]\n", val);
-@@ -1655,7 +1658,9 @@ rzg3s_pcie_host_setup(struct rzg3s_pcie_host *host,
- 
- 	ret = rzg3s_pcie_host_init(host);
- 	if (ret) {
--		dev_err_probe(dev, ret, "Failed to initialize the HW!\n");
-+		if (ret != -ENODEV)
-+			dev_err_probe(dev, ret, "Failed to initialize the HW!\n");
-+
- 		goto teardown_irqdomain;
- 	}
- 
--- 
-2.25.1
+Before commit 304386373007, hyperv_fb relocates the framebuffer
+MMIO base,  so KEXEC_FILE_LOAD doesn't work for you, because the kdump
+kernel's screen_info.lfb_base still points to the initial MMIO, and hence
+the kdump kernel's efifb driver fails to work properly; KEXEC_LOAD works
+for you because the kdump-tools v2.0.18 in Ubuntu 20.04 doesn't have that
+commit (see the other reply from me)
 
+The kexec on Oracle Linux 9.4 has that commit, and it's not buggy -- unless
+we'd like to claim that all the recent kdump-tools versions are buggy :-)
+
+Thanks,
+Dexuan
