@@ -1,214 +1,268 @@
-Received: from MA0PR01CU012.outbound.protection.outlook.com (mail-southindiaazolkn19011034.outbound.protection.outlook.com [52.103.67.34])
+Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022122.outbound.protection.outlook.com [52.101.101.122])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E98C93A4528;
-	Thu,  2 Apr 2026 12:26:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.67.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02CF1384235;
+	Thu,  2 Apr 2026 12:57:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.122
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775132816; cv=fail; b=CLl1o3YWP4PdVlPi1rBwi5pHdei2cyYsuO/+06MGt0cwM0/a7DUCsRfbqmjcijw9Hralwkx8tiZtHSCtZObJ7y8zOm84htla48sKKmu7te6E3dZA28cpag/EbPdVldPPVnDDAwihSjqVPSa5CSXrA4rF2GXZhgqB0HieMOR1kAI=
+	t=1775134644; cv=fail; b=ByJ89wkURhEwpHnQazm/H3OjiwMRt2Kt3XrWOFe28ylQb/Zx0IW2GvWAn00hjh+HZdec7pdxscHpLszb8gjwJaze914syYtoyMEwLRdJ7P5cD5G46Jjsq0pzzIVgK5P8Kq+7mXW24Giir9AqDg72gt47H/QptIL/X6ne/EsIG9w=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775132816; c=relaxed/simple;
-	bh=gz+4OkhC0y/aAX6JADn2I/yoVRc3ktnzkV2f00iYLWU=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=HGRGs9FbkNOQZkgb0LSE8cZOZrMgfcCfgGwvodsvlo36nMwCSPyPMOHN9wLKzNFWBJlbbESTyRRDbolv/NZwQqt+7K8jfVhfCkf5Vgn906M27V8Z30xhhCMa1DniozzsIFzFVrkcInmIw45MBQRaMor1CeaogE0Iicrzo6GcYJk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=X2oI37X/; arc=fail smtp.client-ip=52.103.67.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	s=arc-20240116; t=1775134644; c=relaxed/simple;
+	bh=P+VdVS8TO1+loyNyUaX5vjyZ+7EH83suDqQG95nWA0c=;
+	h=Content-Type:Date:Message-Id:From:To:Cc:Subject:References:
+	 In-Reply-To:MIME-Version; b=kmNO4l0SFvB29diFmVNzGU0ucxxGaAdOg7DmgE/IhFw732beF50lCpAQ26JqhgcFGPLv4pZ4atPgMpJ3kgt+60Mz3ZMFjUgupzVazVmvmk5Ye+FeTCcoXRdMIode9Lf4hybeau8NeqNBfeMxSLrk3ok2WWKf/EI6DwS1HMk2+ZY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=QnYqZ+Tb; arc=fail smtp.client-ip=52.101.101.122
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="X2oI37X/"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="QnYqZ+Tb"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=j/kKN5jz2DJgWPunTsZzW4CkgZh9LgAb16xLxNFcyOxtwfwNpYfAbvNZy2u1t/kN88UuOgC6aHUHeVn9XRzt+MM1UTQHHN546yHhFxHu0s7VGCjmPll6jaOqPdKOg3SDb6A1pCNiXsiHtx4oZTA4qagSqZTljKtc+57bKKOd1EkxWwCR4gq40ODXSzenMxHLnEoAwxZBR3ASPkWK96UieKFBkyHEz34MPWenCxvZIpo26PsK2rIq4Q3xNo4mH0i/X9fERsqwULsaxM44piUxL3Mcqnnk/FUF5NeC0d57UGXELJjaIWLf6xT66WQBq5FmomR7VMMmNUB2MKR2ZT5GCA==
+ b=HOshInJuihJlRDOHOQHheHo9VBlge9+snemxNZaPgonQx1+OLcP6ydBwd7t+KyjuW8yY76IDxScC62FU+TXd9VK12wl2TWSNWDRYiw4GpvVtK9iTZb0jLBpTsE9wQ63jWGrkYfJGJsQRnQOckSy9smxWnO7UTmqMRcm0y7y8q8ixf7sHDTDKgAox9jH4edm9WhLD3JmnlR/FGgz3HIpsTE/9K5BmIxykHgN4qUpeqyTeusIwTcx+yedTNH9XGHi4WBmXUEAV+58s2PUL7eUex8329eGpxU4IMxBlNcHfNq8EQtCn/HOPUIKPQgtQdpnge4nTsHobCZ1Boa2mmXCV+Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=iuKRMVYH9l9O6NgkOG1ASb81cbX78sU88JhsrqoVoeg=;
- b=lJyOgeRw34dJs5bpsLb0LYGI7q4+/ioJ6jdSPetmsuKshdWKL4u6K3nV/HXfpHMZhRpaoxUncmGWwX9Xcv0oz7xvwpSw19XdKnwGv7Xgm7BVabHDFxqlWy0W5rJe1COnld/ZfiudEvITCpayyGKFnGHPVzuk1Qium/UnRJsMHqRrX1w96QXx6K590DaQvvCSz8+SnrWbgq2dG4tGF5FFoG7fLlHvzt1VnvSGLhj8iSfFFk9tqGtNt5DIXSdUkIhmaXUHyhdrhkMWdVI22U7gDIT7N3BRQnI/oLZSOLIl9oW8SZK/G8CIw9W7aAPMqSqy+iunrB2Jb+NaR5gd/BdTHA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ bh=jEsE3x6kP3e5/onLtqPyykZT980R7FIUlmfLfnh2p5k=;
+ b=WXKhvC9iA13ZrBH6c7XrOeJ2URbgts+ckGqeYFrTnWOOpc0jMtDCDAps8QQwewLYUPrzXshACqq+UwGuItLNhGxKCzgtgthYuNqQpxQL3SWfQFeC3kFPe3TOG8CC3qHJmRSf3gHI6VQ0L++DEtMPuA6BZRHZx2VrEEXaCggoaznB0TqsQ2dllQXyXomQ+qjtqcs+D5L68mhAqgpzPNIzextckYMGX7dP+5ska2npJknHqtpXqlUj4CLVLeg1YWv/1pXUx1Z/aYqCcoBvtf0EGzJrShtfNvIwOhL2TOzrrBotCxiu+4Bmc1HoqoRuRMKof2SVdlq8TyKm3Pc13D5kUQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iuKRMVYH9l9O6NgkOG1ASb81cbX78sU88JhsrqoVoeg=;
- b=X2oI37X/tQcm+pTpzBaPJuBAwHsOnUDNaoSd9FNP+UNGIzlxVZ9r9tWv2YXEMOB+A62NqiMVUPSSG2U2jeG5r4izgHRYfQAy/LJBaNnseXSGiVdmp4oen7ILxeytXQdmtv3Lc1OJZWq5fplHzmRHHbaXtIJHV6FkZySmXnHtfx+PJSv3zV5aRYcpk5cBo1Vx+8m93+OcSWyySg307v8uKXoxWRyP7hYZVkfx1evT3CysPk1UnGaSovUwqtnpOVgJwidTlnVgsV59jJCX9CkRfpxJajQOTdJqCY8vQ95a9/FsWaWtdb4bvy59ZpqxtEtuvtYfxTl25dFbQ1w/1deNfQ==
-Received: from MA5PR01MB12500.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:a01:1e9::18) by MAXPR01MB4327.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:a01:3::12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.18; Thu, 2 Apr
- 2026 12:26:48 +0000
-Received: from MA5PR01MB12500.INDPRD01.PROD.OUTLOOK.COM
- ([fe80::8a6b:3853:1bc:67e4]) by MA5PR01MB12500.INDPRD01.PROD.OUTLOOK.COM
- ([fe80::8a6b:3853:1bc:67e4%6]) with mapi id 15.20.9769.016; Thu, 2 Apr 2026
- 12:26:48 +0000
-Message-ID:
- <MA5PR01MB125004EEB0476CC599978C844FE51A@MA5PR01MB12500.INDPRD01.PROD.OUTLOOK.COM>
-Date: Thu, 2 Apr 2026 20:26:42 +0800
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/2] PCI: sg2042: Avoid L0s and L1 on Sophgo 2042 PCIe
- Root Ports
-To: Yao Zi <me@ziyao.cc>, Manivannan Sadhasivam <mani@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Siddharth Vadapalli <s-vadapalli@ti.com>, Hans Zhang <18255117159@163.com>,
- Kishon Vijay Abraham I <kishon@kernel.org>,
- Manikandan K Pillai <mpillai@cadence.com>,
- Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
- Inochi Amaoto <inochiama@gmail.com>, Han Gao <rabenda.cn@gmail.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260227181925.52475-1-me@ziyao.cc>
- <20260227181925.52475-3-me@ziyao.cc>
- <wykv2qz7lt3v67n3hjjqlprjbhlv7eur5wiw2reagvu2sq3dhc@4y5x2yok4kho>
- <acY9kUDAuexKy19C@pie>
-From: Chen Wang <unicorn_wang@outlook.com>
-In-Reply-To: <acY9kUDAuexKy19C@pie>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: SG2PR03CA0085.apcprd03.prod.outlook.com
- (2603:1096:4:7c::13) To MA5PR01MB12500.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:a01:1e9::18)
-X-Microsoft-Original-Message-ID:
- <5d268df0-1d7f-4771-9b37-352b9c053889@outlook.com>
+ bh=jEsE3x6kP3e5/onLtqPyykZT980R7FIUlmfLfnh2p5k=;
+ b=QnYqZ+TbEzW03SlaVSGS5EFNM0DRru8d88h27GxNp6Op9a+wV5WfIzVwKsWrhb8ZCgycrEk0L909Eh0FmHkXmZw89blYPciHrQx7OcLhkNSrn0+H7ifk/SOUt0Wg/aoqKvUyHqVSGJbNHMZnVDh7Y1FHO5C/ty74oA6ooGDPB5I=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
+ by CWLP265MB6960.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:1fd::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.17; Thu, 2 Apr
+ 2026 12:57:12 +0000
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.20.9769.016; Thu, 2 Apr 2026
+ 12:57:12 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 02 Apr 2026 13:57:11 +0100
+Message-Id: <DHIOPJTS4QBX.3805F1AFFZAOK@garyguo.net>
+From: "Gary Guo" <gary@garyguo.net>
+To: "Andreas Hindborg" <a.hindborg@kernel.org>, "Gary Guo"
+ <gary@garyguo.net>, "Gary Guo" <gary@kernel.org>, "Miguel Ojeda"
+ <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>, "Trevor Gross"
+ <tmgross@umich.edu>, "Danilo Krummrich" <dakr@kernel.org>, "Greg
+ Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, "Daniel Almeida" <daniel.almeida@collabora.com>,
+ "Bjorn Helgaas" <bhelgaas@google.com>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Cc: <rust-for-linux@vger.kernel.org>, <driver-core@lists.linux.dev>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/8] rust: io: generalize `Mmio` to arbitrary type
+X-Mailer: aerc 0.21.0
+References: <20260323153807.1360705-1-gary@kernel.org>
+ <_GdG2BR4qqT-8cwpiurteKJJr58WPTCsM6UyCU0NsA1DK6yTNMiSGOBZlm79OMaLm_tIMM7feHDx7mKljWea4A==@protonmail.internalid> <20260323153807.1360705-3-gary@kernel.org> <87o6kayc5t.fsf@t14s.mail-host-address-is-not-set> <bhB8A8DQ2KuT2rRe-Niqt5dPHRePikSsZfFL2XCGm9ABnQEpzHCN7f_1CfKvSOhXffGqseuceJL6XoBlwA_8aQ==@protonmail.internalid> <DHCSCWVI38X2.2K7DBY0YPBS5N@garyguo.net> <87bjgaxxe3.fsf@t14s.mail-host-address-is-not-set>
+In-Reply-To: <87bjgaxxe3.fsf@t14s.mail-host-address-is-not-set>
+X-ClientProxiedBy: LO4P123CA0259.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:194::12) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MA5PR01MB12500:EE_|MAXPR01MB4327:EE_
-X-MS-Office365-Filtering-Correlation-Id: 633feed4-bef6-4c89-c330-08de90b31c35
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|CWLP265MB6960:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7c195955-266c-4c94-84d2-08de90b75b75
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:14566002|24121999003|8060799015|23021999003|25031999004|22091999003|15080799012|1474299035|5072599009|6090799003|461199028|51005399006|19110799012|440099028|3412199025|26121999003|40105399003;
+	BCL:0;ARA:13230040|366016|1800799024|10070799003|376014|7416014|921020|56012099003|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?SlZBR3UwZzErcE1vMTB2VmNuQjJuNUZnYStoYjRqQ21taW9HK1JicC9mNUFO?=
- =?utf-8?B?Q0V2b2pwMDBMOW95V3dML2ZnQlhEMklteklMbHo4VU1MUkxvaHFJa2VHc3pO?=
- =?utf-8?B?d0w4SjVqcjZXeHI5RGlMMHpuV0hvYTNaWVdwOTJvTHQ2MzJpejQ3WkdWVDFK?=
- =?utf-8?B?VXd2VVhSeXlnMUV2ZW5ISjhTWFpINWw4VHV4WmFIVFhvRGFiSWVBc1lMMGdY?=
- =?utf-8?B?OWVWbnFqWEJ5K0xzbkZLSDg2YzVsdDJ4UnhCVGNKUUlmdlNaanROQVhEMTlN?=
- =?utf-8?B?WEhkemNUdTBieC9MTVlrMHNqMzM3RXpTVTgvN0hsWFRuNHJEUXBKdkhGOGU5?=
- =?utf-8?B?Q3hWa0lOUHVxZHhNZFFsL1FSdjN3WjA5K3NwWFlXblJOSE1KeUpBd0xDdE81?=
- =?utf-8?B?cFFoNzhPMVFhK29ZbjBTUGc3L1BFbjlrUjl1cHJUS3BLRlVDcDBDUVpWenhj?=
- =?utf-8?B?UGxUdGQvYU9ucGJMWmhkNmRtY0xmcWhVNWVVZjdreEtOTDd5ZE5rWnUyTlhE?=
- =?utf-8?B?clR5dGUvVkVVOUF4VnFXa1VvM2VLc25OTDl0VmhkSjlGeURDVU51dnBjVFpy?=
- =?utf-8?B?eG1xd3d2c3Y1cytoY0RPaDZDSG9PMTNsdk5nUWxoRkZoOUpRRVdOWHVMZTAx?=
- =?utf-8?B?SmdUQXBCY2d1ckY5NG9jVWFjYlZUVUNaNi9nYnlGbXNFaGRLOUkxZUJWTEtO?=
- =?utf-8?B?VVFCNEcyVk1PQ3pZQW13ZFdWRFRuVk14UG1TODRnNHBBZk5DcVdMTnpnc2FV?=
- =?utf-8?B?Vi9vanpBUWVrV1dHT255NEo5RlB0bndEUkNrSDdLaURUY0xjaXNwWkhzaldX?=
- =?utf-8?B?TGgwZy9WNjQwVTlBaDBvMHZHUjNwMWphaStzZjFOMGtCNHVsaGxCWGZ0Nkwy?=
- =?utf-8?B?VmRtZGVZMFhJWWVvdzNXQk1EbldzS0k1NCtCem16b0s4UTZVTmIyQzhZTlFE?=
- =?utf-8?B?R2dUcDhCVERuUlB0WE9YLzZ0WXR1V1dGMU9JN3VYWFVlR2VVdWpsUzFUSnNq?=
- =?utf-8?B?Z0lWbG9vb1pUbnVSNGQ1bXRnVUdwRmRPdDN6dHNZbFVxNGI0RTh1ZVUyZUpL?=
- =?utf-8?B?L3E2bkxBR25mMzhTMFlyMFh2Wmt5cVpPRUtoN0JpaWU0RzQxdFVQckNFWC9a?=
- =?utf-8?B?WEhnNmVEQnJqWFRJUytXdE4xVVpQa0xNU2dLaTNvTjc3c1IvUGlrbnNidklQ?=
- =?utf-8?B?QVlrNElKVzVRREZnWWNqWjgrZU1YOUp3ZVBIM3dCV2xYbU81TzBYaHE0a1Bi?=
- =?utf-8?B?TUwxZktBcEV3enBaaHYzQm15RDgzUzhkcTJtTUl4aW1KMkgwb2dtKzZGTzdo?=
- =?utf-8?B?TkpuR3U2U1hNMDRlbWExTTVteHU3OHBhd1hQSzlDMHoyWVJ3S2d2THVUOTR5?=
- =?utf-8?B?TmVtQjJpWWJTVlJ1d0Y5c01PbmlSVm9aZng0d2FtUmhoVTdEZ3NyczZCejla?=
- =?utf-8?B?ZWpmK0xMTUVnOURpenZraU5Oc0xNcmM0ZEdVTDJRPT0=?=
+	tT1rBxZc1CCH8+oLmWMirkBNJeuAlptpydhM85sOAHVk9Eg+yFUAjGkznehXS37gr8/TROOTBFKoW8BtsLVIxZHSJxdoefYbzaJujZyFNuivccCK2Mo6ouhdPJNQSZEerYOtv9qm0aTz+F+a/O5YCjg1+BMlCye5RhfQPHZFpksOtSqDgIzJriPFTkw/geFG3HBX4spFl7LvdPbeAR9o6LnacRyiGaLx/lgwCpzdVoeO26dojuGxqkHowOGs2bmfOY7A/gvdCxB6j1Ngkhzv4q2oVPsoNarBdHsfdrR20DjqoKQxy/NcFG4NcGXlaph081EIwp89ik96lCgS0msMqRWKX7hjAgxcb4WglI5zaDNbSrI69cBfsyYpEvU9ceTy0/iqyy5o77UYpjqYCK2y8wpW3wNoDVlVutxUEOuAdIhqofTwP2FdGpzfTwfTKjLGM/oV+n5gDxS0GZk0xKAJ1p1dD7zsXT+X4Sry0PxO69FLN+zJC+oAHcmzqNoj0FzqkbNtC2V2kNmGiFR/MwMav/xckBlQY7naIZlS35FAPj1P5ACK2YO7bCFe1yA4kseqZkSX8/rvDZG7GmoDFTTMKrRq4hD/AZLXQ+tMpYQAZQSkKyfgKhkJStm+jWKImFhgp/Dazw3CqfBJvUBt5enlB8K+XyvvOgcKSyqyMXx/ByXw1eqYuQhmlN0veEWWukQcv4pfFP+SmS62m3OQC426z20VYxZfvWwkw35h36PDm5iz5c/aV8S47Z2CeVxfquYx33WGzrf5DBC5SiWnVuPg0Q==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(10070799003)(376014)(7416014)(921020)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?eUVYZXJoM3Nua0F6MnhvWjZGY3lZYnBKN1JJYnM4VDNscVppdFVrM1ZISHpt?=
- =?utf-8?B?U2dQNUh1ZUVwTTkydms1cC84bmJyb0gwbkxmTVhQL2VVMzhEMjcvRUNmT1p4?=
- =?utf-8?B?REhsclVpVHRzaElCbEE2WHE3WGVrR3JTVERHZGlnbGtJeVJUaERZTFRXSitT?=
- =?utf-8?B?dmY4TE44TFFPWUh1TWFvM3lsdGdFbE93TlFLa2dPb1JzclNQQnc5RUs2U3g1?=
- =?utf-8?B?a2FrbURjMWY4cWZDd2dJeDY5c2IyUW5KMHQ1cmFrVENXTS84bFBxb3lXSlY1?=
- =?utf-8?B?bFY5Q0E3Mituc1U0WTRaS29Ebmc3UEN3bjROVTJDRFBWeGtoaCtrME9wd1pB?=
- =?utf-8?B?MXNKVm9udmNOUWsrYkxIeFdzSXUwaEJZNjRzMmFEUGtjajIxUEFCZWpGYlRh?=
- =?utf-8?B?azhJem9kVE9NYTkyRytIdVR3eDhpeWNwNHd5MlV3dGd6QlQ2ZkF6WnpHT3BO?=
- =?utf-8?B?emRXWjYyTDBxdHhoUlV4cjM2VXJKc3R5WFlUYThJZ3I0U0xFQmZQcVl1WjVx?=
- =?utf-8?B?OXBmd0RYK3NGUlVBMUFxaGdPRlBsYytLclFWZmpiai9nbldqenR3NEg0emE5?=
- =?utf-8?B?anFXMkRHSWFmbnVoNzBsMldYaUx3dmVIckt1QlpWQ3k4Y1ZJWHQwb2NlNVRz?=
- =?utf-8?B?REVUWnRwRnBvWHJxTVd0c0lmZldBYmx1SmRMZ1ZWSFg3M240dTRJWldFRGxJ?=
- =?utf-8?B?VWw1M28xd09xTGRBZzlxc1d6Mzk2UXlSMVBvZ3JZYklETGpNbFYxa0NWaXdQ?=
- =?utf-8?B?bUM0MHBEYlg2UEU0Q0k1di9MZGk2YVBUaW1Ya0xsRm5lNy9MbGp2cExqMG1x?=
- =?utf-8?B?U1ZNRmxVR1cwYUZ5eGFCUEd3ZXdMNXpuZDBuVDJEbEh3T29xVk85SVFueXZr?=
- =?utf-8?B?NGhsYzhxOWhKM1B6eENDRzNrOEtzZlhsUGZPbzg2WUhzUHQ4ZEZIQ0tOZncv?=
- =?utf-8?B?alR6d2JKa3ZQYXFoSHFjeWw3eVBMdnRGaTB5TzZZUlViZ2VwSTNmdkQ0VXpY?=
- =?utf-8?B?N2lLSld4NU5wK3JNaXBNNk95c0pIL0Rtb2QyRUVoQlYxV0g3eC9lYTIxNnVK?=
- =?utf-8?B?bzAweDNnSGx0OVBBdU95czNzT1V6ZjA1MW5nYkQvTEw2VUVpNlVuNFl4S05K?=
- =?utf-8?B?OStKTmxqL2lsNnltanBVSEdKR1FjRnpHNnllNkdaaVhXUUErSnRCdGZINWFx?=
- =?utf-8?B?RU1MbnVBbjM0U00rTFpXNDh0TzBjaksydm52WDJpR0g0MGM5SnA5Qk93Q2Iw?=
- =?utf-8?B?NGtsTFplVjlLVXlGeE5UdGVXVzZpd0xvblBOMzl3OUgxRG5wSmE2alJqT29J?=
- =?utf-8?B?ZkpIWHBTU0ZxNFN4NU8wbGxRVXZSSTlkdTNBbE94TVplY015ZDRDYjBwUllX?=
- =?utf-8?B?NzNZZ2JSUi9jR2xGUFNNWXlHZGVNWWxxaGM3Nm84T09wcXAwNU4vVkxRYVIv?=
- =?utf-8?B?QlVYYStHQ00vM1BzeHJYaTgvYzJSQSt3MnFCbkdBU0REL3NVTUtldlA5ZFFi?=
- =?utf-8?B?WlJUcDBFT0d6R0ZxMVFySEs3em9MRisyNDUxdUc3NHBaVmpvakZjYnViZzVE?=
- =?utf-8?B?SXJRK2FUeU5hQVNjelRQVlV3a2h6OExic09ZY2Q4c3N0MW5XSng1aC9GVDBC?=
- =?utf-8?B?VkNFTjR6RkpMVG5IcjNhZGJkNytOQ0FIWStzNjFkaUN5UEsrQ3FMREdVOGNj?=
- =?utf-8?B?TlRiTGViSjBiVnpvL3c0WGxIWXJqUlgrUWkwQVdmSnZtODZhR0RudmdJVXBj?=
- =?utf-8?B?QVl3YldZdDlwVENmNzdRY0labEpVOStRRnZqd1BCdXJKZUZjbWc2V3pPSDV1?=
- =?utf-8?B?UDZ6TmpYNmhDUjB1Z2NRMjJxcnhmUEdtc2hJYmtnRVRvVDNBWWloNk1Cb0Ir?=
- =?utf-8?B?eC9uK2VGYi9ZZm52bWxLY1N2SUZialBXdzdVQWpqZEFWY2J4ZDU4bmZhaWhL?=
- =?utf-8?Q?YOAIPXcb+K+We3E1Oz01B0VarEOWXP5p?=
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 633feed4-bef6-4c89-c330-08de90b31c35
-X-MS-Exchange-CrossTenant-AuthSource: MA5PR01MB12500.INDPRD01.PROD.OUTLOOK.COM
+	=?utf-8?B?d0tIbXhEUjdieWs1MGZTd2ZhY1I4ZURiWURXTkt3TENQWnNkQkpna24rRksr?=
+ =?utf-8?B?VWIrQnN6b2FRWitZN0dObU1HMk1TbFd6Wm1SQWhoRjRHSE96OGpkOWlPa3lH?=
+ =?utf-8?B?d09Va21xOThLZFpJOXlqZFM5OTd2czFPWFJ3Znd3bGFRdWRsNk02dXkrQ2tB?=
+ =?utf-8?B?SEg3SS9Vc0pMYzc5UnhwalBLb2MzK3BNT3R4THFNcHpObUZ3bzBuUlVWRW53?=
+ =?utf-8?B?eVBBcE1mZ0sydFE0K1A0ZDRBOStwbi8rcCtwNnZMaTVyOGs1dk1GdWJxalcy?=
+ =?utf-8?B?MitNUWwyTTZFM0ViRG5XMVJiM3Z3a0hpQmtIVDJZSVJFVGxjdWhvWjVDbXZz?=
+ =?utf-8?B?aVFXS0RyS2RXY0NsOXpzY1BDaXFHa2dFRDcvbzVYOURyOERpYnQ3RExxUzhw?=
+ =?utf-8?B?VTZ6VWNkdG44a2FNMEJobmY2aXBOTnBkV2l4UW9ZUldRU3BZQ3RBQUszZ3dj?=
+ =?utf-8?B?cm55NURvQ0xvTVliL1YzSVJaTFkyOHVDWUR4dXVOSXcrVFR0UllHaE02Qm5y?=
+ =?utf-8?B?MmR0cExvcS9BQ0tFU09uUElVNzVqR1dYRndCNTdKSUMweVhOdWs2VVJ3bGJN?=
+ =?utf-8?B?UTBhV1VLaFVsZUNSQWlHM01PamUweC92aEQ2ZE9hSHhOeHB0NytoTEY5OHAw?=
+ =?utf-8?B?RFRaajMxdERzbW8xcm4wTXdGRUtSSUtqNktOQlRJQUd6MXgxU3QzVzR1citM?=
+ =?utf-8?B?NW9BaXZNU0UyUDNoeXFuUkVvZzgvd0k5bXQ4dHJkb0VGT2RYSENHeXZ0YlhQ?=
+ =?utf-8?B?eEl2WGtCVkgxbTduKzVxQnBqK25PRzJDdTMwd0FpOWEzRzk0KzZ4VjhiZDBz?=
+ =?utf-8?B?aHhGK3lDSlJzMS9hT0JGZm1tM1YzaERUZVFKeSs0blZFV1FSb1Vqa0FwNzF3?=
+ =?utf-8?B?bTB6eFlvbFpENGxZOXI1N0lsL0NJSzltcE51YnZUQTVmZWp3K1ZMSE91YnV6?=
+ =?utf-8?B?T3JvSWszSStQMU83aXV1RFNWZi9oa040VTN6OUhIdTZtaEZjS2N1S3VHNlZR?=
+ =?utf-8?B?S0g1RGZBamVCdTJmNmErQjVsWmJZY3ZjaEUxb3VQakhFTVFRbk9jTjhrQUlQ?=
+ =?utf-8?B?bW1sUzArbHRuN1NWME1lM2FHSUpvUkZQVjhvUTY4R2xscnNlZE8yUXljWkhE?=
+ =?utf-8?B?NmNjaThsMWd2TmlrdFhOdmtUMjBUM2w5UjdNL3lLb1RSd3l5NncrZTdQMEM3?=
+ =?utf-8?B?NEpBMXdYcVdsdlozS1YvWlhQVEhHT1ZsTWhvTUF2MXdDOHJiaUJOYk8vOVNo?=
+ =?utf-8?B?MTlYbFZhZVVydDloNFI4WnU2TmppUXloUFd5T1BhaWlvMVlndzR4UVc5enZa?=
+ =?utf-8?B?Tnp1TkJoMEZ3d1F1b3kydjNneEcyYmEybHZOaFVhVVFiSFJvZXZkaUFQRlE2?=
+ =?utf-8?B?ZVpGOVdRZ0ROajk2WGpKT2cyZFNIekNtcDJjVEpFMTI1QVBkamY1blN0cGJL?=
+ =?utf-8?B?czRaVi8rbWVKb1BxcGYzZ2RHZFp1dTAzaDFSQ3B3NFpmQlNBWGdtbXFsYis3?=
+ =?utf-8?B?NU5MZkNCcExtYk9ub0hiRm9RYlBScTUrRUdkQm80Nk1DV0J5NnZOd2J6aXFq?=
+ =?utf-8?B?S01Uc2NXSFJOTW1FMlQyOE9QK25wOXh6RWdDYjY4UDBFQUl3c2ZTVVU5Y3BT?=
+ =?utf-8?B?dmpkWWg5OVFmMkpaYVN0b2NYS0UwRURnTWE1RmM3MzFxbjlkdHh6Tk5IQlNl?=
+ =?utf-8?B?WFU5NGw3RFpkOWVTQk1CN3p3TFczRG9OK2pTQW9hcDlvWGNqb0ZZOVl6VlEr?=
+ =?utf-8?B?b2duZFF2YzFBUjlBK0p2YUg2M05zSGZReTNZVTFYLzE3ekhiLzNQTCtmczFk?=
+ =?utf-8?B?M3NkWHdwTGJCMS9uVEtjOFVpM1ZHRmdTOXpxMTdqQUJmRkt2d2NHQjRFZVpE?=
+ =?utf-8?B?MCsxY0c1U2ErZVdmUVI1ZWRhOGloTXlVRFhEV0c0d3h5VDhlSC9VNUFyMlM4?=
+ =?utf-8?B?TWZ3Zjg2amlHcGxGK1V6anVFZENGb3MvK3VNMjJtTkR4Z0RYcUs5R1daL2s1?=
+ =?utf-8?B?cVlzSzloaHU4aitlRzhmWTlzN3I1d3hqVEJ4VE44MjFaZ2plSW1GalJBUU5X?=
+ =?utf-8?B?clRXeVI2bU5YOS9jNXlqUFV6cVpRdlcwTmVOMjRnM3VkUjZsaEFvMHhKK0lo?=
+ =?utf-8?B?NnpHdERSV0V5bFZmSXJnbUQxTlM3TXBjd1Q5a1F1M3hpS2NEcnJYcm9OS0ds?=
+ =?utf-8?B?dzBCRXEzUEh4WHJ0Vit0TTNvN2JlKzNnYWdGNmFmOG1UaGtBN20rTStLUGpV?=
+ =?utf-8?B?YTBNMjgzWGQxeW51R3M5Q1krMG9JVkxzdHpLVitVbjQzR1RHVjk2cnh5TWdW?=
+ =?utf-8?B?dmN6N1lJZWl2QTVtM2ZUSzBEUyt3L3Fuc2U3Y1NtYUtkWWJTSEJ0dz09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7c195955-266c-4c94-84d2-08de90b75b75
+X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Apr 2026 12:26:48.2187
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Apr 2026 12:57:12.1848
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
-	00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MAXPR01MB4327
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: aGtDJC+TucAPcGo/VLSDuWfimOD1Go+xRa3vq/ag0nT/cksT6UDseh2qJ8jxxI/WC9RsUx1U2bW2qF6+r3kwAg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWLP265MB6960
 
-
-On 3/27/2026 4:19 PM, Yao Zi wrote:
-> On Thu, Mar 26, 2026 at 10:15:16PM +0530, Manivannan Sadhasivam wrote:
->> On Fri, Feb 27, 2026 at 06:19:25PM +0000, Yao Zi wrote:
->>> Since commit f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM
->>> states for devicetree platforms") force enable ASPM on all device tree
->>> platform, the SG2042 root port breaks as it advertises L0s and L1
->>> capabilities without supporting it.
+On Thu Mar 26, 2026 at 6:23 PM GMT, Andreas Hindborg wrote:
+> "Gary Guo" <gary@garyguo.net> writes:
+>
+>> On Thu Mar 26, 2026 at 1:04 PM GMT, Andreas Hindborg wrote:
+>>> "Gary Guo" <gary@kernel.org> writes:
 >>>
->>> Provide a platform-specific initialization hook to override the L0s and
->>> L1 support advertised in LNKCAP register of SG2042 Root Ports, so it
->>> doesn't try to enable those states.
+>>>> From: Gary Guo <gary@garyguo.net>
+>>>>
+>>>> Currently, `io::Mmio` always represent an untyped region of a compile-=
+time
+>>>> known minimum size, which is roughly equivalent to `void __iomem*` (bu=
+t
+>>>> with bound checks). However, it is useful to also be to represent I/O
+>>>> memory of a specific type, e.g. `u32 __iomem*` or `struct foo __iomem*=
+`.
+>>>>
+>>>> Thus, make `Mmio` generic on arbitrary `T`, where `T` is a sized type,=
+ or a
+>>>> DST that implements `KnownSize`. Similar to the `MmioRaw` change, the
+>>>> existing behaviour is preserved in the form of `Mmio<Region<SIZE>>`. T=
+his
+>>>> change brings the MMIO closer to the DMA coherent allocation types tha=
+t we
+>>>> have, which is already typed.
+>>>>
+>>>> To be able to implement `IoKnownSize`, add a `MIN_SIZE` constant to
+>>>> `KnownSize` trait to represent compile-time known minimum size of a
+>>>> specific type.
+>>>>
+>>>> Signed-off-by: Gary Guo <gary@garyguo.net>
+>>>> ---
+>>>>  rust/kernel/devres.rs      |  2 +-
+>>>>  rust/kernel/io.rs          | 63 ++++++++++++++++++++++---------------=
+-
+>>>>  rust/kernel/io/mem.rs      |  4 +--
+>>>>  rust/kernel/io/poll.rs     |  6 ++--
+>>>>  rust/kernel/io/register.rs | 19 +++++++-----
+>>>>  rust/kernel/pci/io.rs      |  2 +-
+>>>>  rust/kernel/ptr.rs         |  7 +++++
+>>>>  7 files changed, 64 insertions(+), 39 deletions(-)
+>>>>
+>>>> diff --git a/rust/kernel/devres.rs b/rust/kernel/devres.rs
+>>>> index 65a4082122af..3e22c63efb98 100644
+>>>> --- a/rust/kernel/devres.rs
+>>>> +++ b/rust/kernel/devres.rs
+>>>> @@ -106,7 +106,7 @@ struct Inner<T> {
+>>>>  /// }
+>>>>  ///
+>>>>  /// impl<const SIZE: usize> Deref for IoMem<SIZE> {
+>>>> -///    type Target =3D Mmio<SIZE>;
+>>>> +///    type Target =3D Mmio<Region<SIZE>>;
+>>>>  ///
+>>>>  ///    fn deref(&self) -> &Self::Target {
+>>>>  ///         // SAFETY: The memory range stored in `self` has been pro=
+perly mapped in `Self::new`.
+>>>> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+>>>> index d7f2145fa9b9..5a26b1e7e533 100644
+>>>> --- a/rust/kernel/io.rs
+>>>> +++ b/rust/kernel/io.rs
+>>>> @@ -44,6 +44,8 @@ pub struct Region<const SIZE: usize =3D 0> {
+>>>>  }
+>>>>
+>>>>  impl<const SIZE: usize> KnownSize for Region<SIZE> {
+>>>> +    const MIN_SIZE: usize =3D SIZE;
+>>>> +
+>>>>      #[inline(always)]
+>>>>      fn size(p: *const Self) -> usize {
+>>>>          (p as *const [u8]).len()
+>>>> @@ -169,7 +171,7 @@ pub fn size(&self) -> usize {
+>>>>  /// }
+>>>>  ///
+>>>>  /// impl<const SIZE: usize> Deref for IoMem<SIZE> {
+>>>> -///    type Target =3D Mmio<SIZE>;
+>>>> +///    type Target =3D Mmio<Region<SIZE>>;
+>>>>  ///
+>>>>  ///    fn deref(&self) -> &Self::Target {
+>>>>  ///         // SAFETY: The memory range stored in `self` has been pro=
+perly mapped in `Self::new`.
+>>>> @@ -187,7 +189,7 @@ pub fn size(&self) -> usize {
+>>>>  /// # }
+>>>>  /// ```
+>>>>  #[repr(transparent)]
+>>>> -pub struct Mmio<const SIZE: usize =3D 0>(MmioRaw<Region<SIZE>>);
+>>>> +pub struct Mmio<T: ?Sized>(MmioRaw<T>);
 >>>
->>> Fixes: 4e27aca4881a ("riscv: sophgo: dts: add PCIe controllers for SG2042")
->>> Co-authored-by: Inochi Amaoto <inochiama@gmail.com>
->>> Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
->>> Signed-off-by: Yao Zi <me@ziyao.cc>
->>> ---
->>>   drivers/pci/controller/cadence/pcie-sg2042.c | 20 ++++++++++++++++++++
->>>   1 file changed, 20 insertions(+)
+>>> Why not have the `KnownSize` bound here? I think that would be more cle=
+ar.
 >>>
->>> diff --git a/drivers/pci/controller/cadence/pcie-sg2042.c b/drivers/pci/controller/cadence/pcie-sg2042.c
->>> index 0c50c74d03ee..3142f82bd393 100644
->>> --- a/drivers/pci/controller/cadence/pcie-sg2042.c
->>> +++ b/drivers/pci/controller/cadence/pcie-sg2042.c
->>> @@ -32,6 +32,25 @@ static struct pci_ops sg2042_pcie_child_ops = {
->>>   	.write		= pci_generic_config_write,
->>>   };
->>>   
->>> +static int sg2042_pcie_disable_l0s_l1(struct cdns_pcie_rc *rc)
->>> +{
->>> +	struct cdns_pcie *pcie = &rc->pcie;
->>> +	u32 pcie_lnkcap_off;
->>> +	u32 lnkcap;
->>> +
->>> +	pcie_lnkcap_off = CDNS_PCIE_RP_CAP_OFFSET + PCI_EXP_LNKCAP;
->>> +
->>> +	lnkcap = cdns_pcie_rp_readw(pcie, pcie_lnkcap_off);
->>> +	lnkcap &= ~PCI_EXP_LNKCAP_ASPMS;
->>> +	cdns_pcie_rp_writew(pcie, pcie_lnkcap_off, lnkcap);
->>> +
->> cadence-host driver already has cdns_pcie_host_init_root_port() to initialize
->> the Root Port. Since your intention is to modify the LNKCAP field, which belongs
->> to the Root Port, you should do that in cdns_pcie_host_init_root_port() instead.
->> I see no sg2042 specific registers used in this patch, so just set a flag in
->> this driver like 'broken_aspm' and clear PCI_EXP_LNKCAP_ASPMS if set in
->> cdns_pcie_host_init_root_port().
-> Okay, it makes sense. Will do it in v3.
-
-Keep it up, Yao :) I'm looking forward to your v3!
-
-Chen
-
->> - Mani
 >>
->> -- 
->> மணிவண்ணன் சதாசிவம்
-> Regards,
-> Yao Zi
+>> There's no need to put bounds on structs unless you need them for `Drop`=
+ or use
+>> of assoc types.
+>
+> I understand there is no technical need, but it would help communicating
+> how the code is intended to work. Unless I am mistaken, T will always be
+> `KnownSize`, right?
+
+I think most users don't need to know about this. All `T: Sized` will be `T=
+:
+KnownSize`, so if you're using it with a concrete type then the bound is
+already satisfied.
+
+The same argument can be said to document
+
+    struct Coherent<T: AsBytes + FromBytes + KnownSize + ?Sized>
+
+instead of just
+
+    struct Coherent<T: ?Sized + KnownSize>
+    // ^ In this case the `drop` does need `KnownSize` bound
+
+But this just makes code more verbose as now you need to carry `?Sized` bou=
+nd
+everywhere.
+
+If there's nothing other than documentation purpose I'd prefer to just leav=
+e it
+out.
+
+Best,
+Gary
+
+
+
+>
+>
+> Best regards,
+> Andreas Hindborg
+
