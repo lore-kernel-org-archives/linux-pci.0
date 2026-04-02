@@ -1,191 +1,424 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7963E3093D3;
-	Thu,  2 Apr 2026 01:06:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78B4930B53F;
+	Thu,  2 Apr 2026 01:12:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.18
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775091978; cv=fail; b=uMCJk/iV4E5zzMuuikMzFYAst6l7f99KRaWUo73Z+/umzft8yJ9hqr/b+AlwOAnsDePu/DBtdwoUEQoX26sQDUYHhDJ/73FfFEeI7wPLb0lJzYChIiOTrv40r0mwwi1W6OxmoX/GWU90g8tYzhCzTOypr9OsXemuTR2zp1+Tpv0=
+	t=1775092349; cv=fail; b=DTuAboIrSg4eD7v2KPVVnsOFJjsiW2p2hU7iJHag5FyD89UePTGtVHQj+OkZATTgnfV4ellVVAiFLOh7Av1OwEY4LcxrBvvlDm8qDQnPWXNUsKVZsq2LH6mFBtFkr5K4yjC0We65KGyyWTxPWBa9eYtCsPjISdQfUfmP83YH3ag=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775091978; c=relaxed/simple;
-	bh=MCU8uuH/t3C3O73otISgl+pwu0vKN9QmvsDa/tVr+dg=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=KHEar8AnSB6OU+KjdYl7yZnBpapZTTzBI7MGDQYRmwLJAV6IcDnNpOPZxNYXCU+Af9bjfcZmUflxWzGsdmlEc8dnH22gmuzPej0UdZXYd78rUD7aDeBQXwS1pGIA59LL2Akl4xgwN1sSggUZ6FtbVmCyNpFC+ikUtxm/TzGNSVo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DLw9NgjU; arc=fail smtp.client-ip=192.198.163.19
+	s=arc-20240116; t=1775092349; c=relaxed/simple;
+	bh=fJmi3eFV5BMWE4ATxPUg7Plfh6dzxMZq+nmMOSlL02g=;
+	h=From:Date:To:CC:Message-ID:In-Reply-To:References:Subject:
+	 Content-Type:MIME-Version; b=Ad0eSg6b7GO1TcRFCZEMGCZq41Ws/iud9Ju3I/Qd8ipyrMBVVRyDZZMGhysnphpVE6yxnzvVZDh+bTxUVFx6m2yabegn4hvfYPNQteF+MoJy7gwPYyAG6EXyip1cudnU5TBKdMH2hWZsMXqtflNDeXlHz5Kfxg2687BXgWbH14E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LWIlY/aH; arc=fail smtp.client-ip=198.175.65.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DLw9NgjU"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LWIlY/aH"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775091977; x=1806627977;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=MCU8uuH/t3C3O73otISgl+pwu0vKN9QmvsDa/tVr+dg=;
-  b=DLw9NgjU46u7NEPqa53h7Jud0Gs4q0CKn1ZRnL8/rZXKdEFRFd1IyaiZ
-   C2uDc11Lx/ijc+KmEA47zqM8NxPSSp7Q/dxNOxOpBSmZwF1aCK6uRq3rG
-   un3l7Z/Rdb5geOv4iUSyCYYVK6ZIt1BLlskVN+1BNSY95s9t/ZAXDHLrh
-   LzBVRUkq2wfeg92xxFNMAux3ViIj+woN3er4e7vDgWE7wZV4Y29OoI5LL
-   vev5V46lk1VMHLh9T8r/mOzhPNHDOj+Poasxu3lvuRHxzs4yr1tixo9gR
-   mJZUw49832UyhNDnUqGied0bde4CCA9ilxPxCLl+CbV2HuvNJMAadFENg
-   w==;
-X-CSE-ConnectionGUID: rcTQkLzdSG+lKBfouPM3vw==
-X-CSE-MsgGUID: 0DqOQrU5TJegycrHRtLSNA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11746"; a="75181546"
+  t=1775092348; x=1806628348;
+  h=from:date:to:cc:message-id:in-reply-to:references:
+   subject:content-transfer-encoding:mime-version;
+  bh=fJmi3eFV5BMWE4ATxPUg7Plfh6dzxMZq+nmMOSlL02g=;
+  b=LWIlY/aHm4a/JlRB88wqGGHrc0K1AszdbxNVPaL4Sn4WZA3GI+I0FOZC
+   KRtT1P71q491TgLPDJqZ0wtnGFt3d9f9bpFzFvOsrOesSIzMm9mvy7ScD
+   IgAcxxQ6DTuAneOxhQPbOj5WYlYByRqgDdLVWy/W87uSV5zKc0mCuogfk
+   dst/KTcJUXS6DpLzW2dPy5v9QMiXiq32N7HamtyK7UZ+1jNbRFMZ/07Yh
+   SlczKZxsHhfi9y408RgND/VRQFvl0yX/juZmOFg0og0VVdID1POcRANsP
+   v1LyNgOblHWyimh4Q9Xq+u8Ou1gXz81OeeUpNbWELulj62VbsbCdRVkGC
+   Q==;
+X-CSE-ConnectionGUID: aBMitS3MQCOYSl+Qy87PoQ==
+X-CSE-MsgGUID: TiSElvvtRUSwXSL9t8fu5w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11746"; a="76161154"
 X-IronPort-AV: E=Sophos;i="6.23,153,1770624000"; 
-   d="scan'208";a="75181546"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2026 18:06:16 -0700
-X-CSE-ConnectionGUID: lBWKt+MgQW6OXHoLcWjK0A==
-X-CSE-MsgGUID: AdvCMPaLQ96l3QWz2fxQDA==
+   d="scan'208";a="76161154"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2026 18:12:27 -0700
+X-CSE-ConnectionGUID: 2IM4udm5S0+EJ3WVuyvAOw==
+X-CSE-MsgGUID: 7d/aWQsbSzWpZBc5ZP3wAg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,153,1770624000"; 
-   d="scan'208";a="249887046"
-Received: from fmsmsx902.amr.corp.intel.com ([10.18.126.91])
-  by fmviesa002.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2026 18:06:16 -0700
-Received: from FMSMSX902.amr.corp.intel.com (10.18.126.91) by
- fmsmsx902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+   d="scan'208";a="257301690"
+Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
+  by orviesa002.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2026 18:12:27 -0700
+Received: from ORSMSX902.amr.corp.intel.com (10.22.229.24) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Wed, 1 Apr 2026 18:06:15 -0700
-Received: from fmsedg903.ED.cps.intel.com (10.1.192.145) by
- FMSMSX902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ 15.2.2562.37; Wed, 1 Apr 2026 18:12:26 -0700
+Received: from ORSEDG901.ED.cps.intel.com (10.7.248.11) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37 via Frontend Transport; Wed, 1 Apr 2026 18:06:15 -0700
-Received: from BN1PR04CU002.outbound.protection.outlook.com (52.101.56.36) by
- edgegateway.intel.com (192.55.55.83) with Microsoft SMTP Server
+ 15.2.2562.37 via Frontend Transport; Wed, 1 Apr 2026 18:12:26 -0700
+Received: from BL2PR02CU003.outbound.protection.outlook.com (52.101.52.38) by
+ edgegateway.intel.com (134.134.137.111) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Wed, 1 Apr 2026 18:06:14 -0700
+ 15.2.2562.37; Wed, 1 Apr 2026 18:12:24 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=e+Dm0KHMeMatQHajKylSHpFE4YKDXaWqawcaHN+D838yeMnwUdoVArTCq0xIT/R5ckJdLRADYnHGnPwt7M7iUtMNE4NaymN68xik0+OKexe3WsWhw5imLSf/UngGgP16fHcgb6/f9qUrkqgG1Q/C+itdkRMchfDti/qGTvSZoGgHpqFBQjROBhZb3+qTEiy6NOdUnSB1L56++wW7Hq6co4+yVNPgqu3dwWILkg/07+AX5m8zVgw7sxxULujIuwDb7DRQp6ynvRCMB1fDefYcRNF+4WySL9j0J6HvvnYcreeTrQN5So3mca6pQSDVgoOGEr5MLh5bagfquzjpKfzx5A==
+ b=RhFFjcF6QqGsk1lU8l1lSTvyT8xX04qufsAc8pAa4TU1fqSejjXK2OwxisCIsI5uRLHUInXlgfZVT9O0rKC95nyITM29tgHKTGBu072qPsnA9PLQnmSJtoMjqMLlC0Dm0490H0Qi8ENMi4xb9NDK8fFFnhe6f8KgdyAjM1sWuESlTQvSAd3/joDdYiNklsJph+YDlsSYWZARGW1aMfogzgEofOx0/SlMmfN59c4vTloN9QW1Y7lwJq7eyNusbzVSWYiQtVFSU6Lzrmss3ql/KlVsDRgnwFjC6UPvaTSg2xb+9w7XV/ImzRcB8OoCHxLFuXEQ8zVgekGAVD3czrABbg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=MCU8uuH/t3C3O73otISgl+pwu0vKN9QmvsDa/tVr+dg=;
- b=jLwOjlbSon+732JxOfE7hgK0INOzz7ev1G8/FxWCrenme8wEZGTRwLtt/aWtWBhiOSNepadARD5yqed0zbOCG7AuaxcXttoU2L1xSa98WXYYYYc+UxrG4hbcvU+qPj8I6r5xPSuARagK0+p/NY6OtBEvKb+pt2HGhekiiaSjlEbKmJWUBxOQoNhEs19BHj0AWzboBZag0ltOM2jROa8ZU/kQD1G/VaT4q37ZyonbCnghaZj0EsOJ4+1vHnj9WNngMEvY1farn9v/uoM+zdWzGmqwFK45RVU8Ou1QbsqaYTZt2PGCggXYr0L4svCeCs/c5GVFSG6mgT+I6gJcu7/0+g==
+ bh=ntFC7C5bFnrcKfBXvCNKciUxbSWXAKxBQIhPvnVkyGo=;
+ b=gUFZB2zT5Ggqi5kBJ2VEI4tP/yYU8+Hg516NQw6VzK19xgIgxRqnAXlVgIvGOIrRmAP94Q/EbqjqsVrJX4FR+D1SUsKyA+B6RtnQlNr0fLOPXiQ4YaP5oM0WN5Kg5vuUHYyy+g5rAV0X1RceVEkytsFF6KE0e40R3Z5GUdQaLSFCUCe/dgb7DnkVQQrpUq1utdomLhOXIge/jgQM4UsDP7FpqA2qiEKvI+gxrm0OEpQsGVhkpttF0oIJoiczGS9VtobWZZcqOfz07pnyrAkBJhqxROwZKC2cQuncwWzL4vyl0pm/FA7Br/x9OZIpZAUk+zucgu6tbMXbsPZVw6TFSQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
  dkim=pass header.d=intel.com; arc=none
-Received: from DM6PR11MB2650.namprd11.prod.outlook.com (2603:10b6:5:c4::18) by
- DS7PR11MB7738.namprd11.prod.outlook.com (2603:10b6:8:e0::6) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9769.17; Thu, 2 Apr 2026 01:06:06 +0000
-Received: from DM6PR11MB2650.namprd11.prod.outlook.com
- ([fe80::ec1e:bdbd:ecd8:4c86]) by DM6PR11MB2650.namprd11.prod.outlook.com
- ([fe80::ec1e:bdbd:ecd8:4c86%6]) with mapi id 15.20.9769.004; Thu, 2 Apr 2026
- 01:06:05 +0000
-From: "Huang, Kai" <kai.huang@intel.com>
-To: "Williams, Dan J" <dan.j.williams@intel.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-coco@lists.linux.dev"
-	<linux-coco@lists.linux.dev>, "Hansen, Dave" <dave.hansen@intel.com>,
-	"Edgecombe, Rick P" <rick.p.edgecombe@intel.com>, "yilun.xu@linux.intel.com"
-	<yilun.xu@linux.intel.com>, "x86@kernel.org" <x86@kernel.org>
-CC: "Gao, Chao" <chao.gao@intel.com>, "Xu, Yilun" <yilun.xu@intel.com>,
-	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>, "kas@kernel.org"
-	<kas@kernel.org>, "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>, "Li,
- Xiaoyao" <xiaoyao.li@intel.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "Verma, Vishal L" <vishal.l.verma@intel.com>,
-	"Jiang, Dave" <dave.jiang@intel.com>, "kvm@vger.kernel.org"
-	<kvm@vger.kernel.org>, "Duan, Zhenzhong" <zhenzhong.duan@intel.com>
-Subject: Re: [PATCH v2 08/31] x86/virt/tdx: Configure TDX Module with optional
- TDX Connect feature
-Thread-Topic: [PATCH v2 08/31] x86/virt/tdx: Configure TDX Module with
- optional TDX Connect feature
-Thread-Index: AQHcvgciEO9ja9+YTEeNEsKQg5wh6rXK5moAgAAC+ICAAA0lAIAAAi2AgAAE/oA=
-Date: Thu, 2 Apr 2026 01:06:05 +0000
-Message-ID: <cdf1b042192b9ed501af8b810b392f50e6231e51.camel@intel.com>
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
-	 <20260327160132.2946114-9-yilun.xu@linux.intel.com>
-	 <6a28710b65d1a291213d28a8297477bf0287df7d.camel@intel.com>
-	 <8c4dfadaf73ed175a959ab16335a8d90266453b5.camel@intel.com>
-	 <847eb26878cb06afb47f4ecdb0bfe8ab7e432e8a.camel@intel.com>
-	 <5183437e-bbe8-4453-9b03-9bef2e025c0a@intel.com>
-In-Reply-To: <5183437e-bbe8-4453-9b03-9bef2e025c0a@intel.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-user-agent: Evolution 3.58.3 (3.58.3-1.fc43) 
-authentication-results: dkim=none (message not signed)
+Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=intel.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR11MB2650:EE_|DS7PR11MB7738:EE_
-x-ms-office365-filtering-correlation-id: 40a4e2a3-9600-4651-2bbe-08de90540465
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|366016|376014|1800799024|38070700021|921020|22082099003|56012099003|18002099003;
-x-microsoft-antispam-message-info: mKsbDe0vCaRC8rQ7dp44DBkn2kEK2HRZl+iZz631gKZ0wTpHycBq3oPEtM2y4cZ5tu3TFuVSD/Bd21jF98uiZ4mAEWMB4/TGYYu6C0J0MvvGPcXCkcwoQ97Lwb5DNPdwgXiB/LM5VfwwfZf1VIkfA0VqPGJTQ46x5RcZVLjxcV6crolLTw6REniLiyBgerS/cSnZh10XXjtHkbdF/1ve/+6Ey1BvAvYqIdUstE9oxg9RKkZmx4sFTPvHg2UoAeZ0YwUCKpuVMcIn6Pq9e8ZSv0W22PpPaXvhwNheyLUtfgxC4QqT0ckh2N+0YOtB3oXN5sLT86fEQyVJX0VV+zdeC2LIxkn4pe1t3Qxdgf68FMYGuI2POd6mdJTcqusSxe3cU0lN6nMpfnWKP7Yvrwf5tSMSY1GSYhnMDPvG4YpEAnB6yKcoAowl2teBRDQ7olExRhY1pEQ5sFkzW62v0HisaFrYJ3HN30HzyO7R3zjQ3loycg/AiP6+Ed1oc8WleJ/HRxo7Osn6033BHppcL0Q4aZvEgALj3UeI9LvYEgQ3kDhCxtDTgH8IHzysJt4V+vRXZKS3jUzdGrnsr2qsfu5rnNXGrSFXIvFuy9r8qERz3Efy9IFXxaMHYEtHbI5kQXGmdwsqwTjACKj6b+8klmhpBXlO8JZ7cO2Q1l2Ef1MqBbuP6DtNLnuayRFwO9jM88H0dR1OoCqJeVtmKZ2r5jhU2TSIc0pKztOcRKqC0WpHXEt4Ne1wSzBCEvzUJXHACa+SdhXNhitusrZkmhHoz4mDVmLmNYD4XpDh/D6ngUNpVgw8vtYH24V/CzNCNn6bR/M7
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR11MB2650.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(38070700021)(921020)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?eGtSQ2wvMVJlemtKb3BTS0xoZVJybHlLc3QyNDB3TjRwQU85QThPdVZ6aThp?=
- =?utf-8?B?YnpTaUd1VXE0VkJlSmdadjdKdUdiZ0lUaVhpVVRFOVVXeFBQMktHVTJsWlhJ?=
- =?utf-8?B?bWQwVmltbVBzUzA5M3VFbDk4N1hGTktjaUpxc3JaTTJ3VEVTR0ozU1ZWeVY0?=
- =?utf-8?B?aGZXSitnNDhHMk9vaDFMRnNibUJsQVl1TGdoZ0Q0d2FKcUZ0bGtLYmhmSFEw?=
- =?utf-8?B?THBOUlhjaG1IRjdnNXlKNEJnQVNuaVAxVytXTzUvZGgrSldMWDdYZEwvT2tM?=
- =?utf-8?B?ZWk3NEV2WU1JRHZWSmVQN2lESE1vd3BuM3RtcU1LWFZ2MU1ETlF3bFk1MFJu?=
- =?utf-8?B?T1prWmRna013OGgwRzNUcHVId08wUUx0ZTI2SDFjODhwL1RiT0krK0lsQzhw?=
- =?utf-8?B?bkZsbXZnRHo2ZmhoYkV6UFdFVFhpaGJMNElrRjVZaHpscDNHakkrOTBxOUNt?=
- =?utf-8?B?bzlqelExNTJBVDFUVnhWc2hhYytKbVpXdXZLRnZINjNZRVl3U3FmWVpUMkls?=
- =?utf-8?B?b3JtbTJBaDJYSko5SG9EVFhRK0xRRHQ0NjY4TEpDM3BMUHVXUHRVYWw0MmpG?=
- =?utf-8?B?elZsZFV4Ny9GdEFSNDduUEZyczZ3U2pTcVQxcXJuSWpaaXM1OWl1OFpKSm8x?=
- =?utf-8?B?ZFd3MkVRQWdLWWNoOEpHZEg2UUJhbVJVMnhOTWFPMmIyTng4WlVlTFdWOW1p?=
- =?utf-8?B?N0JrQUhsNVN4R3dMQWxPWVZqTmZBdGVxVGlLaC9JN1FNQmgyc0VjVndOaXBY?=
- =?utf-8?B?YjB0R0pLUkc4RmJJTWJSYldDRlZwY2hPdm5NakdZSGdvMlE4ZTlPR3hDMEE0?=
- =?utf-8?B?MWRqQk1qU3p0NVA5OE9TMVdGRlRqWXlFeWxFTkdvQXR1Tkc0L1B5ZlBpTU10?=
- =?utf-8?B?VGFtWndndGUwcW5Cc1RRSk9PNEphS0o4T1VJOFNwbXIycURHdGg5UHQxajli?=
- =?utf-8?B?RzFvTFpkYnlmNmlNZis5M3RPTnB1OEFCV25FRG52bnRKVUZPTVdzeE1EekRS?=
- =?utf-8?B?Nk8vQ3Z4Y2R3Q2ZEbkE3RWtQaStXUnlmMUROM0NvTGRKUU84ODEzSHJyUEE3?=
- =?utf-8?B?SG9GK3MySzRpSklheXFiaDdtMTVGSWJVZ0Q1bmtJK1lsSS9KSE1FcHRRUDJ6?=
- =?utf-8?B?Tk1mZHZXZkMvQ3JMM1hIRlJQOVRnQ3FvdWxFQjBlUWhQZ2JCb2tlOUJBU3Nl?=
- =?utf-8?B?clVsWHZIbVNoaUg2bk8xdm9MVFZuQStod3dadGx5Z2FzMTZMZ210bk00cVFO?=
- =?utf-8?B?MitReHBjK0w4dUR0UVQvVmQ3d0REbk1XUDhqdEE2S25icndWTE1MUnRIWERL?=
- =?utf-8?B?Y3MzWmV6OG5xRzVPTE54VnI4TDVGQlZCNTFKWjVuN0FJZEtZek9VWVFacTNi?=
- =?utf-8?B?NnZIc2JJb3Q2S3F0OHNMM3ZFbjVialFLRzZwdjd0SENsNnNIaFR3OUl1SnU3?=
- =?utf-8?B?aklKczA1VnFjWWg1VFdqY0RhaFdXaXdNbTlncHBSaWJHR0Jpa09NYXkvbTZB?=
- =?utf-8?B?VFZKWVBwTURka21IWmtnd2MwbXE0K0hIK3ZoN0pGUG5wck0rek5xdU5oT016?=
- =?utf-8?B?c1lVenk5SjFXYTM5YlhBTkF6ZEhJVDFpanBUQ2J4MUxYM25BdWdBSXNMMTBs?=
- =?utf-8?B?Z01WNHJoc1Y1WlV0M3hVVE1FMWZqeGp1anRiSC9VOXdMc21Hc0xWQUdPNzNM?=
- =?utf-8?B?Q2l5a2twYnhhbHlKanViT2pxZDBoWkJnOGJwTmkvZmFTVW43MUtIeWxaZW5X?=
- =?utf-8?B?QlNFZUlTSjhQc2RaNm5tZ2U5c0F4OXFrZEIvT0tJZTBscmxJbTZwZ1gvRTc4?=
- =?utf-8?B?SWI1RVVGd2xVc1dUM1J3ZjRwQVhQQ1JiZDBUNEVpMjRISFU5SG5VcEovMlho?=
- =?utf-8?B?RXZTalBvckZrZDVYaGhBUSswQ1d4SGFJL04yekZjY2MrblFEM2REM3FMWjY3?=
- =?utf-8?B?Q1pxdGZXQit5cC84bXpieWFpNWJuNkJhak12a1hybURmRllCbU9sTUJTWlRT?=
- =?utf-8?B?TjJzRlk1dFZBeGRMTFBsMUl0NHRDTTJ1c2Q5TlU2OVZKYVpMdEYybVphK1BB?=
- =?utf-8?B?ZkE3UzUxamozTDNaZm0vYVcreHhGR1ZST09YMnNSd2VaOFhMNHRrNW01VTFW?=
- =?utf-8?B?ZTlJdWMwR1lWZWlDaWJ1eWFVL0hKZ1ovaWtoNmtuaWFvenZ5RVpqUWlHZ2Yz?=
- =?utf-8?B?ak1EdmhlQmNmTkZLNU9KVXA0NHFTMXhmRDgrUnlMOXVxRzNXNUpVL2pjZkNE?=
- =?utf-8?B?OStGRGpJZGhTU1pqdjM1UXdoaFkzb2EvZ0pOUjBYUU5UK081aEhRSnY1ZXJZ?=
- =?utf-8?B?L2N5ZXZRVmJ0Q1I2RGtOOHZ5Ym4vMXhWWXVWM2hyaHN4Q04yTUgxQT09?=
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
+ by SJ1PR11MB6156.namprd11.prod.outlook.com (2603:10b6:a03:45d::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.16; Thu, 2 Apr
+ 2026 01:12:22 +0000
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::1ff:1e09:994b:21ff]) by PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::1ff:1e09:994b:21ff%3]) with mapi id 15.20.9769.016; Thu, 2 Apr 2026
+ 01:12:22 +0000
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 1 Apr 2026 18:12:19 -0700
+To: Alex Williamson <alex@shazbot.org>, Dan Williams
+	<dan.j.williams@intel.com>
+CC: Manish Honap <mhonap@nvidia.com>, "jonathan.cameron@huawei.com"
+	<jonathan.cameron@huawei.com>, Srirangan Madhavan <smadhavan@nvidia.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>, "dave.jiang@intel.com"
+	<dave.jiang@intel.com>, "ira.weiny@intel.com" <ira.weiny@intel.com>,
+	"vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
+	"alison.schofield@intel.com" <alison.schofield@intel.com>,
+	"dave@stgolabs.net" <dave@stgolabs.net>, Jeshua Smith <jeshuas@nvidia.com>,
+	Vikram Sethi <vsethi@nvidia.com>, Sai Yashwanth Reddy Kancherla
+	<skancherla@nvidia.com>, Vishal Aslot <vaslot@nvidia.com>, Shanker Donthineni
+	<sdonthineni@nvidia.com>, Vidya Sagar <vidyas@nvidia.com>, Jiandi An
+	<jan@nvidia.com>, Matt Ochs <mochs@nvidia.com>, Derek Schumacher
+	<dschumacher@nvidia.com>, "linux-cxl@vger.kernel.org"
+	<linux-cxl@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, <alex@shazbot.org>
+Message-ID: <69cdc273ca48e_1b0cc610042@dwillia2-mobl4.notmuch>
+In-Reply-To: <20260317121943.3c404db9@shazbot.org>
+References: <20260306080026.116789-1-smadhavan@nvidia.com>
+ <69b08f8d8eb97_490a10042@dwillia2-mobl4.notmuch>
+ <20260310164630.7abeed30@shazbot.org>
+ <69b0c934b2793_2132100ec@dwillia2-mobl4.notmuch>
+ <IA1PR12MB90304014081461742C3977F4BD41A@IA1PR12MB9030.namprd12.prod.outlook.com>
+ <69b98960907e9_7ee31003b@dwillia2-mobl4.notmuch>
+ <20260317121943.3c404db9@shazbot.org>
+Subject: Re: [PATCH 0/5] PCI/CXL: Save and restore CXL DVSEC and HDM state
+ across resets
 Content-Type: text/plain; charset="utf-8"
-Content-ID: <C1E7D059209B3649B53AF6B4737B8A52@namprd11.prod.outlook.com>
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: quoted-printable
+X-ClientProxiedBy: MW4PR04CA0373.namprd04.prod.outlook.com
+ (2603:10b6:303:81::18) To PH8PR11MB8107.namprd11.prod.outlook.com
+ (2603:10b6:510:256::6)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Exchange-RoutingPolicyChecked: t9XSwGDMUFBZOJ9Lwk+RUSEj6/voiLpHS02kqyatO/2/3iZgkl7ZnIWz0fXAT+GT1zzlJo1XwgskYgIl5H5JbSQCrA6DxFEDRsOPyNPBHfLW3D9X056R80fCiiQsGq+keWbZ74dqq1fB2jO4nU17fgSun9jE7lOB1fqK/kq4/iMQKl5yO6Qh+d7QXJeZTdBZrniDUTNPw3Ox3ZmGMfxDqThZRzPSa3kPJq63Qh5I9MtEHPXPEjO1L8PovO48Ttyvyr0wE84K/kwsaZ8VeXluW5Lz7CwCIJ2IShv5xDHmU4spX4E9XT4bFw2tngKUKU3dC5atAcI5gp+1Zkn+KZ5JzA==
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|SJ1PR11MB6156:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8d4564b8-6d95-423f-cf10-08de9054e47b
+X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|7416014|376014|366016|1800799024|18002099003|56012099003|22082099003;
+X-Microsoft-Antispam-Message-Info: pUWUDJogTUxwjh0dxcjIXDkFw9JJq5OBEmCIvquGbS4fM0OEwJ6MKnloMrH0kVIavtsNfd521RB9NGiV7BK3p6OWiKjpFPu5nKB/1NqfgdU1nkPCBtxSy85RT1Y1+/8nAJhQrhi71UBVzjoMKXu0k51lZmDHOrv1G5q9hWYtI8qY/yMYF2v/SljwQvYMdXZ5hf7/RNNJnJ8tOQoZdjVJFgthSf7UFQHGpL6RwE8cbCg2bmiCeAF6FWtjF59cQDiv3nRB7++oShTPbRdx82JIhgC19u18H1uwVj8e2icMUvGwc3QYVGEBe3n6SG7JM+y+/a4hWoKcibYQ5c4vreWYRUSn4i3jnGz3asomD2iG1Ib1Epgo25BjjPbZxaHqD+g+TD24nUf7rVJqmhKaDOmMgQxiWZETx3JrDwmaCtzbBIgWtUO5ShOB9hURQFbVmO6tNtpkFygKYq+ytisDZQhN7FhZQXAMkvwqowMVj/dE8caHcgoH77AcM7QT2nQfd19QllmPWf6WAl7yEDu4XG9vBMDRalrYbImkUIH5UvkGqaWuFsNxi22UwQYWrwQBEh1E5OiQ+gV3cP9vNMG35dnGyMcYhkmgDdMexXGN45ndOL4tnmgPVEXSw4NLpfuFDaEgqmJcQs1Spj4GJfrI8kvISuU7qedvQhBqdZ0xjv5QYBIL57ys1mqYa+CRhWB0yqaVvqLoaJ51Y3eQbHduP8gEi/OJDV1KTBaYgelImuVVCRM=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?MG9DcGxvODRENzFCSGFESDh2M1dNbDVyOXkyMGs5blBRVVZhSjFvNit3SjRH?=
+ =?utf-8?B?REMreUpVRlgrdnkwajI0V2VqOFd3WFFISnVFY2xFOVFlNGZaSjJCS0x5MkxC?=
+ =?utf-8?B?eXpvY0V5dFRGZ09vZFZVTjVhS2JjSU1uUitZckJaZ0xZWVh1UW9tdC9zT29h?=
+ =?utf-8?B?bGpiZTBQUVczTGgrOS9rYmUzZVNsRlBvK3NmS01SbFdUL1pibS9TMkhKOGJ5?=
+ =?utf-8?B?U0ZPelNKMStYa2ZUamlJWWpaVXFvK0hvOS9zODZYaUZUM3BHRzNDYWxTdnZH?=
+ =?utf-8?B?ZGgrbllPWkRaelhSVnlwSmQwVnlCbDl5bk9aMFVYMWxjRDF1SlJvM3lmaURa?=
+ =?utf-8?B?dnlySzhhN0RpRlI4dFJpQ2RaTXN5VlNxa2F6Kzl5d3MxeGViMFZ5L29KRnR5?=
+ =?utf-8?B?Z0VmZzlBdmoyT0lUaTA0a1hVaFZUV2cza3lRVHExbGJ3L3FWNWJtSGRHWmQr?=
+ =?utf-8?B?UXZURW5wWVBrMDRKMkZNaU5URXBKTGhZenJ1SGk0UXhCdU1LL2hSbERoc3B0?=
+ =?utf-8?B?ampONzQ3UGh4eGNJU29IRU85amYwc1M2VTRWVHF3Z1NnaVBXa0NoV1MzU2Q4?=
+ =?utf-8?B?anBuNzJYSjhMeUtqMzQwVFk4UDNXSDg4TU5lRFo5Um00dnFBaGo4K1pjZEFW?=
+ =?utf-8?B?TXppVFptTkxHdFl1SXBzNnA2d2E2TG55SkJFbVR4MEtwTEZaU3paL3REMlNy?=
+ =?utf-8?B?Sm9FU25GeEJKRVJUcWdSYjFsK1F6ZGtTVm85V3liYTV3c1RmcmlkQlpHVFBv?=
+ =?utf-8?B?NEo0a3BlaW80dHcxYkZ6T0dNSmlhakovT2pkNHByTEtJL0JmMkxTUEkrcGJy?=
+ =?utf-8?B?MG9mRmt1OTVmNGFZUFRSV2QrSG0vQjFNdU9qbHdxYlg4ajVyaWd5NW1XdWZx?=
+ =?utf-8?B?dzY3NVhJc0ova1RUT0xocGJndCs3cmhxTDhKT3o5L3BiYkt5QkFURklrdlVZ?=
+ =?utf-8?B?eS9NekZVcllhTHlIc1UvZFN6c3FXTHZFV2hWUE02ME5lanNuZG5ScjdiOWVI?=
+ =?utf-8?B?SXVzTkJ4TVBHVTQyMmpmSzYwTTNQeW5BSU9CWUFmVmtDbFF1R3NzQXo2N3JO?=
+ =?utf-8?B?RE1KMllNWXZrRnlPTGdYNi9jRVlCaGF6eFJwclNPaEEyZDFmZVg3cW0zZVdU?=
+ =?utf-8?B?Zno3TEI1MkdQOWM0cmFKMENIOXBPSWRDUEVYQzMwWTRRdW96UGQ3ZUdEUHhq?=
+ =?utf-8?B?TFJaVnk5WitiVmZXbWxnWkppWG9mT0wvR1ZGZG5vQlhnbkZqNHZUMUtXQUw3?=
+ =?utf-8?B?MDQ3dU9KcmVHbDFkUi96a1hHQmZRaU1SQmM5Rk90Tlh3dGdpMzkwUTVZQisr?=
+ =?utf-8?B?RFdodzlmMXdGYkxTellWcmRQZmtkMHlReDlWTnFqeGd2dkxCWHI4SXQ5Wjdy?=
+ =?utf-8?B?MkpoYTk3eFFHdmZDbjdwclovODZkakc4Ujh5TVpVVkM3M3RGQ1JVU2dZTmZD?=
+ =?utf-8?B?ZWFLMWFBWEpiM25qcFk0Q1YrYis5QWV6emsva3ZZRWJJVFEzMjNVR3BoeUtK?=
+ =?utf-8?B?NDR5cUpkK0hKUng3QUNRc0hVTG1KNGZyMk1VdHd0dnZMM1ZFblJmQWl2eFV2?=
+ =?utf-8?B?djJqSXY3dGtQQTZCYjNIVDVqejZhZEtYQm5veVFCbngzYzhnbXdYTWlKMUN3?=
+ =?utf-8?B?Y1UzL1FFNjRocG5TR1A2Wld5eEZNUTJ0ek1oOWxKdERkNEFoWXBkbXhvLzVJ?=
+ =?utf-8?B?SmZncjJTQm1TUHhJNmhySjhLT3hiQk9qZVVsWFp4b2pIa2dSTktKTnhmTEJq?=
+ =?utf-8?B?MFcwY1hqdkFUV0lZUVBEbFpleWlvdWx6UnEvUkJBdGk2QUVkQUUvYzZIR2Jm?=
+ =?utf-8?B?V3VoRlI4SHFlc3JtbWpia3pJeEtXRjR2bC9xVkhSN3lRWk9zRFFUaUx6ZnFT?=
+ =?utf-8?B?UWlndlFIREQ1ZkkweUc2QmhyZmNUdHlwUmN5dFZaNzliNUtvODV1WTh5Wlkw?=
+ =?utf-8?B?S0FDemdFUEVKdUo2UE4rSzBGU1dzK3dPcG5NQ2JtWVlidzVzL2s4YUVqbldj?=
+ =?utf-8?B?cTJsMjVlWUFVdXg2MnhvY2EyTUJQb1R6R1R4dk5mcTdJOFkwbUt0VVJtd25D?=
+ =?utf-8?B?L2xFMTFpVXVEQ25laC95K1pFQTdUb3lvRU5mQzN2R0pBVHk3QmE4VzdmakNq?=
+ =?utf-8?B?Z09SSmhzeHJiTlhEbzgvVW12a1Z0WDVQa29TdW41TXoxWjdPc0d3aWc5N0lB?=
+ =?utf-8?B?TXQyNzN3WXhaRU5PRVErQUZYK09vUFFRVWpSVjRhY05GVERzbndkeEhDYWR6?=
+ =?utf-8?B?NVNaYnpqTFZneDJsQmdBRGZ3WjZ5WEZwd1cxVWtSRitOTjZuQ3hLQ1d0UmYw?=
+ =?utf-8?B?cmk0amJxMm9zbW4xWEdZMklqYUNHQ2VTTXFzaEZvVXBXcG1uNDVHV015UElw?=
+ =?utf-8?Q?zmMFD6uzqT2fGm6E=3D?=
+X-Exchange-RoutingPolicyChecked: OMtxJdCmru8MYi5NLGGhr2m3UepITYmiMFGw6DoUGsrigBuN2kmD2PFJsWDCmVKulwwwhHdy2KMayTn8dCdR40GO6NWcYEa93D4DKfGV64rZIyTEg8irN9pv5h7GDstUBTnQCfMpNIRcjRVYQq2SE6gjrhS14ykUNaJbrMVukmPV1UnwlYP1TFE6SSHyq4G7/C2Etqdw4DkI/CwvwPUGmQDTjbiyMRltF9zxFpyABOKVMEi4hxUgykFGHYigmhyEJijItjA0e5F5j47+W2RKWznWvFe7uWJeXlgLk4iA3JO63K2LkHlhar7iCPoQlUoc2OuDmOLhXj5Lm7iT6tQVtA==
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8d4564b8-6d95-423f-cf10-08de9054e47b
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR11MB2650.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 40a4e2a3-9600-4651-2bbe-08de90540465
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Apr 2026 01:06:05.8055
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Apr 2026 01:12:22.1071
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 3WBFpfj7emlScuoVh/KqmyP/X+mLxx62fQwi0fgSuxjF453aYujD8mE/lGXIxVDuo8v+TVgHSRTob1EijYGjLQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR11MB7738
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: ZGffA0bSRHiuXaaa0kn6ajf1im1pCdC8GKEgN0OuE+VlIyeUb1iWe9zJbPUAgknMeVQlNk91bvdJby3QKFxuyLYxVXxCZBbnDN/uUhNxw6M=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ1PR11MB6156
 X-OriginatorOrg: intel.com
 
-T24gV2VkLCAyMDI2LTA0LTAxIGF0IDE3OjQ4IC0wNzAwLCBEYXZlIEhhbnNlbiB3cm90ZToNCj4g
-T24gNC8xLzI2IDE3OjQwLCBIdWFuZywgS2FpIHdyb3RlOg0KPiAuLi4NCj4gPiBUaGV5IG1pZ2h0
-IG5vdCBjYXJlIGFib3V0IGxvc2luZyB+NTBNIG1lbW9yeSwgdGhvdWdoLCBidXQgdGhhdCdzIGEg
-ZGlmZmVyZW50DQo+ID4gc3RvcnksIGFuZCBpdCBjb3VsZCBiZSBtb3JlIGluIHRoZSBmdXR1cmUu
-DQo+IA0KPiBJZiBhbnlvbmUgX2RvZXNfIGNhcmUgYWJvdXQgNTBNQiBvZiBtZW1vcnksIEkgZXhw
-ZWN0IHRoZXknbGwgc3BlYWsgdXAuDQo+IFVudGlsIHRoZXkgZG8sIGNvdWxkIHdlIHBsZWFzZSBl
-cnIgb24gdGhlIHNpZGUgb2YgbGVhc3QgY29tcGxleGl0eT8NCg0KWWVhaCBhZ3JlZWQuDQoNCj4g
-DQo+IEknbSBub3QgZXZlbiBzdXJlIHRoZSBLY29uZmlnIGlzIHdvcnRoIGl0IHRvIGJlIGhvbmVz
-dC4NCg0KSSBhbSBub3Qgc3VyZSBlaXRoZXIuDQoNCk15IG1haW4gY29tbWVudCBpcyB0byBtYWtl
-IHRoZSBjb2RlIG1vcmUgZnJpZW5kbHkgdG8gb3B0LWluIG1vcmUgZmVhdHVyZXMsDQphY3R1YWxs
-eS4NCg==
+Alex Williamson wrote:
+
+Hey Alex, sorry for the lag in responding here...
+
+> On Tue, 17 Mar 2026 10:03:28 -0700
+> Dan Williams <dan.j.williams@intel.com> wrote:
+>=20
+> > Manish Honap wrote:
+> > [..]
+> > > > The CXL accelerator series is currently contending with being able =
+to
+> > > > restore device configuration after reset. I expect vfio-cxl to buil=
+d on
+> > > > that, not push CXL flows into the PCI core. =20
+> > >=20
+> > > Hello Dan,
+> > >=20
+> > > My VFIO CXL Type-2 passthrough series [1] takes a position on this th=
+at I
+> > > would like to explain because I expect you will have similar concerns=
+ about
+> > > it and I'd rather have this conversation now.
+> > >=20
+> > > Type-2 passthrough series takes the opposite structural approach as y=
+ou are
+> > > suggesting here: CXL Type-2 support is an optional extension compiled=
+ into
+> > > vfio-pci-core (CONFIG_VFIO_CXL_CORE), not a separate driver.
+> > >=20
+> > > Here is the reasoning:
+> > >=20
+> > > 1. Device enumeration
+> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > >=20
+> > > CXL Type-2 devices (GPU + accelerator class) are enumerated as struct=
+ pci_dev
+> > > objects.  The kernel discovers them through PCI config space scan, no=
+t through
+> > > the CXL bus. The CXL capability is advertised via the DVSEC (PCI_EXT_=
+CAP_ID
+> > > 0x23, Vendor ID 0x1E98), which is PCI config space. There is no CXL b=
+us
+> > > device to bind to.
+> > >=20
+> > > A standalone vfio-cxl driver would therefore need to match on the PCI=
+ device
+> > > just like vfio-pci does, and then call into vfio-pci-core for every P=
+CI
+> > > concern: config space emulation, BAR region handling, MSI/MSI-X, INTx=
+, DMA
+> > > mapping, FLR, and migration callbacks. That is the variant driver pat=
+tern
+> > > we rejected in favour of generic CXL passthrough. We have seen this e=
+xact =20
+> >=20
+> > Lore link for this "rejection" discussion?
+> >=20
+> > > outcome with the prior iterations of this series before we moved to t=
+he
+> > > enlightened vfio-pci model. =20
+> >=20
+> > I still do not understand the argument. CXL functionality is a library
+> > that PCI drivers can use.
+>=20
+[..]
+> If we were to make "vfio-cxl" as a vfio-pci variant driver, we'd need
+> to expand the ID table for specific devices, which becomes a
+> maintenance issue.  Otherwise userspace would need to detect the CXL
+> capabilities and override the automatic driver aliases.  We can't match
+> drivers based on DVSEC capabilities and we don't have any protocol to
+> define a "2nd best" match for a device alias if probe fails.
+
+I can see the argument, and why it makes sense to attempt this way
+first. Point conceded.
+
+Now a follow on concern is the plan to manage a case of "PCI operation
+is available, but CXL operation is not. Does the driver proceed?" Put
+another way, I immediately see how to convey the policy of "continue
+without CXL" when there is an explicit driver distinction, but it is
+ambiguous with an enlightened vfio-pci driver.
+
+> > If vfio-pci functionality is also a library
+> > then vfio-cxl is a driver that uses services from both libraries. Where
+> > the module and driver name boundaries are drawn is more an organization
+> > decision not an functional one.
+>=20
+> But as above, it is functional.  Someone needs to define when to use
+> which driver, which leads to libvirt needing to specify whether a
+> device is being exposed as PCI or CXL, and the same understanding in
+> each VMM.  OTOH, using vfio-pci as the basis and layering CXL feature
+> detection, ie. enlightenment, gives us a more compatible, incremental
+> approach.
+
+Ok, to make sure I understand the proposal: userspace still needs to to
+end up with knowledge of CXL operation, but that need not be resolved by
+module policy.
+
+Userspace also just needs to be ok with the unsightliness of the CXL
+modules autoloading on systems without CXL.
+
+> > The argument for vfio-cxl organizational independence is more about
+> > being able to tell at a diffstat level the relative PCI vs CXL
+> > maintenance impact / regression risk.
+>=20
+> But we still have that.  CXL enlightenment for vfio-pci(-core) can
+> still be configured out and compartmentalized into separate helper
+> library code.
+
+Yes, modulo some of the proposal here to enlighten the PCI core with CXL
+specifics that I want to give more scrutiny.
+
+> > > 2. CXL-CORE involvement
+> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > >=20
+> > > CXL type-2 passthrough series does not bypass CXL core. At vfio_pci_p=
+robe()
+> > > time the CXL enlightenment layer:
+> > >=20
+> > >   - calls cxl_get_hdm_info() to probe the HDM Decoder Capability bloc=
+k,
+> > >   - calls cxl_get_committed_decoder() to locate pre-committed firmwar=
+e regions,
+> > >   - calls cxl_create_region() / cxl_request_dpa() for dynamic allocat=
+ion,
+> > >   - creates a struct cxl_memdev via the CXL core (via cxl_probe_compo=
+nent_regs,
+> > >     the same path Alejandro's v23 series uses).
+> > >=20
+> > > The CXL core is fully involved.  The difference is that the binding t=
+o
+> > > userspace is still through vfio-pci, which already manages the pci_de=
+v
+> > > lifecycle, reset sequencing, and VFIO region/irq API. =20
+> >=20
+> > Sure, every CXL driver in the system will do the same.
+> >=20
+> > > 3. Standalone vfio-cxl
+> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > >=20
+> > > To match the model you are suggesting, vfio-cxl would need to:
+> > >=20
+> > >   (a) Register a new driver on the CXL bus (struct cxl_driver), probi=
+ng
+> > >       struct cxl_memdev or a new struct cxl_endpoint, =20
+> >=20
+> > What, why? Just like this patch was series was proposing extending the
+> > PCI core with additional common functionality the proposal is extend th=
+e
+> > CXL core object drivers with the same.
+>=20
+> I don't follow, what is the proposal?
+
+Implement features like CXL Reset as operations against CXL objects like
+memdevs and regions. For example, PCI reset does not consider management
+of cache coherent memory, and certainly not interleaved cache coherent
+memory. Other CXL drivers also benefit if these capabilities are
+centralized.
+
+> > >   (b) Re-implement or delegate everything vfio-pci-core provides =E2=
+=80=94 config
+> > >       space, BAR regions, IRQs, DMA, FLR, and VFIO container manageme=
+nt =E2=80=94
+> >=20
+> > What is the argument against a library?
+>=20
+> vfio-pci-core is already a library, the extensions to support CXL as an
+> enlightenment of vfio-pci is also a library.  The issue is that a
+> vfio-cxl PCI driver module presents more issues than simply code
+> organization.
+
+Understood. As I conceded above my concerns are complications that a
+vfio-cxl module does not solve cleanly.
+
+> > >   (c) present to userspace through a new device model distinct from
+> > >       vfio-pci. =20
+> >=20
+> > CXL is a distinct operational model. What breaks if userspace is
+> > required to explicitly account for CXL passhthrough?
+>=20
+> The entire virtualization stack needs to gain an understanding of the
+> intended use case of the device rather than simply push a PCI device
+> with CXL capabilities out to the guest.
+
+Agree.
+
+> > > This is a significant new surface. QEMU's CXL passthrough support alr=
+eady
+> > > builds on vfio-pci: it receives the PCI device via VFIO, reads the
+> > > VFIO_DEVICE_INFO_CAP_CXL capability chain, and exposes the CXL topolo=
+gy.
+> > > A vfio-cxl object model would require non-trivial QEMU changes for so=
+mething
+> > > that already works in the enlightened vfio-pci model. =20
+> >=20
+> > What specifically about a kernel code organization choice affects the
+> > QEMU implementation? A uAPI is kernel code organization agnostic.
+> >=20
+> > The concern is designing ourselves into a PCI corner when longterm QEMU
+> > benefits from understanding CXL objects. For example, CXL error handlin=
+g
+> > / recovery is already well on its way to being performed in terms of CX=
+L
+> > port objects.
+>=20
+> Are you suggesting that rather than using the PCI device as the basis
+> for assignment to a userspace driver or VM that we make each port
+> objects assignable and somehow collect them into configuration on top of
+> a PCI device?  I don't think these port objects are isolated for such a
+> use case.  I'd like to better understand how you envision this to work.
+
+No, simply that CXL operations relative to that assigned PCI device are
+serviced by the CXL core. The object to manage over reset is subject to
+CPU speculative reads and potentially interleave, I think it breaks the
+PCI expectations of local device scope operations.
+
+If CXL Reset in particular stays out of the PCI core it at least
+requires something CXL enlightened to be loaded, and at a minimum I do
+not think that "something CXL enlightened" should be the PCI core.
+
+There is a reason the CXL specification decided to block secondary bus
+reset by default.
+
+> The organization of the code in the kernel seems 90%+ the same whether
+> we enlighten vfio-pci to detect and expose CXL features or we create a
+> separate vfio-cxl PCI driver only for CXL devices, but the userspace
+> consequences are increased significantly.
+
+Agree.
+
+> > > 4. Module dependency
+> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > >=20
+> > > Current solution: CONFIG_VFIO_CXL_CORE depends on CONFIG_CXL_BUS. We =
+do not
+> > > add CXL knowledge to the PCI core; =20
+> >=20
+> > drivers/pci/cxl.c
+>=20
+> This is largely a consequence of CXL_BUS being a loadable module.
+
+Yes, the question is why does that matter for CXL enlightened operation?
+Simply do not burden the PCI core to learn all the CXL concerns.=
