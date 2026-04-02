@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 782973033C0;
-	Thu,  2 Apr 2026 18:07:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ED6C36D9FE;
+	Thu,  2 Apr 2026 18:08:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775153250; cv=none; b=X2G9iXw1zV9D95OJwxWWyyreYoRZknDgca4h7/01Nb1ndOc2KVvCX4bbCSI/mUbXBMZ657yn3ibl//vu8oqHvO7/w/zeJqwg6ItVo/lYNnxheIZfQCg8JUHtsvU0MoUX36wvSXbcTVo5yammGQxSKq0R0sKf+JP3b+rv+7b2qBU=
+	t=1775153293; cv=none; b=NMdps3LxbheDyy8DtVabBeEccOGWg/9kI/5I4ZOJsFUEYsTSAF9gkmfD5NLV7h/Kq0jmU4a6Pw9iioJLrMNujnKMdY8ZkEhG9iwPt68pxC85E46RJa0/LfxA+WhVql8bMbUvwsBoeG5LLfWDxVOXjSvusHTcI/pPfGTNSZ2scSU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775153250; c=relaxed/simple;
-	bh=z0rx4uq00Q9234doig/yq98Bb0sNvBBK0X35d8mDbVs=;
+	s=arc-20240116; t=1775153293; c=relaxed/simple;
+	bh=/N8OatrR1ZMXXHUVkwCXF5bvIo9DDJWSh07nx01MuDs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uFuroGMYo/4pi0CFwnVphPUCzstIpnhFrKsoBtcQqPXr1PsdawG27tnTGss9e5iLWx3vDVE+JoSbQxL2ojndhmFlDoyeJhH8cMLzzpwP2RnOjN8yQXxIrOG3h8X0S28aAr1qZNU59DQqrYmoabDgTwIrCcZ282q3LyyhxKsHX+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ODdjTrFK; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=IYgoNUPf+5KimfMsgVAhe05/Hy102CtEcfSPTKoir2YARzjiR77IeqHfj0BrOAOoAyJnpgsLYjkh1NeDQmABrOtbXD+NlOOrGrP22iaOjJHm5g1uqf94lvf7q8KB/p3/2kV/so8ODakoNkCYpdV+s3mXnqx8wlZ2yNuOK1e8siI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lo1dRpwI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ODdjTrFK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 108FDC116C6;
-	Thu,  2 Apr 2026 18:07:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lo1dRpwI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E278AC116C6;
+	Thu,  2 Apr 2026 18:08:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775153250;
-	bh=z0rx4uq00Q9234doig/yq98Bb0sNvBBK0X35d8mDbVs=;
+	s=k20201202; t=1775153293;
+	bh=/N8OatrR1ZMXXHUVkwCXF5bvIo9DDJWSh07nx01MuDs=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ODdjTrFKEvBKknN7n/FV4oACUvBmfihBxWnBPRs0AhVhQYYRh0C/fVxtHttgJd8Sq
-	 E+YchLRhNJc2bEX1pfOEF0BHME4oHH2UYlMD38SjI/4q02dKeJrY+51hy4ETQDdDfO
-	 bg4kAmDW9y8VJ/T1urVr7MasBZZpVYDRaRQkMMLcge7Cxy+wDeXSJMsLPpPVW059bo
-	 1DE75q+DayI57pkjDjl5fsFEU0/RZQrLR4TnC9z5YffCkS67P8ZqflWCqF1KRLuhxI
-	 FXAJj/HQ6dBFy+c9kn5lCf4HlhErlWB0Z5i8vy4GsU21pfZn1aFLtaLPNK4YBPZu8a
-	 c52qfOph0q3dw==
-Message-ID: <68f50e02-d12f-4f46-bdc1-812cbbb2bd0b@kernel.org>
-Date: Thu, 2 Apr 2026 20:07:25 +0200
+	b=lo1dRpwIEWZ/NSljB4eSpHEDzIQmTo/0LKH4YVvjRzBv6+W0hSA67+EsGz0lUWLQY
+	 Br4Qvq17Tzv+1DxWilgdTTP32UQAS3XC8+OZy9zvoaGywTLw2XZDn/cGRtJil2OMvh
+	 aWYd+kVF+k+wc0xW5dedQJUGB1qpGUjs+6VdD/rMUEVV7hQkNt3/OMyScUgtIOaTgS
+	 Cbyx3WCwXvy5R6OsXsbdK3k1nPTzmuHHiruSkiyX/w/x/raXh4j1mizQAeVIl3C5AX
+	 LDboUYN34oXoQ6ZyLWrTPgadv1gXiIKRFElWF3Zxm7y/GzoGCLLSHSdShSaBlQZSnF
+	 E4RcmZvSSWLVg==
+Message-ID: <54786a14-e6eb-48e4-96a3-500a7e9b4de4@kernel.org>
+Date: Thu, 2 Apr 2026 20:08:08 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] dt-bindings: PCI: Add compatible for AMD Versal2 CPM6
- host bridge
+Subject: Re: [PATCH 2/2] PCI: amd-mdb: Add amd,versal2-cpm6-host compatible
 To: Sai Krishna Musham <sai.krishna.musham@amd.com>, bhelgaas@google.com,
  lpieralisi@kernel.org, kw@linux.com, mani@kernel.org, robh@kernel.org,
  krzk+dt@kernel.org, conor+dt@kernel.org, cassel@kernel.org
@@ -44,7 +43,7 @@ Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
  linux-kernel@vger.kernel.org, michal.simek@amd.com,
  bharat.kumar.gogada@amd.com, thippeswamy.havalige@amd.com
 References: <20260402180006.486229-1-sai.krishna.musham@amd.com>
- <20260402180006.486229-2-sai.krishna.musham@amd.com>
+ <20260402180006.486229-3-sai.krishna.musham@amd.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -90,42 +89,42 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
  zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
  XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <20260402180006.486229-2-sai.krishna.musham@amd.com>
+In-Reply-To: <20260402180006.486229-3-sai.krishna.musham@amd.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 02/04/2026 20:00, Sai Krishna Musham wrote:
-> Add the "amd,versal2-cpm6-host" compatible string for AMD Versal2 CPM6
-> host bridge.
+> Add "amd,versal2-cpm6-host" to the OF match table of the AMD MDB PCIe
+> host controller driver.
 > 
-> CPM6 integrates a Synopsys DesignWare PCIe Root Port controller derived
-> from the same IP family as the existing MDB host bridge, but uses a
-> newer IP revision, supports PCIe Gen6 operation up to 64 GT/s per lane
-> and has differences in register layout.
+> The Versal2 CPM6 host controller is DesignWare-based and supports
+> PCIe Gen6 operation at up to 64 GT/s per lane. It is currently
+> handled by the same driver and match data (NULL) as the existing
+> MDB host controller, but CPM6 uses a newer IP revision and differs
+> in legacy INTx register offsets.
 > 
-> A separate compatible string is required to accurately describe the
-> CPM6 hardware and allow software to distinguish it from the MDB-based
-> host bridge.
+> Use a separate compatible to allow CPM6-specific handling once legacy
+> interrupt support is validated.
 > 
 > Signed-off-by: Sai Krishna Musham <sai.krishna.musham@amd.com>
 > ---
->  .../devicetree/bindings/pci/amd,versal2-mdb-host.yaml         | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+>  drivers/pci/controller/dwc/pcie-amd-mdb.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/amd,versal2-mdb-host.yaml b/Documentation/devicetree/bindings/pci/amd,versal2-mdb-host.yaml
-> index 406c15e1dee1..be5a77908d24 100644
-> --- a/Documentation/devicetree/bindings/pci/amd,versal2-mdb-host.yaml
-> +++ b/Documentation/devicetree/bindings/pci/amd,versal2-mdb-host.yaml
-> @@ -15,7 +15,9 @@ allOf:
->  
->  properties:
->    compatible:
-> -    const: amd,versal2-mdb-host
-> +    enum:
-> +      - amd,versal2-mdb-host
-> +      - amd,versal2-cpm6-host
+> diff --git a/drivers/pci/controller/dwc/pcie-amd-mdb.c b/drivers/pci/controller/dwc/pcie-amd-mdb.c
+> index 3c6e837465bb..325bf7aad657 100644
+> --- a/drivers/pci/controller/dwc/pcie-amd-mdb.c
+> +++ b/drivers/pci/controller/dwc/pcie-amd-mdb.c
+> @@ -511,6 +511,9 @@ static const struct of_device_id amd_mdb_pcie_of_match[] = {
+>  	{
+>  		.compatible = "amd,versal2-mdb-host",
+>  	},
+> +	{
+> +		.compatible = "amd,versal2-cpm6-host",
+> +	},
 
-Why reversed alphabetical order?
+So devices are fully compatible. Fix your compatibility in the binding
+and drop this.
 
 Best regards,
 Krzysztof
