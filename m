@@ -1,46 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84CB43806BA;
-	Thu,  2 Apr 2026 11:54:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83F4D35957;
+	Thu,  2 Apr 2026 11:56:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775130884; cv=none; b=pzD2aAShfHBBQnfdvlyDP+8jQcB9ZTLSdVtT9hF6PMFjEujWDZk14mRN18cpKYcU6kbMg/MLUy62GvUqJXkIkcVjnzjnK5vE2k7+c1fwZaC5NEUN1dUq35hp2D+Beui6iO5Uu29iyaoazD4uz55BZLaeynYsQV+0WPmoZiHqMWw=
+	t=1775131011; cv=none; b=RMJUgtCDJOkg4QSSckfyfzq8I2GqUwXiliDHmEpMTMqhIC13flJkVMTpbK/LBDGXMPrvQzAJMBoMri3pgc29TAT4dbAdvgAqMxanbrD0rYouEQZG6gNEvdbbVCPs+VaiuRTaw35a0M+pMhN80UmBDsursVvp+U4R/ZrWkGT1Kfo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775130884; c=relaxed/simple;
-	bh=6jY2zA83Vj3154ea5Z6LcOkfUV+L4Q1s56RH12N/p/E=;
+	s=arc-20240116; t=1775131011; c=relaxed/simple;
+	bh=qHCU7KuluEAoAYrPL6lU76Qh5ztSdBB3Rk7YSr8E/G0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GXVJpyBmKCcTqbazAxL3suaPghyGcR8aIPX0uxOxNtgpbBAcV86tPV63JPpTBG3agV5HXMvHkIUa8tnHJYLh7MCKhFF9W10AGaxDZifdtTBr4EhhRSpvy8KIQ0MY0jfXS6uqGqw+ue/CAlGbc/B+I6EHK8ksE2KrBZcQgANCfm0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QzJ6V8vR; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=N0fOaiksBLlAMo3xyCTHugs99SjJAn+wxgAhdQM6E06SKL1uriUHYGhs1c5yi6OlqjADTfW2qoF/be+R3mE5rbUwNG+v/LuVXf0mlmpaKNyWTwgDAvkTCc7PqDGnHVqCUEEip8Urhifi/q1s0mS/dy8hgglt9K9I37sxG6VGC84=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QpWiI7ek; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QzJ6V8vR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFDF2C19423;
-	Thu,  2 Apr 2026 11:54:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QpWiI7ek"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DC70C19423;
+	Thu,  2 Apr 2026 11:56:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775130883;
-	bh=6jY2zA83Vj3154ea5Z6LcOkfUV+L4Q1s56RH12N/p/E=;
+	s=k20201202; t=1775131010;
+	bh=qHCU7KuluEAoAYrPL6lU76Qh5ztSdBB3Rk7YSr8E/G0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=QzJ6V8vRXkuz56WfCU2oxKir4hB82qs6ZJ/UIt9OgZy540/ZSV6TiuVkJwhJCHRt/
-	 tP4xQIPbZWA7UZkuvDDV3OtVQ7i0Rl4m6xTol9ipzMb19AWnzz+jL2CCE96tDnzv7/
-	 0BSUpyt1yXagj2RFEow2zIlASCpnY7SxkkQCASH3taBGXXsm4dzx04wCJemW93FzjN
-	 zKhQaisQNmWZaLAE33bD4ktRuAMPV95PQODBX3vaDj8oB7u0m7xnaP0CXzOCPaaCRT
-	 qrEJLOVVCyzhRm/CL2Ot790znrr3YXSQ1YaAFhc6tpWZWGgldPZSulfwdan0oQzMun
-	 u7B1cpQcA8t4A==
-Date: Thu, 2 Apr 2026 13:54:40 +0200
+	b=QpWiI7ekZllBUgA55FaznDKG1bFcCKC2+4R4JtbHAzKkyWLLIyCXw7+2m0enLxC73
+	 g6e6UT8G38pZA71oYvaJ8IkdSl8QAnHOHk+JYeLKX6+vmhRdext5FoJC0Y4TyWXKQp
+	 AVhE0bVLVSNrhPs6WOFP0CZiY0AL5ybUqt4nlUDLm3zjKLizJV21M2taOlnn8G5KuM
+	 o9Wll3Q60a//L2kHi9u6pa8whDvPksfddKcvgUfd9b3rhu4CmlPQUvGdT5NLbP9aSw
+	 Wf759oAmL/lsxNZHVTKoYr07FbdfDGkL3fnIxm/Mb0eQ8eAy9JkoJxwIfVxBK4zSWx
+	 rU2eAydACfcBQ==
+Date: Thu, 2 Apr 2026 13:56:48 +0200
 From: Thierry Reding <thierry.reding@kernel.org>
-To: "Rob Herring (Arm)" <robh@kernel.org>
-Cc: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	devicetree@vger.kernel.org, linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org, 
-	Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Jon Hunter <jonathanh@nvidia.com>, 
-	Mikko Perttunen <mperttunen@nvidia.com>, Conor Dooley <conor+dt@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>
-Subject: Re: [PATCH v2 3/5] dt-bindings: pci: Document the NVIDIA Tegra264
- PCIe controller
-Message-ID: <ac5YiVt-HZMe8FfQ@orome>
-References: <20260320225443.2571920-1-thierry.reding@kernel.org>
- <20260320225443.2571920-4-thierry.reding@kernel.org>
- <177440189257.2451552.18196101830235626115.robh@kernel.org>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: Re: [GIT PULL] PCI: tegra: Changes for v7.1-rc1
+Message-ID: <ac5ZGItkKNEI_W1-@orome>
+References: <20260329155040.1448158-1-thierry.reding@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,72 +41,74 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="hywuacew5zvcyg2p"
+	protocol="application/pgp-signature"; boundary="sqygtkd3gjj3h2rc"
 Content-Disposition: inline
-In-Reply-To: <177440189257.2451552.18196101830235626115.robh@kernel.org>
+In-Reply-To: <20260329155040.1448158-1-thierry.reding@kernel.org>
 
 
---hywuacew5zvcyg2p
+--sqygtkd3gjj3h2rc
 Content-Type: text/plain; protected-headers=v1; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH v2 3/5] dt-bindings: pci: Document the NVIDIA Tegra264
- PCIe controller
+Subject: Re: [GIT PULL] PCI: tegra: Changes for v7.1-rc1
 MIME-Version: 1.0
 
-On Tue, Mar 24, 2026 at 08:24:53PM -0500, Rob Herring (Arm) wrote:
+On Sun, Mar 29, 2026 at 05:50:39PM +0200, Thierry Reding wrote:
+> From: Thierry Reding <thierry.reding@gmail.com>
 >=20
-> On Fri, 20 Mar 2026 23:54:35 +0100, Thierry Reding wrote:
-> > From: Thierry Reding <treding@nvidia.com>
-> >=20
-> > The six PCIe controllers found on Tegra264 are of two types: one is used
-> > for the internal GPU and therefore is not connected to a UPHY and the
-> > remaining five controllers are typically routed to a PCI slot and have
-> > additional controls for the physical link.
-> >=20
-> > While these controllers can be switched into endpoint mode, this binding
-> > describes the root complex mode only.
-> >=20
-> > Signed-off-by: Thierry Reding <treding@nvidia.com>
-> > ---
-> > Changes in v2:
-> > - move ECAM region first and unify C0 vs. C1-C5
-> > - move unevaluatedProperties to right before the examples
-> > - add description to clarify the two types of controllers
-> > - add examples for C0 and C1-C5
-> >=20
-> >  .../bindings/pci/nvidia,tegra264-pcie.yaml    | 149 ++++++++++++++++++
-> >  1 file changed, 149 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra2=
-64-pcie.yaml
-> >=20
+> Hi Lorenzo, Bjorn,
 >=20
-> Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+> The following changes since commit 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f2=
+7f:
+>=20
+>   Linux 7.0-rc1 (2026-02-22 13:18:59 -0800)
+>=20
+> are available in the Git repository at:
+>=20
+>   git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git tags/tegr=
+a-for-7.1-pci
+>=20
+> for you to fetch changes up to a0c0906bb09ee2f64690b3b8ffb458b4dbbcb26e:
+>=20
+>   PCI: tegra: Add Tegra264 support (2026-03-28 15:00:05 +0100)
+>=20
+> This is v3 of the Tegra264 PCI patches that can be found here:
+>=20
+>   https://lore.kernel.org/linux-pci/20260326135855.2795149-1-thierry.redi=
+ng@kernel.org/
+>=20
+> This looks ready now, but if there's any more feedback, I will happily
+> respin these driver patches.
+>=20
+> Note that the shortlog and the diffstat below include the dependencies
+> from the Tegra tree, and that subset will go in through the ARM SoC tree
+> as well. Effectively what's new in this pull request is just the two PCI
+> patches, the rest is only included here to resolve the build time
+> dependencies.
 
-Unfortunately making the ECAM region the first entry causes the DTC to
-emit a couple of simple_bus_reg warnings, as seen in some more pedantic
-build tests. I'll revert this back to the oneOf construct from v1.
+I'm retracting this PR. DT maintainers aren't happy about how I handled
+this, so it'll have to wait for another release cycle.
 
 Thierry
 
---hywuacew5zvcyg2p
+--sqygtkd3gjj3h2rc
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAABCgAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmnOWQAACgkQ3SOs138+
-s6FLXhAAkYkhf1nRIIvJYIqH6tgxjrZt5dvdiwTzt9PBd/ZsfokG/QxZ4wEAhaOc
-xaaMRao0IdDpQw+NXblxEKeQK+19PxqJErQW7y1upkoebQcbKfL9EaHEAwEnoTo7
-p//belmepyrLtvujjYGZiFkzhPsvaK3SlIuD6/sNuBeOPrH16cXQ6z2cWkKhiXhP
-B+v+okT4nFTzVsVRIQR+Ywucjgs00zgTNXEV9U/hCoWCW2OW5jyfudpNKMVMKtZb
-jZGDKG+KTYgAlwjndLUEmfea/2OBYfQKT+6fxlNrP/nzkgyzgbNLwwV8CYrDaXjw
-l1z4+UQfKoUW/u72TUo98Hhp0EH2H3NCLNNaHzjWfDpvwZesYsgw8vHwBvZqaP5L
-DUUHtsyEl6+oDI36ix2TCIn/bP5cbwpf4xrHhCOE6EcVcGAZQ9PvWMtc1Qkl7cNj
-lC08iHWi0Zs1JPLTSpCewwHuz3iu8cDNaY29avNNCbAhp26+lvvKTUQ6lVwExFzU
-pDtbK+I++xPKB0xpL3+3lez0qoJ/PW3glzwutyKNbZ3/qGzGmehRmBjYrK1M6xIv
-HJkSLHxuZWti9u9ZrK6yvulH9SXwOMXR+DMsJRth2v6n1ofMpnrjgZaSpKblWryl
-Vfd3soZ+AdkD3MTs7v4V1dojwiWJyajpqxzeyLtwYRWfSllPGyE=
-=oZ2w
+iQIzBAABCgAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmnOWYAACgkQ3SOs138+
+s6G6Zw//QYfwJuUWFp0oCnT5XmsMnUIYQjEZ7Mb84h8F7NAoTGNuGU1SdZ/wMvWA
+L67jiQNK1ZbML3KngD2kwrraSXGN8Sk1L421cBZq/kLbw4U18R6mmPlnoeWbYt2z
+voD8D7NIr0queFKrNfsChepCM3UPOpMGIDi/De6fsj5Eir6wo0Lh28bXTSKiSN0w
+elPFQ9r43OK9wTpz5HAC2ouKiGGg/2KBgofvNyA0iLGTFg+kWnk+sdrIWn+CaBrO
+XqAqsbhx4tyduGA8ssg5y2nt8N14WoQWgFcRPS/d6XY/7/yrqyiNdN4EVtx/E2CC
+Xa9wGUOYG3zTPU3OA/r8eDzvdjUTHhZtwkDQcmLdCcFKWKIS1O9cKdvNOXXlK9JE
+/Qbi1rQ1Ryw89qRfTpu6FWQUC2uWVmK+n7+3mz8FAZXmWdsAByBiSp1wYA6wDdSz
+NTjEcoU+QhwPhYel/n7OmxACCXL6UeAarvM8MJANKeOcNuZ9vKCLi8v1mbxNkGN+
+T50bqdeyVnV/FQKvDTSswR+jg5x4gKnTQ3tXiKjNqubadyUc6e1Ucfm3Ee/YJ7JI
+SIzEP3X+9FUF8y2DBLtCpmbenSLvJrHwf9yVkWDuPHL9uM1YLU3dXoU2KDv64/uG
+4xxJd7Y3ALBFQxGkfs2wnXaURo49jytq9ClRcMh8/BhiuH6hQt4=
+=DzGB
 -----END PGP SIGNATURE-----
 
---hywuacew5zvcyg2p--
+--sqygtkd3gjj3h2rc--
