@@ -1,210 +1,191 @@
-Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011059.outbound.protection.outlook.com [52.101.62.59])
+Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013052.outbound.protection.outlook.com [40.93.201.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1CA51B4F1F;
-	Thu,  2 Apr 2026 08:55:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.59
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B3153D3CE7;
+	Thu,  2 Apr 2026 09:39:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.52
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775120156; cv=fail; b=TvTfZejQoWrro3ZFCf1es3vPa3U2aqiB1KDiCTPSWOHyLBMrRRLe4B7G0/Phg8oLHDxh9jnKEGWmuPsh0EAkJcMfAhvwiZRl31VCRw8zVS71bYYTGjE8ET1z8BsQhBcNqDZen9BIFne4SEaGhJyNvJhnsomUSZIcR4xqQe+3Dx0=
+	t=1775122755; cv=fail; b=J09wTTGhXgZPnmdEl+Bco4byziY18fOQwiXg656jr4MRCKw2J+4QjcGHbXyhAwRpQmK8XKVTfUxb0FlEZtiP84zezQPnc8M1qk5FtIBCskpaUYT4WwqHtoBPudXRvaZxMd3nVXSydPoyf/CPIJgbZueI3Bp3q0ao9nDSiYifExM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775120156; c=relaxed/simple;
-	bh=AooOAT7AVA4fY0/XfFgOibDviIy7i3sroXvIPIO9Qvk=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hpUi246ot1kR77onCuKC1XyUl2l5PPFVHPRWUCxxBqcwfiDfFy93NogceVbF3aeqS+fVw4j4yNrbcEBQ9WaOPTE2LFRa7H7a+AO/QdJ2oi6CcQcL7MKNQXz2QzKfyQbQvqQMt9id0pWqTsCZcZ48ldBIXEm45ohMVQFLFui6Oy8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=UkPtKQjU; arc=fail smtp.client-ip=52.101.62.59
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	s=arc-20240116; t=1775122755; c=relaxed/simple;
+	bh=RMQrCLdbz4jiURBfeNjRslP0s1ygPNcG7d8k3DPgmy0=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=sJK8tm4qCVUv5gZ9P0OjxdEw5FejEHIbx0FG+u+AXMnSIAcG/uGyPaqX/OeLQX3oD2ZqYFCHArrKZ1GvwRzwCzKcd1oePK2Z7ki86fBdDtvWRYdPiUl0VpBoKla6ZrXslNq2c/iIc1/PqxuGOBPJktFFM8LKR69VTC3xeFIW5zA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=m0K/w+JF; arc=fail smtp.client-ip=40.93.201.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="UkPtKQjU"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="m0K/w+JF"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ocbdVwlUCjqcKXwhJzL2P9gpAYli2Te4kgSRqkr7jfgaWFClG1P5fqkSgfEPhw3KcalT7IPgVQdMwKnp26ekNNJPLgVOk9z0sbC/1Dls2QGvd/2voe+hKY98Kme/4jnPRcOsGmw+sUQyw241vZ3y4rPQIUQjBRmnZPVqFLX8Nc05A0xwLs/UtNGzWi9pZz9ylxLsBv7arPHZaPxJkwWIf+8gcP9f8dJSzKASjFaT64u67Bh4iR5lkmIc10EJ7OwOJSTnShcJYK4W6t6VR7WeR80C2PoRqlELXGW2O/z4uWHGnZ98rBGMZiRjhbfDNNyQjU9wxDbfUXTQcb1/t0AzYA==
+ b=N0PmRKt4dMmsLeSQea+CVT9XRmCeEL4d1ARw1v8HREh/7VWF2wyFNCh8lNqArjJp+m/nDBKfNb0exm3prutapHaiVgMydm/HD899R/7J0H8HLNxeFeAKzZrjfQl2ECQPz+wnu9KfUquccKZT92lJtG5jNw5JvdzlPdn6VRgjG72cYeP6PTvMVUoAiaQcT0OJtw2xECfTc6/V2HqcmBQCKCijAzjkSG+yqFNKycCM2B1bmRAXx6ezUcYZ8Z2Z2ZBJA+IxQqTRFLVri/eb6/9QBs6i/hCm8WGdhov5qcgHmOBmVYJzeugayXEf99PJvHRZbEYR+zxDAFsByNQlZTnI5A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=OigpvRnq8Az+RJBJRmOjabUCVoeUyUSdDJvllJ3AJns=;
- b=zVA1wvZw7PJ+CG+RtDDM5dw58g2gv9GweEeJuLeR6q1CuWpv9GUvq8+QwptJJGPD12GmT5VZRSD0IcFp3TswfDCllpT7E0Jlb5+e5pja3dnFGtRQxUdbMtxPF5Kp7BUBaVwh5KQ0fU8jsD+gNH3A15AY6uS/jDK7pJHelzbCeI0rsabYiaHyfVEHeie/UkAnCssEdRiE2shFWU4LuZtJr7Ou14vapgFEkrJwWeohw7O7tuEInsiZT2WB7m8HMdP4qirk0vE8BWsz4oSXNoCYJgC55Vn5bn0TXOOM+JrBq2CkK2hpzhq+GYhUTYnTo2Gnf3NUtXETfRhrDv9PTFecvw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.21.195) smtp.rcpttodomain=outlook.com smtp.mailfrom=ti.com; dmarc=pass
- (p=quarantine sp=none pct=100) action=none header.from=ti.com; dkim=none
- (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
+ bh=ejqrYxkyVjscL/VY7y7kuDp/OuQgloD6i2Ludz84Qdw=;
+ b=b5l8cXq5TSUrTEnDqUmssrbLG5ZHiv7wGm/woBflizn3a87QwQaA6cuRkAgzDGPdfWPoJ3qI48hBB9ABpPGR34IJeJAG/Ns100ZyE2eSJc2Kq8VoyK6EBS/1MXDy+iqUOBQAgsajneYmsiMD6HIfRa1Hs91f1J83ywJT01Ay8+OZ0hhAdEpodCsTnF8yVArZVx8B4LcYUH0kVTOmlMPAKZrFRjxIrA8ia3GwaMKcmaRZiH/zA9/LqGhSPKo/m7plxey19rE2r64Zbf29xRM9Yu+rHI4sEVsIdqvAWSjmrvoVTFKhjTfGSwuN7q95Og2CV3bKcrm+EZCCyuvT05F70Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OigpvRnq8Az+RJBJRmOjabUCVoeUyUSdDJvllJ3AJns=;
- b=UkPtKQjULQ9NsLl/Kd56rzQinnMPsvgs0iMdpzuKbaF1J0anLt5sQnXPjmKzHv3sbzVRy52BMmsjQKG36C858FGbKBQED27Y6TbPF9yl96WqWAePbiSxVehk5aovbXzBW3xJMMFYMpExwMU44qKFfbhif9QBY0oYdTyPkl3GePo=
-Received: from BY3PR05CA0006.namprd05.prod.outlook.com (2603:10b6:a03:254::11)
- by SJ0PR10MB6424.namprd10.prod.outlook.com (2603:10b6:a03:44e::10) with
+ bh=ejqrYxkyVjscL/VY7y7kuDp/OuQgloD6i2Ludz84Qdw=;
+ b=m0K/w+JFUTyDlHtxM+zqSJ65FURUi47p5uguYt2+a7xMoR9WNXlKRududoRl8LDM42AYhBJifevtfeYWCuwGEJWMJVkqk1kHuoxS7CqwOBB5yaOY4b8ZUPNyYfoQ2wBBvWwaXu18lp6J5B+71x6z2PdWdcClYuIf+4YydPJQdC+DMpPVaPqdydRIdk3fdgnaYhQ8P5ooZ0B8jjvhRdhzarwtPCei9neO0/1uZoS8JviRHL2K1OEWjRsy3fyJel/lOygx7ZLB++XdwB3GgH3wQM4MZG9I4ZDYeRuB5dZ+hETbvKQrD0clfWXolTyyTBO2Xs1gaEK2kV8lleFnNTSIew==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from BL0PR12MB2370.namprd12.prod.outlook.com (2603:10b6:207:47::27)
+ by DM4PR12MB5841.namprd12.prod.outlook.com (2603:10b6:8:64::13) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.17; Thu, 2 Apr
- 2026 08:55:52 +0000
-Received: from SJ5PEPF0000020A.namprd05.prod.outlook.com
- (2603:10b6:a03:254:cafe::7e) by BY3PR05CA0006.outlook.office365.com
- (2603:10b6:a03:254::11) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9769.16 via Frontend Transport; Thu,
- 2 Apr 2026 08:55:52 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.195)
- smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
- action=none header.from=ti.com;
-Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.21.195 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.21.195; helo=flwvzet201.ext.ti.com; pr=C
-Received: from flwvzet201.ext.ti.com (198.47.21.195) by
- SJ5PEPF0000020A.mail.protection.outlook.com (10.167.244.43) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9769.17 via Frontend Transport; Thu, 2 Apr 2026 08:55:50 +0000
-Received: from DFLE205.ent.ti.com (10.64.6.63) by flwvzet201.ext.ti.com
- (10.248.192.32) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 2 Apr
- 2026 03:55:49 -0500
-Received: from DFLE208.ent.ti.com (10.64.6.66) by DFLE205.ent.ti.com
- (10.64.6.63) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 2 Apr
- 2026 03:55:49 -0500
-Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DFLE208.ent.ti.com
- (10.64.6.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Thu, 2 Apr 2026 03:55:49 -0500
-Received: from a0507033-hp.dhcp.ti.com (a0507033-hp.dhcp.ti.com [172.24.231.225])
-	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 6328tjUs2171747;
-	Thu, 2 Apr 2026 03:55:46 -0500
-From: Aksh Garg <a-garg7@ti.com>
-To: <linux-pci@vger.kernel.org>, <lpieralisi@kernel.org>, <mani@kernel.org>,
-	<kwilczynski@kernel.org>, <bhelgaas@google.com>, <18255117159@163.com>
-CC: <linux-kernel@vger.kernel.org>, <robh@kernel.org>, <mpillai@cadence.com>,
-	<unicorn_wang@outlook.com>, <s-vadapalli@ti.com>, <danishanwar@ti.com>,
-	<a-garg7@ti.com>
-Subject: [PATCH] PCI: cadence: Use cdns_pcie_read_sz() for byte or word read access
-Date: Thu, 2 Apr 2026 14:25:45 +0530
-Message-ID: <20260402085545.284457-1-a-garg7@ti.com>
-X-Mailer: git-send-email 2.34.1
+ 2026 09:39:02 +0000
+Received: from BL0PR12MB2370.namprd12.prod.outlook.com
+ ([fe80::86cf:c3ec:2cf5:74c8]) by BL0PR12MB2370.namprd12.prod.outlook.com
+ ([fe80::86cf:c3ec:2cf5:74c8%3]) with mapi id 15.20.9769.016; Thu, 2 Apr 2026
+ 09:39:02 +0000
+From: Richard Cheng <icheng@nvidia.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	jan@nvidia.com,
+	newtonl@nvidia.com,
+	sreddym@nvidia.com,
+	skomatineni@nvidia.com,
+	vidyas@nvidia.com,
+	kristinc@nvidia.com,
+	kaihengf@nvidia.com,
+	mochs@nvidia.com,
+	Richard Cheng <icheng@nvidia.com>
+Subject: [PATCH] PCI/NPEM: Set LED_HW_PLUGGABLE for hotplug-capable ports
+Date: Thu,  2 Apr 2026 17:38:50 +0800
+Message-Id: <20260402093850.23075-1-icheng@nvidia.com>
+X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: KUZPR01CA0010.apcprd01.prod.exchangelabs.com
+ (2603:1096:d10:34::16) To BL0PR12MB2370.namprd12.prod.outlook.com
+ (2603:10b6:207:47::27)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
-X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ5PEPF0000020A:EE_|SJ0PR10MB6424:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4535416b-7a36-4f25-6f87-08de9095a3cf
+X-MS-TrafficTypeDiagnostic: BL0PR12MB2370:EE_|DM4PR12MB5841:EE_
+X-MS-Office365-Filtering-Correlation-Id: a76a6b7c-ceb2-4612-635d-08de909bac49
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|32650700020|36860700016|376014|1800799024|7416014|82310400026|18002099003|56012099003;
+	BCL:0;ARA:13230040|366016|1800799024|376014|18002099003|56012099003;
 X-Microsoft-Antispam-Message-Info:
-	xn4KuBQDpXQM6LAha8b7qk0hAkqCIExIbY1YUcVl1PJqvqHexFxPEQq838I4ai16O7Impg6EuvnQ4vdixmX016O/HL2L49+bdTlAGluFonDFQN1Jv5JI5ySCDfq4kRFE8zb1LxfWVpuLBsdbPVbzp08brl0j6NvNeCA9zDqBtF0csKzS+q6GwVz3yQ3SF6D2o7b7PbAkvaJijxZ6kUj6ewjNRqHe3ChFBdZ94TiHhQpVaD9h/kpk6OOY0LnL46Fl7YYIuyXJwmDxABAvx0A0oKyn7i1cR2miFSPXLv0OXZ1G4k2MQ4zjYf2cPpzRqI84JNN5xqsy7l82IB1mV4WI9indl513juBKFwGexYwJgMfeFGA+waIH17J0y41ZJbh1Hfwm/S3QWCX+6oRwyplGZJGlR8ue2j7q5HimVJDrjK99DRARgZNVIxAFWYXOEzad8658aek2Knwjy9EoWJFl63wOrMB7PNEl8t1VrQ7Y5SNBKaRjNI/3NCC/yykcQTkrq/QMFp/lOGcpBNeaKP+kdwBfbO0MliolkPHJ6Wr5m0bALc3KOM2xgJ3l24upiOVvh9QpESEysEz1gstcIUyKrjzHayJzoBrO0Sxp586ojcp2hukVnWW2Um21IgPHPRs5hb/AmOdhxKAd8jzSF87W5bszoWG/3DqLHr1XIv576ibGvxbsjl5rbki0aK9lFD3gvBSUN2kym8TGRE97+n+vIrhBGGlt4Z+qoGxg9hyLi/eV+KenWfW2/MUITamv0P06Q+7iPSGAAsMtdVwiM89h2A==
+	DDdzQd8qK8fls/x1iBrpraDT2loGSk7nVg2BnqOE9YKrQWwQ6mFe7pOuwJI/wacpvm5vSaFt2lKO1Yg0IQbD68UmvORVYhQJs1xsvdej2xcCojO+mK/gyYJHqZL15TDQHJOC4XyQho9CwnUXeh3AB0iK8ImLA7JUGesbr0aFSyS1XYGQAKfiA+ViJscxeUOSnR55mcDGXykVassTwzMPjnWkd01g43ARwLZBt7fh0vCUJYo/m48oHegRvIoS5YaHnIxO1e7NNorvn1bpylhzHY/5Ja/axUWzOXCRGfWOmJQwOMKFoJ0ty7KIx6wGXGR6s/J8vN14DUcv0ISAwaUit4+nW0dQlaPJ3rrXkB28ZcywqswI/xsx4WjsxrEiGk7z+v/XXeqOtlO8i32y2uhjDPApfYj6fNFVogB2ZWbiaj42uDt6AFr1SuC+qe8XbCn7K6QWnuSmjDaIHLxVI8V3q4iYil5DAePsLcJbFMNayL/AaiUZiieAY2fUMzbhfQA/FIKUdw7KstYbVAeGCVFxfva0Ver8+40czfL8UIYYJCn5KJGVwrjjGwYO0zJSTvKjg4dZ7gLNg8gRxk7GSecAu5bzFpZsD++wY3zLo0ZJyKnY2itX60P6qfEPuxWmQtYYkn1wkBaYo71Bkn41nD1ShQl7JPxud/D406cIDihBDJxYx/OqtqNkBqqmTb2MZ6v7DT+tNnk2cI8EEiQizjQD1fMaEVwM/8N6Zq+2QW+2P3I=
 X-Forefront-Antispam-Report:
-	CIP:198.47.21.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet201.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(32650700020)(36860700016)(376014)(1800799024)(7416014)(82310400026)(18002099003)(56012099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB2370.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(18002099003)(56012099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	t2Gz0pNFOmgjnrGUB49U2cSWzyPoJQ0Ml/jD6zE9XVFlXXWd1jg690FBa6WDeSz1CXevOBqKHV44iXVdLWSxTXWmNV9aBWY472rG9jgDN3xgrwmvi3BRtYkzLLdkQHAsfcN/k60GH6OLmv0pkdBNXietcSf5GOCd4eoB3eRtWr2DaMNMCYpRaos5lkhl9xzCC38o63Dout6pX7BJ7Ld1UVeQ7uNRNINIVGUzkGqbnOgMfau0uwVmnVLgNijTHyO5HwED8u/sUFyDshJoJIgXP5+fnJ0DEN2YneQOuLWbyKamOTYje38LKrYrpTmDrjycFtM/xaGD2jf9ra6G+HddacRNP2HZX/N5Jpy86ekgmZZ3MPT9KC5Zx1w3LGg03mGXS06Y+WCzBH2lEmc7yBDTZSgcAGCD1+JLleGQibxjluwprv/i4a0ZE8T1CwMKFtO8
-X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Apr 2026 08:55:50.4737
+	=?us-ascii?Q?RNx3lLUeaqXi47NDwpx6+oqvB5qiAIM01BgkxzEax4lcwpdtL4l3XSbFT/Ic?=
+ =?us-ascii?Q?1LiERczO8aIW6Ed4jVNetR4pcB4d6wSFmxA3kLWgYUUXNmvD3Cgpig7lG7FT?=
+ =?us-ascii?Q?AsWhzGjF2OkH+sl0sioy+/MS5qTqzAqAMadKR9thUOvZUq6kZuNQ5MyNnjYq?=
+ =?us-ascii?Q?3//Et+zpS6EA7PPn2HGE3Pgfl/U9m53Xlp1rdaXw4M8WNRRYmXGupkoo4Fsq?=
+ =?us-ascii?Q?w2eAG1QSMGsTi8Za7pem11pZGB66awC64A0vY+ZtEn50snBDUyAoxNSit/q7?=
+ =?us-ascii?Q?uAWV8LaPExxmGggo8qjYiv0cBoERQiXVYWHjOFnbHWsuE60v2yddyqvBkyql?=
+ =?us-ascii?Q?gI8olMRohiVBys1hLi+nisF5AuJE6P3/gnU8CCNMEkO02PYTiIgX8l+TFh6H?=
+ =?us-ascii?Q?fYepXQa9/XqgRJTVCq66d0Wp+RMZyuKqTbOfYvk7yIAbdvbbWDiaeAacygFJ?=
+ =?us-ascii?Q?J01ISD1ZmgEdz5aptnqQE6pF1CZbMzRT6pMApYSe5y0zmk7cOAyBT5b2z6z0?=
+ =?us-ascii?Q?m+iVf9kwKLq20wvj8VT5S3/7XJGWct70xTozd+zxMxdQhaheyg0qtSQqpB0Q?=
+ =?us-ascii?Q?HzJUskJfJPNeXpAv0/bxeFBuDAdUKvc+WtiWqBBUoWOaac7qHfUVTvOy0lL6?=
+ =?us-ascii?Q?RrurQ6mC2rAbNRfLf7lhCpy8IgTpVBpIIA8H/l2Mu3esP8bFumokMufyYV8S?=
+ =?us-ascii?Q?AkkCFO+B0FYYWucu/6N6vO1n4h8oHDF+ZDbDOyclyVrAQNigvh7SZ1AyHJa+?=
+ =?us-ascii?Q?x+SprHiwErsp1Z49BSrAhz13uWsMsjnl9hresNvGcnya+Rjr8Kq4iHvhHTG3?=
+ =?us-ascii?Q?YwdfvTnq9uHK/tqCcVeOA+7PvWCWFvSP5kSBLe/x5LATM2RU3QDgQ6zoa6Ey?=
+ =?us-ascii?Q?Vr1N1V3xqzvubXz9yp+8DQztqWAqeD1nDQUR52CDuwe4SYhiAAE7vJL1b0ZX?=
+ =?us-ascii?Q?k4eBQXXCFAgJWnfsGsOPP6bI2wmYKSx+x8nbb5GFZl9xqU62ZlkqQ9O3V+FM?=
+ =?us-ascii?Q?gsdKaGoQZoj8Ayn89V46IxNitvP5uap1jciMEynP2sRJaqfg5vkGpM8wxEWB?=
+ =?us-ascii?Q?ouOPsWinYqae2omf9IAHNc8Ebr9XQ7RIzM4x+bML4Y65+EqPeowgHcutCmRk?=
+ =?us-ascii?Q?tASHtRATAAKHTzkpB2TRnwG4zbFXvIIv8MO/eq7Jz7e5hqa9oobm9O1Luhlz?=
+ =?us-ascii?Q?xeMhq078o96F4gOakJnGWrjWfnkbjNtIzMFUaXC6h7WeK0zh3ckizGUH1+we?=
+ =?us-ascii?Q?gMV3+qbCvlrTrHNtykhdCQBjKmAvXHbR6cMlAjdaUSj7mKw5w5RROYt0YXIn?=
+ =?us-ascii?Q?wiQ2ZTu0Sar02NT6yUkAQKmQrJj0VQHdCv7jffIub1u928APPioByelGMs+u?=
+ =?us-ascii?Q?cJGNixqCqECmkeR2+NVJP2MnQqqc/UIMb8maPHEy7OokFQoYlysGxc1CWH0l?=
+ =?us-ascii?Q?FAvxqN9HBd7mFKewbJF/DIAzkN2bdZBr7Y1HuWaUMKAiIgkKIHChLBmjYG8g?=
+ =?us-ascii?Q?BFq4+d2YozMCevqKiGw7SA5ldi8TXL5UQqVCguvoctLsRC7nsOrmtnhi8Qt2?=
+ =?us-ascii?Q?MKcSrqmbnWJ8o1y25ISBr9EUSoyUIBC8H1AixpqHsvQXpKpJ+UQy70WQgtb7?=
+ =?us-ascii?Q?+/q9eSslwMb4Xc2bjmsyRAvFz52+BR4LLbJSrBer1Cfrq8wFmyNyHA2a6Sen?=
+ =?us-ascii?Q?V4pEew/ajQiEEelKh1wGb3RwwAUOs2Pdd70SwKrhNZb8PTswStHDI7pyB5fG?=
+ =?us-ascii?Q?oCTHkUcINQ=3D=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a76a6b7c-ceb2-4612-635d-08de909bac49
+X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB2370.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Apr 2026 09:39:02.2649
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4535416b-7a36-4f25-6f87-08de9095a3cf
-X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.195];Helo=[flwvzet201.ext.ti.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	SJ5PEPF0000020A.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB6424
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 3CYERdOWl4L00U4ckLTEgw/G8M4u9pL5TPLKTP5tG+YC+VT2Cnd5FHWRt7jPjh0TMe9/q0biQQB4L5BNYA5Zwg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB5841
 
-The commit 18ac51ae9df9 ("PCI: cadence: Implement capability search
-using PCI core APIs") assumes all the platforms using Cadence PCIe
-controller support byte and word register accesses. This is not true
-for all platforms (e.g., TI J721E SoC, which only supports dword
-register accesses).
+NPEM registers LED classdevs on PCI endpoint that may be behind
+hotplug-capable ports. During hot-removal, led_classdev_unregister()
+calls led_set_brightness(LED_OFF) which PCI config on a disconnected
+device, returning -ENODEV:
 
-This causes capability searches via cdns_pcie_find_capability() to fail
-on such platforms.
+```
+leds 0003:01:00.0:enclosure:ok: Setting an LED's brightness failed (-19)
+```
 
-Fix this by using cdns_pcie_read_sz() for config read functions, which
-properly handles size-aligned accesses. Remove the now-unused byte and
-word read wrapper functions (cdns_pcie_readw and cdns_pcie_readb).
+The LED core already suppresses this for devices with LED_HW_PLUGGABLE
+set, but NPEM never sets it. Add the flag since NPEM LEDs are on
+hot-pluggable hardware by nature.
 
-Fixes: 18ac51ae9df9 ("PCI: cadence: Implement capability search using PCI core APIs")
-Signed-off-by: Aksh Garg <a-garg7@ti.com>
-Cc: stable@vger.kernel.org
+Fixes: 4e893545ef87 ("PCI/NPEM: Add Native PCIe Enclosure Management support")
+Signed-off-by: Richard Cheng <icheng@nvidia.com>
+Acked-by: Kai-Heng Feng <kaihengf@nvidia.com>
 ---
- drivers/pci/controller/cadence/pcie-cadence.h | 56 +++++++++----------
- 1 file changed, 25 insertions(+), 31 deletions(-)
+The bug was triggered on an ARM64 machine with CPU model Olympus.
+Kernel version is v6.17.
+The PCI topology is
+```
+$ sudo lspci -tv
+-[0001:00]---00.0-[01]--+-00.0  Mellanox Technologies CX8 Family [ConnectX-8]
+                        +-00.1  Mellanox Technologies CX8 Family [ConnectX-8]
+                        +-00.2  Mellanox Technologies CX8 Family [ConnectX-8]
+                        \-00.3  Mellanox Technologies CX8 Family [ConnectX-8]
+-[0002:00]---00.0-[01]--
+-+-[0003:00]---00.0-[01]----00.0  Montage Technology Co., Ltd. Device c002
+ \-[0003:80]---00.0-[81]----00.0  Montage Technology Co., Ltd. Device c002
+-[0004:00]---00.0-[01]--
+-+-[0005:00]---00.0-[01]----00.0  Samsung Electronics Co Ltd Device a810
+ +-[0005:40]---00.0-[41]----00.0  Samsung Electronics Co Ltd Device a810
+ +-[0005:c0]---00.0-[c1]----00.0  Intel Corporation I210 Gigabit Network Connection
+ \-[0005:e0]---00.0-[e1-e2]----00.0-[e2]--+-00.0  ASPEED Technology, Inc. ASPEED Graphics Family
+                                          \-02.0  ASPEED Technology, Inc. Device 2603
+-+-[0006:00]---00.0-[01]--
+ \-[0006:80]---00.0-[81]--
+```
+We're targeting on 0003:01:00.0 CXL [0502]: Montage Technology Co., Ltd. Device [1b00:c002] (rev 03).
+First use `sudo setpci -s 0003:00:00.0 0x1f4.w=0x0002` to set UnmaskLinkDisable in CXL DVSEC.
+Then disable the link with `sudo setpci -v -s 0003:00:00.0 CAP_EXP+0x10.b=0x10:0x10`
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 443033c607d7..277f3706a4f4 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -249,37 +249,6 @@ static inline u32 cdns_pcie_hpa_readl(struct cdns_pcie *pcie,
- 	return readl(pcie->reg_base + reg);
- }
+
+Best regards,
+Richard Cheng.
+---
+ drivers/pci/npem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/npem.c b/drivers/pci/npem.c
+index ffeeedf6e311..c51879fcd438 100644
+--- a/drivers/pci/npem.c
++++ b/drivers/pci/npem.c
+@@ -504,7 +504,7 @@ static int pci_npem_set_led_classdev(struct npem *npem, struct npem_led *nled)
+ 	led->brightness_get = brightness_get;
+ 	led->max_brightness = 1;
+ 	led->default_trigger = "none";
+-	led->flags = 0;
++	led->flags = LED_HW_PLUGGABLE;
  
--static inline u16 cdns_pcie_readw(struct cdns_pcie *pcie, u32 reg)
--{
--	return readw(pcie->reg_base + reg);
--}
--
--static inline u8 cdns_pcie_readb(struct cdns_pcie *pcie, u32 reg)
--{
--	return readb(pcie->reg_base + reg);
--}
--
--static inline int cdns_pcie_read_cfg_byte(struct cdns_pcie *pcie, int where,
--					  u8 *val)
--{
--	*val = cdns_pcie_readb(pcie, where);
--	return PCIBIOS_SUCCESSFUL;
--}
--
--static inline int cdns_pcie_read_cfg_word(struct cdns_pcie *pcie, int where,
--					  u16 *val)
--{
--	*val = cdns_pcie_readw(pcie, where);
--	return PCIBIOS_SUCCESSFUL;
--}
--
--static inline int cdns_pcie_read_cfg_dword(struct cdns_pcie *pcie, int where,
--					   u32 *val)
--{
--	*val = cdns_pcie_readl(pcie, where);
--	return PCIBIOS_SUCCESSFUL;
--}
--
- static inline u32 cdns_pcie_read_sz(void __iomem *addr, int size)
- {
- 	void __iomem *aligned_addr = PTR_ALIGN_DOWN(addr, 0x4);
-@@ -320,6 +289,31 @@ static inline void cdns_pcie_write_sz(void __iomem *addr, int size, u32 value)
- 	writel(val, aligned_addr);
- }
- 
-+static inline int cdns_pcie_read_cfg_byte(struct cdns_pcie *pcie, int where,
-+					  u8 *val)
-+{
-+	void __iomem *addr = pcie->reg_base + where;
-+
-+	*val = cdns_pcie_read_sz(addr, 0x1);
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static inline int cdns_pcie_read_cfg_word(struct cdns_pcie *pcie, int where,
-+					  u16 *val)
-+{
-+	void __iomem *addr = pcie->reg_base + where;
-+
-+	*val = cdns_pcie_read_sz(addr, 0x2);
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static inline int cdns_pcie_read_cfg_dword(struct cdns_pcie *pcie, int where,
-+					   u32 *val)
-+{
-+	*val = cdns_pcie_readl(pcie, where);
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
- /* Root Port register access */
- static inline void cdns_pcie_rp_writeb(struct cdns_pcie *pcie,
- 				       u32 reg, u8 value)
+ 	ret = led_classdev_register(&npem->dev->dev, led);
+ 	if (ret)
 -- 
-2.34.1
+2.43.0
 
