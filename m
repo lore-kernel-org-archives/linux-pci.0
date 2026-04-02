@@ -1,132 +1,152 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E77C03D6CCF;
-	Thu,  2 Apr 2026 22:57:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8BBD236B043;
+	Thu,  2 Apr 2026 23:44:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775170653; cv=none; b=Lea5wfpFH+WBp7jNhG2BpIZSLpwPkKU3P0pPmu+qB3I0NSkEHjMP7ZvSIIIs6B5SkIEbYgdkd60oLbrRC//h0u7XRlq3G/zVYI0UcPqU+qYcjVXzqJs1ITlx+4MPZSg8h3GJneKamodWikXlRuI9aic7k24/rCeaWvmGOyuO95Y=
+	t=1775173447; cv=none; b=RhCPKo/BdFXkGGVKBuZ6xqOj6FzzQNw4tIh2AQss6qNeuyDrOOGiywk4YyjgEQy722dKQTN0l1+Ipaucs7TgrmBuknjpsM1cImAUY8chaCrVhSIgHhIQB6ychYz6CrusFE4WakbTEbCgOzWZbDfSjlKf8dXC1QM3EwTH/z2LrII=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775170653; c=relaxed/simple;
-	bh=15K8mXYMWJzSX7LYoqjquZFaGkWetpo55iEai3+MFH8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XUw5bg6X3ZuEcFPChJqupMNX2bG8P+Q4yhgUXCLWQmqTjIJzBDplXUzXDNZqstz+4PrXwEnZG2cYrJmegMybvWY8/I7tscJG9mfryhK49zXxg7qCkFAHv6A3omEVrJrt6CM8mGtr/ELoD2s/lR7mtx/miUu3kJKW8RkXwgwr2R8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=K0l2V328; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="K0l2V328"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775170650; x=1806706650;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=15K8mXYMWJzSX7LYoqjquZFaGkWetpo55iEai3+MFH8=;
-  b=K0l2V328izJFTWpVnKaqLLI2Fr94OWrUH+Z+thAlhKyhzGbPOnOZuxTo
-   VjbBXNTJm6ljWkQj7/FpHxX+ngJSbBFBGjSmeqMo2djIh9DXaJUNqZhaJ
-   coiNomsIu95dq5TGUhGk5es0DbTLStpz45rOJ1vC6gwWAGc21tX6y9oNn
-   B4q/HIx725roB5971KObTR8LSfsftpw79dVPs+4ekHYrDUv8Zt85QZbPC
-   Hw703mYtJXvSa9HCUQBlLzAJEqqHXsikPB9xmC64vtFZXwF1ZpS+muYln
-   lOZ9x4/Jy1lzXQSQGFwL67BZ3/A1GtVh+Ug4I8I+47G1dIDgG4r1whm/y
-   g==;
-X-CSE-ConnectionGUID: 0QKKleq3SQ2xZXfl5mwglQ==
-X-CSE-MsgGUID: 0zJ85QleQbOXgl9P2BQPMw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11747"; a="76304288"
-X-IronPort-AV: E=Sophos;i="6.23,156,1770624000"; 
-   d="scan'208";a="76304288"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Apr 2026 15:57:29 -0700
-X-CSE-ConnectionGUID: WO6gRj2yTGG9Demu2aQJcA==
-X-CSE-MsgGUID: bNGBqwP6SKys7vrNq2UD7Q==
-X-ExtLoop1: 1
-Received: from igk-lkp-server01.igk.intel.com (HELO 9958d990ccf2) ([10.211.93.152])
-  by fmviesa003.fm.intel.com with ESMTP; 02 Apr 2026 15:57:27 -0700
-Received: from kbuild by 9958d990ccf2 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1w8Qya-000000009B7-3Fm6;
-	Thu, 02 Apr 2026 22:57:24 +0000
-Date: Fri, 3 Apr 2026 00:56:47 +0200
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-	brgl@kernel.org, robh@kernel.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-serial@vger.kernel.org,
+	s=arc-20240116; t=1775173447; c=relaxed/simple;
+	bh=t3GTXZP+Qx6sXooMZV8eBLTayxLudqq1llwsAayvvpU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eRwaH7jFqLEs7FIb4Yl8OrzEjywMPAvm8WVcDDoL5JWmJ/Oi7ZViW1XmSHLpa4ejKo3LPjSx8ODi4K0KOsluvzkRVbIBLXqx5esqmk/FN/zWNtKYUdeRBy/TR++HvAF/60PTkon/8V2f1xuRGDHNrAKlX00jy+ccEqE2rcHFdoI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+Received: by linux.microsoft.com (Postfix, from userid 1009)
+	id A64F420B7001; Thu,  2 Apr 2026 16:44:06 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com A64F420B7001
+From: Dexuan Cui <decui@microsoft.com>
+To: kys@microsoft.com,
+	haiyangz@microsoft.com,
+	wei.liu@kernel.org,
+	decui@microsoft.com,
+	longli@microsoft.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
 	mani@kernel.org,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-	kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH 3/3] power: sequencing: pcie-m2: Guard the helper
- functions making use of PCI bus notifier
-Message-ID: <202604030008.5exLAPFm-lkp@intel.com>
-References: <20260401070735.107162-4-manivannan.sadhasivam@oss.qualcomm.com>
+	robh@kernel.org,
+	bhelgaas@google.com,
+	jakeo@microsoft.com,
+	linux-hyperv@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	mhklinux@outlook.com,
+	matthew.ruffell@canonical.com,
+	kjlx@templeofstupid.com
+Cc: Krister Johansen <johansen@templeofstupid.com>,
+	stable@vger.kernel.org
+Subject: [PATCH v2] PCI: hv: Allocate MMIO from above 4GB for the config window
+Date: Thu,  2 Apr 2026 16:43:13 -0700
+Message-ID: <20260402234313.2490779-1-decui@microsoft.com>
+X-Mailer: git-send-email 2.43.7
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260401070735.107162-4-manivannan.sadhasivam@oss.qualcomm.com>
+Content-Transfer-Encoding: 8bit
 
-Hi Manivannan,
+There has been a longstanding MMIO conflict between the pci_hyperv
+driver's config_window (see hv_allocate_config_window()) and the
+hyperv_drm (or hyperv_fb) driver (see hyperv_setup_vram()): typically
+both get MMIO from the low MMIO range below 4GB; this is not an issue
+in the normal kernel since the VMBus driver reserves the framebuffer
+MMIO range in vmbus_reserve_fb(), so the drm driver's hyperv_setup_vram()
+can always get the reserved framebuffer MMIO; however, a Gen2 VM's
+kdump kernel can fail to reserve the framebuffer MMIO in
+vmbus_reserve_fb() because the screen_info.lfb_base is zero in the
+kdump kernel due to several possible reasons (see the Link below for
+more details):
 
-kernel test robot noticed the following build warnings:
+1) on ARM64, the two syscalls (KEXEC_LOAD, KEXEC_FILE_LOAD) don't
+initialize the screen_info.lfb_base for the kdump kernel;
 
-[auto build test WARNING on linux-next/master]
-[also build test WARNING on linus/master v6.16-rc1]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+2) on x86-64, the KEXEC_FILE_LOAD syscall initializes kdump kernel's
+screen_info.lfb_base, but the KEXEC_LOAD syscall doesn't really do that
+when the hyperv_drm driver loads, because the user-space kexec-tools
+(i.e. the program 'kexec') doesn't recognize the hyperv_drm driver
+(let's ignore the behavior of kexec-tools of very old versions).
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Manivannan-Sadhasivam/serdev-Add-missing-stubs-for-serdev-APIs-when-CONFIG_SERIAL_DEV_BUS-is-not-selected/20260402-225703
-base:   linux-next/master
-patch link:    https://lore.kernel.org/r/20260401070735.107162-4-manivannan.sadhasivam%40oss.qualcomm.com
-patch subject: [PATCH 3/3] power: sequencing: pcie-m2: Guard the helper functions making use of PCI bus notifier
-config: x86_64-kexec (https://download.01.org/0day-ci/archive/20260403/202604030008.5exLAPFm-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260403/202604030008.5exLAPFm-lkp@intel.com/reproduce)
+When vmbus_reserve_fb() fails to reserve the framebuffer MMIO in the
+kdump kernel, if pci_hyperv in the kdump kernel loads before hyperv_drm
+loads, pci_hyperv's vmbus_allocate_mmio() gets the framebuffer MMIO
+and tries to use it, but since the host thinks that the MMIO range is
+still in use by hyperv_drm, the host refuses to accept the MMIO range
+as the config window, and pci_hyperv's hv_pci_enter_d0() errors out,
+e.g. an error can be "PCI Pass-through VSP failed D0 Entry with status
+c0370048".
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202604030008.5exLAPFm-lkp@intel.com/
+Typically, this pci_hyperv error in the kdump kernel was not fatal in
+the past because the kdump kernel typically doesn't rely on pci_hyperv,
+i.e. the root file system is on a VMBus SCSI device.
 
-All warnings (new ones prefixed by >>):
+Now, a VM on Azure can boot from NVMe, i.e. the root file system can be
+on a NVMe device, which depends on pci_hyperv. When the error occurs,
+the kdump kernel fails to boot up since no root file system is detected.
 
-   In file included from drivers/tty/tty_port.c:20:
->> include/linux/serdev.h:268:83: warning: omitting the parameter name in a function definition is a C23 extension [-Wc23-extensions]
-     268 | static inline struct serdev_device *serdev_device_alloc(struct serdev_controller *)
-         |                                                                                   ^
-   include/linux/serdev.h:272:59: warning: omitting the parameter name in a function definition is a C23 extension [-Wc23-extensions]
-     272 | static inline int serdev_device_add(struct serdev_device *)
-         |                                                           ^
-   include/linux/serdev.h:276:63: warning: omitting the parameter name in a function definition is a C23 extension [-Wc23-extensions]
-     276 | static inline void serdev_device_remove(struct serdev_device *) {}
-         |                                                               ^
-   include/linux/serdev.h:284:67: warning: omitting the parameter name in a function definition is a C23 extension [-Wc23-extensions]
-     284 | static inline int serdev_controller_add(struct serdev_controller *)
-         |                                                                   ^
-   include/linux/serdev.h:288:71: warning: omitting the parameter name in a function definition is a C23 extension [-Wc23-extensions]
-     288 | static inline void serdev_controller_remove(struct serdev_controller *) {}
-         |                                                                       ^
-   5 warnings generated.
+Fix the MMIO conflict by allocating MMIO above 4GB for the config_window,
+so it won't conflict with hyperv_drm's MMIO, which should be below the
+4GB boundary. The size of config_window is small: it's only 8KB per PCI
+device, so there should be sufficient MMIO space available above 4GB.
+
+Note: we still need to figure out how to address the possible MMIO
+conflict between hyperv_drm and pci_hyperv in the case of 32-bit PCI
+MMIO BARs, but that's of low priority because all PCI devices available
+to a Linux VM on Azure or on a modern host should use 64-bit BARs and
+should not use 32-bit BARs -- I checked Mellanox VFs, MANA VFs, NVMe
+devices, and GPUs in Linux VMs on Azure, and found no 32-bit BARs.
+
+Fixes: 4daace0d8ce8 ("PCI: hv: Add paravirtual PCI front-end for Microsoft Hyper-V VMs")
+Link: https://lore.kernel.org/all/SA1PR21MB692176C1BC53BFC9EAE5CF8EBF51A@SA1PR21MB6921.namprd21.prod.outlook.com/
+Tested-by: Matthew Ruffell <matthew.ruffell@canonical.com>
+Tested-by: Krister Johansen <johansen@templeofstupid.com>
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+Cc: stable@vger.kernel.org
+---
+
+Changes since v1:
+    Updated the commit message and the comment to better explain
+    why screen_info.lfb_base can be 0 in the kdump kernel.
+
+    No code change since v1.
 
 
-vim +268 include/linux/serdev.h
+ drivers/pci/controller/pci-hyperv.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
-   267	
- > 268	static inline struct serdev_device *serdev_device_alloc(struct serdev_controller *)
-   269	{
-   270		return NULL;
-   271	}
-   272	static inline int serdev_device_add(struct serdev_device *)
-   273	{
-   274		return -ENODEV;
-   275	}
-   276	static inline void serdev_device_remove(struct serdev_device *) {}
-   277	
-
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+index 2c7a406b4ba8..1a79334ea9f4 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -3403,9 +3403,26 @@ static int hv_allocate_config_window(struct hv_pcibus_device *hbus)
+ 
+ 	/*
+ 	 * Set up a region of MMIO space to use for accessing configuration
+-	 * space.
++	 * space. Use the high MMIO range to not conflict with the hyperv_drm
++	 * driver (which normally gets MMIO from the low MMIO range) in the
++	 * kdump kernel of a Gen2 VM, which may fail to reserve the framebuffer
++	 * MMIO range in vmbus_reserve_fb() due to screen_info.lfb_base being
++	 * zero in the kdump kernel:
++	 *
++	 * on ARM64, the two syscalls (KEXEC_LOAD, KEXEC_FILE_LOAD) don't
++	 * initialize the screen_info.lfb_base for the kdump kernel;
++	 *
++	 * on x86-64, the KEXEC_FILE_LOAD syscall initializes kdump kernel's
++	 * screen_info.lfb_base (see bzImage64_load() -> setup_boot_parameters())
++	 * but the KEXEC_LOAD syscall doesn't really do that when the hyperv_drm
++	 * driver loads, because the user-space program 'kexec' doesn't
++	 * recognize hyperv_drm: see the function setup_linux_vesafb() in the
++	 * kexec-tools.git repo. Note: old versions of kexec-tools, e.g.
++	 * v2.0.18, initialize screen_info.lfb_base if the hyperv_fb driver
++	 * loads, but hyperv_fb is deprecated and has been removed from the
++	 * mainline kernel.
+ 	 */
+-	ret = vmbus_allocate_mmio(&hbus->mem_config, hbus->hdev, 0, -1,
++	ret = vmbus_allocate_mmio(&hbus->mem_config, hbus->hdev, SZ_4G, -1,
+ 				  PCI_CONFIG_MMIO_LENGTH, 0x1000, false);
+ 	if (ret)
+ 		return ret;
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.43.0
+
