@@ -1,147 +1,160 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2470337F734;
-	Thu,  2 Apr 2026 07:06:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 597A133D4FD;
+	Thu,  2 Apr 2026 07:23:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775113615; cv=none; b=Gt9idfSULal+2RVt25tOnurL6xfpOJEdBW5Y2Xlthd3DMSkfcjJKzKG936mIZt/byUKb59mqBUMpqbNKd7YRbeGy+kFd40bF/ZshxK5AXnMzOmqy5+Srp4267iE2p3VrhU+bj5q0o8RdDwhR7bLEWGl9EQvCD7ivxx/NaE2ueCY=
+	t=1775114627; cv=none; b=gfUJITWidWEJDtjBhjxGcMMsSnDhAEkEIjdclZWEIJUW7ZzQA/IRgrAmsQLRMTWdagbUdGrfHOrcikxh85zoQZh1jrzQyQq93P5GenpZ6eRseM0m0igPT2gXKVeIvF8BJIuC5J0vuO0tZOzRv82Oy6OIkoHNyl4b94+CTF2onic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775113615; c=relaxed/simple;
-	bh=YOfWV0b+1yPsva8LgjO/aKzz5PWMLP1G/zmXa15zYV0=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
-	 References:In-Reply-To; b=OsRQGH6IeBrsHZYaWcZ+JbiluBJ5S9J2uFTgSCTaCHKW1ovYUYZxFnP9iPMmIemF1UipyDC3qAbwAqbxtoWRBUCgbhvdPuG2jTXp+arFKUE8xSGzrTsI3jgNKJsmRt72sfETarBZUC4p/wrtHfW9v0fMlt12IFpod5vBCu3j7lw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=CGpTdZoF; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1775114627; c=relaxed/simple;
+	bh=cgB8H9DlUIZ+uwTVcF6odwPEZPbboVTlUYsZmwBSBH8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=SCMkq8ysmxWDhwTRaXsojOz/GLXlZWZRaItmqIOrNOSZXxoclhp1ntGrJd/07LH2XhSRtE5xOPBl0uB6ispRYoTbCxsiOCuI5leJIJvQgxF8aHmD+Dbtzjx1mtpF6plBsQsP5+79e0KwSRc6p6V0forc7t0QE/Few/n8+t7XFbE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=l52Mp77a; arc=none smtp.client-ip=113.46.200.220
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="CGpTdZoF"
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6321QLLE108580;
-	Thu, 2 Apr 2026 07:06:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=KTjfrj
-	TpSK0fVT+D/0wqDCWvFcR2XqlkR0GvUIEpVUw=; b=CGpTdZoFMBa/fEnF5reNfY
-	dODnCk+uRojGVPZLfxBWWuz6PFqwL8pgdPTjIOnLMJ+7RPB9oRdo1VFHX6FXOS/r
-	qkqdbTkIBQ+4+uG/izb9FRAmncrH09Jc3jRpTG9Ly10wb8d8QbsJNmq4DpcEVbtW
-	mZbCGST+40gJqyu8BdKYNMRQXXBTNl4IVqreFuMjOestuFRgNfTyWamnhNzoqE5G
-	fl6fmu1h5BPq4M3YfMKzOP6H04E2LnFJuMqxfBOMs/W3CzpXB6DzHm9595ZHhYxc
-	FC1bonybXZ/8R7Sm7VFdlpPZww/gGQ4ERE7afZP5ts0gkmUGjISrd05KS2/JzBMw
-	==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4d65dcjuw4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 02 Apr 2026 07:06:47 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 63271VQD013897;
-	Thu, 2 Apr 2026 07:06:46 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4d6ttkryfs-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 02 Apr 2026 07:06:46 +0000
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 63276g0246268730
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 2 Apr 2026 07:06:42 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 6BDEE20043;
-	Thu,  2 Apr 2026 07:06:42 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 046462004D;
-	Thu,  2 Apr 2026 07:06:41 +0000 (GMT)
-Received: from localhost (unknown [9.111.23.196])
-	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Thu,  2 Apr 2026 07:06:40 +0000 (GMT)
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="l52Mp77a"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=yp4FpjnLfYl5LRJx0uX5SvO3U1QpXS7va9VO6CIjnSA=;
+	b=l52Mp77aSFW6AGyzkcFLE7JzoRCBTt4O50KG/TbASaTLPIx7RN74zpfMG3UzZIMqWj+fIklTW
+	hThwh4ynoXj+nRn9uicynKa9B/WSPZilFP2x/a4+LMJnoasa/4GFZZQvytVK7MltJ6DUQ/XbKZ4
+	GLOfnEk2BaFWs977lJf1Ehk=
+Received: from mail.maildlp.com (unknown [172.19.162.144])
+	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4fmY8F4hG7z12LCb;
+	Thu,  2 Apr 2026 15:17:17 +0800 (CST)
+Received: from kwepemr500012.china.huawei.com (unknown [7.202.195.23])
+	by mail.maildlp.com (Postfix) with ESMTPS id 288F040538;
+	Thu,  2 Apr 2026 15:23:43 +0800 (CST)
+Received: from [100.103.109.121] (100.103.109.121) by
+ kwepemr500012.china.huawei.com (7.202.195.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 2 Apr 2026 15:23:42 +0800
+Message-ID: <502de80c-d062-4253-a2a3-cfb240d7dab2@huawei.com>
+Date: Thu, 2 Apr 2026 15:23:41 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 02 Apr 2026 11:06:28 +0200
-Message-Id: <DHIJSWHNRSRC.BDZJHUQF0K80@linux.ibm.com>
-Cc: <schnelle@linux.ibm.com>, <wintera@linux.ibm.com>, <ts@linux.ibm.com>,
-        <oberpar@linux.ibm.com>, <gbayer@linux.ibm.com>,
-        "Jason Gunthorpe"
- <jgg@ziepe.ca>, "Yishai Hadas" <yishaih@nvidia.com>,
-        "Shameer Kolothum"
- <skolothumtho@nvidia.com>,
-        "Kevin Tian" <kevin.tian@intel.com>, <mjrosato@linux.ibm.com>,
-        <alifm@linux.ibm.com>, <raspl@linux.ibm.com>, <hca@linux.ibm.com>,
-        <agordeev@linux.ibm.com>, <gor@linux.ibm.com>, <kvm@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-s390@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v8 2/3] vfio/ism: Implement vfio_pci driver for ISM
- devices
-From: "Julian Ruess" <julianr@linux.ibm.com>
-To: "Alex Williamson" <alex@shazbot.org>,
-        "Julian Ruess"
- <julianr@linux.ibm.com>
-X-Mailer: aerc 0.21.0-0-g5549850facc2
-References: <20260325-vfio_pci_ism-v8-0-ddc504cde914@linux.ibm.com>
- <20260325-vfio_pci_ism-v8-2-ddc504cde914@linux.ibm.com>
- <20260401160441.406fe25a@shazbot.org>
-In-Reply-To: <20260401160441.406fe25a@shazbot.org>
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=RsjI7SmK c=1 sm=1 tr=0 ts=69ce1587 cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VnNF1IyMAAAA:8
- a=ZDiVSpLLCKoyWu1YpPgA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: EVxx1ZDovUSM0yfp_nhhPsUDtEZ_Wy6P
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDAyMDA1OSBTYWx0ZWRfX3ovWCpFFYroV
- 1u2j4sTkKDo8LEOTApw/T0oDUX5BdWaECIRsmc1xWCqEozVjpZc31HooRqiOe38iy52SB1oDLdV
- F7U2y5RRikbE3jfEkcAZqS1kZwS7KryD0Qt0v1WtlIUgam3OmlFcdjb+BCu64Z/TJvo+/8GkhXi
- /x6lXxblxnE9NCJ3NNeefU0Po74S2Y5KZ9OXQF9SG/BAjadxGLGjg93x5r7kTlsL0p+rSGO2svw
- CWM0h6xtpr2h3jbf7Mq+s8rrHktr91XtLderXamWboubb9j165q3IXNud6Q2gaIJZQ8VL9fbd9c
- k5Nk2ElAKHi0V1Sg5vgRmGYkIgdNv7kpWL6MjhYZtqLCTb5qyni8Ohx0p9GJUUyr9S4jKZR2WzS
- tIBFcuiLkqC0lDo1NX59grUX/USYn2Faj89d0SIK5Y8nYFY7PypUIEA0LPnnuwe907+6iYiA8rQ
- z+hM7aVPaJi8N/G5DIA==
-X-Proofpoint-ORIG-GUID: EVxx1ZDovUSM0yfp_nhhPsUDtEZ_Wy6P
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-02_01,2026-04-01_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 bulkscore=0 priorityscore=1501 lowpriorityscore=0
- suspectscore=0 malwarescore=0 spamscore=0 clxscore=1015 phishscore=0
- adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
- definitions=main-2604020059
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 2/4] PCI/sysfs: Fix null pointer dereference during
+ hotplug
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <bhelgaas@google.com>, <alex@shazbot.org>, <chrisw@redhat.com>,
+	<jbarnes@virtuousgeek.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <liuyongqiang13@huawei.com>
+References: <20260226171403.GA3813150@bhelgaas>
+From: duziming <duziming2@huawei.com>
+In-Reply-To: <20260226171403.GA3813150@bhelgaas>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemr500012.china.huawei.com (7.202.195.23)
 
-On Thu Apr 2, 2026 at 12:04 AM CEST, Alex Williamson wrote:
-> On Wed, 25 Mar 2026 14:31:24 +0100
-> Julian Ruess <julianr@linux.ibm.com> wrote:
->> diff --git a/drivers/vfio/pci/ism/main.c b/drivers/vfio/pci/ism/main.c
->> new file mode 100644
->> index 0000000000000000000000000000000000000000..00bc81f7225f806eac1b99c4=
-520ab5a68137885e
->> --- /dev/null
->> +++ b/drivers/vfio/pci/ism/main.c
->> @@ -0,0 +1,408 @@
->> +// SPDX-License-Identifier: GPL-2.0
->> +/*
->> + * vfio-ISM driver for s390
->> + *
->> + * Copyright IBM Corp.
->> + */
->> +
->> +#include "../vfio_pci_priv.h"
->> +#include "linux/slab.h"
->
-> Convention says this should be:
->
-> +#include <linux/slab.h>
->  #include "../vfio_pci_priv.h"
-> -#include "linux/slab.h"
-> =20
-> Without objection, I'll make the change and push this to next tomorrow.
-> Thanks,
->
-> Alex
 
-Thank you very much!!=20
+在 2026/2/27 1:14, Bjorn Helgaas 写道:
+> On Fri, Jan 16, 2026 at 04:17:19PM +0800, Ziming Du wrote:
+>> During the concurrent process of creating and rescanning in VF, the
+>> resource files for the same pci_dev may be created twice.
+> Where are the two resource file creations?  This will help review the
+> patch.
+>
+>> The second
+>> creation attempt fails, resulting the res_attr in pci_dev to kfree(),
+>> but the pointer is not set to NULL. This will subsequently lead to
+>> dereferencing a null pointer when removing the device.
+>>
+>> When we perform the following operation:
+>>    echo $sriov_totalvfs > /sys/class/net/"$pfname"/device/sriov_numvfs &
+> I think it would be more informative to include an actual sample here.
+> We can easily substitute the device names and numbers, given a
+> concrete example.  It's a little bit harder to intuit what $pfname and
+> $sriov_totalvfs should be.  E.g.,
+>
+>    $ cat /sys/bus/pci/devices/0000:02:00.0/sriov_totalvfs
+>    128
+>    $ echo 128 > /sys/bus/pci/devices/0000:02:00.0/sriov_numvfs &
+>
+> Unless it's important to use /sys/class/net/..., use
+> /sys/bus/pci/devices/... both places to make it simpler.
+>
+>>    sleep 0.5
+>>    echo 1 > /sys/bus/pci/rescan
+> These look like shell commands ...
+>
+>>    pci_remove "$pfname"
+> but what is "pci_remove"?  I guess it must be an echo into
+> /sys/bus/pci/devices/.../remove; expanding it here would be better.
+>
+>> system will crash as follows:
+>>
+>>    Unable to handle kernel NULL pointer dereference at virtual address 0000000000000000
+>>    Call trace:
+>>     __pi_strlen+0x14/0x150
+>>     kernfs_find_ns+0x54/0x120
+>>     kernfs_remove_by_name_ns+0x58/0xf0
+>>     sysfs_remove_bin_file+0x24/0x38
+>>     pci_remove_resource_files+0x44/0x90
+>>     pci_remove_sysfs_dev_files+0x28/0x40
+>>     pci_stop_bus_device+0xb8/0x118
+>>     pci_stop_and_remove_bus_device+0x20/0x40
+>>     pci_iov_remove_virtfn+0xb8/0x138
+>>     sriov_disable+0xbc/0x190
+>>     pci_disable_sriov+0x30/0x48
+>>     hinic_pci_sriov_disable+0x54/0x138 [hinic]
+>>     hinic_remove+0x140/0x290 [hinic]
+>>     pci_device_remove+0x4c/0xf8
+>>     device_remove+0x54/0x90
+>>     device_release_driver_internal+0x1d4/0x238
+>>     device_release_driver+0x20/0x38
+>>     pci_stop_bus_device+0xa8/0x118
+>>     pci_stop_and_remove_bus_device_locked+0x28/0x50
+>>     remove_store+0x128/0x208
+>>
+>> Fix this by set the pointer to NULL after releasing 'res_attr' immediately.
+> This *sounds* like it would still be racy unless there's a lock around
+> this.  If there is a lock, please mention what it is and where it's
+> held.
 
-Julian
+I found that the primary race condition between VF creation and PCI 
+rescan has been
+
+addressed by the pci_lock_rescan_remove() lock added in commit 
+a5338e365c45.
+
+Given this, would setting the pointer to NULL after kfree still be 
+considered a worthwhile defensive measure?
+
+>> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+>> Signed-off-by: Ziming Du <duziming2@huawei.com>
+>> ---
+>>   drivers/pci/pci-sysfs.c | 2 ++
+>>   1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> index 18e5d4603b472..fbcbf39232732 100644
+>> --- a/drivers/pci/pci-sysfs.c
+>> +++ b/drivers/pci/pci-sysfs.c
+>> @@ -1227,12 +1227,14 @@ static void pci_remove_resource_files(struct pci_dev *pdev)
+>>   		if (res_attr) {
+>>   			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
+>>   			kfree(res_attr);
+>> +			pdev->res_attr[i] = NULL;
+>>   		}
+>>   
+>>   		res_attr = pdev->res_attr_wc[i];
+>>   		if (res_attr) {
+>>   			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
+>>   			kfree(res_attr);
+>> +			pdev->res_attr_wc[i] = NULL;
+>>   		}
+>>   	}
+>>   }
+>> -- 
+>> 2.43.0
+>>
