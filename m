@@ -1,144 +1,98 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22E3D34B437
-	for <linux-pci@vger.kernel.org>; Thu,  2 Apr 2026 22:18:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1297B36D51B;
+	Thu,  2 Apr 2026 22:20:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775168300; cv=none; b=B4Pdii8KDvyExG6S9UyRiA873ZTTCYskyBZRYiGLHGVeEwkv7pZEWgVVdAZVau6qgi7TaTGZgYz2u6oRYkqBSxS7lH9P3nLh/JknQYjT4O2TZEtv9Y4Q9eBMwjM73npa4zdiJn1ZmUkoaPDG57cEkV59p/G7lK2Vj6EKkW2m7qo=
+	t=1775168457; cv=none; b=UXDsA9B3F081WZno8+5eCiaynd6NH2uQL8fO6MCM0adwiMa9pRExshmxW8NerKJNGWilCjTIjZbAbE9WTFxFZePgMsCWSPqQEre2dYJtjz6FO8TVQ/y1WYPpdsuciVDNrtq0NGTwEROcF/OGkZUko8QyhebWJlTcCE/+cgslHjk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775168300; c=relaxed/simple;
-	bh=ss6SBO4aBnxZfQtgA58c8zVrUCdwWva/CrkOsUnHsXc=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=jqrx8Tys+GSeoDt/K0+FjthzF1taV3BKdulAl560+ioagQM9aEHYh6rXsnOFnd4BiQ/+hKV4qmB7zBkwXgeow19ByphexGzKfOsseYBDVpqjXdzQ/2xShQ/IxDRVCFJhsqlfJmsdpGxf1p1zCFKYIsycltMx/yQKHF2XhPUET4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jsNYtb54; arc=none smtp.client-ip=209.85.128.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1775168457; c=relaxed/simple;
+	bh=KE5CJQvzLY7UMhd/2yz8skIZOhhpRl5F0TjWND7YUkI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=ZtxXfIt4LwDW1GtQUKRkQxb2Q/YwLU+AZtUnXCShUQfFf8mPNID9h+1L++eRDmGowCN7JSutKjd6rfzOG+xGBJqBfkpkf+eM0ro7qcKZ+16fyNrMH5ltlbiTBd7s+fsgfYCGM/XvpL0Cf18bqP1BP2gHjG7cdHbEXNuHphtOjp4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=prUW9UT3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jsNYtb54"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-48891776099so14319505e9.2
-        for <linux-pci@vger.kernel.org>; Thu, 02 Apr 2026 15:18:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1775168297; x=1775773097; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=DbIp1ob/MgbLUlDr1JF2AIWekXiUFRu+YrNw5NosV6o=;
-        b=jsNYtb54jVsaacCdNUNvnudksp/3MPqlOCgkgAFDf/isEzdjXo2nSznF6UgohIPnGK
-         I8SALRnAjhrI9gehCuX/rMqBbu09sdR0kE2qKCQlvCajQgXCk65Gxicd0lGJICtEqdNR
-         jV4E525n49fo389jf5kX519zMYzIa1x/VfpZRn6jD5ah0b2ZMVbFV9OOtCeDkcPUjPw6
-         TM3jb+C4YSgBMzVWNWhOgQcLuwkdg4Lp3FoTghGe9UDvX+3PNreMAdn0QjeJH7WHHZKg
-         mEjgyJBmwHqobi/yP8sg2PUjLuv4E/V6WQTi8I++sYE6IpdGcPAUZK9k1PtAwPv7cpXu
-         pMZw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775168297; x=1775773097;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=DbIp1ob/MgbLUlDr1JF2AIWekXiUFRu+YrNw5NosV6o=;
-        b=QMR6Dke789hU32Tk0FViEA/tVKarrMWXK57P5w0zABS95a/kv3Z360ZDd3X5+PnmqW
-         vlDlmfTeVlUbO359Cx4EOCFiVCCk5LosnxWnydNhGBunhf7xzWt0gNdzJfieKOmFmVcM
-         hhKPhwBiv07pXQsf1d1G3TGJEtiKzKmC+FDp10eL7II+/KTydq+CKadanJC2pFZRECDP
-         7kgrJMg6DrIizRZTfKinUsGzcb91e24K+9GNZGQz7N7D9TZbhnsDJvjt+z4cC3rDnucp
-         4na4OTWpcBvvY/EwHBZ76dkXwRaolwcJu5o0Hix+cXD3pUbulmveEa7OgzYHojbghJaJ
-         Lbpw==
-X-Forwarded-Encrypted: i=1; AJvYcCXTYSlMqCOz6BeSBwqAhWsIWFQAnhuZCdss4gA18gBOq0dkbTrVueRjYJRjdq3p1dKmEcFAtzbVOLk=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxt3trkFLFDs3ozpuwNQ6kxv0m10GURdvpE9ZbobawB408vHcvz
-	41pRaavqHhBjlmFLvpg9f0hZ26FzQDGyBrBX+EZq+gzMHZVZOXpjtPIH
-X-Gm-Gg: ATEYQzz8BiYb7DvlkoOQke9Qb/sk73lGB7HoM9UoBVy7qAvqs0P232oTz9nOA3hG+sd
-	fGLbhv81pYdubXBBmZ2GzBUYkIjoXcbXlNb54N67GIi6hvnvlcUNImHcpQv/BxBx7lO6mxKG6kW
-	CPJvtbAZ8/b47kV1lRhX+t7n6aed35765CvP2sL1PsGpzPxrdtG4QMuFoH1B2F5MUNd27swiPSt
-	EAWPBYm2VeW+eUC8GD18x9BdJzrYV8CAKX3x13C+la9bvmcJp0ivdzkWIGvRfafBX6gcm9C94G7
-	5y11zpBJbSQji08iTRXpcT+9rDohLMeUCaMWuD9qaOnPqnxZnnGtfZFasrKh1gaaWAwzqKEIVdv
-	OQG+WayXzD8IrEOqoB5udTSB9pUx5vKzLkUuHW1CkPjdJPSXxU/hn+uKpXIEmujGORuq4bwQAbr
-	4chwbx6uW1ZPdUoZUea6dWcr+taIFLnRFWsufTVUY07VeD2muFUvP2QV5l5JMMzqDMi6nHGJeLJ
-	wytSLEe8zqFzQm3REpSefQbmdQNfB2sQYZt7YqUDKZZSWky2tWUDbMeqa+2ZzWu0Q==
-X-Received: by 2002:a05:600c:6305:b0:486:d76c:fa57 with SMTP id 5b1f17b1804b1-4889978da75mr10428725e9.17.1775168297272;
-        Thu, 02 Apr 2026 15:18:17 -0700 (PDT)
-Received: from ?IPV6:2003:ea:8f19:9500:c168:ad27:2fdd:9334? (p200300ea8f199500c168ad272fdd9334.dip0.t-ipconnect.de. [2003:ea:8f19:9500:c168:ad27:2fdd:9334])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4888b142319sm90294465e9.7.2026.04.02.15.18.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 02 Apr 2026 15:18:16 -0700 (PDT)
-Message-ID: <b0ce592d-c34c-4e0b-b389-4e346b3a0c44@gmail.com>
-Date: Fri, 3 Apr 2026 00:18:15 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="prUW9UT3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77D8AC116C6;
+	Thu,  2 Apr 2026 22:20:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775168456;
+	bh=KE5CJQvzLY7UMhd/2yz8skIZOhhpRl5F0TjWND7YUkI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=prUW9UT3rmyzotQUUTkrod77DHp5m0ZeQwv/pLDDsFw61hdnQwmDt6kbTMrlmHXU4
+	 Yav12lrsXexlysCdiZa/s+L93vFGEtXNLrXgQFQu0ZCXxoKQVIw0fJsUA8mxnZMGHw
+	 /W5mbO7pMFwX56f2y+HnMPgOi9DNndI+cBzkSJxt/hU1UbW7AjapGJxaWqBfVfUD8J
+	 PDuDkOVALGisc0MdTmzy0+gWJ6IuYkecZGM8Vgjf/0BhX3Afg6KO4cpSTJhRWwzGC7
+	 Uio39ErNSNf+E0wuiJtGKnYaZaJrtFIJ13+WK6PFIhkbWK4oSQhxS/ozaajRXOQiZq
+	 saOofhH1rQ8ag==
+Date: Thu, 2 Apr 2026 17:20:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Georg Klima <Georg.Klima@durst-group.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Georg Klima <georg_klima@gmx.at>, Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Mika Westerberg <westeri@kernel.org>,
+	Yehezkel Bernat <YehezkelShB@gmail.com>, linux-usb@vger.kernel.org
+Subject: Re: AW: [BUG] Thunderbolt runtime resume during PCIe removal causes
+ IRQ warning and shutdown failure.
+Message-ID: <20260402222055.GA293966@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: [PATCH 2/2] PCI: Remove no_pci_devices
-From: Heiner Kallweit <hkallweit1@gmail.com>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>
-Cc: "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <dd9ea7c1-44f5-4364-a3d5-885b1c99159f@gmail.com>
-Content-Language: en-US
-In-Reply-To: <dd9ea7c1-44f5-4364-a3d5-885b1c99159f@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <AM9PR10MB4231D6536D271E1F5A81F3D1B757A@AM9PR10MB4231.EURPRD10.PROD.OUTLOOK.COM>
 
-After having removed the last usage of no_pci_devices(), this function
-can be removed.
+[+cc Thunderbolt & pciehp folks, initial report of system poweroff
+failure at
+https://lore.kernel.org/all/AM9PR10MB42316BF3E59B29E1EA3E5600B756A@AM9PR10MB4231.EURPRD10.PROD.OUTLOOK.COM]
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- drivers/pci/probe.c | 17 -----------------
- include/linux/pci.h |  3 ---
- 2 files changed, 20 deletions(-)
+On Fri, Mar 27, 2026 at 05:28:28PM +0000, Georg Klima wrote:
+> Hi Bjorn,
+> 
+> Upstream without nvidia, more debug, same issue with aspm default:
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index bccc7a4bd..19d73f613 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -67,23 +67,6 @@ static struct resource *get_pci_domain_busn_res(int domain_nr)
- 	return &r->res;
- }
- 
--/*
-- * Some device drivers need know if PCI is initiated.
-- * Basically, we think PCI is not initiated when there
-- * is no device to be found on the pci_bus_type.
-- */
--int no_pci_devices(void)
--{
--	struct device *dev;
--	int no_devices;
--
--	dev = bus_find_next_device(&pci_bus_type, NULL);
--	no_devices = (dev == NULL);
--	put_device(dev);
--	return no_devices;
--}
--EXPORT_SYMBOL(no_pci_devices);
--
- /*
-  * PCI Bus Class
-  */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8861eeb43..cc98713e3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1201,8 +1201,6 @@ extern const struct bus_type pci_bus_type;
- /* Do NOT directly access these two variables, unless you are arch-specific PCI
-  * code, or PCI core code. */
- extern struct list_head pci_root_buses;	/* List of all known PCI buses */
--/* Some device drivers need know if PCI is initiated */
--int no_pci_devices(void);
- 
- void pcibios_resource_survey_bus(struct pci_bus *bus);
- void pcibios_bus_add_device(struct pci_dev *pdev);
-@@ -2140,7 +2138,6 @@ static inline struct pci_dev *pci_get_base_class(unsigned int class,
- static inline int pci_dev_present(const struct pci_device_id *ids)
- { return 0; }
- 
--#define no_pci_devices()	(1)
- #define pci_dev_put(dev)	do { } while (0)
- 
- static inline void pci_set_master(struct pci_dev *dev) { }
--- 
-2.53.0
+Thanks for this test with an upstream kernel (6.19.10).  Complete
+dmesg log was attached to
+https://lore.kernel.org/all/AM9PR10MB4231D6536D271E1F5A81F3D1B757A@AM9PR10MB4231.EURPRD10.PROD.OUTLOOK.COM/
 
+Linux only requests control of PME, AER, hotplug, etc if Linux
+supports ASPM and MSI.  "pcie_aspm=off" means Linux doesn't support
+ASPM, so it doesn't request control:
 
+  --- dmesg_aspm_off.txt
+  +++ dmesg_actual.txt
+  - acpi PNP0A08:01: _OSC: OS supports [ExtendedConfig Segments MSI EDR HPX-Type3]
+  + acpi PNP0A08:01: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI EDR HPX-Type3]
+  - acpi PNP0A08:01: _OSC: not requesting OS control; OS requires [ExtendedConfig ASPM ClockPM MSI]
+  + acpi PNP0A08:01: _OSC: OS now controls [PCIeHotplug SHPCHotplug PME AER PCIeCapability LTR DPC]
+
+I suspect the issue is related to those services, not to ASPM itself.
+Booting with "pcie_port_pm=off" might be a more targeted workaround.
+
+You have this topology:
+
+  0000:80:1b.4: [8086:7f44] PCIe Root Port to [bus 88-d8]
+  0000:88:00.0: [8086:5780] PCIe Switch Upstream Port (JHL9580 Thunderbolt 5)
+
+and the first thing I see in the 6.19.10 log is this, which makes me
+think we put the Thunderbolt controller at 88:00.0 into D3 and are
+trying to bring it back to D0 but it took too long, so we can't access
+downstream devices like b1:00.0:
+
+  Mar 27 18:08:40 fedora kernel: pcieport 0000:80:1b.4: Data Link Layer Link Active not set in 100 msec
+  Mar 27 18:08:40 fedora kernel: pcieport 0000:80:1b.4: pciehp: Slot(25): Card not present
+  Mar 27 18:08:40 fedora kernel: xhci_hcd 0000:b1:00.0: Controller not ready at resume -19
+  Mar 27 18:08:40 fedora kernel: ------------[ cut here ]------------
+  Mar 27 18:08:40 fedora kernel: xhci_hcd 0000:b1:00.0: PCI post-resume error -19!
+  Mar 27 18:08:40 fedora kernel: thunderbolt 0000:8a:00.0: interrupt for TX ring 0 is already enabled
+  Mar 27 18:08:40 fedora kernel:  tb_ring_start+0x149/0x330 [thunderbolt]
+  Mar 27 18:08:40 fedora kernel:  tb_ctl_start+0x1b/0xc0 [thunderbolt]
+  Mar 27 18:08:40 fedora kernel:  tb_domain_runtime_resume+0x19/0x40 [thunderbolt]
+  Mar 27 18:08:40 fedora kernel:  __rpm_callback+0x48/0x1f0
+  Mar 27 18:08:40 fedora kernel:  rpm_callback+0x6d/0x80
+  Mar 27 18:08:40 fedora kernel:  rpm_resume+0x4ab/0x6d0
