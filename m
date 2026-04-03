@@ -1,130 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 541311A9FBA;
-	Fri,  3 Apr 2026 17:03:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 36D0B313298;
+	Fri,  3 Apr 2026 17:17:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775235798; cv=none; b=u4X/th8pxpUnJLOhKCw5pafPmcsqqoAIOjq2NRb51+W5uXUQaS5T87OhImcDWPhTaz0hYAPoyX7hsZW815zTTax4HNmLlyT3IdVcATN9PMuSDvSdxe5h/+SDUP2bZ6SVrOZpHUCEzbMWqDCFO3NOc6PEjcsqUlsg9ru12yS3fM0=
+	t=1775236621; cv=none; b=TLa4mECPw9232PahxM+CWOjZhVMBMbJa1cwVSztReuJoGytQwtlG7bakGuZElm57XvAEj11CyxKmozHpvgLe8rx4IZfO0kzyc6jpo2ZVwc6vN2hqmWZi5YGriMh2mfba7jtFFUMm7OmcIJI0zsIm67Rwzd75+DzOHvkmnp1prrk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775235798; c=relaxed/simple;
-	bh=AOS61gbnHSp9w8+XowYHPIQQIZMANYd5/P0NBGDXrIg=;
+	s=arc-20240116; t=1775236621; c=relaxed/simple;
+	bh=By9EQpNCDpp6s2NYHjtZqT1nhJ8CR8Y2CKPeiQPRZwI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TUbuFJ0vCezbvL8AeWJYleEp81Rmn7uCzJFUzbXAxnRG3j8uld15XoZ49vW/vg7ZXA9Y71p/uehQuwvt3dwS2S+iUrID1TK0tAR95gIAfSK05ajxnSkQx0ow7DD3nEsAuUvBgCxpgeziVIuq0lIY5VN+OMW7VgQy88Vre+Vkkp4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dcppZFR2; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=YzwuI3YiQVx1LJZDwocccvUhzqFcd9siI/2iub2p63cqQvfi5Q/9Oe3xUWG9i8g7z570b1DmlGWXeiHPW8x/XBhQ7wOZuSWenTF2R2lJUGaGbrL9AtGve3LOfBLUpqlAwZKKxBdhdBcPXZn2VVsyoNCWtszYkrTDuy7t4JK2h+w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=KSHb6Glr; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dcppZFR2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4AB5C4CEF7;
-	Fri,  3 Apr 2026 17:03:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775235797;
-	bh=AOS61gbnHSp9w8+XowYHPIQQIZMANYd5/P0NBGDXrIg=;
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="KSHb6Glr"
+Received: by linux.microsoft.com (Postfix, from userid 1127)
+	id C975720B6F01; Fri,  3 Apr 2026 10:16:59 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com C975720B6F01
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1775236619;
+	bh=kh5ou9R6vorVFKGIjYV/L1uLTk5ZwMi2N5RzFqNbU74=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dcppZFR2728XjAy91UjuJreyiJLkT1JSxrFm7WUeqgzLH+t/zs9O2CadQ1LuQPkCE
-	 1yPDzkplh6xvOy1RnplfX8yvT0MT5n3r5y6uAL9W9T8JxkF0/wTH2ELd580zM0CwZ/
-	 SXEntQ4XlfCN9EnwqzCO/FEEM7soxB/8YwacJBRvo5rTgrLJkLLlRgInit/UnNyDxy
-	 ApHFhNzgr+NnbNMhMBmK8PhFKfJoOB3ePgrrI7wRvps3m8xudbtzTA3Mwi6OSoEL9W
-	 fksYtPkY5QapWcxwaceESrOlfI1TdrP+mbiWez7tsavsiX5N8XehlDq+r+8Q8rBD6p
-	 50VpNVzisZwew==
-Date: Fri, 3 Apr 2026 22:33:04 +0530
-From: "mani@kernel.org" <mani@kernel.org>
-To: Hongxing Zhu <hongxing.zhu@nxp.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Frank Li <frank.li@nxp.com>, 
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>, "l.stach@pengutronix.de" <l.stach@pengutronix.de>, 
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>, 
-	"robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>, 
-	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "kernel@pengutronix.de" <kernel@pengutronix.de>, 
-	"festevam@gmail.com" <festevam@gmail.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev" <imx@lists.linux.dev>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH v1] PCI: imx6: Add force_suspend flag to override L1SS
- suspend skip
-Message-ID: <y76fzvju42srykr3khio2bx5lmzusy6iasodvs45imis7fw3b5@wjv3gsocj534>
-References: <AS8PR04MB8833061F34B9BEFC9D19764A8C4EA@AS8PR04MB8833.eurprd04.prod.outlook.com>
- <20260323220858.GA1084506@bhelgaas>
- <AS8PR04MB8833137860C682F9E1E743E08C48A@AS8PR04MB8833.eurprd04.prod.outlook.com>
+	b=KSHb6GlrE+oMlnijn2yddWJvQl4JlPLJPvGgrzNN9VpDP8m8olNJC1Ze0Q2l7fMAL
+	 2phDY5wnNto5r5I7PxwqYV2sRrc6nKhAeAhNclPw/n4fmIS6oDQ8Mex6D5j9WY29U/
+	 naca6YQjgLNdFhb+sC39IFbdc1TmOU3KQVoIfsWM=
+Date: Fri, 3 Apr 2026 10:16:59 -0700
+From: Saurabh Singh Sengar <ssengar@linux.microsoft.com>
+To: Sahil Chandna <sahilchandna@linux.microsoft.com>
+Cc: kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+	decui@microsoft.com, longli@microsoft.com, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+	bhelgaas@google.com, dan.j.williams@intel.com, mhklinux@outlook.com,
+	linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: hv: Fix double ida_free in hv_pci_probe error path
+Message-ID: <ac/2CyhuZhWa8ctW@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+References: <20260403120933.466259-1-sahilchandna@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <AS8PR04MB8833137860C682F9E1E743E08C48A@AS8PR04MB8833.eurprd04.prod.outlook.com>
+In-Reply-To: <20260403120933.466259-1-sahilchandna@linux.microsoft.com>
 
-On Tue, Mar 24, 2026 at 02:01:58AM +0000, Hongxing Zhu wrote:
-> > -----Original Message-----
-> > From: Bjorn Helgaas <helgaas@kernel.org>
-> > Sent: 2026年3月24日 6:09
-> > To: Hongxing Zhu <hongxing.zhu@nxp.com>
-> > Cc: Frank Li <frank.li@nxp.com>; jingoohan1@gmail.com;
-> > l.stach@pengutronix.de; lpieralisi@kernel.org; kwilczynski@kernel.org;
-> > mani@kernel.org; robh@kernel.org; bhelgaas@google.com;
-> > s.hauer@pengutronix.de; kernel@pengutronix.de; festevam@gmail.com;
-> > linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
-> > imx@lists.linux.dev; linux-kernel@vger.kernel.org; stable@vger.kernel.org
-> > Subject: Re: [PATCH v1] PCI: imx6: Add force_suspend flag to override L1SS
-> > suspend skip
-> > 
-> > On Wed, Mar 18, 2026 at 02:55:45AM +0000, Hongxing Zhu wrote:
-> > > > -----Original Message-----
-> > > > From: Bjorn Helgaas <helgaas@kernel.org>
-> > > ... [messed up quoting]
-> > 
-> > > > On Tue, Mar 17, 2026 at 02:12:56PM +0800, Richard Zhu wrote:
-> > > > > Add a force_suspend flag to allow platform drivers to force the
-> > > > > PCIe link into L2 state during suspend, even when L1SS (ASPM L1
-> > > > > Sub-States) is enabled.
-> > > > >
-> > > > > By default, the DesignWare PCIe host controller skips L2 suspend
-> > > > > when L1SS is supported to meet low resume latency requirements for
-> > > > > devices like NVMe. However, some platforms like i.MX PCIe need to
-> > > > > enter L2 state for proper power management regardless of L1SS
-> > support.
-> > > > >
-> > > > > Enable force_suspend for i.MX PCIe to ensure the link enters L2
-> > > > > during system suspend.
-> > > >
-> > > > I'm a little bit skeptical about this.
-> > > >
-> > > > What exactly does a "low resume latency requirement" mean?  Is this
-> > > > an actual functional requirement that's special to NVMe, or is it
-> > > > just the desire for low resume latency that everybody has for all
-> > > > devices?
-> > >
-> > > From my understanding, L1SS mode is characterized by lower latency
-> > > when compared to L2 or L3 modes.
-> > >
-> > > It can be used on all devices, avoiding frequent power on/off cycles.
-> > > NVMe can also extend the service life of the equipment.
-> > 
-> > All the above applies to all platforms, so it's not an argument for
-> > i.MX-specific code here.
-> >
-> Hi Bjorn:
-> Thanks for your kindly review. 
-> Yes, it is.
-> > > > Is there something special about i.MX here?  Why do we want i.MX to
-> > > > be different from other host controllers?
-> > >
-> > > i.MX PCIe loses power supply during Deep Sleep Mode (DSM), requiring
-> > > full reinitialization after system wake-up.
-> > 
-> > I don't know what DSM means in PCIe or how it would help justify this
-> > change.
-> > 
-> i.MX PCIe power is gated off during suspend, requiring full reinitialization
-> on resume
+On Fri, Apr 03, 2026 at 05:09:29AM -0700, Sahil Chandna wrote:
+> If hv_pci_probe() fails after storing the domain number in
+> hbus->bridge->domain_nr, there is a call to free this domain_nr via
+> pci_bus_release_emul_domain_nr(), however, during cleanup, the bridge
+> release callback pci_release_host_bridge_dev() also frees the domain_nr
+> causing ida_free to be called on same ID twice and triggering following
+> warning:
+> 
+>   ida_free called for id=28971 which is not allocated.
+>   WARNING: lib/idr.c:594 at ida_free+0xdf/0x160, CPU#0: kworker/0:2/198
+>   Call Trace:
+>    pci_bus_release_emul_domain_nr+0x17/0x20
+>    pci_release_host_bridge_dev+0x4b/0x60
+>    device_release+0x3b/0xa0
+>    kobject_put+0x8e/0x220
+>    devm_pci_alloc_host_bridge_release+0xe/0x20
+>    devres_release_all+0x9a/0xd0
+>    device_unbind_cleanup+0x12/0xa0
+>    really_probe+0x1c5/0x3f0
+>    vmbus_add_channel_work+0x135/0x1a0
+> 
+> Fix this by letting pci core handle the free domain_nr and remove
+> the explicit free called in pci-hyperv driver.
+> 
+> Fixes: bcce8c74f1ce ("PCI: Enable host bridge emulation for PCI_DOMAINS_GENERIC platforms")
+> Signed-off-by: Sahil Chandna <sahilchandna@linux.microsoft.com>
+> ---
+>  drivers/pci/controller/pci-hyperv.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> index 2c7a406b4ba8..5616ad5d2a8f 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -3778,7 +3778,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  					   hbus->bridge->domain_nr);
+>  	if (!hbus->wq) {
+>  		ret = -ENOMEM;
+> -		goto free_dom;
+> +		goto free_bus;
+>  	}
+> 
+>  	hdev->channel->next_request_id_callback = vmbus_next_request_id;
+> @@ -3874,8 +3874,6 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  	vmbus_close(hdev->channel);
+>  destroy_wq:
+>  	destroy_workqueue(hbus->wq);
+> -free_dom:
+> -	pci_bus_release_emul_domain_nr(hbus->bridge->domain_nr);
+>  free_bus:
+>  	kfree(hbus);
+>  	return ret;
+> --
+> 2.53.0
 > 
 
-Is this an unconditional behavior? What if the PCIe device is configured as a
-wakeup source like WOL, WOW? And if you connect NVMe, this behavior will result
-in resume failure as NVMe driver expects the power to be retained if ASPM is
-supported.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+LGTM,
+Reviewed-by: Saurabh Sengar <ssengar@linux.microsoft.com>
