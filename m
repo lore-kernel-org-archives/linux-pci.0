@@ -1,268 +1,398 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86050218845
-	for <linux-pci@vger.kernel.org>; Fri,  3 Apr 2026 05:29:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 447A635295E;
+	Fri,  3 Apr 2026 05:56:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775194178; cv=none; b=ei3/pqdlv7rGMjdQc14pDGgQAMyWCSh8K8LbxOIu65WtMDl7b4JvucSxOtAqPQe7xb9uV1W/Ae04VIcf7bd1KNOXFfNLG+clZc5BcfiVH00A28DB3n+t96Y59H880pDhGU4PvxXCk+cvbYbuEW49yxxa49i3YZdd4pRO2DSpMBk=
+	t=1775195810; cv=none; b=fxIv+Z20Y9TErJ74U/kow/AnaZDbVCA7erbU40WdbQp2k0tvqbHD4XYQr+oe3blL7tc42TfX+jgFPnb91At7uchKEyj0ECPU04lmLenYT8qTMAH0/U5SDfqwD3gw7LNZgHByu+Rp6/lNTu8mi2ob3THuN6LMlcVBljeCCXLd1x4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775194178; c=relaxed/simple;
-	bh=HHumqgmYJiqD0FJuVYyeKQMW0me2HRPR5BkU9aqLDjA=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=J2w4Mba1OhtMjvkosmJ/1BoCrvDaLzrnzD4nVjiD+xNrCumyYr9mgWjI4ebWohxkqPZdYG1j5iUykVrO4Xrg0YN5mQHdLDRpgqlHARkyYrvLr0j5X4/fevdghOPucayOWNkB3sfAtvLJX1cja31vgElZV+ZKr/6OzC6LzbKdKXY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SBJ+nf99; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1775195810; c=relaxed/simple;
+	bh=RkjPsXX9ZPme/Zm3T7FHzMGkJeGZSlwDURWHin3E/gQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Sjl1OOYf07ZRnUCaUTIVc15uJgkaaU+Lj4m5wT78pVs7YzdWk+1PJ8G1UoZGKYAmjsUhSiRur1Frkdx1GmYS1G1yW/Et1KTWsfRTnTzQ1djr7lLtDasH9wevbr7IEdmybguJvM8FkiN0ang5Y1Gm1RNE/r94/I/Er8iEZ9zqUH4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hclCYwhC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SBJ+nf99"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775194178; x=1806730178;
-  h=date:from:to:cc:subject:message-id;
-  bh=HHumqgmYJiqD0FJuVYyeKQMW0me2HRPR5BkU9aqLDjA=;
-  b=SBJ+nf99jE3b4cBsZB/lZ+wjUx9vXM01aK4SCmntn8Va4Ah7jYKKoGFV
-   mNow69Ergmx3zqlcr9KR5wr6pdQnbsSs+rO+3TjeOte2caHy4y7y02UwG
-   BhlxB0mwvMp2Tlutmr+gFSeSTMTJADDHtZInUZVal6n+QnybTXty5bShC
-   pumXWspvPZxSjNpGV6Tzn2Dr1dGUh/22/rmtXhCZZn8btJgHrr6YuA9cC
-   QFioTbGD5HK8UWh9/rd9BxJncMbGETSDQ32tzs5u0hgiwmTXnZax+mgp+
-   8zSkR7xbG8ajo45WUaEl2cJRMlppTmDe1QDuMLJS1CGOcjQZKpcWGS+aw
-   w==;
-X-CSE-ConnectionGUID: gofYXHgWQyCgjVxs466B+w==
-X-CSE-MsgGUID: O75pSmsxQ1CVTWN3N5Xo4g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11747"; a="76142593"
-X-IronPort-AV: E=Sophos;i="6.23,157,1770624000"; 
-   d="scan'208";a="76142593"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Apr 2026 22:29:37 -0700
-X-CSE-ConnectionGUID: oDLdcudsS+mpoN3TTjq50Q==
-X-CSE-MsgGUID: ZpvLi7jKQfKr0G3a3SVgVg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,157,1770624000"; 
-   d="scan'208";a="227044485"
-Received: from lkp-server01.sh.intel.com (HELO 064ad336901d) ([10.239.97.150])
-  by orviesa009.jf.intel.com with ESMTP; 02 Apr 2026 22:29:36 -0700
-Received: from kbuild by 064ad336901d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1w8X64-000000000rx-43Cs;
-	Fri, 03 Apr 2026 05:29:32 +0000
-Date: Fri, 03 Apr 2026 13:28:52 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:atomics] BUILD SUCCESS
- 674b483b632f5c198e499e8da013e7215a8e7971
-Message-ID: <202604031343.FdX1oGWB-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hclCYwhC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39D86C19421;
+	Fri,  3 Apr 2026 05:56:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775195809;
+	bh=RkjPsXX9ZPme/Zm3T7FHzMGkJeGZSlwDURWHin3E/gQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=hclCYwhCoqFjVqOhoNQnN8upK9pCg3kqo/r7a3qnSZyUnu7CdNmZuHqxNPpt9Tg5i
+	 Mw+MTN0KmVUJViKuCh0G+NdcfRcj4alxMjotf+8H6grMlJ6u1oHX0JMGp+cJEPSAnl
+	 RfEEkYfMDpymIE9nBpUavuV38kipgiXRMs788zDnB7KN/lBTkUm9XzqecywwRGVb63
+	 57ffw+ytp1Nu0uvMCBifxSTWYXW169VN+6IOJsnWLgCmi8ZYFZTQX9Vn938dtVllUZ
+	 Vm2l+dQFHgJO21NEi2L6lLz2fRfU44YFAfzuOqX+8ljNGlV3QcnqLYdFIRvuaV4Ti1
+	 Pd4oyUp0oqR+A==
+Date: Fri, 3 Apr 2026 13:56:45 +0800
+From: "Peter Chen (CIX)" <peter.chen@kernel.org>
+To: pawell@cadence.com
+Cc: Roger Quadros <rogerq@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-usb@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] usb: cdnsp: Add support for device-only configuration
+Message-ID: <ac9WnY5C+yTVi0X/@nchen-desktop>
+References: <20260331-device_only-v1-1-00378b80365c@cadence.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260331-device_only-v1-1-00378b80365c@cadence.com>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git atomics
-branch HEAD: 674b483b632f5c198e499e8da013e7215a8e7971  PCI: Update PCIe spec references for AtomicOps
+On 26-03-31 10:19:11, Pawel Laszczak via B4 Relay wrote:
+> From: Pawel Laszczak <pawell@cadence.com>
+> 
+> This patch introduces support for operating the Cadence USBSSP (cdnsp)
+> controller in a peripheral-only mode, bypassing the Dual-Role Device (DRD)
+> logic.
 
-elapsed time: 758m
+Is it possible the SoC customer (not Cadence internal) has this configuration
+too?
 
-configs tested: 191
-configs skipped: 2
+> 
+> The change in BAR indexing (from BAR 2 to BAR 1) is a direct
+> consequence of switching from 64-bit to 32-bit addressing in the
+> Peripheral-only configuration.
+> 
+> Tested on PCI platform with Device-only configuration. Platform-side
+> changes are included to support the PCI glue layer's property injection.
+> 
+> Signed-off-by: Pawel Laszczak <pawell@cadence.com>
+> ---
+> NOTE: This patch depends on Peter Chen's series "usb: cdns3: Add 
+> USBSSP platform driver support", which was recently accepted by 
+> Greg into the usb-testing branch (commit 6076388ca1ed).
+> ---
+>  drivers/usb/cdns3/cdns3-plat.c | 24 ++++++++++++---------
+>  drivers/usb/cdns3/cdnsp-pci.c  | 47 ++++++++++++++++++++++++++++++++++--------
+>  drivers/usb/cdns3/core.c       |  3 ++-
+>  drivers/usb/cdns3/core.h       |  5 ++++-
+>  drivers/usb/cdns3/drd.c        | 16 ++++++++++++--
+>  include/linux/pci_ids.h        |  1 +
+>  6 files changed, 73 insertions(+), 23 deletions(-)
+> 
+> diff --git a/drivers/usb/cdns3/cdns3-plat.c b/drivers/usb/cdns3/cdns3-plat.c
+> index 71c612e27b73..33746e672cda 100644
+> --- a/drivers/usb/cdns3/cdns3-plat.c
+> +++ b/drivers/usb/cdns3/cdns3-plat.c
+> @@ -75,6 +75,7 @@ static int cdns3_plat_probe(struct platform_device *pdev)
+>  	if (cdns->pdata && cdns->pdata->override_apb_timeout)
+>  		cdns->override_apb_timeout = cdns->pdata->override_apb_timeout;
+>  
+> +	cdns->no_drd = device_property_read_bool(dev, "no_drd");
+>  	platform_set_drvdata(pdev, cdns);
+>  
+>  	ret = platform_get_irq_byname(pdev, "host");
+> @@ -107,21 +108,23 @@ static int cdns3_plat_probe(struct platform_device *pdev)
+>  
+>  	cdns->dev_regs	= regs;
+>  
+> -	cdns->otg_irq = platform_get_irq_byname(pdev, "otg");
+> -	if (cdns->otg_irq < 0)
+> -		return dev_err_probe(dev, cdns->otg_irq,
+> -				     "Failed to get otg IRQ\n");
+> +	if (!cdns->no_drd) {
+> +		cdns->otg_irq = platform_get_irq_byname(pdev, "otg");
+> +		if (cdns->otg_irq < 0)
+> +			return dev_err_probe(dev, cdns->otg_irq,
+> +					     "Failed to get otg IRQ\n");
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+I suggest making "otg" register/irq as optional, if it is not existed,
+we set "no_drd" flag for cdns structure. In that case, we do not need to
+add new property.
 
-tested configs:
-alpha                             allnoconfig    gcc-15.2.0
-alpha                            allyesconfig    gcc-15.2.0
-alpha                               defconfig    gcc-15.2.0
-arc                              allmodconfig    clang-16
-arc                              allmodconfig    gcc-15.2.0
-arc                               allnoconfig    gcc-15.2.0
-arc                              allyesconfig    clang-23
-arc                              allyesconfig    gcc-15.2.0
-arc                                 defconfig    gcc-15.2.0
-arc                   randconfig-001-20260403    gcc-10.5.0
-arc                   randconfig-002-20260403    gcc-10.5.0
-arm                               allnoconfig    gcc-15.2.0
-arm                              allyesconfig    clang-16
-arm                              allyesconfig    gcc-15.2.0
-arm                                 defconfig    gcc-15.2.0
-arm                         orion5x_defconfig    clang-23
-arm                   randconfig-001-20260403    gcc-10.5.0
-arm                   randconfig-002-20260403    gcc-10.5.0
-arm                   randconfig-003-20260403    gcc-10.5.0
-arm                   randconfig-004-20260403    gcc-10.5.0
-arm                         vf610m4_defconfig    gcc-15.2.0
-arm64                            allmodconfig    clang-19
-arm64                            allmodconfig    clang-23
-arm64                             allnoconfig    gcc-15.2.0
-arm64                               defconfig    gcc-15.2.0
-arm64                 randconfig-001-20260403    gcc-13.4.0
-arm64                 randconfig-002-20260403    gcc-13.4.0
-arm64                 randconfig-003-20260403    gcc-13.4.0
-arm64                 randconfig-004-20260403    gcc-13.4.0
-csky                             allmodconfig    gcc-15.2.0
-csky                              allnoconfig    gcc-15.2.0
-csky                                defconfig    gcc-15.2.0
-csky                  randconfig-001-20260403    gcc-13.4.0
-csky                  randconfig-002-20260403    gcc-13.4.0
-hexagon                          allmodconfig    gcc-15.2.0
-hexagon                           allnoconfig    gcc-15.2.0
-hexagon                             defconfig    gcc-15.2.0
-hexagon               randconfig-001-20260403    clang-23
-hexagon               randconfig-002-20260403    clang-23
-i386                             allmodconfig    clang-20
-i386                              allnoconfig    gcc-15.2.0
-i386                             allyesconfig    clang-20
-i386        buildonly-randconfig-001-20260403    gcc-14
-i386        buildonly-randconfig-002-20260403    gcc-14
-i386        buildonly-randconfig-003-20260403    gcc-14
-i386        buildonly-randconfig-004-20260403    gcc-14
-i386        buildonly-randconfig-005-20260403    gcc-14
-i386        buildonly-randconfig-006-20260403    gcc-14
-i386                                defconfig    gcc-15.2.0
-i386                  randconfig-001-20260403    gcc-14
-i386                  randconfig-002-20260403    gcc-14
-i386                  randconfig-003-20260403    gcc-14
-i386                  randconfig-004-20260403    gcc-14
-i386                  randconfig-005-20260403    gcc-14
-i386                  randconfig-006-20260403    gcc-14
-i386                  randconfig-007-20260403    gcc-14
-i386                  randconfig-011-20260403    clang-20
-i386                  randconfig-012-20260403    clang-20
-i386                  randconfig-013-20260403    clang-20
-i386                  randconfig-014-20260403    clang-20
-i386                  randconfig-015-20260403    clang-20
-i386                  randconfig-016-20260403    clang-20
-i386                  randconfig-017-20260403    clang-20
-loongarch                        allmodconfig    clang-19
-loongarch                        allmodconfig    clang-23
-loongarch                         allnoconfig    gcc-15.2.0
-loongarch                           defconfig    clang-19
-loongarch             randconfig-001-20260403    clang-23
-loongarch             randconfig-002-20260403    clang-23
-m68k                             allmodconfig    gcc-15.2.0
-m68k                              allnoconfig    gcc-15.2.0
-m68k                             allyesconfig    clang-16
-m68k                             allyesconfig    gcc-15.2.0
-m68k                                defconfig    clang-19
-microblaze                        allnoconfig    gcc-15.2.0
-microblaze                       allyesconfig    gcc-15.2.0
-microblaze                          defconfig    clang-19
-mips                             allmodconfig    gcc-15.2.0
-mips                              allnoconfig    gcc-15.2.0
-mips                             allyesconfig    gcc-15.2.0
-nios2                            allmodconfig    clang-23
-nios2                            allmodconfig    gcc-11.5.0
-nios2                             allnoconfig    clang-23
-nios2                             allnoconfig    gcc-11.5.0
-nios2                               defconfig    clang-19
-nios2                 randconfig-001-20260403    clang-23
-nios2                 randconfig-002-20260403    clang-23
-openrisc                         allmodconfig    clang-23
-openrisc                         allmodconfig    gcc-15.2.0
-openrisc                          allnoconfig    clang-23
-openrisc                          allnoconfig    gcc-15.2.0
-openrisc                            defconfig    gcc-15.2.0
-parisc                           allmodconfig    gcc-15.2.0
-parisc                            allnoconfig    clang-23
-parisc                            allnoconfig    gcc-15.2.0
-parisc                           allyesconfig    clang-19
-parisc                           allyesconfig    gcc-15.2.0
-parisc                              defconfig    gcc-15.2.0
-parisc                randconfig-001-20260403    gcc-10.5.0
-parisc                randconfig-002-20260403    gcc-10.5.0
-parisc64                            defconfig    clang-19
-powerpc                          allmodconfig    gcc-15.2.0
-powerpc                           allnoconfig    clang-23
-powerpc                           allnoconfig    gcc-15.2.0
-powerpc               randconfig-001-20260403    gcc-10.5.0
-powerpc               randconfig-002-20260403    gcc-10.5.0
-powerpc                     tqm5200_defconfig    gcc-15.2.0
-powerpc64             randconfig-001-20260403    gcc-10.5.0
-powerpc64             randconfig-002-20260403    gcc-10.5.0
-riscv                            allmodconfig    clang-23
-riscv                             allnoconfig    clang-23
-riscv                             allnoconfig    gcc-15.2.0
-riscv                            allyesconfig    clang-16
-riscv                               defconfig    gcc-15.2.0
-riscv                 randconfig-001-20260403    clang-23
-riscv                 randconfig-002-20260403    clang-23
-s390                             allmodconfig    clang-18
-s390                             allmodconfig    clang-19
-s390                              allnoconfig    clang-23
-s390                             allyesconfig    gcc-15.2.0
-s390                                defconfig    gcc-15.2.0
-s390                  randconfig-001-20260403    clang-23
-s390                  randconfig-002-20260403    clang-23
-sh                               allmodconfig    gcc-15.2.0
-sh                                allnoconfig    clang-23
-sh                                allnoconfig    gcc-15.2.0
-sh                               allyesconfig    clang-19
-sh                               allyesconfig    gcc-15.2.0
-sh                                  defconfig    gcc-14
-sh                     magicpanelr2_defconfig    gcc-15.2.0
-sh                    randconfig-001-20260403    clang-23
-sh                    randconfig-002-20260403    clang-23
-sparc                             allnoconfig    clang-23
-sparc                             allnoconfig    gcc-15.2.0
-sparc                               defconfig    gcc-15.2.0
-sparc                 randconfig-001-20260403    clang-20
-sparc                 randconfig-002-20260403    clang-20
-sparc64                          allmodconfig    clang-23
-sparc64                             defconfig    gcc-14
-sparc64               randconfig-001-20260403    clang-20
-sparc64               randconfig-002-20260403    clang-20
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-23
-um                               allyesconfig    gcc-15.2.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20260403    clang-20
-um                    randconfig-002-20260403    clang-20
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-20
-x86_64                            allnoconfig    clang-20
-x86_64                            allnoconfig    clang-23
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20260403    clang-20
-x86_64      buildonly-randconfig-002-20260403    clang-20
-x86_64      buildonly-randconfig-003-20260403    clang-20
-x86_64      buildonly-randconfig-004-20260403    clang-20
-x86_64      buildonly-randconfig-005-20260403    clang-20
-x86_64      buildonly-randconfig-006-20260403    clang-20
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-20
-x86_64                randconfig-001-20260403    clang-20
-x86_64                randconfig-002-20260403    clang-20
-x86_64                randconfig-003-20260403    clang-20
-x86_64                randconfig-004-20260403    clang-20
-x86_64                randconfig-005-20260403    clang-20
-x86_64                randconfig-006-20260403    clang-20
-x86_64                randconfig-011-20260403    gcc-14
-x86_64                randconfig-012-20260403    gcc-14
-x86_64                randconfig-013-20260403    gcc-14
-x86_64                randconfig-014-20260403    gcc-14
-x86_64                randconfig-015-20260403    gcc-14
-x86_64                randconfig-016-20260403    gcc-14
-x86_64                randconfig-071-20260403    gcc-14
-x86_64                randconfig-072-20260403    gcc-14
-x86_64                randconfig-073-20260403    gcc-14
-x86_64                randconfig-074-20260403    gcc-14
-x86_64                randconfig-075-20260403    gcc-14
-x86_64                randconfig-076-20260403    gcc-14
-x86_64                               rhel-9.4    clang-20
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-20
-x86_64                    rhel-9.4-kselftests    clang-20
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    clang-23
-xtensa                            allnoconfig    gcc-15.2.0
-xtensa                           allyesconfig    clang-23
-xtensa                randconfig-001-20260403    clang-20
-xtensa                randconfig-002-20260403    clang-20
+>  
+> -	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "otg");
+> -	if (!res) {
+> -		dev_err(dev, "couldn't get otg resource\n");
+> -		return -ENXIO;
+> +		res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "otg");
+> +		if (!res) {
+> +			dev_err(dev, "couldn't get otg resource\n");
+> +			return -ENXIO;
+> +		}
+> +
+> +		cdns->otg_res = *res;
+>  	}
+>  
+>  	cdns->phyrst_a_enable = device_property_read_bool(dev, "cdns,phyrst-a-enable");
+>  
+> -	cdns->otg_res = *res;
+> -
+>  	cdns->wakeup_irq = platform_get_irq_byname_optional(pdev, "wakeup");
+>  	if (cdns->wakeup_irq == -EPROBE_DEFER)
+>  		return cdns->wakeup_irq;
+> @@ -158,6 +161,7 @@ static int cdns3_plat_probe(struct platform_device *pdev)
+>  		goto err_cdns_init;
+>  
+>  	cdns->gadget_init = cdns3_plat_gadget_init;
+> +
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Not related to this change.
+
+>  	ret = cdns_core_init_role(cdns);
+>  	if (ret)
+>  		goto err_cdns_init;
+> diff --git a/drivers/usb/cdns3/cdnsp-pci.c b/drivers/usb/cdns3/cdnsp-pci.c
+> index 432007cfe695..e20c59ceb8a4 100644
+> --- a/drivers/usb/cdns3/cdnsp-pci.c
+> +++ b/drivers/usb/cdns3/cdnsp-pci.c
+> @@ -19,6 +19,7 @@
+>  
+>  struct cdnsp_wrap {
+>  	struct platform_device *plat_dev;
+> +	struct property_entry prop[3];
+>  	struct resource dev_res[6];
+>  	int devfn;
+>  };
+> @@ -29,10 +30,15 @@ struct cdnsp_wrap {
+>  #define RES_HOST_ID		3
+>  #define RES_DEV_ID		4
+>  #define RES_DRD_ID		5
+> -
+> +/* DRD PCI configuration - 64-bit addressing */
+> +/* First PCI function */
+>  #define PCI_BAR_HOST		0
+> -#define PCI_BAR_OTG		0
+>  #define PCI_BAR_DEV		2
+> +/* Second PCI function */
+> +#define PCI_BAR_OTG		0
+> +/* Device only PCI configuration - 32-bit addressing */
+> +/* First PCI function */
+> +#define PCI_BAR_ONLY_DEV	1
+>  
+>  #define PCI_DEV_FN_HOST_DEVICE	0
+>  #define PCI_DEV_FN_OTG		1
+> @@ -65,6 +71,7 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+>  	struct cdnsp_wrap *wrap;
+>  	struct resource *res;
+>  	struct pci_dev *func;
+> +	bool no_drd = false;
+>  	int ret = 0;
+>  
+>  	/*
+> @@ -75,11 +82,14 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+>  		    pdev->devfn != PCI_DEV_FN_OTG))
+>  		return -EINVAL;
+>  
+> +	if (pdev->device == PCI_DEVICE_ID_CDNS_UDC_USBSSP)
+> +		no_drd = true;
+> +
+>  	func = cdnsp_get_second_fun(pdev);
+> -	if (!func)
+> +	if (!func && !no_drd)
+>  		return -EINVAL;
+>  
+> -	if (func->class == PCI_CLASS_SERIAL_USB_XHCI ||
+> +	if ((func && func->class == PCI_CLASS_SERIAL_USB_XHCI) ||
+>  	    pdev->class == PCI_CLASS_SERIAL_USB_XHCI) {
+>  		ret = -EINVAL;
+>  		goto put_pci;
+> @@ -93,7 +103,7 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+>  
+>  	pci_set_master(pdev);
+>  
+> -	if (pci_is_enabled(func)) {
+> +	if (func && pci_is_enabled(func)) {
+>  		wrap = pci_get_drvdata(func);
+>  	} else {
+>  		wrap = kzalloc_obj(*wrap);
+> @@ -106,10 +116,13 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+>  	res = wrap->dev_res;
+>  
+>  	if (pdev->devfn == PCI_DEV_FN_HOST_DEVICE) {
+> +		int bar_dev = no_drd ? PCI_BAR_ONLY_DEV : PCI_BAR_DEV;
+> +
+>  		/* Function 0: host(BAR_0) + device(BAR_2). */
+>  		dev_dbg(&pdev->dev, "Initialize Device resources\n");
+> -		res[RES_DEV_ID].start = pci_resource_start(pdev, PCI_BAR_DEV);
+> -		res[RES_DEV_ID].end = pci_resource_end(pdev, PCI_BAR_DEV);
+> +
+> +		res[RES_DEV_ID].start = pci_resource_start(pdev, bar_dev);
+> +		res[RES_DEV_ID].end = pci_resource_end(pdev, bar_dev);
+>  		res[RES_DEV_ID].name = "dev";
+>  		res[RES_DEV_ID].flags = IORESOURCE_MEM;
+>  		dev_dbg(&pdev->dev, "USBSSP-DEV physical base addr: %pa\n",
+> @@ -145,9 +158,20 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+>  		wrap->dev_res[RES_IRQ_OTG_ID].flags = IORESOURCE_IRQ;
+>  	}
+>  
+> -	if (pci_is_enabled(func)) {
+> +	if (no_drd || pci_is_enabled(func)) {
+> +		u8 idx = 0;
+> +
+>  		/* set up platform device info */
+>  		pdata.override_apb_timeout = CHICKEN_APB_TIMEOUT_VALUE;
+> +		if (no_drd) {
+> +			wrap->prop[idx++] = PROPERTY_ENTRY_STRING("dr_mode", "peripheral");
+> +			wrap->prop[idx++] = PROPERTY_ENTRY_BOOL("no_drd");
+> +		} else {
+> +			wrap->prop[idx++] = PROPERTY_ENTRY_STRING("dr_mode", "otg");
+> +			wrap->prop[idx++] = PROPERTY_ENTRY_BOOL("usb-role-switch");
+> +		}
+> +
+> +		wrap->prop[idx] = (struct property_entry){ };
+>  		memset(&plat_info, 0, sizeof(plat_info));
+>  		plat_info.parent = &pdev->dev;
+>  		plat_info.fwnode = pdev->dev.fwnode;
+> @@ -158,6 +182,7 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+>  		plat_info.dma_mask = pdev->dma_mask;
+>  		plat_info.data = &pdata;
+>  		plat_info.size_data = sizeof(pdata);
+> +		plat_info.properties = wrap->prop;
+>  		wrap->devfn = pdev->devfn;
+>  		/* register platform device */
+>  		wrap->plat_dev = platform_device_register_full(&plat_info);
+> @@ -185,13 +210,17 @@ static void cdnsp_pci_remove(struct pci_dev *pdev)
+>  	if (wrap->devfn == pdev->devfn)
+>  		platform_device_unregister(wrap->plat_dev);
+>  
+> -	if (!pci_is_enabled(func))
+> +	if (!func || !pci_is_enabled(func))
+>  		kfree(wrap);
+>  
+>  	pci_dev_put(func);
+>  }
+>  
+>  static const struct pci_device_id cdnsp_pci_ids[] = {
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_UDC_USBSSP),
+> +	  .class = PCI_CLASS_SERIAL_USB_DEVICE },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_UDC_USBSSP),
+> +	  .class = PCI_CLASS_SERIAL_USB_CDNS },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_USBSSP),
+>  	  .class = PCI_CLASS_SERIAL_USB_DEVICE },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_USBSSP),
+> diff --git a/drivers/usb/cdns3/core.c b/drivers/usb/cdns3/core.c
+> index 10f00b6c3c83..72f7acba6258 100644
+> --- a/drivers/usb/cdns3/core.c
+> +++ b/drivers/usb/cdns3/core.c
+> @@ -71,7 +71,8 @@ static void cdns_role_stop(struct cdns *cdns)
+>  static void cdns_exit_roles(struct cdns *cdns)
+>  {
+>  	cdns_role_stop(cdns);
+> -	cdns_drd_exit(cdns);
+> +	if (!cdns->no_drd)
+> +		cdns_drd_exit(cdns);
+>  }
+>  
+>  /**
+> diff --git a/drivers/usb/cdns3/core.h b/drivers/usb/cdns3/core.h
+> index dc8c4137de15..6abe231f4559 100644
+> --- a/drivers/usb/cdns3/core.h
+> +++ b/drivers/usb/cdns3/core.h
+> @@ -80,9 +80,11 @@ struct cdns3_platform_data {
+>   * @pdata: platform data from glue layer
+>   * @lock: spinlock structure
+>   * @xhci_plat_data: xhci private data structure pointer
+> + * @gadget_init: pointer to gadget initialization function
+>   * @override_apb_timeout: hold value of APB timeout. For value 0 the default
+>   *                        value in CHICKEN_BITS_3 will be preserved.
+> - * @gadget_init: pointer to gadget initialization function
+> + * @no_drd: DRD register block is inaccessible - driver handles only
+> + *          device mode.
+>   */
+>  struct cdns {
+>  	struct device			*dev;
+> @@ -122,6 +124,7 @@ struct cdns {
+>  	struct xhci_plat_priv		*xhci_plat_data;
+>  	int (*gadget_init)(struct cdns *cdns);
+>  	u32                             override_apb_timeout;
+> +	bool				no_drd;
+>  };
+>  
+>  int cdns_hw_role_switch(struct cdns *cdns);
+> diff --git a/drivers/usb/cdns3/drd.c b/drivers/usb/cdns3/drd.c
+> index 84fb38a5723a..38f3051c2188 100644
+> --- a/drivers/usb/cdns3/drd.c
+> +++ b/drivers/usb/cdns3/drd.c
+> @@ -107,7 +107,7 @@ void cdns_clear_vbus(struct cdns *cdns)
+>  {
+>  	u32 reg;
+>  
+> -	if (cdns->version != CDNSP_CONTROLLER_V2)
+> +	if (cdns->version != CDNSP_CONTROLLER_V2 || cdns->no_drd)
+>  		return;
+>  
+>  	reg = readl(&cdns->otg_cdnsp_regs->override);
+> @@ -120,7 +120,7 @@ void cdns_set_vbus(struct cdns *cdns)
+>  {
+>  	u32 reg;
+>  
+> -	if (cdns->version != CDNSP_CONTROLLER_V2)
+> +	if (cdns->version != CDNSP_CONTROLLER_V2 || cdns->no_drd)
+>  		return;
+>  
+>  	reg = readl(&cdns->otg_cdnsp_regs->override);
+> @@ -234,6 +234,9 @@ int cdns_drd_gadget_on(struct cdns *cdns)
+>  	u32 ready_bit;
+>  	int ret, val;
+>  
+> +	if (cdns->no_drd)
+> +		return 0;
+> +
+
+You may add similar logic for cdns_power_is_lost and cdns_get_id.
+
+>  	/* switch OTG core */
+>  	writel(OTGCMD_DEV_BUS_REQ | reg, &cdns->otg_regs->cmd);
+>  
+> @@ -265,6 +268,9 @@ void cdns_drd_gadget_off(struct cdns *cdns)
+>  {
+>  	u32 val;
+>  
+> +	if (cdns->no_drd)
+> +		return;
+> +
+>  	/*
+>  	 * Driver should wait at least 10us after disabling Device
+>  	 * before turning-off Device (DEV_BUS_DROP).
+> @@ -392,6 +398,12 @@ int cdns_drd_init(struct cdns *cdns)
+>  	u32 state, reg;
+>  	int ret;
+>  
+> +	if (cdns->no_drd) {
+> +		cdns->version  = CDNSP_CONTROLLER_V2;
+> +		cdns->dr_mode = USB_DR_MODE_PERIPHERAL;
+
+With "no_drd", are configurations fixed, no other options?
+
+> +		return 0;
+> +	}
+> +
+>  	regs = devm_ioremap_resource(cdns->dev, &cdns->otg_res);
+>  	if (IS_ERR(regs))
+>  		return PTR_ERR(regs);
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 406abf629be2..a931fb201402 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2424,6 +2424,7 @@
+>  #define PCI_DEVICE_ID_CDNS_USBSS	0x0100
+>  #define PCI_DEVICE_ID_CDNS_USB		0x0120
+>  #define PCI_DEVICE_ID_CDNS_USBSSP	0x0200
+> +#define PCI_DEVICE_ID_CDNS_UDC_USBSSP	0x0400
+>  
+>  #define PCI_VENDOR_ID_ARECA		0x17d3
+>  #define PCI_DEVICE_ID_ARECA_1110	0x1110
+> 
+> ---
+> base-commit: 5196f2c98340297e1fdd36555285e991ceddf776
+> change-id: 20260331-device_only-192d539430b5
+> 
+> Best regards,
+> -- 
+> Pawel Laszczak <pawell@cadence.com>
+> 
+> 
+
+-- 
+
+Best regards,
+Peter
