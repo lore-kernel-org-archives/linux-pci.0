@@ -1,189 +1,423 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8434D340A5A;
-	Fri,  3 Apr 2026 19:37:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E8643D6CBE;
+	Fri,  3 Apr 2026 19:49:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775245079; cv=none; b=uWWZAwrmkD0EQIo6rUB8Zl5lmGOfssHXm8KXiwdmJhDZMCrg0q4IaOZ4HwnpNgsbjbMfO1Ts1wNqTp6WkXosYF4iMGfhZnxt2BDKKz5rCcmCWPdHoFmT/Eblrp4KsC5xLs5v4JlBrq8mdSmfU9OeEPLsLkoxUVY4zVFh/QWVyKw=
+	t=1775245790; cv=none; b=WoXRxDtUOi65vB+oJGBNHaYa0ktbXRqn9fmPQqX05azMPN6863XCLtNz/TWWnayA99QRrosrnL8ftONEBxwzXW9qqIliYRvUJY/hM3YmI+X7Sf30ICEzdTCQ7OnbbzeVilLFeN8wNQQinLoAlJEOeSWrBIKX1uUBbQBjg6Q2F9k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775245079; c=relaxed/simple;
-	bh=Wg2ySFnFAbKQqFRoijx3WO64dIBXLEzVMuCQlQnsrC8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VBQcwaLBAoLZrqOiHAAFDt78xIad2W7b7Mu8xUTaQN1b3gR9NJ94B7CLD2MURW0WbSF7SLcDpAx+E8RKE7IRUr6YR5iVwnYYbwyv2emW8UfGCLNCw9swoezjrWrZsSSyCqH+QSXHKq7ltqGdsr0jTG+G0W1gyZn4puUapZxnJRA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZdGZo4xw; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1775245790; c=relaxed/simple;
+	bh=bXeEbllSUhc62/nolE52XEdol2e7UKXNWrejec72ScU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=DHi0e24tNu/qpe569zgDQz2KAd/GTeFrOEHrvoldnCXekNeRA/z2v66gMtvBzx6+/3mNE5TsyJiTSazobbIQuzIfeZTF87Ro89zKCr65rKieAdrlJ6RyZY78OvYDNL5SNDw/1EXyYZDEvR+6NYVmjvyw9aOn2cEX2Gj48Dp+nuw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fALstElO; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZdGZo4xw"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fALstElO"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775245077; x=1806781077;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=Wg2ySFnFAbKQqFRoijx3WO64dIBXLEzVMuCQlQnsrC8=;
-  b=ZdGZo4xwrwkr7dBPLyCIJeJ8Hu13ou4RMvEg8rE/1O8New3KbHbUE9vF
-   6tlAnaBUE9cmavrmPs8s4VU2WPFy9iDLqguhfWAek4+5Zehh67uKk4SYC
-   5So4ckwscRtSgzRrNwPwZstdH9GeLKVcrqpe2TYYoEJ1FLhX54H/294C5
-   OpaLm8s21N6L6BwPbCOXILPBs39Zd3lQgO9BcvAhC3Cn0iPhQN+Me61e5
-   /hLDwVtYtWK1eqBYGO/yqzPtxpnRhB0TZ2xlwrquj3DH9/HnKmIzd4FLJ
-   03eG1lhjI2wUkqQIrJuv2OEUVn/xYCXI2/8qSsI1pyIlz9pCh2MBjeMGh
-   w==;
-X-CSE-ConnectionGUID: UyCYngSeS2mdUSeXl8lW2w==
-X-CSE-MsgGUID: GXnYQ94XSJ+8pcw6w9VYsA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11748"; a="75480999"
+  t=1775245788; x=1806781788;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=bXeEbllSUhc62/nolE52XEdol2e7UKXNWrejec72ScU=;
+  b=fALstElOLcrEFkFN1dPRTVJSnh6QATgl/gbyivg4Z2r2JwooHytoA2vT
+   Eo8ngjdU7Ct6jUqehcBPVVqkkySfvICMlLpX556QsfO/jUpKuO69vU5U/
+   kKxB87eNPwRARZ3pkYBoSjFKQ+JZE2ovTRIDXFP4iDVcNEtN8jNM3+LH9
+   wRxedmsR1YvFtnqtLh187zufQ9GGP8DkroDGkVvRJI0wAJxkGQQ6EFxwy
+   JTbDBm2YfAuNTBSz8QCy1ZixvzlyU6rSCkTWg4JTgzY8GfFqKw2e2SStC
+   88ZQ+BMn5kbRV1w2I34E9LGw9rTfPk5SgVsS2s/oTdWQHhWudJ/STma1L
+   A==;
+X-CSE-ConnectionGUID: aIM2LpSCQnayXX7B89GNaA==
+X-CSE-MsgGUID: CjbTmXfmSQK9XYsgyjQl9Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11748"; a="76428769"
 X-IronPort-AV: E=Sophos;i="6.23,158,1770624000"; 
-   d="scan'208";a="75480999"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Apr 2026 12:37:57 -0700
-X-CSE-ConnectionGUID: LO368yLpRumYf1IVUMQg1A==
-X-CSE-MsgGUID: YQvXz6ElSz2Ehlm7xrPMqQ==
+   d="scan'208";a="76428769"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Apr 2026 12:49:45 -0700
+X-CSE-ConnectionGUID: bBOwlyLgRXCAMvQN7NTayg==
+X-CSE-MsgGUID: kCeEeIQZTpC2rLlXdFeO8w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,158,1770624000"; 
-   d="scan'208";a="250549948"
-Received: from smbird-mobl.amr.corp.intel.com (HELO [10.125.84.163]) ([10.125.84.163])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Apr 2026 12:37:57 -0700
-Message-ID: <633cef07-2991-4ce8-b8c6-6b091deaeb0b@linux.intel.com>
-Date: Fri, 3 Apr 2026 12:37:39 -0700
+   d="scan'208";a="265266116"
+Received: from anguy11-upstream.jf.intel.com ([10.166.9.133])
+  by orviesa001.jf.intel.com with ESMTP; 03 Apr 2026 12:49:44 -0700
+From: Tony Nguyen <anthony.l.nguyen@intel.com>
+To: davem@davemloft.net,
+	kuba@kernel.org,
+	pabeni@redhat.com,
+	edumazet@google.com,
+	andrew+netdev@lunn.ch,
+	netdev@vger.kernel.org
+Cc: Phani R Burra <phani.r.burra@intel.com>,
+	anthony.l.nguyen@intel.com,
+	larysa.zaremba@intel.com,
+	przemyslaw.kitszel@intel.com,
+	aleksander.lobakin@intel.com,
+	sridhar.samudrala@intel.com,
+	anjali.singhai@intel.com,
+	michal.swiatkowski@linux.intel.com,
+	maciej.fijalkowski@intel.com,
+	emil.s.tantilov@intel.com,
+	madhu.chittim@intel.com,
+	joshua.a.hay@intel.com,
+	jacob.e.keller@intel.com,
+	jayaprakash.shanmugam@intel.com,
+	jiri@resnulli.us,
+	horms@kernel.org,
+	corbet@lwn.net,
+	richardcochran@gmail.com,
+	linux-doc@vger.kernel.org,
+	bhelgaas@google.com,
+	linux-pci@vger.kernel.org,
+	Bharath R <bharath.r@intel.com>,
+	Samuel Salin <Samuel.salin@intel.com>,
+	Aleksandr Loktionov <aleksandr.loktionov@intel.com>
+Subject: [PATCH net-next v2 02/14] libie: add PCI device initialization helpers to libie
+Date: Fri,  3 Apr 2026 12:49:24 -0700
+Message-ID: <20260403194938.3577011-3-anthony.l.nguyen@intel.com>
+X-Mailer: git-send-email 2.47.1
+In-Reply-To: <20260403194938.3577011-1-anthony.l.nguyen@intel.com>
+References: <20260403194938.3577011-1-anthony.l.nguyen@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] PCI: pciehp: Fix hotplug on Catlow Lake with
- unreliable PME status
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- "Rafael J . Wysocki" <rafael@kernel.org>, Lukas Wunner <lukas@wunner.de>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260323232437.GA1085990@bhelgaas>
- <ca15feda-5d63-405d-a4c4-00cbb9991fed@linux.intel.com>
- <20260325061131.GY2275908@black.igk.intel.com>
- <5d6d94b4-458f-473c-84df-c6fab7805dbe@linux.intel.com>
- <20260326061200.GA3552@black.igk.intel.com>
- <3a97fb38-70c7-4ca9-8c49-4c95e1623c91@linux.intel.com>
- <20260327111616.GC3552@black.igk.intel.com>
-Content-Language: en-US
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <20260327111616.GC3552@black.igk.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Hi Mika,
+From: Phani R Burra <phani.r.burra@intel.com>
 
-On 3/27/2026 4:16 AM, Mika Westerberg wrote:
-> Hey,
-> 
-> On Thu, Mar 26, 2026 at 02:23:50PM -0700, Kuppuswamy Sathyanarayanan wrote:
->> Hi Mika,
->>
->> On 3/25/2026 11:12 PM, Mika Westerberg wrote:
->>> On Wed, Mar 25, 2026 at 02:12:48PM -0700, Kuppuswamy Sathyanarayanan wrote:
->>>>
->>>>
->>>> On 3/24/2026 11:11 PM, Mika Westerberg wrote:
->>>>> On Tue, Mar 24, 2026 at 02:45:25PM -0700, Kuppuswamy Sathyanarayanan wrote:
->>>>>>> eb34da60edee ("PCI: pciehp: Disable hotplug interrupt during suspend")
->>>>>>> cleared PCI_EXP_SLTCTL_HPIE so that when the link goes down, we
->>>>>>> wouldn't get a PCI_EXP_SLTSTA_DLLSC interrupt and wake the system.
->>>>>>>
->>>>>>> I don't know the details of why the PCI_EXP_SLTSTA_DLLSC would cause
->>>>>>> that wakeup.  I would think pciehp should field that, and it should be
->>>>>>> able to figure out whether to bring the port out of D3hot.
->>>>>>>
->>>>>>> Anyway, with this patch it looks like we'll leave PCI_EXP_SLTCTL_HPIE
->>>>>>> set, and potentially get that PCI_EXP_SLTSTA_DLLSC interrupt again?
->>>>>>
->>>>>> I have tested this patch on Catlow Lake. Enabling HPIE does not result in
->>>>>> spurious wakeups as mentioned in Mika's patch.
->>>>>>
->>>>>> Mika, any comments?
->>>>>
->>>>> What do you have connected to the slot?
->>>>
->>>> A network card.
->>>
->>> Okay.
->>>
->>> Out of interest how do you hotplug it? :)
->>
->> We physically remove and insert the card.
-> 
-> Got it.
-> 
->>>>> IIRC the interrupt triggers when presence change toggles (due to the link
->>>>> going down).
->>>>>
->>>>
->>>> I have tested the s3 mode. I was able to see message related to system entering
->>>> suspend and then coming back again after (after user intervention). I also noted
->>>> pcie_disable_interrupt() called before suspend and pcie_enable_interrupt() called
->>>> after resume.
->>>
->>> In case of S3 the BIOS also configures the hardware before entering
->>> suspend. On client at least it's suspend-to-idle and any interrupt will
->>> bring the CPU and the system out of it. It could be that that's the reason
->>> you don't see any issue if this is server system and it goes into full S3?
->>>
->>
->> Looking at the kernel logs, the system is actually using suspend-to-idle 
->> (s2idle), not full S3:
->>
->>   PM: suspend entry (s2idle)
->>
->> So this is the same suspend mode where you observed the spurious wakeup issue.
->> Interestingly, we're not seeing the problem on Catlow Lake with HPIE enabled.
->>
->> I am trying to understand the wakeup sequence in your case. IIUC, before the
->> system enters suspend, it will put the device and port in D3hot, right? So link
->> down should happen before the system goes to sleep or idle. At what point does
->> the spurious DLLSC interrupt occur that causes the unwanted wakeup?
-> 
-> I think in case of tunneled PCIe it is presence detect that toggles and
-> triggers the interrupt if left enabled.
-> 
-> The flow is something like this (from my memory):
-> 
-> 1. User enters s2idle.
-> 2. PM core suspends devices.
-> 3. PCI core suspends the devices behind the root port and then the root
->    port itself. This makes the root port be in D3hot and the link below it
->    is still in L1.
-> 4. PCI/ACPI turns of the power resource attached to the root port. This
->    puts the link into L2/3 ready and then PERST# is asserted in which case
->    the tunnels are gone and presence detect changes and the link enters L2
->    and the root port enters D3cold.
+Add support functions for drivers to configure PCI functionality and access
+MMIO space.
 
-Thanks for the detailed explanation. So the spurious wakeup happens when the
-power resource is turned off during suspend, which triggers the presence detect
-change. Is there a way to detect if a port has this power resource configuration
-via ACPI methods? I'm wondering if we could make HPIE disabling conditional on
-the presence of this power management setup.
+Reviewed-by: Maciej Fijalkowski <maciej.fijalkowski@intel.com>
+Signed-off-by: Phani R Burra <phani.r.burra@intel.com>
+Co-developed-by: Victor Raj <victor.raj@intel.com>
+Signed-off-by: Victor Raj <victor.raj@intel.com>
+Co-developed-by: Sridhar Samudrala <sridhar.samudrala@intel.com>
+Signed-off-by: Sridhar Samudrala <sridhar.samudrala@intel.com>
+Co-developed-by: Pavan Kumar Linga <pavan.kumar.linga@intel.com>
+Signed-off-by: Pavan Kumar Linga <pavan.kumar.linga@intel.com>
+Co-developed-by: Larysa Zaremba <larysa.zaremba@intel.com>
+Signed-off-by: Larysa Zaremba <larysa.zaremba@intel.com>
+Tested-by: Bharath R <bharath.r@intel.com>
+Tested-by: Samuel Salin <Samuel.salin@intel.com>
+Reviewed-by: Aleksandr Loktionov <aleksandr.loktionov@intel.com>
+Signed-off-by: Tony Nguyen <anthony.l.nguyen@intel.com>
+---
+ drivers/net/ethernet/intel/libie/Kconfig  |   6 +
+ drivers/net/ethernet/intel/libie/Makefile |   4 +
+ drivers/net/ethernet/intel/libie/pci.c    | 208 ++++++++++++++++++++++
+ include/linux/intel/libie/pci.h           |  56 ++++++
+ 4 files changed, 274 insertions(+)
+ create mode 100644 drivers/net/ethernet/intel/libie/pci.c
+ create mode 100644 include/linux/intel/libie/pci.h
 
-> 
-> In your case does the root port enter D3cold? Does it have power resource?
-> Or it stays in D3hot? We should not put any hotplug ports into low power
-> states if they don't have HotPlugSupportInD3 property as described here:
-
-I think it stays in D3hot. I am not very clear about the power resource. is
-there a way to check for it? Should I look for power_resources_* in sysfs or
-check the ACPI tables directly?
-
-Regarding your suggestion about HotPlugSupportInD3: would it make sense to modify
-the HPIE disable logic to be conditional on the presence of this _DSD property? 
-
-
-> 
-> https://learn.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports#identifying-pcie-root-ports-supporting-hot-plug-in-d3
-> 
-> There is some BIOS support needed for the D3cold. We have that in client
-> but I have not been dealing with the server so not familiar how things are
-> done there. I would think power savings are not that important in big iron.
-> 
-
+diff --git a/drivers/net/ethernet/intel/libie/Kconfig b/drivers/net/ethernet/intel/libie/Kconfig
+index 70831c7e336e..500a95c944a8 100644
+--- a/drivers/net/ethernet/intel/libie/Kconfig
++++ b/drivers/net/ethernet/intel/libie/Kconfig
+@@ -23,3 +23,9 @@ config LIBIE_FWLOG
+ 	  for it. Firmware logging is using admin queue interface to communicate
+ 	  with the device. Debugfs is a user interface used to config logging
+ 	  and dump all collected logs.
++
++config LIBIE_PCI
++	tristate
++	help
++	  Helper functions for management of PCI resources belonging
++	  to networking devices.
+diff --git a/drivers/net/ethernet/intel/libie/Makefile b/drivers/net/ethernet/intel/libie/Makefile
+index db57fc6780ea..a28509cb9086 100644
+--- a/drivers/net/ethernet/intel/libie/Makefile
++++ b/drivers/net/ethernet/intel/libie/Makefile
+@@ -12,3 +12,7 @@ libie_adminq-y			:= adminq.o
+ obj-$(CONFIG_LIBIE_FWLOG) 	+= libie_fwlog.o
+ 
+ libie_fwlog-y			:= fwlog.o
++
++obj-$(CONFIG_LIBIE_PCI)		+= libie_pci.o
++
++libie_pci-y			:= pci.o
+diff --git a/drivers/net/ethernet/intel/libie/pci.c b/drivers/net/ethernet/intel/libie/pci.c
+new file mode 100644
+index 000000000000..7276a3533b54
+--- /dev/null
++++ b/drivers/net/ethernet/intel/libie/pci.c
+@@ -0,0 +1,208 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/* Copyright (C) 2025 Intel Corporation */
++
++#include <linux/intel/libie/pci.h>
++
++/**
++ * libie_find_mmio_region - find MMIO region containing a range
++ * @mmio_list: list that contains MMIO region info
++ * @offset: range start offset
++ * @size: range size
++ * @bar_idx: BAR index containing the range to search
++ *
++ * Return: pointer to a MMIO region overlapping with the range in any way or
++ *	   NULL if no such region is mapped.
++ */
++static struct libie_pci_mmio_region *
++libie_find_mmio_region(const struct list_head *mmio_list,
++		       resource_size_t offset, resource_size_t size,
++		       int bar_idx)
++{
++	resource_size_t end_offset = offset + size;
++	struct libie_pci_mmio_region *mr;
++
++	list_for_each_entry(mr, mmio_list, list) {
++		resource_size_t mr_end = mr->offset + mr->size;
++		resource_size_t mr_start = mr->offset;
++
++		if (mr->bar_idx != bar_idx)
++			continue;
++		if (offset < mr_end && end_offset > mr_start)
++			return mr;
++	}
++
++	return NULL;
++}
++
++/**
++ * __libie_pci_get_mmio_addr - get the MMIO virtual address
++ * @mmio_info: contains list of MMIO regions
++ * @offset: register offset to find
++ * @num_args: number of additional arguments present
++ *
++ * This function finds the virtual address of a register offset by iterating
++ * through the non-linear MMIO regions that are mapped by the driver.
++ *
++ * Return: valid MMIO virtual address or NULL.
++ */
++void __iomem *__libie_pci_get_mmio_addr(struct libie_mmio_info *mmio_info,
++					resource_size_t offset,
++					int num_args, ...)
++{
++	struct libie_pci_mmio_region *mr;
++	int bar_idx = 0;
++	va_list args;
++
++	if (num_args) {
++		va_start(args, num_args);
++		bar_idx = va_arg(args, int);
++		va_end(args);
++	}
++
++	list_for_each_entry(mr, &mmio_info->mmio_list, list)
++		if (bar_idx == mr->bar_idx && offset >= mr->offset &&
++		    offset < mr->offset + mr->size) {
++			offset -= mr->offset;
++
++			return mr->addr + offset;
++		}
++
++	return NULL;
++}
++EXPORT_SYMBOL_NS_GPL(__libie_pci_get_mmio_addr, "LIBIE_PCI");
++
++/**
++ * __libie_pci_map_mmio_region - map PCI device MMIO region
++ * @mmio_info: struct to store the mapped MMIO region
++ * @offset: MMIO region start offset
++ * @size: MMIO region size
++ * @num_args: number of additional arguments present
++ *
++ * Return: true on success, false on memory map failure.
++ */
++bool __libie_pci_map_mmio_region(struct libie_mmio_info *mmio_info,
++				 resource_size_t offset,
++				 resource_size_t size, int num_args, ...)
++{
++	struct pci_dev *pdev = mmio_info->pdev;
++	struct libie_pci_mmio_region *mr;
++	resource_size_t pa;
++	void __iomem *va;
++	int bar_idx = 0;
++	va_list args;
++
++	if (num_args) {
++		va_start(args, num_args);
++		bar_idx = va_arg(args, int);
++		va_end(args);
++	}
++
++	if (offset + size > pci_resource_len(pdev, bar_idx))
++		return false;
++
++	mr = libie_find_mmio_region(&mmio_info->mmio_list, offset, size,
++				    bar_idx);
++	if (mr) {
++		pci_warn(pdev,
++			 "Mapping of BAR%u (offset=%llu, size=%llu) intersecting region (offset=%llu, size=%llu) already exists\n",
++			 bar_idx, (unsigned long long)mr->offset,
++			 (unsigned long long)mr->size,
++			 (unsigned long long)offset, (unsigned long long)size);
++		return mr->offset <= offset &&
++		       mr->offset + mr->size >= offset + size;
++	}
++
++	pa = pci_resource_start(pdev, bar_idx) + offset;
++	va = ioremap(pa, size);
++	if (!va) {
++		pci_err(pdev, "Failed to map BAR%u region\n", bar_idx);
++		return false;
++	}
++
++	mr = kvzalloc_obj(*mr);
++	if (!mr) {
++		iounmap(va);
++		return false;
++	}
++
++	mr->addr = va;
++	mr->offset = offset;
++	mr->size = size;
++	mr->bar_idx = bar_idx;
++
++	list_add_tail(&mr->list, &mmio_info->mmio_list);
++
++	return true;
++}
++EXPORT_SYMBOL_NS_GPL(__libie_pci_map_mmio_region, "LIBIE_PCI");
++
++/**
++ * libie_pci_unmap_fltr_regs - unmap selected PCI device MMIO regions
++ * @mmio_info: contains list of MMIO regions to unmap
++ * @fltr: returns true, if region is to be unmapped
++ */
++void libie_pci_unmap_fltr_regs(struct libie_mmio_info *mmio_info,
++			       bool (*fltr)(struct libie_mmio_info *mmio_info,
++					    struct libie_pci_mmio_region *reg))
++{
++	struct libie_pci_mmio_region *mr, *tmp;
++
++	list_for_each_entry_safe(mr, tmp, &mmio_info->mmio_list, list) {
++		if (!fltr(mmio_info, mr))
++			continue;
++		iounmap(mr->addr);
++		list_del(&mr->list);
++		kvfree(mr);
++	}
++}
++EXPORT_SYMBOL_NS_GPL(libie_pci_unmap_fltr_regs, "LIBIE_PCI");
++
++/**
++ * libie_pci_unmap_all_mmio_regions - unmap all PCI device MMIO regions
++ * @mmio_info: contains list of MMIO regions to unmap
++ */
++void libie_pci_unmap_all_mmio_regions(struct libie_mmio_info *mmio_info)
++{
++	struct libie_pci_mmio_region *mr, *tmp;
++
++	list_for_each_entry_safe(mr, tmp, &mmio_info->mmio_list, list) {
++		iounmap(mr->addr);
++		list_del(&mr->list);
++		kvfree(mr);
++	}
++}
++EXPORT_SYMBOL_NS_GPL(libie_pci_unmap_all_mmio_regions, "LIBIE_PCI");
++
++/**
++ * libie_pci_init_dev - enable and reserve PCI regions of the device
++ * @pdev: PCI device information
++ *
++ * Return: %0 on success, -%errno on failure.
++ */
++int libie_pci_init_dev(struct pci_dev *pdev)
++{
++	int err;
++
++	err = pcim_enable_device(pdev);
++	if (err)
++		return err;
++
++	for (int bar = 0; bar < PCI_STD_NUM_BARS; bar++)
++		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
++			err = pcim_request_region(pdev, bar, pci_name(pdev));
++			if (err)
++				return err;
++		}
++
++	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
++	if (err)
++		return err;
++
++	pci_set_master(pdev);
++
++	return 0;
++}
++EXPORT_SYMBOL_NS_GPL(libie_pci_init_dev, "LIBIE_PCI");
++
++MODULE_DESCRIPTION("Common Ethernet PCI library");
++MODULE_LICENSE("GPL");
+diff --git a/include/linux/intel/libie/pci.h b/include/linux/intel/libie/pci.h
+new file mode 100644
+index 000000000000..effd072c55c8
+--- /dev/null
++++ b/include/linux/intel/libie/pci.h
+@@ -0,0 +1,56 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/* Copyright (C) 2025 Intel Corporation */
++
++#ifndef __LIBIE_PCI_H
++#define __LIBIE_PCI_H
++
++#include <linux/pci.h>
++
++/**
++ * struct libie_pci_mmio_region - structure for MMIO region info
++ * @list: used to add a MMIO region to the list of MMIO regions in
++ *	  libie_mmio_info
++ * @addr: virtual address of MMIO region start
++ * @offset: start offset of the MMIO region
++ * @size: size of the MMIO region
++ * @bar_idx: BAR index to which the MMIO region belongs to
++ */
++struct libie_pci_mmio_region {
++	struct list_head	list;
++	void __iomem		*addr;
++	resource_size_t		offset;
++	resource_size_t		size;
++	u16			bar_idx;
++};
++
++/**
++ * struct libie_mmio_info - contains list of MMIO regions
++ * @pdev: PCI device pointer
++ * @mmio_list: list of MMIO regions
++ */
++struct libie_mmio_info {
++	struct pci_dev		*pdev;
++	struct list_head	mmio_list;
++};
++
++#define libie_pci_map_mmio_region(mmio_info, offset, size, ...)	\
++	__libie_pci_map_mmio_region(mmio_info, offset, size,		\
++				     COUNT_ARGS(__VA_ARGS__), ##__VA_ARGS__)
++
++#define libie_pci_get_mmio_addr(mmio_info, offset, ...)		\
++	__libie_pci_get_mmio_addr(mmio_info, offset,			\
++				   COUNT_ARGS(__VA_ARGS__), ##__VA_ARGS__)
++
++bool __libie_pci_map_mmio_region(struct libie_mmio_info *mmio_info,
++				 resource_size_t offset, resource_size_t size,
++				 int num_args, ...);
++void __iomem *__libie_pci_get_mmio_addr(struct libie_mmio_info *mmio_info,
++					resource_size_t offset,
++					int num_args, ...);
++void libie_pci_unmap_all_mmio_regions(struct libie_mmio_info *mmio_info);
++void libie_pci_unmap_fltr_regs(struct libie_mmio_info *mmio_info,
++			       bool (*fltr)(struct libie_mmio_info *mmio_info,
++					    struct libie_pci_mmio_region *reg));
++int libie_pci_init_dev(struct pci_dev *pdev);
++
++#endif /* __LIBIE_PCI_H */
 -- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+2.47.1
 
