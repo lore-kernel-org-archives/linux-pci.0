@@ -1,197 +1,268 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 537CB1991D4;
-	Fri,  3 Apr 2026 04:01:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86050218845
+	for <linux-pci@vger.kernel.org>; Fri,  3 Apr 2026 05:29:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775188920; cv=none; b=Lf4Ol3PYVEIyzprtlMGyoi7NPUy0vdLmITNnsSCDThXWm2IPPSZihiqQkzWyobOUqn2hd/u8ZsK0WDXBrG2niCFjLx9m6IiqJ3UZH4K0CTw6YYizcznH6+7Ej/de2s2jdF9W5ELCgffXBCxhUZR/F50cTj1l9ohyeAc7oUqafTY=
+	t=1775194178; cv=none; b=ei3/pqdlv7rGMjdQc14pDGgQAMyWCSh8K8LbxOIu65WtMDl7b4JvucSxOtAqPQe7xb9uV1W/Ae04VIcf7bd1KNOXFfNLG+clZc5BcfiVH00A28DB3n+t96Y59H880pDhGU4PvxXCk+cvbYbuEW49yxxa49i3YZdd4pRO2DSpMBk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775188920; c=relaxed/simple;
-	bh=KlhxTTbe0S2+L2xbVGidcgd76YiRASLn6uvcswLCaVU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nTzg6EyCU97LpMkXx8gNcLRj5RYqb/KFBWbSYJljU0lat+L9TDDI4J1Zus6Ss+JrYaAOwAevI+JF9pt6BOL71cLwSXxW1KmeRGgi6PPs9m7DPucUxcwFfsv/8l95+FiAhEDuFpDIkl/C4vNXbhefGNIp7I4bnQbYro2ictr/5T0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=axqu/+VV; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1775194178; c=relaxed/simple;
+	bh=HHumqgmYJiqD0FJuVYyeKQMW0me2HRPR5BkU9aqLDjA=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=J2w4Mba1OhtMjvkosmJ/1BoCrvDaLzrnzD4nVjiD+xNrCumyYr9mgWjI4ebWohxkqPZdYG1j5iUykVrO4Xrg0YN5mQHdLDRpgqlHARkyYrvLr0j5X4/fevdghOPucayOWNkB3sfAtvLJX1cja31vgElZV+ZKr/6OzC6LzbKdKXY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SBJ+nf99; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="axqu/+VV"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
-	bh=hth5ItCsj8A6hKUrhr9C+dhAotpxXmKlU+z7J5ngyAs=; b=axqu/+VVT6ssg7tTfhgTd3VnKT
-	tgUc58iew4NhtlTgUr4eXMDUnxW9TgpQU0xCsYZemdwFASZftVgX1nz8vDwosnYpxmhtPMpLw7NM2
-	vrArPgkmwABZfC94lJkTqzvL5OiwjzZZCM3vM8y9O+WpFvvVwUBfPUuQdscelSWQn8b8OM24GJmmh
-	jnIsLTRShUhecssRcahCiRyNpRsrHAFT/K9FerX8ktETyaXqSMu2Ci5dwVLQHrM8Ss0Wa/dQe8Xio
-	N6an47614s2aNsAe30Odxw86oaY6NanalJYUIl11UwiT3ewrQrlN1+vRdk4xEicFglvD4eo2FGX+J
-	rubVJiVg==;
-Received: from [50.53.43.113] (helo=[192.168.254.34])
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w8VjB-00000001Ak3-4BmC;
-	Fri, 03 Apr 2026 04:01:50 +0000
-Message-ID: <9e1cc48c-79ea-486a-96f4-a1d1395d7e47@infradead.org>
-Date: Thu, 2 Apr 2026 21:01:47 -0700
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SBJ+nf99"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1775194178; x=1806730178;
+  h=date:from:to:cc:subject:message-id;
+  bh=HHumqgmYJiqD0FJuVYyeKQMW0me2HRPR5BkU9aqLDjA=;
+  b=SBJ+nf99jE3b4cBsZB/lZ+wjUx9vXM01aK4SCmntn8Va4Ah7jYKKoGFV
+   mNow69Ergmx3zqlcr9KR5wr6pdQnbsSs+rO+3TjeOte2caHy4y7y02UwG
+   BhlxB0mwvMp2Tlutmr+gFSeSTMTJADDHtZInUZVal6n+QnybTXty5bShC
+   pumXWspvPZxSjNpGV6Tzn2Dr1dGUh/22/rmtXhCZZn8btJgHrr6YuA9cC
+   QFioTbGD5HK8UWh9/rd9BxJncMbGETSDQ32tzs5u0hgiwmTXnZax+mgp+
+   8zSkR7xbG8ajo45WUaEl2cJRMlppTmDe1QDuMLJS1CGOcjQZKpcWGS+aw
+   w==;
+X-CSE-ConnectionGUID: gofYXHgWQyCgjVxs466B+w==
+X-CSE-MsgGUID: O75pSmsxQ1CVTWN3N5Xo4g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11747"; a="76142593"
+X-IronPort-AV: E=Sophos;i="6.23,157,1770624000"; 
+   d="scan'208";a="76142593"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Apr 2026 22:29:37 -0700
+X-CSE-ConnectionGUID: oDLdcudsS+mpoN3TTjq50Q==
+X-CSE-MsgGUID: ZpvLi7jKQfKr0G3a3SVgVg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,157,1770624000"; 
+   d="scan'208";a="227044485"
+Received: from lkp-server01.sh.intel.com (HELO 064ad336901d) ([10.239.97.150])
+  by orviesa009.jf.intel.com with ESMTP; 02 Apr 2026 22:29:36 -0700
+Received: from kbuild by 064ad336901d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1w8X64-000000000rx-43Cs;
+	Fri, 03 Apr 2026 05:29:32 +0000
+Date: Fri, 03 Apr 2026 13:28:52 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:atomics] BUILD SUCCESS
+ 674b483b632f5c198e499e8da013e7215a8e7971
+Message-ID: <202604031343.FdX1oGWB-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 1/2] docs: s390/pci: Improve and update PCI
- documentation
-To: Niklas Schnelle <schnelle@linux.ibm.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
- Lukas Wunner <lukas@wunner.de>, Shuah Khan <skhan@linuxfoundation.org>
-Cc: Farhan Ali <alifm@linux.ibm.com>,
- Alexander Gordeev <agordeev@linux.ibm.com>,
- Christian Borntraeger <borntraeger@linux.ibm.com>,
- Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
- Gerd Bayer <gbayer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>,
- Julian Ruess <julianr@linux.ibm.com>, Matthew Rosato
- <mjrosato@linux.ibm.com>, Peter Oberparleiter <oberpar@linux.ibm.com>,
- Ramesh Errabolu <ramesh@linux.ibm.com>, Sven Schnelle <svens@linux.ibm.com>,
- Vasily Gorbik <gor@linux.ibm.com>, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-s390@vger.kernel.org
-References: <20260402-uid_slot-v6-0-d5ea0a14ddb9@linux.ibm.com>
- <20260402-uid_slot-v6-1-d5ea0a14ddb9@linux.ibm.com>
-Content-Language: en-US
-From: Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <20260402-uid_slot-v6-1-d5ea0a14ddb9@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-Hi,
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git atomics
+branch HEAD: 674b483b632f5c198e499e8da013e7215a8e7971  PCI: Update PCIe spec references for AtomicOps
 
-On 4/2/26 1:34 PM, Niklas Schnelle wrote:
-> Update the s390 specific PCI documentation to better reflect current
-> behavior and terms such as the handling of Isolated VFs via commit
-> 25f39d3dcb48 ("s390/pci: Ignore RID for isolated VFs").
-> 
-> Add a descriptions for /sys/firmware/clp/uid_is_unique which was added
-> in commit b043a81ce3ee ("s390/pci: Expose firmware provided UID Checking
-> state in sysfs") but missed documentation.
-> 
-> Similarly add documentation for the fidparm attribute added by commit
-> 99ad39306a62 ("s390/pci: Expose FIDPARM attribute in sysfs") and
-> add a list of pft values and their names.
-> 
-> Finally improve formatting of the different attribute descriptions by
-> adding a separating colon.
-> 
-> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> ---
->  Documentation/arch/s390/pci.rst | 139 +++++++++++++++++++++++++++-------------
->  1 file changed, 94 insertions(+), 45 deletions(-)
+elapsed time: 758m
 
+configs tested: 191
+configs skipped: 2
 
-These changes are good, so:
-Acked-by: Randy Dunlap <rdunlap@infradead.org>
-Tested-by: Randy Dunlap <rdunlap@infradead.org>
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
+tested configs:
+alpha                             allnoconfig    gcc-15.2.0
+alpha                            allyesconfig    gcc-15.2.0
+alpha                               defconfig    gcc-15.2.0
+arc                              allmodconfig    clang-16
+arc                              allmodconfig    gcc-15.2.0
+arc                               allnoconfig    gcc-15.2.0
+arc                              allyesconfig    clang-23
+arc                              allyesconfig    gcc-15.2.0
+arc                                 defconfig    gcc-15.2.0
+arc                   randconfig-001-20260403    gcc-10.5.0
+arc                   randconfig-002-20260403    gcc-10.5.0
+arm                               allnoconfig    gcc-15.2.0
+arm                              allyesconfig    clang-16
+arm                              allyesconfig    gcc-15.2.0
+arm                                 defconfig    gcc-15.2.0
+arm                         orion5x_defconfig    clang-23
+arm                   randconfig-001-20260403    gcc-10.5.0
+arm                   randconfig-002-20260403    gcc-10.5.0
+arm                   randconfig-003-20260403    gcc-10.5.0
+arm                   randconfig-004-20260403    gcc-10.5.0
+arm                         vf610m4_defconfig    gcc-15.2.0
+arm64                            allmodconfig    clang-19
+arm64                            allmodconfig    clang-23
+arm64                             allnoconfig    gcc-15.2.0
+arm64                               defconfig    gcc-15.2.0
+arm64                 randconfig-001-20260403    gcc-13.4.0
+arm64                 randconfig-002-20260403    gcc-13.4.0
+arm64                 randconfig-003-20260403    gcc-13.4.0
+arm64                 randconfig-004-20260403    gcc-13.4.0
+csky                             allmodconfig    gcc-15.2.0
+csky                              allnoconfig    gcc-15.2.0
+csky                                defconfig    gcc-15.2.0
+csky                  randconfig-001-20260403    gcc-13.4.0
+csky                  randconfig-002-20260403    gcc-13.4.0
+hexagon                          allmodconfig    gcc-15.2.0
+hexagon                           allnoconfig    gcc-15.2.0
+hexagon                             defconfig    gcc-15.2.0
+hexagon               randconfig-001-20260403    clang-23
+hexagon               randconfig-002-20260403    clang-23
+i386                             allmodconfig    clang-20
+i386                              allnoconfig    gcc-15.2.0
+i386                             allyesconfig    clang-20
+i386        buildonly-randconfig-001-20260403    gcc-14
+i386        buildonly-randconfig-002-20260403    gcc-14
+i386        buildonly-randconfig-003-20260403    gcc-14
+i386        buildonly-randconfig-004-20260403    gcc-14
+i386        buildonly-randconfig-005-20260403    gcc-14
+i386        buildonly-randconfig-006-20260403    gcc-14
+i386                                defconfig    gcc-15.2.0
+i386                  randconfig-001-20260403    gcc-14
+i386                  randconfig-002-20260403    gcc-14
+i386                  randconfig-003-20260403    gcc-14
+i386                  randconfig-004-20260403    gcc-14
+i386                  randconfig-005-20260403    gcc-14
+i386                  randconfig-006-20260403    gcc-14
+i386                  randconfig-007-20260403    gcc-14
+i386                  randconfig-011-20260403    clang-20
+i386                  randconfig-012-20260403    clang-20
+i386                  randconfig-013-20260403    clang-20
+i386                  randconfig-014-20260403    clang-20
+i386                  randconfig-015-20260403    clang-20
+i386                  randconfig-016-20260403    clang-20
+i386                  randconfig-017-20260403    clang-20
+loongarch                        allmodconfig    clang-19
+loongarch                        allmodconfig    clang-23
+loongarch                         allnoconfig    gcc-15.2.0
+loongarch                           defconfig    clang-19
+loongarch             randconfig-001-20260403    clang-23
+loongarch             randconfig-002-20260403    clang-23
+m68k                             allmodconfig    gcc-15.2.0
+m68k                              allnoconfig    gcc-15.2.0
+m68k                             allyesconfig    clang-16
+m68k                             allyesconfig    gcc-15.2.0
+m68k                                defconfig    clang-19
+microblaze                        allnoconfig    gcc-15.2.0
+microblaze                       allyesconfig    gcc-15.2.0
+microblaze                          defconfig    clang-19
+mips                             allmodconfig    gcc-15.2.0
+mips                              allnoconfig    gcc-15.2.0
+mips                             allyesconfig    gcc-15.2.0
+nios2                            allmodconfig    clang-23
+nios2                            allmodconfig    gcc-11.5.0
+nios2                             allnoconfig    clang-23
+nios2                             allnoconfig    gcc-11.5.0
+nios2                               defconfig    clang-19
+nios2                 randconfig-001-20260403    clang-23
+nios2                 randconfig-002-20260403    clang-23
+openrisc                         allmodconfig    clang-23
+openrisc                         allmodconfig    gcc-15.2.0
+openrisc                          allnoconfig    clang-23
+openrisc                          allnoconfig    gcc-15.2.0
+openrisc                            defconfig    gcc-15.2.0
+parisc                           allmodconfig    gcc-15.2.0
+parisc                            allnoconfig    clang-23
+parisc                            allnoconfig    gcc-15.2.0
+parisc                           allyesconfig    clang-19
+parisc                           allyesconfig    gcc-15.2.0
+parisc                              defconfig    gcc-15.2.0
+parisc                randconfig-001-20260403    gcc-10.5.0
+parisc                randconfig-002-20260403    gcc-10.5.0
+parisc64                            defconfig    clang-19
+powerpc                          allmodconfig    gcc-15.2.0
+powerpc                           allnoconfig    clang-23
+powerpc                           allnoconfig    gcc-15.2.0
+powerpc               randconfig-001-20260403    gcc-10.5.0
+powerpc               randconfig-002-20260403    gcc-10.5.0
+powerpc                     tqm5200_defconfig    gcc-15.2.0
+powerpc64             randconfig-001-20260403    gcc-10.5.0
+powerpc64             randconfig-002-20260403    gcc-10.5.0
+riscv                            allmodconfig    clang-23
+riscv                             allnoconfig    clang-23
+riscv                             allnoconfig    gcc-15.2.0
+riscv                            allyesconfig    clang-16
+riscv                               defconfig    gcc-15.2.0
+riscv                 randconfig-001-20260403    clang-23
+riscv                 randconfig-002-20260403    clang-23
+s390                             allmodconfig    clang-18
+s390                             allmodconfig    clang-19
+s390                              allnoconfig    clang-23
+s390                             allyesconfig    gcc-15.2.0
+s390                                defconfig    gcc-15.2.0
+s390                  randconfig-001-20260403    clang-23
+s390                  randconfig-002-20260403    clang-23
+sh                               allmodconfig    gcc-15.2.0
+sh                                allnoconfig    clang-23
+sh                                allnoconfig    gcc-15.2.0
+sh                               allyesconfig    clang-19
+sh                               allyesconfig    gcc-15.2.0
+sh                                  defconfig    gcc-14
+sh                     magicpanelr2_defconfig    gcc-15.2.0
+sh                    randconfig-001-20260403    clang-23
+sh                    randconfig-002-20260403    clang-23
+sparc                             allnoconfig    clang-23
+sparc                             allnoconfig    gcc-15.2.0
+sparc                               defconfig    gcc-15.2.0
+sparc                 randconfig-001-20260403    clang-20
+sparc                 randconfig-002-20260403    clang-20
+sparc64                          allmodconfig    clang-23
+sparc64                             defconfig    gcc-14
+sparc64               randconfig-001-20260403    clang-20
+sparc64               randconfig-002-20260403    clang-20
+um                               allmodconfig    clang-19
+um                                allnoconfig    clang-23
+um                               allyesconfig    gcc-15.2.0
+um                                  defconfig    gcc-14
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20260403    clang-20
+um                    randconfig-002-20260403    clang-20
+um                           x86_64_defconfig    gcc-14
+x86_64                           allmodconfig    clang-20
+x86_64                            allnoconfig    clang-20
+x86_64                            allnoconfig    clang-23
+x86_64                           allyesconfig    clang-20
+x86_64      buildonly-randconfig-001-20260403    clang-20
+x86_64      buildonly-randconfig-002-20260403    clang-20
+x86_64      buildonly-randconfig-003-20260403    clang-20
+x86_64      buildonly-randconfig-004-20260403    clang-20
+x86_64      buildonly-randconfig-005-20260403    clang-20
+x86_64      buildonly-randconfig-006-20260403    clang-20
+x86_64                              defconfig    gcc-14
+x86_64                                  kexec    clang-20
+x86_64                randconfig-001-20260403    clang-20
+x86_64                randconfig-002-20260403    clang-20
+x86_64                randconfig-003-20260403    clang-20
+x86_64                randconfig-004-20260403    clang-20
+x86_64                randconfig-005-20260403    clang-20
+x86_64                randconfig-006-20260403    clang-20
+x86_64                randconfig-011-20260403    gcc-14
+x86_64                randconfig-012-20260403    gcc-14
+x86_64                randconfig-013-20260403    gcc-14
+x86_64                randconfig-014-20260403    gcc-14
+x86_64                randconfig-015-20260403    gcc-14
+x86_64                randconfig-016-20260403    gcc-14
+x86_64                randconfig-071-20260403    gcc-14
+x86_64                randconfig-072-20260403    gcc-14
+x86_64                randconfig-073-20260403    gcc-14
+x86_64                randconfig-074-20260403    gcc-14
+x86_64                randconfig-075-20260403    gcc-14
+x86_64                randconfig-076-20260403    gcc-14
+x86_64                               rhel-9.4    clang-20
+x86_64                           rhel-9.4-bpf    gcc-14
+x86_64                          rhel-9.4-func    clang-20
+x86_64                    rhel-9.4-kselftests    clang-20
+x86_64                         rhel-9.4-kunit    gcc-14
+x86_64                           rhel-9.4-ltp    gcc-14
+x86_64                          rhel-9.4-rust    clang-20
+xtensa                            allnoconfig    clang-23
+xtensa                            allnoconfig    gcc-15.2.0
+xtensa                           allyesconfig    clang-23
+xtensa                randconfig-001-20260403    clang-20
+xtensa                randconfig-002-20260403    clang-20
 
-However, I would go a little farther and add these changes if you
-are OK with them. (Patch applies after both of your patches.)
-
--- 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
----
- Documentation/arch/s390/pci.rst |   25 +++++++++++++------------
- 1 file changed, 13 insertions(+), 12 deletions(-)
-
---- linux-next-20260401.orig/Documentation/arch/s390/pci.rst
-+++ linux-next-20260401/Documentation/arch/s390/pci.rst
-@@ -36,7 +36,8 @@ in sysfs directories of the form:
- For example:
- 
-   - /sys/kernel/debug/s390dbf/pci_msg/sprintf
--    Holds messages from the processing of PCI events, like machine check handling
-+
-+    holds messages from the processing of PCI events, like machine check handling
-     and setting of global functionality, like UID checking.
- 
-   Change the level of logging to be more or less verbose by piping
-@@ -57,8 +58,8 @@ Entries specific to zPCI functions and e
- 
-   - /sys/bus/pci/slots/XXXXXXXX/power
- 
--  In addition to using the FID as the name of the slot the slot directory
--  also contains the following s390 specific slot attributes.
-+  In addition to using the FID as the name of the slot, the slot directory
-+  also contains the following s390-specific slot attributes.
- 
-   - uid:
-     The User-defined identifier (UID) of the function which may be configured
-@@ -71,22 +72,22 @@ Entries specific to zPCI functions and e
- * /sys/bus/pci/devices/DDDD:BB:dd.f/:
- 
-   - function_id:
--    The zPCI function identifier (FID) is a 32 bit hexadecimal value that
-+    The zPCI function identifier (FID) is a 32-bit hexadecimal value that
-     uniquely identifies the PCI function. Unless the hypervisor provides
-     a virtual FID e.g. on KVM this identifier is unique across the machine even
-     between different partitions.
- 
-   - function_handle:
--    This 32 bit hexadecimal value is a low-level identifier used for a PCI
-+    This 32-bit hexadecimal value is a low-level identifier used for a PCI
-     function. Note that the function handle may be changed and become invalid
-     on PCI events and when enabling/disabling the PCI function.
- 
-   - pchid:
--    This 16 bit hexadecimal value encodes a model-dependent location for
-+    This 16-bit hexadecimal value encodes a model-dependent location for
-     the PCI function.
- 
-   - pfgid:
--    PCI function group ID, functions that share identical functionality
-+    PCI function group ID; functions that share identical functionality
-     use a common identifier.
-     A PCI group defines interrupts, IOMMU, IOTLB, and DMA specifics.
- 
-@@ -95,7 +96,7 @@ Entries specific to zPCI functions and e
-     0 for physical functions.
- 
-   - pft:
--    The PCI function type is an s390 specific type attribute. It indicates
-+    The PCI function type is an s390-specific type attribute. It indicates
-     a more general, usage oriented, type than PCI Specification
-     class/vendor/device identifiers. That is PCI functions with the same pft
-     value may be backed by different hardware implementations. At the same time
-@@ -124,7 +125,7 @@ Entries specific to zPCI functions and e
-     not applicable for that PCI function type.
- 
-   - uid:
--    The user-defined identifier (UID) for a PCI function is a 32 bit
-+    The user-defined identifier (UID) for a PCI function is a 32-bit
-     hexadecimal value. It is defined on a per instance basis as part of the
-     partition, KVM guest, or z/VM guest configuration. If UID Checking is
-     enabled the platform ensures that the UID is unique within that instance
-@@ -146,7 +147,7 @@ Entries specific to zPCI functions and e
-     The more the segments are different, the more the functions are isolated.
- 
-   - fidparm:
--    Contains an 8 bit per PCI function parameter field in hexadecimal provided
-+    Contains an 8-bit-per-PCI function parameter field in hexadecimal provided
-     by the platform. The meaning of this field is PCI function type specific.
-     For NETH VFs a value of 0x01 indicates that the function supports
-     promiscuous mode.
-@@ -164,13 +165,13 @@ The PCI address consists of four parts:
- and is of this form: DDDD:BB:dd.f.
- 
- * For a PCI function for which the platform does not expose the RID, the
--  pci=norid kernel parameter is used, or a so called isolated Virtual Function
-+  pci=norid kernel parameter is used, or a so-called isolated Virtual Function
-   which does have RID information but is used without its parent Physical
-   Function being part of the same PCI configuration:
- 
-   - There is only one function per domain.
- 
--  - The domain is set from the zPCI function's UID if UID Checking is on
-+  - The domain is set from the zPCI function's UID if UID Checking is on;
-     otherwise the domain ID is generated dynamically and is not stable
-     across reboots or hot plug.
- 
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
