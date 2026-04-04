@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54B8123D7FF;
-	Sat,  4 Apr 2026 01:20:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73120273D8F;
+	Sat,  4 Apr 2026 01:20:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775265607; cv=none; b=mufsMFmKRPYJ7YcGXJ/NszVjFM9VUarBHevrZtyLLS7zNPWt6xH/spftLUsoIXnDnNNxabkSrX/UHBlN2JqjeDta8sfBmpPewt+uN3i7W8l9CbWULvvAkIgoRXDzZhkdHVTg37+ItUnHhDjPPdSUc45nn78d5sC7y49Dy+h76iE=
+	t=1775265608; cv=none; b=UILycQsDJizlwFAXCTy3dXwDbE/e2j5tjNVf15j9C5gVbMbxBXhBCjbhyHGCtPYIC8Dki8Rscnc9PLNPgSrCnT0/mH91wFoPRVr6VfMIcyqE9iZNYONg9ED/GWR9SMCTrEOfu5rslgJTRpqdOdFX+3fLviw7o17JfIFTWI7FRQk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775265607; c=relaxed/simple;
-	bh=ETZOx9K7I20ciJf/L/y9FtbnIEE/Wq01xt8MytYNDZg=;
+	s=arc-20240116; t=1775265608; c=relaxed/simple;
+	bh=V3grCh/IvHL38jRC5lY2X4Fg0tr+ZJOpI/LmrS+pa6Y=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ldYe3Z668qMTlEOO9jDr+KYrljivYHc+25UBekNDEpZm+SDIWaiZxHml1ea0tA0a6t3pr6GwkPNjbxVL9G29epv4CScbkUCfXz55GVs+g7ln7n2zt3eFruuceUN1gdeDFSlUQM0KFv8SxgWrRENx2xqwOYC8D1I1ODUW/0yBEW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kgS/UBqI; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=AVgi7FU8szngNdkyP3qHluWxtiWYQUVNao6oNDgJ+Q3k2CetjFTjAdbY8x8WdaUKlrxlbZGAxLyJfiCB7N5stdOGEdWYi12lWEJOFlNqyK2Rs8TSaN2YYZFQtQHvELANtGyKQZlej1qV33VkFoggGWlwn3Z6yO54N4o7/liBGwI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HUEUtbzd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kgS/UBqI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFCB1C19421;
-	Sat,  4 Apr 2026 01:20:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HUEUtbzd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08BA1C4CEF7;
+	Sat,  4 Apr 2026 01:20:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775265607;
-	bh=ETZOx9K7I20ciJf/L/y9FtbnIEE/Wq01xt8MytYNDZg=;
+	s=k20201202; t=1775265608;
+	bh=V3grCh/IvHL38jRC5lY2X4Fg0tr+ZJOpI/LmrS+pa6Y=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=kgS/UBqI44h1bOI7Qa2G1M7sMhD+fD3e48RoTm48TaOrDKwkcUyiLD5iJTK26a0iP
-	 NignMXiiihYuqt6u57+Zvg7Ul83ea9VJwn9w6ahm1oX1eCVCj0lOC97bpk6rORElYT
-	 Ws7jq1uxj19GDeivuo1LaI+CGheIjhU9eynbEAFds+GlJtYkgYlIfLvlFH79GmFhA1
-	 rFJxDohInZEEzs9RFpSp+U3w5ijYNyku+pIb6EJPVEvtSn94oJc8mSc2t84m1v5TS6
-	 Tp3/yg4qTvGNc19Y4KBAyc/HjE+ulF5T38wsleWYO8NEaLmSlgXyWFl7qxafMbD/N1
-	 UIUQZ20kT1BXg==
+	b=HUEUtbzdKhLyjc6EOrrhoXAoqPJiBI0SbLWgSK7Sod9K91v0P3iXK0RJ32c7jxFNw
+	 48mW/d8LC4NkMFcmFcCgqB4WzD4DUBVonsLXnNW5ZNXG2+/Ie5qyic6tomuqxG+whO
+	 zy4eSWk1D5YwP3TfcSM7i7JU4lJMDifwcPsGYfLtifRWTlg+MxbwV/fQXm+Yz+KiSd
+	 yrdvAEbxmeo6Q2ScSbOLLamLGoCVEb6oz1ToQSMgWnBoCKemSBDJaCCb8YoNTC0CbM
+	 7FEpLiz/n4Y81dJYMl3aLiEXZmlKAz29Ov2ZEe5+/I+xh8nACdnQ/ZIJ7Qua5N8rNi
+	 5IzvLAopuk9eA==
 From: carlos.bilbao@kernel.org
 To: mani@kernel.org,
 	kwilczynski@kernel.org,
@@ -36,9 +36,9 @@ Cc: arnd@arndb.de,
 	linux-kernel@vger.kernel.org,
 	bilbao@vt.edu,
 	Carlos Bilbao <carlos.bilbao@kernel.org>
-Subject: [PATCH 1/2] misc: pci_endpoint_test: validate BAR index in doorbell test
-Date: Fri,  3 Apr 2026 18:20:01 -0700
-Message-ID: <20260404012002.111873-2-carlos.bilbao@kernel.org>
+Subject: [PATCH 2/2] misc: pci_endpoint_test: remove dead BAR read before doorbell trigger
+Date: Fri,  3 Apr 2026 18:20:02 -0700
+Message-ID: <20260404012002.111873-3-carlos.bilbao@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260404012002.111873-1-carlos.bilbao@kernel.org>
 References: <20260404012002.111873-1-carlos.bilbao@kernel.org>
@@ -52,36 +52,30 @@ Content-Transfer-Encoding: 8bit
 
 From: Carlos Bilbao <carlos.bilbao@kernel.org>
 
-pci_endpoint_test_doorbell() reads the BAR number directly from an endpoint
-test register and uses it as an index into test->bar[] without bounds
-checking. Since the value is a raw u32 from device MMIO, any value is
-possible and if greater than or equal to PCI_STD_NUM_BARS the access goes
-out of bounds.
+The assignment before the writel sequence is dead code (bar is
+unconditionally overwritten by the re-read immediately after) so remove the
+call entirely.
 
-Add a bounds check before dereferencing test->bar[bar].
+Note that the DB_BAR register is a plain value written by the endpoint
+firmware; reading it carries no side effect.
 
-Fixes: eefb83790a0d ("misc: pci_endpoint_test: Add doorbell test case")
 Signed-off-by: Carlos Bilbao (Lambda) <carlos.bilbao@kernel.org>
 ---
- drivers/misc/pci_endpoint_test.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/misc/pci_endpoint_test.c | 1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 74ab5b5b9011..276bed3f1c18 100644
+index 276bed3f1c18..07c5f19d5c5a 100644
 --- a/drivers/misc/pci_endpoint_test.c
 +++ b/drivers/misc/pci_endpoint_test.c
-@@ -1089,6 +1089,11 @@ static int pci_endpoint_test_doorbell(struct pci_endpoint_test *test)
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_STATUS, 0);
+@@ -1081,7 +1081,6 @@ static int pci_endpoint_test_doorbell(struct pci_endpoint_test *test)
  
- 	bar = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_DB_BAR);
-+	if (bar >= PCI_STD_NUM_BARS) {
-+		dev_err(dev, "BAR %u reported by endpoint out of range [0, %u]\n",
-+			bar, PCI_STD_NUM_BARS - 1);
-+		return -EINVAL;
-+	}
+ 	data = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_DB_DATA);
+ 	addr = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_DB_OFFSET);
+-	bar = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_DB_BAR);
  
- 	writel(data, test->bar[bar] + addr);
- 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
 -- 
 2.43.0
 
