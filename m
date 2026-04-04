@@ -1,149 +1,162 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CD01433B3
-	for <linux-pci@vger.kernel.org>; Sat,  4 Apr 2026 16:51:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD6001A682A;
+	Sat,  4 Apr 2026 16:53:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775321492; cv=none; b=ExC4FI6GSZdbau///oAiO3xqgnFQK8kZIBu4ngMWdxCM4JMq2290d2MAYgxZ4gkesrgU8kGYi07m224GEKcRMS8FMnPTmd3a3bT7LZSQ2UCAmAg1VgdXCz4Z+4bLHgzgVAl73r9L1+2zIJ8kfSoDTM5SMbb8ptQwUWlX+va0ei8=
+	t=1775321624; cv=none; b=DDDROPISPnTpjbrTR3i1WhWtih/B3Itl4ztMMI3Qx4S556HT3hPGXGVM8CbzMK9HLLXYBJP9AJMmnSrAUnRyj4fqA1ErOYva8WFkkfRaq9PFwO1Q6Jsp7rTA/UojOSerXuWnU60t4exs1n0tbU6DR7lQ1+KVidhz7YDA/Uyww8M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775321492; c=relaxed/simple;
-	bh=Vx8DIUs7so65W1SOJf+8EampHku6hasfNwd9/iqv0xs=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=JryIfuszXiV8xBAs3C6WZIno1ZbOttZ/LQU3lZb3mvhxJDW7Mcr9GNpKXeWfBzG3NNuDh+Khp20cML447+8XjCEgjNc9W1wJTbxBjWlfbjGsXJoWuvPphJGX+M1ucROZOc1/hmHJSx7n8Eiv7cC1ZKtoUIYGIpi9QnEAtqYzyOs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=aAv9KEZY; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=JBmgwVsp; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1775321624; c=relaxed/simple;
+	bh=4ljFbXNE5GaVpD1qooXO+bZe5p57hd2HpLdsSi36i98=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qaASr+fRuK5zDWNgOXg1FaBpe9s01VoMLW3vmG/SwzR+NJ9VuXmSOdyizaOvhbzXjJH6AhS08Vrd2u7MG8wxP3x23kelFI//uvqLgOm8r8gr8ulncVtpeuguqziWFr1An8bIzq4//LdQsTU6SwA8bratSqo0mIs9IeFqz+IAo+U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uoLLbiIx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="aAv9KEZY";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="JBmgwVsp"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6343dxB9097814
-	for <linux-pci@vger.kernel.org>; Sat, 4 Apr 2026 16:51:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	OE3KlKPOy54a84VacfHvP1EMsCp8vcEdYuMA1b/mBZA=; b=aAv9KEZYGGtDdF3M
-	OmfW38T63vSNQSDYWE8hzShKvMvj47K+WrQ6D9qDQDUCkhyH4GZSKpa5A9cTfbKs
-	cvqJ/8fMfwjreY0AIn7E8Nkw/FS74EMNtkaxjJmGjduV87i5KkY/l81qH2+dtiiD
-	C8IZ+RnwOIIWl7qz1jhTEscmQ7FOUILoERhnKa01iDc0hTOfVxOK8g085qN0QP2O
-	0PYv34OzdjvBO6mDc1pxcGANn1ZOPn4p3t0Pgr94AIUWZ1qvjcWOZ8uyY9Ob20gz
-	pxpcXMatO/Pd5mX7flADZLWbzexqJM0BSUKRiWnKTU+doOJQJ6llSUAN9RSalGRg
-	9Ph2dg==
-Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dasn5s9qa-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Sat, 04 Apr 2026 16:51:29 +0000 (GMT)
-Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-82c9364612fso4152226b3a.2
-        for <linux-pci@vger.kernel.org>; Sat, 04 Apr 2026 09:51:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1775321489; x=1775926289; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OE3KlKPOy54a84VacfHvP1EMsCp8vcEdYuMA1b/mBZA=;
-        b=JBmgwVspbfbobVw3mbGEd6KfNjKphWU4wBPmaGg7BYCLJADhL4/zzL5Yjz7Iczz7V3
-         i4H8mt5cMV5elwdzXLpJsCeG3ccwCJ/PD+vH0A2RluQVIVaGjJX2U+U6kMIUzz/fGToy
-         OwH0KltNg6vC+2dp9eyXKsF3JSouNmbPbdqUVBndt+sF/E2HuouNYctGa9LLlvvEcrZ0
-         sh50FUCQhH6bXOd7vJS6aiBHks1mIDiZJ+iMW3Uv7NkcWDh/rx7v2qgQLwPLv0+CQgcR
-         5d5Xq/wMU0I0aDEvjB5fyo7zYrts9Zjpa580VXD80AiTii8LpGyOjeKHI7PcKpBD+kFB
-         lRSA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775321489; x=1775926289;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=OE3KlKPOy54a84VacfHvP1EMsCp8vcEdYuMA1b/mBZA=;
-        b=PZHHbeUUU9+rkQROxHqFVGnjbhSCK+jDm/L/iSIbtS1zRNVTNndvil5sQuHcsM08qw
-         0HJc9dbfenuqZOmoTgvtG/Yq9CX5wmyxfzjJ9bUoKwXjOmxT0KjAvKsZnauDqrSmptTL
-         F6yEYo5qnidlr39XxCP8xNpPPHw8ucH15IooRouyWnCCRn2l3PChOdXWptjWl5nRVmli
-         aFEmJMgbOg0wzfX3xCBnAiJ3Q2zrWVvgqinpMnADV8MADWBJBelPjvcywDTg1UGpwynU
-         m3XQL6XzY53KOPlCeJOIzxe/E8Dw9/LLiTkUdEkIHJT97BFuqnNIwufGAM9eHSI52L+a
-         QRdw==
-X-Gm-Message-State: AOJu0YxoeaSRlbeyqXrZwCvP3el4zdhPS6Xz54ZhSLI5jZ1o0jcAbPi3
-	TpYPgLyisPMDZWj7gsyVLRHy5g+cRczNG9YVN4Mvgz/UprrJdY8I6MVZUgOKmyFaLMUf93pswR/
-	t8algAIueJPifSYPOz5CiifnKpPECIPgenGYN+25BEvSJ97vJzukLWX9QrY1Reto=
-X-Gm-Gg: AeBDies0XtX1D0qcrYLu4s8YloHG9fd80N3KbBoyEXUtRFqPfLTDSrvLnDgGlMX21WT
-	Fw11s7L7uUJvVkFzlPu5mHkkcVsu75lyjLUduF2XPMWFK2iI4rH4AfjIT1CdoAEliJXbprnYdo3
-	+6akgY+Ho/L7WVqJ89oY3DrMGIlJr107LZ1MbdhRDhRVlrouQzHlLasMY6DFBtX0gm3OM5BYSum
-	HwOd5WEpPgXMTNQ4ZTB7c7585gRwwJQyjNJI+GzO8rCjxRJjhotkNF7Momog42VLmCSPkfEEbDT
-	Nx8xmNrzfKKFOM1Y0KRLS2fOzAjpl1aLLlhTyrVgqe5MLOSLnWjWjU12AD4v+8Tpz3hHtoHgixO
-	scPgUr23FyPcRzxQZawBcrr2D
-X-Received: by 2002:a05:6a00:1ca5:b0:823:998:95b0 with SMTP id d2e1a72fcca58-82d0db5b2c1mr6454115b3a.35.1775321488911;
-        Sat, 04 Apr 2026 09:51:28 -0700 (PDT)
-X-Received: by 2002:a05:6a00:1ca5:b0:823:998:95b0 with SMTP id d2e1a72fcca58-82d0db5b2c1mr6454093b3a.35.1775321488280;
-        Sat, 04 Apr 2026 09:51:28 -0700 (PDT)
-Received: from [192.168.31.133] ([2409:4091:a0f4:6806:b530:cb:a537:434d])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82cf9c9cbdfsm11742697b3a.53.2026.04.04.09.51.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 04 Apr 2026 09:51:27 -0700 (PDT)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Chen-Yu Tsai <wenst@chromium.org>
-Cc: linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-In-Reply-To: <20260324093542.18523-1-wenst@chromium.org>
-References: <20260324093542.18523-1-wenst@chromium.org>
-Subject: Re: [PATCH] PCI: mediatek-gen3: prevent leaking IRQ domains when
- IRQ not found
-Message-Id: <177532148383.26157.12106877313693816923.b4-ty@b4>
-Date: Sat, 04 Apr 2026 22:21:23 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uoLLbiIx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EAFCC19421;
+	Sat,  4 Apr 2026 16:53:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775321624;
+	bh=4ljFbXNE5GaVpD1qooXO+bZe5p57hd2HpLdsSi36i98=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uoLLbiIxFbBGZ/vxLYnikvtUkFkVKpK+0+eS4Voj+KIm5HA/M3qyTg3zJr+w+/gsa
+	 mdc7NOsJGiGu5M6W/VfPOHq0EHo0WoThpRYCQ5/2oVF2oh3tgiYy8Tg3LNrLh+L4Mu
+	 uHBZ++P6y2er+rTRp3yfoTo7bKJHU4Url3YYN9yjLOY++ThUbe297jAGjbSy+FF9RI
+	 IKhX2S4k3adTLbqFyVmgH7E+VllDg6fIf6g6zOQIRH/R8AKRKsl0clumvpP8LIeyzU
+	 U5+YLC/LgJludkLgapI6ZyBO6VqWZkDdVHDcGxwtZeLV1WVdrbru/6P1V06EVBmn75
+	 hjx/TgvCHesdQ==
+Date: Sat, 4 Apr 2026 22:23:32 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Steven Rostedt <rostedt@goodmis.org>, 
+	Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org, linux-trace-kernel@vger.kernel.org, 
+	linux-doc@vger.kernel.org
+Subject: Re: [PATCH v5 0/3] PCI Controller event and LTSSM tracepoint support
+Message-ID: <u2dh2os5qyuuv636uwzttvohfyics7tvqiobheftjzdnuegq33@n77svn2nlqu2>
+References: <1774403912-210670-1-git-send-email-shawn.lin@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.15.0
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA0MDE1OCBTYWx0ZWRfX8G0jZFMdXARj
- J+LdOB3pUdwF49B9v6WMtGJ5r9I+ASjrZWfdxj4niikndKXMQgaXUMg7yqPRbE91ORpQZddWmoP
- Rfbx1BqDAZ8U75HGlPBH329aUzRprMMAtdO9JT86jHUbGHG5D2xGi+Lzo6v5AxmnXYoW7Hbc41H
- xdwueqcw6pYw8bYbJE39otRQGr4ag7Bl5/raI6j419CrTdnmSJ8bgPXSuy5ZXxhhC6aaFXHtlID
- vHmT9Y+oCW6510FW0W8DJ0SBhFVjBzkvuC4Us7XZ/hx3hu91QL8xjij8RYdNAtLUYtDdDj8S4Be
- WDqj8qmsEMkMQpx0hC7FfcVLnJdQLeKaA9su+jS0FI40KhEFhAqvrALBHRD+kXIskWjkNQf9DvS
- 7qsfgbLiYzgACHns+k7EzhV5niIej8LfhBfcqWfeKnF/XK2ef6bfRhAtEZWhmWzvtisr+rQxeeZ
- yHt/eY5G/WHhG3hFrpA==
-X-Proofpoint-ORIG-GUID: 2autXVYBsOGJPPQ9oEDkpSV93PoSp3Cn
-X-Authority-Analysis: v=2.4 cv=K9wv3iWI c=1 sm=1 tr=0 ts=69d14192 cx=c_pps
- a=WW5sKcV1LcKqjgzy2JUPuA==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=A5OVakUREuEA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22 a=VwQbUJbxAAAA:8
- a=xYFpZzvQZLPhPvho2dYA:9 a=QEXdDO2ut3YA:10 a=OpyuDcXvxspvyRM73sMx:22
-X-Proofpoint-GUID: 2autXVYBsOGJPPQ9oEDkpSV93PoSp3Cn
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-04_02,2026-04-03_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 malwarescore=0 suspectscore=0 bulkscore=0 clxscore=1015
- lowpriorityscore=0 impostorscore=0 adultscore=0 phishscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2604040158
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1774403912-210670-1-git-send-email-shawn.lin@rock-chips.com>
 
-
-On Tue, 24 Mar 2026 17:35:41 +0800, Chen-Yu Tsai wrote:
-> In mtk_pcie_setup_irq(), the IRQ domains are allocated before the
-> controller's IRQ is fetched. If the latter fails the function
-> directly returns an error.
+On Wed, Mar 25, 2026 at 09:58:29AM +0800, Shawn Lin wrote:
 > 
-> Instead, reverse the order so that the IRQ domains are allocated
-> after the controller's IRQ is found.
+> This patch-set adds new pci controller event and LTSSM tracepoint used by host drivers
+> which provide LTSSM trace functionality. The first user is pcie-dw-rockchip with a 256
+> Bytes FIFO for recording LTSSM transition.
 > 
-> [...]
 
-Applied, thanks!
+Steve, could you please take a look at the tracing part?
 
-[1/1] PCI: mediatek-gen3: prevent leaking IRQ domains when IRQ not found
-      commit: 5573c44cb3fd01a9f62d569ae9ac870ef5f0e0ba
+- Mani
 
-Best regards,
+> Testing
+> =========
+> 
+> This series was tested on RK3588/RK3588s EVB1 with NVMe SSD connected to PCIe3 and PCIe2
+> root ports.
+> 
+> echo 1 > /sys/kernel/debug/tracing/events/pci_controller/pcie_ltssm_state_transition/enable
+> cat /sys/kernel/debug/tracing/trace_pipe
+> 
+>  # tracer: nop
+>  #
+>  # entries-in-buffer/entries-written: 64/64   #P:8
+>  #
+>  #                                _-----=> irqs-off/BH-disabled
+>  #                               / _----=> need-resched
+>  #                              | / _---=> hardirq/softirq
+>  #                              || / _--=> preempt-depth
+>  #                              ||| / _-=> migrate-disable
+>  #                              |||| /     delay
+>  #           TASK-PID     CPU#  |||||  TIMESTAMP  FUNCTION
+>  #              | |         |   |||||     |         |
+>       kworker/0:0-9       [000] .....     5.600194: pcie_ltssm_state_transition: dev: a40000000.pcie state: DETECT_ACT rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600198: pcie_ltssm_state_transition: dev: a40000000.pcie state: DETECT_WAIT rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600199: pcie_ltssm_state_transition: dev: a40000000.pcie state: DETECT_ACT rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600201: pcie_ltssm_state_transition: dev: a40000000.pcie state: POLL_ACTIVE rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600202: pcie_ltssm_state_transition: dev: a40000000.pcie state: POLL_CONFIG rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600204: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LINKWD_START rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600206: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LINKWD_ACEPT rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600207: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LANENUM_WAI rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600208: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LANENUM_ACEPT rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600210: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_COMPLETE rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600212: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_IDLE rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600213: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 2.5 GT/s
+>       kworker/0:0-9       [000] .....     5.600214: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600216: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600217: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_SPEED rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600218: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600220: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ1 rate: Unknown
+>       kworker/0:0-9       [000] .....     5.600221: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ2 rate: 8.0 GT/s
+>       kworker/0:0-9       [000] .....     5.600222: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ3 rate: 8.0 GT/s
+>       kworker/0:0-9       [000] .....     5.600224: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: 8.0 GT/s
+>       kworker/0:0-9       [000] .....     5.600225: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: 8.0 GT/s
+>       kworker/0:0-9       [000] .....     5.600226: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_IDLE rate: 8.0 GT/s
+>       kworker/0:0-9       [000] .....     5.600227: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 8.0 GT/s
+>       kworker/0:0-9       [000] .....     5.600228: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: 8.0 GT/s
+>       kworker/0:0-9       [000] .....     5.600229: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: 8.0 GT/s
+>       kworker/0:0-9       [000] .....     5.600231: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_IDLE rate: 8.0 GT/s
+>       kworker/0:0-9       [000] .....     5.600232: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 8.0 GT/s
+>       kworker/0:0-9       [000] .....     5.600233: pcie_ltssm_state_transition: dev: a40000000.pcie state: L123_SEND_EIDLE rate: 8.0 GT/s
+>       kworker/0:0-9       [000] .....     5.600234: pcie_ltssm_state_transition: dev: a40000000.pcie state: L1_IDLE rate: 8.0 GT/s
+>       kworker/0:0-9       [000] .....     5.600236: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: 8.0 GT/s
+>       kworker/0:0-9       [000] .....     5.600237: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: 8.0 GT/s
+>       kworker/0:0-9       [000] .....     5.600238: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_IDLE rate: 8.0 GT/s
+>       kworker/0:0-9       [000] .....     5.600239: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 8.0 GT/s
+> 
+> 
+> Changes in v5:
+> - rebase
+> - use EM/EMe instead
+> - remove reg/unreg function and back to use TRACE_EVENT
+> - use trace_pcie_ltssm_state_transition_enabled()
+> 
+> Changes in v4:
+> - use TRACE_EVENT_FN to notify when to start and stop the tracepoint,
+>   and export pci_ltssm_tp_enabled() for host drivers to use
+> - skip trace if pci_ltssm_tp_enabled() is false.(Steven)
+> - wrap into 80 columns(Bjorn)
+> 
+> Changes in v3:
+> - add TRACE_DEFINE_ENUM for all enums(Steven Rostedt)
+> - Add toctree entry in Documentation/trace/index.rst(Bagas Sanjaya)
+> - fix mismatch section underline length(Bagas Sanjaya)
+> - Make example snippets in code block(Bagas Sanjaya)
+> - warp context into 80 columns and fix the file name(Bjorn)
+> - reorder variables(Mani)
+> - rename loop to i; rename en to enable(Mani)
+> - use FIELD_GET(Mani)
+> - add comment about how the FIFO works(Mani)
+> 
+> Changes in v2:
+> - use tracepoint
+> 
+> Shawn Lin (3):
+>   PCI: trace: Add PCI controller LTSSM transition tracepoint
+>   Documentation: tracing: Add PCI controller event documentation
+>   PCI: dw-rockchip: Add pcie_ltssm_state_transition trace support
+> 
+>  Documentation/trace/events-pci-controller.rst |  42 ++++++++++
+>  Documentation/trace/index.rst                 |   1 +
+>  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 111 ++++++++++++++++++++++++++
+>  drivers/pci/trace.c                           |   1 +
+>  include/trace/events/pci_controller.h         |  58 ++++++++++++++
+>  5 files changed, 213 insertions(+)
+>  create mode 100644 Documentation/trace/events-pci-controller.rst
+>  create mode 100644 include/trace/events/pci_controller.h
+> 
+> -- 
+> 2.7.4
+> 
+
 -- 
-Manivannan Sadhasivam <mani@kernel.org>
-
+மணிவண்ணன் சதாசிவம்
