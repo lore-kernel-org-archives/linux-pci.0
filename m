@@ -1,44 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 523CF3B2BA;
-	Sat,  4 Apr 2026 02:34:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4C3750276;
+	Sat,  4 Apr 2026 02:42:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775270047; cv=none; b=qANV+ejv71+zX78a8Lz1t9cgnaTiItuZl+gyOvWXrXU6vuyh3A+0/1yMTx+HxIZoKJcdJG0zTyaj9SsY9EUasTtCLWsxK/AuZzCprEFuTLKXmXc2P+9VTHkIbwfkHEwNcgfjkugUAh+gHYpeihapY8MGMe64md2OfTTpZ+cuLcI=
+	t=1775270569; cv=none; b=gTXYuPiYvstZuoPK87LggbL2ZquzWEQLQb41uzJgtr+vyOlc1bwG97bBCZQlXOXznOSu+VMnEqRKm2k8dx/82CaYFEhaL0Z4P/vbm5mymrKImpC8ltUPpAd7wQubayVKjgnv8jqHG1k+OQxXP6MbjxGUhNGiIlcCi3NhzE11fvI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775270047; c=relaxed/simple;
-	bh=ov2H8JzYKmYOc6CcKNfzyC7ZEUeHD2YB4AVNGff6iNI=;
+	s=arc-20240116; t=1775270569; c=relaxed/simple;
+	bh=QqB5bvrRBlRYHAkjrmkAS8KiUZry2YuTWlK/boc4+l0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cnLP5ikvGlNmkMj+KNO/Ns+I+n7j6/XzPcTlF5jYVjOr7yXwVQpS+b3MdOW8uMd/XlE61xsa94m2lWZg2odltL2O4/w1V/s2B0Mv1H0RIGpNfXoZz7GgfB9NTebRaTqHTis7HcHD8abEhcvmd8J98v5DRLFu0+e3KihBCM9ZaNQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sl9mBwBO; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=B70pJppxEDiN8oIUcyQsrVICQW4m6ZPNNhw/kjQkY4CcRrcy6ndB60RKsc+mJ0zqPZfPQmeduRQ7F1lD0e9tH5R0WjiHQwgyHJ7axM4JPJW48k2A0/YlwlKy14PZ5D6Qky+VZeNzZlIRCu+R9NKSR8g0gUocmKAsQvElMZsD6f8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lKrjXe2R; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sl9mBwBO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E7F4C4CEF7;
-	Sat,  4 Apr 2026 02:34:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lKrjXe2R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1300DC4CEF7;
+	Sat,  4 Apr 2026 02:42:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775270046;
-	bh=ov2H8JzYKmYOc6CcKNfzyC7ZEUeHD2YB4AVNGff6iNI=;
+	s=k20201202; t=1775270569;
+	bh=QqB5bvrRBlRYHAkjrmkAS8KiUZry2YuTWlK/boc4+l0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Sl9mBwBOOKMXn8NEElmhNDOFCe0AXa8FhEfUbyBjxm5l1b1rOhI/gHTHEbFK3AWzy
-	 urFBnB5FEIhF66/Ht5mew/l0VFBEKCT/mwFHunY4bBlEqKqo9NwjxJVVbzyOVkr2k+
-	 wkqDKW/wxQHeCiQikMP+4LfwkyP52a1ne2M5RVkUSCG/5miKkLabfTe62B6W41dHGV
-	 aBPyiZJ2tCeXJwDYM+/6GyDrE4V6imIR0SYqPWE0FhMGUA4nH1A7FmFg+lH1jk14D6
-	 rx6HjQ+gPZptXGbXO9YIu8xjzUhY5F3qQ4GwuK3TdTlhsx9TgOJTNFJmFCcNQgmFvu
-	 cRNEQX6geTkzw==
-Date: Sat, 4 Apr 2026 08:03:53 +0530
+	b=lKrjXe2RhKmkPs+6ix9VLYcP9aXOzxv+/fX2WnlKuROyMr9KYeBKpu89wU6d09LHh
+	 18rRiLv+q4akjmJFxXcYQgp8gv9PeQ2pCkKxOTIBMkeQxUskmyBjRdtbuy45wW+ON1
+	 VRSdKIX+KSDPF+bgE2/TWfTMVnmfL+6O0LxCbtrY+W9KE6hM4Jmri5QWhucr7R4d7f
+	 FSHeTgKBLOSxM5ELXotudZdN2dY2ph58/9IuxVyhGuoXLk4QYdZTmuipyvfLVR19wx
+	 IfJd0AVXgiocylxxZUqiaK+iygFh28KxPz7aBsJtxGMTKZRxNTVZGcHI2DnyDbrW9+
+	 1DJVYe79aSOnA==
+Date: Sat, 4 Apr 2026 08:12:36 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>, frank.li@nxp.com, 
-	l.stach@pengutronix.de, lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, 
-	bhelgaas@google.com, s.hauer@pengutronix.de, kernel@pengutronix.de, 
-	festevam@gmail.com, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	imx@lists.linux.dev, linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: imx6: Don't remove MSI capability for
- i.MX7D/i.MX8M
-Message-ID: <sp2jnu23k6gy2kgpdmwajmz65nah6pdgwjja7apq3ewoqmm2rd@qsaqikndaofl>
-References: <20260331085252.1243108-1-hongxing.zhu@nxp.com>
- <20260403215656.GA360979@bhelgaas>
+To: Sahil Chandna <sahilchandna@linux.microsoft.com>
+Cc: kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org, 
+	decui@microsoft.com, longli@microsoft.com, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, dan.j.williams@intel.com, 
+	mhklinux@outlook.com, linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: hv: Fix double ida_free in hv_pci_probe error path
+Message-ID: <v7l3vghep7h52f3qyoxdbqzu6un5vhio3njy4u46wjrqzhrrvx@hl5imwzjwocf>
+References: <20260403120933.466259-1-sahilchandna@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,136 +46,73 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260403215656.GA360979@bhelgaas>
+In-Reply-To: <20260403120933.466259-1-sahilchandna@linux.microsoft.com>
 
-On Fri, Apr 03, 2026 at 04:56:56PM -0500, Bjorn Helgaas wrote:
-> On Tue, Mar 31, 2026 at 04:52:52PM +0800, Richard Zhu wrote:
-> > The MSI trigger mechanism for endpoint devices connected to i.MX7D,
-> > i.MX8MM, and i.MX8MQ PCIe root complex ports depends on the MSI
-> > capability register settings in the root complex. Removing the MSI
-> > capability breaks MSI functionality for these endpoints.
-> > 
-> > Add keep_rp_msi_en flag to indicate platforms (i.MX7D, i.MX8MM, i.MX8MQ)
-> > that should preserve the MSI capability during initialization.
+On Fri, Apr 03, 2026 at 05:09:29AM -0700, Sahil Chandna wrote:
+> If hv_pci_probe() fails after storing the domain number in
+> hbus->bridge->domain_nr, there is a call to free this domain_nr via
+> pci_bus_release_emul_domain_nr(), however, during cleanup, the bridge
+> release callback pci_release_host_bridge_dev() also frees the domain_nr
+> causing ida_free to be called on same ID twice and triggering following
+> warning:
 > 
-> I guess Mani added this to the commit log:
+>   ida_free called for id=28971 which is not allocated.
+>   WARNING: lib/idr.c:594 at ida_free+0xdf/0x160, CPU#0: kworker/0:2/198
+>   Call Trace:
+>    pci_bus_release_emul_domain_nr+0x17/0x20
+>    pci_release_host_bridge_dev+0x4b/0x60
+>    device_release+0x3b/0xa0
+>    kobject_put+0x8e/0x220
+>    devm_pci_alloc_host_bridge_release+0xe/0x20
+>    devres_release_all+0x9a/0xd0
+>    device_unbind_cleanup+0x12/0xa0
+>    really_probe+0x1c5/0x3f0
+>    vmbus_add_channel_work+0x135/0x1a0
 > 
->   Note that by keeping Root Port MSI capability, Root Port MSIs such as AER,
->   PME and others won't be received by default. So users need to use
->   workarounds such as passing 'pcie_pme=nomsi' cmdline param.
+> Fix this by letting pci core handle the free domain_nr and remove
+> the explicit free called in pci-hyperv driver.
 > 
+> Fixes: bcce8c74f1ce ("PCI: Enable host bridge emulation for PCI_DOMAINS_GENERIC platforms")
+> Signed-off-by: Sahil Chandna <sahilchandna@linux.microsoft.com>
 
-Yes, I did.
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
-> Why can't we fix this automatically?  I hate it when users are
-> expected to use command line parameters to work around issues.
-> 
-> Obviously we know at probe-time, before any PCI devices are
-> enumerated, so it seems like we should be able to do the equivalent of
-> "pcie_pme=nomsi" even without the parameter.
-> 
+Wei: I see that you've taken previous hyperv patches. So feel free to take this
+one also.
 
-That's why we came up with the idea of disabling the MSI/MSI-X capabilities of
-the Root Port so that the code falls back to INTx. But the issue is that,
-disabling that capability or MSI Enable bit (mayebe?) prevents endpoint MSIs
-from being received. We don't know exactly what's going on inside the hardware
-though. But is broken at its best. Fortunately, this behavior only applies to a
-subset of the NXP SoCs.
+We will be proactive from next release onwards ;)
 
 - Mani
 
-> > Cc: stable@vger.kernel.org
-> > Fixes: f5cd8a929c825 ("PCI: dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI controller")
-> > Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
-> > Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-> > ---
-> > v3 changes:
-> > Use a flag 'dw_pcie_rp::keep_rp_msi_en' to identify SoCs that require MSI
-> > capability preservation, and skip the capability removal in
-> > pcie-designware-host.c accordingly.
-> > 
-> > v2 changes:
-> > CC stable tree.
-> > ---
-> >  drivers/pci/controller/dwc/pci-imx6.c             | 7 +++++++
-> >  drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
-> >  drivers/pci/controller/dwc/pcie-designware.h      | 1 +
-> >  3 files changed, 9 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> > index 20dafd2710a3..fde173770933 100644
-> > --- a/drivers/pci/controller/dwc/pci-imx6.c
-> > +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> > @@ -117,6 +117,8 @@ enum imx_pcie_variants {
-> >  #define IMX_PCIE_FLAG_HAS_LUT			BIT(10)
-> >  #define IMX_PCIE_FLAG_8GT_ECN_ERR051586		BIT(11)
-> >  #define IMX_PCIE_FLAG_SKIP_L23_READY		BIT(12)
-> > +/* Preserve MSI capability for platforms that require it */
-> > +#define IMX_PCIE_FLAG_KEEP_MSI_CAP		BIT(13)
-> >  
-> >  #define imx_check_flag(pci, val)	(pci->drvdata->flags & val)
-> >  
-> > @@ -1820,6 +1822,8 @@ static int imx_pcie_probe(struct platform_device *pdev)
-> >  	} else {
-> >  		if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_SKIP_L23_READY))
-> >  			pci->pp.skip_l23_ready = true;
-> > +		if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_KEEP_MSI_CAP))
-> > +			pci->pp.keep_rp_msi_en = true;
-> >  		pci->pp.use_atu_msg = true;
-> >  		ret = dw_pcie_host_init(&pci->pp);
-> >  		if (ret < 0)
-> > @@ -1897,6 +1901,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
-> >  	[IMX7D] = {
-> >  		.variant = IMX7D,
-> >  		.flags = IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
-> > +			 IMX_PCIE_FLAG_KEEP_MSI_CAP |
-> >  			 IMX_PCIE_FLAG_HAS_APP_RESET |
-> >  			 IMX_PCIE_FLAG_SKIP_L23_READY |
-> >  			 IMX_PCIE_FLAG_HAS_PHY_RESET,
-> > @@ -1909,6 +1914,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
-> >  	[IMX8MQ] = {
-> >  		.variant = IMX8MQ,
-> >  		.flags = IMX_PCIE_FLAG_HAS_APP_RESET |
-> > +			 IMX_PCIE_FLAG_KEEP_MSI_CAP |
-> >  			 IMX_PCIE_FLAG_HAS_PHY_RESET |
-> >  			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
-> >  		.gpr = "fsl,imx8mq-iomuxc-gpr",
-> > @@ -1923,6 +1929,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
-> >  	[IMX8MM] = {
-> >  		.variant = IMX8MM,
-> >  		.flags = IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
-> > +			 IMX_PCIE_FLAG_KEEP_MSI_CAP |
-> >  			 IMX_PCIE_FLAG_HAS_PHYDRV |
-> >  			 IMX_PCIE_FLAG_HAS_APP_RESET,
-> >  		.gpr = "fsl,imx8mm-iomuxc-gpr",
-> > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> > index a74339982c24..7b5558561e15 100644
-> > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> > @@ -1171,7 +1171,7 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
-> >  	 * the MSI and MSI-X capabilities of the Root Port to allow the drivers
-> >  	 * to fall back to INTx instead.
-> >  	 */
-> > -	if (pp->use_imsi_rx) {
-> > +	if (pp->use_imsi_rx && !pp->keep_rp_msi_en) {
-> >  		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSI);
-> >  		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSIX);
-> >  	}
-> > diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> > index ae6389dd9caa..b12c5334552c 100644
-> > --- a/drivers/pci/controller/dwc/pcie-designware.h
-> > +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> > @@ -421,6 +421,7 @@ struct dw_pcie_host_ops {
-> >  
-> >  struct dw_pcie_rp {
-> >  	bool			use_imsi_rx:1;
-> > +	bool			keep_rp_msi_en:1;
-> >  	bool			cfg0_io_shared:1;
-> >  	u64			cfg0_base;
-> >  	void __iomem		*va_cfg0_base;
-> > -- 
-> > 2.37.1
-> > 
+> ---
+>  drivers/pci/controller/pci-hyperv.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> index 2c7a406b4ba8..5616ad5d2a8f 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -3778,7 +3778,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  					   hbus->bridge->domain_nr);
+>  	if (!hbus->wq) {
+>  		ret = -ENOMEM;
+> -		goto free_dom;
+> +		goto free_bus;
+>  	}
+> 
+>  	hdev->channel->next_request_id_callback = vmbus_next_request_id;
+> @@ -3874,8 +3874,6 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  	vmbus_close(hdev->channel);
+>  destroy_wq:
+>  	destroy_workqueue(hbus->wq);
+> -free_dom:
+> -	pci_bus_release_emul_domain_nr(hbus->bridge->domain_nr);
+>  free_bus:
+>  	kfree(hbus);
+>  	return ret;
+> --
+> 2.53.0
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
