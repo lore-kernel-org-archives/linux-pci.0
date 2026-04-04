@@ -1,129 +1,128 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BED5386341;
-	Sat,  4 Apr 2026 17:09:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0213224293C;
+	Sat,  4 Apr 2026 17:10:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775322567; cv=none; b=c+DIP8f7lo4+dScQuqsDF7tEURBMHZTMVfjJWXQZar5TvrJhh9a4I2hmd4mQe8Ng7UtJ/XJrIGuFdLdOBkTH1yoGNzS25wWy5pgHqgvXtenfVMCgHmynejYatZg/nybHmmYycHsLBUVjfKLKDqKkGU5g0lz+a0VzeC6r56PFe5U=
+	t=1775322632; cv=none; b=IS6z6R6ppqRtMKUqHMWZbnR8QXAUq4LJX7LlLjDvrIY1lj8XD/6V3MQn/vJwjUAaYXZU+qLiVMJYEmoK3V67wqEISC9Py1ezZq1cIZbthFLEaZS2+LgCZB/MiFOo4jRelNSWWRRWIcTsWD4/UzGyAnStWxJLjI+9EpPj0ICdD04=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775322567; c=relaxed/simple;
-	bh=u8kt7OrQ/vRwebR8QID4XnX8+JNDMp1i5iK/K6bdNDA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=V5yVs8D+L635rIKbwam5DXkkF8SPfX2JABaAxaWPcmjeh4WVHD+IgKz/suHPRLNSAccd8uYsIINDe33xZ9l4vFYM8zbhGkwzGGMeBp38KUWe4G/HBhQxqet0piKNqoXmgJDSTPbYgTIajp4fLWE4rG6a32BbR8fPcIQjWRllPYk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mur2l9g+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775322632; c=relaxed/simple;
+	bh=TL1x8uQHfXMCS5DAHiJFSwR5ZSFg/H+USQuXqbWXElU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XLsywL5VyA7KEQCr/ZKyhDxiYsJEfH+Q3GVaMhUzOnSqt77/TDedSiu+DiJvx4SZRD0YwAybv5y78+USrKa1Hc6ElLcZUhqdZj+55pmSTdjKqQyQvO3EIY32XPTveqZ30Uae+e39T2jIrX6dYujVwcRLCK9gVgYisSynFjzIsMo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tk25YExv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mur2l9g+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6956BC19421;
-	Sat,  4 Apr 2026 17:09:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tk25YExv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E377C19421;
+	Sat,  4 Apr 2026 17:10:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775322567;
-	bh=u8kt7OrQ/vRwebR8QID4XnX8+JNDMp1i5iK/K6bdNDA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Mur2l9g+deVKWOVOfXlkgvgdKFA4eMN3VFsDjrp+nvoKeM3X3pstiyexcKEvOeD0a
-	 RbWpztozc0h4lQoSWYVOnXtkhFF+JRtMTTya2FNPQi3D7loBz93/IYN7Ge2fCwnYY6
-	 Re4J05NhHq8kCVMn7SJKTXcUdNw54AUQcOdwffM3zMjz7evbLjl/s54+7J+0y2RhZM
-	 +Mi+DO81POzfix85rvYo25MmliRWwTmiQ4w8GEjh3lU6Bg01dUBrobNBgfy2tPEGch
-	 AFl8Q1R0jHMSDedYpY3Yug+qqjGh5y0LuX4UV4lD2NPGO2GuUGdy7lPrJwFQklpETH
-	 wOUF3U6ODslbQ==
-Message-ID: <a8c85884-e2ba-4a3a-a660-9715f0de2704@kernel.org>
-Date: Sat, 4 Apr 2026 19:09:11 +0200
+	s=k20201202; t=1775322631;
+	bh=TL1x8uQHfXMCS5DAHiJFSwR5ZSFg/H+USQuXqbWXElU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=tk25YExvw8065Vz9EAfitUx04X7OsINDwnPs6q3WubHt+0ULf8lwIg1JMVEudvdY1
+	 BmSqdQ6R2OPSmmg5/w1As6rFSbzwL7616L+hDAAAEBKweXaNot/S+VJPGB6GnorJnD
+	 Bd8MpQZG6tAjvQ4z9MYttsJKHtH038/8IvNIpSCyz7WNNyp455IC5gBhppMDjyjjM1
+	 qIcyfqahtkzGeFE+g0HzQcvNSuQ9W0KVlHD102us0OpbGi/h76rnXQIueU/wEeADku
+	 y90yOdX5yaMPDEshLmomivYRo7OiDXOcEtB21s5xDudi8KygyIC9vDSL8cwXYFTAcG
+	 NZpqOPG4QVFUA==
+Date: Sat, 4 Apr 2026 22:40:16 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Sherry Sun <sherry.sun@nxp.com>
+Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	Frank.Li@nxp.com, s.hauer@pengutronix.de, kernel@pengutronix.de, 
+	festevam@gmail.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
+	bhelgaas@google.com, hongxing.zhu@nxp.com, l.stach@pengutronix.de, 
+	imx@lists.linux.dev, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V2 0/8] PCI: imx6: Integrate pwrctrl API and update
+ device trees
+Message-ID: <omtn42mopdz7igg7jaqwehd67l6xc77zk7zzqwkufgnsycvadg@5kodhpgfesre>
+References: <20260402101007.208419-1-sherry.sun@nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: (subset) [PATCH 00/12] treewide: Convert buses to use generic
- driver_override
-To: Danilo Krummrich <dakr@kernel.org>
-Cc: Russell King <linux@armlinux.org.uk>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- Ioana Ciornei <ioana.ciornei@nxp.com>, Nipun Gupta <nipun.gupta@amd.com>,
- Nikhil Agarwal <nikhil.agarwal@amd.com>, "K. Y. Srinivasan"
- <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>,
- Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
- Long Li <longli@microsoft.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Armin Wolf <W_Armin@gmx.de>, Bjorn Andersson <andersson@kernel.org>,
- Mathieu Poirier <mathieu.poirier@linaro.org>,
- Vineeth Vijayan <vneethv@linux.ibm.com>,
- Peter Oberparleiter <oberpar@linux.ibm.com>,
- Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
- Alexander Gordeev <agordeev@linux.ibm.com>,
- Christian Borntraeger <borntraeger@linux.ibm.com>,
- Sven Schnelle <svens@linux.ibm.com>,
- Harald Freudenberger <freude@linux.ibm.com>,
- Holger Dengler <dengler@linux.ibm.com>, Mark Brown <broonie@kernel.org>,
- "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>,
- Xuan Zhuo <xuanzhuo@linux.alibaba.com>, =?UTF-8?Q?Eugenio_P=C3=A9rez?=
- <eperezma@redhat.com>, Alex Williamson <alex@shazbot.org>,
- Juergen Gross <jgross@suse.com>, Stefano Stabellini
- <sstabellini@kernel.org>,
- Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
- linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
- linuxppc-dev@lists.ozlabs.org, linux-hyperv@vger.kernel.org,
- linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
- linux-arm-msm@vger.kernel.org, linux-remoteproc@vger.kernel.org,
- linux-s390@vger.kernel.org, linux-spi@vger.kernel.org,
- virtualization@lists.linux.dev, kvm@vger.kernel.org,
- xen-devel@lists.xenproject.org, linux-arm-kernel@lists.infradead.org
-References: <20260324005919.2408620-1-dakr@kernel.org>
- <DHKGQN6D0ANO.2QYY3JTM5435O@kernel.org>
- <76355cb5-0b5d-4a29-9702-8d020a79f4c0@kernel.org>
- <DHKJ7VWI1CHO.3ETHUGQVPFFDE@kernel.org>
-Content-Language: fr-FR
-From: "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>
-In-Reply-To: <DHKJ7VWI1CHO.3ETHUGQVPFFDE@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260402101007.208419-1-sherry.sun@nxp.com>
 
-
-
-Le 04/04/2026 à 19:04, Danilo Krummrich a écrit :
-> On Sat Apr 4, 2026 at 6:58 PM CEST, Christophe Leroy (CS GROUP) wrote:
->>
->>
->> Le 04/04/2026 à 17:07, Danilo Krummrich a écrit :
->>> On Tue Mar 24, 2026 at 1:59 AM CET, Danilo Krummrich wrote:
->>>> Danilo Krummrich (12):
->>>>     PCI: use generic driver_override infrastructure
->>>>     platform/wmi: use generic driver_override infrastructure
->>>>     vdpa: use generic driver_override infrastructure
->>>>     s390/cio: use generic driver_override infrastructure
->>>>     s390/ap: use generic driver_override infrastructure
->>>
->>> Applied to driver-core-testing, thanks!
->>>
->>>>     amba: use generic driver_override infrastructure
->>>>     cdx: use generic driver_override infrastructure
->>>>     hv: vmbus: use generic driver_override infrastructure
->>>>     rpmsg: use generic driver_override infrastructure
->>>
->>> I have not picked these up, as they have not received ACKs from the
->>> corresponding subsystem maintainers so far.
->>>
->>>>     bus: fsl-mc: use generic driver_override infrastructure
->>
->> I droped it from soc_fsl tree, some dependency must be missing.
->>
->> Feal free to take it if you can, it is acked-by Ioana.
+On Thu, Apr 02, 2026 at 06:09:59PM +0800, Sherry Sun wrote:
+> Note: This patch set depends on my previous patch set [1] which adds
+> Root Port device tree nodes and support parsing the reset property in
+> new Root Port binding in pci-imx6 driver.
 > 
-> It is based on v7.0-rc5; if you want I can pick it up.
-
-Yes please pick it up as my tree is based on rc1.
-
-Thanks
-Christophe
-
-
+> This series integrates the PCI pwrctrl framework into the pci-imx6
+> driver and updates i.MX EVK board device trees to support it.
 > 
->>>>     spi: use generic driver_override infrastructure
->>>
->>> These have already been picked up via the respective subsystem trees -- thanks!
->>>
->>> Thanks,
->>> Danilo
+> Patches 2-8 update device trees for i.MX EVK boards which maintained
+> by NXP to move power supply properties from the PCIe controller node
+> to the Root Port child node, which is required for pwrctrl framework.
+> Affected boards:
+> - i.MX6Q/DL SABRESD
+> - i.MX6SX SDB
+> - i.MX8MM EVK
+> - i.MX8MP EVK
+> - i.MX8MQ EVK
+> - i.MX8DXL/QM/QXP EVK
+> - i.MX95 15x15/19x19 EVK
+> 
+> The driver maintains legacy regulator handling for device trees that
+> haven't been updated yet. Both old and new device tree structures are
+> supported.
 > 
 
+Thanks for the work! Due to some recently merged patches, this series (Patch 1)
+doesn't apply on top of pci/controller/dwc-imx6 branch. Please rebase and
+resend!
+
+- Mani
+
+> [1] https://lore.kernel.org/all/20260318062916.2747472-1-sherry.sun@nxp.com/
+> 
+> Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
+> ---
+> Changes in V2:
+> 1. After commit 2d8c5098b847 ("PCI/pwrctrl: Do not power off on pwrctrl
+>    device removal"), the pwrctrl drivers no longer power off devices
+>    during removal. Update pci-imx6 driver's shutdown callback in patch#1
+>    to explicitly call pci_pwrctrl_power_off_devices() before 
+>    pci_pwrctrl_destroy_devices() to ensure devices are properly powered
+>    off.
+> ---
+> 
+> Sherry Sun (8):
+>   PCI: imx6: Integrate new pwrctrl API for pci-imx6
+>   arm: dts: imx6qdl-sabresd: Move power supply property to Root Port
+>     node
+>   arm: dts: imx6sx-sdb: Move power supply property to Root Port node
+>   arm64: dts: imx8mm-evk: Move power supply property to Root Port node
+>   arm64: dts: imx8mp-evk: Move power supply properties to Root Port node
+>   arm64: dts: imx8mq-evk: Move power supply properties to Root Port node
+>   arm64: dts: imx8dxl/qm/qxp: Move power supply properties to Root Port
+>     node
+>   arm64: dts: imx95: Move power supply properties to Root Port node
+> 
+>  .../arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi |  2 +-
+>  arch/arm/boot/dts/nxp/imx/imx6sx-sdb.dtsi     |  2 +-
+>  arch/arm64/boot/dts/freescale/imx8dxl-evk.dts |  4 ++--
+>  arch/arm64/boot/dts/freescale/imx8mm-evk.dtsi |  2 +-
+>  arch/arm64/boot/dts/freescale/imx8mp-evk.dts  |  4 ++--
+>  arch/arm64/boot/dts/freescale/imx8mq-evk.dts  |  4 ++--
+>  arch/arm64/boot/dts/freescale/imx8qm-mek.dts  |  4 ++--
+>  arch/arm64/boot/dts/freescale/imx8qxp-mek.dts |  4 ++--
+>  .../boot/dts/freescale/imx95-15x15-evk.dts    |  4 ++--
+>  .../boot/dts/freescale/imx95-19x19-evk.dts    |  8 +++----
+>  drivers/pci/controller/dwc/Kconfig            |  1 +
+>  drivers/pci/controller/dwc/pci-imx6.c         | 24 ++++++++++++++++++-
+>  12 files changed, 43 insertions(+), 20 deletions(-)
+> 
+> -- 
+> 2.37.1
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
