@@ -1,132 +1,80 @@
-Received: from mail-dy1-f170.google.com (mail-dy1-f170.google.com [74.125.82.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 312333168EB
-	for <linux-pci@vger.kernel.org>; Sat,  4 Apr 2026 18:57:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.170
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775329059; cv=pass; b=CotFiqQRhGXAFwaVNMEjsxjibzzyJUmlaZuZ+0lAmk8ytCkVUscb45ygG74FfgyeXQAIlQq4ucfNT2N7TQ9t0XOJK8mJs8NfFJ08HH5V/UrRBIwIkcj0GMqm74z08vBLi1yjHy4wSXpUIQvrG6ahPhbRA1sEN9XyA7Gq4VbPuRM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775329059; c=relaxed/simple;
-	bh=Dpo1bHWRFUqXo0uNqbtuJo1O2t+g9zkQj8ymAL8CgUQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=U5ani+8/U2e1I6+Kr5JfMJLpwr7bYCrKH2TTpd8OKpruMOA4mINF9CzQmVEobibhWIsCSi23JmQCIjhjUoKH86v6TpLguR1P4utkZ2+Tn789DdDNh7Tg5gc10YR7Qkdv0Zh6DZu12E2GviS38TAKQ+m8kzS9poAfOGuSVEezdHc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hW8PckQ0; arc=pass smtp.client-ip=74.125.82.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 538B323D290;
+	Sat,  4 Apr 2026 19:20:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775330424; cv=none; b=B3ugAX7882C0RZlGR6IB6GuB8wLx3N9rk/sBycIosKaEELWwIJRKAhRVHJZ/PsnTAc01qNupnAWGt6KkI/e5lO4pQNA5k/L9sFqmCya1+7sSCdzTDPOs15HOCN7zgx+lwhyprV1lxZQdry8Aj2cpUqEmspDi++uppF/HHuBRoLM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775330424; c=relaxed/simple;
+	bh=Gm9FGkRc1QRpNSImSwgwSEPvOU2SLgI61ARuYW5LgUM=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
+	 References:In-Reply-To; b=AQJhvOyM11n4YH4IIwN6BBhqRE5jSAFZh1Hemvfuth+8hExzlcKkxUOjwOq9BNu6VWC0qbI4TmaZgbDOURP0AsJI2AmdX16GIBfCqKZ4GwLbbOCTKilDaJL/EORaRW5J66CvvMzkAB8/Lyo8OqosG7Eo+Z0GSDci0RBtlyg911Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jmGUx9ea; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hW8PckQ0"
-Received: by mail-dy1-f170.google.com with SMTP id 5a478bee46e88-2cc43ca447aso83375eec.1
-        for <linux-pci@vger.kernel.org>; Sat, 04 Apr 2026 11:57:38 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1775329057; cv=none;
-        d=google.com; s=arc-20240605;
-        b=XZnH+rII5EZrF7UdFHaPPpVGmUgQTL54nK8qJR+DTe2B1J9ya0BGSPqh4F70L/+K6X
-         1znMag5dtRH5yHrZr9YKLLJo2vB7Wyyzk9MHFF36pCiSFVR3oYHfHLYxpw1gMz0WdZ+0
-         6ZrkWyuhR81ofIJVoElWTPu/H6KOAEmvtKA96AR5OY9clj3AQoFbG4f8yH2F/o/E2Plm
-         FeYAROQ7X+LZ02+5n3gTcS1ip176WUPgOfcLwYP16+BVMzUmtyKfUDXQBVdRYhf4BKqV
-         sdLSVCMF6IcqZ4L6WlcJw90bfrHFn/LY9sZWhP+5gVeLH6n6y124OjD3e9nU1rgaq+8G
-         fKrQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Dpo1bHWRFUqXo0uNqbtuJo1O2t+g9zkQj8ymAL8CgUQ=;
-        fh=t60Yx6hm7rDnRj1rENLdq3GIW7iJ5c9xMKc5pYOXMGg=;
-        b=cOGu93mFdvrCFhRNg5Y/QSUEdO2nHJsXC+hsewXc1P2g0MoasTaE3uGNlHdYMomf5V
-         6KtDZ4Yz1IxW/FifBL2e7w7tX7xWW6dW9gam6VbVWI4TFS7XTe/V7PDMQTIZebd5einx
-         vzwi7nQzdt5ESNv0psddSsbQwZl6nMLS9e1AitHbvoGtAhavifWvcmO3Dto+pAn42XcN
-         eutT4dFYawjTu497BawbK5QunMmT5Gfq8+BXpSNWcZ+ag6e7sZ8Nd1qq+cOtb1Q9OIqP
-         nyuk7Ul6Tdry/upjcYUCtZTRekKZI/vgH9cmVavnPAwZ/FO5lKQoKqw4AvOvs8Tb0mPN
-         /OeQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1775329057; x=1775933857; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Dpo1bHWRFUqXo0uNqbtuJo1O2t+g9zkQj8ymAL8CgUQ=;
-        b=hW8PckQ0MTqsuTDZEDwZGOxVEXNGMV/gd5qQOY8tXqwv47sTV2feyp4lB02F+wXGLT
-         nCMVoDOJmcnaqzQP48axTlxPHtKYYdybOQmdXj+WE86yVulEUira6dR9exgh9+ENXBAK
-         /TMyVPUKTDdywopNSRC8ZOsI2+020BwxKTRLZr0jLUG2nDGDCAeQXa9YMb2O9q6tpgpZ
-         /btG/Gey6C0B67YiBmjeFMrlVERcCDkHhBWg8h2zZOQMwoLpEm5TeUOH7QuhZEH5dpZg
-         qKIFU99hoK8OM72IO4Er/in/a77dAzQlpCosrQMumAFl2AOPXpRw81JFLX/0HRkAI21B
-         JUBA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775329057; x=1775933857;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Dpo1bHWRFUqXo0uNqbtuJo1O2t+g9zkQj8ymAL8CgUQ=;
-        b=lnYbo5oCSKj+iiKWk1NneIeF/a0/bxAqmcrzNrF85If2y+qHtu7i5ODReeLPp/bU/S
-         PA1oZyvutVeeOluMltzijiP+ue239h0yAzRbh+72mr2jUBImntClvTwtQUr8oZnobC0C
-         YScvxx1AocauG2t/+UNXXF3M/+2kMV0PtLA23pgn6Vi5pN3b9pub0GnWDlIVwwriqUtQ
-         qRkMFPL/8SGWQTfnBgkfUaE18AnLnNHxmI7jeKMztaedxYV6vP17/5BEOpYH28pO3OXT
-         6ActZHqCgSDcI8yYveZcmTFfPs/0u9j7DnGnnaTRXumUSioyvxEMC1pXakRJ6e1alghv
-         HqdQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXd5K3OZpWwL+m6pZ/RMlU3A3KALeeQG2Jtvo2ZqBpJdS4faKTn/d2dXN+tbyRpoqPneXuozhCalH4=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz8sjZZ7CosZz+HSwqqB/JXYN7P+WISueMfU36RBjs2EF2e1O5/
-	etZxddUWLDNt70niFY3xbCIOH3Yy6CoAXbWQo3aivNbWCEABxPdTLxpXrH3iUp5EPl7w1zDz9pf
-	gTeZL/44xo72v4nKNlpJr50OzNfexqow=
-X-Gm-Gg: AeBDievEhx3+1i5v07evTdaA3xwzuCpM6cV0jbm4xuErDMGJMyPGVglTMZSeyDv9q49
-	Y1Ap1PxOOfW3vpOmBgb7KC3rrjpSaubqon2I3cF2+KRVK+7/jRiHhyu5V4x4kxEsMurlQOEpX94
-	6jJk2L4Q+kBsmosNRNDEKy7RmajJjY1jtx5C0Chs7J+/EDa2Fb57C8mvC84kkaZCkhBDscK41i5
-	Ix9B4KI7VwEYFNUHmh/wdJMX+eTZyBgAqwfVHzf2UylhiYrpXZrC8+9qgytH5DZItasKDg7vm5C
-	Hd9/eeNyd6G+2Ihka7gvVDoCsdP5uxJt4szsgIv/ESqpgjDOKZ7rk4eLTY2wuj34VuMRTEF0AcS
-	k2GQcvrzrvjoBVCCHlu0nWM8=
-X-Received: by 2002:a05:7300:aa8d:b0:2cb:cc20:1771 with SMTP id
- 5a478bee46e88-2cbfdb8142amr1797820eec.7.1775329057099; Sat, 04 Apr 2026
- 11:57:37 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jmGUx9ea"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00214C19421;
+	Sat,  4 Apr 2026 19:20:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775330423;
+	bh=Gm9FGkRc1QRpNSImSwgwSEPvOU2SLgI61ARuYW5LgUM=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
+	b=jmGUx9ea8KKZGI+yk4InrpqyltSpIFXbxzumeqJLrPMsCCsI1AmriWu84nJMybHDm
+	 YQX3Ac/MMmi2g9ubzYQwGTmoLjoD5HvqXXGENZ7sZF+bdgDoJQgXEb5+YyoFBlZFth
+	 rIDl6Or9j72Pxfg8gbRbLoxXUMFAACLFbQ4DfxU/vKJfbDZ88r7qcAUikXvNARJnPR
+	 UKzC1aGXBRx4bgxjkQ5ETAqx1gHtveCsTmzJzi7+wf9pVTh4t9trQOG4pictre3Zqy
+	 coxYtZTwXCoUTOSXcrTxyqOyBWyu2eDrD5N4/86+0enySLlkVbuU3KeCQL6A1XpL4u
+	 dWWtgOZ4j3TJA==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260323153807.1360705-1-gary@kernel.org> <20260323153807.1360705-3-gary@kernel.org>
-In-Reply-To: <20260323153807.1360705-3-gary@kernel.org>
-From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date: Sat, 4 Apr 2026 20:57:24 +0200
-X-Gm-Features: AQROBzB07bZJqe_QfYpU84UafC2n0TqoqgFxBdtNVi67KZHjlaS5_K2l556ldMw
-Message-ID: <CANiq72=L_GtftTstEznWi908HwcWLmD=cf0gnmLcGkfN+RTaMw@mail.gmail.com>
-Subject: Re: [PATCH 2/8] rust: io: generalize `Mmio` to arbitrary type
-To: Gary Guo <gary@garyguo.net>
-Cc: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
-	=?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
-	Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
-	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
-	Danilo Krummrich <dakr@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Daniel Almeida <daniel.almeida@collabora.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	rust-for-linux@vger.kernel.org, driver-core@lists.linux.dev, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Sat, 04 Apr 2026 21:20:13 +0200
+Message-Id: <DHKM3WP2ZJYE.84WX6IAGUH5@kernel.org>
+Subject: Re: (subset) [PATCH 00/12] treewide: Convert buses to use generic
+ driver_override
+Cc: "Russell King" <linux@armlinux.org.uk>, "Greg Kroah-Hartman"
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ "Ioana Ciornei" <ioana.ciornei@nxp.com>, "Nipun Gupta"
+ <nipun.gupta@amd.com>, "Nikhil Agarwal" <nikhil.agarwal@amd.com>, "K. Y.
+ Srinivasan" <kys@microsoft.com>, "Haiyang Zhang" <haiyangz@microsoft.com>,
+ "Wei Liu" <wei.liu@kernel.org>, "Dexuan Cui" <decui@microsoft.com>, "Long
+ Li" <longli@microsoft.com>, "Bjorn Helgaas" <bhelgaas@google.com>, "Armin
+ Wolf" <W_Armin@gmx.de>, "Bjorn Andersson" <andersson@kernel.org>, "Mathieu
+ Poirier" <mathieu.poirier@linaro.org>, "Vineeth Vijayan"
+ <vneethv@linux.ibm.com>, "Peter Oberparleiter" <oberpar@linux.ibm.com>,
+ "Heiko Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>,
+ "Alexander Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger"
+ <borntraeger@linux.ibm.com>, "Sven Schnelle" <svens@linux.ibm.com>, "Harald
+ Freudenberger" <freude@linux.ibm.com>, "Holger Dengler"
+ <dengler@linux.ibm.com>, "Mark Brown" <broonie@kernel.org>, "Michael S.
+ Tsirkin" <mst@redhat.com>, "Jason Wang" <jasowang@redhat.com>, "Xuan Zhuo"
+ <xuanzhuo@linux.alibaba.com>, =?utf-8?q?Eugenio_P=C3=A9rez?=
+ <eperezma@redhat.com>, "Alex Williamson" <alex@shazbot.org>, "Juergen
+ Gross" <jgross@suse.com>, "Stefano Stabellini" <sstabellini@kernel.org>,
+ "Oleksandr Tyshchenko" <oleksandr_tyshchenko@epam.com>,
+ <linux-kernel@vger.kernel.org>, <driver-core@lists.linux.dev>,
+ <linuxppc-dev@lists.ozlabs.org>, <linux-hyperv@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <platform-driver-x86@vger.kernel.org>,
+ <linux-arm-msm@vger.kernel.org>, <linux-remoteproc@vger.kernel.org>,
+ <linux-s390@vger.kernel.org>, <linux-spi@vger.kernel.org>,
+ <virtualization@lists.linux.dev>, <kvm@vger.kernel.org>,
+ <xen-devel@lists.xenproject.org>, <linux-arm-kernel@lists.infradead.org>
+To: "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20260324005919.2408620-1-dakr@kernel.org>
+ <DHKGQN6D0ANO.2QYY3JTM5435O@kernel.org>
+ <76355cb5-0b5d-4a29-9702-8d020a79f4c0@kernel.org>
+ <DHKJ7VWI1CHO.3ETHUGQVPFFDE@kernel.org>
+ <a8c85884-e2ba-4a3a-a660-9715f0de2704@kernel.org>
+In-Reply-To: <a8c85884-e2ba-4a3a-a660-9715f0de2704@kernel.org>
 
-On Mon, Mar 23, 2026 at 4:38=E2=80=AFPM Gary Guo <gary@kernel.org> wrote:
->
-> From: Gary Guo <gary@garyguo.net>
->
-> Currently, `io::Mmio` always represent an untyped region of a compile-tim=
-e
-> known minimum size, which is roughly equivalent to `void __iomem*` (but
-> with bound checks). However, it is useful to also be to represent I/O
-> memory of a specific type, e.g. `u32 __iomem*` or `struct foo __iomem*`.
->
-> Thus, make `Mmio` generic on arbitrary `T`, where `T` is a sized type, or=
- a
-> DST that implements `KnownSize`. Similar to the `MmioRaw` change, the
-> existing behaviour is preserved in the form of `Mmio<Region<SIZE>>`. This
-> change brings the MMIO closer to the DMA coherent allocation types that w=
-e
-> have, which is already typed.
->
-> To be able to implement `IoKnownSize`, add a `MIN_SIZE` constant to
-> `KnownSize` trait to represent compile-time known minimum size of a
-> specific type.
->
-> Signed-off-by: Gary Guo <gary@garyguo.net>
+On Sat Apr 4, 2026 at 7:09 PM CEST, Christophe Leroy (CS GROUP) wrote:
+> Yes please pick it up as my tree is based on rc1.
 
-Acked-by: Miguel Ojeda <ojeda@kernel.org>
-
-Cheers,
-Miguel
+Applied the patch to driver-core-testing, thanks!
