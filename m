@@ -1,128 +1,248 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0213224293C;
-	Sat,  4 Apr 2026 17:10:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7E823081D7
+	for <linux-pci@vger.kernel.org>; Sat,  4 Apr 2026 17:12:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775322632; cv=none; b=IS6z6R6ppqRtMKUqHMWZbnR8QXAUq4LJX7LlLjDvrIY1lj8XD/6V3MQn/vJwjUAaYXZU+qLiVMJYEmoK3V67wqEISC9Py1ezZq1cIZbthFLEaZS2+LgCZB/MiFOo4jRelNSWWRRWIcTsWD4/UzGyAnStWxJLjI+9EpPj0ICdD04=
+	t=1775322732; cv=none; b=og+NSDm9H4xOney1WXcVVlFkB3+EVAvEobndAb1++jWS3xVVcT0kd87KhWPi0J5GUi0E76QARn5S/23DU72KZqoOUTSEE9aysEEyKW4bwvC8s9pje+NaDyWijqoKES2IUPsAnuDO+qx/lEYL2QTQeNtYWx4K+kZBumxX1coc18g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775322632; c=relaxed/simple;
-	bh=TL1x8uQHfXMCS5DAHiJFSwR5ZSFg/H+USQuXqbWXElU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XLsywL5VyA7KEQCr/ZKyhDxiYsJEfH+Q3GVaMhUzOnSqt77/TDedSiu+DiJvx4SZRD0YwAybv5y78+USrKa1Hc6ElLcZUhqdZj+55pmSTdjKqQyQvO3EIY32XPTveqZ30Uae+e39T2jIrX6dYujVwcRLCK9gVgYisSynFjzIsMo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tk25YExv; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775322732; c=relaxed/simple;
+	bh=6HWbdXTvY5ARCKQw/mJejk6jJkYYvhLGzuFZu/CMKrk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=iZ4SZe5/TvP6jTGDpITa1VW05L3v3xF8taazeJ7pK/AEC1oKvqE4aJmlUGTwfEQbAf2imfaf9GqDFugYwYwPizPbtiMvz9N3jp0Wr9d2MixXcW2H16Mb5kJqLL+MUwbbsuLligjPl+0Hc3B69clFcG2CgFDP/+yRqojrLt1DmL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l24Zqoay; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tk25YExv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E377C19421;
-	Sat,  4 Apr 2026 17:10:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l24Zqoay"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A72D2C2BCB4
+	for <linux-pci@vger.kernel.org>; Sat,  4 Apr 2026 17:12:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775322631;
-	bh=TL1x8uQHfXMCS5DAHiJFSwR5ZSFg/H+USQuXqbWXElU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tk25YExvw8065Vz9EAfitUx04X7OsINDwnPs6q3WubHt+0ULf8lwIg1JMVEudvdY1
-	 BmSqdQ6R2OPSmmg5/w1As6rFSbzwL7616L+hDAAAEBKweXaNot/S+VJPGB6GnorJnD
-	 Bd8MpQZG6tAjvQ4z9MYttsJKHtH038/8IvNIpSCyz7WNNyp455IC5gBhppMDjyjjM1
-	 qIcyfqahtkzGeFE+g0HzQcvNSuQ9W0KVlHD102us0OpbGi/h76rnXQIueU/wEeADku
-	 y90yOdX5yaMPDEshLmomivYRo7OiDXOcEtB21s5xDudi8KygyIC9vDSL8cwXYFTAcG
-	 NZpqOPG4QVFUA==
-Date: Sat, 4 Apr 2026 22:40:16 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Sherry Sun <sherry.sun@nxp.com>
-Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
-	Frank.Li@nxp.com, s.hauer@pengutronix.de, kernel@pengutronix.de, 
-	festevam@gmail.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
-	bhelgaas@google.com, hongxing.zhu@nxp.com, l.stach@pengutronix.de, 
-	imx@lists.linux.dev, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V2 0/8] PCI: imx6: Integrate pwrctrl API and update
- device trees
-Message-ID: <omtn42mopdz7igg7jaqwehd67l6xc77zk7zzqwkufgnsycvadg@5kodhpgfesre>
-References: <20260402101007.208419-1-sherry.sun@nxp.com>
+	s=k20201202; t=1775322732;
+	bh=6HWbdXTvY5ARCKQw/mJejk6jJkYYvhLGzuFZu/CMKrk=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=l24ZqoayMC0xXGNQJsL1cczZw+VJ7tydZVENUQoFBihS5d0jJ67r8PkLWJbt7LO9X
+	 nNEDpcOuw7tthiYq0W7ZllEXSxo1P0nmWkteU2AW/A7FTMB1eKiec9rAGl/eCan8xY
+	 cuG+x8njyYuOQVmOLYoW96ZXXvFkJbdIJ3bSrizrTqBsUnV5NqWT9CmoPEJSZT/A6T
+	 r5TzM/5f+0qceH5JHMLsipBwEFTxPAxgKYIZJkysfbQQD4BlPelJVwSHHuqi7q9ITh
+	 PB7cR/Biqc2lujS5dbZrpsEBHzOGjFI+k/3wAx1GIyCMqHCsgfCso8EOVfFUYrU5xg
+	 hCnONTBJ0i0Nw==
+Received: by mail-oa1-f51.google.com with SMTP id 586e51a60fabf-40efc77933fso1774251fac.3
+        for <linux-pci@vger.kernel.org>; Sat, 04 Apr 2026 10:12:12 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCXu2+YaNiwOXqhIXk/V0LvpLqDM7gQEJy6qHdWiGVpxFQDnuJRx0lNlbnCJvOf8omDZJeBQP4M9CpY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxLrTScxIO+bF9+opWHZdoWdLssP8y8M5IgJ56ZlldOP2tpCJ1K
+	w6xBBKy5xZGrq1E1pqoi9v5US64oCas8MvG++DSfgri1fAUsUlbin4AgEN8X0Xn1vWSpXsjirHk
+	uUqTo+C7cDkwWCVZ5aWo7VKdxDC5Mbks=
+X-Received: by 2002:a05:6871:581e:b0:422:cd76:929d with SMTP id
+ 586e51a60fabf-4230fd2d9e4mr3996409fac.18.1775322730928; Sat, 04 Apr 2026
+ 10:12:10 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260402101007.208419-1-sherry.sun@nxp.com>
+References: <20260404000644.522677-1-dianders@chromium.org>
+In-Reply-To: <20260404000644.522677-1-dianders@chromium.org>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sat, 4 Apr 2026 19:11:59 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0hRKyPesMGKGoDZEMDCX-GVw6Z-dxMLhNhwy6Kjz=7MCQ@mail.gmail.com>
+X-Gm-Features: AQROBzCS1sK1yep87rT-2xolltVfQ4j4qlt-9lHai0wQJnu4V3tzUHOX8_7jVCo
+Message-ID: <CAJZ5v0hRKyPesMGKGoDZEMDCX-GVw6Z-dxMLhNhwy6Kjz=7MCQ@mail.gmail.com>
+Subject: Re: [PATCH v4 0/9] driver core: Fix some race conditions
+To: Douglas Anderson <dianders@chromium.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J . Wysocki" <rafael@kernel.org>, 
+	Danilo Krummrich <dakr@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, 
+	Saravana Kannan <saravanak@kernel.org>, Christoph Hellwig <hch@lst.de>, Eric Dumazet <edumazet@google.com>, 
+	Johan Hovold <johan@kernel.org>, Leon Romanovsky <leon@kernel.org>, 
+	Alexander Lobakin <aleksander.lobakin@intel.com>, Alexey Kardashevskiy <aik@ozlabs.ru>, 
+	Robin Murphy <robin.murphy@arm.com>, Andrew Morton <akpm@linux-foundation.org>, Frank.Li@kernel.org, 
+	Jason Gunthorpe <jgg@ziepe.ca>, alex@ghiti.fr, alexander.stein@ew.tq-group.com, 
+	andre.przywara@arm.com, andrew@codeconstruct.com.au, andrew@lunn.ch, 
+	andriy.shevchenko@linux.intel.com, aou@eecs.berkeley.edu, ardb@kernel.org, 
+	bhelgaas@google.com, brgl@kernel.org, broonie@kernel.org, 
+	catalin.marinas@arm.com, chleroy@kernel.org, davem@davemloft.net, 
+	david@kernel.org, devicetree@vger.kernel.org, dmaengine@vger.kernel.org, 
+	driver-core@lists.linux.dev, gbatra@linux.ibm.com, 
+	gregory.clement@bootlin.com, hkallweit1@gmail.com, iommu@lists.linux.dev, 
+	jirislaby@kernel.org, joel@jms.id.au, joro@8bytes.org, kees@kernel.org, 
+	kevin.brodsky@arm.com, kuba@kernel.org, lenb@kernel.org, lgirdwood@gmail.com, 
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-aspeed@lists.ozlabs.org, linux-cxl@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org, linux-mm@kvack.org, 
+	linux-pci@vger.kernel.org, linux-riscv@lists.infradead.org, 
+	linux-serial@vger.kernel.org, linux-snps-arc@lists.infradead.org, 
+	linux-usb@vger.kernel.org, linux@armlinux.org.uk, 
+	linuxppc-dev@lists.ozlabs.org, m.szyprowski@samsung.com, maddy@linux.ibm.com, 
+	mani@kernel.org, maz@kernel.org, miko.lenczewski@arm.com, mpe@ellerman.id.au, 
+	netdev@vger.kernel.org, npiggin@gmail.com, osalvador@suse.de, 
+	oupton@kernel.org, pabeni@redhat.com, palmer@dabbelt.com, 
+	peter.ujfalusi@gmail.com, peterz@infradead.org, pjw@kernel.org, 
+	robh@kernel.org, sebastian.hesselbarth@gmail.com, tglx@kernel.org, 
+	tsbogend@alpha.franken.de, vgupta@kernel.org, vkoul@kernel.org, 
+	will@kernel.org, willy@infradead.org, yangyicong@hisilicon.com, 
+	yeoreum.yun@arm.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Apr 02, 2026 at 06:09:59PM +0800, Sherry Sun wrote:
-> Note: This patch set depends on my previous patch set [1] which adds
-> Root Port device tree nodes and support parsing the reset property in
-> new Root Port binding in pci-imx6 driver.
-> 
-> This series integrates the PCI pwrctrl framework into the pci-imx6
-> driver and updates i.MX EVK board device trees to support it.
-> 
-> Patches 2-8 update device trees for i.MX EVK boards which maintained
-> by NXP to move power supply properties from the PCIe controller node
-> to the Root Port child node, which is required for pwrctrl framework.
-> Affected boards:
-> - i.MX6Q/DL SABRESD
-> - i.MX6SX SDB
-> - i.MX8MM EVK
-> - i.MX8MP EVK
-> - i.MX8MQ EVK
-> - i.MX8DXL/QM/QXP EVK
-> - i.MX95 15x15/19x19 EVK
-> 
-> The driver maintains legacy regulator handling for device trees that
-> haven't been updated yet. Both old and new device tree structures are
-> supported.
-> 
+On Sat, Apr 4, 2026 at 2:07=E2=80=AFAM Douglas Anderson <dianders@chromium.=
+org> wrote:
+>
+> The main goal of this series is to fix the observed bug talked about
+> in the first patch ("driver core: Don't let a device probe until it's
+> ready"). That patch fixes a problem that has been observed in the real
+> world and could land even if the rest of the patches are found
+> unacceptable or need to be spun.
+>
+> That said, during patch review Danilo correctly pointed out that many
+> of the bitfield accesses in "struct device" are unsafe. I added a
+> bunch of patches in the series to address each one.
+>
+> Danilo said he's most worried about "can_match", so I put that one
+> first. After that, I tried to transition bitfields to flags in reverse
+> order to when the bitfield was added.
+>
+> Even if transitioning from bitfields to flags isn't truly needed for
+> correctness, it seems silly (and wasteful of space in struct device)
+> to have some in bitfields and some as flags. Thus I didn't spend time
+> for each bitfield showing that it's truly needed for correctness.
+>
+> Transition was done semi manually. Presumably someone skilled at
+> coccinelle could do a better job, but I just used sed in a heavy-
+> handed manner and then reviewed/fixed the results, undoing anything my
+> script got wrong. My terrible/ugly script was:
+>
+> var=3Dcan_match
+> caps=3D"${var^^}"
+> for f in $(git grep -l "[>\.]${var}[^1-9_a-zA-Z\[]"); do
+>   echo $f
+>   sed -i~ -e "s/\([a-zA-Z_0-9\.>()-][a-zA-Z_0-9\.>()-]*\)->${var} =3D tru=
+e/set_bit(DEV_FLAG_${caps}, \&\\1->flags)/" "$f"
+>   sed -i~ -e "s/\([a-zA-Z_0-9\.>()-][a-zA-Z_0-9\.>()-]*\)\.${var} =3D tru=
+e/dev_set_${caps}(\&\\1)/" "$f"
+>   sed -i~ -e "s/\([a-zA-Z_0-9\.>()-][a-zA-Z_0-9\.>()-]*\)->${var} =3D fal=
+se/clear_bit(DEV_FLAG_${caps}, \&\\1->flags)/" "$f"
+>   sed -i~ -e "s/\([a-zA-Z_0-9\.>()-][a-zA-Z_0-9\.>()-]*\)\.${var} =3D fal=
+se/dev_clear_${caps}(\&\\1)/" "$f"
+>   sed -i~ -e "s/\([a-zA-Z_0-9\.>()-][a-zA-Z_0-9\.>()-]*\)->${var} =3D \([=
+^;]*\)/assign_bit(DEV_FLAG_${caps}, \&\\1->flags, \\2)/" "$f"
+>   sed -i~ -e "s/\([a-zA-Z_0-9\.>()-][a-zA-Z_0-9\.>()-]*\)\.${var} =3D \([=
+^;]*\)/dev_assign_${caps}(\&\\1, \\2)/" "$f"
+>   sed -i~ -e "s/\([a-zA-Z_0-9\.>()-][a-zA-Z_0-9\.>()-]*\)->${var}\([^1-9_=
+a-zA-Z\[]\)/test_bit(DEV_FLAG_${caps}, \&\\1->flags)\\2/" "$f"
+>   sed -i~ -e "s/\([a-zA-Z_0-9\.>()-][a-zA-Z_0-9\.>()-]*\)\.${var}\([^1-9_=
+a-zA-Z\[]\)/dev_${caps}(\&\\1)\\2/" "$f"
+> done
+>
+> From v3 to v4, I transitioned to accessor functions with another ugly
+> sed script. I had git format the old patches, then transformed them
+> with:
+>
+> for f in *.patch; do
+>   echo $f
+>   sed -i~ -e "s/test_and_set_bit(DEV_FLAG_\([^,]*\), \&\(.*\)->flags)/dev=
+_test_and_set_\\L\\1(\\2)/" "$f"
+>   sed -i~ -e "s/test_and_set_bit(DEV_FLAG_\([^,]*\), \(.*\)\.flags)/dev_t=
+est_and_set_\\L\\1(\\2)/" "$f"
+>   sed -i~ -e "s/test_bit(DEV_FLAG_\([^,]*\), \&\(.*\)->flags)/dev_\\L\\1(=
+\\2)/" "$f"
+>   sed -i~ -e "s/test_bit(DEV_FLAG_\([^,]*\), \(.*\)\.flags)/dev_\\L\\1(\\=
+2)/" "$f"
+>   sed -i~ -e "s/set_bit(DEV_FLAG_\([^,]*\), \&\(.*\)->flags)/dev_set_\\L\=
+\1(\\2)/" "$f"
+>   sed -i~ -e "s/set_bit(DEV_FLAG_\([^,]*\), \(.*\)\.flags)/dev_set_\\L\\1=
+(\\2)/" "$f"
+>   sed -i~ -e "s/clear_bit(DEV_FLAG_\([^,]*\), \&\(.*\)->flags)/dev_clear_=
+\\L\\1(\\2)/" "$f"
+>   sed -i~ -e "s/clear_bit(DEV_FLAG_\([^,]*\), \(.*\)\.flags)/dev_clear_\\=
+L\\1(\\2)/" "$f"
+>   sed -i~ -e "s/assign_bit(DEV_FLAG_\([^,]*\), \&\(.*\)->flags, \(.*\))/d=
+ev_assign_\\L\\1(\\2, \\3)/" "$f"
+>   sed -i~ -e "s/assign_bit(DEV_FLAG_\([^,]*\), \(.*\)\.flags, \(.*\))/dev=
+_assign_\\L\\1(\\2, \\3)/" "$f"
+> done
+>
+> ...and then did a few manual touchups for spacing.
+>
+> NOTE: one potentially "controversial" choice I made in some patches
+> was to always reserve a flag ID even if a flag is only used under
+> certain CONFIG_ settings. This is a change from how things were
+> before. Keeping the numbering consistent and allowing easy
+> compile-testing of both CONFIG settings seemed worth it, especially
+> since it won't take up any extra space until we've added a lot more
+> flags.
+>
+> I only marked the first patch as a "Fix" since it is the only one
+> fixing observed problems. Other patches could be considered fixes too
+> if folks want.
+>
+> I tested the first patch in the series backported to kernel 6.6 on the
+> Pixel phone that was experiencing the race. I added extra printouts to
+> make sure that the problem was hitting / addressed. The rest of the
+> patches are tested with allmodconfig with arm32, arm64, ppc, and
+> x86. I boot tested on an arm64 Chromebook running mainline.
+>
+> Changes in v4:
+> - Use accessor functions for flags
+>
+> Changes in v3:
+> - Use a new "flags" bitfield
+> - Add missing \n in probe error message
+>
+> Changes in v2:
+> - Instead of adjusting the ordering, use "ready_to_probe" flag
+>
+> Douglas Anderson (9):
+>   driver core: Don't let a device probe until it's ready
+>   driver core: Replace dev->can_match with dev_can_match()
+>   driver core: Replace dev->dma_iommu with dev_dma_iommu()
+>   driver core: Replace dev->dma_skip_sync with dev_dma_skip_sync()
+>   driver core: Replace dev->dma_ops_bypass with dev_dma_ops_bypass()
+>   driver core: Replace dev->state_synced with dev_state_synced()
+>   driver core: Replace dev->dma_coherent with dev_dma_coherent()
+>   driver core: Replace dev->of_node_reused with dev_of_node_reused()
+>   driver core: Replace dev->offline + ->offline_disabled with accessors
+>
+>  arch/arc/mm/dma.c                             |   4 +-
+>  arch/arm/mach-highbank/highbank.c             |   2 +-
+>  arch/arm/mach-mvebu/coherency.c               |   2 +-
+>  arch/arm/mm/dma-mapping-nommu.c               |   4 +-
+>  arch/arm/mm/dma-mapping.c                     |  28 ++--
+>  arch/arm64/kernel/cpufeature.c                |   2 +-
+>  arch/arm64/mm/dma-mapping.c                   |   2 +-
+>  arch/mips/mm/dma-noncoherent.c                |   2 +-
+>  arch/powerpc/kernel/dma-iommu.c               |   8 +-
+>  .../platforms/pseries/hotplug-memory.c        |   4 +-
+>  arch/riscv/mm/dma-noncoherent.c               |   2 +-
+>  drivers/acpi/scan.c                           |   2 +-
+>  drivers/base/core.c                           |  53 +++++---
+>  drivers/base/cpu.c                            |   4 +-
+>  drivers/base/dd.c                             |  28 ++--
+>  drivers/base/memory.c                         |   2 +-
+>  drivers/base/pinctrl.c                        |   2 +-
+>  drivers/base/platform.c                       |   2 +-
+>  drivers/dma/ti/k3-udma-glue.c                 |   6 +-
+>  drivers/dma/ti/k3-udma.c                      |   6 +-
+>  drivers/iommu/dma-iommu.c                     |   9 +-
+>  drivers/iommu/iommu.c                         |   5 +-
+>  drivers/net/pcs/pcs-xpcs-plat.c               |   2 +-
+>  drivers/of/device.c                           |   6 +-
+>  drivers/pci/of.c                              |   2 +-
+>  drivers/pci/pwrctrl/core.c                    |   2 +-
+>  drivers/regulator/bq257xx-regulator.c         |   2 +-
+>  drivers/regulator/rk808-regulator.c           |   2 +-
+>  drivers/tty/serial/serial_base_bus.c          |   2 +-
+>  drivers/usb/gadget/udc/aspeed-vhub/dev.c      |   2 +-
+>  include/linux/device.h                        | 120 ++++++++++++------
+>  include/linux/dma-map-ops.h                   |   6 +-
+>  include/linux/dma-mapping.h                   |   2 +-
+>  include/linux/iommu-dma.h                     |   3 +-
+>  kernel/cpu.c                                  |   4 +-
+>  kernel/dma/mapping.c                          |  12 +-
+>  mm/hmm.c                                      |   2 +-
+>  37 files changed, 206 insertions(+), 142 deletions(-)
+>
+> --
 
-Thanks for the work! Due to some recently merged patches, this series (Patch 1)
-doesn't apply on top of pci/controller/dwc-imx6 branch. Please rebase and
-resend!
+For the whole set
 
-- Mani
-
-> [1] https://lore.kernel.org/all/20260318062916.2747472-1-sherry.sun@nxp.com/
-> 
-> Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
-> ---
-> Changes in V2:
-> 1. After commit 2d8c5098b847 ("PCI/pwrctrl: Do not power off on pwrctrl
->    device removal"), the pwrctrl drivers no longer power off devices
->    during removal. Update pci-imx6 driver's shutdown callback in patch#1
->    to explicitly call pci_pwrctrl_power_off_devices() before 
->    pci_pwrctrl_destroy_devices() to ensure devices are properly powered
->    off.
-> ---
-> 
-> Sherry Sun (8):
->   PCI: imx6: Integrate new pwrctrl API for pci-imx6
->   arm: dts: imx6qdl-sabresd: Move power supply property to Root Port
->     node
->   arm: dts: imx6sx-sdb: Move power supply property to Root Port node
->   arm64: dts: imx8mm-evk: Move power supply property to Root Port node
->   arm64: dts: imx8mp-evk: Move power supply properties to Root Port node
->   arm64: dts: imx8mq-evk: Move power supply properties to Root Port node
->   arm64: dts: imx8dxl/qm/qxp: Move power supply properties to Root Port
->     node
->   arm64: dts: imx95: Move power supply properties to Root Port node
-> 
->  .../arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi |  2 +-
->  arch/arm/boot/dts/nxp/imx/imx6sx-sdb.dtsi     |  2 +-
->  arch/arm64/boot/dts/freescale/imx8dxl-evk.dts |  4 ++--
->  arch/arm64/boot/dts/freescale/imx8mm-evk.dtsi |  2 +-
->  arch/arm64/boot/dts/freescale/imx8mp-evk.dts  |  4 ++--
->  arch/arm64/boot/dts/freescale/imx8mq-evk.dts  |  4 ++--
->  arch/arm64/boot/dts/freescale/imx8qm-mek.dts  |  4 ++--
->  arch/arm64/boot/dts/freescale/imx8qxp-mek.dts |  4 ++--
->  .../boot/dts/freescale/imx95-15x15-evk.dts    |  4 ++--
->  .../boot/dts/freescale/imx95-19x19-evk.dts    |  8 +++----
->  drivers/pci/controller/dwc/Kconfig            |  1 +
->  drivers/pci/controller/dwc/pci-imx6.c         | 24 ++++++++++++++++++-
->  12 files changed, 43 insertions(+), 20 deletions(-)
-> 
-> -- 
-> 2.37.1
-> 
-
--- 
-மணிவண்ணன் சதாசிவம்
+Reviewed-by: Rafael J. Wysocki (Intel) <rafael@kernel.org>
