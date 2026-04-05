@@ -1,249 +1,97 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AD14625
-	for <linux-pci@vger.kernel.org>; Sun,  5 Apr 2026 08:01:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 250AC340DB8;
+	Sun,  5 Apr 2026 08:02:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775376063; cv=none; b=f2g2CzRO3ssvtGc2giTW6hkdRiM9285TfHa0rI4wGldGWOf+kR4DZQK9EMbqUauTe1NaKpUAwCc1Phzmm5nbWCsjUoNIXf4PejKQdNm72e0RSnw8UJIwOfWdgv9But4nuINcBpiU3c3befyIE7oGTB3HluMRrGv9x5Fw4B7RVFk=
+	t=1775376176; cv=none; b=LyDFq7A086LNaFtFDOXLzhZ8R6gA1vhcG4kwexq9dZSNAsl1SHs8kd0EHutDL6GodBz+KsE7hSGXBv96rPRs6vW0WK4j/BndINHg6Y199X0w2fjLJCYOzgw/Ykaj4uyDT64DBjLhjJB+NKscxLmvo3Q5Uc9zWpv6f3wfIqlsoCM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775376063; c=relaxed/simple;
-	bh=zSgDUJJQ/2Wq0HtZ088oKxzGuWAAzyJwgL5w54myu9A=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=KjO+pXSRpd6yNu0zy/cPXBEyYtyQKobowauI+Co4NGazjYp2ovxOBBaXtoobNloHGCdDbhcM9YfFn+l/ZMOxam85R2abhPLDlIHBnQpurUmC4t/uUJDjmmAT5YHsiKYCbpzVeQN8HkARSacfAv2O0dqkZj0mU/GYK4SC006jXhM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OUTZPp21; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OUTZPp21"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775376062; x=1806912062;
-  h=date:from:to:cc:subject:message-id;
-  bh=zSgDUJJQ/2Wq0HtZ088oKxzGuWAAzyJwgL5w54myu9A=;
-  b=OUTZPp21assVqJvv//tG1HcVHjfT/nHB06cZDLI9L74u6WipM4THXRn1
-   aHBeFqVWc8Soog67jcRwxV8mJ05PBPPiGYGmbtaO/LVkH4Wpst0D0WVNf
-   x5DVUWWEMSNd2NYg7d3Xo/Pu2qeyUUXQst7kR4WMnR1PwBHY2i8jYHNEW
-   ImLGMRViWs3Y92+oYHA32xha8XTf4fNgDYr9IcKfxuCJ2wNfWSlDg3VSa
-   nr4u2VrR3jc4yxuN/4UAsTq+uAnMPjwl5R8Ahcc+8TuphGEBKRAf+Wm5e
-   pYLRfTqnOQlTSVUXab+slWMDJH6EelhZ8B034wY8a5u22jOWfqbMxUpuT
-   g==;
-X-CSE-ConnectionGUID: D3vuUlKbSEKLeGqY042xwA==
-X-CSE-MsgGUID: Tb4WCQUjQk6gtt2Gr3RN6g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11749"; a="101827166"
-X-IronPort-AV: E=Sophos;i="6.23,161,1770624000"; 
-   d="scan'208";a="101827166"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2026 01:01:01 -0700
-X-CSE-ConnectionGUID: 5/obRTr0SDaDFEamqADwSQ==
-X-CSE-MsgGUID: TYJmONcIT5iUAw8+t1gTkA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,161,1770624000"; 
-   d="scan'208";a="250723856"
-Received: from lkp-server01.sh.intel.com (HELO 3afb7d003cac) ([10.239.97.150])
-  by fmviesa002.fm.intel.com with ESMTP; 05 Apr 2026 01:01:00 -0700
-Received: from kbuild by 3afb7d003cac with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1w9IPh-000000001yX-2aaA;
-	Sun, 05 Apr 2026 08:00:57 +0000
-Date: Sun, 05 Apr 2026 16:00:32 +0800
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/mediatek-gen3] BUILD SUCCESS
- 5573c44cb3fd01a9f62d569ae9ac870ef5f0e0ba
-Message-ID: <202604051623.ZNchlTge-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	s=arc-20240116; t=1775376176; c=relaxed/simple;
+	bh=qHkqTHtiiUhYv5EJ13SgSzGtKIR7zctCY+vWkvIRuoU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=llgGcr8FcsYBd+zBBPX1JkDfyeLgj2qCsD7JF7f75Sco/ZE3sE9OS3RoWISk/Mz7X+uTHfhZnXPX9l9He66O+fhs4MCDZKB4M3STZGxlV9YJZQ653KGBCxFAqGqbl5ied7iAlowM3qSmh1si2+sGedbf5Zn2WMFIZCR+q+fqSbc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id 636CC10606;
+	Sun, 05 Apr 2026 10:02:46 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 5A388602D63A; Sun,  5 Apr 2026 10:02:46 +0200 (CEST)
+Date: Sun, 5 Apr 2026 10:02:46 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	manivannan.sadhasivam@oss.qualcomm.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: Fix NULL pointer access in
+ pci_store_saved_state()
+Message-ID: <adIXJvrV1VRunFOu@wunner.de>
+References: <20260404-fix_pci_access-v1-0-416f32c6f7ec@oss.qualcomm.com>
+ <20260404-fix_pci_access-v1-2-416f32c6f7ec@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260404-fix_pci_access-v1-2-416f32c6f7ec@oss.qualcomm.com>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/mediatek-gen3
-branch HEAD: 5573c44cb3fd01a9f62d569ae9ac870ef5f0e0ba  PCI: mediatek-gen3: Prevent leaking IRQ domains when IRQ not found
+On Sat, Apr 04, 2026 at 02:23:00PM +0530, Krishna Chaitanya Chundru wrote:
+> If the PCIe link goes down while pci_save_state() is in progress, reads
+> from the device configuration space may return invalid values(all 0xF's).
 
-elapsed time: 739m
+That should be harmless.  If the link goes down, the device should
+subsequently be de-enumerated by the hotplug driver.  If we save
+some bogus data before de-enumerating it, so be it.
 
-configs tested: 172
-configs skipped: 6
+If the port above is not hotplug-capable, manual intervention is
+required for remove/rescan, but that's orthogonal to this problem.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+> One example is, while saving VC extended capability save path
+> (pci_save_vc_state() / pci_vc_do_save_buffer()) then interprets all-1s
+> capability fields as valid and ends up writing far beyond the allocated
+> pci_cap_saved_state buffer, corrupting the pci_dev->saved_cap_space list.
 
-tested configs:
-alpha                             allnoconfig    gcc-15.2.0
-alpha                            allyesconfig    gcc-15.2.0
-alpha                               defconfig    gcc-15.2.0
-arc                              allmodconfig    clang-16
-arc                               allnoconfig    gcc-15.2.0
-arc                              allyesconfig    clang-23
-arc                                 defconfig    gcc-15.2.0
-arc                   randconfig-001-20260405    clang-23
-arc                   randconfig-002-20260405    clang-23
-arm                               allnoconfig    gcc-15.2.0
-arm                              allyesconfig    clang-16
-arm                                 defconfig    gcc-15.2.0
-arm                   randconfig-001-20260405    clang-23
-arm                   randconfig-002-20260405    clang-23
-arm                   randconfig-003-20260405    clang-23
-arm                   randconfig-004-20260405    clang-23
-arm                        realview_defconfig    clang-16
-arm                         socfpga_defconfig    gcc-15.2.0
-arm64                            allmodconfig    clang-23
-arm64                             allnoconfig    gcc-15.2.0
-arm64                               defconfig    gcc-15.2.0
-arm64                 randconfig-001-20260405    gcc-9.5.0
-arm64                 randconfig-002-20260405    gcc-9.5.0
-arm64                 randconfig-003-20260405    gcc-9.5.0
-arm64                 randconfig-004-20260405    gcc-9.5.0
-csky                             allmodconfig    gcc-15.2.0
-csky                              allnoconfig    gcc-15.2.0
-csky                                defconfig    gcc-15.2.0
-csky                  randconfig-001-20260405    gcc-9.5.0
-csky                  randconfig-002-20260405    gcc-9.5.0
-hexagon                          allmodconfig    gcc-15.2.0
-hexagon                           allnoconfig    gcc-15.2.0
-hexagon                             defconfig    gcc-15.2.0
-hexagon               randconfig-001-20260405    clang-23
-hexagon               randconfig-002-20260405    clang-23
-i386                             allmodconfig    clang-20
-i386                              allnoconfig    gcc-15.2.0
-i386                             allyesconfig    clang-20
-i386        buildonly-randconfig-001-20260405    gcc-14
-i386        buildonly-randconfig-002-20260405    gcc-14
-i386        buildonly-randconfig-003-20260405    gcc-14
-i386        buildonly-randconfig-004-20260405    gcc-14
-i386        buildonly-randconfig-005-20260405    gcc-14
-i386        buildonly-randconfig-006-20260405    gcc-14
-i386                                defconfig    gcc-15.2.0
-i386                  randconfig-001-20260405    gcc-14
-i386                  randconfig-002-20260405    gcc-14
-i386                  randconfig-003-20260405    gcc-14
-i386                  randconfig-004-20260405    gcc-14
-i386                  randconfig-005-20260405    gcc-14
-i386                  randconfig-006-20260405    gcc-14
-i386                  randconfig-007-20260405    gcc-14
-i386                  randconfig-011-20260405    gcc-14
-i386                  randconfig-012-20260405    gcc-14
-i386                  randconfig-013-20260405    gcc-14
-i386                  randconfig-014-20260405    gcc-14
-i386                  randconfig-015-20260405    gcc-14
-i386                  randconfig-016-20260405    gcc-14
-i386                  randconfig-017-20260405    gcc-14
-loongarch                        allmodconfig    clang-23
-loongarch                         allnoconfig    gcc-15.2.0
-loongarch                           defconfig    clang-19
-loongarch             randconfig-001-20260405    clang-23
-loongarch             randconfig-002-20260405    clang-23
-m68k                             allmodconfig    gcc-15.2.0
-m68k                              allnoconfig    gcc-15.2.0
-m68k                             allyesconfig    clang-16
-m68k                                defconfig    clang-19
-microblaze                        allnoconfig    gcc-15.2.0
-microblaze                       allyesconfig    gcc-15.2.0
-microblaze                          defconfig    clang-19
-mips                             allmodconfig    gcc-15.2.0
-mips                              allnoconfig    gcc-15.2.0
-mips                             allyesconfig    gcc-15.2.0
-nios2                            allmodconfig    clang-23
-nios2                             allnoconfig    clang-23
-nios2                               defconfig    clang-19
-nios2                 randconfig-001-20260405    clang-23
-nios2                 randconfig-002-20260405    clang-23
-openrisc                         allmodconfig    clang-23
-openrisc                          allnoconfig    clang-23
-openrisc                            defconfig    gcc-15.2.0
-parisc                           allmodconfig    gcc-15.2.0
-parisc                            allnoconfig    clang-23
-parisc                           allyesconfig    clang-19
-parisc                              defconfig    gcc-15.2.0
-parisc                randconfig-001-20260405    gcc-10.5.0
-parisc                randconfig-002-20260405    gcc-10.5.0
-parisc64                            defconfig    clang-19
-powerpc                          allmodconfig    gcc-15.2.0
-powerpc                           allnoconfig    clang-23
-powerpc                 mpc837x_rdb_defconfig    gcc-15.2.0
-powerpc               randconfig-001-20260405    gcc-10.5.0
-powerpc               randconfig-002-20260405    gcc-10.5.0
-powerpc64             randconfig-001-20260405    gcc-10.5.0
-powerpc64             randconfig-002-20260405    gcc-10.5.0
-riscv                            allmodconfig    clang-23
-riscv                             allnoconfig    clang-23
-riscv                            allyesconfig    clang-16
-riscv                               defconfig    gcc-15.2.0
-riscv                 randconfig-001-20260405    clang-23
-riscv                 randconfig-002-20260405    clang-23
-s390                             allmodconfig    clang-19
-s390                              allnoconfig    clang-23
-s390                             allyesconfig    gcc-15.2.0
-s390                                defconfig    gcc-15.2.0
-s390                  randconfig-001-20260405    clang-23
-s390                  randconfig-002-20260405    clang-23
-sh                               allmodconfig    gcc-15.2.0
-sh                                allnoconfig    clang-23
-sh                               allyesconfig    clang-19
-sh                                  defconfig    gcc-14
-sh                             espt_defconfig    gcc-15.2.0
-sh                    randconfig-001-20260405    clang-23
-sh                    randconfig-002-20260405    clang-23
-sh                        sh7757lcr_defconfig    gcc-15.2.0
-sparc                             allnoconfig    clang-23
-sparc                               defconfig    gcc-15.2.0
-sparc                 randconfig-001-20260405    clang-23
-sparc                 randconfig-002-20260405    clang-23
-sparc64                          allmodconfig    clang-23
-sparc64                             defconfig    gcc-14
-sparc64               randconfig-001-20260405    clang-23
-sparc64               randconfig-002-20260405    clang-23
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-23
-um                               allyesconfig    gcc-15.2.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20260405    clang-23
-um                    randconfig-002-20260405    clang-23
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-20
-x86_64                            allnoconfig    clang-23
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20260405    gcc-14
-x86_64      buildonly-randconfig-002-20260405    gcc-14
-x86_64      buildonly-randconfig-003-20260405    gcc-14
-x86_64      buildonly-randconfig-004-20260405    gcc-14
-x86_64      buildonly-randconfig-005-20260405    gcc-14
-x86_64      buildonly-randconfig-006-20260405    gcc-14
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-20
-x86_64                randconfig-001-20260405    clang-20
-x86_64                randconfig-002-20260405    clang-20
-x86_64                randconfig-003-20260405    clang-20
-x86_64                randconfig-004-20260405    clang-20
-x86_64                randconfig-005-20260405    clang-20
-x86_64                randconfig-006-20260405    clang-20
-x86_64                randconfig-011-20260405    gcc-14
-x86_64                randconfig-012-20260405    gcc-14
-x86_64                randconfig-013-20260405    gcc-14
-x86_64                randconfig-014-20260405    gcc-14
-x86_64                randconfig-015-20260405    gcc-14
-x86_64                randconfig-016-20260405    gcc-14
-x86_64                randconfig-071-20260405    gcc-14
-x86_64                randconfig-072-20260405    gcc-14
-x86_64                randconfig-073-20260405    gcc-14
-x86_64                randconfig-074-20260405    gcc-14
-x86_64                randconfig-075-20260405    gcc-14
-x86_64                randconfig-076-20260405    gcc-14
-x86_64                               rhel-9.4    clang-20
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-20
-x86_64                    rhel-9.4-kselftests    clang-20
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    clang-23
-xtensa                           allyesconfig    clang-23
-xtensa                randconfig-001-20260405    clang-23
-xtensa                randconfig-002-20260405    clang-23
+I'm not familiar with drivers/pci/vc.c, but it seems it takes a size
+read from config space and uses it to write to a particular memory
+area?  That feels totally wrong, at the very least there should be
+a check for PCI_POSSIBLE_ERROR().
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+> The link state check here is racy since the link may transition at any
+> time. This is a best-effort attempt to avoid saving PCI state when the
+> link is already down.
+
+No, please validate values read from config space with
+PCI_POSSIBLE_ERROR() before using them to access memory at
+a location that may be out-of-bounds.  Or cache the size on
+enumeration and avoid re-reading it upon pci_save_state().
+
+> +	/*
+> +	 * The link state check here is racy since the link may transition at
+> +	 * any time. This is a best-effort attempt to avoid saving PCI state
+> +	 * when the link is already down.
+> +	 */
+> +	if (!pcie_link_is_active(dev)) {
+> +		dev->state_saved = false;
+> +		return NULL;
+> +	}
+
+The state_saved flag is only used by PM code to determine whether
+the driver called pci_save_state().  If it didn't, the PCI core
+will make up for it by calling pci_save_state().
+
+The state_saved flag is *not* an indication whether the saved state
+is usable and code outside power management has no business changing
+the flag's value.
+
+Thanks,
+
+Lukas
