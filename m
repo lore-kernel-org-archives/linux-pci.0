@@ -1,311 +1,184 @@
-Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazolkn19012016.outbound.protection.outlook.com [52.103.11.16])
+Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020098.outbound.protection.outlook.com [52.101.196.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E25BA19C556;
-	Sun,  5 Apr 2026 23:15:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.11.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E50AF353EDF;
+	Sun,  5 Apr 2026 23:21:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.98
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775430911; cv=fail; b=YgaUZrGsoYWxVvvXrsEJBqvhx1YeX1p618zuX82BwLXqnBCjmHN1VQzmLLS9SO+qcRm8cENp6Ydj/BAsqw19Y8VDj2ENyufy0F3E8lMV67xf5UTkyMB4JIdOUc/OOZ7cwufd4I22gY3lqxHG/G3jYs1D7t2/xuPmB1e4mXbDvag=
+	t=1775431293; cv=fail; b=Wicoe5DL6gOiwOA2ZxMOhWj4Q894yBy/sgJD2AdN5kUUfFi1zhGZ01RApmF3i1zghnsK4Qd/a/nxjRBcySXAIxvZQLHihR3EV40BUt0ME8wEG3KHTeu8qvkddbklHkljSw+79q6bcCtD+LQKyXb/1hM5t/KKQ/aQD6IM1sbsH20=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775430911; c=relaxed/simple;
-	bh=V5ZPWcIfabG5P9/GKCQxv6P63aT2TH0cfV8cykd7qQs=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=t2uD0LgFFgEozN8aEYl0Xw6L23uEUKzzHah1NBRvFWnFHoap1ejFQP2ck0KUBuv5aRd4u8n7N4Gpe7Hpr3IOBG6Cqmz8svHr/KN0sl6NYk7zkxDjx+Uuo552YDpNOeDmVkZKphybXI13DW4FNu3XCD4xW71mvyfbQ+jBa2iOhqI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=CtW8SRh7; arc=fail smtp.client-ip=52.103.11.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	s=arc-20240116; t=1775431293; c=relaxed/simple;
+	bh=+zOah+eH8bQTV6F+/8XBWsk9uLi52RBA3N35rNAgOOA=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=JMvKrjJUUHbAkUWCaQJDKXmWX34uj8Bb8F3Us6tbePyPxzkX7q9opZITeimmJByD5FEzuY8op5oXgasw3rQaIbbP850HJyhO8wS8Rg8tnfuspzXvA/7aPqd9fPHUQyQ5p9ecDBkxYilAox3fKarQFcdNO+UNCseKHJBPsY8wP7Y=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=HeUXbW8y; arc=fail smtp.client-ip=52.101.196.98
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="CtW8SRh7"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="HeUXbW8y"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=I3HokQUaUOwanDkViONDNEsz1RZRmmYo7Abu8fjR5j9J5+DhtbHwX0ippdIyzTPer8VFbH62sns2E6Ft3s0cLaWUs8pMrkU0xRNeEaaFVU4CzPa6TFLGLwzYjo5iJr9/9d9u+BxRokCBm42lHqTz7tzAu/E1qLn/83sx0LKdVHatQZqP5h30ZXaWdicqjMV/1uOGL1cLp3m0FPTr4SXxYpL/P+ZX4CbyFlOKlcyXdE99BID3NyvjlxGRmuq7NYrbnAANoNtwNSThbm8EQxsKjTUAo2jDc3F+9GLC7hRM7cHoLplt3YZYYaXkcr3rTCurueE4nLp2A63ACCZ2dNd4DA==
+ b=m+ItvPXigNcbOwlPp3YG/G4Ja4PdpN/3/zwdJdKZFytJJZbqcfPdRwKPR4DgsTJRRvSIgRVnfgb/FEjCvYZknesPiGP4sXPd7d/On9RNUR5UhCEad2+hvOVNpTYeKhQWsUjI0l/RZGwmJg6I2F0GzebzCZ64W3KRKDeC6u4zXv9LjEt5OMxOJlb/bBdKmUGA+/k6DbpQuiItWBvASFzWLwSghbOotvU/42GQeJOE4phmD8ABIfB7eXweitZYeLC9MZtcg2oxpqTvqV6PyauL7J8v9bn4JlA58zh4IVGNKVrC4NfgJdgY4mQuy75ie8nWoS1tQUt4KDHFQRkzepoSLQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=vgNDf+I1Z2WIBhCFJJ7k0T6uMHaFxkknv+oW+LyPJTk=;
- b=DoA9n85c+o4zkEmFUqOx0X+UEzuQdVcjoM2AmH1hXkvsia82wMD6lt2kIj3NpuX338VrnMuwu5jKoPshAgdibWtKWVGFtOMDEk2ANiqar1u84cQGyKkbE5BkrE9zSPohTBlA7OdSVM0MFfWiZXCKDO7BY5lO3o3B/1coddSHxrreVeccJeBIJVTf1tACmw8C+0z+rw4/dy6ooLQMhrG6wQk71RfMIIomDbvYeMHeT6tRQfvD5DsS/v7OuHopngU1TRl1yQfXIkW6izmHOdbGx4bh5n0ceR59UU2wp5QykqIBGDD8I/UQnQRhgSQuQYzlTy/6/NkhCTUVzEjDCTUQFg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ bh=+zOah+eH8bQTV6F+/8XBWsk9uLi52RBA3N35rNAgOOA=;
+ b=AuC/WgcqT30E41fZx3+EDCGEFxdnPfj41+UsXUHQD36Jj3K9qNwgVaQSSsT0WLX5gddarLk/QhY2/Mi4cPLZFJS3J/wEkWqYQmIz9YzGW06QKcW32xqaJrWJ94OMl3YxywR/urFpvJfpZNBe/HMGbN7wEos2AcbTmt91DrBjrYcTOx+irOlP8JKmAZwiTWc/opsVqxhD+BtEwDYhcjHHy3Z7exVVggpCYjAU2uwmegyMgHONc9vQ/jdNkc+AuGdfhFgH3z6KsBYg6X+ksSlgAuwuy38txtxFE/vCeaZk3fs2DRD6zzTKe78hAbnW1VTrVPwqFXihmirGUL7ICQdUHQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vgNDf+I1Z2WIBhCFJJ7k0T6uMHaFxkknv+oW+LyPJTk=;
- b=CtW8SRh7yyv0xxWlOx/vkaSHlRuQsD9Eo2ivprdurWHewEhvY1Qq+0EKxINwiEFzPtNsRM81KlkCmIj5MCNzjIX/NrSM09GnNWtVXSSlCItMp+kdoo4SuYYjyu2vxkvHA4RzR6WbUatvy/3y5Y59t7xz98uOaQrBaxt4QMgSyn/C3YigeRy1bXpv4IJ1ZozIZU5Jb9zWyYNwJ+hzVDHR9vFP+awxP+6uCHRBIejmVQHy78d63jXr6QXGGJTX1cSNRObSr9NnUyPAgPKa58TuVbG80RTe+6FqJNp8IUPctC8O80Kbi25+e7F529VMtCAGH4BZcfHf+dRXTI/2zWoOQQ==
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
- by MW4PR02MB7201.namprd02.prod.outlook.com (2603:10b6:303:79::12) with
+ bh=+zOah+eH8bQTV6F+/8XBWsk9uLi52RBA3N35rNAgOOA=;
+ b=HeUXbW8yQDNv0Sb6r4rQPSNX/J63pFwimUXPoTmQGaHZNvirL5zIJBGFF385YizJ7r5iI1WoRHyDZglB7sHYrI62AvIKRouaCPKzhfvJVJFS1S6TKRgmxJ0mpJhCBAHH/C6cxBmlgwIJEj3fo2ypy79cZ1jxZBl40Ms8nWwf7xo=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
+ by LO2P265MB5602.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:25d::14) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.15; Sun, 5 Apr
- 2026 23:15:06 +0000
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6]) by SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6%6]) with mapi id 15.20.9769.014; Sun, 5 Apr 2026
- 23:15:06 +0000
-From: Michael Kelley <mhklinux@outlook.com>
-To: Dexuan Cui <decui@microsoft.com>, "kys@microsoft.com" <kys@microsoft.com>,
-	"haiyangz@microsoft.com" <haiyangz@microsoft.com>, "wei.liu@kernel.org"
-	<wei.liu@kernel.org>, "longli@microsoft.com" <longli@microsoft.com>,
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kwilczynski@kernel.org"
-	<kwilczynski@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "jakeo@microsoft.com" <jakeo@microsoft.com>,
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Michael Kelley
-	<mhklinux@outlook.com>, "matthew.ruffell@canonical.com"
-	<matthew.ruffell@canonical.com>, "kjlx@templeofstupid.com"
-	<kjlx@templeofstupid.com>
-CC: Krister Johansen <johansen@templeofstupid.com>, "stable@vger.kernel.org"
-	<stable@vger.kernel.org>
-Subject: RE: [PATCH v2] PCI: hv: Allocate MMIO from above 4GB for the config
- window
-Thread-Topic: [PATCH v2] PCI: hv: Allocate MMIO from above 4GB for the config
- window
-Thread-Index: AQHcwvqZ7/kLR2JkdUmudlv9HY41bLXRHh0Q
-Date: Sun, 5 Apr 2026 23:15:06 +0000
-Message-ID:
- <SN6PR02MB415794E53D2B621F6A8BA382D45CA@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <20260402234313.2490779-1-decui@microsoft.com>
-In-Reply-To: <20260402234313.2490779-1-decui@microsoft.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|MW4PR02MB7201:EE_
-x-ms-office365-filtering-correlation-id: 9b00ec4c-079a-4d86-cff7-08de93692cd7
-x-ms-exchange-slblob-mailprops:
- a+H6FLLcF3qkJ+BXrfQxbsvYfyGqqDaQfLt1XsgWV+VYRxlGxuY7P/VEnTL7SIjdWLLr6k70vhOP3MVz+9bro4eXwvKualWq/tHqVEfXPT145XnAB9k7OXtZokOG2m7FbavjB1PbW41jSBjo31XFzowrbQcLaJbQj9MYZRG+fcL/a9+4z3vjYuJHmZ+6CuI62zQf8wjNuGdRkQ38bRniEdJJsIORSF45v2hOO1fTM9fjFZzVhbX3jtnfsxGlRQfKLi9uH6OH0rcGjmJWu0LVZEJMKEZF32JlfK+zmx0moi2lsvdM35HN/znXlNQYeFFORI0/r5/9Wm+v3pnbdAUf8RH5Ms0ssFFfiJUpJSkGtlNUpQcYDwGz1+ipeldP27pchpAQulMV/P7wK3PuJuCMGsmDCsC8q1EFD1MxK0PhWARRGqHGurVRadhoSCd4lUHPdg4s8D41moJceZ0semOv+hsE9bQm2CcojwV/VnrRFdezg+wue718r0rYetsRDqIRZ/Uqw6sDowmHk4Ja/jgsfvj0rdM/BiVJzWuXO3URe63ji6q1Q7k1KlmjV5PaCQfotnFJ0cpCUtMQsEFdhLAO8h6LCTPGlqku7VezFiZmOv+7yvVzsZUMsd9+9Zxo/nx6P9lCVc9QggF2Yg9M79TMv6VRNw1HteP8nrc+WloRXxYt1y0oE0XiplPVuPDrOY1ah98uO4NrfdKiI4EpKR/ZpomFn4T4tWcqNNJiLeU6UBbSiuKx8/fbqVVIP/0atQf+U/R8Wj/X12GBx/R8UiKcJN9mZbbu7aih867tusDLpjAPECYS2WGLIZ0PJuHO+lhi
-x-microsoft-antispam:
- BCL:0;ARA:14566002|13091999003|19110799012|31061999003|8060799015|51005399006|461199028|41001999006|37011999003|8062599012|12121999013|15080799012|1602099012|40105399003|4302099013|3412199025|440099028|10035399007|102099032|26121999003|1710799026;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?BlVzv1QWiCUwk3Z4HpiHhwX2N6GQBzCQ8vehP8szvgq27zjonK+4HACDYOXT?=
- =?us-ascii?Q?0yiVPemM44mXCbbE7SJTeeL0vBe+kjNUrKIX3qtvHCtWb2D7zZJD41e70UX1?=
- =?us-ascii?Q?w67NNIx23fom8Nd19mC0RcaveZYq54ZbE108UIVJIKc7DWzoirCapDAjEK4Y?=
- =?us-ascii?Q?NXUoiygGNufkA5jzZZJR+4Z+zx+E/dELXIeDqi04Z1Wo9HRJL6NQo1H1cFPd?=
- =?us-ascii?Q?JIbI/7I5iBKc6NyDzfqIEZqb/oNAOB1eHL9+C5OQgZ/KroZdGXGZrORJ/1n4?=
- =?us-ascii?Q?/YULnEBQqqfewtZAoX08ipcIalENE8AMdxTlAfnY6iWYHeEtZer0Wu5UYEIu?=
- =?us-ascii?Q?PYVFEZsjqyvzahFSXoLSMvF8WkdJGKX7AvkQvNoh6vzrYJZxbPRKvMzbcDF9?=
- =?us-ascii?Q?UXakBzzUmTCkrr8Z+SHPqfq0A77C7n84JuH+8PXgHmGp8chYzbCyZkPehPqQ?=
- =?us-ascii?Q?ayeSIyDbYzVwP8g1CoWgAhMkPPZSGvsG35x4V74aKb/JiY8aD91PyVSk2ume?=
- =?us-ascii?Q?ZM/nznpiFwb5osYTYlEZlteaG15U2UDRdZzukVkZyC1BZRH0EuLDTZCohi8C?=
- =?us-ascii?Q?fyBeSYQS7Ld11pkWsuuTeW7vAM6K9IeQUWyT8jHtb7/8zXI5+mMbuL2PzyMb?=
- =?us-ascii?Q?R+42G2L5Jis9WJRdk47Y1ABGErNfHDW8jWdWPDyAD3zdhkLEUgW5Guy3hisj?=
- =?us-ascii?Q?qivBS35rMb0zKLQamHPBHXFjJWeT8J+0q1yXUVhUbcHXkxLHHmM+1vzeMhok?=
- =?us-ascii?Q?v0mVWoQIZyze2rbA77em+6KlynLI9LVuDLseg5VnMpjL4gWZiPfWHF+LcAUl?=
- =?us-ascii?Q?0jCPq5rmKaL2SGcJ4lCwfMRS+gtKfPCJ6M8lXRhaTTs+Slfs58YOyQmFLQzn?=
- =?us-ascii?Q?X2a1QHMSDtmfKJy6eB1TrIBZMfrkl5J0QFagUtE6ZOnUV/qwdSBV37Nir1cX?=
- =?us-ascii?Q?RIGhqVpW4J80t7Oeo//bUChwTX6N9EakJvq5v9Ui5OvANe26CwCdcMnPnSwY?=
- =?us-ascii?Q?+i5GBPuG3JgrQIUxSa+l99FuhuDTWncY5oXcG3cNz8USH5rwjtL0xRo1VqmK?=
- =?us-ascii?Q?zA1+LLoi8Ry548f32wfVNJnGZEcsl1p1YbcRZvyTYKrGbL7YhrJbSbUTB6+w?=
- =?us-ascii?Q?uVeiq964PpdW0enX55Q051jgeIQBBV701iLLLtppLQz7aqPcXH74Oxey2Szu?=
- =?us-ascii?Q?/WLSFPkKvDoHMsWV657+VdFM+q8ftDVk1rP7v7B/pEfIg1avw6MCvVS0NGU?=
- =?us-ascii?Q?=3D?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?N4OzXtG9glev0TJT1/xEG0uCxLsEUblYb+eNFhQIp9xs6z0V3BZXMO3aJQ+1?=
- =?us-ascii?Q?7k7756wnD+CSqpLoMr9hywjsSkdqUCVDx4/SdJKhDFQffko34+bD+ne/8uH6?=
- =?us-ascii?Q?UTvOrLHxDX3ndDzdVYcre07VXXIliZgkjv3P6kWswc5/sLjo7UVhHdkNiijC?=
- =?us-ascii?Q?r7gPQt094bWvKHOZazsJ9oQ3nLPUguTQRGtg80gYooBxpVmUGDzWuzIHUMVm?=
- =?us-ascii?Q?ljNKKFF0Fx4H6wxi+Vf6ISR3Zj2QqWwHpfEEAZau4KHcPWIPfqcA9VAKDGgM?=
- =?us-ascii?Q?By3i4GW0XO41+oVIJG/eMchG8M3FHgJMSbd6DyC4d6Jwtj7KpnqnCDFvwOOf?=
- =?us-ascii?Q?z7JpbZUzdQ/Hsg5LgxRTed/4S2CJXrvbspjlb0AqI23YlR3LaNoKX0+PD+Bn?=
- =?us-ascii?Q?k40ZR8HnuAj10G5vsRPJ4134T1l5XrArmB0YBGu8J72DLeVO/7Jae/jeZf+x?=
- =?us-ascii?Q?A3CTweYUGYMpn9UaqvtkDNFju87Fl5b6cA+5YMD8W4q5dHb45KYRflh15CB7?=
- =?us-ascii?Q?8TQKXuPMPn3ZkzJ/dFALwVc6jlMMdRIbgwoqTsRyMDBno2HANP3qrbhu3I5I?=
- =?us-ascii?Q?qSzm5hDdaZ/bcSq72KnAm3fPZJWQzbyliWGYNyb023j9+iQlHLyLZANo3kEa?=
- =?us-ascii?Q?BQC1e9+v4r5pSWf1X2nrJu3K7QNDbk8kaNhfGPiE9d0lGDLx61jQO+E1s1xr?=
- =?us-ascii?Q?uv2b+cabD3yIJkUwfUAXt+yDFljFAeTCqFQzh4sLpn+9gCbTlnGPmhIPh7gK?=
- =?us-ascii?Q?H7kMZ2JnJvRiBhltJ6hUA54KsgRRbhZ5RQIg47CH+CXxMeLJD5YfXiZyez2o?=
- =?us-ascii?Q?r2rRNqaSV65b4ghAoZOTMOZZhxS8et+nauSmZPThe9gtH4+t2oRtS6xsRaZF?=
- =?us-ascii?Q?MDevO+2pJegq+ovL4ert1Y6e9hsAFyeisCTLuL84OsjJKDUfJMus9WHaTjQf?=
- =?us-ascii?Q?RfuC0YQXEMpqWwT+LD5B4W7ORnL9tygsenX7T5Trsl1thh6wiesVSiMnwyQz?=
- =?us-ascii?Q?ZjMjo3jN43tzhJgcfPDLPsLqK6rzHsMF8SuFhfC8iev1KKb8/cBzAnNUBFwh?=
- =?us-ascii?Q?SjvfAJKxPGVHW6P6FJCPH4Kx/w90zkvEq32evox/I1Z1zrezQ7dAU2vGkCw0?=
- =?us-ascii?Q?inrlFj1GxUzmrfZ6Tgr7RyEtzn1IfydFL6TDWfCE4rLkkKDc8EPRqBAQopLQ?=
- =?us-ascii?Q?s6x+IuSHTLHoeO2RechXBdN7flqSFIjMvdf8ddVnUE5oMvPfNbUh02aRetY3?=
- =?us-ascii?Q?/7CkeaXr6ev2+GFNlDFZEwGvc03FbuWrxDOqsPcVsLa1OCguT5jr9KoG+SB2?=
- =?us-ascii?Q?eVI4kWIqPA05evWYo+gUTIuukzezc8EArgcAIke4lC2mFNNZi8qHCcbD+Kae?=
- =?us-ascii?Q?p0cK7CE=3D?=
-Content-Type: text/plain; charset="us-ascii"
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.17; Sun, 5 Apr
+ 2026 23:21:29 +0000
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.20.9769.016; Sun, 5 Apr 2026
+ 23:21:29 +0000
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 06 Apr 2026 00:21:29 +0100
+Message-Id: <DHLLV6ER6L2T.JF2CXDXSFJX7@garyguo.net>
+Cc: "Gary Guo" <gary@garyguo.net>, "Miguel Ojeda" <ojeda@kernel.org>, "Boqun
+ Feng" <boqun@kernel.org>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
+ <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Andreas
+ Hindborg" <a.hindborg@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>,
+ "Trevor Gross" <tmgross@umich.edu>, "Danilo Krummrich" <dakr@kernel.org>,
+ "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, "Daniel Almeida" <daniel.almeida@collabora.com>,
+ "Bjorn Helgaas" <bhelgaas@google.com>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ <rust-for-linux@vger.kernel.org>, <driver-core@lists.linux.dev>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/8] rust: io: generalize `Mmio` to arbitrary type
+From: "Gary Guo" <gary@garyguo.net>
+To: "Alexandre Courbot" <acourbot@nvidia.com>, "Gary Guo" <gary@kernel.org>
+X-Mailer: aerc 0.21.0
+References: <20260323153807.1360705-1-gary@kernel.org>
+ <20260323153807.1360705-3-gary@kernel.org>
+ <DHLB3RO3OSF5.2R7F27U99BKLN@nvidia.com>
+In-Reply-To: <DHLB3RO3OSF5.2R7F27U99BKLN@nvidia.com>
+X-ClientProxiedBy: LO4P265CA0192.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:311::20) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO2P265MB5602:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5a01c771-98a6-4331-a9e8-08de936a111e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|10070799003|376014|1800799024|7416014|56012099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	x+z+pEaJVq+NQj32ZNO9bWS1xPil5/zWkYFbB6mOIeqE7QM4w2GYozle4M0gqs4dmvGa2+OV6Pf+UUavSVB7KHezQWUDG7rZ8i8qR34vwhY3Rf59JVqWYnJzctI1v9NBgIILmxZCcyRT8xfVa3RhZ4OVwVvr9VvzyfT//SQ52shW1fwEP7XV2obwZ05tGJNpA/bL3NXPEId3wfs0oe5TjjBMYOHbr1QTIGcdN/yxbs6Jx54u/MIwfrm44hJKpTlVAD3xiMkKGI3VLSBjLUqQ2ssSjhR1fRwqFhw+2U2LAqcl1J8rh2x1ovwrLIlc9mdtzE5RleNKS5cJsELw9flCZEXcOfMU/BjH2kyLRhn7Ims+Ipu+8yFUMQ7IKjpj6UIaod1I+OPE6u+OJSzY9IjQgFY2uuBtQV0RTxSCM6ZAlezNLjAvXKhxJaOukWxOFXK7UZiwUg7Gz0QVT6HtoHr54nwra1WWbdYEdxeFQCc/c4xcQe3vU+PvTENfp0CgOK3FPkx7YyGeveBK1REr/9ek7Ftrf4U7HLdasUmK3x7BNbLIykgXvdA8GAYtrhzUoC+H12YCItoMV8Mtmv+TbA2VeZLP5gUPNdho6CE3scIgL0kIunKlArOYJ6iq3kvD4WP72q/2tsw9BA/L25mqeORk9f+DDzGdU5toyMMAZWMegoOolE1YUe21t9HSivlsrtRwAcqFMfLXyKbimdhBX9mLVS1HtL31deRJCbQM1Smi978=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(10070799003)(376014)(1800799024)(7416014)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?QThKS3kwa1dVVDByYlc4elo4Ym55ZHVobGZVQ01ScWpBZko4NjJvYkJhUUlx?=
+ =?utf-8?B?VHIvNGlpSCtTS3krckxCeUpLZ1NIeHJtTDJmU0xTTmoxLzZPb3hmTHpWUHNo?=
+ =?utf-8?B?Z1Z3SkxLbG5zSTMxZHcyZVI0Mzl1ek9DaWM1VGorOUFaUVl4MUJ5QXp5SjVC?=
+ =?utf-8?B?Q3prTkV6R1ZNcWdsR2MrRjJ2bWl0TVRlNllJYXBQeXA2YTZKcHlIVEd5blR4?=
+ =?utf-8?B?L3E1NzFEQU4xa3hYdjlRVlR0RlZpbnlEY3FEb0hqT3d3cjZ0UlN1ckdoUXlu?=
+ =?utf-8?B?T21EdzhqcDU2dE5NK1BCTlJOcHlSZVhGNkdPRWJrQWdGUUVobmxpOUQreXFk?=
+ =?utf-8?B?VG9Rb1ZLSGNVNlVqakRDMUYrSmJ4K0dvaHJMTEx3dlRuT3V5cmRKSzFHUmNY?=
+ =?utf-8?B?QS9OUWwxd01Ha3lyeld5NDREcC9iL0IwYU5LRmFlNURZUDJDMyswd0FlaVUz?=
+ =?utf-8?B?ckh1TEJvU0pZMHQxSmtTZ3JpeSthVlA1ZlN3L0xMM0VPYlZsQzRLNGJ1RGZC?=
+ =?utf-8?B?TkxoeUlyWHRYQm83VlZlK1FLQXpVK0R0aTBhS0F5eXU5eldqMHNtQTlNSGcz?=
+ =?utf-8?B?d2xDVlQvTFVyRXh4M2FqRlFTMXNUQWdGWkdlUDgyTTcyalBuTWhjWS8yd0k1?=
+ =?utf-8?B?Qkh0SXJBU2grMUZqV1oyTWdCK3NjUjcvVmN0Y1QxcU9sUHN2dEd2VDhSYk80?=
+ =?utf-8?B?V29CYkRqbmFVNGZUSWc3WmxIa0FRTDZkK0lHLzNpc0FDTnBGQWt5MFJLaEZz?=
+ =?utf-8?B?RHZsczNBRmUrSHZNV0ROcGN0dVBnaFZRTG1hTlJCbGlFRktDQXVBRDgrRTM2?=
+ =?utf-8?B?SnpOTEd1bGg0SU53T3VLV3VMV1FyWVU4NkgzUStwNzk2dDZORjU5UGNXZ1pk?=
+ =?utf-8?B?bWJwVUpaUVFnMFNIMWMrbEhiRUdwYkpSbzNnaVZkVzNSNG5kWnJIcW1xejFI?=
+ =?utf-8?B?WDNCVmcyZVZKNnM3WGxHbWQ5bE9vMEkyVmk2OXhWbGVEeGFyUjhmRzM2MG0z?=
+ =?utf-8?B?YVRtNVlLRHhaUm52dEhiVVhkVldXS3pEbmNGTlIrR1FpeXFjWFRuTFJteDN6?=
+ =?utf-8?B?Ym9QcTdmN1RoeHBPWUZ0MlhaTHlTNkI3alAvVWc3UThFdVp5dlhTNFNvZi8x?=
+ =?utf-8?B?Z2xIZmw3b2JKRGpwenJ4dTI2bWNNUEJtRkdjZ1R4U29ZTmZwVUtZaTBDTjlJ?=
+ =?utf-8?B?bEFLeWpaTWxuYkYvSzFyR0g2Y3YyTzVIa1ByWEttVDFFQTdTS1BzeFRrZGd6?=
+ =?utf-8?B?RFBEdWlwQTNOaEtEUFhjdTdOQzM0Y0pKaDFMRE9DUWdveHBvS2pVV3RpNnpU?=
+ =?utf-8?B?aWdaTmtDTi9Da3IxVjRRMlYrUDFldVhzQmZWUERxdEt3YitPRzcwN3lnTW5j?=
+ =?utf-8?B?Y01oUUMxaXUvWVE5K0JjQkYyOUVtWmhqWlgyTlE1TFNuOVAzbVVkd1psL0NR?=
+ =?utf-8?B?S1oyS3o0Z2xSeUF6UGw0eXIvaXd4WFMwVXgyQ2hsVkdwbUI1b0x2aWREeC9j?=
+ =?utf-8?B?NFI1SktkdHZrZk9zcTdVbk56RGRpK0FhWDBQZVEwdzM4QUY3SDRsTm90aU9G?=
+ =?utf-8?B?MjQrVFdXRDU2cmlZNC9ZVVBBSlZxWm9TbXAwcTNmcDNUejJwZDNML3FqS2JS?=
+ =?utf-8?B?OXZsYVo2NXo0OTRDUHZ3aER1d1o3WGhnd2ZGajZvUlFILzN4dXg5YVlRU21W?=
+ =?utf-8?B?MjhBTEFIbTVsQUFDOUp4Rmp3WlVFSFgvSUtLMldhR2VqYWU3bHpmODg2MnJ4?=
+ =?utf-8?B?VVVhakVwT1V6ZGtlVDdIR2pLOVlyTnN1NTU4SnRlZ1ZUMTNXYTFydms2d29E?=
+ =?utf-8?B?UklRbkRXS3JFbWRRbkFVMXNTVEpISVNlOHFoL3BVcU01dUQvMWV0ckZPejdn?=
+ =?utf-8?B?Z2dTcys4eTBDN2pyekIrOFI1bGljL1hBeG94dmpLbXpBSkFad00rNlhEcmto?=
+ =?utf-8?B?TlF1aTZNV0JuWExSUitCVERhSnE4OEx1NndPUjVRQUlWck1GWEtqY0wyQzFL?=
+ =?utf-8?B?MHhoSXhSdGh3c1kwOEgwbXNJdlNIV1cwVzE0YWpZV3h2cGJBSFB0VXZoK1dW?=
+ =?utf-8?B?WmY1eUd5VDEvczg3RmNDOXZFMldQTWVHUmJpSkZ5NkQybXczeFZjLzVVOXhP?=
+ =?utf-8?B?NzVHUkFhellVdDRUSjd5SWVTbTBnSEx5TWRwbWlXNjZuNnZvVzdUa2lhRmhZ?=
+ =?utf-8?B?Y1RmeVRTSkVFdlh0enVPNXpudVVETmRKWC8rT3FuSFJlZS9qTk5aMWZRWDBS?=
+ =?utf-8?B?RHYrdEpoWVdGWXR3Z0xpUkpNVjhnYW9HYTU3OUI2MDNhQ25MQm9mWnBZeU1p?=
+ =?utf-8?B?MUlQVDE2bHc1TjZKZ3lWZTVDSCtCMENxN0xkQjV1RSt3bW5KbXNMZz09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5a01c771-98a6-4331-a9e8-08de936a111e
+X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9b00ec4c-079a-4d86-cff7-08de93692cd7
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Apr 2026 23:15:06.6154
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Apr 2026 23:21:29.6793
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR02MB7201
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: yEufMbD/ngVZXt809TggEtmNAFdBEImOmti1ZbFQ3XEwzFNrfKjBHweFHEDYP9Ex0uCqMkgxXPZi2be1epVOvA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO2P265MB5602
 
-From: Dexuan Cui <decui@microsoft.com> Sent: Thursday, April 2, 2026 4:43 P=
-M
->=20
-> There has been a longstanding MMIO conflict between the pci_hyperv
-> driver's config_window (see hv_allocate_config_window()) and the
-> hyperv_drm (or hyperv_fb) driver (see hyperv_setup_vram()): typically
-> both get MMIO from the low MMIO range below 4GB; this is not an issue
-> in the normal kernel since the VMBus driver reserves the framebuffer
-> MMIO range in vmbus_reserve_fb(), so the drm driver's hyperv_setup_vram()
-> can always get the reserved framebuffer MMIO; however, a Gen2 VM's
-> kdump kernel can fail to reserve the framebuffer MMIO in
-> vmbus_reserve_fb() because the screen_info.lfb_base is zero in the
-> kdump kernel due to several possible reasons (see the Link below for
-> more details):
->=20
-> 1) on ARM64, the two syscalls (KEXEC_LOAD, KEXEC_FILE_LOAD) don't
-> initialize the screen_info.lfb_base for the kdump kernel;
->=20
-> 2) on x86-64, the KEXEC_FILE_LOAD syscall initializes kdump kernel's
-> screen_info.lfb_base, but the KEXEC_LOAD syscall doesn't really do that
-> when the hyperv_drm driver loads, because the user-space kexec-tools
-> (i.e. the program 'kexec') doesn't recognize the hyperv_drm driver
-> (let's ignore the behavior of kexec-tools of very old versions).
->=20
-> When vmbus_reserve_fb() fails to reserve the framebuffer MMIO in the
-> kdump kernel, if pci_hyperv in the kdump kernel loads before hyperv_drm
-> loads, pci_hyperv's vmbus_allocate_mmio() gets the framebuffer MMIO
-> and tries to use it, but since the host thinks that the MMIO range is
-> still in use by hyperv_drm, the host refuses to accept the MMIO range
-> as the config window, and pci_hyperv's hv_pci_enter_d0() errors out,
-> e.g. an error can be "PCI Pass-through VSP failed D0 Entry with status
-> c0370048".
->=20
-> Typically, this pci_hyperv error in the kdump kernel was not fatal in
-> the past because the kdump kernel typically doesn't rely on pci_hyperv,
-> i.e. the root file system is on a VMBus SCSI device.
->=20
-> Now, a VM on Azure can boot from NVMe, i.e. the root file system can be
-> on a NVMe device, which depends on pci_hyperv. When the error occurs,
-> the kdump kernel fails to boot up since no root file system is detected.
->=20
-> Fix the MMIO conflict by allocating MMIO above 4GB for the config_window,
-> so it won't conflict with hyperv_drm's MMIO, which should be below the
-> 4GB boundary. The size of config_window is small: it's only 8KB per PCI
-> device, so there should be sufficient MMIO space available above 4GB.
->=20
-> Note: we still need to figure out how to address the possible MMIO
-> conflict between hyperv_drm and pci_hyperv in the case of 32-bit PCI
-> MMIO BARs, but that's of low priority because all PCI devices available
-> to a Linux VM on Azure or on a modern host should use 64-bit BARs and
-> should not use 32-bit BARs -- I checked Mellanox VFs, MANA VFs, NVMe
-> devices, and GPUs in Linux VMs on Azure, and found no 32-bit BARs.
+On Sun Apr 5, 2026 at 3:55 PM BST, Alexandre Courbot wrote:
+> On Tue Mar 24, 2026 at 12:37 AM JST, Gary Guo wrote:
+>> From: Gary Guo <gary@garyguo.net>
+>>
+>> Currently, `io::Mmio` always represent an untyped region of a compile-ti=
+me
+>> known minimum size, which is roughly equivalent to `void __iomem*` (but
+>> with bound checks). However, it is useful to also be to represent I/O
+>> memory of a specific type, e.g. `u32 __iomem*` or `struct foo __iomem*`.
+>>
+>> Thus, make `Mmio` generic on arbitrary `T`, where `T` is a sized type, o=
+r a
+>> DST that implements `KnownSize`. Similar to the `MmioRaw` change, the
+>> existing behaviour is preserved in the form of `Mmio<Region<SIZE>>`. Thi=
+s
+>> change brings the MMIO closer to the DMA coherent allocation types that =
+we
+>> have, which is already typed.
+>
+> You probably noticed, but the regular `read8`, `read16` remain available
+> irrespective of the `T` parameter, allowing the `Mmio` to be accessed
+> using both the structured type and arbitrary primitives with an offset.
+> I cannot find a reason to label this as unsound, but it might be
+> confusing as it makes projection an additional capability on top of the
+> existing raw I/O methods. This might be worth mentioning in the
+> documentation, or maybe the primitive accessors should only be made
+> available to `Io<Region>`?
 
-Just to clarify, since this patch is predicated on all BARs being 64-bit,
-hv_pci_alloc_bridge_windows() never encounters a non-zero
-hbus->low_mmio_space, and hence also never allocates from low
-MMIO space. So hv_pci_alloc_bridge_windows() does not need to be
-patched. Is that correct?
+Perhaps I could add a new `UntypedIo` trait which is implemented on
+`Region`? And I can restrict these methods to be only usable for it.
 
-Taking a broader view, fundamentally the current MMIO location of
-the frame buffer may be unknown to the Linux guest. At the same time,
-Linux must ensure that PCI devices don't get assigned to the MMIO space
-where the frame buffer is located. While the current MMIO location of
-the frame buffer may be unknown, we can assume it was placed in low
-MMIO space by the host -- either Windows Hyper-V or Linux/VMM
-in the root partition, and perhaps as mediated by a paravisor. Probably
-need to confirm with the Linux-in-the-root partition team (and maybe
-the OpenHCL team) that this assumption is true. Presumably the
-hyperv_drm driver doesn't need to move the frame buffer, but if it
-does, it must stay in the low MMIO space.
+I would actually prefer to just remove them, and say you should either acce=
+ss
+via projections, or via register macro.
 
-This patch depends on this assumption, and effectively reserves
-the entire low MMIO space for the frame buffer. The low MMIO space
-size defaults to 128 MiB on a local Hyper-V, and is set to 3 GiB in most
-Azure VMs (or to 1 GiB in an Azure CVM), so that all gets reserved.
+Best,
+Gary
 
-A slightly different approach to the whole problem is to change
-vmbus_reserve_fb(). If it is unable to get a non-zero "start" value, then
-it should use the same assumption as above, and reserve a frame buffer
-area starting at the lowest address in low MMIO space. The reserved size
-could be the max possible frame buffer size, which I think is 64 MiB (?).
-This still leaves low MMIO space for subsequent PCI devices, and allows
-32-bit BARs to continue to work. This approach requires one further
-assumption, which is that the host, plus any movement by hyperv_drm,
-has kept the frame buffer at the low end of the low MMIO space. From
-what I've seen, that assumption is reality -- the frame buffer always
-starts at the beginning of low MMIO space.
-
-This approach could be taken one step further, where vmbus_reserve_fb()
-*always* reserves 64 MiB starting at the low end of low MMIO space,
-regardless of the value of "start". The messy code for getting "start"
-could be dropped entirely, and the dependency on CONFIG_SYSFB goes
-away. Or maybe still get the value of "start" and "size", and if non-zero
-just do a sanity check that they are within the fixed 64 MiB reserved area.
-
-Thoughts? To me tweaking vmbus_reserve_fb() is a more
-straightforward and explicit way to do the reserving, vs. modifying
-the requested range in the Hyper-V PCI driver. And FWIW, it avoids
-introducing the 32-bit BAR limitation.
-
-Michael
-
->=20
-> Fixes: 4daace0d8ce8 ("PCI: hv: Add paravirtual PCI front-end for Microsof=
-t Hyper-V VMs")
-> Link: https://lore.kernel.org/all/SA1PR21MB692176C1BC53BFC9EAE5CF8EBF51A@=
-SA1PR21MB6921.namprd21.prod.outlook.com/
-> Tested-by: Matthew Ruffell <matthew.ruffell@canonical.com>
-> Tested-by: Krister Johansen <johansen@templeofstupid.com>
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Cc: stable@vger.kernel.org
-> ---
->=20
-> Changes since v1:
->     Updated the commit message and the comment to better explain
->     why screen_info.lfb_base can be 0 in the kdump kernel.
->=20
->     No code change since v1.
->=20
->=20
->  drivers/pci/controller/pci-hyperv.c | 21 +++++++++++++++++++--
->  1 file changed, 19 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller=
-/pci-hyperv.c
-> index 2c7a406b4ba8..1a79334ea9f4 100644
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
-> @@ -3403,9 +3403,26 @@ static int hv_allocate_config_window(struct
-> hv_pcibus_device *hbus)
->=20
->  	/*
->  	 * Set up a region of MMIO space to use for accessing configuration
-> -	 * space.
-> +	 * space. Use the high MMIO range to not conflict with the hyperv_drm
-> +	 * driver (which normally gets MMIO from the low MMIO range) in the
-> +	 * kdump kernel of a Gen2 VM, which may fail to reserve the framebuffer
-> +	 * MMIO range in vmbus_reserve_fb() due to screen_info.lfb_base being
-> +	 * zero in the kdump kernel:
-> +	 *
-> +	 * on ARM64, the two syscalls (KEXEC_LOAD, KEXEC_FILE_LOAD) don't
-> +	 * initialize the screen_info.lfb_base for the kdump kernel;
-> +	 *
-> +	 * on x86-64, the KEXEC_FILE_LOAD syscall initializes kdump kernel's
-> +	 * screen_info.lfb_base (see bzImage64_load() -> setup_boot_parameters(=
-))
-> +	 * but the KEXEC_LOAD syscall doesn't really do that when the hyperv_dr=
-m
-> +	 * driver loads, because the user-space program 'kexec' doesn't
-> +	 * recognize hyperv_drm: see the function setup_linux_vesafb() in the
-> +	 * kexec-tools.git repo. Note: old versions of kexec-tools, e.g.
-> +	 * v2.0.18, initialize screen_info.lfb_base if the hyperv_fb driver
-> +	 * loads, but hyperv_fb is deprecated and has been removed from the
-> +	 * mainline kernel.
->  	 */
-> -	ret =3D vmbus_allocate_mmio(&hbus->mem_config, hbus->hdev, 0, -1,
-> +	ret =3D vmbus_allocate_mmio(&hbus->mem_config, hbus->hdev, SZ_4G, -1,
->  				  PCI_CONFIG_MMIO_LENGTH, 0x1000, false);
->  	if (ret)
->  		return ret;
-> --
-> 2.43.0
->=20
+>
+>>
+>> To be able to implement `IoKnownSize`, add a `MIN_SIZE` constant to
+>> `KnownSize` trait to represent compile-time known minimum size of a
+>> specific type.
 
