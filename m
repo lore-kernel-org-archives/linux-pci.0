@@ -1,17 +1,17 @@
-Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A5C170818;
-	Sun,  5 Apr 2026 07:05:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 609661E5B68;
+	Sun,  5 Apr 2026 07:17:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775372725; cv=none; b=tgwCO1DvdbuO+vj2uclb99heK053I1VSlU8e8V3eSrmADAVFP/wE5I7IDNMMGVogcJT2pabKoQSCZ4jI57lGdTXhciCoJk0gBzyve1cikMvkFXi2Vw7s0BLHAHWtn+jVjdTsYSgJHA8s/UNhp/UTppIlb349REsHUtZmsbk25iI=
+	t=1775373430; cv=none; b=rMyUaHPbIUlFXOGQlZA1B408GSDdNBAz803a1XFwsdNfTgtGhP5hleTRFM7g67gy3t+0wp/pP/BbxbwpLxkAX34VEJnQmM1MyN0j8TqJi6guERLdNQ36aZinI8uNByRA5oBs3TudFqNoH4L9mIDGecUnixhvUapHwwIfPTbMpSE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775372725; c=relaxed/simple;
-	bh=kfa4tEekvQKAv2+kDvqO33po8NedO0Q9IC4uwPSe8ro=;
+	s=arc-20240116; t=1775373430; c=relaxed/simple;
+	bh=GN6VFv/oxQu1oTePkEXrJqHA531yO+kKNFT27nH+PXQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VU5rqbSx4Cya/dnPGGWuHpWmyKFIzis9GyFiLXIVbMnYE0+44+zcyW3YhJUkdANfvP2lcRquI8xdF+UbVOR9ti0ZYGsJKg31BzYB3To/zpu+8OFToCUcfkJljRKdz9h+8v1P/hf7Vm6x4bAZU6+wdVJDFhrXJp+18N7Aw7wEY+4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+	 Content-Type:Content-Disposition:In-Reply-To; b=iwYWg8x+ylekVm26fr1+qh9NgDn0aPZaPDuV9GTuvnB5qiCUBbTSc71Mv/pwFys5nLBrhRyyugNzcFgfxWI7wQ2j5swWRTuJjXOqjMAWJftG+vxOz1PwuLtks6Osk5bvOEYc0W2A/86DmZJ4WWVvYWXERhFKy6hj8FCMYSmyIuA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
 Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
@@ -19,15 +19,15 @@ Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
 	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
 	 client-signature ECDSA (secp384r1) client-digest SHA384)
 	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout3.hostsharing.net (Postfix) with ESMTPS id ED0ABCBE;
-	Sun, 05 Apr 2026 09:05:12 +0200 (CEST)
+	by mailout1.hostsharing.net (Postfix) with ESMTPS id 4E22736D;
+	Sun, 05 Apr 2026 09:16:59 +0200 (CEST)
 Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id B46546029C49; Sun,  5 Apr 2026 09:05:12 +0200 (CEST)
-Date: Sun, 5 Apr 2026 09:05:12 +0200
+	id 3B2706029C49; Sun,  5 Apr 2026 09:16:59 +0200 (CEST)
+Date: Sun, 5 Apr 2026 09:16:59 +0200
 From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Mario Limonciello <mario.limonciello@amd.com>,
-	Joyful Lee <joy@joyfullee.me>, platform-driver-x86@vger.kernel.org,
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Joyful Lee <joy@joyfullee.me>, Bjorn Helgaas <helgaas@kernel.org>,
+	platform-driver-x86@vger.kernel.org,
 	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
 	Hans de Goede <hansg@kernel.org>,
 	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
@@ -36,9 +36,14 @@ Cc: Mario Limonciello <mario.limonciello@amd.com>,
 	linux-kernel@vger.kernel.org
 Subject: Re: [BUG] ASUS ProArt PX13 HN7306WU: amd_pmc s2idle S0ix corrupts
  AMD 1022:150b root port, NVIDIA dGPU returns header type 7f
-Message-ID: <adIJqIn76ApoSdMg@wunner.de>
+Message-ID: <adIMa_yVLMJZvdLq@wunner.de>
 References: <84268751-a128-4cfc-94ae-588de5d98ec8@amd.com>
  <20260403180422.GA341023@bhelgaas>
+ <CADj6jrg4YWx+iR0o=JSh23uP0Mb2Mvs-ngCJXGUAwCCUQGHM4A@mail.gmail.com>
+ <d0994dad-4506-4b5a-b44d-3bb68aae4517@amd.com>
+ <CADj6jrgEwySW_A=-0o947aGg+CmaZD+qR4NnopVFoQptdHz=bQ@mail.gmail.com>
+ <024bce0e-5bc7-40ca-be01-278ef9935531@amd.com>
+ <adc13acd-4a2b-4b64-9dcc-c622d8b9f3cf@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,36 +52,42 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260403180422.GA341023@bhelgaas>
+In-Reply-To: <adc13acd-4a2b-4b64-9dcc-c622d8b9f3cf@amd.com>
 
-On Fri, Apr 03, 2026 at 01:04:22PM -0500, Bjorn Helgaas wrote:
-> It looks like something is wrong with the 00:03.1 Root Port config
-> space after S0ix, e.g., the HwInit Port Number is non-sensical:
+On Fri, Apr 03, 2026 at 04:28:23PM -0500, Mario Limonciello wrote:
+> On 4/3/26 4:05 PM, Mario Limonciello wrote:
+> > Thanks - the most obvious observation is what you already noted -
+> > without hotplug support the root port skips PM all together.
+> > 
+> > [24.575705] pcieport 0000:00:01.2: PCI PM: Suspend power state: D0
+> > [24.575707] pcieport 0000:00:01.2: PCI PM: Skipped
+> > [24.575709] pcieport 0000:00:01.1: PCI PM: Suspend power state: D0
+> > [24.575709] pcieport 0000:00:01.1: PCI PM: Skipped
+> > 
+> > vs
+> > 
+> > [29.279987] pcieport 0000:00:01.1: power state changed by ACPI to D3cold
+> > [29.279991] pcieport 0000:00:01.1: PCI PM: Suspend power state: D3cold
+> > [29.280214] pcieport 0000:00:01.2: power state changed by ACPI to D3cold
+> > [29.280219] pcieport 0000:00:01.2: PCI PM: Suspend power state: D3cold
+
+Those are different Root Ports than 0000:00:03.1.
+
+> > The hotplug support seems to apply to 3 ports.
+[...]
+> >    0000:00:03.1 (Bus c4):
+> >    - Slot Capabilities: 0x000425e0
+> >    - Flags: HotPlug+ Surprise+ LLActRep+
+[...]
+> OK - so the issue comes from acpi_pci_bridge_d3() which is called from
+> platform_pci_bridge_d3():
 > 
->   00:03.1 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] Strix/Strix Halo GPP Bridge
->   -               LnkCap: Port #0, Speed 16GT/s, Width x8, ASPM not supported
->   +               LnkCap: Port #247, Speed 16GT/s, Width x8, ASPM not supported
-> 
-> but the c4:00 device below it seems completely inaccessible; maybe the
-> link is down or the endpoint is in D3cold so config reads return ~0:
-> 
->   c4:00.0 VGA compatible controller [0300]: NVIDIA Corporation AD107M
->   +       !!! Unknown header type 7f
->   +       Interrupt: pin ? routed to IRQ 255
+> 	if (acpi_pci_disabled || !dev->is_pciehp)
+> 		return false;
 
-The link is indeed down at the Root Port:
-
-		LnkSta:	Speed 2.5GT/s, Width x16 (overdriven)
-			TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-                                               ^^^^^^^^^
-
-But perhaps that's expected when a port capable of x8 is configured
-to x16?  I don't think system software can even influence the width,
-I'd expect platform firmware to have set that incorrectly.
-
-Elsewhere in this thread, Mario hypothesized that platform firmware
-may behave incorrectly unless the OS requests control of PCIe hotplug.
-Perhaps Joyful could provide an acpidump that may help confirm this.
+Also not relevant, the is_pciehp flag is true because of the
+set HotPlug+ bit in the Slot Capabilities Register, so the check
+doesn't evaluate to true and the function doesn't return here.
 
 Thanks,
 
