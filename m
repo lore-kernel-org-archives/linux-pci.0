@@ -1,85 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F39F70818;
-	Sun,  5 Apr 2026 07:03:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A5C170818;
+	Sun,  5 Apr 2026 07:05:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775372622; cv=none; b=dtU8j07nCqZojhFcpZewGRgXd0GdBNtQ4wszIunV6avO5oV2MSIJFSWmU5sRrywKYBx9SGJTZe4YPE1XP9uxOLG+18aA2RC7p8lEljZOESVl0e25w844R4hb9sJaPF3BGmFEVpLgD9mzpYS9Bi4wX5GmvkvOp2YHNXxWb2IKE/8=
+	t=1775372725; cv=none; b=tgwCO1DvdbuO+vj2uclb99heK053I1VSlU8e8V3eSrmADAVFP/wE5I7IDNMMGVogcJT2pabKoQSCZ4jI57lGdTXhciCoJk0gBzyve1cikMvkFXi2Vw7s0BLHAHWtn+jVjdTsYSgJHA8s/UNhp/UTppIlb349REsHUtZmsbk25iI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775372622; c=relaxed/simple;
-	bh=cGZQASeUOD7DEYI24yGkpzM2VpgQdKxFA6eMQ7fZ9Mg=;
+	s=arc-20240116; t=1775372725; c=relaxed/simple;
+	bh=kfa4tEekvQKAv2+kDvqO33po8NedO0Q9IC4uwPSe8ro=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AG+kGlLKkBk19njCVwh41LGi9N2voc/I470uXLWan4WWVEVc1Bbzh1dDmCLu3Y8yjwsYkkqRZxIotexBGWriZ60UDBP6o50jo45dSWz+bgYyI6B975W6H70K70Kq3rgo1H5YoK+biNrAOpCXog3z/ELc6KxdRhExq7JXLelngGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U4JLTX8/; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U4JLTX8/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17DF8C116C6;
-	Sun,  5 Apr 2026 07:03:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775372621;
-	bh=cGZQASeUOD7DEYI24yGkpzM2VpgQdKxFA6eMQ7fZ9Mg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=U4JLTX8/zDK6FRLC2p7WxuOu6hFXklMMukj9ElNkbETU0DRkXJLsJQ8h+1l6XGg7o
-	 BxaCe6udKIsJLA5gFXj9mFJyPrYMsLFy5M8BwiE0ocE8M/yWRBM7h1pP6yTRhvqzBb
-	 xoDvZ9MWgwDEEymjkd8ILzjWo2jVI0NX/QlshiEnFNMeh5oppoP30SWH5AjOv1IAol
-	 /Pv8ZKG1mXGB/btCYEdFWN+14AOkY8luPUbqGNngYgJwZu+73NZL6i1/TaCCSw2rbB
-	 VP2sPwgb8JFZI+UWYsg/qDFKJ8HVtEOJqdFod70D3pqJpYFZG/PM8m1HEJO8LktkEz
-	 4oasjxw6uhtSw==
-Date: Sun, 5 Apr 2026 09:03:39 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Caleb James DeLisle <cjd@cjdns.fr>
-Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org, 
-	naseefkm@gmail.com, ryder.lee@mediatek.com, helgaas@kernel.org, 
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org, 
-	krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com, 
-	angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com, linux-mediatek@lists.infradead.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 1/2] dt-bindings: PCI: mediatek: Add support for
- EcoNet EN7528
-Message-ID: <20260405-phenomenal-messy-shark-bdefbd@quoll>
-References: <20260404182854.2183651-1-cjd@cjdns.fr>
- <20260404182854.2183651-2-cjd@cjdns.fr>
+	 Content-Type:Content-Disposition:In-Reply-To; b=VU5rqbSx4Cya/dnPGGWuHpWmyKFIzis9GyFiLXIVbMnYE0+44+zcyW3YhJUkdANfvP2lcRquI8xdF+UbVOR9ti0ZYGsJKg31BzYB3To/zpu+8OFToCUcfkJljRKdz9h+8v1P/hf7Vm6x4bAZU6+wdVJDFhrXJp+18N7Aw7wEY+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id ED0ABCBE;
+	Sun, 05 Apr 2026 09:05:12 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id B46546029C49; Sun,  5 Apr 2026 09:05:12 +0200 (CEST)
+Date: Sun, 5 Apr 2026 09:05:12 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Mario Limonciello <mario.limonciello@amd.com>,
+	Joyful Lee <joy@joyfullee.me>, platform-driver-x86@vger.kernel.org,
+	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+	Hans de Goede <hansg@kernel.org>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rafael@kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [BUG] ASUS ProArt PX13 HN7306WU: amd_pmc s2idle S0ix corrupts
+ AMD 1022:150b root port, NVIDIA dGPU returns header type 7f
+Message-ID: <adIJqIn76ApoSdMg@wunner.de>
+References: <84268751-a128-4cfc-94ae-588de5d98ec8@amd.com>
+ <20260403180422.GA341023@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260404182854.2183651-2-cjd@cjdns.fr>
+In-Reply-To: <20260403180422.GA341023@bhelgaas>
 
-On Sat, Apr 04, 2026 at 06:28:53PM +0000, Caleb James DeLisle wrote:
-> Introduce EcoNet EN7528 SoC compatible in MediaTek PCIe controller
-> binding.
+On Fri, Apr 03, 2026 at 01:04:22PM -0500, Bjorn Helgaas wrote:
+> It looks like something is wrong with the 00:03.1 Root Port config
+> space after S0ix, e.g., the HwInit Port Number is non-sensical:
 > 
-> EcoNet PCIe controller has the same configuration model as
-> Mediatek v2 but is initialized more similarly to an MT7621
-> PCIe.
+>   00:03.1 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] Strix/Strix Halo GPP Bridge
+>   -               LnkCap: Port #0, Speed 16GT/s, Width x8, ASPM not supported
+>   +               LnkCap: Port #247, Speed 16GT/s, Width x8, ASPM not supported
 > 
+> but the c4:00 device below it seems completely inaccessible; maybe the
+> link is down or the endpoint is in D3cold so config reads return ~0:
+> 
+>   c4:00.0 VGA compatible controller [0300]: NVIDIA Corporation AD107M
+>   +       !!! Unknown header type 7f
+>   +       Interrupt: pin ? routed to IRQ 255
 
-<form letter>
-This is a friendly reminder during the review process.
+The link is indeed down at the Root Port:
 
-It looks like you received a tag and forgot to add it.
+		LnkSta:	Speed 2.5GT/s, Width x16 (overdriven)
+			TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+                                               ^^^^^^^^^
 
-If you do not know the process, here is a short explanation:
-Please add Acked-by/Reviewed-by/Tested-by tags when posting new
-versions of patchset, under or above your Signed-off-by tag, unless
-patch changed significantly (e.g. new properties added to the DT
-bindings). Tag is "received", when provided in a message replied to you
-on the mailing list. Tools like b4 can help here. However, there's no
-need to repost patches *only* to add the tags. The upstream maintainer
-will do that for tags received on the version they apply.
+But perhaps that's expected when a port capable of x8 is configured
+to x16?  I don't think system software can even influence the width,
+I'd expect platform firmware to have set that incorrectly.
 
-Please read:
-https://elixir.bootlin.com/linux/v6.12-rc3/source/Documentation/process/submitting-patches.rst#L577
+Elsewhere in this thread, Mario hypothesized that platform firmware
+may behave incorrectly unless the OS requests control of PCIe hotplug.
+Perhaps Joyful could provide an acpidump that may help confirm this.
 
-If a tag was not added on purpose, please state in the patch changelog
-or cover letter why and what changed.
-</form letter>
+Thanks,
 
-Best regards,
-Krzysztof
-
+Lukas
