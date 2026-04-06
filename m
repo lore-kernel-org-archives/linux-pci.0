@@ -1,32 +1,32 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EAD2309EE9;
-	Mon,  6 Apr 2026 02:23:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1CA2231832;
+	Mon,  6 Apr 2026 02:28:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775442216; cv=none; b=njlVkdxOyKzRGEAfgrea98KjboWLhb/1Rvd9uPKCgJ5hp4R/T0K21Af3sRLKkZRy/B72x0Vh1u+oKu2NWCcoHvEWw+FuNre4uy/7r63jIDcwHB3mDa7bRTgLo4FAxdKbC4Z/Xrwa+TDdCGwBOjECnJXkCpeXnrreh3w3QZ91iF4=
+	t=1775442531; cv=none; b=A/atf6QNBxWGX66ZdwsSxaBZeIR8Cdu40w4ERobmkxnR/BYwIbsoHBpe6DuVbk0WAJluopstDXiDUHoU6vIWt/YgO0cSXJYMjAvWk1YbHIJbbepqp4cQ+0yv5SK6DoE+sf6x/271WFqhbgU1lFyNcpRcdub7xdytJaa3oB75gjw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775442216; c=relaxed/simple;
-	bh=qgH5lLMPz12kcMtpYmHSsDNTWuj9PjnekwQx2BCuQ7w=;
+	s=arc-20240116; t=1775442531; c=relaxed/simple;
+	bh=5ueL3SgwQdKPecM9Fovyz1KGIG7vUsoVcWjEYPy5lw0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rqqo7MiQ/DGSOSMz8qWrrocvlREtYg60B5LO3QADf+XtUtdL6dE/sG/9QkS47mBIYO4sbPEskh7Km61+kJ+qXME5ysyRIS4CKPtfmHht57Crkw9iCWVtRfSAHH/9oL0/GH12zTwsrMyHjhmghxay/Lg/hSQuD3sP6OjXDCwIiJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=KqSEVf3a; arc=none smtp.client-ip=220.197.31.4
+	 In-Reply-To:Content-Type; b=UeO+MTp4/jSGcfvCG8CCcn05cOqjCcXZqsBFYYSQiWMuvQZ9B9qherFiYY06hVDDYZM2HkW2Kbjz0VDux4mGmQn8boL/+pe7ALkInoqg2uFOHjAl6PL8cv519G7yly/buKzKqdYiRUqkZQqM6jbKrdi9i6CZE175AV8KfFS/b/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=VW9dqPmd; arc=none smtp.client-ip=117.135.210.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="KqSEVf3a"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="VW9dqPmd"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
 	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=YECcG1HVAHm+5vEAAqi3wT4vV8qbA8EnX2Cnublm+OU=;
-	b=KqSEVf3aUGyhkwhiI9ksP8PKca7i2SqBPQ5wrFlsYHuuJ/zYkQiaZIM7SySJrU
-	1cAbQPaulVFQ0v9XUvGIaYXbkjywxSEsFVgM46YTORHlG/Mxi1ech3A3/gc3fw7Y
-	8DPdAMyd8EYqc80vJb3daKFRMr97Fw8F/c6O/V6lEXC+A=
+	Content-Type; bh=NsPfresLcode65R651DUk7KfdMYdFOyfLhDlOWF+fH8=;
+	b=VW9dqPmd1IxLDVXMLK1OiZ6ON2DSAZcpg+3eZ7k7DfH8luXvrCpl0/czN74aPe
+	lZJxe7QjAY6E/7QeXDjo2xUkTacUztW9qH+MuTzA7YkVwibN0XHT0sEKWa25hGRx
+	xfHEt66OiHdXnVZ346Xm4WNRW3HxquN+hDmlxiMINZ5Ec=
 Received: from [192.168.50.71] (unknown [])
-	by gzsmtp4 (Coremail) with SMTP id PygvCgDnYK_qGNNpQQMTVA--.221S2;
-	Mon, 06 Apr 2026 10:22:37 +0800 (CST)
-Message-ID: <16f61139-5feb-4c90-acea-80dda81d113a@163.com>
-Date: Mon, 6 Apr 2026 10:22:34 +0800
+	by gzsmtp3 (Coremail) with SMTP id PigvCgCXYnhIGtNpoemhCA--.202S2;
+	Mon, 06 Apr 2026 10:28:27 +0800 (CST)
+Message-ID: <9e86336d-21be-4301-92ca-b79069ea99a5@163.com>
+Date: Mon, 6 Apr 2026 10:28:24 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -34,95 +34,79 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 3/3] PCI: dwc: Use common speed conversion function
+Subject: Re: [PATCH v1 3/3] PCI: Remove extern declaration of pcie_link_speed
+ array
 To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com,
- kwilczynski@kernel.org, ilpo.jarvinen@linux.intel.com, jingoohan1@gmail.com,
- robh@kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20251102143206.111347-1-18255117159@163.com>
- <20251102143206.111347-4-18255117159@163.com>
- <haordo3chzioc36ciby6x44eyullcacqyoyas636urrhjexk2g@pe6htoghrd6p>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260315160057.127639-1-18255117159@163.com>
+ <20260315160057.127639-4-18255117159@163.com>
+ <jobpwbins7tdv44kkbxnjsrobcqfdgxh7dxbngqwffzu4dutsi@p672ub6575hg>
 Content-Language: en-US
 From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <haordo3chzioc36ciby6x44eyullcacqyoyas636urrhjexk2g@pe6htoghrd6p>
+In-Reply-To: <jobpwbins7tdv44kkbxnjsrobcqfdgxh7dxbngqwffzu4dutsi@p672ub6575hg>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:PygvCgDnYK_qGNNpQQMTVA--.221S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Zr45Cw43CFW3Cw1DJFyUGFg_yoW8tFyxpa
-	y3AF40yF48JF45uan0ga4kXFyUXFnxCrWDGrW5Was5XFy2y3s3XF18Zr4Sqr9I9FZFyr1x
-	ur17JrW7Gw17tF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UerWwUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCww2QNGnTGO3klwAA3W
+X-CM-TRANSID:PigvCgCXYnhIGtNpoemhCA--.202S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxurW3CF1kZr4kur1xCrWDCFg_yoW5Gw1kpa
+	y7AF40yF18JF45Zr4Yq3W8ZFyYqFnxCrWDG398W3Z7ZFy29rZxWa4IvrWfXF9IyrsF9r13
+	tF17J3W7CF13tF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zidMarUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6w3ojGnTGk1W4wAA3a
 
 
 
-On 4/5/26 00:35, Manivannan Sadhasivam wrote:
-> On Sun, Nov 02, 2025 at 10:32:06PM +0800, Hans Zhang wrote:
->> Replace the private switch-based speed conversion in
->> dw_pcie_link_set_max_speed() with the public pci_bus_speed2lnkctl2()
->> function.
->>
->> This eliminates duplicate conversion logic and ensures consistency with
->> other PCIe drivers, while handling invalid speeds by falling back to
->> hardware capabilities.
+On 4/5/26 00:41, Manivannan Sadhasivam wrote:
+> On Mon, Mar 16, 2026 at 12:00:57AM +0800, Hans Zhang wrote:
+>> With all users of pcie_link_speed converted to use to_pcie_link_speed(),
+>> the external declaration in pci.h is no longer needed. Remove it to
+>> prevent new code from directly accessing the array and to reduce the
+>> global symbol footprint.
 >>
 >> Signed-off-by: Hans Zhang <18255117159@163.com>
+>> ---
+>>   drivers/pci/pci.h   | 1 -
+>>   drivers/pci/probe.c | 1 -
+>>   2 files changed, 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>> index 053fc245a1e3..b2f91409b439 100644
+>> --- a/drivers/pci/pci.h
+>> +++ b/drivers/pci/pci.h
+>> @@ -107,7 +107,6 @@ struct pcie_tlp_log;
+>>   #define PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
+>>   				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
+>>   
+>> -extern const unsigned char pcie_link_speed[];
 > 
-> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
-> 
-> I hope Bjorn will merge this series.
-
+> What about controller drivers using this array?
 
 Hi Mani,
 
-Thank you. Since the pci-next branch has removed the direct reference to 
-pcie_link_speed, I will re-create this series of patches based on the 
-pci-next branch or v7.1-rc1.
+The following call has been accepted by the following branch.
+
+https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/log/?h=controller/max-link-speed
+
+The main purpose of this series is to prevent the pcie_link_speed array 
+from being exposed.
 
 Best regards,
 Hans
 
 > 
-> - Mani
+> git grep -r "pcie_link_speed\[" drivers/pci/controller/
+> drivers/pci/controller/dwc/pcie-designware-host.c:      enum pci_bus_speed speed = pcie_link_speed[pci->max_link_speed];
+> drivers/pci/controller/dwc/pcie-designware.c:   switch (pcie_link_speed[pci->max_link_speed]) {
+> drivers/pci/controller/dwc/pcie-qcom-common.c:  for (speed = PCIE_SPEED_8_0GT; speed <= pcie_link_speed[pci->max_link_speed]; speed++) {
+> drivers/pci/controller/dwc/pcie-qcom-ep.c:              Mbps_to_icc(PCIE_SPEED2MBS_ENC(pcie_link_speed[speed]))
+> drivers/pci/controller/dwc/pcie-qcom-ep.c:      if (pcie_link_speed[pci->max_link_speed] == PCIE_SPEED_16_0GT)
+> drivers/pci/controller/dwc/pcie-qcom.c:         Mbps_to_icc(PCIE_SPEED2MBS_ENC(pcie_link_speed[speed]))
+> drivers/pci/controller/dwc/pcie-qcom.c: if (pcie_link_speed[pci->max_link_speed] == PCIE_SPEED_16_0GT)
+> drivers/pci/controller/dwc/pcie-qcom.c:         freq_mbps = pcie_dev_speed_mbps(pcie_link_speed[speed]);
+> drivers/pci/controller/dwc/pcie-tegra194.c:     val = width * PCIE_SPEED2MBS_ENC(pcie_link_speed[speed]);
+> drivers/pci/controller/pcie-brcmstb.c:           pci_speed_string(pcie_link_speed[cls]), nlw,
+> drivers/pci/controller/pcie-rzg3s-host.c:       switch (pcie_link_speed[host->max_link_speed]) {
 > 
->> ---
->>   drivers/pci/controller/dwc/pcie-designware.c | 18 +++---------------
->>   1 file changed, 3 insertions(+), 15 deletions(-)
->>
->> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
->> index c644216995f6..20ba314e82d5 100644
->> --- a/drivers/pci/controller/dwc/pcie-designware.c
->> +++ b/drivers/pci/controller/dwc/pcie-designware.c
->> @@ -717,24 +717,12 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci)
->>   	ctrl2 = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCTL2);
->>   	ctrl2 &= ~PCI_EXP_LNKCTL2_TLS;
->>   
->> -	switch (pcie_link_speed[pci->max_link_speed]) {
->> -	case PCIE_SPEED_2_5GT:
->> -		link_speed = PCI_EXP_LNKCTL2_TLS_2_5GT;
->> -		break;
->> -	case PCIE_SPEED_5_0GT:
->> -		link_speed = PCI_EXP_LNKCTL2_TLS_5_0GT;
->> -		break;
->> -	case PCIE_SPEED_8_0GT:
->> -		link_speed = PCI_EXP_LNKCTL2_TLS_8_0GT;
->> -		break;
->> -	case PCIE_SPEED_16_0GT:
->> -		link_speed = PCI_EXP_LNKCTL2_TLS_16_0GT;
->> -		break;
->> -	default:
->> +	link_speed = pcie_link_speed[pci->max_link_speed];
->> +	link_speed = pci_bus_speed2lnkctl2(link_speed);
->> +	if (link_speed == 0) {
->>   		/* Use hardware capability */
->>   		link_speed = FIELD_GET(PCI_EXP_LNKCAP_SLS, cap);
->>   		ctrl2 &= ~PCI_EXP_LNKCTL2_HASD;
->> -		break;
->>   	}
->>   
->>   	dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCTL2, ctrl2 | link_speed);
->> -- 
->> 2.34.1
->>
+> - Mani
 > 
 
