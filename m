@@ -1,44 +1,48 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70F06330330;
-	Mon,  6 Apr 2026 10:33:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B96E288505;
+	Mon,  6 Apr 2026 10:47:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775471606; cv=none; b=tQqrW5oRNBWT1AKkM475z8ZuG4EkrcwtrWTeZ4UxIjAvwj/8A+Re1mk3f2njeQ5ix+RA0HxUVnVeNv5skgGAoDven6FA/ZcE3i6TV+GStUmuwjFOTm+hPqR8sJPf2X079WFRJ0MQ/SeZZ2iWxxst6xx4FCnaBj01syjq7vqBaSk=
+	t=1775472469; cv=none; b=UtDiTDUKvXUnP9qHYQmgO+qd2OCQQ7NssPzqnOhAQ8JeosqpDfNqgsXkvkCbh7wmGGfKEkWUkq15oPS6fM8knf/dqjbJeCjrgaAvb0rLa9GUeFDautA5s58GmEc+K6f0G2NeIOWPaKM8LnQINi29rOsButphkKu13OduFCmEUTE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775471606; c=relaxed/simple;
-	bh=qUOQE+9RmzChpZsDmkWFXmZRdnTeJOlCZlOKCP+Je8A=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=cMd+vfYJGm1ZFj4ybJ2A9x0Pq3f3BC6GRsj2dTFS/tWdRd7EfGI//se85VWqsdEWAnvQXWX+ZJ1/kOzjLpAYVcZpskldySucLhFn43nptF64m1S59blPAiynMtoQB+R1y+WXb99DvwPsCnIrpW2B5ME4ZP6Q/10jpxWPiaLRLeM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=a/Kw02SF; arc=none smtp.client-ip=117.135.210.5
+	s=arc-20240116; t=1775472469; c=relaxed/simple;
+	bh=K5Y0PBLnucTW3zOL2uWce0Kl7pET+ylirq39OJDQdRY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=PU0EtFcUsoqw/HVPD/syGhjIlUjAoCWFNCgtej2mBEqPpGCntUQDLKNXKiLmgiLmqq11e3zft21CuFb1YTErBiXe27WNYLbtKtQ7Z+Ay6GmEDd+Z7KdnJYUndLDfj45F/Hw1VySPR03ucMS4ozE3j9Oby+r1OhJP2dAGMbGENQA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=joq/718F; arc=none smtp.client-ip=220.197.31.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="a/Kw02SF"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="joq/718F"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=QR
-	klyE92/++5ay+6Wu0lmX7bnfg+iz/Yf042yUwUxMY=; b=a/Kw02SFomUvn9H6ve
-	NyNBTWj5cvb1yqCO32Z63VmBBq5VEho6zCrv/ubjyQUGZaC0MygL6Hh8las9XgOE
-	cLRxF3pnTsOemIqK+ebGIVl7kbaGuM8IPhAdyIfQl3R3/QAHYVgILqG5S76jhkCn
-	VmVJv31M8ZPksMjw0/JCPzV9M=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=2A
+	iyRk9VuZ8SjJ/3y8MHKB5yKl6vNqKwzPKLEYzjPaw=; b=joq/718FEvRJzjRIjH
+	wYBmvGwRIzVgdk9bh3UFTHXTFtianlsUit7ovRriYXX8CLPsFObGJYImsGkBXK4L
+	4RB/S4pPBziWoIdkgcmkdrVwULbIAxQ3nxWHIliLSyLfM4725Xprp7+3KgULJE5X
+	kb+PziVzR41+2lhFdKGhCkhg4=
 Received: from Precision-7960.. (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wAHyuPNi9NplrBRDg--.19284S2;
-	Mon, 06 Apr 2026 18:32:46 +0800 (CST)
+	by gzsmtp3 (Coremail) with SMTP id PigvCgDXX3Qwj9NpKHYUAA--.1246S3;
+	Mon, 06 Apr 2026 18:47:18 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
+	kw@linux.com,
 	kwilczynski@kernel.org,
 	mani@kernel.org,
-	hans.zhang@cixtech.com
+	ilpo.jarvinen@linux.intel.com,
+	jingoohan1@gmail.com
 Cc: robh@kernel.org,
-	mpillai@cadence.com,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v3 0/2] PCI: cadence: Add LTSSM debugfs
-Date: Mon,  6 Apr 2026 18:32:35 +0800
-Message-Id: <20260406103237.1203127-1-18255117159@163.com>
+Subject: [PATCH v5 1/3] PCI: Add public pcie_valid_speed() for shared validation
+Date: Mon,  6 Apr 2026 18:47:06 +0800
+Message-Id: <20260406104708.1218648-2-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260406104708.1218648-1-18255117159@163.com>
+References: <20260406104708.1218648-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,66 +50,58 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wAHyuPNi9NplrBRDg--.19284S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7tF4Uur4xJw43Zr17ZryUtrb_yoW8KFyUpa
-	yDGrWfAF1xZrW3Zan3Z3WUXFyftF93Aa97JwsF9w1xZF13CryDXF4IqF4rXrW7GrZFqr17
-	tr15twnrKr1ayFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0JUUxhdUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBBmCmnTi9CINAAA3l
+X-CM-TRANSID:PigvCgDXX3Qwj9NpKHYUAA--.1246S3
+X-Coremail-Antispam: 1Uf129KBjvJXoW7urW5CF43uw45Xw15KF43trb_yoW8WrWxpa
+	yDAFyYyF18Aa15XF4Dta18ZFy5uFZayrW0krW3u39xZF13A3s3Ja45tay8tryaqrWIvF1U
+	Ja1YyF18Ca1jyF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRxnYrUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7BZA42nTjzb6zgAA3u
 
-Hi,
+Extract the PCIe speed validation logic from bwctrl.c's static
+pcie_valid_speed() into a public static inline function in pci.h.
 
-This series adds debugfs support to the Cadence PCIe controller driver,
-allowing users to read the current LTSSM state of the link for debugging
-purposes.
+This allows consistent speed range checks (2.5GT/s to 64.0GT/s) across
+multiple drivers and functions, avoiding duplicate code and ensuring
+validation consistency as per PCIe specifications.
 
-Patch 1 introduces a new flag 'is_hpa' in the cdns_pcie structure to
-distinguish HPA (High Performance Architecture IP) platforms, which
-have a different register layout for LTSSM status.
-
-Patch 2 implements the debugfs file "ltssm_status" under a per-device
-directory. It reads the LTSSM state from the appropriate hardware register
-based on the 'is_hpa' flag and displays both a descriptive string and the
-raw value.
-
+Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
-Changes for v3:
-- Export cdns_pcie_debugfs_deinit (Mani)
-- pcie-cadence-ep.c pcie-cadence-host.c pci-sky1.c call cdns_pcie_debugfs_deinit
+ drivers/pci/pci.h         | 5 +++++
+ drivers/pci/pcie/bwctrl.c | 5 -----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-Changes for v2:
-https://patchwork.kernel.org/project/linux-pci/patch/20260321033035.3008585-3-18255117159@163.com/
-
-- s/DW_PCIE_LTSSM_NAME/CDNS_PCIE_LTSSM_NAME/
-- S/January 2026/March 2026/
-- EXPORT_SYMBOL_GPL(cdns_pcie_debugfs_init); // Resolve the following error issues.
-  >> ERROR: modpost: "cdns_pcie_debugfs_init" [drivers/pci/controller/cadence/pcie-cadence-host-mod.ko] undefined!
-  >> ERROR: modpost: "cdns_pcie_debugfs_init" [drivers/pci/controller/cadence/pcie-cadence-ep-mod.ko] undefined!
-
-v1:
-https://patchwork.kernel.org/project/linux-pci/cover/20260315155514.127255-1-18255117159@163.com/
----
-
-Hans Zhang (2):
-  PCI: cadence: Add HPA architecture flag
-  PCI: cadence: Add debugfs property to provide LTSSM status of the PCIe
-    link
-
- Documentation/ABI/testing/debugfs-cdns-pcie   |   5 +
- drivers/pci/controller/cadence/Kconfig        |   9 +
- drivers/pci/controller/cadence/Makefile       |   1 +
- drivers/pci/controller/cadence/pci-sky1.c     |   4 +
- .../controller/cadence/pcie-cadence-debugfs.c | 215 ++++++++++++++++++
- .../pci/controller/cadence/pcie-cadence-ep.c  |   3 +
- .../cadence/pcie-cadence-host-hpa.c           |   8 +-
- .../controller/cadence/pcie-cadence-host.c    |   9 +-
- drivers/pci/controller/cadence/pcie-cadence.h | 147 ++++++++++++
- 9 files changed, 399 insertions(+), 2 deletions(-)
- create mode 100644 Documentation/ABI/testing/debugfs-cdns-pcie
- create mode 100644 drivers/pci/controller/cadence/pcie-cadence-debugfs.c
-
-
-base-commit: 525e91d84dc085492b36d4b87abb7c1cc93fcb44
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4a14f88e543a..f0a082bfd6f1 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -606,6 +606,11 @@ void pci_bus_put(struct pci_bus *bus);
+ 	 (speed) == PCIE_SPEED_2_5GT  ?  2500*8/10 : \
+ 	 0)
+ 
++static inline bool pcie_valid_speed(enum pci_bus_speed speed)
++{
++	return (speed >= PCIE_SPEED_2_5GT) && (speed <= PCIE_SPEED_64_0GT);
++}
++
+ static inline int pcie_dev_speed_mbps(enum pci_bus_speed speed)
+ {
+ 	switch (speed) {
+diff --git a/drivers/pci/pcie/bwctrl.c b/drivers/pci/pcie/bwctrl.c
+index c4c8d260bf96..ea82e326f164 100644
+--- a/drivers/pci/pcie/bwctrl.c
++++ b/drivers/pci/pcie/bwctrl.c
+@@ -48,11 +48,6 @@ struct pcie_bwctrl_data {
+ /* Prevent port removal during Link Speed changes. */
+ static DECLARE_RWSEM(pcie_bwctrl_setspeed_rwsem);
+ 
+-static bool pcie_valid_speed(enum pci_bus_speed speed)
+-{
+-	return (speed >= PCIE_SPEED_2_5GT) && (speed <= PCIE_SPEED_64_0GT);
+-}
+-
+ static u16 pci_bus_speed2lnkctl2(enum pci_bus_speed speed)
+ {
+ 	static const u8 speed_conv[] = {
 -- 
 2.34.1
 
