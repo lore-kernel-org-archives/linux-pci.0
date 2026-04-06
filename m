@@ -1,109 +1,65 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10E2031A061;
-	Mon,  6 Apr 2026 10:56:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+Received: from elvis.franken.de (elvis.franken.de [193.175.24.41])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3E5FA3368BF;
+	Mon,  6 Apr 2026 12:37:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.175.24.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775473019; cv=none; b=RZkAGBNxUxTvNlczFG4r2g/9Q1Cw9Oaj7l+V+UQZuFwmnS3RDZkPmZHZ0eE2T0bXKi9r6asq2Jq9ZtRf2UBiNBt4yps450UNg2DL83FNl0lQCi/F3M1s362yEL6nz+OJqd3tcDV0S/dS3w5JBqvQMiHK7KTY+wq+k3FMAKmh3cA=
+	t=1775479062; cv=none; b=iIWHArlAqok0o5aMF1/YxsnKH/NKDZ81B46ViTJ3wX49nmI2FGfGFZA3UnYw7cR0fw6UpeCjHbBAPok/19E9JoTVdS6k7z1f9JZ8puK7fmNRWuw4BN8eLQTlnZdRQGu3+EGcAYJ5Yg8BiiNKrjs3moDMkQhz+f8y5LukPXIlaQM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775473019; c=relaxed/simple;
-	bh=nan5179p0F4xSgv64zjXRiKBFJ0BJ3H/7k9IVZT0oEI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=T2WZEjuH180JG6amSweZWJlXgeZ9RhdlCIW3u1qI/AQJe93zcmbJY/6sroIqKA7IyqK51T+A7RVg1FNbz7vU6bROKLRbQhyZdfYwKrk1uPcstYTrEBc1UO+O8Yur0jvur8v0q95g255Cu0CEcTuDIzzEsPBmN8b5e8m1rY2GzWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=SRIsygnB; arc=none smtp.client-ip=117.135.210.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="SRIsygnB"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=7L
-	ld9hOXfc3Ls9HFf+pUDgYMDFqZiJUBOpyviglyfjU=; b=SRIsygnBfn5wTzFKBR
-	g18pm6kVb0KFZSAKyEdV0BIjjLgqsp9ql3h0xiGaBiSJUhk4S2yap7WC2vAQu7Wb
-	bqoQCHYqrf2AHu4blUbRG8UjdmYZHmdxSD/wa4pUAu55zTdrIWzWWEH9FxGyhLAM
-	Wrm/YHlVLBZNsHti/gj2QJ3Ao=
-Received: from Precision-7960.. (unknown [])
-	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wC37wJQkdNpmdyZDg--.25057S2;
-	Mon, 06 Apr 2026 18:56:16 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: bhelgaas@google.com,
-	lpieralisi@kernel.org,
-	kw@linux.com,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	ilpo.jarvinen@linux.intel.com,
-	jingoohan1@gmail.com
-Cc: robh@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v6 0/3] PCI: Refactor PCIe speed validation and conversion functions
-Date: Mon,  6 Apr 2026 18:56:10 +0800
-Message-Id: <20260406105613.1228673-1-18255117159@163.com>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1775479062; c=relaxed/simple;
+	bh=jDWo6+SjLg0ECrFBwUS2wSfSOs3ThAS24loBQlJOI9c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=i+lsCRj558Q/mhUEpRj0ABvQdLAUSaQJjyrdmskeYeTm3tAlszoMn/JbOMCWFzDpgz3EtrMsRqMq3uZ1/AMQOi6Izhtj5dMZLKp8q61ufrktDy++ijzv4KdL1Ks3ZUbOH9Gmit3Z06rGsZ6io9a4AuLCNsPWpYUN2tCVfjInz8o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alpha.franken.de; spf=pass smtp.mailfrom=alpha.franken.de; arc=none smtp.client-ip=193.175.24.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alpha.franken.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alpha.franken.de
+Received: from uucp by elvis.franken.de with local-rmail (Exim 3.36 #1)
+	id 1w9jD1-000441-00; Mon, 06 Apr 2026 14:37:39 +0200
+Received: by alpha.franken.de (Postfix, from userid 1000)
+	id 1F503C0256; Mon,  6 Apr 2026 14:37:11 +0200 (CEST)
+Date: Mon, 6 Apr 2026 14:37:11 +0200
+From: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+To: Caleb James DeLisle <cjd@cjdns.fr>
+Cc: linux-mips@vger.kernel.org, naseefkm@gmail.com, mturquette@baylibre.com,
+	sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
+	conor+dt@kernel.org, ryder.lee@mediatek.com,
+	jianjun.wang@mediatek.com, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, bhelgaas@google.com,
+	vkoul@kernel.org, neil.armstrong@linaro.org, p.zabel@pengutronix.de,
+	matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
+	nbd@nbd.name, ansuelsmth@gmail.com, linux-clk@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
+	linux-phy@lists.infradead.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 8/8] mips: dts: Add PCIe to EcoNet EN751221
+Message-ID: <adOo9xZxXT3FkufM@alpha.franken.de>
+References: <20260309131818.74467-1-cjd@cjdns.fr>
+ <20260309131818.74467-9-cjd@cjdns.fr>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wC37wJQkdNpmdyZDg--.25057S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7uF1Uur17WF15Jry5tFW8JFb_yoW8Aw45pa
-	yavw4fJrW7G343Ga97W3WjgFy5Wan3JrW0vry3J3s3Zr13ZFn3Jr4IgF4F9ry2yrWI9r42
-	vr12vF1kCw1jkaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRj2NZUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwxHHa2nTkVHzNwAA3A
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260309131818.74467-9-cjd@cjdns.fr>
 
-This series refactors PCIe speed validation and conversion logic to
-shared functions in the public header, eliminating code duplication
-and ensuring consistency across drivers.
+On Mon, Mar 09, 2026 at 01:18:18PM +0000, Caleb James DeLisle wrote:
+> Add PCIe based on EN7528 PCIe driver, also add two MT76 wifi devices
+> to SmartFiber XP8421-B.
+> 
+> Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
+> ---
+>  arch/mips/boot/dts/econet/en751221.dtsi       | 114 ++++++++++++++++++
+>  .../econet/en751221_smartfiber_xp8421-b.dts   |  21 ++++
+>  arch/mips/econet/Kconfig                      |   2 +
+>  3 files changed, 137 insertions(+)
+> 
 
----
-Changes for v6:
-- missing one line of code:
-  link_speed = pcie_get_link_speed(pci->max_link_speed); 
+applied to mips-next
 
-Changes for v5:
-https://patchwork.kernel.org/project/linux-pci/patch/20260406104708.1218648-1-18255117159@163.com/
+Thomas.
 
-- Rebase to v7.0-rc1. (pci/next tree)
-
-Changes for v4:
-https://patchwork.kernel.org/project/linux-pci/patch/20251102143206.111347-1-18255117159@163.com/
-
-- Maintain O(1) array-based lookup for speed conversion (addressing
-  performance concerns from v3 feedback)
-- Move pcie_valid_speed() and pci_bus_speed2lnkctl2() to pci.h
-- Update dwc driver to use the shared functions
-- Rebase to v6.18-rc3.
-
-This addresses the feedback from Lukas Wunner and Manivannan Sadhasivam
-on the v3 submission, ensuring no runtime performance regression while
-achieving code reuse.
-
-Changes for v3:
-https://patchwork.kernel.org/project/linux-pci/patch/20250816154633.338653-1-18255117159@163.com/
-
-- Rebase to v6.17-rc1.
-- Gentle ping.
-
-Changes for v2:
-- s/PCIE_SPEED2LNKCTL2_TLS_ENC/PCIE_SPEED2LNKCTL2_TLS
-- The patch commit message were modified.
----
-
-Hans Zhang (3):
-  PCI: Add public pcie_valid_speed() for shared validation
-  PCI: Move pci_bus_speed2lnkctl2() to public header
-  PCI: dwc: Use common speed conversion function
-
- drivers/pci/controller/dwc/pcie-designware.c | 18 +++-------------
- drivers/pci/pci.h                            | 22 ++++++++++++++++++++
- drivers/pci/pcie/bwctrl.c                    | 22 --------------------
- 3 files changed, 25 insertions(+), 37 deletions(-)
-
-
-base-commit: 525e91d84dc085492b36d4b87abb7c1cc93fcb44
 -- 
-2.34.1
-
+Crap can work. Given enough thrust pigs will fly, but it's not necessarily a
+good idea.                                                [ RFC1925, 2.3 ]
