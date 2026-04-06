@@ -1,125 +1,163 @@
-Received: from mail-dl1-f46.google.com (mail-dl1-f46.google.com [74.125.82.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-m128214.netease.com (mail-m128214.netease.com [103.209.128.214])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F942257843
-	for <linux-pci@vger.kernel.org>; Mon,  6 Apr 2026 19:02:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2130F38C433;
+	Mon,  6 Apr 2026 19:14:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.209.128.214
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775502129; cv=none; b=gw4jj7NK4F7QFnB+3yxwhEjufel6qE3wQSzZWXWxzMxBpyphUjFaKfDqcMRANup1L0mXaN+vbBLabqjZXT2X5UX315JAyjTZ51AaBO239IqklU8CSORLe9cfnBiGaD9ccXTq5MNUdhB83cr8FkM8Vu4TP2L+ZbNt3G8FNmS2tsg=
+	t=1775502858; cv=none; b=CNvCJpiD5ydppmTOhssG1SNtONC7xACZAwqRhcf/6GUWy5UVNI/Gg4QvEAaksVwCyYopSaS9wouRRxQjMDx9xnXHK6AHKT+dN2X//PSxPz/5HYR2NNZdP9DyhEpCUk1S2VlaUgd8ijjWvEKNvlGQg3AG7/fNdT9vRH/tnP0hVj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775502129; c=relaxed/simple;
-	bh=v+9KS65MHbrp/p6HVIZ/3YQz/WeqheDUGbseYa3ndMs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UitAGrkrDX66jdm5OMlrIiuq9wQ7GFZKtq4n5G0JH0ZwkOW40NJkA6b330AXOJbZWgF/T8ilMBKyXJKTq35UtksabuWi6DcOBxtVL+ui/Lw2lNhNBV7t0rF48wV1Lky8Rg4CtFbkpZXPIV8c5Dc6JFMuNxP4mON679FeGdOO9P4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Pj8QmBOd; arc=none smtp.client-ip=74.125.82.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1775502858; c=relaxed/simple;
+	bh=KnDk22NqfK2A5VmoRBMw4hkb6fV0LQGmL7Q7xj9UxpE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=qgDGGJyi1gut72bPIrcqyFuURJxV67xKp/NeQJCYUh/Fn3/LOKspIn0YuRSiftnzOfaUBo8/dPv0aY5eztM/OIS9czSuMOrpE6DI8QEkoj1W3N4shqfnUVwhqG6HyLLnApQKMUeg/qednaKtcrwBGTLyOsA7cV4fex/l4kdkokU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ruc.edu.cn; spf=pass smtp.mailfrom=ruc.edu.cn; dkim=pass (1024-bit key) header.d=ruc.edu.cn header.i=@ruc.edu.cn header.b=cUnJcBHG; arc=none smtp.client-ip=103.209.128.214
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ruc.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ruc.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Pj8QmBOd"
-Received: by mail-dl1-f46.google.com with SMTP id a92af1059eb24-12776bebe9fso9734654c88.1
-        for <linux-pci@vger.kernel.org>; Mon, 06 Apr 2026 12:02:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1775502127; x=1776106927; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=NSe2oQTkbqvMIVuDSTJwJ6bnD+odJ4jguUD7R1d/gBI=;
-        b=Pj8QmBOd4oXbftGbrxR5Pwu1i2RuXm5c1wVeu7hf/Dwxf32NXrIbYukukF07EGEwOa
-         TebJp+tHUiqSkTJGjpJmT5Kh1duQKpkQcvV3PctibhK0pUJ2VJtapRrN2WMsdze73VMj
-         VUO9FLC/dERatTGuWBppGa3GUEkqF9hUBXJtxTZF6+pxOq07dU8IGengI38FSUXOO4wr
-         FozaDC913B2pkbmlaGQCUsuN84W11KvRWW+axULZZSXSPMT/3j9ythUF+7dG+JubFUfd
-         6Qg8rfCavKHZb/UALLsZgy92+CrKDhtkLsEN4Pmm1ON5tb3DFZYNMLkzvdG1A2jVKD89
-         b6jA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775502127; x=1776106927;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=NSe2oQTkbqvMIVuDSTJwJ6bnD+odJ4jguUD7R1d/gBI=;
-        b=bkI4DOdJvHA6nx2qoy1bm3HCs9bSqp719mE4xzN/bQweOe435KzBaG8IFGSoFEmfVk
-         R2f1XDZbQ84PPg1laYM7NOhMIoOldby36zqLmBDh2xkexUNVkBOGI0IXQDKv7Nan2Obw
-         AweyHqVGqPxWuhPXsYoiAlb6ATYILld912PM2Jgp5yaGm/WfeGiL+fFBnCMakBxaduPa
-         P2XyjV14i938BdbhxeIaYkW1CrpaUJ7EgVIMK8akqY8S8EuyfV5d0cIfvdIPlPNFZSoI
-         fE0VjiS+HRGWSwol+F1V+sYt62Wym0VpwH8dxq9mEF6x0zvolclEFRpRSDuBHcJ/tB6t
-         Qwyw==
-X-Forwarded-Encrypted: i=1; AJvYcCUm9a8n7x6oR1Hf92JxBHzeTxSy3dxYf+JwNOnJU6xIoQw/l1VP8bx5jqfuo9cXV4t2SWuSku/7hCo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwedH+JSOPLowQLe4F+QINjoc7cCidf8hSNzLGUX+kiPa3s/zP1
-	TBY18uUnB29rccTkfznXJ0WgGPc27Z/3CjQ+9ezUz764hcAl1viO2+oN
-X-Gm-Gg: AeBDievUqNDdIMOz6F1P0kOYHIrexvm+++gWpNUH+xByUwTROybfqZdPMY1hyF1yGHG
-	ZORHHU2taWnq7f82PXcghMHR8ZvXoCz77heuqLWU+cykfnI8wClj49aEvKb/ZAOyrT8BUm6tqP6
-	9V38+qEFEbPPPaAkbaSt1JuGEwz5lMBokIlkYuzZ6hM/GjMxVVxN8e3i7s6kp8/gKu0LJtW2ZuK
-	K5KFVcdtSDY020xRa8+MLP1vMZcDhcs+TJqqd/dFp7mlxuZ6flAdjR1W+HdAn+voBelPSrIUiVj
-	7FqqzFR9tkm+Y6Bjs8o3gEjP3R7omoeVJxNc5CpQMsJ+fZ4t88Mzy6wyy8Pesw9cYmXy92sJZG5
-	ZED7TssvMVr9SCyZUp5RvBp1OhuA/xtM3n0uPlFFlCwSvHpUyLKK3nK0Q2TZQ5RiaY2t9KsebOK
-	p9OGqtKfZkL+XQLN6COq946I4DFViYl1LDzym1rMTifp49oIjOQdikply7X6Vx6t2t
-X-Received: by 2002:a05:701b:270e:b0:12b:fc21:874d with SMTP id a92af1059eb24-12bfc218ac5mr3524770c88.19.1775502127119;
-        Mon, 06 Apr 2026 12:02:07 -0700 (PDT)
-Received: from google.com ([2a00:79e0:2ebe:8:dd71:7176:b4e4:a7a5])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-12c05a7beffsm6197436c88.15.2026.04.06.12.02.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Apr 2026 12:02:06 -0700 (PDT)
-Date: Mon, 6 Apr 2026 12:02:03 -0700
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Heiner Kallweit <hkallweit1@gmail.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, "open list:HID CORE LAYER" <linux-input@vger.kernel.org>, 
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/2] input: pc110pad: change PCI check to get rid of
- orphaned no_pci_devices
-Message-ID: <adQCShxoHCwfcwlm@google.com>
-References: <cf519463-775a-4d43-be38-20742fdad407@gmail.com>
- <20260406172324.GA170281@bhelgaas>
+	dkim=pass (1024-bit key) header.d=ruc.edu.cn header.i=@ruc.edu.cn header.b="cUnJcBHG"
+Received: from lwz.tail698a0e.ts.net (gy-adaptive-ssl-proxy-1-entmail-virt204.gy.ntes [36.112.3.244])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 39aaefbdd;
+	Tue, 7 Apr 2026 00:51:34 +0800 (GMT+08:00)
+From: Wenzhao Liao <wenzhaoliao@ruc.edu.cn>
+To: rust-for-linux@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Cc: ojeda@kernel.org,
+	dakr@kernel.org,
+	bhelgaas@google.com,
+	kwilczynski@kernel.org,
+	arnd@arndb.de,
+	gregkh@linuxfoundation.org,
+	linux-kernel@vger.kernel.org,
+	linux-api@vger.kernel.org
+Subject: [RFC PATCH v3 3/6] rust: page: add helpers for page-backed ping state
+Date: Mon,  6 Apr 2026 12:51:17 -0400
+Message-Id: <20260406165120.166928-4-wenzhaoliao@ruc.edu.cn>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260406165120.166928-1-wenzhaoliao@ruc.edu.cn>
+References: <cover.1775456181.git.wenzhaoliao@ruc.edu.cn>
+ <20260406165120.166928-1-wenzhaoliao@ruc.edu.cn>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260406172324.GA170281@bhelgaas>
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9d63b4eb5a03a2kunm562d3b0d647e7c
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlCTRgaVkJOSh4eTksZSUsaSVYeHw5VEwETFhoSFy
+	QUDg9ZV1kYEgtZQVlITVVKSklVSFVJT09ZV1kWGg8SFR0UWUFZT0tIVUpLSEpOTE5VSktLVUpCS0
+	tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=cUnJcBHGiOx97/kgEgPi7Kd1EEfqAQImO7E/GBbnA46rDS77dufPinwtyGC8Gy8oWi02nrZ1qBHWhqJLQBRwmPUniLy/xWqWeBZg3pOWN0bSHsN5ppdXQhEqmCTuSnYJfyCZYvdkLgqwrP4jk1Dx3NNmJnAqJUVe1YKzkCJlMsY=; c=relaxed/relaxed; s=default; d=ruc.edu.cn; v=1;
+	bh=kKwjlPbz8irjEUZ4cgjU35rxHOQIvjj9A2j4f+K6xtA=;
+	h=date:mime-version:subject:message-id:from;
 
-On Mon, Apr 06, 2026 at 12:23:24PM -0500, Bjorn Helgaas wrote:
-> On Fri, Apr 03, 2026 at 12:17:35AM +0200, Heiner Kallweit wrote:
-> > As a prerequisite for removing no_pci_devices(), replace its usage here
-> > with an equivalent check for presence of a PCI bus.
-> > 
-> > Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
-> > ---
-> >  drivers/input/mouse/pc110pad.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/input/mouse/pc110pad.c b/drivers/input/mouse/pc110pad.c
-> > index efa58049f..c7a6df210 100644
-> > --- a/drivers/input/mouse/pc110pad.c
-> > +++ b/drivers/input/mouse/pc110pad.c
-> > @@ -91,7 +91,7 @@ static int __init pc110pad_init(void)
-> >  {
-> >  	int err;
-> >  
-> > -	if (!no_pci_devices())
-> > +	if (pci_find_next_bus(NULL))
-> >  		return -ENODEV;
-> 
-> I'd certainly love to get rid of no_pci_devices(), although using
-> pci_find_next_bus() is not really much better.
-> 
-> I don't have much opinion about pc110pad.c change.  It's essentially
-> still the same kludge, which has been there at least since the
-> beginning of git history.
-> 
-> Dmitry, if you want to ack this, I can take both together.
+Add the minimal safe page helpers needed by the goldfish ping buffer: physical address discovery plus bounded read, write, and zeroing operations.
 
-Given "x86/cpu: Remove M486/M486SX/ELAN support" I'd just drop the
-driver completely.
+The driver uses these helpers to manage its per-file ping page entirely from safe Rust while keeping the raw page mapping and pointer handling inside the page abstraction.
 
-I tried it in 2024 but Maciej was insistent that keeping these old
-drivers doe snot hurt. Now I think we can get rid of them.
+Signed-off-by: Wenzhao Liao <wenzhaoliao@ruc.edu.cn>
+---
+ rust/helpers/page.c |  5 +++++
+ rust/kernel/page.rs | 52 +++++++++++++++++++++++----------------------
+ 2 files changed, 32 insertions(+), 25 deletions(-)
 
-You can grab the patch removing it from
-https://lore.kernel.org/all/20240808172733.1194442-4-dmitry.torokhov@gmail.com/
-as I think it should still apply.
-
-Thanks.
-
+diff --git a/rust/helpers/page.c b/rust/helpers/page.c
+index f8463fbed2a2..05824bdc4fd8 100644
+--- a/rust/helpers/page.c
++++ b/rust/helpers/page.c
+@@ -20,6 +20,11 @@ __rust_helper void rust_helper_kunmap_local(const void *addr)
+ 	kunmap_local(addr);
+ }
+ 
++__rust_helper phys_addr_t rust_helper_page_to_phys(struct page *page)
++{
++	return page_to_phys(page);
++}
++
+ #ifndef NODE_NOT_IN_PAGE_FLAGS
+ __rust_helper int rust_helper_page_to_nid(const struct page *page)
+ {
+diff --git a/rust/kernel/page.rs b/rust/kernel/page.rs
+index adecb200c654..e8336d1bcc12 100644
+--- a/rust/kernel/page.rs
++++ b/rust/kernel/page.rs
+@@ -7,7 +7,7 @@
+     bindings,
+     error::code::*,
+     error::Result,
+-    uaccess::UserSliceReader,
++    io::PhysAddr,
+ };
+ use core::{
+     marker::PhantomData,
+@@ -198,6 +198,13 @@ pub fn nid(&self) -> i32 {
+         unsafe { bindings::page_to_nid(self.as_ptr()) }
+     }
+ 
++    /// Returns the physical address of the start of this page.
++    #[inline]
++    pub fn phys_addr(&self) -> PhysAddr {
++        // SAFETY: `self.as_ptr()` is a live `struct page` owned by this `Page`.
++        unsafe { bindings::page_to_phys(self.as_ptr()) }
++    }
++
+     /// Runs a piece of code with this page mapped to an address.
+     ///
+     /// The page is unmapped when this call returns.
+@@ -337,30 +344,25 @@ pub unsafe fn fill_zero_raw(&self, offset: usize, len: usize) -> Result {
+         })
+     }
+ 
+-    /// Copies data from userspace into this page.
+-    ///
+-    /// This method will perform bounds checks on the page offset. If `offset .. offset+len` goes
+-    /// outside of the page, then this call returns [`EINVAL`].
+-    ///
+-    /// Like the other `UserSliceReader` methods, data races are allowed on the userspace address.
+-    /// However, they are not allowed on the page you are copying into.
+-    ///
+-    /// # Safety
+-    ///
+-    /// Callers must ensure that this call does not race with a read or write to the same page that
+-    /// overlaps with this write.
+-    pub unsafe fn copy_from_user_slice_raw(
+-        &self,
+-        reader: &mut UserSliceReader,
+-        offset: usize,
+-        len: usize,
+-    ) -> Result {
+-        self.with_pointer_into_page(offset, len, move |dst| {
+-            // SAFETY: If `with_pointer_into_page` calls into this closure, then it has performed a
+-            // bounds check and guarantees that `dst` is valid for `len` bytes. Furthermore, we have
+-            // exclusive access to the slice since the caller guarantees that there are no races.
+-            reader.read_raw(unsafe { core::slice::from_raw_parts_mut(dst.cast(), len) })
+-        })
++    /// Maps the page and reads from it into the given buffer.
++    pub fn read_slice(&self, dst: &mut [u8], offset: usize) -> Result {
++        // SAFETY: `dst` is a valid mutable slice for `dst.len()` bytes. Safe Rust also prevents
++        // callers from obtaining a mutable reference to this `Page` while this shared borrow
++        // exists, so concurrent writes through the safe API cannot overlap with this read.
++        unsafe { self.read_raw(dst.as_mut_ptr(), offset, dst.len()) }
++    }
++
++    /// Maps the page and writes the given buffer into it.
++    pub fn write_slice(&mut self, src: &[u8], offset: usize) -> Result {
++        // SAFETY: `src` is a valid immutable slice for `src.len()` bytes, and `&mut self`
++        // guarantees unique access to the page through the safe API.
++        unsafe { self.write_raw(src.as_ptr(), offset, src.len()) }
++    }
++
++    /// Zeroes a range within the page.
++    pub fn fill_zero(&mut self, offset: usize, len: usize) -> Result {
++        // SAFETY: `&mut self` guarantees unique access to the page through the safe API.
++        unsafe { self.fill_zero_raw(offset, len) }
+     }
+ }
+ 
 -- 
-Dmitry
+2.34.1
+
