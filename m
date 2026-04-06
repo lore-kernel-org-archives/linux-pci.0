@@ -1,165 +1,179 @@
-Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com [209.85.208.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020137.outbound.protection.outlook.com [52.101.229.137])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C382345741
-	for <linux-pci@vger.kernel.org>; Mon,  6 Apr 2026 16:06:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3CC32DEA75;
+	Mon,  6 Apr 2026 16:39:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.137
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775491608; cv=pass; b=aulMekya+jRQtFp2kyxlnipph5HRwqI8zixkrGwEWHJ+ORuCCdX0e9dfo2u/RlRWANT0CrnoJRhP4X8EnfH3579M+XP3YtNTOxc0h/VOJ4GQzSTPzapp9wnNvqhnmBCIyj+LdYQtVNsvo9HgpcYED+160+338FmxlsDNUw31igA=
+	t=1775493546; cv=fail; b=I96o2pc3/r1pyEt7rZl45i/dD0MbFfxAVwNz6K4Tl0z9WKKNpnuHI96FRYSZVJWj1HWxsw3tf+e+l1tQ5jEZ/IzuieeeHXLnPP0NM+YR4cuc2nPybcoASIE4E7bB66i7DqhVSSFaZ8+HYY4LsIco5qY2ykBcZ2LgPJqjF9PCw7I=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775491608; c=relaxed/simple;
-	bh=0mfv2q13bWahVT0s2waY/ovs1AueK0bCMf6E6tJ8ke4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=G3UnyPr/uj49TePZBTPemnTUhNjB7a/Q4dXkesofx/wFTG1HvC0TfBx+gdaSkkTGd4JeweDVNEV+AGpO/Ml57rgKcLJ8pwunBePi8datEJ/UO5zAeMUFCAmNAdWAm/Ab0PygiwVvAkElt0AEQ7G2sZRvW9NG2jKknWaI1LITRQI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=IwnwHUVD; arc=pass smtp.client-ip=209.85.208.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1775493546; c=relaxed/simple;
+	bh=HDl/xJ2+Na4Nz9EtnMMAVxYHXWghGm43I6mfDMP0XI0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=SUJVpqAElP4GBw0TvnnQ9Q9X/jeKD5/mKqVEKPoSqma7SBlC5RhHbQsrAMbT5plPs3Ll2aQi1b4otUBYRv5xToSNcCDifbqs53dnY3t74nDnpGbAyWlI8AogopWwh/bOUFxT//yeET3gUvGmwhommVbc4jRHqceU7lhxhmiVlQk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=YI3irLKO; arc=fail smtp.client-ip=52.101.229.137
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="IwnwHUVD"
-Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-38ce0ab821cso29698811fa.0
-        for <linux-pci@vger.kernel.org>; Mon, 06 Apr 2026 09:06:46 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1775491605; cv=none;
-        d=google.com; s=arc-20240605;
-        b=dpHlFy4aUgsIBYh6JPUtlFgnk1oMhoAm68jMdJ3FEonUme0rq8lLkeNfkRvKk1uWF8
-         QDmQxM+zAnS1yh79N9EMXTwHqrQiTA6asmWDiFQq4kN6GdvrBKJywsZzvXTADKFEVc1C
-         BhtQfdbvs3Ai+4kvuClhHAe9Eg+MruPuqhF9lkDiVqtXMXvGoqkUZ8Y+fOmKP1GdTK5z
-         P+WXV6HJc2EjpF72FX+nrRZwAjvLL9py2V1bMHRlHiLH5g6id5ppKJgtSpcAZT1iPVee
-         jkJleqp6eWZmly87eAxiTuqauS0/0azUVh81bE2oVJdSkW5oUxMiwbZx7dto7thIjDeT
-         Yn5w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=cOKcd1E+kh/rgDmBatc+5AEkevvJqYiqh34IKuXZ368=;
-        fh=pUGjvtmlSoCk2NZLgH8ftKAvy8UHx43iBNUVhLtgqvM=;
-        b=jH4h6Cf5dzklTPPx4qaBpK5Jco7mfDEUq2JBCnKMHjll2URkIMQcDLFAwayKekxk1C
-         aW6sRL3jp91+Bn5pb/5UbemozmMJ9lPYoiNZAa6NS/2kr5W8C0+UgmXJdQCThkG892zK
-         ac+1LL1RHPRviVlH8dxS4u5cDiqT+7A3ftr5tnhUUVHngCxDwx3SfFh7DNuokvuBxZPI
-         Jxf/OE9+wABG4IV1WR4B0xXK00uLTy+GsBW47MF2lE5sN6qz1arU/jsyrTNKrLvp6pvq
-         lymtseo5NzR4N7oCskCuFFqp4MMPColHAY6RqGBCSTIE/zeRVIT5CpoXyCIsxyNVJBf3
-         ACrg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1775491605; x=1776096405; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=cOKcd1E+kh/rgDmBatc+5AEkevvJqYiqh34IKuXZ368=;
-        b=IwnwHUVD2T4Xb+Dd46BueA+Str+szIapn/Y+fyFgQSwlj6mjzlptehM1Sg6sFr/dwP
-         3/Y1pkp2MwvbGzpNJKsRRCMnPF4yISFdb1OZv23yZ7I7QZgSWRjtI+UkYbPLzAUNkXhw
-         k7dgJGyqBsf48qQdKVz/KPE7CvG1T4JyZDRV/4/3numJsXFFE8ATg28Ku7sq8l9Ns5wR
-         aMXQgJT++ZZAj6Jq4q53P43tlh1BPBlIupFJOFOkGTTdquFzsj4NJtEubzYunEHrbwr4
-         Pj6Q5vptSf57UeMe8W+fBnqjBlh5WRfD7UwDgIrJ0Szmz1FrYU0sZzEQocx3URM+s4uc
-         RSjA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775491605; x=1776096405;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=cOKcd1E+kh/rgDmBatc+5AEkevvJqYiqh34IKuXZ368=;
-        b=rKuvujOFrAyPWA9KUcM65suJqyMYefgH7SgwSRfmSHqIeddDFX/v2YEWWWOPv6xofZ
-         lOBfNectQavg4glW7Db2OSeJ1cpSJHwBTWBn52TPF9VZSGmYj9IcXEdxKKJ4NxsoMmfe
-         Eab25qBHnTlDDjSN+c5XIZ9tMrop2E68tJwlAO1B+ioYUvZNfVOLSLgazpq/y1nh0fbz
-         LwHZSK/xhWKyl5Q5YKRYr4JrNsnkyt9WUdWI17XUl4Esr6HsOr6RpHdRjtGOaW5bADSd
-         Vmki5lFjc67pgbWszBU3692x+ZjiE/ybfdm0+pUeZ5Y2Z9zmlhqz/j4+ddYeY0KSxg8K
-         kPwA==
-X-Forwarded-Encrypted: i=1; AJvYcCW2QMW2D9vHhGvO0tnobeXw9ifOFfLmRWrfQUaTqswHOd86G4AmkKZlIaWOIrl4ZFsXLW4jjwFQbaA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyUT2a9kYofNgptCWCez8UJsVnADOw0EKTtBJ4l46gLnzIWvx8q
-	5HZi51xjiIuD/N6av/wXLQl+vvyJ1rFzN3FPJRKwUS6Dhgka5qTufceAgB4xRh+ApHLWRHgjh0k
-	CczOaOP9E0LGOf+wYGwNb3LJb1Gq7/2aIkKCpNsjr
-X-Gm-Gg: AeBDieuq14jRWKy/GUwp1Cr/hO7GEL2r/E9qxUu29NxNLd/3Mv9XzaGpcj0QWPiW8Ta
-	rrSYhulrNQldvXUsGlyP5ljeHM8jmDHzrBz9eTN7B1J2ve+8t+yFsmPnvyC6cEKBxmMuBsR84Mv
-	odrLlECLaS4P7c1KU+pCm8Ja/H1Hv64chtUmfU6larzJ7uSh2ImEcEAmvbJI4kpcYlT4LS8KCOg
-	gUpGrwCUB8LaCNjwdYL/vJ37Yx3qTh7IK16Pe3j8XyVmAiT3fh+agp8R5heLTY4dh8ZX4hxNqVd
-	Cc6mXHbB
-X-Received: by 2002:a05:6512:33cd:b0:5a3:d2ef:2f93 with SMTP id
- 2adb3069b0e04-5a3d2ef2ff2mr3364086e87.30.1775491604807; Mon, 06 Apr 2026
- 09:06:44 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="YI3irLKO"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=lCC3Fk0CVsxdYsST3YEzMUVRkdSDt59B8eDP4YBub7SzmffaSiOqVMULP/Dza6SsYSh8aHlyIzji6yZJjOGxPKo0JBXAUSCvKhrKqxy8RNOqGBA23tOXxmLxwSaSnNuZ1wPZYWlPXXfKs+Xbl5Pm1NZv6TcnTDDNuydXCOg0qT64EH3H6aggAbXfkUUVLLxMxZUsi/n5IWKbd1zNo4hVi6CARqLJhRfH+UVRn2YK9HTm0XnchuCG7P1yFhbucqRtRda21IusDQwiwprELF0qyjWbL1W1BkV1NyU9s1YLEsjgzRkR+uwlb3PGvgKm5nU5VH817WaIybbNwM2oaGEZ5Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=4NCWWDQV96Rwq+EhA4j0YCCBAJOyyIfA1aL4gfpXqKI=;
+ b=HvYn5id1mUq8uOIBEmkci8f9XVyaq6uFJ6w38TB4rzE0xt1uJLQ/h3rH6JIQzFrlcOvSx9YYPj0iQqJPvBVfwqujPBvweGqdyRsKHamn7lfv3uBo+CbslTgr04KdNFhSNCcIXbQb6YrbPG4SFAeGaekdCQxfEN/URgqgg67VTGcnKZHMhJDn0ThF7bejQQrNpPJJRaPDhAEMtgsIEyGimMG+zukS0FAU1n7TqBRwJ6tZxUbeIs/YiIazsuTeZK9eaxP1cV0yEWGF2Y+axqfybmgdoHAPJB52s4BpwL/pCzdsiYtvTvkxrBZ23BbpRvhGL3ZkPsvJoYW1H+t6JX0nVQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4NCWWDQV96Rwq+EhA4j0YCCBAJOyyIfA1aL4gfpXqKI=;
+ b=YI3irLKOrc/fiYg8THH0/Mw+wPhFrPvgRpVIpzmL+5DeXl4x1L8YY7kDKX3qos6F8JzYoal6faRZ2O/Rn77DVm93Ts/nyWHf2Io7cCaO+jvKoX4mOoSGcRpMJYdYQoa+/4pHRAHhxphf5n5jneiaLjie334BxmANIkBGYt9nIcE=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TY3P286MB2674.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:255::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.17; Mon, 6 Apr
+ 2026 16:39:01 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9769.017; Mon, 6 Apr 2026
+ 16:39:01 +0000
+Date: Tue, 7 Apr 2026 01:39:00 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: carlos.bilbao@kernel.org
+Cc: mani@kernel.org, kwilczynski@kernel.org, kishon@kernel.org, 
+	arnd@arndb.de, gregkh@linuxfoundation.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, bilbao@vt.edu
+Subject: Re: [PATCH 1/2] misc: pci_endpoint_test: validate BAR index in
+ doorbell test
+Message-ID: <bqqpugb2vhp7pia4pptktnv2ky6briu6lgvlnmvtopdx3nqq63@hgdapwdihxe4>
+References: <20260404012002.111873-1-carlos.bilbao@kernel.org>
+ <20260404012002.111873-2-carlos.bilbao@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260404012002.111873-2-carlos.bilbao@kernel.org>
+X-ClientProxiedBy: TY4P286CA0116.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:37c::6) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260323235817.1960573-1-dmatlack@google.com> <20260323235817.1960573-3-dmatlack@google.com>
- <e3fe7085-1297-47b8-bb17-a48196e8f37f@linux.dev> <CALzav=eyf4XRTi8MfE_GBNSm+tjmfX7=d0M8Aj5Hh0vJn7huew@mail.gmail.com>
- <c4138f66-edf2-4689-b5fe-16dc4839e9c3@linux.dev>
-In-Reply-To: <c4138f66-edf2-4689-b5fe-16dc4839e9c3@linux.dev>
-From: David Matlack <dmatlack@google.com>
-Date: Mon, 6 Apr 2026 09:06:15 -0700
-X-Gm-Features: AQROBzBbHlG2eO4NjewlbX-rvy8OZhgqlWaRP6spr5d6_KAEWYAdDGH-j6HkrWs
-Message-ID: <CALzav=ei_xSfM0MTdPFhGDjNwe3EQ0vHPiEk=vszFX-Xi_KjQw@mail.gmail.com>
-Subject: Re: [PATCH v3 02/24] PCI: Add API to track PCI devices preserved
- across Live Update
-To: Zhu Yanjun <yanjun.zhu@linux.dev>
-Cc: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Ankit Agrawal <ankita@nvidia.com>, 
-	Arnd Bergmann <arnd@arndb.de>, Askar Safin <safinaskar@gmail.com>, 
-	"Borislav Petkov (AMD)" <bp@alien8.de>, Chris Li <chrisl@kernel.org>, Dapeng Mi <dapeng1.mi@linux.intel.com>, 
-	David Rientjes <rientjes@google.com>, Feng Tang <feng.tang@linux.alibaba.com>, 
-	Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, 
-	Jason Gunthorpe <jgg@ziepe.ca>, Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
-	Kees Cook <kees@kernel.org>, Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org, 
-	kvm@vger.kernel.org, Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org, Li RongQing <lirongqing@baidu.com>, 
-	Lukas Wunner <lukas@wunner.de>, Marco Elver <elver@google.com>, 
-	=?UTF-8?Q?Micha=C5=82_Winiarski?= <michal.winiarski@intel.com>, 
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, "Paul E. McKenney" <paulmck@kernel.org>, 
-	Pawan Gupta <pawan.kumar.gupta@linux.intel.com>, 
-	"Peter Zijlstra (Intel)" <peterz@infradead.org>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>, 
-	Randy Dunlap <rdunlap@infradead.org>, Rodrigo Vivi <rodrigo.vivi@intel.com>, 
-	Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Vipin Sharma <vipinsh@google.com>, 
-	Vivek Kasireddy <vivek.kasireddy@intel.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY3P286MB2674:EE_
+X-MS-Office365-Filtering-Correlation-Id: a64dd1e9-ccc0-4088-cb5d-08de93fb01ea
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|376014|10070799003|22082099003|18002099003|56012099003;
+X-Microsoft-Antispam-Message-Info:
+	D3Q/t7kpz1SVjqCcKVRkmtOa7JbYwzCoZoYlP1Wt/aTv2Qp8oBIfFZiu9XZA+zTomAM9TdgdM07kTe4u4Crpcgwm+WEy+dt3+LBYsiIofmB1hx1nou+zUhKrHcqGQTU1jUPs6gk3YBrdEgJOC/MXhdKyachaTZpWY5J3rIKKKocsRsFPSbozPzBILjBJ+A9mcoloxGigQoBV/gh9WKs85gQV84gpiAkiElomVUVoM+cHW3mZT/L48PqJB1SCRhyjk9OmfBS2OiQavKnmfNE0NL/ZcZH5JO87VVjKg88uULG+bEBTUBW8D10eWJeU9g5M5AWhKOj8b9R/EnPzDAjEke1+4D/2pQuTH9iS9rxGCJOXm0/ErdGbO2q7v0sCFAJlDmoierHbdcvYHGXXs2dH8BHKJwWFdcuKBKp/iSNzTHQp5pgAPPGy1qdRYAX5cF2OmZRPUihPO8O0TR2r5xEEeZsdJ3DXuEkmIL1WYxnPN8wituCqsTq0lSvVBSsJZR03qoNA0dIz9BX8m6uVFZzKt7/b6h1e9IWKhdCVDG5LW5ynmxoo9Fg9lwM3/rgWi3Ms2uAVkfcVVnIGoYyCJYEJOxNIWwBmN3PyywAGHCDXyTe+yolvFsBjLSHeZknFT0O24l9Ao5E7AeKBFg9x5zBwKeYqcqVteM5j2ALaKyBryAn+/nEuJWVCffRytYfcChg2eVTseXdgCGz2/GIIsIlNV07deZJvmfGhdVFLBx2jWBQ=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(10070799003)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?E139lZDEj836GGku7+1SXl8+kU9zVjB/vPmcMpK0n52SWYYEylzDvArQiOXa?=
+ =?us-ascii?Q?xxAGe8w7vkGW9NeAjYkJFX0yPIQsH0oX9pC8o2Mj2DFmX2YxJEu7RKgpl0qv?=
+ =?us-ascii?Q?MtPNA+vO7GbWGyiioF2Nm6BvJFeJqzWsqK2l7EWTLhSNjDnYfM4blwrzgAXV?=
+ =?us-ascii?Q?iyn1sVSBW+dtSJuMGg6x/7JrpjzoUcTciHB7smgWSZAnIsn9USP7mJcla1lz?=
+ =?us-ascii?Q?03SvvVwfb/PPKl+sHpAr0bMo45e/lWAWBzYggKGEz13pVn+LWQ10sHpDHTZV?=
+ =?us-ascii?Q?gmIXX6R1Ga3gHDOr5HysUDvI6tArpmGGZh63aGExA2OkkBqiSHpBEUrFeWF8?=
+ =?us-ascii?Q?sy5sb416W/bPRc/leTMcj1KVYotwyIBznoNfAMGrQzjK1yXthqall5DVil4o?=
+ =?us-ascii?Q?X6veSM52BmPWX1k5k2u0mrla0A7INbwCL8Hx8xwzX+Qx28AI9vhk/b8jppcQ?=
+ =?us-ascii?Q?B567xkPG6LosWZecv+6jFMesYNXeynZpGMdhc97FkhfKgc9QJBrK/hNaVw8T?=
+ =?us-ascii?Q?i7cYAfC+ucVsKCZshnE74bxWPaw9slfuU468Tw8arpQApD+Nh2X4bVLiS/wx?=
+ =?us-ascii?Q?gSWmojGEKbABlEnDew5I8Oghpmqr5qZ/oDySUUSqR5LHAU0a0kr5PZel/qml?=
+ =?us-ascii?Q?Zqmyt1QwNVRVPkf7Z9eJKMtbZArUy2umKwDZUBGvgx3PCwJC8HlZwDDy/sD6?=
+ =?us-ascii?Q?UexsEDh4/Q7YRTKeAIiKGTVgqUSxLEvRgngc0RKzZ6xsPnCdJU9dWWpqlqMZ?=
+ =?us-ascii?Q?eIVoqprsbeOfZHrXAnMoQ8WRke97aR58KvcmdROg1OvIjcKOTZ+n3Le5YE0+?=
+ =?us-ascii?Q?N2V08AH8GUUBxy1+KoH8dJ2EdAQCmwoRriLLJhv8rGZEx8q44wng8L9aQGUb?=
+ =?us-ascii?Q?CbgvfbPp0iQdsuHcyNYSKjIZLVFRX24FAfe8WXvAYgS05l53awzOyaC3R24e?=
+ =?us-ascii?Q?SbWMZtKFGyBaUwiaBnoRjnWjqssAPX/DGkR7N4gRFoPqeAQlCrlEr0kE9jMS?=
+ =?us-ascii?Q?4oDPOf57LJOjbVX0hDb2J1GQF0jeO89+isykNu+2HvQiws1K2Y0KCRZy1y7i?=
+ =?us-ascii?Q?mMH4hMhvIFC0zjgucMW8C3aT3PWvrtfypqZXLnkWPCue3VXIjquFiVAdKw2P?=
+ =?us-ascii?Q?a14OM/6tr5sNkcp3ndEfpHIKMGkjZL8CeZixwLHo1hjztPggfm60CvHzu9++?=
+ =?us-ascii?Q?Ajd0Ol+6QsjtgvEvy+m6fGjgZUeHRKozu3lxqA7X+CN8udWCWg1KuKSFzU+P?=
+ =?us-ascii?Q?ckqRfS4YDw5pNDoA1Bm348/a4OklZwabcSY/wzOZhK5a//qRezhK0E8+K8gU?=
+ =?us-ascii?Q?zHsqbs/qs31saPArzt95LO65ODDRjQSvsOY+nVs+HSmHt9YsxVCY1JVUcyw+?=
+ =?us-ascii?Q?UvloKpNAK0u7/ypKB/We+76GigtnnrCmfqSMsdLEC/g4CWn/Cr1NJcgMRQ2p?=
+ =?us-ascii?Q?KIl0tpmGQiUQp00wSzby138gJaUX9xSQFpwfgTbePLKnDtXPcsVgrVOkBceT?=
+ =?us-ascii?Q?fQzUD8k/sJNzEbNXvJccT/TzuhzILhpqVNFLfOUm9llPcm3msHqcFwU+oQwi?=
+ =?us-ascii?Q?LsA3IwugFl59et7qnARCoiShBZP/EHKzyfZaXzR8xtvYaKrFUt84kpHx3U1N?=
+ =?us-ascii?Q?n04/hRTC/eY5tCHETuHrmcvRx6E+wlR83mJhysuGbVhnwl5ruNGVJ2u7C+5L?=
+ =?us-ascii?Q?6KmlkiVDv9vY2OKXMoRBu57M4Fi7tEW28x6JPVfDrlyyC49fSKg8boVg1tht?=
+ =?us-ascii?Q?IE9J1pjU/CvUYmwNwdXyeahLDTp2yBKgHimOmQL4S5xSueMi1Rqu?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: a64dd1e9-ccc0-4088-cb5d-08de93fb01ea
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Apr 2026 16:39:01.2283
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: snCcdQ0i2GWQuQakLxfFPgDA+Q2hlNyYH9REwhqkWMnsaPrajNuUd/I76fPWNFTlYx9YqHWpXR9pFh4OINCKxw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY3P286MB2674
 
-On Sun, Apr 5, 2026 at 9:56=E2=80=AFAM Zhu Yanjun <yanjun.zhu@linux.dev> wr=
-ote:
-> =E5=9C=A8 2026/4/3 14:58, David Matlack =E5=86=99=E9=81=93:
-> > On Thu, Apr 2, 2026 at 2:29=E2=80=AFPM Yanjun.Zhu <yanjun.zhu@linux.dev=
-> wrote:
-> >> On 3/23/26 4:57 PM, David Matlack wrote:
-> >>> +config PCI_LIVEUPDATE
-> >>> +     bool "PCI Live Update Support (EXPERIMENTAL)"
-> >>> +     depends on PCI && LIVEUPDATE
-> >>> +     help
-> >>> +       Support for preserving PCI devices across a Live Update. This=
- option
-> >>> +       should only be enabled by developers working on implementing =
-this
-> >>> +       support. Once enough support as landed in the kernel, this op=
-tion
-> >>> +       will no longer be marked EXPERIMENTAL.
-> >>> +
-> >>> +       If unsure, say N.
-> >> Currently, it only supports 'n' or 'y'. Is it possible to add 'm'
-> >> (modular support)?
-> >>
-> >> This would allow the feature to be built as a kernel module. For
-> >> development
-> >>
-> >> purposes, modularization means we only need to recompile a single modu=
-le
-> >>
-> >> for testing, rather than rebuilding the entire kernel. Compiling a
-> >> module should
-> >>
-> >> be significantly faster than a full kernel build.
-> > I don't think it is possible for CONFIG_PCI_LIVEUPDATE to support 'm'.
-> > pci_setup_device() (which is under CONFIG_PCI) needs to call
-> > pci_liveupdate_setup_device(), and CONFIG_PCI cannot be built as a
-> > module. This call is necessary so the PCI core knows whether a device
-> > being enumerated was preserved across a previous Live Update.
->
-> After the following changes, the liveupdate.ko can be generated
-> successfully.
+On Fri, Apr 03, 2026 at 06:20:01PM -0700, carlos.bilbao@kernel.org wrote:
+> From: Carlos Bilbao <carlos.bilbao@kernel.org>
+> 
+> pci_endpoint_test_doorbell() reads the BAR number directly from an endpoint
+> test register and uses it as an index into test->bar[] without bounds
+> checking. Since the value is a raw u32 from device MMIO, any value is
+> possible and if greater than or equal to PCI_STD_NUM_BARS the access goes
+> out of bounds.
+> 
+> Add a bounds check before dereferencing test->bar[bar].
+> 
+> Fixes: eefb83790a0d ("misc: pci_endpoint_test: Add doorbell test case")
+> Signed-off-by: Carlos Bilbao (Lambda) <carlos.bilbao@kernel.org>
+> ---
+>  drivers/misc/pci_endpoint_test.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+> index 74ab5b5b9011..276bed3f1c18 100644
+> --- a/drivers/misc/pci_endpoint_test.c
+> +++ b/drivers/misc/pci_endpoint_test.c
+> @@ -1089,6 +1089,11 @@ static int pci_endpoint_test_doorbell(struct pci_endpoint_test *test)
+>  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_STATUS, 0);
+>  
+>  	bar = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_DB_BAR);
+> +	if (bar >= PCI_STD_NUM_BARS) {
+> +		dev_err(dev, "BAR %u reported by endpoint out of range [0, %u]\n",
+> +			bar, PCI_STD_NUM_BARS - 1);
+> +		return -EINVAL;
+> +	}
 
-Sure but you've broken the feature. Now devices can be probed before
-liveupdate.ko is loaded and the PCI core will have an incorrect view
-of which devices were preserved by the previous kernel.
+Hi,
+
+On the EP-side (pci-epf-test.c), doorbell_bar is set to NO_BAR or a valid BAR
+number in the range 0..(PCI_STD_NUM_BARS-1), so if we add such a safeguard here,
+we might as well handle NO_BAR explicitly.
+
+That said, I'm not sure this check is really needed. At this point
+COMMAND_ENABLE_DOORBELL should have succeeded, so bar is expected to always be
+within the valid range. Whether such defensive checks are desirable probably
+depends on the maintainers' preference. In any case, I don't think a Fixes tag
+is appropriate here.
+
+Also, even if the intention is also to guard against an "all 1's" value scenario
+on errors, then I think it might be better to handle that in a more centralized
+way, since the same concern would apply to other similar reads as well.
+
+Best regards,
+Koichiro
+
+>  
+>  	writel(data, test->bar[bar] + addr);
+>  
+> -- 
+> 2.43.0
+> 
+> 
