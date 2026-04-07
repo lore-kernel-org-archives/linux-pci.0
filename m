@@ -1,32 +1,32 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BFE4395DA0;
-	Tue,  7 Apr 2026 12:30:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46972332EBA;
+	Tue,  7 Apr 2026 12:32:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775565058; cv=none; b=r51wPbXs5IsdI4lTa/I0jz69MFZ/pn4RTqV42AthF3GAs+dhiPq+hBkFEAqIfMETZvhV+6QJW893EhCmfNXoyz3JLPRZhH+cXKsOswMPpCRGOorFHkm1QAJDQiLSVI8ERbSbVULqCKpOKTRjb3oOIMZRGsgfGsBhim1AmP0P4qM=
+	t=1775565183; cv=none; b=kHo2kcuu0/4FBWfGw/Al8LFOJAa1ekx92m/D5dyICghPYc7qkXbeQoR3uVGZzU+pjLm17xHRxsgG/S8yleGtnBM9iIVfluOm+xedLrjw5muisi/Hp8P6+pkpc3530jM4PZb05y9rtcx1CzXVVqv4Z4/pfF20hUAxlRn+JKSAaqM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775565058; c=relaxed/simple;
-	bh=ijtx/ltxHH3xSD88g3nSbWsCaEKN6jqbrHlB/guHcgM=;
+	s=arc-20240116; t=1775565183; c=relaxed/simple;
+	bh=4jEUS4TVj0mUoG/B4T0vgcXzf61uSxD0SXo9Ymr9jjg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=W0iGBfKlwd5TeZmMGguUlo5fXVYn+IOZ7gmFjHIIsuAHUKaaaLc683WbqpsmP8aOwNGM2dGFhjG/emQdz5fBvRT++rGZ7uR6FB7wctAaZQysM/XyejfaQG63+qByo99XR3wXeMrDrFcAZ0eX2vleeJnlblUjnC01ifinuL2nJJg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=P85+7f9y; arc=none smtp.client-ip=117.135.210.3
+	 In-Reply-To:Content-Type; b=MrEkOccmmqX7oVvFMjgKtEtt1MHFey0ZJOfEbK0jFqMaT7XkExesjg6vB5u5//bG6w2AzYIOfZjPMI4aD/0GBgxSrT30JGs8bIztTBv/fcNoBBK8IuJart4Via8BkrvfOML4C9grpSBqBJv37KTypzcsg2o6hdPoZSTRgZ+ap8U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=kLf3lI92; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="P85+7f9y"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="kLf3lI92"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
 	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=fyRGmgRFrZJrUba2c/bbvWonNZsAogO1ce7fqODSjFA=;
-	b=P85+7f9ydydOQs+ytGuR37jKBDx/5IXlaItyyUUv/83EBbmGgfqo46s4a+BEkw
-	bNmQu89VISR99oWQleOnfjkKl0y2uxKdD4B9uelplQule34n0C16tHTScyf3up9b
-	8yYAwvIzmXakgCK1QiPu3y2Nij5PXH9vSuNizyixGwRCY=
+	Content-Type; bh=T3CJe6lVPxvccwbAj3XRUf9iVuhSZuG6SmUOX9MS6+Y=;
+	b=kLf3lI92WJEnykUB+TyuMNEIwS9dWCEVl3XvTsLNpMLiD9p+7Flxt1TtsDCHZJ
+	iLNfEV57jB55HbaevaMqp0iZDpatpqb3M28sKVmjZsvNHqZ1S9+4MNekuu/sHq28
+	Q64/U42FbAJPdkTemy69i0CqHuvHUQ11ZisM6AMQFtDDU=
 Received: from [192.168.50.71] (unknown [])
-	by gzga-smtp-mtada-g1-0 (Coremail) with SMTP id _____wD3l+21+NRpwAdsDg--.21097S2;
-	Tue, 07 Apr 2026 20:29:42 +0800 (CST)
-Message-ID: <8f10ec0e-9774-4eb8-b369-95c99a8e0226@163.com>
-Date: Tue, 7 Apr 2026 20:29:41 +0800
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wDH7TZb+dRpr4MiDw--.8196S2;
+	Tue, 07 Apr 2026 20:32:28 +0800 (CST)
+Message-ID: <83fe07c5-f3c8-4e13-9b04-fbbea67f3326@163.com>
+Date: Tue, 7 Apr 2026 20:32:27 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -34,108 +34,125 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/3] PCI: Move pci_bus_speed2lnkctl2() to public header
+Subject: Re: [PATCH v6 3/3] PCI: dwc: Use common speed conversion function
 To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 Cc: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com,
  kwilczynski@kernel.org, mani@kernel.org, jingoohan1@gmail.com,
  robh@kernel.org, linux-pci@vger.kernel.org,
  LKML <linux-kernel@vger.kernel.org>
-References: <20260406104708.1218648-1-18255117159@163.com>
- <20260406104708.1218648-3-18255117159@163.com>
- <d19c8a93-71ae-187d-4aa6-a22105edcde3@linux.intel.com>
- <e1acfaad-faaa-410e-a20c-94552fded7a3@163.com>
- <a08aae5d-4239-6099-d95a-9d1ea1661c69@linux.intel.com>
+References: <20260406105613.1228673-1-18255117159@163.com>
+ <20260406105613.1228673-4-18255117159@163.com>
+ <d2bb9eae-8731-b438-87dd-fcbcf2a17551@linux.intel.com>
+ <70f81184-4900-499b-a6ee-fbe18367bd0a@163.com>
+ <2af36546-5c33-caf8-b15d-fbf8fec4417e@linux.intel.com>
 Content-Language: en-US
 From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <a08aae5d-4239-6099-d95a-9d1ea1661c69@linux.intel.com>
+In-Reply-To: <2af36546-5c33-caf8-b15d-fbf8fec4417e@linux.intel.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3l+21+NRpwAdsDg--.21097S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxGr1kZF1rJFWxtr4fAw4xJFb_yoW5GF4xpa
-	y3CF1UAF18Jw13AasIg3WkXa4Fqan3tFWUZr13W3s5ZFnIyas3Jw4ftrWY9ryavrW0yr40
-	va4UJF17Ca1jyrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRcJ5rUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwxb6nmnU+Lb61AAA3s
+X-CM-TRANSID:_____wDH7TZb+dRpr4MiDw--.8196S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxGr4UAw1xKr1rGw4DWr45KFg_yoW5tw1xpa
+	y3AF40yF18Jr45Za1qq3WYqa4jqFnxGrWUGrZ8WasYgFy2vF93JF18Kr4S9r9a9rs7Ar12
+	y347t3srGw17tFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07Una9-UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xwlyGnU+VzsmgAA30
 
 
 
-On 4/7/26 20:26, Ilpo Järvinen wrote:
+On 4/7/26 20:29, Ilpo Järvinen wrote:
 > On Tue, 7 Apr 2026, Hans Zhang wrote:
-> 
->>
->>
->> On 4/7/26 16:11, Ilpo Järvinen wrote:
+>> On 4/7/26 16:25, Ilpo Järvinen wrote:
 >>> On Mon, 6 Apr 2026, Hans Zhang wrote:
 >>>
->>>> Move the static array-based pci_bus_speed2lnkctl2() function from
->>>> bwctrl.c to pci.h as a public inline function.
+>>>> Replace the private switch-based speed conversion in
+>>>> dw_pcie_link_set_max_speed() with the public pci_bus_speed2lnkctl2()
+>>>> function.
 >>>>
->>>> This provides efficient O(1) speed-to-LNKCTL2 value conversion using
->>>> static array lookup, maintaining optimal performance while enabling
->>>> code reuse by other PCIe drivers.
+>>>> This eliminates duplicate conversion logic and ensures consistency with
+>>>> other PCIe drivers, while handling invalid speeds by falling back to
+>>>> hardware capabilities.
 >>>>
 >>>> Signed-off-by: Hans Zhang <18255117159@163.com>
+>>>> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 >>>> ---
->>>>    drivers/pci/pci.h         | 17 +++++++++++++++++
->>>>    drivers/pci/pcie/bwctrl.c | 17 -----------------
->>>>    2 files changed, 17 insertions(+), 17 deletions(-)
+>>>>    drivers/pci/controller/dwc/pcie-designware.c | 18 +++---------------
+>>>>    1 file changed, 3 insertions(+), 15 deletions(-)
 >>>>
->>>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->>>> index f0a082bfd6f1..db91878a86ac 100644
->>>> --- a/drivers/pci/pci.h
->>>> +++ b/drivers/pci/pci.h
->>>> @@ -611,6 +611,23 @@ static inline bool pcie_valid_speed(enum
->>>> pci_bus_speed speed)
->>>>    	return (speed >= PCIE_SPEED_2_5GT) && (speed <= PCIE_SPEED_64_0GT);
->>>>    }
->>>>    +static inline u16 pci_bus_speed2lnkctl2(enum pci_bus_speed speed)
->>>> +{
->>>> +	static const u8 speed_conv[] = {
->>>> +		[PCIE_SPEED_2_5GT] = PCI_EXP_LNKCTL2_TLS_2_5GT,
->>>> +		[PCIE_SPEED_5_0GT] = PCI_EXP_LNKCTL2_TLS_5_0GT,
->>>> +		[PCIE_SPEED_8_0GT] = PCI_EXP_LNKCTL2_TLS_8_0GT,
->>>> +		[PCIE_SPEED_16_0GT] = PCI_EXP_LNKCTL2_TLS_16_0GT,
->>>> +		[PCIE_SPEED_32_0GT] = PCI_EXP_LNKCTL2_TLS_32_0GT,
->>>> +		[PCIE_SPEED_64_0GT] = PCI_EXP_LNKCTL2_TLS_64_0GT,
->>>> +	};
->>>> +
->>>> +	if (WARN_ON_ONCE(!pcie_valid_speed(speed)))
+>>>> diff --git a/drivers/pci/controller/dwc/pcie-designware.c
+>>>> b/drivers/pci/controller/dwc/pcie-designware.c
+>>>> index 06792ba92aa7..ab8dee5d6c7a 100644
+>>>> --- a/drivers/pci/controller/dwc/pcie-designware.c
+>>>> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+>>>> @@ -861,24 +861,12 @@ static void dw_pcie_link_set_max_speed(struct
+>>>> dw_pcie *pci)
+>>>>    	ctrl2 = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCTL2);
+>>>>    	ctrl2 &= ~PCI_EXP_LNKCTL2_TLS;
+>>>>    -	switch (pcie_get_link_speed(pci->max_link_speed)) {
+>>>> -	case PCIE_SPEED_2_5GT:
+>>>> -		link_speed = PCI_EXP_LNKCTL2_TLS_2_5GT;
+>>>> -		break;
+>>>> -	case PCIE_SPEED_5_0GT:
+>>>> -		link_speed = PCI_EXP_LNKCTL2_TLS_5_0GT;
+>>>> -		break;
+>>>> -	case PCIE_SPEED_8_0GT:
+>>>> -		link_speed = PCI_EXP_LNKCTL2_TLS_8_0GT;
+>>>> -		break;
+>>>> -	case PCIE_SPEED_16_0GT:
+>>>> -		link_speed = PCI_EXP_LNKCTL2_TLS_16_0GT;
+>>>> -		break;
+>>>> -	default:
+>>>> +	link_speed = pcie_get_link_speed(pci->max_link_speed);
+>>>> +	link_speed = pci_bus_speed2lnkctl2(link_speed);
 >>>
->>> drivers/pci/pci.h doesn't seem to have include for WARN_ON_ONCE() so you
->>> should add it.
+>>> Its signature is:
+>>>
+>>> u16 pci_bus_speed2lnkctl2(enum pci_bus_speed speed)
+>>>
+>>> Using link_speed variable both for in and out does contradict with the
+>>> expected typing.
+>>>
+>>> Maybe it would be beneficial to rename the current 'link_speed' to
+>>> 'ctrl2_speed' (or something along those lines) to differentiate Link
+>>> Control 2 speed representation from PCI core's internal link speed
+>>> representation. And then reintroduce link_speed variable as the
+>>> pci_bus_speed. ...But this is just my suggestion, there may be better ways
+>>> to untangle this type abuse.
 >>
 >> Hi Ilpo,
 >>
->> In the file "drivers/pci/pcie/bwctrl.c", there is no reference to the header
->> file of WARN_ON_ONCE(). It seems that no error was reported. I think it might
->> be that some other header files have indirectly referenced the header file of
->> WARN_ON_ONCE(). However, when I compiled it locally, no errors were reported.
+>>
+>> Thank you for your review comments. This way it will be clearer. Here are my
+>> revisions. If there are no issues, I will send the next version.
+>>
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware.c
+>> b/drivers/pci/controller/dwc/pcie-designware.c
+>> index 06792ba92aa7..21a709a47e82 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware.c
+>> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+>> @@ -843,8 +843,9 @@ EXPORT_SYMBOL_GPL(dw_pcie_upconfig_setup);
+>>
+>>   static void dw_pcie_link_set_max_speed(struct dw_pcie *pci)
+>>   {
+>> -       u32 cap, ctrl2, link_speed;
+>> +       u32 cap, ctrl2, pci_bus_speed;
 > 
-> Hi,
-> 
-> Apparently it was missing from there as well.
-> 
-> It might build now (I don't actually even doubt that), but that depends
-> on the includes in every file including drivers/pci/pci.h. We should not
-> depend on that as it is fragile but ensure a header is self-sufficient
-> when it comes to includes necessary for it.
+> I meant something like this (instead of introducing variable named
+> "pci_bus_speed"):
 
 Hi Ilpo,
 
-OK, I see.
-
-
-> 
->> I think if we want to add a header file, it should be #include
->> <asm-generic/bug.h> ?
-> 
-> Yes
-> 
-> #include <asm/bug.h>
-
-Thank you. Will add.
+Thank you. Will change.
 
 Best regards,
 Hans
+
+> 
+> 	enum pci_bus_speed link_speed;
+> 
+>>          u8 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+>> +       u16 ctrl2_speed;
+> 
+> ...And keep this like you have it now.
 > 
 
