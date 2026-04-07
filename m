@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF13DDDCD;
-	Tue,  7 Apr 2026 06:46:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F3AE38C2C3;
+	Tue,  7 Apr 2026 06:52:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775544379; cv=none; b=tZPXOqjbopZxrrs0MMQ9MaiFg8RQbu7HS/o+jY0MoB+UjCTOdb/viWGaMd8VQRxSPEVQ43uyZ4vhsboE0X2ZOX9kxVhJxkMqVjBM+aRqN/BkTHBIqsn3aDx4HNe6tSjgV5Cfvp84twBzQ+i+kSuEzUmARDYcCmzIeoWjt7tgqjw=
+	t=1775544772; cv=none; b=moeEZpdaIlHdujo9X6/IdPP+YrElN8i4mnWnEg9QmmvPn3oXaK6bvLKfgHyZXBZVBT1TIp/UB5IVgIMmYHlbTEu8D6EE8X1dj9bHPjEzmmxigNlZ/qfcehDj4HXkvhq7TMIccGXhydxN7wVWr5R4ZbInKwPE+qKk7Xv6SIIrS8Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775544379; c=relaxed/simple;
-	bh=JWzVl+hFxS1v2h/vOubMYt37T/3geUVKLbWBzFaKKd4=;
+	s=arc-20240116; t=1775544772; c=relaxed/simple;
+	bh=WGsLWUaefXttIWa4xg//3ucHTQKXOeomFOP2gCuLPaQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kRr/hVOXuj884QafpNIphJqJ08uXUXpi8ofg6BBk/WLjWEgZ5zKTumqw2p7Q3cBdsFdcv/3oqa1J0ZOzwYkmLsIFs+ChFGqHcMeqCRpk7JYVCVlzF5Mtd8SLF7okTp5n+hXGofSjuYmsgHn7v1/IUjV45y3c5TNtzDEuxcmrq4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f6TI3dHv; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=fVrUx5+hMHtMaN7TvshdmKplEc0hdh7mWZjr/zHoOx6+h3zleKbHTvTo9Vo660j6EjhDD963VP20qPFpt3MMLx1DIHRVt0VyhmmpOFS56f/qvi+r023/u8dZXW4p9PHuwOWrwRve48gfl5k9ZMEWOAmTzdKgPVwnOzjCeEhfAKo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JMiZJyBS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f6TI3dHv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7120C19424;
-	Tue,  7 Apr 2026 06:46:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JMiZJyBS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADC4FC19424;
+	Tue,  7 Apr 2026 06:52:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775544379;
-	bh=JWzVl+hFxS1v2h/vOubMYt37T/3geUVKLbWBzFaKKd4=;
+	s=k20201202; t=1775544772;
+	bh=WGsLWUaefXttIWa4xg//3ucHTQKXOeomFOP2gCuLPaQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=f6TI3dHvRHD5myC8xWWtTsD8aMB3BhC3WUUiwFcLlU5gA1tCFBkQl149chLl+uRmb
-	 0I/hsU9Y+eMIS52ruHvPgjIn37oe8gDvL3qYSzdKEg/ayyLdrDO1wdWv8JbkbTFMB5
-	 lvcEw/AZsElchIcomecu3lIsFMLPPYPcev8IWYYQzc1dGardoLfMBjB0D9H5Urr2Eb
-	 FZNJK3JtbUbfWx+apki9PYeLilTY0AYd0ajlSIIXNvzG57Rxpcm/Clvgs1KqRfae72
-	 Gokux7xq+l90mEjr6BAAEtBxSP0VnN5Nvf2hv1omv5N7JuTm5+ksyvRrrIjXrmzG5m
-	 efSnf2IaBw8nQ==
-Date: Tue, 7 Apr 2026 12:16:09 +0530
+	b=JMiZJyBS4mIHsbyctppDhmAKIiEAFEcyZzWgxNdB/JZgKoP9I6U0Z0gMuyODk/+0w
+	 PJkA8c2thFkCppygUqBiD3WNPgwFWMWK+hSpvwCeR2/VSIZIrTfWurnRMHwap7A/9L
+	 uPnBZHFMEbz6ZdDp18rxenqpokrVLSS1txIbHpwjFBzLLTeleOsTn1pfvib8/MO9o3
+	 prj50U83P8JLIE+csPT/sFsyhuw2M7qOYO0dup5/FLdVOJJA8Q9Gx6P9uLukSI/rCt
+	 eRq5/GdmHiadCfIenQawy4MHHPOHHUib1ZfCgf/J+2uv/51LwA1Gqg8QW5dUgBdhVU
+	 wt9wjPX0hjMSw==
+Date: Tue, 7 Apr 2026 12:22:42 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Sherry Sun <sherry.sun@nxp.com>
 Cc: "robh@kernel.org" <robh@kernel.org>, 
@@ -39,13 +39,13 @@ Cc: "robh@kernel.org" <robh@kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
 	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, 
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V10 04/13] PCI: imx6: Assert PERST# before enabling
- regulators
-Message-ID: <shkbpacha7bwqw5i3inkpy34fouyy5f2qhusl6gdag4677oipg@ej26npc5zgeh>
+Subject: Re: [PATCH V10 03/13] PCI: dwc: Parse Root Port nodes in
+ dw_pcie_host_init()
+Message-ID: <gxqcmujdzlzcoawn4rkttasftuyusqtvycu7oagogxaw4yggeo@ww6rjdwbyj2w>
 References: <20260402095107.205439-1-sherry.sun@nxp.com>
- <20260402095107.205439-5-sherry.sun@nxp.com>
- <jwazawvhuoafkhfwpjfgccc3hz6kej7i6iwkh5be2qena2b4di@yzv6e75zezfu>
- <VI0PR04MB12114917D17B5B8FB67E68DB9925AA@VI0PR04MB12114.eurprd04.prod.outlook.com>
+ <20260402095107.205439-4-sherry.sun@nxp.com>
+ <xlsfwtcy3wl6nasmx2w2oys6u4bbnvh24qiwr4pf3v5uz523gz@qvhzqfcs5q2c>
+ <VI0PR04MB121147E4D3F9FDC95391C1153925AA@VI0PR04MB12114.eurprd04.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -55,71 +55,64 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <VI0PR04MB12114917D17B5B8FB67E68DB9925AA@VI0PR04MB12114.eurprd04.prod.outlook.com>
+In-Reply-To: <VI0PR04MB121147E4D3F9FDC95391C1153925AA@VI0PR04MB12114.eurprd04.prod.outlook.com>
 
-On Tue, Apr 07, 2026 at 06:38:50AM +0000, Sherry Sun wrote:
-> 
-> > On Thu, Apr 02, 2026 at 05:50:58PM +0800, Sherry Sun wrote:
-> > > According to the PCIe initialization requirements, PERST# signal
-> > > should be asserted before applying power to the PCIe device, and
-> > > deasserted after power and reference clock are stable.
+On Tue, Apr 07, 2026 at 03:21:30AM +0000, Sherry Sun wrote:
+> > On Thu, Apr 02, 2026 at 05:50:57PM +0800, Sherry Sun wrote:
+> > > Add support for parsing Root Port child nodes in dw_pcie_host_init()
+> > > using pci_host_common_parse_ports(). This allows DWC-based drivers to
+> > > specify Root Port properties (like reset GPIOs) in individual Root
+> > > Port nodes rather than in the host bridge node.
 > > >
+> > > Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
+> > > ---
+> > >  drivers/pci/controller/dwc/pcie-designware-host.c | 8 ++++++++
+> > >  1 file changed, 8 insertions(+)
+> > >
+> > > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c
+> > > b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > > index da152c31bb2e..f6fca984fb34 100644
+> > > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> > > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > > @@ -20,6 +20,7 @@
+> > >  #include <linux/platform_device.h>
+> > >
+> > >  #include "../../pci.h"
+> > > +#include "../pci-host-common.h"
+> > >  #include "pcie-designware.h"
+> > >
+> > >  static struct pci_ops dw_pcie_ops;
+> > > @@ -581,6 +582,13 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+> > >
+> > >  	pp->bridge = bridge;
+> > >
+> > > +	/* Parse Root Port nodes if present */
+> > > +	ret = pci_host_common_parse_ports(dev, bridge);
+> > > +	if (ret && ret != -ENOENT) {
+> > > +		dev_err(dev, "Failed to parse Root Port nodes: %d\n", ret);
+> > > +		return ret;
 > > 
-> > Spec wording is not quite like this. Spec mandates asserting PERST# *before*
-> > stopping refclk and powering down the device and deasserting it *after*
-> > applying power and refclk stable.
+> > Won't this change break drivers that parse Root Ports on their own? Either
+> > you need to modify them also in this change or call this API from imx6 driver
+> > and let other drivers switch to it in a phased manner.
 > > 
-> > I believe you want to assert PERST# before enabling regulator to prevent the
-> > endpoint from functioning? If so, is it due to refclk not available yet or some
-> > other reason?
+> > I perfer the latter.
 > 
-> You are right. My commit message wording was not that precise.
-> The PCIe endpoint may start responding or driving signals as
-> soon as its supply is enabled, even before the reference clock is stable.
-> Asserting PERST# before enabling the regulator ensures that the endpoint
-> remains in reset throughout the entire power-up sequence, until both
-> power and refclk are known to be stable and link initialization can safely
-> begin. This is mainly to avoid undefined behavior during early power-up.
-> 
-> I will update the commit message to better reflect this.
-> 
-> > 
-> > > Currently, the driver enables the vpcie3v3aux regulator in
-> > > imx_pcie_probe() before PERST# is asserted in imx_pcie_host_init(),
-> > > which violates the PCIe power sequencing requirements. However, there
-> > > is no issue so far because PERST# is requested as GPIOD_OUT_HIGH in
-> > > imx_pcie_probe(), which guarantees that PERST# is asserted before
-> > > enabling the vpcie3v3aux regulator.
-> > >
-> > > This is prepare for the upcoming changes that will parse the reset
-> > > property using the new Root Port binding, which will use GPIOD_ASIS
-> > > when requesting the reset GPIO. With GPIOD_ASIS, the GPIO state is not
-> > > guaranteed, so explicit sequencing is required.
-> > >
-> > > Fix the power sequencing by:
-> > > 1. Moving vpcie3v3aux regulator enable from probe to
-> > >    imx_pcie_host_init(), where it can be properly sequenced with PERST#.
-> > > 2. Moving imx_pcie_assert_perst() before regulator and clock enable to
-> > >    ensure correct ordering.
-> > >
-> > > The vpcie3v3aux regulator is kept enabled for the entire PCIe
-> > > controller lifecycle and automatically disabled on device removal via devm
-> > cleanup.
-> > >
-> > 
-> > vpcie3v3aux handling should be in a separate patch.
-> 
-> Actually the handling of vpcie3v3aux itself remains unchanged, I just adjust the
-> sequence of regulator/clock enable and perst#.
-> Previously, the imx driver enabled the vpcie3v3aux regulator in imx_pcie_probe()
-> before PERST# is asserted in imx_pcie_host_init(), which violates the PCIe power
-> sequencing requirements.
-> This patch moves vpcie3v3aux regulator enable from probe to  imx_pcie_host_init(),
-> where it can be properly sequenced with PERST#.
-> Perhaps I should just remove this description to avoid confusion.
+> Hi Mani, sorry I didn't fully get your point here, there are no changes to this part
+> V10, for drivers that parse Root Ports on their own, here pci_host_common_parse_ports()
+> will return -ENOENT, so nothing break as we discussed this in V8
+> https://lore.kernel.org/all/dcl3bdljrdzgeaybrg3dc5uaxkebkjns7pajix6mxxftao5g4m@vm3ywyyp4ujh/.
 > 
 
-Yeah.
+So if this API gets called first, it will acquire PERST# from the Root Port node
+and if the controller drivers try to do the same in their own parsing code,
+PERST# request will return -EBUSY and the probe will fail.
+
+On the other hand, if the controller drivers parse PERST# first, this API will
+return -EBUSY and will result in probe failure.
+
+Only way to fix this issue would be to call this API from imx6 driver for now
+and start migrating other drivers later.
 
 - Mani
 
