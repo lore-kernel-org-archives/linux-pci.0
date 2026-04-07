@@ -1,144 +1,115 @@
-Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11011066.outbound.protection.outlook.com [40.107.130.66])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAE783B52E6;
-	Tue,  7 Apr 2026 12:05:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.130.66
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775563523; cv=fail; b=myqTS31CV5vo9vf4+v0Rw8X7O+eZ1rsG3h/2YkBe6hity9floOJ1wbOotHtd9rUKhP8V4bIRpEi0jTTVSsYojNYmPEoD9JISQ7OigUEta1MoBvg3wQtdXkM0jsmLBWO9Bj/QxY1RJSd0dTZ6ZgZOj6YKg0ltIdhy9ry/8OsvrBc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775563523; c=relaxed/simple;
-	bh=Ur+hC9N9q+y/Bh8yS4xBIsJPSa4Y2dnTerXd1DGE2CE=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:CC; b=J+tH6gdtARWkUnd7JNKnk5w2dWqj+/AfWB279ymIzMk5lLtJW5S0fwSs/2wjagKmuPXOvGRas8EqY/fxLFFFRIjuoMH6w/+eyE/MAJVUUSfDlf37fYqR6n4riy9Xb1BUupkdxrkn5pnOUjgUFztSXdXDgFeF7Ea5KMbaUX5tCXQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=O8nCqh2b; arc=fail smtp.client-ip=40.107.130.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE8A3C2FF;
+	Tue,  7 Apr 2026 12:10:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775563814; cv=none; b=BX+cQaHLHzfeswB1M+AjV05OSvtpXeIf1AYv2EnHhZ/GKKHrRC6ygFmsOF2zwEem6YeR5ipGxzvjH1rgzyQG1ylCOq2VjKeM6JQQZU3PTizoCUKQ/5u/kZN+oCzMVj8M3vn8cShIrGQQPGfwq6tatbYbmgR6xKE6Zu2b/xQQqUY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775563814; c=relaxed/simple;
+	bh=0icj21BdzxEURU+/9Q68nCCqKz6J/3TgY6V83XiC/xk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=dHiULDd96xp+5DhmcWgsual9QYysoU4IKEBEE8YmXmU8aybXLJqJ5x1xvOr64qzypvWJhs0xN6F/UDT2KToE/DUQHII/TOaA6y5BKOnPLoiUCyf7S8RdfT0pe53P9h0G6ZFcD/SCJYJrw1tz8CZkTtfds0OyXtVuiDwJRalKmuU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=iDXLxYNq; arc=none smtp.client-ip=220.197.31.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="O8nCqh2b"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=eIA63srrwU8ZeJdfck8csstIHXr6UsF+5bd0h2c4Z1A0G2Qkpg1RqNYCsi9ZNrp9T5zK2BtVCrqPMVL6JZMALFFis+NAoQQGS+8kJUelil0QPHZNB5jpnfyB0zcM6XMAuYkIasw+oLDTE7hoVUzxmoLaJEIhCns4k4zOaDONRcubfb//R+C0YNUDup7UowIi4EL9+Hur7l7cCq6sWovPIPYdZ88N4eyJkj9h1wDA4Z8jf46FyN4YkbOr+RnAPdPJ/M/LfKnGEyWtAR4QiCMk2KbrpMrEI32ulQxZ8yqTf6SIdqQDvdVYo06R0oAaJIgocUr8bm+rZPbhoUIEG8+5+A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=uH3ZDdmV13hTziajxqns6OfIHTyAmNNk0yj21yeqzMc=;
- b=eLlHRSZ4PUV0euvyIUDA/U+Csj+0yfs2D1zA8m0pcXOAUZXZT7pJdj68Lyz1qxgYeuWuOae85LxBfyVf87nAfrk9QHUjmS0xzGUYw57U4v/31x7uhYPZYGg99QQ5YI2ApWw7KGVFP2FoQVRNO40bnotE3PZ1zwq3Npn1/kIBq7NJHFiPmQJYkkkG7OR0ftnWU7DKfMFpqWW/TACuAwad4rDCiPVrPjHTag9aYOSmHXxL4OFijdgtFJ7ipAnChs9I1GPR0zdiQoeUhs5AnoI2h1HexWRIXr5YQ09l9HadjpU1q0cB3ut6CwAQnTd/KLeoyfKMVIw4scdt+h729kZQ/Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=fail (sender ip is
- 164.130.1.60) smtp.rcpttodomain=kernel.org smtp.mailfrom=foss.st.com;
- dmarc=fail (p=none sp=none pct=100) action=none header.from=foss.st.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uH3ZDdmV13hTziajxqns6OfIHTyAmNNk0yj21yeqzMc=;
- b=O8nCqh2bDdiepdokmUkCBpLQ3KfocESBEuhVwioDN4+xfIMYPB0/y/8fVpETWOoV5ahqZp+9yyXbyXBoUj2rB9JgvjT7ZmBOunkDVI7KwfLv0O3PjDLwl9BmN7x4KLuEGgdOKfXWoqn81sRxU7oXGjykxnLhbOzAeC1AZ1lBpFKa0pGOK78vO2Maoj7ma68DAMvrW5TCx+b22q8Pxx7U1P4OZDzQofTqunMxEqfZVqJ07Sm3QTbDhJHHgCsGLAhw+5BBbplLVw3/4Q/SEtPXD/4uq9PIrtM1xCze7Lo7OAYCqbwK9G/Bm3sQL3QnUYM5qd0PnWLLmCoST+ks0Y2AqA==
-Received: from DB9PR05CA0005.eurprd05.prod.outlook.com (2603:10a6:10:1da::10)
- by DU0PR10MB6131.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:10:3e6::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.20; Tue, 7 Apr
- 2026 12:04:56 +0000
-Received: from DB1PEPF000509E4.eurprd03.prod.outlook.com
- (2603:10a6:10:1da:cafe::b2) by DB9PR05CA0005.outlook.office365.com
- (2603:10a6:10:1da::10) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9769.32 via Frontend Transport; Tue,
- 7 Apr 2026 12:04:56 +0000
-X-MS-Exchange-Authentication-Results: spf=fail (sender IP is 164.130.1.60)
- smtp.mailfrom=foss.st.com; dkim=none (message not signed)
- header.d=none;dmarc=fail action=none header.from=foss.st.com;
-Received-SPF: Fail (protection.outlook.com: domain of foss.st.com does not
- designate 164.130.1.60 as permitted sender) receiver=protection.outlook.com;
- client-ip=164.130.1.60; helo=smtpO365.st.com;
-Received: from smtpO365.st.com (164.130.1.60) by
- DB1PEPF000509E4.mail.protection.outlook.com (10.167.242.54) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9745.21 via Frontend Transport; Tue, 7 Apr 2026 12:04:56 +0000
-Received: from STKDAG1NODE2.st.com (10.75.128.133) by smtpO365.st.com
- (10.250.44.72) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.29; Tue, 7 Apr
- 2026 14:07:25 +0200
-Received: from localhost (10.130.77.120) by STKDAG1NODE2.st.com
- (10.75.128.133) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.29; Tue, 7 Apr
- 2026 14:04:39 +0200
-From: Christian Bruel <christian.bruel@foss.st.com>
-Date: Tue, 7 Apr 2026 14:04:10 +0200
-Subject: [PATCH v4 3/3] selftests: pci_endpoint: Skip BAR subrange test on
- -ENOSPC
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="iDXLxYNq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=JusMDspgfnp9ijHpg8OqUeqKHxWR7v/cVK8rLjb2EcU=;
+	b=iDXLxYNqXRY6t5nRSb/6p+XB334PlOBMRMuL1ex4pYzwfqwC211g1woRVtE8sJ
+	F63TT+ezirTxSS1hYfNlrZzptJu02ik4wKkFX1O1kA2Cqk7cDKrrrdSnKOlRSAfI
+	QDW1dkQpQAbQDuPV1gB13DakrzJQz3RpjbmQkXrBmPW7w=
+Received: from [192.168.50.71] (unknown [])
+	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wCXlWz089RpmqKQDg--.52570S2;
+	Tue, 07 Apr 2026 20:09:24 +0800 (CST)
+Message-ID: <e1acfaad-faaa-410e-a20c-94552fded7a3@163.com>
+Date: Tue, 7 Apr 2026 20:09:24 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-ID: <20260407-skip-bar_subrange-tests-if-enospc-v4-3-6f2e65f2298c@foss.st.com>
-References: <20260407-skip-bar_subrange-tests-if-enospc-v4-0-6f2e65f2298c@foss.st.com>
-In-Reply-To: <20260407-skip-bar_subrange-tests-if-enospc-v4-0-6f2e65f2298c@foss.st.com>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-	=?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Kishon Vijay
- Abraham I" <kishon@kernel.org>, Shuah Khan <shuah@kernel.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman
-	<gregkh@linuxfoundation.org>, Koichiro Den <den@valinux.co.jp>, Niklas Cassel
-	<cassel@kernel.org>
-CC: <fabrice.gasnier@foss.st.com>, <linux-pci@vger.kernel.org>,
-	<linux-kselftest@vger.kernel.org>, <linux-kernel@vger.kernel.org>, "Christian
- Bruel" <christian.bruel@foss.st.com>, Frank Li <Frank.Li@nxp.com>
-X-Mailer: b4 0.14.2
-X-ClientProxiedBy: STKCAS1NODE1.st.com (10.75.128.134) To STKDAG1NODE2.st.com
- (10.75.128.133)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DB1PEPF000509E4:EE_|DU0PR10MB6131:EE_
-X-MS-Office365-Filtering-Correlation-Id: ad960d8d-a194-45a8-3889-08de949de274
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|82310400026|36860700016|7416014|18002099003|22082099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	NWNk3yHaFqK2Ne5cpL0Ef1CI7oc0I/WHp8kEOJM35380gNDfsrXlJsNmUKqOKrFKA8dRijno651UtHJ3pNZwKfCXHj5jTjgzIO+ubv3GGYKrORoh88sLT0eS1sJqHMFoXojkreGk5lQqx+QGxmizzh3XFiVbF62I/El1W6663JnnC/nLmX2WbKN7IYAYQk/dnxDjD+MIbrtqkVFdzuzBVvTyeUGFn99nuEvfEyJu0YKfRS+zo0u91RhTpA2sSHkTj/3boUnXpYHa+EHM3kUq1drZn5H2LCSj8Rco6/sQgRdWUplvfSnDS3oesZOg+wlrMQIKc7fIua6k0SvZULR/f1yvcIARsKBREhtj31J7WQPXFI9KfGFU9AmYzdyIYTIHq49LR4Mi0NFha/ACWc+EtnQBWVw/5WQCuzYlsWyILYZ3nbGiQq4huUAKptGCJkr7UBDHAYAsZ8rj9jVQ7zI9wafqIPOMhGBPUtnZ/qgp9zcZ5VUQkb0ZhSb6KlVcZhmb4oMakvEIgocC+WzgsaXNRjywfwoilEdC1RlQTimGuyMUzHX60arXXq5Vxmpb2TyhxUaCZCaPDTe1lrajCmOJFWVJEIE0BUq7DyQHUheOP+jcAOHYKMLyVmpMToOLwaBXmYWng+2qNjLVZHrj+MEg8HKOWMFd1lA9P+gdbnjQmLBKg7qcIZTXZA1IMICixc1xJP8LQL+fcVZjsg3lGB6zYkue4/ERKjWhPREzl6W9NNG9SfTOwsFQ4y4RET0URtbxZJwl0WV9zDG2d3eiR/FF6Q==
-X-Forefront-Antispam-Report:
-	CIP:164.130.1.60;CTRY:IT;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:smtpO365.st.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(376014)(82310400026)(36860700016)(7416014)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	gLiNeCMs+dwO6woIsZFzRA51cFzHV0ElH9TA7aN4jgPNPWD3pKbw0WMfWAXSIMGC3oFzXUB7maw2BGRWTa9MWGR6I/RZmCDyIERBBfdYMjNVzQs9PSAH/wpXbSftv6P/rP8oMPout7vAXBSxhd9zP51C/Lm6LIIpDrg8VPaK0zRdRsj6kjB7jneskIvv7bD0onwAlvt7zHnLE+I/428hOUmpkJSxNoPrqTtRI2v4z0+PSBEOLEqKw55/RAEpmv21lVFIbvRHdeLADsRvhdLyw26nORVhRd6pZoF5NCKOH7xdVgGtE+0BPtUVrMFoycpusdOux8TVx4wP1r4W2mY7E/leUTHp7q/dawhUX6Qf+KtnikTr53U6iBn89Bb8AWSl6Fm3XXnTEwQuyKGG5T44rKWDjoQd3CBY6PG2SC8C69QAdwg1BUuunywQgKAKCUaP
-X-OriginatorOrg: foss.st.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Apr 2026 12:04:56.2066
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: ad960d8d-a194-45a8-3889-08de949de274
-X-MS-Exchange-CrossTenant-Id: 75e027c9-20d5-47d5-b82f-77d7cd041e8f
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=75e027c9-20d5-47d5-b82f-77d7cd041e8f;Ip=[164.130.1.60];Helo=[smtpO365.st.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	DB1PEPF000509E4.eurprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU0PR10MB6131
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 2/3] PCI: Move pci_bus_speed2lnkctl2() to public header
+To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com,
+ kwilczynski@kernel.org, mani@kernel.org, jingoohan1@gmail.com,
+ robh@kernel.org, linux-pci@vger.kernel.org,
+ LKML <linux-kernel@vger.kernel.org>
+References: <20260406104708.1218648-1-18255117159@163.com>
+ <20260406104708.1218648-3-18255117159@163.com>
+ <d19c8a93-71ae-187d-4aa6-a22105edcde3@linux.intel.com>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <d19c8a93-71ae-187d-4aa6-a22105edcde3@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wCXlWz089RpmqKQDg--.52570S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7ur1ruF45Xw17Kw17WryUJrb_yoW8ZFy3pa
+	9xCF1UAF18J3W3Aa9aga4kXa4rXFs3KFWUurW3W3s5WFyfA3s5Ga4ftryF9ryaqrW0yr40
+	va45GF1UCa1jyFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRI1v3UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7BTJbWnU8-Q53gAA3B
 
-Handle -ENOSPC error. Skip the test if the number of available inbound
-windows is insufficient to map the subrange.
 
-Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
-Reviewed-by: Koichiro Den <den@valinux.co.jp>
----
- tools/testing/selftests/pci_endpoint/pci_endpoint_test.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-index c417fb3a198b2d92c3060938c23807cc8bea5573..588d75c97ad181d2f8e84c9b86b865439152e20d 100644
---- a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-+++ b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-@@ -88,6 +88,8 @@ TEST_F(pci_ep_bar, BAR_SUBRANGE_TEST)
- 		SKIP(return, "Subrange map is not supported");
- 	if (ret == -ENOBUFS)
- 		SKIP(return, "BAR is reserved");
-+	if (ret == -ENOSPC)
-+		SKIP(return, "Not enough inbound windows");
- 	EXPECT_FALSE(ret) TH_LOG("Test failed for BAR%d", variant->barno);
- }
- 
+On 4/7/26 16:11, Ilpo Järvinen wrote:
+> On Mon, 6 Apr 2026, Hans Zhang wrote:
+> 
+>> Move the static array-based pci_bus_speed2lnkctl2() function from
+>> bwctrl.c to pci.h as a public inline function.
+>>
+>> This provides efficient O(1) speed-to-LNKCTL2 value conversion using
+>> static array lookup, maintaining optimal performance while enabling
+>> code reuse by other PCIe drivers.
+>>
+>> Signed-off-by: Hans Zhang <18255117159@163.com>
+>> ---
+>>   drivers/pci/pci.h         | 17 +++++++++++++++++
+>>   drivers/pci/pcie/bwctrl.c | 17 -----------------
+>>   2 files changed, 17 insertions(+), 17 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>> index f0a082bfd6f1..db91878a86ac 100644
+>> --- a/drivers/pci/pci.h
+>> +++ b/drivers/pci/pci.h
+>> @@ -611,6 +611,23 @@ static inline bool pcie_valid_speed(enum pci_bus_speed speed)
+>>   	return (speed >= PCIE_SPEED_2_5GT) && (speed <= PCIE_SPEED_64_0GT);
+>>   }
+>>   
+>> +static inline u16 pci_bus_speed2lnkctl2(enum pci_bus_speed speed)
+>> +{
+>> +	static const u8 speed_conv[] = {
+>> +		[PCIE_SPEED_2_5GT] = PCI_EXP_LNKCTL2_TLS_2_5GT,
+>> +		[PCIE_SPEED_5_0GT] = PCI_EXP_LNKCTL2_TLS_5_0GT,
+>> +		[PCIE_SPEED_8_0GT] = PCI_EXP_LNKCTL2_TLS_8_0GT,
+>> +		[PCIE_SPEED_16_0GT] = PCI_EXP_LNKCTL2_TLS_16_0GT,
+>> +		[PCIE_SPEED_32_0GT] = PCI_EXP_LNKCTL2_TLS_32_0GT,
+>> +		[PCIE_SPEED_64_0GT] = PCI_EXP_LNKCTL2_TLS_64_0GT,
+>> +	};
+>> +
+>> +	if (WARN_ON_ONCE(!pcie_valid_speed(speed)))
+> 
+> drivers/pci/pci.h doesn't seem to have include for WARN_ON_ONCE() so you
+> should add it.
 
--- 
-2.34.1
+Hi Ilpo,
+
+In the file "drivers/pci/pcie/bwctrl.c", there is no reference to the 
+header file of WARN_ON_ONCE(). It seems that no error was reported. I 
+think it might be that some other header files have indirectly 
+referenced the header file of WARN_ON_ONCE(). However, when I compiled 
+it locally, no errors were reported.
+
+I think if we want to add a header file, it should be #include 
+<asm-generic/bug.h> ?
+
+Best regards,
+Hans
+
+> 
 
