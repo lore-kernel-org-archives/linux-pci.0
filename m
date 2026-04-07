@@ -1,104 +1,89 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F07B351C09
-	for <linux-pci@vger.kernel.org>; Tue,  7 Apr 2026 07:37:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3B1E350A1B;
+	Tue,  7 Apr 2026 07:44:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775547470; cv=none; b=Mmpn5UG3KlIO3b7CHpRuwNKEjGIeN04Pwxc6LofxTzMWmWB+QLAHYNVg+LUK9F4bACQGKGbvlxphbd+JMUoL5u806qDYmBrP4qkCACTscokI8c1uCoGxslzD6Weca2aXql29tx8jvVAviIusdCvWnb2RnpjidiesgkSaNlH6pfY=
+	t=1775547885; cv=none; b=BLbGxbwbKPHOAeupomlU/r4BxBrhEWtxGfS5fWwldJ6vWduFoeeBD58TD/HMqUfkhZ3G3luEiWpDekoZvlGL48Bdo2sk/kwIWDaMHPGvq8ma665NIMXYKQ/1n4d2JGwXHyaEcyEQdWyOyckVzw6VWfHzSWYnwXFCd6L4i+OVQH8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775547470; c=relaxed/simple;
-	bh=3+NC6CHo0X3VCquVypVEb5EG0yaES8GRmsBCzrVMpAg=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=f0Maxi8qC57W7lBTaiKcJZwpsa2BCsYtBoyIZhmk8hhVz0qF/vbt+qHfCC3heAVSAFceuY9ksLhPDKqU8fSIsMYykUX+/Kj3rmaGx7SODvjHI+HCCWbfse/ukP0IZTgS14yWJ6iu7XxxM7zHvAK/kQ1IS8ctQO4PX/b66iyU4xs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MJijVzZy; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1775547885; c=relaxed/simple;
+	bh=HjZP30bYnSmFP1+xLQFRJtHi+NfCFRTfqlk4yhxk9NY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VFY2tk5H1JaK38Nv5pTJSrr0LI1Y7S463qOx4M+fcekKoxk9EU2tpos2Yd4JVewqyvVVAK5RBhzwj2sA8Sp/N+hPgQ5cvzPx0SYmO2una0zDMSfXN+GHQE9zmzuXoQ8H2hdLVoULXwqrUZn5pfuihrHhxouj/+1hvsg9DpKy8iM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TSQNJrh0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MJijVzZy"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775547470; x=1807083470;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=3+NC6CHo0X3VCquVypVEb5EG0yaES8GRmsBCzrVMpAg=;
-  b=MJijVzZyAyns4oZghUvOtru4IdcK6ZcC21ssTjH5kD/TWiuLdhXC4Luh
-   Ef5fmeWbJzxGLv2Yuz3XQtptIIpjimU8ACqr66dhvagTV90pFcfVGj0cy
-   6JxXt6QvL+wT8w94uUq0RVNnZcmL7w64ABs7cbGoIKZz0i4OKE4T2y36p
-   xUMfKwG3l9LpR6HNljyvrEgmXX7ixaGX8FY6Nh1X0RsuU6c0h7QzP86gb
-   KtbRfC1IeDvweW/KKDPhAU6SJAqFgEWzDl2i7qxqOX8YRGLsCVU5SHyMT
-   lTe2lcpzgVwztu5DiJd/4N6sisAs5cVufRIka/4IWguF3nG6mSTCNtgE8
-   w==;
-X-CSE-ConnectionGUID: fJg2ZnbWQpKvI7r0AERSkA==
-X-CSE-MsgGUID: 6bblC/hVTwCmwb6IRHxBOg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11751"; a="94084676"
-X-IronPort-AV: E=Sophos;i="6.23,165,1770624000"; 
-   d="scan'208";a="94084676"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2026 00:37:49 -0700
-X-CSE-ConnectionGUID: 5MXTMH3lRPGQxOzLvdyH3w==
-X-CSE-MsgGUID: q0DUHcL8RoWvrEiN06coiw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,165,1770624000"; 
-   d="scan'208";a="228004275"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.110])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2026 00:37:46 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Tue, 7 Apr 2026 10:37:43 +0300 (EEST)
-To: =?ISO-8859-15?Q?Jonas_H=F6glund?= <firefly@firefly.nu>
-cc: Thorsten Leemhuis <regressions@leemhuis.info>, 
-    Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-    regressions@lists.linux.dev
-Subject: Re: [REGRESSION] amdgpu with Thunderbolt eGPU bracket fails since
- new bridge window alignment calculation code
-In-Reply-To: <d50a8eb1-3a16-47c7-bfea-0a3def606c6f@app.fastmail.com>
-Message-ID: <db715a3b-80c7-31ed-bf31-fb55ad7c538c@linux.intel.com>
-References: <a5f23340-2b84-4734-be11-f5a97c188195@app.fastmail.com> <ec9af6c3-755b-488a-8400-cef9eeeac509@leemhuis.info> <740b10c4-a54a-f776-d564-d3c977d90ba6@linux.intel.com> <52614de3-9658-4390-8e0e-689963f364a4@app.fastmail.com>
- <4a7704af-4c30-3050-e8a6-cb1fa3fd7ec9@linux.intel.com> <ac71d5ee-5895-417e-a7af-51cdecec8b67@app.fastmail.com> <d50a8eb1-3a16-47c7-bfea-0a3def606c6f@app.fastmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TSQNJrh0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C179CC116C6;
+	Tue,  7 Apr 2026 07:44:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775547885;
+	bh=HjZP30bYnSmFP1+xLQFRJtHi+NfCFRTfqlk4yhxk9NY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=TSQNJrh0F0gZTFwo+TmT4VSoYmwdye0MphJxYNt+pvFRgeFwV+QtE1B9gstV08AxV
+	 JeNFOF7U3ErVbHFDzIpGRah44q5FjT2uQikbDaZJFLAmR0ZEOICEQRgTVoPyLJZrgD
+	 x0XkWxrhykrxczdvY0iR5oAylxQDc32NFmUNRxPWVVrJz/ZIqIBn7H8JBixkyS/JB/
+	 bzorod1Ffbp1615pJjx8BEvCDPpTT0Y6LKvDziVyUS46W1PkovVvwBR+q5HeF50q4l
+	 YfeYvDv4x4OG0z95Q3V9+p2qq6Tan5MbtaQeGwDPABwrH1dz5+eN0IMquCt2Uv0Lp3
+	 QzVe0PtCv3buw==
+Date: Tue, 7 Apr 2026 09:44:42 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Jia Wang <wangjia@ultrarisc.com>
+Cc: Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, 
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, 
+	Xincheng Zhang <zhangxincheng@ultrarisc.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, linux-riscv@lists.infradead.org, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 2/4] MAINTAINERS: Add entry for the UltraRISC DP1000
+ PCIe controller driver and its DT binding
+Message-ID: <20260407-gentle-warping-tanuki-0edbda@quoll>
+References: <20260407-ultrarisc-pcie-v2-0-2aa2a19a7fb3@ultrarisc.com>
+ <20260407-ultrarisc-pcie-v2-2-2aa2a19a7fb3@ultrarisc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-34575375-1775547463=:983"
-
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---8323328-34575375-1775547463=:983
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Disposition: inline
+In-Reply-To: <20260407-ultrarisc-pcie-v2-2-2aa2a19a7fb3@ultrarisc.com>
 
-On Thu, 2 Apr 2026, Jonas H=C3=B6glund wrote:
+On Tue, Apr 07, 2026 at 10:40:53AM +0800, Jia Wang wrote:
+> Add a MAINTAINERS entry for the UltraRISC DP1000 PCIe host driver and its
+> DT binding.
+> 
+> Signed-off-by: Jia Wang <wangjia@ultrarisc.com>
+> ---
+>  MAINTAINERS | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index c3fe46d7c4bc..c8159670a14d 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -20582,6 +20582,14 @@ S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/starfive,jh7110-pcie.yaml
+>  F:	drivers/pci/controller/plda/pcie-starfive.c
+>  
+> +PCIE DRIVER FOR ULTRARISC DP1000
+> +M:	Xincheng Zhang <zhangxincheng@ultrarisc.com>
+> +M:	Jia Wang <wangjia@ultrarisc.com>
+> +L:	linux-pci@vger.kernel.org
+> +S:	Maintained
+> +F:	Documentation/devicetree/bindings/pci/ultrarisc,dp1000-pcie.yaml
 
-> On Thu, 2 Apr 2026, at 16:51, Jonas H=C3=B6glund wrote:
-> > Here are dmesg logs (with the appropriate dyndbg cmdline flag) for both
-> > cases, in case it's useful:
-> >
-> > https://up.firefly.nu/pub/amdgpu-egpu-crash-7.0.0-rc6.dmesg.txt
-> > https://up.firefly.nu/pub/amdgpu-egpu-good-pci-resource.dmesg.txt
->=20
-> Actually, now that I look closer at the good-case dmesg (just after
-> sending the email, typical), I guess I'm not sure how happy the driver
-> and dock really are.  Well, I'll let you weigh in since you're more
-> intimately familiar with the subsystem and expected debug messages.
+There is no such file.
 
-Hi,
+This is not supposed to be a separate commit.
 
-Even the "good" case does fail to enlarge the eGPU resource because some=20
-of the upstream bridge window are pinned by other resources.
+> +F:	drivers/pci/controller/dwc/pcie-ultrarisc.c
 
-It is a problem that has come up multiple times over the past few years=20
-but it's also a problem that is not very easy to solve (but I'm working on=
-=20
-it). The sizing needs to be corrected earlier than that point (before the=
-=20
-other resources pin those bridge windows), at the time we discover that=20
-BAR resize fails, it's already way too late to correct things.
+No such file.
 
+Best regards,
+Krzysztof
 
---=20
- i.
-
---8323328-34575375-1775547463=:983--
