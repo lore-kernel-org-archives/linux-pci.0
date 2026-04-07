@@ -1,443 +1,487 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC6741F192E;
-	Tue,  7 Apr 2026 09:30:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AD4738AC93;
+	Tue,  7 Apr 2026 09:38:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775554222; cv=none; b=fOtHIbB/aKMudX2oiwVU728dRexbx5VgtIn6BoXbM1ilShQk2GG5xvlZTAcl2+4xYOINdAHJNtfNjjCFGYih8YJaIqSAbOS43D92tElB7iZeYMeMZxiJAZe+I3lNhNXxnCqNrZ1dKxjMqrbpo2PA17x9HcL10ZhEG9xRstXzn5g=
+	t=1775554711; cv=none; b=kWxRJVLMDudJPxI+n5M5TPWfas8OS9rIoz7SYaqM3t6xWdRjiieaBvaqPDy/sytwgE+C/Ku8agTPIYRBwPK7jJS4MXzlGZ/a5yrk7W9iQGIjh7EVP7N0CstmZszPBmXFdOfvJQC6Dlidoid7tAaanGneHubwI3sakbldMAB6Ikg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775554222; c=relaxed/simple;
-	bh=qsH2UKICGVyaL6ToSCRVv2k4Aumdx9Cw0tu2ZW+ohX0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Hq2KaDczvxGiTAbn65rjg86liZji5WbAxmZIM7RWrKF7M4snZ28JERZkn8qW0ZAAL7NsWxfNWn/U2M6F/dBlkR4HZuEDpDbs5abL/eAcKLhTi4/RGKqFhneEqvBzHEkRk8Zyt4n4DbHyiQC5DTI4cG2spZnhf3U2jMEHMvVnjBA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VG9FskOZ; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1775554711; c=relaxed/simple;
+	bh=Uclf5ajKGlirtFS+exys4PG+9RGNZbkt5MlvGo9XdQ0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BSkAcIb6HgnY/+Wg2lAyN5WhlKQCZxXzxTsC9C8CGq8VhdEynxIcIt8LirUkK4DG5qo2cMAO636gDArsA1nm3FOp5R4vlL8BRJ9FkfDM0ikPDetxYFULN7m0ubDG9r5qpiR/m5odENlePkkiICJH4QIRWUZ/63xZJUpw8uQzrvY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rk87Mz5+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VG9FskOZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775554220; x=1807090220;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=qsH2UKICGVyaL6ToSCRVv2k4Aumdx9Cw0tu2ZW+ohX0=;
-  b=VG9FskOZIlNi3rf7H1bVcLswjQrf5yEREZec2x0lRCyV5/qprfh4HaGt
-   qR2+tFIYd9CEamIH5vLNj9JCo8anbJm1C/cgpsH/7Zf28/ToNOfoWmk7o
-   9ydrDq3zq48cqi4qb7Agzuy/HTmZU+FqhavKFNjfjkRW25SvSZDQIpyN7
-   Zj4Kgz7TkGQN7LnkZU+MNc8s6dhioags57yCHcL5AMpSUzWhXWdvJhKvL
-   0sU7Tem+qGA5cBnTFQVB8R8RRs/aSRELLpGWEkz8EadGYdYregT3y7x+x
-   RGT+Rye5o7ceB93UW9AIDbQ1IHQBXHmVwZG44sUKQ9oYakP12LnaVhJDI
-   A==;
-X-CSE-ConnectionGUID: HT+YZUI/S3e3dfQDCWXOTA==
-X-CSE-MsgGUID: sILv88x4RC+VoxsD9ePhpA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11751"; a="101967001"
-X-IronPort-AV: E=Sophos;i="6.23,165,1770624000"; 
-   d="scan'208";a="101967001"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2026 02:30:20 -0700
-X-CSE-ConnectionGUID: EHykXMblQ/mZaoTDnwXANQ==
-X-CSE-MsgGUID: 3Pk5KUnORgut0vsVwFORuQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,165,1770624000"; 
-   d="scan'208";a="232157672"
-Received: from weba0957.iind.intel.com (HELO WEBA0932.iind.intel.com) ([10.224.186.34])
-  by orviesa003.jf.intel.com with ESMTP; 07 Apr 2026 02:30:17 -0700
-From: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
-To: linux-bluetooth@vger.kernel.org
-Cc: linux-pci@vger.kernel.org,
-	bhelgaas@google.com,
-	ravishankar.srivatsa@intel.com,
-	chethan.tumkur.narayan@intel.com,
-	Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
-Subject: [PATCH v2] Bluetooth: btintel_pcie: Support Product level reset
-Date: Tue,  7 Apr 2026 14:59:40 +0530
-Message-ID: <20260407092940.1272507-1-chandrashekar.devegowda@intel.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rk87Mz5+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EB40C116C6;
+	Tue,  7 Apr 2026 09:38:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775554711;
+	bh=Uclf5ajKGlirtFS+exys4PG+9RGNZbkt5MlvGo9XdQ0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Rk87Mz5+8zNd8ViFTM/x+ma8Z16WtyLvt2IZj/EOooJFfHKz2LnBAYdzKKWuTKIHx
+	 tkds+wFJe5Y3EyrOGGuhGN/AI7qM5eje9RNBKhdS8HcNVh+o6E6RLNB1mGhd9fMd46
+	 uDfXG34YKhgyX7CoeypvOWcNvvKBubM+9Ozopw84vdJP3oEcoBU9MVJPeFNvmuhPdt
+	 Tp71MMFoOMwuR/ZtO7xcJTFYc0eO2eXSTnw0ikAJOtcbz598y9rtbo0tx2VMwb2I3h
+	 Aq+i8aMGWY3Mt4h5h2Ignec1MGLZh0WGN5QgiCuq5F+BHADfShsaluYcUeBZtpk2+u
+	 iIGNguEMCdO3Q==
+Date: Tue, 7 Apr 2026 11:38:28 +0200
+From: Thierry Reding <thierry.reding@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Thierry Reding <thierry.reding@gmail.com>, 
+	Jonathan Hunter <jonathanh@nvidia.com>, Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, 
+	Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
+	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, Michal Simek <michal.simek@amd.com>, 
+	Kevin Xie <kevin.xie@starfivetech.com>, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>, 
+	Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: Re: [PATCH v4 3/4] PCI: tegra: Add Tegra264 support
+Message-ID: <adTAVYEzfD9FQl8N@orome>
+References: <20260402-tegra264-pcie-v4-0-21e2e19987e8@nvidia.com>
+ <20260402-tegra264-pcie-v4-3-21e2e19987e8@nvidia.com>
+ <iaoee5r5e2w52fap7ex23wdikbuvpjpesinedgjkehsedszhzo@64yoo2avmxle>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="q44iycnkojb2hlgm"
+Content-Disposition: inline
+In-Reply-To: <iaoee5r5e2w52fap7ex23wdikbuvpjpesinedgjkehsedszhzo@64yoo2avmxle>
 
-When driver encounters a TOP exception, ACPI methods will be called
-for Product level reset since Wifi and BT share the same TOP. BT driver
-will first reprobe the wifi driver and then reprobe BT.
 
-Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
----
+--q44iycnkojb2hlgm
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v4 3/4] PCI: tegra: Add Tegra264 support
+MIME-Version: 1.0
 
-Notes:
-    v2: Incorporated review comments.
-    
-    Tested by:
-    1) Simulating TOP exception: sudo hcitool cmd 3f 4d 0A 00
-       And verified that the device went through PLDR by checking the ACPI
-       debug logs.
-    2) Toggle of sysfs attribute for BT reset for FLR i.e
-       echo 1 > /sys/class/bluetooth/hci0/reset
+On Thu, Apr 02, 2026 at 11:02:02PM +0530, Manivannan Sadhasivam wrote:
+> On Thu, Apr 02, 2026 at 04:27:37PM +0200, Thierry Reding wrote:
+> > From: Thierry Reding <treding@nvidia.com>
+> >=20
+> > Add a driver for the PCIe controller found on NVIDIA Tegra264 SoCs. The
+> > driver is very small, with its main purpose being to set up the address
+> > translation registers and then creating a standard PCI host using ECAM.
+> >=20
+> > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> > Signed-off-by: Thierry Reding <treding@nvidia.com>
+>=20
+> What is the rationale for adding a new driver? Can't you reuse the existi=
+ng one?
+> If so, that should be mentioned in the description.
 
- drivers/bluetooth/btintel.c      |   8 +-
- drivers/bluetooth/btintel.h      |   7 ++
- drivers/bluetooth/btintel_pcie.c | 164 +++++++++++++++++++++++++++++--
- drivers/bluetooth/btintel_pcie.h |   6 ++
- 4 files changed, 173 insertions(+), 12 deletions(-)
+Which existing one? Tegra PCI controllers for previou generations
+(Tegra194 and Tegra234) were DesignWare IP, but Tegra264 is an internal
+IP, so the programming is entirely different. I'll add something to that
+effect to the commit message.
 
-diff --git a/drivers/bluetooth/btintel.c b/drivers/bluetooth/btintel.c
-index dcaaa4ca02b9..c068a1d5ce81 100644
---- a/drivers/bluetooth/btintel.c
-+++ b/drivers/bluetooth/btintel.c
-@@ -67,9 +67,10 @@ static struct {
- 	u32        fw_build_num;
- } coredump_info;
- 
--static const guid_t btintel_guid_dsm =
-+const guid_t btintel_guid_dsm =
- 	GUID_INIT(0xaa10f4e0, 0x81ac, 0x4233,
- 		  0xab, 0xf6, 0x3b, 0x2a, 0xc5, 0x0e, 0x28, 0xd9);
-+EXPORT_SYMBOL_GPL(btintel_guid_dsm);
- 
- int btintel_check_bdaddr(struct hci_dev *hdev)
- {
-@@ -2624,7 +2625,7 @@ static void btintel_set_ppag(struct hci_dev *hdev, struct intel_version_tlv *ver
- 	kfree_skb(skb);
- }
- 
--static int btintel_acpi_reset_method(struct hci_dev *hdev)
-+int btintel_acpi_reset_method(struct hci_dev *hdev)
- {
- 	int ret = 0;
- 	acpi_status status;
-@@ -2632,7 +2633,7 @@ static int btintel_acpi_reset_method(struct hci_dev *hdev)
- 	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
- 
- 	status = acpi_evaluate_object(ACPI_HANDLE(GET_HCIDEV_DEV(hdev)), "_PRR", NULL, &buffer);
--	if (ACPI_FAILURE(status)) {
-+	if (ACPI_FAILURE(status) || !buffer.pointer) {
- 		bt_dev_err(hdev, "Failed to run _PRR method");
- 		ret = -ENODEV;
- 		return ret;
-@@ -2663,6 +2664,7 @@ static int btintel_acpi_reset_method(struct hci_dev *hdev)
- 	kfree(buffer.pointer);
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(btintel_acpi_reset_method);
- 
- static void btintel_set_dsm_reset_method(struct hci_dev *hdev,
- 					 struct intel_version_tlv *ver_tlv)
-diff --git a/drivers/bluetooth/btintel.h b/drivers/bluetooth/btintel.h
-index 0e9ca99aaaae..70d812ad36a2 100644
---- a/drivers/bluetooth/btintel.h
-+++ b/drivers/bluetooth/btintel.h
-@@ -79,6 +79,8 @@ struct intel_tlv {
- #define BTINTEL_HWID_SCP2	0x20	/* Scorpius Peak2 - Nova Lake */
- #define BTINTEL_HWID_BZRIW	0x22	/* BlazarIW - Wildcat Lake */
- 
-+extern const guid_t btintel_guid_dsm;
-+
- struct intel_version_tlv {
- 	u32	cnvi_top;
- 	u32	cnvr_top;
-@@ -289,6 +291,7 @@ int btintel_bootloader_setup_tlv(struct hci_dev *hdev,
- int btintel_shutdown_combined(struct hci_dev *hdev);
- void btintel_hw_error(struct hci_dev *hdev, u8 code);
- void btintel_print_fseq_info(struct hci_dev *hdev);
-+int btintel_acpi_reset_method(struct hci_dev *hdev);
- #else
- 
- static inline int btintel_check_bdaddr(struct hci_dev *hdev)
-@@ -422,4 +425,8 @@ static inline void btintel_hw_error(struct hci_dev *hdev, u8 code)
- static inline void btintel_print_fseq_info(struct hci_dev *hdev)
- {
- }
-+static inline int btintel_acpi_reset_method(struct hci_dev *hdev)
-+{
-+	return -ENODEV;
-+}
- #endif
-diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
-index 05f82bc3f0d7..d45341cc4db6 100644
---- a/drivers/bluetooth/btintel_pcie.c
-+++ b/drivers/bluetooth/btintel_pcie.c
-@@ -15,6 +15,7 @@
- #include <linux/wait.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
-+#include <linux/acpi.h>
- 
- #include <linux/unaligned.h>
- #include <linux/devcoredump.h>
-@@ -100,6 +101,22 @@ enum {
- 	BTINTEL_PCIE_D3
- };
- 
-+enum {
-+	BTINTEL_PCIE_DSM_SET_RESET_TIMING = 1,
-+	BTINTEL_PCIE_DSM_GET_RESET_TIMING = 2,
-+	BTINTEL_PCIE_DSM_BT_PLDR_CONFIG = 3,
-+	BTINTEL_PCIE_DSM_GET_RESET_TYPE = 4,
-+	BTINTEL_PCIE_DSM_DYNAMIC_PLDR = 5,
-+	BTINTEL_PCIE_DSM_GET_RESET_METHOD = 6,
-+	BTINTEL_PCIE_DSM_SET_PLDR_DELAY = 7,
-+};
-+
-+enum btintel_dsm_internal_product_reset_mode {
-+	BTINTEL_PCIE_DSM_PLDR_MODE_EN_PROD_RESET	= BIT(0),
-+	BTINTEL_PCIE_DSM_PLDR_MODE_EN_WIFI_FLR		= BIT(1),
-+	BTINTEL_PCIE_DSM_PLDR_MODE_EN_BT_OFF_ON		= BIT(2),
-+};
-+
- /* Structure for dbgc fragment buffer
-  * @buf_addr_lsb: LSB of the buffer's physical address
-  * @buf_addr_msb: MSB of the buffer's physical address
-@@ -126,6 +143,11 @@ struct btintel_pcie_dbgc_ctxt {
- 	struct btintel_pcie_dbgc_ctxt_buf bufs[BTINTEL_PCIE_DBGC_BUFFER_COUNT];
- };
- 
-+/* structure for reset and recovery
-+ * @pdev: The pci_dev for controller
-+ * @work: work struct for reset
-+ * @reset type: Reset can be FLR or PLDR
-+ */
- struct btintel_pcie_removal {
- 	struct pci_dev *pdev;
- 	struct work_struct work;
-@@ -2254,6 +2276,113 @@ static void btintel_pcie_inc_recovery_count(struct pci_dev *pdev,
- }
- 
- static int btintel_pcie_setup_hdev(struct btintel_pcie_data *data);
-+static void btintel_pcie_reset(struct hci_dev *hdev);
-+
-+static int btintel_pcie_acpi_reset_method(struct btintel_pcie_data *data)
-+{
-+	union acpi_object *obj, argv4;
-+	acpi_handle handle;
-+	int ret;
-+	struct pldr_mode {
-+		__le16	cmd_type;
-+		__le16	cmd_payload;
-+	} __packed;
-+
-+	/* set 1 for _PRR mode
-+	 * Product Reset (PLDR Abort flow)
-+	 */
-+	static const struct pldr_mode mode = {
-+		.cmd_type = 1,
-+		.cmd_payload = BTINTEL_PCIE_DSM_PLDR_MODE_EN_PROD_RESET |
-+			       BTINTEL_PCIE_DSM_PLDR_MODE_EN_WIFI_FLR,
-+	};
-+	struct hci_dev *hdev = data->hdev;
-+
-+	handle = ACPI_HANDLE(GET_HCIDEV_DEV(data->hdev));
-+	if (!handle) {
-+		bt_dev_err(data->hdev, "No support for bluetooth device in ACPI firmware");
-+		return -EACCES;
-+	}
-+
-+	if (!acpi_has_method(handle, "_PRR")) {
-+		bt_dev_err(data->hdev, "No support for _PRR ACPI method, cold boot");
-+		return -ENODEV;
-+	}
-+
-+	argv4.buffer.type = ACPI_TYPE_BUFFER;
-+	argv4.buffer.length = sizeof(mode);
-+	argv4.buffer.pointer = (void *)&mode;
-+
-+	obj = acpi_evaluate_dsm(handle, &btintel_guid_dsm, 0,
-+				BTINTEL_PCIE_DSM_DYNAMIC_PLDR, &argv4);
-+	if (!obj) {
-+		bt_dev_err(data->hdev, "Failed to call dsm to set reset method");
-+		return -EIO;
-+	}
-+	ACPI_FREE(obj);
-+
-+	pci_dev_lock(data->pdev);
-+	pci_save_state(data->pdev);
-+	ret = btintel_acpi_reset_method(hdev);
-+	if (ret)
-+		bt_dev_err(data->hdev, "ACPI _PRR reset failed (%d), PLDR incomplete",
-+			   ret);
-+	pci_restore_state(data->pdev);
-+	pci_dev_unlock(data->pdev);
-+	return ret;
-+}
-+
-+static void btintel_pcie_perform_pldr(struct btintel_pcie_removal *removal)
-+{
-+	struct pci_dev *pdev = removal->pdev;
-+	struct pci_dev *wifi = NULL;
-+	struct pci_bus *bus;
-+	struct btintel_pcie_data *data;
-+	int ret;
-+	/* on integrated we have to look up by ID (same bus) */
-+	static const struct pci_device_id wifi_device_ids[] = {
-+	#define WIFI_DEV(_id) { PCI_DEVICE(PCI_VENDOR_ID_INTEL, _id) }
-+		WIFI_DEV(0xA840), /* LNL */
-+		WIFI_DEV(0xE440), /* PTL-P */
-+		WIFI_DEV(0xE340), /* PTL-H */
-+		WIFI_DEV(0xD340), /* NVL-H */
-+		WIFI_DEV(0x6E70), /* NVL-S */
-+		WIFI_DEV(0x4D40), /* WCL */
-+		WIFI_DEV(0xD240), /* RZL-H */
-+		WIFI_DEV(0x6C40), /* RZL-M */
-+		{}
-+	};
-+	struct pci_dev *tmp = NULL;
-+
-+	data = pci_get_drvdata(pdev);
-+
-+	bus = pdev->bus;
-+	if (!bus)
-+		return;
-+
-+	list_for_each_entry(tmp, &bus->devices, bus_list) {
-+		if (pci_match_id(wifi_device_ids, tmp)) {
-+			wifi = pci_dev_get(tmp);
-+			break;
-+		}
-+	}
-+
-+	if (wifi)
-+		device_release_driver(&wifi->dev);
-+
-+	ret = btintel_pcie_acpi_reset_method(data);
-+
-+	if (wifi) {
-+		if (device_reprobe(&wifi->dev))
-+			BT_ERR("WiFi reprobe failed for BDF:%s", pci_name(wifi));
-+		pci_dev_put(wifi);
-+	}
-+
-+	if (!ret) {
-+		if (device_reprobe(&pdev->dev))
-+			BT_ERR("BT reprobe failed for BDF:%s", pci_name(pdev));
-+	}
-+}
- 
- static void btintel_pcie_removal_work(struct work_struct *wk)
- {
-@@ -2266,9 +2395,13 @@ static void btintel_pcie_removal_work(struct work_struct *wk)
- 	pci_lock_rescan_remove();
- 
- 	if (!pdev->bus)
--		goto error;
-+		goto out;
- 
- 	data = pci_get_drvdata(pdev);
-+	if (!data) {
-+		BT_WARN("PCI driver data is NULL, aborting removal work");
-+		goto out;
-+	}
- 
- 	btintel_pcie_disable_interrupts(data);
- 	btintel_pcie_synchronize_irqs(data);
-@@ -2276,12 +2409,16 @@ static void btintel_pcie_removal_work(struct work_struct *wk)
- 	flush_work(&data->rx_work);
- 
- 	bt_dev_dbg(data->hdev, "Release bluetooth interface");
-+	if (data->reset_type == BTINTEL_PCIE_IOSF_PRR_PLDR) {
-+		btintel_pcie_perform_pldr(removal);
-+		goto out;
-+	}
- 	btintel_pcie_release_hdev(data);
- 
- 	err = pci_reset_function(pdev);
- 	if (err) {
- 		BT_ERR("Failed resetting the pcie device (%d)", err);
--		goto error;
-+		goto out;
- 	}
- 
- 	btintel_pcie_enable_interrupts(data);
-@@ -2291,7 +2428,7 @@ static void btintel_pcie_removal_work(struct work_struct *wk)
- 	if (err) {
- 		BT_ERR("Failed to enable bluetooth hardware after reset (%d)",
- 		       err);
--		goto error;
-+		goto out;
- 	}
- 
- 	btintel_pcie_reset_ia(data);
-@@ -2301,9 +2438,9 @@ static void btintel_pcie_removal_work(struct work_struct *wk)
- 	err = btintel_pcie_setup_hdev(data);
- 	if (err) {
- 		BT_ERR("Failed registering hdev (%d)", err);
--		goto error;
-+		goto out;
- 	}
--error:
-+out:
- 	pci_dev_put(pdev);
- 	pci_unlock_rescan_remove();
- 	kfree(removal);
-@@ -2339,15 +2476,19 @@ static void btintel_pcie_hw_error(struct hci_dev *hdev, u8 code)
- 	struct pci_dev *pdev = dev_data->pdev;
- 	time64_t retry_window;
- 
--	if (code == 0x13) {
--		bt_dev_err(hdev, "Encountered top exception");
--		return;
--	}
-+	btintel_pcie_dump_debug_registers(hdev);
- 
- 	data = btintel_pcie_get_recovery(pdev, &hdev->dev);
- 	if (!data)
- 		return;
- 
-+	if (code == 0x13)
-+		dev_data->reset_type = BTINTEL_PCIE_IOSF_PRR_PLDR;
-+	else
-+		dev_data->reset_type = BTINTEL_PCIE_IOSF_PRR_FLR;
-+
-+	bt_dev_err(hdev, "Encountered exception err:0x%x triggering: %s", code,
-+		   dev_data->reset_type == BTINTEL_PCIE_IOSF_PRR_PLDR ? "PLDR" : "FLR");
- 	retry_window = ktime_get_boottime_seconds() - data->last_error;
- 
- 	if (retry_window < BTINTEL_PCIE_RESET_WINDOW_SECS &&
-@@ -2503,6 +2644,10 @@ static int btintel_pcie_probe(struct pci_dev *pdev,
- 
- 	data->boot_stage_cache = 0x00;
- 	data->img_resp_cache = 0x00;
-+	/* FLR can be invoked by echoing to debugfs path, so explicitly
-+	 * initialized
-+	 */
-+	data->reset_type = BTINTEL_PCIE_IOSF_PRR_FLR;
- 
- 	err = btintel_pcie_config_pcie(pdev, data);
- 	if (err)
-@@ -2701,6 +2846,7 @@ static int btintel_pcie_resume(struct device *dev)
- 	if (data->pm_sx_event == PM_EVENT_FREEZE ||
- 	    data->pm_sx_event == PM_EVENT_HIBERNATE) {
- 		set_bit(BTINTEL_PCIE_CORE_HALTED, &data->flags);
-+		data->reset_type = BTINTEL_PCIE_IOSF_PRR_FLR;
- 		btintel_pcie_reset(data->hdev);
- 		return 0;
- 	}
-diff --git a/drivers/bluetooth/btintel_pcie.h b/drivers/bluetooth/btintel_pcie.h
-index e3d941ffef4a..856673fb2bd7 100644
---- a/drivers/bluetooth/btintel_pcie.h
-+++ b/drivers/bluetooth/btintel_pcie.h
-@@ -144,6 +144,11 @@ enum msix_mbox_int_causes {
- 	BTINTEL_PCIE_CSR_MBOX_STATUS_MBOX4 = BIT(3), /* cause MBOX4 */
- };
- 
-+enum btintel_pcie_reset_type {
-+	BTINTEL_PCIE_IOSF_PRR_FLR = 0,
-+	BTINTEL_PCIE_IOSF_PRR_PLDR = 1,
-+};
-+
- #define BTINTEL_PCIE_MSIX_NON_AUTO_CLEAR_CAUSE	BIT(7)
- 
- /* Minimum and Maximum number of MSI-X Vector
-@@ -514,6 +519,7 @@ struct btintel_pcie_data {
- 	struct txq	txq;
- 	struct rxq	rxq;
- 	u32	alive_intr_ctxt;
-+	enum btintel_pcie_reset_type	reset_type;
- 	struct btintel_pcie_dbgc	dbgc;
- 	struct btintel_pcie_dump_header dmp_hdr;
- 	u8	pm_sx_event;
--- 
-2.43.0
+> > diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kc=
+onfig
+> > index 5aaed8ac6e44..6ead04f7bd6e 100644
+> > --- a/drivers/pci/controller/Kconfig
+> > +++ b/drivers/pci/controller/Kconfig
+> > @@ -254,7 +254,15 @@ config PCI_TEGRA
+> >  	select IRQ_MSI_LIB
+> >  	help
+> >  	  Say Y here if you want support for the PCIe host controller found
+> > -	  on NVIDIA Tegra SoCs.
+> > +	  on NVIDIA Tegra SoCs (Tegra20 through Tegra186).
+> > +
+> > +config PCIE_TEGRA264
+> > +	bool "NVIDIA Tegra264 PCIe controller"
+>=20
+> This driver seems to be using external MSI controller. So it can be built=
+ as a
+> module. Also, you have the remove() callback for some reason.
 
+Okay, I can turn this into a tristate symbol.
+
+> > +	depends on ARCH_TEGRA || COMPILE_TEST
+> > +	depends on PCI_MSI
+>=20
+> Why?
+
+I suppose it's not necessary in the sense of it being a build
+dependency. At runtime, however, the root complex is not useful if PCI
+MSI is not enabled. We can drop this dependency and rely on .config to
+have it enabled as needed.
+
+> > diff --git a/drivers/pci/controller/pcie-tegra264.c b/drivers/pci/contr=
+oller/pcie-tegra264.c
+> > new file mode 100644
+> > index 000000000000..3ce1ad971bdb
+> > --- /dev/null
+> > +++ b/drivers/pci/controller/pcie-tegra264.c
+[...]
+> > +struct tegra264_pcie {
+> > +	struct device *dev;
+> > +	bool link_up;
+>=20
+> Keep bool types at the end to avoid holes.
+
+Done.
+
+> > +static int tegra264_pcie_parse_dt(struct tegra264_pcie *pcie)
+> > +{
+> > +	int err;
+> > +
+> > +	pcie->wake_gpio =3D devm_gpiod_get_optional(pcie->dev, "nvidia,pex-wa=
+ke",
+>=20
+> You should switch to standard 'wake-gpios' property.
+
+Will do.
+
+> > +						  GPIOD_IN);
+> > +	if (IS_ERR(pcie->wake_gpio))
+> > +		return PTR_ERR(pcie->wake_gpio);
+> > +
+> > +	if (pcie->wake_gpio) {
+>=20
+> Since you are bailing out above, you don't need this check.
+
+I think we still want to have this check to handle the case of optional
+wake GPIOs. Not all controllers may have this wired up and
+devm_gpiod_get_optional() will return NULL (not an ERR_PTR()-encoded
+error) if the wake-gpios property is missing.
+
+> > +static void tegra264_pcie_bpmp_set_rp_state(struct tegra264_pcie *pcie)
+>=20
+> I don't think this function name is self explanatory. Looks like it is tu=
+rning
+> off the PCIe controller, so how about tegra264_pcie_power_off()?
+
+Agreed. The name is a relic from when this was potentially being used to
+toggle on and off the controller. But it's only used for disabling, so
+tegra264_pcie__power_off() sounds much better.
+
+> > +{
+> > +	struct tegra_bpmp_message msg =3D {};
+> > +	struct mrq_pcie_request req =3D {};
+> > +	int err;
+> > +
+> > +	req.cmd =3D CMD_PCIE_RP_CONTROLLER_OFF;
+> > +	req.rp_ctrlr_off.rp_controller =3D pcie->ctl_id;
+> > +
+> > +	msg.mrq =3D MRQ_PCIE;
+> > +	msg.tx.data =3D &req;
+> > +	msg.tx.size =3D sizeof(req);
+> > +
+> > +	err =3D tegra_bpmp_transfer(pcie->bpmp, &msg);
+> > +	if (err)
+> > +		dev_info(pcie->dev, "failed to turn off PCIe #%u: %pe\n",
+>=20
+> Why not dev_err()?
+>=20
+> > +			 pcie->ctl_id, ERR_PTR(err));
+> > +
+> > +	if (msg.rx.ret)
+> > +		dev_info(pcie->dev, "failed to turn off PCIe #%u: %d\n",
+>=20
+> Same here.
+
+These are not fatal errors and are safe to ignore. dev_err() seemed too
+strong for this. They also really shouldn't happen. Though I now realize
+that's a bad argument, or rather, actually an argument for making them
+dev_err() so that they do stand out if they really should happen.
+
+>=20
+> > +			 pcie->ctl_id, msg.rx.ret);
+> > +}
+> > +
+> > +static void tegra264_pcie_icc_set(struct tegra264_pcie *pcie)
+> > +{
+> > +	u32 value, speed, width, bw;
+> > +	int err;
+> > +
+> > +	value =3D readw(pcie->ecam + XTL_RC_PCIE_CFG_LINK_STATUS);
+> > +	speed =3D FIELD_GET(PCI_EXP_LNKSTA_CLS, value);
+> > +	width =3D FIELD_GET(PCI_EXP_LNKSTA_NLW, value);
+> > +
+> > +	bw =3D width * (PCIE_SPEED2MBS_ENC(speed) / BITS_PER_BYTE);
+> > +	value =3D MBps_to_icc(bw);
+>=20
+> So this becomes, 'width * (PCIE_SPEED2MBS_ENC(speed) / 8) * 1000 / 8'. Bu=
+t don't
+> you want, 'width * (PCIE_SPEED2MBS_ENC(speed)) * 1000 / 8'?
+
+This is M*B*ps_to_icc(), not M*b*ps_to_icc(), so we do in fact get the
+latter. I almost fell for this as well because I got confused by some of
+these macros being all-caps and other times the case actually mattering.
+
+> > +	err =3D icc_set_bw(pcie->icc_path, bw, bw);
+> > +	if (err < 0)
+> > +		dev_err(pcie->dev,
+> > +			"failed to request bandwidth (%u MBps): %pe\n",
+> > +			bw, ERR_PTR(err));
+>=20
+> So you don't want to error out if this fails?
+
+No. This is not a fatal error and the system will continue to work,
+albeit perhaps at suboptimal performance. Given that Ethernet and mass
+storage are connected to these, a failure to set the bandwidth and
+erroring out here may leave the system unusable, but continuing on would
+let the system boot and update firmware, kernel or whatever to recover.
+
+I'll add a comment explaining this.
+
+[...]
+> > +static void tegra264_pcie_init(struct tegra264_pcie *pcie)
+> > +{
+> > +	enum pci_bus_speed speed;
+> > +	unsigned int i;
+> > +	u32 value;
+> > +
+> > +	/* bring the link out of reset */
+>=20
+> s/link/controller or endpoint?
+
+This controls the PERST# signal, so I guess "endpoint" would be more
+correct.
+
+> > +	value =3D readl(pcie->xtl + XTL_RC_MGMT_PERST_CONTROL);
+> > +	value |=3D XTL_RC_MGMT_PERST_CONTROL_PERST_O_N;
+> > +	writel(value, pcie->xtl + XTL_RC_MGMT_PERST_CONTROL);
+> > +
+> > +	if (!tegra_is_silicon()) {
+>=20
+> This looks like some pre-silicon validation thing. Do you really want it =
+to be
+> present in the upstream driver?
+
+At this point there is silicon for this chip, but we've been trying to
+get some of the pre-silicon code merged upstream as well because
+occasionally people will want to run upstream on simulation, even after
+silicon is available. At other times we may want to reuse these drivers
+on future chips during pre-silicon validation.
+
+Obviously there needs to be a balance. We don't want to have excessive
+amounts of code specifically for pre-silicon validation, but in
+relatively simple cases like this it is useful.
+
+>=20
+> > +		dev_info(pcie->dev,
+> > +			 "skipping link state for PCIe #%u in simulation\n",
+> > +			 pcie->ctl_id);
+> > +		pcie->link_up =3D true;
+> > +		return;
+> > +	}
+> > +
+> > +	for (i =3D 0; i < PCIE_LINK_WAIT_MAX_RETRIES; i++) {
+> > +		if (tegra264_pcie_link_up(pcie, NULL))
+> > +			break;
+> > +
+> > +		usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
+> > +	}
+> > +
+> > +	if (tegra264_pcie_link_up(pcie, &speed)) {
+>=20
+> Why are you doing it for the second time?
+
+It's just a last-resort check to see if it's really not come up after
+the retries. Also, in this call we're actually interested in retrieving
+the detected link speed.
+
+>=20
+> > +		/* Per PCIe r5.0, 6.6.1 wait for 100ms after DLL up */
+>=20
+> No need of this comment.
+
+Fair enough. This was perhaps more useful in earlier versions of the
+patch before the line below used the standardize wait time.
+
+[...]
+> > +static int tegra264_pcie_probe(struct platform_device *pdev)
+> > +{
+> > +	struct device *dev =3D &pdev->dev;
+> > +	struct pci_host_bridge *bridge;
+> > +	struct tegra264_pcie *pcie;
+> > +	struct resource_entry *bus;
+> > +	struct resource *res;
+> > +	int err;
+> > +
+> > +	bridge =3D devm_pci_alloc_host_bridge(dev, sizeof(struct tegra264_pci=
+e));
+> > +	if (!bridge)
+> > +		return dev_err_probe(dev, -ENOMEM,
+> > +				     "failed to allocate host bridge\n");
+> > +
+> > +	pcie =3D pci_host_bridge_priv(bridge);
+> > +	platform_set_drvdata(pdev, pcie);
+> > +	pcie->bridge =3D bridge;
+> > +	pcie->dev =3D dev;
+> > +
+> > +	err =3D pinctrl_pm_select_default_state(dev);
+>=20
+> I questioned this before:
+> https://lore.kernel.org/linux-pci/o5sxxdikdjwd76zsedvkpsl54nw6wrhopwsflt4=
+3y5st67mrub@uuw3yfjfqthd/
+
+I'll remove this. Looks like we should be fine with just relying on the
+default state being set by the pinctrl core. We might need to move it
+into the resume callback.
+
+> > +	if (err < 0)
+> > +		return dev_err_probe(dev, err,
+> > +				     "failed to configure sideband pins\n");
+> > +
+> > +	err =3D tegra264_pcie_parse_dt(pcie);
+> > +	if (err < 0)
+> > +		return dev_err_probe(dev, err, "failed to parse device tree");
+> > +
+> > +	pcie->xal =3D devm_platform_ioremap_resource_byname(pdev, "xal");
+> > +	if (IS_ERR(pcie->xal))
+> > +		return dev_err_probe(dev, PTR_ERR(pcie->xal),
+> > +				     "failed to map XAL memory\n");
+> > +
+> > +	pcie->xtl =3D devm_platform_ioremap_resource_byname(pdev, "xtl-pri");
+> > +	if (IS_ERR(pcie->xtl))
+> > +		return dev_err_probe(dev, PTR_ERR(pcie->xtl),
+> > +				     "failed to map XTL-PRI memory\n");
+> > +
+> > +	bus =3D resource_list_first_type(&bridge->windows, IORESOURCE_BUS);
+> > +	if (!bus)
+> > +		return dev_err_probe(dev, -ENODEV,
+> > +				     "failed to get bus resources\n");
+> > +
+> > +	res =3D platform_get_resource_byname(pdev, IORESOURCE_MEM, "ecam");
+> > +	if (!res)
+> > +		return dev_err_probe(dev, -ENXIO,
+> > +				     "failed to get ECAM resource\n");
+> > +
+> > +	pcie->icc_path =3D devm_of_icc_get(&pdev->dev, "write");
+> > +	if (IS_ERR(pcie->icc_path))
+> > +		return dev_err_probe(&pdev->dev, PTR_ERR(pcie->icc_path),
+> > +				     "failed to get ICC");
+> > +
+> > +	/*
+> > +	 * Parse BPMP property only for silicon, as interaction with BPMP is
+> > +	 * not needed for other platforms.
+> > +	 */
+> > +	if (tegra_is_silicon()) {
+> > +		pcie->bpmp =3D tegra_bpmp_get_with_id(dev, &pcie->ctl_id);
+> > +		if (IS_ERR(pcie->bpmp))
+> > +			return dev_err_probe(dev, PTR_ERR(pcie->bpmp),
+> > +					     "failed to get BPMP\n");
+> > +	}
+> > +
+>=20
+> pm_runtime_set_active()
+>=20
+> > +	pm_runtime_enable(dev);
+>=20
+> devm_pm_runtime_enable()?
+
+Looks like I can even use devm_pm_runtime_set_active_enabled() to
+combine the two.
+
+>=20
+> > +	pm_runtime_get_sync(dev);
+> > +
+> > +	/* sanity check that programmed ranges match what's in DT */
+> > +	if (!tegra264_pcie_check_ranges(pdev)) {
+> > +		err =3D -EINVAL;
+> > +		goto put_pm;
+> > +	}
+> > +
+> > +	pcie->cfg =3D pci_ecam_create(dev, res, bus->res, &pci_generic_ecam_o=
+ps);
+> > +	if (IS_ERR(pcie->cfg)) {
+> > +		err =3D dev_err_probe(dev, PTR_ERR(pcie->cfg),
+> > +				    "failed to create ECAM\n");
+> > +		goto put_pm;
+> > +	}
+> > +
+> > +	bridge->ops =3D (struct pci_ops *)&pci_generic_ecam_ops.pci_ops;
+> > +	bridge->sysdata =3D pcie->cfg;
+> > +	pcie->ecam =3D pcie->cfg->win;
+> > +
+> > +	tegra264_pcie_init(pcie);
+> > +
+> > +	if (!pcie->link_up)
+> > +		goto free;
+>=20
+> goto free_ecam;
+
+It's not clear to me, but are you suggesting to rename the existing
+"free" label to "free_ecam"? I can do that.
+
+> > +	err =3D pci_host_probe(bridge);
+> > +	if (err < 0) {
+> > +		dev_err(dev, "failed to register host: %pe\n", ERR_PTR(err));
+>=20
+> dev_err_probe()
+
+Okay.
+
+>=20
+> > +		goto free;
+> > +	}
+> > +
+> > +	return err;
+>=20
+> return 0;
+
+Done.
+
+[...]
+> > +static int tegra264_pcie_resume_noirq(struct device *dev)
+> > +{
+> > +	struct tegra264_pcie *pcie =3D dev_get_drvdata(dev);
+> > +	int err;
+> > +
+> > +	if (pcie->wake_gpio && device_may_wakeup(dev)) {
+> > +		err =3D disable_irq_wake(pcie->wake_irq);
+> > +		if (err < 0)
+> > +			dev_err(dev, "failed to disable wake IRQ: %pe\n",
+> > +				ERR_PTR(err));
+> > +	}
+> > +
+> > +	if (pcie->link_up =3D=3D false)
+> > +		return 0;
+> > +
+> > +	tegra264_pcie_init(pcie);
+> > +
+>=20
+> Why do you need init() here without deinit() in tegra264_pcie_suspend_noi=
+rq()?
+
+That's because when we come out of suspend the link may have gone down
+again, so we need to take the endpoint out of reset to retrigger the
+link training. I think we could possibly explicitly clear that PERST_O_N
+bit in the PERST_CONTROL register in a new tegra264_pcie_deinit() to
+mirror what tegra264_pcie_init() does, but it's automatically done by
+firmware anyway, so not needed.
+
+Thierry
+
+--q44iycnkojb2hlgm
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmnU0JEACgkQ3SOs138+
+s6H4mhAAj69cIjkOjfrlyDPnuCpXLVmKhK5GcEX189lxYsxkcWieA9t/WNB0LQpr
+jwLRptKVBBNA1uJvi3vhFrzDumYVugeKreYr+IrxnCFHONLe8V4hzDDgWXoTRk87
+UpE7YpQNqrSXC7gF8+PU/HQ7keyLnTqvPPIQXBL/7Mpo4gqHnvNCOAaqA4SB8Zke
+0XKHXdJ7jb/ctJZnGPjqsgB31pBRaPzJ6KL3Q5N09AdMz7bRPk1Umf844lwfB1Np
+cwttsID9SRWx8fkZtsSvzkNRUka2l71O9b2Y9RnHFNvpNbvQR1aj95prjZYmi0ID
+uVwhT2n0omToDkP6eHYdoHvR5WtBbIw2C6z+7ocptiT5/bR0JxDxotNKGOeZgzEd
+kQY3lUSVdPOa5ML+yZ7Odo8WXV76IAiGpS3CVXXfTK5n65c75g01IF4VB1GjGKDF
+K0j/a477oiJ/WFn2J+yRj3milfNidXcMwrQC7ImdY2gT6Mn2EClvPGIv3nF9xYfu
+NdSXxIWmpoZxfVWKprY91cgnawFDusim1UO+w3iZ2SPFG81Aj0WekmcJ3zsFAaMn
+kFyzXAVzMm7m9/vxlnYEaeBFnoVmf2HMUeNWt7O0drlfKN5XG36MYSu1FdEDCfUK
+l+x/oy8E/GYC5nwfKp5TYVmAnkFjQbo+ZWgSyxw2mg1CYBpyzbY=
+=TfWe
+-----END PGP SIGNATURE-----
+
+--q44iycnkojb2hlgm--
