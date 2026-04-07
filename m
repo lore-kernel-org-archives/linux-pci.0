@@ -1,176 +1,124 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7BAC3BC69C
-	for <linux-pci@vger.kernel.org>; Tue,  7 Apr 2026 18:05:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C8A13CF03B;
+	Tue,  7 Apr 2026 18:06:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775585157; cv=none; b=AX6Li1VsyfwaofhGANNR4eM8BR1H5yUJfiLDD7nznmXVlaaSSlUfeHN0JnR+2tIIQdhotrpDhRgC0Rpr4gxBhbJKW7sbfOnh2xd0+zWhJDUNnquFR00lvOHKCMnBKEIX2qK383JCoaCtTwVkf968PotoN3AzS2ifX3GleUTIrHU=
+	t=1775585193; cv=none; b=O80f/U1kBp8uzWs4PhV6LOpVjHEvRs3iARgZokQm7tM17iHUgW1fzDISVhjQcHUSGj2avTbmzIHiyUDzRgWSAEA0c8NgmRWfz0JSMfaG1+w0Wiqh3b80VtNYGOwFvzJWSaO+IBpn/U3PmQXcZkjK8wCLrb39kcNb7Mby7+9VCJk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775585157; c=relaxed/simple;
-	bh=uFO0xP5YCzidCQEHhppwCpm47278XPfZ+3Ibhoo3yo8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KubLDegj/FmdZP5/MFZ4s8xzeOvS/Lw2pSt6pXy6xtz1ROc5J24Q+YpTooMKPigBV6vHb+HTGwDCwfHdLPFoiY92Lq8fSXhCcIgfVHXO9kG6OSqM+REoRegsakv4clkmhfDBP6D1RcSaTSqV2IqdelxirYqY3whaGnB9U/E8m0s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mF6eAW86; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775585193; c=relaxed/simple;
+	bh=rE/S8sXacEZvPrxZTF9QP8OJ12EbZTJXA+T9P3zUtIs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Er0BQUiDyEz9IX1g8WitzPaFgAJ+PDFlMkFg9rIfdzXvUeV0gs70lCxPJcIrUvG88BkigtpVCVwqd+QU9Nkcp1YwfSyLW4CjgNLHgfANiM0Exz4yLqDhs+DKdwGJ1PcSvDf+LKR8vndNN/DprzOe3pLKZ/KT772Q8EwpwEZc97E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jjj+5nNZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mF6eAW86"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B800C2BCAF
-	for <linux-pci@vger.kernel.org>; Tue,  7 Apr 2026 18:05:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jjj+5nNZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7912CC116C6;
+	Tue,  7 Apr 2026 18:06:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775585157;
-	bh=uFO0xP5YCzidCQEHhppwCpm47278XPfZ+3Ibhoo3yo8=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=mF6eAW86xTzc4seINUXWCAkNT4/kMxvZtF4KEb0JcKoIl12ezSkyFWDM1W+5rDl3Q
-	 XJ8672VFZrXnm7TqGPHK0byTAohbxmC05rGGoCa5OQeZkxCKtqK8y3kFRANQCTnsaS
-	 0IrSLsQzXdTHpS86dudwRDXAXX4T7zFR3WA7hl5X4bp65VZ4JJMtPrF6ZDt2eYY9g9
-	 uu0Qqj2utUleNsxZmfMWetl+2CUpuKjWOM20wZO3kDxmZJ9uvSgwTv0bLQl5jtIBbl
-	 5z0l24bS7oDe8nvMEpJrgpZJ22T8ex3zhXQqSzVWvaSeMpt2S2U7O2tJqrrLsSIcXX
-	 D/8icD4CRxLmQ==
-Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-66f74fa69ceso1226093a12.2
-        for <linux-pci@vger.kernel.org>; Tue, 07 Apr 2026 11:05:57 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCXAh8/PpYFOqySir+Got905awLVyGNjQ3GGf1QC2aCx71+SSPveH7Tv8bhdoZFftGQIa4e/PMPj5ng=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxQ8JtVjdzXkYNCelEAUaJB4l8qJH3pVZLhRQ8sKA5AcpvO51Bn
-	fItAZVq3i19PaPXVCT9KbEiycV0P5EUsRqFDEFsCqP/SI4nVajORMJ5LWNAkieGyxTDkZcEq7UC
-	Z0slh3rVvebUA4tGNH/FqB3Em0cov7Q==
-X-Received: by 2002:a17:907:960f:b0:b9b:38d4:2cea with SMTP id
- a640c23a62f3a-b9c676c8812mr866811266b.23.1775585155532; Tue, 07 Apr 2026
- 11:05:55 -0700 (PDT)
+	s=k20201202; t=1775585192;
+	bh=rE/S8sXacEZvPrxZTF9QP8OJ12EbZTJXA+T9P3zUtIs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Jjj+5nNZeVO6S/izZL6Hm/LvTGb/DIf7KcD5DEbkT9djs0v3EgNthYfp1MPeI8J8X
+	 pkGnv8wxDoY4F7s+XjbQUPTQPi9C7fmzAKEft7MpBX27UBLACrKZ2EWIHd6E14frHZ
+	 0s5Dq1xfyZHj/hMBBJcwqohAtRvfRFeC74YU5kOAoLmuHB4rzBD+6T0PAL2JxhREEW
+	 DmV1grH/t06uIFol7CdbzFASJUXuH9fZQyg3c3YVM6wNdU9tWmCQV+0zrAJ8vWTbQV
+	 lKR2lOdBAEgAceUpp4zmEtwCfKMWbJFfPnkZWfSnluSR1fzFm26eNaDbC0taoPxqs6
+	 muUxCwHktAJ0w==
+Date: Tue, 7 Apr 2026 13:06:31 -0500
+From: "Rob Herring (Arm)" <robh@kernel.org>
+To: Herve Codina <herve.codina@bootlin.com>
+Cc: Daniel Scally <djrscally@gmail.com>, Mark Brown <broonie@kernel.org>,
+	linux-i2c@vger.kernel.org, Conor Dooley <conor+dt@kernel.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	David Rhodes <david.rhodes@cirrus.com>,
+	Michael Turquette <mturquette@baylibre.com>, imx@lists.linux.dev,
+	Arnd Bergmann <arnd@arndb.de>, Linus Walleij <linusw@kernel.org>,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	linux-arm-kernel@lists.infradead.org, linux-sound@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ira Weiny <ira.weiny@intel.com>, Dave Jiang <dave.jiang@intel.com>,
+	Andrew Lunn <andrew@lunn.ch>, Ulf Hansson <ulf.hansson@linaro.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Alison Schofield <alison.schofield@intel.com>,
+	linux-pm@vger.kernel.org, linux-clk@vger.kernel.org,
+	linux-cxl@vger.kernel.org, Stephen Boyd <sboyd@kernel.org>,
+	Charles Keepax <ckeepax@opensource.cirrus.com>,
+	linux-spi@vger.kernel.org, patches@opensource.cirrus.com,
+	Saravana Kannan <saravanak@google.com>, devicetree@vger.kernel.org,
+	Luca Ceresoli <luca.ceresoli@bootlin.com>,
+	Fabio Estevam <festevam@gmail.com>,
+	Wolfram Sang <wsa+renesas@sang-engineering.com>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	linux-kernel@vger.kernel.org,
+	Steen Hegelund <steen.hegelund@microchip.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	driver-core@lists.linux.dev,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Saravana Kannan <saravanak@kernel.org>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Frank Li <Frank.Li@nxp.com>, Wolfram Sang <wsa@kernel.org>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Sakari Ailus <sakari.ailus@linux.intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Horatiu Vultur <horatiu.vultur@microchip.com>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	Andi Shyti <andi.shyti@kernel.org>, linux-gpio@vger.kernel.org,
+	Allan Nielsen <allan.nielsen@microchip.com>,
+	Richard Fitzgerald <rf@opensource.cirrus.com>,
+	Kalle Niemi <kaleposti@gmail.com>,
+	Matti Vaittinen <mazziesaccount@gmail.com>,
+	Peter Rosin <peda@axentia.se>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v6 02/27] of: dynamic: Fix overlayed devices not probing
+ because of fw_devlink
+Message-ID: <177558519048.3200719.13441877339906679105.robh@kernel.org>
+References: <20260325143555.451852-1-herve.codina@bootlin.com>
+ <20260325143555.451852-3-herve.codina@bootlin.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260325143555.451852-1-herve.codina@bootlin.com> <20260407180315.GA3175985-robh@kernel.org>
-In-Reply-To: <20260407180315.GA3175985-robh@kernel.org>
-From: Rob Herring <robh@kernel.org>
-Date: Tue, 7 Apr 2026 13:05:43 -0500
-X-Gmail-Original-Message-ID: <CAL_Jsq+vuQba8kSfD7YvBADRMG2FVcWqTvJdsyAOZ3b2CPTUPA@mail.gmail.com>
-X-Gm-Features: AQROBzDYXYYcVJxX1hhqK2Tcju9IchSU1-kXz0rhO9iaVymSVAahX9Zn0Xa7GiQ
-Message-ID: <CAL_Jsq+vuQba8kSfD7YvBADRMG2FVcWqTvJdsyAOZ3b2CPTUPA@mail.gmail.com>
-Subject: Re: [PATCH v6 00/27] lan966x pci device: Add support for SFPs
-To: Herve Codina <herve.codina@bootlin.com>
-Cc: Andrew Lunn <andrew@lunn.ch>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, 
-	Kalle Niemi <kaleposti@gmail.com>, Matti Vaittinen <mazziesaccount@gmail.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Danilo Krummrich <dakr@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
-	Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team <kernel@pengutronix.de>, 
-	Fabio Estevam <festevam@gmail.com>, Michael Turquette <mturquette@baylibre.com>, 
-	Stephen Boyd <sboyd@kernel.org>, Andi Shyti <andi.shyti@kernel.org>, 
-	Wolfram Sang <wsa+renesas@sang-engineering.com>, Peter Rosin <peda@axentia.se>, 
-	Arnd Bergmann <arnd@arndb.de>, Saravana Kannan <saravanak@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Charles Keepax <ckeepax@opensource.cirrus.com>, 
-	Richard Fitzgerald <rf@opensource.cirrus.com>, David Rhodes <david.rhodes@cirrus.com>, 
-	Linus Walleij <linusw@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, 
-	Mark Brown <broonie@kernel.org>, Len Brown <lenb@kernel.org>, 
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Daniel Scally <djrscally@gmail.com>, 
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>, 
-	Sakari Ailus <sakari.ailus@linux.intel.com>, Davidlohr Bueso <dave@stgolabs.net>, 
-	Jonathan Cameron <jonathan.cameron@huawei.com>, Dave Jiang <dave.jiang@intel.com>, 
-	Alison Schofield <alison.schofield@intel.com>, Vishal Verma <vishal.l.verma@intel.com>, 
-	Ira Weiny <ira.weiny@intel.com>, Dan Williams <dan.j.williams@intel.com>, 
-	Shawn Guo <shawnguo@kernel.org>, Wolfram Sang <wsa@kernel.org>, linux-kernel@vger.kernel.org, 
-	driver-core@lists.linux.dev, imx@lists.linux.dev, 
-	linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org, 
-	linux-i2c@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
-	patches@opensource.cirrus.com, linux-gpio@vger.kernel.org, 
-	linux-pm@vger.kernel.org, linux-spi@vger.kernel.org, 
-	linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org, 
-	Allan Nielsen <allan.nielsen@microchip.com>, Horatiu Vultur <horatiu.vultur@microchip.com>, 
-	Steen Hegelund <steen.hegelund@microchip.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>, 
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260325143555.451852-3-herve.codina@bootlin.com>
 
-On Tue, Apr 7, 2026 at 1:03=E2=80=AFPM Rob Herring <robh@kernel.org> wrote:
->
-> On Wed, Mar 25, 2026 at 03:35:27PM +0100, Herve Codina wrote:
-> > Hi,
-> >
-> > This series add support for SFPs ports available on the LAN966x PCI
-> > device. In order to have the SFPs supported, additional devices are
-> > needed such as clock controller and I2C.
-> >
-> > As a reminder, the LAN966x PCI device driver use a device-tree overlay
-> > to describe devices available on the PCI board. Adding support for SFPs
-> > ports consists in adding more devices in the already existing
-> > device-tree overlay.
-> >
-> > With those devices added, the device-tree overlay is more complex and
-> > some consumer/supplier relationship are needed in order to remove
-> > devices in correct order when the LAN966x PCI driver is removed.
-> >
-> > Those links are typically provided by fw_devlink and we faced some
-> > issues with fw_devlink and overlays.
-> >
-> > This series gives the big picture related to the SFPs support from
-> > fixing issues to adding new devices. Of course, it can be split if
-> > needed.
-> >
-> > The first part of the series (patch 1 and 2 ) fixes fw_devlink when it
-> > is used with overlay. Those patches were previously sent by Saravana
-> > [0]. I rebased them on top of v7.0-rc1.
-> >
-> > Also I added a call to driver_deferred_probe_trigger() in Saravana's
-> > patch (patch 2) to ensure that probes are retried after the modificatio=
-n
-> > performed on the dangling consumers. This allows to fix issues reported
-> > by Matti and Geert [2] with the previous iteration patches.
-> >
-> > Those modification were not sufficient in our case and so, on top of
-> > that, patches 3 to 5 fix some more issues related to fw_devlink.
-> >
-> > Patches 6 to 11 introduce and use fw_devlink_set_device() in already
-> > existing code.
-> >
-> > Patches 12 and 13 are related also to fw_devlink but specific to PCI an=
-d
-> > the device-tree nodes created during enumeration.
-> >
-> > Patches 14, 15 and 16 are related fw_devlink too but specific to I2C
-> > muxes. Patches purpose is to correctly set a link between an adapter
-> > supplier and its consumer. Indeed, an i2c mux adapter's parent is not
-> > the i2c mux supplier but the adapter the i2c mux is connected to. Addin=
-g
-> > a new link between the adapter supplier involved when i2c muxes are use=
-d
-> > avoid a freeze observed during device removal.
-> >
-> > Patch 17 adds support for fw_delink on x86. fw_devlink is needed to hav=
-e
-> > the consumer/supplier relationship between devices in order to ensure a
-> > correct device removal order. Adding fw_devlink support for x86 has bee=
-n
-> > tried in the past but was reverted [1] because it broke some systems.
-> > Instead of enabling fw_devlink on *all* x86 system, enable it on *all*
-> > x86 except on those where it leads to issue.
-> >
-> > Patches 18 and 19 allow to build clock and i2c controller used by the
-> > LAN966x PCI device when the LAN966x PCI device is enabled.
-> >
-> > Patches 20 to 24 are specific to the LAN966x. They touch the current
-> > dtso, split it in dtsi/dtso files, rename the dtso and improve the
-> > driver to allow easier support for other boards.
-> >
-> > The next patch (patch 25) update the LAN966x device-tree overlay itself
-> > to have the SPF ports and devices they depends on described.
-> >
-> > The last two patches (patches 26 and 27) sort the existing drivers in
-> > the needed driver list available in the Kconfig help and add new driver=
-s
-> > in this list keep the list up to date with the devices described in the
-> > device-tree overlay.
-> >
-> > We believe some items from the above list can be merged separately, wit=
-h
-> > no build dependencies. We expect:
-> >
-> >  - Patches 1 to 5 to be taken by driver core maintainers
->
-> From a quick look, can't the first 2 DT patches be taken by me?
 
-Err, I guess patch 2 is really more driver core than DT.
+On Wed, 25 Mar 2026 15:35:29 +0100, Herve Codina wrote:
+> From: Saravana Kannan <saravanak@google.com>
+> 
+> When an overlay is applied, if the target device has already probed
+> successfully and bound to a device, then some of the fw_devlink logic
+> that ran when the device was probed needs to be rerun. This allows newly
+> created dangling consumers of the overlayed device tree nodes to be
+> moved to become consumers of the target device.
+> 
+> Fixes: 1a50d9403fb9 ("treewide: Fix probing of devices in DT overlays")
+> Reported-by: Herve Codina <herve.codina@bootlin.com>
+> Closes: https://lore.kernel.org/lkml/CAMuHMdXEnSD4rRJ-o90x4OprUacN_rJgyo8x6=9F9rZ+-KzjOg@mail.gmail.com/
+> Closes: https://lore.kernel.org/all/20240221095137.616d2aaa@bootlin.com/
+> Closes: https://lore.kernel.org/lkml/20240312151835.29ef62a0@bootlin.com/
+> Signed-off-by: Saravana Kannan <saravanak@google.com>
+> Link: https://lore.kernel.org/lkml/20240411235623.1260061-3-saravanak@google.com/
+> [Herve: Rebase on top of recent kernel]
+> [Herve: Add the call to driver_deferred_probe_trigger()]
+> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+> Tested-by: Kalle Niemi <kaleposti@gmail.com>
+> Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> ---
+>  drivers/base/core.c    | 83 +++++++++++++++++++++++++++++++++++++-----
+>  drivers/of/overlay.c   | 15 ++++++++
+>  include/linux/fwnode.h |  1 +
+>  3 files changed, 90 insertions(+), 9 deletions(-)
+> 
 
-Rob
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+
