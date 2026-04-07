@@ -1,164 +1,90 @@
-Received: from fout-b3-smtp.messagingengine.com (fout-b3-smtp.messagingengine.com [202.12.124.146])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E5F13DBA0;
-	Tue,  7 Apr 2026 15:58:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.146
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAC563C73EA
+	for <linux-pci@vger.kernel.org>; Tue,  7 Apr 2026 16:24:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775577529; cv=none; b=rXVJM3b5ZrFGt522c9Ye1FPiEWzTgyMUXL1RZHF28uRL19Gzt0XmiUDreCx5kWvHMb9/UBL0PMYcsmPRaf56/Hukll3QCsJG9NGSsbQzyLkj/Jc2eWhZn9Zv+XBiuyACykBZFpZitGtnPBSVODiJCl9I7gAjx92JCmMVa8iClEU=
+	t=1775579052; cv=none; b=CvlLtB1ifWGZvoPfEFsuf3M00oxiKAaxTVHT0UkwXeck5z30JNej6Yu/heLxGnnfdIaLfjib2aKfQDaet8x+SrnJTxhKaCUGUvmBiP1Tjbg8nQ4IkBz/eCulqRv/B1M9TiYYT25O/AChqXOTOTP0e1WdoZEKjxntVecZaQ5A+Wg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775577529; c=relaxed/simple;
-	bh=EBFnxExK4VX2YswSoy+PzJvSVt/+6kITNov1zrMkHX4=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=owJHLAOOd1MhH1qLQGx6dSNPe8sjmSuoKmNtHl0u1JY+X9Eze6T3tWxLoQW9q/vdmZUx9UBv143Qq6VXggFxiCYQjsCypVbNfRUHq0L5nPw+/kfyJTL7iVncNQLP6nn/BQg1/2TjCJBZTcNtI8Ge+S31/UBYrj2s/zn2m2bXYfA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=fuHKukx5; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=fk2G5NVw; arc=none smtp.client-ip=202.12.124.146
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1775579052; c=relaxed/simple;
+	bh=9FeJFyp0FaZnv7lMyE8/o9uC1lGRabz7wKdgpqoqhx8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uuxyl31tu4wxU1Bo+lCBs8D48HVapK066csK3mHlit31RC05J/qGj22MAh9DUF81AqXmlOnA87u7Or29lLEfI0qiXw18nu+IrYGegIm3bU+4sru2HyFAs7WbKoDL0elNBbXyf9/kpB2+R9p8CzN9jz4A/cZbO0ofqoFAPj/bP9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EpAauxTx; arc=none smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="fuHKukx5";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="fk2G5NVw"
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailfout.stl.internal (Postfix) with ESMTP id 3715D1D00251;
-	Tue,  7 Apr 2026 11:58:38 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-06.internal (MEProxy); Tue, 07 Apr 2026 11:58:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1775577518;
-	 x=1775663918; bh=tK7NLpFbjwDadQoTc0iaAErmYavZBKRhAuqroi1ZxdI=; b=
-	fuHKukx5ByeBZRP0NyAyOrRRoBwpZfzFMG9JUdZ8SGg7+t6rnfx9Ho6JDbAceliN
-	y/KaGNL3+Um9Sx7zB7lwkT8g6gkl+yBYCtQA+9jXWJAMgaY+Ud8CB4S9Sw5US/j8
-	EUE0hIMJGYlBW1qFl2KY0lSRTCR56YPKZEvJQymH1HFPKpf1D0qMMtQojtIkPHdW
-	YY7roLh7shptbYHzTx0aHFf77NUZoCXYElQqRSxUgeFyoF5bdAVuSAEJ4HbAq3J5
-	7W4Mz6f12oT5GQu3n2Wujt77lmrZkwxRykWwKpxu4wM/d5wVOIOvGaNXejeX7+L9
-	K4mynKm4sLrEMtXBgaRPDQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1775577518; x=
-	1775663918; bh=tK7NLpFbjwDadQoTc0iaAErmYavZBKRhAuqroi1ZxdI=; b=f
-	k2G5NVw2HZYwORQcCkYyUaqFHMO3t73Fytx1y2uQkxW0as9MlfO7qKbmciIzAax7
-	vqUytmCWtanwte4DzS9t1GCcCpT/KeXdl/HvevMzXxOmumE833AJh0eCsAtGmI8D
-	ZZvAbKgdo6DoZClbaykAkY3oQviQTagGPFA+2rtH1WXF+rPW58NHjeJ4jVuHaJuh
-	6d05LSohI9uS/1vPmMfMwI6osmgU4RUqv+myWwHvFr8Rn/O4CsZqeV2DZKnsa+u/
-	/M+2d161LBG5HHj4DqhPuGpYXu2UiyYMDD801s2LCDFYjsKttaiXgaz3uR4qC5RP
-	TmRQQXuVK9rt/7YkGzIKA==
-X-ME-Sender: <xms:rSnVaRWR9Zk6IMIRx8mfp6nN-NdJs92Kcn_vM2W_0NjzaR9yts1HTQ>
-    <xme:rSnVaVSXCcGPCNqPCnqedZZny9hb75jFyzShBds3eNq4KezIDcGWle6DkGlKnpb_e
-    BZFaBYKtytfAWm-Qj5-5O7NXO6EJdS-SyQ4N8ixdYlo9jSVyOFB>
-X-ME-Received: <xmr:rSnVaWA08u84AQqew-eRjGFeHFH0u5sONVB_tl5H6msys_EWZH_LccSgwdY>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgddvuddtjecutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
-    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
-    hrpeffhffvvefukfgjfhfogggtgfesthejredtredtvdenucfhrhhomheptehlvgigucgh
-    ihhllhhirghmshhonhcuoegrlhgvgiesshhhrgiisghothdrohhrgheqnecuggftrfgrth
-    htvghrnhepvdekfeejkedvudfhudfhteekudfgudeiteetvdeukedvheetvdekgfdugeev
-    ueeunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
-    hlvgigsehshhgriigsohhtrdhorhhgpdhnsggprhgtphhtthhopeduvddpmhhouggvpehs
-    mhhtphhouhhtpdhrtghpthhtoheprghlihhfmheslhhinhhugidrihgsmhdrtghomhdprh
-    gtphhtthhopehlihhnuhigqdhsfeeltdesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgt
-    phhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprh
-    gtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghp
-    thhtohephhgvlhhgrggrsheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhukhgrsh
-    esfihunhhnvghrrdguvgdprhgtphhtthhopegtlhhgsehrvgguhhgrthdrtghomhdprhgt
-    phhtthhopehksghushgthheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepshgthhhnvg
-    hllhgvsehlihhnuhigrdhisghmrdgtohhm
-X-ME-Proxy: <xmx:rinVaVvULn6gTZC7Scga_IIbm3bsYfRZwuPbKjuavFqAk0JAccWf-g>
-    <xmx:rinVac-0CJrJcUyzr0AJpoNWxvtP9qPuv1_766RKzEw3REeYTfVmKg>
-    <xmx:rinVaUQ1GTejdLlKUwzqVlFZSCVifltG_y1M5oBP8NNMNw0VTHAEtg>
-    <xmx:rinVaWVZwhB6yTu9NW9ACeP8zN6lssBEPOOondwvul6AzfCUi7He0g>
-    <xmx:rinVaTQoG2cI98FiGf_h_CuKls_Q7uM5tiRV7MMdPMgZfdT8a-Pr1sX8>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 7 Apr 2026 11:58:37 -0400 (EDT)
-Date: Tue, 7 Apr 2026 09:58:35 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Farhan Ali <alifm@linux.ibm.com>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, helgaas@kernel.org, lukas@wunner.de,
- clg@redhat.com, kbusch@kernel.org, schnelle@linux.ibm.com,
- mjrosato@linux.ibm.com, Julian Ruess <julianr@linux.ibm.com>,
- alex@shazbot.org
-Subject: Re: [PATCH v12 7/7] vfio/pci: Remove the pcie check for
- VFIO_PCI_ERR_IRQ_INDEX
-Message-ID: <20260407095835.7f42b66e@shazbot.org>
-In-Reply-To: <20260330174011.1161-8-alifm@linux.ibm.com>
-References: <20260330174011.1161-1-alifm@linux.ibm.com>
-	<20260330174011.1161-8-alifm@linux.ibm.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EpAauxTx"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1775579050; x=1807115050;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=9FeJFyp0FaZnv7lMyE8/o9uC1lGRabz7wKdgpqoqhx8=;
+  b=EpAauxTxe+h8nRrpKDnnMzWzXIaUk005wYVQSDqpeUNHK5O/YL9tdRQw
+   G5pmQMiNl/XeVbUfGrYCLHcPCjAFiZMBlN1y3b8Q8q0/+7qTdgsac4syP
+   ubAOUvnsgAdvMwR/6uUYdtnKUNp5Q0FyOnk/ReRpeijgKDWzOiB8DkY/M
+   oKDqLMb8+UgHjPWSwV20e/BYOBYhm2Nbp9NDLTTLAItKSWSOet7DZ0f3p
+   sFnRd2BnswsPIJ7NFR2tiT3YxrKBozAQBbkdYk5OK8bDaCjUz8iMqCst8
+   yi8y42g3leIfNmOzhIUDu/FdSf4jixVT0YenvULtFtypwXfy107ePWtVL
+   A==;
+X-CSE-ConnectionGUID: MI18FM4JTP2gBokwrrKXjQ==
+X-CSE-MsgGUID: WjIZp1opTim1nuHA9bMtsA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11752"; a="79137092"
+X-IronPort-AV: E=Sophos;i="6.23,165,1770624000"; 
+   d="scan'208";a="79137092"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2026 09:24:09 -0700
+X-CSE-ConnectionGUID: +2Jwot1rQC6eUXiRWlp2yA==
+X-CSE-MsgGUID: hkMlB8cmTy6L/5Cqw9Xajw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,165,1770624000"; 
+   d="scan'208";a="223431250"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
+  by fmviesa006.fm.intel.com with ESMTP; 07 Apr 2026 09:24:07 -0700
+Date: Wed, 8 Apr 2026 00:02:37 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, aik@amd.com, aneesh.kumar@kernel.org,
+	bhelgaas@google.com, alistair23@gmail.com, lukas@wunner.de,
+	jgg@nvidia.com
+Subject: Re: [PATCH v2 01/19] PCI/TSM: Report active IDE streams per host
+ bridge
+Message-ID: <adUqnUwBBtrqXcX7@yilunxu-OptiPlex-7050>
+References: <20260303000207.1836586-1-dan.j.williams@intel.com>
+ <20260303000207.1836586-2-dan.j.williams@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260303000207.1836586-2-dan.j.williams@intel.com>
 
-On Mon, 30 Mar 2026 10:40:11 -0700
-Farhan Ali <alifm@linux.ibm.com> wrote:
-
-> The error signaling is configured for the vast majority of devices and it's
-> extremely rare that it fires anyway. Removing the pcie check will allow
-> userspace to be notified on errors for legacy PCI devices. The Internal
-> Shared Memory (ISM) device on s390 is one such device. For PCI devices on
-> IBM s390 error recovery involves platform firmware and notification to
-> operating system is done by architecture specific way. So the ISM device
-> can still be recovered when notified of an error.
+On Mon, Mar 02, 2026 at 04:01:49PM -0800, Dan Williams wrote:
+> The first attempt at an ABI for this failed to account for naming
+> collisions across host bridges:
 > 
-> Reviewed-by: Julian Ruess <julianr@linux.ibm.com>
-> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
-> ---
->  drivers/vfio/pci/vfio_pci_core.c  | 8 ++------
->  drivers/vfio/pci/vfio_pci_intrs.c | 3 +--
->  2 files changed, 3 insertions(+), 8 deletions(-)
-
-Reviewed-by: Alex Williamson <alex@shazbot.org>
-
+> Commit a4438f06b1db ("PCI/TSM: Report active IDE streams")
 > 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index f1bd1266b88f..cfd9a51cd194 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -786,8 +786,7 @@ static int vfio_pci_get_irq_count(struct vfio_pci_core_device *vdev, int irq_typ
->  			return (flags & PCI_MSIX_FLAGS_QSIZE) + 1;
->  		}
->  	} else if (irq_type == VFIO_PCI_ERR_IRQ_INDEX) {
-> -		if (pci_is_pcie(vdev->pdev))
-> -			return 1;
-> +		return 1;
->  	} else if (irq_type == VFIO_PCI_REQ_IRQ_INDEX) {
->  		return 1;
->  	}
-> @@ -1163,11 +1162,8 @@ static int vfio_pci_ioctl_get_irq_info(struct vfio_pci_core_device *vdev,
->  	switch (info.index) {
->  	case VFIO_PCI_INTX_IRQ_INDEX ... VFIO_PCI_MSIX_IRQ_INDEX:
->  	case VFIO_PCI_REQ_IRQ_INDEX:
-> -		break;
->  	case VFIO_PCI_ERR_IRQ_INDEX:
-> -		if (pci_is_pcie(vdev->pdev))
-> -			break;
-> -		fallthrough;
-> +		break;
->  	default:
->  		return -EINVAL;
->  	}
-> diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
-> index 33944d4d9dc4..64f80f64ff57 100644
-> --- a/drivers/vfio/pci/vfio_pci_intrs.c
-> +++ b/drivers/vfio/pci/vfio_pci_intrs.c
-> @@ -859,8 +859,7 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_core_device *vdev, uint32_t flags,
->  	case VFIO_PCI_ERR_IRQ_INDEX:
->  		switch (flags & VFIO_IRQ_SET_ACTION_TYPE_MASK) {
->  		case VFIO_IRQ_SET_ACTION_TRIGGER:
-> -			if (pci_is_pcie(vdev->pdev))
-> -				func = vfio_pci_set_err_trigger;
-> +			func = vfio_pci_set_err_trigger;
->  			break;
->  		}
->  		break;
+> Revive this ABI with a per host bridge link that appears at first stream
+> creation for a given host bridge and disappears after the last stream is
+> removed.
+> 
+> For systems with many host bridge objects it allows:
+> 
+>     ls /sys/class/tsm/tsmN/pci*/stream*
+> 
+> ...to find all the host bridges with active streams without first iterating
+> over all host bridges. Yilun notes that is handy to have this short cut [1]
+> and from an administrator perspective it helps with inventory for
+> constrained stream resources.
+> 
+> Link: http://lore.kernel.org/aXLtILY85oMU5qlb@yilunxu-OptiPlex-7050 [1]
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
+Reviewed-by: Xu Yilun <yilun.xu@linux.intel.com>
