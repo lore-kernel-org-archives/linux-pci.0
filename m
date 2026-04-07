@@ -1,174 +1,171 @@
-Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013040.outbound.protection.outlook.com [52.101.72.40])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2B813559E6;
-	Tue,  7 Apr 2026 09:48:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.40
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775555299; cv=fail; b=WXATby5zplzIRy8gPwgAQIogpKLRsb8sLA210NEGAVSr6Eev0MRoFXwS4MyWhtPmVOgzi5puKVaVRoQMrV0FoExtNdpxgUcHx5h72Gx96mJr1xCoq+kj9QJulSejB1ZBADLq861WrgRBISEheM42DKwJqTUFjtOQqyrm6UFLqIQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775555299; c=relaxed/simple;
-	bh=7gV289RFcPtnl70kLZF3Tg+LmFgIlL9LVv0WDMnmL6Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=eJTgUPIm+2tJYAZDiIsOx+W2ujPlRfKnQRs3SEA7mmpDx0xTDM7YcVCq48Xw1lySNbee/RBQFgwzNBqtubSkM5guVU24jcGaZ+mlEiKz3o64Csym8GWBdAbpsgXuTAVvXPMq7ph01V+nO+EoGV2HZt3wBTlGlgWGrNqC360mZ+U=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=TEGcfjH8; arc=fail smtp.client-ip=52.101.72.40
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15A5539B96A;
+	Tue,  7 Apr 2026 10:13:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775556783; cv=none; b=Z340C8d9zii0ZmFkATAwS1jj4wUmmTL4iY7CKRH3fOaWuCLphpG9KFqBGsn9rgYDu00OwjU/9BlGzIUez+lwlT63wX+r0/0rFBNu4THkxMuGx9hDgPOMUEy3Cn6P0Rx6keOYAIQfJPMy2klEE+KEwY9YIu3rCky1RSitQppLTyo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775556783; c=relaxed/simple;
+	bh=xMPDe5yarCr8rtAtA/og41ZgZ1Wq8HJO0LpEXG4QDQk=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=Ja5FlFWavtPx35tm+3LARuqwM1yr2SNZ8sqDh5hTJw902Xm1hv1l/sp6HVZlTwP4o8X3u4BHEWKNcRmmvOPrDqlNdF+GFLfQFRkz6UoSF53BqgnVSIlvzySzs8L22L5v8FazVkabuY1xIENdTdjDNQaFfpPrdEKIP7yLq0e95tE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=ng2GJWFs; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="TEGcfjH8"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=imfIwxb0H1vxY0SHiBPllCatAYwV6TI3m7M1oOxXiZRLJ6WAEIbD2rE9P/wYCF7v3IRuut/2noY1rNqnRSftJf5hrMPxk6uOgFKWf+fckaETHBivyFwuPp2TOZzcs35u9mBW06tGUG1YYokLtN3VX/FEtu8N7T86GE9vKEi9FnOgfSSTz31YZ9eyPhkJt5eTyrcJK0yBPSMh+NZPAjzJ+8fb9dS4yH7n4EMzjVN7DMPwtpUlGIS8SozuIkZdNX1V060q04HBPTUfyYp7NrVt4n2BVh79YhXj4mtFn9c2qgt0Fq/6OmchGQ53HpzXljus/6FGnjNub/tnC0Tf0QDkzA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=LFumAhxSOpTYOVhwvEfTshTEQeyOaZ8AkICnT+edsL4=;
- b=gJ1f17cv7q/sZL3w1zgTcnv7jax58Adr39u/9qAW5pMsgxTP6uSPgKKQi8KhpoTkkNL+bwB6UtkqYVt3J0mIi30ZZXRSCi+77OGRFPbpRM5//ir4CADBzQG7Uh7HKXPXcWSULFFwicFqM+QKo704cizeGZgR7boqpDUvgor8rIfd7OblTwv1L5dQPqzqy0rfZOXHOEGeqOcdCTFFzy+bcUM035Ym9mJRRz3tQ779VRTSr5cXqwteH2jZdz1G6DOEQ02+oIaysbvWouRCgE393dvqWENa4m4AeFr6CLaBjUPgjmnKe+9PmjZVNlMMmLeApiSwbdGwkXDGWmcPiEtGIA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LFumAhxSOpTYOVhwvEfTshTEQeyOaZ8AkICnT+edsL4=;
- b=TEGcfjH82Q3u/CRLWgvmOPSc6NHoyHrHKU7gtPVxgdkZGgLtemhl2VYq9nUVsS/XN2VDTFvtnFgt+m72CEllD7lm+9lk5uwZ0gptEFQSvvqfnFkDGrzccGoeMnoo0L2taXk4tCsWbdr07yErA8Ejl6tVFzqFotYn+TY6ooWJw9Xenn+IrBIXTBlST18r1xcEKbNVNZisxASseCiaOFBSp1q5NbEFYojDl94fHNvoMeeM4j7oH6RaFlNXldsl/6QIUfFxf1JEBD/v7w5YWIiH3moXYIESGndeUUFOr0EGp+pz95/PvxV81H1HbDxmyBDJUMoWYv4ElZilVA7e2MSgvw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by DU4PR04MB11364.eurprd04.prod.outlook.com (2603:10a6:10:5d7::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.15; Tue, 7 Apr
- 2026 09:48:13 +0000
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9769.018; Tue, 7 Apr 2026
- 09:48:13 +0000
-Date: Tue, 7 Apr 2026 05:48:06 -0400
-From: Frank Li <Frank.li@nxp.com>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <allenbh@gmail.com>, Niklas Cassel <cassel@kernel.org>,
-	Bhanu Seshu Kumar Valluri <bhanuseshukumar@gmail.com>,
-	Marco Crivellari <marco.crivellari@suse.com>,
-	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-	Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ntb@lists.linux.dev
-Subject: Re: [PATCH v13 7/7] PCI: endpoint: pci-ep-msi: Add embedded doorbell
- fallback
-Message-ID: <adTS1gj1nqi9DLFZ@lizhi-Precision-Tower-5810>
-References: <20260406155717.880246-1-den@valinux.co.jp>
- <20260406155717.880246-8-den@valinux.co.jp>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260406155717.880246-8-den@valinux.co.jp>
-X-ClientProxiedBy: SN1PR12CA0057.namprd12.prod.outlook.com
- (2603:10b6:802:20::28) To PA4PR04MB9366.eurprd04.prod.outlook.com
- (2603:10a6:102:2a9::8)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ng2GJWFs"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 636LmEwN2316372;
+	Tue, 7 Apr 2026 10:12:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=pp1; bh=xTGtqdgffUwPNDG0eIqe82vPJHv+
+	sVwRqcemU78j4bM=; b=ng2GJWFstj3w5X/6RwOXXPUvL5bZvBPgBoVbtN2FcUZU
+	umt+hkm9w/OvXtZzo2NE+uz4Y9DEJjxm0qndkAukTM4VPaiBHC9foAzcvACzUdSK
+	YBPKphH4TQuNjTT+5y9Mc4CbApwMWI3w+jvXN05SiQMBWkx5LcIeUYE2UqJOMHvU
+	sTiH7xCalGX+NW/oG44AyDbIhAHbYWEG0pW4/DkqykXu4OgAxP7p303Tc9KBRjfJ
+	yA2WZxdlAKvd2wCQmEBDHGvZ4YfLAf5PTvaw+CEMW8FCeEWTvsxvWSvbmEpL0zDb
+	qu2Td/Z3/ld+7PqWE8dbsC+IxVaMPaHFKUbrkeig6w==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dcn2ftbxn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 07 Apr 2026 10:12:55 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 63793c2b026642;
+	Tue, 7 Apr 2026 10:12:54 GMT
+Received: from smtprelay05.dal12v.mail.ibm.com ([172.16.1.7])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4dcmg7t2fg-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 07 Apr 2026 10:12:54 +0000
+Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
+	by smtprelay05.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 637ACrjQ64028994
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 7 Apr 2026 10:12:53 GMT
+Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 0CCD358043;
+	Tue,  7 Apr 2026 10:12:53 +0000 (GMT)
+Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 34EDC58080;
+	Tue,  7 Apr 2026 10:12:50 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.87.85.9])
+	by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Tue,  7 Apr 2026 10:12:50 +0000 (GMT)
+From: Niklas Schnelle <schnelle@linux.ibm.com>
+Subject: [PATCH v7 0/2] PCI: s390: Expose the UID as an arch specific PCI
+ slot attribute
+Date: Tue, 07 Apr 2026 12:12:32 +0200
+Message-Id: <20260407-uid_slot-v7-0-e50f7976124e@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|DU4PR04MB11364:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9a4a2080-37cb-4301-9de1-08de948ac941
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|52116014|366016|7416014|376014|19092799006|38350700014|56012099003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	hLD1tZ2tBt5SnQ7+LNdL5aKyl3MjvAHUMgvLUpGgyk+F/5YlxCkjSp9MkjliLNzhbtj7SthA/Ygdg1+qpY7maNDuSe0CDAGQ5njAtUz3b7a6CK3HQThgTlL5VKO62tC1UfEEowzK2UrOjj6ndsKzfnQ8OjIHRthG/7wBxoGG8b7DRVK6AnWJGER1VH4i5mrZZRTzxDFcGtc6eQfc867sQZyMq2SciciThgD0mEM5M2vmnCB/KC8oA6ucMD3BWRPvA+aQcBDw472R1HGKVUFOWmj2fwWtQ6oVa8X1G+C1tN3AIahmNVbc1NNEoJWfBc0ZYM53T5XlCAo+o00C2KvAPigxXIy4LUYYCAQfpYStb1G0PmbYu5eHOI7KpgFz5v9PPpUH/7zjlc3wZzvZcGKApgAPKhE397gakKF+VJq9mqw6SJDXh4x/8M4dy95yO2cTRAUUNAc4HCfD1xIm4z9Og4GxwRM/SEt1wUcLAAgXAhyBUQtbU57VrmbJSg+x4GIeRuzqc6b8jX2o+gsvHp1z794mM1k17H9aiaUX1+bEr7skHbgyPs1idodYWABnbrTM+QbaZe9lypUFK9rBObGIzA5aJoZmMEtj2tPGovIpR9S+rcq0Kp+am7UkBltnD3m0sh+1YfENdANIt+L8q/aFJh3gfup7KsGNEQu78X08dA8GLs44qF56fguUcfC1yc17cxfxyKN8O9qVUWuB76q01qYa+AzdQ9u4jwINEEZfJWMlW2ZOyUZpwEpioejGMkl9eI9nQgKNve+BOzM/+RdRfioD5+/QoEgw2krFwH6BAO8=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(52116014)(366016)(7416014)(376014)(19092799006)(38350700014)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?2GYHwS0SHrleHKEcrzGS5NQhBWIVYm94HohYv9ERhQEAmLnUyAkdt0oAzWo6?=
- =?us-ascii?Q?GjNQ7UJJTHIC55MDdfCbM5m9/5KFEgN5XPn96M4vRZnXchqKUOYjbi9kdWi1?=
- =?us-ascii?Q?C676FkZ9yrwPwlPj2qTh2Cisqxi7gC1dfvj0pqrCB9mXtCuoTDoZAeIm+ktV?=
- =?us-ascii?Q?lwI9hYPZU9yFNju1inPX8Ov1vxc5k6XSjEsLFMQIwg8jDPncPbyESQLQApxX?=
- =?us-ascii?Q?STYp2FLHaZWwaFHcQQppdfU9IaXZLY5FtD4fvrZHx9zSyaeqr2wE74Vir3Yu?=
- =?us-ascii?Q?nCZ8INka5PbL6fVI3rn2cQ/Cp6uwirLW3PO/HbcMhq+mu7quS3gSfs101lph?=
- =?us-ascii?Q?SMjS35z4S5myRAqXQZsvXUGlBM1QGD4ydP/jwlx1av339YtIT757UncibL6k?=
- =?us-ascii?Q?4g74MsDgmsKrLeqzU61CiwSxqSH2VdmXGVmuxWEj4QpFbl+mVkHk2BcV3V63?=
- =?us-ascii?Q?nh4VKfRVeiiEOq4RwIu1TyFMnu4jhMHxnlyh5Cog7o8bC+DbgB4WXi4mtUQ7?=
- =?us-ascii?Q?GFacVer/oZspsSB+3MFYrHGtu17/DYZDoQVfVPGO2QsH0MPdo4H30fPgY/fC?=
- =?us-ascii?Q?9MdaIZoXxhSBwze+2S9eUtWYa2/q7+jQGo4R4FqVINhnMGs6uCJFBa896+71?=
- =?us-ascii?Q?la5SsNXTHkP0U/jVHTe+2vgaz+FbDGLYJGwoiIk7n4dPc7gWRZLab7TjvSSC?=
- =?us-ascii?Q?X0offJ/xCrsRmyU9o/OuUnnlsuAbjLttL3wR3SidFCCMwJjuLt1gQCYBMRYS?=
- =?us-ascii?Q?MXi1CLoMztE8KcdOTyrd3jwP6nlqeBBTGSzEVVUb8Pa8T3Y4Wq3+ZAMfC6WS?=
- =?us-ascii?Q?h2p4576wUXC/8sCkn8EnQ88LlFdXldiC6cgyvBgsVEr+AupLcoKi0NBlg3Ja?=
- =?us-ascii?Q?K50tBvdTudpJU09rjpmNTjY7BMmjz26QRCLvnV1xZ8pBZRmn2/hNwigb/ks2?=
- =?us-ascii?Q?ZS1Y9Y79r6he3wZ7eRCYS4yao/Wlw6aT9eE/m6szwtD++tQ6ZbplnaRbk72R?=
- =?us-ascii?Q?VRzYEcNE/c9Oie5XpWcNG+Azf+WXFsLyY0OuVAnaoAVZvl9X9CH2Tlh7hF36?=
- =?us-ascii?Q?6bjZiEfYWIysqTqlpRrwtqAMnC3J7M9QsmEQTZiNCTnjpS+92MBVSa9v5lcq?=
- =?us-ascii?Q?gK2/JFQ2Nr91IPgq7GQ7z9eZ06BS+bCeE3cPJnRWaHoCWyfGE0MvJgAHAYos?=
- =?us-ascii?Q?Yaeo2LGWNJDUjsVsytwvkJi/qd9rAuFGbKOiQGviSwdTaMrn+DV2H8LvzUG7?=
- =?us-ascii?Q?F/GhRQ4BCqssMXwajy1lThigkXTgxQY1PgX4d374jbZmAcfBv9H1UPpMhhjo?=
- =?us-ascii?Q?jOY8QzPrcuVervDEzcrPan7pBM7fTXQww+rsQzw0WXGXH9njOVnoy1dGsgqX?=
- =?us-ascii?Q?iO27iCXG6KclRKJqfHs0MgdZDEeCwrSjseYBhnASve9kwOLARcPmIX3qJdhy?=
- =?us-ascii?Q?CsutFMawG1wEG7k/ZREO5WXsH7gFau5kXf3NKlDzObbrLH7s+DVDtrBFPs7A?=
- =?us-ascii?Q?NgMQd9ydcK538QZ++7ZDab2NASyFe3K0C5Be3y7q+/Is0QmJJ6KKm0vUl2gn?=
- =?us-ascii?Q?wx+yx0R/uU54nnmU/B+GdB6h63+zYtoey5f0cRbxI/gn9WfvPSz0iachknV7?=
- =?us-ascii?Q?RzF4CugOGZZ/cwM96ZxUv6j/vU11vlVmt+Y1cidbzxGsZ+pWlynpffFiXQrl?=
- =?us-ascii?Q?HjInC6K6Y9PmlQ7jvQBn3I3aKCMwcg6B/oPq8V9WIu4tfapK?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9a4a2080-37cb-4301-9de1-08de948ac941
-X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Apr 2026 09:48:13.8007
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: kx0VFCNkpPcjLuGVkQKYt/GppKy7s1qa4d358b6zPpoPzwXHho4JZJbE5x280PsYIHOV40nbI2mUGoNwGiHt/Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU4PR04MB11364
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAJDY1GkC/23Q3YrDIBAF4FcpXq9l1BmNvdr3WJaiRrdCmyxJG
+ 1pK3n1N2R/p5kYY8Ttn8M7GOOQ4st3mzoY45TH3XRnMy4aFg+s+Is9tmZkESWCl4pfc7sdjf+Z
+ REdmQKDgFrDz/HGLK10fU23uZD3k898PtkTyJ5XYlZBJccGVIBmdCapx6Pebuct1mf9qG/rTkf
+ iN8QmBdBEzYBDJPaGmf5G+jAGgqLAuOScpQDmNQrGFVYUEVVgUjqsY2loLwfg3jH5bCVBgLXv4
+ serLeabuG6QdrQBAVpmVto0DpYNAnvYZ1jWWFNQfeUnTgBLat/9c8z/MXOELn/goCAAA=
+X-Change-ID: 20250923-uid_slot-e3559cf5ca30
+To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
+        Lukas Wunner <lukas@wunner.de>, Shuah Khan <skhan@linuxfoundation.org>
+Cc: Farhan Ali <alifm@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
+        Gerd Bayer <gbayer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>,
+        Julian Ruess <julianr@linux.ibm.com>,
+        Matthew Rosato <mjrosato@linux.ibm.com>,
+        Peter Oberparleiter <oberpar@linux.ibm.com>,
+        Ramesh Errabolu <ramesh@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        Niklas Schnelle <schnelle@linux.ibm.com>,
+        Randy Dunlap <rdunlap@infradead.org>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1636;
+ i=schnelle@linux.ibm.com; h=from:subject:message-id;
+ bh=xMPDe5yarCr8rtAtA/og41ZgZ1Wq8HJO0LpEXG4QDQk=;
+ b=owGbwMvMwCX2Wz534YHOJ2GMp9WSGDKv3Ji1ZEKm6p7ntZ91nkUe+nbVy6P3Z5Fh6RP2S4szL
+ SMEc7JCO0pZGMS4GGTFFFkWdTn7rSuYYronqL8DZg4rE8gQBi5OAZjIdUZGht+PF+neme8WVi0o
+ OSUtgrMrSO2PSb5V7rbVZz7f2lCzhZeR4V+s19Zp0+ZWbJmwyie25SnLt1YD+ffx72PrLTeL9XT
+ MZgAA
+X-Developer-Key: i=schnelle@linux.ibm.com; a=openpgp;
+ fpr=9DB000B2D2752030A5F72DDCAFE43F15E8C26090
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Authority-Analysis: v=2.4 cv=FKArAeos c=1 sm=1 tr=0 ts=69d4d8a7 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=VwQbUJbxAAAA:8
+ a=VnNF1IyMAAAA:8 a=jVLf_0g3wJiVkyeFp14A:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: O-ORLQeHeb-ymCG8d7KvfqnZyOf8627S
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA3MDA5MCBTYWx0ZWRfX5ViD6Bs3ZpSU
+ eCbuOFYjPm5sYwVyIkjSos4bh8EqQH5M1f3GCuGaZ1Hl4JYs7Dl+/K81nm+ezbfPVX/Yj1YjaCq
+ FR5tzDMXByjsu4YCzpc17x89+IhLlZI8OUr0FSKT+4Itxvx/4mQA4WZP+tm0z7n7UD9yTmrySkK
+ d+fZe8CWpstwhGoWCAXyAcQihnDXwdI0y6ZwKCgYhsdWnPHeD4OGNDgdlec1VF89Ko5wa4CpFR/
+ mSdwMQcNTwdqCKLfbzd3tWwV9O3Svg3/CK9ozIy6xJP0G1ZHFkh4ROndKapGyl6V42mn2/ahA1R
+ kQi8yEqjTt0qyLFgJMOdSxZcVgyARk5eRD0iMq6v9n8XOHIXRXNOnhnE6PfGwToalxW+oK1rP23
+ kiBiAQRbLMzf+osGdcMap9X4frq1RfjVl6i3+jMYelOV6dMvN2F59qBWCdhRTTTqHZc0wm530DQ
+ It6Kn1yyQINxnb004CQ==
+X-Proofpoint-GUID: cKHMFh9Ch_c3p7P_QksklsyN6_383IQM
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-07_02,2026-04-07_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 clxscore=1015 lowpriorityscore=0 adultscore=0 bulkscore=0
+ suspectscore=0 priorityscore=1501 impostorscore=0 spamscore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604070090
 
-On Tue, Apr 07, 2026 at 12:57:17AM +0900, Koichiro Den wrote:
-> Some endpoint platforms cannot use platform MSI / GIC ITS to implement
-> EP-side doorbells. In those cases, EPF drivers cannot provide an
-> interrupt-driven doorbell and often fall back to polling.
->
-> Add an "embedded" doorbell backend that uses a controller-integrated
-> doorbell target (e.g. DesignWare integrated eDMA interrupt-emulation
-> doorbell).
->
-> The backend locates the doorbell register and a corresponding Linux IRQ
-> via the EPC aux-resource API. If the doorbell register is already
-> exposed via a fixed BAR mapping, provide BAR+offset. Otherwise provide
-> the DMA address returned by dma_map_resource() (which may be an IOVA
-> when an IOMMU is enabled) so EPF drivers can map it into BAR space.
->
-> When MSI doorbell allocation fails with -ENODEV,
-> pci_epf_alloc_doorbell() falls back to this embedded backend.
->
-> Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> ---
->
-...
-> +static int pci_epf_alloc_doorbell_embedded(struct pci_epf *epf, u16 num_db)
-> +{
-> +	const struct pci_epc_aux_resource *doorbell = NULL;
-> +	struct pci_epf_doorbell_msg *msg;
-> +	struct pci_epc *epc = epf->epc;
-> +	size_t map_size = 0, off = 0;
-> +	dma_addr_t iova_base = 0;
-> +	phys_addr_t phys_base;
-> +	int count, ret, i;
-> +	u64 addr;
-> +
-> +	count = pci_epc_get_aux_resources_count(epc, epf->func_no,
-> +						epf->vfunc_no);
-> +	if (count == -EOPNOTSUPP)
-> +		return -ENODEV;
+Hi all,
 
-why need replace error code here ?
+Add a mechanism for architecture specific attributes on
+PCI slots in order to add the user-defined ID (UID) as an s390 specific
+PCI slot attribute. First though improve some issues with the s390 specific
+documentation of PCI sysfs attributes noticed during development. 
 
+Also note, I considered adding the UID as a generic slot index attribute
+analogous to the PCI device index attribute (SMBIOS index / s390 UID)
+but decided against it as this seems rather s390 specific and having
+it named UID makes things easier for users and aligns with the existing
+separate uid device attribute.
 
-Frank
+Thanks,
+Niklas
+
+v6->v7:
+- Incorporate doc suggestions from Randy Dunlap
+- Add R-b, T-b and A-b
+- Rebase on v7.0-rc7
+- Link to v6: https://lore.kernel.org/r/20260402-uid_slot-v6-0-d5ea0a14ddb9@linux.ibm.com
+v5->v6:
+- Add documentation cleanup patch before adding new slot attribute
+- Link to v5: https://lore.kernel.org/r/20260401-uid_slot-v5-1-e73036c74bf6@linux.ibm.com
+
+Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+---
+---
+
+---
+Niklas Schnelle (2):
+      docs: s390/pci: Improve and update PCI documentation
+      PCI: s390: Expose the UID as an arch specific PCI slot attribute
+
+ Documentation/arch/s390/pci.rst | 151 +++++++++++++++++++++++++++-------------
+ arch/s390/include/asm/pci.h     |   4 ++
+ arch/s390/pci/pci_sysfs.c       |  20 ++++++
+ drivers/pci/slot.c              |  13 +++-
+ 4 files changed, 140 insertions(+), 48 deletions(-)
+---
+base-commit: 591cd656a1bf5ea94a222af5ef2ee76df029c1d2
+change-id: 20250923-uid_slot-e3559cf5ca30
+
+Best regards,
+-- 
+Niklas Schnelle
+
