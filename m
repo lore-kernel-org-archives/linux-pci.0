@@ -1,171 +1,448 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from fhigh-b3-smtp.messagingengine.com (fhigh-b3-smtp.messagingengine.com [202.12.124.154])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1BAB3C3423
-	for <linux-pci@vger.kernel.org>; Tue,  7 Apr 2026 15:36:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D7D23CB2E9;
+	Tue,  7 Apr 2026 15:38:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.154
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775576189; cv=none; b=CEeLALs3EhfVPh4vO5WGhg9W0LdkQshZBJcAaFt3fVpq55hyNmCKKlcilEoQ0Ukwo+Gcs1DePHMhAvUn2f1hC/Cbm01mYNKx7bDIeqAp9GTUbOF2/4ZBZvAIIhtUUmlVnzCnPO5XB+tYseu5Rx/XUylQZPuxTJ4Ap4n7nSZRqyA=
+	t=1775576312; cv=none; b=meSfeVvQxpBhZadBRjlBFLfpRmsHYGJW424wQCDHg3tJ27PlkVBADshwhviQCWH9nFPH26qA2V3heTCU2/o37Yl8SggKS0mu2PkuSyi3zBo16djJJqdZ0ATM/mhIu6r97SVdxA8psL43U0NyZjxqANd1Olm/TOrSBwpSHRr+jVg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775576189; c=relaxed/simple;
-	bh=hX445ynibnXiIWMEjocw1AVTzkgY1FNORC7rREkeDJw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dlGRW7cd5jRNpEwLLx2wqaonw65LbC34YYGkGG/4dgolNhch752dHvHEjnjrsdFnUaB+Ek8UOJJ4k3Xaj2oCBz+EtacGGSnjAJLjNIRoTyI4DdD/V1+AYAnvnI/usp6SAwmEeG+QFdPce1MWP3xqJDHGzCAPKjkPRuvI/GFg7pE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=L3p8hNcD; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1775576312; c=relaxed/simple;
+	bh=evJdhxLgAUSxckcSn7SGgcUSbyvi5lV6VdJX/VmCheM=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=eCTEOqTOzCEkN9qd3JWaKk/oXk3HueR2Xt3PXdI2HZegXwlcbD2HHJTyAeZTCwjCDLaiRyntEKtZZWk+MINF//pHIuqROVDsVexBAYO3FZhnF9m8lceDZm25+2D5ZUm1KBw0plqAPPsGgBZyvU+Qn4EpJPi/bUkaT0pov2iNZZA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=tDfrObT/; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=vh4jMgvF; arc=none smtp.client-ip=202.12.124.154
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="L3p8hNcD"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1775576176;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BQUsDl+61brgBW+bmtwfnTQiS3JcRbzE4Uc2abCpuBs=;
-	b=L3p8hNcDjunEEeyhkIHm8WyBL+mBHp2d2gOgdVC+gAJo+f2hVbwyL0dhaIsft315wxUpVG
-	VLS7ieRqq5XPJ04zF/9CsUtzXv/MlLagVlV8MVPR/kK2tKNwgtwYoFLG+AQZB8eUg2LpSW
-	S+Wjb81alMllKorWGww2aFXU27A169E=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-542-i3a9Ot2dP1qh06s5bqKUUw-1; Tue,
- 07 Apr 2026 11:36:13 -0400
-X-MC-Unique: i3a9Ot2dP1qh06s5bqKUUw-1
-X-Mimecast-MFC-AGG-ID: i3a9Ot2dP1qh06s5bqKUUw_1775576171
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EDCEE195608C;
-	Tue,  7 Apr 2026 15:36:10 +0000 (UTC)
-Received: from fedora-work.redhat.com (unknown [10.22.80.127])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D1C3D1800594;
-	Tue,  7 Apr 2026 15:36:06 +0000 (UTC)
-From: David Jeffery <djeffery@redhat.com>
-To: linux-kernel@vger.kernel.org,
-	driver-core@lists.linux.dev,
-	linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>
-Cc: Tarun Sahu <tarunsahu@google.com>,
-	Pasha Tatashin <tatashin@google.com>,
-	=?UTF-8?q?Micha=C5=82=20C=C5=82api=C5=84ski?= <mclapinski@google.com>,
-	Jordan Richards <jordanrichards@google.com>,
-	Ewan Milne <emilne@redhat.com>,
-	John Meneghini <jmeneghi@redhat.com>,
-	"Lombardi, Maurizio" <mlombard@redhat.com>,
-	Stuart Hayes <stuart.w.hayes@gmail.com>,
-	Laurence Oberman <loberman@redhat.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	David Jeffery <djeffery@redhat.com>
-Subject: [PATCH 5/5] scsi: enable async shutdown support
-Date: Tue,  7 Apr 2026 11:35:32 -0400
-Message-ID: <20260407153532.6395-6-djeffery@redhat.com>
-In-Reply-To: <20260407153532.6395-1-djeffery@redhat.com>
-References: <20260407153532.6395-1-djeffery@redhat.com>
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="tDfrObT/";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="vh4jMgvF"
+Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id D96E67A0204;
+	Tue,  7 Apr 2026 11:38:17 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-05.internal (MEProxy); Tue, 07 Apr 2026 11:38:18 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1775576297;
+	 x=1775662697; bh=B+vpSPOvVYBV6UZEtJ9PjEQ3AzLLVVZ5NuqqDyqwri0=; b=
+	tDfrObT/gsjorNHkRrLFFWBUOJonk2gAJZtcPYM7YhaQWjLEfmWyEWdTMrVEr8i/
+	XILz/vTB3+yya6LePgFHh0i6KXARovMjdibmOUVFBMpppBisypxFc0AddpRUSuu2
+	+7k+G+UwQ3JhBkFgZomGOPicwE8/KpaCOErx6bLixihwDh4i5z2/vCPr8xTG0JUx
+	wCGrnYHLZGWSFvitVELx3ladkBr8JssrQexJE7cLvMqwiV5Em9Cye99p3Xt4q4em
+	oPw1rogyya6AYKINKLWOQ2+vzRg9Hn2KAS3h/2oP4KJ1kqD18qZvn6wWRPJP97de
+	iRRNJj1+CqejQ8o0Nn+x8Q==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1775576297; x=
+	1775662697; bh=B+vpSPOvVYBV6UZEtJ9PjEQ3AzLLVVZ5NuqqDyqwri0=; b=v
+	h4jMgvFHMT9ecfaInEl+T0WbSd3AyEVvCOQc8ppuecNJXUGrCgdH4wV9V5MKk6PO
+	IIrfyBn2mHpakHros3NAIpgb5yOMW021if8q7HNnw8X7W8xAfdlhEV2pHzVFaRrT
+	su+EuaQS5RQ2LfaB1161Wwf0/4f3BmPrqtoQzuz/mPS2tTppSrTPiw5XNU2i/0HT
+	BdFQDad1/gCL0QinXlzAsaA3oLZsCY1ami27J8+t6IJ8ZbdW/Y1jHgxFkt2+EQud
+	UWA2MpvopW+n8gx2KnE94QhDC86wOajPsHbEEpERgOgAdqZG7GLhAiOmBvyAFoZ2
+	qdI2Wzu8xuPPqyaK3d+pw==
+X-ME-Sender: <xms:6STVaQ9sz6V9u9Y1fVMEEiJSqpOhtvjHpmm3Z3WsA_mML8FKwIWjcw>
+    <xme:6STVaQ1OOb_JS5c25Z00brH6UnuoH-ix-GWfjYuI8hA7y-GmOkKVoJgvI_CFn_SaA
+    wt0DJb6ApZ-C0_8lF79d8AXCM3znCdKZdGqg1U1vkmlH5pUrFcRNJw>
+X-ME-Received: <xmr:6STVaVj3GuvrCfx0qPWlvhDi4qLxhGkB06CVhMLbZlSoBeGpbA4afpspE94>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgddvuddtvdcutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
+    ihhlohhuthemuceftddtnecunecujfgurhepfffhvfevuffkjghfofggtgfgsehtjeertd
+    ertddvnecuhfhrohhmpeetlhgvgicuhghilhhlihgrmhhsohhnuceorghlvgigsehshhgr
+    iigsohhtrdhorhhgqeenucggtffrrghtthgvrhhnpedvkeefjeekvdduhfduhfetkedugf
+    duieettedvueekvdehtedvkefgudegveeuueenucevlhhushhtvghrufhiiigvpedtnecu
+    rfgrrhgrmhepmhgrihhlfhhrohhmpegrlhgvgiesshhhrgiisghothdrohhrghdpnhgspg
+    hrtghpthhtohepuddupdhmohguvgepshhmthhpohhuthdprhgtphhtthhopegrlhhifhhm
+    sehlihhnuhigrdhisghmrdgtohhmpdhrtghpthhtoheplhhinhhugidqshefledtsehvgh
+    gvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehv
+    ghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphgtihesvhhgvg
+    hrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehhvghlghgrrghssehkvghrnhgvlhdr
+    ohhrghdprhgtphhtthhopehluhhkrghsseifuhhnnhgvrhdruggvpdhrtghpthhtoheptg
+    hlghesrhgvughhrghtrdgtohhmpdhrtghpthhtohepkhgsuhhstghhsehkvghrnhgvlhdr
+    ohhrghdprhgtphhtthhopehstghhnhgvlhhlvgeslhhinhhugidrihgsmhdrtghomh
+X-ME-Proxy: <xmx:6STVaQbfPvwdNZL7w43iJZbadvWuMAC_CsJwbtk0-PakCggj2PhUAQ>
+    <xmx:6STVaRV7nC3enBFBKF7ocza5HInXk1se7biijhDZsC9tTBorvyfq3A>
+    <xmx:6STVaYHl_hRahgAzgcRLR1Gv3se845_ZUP_gpsMV3myq77tKzZ9hrA>
+    <xmx:6STVabaoj_yPudOKhB6MgYDJcKwgIXANqk9DbekuO4ej2cWWk6fTFw>
+    <xmx:6STVacO1ECQ4IViqzFko9L_t5kIPIe4xsIOVJmNRmVmH5ZmPeojUabfk>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 7 Apr 2026 11:38:16 -0400 (EDT)
+Date: Tue, 7 Apr 2026 09:38:14 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Farhan Ali <alifm@linux.ibm.com>
+Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, helgaas@kernel.org, lukas@wunner.de,
+ clg@redhat.com, kbusch@kernel.org, schnelle@linux.ibm.com,
+ mjrosato@linux.ibm.com, alex@shazbot.org
+Subject: Re: [PATCH v12 4/7] s390/pci: Store PCI error information for
+ passthrough devices
+Message-ID: <20260407093814.3d95263a@shazbot.org>
+In-Reply-To: <20260330174011.1161-5-alifm@linux.ibm.com>
+References: <20260330174011.1161-1-alifm@linux.ibm.com>
+	<20260330174011.1161-5-alifm@linux.ibm.com>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Like scsi's async suspend support, allow scsi devices to be shut down
-asynchronously to reduce system shutdown time.
+On Mon, 30 Mar 2026 10:40:08 -0700
+Farhan Ali <alifm@linux.ibm.com> wrote:
 
-Signed-off-by: David Jeffery <djeffery@redhat.com>
-Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
-Tested-by: Laurence Oberman <loberman@redhat.com>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- drivers/scsi/hosts.c      | 3 +++
- drivers/scsi/scsi_scan.c  | 1 +
- drivers/scsi/scsi_sysfs.c | 4 ++++
- 3 files changed, 8 insertions(+)
+> For a passthrough device we need co-operation from user space to recover
+> the device. This would require to bubble up any error information to user
+> space.  Let's store this error information for passthrough devices, so it
+> can be retrieved later.
+> 
+> We can now have userspace drivers (vfio-pci based) on s390x. The userspace
+> drivers will not have any KVM fd and so no kzdev associated with them. So
+> we need to update the logic for detecting passthrough devices to not depend
+> on struct kvm_zdev.
+> 
+> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+> ---
+>  arch/s390/include/asm/pci.h      |  30 ++++++++
+>  arch/s390/pci/pci.c              |   1 +
+>  arch/s390/pci/pci_event.c        | 113 ++++++++++++++++++-------------
+>  drivers/vfio/pci/vfio_pci_zdev.c |   9 ++-
+>  4 files changed, 105 insertions(+), 48 deletions(-)
+> 
+> diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
+> index c0ff19dab580..7fb9a80b0175 100644
+> --- a/arch/s390/include/asm/pci.h
+> +++ b/arch/s390/include/asm/pci.h
+> @@ -118,6 +118,31 @@ struct zpci_bus {
+>  	enum pci_bus_speed	max_bus_speed;
+>  };
+>  
+> +/* Content Code Description for PCI Function Error */
+> +struct zpci_ccdf_err {
+> +	u32 reserved1;
+> +	u32 fh;                         /* function handle */
+> +	u32 fid;                        /* function id */
+> +	u32 ett         :  4;           /* expected table type */
+> +	u32 mvn         : 12;           /* MSI vector number */
+> +	u32 dmaas       :  8;           /* DMA address space */
+> +	u32 reserved2   :  6;
+> +	u32 q           :  1;           /* event qualifier */
+> +	u32 rw          :  1;           /* read/write */
+> +	u64 faddr;                      /* failing address */
+> +	u32 reserved3;
+> +	u16 reserved4;
+> +	u16 pec;                        /* PCI event code */
+> +} __packed;
+> +
+> +#define ZPCI_ERR_PENDING_MAX 4
+> +struct zpci_ccdf_pending {
+> +	u8 count;
+> +	u8 head;
+> +	u8 tail;
+> +	struct zpci_ccdf_err err[ZPCI_ERR_PENDING_MAX];
+> +};
+> +
+>  /* Private data per function */
+>  struct zpci_dev {
+>  	struct zpci_bus *zbus;
+> @@ -171,6 +196,7 @@ struct zpci_dev {
+>  
+>  	char res_name[16];
+>  	bool mio_capable;
+> +	bool mediated_recovery;
+>  	struct zpci_bar_struct bars[PCI_STD_NUM_BARS];
+>  
+>  	u64		start_dma;	/* Start of available DMA addresses */
+> @@ -192,6 +218,8 @@ struct zpci_dev {
+>  	struct iommu_domain *s390_domain; /* attached IOMMU domain */
+>  	struct kvm_zdev *kzdev;
+>  	struct mutex kzdev_lock;
+> +	struct zpci_ccdf_pending pending_errs;
+> +	struct mutex pending_errs_lock;
+>  	spinlock_t dom_lock;		/* protect s390_domain change */
+>  };
+>  
+> @@ -330,6 +358,8 @@ void zpci_debug_exit_device(struct zpci_dev *);
+>  int zpci_report_error(struct pci_dev *, struct zpci_report_error_header *);
+>  int zpci_clear_error_state(struct zpci_dev *zdev);
+>  int zpci_reset_load_store_blocked(struct zpci_dev *zdev);
+> +void zpci_start_mediated_recovery(struct zpci_dev *zdev);
+> +void zpci_stop_mediated_recovery(struct zpci_dev *zdev);
+>  
+>  #ifdef CONFIG_NUMA
+>  
+> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> index 2a430722cbe4..d64d370d86cf 100644
+> --- a/arch/s390/pci/pci.c
+> +++ b/arch/s390/pci/pci.c
+> @@ -841,6 +841,7 @@ struct zpci_dev *zpci_create_device(u32 fid, u32 fh, enum zpci_state state)
+>  	mutex_init(&zdev->state_lock);
+>  	mutex_init(&zdev->fmb_lock);
+>  	mutex_init(&zdev->kzdev_lock);
+> +	mutex_init(&zdev->pending_errs_lock);
+>  
+>  	return zdev;
+>  
+> diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
+> index 839bd91c056e..9cda09da8b43 100644
+> --- a/arch/s390/pci/pci_event.c
+> +++ b/arch/s390/pci/pci_event.c
+> @@ -17,23 +17,6 @@
+>  #include "pci_bus.h"
+>  #include "pci_report.h"
+>  
+> -/* Content Code Description for PCI Function Error */
+> -struct zpci_ccdf_err {
+> -	u32 reserved1;
+> -	u32 fh;				/* function handle */
+> -	u32 fid;			/* function id */
+> -	u32 ett		:  4;		/* expected table type */
+> -	u32 mvn		: 12;		/* MSI vector number */
+> -	u32 dmaas	:  8;		/* DMA address space */
+> -	u32		:  6;
+> -	u32 q		:  1;		/* event qualifier */
+> -	u32 rw		:  1;		/* read/write */
+> -	u64 faddr;			/* failing address */
+> -	u32 reserved3;
+> -	u16 reserved4;
+> -	u16 pec;			/* PCI event code */
+> -} __packed;
+> -
+>  /* Content Code Description for PCI Function Availability */
+>  struct zpci_ccdf_avail {
+>  	u32 reserved1;
+> @@ -60,16 +43,11 @@ static inline bool ers_result_indicates_abort(pci_ers_result_t ers_res)
+>  	}
+>  }
+>  
+> -static bool is_passed_through(struct pci_dev *pdev)
+> +static bool needs_mediated_recovery(struct pci_dev *pdev)
+>  {
+>  	struct zpci_dev *zdev = to_zpci(pdev);
+> -	bool ret;
+> -
+> -	mutex_lock(&zdev->kzdev_lock);
+> -	ret = !!zdev->kzdev;
+> -	mutex_unlock(&zdev->kzdev_lock);
+> -
+> -	return ret;
+> +	guard(mutex)(&zdev->pending_errs_lock);
+> +	return zdev->mediated_recovery;
+>  }
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index e047747d4ecf..dfb38a82c0bf 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -273,6 +273,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	pm_runtime_set_active(&shost->shost_gendev);
- 	pm_runtime_enable(&shost->shost_gendev);
- 	device_enable_async_suspend(&shost->shost_gendev);
-+	device_enable_async_shutdown(&shost->shost_gendev);
- 
- 	error = device_add(&shost->shost_gendev);
- 	if (error)
-@@ -282,6 +283,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	get_device(shost->shost_gendev.parent);
- 
- 	device_enable_async_suspend(&shost->shost_dev);
-+	device_enable_async_shutdown(&shost->shost_dev);
- 
- 	get_device(&shost->shost_gendev);
- 	error = device_add(&shost->shost_dev);
-@@ -519,6 +521,7 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_host_template *sht, int priv
- 	shost->shost_gendev.bus = &scsi_bus_type;
- 	shost->shost_gendev.type = &scsi_host_type;
- 	scsi_enable_async_suspend(&shost->shost_gendev);
-+	device_enable_async_shutdown(&shost->shost_gendev);
- 
- 	device_initialize(&shost->shost_dev);
- 	shost->shost_dev.parent = &shost->shost_gendev;
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 7b11bc7de0e3..72f30db8609a 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -515,6 +515,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
- 	dev->bus = &scsi_bus_type;
- 	dev->type = &scsi_target_type;
- 	scsi_enable_async_suspend(dev);
-+	device_enable_async_shutdown(dev);
- 	starget->id = id;
- 	starget->channel = channel;
- 	starget->can_queue = 0;
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 6b8c5c05f294..c76ba17b206f 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1370,6 +1370,7 @@ static int scsi_target_add(struct scsi_target *starget)
- 	pm_runtime_set_active(&starget->dev);
- 	pm_runtime_enable(&starget->dev);
- 	device_enable_async_suspend(&starget->dev);
-+	device_enable_async_shutdown(&starget->dev);
- 
- 	return 0;
- }
-@@ -1396,6 +1397,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	transport_configure_device(&starget->dev);
- 
- 	device_enable_async_suspend(&sdev->sdev_gendev);
-+	device_enable_async_shutdown(&sdev->sdev_gendev);
- 	scsi_autopm_get_target(starget);
- 	pm_runtime_set_active(&sdev->sdev_gendev);
- 	if (!sdev->rpm_autosuspend)
-@@ -1415,6 +1417,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	}
- 
- 	device_enable_async_suspend(&sdev->sdev_dev);
-+	device_enable_async_shutdown(&sdev->sdev_dev);
- 	error = device_add(&sdev->sdev_dev);
- 	if (error) {
- 		sdev_printk(KERN_INFO, sdev,
-@@ -1670,6 +1673,7 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
- 	sdev->sdev_gendev.bus = &scsi_bus_type;
- 	sdev->sdev_gendev.type = &scsi_dev_type;
- 	scsi_enable_async_suspend(&sdev->sdev_gendev);
-+	device_enable_async_shutdown(&sdev->sdev_gendev);
- 	dev_set_name(&sdev->sdev_gendev, "%d:%d:%d:%llu",
- 		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
- 	sdev->sdev_gendev.groups = hostt->sdev_groups;
--- 
-2.53.0
+This immediately raises a red flag, the caller gets a snapshot of the
+value under mutex, but nothing guarantees the value doesn't immediately
+change before the caller can take action using the (now stale) value.
+
+The pending_errs_lock is attempting to be used to protect the recovery
+state, in kernel vs mediated, but it only provides an instantaneous
+snapshot.
+
+>  
+>  static bool is_driver_supported(struct pci_driver *driver)
+> @@ -81,6 +59,47 @@ static bool is_driver_supported(struct pci_driver *driver)
+>  	return true;
+>  }
+>  
+> +static void zpci_store_pci_error(struct pci_dev *pdev,
+> +				 struct zpci_ccdf_err *ccdf)
+> +{
+> +	struct zpci_dev *zdev = to_zpci(pdev);
+> +	int i;
+> +
+> +	guard(mutex)(&zdev->pending_errs_lock);
+> +	if (zdev->pending_errs.count >= ZPCI_ERR_PENDING_MAX) {
+> +		pr_err("%s: Maximum number (%d) of pending error events queued",
+> +		       pci_name(pdev), ZPCI_ERR_PENDING_MAX);
+> +		return;
+> +	}
+> +
+> +	i = zdev->pending_errs.tail % ZPCI_ERR_PENDING_MAX;
+> +	memcpy(&zdev->pending_errs.err[i], ccdf, sizeof(struct zpci_ccdf_err));
+> +	zdev->pending_errs.tail++;
+> +	zdev->pending_errs.count++;
+> +}
+
+Here we're using the mutex for something different, serializing access
+to the buffer.
+
+> +
+> +void zpci_start_mediated_recovery(struct zpci_dev *zdev)
+> +{
+> +	guard(mutex)(&zdev->pending_errs_lock);
+> +	zdev->mediated_recovery = true;
+> +}
+> +EXPORT_SYMBOL_GPL(zpci_start_mediated_recovery);
+
+An now back to protecting the recovery mode, but not really.
+
+> +
+> +void zpci_stop_mediated_recovery(struct zpci_dev *zdev)
+> +{
+> +	struct pci_dev *pdev = NULL;
+> +
+> +	guard(mutex)(&zdev->pending_errs_lock);
+> +	zdev->mediated_recovery = false;
+> +	pdev = pci_get_slot(zdev->zbus->bus, zdev->devfn);
+> +	if (zdev->pending_errs.count)
+> +		pr_info("%s: Unhandled PCI error events count=%d",
+> +			pci_name(pdev), zdev->pending_errs.count);
+> +	memset(&zdev->pending_errs, 0, sizeof(struct zpci_ccdf_pending));
+> +	pci_dev_put(pdev);
+> +}
+> +EXPORT_SYMBOL_GPL(zpci_stop_mediated_recovery);
+
+This brings the use cases together, fair.
+
+> +
+>  static pci_ers_result_t zpci_event_notify_error_detected(struct pci_dev *pdev,
+>  							 struct pci_driver *driver)
+>  {
+> @@ -175,7 +194,8 @@ static pci_ers_result_t zpci_event_do_reset(struct pci_dev *pdev,
+>   * and the platform determines which functions are affected for
+>   * multi-function devices.
+>   */
+> -static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
+> +static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev,
+> +							  struct zpci_ccdf_err *ccdf)
+>  {
+>  	pci_ers_result_t ers_res = PCI_ERS_RESULT_DISCONNECT;
+>  	struct zpci_dev *zdev = to_zpci(pdev);
+> @@ -194,13 +214,6 @@ static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
+>  	}
+>  	pdev->error_state = pci_channel_io_frozen;
+>  
+> -	if (is_passed_through(pdev)) {
+> -		pr_info("%s: Cannot be recovered in the host because it is a pass-through device\n",
+> -			pci_name(pdev));
+> -		status_str = "failed (pass-through)";
+> -		goto out_unlock;
+> -	}
+> -
+>  	driver = to_pci_driver(pdev->dev.driver);
+>  	if (!is_driver_supported(driver)) {
+>  		if (!driver) {
+> @@ -216,12 +229,23 @@ static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
+>  		goto out_unlock;
+>  	}
+>  
+> +	if (needs_mediated_recovery(pdev))
+
+The test result is invalid here.  Why not call zpci_store_pci_error()
+unconditionally here and wrap both in the same guard?
+needs_mediated_recovery() should have a lockdep_assert.
+
+> +		zpci_store_pci_error(pdev, ccdf);
+> +
+>  	ers_res = zpci_event_notify_error_detected(pdev, driver);
+>  	if (ers_result_indicates_abort(ers_res)) {
+>  		status_str = "failed (abort on detection)";
+>  		goto out_unlock;
+>  	}
+>  
+> +	if (needs_mediated_recovery(pdev)) {
+> +		pr_info("%s: Leaving recovery of pass-through device to user-space\n",
+> +			pci_name(pdev));
+> +		ers_res = PCI_ERS_RESULT_RECOVERED;
+> +		status_str = "in progress";
+> +		goto out_unlock;
+> +	}
+
+Does the mutex guard need to extend to here to make sure this is
+consistent with the previous test?  What prevents an open/close
+across these discrete tests?
+
+> +
+>  	if (ers_res != PCI_ERS_RESULT_NEED_RESET) {
+>  		ers_res = zpci_event_do_error_state_clear(pdev, driver);
+>  		if (ers_result_indicates_abort(ers_res)) {
+> @@ -266,25 +290,20 @@ static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
+>   * @pdev: PCI function for which to report
+>   * @es: PCI channel failure state to report
+>   */
+> -static void zpci_event_io_failure(struct pci_dev *pdev, pci_channel_state_t es)
+> +static void zpci_event_io_failure(struct pci_dev *pdev, pci_channel_state_t es,
+> +				  struct zpci_ccdf_err *ccdf)
+>  {
+>  	struct pci_driver *driver;
+>  
+>  	pci_dev_lock(pdev);
+>  	pdev->error_state = es;
+> -	/**
+> -	 * While vfio-pci's error_detected callback notifies user-space QEMU
+> -	 * reacts to this by freezing the guest. In an s390 environment PCI
+> -	 * errors are rarely fatal so this is overkill. Instead in the future
+> -	 * we will inject the error event and let the guest recover the device
+> -	 * itself.
+> -	 */
+> -	if (is_passed_through(pdev))
+> -		goto out;
+> +
+> +	if (needs_mediated_recovery(pdev))
+> +		zpci_store_pci_error(pdev, ccdf);
+
+Same.  Unless something else prevents this from changing, the mutex is
+not effective between test and use.  Thanks,
+
+Alex
+
+>  	driver = to_pci_driver(pdev->dev.driver);
+>  	if (driver && driver->err_handler && driver->err_handler->error_detected)
+>  		driver->err_handler->error_detected(pdev, pdev->error_state);
+> -out:
+> +
+>  	pci_dev_unlock(pdev);
+>  }
+>  
+> @@ -330,12 +349,12 @@ static void __zpci_event_error(struct zpci_ccdf_err *ccdf)
+>  		break;
+>  	case 0x0040: /* Service Action or Error Recovery Failed */
+>  	case 0x003b:
+> -		zpci_event_io_failure(pdev, pci_channel_io_perm_failure);
+> +		zpci_event_io_failure(pdev, pci_channel_io_perm_failure, ccdf);
+>  		break;
+>  	default: /* PCI function left in the error state attempt to recover */
+> -		ers_res = zpci_event_attempt_error_recovery(pdev);
+> +		ers_res = zpci_event_attempt_error_recovery(pdev, ccdf);
+>  		if (ers_res != PCI_ERS_RESULT_RECOVERED)
+> -			zpci_event_io_failure(pdev, pci_channel_io_perm_failure);
+> +			zpci_event_io_failure(pdev, pci_channel_io_perm_failure, ccdf);
+>  		break;
+>  	}
+>  	pci_dev_put(pdev);
+> diff --git a/drivers/vfio/pci/vfio_pci_zdev.c b/drivers/vfio/pci/vfio_pci_zdev.c
+> index 0990fdb146b7..0658095ac5b1 100644
+> --- a/drivers/vfio/pci/vfio_pci_zdev.c
+> +++ b/drivers/vfio/pci/vfio_pci_zdev.c
+> @@ -148,6 +148,8 @@ int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
+>  	if (!zdev)
+>  		return -ENODEV;
+>  
+> +	zpci_start_mediated_recovery(zdev);
+> +
+>  	if (!vdev->vdev.kvm)
+>  		return 0;
+>  
+> @@ -161,7 +163,12 @@ void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev)
+>  {
+>  	struct zpci_dev *zdev = to_zpci(vdev->pdev);
+>  
+> -	if (!zdev || !vdev->vdev.kvm)
+> +	if (!zdev)
+> +		return;
+> +
+> +	zpci_stop_mediated_recovery(zdev);
+> +
+> +	if (!vdev->vdev.kvm)
+>  		return;
+>  
+>  	if (zpci_kvm_hook.kvm_unregister)
 
