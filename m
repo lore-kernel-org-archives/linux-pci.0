@@ -1,47 +1,47 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0C183C197C
-	for <linux-pci@vger.kernel.org>; Tue,  7 Apr 2026 15:36:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1BAB3C3423
+	for <linux-pci@vger.kernel.org>; Tue,  7 Apr 2026 15:36:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775576185; cv=none; b=HQ+o/Zy6fpWk+dLFjYgDpWeDgqJtyLSv955M8b1fCeC1DFKc7xfzlQRsBijZZxEnSwmmW4QdpqTePBWSb9eM2s987tTC1ZCpp+dHdn3F5PYYBFzG4nM+CXDCA5xKO6QVUh3c9myMUH2JtuZTzjXPB220ghxxGgzO+jzhxe2SMlg=
+	t=1775576189; cv=none; b=CEeLALs3EhfVPh4vO5WGhg9W0LdkQshZBJcAaFt3fVpq55hyNmCKKlcilEoQ0Ukwo+Gcs1DePHMhAvUn2f1hC/Cbm01mYNKx7bDIeqAp9GTUbOF2/4ZBZvAIIhtUUmlVnzCnPO5XB+tYseu5Rx/XUylQZPuxTJ4Ap4n7nSZRqyA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775576185; c=relaxed/simple;
-	bh=mpd6Cy76MjC+38ye2jj7ei/MJhynExxQIydz6BHpHEA=;
+	s=arc-20240116; t=1775576189; c=relaxed/simple;
+	bh=hX445ynibnXiIWMEjocw1AVTzkgY1FNORC7rREkeDJw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TPsI59Zkw5/Swoj9548NklZ3v85gh90R4Ikn4CTv1wv0FTuuqtJYGSubtLjFjOjZOjjaZ0PwX2lDJWBz3mm4lQ5UmjX8lOgmENwS+mIIownihzPbt50aKOa0TVkno+DyAVa0zU7ZH56cAb2G9QhSe1LU/Q/j+86erVA/1Bsb8Ec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=X7um2l0l; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=dlGRW7cd5jRNpEwLLx2wqaonw65LbC34YYGkGG/4dgolNhch752dHvHEjnjrsdFnUaB+Ek8UOJJ4k3Xaj2oCBz+EtacGGSnjAJLjNIRoTyI4DdD/V1+AYAnvnI/usp6SAwmEeG+QFdPce1MWP3xqJDHGzCAPKjkPRuvI/GFg7pE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=L3p8hNcD; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="X7um2l0l"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="L3p8hNcD"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1775576168;
+	s=mimecast20190719; t=1775576176;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=lIi8MnLsK9rqgcVhPGK6L1pnrqyxpZ0hlITssQNvVPg=;
-	b=X7um2l0ld8RS/F6JmrtqRynLf9N9XLvA+pKZzOLYstFaY/DsU/Kp4esllS3AYznqPkQZpU
-	NZOGJ/Rdo2moRXpL7XBXzfge3jWrzX4FnXMxM3awpdFTTkBVLEhcjxxX/3cVoSzVOKqyzI
-	fkedy9eb7PnZC/jJM5rdJz90VbbUyHI=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	bh=BQUsDl+61brgBW+bmtwfnTQiS3JcRbzE4Uc2abCpuBs=;
+	b=L3p8hNcDjunEEeyhkIHm8WyBL+mBHp2d2gOgdVC+gAJo+f2hVbwyL0dhaIsft315wxUpVG
+	VLS7ieRqq5XPJ04zF/9CsUtzXv/MlLagVlV8MVPR/kK2tKNwgtwYoFLG+AQZB8eUg2LpSW
+	S+Wjb81alMllKorWGww2aFXU27A169E=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-495-QptULq8QP4OWFSmD-GZQIA-1; Tue,
- 07 Apr 2026 11:36:04 -0400
-X-MC-Unique: QptULq8QP4OWFSmD-GZQIA-1
-X-Mimecast-MFC-AGG-ID: QptULq8QP4OWFSmD-GZQIA_1775576162
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-542-i3a9Ot2dP1qh06s5bqKUUw-1; Tue,
+ 07 Apr 2026 11:36:13 -0400
+X-MC-Unique: i3a9Ot2dP1qh06s5bqKUUw-1
+X-Mimecast-MFC-AGG-ID: i3a9Ot2dP1qh06s5bqKUUw_1775576171
 Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D493A18002E3;
-	Tue,  7 Apr 2026 15:36:01 +0000 (UTC)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EDCEE195608C;
+	Tue,  7 Apr 2026 15:36:10 +0000 (UTC)
 Received: from fedora-work.redhat.com (unknown [10.22.80.127])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 69DD61800576;
-	Tue,  7 Apr 2026 15:35:57 +0000 (UTC)
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D1C3D1800594;
+	Tue,  7 Apr 2026 15:36:06 +0000 (UTC)
 From: David Jeffery <djeffery@redhat.com>
 To: linux-kernel@vger.kernel.org,
 	driver-core@lists.linux.dev,
@@ -63,9 +63,9 @@ Cc: Tarun Sahu <tarunsahu@google.com>,
 	Bjorn Helgaas <helgaas@kernel.org>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	David Jeffery <djeffery@redhat.com>
-Subject: [PATCH 3/5] driver core: async device shutdown infrastructure
-Date: Tue,  7 Apr 2026 11:35:30 -0400
-Message-ID: <20260407153532.6395-4-djeffery@redhat.com>
+Subject: [PATCH 5/5] scsi: enable async shutdown support
+Date: Tue,  7 Apr 2026 11:35:32 -0400
+Message-ID: <20260407153532.6395-6-djeffery@redhat.com>
 In-Reply-To: <20260407153532.6395-1-djeffery@redhat.com>
 References: <20260407153532.6395-1-djeffery@redhat.com>
 Precedence: bulk
@@ -77,245 +77,95 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Patterned after async suspend, allow devices to mark themselves as wanting
-to perform async shutdown. Devices using async shutdown wait only for their
-dependencies to shutdown before executing their shutdown routine.
-
-Sync shutdown devices are shut down one at a time and will only wait for an
-async shutdown device if the async device is a dependency.
+Like scsi's async suspend support, allow scsi devices to be shut down
+asynchronously to reduce system shutdown time.
 
 Signed-off-by: David Jeffery <djeffery@redhat.com>
 Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
 Tested-by: Laurence Oberman <loberman@redhat.com>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/base/base.h    |   2 +
- drivers/base/core.c    | 101 ++++++++++++++++++++++++++++++++++++++++-
- include/linux/device.h |  13 ++++++
- 3 files changed, 115 insertions(+), 1 deletion(-)
+ drivers/scsi/hosts.c      | 3 +++
+ drivers/scsi/scsi_scan.c  | 1 +
+ drivers/scsi/scsi_sysfs.c | 4 ++++
+ 3 files changed, 8 insertions(+)
 
-diff --git a/drivers/base/base.h b/drivers/base/base.h
-index 1af95ac68b77..cd435adeeac5 100644
---- a/drivers/base/base.h
-+++ b/drivers/base/base.h
-@@ -113,6 +113,7 @@ struct driver_type {
-  * @device - pointer back to the struct device that this structure is
-  * associated with.
-  * @driver_type - The type of the bound Rust driver.
-+ * @complete - completion for device shutdown ordering
-  * @dead - This device is currently either in the process of or has been
-  *	removed from the system. Any asynchronous events scheduled for this
-  *	device should exit without taking any action.
-@@ -132,6 +133,7 @@ struct device_private {
- #ifdef CONFIG_RUST
- 	struct driver_type driver_type;
- #endif
-+	struct completion complete;
- 	u8 dead:1;
- };
- #define to_device_private_parent(obj)	\
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 0fb2f3ccc3bd..89b482435e85 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -9,6 +9,7 @@
-  */
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index e047747d4ecf..dfb38a82c0bf 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -273,6 +273,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 	pm_runtime_set_active(&shost->shost_gendev);
+ 	pm_runtime_enable(&shost->shost_gendev);
+ 	device_enable_async_suspend(&shost->shost_gendev);
++	device_enable_async_shutdown(&shost->shost_gendev);
  
- #include <linux/acpi.h>
-+#include <linux/async.h>
- #include <linux/blkdev.h>
- #include <linux/cleanup.h>
- #include <linux/cpufreq.h>
-@@ -37,6 +38,10 @@
- #include "physical_location.h"
- #include "power/power.h"
+ 	error = device_add(&shost->shost_gendev);
+ 	if (error)
+@@ -282,6 +283,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 	get_device(shost->shost_gendev.parent);
  
-+static bool async_shutdown = true;
-+module_param(async_shutdown, bool, 0644);
-+MODULE_PARM_DESC(async_shutdown, "Enable asynchronous device shutdown support");
-+
- /* Device links support. */
- static LIST_HEAD(deferred_sync);
- static unsigned int defer_sync_state_count = 1;
-@@ -3540,6 +3545,7 @@ static int device_private_init(struct device *dev)
- 	klist_init(&dev->p->klist_children, klist_children_get,
- 		   klist_children_put);
- 	INIT_LIST_HEAD(&dev->p->deferred_probe);
-+	init_completion(&dev->p->complete);
+ 	device_enable_async_suspend(&shost->shost_dev);
++	device_enable_async_shutdown(&shost->shost_dev);
+ 
+ 	get_device(&shost->shost_gendev);
+ 	error = device_add(&shost->shost_dev);
+@@ -519,6 +521,7 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_host_template *sht, int priv
+ 	shost->shost_gendev.bus = &scsi_bus_type;
+ 	shost->shost_gendev.type = &scsi_host_type;
+ 	scsi_enable_async_suspend(&shost->shost_gendev);
++	device_enable_async_shutdown(&shost->shost_gendev);
+ 
+ 	device_initialize(&shost->shost_dev);
+ 	shost->shost_dev.parent = &shost->shost_gendev;
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 7b11bc7de0e3..72f30db8609a 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -515,6 +515,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	dev->bus = &scsi_bus_type;
+ 	dev->type = &scsi_target_type;
+ 	scsi_enable_async_suspend(dev);
++	device_enable_async_shutdown(dev);
+ 	starget->id = id;
+ 	starget->channel = channel;
+ 	starget->can_queue = 0;
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 6b8c5c05f294..c76ba17b206f 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1370,6 +1370,7 @@ static int scsi_target_add(struct scsi_target *starget)
+ 	pm_runtime_set_active(&starget->dev);
+ 	pm_runtime_enable(&starget->dev);
+ 	device_enable_async_suspend(&starget->dev);
++	device_enable_async_shutdown(&starget->dev);
+ 
  	return 0;
  }
+@@ -1396,6 +1397,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 	transport_configure_device(&starget->dev);
  
-@@ -4784,6 +4790,37 @@ int device_change_owner(struct device *dev, kuid_t kuid, kgid_t kgid)
- 	return error;
- }
- 
-+static bool wants_async_shutdown(struct device *dev)
-+{
-+	return async_shutdown && dev->async_shutdown;
-+}
-+
-+static int wait_for_device_shutdown(struct device *dev, void *data)
-+{
-+	bool async = *(bool *)data;
-+
-+	if (async || wants_async_shutdown(dev))
-+		wait_for_completion(&dev->p->complete);
-+
-+	return 0;
-+}
-+
-+static void wait_for_shutdown_dependencies(struct device *dev, bool async)
-+{
-+	struct device_link *link;
-+	int idx;
-+
-+	device_for_each_child(dev, &async, wait_for_device_shutdown);
-+
-+	idx = device_links_read_lock();
-+
-+	dev_for_each_link_to_consumer(link, dev)
-+		if (!device_link_flag_is_sync_state_only(link->flags))
-+			wait_for_device_shutdown(link->consumer, &async);
-+
-+	device_links_read_unlock(idx);
-+}
-+
- static void __shutdown_one_device(struct device *dev)
- {
- 	device_lock(dev);
-@@ -4807,6 +4844,8 @@ static void __shutdown_one_device(struct device *dev)
- 		dev->driver->shutdown(dev);
+ 	device_enable_async_suspend(&sdev->sdev_gendev);
++	device_enable_async_shutdown(&sdev->sdev_gendev);
+ 	scsi_autopm_get_target(starget);
+ 	pm_runtime_set_active(&sdev->sdev_gendev);
+ 	if (!sdev->rpm_autosuspend)
+@@ -1415,6 +1417,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
  	}
  
-+	complete_all(&dev->p->complete);
-+
- 	device_unlock(dev);
- }
- 
-@@ -4828,6 +4867,55 @@ static void shutdown_one_device(struct device *dev)
- 	put_device(dev);
- }
- 
-+static void async_shutdown_handler(void *data, async_cookie_t cookie)
-+{
-+	struct device *dev = data;
-+
-+	wait_for_shutdown_dependencies(dev, true);
-+	shutdown_one_device(dev);
-+}
-+
-+static bool shutdown_device_async(struct device *dev)
-+{
-+	if (async_schedule_dev_nocall(async_shutdown_handler, dev))
-+		return true;
-+	return false;
-+}
-+
-+
-+static void early_async_shutdown_devices(void)
-+{
-+	struct device *dev, *next, *needs_put = NULL;
-+
-+	if (!async_shutdown)
-+		return;
-+
-+	spin_lock(&devices_kset->list_lock);
-+
-+	list_for_each_entry_safe_reverse(dev, next, &devices_kset->list,
-+					 kobj.entry) {
-+		if (wants_async_shutdown(dev)) {
-+			get_device(dev);
-+
-+			if (shutdown_device_async(dev)) {
-+				list_del_init(&dev->kobj.entry);
-+			} else {
-+				/*
-+				 * async failed, clean up extra references
-+				 * and run from the standard shutdown loop
-+				 */
-+				needs_put = dev;
-+				break;
-+			}
-+		}
-+	}
-+
-+	spin_unlock(&devices_kset->list_lock);
-+
-+	if (needs_put)
-+		put_device(needs_put);
-+}
-+
- /**
-  * device_shutdown - call ->shutdown() on each device to shutdown.
-  */
-@@ -4840,6 +4928,12 @@ void device_shutdown(void)
- 
- 	cpufreq_suspend();
- 
-+	/*
-+	 * Start async device threads where possible to maximize potential
-+	 * parallelism and minimize false dependency on unrelated sync devices
-+	 */
-+	early_async_shutdown_devices();
-+
- 	spin_lock(&devices_kset->list_lock);
- 	/*
- 	 * Walk the devices list backward, shutting down each in turn.
-@@ -4858,11 +4952,16 @@ void device_shutdown(void)
- 		list_del_init(&dev->kobj.entry);
- 		spin_unlock(&devices_kset->list_lock);
- 
--		shutdown_one_device(dev);
-+		if (!wants_async_shutdown(dev) || !shutdown_device_async(dev)) {
-+			wait_for_shutdown_dependencies(dev, false);
-+			shutdown_one_device(dev);
-+		}
- 
- 		spin_lock(&devices_kset->list_lock);
- 	}
- 	spin_unlock(&devices_kset->list_lock);
-+
-+	async_synchronize_full();
- }
- 
- /*
-diff --git a/include/linux/device.h b/include/linux/device.h
-index e65d564f01cd..cdc890e5d6ae 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -553,6 +553,8 @@ struct device_physical_location {
-  * @dma_skip_sync: DMA sync operations can be skipped for coherent buffers.
-  * @dma_iommu: Device is using default IOMMU implementation for DMA and
-  *		doesn't rely on dma_ops structure.
-+ * @async_shutdown: Device shutdown may be run asynchronously and in parallel
-+ *		to the shutdown of unrelated devices
-  *
-  * At the lowest level, every device in a Linux system is represented by an
-  * instance of struct device. The device structure contains the information
-@@ -675,6 +677,7 @@ struct device {
- #ifdef CONFIG_IOMMU_DMA
- 	bool			dma_iommu:1;
- #endif
-+	bool			async_shutdown:1;
- };
- 
- /**
-@@ -878,6 +881,16 @@ static inline bool device_async_suspend_enabled(struct device *dev)
- 	return !!dev->power.async_suspend;
- }
- 
-+static inline void device_enable_async_shutdown(struct device *dev)
-+{
-+	dev->async_shutdown = true;
-+}
-+
-+static inline bool device_async_shutdown_enabled(struct device *dev)
-+{
-+	return !!dev->async_shutdown;
-+}
-+
- static inline bool device_pm_not_required(struct device *dev)
- {
- 	return dev->power.no_pm;
+ 	device_enable_async_suspend(&sdev->sdev_dev);
++	device_enable_async_shutdown(&sdev->sdev_dev);
+ 	error = device_add(&sdev->sdev_dev);
+ 	if (error) {
+ 		sdev_printk(KERN_INFO, sdev,
+@@ -1670,6 +1673,7 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
+ 	sdev->sdev_gendev.bus = &scsi_bus_type;
+ 	sdev->sdev_gendev.type = &scsi_dev_type;
+ 	scsi_enable_async_suspend(&sdev->sdev_gendev);
++	device_enable_async_shutdown(&sdev->sdev_gendev);
+ 	dev_set_name(&sdev->sdev_gendev, "%d:%d:%d:%llu",
+ 		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
+ 	sdev->sdev_gendev.groups = hostt->sdev_groups;
 -- 
 2.53.0
 
