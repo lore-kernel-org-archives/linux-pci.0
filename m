@@ -1,27 +1,28 @@
-Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010047.outbound.protection.outlook.com [52.101.84.47])
+Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11011066.outbound.protection.outlook.com [40.107.130.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E869F3B38B0;
-	Tue,  7 Apr 2026 12:05:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.84.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAE783B52E6;
+	Tue,  7 Apr 2026 12:05:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.130.66
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775563503; cv=fail; b=TcTTRGW15FC7H+bsWQZARpCWayAlHi8zo/YcNG8Oxg1YehAe9l02xHUlv+MhkMiuwjKal4P7goQNHPdceuM8iKiaLSINF6Y7sbGxsn8Ym0yJU/9Xq2aWISpbds8SZmrkWwPtFEqOBJGS4ElTjXf0yy4MoxG9TlrBdcMM5gn1xi8=
+	t=1775563523; cv=fail; b=myqTS31CV5vo9vf4+v0Rw8X7O+eZ1rsG3h/2YkBe6hity9floOJ1wbOotHtd9rUKhP8V4bIRpEi0jTTVSsYojNYmPEoD9JISQ7OigUEta1MoBvg3wQtdXkM0jsmLBWO9Bj/QxY1RJSd0dTZ6ZgZOj6YKg0ltIdhy9ry/8OsvrBc=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775563503; c=relaxed/simple;
-	bh=xMcfUHTj5oivJiHTBVgp4jU/mITcHy3n+k8Y2SWq2io=;
-	h=From:Subject:Date:Message-ID:MIME-Version:Content-Type:To:CC; b=fb2a5imPcELldmYm7/IS2Q25nJKZmyogLcf/RGwsicp33z8qcknfXLIx6mXKUHUDJAQpD4q+D9RMZiQnYw1iFawuFUQnKLM5K0AqpM897DmwdYfpFW7KREWIfIwctcnTlth/HTMvEbZbLJHjBzjJRVjuTpQToq+P1st9e+NZnRY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=TAW2TQKW; arc=fail smtp.client-ip=52.101.84.47
+	s=arc-20240116; t=1775563523; c=relaxed/simple;
+	bh=Ur+hC9N9q+y/Bh8yS4xBIsJPSa4Y2dnTerXd1DGE2CE=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
+	 In-Reply-To:To:CC; b=J+tH6gdtARWkUnd7JNKnk5w2dWqj+/AfWB279ymIzMk5lLtJW5S0fwSs/2wjagKmuPXOvGRas8EqY/fxLFFFRIjuoMH6w/+eyE/MAJVUUSfDlf37fYqR6n4riy9Xb1BUupkdxrkn5pnOUjgUFztSXdXDgFeF7Ea5KMbaUX5tCXQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=O8nCqh2b; arc=fail smtp.client-ip=40.107.130.66
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="TAW2TQKW"
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="O8nCqh2b"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=XGeuQXJK+ARB1i+T8+YPKL8eprd8jozbPpaIXPiEGDPtMghcUWl0hkgkv2nS96Gk4kBay2NbCNJQ3Cc3EUSenIZUb2dvBGbdBmVEhAk91DazZDvXyXSlYHjZCR97YtfDXf/lJU2WZLlP+XbfkgHdvRyxD+DdefYwSTUHLCCUO7yxpTFycL/Ys3zaHNdcaEX8J6SNc0kI/+3MmLWW9jU9mr/B+1s/fT/PBBcYoCGgSbU9ADtIWFuWsMSYlKg3N2mVWua3J7vKmdjHglVg2CAJsH/KxsEH60oGyI/JkcHS06QR5aCR76ZPWsK+FuuOk27v1/RQ6GRJ/vyl1AZHMqzfIQ==
+ b=eIA63srrwU8ZeJdfck8csstIHXr6UsF+5bd0h2c4Z1A0G2Qkpg1RqNYCsi9ZNrp9T5zK2BtVCrqPMVL6JZMALFFis+NAoQQGS+8kJUelil0QPHZNB5jpnfyB0zcM6XMAuYkIasw+oLDTE7hoVUzxmoLaJEIhCns4k4zOaDONRcubfb//R+C0YNUDup7UowIi4EL9+Hur7l7cCq6sWovPIPYdZ88N4eyJkj9h1wDA4Z8jf46FyN4YkbOr+RnAPdPJ/M/LfKnGEyWtAR4QiCMk2KbrpMrEI32ulQxZ8yqTf6SIdqQDvdVYo06R0oAaJIgocUr8bm+rZPbhoUIEG8+5+A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=9Q9NNeqD4cuk4qVRSfTnmOZzZ+MVmSz/luaQsJdZ+Hw=;
- b=AKIRiDDdzey+ufXp+16qVqbZdDkXjmtnXnvuuRDrY4i7Nw9+7BW3tNUTrCb2zQJpFn0cvnSqfJ0HBqHZlgdrVB72j9qQbyD25/jsr1iMszuVeVP0hk6n/8a6iGAwRpNzTMPQsuS7HZkPJq2odI1MKElzUFAotO5YUXs3Ravr/kx/fMXHKI/1c4btl3ra0yWDLN8mspYCOCCz0bkIStHBQHIJGrWwFCs5sWCKxQDKROMy6oyXVUqwGSOds3XreAakikkHmlzZosprrXpRVjmKfp5p3BN8tPeDpw7aHr/0gkaPo9VVgniJNYI9hIFZLIZxk8NewMYS+gSPk/7Og7b0pQ==
+ bh=uH3ZDdmV13hTziajxqns6OfIHTyAmNNk0yj21yeqzMc=;
+ b=eLlHRSZ4PUV0euvyIUDA/U+Csj+0yfs2D1zA8m0pcXOAUZXZT7pJdj68Lyz1qxgYeuWuOae85LxBfyVf87nAfrk9QHUjmS0xzGUYw57U4v/31x7uhYPZYGg99QQ5YI2ApWw7KGVFP2FoQVRNO40bnotE3PZ1zwq3Npn1/kIBq7NJHFiPmQJYkkkG7OR0ftnWU7DKfMFpqWW/TACuAwad4rDCiPVrPjHTag9aYOSmHXxL4OFijdgtFJ7ipAnChs9I1GPR0zdiQoeUhs5AnoI2h1HexWRIXr5YQ09l9HadjpU1q0cB3ut6CwAQnTd/KLeoyfKMVIw4scdt+h729kZQ/Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=fail (sender ip is
  164.130.1.60) smtp.rcpttodomain=kernel.org smtp.mailfrom=foss.st.com;
  dmarc=fail (p=none sp=none pct=100) action=none header.from=foss.st.com;
@@ -29,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=fail (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9Q9NNeqD4cuk4qVRSfTnmOZzZ+MVmSz/luaQsJdZ+Hw=;
- b=TAW2TQKW+JcmhCr0e+6PZAndhdtmMRvdFhZyivVm7qM12MoCUCPoiYmgPAKj4DQgTkzB4QDdlyKqvHZ5smmwsbuu8QsINsRMxJ1pLlm6Bn/UMTXMJ/7qheAQUZJ3+CjNBUYBHFmzzb8f7pEfIbPgAZnBgOfBZ0CZ2gV1/rrs4JWgcr2JhQ4eM3J3wuaNK2LZiuJ8g3TZQZw1kPz3UYA2/nShXDNVyYV3rQ+0Vhjbz8BJ2vVx5GyAx8uJtQd9fzqlSyRGg0AVl6kO3HqihUXxJx+rtmVYboqsyJch9+zUJEhivD7PYOLJB1lMZBUPyiFN69sw6jhN9g/7vfxJwIv8HQ==
-Received: from DB9PR05CA0007.eurprd05.prod.outlook.com (2603:10a6:10:1da::12)
- by AS4PR10MB5845.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:20b:510::21) with
+ bh=uH3ZDdmV13hTziajxqns6OfIHTyAmNNk0yj21yeqzMc=;
+ b=O8nCqh2bDdiepdokmUkCBpLQ3KfocESBEuhVwioDN4+xfIMYPB0/y/8fVpETWOoV5ahqZp+9yyXbyXBoUj2rB9JgvjT7ZmBOunkDVI7KwfLv0O3PjDLwl9BmN7x4KLuEGgdOKfXWoqn81sRxU7oXGjykxnLhbOzAeC1AZ1lBpFKa0pGOK78vO2Maoj7ma68DAMvrW5TCx+b22q8Pxx7U1P4OZDzQofTqunMxEqfZVqJ07Sm3QTbDhJHHgCsGLAhw+5BBbplLVw3/4Q/SEtPXD/4uq9PIrtM1xCze7Lo7OAYCqbwK9G/Bm3sQL3QnUYM5qd0PnWLLmCoST+ks0Y2AqA==
+Received: from DB9PR05CA0005.eurprd05.prod.outlook.com (2603:10a6:10:1da::10)
+ by DU0PR10MB6131.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:10:3e6::7) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.20; Tue, 7 Apr
- 2026 12:04:53 +0000
+ 2026 12:04:56 +0000
 Received: from DB1PEPF000509E4.eurprd03.prod.outlook.com
- (2603:10a6:10:1da:cafe::cb) by DB9PR05CA0007.outlook.office365.com
- (2603:10a6:10:1da::12) with Microsoft SMTP Server (version=TLS1_3,
+ (2603:10a6:10:1da:cafe::b2) by DB9PR05CA0005.outlook.office365.com
+ (2603:10a6:10:1da::10) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.20.9769.32 via Frontend Transport; Tue,
- 7 Apr 2026 12:04:53 +0000
+ 7 Apr 2026 12:04:56 +0000
 X-MS-Exchange-Authentication-Results: spf=fail (sender IP is 164.130.1.60)
  smtp.mailfrom=foss.st.com; dkim=none (message not signed)
  header.d=none;dmarc=fail action=none header.from=foss.st.com;
@@ -50,7 +51,7 @@ Received-SPF: Fail (protection.outlook.com: domain of foss.st.com does not
 Received: from smtpO365.st.com (164.130.1.60) by
  DB1PEPF000509E4.mail.protection.outlook.com (10.167.242.54) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9745.21 via Frontend Transport; Tue, 7 Apr 2026 12:04:53 +0000
+ 15.20.9745.21 via Frontend Transport; Tue, 7 Apr 2026 12:04:56 +0000
 Received: from STKDAG1NODE2.st.com (10.75.128.133) by smtpO365.st.com
  (10.250.44.72) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.29; Tue, 7 Apr
@@ -58,12 +59,11 @@ Received: from STKDAG1NODE2.st.com (10.75.128.133) by smtpO365.st.com
 Received: from localhost (10.130.77.120) by STKDAG1NODE2.st.com
  (10.75.128.133) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.29; Tue, 7 Apr
- 2026 14:04:37 +0200
+ 2026 14:04:39 +0200
 From: Christian Bruel <christian.bruel@foss.st.com>
-Subject: [PATCH v4 0/3] Skip subrange map tests on DWC iATU allocation
- failure
-Date: Tue, 7 Apr 2026 14:04:07 +0200
-Message-ID: <20260407-skip-bar_subrange-tests-if-enospc-v4-0-6f2e65f2298c@foss.st.com>
+Date: Tue, 7 Apr 2026 14:04:10 +0200
+Subject: [PATCH v4 3/3] selftests: pci_endpoint: Skip BAR subrange test on
+ -ENOSPC
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -72,11 +72,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIALfy1GkC/5XNQQrCMBCF4atI1qYkk9imrryHiKRxYoPYlEwti
- vTupl0pbnT5D8P3nowwBSS2XT1ZwjFQiF0OvV4x19rujDyccjMQUAolDadL6Hlj05FuTVoeBqS
- BePAcu0i94w5KL5RQBmtg2ekT+nBfNvaH3G2gIabHMjnK+fqPPkouuJdW1xulsUG785GooKFw8
- cpmf4Q3E9QvJmQThBHeVEYqffo21d+myqausgl1aTeN/jSnaXoBpifvQnwBAAA=
-X-Change-ID: 20260318-skip-bar_subrange-tests-if-enospc-c26f03038e92
+Message-ID: <20260407-skip-bar_subrange-tests-if-enospc-v4-3-6f2e65f2298c@foss.st.com>
+References: <20260407-skip-bar_subrange-tests-if-enospc-v4-0-6f2e65f2298c@foss.st.com>
+In-Reply-To: <20260407-skip-bar_subrange-tests-if-enospc-v4-0-6f2e65f2298c@foss.st.com>
 To: Manivannan Sadhasivam <mani@kernel.org>,
 	=?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Kishon Vijay
  Abraham I" <kishon@kernel.org>, Shuah Khan <shuah@kernel.org>, Bjorn Helgaas
@@ -91,77 +89,56 @@ X-ClientProxiedBy: STKCAS1NODE1.st.com (10.75.128.134) To STKDAG1NODE2.st.com
  (10.75.128.133)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DB1PEPF000509E4:EE_|AS4PR10MB5845:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0f2aab37-0b52-40f4-7796-08de949de090
+X-MS-TrafficTypeDiagnostic: DB1PEPF000509E4:EE_|DU0PR10MB6131:EE_
+X-MS-Office365-Filtering-Correlation-Id: ad960d8d-a194-45a8-3889-08de949de274
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|1800799024|376014|7416014|82310400026|56012099003|18002099003;
+	BCL:0;ARA:13230040|1800799024|376014|82310400026|36860700016|7416014|18002099003|22082099003|56012099003;
 X-Microsoft-Antispam-Message-Info:
-	bBRrSiY2/3CzoUZ2T3YKcUwlvjYsQ8TAC3jbw+El/Zo7UPl3czrIe4Vd7R7prMbB5PCeu5Gpf8E9u7GP52PFfRhS7hbb9aAgRrrccHargYlnnkyGKSsFESxubETkRUB3o35osfYrK90rGa9oCquDObFpFkbi99d9Jp0ahbUFyVDi2h4enskKVAOh9PpLApgxu64JpR/FdjBcfuy02nGNAGJbgNriQ1RmOQy1+vi8E3jtYsMtak9Ys8/nej/b3XJdqtU16TdC0bGjUonKt0L8BAh0JHPhRfXhvBEmTMwGEs+4Bcj8AWylTVJxmLkizbJki5fhi3nfKp3EQTIOANCvZc1H6Kfx1L7XJBis95a8uF9lyL18/vP1/Ss+A5TQW10t3eTQgJirfCcB510QTPdzPBaUg8G2f0cwTL1Xg8ggB4n5RsgQKl4mAwYrr9wsEo70g9ASJ+mF/eG/P1IL6+xHZ+LorK+dwyFFv9EYtDr0KqJSk8LdxXPI4h/CC2NCagFYc+lNp2mOA1LBcsF05r4yvB4aTcrarKBM2Cv4wQnNvjisXUqQ0LWgW/GUYGhVR2jsrGCcFc7AGbWWhSnuHmgUkqdeKVHI3cvBTyTw2+0CIRKI4Y5KFsdCnzpX+Yym53ANtPG79ijaUEphrvxZZfh3ugRMmoMt2UhzH0Tg/6wvJUqDzPCSySVVOOSuoJbafYKBxJFFFfzHxNVzLovHrHMnsmdIP2yPz7aGHLWrD0gAV0KIw1OpNI05kHx2Xwfs/0dcsBRFdmqpDRymh7vbct8/rA==
+	NWNk3yHaFqK2Ne5cpL0Ef1CI7oc0I/WHp8kEOJM35380gNDfsrXlJsNmUKqOKrFKA8dRijno651UtHJ3pNZwKfCXHj5jTjgzIO+ubv3GGYKrORoh88sLT0eS1sJqHMFoXojkreGk5lQqx+QGxmizzh3XFiVbF62I/El1W6663JnnC/nLmX2WbKN7IYAYQk/dnxDjD+MIbrtqkVFdzuzBVvTyeUGFn99nuEvfEyJu0YKfRS+zo0u91RhTpA2sSHkTj/3boUnXpYHa+EHM3kUq1drZn5H2LCSj8Rco6/sQgRdWUplvfSnDS3oesZOg+wlrMQIKc7fIua6k0SvZULR/f1yvcIARsKBREhtj31J7WQPXFI9KfGFU9AmYzdyIYTIHq49LR4Mi0NFha/ACWc+EtnQBWVw/5WQCuzYlsWyILYZ3nbGiQq4huUAKptGCJkr7UBDHAYAsZ8rj9jVQ7zI9wafqIPOMhGBPUtnZ/qgp9zcZ5VUQkb0ZhSb6KlVcZhmb4oMakvEIgocC+WzgsaXNRjywfwoilEdC1RlQTimGuyMUzHX60arXXq5Vxmpb2TyhxUaCZCaPDTe1lrajCmOJFWVJEIE0BUq7DyQHUheOP+jcAOHYKMLyVmpMToOLwaBXmYWng+2qNjLVZHrj+MEg8HKOWMFd1lA9P+gdbnjQmLBKg7qcIZTXZA1IMICixc1xJP8LQL+fcVZjsg3lGB6zYkue4/ERKjWhPREzl6W9NNG9SfTOwsFQ4y4RET0URtbxZJwl0WV9zDG2d3eiR/FF6Q==
 X-Forefront-Antispam-Report:
-	CIP:164.130.1.60;CTRY:IT;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:smtpO365.st.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700016)(1800799024)(376014)(7416014)(82310400026)(56012099003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:164.130.1.60;CTRY:IT;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:smtpO365.st.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(376014)(82310400026)(36860700016)(7416014)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	p9kf/z5VNZa6Y/ywcaLD6EKPuosSIsYbPb7w6H5Om0N17qQuVeh5wrOzwKt+G9DAIEltTUOz7FjQ9EdoAzKmWYgp/vBEEw692lyXempga4ymTmfCsZr2w1gotnowdwZo4rRtubTp8UVqBsXZQLVww0jCiLLSDERDpLw5vXm4x1qHuLbcrVQyYomrRIAyFuUJdeDW+dZM6zUl0zKnYwheV3D5tgCQvtZ+SZk1nx8UPsegzG/PB85wR6uWb7xFSW7Oahh/wSJ2LkkRzTPrFUUgsrtdluaYWLb3hYmSNcavFicdU3Hq8t2KDl8UqaOnuvOp58P+utZnksmNw0ZSSPvMqpiy/3krWzWcCnllWhcHXEY9Rzw1OHX/ZQw/sC5QxGskYdhzhVotQADI70yFwzSSO4G+W+gAoHMRcn1158OyUcjKDXqiOCMcxkK4U0fFsuJq
+	gLiNeCMs+dwO6woIsZFzRA51cFzHV0ElH9TA7aN4jgPNPWD3pKbw0WMfWAXSIMGC3oFzXUB7maw2BGRWTa9MWGR6I/RZmCDyIERBBfdYMjNVzQs9PSAH/wpXbSftv6P/rP8oMPout7vAXBSxhd9zP51C/Lm6LIIpDrg8VPaK0zRdRsj6kjB7jneskIvv7bD0onwAlvt7zHnLE+I/428hOUmpkJSxNoPrqTtRI2v4z0+PSBEOLEqKw55/RAEpmv21lVFIbvRHdeLADsRvhdLyw26nORVhRd6pZoF5NCKOH7xdVgGtE+0BPtUVrMFoycpusdOux8TVx4wP1r4W2mY7E/leUTHp7q/dawhUX6Qf+KtnikTr53U6iBn89Bb8AWSl6Fm3XXnTEwQuyKGG5T44rKWDjoQd3CBY6PG2SC8C69QAdwg1BUuunywQgKAKCUaP
 X-OriginatorOrg: foss.st.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Apr 2026 12:04:53.0356
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Apr 2026 12:04:56.2066
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0f2aab37-0b52-40f4-7796-08de949de090
+X-MS-Exchange-CrossTenant-Network-Message-Id: ad960d8d-a194-45a8-3889-08de949de274
 X-MS-Exchange-CrossTenant-Id: 75e027c9-20d5-47d5-b82f-77d7cd041e8f
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=75e027c9-20d5-47d5-b82f-77d7cd041e8f;Ip=[164.130.1.60];Helo=[smtpO365.st.com]
 X-MS-Exchange-CrossTenant-AuthSource:
 	DB1PEPF000509E4.eurprd03.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS4PR10MB5845
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU0PR10MB6131
 
-For platforms with a limited iATU inbound window entries, pci_epc_set_bar()
-might fail to allocate the ATU entries for subrange maps requiring more
-than 1 slot.
-For the dwc controller, this failure is reported with -ENOSPC in
-dw_pcie_ep_set_bar(). In this case, the epf test cannot be run and needs
-to be skipped.
-
-For other controllers (Rockchip, RCar, Cadence) the .set_bar functions do
-not use this error.
-
-Depends on:
-https://lore.kernel.org/linux-pci/20260320140139.2415480-1-den@valinux.co.jp/
+Handle -ENOSPC error. Skip the test if the number of available inbound
+windows is insufficient to map the subrange.
 
 Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Reviewed-by: Koichiro Den <den@valinux.co.jp>
 ---
-Changes in v4:
-- Rebase to pci/endpoint
-- Added Koichiro and Frank 'Reviewed-by:'
-- Link to v3: https://lore.kernel.org/r/20260323-skip-bar_subrange-tests-if-enospc-v3-0-4780f296a5b4@foss.st.com
-
-Changes in v3:
-- Remove 'BAR' from SKIP print message (Niklas)
-- Added 'Reviewed-by: Niklas Cassel <cassel@kernel.org>' tag
-- Link to v2: https://lore.kernel.org/r/20260323-skip-bar_subrange-tests-if-enospc-v2-0-2080f878134d@foss.st.com
-
-Changes in v2:
-- Rebased, reordered patches
-- Clarified reporting message in selftest
-- Renamed STATUS_BAR_SUBRANGE_SETUP_NOPSC STATUS_NO_RESOURCE
-- Link to v1: https://lore.kernel.org/r/20260318-skip-bar_subrange-tests-if-enospc-v1-0-f1a49534ebea@foss.st.com
-
----
-Christian Bruel (3):
-      PCI: endpoint: pci-epf-test: Handle -ENOSPC in subrange_setup
-      misc: pci_endpoint_test: Handle -ENOSPC in subrange mapping test case
-      selftests: pci_endpoint: Skip BAR subrange test on -ENOSPC
-
- drivers/misc/pci_endpoint_test.c                         | 3 ++-
- drivers/pci/endpoint/functions/pci-epf-test.c            | 3 +++
  tools/testing/selftests/pci_endpoint/pci_endpoint_test.c | 2 ++
- 3 files changed, 7 insertions(+), 1 deletion(-)
----
-base-commit: 5ab7a225888baa5474def18ba3b0a298d27e6ba0
-change-id: 20260318-skip-bar_subrange-tests-if-enospc-c26f03038e92
+ 1 file changed, 2 insertions(+)
 
-Best regards,
+diff --git a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
+index c417fb3a198b2d92c3060938c23807cc8bea5573..588d75c97ad181d2f8e84c9b86b865439152e20d 100644
+--- a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
++++ b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
+@@ -88,6 +88,8 @@ TEST_F(pci_ep_bar, BAR_SUBRANGE_TEST)
+ 		SKIP(return, "Subrange map is not supported");
+ 	if (ret == -ENOBUFS)
+ 		SKIP(return, "BAR is reserved");
++	if (ret == -ENOSPC)
++		SKIP(return, "Not enough inbound windows");
+ 	EXPECT_FALSE(ret) TH_LOG("Test failed for BAR%d", variant->barno);
+ }
+ 
+
 -- 
-Christian Bruel <christian.bruel@foss.st.com>
+2.34.1
 
