@@ -1,118 +1,131 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C273F126C17;
-	Tue,  7 Apr 2026 19:56:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 215BF286D4D
+	for <linux-pci@vger.kernel.org>; Tue,  7 Apr 2026 20:46:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775591801; cv=none; b=lE3AmZBJMljbzL9tnteFs0kgrEtkOsdJ1NAyG81a0Xqs7fSajj7KL2XIY31wZJPtTPale+rcnUJbO4SB2YMHM3oLhntvb2mZhqxdszqX73UDwizCjhcPycqXl/dfj3Wwx7xTL4zOr4tZHtNdy43gWJKR45e2sklvEO2Y+iGuLP0=
+	t=1775594779; cv=none; b=M/YLexoOC5CfluqVMWn2jfQUUol0moo7MyHf4ip2dkT/Nz5zuS+s60JzxfjMhDZReWLQIt4JGdx3MMaqHQMXd7oLoxGjSonkuo5Brf9ScI0J8wLr56ptyc5bYTv56Px5fnHYukrsCz292KXEe/t53OUniQYlZjFlTKocb5pv30k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775591801; c=relaxed/simple;
-	bh=DtWNZr4Jo5RuxN7LV0LKAmjia2Fz63RniapcsPaf7+c=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=W6ulqIRXCCPLgS60qVyGd9/r+L2FXJHfNOOJz+du1LpywEe7FmtxbTDOgQk6SZJwYicjiR2B37MzBFRMSYYPcEcnJNGQDPow+TyRWagpgro6T8os4SRyt1XbW0g0dhU4ErO8ybLfQYtK+OYxDN/chRHjX2FewRCdzBlWviNevkE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FElrXRsz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775594779; c=relaxed/simple;
+	bh=OMDbQxgwTvN7M1LP1XrjSE2Bw+S1tQ7FujhnqdsJIb0=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=X4hx3VBHVc1mgJP8vTxSI7YyHiTjqSgcb2zWVzlJXc6tsE8Kl/qIPwJW/m5fPg+ZJdYi0WPfWSUq4vlIxAi17Ds48Gbf0JXeUXOndexV40ecJY7BRsTpn0AstK+ZXtbq3NwEZTDAMRCFy0AycoQlOwlez3ZxxzljAximE8ObPl4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ikQqDpCj; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FElrXRsz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B8E6C116C6;
-	Tue,  7 Apr 2026 19:56:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775591801;
-	bh=DtWNZr4Jo5RuxN7LV0LKAmjia2Fz63RniapcsPaf7+c=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=FElrXRszYrT7tENCRG7igqqsyY2+Fbe5B1NwwyqwrpL7zYPsk94VC6mEE/UXCWFoW
-	 AtKYclNDCk1deh1D1FeDyFGBjwmrJgOtEO96BTMHWPOIP1xCya0ioSGmMl/V1o+HAy
-	 GYLwqW1g2GJ8ead81zmz2MWGhD5liOP0ITYugFd3ZrtvJM8wwaiYvmOmWVkWefu1y7
-	 yTiBbg5Xv3zLJllqKRBwPlZWALJKkDAQ7yuTyC8Gn8oKUoYMUwJKSoOcOorW6KWxHz
-	 bdlekN7qQJNKtrudIXrKV5LFpI720JK12el0lTI5HKfTOHpUp+t2Y7btpwBZkL152V
-	 iiDrzAJNI7NZw==
-Date: Tue, 7 Apr 2026 14:56:40 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Farhan Ali <alifm@linux.ibm.com>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, lukas@wunner.de, alex@shazbot.org,
-	clg@redhat.com, kbusch@kernel.org, schnelle@linux.ibm.com,
-	mjrosato@linux.ibm.com, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v12 2/7] PCI: Avoid saving config space state if
- inaccessible
-Message-ID: <20260407195640.GA251318@bhelgaas>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ikQqDpCj"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1775594778; x=1807130778;
+  h=date:from:to:cc:subject:message-id;
+  bh=OMDbQxgwTvN7M1LP1XrjSE2Bw+S1tQ7FujhnqdsJIb0=;
+  b=ikQqDpCj14CYUAm4K0vVN3liXt41liPEfb7vw7OSk3CwjZymP8TAzpZr
+   4uwuflSZHfUmcsLoMrqEy23Sx93/mFE1aHoiZH8QpDMg75M7AdDGAousD
+   aN81Zjy+8PeR5Z7qjvSUjbN10fx/VIhUhTVMaDHkGXKtt+5VvWEu1VVEa
+   tNgWoc5iSDufazarBB8lh1BXeOrSuNfc9mivVfnvleFHQ6hpL2vBaS3A/
+   rtaVrTdQaO3cKeCQWhHAEHzU/6FqdJlJfW+OROoNLK/ab7otfT+agEl/V
+   gdeXFbwhE8LHKarjuxRaQYtkFTKh47yoXtfEG1CBgUsAHrfhwmsTX8c/F
+   g==;
+X-CSE-ConnectionGUID: bmBK4UWdSO+vuE25ViCfbA==
+X-CSE-MsgGUID: 0H7pAFYwQjGREcWcI8SPtg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11752"; a="75740004"
+X-IronPort-AV: E=Sophos;i="6.23,166,1770624000"; 
+   d="scan'208";a="75740004"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2026 13:46:16 -0700
+X-CSE-ConnectionGUID: xcZSTdM+SwWUsJqXU2dv2w==
+X-CSE-MsgGUID: svbxvQntRbCsIEJ6TPC0cA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,166,1770624000"; 
+   d="scan'208";a="233236101"
+Received: from lkp-server01.sh.intel.com (HELO d00eb8a6782a) ([10.239.97.150])
+  by orviesa005.jf.intel.com with ESMTP; 07 Apr 2026 13:46:15 -0700
+Received: from kbuild by d00eb8a6782a with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wADJM-00000000123-1XZR;
+	Tue, 07 Apr 2026 20:46:12 +0000
+Date: Wed, 08 Apr 2026 04:45:36 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:next] BUILD SUCCESS
+ 06d8a0ad6bc3b7609f14441ea2d2470d9a33b2b5
+Message-ID: <202604080428.L9dTUViP-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260330174011.1161-3-alifm@linux.ibm.com>
 
-On Mon, Mar 30, 2026 at 10:40:06AM -0700, Farhan Ali wrote:
-> The current reset process saves the device's config space state before
-> reset and restores it afterward. However errors may occur unexpectedly and
-> it may then be impossible to save config space because the device may be
-> inaccessible (e.g. DPC). This results in saving invalid values that get
-> written back to the device during state restoration.
-> 
-> With a reset we want to recover/restore the device into a functional state.
-> So avoid saving the state of the config space when the device config space
-> is inaccessible.
-> 
-> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
-> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/pci.c | 24 ++++++++++++++++++++++++
->  1 file changed, 24 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 70162f15a72c..b36263834289 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -722,6 +722,27 @@ u16 pci_find_dvsec_capability(struct pci_dev *dev, u16 vendor, u16 dvsec)
->  }
->  EXPORT_SYMBOL_GPL(pci_find_dvsec_capability);
->  
-> +static bool pci_dev_config_accessible(struct pci_dev *dev, char *msg)
-> +{
-> +	u32 val;
-> +
-> +	/*
-> +	 * If device's config space is inaccessible it can return ~0 for
-> +	 * any reads. Since VFs can also return ~0 for Device and Vendor ID
-> +	 * check Command and Status registers. Note that this is racy
-> +	 * because the device may become inaccessible partway through
-> +	 * next access.
-> +	 */
-> +	pci_read_config_dword(dev, PCI_COMMAND, &val);
-> +	if (PCI_POSSIBLE_ERROR(val)) {
-> +		pci_warn(dev, "Device config space inaccessible; unable to %s\n",
-> +				msg);
-> +		return false;
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+branch HEAD: 06d8a0ad6bc3b7609f14441ea2d2470d9a33b2b5  Merge branch 'pci/misc'
 
-I wonder if it's feasible to do the pci_save_state() into a temporary
-buffer, check the buffer for PCI_POSSIBLE_ERROR(), and copy the temp
-buffer into the real buffer if we think the save was successful.  I
-know this is a lot more work, but I would like to avoid the raciness
-if possible.
+elapsed time: 1336m
 
-> +	}
-> +
-> +	return true;
-> +}
-> +
->  /**
->   * pci_find_parent_resource - return resource region of parent bus of given
->   *			      region
-> @@ -5029,6 +5050,9 @@ static void pci_dev_save_and_disable(struct pci_dev *dev)
->  	 */
->  	pci_set_power_state(dev, PCI_D0);
->  
-> +	if (!pci_dev_config_accessible(dev, "save state"))
-> +		return;
-> +
->  	pci_save_state(dev);
->  	/*
->  	 * Disable the device by clearing the Command register, except for
-> -- 
-> 2.43.0
-> 
+configs tested: 54
+configs skipped: 1
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha         allnoconfig    gcc-15.2.0
+alpha        allyesconfig    gcc-15.2.0
+arc          allmodconfig    gcc-15.2.0
+arc           allnoconfig    gcc-15.2.0
+arc          allyesconfig    gcc-15.2.0
+arm           allnoconfig    clang-23
+arm          allyesconfig    gcc-15.2.0
+arm64        allmodconfig    clang-19
+arm64         allnoconfig    gcc-15.2.0
+csky         allmodconfig    gcc-15.2.0
+csky          allnoconfig    gcc-15.2.0
+hexagon      allmodconfig    clang-17
+hexagon       allnoconfig    clang-23
+i386         allmodconfig    gcc-14
+i386          allnoconfig    gcc-14
+i386         allyesconfig    gcc-14
+loongarch    allmodconfig    clang-19
+loongarch     allnoconfig    clang-23
+m68k         allmodconfig    gcc-15.2.0
+m68k          allnoconfig    gcc-15.2.0
+m68k         allyesconfig    gcc-15.2.0
+microblaze    allnoconfig    gcc-15.2.0
+microblaze   allyesconfig    gcc-15.2.0
+mips         allmodconfig    gcc-15.2.0
+mips          allnoconfig    gcc-15.2.0
+mips         allyesconfig    gcc-15.2.0
+nios2        allmodconfig    gcc-11.5.0
+nios2         allnoconfig    gcc-11.5.0
+openrisc     allmodconfig    gcc-15.2.0
+openrisc      allnoconfig    gcc-15.2.0
+parisc       allmodconfig    gcc-15.2.0
+parisc        allnoconfig    gcc-15.2.0
+parisc       allyesconfig    gcc-15.2.0
+powerpc      allmodconfig    gcc-15.2.0
+powerpc       allnoconfig    gcc-15.2.0
+riscv        allmodconfig    clang-23
+riscv         allnoconfig    gcc-15.2.0
+riscv        allyesconfig    clang-16
+s390         allmodconfig    clang-18
+s390          allnoconfig    clang-23
+s390         allyesconfig    gcc-15.2.0
+sh           allmodconfig    gcc-15.2.0
+sh            allnoconfig    gcc-15.2.0
+sh           allyesconfig    gcc-15.2.0
+sparc         allnoconfig    gcc-15.2.0
+sparc64      allmodconfig    clang-23
+um           allmodconfig    clang-19
+um            allnoconfig    clang-23
+um           allyesconfig    gcc-14
+x86_64       allmodconfig    clang-20
+x86_64        allnoconfig    clang-20
+x86_64       allyesconfig    clang-20
+x86_64      rhel-9.4-rust    clang-20
+xtensa        allnoconfig    gcc-15.2.0
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
