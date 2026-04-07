@@ -1,69 +1,66 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3629B38C2C3;
-	Tue,  7 Apr 2026 06:53:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85CB838945C;
+	Tue,  7 Apr 2026 07:08:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775544822; cv=none; b=HkmNX4t3S4K3L6+7XbJl2MztYD7qnDEBHyNoe6yay4ofp7X4qv6g0t3buv9cdGHsWdBT21dyDW3WWzIXddbqclG6iSpuoiMrhcv0v+oYJoOvh8v7EGJCyfHkbM19dyYqk4JomaMIPUR+/h6ilz9jnQSCg+CoxaDNNeu73NhD0iE=
+	t=1775545685; cv=none; b=apxRdCrevlBv4ltd4Nka1SiDtqqwXx1HQSAvBvBknEwxLTNNKRC/UWinhjvWWAZYXgKuVBFwi8u3/yKFgXkM234UV5zd6Ae9HWST+K/OBdsHnchk8CALtfvu9ha2riX9X0GYKNuzjqQWAFoXQCKSpvYXluBaLBkH29P0OsSQso0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775544822; c=relaxed/simple;
-	bh=0ylP3qPddIE6iKieDpcRNjjkdOUWN7+gbfiTZw5y9BE=;
+	s=arc-20240116; t=1775545685; c=relaxed/simple;
+	bh=YR3EkiIV1wp1OSxtFJEazA7eHFQYSy2cCtHxbX6WW3E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BaJHCvu6C+6eLHZLsLG1ASz27iLrBt7Ztatf7C7ymmrxZNxiJ5P4Qd7KDfID+fI815KSVR/FazSBxzpp0n3ZKC4x5Es5fy6XbyxehkCysOE4PimLCkg/qvU+E5CVHjthCdthY3hepsoTTkTe+hGDxvmENr4CAm0PZ2PL3VsqUl0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=f7bY7P9i; arc=none smtp.client-ip=192.198.163.16
+	 Content-Type:Content-Disposition:In-Reply-To; b=uawM5Fgt6hjCzGfHOrKgpgvHb9MHp96GHGNiZwyaeTeMtEhuo1qJmtyGnkQcrSEKR/S+QAkrhtgLX+w44TB8Ji7hBhZOHCevw0pP3EJpgYfJYwbOwYA8E0OpKwauOGh1zsoXrvaTxrx3xyQvH/DkpttmYoju3poZySk4sqaqDCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GePPrqDP; arc=none smtp.client-ip=192.198.163.8
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="f7bY7P9i"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GePPrqDP"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775544820; x=1807080820;
+  t=1775545683; x=1807081683;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=0ylP3qPddIE6iKieDpcRNjjkdOUWN7+gbfiTZw5y9BE=;
-  b=f7bY7P9ivZqA0znFudJ0GMv2TtXinCRUbxdu9CVJXwsoN/ZKd3vV3wLw
-   me6CpfASXGypZJ45nnKt8w6/53p8rVoTc25DogKj/UYmo5liI6gMf/YNX
-   DKlyAZoNATFl+sYIWLnxzG93sXLL8ZirMc92eR2VrhQXkFX7XsAEJupzQ
-   /1YYgQXZkNc5zPPd2xIGpilosd3rwH4qxZuUGmL0mYn6O0y45F/+vfLc/
-   Mq0WNrYA/BS/Xk/C/xuqSDaRSMKg6ibam2beYlrcBPqjEPhPwGM3H45dX
-   WhSIdgotFx6OXG43OyrAfDaRItvseYxb0oUfsCgz/OIN8PS4PDqbrPfPr
-   A==;
-X-CSE-ConnectionGUID: GCFJ7AUcTU2T5GvHj74EoA==
-X-CSE-MsgGUID: OEGfofX8QO+088NffQIHVA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11751"; a="64046699"
+  bh=YR3EkiIV1wp1OSxtFJEazA7eHFQYSy2cCtHxbX6WW3E=;
+  b=GePPrqDPMkgHqJR66mHN1xBt75AX3XvZLjopRE4RBOWsHIuluq237Tq+
+   SPKPHZ9/9kuV912DMPZMdY6oukCvNaaTG1+vhCpSkhWHAuZaa1Urx2CSy
+   sqP8hIwUkXqevKt4EY+6I66NVnFDAc29KnDRZqhDJAP4AT/g1atbW+ICE
+   Uapq3OxKrkjZqIacDboH0dis8/A4lOKkYSMG5PWqlvVwoOxxexx4W6YP6
+   BDPu2+1sFtTBpDdQx5RXol+b71IC1S4Xhmo0JzsCVu0o0hyi73cSYcx/U
+   lfBOJnZFbwOc+69mgzA1AcnOF2NShxA10RA6UXMqzq4cof6mP5qWVdwbi
+   g==;
+X-CSE-ConnectionGUID: fw9lsHxvRLikDPLE3j569Q==
+X-CSE-MsgGUID: k1Fm1RLtRTqyWy3s1oE8lw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11751"; a="94081568"
 X-IronPort-AV: E=Sophos;i="6.23,165,1770624000"; 
-   d="scan'208";a="64046699"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Apr 2026 23:53:21 -0700
-X-CSE-ConnectionGUID: iSNZMh5iTqqQpKQNzsq4cA==
-X-CSE-MsgGUID: Onw+95tRTxCMlGBz5WScxw==
+   d="scan'208";a="94081568"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2026 00:08:03 -0700
+X-CSE-ConnectionGUID: 3rJUuB45RMacw3fh4cGwvQ==
+X-CSE-MsgGUID: 9b8UN5fNTsmZW6InxEWpEg==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,165,1770624000"; 
-   d="scan'208";a="251373004"
 Received: from black.igk.intel.com ([10.91.253.5])
-  by fmviesa001.fm.intel.com with ESMTP; 06 Apr 2026 23:53:16 -0700
+  by fmviesa003.fm.intel.com with ESMTP; 07 Apr 2026 00:08:01 -0700
 Received: by black.igk.intel.com (Postfix, from userid 1001)
-	id 49A9095; Tue, 07 Apr 2026 08:53:15 +0200 (CEST)
-Date: Tue, 7 Apr 2026 08:53:15 +0200
+	id 0FB7E95; Tue, 07 Apr 2026 09:08:00 +0200 (CEST)
+Date: Tue, 7 Apr 2026 09:08:00 +0200
 From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Paolo Abeni <pabeni@redhat.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Tony Nguyen <anthony.l.nguyen@intel.com>, davem@davemloft.net,
-	kuba@kernel.org, edumazet@google.com, andrew+netdev@lunn.ch,
-	netdev@vger.kernel.org, andriy.shevchenko@intel.com,
-	ilpo.jarvinen@linux.intel.com, dima.ruinskiy@intel.com,
-	mbloch@nvidia.com, leon@kernel.org, linux-pci@vger.kernel.org,
-	saeedm@nvidia.com, tariqt@nvidia.com, lukas@wunner.de,
-	bhelgaas@google.com, richardcochran@gmail.com,
-	Vinicius Costa Gomes <vinicius.gomes@intel.com>,
-	Jacob Keller <jacob.e.keller@intel.com>,
-	Avigail Dahan <avigailx.dahan@intel.com>
-Subject: Re: [PATCH net-next 01/15] igc: Call netif_queue_set_napi() with
- rtnl locked
-Message-ID: <20260407065315.GD3552@black.igk.intel.com>
-References: <20260331173728.GA146742@bhelgaas>
- <9f169800-12f2-4f98-ab99-e4433b2b49a9@redhat.com>
+To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: pciehp: Fix hotplug on Catlow Lake with
+ unreliable PME status
+Message-ID: <20260407070800.GF3552@black.igk.intel.com>
+References: <20260323232437.GA1085990@bhelgaas>
+ <ca15feda-5d63-405d-a4c4-00cbb9991fed@linux.intel.com>
+ <20260325061131.GY2275908@black.igk.intel.com>
+ <5d6d94b4-458f-473c-84df-c6fab7805dbe@linux.intel.com>
+ <20260326061200.GA3552@black.igk.intel.com>
+ <3a97fb38-70c7-4ca9-8c49-4c95e1623c91@linux.intel.com>
+ <20260327111616.GC3552@black.igk.intel.com>
+ <633cef07-2991-4ce8-b8c6-6b091deaeb0b@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -72,93 +69,114 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <9f169800-12f2-4f98-ab99-e4433b2b49a9@redhat.com>
+In-Reply-To: <633cef07-2991-4ce8-b8c6-6b091deaeb0b@linux.intel.com>
 
 Hi,
 
-On Thu, Apr 02, 2026 at 12:29:06PM +0200, Paolo Abeni wrote:
-> On 3/31/26 7:37 PM, Bjorn Helgaas wrote:
-> > On Mon, Mar 30, 2026 at 04:02:30PM -0700, Tony Nguyen wrote:
-> >> From: Mika Westerberg <mika.westerberg@linux.intel.com>
-> >>
-> >> When runtime resuming igc we get:
-> >>
-> >>   [  516.161666] RTNL: assertion failed at ./include/net/netdev_lock.h (72)
-> >>
-> >> Happens because commit 310ae9eb2617 ("net: designate queue -> napi
-> >> linking as "ops protected"") added check for this. For this reason drop
-> >> the special case for runtime PM from __igc_resume(). This makes it take
-> >> rtnl lock unconditionally.
+On Fri, Apr 03, 2026 at 12:37:39PM -0700, Kuppuswamy Sathyanarayanan wrote:
+> Hi Mika,
+> 
+> On 3/27/2026 4:16 AM, Mika Westerberg wrote:
+> > Hey,
 > > 
-> > Taking the rtnl lock unconditionally certainly makes the code nicer,
-> > but the commit log only mentions the "avoid the warning" benefit, not
-> > the actual reason this is safe to do.
+> > On Thu, Mar 26, 2026 at 02:23:50PM -0700, Kuppuswamy Sathyanarayanan wrote:
+> >> Hi Mika,
+> >>
+> >> On 3/25/2026 11:12 PM, Mika Westerberg wrote:
+> >>> On Wed, Mar 25, 2026 at 02:12:48PM -0700, Kuppuswamy Sathyanarayanan wrote:
+> >>>>
+> >>>>
+> >>>> On 3/24/2026 11:11 PM, Mika Westerberg wrote:
+> >>>>> On Tue, Mar 24, 2026 at 02:45:25PM -0700, Kuppuswamy Sathyanarayanan wrote:
+> >>>>>>> eb34da60edee ("PCI: pciehp: Disable hotplug interrupt during suspend")
+> >>>>>>> cleared PCI_EXP_SLTCTL_HPIE so that when the link goes down, we
+> >>>>>>> wouldn't get a PCI_EXP_SLTSTA_DLLSC interrupt and wake the system.
+> >>>>>>>
+> >>>>>>> I don't know the details of why the PCI_EXP_SLTSTA_DLLSC would cause
+> >>>>>>> that wakeup.  I would think pciehp should field that, and it should be
+> >>>>>>> able to figure out whether to bring the port out of D3hot.
+> >>>>>>>
+> >>>>>>> Anyway, with this patch it looks like we'll leave PCI_EXP_SLTCTL_HPIE
+> >>>>>>> set, and potentially get that PCI_EXP_SLTSTA_DLLSC interrupt again?
+> >>>>>>
+> >>>>>> I have tested this patch on Catlow Lake. Enabling HPIE does not result in
+> >>>>>> spurious wakeups as mentioned in Mika's patch.
+> >>>>>>
+> >>>>>> Mika, any comments?
+> >>>>>
+> >>>>> What do you have connected to the slot?
+> >>>>
+> >>>> A network card.
+> >>>
+> >>> Okay.
+> >>>
+> >>> Out of interest how do you hotplug it? :)
+> >>
+> >> We physically remove and insert the card.
+> > 
+> > Got it.
+> > 
+> >>>>> IIRC the interrupt triggers when presence change toggles (due to the link
+> >>>>> going down).
+> >>>>>
+> >>>>
+> >>>> I have tested the s3 mode. I was able to see message related to system entering
+> >>>> suspend and then coming back again after (after user intervention). I also noted
+> >>>> pcie_disable_interrupt() called before suspend and pcie_enable_interrupt() called
+> >>>> after resume.
+> >>>
+> >>> In case of S3 the BIOS also configures the hardware before entering
+> >>> suspend. On client at least it's suspend-to-idle and any interrupt will
+> >>> bring the CPU and the system out of it. It could be that that's the reason
+> >>> you don't see any issue if this is server system and it goes into full S3?
+> >>>
+> >>
+> >> Looking at the kernel logs, the system is actually using suspend-to-idle 
+> >> (s2idle), not full S3:
+> >>
+> >>   PM: suspend entry (s2idle)
+> >>
+> >> So this is the same suspend mode where you observed the spurious wakeup issue.
+> >> Interestingly, we're not seeing the problem on Catlow Lake with HPIE enabled.
+> >>
+> >> I am trying to understand the wakeup sequence in your case. IIUC, before the
+> >> system enters suspend, it will put the device and port in D3hot, right? So link
+> >> down should happen before the system goes to sleep or idle. At what point does
+> >> the spurious DLLSC interrupt occur that causes the unwanted wakeup?
+> > 
+> > I think in case of tunneled PCIe it is presence detect that toggles and
+> > triggers the interrupt if left enabled.
+> > 
+> > The flow is something like this (from my memory):
+> > 
+> > 1. User enters s2idle.
+> > 2. PM core suspends devices.
+> > 3. PCI core suspends the devices behind the root port and then the root
+> >    port itself. This makes the root port be in D3hot and the link below it
+> >    is still in L1.
+> > 4. PCI/ACPI turns of the power resource attached to the root port. This
+> >    puts the link into L2/3 ready and then PERST# is asserted in which case
+> >    the tunnels are gone and presence detect changes and the link enters L2
+> >    and the root port enters D3cold.
 > 
-> Sashiko says it's not safe:
+> Thanks for the detailed explanation. So the spurious wakeup happens when the
+> power resource is turned off during suspend, which triggers the presence detect
+> change. Is there a way to detect if a port has this power resource configuration
+> via ACPI methods? I'm wondering if we could make HPIE disabling conditional on
+> the presence of this power management setup.
+
+Yes the Root Port has _PR3() method but see below.
+
+> > In your case does the root port enter D3cold? Does it have power resource?
+> > Or it stays in D3hot? We should not put any hotplug ports into low power
+> > states if they don't have HotPlugSupportInD3 property as described here:
 > 
-> ---
-> Can this regression cause a self-deadlock when a runtime resume is
-> triggered from paths that already hold the rtnl lock?
-> If the network interface is logically up but the link is disconnected,
-> igc_runtime_idle() allows the device to enter runtime suspend. When a
-> user queries the device using ethtool, the networking core acquires
-> rtnl_lock() and then calls pm_runtime_get_sync() to ensure the hardware
-> is awake.
-> This synchronously executes the driver's runtime resume callback, which
-> calls __igc_resume(). Because netif_running(netdev) is true, the
-> modified __igc_resume() unconditionally attempts to acquire rtnl_lock().
-> Since the executing thread already holds this non-recursive mutex, it
-> appears the system would self-deadlock, hanging the network stack.
-> ---
+> I think it stays in D3hot. I am not very clear about the power resource. is
+> there a way to check for it? Should I look for power_resources_* in sysfs or
+> check the ACPI tables directly?
+> 
+> Regarding your suggestion about HotPlugSupportInD3: would it make sense to modify
+> the HPIE disable logic to be conditional on the presence of this _DSD property? 
 
-It's a good analysis. I just tried this flow:
-
-1. Boot the system up, nothing connected to igc NIC.
-2. Plug in cable to igc.
-3. Configure the interface.
-4. Enable runtime PM for igc.
-5. Unplug the cable.
-6. Verify igc is runtime suspended.
-7. Run ethtool <interface>
-
-This leads to deadlock as below.
-
-igc maintainers, please drop this patch. I apologize I did not realize this
-flow when I did it.
-
-[ 1231.655924] INFO: task ethtool:3139 blocked for more than 122 seconds.
-[ 1231.662515]       Tainted: G     U              7.0.0-rc6+ #1748
-[ 1231.668551] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[ 1231.676410] task:ethtool         state:D stack:0     pid:3139  tgid:3139  ppid:292    task_flags:0x480000 flags:0x00080800
-[ 1231.687508] Call Trace:
-[ 1231.689997]  <TASK>
-[ 1231.692132]  __schedule+0x58a/0x1820
-[ 1231.695747]  ? sysvec_apic_timer_interrupt+0x4c/0xa0
-[ 1231.700742]  ? asm_sysvec_apic_timer_interrupt+0x1b/0x20
-[ 1231.706090]  schedule+0x64/0xe0
-[ 1231.709262]  schedule_preempt_disabled+0x15/0x30
-[ 1231.713907]  __mutex_lock+0x377/0xa60
-[ 1231.717606]  __mutex_lock_slowpath+0x13/0x20
-[ 1231.721905]  mutex_lock+0x2c/0x40
-[ 1231.725259]  rtnl_lock+0x15/0x20
-[ 1231.728541]  __igc_resume+0x19a/0x2b0 [igc]
-[ 1231.732798]  igc_runtime_resume+0xe/0x20 [igc]
-[ 1231.737288]  pci_pm_runtime_resume+0xce/0x100
-[ 1231.741678]  ? __pfx_pci_pm_runtime_resume+0x10/0x10
-[ 1231.746681]  __rpm_callback+0xab/0x310
-[ 1231.750458]  ? ktime_get_mono_fast_ns+0x3a/0x100
-[ 1231.755107]  ? __pfx_pci_pm_runtime_resume+0x10/0x10
-[ 1231.760096]  rpm_resume+0x4bb/0x670
-[ 1231.763618]  __pm_runtime_resume+0x5c/0x80
-[ 1231.767749]  dev_ethtool+0x19d/0xc90
-[ 1231.771352]  dev_ioctl+0x23c/0x550
-[ 1231.774791]  sock_do_ioctl+0x11f/0x1b0
-[ 1231.778569]  sock_ioctl+0x27f/0x390
-[ 1231.782091]  ? handle_mm_fault+0x11a5/0x1250
-[ 1231.786388]  __se_sys_ioctl+0x75/0xd0
-[ 1231.790077]  __x64_sys_ioctl+0x1d/0x30
-[ 1231.793851]  x64_sys_call+0x14ed/0x2d30
-[ 1231.797719]  do_syscall_64+0xfb/0x680
-[ 1231.801404]  ? arch_exit_to_user_mode_prepare+0xd/0xb0
-[ 1231.806559]  ? irqentry_exit+0x3b/0x510
-[ 1231.810413]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+We already have the check in acpi_pci_bridge_d3(). In your case that should
+return false and the port should never enter D3.
