@@ -1,196 +1,226 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F322395DA0;
-	Tue,  7 Apr 2026 12:28:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E8B93B3BE2;
+	Tue,  7 Apr 2026 12:30:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775564898; cv=none; b=S5VMJ+diLwIKRStWHub0eZx0JKbs306X/zUZ6XSn++EL832J9tkyGoZ+7B/ZkJjw91BS+KcTRH0fYPasGwbU5nnIHIu4fY/uSm85/UuAxhQqrP1Q4nrLwDSbhdRuDXNeGFpAMm5cHNnXEMP4EwXHxt8uwVG8wT4MNsk0Oq73CRE=
+	t=1775565006; cv=none; b=c9e/NAar0mOKZ5pCATkOLggo2Xyc/YFgF4qqRo1WFjLI/GIurC9aaXa2ELOEBe3zh9IzdlCvOoHi95nfcjVyStG9+ZlHOl8fSST6T/PXMeP7Z1LzcCHsyexfJ+fPj0dE6VFfs2/cL/21z53YPe/yx/aXkDb7OSTqeKXQjV4hce0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775564898; c=relaxed/simple;
-	bh=6FUfk7RT/o3k/XrMyRD8enzUua7pxbhrQLW2/w4NOcA=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Bv/r8LpMtAyzNzGqwTjo/Fz7Eiz5AmNYBMCpyoJjA5eZ0eF1ux7WxQKoV05XlpFj8HecDmYOFoPLnNvT9vmloHIsDclqLPYYkUJBH7st5HVPsz/qOInIX3l6+Ql5B0Swdf1hlFADgI9cmKeTLEwByi647c0JY4/W227gJ4YPHGg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=LqDvnMly; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1775565006; c=relaxed/simple;
+	bh=NSzYOUJrsZTTfsNyjyz8JWsUP567zhtdpZ2OHarUZ/s=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=uDMmtV3cuBMImcto/q4ZcbdHjpjHKLTjAji8ARtscFS97IrYPF4x6Kdox533eNvXXVDceMUzGjU+9nv4KxSXxx65H79VfqTI9NFgopXM//F1pV2Vq/SLM6PB7DEZwIapqfDichrQvuYqGeG5kdh02D7GxNh8gVzGE/jGxxnoELw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Jh9vJENh; arc=none smtp.client-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="LqDvnMly"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 636LnDE42594684;
-	Tue, 7 Apr 2026 12:28:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=VYRpeG
-	fSJPcs/ZBissaz4FE+R6c8k6IoRpmKwrxG83c=; b=LqDvnMlyp/SO08OuzBZzbA
-	FEaPTTLEmuobas5UfslokXkF3vFARZdlA0mE3Bd+mQFCAzeZKArtQSzc0lUB642a
-	WmI3QWoyPN0xu0bSRu5vKdlrAy1vvJAH2Ji240A1mfuKNrvqjnAElsZx5Maf6Jq4
-	mkfj5ZQ45JezStr4lhYVOiWYIYcKdC00UvG6einatuauzCi4wU9h7hudjEaxfA2n
-	Q64KtngweI3RKrXSRp22Kxjs7NZbSmyyJ7yq8o2aXD+KEGC/4pzAswMUY7axcRhH
-	S02xz64f9DgY8r5MC9MZroO359MabOfJpTAyKIaHrBqFT4Cgt96zsP6lDd2EAEbw
-	==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dcn2e2x9e-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 07 Apr 2026 12:28:07 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 637BQMMe013902;
-	Tue, 7 Apr 2026 12:28:06 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4dcmf432u8-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 07 Apr 2026 12:28:06 +0000
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 637CS2jC53215620
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 7 Apr 2026 12:28:02 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id A224520043;
-	Tue,  7 Apr 2026 12:28:02 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 49F292004E;
-	Tue,  7 Apr 2026 12:28:02 +0000 (GMT)
-Received: from [9.52.210.163] (unknown [9.52.210.163])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Tue,  7 Apr 2026 12:28:02 +0000 (GMT)
-Message-ID: <61126291e21010eb79bc0a8d02cbf5d30e0c7b8f.camel@linux.ibm.com>
-Subject: Re: [PATCH v7 1/2] docs: s390/pci: Improve and update PCI
- documentation
-From: Gerd Bayer <gbayer@linux.ibm.com>
-To: Niklas Schnelle <schnelle@linux.ibm.com>,
-        Bjorn Helgaas
-	 <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>, Lukas Wunner
-	 <lukas@wunner.de>,
-        Shuah Khan <skhan@linuxfoundation.org>
-Cc: Farhan Ali <alifm@linux.ibm.com>,
-        Alexander Gordeev
- <agordeev@linux.ibm.com>,
-        Christian Borntraeger
- <borntraeger@linux.ibm.com>,
-        Gerald Schaefer
- <gerald.schaefer@linux.ibm.com>,
-        Heiko Carstens	 <hca@linux.ibm.com>,
-        Julian Ruess <julianr@linux.ibm.com>,
-        Matthew Rosato	
- <mjrosato@linux.ibm.com>,
-        Peter Oberparleiter <oberpar@linux.ibm.com>,
-        Ramesh Errabolu <ramesh@linux.ibm.com>,
-        Sven Schnelle
- <svens@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-s390@vger.kernel.org, Randy Dunlap	
- <rdunlap@infradead.org>,
-        Gerd Bayer <gbayer@linux.ibm.com>
-Date: Tue, 07 Apr 2026 14:28:02 +0200
-In-Reply-To: <20260407-uid_slot-v7-1-e50f7976124e@linux.ibm.com>
-References: <20260407-uid_slot-v7-0-e50f7976124e@linux.ibm.com>
-	 <20260407-uid_slot-v7-1-e50f7976124e@linux.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Jh9vJENh"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1775565006; x=1807101006;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=NSzYOUJrsZTTfsNyjyz8JWsUP567zhtdpZ2OHarUZ/s=;
+  b=Jh9vJENhuxhRbW7dZi0cVuCV9eeTD0PcK6Xthd+VUUf26Xtg3q8AAJ2i
+   IEKRUUaLKGBHGsWbFZNsMHFAK/+i+Re8LnKa+/1hyrVHH67aWeGsXknq4
+   Kn78V2KgC0/Kg9iWfWpuvEijRDzxBABVJ2Ja+ebrQbZq8XXZOjftk8APV
+   GJwigCn6wZ2KmlktFDegJzzeXCC6Y7L7H3Bm22lE+jcqwt01WHZaGrw+F
+   d3wl23a0Cf3ibnbIcPrFkkJkT9CObTCxXLd77kjQSsSvEZ9Ht4goB7Zkp
+   ToV4QKFVfG48erZ/nz6ywkBJtSVq1oHOMHvnymAzcO1dPvRWRA/5h8PLy
+   w==;
+X-CSE-ConnectionGUID: hQaBeo2XQj2pGr9ssemp/g==
+X-CSE-MsgGUID: whMmh9pgQTGZTCla+qlu2A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11752"; a="76422650"
+X-IronPort-AV: E=Sophos;i="6.23,165,1770624000"; 
+   d="scan'208";a="76422650"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2026 05:30:05 -0700
+X-CSE-ConnectionGUID: 9uJN04r0Q7Opp9d1tgP7xw==
+X-CSE-MsgGUID: r2jaGtjMTGi/5hN4XBezsw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,165,1770624000"; 
+   d="scan'208";a="233027760"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.110])
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2026 05:30:02 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Tue, 7 Apr 2026 15:29:59 +0300 (EEST)
+To: Hans Zhang <18255117159@163.com>
+cc: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com, 
+    kwilczynski@kernel.org, mani@kernel.org, jingoohan1@gmail.com, 
+    robh@kernel.org, linux-pci@vger.kernel.org, 
+    LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v6 3/3] PCI: dwc: Use common speed conversion function
+In-Reply-To: <70f81184-4900-499b-a6ee-fbe18367bd0a@163.com>
+Message-ID: <2af36546-5c33-caf8-b15d-fbf8fec4417e@linux.intel.com>
+References: <20260406105613.1228673-1-18255117159@163.com> <20260406105613.1228673-4-18255117159@163.com> <d2bb9eae-8731-b438-87dd-fcbcf2a17551@linux.intel.com> <70f81184-4900-499b-a6ee-fbe18367bd0a@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-ORIG-GUID: 2FrKXpPRsQulnMDZ7cCBZYX1SSb9CaJg
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA3MDExNSBTYWx0ZWRfX6U7wudWaC2vP
- aeCb1yFxSgTz20lMErS145WDtAbPJ1p4DbtUSEgt49uruJWHkQFUfSOOAV66J7iI+vkmGEg0L2G
- v9A1Ndu+L+lt6yynCLh5UdOZZPyrUWLrpDxEc9oqKwVYztHcRKiez4f+FOIqGUxBWg7l8o372EK
- eavRf2lwDrCoZ059SbYBkHlG7RGwMMAP3XWKjGMpfZ2BiZbBihwAZckYeKtUJsu44pUdK9LDZ89
- tioW9HeaFRReLd5hFa7F7gZntr4qCRpsnbPHuSZA5lUCMt8eGA6JtudBP/y5zCkDivo1d9kDD10
- QA23i/oNeCV2y9R+Sut4lgv/krDtgDeTtk8B4xyP03Gq5HTA9fWZpTgICPZ3lbe4MEef98VN1Xw
- ZYRM3LZLOHnmw4fLkXbURqCskuFWf6owB7fDxBmJPIH8hEzxVWL2vr6eM73396q1ulSQkeNXjAE
- vlj4+WHFEDgzsyI3Ksg==
-X-Authority-Analysis: v=2.4 cv=Cfw4Irrl c=1 sm=1 tr=0 ts=69d4f858 cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=OSxpM7LHIlj9ssaGjo0A:9
- a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: -KEi8FMBa-OPQkuO470t9wEU_YANZg5t
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-07_02,2026-04-07_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 phishscore=0 clxscore=1011 adultscore=0 suspectscore=0
- priorityscore=1501 impostorscore=0 bulkscore=0 spamscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604070115
+Content-Type: multipart/mixed; boundary="8323328-1691075706-1775564999=:983"
 
-On Tue, 2026-04-07 at 12:12 +0200, Niklas Schnelle wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
+--8323328-1691075706-1775564999=:983
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-[... snip ...]
+On Tue, 7 Apr 2026, Hans Zhang wrote:
+> On 4/7/26 16:25, Ilpo J=C3=A4rvinen wrote:
+> > On Mon, 6 Apr 2026, Hans Zhang wrote:
+> >=20
+> > > Replace the private switch-based speed conversion in
+> > > dw_pcie_link_set_max_speed() with the public pci_bus_speed2lnkctl2()
+> > > function.
+> > >=20
+> > > This eliminates duplicate conversion logic and ensures consistency wi=
+th
+> > > other PCIe drivers, while handling invalid speeds by falling back to
+> > > hardware capabilities.
+> > >=20
+> > > Signed-off-by: Hans Zhang <18255117159@163.com>
+> > > Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+> > > ---
+> > >   drivers/pci/controller/dwc/pcie-designware.c | 18 +++--------------=
+-
+> > >   1 file changed, 3 insertions(+), 15 deletions(-)
+> > >=20
+> > > diff --git a/drivers/pci/controller/dwc/pcie-designware.c
+> > > b/drivers/pci/controller/dwc/pcie-designware.c
+> > > index 06792ba92aa7..ab8dee5d6c7a 100644
+> > > --- a/drivers/pci/controller/dwc/pcie-designware.c
+> > > +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> > > @@ -861,24 +861,12 @@ static void dw_pcie_link_set_max_speed(struct
+> > > dw_pcie *pci)
+> > >   =09ctrl2 =3D dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCTL2);
+> > >   =09ctrl2 &=3D ~PCI_EXP_LNKCTL2_TLS;
+> > >   -=09switch (pcie_get_link_speed(pci->max_link_speed)) {
+> > > -=09case PCIE_SPEED_2_5GT:
+> > > -=09=09link_speed =3D PCI_EXP_LNKCTL2_TLS_2_5GT;
+> > > -=09=09break;
+> > > -=09case PCIE_SPEED_5_0GT:
+> > > -=09=09link_speed =3D PCI_EXP_LNKCTL2_TLS_5_0GT;
+> > > -=09=09break;
+> > > -=09case PCIE_SPEED_8_0GT:
+> > > -=09=09link_speed =3D PCI_EXP_LNKCTL2_TLS_8_0GT;
+> > > -=09=09break;
+> > > -=09case PCIE_SPEED_16_0GT:
+> > > -=09=09link_speed =3D PCI_EXP_LNKCTL2_TLS_16_0GT;
+> > > -=09=09break;
+> > > -=09default:
+> > > +=09link_speed =3D pcie_get_link_speed(pci->max_link_speed);
+> > > +=09link_speed =3D pci_bus_speed2lnkctl2(link_speed);
+> >=20
+> > Its signature is:
+> >=20
+> > u16 pci_bus_speed2lnkctl2(enum pci_bus_speed speed)
+> >=20
+> > Using link_speed variable both for in and out does contradict with the
+> > expected typing.
+> >=20
+> > Maybe it would be beneficial to rename the current 'link_speed' to
+> > 'ctrl2_speed' (or something along those lines) to differentiate Link
+> > Control 2 speed representation from PCI core's internal link speed
+> > representation. And then reintroduce link_speed variable as the
+> > pci_bus_speed. ...But this is just my suggestion, there may be better w=
+ays
+> > to untangle this type abuse.
+>=20
+> Hi Ilpo,
+>=20
+>=20
+> Thank you for your review comments. This way it will be clearer. Here are=
+ my
+> revisions. If there are no issues, I will send the next version.
+>=20
+>=20
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c
+> b/drivers/pci/controller/dwc/pcie-designware.c
+> index 06792ba92aa7..21a709a47e82 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -843,8 +843,9 @@ EXPORT_SYMBOL_GPL(dw_pcie_upconfig_setup);
+>=20
+>  static void dw_pcie_link_set_max_speed(struct dw_pcie *pci)
+>  {
+> -       u32 cap, ctrl2, link_speed;
+> +       u32 cap, ctrl2, pci_bus_speed;
 
-> Similarly add documentation for the fidparm attribute added by commit
-> 99ad39306a62 ("s390/pci: Expose FIDPARM attribute in sysfs") and
-> add a list of pft values and their names.
+I meant something like this (instead of introducing variable named=20
+"pci_bus_speed"):
+
+=09enum pci_bus_speed link_speed;
+
+>         u8 offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> +       u16 ctrl2_speed;
+
+=2E..And keep this like you have it now.
+
+--=20
+ i.
+
+>         cap =3D dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
+>=20
+> @@ -861,30 +862,18 @@ static void dw_pcie_link_set_max_speed(struct dw_pc=
+ie
+> *pci)
+>         ctrl2 =3D dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCTL2);
+>         ctrl2 &=3D ~PCI_EXP_LNKCTL2_TLS;
+>=20
+> -       switch (pcie_get_link_speed(pci->max_link_speed)) {
+> -       case PCIE_SPEED_2_5GT:
+> -               link_speed =3D PCI_EXP_LNKCTL2_TLS_2_5GT;
+> -               break;
+> -       case PCIE_SPEED_5_0GT:
+> -               link_speed =3D PCI_EXP_LNKCTL2_TLS_5_0GT;
+> -               break;
+> -       case PCIE_SPEED_8_0GT:
+> -               link_speed =3D PCI_EXP_LNKCTL2_TLS_8_0GT;
+> -               break;
+> -       case PCIE_SPEED_16_0GT:
+> -               link_speed =3D PCI_EXP_LNKCTL2_TLS_16_0GT;
+> -               break;
+> -       default:
+> +       pci_bus_speed =3D pcie_get_link_speed(pci->max_link_speed);
+> +       ctrl2_speed =3D pci_bus_speed2lnkctl2(pci_bus_speed);
+> +       if (ctrl2_speed =3D=3D 0) {
+>                 /* Use hardware capability */
+> -               link_speed =3D FIELD_GET(PCI_EXP_LNKCAP_SLS, cap);
+> +               ctrl2_speed =3D FIELD_GET(PCI_EXP_LNKCAP_SLS, cap);
+>                 ctrl2 &=3D ~PCI_EXP_LNKCTL2_HASD;
+> -               break;
+>         }
+>=20
+> -       dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCTL2, ctrl2 | link_sp=
+eed);
+> +       dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCTL2, ctrl2 |
+> ctrl2_speed);
+>=20
+>         cap &=3D ~((u32)PCI_EXP_LNKCAP_SLS);
+> -       dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, cap | link_speed=
+);
+> +       dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, cap | ctrl2_spee=
+d);
+>=20
+>=20
+> Best regards,
+> Hans
+>=20
+> >=20
+> > > +=09if (link_speed =3D=3D 0) {
+> > >   =09=09/* Use hardware capability */
+> > >   =09=09link_speed =3D FIELD_GET(PCI_EXP_LNKCAP_SLS, cap);
+> > >   =09=09ctrl2 &=3D ~PCI_EXP_LNKCTL2_HASD;
+> > > -=09=09break;
+> > >   =09}
+> > >     =09dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCTL2, ctrl2 |
+> > > link_speed);
+> > >=20
+> >=20
 >=20
 
-[... snip ...]
-
-> ---
->  Documentation/arch/s390/pci.rst | 144 +++++++++++++++++++++++++++-------=
-------
->  1 file changed, 97 insertions(+), 47 deletions(-)
->=20
-> diff --git a/Documentation/arch/s390/pci.rst b/Documentation/arch/s390/pc=
-i.rst
-> index d5755484d8e75c7bf67a350e61bbe04f0452a2fa..8cb0a1e784a7cfc5df1e04a41=
-54ba02c9ecf46cc 100644
-> --- a/Documentation/arch/s390/pci.rst
-> +++ b/Documentation/arch/s390/pci.rst
-> @@ -6,6 +6,7 @@ S/390 PCI
-> =20
->  Authors:
->          - Pierre Morel
-> +        - Niklas Schnelle
-> =20
->  Copyright, IBM Corp. 2020
-> =20
-> @@ -27,14 +28,16 @@ Command line parameters
->  debugfs entries
->  ---------------
-> =20
-> -The S/390 debug feature (s390dbf) generates views to hold various debug =
-results in sysfs directories of the form:
-> +The S/390 debug feature (s390dbf) generates views to hold various debug =
-results
-> +in sysfs directories of the form:
-> =20
->   * /sys/kernel/debug/s390dbf/pci_*/
-> =20
->  For example:
-> =20
->    - /sys/kernel/debug/s390dbf/pci_msg/sprintf
-> -    Holds messages from the processing of PCI events, like machine check=
- handling
-> +
-> +    holds messages from the processing of PCI events, like machine check=
- handling
->      and setting of global functionality, like UID checking.
-> =20
->    Change the level of logging to be more or less verbose by piping
-> @@ -47,87 +50,134 @@ Sysfs entries
-> =20
-
-[... snip ...]
-
-> +
-> +* /sys/firmware/clp/uid_is_unique:
-
-As much as I had loved the attribute to be named as such, or even
-better /sys/firmware/clp/uids_are_unique, I find commit b043a81ce3ee
-("s390/pci: Expose firmware provided UID Checking state in sysfs") has
-introduced
-
-/sys/firmware/clp/uid_checking.
-
-Sorry, that this did slip me...
-
-Gerd
+--8323328-1691075706-1775564999=:983--
