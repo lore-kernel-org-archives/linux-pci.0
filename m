@@ -1,310 +1,190 @@
-Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011033.outbound.protection.outlook.com [52.101.52.33])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0844A35AC18
-	for <linux-pci@vger.kernel.org>; Wed,  8 Apr 2026 05:32:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAB8B351C2E;
+	Wed,  8 Apr 2026 05:57:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.33
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775626355; cv=pass; b=RCYQ42lmK4qAWtNNQV6IVXs35icJzi5KuYczNYpbJKfhEPSqZHGSdcy6Yap2Bmv2wOr3BGo+IqR6VO3/TNxF9v0Y8pfFFqETfKZDSAiE4wHZioSVYHtHtO9GIsSk+4dlpWbl0rmOqmjfJepXG53bMXg1o3WHw3gKwGfII5OTINU=
+	t=1775627871; cv=fail; b=O786xu4QR5HxDklWjWGvnJRjapw6rFr3ifoSweS8r2+ej8J06eLQijwZjAvvZZd8RsNUgo3tfGr2XrosN654fOkD9OCaFXbwYJFV2XweFXJzEHGm6XXbxqHRXJRAT2cVUcE7xvVYL9VJbC/r4ShO7d06+PGuVnviOCCxsH9VdN4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775626355; c=relaxed/simple;
-	bh=sLfaX2hgX+idAzh51tXozUyLLhH1yCiPE4YxGcsWrMI=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=ShqujaXyZZ/VfJwV6Gvzzy5Ihj+JbTI33kl77F8B9MSw6HYodOjqhzq+kWOE3QYrwivrpYAt0Q+c/rb7ejipwq1AITExH2E59Avff6Wkj1v5s2pVgldRxIPZmTx4mdTEirfWb+eZZieMzbJeKS1cKjFExN1n17SAvLmG/sGUNXg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com; spf=none smtp.mailfrom=jqluv.com; dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b=zSWA/ynO; arc=pass smtp.client-ip=209.85.160.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=jqluv.com
+	s=arc-20240116; t=1775627871; c=relaxed/simple;
+	bh=xnIWDbR34hbeb4oMWVixn9Ej/RalLUL3+nhnhvZNwSI=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=CUOHW6HlOQ+N1AGe6XVOP0Z2tx5lvMrlyR5QtwPK/xQLGFSeuHnW28KTloAoBEzo0Wn53aS0lcwSWlIeUk1fwTtRCyaC4VbXj+cBF37fyfhDEt6Ll3M9s6vCRaFlVDt9K4a2TTsqtCryPYz1KMG3LRyS5YGslyT3yG3ffVByOew=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=H7T1lGZW; arc=fail smtp.client-ip=52.101.52.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b="zSWA/ynO"
-Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-50d7c12e48eso6121381cf.1
-        for <linux-pci@vger.kernel.org>; Tue, 07 Apr 2026 22:32:33 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1775626353; cv=none;
-        d=google.com; s=arc-20240605;
-        b=TbyG4+e7v/pS6DlgJTOBlcsFn3rsKmzOu5C0PNMwMA8Ei1NHVmBtP0URqCGEY9vDtZ
-         rCnxS2KrGQubo8MiPDh6WGUZHIDc/zxdQhfK+8vmp+sGYPqH6u4kXyWcL3Dty3xINlqu
-         MiHL+03lYbXZnD17ixZoCzl5ZSuWulM1udgHO6+mrnJX5r2znJgx8EHwvKIecOIKubaq
-         3/nHY3bG/1PSuOTqJhnUY+TOlzX10TUGIot424oVlEejfot/NGU+ZdECwJYgagF4mmEn
-         2yZvOKlqQmb+06Ipzvtlx4nBRbx2JvH723eceaw1WxIiW/zl1UVOd0UqLYDcoaTULSQD
-         U5jw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :mime-version:dkim-signature;
-        bh=Pyx8+IObwARdlsUUeV2kpREDkLjdUir7NOSjCU9PyHY=;
-        fh=KZ7p//v/5JuZ6ARtwismLZ/dsvuf+E17/zrgm0s1Aaw=;
-        b=eP91WD+jOCtTnW+NGdUz4X1VlUhznd+dxR/Xhbcs6dKOd20bdhLuDN4crqxBxVjNJ/
-         7ftYqPYl4281q9fGRDOrURJMhudtrz5DdQeEwcvfGTe25OoqdXktn3Fud/1hTVzVauwF
-         aUnquzRdalvI+GID8WmrLIBHsfZORpMKwJhrQ5meJZaAnmaLmNztLjzheRIaM/qoIkGQ
-         gInMQAAwz3TMvZtsflxQNZuDWVeMmMhmf+9lRZN45xjozarvFCy7EQnEuO6XE08dqT22
-         glrQv16qbF9l5lpYux5czFn7FBkX0X/XTMnyBlTpNnSjbrT0RXj86tsAFNDLSInjJOZC
-         WK2Q==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=jqluv-com.20251104.gappssmtp.com; s=20251104; t=1775626353; x=1776231153; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Pyx8+IObwARdlsUUeV2kpREDkLjdUir7NOSjCU9PyHY=;
-        b=zSWA/ynOH38JPo2unJb06QMfxQ390LxdDABDhHEyPd96HAlJ3QTfDpe8zFCjRV1B2m
-         IfD41OVXyk4eh9h83nX8V3Z/AMfnwrGQ1VFnLoQWbfQC5EZ9OXojuTofc71qP+1wXG4n
-         1rxgQmPpZPIw9oJtGwdoU0NNiE/esinWCKsGud+wzfXsEqrxh4dm6dlqElFCeiVCFZrw
-         3K0wIJpU0Xcusf7Ee7Jhl/cUR0szJ+RYUpOknt05EdV6UqxbKXeRJ419zznqZYOIRYVV
-         21tgcWE5aSRg9BT7peyD4aIvWBhcmbVEhjkQ6KeDr85hj1t/5jkQ7FtZuaYaNI79VGpT
-         MNAg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775626353; x=1776231153;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Pyx8+IObwARdlsUUeV2kpREDkLjdUir7NOSjCU9PyHY=;
-        b=S9Y/a4RNEnt8GLqjbl7gCVY7hFSoe4Xf0JXju1vlACKt3m+D4PZgHLrZy9M2cRB4GF
-         2k30j2dj3SeS+fo5W6U+C3/N9TJG8V0WAdQeZB+GngeoJx31us4KgjPDHS+pkFgMxQYO
-         A/OJXjmj39BLFDHCAz4gDdMboZoidM6yODqj18nRt+gWHIXrORMGMlalBWbD8+BBR9JX
-         IoRH+pFRjxkTq3WdGVcBgAT+N48mFQFKGH+si1jgG60iBdQHXh0HHljHMSweK9bhm1Gp
-         swURn2UQ0pA5T5Xo/APImaUxsrA3fsov+HzHy68BAkI0SD2SLTIFAp2Wn392dp+m6Dwz
-         GM5g==
-X-Gm-Message-State: AOJu0YwsvYWJDxmS9kSAhD0zqNqRzdsrCQrhQVbgSg0u5wYBHWU3MJ8C
-	Jp+1C70isORVFHgGD3ofM6chWsmfw4bcSdNcHHVUVL8P5RW/It8G3lD+rbjluqeEIP+2ripygIK
-	SkunIQXhGZZjE/55zbAV9KZQtRsLZlboVgCqKa4LzHn2x1GtJUP5MYCY9Ig==
-X-Gm-Gg: AeBDietyqxxhs+1975TxvFHXAj7KRZ768iCqCDoV5hEoIdc1SNIF5cM6D2YL2iMSa2x
-	8mas36+RaIcPJar+UvAU/fkSs8hFRFszynZ7GHp1NLSUR7K2/27Jzq8cssl17640zjuI3YxfHyg
-	mqDsUIlmwgrDKnjAIVesE4vWeCd5ga6FfUZA2RGT7KK7X465R6iiDFzXK1zetpVHv1dHV1w4kA4
-	XICGWVyocmiyvDOCQ7lujZOf+SgGeT3cNnDpkSbVhoYIhs3hkiKSVYC6S4pTjDf1v7+tMu9QjKx
-	OsDhf8v8Q3Ge6lt0XaczcQ2PKUlx6/+FWUS8NMw=
-X-Received: by 2002:a05:622a:835b:b0:506:baf9:5dd9 with SMTP id
- d75a77b69052e-50d4fab3562mr240087451cf.17.1775626352855; Tue, 07 Apr 2026
- 22:32:32 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="H7T1lGZW"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=f63W7ajx4MzwcbOk2cqA/0MSWaDH01TfwfuTRY/t8aB5zJqFz06I4wu1o8IEuOXZ1yEt1anzB0Tp1DuuFVwAx7do/fknPOpmUYfJ/6RNcvJxkS4EX/psxJYCpMyiDOF66O2QVgn+up4qYzjaFa9OHpSCSRPJWOhuJ8kkVMWMkODfcdzLDjsFnogpU9JNIslL5kU+lh57nYwLKEqJ4XGQWrnCrSN56zB/TEylfjSM6wDJPK2hWwMB4vKpk+TYJDmwEj1M4bl6oZv97J8VezD0g2cWoGQvdida8HQt7bX01kNq1JmsXmsB8zbQJUQGbJ4A9vs2Un7/xd0E+knB5FyI6A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=dp0UeCADjvZbl+L2Aa2VzoXUhzr5MrG947jJmdyHKGY=;
+ b=IkPc0xvDrfU+KsAj8v9Aqez6bXjhMWWlUyObCEznObv9RizFlvcJZ+zktdYGcyxMn8QIt+4KOQOntTY1i5pbAeyo539PYEWOQZNG3W9Tt5riJSU81zUFnR/B6kAzlNOk650Fgt44UdmJjtYS55JnqKB4IBD1Hqw9sRIXMEbIR/rN5T0YCBcuAYpBjcaSHSUQ7xhg72SUMfIHAPepxoWn9yJhbdtAfUD6PpDZ1bFmjYq3ZFBh18oE4XFF8y8w8jOmP+kI0RuA9Uz2P4YwfDLapyEzQR3aaIwc/2iJGkz+ZUSXI0kfaJBVX51YWQ7t/aImpUWJ9qeXfvQqjmC2MEKH4Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=dp0UeCADjvZbl+L2Aa2VzoXUhzr5MrG947jJmdyHKGY=;
+ b=H7T1lGZWtLY74pGwWzCtWsjmCV26rYujDHuiGIlIJ8DLhHc7sN/phXjZtT0oXWhU49df9xpNzrCdOI2glDQiszKfkEp03y54MOXQ4c9KL3Zmo5OpdxZRULDT5nzL4Q39R9Ol+boHkGghhouP1dPRF5lo4ujsM9E6TlFSzHI2DiLaQPu0mU7LAMK87byaAm+nD/npqsK3SoW7EctPodqz2Ox4KYgXdyoKbXPCB+c8HjcVDNwuFfIEE62nfGBnHNcR7D8kWqNsxKLrYFvB+vsTHz1CVgOGejj6ol91xYBtdRO5lF+RZTfWr0+gN8JTtEQAkMIrbnXj13cYaJTZvTJHgw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS0PR12MB8245.namprd12.prod.outlook.com (2603:10b6:8:f2::16) by
+ DM4PR12MB5915.namprd12.prod.outlook.com (2603:10b6:8:68::12) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9769.18; Wed, 8 Apr 2026 05:57:40 +0000
+Received: from DS0PR12MB8245.namprd12.prod.outlook.com
+ ([fe80::e7c5:cfca:a597:7fa4]) by DS0PR12MB8245.namprd12.prod.outlook.com
+ ([fe80::e7c5:cfca:a597:7fa4%4]) with mapi id 15.20.9769.017; Wed, 8 Apr 2026
+ 05:57:40 +0000
+Message-ID: <61133700-7024-4f72-98bf-ac8cc94b3a56@nvidia.com>
+Date: Wed, 8 Apr 2026 11:27:28 +0530
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/1] PCI: tegra194: fix min() signedness when capping ASPM
+ L1 entrance latency
+To: mani@kernel.org
+Cc: linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+ linux-kernel@vger.kernel.org, kernel test robot <lkp@intel.com>,
+ robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ thierry.reding@gmail.com, jonathanh@nvidia.com, kishon@kernel.org,
+ arnd@arndb.de, gregkh@linuxfoundation.org, Frank.Li@nxp.com,
+ den@valinux.co.jp, hongxing.zhu@nxp.com, jingoohan1@gmail.com,
+ vidyas@nvidia.com, bhelgaas@google.com, lpieralisi@kernel.org,
+ kwilczynski@kernel.org, cassel@kernel.org, 18255117159@163.com
+References: <20260407145749.130753-1-mmaddireddy@nvidia.com>
+Content-Language: en-US
+X-Nvconfidentiality: nvpublic
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+In-Reply-To: <20260407145749.130753-1-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: PN4P287CA0076.INDP287.PROD.OUTLOOK.COM
+ (2603:1096:c01:26b::7) To DS0PR12MB8245.namprd12.prod.outlook.com
+ (2603:10b6:8:f2::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Geramy Loveless <gloveless@jqluv.com>
-Date: Tue, 7 Apr 2026 22:32:22 -0700
-X-Gm-Features: AQROBzBMvi6tjW5BnVfdSCn_J9hAcZx1yY2WwRSZvQnNExetUN47QwU5tc57s5c
-Message-ID: <CAGpo2me5irs2znVr+dnbtNPsNPiDBqKtKSn3r6D6K5-WWEPj0g@mail.gmail.com>
-Subject: USB4v2 BAR resizing problems - hotplug gpu via razor tb5 dock - Intel
- Barlow Ridge
-To: linux-usb@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS0PR12MB8245:EE_|DM4PR12MB5915:EE_
+X-MS-Office365-Filtering-Correlation-Id: d4974e27-f2a1-489a-9e8b-08de9533be2d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|376014|7416014|22082099003|56012099003|18002099003|13003099007;
+X-Microsoft-Antispam-Message-Info:
+	mP6QQW6FKi9JvJxUYKIeiChST4RmdnGdlmCaE8CUFK7WqfQaDwSq397t42jPiXr9fdX6DugPdmVsDAsJ4zxC9BTqhdk8IpDPi+LEUVUsRnEkT/+DE9zAkbF3WL3tJE9+wHB/sHD3hXNaJeDHLmer7rRUcEnTf2NYFJWJ9+bMY7EZ5Y6odkeMFZTx1Xw6r8/PJ3ox64zSgcaN9a/N8N+MPP/UN04Goh4+TDgAqk67/Pw+Xrg6Kh5wbacQdKMEEPqdFROpuWnoMj6Mxq3+Fz3FZHVn6tyZDAnjGUK9qPf+EyFHdNDdQiZPYHcl/0yGiAOKdeVWeazC0E2IxAzHgnG0IWSk4mcZM654WclR9OImcIwK7iOTwC0XC8Sv6E07zjyu+nUgx/QCfojDjd3dr90Xr76Va4JS5T/UecHvhfqfvdLt6e+SvQ+slamPLi6x+eUWdQdWdXnxinUDsnLmVZa4Qel8rQlQFn6mE7wTrEpFYNmuV90ZgMxzktXnMV8EAxMmuGNxwch1tTUi0Il8cSAa0aV3w3kobP0xCKsSupTqMXg4v15H7D6ZrGqD5yMNoeY1z1RoAO1AvC/E8rp+N6D6+T4MVwium8mv3foshDolAyg0vqd9y0GlW2F3hVrSvPSjoI5nOrg0Ayp3n9IvzFiXIo791Gfh9IM0wS78KaVMPV70w2X9Pfo4FVMOiVq5z9uOiCZgvhrMgdteIr/K5HyCL7X2PlePMZpPVKL5CuON3Qewg4UXUk0UbBrpxiwzPe99
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB8245.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014)(22082099003)(56012099003)(18002099003)(13003099007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?Tm1pMmwxQXFwSGovbUZsek0rNmNJTGlieSszbzZUdFhJSkhrZlpYYlhoalFO?=
+ =?utf-8?B?SHFZb0Y2SkR3MHlGOUNwZnpCUk9wWkgvWXJiVFVaQi9YQk5SdldWL2IzL2xD?=
+ =?utf-8?B?YkUvOGI0L1BQS2ViOFF3SmxLQ1JueG5OLzB3WjNYSldwMUcvbE9aRFFPMGtX?=
+ =?utf-8?B?Q2F5aU5FbEJlZGI5UlJaODV6ZHprWWI5ZjgzbWNHbS9pRHVOUmJOalV2MEpL?=
+ =?utf-8?B?MjYzNjBvdWhIY3o1b2crMDJaaWYxaVNWRDZzQnJaVmkvUFRRSkdJQ2NlS2RE?=
+ =?utf-8?B?Z0c1YkxoMzg2VS9sOHYwendwY0kyamJ2eHRzQmpXck84Y0c4K3FEMzdpU2o5?=
+ =?utf-8?B?TmtPakhmVGZSVndYR3YvRDB4VUFWa3ppbjFqdDJhd254SWtkYUt5RWpic0hk?=
+ =?utf-8?B?b3R0WlpDVXFCNkdRRXl3N2xvc0N3SGJYR1gyYjRUNll1M1dzZ1pucTBqMldt?=
+ =?utf-8?B?Y0R2MGhVTmdvWTlDMGdnZjVlWUFGRTBKeVZITEZkNUI4VXpGZ0EydnVpNDBC?=
+ =?utf-8?B?THUreEgvc3IwdWpqeEVrVnk1RGtwYzRRREZFT0xSYzRzaVVyaGVxdnNrSU41?=
+ =?utf-8?B?TXprMm0wTVY0Q3JMNUVkSjV1Y3cxMUpma01Zem1hMVRKN2VNelhkZ3JrVjJR?=
+ =?utf-8?B?M01ESWJNVkRqTzFBRUNxb2xsandXb3drMjFQWHN2QmNUVFdjenFPSTc4M2dN?=
+ =?utf-8?B?dTFEazJTN1MxcHhNaExZS2F3RXpYTittS2ZOMjVoWVR4MDlJWnFpNTZKL2s0?=
+ =?utf-8?B?ejZxb2ZZVHdkSy8zOVo4aVZYd3VlbElScHRHdW1GUnMzUldiMWpBbkt1TWRE?=
+ =?utf-8?B?NjA3eEl3bDhEdG5LYlhmWktwTmNwMk1Gc3BrM1hlZGVCZGQ4bko0UkEvaytQ?=
+ =?utf-8?B?V205aE91Q1FqR3JUd2lndFY5VXJKZlY2YzIxTWhFcWxjZlROdlBERFB3c1dR?=
+ =?utf-8?B?TjFyaFR4clRZdzRWSW1DOG93MDFib2JMVUpCZFNpNm0vZmVXLzNnV1BRUC9L?=
+ =?utf-8?B?NUlRR0VMWERGNFJTYjQ4RlN5aEVjbms5WVpPUGlyeG1uVUkxSFhMRGxVNE84?=
+ =?utf-8?B?WVJzcDg2ZmZtdWo0QU9uRzNSdWlBK21nT050bE5BcDUyS052VnVtSG1oSSt5?=
+ =?utf-8?B?ZlNsSmdTRXN3amJrZlc3MCs5S0ppWmRDV3U5TFd2Q09hRDdZSTR5ODFBaHRW?=
+ =?utf-8?B?TUlOUG5MT1oxZmUyQ0NUUkJmdWdMMktNT3ZuOGFRVW5UWHNVendjNFRkSStZ?=
+ =?utf-8?B?NFhWN1JqMThKb0dsOWRkWTVMazhnSXF6dUFXRTZsTVhtM2tnK0xjL0djdGVC?=
+ =?utf-8?B?ZTJoTUdrSWJ3MEZYTmRIMmJIcS9DWUlGNUJOZWg3eFJhNU9PRkxCS2hOdFlK?=
+ =?utf-8?B?RkxodlhpS0ROZ25FYUZMSzFpOWlsK0I3ejcyTVlVUGt1QVFRYVlVdkQ1bDlp?=
+ =?utf-8?B?c1dNRWx5TFBIUU9TcjBNR2dsMnhRczljd2FQVVU1UzZISUdJVEtXdURXdW9D?=
+ =?utf-8?B?b2ozdy9yUHJ2dE05Y1NlckJEMzhwaFIyRWhTenRPTzhwNll3SXFReW42NjNw?=
+ =?utf-8?B?cFZzbW52SFA0N3ZEaXRnVzNtWXpRUXVDTHdSNTZyTzFBeVhWaFNSWFBqMGlX?=
+ =?utf-8?B?Tm92OHZwWEZrTTZpUzQvcS9pRmZIdE1LTVpMSWlwUUJKWHJtVW1JUVhXM05h?=
+ =?utf-8?B?Q2IxVzBQMFc0Nmx2M3F3TmJYV3NrcUI1c2gvQnBJMUJndENqYlRaT2t2MkJO?=
+ =?utf-8?B?V0Rlb2w5MzJodmF1MDhIaDR5OHkyWE8wNS9yTEJtcXVMSHlYaGgyTVQwTTk0?=
+ =?utf-8?B?bDE1MzRvR0lQUVpIMXFyWjNPbUtGbGhkTHVyZHc3Y1VMRkZCaEZveDhCZUZz?=
+ =?utf-8?B?Nk5wd1RxU0krRFpKenJFZG1FMXArRlI1YXIyRy9NMEowUGdDWldZRlFOUEhY?=
+ =?utf-8?B?SVlab0M1eVNwQ0VzbWJZeVhyT2YrYWVZMjlaelZHQXJFMktuSWQxYjByZDZs?=
+ =?utf-8?B?UnJ4bWpKdEFEeGV1eXdTTzhyU2pub0V0Rm5VRjN3dUNoOUZkNDBQOVArZXNh?=
+ =?utf-8?B?SmdaY3VTT2pWejJPWXdyQW1iS0pZMnh6K0RSUTErZTVXcFV0WnAyQTBpdmpT?=
+ =?utf-8?B?YnZwYmMzb0d5ODFURjRxRGdLM2hvWG1kdTNjdGFLTittdWlzMFZpeEJ2Y2s3?=
+ =?utf-8?B?SlQ1WTdpeUw3aFVaaDRYbWNTMEhaTDhmYlAyQmVmbi9nMkRJbC9DVWloK3hm?=
+ =?utf-8?B?a3RjUlJwTnE1L0lCbWpYQjlPNk1zemhrdFFuL29FUHV0eGFZS29VMlViTmJj?=
+ =?utf-8?B?aTZCZlhSM2daTG51eUNERmI0bVplQ2s0QXNOd0RmQTN3Z0V0Z2xGUT09?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d4974e27-f2a1-489a-9e8b-08de9533be2d
+X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB8245.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Apr 2026 05:57:40.1412
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: WYOEtJy5K3I4WOm8XPSRwXNdl1JQ2CSqwrnTAsdPFkITofKwvMMA5FktsgKS+TLfKH/mMcvu4+11g4+PLDNPPw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB5915
 
-Hello,
+Hi Mani,
 
-I am hoping someone here can help me; I'm currently having some issues
-with a Razor thunderbolt 5 / USB4v2 Dock connected to a Halo Strix or
-AMD Ryzen AI 395+ Max machine.
-Specifically a Minisforum MS-S1 with a Host controller: Intel
-8086:5780 =E2=80=94 Barlow Ridge Host 80G (rev 84) and the Dock hub: Intel
-8086:5786 =E2=80=94 Barlow Ridge Hub 80G (rev 85) These are the JHL9580 (ho=
-st)
-and JHL9586 (hub) =E2=80=94 Intel's Barlow Ridge TB5 80Gbps silicon.
-The specific problem I'm having, which I think is the largest issue
-besides power management causing havoc which i can fix with kernel
-parameters but the one I cannot "fix" granted not kernel params are
-not a fix is that on thunderbolt driver it will not expand its bar
-size to the parent size.
-so when setting hpmmiopresize to 64G it gets split between the two
-usb4v2 ports giving me 32G on each port and then the memory space is
-not aligned so when amdgpu tries to resize it cant. I would think the
-ideal situation at least in my head and not being a linux kernel
-expert is that the thunderbolt driver should request the pcie device
-max memory size and then create the bar at the correct sizes or at the
-least let me resize it which might be a difficult and bad path to let
-the "user" resize it.
+I added W=1 argument to make command to reproduce the issue, but I am 
+not able reproduce the issue at my end. I made this change based on the 
+issue description in 
+https://lore.kernel.org/oe-kbuild-all/202604051407.AODe3ddZ-lkp@intel.com/, 
+but I couldn't verify the fix since build is working fine with or 
+without this change.
 
-Current kernel image is: 6.18.7-061807-generic
+Thanks,
+Manikanta
 
-Custom Parameters:
- pcie_port_pm=3Doff pcie_aspm=3Doff
-pci=3Dhpmemsize=3D2G,realloc,hpmmioprefsize=3D64G amdgpu.dc=3D0
+On 07/04/26 8:27 pm, Manikanta Maddireddy wrote:
+> The DT property "aspm-l1-entry-delay-ns" is converted to microseconds,
+> then encoded for the L1 entrance latency register field as ilog2(us) + 1,
+> clamped to the hardware maximum of 7.
+> 
+> ilog2() returns int type, while the upper bound is 7U (unsigned int).
+> The min() macro is implemented with __careful_cmp(), which rejects mixed
+> signed and unsigned operands at compile time via BUILD_BUG_ON_MSG in
+> minmax.h; that check trips on this pair, notably when building with W=1.
+> 
+> This combination fails to build (e.g. parisc allyesconfig, GCC 15, as
+> reported by the 0-day bot).
+> 
+> Use min_t(u32, ilog2(us) + 1U, 7U) so both sides of the comparison are
+> unsigned and consistent with aspm_l1_enter_lat.
+> 
+> Fixes: 4a44cd65c9dd ("PCI: tegra194: Use aspm-l1-entry-delay-ns DT property for L1 entrance latency")
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> Reported-by: kernel test robot <lkp@intel.com>
+> Closes: https://lore.kernel.org/oe-kbuild-all/202604051407.AODe3ddZ-lkp@intel.com/
+> ---
+>   drivers/pci/controller/dwc/pcie-tegra194.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+> index 393f75ce3df3..93d3452ac117 100644
+> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+> @@ -1147,7 +1147,7 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
+>   	if (!ret) {
+>   		u32 us = max(val / 1000, 1U);
+>   
+> -		pcie->aspm_l1_enter_lat = min(ilog2(us) + 1, 7U);
+> +		pcie->aspm_l1_enter_lat = min_t(u32, ilog2(us) + 1U, 7U);
+>   	}
+>   
+>   	ret = of_property_read_u32(np, "num-lanes", &pcie->num_lanes);
 
-This was required to get the kernel to stop powering down the
-thunderbolt link on the amd gfx1201 device because it goes into a low
-power state when there is no display connected.
-For my application thats okay, i'm using it for compute based workloads any=
-ways.
+-- 
+nvpublic
 
-Thank you for taking a look at this here are some log snippets have a great=
- day!
-
-Here is my amdgpu issue with full logs
-https://gitlab.freedesktop.org/drm/amd/-/work_items/4978#note_3339645
-
-Here are more recent logs after running the kernel parameters.
-
-System: MinisForum MS-S1 (AMD Ryzen AI 395+ Max / Strix Halo) + Razer
-Core X V2 via Intel Barlow Ridge TB5 (JHL9580/JHL9586)
-GPU: AMD Radeon AI PRO R9700 [1002:7551] (RDNA 4 / gfx1201, 32GB GDDR6)
-Kernel: 6.18.7 (Ubuntu mainline)
-Cmdline: pcie_port_pm=3Doff pcie_aspm=3Doff
-pci=3Dhpmemsize=3D2G,realloc,hpmmioprefsize=3D64G amdgpu.dc=3D0
-
---- Boot-time TB5 bridge layout (host-side, before tunnel) ---
-pci 0000:65:00.0: [8086:5780] type 01 class 0x060400 PCIe Switch Upstream P=
-ort
-pci 0000:65:00.0: PCI bridge to [bus 66-bc]
-pci 0000:65:00.0:   bridge window [mem 0x8880000000-0x98800fffff 64bit pref=
-]
-pci 0000:66:01.0: [8086:5780] type 01 class 0x060400 PCIe Switch Downstream=
- Port
-pci 0000:66:01.0: PCI bridge to [bus 68-91]
-pci 0000:66:01.0:   bridge window [mem 0x9080000000-0x987fffffff 64bit pref=
-]
-pci 0000:66:03.0: [8086:5780] type 01 class 0x060400 PCIe Switch Downstream=
- Port
-pci 0000:66:03.0: PCI bridge to [bus 93-bc]
-pci 0000:66:03.0:   bridge window [mem 0x8880000000-0x907fffffff 64bit pref=
-]
-
---- Dock hot-plug enumeration (after TB tunnel up + PCI rescan) ---
-pci 0000:93:00.0: [8086:5786] type 01 class 0x060400 PCIe Switch Upstream P=
-ort
-pci 0000:93:00.0: PCI bridge to [bus 00]
-pci 0000:93:00.0:   bridge window [mem 0x00000000-0x000fffff 64bit pref]
-pci 0000:93:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:94:00.0: [8086:5786] type 01 class 0x060400 PCIe Switch Downstream=
- Port
-pci 0000:94:00.0:   bridge window [mem 0x00000000-0x000fffff 64bit pref]
-
---- Kernel resource allocation: cannot fit rebar + hotplug reserves ---
-pcieport 0000:66:03.0: Assigned bridge window [mem
-0x8880000000-0x907fffffff 64bit pref] to [bus 93-bc] cannot fit
-0x1000000000 required for 0000:94:01.0 bridging to [bus 98-a4]
-pcieport 0000:66:03.0: Assigned bridge window [mem
-0x8880000000-0x907fffffff 64bit pref] to [bus 93-bc] cannot fit
-0x1000000000 required for 0000:94:02.0 bridging to [bus a5-b1]
-pcieport 0000:66:03.0: Assigned bridge window [mem
-0x8880000000-0x907fffffff 64bit pref] to [bus 93-bc] cannot fit
-0x1000000000 required for 0000:94:03.0 bridging to [bus b2-bc]
-pcieport 0000:66:03.0: Assigned bridge window [mem
-0x8880000000-0x907fffffff 64bit pref] to [bus 93-bc] cannot fit
-0x3018000000 required for 0000:93:00.0 bridging to [bus 94-bc]
-pci 0000:93:00.0: bridge window [mem 0x04000000-0x1fffffff 64bit pref]
-to [bus 94-bc] requires relaxed alignment rules
-pci 0000:93:00.0: bridge window [mem size 0x3018000000 64bit pref]:
-can't assign; no space
-pci 0000:93:00.0: bridge window [mem size 0x3018000000 64bit pref]:
-failed to assign
-pci 0000:93:00.0: bridge window [mem 0x8880000000-0x889bffffff 64bit
-pref]: assigned
-
---- GPU BAR enumeration ---
-pci 0000:97:00.0: [1002:7551] type 00 class 0x030000 PCIe Legacy Endpoint
-pci 0000:97:00.0: BAR 0 [mem 0x00000000-0x0fffffff 64bit pref]
-pci 0000:97:00.0: 8.000 Gb/s available PCIe bandwidth, limited by 2.5
-GT/s PCIe x4 link at 0000:66:03.0 (capable of 504.112 Gb/s with 32.0
-GT/s PCIe x16 link)
-pci 0000:97:00.0: BAR 0 [mem 0x8880000000-0x888fffffff 64bit pref]: assigne=
-d
-pci 0000:97:00.0: BAR 4 [io  size 0x0100]: can't assign; no space
-
---- amdgpu rebar attempt and failure ---
-amdgpu 0000:97:00.0: amdgpu: PCIE atomic ops is not supported
-amdgpu 0000:97:00.0: BAR 2 [mem 0x8890000000-0x88901fffff 64bit pref]: rele=
-asing
-amdgpu 0000:97:00.0: BAR 0 [mem 0x8880000000-0x888fffffff 64bit pref]: rele=
-asing
-amdgpu 0000:97:00.0: BAR 0 [mem size 0x800000000 64bit pref]: can't
-assign; no space
-amdgpu 0000:97:00.0: BAR 0 [mem size 0x800000000 64bit pref]: failed to ass=
-ign
-amdgpu 0000:97:00.0: BAR 2 [mem size 0x00200000 64bit pref]: can't
-assign; no space
-amdgpu 0000:97:00.0: BAR 2 [mem size 0x00200000 64bit pref]: failed to assi=
-gn
-amdgpu 0000:97:00.0: amdgpu: Not enough PCI address space for a large BAR.
-amdgpu 0000:97:00.0: BAR 0 [mem 0x8880000000-0x888fffffff 64bit pref]: assi=
-gned
-amdgpu 0000:97:00.0: amdgpu: VRAM: 32624M 0x0000008000000000 -
-0x00000087F6FFFFFF (32624M used)
-
-System: MinisForum MS-S1 (AMD Ryzen AI 395+ Max / Strix Halo) + Razer
-Core X V2 via Intel Barlow Ridge TB5 (JHL9580/JHL9586)
-GPU: AMD Radeon AI PRO R9700 [1002:7551] (RDNA 4 / gfx1201, 32GB GDDR6)
-Kernel: 6.18.7 (Ubuntu mainline)
-Cmdline: pcie_port_pm=3Doff pcie_aspm=3Doff
-pci=3Dhpmemsize=3D2G,realloc,hpmmioprefsize=3D64G amdgpu.dc=3D0
-
---- Boot-time TB5 bridge layout (host-side, before tunnel) ---
-pci 0000:65:00.0: [8086:5780] type 01 class 0x060400 PCIe Switch Upstream P=
-ort
-pci 0000:65:00.0: PCI bridge to [bus 66-bc]
-pci 0000:65:00.0:   bridge window [mem 0x8880000000-0x98800fffff 64bit pref=
-]
-pci 0000:66:01.0: [8086:5780] type 01 class 0x060400 PCIe Switch Downstream=
- Port
-pci 0000:66:01.0: PCI bridge to [bus 68-91]
-pci 0000:66:01.0:   bridge window [mem 0x9080000000-0x987fffffff 64bit pref=
-]
-pci 0000:66:03.0: [8086:5780] type 01 class 0x060400 PCIe Switch Downstream=
- Port
-pci 0000:66:03.0: PCI bridge to [bus 93-bc]
-pci 0000:66:03.0:   bridge window [mem 0x8880000000-0x907fffffff 64bit pref=
-]
-
---- Dock hot-plug enumeration (after TB tunnel up + PCI rescan) ---
-pci 0000:93:00.0: [8086:5786] type 01 class 0x060400 PCIe Switch Upstream P=
-ort
-pci 0000:93:00.0: PCI bridge to [bus 00]
-pci 0000:93:00.0:   bridge window [mem 0x00000000-0x000fffff 64bit pref]
-pci 0000:93:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:94:00.0: [8086:5786] type 01 class 0x060400 PCIe Switch Downstream=
- Port
-pci 0000:94:00.0:   bridge window [mem 0x00000000-0x000fffff 64bit pref]
-
---- Kernel resource allocation: cannot fit rebar + hotplug reserves ---
-pcieport 0000:66:03.0: Assigned bridge window [mem
-0x8880000000-0x907fffffff 64bit pref] to [bus 93-bc] cannot fit
-0x1000000000 required for 0000:94:01.0 bridging to [bus 98-a4]
-pcieport 0000:66:03.0: Assigned bridge window [mem
-0x8880000000-0x907fffffff 64bit pref] to [bus 93-bc] cannot fit
-0x1000000000 required for 0000:94:02.0 bridging to [bus a5-b1]
-pcieport 0000:66:03.0: Assigned bridge window [mem
-0x8880000000-0x907fffffff 64bit pref] to [bus 93-bc] cannot fit
-0x1000000000 required for 0000:94:03.0 bridging to [bus b2-bc]
-pcieport 0000:66:03.0: Assigned bridge window [mem
-0x8880000000-0x907fffffff 64bit pref] to [bus 93-bc] cannot fit
-0x3018000000 required for 0000:93:00.0 bridging to [bus 94-bc]
-pci 0000:93:00.0: bridge window [mem 0x04000000-0x1fffffff 64bit pref]
-to [bus 94-bc] requires relaxed alignment rules
-pci 0000:93:00.0: bridge window [mem size 0x3018000000 64bit pref]:
-can't assign; no space
-pci 0000:93:00.0: bridge window [mem size 0x3018000000 64bit pref]:
-failed to assign
-pci 0000:93:00.0: bridge window [mem 0x8880000000-0x889bffffff 64bit
-pref]: assigned
-
---- GPU BAR enumeration ---
-pci 0000:97:00.0: [1002:7551] type 00 class 0x030000 PCIe Legacy Endpoint
-pci 0000:97:00.0: BAR 0 [mem 0x00000000-0x0fffffff 64bit pref]
-pci 0000:97:00.0: 8.000 Gb/s available PCIe bandwidth, limited by 2.5
-GT/s PCIe x4 link at 0000:66:03.0 (capable of 504.112 Gb/s with 32.0
-GT/s PCIe x16 link)
-pci 0000:97:00.0: BAR 0 [mem 0x8880000000-0x888fffffff 64bit pref]: assigne=
-d
-pci 0000:97:00.0: BAR 4 [io  size 0x0100]: can't assign; no space
-
---- amdgpu rebar attempt and failure ---
-amdgpu 0000:97:00.0: amdgpu: PCIE atomic ops is not supported
-amdgpu 0000:97:00.0: BAR 2 [mem 0x8890000000-0x88901fffff 64bit pref]: rele=
-asing
-amdgpu 0000:97:00.0: BAR 0 [mem 0x8880000000-0x888fffffff 64bit pref]: rele=
-asing
-amdgpu 0000:97:00.0: BAR 0 [mem size 0x800000000 64bit pref]: can't
-assign; no space
-amdgpu 0000:97:00.0: BAR 0 [mem size 0x800000000 64bit pref]: failed to ass=
-ign
-amdgpu 0000:97:00.0: BAR 2 [mem size 0x00200000 64bit pref]: can't
-assign; no space
-amdgpu 0000:97:00.0: BAR 2 [mem size 0x00200000 64bit pref]: failed to assi=
-gn
-amdgpu 0000:97:00.0: amdgpu: Not enough PCI address space for a large BAR.
-amdgpu 0000:97:00.0: BAR 0 [mem 0x8880000000-0x888fffffff 64bit pref]: assi=
-gned
-amdgpu 0000:97:00.0: amdgpu: VRAM: 32624M 0x0000008000000000 -
-0x00000087F6FFFFFF (32624M used)
-
-
-
-Geramy L. Loveless
