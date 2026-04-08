@@ -1,114 +1,133 @@
-Received: from ultrarisc.com (unknown [218.76.62.146])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7633336495E;
-	Wed,  8 Apr 2026 06:43:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.76.62.146
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 730322D0614;
+	Wed,  8 Apr 2026 06:49:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775630622; cv=none; b=KJtiC4PG6suctlbBrWvBZnReo/LiHOFOcFrQGiTytwmWu0NBBE8yBJWKYb/hamnqBe98lQNeeqmi0innguaVJr2+IJKi4991grLjohAy7kG2tRQHEfo3qqUy2Y3Z/mdqqHOky0ru3RQA8VcI52sAIMHp7KJ2padEEKHxyc6XS/A=
+	t=1775630952; cv=none; b=ia5xfaNCOVGzsTYGNse/AVCOBWPeE00c462I68tT0+8X4MbNVQuycGtNrYFdsPHH7y6NQC4xEB8R8HGbqSHoOatod+G6Atybk+duZk/vCCq8ZDVluw9O9hAgvrslorYZLqa6SBL6/F2dZxV0P1TxbZMASpD5nsHIz9eX/qZO0WU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775630622; c=relaxed/simple;
-	bh=2hdbV6/k/0D5ZPlOLiZgFhv0ho2ZF/B1xroBTN/yRgk=;
-	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=n9BptAtc2yRlcJmMeZR7E1g5cxHDrXqTLZas7qrkoKPZpQoVWmnDkZThA4HSqB3Kryyck9ZWA4nfzIuDG0yr3DnKABF5RxH5MBFcXpoJIr7eduP2o6nBv4Hc14zTaieOXlKQy0ePN7E9Q/NCgt0G1VCHvPnjgYjC71S960in49I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=none smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=EYx66LlO; arc=none smtp.client-ip=218.76.62.146
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ultrarisc.com
+	s=arc-20240116; t=1775630952; c=relaxed/simple;
+	bh=QPVNlLo2aK9kDoLAR3ZDxw4eYcl2wRDB6RzLGp9QwHk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=kNZ/JS02ErRy1+r0oLFGTvlxu7EWJpReZdN44ValGJVhOKNMqPA7wUcvLUrX468Zw5tXVyPmKCVxjKS00tUmRCnGewQcJI4kgqvRdmt77ikLs7p74Yp3a3Hqgn+ZM7Mefcmj/fHR5upTJ7kWfIPLQA9uKRwk89lMCdLz3t9f4Ms=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iScPrbKl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="EYx66LlO"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=ultrarisc.com; s=dkim; h=Received:MIME-Version:Content-Type:
-	Content-Transfer-Encoding:Subject:From:To:Cc:In-Reply-To:
-	References:Date:Message-Id; bh=hS/w51EPTbNWGcs80cYtMs7ssnkfGD2zW
-	cF8zT6Qlug=; b=EYx66LlOSiSbVcNq+lzEc/OAjRVJuNtAUKk7AwEPC6FSeIXe4
-	6R7SyI3SyLf5+vxbvQ9GxCHIWsPlDfcNaglNuMeHG5CTRpuejyzd3vKPN6931lT8
-	sNct9yA+r8tkp6KAq3I/iJ/XqmOHX4tsVDjkAya1CVulsbmKVJ5hrCq2P8=
-Received: from [127.0.0.1] (unknown [192.168.100.1])
-	by localhost.localdomain (Coremail) with SMTP id AQAAfwAnYUI1+dVpSq0BAA--.1022S2;
-	Wed, 08 Apr 2026 14:44:06 +0800 (CST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iScPrbKl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DFC0C19424;
+	Wed,  8 Apr 2026 06:49:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775630952;
+	bh=QPVNlLo2aK9kDoLAR3ZDxw4eYcl2wRDB6RzLGp9QwHk=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=iScPrbKlquhqxYauv6zRL2pp+kGnGBMjxChUhGWMktZj/GH7V2F6u6oky876fiFxc
+	 FrT32dK6t7QxKr0U1jW4zyMWwJnS4lYDQHQEaBgsNTXnUxRnU6wlq4PznomGe6KTxV
+	 qrH05Ipbs9/D0ilST8kVgn1d97yixWF3tekgCZpss0+aiMnDnVbHeT0G8PzJfaIbAA
+	 5MiWsBRaOFTqdQnISbYsJWWrmkZG+vlrcMAu5fDcdXHZ54QOsriERKvfkcFIxD9zTY
+	 GRzcgoTFOpoC8OwOJXyvK0Ifplg7RhDpuPRAiPv8GRzTateGe6vTm4AAyx162LWWvK
+	 kUHqshRI1P6rA==
+Message-ID: <c60a712e-ecf3-4926-9947-0e593cdb921d@kernel.org>
+Date: Wed, 8 Apr 2026 08:49:06 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v2 3/4] dt-bindings: PCI: Add UltraRISC DP1000 PCIe
  controller
-From: Jia Wang <wangjia@ultrarisc.com>
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: Jia Wang <wangjia@ultrarisc.com>, Paul Walmsley <pjw@kernel.org>, 
- Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
- Alexandre Ghiti <alex@ghiti.fr>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, 
- Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, linux-riscv@lists.infradead.org, 
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+To: Jia Wang <wangjia@ultrarisc.com>
+Cc: Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+ Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Xincheng Zhang <zhangxincheng@ultrarisc.com>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, linux-riscv@lists.infradead.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
  devicetree@vger.kernel.org
-In-Reply-To: <13907c0e-0502-413d-b54d-4e903f5c781e@kernel.org>
 References: <20260407-ultrarisc-pcie-v2-0-2aa2a19a7fb3@ultrarisc.com>
  <20260407-ultrarisc-pcie-v2-3-2aa2a19a7fb3@ultrarisc.com>
  <20260407-uptight-tody-of-weather-ae1e35@quoll>
  <177561928084.2918127.18218641774926914517.b4-reply@b4>
  <13907c0e-0502-413d-b54d-4e903f5c781e@kernel.org>
-Date: Wed, 08 Apr 2026 14:43:19 +0800
-Message-Id: <177563059910.3194559.10112671473525736823.b4-reply@b4>
-X-Mailer: b4 0.15-dev
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1775630599; l=804;
- i=wangjia@ultrarisc.com; s=20260309; h=from:subject:message-id;
- bh=2hdbV6/k/0D5ZPlOLiZgFhv0ho2ZF/B1xroBTN/yRgk=;
- b=FwDWsOzDS/KbcQdL6O8kYj37FxAVDdJiioU3JgfIuqk4Y2qDTOKjWi/9k1iWNJJCVb+1lm4DQ
- o9KLacoeFpiCi1XqVroJ2MYAatf4HHhjIytgQd8XRGfBgLmZrQFD0Ig
-X-Developer-Key: i=wangjia@ultrarisc.com; a=ed25519;
- pk=XvYkrelqJIIzobY7j+nIg8rsfv5kzaOzuc1UPhd087U=
-X-CM-TRANSID:AQAAfwAnYUI1+dVpSq0BAA--.1022S2
-X-Coremail-Antispam: 1UD129KBjvdXoW7Jr1DuF45Ww1UuF1DXrW3trb_yoW3Xrg_AF
-	1jvw1Dur17XFZ8Wws5tF4kZ3ZIk34Duws3X3ykuF9rXwn0yry5ur90kryfJ39xJa1xKF1r
-	ua10q3W5uF9xujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbT8FF20E14v26ryj6rWUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
-	Cr1l84ACjcxK6I8E87Iv67AKxVW8JVWxJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gr1j6F
-	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
-	n2kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCY02Avz4vE-syl42xK82IYc2Ij64vIr41l4I
-	8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AK
-	xVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcV
-	AFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8I
-	cIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r
-	4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjTRRBT5DUUUU
-X-CM-SenderInfo: pzdqwylld63zxwud2x1vfou0bp/1tbiAQALEWnV0LsAEAAAsc
+ <177563059910.3194559.10112671473525736823.b4-reply@b4>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ xsFNBFVDQq4BEAC6KeLOfFsAvFMBsrCrJ2bCalhPv5+KQF2PS2+iwZI8BpRZoV+Bd5kWvN79
+ cFgcqTTuNHjAvxtUG8pQgGTHAObYs6xeYJtjUH0ZX6ndJ33FJYf5V3yXqqjcZ30FgHzJCFUu
+ JMp7PSyMPzpUXfU12yfcRYVEMQrmplNZssmYhiTeVicuOOypWugZKVLGNm0IweVCaZ/DJDIH
+ gNbpvVwjcKYrx85m9cBVEBUGaQP6AT7qlVCkrf50v8bofSIyVa2xmubbAwwFA1oxoOusjPIE
+ J3iadrwpFvsZjF5uHAKS+7wHLoW9hVzOnLbX6ajk5Hf8Pb1m+VH/E8bPBNNYKkfTtypTDUCj
+ NYcd27tjnXfG+SDs/EXNUAIRefCyvaRG7oRYF3Ec+2RgQDRnmmjCjoQNbFrJvJkFHlPeHaeS
+ BosGY+XWKydnmsfY7SSnjAzLUGAFhLd/XDVpb1Een2XucPpKvt9ORF+48gy12FA5GduRLhQU
+ vK4tU7ojoem/G23PcowM1CwPurC8sAVsQb9KmwTGh7rVz3ks3w/zfGBy3+WmLg++C2Wct6nM
+ Pd8/6CBVjEWqD06/RjI2AnjIq5fSEH/BIfXXfC68nMp9BZoy3So4ZsbOlBmtAPvMYX6U8VwD
+ TNeBxJu5Ex0Izf1NV9CzC3nNaFUYOY8KfN01X5SExAoVTr09ewARAQABzSVLcnp5c3p0b2Yg
+ S296bG93c2tpIDxrcnprQGtlcm5lbC5vcmc+wsGVBBMBCgA/AhsDBgsJCAcDAgYVCAIJCgsE
+ FgIDAQIeAQIXgBYhBJvQfg4MUfjVlne3VBuTQ307QWKbBQJoF1BKBQkWlnSaAAoJEBuTQ307
+ QWKbHukP/3t4tRp/bvDnxJfmNdNVn0gv9ep3L39IntPalBFwRKytqeQkzAju0whYWg+R/rwp
+ +r2I1Fzwt7+PTjsnMFlh1AZxGDmP5MFkzVsMnfX1lGiXhYSOMP97XL6R1QSXxaWOpGNCDaUl
+ ajorB0lJDcC0q3xAdwzRConxYVhlgmTrRiD8oLlSCD5baEAt5Zw17UTNDnDGmZQKR0fqLpWy
+ 786Lm5OScb7DjEgcA2PRm17st4UQ1kF0rQHokVaotxRM74PPDB8bCsunlghJl1DRK9s1aSuN
+ hL1Pv9VD8b4dFNvCo7b4hfAANPU67W40AaaGZ3UAfmw+1MYyo4QuAZGKzaP2ukbdCD/DYnqi
+ tJy88XqWtyb4UQWKNoQqGKzlYXdKsldYqrLHGoMvj1UN9XcRtXHST/IaLn72o7j7/h/Ac5EL
+ 8lSUVIG4TYn59NyxxAXa07Wi6zjVL1U11fTnFmE29ALYQEXKBI3KUO1A3p4sQWzU7uRmbuxn
+ naUmm8RbpMcOfa9JjlXCLmQ5IP7Rr5tYZUCkZz08LIfF8UMXwH7OOEX87Y++EkAB+pzKZNNd
+ hwoXulTAgjSy+OiaLtuCys9VdXLZ3Zy314azaCU3BoWgaMV0eAW/+gprWMXQM1lrlzvwlD/k
+ whyy9wGf0AEPpLssLVt9VVxNjo6BIkt6d1pMg6mHsUEVzsFNBFVDXDQBEADNkrQYSREUL4D3
+ Gws46JEoZ9HEQOKtkrwjrzlw/tCmqVzERRPvz2Xg8n7+HRCrgqnodIYoUh5WsU84N03KlLue
+ MNsWLJBvBaubYN4JuJIdRr4dS4oyF1/fQAQPHh8Thpiz0SAZFx6iWKB7Qrz3OrGCjTPcW6ei
+ OMheesVS5hxietSmlin+SilmIAPZHx7n242u6kdHOh+/SyLImKn/dh9RzatVpUKbv34eP1wA
+ GldWsRxbf3WP9pFNObSzI/Bo3kA89Xx2rO2roC+Gq4LeHvo7ptzcLcrqaHUAcZ3CgFG88CnA
+ 6z6lBZn0WyewEcPOPdcUB2Q7D/NiUY+HDiV99rAYPJztjeTrBSTnHeSBPb+qn5ZZGQwIdUW9
+ YegxWKvXXHTwB5eMzo/RB6vffwqcnHDoe0q7VgzRRZJwpi6aMIXLfeWZ5Wrwaw2zldFuO4Dt
+ 91pFzBSOIpeMtfgb/Pfe/a1WJ/GgaIRIBE+NUqckM+3zJHGmVPqJP/h2Iwv6nw8U+7Yyl6gU
+ BLHFTg2hYnLFJI4Xjg+AX1hHFVKmvl3VBHIsBv0oDcsQWXqY+NaFahT0lRPjYtrTa1v3tem/
+ JoFzZ4B0p27K+qQCF2R96hVvuEyjzBmdq2esyE6zIqftdo4MOJho8uctOiWbwNNq2U9pPWmu
+ 4vXVFBYIGmpyNPYzRm0QPwARAQABwsF8BBgBCgAmAhsMFiEEm9B+DgxR+NWWd7dUG5NDfTtB
+ YpsFAmgXUF8FCRaWWyoACgkQG5NDfTtBYptO0w//dlXJs5/42hAXKsk+PDg3wyEFb4NpyA1v
+ qmx7SfAzk9Hf6lWwU1O6AbqNMbh6PjEwadKUk1m04S7EjdQLsj/MBSgoQtCT3MDmWUUtHZd5
+ RYIPnPq3WVB47GtuO6/u375tsxhtf7vt95QSYJwCB+ZUgo4T+FV4hquZ4AsRkbgavtIzQisg
+ Dgv76tnEv3YHV8Jn9mi/Bu0FURF+5kpdMfgo1sq6RXNQ//TVf8yFgRtTUdXxW/qHjlYURrm2
+ H4kutobVEIxiyu6m05q3e9eZB/TaMMNVORx+1kM3j7f0rwtEYUFzY1ygQfpcMDPl7pRYoJjB
+ dSsm0ZuzDaCwaxg2t8hqQJBzJCezTOIkjHUsWAK+tEbU4Z4SnNpCyM3fBqsgYdJxjyC/tWVT
+ AQ18NRLtPw7tK1rdcwCl0GFQHwSwk5pDpz1NH40e6lU+NcXSeiqkDDRkHlftKPV/dV+lQXiu
+ jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
+ zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
+ XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
+In-Reply-To: <177563059910.3194559.10112671473525736823.b4-reply@b4>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 2026-04-08 08:28 +0200, Krzysztof Kozlowski wrote:
-> On 08/04/2026 05:34, Jia Wang wrote:
-> >>> +  max-link-speed:
-> >>> +    $ref: /schemas/types.yaml#/definitions/uint32
-> >>> +    const: 4
-> >>
-> >> If const then deducible from the compatible. Drop the property.
-> >>
-> > 
-> > Will replace `const: 4` with `maximum: 4` in v3.
+On 08/04/2026 08:43, Jia Wang wrote:
+> On 2026-04-08 08:28 +0200, Krzysztof Kozlowski wrote:
+>> On 08/04/2026 05:34, Jia Wang wrote:
+>>>>> +  max-link-speed:
+>>>>> +    $ref: /schemas/types.yaml#/definitions/uint32
+>>>>> +    const: 4
+>>>>
+>>>> If const then deducible from the compatible. Drop the property.
+>>>>
+>>>
+>>> Will replace `const: 4` with `maximum: 4` in v3.
+>>
+>> Why? Wasn't maximum link speed fixed to 4?
+>>
 > 
-> Why? Wasn't maximum link speed fixed to 4?
->
+> Just to make sure I fully understand: since the maximum link speed is a
+> fixed hardware property and is implied by the compatible, we should drop
+> the `max-link-speed` property from the binding.
+> 
+> In that case, should I set `pci->max_link_speed = 4` in the driver during
+> probe? I want to make sure this is the correct way to handle it.
+>  
 
-Just to make sure I fully understand: since the maximum link speed is a
-fixed hardware property and is implied by the compatible, we should drop
-the `max-link-speed` property from the binding.
-
-In that case, should I set `pci->max_link_speed = 4` in the driver during
-probe? I want to make sure this is the correct way to handle it.
- 
-> 
-> Best regards,
-> Krzysztof
-> 
+Yes
 
 Best regards,
-Jia Wang
-
-
+Krzysztof
