@@ -1,100 +1,142 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23C5F37B02E;
-	Tue,  7 Apr 2026 22:58:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from ultrarisc.com (unknown [218.76.62.146])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 80B122E4247;
+	Wed,  8 Apr 2026 01:47:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.76.62.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775602726; cv=none; b=e+sI2uhKu2i/P7Z5BZNR0yR/oeOxB+SX6vGPcCc2bzdHMwLrxYb134U5MV5ks5sSOKOnxNuBvjKM2PZXlj17Hrd9wr3LSg8/AOf/19w/vl48l5Sk+QGebZiNIB1qDbU5mJaAh8JJk1uX5Zrh5KRNP0dPUFZU+81PZ0vdA9pqsbw=
+	t=1775612841; cv=none; b=tcs5DAf2ihJav5cfTs0HsSnn9zhCfkLs97UPvOipNOquoRwOpycQMFMWeNRHOVphmZYXLtwQ+5J6W0psj/TxwLdyCWX7USOM7FWDupjegaDrEYzAvjueeOmHXMe1vgb3yhMcUPiaugyzSxBePwQj7ik8ROYewd0rvHsS5mAZWJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775602726; c=relaxed/simple;
-	bh=ZxMhQkn/NMJTsfUq+eNI5wRqTDBwCQBg1cjTyGaGSzA=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=CAFvIFUcUCh0VIHYGjMrdQEU7mL056z+zfQGxWKN+y2EY4XuEQ+udsZzjBcgQZOMoNA+EQ4UDQruMAtfVoplvx+xf66OTsQffPw2Syll1ZFr/yBHxAY6sBNTcBP4WY2reidLOzXk6Re7rfFdF3Ro6CnEnIxr81bH/Ngj88si6qA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YxT4H0gM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775612841; c=relaxed/simple;
+	bh=i0dYsL4yUueJ1cAqUP1xzFPT+0rfwfboD6UwNL4rbjc=;
+	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
+	 References:Date:Message-Id; b=JHBGkZdVN0pWB+4gt4Or6jVJbIFHKwEAXi1VB6bggTcQjRbNVExhPNf9FfgnxGlODJ8pQfwWb5XI9ixxg99uZqytb5Fh7oV9PL/Hm/KkmvZrRl3+tFZoXSICz+1SmHo7lG/zzy5/8hyZ09otYxXCPnmZe4u6iIbSWLFe/syftBI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=none smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=gnxAX7Uu; arc=none smtp.client-ip=218.76.62.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ultrarisc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YxT4H0gM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77C69C116C6;
-	Tue,  7 Apr 2026 22:58:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775602726;
-	bh=ZxMhQkn/NMJTsfUq+eNI5wRqTDBwCQBg1cjTyGaGSzA=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
-	b=YxT4H0gMU1uiOeHwbtOxxGkfFWJBaCzthqg03Sftf8l9d186Y09INkfJ8VCpcsjUT
-	 Qfd/Qlw+XjxQGpsD/+wtJtFtyh3etr3/mtV9qhSmixByvSXfzBB7nBSEJNPsodmdHd
-	 n6aWnXLqcu6DDQCkFID7N0ab2dedIpF0ftmNXCcvehsYTzafVVvpTSGtJI0Yt78qAh
-	 7zcrBzbK4e2mGEgKbxfT4/RQOcj3aPhgKqv9IwN+ABisbMsvBq2hQAvVVGI9l26vIJ
-	 NOji8KIk0pikMh4DCWmZrmRQsTJnp7fjTB24k9B9hx+3b4Laf7gnEUw1IEsuOG28xo
-	 +wM+h43SmOleg==
+	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="gnxAX7Uu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=ultrarisc.com; s=dkim; h=Received:MIME-Version:Content-Type:
+	Content-Transfer-Encoding:Subject:From:To:Cc:In-Reply-To:
+	References:Date:Message-Id; bh=v2ZpFKZ/AQsdYQlk9IBkKHx5XqLUslRX6
+	ByqCZmbkEU=; b=gnxAX7UuBfJ1Cmi6979zEjTRxBFPE5BC4BbJ7sFxJ0VGCoL55
+	LD/FAe1VImik0zBDYqS413oC66xMZy+5dvo5oac6Hrx3blJWdzuNTPiYZ5zDPyA3
+	Kv+waxeqryrSQixZXTDrFVDpLunOJw6QNh9WbcxTBILfEyxTtN1VP2cdIU=
+Received: from [127.0.0.1] (unknown [192.168.100.1])
+	by localhost.localdomain (Coremail) with SMTP id AQAAfwDXEELHs9Vp+6kBAA--.905S2;
+	Wed, 08 Apr 2026 09:47:52 +0800 (CST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 08 Apr 2026 00:58:28 +0200
-Message-Id: <DHNAMNISZJ9O.3B58NWX64GBGE@kernel.org>
-Subject: Re: [PATCH v5 0/9] driver core: Fix some race conditions
-Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J . Wysocki"
- <rafael@kernel.org>, "Alan Stern" <stern@rowland.harvard.edu>, "Alexey
- Kardashevskiy" <aik@ozlabs.ru>, "Johan Hovold" <johan@kernel.org>, "Eric
- Dumazet" <edumazet@google.com>, "Leon Romanovsky" <leon@kernel.org>,
- "Christoph Hellwig" <hch@lst.de>, <maz@kernel.org>, "Alexander Lobakin"
- <aleksander.lobakin@intel.com>, "Saravana Kannan" <saravanak@kernel.org>,
- "Andrew Morton" <akpm@linux-foundation.org>, <Frank.Li@kernel.org>, "Jason
- Gunthorpe" <jgg@ziepe.ca>, <alex@ghiti.fr>,
- <alexander.stein@ew.tq-group.com>, <andre.przywara@arm.com>,
- <andrew@codeconstruct.com.au>, <andrew@lunn.ch>,
- <andriy.shevchenko@linux.intel.com>, <aou@eecs.berkeley.edu>,
- <ardb@kernel.org>, <astewart@tektelic.com>, <bhelgaas@google.com>,
- <brgl@kernel.org>, <broonie@kernel.org>, <catalin.marinas@arm.com>,
- <chleroy@kernel.org>, <davem@davemloft.net>, <david@kernel.org>,
- <devicetree@vger.kernel.org>, <dmaengine@vger.kernel.org>,
- <driver-core@lists.linux.dev>, <gbatra@linux.ibm.com>,
- <gregory.clement@bootlin.com>, <hkallweit1@gmail.com>,
- <iommu@lists.linux.dev>, <jirislaby@kernel.org>, <joel@jms.id.au>,
- <joro@8bytes.org>, <kees@kernel.org>, <kevin.brodsky@arm.com>,
- <kuba@kernel.org>, <lenb@kernel.org>, <lgirdwood@gmail.com>,
- <linux-acpi@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-aspeed@lists.ozlabs.org>, <linux-cxl@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-mips@vger.kernel.org>,
- <linux-mm@kvack.org>, <linux-pci@vger.kernel.org>,
- <linux-riscv@lists.infradead.org>, <linux-serial@vger.kernel.org>,
- <linux-snps-arc@lists.infradead.org>, <linux-usb@vger.kernel.org>,
- <linux@armlinux.org.uk>, <linuxppc-dev@lists.ozlabs.org>,
- <maddy@linux.ibm.com>, <mani@kernel.org>, <miko.lenczewski@arm.com>,
- <mpe@ellerman.id.au>, <netdev@vger.kernel.org>, <npiggin@gmail.com>,
- <osalvador@suse.de>, <oupton@kernel.org>, <pabeni@redhat.com>,
- <palmer@dabbelt.com>, <peter.ujfalusi@gmail.com>, <peterz@infradead.org>,
- <pjw@kernel.org>, <robh@kernel.org>, <sebastian.hesselbarth@gmail.com>,
- <tglx@kernel.org>, <tsbogend@alpha.franken.de>, <vgupta@kernel.org>,
- <vkoul@kernel.org>, <will@kernel.org>, <willy@infradead.org>,
- <yangyicong@hisilicon.com>, <yeoreum.yun@arm.com>
-To: "Douglas Anderson" <dianders@chromium.org>, <m.szyprowski@samsung.com>,
- "Robin Murphy" <robin.murphy@arm.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260406232444.3117516-1-dianders@chromium.org>
-In-Reply-To: <20260406232444.3117516-1-dianders@chromium.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH v2 1/4] riscv: add UltraRISC SoC family Kconfig support
+From: Jia Wang <wangjia@ultrarisc.com>
+To: Conor Dooley <conor@kernel.org>
+Cc: Jia Wang <wangjia@ultrarisc.com>, Paul Walmsley <pjw@kernel.org>, 
+ Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
+ Alexandre Ghiti <alex@ghiti.fr>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, 
+ Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, linux-riscv@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ devicetree@vger.kernel.org
+In-Reply-To: <20260407-shown-guileless-5c8b8d94f5e5@spud>
+References: <20260407-ultrarisc-pcie-v2-0-2aa2a19a7fb3@ultrarisc.com>
+ <20260407-ultrarisc-pcie-v2-1-2aa2a19a7fb3@ultrarisc.com>
+ <20260407-shown-guileless-5c8b8d94f5e5@spud>
+Date: Wed, 08 Apr 2026 09:47:04 +0800
+Message-Id: <177561282495.2731393.9548650582911498336.b4-reply@b4>
+X-Mailer: b4 0.15-dev
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1775612825; l=1927;
+ i=wangjia@ultrarisc.com; s=20260309; h=from:subject:message-id;
+ bh=i0dYsL4yUueJ1cAqUP1xzFPT+0rfwfboD6UwNL4rbjc=;
+ b=9i1+wyuOTnFY16LgLMob0IB6IKa/m+ARZPhZWrHM+Tr9j8ZgcpSyhohOfC976wd4wrolWJ3k4
+ gzVv0pkedoQB+5Etk8kISb9ErzxusztZpRbkoIS1wIdOy0KhkoWbXH+
+X-Developer-Key: i=wangjia@ultrarisc.com; a=ed25519;
+ pk=XvYkrelqJIIzobY7j+nIg8rsfv5kzaOzuc1UPhd087U=
+X-CM-TRANSID:AQAAfwDXEELHs9Vp+6kBAA--.905S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7AFy3JrW3KF1UKF45Xr1kKrg_yoW8Aw4xpF
+	4rCa45CFZxGF1ftF9aqw409rW3uFsaq3y5uw4UJw1rAFZ8Cry5ZFnrKry3W3WDZFWkJryf
+	KFyFg3W3uF45Za7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9l14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Jr0_Gr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
+	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+	n2kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCY02Avz4vE-syl42xK82IYc2Ij64vIr41l4I
+	8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AK
+	xVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcV
+	AFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8I
+	cIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r
+	4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjTRNJ5oDUUUU
+X-CM-SenderInfo: pzdqwylld63zxwud2x1vfou0bp/1tbiAQALEWnUfzsANAAAsW
 
-On Tue Apr 7, 2026 at 1:22 AM CEST, Douglas Anderson wrote:
+On 2026-04-07 17:29 +0100, Conor Dooley wrote:
+> On Tue, Apr 07, 2026 at 10:40:52AM +0800, Jia Wang wrote:
+> > The first SoC in the UltraRISC series is UR-DP1000, containing octa
+> > UltraRISC C100 cores.
+> 
+> Not gonna lie, I find it odd that pcie is where this platform starts
+> off, but sure. What's the plan for adding the rest of the platform?
+>
 
-Applied to driver-core-testing, thanks!
+Hi Conor,
 
-> Douglas Anderson (9):
->   driver core: Don't let a device probe until it's ready
->   driver core: Replace dev->can_match with dev_can_match()
->   driver core: Replace dev->dma_iommu with dev_dma_iommu()
->   driver core: Replace dev->dma_skip_sync with dev_dma_skip_sync()
->   driver core: Replace dev->dma_ops_bypass with dev_dma_ops_bypass()
->   driver core: Replace dev->state_synced with dev_state_synced()
->   driver core: Replace dev->dma_coherent with dev_dma_coherent()
+Thanks for the question.
 
-    [ Since all DEV_FLAG_DMA_COHERENT accessors are exposed unconditionally=
-,
-      also drop the CONFIG guards around dev_assign_dma_coherent() in
-      device_initialize() to ensure a correct default value. - Danilo ]
+Our next step is to upstream the pinctrl driver together with the related
+DTS updates. The pinctrl series only affects the SoC’s low-speed peripheral
+interfaces. For GMAC, SPI, I2C, and GPIO, we plan to use the existing
+kernel drivers, so no new controller drivers are needed 
+> > 
+> > Signed-off-by: Jia Wang <wangjia@ultrarisc.com>
+> > ---
+> >  arch/riscv/Kconfig.socs | 9 +++++++++
+> >  1 file changed, 9 insertions(+)
+> > 
+> > diff --git a/arch/riscv/Kconfig.socs b/arch/riscv/Kconfig.socs
+> > index d621b85dd63b..98708569ec6a 100644
+> > --- a/arch/riscv/Kconfig.socs
+> > +++ b/arch/riscv/Kconfig.socs
+> > @@ -84,6 +84,15 @@ config ARCH_THEAD
+> >  	help
+> >  	  This enables support for the RISC-V based T-HEAD SoCs.
+> >  
+> > +config ARCH_ULTRARISC
+> > +	bool "UltraRISC RISC-V SoCs"
+> > +	help
+> > +	  This enables support for UltraRISC SoC platform hardware,
+> > +	  including boards based on the UR-DP1000.
+> 
+> > +	  UR-DP1000 is an 8-core 64-bit RISC-V SoC that supports
+> > +	  the RV64GCBHX ISA. It supports Hardware Virtualization
+> > +	  and RISC-V RV64 ISA H(v1.0) Extension.
+> 
+> Delete this section IMO, doesn't provide any real value. Don't need nor
+> want the marketing brochure in the help text. The first sentence is
+> sufficient.
+>
 
->   driver core: Replace dev->of_node_reused with dev_of_node_reused()
->   driver core: Replace dev->offline + ->offline_disabled with accessors
+I’ll drop the SoC description part from the Kconfig help text as you
+suggested.
+ 
+> > +
+> >  config ARCH_VIRT
+> >  	bool "QEMU Virt Machine"
+> >  	select POWER_RESET
+> > 
+> > -- 
+> > 2.34.1
+> > 
+
+Best regards,
+Jia Wang
+
