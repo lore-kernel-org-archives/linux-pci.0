@@ -1,48 +1,48 @@
-Received: from sender4-op-o15.zoho.com (sender4-op-o15.zoho.com [136.143.188.15])
+Received: from sender4-op-o12.zoho.com (sender4-op-o12.zoho.com [136.143.188.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 099343D9027;
-	Wed,  8 Apr 2026 17:57:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 688333D8918;
+	Wed,  8 Apr 2026 17:57:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.12
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775671067; cv=pass; b=C4lGVo80r+TiCj5D8jC+CNfXhwGivwRDi3zjitXtmnDim/QXq7jow7nVMTNU439hiXZtAWWrM8oAu06lxWvqfwosnCYrihyCa4ZA5IKZyecA+vo1xgXwG3JaQ34GFPzEu10+8Y9YGLA1mgq4xi/0l3edjzspUaklQ1QOUeNhceo=
+	t=1775671070; cv=pass; b=H+HJ9048JI5/tHx6KJaS3W910QtygSQu8afeVadj9zF+m3imOmf4pkM02dma4u8xk0rZkFzNkJ062ERPwlIx8jRd6FfAweYPfDtfK0GzDcRRoDD8K4c5go0T/HMxi1B2Zi5ndtPOP5ICIfEfKQ5u9ozxAbWUzUFQY6OuHAoYAdE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775671067; c=relaxed/simple;
-	bh=Y6T0jbAcKzSvw6cN8qw0CztXkKVreZpkXHAOkeyyZWI=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=K7BC30Fsx7LqvB1IMIwn+yNogb2hcBO2OzGUYxu6O1beeGPSyA1gjQ7IdNC/Xzilm+UGH2r6VDcbTPY2TcIjUzR4m/YEXEoUfhNfkKtFueGcG5JaadCUf3Q90YjzxWLzfsWstR678ErLht2/dFB2xDxr9CtMEPX/BlDTfOyvqJs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rong.moe; spf=pass smtp.mailfrom=rong.moe; dkim=pass (2048-bit key) header.d=rong.moe header.i=i@rong.moe header.b=GjPFp+7z; arc=pass smtp.client-ip=136.143.188.15
+	s=arc-20240116; t=1775671070; c=relaxed/simple;
+	bh=40Swb9hDDPRZ1WxKQ3Q1OfIJx4PN2zac84FzG+15J30=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=N/MQvg1qmygi1xE4Lzz1U7pAT/Rp2+T2aTOlAJqXIBY58ATEEL9rOaCSuQselITQyb7s0zcs/UMQBB6w0K8ckqXdzsHpEEgHrWO7z1nMLWDe7aF+KYVAXFzPb6FoOocn+v3noIrzhVwyOBDJ6alhAvils3m4oJWwRqu9Fi02w1g=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rong.moe; spf=pass smtp.mailfrom=rong.moe; dkim=pass (2048-bit key) header.d=rong.moe header.i=i@rong.moe header.b=l3XNOglI; arc=pass smtp.client-ip=136.143.188.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rong.moe
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rong.moe
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=rong.moe header.i=i@rong.moe header.b="GjPFp+7z"
-ARC-Seal: i=1; a=rsa-sha256; t=1775671041; cv=none; 
+	dkim=pass (2048-bit key) header.d=rong.moe header.i=i@rong.moe header.b="l3XNOglI"
+ARC-Seal: i=1; a=rsa-sha256; t=1775671047; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=exeaXtbr2Hw43s8iGcGd8frkjNj4yj5XJuuj0IkGZSXOuGB7zvyPAIBatElcaelomnOTgZRBvRUhmzfybOfRJKhyzfL+YiS/Bl/WD60IKSLRcNr4vUyqAtjLjdmj4bTZlmLOFHTuI9eR/H/TBznxvtHKOfJI1dabfWuL+5/JgkE=
+	b=hMWTn1vIgHtcYyHEYu2t7qhR2GJU65MlI2IN+3dS4WzM85pwR+crkJpvK0U3c/JAx8xwqD2+MVIx/fJZG3BDUe0m74BjO+JYuMG3wgjLZlTFYrNoIAfVUT0n/sa4HUnbrCG8HcTwou4CDnkjOb87hG0hIZsg4oTmVa9+Lxx6FZA=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1775671041; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=p4pF/F9iArMybAchaDSsfxBcz1TRYzAHsA/fPnJEh7Q=; 
-	b=d12wKUnwCGdTCK/7902RZ6G3Dup4QMXi8XbZDvuAuN2URcoxDqVHYMs6r8I9JAUq0LwKc7Wn4KoQi+AUL5nGYR2slrXzmytiGqBRg8Yu8r3qkcjDPLnbuAlIQVty9cZE6/po5yrGMDEuZ+dX1rYC8XjSosnpIWeupMf35/n50WU=
+	t=1775671047; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=COxeKDaX+XgKV90LR9TylYsK00hAyP3GSYBqn/E/Jzc=; 
+	b=TdG9+eQmuLpFuksJOJeg1MT6rtxjeXh8VfDcDwD8iqfqzkA1BLJ9pmVFbx0V283fqz3f4GpyQ9dhOCiHMVil+LbbYgXwbbry38lGbeq+FI7dG51KS7vOzoNikGDwPL1Z1HKiHw4vBQZU04+cFQKNQfVioFsLsA9ki+rVt5QJlE0=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=rong.moe;
 	spf=pass  smtp.mailfrom=i@rong.moe;
 	dmarc=pass header.from=<i@rong.moe>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1775671041;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1775671047;
 	s=zmail2048; d=rong.moe; i=i@rong.moe;
-	h=From:From:Subject:Subject:Date:Date:Message-Id:Message-Id:MIME-Version:Content-Type:Content-Transfer-Encoding:To:To:Cc:Cc:Reply-To;
-	bh=p4pF/F9iArMybAchaDSsfxBcz1TRYzAHsA/fPnJEh7Q=;
-	b=GjPFp+7zMBflyY0tAme4KCFoFIJ3+aQ5+f9umJ7zDW5OkOTwjU0yTRIO7dh20y3I
-	KXgaoUZcWfNt2PhezJ5Aa4t6Ke+ewQUTDw67D5hx3xx0/3mjorD09BiS4YDIFB4A6Hx
-	NVMquKKxiveILly4aK4f3m6WhiGu9WUtAXBM0YRKsqH6ksfUYJKujsD12l0DGVe6+Wl
-	F8TwGA30YqMjmazWPwwEBKstrap6GTyfEGsm9iuUQT2qhK3WvI598B3gqn8P1xlbjXF
-	U5cOOA+HOZk3x6n6ivcWGhQKuTTIve2dYg6RCxNLtul8pPuLZD7X5w0Bpwtj7lQEIOm
-	mQhE95Butw==
-Received: by mx.zohomail.com with SMTPS id 1775671038793514.9253555983514;
-	Wed, 8 Apr 2026 10:57:18 -0700 (PDT)
+	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:References:In-Reply-To:To:To:Cc:Cc:Reply-To;
+	bh=COxeKDaX+XgKV90LR9TylYsK00hAyP3GSYBqn/E/Jzc=;
+	b=l3XNOglIfOzSCm5bFTlmolTMycT7nLvoW4Ifh0HfS6RKlUrmL90i1Aib5ziIRhmA
+	ajnJ+qTvunHg/PvWssGonXnikoBh3zehXEIEdXU3i6bw5dPXEz+KNBUBVjTT5OKWHJN
+	W3XSY6EW85RlIa8YWR+RBpBRRRH83laFF3YfdnI1ktAW4Pg2Tt0oWHK/L9FRE9v0ESJ
+	A+/eR8JFhccUfTgZRiAG2S11DCWkQmY1qUCLBX+jFxDsaGM8xm9YUsvBbZAD9wBX9v7
+	AFC2/yY5rTKL5tyDwI20Hchqiqc3DpUP8CDWuVqK2xY5RYOJDVYUMhJlV89fBJBx8pm
+	rBNOp56jEA==
+Received: by mx.zohomail.com with SMTPS id 1775671044929313.9143064676292;
+	Wed, 8 Apr 2026 10:57:24 -0700 (PDT)
 From: Rong Zhang <i@rong.moe>
-Subject: [PATCH 0/2] PCI: loongson: Do not ignore downstream devices on
+Date: Thu, 09 Apr 2026 01:56:58 +0800
+Subject: [PATCH 2/2] PCI: loongson: Do not ignore downstream devices on
  external bridges
-Date: Thu, 09 Apr 2026 01:56:56 +0800
-Message-Id: <20260409-ls7a-bridge-fixes-v1-0-3650fedf1afc@rong.moe>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,10 +51,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAOiW1mkC/yWMywrCMBAAf6XsuYEY0pj6K8VDHquulCjZKkLIv
- 3fV4zDMNGCshAynoUHFNzE9isBhHCDdQrmioiwMRhunrfZq5WNQsVIWdaEPsvJhjpMNLjqTQLp
- nxZ+QbDn/mV/xjmn7jqD3HWQdQph1AAAA
-X-Change-ID: 20260408-ls7a-bridge-fixes-8a9b54a6b62c
+Message-Id: <20260409-ls7a-bridge-fixes-v1-2-3650fedf1afc@rong.moe>
+References: <20260409-ls7a-bridge-fixes-v1-0-3650fedf1afc@rong.moe>
+In-Reply-To: <20260409-ls7a-bridge-fixes-v1-0-3650fedf1afc@rong.moe>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
  =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
  Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
@@ -106,16 +105,29 @@ Co-developed-by: Lain "Fearyncess" Yang <i@lain.vg>
 Signed-off-by: Lain "Fearyncess" Yang <i@lain.vg>
 Signed-off-by: Rong Zhang <i@rong.moe>
 ---
-Rong Zhang (2):
-      PCI: loongson: Move bridge device ids to file scope
-      PCI: loongson: Do not ignore downstream devices on external bridges
+ drivers/pci/controller/pci-loongson.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
- drivers/pci/controller/pci-loongson.c | 31 ++++++++++++++++---------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
----
-base-commit: 3036cd0d3328220a1858b1ab390be8b562774e8a
-change-id: 20260408-ls7a-bridge-fixes-8a9b54a6b62c
+diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controller/pci-loongson.c
+index 8b1a3a03dc51..de5e809a537d 100644
+--- a/drivers/pci/controller/pci-loongson.c
++++ b/drivers/pci/controller/pci-loongson.c
+@@ -231,11 +231,11 @@ static void __iomem *pci_loongson_map_bus(struct pci_bus *bus,
+ 	struct loongson_pci *priv = pci_bus_to_loongson_pci(bus);
+ 
+ 	/*
+-	 * Do not read more than one device on the bus other than
+-	 * the host bus.
++	 * Do not read more than one device on the internal bridges.
+ 	 */
+ 	if ((priv->data->flags & FLAG_DEV_FIX) && bus->self) {
+-		if (!pci_is_root_bus(bus) && (device > 0))
++		if (!pci_is_root_bus(bus) && (device > 0) &&
++		    pci_match_id(loongson_internal_bridge_devids, bus->self))
+ 			return NULL;
+ 	}
+ 
 
-Thanks,
-Rong
+-- 
+2.53.0
 
