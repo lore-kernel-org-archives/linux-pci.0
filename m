@@ -1,60 +1,64 @@
-Received: from sender4-op-o15.zoho.com (sender4-op-o15.zoho.com [136.143.188.15])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDA9C3BB9E5;
-	Wed,  8 Apr 2026 12:27:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.15
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775651267; cv=pass; b=fjOK6oWf3sAQxV7ef/ePVE2dk1rCAvbwRUPOuTyd5ZyhB9zQRjW9tLmRYZobkH/7w3/AjVJaBu+O17r9RijspJ8uoXFV0Xmgpl+tjFLf5ThBf4MrOE0eTfb653uSyb4LEmr5S8+vP75+bpO7H6JH6ZchXnn824RMKVpBsLgSs5M=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775651267; c=relaxed/simple;
-	bh=1myPJNKnI5ThomXAWdu4Y+2jDCmojVjvH5o93/k4DSw=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD3F83612F6;
+	Wed,  8 Apr 2026 12:29:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775651356; cv=none; b=GyCUQ/S9qS2AqhFWm5QIdCKNZ2VsnCjKJnrAEY6WA+1JPjauii4b7nI/KI9qBkFHnNmxONu8qoJOVpOUqmxMCrr+wWnzFgiHZPJyHL8McJWmxYKHUUFpQgyc3z4zeK0DfR3zZ+SyeADs5Df0jBWGUedcMezlThliBJ8cbICWqwo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775651356; c=relaxed/simple;
+	bh=RyPjlBk2oXw22XJ3XZElJPOkp9RBF5BLOF29crTwsoQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tPiB6cXXNbUOmQI3xHkYrz/nSorwBmO0Uff4aNlATedGnYYkd6IP4bvJv/nCAf3oWxlhZGpni2RVimN+rCzCFf2cBP967TvMoRpeVpZyfOO5wQSVw5AKZ6YGUccigRLXQGgvaXUv5AoiY+/ehEIMBefWusm6porZzerQ3Q7XzA8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc; spf=pass smtp.mailfrom=ziyao.cc; dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b=SuXHdTn1; arc=pass smtp.client-ip=136.143.188.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziyao.cc
+	 Content-Type:Content-Disposition:In-Reply-To; b=SpmMKgJIWbOO5Y3dEapRSaJwvnyawIrSH8Dqb1D6f/fbSM+c+pdc8WVq6msntA0mK0RzjCcjHjiTbhBlelCaeoppe+mMs22pc/zF3DeNodeR9HTclRclkNzlyAjMzz4ybzgNUXpPyenfh4OjPuQqLBPlKyYTPhYy64ODwx9cfgs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cIdM0v1R; arc=none smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b="SuXHdTn1"
-ARC-Seal: i=1; a=rsa-sha256; t=1775651242; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=Dlz4YQIt+f6fwT7Ir0PgfSSA8ecvzDFVtMtkrlODhajvUTF0cyZrUHRNCN98CQXC7EoO3IXuixuwf+jrpJyGZimPVR4fTMltByf2brj+hW8lhAnsB8ycw/RqBR98mcoo+Nwisq5Dz953mkouGcN+iBTOFNKMmTFDgfDI7AcV/1o=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1775651242; h=Content-Type:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=OP0Xtw6BJphUFRNOGnh1Chi0RqSO/93ee7QIMktWQu4=; 
-	b=HSXSLgRd3+nWET8IIo8MbsXR6IKCRTiuaZhC7XvH63wIkz9L08Pc+FhBSRHErCf2nPEJc7M/RCTINUpekO0xHpucwQ4tyUfz26GS03ClS29eNn6msrHCsv07rncd+8HttwODShDayEoEwXCfJaGTh3LmkVo9txdQiErzX/Xht9Y=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=ziyao.cc;
-	spf=pass  smtp.mailfrom=me@ziyao.cc;
-	dmarc=pass header.from=<me@ziyao.cc>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1775651242;
-	s=zmail; d=ziyao.cc; i=me@ziyao.cc;
-	h=Date:Date:From:From:To:To:Cc:Cc:Subject:Subject:Message-ID:References:MIME-Version:Content-Type:In-Reply-To:Message-Id:Reply-To;
-	bh=OP0Xtw6BJphUFRNOGnh1Chi0RqSO/93ee7QIMktWQu4=;
-	b=SuXHdTn165Ql5lOQchED3QYxMNSRDBD1V515RbRDGj9uWs/JTRicSgULb0PDf36x
-	x5nX3xwWHJHg3hBsA2o0iR1mykK/cfEbjQ5cPkUnicZo6r1KQvTU6DlzuRpI5Wjyx55
-	UeDsrhh6zd3OHYhx2gn9SxdlKBJhu4XOqUcWfHZ4=
-Received: by mx.zohomail.com with SMTPS id 1775651239806991.8648941834614;
-	Wed, 8 Apr 2026 05:27:19 -0700 (PDT)
-Date: Wed, 8 Apr 2026 12:27:09 +0000
-From: Yao Zi <me@ziyao.cc>
-To: Chen Wang <unicorn_wang@outlook.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>,
-	Hans Zhang <18255117159@163.com>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Manikandan K Pillai <mpillai@cadence.com>,
-	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-	Inochi Amaoto <inochiama@gmail.com>, Han Gao <rabenda.cn@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/2] PCI/sg2042: Avoid L0s and L1 on Sophgo 2042 PCIe
- Root Ports
-Message-ID: <adZJnZAmaFvEFSqL@pie>
-References: <20260405154154.46829-1-me@ziyao.cc>
- <MA5PR01MB1250034FF14DFFDF5C04093FDFE5BA@MA5PR01MB12500.INDPRD01.PROD.OUTLOOK.COM>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cIdM0v1R"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1775651354; x=1807187354;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=RyPjlBk2oXw22XJ3XZElJPOkp9RBF5BLOF29crTwsoQ=;
+  b=cIdM0v1ROO//RlDUJbhh9Y2RjYsqT2cZHiuvHj5lc/FXVVm8SuhiSKbw
+   6Mq+MIGBy57W9jBwsgPa7TfUDiMUiWVsJiY8aeaAGc7wBATmPWiyrOjgN
+   gojgLxt/R9WsuzmAtd+gP4jRzvy8MLbgG/pdvW0qqTQ3XPyIHHK0fi+SP
+   y6GQ/hfHdGPPZSoVEcTeRYR9pW3OjvZa1yFBopIkE2p3O6EqPJ+dLGkMI
+   t6yaED+cEG0DDZmYZMLK6D5bQTBw4y4MCsUi8cMxpmzY9/RIjIta2U0Sx
+   y/rLMXKq+7HtDuSUoS3beesti/yZMEGd1EQe6UkSNnZuHQswAmHZHOXh6
+   w==;
+X-CSE-ConnectionGUID: DYJAOOUdRe6tvhcrhg+Npg==
+X-CSE-MsgGUID: eAQmXBU0SWGLu0kgSD18Dw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11752"; a="102084311"
+X-IronPort-AV: E=Sophos;i="6.23,167,1770624000"; 
+   d="scan'208";a="102084311"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Apr 2026 05:29:13 -0700
+X-CSE-ConnectionGUID: wpPR+5qCTKCfpiZxazO9Gw==
+X-CSE-MsgGUID: egdSHuSsRXKyCaVnDn4z8g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,167,1770624000"; 
+   d="scan'208";a="232821144"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
+  by orviesa004.jf.intel.com with ESMTP; 08 Apr 2026 05:29:09 -0700
+Date: Wed, 8 Apr 2026 20:07:36 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: Baolu Lu <baolu.lu@linux.intel.com>
+Cc: kernel test robot <lkp@intel.com>, linux-coco@lists.linux.dev,
+	linux-pci@vger.kernel.org, dan.j.williams@intel.com, x86@kernel.org,
+	oe-kbuild-all@lists.linux.dev, chao.gao@intel.com,
+	dave.jiang@intel.com, yilun.xu@intel.com, zhenzhong.duan@intel.com,
+	kvm@vger.kernel.org, rick.p.edgecombe@intel.com,
+	dave.hansen@linux.intel.com, kas@kernel.org, xiaoyao.li@intel.com,
+	vishal.l.verma@intel.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 19/31] iommu/vt-d: Reserve the MSB domain ID bit for
+ the TDX module
+Message-ID: <adZFCF01fxt4gBh8@yilunxu-OptiPlex-7050>
+References: <20260327160132.2946114-20-yilun.xu@linux.intel.com>
+ <202603290006.za7iiDgF-lkp@intel.com>
+ <4be868dc-d6e1-4488-8f28-34ef1d3659ac@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -63,81 +67,66 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <MA5PR01MB1250034FF14DFFDF5C04093FDFE5BA@MA5PR01MB12500.INDPRD01.PROD.OUTLOOK.COM>
-X-ZohoMailClient: External
+In-Reply-To: <4be868dc-d6e1-4488-8f28-34ef1d3659ac@linux.intel.com>
 
-On Wed, Apr 08, 2026 at 04:28:01PM +0800, Chen Wang wrote:
+On Tue, Mar 31, 2026 at 03:20:44PM +0800, Baolu Lu wrote:
+> On 3/29/26 00:57, kernel test robot wrote:
+> > kernel test robot noticed the following build warnings:
+> > 
+> > [auto build test WARNING on 11439c4635edd669ae435eec308f4ab8a0804808]
+> > 
+> > url:https://github.com/intel-lab-lkp/linux/commits/Xu-Yilun/x86-tdx-Move-
+> > all-TDX-error-defines-into-asm-shared-tdx_errno-h/20260328-151524
+> > base:   11439c4635edd669ae435eec308f4ab8a0804808
+> > patch link:https://lore.kernel.org/r/20260327160132.2946114-20-
+> > yilun.xu%40linux.intel.com
+> > patch subject: [PATCH v2 19/31] iommu/vt-d: Reserve the MSB domain ID bit for the TDX module
+> > config: i386-randconfig-141-20260328
+> > (https://download.01.org/0day-ci/archive/20260329/202603290006.za7iiDgF-
+> > lkp@intel.com/config)
+> > compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+> > smatch: v0.5.0-9004-gb810ac53
+> > reproduce (this is a W=1 build):
+> > (https://download.01.org/0day-ci/archive/20260329/202603290006.za7iiDgF-
+> > lkp@intel.com/reproduce)
+> > 
+> > If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> > the same patch/commit), kindly add following tags
+> > | Reported-by: kernel test robot<lkp@intel.com>
+> > | Closes:https://lore.kernel.org/oe-kbuild-all/202603290006.za7iiDgF-lkp@intel.com/
+> > 
+> > All warnings (new ones prefixed by >>, old ones prefixed by <<):
+> > 
+> > > > WARNING: modpost: vmlinux: section mismatch in reference: iommu_max_domain_id+0x55 (section: .text.iommu_max_domain_id) -> acpi_table_parse_keyp (section: .init.text)
 > 
-> On 4/5/2026 11:41 PM, Yao Zi wrote:
-> > After talking to Inochi privately, I'll take the patch instead.
-> > 
-> > This series defines quirk flags for Cadence PCIe host driver to allow
-> > disabling advertisement of ASPM L0s/L1 states by overriding LNKCAP
-> > register, and set them in SG2042 PCIe driver since SG2042's
-> > implementation is broken.
-> > 
-> > I've considered to re-write LNKCAP after cdns_pcie_host_setup() in
-> > SG2042 platform glue, like what has been done in the v1 of patch.
-> > However, cdns_pcie_host_setup() performs pci_host_probe(), which finally
-> > invokes set_pcie_port_type() on the root port. It reads ASPM-related
-> > LNKCAP, which might lead to dangling pci_dev.aspm_{l0s,l1}_support
-> > values. Early PCI device fixup won't work for similar reasons, since the
-> > fixup is performed in pci_setup_device() after calling
-> > set_pcie_port_type().
-> > 
-> > It's hard to fix up the LNKCAP earlier than invokation of
-> > cdns_pcie_host_setup() in SG2042's platform glue, either, since
-> > the function also performs resource allocation/mapping, and we have no
-> > access to the RC registers before it returns.
-> > 
-> > The safest solution which also depends on no PCI subsystem
-> > implementation detail is to have the LNKCAP fixed up right before
-> > informing the PCI subsystem of the device through pci_host_probe(), so
-> > here come the quirk flags and the ASPM advertisement disabling logic
-> > in the core Cadence PCIe driver.
-> > 
-> > This series is based on next-20260403, thanks for your time and review.
-> > 
-> > Changed from v2:
-> > - Use flags to allow platform glues to inform the core driver that
-> >    ASPM implementation is broken and should be disabled, instead of
-> >    introducing platform-specific hooks to do so.
-> > - Fix Co-developed-by tag in patch 2
-> > - Link to v2: https://lore.kernel.org/linux-pci/20260227181925.52475-1-me@ziyao.cc/
-> > 
-> > Changed from v1:
-> > - Disable L0s/L1 capabilities through LNKCAP instead of LNKCTL
-> > - Introduce platform-specific init/deinit hooks (new PATCH 1) to
-> >    realiably overwrite PCIe RC properties
-> > - Link to v1: https://lore.kernel.org/all/20260109040756.731169-2-inochiama@gmail.com/
-> > 
-> > Changed from the original patch:
-> > - Use driver to mask the ASPM advertisement
-> > - Separate from the following patch
-> >    https://lore.kernel.org/all/20251225100530.1301625-1-inochiama@gmail.com
-> > 
-> > Yao Zi (2):
-> >    PCI: cadence: Add flags for disabling ASPM support advertisement
-> >    PCI: sg2042: Avoid L0s and L1 on Sophgo 2042 PCIe Root Ports
-> > 
-> >   .../controller/cadence/pcie-cadence-host.c    |  7 +++++++
-> >   drivers/pci/controller/cadence/pcie-cadence.h | 19 +++++++++++++++++++
-> >   drivers/pci/controller/cadence/pcie-sg2042.c  |  2 ++
-> >   3 files changed, 28 insertions(+)
 > 
-> BTW, I guess you might forget to post this patchset to
-> sophgo@lists.linux.dev. Please remember this later.
-
-Oops, yes. I blindly followed the output of get_maintainers.pl, which
-doesn't mention Sophgo's mailing list when run against pcie-sg2042.c.
-
-Maybe we should add pcie-sg2042.c to the "SOPHGO DEVICETREES and
-DRIVERS" entry in MAINTAINERS file, or add a keyword for the entry?
-
-> Thanks,
+> acpi_table_parse_keyp() is marked as __init. But this patch causes the
+> intel iommu driver to call it from a runtime function.
 > 
-> Chen
-> 
+> int __init_or_acpilib
+> acpi_table_parse_keyp(enum acpi_keyp_type id,
+>                       acpi_tbl_entry_handler_arg handler_arg, void *arg)
+> {
+>         return __acpi_table_parse_entries(ACPI_SIG_KEYP,
+>                                           sizeof(struct acpi_table_keyp),
+> id,
+>                                           NULL, handler_arg, arg, 0);
+> }
 
-Regards,
-Yao Zi
+Is it better we configure ACPI table as library, so that drivers could
+use it freely at runtime? tdx-host also uses this function.
+
+--------8<--------
+
+diff --git a/drivers/iommu/intel/Kconfig b/drivers/iommu/intel/Kconfig
+index 5471f814e073..55188d6d38bb 100644
+--- a/drivers/iommu/intel/Kconfig
++++ b/drivers/iommu/intel/Kconfig
+@@ -1,6 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ # Intel IOMMU support
+ config DMAR_TABLE
++       select ACPI_TABLE_LIB
+        bool
+
+ config DMAR_PERF
