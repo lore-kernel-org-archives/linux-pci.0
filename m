@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAFE13B8938;
-	Wed,  8 Apr 2026 13:55:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 696503D2FE1;
+	Wed,  8 Apr 2026 14:10:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775656530; cv=none; b=k2KcMr7TNZEy7SO0ou6bCqyVZf1/vifg579OFiywz7ylLFd3vpJHDb3aD9Kny48dt++R2PQJB+c/1SDZMlNlArXcR5XWln+ZznP+V75t0StUIREUUnCjFKireBV5OqqgUW0GwK+GmSHdx4VNFTpgREkBEi/wkonagHVihuVrK7s=
+	t=1775657429; cv=none; b=aaw0dwVm573hqLNdPDs+n3U5bSHp2h7ph+dUMD3ON74t76kOikVuIp4ZCd5ATNpiWt6ZIjQX6FFQ+o0HLtvniau82q+/0LIpe//nB4Afe0YRhCa3P8H4BJ6ndE1qV7CXmkzRiNwlr/6xe8tAh74nlRtmxHAarldl7yK2M1kU4N4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775656530; c=relaxed/simple;
-	bh=bWhTBkh9lG0OYn3p1uqGUIvyw6GLsmFHsj0//fglkRI=;
+	s=arc-20240116; t=1775657429; c=relaxed/simple;
+	bh=i2Dbh2ANq28qBSTN2bv54+q1a50BxTE9oJVrrroT5ZY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M7qp2G3/hCf2nwv9pALkmEH4qvgcr+NzH01sHt5i5OZ03w2Fj3QO5SOEQ028aPNBm4fbqIs+mgufGW4N3vtWdxD9pUROGFDL5qUPf43iwPE+uQTFB+3oXVcHwepbg92fTsaEzYUA4ocSn1zXbTkDGixTRgolXt818L0b30jPqtQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xyh+eGOS; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=AVEUYNuvHOdBxfzZJi5/WcllD/9xWDw98jUhFz0THFbdr1VhkrPqJ2kEJPS/axqUILdMJDMURzF9dU9kvD/HifRa2vNGVAMh8gFjkYVq84psArY4IOYE1LNkN5sD7sOi5DMv19FUxINo4kori9VBIvxH+ZAFAntxylq2kkD0kdg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=up9YGgAc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xyh+eGOS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA82DC19421;
-	Wed,  8 Apr 2026 13:55:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="up9YGgAc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EFE9C19421;
+	Wed,  8 Apr 2026 14:10:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775656529;
-	bh=bWhTBkh9lG0OYn3p1uqGUIvyw6GLsmFHsj0//fglkRI=;
+	s=k20201202; t=1775657429;
+	bh=i2Dbh2ANq28qBSTN2bv54+q1a50BxTE9oJVrrroT5ZY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Xyh+eGOS1uEhknb6elYjvxe9plsLEQA0ndZ/lEoPUYioAiP5zQvjd2bNOOWvI5MCL
-	 dZfs0TsU9xwBVF5m6omQOw13bGHGgud/VvcptZASu3QkiKC8BCoEO+mkYwyUCwzz1J
-	 jes4D92bC7QMF7a9IOOGoVb3U8JTx4tCUFf4SaCvo5DDyZDEcXE3XDiP3Rq4W/skR9
-	 zf/ld081YahQDRuyOUmAPBGZFFE1GEOdZjtyqIvCZrXGAXsLZBOzMXh6jasUlbgBvO
-	 1D/CXQGw4lO4f54mBTQyiNhYZU2Klfd6QJQ5LTHEYWyQ09Dks+38g79+7twLd8/bex
-	 //beLRzRUVylA==
-Date: Wed, 8 Apr 2026 19:25:19 +0530
+	b=up9YGgAc7IHMuoBdh3ONWLG9qnGSwvEiHxfi39HKRZ8mywBhKMEm94Rlzn1VuzHDT
+	 33HmtrnISdZapkbYCiHQjrmR+XSrquFED4gadV3DPKdWRpj+a/hMReRETWCsZWNl/u
+	 LriCmU95F2JEOGNheFI41iQL3lQ9uv0JkXa8JtM+/1wz1RyGvOL8k24ogA4dd1fe8k
+	 EmnSVEpf8u+JxK3wcf8oYdNQhCF1saI99/xBesze8W5A8sKEDM2Q5iS/EogyuGBgBA
+	 PeOr16P2iVdIVOPPvwAsRk5gcFTlSMaZ8STdL2vqIgXSmSlUJS604tkBltVO1F4cQ+
+	 0yYXyL5qWsgew==
+Date: Wed, 8 Apr 2026 19:40:19 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Sherry Sun <sherry.sun@nxp.com>
 Cc: "robh@kernel.org" <robh@kernel.org>, 
@@ -39,13 +39,13 @@ Cc: "robh@kernel.org" <robh@kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
 	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, 
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V11 04/12] PCI: imx6: Add support for parsing the reset
- property in new Root Port binding
-Message-ID: <t5x45nyn6lw7cofzj2rec5j6z2ml6kve2hvzeeastdrv4hilsu@ujhkmltpp5ky>
+Subject: Re: [PATCH V11 02/12] PCI: host-generic: Add common helpers for
+ parsing Root Port properties
+Message-ID: <yijf6mwclpx6n7giucgykxvrm73baicy2urhzns34sxgloli3z@ygose2qrgvuz>
 References: <20260407104154.2842132-1-sherry.sun@nxp.com>
- <20260407104154.2842132-5-sherry.sun@nxp.com>
- <7ewnbwdo5qtasbxj4uel6a6uthczq2l6udbvoqqkwm776lvseb@v54ri2gknwxn>
- <VI0PR04MB12114AAA709016DADF0B45DA6925BA@VI0PR04MB12114.eurprd04.prod.outlook.com>
+ <20260407104154.2842132-3-sherry.sun@nxp.com>
+ <lnzprzrdwra7pn7d6m3sbj5pvjy64blwpjl6i3lmlnfbyho63b@czpyhpgz5vum>
+ <VI0PR04MB12114A60C4A7E43ED62A32B04925BA@VI0PR04MB12114.eurprd04.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -55,72 +55,92 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <VI0PR04MB12114AAA709016DADF0B45DA6925BA@VI0PR04MB12114.eurprd04.prod.outlook.com>
+In-Reply-To: <VI0PR04MB12114A60C4A7E43ED62A32B04925BA@VI0PR04MB12114.eurprd04.prod.outlook.com>
 
-On Wed, Apr 08, 2026 at 08:34:03AM +0000, Sherry Sun wrote:
-> > On Tue, Apr 07, 2026 at 06:41:46PM +0800, Sherry Sun wrote:
-> > > The current DT binding for pci-imx6 specifies the 'reset-gpios'
-> > > property in the host bridge node. However, the PERST# signal logically
-> > > belongs to individual Root Ports rather than the host bridge itself.
-> > > This becomes important when supporting PCIe KeyE connector and PCI
-> > > power control framework for pci-imx6 driver, which requires properties
-> > > to be specified in Root Port nodes.
-> > >
-> > > Add support for parsing 'reset-gpios' from Root Port child nodes using
-> > > the common helper pci_host_common_parse_ports(), and update the reset
-> > > GPIO handling to use the parsed port list from bridge->ports. To
-> > > maintain DT backwards compatibility, fallback to the legacy method of
-> > > parsing the host bridge node if the reset property is not present in
-> > > the Root Port node.
-> > >
-> > > Since now the reset GPIO is obtained with GPIOD_ASIS flag, it may be
-> > > in input mode, using gpiod_direction_output() instead of
-> > > gpiod_set_value_cansleep() to ensure the reset GPIO is properly
-> > > configured as output before setting its value.
-> > >
-> > > Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
-> > > ---
-> > >  drivers/pci/controller/dwc/pci-imx6.c | 75
-> > > +++++++++++++++++++++------
-> > >  1 file changed, 60 insertions(+), 15 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/controller/dwc/pci-imx6.c
-> > > b/drivers/pci/controller/dwc/pci-imx6.c
-> > > index d99da7e42590..dd8f9c0fcec4 100644
-> > > --- a/drivers/pci/controller/dwc/pci-imx6.c
-> > > +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> > > @@ -34,6 +34,7 @@
-> > >  #include <linux/pm_runtime.h>
-> > >
-> > >  #include "../../pci.h"
-> > > +#include "../pci-host-common.h"
-> > >  #include "pcie-designware.h"
-> > >
-> > >  #define IMX8MQ_GPR_PCIE_REF_USE_PAD		BIT(9)
-> > > @@ -152,7 +153,6 @@ struct imx_lut_data {
-> > >
-> > >  struct imx_pcie {
-> > >  	struct dw_pcie		*pci;
-> > > -	struct gpio_desc	*reset_gpiod;
-> > >  	struct clk_bulk_data	*clks;
-> > >  	int			num_clks;
-> > >  	bool			supports_clkreq;
-> > > @@ -1224,6 +1224,32 @@ static void imx_pcie_disable_device(struct
-> > pci_host_bridge *bridge,
-> > >  	imx_pcie_remove_lut(imx_pcie, pci_dev_id(pdev));  }
-> > >
-> > > +static int imx_pcie_parse_legacy_binding(struct imx_pcie *pcie) {
-> > > +	struct device *dev = pcie->pci->dev;
-> > > +	struct pci_host_bridge *bridge = pcie->pci->pp.bridge;
+On Wed, Apr 08, 2026 at 06:34:02AM +0000, Sherry Sun wrote:
+
+[...]
+
+> > > +/**
+> > > + * pci_host_common_parse_port - Parse a single Root Port node
+> > > + * @dev: Device pointer
+> > > + * @bridge: PCI host bridge
+> > > + * @node: Device tree node of the Root Port
+> > > + *
+> > > + * Returns: 0 on success, negative error code on failure  */ static
+> > > +int pci_host_common_parse_port(struct device *dev,
+> > > +				      struct pci_host_bridge *bridge,
+> > > +				      struct device_node *node)
+> > > +{
 > > > +	struct pci_host_port *port;
 > > > +	struct gpio_desc *reset;
 > > > +
-> > > +	reset = devm_gpiod_get_optional(dev, "reset", GPIOD_ASIS);
+> > > +	reset = devm_fwnode_gpiod_get(dev, of_fwnode_handle(node),
+> > > +				      "reset", GPIOD_ASIS, "PERST#");
+> > 
+> > Sorry, I missed this earlier.
+> > 
+> > Since PERST# is optional, you cannot reliably detect whether the Root Port
+> > binding intentionally skipped the PERST# GPIO or legacy binding is used, just
+> > by checking for PERST# in Root Port node.
+> > 
+> > So this helper should do 3 things:
+> > 
+> > 1. If PERST# is found in Root Port node, use it.
+> > 2. If not, check the RC node and if present, return -ENOENT to fallback to the
+> > legacy binding.
+> > 3. If not found in both nodes, assume that the PERST# is not present in the
+> > design, and proceed with parsing Root Port binding further.
+> 
+> Hi Mani, understand, does the following code looks ok for above three cases?
+> 
+>     /* Check if PERST# is present in Root Port node */
+>     reset = devm_fwnode_gpiod_get(dev, of_fwnode_handle(node),
+>                       "reset", GPIOD_ASIS, "PERST#");
+>     if (IS_ERR(reset)) {
+>         /* If error is not -ENOENT, it's a real error */
+>         if (PTR_ERR(reset) != -ENOENT)
+>             return PTR_ERR(reset);
+> 
+>         /* PERST# not found in Root Port node, check RC node */
+>         rc_has_reset = of_property_read_bool(dev->of_node, "reset-gpios") ||
+>                    of_property_read_bool(dev->of_node, "reset-gpio");
+
+Just:
+		if (of_property_read_bool(dev->of_node, "reset-gpios") ||
+		    of_property_read_bool(dev->of_node, "reset-gpio")) {
+			return -ENOENT;
+		} 
+
+>         if (rc_has_reset)
+>             return -ENOENT;
+> 
+>         /* No PERST# in either node, assume not present in design */
+>         reset = NULL;
+>     }
+> 
+>     port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
+>     if (!port)
+>         return -ENOMEM;
+> ...
+> 
+> > 
+> > But there is one more important limitation here. Right now, this API only
+> > handles PERST#. But if another vendor tries to use it and if they need other
+> > properties such as PHY, clocks etc... those resources should be fetched
+> > optionally only by this helper. But if the controller has a hard dependency on
+> > those resources, the driver will fail to operate.
+> > 
+> > I don't think we can fix this limitation though and those platforms should
+> > ensure that the resource dependency is correctly modeled in DT binding and
+> > the DTS is validated properly. It'd be good to mention this in the kernel doc of
+> > this API.
+> 
+> Ok, I will add a NOTE for this in this API description.
+> 
+> > 
 > > > +	if (IS_ERR(reset))
 > > > +		return PTR_ERR(reset);
-> > > +
-> > > +	if (!reset)
-> > > +		return 0;
 > > > +
 > > > +	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
 > > > +	if (!port)
@@ -130,110 +150,60 @@ On Wed, Apr 08, 2026 at 08:34:03AM +0000, Sherry Sun wrote:
 > > > +	INIT_LIST_HEAD(&port->list);
 > > > +	list_add_tail(&port->list, &bridge->ports);
 > > > +
-> > > +	return devm_add_action_or_reset(dev,
-> > pci_host_common_delete_ports,
-> > > +					&bridge->ports);
+> > > +	return 0;
 > > > +}
 > > > +
-> > >  static void imx_pcie_vpcie_aux_disable(void *data)  {
-> > >  	struct regulator *vpcie_aux = data;
-> > > @@ -1233,13 +1259,22 @@ static void imx_pcie_vpcie_aux_disable(void
-> > > *data)
-> > >
-> > >  static void imx_pcie_assert_perst(struct imx_pcie *imx_pcie, bool
-> > > assert)  {
-> > > -	if (assert) {
-> > > -		gpiod_set_value_cansleep(imx_pcie->reset_gpiod, 1);
-> > > -	} else {
-> > > -		if (imx_pcie->reset_gpiod) {
-> > > -			msleep(PCIE_T_PVPERL_MS);
-> > > -			gpiod_set_value_cansleep(imx_pcie->reset_gpiod, 0);
-> > > -			msleep(PCIE_RESET_CONFIG_WAIT_MS);
-> > > +	struct dw_pcie *pci = imx_pcie->pci;
-> > > +	struct pci_host_bridge *bridge = pci->pp.bridge;
-> > > +	struct pci_host_port *port;
+> > > +/**
+> > > + * pci_host_common_parse_ports - Parse Root Port nodes from device
+> > > +tree
+> > > + * @dev: Device pointer
+> > > + * @bridge: PCI host bridge
+> > > + *
+> > > + * This function iterates through child nodes of the host bridge and
+> > > +parses
+> > > + * Root Port properties (currently only reset GPIO).
+> > > + *
+> > > + * Returns: 0 on success, -ENOENT if no ports found, other negative
+> > > +error codes
+> > > + * on failure
+> > > + */
+> > > +int pci_host_common_parse_ports(struct device *dev, struct
+> > > +pci_host_bridge *bridge) {
+> > > +	int ret = -ENOENT;
 > > > +
-> > > +	if (!bridge)
-> > > +		return;
-> > > +
-> > > +	list_for_each_entry(port, &bridge->ports, list) {
-> > > +		if (assert) {
-> > > +			gpiod_direction_output(port->reset, 1);
-> > > +		} else {
-> > > +			if (port->reset) {
-> > > +				msleep(PCIE_T_PVPERL_MS);
-> > > +				gpiod_direction_output(port->reset, 0);
-> > > +				msleep(PCIE_RESET_CONFIG_WAIT_MS);
-> > > +			}
+> > > +	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
+> > > +		if (!of_node_is_type(of_port, "pci"))
+> > > +			continue;
+> > > +		ret = pci_host_common_parse_port(dev, bridge, of_port);
+> > > +		if (ret)
+> > > +			return ret;
 > > 
-> > Sashiko flagged this loop:
-> > 
-> > ```
-> > Does this loop multiply the initialization delays?
-> > If a controller has multiple Root Ports, the msleep calls will run sequentially
-> > for each port, linearly increasing the delay. Could we optimize this by
-> > asserting all reset GPIOs, waiting the pre-delay once, de-asserting all GPIOs,
-> > and waiting the post-delay once for the entire bus?
-> > ```
-> > 
-> > Maybe you should do:
-> > 
-> > 	if (!list_empty(&bridge->ports) && !assert)
-> > 		msleep(PCIE_T_PVPERL_MS);
-> > 
-> > 	list_for_each_entry(port, &bridge->ports, list) {
-> > 		...
-> > 		gpiod_direction_output(port->reset, 0);
-> > 		...
-> > 	}
-> > 
-> > 	if (!list_empty(&bridge->ports) && !assert)
-> > 		msleep(PCIE_RESET_CONFIG_WAIT_MS);
-> > 
+> > As Sashiko flagged, you need to make sure that devm_add_action_or_reset()
+> > is added even during the error path:
 > 
-> Hi Mani, I think the code below looks clearer, is that ok for you?
+> Yes, it needs to be fixed. We can handle it with the following two methods, I am not sure which method is better or more preferable?
 > 
->     if (assert) {
->         list_for_each_entry(port, &bridge->ports, list)
->             gpiod_direction_output(port->reset, 1);
->     } else {
->         if (list_empty(&bridge->ports))
->             return;
+> #1: register cleanup action after first successful port parse and use cleanup_registered flag to avoid duplicate register.
+>     int ret = -ENOENT;    
+>     bool cleanup_registered = false;
 > 
+>     for_each_available_child_of_node_scoped(dev->of_node, of_port) {
+>         if (!of_node_is_type(of_port, "pci"))
+>             continue;
+>         ret = pci_host_common_parse_port(dev, bridge, of_port);
+>         if (ret)
+>             return ret;
+> 
+>         /* Register cleanup action after first successful port parse */
+>         if (!cleanup_registered) {
+>             ret = devm_add_action_or_reset(dev,
+>                                pci_host_common_delete_ports,
+>                                &bridge->ports);
 
-This check should be moved out of the if() condition. Other than this, the
-change looks good.
+Even if you register devm_add_action_or_reset(), it won't be called when
+pci_host_common_parse_port() fails since the legacy fallback will be used.
 
->         msleep(PCIE_T_PVPERL_MS);
->         list_for_each_entry(port, &bridge->ports, list)
->             gpiod_direction_output(port->reset, 0);
->         msleep(PCIE_RESET_CONFIG_WAIT_MS);
->     }
->
-> > And then this:
-> > 
-> > ```
-> > Also, since this function is called from imx_pcie_resume_noirq, which
-> > executes with hardware interrupts disabled, does the use of msleep here
-> > trigger a 'sleeping while atomic' bug?
-> > ```
-> > 
-> > This is a valid concern. You should use mdelay(). But I'd recommend switching
-> > to IRQ enabled callback, resume() instead. There is no complelling reason to
-> > use resume_noirq() in this driver and adding delays in noirq() callbacks is not
-> > recommended as it may increase the overall system resume time.
-> > 
-> > I will submit a separate series to convert dw_pcie_resume_noirq() and its
-> > callers to IRQ enabled callbacks since this dw_pcie_resume_noirq() could
-> > potentially cause delay up to 1sec.
-> 
-> Yes, this is not a new bug introduced by this patch. I agree we should covert the
-> convert dw_pcie_resume_noirq() and the caller to IRQ enabled callbacks to fix
-> this in a separate patch series.
-> For now, should I leave it as is, or switch to mdelay in this patch?
-> 
-
-Just use mdelay() in your patch for now.
+So you need to manually call pci_host_common_delete_ports() in the error path.
 
 - Mani
 
