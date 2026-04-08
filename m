@@ -1,161 +1,127 @@
-Received: from mail-qt1-f169.google.com (mail-qt1-f169.google.com [209.85.160.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15BE0322A
-	for <linux-pci@vger.kernel.org>; Wed,  8 Apr 2026 22:32:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.169
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775687532; cv=pass; b=eCC/8tYR2+zWnL+TWoBfU7HoKpPJuR3sjHaT2lrtc3TBQO+hKXCK4Prln9eCMrWX6BFG8aHkv6rtBYVttfQMJ2Y6I22ZSX/qkT8Tt6+GIy/iTPIPim8aPu2Xjn3EQwWerH5I767GPQqj+d4s/XSX5ps4ls/KVavtRgtyE0mWUZs=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775687532; c=relaxed/simple;
-	bh=IZpPMH2uXRAuJm3GoI9DOO84aQStal6cbQJmXC/Si1Y=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=bHLJljLK26tGSQxbKbcuhg3t43HTSPIkYikDCXheaVVATORV5WafX5PtkVp0OWOC1UeSzVE3zQ84Hz7lIVPFnpXEbKWK2YeZtc7DLarRfPa3QKizX8Tixr19Z7BuaoKq6TmkKuiwUoHHLSEgldMGuY5TYY+XsYp+n6qO+bQ8k44=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com; spf=none smtp.mailfrom=jqluv.com; dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b=HaFHmRNT; arc=pass smtp.client-ip=209.85.160.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=jqluv.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87A9F27FB37;
+	Wed,  8 Apr 2026 23:12:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775689972; cv=none; b=ikd9w3OyX1rRxANCr45O+6XaLrKRuzoiEZ6O0UAqiXa6V9Tyz/vGYfFC8naBFaxJo+RBDFGznhNB4Qy3PSjHHVyb3WWRSP+MJtKAb9eel6qfc0L2V+Ff3YCbW/mcCxI9gzcxs9OfmyqiqBcvxX/ZM8/aawQ89gHiP8+Bc9OxRrQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775689972; c=relaxed/simple;
+	bh=4ixOa87Rl+zC5lLX74n74Emn8LZURNkIR0pJN/SLRk0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UshZQAI/xEi+Ba3qFYJNkk9/Js6kadq+DnTumTqx1vTktQN72ywP/uBCefbPKia1CfpaqzjTP+377llDYQCI/CyvdH1csCuQYCGKwuZXEjkOZQhMbeh9iNPeY59AJadpEyaD37jPJbBaB8iX92Fo+VYtmSUiqejGiRc40a1G5lw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=RnXSvFBQ; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b="HaFHmRNT"
-Received: by mail-qt1-f169.google.com with SMTP id d75a77b69052e-50697d6a69cso1607841cf.2
-        for <linux-pci@vger.kernel.org>; Wed, 08 Apr 2026 15:32:10 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1775687530; cv=none;
-        d=google.com; s=arc-20240605;
-        b=J9obMpmzeeP0BIP4qbTFlDQeL/svcFeyTUSxDoMzZtQTJ+6+s03uOLDFPmZT9LuzUh
-         x0GUC5YEJ9AujaK57jV6fq0Jzas0AJoBD9tKl8N3stBlKMxjs733rsCrt6UqgIUO7MCu
-         7i3Daypg8wquLwRVPHJqazyBgSZSIQCWvshjeSfj3hD5nmDvCp8+ffL86nhlGRzN2AZW
-         8OPrvnvCAiKgdf8vk+5mCC4lbwNqQ5GL51pIdbqNjMD0VJM1wHlcQn0EJnelfcbOu8jN
-         Cro3mTA1KbJO/nxL36YbM58kEPYATcGOtkCNAC2yvR0A2Dc1GvFXvczqG6CXEYPepZTT
-         6G6Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=qTWgccEr99tvNib9c0TXHqLjF/qDPCnDy+II/n6qryg=;
-        fh=3vasvzV3PWarSQU4ptWMrJZYWSFv15+BXbY1lciJg+k=;
-        b=MX3sc2Cq0Ma7rlb/PqozZikhORZM7z1IPcxfgitkQAyvK2g5cfBFcZfEQG67ZvaG8x
-         3oMMBuIb0JcSbFvwncRI6y5/zo+e0YS3hcxjW75PUo0PIgt17D9idB5rzhWdrFr6mGW8
-         U37t3L6/6pDg5bihYfoIciHnnDa6Q+Q9IWdc36gFhyxgxsTDWozHF36EGxsyLYfKTFLi
-         R2RrhyANBIi/Vol/Z0XrcbyjCogjmHKG0b4+ZoL3KdhAdxzuYarXfAj1XdwD2dfi0fbo
-         wJRNatnkKTn6kJlR8FBRrzQswICYMp+Wg7NOd3eYBc4Qj9/vZD4tlVP/qtJLrGgD4qfk
-         oJIQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=jqluv-com.20251104.gappssmtp.com; s=20251104; t=1775687530; x=1776292330; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=qTWgccEr99tvNib9c0TXHqLjF/qDPCnDy+II/n6qryg=;
-        b=HaFHmRNTH8Oib5ih4a8uCFWXkrXa5Czc4zpSBr6tKSADPZj0Rr4czVTosJcnUnEYQk
-         LFZtV6olMzWZYNuE34dVdJIANi7jUjM0fKSw4TrriTjd6eVm2UavsJE6gXFyM0WPqj4d
-         XrHZC8xY+hqhx/I6htWFWO3rBcP+VBW1MB65CshcdMCFt2KOIV3iIqI2itVY+uDPdq8/
-         yoYphlP3gVVy24peVQN7+bbhlcQeM6eBk2P/UZ5Isr1pnMMWqlSvAK79WKm/c5HlO9eF
-         h4dS8XXWOOwvHbypekYcJSDk6MDkn7schUxCS9UAFzU4QxdRUL2EKzLo174/BwzEiOTL
-         lF2A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775687530; x=1776292330;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=qTWgccEr99tvNib9c0TXHqLjF/qDPCnDy+II/n6qryg=;
-        b=Xt4K0qDzK2H/LVNjUqy625B9SJtirS8z2WzHAsDCfCYzAzYuov4cpp4XDj42Gc2eYK
-         oW2XauYg0UGiPpb8F8CJ41Sh3OrC4VNF8rg+x1u024O6Gr1t+c7eClPyrB6M2CfRlu0Y
-         5EF3dSgmWb84V9JvwKohrPhJBJG7/jvYBB8926HC/IoEYZwXbebFyM5zLNHKtXcMZOQl
-         FYuIaTavWeEz3Ci6cKu7JI/hMG4mTHZHok6Uo2eEMnzWoAO46yps9sJ/IOFANP/wdbNw
-         ms5iFdxKfHoTe+c2utRj8Paz9LDBxForDU96VUMl6kxciSg1z6Wv5M8rTlh5IG1m+txI
-         HRWg==
-X-Gm-Message-State: AOJu0Yz+KLjX9kXmZdtip60Ogzz3XZyG8H9aK6R8pme1lWZE96g2T6PW
-	Ub5I5kJqlav7M+pW7KYhvBIY/UyQrnFXu4HsmaW6nMtZodnpMNklOL0om7UcN3ZqAg5q2HU+Ibt
-	DqQksVF2Okm2A6fPNeckn5N+odE+piY5Z0+veNtS1cv6cFdoOkA26UKf4KyFT
-X-Gm-Gg: AeBDiesUBnuA0bM/8Wjap8ruJk0eEmRlbI9WmaAWiIbbVLIzDKrrnUyO1vDaWmOQZlc
-	NDUZ6llL06HpCHPXzAq5znXD/JuLD9wsJBOdPdQdzS9pybP++JIETy6/tQcDdUgYNqD0nhpV/F2
-	xIIBUhXtwAFU3ChROv7dFDgzNrkWL05o8fyjUgx88y+mzjTPT2MT7NZcbE1IWMXca5KAkeAKX8w
-	kuaS8/NX6ToDAc92GZAmNFeTEzEJwe6cFmbA7wKmWhNusntYc7BoSxNwNpfB7jTb8S1X5uocwcP
-	s8dt
-X-Received: by 2002:a05:622a:298e:b0:50b:3e4d:7ffa with SMTP id
- d75a77b69052e-50d62b191a6mr313634201cf.45.1775687529667; Wed, 08 Apr 2026
- 15:32:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="RnXSvFBQ"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 638IBOWd2301624;
+	Wed, 8 Apr 2026 23:12:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=xQl6MmNdG3YYnHAHUYZMWGICh6uDQs
+	SLUxVz+4KVHYQ=; b=RnXSvFBQQNyH5EJIs1e943OMDWq861BdQky3UOGKZ2lFm1
+	0+0OKc/GdTsM7ferqZEaIPF6FZfBVhA+c5iYhiiH6CDKOo759m/IKmTm2QX+JlKg
+	KgQh+agqStcJjP902dgFarU1TdheWklVDjCx9V8OqQZ/Dh1CrP9v9C0cdlpYeoF9
+	lfq1auoBu1eYrxEM6jxQ3+wFuZH7/79nWTF/pCH43IOA/3frVLJsO1M89PU2Bj9r
+	nYtueXpe7Fw4KiiMkR0XMF+FLi6JTXPwen2x2keeaAsSWo5m2TXyu2WmdZDN28Z1
+	nSIpn2bm6aUbEdSM+aLEr16aDxDrwKA7/NZwHTFA==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dcn2fjc4e-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 08 Apr 2026 23:12:37 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 638KGLse026723;
+	Wed, 8 Apr 2026 23:12:36 GMT
+Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4dcmg81ag8-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 08 Apr 2026 23:12:36 +0000
+Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
+	by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 638NCT0f27263420
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 8 Apr 2026 23:12:29 GMT
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 429CB20043;
+	Wed,  8 Apr 2026 23:12:29 +0000 (GMT)
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id F0E2D20040;
+	Wed,  8 Apr 2026 23:12:27 +0000 (GMT)
+Received: from localhost (unknown [9.111.74.150])
+	by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Wed,  8 Apr 2026 23:12:27 +0000 (GMT)
+Date: Thu, 9 Apr 2026 01:12:26 +0200
+From: Vasily Gorbik <gor@linux.ibm.com>
+To: Niklas Schnelle <schnelle@linux.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
+        Lukas Wunner <lukas@wunner.de>, Shuah Khan <skhan@linuxfoundation.org>,
+        Farhan Ali <alifm@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
+        Gerd Bayer <gbayer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>,
+        Julian Ruess <julianr@linux.ibm.com>,
+        Matthew Rosato <mjrosato@linux.ibm.com>,
+        Peter Oberparleiter <oberpar@linux.ibm.com>,
+        Ramesh Errabolu <ramesh@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-s390@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v8 0/2] PCI: s390: Expose the UID as an arch specific PCI
+ slot attribute
+Message-ID: <ttd774q@ub.hpns>
+References: <20260407-uid_slot-v8-0-15ae4409d2ce@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Geramy Loveless <gloveless@jqluv.com>
-Date: Wed, 8 Apr 2026 15:31:59 -0700
-X-Gm-Features: AQROBzAYRd2k4J9iQ-ethz1Ie32d9w_Wd4dppEmM_5LK5tSu3ozEdURBbY8cotQ
-Message-ID: <CAGpo2meKY6SXsESU-D0PGgbESLqdF8UBF-tmThxOvk2XUDpEzw@mail.gmail.com>
-Subject: [PATCH] PCI: release empty sibling resources during bridge window resize
-To: linux-pci@vger.kernel.org
-Cc: ilpo.jarvinen@linux.intel.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260407-uid_slot-v8-0-15ae4409d2ce@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA4MDIxMSBTYWx0ZWRfX04fSY9lJXWCl
+ Hybl/B4eBz5+w1drE2mmzeDWpQ1oB5MNuElxem7elzqStgpPyzcYhgngG3DMZDQPxpjf4nwfcwY
+ UlAyKf3iP8Vr060Xp1HVURYjTD08EmZiBAgP2Dts6Smbp30vGVFZuEUMMjLbcO9GQZMFDMRa5Qg
+ XLjl8A22tz4rEqkmSK3dBVhk8ipKz5e6Zy5pxxFc5X86dTZADIMsSevBSEHYzoY84pmsxWsuD1B
+ qHRPiqbob3kOtJVLRfhiD5Nlyw7yK7jqAe/dpGvRrvqf0SScTDyyFz10vp7f+JTzhEoJjiwicMc
+ a6GWLWqF2hY7n7XX7sX2C3iTzKy/+Kqu8H2d2ssxH7hiLK7LqPGslSSHpOWhZ5T2QMgfPdd4BX2
+ hom9+dv2JbUl0piZFd4TPVVDEdh2V00G5dHYCfU393DHTA7PnDNymZROmUU499yFmuHgHJxuJpI
+ LU5N86TkcocpxUX+dqg==
+X-Authority-Analysis: v=2.4 cv=FsY1OWrq c=1 sm=1 tr=0 ts=69d6e0e7 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=7fw9t-owY_ObQSO0K9YA:9
+ a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: qpQNmMpZT1FSp0wZBE931XIvoIwTc2va
+X-Proofpoint-GUID: 7IdXthYsBHhh8Nb4CRm6PuqhLy-jLcnN
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-08_06,2026-04-08_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 priorityscore=1501 impostorscore=0 spamscore=0 phishscore=0
+ lowpriorityscore=0 clxscore=1015 adultscore=0 malwarescore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604080211
 
-When pci_resize_resource() walks up the bridge hierarchy via
-pbus_reassign_bridge_resources(), bridge windows with any child
-resources are refused release. This prevents BAR resize on devices
-behind multi-port PCIe switches (such as Thunderbolt docks) where
-empty sibling downstream ports hold small reservations that block the
-parent bridge window from being freed and re-sized.
+On Tue, Apr 07, 2026 at 03:24:44PM +0200, Niklas Schnelle wrote:
+> Add a mechanism for architecture specific attributes on
+> PCI slots in order to add the user-defined ID (UID) as an s390 specific
+> PCI slot attribute. First though improve some issues with the s390 specific
+> documentation of PCI sysfs attributes noticed during development. 
 
-Add pci_bus_release_bridge_resources_safe() which verifies that a
-resource subtree contains no active children before releasing it,
-and use it in pbus_reassign_bridge_resources() to clear empty sibling
-reservations so the bridge window can grow.
+> Niklas Schnelle (2):
+>       docs: s390/pci: Improve and update PCI documentation
+>       PCI: s390: Expose the UID as an arch specific PCI slot attribute
+> 
+>  Documentation/arch/s390/pci.rst | 151 +++++++++++++++++++++++++++-------------
+>  arch/s390/include/asm/pci.h     |   4 ++
+>  arch/s390/pci/pci_sysfs.c       |  20 ++++++
+>  drivers/pci/slot.c              |  13 +++-
+>  4 files changed, 140 insertions(+), 48 deletions(-)
 
-Signed-off-by: Geramy Loveless <gloveless@jqluv.com>
----
-drivers/pci/setup-bus.c | 30 +++++++++++++++++++++++++++---
-1 file changed, 27 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 4cf120ebe..9a3a23819 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -2297,6 +2297,30 @@
-EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
-* release it when possible. If the bridge window contains assigned
-* resources, it cannot be released.
-*/
-+
-+/*
-+ * Release child resources from a bridge window so it can be freed and
-+ * re-sized, but only if the entire subtree is empty (no active device
-+ * resources underneath). Walks the resource tree recursively to handle
-+ * arbitrarily deep bridge hierarchies. Returns true if the resources
-+ * were released or the window was already empty.
-+ */
-+static bool pci_bus_release_bridge_resources_safe(struct pci_bus *bus,
-+ struct resource *res)
-+{
-+ struct resource *child;
-+
-+ for (child = res->child; child; child = child->sibling) {
-+ if (child->child &&
-+ !pci_bus_release_bridge_resources_safe(bus, child))
-+ return false;
-+ }
-+
-+ if (res->child)
-+ pci_bus_release_bridge_resources(bus, res, whole_subtree);
-+ return true;
-+}
-+
-static int pbus_reassign_bridge_resources(struct pci_bus *bus, struct
-resource *res,
-struct list_head *saved)
-{
-@@ -2316,8 +2340,8 @@ static int pbus_reassign_bridge_resources(struct
-pci_bus *bus, struct resource *
-i = pci_resource_num(bridge, res);
-- /* Ignore BARs which are still in use */
-- if (!res->child) {
-+ if (!res->child ||
-+ pci_bus_release_bridge_resources_safe(bridge->subordinate, res)) {
-ret = pci_dev_res_add_to_list(saved, bridge, res, 0, 0);
-if (ret)
-return ret;
-@@ -2327,7 +2351,7 @@ static int pbus_reassign_bridge_resources(struct
-pci_bus *bus, struct resource *
-const char *res_name = pci_resource_name(bridge, i);
-pci_warn(bridge,
-- "%s %pR: was not released (still contains assigned resources)\n",
-+ "%s %pR: not released, active children present\n",
-res_name, res);
-}
--- 
-2.51.0
+Applied to s390 tree, thank you!
