@@ -1,103 +1,151 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C6BF31355C;
-	Wed,  8 Apr 2026 07:49:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82CC939D6D5
+	for <linux-pci@vger.kernel.org>; Wed,  8 Apr 2026 08:11:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775634588; cv=none; b=ogx0yj5O35+NKx8mnqa4TL+TJYark3jwGsh8sPIe8nZmxBAa5ow2SKG0UOy3Ep3uCQ2CmhUyzn/zBRYBHX5NThmpZJ9/ZzkdC+z0/p91APws0xyF+xGIwvukYgf/Lhs29Yn1iFTM++51pbOLFl9UNC2CDLQ2qlQ97OrdTHY3HAE=
+	t=1775635884; cv=none; b=ME7AXPriBSKOUjqOWyjIhDKkrnTFMGyAhQAXMXDGeaoFtYjj3sHeaDAxyUXxaM+3UG5vskNFRoMo4shfqv7XiPjBqvL2tpOJf8gwvgAXc4x5CLm5AJHeCO1m5VVvk7VDE8wXnIYYjRzGenRCtCOnwHZHtt032vF17OkAtDlrEQ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775634588; c=relaxed/simple;
-	bh=TZ8vAjBEh8SJSxBZo9/DJgG2nIYFLp8l9WUkHVDXk2E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Dmsf+g2pLJ6+x9RWfWNgVOC2mGsAhtJT3/Ci3ncGHFZ5eclkY9f/sC4SPBl8ijIOt0U9niznpZwxGUG+oIh+3NHHOcS8a77eJmsKVuDWDGSf3e2Bd8N8k1zm+NFINYrWZKgRPrxdrwS07CkJYHC65+A2xkpwqdZj5flUn6j7vcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SylTvEXa; arc=none smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SylTvEXa"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775634587; x=1807170587;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=TZ8vAjBEh8SJSxBZo9/DJgG2nIYFLp8l9WUkHVDXk2E=;
-  b=SylTvEXarqXeISKlnlxzQGog4L7jM04gWBNq6Y0TRSfJgOeTZVqwck8C
-   N8SYFmpd6w6wHLUt+CLHLXlZ9Kdr3pdCtKIRiVU9itHJlswEzqhHsZRWR
-   ZfpnpuGKwTKJxpkI9x4KSB0xXSNtQe68NqjvVEq80BwP/BrRbMEWWhGSN
-   OqJD/nLvoabt9GQ4HqKAaQAbucF4V87yNaEqRT2uaA29J+sSJTObNZx9r
-   BZEHbqwg08KojSLnY+fbfN+vS8VBeV8ooUgDhH9WWS6dYmMHdOUqikdm2
-   FgGyH6ooOkP5wJchA0shzZ0MEZfHjj3WEPGx6QL/Om1x1z78NVh27S4LN
-   g==;
-X-CSE-ConnectionGUID: Fgb8c1MQS5Wk897ytyBNxA==
-X-CSE-MsgGUID: FXJ/FtuYR76FfrnlfHNK+Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11752"; a="86901697"
-X-IronPort-AV: E=Sophos;i="6.23,167,1770624000"; 
-   d="scan'208";a="86901697"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Apr 2026 00:49:46 -0700
-X-CSE-ConnectionGUID: LQFNHdM2S+icJZVek/TuOQ==
-X-CSE-MsgGUID: iPTdPX9gSOeIsZFEVM9X2A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,167,1770624000"; 
-   d="scan'208";a="251725022"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by fmviesa001.fm.intel.com with ESMTP; 08 Apr 2026 00:49:43 -0700
-Date: Wed, 8 Apr 2026 15:28:11 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Nikolay Borisov <nik.borisov@suse.com>
-Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
-	dan.j.williams@intel.com, x86@kernel.org, chao.gao@intel.com,
-	dave.jiang@intel.com, baolu.lu@linux.intel.com, yilun.xu@intel.com,
-	zhenzhong.duan@intel.com, kvm@vger.kernel.org,
-	rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com,
-	kas@kernel.org, xiaoyao.li@intel.com, vishal.l.verma@intel.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 10/31] x86/virt/tdx: Add extra memory to TDX Module
- for Extensions
-Message-ID: <adYDiw2BkdzajBHD@yilunxu-OptiPlex-7050>
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-11-yilun.xu@linux.intel.com>
- <d9f09a41-9d10-4778-b49a-d54504020636@suse.com>
+	s=arc-20240116; t=1775635884; c=relaxed/simple;
+	bh=qgkECxzGSpnuq07rnxhj52qCBc/KBJvowuMtgBzyENM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=fvkiJEESJV54oZeYJF1DnwJJDE/yYwDadwTs1u4YAcqE1zBEceClP6cHvWRV4zXfoZWo/8V/InjyBbI/gMt0BgY+gLGLJUVANbWpRv+Wvy5NxYrkLtWEIxvc+vY2STb4VBlGcpsDyKHNMTlSwmQ5/bGGsdWqpvK+6nAkmxX3E/s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2aae4816912so37470265ad.2
+        for <linux-pci@vger.kernel.org>; Wed, 08 Apr 2026 01:11:23 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1775635883; x=1776240683;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=dgSjrs+bZCBNPvbS97WPj5GTT7jaQlR+JpRwd/gT2+Y=;
+        b=YHVar+FsvSWeXfXVGhrSdZdtzHTRSGIeGtp9UXhtBvOMjDDvBsguXmo/bwPdPvvX4e
+         IwLrLfjrOPLOlXPG6pZWQDmZd9Bnj2s1+GFyF5XmfFVDlncvHNsfw/pFEGkTay9zlL4P
+         qjUyawbqB0qhWCzMImAGkhuv0I5KHfYRXVOWQN4pAYPh8PUxabnN0CLrBh+FuHtZy2Rx
+         +2MzydNjsYLGDNzqJnVS5ux+Uxq5igxn0pshNWkAAOPkt/JTQ1TMhtTNw7taM/xe3Fqk
+         iCC/nS8iYW4n9HsKypb7iZDEkRWjuV6id/M8r3u645UaUAKpd2dRnIcicotouLY8jjwU
+         pO3Q==
+X-Forwarded-Encrypted: i=1; AJvYcCW0JRu6wy3cs5H0WvLA57sIQC020GLZLumfVVFQ1KZZKc+MFDBokC4HbFCFJb6mLqMwSQ+XrUHqOlA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx55no2jx67xaXBgVkG4pdcFmY4880X/5XBJE41RFb1JioEmBkT
+	ARdDEWMd1FUUGjeck3NiuxrqrqoYAzUy+dihx38Qn37iI2htXvQf01/zH7VnxVso
+X-Gm-Gg: AeBDietsiNpvPeDcVzpwaIQYi+h/AbKi9Vlz6xFc4SKSc5E3SB/S6dv5dgUkdFhvSaU
+	/l5h8XEMu2IfqFEpTBofCEXxrJyFIKOVt6BukYjIIEEdRxGbl9o+N6IXLVBts83lE0ZmFQMLG/Y
+	dTQ8hG+O8lP6gKWPjR76EJR8VSrnjel0YjXpspD8V7fbayiQ0t/s7XKWGETA8YNtvI65p+AYuSr
+	DWLm09DxK0MQ4kwuaquCCYl535oyOAxtF/4cWfZZ7p8eSdnQreYeWwN0i1rE1RmYhGys/gN8NOY
+	D4SGA8gogtW+ac1uK3zjW8cM6SYnSTOWCrDorFMk4MdFj5Ck7UCIxsaQri8qr5LOhWkBfg7E1m7
+	HehpVfRcdjhlQpb2J+Zi/733bLiXHaxuBIT4YQfQ/ZFxUYLKq12Dh1SsQFtg9jECzLh6O4miQR+
+	J5T7Sv+7w8C4NuXCK0Sgn2HO5iXM4WtNNApUQzzEemmLynW2sl7weeGJqkVh5dmSDf
+X-Received: by 2002:a17:903:3508:b0:2b2:50e1:f104 with SMTP id d9443c01a7336-2b281706efbmr224905465ad.3.1775635882782;
+        Wed, 08 Apr 2026 01:11:22 -0700 (PDT)
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com. [209.85.214.169])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b274979525sm237859415ad.45.2026.04.08.01.11.22
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 08 Apr 2026 01:11:22 -0700 (PDT)
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2aae4816912so37470155ad.2
+        for <linux-pci@vger.kernel.org>; Wed, 08 Apr 2026 01:11:22 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCVZboQ0+puBdeLryZHEJDoo21dzQFa5zQwGzLzzL+dyUVRL0AR+OqHFvxntLECuD5EePh+DpHrNkJA=@vger.kernel.org
+X-Received: by 2002:a05:6102:688e:b0:607:9b47:81f2 with SMTP id
+ ada2fe7eead31-6079b478f09mr649179137.20.1775635395263; Wed, 08 Apr 2026
+ 01:03:15 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d9f09a41-9d10-4778-b49a-d54504020636@suse.com>
+References: <20260325143555.451852-1-herve.codina@bootlin.com> <20260325143555.451852-2-herve.codina@bootlin.com>
+In-Reply-To: <20260325143555.451852-2-herve.codina@bootlin.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Wed, 8 Apr 2026 10:03:04 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdVh2gFQf16AarJCY+2y+24bOgaQyTUv6opPqVKCoUwMag@mail.gmail.com>
+X-Gm-Features: AQROBzDnP0FsdrSe7kiaKBzgO-Rt21-zwjAE4PjirQbwD7WYIqJw4iFM_IJ47Kw
+Message-ID: <CAMuHMdVh2gFQf16AarJCY+2y+24bOgaQyTUv6opPqVKCoUwMag@mail.gmail.com>
+Subject: Re: [PATCH v6 01/27] Revert "treewide: Fix probing of devices in DT overlays"
+To: Herve Codina <herve.codina@bootlin.com>
+Cc: Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Kalle Niemi <kaleposti@gmail.com>, Matti Vaittinen <mazziesaccount@gmail.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Danilo Krummrich <dakr@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
+	Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team <kernel@pengutronix.de>, 
+	Fabio Estevam <festevam@gmail.com>, Michael Turquette <mturquette@baylibre.com>, 
+	Stephen Boyd <sboyd@kernel.org>, Andi Shyti <andi.shyti@kernel.org>, 
+	Wolfram Sang <wsa+renesas@sang-engineering.com>, Peter Rosin <peda@axentia.se>, 
+	Arnd Bergmann <arnd@arndb.de>, Saravana Kannan <saravanak@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Charles Keepax <ckeepax@opensource.cirrus.com>, 
+	Richard Fitzgerald <rf@opensource.cirrus.com>, David Rhodes <david.rhodes@cirrus.com>, 
+	Linus Walleij <linusw@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, 
+	Mark Brown <broonie@kernel.org>, Len Brown <lenb@kernel.org>, 
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Daniel Scally <djrscally@gmail.com>, 
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>, 
+	Sakari Ailus <sakari.ailus@linux.intel.com>, Davidlohr Bueso <dave@stgolabs.net>, 
+	Jonathan Cameron <jonathan.cameron@huawei.com>, Dave Jiang <dave.jiang@intel.com>, 
+	Alison Schofield <alison.schofield@intel.com>, Vishal Verma <vishal.l.verma@intel.com>, 
+	Ira Weiny <ira.weiny@intel.com>, Dan Williams <dan.j.williams@intel.com>, 
+	Shawn Guo <shawnguo@kernel.org>, Wolfram Sang <wsa@kernel.org>, linux-kernel@vger.kernel.org, 
+	driver-core@lists.linux.dev, imx@lists.linux.dev, 
+	linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org, 
+	linux-i2c@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
+	patches@opensource.cirrus.com, linux-gpio@vger.kernel.org, 
+	linux-pm@vger.kernel.org, linux-spi@vger.kernel.org, 
+	linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org, 
+	Allan Nielsen <allan.nielsen@microchip.com>, Horatiu Vultur <horatiu.vultur@microchip.com>, 
+	Steen Hegelund <steen.hegelund@microchip.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>, 
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Saravana Kannan <saravanak@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-> > @@ -643,7 +643,7 @@ EXPORT_SYMBOL_GPL(tdx_page_array_create_iommu_mt);
-> >   #define HPA_LIST_INFO_PFN		GENMASK_U64(51, 12)
-> >   #define HPA_LIST_INFO_LAST_ENTRY	GENMASK_U64(63, 55)
-> > -static u64 __maybe_unused hpa_list_info_assign_raw(struct tdx_page_array *array)
-> > +static u64 hpa_list_info_assign_raw(struct tdx_page_array *array)
-> >   {
-> >   	return FIELD_PREP(HPA_LIST_INFO_FIRST_ENTRY, 0) |
-> >   	       FIELD_PREP(HPA_LIST_INFO_PFN,
-> > @@ -1513,6 +1513,94 @@ static void tdx_clflush_page(struct page *page)
-> >   	clflush_cache_range(page_to_virt(page), PAGE_SIZE);
-> >   }
-> > +static void tdx_clflush_page_array(struct tdx_page_array *array)
-> > +{
-> > +	for (int i = 0; i < array->nents; i++)
-> 
-> shouldn't the actual number of entries be adjusted as per offset, similarly
-> to how 'nents' in tdx_page_array_validate_release is calculated?
+On Wed, 25 Mar 2026 at 15:36, Herve Codina <herve.codina@bootlin.com> wrote:
+> From: Saravana Kannan <saravanak@google.com>
+>
+> This reverts commit 1a50d9403fb90cbe4dea0ec9fd0351d2ecbd8924.
+>
+> While the commit fixed fw_devlink overlay handling for one case, it
+> broke it for another case. So revert it and redo the fix in a separate
+> patch.
+>
+> Fixes: 1a50d9403fb9 ("treewide: Fix probing of devices in DT overlays")
+> Reported-by: Herve Codina <herve.codina@bootlin.com>
+> Closes: https://lore.kernel.org/lkml/CAMuHMdXEnSD4rRJ-o90x4OprUacN_rJgyo8x6=9F9rZ+-KzjOg@mail.gmail.com/
+> Closes: https://lore.kernel.org/all/20240221095137.616d2aaa@bootlin.com/
+> Closes: https://lore.kernel.org/lkml/20240312151835.29ef62a0@bootlin.com/
+> Signed-off-by: Saravana Kannan <saravanak@google.com>
+> Link: https://lore.kernel.org/lkml/20240411235623.1260061-2-saravanak@google.com/
+> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+> Acked-by: Mark Brown <broonie@kernel.org>
 
-Actually array->nents is calculated the same way:
+> --- a/drivers/bus/imx-weim.c
+> +++ b/drivers/bus/imx-weim.c
+> @@ -327,12 +327,6 @@ static int of_weim_notify(struct notifier_block *nb, unsigned long action,
+>                                  "Failed to setup timing for '%pOF'\n", rd->dn);
+>
+>                 if (!of_node_check_flag(rd->dn, OF_POPULATED)) {
+> -                       /*
+> -                        * Clear the flag before adding the device so that
+> -                        * fw_devlink doesn't skip adding consumers to this
+> -                        * device.
+> -                        */
+> -                       rd->dn->fwnode.flags &= ~FWNODE_FLAG_NOT_DEVICE;
+>                         if (!of_platform_device_create(rd->dn, NULL, &pdev->dev)) {
+>                                 dev_err(&pdev->dev,
+>                                         "Failed to create child device '%pOF'\n",
 
-  static int tdx_page_array_populate(struct tdx_page_array *array,
-				   unsigned int offset)
-  {
-	...
+Note that all these removals no longer apply cleanly due to commit
+f72e77c33e4b5657 ("device property: Make modifications of fwnode
+"flags" thread safe") in driver-core-next, which is gonna complicate
+backporting to stable.
 
-	array->offset = offset;
-	array->nents = umin(array->nr_pages - offset,
-			    TDX_PAGE_ARRAY_MAX_NENTS);
-	...
-  }
+Gr{oetje,eeting}s,
 
-so IIUC we are good here.
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
