@@ -1,99 +1,114 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17FB53644C3;
-	Wed,  8 Apr 2026 06:39:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+Received: from ultrarisc.com (unknown [218.76.62.146])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7633336495E;
+	Wed,  8 Apr 2026 06:43:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.76.62.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775630348; cv=none; b=s5MRqoNuePE5ufDsNZ/6v06eNtPVJIgWA+IqgbEaSNMPhgYQfJYyEoeUYnp3A8v80OkqCSGXKYaWKhQjbOtmXCvJhQLaZoJ0RP1Vw/2/kTuVkHGOWzj/gHZo1aNl1chfIe3ZQUlY/cxUDM8ypUIGYFUb3B1/nAboS4r1X+2umhw=
+	t=1775630622; cv=none; b=KJtiC4PG6suctlbBrWvBZnReo/LiHOFOcFrQGiTytwmWu0NBBE8yBJWKYb/hamnqBe98lQNeeqmi0innguaVJr2+IJKi4991grLjohAy7kG2tRQHEfo3qqUy2Y3Z/mdqqHOky0ru3RQA8VcI52sAIMHp7KJ2padEEKHxyc6XS/A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775630348; c=relaxed/simple;
-	bh=gfNGQ5QjHhh5D3nMxQxPtsK5nwXzJaRB3AosQTY0GQk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SPOQWq+qXJrs3mW2z2N9XpWVwR+Qx8sbHFixtBgSqfI8xizXoT6Jjtc98Jk2y/iCFE+FR1gObAfVzLRVwLTBMFwv1GPfuWqmdqOl4xWFQBb6h+l5ZKwYsmJRkA95T6HfcC84xp9MWqxVywr18kPcv2dzGDrVNre6tQKsMXYUPEk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=T+tNxtyL; arc=none smtp.client-ip=192.198.163.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1775630622; c=relaxed/simple;
+	bh=2hdbV6/k/0D5ZPlOLiZgFhv0ho2ZF/B1xroBTN/yRgk=;
+	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
+	 References:Date:Message-Id; b=n9BptAtc2yRlcJmMeZR7E1g5cxHDrXqTLZas7qrkoKPZpQoVWmnDkZThA4HSqB3Kryyck9ZWA4nfzIuDG0yr3DnKABF5RxH5MBFcXpoJIr7eduP2o6nBv4Hc14zTaieOXlKQy0ePN7E9Q/NCgt0G1VCHvPnjgYjC71S960in49I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=none smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=EYx66LlO; arc=none smtp.client-ip=218.76.62.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ultrarisc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="T+tNxtyL"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775630347; x=1807166347;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=gfNGQ5QjHhh5D3nMxQxPtsK5nwXzJaRB3AosQTY0GQk=;
-  b=T+tNxtyLI31ER3jlNqXSeHXfgON+v6gN/Ae7+0lE/Xcpv3ZTwmbqIjki
-   OOtaLA5HlbagAtL7PnqtkL2pVwy2Ltf24LQiMg8ld+ET5mjGLFOI95sZs
-   rma8LTG2xCwlDhowvJAHDf6bhZjn/zcZyJ69B5cHcGSdbEXO/pm3RDoQj
-   rEaH3RBj6F4Q5goq/UtNmJDEIwiHHZxzwpRk3Qian3hT/ZsSPd8hvlP9E
-   3oig7tHn/V9oPDhl64Jby2rrBREfxBqyFnqk0WUgAd0LIDrf6aqFRG3fo
-   HR0o0grNmfNp18MyRHVj6wscVXExeFXpKGare0YmxRiNO8Eljxc84jI3c
-   g==;
-X-CSE-ConnectionGUID: MsRy075RTYy2odXLtPhj9A==
-X-CSE-MsgGUID: j9sY16+1QTSwNDQculGw1g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11752"; a="87303576"
-X-IronPort-AV: E=Sophos;i="6.23,167,1770624000"; 
-   d="scan'208";a="87303576"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2026 23:39:07 -0700
-X-CSE-ConnectionGUID: PTqeNjZ1Tg+5CCFgVSdFIw==
-X-CSE-MsgGUID: 3sWgQKr4QraK0pO2vtTxUQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,167,1770624000"; 
-   d="scan'208";a="233340257"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa005.jf.intel.com with ESMTP; 07 Apr 2026 23:39:03 -0700
-Date: Wed, 8 Apr 2026 14:17:30 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: "Huang, Kai" <kai.huang@intel.com>
-Cc: "Williams, Dan J" <dan.j.williams@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>,
-	"x86@kernel.org" <x86@kernel.org>, "Gao, Chao" <chao.gao@intel.com>,
-	"Edgecombe, Rick P" <rick.p.edgecombe@intel.com>,
-	"Xu, Yilun" <yilun.xu@intel.com>,
-	"Jiang, Dave" <dave.jiang@intel.com>,
-	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
-	"Duan, Zhenzhong" <zhenzhong.duan@intel.com>,
-	"kas@kernel.org" <kas@kernel.org>,
-	"Verma, Vishal L" <vishal.l.verma@intel.com>,
-	"Li, Xiaoyao" <xiaoyao.li@intel.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 06/31] x86/virt/tdx: Read global metadata for TDX
- Module Extensions/Connect
-Message-ID: <adXy+unvDJDytU1Q@yilunxu-OptiPlex-7050>
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-7-yilun.xu@linux.intel.com>
- <123290f2bd1fb9c98bf494650c5912a3bf080114.camel@intel.com>
+	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="EYx66LlO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=ultrarisc.com; s=dkim; h=Received:MIME-Version:Content-Type:
+	Content-Transfer-Encoding:Subject:From:To:Cc:In-Reply-To:
+	References:Date:Message-Id; bh=hS/w51EPTbNWGcs80cYtMs7ssnkfGD2zW
+	cF8zT6Qlug=; b=EYx66LlOSiSbVcNq+lzEc/OAjRVJuNtAUKk7AwEPC6FSeIXe4
+	6R7SyI3SyLf5+vxbvQ9GxCHIWsPlDfcNaglNuMeHG5CTRpuejyzd3vKPN6931lT8
+	sNct9yA+r8tkp6KAq3I/iJ/XqmOHX4tsVDjkAya1CVulsbmKVJ5hrCq2P8=
+Received: from [127.0.0.1] (unknown [192.168.100.1])
+	by localhost.localdomain (Coremail) with SMTP id AQAAfwAnYUI1+dVpSq0BAA--.1022S2;
+	Wed, 08 Apr 2026 14:44:06 +0800 (CST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <123290f2bd1fb9c98bf494650c5912a3bf080114.camel@intel.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2 3/4] dt-bindings: PCI: Add UltraRISC DP1000 PCIe
+ controller
+From: Jia Wang <wangjia@ultrarisc.com>
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: Jia Wang <wangjia@ultrarisc.com>, Paul Walmsley <pjw@kernel.org>, 
+ Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
+ Alexandre Ghiti <alex@ghiti.fr>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, 
+ Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, linux-riscv@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ devicetree@vger.kernel.org
+In-Reply-To: <13907c0e-0502-413d-b54d-4e903f5c781e@kernel.org>
+References: <20260407-ultrarisc-pcie-v2-0-2aa2a19a7fb3@ultrarisc.com>
+ <20260407-ultrarisc-pcie-v2-3-2aa2a19a7fb3@ultrarisc.com>
+ <20260407-uptight-tody-of-weather-ae1e35@quoll>
+ <177561928084.2918127.18218641774926914517.b4-reply@b4>
+ <13907c0e-0502-413d-b54d-4e903f5c781e@kernel.org>
+Date: Wed, 08 Apr 2026 14:43:19 +0800
+Message-Id: <177563059910.3194559.10112671473525736823.b4-reply@b4>
+X-Mailer: b4 0.15-dev
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1775630599; l=804;
+ i=wangjia@ultrarisc.com; s=20260309; h=from:subject:message-id;
+ bh=2hdbV6/k/0D5ZPlOLiZgFhv0ho2ZF/B1xroBTN/yRgk=;
+ b=FwDWsOzDS/KbcQdL6O8kYj37FxAVDdJiioU3JgfIuqk4Y2qDTOKjWi/9k1iWNJJCVb+1lm4DQ
+ o9KLacoeFpiCi1XqVroJ2MYAatf4HHhjIytgQd8XRGfBgLmZrQFD0Ig
+X-Developer-Key: i=wangjia@ultrarisc.com; a=ed25519;
+ pk=XvYkrelqJIIzobY7j+nIg8rsfv5kzaOzuc1UPhd087U=
+X-CM-TRANSID:AQAAfwAnYUI1+dVpSq0BAA--.1022S2
+X-Coremail-Antispam: 1UD129KBjvdXoW7Jr1DuF45Ww1UuF1DXrW3trb_yoW3Xrg_AF
+	1jvw1Dur17XFZ8Wws5tF4kZ3ZIk34Duws3X3ykuF9rXwn0yry5ur90kryfJ39xJa1xKF1r
+	ua10q3W5uF9xujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbT8FF20E14v26ryj6rWUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
+	Cr1l84ACjcxK6I8E87Iv67AKxVW8JVWxJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gr1j6F
+	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+	n2kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCY02Avz4vE-syl42xK82IYc2Ij64vIr41l4I
+	8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AK
+	xVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcV
+	AFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8I
+	cIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r
+	4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjTRRBT5DUUUU
+X-CM-SenderInfo: pzdqwylld63zxwud2x1vfou0bp/1tbiAQALEWnV0LsAEAAAsc
 
-On Wed, Apr 01, 2026 at 09:36:18PM +0000, Huang, Kai wrote:
-> On Sat, 2026-03-28 at 00:01 +0800, Xu Yilun wrote:
-> > Add reading of the global metadata for TDX Module Extensions & TDX
-> > Connect. Add them in a batch as TDX Connect is currently the only user
-> > of TDX Module Extensions and no way to initialize TDX Module Extensions
-> > without firstly enabling TDX Connect.
+On 2026-04-08 08:28 +0200, Krzysztof Kozlowski wrote:
+> On 08/04/2026 05:34, Jia Wang wrote:
+> >>> +  max-link-speed:
+> >>> +    $ref: /schemas/types.yaml#/definitions/uint32
+> >>> +    const: 4
+> >>
+> >> If const then deducible from the compatible. Drop the property.
+> >>
 > > 
-> > TDX Module Extensions & TDX Connect are optional features enumerated by
-> > TDX_FEATURES0. Check the TDX_FEATURES0 before reading these metadata to
-> > avoid failing the whole TDX initialization.
+> > Will replace `const: 4` with `maximum: 4` in v3.
 > 
-> Maybe it's better to split this patch into two, one to read generic "TDX
-> Module Extension" related global metadata, and the other to read TDX Connect
-> specific ones?
-> 
-> They are logically two separate things anyway.  And there are other features
-> also need to enable TDX Module Extensions (e.g., NRX for migration), and we
-> can just reuse the generic metadata patch from this series.
+> Why? Wasn't maximum link speed fixed to 4?
+>
 
-Will do.
+Just to make sure I fully understand: since the maximum link speed is a
+fixed hardware property and is implied by the compatible, we should drop
+the `max-link-speed` property from the binding.
+
+In that case, should I set `pci->max_link_speed = 4` in the driver during
+probe? I want to make sure this is the correct way to handle it.
+ 
+> 
+> Best regards,
+> Krzysztof
+> 
+
+Best regards,
+Jia Wang
+
+
