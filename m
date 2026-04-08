@@ -1,472 +1,195 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F6C8284669
-	for <linux-pci@vger.kernel.org>; Wed,  8 Apr 2026 03:47:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2427827702D;
+	Wed,  8 Apr 2026 04:51:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775620069; cv=none; b=hEcJtgkJ3099LL9nkGBSzyalJq3Uq9nl+CDz1xGirJNODB106Dqbx4jK9NzOwnp5RAh8kVyAmfjZW8rPCZ078vTK5DgUKm25ce1f96+CHEKEo9wmGKNMbafF2h0a7ayz2amiwJDcUQuP6vfNlMO/0vihDpzYxaX2mJeHrxhU3VI=
+	t=1775623883; cv=none; b=pIQrHyqaug1vP4DbvYKH0XJtA1j3nLPEOyj3ARKP4jTDgkr5P1SVQXz7L6jf+D6La4gIzpFmhyblzzjpdHISwypmmvnjwGN3NYYuWaal0Q/T9JzltGcbE17997KI4lRq/zoPfW1FwT3ufFhzXL8jhSQ2lKdoHcWo/0lY3In3Ix8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775620069; c=relaxed/simple;
-	bh=pMFX+LeFgJSTxxETFjnvpRUhBrVx0ucO51SY4a1q804=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hScUQ/PigyjIARWPEqkGpMXoD20+AbnmIaghJZINtVoUcP0RDYzLyE1AWGNEbW7tIfb8YizdR3yMYQNqvMr9yw82p5LfX+n+p6uLvLnYJY1R0L1sRowcvd4HXNS/Zh2cmlVKRIKx0CcmoZmEJEXWT7GrZcabt+NxoGgl1paSrT8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=DquyzA2V; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=R1HqIgA/; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1775623883; c=relaxed/simple;
+	bh=B132BJS1yCU7jBLOGy3abXkXYvrR8CqJzEnq5tfW/08=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nlRJ0tSCdFDcMOcUlUa2i+YTtxKbWVeT+CI6M7ShHUl6tbvRdLwHQOfFeUeDJ8d4J9onTpypH4T4eocH4zUzf4Wwo/3oBxJFgtUyV6ZSS3/SHzdJ7E9nQX2Ne+KMi8Cno9ez+Ob6T2+o65fVK0CwOArF1OiEgk0LAanite2s6rc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=G9HhrU9P; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="DquyzA2V";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="R1HqIgA/"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 637M4PQ42860735
-	for <linux-pci@vger.kernel.org>; Wed, 8 Apr 2026 03:47:45 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Y5GqDnKn52rUOOKe43UhTsLV1PBh6CrPSK05M/M7TzU=; b=DquyzA2Vf1Yevkcc
-	ZrdAzF3JRX7sEPuqvNjEnuv1kpB8b+YREurAOYRZx5WAt/g2Js1VA6rI27HSqMXo
-	UMCb/9cM5rt1ZYjcsuvGWl2bfqRYXkdb/uVuBsVv3S9WknVIqfKnJh6lfLpIHCJg
-	9IUQE2nY6cFF2ypn1jieQjuymNiOogMutndGk2dlGUlGS9lKWQbZFXA6LWU8q1dZ
-	JiZzeXWLO5CBHRwd4dylqnu+RedxsoYjO2jX/EAPejAgrwafivbwjW3SC6L+Fp8O
-	3xC1heXYvzX0c/k2zPTwagU3QWjOOJOVusysRZvZevb+NHOwl9fcbbA3SAZY8wti
-	/0h3NA==
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ddad8ruc2-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 08 Apr 2026 03:47:45 +0000 (GMT)
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2b24a00d12cso63228755ad.1
-        for <linux-pci@vger.kernel.org>; Tue, 07 Apr 2026 20:47:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1775620064; x=1776224864; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Y5GqDnKn52rUOOKe43UhTsLV1PBh6CrPSK05M/M7TzU=;
-        b=R1HqIgA/mdHU2hTEfEEIHj7EtXRAJ2voMK3FJVFJ1AmyB5VTUX7Hrso5WBNuexeKKm
-         kgVGDtZ2zKN5cQfp4WOOVE1XdGuOnqniTX7VeJosyeExOWbCzw8KhPpwYCibln/MrKW6
-         7tKcbi8ahe/CEw8dl7iBE4Xc8uBfrMyC1Ohz+KcsHP7/3FqcmzLL1ZzNdQAVy0bfI+LZ
-         1psQcN7M5tnEjLzqiXtvFXy+BrTZIMEGkRYNiMMyni6SmHRD8OOmolVMb8U2pdoZNvzL
-         e3VYKkzIeM0tZfdSZSCZquf0VUU5jnaPnPOcH78th9cU3LHyCcuBoUuRsOA3j99/LZ7l
-         fUXw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775620064; x=1776224864;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Y5GqDnKn52rUOOKe43UhTsLV1PBh6CrPSK05M/M7TzU=;
-        b=ZBYJfM6W8tNQ91d2qK+sueEfCiZJ/EVEujc/Sik+A76yKtCIi341AvvwdU2q1Ionol
-         wGz/xJQ3Mk1KsruDKEqV0qFCwaH4yK5WkfqEZtB09Hit4Pnr3pk6EcQeWBTLn7wI0r5p
-         a0NA5s2B1rHS81ymQ3h71us8tfoxQREv8FIuKC3r148aM6uqev/A/flVVXGofQzIYg84
-         lITNaoDrUk5RJhZKNXdTij/9V5Sy9Wpz9YC/C62yePB0cvFUMI2plGVNH05ycogFJ4TO
-         ddr7uReY7jgOtuBFOW5x1vCb2jGAJajwP5WkRnazzwzDZq0dmTahaWcu4hPfwqKbB9VX
-         P4Ug==
-X-Forwarded-Encrypted: i=1; AJvYcCUAp7kYCRZ3XZLkWNuLZIDdb6cIb8KEXmFzGhL3tiQIcioTfDXWRubwoxyjxbpeY4C0jnENXK8VqtQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwGjvracyOOYeFMRJmwscqGPT09GRUAh8wYXu674b+G8PObwUMm
-	zi1NWCySGmM8mBqDS7+YpgykhSaKmuqw0MiEFD3JoiJUN7hzr7W/NqR2JrYLZXz+KrgALK5hFQY
-	MNml2HsEc4GocCRENFSJ5hBaFhHGUcMPjy0aQ87/h/03+FKU6s1miX2phsZJvii0=
-X-Gm-Gg: AeBDiesJWPl09WZVdH84ogkCQvgmfiluvWo3oV5YFg12EmB9zvUhb0hvmmAb/TvHoZy
-	woYmRY8ktPO3RQiRhNJpkySE4NYn5F08kmR0hM5f/bKheKwVv+Vy1nXBwrU0q1qXEMwVlVD2t56
-	STFND1wmFQhd2w/HK0ABK0YJYGlN1HrA3QZti1DWwAyoq2gmvFuHVNTzWY+HDR01Cn/hSV2InvG
-	/1Zu1rQOciRuSSYnSx1LX5vvkgMx75mb9VNYPOVZTTylBrcCdrPX5Wq955UxAPhWOg+xXhwRo4b
-	8zsNELCR9fNIMSx2MjkWiD6aaCfquTBzWeN4gCDCLFtuyxgE12RVC74TjUG7V1o7GlSVGvmwgeH
-	37+2StRmc64AaPKtN4eksgXd75HRvhtW426iCy5xJuU36wFGHYZV1zjIf
-X-Received: by 2002:a17:903:2ec7:b0:2b2:454f:b951 with SMTP id d9443c01a7336-2b28176a3cemr203121895ad.29.1775620064308;
-        Tue, 07 Apr 2026 20:47:44 -0700 (PDT)
-X-Received: by 2002:a17:903:2ec7:b0:2b2:454f:b951 with SMTP id d9443c01a7336-2b28176a3cemr203121315ad.29.1775620063681;
-        Tue, 07 Apr 2026 20:47:43 -0700 (PDT)
-Received: from [10.219.57.109] ([202.46.23.19])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b27478b64csm194156625ad.30.2026.04.07.20.47.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 07 Apr 2026 20:47:43 -0700 (PDT)
-Message-ID: <92ee00a9-0094-4481-9156-709b94ba3b82@oss.qualcomm.com>
-Date: Wed, 8 Apr 2026 09:16:39 +0530
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="G9HhrU9P"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1775623883; x=1807159883;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=B132BJS1yCU7jBLOGy3abXkXYvrR8CqJzEnq5tfW/08=;
+  b=G9HhrU9PKQZxenEKoE+J3ognUxLVO+ZH+jtS/MVItozO7v7iqjygxGBR
+   jiTQ2aK8aKvBmd8Dm2+xEdbeppjOi/fZLBPY5mOZmQi3IpzwCZl9k72Zl
+   KeHiX39NxoP3mazDlJHMXzVNqY8lbgnuYmKzJ7rjrWRafLWFfEWU/2a+X
+   ivI743cRX3Uiri2pxOYL+Ldcl2szydFXv1NrJTUgxhhsNzBa/FG7ROabv
+   iwU4Y/Ou2RqzAT7gyb/0xMF10PGv1x28UqLbpIF7N5QBZTKpGttsXuFAR
+   as1QbVZAaoibY/713YjRPO/O2TkWO3qazgOR7wVM1exTzvGcDqAGSTN5W
+   A==;
+X-CSE-ConnectionGUID: X2uFHfpURMGr7MJxFohOuA==
+X-CSE-MsgGUID: Ba4YaOTdQG6zoprOCYSEqg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11752"; a="99224865"
+X-IronPort-AV: E=Sophos;i="6.23,167,1770624000"; 
+   d="scan'208";a="99224865"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2026 21:51:22 -0700
+X-CSE-ConnectionGUID: xoqBl0YaQw6iISbq4hmDPg==
+X-CSE-MsgGUID: ilu7+LiCSJOmS4Yy02oeMA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,166,1770624000"; 
+   d="scan'208";a="258800426"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
+  by orviesa002.jf.intel.com with ESMTP; 07 Apr 2026 21:51:18 -0700
+Date: Wed, 8 Apr 2026 12:29:46 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: "Edgecombe, Rick P" <rick.p.edgecombe@intel.com>
+Cc: "Gao, Chao" <chao.gao@intel.com>, "Xu, Yilun" <yilun.xu@intel.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"kas@kernel.org" <kas@kernel.org>,
+	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+	"Li, Xiaoyao" <xiaoyao.li@intel.com>,
+	"Williams, Dan J" <dan.j.williams@intel.com>,
+	"Jiang, Dave" <dave.jiang@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Duan, Zhenzhong" <zhenzhong.duan@intel.com>,
+	"Verma, Vishal L" <vishal.l.verma@intel.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>
+Subject: Re: [PATCH v2 05/31] x86/virt/tdx: Extend tdx_page_array to support
+ IOMMU_MT
+Message-ID: <adXZusc4jX1JlrD9@yilunxu-OptiPlex-7050>
+References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
+ <20260327160132.2946114-6-yilun.xu@linux.intel.com>
+ <828f174d49a1ecaec65ba1179e08c6b22e249297.camel@intel.com>
+ <acvX1x5nDdGtZWyI@yilunxu-OptiPlex-7050>
+ <f38d0a080aee052937cb6721683d55155c657717.camel@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v12 3/3] of: Respect #{iommu,msi}-cells in maps
-To: Nipun Gupta <nipun.gupta@amd.com>,
-        Nikhil Agarwal
- <nikhil.agarwal@amd.com>,
-        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
-        Robin Murphy <robin.murphy@arm.com>, Marc Zyngier <maz@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Thomas Gleixner <tglx@kernel.org>,
-        Saravana Kannan <saravanak@kernel.org>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Bjorn Helgaas
- <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>, Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-        Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>,
-        Rob Herring <robh@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Prakash Gupta <prakash.gupta@oss.qualcomm.com>,
-        Vikash Garodia <vikash.garodia@oss.qualcomm.com>
-Cc: linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, imx@lists.linux.dev,
-        xen-devel@lists.xenproject.org, linux-arm-msm@vger.kernel.org,
-        Charan Teja Kalla <charan.kalla@oss.qualcomm.com>
-References: <20260331-parse_iommu_cells-v12-0-decfd305eea9@oss.qualcomm.com>
- <20260331-parse_iommu_cells-v12-3-decfd305eea9@oss.qualcomm.com>
-Content-Language: en-US
-From: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>
-In-Reply-To: <20260331-parse_iommu_cells-v12-3-decfd305eea9@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-ORIG-GUID: BBTkgjJGEUXNDF9lTp_HK2cfukeS-75y
-X-Proofpoint-GUID: BBTkgjJGEUXNDF9lTp_HK2cfukeS-75y
-X-Authority-Analysis: v=2.4 cv=EoDiaycA c=1 sm=1 tr=0 ts=69d5cfe1 cx=c_pps
- a=cmESyDAEBpBGqyK7t0alAg==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
- a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
- a=7CQSdrXTAAAA:8 a=EUspDBNiAAAA:8 a=OsyBWCJeBE2wmg0BnjgA:9 a=QEXdDO2ut3YA:10
- a=1OuFwYUASf3TG4hYMiVC:22 a=a-qgeE7W1pNrGK8U0ZQC:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA4MDAzMSBTYWx0ZWRfX1p3Itseb1odD
- oycnAbUx6nIqbz6d0TdRAakGsN648j37YbCSk12gKmqtyHIVJt0ZiUb/Wyvb35fg+vrjrwdEtoO
- l6q9zwswh3vxQvCbuFP0Hs1GZ2f+HoDQv2MmzDtbNP8I8ZWdefdtofSfe4lXOlnxVMeN6u3yV9a
- iL+kZ9jc2Ybl8IptSKV4df4CB9KH9dhymw5DQNumYpzstQ+ZJPw9cWgNKpswvfGir5sNndKw6Y4
- BX4Oy60WXHnlmFm7zNbAVPHFvzYbiKwWQ3cdYlOeXPKYGUpHA/837Rajk3qoC59qEap1msbHela
- +TM37XxlR9ZmXrwk8mgaLEoaY1k7Q9kfNDFlua/NDrzu2Ra9+ulTQQg0sAGShGEAhonL6NWGlfS
- xTLWFqCY9yIULaME5AeWZCcPzgfZEfRu/tJdrHSnBuVFlIn/hbX2skKkmUQRCLWEa77gvluXdE7
- jQaW85Jhle1FaG2iaCQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-08_01,2026-04-07_05,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 priorityscore=1501 spamscore=0 clxscore=1015 bulkscore=0
- malwarescore=0 impostorscore=0 suspectscore=0 phishscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604080031
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f38d0a080aee052937cb6721683d55155c657717.camel@intel.com>
+
+On Wed, Apr 01, 2026 at 12:17:45AM +0000, Edgecombe, Rick P wrote:
+> On Tue, 2026-03-31 at 22:19 +0800, Xu Yilun wrote:
+> > > Consider the amount of tricks that are needed to coax the tdx_page_array to
+> > > populate the handoff page as needed. It adds 2 pages here, then subtracts
+> > > them
+> > > later in the callback. Then tweaks the pa in tdx_page_array_populate() to
+> > > add
+> > > the length...
+> > 
+> > mm.. The tricky part is the specific memory requirement/allocation, the
+> > common part is the pa list contained in a root page. Maybe we only model
+> > the later, let the specific user does the memory allocation. Is that
+> > closer to your "break concepts apart" idea?
+> 
+> I haven't wrapped my head around this enough to suggest anything is definitely
+> the right approach.
+> 
+> But yes, the idea would be that the allocation of the list of pages to give to
+> the TDX module would be a separate allocation and set of management functions.
+> And the the allocation of the pages that are used to communicate the list of
+> pages (and in this case other args) with the module would be another set. So
+> each type of TDX module arg page format (IOMMU_MT, etc) would be separable, but
+> share the page list allocation part only. It looks like Nikolay was probing
+> along the same path. Not sure if he had the same solution in mind.
+> 
+> So for this:
+> 1. Allocate a list or array of pages using a generic method.
+> 2. Allocate these two IOMMU special pages.
+> 3. Allocate memory needed for the seamcall (root pages)
+> 
+> Hand all three to the wrapper and have it shove them all through in the special
+> way it prefers.
+> 
+> Maybe... Can you write something about the similarities and differences with the
+> three types of lists in that series? Like in a compact form?
+
+
+The common part:
+   
+         64bit obj type                 root page
+   +----------+----------------+    +---------------------+     
+   | ...      |  ...           |    | page0 HPA(bit12-51) |--> page0
+   +----------+----------------+    +---------------------+     
+   |bit 12-51 | root page HPA  |--->| page1 HPA           |--> page1
+   +----------+----------------+    +---------------------+
+   | ...      |  ...           |    | pageX HPA           |--> pageX
+   +----------+----------------+    +---------------------+
 
 
 
-On 3/31/2026 7:34 PM, Vijayanand Jitta wrote:
-> From: Robin Murphy <robin.murphy@arm.com>
-> 
-> So far our parsing of {iommu,msi}-map properties has always blindly
-> assumed that the output specifiers will always have exactly 1 cell.
-> This typically does happen to be the case, but is not actually enforced
-> (and the PCI msi-map binding even explicitly states support for 0 or 1
-> cells) - as a result we've now ended up with dodgy DTs out in the field
-> which depend on this behaviour to map a 1-cell specifier for a 2-cell
-> provider, despite that being bogus per the bindings themselves.
-> 
-> Since there is some potential use in being able to map at least single
-> input IDs to multi-cell output specifiers (and properly support 0-cell
-> outputs as well), add support for properly parsing and using the target
-> nodes' #cells values, albeit with the unfortunate complication of still
-> having to work around expectations of the old behaviour too.
-> 
-> Since there are multi-cell output specifiers, the callers of of_map_id()
-> may need to get the exact cell output value for further processing.
-> Update of_map_id() to set args_count in the output to reflect the actual
-> number of output specifier cells.
-> 
-> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
-> Signed-off-by: Charan Teja Kalla <charan.kalla@oss.qualcomm.com>
-> Signed-off-by: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>
-> ---
->  drivers/of/base.c  | 155 ++++++++++++++++++++++++++++++++++++++++-------------
->  include/linux/of.h |   6 ++-
->  2 files changed, 123 insertions(+), 38 deletions(-)
-> 
-> diff --git a/drivers/of/base.c b/drivers/of/base.c
-> index b3d002015192..7b22e2484e1c 100644
-> --- a/drivers/of/base.c
-> +++ b/drivers/of/base.c
-> @@ -2096,18 +2096,48 @@ int of_find_last_cache_level(unsigned int cpu)
->  	return cache_level;
->  }
->  
-> +/*
-> + * Some DTs have an iommu-map targeting a 2-cell IOMMU node while
-> + * specifying only 1 cell. Fortunately they all consist of value '1'
-> + * as the 2nd cell entry with the same target, so check for that pattern.
-> + *
-> + * Example:
-> + *	IOMMU node:
-> + *		#iommu-cells = <2>;
-> + *
-> + *	Device node:
-> + *		iommu-map = <0x0000 &smmu 0x0000 0x1>,
-> + *			    <0x0100 &smmu 0x0100 0x1>;
-> + */
-> +static bool of_check_bad_map(const __be32 *map, int len)
-> +{
-> +	__be32 phandle = map[1];
-> +
-> +	if (len % 4)
-> +		return false;
-> +	for (int i = 0; i < len; i += 4) {
-> +		if (map[i + 1] != phandle || map[i + 3] != cpu_to_be32(1))
-> +			return false;
-> +	}
-> +	return true;
-> +}
-> +
->  /**
->   * of_map_id - Translate an ID through a downstream mapping.
->   * @np: root complex device node.
->   * @id: device ID to map.
->   * @map_name: property name of the map to use.
-> + * @cells_name: property name of target specifier cells.
->   * @map_mask_name: optional property name of the mask to use.
->   * @filter_np: optional device node to filter matches by, or NULL to match any.
->   *	If non-NULL, only map entries targeting this node will be matched.
->   * @arg: pointer to a &struct of_phandle_args for the result. On success,
-> - *	@arg->args[0] will contain the translated ID. If a map entry was
-> - *	matched, @arg->np will be set to the target node with a reference
-> - *	held that the caller must release with of_node_put().
-> + *	@arg->args_count will be set to the number of output specifier cells
-> + *	as defined by @cells_name in the target node, and
-> + *	@arg->args[0..args_count-1] will contain the translated output
-> + *	specifier values. If a map entry was matched, @arg->np will be set
-> + *	to the target node with a reference held that the caller must release
-> + *	with of_node_put().
->   *
->   * Given a device ID, look up the appropriate implementation-defined
->   * platform ID and/or the target device which receives transactions on that
-> @@ -2116,17 +2146,19 @@ int of_find_last_cache_level(unsigned int cpu)
->   * Return: 0 on success or a standard error code on failure.
->   */
->  int of_map_id(const struct device_node *np, u32 id,
-> -	       const char *map_name, const char *map_mask_name,
-> +	       const char *map_name, const char *cells_name,
-> +	       const char *map_mask_name,
->  	       const struct device_node *filter_np, struct of_phandle_args *arg)
->  {
->  	u32 map_mask, masked_id;
-> -	int map_len;
-> +	int map_bytes, map_len, offset = 0;
-> +	bool bad_map = false;
->  	const __be32 *map = NULL;
->  
->  	if (!np || !map_name || !arg)
->  		return -EINVAL;
->  
-> -	map = of_get_property(np, map_name, &map_len);
-> +	map = of_get_property(np, map_name, &map_bytes);
->  	if (!map) {
->  		if (filter_np)
->  			return -ENODEV;
-> @@ -2136,11 +2168,9 @@ int of_map_id(const struct device_node *np, u32 id,
->  		return 0;
->  	}
->  
-> -	if (!map_len || map_len % (4 * sizeof(*map))) {
-> -		pr_err("%pOF: Error: Bad %s length: %d\n", np,
-> -			map_name, map_len);
-> -		return -EINVAL;
-> -	}
-> +	if (map_bytes % sizeof(*map))
-> +		goto err_map_len;
-> +	map_len = map_bytes / sizeof(*map);
->  
->  	/* The default is to select all bits. */
->  	map_mask = 0xffffffff;
-> @@ -2153,39 +2183,82 @@ int of_map_id(const struct device_node *np, u32 id,
->  		of_property_read_u32(np, map_mask_name, &map_mask);
->  
->  	masked_id = map_mask & id;
-> -	for ( ; map_len > 0; map_len -= 4 * sizeof(*map), map += 4) {
-> +
-> +	while (offset < map_len) {
->  		struct device_node *phandle_node;
-> -		u32 id_base = be32_to_cpup(map + 0);
-> -		u32 phandle = be32_to_cpup(map + 1);
-> -		u32 out_base = be32_to_cpup(map + 2);
-> -		u32 id_len = be32_to_cpup(map + 3);
-> +		u32 id_base, phandle, id_len, id_off, cells = 0;
-> +		const __be32 *out_base;
-> +
-> +		if (map_len - offset < 2)
-> +			goto err_map_len;
-> +
-> +		id_base = be32_to_cpup(map + offset);
->  
->  		if (id_base & ~map_mask) {
-> -			pr_err("%pOF: Invalid %s translation - %s-mask (0x%x) ignores id-base (0x%x)\n",
-> -				np, map_name, map_name,
-> -				map_mask, id_base);
-> +			pr_err("%pOF: Invalid %s translation - %s (0x%x) ignores id-base (0x%x)\n",
-> +			       np, map_name, map_mask_name, map_mask, id_base);
->  			return -EFAULT;
->  		}
->  
-> -		if (masked_id < id_base || masked_id >= id_base + id_len)
-> -			continue;
-> -
-> +		phandle = be32_to_cpup(map + offset + 1);
->  		phandle_node = of_find_node_by_phandle(phandle);
->  		if (!phandle_node)
->  			return -ENODEV;
->  
-> +		if (!bad_map && of_property_read_u32(phandle_node, cells_name, &cells)) {
-> +			pr_err("%pOF: missing %s property\n", phandle_node, cells_name);
-> +			of_node_put(phandle_node);
-> +			return -EINVAL;
-> +		}
-> +
-> +		if (map_len - offset < 3 + cells) {
-> +			of_node_put(phandle_node);
-> +			goto err_map_len;
-> +		}
-> +
-> +		if (offset == 0 && cells == 2) {
-> +			bad_map = of_check_bad_map(map, map_len);
-> +			if (bad_map) {
-> +				pr_warn_once("%pOF: %s mismatches target %s, assuming extra cell of 0\n",
-> +					     np, map_name, cells_name);
-> +				cells = 1;
-> +			}
-> +		}
-> +
-> +		out_base = map + offset + 2;
-> +		offset += 3 + cells;
-> +
-> +		id_len = be32_to_cpup(map + offset - 1);
-> +		if (id_len > 1 && cells > 1) {
-> +			/*
-> +			 * With 1 output cell we reasonably assume its value
-> +			 * has a linear relationship to the input; with more,
-> +			 * we'd need help from the provider to know what to do.
-> +			 */
-> +			pr_err("%pOF: Unsupported %s - cannot handle %d-ID range with %d-cell output specifier\n",
-> +			       np, map_name, id_len, cells);
-> +			of_node_put(phandle_node);
-> +			return -EINVAL;
-> +		}
-> +		id_off = masked_id - id_base;
-> +		if (masked_id < id_base || id_off >= id_len) {
-> +			of_node_put(phandle_node);
-> +			continue;
-> +		}
-> +
->  		if (filter_np && filter_np != phandle_node) {
->  			of_node_put(phandle_node);
->  			continue;
->  		}
->  
->  		arg->np = phandle_node;
-> -		arg->args[0] = masked_id - id_base + out_base;
-> -		arg->args_count = 1;
-> +		for (int i = 0; i < cells; i++)
-> +			arg->args[i] = id_off + be32_to_cpu(out_base[i]);
-> +		arg->args_count = cells;
->  
->  		pr_debug("%pOF: %s, using mask %08x, id-base: %08x, out-base: %08x, length: %08x, id: %08x -> %08x\n",
-> -			np, map_name, map_mask, id_base, out_base,
-> -			id_len, id, masked_id - id_base + out_base);
-> +			np, map_name, map_mask, id_base, be32_to_cpup(out_base),
-> +			id_len, id, id_off + be32_to_cpup(out_base));
->  		return 0;
->  	}
->  
-> @@ -2196,6 +2269,10 @@ int of_map_id(const struct device_node *np, u32 id,
->  	arg->args[0] = id;
->  	arg->args_count = 1;
->  	return 0;
-> +
-> +err_map_len:
-> +	pr_err("%pOF: Error: Bad %s length: %d\n", np, map_name, map_bytes);
-> +	return -EINVAL;
->  }
->  EXPORT_SYMBOL_GPL(of_map_id);
->  
-> @@ -2205,18 +2282,21 @@ EXPORT_SYMBOL_GPL(of_map_id);
->   * @id: Requester ID of the device (e.g. PCI RID/BDF or a platform
->   *      stream/device ID) used as the lookup key in the iommu-map table.
->   * @arg: pointer to a &struct of_phandle_args for the result. On success,
-> - *	@arg->args[0] contains the translated ID. If a map entry was matched,
-> - *	@arg->np holds a reference to the target node that the caller must
-> - *	release with of_node_put().
-> + *	@arg->args_count will be set to the number of output specifier cells
-> + *	and @arg->args[0..args_count-1] will contain the translated output
-> + *	specifier values. If a map entry was matched, @arg->np holds a
-> + *	reference to the target node that the caller must release with
-> + *	of_node_put().
->   *
-> - * Convenience wrapper around of_map_id() using "iommu-map" and "iommu-map-mask".
-> + * Convenience wrapper around of_map_id() using "iommu-map", "#iommu-cells",
-> + * and "iommu-map-mask".
->   *
->   * Return: 0 on success or a standard error code on failure.
->   */
->  int of_map_iommu_id(const struct device_node *np, u32 id,
->  		    struct of_phandle_args *arg)
->  {
-> -	return of_map_id(np, id, "iommu-map", "iommu-map-mask", NULL, arg);
-> +	return of_map_id(np, id, "iommu-map", "#iommu-cells", "iommu-map-mask", NULL, arg);
->  }
->  EXPORT_SYMBOL_GPL(of_map_iommu_id);
->  
-> @@ -2229,17 +2309,20 @@ EXPORT_SYMBOL_GPL(of_map_iommu_id);
->   *	to match any. If non-NULL, only map entries targeting this node will
->   *	be matched.
->   * @arg: pointer to a &struct of_phandle_args for the result. On success,
-> - *	@arg->args[0] contains the translated ID. If a map entry was matched,
-> - *	@arg->np holds a reference to the target node that the caller must
-> - *	release with of_node_put().
-> + *	@arg->args_count will be set to the number of output specifier cells
-> + *	and @arg->args[0..args_count-1] will contain the translated output
-> + *	specifier values. If a map entry was matched, @arg->np holds a
-> + *	reference to the target node that the caller must release with
-> + *	of_node_put().
->   *
-> - * Convenience wrapper around of_map_id() using "msi-map" and "msi-map-mask".
-> + * Convenience wrapper around of_map_id() using "msi-map", "#msi-cells",
-> + * and "msi-map-mask".
->   *
->   * Return: 0 on success or a standard error code on failure.
->   */
->  int of_map_msi_id(const struct device_node *np, u32 id,
->  		  const struct device_node *filter_np, struct of_phandle_args *arg)
->  {
-> -	return of_map_id(np, id, "msi-map", "msi-map-mask", filter_np, arg);
-> +	return of_map_id(np, id, "msi-map", "#msi-cells", "msi-map-mask", filter_np, arg);
->  }
->  EXPORT_SYMBOL_GPL(of_map_msi_id);
-> diff --git a/include/linux/of.h b/include/linux/of.h
-> index 8548cd9eb4f1..51ac8539f2c3 100644
-> --- a/include/linux/of.h
-> +++ b/include/linux/of.h
-> @@ -462,7 +462,8 @@ const char *of_prop_next_string(const struct property *prop, const char *cur);
->  bool of_console_check(const struct device_node *dn, char *name, int index);
->  
->  int of_map_id(const struct device_node *np, u32 id,
-> -	       const char *map_name, const char *map_mask_name,
-> +	       const char *map_name, const char *cells_name,
-> +	       const char *map_mask_name,
->  	       const struct device_node *filter_np, struct of_phandle_args *arg);
->  
->  int of_map_iommu_id(const struct device_node *np, u32 id,
-> @@ -934,7 +935,8 @@ static inline void of_property_clear_flag(struct property *p, unsigned long flag
->  }
->  
->  static inline int of_map_id(const struct device_node *np, u32 id,
-> -			     const char *map_name, const char *map_mask_name,
-> +			     const char *map_name, const char *cells_name,
-> +			     const char *map_mask_name,
->  			     const struct device_node *filter_np,
->  			     struct of_phandle_args *arg)
->  {
-> 
+The specific objects:
 
-Gentle ping.
+         HPA_LIST_INFO                 root page
+   +----------+----------------+    +---------------------+
+   |bit 3-11  | first entry    |    | page0 HPA(bit12-51) |
+   +----------+----------------+    +---------------------+
+   |bit 12-51 | root page HPA  |--->| page1 HPA           |
+   +----------+----------------+    +---------------------+
+   |bit 55-63 | last entry     |    | pageX HPA           |
+   +----------+----------------+    +---------------------+
+
+
+
+         HPA_ARRAY_T                   root page                  HPA_ARRAY_T(singleton mode)
+   +----------+----------------+    +---------------------+      +----------+----------------+
+   |bit 3-11  | Reserved 0     |    | page0 HPA(bit12-51) |      |bit 3-11  | Reserved 0     |
+   +----------+----------------+    +---------------------+      +----------+----------------+
+   |bit 12-51 | root page HPA  |--->| page1 HPA           |      |bit 12-51 | page0 HPA      |--> page0
+   +----------+----------------+    +---------------------+      +----------+----------------+
+   |bit 55-63 | last entry     |    | pageX HPA           |      |bit 55-63 | last entry     |
+   +----------+----------------+    +---------------------+      +----------+----------------+
+
+
+
+         MMIOMT                       root page
+   +----------+----------------+    +-----------------------------+-------------------+
+   |bit 3-11  | Reserved 0     |    | 2^order page0 HPA(bit12-51) |num pages(bit 0-11)|
+   +----------+----------------+    +-----------------------------+-------------------+
+   |bit 12-51 | root page HPA  |--->| 2^order page1 HPA           |num pages          |
+   +----------+----------------+    +-----------------------------+-------------------+
+   |bit 55-63 | Reserved 0     |    | page2 HPA                   |0                  |
+   +----------+----------------+    +-----------------------------+-------------------+
+                                    | page3 HPA                   |0                  |
+                                    +-----------------------------+-------------------+
+                                    | pageX HPA                   |0                  |
+                                    +-----------------------------+-------------------+
+
+
+
+The same thing is they all have root_page_hpa->root_page->page_hpa_list structure.
+
+The differences:
+
+		HPA_LIST_INFO	HPA_ARRAY_T	IOMMU_MT	Note
+first entry     Y		N		N		start entry in root page
+last entry	Y		Y		N		last entry in root page
+num pages	always 0	always 0	Y		for multi-order page
+singleton	N		Y		N		try to save a root page
+
+
+> 
+> Also, how much of the earlier code duplication you wanted to avoid was the
+> leaking and special error handling stuff?
+
+This is indeed a large part, and now we don't need them anymore.
+
+Others are:
+ - the root_page allocation/population/free
+ - Too much parameters (struct page **, num_pages, struct page *root...)
+   for seamcall wrappers. Or 3 newly defined structures which looks
+   pretty much the same and need same implementations like
+   tdx_clflush_page().
 
 Thanks,
-Vijay
+Yilun
