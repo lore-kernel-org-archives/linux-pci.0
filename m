@@ -1,283 +1,277 @@
-Received: from mail-dy1-f174.google.com (mail-dy1-f174.google.com [74.125.82.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013044.outbound.protection.outlook.com [40.107.159.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E3413624B5
-	for <linux-pci@vger.kernel.org>; Thu,  9 Apr 2026 01:58:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.174
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775699921; cv=none; b=GdAWbhQKX+U69QSE97afPJsNSC3BI5CrspX3BybdPkZoE29zrhzimX1xtRM2vJb2Ag0OL4BV8wTTmaXMQfGZfgh8fGq5gGs85Zt6sqVL6GicXVVDf9VkgpBeKfZD1WLJZ5FyHrWhKGDGXmBBL6CApYkjMHCBIbgqekI4Fp3Dsxk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775699921; c=relaxed/simple;
-	bh=ImbgTzP+JJQ0wT/r9F7poPzQD53JcpRtXcFwBff9CgU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bA0D6pYSIDZ9JWGwk/eioCdee1TMX7g0TL7wsy5aN1YsCn9V3+Cd3eDQ+rpVDZeB3aVxNVajBGpm3g7WUD4Vdpomb3SpFL+gyJXFkSapGNFATYsOorllx7I3U7dyTeicuqA3qA2bZv4TN6TOIcKsOb/5qgOvSRvWKUU4HpH3PzQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=HwGZpkxi; arc=none smtp.client-ip=74.125.82.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59BA6288C2F;
+	Thu,  9 Apr 2026 02:40:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.44
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775702433; cv=fail; b=UtLKvbVYVT0QmthekfAX64zKmUOI2I7uTkMm6bbfVQE8CXiMC2K+yFXBMGKvrz/Cj8PSOL393WEFJ0B+tRCz5mAiyY0o8oygIurpF61CP3kL9/WyYI+SGrUQvQzxWPgyi9wKwYthVy1bBo4B4EH92R0tHoy/g5S6+SpkeMBfPx0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775702433; c=relaxed/simple;
+	bh=5g5qB4RD6e8kh3F0/bM0IOV35xTiXw1WKZbgmimrTeQ=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=FeUTWlzuhk67a+hr6z/OtojrSDDABMJap98o4D1ydMf8//pAj0bUU+D/9fhGrw9q6PHTmreKyL5cGVBEI+XTyCrdMHs/eWLjx61v2AMebCT2tkpH0G8POZQC5UHqc0ZR11Q2nGPtbqi3JiU+7aMSfqSaITXw1xHYIdntutWEKMY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=IdmABsWN; arc=fail smtp.client-ip=40.107.159.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="HwGZpkxi"
-Received: by mail-dy1-f174.google.com with SMTP id 5a478bee46e88-2d17b8fbedaso101481eec.1
-        for <linux-pci@vger.kernel.org>; Wed, 08 Apr 2026 18:58:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1775699918; x=1776304718; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=rtu5J6mkYa7cAz+oGv/2J7Qnc58jCw+U8QvJQpdZOFw=;
-        b=HwGZpkxi0GU+D+l4ZMO2DPxkJJW7lvH7yA95n+VX9ehoYcUhXos1iqzeSy7UgdFF/c
-         uR3M37ZzdFgV0UAWYzrGxN1hnybkJcZy+FlbKtznDj69vcl/VguDp7byKf3IScrgihj3
-         +kNazM78YpOFtv319uYznJUIOL0VxLmQaSV2M=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775699918; x=1776304718;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=rtu5J6mkYa7cAz+oGv/2J7Qnc58jCw+U8QvJQpdZOFw=;
-        b=i25VAX+4DKfMhf2DW+7HtL+8UZLQtYzj6O689Ze0tphd5ejaHjNG97QFMVuJ+ZpIux
-         znVv+to0egG+1rk2QBmmTkEWxQxQhSyl4mzneV7ywUglhrMe3piCDPJuWKfiKbbyCXMY
-         zNqRtCBUSN8CXxQG/WpwAeADoQDIJa5fYcd6J8H0WKkKaAHYMITTTeCxfLU94BkcBqX3
-         dCfD9B5Ee6Uq3lRrAEJ7FqyKoPsbgkNKVDnf3oQmQLDWDp+qwPd7+Uk85GQum2Sl4uHW
-         JBQNniILdewBqsGI7sIhRVaTO984yOnUhrVwLkO89jJ+1HzCSI6CvWg3m9Ua5diS9fpu
-         WIMg==
-X-Forwarded-Encrypted: i=1; AJvYcCVpDtO9UuJKCjLlS6tH1E/W4DZKEfn2bnKRwjTKy+L1f3GQaYOUKo6tNMjOuFVqyNEvJCPZvPwZQFM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwcKgHn8vRKEznAofR9/1nTTnMxjVgCX79nwOg08VW1jCPDw8Nr
-	JDfSj6YliF9IgC3Es4qrUbRTvYMylEAhzVVPGPQMubUx6bPfoAS2L1ddfhWBj4+/ug==
-X-Gm-Gg: AeBDiesK4mskfMkBfCwYYIMi1Vw8C0tatZt/QHD3cGWk0jIiQrbZpv/SIKK+S0FCAvu
-	ryyfZbrIAySqKOScIPZathrXFjh2VU8jZCh5tHm0TVJXLPveGpOZJhQ1ztsD+4AT7isMnXzQNiy
-	H39OfV0UoDuy+tJqLa6oIwN7tWcEulZcM74hW5uCRyjU923vM38MRRp0XP5EtA09g1u0Zk+iv8z
-	h6UkkcnQNnuduLJ1lKto4Y1BrPkzQuO1WE/blsNWy35kRQ+4i3/jXZXswgiUJcicj6d/eLD+mJG
-	5UXJbloiKC6sJmrWFyc1e2mfAoX6hqTkki2bskY+AmZM7KswfwasHuRreuzSEKYxP/STZpArxnd
-	5f400jN3pWlvYP137Kgb0M13L7HSSlaPHear5I90N6fWM0hCIAp4iZKZUG6yhP5GI5/sHY45HtS
-	58lQ5HROAuazrOon9+Tl7P0WivtNTR13GVgQRlLV11epJika/67POoppUI1pwPWA==
-X-Received: by 2002:a05:7301:6097:b0:2d1:a3ea:d8a5 with SMTP id 5a478bee46e88-2d40e9cace4mr857392eec.7.1775699918176;
-        Wed, 08 Apr 2026 18:58:38 -0700 (PDT)
-Received: from localhost ([2a00:79e0:2e7c:8:8419:d73b:6e27:ef7e])
-        by smtp.gmail.com with UTF8SMTPSA id 5a478bee46e88-2ca7c3010e9sm29435810eec.14.2026.04.08.18.58.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Apr 2026 18:58:37 -0700 (PDT)
-Date: Wed, 8 Apr 2026 18:58:34 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Hongxing Zhu <hongxing.zhu@nxp.com>
-Cc: "manivannan.sadhasivam@oss.qualcomm.com" <manivannan.sadhasivam@oss.qualcomm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver O'Halloran <oohall@gmail.com>, Will Deacon <will@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-	"linux-rockchip@lists.infradead.org" <linux-rockchip@lists.infradead.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-	Lukas Wunner <lukas@wunner.de>, Wilson Ding <dingwei@marvell.com>,
-	Miles Chen <minhuachen@google.com>
-Subject: Re: [PATCH v7 0/4] PCI: Add support for resetting the Root Ports in
- a platform specific way
-Message-ID: <adcHylFjFjhHT-tP@google.com>
-References: <20260310-pci-port-reset-v7-0-9dd00ccc25ab@oss.qualcomm.com>
- <AS8PR04MB883389FD2A016F9E02756B048C49A@AS8PR04MB8833.eurprd04.prod.outlook.com>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="IdmABsWN"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=AWeI2GyfxAfhe/v66nb4kWZSx99UPLdOA0qpFCtwcHxkt9Z7YcUpN9p5JyK6AAKTP0ajYaMuu+1cto3iskWXPDPkDrqCltBYRw/s3EF73PyC9X9LaZY59As/DX46pBbVcZMoF2eA3J5gzX/0Fc+UlPjAgij8Zu/6JMbLw4PYjwRzWrr5J7rALu8Dfr+Q80en03rEti+tGqGkz5RFnXpGo6JEXMcfpJwDORhPJJXQbntPt8AWd+Y7s6j1/WpDsjLJmnh/j5oavgfplvx1axvRIra4UhU0SiI7LixUCfDCeSihTM+vNzEAUCllKUL0XY5OKEQYeVIIVdSeP3kK9QhSLA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=5g5qB4RD6e8kh3F0/bM0IOV35xTiXw1WKZbgmimrTeQ=;
+ b=sPG2Fhyh9ob42l4jpkM+TmEkC/BGz7tQ02fX3qhFDRKdBjPRdW3s9vSFktXZw5hs7pJhL3n/89c4u/06T0VlayGb8/i6D4fTPqxRVmhQFpOLGmedp06uZKJqPmFzfTPuzgpkiK/21cRNPqUG3FsKUiNzstoy379IrDgsdgc6Psa/1yRqiFHCfl18NF1oO8xKMtFbo1jWc6vXE+0nA8RtVI21NXBX65PcpckG6zSelEWRtECX1h8g1s2CSiWMqkDSHllUK43TUYHaSsfUMa7nZxgTNxyLMae09udD8hT47U653U/MaZNIjzb2Mp5QINi4qyxs9E3U2ExgYlPiV4Rkug==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=5g5qB4RD6e8kh3F0/bM0IOV35xTiXw1WKZbgmimrTeQ=;
+ b=IdmABsWNaHtmdX+CvkTg/OQyyQAy8IBXWQzvrF7GOkGPa0trZxAA7nDW50mp9EC+ePsLoJ+Q5wNU8UxkT2XPf9W4ywkeI6vCntK0/K1U40SjVCtt/mnqku5TkyS+sIIERWytRL0ka1S4TiwGgY7ssNX3KzciT53PMssHkDBBCGUAr+baSQRq5qmY1QZ8wqp0wG7t5K3HcaJRyGsgymNvymcljyrt3m0NKSusgSS4xEXjt8bXhbUDQfBDkg2u31z1oQ1zXZN8q1WN0X7hi1/oAv4uLi3mUfBkGFtNnGwFV09EGP8d2S77FsrQoG+Afh1wHDxvdZOrDz7uEhLt1LtEZg==
+Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
+ (2603:10a6:800:315::13) by GV1PR04MB10992.eurprd04.prod.outlook.com
+ (2603:10a6:150:207::20) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.17; Thu, 9 Apr
+ 2026 02:40:27 +0000
+Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
+ ([fe80::feda:fd0e:147f:f994]) by VI0PR04MB12114.eurprd04.prod.outlook.com
+ ([fe80::feda:fd0e:147f:f994%6]) with mapi id 15.20.9769.018; Thu, 9 Apr 2026
+ 02:40:26 +0000
+From: Sherry Sun <sherry.sun@nxp.com>
+To: Manivannan Sadhasivam <mani@kernel.org>
+CC: "robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org"
+	<krzk+dt@kernel.org>, "conor+dt@kernel.org" <conor+dt@kernel.org>, Frank Li
+	<frank.li@nxp.com>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>, "festevam@gmail.com"
+	<festevam@gmail.com>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "bhelgaas@google.com"
+	<bhelgaas@google.com>, Hongxing Zhu <hongxing.zhu@nxp.com>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "imx@lists.linux.dev"
+	<imx@lists.linux.dev>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org"
+	<devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH V11 04/12] PCI: imx6: Add support for parsing the reset
+ property in new Root Port binding
+Thread-Topic: [PATCH V11 04/12] PCI: imx6: Add support for parsing the reset
+ property in new Root Port binding
+Thread-Index: AQHcxnsvpEGHOh8zy0CNlQtKGkFWybXTn/aAgAE0/uCAAFzBgIAA1Uvw
+Date: Thu, 9 Apr 2026 02:40:26 +0000
+Message-ID:
+ <VI0PR04MB12114B5FD1ACD1B8CC789B12592582@VI0PR04MB12114.eurprd04.prod.outlook.com>
+References: <20260407104154.2842132-1-sherry.sun@nxp.com>
+ <20260407104154.2842132-5-sherry.sun@nxp.com>
+ <7ewnbwdo5qtasbxj4uel6a6uthczq2l6udbvoqqkwm776lvseb@v54ri2gknwxn>
+ <VI0PR04MB12114AAA709016DADF0B45DA6925BA@VI0PR04MB12114.eurprd04.prod.outlook.com>
+ <t5x45nyn6lw7cofzj2rec5j6z2ml6kve2hvzeeastdrv4hilsu@ujhkmltpp5ky>
+In-Reply-To: <t5x45nyn6lw7cofzj2rec5j6z2ml6kve2hvzeeastdrv4hilsu@ujhkmltpp5ky>
+Accept-Language: zh-CN, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: VI0PR04MB12114:EE_|GV1PR04MB10992:EE_
+x-ms-office365-filtering-correlation-id: 8963c263-6e93-407d-6a87-08de95e15b78
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|366016|19092799006|7416014|376014|1800799024|22082099003|18002099003|38070700021|56012099003;
+x-microsoft-antispam-message-info:
+ /a49k8uxPY5QTDgmqS1oqLRG9piw+nkNGwvTLTRQZOGNAd+AXODJkYO/XLDMG5kJgImqQpaGBvBh/rhBHywpg2O+uvRIb1cep1jgxhKPi+brYjtcKTVvQq9RCN0jKl303iYv1qNS3f/X9Hm5EAe2RFdFqKARTiIQZHTaRfXsjiGSZSZUCjOnJKvb8C18ornz7uDpH+QTRWBPyYZjMQW0iK/3pz+0h0tNM4NT7by8F75OsLmE9TVuRTfDWQwLiTnhhvrTySlX4EJtRc9HeGRbeIEeQIL4RL2Rj8WRlE9gf2aBFc8gUgHWRyUPdoyZi0vAaa5X3lRospwgM9QAFoNrY5QdBsKtM2tUcK/J8fUf3bJZCHz01rWdMi79TFwt0Js3L2Ls5AJ5f+XHnwuAe10iLA2vOWZcwRx8XYcaVOxwS36S+tu0/FFButWlkn1Nh1ihZ56HSUA5WI8gr/Y0dkeH430PRHE4fUBYWYpkT90toNIS7bFyeD1+Im9urwLDwaKgAeL+0qQ58mLv6q2xT+ILB/AaJXyH0B2t0D6zvyelVB4dMIKp/UZ/9HGcgn2MoL/uUhxITy+2Z965A4owBTz9HLpXe20MJq8Vxo1GRI/qJmSjJdQcTPYCq+faRe0lftEzPRR9Rs+jIg+geVhUK1FbmONuu8q6Run1kBtOIjPXDAfZZzgKslEa7k3BOZcDLwRthSD33RmJwOi2uJSAZMekbD6BHoZ67nI02I37QrEdFKu1JHGu52QnpsIE2yhmT/zEXLzmQlZbia57DnGedHA612HmEsSin/Urk48Rt1SbUiI=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI0PR04MB12114.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(7416014)(376014)(1800799024)(22082099003)(18002099003)(38070700021)(56012099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?alVlWkFmUWQ4UFovT3NwSFFXdm54U0NDbkR5NmNreHVRNXlKVSsxNEhpRE5u?=
+ =?utf-8?B?VFlHV2tuQlFtVFhCejVpYjJsMEM0bEZTNS9jajM2em84YytRejZNN1pxSWd2?=
+ =?utf-8?B?azdEL1VCY3FoSmVBSnJDZkYzN09MQnF3SDByNFNUODFuazJnUFg2cFZLVzBI?=
+ =?utf-8?B?MG1XbU0vWFVVTE5PYXo5L1pQdW16NURVMi9TbnpvTFlwNEFJSXgrVWZ3YnZB?=
+ =?utf-8?B?Nk5VbGRXWmltMUZuNWcxeXZ2U2NKRmxXYTV1V1prdnQ2b1BhSW9TN2p5ZnZl?=
+ =?utf-8?B?ZlJsK0syUDI0a09tSnBXTlFSb2s2VEpiM3pKeHN4NDh5cVl4dDZjUHFiUXd6?=
+ =?utf-8?B?NmdIbkN0eXMwMmpEbjRUMTBCWUNOT29YQ3V4blNubHpaaVdheEVaUGFudjdH?=
+ =?utf-8?B?bXlvams3TVM1RktHck1SWVpWUU9mSTFYcXlBa3plZmpseUl3bzcxcm1qRkx0?=
+ =?utf-8?B?a2lsdm9DSzRxM1BRb3h5TlpGZldCUzNyaE1ZcmhDWXRqTXBzTEdqRHMyL2FW?=
+ =?utf-8?B?MVIzOWwrcjBWbkEwb0tGQ0R0NEhHaDdzOXZUMnJHVmRtMjdWblMwSEZvbTJE?=
+ =?utf-8?B?eVdwVVFUd1pTQmp2dUpLclFCa1A0RkVsODVFbDFFanV1SFFDL2NZTHd5SVVS?=
+ =?utf-8?B?dDhEMFE5aFdkMExpeW12WVQvd2tUaTQ3M1puQlpXR09ITVRFY2E0cUtxUVl3?=
+ =?utf-8?B?YzNyNnpFT3l4RDhNeXFobTBlVllQS3krNXZsNWw2aHVOWkE0SzBXb0xxVCtk?=
+ =?utf-8?B?ZjJmNEplOEcxMVFHNUtwcE9qaUhPeElNVVFBUkRXN3ZHa0VrUENqTDhFZ29F?=
+ =?utf-8?B?UlBmVTVXY1JiaFFVREtTOC9MT1FuaTVmeDBPZHRkUHdZVnFiSWJicFVoc0RY?=
+ =?utf-8?B?YlNkc1BnemI0NTRVREN0RFV5U3lBU2JWODhqQ2UwRXJSQnRWdW5TczV2QXJk?=
+ =?utf-8?B?ZDFPU0dIUmRmeDVKQ1RuZ3JBTFJEUm1PSkJPY2ZTNFdyVkJiRkFDeXdyN1Zy?=
+ =?utf-8?B?Y05WMGxXSDlPVTZ4UEpmY3dkbXdvd3BwNEU2RHo3SWdNQU9rNXgwcHAzRGJP?=
+ =?utf-8?B?RzdTaC9xdy9vbzVmSXMrV0Fnb2Z5c2E3UmQ2VWhyZDdtQ2MvNkxFVSs1RlBp?=
+ =?utf-8?B?QnZ5KzB4TkVzbWJFZWVseUFBdStxYlNNbXlOR1BKY3JhTWovQVlVcE9qZWV0?=
+ =?utf-8?B?UjBZdWQwa1VHYm5SM0haRW5aa2xjcEJiUHJicXFjK1lTaWRkTVJuUTZpS1ps?=
+ =?utf-8?B?VXhSMmY0ZXY2V0VhdnNSMUppd0VuRnBtK1RPVExTVGRhSUxjR3BxS093aDBT?=
+ =?utf-8?B?bU5rNGx5RHFqQnpJSGc0QTBhSlMzZE1RVFVLUDBtL0g4V1VUaWxMOURRY3Fq?=
+ =?utf-8?B?eWJGYzVRcS9tM29YYVdaajZnMk5zdXNXRlBtNGtucHp3aTZUK2FNUU90K0Ri?=
+ =?utf-8?B?T3lOZmFPRmM0M3l2THkweWZJTnhSTUZIWGRVdTBHWjVSamZRWEJ0MmVNYWlP?=
+ =?utf-8?B?b3RpOG50amdHaXJNUFBtMVB4N2dFMWVRdlRNSDJqQjkzdzZnRWdVTlFndmE0?=
+ =?utf-8?B?K3FTK0ppSERwZ0Jjekc0UEhEbEptTk1tTHd1K0dRcm9OUWJsd1V4YXlURW1i?=
+ =?utf-8?B?VUpheCtoSmRKNGhYL2h0eFpOdzZPUU1pbnMweVM5SWFFaFp2QjZvTVNvV2Nr?=
+ =?utf-8?B?YkhiK3paY1d4MDVlajlTNGlsN21iT1RNY1o0VDFNWUZ4RStDL1ExSEMxcW5U?=
+ =?utf-8?B?M1drRGlVa3JKeHBZK2pFVEJHejR4TVUvOUl1N1Fyc3FtUWdnVE93RzN2cjAz?=
+ =?utf-8?B?bERleElYKzBVdUo2aExFT01lNUExd0x2T29vbnMyUVdoREx2MldPR1lWNXlO?=
+ =?utf-8?B?MTRWTFFDNkJaY1JOdnZ3NW9lVXJ4ZTFrVXhPSVozK3k5aSs2cXNFMHlzVHM1?=
+ =?utf-8?B?QmtvUldaTGVtNjZFWmRmS0kwY2lHWmZ6MmtNZ1cyLytYbUg2M0UzZ0VnTFVD?=
+ =?utf-8?B?ekJNdTZabjIvUVhBWkpYcnpBKzQvNFNIMkI4R3c0WGdRZkJrMUNDRGEzRWVX?=
+ =?utf-8?B?NFVLR2I0ckhueFR1cTRmdlZTWHFQTENUdG8wVWhuN28veVBOc3U1b1NPbzlZ?=
+ =?utf-8?B?S1owVEFCZ2pDcWxTZDZZalR0QmtxSTZtZ3lWSi9WQVYySXdSZ2RLSkdiVnU4?=
+ =?utf-8?B?em5VdzBiSFkzQis0L1UyN0w5SThuZVkxaDBLaHM2K0hsM01McFpqRnFCalZN?=
+ =?utf-8?B?Wjhxa1VwZUVKdjFyd2RlVzFVSkxlTU10RlBISzE4bjNYMDFibUQrbkNvbWRL?=
+ =?utf-8?Q?EvTu+AMoG58XwkRZXX?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <AS8PR04MB883389FD2A016F9E02756B048C49A@AS8PR04MB8833.eurprd04.prod.outlook.com>
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: VI0PR04MB12114.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8963c263-6e93-407d-6a87-08de95e15b78
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Apr 2026 02:40:26.7955
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: AfkOP61aU1xNg20ZQxdcHDY9HPGWEv2rz70qQDhVT0awSBFKSBCzjC8hpm8OjKlkEU/O8WTsM+sZQR6NYbpjTw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV1PR04MB10992
 
-Hi Richard and Mani,
-
-For the record, I've been using a form of an earlier version of this
-patchset in my environment for some time now, and I've run across
-problems that *might* relate to what Richard is reporting, but I'm not
-quite sure at the moment. Details below.
-
-On Wed, Mar 25, 2026 at 07:06:49AM +0000, Hongxing Zhu wrote:
-> Hi Mani:
-> I've accidentally encountered a new issue based on the reset root port patch-set.
-> After performing a few hot-reset operations, the PCIe link enters a continuous up/down cycling pattern.
-> 
-> I found that calling pci_reset_secondary_bus() first in pcibios_reset_secondary_bus() appears to resolve this issue.
-> Have you experienced a similar problem?
-> 
-> "
-> ...
-> [  141.897701] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000700) link up detected
-> [  142.086341] imx6q-pcie 4c300000.pcie: PCIe Gen.3 x1 link up
-> [  142.092038] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000c00) link down detected
-> ...
-> "
-> 
-> Platform: i.MX95 EVK board plus local Root Ports reset supports based on the #1 and #2 patches of v7 patch-set.
-> Notes of the logs:
-> - One Gen3 NVME device is connected.
-> - "./memtool 4c341058=0;./memtool 4c341058=1;" is used to toggle the LTSSM_EN bit to trigger the link down.
-> - Toggle BIT6 of Bridge Control Register to trigger hot reset by "./memtool 4c30003c=004001ff; ./memtool 4c30003c=000001ff;"
-> - The Root Port reset patches works correctly at first.
-> However, after several hot-reset triggers, the link enters a repeated down/up cycling state.
-> 
-> Logs:
-> [    3.553188] imx6q-pcie 4c300000.pcie: host bridge /soc/pcie@4c300000 ranges:
-> [    3.560308] imx6q-pcie 4c300000.pcie:       IO 0x006ff00000..0x006fffffff -> 0x0000000000
-> [    3.568525] imx6q-pcie 4c300000.pcie:      MEM 0x0910000000..0x091fffffff -> 0x0010000000
-> [    3.577314] imx6q-pcie 4c300000.pcie: config reg[1] 0x60100000 == cpu 0x60100000
-> [    3.796029] imx6q-pcie 4c300000.pcie: iATU: unroll T, 128 ob, 128 ib, align 4K, limit 1024G
-> [    4.003746] imx6q-pcie 4c300000.pcie: PCIe Gen.3 x1 link up
-> [    4.009553] imx6q-pcie 4c300000.pcie: PCI host bridge to bus 0000:00
-> root@imx95evk:~#
-> root@imx95evk:~#
-> root@imx95evk:~# ./memtool 4c341058=0;./memtool 4c341058=1; Writing 32-bit value 0x0 to address 0x4C341058
-> Writing 32-bit v
-> [   87.265348] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000d01) link down detected
-> alue 0x1 to adder
-> [   87.273106] imx6q-pcie 4c300000.pcie: Stop root bus and handle link down
-> ss 0x4C341058
-> [   87.281264] pcieport 0000:00:00.0: Recovering Root Port due to Link Down
-> [   87.289245] pci 0000:01:00.0: AER: can't recover (no error_detected callback)
-> root@imx95evk:~# [   87.514216] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000700) link up detected
-> [   87.702968] imx6q-pcie 4c300000.pcie: PCIe Gen.3 x1 link up
-> [   87.834983] pcieport 0000:00:00.0: Root Port has been reset
-> [   87.840714] pcieport 0000:00:00.0: AER: device recovery failed
-> [   87.846592] imx6q-pcie 4c300000.pcie: Rescan bus after link up is detected
-> [   87.855947] pcieport 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-
-I've seen this same line ("bridge configuration invalid") before, and I
-believe that's because the saved state (pci_save_state(); more about
-this below) is invalid -- it contains 0 values in places where they
-should be non-zero. So when those values are restored
-(pci_restore_state()), we get confused.
-
-I believe we've pinned down one reason this invalid state occurs -- it's
-because of an automatic (mis)feature in the DesignWare PCIe hardware.
-Specifically, it's because of what the controller does during a surprise
-link-down error.
-
-From the Designware docs:
-
-  "[...] during normal operation, the link might fail and go down. After
-  this link-down event, the controller requests the DWC_pcie_clkrst.v
-  module to hot-reset the controller. There is no difference in the
-  handling of a link-down reset or a hot reset; the controller asserts
-  the link_req_rst_not output requesting the DWC_pcie_clkrst.v module to
-  reset the controller."
-
-In some of the adjacent documentation (and confirmed in local testing),
-it suggests that this automatic reset will also reset various DBI (i.e.,
-PCIe config space) registers. It also seems as if there's not really a
-good way to completely stop this automatic reset -- the docs mention
-some SW methods prevent the reset, but they all seem racy or incomplete.
-
-Anyway, I think this implies that patch 1 is somewhat wrong [1]. It
-includes some code like this:
-
-		pci_save_state(dev);
-		ret = host->reset_root_port(host, dev);
-		if (ret)
-			pci_err(dev, "Failed to reset Root Port: %d\n", ret);
-		else
-			/* Now restore it on success */
-			pci_restore_state(dev);
-
-That first line (pci_save_state()) is prone to saving invalid state,
-depending on whether the link-down event has finished flushing and
-resetting the controller yet or not. The resulting impact is a bit hard
-to judge, depending on what (mis)configuration you end up with.
-
-I also noticed commit a2f1e22390ac ("PCI/ERR: Ensure error
-recoverability at all times") was merged recently. With that change, I
-believe it is now safe to perform pci_restore_state() even without
-pci_save_state() here.
-
-So ... can we remove pci_save_state() from
-pcibios_reset_secondary_bus()? Might that help? It sounds like my above
-observations *may* match Richard's reports, but I'm not sure. And
-anyway, the documented hardware behavior is racy, so it's hard to
-propose a foolproof solution.
-
-Brian
-
-[1] At least, for DesignWare controllers.
-
-> [   87.864423] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-> 
-> root@imx95evk:~#
-> root@imx95evk:~# cat /proc/interrupts | grep lnk;
-> 273:          2          0          0          0          0          0    GICv3 342 Level     PCIe PME, lnk_notify
-> root@imx95evk:~#
-> root@imx95evk:~#
-> root@imx95evk:~# ./memtool 4c30003c=004001ff; ./memtool 4c30003c=000001ff; Writing 32-bit va
-> [  107.028086] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000d00) link down detected lue 0x4001FF to a
-> [  107.037018] imx6q-pcie 4c300000.pcie: Stop root bus and handle link down ddress 0x4C30003C
-> [  107.045137] pcieport 0000:00:00.0: Recovering Root Port due to Link Down
-> 
-> Writing 32-bit
-> [  107.053332] pci 0000:01:00.0: AER: can't recover (no error_detected callback)  value 0x1FF to address 0x4C30003C root@imx95evk:~#
-> [  107.282146] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000700) link up detected
-> [  107.470801] imx6q-pcie 4c300000.pcie: PCIe Gen.3 x1 link up
-> [  107.602823] pcieport 0000:00:00.0: Root Port has been reset
-> [  107.608601] pcieport 0000:00:00.0: AER: device recovery failed
-> [  107.614497] imx6q-pcie 4c300000.pcie: Rescan bus after link up is detected
-> [  107.623805] pcieport 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> [  107.632281] pci_bus 0000:01: busn_res: [bus 01] end is updated to 01
-> 
-> root@imx95evk:~#
-> root@imx95evk:~# cat /proc/interrupts | grep lnk;
-> 273:          4          0          0          0          0          0    GICv3 342 Level     PCIe PME, lnk_notify
-> root@imx95evk:~#
-> root@imx95evk:~# ./memtool 4c30003c=004001ff; ./memtool 4c30003c=000001ff; Writing 32-bit va
-> [  133.424041] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000d00) link down detected lue 0x4001FF to a
-> [  133.432954] imx6q-pcie 4c300000.pcie: Stop root bus and handle link down ddress 0x4C30003C
-> [  133.441106] pcieport 0000:00:00.0: Recovering Root Port due to Link Down
-> 
-> Writing 32-bit
-> [  133.449309] pci 0000:01:00.0: AER: can't recover (no error_detected callback)  value 0x1FF to address 0x4C30003C root@imx95evk:~#
-> [  133.677824] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000700) link up detected
-> [  133.870414] imx6q-pcie 4c300000.pcie: PCIe Gen.3 x1 link up
-> [  134.002534] pcieport 0000:00:00.0: Root Port has been reset
-> [  134.008307] pcieport 0000:00:00.0: AER: device recovery failed
-> [  134.014193] imx6q-pcie 4c300000.pcie: Rescan bus after link up is detected
-> [  134.023418] pcieport 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> [  134.031881] pci_bus 0000:01: busn_res: [bus 01] end is updated to 01
-> 
-> root@imx95evk:~# ./memtool 4c30003c=004001ff; ./memtool 4c30003c=000001ff; Writing 32-bit va
-> [  140.149713] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000d00) link down detected lue 0x4001FF to a
-> [  140.158614] imx6q-pcie 4c300000.pcie: Stop root bus and handle link down ddress 0x4C30003C
-> [  140.166779] pcieport 0000:00:00.0: Recovering Root Port due to Link Down
-> [  140.174981] pci 0000:01:00.0: AER: can't recover (no error_detected callback) Writing 32-bit value 0x1FF to address 0x4C30003C root@imx95evk:~#
-> [  140.401605] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000700) link up detected
-> [  140.590491] imx6q-pcie 4c300000.pcie: PCIe Gen.3 x1 link up
-> [  140.596206] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000c00) link down detected
-> 
-> root@imx95evk:~#
-> [  141.630311] pcieport 0000:00:00.0: Data Link Layer Link Active not set in 100 msec
-> [  141.637950] pcieport 0000:00:00.0: Failed to reset Root Port: -25
-> [  141.644095] pcieport 0000:00:00.0: AER: subordinate device reset failed
-> [  141.650883] pcieport 0000:00:00.0: AER: device recovery failed
-> [  141.656784] imx6q-pcie 4c300000.pcie: Stop root bus and handle link down
-> [  141.663520] pcieport 0000:00:00.0: Recovering Root Port due to Link Down
-> [  141.670271] pci 0000:01:00.0: AER: can't recover (no error_detected callback)
-> [  141.897701] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000700) link up detected
-> [  142.086341] imx6q-pcie 4c300000.pcie: PCIe Gen.3 x1 link up
-> [  142.092038] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000c00) link down detected
-> [  143.126273] pcieport 0000:00:00.0: Data Link Layer Link Active not set in 100 msec
-> [  143.133919] pcieport 0000:00:00.0: Failed to reset Root Port: -25
-> [  143.140052] pcieport 0000:00:00.0: AER: subordinate device reset failed
-> [  143.146747] pcieport 0000:00:00.0: AER: device recovery failed
-> [  143.152604] imx6q-pcie 4c300000.pcie: Stop root bus and handle link down
-> [  143.159314] pcieport 0000:00:00.0: Recovering Root Port due to Link Down
-> [  143.166022] pci 0000:01:00.0: AER: can't recover (no error_detected callback)
-> [  143.389723] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000700) link up detected
-> [  143.582294] imx6q-pcie 4c300000.pcie: PCIe Gen.3 x1 link up
-> [  143.587996] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000c00) link down detected
-> 
-> 
-> Thanks.
-> Best Regards
-> Richard Zhu
+PiBTdWJqZWN0OiBSZTogW1BBVENIIFYxMSAwNC8xMl0gUENJOiBpbXg2OiBBZGQgc3VwcG9ydCBm
+b3IgcGFyc2luZyB0aGUgcmVzZXQNCj4gcHJvcGVydHkgaW4gbmV3IFJvb3QgUG9ydCBiaW5kaW5n
+DQo+IA0KPiBPbiBXZWQsIEFwciAwOCwgMjAyNiBhdCAwODozNDowM0FNICswMDAwLCBTaGVycnkg
+U3VuIHdyb3RlOg0KPiA+ID4gT24gVHVlLCBBcHIgMDcsIDIwMjYgYXQgMDY6NDE6NDZQTSArMDgw
+MCwgU2hlcnJ5IFN1biB3cm90ZToNCj4gPiA+ID4gVGhlIGN1cnJlbnQgRFQgYmluZGluZyBmb3Ig
+cGNpLWlteDYgc3BlY2lmaWVzIHRoZSAncmVzZXQtZ3Bpb3MnDQo+ID4gPiA+IHByb3BlcnR5IGlu
+IHRoZSBob3N0IGJyaWRnZSBub2RlLiBIb3dldmVyLCB0aGUgUEVSU1QjIHNpZ25hbA0KPiA+ID4g
+PiBsb2dpY2FsbHkgYmVsb25ncyB0byBpbmRpdmlkdWFsIFJvb3QgUG9ydHMgcmF0aGVyIHRoYW4g
+dGhlIGhvc3QgYnJpZGdlDQo+IGl0c2VsZi4NCj4gPiA+ID4gVGhpcyBiZWNvbWVzIGltcG9ydGFu
+dCB3aGVuIHN1cHBvcnRpbmcgUENJZSBLZXlFIGNvbm5lY3RvciBhbmQgUENJDQo+ID4gPiA+IHBv
+d2VyIGNvbnRyb2wgZnJhbWV3b3JrIGZvciBwY2ktaW14NiBkcml2ZXIsIHdoaWNoIHJlcXVpcmVz
+DQo+ID4gPiA+IHByb3BlcnRpZXMgdG8gYmUgc3BlY2lmaWVkIGluIFJvb3QgUG9ydCBub2Rlcy4N
+Cj4gPiA+ID4NCj4gPiA+ID4gQWRkIHN1cHBvcnQgZm9yIHBhcnNpbmcgJ3Jlc2V0LWdwaW9zJyBm
+cm9tIFJvb3QgUG9ydCBjaGlsZCBub2Rlcw0KPiA+ID4gPiB1c2luZyB0aGUgY29tbW9uIGhlbHBl
+ciBwY2lfaG9zdF9jb21tb25fcGFyc2VfcG9ydHMoKSwgYW5kIHVwZGF0ZQ0KPiA+ID4gPiB0aGUg
+cmVzZXQgR1BJTyBoYW5kbGluZyB0byB1c2UgdGhlIHBhcnNlZCBwb3J0IGxpc3QgZnJvbQ0KPiA+
+ID4gPiBicmlkZ2UtPnBvcnRzLiBUbyBtYWludGFpbiBEVCBiYWNrd2FyZHMgY29tcGF0aWJpbGl0
+eSwgZmFsbGJhY2sgdG8NCj4gPiA+ID4gdGhlIGxlZ2FjeSBtZXRob2Qgb2YgcGFyc2luZyB0aGUg
+aG9zdCBicmlkZ2Ugbm9kZSBpZiB0aGUgcmVzZXQNCj4gPiA+ID4gcHJvcGVydHkgaXMgbm90IHBy
+ZXNlbnQgaW4gdGhlIFJvb3QgUG9ydCBub2RlLg0KPiA+ID4gPg0KPiA+ID4gPiBTaW5jZSBub3cg
+dGhlIHJlc2V0IEdQSU8gaXMgb2J0YWluZWQgd2l0aCBHUElPRF9BU0lTIGZsYWcsIGl0IG1heQ0K
+PiA+ID4gPiBiZSBpbiBpbnB1dCBtb2RlLCB1c2luZyBncGlvZF9kaXJlY3Rpb25fb3V0cHV0KCkg
+aW5zdGVhZCBvZg0KPiA+ID4gPiBncGlvZF9zZXRfdmFsdWVfY2Fuc2xlZXAoKSB0byBlbnN1cmUg
+dGhlIHJlc2V0IEdQSU8gaXMgcHJvcGVybHkNCj4gPiA+ID4gY29uZmlndXJlZCBhcyBvdXRwdXQg
+YmVmb3JlIHNldHRpbmcgaXRzIHZhbHVlLg0KPiA+ID4gPg0KPiA+ID4gPiBTaWduZWQtb2ZmLWJ5
+OiBTaGVycnkgU3VuIDxzaGVycnkuc3VuQG54cC5jb20+DQo+ID4gPiA+IC0tLQ0KPiA+ID4gPiAg
+ZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNpLWlteDYuYyB8IDc1DQo+ID4gPiA+ICsrKysr
+KysrKysrKysrKysrKysrKy0tLS0tLQ0KPiA+ID4gPiAgMSBmaWxlIGNoYW5nZWQsIDYwIGluc2Vy
+dGlvbnMoKyksIDE1IGRlbGV0aW9ucygtKQ0KPiA+ID4gPg0KPiA+ID4gPiBkaWZmIC0tZ2l0IGEv
+ZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNpLWlteDYuYw0KPiA+ID4gPiBiL2RyaXZlcnMv
+cGNpL2NvbnRyb2xsZXIvZHdjL3BjaS1pbXg2LmMNCj4gPiA+ID4gaW5kZXggZDk5ZGE3ZTQyNTkw
+Li5kZDhmOWMwZmNlYzQgMTAwNjQ0DQo+ID4gPiA+IC0tLSBhL2RyaXZlcnMvcGNpL2NvbnRyb2xs
+ZXIvZHdjL3BjaS1pbXg2LmMNCj4gPiA+ID4gKysrIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9k
+d2MvcGNpLWlteDYuYw0KPiA+ID4gPiBAQCAtMzQsNiArMzQsNyBAQA0KPiA+ID4gPiAgI2luY2x1
+ZGUgPGxpbnV4L3BtX3J1bnRpbWUuaD4NCj4gPiA+ID4NCj4gPiA+ID4gICNpbmNsdWRlICIuLi8u
+Li9wY2kuaCINCj4gPiA+ID4gKyNpbmNsdWRlICIuLi9wY2ktaG9zdC1jb21tb24uaCINCj4gPiA+
+ID4gICNpbmNsdWRlICJwY2llLWRlc2lnbndhcmUuaCINCj4gPiA+ID4NCj4gPiA+ID4gICNkZWZp
+bmUgSU1YOE1RX0dQUl9QQ0lFX1JFRl9VU0VfUEFECQlCSVQoOSkNCj4gPiA+ID4gQEAgLTE1Miw3
+ICsxNTMsNiBAQCBzdHJ1Y3QgaW14X2x1dF9kYXRhIHsNCj4gPiA+ID4NCj4gPiA+ID4gIHN0cnVj
+dCBpbXhfcGNpZSB7DQo+ID4gPiA+ICAJc3RydWN0IGR3X3BjaWUJCSpwY2k7DQo+ID4gPiA+IC0J
+c3RydWN0IGdwaW9fZGVzYwkqcmVzZXRfZ3Bpb2Q7DQo+ID4gPiA+ICAJc3RydWN0IGNsa19idWxr
+X2RhdGEJKmNsa3M7DQo+ID4gPiA+ICAJaW50CQkJbnVtX2Nsa3M7DQo+ID4gPiA+ICAJYm9vbAkJ
+CXN1cHBvcnRzX2Nsa3JlcTsNCj4gPiA+ID4gQEAgLTEyMjQsNiArMTIyNCwzMiBAQCBzdGF0aWMg
+dm9pZCBpbXhfcGNpZV9kaXNhYmxlX2RldmljZShzdHJ1Y3QNCj4gPiA+IHBjaV9ob3N0X2JyaWRn
+ZSAqYnJpZGdlLA0KPiA+ID4gPiAgCWlteF9wY2llX3JlbW92ZV9sdXQoaW14X3BjaWUsIHBjaV9k
+ZXZfaWQocGRldikpOyAgfQ0KPiA+ID4gPg0KPiA+ID4gPiArc3RhdGljIGludCBpbXhfcGNpZV9w
+YXJzZV9sZWdhY3lfYmluZGluZyhzdHJ1Y3QgaW14X3BjaWUgKnBjaWUpIHsNCj4gPiA+ID4gKwlz
+dHJ1Y3QgZGV2aWNlICpkZXYgPSBwY2llLT5wY2ktPmRldjsNCj4gPiA+ID4gKwlzdHJ1Y3QgcGNp
+X2hvc3RfYnJpZGdlICpicmlkZ2UgPSBwY2llLT5wY2ktPnBwLmJyaWRnZTsNCj4gPiA+ID4gKwlz
+dHJ1Y3QgcGNpX2hvc3RfcG9ydCAqcG9ydDsNCj4gPiA+ID4gKwlzdHJ1Y3QgZ3Bpb19kZXNjICpy
+ZXNldDsNCj4gPiA+ID4gKw0KPiA+ID4gPiArCXJlc2V0ID0gZGV2bV9ncGlvZF9nZXRfb3B0aW9u
+YWwoZGV2LCAicmVzZXQiLCBHUElPRF9BU0lTKTsNCj4gPiA+ID4gKwlpZiAoSVNfRVJSKHJlc2V0
+KSkNCj4gPiA+ID4gKwkJcmV0dXJuIFBUUl9FUlIocmVzZXQpOw0KPiA+ID4gPiArDQo+ID4gPiA+
+ICsJaWYgKCFyZXNldCkNCj4gPiA+ID4gKwkJcmV0dXJuIDA7DQo+ID4gPiA+ICsNCj4gPiA+ID4g
+Kwlwb3J0ID0gZGV2bV9remFsbG9jKGRldiwgc2l6ZW9mKCpwb3J0KSwgR0ZQX0tFUk5FTCk7DQo+
+ID4gPiA+ICsJaWYgKCFwb3J0KQ0KPiA+ID4gPiArCQlyZXR1cm4gLUVOT01FTTsNCj4gPiA+ID4g
+Kw0KPiA+ID4gPiArCXBvcnQtPnJlc2V0ID0gcmVzZXQ7DQo+ID4gPiA+ICsJSU5JVF9MSVNUX0hF
+QUQoJnBvcnQtPmxpc3QpOw0KPiA+ID4gPiArCWxpc3RfYWRkX3RhaWwoJnBvcnQtPmxpc3QsICZi
+cmlkZ2UtPnBvcnRzKTsNCj4gPiA+ID4gKw0KPiA+ID4gPiArCXJldHVybiBkZXZtX2FkZF9hY3Rp
+b25fb3JfcmVzZXQoZGV2LA0KPiA+ID4gcGNpX2hvc3RfY29tbW9uX2RlbGV0ZV9wb3J0cywNCj4g
+PiA+ID4gKwkJCQkJJmJyaWRnZS0+cG9ydHMpOw0KPiA+ID4gPiArfQ0KPiA+ID4gPiArDQo+ID4g
+PiA+ICBzdGF0aWMgdm9pZCBpbXhfcGNpZV92cGNpZV9hdXhfZGlzYWJsZSh2b2lkICpkYXRhKSAg
+ew0KPiA+ID4gPiAgCXN0cnVjdCByZWd1bGF0b3IgKnZwY2llX2F1eCA9IGRhdGE7IEBAIC0xMjMz
+LDEzICsxMjU5LDIyIEBADQo+ID4gPiA+IHN0YXRpYyB2b2lkIGlteF9wY2llX3ZwY2llX2F1eF9k
+aXNhYmxlKHZvaWQNCj4gPiA+ID4gKmRhdGEpDQo+ID4gPiA+DQo+ID4gPiA+ICBzdGF0aWMgdm9p
+ZCBpbXhfcGNpZV9hc3NlcnRfcGVyc3Qoc3RydWN0IGlteF9wY2llICppbXhfcGNpZSwgYm9vbA0K
+PiA+ID4gPiBhc3NlcnQpICB7DQo+ID4gPiA+IC0JaWYgKGFzc2VydCkgew0KPiA+ID4gPiAtCQln
+cGlvZF9zZXRfdmFsdWVfY2Fuc2xlZXAoaW14X3BjaWUtPnJlc2V0X2dwaW9kLCAxKTsNCj4gPiA+
+ID4gLQl9IGVsc2Ugew0KPiA+ID4gPiAtCQlpZiAoaW14X3BjaWUtPnJlc2V0X2dwaW9kKSB7DQo+
+ID4gPiA+IC0JCQltc2xlZXAoUENJRV9UX1BWUEVSTF9NUyk7DQo+ID4gPiA+IC0JCQlncGlvZF9z
+ZXRfdmFsdWVfY2Fuc2xlZXAoaW14X3BjaWUtPnJlc2V0X2dwaW9kLCAwKTsNCj4gPiA+ID4gLQkJ
+CW1zbGVlcChQQ0lFX1JFU0VUX0NPTkZJR19XQUlUX01TKTsNCj4gPiA+ID4gKwlzdHJ1Y3QgZHdf
+cGNpZSAqcGNpID0gaW14X3BjaWUtPnBjaTsNCj4gPiA+ID4gKwlzdHJ1Y3QgcGNpX2hvc3RfYnJp
+ZGdlICpicmlkZ2UgPSBwY2ktPnBwLmJyaWRnZTsNCj4gPiA+ID4gKwlzdHJ1Y3QgcGNpX2hvc3Rf
+cG9ydCAqcG9ydDsNCj4gPiA+ID4gKw0KPiA+ID4gPiArCWlmICghYnJpZGdlKQ0KPiA+ID4gPiAr
+CQlyZXR1cm47DQo+ID4gPiA+ICsNCj4gPiA+ID4gKwlsaXN0X2Zvcl9lYWNoX2VudHJ5KHBvcnQs
+ICZicmlkZ2UtPnBvcnRzLCBsaXN0KSB7DQo+ID4gPiA+ICsJCWlmIChhc3NlcnQpIHsNCj4gPiA+
+ID4gKwkJCWdwaW9kX2RpcmVjdGlvbl9vdXRwdXQocG9ydC0+cmVzZXQsIDEpOw0KPiA+ID4gPiAr
+CQl9IGVsc2Ugew0KPiA+ID4gPiArCQkJaWYgKHBvcnQtPnJlc2V0KSB7DQo+ID4gPiA+ICsJCQkJ
+bXNsZWVwKFBDSUVfVF9QVlBFUkxfTVMpOw0KPiA+ID4gPiArCQkJCWdwaW9kX2RpcmVjdGlvbl9v
+dXRwdXQocG9ydC0+cmVzZXQsIDApOw0KPiA+ID4gPiArCQkJCW1zbGVlcChQQ0lFX1JFU0VUX0NP
+TkZJR19XQUlUX01TKTsNCj4gPiA+ID4gKwkJCX0NCj4gPiA+DQo+ID4gPiBTYXNoaWtvIGZsYWdn
+ZWQgdGhpcyBsb29wOg0KPiA+ID4NCj4gPiA+IGBgYA0KPiA+ID4gRG9lcyB0aGlzIGxvb3AgbXVs
+dGlwbHkgdGhlIGluaXRpYWxpemF0aW9uIGRlbGF5cz8NCj4gPiA+IElmIGEgY29udHJvbGxlciBo
+YXMgbXVsdGlwbGUgUm9vdCBQb3J0cywgdGhlIG1zbGVlcCBjYWxscyB3aWxsIHJ1bg0KPiA+ID4g
+c2VxdWVudGlhbGx5IGZvciBlYWNoIHBvcnQsIGxpbmVhcmx5IGluY3JlYXNpbmcgdGhlIGRlbGF5
+LiBDb3VsZCB3ZQ0KPiA+ID4gb3B0aW1pemUgdGhpcyBieSBhc3NlcnRpbmcgYWxsIHJlc2V0IEdQ
+SU9zLCB3YWl0aW5nIHRoZSBwcmUtZGVsYXkNCj4gPiA+IG9uY2UsIGRlLWFzc2VydGluZyBhbGwg
+R1BJT3MsIGFuZCB3YWl0aW5nIHRoZSBwb3N0LWRlbGF5IG9uY2UgZm9yIHRoZSBlbnRpcmUNCj4g
+YnVzPw0KPiA+ID4gYGBgDQo+ID4gPg0KPiA+ID4gTWF5YmUgeW91IHNob3VsZCBkbzoNCj4gPiA+
+DQo+ID4gPiAJaWYgKCFsaXN0X2VtcHR5KCZicmlkZ2UtPnBvcnRzKSAmJiAhYXNzZXJ0KQ0KPiA+
+ID4gCQltc2xlZXAoUENJRV9UX1BWUEVSTF9NUyk7DQo+ID4gPg0KPiA+ID4gCWxpc3RfZm9yX2Vh
+Y2hfZW50cnkocG9ydCwgJmJyaWRnZS0+cG9ydHMsIGxpc3QpIHsNCj4gPiA+IAkJLi4uDQo+ID4g
+PiAJCWdwaW9kX2RpcmVjdGlvbl9vdXRwdXQocG9ydC0+cmVzZXQsIDApOw0KPiA+ID4gCQkuLi4N
+Cj4gPiA+IAl9DQo+ID4gPg0KPiA+ID4gCWlmICghbGlzdF9lbXB0eSgmYnJpZGdlLT5wb3J0cykg
+JiYgIWFzc2VydCkNCj4gPiA+IAkJbXNsZWVwKFBDSUVfUkVTRVRfQ09ORklHX1dBSVRfTVMpOw0K
+PiA+ID4NCj4gPg0KPiA+IEhpIE1hbmksIEkgdGhpbmsgdGhlIGNvZGUgYmVsb3cgbG9va3MgY2xl
+YXJlciwgaXMgdGhhdCBvayBmb3IgeW91Pw0KPiA+DQo+ID4gICAgIGlmIChhc3NlcnQpIHsNCj4g
+PiAgICAgICAgIGxpc3RfZm9yX2VhY2hfZW50cnkocG9ydCwgJmJyaWRnZS0+cG9ydHMsIGxpc3Qp
+DQo+ID4gICAgICAgICAgICAgZ3Bpb2RfZGlyZWN0aW9uX291dHB1dChwb3J0LT5yZXNldCwgMSk7
+DQo+ID4gICAgIH0gZWxzZSB7DQo+ID4gICAgICAgICBpZiAobGlzdF9lbXB0eSgmYnJpZGdlLT5w
+b3J0cykpDQo+ID4gICAgICAgICAgICAgcmV0dXJuOw0KPiA+DQo+IA0KPiBUaGlzIGNoZWNrIHNo
+b3VsZCBiZSBtb3ZlZCBvdXQgb2YgdGhlIGlmKCkgY29uZGl0aW9uLiBPdGhlciB0aGFuIHRoaXMs
+IHRoZQ0KPiBjaGFuZ2UgbG9va3MgZ29vZC4NCg0KT2ssIHdpbGwgZG8uDQoNCj4gDQo+ID4gICAg
+ICAgICBtc2xlZXAoUENJRV9UX1BWUEVSTF9NUyk7DQo+ID4gICAgICAgICBsaXN0X2Zvcl9lYWNo
+X2VudHJ5KHBvcnQsICZicmlkZ2UtPnBvcnRzLCBsaXN0KQ0KPiA+ICAgICAgICAgICAgIGdwaW9k
+X2RpcmVjdGlvbl9vdXRwdXQocG9ydC0+cmVzZXQsIDApOw0KPiA+ICAgICAgICAgbXNsZWVwKFBD
+SUVfUkVTRVRfQ09ORklHX1dBSVRfTVMpOw0KPiA+ICAgICB9DQo+ID4NCj4gPiA+IEFuZCB0aGVu
+IHRoaXM6DQo+ID4gPg0KPiA+ID4gYGBgDQo+ID4gPiBBbHNvLCBzaW5jZSB0aGlzIGZ1bmN0aW9u
+IGlzIGNhbGxlZCBmcm9tIGlteF9wY2llX3Jlc3VtZV9ub2lycSwNCj4gPiA+IHdoaWNoIGV4ZWN1
+dGVzIHdpdGggaGFyZHdhcmUgaW50ZXJydXB0cyBkaXNhYmxlZCwgZG9lcyB0aGUgdXNlIG9mDQo+
+ID4gPiBtc2xlZXAgaGVyZSB0cmlnZ2VyIGEgJ3NsZWVwaW5nIHdoaWxlIGF0b21pYycgYnVnPw0K
+PiA+ID4gYGBgDQo+ID4gPg0KPiA+ID4gVGhpcyBpcyBhIHZhbGlkIGNvbmNlcm4uIFlvdSBzaG91
+bGQgdXNlIG1kZWxheSgpLiBCdXQgSSdkIHJlY29tbWVuZA0KPiA+ID4gc3dpdGNoaW5nIHRvIElS
+USBlbmFibGVkIGNhbGxiYWNrLCByZXN1bWUoKSBpbnN0ZWFkLiBUaGVyZSBpcyBubw0KPiA+ID4g
+Y29tcGxlbGxpbmcgcmVhc29uIHRvIHVzZSByZXN1bWVfbm9pcnEoKSBpbiB0aGlzIGRyaXZlciBh
+bmQgYWRkaW5nDQo+ID4gPiBkZWxheXMgaW4gbm9pcnEoKSBjYWxsYmFja3MgaXMgbm90IHJlY29t
+bWVuZGVkIGFzIGl0IG1heSBpbmNyZWFzZSB0aGUNCj4gb3ZlcmFsbCBzeXN0ZW0gcmVzdW1lIHRp
+bWUuDQo+ID4gPg0KPiA+ID4gSSB3aWxsIHN1Ym1pdCBhIHNlcGFyYXRlIHNlcmllcyB0byBjb252
+ZXJ0IGR3X3BjaWVfcmVzdW1lX25vaXJxKCkNCj4gPiA+IGFuZCBpdHMgY2FsbGVycyB0byBJUlEg
+ZW5hYmxlZCBjYWxsYmFja3Mgc2luY2UgdGhpcw0KPiA+ID4gZHdfcGNpZV9yZXN1bWVfbm9pcnEo
+KSBjb3VsZCBwb3RlbnRpYWxseSBjYXVzZSBkZWxheSB1cCB0byAxc2VjLg0KPiA+DQo+ID4gWWVz
+LCB0aGlzIGlzIG5vdCBhIG5ldyBidWcgaW50cm9kdWNlZCBieSB0aGlzIHBhdGNoLiBJIGFncmVl
+IHdlIHNob3VsZA0KPiA+IGNvdmVydCB0aGUgY29udmVydCBkd19wY2llX3Jlc3VtZV9ub2lycSgp
+IGFuZCB0aGUgY2FsbGVyIHRvIElSUQ0KPiA+IGVuYWJsZWQgY2FsbGJhY2tzIHRvIGZpeCB0aGlz
+IGluIGEgc2VwYXJhdGUgcGF0Y2ggc2VyaWVzLg0KPiA+IEZvciBub3csIHNob3VsZCBJIGxlYXZl
+IGl0IGFzIGlzLCBvciBzd2l0Y2ggdG8gbWRlbGF5IGluIHRoaXMgcGF0Y2g/DQo+ID4NCj4gDQo+
+IEp1c3QgdXNlIG1kZWxheSgpIGluIHlvdXIgcGF0Y2ggZm9yIG5vdy4NCg0KT2ssIHRoYW5rcyEN
+Cg0KQmVzdCBSZWdhcmRzDQpTaGVycnkNCg==
