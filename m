@@ -1,278 +1,338 @@
-Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010040.outbound.protection.outlook.com [52.101.201.40])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 741F630BF6D;
-	Thu,  9 Apr 2026 13:37:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.40
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775741840; cv=fail; b=Jf8+8kD7gTiZvDymo61FAzJPdX3v3uOEMbp9vmVorE8bBDrdzACgRu39B+1Ygsv74L2N/jPHcWaPlLlIq8lQY6vNqynnKKs1g2yVaMkpNvzGa3t2BvT0ZcOgW5HLJMW6p+Ypm7d0nNk7hx2IxpvVvZ66iy4TF2Ah/eFxF422TBs=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775741840; c=relaxed/simple;
-	bh=eAHItLiBYE4yK1DX5WMtG1FQ6t8yJw6XI3451UJzxos=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=QryMWos3B8PUi9R4qwBKEKpS8Mxo3bZGUfytZ/S044HBZ9qRFAERafardPgdS0Dch158ktkPysHgPy069NMkl2lFuCk7RcrPRm0Jn8+/jwefLw+jr1UxKhTGed/3tJBtnbTd1lSNcx5MWpD7k6fmAaFmtEnTggGHJhHbt0FiAYU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=hS1a+9hD; arc=fail smtp.client-ip=52.101.201.40
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id A87CF38F93B;
+	Thu,  9 Apr 2026 14:41:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775745680; cv=none; b=okP42KjjVr+f6ajWxepruH2mxDMAp5cIYfNiTsl1I5130CovpRXZBp+jsF+P0bslNZpZPi00Wht96rbZGnhIl0ayrWdHew7D2XbBQs77eOnJVhxP+HLXvGQv+OuvfzPdqqSf6V9YYjiWVnI+c5e9xu7DXGXCyXPIHLEXmdlLySQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775745680; c=relaxed/simple;
+	bh=TVQS0ZOj5zcUDt4Wump+4Wn42R2VUViqJwrKgOQK2Tg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=B9k/x1ri6ZMBVTe6LjsrPiJ1MgnCZ0NrsSv626+vTYaWy7CIK4vrMo23pRFzqZBqJjIuOn8k4J7txiAkk/nojiluYf2EUgnfpaeTaSR6g8qR7y8MpGH4k8dzxkHlUc79h4HdRidpYWoauH+6bm4Ad0APEpAK1DjFFUTQSkQjld8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=iyTp/+V3; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="hS1a+9hD"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=jFQ0wXwtbaYvVWaZ9qBUrYHaqoOOSlcrbeOkND9Xw8ISYtOuEiYQ+GeJD4iaIXv6K80543XiJfYLHwE4jLSduxln1TRvaO8wtfJHlWh/FQHIJKMb5br8kOlxKXH6iKpwhTf43nn4OnV2uUqjXF3MqT2ljGvYYhAiaT9QtuNpRSm2I0whpGw/lhbO+SD2D86Gk+ISfoBCOmFRjtXPkUr/vN9H2wNCx0X+kMXWmplLpV/APjf5V2Lvd53l2rZOeWs7D+AuXC0SFZpofn2IdSZjhh0Cw7ulapS6bRiTtcWLNZ0ikbqgL+oQ0yuKUTNb9Dbc+lppBuxK/EZCTlCjPsPrlA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7/t8Tos4Hitv8Im1HTU0NTNJxP6+jfmpame58mpWsrc=;
- b=CBgTIX/ExP/vOMT48wolmfzdJNaAqhtr1jqoC7hAtB2MMQDYK1fpy92FYJm51Vz7Rt7f9E7mKugFVsh9/+1dGezgj/q9vrs6WFCYTw6/rg4WGcvhQhO815N4Slm8FppR12BvKEziShlfNCLfjZPkExhtlEhCHqZvC3xLldWdeLNKJJJqgbCeMUnuKB5Ri/mEMyc47J33ptdfk4t6NkK8A9YXD+ThYKKc94RSrZLyL6UWjEjziAkvy6pTEAAnuPDNsK5Q0lxsUgJD5XIIefgmhK7/C8zkPv+1zCau05na4jdNGE4L5sRcS3rugy3/TSqvP4DIigyNhtQ+LVoZH8aEIQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=shazbot.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7/t8Tos4Hitv8Im1HTU0NTNJxP6+jfmpame58mpWsrc=;
- b=hS1a+9hD3YFGlKpP6PFA2wsCI8NZjDsVN6lCdjDJ0hHMHPaHkA9bIQtanSpWg1UOTKHIFvEiiQ5KT6T0kR1NAwh2ZoqlhM+jlLn/AkGXK+8VTr+hzdrsRNqKZiLDeiLDEViOjIdC3qfqF/kDrKN+VPxGvn5AxI73mzAdvKfPCV/crjUsDUg97bnNcn8OyY7YTtA71c04stavmpoQ9cgnebdVdgxDtxpEqQ1ZPvytJri0eSGmXk8feu4gQtqS779WHsb7TDkWNeshjGJVpgXV8/JC5ZQlOmd9T19De5YdKJL+b986r6QvJ/D7sBryaSXF5Gnp9jukUXbaWI4mIVWtPQ==
-Received: from BL0PR05CA0006.namprd05.prod.outlook.com (2603:10b6:208:91::16)
- by DS0PR12MB6413.namprd12.prod.outlook.com (2603:10b6:8:ce::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.20; Thu, 9 Apr
- 2026 13:37:09 +0000
-Received: from BL02EPF00029929.namprd02.prod.outlook.com
- (2603:10b6:208:91:cafe::1c) by BL0PR05CA0006.outlook.office365.com
- (2603:10b6:208:91::16) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9769.40 via Frontend Transport; Thu,
- 9 Apr 2026 13:37:09 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- BL02EPF00029929.mail.protection.outlook.com (10.167.249.54) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9769.17 via Frontend Transport; Thu, 9 Apr 2026 13:37:09 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 9 Apr
- 2026 06:36:52 -0700
-Received: from rnnvmail202.nvidia.com (10.129.68.7) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 9 Apr
- 2026 06:36:51 -0700
-Received: from localhost.nvidia.com (10.127.8.12) by mail.nvidia.com
- (10.129.68.7) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Thu, 9 Apr 2026 06:36:51 -0700
-From: Ankit Agrawal <ankita@nvidia.com>
-To: <alex@shazbot.org>
-CC: <kvm@vger.kernel.org>, <jgg@ziepe.ca>, <yishaih@nvidia.com>,
-	<skolothumtho@nvidia.com>, <kevin.tian@intel.com>, <ankita@nvidia.com>,
-	<bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH v2 1/1] vfio/nvgrace-gpu: Add Blackwell-Next GPU readiness check via CXL DVSEC
-Date: Thu, 9 Apr 2026 13:36:51 +0000
-Message-ID: <20260409133651.92580-1-ankita@nvidia.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="iyTp/+V3"
+Received: from skinsburskii.localdomain (c-98-225-44-182.hsd1.wa.comcast.net [98.225.44.182])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 6C26F20B710C;
+	Thu,  9 Apr 2026 07:41:15 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 6C26F20B710C
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1775745676;
+	bh=me5YO/Z98Xo/CnJEc58EgRSQPAwm8XJvQ17AhbPdrgA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=iyTp/+V3zug1H1eKD8Y+lqErBGhVzyZqiXJvVdC5BNnw4e6X/hzd27rqaaDkrvcX2
+	 iXSe8ig/44rWzZANK4AaFJXUBGzYFW5AnwrCbIKgEuPTDF3ur5xB+WTGM+F7sD6B7L
+	 HVysnLWmifu4NpQwPkS5atVyXedHP7VyIvA4xTbA=
+Date: Thu, 9 Apr 2026 07:41:13 -0700
+From: Stanislav Kinsburskii <skinsburskii@linux.microsoft.com>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+	decui@microsoft.com, longli@microsoft.com, catalin.marinas@arm.com,
+	will@kernel.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
+	dave.hansen@linux.intel.com, hpa@zytor.com, joro@8bytes.org,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	robh@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+	nunodasneves@linux.microsoft.com, mhklinux@outlook.com,
+	romank@linux.microsoft.com
+Subject: Re: [PATCH v0 06/15] mshv: Implement mshv bridge device for VFIO
+Message-ID: <ade6iYUcODxEjl0Q@skinsburskii.localdomain>
+References: <20260120064230.3602565-1-mrathor@linux.microsoft.com>
+ <20260120064230.3602565-7-mrathor@linux.microsoft.com>
+ <aW-oniY3VpagQMPb@skinsburskii.localdomain>
+ <c30ede65-46c4-02b1-756a-868f9a265cf1@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL02EPF00029929:EE_|DS0PR12MB6413:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5a186f2e-dd3c-4c5e-25f6-08de963d1966
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|82310400026|376014|36860700016|18002099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	0indadCnXRpxZQ2I2B5XP3mw9EADehAPzxCxzmX17kiKWMjzAaDPG9JpFDXDoUHESO4ucKRY6Y96eIsV+51b8ZaX0km9vPFPd0O6MGr/Lfm2VnEAm1J7odCs30lQpinRYJh876Qag/2qH7zimSTwruJb9xwK2fQ1mNe+wWqjHuXzOlklQHs1Jr4ic6OAxI3oX2NY71bAjPfNxNMw7rrYhan1pTO5Jh0Pr43kIEKtTdaX2aoAeyve5v9P5Sj/0LZ2//UZZqJ3d7lR4ACrTuDC1Hx2vXJTs2+wC8dYp3k+l/swdpcF41ywK1/7ymhXkPTWsBMxlHpf3Xj3NVgIGAJ90o6Xkq+v0d5MH4rK1jBSEvUgoMuwnHXE7A+k3hodmwpM3Tw3g7e8MFRmBeSepKxvyjuI4Y4oAf07hKKSc6dkmU1VaWpNLCqR4+Jj/t8vmDSZX1CKyGuzQpDAwAsKurKyPpdX7HTPkbXmyq3hgEHwvpaH/y6VG5StRBYFIo6MqGv6JcP+Dmygi8QXzNIhyIIVMBmO7zWDRkJYH3LY2i5dVAZUb6FqVMcYOKvYu4W3fy4o/9INquKIAqEIyviO17+9V441c0gM37OoIEjebEIX5uTrHUEgH6/ay7YW005BlBV07M7H2EWDae6Z6nhjbkC4ZW9javgx45Y0+pyApDFIvU/NsB7BDrv9e8EtK17T51TmtdkHkHMJDYgmc4p8vXpJC1e0+TLtAYUEUnPigiXsE2gD7L7nAizIWvy6DVMvUS7wyviNWgenFf1p+h62aRvAtQ==
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(376014)(36860700016)(18002099003)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	3VT97SbBXssT5YYQ2UZJFJUEPRjl+5iIG66pN1QxCQ93s/IsPIcq57qwWfTMSxMyuC1e/0R8A+rCCzCuILox8PAqlHi9xgxnHsZY08AsW0AnznpYPOpCdT4PAUnL5zVctAj/KMqsAE5RoZuoO/h2JOL0vDBNUekhBt2P0htMHhCfzQn+B7kkR0muD/JvlcmqUSjjTNRc082TtlZ9YzWKFrdxULwEYTEsNEiuyVbvfDVWWJhJ49iif/ti8q/qn40F0Hzuk7974TyP0lngUahHdObtplzr8D0yct7CCN2BXU9QJBT4lDATx2iZ/2uM/jMADVhSw8GFOgkyx/y506/9Fc+n+R7+6ZNTpCS4/E3ekFfgyFZcCdN71MdmgUW4r6iTZLfGn39+9uA+UH8xuV0blyPVJSR9g3r644vO0lte1DpYzhhUaWxeeCiKfDxHl1vV
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Apr 2026 13:37:09.4626
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5a186f2e-dd3c-4c5e-25f6-08de963d1966
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	BL02EPF00029929.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6413
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c30ede65-46c4-02b1-756a-868f9a265cf1@linux.microsoft.com>
 
-Add a CXL DVSEC-based readiness check for Blackwell-Next GPUs alongside
-the existing legacy BAR0 polling path. On probe and after reset, the
-driver reads the CXL Device DVSEC capability to determine whether the
-GPU memory is valid. This is checked by polling on the Memory_Active bit
-based on the Memory_Active_Timeout.
+On Tue, Apr 07, 2026 at 10:41:12AM -0700, Mukesh R wrote:
+> On 1/20/26 08:09, Stanislav Kinsburskii wrote:
+> > On Mon, Jan 19, 2026 at 10:42:21PM -0800, Mukesh R wrote:
+> > > From: Mukesh Rathor <mrathor@linux.microsoft.com>
+> > > 
+> > > Add a new file to implement VFIO-MSHV bridge pseudo device. These
+> > > functions are called in the VFIO framework, and credits to kvm/vfio.c
+> > > as this file was adapted from it.
+> > > 
+> > > Original author: Wei Liu <wei.liu@kernel.org>
+> > > (Slightly modified from the original version).
+> > > 
+> > 
+> > There is a Linux standard for giving credits when code is adapted from.
+> > This doesn't follow that standard. Please fix.
+> > 
+> > > Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
+> > > ---
+> > >   drivers/hv/Makefile    |   3 +-
+> > >   drivers/hv/mshv_vfio.c | 210 +++++++++++++++++++++++++++++++++++++++++
+> > >   2 files changed, 212 insertions(+), 1 deletion(-)
+> > >   create mode 100644 drivers/hv/mshv_vfio.c
+> > > 
+> > > diff --git a/drivers/hv/Makefile b/drivers/hv/Makefile
+> > > index a49f93c2d245..eae003c4cb8f 100644
+> > > --- a/drivers/hv/Makefile
+> > > +++ b/drivers/hv/Makefile
+> > > @@ -14,7 +14,8 @@ hv_vmbus-y := vmbus_drv.o \
+> > >   hv_vmbus-$(CONFIG_HYPERV_TESTING)	+= hv_debugfs.o
+> > >   hv_utils-y := hv_util.o hv_kvp.o hv_snapshot.o hv_utils_transport.o
+> > >   mshv_root-y := mshv_root_main.o mshv_synic.o mshv_eventfd.o mshv_irq.o \
+> > > -	       mshv_root_hv_call.o mshv_portid_table.o mshv_regions.o
+> > > +	       mshv_root_hv_call.o mshv_portid_table.o mshv_regions.o \
+> > > +               mshv_vfio.o
+> > >   mshv_vtl-y := mshv_vtl_main.o
+> > >   # Code that must be built-in
+> > > diff --git a/drivers/hv/mshv_vfio.c b/drivers/hv/mshv_vfio.c
+> > > new file mode 100644
+> > > index 000000000000..6ea4d99a3bd2
+> > > --- /dev/null
+> > > +++ b/drivers/hv/mshv_vfio.c
+> > > @@ -0,0 +1,210 @@
+> > > +// SPDX-License-Identifier: GPL-2.0-only
+> > > +/*
+> > > + * VFIO-MSHV bridge pseudo device
+> > > + *
+> > > + * Heavily inspired by the VFIO-KVM bridge pseudo device.
+> > > + */
+> > > +#include <linux/errno.h>
+> > > +#include <linux/file.h>
+> > > +#include <linux/list.h>
+> > > +#include <linux/module.h>
+> > > +#include <linux/mutex.h>
+> > > +#include <linux/slab.h>
+> > > +#include <linux/vfio.h>
+> > > +
+> > > +#include "mshv.h"
+> > > +#include "mshv_root.h"
+> > > +
+> > > +struct mshv_vfio_file {
+> > > +	struct list_head node;
+> > > +	struct file *file;	/* list of struct mshv_vfio_file */
+> > > +};
+> > > +
+> > > +struct mshv_vfio {
+> > > +	struct list_head file_list;
+> > > +	struct mutex lock;
+> > > +};
+> > > +
+> > > +static bool mshv_vfio_file_is_valid(struct file *file)
+> > > +{
+> > > +	bool (*fn)(struct file *file);
+> > > +	bool ret;
+> > > +
+> > > +	fn = symbol_get(vfio_file_is_valid);
+> > > +	if (!fn)
+> > > +		return false;
+> > > +
+> > > +	ret = fn(file);
+> > > +
+> > > +	symbol_put(vfio_file_is_valid);
+> > > +
+> > > +	return ret;
+> > > +}
+> > > +
+> > > +static long mshv_vfio_file_add(struct mshv_device *mshvdev, unsigned int fd)
+> > > +{
+> > > +	struct mshv_vfio *mshv_vfio = mshvdev->device_private;
+> > > +	struct mshv_vfio_file *mvf;
+> > > +	struct file *filp;
+> > > +	long ret = 0;
+> > > +
+> > > +	filp = fget(fd);
+> > > +	if (!filp)
+> > > +		return -EBADF;
+> > > +
+> > > +	/* Ensure the FD is a vfio FD. */
+> > > +	if (!mshv_vfio_file_is_valid(filp)) {
+> > > +		ret = -EINVAL;
+> > > +		goto out_fput;
+> > > +	}
+> > > +
+> > > +	mutex_lock(&mshv_vfio->lock);
+> > > +
+> > > +	list_for_each_entry(mvf, &mshv_vfio->file_list, node) {
+> > > +		if (mvf->file == filp) {
+> > > +			ret = -EEXIST;
+> > > +			goto out_unlock;
+> > > +		}
+> > > +	}
+> > > +
+> > > +	mvf = kzalloc(sizeof(*mvf), GFP_KERNEL_ACCOUNT);
+> > > +	if (!mvf) {
+> > > +		ret = -ENOMEM;
+> > > +		goto out_unlock;
+> > > +	}
+> > > +
+> > > +	mvf->file = get_file(filp);
+> > > +	list_add_tail(&mvf->node, &mshv_vfio->file_list);
+> > > +
+> > > +out_unlock:
+> > > +	mutex_unlock(&mshv_vfio->lock);
+> > > +out_fput:
+> > > +	fput(filp);
+> > > +	return ret;
+> > > +}
+> > > +
+> > > +static long mshv_vfio_file_del(struct mshv_device *mshvdev, unsigned int fd)
+> > > +{
+> > > +	struct mshv_vfio *mshv_vfio = mshvdev->device_private;
+> > > +	struct mshv_vfio_file *mvf;
+> > > +	long ret;
+> > > +
+> > > +	CLASS(fd, f)(fd);
+> > > +
+> > > +	if (fd_empty(f))
+> > > +		return -EBADF;
+> > > +
+> > > +	ret = -ENOENT;
+> > > +	mutex_lock(&mshv_vfio->lock);
+> > > +
+> > > +	list_for_each_entry(mvf, &mshv_vfio->file_list, node) {
+> > > +		if (mvf->file != fd_file(f))
+> > > +			continue;
+> > > +
+> > > +		list_del(&mvf->node);
+> > > +		fput(mvf->file);
+> > > +		kfree(mvf);
+> > > +		ret = 0;
+> > > +		break;
+> > > +	}
+> > > +
+> > > +	mutex_unlock(&mshv_vfio->lock);
+> > > +	return ret;
+> > > +}
+> > > +
+> > > +static long mshv_vfio_set_file(struct mshv_device *mshvdev, long attr,
+> > > +			      void __user *arg)
+> > > +{
+> > > +	int32_t __user *argp = arg;
+> > > +	int32_t fd;
+> > > +
+> > > +	switch (attr) {
+> > > +	case MSHV_DEV_VFIO_FILE_ADD:
+> > > +		if (get_user(fd, argp))
+> > > +			return -EFAULT;
+> > > +		return mshv_vfio_file_add(mshvdev, fd);
+> > > +
+> > > +	case MSHV_DEV_VFIO_FILE_DEL:
+> > > +		if (get_user(fd, argp))
+> > > +			return -EFAULT;
+> > > +		return mshv_vfio_file_del(mshvdev, fd);
+> > > +	}
+> > > +
+> > > +	return -ENXIO;
+> > > +}
+> > > +
+> > > +static long mshv_vfio_set_attr(struct mshv_device *mshvdev,
+> > > +			      struct mshv_device_attr *attr)
+> > > +{
+> > > +	switch (attr->group) {
+> > > +	case MSHV_DEV_VFIO_FILE:
+> > > +		return mshv_vfio_set_file(mshvdev, attr->attr,
+> > > +					  u64_to_user_ptr(attr->addr));
+> > > +	}
+> > > +
+> > > +	return -ENXIO;
+> > > +}
+> > > +
+> > > +static long mshv_vfio_has_attr(struct mshv_device *mshvdev,
+> > > +			      struct mshv_device_attr *attr)
+> > > +{
+> > > +	switch (attr->group) {
+> > > +	case MSHV_DEV_VFIO_FILE:
+> > > +		switch (attr->attr) {
+> > > +		case MSHV_DEV_VFIO_FILE_ADD:
+> > > +		case MSHV_DEV_VFIO_FILE_DEL:
+> > > +			return 0;
+> > > +		}
+> > > +
+> > > +		break;
+> > > +	}
+> > > +
+> > > +	return -ENXIO;
+> > > +}
+> > > +
+> > > +static long mshv_vfio_create_device(struct mshv_device *mshvdev, u32 type)
+> > > +{
+> > > +	struct mshv_device *tmp;
+> > > +	struct mshv_vfio *mshv_vfio;
+> > > +
+> > > +	/* Only one VFIO "device" per VM */
+> > > +	hlist_for_each_entry(tmp, &mshvdev->device_pt->pt_devices,
+> > > +			     device_ptnode)
+> > > +		if (tmp->device_ops == &mshv_vfio_device_ops)
+> > > +			return -EBUSY;
+> > > +
+> > > +	mshv_vfio = kzalloc(sizeof(*mshv_vfio), GFP_KERNEL_ACCOUNT);
+> > > +	if (mshv_vfio == NULL)
+> > > +		return -ENOMEM;
+> > > +
+> > > +	INIT_LIST_HEAD(&mshv_vfio->file_list);
+> > > +	mutex_init(&mshv_vfio->lock);
+> > > +
+> > > +	mshvdev->device_private = mshv_vfio;
+> > > +
+> > > +	return 0;
+> > > +}
+> > > +
+> > > +/* This is called from mshv_device_fop_release() */
+> > > +static void mshv_vfio_release_device(struct mshv_device *mshvdev)
+> > > +{
+> > > +	struct mshv_vfio *mv = mshvdev->device_private;
+> > > +	struct mshv_vfio_file *mvf, *tmp;
+> > > +
+> > > +	list_for_each_entry_safe(mvf, tmp, &mv->file_list, node) {
+> > > +		fput(mvf->file);
+> > 
+> > This put must be sync as device must be detached from domain before
+> > attempting partition destruction.
+> 
+> Like I said in 6.6 PR, this does not attach or detach devices.
+> 
 
-A static inline wrapper dispatches to the appropriate readiness check
-based on whether the CXL DVSEC capability is present.
+You are mistaken. It absolutely does.
 
-Suggested-by: Alex Williamson <alex@shazbot.org>
-Signed-off-by: Ankit Agrawal <ankita@nvidia.com>
----
- drivers/vfio/pci/nvgrace-gpu/main.c | 75 ++++++++++++++++++++++++++---
- include/uapi/linux/pci_regs.h       |  1 +
- 2 files changed, 68 insertions(+), 8 deletions(-)
+Thanks,
+Stanislav
 
-diff --git a/drivers/vfio/pci/nvgrace-gpu/main.c b/drivers/vfio/pci/nvgrace-gpu/main.c
-index fa056b69f899..52f7e3a3054a 100644
---- a/drivers/vfio/pci/nvgrace-gpu/main.c
-+++ b/drivers/vfio/pci/nvgrace-gpu/main.c
-@@ -64,6 +64,8 @@ struct nvgrace_gpu_pci_core_device {
- 	bool has_mig_hw_bug;
- 	/* GPU has just been reset */
- 	bool reset_done;
-+	/* CXL Device DVSEC offset; 0 if not present (legacy GB path) */
-+	int cxl_dvsec;
- };
- 
- static void nvgrace_gpu_init_fake_bar_emu_regs(struct vfio_device *core_vdev)
-@@ -242,7 +244,7 @@ static void nvgrace_gpu_close_device(struct vfio_device *core_vdev)
- 	vfio_pci_core_close_device(core_vdev);
- }
- 
--static int nvgrace_gpu_wait_device_ready(void __iomem *io)
-+static int nvgrace_gpu_wait_device_ready_legacy(void __iomem *io)
- {
- 	unsigned long timeout = jiffies + msecs_to_jiffies(POLL_TIMEOUT_MS);
- 
-@@ -256,6 +258,59 @@ static int nvgrace_gpu_wait_device_ready(void __iomem *io)
- 	return -ETIME;
- }
- 
-+/*
-+ * Decode the 3-bit Memory_Active_Timeout field from CXL DVSEC Range 1 Low
-+ * (bits 15:13) into milliseconds. Encoding per CXL spec r4.0 sec 8.1.3.8.2:
-+ * 000b = 1s, 001b = 4s, 010b = 16s, 011b = 64s, 100b = 256s,
-+ * 101b-111b = reserved (clamped to 256s).
-+ */
-+static inline unsigned long nvgrace_gpu_cxl_mem_active_timeout_ms(u8 timeout)
-+{
-+	return 1000UL << (2 * min_t(u8, timeout, 4));
-+}
-+
-+static int nvgrace_gpu_wait_device_ready_bw_next(struct nvgrace_gpu_pci_core_device *nvdev)
-+{
-+	struct pci_dev *pdev = nvdev->core_device.pdev;
-+	int pcie_dvsec = nvdev->cxl_dvsec;
-+	unsigned long timeout;
-+	u32 dvsec_memory_status;
-+	u8 mem_active_timeout;
-+
-+	pci_read_config_dword(pdev, pcie_dvsec + PCI_DVSEC_CXL_RANGE_SIZE_LOW(0),
-+			      &dvsec_memory_status);
-+
-+	if (!(dvsec_memory_status & PCI_DVSEC_CXL_MEM_INFO_VALID))
-+		return -ENODEV;
-+
-+	mem_active_timeout = FIELD_GET(PCI_DVSEC_CXL_MEM_ACTIVE_TIMEOUT,
-+				       dvsec_memory_status);
-+
-+	timeout = jiffies +
-+		  msecs_to_jiffies(nvgrace_gpu_cxl_mem_active_timeout_ms(mem_active_timeout));
-+
-+	do {
-+		pci_read_config_dword(pdev,
-+				      pcie_dvsec + PCI_DVSEC_CXL_RANGE_SIZE_LOW(0),
-+				      &dvsec_memory_status);
-+
-+		if (dvsec_memory_status & PCI_DVSEC_CXL_MEM_ACTIVE)
-+			return 0;
-+
-+		msleep(POLL_QUANTUM_MS);
-+	} while (!time_after(jiffies, timeout));
-+
-+	return -ETIME;
-+}
-+
-+static inline int nvgrace_gpu_wait_device_ready(struct nvgrace_gpu_pci_core_device *nvdev,
-+						void __iomem *io)
-+{
-+	return nvdev->cxl_dvsec ?
-+		nvgrace_gpu_wait_device_ready_bw_next(nvdev) :
-+		nvgrace_gpu_wait_device_ready_legacy(io);
-+}
-+
- /*
-  * If the GPU memory is accessed by the CPU while the GPU is not ready
-  * after reset, it can cause harmless corrected RAS events to be logged.
-@@ -275,7 +330,7 @@ nvgrace_gpu_check_device_ready(struct nvgrace_gpu_pci_core_device *nvdev)
- 	if (!__vfio_pci_memory_enabled(vdev))
- 		return -EIO;
- 
--	ret = nvgrace_gpu_wait_device_ready(vdev->barmap[0]);
-+	ret = nvgrace_gpu_wait_device_ready(nvdev, vdev->barmap[0]);
- 	if (ret)
- 		return ret;
- 
-@@ -1146,8 +1201,9 @@ static bool nvgrace_gpu_has_mig_hw_bug(struct pci_dev *pdev)
-  * Ensure that the BAR0 region is enabled before accessing the
-  * registers.
-  */
--static int nvgrace_gpu_probe_check_device_ready(struct pci_dev *pdev)
-+static int nvgrace_gpu_probe_check_device_ready(struct nvgrace_gpu_pci_core_device *nvdev)
- {
-+	struct pci_dev *pdev = nvdev->core_device.pdev;
- 	void __iomem *io;
- 	int ret;
- 
-@@ -1165,7 +1221,7 @@ static int nvgrace_gpu_probe_check_device_ready(struct pci_dev *pdev)
- 		goto iomap_exit;
- 	}
- 
--	ret = nvgrace_gpu_wait_device_ready(io);
-+	ret = nvgrace_gpu_wait_device_ready(nvdev, io);
- 
- 	pci_iounmap(pdev, io);
- iomap_exit:
-@@ -1183,10 +1239,6 @@ static int nvgrace_gpu_probe(struct pci_dev *pdev,
- 	u64 memphys, memlength;
- 	int ret;
- 
--	ret = nvgrace_gpu_probe_check_device_ready(pdev);
--	if (ret)
--		return ret;
--
- 	ret = nvgrace_gpu_fetch_memory_property(pdev, &memphys, &memlength);
- 	if (!ret)
- 		ops = &nvgrace_gpu_pci_ops;
-@@ -1198,6 +1250,13 @@ static int nvgrace_gpu_probe(struct pci_dev *pdev,
- 
- 	dev_set_drvdata(&pdev->dev, &nvdev->core_device);
- 
-+	nvdev->cxl_dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-+						     PCI_DVSEC_CXL_DEVICE);
-+
-+	ret = nvgrace_gpu_probe_check_device_ready(nvdev);
-+	if (ret)
-+		goto out_put_vdev;
-+
- 	if (ops == &nvgrace_gpu_pci_ops) {
- 		nvdev->has_mig_hw_bug = nvgrace_gpu_has_mig_hw_bug(pdev);
- 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 14f634ab9350..718fb630f5bb 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -1357,6 +1357,7 @@
- #define  PCI_DVSEC_CXL_RANGE_SIZE_LOW(i)		(0x1C + (i * 0x10))
- #define   PCI_DVSEC_CXL_MEM_INFO_VALID			_BITUL(0)
- #define   PCI_DVSEC_CXL_MEM_ACTIVE			_BITUL(1)
-+#define   PCI_DVSEC_CXL_MEM_ACTIVE_TIMEOUT		__GENMASK(15, 13)
- #define   PCI_DVSEC_CXL_MEM_SIZE_LOW			__GENMASK(31, 28)
- #define  PCI_DVSEC_CXL_RANGE_BASE_HIGH(i)		(0x20 + (i * 0x10))
- #define  PCI_DVSEC_CXL_RANGE_BASE_LOW(i)		(0x24 + (i * 0x10))
--- 
-2.34.1
-
+> > This was explicitly mentioned in the patch originated this code.
+> > Please fix, add a comment and credits to the commit message.
+> 
+> That was ".detstroy" hook which is gone.
+> 
+> Thanks,
+> -Mukesh
+> 
+> 
+> > Thanks,
+> > Stanislav
+> > 
+> > 
+> > > +		list_del(&mvf->node);
+> > > +		kfree(mvf);
+> > > +	}
+> > > +
+> > > +	kfree(mv);
+> > > +	kfree(mshvdev);
+> > > +}
+> > > +
+> > > +struct mshv_device_ops mshv_vfio_device_ops = {
+> > > +	.device_name = "mshv-vfio",
+> > > +	.device_create = mshv_vfio_create_device,
+> > > +	.device_release = mshv_vfio_release_device,
+> > > +	.device_set_attr = mshv_vfio_set_attr,
+> > > +	.device_has_attr = mshv_vfio_has_attr,
+> > > +};
+> > > -- 
+> > > 2.51.2.vfs.0.1
+> > > 
+> 
