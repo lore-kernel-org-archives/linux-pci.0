@@ -1,240 +1,278 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010040.outbound.protection.outlook.com [52.101.201.40])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EE042749DC
-	for <linux-pci@vger.kernel.org>; Thu,  9 Apr 2026 13:26:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775741211; cv=none; b=YzZt3L3coofhurXd1ErhQd0p8fu+dqB24XPOLSNHGmb/OkzwfALf5uGWpDbG1hjmO9Hl/m/zO+LTcJ8QdYJx2/x7z7fWPxD7GxhleKFFI1lIMC618AN3+s0u8WgMu8QDrsqXxMIgkx10gUyzuVD66FcpH9LhWLTHTzzchBnx+WM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775741211; c=relaxed/simple;
-	bh=LdDisOMGiGNWzGjHA1VjgRKrig7jD6aUWtcfv6Nfl2k=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=eEyLvAi3jQx7KnlLNmhUMLK7scW9FAP1XqwsOHx+F2cOgUuYfYXNBxAg8ypdeh1DgCUmbCeMRK5NcASMS223w2ZKtA7vDFM4SEneG6aWOs7ZR1R7xK0ZXp1OOTKtpcLfKKf1OuluHaO8Er3lteRqovIRtDIyyYE8cTvwdo08QXs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=n0Ne5uNF; arc=none smtp.client-ip=192.198.163.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 741F630BF6D;
+	Thu,  9 Apr 2026 13:37:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.40
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775741840; cv=fail; b=Jf8+8kD7gTiZvDymo61FAzJPdX3v3uOEMbp9vmVorE8bBDrdzACgRu39B+1Ygsv74L2N/jPHcWaPlLlIq8lQY6vNqynnKKs1g2yVaMkpNvzGa3t2BvT0ZcOgW5HLJMW6p+Ypm7d0nNk7hx2IxpvVvZ66iy4TF2Ah/eFxF422TBs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775741840; c=relaxed/simple;
+	bh=eAHItLiBYE4yK1DX5WMtG1FQ6t8yJw6XI3451UJzxos=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=QryMWos3B8PUi9R4qwBKEKpS8Mxo3bZGUfytZ/S044HBZ9qRFAERafardPgdS0Dch158ktkPysHgPy069NMkl2lFuCk7RcrPRm0Jn8+/jwefLw+jr1UxKhTGed/3tJBtnbTd1lSNcx5MWpD7k6fmAaFmtEnTggGHJhHbt0FiAYU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=hS1a+9hD; arc=fail smtp.client-ip=52.101.201.40
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="n0Ne5uNF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775741209; x=1807277209;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=LdDisOMGiGNWzGjHA1VjgRKrig7jD6aUWtcfv6Nfl2k=;
-  b=n0Ne5uNF40byPj+dYv8aYHI9bXhcsN3oXvzyJBWqMLxPzVjDVWnuKP0L
-   x5QINtkYc6Q9OgHhuXfCRb6XgeVUxIZbGG1jLVG0WnYSszkeXsgF8/eFP
-   tEyYwKPC4o75xQX2xhOHyjCiV5sAnHfO6Ol9VxOn/CGy7xij7yKkNIqMM
-   HQdbwa005BQfdEooOtd3ZnYX5x1vfCpz6Ko6LZdgqTBUyx5ubEkEFexbm
-   F3pGZ1hqI7rutT2+X6tvSXYPJsNVBiJRcqsh5lk0p1FiqugzOKGLurfhg
-   nyY3L10ToleqIQqGtBh/6pbo3MhjKm0kehqRGBgydolkyeBCQjqwTEuId
-   Q==;
-X-CSE-ConnectionGUID: owFwKTKEQp+yDH848Jyrsw==
-X-CSE-MsgGUID: Fddk/FpsSyegNf8vN1Y/kw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11754"; a="87442380"
-X-IronPort-AV: E=Sophos;i="6.23,169,1770624000"; 
-   d="scan'208";a="87442380"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Apr 2026 06:26:48 -0700
-X-CSE-ConnectionGUID: +a3KZ+yFSbCe/HWMzKtiNw==
-X-CSE-MsgGUID: Ks5xYG8+TQORPQUJCt2meg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,169,1770624000"; 
-   d="scan'208";a="228700593"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.197])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Apr 2026 06:26:46 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Thu, 9 Apr 2026 16:26:43 +0300 (EEST)
-To: Geramy Loveless <gloveless@jqluv.com>
-cc: linux-pci@vger.kernel.org, cristi@ieee.org
-Subject: Re: [PATCH] PCI: release empty sibling resources during bridge window
- resize
-In-Reply-To: <CAGpo2mcyLhY6muz9Zgg3zD=Ux-HT8RXeMvbUi27a+SX=VxCRPQ@mail.gmail.com>
-Message-ID: <f2cf6508-e2e8-d567-66f3-51b094585434@linux.intel.com>
-References: <CAGpo2meKY6SXsESU-D0PGgbESLqdF8UBF-tmThxOvk2XUDpEzw@mail.gmail.com> <4203a8ea-25a3-72e1-c071-db371be045e1@linux.intel.com> <CAGpo2mcyLhY6muz9Zgg3zD=Ux-HT8RXeMvbUi27a+SX=VxCRPQ@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="hS1a+9hD"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=jFQ0wXwtbaYvVWaZ9qBUrYHaqoOOSlcrbeOkND9Xw8ISYtOuEiYQ+GeJD4iaIXv6K80543XiJfYLHwE4jLSduxln1TRvaO8wtfJHlWh/FQHIJKMb5br8kOlxKXH6iKpwhTf43nn4OnV2uUqjXF3MqT2ljGvYYhAiaT9QtuNpRSm2I0whpGw/lhbO+SD2D86Gk+ISfoBCOmFRjtXPkUr/vN9H2wNCx0X+kMXWmplLpV/APjf5V2Lvd53l2rZOeWs7D+AuXC0SFZpofn2IdSZjhh0Cw7ulapS6bRiTtcWLNZ0ikbqgL+oQ0yuKUTNb9Dbc+lppBuxK/EZCTlCjPsPrlA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=7/t8Tos4Hitv8Im1HTU0NTNJxP6+jfmpame58mpWsrc=;
+ b=CBgTIX/ExP/vOMT48wolmfzdJNaAqhtr1jqoC7hAtB2MMQDYK1fpy92FYJm51Vz7Rt7f9E7mKugFVsh9/+1dGezgj/q9vrs6WFCYTw6/rg4WGcvhQhO815N4Slm8FppR12BvKEziShlfNCLfjZPkExhtlEhCHqZvC3xLldWdeLNKJJJqgbCeMUnuKB5Ri/mEMyc47J33ptdfk4t6NkK8A9YXD+ThYKKc94RSrZLyL6UWjEjziAkvy6pTEAAnuPDNsK5Q0lxsUgJD5XIIefgmhK7/C8zkPv+1zCau05na4jdNGE4L5sRcS3rugy3/TSqvP4DIigyNhtQ+LVoZH8aEIQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.160) smtp.rcpttodomain=shazbot.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7/t8Tos4Hitv8Im1HTU0NTNJxP6+jfmpame58mpWsrc=;
+ b=hS1a+9hD3YFGlKpP6PFA2wsCI8NZjDsVN6lCdjDJ0hHMHPaHkA9bIQtanSpWg1UOTKHIFvEiiQ5KT6T0kR1NAwh2ZoqlhM+jlLn/AkGXK+8VTr+hzdrsRNqKZiLDeiLDEViOjIdC3qfqF/kDrKN+VPxGvn5AxI73mzAdvKfPCV/crjUsDUg97bnNcn8OyY7YTtA71c04stavmpoQ9cgnebdVdgxDtxpEqQ1ZPvytJri0eSGmXk8feu4gQtqS779WHsb7TDkWNeshjGJVpgXV8/JC5ZQlOmd9T19De5YdKJL+b986r6QvJ/D7sBryaSXF5Gnp9jukUXbaWI4mIVWtPQ==
+Received: from BL0PR05CA0006.namprd05.prod.outlook.com (2603:10b6:208:91::16)
+ by DS0PR12MB6413.namprd12.prod.outlook.com (2603:10b6:8:ce::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.20; Thu, 9 Apr
+ 2026 13:37:09 +0000
+Received: from BL02EPF00029929.namprd02.prod.outlook.com
+ (2603:10b6:208:91:cafe::1c) by BL0PR05CA0006.outlook.office365.com
+ (2603:10b6:208:91::16) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9769.40 via Frontend Transport; Thu,
+ 9 Apr 2026 13:37:09 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ BL02EPF00029929.mail.protection.outlook.com (10.167.249.54) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9769.17 via Frontend Transport; Thu, 9 Apr 2026 13:37:09 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 9 Apr
+ 2026 06:36:52 -0700
+Received: from rnnvmail202.nvidia.com (10.129.68.7) by rnnvmail201.nvidia.com
+ (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 9 Apr
+ 2026 06:36:51 -0700
+Received: from localhost.nvidia.com (10.127.8.12) by mail.nvidia.com
+ (10.129.68.7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Thu, 9 Apr 2026 06:36:51 -0700
+From: Ankit Agrawal <ankita@nvidia.com>
+To: <alex@shazbot.org>
+CC: <kvm@vger.kernel.org>, <jgg@ziepe.ca>, <yishaih@nvidia.com>,
+	<skolothumtho@nvidia.com>, <kevin.tian@intel.com>, <ankita@nvidia.com>,
+	<bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: [PATCH v2 1/1] vfio/nvgrace-gpu: Add Blackwell-Next GPU readiness check via CXL DVSEC
+Date: Thu, 9 Apr 2026 13:36:51 +0000
+Message-ID: <20260409133651.92580-1-ankita@nvidia.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-1390774046-1775741203=:968"
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL02EPF00029929:EE_|DS0PR12MB6413:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5a186f2e-dd3c-4c5e-25f6-08de963d1966
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|82310400026|376014|36860700016|18002099003|56012099003;
+X-Microsoft-Antispam-Message-Info:
+	0indadCnXRpxZQ2I2B5XP3mw9EADehAPzxCxzmX17kiKWMjzAaDPG9JpFDXDoUHESO4ucKRY6Y96eIsV+51b8ZaX0km9vPFPd0O6MGr/Lfm2VnEAm1J7odCs30lQpinRYJh876Qag/2qH7zimSTwruJb9xwK2fQ1mNe+wWqjHuXzOlklQHs1Jr4ic6OAxI3oX2NY71bAjPfNxNMw7rrYhan1pTO5Jh0Pr43kIEKtTdaX2aoAeyve5v9P5Sj/0LZ2//UZZqJ3d7lR4ACrTuDC1Hx2vXJTs2+wC8dYp3k+l/swdpcF41ywK1/7ymhXkPTWsBMxlHpf3Xj3NVgIGAJ90o6Xkq+v0d5MH4rK1jBSEvUgoMuwnHXE7A+k3hodmwpM3Tw3g7e8MFRmBeSepKxvyjuI4Y4oAf07hKKSc6dkmU1VaWpNLCqR4+Jj/t8vmDSZX1CKyGuzQpDAwAsKurKyPpdX7HTPkbXmyq3hgEHwvpaH/y6VG5StRBYFIo6MqGv6JcP+Dmygi8QXzNIhyIIVMBmO7zWDRkJYH3LY2i5dVAZUb6FqVMcYOKvYu4W3fy4o/9INquKIAqEIyviO17+9V441c0gM37OoIEjebEIX5uTrHUEgH6/ay7YW005BlBV07M7H2EWDae6Z6nhjbkC4ZW9javgx45Y0+pyApDFIvU/NsB7BDrv9e8EtK17T51TmtdkHkHMJDYgmc4p8vXpJC1e0+TLtAYUEUnPigiXsE2gD7L7nAizIWvy6DVMvUS7wyviNWgenFf1p+h62aRvAtQ==
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(376014)(36860700016)(18002099003)(56012099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	3VT97SbBXssT5YYQ2UZJFJUEPRjl+5iIG66pN1QxCQ93s/IsPIcq57qwWfTMSxMyuC1e/0R8A+rCCzCuILox8PAqlHi9xgxnHsZY08AsW0AnznpYPOpCdT4PAUnL5zVctAj/KMqsAE5RoZuoO/h2JOL0vDBNUekhBt2P0htMHhCfzQn+B7kkR0muD/JvlcmqUSjjTNRc082TtlZ9YzWKFrdxULwEYTEsNEiuyVbvfDVWWJhJ49iif/ti8q/qn40F0Hzuk7974TyP0lngUahHdObtplzr8D0yct7CCN2BXU9QJBT4lDATx2iZ/2uM/jMADVhSw8GFOgkyx/y506/9Fc+n+R7+6ZNTpCS4/E3ekFfgyFZcCdN71MdmgUW4r6iTZLfGn39+9uA+UH8xuV0blyPVJSR9g3r644vO0lte1DpYzhhUaWxeeCiKfDxHl1vV
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Apr 2026 13:37:09.4626
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5a186f2e-dd3c-4c5e-25f6-08de963d1966
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BL02EPF00029929.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6413
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Add a CXL DVSEC-based readiness check for Blackwell-Next GPUs alongside
+the existing legacy BAR0 polling path. On probe and after reset, the
+driver reads the CXL Device DVSEC capability to determine whether the
+GPU memory is valid. This is checked by polling on the Memory_Active bit
+based on the Memory_Active_Timeout.
 
---8323328-1390774046-1775741203=:968
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+A static inline wrapper dispatches to the appropriate readiness check
+based on whether the CXL DVSEC capability is present.
 
-On Thu, 9 Apr 2026, Geramy Loveless wrote:
+Suggested-by: Alex Williamson <alex@shazbot.org>
+Signed-off-by: Ankit Agrawal <ankita@nvidia.com>
+---
+ drivers/vfio/pci/nvgrace-gpu/main.c | 75 ++++++++++++++++++++++++++---
+ include/uapi/linux/pci_regs.h       |  1 +
+ 2 files changed, 68 insertions(+), 8 deletions(-)
 
-> Perfect I=E2=80=99ll get started on these changes, while I=E2=80=99m here=
-, does the other bug create
-> a cascade of problems if fixed?=C2=A0
+diff --git a/drivers/vfio/pci/nvgrace-gpu/main.c b/drivers/vfio/pci/nvgrace-gpu/main.c
+index fa056b69f899..52f7e3a3054a 100644
+--- a/drivers/vfio/pci/nvgrace-gpu/main.c
++++ b/drivers/vfio/pci/nvgrace-gpu/main.c
+@@ -64,6 +64,8 @@ struct nvgrace_gpu_pci_core_device {
+ 	bool has_mig_hw_bug;
+ 	/* GPU has just been reset */
+ 	bool reset_done;
++	/* CXL Device DVSEC offset; 0 if not present (legacy GB path) */
++	int cxl_dvsec;
+ };
+ 
+ static void nvgrace_gpu_init_fake_bar_emu_regs(struct vfio_device *core_vdev)
+@@ -242,7 +244,7 @@ static void nvgrace_gpu_close_device(struct vfio_device *core_vdev)
+ 	vfio_pci_core_close_device(core_vdev);
+ }
+ 
+-static int nvgrace_gpu_wait_device_ready(void __iomem *io)
++static int nvgrace_gpu_wait_device_ready_legacy(void __iomem *io)
+ {
+ 	unsigned long timeout = jiffies + msecs_to_jiffies(POLL_TIMEOUT_MS);
+ 
+@@ -256,6 +258,59 @@ static int nvgrace_gpu_wait_device_ready(void __iomem *io)
+ 	return -ETIME;
+ }
+ 
++/*
++ * Decode the 3-bit Memory_Active_Timeout field from CXL DVSEC Range 1 Low
++ * (bits 15:13) into milliseconds. Encoding per CXL spec r4.0 sec 8.1.3.8.2:
++ * 000b = 1s, 001b = 4s, 010b = 16s, 011b = 64s, 100b = 256s,
++ * 101b-111b = reserved (clamped to 256s).
++ */
++static inline unsigned long nvgrace_gpu_cxl_mem_active_timeout_ms(u8 timeout)
++{
++	return 1000UL << (2 * min_t(u8, timeout, 4));
++}
++
++static int nvgrace_gpu_wait_device_ready_bw_next(struct nvgrace_gpu_pci_core_device *nvdev)
++{
++	struct pci_dev *pdev = nvdev->core_device.pdev;
++	int pcie_dvsec = nvdev->cxl_dvsec;
++	unsigned long timeout;
++	u32 dvsec_memory_status;
++	u8 mem_active_timeout;
++
++	pci_read_config_dword(pdev, pcie_dvsec + PCI_DVSEC_CXL_RANGE_SIZE_LOW(0),
++			      &dvsec_memory_status);
++
++	if (!(dvsec_memory_status & PCI_DVSEC_CXL_MEM_INFO_VALID))
++		return -ENODEV;
++
++	mem_active_timeout = FIELD_GET(PCI_DVSEC_CXL_MEM_ACTIVE_TIMEOUT,
++				       dvsec_memory_status);
++
++	timeout = jiffies +
++		  msecs_to_jiffies(nvgrace_gpu_cxl_mem_active_timeout_ms(mem_active_timeout));
++
++	do {
++		pci_read_config_dword(pdev,
++				      pcie_dvsec + PCI_DVSEC_CXL_RANGE_SIZE_LOW(0),
++				      &dvsec_memory_status);
++
++		if (dvsec_memory_status & PCI_DVSEC_CXL_MEM_ACTIVE)
++			return 0;
++
++		msleep(POLL_QUANTUM_MS);
++	} while (!time_after(jiffies, timeout));
++
++	return -ETIME;
++}
++
++static inline int nvgrace_gpu_wait_device_ready(struct nvgrace_gpu_pci_core_device *nvdev,
++						void __iomem *io)
++{
++	return nvdev->cxl_dvsec ?
++		nvgrace_gpu_wait_device_ready_bw_next(nvdev) :
++		nvgrace_gpu_wait_device_ready_legacy(io);
++}
++
+ /*
+  * If the GPU memory is accessed by the CPU while the GPU is not ready
+  * after reset, it can cause harmless corrected RAS events to be logged.
+@@ -275,7 +330,7 @@ nvgrace_gpu_check_device_ready(struct nvgrace_gpu_pci_core_device *nvdev)
+ 	if (!__vfio_pci_memory_enabled(vdev))
+ 		return -EIO;
+ 
+-	ret = nvgrace_gpu_wait_device_ready(vdev->barmap[0]);
++	ret = nvgrace_gpu_wait_device_ready(nvdev, vdev->barmap[0]);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -1146,8 +1201,9 @@ static bool nvgrace_gpu_has_mig_hw_bug(struct pci_dev *pdev)
+  * Ensure that the BAR0 region is enabled before accessing the
+  * registers.
+  */
+-static int nvgrace_gpu_probe_check_device_ready(struct pci_dev *pdev)
++static int nvgrace_gpu_probe_check_device_ready(struct nvgrace_gpu_pci_core_device *nvdev)
+ {
++	struct pci_dev *pdev = nvdev->core_device.pdev;
+ 	void __iomem *io;
+ 	int ret;
+ 
+@@ -1165,7 +1221,7 @@ static int nvgrace_gpu_probe_check_device_ready(struct pci_dev *pdev)
+ 		goto iomap_exit;
+ 	}
+ 
+-	ret = nvgrace_gpu_wait_device_ready(io);
++	ret = nvgrace_gpu_wait_device_ready(nvdev, io);
+ 
+ 	pci_iounmap(pdev, io);
+ iomap_exit:
+@@ -1183,10 +1239,6 @@ static int nvgrace_gpu_probe(struct pci_dev *pdev,
+ 	u64 memphys, memlength;
+ 	int ret;
+ 
+-	ret = nvgrace_gpu_probe_check_device_ready(pdev);
+-	if (ret)
+-		return ret;
+-
+ 	ret = nvgrace_gpu_fetch_memory_property(pdev, &memphys, &memlength);
+ 	if (!ret)
+ 		ops = &nvgrace_gpu_pci_ops;
+@@ -1198,6 +1250,13 @@ static int nvgrace_gpu_probe(struct pci_dev *pdev,
+ 
+ 	dev_set_drvdata(&pdev->dev, &nvdev->core_device);
+ 
++	nvdev->cxl_dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
++						     PCI_DVSEC_CXL_DEVICE);
++
++	ret = nvgrace_gpu_probe_check_device_ready(nvdev);
++	if (ret)
++		goto out_put_vdev;
++
+ 	if (ops == &nvgrace_gpu_pci_ops) {
+ 		nvdev->has_mig_hw_bug = nvgrace_gpu_has_mig_hw_bug(pdev);
+ 
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 14f634ab9350..718fb630f5bb 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -1357,6 +1357,7 @@
+ #define  PCI_DVSEC_CXL_RANGE_SIZE_LOW(i)		(0x1C + (i * 0x10))
+ #define   PCI_DVSEC_CXL_MEM_INFO_VALID			_BITUL(0)
+ #define   PCI_DVSEC_CXL_MEM_ACTIVE			_BITUL(1)
++#define   PCI_DVSEC_CXL_MEM_ACTIVE_TIMEOUT		__GENMASK(15, 13)
+ #define   PCI_DVSEC_CXL_MEM_SIZE_LOW			__GENMASK(31, 28)
+ #define  PCI_DVSEC_CXL_RANGE_BASE_HIGH(i)		(0x20 + (i * 0x10))
+ #define  PCI_DVSEC_CXL_RANGE_BASE_LOW(i)		(0x24 + (i * 0x10))
+-- 
+2.34.1
 
-Hi,
-
-I'm not sure what "other bug" refers to?
-
-If you meant Cristian problem, he seemed to have empty bridge windows=20
-which this approach should be able to solve without extra problems=20
-expected.
-
-If you refer to the resource entries having dangling resource tree=20
-pointers (sibling, etc.), it's not a big problem when the resource entry=20
-has been detached from the tree. It has some impact on whether=20
-resource_assigned() can always be trusted so it would be nice to clear all=
-=20
-those links on removal (the current remove algorithm shortcuts the=20
-subtree).
-
---=20
- i.
-
-> On Thu, Apr 9, 2026 at 1:03=E2=80=AFAM Ilpo J=C3=A4rvinen <ilpo.jarvinen@=
-linux.intel.com> wrote:
->       On Wed, 8 Apr 2026, Geramy Loveless wrote:
->=20
->       Thanks for the patch. The patch need some work but the general dire=
-ction
->       looks acceptable.
->=20
->       FYI, your patch is misformatted, tabs got eaten, probably something=
- in
->       tha way you send the email does that.
->=20
->       Please Cc also Cristian Cocos <cristi@ieee.org> on further submissi=
-ons.
->=20
->       > When pci_resize_resource() walks up the bridge hierarchy via
->       > pbus_reassign_bridge_resources(), bridge windows with any child
->       > resources are refused release. This prevents BAR resize on device=
-s
->       > behind multi-port PCIe switches (such as Thunderbolt docks) where
->       > empty sibling downstream ports hold small reservations that block=
- the
->       > parent bridge window from being freed and re-sized.
->       >
->       > Add pci_bus_release_bridge_resources_safe() which verifies that a
->       > resource subtree contains no active children before releasing it,
->       > and use it in pbus_reassign_bridge_resources() to clear empty sib=
-ling
->       > reservations so the bridge window can grow.
->       >
->       > Signed-off-by: Geramy Loveless <gloveless@jqluv.com>
->=20
->       You may want to add Suggested-by tag.
->=20
->       > ---
->       > drivers/pci/setup-bus.c | 30 +++++++++++++++++++++++++++---
->       > 1 file changed, 27 insertions(+), 3 deletions(-)
->       >
->       > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->       > index 4cf120ebe..9a3a23819 100644
->       > --- a/drivers/pci/setup-bus.c
->       > +++ b/drivers/pci/setup-bus.c
->       > @@ -2297,6 +2297,30 @@
->       > EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
->       > * release it when possible. If the bridge window contains assigne=
-d
->       > * resources, it cannot be released.
->       > */
->       > +
->       > +/*
->       > + * Release child resources from a bridge window so it can be fre=
-ed and
->       > + * re-sized, but only if the entire subtree is empty (no active =
-device
->       > + * resources underneath). Walks the resource tree recursively to
->       handle
->       > + * arbitrarily deep bridge hierarchies. Returns true if the reso=
-urces
->       > + * were released or the window was already empty.
->       > + */
->       > +static bool pci_bus_release_bridge_resources_safe(struct pci_bus=
- *bus,
->       > + struct resource *res)
->       > +{
->       > + struct resource *child;
->       > +
->       > + for (child =3D res->child; child; child =3D child->sibling) {
->       > + if (child->child &&
->       > + !pci_bus_release_bridge_resources_safe(bus, child))
->       > + return false;
->=20
->       This should walk bus devices and device resources using PCI side
->       iterators (not using the low-level resource list). This does not lo=
-ok
->       safe iteration anyway because the code is also removing entries fro=
-m the
->       resource tree (it only works because resource code leaves stale sib=
-ling
->       pointers which should be corrected one day).
->=20
->       PCI side should be enough to capture all resources, and that way yo=
-u
->       still have access to all PCI side structs.
->=20
->       Perhaps sanity checking ! ->child at the end wouldn't hurt but it t=
-he
->       release should be doable.
->=20
->       You should also pass the saved list and store any released resource=
-s so
->       you can properly rollback in case of a failure (I think the rollbac=
-k
->       code will already just-work as long as you add the entries there).
->=20
->       > + }
->       > +
->       > + if (res->child)
->       > + pci_bus_release_bridge_resources(bus, res, whole_subtree);
->=20
->       I think this could pass non-bridge window resources which looks wro=
-ng but
->       you need to rewrite the algorithm in this function anyway.
->=20
->       > + return true;
->       > +}
->       > +
->       > static int pbus_reassign_bridge_resources(struct pci_bus *bus, st=
-ruct
->       > resource *res,
->       > struct list_head *saved)
->       > {
->       > @@ -2316,8 +2340,8 @@ static int pbus_reassign_bridge_resources(s=
-truct
->       > pci_bus *bus, struct resource *
->       > i =3D pci_resource_num(bridge, res);
->       > - /* Ignore BARs which are still in use */
->       > - if (!res->child) {
->       > + if (!res->child ||
->       > + pci_bus_release_bridge_resources_safe(bridge->subordinate, res)=
-) {
->=20
->       Just call this release always before checking !res->child.
->=20
->       You need to check bridge->subordinate before calling it.
->=20
->       > ret =3D pci_dev_res_add_to_list(saved, bridge, res, 0, 0);
->       > if (ret)
->       > return ret;
->       > @@ -2327,7 +2351,7 @@ static int pbus_reassign_bridge_resources(s=
-truct
->       > pci_bus *bus, struct resource *
->       > const char *res_name =3D pci_resource_name(bridge, i);
->       > pci_warn(bridge,
->       > - "%s %pR: was not released (still contains assigned resources)\n=
-",
->       > + "%s %pR: not released, active children present\n",
->       > res_name, res);
->       > }
->       >
->=20
->       --
->       =C2=A0i.
->=20
->=20
->=20
---8323328-1390774046-1775741203=:968--
