@@ -1,156 +1,165 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CED230C61B
-	for <linux-pci@vger.kernel.org>; Thu,  9 Apr 2026 20:37:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.133.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775767028; cv=pass; b=bZRkaEMUE/Cu/Nm0vHDxLRlkyyUAmgy/2D4mucpKiOFNfX8xBnYsXlh3z77QMEBRDJhxdDHhs4C1j5twpg93yvnnfRhQwXPGybqaX3pr2gK3eZcOdNODMyZspeh9SdcTyiKVGlT6a9g0WvZpwDDSx6ZOacPzw73Ub6F7T9IqbW8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775767028; c=relaxed/simple;
-	bh=9GON4HqrWMN21HWEXWy1UigIACbH1qvKcO/t8RyCEB0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Kff32T4m8H56lT6ysJPYV8YnCGP+WbNlVN8UOqFcbkg5xrx5LU5+mogW7oLlYbQkKq6HBfbMnmhuEg5zSieWPT0KsariZaKt9DzCAWJvZn6GnJ8LtsuRR2JCGSMxIJ4NwR/GSMQIRbwMisyNphPrZ4NZUFakTMLHxwO8fRmDhBk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CJpfVwO8; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=YdzkUFB7; arc=pass smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CJpfVwO8";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="YdzkUFB7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1775767026;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9GON4HqrWMN21HWEXWy1UigIACbH1qvKcO/t8RyCEB0=;
-	b=CJpfVwO8C7Ni3xuKmN2QTWMuOxD0vTW8wg/5VvOmnzvVpHjHakksZTcW+QCEyfP+iU+gBZ
-	zQZ+UQzx8MUCmeRbY1WjX0K23CtsgeLMzRn1gaQQIfFUVeGE6qrNh0BNCViUvTcX0nZ2CS
-	QglY3dgMr5Eoj3hd44j8v9FqsknwZFE=
-Received: from mail-lj1-f197.google.com (mail-lj1-f197.google.com
- [209.85.208.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-608-YOPbSmYEMp6VtY7PoG0rCg-1; Thu, 09 Apr 2026 16:37:04 -0400
-X-MC-Unique: YOPbSmYEMp6VtY7PoG0rCg-1
-X-Mimecast-MFC-AGG-ID: YOPbSmYEMp6VtY7PoG0rCg_1775767023
-Received: by mail-lj1-f197.google.com with SMTP id 38308e7fff4ca-38de8df0489so5764481fa.2
-        for <linux-pci@vger.kernel.org>; Thu, 09 Apr 2026 13:37:04 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1775767023; cv=none;
-        d=google.com; s=arc-20240605;
-        b=OPoPps77dAeS0VSFSlR0epP+kS61+afQzB9G+dVyo6VD6iPCsYhgeICuzMQnprVzmw
-         DrcfD6gA/YTi3WnjXV5bfkozcEvu661aEj6PifCWfFRrxcrFMBbD/Eh7WOsNop5X5Tn7
-         3zUZAjSkY7vwRq+pfaURF2miV9xVdH1oXvz/U94LGHAdX/UB+BFHPxJtI9eTjwvWP7ob
-         w+TQ7NhyBYAx8wsm+JhP6aVQX+wwRRj7MXFyNglLXfpFUMFD7cFHSMwM+W2vF2DLBJCL
-         gC9RJzehYzPGpwVBxeWERHXkaYtD+N8dCIfbZ7u5Sb2TirwrOZWrv98h1p33gtpEOe7F
-         wkjg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=9GON4HqrWMN21HWEXWy1UigIACbH1qvKcO/t8RyCEB0=;
-        fh=QRt1LmyggolKOzLUb3yEcSVRuIlJnGsHED3hCsKylC4=;
-        b=KgiiUdgQ4hfrG3P9fT7tAGNYfa3Y8JS6jU0FptksE46OmuJA751NMqmkpELNVm7il/
-         lYaGOe6wc8eqaz4RFSWE5A2BpXzYyYFe38UIGVMTITzBeDALV1ZONNieWNPb3vR3Xe6v
-         CBJ5kRpXqn5dulAXCUJPin61wU+fG6TiY9/EN+FTJZgCPub/CrE2ON8yHyeFsYIk7UlD
-         8UlL7JICUKCRFFEWCG9l236H/2tdDwED7rHdzWoA2MPj3H6pWQumSjTl1RQ4mwlkRH7x
-         I8ZAZ8K5FPwCvaMsEVvndvF3sUp53+JKd1smCcUzygT4NNlwDP3GrpObY7Z6E9jteonV
-         U/pQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1775767023; x=1776371823; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=9GON4HqrWMN21HWEXWy1UigIACbH1qvKcO/t8RyCEB0=;
-        b=YdzkUFB7wUFja+EhKAHF6zmTzA21H/mtWFp5DyvMtsKqktAR3DKvb/WKQvjF9ftiwy
-         9bgbycl/uhHTNsESm1f7ClDwRaTz1h8YGg7cNJNnFtlcNtpHniHZ5aDOURnoX3YnbN0m
-         VGCyoymORA+KN8vaZEyYs8W7Ikd49SFMQ3KhuqdpEBnubazx33ljvRUpVa9uxtkZfmEH
-         XvnOxhsXhDRcL6ohiOWz5k+WNNC8IdFhiJGZ8FX0KecnSNSCt8oq53lA6gy2wsFavDA7
-         0d8+269MvySqtVzHTSGVPczzsJYeEuhJiLySn5UjhCnIQtgMgNJl5D3bM3Gq60/RG8Kv
-         8tdA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775767023; x=1776371823;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=9GON4HqrWMN21HWEXWy1UigIACbH1qvKcO/t8RyCEB0=;
-        b=H5ohvJ/UxrxmeI2T6sWmX4IG01iyR57w8Tn0+fuhboDq+L1gIz1sqSnoZge/EHxZuv
-         qfWEo7zH1bFTvXgf4ZnJlAWzH/jBAD9xMK2aQVcIrFBUwpSI/bhyGHWuIwQPWveC5mqE
-         NpAf3r8UMnH80C23BnG429lp/TOclkUyi7xLue2byiQInUc0+wWtYfZ5IuEchbEYucfs
-         v0leMbqfxXpCT/wDfDHidpFonCulZU5eZJ1NHlGMdI/h0zMwroj2NWSEJB/izzFokddD
-         8FT4l9QVywaP+H74aaM9UdhMgPzY+eBeJlKdkQxfZtGanwPJ2H/u4oMdfuhicI5tD3aE
-         URNQ==
-X-Forwarded-Encrypted: i=1; AJvYcCV1s4XbSAQLO7sFvIJBTRyVGu2QVzsVC+6x1lyKBYQ+qUMB4stMHp2fguo71nWzbraTKupJZSnab/4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyzxniJeVftZs/2sgRURUgEfaxZQROJlkDzNBVVBPAZx+/UpjxO
-	WMa8coyySUaJd7qAVpxnRsUZM+I406ieYg4RtPs5yeA3eky/+0rN4urrW/UrZ1y4H6mzlYR7CYY
-	c7IB3kyyQZ+/67D/OEV0Jiww2gUzaTsYIoOIZGHwLER1nlroees7gfVRsKq3KHXivm0hD7G+ZdD
-	BsK9dmHEWoCLqk4U+p14QTxA4KGYDRmR/dJ1I6
-X-Gm-Gg: AeBDieulhWyywHnJWzbPGFBEKNdix8DgOH1m6QnUncW8YJ6Hm1FOzdgKgs+ONHMFOWx
-	Ouza/8j30HhV9YdOKcCk4QEjcUHkIncTjgohlowENgKmLIWbyvwg5Vx9kFD1J8e7B2dsSK/ve3x
-	3ipH9Rbo7pNYamdnDGDEckAzJvB+5jfqqDjrJWA0S4qD+VOQqF43bKWJcfnyEt6kqErRC2XHV6m
-	E3u
-X-Received: by 2002:a2e:b8d1:0:b0:38a:4dd3:6a48 with SMTP id 38308e7fff4ca-38e4bf6873bmr720081fa.26.1775767023274;
-        Thu, 09 Apr 2026 13:37:03 -0700 (PDT)
-X-Received: by 2002:a2e:b8d1:0:b0:38a:4dd3:6a48 with SMTP id
- 38308e7fff4ca-38e4bf6873bmr719981fa.26.1775767022741; Thu, 09 Apr 2026
- 13:37:02 -0700 (PDT)
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 299CD37C0FE;
+	Thu,  9 Apr 2026 21:52:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775771571; cv=none; b=F5X9wga9rlBQCGFT2b+0NK89dKFaKMfnEyhYTA2A/l3OQk5pYJL7CM0HebYQuGJo38xQR5EcLLABMSPstnVfR0+rjD8Ah1c/Njjl9A2C6Z3Q2FJlLyUOWmeuhfLv/nIJNfrP5Ik6QDstpWOdPvtOBx19MZ0ncPcQ6vyT/Vp0CEI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775771571; c=relaxed/simple;
+	bh=tFfRzLm4MwVx6uT8622X3ap+XCSlK+8946afWlhqItQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pT2AnsvUy5S3mACPF/Gun3qwheDcKdbMLJUtRTYrc7oz7brwB/yZ3o8gUCgDDr0zOeAKdHYwALNmb5KZK5/CRj1ygYG2nEd3hhFq6uXG2D9bm5kCe2duP5oYzjFckEWiX9si62L1buMOsqtoT8bxiD/Mz/rhoQgI4iMu8Sw7RDk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+Received: by linux.microsoft.com (Postfix, from userid 1009)
+	id EA39620B7129; Thu,  9 Apr 2026 14:52:49 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com EA39620B7129
+From: Dexuan Cui <decui@microsoft.com>
+To: kys@microsoft.com,
+	haiyangz@microsoft.com,
+	wei.liu@kernel.org,
+	decui@microsoft.com,
+	longli@microsoft.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	linux-hyperv@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Mukesh Rathor <mrathor@linux.microsoft.com>
+Subject: [PATCH] Drivers: hv: vmbus: Export hv_vmbus_exists() and use it in pci-hyperv
+Date: Thu,  9 Apr 2026 14:52:32 -0700
+Message-ID: <20260409215232.399350-1-decui@microsoft.com>
+X-Mailer: git-send-email 2.43.7
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260407153532.6395-1-djeffery@redhat.com> <20260407153532.6395-6-djeffery@redhat.com>
- <c5cb8cf0-9beb-4bc4-8ce6-83b4544beede@oracle.com> <CA+-xHTG9tMCCf11NZwKfvE5xvCfjXrttDXhFsyz=SCofAc9Mgw@mail.gmail.com>
- <069f3f1b-8150-41e8-a760-f85a0b1b0ce4@oracle.com> <CA+-xHTFdKaCCwkytXpWdvp6vZ4ZCh+Pp8wzkoVZYPOy--CjiSw@mail.gmail.com>
- <c9af1723-550c-4f2b-aa04-3ce769bb4a84@oracle.com>
-In-Reply-To: <c9af1723-550c-4f2b-aa04-3ce769bb4a84@oracle.com>
-From: David Jeffery <djeffery@redhat.com>
-Date: Thu, 9 Apr 2026 16:36:50 -0400
-X-Gm-Features: AQROBzCNo2zD09xUDoJkeee-Ps33E2lSudGCsUOC7vsRfjmkn3a0hz8Fbj91pfc
-Message-ID: <CA+-xHTEGpmM7Kvpip1C4QjMPU8u9MoP9=bMyukEWtgwK6VdShw@mail.gmail.com>
-Subject: Re: [PATCH 5/5] scsi: enable async shutdown support
-To: John Garry <john.g.garry@oracle.com>
-Cc: bvanassche@acm.org, linux-kernel@vger.kernel.org, 
-	driver-core@lists.linux.dev, linux-pci@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, Tarun Sahu <tarunsahu@google.com>, 
-	Pasha Tatashin <tatashin@google.com>, =?UTF-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>, 
-	Jordan Richards <jordanrichards@google.com>, Ewan Milne <emilne@redhat.com>, 
-	John Meneghini <jmeneghi@redhat.com>, "Lombardi, Maurizio" <mlombard@redhat.com>, 
-	Stuart Hayes <stuart.w.hayes@gmail.com>, Laurence Oberman <loberman@redhat.com>, 
-	Bjorn Helgaas <helgaas@kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Thu, Apr 9, 2026 at 8:18=E2=80=AFAM John Garry <john.g.garry@oracle.com>=
- wrote:
->
-> On 08/04/2026 20:35, David Jeffery wrote:
-> >> Well it is not exactly like that. We have the following:
-> >>
-> >> scsi_sysfs_add_sdev() -> device_enable_async_suspend(&sdev->sdev_gende=
-v)
-> >>
-> >> and
-> >>
-> >> scsi_sysfs_device_initialize() ->
-> >> scsi_enable_async_suspend(&sdev->sdev_gendev) ->
-> >> device_enable_async_suspend(&sdev->sdev_gendev) when not async
-> >>
-> >> Maybe similar needs to be done for this shutdown feature. AFICS, Bart,
-> >> added scsi_enable_async_suspend(), so maybe he can comment.
-> >>
-> > My inclination is to drop adding device_enable_async_shutdown into
-> > scsi_sysfs_device_initialize. The intent is for normal scsi devices,
-> > and I see little value in setting the flag so early to flag partially
-> > initialized or pseudo devices.
->
-> That seems reasonable, but, again I am not so familiar with this async
-> suspend and shutdown.
->
+With commit f84b21da3624 ("PCI: hv: Don't load the driver for baremetal root partition"),
+the bare metal Linux root partition won't use the pci-hyperv driver, but
+when a Linux VM runs on the Linux root partition, pci-hyperv's module_init
+function init_hv_pci_drv() can still run, e.g. in the case of
+CONFIG_PCI_HYPERV=y, even if the VMBus driver is not used in such a VM
+(i.e. the hv_vmbus driver's init function returns -ENODEV due to
+vmbus_root_device being NULL).
 
-There also appears to be similar duplication with flagging scsi hosts
-and targets for async shutdown. I'll see about consolidating those as
-well.
+In such a Linux VM, init_hv_pci_drv() runs with a side effect: the 3
+hvpci_block_ops callbacks are set to functions that depend on hv_vmbus.
+
+Later, when the MLX driver in such a VM invokes the callbacks, e.g. in
+drivers/net/ethernet/mellanox/mlx5/core/lib/hv.c:
+mlx5_hv_register_invalidate(), hvpci_block_ops.reg_blk_invalidate() is
+hv_register_block_invalidate() rather than a NULL function pointer, and
+hv_register_block_invalidate() assumes that it can find a struct
+hv_pcibus_device from pdev->bus->sysdata, which is false in such a VM.
+
+Consequently, hv_register_block_invalidate() -> get_pcichild_wslot() ->
+spin_lock_irqsave() may hang since it can be accessing an invalid
+spinlock pointer.
+
+Fix the issue by exporting hv_vmbus_exists() and using it in pci-hyperv:
+
+    hv_root_partition() is true and hv_nested is false ==>
+	hv_vmbus_exists() is false.
+
+    hv_root_partition() is true and hv_nested is true ==>
+	hv_vmbus_exists() is true.
+
+    hv_root_partition() is false ==> hv_vmbus_exists() is true.
+
+While at it, rename vmbus_exists() to hv_vmbus_exists() to follow the
+convention that all public functions have the hv_ prefix; also change
+the return value's type from int to bool to make the code more readable;
+also move the two pr_info() calls.
+
+Reported-by: Mukesh Rathor <mrathor@linux.microsoft.com>
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+---
+ drivers/hv/vmbus_drv.c              | 20 ++++++++------------
+ drivers/pci/controller/pci-hyperv.c |  2 +-
+ include/linux/hyperv.h              |  2 ++
+ 3 files changed, 11 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index bc4fc1951ae1..2c8936efc8d1 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -101,13 +101,11 @@ struct device *hv_get_vmbus_root_device(void)
+ }
+ EXPORT_SYMBOL_GPL(hv_get_vmbus_root_device);
+ 
+-static int vmbus_exists(void)
++bool hv_vmbus_exists(void)
+ {
+-	if (vmbus_root_device == NULL)
+-		return -ENODEV;
+-
+-	return 0;
++	return vmbus_root_device != NULL;
+ }
++EXPORT_SYMBOL_GPL(hv_vmbus_exists);
+ 
+ static u8 channel_monitor_group(const struct vmbus_channel *channel)
+ {
+@@ -1582,11 +1580,10 @@ int __vmbus_driver_register(struct hv_driver *hv_driver, struct module *owner, c
+ {
+ 	int ret;
+ 
+-	pr_info("registering driver %s\n", hv_driver->name);
++	if (!hv_vmbus_exists())
++		return -ENODEV;
+ 
+-	ret = vmbus_exists();
+-	if (ret < 0)
+-		return ret;
++	pr_info("registering driver %s\n", hv_driver->name);
+ 
+ 	hv_driver->driver.name = hv_driver->name;
+ 	hv_driver->driver.owner = owner;
+@@ -1612,9 +1609,8 @@ EXPORT_SYMBOL_GPL(__vmbus_driver_register);
+  */
+ void vmbus_driver_unregister(struct hv_driver *hv_driver)
+ {
+-	pr_info("unregistering driver %s\n", hv_driver->name);
+-
+-	if (!vmbus_exists()) {
++	if (hv_vmbus_exists()) {
++		pr_info("unregistering driver %s\n", hv_driver->name);
+ 		driver_unregister(&hv_driver->driver);
+ 		vmbus_free_dynids(hv_driver);
+ 	}
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+index 2c7a406b4ba8..226b8bb802f3 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -4166,7 +4166,7 @@ static int __init init_hv_pci_drv(void)
+ 	if (!hv_is_hyperv_initialized())
+ 		return -ENODEV;
+ 
+-	if (hv_root_partition() && !hv_nested)
++	if (!hv_vmbus_exists())
+ 		return -ENODEV;
+ 
+ 	ret = hv_pci_irqchip_init();
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index dfc516c1c719..5459e776ec17 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -1304,6 +1304,8 @@ static inline void *hv_get_drvdata(struct hv_device *dev)
+ 
+ struct device *hv_get_vmbus_root_device(void);
+ 
++bool hv_vmbus_exists(void);
++
+ struct hv_ring_buffer_debug_info {
+ 	u32 current_interrupt_mask;
+ 	u32 current_read_index;
+-- 
+2.43.0
 
