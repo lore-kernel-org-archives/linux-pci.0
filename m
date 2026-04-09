@@ -1,262 +1,173 @@
-Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013023.outbound.protection.outlook.com [52.101.72.23])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C62D30F531
-	for <linux-pci@vger.kernel.org>; Thu,  9 Apr 2026 03:39:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71DD18462;
+	Thu,  9 Apr 2026 03:42:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.23
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775705977; cv=pass; b=MktshLUOM+Z1ccE0A45K9DqF2Cx8VPGGX6kiYHfn4kuD7yxj34TXZQ58cTbKZRcP2KDIDupZB6j8CmG+4hBUEaFglqJLvzFh16jUGkuRqJOXJx/5xBYVVdunrX2udNZj3+4xMjFU4qI2qkyZoLx+xzHUF6dYDz62eioaDRks7bs=
+	t=1775706160; cv=fail; b=c+070J8A+Sc8W7KWsCZDouajYHiF6dYvUyRM3aROQoRWs1zfDE20bzY5jAFVq7+FvEzebIsVWlgX4uHLWcMqpo8kN+CBLbUYu1ikPMv+FGSrRU6WRSER+wevgcE+RZzjNkq/L2vFnzazdcR+XS134ref/y2lU5KIYN+tQRSwhA0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775705977; c=relaxed/simple;
-	bh=ipzqqbtUTjTUXelIrvbr406hnlHtjj80FJssP+iGieM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=IfagSLsnreKS7wao918xvIqiXwqelwzSaxZRbx6zJ0x5jKdRXn1I+qKE5n2fWfTmY2gWGjrJjMBv2s78dDscFolI+9rkBQDJHr8DQ5iXDrda86Dmdpeb/Hj1I60V/2NMnU2JGPqh3PuOaflNCvKltgPu4iyuXfcD8pilDK/HwuI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=r/m5kjUA; arc=pass smtp.client-ip=209.85.208.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1775706160; c=relaxed/simple;
+	bh=p/YZh9TPKC8cpSMRXE77P98XacZiUBwrXXjK59rfc5o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=REcN2hOcB9NmXf6vTWG/ALj5+UURWnXpa410LO/Ff+m6bgddx2bI9FMhGk97xL9w+IYGjIXhCsP7nDMBn1Jsa7E7hnuvIPA9jX3wS+9lctMMKTLZbS/WWY/Ea3sdDKp63khZjyHw0hSUE0pDu2DHu0FITtmUqCGHKQUalfpDCxM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=h7NyO0S4; arc=fail smtp.client-ip=52.101.72.23
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="r/m5kjUA"
-Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-66bf6aa4858so669961a12.2
-        for <linux-pci@vger.kernel.org>; Wed, 08 Apr 2026 20:39:35 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1775705974; cv=none;
-        d=google.com; s=arc-20240605;
-        b=eRXSVz4qZxkrslNcDYKU3SveiC+VgsjOMNIOEc52JQv8BA/jZaJ7lLwUhyMeCH/eJT
-         ZDRbZ1DBjep7w6yrb2U7w+YSNNft9LIOm0cFa0fRJ7cOsdV6KRWU8rdRBfgcZsI3K9lg
-         mzxno7guJOg6si77236i8KWne769786/F5yDggCBGDFEkVZ2KvTf0+t96XZ/EFcp00gX
-         vrsNMpOGYScAAhvdYTBnxxNT7jVcb+cVmz1y3+M2mQ00Tgmqo8xH8xqkv9r6nJmOqXxg
-         g/rwCTsi70CSLmz/JuZJi2QemPM8lhGaU0aBcb8JDdO/tGZ7JjEXeSG5jfUG4jjELy2t
-         y/9g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=3nK2rPjTD2J2hcTM4BMrIGnDtvubzv9T1WI+OHmAy3g=;
-        fh=/ce8A07YVbLrLu1fh0268iEtReRrOTYEfLXqpv735GQ=;
-        b=GcmQwxectwqwQFuhIPm9AwLV01Ud8iONZb7S50pahnIG5Eu8k/Dvvnxuw3Bc9ZbEBx
-         4MT0eo25WN3kBJ+eOAC5NSV1ON5jtbTap6CLLDUc2io7pzi9JEPaIIvGC2GXQEFTHM/o
-         BdtSgcRpCki8n6tZxzbsrJMRNN+jLwj3cnnlIeXIPHOCwzUjJW7mMNr3Bkp8y8XU/Hpi
-         VJIZYL4E/2pv+xjU3deFC/B2U64vTXECmBYB42MBzVfm31+Df/C3eYmsJ95voWjXMmZC
-         Ty+u2pxJA6rjW/aU69AfBxYGWUaKqgpWGwP16Yfktm6l3HFL1eShvpTZdVKlZ2p/qG6t
-         lGBg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1775705974; x=1776310774; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3nK2rPjTD2J2hcTM4BMrIGnDtvubzv9T1WI+OHmAy3g=;
-        b=r/m5kjUASiqAbHtDa6Rpw4MiO3QxDjcYQrkoPIxQhSEt8OhFq432UurTa9db+6rMR4
-         1tSQCN+pH0oShWSsQVEBe9gNS7A1a72NTkMqJ4XsEL4nolY/THohvyHZDQq5+J6r+sLO
-         ywxKgQCCbqxcz4+QvY5yjPpFGuPwnT1/eYwLK3sS2cTQeOatR7eEdiAtOs2rXSH4gv55
-         IN6sjFfEPANe5sF+KDe3aLe02/t7JIy1StdLK//FbvorQO6UnLneZpVovVWgAcf4sCgx
-         ADvPKCPKt7HTGaj6dBjZggXk92GosIxJgGEh7UiH02CTbg7ugtYXohith8SrwDnpryzs
-         ggNg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775705974; x=1776310774;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=3nK2rPjTD2J2hcTM4BMrIGnDtvubzv9T1WI+OHmAy3g=;
-        b=QGzz3SfvHWALDomh9uPYhkQIAbs4MuTsdFqg35RCPvmqnEIojbWJ47xPGSV5KZdESk
-         qMUHUazzEVM0DSU4zx11fgNaKtC65bVpW4oDLNSAxA+3+pRAk/H5saogqbbcoFYTs7KW
-         yrR3VFngmcBHxvIZAKE8AiT5BUUVBuL1Xvjv00zZPXgjDN9vvsnyAp7c8+sKfcmIZK40
-         xHRzmbKOg3yc+9Ho1BMRP4eb9U4qyv1MKmlFkCUsZBMzM/GNDBUn7A3l+xx2aSqOcpHB
-         Idgc6LJSHdx5MzxZkFDqpEz47iFvpbzPfCwqooeuM+5LhYnvPQ/P45nTroZaSc6nxopp
-         4dYw==
-X-Forwarded-Encrypted: i=1; AJvYcCVgNmwnK8RMHL/o10xlxWt4I9hsYxWNibVu4yXbPPXZn7mez0hfhNyRMFpGndibZumxjgEGOJp5nCE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzmB6BzsMSIF3Y5+qMP5ns8Mz7+eoSLlneZWo8h/GD1Pkp5Q319
-	6XaJfwRh8evfFkjZJCUMaveE1g9Bg57gVjIBMHxpBFM5CPEYKNU3iT1ZuAHzAj1dCugCzGcZnEp
-	gBf3IJnjandM9gVOUGeR0P5NcK3aHrgw=
-X-Gm-Gg: AeBDieue0VcDKAdwGZasOWK53xkIurD1Bxeed8I/Aeo7rCSo5xBCI/JtlmEnCuQMi0F
-	TAojBrjMCveSkk1vjQjqQV5g3P/TBsY2WkdkOyWwHIWB5dl9j0iS0aRL0Ypx4rKcp31XGl2nBk4
-	0B0/vtUU5ihAYtLq5ygK8mto9IQZ4PMOLhZFqp6Off++OMjSadYQCW6oR+LO8nftXTZKRhQ5FZx
-	GrLYZ6t6s1XTE6BS6ntavxurnr63WJlXreMyopfknK6Z15sBHCotl5AIqMcb32dz/e9JXyUU6Aw
-	SobAA1lFy/vxW/zHkhSkfeqIx06/JTnl0mTcDg==
-X-Received: by 2002:a17:907:96ac:b0:b97:d126:c007 with SMTP id
- a640c23a62f3a-b9d4766357cmr74156066b.30.1775705973292; Wed, 08 Apr 2026
- 20:39:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="h7NyO0S4"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=bJ2hD63B+UypW/gZlW7QKj5rFaSELfJ+0muf1LCPwFUhdY/wDWQqOHaXP5zhPmQmUALp/zUTNMttgu8J8SuCgGonjSO/DLuAT5wgZ2FuVhEqIdZpREbZPYpL33otKA1L9/0Gxd2uks3F8yZEp7urFwOx154D2B63PmdL0a8oczAIUut0nyoFv1sX++wJT6larw/RMirN5oi5R483lLHoXwM5XK43RHsD/dKXFmbtAdvepHV4M2PCc8ypAo93oXvz0nheEVuK6zMWrcZxI52Jg5CLBC641yfmPzQGC8a2dnR3h9LkL85BEcgYkrtxb+3djcwtVS3l2ADbWUON3gHETw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=m6EwSW+j87gVLmyo/1WGmBEXDxw6e3us+9LCSR2pdHs=;
+ b=eMXj6pm44H9RU88ESmcXP7vVS+diCcXeiqPIdPpNeDK5sknkom8/urBIo/ipbGh0tiDOvdv7LRWhZT3GvAmqenvPcvJjKvit8DMQhHRLXQf57PUNGbPL5CWBMNJYgjKc1N+T88Qdi/5b2MSqrf/7iIQ7qx4s9VNyDITuCE6pZWE/DDq1UVn4jcQ9PueRhpmKBTf5uSBssjCpw6gUV829G5YQfVGhZfI540IOfhWQYzfgd206o8gDnhiUSOVPN8d9wyDIdBLVeVD6P1PJLC/9oiew98vuePK0iJpXQaL7baHp15q8t1aA4SRS6k6Vl2Ik/B7XPcC+1ZrR2/OpxU+GCQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=m6EwSW+j87gVLmyo/1WGmBEXDxw6e3us+9LCSR2pdHs=;
+ b=h7NyO0S4iP3qztdvgRwvlTJ2lk64dXi7DRvD21aG8yp55zBDsEOPnVJnSb1lJJYOTDsIGrzLTJAymz2rWVEiRU9c0dtGC6eXuFOAHJy0jzikoEYotjrXJ1gzhLMIqZZy0rtWG1zTsUHRdhfUSMTYJwl7HKSn2w429aZitLuSBgUCGh50m5t72jcApGML37G/3VKsQPJPrEhY1TMyZOhmQZjkqtGuy/OfRhu6UiKMjUBpzPjCugSh1GlGhEC0V8cA+ZkTA84CghB4ji7CsmK99/LEhsA3TEy0gPDxKFwB4SEfBA9KtQzWtyMFZoGnsIhw64HZLDAzWZNtP6GAnx7qnw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
+ by AS5PR04MB9769.eurprd04.prod.outlook.com (2603:10a6:20b:679::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.15; Thu, 9 Apr
+ 2026 03:42:36 +0000
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9769.018; Thu, 9 Apr 2026
+ 03:42:36 +0000
+Date: Wed, 8 Apr 2026 23:42:29 -0400
+From: Frank Li <Frank.li@nxp.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: mani@kernel.org, kwilczynski@kernel.org, kishon@kernel.org,
+	bhelgaas@google.com, jdmason@kudzu.us, dave.jiang@intel.com,
+	allenbh@gmail.com, ntb@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, den@valinux.co.jp
+Subject: Re: [PATCH 1/2] PCI: endpoint: pci-epf-vntb: Add check to detect
+ 'db_count' value of 0
+Message-ID: <adcgJYlBX5P96QCi@lizhi-Precision-Tower-5810>
+References: <20260407124421.282766-1-mani@kernel.org>
+ <20260407124421.282766-2-mani@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260407124421.282766-2-mani@kernel.org>
+X-ClientProxiedBy: PH8PR21CA0008.namprd21.prod.outlook.com
+ (2603:10b6:510:2ce::29) To PA4PR04MB9366.eurprd04.prod.outlook.com
+ (2603:10a6:102:2a9::8)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260211032935.2705841-1-alistair.francis@wdc.com> <698d6b7faa190_2e57100d3@dwillia2-mobl4.notmuch>
-In-Reply-To: <698d6b7faa190_2e57100d3@dwillia2-mobl4.notmuch>
-From: Alistair Francis <alistair23@gmail.com>
-Date: Thu, 9 Apr 2026 13:39:06 +1000
-X-Gm-Features: AQROBzBMdVWviJ7UQPVJiSjzXhX3MyVPNdI2Nycp2rCssuJJohwu6SX0ICGXpZw
-Message-ID: <CAKmqyKPyR165rACXRMJXgyUOp6OUdQqSsym-gfYVFnKLZ4ednQ@mail.gmail.com>
-Subject: Re: [RFC v3 00/27] lib: Rust implementation of SPDM
-To: dan.j.williams@intel.com
-Cc: bhelgaas@google.com, lukas@wunner.de, rust-for-linux@vger.kernel.org, 
-	akpm@linux-foundation.org, linux-pci@vger.kernel.org, 
-	Jonathan.Cameron@huawei.com, linux-cxl@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, alex.gaynor@gmail.com, benno.lossin@proton.me, 
-	boqun.feng@gmail.com, a.hindborg@kernel.org, gary@garyguo.net, 
-	bjorn3_gh@protonmail.com, tmgross@umich.edu, ojeda@kernel.org, 
-	wilfred.mallawa@wdc.com, aliceryhl@google.com, 
-	Alistair Francis <alistair.francis@wdc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|AS5PR04MB9769:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2524b9f4-5813-4293-7ce8-08de95ea0a8d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|19092799006|52116014|376014|7416014|38350700014|18002099003|22082099003|56012099003;
+X-Microsoft-Antispam-Message-Info:
+	cM2kWfRE84Qg6i7LdIVItPbQ6YF7mB3hrKWRZpTCIKm05+WCxwtlOzZgdNLbTDXEFEBv0er6Dn/Tqfq3gETT/jpOG3E+eXhN5jhKMEq46narVPNjhvyHL/tASD247dtzLQMQMmFHgCTNxF06w20yl1Gx+4rLl61+TPX6zEwgCgADFfWUSxzyk9p76OzggH94s4vQD327KbZkhUuLvsgIpfxYVj1qBpdenxS6BcGOQZHGoYw9h0lL3IuOCgmHTvvapTxfWWuygw+TdszFZCPgdP9MAavw5ULbmoKgLK4mchBqZDxm0QgXT6ejvMgyMbPxYjFmJzZSkx8p8SIps5waUoZZROK8n5u0oXTAvvbZGt2c4mUAQ+wVHNBqIYlH8hwVzFRbQsD8vpPap5ms7AytemaUcaeJpj2/gjWS57XCppCITzb3jRf5V0tY5Mv/uuP6f5hD9am3OOta0POmwyI115O8Svf7PdaveMedumBvC4srZnfdJe3ouBs+xbTuiDBUNZrxzSLm88hYIjbYLc2HJ4dpf8HDZoGELWobW/O8+ufsQhotaE7DEgFGsZxL9envVzueB5twwJR96hfl1tuddsreBWdIlZFbsuwMYF6pDn9kBy0vXRM0f3TblDdeP4HYjpypESt6zAHDwIs5ghxFySWbF3DwQfWDz7zx12uxbxNKrL6O1FjhBrJj9qXLB/rmr00yCzovdOaxzjMl4mEPVJxTgt1hC59ouDQM9ih/Ktn1uL9cv9Ga2EjJW3s59EX71RZoOAFULmraF3q1SjSQ5RhWs7r4mg86zvrost8pZ28=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(19092799006)(52116014)(376014)(7416014)(38350700014)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?pXg2voZrdtzPJVVsavGgQzBNSzp4he+ptlYYdE5qzJBYF4NWDXoPOHTUD+bO?=
+ =?us-ascii?Q?O9IW6Pr30x9VboOy4sr/L2AlxraYQFCLKxbuLGTVF4NdJQncSejyensYTZLD?=
+ =?us-ascii?Q?Ftn/SYf9knQ7s0Ohx3vK3kqXJNz3rUuMNBinBmrkFFUdQ5HE3D3TEZr8KZsk?=
+ =?us-ascii?Q?ViKCn0jhv9nKC6PnOkQPCtD5t5qDdPhKgV9bLwzcRYt/cyWbBILBhi2HNaWc?=
+ =?us-ascii?Q?sfMFHrTJEgUnjXRepH0jtfbRGpoS31gVduG/q8eQlsGAQSZY6OHd6ldOv3kF?=
+ =?us-ascii?Q?wP2nwczk6VdVqUljI0JEjZqouehJb12iPqSWa5sKfxpr52UWKftQNWYOp8Rk?=
+ =?us-ascii?Q?cPighmDKkL7T74usJu3ppIm2XWtWlY+h3ZZaloN255ACHLAflZyL1Q9Ssirg?=
+ =?us-ascii?Q?MlE3KJslOT4RmCzA39CDlXdEEyZTaP3hkVV7r67J1petb+7Si4EX+4u59af1?=
+ =?us-ascii?Q?8aCgzpya1nH7BF6mqruBhhpZPx8c/f1HZVcki8db9Lf6qwC4PYizNXMu5A35?=
+ =?us-ascii?Q?xz40DIzj5OdtHYZI6GUmNFhX8TVvPtihb7xdKmSuVvau5T1oYAJcW7ieKtDn?=
+ =?us-ascii?Q?tyy8BPra6h5objkY//LY3Ji11tsnb6cwJhDPsov8tCXBuHATW2Co+dsDxtz/?=
+ =?us-ascii?Q?ufnHTeKuzAv+ajsb8CH32qL9I+n4KIhWVRzEFSAyJtb45GnMjBrnZDB8FWyM?=
+ =?us-ascii?Q?6gncvUNhqBmqlt9SGlDRuzgTclmn2tpae8AHtHQqtbF5BY0hQGtJ62RmnsLr?=
+ =?us-ascii?Q?iFsbf5SxPdGBRX+R9ZnNRt7u49DzWT7Hbxn3wzNfQ6OvbS0YU6Chjopfz1fB?=
+ =?us-ascii?Q?cdhr/YThcfYsRwen1iFTOSQRA7UZpFO0SxdUWDG+Wuv0/XvjVepE01YZXMcR?=
+ =?us-ascii?Q?2kHBCtQTqpezGKGdM6PGVbQuf7KjHWXMOe5zodtPz8sr/IuMii/34VjaY46+?=
+ =?us-ascii?Q?OPDnvaDxmrg+4oFJffOsyODst8SM6B9wNbWgLMzZpqIzdeZEDD/Cq5GFJCD4?=
+ =?us-ascii?Q?+f+1+hMJdeweLqlPMr7FDNc3AzvUbjTDX6To270lvee+0mP+L7VqByw4GJe+?=
+ =?us-ascii?Q?cR6r2VoUH/ModsVKiGirLHwLpJmX+taTg6/kyyIYRSRP4kTr22rcS0/9Lz4e?=
+ =?us-ascii?Q?K2L09z2KHsnHYvP4VsGG/vMZjc53nhvdaE7EBVNTTGI/2a7VXiZYkE9Yl1JN?=
+ =?us-ascii?Q?ZriKr+IXXf4Kk0p42iXvOxNfrwa3+1uAhefAfCZmzpdcJkA+34TtYDPHlzj8?=
+ =?us-ascii?Q?l1abtwqtAuUcN9fLjvo1AzsdYCuQsWf0GDa3zIgtxCNdZBS2rRYMrfKFk0z4?=
+ =?us-ascii?Q?DDDMnXThikj2arGXUa+62ge8UV23N81UhqUDvB7ZIARE2rbWsv5fzs28/wpt?=
+ =?us-ascii?Q?bbFJs+Th8QxJSppT0yQOhS+zpi8yHXqtpT50CNgcW+ERDMaE1AfncuO+BOe6?=
+ =?us-ascii?Q?zSF0igE2P/GWbfra2NRgCP0o8LKUBtVyw2qjWERUHslTPpELLAP0adRDT52v?=
+ =?us-ascii?Q?bpVu7F51fXUpHuVJzfbmRh08KfHlP0cgJXjPvC+W9wK/d11zqRCB/ePT2o0G?=
+ =?us-ascii?Q?w9IcKHIKrxLLJCeU/LNXlvaZzpaMaC4uY+Bj7WvV9cT88Xs2DL7wDcbZZ+5J?=
+ =?us-ascii?Q?zjT4t/OmwVQl/gvoKE57c6LavzhAuGgw33RruuTSEkgCq3baHK7DChjHoB3m?=
+ =?us-ascii?Q?VjTaEWfSeOMfORktCToRVhhZcZzXa7Y0hlG8i8YgrJO8dmKO?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2524b9f4-5813-4293-7ce8-08de95ea0a8d
+X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Apr 2026 03:42:36.7061
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 0eXjE1TD0H6GoX9/4CMRdytk4v3CsQQ0guPguhPNNcrTVePtfKzoshppqEZNWnozUAqwCIP2gBxIDNml+HYRcg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS5PR04MB9769
 
-On Thu, Feb 12, 2026 at 3:56=E2=80=AFPM <dan.j.williams@intel.com> wrote:
+On Tue, Apr 07, 2026 at 06:14:20PM +0530, Manivannan Sadhasivam wrote:
+> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 >
-> alistair23@ wrote:
-> > From: Alistair Francis <alistair.francis@wdc.com>
+> epf_ntb::db_count value should be within 1 to MAX_DB_COUNT. Current code
+> only checks for the upper bound, while the lower bound is unchecked. This
+> can cause a lot of issues in the driver if the user passes 'db_count' as 0.
 >
-> Hi Alistair, quite a bit to digest here and details to dig into. Before
-> getting into that, I will say that at a broad strokes level, no immune
-> response to the core proposal of depending on a Rust SPDM library and
-> forgoing a C SPDM library.
+> So add a check for 0 also. While at it, remove the redundant 'db_count'
+> assignment.
 >
-> Most of that allergy relief comes from how this organizes the C to
-> Rust interactions. The core SPDM implementation calls out to C for the
-> presentation layer (Netlink) or is invoked by sysfs. That makes it
-> amenable for sharing those presentation mechanics.
->
-> Specifically, my primary concern is integration and refactoring
-> opportunities with the PCI TSM implementation [1]. The PCI TSM case
-> should use the same uABI transport for requesting + conveying device
-> certificate chain, SPDM transcript, and device measurements as PCI CMA.
-> Note that in the TSM case the SPDM implementation is in platform
-> firmware and will bypass this library. The TSM SPDM session is mutually
-> exclusive with the CMA SPDM session.
->
-> [1]: http://lore.kernel.org/69339e215b09f_1e0210057@dwillia2-mobl4.notmuc=
-h
->
-> > Security Protocols and Data Models (SPDM) [1] is used for authenticatio=
-n,
-> > attestation and key exchange. SPDM is generally used over a range of
-> > transports, such as PCIe, MCTP/SMBus/I3C, ATA, SCSI, NVMe or TCP.
-> >
-> > From the kernels perspective SPDM is used to authenticate and attest de=
-vices.
-> > In this threat model a device is considered untrusted until it can be v=
-erified
-> > by the kernel and userspace using SPDM. As such SPDM data is untrusted =
-data
-> > that can be mallicious.
-> >
-> > The SPDM specification is also complex, with the 1.2.1 spec being almos=
-t 200
-> > pages and the 1.3.0 spec being almost 250 pages long.
-> >
-> > As such we have the kernel parsing untrusted responses from a complex
-> > specification, which sounds like a possible exploit vector. This is the=
- type
-> > of place where Rust excels!
-> >
-> > This series implements a SPDM requester in Rust.
-> >
-> > This is very similar to Lukas' implementation [2]. This series includes=
- patches
-> > and files from Lukas' C SPDM implementation, which isn't in mainline.
-> >
-> > This is a standalone series and doesn't depend on Lukas' implementation=
-.
->
-> So, I *am* allergic to how this series references Lukas' work by
-> pointing to random points in his personal git tree. I trust that was
-> done for RFC purposes, but it would have helped to call that out in the
-> changelog and set expectations about the ideal path to coordinate with
-> that work.
->
-> > To help with maintaining compatibility it's designed in a way to match =
-Lukas'
-> > design and the state struct stores the same information, although in a =
-Rust
-> > struct instead of the original C one.
-> >
-> > This series exposes the data to userspace via netlink, with a single sy=
-sfs
-> > atrribute to allow reauthentication.
-> >
-> > All of the patches are included in the RFC, as it depends on some patch=
-es
-> > that aren't upstream yet.
-> >
-> > Now that Rust is no longer experimental I have picked this back up. If =
-the
-> > community is generally on board with a Rust implementation I can work o=
-n
-> > sending a non-RFC version and push towards getting that merged.
->
-> As long as this stays explicitly designed to minimize exposure to
-> "refactor across language boundary" events (as initially seems to be the
-> case), then it seems workable.
->
-> > The entire tree can be seen here: https://github.com/alistair23/linux/t=
-ree/alistair/spdm-rust
-> >
-> > I'm testing the netlink data by running the following
-> >
-> > ```shell
-> > cargo run -- --qemu-server response
-> >
-> > qemu-system-x86_64 \
-> >   -nic none \
-> >   -object rng-random,filename=3D/dev/urandom,id=3Drng0 \
-> >   -device virtio-rng-pci,rng=3Drng0 \
-> >   -drive file=3Ddeploy/images/qemux86-64/core-image-pcie-qemux86-64.roo=
-tfs.ext4,if=3Dvirtio,format=3Draw \
-> >   -usb -device usb-tablet -usb -device usb-kbd \
-> >   -cpu Skylake-Client \
-> >   -machine q35,i8042=3Doff \
-> >   -smp 4 -m 2G \
-> >   -drive file=3Dblknvme,if=3Dnone,id=3Dmynvme,format=3Draw \
-> >   -device nvme,drive=3Dmynvme,serial=3Ddeadbeef,spdm_port=3D2323,spdm_t=
-rans=3Ddoe \
-> >   -snapshot \
-> >   -serial mon:stdio -serial null -nographic \
-> >   -kernel deploy/images/qemux86-64/bzImage \
-> >   -append 'root=3D/dev/vda rw  console=3DttyS0 console=3DttyS1 oprofile=
-.timer=3D1 tsc=3Dreliable no_timer_check rcupdate.rcu_expedited=3D1 swiotlb=
-=3D0 '
-> >
-> > spdm_utils identify &
-> > sleep 1
-> > echo re > /sys/devices/pci0000:00/0000:00:03.0/authenticated
->
-> So this is where it will collide with TSM that also emits an
-> authenticated attribute. See Documentation/ABI/testing/sysfs-bus-pci.
->
-> The rough plan Lukas and I worked out is that switching between TSM and
-> CMA based authentication would use sysfs visibility to coordinate. I.e.
-> TSM to CMA conversion hides the TSM "authenticated" attribute and
-> unhides the CMA attribute of the same name.
+> Fixes: e35f56bb0330 ("PCI: endpoint: Support NTB transfer between RC and EP")
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> ---
 
-That seems straightforward and is already documented upstream as well,
-so that's pretty easy.
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
 
+>  drivers/pci/endpoint/functions/pci-epf-vntb.c | 9 +++------
+>  1 file changed, 3 insertions(+), 6 deletions(-)
 >
-> The most significant unsolved point of contention between TSM and CMA is
-> the policy on when authentication is mandated and the driver probe
-> policy. The proposed model for enforcing device security for
-> Confidential Computing is make it completely amenable to userspace
-> policy. Draft details here [2] to be refreshed "soon" when I send out
-> the next version of that.
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> index 2256c3062b1a..3d30aa4dbb84 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> @@ -483,7 +483,6 @@ static int epf_ntb_configure_interrupt(struct epf_ntb *ntb)
+>  {
+>  	const struct pci_epc_features *epc_features;
+>  	struct device *dev;
+> -	u32 db_count;
+>  	int ret;
 >
-> [2]: http://lore.kernel.org/20250827035259.1356758-6-dan.j.williams@intel=
-.com
-
-CMA will eventually need to support some sort of drive probe policy as
-well, but that can wait until later and isn't going to be dealt with
-in this series.
-
+>  	dev = &ntb->epf->dev;
+> @@ -495,14 +494,12 @@ static int epf_ntb_configure_interrupt(struct epf_ntb *ntb)
+>  		return -EINVAL;
+>  	}
 >
-> To be clear I am ok if there is an incremental option to have auto_cma
-> and/or auto_tsm that arranges for authentication or link encryption to
-> happen without asking. I take issue with auto_cma being the only hard
-> coded option.
-
-I have been working through all of the comments and discussions and I
-think I have addressed everything, except for this one.
-
-To summerise, is the high level issue is how do we know if we should
-use CMA or TSM?
-
-Do you have any more thoughts on this?
-
-Alistair
+> -	db_count = ntb->db_count;
+> -	if (db_count > MAX_DB_COUNT) {
+> -		dev_err(dev, "DB count cannot be more than %d\n", MAX_DB_COUNT);
+> +	if (!ntb->db_count || ntb->db_count > MAX_DB_COUNT) {
+> +		dev_err(dev, "DB count %d out of range (1 - %d)\n",
+> +			ntb->db_count, MAX_DB_COUNT);
+>  		return -EINVAL;
+>  	}
+>
+> -	ntb->db_count = db_count;
+> -
+>  	if (epc_features->msi_capable) {
+>  		ret = pci_epc_set_msi(ntb->epf->epc,
+>  				      ntb->epf->func_no,
+> --
+> 2.51.0
+>
