@@ -1,107 +1,144 @@
-Received: from mail-vs1-f74.google.com (mail-vs1-f74.google.com [209.85.217.74])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3B163DCD9C
-	for <linux-pci@vger.kernel.org>; Thu,  9 Apr 2026 15:01:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07C9B29B78D;
+	Thu,  9 Apr 2026 16:53:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775746900; cv=none; b=J8LVHGffzzIfFtb8qXwUi1GiFvS4/m8FDMhZCrKT2eN0653PuEvzIRXHCXQQwYdpwlWGQdTH3kgVAI/ysdj3eCtiBVigrRKrhulQ+U7aTeHIdYj8buWlP5vMk7eLpezwbcSbCaLcMBGvdZiGxrAmtg4r0R5A4fb8nSAi13jXhJg=
+	t=1775753636; cv=none; b=KUmjDfykyLYNIwVXOwxgquKQosQVtbSVAOYiqNNopzox5Dm2IPGoeFqm3hyuYWDv/Dg2quHzGp9y3BA2599aBCSDjml1fL5Jyh1GnIgQtM5T/OE8PnNctTG6x2Uln9leSDUcu9UrZpLmVBlFLDzNhqNv3WiRtSC6esWp8m4NjlU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775746900; c=relaxed/simple;
-	bh=G9OvV7vXp/wWZxzfIcoWe97Q3YUGjNO5GzlbZys/VW4=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=L9W7FXbNMY3tVOmV2pAaDualaQNo9vFb6kNUgzNM1y2yA9xfAM4CRpJwMJDLSMhtM8nO9UndVIDs2iSiPTpzz4WhKrj/R/rRehLHDRPSyw6mzjHsk0sYR0X5KZIsUmJhdRiSRPtioh6YR/E/ngzI+pNkrmQtQqtixXN7CsnALBI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--jmoroni.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=RguL8IJG; arc=none smtp.client-ip=209.85.217.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--jmoroni.bounces.google.com
+	s=arc-20240116; t=1775753636; c=relaxed/simple;
+	bh=0KZ30YzaiucJMS+OGrhTeqDb6HerageSBpXY41WlaYI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aQ8NVqeUvl7nVE6zLROkhH15xkUHt+2mLVb/pex7Y4Uc2LaQd6k7rPzsEZe/6H/qWJo1p2pT4CmYRhQXI4E8QVTPOiMvpDEwgr4ccS44ppimb7FtOCupQKoZibL5CITgK4y23DjCmGtH0YWkT/7JmO+WufICBExWteueKhsTwr0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AFrhoQK2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="RguL8IJG"
-Received: by mail-vs1-f74.google.com with SMTP id ada2fe7eead31-6054a46d802so1278509137.0
-        for <linux-pci@vger.kernel.org>; Thu, 09 Apr 2026 08:01:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1775746897; x=1776351697; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=99ro2vXgYbLolPPBo8Mdr0wz15miyOgxU6wtwQUoCuw=;
-        b=RguL8IJGgwYb73v22ra/Nuk8UeYO8iiHJnAkJ0U7peqA76eBkzk9pgpa7DkqQTyyMS
-         PxaSB2xSBI8ugAqGMo3wGAy+IzU6HJbEcH8JEl3UouEk8RlN7BHXb3zViyaFYzYrVz9m
-         hFp1Nox6pR5j+SQ7xbXopBFnPOmRCsvKklpJPNJOCYJuSFL58MRDItw/6QmK+qEw4yK/
-         ZXFe0PF+XEWtk/xniTcLd+EObV4MlHUXDDj9XRhXSj260Bpex35VDLmB7VsVcGWCgAz0
-         yQOXHyjIH2yMjCg/flEswP9b17VeCpKAlcBeccYhGsoI3CLDjPbwzGzN63fBZEVYJiym
-         EhAA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775746897; x=1776351697;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=99ro2vXgYbLolPPBo8Mdr0wz15miyOgxU6wtwQUoCuw=;
-        b=joEiGf6XyS3WC4lVbfwzL6ycJhTKI6VtHFeVUyZdtfj894pYfXxbamX0mpLtxCKMaU
-         TEz3RYxux2NrqPkqlarpBD/WZrE9eJ9TyKnDcbxo61DzhQ5f961SNAlhMEIa146MC5lr
-         N60MejfGNCnu9ZTOaFA/sgivpRGUcy2fbG9DWpvNkZEv8Y47lH7QdDoECXiGE8vvlUEh
-         DUOp2zKGZ5NsGPG6UATNyJGJPASqzCAog8HOyGGZTVZQZaDpEOAwc/9n103P8l+GV54e
-         BnPvbmfsiKwn2wcbAcxfL7oVV43oEsq1ObPSb5KgjPKr7g6uoTW4DoP/xjnA3B1YAbA9
-         2k8A==
-X-Gm-Message-State: AOJu0Yz+phoQcGRBV7C0nkFGxVhcclSZ5v6O5HWFY9P6sAvZ/i+rzDzC
-	WJC9IjUwvLjpFIzEHizup0ZlgsqnGaw5V+fDpS4pkoFT+/nQoeaS6y15aSCq7tkNMPTb6kbpgsk
-	5qLYslA106A==
-X-Received: from qkld10.prod.google.com ([2002:a05:620a:136a:b0:8cf:d0b8:9bfd])
- (user=jmoroni job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6102:442c:b0:5ff:cb2c:a04c
- with SMTP id ada2fe7eead31-605a4cc1e5dmr10588809137.1.1775746896355; Thu, 09
- Apr 2026 08:01:36 -0700 (PDT)
-Date: Thu,  9 Apr 2026 15:01:23 +0000
-In-Reply-To: <20260409150123.3538444-1-jmoroni@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AFrhoQK2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44BA4C4CEF7;
+	Thu,  9 Apr 2026 16:53:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775753635;
+	bh=0KZ30YzaiucJMS+OGrhTeqDb6HerageSBpXY41WlaYI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=AFrhoQK2EdezdnbCa+QLwP+Is2C7pa4Qc43Ecd80EC0h+iEXoaniKAmiNTohiAQLG
+	 1c8DVvHg6e42cFrHcC5lFKcFBkWc24QiE4TJ1+ANkHiiTcSBvilA0EbJRhhr6X0HLP
+	 CPrS76NozBEKNPVMXu2+dCGXrq6y6ensO3DZ+dOBL4pQEHzvtaYIoQBTRX2WCTedj1
+	 hsxhTUsDXGDlE6KeLvUsm2xUC3MK7itgHczCVMXAAQvFTPhCfCKpcOFbyda8Naf32a
+	 lLVI5oHYVaeOaGTnxhq2NqVbUA1lY5sR6ftFpG/H23puEVydBDapl6htnw5C14ElW3
+	 uq16c3VpnwHPw==
+Date: Thu, 9 Apr 2026 22:23:43 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: David Laight <david.laight.linux@gmail.com>, bhelgaas@google.com, 
+	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, krzk+dt@kernel.org, 
+	conor+dt@kernel.org, thierry.reding@gmail.com, jonathanh@nvidia.com, 
+	kishon@kernel.org, arnd@arndb.de, gregkh@linuxfoundation.org, Frank.Li@nxp.com, 
+	den@valinux.co.jp, hongxing.zhu@nxp.com, jingoohan1@gmail.com, vidyas@nvidia.com, 
+	cassel@kernel.org, 18255117159@163.com, linux-pci@vger.kernel.org, 
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH 1/1] PCI: tegra194: fix min() signedness when capping
+ ASPM L1 entrance latency
+Message-ID: <z4mgcazzskxp354izuphajkry4klfkrupofkrrbyvta5kjfjrv@t3po7fsxfom7>
+References: <20260407145749.130753-1-mmaddireddy@nvidia.com>
+ <20260408125827.7063fd83@pumpkin>
+ <d6c62d55-d58a-48de-819c-c07233717500@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260409150123.3538444-1-jmoroni@google.com>
-X-Mailer: git-send-email 2.53.0.1213.gd9a14994de-goog
-Message-ID: <20260409150123.3538444-2-jmoroni@google.com>
-Subject: [PATCH 2/2] PCI/P2PDMA: Add Google SoCs to the P2P DMA host bridge list
-From: Jacob Moroni <jmoroni@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>, 
-	David Hu <xuehaohu@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Jacob Moroni <jmoroni@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <d6c62d55-d58a-48de-819c-c07233717500@nvidia.com>
 
-All Google SoCs support p2p between root ports, so add a wildcard
-rule to the host bridge list.
+On Thu, Apr 09, 2026 at 12:35:04PM +0530, Manikanta Maddireddy wrote:
+> 
+> 
+> On 08/04/26 5:28 pm, David Laight wrote:
+> > On Tue, 7 Apr 2026 20:27:49 +0530
+> > Manikanta Maddireddy <mmaddireddy@nvidia.com> wrote:
+> > 
+> > > The DT property "aspm-l1-entry-delay-ns" is converted to microseconds,
+> > > then encoded for the L1 entrance latency register field as ilog2(us) + 1,
+> > > clamped to the hardware maximum of 7.
+> > > 
+> > > ilog2() returns int type, while the upper bound is 7U (unsigned int).
+> > > The min() macro is implemented with __careful_cmp(), which rejects mixed
+> > > signed and unsigned operands at compile time via BUILD_BUG_ON_MSG in
+> > > minmax.h; that check trips on this pair, notably when building with W=1.
+> > > 
+> > > This combination fails to build (e.g. parisc allyesconfig, GCC 15, as
+> > > reported by the 0-day bot).
+> > > 
+> > > Use min_t(u32, ilog2(us) + 1U, 7U) so both sides of the comparison are
+> > > unsigned and consistent with aspm_l1_enter_lat.
+> > 
+> > Adding 1U (rather than 1) is enough to make everything signed.
+> > Alternatively change the 7U to 7 and it will all be fine regardless of
+> > whether ilog2() returns a signed or unsigned result.
+> > 
+> > Remember min_t(u32, x, y) is min((u32)x, (u32)y) and you wouldn't put in
+> > casts like that for any other arithmetic operation.
+> > 
+> > Note that for the compile to fail there has to be a code path where
+> > ilog2(us) isn't known to generate a non-negative value.
+> > ilog2(us) (probably) ends up as 'fls(us) - 1'. If that is implemented using a
+> > compiler builtin (because there is a single instruction) then gcc knows that
+> > the input can't be zero (from the max()), so knows that fls() can't return 0
+> > (which it does for 0), so knows it is never negative and the checks in min()
+> > pass.
+> > 
+> > parisc may be one of the architectures that ends up with a real function
+> > for fls() so the compiler doesn't know the result of ilog2() is
+> > non-negative.
+> > 
+> > Just delete the U.
+> > 
+> > 	David
+> 
+> Thank you David for the review.
+> 
+> Hi Bjorn, Mani,
+> 
+> Let me know if you are OK with David's suggestion, I will send new patch as
+> shown below
+> 
+> -	pcie->aspm_l1_enter_lat = min(ilog2(us) + 1, 7U);
+> +	pcie->aspm_l1_enter_lat = min(ilog2(us) + 1, 7);
+> 
 
-Tested-by: David Hu <xuehaohu@google.com>
-Signed-off-by: Jacob Moroni <jmoroni@google.com>
----
- drivers/pci/p2pdma.c    | 2 ++
- include/linux/pci_ids.h | 2 ++
- 2 files changed, 4 insertions(+)
+Sure, go ahead.
 
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 25e9358d0..7c898542a 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -548,6 +548,8 @@ static const struct pci_p2pdma_whitelist_entry {
- 	{PCI_VENDOR_ID_INTEL,	0x2033, 0},
- 	{PCI_VENDOR_ID_INTEL,	0x2020, 0},
- 	{PCI_VENDOR_ID_INTEL,	0x09a2, 0},
-+	/* Google SoCs. */
-+	{PCI_VENDOR_ID_GOOGLE,	PCI_ANY_ID, 0},
- 	{}
- };
- 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 406abf629..24cb42f66 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2586,6 +2586,8 @@
- 
- #define PCI_VENDOR_ID_AZWAVE		0x1a3b
- 
-+#define PCI_VENDOR_ID_GOOGLE		0x1ae0
-+
- #define PCI_VENDOR_ID_REDHAT_QUMRANET    0x1af4
- #define PCI_SUBVENDOR_ID_REDHAT_QUMRANET 0x1af4
- #define PCI_SUBDEVICE_ID_QEMU            0x1100
+- Mani
+
+> > 
+> > > 
+> > > Fixes: 4a44cd65c9dd ("PCI: tegra194: Use aspm-l1-entry-delay-ns DT property for L1 entrance latency")
+> > > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> > > Reported-by: kernel test robot <lkp@intel.com>
+> > > Closes: https://lore.kernel.org/oe-kbuild-all/202604051407.AODe3ddZ-lkp@intel.com/
+> > > ---
+> > >   drivers/pci/controller/dwc/pcie-tegra194.c | 2 +-
+> > >   1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+> > > index 393f75ce3df3..93d3452ac117 100644
+> > > --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> > > +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+> > > @@ -1147,7 +1147,7 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
+> > >   	if (!ret) {
+> > >   		u32 us = max(val / 1000, 1U);
+> > > -		pcie->aspm_l1_enter_lat = min(ilog2(us) + 1, 7U);
+> > > +		pcie->aspm_l1_enter_lat = min_t(u32, ilog2(us) + 1U, 7U);
+> > >   	}
+> > >   	ret = of_property_read_u32(np, "num-lanes", &pcie->num_lanes);
+> > 
+> 
+> -- 
+> nvpublic
+> 
+
 -- 
-2.53.0.1213.gd9a14994de-goog
-
+மணிவண்ணன் சதாசிவம்
