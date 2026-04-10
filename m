@@ -1,293 +1,195 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15AE93BF67A;
-	Fri, 10 Apr 2026 13:07:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775826471; cv=none; b=uUHJA2KVKc+v+NHDWIisiLlOYWcO0EBByBoGABgfI7Th6wR786goK06AUJ7FxvxLu9scY264p6Xa5J7dh1dil+0UER80e0t2PcIBraAZzR4Yxy0uWVepVVjur2tDtwyrp0lEsKtIF7GHLXCXKyF/SECmEvr0uiKSyPO3Dy+BFik=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775826471; c=relaxed/simple;
-	bh=G2huuPtM8dkZc7ys3YvCtddLjlcJRsje8S+Ue6LmqbM=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=htgw1IC2PYxvY1lphIMjmqgl38lgf0Py7EFktpC+WlMDi1rAiifyC+9tikXR0AEYwHR5tkLknff1+LL/XnZerOhCuL00wX/jCbMGCCHMThrqWlc43smwipFJX8fmpwQGHBBCfKSkRwEDSQgshXX3s71DnTOIQ6DN6vwYX0Ne5YU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kBtF9eLu; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F462388E40;
+	Fri, 10 Apr 2026 13:34:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.9
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775828046; cv=fail; b=U/GKIdqPANf49yboC/vu6yfxJHmLXuWuR5mfrzDf8vH3kz8vhZ6Q4pcm6pn9c1AEtjoTAv+hLPIxD3rdtVUYF6oyq3wHPkCO+sJl8g14nbqzSUIT3tI64BZad6IblM0HKLzRqHIeej+1Zo4dwaqxblz1w5Z9AiTwnVRwOuyerRY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775828046; c=relaxed/simple;
+	bh=mE43ofK6HggfgriO/t+KxM8B7Um/8gfIsueInr+0wOs=;
+	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=QFcEhBtZWBsT8aZSgIzI/OZTLwSBRy55gPP11wCfIH1yhVskYTZs9Gx9qwGzlozn39XddSBFo0RH1I2ru/vtchy0nxd1DAy3nUgeOS8UHKr0GTiHaSMs4S7c5G10au/eaUuH1mr28jt5IyX/JpRSRQinoVdXc2Ek+qD4gV3hg+o=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YAPnBAgE; arc=fail smtp.client-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kBtF9eLu"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id F0465C2BCAF;
-	Fri, 10 Apr 2026 13:07:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775826471;
-	bh=G2huuPtM8dkZc7ys3YvCtddLjlcJRsje8S+Ue6LmqbM=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=kBtF9eLuCD+pBYJqjlEY3TzIftzPCZffmAqfpSKPWMt1Vc/DwAL7IHKct4/a85WJD
-	 0OAkdWGglJuYnopM2lDK0txfXejmx9KhgOqH6F3G1UBO+wnnxfQP4qzwoPmPYZJDLr
-	 GZVKjbxce6ctMb+HgXAAX0UJSQfYW2aCOtACyyoGH8MMkvXBop76KiZDO1tbtN/bRn
-	 jRyWsM60zlN31RUVsMtYSA7iSzdoGS6FrZZsKwYcZTYauVeSL2uFBqqxqIepyxdhLj
-	 IP4usiJzH4Oh+1D3RyXXV3M6xOPxGwun5IlPRWn4dH1fAZ40Nn083TCJt/d5LNVbH9
-	 6mq6g6jCVh6WA==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9B42F44860;
-	Fri, 10 Apr 2026 13:07:50 +0000 (UTC)
-From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-Date: Fri, 10 Apr 2026 08:07:32 -0500
-Subject: [PATCH 22/23] dmaengine: sdxi: MSI/MSI-X vector allocation and
- mapping
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YAPnBAgE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1775828045; x=1807364045;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=mE43ofK6HggfgriO/t+KxM8B7Um/8gfIsueInr+0wOs=;
+  b=YAPnBAgEICI0S0oma2JZ8GRNn9VFz7N06rZTPfp2hIa3F8Sz2UX9VAe/
+   VVmlYMjfcKe6QTnnXfFno2hL5biyRP+juLd4uv4VOzQ5rlUFhS9iCtJfj
+   Q5EOwOy6cl0tsULlUgWd8qP0Q6vQvjaxy1Tzg5eJeHkRq/hoMtA6Oq6q6
+   2UXvG1tvA3Ox56H6co4wbIGzMpH/dOb6QSqQKyJVZu/PZ/QYbbndUarIW
+   v14OEUWkIkPdRpwoyAB7pX7LddhEMrS5ldqR4pHplRmIwXzbuAzKQULug
+   4czxLhfkBz4rIJC5k9P6PWEI7fxBiY9xoQGiGbsMUxs7Qg7xvNAY3byWq
+   A==;
+X-CSE-ConnectionGUID: w5/HyXU8R0KDaTqujbEixw==
+X-CSE-MsgGUID: 0N09x+bwSHC87e1+/w3rQg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11754"; a="87544408"
+X-IronPort-AV: E=Sophos;i="6.23,171,1770624000"; 
+   d="scan'208";a="87544408"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 06:34:04 -0700
+X-CSE-ConnectionGUID: MsaVpUZkQoGGhYDaycyMMQ==
+X-CSE-MsgGUID: xS+D//9iQdGFx6sOz21RvA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,171,1770624000"; 
+   d="scan'208";a="267053057"
+Received: from fmsmsx903.amr.corp.intel.com ([10.18.126.92])
+  by orviesa001.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 06:33:29 -0700
+Received: from FMSMSX901.amr.corp.intel.com (10.18.126.90) by
+ fmsmsx903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Fri, 10 Apr 2026 06:33:28 -0700
+Received: from fmsedg902.ED.cps.intel.com (10.1.192.144) by
+ FMSMSX901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37 via Frontend Transport; Fri, 10 Apr 2026 06:33:28 -0700
+Received: from PH7PR06CU001.outbound.protection.outlook.com (52.101.201.53) by
+ edgegateway.intel.com (192.55.55.82) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Fri, 10 Apr 2026 06:33:25 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=P1utUNUQJZtkG5r3x9YxxFLpOj4I1Zei2BnfhJcfCuZ7xh3b5p8sQkS2GB5ikjOI/vTGAN8jsdoGW+ldHmJ/Bqvrzf/5UzcxEeFFqkceq+7gyWBPNb7hH+8dh+AAaBfl5QdQnCgCK4ejQp1q6CkdceEPFm++C/LosT+48iJL69o3kzSNzxu+Vx8h2ap+ZzedYMg/9F/wVJqnYqdZ6RvXl2Y9lkiCTT8KEZik/5igOsGTnc3Oo0zumU4XfPPprFKb2jVkAZPDVZlq+O6GC9j3LblZYXvuNnnvoKKwT9KtdlgU0bUFGWES333j16NvTiBVvjBuGrGyG2/0v85Wlf7Lhw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=9hTJXMjufOHjXSIaWgop9oZubPzN3uCenellTODUm7Q=;
+ b=WBCC1H7kerNJ4+feg0rHP4I+v5q6O1HRFkW9nIoriVkEKZZoy0JXZ/NgC2mNMPcfHftRkke4rdgeVTkkqWkS7Sqy+6n9YoqIjjwiY9xKTJVbVIDrDNwPlGXSFFQaP9UO2TsuPj+zTf6ZCpRt9gRhN+O9Ves8Mkssxh4pm4FGMImUBPZSPHbf24FKObnoa0v7kAx2BHwbiJGao0k89OjVTGOX8pkUulqZ+MJbVMNe+tcHttEaeemM08JSe+cj/it98ToSgHb+yy+ujP7qazsmKIiacgfMuVkq8RtU7xhYWlZADlpAl/mPirypyabrU9xITQRyRZHcI5JpiQU4V6UY5Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from SN7PR11MB7540.namprd11.prod.outlook.com (2603:10b6:806:340::7)
+ by DM6PR11MB4513.namprd11.prod.outlook.com (2603:10b6:5:2a2::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.42; Fri, 10 Apr
+ 2026 13:33:23 +0000
+Received: from SN7PR11MB7540.namprd11.prod.outlook.com
+ ([fe80::2edd:5c6d:169c:389b]) by SN7PR11MB7540.namprd11.prod.outlook.com
+ ([fe80::2edd:5c6d:169c:389b%6]) with mapi id 15.20.9769.018; Fri, 10 Apr 2026
+ 13:33:23 +0000
+Date: Fri, 10 Apr 2026 15:32:49 +0200
+From: Larysa Zaremba <larysa.zaremba@intel.com>
+To: Paolo Abeni <pabeni@redhat.com>
+CC: Tony Nguyen <anthony.l.nguyen@intel.com>, <davem@davemloft.net>,
+	<kuba@kernel.org>, <edumazet@google.com>, <andrew+netdev@lunn.ch>,
+	<netdev@vger.kernel.org>, Phani R Burra <phani.r.burra@intel.com>,
+	<przemyslaw.kitszel@intel.com>, <aleksander.lobakin@intel.com>,
+	<sridhar.samudrala@intel.com>, <anjali.singhai@intel.com>,
+	<michal.swiatkowski@linux.intel.com>, <maciej.fijalkowski@intel.com>,
+	<emil.s.tantilov@intel.com>, <madhu.chittim@intel.com>,
+	<joshua.a.hay@intel.com>, <jacob.e.keller@intel.com>,
+	<jayaprakash.shanmugam@intel.com>, <jiri@resnulli.us>, <horms@kernel.org>,
+	<corbet@lwn.net>, <richardcochran@gmail.com>, <linux-doc@vger.kernel.org>,
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>, Bharath R
+	<bharath.r@intel.com>, Samuel Salin <Samuel.salin@intel.com>, "Aleksandr
+ Loktionov" <aleksandr.loktionov@intel.com>
+Subject: Re: [PATCH net-next v2 02/14] libie: add PCI device initialization
+ helpers to libie
+Message-ID: <adj8AR6OuP-LneCY@soc-5CG4396X81.clients.intel.com>
+References: <20260403194938.3577011-1-anthony.l.nguyen@intel.com>
+ <20260403194938.3577011-3-anthony.l.nguyen@intel.com>
+ <2e618260-2153-4c36-be61-d2329c9da13f@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <2e618260-2153-4c36-be61-d2329c9da13f@redhat.com>
+X-ClientProxiedBy: VIYP296CA0001.AUTP296.PROD.OUTLOOK.COM
+ (2603:10a6:800:29d::17) To SN7PR11MB7540.namprd11.prod.outlook.com
+ (2603:10b6:806:340::7)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260410-sdxi-base-v1-22-1d184cb5c60a@amd.com>
-References: <20260410-sdxi-base-v1-0-1d184cb5c60a@amd.com>
-In-Reply-To: <20260410-sdxi-base-v1-0-1d184cb5c60a@amd.com>
-To: Vinod Koul <vkoul@kernel.org>
-Cc: Wei Huang <wei.huang2@amd.com>, 
- Mario Limonciello <mario.limonciello@amd.com>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- Jonathan Cameron <jonathan.cameron@huawei.com>, 
- Stephen Bates <Stephen.Bates@amd.com>, PradeepVineshReddy.Kodamati@amd.com, 
- John.Kariuki@amd.com, linux-pci@vger.kernel.org, 
- linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org, 
- Nathan Lynch <nathan.lynch@amd.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1775826467; l=6787;
- i=nathan.lynch@amd.com; s=20260410; h=from:subject:message-id;
- bh=+70bvPsXLZ6JtPOvD5LtOSlAhOg3eN58vo6yDBNKJ0s=;
- b=gNZi96Bgh+vS0dBam9zeGmkSaV4mScK2225z7j07aiU5mBGt3DVyCo+TfF8XaM2eeVgWVSM+B
- HwfUKkollP0Bl/f+3MeMuQPwo6ZQeFLagjMRwVaEuCSeylMKU7fXm5o
-X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
- pk=PK4ozhq+/z9/2Jl5rgDmvHa9raVomv79qM8p1RAFpEw=
-X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20260410 with
- auth_id=728
-X-Original-From: Nathan Lynch <nathan.lynch@amd.com>
-Reply-To: nathan.lynch@amd.com
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SN7PR11MB7540:EE_|DM6PR11MB4513:EE_
+X-MS-Office365-Filtering-Correlation-Id: e8474b02-8b83-4334-8b22-08de9705bca5
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|10070799003|1800799024|7416014|376014|18002099003|22082099003|56012099003;
+X-Microsoft-Antispam-Message-Info: jOoXAnhER+0IB1PsyLrHLXoOkvImt9IBABOqXgswf9fnrFKCsGg6p9wZP+/IYb9YNZJih8vpTYNo6Yob57w+D1m/ab7Bj98YygoIrUXQzCh//n94WLbRYQMJcEoQR/JaPKa0PYj0nsWBJYkaHNjsFuTPWod+jVvZzw4mmuz9DVbTBqryYRTci6AP95oMh2qi2IouC71T5Ssbxh99HCLvjyEAp19BxRLf8r8mwqQQENE+qya3uMqRpt8Y6Wt83J0QVsTTGm8gfyDyZjUZSJrwqF91CUMl9Mhj5N1in5d6xF49cQTfzufobZk+ssur5v7jOGZgp51oIPCm58u0Ve37yByQxUWTWWV+Edd6zHVUSEBLJ7Ivw2hfugjLtTbqMHgKcYXaxwgTM5+emOG6rt8fPWPCgcfS0UnWQ1MGN8ASlH2pyiGxlMACS171ri+J8Q81DvwvQcc5gNVYxIv1n22ThUj3cpviW2F9PlW6kUm4Qma92CNUhWFx5yRsgRHiYxWHZFBJPibAOXLhvXn+6Ccw310bCC1wThzOnJ00eHwdPuJuKkvhuGPXwPvOL0vhld5rutzgafdvt0U/kSNjd6GOm+GG9jga/hXeeV5fjtuBwXWfUtabcdwe+opTnbo0Rz8NJJuTHaVY2gAZe2YyxRIp1OO1jNoxlJIaJUxgDOY/FmdWsfxC/Dp3tXSHYvgHRs1kb/5hybmYHXiz+2xUVqtFtPM34pCBJnLNhPMzHkqUOfQ=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN7PR11MB7540.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(10070799003)(1800799024)(7416014)(376014)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?OC5uJpNV45noy9BWQL9Pr1DA8oz24wBR521oKpTJoEMYiSlgf/hzo5H+CV4P?=
+ =?us-ascii?Q?37xOVuvJG4he+XOMlDmM/UmY6sDSmByPaMPnfKGEywkgWxoZ71rHj6U3SGXT?=
+ =?us-ascii?Q?YdqiIET1O9nWeouLMXXq16KiTUU92XIV2fxM4uUHXaUCRfWWz/OfHn17su3E?=
+ =?us-ascii?Q?d3VeW2ug/I2NUOtBxEK8Y87UctEEC+u3oTi6pfszzo3BUYqCJt6B3fNbbtsR?=
+ =?us-ascii?Q?Sf9VR/vp6chJ8qiUuVlXkMsqeWztZ38eD12S5+QPSmjkBX6Wc1kiJ/mRAA+2?=
+ =?us-ascii?Q?gBPztHhKPYx7dJvkvmpAJbXWqBfRxeZdqZIfxm1YmEf+d+KlVrKO8sQ+6Hgs?=
+ =?us-ascii?Q?/MURemfK86wSLMQ7AWwzqJppQWao0L82Lu4/MUwc9wJhRMSucaCt13VKiWhJ?=
+ =?us-ascii?Q?YCk3LYuLuErw9dvg87WdEbAFxLYxwfA4g5JyB0TM7ZN0TwESJp57p/dCXf2d?=
+ =?us-ascii?Q?trGutwyrK/WU8PhTWbBQRKCZ20rt3NcnjzI9dayGS39AiasKUjZ6JrXa1qVl?=
+ =?us-ascii?Q?0/SDJgMj3f3VUn78AWyhTn3Ohf5ZaInLydtPLW+SsmsoVQKzJlcKHxBIxlNY?=
+ =?us-ascii?Q?Cn/cSJwYTFTnKZhr5iDr2hfjTc+ZhHZYsAZWBEiHQkntkjkfLZUoWFlJYeZT?=
+ =?us-ascii?Q?RblxxO45csJfbVV6ze2Nd/el5c1z249wR5Z7ulIhBpLSduujeO5cH1NnFYKm?=
+ =?us-ascii?Q?4MI0zbhvXXbsOE5PFkKIBbiciOwQWCk3KpZvRBsDztWeEIfaNMnOq2s5wuTV?=
+ =?us-ascii?Q?69g1/5Obs9tEW/T6WH71rhhXG6pvlrOdMVaR9Vx7yyKZ9hqkISD71+Z9En8z?=
+ =?us-ascii?Q?RejU/ZghcZSk4zLLQLdgsjU2YfrrWpKX0vG0IXmCRYQQ/VOkbQn6I3ot4vtm?=
+ =?us-ascii?Q?EHWGBbuhiRA5nlUBJPO1NmhGI1DtuvyfAjt0B0nCxA7IJ6lG2trbUmurQbj4?=
+ =?us-ascii?Q?3l1BwznmPDb63pkKuJjqoReOyN33BpBJ9JdIJOJX7+ieFLF08L9G1AWXXMFE?=
+ =?us-ascii?Q?Nf9B7KenUMJnh8twdOHNg02obb7EpWht0VppJhtx3v6jjW5gx+p2ihGzmXB3?=
+ =?us-ascii?Q?2Pc/f7XXYDrQ+h/0X5SaLOILnpFDIUAkE1Is795q0sVfp1FdqCxdFUqjQaL1?=
+ =?us-ascii?Q?fUp6q94SLC9QqIY9gd7Rp7K30ClRDxa4Nobbn8TpGTaXcpnDi4fKbrOR2QBf?=
+ =?us-ascii?Q?gAcGrlnHjDDK4gyqdVTRV9iba9ZbHvHTJnSaoZu2xSKRnjDb0b9CQbEr6S5D?=
+ =?us-ascii?Q?trsgjTD3GMBb3CgStHi2hC57WzQmrEgM2075Q3yPjM8hYIVuE+GwbBJCpbSE?=
+ =?us-ascii?Q?LWhDXiz3BLJVedhqDw4jxlgpp/lDIvORdyycxUtz5pLawOW9Vu30kRELBJYx?=
+ =?us-ascii?Q?ox3h8WpT3CPB2YYFnN/qkZ3kRdhHI6qzuE/KjScgj0hwAdJ56B2tzRxi4Wda?=
+ =?us-ascii?Q?+zgA6BFesqa9RG2MHIIJzq3si4lNyFMO2Q/FuQEHDXnHy9U2gJLeDeGJM6Xt?=
+ =?us-ascii?Q?Lb5RXxEr0MuGjb3XRrYGwBWn7pi3OBSOK4SOFOgdsZhPhElgQ17AbkTKpTSH?=
+ =?us-ascii?Q?XpO8KdVckZVbdc9LAKB2cqGhhALYMG8xYmlC392jN+MbWYI9F7ER9WcoG6vE?=
+ =?us-ascii?Q?s0pXudIa3ICoh3Pca5qxkfjwhWe+crU3GvS4iIeocbDOS6zEtziOTg/O1Rm/?=
+ =?us-ascii?Q?RfgGXny8HaKCY/HlZXeTEauwLqdcDLAaftDCa1XVmVrVzH9QMux1G5KxYyh5?=
+ =?us-ascii?Q?B7Z/q2oo1pBwu3Mk5p/szp7ymgPynSWxmC9r2F7iugkYI3HFD/KnT45z4ZT8?=
+X-MS-Exchange-AntiSpam-MessageData-1: EXF4VkLK8bzJHRkVbmrO+jKae7DvJ/z9qg8=
+X-Exchange-RoutingPolicyChecked: Um1r8SZvbUwP2YaeYOZMkQyrjb1lwrL7qJlLSRWRffGtSs5fobcSUOeJQkMkw7frSbW4ueHv6b66A4LWul7Y0xw2efyd5PZ7TBl+QsW2QhcrI53ydwzn5QmL2fpT/0nWaUyZCGOyY+dh2dXLoWkolFBD7rJOlkr18r1sbUtO1AUeuKDZHETBD7DIjiaPKzK9ABUiRiaVF+945BNRxnVZHX5bSeWOh5tSAo9TVFhWX/nvk2qoVEUT+EF3sja0vGIyPIeEP5pT5OZot//ppu/HF7aRvmChanCvxkXIgbJdEP37J8ImwVp26IcDcap8gUbxdv7d9bils/5i9WcQFVFhMg==
+X-MS-Exchange-CrossTenant-Network-Message-Id: e8474b02-8b83-4334-8b22-08de9705bca5
+X-MS-Exchange-CrossTenant-AuthSource: SN7PR11MB7540.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Apr 2026 13:33:23.0345
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: wbOzw54v9SmseCmM3uu5FYDAXJekTFwM4v4tlQyCDfWjqGz1185vMk1+JJFloPJ6rWkH3XbblGCXe9IkZzG8v1wW4qhC5M/hySfY2tBx6nE=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR11MB4513
+X-OriginatorOrg: intel.com
 
-From: Nathan Lynch <nathan.lynch@amd.com>
+On Thu, Apr 09, 2026 at 10:56:26AM +0200, Paolo Abeni wrote:
+> On 4/3/26 9:49 PM, Tony Nguyen wrote:
+> > +	mr = libie_find_mmio_region(&mmio_info->mmio_list, offset, size,
+> > +				    bar_idx);
+> > +	if (mr) {
+> > +		pci_warn(pdev,
+> > +			 "Mapping of BAR%u (offset=%llu, size=%llu) intersecting region (offset=%llu, size=%llu) already exists\n",
+> > +			 bar_idx, (unsigned long long)mr->offset,
+> > +			 (unsigned long long)mr->size,
+> > +			 (unsigned long long)offset, (unsigned long long)size);
+> > +		return mr->offset <= offset &&
+> > +		       mr->offset + mr->size >= offset + size;
+> 
+> Sashiko says:
+> 
+> ---
+> Does returning true here without creating a new tracking object leave
+> the new mapping tied to the original mapping's lifetime?
+> If the driver unmaps the original region, iounmap() is called and the
+> tracking object is freed. Any cached virtual address pointers to the
+> sub-region would then become a use-after-free, and subsequent queries
+> for the sub-region would fail.
+> ---
 
-During PCI probe, allocate a vector per context supported by the
-function as reported by the capability register, plus one for the
-error log interrupt, which is always vector 0. The rest of the vector
-range is available for use with interrupt-generating descriptors.
+Current users map and unmap region groups in a 'map 1-2-3 and unmap 3-2-1' 
+fashion, and this is not expected to change, so should be fine as-is.
 
-Introduce sdxi_alloc_vector() and sdxi_free_vector() which are thin
-wrappers around the IDA that tracks the allocated vector range.
-
-Introduce sdxi_vector_to_irq() which invokes a new get_irq() bus op to
-translate the device-relative index to the Linux IRQ number for use
-with request_irq() etc. For PCI this dispatches to pci_irq_vector().
-
-Code such as the DMA engine provider that intends to submit interrupt
-descriptors should prepare by using sdxi_alloc_vector() and
-sdxi_vector_to_irq(), and clean up by using sdxi_free_vector().
-
-Co-developed-by: Wei Huang <wei.huang2@amd.com>
-Signed-off-by: Wei Huang <wei.huang2@amd.com>
-Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
----
- drivers/dma/sdxi/device.c |  4 ++++
- drivers/dma/sdxi/pci.c    | 29 +++++++++++++++++++++++-
- drivers/dma/sdxi/sdxi.h   | 57 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 89 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/dma/sdxi/device.c b/drivers/dma/sdxi/device.c
-index aaff6b15325a..8b11197c5781 100644
---- a/drivers/dma/sdxi/device.c
-+++ b/drivers/dma/sdxi/device.c
-@@ -10,6 +10,7 @@
- #include <linux/device.h>
- #include <linux/dma-mapping.h>
- #include <linux/dmapool.h>
-+#include <linux/idr.h>
- #include <linux/log2.h>
- #include <linux/slab.h>
- #include <linux/xarray.h>
-@@ -303,6 +304,7 @@ int sdxi_register(struct device *dev, const struct sdxi_bus_ops *ops)
- 
- 	sdxi->dev = dev;
- 	sdxi->bus_ops = ops;
-+	ida_init(&sdxi->vectors);
- 	xa_init_flags(&sdxi->client_cxts, XA_FLAGS_ALLOC1);
- 	dev_set_drvdata(dev, sdxi);
- 
-@@ -323,5 +325,7 @@ void sdxi_unregister(struct device *dev)
- 		sdxi_cxt_exit(cxt);
- 	xa_destroy(&sdxi->client_cxts);
- 
-+	ida_destroy(&sdxi->vectors);
-+
- 	sdxi_dev_stop(sdxi);
- }
-diff --git a/drivers/dma/sdxi/pci.c b/drivers/dma/sdxi/pci.c
-index 8e4dfde078ff..99430eaa583d 100644
---- a/drivers/dma/sdxi/pci.c
-+++ b/drivers/dma/sdxi/pci.c
-@@ -5,6 +5,7 @@
-  * Copyright Advanced Micro Devices, Inc.
-  */
- 
-+#include <linux/bitfield.h>
- #include <linux/dev_printk.h>
- #include <linux/dma-mapping.h>
- #include <linux/err.h>
-@@ -13,6 +14,7 @@
- #include <linux/module.h>
- #include <linux/pci.h>
- 
-+#include "mmio.h"
- #include "sdxi.h"
- 
- enum sdxi_mmio_bars {
-@@ -29,7 +31,8 @@ static int sdxi_pci_init(struct sdxi_dev *sdxi)
- {
- 	struct pci_dev *pdev = sdxi_to_pci_dev(sdxi);
- 	struct device *dev = &pdev->dev;
--	int ret;
-+	unsigned int cap1_max_cxt;
-+	int vecs, ret;
- 
- 	ret = pcim_enable_device(pdev);
- 	if (ret)
-@@ -53,12 +56,36 @@ static int sdxi_pci_init(struct sdxi_dev *sdxi)
- 				     "failed to map doorbell region\n");
- 	}
- 
-+	/*
-+	 * Allocate the minimum required set of vectors plus one for
-+	 * each client context supported by the function.
-+	 */
-+	cap1_max_cxt = FIELD_GET(SDXI_MMIO_CAP1_MAX_CXT,
-+				 sdxi_read64(sdxi, SDXI_MMIO_CAP1));
-+	vecs = pci_alloc_irq_vectors(pdev, SDXI_MIN_VECTORS,
-+				     SDXI_MIN_VECTORS + cap1_max_cxt,
-+				     PCI_IRQ_MSI | PCI_IRQ_MSIX);
-+	if (vecs < 0) {
-+		return dev_err_probe(dev, vecs,
-+				     "failed to allocate MSIs (max_cxt=%u)\n",
-+				     cap1_max_cxt);
-+	}
-+
-+	sdxi->nr_vectors = vecs;
-+	sdxi_dbg(sdxi, "allocated %u vectors\n", sdxi->nr_vectors);
-+
- 	pci_set_master(pdev);
- 	return 0;
- }
- 
-+static int sdxi_pci_get_irq(struct sdxi_dev *sdxi, unsigned int nr)
-+{
-+	return pci_irq_vector(sdxi_to_pci_dev(sdxi), nr);
-+}
-+
- static const struct sdxi_bus_ops sdxi_pci_ops = {
- 	.init = sdxi_pci_init,
-+	.get_irq = sdxi_pci_get_irq,
- };
- 
- static int sdxi_pci_probe(struct pci_dev *pdev,
-diff --git a/drivers/dma/sdxi/sdxi.h b/drivers/dma/sdxi/sdxi.h
-index da33719735ab..d4e1236a775e 100644
---- a/drivers/dma/sdxi/sdxi.h
-+++ b/drivers/dma/sdxi/sdxi.h
-@@ -8,8 +8,10 @@
- #ifndef DMA_SDXI_H
- #define DMA_SDXI_H
- 
-+#include <linux/bug.h>
- #include <linux/compiler_types.h>
- #include <linux/dev_printk.h>
-+#include <linux/idr.h>
- #include <linux/io-64-nonatomic-lo-hi.h>
- #include <linux/types.h>
- #include <linux/xarray.h>
-@@ -27,6 +29,21 @@
- #define L1_CXT_CTRL_PTR_SHIFT		6
- #define L1_CXT_AKEY_PTR_SHIFT		12
- 
-+enum {
-+	/*
-+	 * Per SDXI 1.0 3.4 Error Log, the error log interrupt is
-+	 * always vector 0.
-+	 */
-+	SDXI_ERROR_VECTOR = 0,
-+
-+	/*
-+	 * Request at least one vector to account for the error log
-+	 * interrupt. Increment this if the driver gains more
-+	 * dedicated interrupts (e.g. one for the admin context).
-+	 */
-+	SDXI_MIN_VECTORS = 1,
-+};
-+
- struct sdxi_dev;
- 
- /**
-@@ -39,6 +56,10 @@ struct sdxi_bus_ops {
- 	 *        function initialization.
- 	 */
- 	int (*init)(struct sdxi_dev *sdxi);
-+	/**
-+	 * @get_irq: Map device interrupt index to Linux IRQ number.
-+	 */
-+	int (*get_irq)(struct sdxi_dev *sdxi, unsigned int index);
- };
- 
- struct sdxi_dev {
-@@ -61,6 +82,9 @@ struct sdxi_dev {
- 	struct dma_pool *cxt_ctl_pool;
- 	struct dma_pool *cst_blk_pool;
- 
-+	unsigned int nr_vectors;
-+	struct ida vectors;
-+
- 	struct sdxi_cxt *admin_cxt;
- 	struct xarray client_cxts; /* context id -> (struct sdxi_cxt *) */
- 
-@@ -76,6 +100,39 @@ static inline struct device *sdxi_to_dev(const struct sdxi_dev *sdxi)
- #define sdxi_info(s, fmt, ...) dev_info(sdxi_to_dev(s), fmt, ## __VA_ARGS__)
- #define sdxi_err(s, fmt, ...) dev_err(sdxi_to_dev(s), fmt, ## __VA_ARGS__)
- 
-+/**
-+ * sdxi_alloc_vector() - Allocate an interrupt vector.
-+ *
-+ * A vector that will have the same lifetime as the device does not
-+ * need to be released explicitly. Otherwise the vector must be
-+ * released with sdxi_free_vector().
-+ */
-+static inline int sdxi_alloc_vector(struct sdxi_dev *sdxi)
-+{
-+	return ida_alloc_max(&sdxi->vectors, sdxi->nr_vectors - 1,
-+			     GFP_KERNEL);
-+}
-+
-+/**
-+ * sdxi_free_vector() - Release a previously allocated index.
-+ */
-+static inline void sdxi_free_vector(struct sdxi_dev *sdxi, unsigned int nr)
-+{
-+	ida_free(&sdxi->vectors, nr);
-+}
-+
-+/**
-+ * sdxi_vector_to_irq() - Translate an allocated interrupt vector to
-+ *                        Linux IRQ number suitable for passing to
-+ *                        request_irq() et al.
-+ */
-+static inline int sdxi_vector_to_irq(struct sdxi_dev *sdxi, unsigned int nr)
-+{
-+	/* Moan if the index isn't currently allocated. */
-+	WARN_ON_ONCE(!ida_exists(&sdxi->vectors, nr));
-+	return sdxi->bus_ops->get_irq(sdxi, nr);
-+}
-+
- int sdxi_register(struct device *dev, const struct sdxi_bus_ops *ops);
- void sdxi_unregister(struct device *dev);
- 
-
--- 
-2.53.0
-
-
+> 
+> /P
+> 
