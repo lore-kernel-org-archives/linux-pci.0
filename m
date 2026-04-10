@@ -1,280 +1,292 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CAE73AD53F
-	for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2026 08:53:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F06D342510
+	for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2026 10:09:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775811238; cv=none; b=LPvFjn6uX4JoHZvxMNuRk+kmN/ULBaLvkhrsQaqruOcVsdj37ylCbfI6GbCsXNc3P80uBnKGXmJD73S9balBPC3oZKmboeibIA+rOWseBRmofExg3uBcALpz2nt7VZ6H1UE37QtLXwcBSTJuqQev2GueEKEBGWCzoI9MzYfCfDo=
+	t=1775815751; cv=none; b=ANT4k3HGZDGAMbUk9LOYEGp7jbeAHdbjj/QMkkR1ZGrnaIKEb/gJtGCA7Ozwt0jgpg01ZeoPukNd/mFLrc4noraV6cPwcEdxMT1uNREDPvJ6/KBKAUPvDggghXuwCsx8PkexQdAECRYEM3UD2s4C4vT3LT2sRqdfHI6BRMdukHo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775811238; c=relaxed/simple;
-	bh=LlajGwjuNbRpOSUlDi9JuAJEAsPaqQSpr4zuJcI19mI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=P8NeJO1V4ZWmcl3juRimyS1rWbRgX55NhWvvBJOg6UsISlmL2rtfyZ34ac+smHiezb+OyCmPYDs9tkkDIQysufwfgWzXWRlE9RfKi12YKuVgBBXT4twAR5Tiqhl8rBsOWB5pfQ7OfUt16D5YwqSKf+8H4qIMnjRUvzDRLEtYio4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LstA3T5i; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1775815751; c=relaxed/simple;
+	bh=b7pY61ZvOSbQtCy8Bvp7KRnn/GfSyA5IPs1slpsXUFU=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=bKwXYLl7omSL+232hy89+4/90RBdtbtHsM04jO06IdnN8xVwhDcYkvnVuthVv7+R9QU22Im/NGcJS8UoL0YABjrbB/YHvyGFZvAcarLEiPRGuq3TdjY/DBz3YXjo+x6U23x0WpzCxE/+2XLKXayl3O1aMCosul0Cl5P37rsXmAc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hkMKkJmw; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LstA3T5i"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hkMKkJmw"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775811236; x=1807347236;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=LlajGwjuNbRpOSUlDi9JuAJEAsPaqQSpr4zuJcI19mI=;
-  b=LstA3T5iIZ/aqxM3u+81q7zFqZA/7aS3SbPF3zykfZYf/B9J3MBTwbC5
-   sVwakowIyedxJmUjtaj7nlhsAi/L3w5Hk6w8BQMxjCQHbyC5aVQlosbHh
-   OLDuDZYrP32ycMyHCfYS6mCEAuXFXlium554TKKppn520VkXueB01w1Ur
-   2q+tlsgy9MEPriojR0YS+rGJxRDg4dH/yO9bLCjS5ir6/nmtw5VZJEPuc
-   wwCy5L2Xy4SMI99NT091pTUd8evPmA+ea9L6owPg2ILwsyJ6jC3HAqKI9
-   IodPM57lEzJPw9slwewPXkgShDC41/qlMeRrJ5fs9eEuwrrx6McFpHu9F
+  t=1775815749; x=1807351749;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=b7pY61ZvOSbQtCy8Bvp7KRnn/GfSyA5IPs1slpsXUFU=;
+  b=hkMKkJmwwEGSuUoCRgqSMCM7cQcPg/neayZo3IrvpUWRQZKW7di5npA/
+   y2l3unatsEUagI8todjBlC0ZdMTwckm7kSr/ALL0VN2u682PnbEXU8AkL
+   Hg7JZLRH0cqbAf4dqx2JzfJc+1yfdbP+IL3s5Lk7yqXxJtsb75c45Rj7Q
+   nlbKSLzd/SKrND+XUSXKAJbtS/Qc77dI5SHxMQOzDq9qhjxW4R/shF7KM
+   BVV43uHrPTf96BiuUl8dwaavD/zaicINpfIeEBNzG/mqKxvIrK3/uxPWC
+   XgcJaLa67Q2rpVDeDw3qIr8Dl0hMjWfMM+dobdqJhG5DTlEL7Cvztj2ho
    w==;
-X-CSE-ConnectionGUID: 0F+ZIXB7S7ip8+swWA/uxw==
-X-CSE-MsgGUID: aYDhP60sSpmkpFwo0BvBJQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11754"; a="76545648"
+X-CSE-ConnectionGUID: 8c6GPryFQBuTBvYX2zNT4g==
+X-CSE-MsgGUID: UirCBcR3RxqwgwMXKp8Uig==
+X-IronPort-AV: E=McAfee;i="6800,10657,11754"; a="87461878"
 X-IronPort-AV: E=Sophos;i="6.23,171,1770624000"; 
-   d="scan'208";a="76545648"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 01:53:55 -0700
-X-CSE-ConnectionGUID: LXBcm4VUQuGWJQ2QgNefJQ==
-X-CSE-MsgGUID: lV8IWcD0Sdm6as+S2gvtzQ==
+   d="scan'208";a="87461878"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 03:09:08 -0700
+X-CSE-ConnectionGUID: z6MNtYYxQu2sG9blz5X8lg==
+X-CSE-MsgGUID: jNrmVPPRSSmtN1wpgx0Y+g==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,171,1770624000"; 
-   d="scan'208";a="226316637"
-Received: from ly-workstation.sh.intel.com (HELO ly-workstation) ([10.239.182.64])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 01:53:52 -0700
-Date: Fri, 10 Apr 2026 16:53:49 +0800
-From: "Lai, Yi" <yi1.lai@intel.com>
-To: Dan Williams <djbw@kernel.org>
-Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, aik@amd.com, aneesh.kumar@kernel.org,
-	yilun.xu@linux.intel.com, bhelgaas@google.com, alistair23@gmail.com,
-	lukas@wunner.de, jgg@nvidia.com
-Subject: Re: [PATCH v2 07/19] PCI/TSM: Add Device Security (TVM Guest) ACCEPT
- operation support
-Message-ID: <adi6nb82sM33TJV8@ly-workstation>
-References: <20260303000207.1836586-1-dan.j.williams@intel.com>
- <20260303000207.1836586-8-dan.j.williams@intel.com>
+   d="scan'208";a="228207051"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.118])
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 03:09:05 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Fri, 10 Apr 2026 13:09:00 +0300 (EEST)
+To: Geramy Loveless <gloveless@jqluv.com>
+cc: linux-pci@vger.kernel.org, cristi@ieee.org
+Subject: Re: [PATCH v2] PCI: release empty sibling bridge windows during
+ rebar expansion
+In-Reply-To: <20260410052918.5556-2-gloveless@jqluv.com>
+Message-ID: <efcba31b-4c5f-d4ec-e2e5-d01254c8256c@linux.intel.com>
+References: <29a5ee31baf8be7d07617beea016c3f6d03934bf.camel@ieee.org> <20260410052918.5556-2-gloveless@jqluv.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260303000207.1836586-8-dan.j.williams@intel.com>
+Content-Type: multipart/mixed; boundary="8323328-1033624320-1775815741=:1195"
 
-On Mon, Mar 02, 2026 at 04:01:55PM -0800, Dan Williams wrote:
-> The final operation of the PCIe Trusted Execution Environment (TEE) Device
-> Interface Security Protocol (TDISP) is asking the TEE Security Manager
-> (TEE) to enable private DMA and MMIO.
-> 
-> The story so far in the security lifecycle of the device is that the VMM
-> setup an SPDM session and link encryption with the device's physical
-> function0. The VMM then assigned either that physical function or other
-> virtual function of that device to a VM. The VM asked the TSM to transition
-> the device from TDISP UNLOCKED->LOCKED. With the device LOCKED the VM
-> validated signed fresh device evidence and expected MMIO mappings.
-> 
-> The VM now accepts the device to transition it from LOCKED to RUN and tell
-> the TSM to unblock DMA to VM private memory.
-> 
-> Implement a sysfs trigger to flip the device to private operation and plumb
-> that to a 'struct pci_tsm_ops::accept()' operation.
-> 
-> Co-developed-by: Xu Yilun <yilun.xu@linux.intel.com>
-> Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
-> Co-developed-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
-> Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+--8323328-1033624320-1775815741=:1195
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+
+On Thu, 9 Apr 2026, Geramy Loveless wrote:
+
+> When pbus_reassign_bridge_resources() walks up the bridge hierarchy
+> to expand a window (e.g. for resizable BAR), it refuses to release
+> any bridge window that has children.  This prevents BAR resize on
+> devices behind multi-port PCIe switches (such as Thunderbolt docks)
+> where empty sibling downstream ports hold small reservations that
+> block the parent bridge window from being freed and re-sized.
+>=20
+> Add pci_bus_subtree_empty() to check whether a bus subtree contains
+> any assigned device BARs, and pci_bus_release_empty_bridges() to
+> release bridge window resources of empty sibling bridges, saving
+> them to the rollback list so failures can be properly unwound.
+>=20
+> In pbus_reassign_bridge_resources(), call pci_bus_release_empty_bridges()
+> before checking res->child, so empty sibling windows are cleared first
+> and the parent window can then be released and grown.
+>=20
+> Uses PCI bus/device iterators rather than walking the raw resource
+> tree, which avoids issues with stale sibling pointers after resource
+> release.
+
+This paragraph can be dropped. And it's not exactly correct either as=20
+the pointers are only stale for resource entries that reside outside of=20
+the resource tree (after they've been released in a specific way) so if=20
+you start from a resource tree entry, you should never encounter a stale=20
+pointer.
+
+> Suggested-by: Ilpo J=C3=A4rvinen=C2=A0<ilpo.jarvinen@linux.intel.com>
+> Signed-off-by: Geramy Loveless <gloveless@jqluv.com>
 > ---
->  drivers/pci/Kconfig                     |  2 +
->  Documentation/ABI/testing/sysfs-bus-pci | 13 +++++
->  include/linux/pci-tsm.h                 |  7 ++-
->  drivers/pci/tsm.c                       | 69 ++++++++++++++++++++++++-
->  4 files changed, 88 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index e3f848ffb52a..c45c6b978e1d 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -127,6 +127,8 @@ config PCI_IDE
->  
->  config PCI_TSM
->  	bool "PCI TSM: Device security protocol support"
-> +	depends on ARCH_HAS_CC_PLATFORM
-> +	select CONFIDENTIAL_DEVICES
->  	select PCI_IDE
->  	select PCI_DOE
->  	select TSM
-> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-> index 1ed77b9402a6..c2a5c4fe9373 100644
-> --- a/Documentation/ABI/testing/sysfs-bus-pci
-> +++ b/Documentation/ABI/testing/sysfs-bus-pci
-> @@ -732,3 +732,16 @@ Description:
->  		'lock' to teardown the connection. Writes fail with EBUSY if
->  		this device is bound to a driver. This is a "devsec" TSM
->  		attribute, see Documentation/ABI/testing/sysfs-class-tsm.
-> +
-> +What:		/sys/bus/pci/devices/.../tsm/accept
-> +Contact:	linux-coco@lists.linux.dev
-> +Description:
-> +		(RW) Write "1" (or any boolean "true" string) to this file to
-> +		request that TSM transition the device from the TDISP LOCKED
-> +		state to the RUN state and arrange the for the secure IOMMU to
-> +		accept requests with T=1 in the PCIe packet header (TLP)
-> +		targeting private memory. Per TDISP the only exits from the RUN
-> +		state are via an explicit unlock request or an event that
-> +		transitions the device to the ERROR state. Writes fail with
-> +		EBUSY if this device is bound to a driver. This is a "devsec"
-> +		TSM attribute, see Documentation/ABI/testing/sysfs-class-tsm.
-> diff --git a/include/linux/pci-tsm.h b/include/linux/pci-tsm.h
-> index 2a896b83bff9..176d214cd0da 100644
-> --- a/include/linux/pci-tsm.h
-> +++ b/include/linux/pci-tsm.h
-> @@ -66,15 +66,18 @@ struct pci_tsm_ops {
->  	 *	  pci_tsm') for follow-on security state transitions from the
->  	 *	  LOCKED state
->  	 * @unlock: destroy TSM context and return device to UNLOCKED state
-> +	 * @accept: accept a locked TDI for use, move it to RUN state
->  	 *
->  	 * Context: @lock and @unlock run under pci_tsm_rwsem held for write to
-> -	 * sync with TSM unregistration and each other. All operations run under
-> -	 * the device lock for mutual exclusion with driver attach and detach.
-> +	 * sync with TSM unregistration and each other. @accept runs under
-> +	 * pci_tsm_rwsem held for read. All operations run under the device lock
-> +	 * for mutual exclusion with driver attach and detach.
->  	 */
->  	struct_group_tagged(pci_tsm_devsec_ops, devsec_ops,
->  		struct pci_tsm *(*lock)(struct tsm_dev *tsm_dev,
->  					struct pci_dev *pdev);
->  		void (*unlock)(struct pci_tsm *tsm);
-> +		int (*accept)(struct pci_dev *pdev);
->  	);
->  };
->  
-> diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
-> index 259e75092618..aa93a59d2720 100644
-> --- a/drivers/pci/tsm.c
-> +++ b/drivers/pci/tsm.c
-> @@ -557,6 +557,71 @@ static ssize_t dsm_show(struct device *dev, struct device_attribute *attr,
+>  drivers/pci/setup-bus.c | 99 ++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 97 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 4cf120ebe5a..7a182cd7e4d 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -2292,6 +2292,94 @@ void pci_assign_unassigned_bridge_resources(struct=
+ pci_dev *bridge)
 >  }
->  static DEVICE_ATTR_RO(dsm);
->  
-> +/**
-> + * pci_tsm_accept() - accept a device for private MMIO+DMA operation
-> + * @pdev: PCI device to accept
+>  EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
+> =20
+> +/*
+> + * pci_bus_subtree_empty - Check whether a bus subtree has any assigned
+> + * non-bridge device resources.
+> + * @bus: PCI bus to check
 > + *
-> + * "Accept" transitions a device to the run state, it is only suitable to make
-> + * that transition from a known DMA-idle (no active mappings) state. The "driver
-> + * detached" state is a coarse way to assert that requirement.
+> + * Returns true if no device on @bus or its descendant buses has any
+> + * assigned BARs (bridge window resources are not considered).
 > + */
-> +static int pci_tsm_accept(struct pci_dev *pdev)
+> +static bool pci_bus_subtree_empty(struct pci_bus *bus)
 > +{
-> +	int rc;
+> +=09struct pci_dev *dev;
 > +
-> +	ACQUIRE(rwsem_read_intr, lock)(&pci_tsm_rwsem);
-> +	if ((rc = ACQUIRE_ERR(rwsem_read_intr, &lock)))
-> +		return rc;
+> +=09list_for_each_entry(dev, &bus->devices, bus_list) {
+> +=09=09struct resource *r;
+> +=09=09unsigned int i;
 > +
-> +	if (!pdev->tsm)
-> +		return -EINVAL;
+> +=09=09pci_dev_for_each_resource(dev, r, i) {
+> +=09=09=09if (i >=3D PCI_BRIDGE_RESOURCES)
+> +=09=09=09=09break;
+> +=09=09=09if (resource_assigned(r))
+> +=09=09=09=09return false;
+> +=09=09}
 > +
-> +	ACQUIRE(device_intr, dev_lock)(&pdev->dev);
-> +	if ((rc = ACQUIRE_ERR(device_intr, &dev_lock)))
-> +		return rc;
+> +=09=09if (dev->subordinate &&
+> +=09=09    !pci_bus_subtree_empty(dev->subordinate))
+> +=09=09=09return false;
+> +=09}
 > +
-> +	if (pdev->dev.driver)
-> +		return -EBUSY;
-> +
-> +	rc = to_pci_tsm_ops(pdev->tsm)->accept(pdev);
-> +	if (rc)
-> +		return rc;
-> +
-> +	return device_cc_accept(&pdev->dev);
+> +=09return true;
 > +}
 > +
-# Re-send to Dan's kernel.org address. Sorry if you receive the same
-# email twice.
-
-Repeated accept on a device that is already in RUN state is not rejected
-by the PCI TSM core, and multiple encrypted MMIO resources for the same
-BAR range can be created. Furthermore, a later request to move the
-device to UNLOCKED state only removes the most recently tracked
-encrypted range.
-
-Reproduce steps:
-1. echo tsmX > /sys/bus/pci/devices/<bdf>/tsm/lock
-2. echo 1 > /sys/bus/pci/devices/<bdf>/tsm/accept
-3. echo 1 > /sys/bus/pci/devices/<bdf>/tsm/accept
-4. cat /proc/iomem | grep "PCI MMIO Encrypted"
-5. echo tsmX > /sys/bus/pci/devices/<bdf>/tsm/unlock
-6. cat /proc/iomem | grep "PCI MMIO Encrypted"
-
-Observed results after step4 (duplicate BAR range):
-380002000000-3800021fffff : PCI MMIO Encrypted
-  380002000000-3800021fffff : PCI MMIO Encrypted
-
-Observed results after step 6 (leaked resource):
-380002000000-3800021fffff : PCI MMIO Encrypted
-
-Regards,
-Yi Lai
-
-> +static ssize_t accept_store(struct device *dev, struct device_attribute *attr,
-> +			    const char *buf, size_t len)
+> +/*
+> + * pci_bus_release_empty_bridges - Release bridge window resources of
+> + * empty sibling bridges so the parent window can be freed and re-sized.
+> + * @bus: PCI bus whose child bridges to scan
+> + * @b_win: Parent bridge window resource; only children of this window
+> + *         are released
+> + * @saved: List to save released resources for rollback
+> + *
+> + * For each PCI-to-PCI bridge on @bus whose subtree is empty (no assigne=
+d
+> + * device BARs), releases bridge window resources that are children of
+> + * @b_win, saving them for rollback via @saved.
+> + *
+> + * Returns 0 on success, negative errno on failure.
+> + */
+> +static int pci_bus_release_empty_bridges(struct pci_bus *bus,
+> +=09=09=09=09=09 struct resource *b_win,
+> +=09=09=09=09=09 struct list_head *saved)
 > +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +	bool accept;
-> +	int rc;
+> +=09struct pci_dev *dev;
 > +
-> +	rc = kstrtobool(buf, &accept);
-> +	if (rc)
-> +		return rc;
+> +=09list_for_each_entry(dev, &bus->devices, bus_list) {
+> +=09=09struct resource *r;
+> +=09=09unsigned int i;
 > +
-> +	/*
-> +	 * TDISP can only go from RUN to UNLOCKED/ERROR, so there is no
-> +	 * 'unaccept' verb.
-> +	 */
-> +	if (!accept)
-> +		return -EINVAL;
+> +=09=09if (!dev->subordinate)
+> +=09=09=09continue;
 > +
-> +	rc = pci_tsm_accept(pdev);
-> +	if (rc)
-> +		return rc;
+> +=09=09if ((dev->class >> 8) !=3D PCI_CLASS_BRIDGE_PCI)
+> +=09=09=09continue;
+
+I suppose dev->subordinate check is enough for what we're doing so this=20
+looks redundant.
+
 > +
-> +	return len;
+> +=09=09if (!pci_bus_subtree_empty(dev->subordinate))
+> +=09=09=09continue;
+> +
+> +=09=09pci_dev_for_each_resource(dev, r, i) {
+> +=09=09=09int ret;
+> +
+> +=09=09=09if (!pci_resource_is_bridge_win(i))
+> +=09=09=09=09continue;
+> +
+> +=09=09=09if (!resource_assigned(r))
+> +=09=09=09=09continue;
+> +
+> +=09=09=09if (r->parent !=3D b_win)
+> +=09=09=09=09continue;
+> +
+> +=09=09=09ret =3D pci_dev_res_add_to_list(saved, dev, r, 0, 0);
+> +=09=09=09if (ret)
+> +=09=09=09=09return ret;
+> +
+> +=09=09=09release_child_resources(r);
+
+Unfortunately you cannot call this low-level function because it=20
+recursively frees child resources which means you won't be able to=20
+rollback them as they were not added to the saved list.
+
+I think the release algorithm should basically do this:
+
+- Recurse to the subordinate buses
+- Loop through bridge window resources of this bus
+=09- Skip resources that are not assigned or are not parented by b_win
+=09- If the resource still has childs, leave the resource alone
+=09  (+ log it for easier troubleshooting these cases; any failure
+=09     will also cascade to upstream so it may be possible to=20
+=09     shortcut something but it will also make the algorithm more
+=09     complicated)
+=09- Save and free the resource
+
+It might be better to move some of the code from=20
+pbus_reassign_bridge_resources() here as there's overlap with the sketched=
+=20
+algorithm (but I'm not sure until I see the updated version but keep this=
+=20
+in mind).
+
+Doing pci_bus_subtree_empty() before any removal is fine with me, but I=20
+see it just an optimization.
+
+> +=09=09=09pci_release_resource(dev, i);
+> +=09=09}
+> +=09}
+> +
+> +=09return 0;
 > +}
 > +
-> +static ssize_t accept_show(struct device *dev, struct device_attribute *attr,
-> +			   char *buf)
-> +{
-> +	return sysfs_emit(buf, "%d\n", device_cc_accepted(dev));
-> +}
-> +static DEVICE_ATTR_RW(accept);
+>  /*
+>   * Walk to the root bus, find the bridge window relevant for @res and
+>   * release it when possible. If the bridge window contains assigned
+> @@ -2316,7 +2404,14 @@ static int pbus_reassign_bridge_resources(struct p=
+ci_bus *bus, struct resource *
+> =20
+>  =09=09i =3D pci_resource_num(bridge, res);
+> =20
+> -=09=09/* Ignore BARs which are still in use */
+
+I don't know why you removed this comment (I admit though "BARs" could=20
+have been worded better as it's bridge windows we're dealing here).
+
+> +=09=09/* Release empty sibling bridge windows first */
+> +=09=09if (bridge->subordinate) {
+> +=09=09=09ret =3D pci_bus_release_empty_bridges(
+> +=09=09=09=09=09bridge->subordinate, res, saved);
+
+First arg fits to the previous line.
+
+Align the second line to (.
+
+But consider also rearranging code as I mentioned above.
+
+> +=09=09=09if (ret)
+> +=09=09=09=09return ret;
+
+Consider proceeding with the resize even if something failed as there are=
+=20
+cases where the bridge windows are large enough (admittedly, you seem to=20
+only bail out in case of alloc error).
+
+In to the same vein, there seems to be one existing goto restore (that was=
+=20
+added by me), which could also probably do continue instead (but changing=
+=20
+it would be worth another patch).
+
+> +=09=09}
 > +
->  /**
->   * pci_tsm_unlock() - Transition TDI from LOCKED/RUN to UNLOCKED
->   * @pdev: TDI device to unlock
-> @@ -740,7 +805,8 @@ static umode_t pci_tsm_attr_visible(struct kobject *kobj,
->  	}
->  
->  	if (pci_tsm_devsec_group_visible(kobj)) {
-> -		if (attr == &dev_attr_lock.attr ||
-> +		if (attr == &dev_attr_accept.attr ||
-> +		    attr == &dev_attr_lock.attr ||
->  		    attr == &dev_attr_unlock.attr)
->  			return attr->mode;
->  	}
-> @@ -760,6 +826,7 @@ static struct attribute *pci_tsm_attrs[] = {
->  	&dev_attr_disconnect.attr,
->  	&dev_attr_bound.attr,
->  	&dev_attr_dsm.attr,
-> +	&dev_attr_accept.attr,
->  	&dev_attr_lock.attr,
->  	&dev_attr_unlock.attr,
->  	NULL
-> -- 
-> 2.52.0
-> 
+>  =09=09if (!res->child) {
+>  =09=09=09ret =3D pci_dev_res_add_to_list(saved, bridge, res, 0, 0);
+>  =09=09=09if (ret)
+> @@ -2327,7 +2422,7 @@ static int pbus_reassign_bridge_resources(struct pc=
+i_bus *bus, struct resource *
+>  =09=09=09const char *res_name =3D pci_resource_name(bridge, i);
+> =20
+>  =09=09=09pci_warn(bridge,
+> -=09=09=09=09 "%s %pR: was not released (still contains assigned resource=
+s)\n",
+> +=09=09=09=09 "%s %pR: not released, active children present\n",
+>  =09=09=09=09 res_name, res);
+>  =09=09}
+> =20
+>=20
+
+--=20
+ i.
+
+--8323328-1033624320-1775815741=:1195--
