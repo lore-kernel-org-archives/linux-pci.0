@@ -1,208 +1,280 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E95BC37A4BC;
-	Fri, 10 Apr 2026 07:39:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.15
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775806772; cv=fail; b=twNlKi1hITmSq9aN4MdyyzUkmqwTUESX2/Nrh9/nbyAj6hIFAzV+1uiH5VnwfjSnFU7y/YZT3IpWFd/aMyCY01peClM6i6kO5V+FlFtfG9UhmQprd1E6ohWSP00hUeSDvgnr+eT/umm96CpkwPawCBlUJIolhKWhBK2Hnm8i3+M=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775806772; c=relaxed/simple;
-	bh=i0IIMDn4lDQWfV2K84P9DhJKDnLJizTSGujsSI/eru8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Kb8AbGCCpAS/3lbs92LXmWgh4N7LC5Muxk6/ZBJW317j3WSFkrKQZ94Cfm72TjW81u0z5m0C5a88dkSFRzMzMqn+tOj9aGhTTYTQC6/jm34XEIdl8H6Ajf/+m4R5VpIIAGq5thCI0Ycf7fFB7qJb2Kgg0pDTxDMUAig/DK45M+g=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ewOw3bGF; arc=fail smtp.client-ip=192.198.163.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E349C3ACF19
+	for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2026 08:45:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775810709; cv=none; b=K/AiBfyNxy3TZmDriTSx4dgdRKr4ds9pFt6A4jw+lupmRO+niPgZIKT8sQRARG+21z9BJL16JfsjLpn/+h8zGm68uaWblzUaXSnviLU3aCFGJnbjYZPEmRptIRE/nMfZvX5vzNbeZ8zv5Z3FDKJYHmZddLqgsbjbdpG5efNiYYk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775810709; c=relaxed/simple;
+	bh=uM477T0brWyxusRDXk4SK1YNPl9h71+Ekls5lbmT6zc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CH7KizF6dq1b0Ye9vxnltPXKeyD1o8Tbc1CXeF7IumVnYlzASfyLRxmZaxJUKcwzZaB2Z2cEB/cbVmk9deB7OAiXwQdSoN267XlQZlFvq4TtEmoq8Qos3/Q/hpXZFumKpr4AhyXtrLEZfP4FhjqXEPGffn8blmJdfiawIbIWTsU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nHd9XAdo; arc=none smtp.client-ip=192.198.163.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ewOw3bGF"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nHd9XAdo"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775806771; x=1807342771;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=i0IIMDn4lDQWfV2K84P9DhJKDnLJizTSGujsSI/eru8=;
-  b=ewOw3bGFIIo1c0eTH6HJegt8LSesQLsMe7FbJbATQDhm3nwYpdWCzZfk
-   dcmLxSD0SVmYqmgW++m7cvs/C2yxlhEdx0VYIxL1KhRSRQ2k/qWDqtgC2
-   KfL+2YLjnT6pmyaJ5BV9lARC04xUWkox+1hKTZ8Y99rZeyDRBDNfl3WqR
-   /oGOjca7WjQBoFAolGhbzILvjggHbhL0P/uqccbvjo+W+OeR2/RQPvQdu
-   0k3thHBf6GsEoAstleAmylJuL80NIaJprSFRbk3xM6YVZbNi/n6KR5Fzt
-   KlAOiSF/gFbL8gwhIkNfq6St32U0Hv7gdaH+I+/G1ULG+hPn3jfNExip5
-   A==;
-X-CSE-ConnectionGUID: 0+XAm0XvRoOx4MlfGJP5rQ==
-X-CSE-MsgGUID: u42DvEGTQn+sdTq+gfcpCw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11754"; a="76943810"
+  t=1775810708; x=1807346708;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=uM477T0brWyxusRDXk4SK1YNPl9h71+Ekls5lbmT6zc=;
+  b=nHd9XAdo6CECJ7bHr92HC0boD8u2Mv1q8TmABInQBSbrKkoKq3zk0xOB
+   ZQr2J9J+aO+eHVK3NABADETOAWo6/UQuh8MN7O2ILWobtfrEsunLa4Zc+
+   sg6Wcpf0uqGp5Uu50o5qwrB9fmrQ4vYHMjyZZUZKM7d/Lj9aIg4sqyswu
+   PDgO0PzSBhZo7rkMG4Qwf5pNXrxAKWIkNaly+sdyzYBvq1bXwCvPzJp9x
+   bRRcDSM6TBqh+pp1OvmMu9LZmp15s6l/i3AUs+uaUMS+bU742kZrBZF3W
+   OASqzPw6MY0HJHNWoE4O8sr+TnXwkjGguuDz55IjCfOIp2A/KgP+ZTWne
+   g==;
+X-CSE-ConnectionGUID: zH+QhcpXQLeuRS6LjDeSqw==
+X-CSE-MsgGUID: fEt+ZpXvSV+hP/q64gaklw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11754"; a="80715375"
 X-IronPort-AV: E=Sophos;i="6.23,171,1770624000"; 
-   d="scan'208";a="76943810"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 00:39:30 -0700
-X-CSE-ConnectionGUID: k6zXFFqKR0uXSE/lfN5XWw==
-X-CSE-MsgGUID: YA6FqYd5RM+kGLUz89ZA9Q==
+   d="scan'208";a="80715375"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 01:44:18 -0700
+X-CSE-ConnectionGUID: PvhHduFDTDiEy0ZGC7PGPw==
+X-CSE-MsgGUID: iTXEXmLDQVG6QpCYZIgrow==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,171,1770624000"; 
-   d="scan'208";a="222518399"
-Received: from orsmsx901.amr.corp.intel.com ([10.22.229.23])
-  by fmviesa009.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 00:39:29 -0700
-Received: from ORSMSX903.amr.corp.intel.com (10.22.229.25) by
- ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Fri, 10 Apr 2026 00:39:29 -0700
-Received: from ORSEDG903.ED.cps.intel.com (10.7.248.13) by
- ORSMSX903.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37 via Frontend Transport; Fri, 10 Apr 2026 00:39:29 -0700
-Received: from CO1PR03CU002.outbound.protection.outlook.com (52.101.46.55) by
- edgegateway.intel.com (134.134.137.113) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Fri, 10 Apr 2026 00:39:28 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=L23V13OXdbQflEwWrTZH5lOBdR4XHb0sRWeVeouVH5IfaWyjGQiThVuAl/MtW3hj5Hmd6eioYB8c1eb2OTpYsY8y9j1ISdBYw6k/fZtBhy5UO45JtUu71hsN8rdPJyjhCarKj3tenLpSXscppaqjAazCPYqw3XZMUqT9+5fEwOX0zpy5DIw80QNixCKdIuBXpCof/D2GDKjIXDQc4G0lWDyXppvOX3xb/2W6noL+VR0YRa0LXQA0KROCrj7aiCKLkLNBkoy1msIbTia+MBBqYtpWeD5EcuU9PPzJ8r6DhOsfbMt1qYbEc26eixF9sUlTb0TZ/xIs7eARX8EfjlY4MA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=i0IIMDn4lDQWfV2K84P9DhJKDnLJizTSGujsSI/eru8=;
- b=OrYbAgUL70bUOtncXslKwy0axsB5TmS3lg7sDf6TK/rQo1xYG5glK+I418159iii48Q4a6/Wsqi4RyEzZv3Jz04dcI9ReJu+ZPhMgKMPQnNG8jEdfvBvepR12JEL004O0epoIq7Tm5yzMW0T594bapmqf4xjrTXiD2L31HftCIN0n0tsuRvJtkTrwZ2DAX3flhgnIVgbg1G2WbzJj6jI1P62JKRzdYdFn8GG68dHpcSIFOW2+6blRyn08zYXqejG/Osjwe5iUfXwlN8EruWygvm2gdF8x8q+HXEDMCK4TgapSl+1+SAqMQs14P5goe9/w6qt3XUSA1GDcUlYhZNzYQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Received: from BN9PR11MB5276.namprd11.prod.outlook.com (2603:10b6:408:135::18)
- by IA1PR11MB7871.namprd11.prod.outlook.com (2603:10b6:208:3f5::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9791.34; Fri, 10 Apr
- 2026 07:39:26 +0000
-Received: from BN9PR11MB5276.namprd11.prod.outlook.com
- ([fe80::f997:762f:f079:134f]) by BN9PR11MB5276.namprd11.prod.outlook.com
- ([fe80::f997:762f:f079:134f%5]) with mapi id 15.20.9791.032; Fri, 10 Apr 2026
- 07:39:26 +0000
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: Jason Gunthorpe <jgg@nvidia.com>, Nicolin Chen <nicolinc@nvidia.com>
-CC: Samiullah Khawaja <skhawaja@google.com>, "will@kernel.org"
-	<will@kernel.org>, "robin.murphy@arm.com" <robin.murphy@arm.com>,
-	"joro@8bytes.org" <joro@8bytes.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "rafael@kernel.org" <rafael@kernel.org>,
-	"lenb@kernel.org" <lenb@kernel.org>, "praan@google.com" <praan@google.com>,
-	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
-	"xueshuai@linux.alibaba.com" <xueshuai@linux.alibaba.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "iommu@lists.linux.dev"
-	<iommu@lists.linux.dev>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "linux-acpi@vger.kernel.org"
-	<linux-acpi@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, Vikram Sethi <vsethi@nvidia.com>
-Subject: RE: [PATCH v2 4/7] iommu/arm-smmu-v3: Mark ATC invalidate timeouts
- via lockless bitmap
-Thread-Topic: [PATCH v2 4/7] iommu/arm-smmu-v3: Mark ATC invalidate timeouts
- via lockless bitmap
-Thread-Index: AQHctkK1dv4ps/vKUE+CojHzX1Q1QrWz5inQgADHk4CAACzGAIAAUyTQgAACJgCAB6OBgIAbOWMw
-Date: Fri, 10 Apr 2026 07:39:26 +0000
-Message-ID: <BN9PR11MB5276908B840B7ED348863A868C592@BN9PR11MB5276.namprd11.prod.outlook.com>
-References: <cover.1773774441.git.nicolinc@nvidia.com>
- <0c5525367cc67ccc84a675544d1d9f8462704065.1773774441.git.nicolinc@nvidia.com>
- <BN9PR11MB52763AB181F5213FAAB4F4F08C4EA@BN9PR11MB5276.namprd11.prod.outlook.com>
- <abr8aS/MDU9aeKu9@Asurada-Nvidia> <absaKimeI_TXXxuu@google.com>
- <BN9PR11MB5276467C1933E19E98277D378C4FA@BN9PR11MB5276.namprd11.prod.outlook.com>
- <abtphBuLiXxSxmAy@Asurada-Nvidia> <20260323235105.GV7340@nvidia.com>
-In-Reply-To: <20260323235105.GV7340@nvidia.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: BN9PR11MB5276:EE_|IA1PR11MB7871:EE_
-x-ms-office365-filtering-correlation-id: 9d2fa823-6e22-4e97-5107-08de96d44ab7
-x-ld-processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|376014|7416014|366016|38070700021|18002099003|56012099003|22082099003;
-x-microsoft-antispam-message-info: 60ma6XZRnymsz5fK4vQbJRY80sPLutMq42Zwb6byloWknhEg8YhhFD5BYC+JEDtQtj0GbZpPWpU/+xrMmKyueKgErMbq0s1sP+HZh49CwLp9SjbrycVAD0XkKDjTABEzin0kqKbBG9MMYgYqpNNmq6cW5vgqMmIuYEDg9/mgPjhw1zlYfxdP3sjLETLUZl7qTICvU2aTc3PQIshPkO8z3P5tX5+FFp1YLyShu9Fr4gryyloCaIKuuca9fiAa2er2uHfevrcLkGDB2q+cLNdjU9Tkex882b+oXHmOHHgOApgvLGclCOVliDL4sgzAmMcfAI82/K3gJfOVfpZhHWYmPAmujtQRghT1HWaVUVG03MqtGH4HMDkCwJY9nNhyYsoW4m3S/YK3Su4hThzLAcrDWUH24pcQuwgXna7q9+7zZJstQzDhLz7PlACKGKzPetRrC7+X2xJNW5QC8HRcyFn+lf6gSoMDpWEpR5TQ11DkxcCmV8j/hKwzegSWFz3JkZk+OVQ7olMPMvTSeaRtGYXDshyU7+WkG9vgdiKTwJ0iLjba6bo4V7/SLDCfhxtdQXtlUociOglVzAZqjCKfdgY5bUs3XzTa8sOuHyuVV43P75Mv0fc5geeS5cvLd16KTPdmM2KJo0/Zuc3UEaVPXOK/FlFJnuAt4SznbunzoG74QU+9hMXDwCNasheLR7t/P49/I+jYwB2AmgVT5uP3zGkDnX2mlJ6pfwsIimPXxcbLjqxau/G73k1Z+Rey3D5QY35b5Vtfq5+QDMC5aqhSYK4Kl7c8jpVnrbnl9EzXTLvRzZI=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR11MB5276.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(366016)(38070700021)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?9XyLN0ywZsakbY/TZlHsoTn9m17O13EvRZFpLPn2xkQd0c0pyYWFOHUjof0k?=
- =?us-ascii?Q?wzKAIZWHWtb6t53u8iILtFCUZWiihYgF7rMZ7aLxR38I/hbxILl7LyWE1sL3?=
- =?us-ascii?Q?SSO7ew3aFawUIJj7lUKnx1QCH4kso40CoeJzzKysZub3kMrKXAf80V+1ymRx?=
- =?us-ascii?Q?ssoL0RRRmqPC+/ahq6nawlKY28zPC8gE6SNt9oTTmNqp3XFNQBi3CLHDUsW4?=
- =?us-ascii?Q?rFejpuxbeu1n3Pn/Fb/mPHLjE/qzCdi3F+7ThOz+qLbWnJQZNq9kI45b7ZnL?=
- =?us-ascii?Q?I0FYf2w9CEXHtvwjNp7OduUx6m9p8wJTxXQW/irpXuLTsHn/fRJQXrZwQkM9?=
- =?us-ascii?Q?Da3t+YMJfl9wtQ1q6lxANWU28UdAjFOt3vJm4ia/8ltP4NsbX8P1sgI2dE+i?=
- =?us-ascii?Q?HONOUieD5k5b1mtZmDFIBEVtBhw1qWk4UMF3fP5mQgcQ+ZlyufU8YQVFo1lk?=
- =?us-ascii?Q?KVIsPICNlrQNcVwcOQ4Cf/mEnYyXRuBKXZhioZPcXkSYmb0VtXBIwLhgNYyx?=
- =?us-ascii?Q?5UbHwEyQkgY1GWk07QopvGt6zWp/M+7/Y/TLPiAPRe8ceeHdNrjNNlSHmNC6?=
- =?us-ascii?Q?DoRYD/IYeu86Q59lR3RWgRBAHkJ2Hyhzrze+wJK4VgWVNmrSqaZARiC/Ewbv?=
- =?us-ascii?Q?sM5hOCfwGwtrp1kFgsARRE/k0q9IP3GxncJdmwz1uk/5tbJ6AI4Zfq4HQl3U?=
- =?us-ascii?Q?UPZNfBSZHI22JSjEkzJ7oPnwfS/hRVFEmRvbHLPIlvLGWTevohXZbGgVvb83?=
- =?us-ascii?Q?0r/qKKejmxpY0mtyfOD0irA8wQr3nS2Hf4le+feXX5Vus2rXI28lBZfdO0ZC?=
- =?us-ascii?Q?LJNzt4YbX8+rc00fbqX6FoM26vdr/mpIJbb0RaznfN170hzdgjYV1kAmG3f9?=
- =?us-ascii?Q?sq//nIF71+kAbeRawIbZHwKu1onMtLuHSp7t8J/fJXABe2afHf9IOms5jHMm?=
- =?us-ascii?Q?R0a4dZcgbktJr+NkRMnvA7oKUiDLVZehuBUOyX0vIIbBceEKq7p4j4GYy6/d?=
- =?us-ascii?Q?Jhg9/171qfC/PdGkaK86VULzpVAjc/oDXxrlGZk17yiw9eqihDQl3x0k/xM6?=
- =?us-ascii?Q?hZ/Byb38/MjP0oB7Pjt2o5AP75qbc92stc2kCd6eWNwtUEgEMpdpm7abOdxV?=
- =?us-ascii?Q?24YprGLgE68vr0AuZ87EddzwW+zwRuyZ/Yy8f/28q4XyJw17ILt76PiBh6NZ?=
- =?us-ascii?Q?0k8oopanYOozhn2VLf66dsPy5hN/ejSy7ca0EmVdIWvHIby6Pr6yi/WQOpP1?=
- =?us-ascii?Q?v+8Zds2lqNOnMNFWKik1E6MLGMy5654+UIR6C36kw8bdNK29+lttLBDemKTL?=
- =?us-ascii?Q?HNEwjvdVVIBjeIOnqFNFW5LyS2gEPnUYYimU1Mulxc5dMlHohPEaUr/C5TIU?=
- =?us-ascii?Q?h4s1Vacj4yg2HYJp1boNPQ/QoUT3QubO9zGo2O1C0nSVKKNof7kdP4VEUn2S?=
- =?us-ascii?Q?zWBAnoXangDz9W9QGQHMvGCRNGCs0jMXPp6bwHk4k0CfThZgOuxC0F4BZHyQ?=
- =?us-ascii?Q?T+VDvXQKAvixDjB80kxYH8AIKWDee/zZoXuGWYZ2TLN3n4UoeqhPUcvPOYCQ?=
- =?us-ascii?Q?IRQqL57D2/muaoIvtah1YYimv6kjXFuoly/5yOoOU5ny09grnFtf8caiqZyT?=
- =?us-ascii?Q?zayn38lfMdPaGmrHCNk7UjDAKlXQol9pHRJiz/C+5NO7oTWpL0cxekgHhe5m?=
- =?us-ascii?Q?PBMpPpsdoohBtuvKvza4ha+fSoc0g6VAS7QaTZyvmD34ptQb+ekICVZfRB0E?=
- =?us-ascii?Q?0KCp4HwmEg=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+   d="scan'208";a="225870127"
+Received: from ly-workstation.sh.intel.com (HELO ly-workstation) ([10.239.182.64])
+  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 01:44:15 -0700
+Date: Fri, 10 Apr 2026 16:44:11 +0800
+From: "Lai, Yi" <yi1.lai@intel.com>
+To: Dan Williams <dan.j.williams@intel.com>, djbw@kernel.org
+Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, aik@amd.com, aneesh.kumar@kernel.org,
+	yilun.xu@linux.intel.com, bhelgaas@google.com, alistair23@gmail.com,
+	lukas@wunner.de, jgg@nvidia.com, djbw@kernel.org
+Subject: Re: [PATCH v2 07/19] PCI/TSM: Add Device Security (TVM Guest) ACCEPT
+ operation support
+Message-ID: <adi4W2zKANjqmtZC@ly-workstation>
+References: <20260303000207.1836586-1-dan.j.williams@intel.com>
+ <20260303000207.1836586-8-dan.j.williams@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Exchange-RoutingPolicyChecked: FFfJdhhHoMZWe97b6o71ZYGN8FJgwzoV2wH7lTYLy0RYSlNDqvfEp8NSmbV0yzrLtgGmhQmafPvUG1q0eT5pG4G+xdOYlaBqV33KOK52ycBiZDZKSBUNNBhhVuYGWAp8TrdJSirE9DtSpXASBKiK5RhT90p6HcgVhjHoYzs86etqxHZloeRL0JdUFh3esUthzYoPUczmpbIXigqF+vt+E7KFG6SopU21EHmYoEkmL14W2XZ+XUTlS/aEdmguYJBampiJY+o36vFpJ18kNccS3whXXQDgtRtHRmXbmaUPfCV04LSyAOMJW0+pa4vFMpzzkMHb0mRjmfufV6KQqcwHYg==
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BN9PR11MB5276.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9d2fa823-6e22-4e97-5107-08de96d44ab7
-X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Apr 2026 07:39:26.3919
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: MbCxCoD8JDS3PGwyFkoFXOfKCtWyC0qddwp2hSBKmsMB+vsOJ9GA5NHOWKzR1MqZKcQwVtbDxw7YXS4+Hksz5g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR11MB7871
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260303000207.1836586-8-dan.j.williams@intel.com>
 
-> From: Jason Gunthorpe <jgg@nvidia.com>
-> Sent: Tuesday, March 24, 2026 7:51 AM
->=20
-> On Wed, Mar 18, 2026 at 08:12:04PM -0700, Nicolin Chen wrote:
-> > > > VT-d is able to find out the SID of the device for which the device=
- TLB
-> > > > invalidation timed-out occured by using the SID reported in the
-> > > > "Invalidation Queue Error Record Register" (VT-d Specs 11.4.9.9).
-> > >
-> > > yes. but when there are multiple submissions (each with a wait descri=
-ptor)
-> > > fetched/handled by the hw and then an invalidation timeout comes, all
-> > > pending wait descriptors will be aborted (not just the one correspond=
-ing
-> > > to the timeout). In this case all affected submitters need to re-try.
-> >
-> > This sounds similar to SMMU then.
->=20
-> Not entirely.. smmu HW stops processing at a SYNC and waits for
-> everything pending to complete, then goes on forward. If there is a HW
-> reported ATC timeout then it is contained to the SYNC that followed
-> the ATC invalidation. The errored sync is skipped and whatever follows
-> continues forward, so it doesn't contaminate future work.
->=20
-> VT-d's wait descriptor with fence FN=3D1 sounds identical???
+On Mon, Mar 02, 2026 at 04:01:55PM -0800, Dan Williams wrote:
+> The final operation of the PCIe Trusted Execution Environment (TEE) Device
+> Interface Security Protocol (TDISP) is asking the TEE Security Manager
+> (TEE) to enable private DMA and MMIO.
+> 
+> The story so far in the security lifecycle of the device is that the VMM
+> setup an SPDM session and link encryption with the device's physical
+> function0. The VMM then assigned either that physical function or other
+> virtual function of that device to a VM. The VM asked the TSM to transition
+> the device from TDISP UNLOCKED->LOCKED. With the device LOCKED the VM
+> validated signed fresh device evidence and expected MMIO mappings.
+> 
+> The VM now accepts the device to transition it from LOCKED to RUN and tell
+> the TSM to unblock DMA to VM private memory.
+> 
+> Implement a sysfs trigger to flip the device to private operation and plumb
+> that to a 'struct pci_tsm_ops::accept()' operation.
+> 
+> Co-developed-by: Xu Yilun <yilun.xu@linux.intel.com>
+> Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
+> Co-developed-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
+> Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  drivers/pci/Kconfig                     |  2 +
+>  Documentation/ABI/testing/sysfs-bus-pci | 13 +++++
+>  include/linux/pci-tsm.h                 |  7 ++-
+>  drivers/pci/tsm.c                       | 69 ++++++++++++++++++++++++-
+>  4 files changed, 88 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index e3f848ffb52a..c45c6b978e1d 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -127,6 +127,8 @@ config PCI_IDE
+>  
+>  config PCI_TSM
+>  	bool "PCI TSM: Device security protocol support"
+> +	depends on ARCH_HAS_CC_PLATFORM
+> +	select CONFIDENTIAL_DEVICES
+>  	select PCI_IDE
+>  	select PCI_DOE
+>  	select TSM
+> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+> index 1ed77b9402a6..c2a5c4fe9373 100644
+> --- a/Documentation/ABI/testing/sysfs-bus-pci
+> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+> @@ -732,3 +732,16 @@ Description:
+>  		'lock' to teardown the connection. Writes fail with EBUSY if
+>  		this device is bound to a driver. This is a "devsec" TSM
+>  		attribute, see Documentation/ABI/testing/sysfs-class-tsm.
+> +
+> +What:		/sys/bus/pci/devices/.../tsm/accept
+> +Contact:	linux-coco@lists.linux.dev
+> +Description:
+> +		(RW) Write "1" (or any boolean "true" string) to this file to
+> +		request that TSM transition the device from the TDISP LOCKED
+> +		state to the RUN state and arrange the for the secure IOMMU to
+> +		accept requests with T=1 in the PCIe packet header (TLP)
+> +		targeting private memory. Per TDISP the only exits from the RUN
+> +		state are via an explicit unlock request or an event that
+> +		transitions the device to the ERROR state. Writes fail with
+> +		EBUSY if this device is bound to a driver. This is a "devsec"
+> +		TSM attribute, see Documentation/ABI/testing/sysfs-class-tsm.
+> diff --git a/include/linux/pci-tsm.h b/include/linux/pci-tsm.h
+> index 2a896b83bff9..176d214cd0da 100644
+> --- a/include/linux/pci-tsm.h
+> +++ b/include/linux/pci-tsm.h
+> @@ -66,15 +66,18 @@ struct pci_tsm_ops {
+>  	 *	  pci_tsm') for follow-on security state transitions from the
+>  	 *	  LOCKED state
+>  	 * @unlock: destroy TSM context and return device to UNLOCKED state
+> +	 * @accept: accept a locked TDI for use, move it to RUN state
+>  	 *
+>  	 * Context: @lock and @unlock run under pci_tsm_rwsem held for write to
+> -	 * sync with TSM unregistration and each other. All operations run under
+> -	 * the device lock for mutual exclusion with driver attach and detach.
+> +	 * sync with TSM unregistration and each other. @accept runs under
+> +	 * pci_tsm_rwsem held for read. All operations run under the device lock
+> +	 * for mutual exclusion with driver attach and detach.
+>  	 */
+>  	struct_group_tagged(pci_tsm_devsec_ops, devsec_ops,
+>  		struct pci_tsm *(*lock)(struct tsm_dev *tsm_dev,
+>  					struct pci_dev *pdev);
+>  		void (*unlock)(struct pci_tsm *tsm);
+> +		int (*accept)(struct pci_dev *pdev);
+>  	);
+>  };
+>  
+> diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
+> index 259e75092618..aa93a59d2720 100644
+> --- a/drivers/pci/tsm.c
+> +++ b/drivers/pci/tsm.c
+> @@ -557,6 +557,71 @@ static ssize_t dsm_show(struct device *dev, struct device_attribute *attr,
+>  }
+>  static DEVICE_ATTR_RO(dsm);
+>  
+> +/**
+> + * pci_tsm_accept() - accept a device for private MMIO+DMA operation
+> + * @pdev: PCI device to accept
+> + *
+> + * "Accept" transitions a device to the run state, it is only suitable to make
+> + * that transition from a known DMA-idle (no active mappings) state. The "driver
+> + * detached" state is a coarse way to assert that requirement.
+> + */
 
-yes
+Hi Dan,
 
->=20
-> I guess if FN=3D0 then things start to become indeterminate what the
-> wait actually waits for..
->=20
+Repeated accept on a device that is already in RUN state is not rejected
+by the PCI TSM core, and multiple encrypted MMIO resources for the same
+BAR range can be created. Furthermore, a later request to move the
+device to UNLOCKED state only removes the most recently tracked
+encrypted range.
 
-Currently we use FN=3D0, so all pending works before head pointer will be
-re-submitted. It has a larger impact compared to FN=3D1 when a timeout
-happens, but allows more parallel work in hardware at other times.
+Reproduce steps:
+1. echo tsmX > /sys/bus/pci/devices/<bdf>/tsm/lock
+2. echo 1 > /sys/bus/pci/devices/<bdf>/tsm/accept
+3. echo 1 > /sys/bus/pci/devices/<bdf>/tsm/accept
+4. cat /proc/iomem | grep "PCI MMIO Encrypted"
+5. echo tsmX > /sys/bus/pci/devices/<bdf>/tsm/unlock
+6. cat /proc/iomem | grep "PCI MMIO Encrypted"
+
+Observed results after step4 (duplicate BAR range):
+380002000000-3800021fffff : PCI MMIO Encrypted
+  380002000000-3800021fffff : PCI MMIO Encrypted
+
+Observed results after step 6 (leaked resource):
+380002000000-3800021fffff : PCI MMIO Encrypted
+
+Regards,
+Yi Lai
+
+> +static int pci_tsm_accept(struct pci_dev *pdev)
+> +{
+> +	int rc;
+> +
+> +	ACQUIRE(rwsem_read_intr, lock)(&pci_tsm_rwsem);
+> +	if ((rc = ACQUIRE_ERR(rwsem_read_intr, &lock)))
+> +		return rc;
+> +
+> +	if (!pdev->tsm)
+> +		return -EINVAL;
+> +
+> +	ACQUIRE(device_intr, dev_lock)(&pdev->dev);
+> +	if ((rc = ACQUIRE_ERR(device_intr, &dev_lock)))
+> +		return rc;
+> +
+> +	if (pdev->dev.driver)
+> +		return -EBUSY;
+> +
+> +	rc = to_pci_tsm_ops(pdev->tsm)->accept(pdev);
+> +	if (rc)
+> +		return rc;
+> +
+> +	return device_cc_accept(&pdev->dev);
+> +}
+> +
+> +static ssize_t accept_store(struct device *dev, struct device_attribute *attr,
+> +			    const char *buf, size_t len)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +	bool accept;
+> +	int rc;
+> +
+> +	rc = kstrtobool(buf, &accept);
+> +	if (rc)
+> +		return rc;
+> +
+> +	/*
+> +	 * TDISP can only go from RUN to UNLOCKED/ERROR, so there is no
+> +	 * 'unaccept' verb.
+> +	 */
+> +	if (!accept)
+> +		return -EINVAL;
+> +
+> +	rc = pci_tsm_accept(pdev);
+> +	if (rc)
+> +		return rc;
+> +
+> +	return len;
+> +}
+> +
+> +static ssize_t accept_show(struct device *dev, struct device_attribute *attr,
+> +			   char *buf)
+> +{
+> +	return sysfs_emit(buf, "%d\n", device_cc_accepted(dev));
+> +}
+> +static DEVICE_ATTR_RW(accept);
+> +
+>  /**
+>   * pci_tsm_unlock() - Transition TDI from LOCKED/RUN to UNLOCKED
+>   * @pdev: TDI device to unlock
+> @@ -740,7 +805,8 @@ static umode_t pci_tsm_attr_visible(struct kobject *kobj,
+>  	}
+>  
+>  	if (pci_tsm_devsec_group_visible(kobj)) {
+> -		if (attr == &dev_attr_lock.attr ||
+> +		if (attr == &dev_attr_accept.attr ||
+> +		    attr == &dev_attr_lock.attr ||
+>  		    attr == &dev_attr_unlock.attr)
+>  			return attr->mode;
+>  	}
+> @@ -760,6 +826,7 @@ static struct attribute *pci_tsm_attrs[] = {
+>  	&dev_attr_disconnect.attr,
+>  	&dev_attr_bound.attr,
+>  	&dev_attr_dsm.attr,
+> +	&dev_attr_accept.attr,
+>  	&dev_attr_lock.attr,
+>  	&dev_attr_unlock.attr,
+>  	NULL
+> -- 
+> 2.52.0
+> 
