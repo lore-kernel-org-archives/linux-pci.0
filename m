@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96F143A8734;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A54F13B2FD5;
 	Fri, 10 Apr 2026 13:07:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775826470; cv=none; b=hcUPg2KWX0kbNnrow60qG6q8dEUigZbqCCpGGvSH9SKFON9eg7XcEE7XPJ6se7LCpCKasoXhwWX51vIbDfKIwaRdk+gQsxlEv7EO1ohSEWr60Jbb0qZ+XOFvPOIiSvMtL5bjFyQQnV0bmDOvsrtD68ra4YR0eoe5VZfa3FqJLuM=
+	t=1775826470; cv=none; b=IbFXGxY3wg6XcBwA/5yrs0MNsgN1YtZ6knFyUp/MwdyKX+QeMS3SxjD/KN7lpMtFarqFBGOoiibpFb3lsp3EYlcjsOoJLawZdncIB6Vfm24lgFTlLe82q45jM1ocVzb9gCc+Q+yV6UIXepV49kR8AHNM6bGxB3Fw/YlYYH6Hy0Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1775826470; c=relaxed/simple;
-	bh=ix/egd9ifwo7e/St7dPwr06De/VvvRAKulv1v4opdYo=;
+	bh=SrdVR/zASpBIWlniEiIxoO0qyZvZr0iZfP+wJLzN6zk=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=bzAjgjYADINmnb4o0cCY49I6b4sFKY+5NcEEA2kcqwuUG9S3+lxrhE5l8IPTZ/mZcSA5GEO0V9w1UEo/+gp/8OyZjJcA2jL7zrzMb+7OoFk3siYwZAXb+3FVInZIzk3PkHc8kkasXEtKMx3cSTIoYBzU2/YdenVbHea4rnyGTF4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LBJxIBFw; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=jUVJXYRuvMObKZQfJUlJykRvS0AlNoJLJpQTyjfgr1qNst0fJD0aCEmZ0Fypv0HYq2EfjcBb0TrRe6SjWUUGcMy2wZdNcUxCOlyjaEkf2b3E/B/kXz13glByUyNVR67+dxJmsPbkTmc16Qb5y3WCwCNQa3+8W5JJvtCEgOHHEfk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oZxD/Mjm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LBJxIBFw"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 6BDFCC2BCFF;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oZxD/Mjm"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 89AF6C2BCF4;
 	Fri, 10 Apr 2026 13:07:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1775826470;
-	bh=ix/egd9ifwo7e/St7dPwr06De/VvvRAKulv1v4opdYo=;
+	bh=SrdVR/zASpBIWlniEiIxoO0qyZvZr0iZfP+wJLzN6zk=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=LBJxIBFwuVGlyPRAN5+DCgSkH+nVNWFopP9JCG/yihA9ahGSpvJDhZOmgJXH4D9jB
-	 b1qkxIzC/m7OLAsaLYMTPo/nRivIKV/tFM9UO9tWMexLDLo5q4XxsClAyb1mU8eQKW
-	 8qJahjU9L+5vvNEDRCQvbIuVMs5L2bz97lpljjnKKZ6E7mry9OQMrIa+g2JlGlXWmJ
-	 Jw/4mKU6onWulzXFQ22HcZSZfQKYqUNi4I2lMww32vA4RFCV2qtWAytwimzrARWmmn
-	 m9EpCZPnFQ8HyoNT5zO+txTXKGOg9wGlWvcevEVPdj/Elu2BJXrpRRM3Yexx7wzmOt
-	 69k4dTsL/CHBA==
+	b=oZxD/MjmjiyABwcLxqXy+JOXPiNq9vQRaLf7Sb7z1vAsQYHdj+nVwPFkdJuKz/jME
+	 l/8/OqqYn8XPV73uaJ+xxnJft7edRUChoI5zRWQm2PDS36EgMZoth5EpvoJ/LyTE+I
+	 nP7zhBaRPsuc9K3IyyEBmOgoBApG4BJcTPORnuwLiaxj8d1HFBVEPsphBL/CcIC7+X
+	 rUr2Qq46/y5tfHJR4ARcfzKasxpm+LT0q771YvG3Qj6AjsZfMU9EoZYBLajwLffvKT
+	 ozI2pQYfPVpCZXlvPB1dirl3PgkaTtCPJtcdO+1yBxlZsm20T1nCdCgl+cogwM4Yh+
+	 6C7W/wLshm3GA==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6155CF4485E;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83173F44861;
 	Fri, 10 Apr 2026 13:07:50 +0000 (UTC)
 From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-Date: Fri, 10 Apr 2026 08:07:24 -0500
-Subject: [PATCH 14/23] dmaengine: sdxi: Attach descriptor ring state to
- contexts
+Date: Fri, 10 Apr 2026 08:07:26 -0500
+Subject: [PATCH 16/23] dmaengine: sdxi: Generic descriptor manipulation
+ helpers
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260410-sdxi-base-v1-14-1d184cb5c60a@amd.com>
+Message-Id: <20260410-sdxi-base-v1-16-1d184cb5c60a@amd.com>
 References: <20260410-sdxi-base-v1-0-1d184cb5c60a@amd.com>
 In-Reply-To: <20260410-sdxi-base-v1-0-1d184cb5c60a@amd.com>
 To: Vinod Koul <vkoul@kernel.org>
@@ -54,11 +54,11 @@ Cc: Wei Huang <wei.huang2@amd.com>,
  linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org, 
  Nathan Lynch <nathan.lynch@amd.com>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1775826467; l=2539;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1775826467; l=3976;
  i=nathan.lynch@amd.com; s=20260410; h=from:subject:message-id;
- bh=osQr3BYuGP2fBkWl8ruQ505ci52JISit3XTQLri9FVw=;
- b=1EooEzzSz67Nn6PR20Q6rrCyRCAf3qi2P0cVNLda1cXwdfMEQU79c4wdjgA7Tz6eVMZAsqlR0
- 4p8Xayjz17YBZrdP0wIg80eMQbmbgoBm+njik+C99Q3ypwk52Oq350F
+ bh=Lszd5dFpwIf8x9JZPBSkgBuvGWv9C1XzwrHoWKMViVE=;
+ b=0RRy/1dL9AMFLIZJJ2oQ3qAPzAbErPl2xIHzjlVvUswvgk87MV9ZeramCKECR2+PXTRca1BTg
+ sVfko36kstwAR3dNijg2HbLPD8Ze7Q2WULh499jkZawK3GM39j2BQRi
 X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
  pk=PK4ozhq+/z9/2Jl5rgDmvHa9raVomv79qM8p1RAFpEw=
 X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20260410 with
@@ -68,87 +68,129 @@ Reply-To: nathan.lynch@amd.com
 
 From: Nathan Lynch <nathan.lynch@amd.com>
 
-Attach an instance of struct sdxi_ring_state to each context upon
-allocation. Each ring state has the same lifetime has its context and
-is freed upon context release.
+Introduce small helper functions for manipulating certain common
+properties of descriptors after their operation-specific encoding has
+been performed but before they are submitted.
+
+sdxi_desc_set_csb() associates an optional completion status block
+with a descriptor.
+
+sdxi_desc_set_fence() forces retirement of any prior descriptors in
+the ring before the target descriptor is executed. This is useful for
+interrupt descriptors that signal the completion of an operation.
+
+sdxi_desc_set_sequential() ensures that all writes from prior
+descriptor operations in the same context are made globally visible
+prior to making writes from the target descriptor globally visible.
+
+sdxi_desc_make_valid() sets the descriptor validity bit, transferring
+ownership of the descriptor from software to the SDXI
+implementation. (The implementation is allowed to execute the
+descriptor at this point, but the caller is still obligated to push
+the doorbell to ensure execution occurs.)
+
+Each of the preceding functions will warn if invoked on a descriptor
+that has already been released to the SDXI implementation (i.e. had
+its validity bit set).
 
 Co-developed-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 ---
- drivers/dma/sdxi/context.c | 13 +++++++++++++
- drivers/dma/sdxi/context.h |  2 ++
- 2 files changed, 15 insertions(+)
+ drivers/dma/sdxi/descriptor.h | 64 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/dma/sdxi/hw.h         |  9 ++++++
+ 2 files changed, 73 insertions(+)
 
-diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
-index 7cae140c0a20..792b5032203b 100644
---- a/drivers/dma/sdxi/context.c
-+++ b/drivers/dma/sdxi/context.c
-@@ -24,6 +24,7 @@
- 
- #include "context.h"
- #include "hw.h"
-+#include "ring.h"
- #include "sdxi.h"
- 
- #define DEFAULT_DESC_RING_ENTRIES 1024
-@@ -60,6 +61,7 @@ static void sdxi_free_cxt(struct sdxi_cxt *cxt)
- 		dma_free_coherent(sdxi_to_dev(sdxi), sq->ring_size,
- 				  sq->desc_ring, sq->ring_dma);
- 	kfree(cxt->sq);
-+	kfree(cxt->ring_state);
- 	kfree(cxt);
- }
- 
-@@ -77,6 +79,10 @@ static struct sdxi_cxt *sdxi_alloc_cxt(struct sdxi_dev *sdxi)
- 
- 	cxt->sdxi = sdxi;
- 
-+	cxt->ring_state = kzalloc_obj(*cxt->ring_state, GFP_KERNEL);
-+	if (!cxt->ring_state)
-+		return NULL;
+diff --git a/drivers/dma/sdxi/descriptor.h b/drivers/dma/sdxi/descriptor.h
+new file mode 100644
+index 000000000000..c0f01b1be726
+--- /dev/null
++++ b/drivers/dma/sdxi/descriptor.h
+@@ -0,0 +1,64 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++#ifndef DMA_SDXI_DESCRIPTOR_H
++#define DMA_SDXI_DESCRIPTOR_H
 +
- 	cxt->sq = kzalloc_obj(*cxt->sq, GFP_KERNEL);
- 	if (!cxt->sq)
- 		return NULL;
-@@ -373,6 +379,8 @@ int sdxi_admin_cxt_init(struct sdxi_dev *sdxi)
- 	sq->cxt_sts->state = FIELD_PREP(SDXI_CXT_STS_STATE, CXTV_RUN);
- 	cxt->id = SDXI_ADMIN_CXT_ID;
- 	cxt->db = sdxi->dbs + cxt->id * sdxi->db_stride;
-+	sdxi_ring_state_init(cxt->ring_state, &sq->cxt_sts->read_index,
-+			     sq->write_index, sq->ring_entries, sq->desc_ring);
- 
- 	err = sdxi_publish_cxt(cxt);
- 	if (err)
-@@ -389,10 +397,15 @@ int sdxi_admin_cxt_init(struct sdxi_dev *sdxi)
-  */
- struct sdxi_cxt *sdxi_cxt_new(struct sdxi_dev *sdxi)
- {
-+	struct sdxi_sq *sq;
++/*
++ * Facilities for encoding SDXI descriptors.
++ *
++ * Copyright Advanced Micro Devices, Inc.
++ */
 +
- 	struct sdxi_cxt *cxt __free(sdxi_cxt) = sdxi_alloc_cxt(sdxi);
- 	if (!cxt)
- 		return NULL;
- 
-+	sq = cxt->sq;
-+	sdxi_ring_state_init(cxt->ring_state, &sq->cxt_sts->read_index,
-+			     sq->write_index, sq->ring_entries, sq->desc_ring);
- 	if (register_cxt(sdxi, cxt))
- 		return NULL;
- 
-diff --git a/drivers/dma/sdxi/context.h b/drivers/dma/sdxi/context.h
-index 5cd78e883c8d..9779b9aa4f86 100644
---- a/drivers/dma/sdxi/context.h
-+++ b/drivers/dma/sdxi/context.h
-@@ -54,6 +54,8 @@ struct sdxi_cxt {
- 	dma_addr_t akey_table_dma;
- 
- 	struct sdxi_sq *sq;
++#include <linux/bitfield.h>
++#include <linux/ratelimit.h>
++#include <linux/types.h>
++#include <asm/byteorder.h>
 +
-+	struct sdxi_ring_state *ring_state;
- };
- 
- int sdxi_admin_cxt_init(struct sdxi_dev *sdxi);
++#include "hw.h"
++
++static inline void sdxi_desc_vl_expect(const struct sdxi_desc *desc, bool expected)
++{
++	u8 vl = FIELD_GET(SDXI_DSC_VL, le32_to_cpu(desc->opcode));
++
++	WARN_RATELIMIT(vl != expected, "expected vl=%u but got %u\n", expected, vl);
++}
++
++static inline void sdxi_desc_set_csb(struct sdxi_desc *desc, dma_addr_t addr)
++{
++	sdxi_desc_vl_expect(desc, 0);
++	desc->csb_ptr = cpu_to_le64(FIELD_PREP(SDXI_DSC_CSB_PTR, addr >> 5));
++}
++
++static inline void sdxi_desc_make_valid(struct sdxi_desc *desc)
++{
++	u32 opcode = le32_to_cpu(desc->opcode);
++
++	sdxi_desc_vl_expect(desc, 0);
++	FIELD_MODIFY(SDXI_DSC_VL, &opcode, 1);
++	/*
++	 * Once vl is set, no more modifications to the descriptor
++	 * payload are allowed. Ensure the vl update is ordered after
++	 * all other initialization of the descriptor.
++	 */
++	dma_wmb();
++	WRITE_ONCE(desc->opcode, cpu_to_le32(opcode));
++}
++
++static inline void sdxi_desc_set_fence(struct sdxi_desc *desc)
++{
++	u32 opcode = le32_to_cpu(desc->opcode);
++
++	sdxi_desc_vl_expect(desc, 0);
++	FIELD_MODIFY(SDXI_DSC_FE, &opcode, 1);
++	desc->opcode = cpu_to_le32(opcode);
++}
++
++static inline void sdxi_desc_set_sequential(struct sdxi_desc *desc)
++{
++	u32 opcode = le32_to_cpu(desc->opcode);
++
++	sdxi_desc_vl_expect(desc, 0);
++	FIELD_MODIFY(SDXI_DSC_SE, &opcode, 1);
++	desc->opcode = cpu_to_le32(opcode);
++}
++
++#endif /* DMA_SDXI_DESCRIPTOR_H */
+diff --git a/drivers/dma/sdxi/hw.h b/drivers/dma/sdxi/hw.h
+index 46424376f26f..cb1bed2f83f2 100644
+--- a/drivers/dma/sdxi/hw.h
++++ b/drivers/dma/sdxi/hw.h
+@@ -140,6 +140,15 @@ struct sdxi_desc {
+ 			__u8 operation[52];
+ 			__le64 csb_ptr;
+ 		);
++
++/* For opcode field */
++#define SDXI_DSC_VL  BIT(0)
++#define SDXI_DSC_SE  BIT(1)
++#define SDXI_DSC_FE  BIT(2)
++
++/* For csb_ptr field */
++#define SDXI_DSC_CSB_PTR GENMASK_ULL(63, 5)
++
+ 	};
+ } __packed;
+ static_assert(sizeof(struct sdxi_desc) == 64);
 
 -- 
 2.53.0
