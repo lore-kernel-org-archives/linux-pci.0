@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29E223BC664;
-	Fri, 10 Apr 2026 11:48:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9952C3BE167;
+	Fri, 10 Apr 2026 11:55:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775821735; cv=none; b=tQoIguiKx1TKYzMErbbSeAa+79sRcfFeKYQ7X3w4whXoHnBDAJHzpSIaxozCj5dBfJbde8oTkMhEM/xofIsodvKE+nol6YEoRjc4wSorX38VceYTQf/Pr1bTANQo6+tkh9DP4dran4rOZr2Jb/PN+LQkOjEVBDqnCyHVfNg6eR8=
+	t=1775822143; cv=none; b=kEBfWFebAkDCa4qz/1j92a1w4M2pv/Y41BPn3judM2idXrZH6beshAQ/tqwEwsuJLvTtX2O2cpgPWV7yc5kGGFlMmZAh1BYGeYJhIcbyyqe6Lho+O5z+1vJI+63KLVNOEPTDbY4/Z3eDuRnsX2MMMRSTXijb8MQ+ShydEC9Ahaw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775821735; c=relaxed/simple;
-	bh=LZilPulN3qlgDY3IxRp/Zcm4TbaTOPqVA6WSuY47T5E=;
+	s=arc-20240116; t=1775822143; c=relaxed/simple;
+	bh=mdpaoKvaXfKLinXjUDc/IbjJOXSHqFvXpOvUOnu9NX8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dD8vKON39QCj4y6ntAs+5P+2elgWe+YVzfq6GepJewGEanUOiD0Iv8U75yJqYnO6k7kgBigz1jpg66OdxoiFZ8vxd84atotCkNC2Bla1Gnoat1zJTX9ogJuxy+8KfSRLBvmySt+hlGso5Et8eRCTMRZvUMGnMTYJDYzVQS5o2Es=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TbE+TtYG; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=T+jbEnR2ZNHT1wXbrtt9H2vm+n2WT+F66DJHEcXhjeINNnqDWTE67cXbw+UcsGEiaCkSfuQA6pGI5pRnHgEuxMS9g1y1iaijUJO4xguW2/O0fewXGpgdn+8X3VcV+xlYVlOVYsdhWs7mNWH7Mo98piHNcUBeMTePXGZ8KECHDgY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lb/ZmOTV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TbE+TtYG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C988C19421;
-	Fri, 10 Apr 2026 11:48:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lb/ZmOTV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08420C19421;
+	Fri, 10 Apr 2026 11:55:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775821734;
-	bh=LZilPulN3qlgDY3IxRp/Zcm4TbaTOPqVA6WSuY47T5E=;
+	s=k20201202; t=1775822143;
+	bh=mdpaoKvaXfKLinXjUDc/IbjJOXSHqFvXpOvUOnu9NX8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TbE+TtYGOr1Hy4myyKWvvk1P2h7Vxhu8skNaAGe/jW4iBxEEXsK4jt8HwjFzOfbfg
-	 V4wQvrxksT9bTS+Ge4keWG1lgcI9FpM+5LZOyo9TcUoB2qPyLMtbnrDGbHNLJPtCSq
-	 4IiH5OKUaNI0b9oY2dK1MZA+QquqKwoxA8OMYgRsd6L5/A2Ofe9UNBAjsPd3EfKtCi
-	 oYdcZcyaQGv33aiJSdEzhOehJjwJjkzBRTS70S/bCsFy8m4ifTze2+TeeWnC00xN8X
-	 49zICxu10mM5Bo7ALz0On5lo6oB7Z6qdXSzOD8v0NKftzd6B80g90n04HBaLinJuhg
-	 NuTZwUKrQPU/w==
-Date: Fri, 10 Apr 2026 20:48:52 +0900
+	b=Lb/ZmOTV/EI6r89sYKM9ULJyJetsrcgzEuFMg/9jkdKVHDvnAJGfhz6XABBV42pDE
+	 tuDb+vDldQsgNNwYLOcZrBTikPs+k+KF+a7tGZuf4JesL90OlRBkKnyY9ttXH7PRhF
+	 KMyZZBGUe7CHTFHem+Axjaq2pR3+kzKnCTPcWTdbknpkbY9bpWLqpkgQ//cSi7z7dW
+	 JM9Z8kVYEjhEG/YrGw6zPJvyp3StfSjwyeG0Kz/ApB6/aG5lYpqf47YpvGvGF4AG1v
+	 aj/jBzvtsjynVD3A0L6z5orp4L3dsfkgbRa0IwgajGiEEx72Ab5cFsooy/inKLAk6Q
+	 sRx53daBp+a7Q==
+Date: Fri, 10 Apr 2026 20:55:41 +0900
 From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
@@ -48,11 +48,13 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
 	Srivatsa Bhat <srivatsabhat@microsoft.com>,
 	linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH 14/20] alpha/PCI: Add static PCI resource attribute macros
-Message-ID: <20260410114852.GA1761359@rocinante>
+Subject: Re: [PATCH 13/20] alpha/PCI: Clean up __pci_mmap_fits()
+Message-ID: <20260410115541.GA1770099@rocinante>
 References: <20260410055040.39233-1-kwilczynski@kernel.org>
- <20260410055040.39233-15-kwilczynski@kernel.org>
- <2c5b50c7-b357-025d-e0de-1fce1fcddf20@linux.intel.com>
+ <20260410055040.39233-14-kwilczynski@kernel.org>
+ <66eb23bf-1995-363f-78e6-f5a397a063a2@linux.intel.com>
+ <20260410112132.GA1756033@rocinante>
+ <f6c036e1-9145-e784-8a37-2486fc72978e@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -61,40 +63,32 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2c5b50c7-b357-025d-e0de-1fce1fcddf20@linux.intel.com>
+In-Reply-To: <f6c036e1-9145-e784-8a37-2486fc72978e@linux.intel.com>
 
 Hello,
 
-> > +#define __pci_dev_resource_attr(_bar, _name, _suffix, _mmap)		\
-> > +static const struct bin_attribute					\
-> > +pci_dev_resource##_bar##_suffix##_attr = {				\
-> > +	.attr = { .name = __stringify(_name), .mode = 0600 },		\
-> > +	.private = (void *)(unsigned long)(_bar),			\
-> > +	.mmap = (_mmap),						\
-> > +}
-> > +
-> > +#define pci_dev_resource_attr(_bar)					\
-> > +	__pci_dev_resource_attr(_bar, resource##_bar,,			\
-> > +			    pci_mmap_resource_dense)
-> > +
-> > +#define pci_dev_resource_sparse_attr(_bar)				\
-> > +	__pci_dev_resource_attr(_bar, resource##_bar##_sparse, _sparse,	\
-> > +			    pci_mmap_resource_sparse)
-> > +
-> > +#define pci_dev_resource_dense_attr(_bar)				\
-> > +	__pci_dev_resource_attr(_bar, resource##_bar##_dense, _dense,	\
-> > +			    pci_mmap_resource_dense)
-> > +
-> >  /**
-> >   * pci_remove_resource_files - cleanup resource files
-> >   * @pdev: pci_dev to cleanup
+> > > This looks like entirely separate two changes to me which just happen 
+> > > within the same context.
 > > 
+> > True.  I could split this into two separate patches.  However, the early
+> > return is so trivial, that I decided to keep it here, in lieu of that the
+> > linked patch did, too.
+> > 
+> > Thoughts?
 > 
-> Wouldn't this belong together with the next patch, or is there some good 
-> reason why you added them separately?
+> It's not just adding the early return that would go to the first patch but 
+> you also need to rearrange the len for that. Effectively, the change is 
+> split in half, each becoming cleaner and more focused (both diff and the 
+> changelog text).
+> 
+> As is I'm left on the borderline, while I can see it's "correct" after 
+> splitting those changes inside my head, I also know it could have been 
+> done better. I'd easily given rev-by for both if they'd have been done 
+> individually, saved the time writing these emails about it, and 
+> effectively "forgotten" the patches (including upcoming versions of the 
+> series).
 
-No specific reason other than to make it easier to review.  The pattern
-here is: macros first and then users later (when converting things over).
+A simple "yes, please split" would suffice. :)  For future reference.
 
 Thank you!
 
