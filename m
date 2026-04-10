@@ -1,57 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C6553E317B
-	for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2026 18:01:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44E07330641
+	for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2026 18:12:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775844074; cv=none; b=Sx6i/zsTjRrsHKNRRdpwTtqPnpHsN0xDwDZFSPZZnrylQZPCix24VF95t+omQKW/ylXwQQkAOUmZc9nYAYLzvBcQprQWxdB9LgHJ5FnycKusVE1kHZ8uRDIXz/IPE4FfAegbFCTegZi0Gq2P9rzH7R3RF73aPgeyaAkTQ0FRiz4=
+	t=1775844735; cv=none; b=rNVPb/VYlv1JoIAYUAhAVjC2GSeYhECy4EtMEvu1eyOeGgaM+zsgV83ult725poQERszj4Y0FSe3v4OXdS/QO1ICO2hfcNCKNMxOCE67CigkSETALDrgTvPLy6mKCwmOc8ZslxHxaxQNLLYgD2YokXO+DJyX9ebMdkkO6WMc7K0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775844074; c=relaxed/simple;
-	bh=oTKUjGC85e+o3/PfzNCscnh48+iZirA8em+7+jbWPDw=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=JLe99t7EEzUjBWAXoDzLEhjfQAsMmhi90/eeFyzUoZk8pM4DduTqj3EwQfsClmVKGYP5V57g8tFGo/WwFJ9jxTJQV0SfGa9rAZj7cw1EGeEmovlWMfgur7w4Ks7iWWqr7fti2TXRlY6XpZ9lqQsSAS+XpYKyEuTxAoN9CiqsCkk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LuNoqos2; arc=none smtp.client-ip=192.198.163.14
+	s=arc-20240116; t=1775844735; c=relaxed/simple;
+	bh=oAiH0oIxeJDZXnrXig14N1dAjy81VELoN9BEK3/XGd4=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=jcxadqeDMnFGQeJBvk26Jsjnuzgj3BII5xUWGMsQntYIKAZGzVFF+e6qr05zAJYqwwwnFDN8MJTu3BsUlq+fd1uBmxuHR9BF41Vmu5wNIavth5odL5Pk36Z6VRuQABgvmfKpCSF/+ZsgZCu7wVZG1wUbAC6lCcXRaV8gAhGOP5o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GwARSgvq; arc=none smtp.client-ip=192.198.163.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LuNoqos2"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GwARSgvq"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775844072; x=1807380072;
+  t=1775844733; x=1807380733;
   h=date:from:to:cc:subject:message-id;
-  bh=oTKUjGC85e+o3/PfzNCscnh48+iZirA8em+7+jbWPDw=;
-  b=LuNoqos2kbBFTd59KmBltza6HQzVgBIRK2L5zBxh5Sywrf9QvTKZi5Sl
-   TSeKBHvhwVBujfs+mY7HvwtPBZ2S5Ag+XEg7NdZm/lCV29dZ8Wm49pMF8
-   WpniJ7iluWYu/aUbUkcqme6gX2zUvv8pS9ybqTsfyt2kcqenYD/vxRRap
-   wtGLNOw73BGrEkB5uGbi/sWbmQROQ6lHsO/3xq5YX+gC7wO6alyURSkmh
-   Zm03wOUcNddSeY+Sr8N161goLN3U9c04ur5yAjlXg+bEBVuMpTRQC3ok1
-   O/yQRmnYuSZoAiw7gZqyW1rVZSHILW1ulOkjnwRV0y78wYpQkJ9fRQ8K5
-   w==;
-X-CSE-ConnectionGUID: LXkx8epWRy2yAesUt/KHww==
-X-CSE-MsgGUID: a6Ml0wWcRqqIc9JcJ2ZCiA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11755"; a="76942136"
-X-IronPort-AV: E=Sophos;i="6.23,171,1770624000"; 
-   d="scan'208";a="76942136"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 11:01:10 -0700
-X-CSE-ConnectionGUID: zuOermdCSNigw2+YcEwrYw==
-X-CSE-MsgGUID: 3oJMP31FRgKi8AFvy7Ey1Q==
+  bh=oAiH0oIxeJDZXnrXig14N1dAjy81VELoN9BEK3/XGd4=;
+  b=GwARSgvqbZeYh39ipD+wZIv+kFtixv5eUx6y7hIFhhCMz2Qi0uxWzb5V
+   B6hjqjVyVDxBjRKWjs2GQyFWjmFYftzhGmHLQDISl1DGbtUkTU9GLQwVK
+   7fE4gUo7R4umRTykVp9k/3hNtxHZoB08ysbH/XoxkLRfQ2zI4trs/t60T
+   QEFuMMQ4pvFo0E1TZdlfQV8ntzVpdcrL2njXK0lZnpEXlimCE4e7fmM2w
+   fZkmy6pGUK69UPOC9N8UvhAkwzZywZpfD7gu93AhM4uGPjtnzAFLP7sCX
+   0Gjb70TgpvFVMYIAe/NfZkb06YxgXJPApe07J2i9cnTIwamrrQmNxz7ne
+   g==;
+X-CSE-ConnectionGUID: UA4d63qwRXWlR9mDNmuIRg==
+X-CSE-MsgGUID: uWFE+czAQ1aH1/SCrI2Spw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11755"; a="64401164"
+X-IronPort-AV: E=Sophos;i="6.23,172,1770624000"; 
+   d="scan'208";a="64401164"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 11:12:12 -0700
+X-CSE-ConnectionGUID: Fw47c51zQ/G2bH3/b905hw==
+X-CSE-MsgGUID: ujlQ6JxMTMqYqCJQxQl+PA==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,171,1770624000"; 
-   d="scan'208";a="226421105"
+X-IronPort-AV: E=Sophos;i="6.23,172,1770624000"; 
+   d="scan'208";a="224838846"
 Received: from lkp-server01.sh.intel.com (HELO 6449335cace3) ([10.239.97.150])
-  by fmviesa008.fm.intel.com with ESMTP; 10 Apr 2026 11:01:09 -0700
+  by fmviesa010.fm.intel.com with ESMTP; 10 Apr 2026 11:12:12 -0700
 Received: from kbuild by 6449335cace3 with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1wBGAE-0000000048F-2ZTC;
-	Fri, 10 Apr 2026 18:01:06 +0000
-Date: Sat, 11 Apr 2026 02:00:35 +0800
+	id 1wBGKw-000000004CD-1APe;
+	Fri, 10 Apr 2026 18:12:10 +0000
+Date: Sat, 11 Apr 2026 02:11:46 +0800
 From: kernel test robot <lkp@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/cadence-sg2042] BUILD SUCCESS
- 988ef706cdd8a72e61dd90c0d0554eec4df7594a
-Message-ID: <202604110229.xKt1Je71-lkp@intel.com>
+Subject: [pci:next] BUILD SUCCESS
+ 63fdca2e857df8c447bff8362d5c788f31eba86c
+Message-ID: <202604110239.J6FQUOpt-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,12 +59,12 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/cadence-sg2042
-branch HEAD: 988ef706cdd8a72e61dd90c0d0554eec4df7594a  PCI: sg2042: Avoid L0s and L1 on Sophgo 2042 PCIe Root Ports
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+branch HEAD: 63fdca2e857df8c447bff8362d5c788f31eba86c  Merge branch 'pci/misc'
 
-elapsed time: 723m
+elapsed time: 732m
 
-configs tested: 162
+configs tested: 164
 configs skipped: 2
 
 The following configs have been built successfully.
@@ -99,6 +99,7 @@ csky                              allnoconfig    gcc-15.2.0
 csky                                defconfig    gcc-15.2.0
 csky                  randconfig-001-20260410    gcc-10.5.0
 csky                  randconfig-002-20260410    gcc-10.5.0
+hexagon                          allmodconfig    clang-17
 hexagon                          allmodconfig    gcc-15.2.0
 hexagon                           allnoconfig    gcc-15.2.0
 hexagon                             defconfig    gcc-15.2.0
@@ -187,6 +188,7 @@ sparc64               randconfig-001-20260410    clang-23
 sparc64               randconfig-002-20260410    clang-23
 um                               allmodconfig    clang-19
 um                                allnoconfig    clang-23
+um                               allyesconfig    gcc-14
 um                               allyesconfig    gcc-15.2.0
 um                                  defconfig    gcc-14
 um                             i386_defconfig    gcc-14
