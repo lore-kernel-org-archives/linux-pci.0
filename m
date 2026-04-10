@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0300F3BED3D;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B23C3C13FF;
 	Fri, 10 Apr 2026 13:07:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775826471; cv=none; b=Om5i5zXvAtLL0QiWdVf5StaMqh2W35yJE0KiE0HSTd9jURdomnylW5nb1edsmuRWyUewN6tCARV9l7UNiJinqGTsQNGBlgiNQoKpQBQu/fuJk3z10YQDOKNG/vJrhlPUYh5p9IboVlsSCgidV5LFem05jvneTVMN8XExT2xO24E=
+	t=1775826471; cv=none; b=rJQGHoeKFPotWiuOtzFj8LLi41Hnhbclhu+TzJbgYnJnMqV2/JTzWRFgivNaGd2gtNlPGhs4iwg9rQDbUT4h0R7BOFeNgxbKPQV+g/wZkC8EhtQZLqIXBiJbdEYsm/zqU3gIb6u9IHMwsr0uH0Hn71tCAjDfGYSsq/NIvAxG6uI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1775826471; c=relaxed/simple;
-	bh=YM8VU8aWLOhSa2zgTuPFVBkAqcL75HYPrjMg05rhMX8=;
+	bh=7+KRjDF/uWK4e36nnjIyOUDuwqE7B2w+FV3Sra/SIT8=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=nY3jgy0omOG+RAZBH0kH+dJ64DSH2ENm97ovx39T3RUVflieS9uibxuAsFZDrQGaFk6BNCcIRZj4LJfymB02omWyBNOHoOiDozA4ermD4ZonPKSYLbyYtArl6vBSkCeBMUBNWqC4o/JIKx/WnvgfUnw1U7Ranh1OAL16qAob5j4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M4JTqawH; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=kkWL2a1lDxZpriZoAGR7GDE77NwtLjskQa02IH3BMt02mj4mkyBwttRGnp5yGNdao4HCy8PvuyTvzN0QXC/NyU6JBViyDXZFGxqB6WrWc6SjCd2U1UQcFbF8uUz//bkqp2FIb8913iPDSUqm6gWTl8YU+68KlnHwMdtTm75lXNA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uKHtM19h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M4JTqawH"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id DE293C19421;
-	Fri, 10 Apr 2026 13:07:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uKHtM19h"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 1027AC19425;
+	Fri, 10 Apr 2026 13:07:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775826470;
-	bh=YM8VU8aWLOhSa2zgTuPFVBkAqcL75HYPrjMg05rhMX8=;
+	s=k20201202; t=1775826471;
+	bh=7+KRjDF/uWK4e36nnjIyOUDuwqE7B2w+FV3Sra/SIT8=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=M4JTqawH7vwjXA3qBtOkwKGLP6WKiCxj3tIN73BKkyRsDukNHCKv8lbXsjBX1q3cz
-	 3Exr7Gs4MzUmgM0FSdLujAubQmVS8RnHwQvtYDz4TgU91b/91umVEETWIDIURWCNIJ
-	 uGAPMuMucvLiyQB+In4nOeNNooq3rpujiyC97bRygqoZP7uNn/DR7h/uCQsWQxv0g3
-	 nXOKyY28kDVJrsi5MgMjwqaLXKoThJpGR2eBUEEDJdRWLSV3EBvCQJ7hV97/YteQgS
-	 WlrcJwC1vnxPsD5UARCG+opVJoKNekq02RmNoMfh4NIBxS6Nn9HmeKU4te2/cvBFo1
-	 VdL4h3L4vNULw==
+	b=uKHtM19hcatpHR3kXdCb7yJVnDJDoTSr1JXFc4hTqExhHLK/wb3gXF20xRCXpkfTN
+	 zhW/z7jWJT1d0RwrBTYraSy977Mwt3vn/b68iE+PPjTBiFA0BM09O99niE83gmy2Xq
+	 ZF9Adg7h2TlSUjPYuAZuZ7kYH6R4k9rNsRBUo7G1ZVVyluCErMA6Ok3xBJR2BFIoXO
+	 BW8138P2r29MeuMJbXEFMaFLivFW9InoiFtH8FKCmj2PKQz9JVj38rxKA1707oXqI+
+	 2s+sGcUswYoOPhOf7amY9HL+Q1FUjQchzgObFzpVtcNxVYd/oLzq3vslONj/KRQG8T
+	 4xTKjEw5rrM3g==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D929DF44862;
-	Fri, 10 Apr 2026 13:07:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 093DDF44863;
+	Fri, 10 Apr 2026 13:07:51 +0000 (UTC)
 From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-Date: Fri, 10 Apr 2026 08:07:31 -0500
-Subject: [PATCH 21/23] dmaengine: sdxi: Add unit tests for descriptor
- encoding
+Date: Fri, 10 Apr 2026 08:07:33 -0500
+Subject: [PATCH 23/23] dmaengine: sdxi: Add DMA engine provider
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +40,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260410-sdxi-base-v1-21-1d184cb5c60a@amd.com>
+Message-Id: <20260410-sdxi-base-v1-23-1d184cb5c60a@amd.com>
 References: <20260410-sdxi-base-v1-0-1d184cb5c60a@amd.com>
 In-Reply-To: <20260410-sdxi-base-v1-0-1d184cb5c60a@amd.com>
 To: Vinod Koul <vkoul@kernel.org>
@@ -54,11 +53,11 @@ Cc: Wei Huang <wei.huang2@amd.com>,
  linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org, 
  Nathan Lynch <nathan.lynch@amd.com>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1775826467; l=16274;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1775826467; l=18394;
  i=nathan.lynch@amd.com; s=20260410; h=from:subject:message-id;
- bh=2tw9BTJzJ0IPaXU3BSVre9DbnH5JMgDOs9LvzLhbO50=;
- b=hcm6Mi/KaHzj/iZCFf2FUpRBtrq8Sdp6aXAIlBfBSz4G5RTfsEZhGuJ5jKC0gRQaGAMs/2jYz
- C69tOLQOEPpAdLfvGOe2OBnFmezcLwunvwbNo5ttXKpjFdJqYp8PqS8
+ bh=RkHTf9ZFYIm82czlOAy+YS4SszHAEh+BDuoSSbFLJAQ=;
+ b=ZGgmeZ5GXVl76GqjjjtNOhtqmVZNKlXikU3n4S5Yz7cU8P8lPJY7ajJOo9t+KTIfr4/9DpYEd
+ j67+KCRGuR4AAlX5y9dj5ZWPkcJ7EIqet+QDnLE33CbUwMc/u+kExiB
 X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
  pk=PK4ozhq+/z9/2Jl5rgDmvHa9raVomv79qM8p1RAFpEw=
 X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20260410 with
@@ -68,542 +67,619 @@ Reply-To: nathan.lynch@amd.com
 
 From: Nathan Lynch <nathan.lynch@amd.com>
 
-Test the encoder function for each descriptor type currently used by
-the driver.
+Register a DMA engine provider that implements memcpy. The number of
+channels per SDXI function can be controlled via a module
+parameter (dma_channels). The provider uses the virt-dma library.
 
-The production code uses the GENMASK()/BIT() family of macros to
-support encoding descriptors. The tests for that code use the packing
-API to decode descriptors produced by that code without relying on
-those bitmask definitions.
+This survives dmatest runs with both polled and interrupt-signaled
+completion modes, with the following debug options and sanitizers
+enabled:
 
-By limiting what's shared between the real code and the tests we gain
-confidence in both. If both the driver code and the tests rely on the
-bitfield macros, and then upon adding a new descriptor field the
-author mistranslates the bit numbering from the spec, that error is
-more likely to propagate to the tests undetected than if the test code
-relies on a separate mechanism for decoding descriptors.
+CONFIG_DEBUG_KMEMLEAK=y
+CONFIG_KASAN=y
+CONFIG_PROVE_LOCKING=y
+CONFIG_SLUB_DEBUG_ON=y
+CONFIG_UBSAN=y
+
+Example test:
+  $ qemu-system-x86_64 -m 4G -smp 4 -kernel ~/bzImage -nographic \
+    -append 'console=ttyS0 debug sdxi.dma_channels=2 dmatest.polled=0 \
+     dmatest.iterations=10000 dmatest.run=1 dmatest.threads_per_chan=2 \
+     sdxi.dyndbg=+p' -device vfio-pci,host=0000:01:02.1 \
+     -initrd ~/rootfs.cpio -M q35 -accel kvm
+  [...]
+  # dmesg | grep -i -e sdxi -e dmatest
+  dmatest: No channels configured, continue with any
+  sdxi 0000:00:03.0: allocated 64 vectors
+  sdxi 0000:00:03.0: sdxi_dev_stop: function state: stopped
+  sdxi 0000:00:03.0: SDXI 1.0 device found
+  sdxi 0000:00:03.0: sdxi_dev_start: function state: active
+  sdxi 0000:00:03.0: activated
+  dmatest: Added 2 threads using dma0chan0
+  dmatest: Added 2 threads using dma0chan1
+  dmatest: Started 2 threads using dma0chan0
+  dmatest: Started 2 threads using dma0chan1
+  dmatest: dma0chan1-copy1: summary 10000 tests, 0 failures
+  dmatest: dma0chan1-copy0: summary 10000 tests, 0 failures
+  dmatest: dma0chan0-copy1: summary 10000 tests, 0 failures
+  dmatest: dma0chan0-copy0: summary 10000 tests, 0 failures
 
 Co-developed-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 ---
- drivers/dma/sdxi/Kconfig            |   1 +
- drivers/dma/sdxi/Makefile           |   1 +
- drivers/dma/sdxi/descriptor_kunit.c | 484 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 486 insertions(+)
+ drivers/dma/sdxi/Kconfig  |   1 +
+ drivers/dma/sdxi/Makefile |   1 +
+ drivers/dma/sdxi/device.c |   2 +
+ drivers/dma/sdxi/dma.c    | 497 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/dma/sdxi/dma.h    |  12 ++
+ 5 files changed, 513 insertions(+)
 
 diff --git a/drivers/dma/sdxi/Kconfig b/drivers/dma/sdxi/Kconfig
-index e616d3e323bc..39343eb85614 100644
+index 39343eb85614..41158e77b991 100644
 --- a/drivers/dma/sdxi/Kconfig
 +++ b/drivers/dma/sdxi/Kconfig
-@@ -11,6 +11,7 @@ config SDXI_KUNIT_TEST
- 	tristate "SDXI unit tests" if !KUNIT_ALL_TESTS
- 	depends on SDXI && KUNIT
- 	default KUNIT_ALL_TESTS
-+	select PACKING
+@@ -1,6 +1,7 @@
+ config SDXI
+ 	tristate "SDXI support"
+ 	select DMA_ENGINE
++	select DMA_VIRTUAL_CHANNELS
  	help
- 	  KUnit tests for parts of the SDXI driver. Does not require
- 	  SDXI hardware.
+ 	  Enable support for Smart Data Accelerator Interface (SDXI)
+ 	  Platform Data Mover devices. SDXI is a vendor-neutral
 diff --git a/drivers/dma/sdxi/Makefile b/drivers/dma/sdxi/Makefile
-index 08dd73a45dc7..419c71c2ef6a 100644
+index 419c71c2ef6a..80b1871fe7b5 100644
 --- a/drivers/dma/sdxi/Makefile
 +++ b/drivers/dma/sdxi/Makefile
-@@ -11,4 +11,5 @@ sdxi-objs += \
- sdxi-$(CONFIG_PCI_MSI) += pci.o
+@@ -6,6 +6,7 @@ sdxi-objs += \
+ 	context.o     \
+ 	descriptor.o  \
+ 	device.o      \
++	dma.o         \
+ 	ring.o
  
- obj-$(CONFIG_SDXI_KUNIT_TEST) += \
-+	descriptor_kunit.o    \
- 	ring_kunit.o
-diff --git a/drivers/dma/sdxi/descriptor_kunit.c b/drivers/dma/sdxi/descriptor_kunit.c
+ sdxi-$(CONFIG_PCI_MSI) += pci.o
+diff --git a/drivers/dma/sdxi/device.c b/drivers/dma/sdxi/device.c
+index 8b11197c5781..e159c9939fb4 100644
+--- a/drivers/dma/sdxi/device.c
++++ b/drivers/dma/sdxi/device.c
+@@ -16,6 +16,7 @@
+ #include <linux/xarray.h>
+ 
+ #include "context.h"
++#include "dma.h"
+ #include "hw.h"
+ #include "mmio.h"
+ #include "sdxi.h"
+@@ -290,6 +291,7 @@ static int sdxi_device_init(struct sdxi_dev *sdxi)
+ 	if (err)
+ 		return err;
+ 
++	sdxi_dma_register(sdxi);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/dma/sdxi/dma.c b/drivers/dma/sdxi/dma.c
 new file mode 100644
-index 000000000000..1f3c2e7ab2dd
+index 000000000000..238b3140c90f
 --- /dev/null
-+++ b/drivers/dma/sdxi/descriptor_kunit.c
-@@ -0,0 +1,484 @@
++++ b/drivers/dma/sdxi/dma.c
+@@ -0,0 +1,497 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
-+ * SDXI descriptor encoding tests.
++ * SDXI dmaengine provider
 + *
 + * Copyright Advanced Micro Devices, Inc.
-+ *
-+ * While the driver code uses bitfield macros (BIT, GENMASK) to encode
-+ * descriptors, these tests use the packing API to decode them.
-+ * Capturing the descriptor layout using PACKED_FIELD() is basically a
-+ * copy-paste exercise since SDXI defines control structure fields in
-+ * terms of bit offsets. Eschewing the bitfield constants such as
-+ * SDXI_DSC_VL in the test code makes it possible for the tests to
-+ * detect any mistakes in defining them.
-+ *
-+ * Note that the checks in unpack_fields() can be quite time-consuming
-+ * at build time. Uncomment '#define SKIP_PACKING_CHECKS' below if
-+ * that's too annoying when working on this code.
 + */
-+#include <kunit/device.h>
-+#include <kunit/test-bug.h>
-+#include <kunit/test.h>
++
++#include <linux/cleanup.h>
++#include <linux/delay.h>
++#include <linux/dev_printk.h>
 +#include <linux/container_of.h>
 +#include <linux/dma-mapping.h>
++#include <linux/dmaengine.h>
++#include <linux/list.h>
 +#include <linux/module.h>
-+#include <linux/packing.h>
-+#include <linux/stddef.h>
-+#include <linux/string.h>
++#include <linux/overflow.h>
++#include <linux/spinlock.h>
 +
++#include "../dmaengine.h"
++#include "../virt-dma.h"
++#include "completion.h"
++#include "context.h"
 +#include "descriptor.h"
++#include "dma.h"
++#include "ring.h"
++#include "sdxi.h"
 +
-+/* #define SKIP_PACKING_CHECKS */
++static unsigned short dma_channels = 1;
++module_param(dma_channels, ushort, 0644);
++MODULE_PARM_DESC(dma_channels, "DMA channels per function (default: 1)");
 +
-+MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
++/*
++ * An SDXI context is allocated for each channel configured.
++ *
++ * Each context has a descriptor ring with a minimum of 1K entries.
++ * SDXI supports a variety of primitive operations, e.g. copy,
++ * interrupt, nop. Each Linux virtual DMA descriptor may be composed
++ * of a grouping of SDXI descriptors in the ring. E.g. two SDXI
++ * descriptors (copy, then interrupt) to implement a
++ * dma_async_tx_descriptor for memcpy with DMA_PREP_INTERRUPT flag.
++ *
++ * dma_device->device_prep_dma_* functions reserve space in the
++ * descriptor ring and serialize SDXI descriptors implementing the
++ * operation to the reserved slots, leaving their valid (vl) bits
++ * clear. A single virtual descriptor is added to the allocated list.
++ *
++ * dma_async_tx_descriptor->tx_submit() invokes vchan_tx_submit(),
++ * which merely assigns a cookie and moves the txd to the submitted
++ * list without entering the SDXI provider code.
++ *
++ * dma_device->device_issue_pending() (sdxi_dma_issue_pending()) sets vl
++ * on each SDXI descriptor reachable from the submitted list, then
++ * rings the context doorbell. The submitted txds are moved to the
++ * issued list via vchan_issue_pending().
++ */
 +
-+enum {
-+	SDXI_PACKING_QUIRKS = QUIRK_LITTLE_ENDIAN | QUIRK_LSW32_IS_FIRST,
++struct sdxi_dma_chan {
++	struct virt_dma_chan vchan;
++	struct sdxi_cxt *cxt;
++	unsigned int vector;
++	unsigned int irq;
++	struct sdxi_akey_ent *akey;
 +};
 +
-+
-+#define desc_field(_high, _low, _target_struct, _member) \
-+	PACKED_FIELD(_high, _low, _target_struct, _member)
-+#define desc_flag(_bit, _target_struct, _member) \
-+	desc_field(_bit, _bit, _target_struct, _member)
-+
-+/* DMAB_COPY */
-+struct unpacked__copy {
-+	u32 size;
-+	u8 attr_src;
-+	u8 attr_dst;
-+	u16 akey0;
-+	u16 akey1;
-+	u64 addr0;
-+	u64 addr1;
++struct sdxi_dma_dev {
++	struct dma_device dma_dev;
++	size_t nr_channels;
++	struct sdxi_dma_chan sdchan[] __counted_by(nr_channels);
 +};
 +
-+#define copy_field(_high, _low, _member) \
-+	desc_field(_high, _low, struct unpacked__copy, _member)
-+
-+static const struct packed_field_u16 copy_subfields[] = {
-+	copy_field(63, 32, size),
-+	copy_field(67, 64, attr_src),
-+	copy_field(71, 68, attr_dst),
-+	copy_field(111, 96, akey0),
-+	copy_field(127, 112, akey1),
-+	copy_field(191, 128, addr0),
-+	copy_field(255, 192, addr1),
++/*
++ * A virtual descriptor can correspond to a group of SDXI hardware descriptors.
++ */
++struct sdxi_dma_desc {
++	struct virt_dma_desc vdesc;
++	struct sdxi_ring_resv resv;
++	struct sdxi_completion *completion;
 +};
 +
-+/* DSC_INTR */
-+struct unpacked__intr {
-+	u16 akey;
-+};
-+
-+#define intr_field(_high, _low, _member) \
-+	desc_field(_high, _low, struct unpacked__intr, _member)
-+
-+static const struct packed_field_u16 intr_subfields[] = {
-+	intr_field(111, 96, akey),
-+};
-+
-+/* DSC_SYNC */
-+struct unpacked__sync {
-+	u8 flt;
-+	bool vf;
-+	u16 vf_num;
-+	u16 cxt_start;
-+	u16 cxt_end;
-+	u16 key_start;
-+	u16 key_end;
-+};
-+
-+#define sync_field(_high, _low, _member) \
-+	desc_field(_high, _low, struct unpacked__sync, _member)
-+#define sync_flag(_bit, _member) sync_field(_bit, _bit, _member)
-+
-+static const struct packed_field_u16 sync_subfields[] = {
-+	sync_field(34, 32, flt),
-+	sync_flag(47, vf),
-+	sync_field(63, 48, vf_num),
-+	sync_field(79, 64, cxt_start),
-+	sync_field(95, 80, cxt_end),
-+	sync_field(111, 96, key_start),
-+	sync_field(127, 112, key_end),
-+};
-+
-+/* DSC_CXT_START */
-+struct unpacked__cxt_start {
-+	bool dv;
-+	bool vf;
-+	u16 vf_num;
-+	u16 cxt_start;
-+	u16 cxt_end;
-+	u64 db_value;
-+};
-+
-+#define cxt_start_field(_high, _low, _member) \
-+	desc_field(_high, _low, struct unpacked__cxt_start, _member)
-+#define cxt_start_flag(_bit, _member) cxt_start_field(_bit, _bit, _member)
-+
-+static const struct packed_field_u16 cxt_start_subfields[] = {
-+	cxt_start_flag(46, dv),
-+	cxt_start_flag(47, vf),
-+	cxt_start_field(63, 48, vf_num),
-+	cxt_start_field(79, 64, cxt_start),
-+	cxt_start_field(95, 80, cxt_end),
-+	cxt_start_field(191, 128, db_value),
-+};
-+
-+/* DSC_CXT_STOP */
-+struct unpacked__cxt_stop {
-+	bool hs;
-+	bool vf;
-+	u16 vf_num;
-+	u16 cxt_start;
-+	u16 cxt_end;
-+};
-+
-+#define cxt_stop_field(_high, _low, _member) \
-+	desc_field(_high, _low, struct unpacked__cxt_stop, _member)
-+#define cxt_stop_flag(_bit, _member) cxt_stop_field(_bit, _bit, _member)
-+
-+static const struct packed_field_u16 cxt_stop_subfields[] = {
-+	cxt_stop_flag(45, hs),
-+	cxt_stop_flag(47, vf),
-+	cxt_stop_field(63, 48, vf_num),
-+	cxt_stop_field(79, 64, cxt_start),
-+	cxt_stop_field(95, 80, cxt_end),
-+};
-+
-+/* DSC_GENERIC */
-+struct unpacked_desc {
-+	u64 csb_ptr;
-+	u16 type;
-+	u8 subtype;
-+	bool vl;
-+	bool se;
-+	bool fe;
-+	bool ch;
-+	bool csr;
-+	bool rb;
-+	bool np;
-+	union {
-+		struct unpacked__copy copy;
-+		struct unpacked__intr intr;
-+		struct unpacked__sync sync;
-+		struct unpacked__cxt_start cxt_start;
-+		struct unpacked__cxt_stop cxt_stop;
-+	};
-+};
-+
-+#define generic_field(_high, _low, _member)			\
-+	desc_field(_high, _low, struct unpacked_desc, _member)
-+#define generic_flag(_bit, _member) generic_field(_bit, _bit, _member)
-+
-+static const struct packed_field_u16 generic_subfields[] = {
-+	generic_flag(0, vl),
-+	generic_flag(1, se),
-+	generic_flag(2, fe),
-+	generic_flag(3, ch),
-+	generic_flag(4, csr),
-+	generic_flag(5, rb),
-+	generic_field(15, 8, subtype),
-+	generic_field(26, 16, type),
-+	generic_flag(448, np),
-+	generic_field(511, 453, csb_ptr),
-+};
-+
-+#ifndef SKIP_PACKING_CHECKS
-+#define define_unpack_fn(_T)						\
-+	static void unpack_ ## _T(struct unpacked_desc *to,		\
-+				  const struct sdxi_desc *from)		\
-+	{								\
-+		unpack_fields(from, sizeof(*from), to,	\
-+			      generic_subfields, SDXI_PACKING_QUIRKS);	\
-+		unpack_fields(from, sizeof(*from), &to->_T,		\
-+			      _T ## _subfields, SDXI_PACKING_QUIRKS);	\
-+	}
-+#else
-+#define define_unpack_fn(_T)						\
-+	static void unpack_ ## _T(struct unpacked_desc *to,		\
-+				  const struct sdxi_desc *from)		\
-+	{								\
-+		unpack_fields_u16(from, sizeof(*from), to,		\
-+				  generic_subfields,			\
-+				  ARRAY_SIZE(generic_subfields),	\
-+				  SDXI_PACKING_QUIRKS);			\
-+		unpack_fields_u16(from, sizeof(*from), &to->_T,		\
-+				  _T ## _subfields,			\
-+				  ARRAY_SIZE(_T ## _subfields),		\
-+				  SDXI_PACKING_QUIRKS);			\
-+	}
-+#endif	/* SKIP_PACKING_CHECKS */
-+
-+define_unpack_fn(intr)
-+define_unpack_fn(copy)
-+define_unpack_fn(sync)
-+define_unpack_fn(cxt_start)
-+define_unpack_fn(cxt_stop)
-+
-+static void desc_poison(struct sdxi_desc *d)
++static struct sdxi_dma_chan *to_sdxi_dma_chan(const struct dma_chan *dma_chan)
 +{
-+	memset(d, 0xff, sizeof(*d));
++	const struct virt_dma_chan *vchan;
++
++	vchan = container_of_const(dma_chan, struct virt_dma_chan, chan);
++	return container_of(vchan, struct sdxi_dma_chan, vchan);
 +}
 +
-+static void encode_size32(struct kunit *t)
++static struct sdxi_dma_desc *
++to_sdxi_dma_desc(const struct virt_dma_desc *vdesc)
 +{
-+	__le32 res = cpu_to_le32(U32_MAX);
-+
-+	/* Valid sizes. */
-+	KUNIT_EXPECT_EQ(t, 0, sdxi_encode_size32(1, &res));
-+	KUNIT_EXPECT_EQ(t, 0, le32_to_cpu(res));
-+
-+	KUNIT_EXPECT_EQ(t, 0, sdxi_encode_size32(SZ_4K, &res));
-+	KUNIT_EXPECT_EQ(t, SZ_4K - 1, le32_to_cpu(res));
-+
-+	KUNIT_EXPECT_EQ(t, 0, sdxi_encode_size32(SZ_4M, &res));
-+	KUNIT_EXPECT_EQ(t, SZ_4M - 1, le32_to_cpu(res));
-+
-+	KUNIT_EXPECT_EQ(t, 0, sdxi_encode_size32(SZ_4G - 1, &res));
-+	KUNIT_EXPECT_EQ(t, SZ_4G - 2, le32_to_cpu(res));
-+
-+	KUNIT_EXPECT_EQ(t, 0, sdxi_encode_size32(SZ_4G, &res));
-+	KUNIT_EXPECT_EQ(t, SZ_4G - 1, le32_to_cpu(res));
-+
-+	/* Invalid sizes. Ensure the out parameter is unmodified. */
-+#define RES_VAL 0x843829
-+	res = cpu_to_le32(RES_VAL);
-+
-+	KUNIT_EXPECT_EQ(t, -EINVAL, sdxi_encode_size32(0, &res));
-+	KUNIT_EXPECT_EQ(t, RES_VAL, le32_to_cpu(res));
-+
-+	KUNIT_EXPECT_EQ(t, -EINVAL, sdxi_encode_size32(SZ_4G + 1, &res));
-+	KUNIT_EXPECT_EQ(t, RES_VAL, le32_to_cpu(res));
-+
-+	KUNIT_EXPECT_EQ(t, -EINVAL, sdxi_encode_size32(SZ_8G, &res));
-+	KUNIT_EXPECT_EQ(t, RES_VAL, le32_to_cpu(res));
-+
-+	KUNIT_EXPECT_EQ(t, -EINVAL, sdxi_encode_size32(U64_MAX, &res));
-+	KUNIT_EXPECT_EQ(t, RES_VAL, le32_to_cpu(res));
-+
-+#undef RES_VAL
++	return container_of(vdesc, struct sdxi_dma_desc, vdesc);
 +}
 +
-+static void copy(struct kunit *t)
++static void sdxi_tx_desc_free(struct virt_dma_desc *vdesc)
 +{
-+	struct unpacked_desc unpacked;
-+	struct sdxi_desc desc = {};
++	struct sdxi_dma_desc *sddesc = to_sdxi_dma_desc(vdesc);
++
++	sdxi_completion_free(sddesc->completion);
++	kfree(to_sdxi_dma_desc(vdesc));
++}
++
++static struct sdxi_dma_desc *
++prep_memcpy_intr(struct dma_chan *dma_chan, const struct sdxi_copy *params)
++{
++	struct sdxi_cxt *cxt = to_sdxi_dma_chan(dma_chan)->cxt;
++	struct sdxi_akey_ent *akey = to_sdxi_dma_chan(dma_chan)->akey;
++	struct sdxi_desc *copy, *intr;
++
++	struct sdxi_completion *comp __free(sdxi_completion) = sdxi_completion_alloc(cxt->sdxi);
++	if (!comp)
++		return NULL;
++
++	struct sdxi_dma_desc *sddesc __free(kfree) = kzalloc(sizeof(*sddesc), GFP_NOWAIT);
++	if (!sddesc)
++		return NULL;
++
++	if (sdxi_ring_try_reserve(cxt->ring_state, 2, &sddesc->resv))
++		return NULL;
++
++	copy = sdxi_ring_resv_next(&sddesc->resv);
++	(void)sdxi_encode_copy(copy, params); /* Caller checked validity. */
++	sdxi_desc_set_fence(copy); /* Conservatively fence every descriptor. */
++	sdxi_completion_attach(copy, comp);
++
++	sddesc->completion = no_free_ptr(comp);
++
++	intr = sdxi_ring_resv_next(&sddesc->resv);
++	sdxi_encode_intr(intr, &(const struct sdxi_intr) {
++			.akey = sdxi_akey_index(cxt, akey),
++		});
++	/* Raise the interrupt only after the copy has completed. */
++	sdxi_desc_set_fence(intr);
++	return_ptr(sddesc);
++}
++
++static struct sdxi_dma_desc *
++prep_memcpy_polled(struct dma_chan *dma_chan, const struct sdxi_copy *params)
++{
++	struct sdxi_cxt *cxt = to_sdxi_dma_chan(dma_chan)->cxt;
++	struct sdxi_desc *copy;
++
++	struct sdxi_completion *comp __free(sdxi_completion) = sdxi_completion_alloc(cxt->sdxi);
++	if (!comp)
++		return NULL;
++
++	struct sdxi_dma_desc *sddesc __free(kfree) = kzalloc(sizeof(*sddesc), GFP_NOWAIT);
++	if (!sddesc)
++		return NULL;
++
++	if (sdxi_ring_try_reserve(cxt->ring_state, 1, &sddesc->resv))
++		return NULL;
++
++	copy = sdxi_ring_resv_next(&sddesc->resv);
++	(void)sdxi_encode_copy(copy, params); /* Caller checked validity. */
++	sdxi_completion_attach(copy, comp);
++
++	sddesc->completion = no_free_ptr(comp);
++	return_ptr(sddesc);
++}
++
++static struct dma_async_tx_descriptor *
++sdxi_dma_prep_memcpy(struct dma_chan *dma_chan, dma_addr_t dst,
++		     dma_addr_t src, size_t len, unsigned long flags)
++{
++	struct sdxi_akey_ent *akey = to_sdxi_dma_chan(dma_chan)->akey;
++	struct sdxi_cxt *cxt = to_sdxi_dma_chan(dma_chan)->cxt;
++	u16 akey_index = sdxi_akey_index(cxt, akey);
++	struct sdxi_dma_desc *sddesc;
 +	struct sdxi_copy copy = {
-+		.src = 0x1000,
-+		.dst = 0x2000,
-+		.len = 4096,
-+		.src_akey = 0,
-+		.dst_akey = 0,
++		.src = src,
++		.dst = dst,
++		.src_akey = akey_index,
++		.dst_akey = akey_index,
++		.len = len,
 +	};
-+
-+	KUNIT_EXPECT_EQ(t, 0, sdxi_encode_copy(&desc, &copy));
-+
-+	unpack_copy(&unpacked, &desc);
-+	KUNIT_EXPECT_EQ(t, unpacked.vl, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.ch, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.subtype, SDXI_DSC_OP_SUBTYPE_COPY);
-+	KUNIT_EXPECT_EQ(t, unpacked.type, SDXI_DSC_OP_TYPE_DMAB);
-+	KUNIT_EXPECT_EQ(t, unpacked.csb_ptr, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.np, 1);
-+
-+	KUNIT_EXPECT_EQ(t, unpacked.copy.size, copy.len - 1);
-+
-+	/* Zero isn't a valid size. */
-+	desc_poison(&desc);
-+	copy.len = 0;
-+	KUNIT_EXPECT_EQ(t, -EINVAL, sdxi_encode_copy(&desc, &copy));
-+
-+	/* But 1 is. */
-+	desc_poison(&desc);
-+	copy.len = 1;
-+	KUNIT_EXPECT_EQ(t, 0, sdxi_encode_copy(&desc, &copy));
-+	unpack_copy(&unpacked, &desc);
-+	KUNIT_EXPECT_EQ(t, unpacked.copy.size, copy.len - 1);
-+
-+	/* SDXI forbids overlapping source and destination. */
-+	desc_poison(&desc);
-+	copy.len = 4097;
-+	KUNIT_EXPECT_EQ(t, -EINVAL, sdxi_encode_copy(&desc, &copy));
-+	copy = (typeof(copy)) {
-+		.src = 0x4000,
-+		.dst = 0x4000,
-+		.len = 1,
-+		.src_akey = 0,
-+		.dst_akey = 0,
-+	};
-+	KUNIT_EXPECT_EQ(t, -EINVAL, sdxi_encode_copy(&desc, &copy));
-+
-+	desc_poison(&desc);
-+	KUNIT_EXPECT_EQ(t, 0,
-+			sdxi_encode_copy(&desc,
-+					 &(struct sdxi_copy) {
-+						 .src = 0x1000,
-+						 .dst = 0x2000,
-+						 .len = 0x100,
-+						 .src_akey = 1,
-+						 .dst_akey = 2,
-+					 }));
-+	KUNIT_EXPECT_EQ(t, 0x1000, le64_to_cpu(desc.copy.addr0));
-+	KUNIT_EXPECT_EQ(t, 0x2000, le64_to_cpu(desc.copy.addr1));
-+	KUNIT_EXPECT_EQ(t, 0x100, 1 + le32_to_cpu(desc.copy.size));
-+	KUNIT_EXPECT_EQ(t, 1, le16_to_cpu(desc.copy.akey0));
-+	KUNIT_EXPECT_EQ(t, 2, le16_to_cpu(desc.copy.akey1));
-+
-+	unpack_copy(&unpacked, &desc);
-+	KUNIT_EXPECT_EQ(t, unpacked.vl, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.ch, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.subtype, SDXI_DSC_OP_SUBTYPE_COPY);
-+	KUNIT_EXPECT_EQ(t, unpacked.type, SDXI_DSC_OP_TYPE_DMAB);
-+	KUNIT_EXPECT_EQ(t, unpacked.csb_ptr, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.np, 1);
-+
-+	KUNIT_EXPECT_EQ(t, unpacked.copy.size, 0x100 - 1);
-+}
-+
-+static void intr(struct kunit *t)
-+{
-+	struct unpacked_desc unpacked;
-+	struct sdxi_intr intr = {
-+		.akey = 1234,
-+	};
-+	struct sdxi_desc desc;
-+
-+	desc_poison(&desc);
-+	KUNIT_EXPECT_EQ(t, 0, sdxi_encode_intr(&desc, &intr));
-+
-+	unpack_intr(&unpacked, &desc);
-+	KUNIT_EXPECT_EQ(t, unpacked.vl, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.ch, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.subtype, SDXI_DSC_OP_SUBTYPE_INTR);
-+	KUNIT_EXPECT_EQ(t, unpacked.type, SDXI_DSC_OP_TYPE_INTR);
-+	KUNIT_EXPECT_EQ(t, unpacked.csb_ptr, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.np, 1);
-+
-+	KUNIT_EXPECT_EQ(t, unpacked.intr.akey, 1234);
-+}
-+
-+static void cxt_start(struct kunit *t)
-+{
-+	struct unpacked_desc unpacked;
-+	struct sdxi_cxt_start start = {
-+		.range = sdxi_cxt_range_single(2),
-+	};
-+	struct sdxi_desc desc;
-+
-+	desc_poison(&desc);
-+	KUNIT_ASSERT_EQ(t, 0, sdxi_encode_cxt_start(&desc, &start));
-+
-+	unpack_cxt_start(&unpacked, &desc);
-+
-+	/* Check op-specific fields. */
-+	KUNIT_EXPECT_EQ(t, 0, desc.cxt_start.vflags);
 +
 +	/*
-+	 * Check generic fields. Some flags have mandatory values
-+	 * according to the operation type.
++	 * Perform a trial encode to a dummy descriptor on the stack
++	 * so we can reject bad inputs without touching the ring
++	 * state.
 +	 */
-+	KUNIT_EXPECT_EQ(t, unpacked.vl, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.se, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.fe, 1);
-+	KUNIT_EXPECT_EQ(t, unpacked.ch, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.subtype, SDXI_DSC_OP_SUBTYPE_CXT_START_NM);
-+	KUNIT_EXPECT_EQ(t, unpacked.type, SDXI_DSC_OP_TYPE_ADMIN);
-+	KUNIT_EXPECT_EQ(t, unpacked.csb_ptr, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.np, 1);
++	if (sdxi_encode_copy(&(struct sdxi_desc){}, &copy))
++		return NULL;
 +
-+	KUNIT_EXPECT_FALSE(t, unpacked.cxt_start.dv);
-+	KUNIT_EXPECT_FALSE(t, unpacked.cxt_start.vf);
-+	KUNIT_EXPECT_EQ(t, unpacked.cxt_start.cxt_start, 2);
-+	KUNIT_EXPECT_EQ(t, unpacked.cxt_start.cxt_end, 2);
-+	KUNIT_EXPECT_EQ(t, unpacked.cxt_start.vf_num, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.cxt_start.db_value, 0);
++	sddesc = (flags & DMA_PREP_INTERRUPT) ?
++		prep_memcpy_intr(dma_chan, &copy) :
++		prep_memcpy_polled(dma_chan, &copy);
++
++	if (!sddesc)
++		return NULL;
++
++	return vchan_tx_prep(to_virt_chan(dma_chan), &sddesc->vdesc, flags);
 +}
 +
-+static void cxt_stop(struct kunit *t)
++static enum dma_status sdxi_tx_status(struct dma_chan *chan,
++				      dma_cookie_t cookie,
++				      struct dma_tx_state *state)
 +{
-+	struct unpacked_desc unpacked;
-+	struct sdxi_cxt_stop stop = {
-+		.range = sdxi_cxt_range_single(2),
-+	};
-+	struct sdxi_desc desc;
++	struct sdxi_dma_chan *sdchan = to_sdxi_dma_chan(chan);
++	struct sdxi_dma_desc *sddesc;
++	enum dma_status status;
++	struct virt_dma_desc *vdesc;
 +
-+	desc_poison(&desc);
-+	KUNIT_ASSERT_EQ(t, 0, sdxi_encode_cxt_stop(&desc, &stop));
++	status = dma_cookie_status(chan, cookie, state);
++	if (status == DMA_COMPLETE)
++		return status;
 +
-+	unpack_cxt_stop(&unpacked, &desc);
++	guard(spinlock_irqsave)(&sdchan->vchan.lock);
 +
-+	/* Check op-specific fields. */
-+	KUNIT_EXPECT_EQ(t, 0, desc.cxt_start.vflags);
++	vdesc = vchan_find_desc(&sdchan->vchan, cookie);
++	if (!vdesc)
++		return status;
++
++	sddesc = to_sdxi_dma_desc(vdesc);
++
++	if (WARN_ON_ONCE(!sddesc->completion))
++		return DMA_ERROR;
++
++	if (!sdxi_completion_signaled(sddesc->completion))
++		return DMA_IN_PROGRESS;
++
++	if (sdxi_completion_errored(sddesc->completion))
++		return DMA_ERROR;
++
++	list_del(&vdesc->node);
++	vchan_cookie_complete(vdesc);
++
++	return dma_cookie_status(chan, cookie, state);
++}
++
++static void sdxi_dma_issue_pending(struct dma_chan *dma_chan)
++{
++	struct virt_dma_chan *vchan = to_virt_chan(dma_chan);
++	struct virt_dma_desc *vdesc;
++	u64 dbval = 0;
++
++	scoped_guard(spinlock_irqsave, &vchan->lock) {
++		/*
++		 * This can happen with racing submitters.
++		 */
++		if (list_empty(&vchan->desc_submitted))
++			return;
++
++		list_for_each_entry(vdesc, &vchan->desc_submitted, node) {
++			struct sdxi_dma_desc *sddesc = to_sdxi_dma_desc(vdesc);
++			struct sdxi_desc *hwdesc;
++
++			sdxi_ring_resv_foreach(&sddesc->resv, hwdesc)
++				sdxi_desc_make_valid(hwdesc);
++			/*
++			 * The reservations ought to be ordered
++			 * ascending, but use umax() just in case.
++			 */
++			dbval = umax(sdxi_ring_resv_dbval(&sddesc->resv), dbval);
++		}
++
++		vchan_issue_pending(vchan);
++	}
 +
 +	/*
-+	 * Check generic fields. Some flags have mandatory values
-+	 * according to the operation type.
++	 * The implementation is required to handle out-of-order
++	 * doorbell updates; we can do this after dropping the
++	 * lock.
 +	 */
-+	KUNIT_EXPECT_EQ(t, unpacked.vl, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.se, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.fe, 1);
-+	KUNIT_EXPECT_EQ(t, unpacked.ch, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.subtype, SDXI_DSC_OP_SUBTYPE_CXT_STOP);
-+	KUNIT_EXPECT_EQ(t, unpacked.type, SDXI_DSC_OP_TYPE_ADMIN);
-+	KUNIT_EXPECT_EQ(t, unpacked.csb_ptr, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.np, 1);
-+
-+	KUNIT_EXPECT_FALSE(t, unpacked.cxt_stop.hs);
-+	KUNIT_EXPECT_FALSE(t, unpacked.cxt_stop.vf);
-+	KUNIT_EXPECT_EQ(t, unpacked.cxt_stop.cxt_start, 2);
-+	KUNIT_EXPECT_EQ(t, unpacked.cxt_stop.cxt_end, 2);
-+	KUNIT_EXPECT_EQ(t, unpacked.cxt_stop.vf_num, 0);
++	sdxi_cxt_push_doorbell(to_sdxi_dma_chan(dma_chan)->cxt, dbval);
 +}
 +
-+static void sync(struct kunit *t)
++static int sdxi_dma_terminate_all(struct dma_chan *dma_chan)
 +{
-+	struct sdxi_sync sync = {
-+		.filter = SDXI_SYNC_FLT_STOP,
-+		.range = sdxi_cxt_range(1, U16_MAX),
-+	};
-+	struct sdxi_desc desc;
-+	struct unpacked_desc unpacked;
++	struct virt_dma_chan *vchan = to_virt_chan(dma_chan);
++	u64 dbval = 0;
 +
-+	desc_poison(&desc);
-+	KUNIT_ASSERT_EQ(t, 0, sdxi_encode_sync(&desc, &sync));
-+	unpack_sync(&unpacked, &desc);
++	/*
++	 * Allocated and submitted txds are in the ring but not valid
++	 * yet. Overwrite them with nops and then set their valid
++	 * bits.
++	 *
++	 * The implementation may start consuming these as soon as the
++	 * valid bits flip. sdxi_dma_synchronize() will ensure they're
++	 * all done.
++	 */
++	scoped_guard(spinlock_irqsave, &vchan->lock) {
++		struct virt_dma_desc *vdesc;
++		LIST_HEAD(head);
 +
-+	KUNIT_EXPECT_EQ(t, unpacked.type, SDXI_DSC_OP_TYPE_ADMIN);
-+	KUNIT_EXPECT_EQ(t, unpacked.subtype, SDXI_DSC_OP_SUBTYPE_SYNC);
-+	KUNIT_EXPECT_EQ(t, unpacked.ch, 0);
-+	KUNIT_EXPECT_EQ(t, unpacked.sync.flt, SDXI_SYNC_FLT_STOP);
-+	KUNIT_EXPECT_EQ(t, unpacked.sync.cxt_start, 1);
-+	KUNIT_EXPECT_EQ(t, unpacked.sync.cxt_end, U16_MAX);
-+}
++		list_splice_tail_init(&vchan->desc_allocated, &head);
++		list_splice_tail_init(&vchan->desc_submitted, &head);
 +
-+static struct kunit_case generic_desc_tcs[] = {
-+	KUNIT_CASE(encode_size32),
-+	KUNIT_CASE(copy),
-+	KUNIT_CASE(intr),
-+	KUNIT_CASE(cxt_start),
-+	KUNIT_CASE(cxt_stop),
-+	KUNIT_CASE(sync),
-+	{}
-+};
++		if (list_empty(&head))
++			return 0;
 +
-+static int generic_desc_setup_device(struct kunit *t)
-+{
-+	struct device *dev = kunit_device_register(t, "sdxi-mock-device");
++		list_for_each_entry(vdesc, &head, node) {
++			struct sdxi_dma_desc *sddesc = to_sdxi_dma_desc(vdesc);
++			struct sdxi_desc *hwdesc;
 +
-+	KUNIT_ASSERT_NOT_ERR_OR_NULL(t, dev);
-+	t->priv = dev;
++			sdxi_ring_resv_foreach(&sddesc->resv, hwdesc) {
++				sdxi_serialize_nop(hwdesc);
++				sdxi_desc_make_valid(hwdesc);
++			}
++
++			dbval = umax(sdxi_ring_resv_dbval(&sddesc->resv), dbval);
++		}
++
++		list_splice_tail(&head, &vchan->desc_terminated);
++	}
++
++	sdxi_cxt_push_doorbell(to_sdxi_dma_chan(dma_chan)->cxt, dbval);
++
 +	return 0;
 +}
 +
-+static struct kunit_suite generic_desc_ts = {
-+	.name = "Generic SDXI descriptor encoding",
-+	.test_cases = generic_desc_tcs,
-+	.init = generic_desc_setup_device,
-+};
-+kunit_test_suite(generic_desc_ts);
++static void sdxi_dma_synchronize(struct dma_chan *dma_chan)
++{
++	struct sdxi_cxt *cxt = to_sdxi_dma_chan(dma_chan)->cxt;
++	struct sdxi_ring_resv resv;
++	struct sdxi_desc *nop;
 +
-+MODULE_DESCRIPTION("SDXI descriptor encoding tests");
-+MODULE_AUTHOR("Nathan Lynch");
-+MODULE_LICENSE("GPL");
++	/* Submit a single nop with fence and wait for it to complete. */
++
++	if (sdxi_ring_reserve(cxt->ring_state, 1, &resv))
++		return;
++
++	struct sdxi_completion *comp __free(sdxi_completion) = sdxi_completion_alloc(cxt->sdxi);
++	if (!comp)
++		return;
++
++	nop = sdxi_ring_resv_next(&resv);
++	sdxi_serialize_nop(nop);
++	sdxi_completion_attach(nop, comp);
++	sdxi_desc_set_fence(nop);
++	sdxi_desc_make_valid(nop);
++	sdxi_cxt_push_doorbell(cxt, sdxi_ring_resv_dbval(&resv));
++	sdxi_completion_poll(comp);
++
++	vchan_synchronize(to_virt_chan(dma_chan));
++}
++
++static irqreturn_t sdxi_dma_cxt_irq(int irq, void *data)
++{
++	struct sdxi_dma_chan *sdchan = data;
++	struct virt_dma_chan *vchan = &sdchan->vchan;
++	struct virt_dma_desc *vdesc;
++	bool completed = false;
++
++	guard(spinlock_irqsave)(&vchan->lock);
++
++	while ((vdesc = vchan_next_desc(vchan))) {
++		struct sdxi_dma_desc *sddesc = to_sdxi_dma_desc(vdesc);
++
++		if (!sdxi_completion_signaled(sddesc->completion))
++			break;
++
++		list_del(&vdesc->node);
++		vchan_cookie_complete(&sddesc->vdesc);
++		completed = true;
++	}
++
++	if (completed)
++		sdxi_ring_wake_up(sdchan->cxt->ring_state);
++
++	return IRQ_HANDLED;
++}
++
++static int sdxi_dma_alloc_chan_resources(struct dma_chan *dma_chan)
++{
++	struct sdxi_dev *sdxi = dev_get_drvdata(dma_chan->device->dev);
++	struct sdxi_dma_chan *sdchan = to_sdxi_dma_chan(dma_chan);
++	int vector, irq, err;
++
++	sdchan->cxt = sdxi_cxt_new(sdxi);
++	if (!sdchan->cxt)
++		return -ENOMEM;
++	/*
++	 * This irq and akey setup should perhaps all be pushed into
++	 * the context allocation.
++	 */
++	err = vector = sdxi_alloc_vector(sdxi);
++	if (vector < 0)
++		goto exit_cxt;
++
++	sdchan->vector = vector;
++
++	err = irq = sdxi_vector_to_irq(sdxi, vector);
++	if (irq < 0)
++		goto free_vector;
++
++	sdchan->irq = irq;
++
++	/*
++	 * Note this akey entry is used for both the completion
++	 * interrupt and source and destination access for copies.
++	 */
++	sdchan->akey = sdxi_alloc_akey(sdchan->cxt);
++	if (!sdchan->akey)
++		goto free_vector;
++
++	*sdchan->akey = (typeof(*sdchan->akey)) {
++		.intr_num = cpu_to_le16(FIELD_PREP(SDXI_AKEY_ENT_VL, 1) |
++					FIELD_PREP(SDXI_AKEY_ENT_IV, 1) |
++					FIELD_PREP(SDXI_AKEY_ENT_INTR_NUM,
++						   vector)),
++	};
++
++	err = request_irq(sdchan->irq, sdxi_dma_cxt_irq,
++			  IRQF_TRIGGER_NONE, "SDXI DMAengine", sdchan);
++	if (err)
++		goto free_akey;
++
++	err = sdxi_start_cxt(sdchan->cxt);
++	if (err)
++		goto free_irq;
++
++	return 0;
++free_irq:
++	free_irq(sdchan->irq, sdchan);
++free_akey:
++	sdxi_free_akey(sdchan->cxt, sdchan->akey);
++free_vector:
++	sdxi_free_vector(sdxi, vector);
++exit_cxt:
++	sdxi_cxt_exit(sdchan->cxt);
++	return err;
++}
++
++static void sdxi_dma_free_chan_resources(struct dma_chan *dma_chan)
++{
++	struct sdxi_dma_chan *sdchan = to_sdxi_dma_chan(dma_chan);
++
++	sdxi_stop_cxt(sdchan->cxt);
++	free_irq(sdchan->irq, sdchan);
++	sdxi_free_vector(sdchan->cxt->sdxi, sdchan->vector);
++	sdxi_free_akey(sdchan->cxt, sdchan->akey);
++	vchan_free_chan_resources(to_virt_chan(dma_chan));
++	sdxi_cxt_exit(sdchan->cxt);
++}
++
++int sdxi_dma_register(struct sdxi_dev *sdxi)
++{
++	struct device *dev = sdxi_to_dev(sdxi);
++	struct sdxi_dma_dev *sddev;
++	struct dma_device *dma_dev;
++	int err;
++
++	if (!dma_channels)
++		return 0;
++	/*
++	 * Note that this code assumes the device supports the
++	 * interrupt operation group (IntrGrp), which is optional. See
++	 * SDXI 1.0 Table 6-1 SDXI Operation Groups.
++	 *
++	 * TODO: check sdxi->op_grp_cap for IntrGrp support and error
++	 * out if it's missing.
++	 */
++
++	sddev = devm_kzalloc(dev, struct_size(sddev, sdchan, dma_channels),
++			     GFP_KERNEL);
++	if (!sddev)
++		return -ENOMEM;
++
++	sddev->nr_channels = dma_channels;
++
++	dma_dev = &sddev->dma_dev;
++	*dma_dev = (typeof(*dma_dev)) {
++		.dev                 = sdxi_to_dev(sdxi),
++		.src_addr_widths     = DMA_SLAVE_BUSWIDTH_64_BYTES,
++		.dst_addr_widths     = DMA_SLAVE_BUSWIDTH_64_BYTES,
++		.directions          = BIT(DMA_MEM_TO_MEM),
++		.residue_granularity = DMA_RESIDUE_GRANULARITY_DESCRIPTOR,
++
++		.device_alloc_chan_resources = sdxi_dma_alloc_chan_resources,
++		.device_free_chan_resources  = sdxi_dma_free_chan_resources,
++
++		.device_prep_dma_memcpy = sdxi_dma_prep_memcpy,
++
++		.device_terminate_all = sdxi_dma_terminate_all,
++		.device_synchronize = sdxi_dma_synchronize,
++		.device_tx_status = sdxi_tx_status,
++		.device_issue_pending = sdxi_dma_issue_pending,
++	};
++
++	dma_cap_set(DMA_MEMCPY, dma_dev->cap_mask);
++	dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
++	INIT_LIST_HEAD(&dma_dev->channels);
++
++	for (size_t i = 0; i < sddev->nr_channels; ++i) {
++		struct sdxi_dma_chan *sdchan = &sddev->sdchan[i];
++
++		sdchan->vchan.desc_free = sdxi_tx_desc_free;
++		vchan_init(&sdchan->vchan, &sddev->dma_dev);
++	}
++
++	err = dmaenginem_async_device_register(dma_dev);
++	if (err)
++		return dev_warn_probe(dev, err, "failed to register dma device\n");
++
++	return 0;
++}
+diff --git a/drivers/dma/sdxi/dma.h b/drivers/dma/sdxi/dma.h
+new file mode 100644
+index 000000000000..4ff3c2cb67fc
+--- /dev/null
++++ b/drivers/dma/sdxi/dma.h
+@@ -0,0 +1,12 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/* Copyright Advanced Micro Devices, Inc. */
++
++#ifndef DMA_SDXI_DMA_H
++#define DMA_SDXI_DMA_H
++
++struct sdxi_dev;
++
++int sdxi_dma_register(struct sdxi_dev *sdxi);
++void sdxi_dma_unregister(struct sdxi_dev *sdxi);
++
++#endif /* DMA_SDXI_DMA_H */
 
 -- 
 2.53.0
