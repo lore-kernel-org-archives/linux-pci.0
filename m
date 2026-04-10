@@ -1,368 +1,233 @@
-Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11020086.outbound.protection.outlook.com [52.101.84.86])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f44.google.com (mail-dl1-f44.google.com [74.125.82.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 955CA336EE1;
-	Fri, 10 Apr 2026 05:20:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.84.86
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775798412; cv=fail; b=PDpxW9lDMQYc41Um39LGfSBEZ10dhH7sMNrs/xyy7nFZsaAsekvThza7/csaJmfx0gOikXTPVQEWMT+PevLmSKXdp84atYUDjceRH5r7QBZqemn9oWLw1Zr8/hFKkowtFuq9IZNTRnKOsksWphfENoMc7JE1YV1KaKVH8W7CZbg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775798412; c=relaxed/simple;
-	bh=sO441g4vc/8whmw5zxqn1sSNXt54KRsLoNekYcTxBLA=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Y5+q9b8O9dzQsdaWv2FwqvWDrpi8NXt/5Gws+pusJRjM1lJ1wwW+0axqrIBr+txFVp5kg2GrnzOA/npS/JXuJ81g5xpE3QdtWIjWusxmOhDv1FbCXmxsrp2iivy1LyaptMIiFWQwxwyWUxM/1hFaQnuL0aPyl5ub5516e5DTubI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=durst-group.com; spf=pass smtp.mailfrom=durst-group.com; dkim=pass (2048-bit key) header.d=durst-group.com header.i=@durst-group.com header.b=ar11APyP; arc=fail smtp.client-ip=52.101.84.86
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=durst-group.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=durst-group.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0903C20010A
+	for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2026 05:30:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.44
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775799056; cv=none; b=PcBvNhhfN2z5fk6BZw/C/uCuBCVVRhUWejNqpIYKe7zqq7x0EXoHVMtEMsVDzPzXUN0F/g66PBwvLjRm6E1QsydXTPwWfeS74uAI116c5owuegWu0pJ3D3x/1bvtPC5ROhq4+o0L4QBCgJGh6BuTOzVVazeYz0cldwNiJuaCl8I=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775799056; c=relaxed/simple;
+	bh=XkuetcQHM3A7I1YGHrZfr42BJ3/QhNVvyt7EGlGJdmA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=h8so2aIbuhMVndUwLNbiNJ+LKcSwCykmta0il8AAUR2HnoWOhTbW7A4Z3ehz4DM8HylJessP4uUcIricl/A7MTzOlXGwBCWnLhnAwL+cqaD5PkQ/mQ+BUvPzUBZe7LkLzeszk670r41xk+p6iAB+8Vial9SsNsPUINHeRRfqFVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com; spf=none smtp.mailfrom=jqluv.com; dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b=w32qjMo3; arc=none smtp.client-ip=74.125.82.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=jqluv.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=durst-group.com header.i=@durst-group.com header.b="ar11APyP"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ykd60vemyER+mSAxNVMPQc/vvOAaaJdyTZgPPpvtmg9koLKykigmjB4wD9IxlUABEC2kfycvb5K5LIQbYYdchG22wSNIpATZ6+vwIQpL3CWdKnuD3TKQnkQW5UEWPqFZwGmS/RTEh3alPiJO7lp2JvoNCuoLqj5gHtBMGqRqxshc/EOXc2vh+8iEmyGmAiX5bVu20E1hmbufcXLDuKhjQ2h8EAhXSS2xvGMsltZ9afuZcUmCTEmKJrI4gPVnPkpU4/cFPZ7myLJK1KPHK2gv6jjd+8ggM/plAdAV445PFuT5WjB3huzN52D6CyGvcQjG0xN/8wzmJ10Bq0BPTLNE2w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=aBYfQvWF1j/9HA0yety6cqvifD0qA3wFROrQbwFWEo8=;
- b=sx6ChCaAgc7O/cQeXoh5RAaCvv+WZO+AcHPEmyGuDY528kr41E3fP/4D6dP2HKTmlDPeqo84l0YJybgyKK0VW0g93sGjBIbU2o6TzAC4CtNcoJfiUrr+ulfmYTPRwG5JKddXnBpK2jv6Qq+X27alr//M4kSh7a3cVx/6y3DqGTTESuxVFivNn+Aco6lfBVGhxBO3EsCJZCDxfeldwruxkPfHFxR5RLvw4NOnVRYh2QVDj3pR3thwQZRbb0uypyykC72bW4rmT/oi2SN486+A8MWpY07VW/bEwxHAOfdmDKoklQkmrC79dhNkycxzsvrtycU8kwkvnfAe8OBzbi1mNw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=durst-group.com; dmarc=pass action=none
- header.from=durst-group.com; dkim=pass header.d=durst-group.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=durst-group.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aBYfQvWF1j/9HA0yety6cqvifD0qA3wFROrQbwFWEo8=;
- b=ar11APyPBvHklbIr97SE5qqAHLeCRPhnz6qCi7RiXN9rQGw2g0DPYl6V/FdDY9pXWx+QO+wKdKtSeAurj0bmlxcNzvgj91usguG45uYzyxlAQkt0Xyui27fGDgQLXioGatIneQfjvG7lbW9tRDGyUQYz6nPmmGXOFUgHj3UcYL4sTvyWsH6BCpOLxBwTdylv+lOfNeiJsXhDTShBgOtvBfHlsZJ2GtelUkSsNNYT1hKpegzk50GpkdFuXOYwi3knQ1Wp2awK7rD0tu8GnYc0F9UYeEDdTe7UfFQmnCMG4o9T9HMJTlEMf2IiX0DnX6BSdFo0EKCPaQNUs766d7IlLA==
-Received: from AM9PR10MB4231.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:20b:1f6::22)
- by DU4PR10MB8366.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:10:56a::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.21; Fri, 10 Apr
- 2026 05:20:06 +0000
-Received: from AM9PR10MB4231.EURPRD10.PROD.OUTLOOK.COM
- ([fe80::9c01:2554:be0f:71f]) by AM9PR10MB4231.EURPRD10.PROD.OUTLOOK.COM
- ([fe80::9c01:2554:be0f:71f%6]) with mapi id 15.20.9769.020; Fri, 10 Apr 2026
- 05:20:06 +0000
-From: Georg Klima <Georg.Klima@durst-group.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>, Lukas Wunner
-	<lukas@wunner.de>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"thunderbolt@lists.linux.dev" <thunderbolt@lists.linux.dev>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"georg_klima@gmx.at" <georg_klima@gmx.at>, Rene Sapiens
-	<rene.sapiens@linux.intel.com>, Alan Borzeszkowski
-	<alan.borzeszkowski@linux.intel.com>
-Subject: AW: [BUG] Thunderbolt runtime resume during PCIe removal causes IRQ
- warning and shutdown failure.
-Thread-Topic: [BUG] Thunderbolt runtime resume during PCIe removal causes IRQ
- warning and shutdown failure.
-Thread-Index: AQHcvRi//eUtQtyfVEWa70RHOTCJXLXQOskAgALtfICABK1Cuw==
-Date: Fri, 10 Apr 2026 05:20:06 +0000
-Message-ID:
- <AM9PR10MB4231785C02F301161C5B2BA6B7592@AM9PR10MB4231.EURPRD10.PROD.OUTLOOK.COM>
-References:
- <AM9PR10MB42316BF3E59B29E1EA3E5600B756A@AM9PR10MB4231.EURPRD10.PROD.OUTLOOK.COM>
- <adIkaExcG-T5XACV@wunner.de> <20260407054151.GC3552@black.igk.intel.com>
-In-Reply-To: <20260407054151.GC3552@black.igk.intel.com>
-Accept-Language: de-AT, en-US
-Content-Language: de-AT
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
-x-signature365-signatureinjectedby: OutlookAddIn
-x-signature365-messageprocessed: true
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=durst-group.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: AM9PR10MB4231:EE_|DU4PR10MB8366:EE_
-x-ms-office365-filtering-correlation-id: 2107a616-5d95-481c-0a25-08de96c0d3f6
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|366016|376014|38070700021|56012099003|22082099003|18002099003;
-x-microsoft-antispam-message-info:
- fBCiXeizZoj1b3bN/z82K7uZEJz1RWSs4N5J3Oi1OB3ogRP2CXFqcqt8Cm/jx9dXqD18LA3m9WnUqAxutPgK9JWBTQksyxQ/uh46vTnPeCTNva+rDGzaBj7fBKtXaRNyjdI+pYfOLZkE1G38zum2+8Yp5sG5nf0Rr/8aAZO7quS7BVzdtJrQevJw1lm1ZUJKHaXtM8jeBlMx6xSOvSZF5fwh4UaRo6ev9ToJyUmJDFkiiXKLmejp47Zuj1sSdHjRtwr2LKcWQcqwZu39ymh/r6FCIFW3zkQY6779ZipVXI7IrZs967u5wQnoOAZyNsgrJatNuX8e/1+n+NdcLhLyuGWrwDrewq2fl6swsIcp5D0LqYDGDVXOc3o6re319lkvJtMiAPaRFxODw9KUGG5Q703qYubDnlYD4bA+15SCnAPBl/12iR+VfhYpzfiD50wOxxKWh54Pbx6IvbmU2uT6nHwZXrCIEKoXwn1suFWc+2bne9AlfKaJ6lRz4OATQSWhTGyVvEJNcKAy+V0mjTsH3ApQElmDtsfZ4c+Aj4wlQo7QbLybUEprdcOzGqBS7+qUSSNjGhtXnw/QkWU4q4zYPWuC/weS8Zwv7ierxIvMuPnLaqZDut6o0ACF3MO+3tWWw4lNMcKFKjPJe5gsKuB9GAbmPv+jIbJMIOWWKF0wgCwpOCIMMx0ih8hPpQdp1DDTeW9ANUQGvQgPssGjkDisKwdTYZ3PRzU8sa+tIJ9CHARJPDY7vqNK/8jR7dUZaDiaFsf9gLD3JAmKLZBZl2GRtCo9JEo5RzJ9AUg8quUKzes=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR10MB4231.EURPRD10.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(38070700021)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?mVnYNWq9rCIL74RsqQXaJMMZ34y1gTiJqg82fXS7G3SHKLQlKp5A1hc7T7?=
- =?iso-8859-1?Q?9z9ZkrcDuY5XYLqORsP6QhTxaRnAZeQdB2OjotmsvazLsAJCt6buZrbPT6?=
- =?iso-8859-1?Q?A+A6i8EpBb4czVeQfpXPMRTQLPmW/s+8FL77U64GBh3ctbsoG5s9gmoVKy?=
- =?iso-8859-1?Q?CarmNI7OHBts3ym7lyi8+AeqVOyvetfkkR6tFpIZ9/gPPKWiWCDj8OxLQy?=
- =?iso-8859-1?Q?XFKZ4q8CaRMPm9g0//3wtv9CFgEid0yYayYaMU+5CrmkLuNBIpb4tfGpBA?=
- =?iso-8859-1?Q?LGtdWZTGWw/RMhrVmbLQWmxYHxY4joKPNoAAIDzyxyyShqz0Ul39/RTonK?=
- =?iso-8859-1?Q?9vuiul3o+WivYaEKSRL5kXlWQsz3fVIQtVLqx7FrmIhqVYtvyaguwId/Fx?=
- =?iso-8859-1?Q?cJ6afg24s0yToE9QiU3Vkx+EP/At5MDIfF37wjms9NPj2VdkiHUYCWSGLN?=
- =?iso-8859-1?Q?bQGqvf048ccP51a8Ee02bByfST/mhbnng/u4gX3m5eykaYddDwNWRctOdk?=
- =?iso-8859-1?Q?vmkrdk80TahXwqmZSgBRb1J4lzCBdjuq/wpySt1Sc/P99r94/u/yNwwan2?=
- =?iso-8859-1?Q?FND2PvAehrdewSoJm8dJcZg2RHdMouEVHWs9lrzfUSOyJNtMXcP6SeVmK6?=
- =?iso-8859-1?Q?nH1GRI4IWL3zPLcvIWhrRHQ3ns3q6mMF+QoSjQpCBkSGZHOGNeFbkmnJyo?=
- =?iso-8859-1?Q?L8GJrdT4zPbl+W5degfUMuCBiHp17gzAl1qjOqFLmnOdH7DXxw7AJHDeqd?=
- =?iso-8859-1?Q?T1fbtz2eXz/SFSllT8Bqf1LvVb4ymX5KUDzRJZ07QLYFm83+wldnC0izYs?=
- =?iso-8859-1?Q?KdTaaToq74XjMb7cBnTAKe2NQkdxRvUFDlGETAgGKg09+4nADyJtlUEeAm?=
- =?iso-8859-1?Q?poW7WtuWK7UhGNDlP8hkv9Odcj+nLvnYfn/xAEUkzL2tvd3TIEQ3eT28HH?=
- =?iso-8859-1?Q?vL1zXLzTdq5AITYIppK89UmTGZJejT+ggRry1OoCMyvJrAz2ULecn4KU47?=
- =?iso-8859-1?Q?GhBsNgcf2WuKYX2NjJcg36iI/evwyBAbdiWztGc2Y4797+k9aZh8uLmRPg?=
- =?iso-8859-1?Q?e8M/xWgl7lSHDchGwD8o+Pae91kTVeQPY+TLkM38Tl7+xQ/ufgJidfPSYP?=
- =?iso-8859-1?Q?yCGBQ7Teq7mB45B3UkjxDCbYinYTnkZq/4+nw7Nm9AAIHLqaCPYbAQ7JOj?=
- =?iso-8859-1?Q?uzcK7vp/NFEMb8WvalunfDdswxTk4qgyvzICtH0Cd9yA7TLcgOrAL1N7c1?=
- =?iso-8859-1?Q?xxKBGxNXGfHaUIMqXtG4n+Qw0hOXlBhPXORwuU1DqicUP8p06gMZq6aCAB?=
- =?iso-8859-1?Q?fJf2cjDcaJuODCX5NOD7FMi0IR1yp8UQxkpvYJTEBhrSEwIXsj7oD9a0W2?=
- =?iso-8859-1?Q?rBU7mT+87rlgZFUGOd8OeNrbZZDhpwFhY+IoG6jYQpLlacOMYznxOsVuDC?=
- =?iso-8859-1?Q?iJEMlOCPjbx1ZJ3Z7+QyAtZqjr6Y4IBBiI+swniPkwLmNB8KFQTxBOI+XP?=
- =?iso-8859-1?Q?gDVkmY9f7KXFimGjEZHJSOTdRLzUwX3XqX4jUNVlxZwHr7fd1hHAVv7uep?=
- =?iso-8859-1?Q?soZfIDLcZUs+mA166Jfrox99ODAdo8s6BGdVL5+7APZc4F2kIg0tWjNbPn?=
- =?iso-8859-1?Q?6eASnLd6osJMqcRyxvbL/hf+4p8IROZRbmv7u85rhMu1WIla7MXADpyv5I?=
- =?iso-8859-1?Q?0XneTii5gqMTOX7oy1rAmc18n/36dncN5wX8y0yGHQ36eJQMUUp+ydCtf7?=
- =?iso-8859-1?Q?kzmBgAsZq1J9vAreN5Lk/wPNh5Anl8lNF0mr5ERzFwJedCa0mw74RibGTX?=
- =?iso-8859-1?Q?PueSGnLOWg=3D=3D?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b="w32qjMo3"
+Received: by mail-dl1-f44.google.com with SMTP id a92af1059eb24-128e4d0cc48so8967658c88.1
+        for <linux-pci@vger.kernel.org>; Thu, 09 Apr 2026 22:30:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=jqluv-com.20251104.gappssmtp.com; s=20251104; t=1775799054; x=1776403854; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=INYeksj8U+IbdS6ka7WkcvOr+zbRscbIhjwqU/8dvac=;
+        b=w32qjMo3HbcgwPKmjllo1z8M9OMff9C+2APrG/NgHTp7SmwR1b7hxjyNpQoLbTLS1f
+         cIBEOjyV7CfcE5DgfgV52o0wnAqBT0Pgj55+sjUklky1AtSle8olJkDuGuhl5KYoq2wL
+         eXDPfC8liALW0qehTafQhia3c8I/rYLajQQwe+BnJdXNWR7tFDbB/2vgN3KjVp7uc8oi
+         9PCT18ZtmmGxMvHLtVbV4VfNYmGEe+3y3csXbsFuCaQig2D4a5xjmdRrp+CWGJYcib/6
+         Qb0WTucJnL+iSiU9sN4rwqlfLrxj0cp49pbKiuPoUqjBDLKxFjJEi7qzyL2RT1SjEaOL
+         /2mA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1775799054; x=1776403854;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=INYeksj8U+IbdS6ka7WkcvOr+zbRscbIhjwqU/8dvac=;
+        b=WXQb6AoO4IDoPtzxHpeRx+7OybJoso5ErimddD0H1pHBlUbwyNzRVnhn4le1SFdesn
+         AYCnAcGpmO4DYV8T6KZrh2c36/MhWj9+4FiDJGzcBcU4w7CoWI2S6jwizyo9Y2p8VpKH
+         cKC5qV4R5jRFoeOR1I4d5PUCxmh9tHfg4jUE8JKYSFShficKbs/C6LZszrP1kxPwYab8
+         i9q9P2wPPfDsT3jxwY0iRnpTPdjrEP3nnkJ1AO4dS47CEGrZimE3rKBKB0lAalgE6srP
+         Do/6NQlhzl1vFjzgVOCdAeNdQ0jTaBfbmS9kBM/afVgyq9VWZwiBfSkmzulz4GKC3e+d
+         ympg==
+X-Forwarded-Encrypted: i=1; AJvYcCXNoYbHF/9yKm6QksnFD+owGviuqPkNLW+neMk1+R1tjZwD7+DchwnyZbkflK7JBApMl0UjvcJ3U2k=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwnH5llP84/fjXne9Tkoqim6X+BhYcpDpBmQ9HmUxR/eipOO4ep
+	oBeYJ2BwgTCQrD1VwhkME6jvv4O67VB5T9Fs+KEJOnnOKBxuN7KDQ3pUSJiY7q6rta8=
+X-Gm-Gg: AeBDievlPXTtq8KHceTo/2kSTUU6b9PXBysFWMud0TB//MY3SvnsUBv0w7AYHghQeGQ
+	H2GxEcIwUMTvG7+zb/Ck6YvuPUPsvx1uwuDCuvbdugWObw3CLSfrs9OjFxLMBaJBtZ5o3z3adNm
+	BFDFFLov3fW2ZzBetdOI9OHQPtugxlhU0MwoCf9VLuencbjx9JLthA6CUk5TsXmOYJeDel4l7AC
+	oUoST9FulXVmR8DTTLsfUEknyuK6pPOzoyUHBspEOajFMCyRmYu0NW1W6MHlxny2pAyDrcs+4EQ
+	65KS8yV/dccOQS3U6h4YS1j1K07e+iz6GEDqIJXSRMBvFm1wqT/Y2G1kV6fJlm12GbKkzqafzbX
+	qBvl88ZA5pg4+rHVG/tAAc4RW3reC1MWkUXefVsng7pGGqZNVMoRcYh/3Vjn49q/SGa+nwRn5bD
+	znIWSoA2fRwPYO+Ycp5eUFHVan7DFhNOhLyCxU
+X-Received: by 2002:a05:7300:ed0f:b0:2c5:50fe:c78f with SMTP id 5a478bee46e88-2d587c85e31mr1047023eec.12.1775799053874;
+        Thu, 09 Apr 2026 22:30:53 -0700 (PDT)
+Received: from geramyl-MS-S1-MAX.. ([2601:201:8080:e5c0:4e7a:601e:5f03:c2a7])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2d561bde68bsm2796529eec.17.2026.04.09.22.30.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 09 Apr 2026 22:30:53 -0700 (PDT)
+From: Geramy Loveless <gloveless@jqluv.com>
+To: ilpo.jarvinen@linux.intel.com
+Cc: Geramy Loveless <gloveless@jqluv.com>,
+	linux-pci@vger.kernel.org,
+	cristi@ieee.org
+Subject: [PATCH v2] PCI: release empty sibling bridge windows during rebar expansion
+Date: Thu,  9 Apr 2026 22:26:02 -0700
+Message-ID: <20260410052918.5556-2-gloveless@jqluv.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <29a5ee31baf8be7d07617beea016c3f6d03934bf.camel@ieee.org>
+References: <29a5ee31baf8be7d07617beea016c3f6d03934bf.camel@ieee.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: durst-group.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: AM9PR10MB4231.EURPRD10.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2107a616-5d95-481c-0a25-08de96c0d3f6
-X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Apr 2026 05:20:06.6625
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3b002d85-b2f9-4e42-99d9-5cc3454e971a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Ih7zYb6aCqgil/vZPTNIhmJ85NXfYc2rTTlwcqV5N812PC7aS2v2PwLQ6iot106oepnmJzVzwBuuK/mpLDs2t/LZVZLKuPUMgyPykVtAqB4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU4PR10MB8366
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-The issue disappears after a BIOS update that changes the PCIe root port Sl=
-otCap from HotPlug+ to HotPlug-.
-This strongly suggests that the bug is triggered by PCIe hotplug handling (=
-pciehp) interacting with runtime PM and Thunderbolt.
+When pbus_reassign_bridge_resources() walks up the bridge hierarchy
+to expand a window (e.g. for resizable BAR), it refuses to release
+any bridge window that has children.  This prevents BAR resize on
+devices behind multi-port PCIe switches (such as Thunderbolt docks)
+where empty sibling downstream ports hold small reservations that
+block the parent bridge window from being freed and re-sized.
 
-Version: N4FET48W (1.29 )
-Firmware Revision: 1.13
-Release Date: 01/26/2026
-was / is not available over fwupdmgr, sorry
+Add pci_bus_subtree_empty() to check whether a bus subtree contains
+any assigned device BARs, and pci_bus_release_empty_bridges() to
+release bridge window resources of empty sibling bridges, saving
+them to the rollback list so failures can be properly unwound.
 
+In pbus_reassign_bridge_resources(), call pci_bus_release_empty_bridges()
+before checking res->child, so empty sibling windows are cleared first
+and the parent window can then be released and grown.
 
-SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
+Uses PCI bus/device iterators rather than walking the raw resource
+tree, which avoids issues with stale sibling pointers after resource
+release.
 
-80:1b.4 PCI bridge: Intel Corporation 800 Series PCH PCIe Root Port #21 (re=
-v 10) (prog-if 00 [Normal decode])
-        Subsystem: Lenovo Device 2347
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-=
- Stepping- SERR+ FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbort- <T=
-Abort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        Interrupt: pin A routed to IRQ 128
-        IOMMU group: 20
-        Bus: primary=3D80, secondary=3D88, subordinate=3Dd8, sec-latency=3D=
-0
-        I/O behind bridge: [disabled] [16-bit]
-        Memory behind bridge: b0000000-b7ffffff [size=3D128M] [32-bit]
-        Prefetchable memory behind bridge: 4000000000-4fffffffff [size=3D64=
-G] [32-bit]
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=3Dfast >TAbort- <T=
-Abort- <MAbort+ <SERR- <PERR-
-        BridgeCtl: Parity- SERR+ NoISA- VGA- VGA16- MAbort- >Reset- FastB2B=
--
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Express (v2) Root Port (Slot+), IntMsgNum 0
-                DevCap: MaxPayload 128 bytes, PhantFunc 0
-                        ExtTag- RBE+ TEE-IO-
-                DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 128 bytes
-                DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr+ T=
-ransPend-
-                LnkCap: Port #21, Speed 16GT/s, Width x4, ASPM not supporte=
-d
-                        ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp+
-                LnkCtl: ASPM Disabled; RCB 64 bytes, LnkDisable- CommClk+
-                        ExtSynch- ClockPM- AutWidDis- BWInt+ AutBWInt+ FltM=
-odeDis-
-                LnkSta: Speed 16GT/s, Width x4
-                        TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
-                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Su=
-rprise-
-                        Slot #25, PowerLimit 25W; Interlock- NoCompl+
-                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPI=
-rq- LinkChg-
-                        Control: AttnInd Unknown, PwrInd Unknown, Power- In=
-terlock-
-                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ I=
-nterlock-
-                        Changed: MRL- PresDet+ LinkState+
-                RootCap: CRSVisible-
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna+=
- CRSVisible-
-                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-                DevCap2: Completion Timeout: Range ABC, TimeoutDis+ NROPrPr=
-P- LTR+
-                         10BitTagComp+ 10BitTagReq- OBFF Via WAKE#, ExtFmt+=
- EETLPPrefix+, MaxEETLPPrefixes 2
-                         EmergencyPowerReduction Not Supported, EmergencyPo=
-werReductionInit-
-                         FRS- LN System CLS Not Supported, TPHComp- ExtTPHC=
-omp- ARIFwd+
-                         AtomicOpsCap: Routing- 32bit- 64bit- 128bitCAS-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIF=
-wd-
-                         AtomicOpsCtl: ReqEn- EgressBlck-
-                         IDOReq- IDOCompl- LTR+ EmergencyPowerReductionReq-
-                         10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
-                LnkCap2: Supported Link Speeds: 2.5-16GT/s, Crosslink- Reti=
-mer+ 2Retimers+ DRS-
-                LnkCtl2: Target Link Speed: 16GT/s, EnterCompliance- SpeedD=
-is-
-                         Transmit Margin: Normal Operating Range, EnterModi=
-fiedCompliance- ComplianceSOS-
-                         Compliance Preset/De-emphasis: -6dB de-emphasis, 0=
-dB preshoot
-                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationCom=
-plete+ EqualizationPhase1+
-                         EqualizationPhase2+ EqualizationPhase3+ LinkEquali=
-zationRequest-
-                         Retimer- 2Retimers- CrosslinkRes: unsupported, Flt=
-Mode-
-        Capabilities: [80] MSI: Enable+ Count=3D1/1 Maskable- 64bit+
-                Address: 00000000fee002b8  Data: 0000
-        Capabilities: [98] Subsystem: Lenovo Device 2347
-        Capabilities: [a0] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA PME(D0+,D1-,D2=
--,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- =
-RxOF- MalfTLP-
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr- BlockedTLP- =
-AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDET=
-LP- PCRC_CHECK- TLPXlatBlocked-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- =
-RxOF- MalfTLP-
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr- BlockedTLP- =
-AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDET=
-LP- PCRC_CHECK- TLPXlatBlocked-
-                UESvrt: DLP+ SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- =
-RxOF+ MalfTLP+
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr- BlockedTLP- =
-AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDET=
-LP- PCRC_CHECK- TLPXlatBlocked-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFa=
-talErr- CorrIntErr- HeaderOF-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFa=
-talErr+ CorrIntErr- HeaderOF-
-                AERCap: First Error Pointer: 00, ECRCGenCap- ECRCGenEn- ECR=
-CChkCap- ECRCChkEn-
-                        MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
-                HeaderLog: 00000000 00000000 00000000 00000000
-                RootCmd: CERptEn+ NFERptEn+ FERptEn+
-                RootSta: CERcvd- MultCERcvd- UERcvd- MultUERcvd-
-                         FirstFatal- NonFatalMsg- FatalMsg- IntMsgNum 0
-                ErrorSrc: ERR_COR: 0000 ERR_FATAL/NONFATAL: 0000
-        Capabilities: [220 v1] Access Control Services
-                ACSCap: SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamF=
-wd+ EgressCtrl- DirectTrans-
-                ACSCtl: SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamF=
-wd+ EgressCtrl- DirectTrans-
-        Capabilities: [a30 v1] Secondary PCI Express
-                LnkCtl3: LnkEquIntrruptEn- PerformEqu-
-                LaneErrStat: 0
-        Capabilities: [a90 v1] Data Link Feature <?>
-        Capabilities: [a9c v1] Physical Layer 16.0 GT/s
-                Phy16Sta: EquComplete+ EquPhase1+ EquPhase2+ EquPhase3+ Lin=
-kEquRequest-
-        Capabilities: [edc v1] Lane Margining at the Receiver
-                PortCap: Uses Driver-
-                PortSta: MargReady+ MargSoftReady-
-        Kernel driver in use: pcieport
-        Kernel modules: shpchp
+Suggested-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Signed-off-by: Geramy Loveless <gloveless@jqluv.com>
+---
+ drivers/pci/setup-bus.c | 99 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 97 insertions(+), 2 deletions(-)
 
-________________________________________
-Von: Mika Westerberg <mika.westerberg@linux.intel.com>
-Gesendet: Dienstag, 7. April 2026 07:41
-An: Lukas Wunner <lukas@wunner.de>
-Cc: Georg Klima <Georg.Klima@durst-group.com>; linux-pci@vger.kernel.org <l=
-inux-pci@vger.kernel.org>; thunderbolt@lists.linux.dev <thunderbolt@lists.l=
-inux.dev>; linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>; geo=
-rg_klima@gmx.at <georg_klima@gmx.at>; Rene Sapiens <rene.sapiens@linux.inte=
-l.com>; Alan Borzeszkowski <alan.borzeszkowski@linux.intel.com>
-Betreff: Re: [BUG] Thunderbolt runtime resume during PCIe removal causes IR=
-Q warning and shutdown failure.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 4cf120ebe5a..7a182cd7e4d 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -2292,6 +2292,94 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ }
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
+ 
++/*
++ * pci_bus_subtree_empty - Check whether a bus subtree has any assigned
++ * non-bridge device resources.
++ * @bus: PCI bus to check
++ *
++ * Returns true if no device on @bus or its descendant buses has any
++ * assigned BARs (bridge window resources are not considered).
++ */
++static bool pci_bus_subtree_empty(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		struct resource *r;
++		unsigned int i;
++
++		pci_dev_for_each_resource(dev, r, i) {
++			if (i >= PCI_BRIDGE_RESOURCES)
++				break;
++			if (resource_assigned(r))
++				return false;
++		}
++
++		if (dev->subordinate &&
++		    !pci_bus_subtree_empty(dev->subordinate))
++			return false;
++	}
++
++	return true;
++}
++
++/*
++ * pci_bus_release_empty_bridges - Release bridge window resources of
++ * empty sibling bridges so the parent window can be freed and re-sized.
++ * @bus: PCI bus whose child bridges to scan
++ * @b_win: Parent bridge window resource; only children of this window
++ *         are released
++ * @saved: List to save released resources for rollback
++ *
++ * For each PCI-to-PCI bridge on @bus whose subtree is empty (no assigned
++ * device BARs), releases bridge window resources that are children of
++ * @b_win, saving them for rollback via @saved.
++ *
++ * Returns 0 on success, negative errno on failure.
++ */
++static int pci_bus_release_empty_bridges(struct pci_bus *bus,
++					 struct resource *b_win,
++					 struct list_head *saved)
++{
++	struct pci_dev *dev;
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		struct resource *r;
++		unsigned int i;
++
++		if (!dev->subordinate)
++			continue;
++
++		if ((dev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
++			continue;
++
++		if (!pci_bus_subtree_empty(dev->subordinate))
++			continue;
++
++		pci_dev_for_each_resource(dev, r, i) {
++			int ret;
++
++			if (!pci_resource_is_bridge_win(i))
++				continue;
++
++			if (!resource_assigned(r))
++				continue;
++
++			if (r->parent != b_win)
++				continue;
++
++			ret = pci_dev_res_add_to_list(saved, dev, r, 0, 0);
++			if (ret)
++				return ret;
++
++			release_child_resources(r);
++			pci_release_resource(dev, i);
++		}
++	}
++
++	return 0;
++}
++
+ /*
+  * Walk to the root bus, find the bridge window relevant for @res and
+  * release it when possible. If the bridge window contains assigned
+@@ -2316,7 +2404,14 @@ static int pbus_reassign_bridge_resources(struct pci_bus *bus, struct resource *
+ 
+ 		i = pci_resource_num(bridge, res);
+ 
+-		/* Ignore BARs which are still in use */
++		/* Release empty sibling bridge windows first */
++		if (bridge->subordinate) {
++			ret = pci_bus_release_empty_bridges(
++					bridge->subordinate, res, saved);
++			if (ret)
++				return ret;
++		}
++
+ 		if (!res->child) {
+ 			ret = pci_dev_res_add_to_list(saved, bridge, res, 0, 0);
+ 			if (ret)
+@@ -2327,7 +2422,7 @@ static int pbus_reassign_bridge_resources(struct pci_bus *bus, struct resource *
+ 			const char *res_name = pci_resource_name(bridge, i);
+ 
+ 			pci_warn(bridge,
+-				 "%s %pR: was not released (still contains assigned resources)\n",
++				 "%s %pR: not released, active children present\n",
+ 				 res_name, res);
+ 		}
+ 
+-- 
+2.43.0
 
-[Sie erhalten nicht h=E4ufig E-Mails von mika.westerberg@linux.intel.com. W=
-eitere Informationen, warum dies wichtig ist, finden Sie unter https://aka.=
-ms/LearnAboutSenderIdentification ]
-
-Hi,
-
-On Sun, Apr 05, 2026 at 10:59:20AM +0200, Lukas Wunner wrote:
-> [cc +=3D Mika, Rene, Alan; start of thread is here:
-> https://lore.kernel.org/all/AM9PR10MB42316BF3E59B29E1EA3E5600B756A@AM9PR1=
-0MB4231.EURPRD10.PROD.OUTLOOK.COM/
-> ]
->
-> On Thu, Mar 26, 2026 at 04:09:05PM +0000, Georg Klima wrote:
-> > I am reporting a reproducible shutdown issue involving Thunderbolt,
-> > PCIe hotplug, and runtime PM on a Lenovo ThinkPad P16.
-> > System fails to power off cleanly when PCIe ASPM is enabled.
-> > After the kernel prints "Power off", it emits warnings and does not
-> > complete shutdown.
->
-> The dmesg output shows that the problems start much earlier than
-> on shutdown:  The discrete "Barlow Ridge" Thunderbolt controller
-> is hot-removed at the 08:44:29 timestamp in a noisy fashion:
->
-> > Mar 26 08:44:28 fedora kernel: usb 3-3: reset full-speed USB device num=
-ber 2 using xhci_hcd
-> > Mar 26 08:44:29 fedora kernel: pcieport 0000:80:1b.4: Data Link Layer L=
-ink Active not set in 100 msec
-> > Mar 26 08:44:29 fedora kernel: pcieport 0000:80:1b.4: pciehp: Slot(25):=
- Card not present
-> > Mar 26 08:44:29 fedora kernel: ------------[ cut here ]------------
-> > Mar 26 08:44:29 fedora kernel: thunderbolt 0000:8a:00.0: interrupt for =
-TX ring 0 is already enabled
-> > Mar 26 08:44:29 fedora kernel: xhci_hcd 0000:b1:00.0: Controller not re=
-ady at resume -19
-> > Mar 26 08:44:29 fedora kernel: xhci_hcd 0000:b1:00.0: PCI post-resume e=
-rror -19!
-> > Mar 26 08:44:29 fedora kernel: xhci_hcd 0000:b1:00.0: HC died; cleaning=
- up
-> > Mar 26 08:44:29 fedora kernel: WARNING: drivers/thunderbolt/nhi.c:147 a=
-t ring_interrupt_active+0x246/0x2f0 [thunderbolt], CPU#3: kworker/u96:5/109=
-2
->
-> The controller is then re-discovered after the link goes back up.
-> The actual shutdown doesn't seem to start until the 08:45:26 timestamp.
->
-> Going forward please use "dmesg" to collect kernel output, not journalctl=
-,
-> so that we get timestamps with usec granularity.
->
-> >   *   Hardware: Lenovo ThinkPad P16 (21RQ003BGE)
-> >   *   BIOS: N4FET30W (1.11) 10/03/2025
-> >   *   Kernel: 6.19.10-200.fc43.x86_64
-> >   *   Distribution: Fedora 43
-> >   *   Platform: Intel (Meteor Lake)
-> >   *   Thunderbolt controller: 0000:8a:00.0
->
-> It looks like this isn't Meteor Lake but Arrow Lake-S:
->
-> 0000:80:1b.4 - Arrow Lake-S (800 Series) PCH Root Port #21
->   0000:88:00.0 - Barlow Ridge Upstream Port
->     0000:89:00.0 - Barlow Ridge Downstream Port to NHI
->       0000:8a:00.0 - Barlow Ridge NHI
->
-
-Looking at the dmesg there is hotplug enabled for the PCIe root port:
-
-  Mar 26 09:44:00 fedora kernel: pcieport 0000:80:1b.4: pciehp: Slot #25 At=
-tnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl=
-+ IbPresDis- LLActRep+
-
-For Barlow Ridge it should be disabled. Lenovo may already have a BIOS fix
-please check. They have done that for other models too.
