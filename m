@@ -1,58 +1,58 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E349C3ACF19
-	for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2026 08:45:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CAE73AD53F
+	for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2026 08:53:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775810709; cv=none; b=K/AiBfyNxy3TZmDriTSx4dgdRKr4ds9pFt6A4jw+lupmRO+niPgZIKT8sQRARG+21z9BJL16JfsjLpn/+h8zGm68uaWblzUaXSnviLU3aCFGJnbjYZPEmRptIRE/nMfZvX5vzNbeZ8zv5Z3FDKJYHmZddLqgsbjbdpG5efNiYYk=
+	t=1775811238; cv=none; b=LPvFjn6uX4JoHZvxMNuRk+kmN/ULBaLvkhrsQaqruOcVsdj37ylCbfI6GbCsXNc3P80uBnKGXmJD73S9balBPC3oZKmboeibIA+rOWseBRmofExg3uBcALpz2nt7VZ6H1UE37QtLXwcBSTJuqQev2GueEKEBGWCzoI9MzYfCfDo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775810709; c=relaxed/simple;
-	bh=uM477T0brWyxusRDXk4SK1YNPl9h71+Ekls5lbmT6zc=;
+	s=arc-20240116; t=1775811238; c=relaxed/simple;
+	bh=LlajGwjuNbRpOSUlDi9JuAJEAsPaqQSpr4zuJcI19mI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CH7KizF6dq1b0Ye9vxnltPXKeyD1o8Tbc1CXeF7IumVnYlzASfyLRxmZaxJUKcwzZaB2Z2cEB/cbVmk9deB7OAiXwQdSoN267XlQZlFvq4TtEmoq8Qos3/Q/hpXZFumKpr4AhyXtrLEZfP4FhjqXEPGffn8blmJdfiawIbIWTsU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nHd9XAdo; arc=none smtp.client-ip=192.198.163.12
+	 Content-Type:Content-Disposition:In-Reply-To; b=P8NeJO1V4ZWmcl3juRimyS1rWbRgX55NhWvvBJOg6UsISlmL2rtfyZ34ac+smHiezb+OyCmPYDs9tkkDIQysufwfgWzXWRlE9RfKi12YKuVgBBXT4twAR5Tiqhl8rBsOWB5pfQ7OfUt16D5YwqSKf+8H4qIMnjRUvzDRLEtYio4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LstA3T5i; arc=none smtp.client-ip=198.175.65.20
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nHd9XAdo"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LstA3T5i"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775810708; x=1807346708;
+  t=1775811236; x=1807347236;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=uM477T0brWyxusRDXk4SK1YNPl9h71+Ekls5lbmT6zc=;
-  b=nHd9XAdo6CECJ7bHr92HC0boD8u2Mv1q8TmABInQBSbrKkoKq3zk0xOB
-   ZQr2J9J+aO+eHVK3NABADETOAWo6/UQuh8MN7O2ILWobtfrEsunLa4Zc+
-   sg6Wcpf0uqGp5Uu50o5qwrB9fmrQ4vYHMjyZZUZKM7d/Lj9aIg4sqyswu
-   PDgO0PzSBhZo7rkMG4Qwf5pNXrxAKWIkNaly+sdyzYBvq1bXwCvPzJp9x
-   bRRcDSM6TBqh+pp1OvmMu9LZmp15s6l/i3AUs+uaUMS+bU742kZrBZF3W
-   OASqzPw6MY0HJHNWoE4O8sr+TnXwkjGguuDz55IjCfOIp2A/KgP+ZTWne
-   g==;
-X-CSE-ConnectionGUID: zH+QhcpXQLeuRS6LjDeSqw==
-X-CSE-MsgGUID: fEt+ZpXvSV+hP/q64gaklw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11754"; a="80715375"
+  bh=LlajGwjuNbRpOSUlDi9JuAJEAsPaqQSpr4zuJcI19mI=;
+  b=LstA3T5iIZ/aqxM3u+81q7zFqZA/7aS3SbPF3zykfZYf/B9J3MBTwbC5
+   sVwakowIyedxJmUjtaj7nlhsAi/L3w5Hk6w8BQMxjCQHbyC5aVQlosbHh
+   OLDuDZYrP32ycMyHCfYS6mCEAuXFXlium554TKKppn520VkXueB01w1Ur
+   2q+tlsgy9MEPriojR0YS+rGJxRDg4dH/yO9bLCjS5ir6/nmtw5VZJEPuc
+   wwCy5L2Xy4SMI99NT091pTUd8evPmA+ea9L6owPg2ILwsyJ6jC3HAqKI9
+   IodPM57lEzJPw9slwewPXkgShDC41/qlMeRrJ5fs9eEuwrrx6McFpHu9F
+   w==;
+X-CSE-ConnectionGUID: 0F+ZIXB7S7ip8+swWA/uxw==
+X-CSE-MsgGUID: aYDhP60sSpmkpFwo0BvBJQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11754"; a="76545648"
 X-IronPort-AV: E=Sophos;i="6.23,171,1770624000"; 
-   d="scan'208";a="80715375"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 01:44:18 -0700
-X-CSE-ConnectionGUID: PvhHduFDTDiEy0ZGC7PGPw==
-X-CSE-MsgGUID: iTXEXmLDQVG6QpCYZIgrow==
+   d="scan'208";a="76545648"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 01:53:55 -0700
+X-CSE-ConnectionGUID: LXBcm4VUQuGWJQ2QgNefJQ==
+X-CSE-MsgGUID: lV8IWcD0Sdm6as+S2gvtzQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,171,1770624000"; 
-   d="scan'208";a="225870127"
+   d="scan'208";a="226316637"
 Received: from ly-workstation.sh.intel.com (HELO ly-workstation) ([10.239.182.64])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 01:44:15 -0700
-Date: Fri, 10 Apr 2026 16:44:11 +0800
+  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 01:53:52 -0700
+Date: Fri, 10 Apr 2026 16:53:49 +0800
 From: "Lai, Yi" <yi1.lai@intel.com>
-To: Dan Williams <dan.j.williams@intel.com>, djbw@kernel.org
+To: Dan Williams <djbw@kernel.org>
 Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
 	gregkh@linuxfoundation.org, aik@amd.com, aneesh.kumar@kernel.org,
 	yilun.xu@linux.intel.com, bhelgaas@google.com, alistair23@gmail.com,
-	lukas@wunner.de, jgg@nvidia.com, djbw@kernel.org
+	lukas@wunner.de, jgg@nvidia.com
 Subject: Re: [PATCH v2 07/19] PCI/TSM: Add Device Security (TVM Guest) ACCEPT
  operation support
-Message-ID: <adi4W2zKANjqmtZC@ly-workstation>
+Message-ID: <adi6nb82sM33TJV8@ly-workstation>
 References: <20260303000207.1836586-1-dan.j.williams@intel.com>
  <20260303000207.1836586-8-dan.j.williams@intel.com>
 Precedence: bulk
@@ -170,33 +170,6 @@ On Mon, Mar 02, 2026 at 04:01:55PM -0800, Dan Williams wrote:
 > + * that transition from a known DMA-idle (no active mappings) state. The "driver
 > + * detached" state is a coarse way to assert that requirement.
 > + */
-
-Hi Dan,
-
-Repeated accept on a device that is already in RUN state is not rejected
-by the PCI TSM core, and multiple encrypted MMIO resources for the same
-BAR range can be created. Furthermore, a later request to move the
-device to UNLOCKED state only removes the most recently tracked
-encrypted range.
-
-Reproduce steps:
-1. echo tsmX > /sys/bus/pci/devices/<bdf>/tsm/lock
-2. echo 1 > /sys/bus/pci/devices/<bdf>/tsm/accept
-3. echo 1 > /sys/bus/pci/devices/<bdf>/tsm/accept
-4. cat /proc/iomem | grep "PCI MMIO Encrypted"
-5. echo tsmX > /sys/bus/pci/devices/<bdf>/tsm/unlock
-6. cat /proc/iomem | grep "PCI MMIO Encrypted"
-
-Observed results after step4 (duplicate BAR range):
-380002000000-3800021fffff : PCI MMIO Encrypted
-  380002000000-3800021fffff : PCI MMIO Encrypted
-
-Observed results after step 6 (leaked resource):
-380002000000-3800021fffff : PCI MMIO Encrypted
-
-Regards,
-Yi Lai
-
 > +static int pci_tsm_accept(struct pci_dev *pdev)
 > +{
 > +	int rc;
@@ -222,6 +195,33 @@ Yi Lai
 > +	return device_cc_accept(&pdev->dev);
 > +}
 > +
+# Re-send to Dan's kernel.org address. Sorry if you receive the same
+# email twice.
+
+Repeated accept on a device that is already in RUN state is not rejected
+by the PCI TSM core, and multiple encrypted MMIO resources for the same
+BAR range can be created. Furthermore, a later request to move the
+device to UNLOCKED state only removes the most recently tracked
+encrypted range.
+
+Reproduce steps:
+1. echo tsmX > /sys/bus/pci/devices/<bdf>/tsm/lock
+2. echo 1 > /sys/bus/pci/devices/<bdf>/tsm/accept
+3. echo 1 > /sys/bus/pci/devices/<bdf>/tsm/accept
+4. cat /proc/iomem | grep "PCI MMIO Encrypted"
+5. echo tsmX > /sys/bus/pci/devices/<bdf>/tsm/unlock
+6. cat /proc/iomem | grep "PCI MMIO Encrypted"
+
+Observed results after step4 (duplicate BAR range):
+380002000000-3800021fffff : PCI MMIO Encrypted
+  380002000000-3800021fffff : PCI MMIO Encrypted
+
+Observed results after step 6 (leaked resource):
+380002000000-3800021fffff : PCI MMIO Encrypted
+
+Regards,
+Yi Lai
+
 > +static ssize_t accept_store(struct device *dev, struct device_attribute *attr,
 > +			    const char *buf, size_t len)
 > +{
