@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5D4F30BF5C;
-	Fri, 10 Apr 2026 05:51:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD0A030BF5C;
+	Fri, 10 Apr 2026 05:51:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775800277; cv=none; b=BdBzfsCODigH1nz8FisUDXQ14cEGf0w60MRZQR+RS9CIfO8bXkxSmpligCPXUdij8oj9QM697zcIEww//D4IsbQy0avBqr5kqGUwzqzsRxx58mzYUJ6cc+O9rLmrRwLHIBZs6iiElOWgM84NhgrH16PmK9y06ZPNJ2RhbZqN6Ng=
+	t=1775800280; cv=none; b=NWBLnTeV82EnHWUVOB8FTuuZvQ9CNNjLHBu3wVHk8WcJ8q8jqo/LX140obaPbK9wNIdfgp72o7z5UF5ZwIKhHz7f4wgYH+zKEQxkA+CnawTA69noRI1R3sfr/8USijJPbRHCHV1+jHSQyekx8F1g6WWHaLeabA2edqcXv165Xg0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775800277; c=relaxed/simple;
-	bh=3hptuhV9yvRK5QFViJmdIejaERCBcfDgF46k3rwUdzg=;
+	s=arc-20240116; t=1775800280; c=relaxed/simple;
+	bh=RJIbkZ2vyHUaEoq5eiCMqBUxiew4KtMmfoufXoK9vfk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cPgruCb45cHsrTZvGaFtVHAcVkWGHL8eZqzgZ5n3kJIeguMq6aoFgd087qD9t/apc9xhiw/I23hsUAcO9e8oLd9alqkGjIgyKK9zVQC3qI0GjE71ydrXdM5syjyf14r9HtIkg37ggW4uwypQlBZR/bPaYbf4djGxu1I/OkpyxSo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CVeUMnFB; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=GXBuMrf9UBgMVAmvSuZmBhtHpalcimnvQh+U4BKZb+JlK3QswUzMHFpZwXB6q9jAdx2C5e9phaw89cyFt13n3GCuIwSw2wfv/iZyAHCt2F0I2Zba6vxq+xVoFhzUVv6ttS9DLZRz7aG86KandO3a2QMcEBjJp+C3eA9DQzGD9YM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=liCvDkXg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CVeUMnFB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B6F9C2BCAF;
-	Fri, 10 Apr 2026 05:51:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="liCvDkXg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FD2EC19424;
+	Fri, 10 Apr 2026 05:51:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775800277;
-	bh=3hptuhV9yvRK5QFViJmdIejaERCBcfDgF46k3rwUdzg=;
+	s=k20201202; t=1775800280;
+	bh=RJIbkZ2vyHUaEoq5eiCMqBUxiew4KtMmfoufXoK9vfk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=CVeUMnFB92kckEyX6w4AOLTj43SKV6JPyWI+WtBUYmkpZDDOQKifdnGtDYcPQlEPl
-	 afN0P4N57mX3XV53stpV1j8HBs+zNnRRsrSDWkSZW2FeRnTy0lYBaKE78W/7GD6iXz
-	 to+Zhxoks60apXrm5tH+1kUihP78QNon1tQB4gDPxTrIUjv9To/eMvOTNpYH1sBOaN
-	 pzJm/EIB9e7iJ63Tjxx2RJtHBPsEChZ3vdZssI0RN4+ZdYCHcrh3rHGg2cXIUr5LMG
-	 gg/NUq3Cu6u2LyDUIPOP81q2j00XYpnfbEUrXfYgt54IOy+Znj7kTfry/QjxyPHBdO
-	 7iMU488IS78SQ==
+	b=liCvDkXgv7IA7HXmjFq8dJ0WMbYu6MZvNqB4kiD0BSaMgAPd/2c2zB2OX9kHJ0ATy
+	 W+PnIPy3kIG686pSrdTPCUcgVjtAkVa8Oh0JtY0Z+wMgZyuJGoUqxYFKX5yxKhvUeT
+	 XXpIHUgpXZsp08QWBXesvroou4mvzJgHjvboX9BSjAWUAko9ZP2LtK+gQCIlHo2G0x
+	 FTfMh+sPelY4HKAsauSsunCiWVGWmcmtN25ky16oOFQbBeldoblTxD5NQulR2WvUxy
+	 N0Jk8jQxi1XZldp8ovRL1OlUzUz6l6biiioMY4LkFVC0S2Dvy2Mu2w4fKRmbF+bwwz
+	 Zwoesx3LRDWMw==
 From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>,
@@ -49,9 +49,9 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	linux-pci@vger.kernel.org,
 	linux-alpha@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 09/20] PCI/sysfs: Limit pci_sysfs_init() late_initcall compile scope
-Date: Fri, 10 Apr 2026 05:50:29 +0000
-Message-ID: <20260410055040.39233-10-kwilczynski@kernel.org>
+Subject: [PATCH 10/20] alpha/PCI: Add security_locked_down() check to pci_mmap_resource()
+Date: Fri, 10 Apr 2026 05:50:30 +0000
+Message-ID: <20260410055040.39233-11-kwilczynski@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260410055040.39233-1-kwilczynski@kernel.org>
 References: <20260410055040.39233-1-kwilczynski@kernel.org>
@@ -64,64 +64,46 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Currently, pci_sysfs_init() and sysfs_initialized compile
-unconditionally, even on platforms where static attribute
-groups handle all resource file creation.
+Currently, Alpha's pci_mmap_resource() does not check
+security_locked_down(LOCKDOWN_PCI_ACCESS) before allowing
+userspace to mmap PCI BARs.
 
-Thus, place them behind a new HAVE_PCI_SYSFS_INIT macro,
-especially as the late_initcall is only needed when:
+The generic version has had this check since commit eb627e17727e
+("PCI: Lock down BAR access when the kernel is locked down") to
+prevent DMA attacks when the kernel is locked down.
 
-  - HAVE_PCI_LEGACY is set, to iterate buses and create legacy
-    I/O and memory files.
-
-  - Neither HAVE_PCI_MMAP nor ARCH_GENERIC_PCI_MMAP_RESOURCE is
-    set, to iterate devices and create resource files via the
-    __weak pci_create_resource_files() stub override (this is
-    how the Alpha architecture handles this currently).
-
-On most systems both conditions are false and the entire
-late_initcall compiles away.
+Add the same check to Alpha's pci_mmap_resource().
 
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 ---
- drivers/pci/pci-sysfs.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ arch/alpha/kernel/pci-sysfs.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index e200514bbaed..062921d5df9b 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -37,7 +37,14 @@
- #define ARCH_PCI_DEV_GROUPS
- #endif
+diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
+index 3048758304b5..2324720c3e83 100644
+--- a/arch/alpha/kernel/pci-sysfs.c
++++ b/arch/alpha/kernel/pci-sysfs.c
+@@ -11,6 +11,7 @@
+  */
  
-+#if defined(HAVE_PCI_LEGACY) || \
-+	!defined(HAVE_PCI_MMAP) && !defined(ARCH_GENERIC_PCI_MMAP_RESOURCE)
-+#define HAVE_PCI_SYSFS_INIT
-+#endif
+ #include <linux/sched.h>
++#include <linux/security.h>
+ #include <linux/stat.h>
+ #include <linux/slab.h>
+ #include <linux/pci.h>
+@@ -71,7 +72,11 @@ static int pci_mmap_resource(struct kobject *kobj,
+ 	struct resource *res = attr->private;
+ 	enum pci_mmap_state mmap_type;
+ 	struct pci_bus_region bar;
+-	int i;
++	int i, ret;
 +
-+#ifdef HAVE_PCI_SYSFS_INIT
- static int sysfs_initialized;	/* = 0 */
-+#endif
++	ret = security_locked_down(LOCKDOWN_PCI_ACCESS);
++	if (ret)
++		return ret;
  
- /* show configuration fields */
- #define pci_config_attr(field, format_string)				\
-@@ -1791,6 +1798,7 @@ void pci_remove_sysfs_dev_files(struct pci_dev *pdev)
- }
- #endif
- 
-+#ifdef HAVE_PCI_SYSFS_INIT
- static int __init pci_sysfs_init(void)
- {
- #if defined(HAVE_PCI_MMAP) || defined(ARCH_GENERIC_PCI_MMAP_RESOURCE)
-@@ -1817,6 +1825,7 @@ static int __init pci_sysfs_init(void)
- 	return 0;
- }
- late_initcall(pci_sysfs_init);
-+#endif
- 
- static struct attribute *pci_dev_dev_attrs[] = {
- 	&dev_attr_boot_vga.attr,
+ 	for (i = 0; i < PCI_STD_NUM_BARS; i++)
+ 		if (res == &pdev->resource[i])
 -- 
 2.53.0
 
