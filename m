@@ -1,119 +1,125 @@
-Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49EE63B27D4
-	for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2026 10:14:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9BCF2E63C;
+	Fri, 10 Apr 2026 10:18:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775816046; cv=none; b=euIn9iH+6Nto5lcsvpFXX0zCCjsBVFaGc8H8+ZTna7uxgeEd1QvRZCsNHK9KKwhu7SSUbThgKYY400VHacADOILejCttgAMy8HmzvyvF6xooQOZZyJOwX5PWm2924gJqqL+zHOeMfEY5erH5hKtOYLgyb2GduwCTcIZTC4VjiBM=
+	t=1775816341; cv=none; b=Rk/AeHBeXsV+73vhZpa7SayrFa+TK6HaG3BL3QbF4BFz9YY3tQOsSd5fifJGiM6oe5zh+3NStQuAutty+dtFc6y1kTEuI68eMY98ypq184LACu7snp7orZfaHP9bRREyHSw7HwrCT8nN+feRJLgFA9nwCzYdu1RQrzJRGZwjdtk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775816046; c=relaxed/simple;
-	bh=cNwNoQfVMvgb8u/WjV1yoZ/R0UlbAVcORBvRS9+/2dU=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=nOu8Nfb/mKcYG17DIl9jTXmJO41bhr00IKQr3omQnGDV6qGnVg9gnnuS7vcE7t4Ob/KJLplsxkZ0Y4KLh5Mxq5EK08aW9mdkzjuyp3ONwj/Qh6uieOx6zP3U1Q1eCSl0opgrpNCG3ClHksfoXjeTw0dv8BrIAvE6jjnMT9KBtng=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Wohz7C7r; arc=none smtp.client-ip=209.85.128.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1775816341; c=relaxed/simple;
+	bh=sJjahAyArFT38iar0FyVHZtbbpGo+U5iy6pPkK42kPc=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=Kw+hw4DYIK/0xhnUnN7TG6TzTUoSQWBL8wmDMtPdKS3NtxhXdLpE0M7LWCAg7tECfUXQh106i8z4e4G4+GuMxG+DWkkRGU/JgDZnZGF7LT7n1uGUkKrfiBmEkkj3X1P/IqXHhCi4CsNItnvL6oPlsLEwMRpYsgiM69Ne5ouVQZU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=e9qftu5R; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Wohz7C7r"
-Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-4852a9c6309so17649535e9.0
-        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2026 03:14:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1775816044; x=1776420844; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=D9vi1Qcy5IQgvj+vG0eFK20Y9MjA+J4iFlYIuZ+D4fU=;
-        b=Wohz7C7r9onfYWrFvgjBh3IKBWikOM4p7Zf+TXfABgiLWhDOZgaRfUIKjTfS0oJF1I
-         TCGBKl2q2IzHHn7dUjflGYES8+OalyzCLrDLZAXoJOjM5WNMIrsHrWV9OjYqCTnytbo0
-         NlIO9H78rHd7EUT1i5M68njKYEbB564t9XEtqwSxhywXUPRSAt/5JY/V745WAu8tsY/8
-         4RySd3otojTOi098Pzk0O03EKF87H0szb+9xG33uAzPjxS3d11E/Gns6DRGfY6AfP03B
-         9zpRQ471YJu3Z6ipk3xt9TP6hM645DUzJ2UYlG9zj8dIEzW3w7bl+8IzEoP/Z0tYzDT+
-         wXRw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775816044; x=1776420844;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=D9vi1Qcy5IQgvj+vG0eFK20Y9MjA+J4iFlYIuZ+D4fU=;
-        b=bCW+tXUZVm9PtNMEDHc6vffs+XB11nO6fp4t8sq8gq5/2MNSD/623X/1WekNXtUf2c
-         IVbkcNwNPCW6BJbbJD35xx2UOTuM8OmNTl3dzdV/BBrzpE0FEEhUXsNgQ5xcMwSOvRCY
-         87JfgCYjH2wNjwid6QwIUw6NcLbyrdYH7b+rbqLyk13/N/fbR57FVLnn1nNzpms642aj
-         C4zMlais6aAkWZ+sLhZtJwGs+ugwzPBonewCU/5lfs9Ic7U/BWa/OxXRoqzNlEJBIMBO
-         CaoXGRe2PMv2gjO7SK+7gXJCeezk6zalBH3hxl+F18M6Zzb6tm700njUKEsJxMiWIsO6
-         LzdA==
-X-Gm-Message-State: AOJu0YzGd+ITvrZbZHJKAlubgcVNS6cVASDTfLViuLKG8Css9Z0Ve51O
-	+42dQkv4Q7Oiv+YxRoPNpLzw2jfjpq9PfaYuhu0puGuyXjZC6THCkgmA
-X-Gm-Gg: AeBDiesp9uBhvf3sw+huFeug+89LjsNPP76lxuokCIDPq76qSHBgAL4COQDIgm8eipN
-	sIv5SaYqyIepa3dnidVJcH4xj6JzZQIJQIf73GCWMOWvlkfv06HPTKltzC7S2JnYavLQsgB7WoL
-	CH4GbB6rfGklU2VzBlqLuYOoul1bzxO/EAusWXMCTlbBF+hixXzrVhymvMI8y3iS4IVnd4t6w92
-	wlqCEOnAKOhHmycyfJdsqpdn78PrXiTVI8qYIPG8zZI8UBi8mskxGaKd2iBkdgd/UizyXGsUH8L
-	BZRQJCgPq7hxqXS37SSuZhx2h42n7W6pnY4SE4FSOut0JKMSQdpVKI1zZXC749jZPfExqSPSTpg
-	Q8rCNjffRFwJz+H+hrMVa8NZMYjKySV1nF84n2eB/Edq4RLHYGYxJo7ORy1O1N+GERA38lHkVR6
-	3vtlUhc9GGtfXEQsxSSKQ=
-X-Received: by 2002:a05:600c:a409:b0:485:9a50:338d with SMTP id 5b1f17b1804b1-488d67bbd10mr27672835e9.3.1775816043400;
-        Fri, 10 Apr 2026 03:14:03 -0700 (PDT)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488d681ea59sm17034435e9.14.2026.04.10.03.14.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Apr 2026 03:14:02 -0700 (PDT)
-Date: Fri, 10 Apr 2026 13:14:00 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Chen-Yu Tsai <wenst@chromium.org>
-Cc: linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org
-Subject: [bug report] PCI: mediatek-gen3: Integrate new pwrctrl API
-Message-ID: <adjNaKB5KGpl6qIp@stanley.mountain>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="e9qftu5R"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1775816340; x=1807352340;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=sJjahAyArFT38iar0FyVHZtbbpGo+U5iy6pPkK42kPc=;
+  b=e9qftu5RIehFO20cuwVplezN6PCakuRMJlCiAGIwz+lBVpgN7Wm4JNdK
+   cuNP1J7JPWB2KgCOmrKNk5QfSAnF/yQLtHplh0StcFwRfHS2wVLzZapmC
+   TM3fBsSbVbzIqPs8D0Ai1Rsawz/fb7uAHjeNjUGx7HSJe2OXyOz93UW6I
+   G7afNe3sjdQr0bxijUrn/qBLymA2SBw2/2Y9qO6OMJxZd1/0NQo7lDsUa
+   Zxrtsg0GUr8T1Y8ZxKWzc2OJqEJg9DMWJnFkGmB9zbH7h0eJBFcKVubba
+   oOPMXx1+6xjWjJX6QmOLpsRyYNRkgKR3uhTw55YEfF2NV53GX3VAuBoJM
+   Q==;
+X-CSE-ConnectionGUID: aN7lLnGfQyq4MptTwkv8mw==
+X-CSE-MsgGUID: +UAc0gqOS9C/K9Af3RKEug==
+X-IronPort-AV: E=McAfee;i="6800,10657,11754"; a="80723099"
+X-IronPort-AV: E=Sophos;i="6.23,171,1770624000"; 
+   d="scan'208";a="80723099"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 03:18:59 -0700
+X-CSE-ConnectionGUID: 0SVrldBuSXepU1rqThYmYw==
+X-CSE-MsgGUID: ei3zn7N0QJCCee3wDOarkg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,171,1770624000"; 
+   d="scan'208";a="222559193"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.118])
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 03:18:51 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Fri, 10 Apr 2026 13:18:43 +0300 (EEST)
+To: =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>
+cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>, 
+    Manivannan Sadhasivam <mani@kernel.org>, 
+    Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+    Magnus Lindholm <linmag7@gmail.com>, Matt Turner <mattst88@gmail.com>, 
+    Richard Henderson <richard.henderson@linaro.org>, 
+    Christophe Leroy <chleroy@kernel.org>, 
+    Madhavan Srinivasan <maddy@linux.ibm.com>, 
+    Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+    Dexuan Cui <decui@microsoft.com>, 
+    =?ISO-8859-2?Q?Krzysztof_Ha=B3asa?= <khalasa@piap.pl>, 
+    Lukas Wunner <lukas@wunner.de>, Oliver O'Halloran <oohall@gmail.com>, 
+    Saurabh Singh Sengar <ssengar@microsoft.com>, 
+    Shuan He <heshuan@bytedance.com>, 
+    Srivatsa Bhat <srivatsabhat@microsoft.com>, linux-pci@vger.kernel.org, 
+    linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 04/20] PCI/sysfs: Add CAP_SYS_ADMIN check to
+ __resource_resize_store()
+In-Reply-To: <20260410055040.39233-5-kwilczynski@kernel.org>
+Message-ID: <37f2e32a-804d-7c59-d3d0-7148ef2cd95a@linux.intel.com>
+References: <20260410055040.39233-1-kwilczynski@kernel.org> <20260410055040.39233-5-kwilczynski@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: multipart/mixed; boundary="8323328-297789617-1775816323=:1195"
 
-Hello Chen-Yu Tsai,
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Commit 1a152e21940a ("PCI: mediatek-gen3: Integrate new pwrctrl API")
-from Mar 24, 2026 (linux-next), leads to the following Smatch static
-checker warning:
+--8323328-297789617-1775816323=:1195
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-	drivers/pci/controller/pcie-mediatek-gen3.c:1226 mtk_pcie_probe()
-	warn: ignoring unreachable code.
+On Fri, 10 Apr 2026, Krzysztof Wilczy=C5=84ski wrote:
 
-drivers/pci/controller/pcie-mediatek-gen3.c
-    1202 static int mtk_pcie_probe(struct platform_device *pdev)
-    1203 {
-    1204         struct device *dev = &pdev->dev;
-    1205         struct mtk_gen3_pcie *pcie;
-    1206         struct pci_host_bridge *host;
-    1207         int err;
-    1208 
-    1209         host = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
-    1210         if (!host)
-    1211                 return -ENOMEM;
-    1212 
-    1213         pcie = pci_host_bridge_priv(host);
-    1214 
-    1215         pcie->dev = dev;
-    1216         pcie->soc = device_get_match_data(dev);
-    1217         platform_set_drvdata(pdev, pcie);
-    1218 
-    1219         err = mtk_pcie_setup_irq(pcie);
-    1220         if (err)
-    1221                 return dev_err_probe(dev, err, "Failed to setup IRQ domains\n");
-    1222 
-    1223         err = pci_pwrctrl_create_devices(pcie->dev);
-    1224         if (err) {
-    1225                 goto err_tear_down_irq;
---> 1226                 dev_err_probe(dev, err, "failed to create pwrctrl devices\n");
+> Currently, the __resource_resize_store() allows writing to the
+> resourceN_resize sysfs attribute to change a BAR's size without
+> checking for capabilities, currently relying only on the file
+> access check.
+>=20
+> Resizing a BAR modifies PCI device configuration and can disrupt
+> active drivers.  After the upcoming conversion to static attributes,
+> it will also trigger resource file updates via sysfs_update_groups().
+>=20
+> Thus, add a CAP_SYS_ADMIN check to prevent unprivileged users from
+> performing BAR resize operations.
+>=20
+> Signed-off-by: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
+> ---
+>  drivers/pci/pci-sysfs.c | 3 +++
+>  1 file changed, 3 insertions(+)
+>=20
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index ac4e7c516e78..6b8c8e62f68a 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1619,6 +1619,9 @@ static ssize_t __resource_resize_store(struct devic=
+e *dev, int n,
+>  =09int ret;
+>  =09u16 cmd;
+> =20
+> +=09if (!capable(CAP_SYS_ADMIN))
+> +=09=09return -EPERM;
+> +
+>  =09if (kstrtoul(buf, 0, &size) < 0)
+>  =09=09return -EINVAL;
+> =20
+>=20
 
-The error message is unreachable.
+Reviewed-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
 
-    1227         }
-    1228 
-    1229         err = mtk_pcie_setup(pcie);
+--=20
+ i.
 
-This email is a free service from the Smatch-CI project [smatch.sf.net].
-
-regards,
-dan carpenter
+--8323328-297789617-1775816323=:1195--
