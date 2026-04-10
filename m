@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0005C3368AD;
-	Fri, 10 Apr 2026 11:21:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E7E139E177;
+	Fri, 10 Apr 2026 11:27:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775820095; cv=none; b=HjKXygDybq0KpnZQQqyjvL7bWPSN21IAtLT1ZNE7zbjyj5AJaIn7MD1BhycCEua9NZAB4bVwT3pESXwMuGz3umruqzCgzH1Kv64LIqRZ6LuTcvsoPAakKTxn+FA7Bq/gspiO4JalMgBZ2dkjaGFbBX5uDhe/9cYpb8vWqIxUQm4=
+	t=1775820432; cv=none; b=H54DSQ23TypqFKsh4UI3F0rznrdIjhxd9JOD551qLRGx/0mvk3cycUfhMTOpIsxD0/rHAKTDQwROGhqD17UuME/Bg2+ehIm/ZJmRHKK253nR6lvutIKJLpRtd60DbfCmZFqKKHcxjzW0EeNnfgZuCDVckocsRHxlGv+j0INXeIs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775820095; c=relaxed/simple;
-	bh=xLa+rJ9E7aCqjS27Iq/hgGnSH2oHxIMaRffEJnqkauE=;
+	s=arc-20240116; t=1775820432; c=relaxed/simple;
+	bh=1su7Hk+2MPUWstIkBAykmSdSjnEsIRdA/siC5BZw4x0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Sm1KW/uU1dJ3gVKwVaACrSkz1HBrH2hL+tUEzAhbuS8JK14ywbLgjAhInU8fPgP9nbsF/yik27sXRfsEKoV+iJTHO/TajJOwpVmZDrpUb2/rquMQJUew2p+HuUY920J3tgIcPGgso1A13DgiVhGpkVYx2jMgLMJzFUtUb3dHfNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aNkWsMkv; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=b3E0yMTgtOKUUzdZCCfKUkpFozU0Ki+JkcWIke+PWV8ZAkmEb87xRz+9a4QQZernv3mzo2DUwdyWOscUCFeSoEax6sdMAxaJ7NOZkvXoYndvPRnc099g6TQAepIhF4CE4eEegUM6Rk9Vg+xK6GZLTzraFV3FnbF564+4vjzKfUQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PysyFQl6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aNkWsMkv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DC07C19421;
-	Fri, 10 Apr 2026 11:21:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PysyFQl6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EB18C19421;
+	Fri, 10 Apr 2026 11:27:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775820094;
-	bh=xLa+rJ9E7aCqjS27Iq/hgGnSH2oHxIMaRffEJnqkauE=;
+	s=k20201202; t=1775820431;
+	bh=1su7Hk+2MPUWstIkBAykmSdSjnEsIRdA/siC5BZw4x0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=aNkWsMkvMG+Va6sAFKXUZym1llx13MYasPeV+K/sG2YsNB5fhSi1QGBWHW0lr8cEe
-	 Ev40On4E48kLxL4u5xdErZMqk8eBFmaEvlczXiYn844NLVvbOf+5VF6GQjp83Cd6RR
-	 URaOH6uyIvSnEz0s89g95P5FSEndyI6GSpvz+kofOapbCZ+SqnRpgUxmlcj+BjRr6d
-	 tUF3nGYNEh0ST+8xFRk7Kvo5dNDV1K+Mm4nyz7O3WrJ93GDtGkKwnZnfK/X17X7k2b
-	 f0faK0yZgmPX7lfc4nMqHmxbcB/3MooRWPwhpnkEtpGRlxGcqByVvM4/hDJUcHMRuX
-	 9X5aOtHCv4PlQ==
-Date: Fri, 10 Apr 2026 20:21:32 +0900
+	b=PysyFQl6cHHK121wyAz9FjAkUHXRBYYV0l8JL1w0Gb3CrDtM52JIADeYXSy+RQj90
+	 Rb/QLPZTrzyCHpZpi94xhrHAMOOVLE9rvMBQryCpadewXyqKFsDh/XybTPr4riFcYM
+	 nYY+Q5cJDURPt+QOYNqDRYm85T+qux6XCyHhsFcTZH83F9yfxGVA1e+cNapPmnasqD
+	 qRgemNPh5xlNYZehbYiW4cWaNj43FUqgxa92TiIK5ZRPEklq5HcGupxDe8+zrOHP8G
+	 qHs3LHYYSm66jU2NtITeLSEd9oucxEHQp3zhnAqNqGK/AQ+slZFYKeKB+wrfJ37oBZ
+	 2uHS+pp7Hhd2w==
+Date: Fri, 10 Apr 2026 20:27:09 +0900
 From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
@@ -48,45 +48,41 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
 	Srivatsa Bhat <srivatsabhat@microsoft.com>,
 	linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH 13/20] alpha/PCI: Clean up __pci_mmap_fits()
-Message-ID: <20260410112132.GA1756033@rocinante>
+Subject: Re: [PATCH 12/20] alpha/PCI: Use PCI resource accessor macros
+Message-ID: <20260410112709.GB1756033@rocinante>
 References: <20260410055040.39233-1-kwilczynski@kernel.org>
- <20260410055040.39233-14-kwilczynski@kernel.org>
- <66eb23bf-1995-363f-78e6-f5a397a063a2@linux.intel.com>
+ <20260410055040.39233-13-kwilczynski@kernel.org>
+ <f36a3096-4a9c-93f7-48cb-e6f4c60fdb93@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <66eb23bf-1995-363f-78e6-f5a397a063a2@linux.intel.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <f36a3096-4a9c-93f7-48cb-e6f4c60fdb93@linux.intel.com>
 
 Hello,
 
-> > Currently, __pci_mmap_fits() computes the BAR size using
-> > pci_resource_len() - 1, which wraps to a large value when the
-> > BAR length is zero, causing the bounds check to incorrectly
-> > succeed.
-> > 
-> > Thus, add an early return for empty resources.
-> > 
-> > Also, remove the WARN() that fires when userspace attempts to
-> > mmap beyond the BAR bounds.  The check still returns 0 to reject
-> > the mapping, but the warning is excessive for normal operation.
-> > 
-> > A similar warning was removed from the PCI core in the commit
-> > 3b519e4ea618 ("PCI: fix size checks for mmap() on /proc/bus/pci files").
+> > -	if (pdev->resource[num].flags & IORESOURCE_MEM) {
+> > +	if (pci_resource_flags(pdev, num) & IORESOURCE_MEM) {
 > 
-> This looks like entirely separate two changes to me which just happen 
-> within the same context.
+> Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+> 
+> I started wonder though if we'd want to add pci_resource_is_mem/io() 
+> shortcuts for these, as it's largely what
+> 
+>     git grep pci_resource_flags
+> 
+> results contain.
 
-True.  I could split this into two separate patches.  However, the early
-return is so trivial, that I decided to keep it here, in lieu of that the
-linked patch did, too.
+I see what you mean...  We can introduce such helpers here, and be the first
+users within the PCI tree, that is, before someone will do a tree-wide or some
+more granular update eventually.
 
-Thoughts?
+Should I do it?  Thoughts?
 
 Thank you!
 
