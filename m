@@ -1,658 +1,73 @@
-Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com [209.85.160.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6827E2741B6
-	for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2026 23:01:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.176
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775862086; cv=pass; b=jwUGkQxzSOurXYq80etDcOrQ9KPeaAEL2FAXVdCY5Q3BKDmpnOSNTEEUIZdcstllqECs3l+KCGlms1e/Ar/d8ETvGs6m0nLzYPLyVm1g2JUGqmv/PPxPwvH5tePMM0iH3pQVZU4XrXEvRAElffXRi0cPZ98/YuAEkLgpsDhL7Xg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775862086; c=relaxed/simple;
-	bh=iUwdqFwywmlYEPivlt57QUkYHbzFZBPbnIdMsHJE26U=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=K78fRcBnqopUK4kZ+QC+Xm8SmvM740+6G5Jr7B3nERWwyGsLA2H5wpgrZLoZKutUogwu9eJpeRH+TJHC0xPxlMH0ghv3DLN2YaiBT7QkdwelOGTr1siWP+J5Pc1FYqkN5d9rzMUslIfPAuUp6APujrEsRGlbEFUDCyaYERciSf8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com; spf=none smtp.mailfrom=jqluv.com; dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b=KD9g0nJh; arc=pass smtp.client-ip=209.85.160.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=jqluv.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22650223DFB;
+	Fri, 10 Apr 2026 23:03:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775862186; cv=none; b=hqWqGAoSLhLXhcD8iH4eZeRoF1BKByAm9sQ7SBc2skFfR6rzrQFzICAgtYIV0EgjWBGlHhBGVe8YNe4ecQCpxCetRmwOmcIxJxDfUKT+XAFn2P7k869cNyX4LCsL7i8RL5TzcSThjh98bMbX426/ivsBJqAma4CDnTM6d93Qz98=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775862186; c=relaxed/simple;
+	bh=WAMkBQc1h8yLAINGXQ2j2zMism2d+aY+jNOWL9O+r8k=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nRMfmwUqSezWaLGgBJFfHEsht126QqY+D8RhsL08+e8HFuenrLNTTvwUjZewEqlBE3cgFnYca82GOJsEMSphqc0nFaQGG6V/oFIaHCmQaEtNQsaJCxcC30so/BZD1Cy/fneaQLHy772vnhyGL4M3wcKDcR7pBGz2G/8knzFtcWI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TXfiawP7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b="KD9g0nJh"
-Received: by mail-qt1-f176.google.com with SMTP id d75a77b69052e-506a747448dso21124331cf.0
-        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2026 16:01:24 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1775862083; cv=none;
-        d=google.com; s=arc-20240605;
-        b=lKsmDzJyq0R/YV5BhKIkLT48Tg0pSiVwc6HQauuiYbuJen51/lIvWTxEnwLI1THpCM
-         7RIGpKDEwCJdDrrWjN8vnFfCYb/Q46W9Zq9LOxLgW/J8nCjwR2+xg3gx7VVHNB3UTXrG
-         73oM1hRSLOh9KlKoK1pQWVFhToGqQxW4ekAJTfls43VAdelvLdJZXo0B5WxPt25MAn8r
-         A2lATgZ1Es+Il8j3KoOKWsoovuMG/+z+fRd1+8IZWavh56Oh/Q9GU7T1/7LJTB7B2bxe
-         0appRju2oGuye4s3VXODnue1XM9kSBR1nTHb8SkgRGsawuvAwkusBoFrjCUzgCxv8EUf
-         lIuA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=MAAA5gSBQCg4uIjIi9tZrNw/rlgf4TmLnq3JBlYU6RA=;
-        fh=AulswRom1kUpnrAnPb4uKESS0LWYI1G8jysFKqoeMS4=;
-        b=Hz6tUgy+zBJ6isWqV9oUOHCThYCGfjlb1BCtC9Tv3zOHGonioSLwtwLcGAtHokZSqQ
-         AIFy9LJA704nz+sxgRXPDKBbhDi6N4/++fz/k9jncN+zyVXm1DBsD9GXrfWqzDo2ajAJ
-         Cu2KoI5CWbNTVQGMjGccq1CpZ8vHN85fAvecZZX8yzAJ3Yl3M6huAQdz2wdlGL+3mDg+
-         GKdPWi0QSlQQM0irpD76sBQJogeW+VDF1nYRG3Zb6QWSU31AXfhLI9FqCdc2rPTiNfpv
-         kg/nZKRV3wy23px4r3BEjqMIp7nTI7CnVj20iY5oi4Viga8sCZXQXEMeSv2215EulpqH
-         q+og==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=jqluv-com.20251104.gappssmtp.com; s=20251104; t=1775862083; x=1776466883; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=MAAA5gSBQCg4uIjIi9tZrNw/rlgf4TmLnq3JBlYU6RA=;
-        b=KD9g0nJhsDKP7SZDv4V01wh4mIt0/qmuUCb21GNXIKotJ2qP3W0F6A6MYzUElYMsMr
-         1A7+6eTJr1IpyROkZFcokYMzRc66aLF2nqMPMJhxrd4nYmIk2WAMDoi47LfRwBThpF4r
-         pwE2Z9mtJLLeUWcsXxlHiSO/gsQC5Hbus6gCYYCEfGLasLDBpu1WPqYUmCZg4EEufcKk
-         V5/UNxwuACyIamYVR/rHMZLK75jm0bzBDpWL+IYQBlW+U63MfvF4mMukd27FS4ooqinF
-         aBL76pYW97H2VI0izb4LC1PrdCCBt+wUGcmQJQPRrQ0OaGfzBAPAPTDIdyFJXbOS9W0F
-         w3QA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775862083; x=1776466883;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=MAAA5gSBQCg4uIjIi9tZrNw/rlgf4TmLnq3JBlYU6RA=;
-        b=aDHLZOSHqO2Cl0UJ1cw8aP1I+WjtJfLMnJtSMeir2GmPSCppHm2YoTQKy99om1CSPQ
-         gx1n/M3RuXmx+pyQNDnNe6vbUGQgHZgAyFQl7q+TvFGLnCdcI8YaDw60fPI0qXqI6Koz
-         bGoCtSlwMFijZgFBbfhSkql2rD3b6Pa5Bo5MyPxoN3mL+6FreYMXPp4BdtxU0zGl4Ban
-         hoMT28bmVeNbLV+N8eB9D7hmFLIQs1aB5SKnr+u4cJVlAZhi9DK/dMiE+5ZwFZiV/WD5
-         vPLvnp1KMXLpLL3JoF7x3bkOzfXfCn02e7idIzlkHlpfjYAgJ7/km7BuVP4CtrvShXkE
-         31zA==
-X-Forwarded-Encrypted: i=1; AJvYcCWsKPo/xnUxP4OUUh+w6d2YwyMoC2/92IlWrIqnUUFU0Fu70RdsqLhK3ybZZKSOaEch283uFU1ux28=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwSnP+3Gfo7PPEY2/gKKJdaMHPzNq006uUFtnXTJ3QFeVKINYU4
-	FjWh86N4Mjd5GKhRJchQ3CY+dQ0e0vObrWR+mqTQYUvb7iKi/TVtmXVImPHu0cPBi2+BhWirnwn
-	8cSLBtWGB5Y7334I0eWY+T+aXtl+Ikl14ETmE7rorKg==
-X-Gm-Gg: AeBDieui3oNIWK7B3D0fGnqzKFbMlPRxOQEn2NDCbM5iBtvyUkxfGffkx7VtEulsOBX
-	wPuFatiL8Tsk/avpXI9Df0nrQ6ZfcYOiRidtf4D0F6ckYWf6Sc4x6zVxwO3cG6GAveeoWNu5RrS
-	s8rPr6ZdIjZsKpW/r8Qyk3KGz9fjmO3b58oU/0f5Ex++ANIjgQX9UUizQxOQ3g6kCka4yXHKTJQ
-	Ie2y6TKBUiG3/avm7i16XE6yCAr00456VPCSs7ZkLFY6eBIbd50DaoOVdw0uVCF5PYBTVH6y/bi
-	269f
-X-Received: by 2002:a05:622a:4a8d:b0:50d:9dd1:f259 with SMTP id
- d75a77b69052e-50dd5c2eae3mr81763371cf.61.1775862083022; Fri, 10 Apr 2026
- 16:01:23 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TXfiawP7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52EBEC19421;
+	Fri, 10 Apr 2026 23:03:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775862185;
+	bh=WAMkBQc1h8yLAINGXQ2j2zMism2d+aY+jNOWL9O+r8k=;
+	h=From:To:Cc:Subject:Date:From;
+	b=TXfiawP7sieaI/A64eJV9CY8NxKgW2/c1R5vAZNGtVMOGF1VB5IhF64lGAkygis1r
+	 BErHzvkrm8T0CNxLe4Z0YFElv9ZKoBFRRojXgBELQIMgq2phCNiVlpAzDDHAsBAYQE
+	 BKy9Yv0bRL//Dd6a3+BdlGWPotLS7Yvqr1YjanVM6qiOV08OAk2lG6xubtyQQ1k/1d
+	 PAn1/AE4BB/R4QwRih7x8vb0ZWTpHXW3rmGyE30UxHlcvMTjhGCV/EiVx+wBPTXgGV
+	 1ivQFzvDfqdWNx3+uOUBqOidwGP+BuLRocnwRcy1fiv/u8WXn9WC+efdUtsWD9D/Zd
+	 /itsCwXHp5mug==
+From: "Carlos Bilbao (Lambda)" <carlos.bilbao@kernel.org>
+To: mani@kernel.org,
+	kwilczynski@kernel.org,
+	kishon@kernel.org,
+	den@valinux.co.jp
+Cc: arnd@arndb.de,
+	gregkh@linuxfoundation.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	bilbao@vt.edu,
+	Carlos Bilbao <carlos.bilbao@kernel.org>
+Subject: [PATCH v2 0/2] misc: pci_endpoint_test: doorbell BAR validation fixes
+Date: Fri, 10 Apr 2026 16:02:58 -0700
+Message-ID: <20260410230300.135631-1-carlos.bilbao@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <29a5ee31baf8be7d07617beea016c3f6d03934bf.camel@ieee.org>
- <20260410052918.5556-2-gloveless@jqluv.com> <efcba31b-4c5f-d4ec-e2e5-d01254c8256c@linux.intel.com>
- <CAGpo2mdZ6Ge9ZSYK4kKYJ7etBu5JqoVR-_G7jnxfZYhfQxxryA@mail.gmail.com>
- <ec0d287c884cbdd5131e1b09147b9b3cd56faf1d.camel@ieee.org> <CAGpo2meYZ+JmBo5veqF3tAexu+RevMMRmPgB5QjfZKncntYGZg@mail.gmail.com>
-In-Reply-To: <CAGpo2meYZ+JmBo5veqF3tAexu+RevMMRmPgB5QjfZKncntYGZg@mail.gmail.com>
-From: Geramy Loveless <gloveless@jqluv.com>
-Date: Fri, 10 Apr 2026 16:01:11 -0700
-X-Gm-Features: AQROBzA4TUGNz5v7T1bWOjhGdtsckEozmDzSNf8vatJ5iqdhmUeV1JfRa8yQcFA
-Message-ID: <CAGpo2mfVV-UcTg2ST9jHC-irUDYEb=rk4yvf2AQc2Gw9EgyFuw@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: release empty sibling bridge windows during rebar expansion
-To: Cristian Cocos <cristi@ieee.org>
-Cc: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
-	linux-pci@vger.kernel.org, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
-	Mario Limonciello <mario.limonciello@amd.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-So after a while of doing investigations I keep thinking, gpus have
-supported hotplug or so i would believe for a while ever since at
-least thunderbolt 4 and possibly older styles too of hotplug as well
-as dual gpu machines like laptops that have a dedicated and
-integrated. I would think all of these problems we are seeing is most
-likely due to something very specific to thunderbolt 5. So here is a
-theory.
+From: Carlos Bilbao <carlos.bilbao@kernel.org>
 
-Root port ACPI device: \_SB_.PCI0.GP10 at address 0x00030002 =3D PCI 00:03.=
-2
-Its _DSD (Device-Specific Data) contains only:
-"FundamentalDeviceResetTriggeredOnD3ToD0" =3D 1
+pci_endpoint_test_doorbell() reads a BAR number from endpoint MMIO and
+uses it as an array index into test->bar[].  Add a defensive bounds check
+covering both out-of-range positive values and NO_BAR (-1), and remove a
+dead register read that precedes the writel sequence.
 
-No ExternalFacingPort property. The firmware gives it a D3-to-D0 reset
-hint but never declares it as external-facing.
-For comparison, a properly configured system would have:
+Changes since v1:
 
-Package {"ExternalFacingPort", 1},
-Package {"DmaProperty", 1},
+- Patch 1: extend bounds check to also reject NO_BAR (-1), which is the
+  Use %d (not %u) in the error message.
+- Patch 2: no code change; add Reviewed-by tag.
 
-The complete proof chain:
+Carlos Bilbao (2):
+  misc: pci_endpoint_test: validate BAR index in doorbell test
+  misc: pci_endpoint_test: remove dead BAR read before doorbell trigger
 
-DSDT (/tmp/dsdt.dsl:4194-4205): GP10 (00:03.2) _DSD has no ExternalFacingPo=
-rt
-pci_acpi_set_external_facing() (pci-acpi.c:1422):
-device_property_read_u8("ExternalFacingPort") fails =E2=86=92 external_faci=
-ng
-stays 0
-pci_set_removable() (probe.c:1780): parent not removable =E2=86=92 falls th=
-rough
-arch_pci_dev_is_removable() (arch/x86/pci/acpi.c:353):
-!root->external_facing =E2=86=92 returns false
-Result: dev->removable never set to DEVICE_REMOVABLE on any device in the c=
-hain
+ drivers/misc/pci_endpoint_test.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Sysfs proof:
-  00:03.2: removable=3DN/A, external_facing=3DN/A
-  65:00.0: removable=3DN/A
-  66:03.0: removable=3DN/A  (TB bridge with HotPlug+ Surprise+)
-  93:00.0: removable=3DN/A
-  97:00.0: removable=3DN/A  (eGPU =E2=80=94 dev_is_removable() returns fals=
-e)
+-- 
+2.43.0
 
-I'm not sure its correct so much but I have patched up the amdgpu
-driver myself to use what its using now and "||
-pci_is_thunderbolt_attached"
-This might be entirely completely wrong :D but I figured I would see
-what happens.
-
-On Fri, Apr 10, 2026 at 12:14=E2=80=AFPM Geramy Loveless <gloveless@jqluv.c=
-om> wrote:
->
-> Oh wow, would you mind me adding you to my existing bug ticket with AMD?
-> I am having the exact same problem, they are working on some fixes for
-> some of the bugs I ran across. I ended adding in some device active
-> and alive checks basically to stop the driver from crashing the
-> kernel. But I could add you in there so we can get both of our logs
-> which are the same problem I believe in the same "ticket" if you will.
-> It might also help having two views of the same issue. We have the
-> same dock.
->
->
->
->
->
->
->
->
-> On Fri, Apr 10, 2026 at 11:58=E2=80=AFAM Cristian Cocos <cristi@ieee.org>=
- wrote:
-> >
-> > My experience with my 9060XT Thunderbolt eGPU is that the current
-> > amdgpu driver is full of bugs, and this *specifically* in a Thunderbolt
-> > eGPU configuration. I have attempted to document some of these bugs
-> > here:
-> > https://pcforum.amd.com/s/question/0D5Pd00001S3Av9KAF/linux-9060xt-egpu=
-overthunderbolt-bugs-galore
-> >
-> > Apologies for posting this here, as most of these may not be relevant
-> > to ReBAR, yet an AMD representative may still benefit from this
-> > multiple bug report.
-> >
-> > C
-> >
-> > On Fri, 2026-04-10 at 10:53 -0700, Geramy Loveless wrote:
-> > >  I'm going to loop in Christian Koenig over at AMD he has been
-> > > working
-> > > with me on resolving or attempting to figure out whats going on with
-> > > my gfx1201 connected to a tb5 dock to the host.
-> > > I am currently having problems with the GPU basically loosing MMIO
-> > > and
-> > > crashing randomly. This recent patch change I believe helped but its
-> > > really hard to say at this point.
-> > > Without this patch of course the bar size would be 256MB and cause
-> > > huge performance problems or feature loss. I am able to load up AI
-> > > models and run workloads at nearly 100% gpu usage, i'm seeing 205W
-> > > power draw out of the maximum 300W. But after sustained load I still
-> > > get a crash.
-> > >
-> > > Maybe you would have an idea as to what is causing that crash or
-> > > where
-> > > I should be looking to find the cause?
-> > > Here are some relevant logs, from what I can tell something is going
-> > > on with MMIO, but the config bar as i understand it is still alive.
-> > > This let me to believe maybe the router was getting put into suspend
-> > > mode which wouldnt make sense for a GPU that is active and busy
-> > > because the pcie tunnel would be active.
-> > >
-> > > Any advice or tips would be helpful thank you for the suggestions I
-> > > will get started on writing the patch based on those recommendations.
-> > >
-> > > ## SMU Firmware Version
-> > >
-> > > ```
-> > > smu driver if version =3D 0x0000002e
-> > > smu fw if version =3D 0x00000032
-> > > smu fw program =3D 0
-> > > smu fw version =3D 0x00684b00 (104.75.0)
-> > > ```
-> > >
-> > > Note: Driver interface version (0x2e / 46) does not match firmware
-> > > interface version (0x32 / 50).
-> > >
-> > > ## PCI Topology
-> > >
-> > > ```
-> > > 65:00.0 PCI bridge: Intel Barlow Ridge Host 80G (rev 84)
-> > > 66:00.0 PCI bridge: Intel Barlow Ridge Host 80G (rev 84) =E2=86=92 NH=
-I
-> > > 66:01.0 PCI bridge: Intel Barlow Ridge Host 80G (rev 84) =E2=86=92 em=
-pty
-> > > hotplug port
-> > > 66:02.0 PCI bridge: Intel Barlow Ridge Host 80G (rev 84) =E2=86=92 US=
-B
-> > > 66:03.0 PCI bridge: Intel Barlow Ridge Host 80G (rev 84) =E2=86=92 do=
-ck
-> > > 93:00.0 PCI bridge: Intel Barlow Ridge Hub 80G (rev 85) =E2=86=92 doc=
-k switch
-> > > 94:00.0 PCI bridge: Intel Barlow Ridge Hub 80G (rev 85) =E2=86=92 dow=
-nstream
-> > > 95:00.0 PCI bridge: AMD Navi 10 XL Upstream Port (rev 24)
-> > > 96:00.0 PCI bridge: AMD Navi 10 XL Downstream Port (rev 24)
-> > > 97:00.0 VGA: AMD [1002:7551] (rev c0) =E2=86=90 GPU
-> > > 97:00.1 Audio: AMD [1002:ab40]
-> > > ```
-> > >
-> > > ## Workload
-> > >
-> > > GPU compute via llama.cpp (ROCm/HIP backend), running
-> > > Qwen3.5-35B-A3B-Q4_K_M.gguf model (20.49 GiB, fully offloaded to
-> > > VRAM). Flash attention enabled, 128K context, 32 threads.
-> > >
-> > > ## Crash Timeline
-> > >
-> > > All timestamps from `dmesg -T`, kernel boot-relative times in
-> > > brackets.
-> > >
-> > > ### GPU initialization (successful)
-> > >
-> > > ```
-> > > [603.644s] GPU probe: IP DISCOVERY 0x1002:0x7551
-> > > [603.653s] Detected IP block: smu_v14_0_0, gfx_v12_0_0
-> > > [603.771s] Detected VRAM RAM=3D32624M, BAR=3D32768M, RAM width 256bit=
-s
-> > > GDDR6
-> > > [604.014s] SMU driver IF 0x2e, FW IF 0x32, FW version 104.75.0
-> > > [604.049s] SMU is initialized successfully!
-> > > [604.119s] Runtime PM manually disabled (amdgpu.runpm=3D0)
-> > > [604.119s] Initialized amdgpu 3.64.0 for 0000:97:00.0
-> > > ```
-> > >
-> > > ### SMU stops responding [T+4238s after init, ~70 minutes]
-> > >
-> > > ```
-> > > [4841.828s] SMU: No response msg_reg: 12 resp_reg: 0
-> > > [4841.828s] [smu_v14_0_2_get_power_profile_mode] Failed to get
-> > > activity monitor!
-> > > [4849.393s] SMU: No response msg_reg: 12 resp_reg: 0
-> > > [4849.393s] Failed to export SMU metrics table!
-> > > ```
-> > >
-> > > 15 consecutive `SMU: No response` messages logged between [4841s] and
-> > > [4948s], approximately every 7-8 seconds. All with `msg_reg: 12
-> > > resp_reg: 0`. Failed operations include:
-> > > - `smu_v14_0_2_get_power_profile_mode` =E2=80=94 Failed to get activi=
-ty
-> > > monitor
-> > > - `Failed to export SMU metrics table`
-> > > - `Failed to get current clock freq`
-> > >
-> > > ### Page faults begin [T+4349s after init, ~111s after first SMU
-> > > failure]
-> > >
-> > > ```
-> > > [4948.927s] [gfxhub] page fault (src_id:0 ring:40 vmid:9 pasid:108)
-> > > Process llama-cli pid 35632
-> > > GCVM_L2_PROTECTION_FAULT_STATUS: 0x00941051
-> > > Faulty UTCL2 client ID: TCP (0x8)
-> > > PERMISSION_FAULTS: 0x5
-> > > WALKER_ERROR: 0x0
-> > > MAPPING_ERROR: 0x0
-> > > RW: 0x1 (write)
-> > > ```
-> > >
-> > > 10 page faults logged at [4948s], all from TCP (Texture Cache Pipe),
-> > > all PERMISSION_FAULTS=3D0x5, WALKER_ERROR=3D0x0, MAPPING_ERROR=3D0x0.=
- 7
-> > > unique faulting addresses:
-> > > - 0x000072ce90828000
-> > > - 0x000072ce90a88000
-> > > - 0x000072ce90a89000
-> > > - 0x000072ce90cde000
-> > > - 0x000072ce90ce1000
-> > > - 0x000072ce90f51000
-> > > - 0x000072ce90f52000
-> > >
-> > > ### MES failure and GPU reset [T+4349s]
-> > >
-> > > ```
-> > > [4952.809s] MES(0) failed to respond to msg=3DREMOVE_QUEUE
-> > > [4952.809s] failed to remove hardware queue from MES, doorbell=3D0x18=
-06
-> > > [4952.809s] MES might be in unrecoverable state, issue a GPU reset
-> > > [4952.809s] Failed to evict queue 4
-> > > [4952.809s] Failed to evict process queues
-> > > [4952.809s] GPU reset begin!. Source: 3
-> > > ```
-> > >
-> > > ### GPU reset fails
-> > >
-> > > ```
-> > > [4953.121s] Failed to evict queue 4
-> > > [4953.121s] Failed to suspend process pid 28552
-> > > [4953.121s] remove_all_kfd_queues_mes: Failed to remove queue 3 for
-> > > dev 62536
-> > > ```
-> > >
-> > > 6 MES(1) REMOVE_QUEUE failures, each timing out after ~2.5 seconds:
-> > > ```
-> > > [4955.720s] MES(1) failed to respond to msg=3DREMOVE_QUEUE =E2=86=92 =
-failed to
-> > > unmap legacy queue
-> > > [4958.283s] MES(1) failed to respond to msg=3DREMOVE_QUEUE =E2=86=92 =
-failed to
-> > > unmap legacy queue
-> > > [4960.847s] MES(1) failed to respond to msg=3DREMOVE_QUEUE =E2=86=92 =
-failed to
-> > > unmap legacy queue
-> > > [4963.411s] MES(1) failed to respond to msg=3DREMOVE_QUEUE =E2=86=92 =
-failed to
-> > > unmap legacy queue
-> > > [4965.976s] MES(1) failed to respond to msg=3DREMOVE_QUEUE =E2=86=92 =
-failed to
-> > > unmap legacy queue
-> > > [4968.540s] MES(1) failed to respond to msg=3DREMOVE_QUEUE =E2=86=92 =
-failed to
-> > > unmap legacy queue
-> > > ```
-> > >
-> > > ### PSP suspend fails
-> > >
-> > > ```
-> > > [4971.164s] psp gfx command LOAD_IP_FW(0x6) failed and response
-> > > status is (0x0)
-> > > [4971.164s] Failed to terminate ras ta
-> > > [4971.164s] suspend of IP block <psp> failed -22
-> > > ```
-> > >
-> > > ### Suspend unwind fails =E2=80=94 SMU not ready
-> > >
-> > > ```
-> > > [4971.164s] SMU is resuming...
-> > > [4971.164s] SMC is not ready
-> > > [4971.164s] SMC engine is not correctly up!
-> > > [4971.164s] resume of IP block <smu> failed -5
-> > > [4971.164s] amdgpu_device_ip_resume_phase2 failed during unwind: -5
-> > > [4971.164s] GPU pre asic reset failed with err, -22 for drm dev,
-> > > 0000:97:00.0
-> > > ```
-> > >
-> > > ### MODE1 reset =E2=80=94 SMU still dead
-> > >
-> > > ```
-> > > [4971.164s] MODE1 reset
-> > > [4971.164s] GPU mode1 reset
-> > > [4971.164s] GPU smu mode1 reset
-> > > [4972.193s] GPU reset succeeded, trying to resume
-> > > [4972.193s] VRAM is lost due to GPU reset!
-> > > [4972.193s] SMU is resuming...
-> > > [4972.193s] SMC is not ready
-> > > [4972.193s] SMC engine is not correctly up!
-> > > [4972.193s] resume of IP block <smu> failed -5
-> > > [4972.193s] GPU reset end with ret =3D -5
-> > > ```
-> > >
-> > >
-> > >
-> > >
-> > > On Fri, Apr 10, 2026 at 3:09=E2=80=AFAM Ilpo J=C3=A4rvinen
-> > > <ilpo.jarvinen@linux.intel.com> wrote:
-> > > >
-> > > > On Thu, 9 Apr 2026, Geramy Loveless wrote:
-> > > >
-> > > > > When pbus_reassign_bridge_resources() walks up the bridge
-> > > > > hierarchy
-> > > > > to expand a window (e.g. for resizable BAR), it refuses to
-> > > > > release
-> > > > > any bridge window that has children.  This prevents BAR resize on
-> > > > > devices behind multi-port PCIe switches (such as Thunderbolt
-> > > > > docks)
-> > > > > where empty sibling downstream ports hold small reservations that
-> > > > > block the parent bridge window from being freed and re-sized.
-> > > > >
-> > > > > Add pci_bus_subtree_empty() to check whether a bus subtree
-> > > > > contains
-> > > > > any assigned device BARs, and pci_bus_release_empty_bridges() to
-> > > > > release bridge window resources of empty sibling bridges, saving
-> > > > > them to the rollback list so failures can be properly unwound.
-> > > > >
-> > > > > In pbus_reassign_bridge_resources(), call
-> > > > > pci_bus_release_empty_bridges()
-> > > > > before checking res->child, so empty sibling windows are cleared
-> > > > > first
-> > > > > and the parent window can then be released and grown.
-> > > > >
-> > > > > Uses PCI bus/device iterators rather than walking the raw
-> > > > > resource
-> > > > > tree, which avoids issues with stale sibling pointers after
-> > > > > resource
-> > > > > release.
-> > > >
-> > > > This paragraph can be dropped. And it's not exactly correct either
-> > > > as
-> > > > the pointers are only stale for resource entries that reside
-> > > > outside of
-> > > > the resource tree (after they've been released in a specific way)
-> > > > so if
-> > > > you start from a resource tree entry, you should never encounter a
-> > > > stale
-> > > > pointer.
-> > > >
-> > > > > Suggested-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
-> > > > > Signed-off-by: Geramy Loveless <gloveless@jqluv.com>
-> > > > > ---
-> > > > >  drivers/pci/setup-bus.c | 99
-> > > > > ++++++++++++++++++++++++++++++++++++++++-
-> > > > >  1 file changed, 97 insertions(+), 2 deletions(-)
-> > > > >
-> > > > > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> > > > > index 4cf120ebe5a..7a182cd7e4d 100644
-> > > > > --- a/drivers/pci/setup-bus.c
-> > > > > +++ b/drivers/pci/setup-bus.c
-> > > > > @@ -2292,6 +2292,94 @@ void
-> > > > > pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
-> > > > >  }
-> > > > >  EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
-> > > > >
-> > > > > +/*
-> > > > > + * pci_bus_subtree_empty - Check whether a bus subtree has any
-> > > > > assigned
-> > > > > + * non-bridge device resources.
-> > > > > + * @bus: PCI bus to check
-> > > > > + *
-> > > > > + * Returns true if no device on @bus or its descendant buses has
-> > > > > any
-> > > > > + * assigned BARs (bridge window resources are not considered).
-> > > > > + */
-> > > > > +static bool pci_bus_subtree_empty(struct pci_bus *bus)
-> > > > > +{
-> > > > > +     struct pci_dev *dev;
-> > > > > +
-> > > > > +     list_for_each_entry(dev, &bus->devices, bus_list) {
-> > > > > +             struct resource *r;
-> > > > > +             unsigned int i;
-> > > > > +
-> > > > > +             pci_dev_for_each_resource(dev, r, i) {
-> > > > > +                     if (i >=3D PCI_BRIDGE_RESOURCES)
-> > > > > +                             break;
-> > > > > +                     if (resource_assigned(r))
-> > > > > +                             return false;
-> > > > > +             }
-> > > > > +
-> > > > > +             if (dev->subordinate &&
-> > > > > +                 !pci_bus_subtree_empty(dev->subordinate))
-> > > > > +                     return false;
-> > > > > +     }
-> > > > > +
-> > > > > +     return true;
-> > > > > +}
-> > > > > +
-> > > > > +/*
-> > > > > + * pci_bus_release_empty_bridges - Release bridge window
-> > > > > resources of
-> > > > > + * empty sibling bridges so the parent window can be freed and
-> > > > > re-sized.
-> > > > > + * @bus: PCI bus whose child bridges to scan
-> > > > > + * @b_win: Parent bridge window resource; only children of this
-> > > > > window
-> > > > > + *         are released
-> > > > > + * @saved: List to save released resources for rollback
-> > > > > + *
-> > > > > + * For each PCI-to-PCI bridge on @bus whose subtree is empty (no
-> > > > > assigned
-> > > > > + * device BARs), releases bridge window resources that are
-> > > > > children of
-> > > > > + * @b_win, saving them for rollback via @saved.
-> > > > > + *
-> > > > > + * Returns 0 on success, negative errno on failure.
-> > > > > + */
-> > > > > +static int pci_bus_release_empty_bridges(struct pci_bus *bus,
-> > > > > +                                      struct resource *b_win,
-> > > > > +                                      struct list_head *saved)
-> > > > > +{
-> > > > > +     struct pci_dev *dev;
-> > > > > +
-> > > > > +     list_for_each_entry(dev, &bus->devices, bus_list) {
-> > > > > +             struct resource *r;
-> > > > > +             unsigned int i;
-> > > > > +
-> > > > > +             if (!dev->subordinate)
-> > > > > +                     continue;
-> > > > > +
-> > > > > +             if ((dev->class >> 8) !=3D PCI_CLASS_BRIDGE_PCI)
-> > > > > +                     continue;
-> > > >
-> > > > I suppose dev->subordinate check is enough for what we're doing so
-> > > > this
-> > > > looks redundant.
-> > > >
-> > > > > +
-> > > > > +             if (!pci_bus_subtree_empty(dev->subordinate))
-> > > > > +                     continue;
-> > > > > +
-> > > > > +             pci_dev_for_each_resource(dev, r, i) {
-> > > > > +                     int ret;
-> > > > > +
-> > > > > +                     if (!pci_resource_is_bridge_win(i))
-> > > > > +                             continue;
-> > > > > +
-> > > > > +                     if (!resource_assigned(r))
-> > > > > +                             continue;
-> > > > > +
-> > > > > +                     if (r->parent !=3D b_win)
-> > > > > +                             continue;
-> > > > > +
-> > > > > +                     ret =3D pci_dev_res_add_to_list(saved, dev,
-> > > > > r, 0, 0);
-> > > > > +                     if (ret)
-> > > > > +                             return ret;
-> > > > > +
-> > > > > +                     release_child_resources(r);
-> > > >
-> > > > Unfortunately you cannot call this low-level function because it
-> > > > recursively frees child resources which means you won't be able to
-> > > > rollback them as they were not added to the saved list.
-> > > >
-> > > > I think the release algorithm should basically do this:
-> > > >
-> > > > - Recurse to the subordinate buses
-> > > > - Loop through bridge window resources of this bus
-> > > >         - Skip resources that are not assigned or are not parented
-> > > > by b_win
-> > > >         - If the resource still has childs, leave the resource
-> > > > alone
-> > > >           (+ log it for easier troubleshooting these cases; any
-> > > > failure
-> > > >              will also cascade to upstream so it may be possible to
-> > > >              shortcut something but it will also make the algorithm
-> > > > more
-> > > >              complicated)
-> > > >         - Save and free the resource
-> > > >
-> > > > It might be better to move some of the code from
-> > > > pbus_reassign_bridge_resources() here as there's overlap with the
-> > > > sketched
-> > > > algorithm (but I'm not sure until I see the updated version but
-> > > > keep this
-> > > > in mind).
-> > > >
-> > > > Doing pci_bus_subtree_empty() before any removal is fine with me,
-> > > > but I
-> > > > see it just an optimization.
-> > > >
-> > > > > +                     pci_release_resource(dev, i);
-> > > > > +             }
-> > > > > +     }
-> > > > > +
-> > > > > +     return 0;
-> > > > > +}
-> > > > > +
-> > > > >  /*
-> > > > >   * Walk to the root bus, find the bridge window relevant for
-> > > > > @res and
-> > > > >   * release it when possible. If the bridge window contains
-> > > > > assigned
-> > > > > @@ -2316,7 +2404,14 @@ static int
-> > > > > pbus_reassign_bridge_resources(struct pci_bus *bus, struct
-> > > > > resource *
-> > > > >
-> > > > >               i =3D pci_resource_num(bridge, res);
-> > > > >
-> > > > > -             /* Ignore BARs which are still in use */
-> > > >
-> > > > I don't know why you removed this comment (I admit though "BARs"
-> > > > could
-> > > > have been worded better as it's bridge windows we're dealing here).
-> > > >
-> > > > > +             /* Release empty sibling bridge windows first */
-> > > > > +             if (bridge->subordinate) {
-> > > > > +                     ret =3D pci_bus_release_empty_bridges(
-> > > > > +                                     bridge->subordinate, res,
-> > > > > saved);
-> > > >
-> > > > First arg fits to the previous line.
-> > > >
-> > > > Align the second line to (.
-> > > >
-> > > > But consider also rearranging code as I mentioned above.
-> > > >
-> > > > > +                     if (ret)
-> > > > > +                             return ret;
-> > > >
-> > > > Consider proceeding with the resize even if something failed as
-> > > > there are
-> > > > cases where the bridge windows are large enough (admittedly, you
-> > > > seem to
-> > > > only bail out in case of alloc error).
-> > > >
-> > > > In to the same vein, there seems to be one existing goto restore
-> > > > (that was
-> > > > added by me), which could also probably do continue instead (but
-> > > > changing
-> > > > it would be worth another patch).
-> > > >
-> > > > > +             }
-> > > > > +
-> > > > >               if (!res->child) {
-> > > > >                       ret =3D pci_dev_res_add_to_list(saved,
-> > > > > bridge, res, 0, 0);
-> > > > >                       if (ret)
-> > > > > @@ -2327,7 +2422,7 @@ static int
-> > > > > pbus_reassign_bridge_resources(struct pci_bus *bus, struct
-> > > > > resource *
-> > > > >                       const char *res_name =3D
-> > > > > pci_resource_name(bridge, i);
-> > > > >
-> > > > >                       pci_warn(bridge,
-> > > > > -                              "%s %pR: was not released (still
-> > > > > contains assigned resources)\n",
-> > > > > +                              "%s %pR: not released, active
-> > > > > children present\n",
-> > > > >                                res_name, res);
-> > > > >               }
-> > > > >
-> > > > >
-> > > >
-> > > > --
-> > > >  i.
