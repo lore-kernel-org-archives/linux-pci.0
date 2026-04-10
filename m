@@ -1,51 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 332AE3DCD8E;
-	Fri, 10 Apr 2026 16:34:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AF582DF142;
+	Fri, 10 Apr 2026 16:46:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775838873; cv=none; b=nPx5jN7pT5k8f8+7hF1q7pkyGNoMnd3ssl91+YZF1EoQnrL6oDDBlGwDxqQ9rC1au/TugLCOnv2LF2KEflYMBCjw5hlBlnQlVST/ArlFN74H26fi8EZ+ioQlxX0up7vJk8ZyDfqCjeDhGCa+zhMu8LoCaEIQb4hZPHrIi2/zIyY=
+	t=1775839608; cv=none; b=r0UzxH0EnVca9fFfxivwOaSSUe1bAfEZ/gfhM4W8wGZUFfd1grNU1JhxA/R8kwJA2fLaI8NxDO8S8RKhzJY/CvcFKQ6AueJ1BauEcRKI1BfbHCMDPXoviDBrbGlt9mCc+uoB1913v1xxz+HXeWtPNDNLKelYYZL1aRNZwuDu83I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775838873; c=relaxed/simple;
-	bh=0GNmJYWWFmVhVV4nIg36bDblcBd/4S2M8hMuiDQOjUk=;
+	s=arc-20240116; t=1775839608; c=relaxed/simple;
+	bh=vYuCGeZrvzRsD5X2mA2XHFIrMR3WeAbK7kCawFMdixk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=t7etfmih4Tf6udtpHtZjIqtOqDh8BMD4Su7onp1NZyJEkdhcJkj7IK2FCXbArQNHqXOmFqpHHJOuKbo09vpL/MJmm5w2Fu0MBRyBi/87LaogJrY+uLw1ZJ+BitOy4efbCT8Au0pGoBwSxhyeYKJEeQ9OlcuLyxe5wEg2mjQ/HWU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h6yRzHum; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ToqkHinte4X61ruPHz893wELLJUQcWjlDa5lDS2MrMpYnpBv9KmGKfjCvgVU03iERXOHuEciHAmwJZzkTbVqCdrEr2i82y3HwC9EeLU2vXK9JN4u6O3zTkJAaUKc49N50aVAnCgme2Ab7n17LycZ6+Cx95bLAZ6ApedmPH6DWs4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PIM479g4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h6yRzHum"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2098AC19421;
-	Fri, 10 Apr 2026 16:34:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PIM479g4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6355C19421;
+	Fri, 10 Apr 2026 16:46:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775838872;
-	bh=0GNmJYWWFmVhVV4nIg36bDblcBd/4S2M8hMuiDQOjUk=;
+	s=k20201202; t=1775839607;
+	bh=vYuCGeZrvzRsD5X2mA2XHFIrMR3WeAbK7kCawFMdixk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=h6yRzHumYoqUvW46IDcJv1biGCgOPkVYHTUQJAaejVyV7yGNVQJD+bZkpzsdPp/rz
-	 fDEMkqIQLmW3rSuKyrw1YbMsPwg2IqL+q9i/IaY+YrHznB2IeUwuAO7L1QnmSYtxMn
-	 En1ZeXUAkbMjJ10NH+F0uKR6SiHNvRE8ATe7whYZh9bbFh2w4zGdzRo9islLpHmw+a
-	 ahyobHPsqJ/PnCPQNt2AiNLrW7JKbmQSliRGjI6G1rQIJ7IpUEJgsl3DwxHmAOmaLx
-	 ZtVkMqX6UXr8VzRLZtfzqZEVQ7hhWAaN1QOxNfyvtcs1LfZHwEui7WZ47ODNMdsZOX
-	 khotrbWqMUKmA==
-Date: Fri, 10 Apr 2026 22:04:20 +0530
+	b=PIM479g42BcjWK4UJS0jW2EroTuLo/3cQVOEXd2SExU0yAA1zGukTYbhgMIiAUDa1
+	 fDWr+lnRj3CUg2CPbe7VRhruUxc01iNDRaayTJPZeK2sSOIBmCQyDpSJfwFEzHcfPv
+	 dfzrFeS9H3NSyffZNzNeMx4oMQpyzEPhOy3239bDqkR+BXLAp/vPEbpjsWr4jeTxf6
+	 uJ1K+HLXmAhizDk3RvEFLZ00C9q1iooEjgQ3I/WfV8T/zLjf4qLxdjLQRVz9ko3rz2
+	 ryWv3llT/Rin4K22FvmmsZ95Mk5NwGKeFiYDKhPwoMwx2xhhnk99pXvbfT0cX33Xzu
+	 tgV1Nn9iV7KcA==
+Date: Fri, 10 Apr 2026 22:16:40 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Thierry Reding <thierry.reding@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Thierry Reding <thierry.reding@gmail.com>, 
-	Jonathan Hunter <jonathanh@nvidia.com>, Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, 
-	Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
-	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, Michal Simek <michal.simek@amd.com>, 
-	Kevin Xie <kevin.xie@starfivetech.com>, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>, 
-	Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: Re: [PATCH v4 3/4] PCI: tegra: Add Tegra264 support
-Message-ID: <ukeelrtmjgxxwlkkzsojygzo6us5ijshis66a4x2a44hg4bw25@hggglahvrajy>
-References: <20260402-tegra264-pcie-v4-0-21e2e19987e8@nvidia.com>
- <20260402-tegra264-pcie-v4-3-21e2e19987e8@nvidia.com>
- <iaoee5r5e2w52fap7ex23wdikbuvpjpesinedgjkehsedszhzo@64yoo2avmxle>
- <adTAVYEzfD9FQl8N@orome>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, mayank.rana@oss.qualcomm.com, 
+	quic_vbadigan@quicinc.com, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: Re: [PATCH v4 1/3] PCI/ASPM: Add helper to encode L1SS T_POWER_ON
+ fields
+Message-ID: <kd4r5bcaqmjjy4nkqeflbpwgua45umbd3oz4vzkrw26emab5yt@cdvh2rhosdgj>
+References: <20260404-t_power_on_fux-v4-0-2891391177f4@oss.qualcomm.com>
+ <20260404-t_power_on_fux-v4-1-2891391177f4@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -55,340 +48,111 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <adTAVYEzfD9FQl8N@orome>
+In-Reply-To: <20260404-t_power_on_fux-v4-1-2891391177f4@oss.qualcomm.com>
 
-On Tue, Apr 07, 2026 at 11:38:28AM +0200, Thierry Reding wrote:
-> On Thu, Apr 02, 2026 at 11:02:02PM +0530, Manivannan Sadhasivam wrote:
-> > On Thu, Apr 02, 2026 at 04:27:37PM +0200, Thierry Reding wrote:
-> > > From: Thierry Reding <treding@nvidia.com>
-> > > 
-> > > Add a driver for the PCIe controller found on NVIDIA Tegra264 SoCs. The
-> > > driver is very small, with its main purpose being to set up the address
-> > > translation registers and then creating a standard PCI host using ECAM.
-> > > 
-> > > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> > > Signed-off-by: Thierry Reding <treding@nvidia.com>
-> > 
-> > What is the rationale for adding a new driver? Can't you reuse the existing one?
-> > If so, that should be mentioned in the description.
+On Sat, Apr 04, 2026 at 01:47:18PM +0530, Krishna Chaitanya Chundru wrote:
+> Add a shared helper to encode the PCIe L1 PM Substates T_POWER_ON
+> parameter into the T_POWER_ON Scale and T_POWER_ON Value fields.
 > 
-> Which existing one? Tegra PCI controllers for previou generations
-> (Tegra194 and Tegra234) were DesignWare IP, but Tegra264 is an internal
-> IP, so the programming is entirely different. I'll add something to that
-> effect to the commit message.
+> This helper can be used by the controller drivers to change the
+> default/wrong value of T_POWER_ON in L1ss capability register to
+> avoid incorrect calculation of LTR_L1.2_THRESHOLD value.
 > 
+> The helper converts a T_POWER_ON time specified in microseconds into
+> the appropriate scale/value encoding defined by the PCIe spec r7.0,
+> sec 7.8.3.2. Values that exceed the maximum encodable range are clamped
+> to the largest representable encoding.
+> 
+> Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> ---
+>  drivers/pci/pci.h       |  2 ++
+>  drivers/pci/pcie/aspm.c | 40 ++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 42 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 13d998fbacce6698514d92500dfea03cc562cdc2..48964602d802e114a6a2481df3fb75d9e178a31b 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -1105,6 +1105,7 @@ void pcie_aspm_pm_state_change(struct pci_dev *pdev, bool locked);
+>  void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
+>  void pci_configure_ltr(struct pci_dev *pdev);
+>  void pci_bridge_reconfigure_ltr(struct pci_dev *pdev);
+> +void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value);
+>  #else
+>  static inline void pcie_aspm_remove_cap(struct pci_dev *pdev, u32 lnkcap) { }
+>  static inline void pcie_aspm_init_link_state(struct pci_dev *pdev) { }
+> @@ -1113,6 +1114,7 @@ static inline void pcie_aspm_pm_state_change(struct pci_dev *pdev, bool locked)
+>  static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev) { }
+>  static inline void pci_configure_ltr(struct pci_dev *pdev) { }
+>  static inline void pci_bridge_reconfigure_ltr(struct pci_dev *pdev) { }
+> +static inline void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value) { }
 
-Yikes! I completely missed that this is a non-dwc driver. Sorry for the noise.
-
-> > > diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-> > > index 5aaed8ac6e44..6ead04f7bd6e 100644
-> > > --- a/drivers/pci/controller/Kconfig
-> > > +++ b/drivers/pci/controller/Kconfig
-> > > @@ -254,7 +254,15 @@ config PCI_TEGRA
-> > >  	select IRQ_MSI_LIB
-> > >  	help
-> > >  	  Say Y here if you want support for the PCIe host controller found
-> > > -	  on NVIDIA Tegra SoCs.
-> > > +	  on NVIDIA Tegra SoCs (Tegra20 through Tegra186).
-> > > +
-> > > +config PCIE_TEGRA264
-> > > +	bool "NVIDIA Tegra264 PCIe controller"
-> > 
-> > This driver seems to be using external MSI controller. So it can be built as a
-> > module. Also, you have the remove() callback for some reason.
-> 
-> Okay, I can turn this into a tristate symbol.
-> 
-> > > +	depends on ARCH_TEGRA || COMPILE_TEST
-> > > +	depends on PCI_MSI
-> > 
-> > Why?
-> 
-> I suppose it's not necessary in the sense of it being a build
-> dependency. At runtime, however, the root complex is not useful if PCI
-> MSI is not enabled. We can drop this dependency and rely on .config to
-> have it enabled as needed.
-> 
-
-Yes. I think the rationale is to depend on the symbols that the driver needs for
-build dependency.
-
-> > > diff --git a/drivers/pci/controller/pcie-tegra264.c b/drivers/pci/controller/pcie-tegra264.c
-> > > new file mode 100644
-> > > index 000000000000..3ce1ad971bdb
-> > > --- /dev/null
-> > > +++ b/drivers/pci/controller/pcie-tegra264.c
-> [...]
-> > > +struct tegra264_pcie {
-> > > +	struct device *dev;
-> > > +	bool link_up;
-> > 
-> > Keep bool types at the end to avoid holes.
-> 
-> Done.
-> 
-> > > +static int tegra264_pcie_parse_dt(struct tegra264_pcie *pcie)
-> > > +{
-> > > +	int err;
-> > > +
-> > > +	pcie->wake_gpio = devm_gpiod_get_optional(pcie->dev, "nvidia,pex-wake",
-> > 
-> > You should switch to standard 'wake-gpios' property.
-> 
-> Will do.
-> 
-> > > +						  GPIOD_IN);
-> > > +	if (IS_ERR(pcie->wake_gpio))
-> > > +		return PTR_ERR(pcie->wake_gpio);
-> > > +
-> > > +	if (pcie->wake_gpio) {
-> > 
-> > Since you are bailing out above, you don't need this check.
-> 
-> I think we still want to have this check to handle the case of optional
-> wake GPIOs. Not all controllers may have this wired up and
-> devm_gpiod_get_optional() will return NULL (not an ERR_PTR()-encoded
-> error) if the wake-gpios property is missing.
-> 
-
-Ok. In that case you can just bail out:
-	if (!pcie->wake_gpio)
-		return 0;
-
-> > > +static void tegra264_pcie_bpmp_set_rp_state(struct tegra264_pcie *pcie)
-> > 
-> > I don't think this function name is self explanatory. Looks like it is turning
-> > off the PCIe controller, so how about tegra264_pcie_power_off()?
-> 
-> Agreed. The name is a relic from when this was potentially being used to
-> toggle on and off the controller. But it's only used for disabling, so
-> tegra264_pcie__power_off() sounds much better.
-> 
-> > > +{
-> > > +	struct tegra_bpmp_message msg = {};
-> > > +	struct mrq_pcie_request req = {};
-> > > +	int err;
-> > > +
-> > > +	req.cmd = CMD_PCIE_RP_CONTROLLER_OFF;
-> > > +	req.rp_ctrlr_off.rp_controller = pcie->ctl_id;
-> > > +
-> > > +	msg.mrq = MRQ_PCIE;
-> > > +	msg.tx.data = &req;
-> > > +	msg.tx.size = sizeof(req);
-> > > +
-> > > +	err = tegra_bpmp_transfer(pcie->bpmp, &msg);
-> > > +	if (err)
-> > > +		dev_info(pcie->dev, "failed to turn off PCIe #%u: %pe\n",
-> > 
-> > Why not dev_err()?
-> > 
-> > > +			 pcie->ctl_id, ERR_PTR(err));
-> > > +
-> > > +	if (msg.rx.ret)
-> > > +		dev_info(pcie->dev, "failed to turn off PCIe #%u: %d\n",
-> > 
-> > Same here.
-> 
-> These are not fatal errors and are safe to ignore. dev_err() seemed too
-> strong for this. They also really shouldn't happen. Though I now realize
-> that's a bad argument, or rather, actually an argument for making them
-> dev_err() so that they do stand out if they really should happen.
-> 
-> > 
-> > > +			 pcie->ctl_id, msg.rx.ret);
-> > > +}
-> > > +
-> > > +static void tegra264_pcie_icc_set(struct tegra264_pcie *pcie)
-> > > +{
-> > > +	u32 value, speed, width, bw;
-> > > +	int err;
-> > > +
-> > > +	value = readw(pcie->ecam + XTL_RC_PCIE_CFG_LINK_STATUS);
-> > > +	speed = FIELD_GET(PCI_EXP_LNKSTA_CLS, value);
-> > > +	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, value);
-> > > +
-> > > +	bw = width * (PCIE_SPEED2MBS_ENC(speed) / BITS_PER_BYTE);
-> > > +	value = MBps_to_icc(bw);
-> > 
-> > So this becomes, 'width * (PCIE_SPEED2MBS_ENC(speed) / 8) * 1000 / 8'. But don't
-> > you want, 'width * (PCIE_SPEED2MBS_ENC(speed)) * 1000 / 8'?
-> 
-> This is M*B*ps_to_icc(), not M*b*ps_to_icc(), so we do in fact get the
-> latter. I almost fell for this as well because I got confused by some of
-> these macros being all-caps and other times the case actually mattering.
-> 
-
-Oops, I was misleaded too. But you can simply do:
-	bw = Mbps_to_icc(width * PCIE_SPEED2MBS_ENC(speed));
-
-> > > +	err = icc_set_bw(pcie->icc_path, bw, bw);
-
-And here you were setting the MBps, not Kbps.
-
-> > > +	if (err < 0)
-> > > +		dev_err(pcie->dev,
-> > > +			"failed to request bandwidth (%u MBps): %pe\n",
-> > > +			bw, ERR_PTR(err));
-> > 
-> > So you don't want to error out if this fails?
-> 
-> No. This is not a fatal error and the system will continue to work,
-> albeit perhaps at suboptimal performance. Given that Ethernet and mass
-> storage are connected to these, a failure to set the bandwidth and
-> erroring out here may leave the system unusable, but continuing on would
-> let the system boot and update firmware, kernel or whatever to recover.
-> 
-> I'll add a comment explaining this.
-> 
-
-Yeah, that'll help.
-
-> [...]
-> > > +static void tegra264_pcie_init(struct tegra264_pcie *pcie)
-> > > +{
-> > > +	enum pci_bus_speed speed;
-> > > +	unsigned int i;
-> > > +	u32 value;
-> > > +
-> > > +	/* bring the link out of reset */
-> > 
-> > s/link/controller or endpoint?
-> 
-> This controls the PERST# signal, so I guess "endpoint" would be more
-> correct.
-> 
-
-Yes!
-
-> > > +	value = readl(pcie->xtl + XTL_RC_MGMT_PERST_CONTROL);
-> > > +	value |= XTL_RC_MGMT_PERST_CONTROL_PERST_O_N;
-> > > +	writel(value, pcie->xtl + XTL_RC_MGMT_PERST_CONTROL);
-> > > +
-> > > +	if (!tegra_is_silicon()) {
-> > 
-> > This looks like some pre-silicon validation thing. Do you really want it to be
-> > present in the upstream driver?
-> 
-> At this point there is silicon for this chip, but we've been trying to
-> get some of the pre-silicon code merged upstream as well because
-> occasionally people will want to run upstream on simulation, even after
-> silicon is available. At other times we may want to reuse these drivers
-> on future chips during pre-silicon validation.
-> 
-> Obviously there needs to be a balance. We don't want to have excessive
-> amounts of code specifically for pre-silicon validation, but in
-> relatively simple cases like this it is useful.
-> 
-
-Ok, fine with me.
-
-> > 
-> > > +		dev_info(pcie->dev,
-> > > +			 "skipping link state for PCIe #%u in simulation\n",
-> > > +			 pcie->ctl_id);
-> > > +		pcie->link_up = true;
-> > > +		return;
-> > > +	}
-> > > +
-> > > +	for (i = 0; i < PCIE_LINK_WAIT_MAX_RETRIES; i++) {
-> > > +		if (tegra264_pcie_link_up(pcie, NULL))
-> > > +			break;
-> > > +
-> > > +		usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
-> > > +	}
-> > > +
-
-[...]
-
-> > > +	pm_runtime_get_sync(dev);
-> > > +
-> > > +	/* sanity check that programmed ranges match what's in DT */
-> > > +	if (!tegra264_pcie_check_ranges(pdev)) {
-> > > +		err = -EINVAL;
-> > > +		goto put_pm;
-> > > +	}
-> > > +
-> > > +	pcie->cfg = pci_ecam_create(dev, res, bus->res, &pci_generic_ecam_ops);
-> > > +	if (IS_ERR(pcie->cfg)) {
-> > > +		err = dev_err_probe(dev, PTR_ERR(pcie->cfg),
-> > > +				    "failed to create ECAM\n");
-> > > +		goto put_pm;
-> > > +	}
-> > > +
-> > > +	bridge->ops = (struct pci_ops *)&pci_generic_ecam_ops.pci_ops;
-> > > +	bridge->sysdata = pcie->cfg;
-> > > +	pcie->ecam = pcie->cfg->win;
-> > > +
-> > > +	tegra264_pcie_init(pcie);
-> > > +
-> > > +	if (!pcie->link_up)
-> > > +		goto free;
-> > 
-> > goto free_ecam;
-> 
-> It's not clear to me, but are you suggesting to rename the existing
-> "free" label to "free_ecam"? I can do that.
-> 
-
-Yeah, I was just asking for a rename.
-
-> > > +	err = pci_host_probe(bridge);
-> > > +	if (err < 0) {
-> > > +		dev_err(dev, "failed to register host: %pe\n", ERR_PTR(err));
-> > 
-> > dev_err_probe()
-> 
-> Okay.
-> 
-> > 
-> > > +		goto free;
-> > > +	}
-> > > +
-> > > +	return err;
-> > 
-> > return 0;
-> 
-> Done.
-> 
-> [...]
-> > > +static int tegra264_pcie_resume_noirq(struct device *dev)
-> > > +{
-> > > +	struct tegra264_pcie *pcie = dev_get_drvdata(dev);
-> > > +	int err;
-> > > +
-> > > +	if (pcie->wake_gpio && device_may_wakeup(dev)) {
-> > > +		err = disable_irq_wake(pcie->wake_irq);
-> > > +		if (err < 0)
-> > > +			dev_err(dev, "failed to disable wake IRQ: %pe\n",
-> > > +				ERR_PTR(err));
-> > > +	}
-> > > +
-> > > +	if (pcie->link_up == false)
-> > > +		return 0;
-> > > +
-> > > +	tegra264_pcie_init(pcie);
-> > > +
-> > 
-> > Why do you need init() here without deinit() in tegra264_pcie_suspend_noirq()?
-> 
-> That's because when we come out of suspend the link may have gone down
-> again, so we need to take the endpoint out of reset to retrigger the
-> link training. I think we could possibly explicitly clear that PERST_O_N
-> bit in the PERST_CONTROL register in a new tegra264_pcie_deinit() to
-> mirror what tegra264_pcie_init() does, but it's automatically done by
-> firmware anyway, so not needed.
-> 
-
-Hmm, so firmware asserts PERST# at the end of suspend? It is not clear to me why
-it is doing so. But for symmetry I'd like to do it in tegra264_pcie_deinit().
-
-Also, I'm not certain about the 'pcie->link_up' check here. If it is 'false',
-then probe() should've failed. So why do you need the check here anyway?
-
-Maybe you should get rid of this check and return the link status from
-tegra264_pcie_init() directly?
+As Sashiko pointed out, you need to assign 0 value to these pointers to save the
+callers from writing random junk to L1 PM Substates register if CONFIG_PCIEASPM
+is disabled.
 
 - Mani
+
+>  #endif
+>  
+>  #ifdef CONFIG_PCIE_ECRC
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 21f5d23e0b61bd7e1163cc869fe9356d1ab87b34..879d7ecddf8d6430c49f31c88a75d5c6e74015d6 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -525,6 +525,46 @@ static u32 calc_l12_pwron(struct pci_dev *pdev, u32 scale, u32 val)
+>  	return 0;
+>  }
+>  
+> +/**
+> + * pcie_encode_t_power_on - Encode T_POWER_ON into scale and value fields
+> + * @t_power_on_us: T_POWER_ON time in microseconds
+> + * @scale: Encoded T_POWER_ON Scale (0..2)
+> + * @value: Encoded T_POWER_ON Value
+> + *
+> + * T_POWER_ON is encoded as:
+> + *   T_POWER_ON(us) = scale_unit(us) * value
+> + *
+> + * where scale_unit is selected by @scale:
+> + *   0: 2us
+> + *   1: 10us
+> + *   2: 100us
+> + *
+> + * If @t_power_on_us exceeds the maximum representable value, the result
+> + * is clamped to the largest encodable T_POWER_ON.
+> + *
+> + * See PCIe r7.0, sec 7.8.3.2.
+> + */
+> +void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value)
+> +{
+> +	u8 maxv = FIELD_MAX(PCI_L1SS_CAP_P_PWR_ON_VALUE);
+> +
+> +	/* T_POWER_ON_Value ("value") is a 5-bit field with max value of 31. */
+> +	if (t_power_on_us <= 2 * maxv) {
+> +		*scale = 0; /* Value times 2us */
+> +		*value = DIV_ROUND_UP(t_power_on_us, 2);
+> +	} else if (t_power_on_us <= 10 * maxv) {
+> +		*scale = 1; /* Value times 10us */
+> +		*value = DIV_ROUND_UP(t_power_on_us, 10);
+> +	} else if (t_power_on_us <= 100 * maxv) {
+> +		*scale = 2; /* value times 100us */
+> +		*value = DIV_ROUND_UP(t_power_on_us, 100);
+> +	} else {
+> +		*scale = 2;
+> +		*value = maxv;
+> +	}
+> +}
+> +EXPORT_SYMBOL(pcie_encode_t_power_on);
+> +
+>  /*
+>   * Encode an LTR_L1.2_THRESHOLD value for the L1 PM Substates Control 1
+>   * register.  Ports enter L1.2 when the most recent LTR value is greater
+> 
+> -- 
+> 2.34.1
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
