@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DAA51C5D7D;
-	Sat, 11 Apr 2026 08:01:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF8952459E5;
+	Sat, 11 Apr 2026 08:02:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775894517; cv=none; b=lrmjCOkx3QmtM00NhkononOtSVlONuTyjWWfLAcff4U2OAXMexm2PwrG6THH/W6jEtM7jLCSSa2Dm1YCt0BPZIO/cgXaF2wzCYver9RFfUbRDS1X4KI15zCgfXgcWepVdcWplVV3F7p46KIwKFyewrneALRpDkIosIv5lAeXa7c=
+	t=1775894520; cv=none; b=jnmRZk/l47I5Vu+LoJFiykxq9onRJwZGNMDlj9JgPpmyh72vfYD1p9rgM135OtzrMlQ3uZhxjuLNnyR2lx7n4kEB63DkhLAOgZEyLVlKjBTrlIpiKXHTiuGesA5U4BjJvIM7R+H8LsLsS4vRrtJuuQs45LRsMwvIqet2ztikgwA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775894517; c=relaxed/simple;
-	bh=+MngKbk4Fu+hXvrF1jLsdL88/ySXVmeG1h0/A7xlETY=;
+	s=arc-20240116; t=1775894520; c=relaxed/simple;
+	bh=M4LBexol3vWd4MZjwunSYPnTSRksW2HSkNMaScnPtII=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sUsegP7MtrRUWdUtr7HQ43NYE+1fY3qG4wGNvH2xC4P6LPOtYjKXwlz3eJlSml4w7aFgmbBeEqCL0YQ2LRT8nO/M56CFbF0cGvGXeuF4R/09xU7/YOLdDqIVxpsXVMcsclj+vFbt8Ph0cVIM3Ksbi8Fs+cYhN6IKW2Yp6RdjUSM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hLLnRsUt; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=AIhuHO/F8gBeHBp0AAvhBqPLzJU0LU5aX3e/MmTFNaYI6nzT9Dsh3je+A35d9LrqPQ47txR0M3MRRgSjafYk5jpfsEOTay1yPxSJXfocrPN3y0tr6NHgDcn2FPlVTlAChXYW2S5bdWJQ3d5/9DVf8I74Kap63t0EYA2ZcQPaftg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qDyenqYh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hLLnRsUt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7E34C2BCAF;
-	Sat, 11 Apr 2026 08:01:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qDyenqYh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62FA0C4CEF7;
+	Sat, 11 Apr 2026 08:01:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775894517;
-	bh=+MngKbk4Fu+hXvrF1jLsdL88/ySXVmeG1h0/A7xlETY=;
+	s=k20201202; t=1775894520;
+	bh=M4LBexol3vWd4MZjwunSYPnTSRksW2HSkNMaScnPtII=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=hLLnRsUtQdKBkr1E2YTD83+aGN/yU3sxh89srqSUF183NKPL7XfwGw+IVBr4nUBUX
-	 +Dcef6LNrtVh1IPdd3gFxoHsg/uJleINXHd2XYrzl/FmnTsbCqLmAznhXMtQHRkZ1I
-	 vWtGvGBedKLo3hvRGKyC8ftroH/60ibIDAn6LGpQgWxLCwDKRra18hs5vZiydO+pFP
-	 J+1ciusoXTGgsA7gCl2lzCPcTFn19DTxVEOInmTkKR01D93GQBGhGNtvOPwdehn5Xv
-	 j/n2z8rJ0715aFfbqpruhJIfhBvfkglWcs9lMsF9R+26HbLAkIFR7o6P6YpkpDHFLh
-	 8R6PHqxG6Bh3A==
+	b=qDyenqYhmb3sg1Sk7rCtOdP+KJ/KomcwfTCFj0l3eBTWiUDAWAOTOZysGSOcziUmP
+	 Vwabmjnksn5WcPK9TAY8dWQd9eAITjKdJUxRzZWOzOZXK6+rXUlWZ4IWi4P7VrWmxF
+	 vFSXUm6V4VMdSv4iosNzSZ2dF1zOK3/cnJSBGNgIAuC4mdq8cX8BZx3v0rv6GxuHUu
+	 EXbSO7+DTCb2AEFz4Is1ibAjjYm2J8Io+7J+wjHqXsJmBuQcAP4XNLRGwyH9e/4BZi
+	 UK+mjsbcp7nkmJUIOPs/i0zNyZRELYN7jGlca5yJjEJ9EYIO+U2XaBI8QS4zKrUsvE
+	 RVYB7jxYZ2hYQ==
 From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>,
@@ -49,9 +49,9 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	linux-pci@vger.kernel.org,
 	linux-alpha@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v4 01/24] PCI/sysfs: Use PCI resource accessor macros
-Date: Sat, 11 Apr 2026 08:01:25 +0000
-Message-ID: <20260411080148.471335-2-kwilczynski@kernel.org>
+Subject: [PATCH v4 02/24] PCI: Add pci_resource_is_io() and pci_resource_is_mem() helpers
+Date: Sat, 11 Apr 2026 08:01:26 +0000
+Message-ID: <20260411080148.471335-3-kwilczynski@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260411080148.471335-1-kwilczynski@kernel.org>
 References: <20260411080148.471335-1-kwilczynski@kernel.org>
@@ -64,57 +64,53 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Replace direct pdev->resource[] accesses with pci_resource_n(),
-and pdev->resource[].flags accesses with pci_resource_flags().
+Add helpers to check whether a PCI resource is of I/O port or
+memory type.  These replace the open-coded pci_resource_flags()
+with IORESOURCE_IO and IORESOURCE_MEM pattern used across the
+tree.
 
-No functional changes intended.
-
-Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Suggested-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 ---
- drivers/pci/pci-sysfs.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ include/linux/pci.h | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 16eaaf749ba9..ad3c17f86c7f 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -177,7 +177,7 @@ static ssize_t resource_show(struct device *dev, struct device_attribute *attr,
- 		max = PCI_BRIDGE_RESOURCES;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1c270f1d5123..05aceb7f1f37 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -2295,6 +2295,31 @@ int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma);
+ 	CONCATENATE(__pci_dev_for_each_res, COUNT_ARGS(__VA_ARGS__)) 	\
+ 		    (dev, res, __VA_ARGS__)
  
- 	for (i = 0; i < max; i++) {
--		struct resource *res =  &pci_dev->resource[i];
-+		struct resource *res = pci_resource_n(pci_dev, i);
- 		struct resource zerores = {};
- 
- 		/* For backwards compatibility */
-@@ -715,7 +715,7 @@ static ssize_t boot_vga_show(struct device *dev, struct device_attribute *attr,
- 		return sysfs_emit(buf, "%u\n", (pdev == vga_dev));
- 
- 	return sysfs_emit(buf, "%u\n",
--			  !!(pdev->resource[PCI_ROM_RESOURCE].flags &
-+			  !!(pci_resource_flags(pdev, PCI_ROM_RESOURCE) &
- 			     IORESOURCE_ROM_SHADOW));
- }
- static DEVICE_ATTR_RO(boot_vga);
-@@ -1108,7 +1108,7 @@ static int pci_mmap_resource(struct kobject *kobj, const struct bin_attribute *a
- 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
- 	int bar = (unsigned long)attr->private;
- 	enum pci_mmap_state mmap_type;
--	struct resource *res = &pdev->resource[bar];
-+	struct resource *res = pci_resource_n(pdev, bar);
- 	int ret;
- 
- 	ret = security_locked_down(LOCKDOWN_PCI_ACCESS);
-@@ -1312,7 +1312,7 @@ static int pci_create_resource_files(struct pci_dev *pdev)
- 		retval = pci_create_attr(pdev, i, 0);
- 		/* for prefetchable resources, create a WC mappable file */
- 		if (!retval && arch_can_pci_mmap_wc() &&
--		    pdev->resource[i].flags & IORESOURCE_PREFETCH)
-+		    pci_resource_flags(pdev, i) & IORESOURCE_PREFETCH)
- 			retval = pci_create_attr(pdev, i, 1);
- 		if (retval) {
- 			pci_remove_resource_files(pdev);
++/**
++ * pci_resource_is_io - check if a PCI resource is of I/O port type.
++ * @dev: PCI device to check.
++ * @resno: The resource number (BAR index) to check.
++ *
++ * Returns true if the resource type is I/O port.
++ */
++static inline bool pci_resource_is_io(const struct pci_dev *dev, int resno)
++{
++	return resource_type(pci_resource_n(dev, resno)) == IORESOURCE_IO;
++}
++
++/**
++ * pci_resource_is_mem - check if a PCI resource is of memory type.
++ * @dev: PCI device to check.
++ * @resno: The resource number (BAR index) to check.
++ *
++ * Returns true if the resource type is memory, including
++ * prefetchable memory.
++ */
++static inline bool pci_resource_is_mem(const struct pci_dev *dev, int resno)
++{
++	return resource_type(pci_resource_n(dev, resno)) == IORESOURCE_MEM;
++}
++
+ /*
+  * Similar to the helpers above, these manipulate per-pci_dev
+  * driver-specific data.  They are really just a wrapper around
 -- 
 2.53.0
 
