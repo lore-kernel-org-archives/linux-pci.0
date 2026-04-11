@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 397F12459E5;
-	Sat, 11 Apr 2026 08:02:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E671B1C5D7D;
+	Sat, 11 Apr 2026 08:02:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775894531; cv=none; b=SoVHunGUo+TIXAoWPyH1FUARyG7cbc6KgkMUzcCPmzpr1dvdij18mbRqn3sYPGfxBN+/COwzOZgF/WHNgg4c4Z9bSVEJKpLB/QJbjM1VE6xA25awE+2ApfjwN7ZnK+7v3f1I9P3OpDFlrLlDbNIEkPtT2GLvs6VZgVz9YQel3o4=
+	t=1775894535; cv=none; b=KyhHI66wBQhy/Rqr54WSuI7W1qSMk40jNCBX0MqV0P+3f+Nqk/arCnwskviOoh2d5Fky27kkHtdoa4PnrtZAsbMmrRA1Te9eHEU1Vt0jF0znBoOkDF8ZNQAb2vzXcbKf1I255H6Wl9j5gRsiWs55/frscjHfJ6cOzR+loBSK6u0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775894531; c=relaxed/simple;
-	bh=u/k9TMeqaPQPWgW7ILWQ8kth1orOPivoorazdGxMwic=;
+	s=arc-20240116; t=1775894535; c=relaxed/simple;
+	bh=SF6NaKKGKml3gXGCmX67t4OHxTO6Wu63qGLXCgaq56I=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=omfF3MYEd3Oye6R/yVgAYj0S+Qjj4IadZLL/uVOV4xFfJ7rBTINrC7j9viYlFnaahBulp8HjGHULjZTiScuCXlPaEaAE+9NJALUuriDgPmMQIuZyNGFgJn9u/lysiTToOZSMIdvTUXOI4haRSI5AdlZ31YEFO4pCkmsx9HBnMWA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qo4iDtD7; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=t3pgIPDaUfRlL2yxyiI4jhGPgz4O6VJNxAZlTFOf/8pnJFNPbPRG7wJTbo3piNvJTg5yoL1AtYRjTbnMFlq5Rzr0IksJ9W1CAQR7KO1g5LKDYcuc43wKFJEi6IWLuzf2cAhNuctiObAeDDZ+gpORXNiKJEEbei+c1WLH1ob+gdo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S2e1GHoc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qo4iDtD7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E89CBC2BCAF;
-	Sat, 11 Apr 2026 08:02:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S2e1GHoc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72D09C2BC9E;
+	Sat, 11 Apr 2026 08:02:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775894531;
-	bh=u/k9TMeqaPQPWgW7ILWQ8kth1orOPivoorazdGxMwic=;
+	s=k20201202; t=1775894534;
+	bh=SF6NaKKGKml3gXGCmX67t4OHxTO6Wu63qGLXCgaq56I=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=qo4iDtD7qxZkSIZx9BdJoDCYqrdHWObNJT+r06FDnhUtIVeSN58tp+J4UJePTgazh
-	 gl6j2mp9lnQnt6G4D/JWQqQ6wP/rnsDW4HighjI0AWdzlA7hmu/WmnpuL/OuNWT04O
-	 Sl0m2hcBnuTg8iLnRBIPAuEpOt7swOZARRTu7LLrWO0Wcpl/0VGvU3MADeoAyfEv51
-	 hEVZ/4qhRsRvy3AIWoR+7DzVeoiI2ugVcARF6NHRrAgnEbh/b4v2aOKGYGaWo53VEp
-	 e3eoWPOaRSa2r9VJZqHoqMo52bGYgXXZZb/0ilimN8CtTZHvpN4BQQDCYxBj2Xt4xJ
-	 vPciWrP8y34pA==
+	b=S2e1GHocFVBu82bQmSDTnd9TJkJZZw86sPm71UzBO41ZJ3MIg25sYmK5shvNcmGDE
+	 VM8vw8ubGLCURt3ntRM7Iw3nWG96efYVMgrJzcGj/tqSjrij0ZoVq1Dx0yViJPvQ7v
+	 MALWft17Kxw01mYkYQuqAE23FDT61+EEb7105Bgem8xad6aUNurkcafXqIZvmo2zz1
+	 KQOOLd13BO6BdZfn9/pJ1YNOlyO1M3ntW7HH53qNp9oa0SJHGMtexWekyA1cqpxeZ2
+	 qAmzF6cBAyd3gPUumHr/eLnz7ZQ42ZW/0HiLr3GFKfmNoE7+ROD5vJ4e8BhLkchjXX
+	 OGYwFmoYfLbpA==
 From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>,
@@ -49,9 +49,9 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	linux-pci@vger.kernel.org,
 	linux-alpha@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v4 05/24] PCI/sysfs: Add CAP_SYS_ADMIN check to __resource_resize_store()
-Date: Sat, 11 Apr 2026 08:01:29 +0000
-Message-ID: <20260411080148.471335-6-kwilczynski@kernel.org>
+Subject: [PATCH v4 06/24] PCI/sysfs: Add static PCI resource attribute macros
+Date: Sat, 11 Apr 2026 08:01:30 +0000
+Message-ID: <20260411080148.471335-7-kwilczynski@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260411080148.471335-1-kwilczynski@kernel.org>
 References: <20260411080148.471335-1-kwilczynski@kernel.org>
@@ -64,38 +64,75 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Currently, the __resource_resize_store() allows writing to the
-resourceN_resize sysfs attribute to change a BAR's size without
-checking for capabilities, currently relying only on the file
-access check.
+Add three macros for declaring static binary attributes for PCI
+resource files:
 
-Resizing a BAR modifies PCI device configuration and can disrupt
-active drivers.  After the upcoming conversion to static attributes,
-it will also trigger resource file updates via sysfs_update_groups().
+  - pci_dev_resource_io_attr(), for I/O BAR resources (read/write)
+  - pci_dev_resource_uc_attr(), for memory BAR resources (mmap uncached)
+  - pci_dev_resource_wc_attr(), for write-combine resources (mmap WC)
 
-Thus, add a CAP_SYS_ADMIN check to prevent unprivileged users from
-performing BAR resize operations.
+Each macro only sets the callbacks its resource type needs.  The I/O
+macro conditionally includes mmap support via __PCI_RESOURCE_IO_MMAP_ATTRS
+on architectures where arch_can_pci_mmap_io() is true at compile time
+(such as PowerPC, SPARC, and Xtensa).
 
-Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 ---
- drivers/pci/pci-sysfs.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/pci-sysfs.c | 41 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
 
 diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 73a9ae9d289b..4f95b336cc34 100644
+index 4f95b336cc34..ca0074674acc 100644
 --- a/drivers/pci/pci-sysfs.c
 +++ b/drivers/pci/pci-sysfs.c
-@@ -1619,6 +1619,9 @@ static ssize_t __resource_resize_store(struct device *dev, int n,
- 	int ret;
- 	u16 cmd;
+@@ -1220,6 +1220,47 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
+ 	return pci_resource_io(filp, kobj, attr, buf, off, count, true);
+ }
  
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
++/*
++ * generic_file_llseek() consults f_mapping->host to determine
++ * the file size. As iomem_inode knows nothing about the
++ * attribute, it's not going to work, so override it as well.
++ */
++#if arch_can_pci_mmap_io()
++# define __PCI_RESOURCE_IO_MMAP_ATTRS		\
++	.f_mapping = iomem_get_mapping,		\
++	.llseek = pci_llseek_resource,		\
++	.mmap = pci_mmap_resource_uc,
++#else
++# define __PCI_RESOURCE_IO_MMAP_ATTRS
++#endif
 +
- 	if (kstrtoul(buf, 0, &size) < 0)
- 		return -EINVAL;
- 
++#define pci_dev_resource_io_attr(_bar)					\
++static const struct bin_attribute dev_resource##_bar##_io_attr = {	\
++	.attr = { .name = "resource" __stringify(_bar), .mode = 0600 },	\
++	.private = (void *)(unsigned long)(_bar),			\
++	.read = pci_read_resource,					\
++	.write = pci_write_resource,					\
++	__PCI_RESOURCE_IO_MMAP_ATTRS					\
++}
++
++#define pci_dev_resource_uc_attr(_bar)					\
++static const struct bin_attribute dev_resource##_bar##_uc_attr = {	\
++	.attr = { .name = "resource" __stringify(_bar), .mode = 0600 },	\
++	.private = (void *)(unsigned long)(_bar),			\
++	.f_mapping = iomem_get_mapping,					\
++	.llseek = pci_llseek_resource,					\
++	.mmap = pci_mmap_resource_uc,					\
++}
++
++#define pci_dev_resource_wc_attr(_bar)						\
++static const struct bin_attribute dev_resource##_bar##_wc_attr = {		\
++	.attr = { .name = "resource" __stringify(_bar) "_wc", .mode = 0600 },	\
++	.private = (void *)(unsigned long)(_bar),				\
++	.f_mapping = iomem_get_mapping,						\
++	.llseek = pci_llseek_resource,						\
++	.mmap = pci_mmap_resource_wc,						\
++}
++
+ /**
+  * pci_remove_resource_files - cleanup resource files
+  * @pdev: dev to cleanup
 -- 
 2.53.0
 
