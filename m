@@ -1,326 +1,122 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 755442DECA3;
-	Sat, 11 Apr 2026 00:39:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98CF540DFA1;
+	Sat, 11 Apr 2026 01:22:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775867995; cv=none; b=bfoonR+bYbDP6cniJtSbgD/enP0vTUjHghV+MqJ8bp+g+qZ+JP70+CNOxsRF8EFRXcbsl16nP2J5BOTwkq4zTtaY0TSKIuHc6PCd3rvFnZWnaqPBmw3f4XCJh59SN6LTKVIa0gKUVNXaMLhSvf7uKHPDAUET9hfYXM9Izz8BSHk=
+	t=1775870527; cv=none; b=o8QsHJ1LvJe0yt0pEDIXomzZ7hU0ytOvZe+jnJ2Bw9QQE6eY7chmL8byyOJhAJdsh+jODc2FtejmPoUqfDwEBfdKhc+lbq789vldy67TE0S9KT7YLH2zTuVFyHF8zW7Dd+J6f9wlHKEMADQnXC6XoFwmWEOZLpDdXk3ksDRwhRE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775867995; c=relaxed/simple;
-	bh=CBYUwMJK9e/8mCc8Lx+DTlbe4j30OVzY4cQtWJ5dobY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=UWrR8T4EVx4hzc67b3tQiFNMt0Z/c1CT4I0tADoL8Es6O4hJBJt4Sf9yecQerY5GDEptk5jh6oTcmsr4j5ZiPTd5PcRCyuCFVP2U4SleaX8b9cMLRzsAgYfOAv9+BAxP6pkOEaa5pIx50vlDf857qQz52UpFs67P/nEh23urXa4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AjKeuPf1; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1775870527; c=relaxed/simple;
+	bh=/PwF8G2z6l/Sklihb/YvZ936SeSPy4Fa3jTst40qrDs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=t9tddvuP8RZD9ZK93Vp1ojsVmIR40G1bM5RXiVKiuYggH6Y7XM4AksYpcDI+UpR5rd03wduaX73LfB6IlGIPhI7pTeKYzwchsC0J1z2XlMvcnhf0m146dWk9m/zie/IOtE+wGWUreb36z7rn5uwGknBzjryETVmR6mrtUwHE6fY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=gIY5fPrA; arc=none smtp.client-ip=117.135.210.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AjKeuPf1"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775867993; x=1807403993;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references;
-  bh=CBYUwMJK9e/8mCc8Lx+DTlbe4j30OVzY4cQtWJ5dobY=;
-  b=AjKeuPf1m1YO0Eal3mIcJYbsokKE/SXygqmQmBMVpDxY+10OZdF7vekD
-   qxJMyOAmZ6OHr3cCJnlgi8hIQc1EjRyVwqfrNOg987HeIhyLdA3M2+x7Y
-   N4A+CImYSdWfbIL+6PVD73AnCAw5GnZftXjk2WHla2JUK2xmHxJzbe1Oj
-   1hhHuxlQHqXyk+/Q2WoMBk6cFnAerG0xNrmVZsZrcbxmqA15BFV8S4P0Z
-   Hlbu5U7Fs+kzwonuc4gRQJHp6QqWoOboGGGsPlZH46chrP8poj8wtlUL0
-   YyRjqb4mzN3xf40HkH0wX2La8ejnhiIx9tvQzCAIZnrDdVgMlO39IEJyo
-   w==;
-X-CSE-ConnectionGUID: 03qJR7YbSE2pfrU626WTqw==
-X-CSE-MsgGUID: kGz4FtqOQI6fo4zHJwaj3w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11755"; a="64423735"
-X-IronPort-AV: E=Sophos;i="6.23,172,1770624000"; 
-   d="scan'208";a="64423735"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 17:39:52 -0700
-X-CSE-ConnectionGUID: QiR4Bm+8Qqy9358d858MpA==
-X-CSE-MsgGUID: qHRd1gUYQjCWskEwzr2Qzw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,172,1770624000"; 
-   d="scan'208";a="228392494"
-Received: from estantil-desk.jf.intel.com ([10.166.241.24])
-  by orviesa010.jf.intel.com with ESMTP; 10 Apr 2026 17:39:51 -0700
-From: Emil Tantilov <emil.s.tantilov@intel.com>
-To: intel-wired-lan@lists.osuosl.org
-Cc: netdev@vger.kernel.org,
-	przemyslaw.kitszel@intel.com,
-	jay.bhat@intel.com,
-	ivan.d.barrera@intel.com,
-	aleksandr.loktionov@intel.com,
-	larysa.zaremba@intel.com,
-	anthony.l.nguyen@intel.com,
-	andrew+netdev@lunn.ch,
-	davem@davemloft.net,
-	edumazet@google.com,
-	kuba@kernel.org,
-	pabeni@redhat.com,
-	aleksander.lobakin@intel.com,
-	linux-pci@vger.kernel.org,
-	madhu.chittim@intel.com,
-	decot@google.com,
-	willemb@google.com,
-	sheenamo@google.com
-Subject: [PATCH iwl-next 2/2] idpf: implement pci error handlers
-Date: Fri, 10 Apr 2026 17:39:59 -0700
-Message-Id: <20260411003959.30959-3-emil.s.tantilov@intel.com>
-X-Mailer: git-send-email 2.17.2
-In-Reply-To: <20260411003959.30959-1-emil.s.tantilov@intel.com>
-References: <20260411003959.30959-1-emil.s.tantilov@intel.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="gIY5fPrA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=gsFOLbG7V80dZwqsFNZhbuEJATi7InTrokWZZf8tcJA=;
+	b=gIY5fPrAqLlrv2E5KIG7g3KAB4Nyup2e78ZyMCDWrXIhQAX7stnzCs85kccrX0
+	e06nAHGihLp3w5htgSq831Dc4SrAWNtaO569Tn2JHk0LXwlTFPDV1yAdSg5l63CH
+	P7kq+iLrv7tVGXnNgWVkt2ZNJn9qa/Q6AnnIR0w6xOB/U=
+Received: from [192.168.50.71] (unknown [])
+	by gzsmtp5 (Coremail) with SMTP id QCgvCgAnFXIZotlplTr6Vw--.8824S2;
+	Sat, 11 Apr 2026 09:21:31 +0800 (CST)
+Message-ID: <df1d4fa0-13b3-4635-85c5-c1c2512c38ba@163.com>
+Date: Sat, 11 Apr 2026 09:21:28 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 0/3] PCI: Refactor PCIe speed validation and conversion
+ functions
+To: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com,
+ kwilczynski@kernel.org, mani@kernel.org, ilpo.jarvinen@linux.intel.com,
+ jingoohan1@gmail.com
+Cc: robh@kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260407130450.1489318-1-18255117159@163.com>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <20260407130450.1489318-1-18255117159@163.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:QCgvCgAnFXIZotlplTr6Vw--.8824S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7KrWkZFy8Wr4UCF1UXF1fJFb_yoW8KF1Dpa
+	yY9w4fArW7Gr9xCa97J3Wjqry5Wan3XrW0yry3Gas3Zw13AFn3JF4vgF1FvF9F9rWFvr42
+	vry3Zw1kCw1qkFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U0ZXwUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwxyAJGnZohzAMAAA3F
 
-Add callbacks to handle PCI errors and FLR reset. When preparing to handle
-reset on the bus, the driver must stop all operations that can lead to MMIO
-access in order to prevent HW errors. To accomplish this introduce helper
-idpf_reset_prepare() that gets called prior to FLR or when PCI error is
-detected. Upon resume the recovery is done through the existing reset path
-by starting the event task.
+Hi Bjorn,
 
-The following callbacks are implemented:
-.reset_prepare runs the first portion of the generic reset path leading up
-to the part where we wait for the reset to complete.
-.reset_done/resume runs the recovery part of the reset handling.
-.error_detected is the callback dealing with PCI errors, similar to the
-prepare call, we stop all operations, prior to attempting a recovery.
-.slot_reset is the callback attempting to restore the device, provided a
-PCI reset was initiated by the AER driver.
+May I ask if there's any chance for this series to be included in v7.1?
 
-Whereas previously the init logic guaranteed netdevs during reset, the
-addition of idpf_detach_and_close() to the PCI callbacks flow makes it
-possible for the function to be called without netdevs. Add check to
-avoid NULL pointer dereference in that case.
+Best regards,
+Hans
 
-Co-developed-by: Alan Brady <alan.brady@intel.com>
-Signed-off-by: Alan Brady <alan.brady@intel.com>
-Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
-Reviewed-by: Jay Bhat <jay.bhat@intel.com>
-Reviewed-by: Madhu Chittim <madhu.chittim@intel.com>
----
- drivers/net/ethernet/intel/idpf/idpf.h      |   3 +
- drivers/net/ethernet/intel/idpf/idpf_lib.c  |  13 ++-
- drivers/net/ethernet/intel/idpf/idpf_main.c | 114 ++++++++++++++++++++
- 3 files changed, 128 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/ethernet/intel/idpf/idpf.h b/drivers/net/ethernet/intel/idpf/idpf.h
-index 1d0e32e47e87..164d2f3e233a 100644
---- a/drivers/net/ethernet/intel/idpf/idpf.h
-+++ b/drivers/net/ethernet/intel/idpf/idpf.h
-@@ -88,6 +88,7 @@ enum idpf_state {
-  * @IDPF_REMOVE_IN_PROG: Driver remove in progress
-  * @IDPF_MB_INTR_MODE: Mailbox in interrupt mode
-  * @IDPF_VC_CORE_INIT: virtchnl core has been init
-+ * @IDPF_PCI_CB_RESET: Reset via the PCI callbacks
-  * @IDPF_FLAGS_NBITS: Must be last
-  */
- enum idpf_flags {
-@@ -97,6 +98,7 @@ enum idpf_flags {
- 	IDPF_REMOVE_IN_PROG,
- 	IDPF_MB_INTR_MODE,
- 	IDPF_VC_CORE_INIT,
-+	IDPF_PCI_CB_RESET,
- 	IDPF_FLAGS_NBITS,
- };
- 
-@@ -1012,4 +1014,5 @@ void idpf_idc_vdev_mtu_event(struct iidc_rdma_vport_dev_info *vdev_info,
- int idpf_add_del_fsteer_filters(struct idpf_adapter *adapter,
- 				struct virtchnl2_flow_rule_add_del *rule,
- 				enum virtchnl2_op opcode);
-+void idpf_detach_and_close(struct idpf_adapter *adapter);
- #endif /* !_IDPF_H_ */
-diff --git a/drivers/net/ethernet/intel/idpf/idpf_lib.c b/drivers/net/ethernet/intel/idpf/idpf_lib.c
-index 7988836fbae0..1e706beb0098 100644
---- a/drivers/net/ethernet/intel/idpf/idpf_lib.c
-+++ b/drivers/net/ethernet/intel/idpf/idpf_lib.c
-@@ -758,13 +758,16 @@ static int idpf_init_mac_addr(struct idpf_vport *vport,
- 	return 0;
- }
- 
--static void idpf_detach_and_close(struct idpf_adapter *adapter)
-+void idpf_detach_and_close(struct idpf_adapter *adapter)
- {
- 	int max_vports = adapter->max_vports;
- 
- 	for (int i = 0; i < max_vports; i++) {
- 		struct net_device *netdev = adapter->netdevs[i];
- 
-+		if (!netdev)
-+			continue;
-+
- 		/* If the interface is in detached state, that means the
- 		 * previous reset was not handled successfully for this
- 		 * vport.
-@@ -1908,6 +1911,10 @@ static void idpf_init_hard_reset(struct idpf_adapter *adapter)
- 
- 	dev_info(dev, "Device HW Reset initiated\n");
- 
-+	/* Reset has already happened, skip to recovery. */
-+	if (test_and_clear_bit(IDPF_PCI_CB_RESET, adapter->flags))
-+		goto check_rst_complete;
-+
- 	/* Prepare for reset */
- 	if (test_bit(IDPF_HR_DRV_LOAD, adapter->flags)) {
- 		reg_ops->trigger_reset(adapter, IDPF_HR_DRV_LOAD);
-@@ -1925,6 +1932,7 @@ static void idpf_init_hard_reset(struct idpf_adapter *adapter)
- 		goto unlock_mutex;
- 	}
- 
-+check_rst_complete:
- 	/* Wait for reset to complete */
- 	err = idpf_check_reset_complete(adapter, &adapter->reset_reg);
- 	if (err) {
-@@ -1984,7 +1992,8 @@ void idpf_vc_event_task(struct work_struct *work)
- 	if (test_bit(IDPF_HR_FUNC_RESET, adapter->flags))
- 		goto func_reset;
- 
--	if (test_bit(IDPF_HR_DRV_LOAD, adapter->flags))
-+	if (test_bit(IDPF_HR_DRV_LOAD, adapter->flags) ||
-+	    test_bit(IDPF_PCI_CB_RESET, adapter->flags))
- 		goto drv_load;
- 
- 	return;
-diff --git a/drivers/net/ethernet/intel/idpf/idpf_main.c b/drivers/net/ethernet/intel/idpf/idpf_main.c
-index d99f759c55e1..cd467695047e 100644
---- a/drivers/net/ethernet/intel/idpf/idpf_main.c
-+++ b/drivers/net/ethernet/intel/idpf/idpf_main.c
-@@ -234,6 +234,7 @@ static int idpf_cfg_device(struct idpf_adapter *adapter)
- 	if (err)
- 		pci_dbg(pdev, "PCIe PTM is not supported by PCIe bus/controller\n");
- 
-+	pci_save_state(pdev);
- 	pci_set_drvdata(pdev, adapter);
- 
- 	return 0;
-@@ -360,6 +361,118 @@ static int idpf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	return err;
- }
- 
-+static void idpf_reset_prepare(struct idpf_adapter *adapter)
-+{
-+	pci_dbg(adapter->pdev, "resetting\n");
-+	set_bit(IDPF_HR_RESET_IN_PROG, adapter->flags);
-+	cancel_delayed_work_sync(&adapter->serv_task);
-+	cancel_delayed_work_sync(&adapter->vc_event_task);
-+	idpf_detach_and_close(adapter);
-+	idpf_idc_issue_reset_event(adapter->cdev_info);
-+	idpf_vc_core_deinit(adapter);
-+}
-+
-+/**
-+ * idpf_pci_err_detected - PCI error detected, about to attempt recovery
-+ * @pdev: PCI device struct
-+ * @err: err detected
-+ *
-+ * Return: %PCI_ERS_RESULT_NEED_RESET to attempt recovery,
-+ * %PCI_ERS_RESULT_DISCONNECT if recovery is not possible.
-+ */
-+static pci_ers_result_t
-+idpf_pci_err_detected(struct pci_dev *pdev, pci_channel_state_t err)
-+{
-+	struct idpf_adapter *adapter = pci_get_drvdata(pdev);
-+
-+	/* Shutdown the mailbox if PCI I/O is in a bad state to avoid MBX
-+	 * timeouts during the prepare stage.
-+	 */
-+	if (pci_channel_offline(pdev))
-+		libie_ctlq_xn_shutdown(adapter->xnm);
-+
-+	idpf_reset_prepare(adapter);
-+
-+	if (err == pci_channel_io_perm_failure)
-+		return PCI_ERS_RESULT_DISCONNECT;
-+
-+	/* When called due to PCI error, driver will have to force PFR on
-+	 * resume, in order to complete the recovery via the event task.
-+	 */
-+	set_bit(IDPF_PCI_CB_RESET, adapter->flags);
-+
-+	return PCI_ERS_RESULT_NEED_RESET;
-+}
-+
-+/**
-+ * idpf_pci_err_slot_reset - PCI undergoing reset
-+ * @pdev: PCI device struct
-+ *
-+ * Reset PCI state and use a register read to see if we're good.
-+ *
-+ * Return: %PCI_ERS_RESULT_RECOVERED on success,
-+ * %PCI_ERS_RESULT_DISCONNECT on failure.
-+ */
-+static pci_ers_result_t
-+idpf_pci_err_slot_reset(struct pci_dev *pdev)
-+{
-+	struct idpf_adapter *adapter = pci_get_drvdata(pdev);
-+
-+	pci_restore_state(pdev);
-+	pci_set_master(pdev);
-+	pci_wake_from_d3(pdev, false);
-+	if (readl(adapter->reset_reg.rstat) != 0xFFFFFFFF) {
-+		pci_save_state(pdev);
-+		return PCI_ERS_RESULT_RECOVERED;
-+	}
-+
-+	return PCI_ERS_RESULT_DISCONNECT;
-+}
-+
-+/**
-+ * idpf_pci_err_resume - Resume operations after PCI error recovery
-+ * @pdev: PCI device struct
-+ */
-+static void idpf_pci_err_resume(struct pci_dev *pdev)
-+{
-+	struct idpf_adapter *adapter = pci_get_drvdata(pdev);
-+
-+	/* Force a PFR when resuming from PCI error. */
-+	if (test_and_set_bit(IDPF_PCI_CB_RESET, adapter->flags))
-+		adapter->dev_ops.reg_ops.trigger_reset(adapter, IDPF_HR_FUNC_RESET);
-+
-+	queue_delayed_work(adapter->vc_event_wq,
-+			   &adapter->vc_event_task,
-+			   msecs_to_jiffies(300));
-+}
-+
-+/**
-+ * idpf_pci_err_reset_prepare - Prepare driver for PCI reset
-+ * @pdev: PCI device struct
-+ */
-+static void idpf_pci_err_reset_prepare(struct pci_dev *pdev)
-+{
-+	idpf_reset_prepare(pci_get_drvdata(pdev));
-+}
-+
-+/**
-+ * idpf_pci_err_reset_done - PCI err reset recovery complete
-+ * @pdev: PCI device struct
-+ */
-+static void idpf_pci_err_reset_done(struct pci_dev *pdev)
-+{
-+	pci_dbg(pdev, "reset: done\n");
-+	idpf_pci_err_resume(pdev);
-+}
-+
-+static const struct pci_error_handlers idpf_pci_err_handler = {
-+	.error_detected = idpf_pci_err_detected,
-+	.slot_reset = idpf_pci_err_slot_reset,
-+	.reset_prepare = idpf_pci_err_reset_prepare,
-+	.reset_done = idpf_pci_err_reset_done,
-+	.resume = idpf_pci_err_resume,
-+};
-+
- /* idpf_pci_tbl - PCI Dev idpf ID Table
-  */
- static const struct pci_device_id idpf_pci_tbl[] = {
-@@ -377,5 +490,6 @@ static struct pci_driver idpf_driver = {
- 	.sriov_configure	= idpf_sriov_configure,
- 	.remove			= idpf_remove,
- 	.shutdown		= idpf_shutdown,
-+	.err_handler		= &idpf_pci_err_handler,
- };
- module_pci_driver(idpf_driver);
--- 
-2.37.3
+On 4/7/26 21:04, Hans Zhang wrote:
+> This series refactors PCIe speed validation and conversion logic to
+> shared functions in the public header, eliminating code duplication
+> and ensuring consistency across drivers.
+> 
+> ---
+> Changes for v7:
+> - patch 0002 add #include <asm/bug.h> (Ilpo)
+> - s/u32 link_speed/enum pci_bus_speed link_speed/ (Ilpo)
+> - The return value of pci_bus_speed2lnkctl2 uses the variable ctrl2_speed
+>    to avoid the abuse of variable types. (Ilpo)
+> 
+> Changes for v6:
+> https://patchwork.kernel.org/project/linux-pci/patch/20260406105613.1228673-1-18255117159@163.com/
+> 
+> - missing one line of code:
+>    link_speed = pcie_get_link_speed(pci->max_link_speed);
+> 
+> Changes for v5:
+> https://patchwork.kernel.org/project/linux-pci/patch/20260406104708.1218648-1-18255117159@163.com/
+> 
+> - Rebase to v7.0-rc1. (pci/next tree)
+> 
+> Changes for v4:
+> https://patchwork.kernel.org/project/linux-pci/patch/20251102143206.111347-1-18255117159@163.com/
+> 
+> - Maintain O(1) array-based lookup for speed conversion (addressing
+>    performance concerns from v3 feedback)
+> - Move pcie_valid_speed() and pci_bus_speed2lnkctl2() to pci.h
+> - Update dwc driver to use the shared functions
+> - Rebase to v6.18-rc3.
+> 
+> This addresses the feedback from Lukas Wunner and Manivannan Sadhasivam
+> on the v3 submission, ensuring no runtime performance regression while
+> achieving code reuse.
+> 
+> Changes for v3:
+> https://patchwork.kernel.org/project/linux-pci/patch/20250816154633.338653-1-18255117159@163.com/
+> 
+> - Rebase to v6.17-rc1.
+> - Gentle ping.
+> 
+> Changes for v2:
+> - s/PCIE_SPEED2LNKCTL2_TLS_ENC/PCIE_SPEED2LNKCTL2_TLS
+> - The patch commit message were modified.
+> ---
+> 
+> Hans Zhang (3):
+>    PCI: Add public pcie_valid_speed() for shared validation
+>    PCI: Move pci_bus_speed2lnkctl2() to public header
+>    PCI: dwc: Use common speed conversion function
+> 
+>   drivers/pci/controller/dwc/pcie-designware.c | 28 +++++++-------------
+>   drivers/pci/pci.h                            | 23 ++++++++++++++++
+>   drivers/pci/pcie/bwctrl.c                    | 22 ---------------
+>   3 files changed, 32 insertions(+), 41 deletions(-)
+> 
+> 
+> base-commit: 525e91d84dc085492b36d4b87abb7c1cc93fcb44
 
