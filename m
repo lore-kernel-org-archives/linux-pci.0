@@ -1,58 +1,58 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA6EB365A00
-	for <linux-pci@vger.kernel.org>; Sun, 12 Apr 2026 05:24:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6A6E1A275;
+	Sun, 12 Apr 2026 06:38:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775971470; cv=none; b=YGLzSOb+oEIqRMVb1dX9WiL5Y7nTK9U3MFm0pi5ZRo3ZSbzc2JT5ssbvS0biktQOlOLMEGowpsqMs1ZQIHI/k8MTx5d278qo4PqvVN3Si4xTj3qXUhSBzKKaOo53RYqfOkniFSt/K70FiLhKPRwvi+kVIDmC2mqGdsA6pP6O5mI=
+	t=1775975886; cv=none; b=ORd4f25Y6pOo69FHMrqW5Nah8CuQZCf92IsVmFPhmE+ox6KIU3AhXv43zDpaEjBai0srTG+pG6n/VmC4Etvp+jOC7yMdRHZLS5qYaA7oiqfoxnmq6UUCI2Af97QQ6opD1+anxfU8xjZE9Ac1cNpXV4qSdn0VrJoVWTyptlhDGdM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775971470; c=relaxed/simple;
-	bh=lVgMkUHMEYeASOiWqgYB3oWToGo/XxVkMmVCrliaD5c=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=LUb0xMVrVmXkrI0s/EG5fa7Rl1SUQeGmz2hBcjxphOqei1+2lSaOZlUSwWc4EsPZo4ZGSwYkC2ZCLU7SkqSkpLRtmFoXm1dLH0xoHm/N+9HjfiSyStAt7oSyqt1p2bYhBL9ZQDc6AAcFPgmq6HGh7Nn0a5ebcdfgKKDhk1SZHTk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FsTeJA+y; arc=none smtp.client-ip=192.198.163.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1775975886; c=relaxed/simple;
+	bh=sTTFTGEFAtVBl1AdOtumfXjQUbSRjk8/CzL0mvAKNBU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Y0uU0+KrmOB+331DQhB4QGsrgstjCkgEJMw2yDhakZcBxAsuoqL/g9vRymBiAh7H5bJgqKxg7MKQHWV7fiPSwBOr961jUlO4C+XcpwtL+xTVE1vKBgM9//dWpF58kdrQcbBcuC82ucQiCkxcHuU/vjMtuX1A/P7aFlEyn+TOlhg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P5VfRa+f; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FsTeJA+y"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775971469; x=1807507469;
-  h=date:from:to:cc:subject:message-id:mime-version;
-  bh=lVgMkUHMEYeASOiWqgYB3oWToGo/XxVkMmVCrliaD5c=;
-  b=FsTeJA+yQ89hUJeY8OOlAxNpExeiUdYk1lB+tH2pNCi80NekQ6k/fJrT
-   2kww1QtlDmrSoJIFoVtAugKf/EwqkOmqD4wazFWe12DTpdQW06OUnGdcY
-   EyOkH4M2UULJTn/lpg72eTfKZWMrMFjfaxfOngT6A1569Z7zrmzsVDC8X
-   F60w/UdeOu0THuKPyrIP7n+pgNyPaHJmdFD57cRpXtnk2LI6TEMzp1ldA
-   +pfQdLVD+BGkXIzDUFKQxv/oG/tB9dE/zJagmuHuLbHQsvayPKNxLBA9K
-   3w/MnseM9Tna9GpevK3ZrLg1qiQtDAjh5lyG7/9PXcL/BF5FganCC3Q6p
-   w==;
-X-CSE-ConnectionGUID: 3pINrEgdQmup43bIqFCueA==
-X-CSE-MsgGUID: sCN1xwaoQ1C2Sr7m5JdD3Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11755"; a="77052492"
-X-IronPort-AV: E=Sophos;i="6.23,174,1770624000"; 
-   d="scan'208";a="77052492"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Apr 2026 22:24:28 -0700
-X-CSE-ConnectionGUID: lxNP5xnBROmz53/TdiU9XQ==
-X-CSE-MsgGUID: xEpEuADkSi2OPUgNPKa/fA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,174,1770624000"; 
-   d="scan'208";a="267444294"
-Received: from lkp-server01.sh.intel.com (HELO 3eaaf1a74b89) ([10.239.97.150])
-  by orviesa001.jf.intel.com with ESMTP; 11 Apr 2026 22:24:27 -0700
-Received: from kbuild by 3eaaf1a74b89 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wBnJ2-000000001tf-2Olj;
-	Sun, 12 Apr 2026 05:24:24 +0000
-Date: Sun, 12 Apr 2026 13:24:18 +0800
-From: kernel test robot <lkp@intel.com>
-To: "Krzysztof =?utf-8?Q?Wilczy=C5=84ski"?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:kwilczynski/static-sysfs-attributes-v4] BUILD SUCCESS
- 87b311f289d86d6136da7145db113cf94f5ba40c
-Message-ID: <202604121312.sF0Ua4gP-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P5VfRa+f"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24957C19424;
+	Sun, 12 Apr 2026 06:38:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775975885;
+	bh=sTTFTGEFAtVBl1AdOtumfXjQUbSRjk8/CzL0mvAKNBU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=P5VfRa+f8Bq9oWoKaDhwdknQhKG1iG4zqj8NDKZCwDkCRnFuMMtzbLsYJ8ZAkCO7J
+	 1NTU9Ns9AyZ78ETJA5JsSiDLVJTjWhRly1gI7ROcrNjI5svAVdmCuzivmqDB+/sf2+
+	 gn6YLD8CzuODxIw77WI72qIfRwsz8M6xWenUrgrvgwFHnZO9KLKf6EOG5wGDNmv9+/
+	 VFuxPdCyAMqun5yluXF/5J2+vJyY2e6IKlBGFVJh3OEUEGFAtHvvdYQNVsT8imj8qr
+	 gNk5WoFPNJ6bQ8vrKRzLl9Uv8jYidJCInvkefrkbLmapzgVFWX5RQ0dGB+V2FcS0e5
+	 2K2SF97vJwIoA==
+Date: Sun, 12 Apr 2026 15:38:03 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Magnus Lindholm <linmag7@gmail.com>,
+	Matt Turner <mattst88@gmail.com>,
+	Richard Henderson <richard.henderson@linaro.org>,
+	Christophe Leroy <chleroy@kernel.org>,
+	Madhavan Srinivasan <maddy@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	Dexuan Cui <decui@microsoft.com>,
+	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	Lukas Wunner <lukas@wunner.de>,
+	Oliver O'Halloran <oohall@gmail.com>,
+	Saurabh Singh Sengar <ssengar@microsoft.com>,
+	Shuan He <heshuan@bytedance.com>,
+	Srivatsa Bhat <srivatsabhat@microsoft.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v4 00/24] PCI: Convert all dynamic sysfs attributes to
+ static
+Message-ID: <20260412063803.GA2085076@rocinante>
+References: <20260411080148.471335-1-kwilczynski@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -60,218 +60,49 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260411080148.471335-1-kwilczynski@kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git kwilczynski/static-sysfs-attributes-v4
-branch HEAD: 87b311f289d86d6136da7145db113cf94f5ba40c  PCI/sysfs: Remove pci_create_legacy_files() and pci_sysfs_init()
+Hello,
 
-elapsed time: 724m
+> This series converts every dynamically allocated PCI sysfs attribute to
+> a static const definition.  After the full series, pci_sysfs_init() and
+> sysfs_initialized are gone, and every sysfs file is created by the
+> driver model at device_add() time.
 
-configs tested: 198
-configs skipped: 4
+A note on testing:
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+  0-day bot (recent test runs; newer builds will arrive later):
+    - https://lore.kernel.org/linux-pci/202604121312.sF0Ua4gP-lkp@intel.com
+    - https://lore.kernel.org/linux-pci/202604111631.lrwAylMM-lkp@intel.com
+    - https://lore.kernel.org/linux-pci/202603170336.zSLrDvlj-lkp@intel.com
+    - https://lore.kernel.org/linux-pci/202603122052.tMV5rzNq-lkp@intel.com
+    - https://lore.kernel.org/linux-pci/202603081334.b91RGVS6-lkp@intel.com
+    - https://lore.kernel.org/linux-pci/202603060207.pnGfKgGa-lkp@intel.com
 
-tested configs:
-alpha                             allnoconfig    gcc-15.2.0
-alpha                            allyesconfig    gcc-15.2.0
-alpha                               defconfig    gcc-15.2.0
-arc                              allmodconfig    clang-16
-arc                              allmodconfig    gcc-15.2.0
-arc                               allnoconfig    gcc-15.2.0
-arc                              allyesconfig    clang-23
-arc                              allyesconfig    gcc-15.2.0
-arc                                 defconfig    gcc-15.2.0
-arc                   randconfig-001-20260412    gcc-11.5.0
-arc                   randconfig-002-20260412    gcc-11.5.0
-arm                               allnoconfig    clang-23
-arm                               allnoconfig    gcc-15.2.0
-arm                              allyesconfig    clang-16
-arm                              allyesconfig    gcc-15.2.0
-arm                       aspeed_g5_defconfig    gcc-15.2.0
-arm                                 defconfig    gcc-15.2.0
-arm                   randconfig-001-20260412    gcc-11.5.0
-arm                   randconfig-002-20260412    gcc-11.5.0
-arm                   randconfig-003-20260412    gcc-11.5.0
-arm                   randconfig-004-20260412    gcc-11.5.0
-arm64                            allmodconfig    clang-19
-arm64                            allmodconfig    clang-23
-arm64                             allnoconfig    gcc-15.2.0
-arm64                               defconfig    gcc-15.2.0
-arm64                 randconfig-001-20260412    clang-19
-arm64                 randconfig-002-20260412    clang-19
-arm64                 randconfig-003-20260412    clang-19
-arm64                 randconfig-004-20260412    clang-19
-csky                             allmodconfig    gcc-15.2.0
-csky                              allnoconfig    gcc-15.2.0
-csky                                defconfig    gcc-15.2.0
-csky                  randconfig-001-20260412    clang-19
-csky                  randconfig-002-20260412    clang-19
-hexagon                          allmodconfig    gcc-15.2.0
-hexagon                           allnoconfig    clang-23
-hexagon                           allnoconfig    gcc-15.2.0
-hexagon                             defconfig    gcc-15.2.0
-hexagon               randconfig-001-20260412    clang-23
-hexagon               randconfig-002-20260412    clang-23
-i386                             allmodconfig    clang-20
-i386                              allnoconfig    gcc-14
-i386                              allnoconfig    gcc-15.2.0
-i386                             allyesconfig    clang-20
-i386        buildonly-randconfig-001-20260412    gcc-14
-i386        buildonly-randconfig-002-20260412    gcc-14
-i386        buildonly-randconfig-003-20260412    gcc-14
-i386        buildonly-randconfig-004-20260412    gcc-14
-i386        buildonly-randconfig-005-20260412    gcc-14
-i386        buildonly-randconfig-006-20260412    gcc-14
-i386                                defconfig    gcc-15.2.0
-i386                  randconfig-001-20260412    clang-20
-i386                  randconfig-002-20260412    clang-20
-i386                  randconfig-003-20260412    clang-20
-i386                  randconfig-004-20260412    clang-20
-i386                  randconfig-005-20260412    clang-20
-i386                  randconfig-006-20260412    clang-20
-i386                  randconfig-007-20260412    clang-20
-i386                  randconfig-011-20260412    gcc-14
-i386                  randconfig-012-20260412    gcc-14
-i386                  randconfig-013-20260412    gcc-14
-i386                  randconfig-014-20260412    gcc-14
-i386                  randconfig-015-20260412    gcc-14
-i386                  randconfig-016-20260412    gcc-14
-i386                  randconfig-017-20260412    gcc-14
-loongarch                        allmodconfig    clang-19
-loongarch                        allmodconfig    clang-23
-loongarch                         allnoconfig    clang-23
-loongarch                         allnoconfig    gcc-15.2.0
-loongarch                           defconfig    clang-19
-loongarch             randconfig-001-20260412    clang-23
-loongarch             randconfig-002-20260412    clang-23
-m68k                             allmodconfig    gcc-15.2.0
-m68k                              allnoconfig    gcc-15.2.0
-m68k                             allyesconfig    clang-16
-m68k                             allyesconfig    gcc-15.2.0
-m68k                                defconfig    clang-19
-microblaze                        allnoconfig    gcc-15.2.0
-microblaze                       allyesconfig    gcc-15.2.0
-microblaze                          defconfig    clang-19
-mips                             allmodconfig    gcc-15.2.0
-mips                              allnoconfig    gcc-15.2.0
-mips                             allyesconfig    gcc-15.2.0
-mips                         db1xxx_defconfig    clang-23
-mips                      loongson3_defconfig    gcc-15.2.0
-nios2                            allmodconfig    clang-23
-nios2                             allnoconfig    clang-23
-nios2                             allnoconfig    gcc-11.5.0
-nios2                               defconfig    clang-19
-nios2                 randconfig-001-20260412    clang-23
-nios2                 randconfig-002-20260412    clang-23
-openrisc                         allmodconfig    clang-23
-openrisc                          allnoconfig    clang-23
-openrisc                          allnoconfig    gcc-15.2.0
-openrisc                            defconfig    gcc-15.2.0
-parisc                           allmodconfig    gcc-15.2.0
-parisc                            allnoconfig    clang-23
-parisc                            allnoconfig    gcc-15.2.0
-parisc                           allyesconfig    clang-19
-parisc                           allyesconfig    gcc-15.2.0
-parisc                              defconfig    gcc-15.2.0
-parisc                randconfig-001-20260412    gcc-15.2.0
-parisc                randconfig-002-20260412    gcc-15.2.0
-parisc64                            defconfig    clang-19
-powerpc                          allmodconfig    gcc-15.2.0
-powerpc                           allnoconfig    clang-23
-powerpc                           allnoconfig    gcc-15.2.0
-powerpc               randconfig-001-20260412    gcc-15.2.0
-powerpc               randconfig-002-20260412    gcc-15.2.0
-powerpc64             randconfig-001-20260412    gcc-15.2.0
-powerpc64             randconfig-002-20260412    gcc-15.2.0
-riscv                            allmodconfig    clang-23
-riscv                             allnoconfig    clang-23
-riscv                             allnoconfig    gcc-15.2.0
-riscv                            allyesconfig    clang-16
-riscv                               defconfig    gcc-15.2.0
-riscv                 randconfig-001-20260412    clang-23
-riscv                 randconfig-001-20260412    gcc-15.2.0
-riscv                 randconfig-002-20260412    clang-23
-s390                             allmodconfig    clang-18
-s390                             allmodconfig    clang-19
-s390                              allnoconfig    clang-23
-s390                             allyesconfig    gcc-15.2.0
-s390                                defconfig    gcc-15.2.0
-s390                  randconfig-001-20260412    clang-23
-s390                  randconfig-001-20260412    gcc-15.2.0
-s390                  randconfig-002-20260412    clang-23
-s390                  randconfig-002-20260412    gcc-15.2.0
-sh                               allmodconfig    gcc-15.2.0
-sh                                allnoconfig    clang-23
-sh                                allnoconfig    gcc-15.2.0
-sh                               allyesconfig    clang-19
-sh                               allyesconfig    gcc-15.2.0
-sh                                  defconfig    gcc-14
-sh                 kfr2r09-romimage_defconfig    gcc-15.2.0
-sh                    randconfig-001-20260412    clang-23
-sh                    randconfig-001-20260412    gcc-15.2.0
-sh                    randconfig-002-20260412    clang-23
-sh                    randconfig-002-20260412    gcc-15.2.0
-sparc                             allnoconfig    clang-23
-sparc                             allnoconfig    gcc-15.2.0
-sparc                               defconfig    gcc-15.2.0
-sparc                 randconfig-001-20260412    clang-23
-sparc                 randconfig-002-20260412    clang-23
-sparc64                          allmodconfig    clang-23
-sparc64                             defconfig    gcc-14
-sparc64               randconfig-001-20260412    clang-23
-sparc64               randconfig-002-20260412    clang-23
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-23
-um                               allyesconfig    gcc-15.2.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20260412    clang-23
-um                    randconfig-002-20260412    clang-23
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-20
-x86_64                            allnoconfig    clang-20
-x86_64                            allnoconfig    clang-23
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20260412    clang-20
-x86_64      buildonly-randconfig-002-20260412    clang-20
-x86_64      buildonly-randconfig-003-20260412    clang-20
-x86_64      buildonly-randconfig-004-20260412    clang-20
-x86_64      buildonly-randconfig-005-20260412    clang-20
-x86_64      buildonly-randconfig-006-20260412    clang-20
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-20
-x86_64                randconfig-001-20260412    clang-20
-x86_64                randconfig-002-20260412    clang-20
-x86_64                randconfig-003-20260412    clang-20
-x86_64                randconfig-004-20260412    clang-20
-x86_64                randconfig-005-20260412    clang-20
-x86_64                randconfig-006-20260412    clang-20
-x86_64                randconfig-011-20260412    gcc-14
-x86_64                randconfig-012-20260412    gcc-14
-x86_64                randconfig-013-20260412    gcc-14
-x86_64                randconfig-014-20260412    gcc-14
-x86_64                randconfig-015-20260412    gcc-14
-x86_64                randconfig-016-20260412    gcc-14
-x86_64                randconfig-071-20260412    clang-20
-x86_64                randconfig-072-20260412    clang-20
-x86_64                randconfig-073-20260412    clang-20
-x86_64                randconfig-074-20260412    clang-20
-x86_64                randconfig-075-20260412    clang-20
-x86_64                randconfig-076-20260412    clang-20
-x86_64                               rhel-9.4    clang-20
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-20
-x86_64                    rhel-9.4-kselftests    clang-20
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    clang-23
-xtensa                            allnoconfig    gcc-15.2.0
-xtensa                           allyesconfig    clang-23
-xtensa                randconfig-001-20260412    clang-23
-xtensa                randconfig-002-20260412    clang-23
+  KernelCI (for the "for-kernelci" branch):
+    - https://dashboard.kernelci.org/tree/linux-pci/for-kernelci/209e2cfd205a8aad4bae32e6f82b96b20902aa74
+    - https://dashboard.kernelci.org/tree/linux-pci/for-kernelci/70293477e2c0ae8cbc250098818e726e1d658b53
+    - https://dashboard.kernelci.org/tree?ts=pci
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+  Sashiko's feedback:
+    - https://sashiko.dev/#/patchset/20260411080148.471335-1-kwilczynski%40kernel.org
+    - https://sashiko.dev/#/patchset/20260410055040.39233-1-kwilczynski%40kernel.org
+
+I sadly do not own any Alpha or PowerPC hardware, so when I was testing
+these architectures while working on the series, it would be only under
+QEMU.
+
+That said, Magnus Lindholm was able to test the series on the Alpha
+hardware he owns, see:
+
+  - https://lore.kernel.org/linux-pci/CA+=Fv5Q1tZQwnanw99NbvzT-QenfYz7vUdY02_TuPqHX32ZAiA@mail.gmail.com
+
+Lorenzo Pieralisi did some testing reported outside the mailing list (we
+talked on IRC), on the platform he had issues before, and while the issues
+were more with procfs races, similar to the sysfs ones this series aims to
+fix, he didn't notice regressions when having this series applied.
+
+Thank you!
+
+	Krzysztof
