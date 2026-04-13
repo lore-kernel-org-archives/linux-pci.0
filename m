@@ -1,50 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 819E9387358;
-	Mon, 13 Apr 2026 11:44:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6A2B31A053;
+	Mon, 13 Apr 2026 11:45:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776080686; cv=none; b=SVKcznVGnmXAHZLs345/O1rauGDkU6468vR87lVG1P7geYEFRP487offr2SX9DPjgjv0VPWnzj+zruiouVChLpWw2d691yESlj/MhqW0BJ8tUlysqqWzcVhOtIWpC+RqOPaKjtxiE1KmkJkbh7dfFgKDyRtcvhBsd2Fsf9OzcZg=
+	t=1776080751; cv=none; b=ldYTl+ktkyHVp8HND3wqMRM5hHPuguNCKJBSpYqBHVJp2ui9FTFt7Zus/LzLDB39XJ1sQ8ZF5wfAI7tB0zY9mLPwievHYYcTT4YwJI+uusaHsHSgfYZl43DGQUER5/IOTY01bg6psghkhI6/3htr6MXn/lp0w2zXt2brM+rS6Iw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776080686; c=relaxed/simple;
-	bh=AFSD+d73vMww+hbY63uE4fAGE+VrR8hSSF0t67UtcMY=;
+	s=arc-20240116; t=1776080751; c=relaxed/simple;
+	bh=MXb8znk6JA5uSw7e9wrvMoeQSHS1hheycQygUFtOceI=;
 	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=flgZb5kWkWdCd3jObHjn1IhUD9FDrCXnccgd6nKttJxApJFQ2MSVnH9OfmhmWMO70JMmAK22C9YKJxH5V9BrKT+DO5yQ4/g2eWyElc0yWRdaXF1r9b/X5i9WMMjIaruNaX/SGtWoVA7zP0ftkSLYDmi7IXLg9eZTRbElUlka6Wk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Xrt87pcC; arc=none smtp.client-ip=192.198.163.12
+	 MIME-Version:Content-Type; b=tKnW/Rzn+zF4r9Km+889Hh2wHWjh0sJ5bp2Bn6ENvEwu1qxyne9eo3MzYFRNtoEcIPEC2CC24KD8Xlv9UBrEtjXacmxGpgLv48/r6CqKCSY8rtiWYDvfJE0dtDsvXu3w9ErxfhhhJzGPNnBFbMOYhM+LbpOYthb5JIK4Nnvm6GI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gTwmbzLb; arc=none smtp.client-ip=192.198.163.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Xrt87pcC"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gTwmbzLb"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1776080686; x=1807616686;
+  t=1776080750; x=1807616750;
   h=from:date:to:cc:subject:in-reply-to:message-id:
    references:mime-version;
-  bh=AFSD+d73vMww+hbY63uE4fAGE+VrR8hSSF0t67UtcMY=;
-  b=Xrt87pcC+gAKIiS712BDAawSsIET0uUWAqOLSDEZY/KzRdD4YYm02MZi
-   2+k+kH4RG7Vo0nmNuH7eKkp4GIyN1nwm7nO31KyZCIBCF2w8ILbu5Yzil
-   K5TXLzPCkJEyL0Ct+I/pUeUF9mjSr7PReKFUNp2L0JSdbtTTBRnFjqHej
-   1a9RQWeJx3O/XtpeBbzNQLemSt7c3aP1Bib43ex9wXpuik6wi121VLbw5
-   HcbDVkM5GuRgkT9xGjr3RSiEQ/HxfPv95TYtkwaxuTVH6FDY00zheiaxe
-   5JLIf+U5JAw+0RqmzezHu8mVstSRPX6cbQmwlWWyBlNIkOggwRCvssGZs
-   w==;
-X-CSE-ConnectionGUID: FUfauHGTTmKVG8QwOKK09w==
-X-CSE-MsgGUID: guarExyXQL+z162ZiW8zew==
-X-IronPort-AV: E=McAfee;i="6800,10657,11757"; a="80894512"
+  bh=MXb8znk6JA5uSw7e9wrvMoeQSHS1hheycQygUFtOceI=;
+  b=gTwmbzLbTYSaY8Def1TRQIhmlT6A8R28ladhEwK6R0r59eoCjwYB25kU
+   AimKAxBd5/wlZrQeqAScQZeuIr54CmBbS2NfXvT+Tw6tuEQ4ObqElqSBN
+   xHE6xnUOhj1Y/OHTF9pdHV8bgC0BYm2fklmlMmSkPnbbkVsw8Rzkm03R5
+   ZmF8vcT+EOGlBwjNAn0cxg1VXS0r+3F8U2QRomJhRSNSkNkIvzF6ao0EZ
+   vykng0JB2uAWPUx4WSY4Gy4EYW5JQqd1oHjwmLYZxdkwlr/Wwq3wfUjS7
+   EIxs42z+Axoh+tHpP2hR86EuM96nj0ZJEk5QaWhsX9vHra1e2uHwFkdpd
+   Q==;
+X-CSE-ConnectionGUID: NJ/AfIg/QSuB6UC08PsR/A==
+X-CSE-MsgGUID: ua0mpdcmQwSI3gvV7QIdNw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11757"; a="88396338"
 X-IronPort-AV: E=Sophos;i="6.23,177,1770624000"; 
-   d="scan'208";a="80894512"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2026 04:44:45 -0700
-X-CSE-ConnectionGUID: hIZS6DwhSW2wkfAszU3ESQ==
-X-CSE-MsgGUID: 0jcsmTVPSeCQKJIJ8iTaGg==
+   d="scan'208";a="88396338"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2026 04:45:49 -0700
+X-CSE-ConnectionGUID: RZP0kXKVTxepfqH2u5Mj1w==
+X-CSE-MsgGUID: hvRUpLyoSQGtB1aLUpdGmg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,177,1770624000"; 
-   d="scan'208";a="225482707"
+   d="scan'208";a="231496176"
 Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.63])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2026 04:44:35 -0700
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2026 04:45:41 -0700
 From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Mon, 13 Apr 2026 14:44:29 +0300 (EEST)
+Date: Mon, 13 Apr 2026 14:45:32 +0300 (EEST)
 To: =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>
 cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>, 
     Manivannan Sadhasivam <mani@kernel.org>, 
@@ -61,66 +61,60 @@ cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
     Shuan He <heshuan@bytedance.com>, 
     Srivatsa Bhat <srivatsabhat@microsoft.com>, linux-pci@vger.kernel.org, 
     linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v4 15/24] alpha/PCI: Fix __pci_mmap_fits() overflow for
- zero-length BARs
-In-Reply-To: <20260411080148.471335-16-kwilczynski@kernel.org>
-Message-ID: <e6dfcdef-c5ba-7c23-73cc-cf2ffd084b4e@linux.intel.com>
-References: <20260411080148.471335-1-kwilczynski@kernel.org> <20260411080148.471335-16-kwilczynski@kernel.org>
+Subject: Re: [PATCH v4 16/24] alpha/PCI: Remove WARN from __pci_mmap_fits()
+In-Reply-To: <20260411080148.471335-17-kwilczynski@kernel.org>
+Message-ID: <683c3e65-4589-b3a1-ac51-6d7e2b679944@linux.intel.com>
+References: <20260411080148.471335-1-kwilczynski@kernel.org> <20260411080148.471335-17-kwilczynski@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-1214616222-1776080669=:962"
+Content-Type: multipart/mixed; boundary="8323328-1168042318-1776080732=:962"
 
   This message is in MIME format.  The first part should be readable text,
   while the remaining parts are likely unreadable without MIME-aware tools.
 
---8323328-1214616222-1776080669=:962
+--8323328-1168042318-1776080732=:962
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 
 On Sat, 11 Apr 2026, Krzysztof Wilczy=C5=84ski wrote:
 
-> Currently, __pci_mmap_fits() computes the BAR size using
-> pci_resource_len() - 1, which wraps to a large value when the
-> BAR length is zero, causing the bounds check to incorrectly
-> succeed.
+> Remove the WARN() that fires when userspace attempts to mmap beyond
+> the BAR bounds.  The check still returns 0 to reject the mapping,
+> but the warning is excessive for normal operation.
 >=20
-> Thus, add an early return for empty resources.
+> A similar warning was removed from the PCI core in the commit
+> 3b519e4ea618 ("PCI: fix size checks for mmap() on /proc/bus/pci files").
 >=20
-> Fixes: 10a0ef39fbd1 ("PCI/alpha: pci sysfs resources")
 > Signed-off-by: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
 > ---
->  arch/alpha/kernel/pci-sysfs.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
+>  arch/alpha/kernel/pci-sysfs.c | 8 +-------
+>  1 file changed, 1 insertion(+), 7 deletions(-)
 >=20
 > diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.=
 c
-> index 6c011dab326d..2748000a7486 100644
+> index 2748000a7486..c136603ddf2c 100644
 > --- a/arch/alpha/kernel/pci-sysfs.c
 > +++ b/arch/alpha/kernel/pci-sysfs.c
-> @@ -37,12 +37,16 @@ static int hose_mmap_page_range(struct pci_controller=
- *hose,
->  static int __pci_mmap_fits(struct pci_dev *pdev, int num,
->  =09=09=09   struct vm_area_struct *vma, int sparse)
->  {
-> +=09resource_size_t len =3D pci_resource_len(pdev, num);
->  =09unsigned long nr, start, size;
->  =09int shift =3D sparse ? 5 : 0;
-> =20
-> +=09if (!len)
-> +=09=09return 0;
-> +
->  =09nr =3D vma_pages(vma);
+> @@ -48,13 +48,7 @@ static int __pci_mmap_fits(struct pci_dev *pdev, int n=
+um,
 >  =09start =3D vma->vm_pgoff;
-> -=09size =3D ((pci_resource_len(pdev, num) - 1) >> (PAGE_SHIFT - shift)) =
-+ 1;
-> +=09size =3D ((len - 1) >> (PAGE_SHIFT - shift)) + 1;
+>  =09size =3D ((len - 1) >> (PAGE_SHIFT - shift)) + 1;
 > =20
->  =09if (start < size && size - start >=3D nr)
->  =09=09return 1;
+> -=09if (start < size && size - start >=3D nr)
+> -=09=09return 1;
+> -=09WARN(1, "process \"%s\" tried to map%s 0x%08lx-0x%08lx on %s BAR %d "
+> -=09=09"(size 0x%08lx)\n",
+> -=09=09current->comm, sparse ? " sparse" : "", start, start + nr,
+> -=09=09pci_name(pdev), num, size);
+> -=09return 0;
+> +=09return start < size && size - start >=3D nr;
+>  }
+> =20
+>  /**
 >=20
 
 Reviewed-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
@@ -128,4 +122,4 @@ Reviewed-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
 --=20
  i.
 
---8323328-1214616222-1776080669=:962--
+--8323328-1168042318-1776080732=:962--
