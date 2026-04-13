@@ -1,57 +1,46 @@
-Received: from mailo.com (msg-3.mailo.com [213.182.54.8])
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 372FC306D3F;
-	Sun, 12 Apr 2026 18:04:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.182.54.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F00A121D3E2;
+	Mon, 13 Apr 2026 03:40:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776017082; cv=none; b=Xf1VybTeBa2/l6ZkiyeJ7chJaxFk1x/iZkxISQEZgTtMVoV7KZ3WgXAsTD6cr1POX5s4GqSMhZOJv03HagBv+GRlv2K54qfe9TAe+UcATNZybDfL0ntK5PzjDVJlKDlFbPnB+//1F5SZecVqf21KnK2Hdhp43VGqxjsZxU/DVOk=
+	t=1776051644; cv=none; b=UNL8US1PF8oSSfoWPB9dln/zbg3xwUSY1FNNjnFYTD/4Q+HfTPdtB0l0eAWq7M9qWbIZrQ99jbY3XO9njgeBAX17Gt4dWYOxafi7ayDITgCPnHF0xwMt5sSGZPR+f6wKhjDq/jYKeaWi8Vs4wKIsSc/UB8w5zkxmi4QULkoWpJg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776017082; c=relaxed/simple;
-	bh=zGtQNwdBpG7hGH3GJ3R5Yyk5zoQ8fadQOvnmQc9cQvA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mJ8SkeBo+p61tDEMddZRyheHj+wqViUqcjndhwAJKmXin0QLdwoCdHyUWB5r5OHCY3hTz7OhKwMmRIqWviTRWfHohNKC0Upt9Acdm2f1fm1UVlhdXtmaP0raL44/RgwWFH/z3EHYTGwUpK4m8q5ZyjAxBWoYz2nkyFNZNWB8084=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mailo.com; spf=pass smtp.mailfrom=mailo.com; dkim=pass (1024-bit key) header.d=mailo.com header.i=@mailo.com header.b=Q9G4Fy76; arc=none smtp.client-ip=213.182.54.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mailo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailo.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mailo.com header.i=@mailo.com header.b="Q9G4Fy76"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailo.com; s=mailo;
-	t=1776017043; bh=loomyRVspJJPOiGDTGgJ5VyDTwHaaRENDunEDfMh1tY=;
-	h=X-EA-Auth:Message-ID:Date:MIME-Version:Subject:To:Cc:References:
-	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	b=Q9G4Fy76eVx44jdFL79OTn3+/BKYtx0uPxoaA8M+npOJke7KYjT2WDrGsXv5hLekN
-	 4EKbneQarI+guEiQ2ukb+BUpnRG96AjoBniAzSWAS//NCAdHdXiEqoO28TxNE4vU3y
-	 PVlRqe13o7rF9Czs1tXirJlbMqVOqPfNKT5fHxBM=
-Received: by b221-9.in.mailobj.net [192.168.90.29] with ESMTP
-	via ip-20.mailobj.net [213.182.54.20]
-	Sun, 12 Apr 2026 20:04:03 +0200 (CEST)
-X-EA-Auth: 9db1yhh7x8IcLMwmwS2jLjz9b1Dd5xgugMOT61ALM+RMVIDpfz1eUoPt5AZ4Jb0jah5GhDhPddDSHfpb0da43kZN1L5uYLKtbEkAKGS/HrtC8O0T/Sm1KA==
-Message-ID: <dd3c3358-de0f-4a56-9c81-04aceaab4058@mailo.com>
-Date: Sun, 12 Apr 2026 20:04:02 +0200
-Precedence: bulk
-X-Mailing-List: linux-pci@vger.kernel.org
-List-Id: <linux-pci.vger.kernel.org>
-List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+	s=arc-20240116; t=1776051644; c=relaxed/simple;
+	bh=tuDwO3YZZfjHQw7URuUniNkMsqfh3GFLuy//dNLxIVA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mrysFho8VNLfCg4IXm8owDhP63D2o9aG1vUGlxT5P24US1ExXdpbPU/iCIrWeFMuU0Hz1xjVlfMRWmtLdYckWFgmLsU/+7hMnxsP5ttuvKvxtDH0IffrC51LF9jWqC07t+duiAZHRVe8Vm/OJzCr28HSsfZmUb+/EJe4GrNy8NM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id E3C1FC2B;
+	Mon, 13 Apr 2026 05:40:31 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id AD6076017610; Mon, 13 Apr 2026 05:40:31 +0200 (CEST)
+Date: Mon, 13 Apr 2026 05:40:31 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Alexandre N." <an.tech@mailo.com>
+Cc: Bernd Schumacher <bernd@bschu.de>,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <ukleinek@debian.org>,
+	1131025@bugs.debian.org, Salvatore Bonaccorso <carnil@debian.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	regressions@lists.linux.dev, stable@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alex Williamson <alex@shazbot.org>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
 Subject: Re: Bug#1131025: [6.12.y regression] Regression with 58130e7ce6cb
  ("PCI/ERR: Ensure error recoverability at all times"): echo vfio-pci
  >driver_override does not work for DVB Adapter
-To: Bernd Schumacher <bernd@bschu.de>, Lukas Wunner <lukas@wunner.de>
-Cc: =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@debian.org>,
- 1131025@bugs.debian.org, Salvatore Bonaccorso <carnil@debian.org>,
- Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki"
- <rafael@kernel.org>, Mario Limonciello <mario.limonciello@amd.com>,
- regressions@lists.linux.dev, stable@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Alex Williamson <alex@shazbot.org>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-References: <74bcd84500e5efcca035624f325e400dd8a21f44.camel@bschu.de>
- <acgohjvBpVcR7HcK@wunner.de>
- <5f9386146f426e2847550681cb7188471205607f.camel@bschu.de>
- <aclRwznwq6KpA2qA@wunner.de>
+Message-ID: <adxlr9lWBTZIQMev@wunner.de>
+References: <aclRwznwq6KpA2qA@wunner.de>
  <177373189751.7987.7156982489427825197.reportbug@obelix-trixie.bs.de>
  <ecf9b2dd96ff97cc035ba297266b8dd05eea88da.camel@bschu.de>
  <ac0Y85OShbK6mHEV@monoceros>
@@ -60,116 +49,130 @@ References: <74bcd84500e5efcca035624f325e400dd8a21f44.camel@bschu.de>
  <7173609c404c5444e634dd3ab26f55f2788d82e4.camel@bschu.de>
  <ac_VqcBbKRDkHp69@wunner.de>
  <79618160f928d7ed4ba0a84f3ab420427c5b8d10.camel@bschu.de>
-Content-Language: en-US
-From: "Alexandre N." <an.tech@mailo.com>
-In-Reply-To: <79618160f928d7ed4ba0a84f3ab420427c5b8d10.camel@bschu.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+ <dd3c3358-de0f-4a56-9c81-04aceaab4058@mailo.com>
+Precedence: bulk
+X-Mailing-List: linux-pci@vger.kernel.org
+List-Id: <linux-pci.vger.kernel.org>
+List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dd3c3358-de0f-4a56-9c81-04aceaab4058@mailo.com>
 
-On 4/4/26 11:54, Bernd Schumacher wrote:
-> Am Freitag, dem 03.04.2026 um 16:58 +0200 schrieb Lukas Wunner:
->> If you cherry-pick these two upstream commits onto v6.12.73,
->> does the issue go away?
->>
->>    4d4c10f763d7 ("PCI: Explicitly put devices into D0 when
->> initializing")
->>    907a7a2e5bf4 ("PCI/PM: Set up runtime PM even for devices without
->> PCI PM")
->>
+On Sun, Apr 12, 2026 at 08:04:02PM +0200, Alexandre N. wrote:
+> Independent confirmation on different hardware and a different
+> stable branch, plus test results for the proposed fix on 6.19.11.
 > 
-> Yes, with the two patches together it works!!!
+>   Hardware:   PCI 1b4b:9215  Marvell 88SE9215 PCIe 2.0 x1 4-port
+>               SATA 6 Gb/s controller, whole-device passthrough to a
+>               Windows 10 guest via QEMU/libvirt on
+>               an AMD Ryzen 7 7700 8-Core x86_64 host (Arch Linux).
+>   Last good:  linux 6.18.9
+>   First bad:  linux 6.18.13  (contains stable backport 71c50e60421b
+>                               of upstream a2f1e22390ac, "PCI/ERR:
+>                               Ensure error recoverability at all
+>                               times", first backported in 6.18.10)
+>   Also bad:   linux 6.19.11  (mainline carries a2f1e22390ac)
 > 
-> I am not sure, if you need the dmesg. But I have attached it.
-> 
-> Thanks!
-> Bernd
+> Confirmed by rolling linux back to 6.18.9 with everything else
+> untouched: problem vanishes. Rolling forward to 6.18.13 or any
+> later versions in 6.18/6.19 reproduces it everytime.
 
-Hi,
+Hm, that's unexpected.  I cooked up the patch below on Saturday
+but didn't immediately get around to sending it because of a
+security bug report that came in later that day.
 
-(This is my first post to a kernel mailing list, apologies if I've
-made any formatting or etiquette mistakes.)
-
-Independent confirmation on different hardware and a different
-stable branch, plus test results for the proposed fix on 6.19.11.
-
-   Hardware:   PCI 1b4b:9215  Marvell 88SE9215 PCIe 2.0 x1 4-port
-               SATA 6 Gb/s controller, whole-device passthrough to a
-               Windows 10 guest via QEMU/libvirt on
-               an AMD Ryzen 7 7700 8-Core x86_64 host (Arch Linux).
-   Last good:  linux 6.18.9
-   First bad:  linux 6.18.13  (contains stable backport 71c50e60421b
-                               of upstream a2f1e22390ac, "PCI/ERR:
-                               Ensure error recoverability at all
-                               times", first backported in 6.18.10)
-   Also bad:   linux 6.19.11  (mainline carries a2f1e22390ac)
-
-Confirmed by rolling linux back to 6.18.9 with everything else
-untouched: problem vanishes. Rolling forward to 6.18.13 or any
-later versions in 6.18/6.19 reproduces it everytime.
-
-Symptom
--------
-Guest side:
-
-  * Stock Microsoft storahci.sys: Device Manager shows the controller
-    with status "This device cannot start. (Code 10) An I/O adapter
-    hardware error has occurred." None of the disks wired to the
-    controller are visible.
-  * Vendor Marvell 92xx storage driver: Device Manager reports the
-    controller as healthy and the driver loads, but the physically
-    attached disks are not detected.
-
-Host side (before applying the pci-stub workaround described below),
-a subsequent libvirt-managed detach/rebind cycle on VM shutdown
-pagefaults the host in ahci's probe path:
-
-   BUG: unable to handle page fault for address: ...
-   RIP: 0010:ahci_save_initial_config+0x1aa/0x2e0
-   Call Trace:
-    ahci_init_one+0x3a7/0xbf0
-    local_pci_probe+0x46/0xa0
-    ...
-
-virt-manager becomes unresponsive, any command to bind/unbind the
-driver or reset the device will hang. When shutting down the host,
-the system will log a shutdown sequence but will never actually
-turn off. A hard shutdown (long press on the power button)
-is necessary.
-
-On 6.18.9 the same libvirt detach/rebind round trip through ahci
-is clean, there's no page fault error, virt-manager is fine and
-the host can shutdown properly.
-
-Testing the proposed fix on 6.19.11
------------------------------------
-Cherry-picked both fix commits identified in this thread:
-
-   4d4c10f763d7 ("PCI: Explicitly put devices into D0 when
-                  initializing")
-   907a7a2e5bf4 ("PCI/PM: Set up runtime PM even for devices without
-                  PCI PM")
-
-onto v6.19.11. The resulting diff against the unpatched 6.19.11 tree
-is minimal with only one added line (pm_runtime_enable after
-pm_runtime_set_active in pci_pm_init). The guest-side regression
-persists: still Code 10 with storahci, still empty SATA ports
-with the Marvell vendor driver.
-
-I'd be happy to help to test further patches if that would help
-narrow down what the 88SE9215 additionally needs.
-
-Workaround for other affected users searching for this symptom
---------------------------------------------------------------
-Pin linux at a version before a2f1e22390ac was backported (6.18.9
-in my case). Additionally, add  pci-stub.ids=1b4b:9215  to the
-kernel command line, which ensures ahci driver does not load for
-the SATA controller. On the pinned kernel, both the guest-side
-and host-side symptoms are absent.
-
-I can provide additional info or logs if you need.
+Could both of you, Alexandre and Bernd, give that patch a spin
+to see if it fixes the issue?  I believe the patch should at least
+fix things for Bernd.  If it doesn't fix things for you Alexandre,
+I'll have to dig deeper.
 
 Thanks!
 
-Alexandre N.
+Lukas
 
+-- >8 --
+
+Subject: [PATCH] PCI: Update saved_config_space upon resource assignment
+
+Bernd reports passthrough failure of a Digital Devices Cine S2 V6 DVB
+adapter plugged into an ASRock X570S PG Riptide board with BIOS version
+P5.41 (09/07/2023):
+
+  ddbridge 0000:07:00.0: detected Digital Devices Cine S2 V6 DVB adapter
+  ddbridge 0000:07:00.0: cannot read registers
+  ddbridge 0000:07:00.0: fail
+
+The BIOS assigns an incorrect BAR to the DVB adapter which has the upper
+32 bits set to "all ones".  This doesn't fit into the upstream bridge
+window, which has those bits set to "all zeroes".  The kernel therefore
+corrects the BAR assignment:
+
+  pci 0000:07:00.0: BAR 0 [mem 0xfffffffffc500000-0xfffffffffc50ffff 64bit]: can't claim; no compatible bridge window
+  pci 0000:07:00.0: BAR 0 [mem 0xfc500000-0xfc50ffff 64bit]: assigned
+
+Correction of the BAR assignment happens in an x86-specific fs_initcall,
+pcibios_assign_resources(), after PCI devices have been enumerated in a
+subsys_initcall.  This order was introduced at the behest of Linus in
+2004:
+
+    https://git.kernel.org/tglx/history/c/a06a30144bbc
+
+No other architecture performs such a late BAR correction.
+
+Bernd bisected the issue to commit a2f1e22390ac ("PCI/ERR: Ensure error
+recoverability at all times"), but it only occurs in the absence of commit
+4d4c10f763d7 ("PCI: Explicitly put devices into D0 when initializing").
+This combination exists in stable kernel v6.12.70, but not in mainline,
+hence mainline does not exhibit the issue.
+
+Since commit a2f1e22390ac, config space is saved on enumeration (in a
+subsys_initcall), i.e. prior to the BAR correction.  Upon passthrough,
+the corrected BAR is overwritten with the incorrect saved value by:
+
+  vfio_pci_core_register_device()
+    vfio_pci_set_power_state()
+      pci_restore_state()
+
+But only if the device's current_state is PCI_UNKNOWN, as it was prior to
+commit 4d4c10f763d7.  Since the commit it is PCI_D0, which changes the
+behavior of vfio_pci_set_power_state() to no longer restore the state
+without saving it first.
+
+Although the issue could be fixed in v6.12-stable by backporting
+4d4c10f763d7 or by changing vfio_pci_set_power_state(), a more robust fix
+is to update saved_config_space upon resource assignment.
+
+Reported-by: Bernd Schumacher <bernd@bschu.de>
+Closes: https://lore.kernel.org/r/acfZrlP0Ua_5D3U4@eldamar.lan/
+Fixes: a2f1e22390ac ("PCI/ERR: Ensure error recoverability at all times")
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: stable@vger.kernel.org # v6.12+
+---
+ drivers/pci/setup-res.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index e5fcadfc58b0..1769ba960197 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -102,6 +102,7 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
+ 	}
+ 
+ 	pci_write_config_dword(dev, reg, new);
++	dev->saved_config_space[reg / 4] = new;
+ 	pci_read_config_dword(dev, reg, &check);
+ 
+ 	if ((new ^ check) & mask) {
+@@ -112,6 +113,7 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
+ 	if (res->flags & IORESOURCE_MEM_64) {
+ 		new = region.start >> 16 >> 16;
+ 		pci_write_config_dword(dev, reg + 4, new);
++		dev->saved_config_space[(reg + 4) / 4] = new;
+ 		pci_read_config_dword(dev, reg + 4, &check);
+ 		if (check != new) {
+ 			pci_err(dev, "%s: error updating (high %#010x != %#010x)\n",
+-- 
+2.51.0
 
