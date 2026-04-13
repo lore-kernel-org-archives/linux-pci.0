@@ -1,168 +1,76 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 017BB1684BE;
-	Mon, 13 Apr 2026 19:23:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 438B62EB0F;
+	Mon, 13 Apr 2026 20:00:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776108188; cv=none; b=syV3f+a3O0OtU+vlyQhVv7c6cKJ9BABjWYUbqJ2MJ/yOW93wvKlgFAxE81ivZDNYideTcL7K92gEkMYlCGSvOHkuJ3Fil/0rNHjUnO4pbVUm/vMKKZbYq6bpTMXOeXqpdVcCCO9hVyPaxXUE9z75ywhe49WnXCC4w2rOM7wCxe4=
+	t=1776110434; cv=none; b=aHCCJeFh8OZvx6gJPyRgKSWLWGi+2mrFtcmm5BXz7/R0Y4hIqeD2caLQfRxh2qVN7RUdBmEMlGNpPecnqM+FRHg0uT2DzqXbOvUaJq99vVFQVJxD7bat0cIxbuL5HR9t3JMsi542WPmw0Rsr3ES0HXr4VPJPTIUikcL7jdvDfJM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776108188; c=relaxed/simple;
-	bh=L8Mge7a0Hvto5qgzo6Og7aNtT10A7KoGyGQfxTlU9IQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CqG1SMjVm+Be3w5BuCyk2eH/4hX29mR0wW1+m0dVHyOmoW7c57IgGGWEXa+6HkmRLGxeZ6hY2+5/i8mrMs0blHm/LRpe6y3EassnX11ESVWIeboR0xXuic60+L8O8er3E6eaxKWCdbd1lZ/HD6+j9CL+D5Ve3PiJQnzgvOhX2MI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AiM4oEHM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776110434; c=relaxed/simple;
+	bh=WPx8CTRgamD7KatsZgjeYaW6fnE4s7vStM9CP8CV+IE=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=lJFJClL7FNhollKltm1lAeQvIcEyGjyS4kiLATHBKYO8divHf7mQQQhLXecqksZ1skLR6k6FHhGI797jWDjk9gC7uphc9HmgtyaPFEUl6O1+te2NPCtLOeadzqhw4Q/AV1DPI0hcy8EtBiVsEgYe3cj9UBDo1C8AfMDjRfvVb6A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hof6imjH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AiM4oEHM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BF63C2BCAF;
-	Mon, 13 Apr 2026 19:23:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hof6imjH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2270C2BCAF;
+	Mon, 13 Apr 2026 20:00:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776108187;
-	bh=L8Mge7a0Hvto5qgzo6Og7aNtT10A7KoGyGQfxTlU9IQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AiM4oEHM4JU7skqEwN17kL0D7fE9sb1lrrwWunAalcYSOvq/MdHx8tFmFKMPKm/t7
-	 ZAXPb6U9eiOhSA8IA2FheHLvXYOV8yoBuNd+Iyel5pflp/ooV5jxQP9iTmeHWcuMiH
-	 MERyOVRUsGIKrKxu3/Z8BoAn1DuGRbWg8KbR2MYQzCr4SsAKo/NRcAiw0s0mtAptjN
-	 MXUU0LIUn9YTI43pFtwENlDBYY8xw2GTIVXC3dB8pXAhPT3IgMU5Z+1aJOVLl8dARK
-	 sDOWE1e7yXbKHD1ONEK/4zJctD2OKS5S4xbhV9JYs7yHQxlWFd16pYQEOCg4+VP+uw
-	 D2WsMO3a9Vg9Q==
-Date: Mon, 13 Apr 2026 22:23:03 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: Zhiping Zhang <zhipingz@meta.com>
-Cc: Keith Busch <kbusch@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-rdma@vger.kernel.org,
-	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, Yochai Cohen <yochai@nvidia.com>,
-	Yishai Hadas <yishaih@nvidia.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [RFC v2 1/2] vfio: add callback to get tph info for dmabuf
-Message-ID: <20260413192303.GQ21470@unreal>
-References: <20260331083758.GA814676@unreal>
- <acvFV8c5QVxnt3Em@kbusch-mbp>
- <20260331132942.GC814676@unreal>
- <acvNsvS5ShlQlrox@kbusch-mbp>
- <20260331140309.GH814676@unreal>
- <acvWplw67b3Gwlkc@kbusch-mbp>
- <20260331190220.GI814676@unreal>
- <acwkAo2k41xaxdTS@kbusch-mbp>
- <20260409120415.GF86584@unreal>
- <CAH3zFs0hx_-3LetSUaPRMg=0jaL=GD7Mop3pEUhJ3O3qkaJrQg@mail.gmail.com>
+	s=k20201202; t=1776110433;
+	bh=WPx8CTRgamD7KatsZgjeYaW6fnE4s7vStM9CP8CV+IE=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+	b=Hof6imjHnvBwPjHucz3TrKnjTBAx8ZbFshMolJb5w+YoIoG8O1b69GMHXPVvykak5
+	 lQCYx8VRW8gFfzgz5mjGgCHTiuJo7q+helem8yPp0h1rK6zf95KX6OkvW1zBk4h38n
+	 XQ2NUxsgxAJCnUVvPYA1IW6tKetA0M8UstIgYWMfgglOMTiEFx2e9oUH1FdaHaY1sv
+	 BMFH7CC6taEtbU05MSLrSb58LFbu0dNRU+MkGf7UUDOjQm4TI/XdMk1RatwMkKwDnA
+	 dIxcrnNp8YMev8nn/IikNYoIt8zxiOYkt2OkaDynoUqNMB4QW9UgWU7Ka52O5HXtjM
+	 o6bOYzdE/HFSA==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 7CE9B3809A09;
+	Mon, 13 Apr 2026 20:00:06 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAH3zFs0hx_-3LetSUaPRMg=0jaL=GD7Mop3pEUhJ3O3qkaJrQg@mail.gmail.com>
+Subject: Re: [PATCH v3] Bluetooth: btintel_pcie: Support Product level reset
+From: patchwork-bot+bluetooth@kernel.org
+Message-Id: 
+ <177611040529.523783.435139428854356535.git-patchwork-notify@kernel.org>
+Date: Mon, 13 Apr 2026 20:00:05 +0000
+References: <20260413042041.1318723-1-chandrashekar.devegowda@intel.com>
+In-Reply-To: <20260413042041.1318723-1-chandrashekar.devegowda@intel.com>
+To: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+Cc: linux-bluetooth@vger.kernel.org, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, ravishankar.srivatsa@intel.com,
+ chethan.tumkur.narayan@intel.com
 
-On Mon, Apr 13, 2026 at 11:32:48AM -0700, Zhiping Zhang wrote:
-> On Thu, Apr 9, 2026 at 5:04 AM Leon Romanovsky <leon@kernel.org> wrote:
-> >
-> > >
-> > On Tue, Mar 31, 2026 at 01:44:02PM -0600, Keith Busch wrote:
-> > > On Tue, Mar 31, 2026 at 10:02:20PM +0300, Leon Romanovsky wrote:
-> > > >
-> > > > Right, what about adding TPH fields to struct vfio_region_dma_range
-> > > > instead of struct vfio_device_feature_dma_buf?
-> > >
-> > > You might have to show me with code what you're talking about because I
-> > > can't see any way we can add fields to any struct here without breaking
-> > > backward compatibility.
-> > >
-> > > If we can't claim bits out of the unused "flags" field for this feature,
-> > > then my initial reply is the only sane approach: we can introduce a new
-> > > feature and struct for it that closely mirrors the existing one, but
-> > > with the extra hint fields.
-> >
-> > Something like that, on top of this proposal:
-> >
-> > diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> > index 3961afa640391..70d5ee1e3ef7b 100644
-> > --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-> > +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> > @@ -241,9 +241,7 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
-> >                 return -EFAULT;
-> >
-> >         if (!get_dma_buf.nr_ranges ||
-> > -           (get_dma_buf.flags & ~(VFIO_DMABUF_FL_TPH |
-> > -                                  VFIO_DMABUF_TPH_PH_MASK |
-> > -                                  VFIO_DMABUF_TPH_ST_MASK)))
-> > +           (get_dma_buf.flags & ~VFIO_DMABUF_FLAG_TPH))
-> >                 return -EINVAL;
-> >
-> >         /*
-> > @@ -300,13 +298,10 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
-> >                 ret = PTR_ERR(priv->dmabuf);
-> >                 goto err_dev_put;
-> >         }
-> > -       if (get_dma_buf.flags & VFIO_DMABUF_FL_TPH) {
-> > -               priv->steering_tag = (get_dma_buf.flags &
-> > -                                     VFIO_DMABUF_TPH_ST_MASK) >>
-> > -                                    VFIO_DMABUF_TPH_ST_SHIFT;
-> > -               priv->ph = (get_dma_buf.flags &
-> > -                           VFIO_DMABUF_TPH_PH_MASK) >>
-> > -                          VFIO_DMABUF_TPH_PH_SHIFT;
-> > +       if (get_dma_buf.flags & VFIO_DMABUF_FLAG_TPH) {
-> > +               priv->steering_tag =
-> > +                       dma_ranges[get_dma_buf.nr_ranges + 1].tph.tag;
-> > +               priv->ph = dma_ranges[get_dma_buf.nr_ranges + 1].tph.ph;
-> >         }
-> >         /* dma_buf_put() now frees priv */
-> >         INIT_LIST_HEAD(&priv->dmabufs_elm);
-> > diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> > index e2a8962641d2c..a8b8d8b1a3278 100644
-> > --- a/include/uapi/linux/vfio.h
-> > +++ b/include/uapi/linux/vfio.h
-> > @@ -1497,20 +1497,30 @@ struct vfio_device_feature_bus_master {
-> >   */
-> >  #define VFIO_DEVICE_FEATURE_DMA_BUF 11
-> >
-> > +struct vfio_region_dma_tph {
-> > +       u16 tag;
-> > +       u8 ph;
-> > +};
-> > +
-> >  struct vfio_region_dma_range {
-> > -       __u64 offset;
-> > -       __u64 length;
-> > +       union {
-> > +               __u64 offset;
-> > +               struct vfio_region_dma_tph tph;
-> > +       };
-> > +       union {
-> > +               __u64 length;
-> > +               __u64 reserved;
-> > +       };
-> > +};
-> > +
-> > +enum {
-> > +       VFIO_DMABUF_FLAG_TPH = 1 << 0,
-> >  };
-> >
-> >  struct vfio_device_feature_dma_buf {
-> >         __u32   region_index;
-> >         __u32   open_flags;
-> >         __u32   flags;
-> > -#define VFIO_DMABUF_FL_TPH             (1U << 0) /* TPH info is present */
-> > -#define VFIO_DMABUF_TPH_PH_SHIFT       1         /* bits 1-2: PH (2-bit) */
-> > -#define VFIO_DMABUF_TPH_PH_MASK        0x6U
-> > -#define VFIO_DMABUF_TPH_ST_SHIFT       16        /* bits 16-31: steering tag */
-> > -#define VFIO_DMABUF_TPH_ST_MASK                0xffff0000U
-> >         __u32   nr_ranges;
-> >         struct vfio_region_dma_range dma_ranges[] __counted_by(nr_ranges);
-> >  };
+Hello:
+
+This patch was applied to bluetooth/bluetooth-next.git (master)
+by Luiz Augusto von Dentz <luiz.von.dentz@intel.com>:
+
+On Mon, 13 Apr 2026 09:50:40 +0530 you wrote:
+> When driver encounters a TOP exception, ACPI methods will be called
+> for Product level reset since Wifi and BT share the same TOP. BT driver
+> will first reprobe the wifi driver and then reprobe BT.
 > 
-> Sounds good, thanks! We will follow up and move this RFC to a formal patch.
-
-Great. Also, please rename "struct vfio_region_dma_range dma_ranges" to
-something that makes it clear this is a storage object, not something
-limited to a DMA range.
-
-Thanks
-
+> Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+> ---
 > 
-> Zhiping
-> 
+> [...]
+
+Here is the summary with links:
+  - [v3] Bluetooth: btintel_pcie: Support Product level reset
+    https://git.kernel.org/bluetooth/bluetooth-next/c/912a499a7955
+
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
+
