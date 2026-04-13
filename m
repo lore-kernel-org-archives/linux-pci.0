@@ -1,128 +1,182 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A59E72D3A69;
-	Mon, 13 Apr 2026 11:59:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0CB42D3A69;
+	Mon, 13 Apr 2026 12:04:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776081573; cv=none; b=g9ES0EKhMKkIUvTvNmU+hgjjSAkLVXOV1AS/MzT5+5BqudyW/ZYd6kKQg9Vk7uoisblYtsDAu7PFltGMnTPH9jpaBOpQqO+GAR/ZU958L4iL5nnp0C5TTblnvYC6SPth0AexTch5Zmw7A2Uh/w3NbzkQ+z4TbVUhXvr2kr9z8uE=
+	t=1776081856; cv=none; b=NOZI514GaQkHQrWp7njwJqdJfj6CO2c9uYmTkJIOfBfb/5NAcZN8EmKRYN9p5oc9Awh55jfWydgctoSkMTvDtOKXwJfcox1ZcAFujzWo/hrRUwv8TGwAujgDkAJBTXwYwzQ5dNH9VUqVQdBevtqpzWy23ltLLJLOX4dWa5vDyS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776081573; c=relaxed/simple;
-	bh=XjCiDo9y+OHrVQDJKUrYSIpvMP1U6UUn5n4372Stk5c=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=tGLdyYwRyECKjsEvlLS5LRAWAJP8h3aKxyO+l0IT0dwxepEmXf3J/eSi4jCuYEpzlunGt8Tm8UP44ubEXG28jUAe7++ewfilfOVKxgVhs7wxKHSP0BOeyiTSsDZrfpYDx5Q9dR8207fuZE+bP+Oy9rtqkpiMyA4VDWXJTRSn6Y8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=F+7FwymM; arc=none smtp.client-ip=198.175.65.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1776081856; c=relaxed/simple;
+	bh=nifHmy4CfEu0sFBEYinSbwZp6o8pBbzvtZ8EkMTOWiQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=npXT1jb0/EWfZZ51kfKnKCtxiWKM4vkpbwA72Kn6FFrJby7jmNvTUmVKGS4TpbMxXV3mdPBRza50qwrn21rElHEx/tSQZyohLFkM+E4qEipN8NTELnzMrGse2J9dFt5mD64C80BBQi4Ehdaew3DpW1MtbxkUz2t5lIX5jm7pE7U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=rd+dzGDr; arc=none smtp.client-ip=113.46.200.222
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="F+7FwymM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1776081573; x=1807617573;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version:content-id;
-  bh=XjCiDo9y+OHrVQDJKUrYSIpvMP1U6UUn5n4372Stk5c=;
-  b=F+7FwymMvCsIaEKXr/DA8heqhpka18pCpxDdg60fZFjw+u/hANFEy+aQ
-   nm4DZkpa4bX+1XXXuefDQ2a6oepQlFNhhhS26iBdKbMik9uTbTVP3vO+K
-   TryXJ0hergcGsI4qbuuM7D37Pe3nXuR2CugugG8DlaOHWYUtYI3EEJ74t
-   IieL1mROPhUq199A5XfHGHAIkNEmVL9QssaWsg9g622+2V7CVxuBPhA/G
-   xIuma8x414O/8Am2Pch0oplg73c4457A86RF9tbjXYZwEgoTetBqJ+N9C
-   5j50TdfGm+KC0UhYOYP2ZZe4Y/LhGnITVrZxDvZJbd2WuqByPc2ylxnL7
-   Q==;
-X-CSE-ConnectionGUID: NEsLwy3zSc2MWdXv4HNfyQ==
-X-CSE-MsgGUID: jz0r2Gi/Q6ar4Y2tzuvqOA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11757"; a="88088835"
-X-IronPort-AV: E=Sophos;i="6.23,177,1770624000"; 
-   d="scan'208";a="88088835"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2026 04:59:32 -0700
-X-CSE-ConnectionGUID: AWmqfKN+SAKDaoql7UTAbw==
-X-CSE-MsgGUID: 0dDCkOLFShWVnJktOyq7nQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,177,1770624000"; 
-   d="scan'208";a="226597919"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.63])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2026 04:59:23 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Mon, 13 Apr 2026 14:59:19 +0300 (EEST)
-To: =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>
-cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>, 
-    Manivannan Sadhasivam <mani@kernel.org>, 
-    Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-    Magnus Lindholm <linmag7@gmail.com>, Matt Turner <mattst88@gmail.com>, 
-    Richard Henderson <richard.henderson@linaro.org>, 
-    Christophe Leroy <chleroy@kernel.org>, 
-    Madhavan Srinivasan <maddy@linux.ibm.com>, 
-    Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
-    Dexuan Cui <decui@microsoft.com>, 
-    =?ISO-8859-2?Q?Krzysztof_Ha=B3asa?= <khalasa@piap.pl>, 
-    Lukas Wunner <lukas@wunner.de>, Oliver O'Halloran <oohall@gmail.com>, 
-    Saurabh Singh Sengar <ssengar@microsoft.com>, 
-    Shuan He <heshuan@bytedance.com>, 
-    Srivatsa Bhat <srivatsabhat@microsoft.com>, linux-pci@vger.kernel.org, 
-    linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v4 20/24] PCI: Add macros for legacy I/O and memory
- address space sizes
-In-Reply-To: <20260411080148.471335-21-kwilczynski@kernel.org>
-Message-ID: <a73af6f4-9f9a-cff8-e00e-042dcf934708@linux.intel.com>
-References: <20260411080148.471335-1-kwilczynski@kernel.org> <20260411080148.471335-21-kwilczynski@kernel.org>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="rd+dzGDr"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=7cEXSPR5yFHS4LAS4tuybv+AQrYQOOWxZH5AGU0cAX4=;
+	b=rd+dzGDrJpa8Qgu7l+zQ0zoXIF5nnq4gSHdmjPq49OUS5Lzt8XMvEBhc3dvvXW4AFt2yT9oA6
+	LejKNykM2J7GnPw+41MTJa5GKAIxQyMu5zsBtWU2jZYQ1xQGBa9WyIJ59oO8ePaPRIV1bHkDx6z
+	Grp3JUANEDXeYsQtQ1d6eEo=
+Received: from mail.maildlp.com (unknown [172.19.163.15])
+	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4fvQry6py1zLlYX;
+	Mon, 13 Apr 2026 19:57:54 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 5A3A640571;
+	Mon, 13 Apr 2026 20:04:11 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Mon, 13 Apr 2026 20:04:10 +0800
+Message-ID: <c3a6c6ca-3b71-476c-947a-5f2393d046bd@huawei.com>
+Date: Mon, 13 Apr 2026 20:04:10 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323328-972594317-1776081516=:962"
-Content-ID: <ad975c4c-2f7e-f46a-75e8-090fb701efc6@linux.intel.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC] Proposal: Add sysfs interface for PCIe TPH Steering Tag
+ retrieval and configuration
+To: Leon Romanovsky <leon@kernel.org>
+CC: Jason Gunthorpe <jgg@ziepe.ca>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-rdma@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <dri-devel@lists.freedesktop.org>, Keith Busch
+	<kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>, Yishai Hadas
+	<yishaih@nvidia.com>, Zhiping Zhang <zhipingz@meta.com>
+References: <6ea4c4c2-774e-aa76-3665-918e2a24cc84@huawei.com>
+ <20260413100152.GG21470@unreal>
+Content-Language: en-US
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <20260413100152.GG21470@unreal>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On 4/13/2026 6:01 PM, Leon Romanovsky wrote:
+> On Fri, Apr 10, 2026 at 10:30:52PM +0800, fengchengwen wrote:
+>> Hi all,
+>>
+>> I'm writing to propose adding a sysfs interface to expose and configure the
+>> PCIe TPH
+>> Steering Tag for PCIe devices, which is retrieved inside the kernel.
+>>
+>>
+>> Background: The TPH Steering Tag is tightly coupled with both a PCIe device
+>> (identified
+>> by its BDF) and a CPU core. It can only be obtained in kernel mode. To allow
+>> user-space
+>> applications to fetch and set this value securely and conveniently, we need
+>> a standard
+>> kernel-to-user interface.
+>>
+>>
+>> Proposed Solution: Add several sysfs attributes under each PCIe device's
+>> sysfs directory:
+>> 1. /sys/bus/pci/devices/<BDF>/tph_mode to query the TPH mode (interrupt or
+>> device specific)
+>> 2. /sys/bus/pci/devices/<BDF>/tph_enable to control the TPH feature
+>> 3. /sys/bus/pci/devices/<BDF>/tph_st to support both read and write
+>> operations, e.g.:
+>>    Read operation:
+>>      echo "cpu=3" > /sys/bus/pci/devices/0000:01:00.0/tph_st
+>>      cat /sys/bus/pci/devices/0000:01:00.0/tph_st
+>>    Write operation:
+>>      echo "index=10 st=123" > /sys/bus/pci/devices/0000:01:00.0/tph_st
+>>
+>>
+>> The design strictly follows PCI subsystem sysfs standards and has the
+>> following key properties:
+>>
+>> 1. Dynamic Visibility: The sysfs attributes will only be present for PCIe
+>> devices that
+>>    support TPH Steering Tag. Devices without TPH capability will not show
+>> these nodes,
+>>    avoiding unnecessary user confusion.
+>>
+>> 2. Permission Control: The attributes will use 0600 file permissions,
+>> ensuring only
+>>    privileged root users can read or write them, which satisfies security
+>> requirements
+>>    for hardware configuration interfaces.
+>>
+>> 3. Standard Implementation Location: The interface will be implemented in
+>>    drivers/pci/pci-sysfs.c, the canonical location for all PCI device sysfs
+>> attributes,
+>>    ensuring consistency and maintainability within the PCI subsystem.
+>>
+>>
+>> Why sysfs instead of alternatives like VFIO-PCI ioctl:
+>>
+>> - Universality: sysfs does not require binding the device to a special
+>> driver such as
+>>   vfio-pci. It is available to any privileged user-space component,
+>> including system
+>>   utilities, daemons, and monitoring tools.
+>>
+>> - Simplicity: Both user-space usage (cat/echo) and kernel implementation are
+>>   straightforward, reducing code complexity and long-term maintenance cost.
+>>
+>> - Design Alignment: TPH Steering Tag is a generic PCIe device feature, not
+>> specific to
+>>   user-space drivers like DPDK or VFIO. Exposing it via sysfs matches the
+>> kernel's
+>>   standard pattern for hardware capabilities.
+>>
+>>
+>> I look forward to your comments about this design before submitting the
+>> final patch.
+> 
+> You need to explain more clearly why this write functionality is useful
+> and necessary outside the VFIO/RDMA context:
+> https://lore.kernel.org/all/20260324234615.3731237-1-zhipingz@meta.com/
+> 
+> AFAIK, for non-VFIO TPH callers, kernel has enough knowledge to set
+> right ST values.
+> 
+> There are several comments regarding the implementation, but those can wait
+> until the rationale behind the proposal is fully clarified.
 
---8323328-972594317-1776081516=:962
-Content-Type: text/plain; CHARSET=ISO-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-ID: <061d9599-649d-f8aa-2b31-8fe5344029e1@linux.intel.com>
+Thanks for your review and comments.
 
-On Sat, 11 Apr 2026, Krzysztof Wilczy=F1ski wrote:
+Let me clarify the rationale behind this user-space sysfs interface:
 
-> Add defines for the standard PCI legacy address space sizes,
-> replacing the raw literals used by the legacy sysfs attributes.
->=20
-> Suggested-by: Ilpo J=E4rvinen <ilpo.jarvinen@linux.intel.com>
-> Signed-off-by: Krzysztof Wilczy=F1ski <kwilczynski@kernel.org>
-> ---
->  include/linux/pci.h | 5 +++++
->  1 file changed, 5 insertions(+)
->=20
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index f6f55005f82d..6b630bac8c08 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -27,6 +27,7 @@
->  #include <linux/mod_devicetable.h>
-> =20
->  #include <linux/types.h>
-> +#include <linux/sizes.h>
->  #include <linux/init.h>
->  #include <linux/ioport.h>
->  #include <linux/list.h>
-> @@ -1167,6 +1168,10 @@ enum {
->  /* These external functions are only available when PCI support is enabl=
-ed */
->  #ifdef CONFIG_PCI
-> =20
-> +/* PCI legacy I/O port and memory address space sizes. */
-> +#define PCI_LEGACY_IO_SIZE=09(SZ_64K - 1)
-> +#define PCI_LEGACY_MEM_SIZE=09SZ_1M
-> +
->  extern unsigned int pci_flags;
-> =20
->  static inline void pci_set_flags(int flags) { pci_flags =3D flags; }
->=20
+1. VFIO is just one of the user-space device access frameworks.
+   There are many other in-kernel frameworks that expose devices
+   to user space, such as UIO, UACCE, etc., which may also require
+   TPH Steering Tag support.
 
-Shouldn't this also convert the use in pci-sysfs.c (which you now mixed=20
-into the static attrs conversion patch)?
+2. The kernel can automatically program Steering Tags only when
+   the device provides a standard ST table in MSI-X or config space.
+   However, many devices implement vendor-specific or platform-specific
+   Steering Tag programming methods that cannot be fully handled
+   by the generic kernel code.
 
---=20
- i.
---8323328-972594317-1776081516=:962--
+3. For such devices, user-space applications or framework drivers
+   need to retrieve and configure TPH Steering Tags directly.
+   A unified sysfs interface allows all user-space frameworks
+   (not just VFIO) to use a common, standard way to manage
+   TPH Steering Tags, rather than implementing duplicated logic
+   in each subsystem.
+
+This interface provides a uniform method for any user-space
+device access solution to work with TPH, which is why I believe
+it is useful and necessary beyond the VFIO/RDMA case.
+
+Thanks
+
+> 
+> Thanks
+> 
+>>
+>> Best regards,
+>> Chengwen Feng
+>>
+
