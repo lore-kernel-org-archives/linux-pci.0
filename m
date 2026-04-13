@@ -1,104 +1,111 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D51F43CB2C1;
-	Mon, 13 Apr 2026 14:03:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 912993D349D;
+	Mon, 13 Apr 2026 14:03:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776088992; cv=none; b=YZceBHgH4bUMaps8QTPAPDTRV0J6kkPj+/M5WeNmMP2isXzJV/9Em9nF9+Tmu06pC+YLxm6kOBmo6Qqm9Mj+OpDgGvwcouJ58/8/1dp6wxJmwukDSDaZjRuE3+GQmf/IBqYyAd+pAwwqLgC5ixMzVK6anX8QrEqIslYIgsbvVRM=
+	t=1776089042; cv=none; b=ZDB5gkbaYzgK8lV6e8YlMe2HXmrRakNdkBGxQnCBZ2lwlRJkIfnpgYHV2EIy3D56/z5eTpg1jZMB8RK7rPjKUru3S+b1zT0HPa2nEYMz7bChUpVelqJipj6I4hO0o7ZvZS0EbZE+Gofy1nhogB/7Zj/Es4e1XY43oHW9OY3zOgM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776088992; c=relaxed/simple;
-	bh=ZujmsWUiIlgFWuYStOUbuRgZOWkohs/X7TyfIkjFDX0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=efDZ2JdPE90FGg9ogvnnpHIbKTrfSznnGKNM10b1x33TwmWyA9///HlchC6Nc/o7urdMZKzL/xfm1NKAPB6iCc5nJK4qZEtxelDFnoqRYnk+nzbJEamrUn+Dpl6LI/EMRClzTd9AX5FXHtJhCGRfGMV6l8v8mXU8L87XeXa7bBI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DE95C2BCAF;
-	Mon, 13 Apr 2026 14:03:03 +0000 (UTC)
-Date: Mon, 13 Apr 2026 19:32:53 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: Chen-Yu Tsai <wenst@chromium.org>
-Cc: Rob Herring <robh@kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
-	Nathan Chancellor <nathan@kernel.org>, Nicolas Schier <nicolas.schier@linux.dev>, 
-	Hans de Goede <hansg@kernel.org>, Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, 
-	Mark Pearson <mpearson-lenovo@squebb.ca>, "Derek J. Clark" <derekjohn.clark@gmail.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Bartosz Golaszewski <brgl@bgdev.pl>, 
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Bartosz Golaszewski <brgl@kernel.org>, 
-	linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org, 
-	platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org, 
-	Stephan Gerhold <stephan.gerhold@linaro.org>, Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
-	linux-acpi@vger.kernel.org, Hans de Goede <johannes.goede@oss.qualcomm.com>, 
-	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: Re: [PATCH v7 0/8] Add support for handling PCIe M.2 Key E
- connectors in devicetree
-Message-ID: <fpcs4p62f35a5qyqwgm5ysa73stbysxcr62tkmmkrrcvsuf4t4@4ivukyqjey57>
-References: <20260326-pci-m2-e-v7-0-43324a7866e6@oss.qualcomm.com>
- <20260413075459.GA2626902@google.com>
+	s=arc-20240116; t=1776089042; c=relaxed/simple;
+	bh=4/YmWD/JQYMpPuaX1y+aH3e2YNicMHTfgpMaqPpzdvk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=rPqmcera0U7JWWmPX2Gw8G1qgdTDHWJ5jHwinQkTjpj0ls7jnWAAte8BTTMpVu3+YBzp9HbSCn9Ts0C0ztc5cXXwLnVSERUV892xb6t0eP2HyY075W32U3QbvmHdFgN0pMyM5lpJFWQRnX5Zh3BuApqVqYcYha7JycPVNLgoM9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=pass smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=o+vsWT8c; arc=none smtp.client-ip=5.135.140.105
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cjdns.fr
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="o+vsWT8c"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 9EF6B99E29;
+	Mon, 13 Apr 2026 16:03:43 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
+	t=1776089029; h=from:subject:date:message-id:to:cc:mime-version:
+	 content-transfer-encoding; bh=NXhe77XOmmJnTE3Wdolatqa0XdI56uh6Wqn3CSDWXH0=;
+	b=o+vsWT8cWCB/LhTJv8AIarKVQzefHCK6loYoM0HwAPLTQ0NVDtUnDeeCB/CiwP/iouYgMO
+	Jmk/8H+qv6cF+2RunlaKVhbsREgT/4MpgBxKP86ibiu8D2m6NEd8F+XCaetQfdueKA4wJO
+	RXQ2IfOkmzwLapIxdrG1IyzfwL6NaUdoLDvhah+vmy3nkKXN4zGmf+Kwo1VjNnVBDG0EzO
+	GeVR6+BrQ++MG15q5LZ5UQjwWzKU6Jq6P+Qb0c4VeNjuIRWsA7aBsa8Cj0v2TAfrE1eWKb
+	POb7IorwHYhoekaFYxZlCGr5micQ3NMp1O9GnIPiomKdvp+oNB9zcHv7bx9Bvg==
+From: Caleb James DeLisle <cjd@cjdns.fr>
+To: linux-pci@vger.kernel.org
+Cc: linux-mips@vger.kernel.org,
+	naseefkm@gmail.com,
+	ryder.lee@mediatek.com,
+	helgaas@kernel.org,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
+	ansuelsmth@gmail.com,
+	linux-mediatek@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Caleb James DeLisle <cjd@cjdns.fr>
+Subject: [PATCH v5 0/2] PCI: mediatek: Add support for EcoNet SoCs
+Date: Mon, 13 Apr 2026 14:03:37 +0000
+Message-Id: <20260413140339.16238-1-cjd@cjdns.fr>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260413075459.GA2626902@google.com>
+X-Last-TLS-Session-Version: TLSv1.3
 
-On Mon, Apr 13, 2026 at 03:54:59PM +0800, Chen-Yu Tsai wrote:
-> Hi,
-> 
-> On Thu, Mar 26, 2026 at 01:36:28PM +0530, Manivannan Sadhasivam wrote:
-> > Hi,
-> > 
-> > This series is the continuation of the series [1] that added the initial support
-> > for the PCIe M.2 connectors. This series extends it by adding support for Key E
-> > connectors. These connectors are used to connect the Wireless Connectivity
-> > devices such as WiFi, BT, NFC and GNSS devices to the host machine over
-> > interfaces such as PCIe/SDIO, USB/UART and NFC. This series adds support for
-> > connectors that expose PCIe interface for WiFi and UART interface for BT. Other
-> > interfaces are left for future improvements.
-> 
-> Thanks for working on this. I started playing with it now that it is in
-> -next. The PCIe part works fine. I'm looking into how to fit the pwrseq
-> 
-> A couple questions:
-> 
-> - Given that this connector actually represents two devices, how do I
->   say I want the BT part to be a wakeup source, but not the WiFi part?
->   Does wakeup-source even work at this point?
-> 
+Add EcoNet EN7528 (and EN751221) PCIe support.
 
-You can't use the DT property since the devices are not described in DT
-statically. But you can still use the per-device 'wakeup' sysfs knob to enable
-wakeup.
+Changes from v4:
+* Fixed missing Acked-by
+* Rebased to 66672af7a095d89f082c5327f3b15bc2f93d558e
+* v4: https://lore.kernel.org/linux-mips/20260404182854.2183651-1-cjd@cjdns.fr/
 
-> - Are there plans to do the SDIO part?
-> 
+Changes from v3:
+* s/initiallized/initialized/
+* Use PCIE_T_PVPERL_MS for sleep time
+* Use PCI_PM_D3COLD_WAIT for startup wait time
+* Clarify comment "Activate INTx interrupts"
+* Add MTK_PCIE_RETRAIN quirk for devices which require link re-train
+* Do not retrain *all* bridges, only root bridge
+* Better comments and logging in retraining logic
+* v3: https://lore.kernel.org/linux-mips/20260320094212.696671-1-cjd@cjdns.fr/
 
-No, not at the moment. Feel free to take it up if you have the hardware and
-motivation :)
+Changes from v2:
+* mediatek-pcie.yaml -> s/power-domain/power-domains/ and drop example
+* Patch 3 dropped as it has been applied (Thanks!)
+* v2: https://lore.kernel.org/linux-mips/20260316155157.679533-1-cjd@cjdns.fr/
 
-> - The matching done in the M.2 connector driver for pwrseq_get() seems a
->   bit naive. It simply checks if the remote device in the OF graph is
->   the same as the requesting device.
-> 
->   I think this would run into issues with USB hubs. If I have a USB hub
->   and two M.2 connectors, with both connectors connected to the same
->   hub, pwrseq_get() is going to always return only one of the instances.
->   This is because the USB hub has one device node with multiple OF graph
->   ports.
-> 
+Changes from v1:
+* mediatek-pcie.yaml slot0 needs device-type = "pci", fix dt_binding_check
+Link: https://lore.kernel.org/linux-mips/177334026016.3889069.9474337544951486443.robh@kernel.org
+* v1: https://lore.kernel.org/linux-mips/20260312165332.569772-1-cjd@cjdns.fr/
 
-Yeah, this is a known limitation. I'm trying to improve this part now and have
-the WIP commits here: https://github.com/Mani-Sadhasivam/linux/tree/pwrseq-bt-en-fixes
+This was split from a larger PCIe patchset which crossed multiple
+subsystems. I'm not labeling this a v3 because it's a new patchset, but
+I'm keeping the historical record anyway.
 
-Once the merge window closes, I'll submit these.
+Changes from econet-pcie v2:
+* mediatek-pcie.yaml add missing constraints to PCI node properties
+* econet-pcie v2: https://lore.kernel.org/linux-mips/20260309131818.74467-1-cjd@cjdns.fr
 
-- Mani
+Changes from econet-pcie v1:
+* pcie-mediatek.c Exclude pcie_retrain_link() when building as a module
+* econet-pcie v1: https://lore.kernel.org/linux-mips/20260303190948.694783-1-cjd@cjdns.fr/
 
+Caleb James DeLisle (2):
+  dt-bindings: PCI: mediatek: Add support for EcoNet EN7528
+  PCI: mediatek: Add support for EcoNet EN7528 SoC
+
+ .../bindings/pci/mediatek-pcie.yaml           |  26 ++++
+ drivers/pci/controller/Kconfig                |   2 +-
+ drivers/pci/controller/pcie-mediatek.c        | 133 ++++++++++++++++++
+ 3 files changed, 160 insertions(+), 1 deletion(-)
+
+
+base-commit: 66672af7a095d89f082c5327f3b15bc2f93d558e
 -- 
-மணிவண்ணன் சதாசிவம்
+2.39.5
+
