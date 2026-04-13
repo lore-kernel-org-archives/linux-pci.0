@@ -1,157 +1,191 @@
-Received: from fhigh-b3-smtp.messagingengine.com (fhigh-b3-smtp.messagingengine.com [202.12.124.154])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC06F22A7F0;
-	Mon, 13 Apr 2026 16:28:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.154
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3454F313E10;
+	Mon, 13 Apr 2026 16:35:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776097741; cv=none; b=gLbQWdnsjuzaWE+M1Xu042n6GUZvAoIZ2Z+4aSDamz8VxcBABCYw+FF6P7eLIlDFK0JkKre48ZEiGMDR8T8BFddSmd1MgmFoMey1QdBvKFqHsNmw+MyCU9UIn+Vtts1rit718u5QXL8k09+c2FH1dwvprW69Nmpo4CM5BPZ2UCg=
+	t=1776098145; cv=none; b=nrPPZfj+KMkjWfe+sKgVDOW+mpHzcVMid+iVZjpPJ1Ft3NHDDbXDLlmJZy5eE+Sm+7DcLaorCFU0EqvJ9ySX/NFtIxLuHA+1Du7H8+w5uoUK31ftuI/mCPO63IlUkH4W+y72XJLFGIfkDf5+zbMw7j30ocQ2esqgYlOQ9OctUtc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776097741; c=relaxed/simple;
-	bh=PVKamwkfddjR39hTxmNcwgxaZYnKt5TbuFH/SCbcO1s=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=JKLfS25k1dPgmeWWtCS3oso+WTvl/BnsidE6Da5AVCpy+vTttDbku4D2pBD3+noyzTRaksHn9Q6pCzBfAfGnfUEQr/mMuwBo7P1hjs6W41sNRHdnGzGQjiqKJWOntJ/yecR1myVldKW4UiSJH0C7Um8UA/tYOn38zisJjXOR/M8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=ExRQOkBb; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=BpqK7xTI; arc=none smtp.client-ip=202.12.124.154
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
+	s=arc-20240116; t=1776098145; c=relaxed/simple;
+	bh=YZ23nMQ/ay3QztACjeZpwAsTDk5SE/Lr+pB3V6c9Mqw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Y0tUb9bTfX+hf5evk+GGQn5HiUhR2anE8myhHcHpWh6zAmUaDztL95tQasacp+ltnriXp5MywvXvVh7xtZNxsCIzKYS1jkkQwc8n3SlNlW+Rsf2RfkOGzBjQjDrGDDVorxy8Cw9DwDRrDYsAmeCblOVzk2qyESpchoyfUfwWb+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lk8ymw3M; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="ExRQOkBb";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="BpqK7xTI"
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 1EEC07A019D;
-	Mon, 13 Apr 2026 12:28:59 -0400 (EDT)
-Received: from phl-imap-02 ([10.202.2.81])
-  by phl-compute-04.internal (MEProxy); Mon, 13 Apr 2026 12:28:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1776097738;
-	 x=1776184138; bh=hZvAzDUZRm1lvdyJwjEImSU1sVV/PiwjPJrSbJaVvQE=; b=
-	ExRQOkBbgb7ionSCcHduvUnoj81LTjJK0loHLklze1ALqvPDSupFk8uRbRt8iF1y
-	Lwkca3A6PlH9WjEBme7CT3RhIJcNFCuNM1PH58WGgabagpCv02ghMLbwvRhsSxSH
-	CoVqFGTBS5CTWtggOFwJb79AtoAMX5zocDWV27FSRWS2lfn2KLpXCAvrKcUW9bkF
-	x7DbtHBGYznSkVwWHNvZvAj1LbKvfRy9hDBgacAtj2lEt1uW902Y6NUbofLJ4Lc3
-	qYwPkvLOnrJnd8uJZOTW3vIEZxzjsAZWXh0+0ha1wi48Hv6dDaW3f66AW+I7V9Z3
-	/GVF8YZ4vkbyCdzKVs3JFg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1776097738; x=
-	1776184138; bh=hZvAzDUZRm1lvdyJwjEImSU1sVV/PiwjPJrSbJaVvQE=; b=B
-	pqK7xTISDwOtOII1asYgzsyGTc0KS381lvET4S95kNJ30DPy/wZYK6xb4xG82bPc
-	B+DerUzeZO7dJZZAVzGTz3rZQzmutxKpuvN9XUua+ktbJTAygjgGY4jagtpFEAkK
-	rLbbgTpQBfynqtPm1M99SJn4UmV6ZjcSq82jyGLZ1xqiCXWZOFACkf5/OB2eaarz
-	LVTsCqAPLdUeJOMf1y2XtDwWYWSC17i0NDJz5MTqazegLaBworPRDNBYjkZh+B7y
-	+2pKYTTVJBQ8QiVDeF1+ax9GbJgI5NGfABS5BohIB/2AZpndKfPKhN9/0rpI5L7D
-	1vOnUFnOrJ2mgT7rCM3pA==
-X-ME-Sender: <xms:yhndaYM2fyMqYTJ9siACXiHkQuwrfT4aDOP4ma4gqdw3bCZRKYgzrQ>
-    <xme:yhndaZy7dh5TWDjzw_3PdMlaRwhZaTdDjUHQkicj5Cjn2yFdsj6xaUaGPhB-W-PDK
-    MhKLAsAjLOikGDO_6zOY6eMotMmaQCpSswdoU0X-iLgMi1c-psBpks>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdefkeejudcutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
-    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
-    hrpefoggffhffvvefkjghfufgtgfesthejredtredttdenucfhrhhomhepfdetrhhnugcu
-    uegvrhhgmhgrnhhnfdcuoegrrhhnugesrghrnhgusgdruggvqeenucggtffrrghtthgvrh
-    hnpefhtdfhvddtfeehudekteeggffghfejgeegteefgffgvedugeduveelvdekhfdvieen
-    ucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrrhhnug
-    esrghrnhgusgdruggvpdhnsggprhgtphhtthhopedutddpmhhouggvpehsmhhtphhouhht
-    pdhrtghpthhtohepsghhvghlghgrrghssehgohhoghhlvgdrtghomhdprhgtphhtthhope
-    gurghkrheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepkhifihhltgiihihnshhkihes
-    khgvrhhnvghlrdhorhhgpdhrtghpthhtohepohhjvggurgeskhgvrhhnvghlrdhorhhgpd
-    hrtghpthhtohepghhrvghgkhhhsehlihhnuhigfhhouhhnuggrthhiohhnrdhorhhgpdhr
-    tghpthhtohepfigvnhiihhgrohhlihgrohesrhhutgdrvgguuhdrtghnpdhrtghpthhtoh
-    eplhhinhhugidqrghpihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehl
-    ihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhope
-    hlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:yhndabw7-De2BdlTCxKenAwbNU0Ms-sxEuz7BvbVeqeduz1GZdCe3g>
-    <xmx:yhndafIpkepXf8ckQC_agoe6W2biWzDkLWl4YUv0Jmkv8rZ4EMH5Bg>
-    <xmx:yhndaSVjYaLMQRWHmStn4f84HimgqBQwGVKYfXJxC323lAGOc_tDpw>
-    <xmx:yhndaabf19tMZbbnaLh100TX4pfYhLmtLmKl2tHPLl1XRUIdGzrWPg>
-    <xmx:yhndaW-uSW1N8kJzIdGZi3U2SQ_iyyy0DEuh_1pRJuudbB2ktNJyt6qK>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id 16ACC700065; Mon, 13 Apr 2026 12:28:58 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lk8ymw3M"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49FBCC2BCB3;
+	Mon, 13 Apr 2026 16:35:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776098145;
+	bh=YZ23nMQ/ay3QztACjeZpwAsTDk5SE/Lr+pB3V6c9Mqw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Lk8ymw3MMZG/o+y7+yEs9+SRa2wM7p+rrtsT8WBnSf4v+gl6sXbHWOTbbi/XV3xC4
+	 Pn5g7XBWkIkq8K23OKBe16ohjIMDDnUIoslb4p0kQC3a9ulPP1tSHjaCLOf54uD2oZ
+	 G7ui53icbdw2iggotHL0Vy9VNgLSVMib1U3kiMTN0uW2+GElkpA8ikUiE8h0XLfNE9
+	 ImA9l7/Am6GKhLrhIsYsx1CFPePcxFQ9wp4T8PUnxtM3gUcwJQ6/+R6IdMPwZ4nbDA
+	 dZDI+53aOQhehcepUJNY3OiBRpz0ea9bCWS9K13MaCoeVgSKeZOTLYKnFz8Fy56/JW
+	 PoN5/0eOM46Gw==
+Date: Mon, 13 Apr 2026 22:05:28 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Brian Norris <briannorris@chromium.org>, 
+	Hongxing Zhu <hongxing.zhu@nxp.com>
+Cc: Hongxing Zhu <hongxing.zhu@nxp.com>, 
+	"manivannan.sadhasivam@oss.qualcomm.com" <manivannan.sadhasivam@oss.qualcomm.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>, Oliver O'Halloran <oohall@gmail.com>, 
+	Will Deacon <will@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>, 
+	Philipp Zabel <p.zabel@pengutronix.de>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, 
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, 
+	"linux-rockchip@lists.infradead.org" <linux-rockchip@lists.infradead.org>, Niklas Cassel <cassel@kernel.org>, 
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>, Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+	Lukas Wunner <lukas@wunner.de>, Wilson Ding <dingwei@marvell.com>, 
+	Miles Chen <minhuachen@google.com>
+Subject: Re: [PATCH v7 0/4] PCI: Add support for resetting the Root Ports in
+ a platform specific way
+Message-ID: <klzq2i2ne62hdri65gz7s5pxmvely277optr2lrkvdrrahl3ca@k3hdo6o4nkjz>
+References: <20260310-pci-port-reset-v7-0-9dd00ccc25ab@oss.qualcomm.com>
+ <AS8PR04MB883389FD2A016F9E02756B048C49A@AS8PR04MB8833.eurprd04.prod.outlook.com>
+ <adcHylFjFjhHT-tP@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: AFykKnSdOGcF
-Date: Mon, 13 Apr 2026 18:28:36 +0200
-From: "Arnd Bergmann" <arnd@arndb.de>
-To: "Wenzhao Liao" <wenzhaoliao@ruc.edu.cn>, rust-for-linux@vger.kernel.org,
- linux-pci@vger.kernel.org
-Cc: "Miguel Ojeda" <ojeda@kernel.org>, "Danilo Krummrich" <dakr@kernel.org>,
- bhelgaas@google.com,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
- linux-kernel@vger.kernel.org, linux-api@vger.kernel.org
-Message-Id: <68053fb8-3305-43e0-897e-6cc4e48e2362@app.fastmail.com>
-In-Reply-To: <20260406165120.166928-2-wenzhaoliao@ruc.edu.cn>
-References: <cover.1775456181.git.wenzhaoliao@ruc.edu.cn>
- <20260406165120.166928-1-wenzhaoliao@ruc.edu.cn>
- <20260406165120.166928-2-wenzhaoliao@ruc.edu.cn>
-Subject: Re: [RFC PATCH v3 1/6] uapi: add goldfish_address_space userspace ABI header
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <adcHylFjFjhHT-tP@google.com>
 
-On Mon, Apr 6, 2026, at 18:51, Wenzhao Liao wrote:
+Hi Brian,
 
-> +struct goldfish_address_space_allocate_block {
-> +	__u64 size;
-> +	__u64 offset;
-> +	__u64 phys_addr;
-> +};
-> +
-> +struct goldfish_address_space_ping {
-> +	__u64 offset;
-> +	__u64 size;
-> +	__u64 metadata;
-> +	__u32 version;
-> +	__u32 wait_fd;
-> +	__u32 wait_flags;
-> +	__u32 direction;
-> +};
-> +
-> +struct goldfish_address_space_claim_shared {
-> +	__u64 offset;
-> +	__u64 size;
-> +};
+On Wed, Apr 08, 2026 at 06:58:34PM -0700, Brian Norris wrote:
+> Hi Richard and Mani,
+> 
+> For the record, I've been using a form of an earlier version of this
+> patchset in my environment for some time now, and I've run across
+> problems that *might* relate to what Richard is reporting, but I'm not
+> quite sure at the moment. Details below.
+> 
+> On Wed, Mar 25, 2026 at 07:06:49AM +0000, Hongxing Zhu wrote:
+> > Hi Mani:
+> > I've accidentally encountered a new issue based on the reset root port patch-set.
+> > After performing a few hot-reset operations, the PCIe link enters a continuous up/down cycling pattern.
+> > 
+> > I found that calling pci_reset_secondary_bus() first in pcibios_reset_secondary_bus() appears to resolve this issue.
+> > Have you experienced a similar problem?
+> > 
+> > "
+> > ...
+> > [  141.897701] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000700) link up detected
+> > [  142.086341] imx6q-pcie 4c300000.pcie: PCIe Gen.3 x1 link up
+> > [  142.092038] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000c00) link down detected
+> > ...
+> > "
+> > 
+> > Platform: i.MX95 EVK board plus local Root Ports reset supports based on the #1 and #2 patches of v7 patch-set.
+> > Notes of the logs:
+> > - One Gen3 NVME device is connected.
+> > - "./memtool 4c341058=0;./memtool 4c341058=1;" is used to toggle the LTSSM_EN bit to trigger the link down.
+> > - Toggle BIT6 of Bridge Control Register to trigger hot reset by "./memtool 4c30003c=004001ff; ./memtool 4c30003c=000001ff;"
+> > - The Root Port reset patches works correctly at first.
+> > However, after several hot-reset triggers, the link enters a repeated down/up cycling state.
+> > 
+> > Logs:
+> > [    3.553188] imx6q-pcie 4c300000.pcie: host bridge /soc/pcie@4c300000 ranges:
+> > [    3.560308] imx6q-pcie 4c300000.pcie:       IO 0x006ff00000..0x006fffffff -> 0x0000000000
+> > [    3.568525] imx6q-pcie 4c300000.pcie:      MEM 0x0910000000..0x091fffffff -> 0x0010000000
+> > [    3.577314] imx6q-pcie 4c300000.pcie: config reg[1] 0x60100000 == cpu 0x60100000
+> > [    3.796029] imx6q-pcie 4c300000.pcie: iATU: unroll T, 128 ob, 128 ib, align 4K, limit 1024G
+> > [    4.003746] imx6q-pcie 4c300000.pcie: PCIe Gen.3 x1 link up
+> > [    4.009553] imx6q-pcie 4c300000.pcie: PCI host bridge to bus 0000:00
+> > root@imx95evk:~#
+> > root@imx95evk:~#
+> > root@imx95evk:~# ./memtool 4c341058=0;./memtool 4c341058=1; Writing 32-bit value 0x0 to address 0x4C341058
+> > Writing 32-bit v
+> > [   87.265348] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000d01) link down detected
+> > alue 0x1 to adder
+> > [   87.273106] imx6q-pcie 4c300000.pcie: Stop root bus and handle link down
+> > ss 0x4C341058
+> > [   87.281264] pcieport 0000:00:00.0: Recovering Root Port due to Link Down
+> > [   87.289245] pci 0000:01:00.0: AER: can't recover (no error_detected callback)
+> > root@imx95evk:~# [   87.514216] imx6q-pcie 4c300000.pcie: PCIe(LNK_STS:0x00000700) link up detected
+> > [   87.702968] imx6q-pcie 4c300000.pcie: PCIe Gen.3 x1 link up
+> > [   87.834983] pcieport 0000:00:00.0: Root Port has been reset
+> > [   87.840714] pcieport 0000:00:00.0: AER: device recovery failed
+> > [   87.846592] imx6q-pcie 4c300000.pcie: Rescan bus after link up is detected
+> > [   87.855947] pcieport 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+> 
+> I've seen this same line ("bridge configuration invalid") before, and I
+> believe that's because the saved state (pci_save_state(); more about
+> this below) is invalid -- it contains 0 values in places where they
+> should be non-zero. So when those values are restored
+> (pci_restore_state()), we get confused.
+> 
+> I believe we've pinned down one reason this invalid state occurs -- it's
+> because of an automatic (mis)feature in the DesignWare PCIe hardware.
+> Specifically, it's because of what the controller does during a surprise
+> link-down error.
+> 
+> From the Designware docs:
+> 
+>   "[...] during normal operation, the link might fail and go down. After
+>   this link-down event, the controller requests the DWC_pcie_clkrst.v
+>   module to hot-reset the controller. There is no difference in the
+>   handling of a link-down reset or a hot reset; the controller asserts
+>   the link_req_rst_not output requesting the DWC_pcie_clkrst.v module to
+>   reset the controller."
+> 
+> In some of the adjacent documentation (and confirmed in local testing),
+> it suggests that this automatic reset will also reset various DBI (i.e.,
+> PCIe config space) registers. It also seems as if there's not really a
+> good way to completely stop this automatic reset -- the docs mention
+> some SW methods prevent the reset, but they all seem racy or incomplete.
+> 
+> Anyway, I think this implies that patch 1 is somewhat wrong [1]. It
+> includes some code like this:
+> 
+> 		pci_save_state(dev);
+> 		ret = host->reset_root_port(host, dev);
+> 		if (ret)
+> 			pci_err(dev, "Failed to reset Root Port: %d\n", ret);
+> 		else
+> 			/* Now restore it on success */
+> 			pci_restore_state(dev);
+> 
+> That first line (pci_save_state()) is prone to saving invalid state,
+> depending on whether the link-down event has finished flushing and
+> resetting the controller yet or not. The resulting impact is a bit hard
+> to judge, depending on what (mis)configuration you end up with.
+> 
 
-All these ioctl structures are well-formed in the sense that they
-are portable across architectures and won't leak kernel data
-through implicit padding.
+Thanks a lot for your investigation. I think your observation makes sense and
+could be the culprit in saving the corrupted state. Even on non-DWC controllers,
+there is no guarantee that the Root Port config registers state will be
+preserved after LDn (before Root Port reset).
 
-Two of the members are a bit worrying, but that may just
-be my own understanding:
+> I also noticed commit a2f1e22390ac ("PCI/ERR: Ensure error
+> recoverability at all times") was merged recently. With that change, I
+> believe it is now safe to perform pci_restore_state() even without
+> pci_save_state() here.
+> 
+> So ... can we remove pci_save_state() from
+> pcibios_reset_secondary_bus()? Might that help?
 
-- the 'phys_addr' member sounds like it refers to a physical
-  memory location in the CPU address space, which in general
-  should not be visible to user space, as that tends to
-  expose security problems if users with access to the
-  device can use this to access data they should not.
+I think so. I will also test it locally and report back soon.
 
-- the 'version' field may refer to the version of the ioctl
-  command, which is similarly discouraged since it is
-  harder to deal with than just coming up with new ioctl
-  command codes. If this refers to the version of the
-  remote side, this is probably fine.
+> It sounds like my above
+> observations *may* match Richard's reports, but I'm not sure. And
+> anyway, the documented hardware behavior is racy, so it's hard to
+> propose a foolproof solution.
+> 
 
-> +#define GOLDFISH_ADDRESS_SPACE_IOCTL_MAGIC 'G'
-> +
-> +#define GOLDFISH_ADDRESS_SPACE_IOCTL_OP(OP, T) \
-> +	_IOWR(GOLDFISH_ADDRESS_SPACE_IOCTL_MAGIC, OP, T)
+@Richard: Can you confirm if removing 'pci_save_state(dev);' from
+pcibios_reset_secondary_bus() fixes your issue?
 
-I think it would be better to remove this intermediate macro, since
-it prevents easy scraping of ioctl command codes from looking
-at the source file with regular expressions.
+- Mani
 
-It is also unusual that all commands are both reading
-and writing the data. Please check if you can make some
-of them read-only or write-only.
-
-     Arnd
+-- 
+மணிவண்ணன் சதாசிவம்
