@@ -1,30 +1,32 @@
 Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 912993D349D;
-	Mon, 13 Apr 2026 14:03:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CE7D3D3CEE;
+	Mon, 13 Apr 2026 14:04:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776089042; cv=none; b=ZDB5gkbaYzgK8lV6e8YlMe2HXmrRakNdkBGxQnCBZ2lwlRJkIfnpgYHV2EIy3D56/z5eTpg1jZMB8RK7rPjKUru3S+b1zT0HPa2nEYMz7bChUpVelqJipj6I4hO0o7ZvZS0EbZE+Gofy1nhogB/7Zj/Es4e1XY43oHW9OY3zOgM=
+	t=1776089047; cv=none; b=OHFy/HGGqJ34y3VZ0oABx3ukXz74dORoBXGwavGfVQbr0qUkjebvQ0RiCO8K1talmZW1NrcMyJpF9IffRdEggXlHE1eTBGV0KMHtX569tJR9y3RmAIkesz9XJaA6t6yVlB71seT3LWSlAkTovBpEHZymN4HyqcaT+lDrlXg5NmI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776089042; c=relaxed/simple;
-	bh=4/YmWD/JQYMpPuaX1y+aH3e2YNicMHTfgpMaqPpzdvk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=rPqmcera0U7JWWmPX2Gw8G1qgdTDHWJ5jHwinQkTjpj0ls7jnWAAte8BTTMpVu3+YBzp9HbSCn9Ts0C0ztc5cXXwLnVSERUV892xb6t0eP2HyY075W32U3QbvmHdFgN0pMyM5lpJFWQRnX5Zh3BuApqVqYcYha7JycPVNLgoM9g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=pass smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=o+vsWT8c; arc=none smtp.client-ip=5.135.140.105
+	s=arc-20240116; t=1776089047; c=relaxed/simple;
+	bh=ntgvT589fzB4YGv2Bh8ztRC9IObndKMqwGaMWUU8JCo=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=ajxeCz7dvztDbRbjMp5BuWtaYZCr9ribKEYReB1EjoSXmmBqWMCndZaPtFBDNvfPkP0SOO/5CwUGsT9tu2n4mg5rWPPJb7wDmSpvu+1bTNm+bJlJfFvRf/tjG+NJ8n6Fpi82DvENkzsYcaSpipozaRI0RkAVBjomIO7oPYFH3eY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=pass smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=DidLOiHD; arc=none smtp.client-ip=5.135.140.105
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cjdns.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="o+vsWT8c"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 9EF6B99E29;
-	Mon, 13 Apr 2026 16:03:43 +0200 (CEST)
+	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="DidLOiHD"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 18D8D9ACAC;
+	Mon, 13 Apr 2026 16:03:50 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
-	t=1776089029; h=from:subject:date:message-id:to:cc:mime-version:
-	 content-transfer-encoding; bh=NXhe77XOmmJnTE3Wdolatqa0XdI56uh6Wqn3CSDWXH0=;
-	b=o+vsWT8cWCB/LhTJv8AIarKVQzefHCK6loYoM0HwAPLTQ0NVDtUnDeeCB/CiwP/iouYgMO
-	Jmk/8H+qv6cF+2RunlaKVhbsREgT/4MpgBxKP86ibiu8D2m6NEd8F+XCaetQfdueKA4wJO
-	RXQ2IfOkmzwLapIxdrG1IyzfwL6NaUdoLDvhah+vmy3nkKXN4zGmf+Kwo1VjNnVBDG0EzO
-	GeVR6+BrQ++MG15q5LZ5UQjwWzKU6Jq6P+Qb0c4VeNjuIRWsA7aBsa8Cj0v2TAfrE1eWKb
-	POb7IorwHYhoekaFYxZlCGr5micQ3NMp1O9GnIPiomKdvp+oNB9zcHv7bx9Bvg==
+	t=1776089033; h=from:subject:date:message-id:to:cc:mime-version:
+	 content-transfer-encoding:in-reply-to:references;
+	bh=GbaYGCVJ/e4zvTDmh7Ra8wHMVZemBwajoPoC5ZoV0ek=;
+	b=DidLOiHD8PzO7KcjjxLQaoNIKy33RUXYbz/Hv0xLa6jS/gVZGlaNnfKrxPCO9f9csZGewK
+	apzTHsh4J1ZezH4noJxbWYgfqtZux7KCEvtCgdrAF+ggpYHIDCJIwPY/zLST/OsrCW0Rpo
+	V/n4D/Oi3aOh3AVwCAvpW28kI7Sh7lpti7e7BrvAkwoa2nwNA2Qz57KBTnrui0R2/rVsQk
+	sHQ/qH4vf0SzM0cM0lZ5PqtZhEg4oUDBAh/V+6elPldO6xmkME96ocfdPs1lt12t3M6Ps1
+	sUu2z7zvQeAql03YRGFQiQVMGExfMsPhR1m9fYsgWvDhQ+l409u35uRx/musAA==
 From: Caleb James DeLisle <cjd@cjdns.fr>
 To: linux-pci@vger.kernel.org
 Cc: linux-mips@vger.kernel.org,
@@ -43,10 +45,13 @@ Cc: linux-mips@vger.kernel.org,
 	linux-mediatek@lists.infradead.org,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Caleb James DeLisle <cjd@cjdns.fr>
-Subject: [PATCH v5 0/2] PCI: mediatek: Add support for EcoNet SoCs
-Date: Mon, 13 Apr 2026 14:03:37 +0000
-Message-Id: <20260413140339.16238-1-cjd@cjdns.fr>
+	Caleb James DeLisle <cjd@cjdns.fr>,
+	Conor Dooley <conor.dooley@microchip.com>
+Subject: [PATCH v5 1/2] dt-bindings: PCI: mediatek: Add support for EcoNet EN7528
+Date: Mon, 13 Apr 2026 14:03:38 +0000
+Message-Id: <20260413140339.16238-2-cjd@cjdns.fr>
+In-Reply-To: <20260413140339.16238-1-cjd@cjdns.fr>
+References: <20260413140339.16238-1-cjd@cjdns.fr>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -56,56 +61,63 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Last-TLS-Session-Version: TLSv1.3
 
-Add EcoNet EN7528 (and EN751221) PCIe support.
+Introduce EcoNet EN7528 SoC compatible in MediaTek PCIe controller
+binding.
 
-Changes from v4:
-* Fixed missing Acked-by
-* Rebased to 66672af7a095d89f082c5327f3b15bc2f93d558e
-* v4: https://lore.kernel.org/linux-mips/20260404182854.2183651-1-cjd@cjdns.fr/
+EcoNet PCIe controller has the same configuration model as
+Mediatek v2 but is initialized more similarly to an MT7621
+PCIe.
 
-Changes from v3:
-* s/initiallized/initialized/
-* Use PCIE_T_PVPERL_MS for sleep time
-* Use PCI_PM_D3COLD_WAIT for startup wait time
-* Clarify comment "Activate INTx interrupts"
-* Add MTK_PCIE_RETRAIN quirk for devices which require link re-train
-* Do not retrain *all* bridges, only root bridge
-* Better comments and logging in retraining logic
-* v3: https://lore.kernel.org/linux-mips/20260320094212.696671-1-cjd@cjdns.fr/
+Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+---
+ .../bindings/pci/mediatek-pcie.yaml           | 26 +++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-Changes from v2:
-* mediatek-pcie.yaml -> s/power-domain/power-domains/ and drop example
-* Patch 3 dropped as it has been applied (Thanks!)
-* v2: https://lore.kernel.org/linux-mips/20260316155157.679533-1-cjd@cjdns.fr/
-
-Changes from v1:
-* mediatek-pcie.yaml slot0 needs device-type = "pci", fix dt_binding_check
-Link: https://lore.kernel.org/linux-mips/177334026016.3889069.9474337544951486443.robh@kernel.org
-* v1: https://lore.kernel.org/linux-mips/20260312165332.569772-1-cjd@cjdns.fr/
-
-This was split from a larger PCIe patchset which crossed multiple
-subsystems. I'm not labeling this a v3 because it's a new patchset, but
-I'm keeping the historical record anyway.
-
-Changes from econet-pcie v2:
-* mediatek-pcie.yaml add missing constraints to PCI node properties
-* econet-pcie v2: https://lore.kernel.org/linux-mips/20260309131818.74467-1-cjd@cjdns.fr
-
-Changes from econet-pcie v1:
-* pcie-mediatek.c Exclude pcie_retrain_link() when building as a module
-* econet-pcie v1: https://lore.kernel.org/linux-mips/20260303190948.694783-1-cjd@cjdns.fr/
-
-Caleb James DeLisle (2):
-  dt-bindings: PCI: mediatek: Add support for EcoNet EN7528
-  PCI: mediatek: Add support for EcoNet EN7528 SoC
-
- .../bindings/pci/mediatek-pcie.yaml           |  26 ++++
- drivers/pci/controller/Kconfig                |   2 +-
- drivers/pci/controller/pcie-mediatek.c        | 133 ++++++++++++++++++
- 3 files changed, 160 insertions(+), 1 deletion(-)
-
-
-base-commit: 66672af7a095d89f082c5327f3b15bc2f93d558e
+diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie.yaml
+index 0b8c78ec4f91..7e1b0876c291 100644
+--- a/Documentation/devicetree/bindings/pci/mediatek-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.yaml
+@@ -14,6 +14,7 @@ properties:
+     oneOf:
+       - enum:
+           - airoha,an7583-pcie
++          - econet,en7528-pcie
+           - mediatek,mt2712-pcie
+           - mediatek,mt7622-pcie
+           - mediatek,mt7629-pcie
+@@ -226,6 +227,31 @@ allOf:
+ 
+         mediatek,pbus-csr: false
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: econet,en7528-pcie
++    then:
++      properties:
++        clocks:
++          maxItems: 1
++
++        clock-names:
++          maxItems: 1
++
++        reset: false
++
++        reset-names: false
++
++        power-domains: false
++
++        mediatek,pbus-csr: false
++
++      required:
++        - phys
++        - phy-names
++
+ unevaluatedProperties: false
+ 
+ examples:
 -- 
 2.39.5
 
