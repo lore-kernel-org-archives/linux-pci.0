@@ -1,42 +1,55 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BC2D2E888C;
-	Mon, 13 Apr 2026 16:05:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1AC02D7DEF;
+	Mon, 13 Apr 2026 16:08:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776096329; cv=none; b=N9ZUxzdfxv2ajMcyBNl64xfkghgA60b2JS9u2so0Lp35q+5XtxVAUxcpKC+BpUjU1STtYCAO+EfJrjNIB1Yx6Gwo7EGK6mBNzmNM2rbeluYg+s1TVBtAj94XgCuAhs/H1PwJ30eriasNAZlgEGIkOMxJ80OlhPybrJ624t2USIo=
+	t=1776096522; cv=none; b=rrhIMV6R9rp2xl34YuvNVNG98admKfHr3P6KlZDz+nj7O1VxviJECKzOwjvZ2fZbH8LrKIQiqkbVuaQ6TLJ1xWKEhm8EKZpQKXYl7/Q49DMEWWLF7h0dk5vidp8vpWQ8rhIn9bygsiZidr51gNB3IlXNJf78orDh71jtfuFNPW0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776096329; c=relaxed/simple;
-	bh=VC6YVG4xvB3uWGofxiLkJwCx9Wf3xHXSXBXwyzXleEM=;
+	s=arc-20240116; t=1776096522; c=relaxed/simple;
+	bh=qiSHxLPPIZVe0C4u4NCj88+quPA9WlsGUJ7L0/9iL+E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Gtg2xrBM+k0Y4xvFXkr3v1ebAVQg+7GeD1A9evlRMdufYElMLdi7J1ZsDYspt/MrgOhMlHmmY8VLZNUXH1CP58ishs1sH8YjX3gSm/K+stv/TANfIUZmHVGPEZnJyZr5sdgH+X8wsI5R30VF0USsUKdiPPmT9MLuzRHnMdXmI1E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V8B1y4yZ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=E3yKGC8C6oyj4ws8u6pSN0kJnu1ukeFvKndWeA2l0D46zmXzzPOQOcrElmy0zleeOgoOJB1XMgAWPRWFthDiE+PRVRKcyOu92iG5sscvhOjbxAecGDeS4OBOdgrHmMqqWcnQGup5UI2+i48kScfe+1vvGzkUElrqsI4bsb30VvI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WVzt9Sj5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V8B1y4yZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18BB9C2BCB0;
-	Mon, 13 Apr 2026 16:05:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WVzt9Sj5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5C0DC2BCB7;
+	Mon, 13 Apr 2026 16:08:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776096329;
-	bh=VC6YVG4xvB3uWGofxiLkJwCx9Wf3xHXSXBXwyzXleEM=;
+	s=k20201202; t=1776096522;
+	bh=qiSHxLPPIZVe0C4u4NCj88+quPA9WlsGUJ7L0/9iL+E=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=V8B1y4yZHPpZVer24NmGLVfYVkQwgxrxXm0Nk6xI1CS6eBAXdh6hJ/7IwwQ12orTC
-	 wnzBYGDs6koLzdqCLnYIb5j5M0ubQqu6hMhO/524XuH57XXdqQ3j+kSm3e1ZsqoKTQ
-	 F0ThPnDC7ew8M34bBmx2zRe16FGg8d8MuG+9T+hvK3cTHWULdAAPxiRmH6GszB766N
-	 IDn7YZ6MPRKWLvAh/4/JVsYALVdyTgLN7NkWHNdpQARJgMbjJJpJ0QxkNyoOpm1Cud
-	 SUUlewb+v/DooQ8yb9+AZqgnwFifLJ+/jFf7KKQtn3wTGKwACjUL6fL52OA6NhCaQq
-	 J42R3DzzwavtA==
-Date: Mon, 13 Apr 2026 21:35:16 +0530
+	b=WVzt9Sj5x1vB5hUJ/ERGBDdbCHAA+xHGi+2Cab5YsuocOawxXcMHjs4QPVbmQMWHH
+	 LBVP3W79Mk5i8k7mOvaIbXJJjX1s1EJbszc7MXKtUayDh5//la22v9tXBGKoLN13tc
+	 eepA8AV6qgCa/rkuFtDGJ8EE/oTnnRWG43qYp5VgutsKmSxDuQlrIP9DLDsVqKeRSR
+	 LtaLyidytcrvLFb7blWPjXw55+6nQYlanM9PABi0VRX/P7CFYTh19ZL0Ok2+YnB8pl
+	 2FX3uftDhlsY8IDYJe1yV8chbX8VRNw3dXy4YHZRwsHp53Y0y/NTVPjB02cEI6vO+J
+	 c1kgvd9F1CbtA==
+Date: Mon, 13 Apr 2026 21:38:24 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Ratheesh Kannoth <rkannoth@marvell.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	linux-kernel@vger.kernel.org, bhelgaas@google.com, will@kernel.org, lpieralisi@kernel.org, 
-	kwilczynski@kernel.org, robh@kernel.org, vidyas@nvidia.com, 
-	Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH] PCI: host-common: Request bus reassignment when not
- probe-only
-Message-ID: <d3xtqtnhki7qxebbnqkwezdu3g4ln4q3l5t56ecy6k6sq2v5oe@3uwp5rsrv7ci>
-References: <20260410142124.2673056-1-rkannoth@marvell.com>
+To: Chen-Yu Tsai <wenst@chromium.org>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: Rob Herring <robh@kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
+	Nathan Chancellor <nathan@kernel.org>, Nicolas Schier <nicolas.schier@linux.dev>, 
+	Hans de Goede <hansg@kernel.org>, Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, 
+	Mark Pearson <mpearson-lenovo@squebb.ca>, "Derek J. Clark" <derekjohn.clark@gmail.com>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+	Bartosz Golaszewski <brgl@kernel.org>, linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-kbuild@vger.kernel.org, platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+	linux-pm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-acpi@vger.kernel.org, 
+	Hans de Goede <johannes.goede@oss.qualcomm.com>, Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Subject: Re: [PATCH v7 0/8] Add support for handling PCIe M.2 Key E
+ connectors in devicetree
+Message-ID: <eeytuhqpgdz4do4tgtbmfntub2femtyq7bij7svhodpyjwaylx@j3gmvq2a2zqc>
+References: <20260326-pci-m2-e-v7-0-43324a7866e6@oss.qualcomm.com>
+ <20260413075459.GA2626902@google.com>
+ <fpcs4p62f35a5qyqwgm5ysa73stbysxcr62tkmmkrrcvsuf4t4@4ivukyqjey57>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,55 +59,65 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260410142124.2673056-1-rkannoth@marvell.com>
+In-Reply-To: <fpcs4p62f35a5qyqwgm5ysa73stbysxcr62tkmmkrrcvsuf4t4@4ivukyqjey57>
 
-On Fri, Apr 10, 2026 at 07:51:24PM +0530, Ratheesh Kannoth wrote:
-> pci_host_common_init() is used by several generic ECAM host drivers.
-> After PCI core changes around pci_flags and preserve_config, these hosts
-> no longer opted into full bus number reassignment the way they did
-> before.
+[Resending as my previous reply got bounced]
+
+On Mon, Apr 13, 2026 at 07:33:12PM +0530, Manivannan Sadhasivam wrote:
+> On Mon, Apr 13, 2026 at 03:54:59PM +0800, Chen-Yu Tsai wrote:
+> > Hi,
+> > 
+> > On Thu, Mar 26, 2026 at 01:36:28PM +0530, Manivannan Sadhasivam wrote:
+> > > Hi,
+> > > 
+> > > This series is the continuation of the series [1] that added the initial support
+> > > for the PCIe M.2 connectors. This series extends it by adding support for Key E
+> > > connectors. These connectors are used to connect the Wireless Connectivity
+> > > devices such as WiFi, BT, NFC and GNSS devices to the host machine over
+> > > interfaces such as PCIe/SDIO, USB/UART and NFC. This series adds support for
+> > > connectors that expose PCIe interface for WiFi and UART interface for BT. Other
+> > > interfaces are left for future improvements.
+> > 
+> > Thanks for working on this. I started playing with it now that it is in
+> > -next. The PCIe part works fine. I'm looking into how to fit the pwrseq
+> > 
+> > A couple questions:
+> > 
+> > - Given that this connector actually represents two devices, how do I
+> >   say I want the BT part to be a wakeup source, but not the WiFi part?
+> >   Does wakeup-source even work at this point?
+> > 
 > 
-
-So pci_assign_unassigned_root_bus_resources() only assigns the unclaimed
-resources, and do not reassign the bus numbers. Probably the offending commit
-confused PCI_REASSIGN_ALL_BUS with PCI_REASSIGN_ALL_RSRC.
-
-> When PCI_PROBE_ONLY is not set, add PCI_REASSIGN_ALL_BUS so
-> pci_scan_bridge_extend() takes the reassignment path: bus numbers can be
-> assigned from firmware EA data (e.g. pci_ea_fixed_busnrs()). Skip the
-> flag in probe-only mode so existing assignments are not overridden.
+> You can't use the DT property since the devices are not described in DT
+> statically. But you can still use the per-device 'wakeup' sysfs knob to enable
+> wakeup.
 > 
-> CC: Bjorn Helgaas <helgaas@kernel.org>
-> CC: Vidya Sagar <vidyas@nvidia.com>
-> Fixes: 7246a4520b4b ("PCI: Use preserve_config in place of pci_flags")
-> Link: https://lore.kernel.org/netdev/adcXzcz2wWJFw4d7@rkannoth-OptiPlex-7090/
-> Signed-off-by: Ratheesh Kannoth <rkannoth@marvell.com>
-> ---
->  drivers/pci/controller/pci-host-common.c | 4 ++++
->  1 file changed, 4 insertions(+)
+> > - Are there plans to do the SDIO part?
+> > 
 > 
-> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
-> index d6258c1cffe5..860783553cca 100644
-> --- a/drivers/pci/controller/pci-host-common.c
-> +++ b/drivers/pci/controller/pci-host-common.c
-> @@ -68,6 +68,10 @@ int pci_host_common_init(struct platform_device *pdev,
->  	if (IS_ERR(cfg))
->  		return PTR_ERR(cfg);
->  
-> +	/* Do not reassign resources if probe only */
-
-This comment is still wrong and could be the source of confusion that lead to
-the bug. PCI_REASSIGN_ALL_BUS only reassigns the bus number, not resources. So
-please reword it.
-
-> +	if (!pci_has_flag(PCI_PROBE_ONLY))
-> +		pci_add_flags(PCI_REASSIGN_ALL_BUS);
-
-This forces bus number reassignment for all platforms whose DT doesn't provide
-'linux,probe-only' property. Maybe that's OK given that this was the behavior
-before 7246a4520b4b. 
-
-- Mani
+> No, not at the moment. Feel free to take it up if you have the hardware and
+> motivation :)
+> 
+> > - The matching done in the M.2 connector driver for pwrseq_get() seems a
+> >   bit naive. It simply checks if the remote device in the OF graph is
+> >   the same as the requesting device.
+> > 
+> >   I think this would run into issues with USB hubs. If I have a USB hub
+> >   and two M.2 connectors, with both connectors connected to the same
+> >   hub, pwrseq_get() is going to always return only one of the instances.
+> >   This is because the USB hub has one device node with multiple OF graph
+> >   ports.
+> > 
+> 
+> Yeah, this is a known limitation. I'm trying to improve this part now and have
+> the WIP commits here: https://github.com/Mani-Sadhasivam/linux/tree/pwrseq-bt-en-fixes
+> 
+> Once the merge window closes, I'll submit these.
+> 
+> - Mani
+> 
+> -- 
+> மணிவண்ணன் சதாசிவம்
 
 -- 
 மணிவண்ணன் சதாசிவம்
