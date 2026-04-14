@@ -1,174 +1,231 @@
-Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com [209.85.167.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9954E3D567B
-	for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2026 10:29:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.49
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776162564; cv=pass; b=JacU4D+Hd9fAyFy9CtZbzjZfpjIkcCTw0HTv45ATq4iJQWAv/RfE16VgnvjfOPuKEiooqeC+/Xdy0O/HGzKbACCtljW7psVqMIh7s2ijtUInjiMQk9Fkkt/0qzXPWQlgoZoqbFMG7C4UV2jk5ebgceOW5im9XzHRh5d8yD1OWC0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776162564; c=relaxed/simple;
-	bh=Ido82lTsBObPiLyE+cnbnYTa5RnXovthshiMl4cqqxw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ez7mkD2CATGAzquRGA8c7P5NGrb8OCVvKXbKNPFx/FNtYKjHINlIjWG69rcfj/6Hzyp7k6JdSNTBfRdcfkSYEnKovmQP3h2vVSzbp4s2+IRZJRI2EIqlB+DSTpobrJWd0JNE+h9XH7OxzgE3hU/G6J+rdWZv+gNzKch36PqYUkY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=CAg1W+YC; arc=pass smtp.client-ip=209.85.167.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B63C93D7D9E;
+	Tue, 14 Apr 2026 10:35:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776162955; cv=none; b=IhjRXKZzxjEZ1dt5zD2qOoTYy3R4c2a9NlSMKDrDA7p1uIc1CvKQZtpnrAbP0wViFF2MDGr43t7qeXNUHn9ve2UxhyKt0tVqJYVCJcOO5tZTuErU+uLf75v7tx1eRG/wUseAvB/Mg8Zjk652yGtpnig5a2WCTywc2Nas+6ckEN8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776162955; c=relaxed/simple;
+	bh=SFNQ0GUXZDmko3umJzr38nltBojjjdV+yz2yRE036ik=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SdADOrCscmrROw+Tl3h7gGZ0Ak637JZxJJNH13rGl+JLxqGyJSKSjul4cKtDudITEIEi47/tul8bMmZUO17bwvtHvH/xIw/c0uxPqa/QkVdMQRC9AWBMN0jr5KsyOetv3WCpPrQAemWgKQnoaToCQGABfKeJcB7cRBSQoEphZnI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WKPWgq5y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="CAg1W+YC"
-Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-5a402b2d102so1344950e87.3
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2026 03:29:16 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1776162554; cv=none;
-        d=google.com; s=arc-20240605;
-        b=TJACjy6H3DKqbgGdubMoUvYqyTRmO332/weAARvRb+nfcmv9AU1UJv10dWqb1NI4zA
-         mXmaMV/Jq/axHnbQI6tfIZAVNeE85B7Loqonbf9r7YyJRwpUhwARwoHAWKulpUBSdMuz
-         AaGaQEYPTfrKAo0bpjfC0w4VRf2KBccO3nkBKYRHUaaHEvFeNDzk3D/khzmc4vPISOWQ
-         RvptCO/+pEXkYjTBw0iKLjmZ/dnIiSvon3CR0FwkCsWIFdWTbRDKee0bxpn0/xJpCVyb
-         J+cbSZRfULX5L0+aafMKSsTfdf5tc9on53au5c8OJZjQhy6jheki80wF1nQl+DrGzP5j
-         kKNA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=obCwu9OJRNTUN7BsZbzZ8PH73jQ+TTI+BXXfuHZowXE=;
-        fh=GlYYNKQqgS6ge+izPnuhjdBhCcInYP5jDg8ErTSk1qw=;
-        b=XoMmGQJo4FG2Sa/pMOASDc3vI28OtIto1TqGLGQU/Cl6DYKRWv4DnfEffvCbV05j3G
-         sA1NreQ9T1N2+orredX3yK75UzZybqDsYl/DkN2J1AM4qNi+30qJPyW+V4j8WaiTnBbp
-         5wNHk3QAkEnHPjXFNVymTV4avM4b5F7M2+e6Bnz5QLoI9FEbX5LuitFzuMgM9PnUEnbf
-         xF3/SpqVj+Tj3roKvj8/Mv9zXPJ6qiS9EnMIxPCYVqdEscZ0Xw3jKyTBRX0QttZdX13Y
-         inG33zSzEqZQX1DalqLeSLciMYYHzGFeMTUOSWnVJ5SqCj8LPGf/DiP6rKTILEDDoDV5
-         +9cw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1776162554; x=1776767354; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=obCwu9OJRNTUN7BsZbzZ8PH73jQ+TTI+BXXfuHZowXE=;
-        b=CAg1W+YCDWa+7hMyoFTX9wrJnea3anbAiHdxWmpDFPNhe7kCyRPxDRCs4+n9KcUSjl
-         w6nzvTJigwS7oM6UFv5A3HKxmii0VyJz1d3VSyhkRHh9KbLCHy+zvkfyRpySbb5xZhZu
-         JuL3QYV3wyDOI2wfxl8ehTcAnuZZDMlWKsh4c=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776162554; x=1776767354;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=obCwu9OJRNTUN7BsZbzZ8PH73jQ+TTI+BXXfuHZowXE=;
-        b=GKkvJSH09HPBgj2trQWQY8zbaEKJ5h7CqLucVari6Ixtxr8hQCxBEnMrbsNTXZUEEd
-         TCxtlP2IlFKzRGJTZblfJLp/eyXLZhsGxU/UIs/rVGrzxgiraxykioFfDGU4KG6QYno7
-         zhv4G3ckgeHGLNw1cf81CLfWnWaCiarCF1yp5B0XG3s9jeFIpN9BLtj7jIrJUY7sne53
-         Z2gRPc/333TRd1mSqX6iDrWfPM1vgB4+UOP2PoGF+ezk+2LfNNe975TVdIzEPyWi/KcN
-         vqnrTplToMlswNdpXNCBdv+rRsYEWWIJ9GzuUFvdCPTNc7ywRemESdtsIKPFq3gPs0I3
-         mhEg==
-X-Forwarded-Encrypted: i=1; AFNElJ8quCgjw6HJRVTkAuyc2UHp0R1TeDGbGgvjCKgAdi0rgncC1TURW9Ypzo/+UWgNVz6/T6G2783Tz1M=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwuDO4jyFxQGSUdDlK+QK2L06s45ddBajOxJ08ucYAhhfZdvd17
-	OGFuk4FnkEjvWbsQsB0fcnFDjqIhA9bTQLwUrk4jMrjM/1BTuLMc+ShjZBKWqsDk0JLmKbzInR0
-	sNpsGwi9avSp6POy4hAC+cMkLQ0HVTc4H5Jd0yV/t
-X-Gm-Gg: AeBDieuubpAGrQ8+YXYfjLpn9aKudTJ68jHh9HUFvfc05WSnin2H7yGZSZqrTZ0xqAc
-	cH/IZ3sg2Z9UGDHIjzsMHNNos4/iPT37AUqqI8AUSa3cFeM8s6juR2Gft/iY6wtWy8ykcLuzydH
-	ADNtuS/bFXalnyNuZ5cx75ygIk6IFj7WCfOuue8s358KKMhkbNOQ/0j6jX7pac9j7T406SQ7faC
-	erwOeAWjLo85OrH0V9dJecTHRXcqe011JXVUVKQzcSEWZ6fHIZwHfsnDmuNFbtMWkh2dpApGf8k
-	9IDi+Am6UfnWvil3nrergOdaOwgFTQY2nR1W04yWadWHLRoV
-X-Received: by 2002:a05:6512:68e:b0:5a2:ae27:c879 with SMTP id
- 2adb3069b0e04-5a3efd7f0d8mr4850095e87.29.1776162554447; Tue, 14 Apr 2026
- 03:29:14 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WKPWgq5y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60B61C19425;
+	Tue, 14 Apr 2026 10:35:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776162954;
+	bh=SFNQ0GUXZDmko3umJzr38nltBojjjdV+yz2yRE036ik=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=WKPWgq5yvXTwdm6Mn7ddnAlqSEEiLBiWHTaX5mT5aGATcja8JjLui6ZcqNanm6scd
+	 CvXrq5dpTAh4lfYq1EVZUX4GCculXV6aUZ8B2O66uXnN4hL8M3IpV0q1QnBYf/Cgl2
+	 uXmzZTnbW+Tg8K5+cr8iHrkx2+6e8RjuZe77W4iUy0UXTXGq+qIpq/A/xcKV1UjzsD
+	 tSBo0NXcGq1hWol0n071OCMjHVTW3JNe8xQS1eQwar0Cs0wcpqFjwIeRuJfCLbea1B
+	 MZfrvQ0InJkZRVLl5oIPVYvATc3jjlfrLG2y30pSPcM877QPNc8FyNTCL8ekqjzoew
+	 0U2KV9PxBXr2w==
+Date: Tue, 14 Apr 2026 13:35:47 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: fengchengwen <fengchengwen@huawei.com>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	Keith Busch <kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
+	Yishai Hadas <yishaih@nvidia.com>,
+	Zhiping Zhang <zhipingz@meta.com>
+Subject: Re: [RFC] Proposal: Add sysfs interface for PCIe TPH Steering Tag
+ retrieval and configuration
+Message-ID: <20260414103547.GA361495@unreal>
+References: <6ea4c4c2-774e-aa76-3665-918e2a24cc84@huawei.com>
+ <20260413100152.GG21470@unreal>
+ <c3a6c6ca-3b71-476c-947a-5f2393d046bd@huawei.com>
+ <20260413191930.GP21470@unreal>
+ <b95ced54-339f-4859-b3eb-8bf261393ffc@huawei.com>
+ <20260414085723.GR21470@unreal>
+ <84bf119e-fa8c-4c97-9197-3377b7e2b250@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260326-pci-m2-e-v7-0-43324a7866e6@oss.qualcomm.com>
- <20260413075459.GA2626902@google.com> <fpcs4p62f35a5qyqwgm5ysa73stbysxcr62tkmmkrrcvsuf4t4@4ivukyqjey57>
- <eeytuhqpgdz4do4tgtbmfntub2femtyq7bij7svhodpyjwaylx@j3gmvq2a2zqc>
- <CAGXv+5E=tujhtZjwi6Qm7hk3Ks74UzTQHWq82NiTEw1+vYod5g@mail.gmail.com> <ad36pIu-0dutL7Nk@ashevche-desk.local>
-In-Reply-To: <ad36pIu-0dutL7Nk@ashevche-desk.local>
-From: Chen-Yu Tsai <wenst@chromium.org>
-Date: Tue, 14 Apr 2026 18:29:02 +0800
-X-Gm-Features: AQROBzDHB_HCwto4iaprIWgL7mrQWt62yIrtGAtxckKlX4EUkJwTT3ZqPu-YslU
-Message-ID: <CAGXv+5EGe59nJctLweEdZjb3MNmMvjuCHngGSfptzN985OiLdg@mail.gmail.com>
-Subject: Re: [PATCH v7 0/8] Add support for handling PCIe M.2 Key E connectors
- in devicetree
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, Rob Herring <robh@kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
-	Nathan Chancellor <nathan@kernel.org>, Nicolas Schier <nicolas.schier@linux.dev>, 
-	Hans de Goede <hansg@kernel.org>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
-	Mark Pearson <mpearson-lenovo@squebb.ca>, "Derek J. Clark" <derekjohn.clark@gmail.com>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, Bartosz Golaszewski <brgl@kernel.org>, linux-serial@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org, 
-	platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org, 
-	Stephan Gerhold <stephan.gerhold@linaro.org>, 
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-acpi@vger.kernel.org, 
-	Hans de Goede <johannes.goede@oss.qualcomm.com>, 
-	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <84bf119e-fa8c-4c97-9197-3377b7e2b250@huawei.com>
 
-On Tue, Apr 14, 2026 at 4:28=E2=80=AFPM Andy Shevchenko
-<andriy.shevchenko@linux.intel.com> wrote:
->
-> On Tue, Apr 14, 2026 at 01:03:19PM +0800, Chen-Yu Tsai wrote:
-> > On Tue, Apr 14, 2026 at 12:08=E2=80=AFAM Manivannan Sadhasivam <mani@ke=
-rnel.org> wrote:
-> > > On Mon, Apr 13, 2026 at 07:33:12PM +0530, Manivannan Sadhasivam wrote=
-:
-> > > > On Mon, Apr 13, 2026 at 03:54:59PM +0800, Chen-Yu Tsai wrote:
-> > > > > On Thu, Mar 26, 2026 at 01:36:28PM +0530, Manivannan Sadhasivam w=
-rote:
->
-> ...
->
-> > > > > - Given that this connector actually represents two devices, how =
-do I
-> > > > >   say I want the BT part to be a wakeup source, but not the WiFi =
-part?
-> > > > >   Does wakeup-source even work at this point?
-> > > >
-> > > > You can't use the DT property since the devices are not described i=
-n DT
-> > > > statically. But you can still use the per-device 'wakeup' sysfs kno=
-b to enable
-> > > > wakeup.
-> >
-> > I see. I think not being able to specify generic properties for the dev=
-ices
-> > on the connector is going to be a bit problematic.
->
-> This is nature of the open-connectors, especially on the busses that are
-> hotpluggable, like PCIe. We never know what is connected there _ahead_.
+On Tue, Apr 14, 2026 at 05:30:09PM +0800, fengchengwen wrote:
+> On 4/14/2026 4:57 PM, Leon Romanovsky wrote:
+> > On Tue, Apr 14, 2026 at 09:07:23AM +0800, fengchengwen wrote:
+> >> On 4/14/2026 3:19 AM, Leon Romanovsky wrote:
+> >>> On Mon, Apr 13, 2026 at 08:04:10PM +0800, fengchengwen wrote:
+> >>>> On 4/13/2026 6:01 PM, Leon Romanovsky wrote:
+> >>>>> On Fri, Apr 10, 2026 at 10:30:52PM +0800, fengchengwen wrote:
+> >>>>>> Hi all,
+> >>>>>>
+> >>>>>> I'm writing to propose adding a sysfs interface to expose and configure the
+> >>>>>> PCIe TPH
+> >>>>>> Steering Tag for PCIe devices, which is retrieved inside the kernel.
+> >>>>>>
+> >>>>>>
+> >>>>>> Background: The TPH Steering Tag is tightly coupled with both a PCIe device
+> >>>>>> (identified
+> >>>>>> by its BDF) and a CPU core. It can only be obtained in kernel mode. To allow
+> >>>>>> user-space
+> >>>>>> applications to fetch and set this value securely and conveniently, we need
+> >>>>>> a standard
+> >>>>>> kernel-to-user interface.
+> >>>>>>
+> >>>>>>
+> >>>>>> Proposed Solution: Add several sysfs attributes under each PCIe device's
+> >>>>>> sysfs directory:
+> >>>>>> 1. /sys/bus/pci/devices/<BDF>/tph_mode to query the TPH mode (interrupt or
+> >>>>>> device specific)
+> >>>>>> 2. /sys/bus/pci/devices/<BDF>/tph_enable to control the TPH feature
+> >>>>>> 3. /sys/bus/pci/devices/<BDF>/tph_st to support both read and write
+> >>>>>> operations, e.g.:
+> >>>>>>    Read operation:
+> >>>>>>      echo "cpu=3" > /sys/bus/pci/devices/0000:01:00.0/tph_st
+> >>>>>>      cat /sys/bus/pci/devices/0000:01:00.0/tph_st
+> >>>>>>    Write operation:
+> >>>>>>      echo "index=10 st=123" > /sys/bus/pci/devices/0000:01:00.0/tph_st
+> >>>>>>
+> >>>>>>
+> >>>>>> The design strictly follows PCI subsystem sysfs standards and has the
+> >>>>>> following key properties:
+> >>>>>>
+> >>>>>> 1. Dynamic Visibility: The sysfs attributes will only be present for PCIe
+> >>>>>> devices that
+> >>>>>>    support TPH Steering Tag. Devices without TPH capability will not show
+> >>>>>> these nodes,
+> >>>>>>    avoiding unnecessary user confusion.
+> >>>>>>
+> >>>>>> 2. Permission Control: The attributes will use 0600 file permissions,
+> >>>>>> ensuring only
+> >>>>>>    privileged root users can read or write them, which satisfies security
+> >>>>>> requirements
+> >>>>>>    for hardware configuration interfaces.
+> >>>>>>
+> >>>>>> 3. Standard Implementation Location: The interface will be implemented in
+> >>>>>>    drivers/pci/pci-sysfs.c, the canonical location for all PCI device sysfs
+> >>>>>> attributes,
+> >>>>>>    ensuring consistency and maintainability within the PCI subsystem.
+> >>>>>>
+> >>>>>>
+> >>>>>> Why sysfs instead of alternatives like VFIO-PCI ioctl:
+> >>>>>>
+> >>>>>> - Universality: sysfs does not require binding the device to a special
+> >>>>>> driver such as
+> >>>>>>   vfio-pci. It is available to any privileged user-space component,
+> >>>>>> including system
+> >>>>>>   utilities, daemons, and monitoring tools.
+> >>>>>>
+> >>>>>> - Simplicity: Both user-space usage (cat/echo) and kernel implementation are
+> >>>>>>   straightforward, reducing code complexity and long-term maintenance cost.
+> >>>>>>
+> >>>>>> - Design Alignment: TPH Steering Tag is a generic PCIe device feature, not
+> >>>>>> specific to
+> >>>>>>   user-space drivers like DPDK or VFIO. Exposing it via sysfs matches the
+> >>>>>> kernel's
+> >>>>>>   standard pattern for hardware capabilities.
+> >>>>>>
+> >>>>>>
+> >>>>>> I look forward to your comments about this design before submitting the
+> >>>>>> final patch.
+> >>>>>
+> >>>>> You need to explain more clearly why this write functionality is useful
+> >>>>> and necessary outside the VFIO/RDMA context:
+> >>>>> https://lore.kernel.org/all/20260324234615.3731237-1-zhipingz@meta.com/
+> >>>>>
+> >>>>> AFAIK, for non-VFIO TPH callers, kernel has enough knowledge to set
+> >>>>> right ST values.
+> >>>>>
+> >>>>> There are several comments regarding the implementation, but those can wait
+> >>>>> until the rationale behind the proposal is fully clarified.
+> >>>>
+> >>>> Thanks for your review and comments.
+> >>>>
+> >>>> Let me clarify the rationale behind this user-space sysfs interface:
+> >>>>
+> >>>> 1. VFIO is just one of the user-space device access frameworks.
+> >>>>    There are many other in-kernel frameworks that expose devices
+> >>>>    to user space, such as UIO, UACCE, etc., which may also require
+> >>>>    TPH Steering Tag support.
+> >>>>
+> >>>> 2. The kernel can automatically program Steering Tags only when
+> >>>>    the device provides a standard ST table in MSI-X or config space.
+> >>>>    However, many devices implement vendor-specific or platform-specific
+> >>>>    Steering Tag programming methods that cannot be fully handled
+> >>>>    by the generic kernel code.
+> >>>>
+> >>>> 3. For such devices, user-space applications or framework drivers
+> >>>>    need to retrieve and configure TPH Steering Tags directly.
+> >>>>    A unified sysfs interface allows all user-space frameworks
+> >>>>    (not just VFIO) to use a common, standard way to manage
+> >>>>    TPH Steering Tags, rather than implementing duplicated logic
+> >>>>    in each subsystem.
+> >>>>
+> >>>> This interface provides a uniform method for any user-space
+> >>>> device access solution to work with TPH, which is why I believe
+> >>>> it is useful and necessary beyond the VFIO/RDMA case.
+> >>>
+> >>> I understand the rationale for providing a read interface, for example for
+> >>> debugging, but I do not see any justification for a write interface.
+> >>
+> >> Thank you for the comment!
+> >>
+> >> As I explained, read interface is not only for debugging. It was used to
+> >> such device who don't declare ST location in MSI-X or config-space, the following
+> >> is Intel X710 NIC device's lspci output (only TPH part):
+> >>
+> >> 	Capabilities: [1a0 v1] Transaction Processing Hints
+> >> 		Device specific mode supported
+> >> 		No steering table available
+> >>
+> >> So we could not config the ST for device on kernel because it's vendor specific.
+> >> But we could configure ST by it's vendor user-space driver, in this case, we
+> >> should get ST from kernel to user-space.
+> > 
+> > Vendor-specific, in the context of the PCI specification, does not mean the
+> > kernel cannot configure it. It simply means that the ST values are not
+> > stored in the ST table.
+> 
+> Thank you for the clarification!
+> 
+> I agree with your interpretation of "vendor-specific" in PCI spec terms—it
+> does not prevent the kernel from handling TPH in principle. However, the
+> real problem is that the kernel has no standardized way to know where or
+> how to program those vendor-specific ST values.
 
-I believe what you mean by "hotpluggable" is "user replaceable".
+No one here is opposed to you implementing the appropriate callbacks or
+extending the existing in-kernel API to support a device‑specific mode.
 
-> In other words you can't describe in DT something that may not exist.
+> 
+> When a device  reports "No steering table available" and operates in
+> device-specific mode, the method used to set ST values is entirely
+> device-specific and not covered by the PCI specification. If the device
+> is taken over to user-space by UIO framework (e.g. VFIO or IGB_UIO), the
+> generic kernel cannot infer the proper programming sequence or registers
+> for each vendor-specific implementation.
+> 
+> In these cases, the configuration must be done by the vendor’s
+> user-space driver, which is aware of the device’s private programming
+> model. But such a user-space driver still needs to obtain valid,
+> platform-provided ST values (from ACPI _DSM), which it cannot do
+> without a kernel interface.
 
-But this is actually doable with the PCIe slot representation. The
-properties are put in the device node for the slot. If no card is
-actually inserted in the slot, then no device is created, and the
-device node is left as not associated with anything.
+The objection applies to this point. The PCI device exists in kernel space,
+and the kernel is responsible for managing its internal state.
 
-It's just that for this new M.2 E-key connector, there aren't separate
-nodes for each interface. And the system doesn't associate the device
-node with the device, because it's no longer a child node of the
-controller or hierarchy, but connected over the OF graph.
-
-Moving over to the E-key connector representation seems like one step
-forward and one step backward in descriptive ability. We gain proper
-power sequencing, but lose generic properties.
-
-The latter part is solvable, but we likely need child nodes under the
-connector for the different interfaces. Properties that make sense for
-one type might not make sense for another.
-
-
-Thanks
-ChenYu
-
-P.S. We could also just add child device nodes under the controller to
-put the generic properties, but that's splitting the description into
-multiple parts. Let's not go there if at all possible.
+> 
+> This is why a read-only interface to retrieve ST values is still
+> needed: the kernel holds the valid platform tags, while the user-space
+> driver handles the device-specific programming.
+> 
+> Thanks
+> 
+> > 
+> > Thanks
+> 
