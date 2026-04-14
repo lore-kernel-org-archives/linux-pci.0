@@ -1,163 +1,174 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com [209.85.167.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDF7B39A04A;
-	Tue, 14 Apr 2026 10:19:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776161971; cv=none; b=oG86ZRIlBlDA65WPRM1jumrEzC9C83OZzG469NnytmUIMkik9O7eyzoQgi5MyOou/CkFcT4XJAomMDxiF6msUHEoXEw6cufsGlQyMiZ8qNU+1rxrMvO+a2T+adqWy75wb+QVSi0DgmjXPDSCdzVBNfwIywRVLajbQZDZUnAtWBs=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776161971; c=relaxed/simple;
-	bh=B2hp8pIzpur9QpDNjownUQWL2JU+z/TQTreC0jcUJco=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eQBJ1RuMz9hw7Ky+SmH8wxfvTGd0ZZ1hLnhyKRXYDaupUfAk8TtBA9lnvlvFB1LX66bNRA6jghZV9DdEOhp79biGY34Egg9czikBGL159Y8qrdOtmuWlImcyCEBOqhlqa0m1SzExboCZzqP1ZnQeq6M4fuSoC6GVgk+E6JXFvCs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Gio7eHT4; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9954E3D567B
+	for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2026 10:29:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.49
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776162564; cv=pass; b=JacU4D+Hd9fAyFy9CtZbzjZfpjIkcCTw0HTv45ATq4iJQWAv/RfE16VgnvjfOPuKEiooqeC+/Xdy0O/HGzKbACCtljW7psVqMIh7s2ijtUInjiMQk9Fkkt/0qzXPWQlgoZoqbFMG7C4UV2jk5ebgceOW5im9XzHRh5d8yD1OWC0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776162564; c=relaxed/simple;
+	bh=Ido82lTsBObPiLyE+cnbnYTa5RnXovthshiMl4cqqxw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ez7mkD2CATGAzquRGA8c7P5NGrb8OCVvKXbKNPFx/FNtYKjHINlIjWG69rcfj/6Hzyp7k6JdSNTBfRdcfkSYEnKovmQP3h2vVSzbp4s2+IRZJRI2EIqlB+DSTpobrJWd0JNE+h9XH7OxzgE3hU/G6J+rdWZv+gNzKch36PqYUkY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=CAg1W+YC; arc=pass smtp.client-ip=209.85.167.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Gio7eHT4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1776161970; x=1807697970;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=B2hp8pIzpur9QpDNjownUQWL2JU+z/TQTreC0jcUJco=;
-  b=Gio7eHT4JQ2VTFi2lLq1rHZitFG+felbAwXT6yp5GPky+/hEq+pA1gew
-   Cj8tvBvHn06d9zLdgWOc5xHwIovjcBhO3Zk151wkjt1glmlP9JbNpOVAb
-   zgUEBJIU3W9e/iG57alh90Ogi+BV6nAYhABOGiWw/HI+Y9DWwKrVKMKZo
-   T5gnbFqKSWdzCH3uBO/KW0S1jMGxYxly1E5a776G97CNcTrk/tQ8RtksG
-   Xe77ckfPax3WC3uYn/tVDVanQ0mS/nHSDcrrwsXcRoNkzMwaJ3Gy+3EcS
-   qcJ3sDpVdxiXJ+65SfsJFg/PzGNMI3VWMZ32zuiMIr7q27OaG0WGqjp1j
-   g==;
-X-CSE-ConnectionGUID: D2BA/wRSSMSxmtsDosMmsw==
-X-CSE-MsgGUID: c4gCkvBhT5ajludrtEqkhg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11758"; a="77020018"
-X-IronPort-AV: E=Sophos;i="6.23,179,1770624000"; 
-   d="scan'208";a="77020018"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2026 03:19:30 -0700
-X-CSE-ConnectionGUID: DaMgaSwARGiiqBWrF6ndNA==
-X-CSE-MsgGUID: 02DLoXeXSRSlGZYhrOMZtQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,179,1770624000"; 
-   d="scan'208";a="234451599"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa004.jf.intel.com with ESMTP; 14 Apr 2026 03:19:26 -0700
-Date: Tue, 14 Apr 2026 17:57:35 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: "Edgecombe, Rick P" <rick.p.edgecombe@intel.com>
-Cc: "Gao, Chao" <chao.gao@intel.com>, "Xu, Yilun" <yilun.xu@intel.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"kas@kernel.org" <kas@kernel.org>,
-	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
-	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-	"Li, Xiaoyao" <xiaoyao.li@intel.com>,
-	"Williams, Dan J" <dan.j.williams@intel.com>,
-	"Jiang, Dave" <dave.jiang@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Duan, Zhenzhong" <zhenzhong.duan@intel.com>,
-	"Verma, Vishal L" <vishal.l.verma@intel.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>
-Subject: Re: [PATCH v2 05/31] x86/virt/tdx: Extend tdx_page_array to support
- IOMMU_MT
-Message-ID: <ad4Pj0cqlprvNUSj@yilunxu-OptiPlex-7050>
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-6-yilun.xu@linux.intel.com>
- <828f174d49a1ecaec65ba1179e08c6b22e249297.camel@intel.com>
- <acvX1x5nDdGtZWyI@yilunxu-OptiPlex-7050>
- <f38d0a080aee052937cb6721683d55155c657717.camel@intel.com>
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="CAg1W+YC"
+Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-5a402b2d102so1344950e87.3
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2026 03:29:16 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1776162554; cv=none;
+        d=google.com; s=arc-20240605;
+        b=TJACjy6H3DKqbgGdubMoUvYqyTRmO332/weAARvRb+nfcmv9AU1UJv10dWqb1NI4zA
+         mXmaMV/Jq/axHnbQI6tfIZAVNeE85B7Loqonbf9r7YyJRwpUhwARwoHAWKulpUBSdMuz
+         AaGaQEYPTfrKAo0bpjfC0w4VRf2KBccO3nkBKYRHUaaHEvFeNDzk3D/khzmc4vPISOWQ
+         RvptCO/+pEXkYjTBw0iKLjmZ/dnIiSvon3CR0FwkCsWIFdWTbRDKee0bxpn0/xJpCVyb
+         J+cbSZRfULX5L0+aafMKSsTfdf5tc9on53au5c8OJZjQhy6jheki80wF1nQl+DrGzP5j
+         kKNA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=obCwu9OJRNTUN7BsZbzZ8PH73jQ+TTI+BXXfuHZowXE=;
+        fh=GlYYNKQqgS6ge+izPnuhjdBhCcInYP5jDg8ErTSk1qw=;
+        b=XoMmGQJo4FG2Sa/pMOASDc3vI28OtIto1TqGLGQU/Cl6DYKRWv4DnfEffvCbV05j3G
+         sA1NreQ9T1N2+orredX3yK75UzZybqDsYl/DkN2J1AM4qNi+30qJPyW+V4j8WaiTnBbp
+         5wNHk3QAkEnHPjXFNVymTV4avM4b5F7M2+e6Bnz5QLoI9FEbX5LuitFzuMgM9PnUEnbf
+         xF3/SpqVj+Tj3roKvj8/Mv9zXPJ6qiS9EnMIxPCYVqdEscZ0Xw3jKyTBRX0QttZdX13Y
+         inG33zSzEqZQX1DalqLeSLciMYYHzGFeMTUOSWnVJ5SqCj8LPGf/DiP6rKTILEDDoDV5
+         +9cw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1776162554; x=1776767354; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=obCwu9OJRNTUN7BsZbzZ8PH73jQ+TTI+BXXfuHZowXE=;
+        b=CAg1W+YCDWa+7hMyoFTX9wrJnea3anbAiHdxWmpDFPNhe7kCyRPxDRCs4+n9KcUSjl
+         w6nzvTJigwS7oM6UFv5A3HKxmii0VyJz1d3VSyhkRHh9KbLCHy+zvkfyRpySbb5xZhZu
+         JuL3QYV3wyDOI2wfxl8ehTcAnuZZDMlWKsh4c=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776162554; x=1776767354;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=obCwu9OJRNTUN7BsZbzZ8PH73jQ+TTI+BXXfuHZowXE=;
+        b=GKkvJSH09HPBgj2trQWQY8zbaEKJ5h7CqLucVari6Ixtxr8hQCxBEnMrbsNTXZUEEd
+         TCxtlP2IlFKzRGJTZblfJLp/eyXLZhsGxU/UIs/rVGrzxgiraxykioFfDGU4KG6QYno7
+         zhv4G3ckgeHGLNw1cf81CLfWnWaCiarCF1yp5B0XG3s9jeFIpN9BLtj7jIrJUY7sne53
+         Z2gRPc/333TRd1mSqX6iDrWfPM1vgB4+UOP2PoGF+ezk+2LfNNe975TVdIzEPyWi/KcN
+         vqnrTplToMlswNdpXNCBdv+rRsYEWWIJ9GzuUFvdCPTNc7ywRemESdtsIKPFq3gPs0I3
+         mhEg==
+X-Forwarded-Encrypted: i=1; AFNElJ8quCgjw6HJRVTkAuyc2UHp0R1TeDGbGgvjCKgAdi0rgncC1TURW9Ypzo/+UWgNVz6/T6G2783Tz1M=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwuDO4jyFxQGSUdDlK+QK2L06s45ddBajOxJ08ucYAhhfZdvd17
+	OGFuk4FnkEjvWbsQsB0fcnFDjqIhA9bTQLwUrk4jMrjM/1BTuLMc+ShjZBKWqsDk0JLmKbzInR0
+	sNpsGwi9avSp6POy4hAC+cMkLQ0HVTc4H5Jd0yV/t
+X-Gm-Gg: AeBDieuubpAGrQ8+YXYfjLpn9aKudTJ68jHh9HUFvfc05WSnin2H7yGZSZqrTZ0xqAc
+	cH/IZ3sg2Z9UGDHIjzsMHNNos4/iPT37AUqqI8AUSa3cFeM8s6juR2Gft/iY6wtWy8ykcLuzydH
+	ADNtuS/bFXalnyNuZ5cx75ygIk6IFj7WCfOuue8s358KKMhkbNOQ/0j6jX7pac9j7T406SQ7faC
+	erwOeAWjLo85OrH0V9dJecTHRXcqe011JXVUVKQzcSEWZ6fHIZwHfsnDmuNFbtMWkh2dpApGf8k
+	9IDi+Am6UfnWvil3nrergOdaOwgFTQY2nR1W04yWadWHLRoV
+X-Received: by 2002:a05:6512:68e:b0:5a2:ae27:c879 with SMTP id
+ 2adb3069b0e04-5a3efd7f0d8mr4850095e87.29.1776162554447; Tue, 14 Apr 2026
+ 03:29:14 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f38d0a080aee052937cb6721683d55155c657717.camel@intel.com>
+References: <20260326-pci-m2-e-v7-0-43324a7866e6@oss.qualcomm.com>
+ <20260413075459.GA2626902@google.com> <fpcs4p62f35a5qyqwgm5ysa73stbysxcr62tkmmkrrcvsuf4t4@4ivukyqjey57>
+ <eeytuhqpgdz4do4tgtbmfntub2femtyq7bij7svhodpyjwaylx@j3gmvq2a2zqc>
+ <CAGXv+5E=tujhtZjwi6Qm7hk3Ks74UzTQHWq82NiTEw1+vYod5g@mail.gmail.com> <ad36pIu-0dutL7Nk@ashevche-desk.local>
+In-Reply-To: <ad36pIu-0dutL7Nk@ashevche-desk.local>
+From: Chen-Yu Tsai <wenst@chromium.org>
+Date: Tue, 14 Apr 2026 18:29:02 +0800
+X-Gm-Features: AQROBzDHB_HCwto4iaprIWgL7mrQWt62yIrtGAtxckKlX4EUkJwTT3ZqPu-YslU
+Message-ID: <CAGXv+5EGe59nJctLweEdZjb3MNmMvjuCHngGSfptzN985OiLdg@mail.gmail.com>
+Subject: Re: [PATCH v7 0/8] Add support for handling PCIe M.2 Key E connectors
+ in devicetree
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, Rob Herring <robh@kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
+	Nathan Chancellor <nathan@kernel.org>, Nicolas Schier <nicolas.schier@linux.dev>, 
+	Hans de Goede <hansg@kernel.org>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+	Mark Pearson <mpearson-lenovo@squebb.ca>, "Derek J. Clark" <derekjohn.clark@gmail.com>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, Bartosz Golaszewski <brgl@kernel.org>, linux-serial@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org, 
+	platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org, 
+	Stephan Gerhold <stephan.gerhold@linaro.org>, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-acpi@vger.kernel.org, 
+	Hans de Goede <johannes.goede@oss.qualcomm.com>, 
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Apr 01, 2026 at 12:17:45AM +0000, Edgecombe, Rick P wrote:
-> On Tue, 2026-03-31 at 22:19 +0800, Xu Yilun wrote:
-> > > Consider the amount of tricks that are needed to coax the tdx_page_array to
-> > > populate the handoff page as needed. It adds 2 pages here, then subtracts
-> > > them
-> > > later in the callback. Then tweaks the pa in tdx_page_array_populate() to
-> > > add
-> > > the length...
-> > 
-> > mm.. The tricky part is the specific memory requirement/allocation, the
-> > common part is the pa list contained in a root page. Maybe we only model
-> > the later, let the specific user does the memory allocation. Is that
-> > closer to your "break concepts apart" idea?
-> 
-> I haven't wrapped my head around this enough to suggest anything is definitely
-> the right approach.
-> 
-> But yes, the idea would be that the allocation of the list of pages to give to
-> the TDX module would be a separate allocation and set of management functions.
-> And the the allocation of the pages that are used to communicate the list of
-> pages (and in this case other args) with the module would be another set. So
-> each type of TDX module arg page format (IOMMU_MT, etc) would be separable, but
-> share the page list allocation part only. It looks like Nikolay was probing
-> along the same path. Not sure if he had the same solution in mind.
-> 
-> So for this:
-> 1. Allocate a list or array of pages using a generic method.
-> 2. Allocate these two IOMMU special pages.
-> 3. Allocate memory needed for the seamcall (root pages)
-> 
-> Hand all three to the wrapper and have it shove them all through in the special
-> way it prefers.
+On Tue, Apr 14, 2026 at 4:28=E2=80=AFPM Andy Shevchenko
+<andriy.shevchenko@linux.intel.com> wrote:
+>
+> On Tue, Apr 14, 2026 at 01:03:19PM +0800, Chen-Yu Tsai wrote:
+> > On Tue, Apr 14, 2026 at 12:08=E2=80=AFAM Manivannan Sadhasivam <mani@ke=
+rnel.org> wrote:
+> > > On Mon, Apr 13, 2026 at 07:33:12PM +0530, Manivannan Sadhasivam wrote=
+:
+> > > > On Mon, Apr 13, 2026 at 03:54:59PM +0800, Chen-Yu Tsai wrote:
+> > > > > On Thu, Mar 26, 2026 at 01:36:28PM +0530, Manivannan Sadhasivam w=
+rote:
+>
+> ...
+>
+> > > > > - Given that this connector actually represents two devices, how =
+do I
+> > > > >   say I want the BT part to be a wakeup source, but not the WiFi =
+part?
+> > > > >   Does wakeup-source even work at this point?
+> > > >
+> > > > You can't use the DT property since the devices are not described i=
+n DT
+> > > > statically. But you can still use the per-device 'wakeup' sysfs kno=
+b to enable
+> > > > wakeup.
+> >
+> > I see. I think not being able to specify generic properties for the dev=
+ices
+> > on the connector is going to be a bit problematic.
+>
+> This is nature of the open-connectors, especially on the busses that are
+> hotpluggable, like PCIe. We never know what is connected there _ahead_.
 
-I'm drafting some changes and make the tdx_page_array look like:
+I believe what you mean by "hotpluggable" is "user replaceable".
 
-  struct tdx_page_array {
-	/* public: */
-	unsigned int nr_pages;
-	struct page **pages;
+> In other words you can't describe in DT something that may not exist.
 
-	/* private: */
-	u64 *root;
-	bool flush_on_free;
-  };
+But this is actually doable with the PCIe slot representation. The
+properties are put in the device node for the slot. If no card is
+actually inserted in the slot, then no device is created, and the
+device node is left as not associated with anything.
 
-  - I removed the page allocations for tdx_page_array kAPIs. Now the
-    caller needs to allocate the struct page **pages and the page list,
-    then create the tdx_page_array by providing these pages.
+It's just that for this new M.2 E-key connector, there aren't separate
+nodes for each interface. And the system doesn't associate the device
+node with the device, because it's no longer a child node of the
+controller or hierarchy, but connected over the OF graph.
 
-    struct tdx_page_array *tdx_page_array_create(struct page **pages,
-						 unsigned int nr_pages)
+Moving over to the E-key connector representation seems like one step
+forward and one step backward in descriptive ability. We gain proper
+power sequencing, but lose generic properties.
 
-    This also means tdx_page_array doesn't have to hold more than 512
-    pages anymore, it now an exact descriptor for the TDX Module's
-    definitions rather than a manager. It's a chunk of the required
-    memory when we need more than 512 pages. This eliminates the need
-    for 'offset' field and the slide window operations so make the
-    helpers simpler.
+The latter part is solvable, but we likely need child nodes under the
+connector for the different interfaces. Properties that make sense for
+one type might not make sense for another.
 
-  - I still keep the generic struct tdx_page_array to represent all
-    kinds of object types (HPA_ARRAY_T, HPA_LIST_INFO, IOMMU_MT), and
-    provide the tdx_page_array to SEAMCALL helpers as parameters. I
-    think this structure is generally good enough to represent a list of
-    pages, keeps type safety compared to a list of HPAs.
 
-  - I still record both the page list (struct page **pages) and the HPA
-    list (in u64 *root). struct page **pages works with kernel memory
-    management (e.g. vmap) well while the populated root works with
-    SEAMCALLs.
+Thanks
+ChenYu
 
-  - I'm not introducing more structures each for an object type, like 
-    struct hpa_array, struct hpa_list_info, struct iommu_metadata. They
-    are conceptually the same thing. The iommu_mt supports multi-order
-    pages, hpa_array_t & hpa_list_info don't support. But their bit
-    definitions don't conflict. I can use the same piece of code to
-    populate their root page content.
-
-  - Add a flush_on_free field to mark if a cache write back is needed on
-    tdx_page_array_free(), then we don't need 2 free APIs.
-
-I want to clean up my code, then post an incremental patch for preview.
-
-Thanks.
+P.S. We could also just add child device nodes under the controller to
+put the generic properties, but that's splitting the description into
+multiple parts. Let's not go there if at all possible.
