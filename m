@@ -1,353 +1,339 @@
-Received: from fhigh-b5-smtp.messagingengine.com (fhigh-b5-smtp.messagingengine.com [202.12.124.156])
+Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020133.outbound.protection.outlook.com [52.101.228.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65D653E7174;
-	Tue, 14 Apr 2026 14:12:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.156
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776175966; cv=none; b=IjcHI4S3lZ0iXNlo/kpOb9uc2+fKh9ArtYrFg/5J6d3t1kOx/QRWGm6B3j4smCMW0ERxyXkSwjvU8BewVpiNWV0+OYVRutl+2phbnrhPPIBqgryviD9s961aIkA+cg3IDuY5G02OblsVhi0R3huLXj7z8o0AsjfdoI9SYl3fprg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776175966; c=relaxed/simple;
-	bh=uAVJpJnZIO7KMMB/lw9nwEAyap4Nw8wh6yxkAuFuE+o=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ktssHip6aPr+kjjrTfcWsj4az1T9BlNdKW3FG8tiethKQ/e2Ygow/VNM8FGPpIrtljo1czqeqFF+WVqcD+Afp8sIErY8nZ8xJpl+JRm91BAgG9a71S5GIuHyBeTRw2KWP22LSrJfgeSY7wDb+cOCmo9/PsHLgqndD5496gsWvyM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=Mvh+ZeAR; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=sqLeKJEv; arc=none smtp.client-ip=202.12.124.156
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F34742F8BF0;
+	Tue, 14 Apr 2026 14:16:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.133
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776176187; cv=fail; b=ucIBtWzQY38EzBRLURaM0nADjGpyQLvtoYyXHsnpwWICLEkCZ0wIXSLd4/1l/ekMaFjiXHN1clpqh8RKAKaMHGG54LVM5HOWXIKtxPWxALf+iaIMWDBFUz54eGmWpdDeDugLlS92tN0gRBx3hen/IyEtK7S3UzA2R48cNi68ZHA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776176187; c=relaxed/simple;
+	bh=jSyxzDyMc+yL3KObyWMDVtqAuUeHAO3mhGBFmXksR7A=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=OkMxnHRGpCJTwS7RPpa1eVwYFHOEHBxhOwLwreLRmGffyjuIQQ3Q2rHAD3v/FHFmbreCPQzO5z6DKMLtSx8fuv0paSLVhStaZCWcCAHffH/4V9VqJpHJR9JGc6iI6cvLkatkXFSocCU4sW1tsSUDaeGC8qGhgzET2RLZGOqCVfI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=F90S0QhY; arc=fail smtp.client-ip=52.101.228.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="Mvh+ZeAR";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="sqLeKJEv"
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 477997A016A;
-	Tue, 14 Apr 2026 10:12:42 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-06.internal (MEProxy); Tue, 14 Apr 2026 10:12:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1776175962;
-	 x=1776262362; bh=qCvEqJRBfyR4i0siTqFXO2296KUNeGvlyJV4drI5uw0=; b=
-	Mvh+ZeARXPjR10qPXOrSxEFATokBy45AKtJHb6u2cuKr9mOWq3ws1SutzxomogKO
-	N46TVFpM1JxO3h6jcR8D5qIh0INdJHOA3+l6TcXrGrGoxB/tR/7Y9p5sCISBJT1Y
-	eQeZ3oZH35+mpTrUAu+kTyHz3EoH1Maky8885NzaurOu+eDzYVOKmrvIEEP/8+73
-	ZPvNEtl4GdjHzpFZks7GIr5hEHaq+fPKnVR9q7EVVXGz91CMwpdKtodnHXRUE1dP
-	6FM5MA2a/nU4SaVTlwTjDCA4cFVXLB32Q18rccMHHnKlTUC6Xj3qxerdoPKAn8SR
-	VGMXkeY0Syvv1LQ6l/F7mg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1776175962; x=
-	1776262362; bh=qCvEqJRBfyR4i0siTqFXO2296KUNeGvlyJV4drI5uw0=; b=s
-	qLeKJEvR2ft5njB02SO2wg3+OW+bydW9zI6xRNlm3awpKHAacB6QvghQVhcHwGpf
-	fdZg+wlo3Y+oizxEGKdW0srQGC/dAlmH6A5EJCkK12cLvnohnAkX8C8wVUICFnbX
-	tGNZG6Jw0dbgyV/7x4eVk168ZkY7rFwWQNozeLuwXgzhWWGRJ0RYYcMroq0RD1bZ
-	k4vRby1M9X7D3TckVhGMcY1gwEmsZDHFHbnaiFQwVG9/AcZn7Cx++UpX1zDscGV6
-	8gb5xVbqdkS21gw8r0acRARRsj3ZhBw7165vjjrCvDk6ppa9lpMsYpXxVsjhJ+O2
-	D041b1DgWmYubqCjt3+Tw==
-X-ME-Sender: <xms:WUveaWKO0mRvlcZX2YtMQrPdS6VZmw9x_TvyZ48s0naOBmXjbCgpCQ>
-    <xme:WUveaWR96YJS2D9BjoxWGzXJ1M9-zj83I3rGtaCxULo7sAAQItHRhIAL9UoCiMmYN
-    xJE6K2P49-gq1rlx0fuSLXGax7-jNhP6KaYzPUz6MoWzBMwKONbiiw>
-X-ME-Received: <xmr:WUveaWNJ250eRNhy4-DQvGiDdQv4DxYleEBH8xHWVec6JzJXrsmgNrTgiUc>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdegudefiecutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
-    ihhlohhuthemuceftddtnecunecujfgurhepfffhvfevuffkjghfofggtgfgsehtjeertd
-    ertddvnecuhfhrohhmpeetlhgvgicuhghilhhlihgrmhhsohhnuceorghlvgigsehshhgr
-    iigsohhtrdhorhhgqeenucggtffrrghtthgvrhhnpedvkeefjeekvdduhfduhfetkedugf
-    duieettedvueekvdehtedvkefgudegveeuueenucevlhhushhtvghrufhiiigvpedtnecu
-    rfgrrhgrmhepmhgrihhlfhhrohhmpegrlhgvgiesshhhrgiisghothdrohhrghdpnhgspg
-    hrtghpthhtohepuddupdhmohguvgepshhmthhpohhuthdprhgtphhtthhopegrlhhifhhm
-    sehlihhnuhigrdhisghmrdgtohhmpdhrtghpthhtoheplhhinhhugidqshefledtsehvgh
-    gvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehv
-    ghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphgtihesvhhgvg
-    hrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehhvghlghgrrghssehkvghrnhgvlhdr
-    ohhrghdprhgtphhtthhopehluhhkrghsseifuhhnnhgvrhdruggvpdhrtghpthhtoheptg
-    hlghesrhgvughhrghtrdgtohhmpdhrtghpthhtohepkhgsuhhstghhsehkvghrnhgvlhdr
-    ohhrghdprhgtphhtthhopehstghhnhgvlhhlvgeslhhinhhugidrihgsmhdrtghomh
-X-ME-Proxy: <xmx:WUveabWv-w3dCzd0PX7m08Iigw9MluZr_gv3NREMvQ_G0C7eneTPIw>
-    <xmx:WUveaZiP0oEdwQ7B0eu_ZOicXnHb7L9UU4Tw_f90fHWKBvIWC7_mng>
-    <xmx:WUveaUhTNwnz90BhnEVpAMO6qcSZwjNL-_u1r16Qh2_cVRtplOHdjg>
-    <xmx:WUveaXEwq3AZAnoyXeSgZKDxEv1Va89rQx7xnXZw-bRb_wWyb7PcQA>
-    <xmx:Wkveaf7pNKOsHbMbJ2D1HS3AgpJy4sXrIsPpYZu6mEJiJZ-O-PjSfW6V>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 14 Apr 2026 10:12:40 -0400 (EDT)
-Date: Tue, 14 Apr 2026 08:12:38 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Farhan Ali <alifm@linux.ibm.com>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, helgaas@kernel.org, lukas@wunner.de,
- clg@redhat.com, kbusch@kernel.org, schnelle@linux.ibm.com,
- mjrosato@linux.ibm.com, alex@shazbot.org
-Subject: Re: [PATCH v13 5/7] vfio-pci/zdev: Add a device feature for error
- information
-Message-ID: <20260414081238.23e2cecc@shazbot.org>
-In-Reply-To: <cd9d7977-8b36-428c-81f2-c14b66173763@linux.ibm.com>
-References: <20260413210608.2912-1-alifm@linux.ibm.com>
-	<20260413210608.2912-6-alifm@linux.ibm.com>
-	<20260413165758.0f87312b@shazbot.org>
-	<cd9d7977-8b36-428c-81f2-c14b66173763@linux.ibm.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="F90S0QhY"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=A96201vMrhT5ZXwoaVW48WBURrQDeYOMK3MGprR5/Oq7ch9m6BsNoaYFvJKSaMl68GYXCir8f2gJT7mO9MKvPLOcBYep5pNMilMVCVpw0vtljrZfZOsIVIw1DrknPzSYLpY6PSrInGpOYncSbD80NAIVZ11UZGL87U5W6bfbwy0XCyFqQXsz1iXpqhiajXoi//nIuAodkeuPdTGJJKhbw0elB+xDocUboIWT3u7ZdJgOVr4aJz7bsR5eD/W5G0vH+Fp2o/xDH0ZdP/JjCn2AByYfOtR7ypQkdqbbs/NOdTXh2gjB/15mnivFWN22fDpch15JK9o05Ko+YJ85EUgNLw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=/4HnJvHpfcGaR8/bBQQX4t9TQMonu32ecofiMGCq9CA=;
+ b=qtfmjtHGkuTbjH/LrYNrmKKEhzJo2W/qF45r74v3kXm3JPsfi5S+FMHaANxWekDU2D/DZLeWKnd0E+scobrBpXsV0XpZEQWoIeIgyb8fweCIpsjwa/gWM74RmolI1HORTY9kpP3+IE/C5aYLRBK+DSbmBRgAOIdvjAFI0oygflmfiUfKGkG3jKUf23PKnAe5SawEfdk5Tuoz1RvjJOeyXSEO6tWF72EGFXPVf5uwuIVR4n50thGh25mMb8SZcwIMvrKvOdWTI0WssBcBJTx0UwhVVmppBATXru1Qnj8s2C6k3KLggZVTuZv+dsBSQhvqqY0guZSMzyyJvj/VmOXlFQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/4HnJvHpfcGaR8/bBQQX4t9TQMonu32ecofiMGCq9CA=;
+ b=F90S0QhYr2It4KKgsdmTGcLkjWiSz3schs9UoOw43Um4O2qFoSJYy0YHqDgVY5ycUOn/4UJKl5YWkZJQnB3PeKY6ECflUYqZp6NcYbFszk5uYayubbgayzgTs3vJnmIZQILTkbdVCrnanBN7dI85z1SlUVue5S7xtinTqg57280=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TY3P286MB2529.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:222::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.48; Tue, 14 Apr
+ 2026 14:16:23 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9769.046; Tue, 14 Apr 2026
+ 14:16:23 +0000
+From: Koichiro Den <den@valinux.co.jp>
+To: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <allenbh@gmail.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	Frank Li <Frank.Li@nxp.com>,
+	Bhanu Seshu Kumar Valluri <bhanuseshukumar@gmail.com>,
+	Marco Crivellari <marco.crivellari@suse.com>,
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	ntb@lists.linux.dev
+Subject: [PATCH v14 1/7] PCI: endpoint: Add auxiliary resource query API
+Date: Tue, 14 Apr 2026 23:15:08 +0900
+Message-ID: <20260414141514.1341429-2-den@valinux.co.jp>
+X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20260414141514.1341429-1-den@valinux.co.jp>
+References: <20260414141514.1341429-1-den@valinux.co.jp>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: TYCP301CA0071.JPNP301.PROD.OUTLOOK.COM
+ (2603:1096:405:7d::18) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY3P286MB2529:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6cced81d-566d-4a77-973b-08de9a30686b
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|7416014|376014|366016|1800799024|921020|56012099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	Nv47dTs/Ni8noQtu3SKuYQ7p4ih3nRpVw4DEAeVHgh9lToD32Nhlw79BgEzkBwL4YImN07TNAkfuPQwGe7ZRx0Rzsd5nmNHiBXKQmttjkA7y1ycDfDbVLBYOWvuiNroSyfftE8yPpasQ9V1jD3H8m4HhEp/K5nFroci7EP6hi2DXUanCrZ9yeTiZnCJ3CRtofeduH7fupG0jYOnfFQFbYzhx45T5CiPvCvbTZOou7WQP3IFGo65ECUI5xjIcR4ycSxLGEa0vheD6Xv//UtLx64+nkNF47stNwSE/mhWb2Gea6MdoCbBSwSLi0jZWHyUYX0K7IFShzKuat245BrG0rQgu6Usk0PxcJM7s/Hsd/q2YqSQTECujbbyfC9f3byJffFYSjjjIHKbRVuMwlm1tPSl5yJM0G0A9ECFeXeXAhweo1jTi9WEeKj2TS3jbmsYVO6RtyDh1bywMgeM7yOEGh5IpvtMW+bMiTU2dQcbR1Wst0FsYBNBLQJ4Zkt1sb8VK/y0ilYWd9UTT7+LpilcZvHDA2SNGCJk2ODW6QJNWlOxnlkqSXR0FxMeD5R245nkPYkPglcly7l6pqS86DoOYpbgMK40hkWVAFw3DDQyRbKhOVhXl3lMcrKN/t9/baFQlInL5cw6Ai8fDwM79RdomSGrCs7m2f14S/qc1H6w3uvdWr/UpikdH1sBPDazuPuwcJliVNuErRFE95QHymZJLCrOgSqpCGXCCN3i+ofeZ4MHU0MRxushQA9vVLsMFDVCN9FSVTLlS2uCXBo1lcIiXhw==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(7416014)(376014)(366016)(1800799024)(921020)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?75rNFHYdZOunYJueJsScVuJMKeOAa6yU/ismXcPizjrM+kt5RdwKtsAvlZc5?=
+ =?us-ascii?Q?8sqVHejGUXM5OJONNXAnKmgtpqdQWJE660Y0Vd85cQ3AjkAacaAMP/ZASb9L?=
+ =?us-ascii?Q?5XPJfitqnc0kmgi6gFAfhYl0P+VRDadrrtkOHuqhSINOe/nNbmzP0o1G28R8?=
+ =?us-ascii?Q?PBP5pcKvL0LElzEYEpPVGEl9pVbA1JEaZSbgkXDRWF5QCm65H8V4XeD654Tb?=
+ =?us-ascii?Q?L0flZ/tBu9coQqH77+XH1/RAJn02pgbOUUWkG7FGS62J1FezDD9+l5Vy4ygx?=
+ =?us-ascii?Q?E4LYCtLVJgBM5WhHVVB6cN6/dohXZY5jBRy8DxRHYWUvAUn5mnmJF9ADozSX?=
+ =?us-ascii?Q?EeA7MDc7rBZGfQN2DeTAJNMOsVf7r4rqjkZg0QjPpa2LJxQFR+kSkmkTdAHG?=
+ =?us-ascii?Q?1KioVfR3tWaf2aNvccTExWXi3qj9lVmDX73wpJSnkKEJmvNKX0DA9j2AkAR6?=
+ =?us-ascii?Q?x19CjCP+O6Yrt/ZhsOFwpF/ueB2qTNNvzSlm9LKB4dYOmJV7LLQjHXsYYhf3?=
+ =?us-ascii?Q?iueLwb6uO8EspRzj6i/v5gQAPy8gR6X7dLDGDgs8BLxqPgzJHwOpmgotYfYF?=
+ =?us-ascii?Q?THk0mMzPh0efCpnoOGgBxQ0z4Dd505u6UvR+28HEXWJFbomvXCduegnHIwN6?=
+ =?us-ascii?Q?YsIj/c9sU7xZKiYY4Mi5yUeteEyWkqTl7NQW6+PJsG83/cdmaQ3WUVh4uFM+?=
+ =?us-ascii?Q?PmuKiH+CotSkEk/w6xMGaknUtAy+EP54/dSiaweJECjFdJSgIQSsMjq7Enjs?=
+ =?us-ascii?Q?7QyWc+Z9upoUKz8LI6y2HU70+FkiOqpCVRNTNAaXIOxex4Zbc8o3Zu7ydEP1?=
+ =?us-ascii?Q?feaYWBiuaa9lLTa85Qtn0FnBnlrsTv0zAMTHeW1wThzHRyWytwEyI3w8IdQZ?=
+ =?us-ascii?Q?6tnDffXwayEBZDjbeeXy11tEdk6u0dPb/JG9lnpkgAJ/kOVEQ175jWZ4/GMK?=
+ =?us-ascii?Q?fc416KkO+TOzBeOYrx8epzw7hLRoR0p0uYkraEubZ0dNjkCXqcZmxJooTnjF?=
+ =?us-ascii?Q?mBYDMVIlrBF962gDwOWBAHvkNPaSxzldhz3evbw5gYT1bs/7pIYaur2/mL1X?=
+ =?us-ascii?Q?CLWe1pp+sEqZRqw60JTYc4qyTaGPXWCZcwnNCDoNTA3qTrRBd5DJNJIb4avR?=
+ =?us-ascii?Q?nOTi9346PAi3p0MLwGgCkVByR0/sFC3+/FVD/Q9tESTFQq1U8SR5RvAa9LPV?=
+ =?us-ascii?Q?5w44JtbBOaBSj4ZDTh/v8O2yyHhfFj+wI1PvOgd8iJAmcfw3EFfYT2KzNirI?=
+ =?us-ascii?Q?Nqqi16hEpNTUcDJcNVsSg7HHwoghteNbqd5rz+YdJiVx8pgjnLtmjKS694KI?=
+ =?us-ascii?Q?x218OebgdczLEDHrBZOFi+L6sE1iDTyW8r1MjYNjADseyOpZBbIzaQji6lQG?=
+ =?us-ascii?Q?rb9zZu/Vos7wNnrq3M6rERI7avFt9ShWxn9HYCIB+SeY6Q32LLTuLVeUKBfv?=
+ =?us-ascii?Q?Ra3QCM6nyCpfZPtOcD0+3dR28vj5cUalFI5EYwtqn39J9+fmik1oQw4GjHtN?=
+ =?us-ascii?Q?DDFRgIkRMhngnavNjq0yLkbFl+qcWoM38d/M9eTQCEGy4EK/ALGGq1BfbXQ5?=
+ =?us-ascii?Q?SYHrlE7ewnfAnp5Dcf/hYEvlIjOL30oH1f30Xx2AJvXfTy/S+lw1zZJ/fW+M?=
+ =?us-ascii?Q?k+fjmet/tqE9Xj6jM27S9n/tIWF0zL0YrmgHi9kkRwTZLuDRHXpA7Dqe4q0N?=
+ =?us-ascii?Q?TNh5u/tzHi0Xy3jIU/Rek4OY17rjCe2B92lonq0ql897SFeuqp2yPslXdnOt?=
+ =?us-ascii?Q?x8QXceHTQlx8qwPz9rilLb35vuSV2rMRsii01XqtlZjl/50iTX1R?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6cced81d-566d-4a77-973b-08de9a30686b
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Apr 2026 14:16:23.4654
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: leFoA9I8YDZRW1hE1DkojXrrUK4nh2IIHt067mYdvzSL7m0nwBh/6yrQfhsowZcn9s2GzeEok7a3SqSuV6VKCg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY3P286MB2529
 
-On Mon, 13 Apr 2026 16:40:49 -0700
-Farhan Ali <alifm@linux.ibm.com> wrote:
+Endpoint controller drivers may integrate auxiliary blocks (e.g. DMA
+engines) whose register windows and descriptor memories metadata need to
+be exposed to a remote peer. Endpoint function drivers need a generic
+way to discover such resources without hard-coding controller-specific
+helpers.
 
-> On 4/13/2026 3:57 PM, Alex Williamson wrote:
-> > On Mon, 13 Apr 2026 14:06:06 -0700
-> > Farhan Ali <alifm@linux.ibm.com> wrote:
-> >  
-> >> For zPCI devices, we have platform specific error information. The platform
-> >> firmware provides this error information to the operating system in an
-> >> architecture specific mechanism. To enable recovery from userspace for
-> >> these devices, we want to expose this error information to userspace. Add a
-> >> new device feature to expose this information.
-> >>
-> >> Reviewed-by: Matthew Rosato <mjrosato@linux.ibm.com>
-> >> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
-> >> ---
-> >>   arch/s390/include/asm/pci.h      |  3 +++
-> >>   arch/s390/pci/pci_event.c        | 19 +++++++++++++++++++
-> >>   drivers/vfio/pci/vfio_pci_core.c |  2 ++
-> >>   drivers/vfio/pci/vfio_pci_priv.h |  9 +++++++++
-> >>   drivers/vfio/pci/vfio_pci_zdev.c | 31 +++++++++++++++++++++++++++++++
-> >>   include/uapi/linux/vfio.h        | 20 ++++++++++++++++++++
-> >>   6 files changed, 84 insertions(+)
-> >>
-> >> diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
-> >> index 9a6a4eb9d7c1..9c8ee97d7e8a 100644
-> >> --- a/arch/s390/include/asm/pci.h
-> >> +++ b/arch/s390/include/asm/pci.h
-> >> @@ -360,6 +360,9 @@ int zpci_clear_error_state(struct zpci_dev *zdev);
-> >>   int zpci_reset_load_store_blocked(struct zpci_dev *zdev);
-> >>   void zpci_start_mediated_recovery(struct zpci_dev *zdev);
-> >>   void zpci_stop_mediated_recovery(struct zpci_dev *zdev);
-> >> +void zpci_get_pending_error_and_count(struct zpci_dev *zdev,
-> >> +				      struct zpci_ccdf_err *ccdf,
-> >> +				      int *count);
-> >>   
-> >>   #ifdef CONFIG_NUMA
-> >>   
-> >> diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
-> >> index c279a9f50a64..c8714d4a32fa 100644
-> >> --- a/arch/s390/pci/pci_event.c
-> >> +++ b/arch/s390/pci/pci_event.c
-> >> @@ -74,6 +74,25 @@ static void zpci_store_pci_error(struct pci_dev *pdev,
-> >>   	zdev->pending_errs.count++;
-> >>   }
-> >>   
-> >> +void zpci_get_pending_error_and_count(struct zpci_dev *zdev,
-> >> +				      struct zpci_ccdf_err *ccdf,
-> >> +				      int *count)
-> >> +{
-> >> +	int head = 0;  
-> > Unnecessary.  Should also be a blank line between variable declaration
-> > and code.
-> >  
-> >> +	*count = 0;  
-> > But why do we zero this and not ccdf?  
-> 
-> I had thought of memsetting ccdf to 0, but the only caller right already 
-> initializes to 0. So didn't think it was needed.
+Add pci_epc_get_aux_resources_count() / pci_epc_get_aux_resources() and
+the corresponding pci_epc_ops callbacks. The count helper returns the
+number of available resources, while the get helper fills a
+caller-provided array of resources described by type, physical address
+and size, plus type-specific metadata.
 
-The caller initializes count as well.
+Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
+Suggested-by: Frank Li <Frank.li@nxp.com>
+Signed-off-by: Koichiro Den <den@valinux.co.jp>
+---
+Changes in v14:
+  - Fix whitespace and alignment issues reported by checkpatch.pl.
 
-> >> +
-> >> +	guard(mutex)(&zdev->pending_errs_lock);
-> >> +	if (zdev->pending_errs.count) {
-> >> +		head = zdev->pending_errs.head % ZPCI_ERR_PENDING_MAX;
-> >> +		memcpy(ccdf, &zdev->pending_errs.err[head],
-> >> +		       sizeof(struct zpci_ccdf_err));
-> >> +		zdev->pending_errs.head++;
-> >> +		zdev->pending_errs.count--;
-> >> +		*count = zdev->pending_errs.count;
-> >> +	}
-> >> +}  
-> > You've describe in the uAPI now how pec = 0 means no error, but why not
-> > remove that ambiguity altogether and return -ENOMSG in that case.  We
-> > could start here and pass it through:
-> >
-> > {
-> > 	int head;
-> >
-> > 	guard(mutex)(&zdev->pending_errs_lock);
-> >
-> > 	if (!zdev->pending_errs.count)
-> > 		return -ENOMSG;
-> >
-> > 	head = zdev->pending_errs.head % ZPCI_ERR_PENDING_MAX;
-> > 	memcpy(ccdf, &zdev->pending_errs.err[head],
-> > 	       sizeof(struct zpci_ccdf_err));
-> > 	zdev->pending_errs.head++;
-> > 	zdev->pending_errs.count--;
-> > 	*count = zdev->pending_errs.count;
-> >
-> > 	return 0;
-> > }  
-> 
-> I had thought of returning an error (ENOENT was what I was going with), 
-> but perhaps I misunderstood your comment from v12 about specifying pec = 
-> 0 and pending error = 0 as not being an error. My assumption was as this 
-> is not an error we shouldn't return an error to userspace.
+ drivers/pci/endpoint/pci-epc-core.c | 80 +++++++++++++++++++++++++++++
+ include/linux/pci-epc.h             | 54 +++++++++++++++++++
+ 2 files changed, 134 insertions(+)
 
-I think I was trying to get clarity on how 0/0 is interpreted because
-it seems like a weak point of the uAPI.  We could make a more intuitive
-uAPI if we make the "I have no message of desired type" response an
-explicit, unique errno, rather than a reserved pec value.
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index 6c3c58185fc5..831b40458dcd 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -156,6 +156,86 @@ const struct pci_epc_features *pci_epc_get_features(struct pci_epc *epc,
+ }
+ EXPORT_SYMBOL_GPL(pci_epc_get_features);
+ 
++/**
++ * pci_epc_get_aux_resources_count() - get the number of EPC-provided auxiliary resources
++ * @epc: EPC device
++ * @func_no: function number
++ * @vfunc_no: virtual function number
++ *
++ * Some EPC backends integrate auxiliary blocks (e.g. DMA engines) whose control
++ * registers and/or descriptor memories can be exposed to the host by mapping
++ * them into BAR space. This helper queries how many such resources the backend
++ * provides.
++ *
++ * Return: the number of available resources on success, -EOPNOTSUPP if the
++ * backend does not support auxiliary resource queries, or another -errno on
++ * failure.
++ */
++int pci_epc_get_aux_resources_count(struct pci_epc *epc, u8 func_no,
++				    u8 vfunc_no)
++{
++	int count;
++
++	if (!epc || !epc->ops)
++		return -EINVAL;
++
++	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
++		return -EINVAL;
++
++	if (!epc->ops->get_aux_resources_count)
++		return -EOPNOTSUPP;
++
++	mutex_lock(&epc->lock);
++	count = epc->ops->get_aux_resources_count(epc, func_no,
++						  vfunc_no);
++	mutex_unlock(&epc->lock);
++
++	return count;
++}
++EXPORT_SYMBOL_GPL(pci_epc_get_aux_resources_count);
++
++/**
++ * pci_epc_get_aux_resources() - query EPC-provided auxiliary resources
++ * @epc: EPC device
++ * @func_no: function number
++ * @vfunc_no: virtual function number
++ * @resources: output array
++ * @num_resources: size of @resources array in entries
++ *
++ * Some EPC backends integrate auxiliary blocks (e.g. DMA engines) whose control
++ * registers and/or descriptor memories can be exposed to the host by mapping
++ * them into BAR space. This helper queries the backend for such resources.
++ *
++ * Return: 0 on success, -EOPNOTSUPP if the backend does not support auxiliary
++ * resource queries, or another -errno on failure.
++ */
++int pci_epc_get_aux_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
++			      struct pci_epc_aux_resource *resources,
++			      int num_resources)
++{
++	int ret;
++
++	if (!resources || num_resources <= 0)
++		return -EINVAL;
++
++	if (!epc || !epc->ops)
++		return -EINVAL;
++
++	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
++		return -EINVAL;
++
++	if (!epc->ops->get_aux_resources)
++		return -EOPNOTSUPP;
++
++	mutex_lock(&epc->lock);
++	ret = epc->ops->get_aux_resources(epc, func_no, vfunc_no, resources,
++					  num_resources);
++	mutex_unlock(&epc->lock);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(pci_epc_get_aux_resources);
++
+ /**
+  * pci_epc_stop() - stop the PCI link
+  * @epc: the link of the EPC device that has to be stopped
+diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+index 1eca1264815b..f247cf9bcf1a 100644
+--- a/include/linux/pci-epc.h
++++ b/include/linux/pci-epc.h
+@@ -61,6 +61,47 @@ struct pci_epc_map {
+ 	void __iomem	*virt_addr;
+ };
+ 
++/**
++ * enum pci_epc_aux_resource_type - auxiliary resource type identifiers
++ * @PCI_EPC_AUX_DOORBELL_MMIO: Doorbell MMIO, that might be outside the DMA
++ *                             controller register window
++ *
++ * EPC backends may expose auxiliary blocks (e.g. DMA engines) by mapping their
++ * register windows and descriptor memories into BAR space. This enum
++ * identifies the type of each exposable resource.
++ */
++enum pci_epc_aux_resource_type {
++	PCI_EPC_AUX_DOORBELL_MMIO,
++};
++
++/**
++ * struct pci_epc_aux_resource - a physical auxiliary resource that may be
++ *                               exposed for peer use
++ * @type:       resource type, see enum pci_epc_aux_resource_type
++ * @phys_addr:  physical base address of the resource
++ * @size:       size of the resource in bytes
++ * @bar:        BAR number where this resource is already exposed to the RC
++ *              (NO_BAR if not)
++ * @bar_offset: offset within @bar where the resource starts (valid iff
++ *              @bar != NO_BAR)
++ * @u:          type-specific metadata
++ */
++struct pci_epc_aux_resource {
++	enum pci_epc_aux_resource_type type;
++	phys_addr_t phys_addr;
++	resource_size_t size;
++	enum pci_barno bar;
++	resource_size_t bar_offset;
++
++	union {
++		/* PCI_EPC_AUX_DOORBELL_MMIO */
++		struct {
++			int irq; /* IRQ number for the doorbell handler */
++			u32 data; /* write value to ring the doorbell */
++		} db_mmio;
++	} u;
++};
++
+ /**
+  * struct pci_epc_ops - set of function pointers for performing EPC operations
+  * @write_header: ops to populate configuration space header
+@@ -84,6 +125,9 @@ struct pci_epc_map {
+  * @start: ops to start the PCI link
+  * @stop: ops to stop the PCI link
+  * @get_features: ops to get the features supported by the EPC
++ * @get_aux_resources_count: ops to get the number of controller-owned
++ *                           auxiliary resources
++ * @get_aux_resources: ops to retrieve controller-owned auxiliary resources
+  * @owner: the module owner containing the ops
+  */
+ struct pci_epc_ops {
+@@ -115,6 +159,11 @@ struct pci_epc_ops {
+ 	void	(*stop)(struct pci_epc *epc);
+ 	const struct pci_epc_features* (*get_features)(struct pci_epc *epc,
+ 						       u8 func_no, u8 vfunc_no);
++	int	(*get_aux_resources_count)(struct pci_epc *epc, u8 func_no,
++					   u8 vfunc_no);
++	int	(*get_aux_resources)(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
++				     struct pci_epc_aux_resource *resources,
++				     int num_resources);
+ 	struct module *owner;
+ };
+ 
+@@ -343,6 +392,11 @@ int pci_epc_start(struct pci_epc *epc);
+ void pci_epc_stop(struct pci_epc *epc);
+ const struct pci_epc_features *pci_epc_get_features(struct pci_epc *epc,
+ 						    u8 func_no, u8 vfunc_no);
++int pci_epc_get_aux_resources_count(struct pci_epc *epc, u8 func_no,
++				    u8 vfunc_no);
++int pci_epc_get_aux_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
++			      struct pci_epc_aux_resource *resources,
++			      int num_resources);
+ enum pci_barno
+ pci_epc_get_first_free_bar(const struct pci_epc_features *epc_features);
+ enum pci_barno pci_epc_get_next_free_bar(const struct pci_epc_features
+-- 
+2.51.0
 
-> >> +EXPORT_SYMBOL_GPL(zpci_get_pending_error_and_count);
-> >> +
-> >>   void zpci_start_mediated_recovery(struct zpci_dev *zdev)
-> >>   {
-> >>   	guard(mutex)(&zdev->pending_errs_lock);
-> >> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> >> index ad52abc46c04..5403730786a1 100644
-> >> --- a/drivers/vfio/pci/vfio_pci_core.c
-> >> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> >> @@ -1534,6 +1534,8 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
-> >>   		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
-> >>   	case VFIO_DEVICE_FEATURE_DMA_BUF:
-> >>   		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
-> >> +	case VFIO_DEVICE_FEATURE_ZPCI_ERROR:
-> >> +		return vfio_pci_zdev_feature_err(device, flags, arg, argsz);
-> >>   	default:
-> >>   		return -ENOTTY;
-> >>   	}
-> >> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
-> >> index fca9d0dfac90..4e7162234a2e 100644
-> >> --- a/drivers/vfio/pci/vfio_pci_priv.h
-> >> +++ b/drivers/vfio/pci/vfio_pci_priv.h
-> >> @@ -93,6 +93,8 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
-> >>   				struct vfio_info_cap *caps);
-> >>   int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev);
-> >>   void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev);
-> >> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
-> >> +			      void __user *arg, size_t argsz);
-> >>   #else
-> >>   static inline int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
-> >>   					      struct vfio_info_cap *caps)
-> >> @@ -107,6 +109,13 @@ static inline int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
-> >>   
-> >>   static inline void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev)
-> >>   {}
-> >> +
-> >> +static inline int vfio_pci_zdev_feature_err(struct vfio_device *device,
-> >> +					    u32 flags, void __user *arg,
-> >> +					    size_t argsz)
-> >> +{
-> >> +	return -ENOTTY;
-> >> +}
-> >>   #endif
-> >>   
-> >>   static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
-> >> diff --git a/drivers/vfio/pci/vfio_pci_zdev.c b/drivers/vfio/pci/vfio_pci_zdev.c
-> >> index 0658095ac5b1..ee1647f0ffe6 100644
-> >> --- a/drivers/vfio/pci/vfio_pci_zdev.c
-> >> +++ b/drivers/vfio/pci/vfio_pci_zdev.c
-> >> @@ -141,6 +141,37 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
-> >>   	return ret;
-> >>   }
-> >>   
-> >> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
-> >> +			      void __user *arg, size_t argsz)
-> >> +{
-> >> +	struct vfio_device_feature_zpci_err err = {};
-> >> +	struct vfio_pci_core_device *vdev;
-> >> +	struct zpci_ccdf_err ccdf = {};
-> >> +	struct zpci_dev *zdev;
-> >> +	int pending_errors = 0;
-> >> +	int ret;
-> >> +
-> >> +	vdev = container_of(device, struct vfio_pci_core_device, vdev);
-> >> +	zdev = to_zpci(vdev->pdev);
-> >> +	if (!zdev)
-> >> +		return -ENODEV;
-> >> +
-> >> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_GET,
-> >> +				 sizeof(err));
-> >> +	if (ret != 1)
-> >> +		return ret;
-> >> +
-> >> +	zpci_get_pending_error_and_count(zdev, &ccdf, &pending_errors);
-> >> +
-> >> +	err.version = 1;
-> >> +	err.pec = ccdf.pec;
-> >> +	err.pending_errors = pending_errors;
-> >> +	if (copy_to_user(arg, &err, sizeof(err)))
-> >> +		return -EFAULT;
-> >> +
-> >> +	return 0;
-> >> +}
-> >> +
-> >>   int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
-> >>   {
-> >>   	struct zpci_dev *zdev = to_zpci(vdev->pdev);
-> >> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> >> index 5de618a3a5ee..2980ca39dd38 100644
-> >> --- a/include/uapi/linux/vfio.h
-> >> +++ b/include/uapi/linux/vfio.h
-> >> @@ -1534,6 +1534,26 @@ struct vfio_device_feature_dma_buf {
-> >>    */
-> >>   #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
-> >>   
-> >> +/**
-> >> + * VFIO_DEVICE_FEATURE_ZPCI_ERROR feature provides PCI error information to
-> >> + * userspace for vfio-pci devices on s390x. On s390x, PCI error recovery
-> >> + * involves platform firmware and notification to operating system is done
-> >> + * by architecture specific mechanism. Exposing this information to
-> >> + * userspace allows it to take appropriate actions to handle an
-> >> + * error on the device. The pending_errors provide any additional errors
-> >> + * pending for the device, and userspace should read until zero. A value of
-> >> + * 0 for pending_errors and pec would indicate no pending errors that need
-> >> + * to be handled.
-> >> + */
-> >> +
-> >> +struct vfio_device_feature_zpci_err {
-> >> +	__u8 version;
-> >> +	__u8 pending_errors;
-> >> +	__u16 pec;
-> >> +};  
-> > I assume .version is for compatibility, but we don't define a strategy
-> > for using it or specify what the version should be for this table.  It
-> > doesn't seem like there's actually an value-add to having it.  
-> 
-> Its possible we may need to extend this structure in the future if we 
-> want to report more information to userspace. I at least want the 
-> flexibility to do so. We had some discussion around this [1] in an 
-> earlier version. I was trying to follow similar versioning pattern we 
-> had around vfio-pci/zdev structures.
-
-IMHO, the version field is a dead end towards achieving this,
-especially if we don't specify from the onset the expected version
-value or the compatibility semantics.  All that's going to happen is
-that some userspace will hard code that it understands version 1
-because that's what's currently reported and matches the struct defined
-here, and you can never ever report anything other than version 1
-without breaking that user.  At that point you need to come up with
-some other means for the user to opt-in to a new version, whether it's
-triggered by another feature (as we did with the PRECOPY_INFOv2 above
-this), or we reimplement the whole v2 feature.
-
-> > I'm also not clear why we need to report .pending_errors.  It mostly
-> > seems like another ambiguous feature of this API.  The value seems
-> > volatile and the suggestion is to read until zero, so why provide the
-> > value at all, the user can just read until -ENOMSG.  
-> 
-> Since we don't explicitly return an error indicating there are no 
-> available pci errors to handle, was why I added it. Is the preference to 
-> just return linux error code here?
-
-I think that can be interpreted as the .pending_errors field exists to
-work around a deficiency in the uAPI rather than modifying the uAPI to
-something that can explicitly return -ENOMSG.  Feels like we should
-just start with a better uAPI.  Thanks,
-
-Alex
