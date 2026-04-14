@@ -1,60 +1,32 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4941A16A956;
-	Tue, 14 Apr 2026 18:46:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6A9B71A01BE;
+	Tue, 14 Apr 2026 19:44:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776192364; cv=none; b=KcrQetnJCYHvu3YIKP1y5SHIiLDtTt5KIRHD+scJLlhEUtsl9e1lZEUnJcx1h3pdshgSBSfTz4c+69UBkXtAN73vOwqy5/cJfiu74XF2MxCLEjz5uByH1kSSupxnKG2C389z8RsUlpIDtDpCwPYOlOuChQlZ+FywxqxG53EcCds=
+	t=1776195843; cv=none; b=V8c397LHOE2ZNbWglrJz3zFkaY+BXoP9bOjQW3gRAaxIgZJCNd8jhobNv98acIKN2Xvxf89f/7vJB8++qUBEHopiHsfzJOfiaHXcLxU4BsO62HQdP7S9X6mGiUYu4mz7/umfwgzOiN2/LNTXvZnqh+AFq4W7w7fVLjsEADRfaec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776192364; c=relaxed/simple;
-	bh=4BVLYJNCB08LxpFtuxxwJ6fNFl8wv4GUHgOEmwq7+Ns=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=D5HfTpGwSZ9IaGXuM//J4cR9NpEHfRllqJBNkir+NDbj/FXxVTspsuKnN9QHO9NuehIz3hB7gUv07mlTSunjt/dRGqnFH/+rZVVxF+DPpGfwD1FbBc19x5WLMvcCgW6OzYIVBc25GeGQKy7QxHu45rTBOma5Akxu0cCpQ7f0v/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=LQpUY1gs; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1776195843; c=relaxed/simple;
+	bh=8uUybN5gPpkOejRZ6N/OcR8at46nXE+VEYeby7KptWE=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=lZY6+KBfi3+9aTUajKYRnIVfuSo+3UK65ARiRdwZXNkYPNA7uIJs2B11gwc/h9WnBwmbGnMGLj210BNVS0aDFRUBHgMhSNCgJ499JgwDhzwSJerpclnpl2gdDJMERTbyT9DnxTEDNb5EqtTbHonlX4lIEL0tyhVLwVjli4+UWlw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=PrLOGibe; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="LQpUY1gs"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63EEEHpb1859874;
-	Tue, 14 Apr 2026 18:45:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=pU/Lmt
-	NGfbrSzTl3fxBiZbfR12td7Tos12b+70Z29EY=; b=LQpUY1gs5gmkHjO2Q1NwBT
-	rDyYn08rWcY0uZKbKSSUjAvhtpZzJ8X+OogqUo/5nlqdB/W7uCKuP29cCKoRR/2s
-	UOOgwt/oXOZIf1N/c10YwCfl2F5pO4x7eemTORGZeqYp9fjQ3i2FoHu5TD8oUQ29
-	6Hl3MF61J5N3VbsYZWJsWqYt8JT/oUeCP3bDX05sQzhteCRpxyvU1cQiZsoW1NMl
-	0fVWrp99XpVzx7qERnX3HI2y/ZCG9WQ7g3TRSxYaZ1Av9jll3W4tEURbk+ftURn/
-	Z1WDKyLXPcUFdP2Z8AiwHq0zd3RZjK1NfRlo50NMu/mMm81LAAtRijuJOZdUWP3g
-	==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dh89pcdxg-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 14 Apr 2026 18:45:56 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 63EHjFFx025831;
-	Tue, 14 Apr 2026 18:45:55 GMT
-Received: from smtprelay05.dal12v.mail.ibm.com ([172.16.1.7])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4dg3b1ju11-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 14 Apr 2026 18:45:55 +0000
-Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
-	by smtprelay05.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 63EIjsOj32375360
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 14 Apr 2026 18:45:55 GMT
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id DF4C258057;
-	Tue, 14 Apr 2026 18:45:54 +0000 (GMT)
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 35A3E58058;
-	Tue, 14 Apr 2026 18:45:54 +0000 (GMT)
-Received: from [9.61.240.138] (unknown [9.61.240.138])
-	by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Tue, 14 Apr 2026 18:45:54 +0000 (GMT)
-Message-ID: <9d68b944-bd65-495b-b69c-e0d6758f15ee@linux.ibm.com>
-Date: Tue, 14 Apr 2026 11:45:54 -0700
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="PrLOGibe"
+Received: from [192.168.201.246] (unknown [4.194.122.162])
+	by linux.microsoft.com (Postfix) with ESMTPSA id AA20220B7128;
+	Tue, 14 Apr 2026 12:43:52 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com AA20220B7128
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1776195842;
+	bh=2sCL/WvVpitYcQBQMCxOqwbqrjUxJqtzArQ8i2O5xXY=;
+	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
+	b=PrLOGibedMeSwMPv2HpQ8y+V/nZM+s6uNg1WXCtIzzOv10gyHiIY6LpDKf+6cH0Cn
+	 9/NeH8gRxsneTMEubxcKCndOC3iwAcYDiwbBuvgIJMpXXwOrq/YA1QrybZ3tn8k+Yd
+	 +VsbIQ1uOutVAQNpPOISr9NG/Z6DK4GA5Tc3DU5U=
+Message-ID: <c1c86f2d-3535-45bb-86dd-90c3b05c16fb@linux.microsoft.com>
+Date: Tue, 14 Apr 2026 12:43:48 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -62,144 +34,169 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v13 5/7] vfio-pci/zdev: Add a device feature for error
- information
-To: Alex Williamson <alex@shazbot.org>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, helgaas@kernel.org, lukas@wunner.de,
-        clg@redhat.com, kbusch@kernel.org, schnelle@linux.ibm.com,
-        mjrosato@linux.ibm.com
-References: <20260413210608.2912-1-alifm@linux.ibm.com>
- <20260413210608.2912-6-alifm@linux.ibm.com>
- <20260413165758.0f87312b@shazbot.org>
- <cd9d7977-8b36-428c-81f2-c14b66173763@linux.ibm.com>
- <20260414081238.23e2cecc@shazbot.org>
- <5f26af4c-9584-4c70-9702-0a3bcd0c4ad1@linux.ibm.com>
- <20260414114132.31481b48@shazbot.org>
+Cc: easwar.hariharan@linux.microsoft.com,
+ Yu Zhang <zhangyu1@linux.microsoft.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+ "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "kys@microsoft.com" <kys@microsoft.com>,
+ "haiyangz@microsoft.com" <haiyangz@microsoft.com>,
+ "wei.liu@kernel.org" <wei.liu@kernel.org>,
+ "decui@microsoft.com" <decui@microsoft.com>,
+ "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+ "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+ "mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>, "arnd@arndb.de"
+ <arnd@arndb.de>, "joro@8bytes.org" <joro@8bytes.org>,
+ "will@kernel.org" <will@kernel.org>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>,
+ "jacob.pan@linux.microsoft.com" <jacob.pan@linux.microsoft.com>,
+ "nunodasneves@linux.microsoft.com" <nunodasneves@linux.microsoft.com>,
+ "mrathor@linux.microsoft.com" <mrathor@linux.microsoft.com>,
+ "peterz@infradead.org" <peterz@infradead.org>,
+ "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>
+Subject: Re: [RFC v1 1/5] PCI: hv: Create and export hv_build_logical_dev_id()
+To: Michael Kelley <mhklinux@outlook.com>
+References: <20251209051128.76913-1-zhangyu1@linux.microsoft.com>
+ <20251209051128.76913-2-zhangyu1@linux.microsoft.com>
+ <SN6PR02MB41570FC0D7EA1364FB48CD1ED485A@SN6PR02MB4157.namprd02.prod.outlook.com>
+ <162c901f-69a7-420a-9148-a469d5a8ca4f@linux.microsoft.com>
+ <SN6PR02MB4157098A14BE63FCA8C0A70ED480A@SN6PR02MB4157.namprd02.prod.outlook.com>
+ <2dabc1b8-0cf0-4fc8-9cd4-cce60adfc05e@linux.microsoft.com>
+ <SN6PR02MB4157DC555A9EC7A73E2CB8CBD4582@SN6PR02MB4157.namprd02.prod.outlook.com>
+ <a05fa5b8-3b82-4c5f-8fff-fe10b3f71e87@linux.microsoft.com>
+ <SN6PR02MB4157BA7B07D328969EEBF2ADD4252@SN6PR02MB4157.namprd02.prod.outlook.com>
+ <e7b3d040-b504-4665-a3ff-8d20261400ca@linux.microsoft.com>
+ <SN6PR02MB415741EA3C27630199BCEAA3D4252@SN6PR02MB4157.namprd02.prod.outlook.com>
+From: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
 Content-Language: en-US
-From: Farhan Ali <alifm@linux.ibm.com>
-In-Reply-To: <20260414114132.31481b48@shazbot.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: 6yF0ZApbGCOMcO6lu5aPliNWH2KYs_n9
-X-Proofpoint-ORIG-GUID: 6yF0ZApbGCOMcO6lu5aPliNWH2KYs_n9
-X-Authority-Analysis: v=2.4 cv=WbE8rUhX c=1 sm=1 tr=0 ts=69de8b64 cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
- a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=Y2IxJ9c9Rs8Kov3niI8_:22 a=VnNF1IyMAAAA:8
- a=g5-iASi6csL-DJVLufsA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDE0MDE3MSBTYWx0ZWRfX91s2XLUgY+FR
- 3oNusot9TSkXQzrIttRr5w36U8nA1QRjOqo2CFUd/J9KjkCsDWIsH2b9hxW93IPh7jaLsl6XpGK
- abI0sD/NABngR6bnmZVaSH/XiIytUCozT1SrnexScipNgKM6g2z2fzqk7KodCgqOSqx2jx0bV/t
- 9KIhasUXRQPEbzlvIZI7nqbA8HNLJak12kMifnxnoqj7k6mezWA0ue4IXk8hNppdRmKvneyctmC
- 835hwSqUw6/2tqUyTOXP+M89inQ69+mMrM5wFhLGQi8oLZGwhkqAI6WS96422G2AgenDrGFCx8F
- WiMlVfeCpROlqpKZpsWl+Vu4s3BabKXceSYWX/0E+/44AQq0IIHEYwJSwWvPCmV9DkW5IYg61I9
- p+AQpwhdMXsX6ue4dvAoa5vshJtRmO8U2hKTFYv1eM01GtnUhUqXDMpOT15S259RJD8l4tPXE7G
- vI/WMr/+IunUwioJnJA==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-14_03,2026-04-13_04,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 bulkscore=0 priorityscore=1501 spamscore=0 clxscore=1015
- phishscore=0 impostorscore=0 adultscore=0 malwarescore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604070000 definitions=main-2604140171
+In-Reply-To: <SN6PR02MB415741EA3C27630199BCEAA3D4252@SN6PR02MB4157.namprd02.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-
-On 4/14/2026 10:41 AM, Alex Williamson wrote:
-> On Tue, 14 Apr 2026 10:13:22 -0700
-> Farhan Ali <alifm@linux.ibm.com> wrote:
->> On 4/14/2026 7:12 AM, Alex Williamson wrote:
->>> On Mon, 13 Apr 2026 16:40:49 -0700
->>> Farhan Ali <alifm@linux.ibm.com> wrote:
->>>> On 4/13/2026 3:57 PM, Alex Williamson wrote:
->>>>> On Mon, 13 Apr 2026 14:06:06 -0700
->>>>> Farhan Ali <alifm@linux.ibm.com> wrote:
->>>>>> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
->>>>>> index 5de618a3a5ee..2980ca39dd38 100644
->>>>>> --- a/include/uapi/linux/vfio.h
->>>>>> +++ b/include/uapi/linux/vfio.h
->>>>>> @@ -1534,6 +1534,26 @@ struct vfio_device_feature_dma_buf {
->>>>>>      */
->>>>>>     #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
->>>>>>     
->>>>>> +/**
->>>>>> + * VFIO_DEVICE_FEATURE_ZPCI_ERROR feature provides PCI error information to
->>>>>> + * userspace for vfio-pci devices on s390x. On s390x, PCI error recovery
->>>>>> + * involves platform firmware and notification to operating system is done
->>>>>> + * by architecture specific mechanism. Exposing this information to
->>>>>> + * userspace allows it to take appropriate actions to handle an
->>>>>> + * error on the device. The pending_errors provide any additional errors
->>>>>> + * pending for the device, and userspace should read until zero. A value of
->>>>>> + * 0 for pending_errors and pec would indicate no pending errors that need
->>>>>> + * to be handled.
->>>>>> + */
->>>>>> +
->>>>>> +struct vfio_device_feature_zpci_err {
->>>>>> +	__u8 version;
->>>>>> +	__u8 pending_errors;
->>>>>> +	__u16 pec;
->>>>>> +};
->>>>> I assume .version is for compatibility, but we don't define a strategy
->>>>> for using it or specify what the version should be for this table.  It
->>>>> doesn't seem like there's actually an value-add to having it.
->>>> Its possible we may need to extend this structure in the future if we
->>>> want to report more information to userspace. I at least want the
->>>> flexibility to do so. We had some discussion around this [1] in an
->>>> earlier version. I was trying to follow similar versioning pattern we
->>>> had around vfio-pci/zdev structures.
->>> IMHO, the version field is a dead end towards achieving this,
->>> especially if we don't specify from the onset the expected version
->>> value or the compatibility semantics.  All that's going to happen is
->>> that some userspace will hard code that it understands version 1
->>> because that's what's currently reported and matches the struct defined
->>> here, and you can never ever report anything other than version 1
->>> without breaking that user.  At that point you need to come up with
->>> some other means for the user to opt-in to a new version, whether it's
->>> triggered by another feature (as we did with the PRECOPY_INFOv2 above
->>> this), or we reimplement the whole v2 feature.
->> My understanding was based on how we version some of the capability
->> structures for zdev (in include/uapi/linux/vfio_zdev.h). If we wanted to
->> provide more information to userspace in the future, what would be
->> preferred approach? Do we need to explicitly define a v2 feature? I am
->> open to suggestions on this.
+On 4/14/2026 11:06 AM, Michael Kelley wrote:
+> From: Easwar Hariharan <easwar.hariharan@linux.microsoft.com> Sent: Tuesday, April 14, 2026 10:42 AM
 >>
->> If we need to define v2 explicitly in the future, then yes I agree we
->> can simplify it to return only the PEC code (or an error code otherwise).
-> Maybe I'm reading too much into it, but it sounds like you already have
-> plans to expand this.
->
-> The existing zdev structures seem to rely on the version field in the
-> capability header and maybe you've gotten away with bumping the version
-> without breaking userspace, but it's fragile.  AFAICT, the ioctls do not
-> define a versioning strategy where vN+1 only adds fields to vN, so all
-> it takes is one outspoken userspace tool that hard codes its
-> compatibility to a specific version to become a problem for further
-> updates.
->
-> Likewise this feature doesn't define a versioning policy for userspace
-> to follow.  I'm sure there are other examples within vfio that are
-> problematic, but let's try not to create more.
->
-> If you want to use a version, then also define what the version is and
-> what the compatibility policy is for future versions.  A flags field is
-> another option that we've used extensively in vfio.  The version field
-> might be better for incremental expansion of the structure, while flags
-> can address specific fields more directly, ex. a reserved field being
-> redefined.  Thanks,
->
-> Alex
+> 
+> [snip]
+>  
+>>>> Thanks for that explanation, that makes sense. I didn't see any serialization
+>>>> that would ensure that the VMBus path to communicate the child devices on the bus
+>>>> would complete before pci_scan_device() finds and finalizes the pci_dev. I think it's
+>>>
+>>> FWIW, hv_pci_query_relations() should be ensuring that the communication
+>>> has completed before it returns. It does a wait_for_reponse(), which ensures
+>>> that the Hyper-V host has sent the PCI_BUS_RELATIONS[2] response. However,
+>>> that message spins off work to the hbus->wq workqueue, so
+>>> hv_pci_query_relations() has a flush_workqueue() so ensure everything that
+>>> was queued has completed.
+>>
+>> Hm, I read the comment for the flush_workqueue() as addressing the "PCI_BUS_RELATIONS[2]
+>> message arrived before we sent the QUERY_BUS_RELATIONS message" race case, not as an
+>> "all child devices have definitely been received and processed in response to our
+>> QUERY_BUS_RELATIONS message". Also, knowing very little about the VMBus contract, I
+>> discounted the 100 ms timeout in wait_for_response() as a serialization guarantee.
+> 
+> Yeah, that timeout is so that the code can wake up every 100 ms to check
+> if the device has been rescinded (i.e., removed). If the device isn't
+> rescinded, wait_for_response() waits forever until a response comes in.
 
-Just wanted to understand and clarify if we can associate multiple 
-fields with a feature flag? I think in that case flags would be better 
-here and given its also something that is widely used in vfio. I am just 
-trying to figure out the best way we can extend this without a lot of 
-code churn in the future.
+I don't know how I missed that. :(
 
-I appreciate the feedback and discussion on this.
+>>
+>> Chalk it up to previous experience dealing with hardware that's *supposed* to be
+>> spec-compliant and complete initialization within specified timings. :)
+>>
+>> I see now that the flush is sufficient though.
+>>
+>>>
+>>> Thinking more about the "hv_pcibus_installed" case, if that path is ever
+>>> triggered, I don't think anything needs to be done with the logical device ID.
+>>> The vPCI device has already been fully initialized on the Linux side, and it's
+>>> logical device ID would not change.
+>>>
+>>> So I think you could construct the full logical device ID once
+>>> hv_pci_query_relations() returns to hv_pci_probe().
+>>
+>> Let me think about this more and decide between the logical ID and full bus GUID
+>> options.
+>>
+>>>
+>>>> safest to take the approach to communicate the GUID, and find the function number from
+>>>> the pci_dev. This does mean that there will be an essentially identical copy of
+>>>> hv_build_logical_dev_id() in the IOMMU code, but a comment can explain that.
+>>>
+>>> With this alternative approach, is there a need to communicate the full
+>>> GUID to the pvIOMMU drvier? Couldn't you just communicate bytes 4 thru
+>>> 7, which would be logical device ID minus the function number?
+>>
+>> Yes, we could just communicate bytes 4 through 7 but the pvIOMMU version of the build logical
+>> ID function would diverge from the pci-hyperv version. I figured if we say (in a comment)
+>> that this is the same ID as generated in pci-hyperv, it's better for future readers to see it
+>> to be clearly identical at first glance.
+>>
+>> It's also possible to change the pci-hyperv function to only take bytes 4 through 7 instead of the
+>> full GUID, but I rather think we don't need that impedance mismatch of bytes 4 through 7 of the
+>> GUID becoming bytes 0 through 3 of a u32.
+>>
+>>>
 
-Thanks
+<snip>
 
-Farhan
+>>
+>>>>>>>
+>>>>>>> I don't think the pci-hyperv driver even needs to tell the IOMMU driver to
+>>>>>>> remove the information if a PCI pass-thru device is unbound or removed, as
+>>>>>>> the logical device ID will be the same if the device ever comes back. At worst,
+>>>>>>> the IOMMU driver can simply replace an existing logical device ID if a new one
+>>>>>>> is provided for the same PCI domain ID.
+>>>>>>
+>>>>>> As above, replacing a unique GUID when a result is found for a non-unique
+>>>>>> key value may be prone to failure if it happens that the device that came "back"
+>>>>>> is not in fact the same device (or class of device) that went away and just happens
+>>>>>> to, either due to bytes 4 and 5 being identical, or due to collision in the
+>>>>>> pci_domain_nr_dynamic_ida, have the same domain number.
+>>>>
+>>>> Given the vPCI team's statements (above), I think we will need to handle unbind or
+>>>> removal and ensure the pvIOMMU drivers data structure is invalidated when either
+>>>> happens.
+>>>
+>>> The generic PCI code should handle detaching from the pvIOMMU. So I'm assuming
+>>> your statement is specifically about the mapping from domain ID to logical device ID.
+>>
+>> Yes, apologies for the vagueness (again).
+>>
+>>> I still think removing it may be unnecessary since adding a mapping for a new vPCI
+>>> device with the same domain ID but different logical device ID could just overwrite
+>>> any existing mapping. And leaving a dead mapping in the pvIOMMU data structures
+>>> doesn’t actually hurt anything. On the other hand, removing/invalidating it is
+>>> certainly more tidy and might prevent some confusion down the road.
+>>>
+>>
+>> Yes, if the data structure maps domain -> logical ID, we can do the overwrite as you say.
+>> With my approach of informing the pvIOMMU driver of the entire (bus) GUID, we would want
+>> to be careful that we don't assume the 1:1 bus<->device case and overwrite an existing
+>> device entry with a new device that's on the same bus.
+> 
+> Yes, that's a valid point.  I was assuming that the pvIOMMU would use the
+> domain ID at the lookup key, since the domain ID is directly available from the
+> struct pci_dev that is an input parameter to the IOMMU functions. But in the
+> not 1:1 case, that domain ID might refer to a bus with multiple functions. The
+> logical device IDs for those devices will be the same except for the low order
+> 3 bits that encode with the function number. So maybe the domain ID maps
+> to a partial logical device ID, and the pvIOMMU driver must always add in the
+> function number so the not 1:1 case works.
 
+Agreed.
+
+> 
+> Would the pvIOMMU driver do anything with the full GUID, except extract
+> bytes 4 through 7? There's no way I see to use the full GUID as the lookup
+> key.
+> 
+
+No, the hypercalls only use the logical ID, so the rest of the GUID is unused.
+
+Thanks,
+Easwar (he/him)
