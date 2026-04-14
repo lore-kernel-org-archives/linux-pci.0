@@ -1,123 +1,127 @@
-Received: from mx0a-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11547248881;
-	Tue, 14 Apr 2026 08:17:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4574F394797;
+	Tue, 14 Apr 2026 08:28:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776154669; cv=none; b=YHth7ky1miwYWQThHICww1xQMSvWSMxEKyHJ9JV9oZ2UlDF0JGUWuEzAE7UVWfVaKYUt7B8+mAjPVB2o0Hc/ffffu72gAdrpce2YUB38Ojk3mC28BcYAsCZKcP8Nz0z3wH8F4wVU9dbUNSu0TP/C5gpnDD4zXrE7ZKB5mq63HLg=
+	t=1776155313; cv=none; b=G/Z5loJUJESfuxUTbwJLQYpytYgyiej3OEkFYEGKiXzElMaWTkwKJn30okYaTvjuRgBN/Q7rdpeWF/E47yPtw1YprlfNo+AYtnaG+S19Te+B1kquEbwjyAhd0TNqUwSUYgzW+EiYaMOnMMghFt/Hde2qPw46hfz09VkqK4QgBcM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776154669; c=relaxed/simple;
-	bh=jotw/qlnbEICEuGbOPe8n0ek2CAFz4Obecfjdb4BVhM=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=gnkiiuscGULZwXTiducZoRkI/neeJB5ioyQPMNmlbIAAsI3QmhKTLjER/CyfF2fzyBRJz/RPyeTdqD3/nUZnp2tQDEeJURIo3/L4v/uitM1LQ/imL0E+yblYCOXf8K/bV+qqj647Qe4xDQQOkUGTwADmwWtjBsdBuLDywSwLT4I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=Yr0gzlN+; arc=none smtp.client-ip=67.231.148.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
+	s=arc-20240116; t=1776155313; c=relaxed/simple;
+	bh=E8vQKyt9MpxoC9XzgyedL1hL744D9xnu3AxzYNuYnlk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gK7wQzdefrd/JnpAIqaPnjpkWj5rIpjMciOcTWIN5rAoixkwaAVC0q2MhXmRpmmg2Zy1s/9oGM47msC0aGkMSE+RHtwf6pkJaQd1g1mwBQTlzeLxW8ZSvNAu7LxiwnTwICqbQqQ3gVYv+FnwKUnicWKC2Ggkqjuly0h88urhEbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nrqrQBvv; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Yr0gzlN+"
-Received: from pps.filterd (m0431384.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63DLAAZB2633898;
-	Tue, 14 Apr 2026 01:17:38 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=pfpt0220; bh=gNNg448gdtUS+tAAC0N3jqL
-	6fwbj0HrHTEoB0pDAWaA=; b=Yr0gzlN+ZT8gSiQ1l7GEIW7rzEyCtc0z8JN4Ic7
-	R1QV0TSmTF+bzDCEelXTASNO6gnO7I2gjgM2+9GKAc++u2J/kVItLBGlEP60QNSP
-	ZVHPa0vwZzkt7Ef6RYqEgd2PlXITCoaqLtTMDa0uavLqQ/5er8KyHn3FBSO5gdGm
-	XziM6fL0tr193i/ZkjFC0Lx/1xmo/YPVnk+uiBGRnyPoYGdUeNd6O2bNaA+arZ96
-	A2RM5rgxBlw7rPQYRcZuLEbZh70oeupppZZ+/XcLfVX7eUjBjdBw+Pxdgag4vwYX
-	EnzaKF8nB+IchPyelWY+8118W69LD9xMV/fhTFmdbp8Nj1A==
-Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 4dh85b973n-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 14 Apr 2026 01:17:37 -0700 (PDT)
-Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
- DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Tue, 14 Apr 2026 01:17:37 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
- (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Tue, 14 Apr 2026 01:17:37 -0700
-Received: from rkannoth-OptiPlex-7090.. (unknown [10.28.36.165])
-	by maili.marvell.com (Postfix) with ESMTP id 78E8C3F7043;
-	Tue, 14 Apr 2026 01:17:33 -0700 (PDT)
-From: Ratheesh Kannoth <rkannoth@marvell.com>
-To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <bhelgaas@google.com>
-CC: <will@kernel.org>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
-        <mani@kernel.org>, <robh@kernel.org>, <vidyas@nvidia.com>,
-        Ratheesh Kannoth
-	<rkannoth@marvell.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCH v2] PCI: host-common: Request bus reassignment when not probe-only
-Date: Tue, 14 Apr 2026 13:47:30 +0530
-Message-ID: <20260414081730.3864372-1-rkannoth@marvell.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nrqrQBvv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1776155311; x=1807691311;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=E8vQKyt9MpxoC9XzgyedL1hL744D9xnu3AxzYNuYnlk=;
+  b=nrqrQBvvTiXBx7uJRCIKr+aEfVCDIVpV7pbqWVDzXrJMc8ky3+iVLAkS
+   qEhhSVpI/KpE+TAPuD/Bea4SzphrKpJBgpHDY5LMkHEW4mT4SZ0wkdpmb
+   bJBzZEUb4KaRYYx6S9nmyCptWYjuOImXE9MEiXnfC/WX/5DbXqsV3Yzp8
+   jxvL2Y0mHVYzRDmS7eFl3tgBZ9Zs7e5jn4lcmIwl5jE5wPJ/YZ/hP3B0X
+   4HofToBWdlbuiDkKG/mdoUiFgKmfjcwfn/ujWTZcLezIaKKnS7cBhu3cG
+   8mFw46FyHoVgXHwHStOza2HcoDTGmLSAv1u1ODFSSwZ0ti5V3N3Oj8vFB
+   A==;
+X-CSE-ConnectionGUID: htvNGI4VRhWHr7IRHmz0vQ==
+X-CSE-MsgGUID: 2Iqbb7S3QpqjjhmNBDmj2Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11758"; a="87728045"
+X-IronPort-AV: E=Sophos;i="6.23,179,1770624000"; 
+   d="scan'208";a="87728045"
+Received: from orviesa007.jf.intel.com ([10.64.159.147])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2026 01:28:30 -0700
+X-CSE-ConnectionGUID: +bVRXWnVTl+UbC1B5PjMKw==
+X-CSE-MsgGUID: 6AC0PQEOQUaj+1BKtE2xJg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,179,1770624000"; 
+   d="scan'208";a="230255689"
+Received: from pgcooper-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.245.106])
+  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2026 01:28:23 -0700
+Date: Tue, 14 Apr 2026 11:28:20 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Chen-Yu Tsai <wenst@chromium.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	Rob Herring <robh@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Nathan Chancellor <nathan@kernel.org>,
+	Nicolas Schier <nicolas.schier@linux.dev>,
+	Hans de Goede <hansg@kernel.org>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Mark Pearson <mpearson-lenovo@squebb.ca>,
+	"Derek J. Clark" <derekjohn.clark@gmail.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Bartosz Golaszewski <brgl@kernel.org>, linux-serial@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org,
+	Stephan Gerhold <stephan.gerhold@linaro.org>,
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+	linux-acpi@vger.kernel.org,
+	Hans de Goede <johannes.goede@oss.qualcomm.com>,
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Subject: Re: [PATCH v7 0/8] Add support for handling PCIe M.2 Key E
+ connectors in devicetree
+Message-ID: <ad36pIu-0dutL7Nk@ashevche-desk.local>
+References: <20260326-pci-m2-e-v7-0-43324a7866e6@oss.qualcomm.com>
+ <20260413075459.GA2626902@google.com>
+ <fpcs4p62f35a5qyqwgm5ysa73stbysxcr62tkmmkrrcvsuf4t4@4ivukyqjey57>
+ <eeytuhqpgdz4do4tgtbmfntub2femtyq7bij7svhodpyjwaylx@j3gmvq2a2zqc>
+ <CAGXv+5E=tujhtZjwi6Qm7hk3Ks74UzTQHWq82NiTEw1+vYod5g@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDE0MDA3NiBTYWx0ZWRfX1bhEJ+fcl08Y
- 1j7VyRaCWjL+jGuUFTyDO2i/VRXoA6wDPByq8YD9WCLrdXe/AtoWod6iDZ1ysbdW3Mq4PUXX3hF
- pjYwWI5Uc1z2epF0JHTxHJwU98G1H6ol7ZScNvDqWVo9xrRbEAUnk+3LGMPaV2ueVTHeir7J6jy
- xrofM0/UlLUUDIqbUgsRB2NdHbMo2KymjZdkZ3KxOALpq+m/iWmwghtdkBrqHYsLPZJmocOWRjj
- L9FMkURg90j6rUd86HcH75UEbkv1j1I4Tt7uRHjsXfmIBrKw12QKmPN740UV4iWAtHsn8iO0KE/
- YGPB+4ZrX3g1KRnXn90RN5tLq8wLLxJtsXdVjwZHico9WuZ/y9ewusIh0znvxx3v45KLGyHzLzq
- BDHLgu+1dNwuz8o2UI2kwagvlPhA5eS0kypxIG3ZV+rtrTlYKtYE+av3lYxjApSL5MJLSpRvdyY
- TLsLRYfD+qDN4C472wA==
-X-Authority-Analysis: v=2.4 cv=F8NnsKhN c=1 sm=1 tr=0 ts=69ddf821 cx=c_pps
- a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
- a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=TtqV-g6YmW1Jfm2GSLaY:22 a=VwQbUJbxAAAA:8 a=M5GUcnROAAAA:8 a=Ikd4Dj_1AAAA:8
- a=r5FkvgvYKeOTjkmYp6cA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
-X-Proofpoint-GUID: RYAIEn4WFZppLB0I8P04sw0j07gu5wz_
-X-Proofpoint-ORIG-GUID: RYAIEn4WFZppLB0I8P04sw0j07gu5wz_
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-14_02,2026-04-13_04,2025-10-01_01
+In-Reply-To: <CAGXv+5E=tujhtZjwi6Qm7hk3Ks74UzTQHWq82NiTEw1+vYod5g@mail.gmail.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-pci_host_common_init() is used by several generic ECAM host drivers.
-After PCI core changes around pci_flags and preserve_config, these hosts
-no longer opted into full bus number reassignment the way they did
-before.
+On Tue, Apr 14, 2026 at 01:03:19PM +0800, Chen-Yu Tsai wrote:
+> On Tue, Apr 14, 2026 at 12:08 AM Manivannan Sadhasivam <mani@kernel.org> wrote:
+> > On Mon, Apr 13, 2026 at 07:33:12PM +0530, Manivannan Sadhasivam wrote:
+> > > On Mon, Apr 13, 2026 at 03:54:59PM +0800, Chen-Yu Tsai wrote:
+> > > > On Thu, Mar 26, 2026 at 01:36:28PM +0530, Manivannan Sadhasivam wrote:
 
-When PCI_PROBE_ONLY is not set, add PCI_REASSIGN_ALL_BUS so
-pci_scan_bridge_extend() takes the reassignment path: bus numbers can be
-assigned from firmware EA data (e.g. pci_ea_fixed_busnrs()). Skip the
-flag in probe-only mode so existing assignments are not overridden.
+...
 
-CC: Bjorn Helgaas <helgaas@kernel.org>
-CC: Vidya Sagar <vidyas@nvidia.com>
-CC: Manivannan Sadhasivam <mani@kernel.org>
-Fixes: 7246a4520b4b ("PCI: Use preserve_config in place of pci_flags")
-Link: https://lore.kernel.org/netdev/adcXzcz2wWJFw4d7@rkannoth-OptiPlex-7090/
-Signed-off-by: Ratheesh Kannoth <rkannoth@marvell.com>
+> > > > - Given that this connector actually represents two devices, how do I
+> > > >   say I want the BT part to be a wakeup source, but not the WiFi part?
+> > > >   Does wakeup-source even work at this point?
+> > >
+> > > You can't use the DT property since the devices are not described in DT
+> > > statically. But you can still use the per-device 'wakeup' sysfs knob to enable
+> > > wakeup.
+> 
+> I see. I think not being able to specify generic properties for the devices
+> on the connector is going to be a bit problematic.
 
----
-v1 -> v2 : https://lore.kernel.org/linux-pci/20260410142124.2673056-1-rkannoth@marvell.com/
----
- drivers/pci/controller/pci-host-common.c | 4 ++++
- 1 file changed, 4 insertions(+)
+This is nature of the open-connectors, especially on the busses that are
+hotpluggable, like PCIe. We never know what is connected there _ahead_.
 
-diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
-index d6258c1cffe5..99952fb7189b 100644
---- a/drivers/pci/controller/pci-host-common.c
-+++ b/drivers/pci/controller/pci-host-common.c
-@@ -68,6 +68,10 @@ int pci_host_common_init(struct platform_device *pdev,
- 	if (IS_ERR(cfg))
- 		return PTR_ERR(cfg);
- 
-+	/* Do not reassign bus numbers if probe only */
-+	if (!pci_has_flag(PCI_PROBE_ONLY))
-+		pci_add_flags(PCI_REASSIGN_ALL_BUS);
-+
- 	bridge->sysdata = cfg;
- 	bridge->ops = (struct pci_ops *)&ops->pci_ops;
- 	bridge->enable_device = ops->enable_device;
+In other words you can't describe in DT something that may not exist.
+
+> requires specifying a bounce buffer / SWIOTLB for the PCIe WiFi card. The
+> PCIe controller does not have an IOMMU behind it.
+
 -- 
-2.43.0
+With Best Regards,
+Andy Shevchenko
+
 
