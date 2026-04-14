@@ -1,356 +1,296 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from mail-08.mail-europe.com (mail-08.mail-europe.com [57.129.93.249])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27BCB35E949;
-	Mon, 13 Apr 2026 23:40:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B1041A5B8A
+	for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2026 00:16:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.129.93.249
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776123660; cv=none; b=R5/nVZdPa3KVXGNdmsao/BcMrYyBRnVW4aAo2xgkRVL1gvmCH6LYXoP3gMtKK7dcolXtZDbY5/Cq4Gl5cff5d5PUpVU0iQOawi6yWfWky08q0+6IDWemgM19YhglujW/n+6yQkyMfunTJPR3+aWTfFCKojaeRdc5vS9FvFDjmXU=
+	t=1776125817; cv=none; b=iZM6t9QamDbSXeS3ssrJVqm1HzeMnks11yLGA97OLCDX8btsJ1xOYsbJvI2krkekWkFsroKSuYCdPdWDvIVUBj5NIK2redWWclFZlUNCrBps7no604Da08c9a773LbjPibPgJSI13+RKhqKwvSY3qNRmQuy47UoqgFJGMznnuxQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776123660; c=relaxed/simple;
-	bh=MAiEAcmw9bIasbQc42qB2Mu70OEKB/rRrgqlAtn/oPc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Z8nXebVaekMCEoPaJqtt7MMnb3Es2P+70r4VPwiZnaQg91FmFb6mTK4oM5QoijKMXvwL3WhEq+X8T4DkBXoFg1tLaRPOvFhw+i8jheXHnoorAjuF0pHxHq1AEWwKnDkXZpXd+JyOzhZ8U3VocZEV8fd4CmCdJcwD0qHEpOqWE08=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=YfOZuesJ; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1776125817; c=relaxed/simple;
+	bh=Ew870inppcv4vJEytupkKvNwcIFcd21HjqdKcRralfs=;
+	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=pOzjiKpCLk7//0bMh5CZ0hYz4cpu/HcVk6jII1hq0r6vwyJ9oyfxw5DxgsLrNtudjtIC8waNyE2ow7tS2JSPoNtuW7vHXg9Frubavux7nOhuo1+ISOkNRwhdki9t5kGH4zU44kyEtMx5imohBGbE6/SmhKlN4lD/es2TRoWC6yE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=r26.me; spf=pass smtp.mailfrom=r26.me; dkim=pass (2048-bit key) header.d=r26.me header.i=@r26.me header.b=Xuvs5l/j; arc=none smtp.client-ip=57.129.93.249
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=r26.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=r26.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="YfOZuesJ"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63DLIFHQ1804537;
-	Mon, 13 Apr 2026 23:40:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=nRrPRH
-	vAx0lYxy3y85QdUpSwvFTrFT9GLgDb39V+ryg=; b=YfOZuesJfiAsviHtCDEZsx
-	dWQZfQ0Tk8ul5NS0i1HhKS5KgsvYmPhudJ4j/PiOk1FRZcALTknGcqOqfjDGOYf1
-	XZ1yQXGSLjRnlmr8Oji4pUkcil32m3fYhgUMC+oYH6RSdqHbwNqZn4GMPQr9ziiW
-	pZgqgb9QzjFN/6TllmDk6SbNp2CDyCbkmkb/CFQPuFfzbSmsaZDfYJSmfIaSxfZI
-	Xe0j8Bt5CMnkPC/rgfmZ4yj1Dbft88qey+t0vEovHzyBHu8n9qxA1yndGFxet2+a
-	/vNSztpDpuVrgl/WnqmPDEQ9Q3YY4AhpVASgCu14MaEC8Q+zhASDg4QWHa8DqBCA
-	==
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dh89k0a80-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 13 Apr 2026 23:40:53 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 63DM0IfU003514;
-	Mon, 13 Apr 2026 23:40:52 GMT
-Received: from smtprelay07.wdc07v.mail.ibm.com ([172.16.1.74])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4dg1mn789c-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 13 Apr 2026 23:40:52 +0000
-Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
-	by smtprelay07.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 63DNepcG26149574
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 13 Apr 2026 23:40:51 GMT
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 6769A5805C;
-	Mon, 13 Apr 2026 23:40:51 +0000 (GMT)
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 4B92558054;
-	Mon, 13 Apr 2026 23:40:50 +0000 (GMT)
-Received: from [9.61.242.98] (unknown [9.61.242.98])
-	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Mon, 13 Apr 2026 23:40:50 +0000 (GMT)
-Message-ID: <cd9d7977-8b36-428c-81f2-c14b66173763@linux.ibm.com>
-Date: Mon, 13 Apr 2026 16:40:49 -0700
+	dkim=pass (2048-bit key) header.d=r26.me header.i=@r26.me header.b="Xuvs5l/j"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=r26.me;
+	s=protonmail; t=1776125796; x=1776384996;
+	bh=cPG3MUY/aZI27Qvi7IuleElJ2iaZGvPNQOGvNDOLcNY=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=Xuvs5l/jLMHfIHRhxLDy7rMES5pH0Rjhb6yEXE3os2UEhdKhr9vHgo7YjA+uo/ArG
+	 vMQWzSRA4YxoMNnVz/tF8oe8gh1MvYWsVm5831a+Q5HCUYhfZUOf3QuT4GIZHKy+oE
+	 ppwcsS9dC1C8oP4RFF1yy+AlU5sm4NIhfC3hrjOMVnLZjTTSpeOgj0TgxbFXXWO6n5
+	 aSNMSudxDUfhgS09wex/D22Zjn+saEH50PgD+yPQz2vVQA4LZK/gfiBLKZfbPKlpLH
+	 P/p5dLAywNShVUQi4Fvz4ChFqcjNlyFXJDusjNFDfg/wibupTuqQ8FPL/TLboJdTwW
+	 k0j0u+Yk1vGHA==
+Date: Tue, 14 Apr 2026 00:16:30 +0000
+To: =?utf-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+From: Rio Liu <rio@r26.me>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "regressions@lists.linux.dev" <regressions@lists.linux.dev>, Bjorn Helgaas <bhelgaas@google.com>
+Subject: [REGRESSION] amdgpu fails to load eGPU after 6.19
+Message-ID: <a1FodrO_nl6UemO3VLBk5Gsu6PjvxLU-OYhvJEMeKFem-Bpi7ZXDHrIxtwsTCmpn-WndBxnzZNtdKJy_V6PjafnFjSKz7sr1eEfGobRzpgs=@r26.me>
+Feedback-ID: 77429777:user:proton
+X-Pm-Message-ID: f8b7360477b6a35ac306f70035f598369d4abf2b
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v13 5/7] vfio-pci/zdev: Add a device feature for error
- information
-To: Alex Williamson <alex@shazbot.org>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, helgaas@kernel.org, lukas@wunner.de,
-        clg@redhat.com, kbusch@kernel.org, schnelle@linux.ibm.com,
-        mjrosato@linux.ibm.com
-References: <20260413210608.2912-1-alifm@linux.ibm.com>
- <20260413210608.2912-6-alifm@linux.ibm.com>
- <20260413165758.0f87312b@shazbot.org>
-Content-Language: en-US
-From: Farhan Ali <alifm@linux.ibm.com>
-In-Reply-To: <20260413165758.0f87312b@shazbot.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: kB3pJ4wLEUyKh3m8mDOvvYKlW5_Xg91H
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDEzMDIyOSBTYWx0ZWRfX8BpfcXUdMbNr
- H20hG91+wZ67yZ2Y+JCdcJMrQMO8NymBcK7wDnlfCOm+TSpFRsMdi8RIPdAzSBT9LKKBJC+8Ocx
- DHCvn6WJdi9U58lPFkBQ1i5o5Oef8P2pvK/GIwylv+h/FnbmCvRL5OzSA2DNdht5ejz90QePV6F
- GqEVE+qbhDBN61jum2aecbwsFs0KnKK4CK/KQbHn7LFftLEo5dWNgRXTk0HiubJmmaLAtdB3j3s
- CDa3BL3KAkz1kKHEvj6RJRFmyCWNpvFAs1Exp01TUoFdkmaTfROva7jvol1iNgDOqpOFON27L4N
- kzZ8LE2GvneJeHkuFEV5xB84LhZUz0D65S4VcI6lm40tP5/HdJzm7MegN/qaY2/unV9h8RaxYOW
- 5e3KerYU6DAG41SOG8uqsEEh7tJfrZvBO1MCGnbIQyO4S/0V7Bq+zXijyskEzj3bXxJjCCRvFpu
- wahTmoPissmTAqpKiLQ==
-X-Proofpoint-ORIG-GUID: kB3pJ4wLEUyKh3m8mDOvvYKlW5_Xg91H
-X-Authority-Analysis: v=2.4 cv=W60IkxWk c=1 sm=1 tr=0 ts=69dd7f05 cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
- a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8
- a=VnNF1IyMAAAA:8 a=LI8zkurGpkgCOcO8t2sA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-13_03,2026-04-13_04,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 clxscore=1015 priorityscore=1501 spamscore=0 bulkscore=0
- adultscore=0 phishscore=0 lowpriorityscore=0 suspectscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604070000 definitions=main-2604130229
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
+Hello Ilpo,
 
-On 4/13/2026 3:57 PM, Alex Williamson wrote:
-> On Mon, 13 Apr 2026 14:06:06 -0700
-> Farhan Ali <alifm@linux.ibm.com> wrote:
->
->> For zPCI devices, we have platform specific error information. The platform
->> firmware provides this error information to the operating system in an
->> architecture specific mechanism. To enable recovery from userspace for
->> these devices, we want to expose this error information to userspace. Add a
->> new device feature to expose this information.
->>
->> Reviewed-by: Matthew Rosato <mjrosato@linux.ibm.com>
->> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
->> ---
->>   arch/s390/include/asm/pci.h      |  3 +++
->>   arch/s390/pci/pci_event.c        | 19 +++++++++++++++++++
->>   drivers/vfio/pci/vfio_pci_core.c |  2 ++
->>   drivers/vfio/pci/vfio_pci_priv.h |  9 +++++++++
->>   drivers/vfio/pci/vfio_pci_zdev.c | 31 +++++++++++++++++++++++++++++++
->>   include/uapi/linux/vfio.h        | 20 ++++++++++++++++++++
->>   6 files changed, 84 insertions(+)
->>
->> diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
->> index 9a6a4eb9d7c1..9c8ee97d7e8a 100644
->> --- a/arch/s390/include/asm/pci.h
->> +++ b/arch/s390/include/asm/pci.h
->> @@ -360,6 +360,9 @@ int zpci_clear_error_state(struct zpci_dev *zdev);
->>   int zpci_reset_load_store_blocked(struct zpci_dev *zdev);
->>   void zpci_start_mediated_recovery(struct zpci_dev *zdev);
->>   void zpci_stop_mediated_recovery(struct zpci_dev *zdev);
->> +void zpci_get_pending_error_and_count(struct zpci_dev *zdev,
->> +				      struct zpci_ccdf_err *ccdf,
->> +				      int *count);
->>   
->>   #ifdef CONFIG_NUMA
->>   
->> diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
->> index c279a9f50a64..c8714d4a32fa 100644
->> --- a/arch/s390/pci/pci_event.c
->> +++ b/arch/s390/pci/pci_event.c
->> @@ -74,6 +74,25 @@ static void zpci_store_pci_error(struct pci_dev *pdev,
->>   	zdev->pending_errs.count++;
->>   }
->>   
->> +void zpci_get_pending_error_and_count(struct zpci_dev *zdev,
->> +				      struct zpci_ccdf_err *ccdf,
->> +				      int *count)
->> +{
->> +	int head = 0;
-> Unnecessary.  Should also be a blank line between variable declaration
-> and code.
->
->> +	*count = 0;
-> But why do we zero this and not ccdf?
+There seems to be another PCI alignment issue with external amdgpu since 6.=
+19.
+Bisecting this time pointed me to this commit
 
-I had thought of memsetting ccdf to 0, but the only caller right already 
-initializes to 0. So didn't think it was needed.
+commit bc75c8e5071120e919beb39e69f0979cccfdf219 (HEAD)
+Author: Ilpo J<C3><A4>rvinen <ilpo.jarvinen@linux.intel.com>
+Date:   Fri Dec 19 19:40:15 2025 +0200
 
+    PCI: Rewrite bridge window head alignment function
 
->
->> +
->> +	guard(mutex)(&zdev->pending_errs_lock);
->> +	if (zdev->pending_errs.count) {
->> +		head = zdev->pending_errs.head % ZPCI_ERR_PENDING_MAX;
->> +		memcpy(ccdf, &zdev->pending_errs.err[head],
->> +		       sizeof(struct zpci_ccdf_err));
->> +		zdev->pending_errs.head++;
->> +		zdev->pending_errs.count--;
->> +		*count = zdev->pending_errs.count;
->> +	}
->> +}
-> You've describe in the uAPI now how pec = 0 means no error, but why not
-> remove that ambiguity altogether and return -ENOMSG in that case.  We
-> could start here and pass it through:
->
-> {
-> 	int head;
->
-> 	guard(mutex)(&zdev->pending_errs_lock);
->
-> 	if (!zdev->pending_errs.count)
-> 		return -ENOMSG;
->
-> 	head = zdev->pending_errs.head % ZPCI_ERR_PENDING_MAX;
-> 	memcpy(ccdf, &zdev->pending_errs.err[head],
-> 	       sizeof(struct zpci_ccdf_err));
-> 	zdev->pending_errs.head++;
-> 	zdev->pending_errs.count--;
-> 	*count = zdev->pending_errs.count;
->
-> 	return 0;
-> }
+It looks like the same issue that has happened before in
+https://lore.kernel.org/all/o2bL8MtD_40-lf8GlslTw-AZpUPzm8nmfCnJKvS8RQ3NOzO=
+W1uq1dVCEfRpUjJ2i7G2WjfQhk2IWZ7oGp-7G-jXN4qOdtnyOcjRR0PZWK5I=3D@r26.me/.
+It seems like the previous fix with min_align
+https://lore.kernel.org/all/20250822123359.16305-2-ilpo.jarvinen@linux.inte=
+l.com/
+got removed in this commit.
 
-I had thought of returning an error (ENOENT was what I was going with), 
-but perhaps I misunderstood your comment from v12 about specifying pec = 
-0 and pending error = 0 as not being an error. My assumption was as this 
-is not an error we shouldn't return an error to userspace.
+Applying the following patch to the commit fixes the regression. I'm still
+looking at how to rebasing it onto latest commit as there is quite a bit of
+code change around it. But the same regression still happens as of v7.0-rc7=
+.
 
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 80e5a8fc62e7..12ab84271214 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1445,7 +1445,7 @@ static void pbus_size_mem(struct pci_bus *bus, unsign=
+ed long type,
 
->> +EXPORT_SYMBOL_GPL(zpci_get_pending_error_and_count);
->> +
->>   void zpci_start_mediated_recovery(struct zpci_dev *zdev)
->>   {
->>   	guard(mutex)(&zdev->pending_errs_lock);
->> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
->> index ad52abc46c04..5403730786a1 100644
->> --- a/drivers/vfio/pci/vfio_pci_core.c
->> +++ b/drivers/vfio/pci/vfio_pci_core.c
->> @@ -1534,6 +1534,8 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
->>   		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
->>   	case VFIO_DEVICE_FEATURE_DMA_BUF:
->>   		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
->> +	case VFIO_DEVICE_FEATURE_ZPCI_ERROR:
->> +		return vfio_pci_zdev_feature_err(device, flags, arg, argsz);
->>   	default:
->>   		return -ENOTTY;
->>   	}
->> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
->> index fca9d0dfac90..4e7162234a2e 100644
->> --- a/drivers/vfio/pci/vfio_pci_priv.h
->> +++ b/drivers/vfio/pci/vfio_pci_priv.h
->> @@ -93,6 +93,8 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
->>   				struct vfio_info_cap *caps);
->>   int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev);
->>   void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev);
->> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
->> +			      void __user *arg, size_t argsz);
->>   #else
->>   static inline int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
->>   					      struct vfio_info_cap *caps)
->> @@ -107,6 +109,13 @@ static inline int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
->>   
->>   static inline void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev)
->>   {}
->> +
->> +static inline int vfio_pci_zdev_feature_err(struct vfio_device *device,
->> +					    u32 flags, void __user *arg,
->> +					    size_t argsz)
->> +{
->> +	return -ENOTTY;
->> +}
->>   #endif
->>   
->>   static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
->> diff --git a/drivers/vfio/pci/vfio_pci_zdev.c b/drivers/vfio/pci/vfio_pci_zdev.c
->> index 0658095ac5b1..ee1647f0ffe6 100644
->> --- a/drivers/vfio/pci/vfio_pci_zdev.c
->> +++ b/drivers/vfio/pci/vfio_pci_zdev.c
->> @@ -141,6 +141,37 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
->>   	return ret;
->>   }
->>   
->> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
->> +			      void __user *arg, size_t argsz)
->> +{
->> +	struct vfio_device_feature_zpci_err err = {};
->> +	struct vfio_pci_core_device *vdev;
->> +	struct zpci_ccdf_err ccdf = {};
->> +	struct zpci_dev *zdev;
->> +	int pending_errors = 0;
->> +	int ret;
->> +
->> +	vdev = container_of(device, struct vfio_pci_core_device, vdev);
->> +	zdev = to_zpci(vdev->pdev);
->> +	if (!zdev)
->> +		return -ENODEV;
->> +
->> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_GET,
->> +				 sizeof(err));
->> +	if (ret != 1)
->> +		return ret;
->> +
->> +	zpci_get_pending_error_and_count(zdev, &ccdf, &pending_errors);
->> +
->> +	err.version = 1;
->> +	err.pec = ccdf.pec;
->> +	err.pending_errors = pending_errors;
->> +	if (copy_to_user(arg, &err, sizeof(err)))
->> +		return -EFAULT;
->> +
->> +	return 0;
->> +}
->> +
->>   int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
->>   {
->>   	struct zpci_dev *zdev = to_zpci(vdev->pdev);
->> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
->> index 5de618a3a5ee..2980ca39dd38 100644
->> --- a/include/uapi/linux/vfio.h
->> +++ b/include/uapi/linux/vfio.h
->> @@ -1534,6 +1534,26 @@ struct vfio_device_feature_dma_buf {
->>    */
->>   #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
->>   
->> +/**
->> + * VFIO_DEVICE_FEATURE_ZPCI_ERROR feature provides PCI error information to
->> + * userspace for vfio-pci devices on s390x. On s390x, PCI error recovery
->> + * involves platform firmware and notification to operating system is done
->> + * by architecture specific mechanism. Exposing this information to
->> + * userspace allows it to take appropriate actions to handle an
->> + * error on the device. The pending_errors provide any additional errors
->> + * pending for the device, and userspace should read until zero. A value of
->> + * 0 for pending_errors and pec would indicate no pending errors that need
->> + * to be handled.
->> + */
->> +
->> +struct vfio_device_feature_zpci_err {
->> +	__u8 version;
->> +	__u8 pending_errors;
->> +	__u16 pec;
->> +};
-> I assume .version is for compatibility, but we don't define a strategy
-> for using it or specify what the version should be for this table.  It
-> doesn't seem like there's actually an value-add to having it.
+        if (bus->self && size0 &&
+            !pbus_upstream_space_available(bus, b_res, size0, min_align)) {
+-               min_align =3D calculate_head_align(aligns2, max_order);
++               min_align =3D min(min_align, calculate_head_align(aligns2, =
+max_order));
+                size0 =3D calculate_memsize(size, min_size, 0, 0, old_size,=
+ win_align);
+                resource_set_range(b_res, min_align, size0);
+                pci_info(bus->self, "bridge window %pR to %pR requires rela=
+xed alignment rules\n",
+@@ -1459,7 +1459,7 @@ static void pbus_size_mem(struct pci_bus *bus, unsign=
+ed long type,
 
-Its possible we may need to extend this structure in the future if we 
-want to report more information to userspace. I at least want the 
-flexibility to do so. We had some discussion around this [1] in an 
-earlier version. I was trying to follow similar versioning pattern we 
-had around vfio-pci/zdev structures.
+                if (bus->self && size1 &&
+                    !pbus_upstream_space_available(bus, b_res, size1, add_a=
+lign)) {
+-                       min_align =3D calculate_head_align(aligns2, max_ord=
+er);
++                       min_align =3D min(min_align, calculate_head_align(a=
+ligns2, max_order));
+                        size1 =3D calculate_memsize(size, min_size, add_siz=
+e, children_add_size,
+                                                  old_size, win_align);
+                        pci_info(bus->self,
+---
 
-[1] 
-https://lore.kernel.org/all/88289f74-3d4f-4dd9-8f2a-8871d150fd50@linux.ibm.com/
+Relevant errors in dmesg:
 
->
-> I'm also not clear why we need to report .pending_errors.  It mostly
-> seems like another ambiguous feature of this API.  The value seems
-> volatile and the suggestion is to read until zero, so why provide the
-> value at all, the user can just read until -ENOMSG.
+[   10.166037] amdgpu: Virtual CRAT table created for CPU
+[   10.166050] amdgpu: Topology: Add CPU node
+[   10.166166] amdgpu 0000:08:00.0: enabling device (0000 -> 0002)
+[   10.166293] amdgpu 0000:08:00.0: initializing kernel modesetting (SIENNA=
+_CICHLID 0x1002:0x73BF 0x148C:0x2406 0xC1).
+[   10.166345] amdgpu 0000:08:00.0: register mmio base: 0x8C000000
+[   10.166347] amdgpu 0000:08:00.0: register mmio size: 1048576
+[   10.173624] wlan0: Limiting TX power to 30 (30 - 0) dBm as advertised by=
+ 72:13:01:87:79:82
+[   10.174898] amdgpu 0000:08:00.0: detected ip block number 0 <common_v1_0=
+_0> (nv_common)
+[   10.174901] amdgpu 0000:08:00.0: detected ip block number 1 <gmc_v10_0_0=
+> (gmc_v10_0)
+[   10.174903] amdgpu 0000:08:00.0: detected ip block number 2 <ih_v5_0_0> =
+(navi10_ih)
+[   10.174904] amdgpu 0000:08:00.0: detected ip block number 3 <psp_v11_0_0=
+> (psp)
+[   10.174906] amdgpu 0000:08:00.0: detected ip block number 4 <smu_v11_0_0=
+> (smu)
+[   10.174907] amdgpu 0000:08:00.0: detected ip block number 5 <dce_v1_0_0>=
+ (dm)
+[   10.174908] amdgpu 0000:08:00.0: detected ip block number 6 <gfx_v10_0_0=
+> (gfx_v10_0)
+[   10.174909] amdgpu 0000:08:00.0: detected ip block number 7 <sdma_v5_2_0=
+> (sdma_v5_2)
+[   10.174911] amdgpu 0000:08:00.0: detected ip block number 8 <vcn_v3_0_0>=
+ (vcn_v3_0)
+[   10.174912] amdgpu 0000:08:00.0: detected ip block number 9 <jpeg_v3_0_0=
+> (jpeg_v3_0)
+[   10.278772] amdgpu 0000:08:00.0: Fetched VBIOS from ROM BAR
+[   10.278776] amdgpu 0000:08:00.0: [drm] ATOM BIOS: 113-001-X01
+[   10.308408] amdgpu 0000:08:00.0: Trusted Memory Zone (TMZ) feature disab=
+led as experimental (default)
+[   10.308424] amdgpu 0000:08:00.0: PCIE atomic ops is not supported
+[   10.308433] amdgpu 0000:08:00.0: GPU posting now...
+[   10.308461] amdgpu 0000:08:00.0: MEM ECC is not presented.
+[   10.308462] amdgpu 0000:08:00.0: SRAM ECC is not presented.
+[   10.308484] amdgpu 0000:08:00.0: vm size is 262144 GB, 4 levels, block s=
+ize is 9-bit, fragment size is 9-bit
+[   10.308522] amdgpu 0000:08:00.0: Problem resizing BAR0 (-22).
+[   10.308529] amdgpu 0000:08:00.0: VRAM: 16368M 0x0000008000000000 - 0x000=
+00083FEFFFFFF (16368M used)
+[   10.308531] amdgpu 0000:08:00.0: GART: 512M 0x0000000000000000 - 0x00000=
+0001FFFFFFF
+[   10.308545] resource: resource sanity check: requesting [mem 0x000000000=
+0000000-0xffffffffffffffff], which spans more than PCI Bus 0000:00 [mem 0x0=
+00a0000-0x000bffff window]
+[   10.308550] ------------[ cut here ]------------
+[   10.308551] WARNING: arch/x86/mm/pat/memtype.c:721 at memtype_reserve_io=
++0xfc/0x110, CPU#7: (udev-worker)/606
+[   10.308557] Modules linked in: ccm amdgpu(+) amdxcp drm_panel_backlight_=
+quirks gpu_sched drm_exec snd_hda_codec_atihdmi drm_suballoc_helper drm_ttm=
+_helper ntfs3 vfat fat v4l2loopback(OE) snd_seq_midi snd_seq_midi_event snd=
+_seq snd_rawmidi snd_seq_device dm_multipath dm_mod kvmgt mdev vfio_iommu_t=
+ype1 vfio iommufd crypto_user uinput cmac algif_hash algif_skcipher af_alg =
+uvcvideo videobuf2_vmalloc uvc videobuf2_memops videobuf2_v4l2 btusb videob=
+uf2_common btmtk btrtl videodev btbcm mc btintel snd_hda_codec_intelhdmi sn=
+d_hda_codec_hdmi snd_hda_codec_alc269 snd_hda_codec_realtek_lib snd_hda_sco=
+dec_component snd_hda_codec_generic snd_hda_intel snd_sof_pci_intel_cnl joy=
+dev snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd=
+_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_inte=
+l_hda intel_rapl_msr soundwire_cadence intel_rapl_common snd_sof_pci snd_so=
+f_xtensa_dsp intel_uncore_frequency intel_uncore_frequency_common snd_sof s=
+nd_sof_utils snd_soc_acpi_intel_match
+[   10.308591]  snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation=
+ snd_soc_sdw_utils snd_soc_acpi intel_tcc_cooling soundwire_bus x86_pkg_tem=
+p_thermal intel_powerclamp snd_soc_sdca coretemp crc8 snd_soc_avs kvm_intel=
+ snd_soc_hda_codec mousedev snd_hda_ext_core kvm r8169 snd_hda_codec nvme 8=
+021q irqbypass realtek snd_hda_core ghash_clmulni_intel rtsx_pci_sdmmc aesn=
+i_intel nvme_core snd_intel_dspcfg garp mdio_devres snd_intel_sdw_acpi spi_=
+nor iwlmvm mrp iTCO_wdt rapl nvme_keyring stp mmc_core libphy intel_cstate =
+nvme_auth snd_hwdep hid_multitouch mei_hdcp mei_pxp ee1004 intel_pmc_bxt mt=
+d intel_wmi_thunderbolt llc clevo_xsm_wmi(OE) i915 intel_uncore snd_soc_cor=
+e thunderbolt mdio_bus i2c_hid_acpi hkdf mac80211 rtsx_pci i2c_hid snd_comp=
+ress drm_buddy ptp ac97_bus ttm pps_core snd_pcm_dmaengine i2c_algo_bit int=
+el_oc_wdt libarc4 intel_pmc_core drm_display_helper snd_pcm pmt_telemetry c=
+ec pmt_discovery iwlwifi snd_timer i2c_i801 intel_lpss_pci intel_gtt pmt_cl=
+ass mei_me spi_intel_pci i2c_smbus snd intel_lpss
+[   10.308633]  intel_pmc_ssram_telemetry intel_hid psmouse spi_intel video=
+ idma64 soundcore mei intel_pch_thermal i2c_mux intel_vsec pcspkr mac_hid s=
+erio_raw sparse_keymap wmi acpi_pad bnep cfg80211 bluetooth rfkill
+[   10.308645] CPU: 7 UID: 0 PID: 606 Comm: (udev-worker) Tainted: G S     =
+    OE       7.0.0-rc7 #21 PREEMPT(full)  78435afb69b0b07f3561902db6ca6395f=
+9133c11
+[   10.308648] Tainted: [S]=3DCPU_OUT_OF_SPEC, [O]=3DOOT_MODULE, [E]=3DUNSI=
+GNED_MODULE
+[   10.308649] Hardware name: COPELION INTERNATIONAL INC. ZX Series/ZX Seri=
+es, BIOS 1.07.14RCOP1 12/29/2020
+[   10.308650] RIP: 0010:memtype_reserve_io+0xfc/0x110
+[   10.308652] Code: aa fb ff ff b8 f0 ff ff ff eb 88 8b 54 24 04 4c 89 ee =
+48 89 df e8 04 fe ff ff 85 c0 75 db 8b 54 24 04 41 89 16 e9 69 ff ff ff <0f=
+> 0b e9 4b ff ff ff e8 48 d2 09 01 0f 1f 84 00 00 00 00 00 90 90
+[   10.308654] RSP: 0018:ffffcf4781c736d0 EFLAGS: 00010286
+[   10.308655] RAX: 00000000ffffffff RBX: 0000000000000000 RCX: 00000000000=
+00027
+[   10.308657] RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffffffff9b5=
+f5e70
+[   10.308657] RBP: 0000000000000000 R08: 0000000000000000 R09: 00000000fff=
+fefff
+[   10.308658] R10: ffffffff9a85fac0 R11: ffffcf4781c73548 R12: 00000000000=
+00001
+[   10.308659] R13: 0000000000000000 R14: ffffcf4781c7371c R15: 00000000000=
+00001
+[   10.308660] FS:  00007fdda0fa5c80(0000) GS:ffff8b4d39075000(0000) knlGS:=
+0000000000000000
+[   10.308662] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   10.308662] CR2: 00007ffd23cf0ff0 CR3: 0000000109bfa005 CR4: 00000000003=
+726f0
+[   10.308664] Call Trace:
+[   10.308665]  <TASK>
+[   10.308666]  arch_io_reserve_memtype_wc+0x31/0x50
+[   10.308670]  amdgpu_bo_init+0x3e/0x90 [amdgpu 9e1de60160a9bdc6283126cc89=
+fe53e3272a6751]
+[   10.309129]  ? amdgpu_gmc_get_vbios_allocations+0xa9/0x140 [amdgpu 9e1de=
+60160a9bdc6283126cc89fe53e3272a6751]
+[   10.309416]  gmc_v10_0_sw_init+0x352/0x5d0 [amdgpu 9e1de60160a9bdc628312=
+6cc89fe53e3272a6751]
+[   10.309721]  amdgpu_device_init.cold+0x1612/0x22f8 [amdgpu 9e1de60160a9b=
+dc6283126cc89fe53e3272a6751]
+[   10.310080]  ? pci_conf1_read+0xb2/0x100
+[   10.310084]  ? pci_bus_read_config_word+0x4c/0x80
+[   10.310087]  amdgpu_driver_load_kms+0x19/0x80 [amdgpu 9e1de60160a9bdc628=
+3126cc89fe53e3272a6751]
+[   10.310352]  amdgpu_pci_probe+0x233/0x480 [amdgpu 9e1de60160a9bdc6283126=
+cc89fe53e3272a6751]
+[   10.310610]  local_pci_probe+0x3e/0x90
+[   10.310614]  pci_device_probe+0xe1/0x260
+[   10.310616]  ? sysfs_do_create_link_sd+0x6d/0xd0
+[   10.310619]  really_probe+0xde/0x380
+[   10.310622]  __driver_probe_device+0x78/0x150
+[   10.310624]  driver_probe_device+0x1f/0xa0
+[   10.310625]  ? __pfx___driver_attach+0x10/0x10
+[   10.310627]  __driver_attach+0xcb/0x210
+[   10.310628]  bus_for_each_dev+0x85/0xd0
+[   10.310632]  bus_add_driver+0x118/0x200
+[   10.310634]  ? __pfx_amdgpu_init+0x10/0x10 [amdgpu 9e1de60160a9bdc628312=
+6cc89fe53e3272a6751]
+[   10.310890]  driver_register+0x75/0xe0
+[   10.310893]  ? amdgpu_init+0x36/0xff0 [amdgpu 9e1de60160a9bdc6283126cc89=
+fe53e3272a6751]
+[   10.311150]  do_one_initcall+0x5d/0x330
+[   10.311155]  do_init_module+0x62/0x250
+[   10.311158]  ? init_module_from_file+0xd8/0x140
+[   10.311160]  init_module_from_file+0xd8/0x140
+[   10.311163]  idempotent_init_module+0x114/0x310
+[   10.311166]  __x64_sys_finit_module+0x71/0xe0
+[   10.311167]  do_syscall_64+0x11c/0x15f0
+[   10.311170]  ? alloc_fd+0x12e/0x190
+[   10.311172]  ? do_sys_openat2+0x9a/0xe0
+[   10.311175]  ? __x64_sys_openat+0x61/0xa0
+[   10.311177]  ? do_syscall_64+0x11c/0x15f0
+[   10.311179]  ? alloc_fd+0x12e/0x190
+[   10.311180]  ? do_sys_openat2+0x9a/0xe0
+[   10.311182]  ? __x64_sys_openat+0x61/0xa0
+[   10.311184]  ? do_syscall_64+0x11c/0x15f0
+[   10.311186]  ? do_syscall_64+0x2d6/0x15f0
+[   10.311187]  ? do_syscall_64+0x11c/0x15f0
+[   10.311189]  ? clear_bhb_loop+0x30/0x80
+[   10.311191]  ? clear_bhb_loop+0x30/0x80
+[   10.311192]  ? clear_bhb_loop+0x30/0x80
+[   10.311193]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[   10.311195] RIP: 0033:0x7fdda10b967d
+[   10.311197] Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 48 =
+89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48=
+> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 63 16 0d 00 f7 d8 64 89 01 48
+[   10.311198] RSP: 002b:00007ffea5c85328 EFLAGS: 00000246 ORIG_RAX: 000000=
+0000000139
+[   10.311200] RAX: ffffffffffffffda RBX: 000055c8dfdae250 RCX: 00007fdda10=
+b967d
+[   10.311201] RDX: 0000000000000004 RSI: 00007fdda0f5b2f2 RDI: 00000000000=
+00018
+[   10.311202] RBP: 00007ffea5c853c0 R08: 0000000000000000 R09: 00000000000=
+00000
+[   10.311203] R10: 0000000000000000 R11: 0000000000000246 R12: 00000000000=
+20000
+[   10.311204] R13: 000055c8dfdb3130 R14: 000055c8dfdae250 R15: 00000000000=
+00000
+[   10.311205]  </TASK>
+[   10.311206] ---[ end trace 0000000000000000 ]---
+[   10.311208] [drm:amdgpu_bo_init [amdgpu]] *ERROR* Unable to set WC memty=
+pe for the aperture base
+[   10.311476] amdgpu 0000:08:00.0: sw_init of IP block <gmc_v10_0> failed =
+-22
+[   10.311477] amdgpu 0000:08:00.0: amdgpu_device_ip_init failed
+[   10.311478] amdgpu 0000:08:00.0: Fatal error during GPU init
+[   10.311480] amdgpu 0000:08:00.0: finishing device.
+[   10.311825] amdgpu 0000:08:00.0: probe with driver amdgpu failed with er=
+ror -22
 
-Since we don't explicitly return an error indicating there are no 
-available pci errors to handle, was why I added it. Is the preference to 
-just return linux error code here?
-
-Thanks
-
-Farhan
-
->
-> At that point, maybe we don't even need a return structure at all,
-> return small positive values for pec or -errno.  The internal API could
-> match, avoiding the pass by address parameters.  Thanks,
->
-> Alex
->
->
->> +
->> +#define VFIO_DEVICE_FEATURE_ZPCI_ERROR 13
->> +
->>   /* -------- API for Type1 VFIO IOMMU -------- */
->>   
->>   /**
+Best,
+Rio
