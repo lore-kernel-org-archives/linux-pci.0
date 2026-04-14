@@ -1,325 +1,166 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0709B322C6D;
-	Tue, 14 Apr 2026 03:16:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+Received: from ultrarisc.com (unknown [218.76.62.146])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4E372280318;
+	Tue, 14 Apr 2026 03:27:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.76.62.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776136588; cv=none; b=g8bQU0t8Iv3oiNP3TVLzBSP5p30Fbx7RxYKHNgTfFXOXpMG8DVf5/Yc829Q3DeT9Y5KkOFxa6UfZW1j73ajVKrRhBDn5+f+ElX7jfFxA0QYD3H8/uQt3zgCqZfwur9PPaixUAnqJ69GVlura059xVaZ8BhT7CKZBhk2vONKWteo=
+	t=1776137265; cv=none; b=VJKYZJr6vFC1u/JKvgjsyXAn/x8sfc/ctVXRUm3uROoFwVyHUrMS7XXiXaCV8t0kOb3x/kaT/PT+KT7nM2SvElUNQ3wnUZus38uNxy8SuzZ75XBvIjQer7n7B+T60aQTu/p5K6q2E8rrwBfJijOt7jjwNsV/bXoVUa+EZivUmEQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776136588; c=relaxed/simple;
-	bh=8ikZyGWBrYDUmbI9iD2F/pftTxEbB0IwHGrbW3M86xc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=GWZZ+P6MOioItOs/AMP5He0Z0bZDPKlHvVLLS9hbmaj/UyJuQK0evTukeC7Oo3ov4awUpu8cahX5SdVYXa9n0JcoL5fUQtzlLrFSCI1wdeALAONu3dizgydJW4MBQnc0aJrHhqxdnNVYqz+4N9kcmkaDCauoQ0QeiPJoQ1Jb78k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GWVhopSU; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1776137265; c=relaxed/simple;
+	bh=KUPRhC1x/yzG3Mxn3e7SBxQSss+cduj2TK+sbO13rAE=;
+	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
+	 References:Date:Message-Id; b=HxXpqgRex6Rq489rgv/YWJgZAlfU/wrmQbovmNykyfZbwHYBlF83PUWy5ZGjvvWKYFdcInrlD2ls8opmZVtv9HM1VTc6ZZVHy2FzVXwkF2nfGFe9PLmrii4XkNs52HubNYN4SYUvWgiNUJB08jmQ83oS8YhjU3CIjW+uDtZpbLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=pass smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=cqk0bxpZ; arc=none smtp.client-ip=218.76.62.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ultrarisc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GWVhopSU"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1776136586; x=1807672586;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references;
-  bh=8ikZyGWBrYDUmbI9iD2F/pftTxEbB0IwHGrbW3M86xc=;
-  b=GWVhopSUiFPWEMQ0Jxd2tTN4KmX/rMNPiMHd6x5GPPsEHFKc4r9eumMQ
-   IbA17XcEiy96AYEfrwb2Ox42kpCC/Gtn07VDw9wyVeAZ/woiyutWKM9Lh
-   HcsM6X+uK2/Bin3fhmJtPD921Zji2UBUMA+q242xf4IeGh+4EYu6Op8fq
-   jyMFhawtpIzuw93xAwCOXCyCnnWlQIWEEeGW9m860tC7H2Ou5r0TVeieZ
-   PWyVGWzDCDX/BJi8cqcUUk/UE2gJp6gHkZfQeU5tWfjkuBezsaJyqry2m
-   i7Sr7EEVjH6LqcQmx712USICIklIt9jMoW9RJSblwpFSOy1TpT6yEixgM
-   g==;
-X-CSE-ConnectionGUID: +DL1TgNRTmKZOp3WUDTz+A==
-X-CSE-MsgGUID: yAA6GHVKQPylYCC9CEiDQg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11758"; a="87706579"
-X-IronPort-AV: E=Sophos;i="6.23,178,1770624000"; 
-   d="scan'208";a="87706579"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2026 20:16:26 -0700
-X-CSE-ConnectionGUID: DUNMgJhcTS+4CscNgjf+Aw==
-X-CSE-MsgGUID: 2dSd10edQ4Kgrb3jhu+rKw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,178,1770624000"; 
-   d="scan'208";a="226795517"
-Received: from estantil-desk.jf.intel.com ([10.166.241.24])
-  by fmviesa007.fm.intel.com with ESMTP; 13 Apr 2026 20:16:25 -0700
-From: Emil Tantilov <emil.s.tantilov@intel.com>
-To: intel-wired-lan@lists.osuosl.org
-Cc: netdev@vger.kernel.org,
-	przemyslaw.kitszel@intel.com,
-	jay.bhat@intel.com,
-	ivan.d.barrera@intel.com,
-	aleksandr.loktionov@intel.com,
-	larysa.zaremba@intel.com,
-	anthony.l.nguyen@intel.com,
-	andrew+netdev@lunn.ch,
-	davem@davemloft.net,
-	edumazet@google.com,
-	kuba@kernel.org,
-	pabeni@redhat.com,
-	aleksander.lobakin@intel.com,
-	linux-pci@vger.kernel.org,
-	madhu.chittim@intel.com,
-	decot@google.com,
-	willemb@google.com,
-	sheenamo@google.com,
-	lukas@wunner.de
-Subject: [PATCH iwl-next v2 2/2] idpf: implement pci error handlers
-Date: Mon, 13 Apr 2026 20:16:31 -0700
-Message-Id: <20260414031631.2107-3-emil.s.tantilov@intel.com>
-X-Mailer: git-send-email 2.17.2
-In-Reply-To: <20260414031631.2107-1-emil.s.tantilov@intel.com>
-References: <20260414031631.2107-1-emil.s.tantilov@intel.com>
+	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="cqk0bxpZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=ultrarisc.com; s=dkim; h=Received:MIME-Version:Content-Type:
+	Content-Transfer-Encoding:Subject:From:To:Cc:In-Reply-To:
+	References:Date:Message-Id; bh=irEOIAeIzUS6UP0UrzOxi19q2YKjJd8JI
+	x+Bx+4jCSM=; b=cqk0bxpZfC9XjKKAPxfXrskDLMTDTcUAbb9sHL31WC9y0I8Au
+	z3ZPYs4KgWBBxGsu1oMQlaw4C4HCc0+nVMyJxmRSfPRjUiqEvJPW5LqjtebbwWG6
+	k6rKLLAMUR9jZKyqZHp5tgMFbnu5U7ojAZSXekD2HvgnYBap26wGae8S40=
+Received: from [127.0.0.1] (unknown [192.168.100.1])
+	by localhost.localdomain (Coremail) with SMTP id AQAAfwDXEEJItN1pVxYCAA--.1182S2;
+	Tue, 14 Apr 2026 11:28:09 +0800 (CST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH v2 1/4] riscv: add UltraRISC SoC family Kconfig support
+From: Jia Wang <wangjia@ultrarisc.com>
+To: Conor Dooley <conor@kernel.org>
+Cc: Jia Wang <wangjia@ultrarisc.com>, Paul Walmsley <pjw@kernel.org>, 
+ Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
+ Alexandre Ghiti <alex@ghiti.fr>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, 
+ Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, linux-riscv@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ devicetree@vger.kernel.org
+In-Reply-To: <20260408-wise-dividers-ec8a057d4bd2@spud>
+References: <20260407-ultrarisc-pcie-v2-0-2aa2a19a7fb3@ultrarisc.com>
+ <20260407-ultrarisc-pcie-v2-1-2aa2a19a7fb3@ultrarisc.com>
+ <20260407-shown-guileless-5c8b8d94f5e5@spud>
+ <177561282495.2731393.9548650582911498336.b4-reply@b4>
+ <20260408-wise-dividers-ec8a057d4bd2@spud>
+Date: Tue, 14 Apr 2026 11:27:22 +0800
+Message-Id: <177613724276.4104287.2231755690464498119.b4-reply@b4>
+X-Mailer: b4 0.15-dev
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1776137243; l=3173;
+ i=wangjia@ultrarisc.com; s=20260309; h=from:subject:message-id;
+ bh=KUPRhC1x/yzG3Mxn3e7SBxQSss+cduj2TK+sbO13rAE=;
+ b=FN+8w632+RkQXyHIU0y3L8wN9tMkhHCx8tpaVj+B9zlfAi+qfwwpTOvz5rtXb5F8GiCopRgna
+ CtdYbZ9/o3kBTsDWMGou2C6uggPr28he/g/30VW3jCVsEBqPlH0jQYA
+X-Developer-Key: i=wangjia@ultrarisc.com; a=ed25519;
+ pk=XvYkrelqJIIzobY7j+nIg8rsfv5kzaOzuc1UPhd087U=
+X-CM-TRANSID:AQAAfwDXEEJItN1pVxYCAA--.1182S2
+X-Coremail-Antispam: 1UD129KBjvJXoWxAFyrur1kAF4DCF4xtF15CFg_yoW5AryxpF
+	4rCFyYkFs8KF4ftr9Fqw4UurWavan2qrW5Wr1xJ34rZFZ0kry5XF4DtrWaga4DXrZ8Cw1v
+	vFyrK3W7uF45ZaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9l14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Jr0_Gr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
+	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+	n2kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCY02Avz4vE-syl42xK82IYc2Ij64vIr41l4I
+	8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AK
+	xVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcV
+	AFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8I
+	cIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r
+	4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjTRNJ5oDUUUU
+X-CM-SenderInfo: pzdqwylld63zxwud2x1vfou0bp/1tbiAQANEWnYc7wAZAAOsJ
 
-Add callbacks to handle PCI errors and FLR reset. When preparing to handle
-reset on the bus, the driver must stop all operations that can lead to MMIO
-access in order to prevent HW errors. To accomplish this introduce helper
-idpf_reset_prepare() that gets called prior to FLR or when PCI error is
-detected. Upon resume the recovery is done through the existing reset path
-by starting the event task.
+On 2026-04-08 18:10 +0100, Conor Dooley wrote:
+> On Wed, Apr 08, 2026 at 09:47:04AM +0800, Jia Wang wrote:
+> > On 2026-04-07 17:29 +0100, Conor Dooley wrote:
+> > > On Tue, Apr 07, 2026 at 10:40:52AM +0800, Jia Wang wrote:
+> > > > The first SoC in the UltraRISC series is UR-DP1000, containing octa
+> > > > UltraRISC C100 cores.
+> > > 
+> > > Not gonna lie, I find it odd that pcie is where this platform starts
+> > > off, but sure. What's the plan for adding the rest of the platform?
+> > >
+> > 
+> > Hi Conor,
+> > 
+> > Thanks for the question.
+> > 
+> > Our next step is to upstream the pinctrl driver together with the related
+> > DTS updates. The pinctrl series only affects the SoC’s low-speed peripheral
+> > interfaces. For GMAC, SPI, I2C, and GPIO, we plan to use the existing
+> > kernel drivers, so no new controller drivers are needed 
+> 
+> And clocks? pinctrl and clocks would be the bare minimum level of
+> support required before a platform should be merged. Obviously, you can
+> get device drivers for PCI etc etc merged without clock drivers, but the
+> initial dts should contain the clocks too.
+>
 
-The following callbacks are implemented:
-.reset_prepare runs the first portion of the generic reset path leading up
-to the part where we wait for the reset to complete.
-.reset_done/resume runs the recovery part of the reset handling.
-.error_detected is the callback dealing with PCI errors, similar to the
-prepare call, we stop all operations, prior to attempting a recovery.
-.slot_reset is the callback attempting to restore the device, provided a
-PCI reset was initiated by the AER driver.
+On our platform, all functional clocks are fully configured and enabled by
+the firmware before Linux boots. The kernel is not expected to adjust clock
+rates or gate/ungate clocks at runtime.  
+Therefore, in the initial device tree we only describe the fixed clocks
+required by the standard subsystem drivers, using `fixed-clock` where needed.
 
-Whereas previously the init logic guaranteed netdevs during reset, the
-addition of idpf_detach_and_close() to the PCI callbacks flow makes it
-possible for the function to be called without netdevs. Add check to
-avoid NULL pointer dereference in that case.
+Since there is no clock controller accessible to the OS, we do not plan to
+add a clock driver at this stage. If future hardware versions expose a
+programmable clock controller to Linux, we will upstream the corresponding
+driver and update the DT accordingly.
+ 
+> > > > 
+> > > > Signed-off-by: Jia Wang <wangjia@ultrarisc.com>
+> > > > ---
+> > > >  arch/riscv/Kconfig.socs | 9 +++++++++
+> > > >  1 file changed, 9 insertions(+)
+> > > > 
+> > > > diff --git a/arch/riscv/Kconfig.socs b/arch/riscv/Kconfig.socs
+> > > > index d621b85dd63b..98708569ec6a 100644
+> > > > --- a/arch/riscv/Kconfig.socs
+> > > > +++ b/arch/riscv/Kconfig.socs
+> > > > @@ -84,6 +84,15 @@ config ARCH_THEAD
+> > > >  	help
+> > > >  	  This enables support for the RISC-V based T-HEAD SoCs.
+> > > >  
+> > > > +config ARCH_ULTRARISC
+> > > > +	bool "UltraRISC RISC-V SoCs"
+> > > > +	help
+> > > > +	  This enables support for UltraRISC SoC platform hardware,
+> > > > +	  including boards based on the UR-DP1000.
+> > > 
+> > > > +	  UR-DP1000 is an 8-core 64-bit RISC-V SoC that supports
+> > > > +	  the RV64GCBHX ISA. It supports Hardware Virtualization
+> > > > +	  and RISC-V RV64 ISA H(v1.0) Extension.
+> > > 
+> > > Delete this section IMO, doesn't provide any real value. Don't need nor
+> > > want the marketing brochure in the help text. The first sentence is
+> > > sufficient.
+> > >
+> > 
+> > I’ll drop the SoC description part from the Kconfig help text as you
+> > suggested.
+> >  
+> > > > +
+> > > >  config ARCH_VIRT
+> > > >  	bool "QEMU Virt Machine"
+> > > >  	select POWER_RESET
+> > > > 
+> > > > -- 
+> > > > 2.34.1
+> > > > 
+> > 
+> > Best regards,
+> > Jia Wang
+> > 
 
-Co-developed-by: Alan Brady <alan.brady@intel.com>
-Signed-off-by: Alan Brady <alan.brady@intel.com>
-Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
-Reviewed-by: Jay Bhat <jay.bhat@intel.com>
-Reviewed-by: Madhu Chittim <madhu.chittim@intel.com>
----
- drivers/net/ethernet/intel/idpf/idpf.h      |   3 +
- drivers/net/ethernet/intel/idpf/idpf_lib.c  |  13 ++-
- drivers/net/ethernet/intel/idpf/idpf_main.c | 112 ++++++++++++++++++++
- 3 files changed, 126 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/ethernet/intel/idpf/idpf.h b/drivers/net/ethernet/intel/idpf/idpf.h
-index 1d0e32e47e87..164d2f3e233a 100644
---- a/drivers/net/ethernet/intel/idpf/idpf.h
-+++ b/drivers/net/ethernet/intel/idpf/idpf.h
-@@ -88,6 +88,7 @@ enum idpf_state {
-  * @IDPF_REMOVE_IN_PROG: Driver remove in progress
-  * @IDPF_MB_INTR_MODE: Mailbox in interrupt mode
-  * @IDPF_VC_CORE_INIT: virtchnl core has been init
-+ * @IDPF_PCI_CB_RESET: Reset via the PCI callbacks
-  * @IDPF_FLAGS_NBITS: Must be last
-  */
- enum idpf_flags {
-@@ -97,6 +98,7 @@ enum idpf_flags {
- 	IDPF_REMOVE_IN_PROG,
- 	IDPF_MB_INTR_MODE,
- 	IDPF_VC_CORE_INIT,
-+	IDPF_PCI_CB_RESET,
- 	IDPF_FLAGS_NBITS,
- };
- 
-@@ -1012,4 +1014,5 @@ void idpf_idc_vdev_mtu_event(struct iidc_rdma_vport_dev_info *vdev_info,
- int idpf_add_del_fsteer_filters(struct idpf_adapter *adapter,
- 				struct virtchnl2_flow_rule_add_del *rule,
- 				enum virtchnl2_op opcode);
-+void idpf_detach_and_close(struct idpf_adapter *adapter);
- #endif /* !_IDPF_H_ */
-diff --git a/drivers/net/ethernet/intel/idpf/idpf_lib.c b/drivers/net/ethernet/intel/idpf/idpf_lib.c
-index 7988836fbae0..1e706beb0098 100644
---- a/drivers/net/ethernet/intel/idpf/idpf_lib.c
-+++ b/drivers/net/ethernet/intel/idpf/idpf_lib.c
-@@ -758,13 +758,16 @@ static int idpf_init_mac_addr(struct idpf_vport *vport,
- 	return 0;
- }
- 
--static void idpf_detach_and_close(struct idpf_adapter *adapter)
-+void idpf_detach_and_close(struct idpf_adapter *adapter)
- {
- 	int max_vports = adapter->max_vports;
- 
- 	for (int i = 0; i < max_vports; i++) {
- 		struct net_device *netdev = adapter->netdevs[i];
- 
-+		if (!netdev)
-+			continue;
-+
- 		/* If the interface is in detached state, that means the
- 		 * previous reset was not handled successfully for this
- 		 * vport.
-@@ -1908,6 +1911,10 @@ static void idpf_init_hard_reset(struct idpf_adapter *adapter)
- 
- 	dev_info(dev, "Device HW Reset initiated\n");
- 
-+	/* Reset has already happened, skip to recovery. */
-+	if (test_and_clear_bit(IDPF_PCI_CB_RESET, adapter->flags))
-+		goto check_rst_complete;
-+
- 	/* Prepare for reset */
- 	if (test_bit(IDPF_HR_DRV_LOAD, adapter->flags)) {
- 		reg_ops->trigger_reset(adapter, IDPF_HR_DRV_LOAD);
-@@ -1925,6 +1932,7 @@ static void idpf_init_hard_reset(struct idpf_adapter *adapter)
- 		goto unlock_mutex;
- 	}
- 
-+check_rst_complete:
- 	/* Wait for reset to complete */
- 	err = idpf_check_reset_complete(adapter, &adapter->reset_reg);
- 	if (err) {
-@@ -1984,7 +1992,8 @@ void idpf_vc_event_task(struct work_struct *work)
- 	if (test_bit(IDPF_HR_FUNC_RESET, adapter->flags))
- 		goto func_reset;
- 
--	if (test_bit(IDPF_HR_DRV_LOAD, adapter->flags))
-+	if (test_bit(IDPF_HR_DRV_LOAD, adapter->flags) ||
-+	    test_bit(IDPF_PCI_CB_RESET, adapter->flags))
- 		goto drv_load;
- 
- 	return;
-diff --git a/drivers/net/ethernet/intel/idpf/idpf_main.c b/drivers/net/ethernet/intel/idpf/idpf_main.c
-index d99f759c55e1..54fca25c09f7 100644
---- a/drivers/net/ethernet/intel/idpf/idpf_main.c
-+++ b/drivers/net/ethernet/intel/idpf/idpf_main.c
-@@ -234,6 +234,7 @@ static int idpf_cfg_device(struct idpf_adapter *adapter)
- 	if (err)
- 		pci_dbg(pdev, "PCIe PTM is not supported by PCIe bus/controller\n");
- 
-+	pci_save_state(pdev);
- 	pci_set_drvdata(pdev, adapter);
- 
- 	return 0;
-@@ -360,6 +361,116 @@ static int idpf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	return err;
- }
- 
-+static void idpf_reset_prepare(struct idpf_adapter *adapter)
-+{
-+	pci_dbg(adapter->pdev, "resetting\n");
-+	set_bit(IDPF_HR_RESET_IN_PROG, adapter->flags);
-+	cancel_delayed_work_sync(&adapter->serv_task);
-+	cancel_delayed_work_sync(&adapter->vc_event_task);
-+	idpf_detach_and_close(adapter);
-+	idpf_idc_issue_reset_event(adapter->cdev_info);
-+	idpf_vc_core_deinit(adapter);
-+}
-+
-+/**
-+ * idpf_pci_err_detected - PCI error detected, about to attempt recovery
-+ * @pdev: PCI device struct
-+ * @err: err detected
-+ *
-+ * Return: %PCI_ERS_RESULT_NEED_RESET to attempt recovery,
-+ * %PCI_ERS_RESULT_DISCONNECT if recovery is not possible.
-+ */
-+static pci_ers_result_t
-+idpf_pci_err_detected(struct pci_dev *pdev, pci_channel_state_t err)
-+{
-+	struct idpf_adapter *adapter = pci_get_drvdata(pdev);
-+
-+	/* Shutdown the mailbox if PCI I/O is in a bad state to avoid MBX
-+	 * timeouts during the prepare stage.
-+	 */
-+	if (pci_channel_offline(pdev))
-+		libie_ctlq_xn_shutdown(adapter->xnm);
-+
-+	idpf_reset_prepare(adapter);
-+
-+	if (err == pci_channel_io_perm_failure)
-+		return PCI_ERS_RESULT_DISCONNECT;
-+
-+	/* When called due to PCI error, driver will have to force PFR on
-+	 * resume, in order to complete the recovery via the event task.
-+	 */
-+	set_bit(IDPF_PCI_CB_RESET, adapter->flags);
-+
-+	return PCI_ERS_RESULT_NEED_RESET;
-+}
-+
-+/**
-+ * idpf_pci_err_slot_reset - PCI undergoing reset
-+ * @pdev: PCI device struct
-+ *
-+ * Reset PCI state and use a register read to see if we're good.
-+ *
-+ * Return: %PCI_ERS_RESULT_RECOVERED on success,
-+ * %PCI_ERS_RESULT_DISCONNECT on failure.
-+ */
-+static pci_ers_result_t
-+idpf_pci_err_slot_reset(struct pci_dev *pdev)
-+{
-+	struct idpf_adapter *adapter = pci_get_drvdata(pdev);
-+
-+	pci_restore_state(pdev);
-+	pci_set_master(pdev);
-+	pci_wake_from_d3(pdev, false);
-+	if (readl(adapter->reset_reg.rstat) != 0xFFFFFFFF)
-+		return PCI_ERS_RESULT_RECOVERED;
-+
-+	return PCI_ERS_RESULT_DISCONNECT;
-+}
-+
-+/**
-+ * idpf_pci_err_resume - Resume operations after PCI error recovery
-+ * @pdev: PCI device struct
-+ */
-+static void idpf_pci_err_resume(struct pci_dev *pdev)
-+{
-+	struct idpf_adapter *adapter = pci_get_drvdata(pdev);
-+
-+	/* Force a PFR when resuming from PCI error. */
-+	if (test_and_set_bit(IDPF_PCI_CB_RESET, adapter->flags))
-+		adapter->dev_ops.reg_ops.trigger_reset(adapter, IDPF_HR_FUNC_RESET);
-+
-+	queue_delayed_work(adapter->vc_event_wq,
-+			   &adapter->vc_event_task,
-+			   msecs_to_jiffies(300));
-+}
-+
-+/**
-+ * idpf_pci_err_reset_prepare - Prepare driver for PCI reset
-+ * @pdev: PCI device struct
-+ */
-+static void idpf_pci_err_reset_prepare(struct pci_dev *pdev)
-+{
-+	idpf_reset_prepare(pci_get_drvdata(pdev));
-+}
-+
-+/**
-+ * idpf_pci_err_reset_done - PCI err reset recovery complete
-+ * @pdev: PCI device struct
-+ */
-+static void idpf_pci_err_reset_done(struct pci_dev *pdev)
-+{
-+	pci_dbg(pdev, "reset: done\n");
-+	idpf_pci_err_resume(pdev);
-+}
-+
-+static const struct pci_error_handlers idpf_pci_err_handler = {
-+	.error_detected = idpf_pci_err_detected,
-+	.slot_reset = idpf_pci_err_slot_reset,
-+	.reset_prepare = idpf_pci_err_reset_prepare,
-+	.reset_done = idpf_pci_err_reset_done,
-+	.resume = idpf_pci_err_resume,
-+};
-+
- /* idpf_pci_tbl - PCI Dev idpf ID Table
-  */
- static const struct pci_device_id idpf_pci_tbl[] = {
-@@ -377,5 +488,6 @@ static struct pci_driver idpf_driver = {
- 	.sriov_configure	= idpf_sriov_configure,
- 	.remove			= idpf_remove,
- 	.shutdown		= idpf_shutdown,
-+	.err_handler		= &idpf_pci_err_handler,
- };
- module_pci_driver(idpf_driver);
--- 
-2.37.3
 
