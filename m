@@ -1,231 +1,242 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B63C93D7D9E;
-	Tue, 14 Apr 2026 10:35:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776162955; cv=none; b=IhjRXKZzxjEZ1dt5zD2qOoTYy3R4c2a9NlSMKDrDA7p1uIc1CvKQZtpnrAbP0wViFF2MDGr43t7qeXNUHn9ve2UxhyKt0tVqJYVCJcOO5tZTuErU+uLf75v7tx1eRG/wUseAvB/Mg8Zjk652yGtpnig5a2WCTywc2Nas+6ckEN8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776162955; c=relaxed/simple;
-	bh=SFNQ0GUXZDmko3umJzr38nltBojjjdV+yz2yRE036ik=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SdADOrCscmrROw+Tl3h7gGZ0Ak637JZxJJNH13rGl+JLxqGyJSKSjul4cKtDudITEIEi47/tul8bMmZUO17bwvtHvH/xIw/c0uxPqa/QkVdMQRC9AWBMN0jr5KsyOetv3WCpPrQAemWgKQnoaToCQGABfKeJcB7cRBSQoEphZnI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WKPWgq5y; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3AC23D8101;
+	Tue, 14 Apr 2026 11:07:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.7
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776164850; cv=fail; b=pFznxX7BEQZoTt1+lrvUUtv2JkzDYpADfVMkxr/22KBGx9KsXhpAJHXDjeAevM08PvSIcNWQH0fm8UtfXKn1VKjGXL7SHUGmU+o2mfXxkAHxcKwfyVQjbo+x/UVaO2b3sPMQeTn4Ebkck1XBROJQQ9oPEUB5TSwElfPPENzrmjw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776164850; c=relaxed/simple;
+	bh=+BTUZSZUhpIF55hrnc+qbcybJA69vYa984V8tL5c5js=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=D4JCzJsELDwQtetPfW9RNppkd+m1WGvfUliag2bOSwkkvPr6JmRa1S41F9tBxsvUtO0p1fUJum/ja8APiVzMOSHF7cqD+f6oM1y3/cpXa3GE3eOoa0p30YjSD1mIv1ewd3008lHP6m8bC0mnFBMK0D0W+UBNCeW65f9sr6Goch4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=oF2vU3ZZ; arc=fail smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WKPWgq5y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60B61C19425;
-	Tue, 14 Apr 2026 10:35:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776162954;
-	bh=SFNQ0GUXZDmko3umJzr38nltBojjjdV+yz2yRE036ik=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WKPWgq5yvXTwdm6Mn7ddnAlqSEEiLBiWHTaX5mT5aGATcja8JjLui6ZcqNanm6scd
-	 CvXrq5dpTAh4lfYq1EVZUX4GCculXV6aUZ8B2O66uXnN4hL8M3IpV0q1QnBYf/Cgl2
-	 uXmzZTnbW+Tg8K5+cr8iHrkx2+6e8RjuZe77W4iUy0UXTXGq+qIpq/A/xcKV1UjzsD
-	 tSBo0NXcGq1hWol0n071OCMjHVTW3JNe8xQS1eQwar0Cs0wcpqFjwIeRuJfCLbea1B
-	 MZfrvQ0InJkZRVLl5oIPVYvATc3jjlfrLG2y30pSPcM877QPNc8FyNTCL8ekqjzoew
-	 0U2KV9PxBXr2w==
-Date: Tue, 14 Apr 2026 13:35:47 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: fengchengwen <fengchengwen@huawei.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	Keith Busch <kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
-	Yishai Hadas <yishaih@nvidia.com>,
-	Zhiping Zhang <zhipingz@meta.com>
-Subject: Re: [RFC] Proposal: Add sysfs interface for PCIe TPH Steering Tag
- retrieval and configuration
-Message-ID: <20260414103547.GA361495@unreal>
-References: <6ea4c4c2-774e-aa76-3665-918e2a24cc84@huawei.com>
- <20260413100152.GG21470@unreal>
- <c3a6c6ca-3b71-476c-947a-5f2393d046bd@huawei.com>
- <20260413191930.GP21470@unreal>
- <b95ced54-339f-4859-b3eb-8bf261393ffc@huawei.com>
- <20260414085723.GR21470@unreal>
- <84bf119e-fa8c-4c97-9197-3377b7e2b250@huawei.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="oF2vU3ZZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1776164847; x=1807700847;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=+BTUZSZUhpIF55hrnc+qbcybJA69vYa984V8tL5c5js=;
+  b=oF2vU3ZZWCiOMO4e34woL9r+3xp2W7ek9y9Z0lfi+oCCDPqcUO4AobNe
+   vtQpAHKk46j1Y+lIy+JhxjzpuAXGfPs9dKMvrn3hg8mJsiMzwvIwcbv4p
+   YM1eMtmxj+2sAcBo4VeHoXKWfgwqTVLj7yDy5uvZ+Z+h0KC68EyLehmkA
+   O0+bT7+jXr+51k8WdHq5evZZIMFSWixJbm98OaQ0j8puMtb2ZJItPqLvI
+   QQzws26IFjIL7O17symOALZMdmD9KM6FMPxmK4r2iQB1f4mWvt8G5aZtE
+   modRH1tBIXrynK5XAKwfroLGfILrQay4UldSSwwYa8SqJEVw02syF7UTe
+   Q==;
+X-CSE-ConnectionGUID: OroTUfOMSBKPIXUiLiriqA==
+X-CSE-MsgGUID: jdGxThaTTDiO+uC9eoDpdg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11758"; a="102574920"
+X-IronPort-AV: E=Sophos;i="6.23,179,1770624000"; 
+   d="scan'208";a="102574920"
+Received: from orviesa007.jf.intel.com ([10.64.159.147])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2026 04:07:26 -0700
+X-CSE-ConnectionGUID: EZech1U6REC42dsIfecq5A==
+X-CSE-MsgGUID: XNt3zVagSAGH8dMysUTIwg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,179,1770624000"; 
+   d="scan'208";a="230288649"
+Received: from orsmsx901.amr.corp.intel.com ([10.22.229.23])
+  by orviesa007.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2026 04:07:27 -0700
+Received: from ORSMSX903.amr.corp.intel.com (10.22.229.25) by
+ ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Tue, 14 Apr 2026 04:07:26 -0700
+Received: from ORSEDG901.ED.cps.intel.com (10.7.248.11) by
+ ORSMSX903.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37 via Frontend Transport; Tue, 14 Apr 2026 04:07:26 -0700
+Received: from SN4PR0501CU005.outbound.protection.outlook.com (40.93.194.68)
+ by edgegateway.intel.com (134.134.137.111) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Tue, 14 Apr 2026 04:07:25 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=CSpZzj1/jrX/iNwKbQzBYwbMziAqy6mzwUX4E0jXS2/OPKEaQ3Ib5GVDrFAXw8D0JaSMLg/V4rhLXqfUKMOwGblNj0ppNu7ExHo8j6qoBnWInnULnz5GEl1jKL9CDQlXyOlHCpAchnuJbebWgVAoTDGUt8E9asreU7kWYl9uCOvrzW3Poz6SUFlyjWfZGu+KUkSbM7fFnS5FeNa9FLqiSsLKdkfIPdWsaB8V/wQvDH+2oARi6+XsofNA1lYzdcNZcyhlhBWszqZecCP0zqzf+0Wdys5EpOhYzSyozsp05FR8dIttu6uN6UcEUKqa1sw/UD+NxJDr6lpL6TRz73qLvw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=TWzrOyzDIS0scgHWhMf7gbFFlxVHfBbl3tWASC6mfRM=;
+ b=cVLEQqlWl2AZ1kz8OqZxkQ7+B8lh7j6BhrengnWdZKZ0qPqiBd7iGj6Z6Ghu/Ky0mjiMkJ0gG8ZFA7oIjED4uInvHqlJSQTFI2pHkTBmL2KW2U36SkEbwaBVSVLK51H/6Nw6mWQtQYun7KHgo95p4vembMTLvyc9K92vM6wDAFQGIBm2qyY1xPs2n8LkIJ3/5PBfJnOfg2uq9SuFktMVCwY6oh0/JOwdF6E/3qhvzZC3I0bAp9E/+2T+RBRjArgugly4RQ/Kagr/fsZK0jnDryTFypKY8lSxRUX6czs2mC8q3XxnbSUCzRZk8VBo7htntWsdhOH+/ZSHusvCIs6KCw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from IA3PR11MB8986.namprd11.prod.outlook.com (2603:10b6:208:577::21)
+ by PH7PR11MB8123.namprd11.prod.outlook.com (2603:10b6:510:236::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9818.20; Tue, 14 Apr
+ 2026 11:07:22 +0000
+Received: from IA3PR11MB8986.namprd11.prod.outlook.com
+ ([fe80::e6f0:6afb:6ef9:ab5c]) by IA3PR11MB8986.namprd11.prod.outlook.com
+ ([fe80::e6f0:6afb:6ef9:ab5c%5]) with mapi id 15.20.9745.012; Tue, 14 Apr 2026
+ 11:07:21 +0000
+From: "Loktionov, Aleksandr" <aleksandr.loktionov@intel.com>
+To: "Tantilov, Emil S" <emil.s.tantilov@intel.com>,
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>
+CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "Kitszel, Przemyslaw"
+	<przemyslaw.kitszel@intel.com>, "Bhat, Jay" <jay.bhat@intel.com>, "Barrera,
+ Ivan D" <ivan.d.barrera@intel.com>, "Zaremba, Larysa"
+	<larysa.zaremba@intel.com>, "Nguyen, Anthony L" <anthony.l.nguyen@intel.com>,
+	"andrew+netdev@lunn.ch" <andrew+netdev@lunn.ch>, "davem@davemloft.net"
+	<davem@davemloft.net>, "edumazet@google.com" <edumazet@google.com>,
+	"kuba@kernel.org" <kuba@kernel.org>, "pabeni@redhat.com" <pabeni@redhat.com>,
+	"Lobakin, Aleksander" <aleksander.lobakin@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "Chittim, Madhu"
+	<madhu.chittim@intel.com>, "decot@google.com" <decot@google.com>,
+	"willemb@google.com" <willemb@google.com>, "sheenamo@google.com"
+	<sheenamo@google.com>, "lukas@wunner.de" <lukas@wunner.de>
+Subject: RE: [PATCH iwl-next v2 1/2] idpf: remove conditonal MBX deinit from
+ idpf_vc_core_deinit()
+Thread-Topic: [PATCH iwl-next v2 1/2] idpf: remove conditonal MBX deinit from
+ idpf_vc_core_deinit()
+Thread-Index: AQHcy70bXa0JJO4YuU2JyJc3EXRkm7XeZa6w
+Date: Tue, 14 Apr 2026 11:07:21 +0000
+Message-ID: <IA3PR11MB8986EDBC27D4267AA0F48BFBE5252@IA3PR11MB8986.namprd11.prod.outlook.com>
+References: <20260414031631.2107-1-emil.s.tantilov@intel.com>
+ <20260414031631.2107-2-emil.s.tantilov@intel.com>
+In-Reply-To: <20260414031631.2107-2-emil.s.tantilov@intel.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: IA3PR11MB8986:EE_|PH7PR11MB8123:EE_
+x-ms-office365-filtering-correlation-id: ab021629-7cc2-4f8f-eebe-08de9a15ffdb
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|7416014|376014|1800799024|366016|18096099003|38070700021|22082099003|18002099003|56012099003;
+x-microsoft-antispam-message-info: ckAeQ1Z1RmieIoS/zslJl+vwmqHliP6/oEQ7ssjkqqJz71t/sIiQARcCrLX1dTIXWRiQrczDGKGKg9sDusVFP1JhBz5Cwye/73r7oc73nxEfVauI48ZCdinpVSAMmE3JfN9WEPhTghyEf0TXlckECCAoitahd3JyZFcghm2x2iTpN136WkZX6bVYKmAz5ARSoKCtPZQgXz65mZKMpVXlJPx9qwGmRb++tMDihy15jbuxi/Fu3YgJuVIb4tx3jrm72EuhNDx5BzCm6VCA7Qi8t9qVuPwstlBZ3ZIhPOlUgzg1Q43ZMrrl0AcaatwsT6wxe/qi09mIcNlcsL3djkK3t0N3LRcx4T02FhED2gk+u/sA7i/1jlMSyND2izelUW+EHMivXHMVXBgKH7Fc9ItoK+ENl0si6zNPcVm50J1l5s4G6UGSBybozHWS8l6gQktYfSOdVtf4H+M0ogrmOd1t/XwZP3LIGQvzWY8H23uJ9BvMAJe4wHvzyFt2XKLPZa4ztOr49hDxVPofiH+qqwtItMHq/5qsPlQ/LV433a9lQNTivclbzb0tD7frgqXFMHKOM0k7bfj6P73QNDP8qEJuDQzVn1fVuKjm8lu1KxluCkQ12TvPNsqCdY6xQ3jWoa7UAQ8MriJ4YewtS7DkHaI0lMUNaQMNHSLCkSNlolUPc0vU7LT291nRbXHzdOz8jBo4IO4MKehTJGNcpDxqm8sq9iDS0gDCsFLqhZqnld5hOCRglN0nZTiCkvKVbuTwMqtxmU+dwoflIfPZ14uhDEC00ZQaE/ajeRRZKangROrWk7M=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA3PR11MB8986.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(1800799024)(366016)(18096099003)(38070700021)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?7HvG6M8AbIZE8JS1H7LXOA7LuXzFFYiseyMUGeEh8q7d3nR7fuYHiityG1aY?=
+ =?us-ascii?Q?dzKO/4Jg8EmcIc/EueFGL6m8fLUNBIxDOtvX9zOasIz9OyGUBbYKI+P1PlGH?=
+ =?us-ascii?Q?+f74wz7PmAb5NLBnUMx0yoUdtE0uxki/9cDuTiPSAq4BAbHVX4SZ0+Udpt/G?=
+ =?us-ascii?Q?51nx4UasO7eVvBieog2D1ic3hmSBFdvHXLArho+6B49dq/uqmMIz6nrHfD3O?=
+ =?us-ascii?Q?XCgFpzjrxIbTLcRBxOVmp2T6VX59K8N8/1eWxCHVtuWzlZyxHcJqjpX6yZWA?=
+ =?us-ascii?Q?8VaiXksSzPiUxW53amXgTpke5bj0aG4NZdR0PUsHi50M4yye6l7P+ddJzYLP?=
+ =?us-ascii?Q?GwK3JTzBxp/sn0xfqzu6h5BBm1X+8QU8gREUMgrIP2Jmdq5PDDGJMhsOHJ3T?=
+ =?us-ascii?Q?9/Zc/H1m98iToK9laF6oIMZ9M8DNND+lzCae7QuYxn+P34PkpQWWzoKcTY39?=
+ =?us-ascii?Q?I47MJxCvQvv4yPOWbz78RnGg5NsuIC5M2kz1LD8NOy7gClc567Lxn+MSSOzd?=
+ =?us-ascii?Q?YNXHVK2voWa8fP1gaOWhc8uqnpYrd6pokSUWItb4cu7mFx/wWAJCPaIiMRvc?=
+ =?us-ascii?Q?nIxRziGAw8DlMzx7PSjAApehkPBzCaUgVBxFceTSDbpQYsfUBUO8xZ+WGe3R?=
+ =?us-ascii?Q?cU9T/gBUXS54Gk/QeXZc0MFtt64RGe2EuD+ralg6aQ53GmzgSBDJHmmxXrur?=
+ =?us-ascii?Q?fBSKp8F8wppYJNTK1UxHLfvqToD1Sdcsgz7uiR/n5yudcvrel0J67xBpFwij?=
+ =?us-ascii?Q?FzU1BeObDgQsEm6Svv2ISUz6NT7RdYzbxUGctK9L7iAEEkKac9IJUI/g0uHy?=
+ =?us-ascii?Q?MPtgdZsUA3FPgDKPWYqjlUx1f9/F4v/ZVOA1usjviCXG5WRGb9lL74rg6MQP?=
+ =?us-ascii?Q?bsV3slSWiIMmDc8WzDp+hz2LjNbcGFBPV3YNAd+5wMWEgaa0Gi7PiwK8syHn?=
+ =?us-ascii?Q?pptdSjk514WAPHYb5SzbGyWeX36j62Cje3WD+m2uEPLxMN8tsjaNUClEp2cc?=
+ =?us-ascii?Q?XnInxkzwlWZlCcKALTJDXstvSfn5Y99vl7HfrtlVg4eLHAWOGm87bKfC77l7?=
+ =?us-ascii?Q?nYLiOWJUA+2fDsk7rbwGDD486u/OlBPtaNhsf9MPgeFFg7X2JP5+kirMYqyV?=
+ =?us-ascii?Q?rcKWoNcCTVU/qj3BY7X+d6EPSd1Gs0bDwFfvA5ZeGY2A+1hyeq17JykaIbT3?=
+ =?us-ascii?Q?4qmYzYMf65HZLRn1EX59vlUhVKBDhIO2XfA0gqAF98yP+Quw8R5jBiFJ3iTL?=
+ =?us-ascii?Q?nkgbXC2/sGxqcIa9iAu0wIf3giV8JEohAzDTgIcVp45501PikLVpUvoZWJNf?=
+ =?us-ascii?Q?s8dfafkmTBFro8UvfxA1KyNtsmY6LhrRSpp6Ny0RAjItlGuEbHyx1P8pcJWG?=
+ =?us-ascii?Q?3ltweJsq27/vhAARFNjeRXKPcXYnOMIUuOazDuiuc3/RnevDZXH9IXRGarlR?=
+ =?us-ascii?Q?9xwUXbPl7NZUakNkXp1kA/BMg9jabaoxqOk7c1O2oiyj4p4ackaTLkzR6xmN?=
+ =?us-ascii?Q?5SwsGAVkC1b9yyVJAE0BtY5pM6DsMZLyfRUX/8vVAb39Fq8RTlhyA6P+efeP?=
+ =?us-ascii?Q?XPp8R+jAgFwZqu0+0zx4//nD/wym4+EWANEyMBHXMdXI7Z7R1y+SNY3kpPvk?=
+ =?us-ascii?Q?ECXperSgFm4LaAbQ/nLUd36iX4NZyREAVTfTdKLuDwXmS20dO2cdhXICCJYC?=
+ =?us-ascii?Q?8zui/WPLlDqwafn1qAnqIWXSIcDP4cAR5SHAt6SOMiBfbxJczufU2aDLKijV?=
+ =?us-ascii?Q?TriNC19zZdV6DbLaRMdCM7EHnArxDjQ=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <84bf119e-fa8c-4c97-9197-3377b7e2b250@huawei.com>
+X-Exchange-RoutingPolicyChecked: AwEkDEEfcIvS5a2vLYYLkdEXM53tw3AYFo1RHC40jdnq/LEPvf5Y6PQib9vhuFuA+t4B+grLoMUKOy4kDc7qBRoMw82D7wrKLoMBDX/BGzL342LFSkE83eStaZJzGThGyGjT8FtH0LlHz2kAnqoEP1S8lRC3thnip4dyOKHKtgXS8n3SsYmjeydCjtM0xw74bh+uIZNA3u/jyj1bt6atGJeIkxZAJVdibeJXE1akXLfneSEiy+FadHcDra/H46xAWjIPiXnnOThTf3L5ri7m10he/ko/ep7Hrlb4zdseo7/jAZ/RF3vK1fsVCq9hDJErdySdiBn9K7GV9/kxJ05pWw==
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: IA3PR11MB8986.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ab021629-7cc2-4f8f-eebe-08de9a15ffdb
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Apr 2026 11:07:21.0525
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: QMRukR7tKm1HwB8cEkjq6+EXi8mZTZ17xAHoOGFwMRXQSf2nx8g6M1dJJ0QT9VJAGWSFR6QOuVcq25rssbSF1FQlUfYqHGiZjl6xcujxTs4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR11MB8123
+X-OriginatorOrg: intel.com
 
-On Tue, Apr 14, 2026 at 05:30:09PM +0800, fengchengwen wrote:
-> On 4/14/2026 4:57 PM, Leon Romanovsky wrote:
-> > On Tue, Apr 14, 2026 at 09:07:23AM +0800, fengchengwen wrote:
-> >> On 4/14/2026 3:19 AM, Leon Romanovsky wrote:
-> >>> On Mon, Apr 13, 2026 at 08:04:10PM +0800, fengchengwen wrote:
-> >>>> On 4/13/2026 6:01 PM, Leon Romanovsky wrote:
-> >>>>> On Fri, Apr 10, 2026 at 10:30:52PM +0800, fengchengwen wrote:
-> >>>>>> Hi all,
-> >>>>>>
-> >>>>>> I'm writing to propose adding a sysfs interface to expose and configure the
-> >>>>>> PCIe TPH
-> >>>>>> Steering Tag for PCIe devices, which is retrieved inside the kernel.
-> >>>>>>
-> >>>>>>
-> >>>>>> Background: The TPH Steering Tag is tightly coupled with both a PCIe device
-> >>>>>> (identified
-> >>>>>> by its BDF) and a CPU core. It can only be obtained in kernel mode. To allow
-> >>>>>> user-space
-> >>>>>> applications to fetch and set this value securely and conveniently, we need
-> >>>>>> a standard
-> >>>>>> kernel-to-user interface.
-> >>>>>>
-> >>>>>>
-> >>>>>> Proposed Solution: Add several sysfs attributes under each PCIe device's
-> >>>>>> sysfs directory:
-> >>>>>> 1. /sys/bus/pci/devices/<BDF>/tph_mode to query the TPH mode (interrupt or
-> >>>>>> device specific)
-> >>>>>> 2. /sys/bus/pci/devices/<BDF>/tph_enable to control the TPH feature
-> >>>>>> 3. /sys/bus/pci/devices/<BDF>/tph_st to support both read and write
-> >>>>>> operations, e.g.:
-> >>>>>>    Read operation:
-> >>>>>>      echo "cpu=3" > /sys/bus/pci/devices/0000:01:00.0/tph_st
-> >>>>>>      cat /sys/bus/pci/devices/0000:01:00.0/tph_st
-> >>>>>>    Write operation:
-> >>>>>>      echo "index=10 st=123" > /sys/bus/pci/devices/0000:01:00.0/tph_st
-> >>>>>>
-> >>>>>>
-> >>>>>> The design strictly follows PCI subsystem sysfs standards and has the
-> >>>>>> following key properties:
-> >>>>>>
-> >>>>>> 1. Dynamic Visibility: The sysfs attributes will only be present for PCIe
-> >>>>>> devices that
-> >>>>>>    support TPH Steering Tag. Devices without TPH capability will not show
-> >>>>>> these nodes,
-> >>>>>>    avoiding unnecessary user confusion.
-> >>>>>>
-> >>>>>> 2. Permission Control: The attributes will use 0600 file permissions,
-> >>>>>> ensuring only
-> >>>>>>    privileged root users can read or write them, which satisfies security
-> >>>>>> requirements
-> >>>>>>    for hardware configuration interfaces.
-> >>>>>>
-> >>>>>> 3. Standard Implementation Location: The interface will be implemented in
-> >>>>>>    drivers/pci/pci-sysfs.c, the canonical location for all PCI device sysfs
-> >>>>>> attributes,
-> >>>>>>    ensuring consistency and maintainability within the PCI subsystem.
-> >>>>>>
-> >>>>>>
-> >>>>>> Why sysfs instead of alternatives like VFIO-PCI ioctl:
-> >>>>>>
-> >>>>>> - Universality: sysfs does not require binding the device to a special
-> >>>>>> driver such as
-> >>>>>>   vfio-pci. It is available to any privileged user-space component,
-> >>>>>> including system
-> >>>>>>   utilities, daemons, and monitoring tools.
-> >>>>>>
-> >>>>>> - Simplicity: Both user-space usage (cat/echo) and kernel implementation are
-> >>>>>>   straightforward, reducing code complexity and long-term maintenance cost.
-> >>>>>>
-> >>>>>> - Design Alignment: TPH Steering Tag is a generic PCIe device feature, not
-> >>>>>> specific to
-> >>>>>>   user-space drivers like DPDK or VFIO. Exposing it via sysfs matches the
-> >>>>>> kernel's
-> >>>>>>   standard pattern for hardware capabilities.
-> >>>>>>
-> >>>>>>
-> >>>>>> I look forward to your comments about this design before submitting the
-> >>>>>> final patch.
-> >>>>>
-> >>>>> You need to explain more clearly why this write functionality is useful
-> >>>>> and necessary outside the VFIO/RDMA context:
-> >>>>> https://lore.kernel.org/all/20260324234615.3731237-1-zhipingz@meta.com/
-> >>>>>
-> >>>>> AFAIK, for non-VFIO TPH callers, kernel has enough knowledge to set
-> >>>>> right ST values.
-> >>>>>
-> >>>>> There are several comments regarding the implementation, but those can wait
-> >>>>> until the rationale behind the proposal is fully clarified.
-> >>>>
-> >>>> Thanks for your review and comments.
-> >>>>
-> >>>> Let me clarify the rationale behind this user-space sysfs interface:
-> >>>>
-> >>>> 1. VFIO is just one of the user-space device access frameworks.
-> >>>>    There are many other in-kernel frameworks that expose devices
-> >>>>    to user space, such as UIO, UACCE, etc., which may also require
-> >>>>    TPH Steering Tag support.
-> >>>>
-> >>>> 2. The kernel can automatically program Steering Tags only when
-> >>>>    the device provides a standard ST table in MSI-X or config space.
-> >>>>    However, many devices implement vendor-specific or platform-specific
-> >>>>    Steering Tag programming methods that cannot be fully handled
-> >>>>    by the generic kernel code.
-> >>>>
-> >>>> 3. For such devices, user-space applications or framework drivers
-> >>>>    need to retrieve and configure TPH Steering Tags directly.
-> >>>>    A unified sysfs interface allows all user-space frameworks
-> >>>>    (not just VFIO) to use a common, standard way to manage
-> >>>>    TPH Steering Tags, rather than implementing duplicated logic
-> >>>>    in each subsystem.
-> >>>>
-> >>>> This interface provides a uniform method for any user-space
-> >>>> device access solution to work with TPH, which is why I believe
-> >>>> it is useful and necessary beyond the VFIO/RDMA case.
-> >>>
-> >>> I understand the rationale for providing a read interface, for example for
-> >>> debugging, but I do not see any justification for a write interface.
-> >>
-> >> Thank you for the comment!
-> >>
-> >> As I explained, read interface is not only for debugging. It was used to
-> >> such device who don't declare ST location in MSI-X or config-space, the following
-> >> is Intel X710 NIC device's lspci output (only TPH part):
-> >>
-> >> 	Capabilities: [1a0 v1] Transaction Processing Hints
-> >> 		Device specific mode supported
-> >> 		No steering table available
-> >>
-> >> So we could not config the ST for device on kernel because it's vendor specific.
-> >> But we could configure ST by it's vendor user-space driver, in this case, we
-> >> should get ST from kernel to user-space.
-> > 
-> > Vendor-specific, in the context of the PCI specification, does not mean the
-> > kernel cannot configure it. It simply means that the ST values are not
-> > stored in the ST table.
-> 
-> Thank you for the clarification!
-> 
-> I agree with your interpretation of "vendor-specific" in PCI spec terms—it
-> does not prevent the kernel from handling TPH in principle. However, the
-> real problem is that the kernel has no standardized way to know where or
-> how to program those vendor-specific ST values.
 
-No one here is opposed to you implementing the appropriate callbacks or
-extending the existing in-kernel API to support a device‑specific mode.
 
-> 
-> When a device  reports "No steering table available" and operates in
-> device-specific mode, the method used to set ST values is entirely
-> device-specific and not covered by the PCI specification. If the device
-> is taken over to user-space by UIO framework (e.g. VFIO or IGB_UIO), the
-> generic kernel cannot infer the proper programming sequence or registers
-> for each vendor-specific implementation.
-> 
-> In these cases, the configuration must be done by the vendor’s
-> user-space driver, which is aware of the device’s private programming
-> model. But such a user-space driver still needs to obtain valid,
-> platform-provided ST values (from ACPI _DSM), which it cannot do
-> without a kernel interface.
+> -----Original Message-----
+> From: Tantilov, Emil S <emil.s.tantilov@intel.com>
+> Sent: Tuesday, April 14, 2026 5:17 AM
+> To: intel-wired-lan@lists.osuosl.org
+> Cc: netdev@vger.kernel.org; Kitszel, Przemyslaw
+> <przemyslaw.kitszel@intel.com>; Bhat, Jay <jay.bhat@intel.com>;
+> Barrera, Ivan D <ivan.d.barrera@intel.com>; Loktionov, Aleksandr
+> <aleksandr.loktionov@intel.com>; Zaremba, Larysa
+> <larysa.zaremba@intel.com>; Nguyen, Anthony L
+> <anthony.l.nguyen@intel.com>; andrew+netdev@lunn.ch;
+> davem@davemloft.net; edumazet@google.com; kuba@kernel.org;
+> pabeni@redhat.com; Lobakin, Aleksander <aleksander.lobakin@intel.com>;
+> linux-pci@vger.kernel.org; Chittim, Madhu <madhu.chittim@intel.com>;
+> decot@google.com; willemb@google.com; sheenamo@google.com;
+> lukas@wunner.de
+> Subject: [PATCH iwl-next v2 1/2] idpf: remove conditonal MBX deinit
+> from idpf_vc_core_deinit()
+"conditional" -> "conditional"
 
-The objection applies to this point. The PCI device exists in kernel space,
-and the kernel is responsible for managing its internal state.
+Everything else looks fine
+Reviewed-by: Aleksandr Loktionov <aleksandr.loktionov@intel.com>
 
-> 
-> This is why a read-only interface to retrieve ST values is still
-> needed: the kernel holds the valid platform tags, while the user-space
-> driver handles the device-specific programming.
-> 
-> Thanks
-> 
-> > 
-> > Thanks
-> 
+>=20
+> Previously it was assumed that idpf_vc_core_deinit() is always being
+> called during reset handling, with remove being an exception. Ideally
+> the driver needs to communicate the changes to FW in all instances
+> where the MBX is not already disabled. Remove the remove_in_prog check
+> from
+> idpf_vc_core_deinit() as the MBX was already disabled while handling
+> the reset via libie_ctlq_xn_shutdown() by the service task. This is
+> also needed by the following patch, introducing PCI callbacks support.
+>=20
+> Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
+> Reviewed-by: Jay Bhat <jay.bhat@intel.com>
+> Reviewed-by: Madhu Chittim <madhu.chittim@intel.com>
+> ---
+>  drivers/net/ethernet/intel/idpf/idpf_virtchnl.c | 11 +----------
+>  1 file changed, 1 insertion(+), 10 deletions(-)
+>=20
+> diff --git a/drivers/net/ethernet/intel/idpf/idpf_virtchnl.c
+> b/drivers/net/ethernet/intel/idpf/idpf_virtchnl.c
+> index 129c8f6b0faa..fceaf3ec1cd4 100644
+> --- a/drivers/net/ethernet/intel/idpf/idpf_virtchnl.c
+> +++ b/drivers/net/ethernet/intel/idpf/idpf_virtchnl.c
+> @@ -3229,24 +3229,15 @@ int idpf_vc_core_init(struct idpf_adapter
+> *adapter)
+>   */
+>  void idpf_vc_core_deinit(struct idpf_adapter *adapter)  {
+> -	bool remove_in_prog;
+> -
+>  	if (!test_bit(IDPF_VC_CORE_INIT, adapter->flags))
+>  		return;
+>=20
+> -	/* Avoid transaction timeouts when called during reset */
+> -	remove_in_prog =3D test_bit(IDPF_REMOVE_IN_PROG, adapter->flags);
+> -	if (!remove_in_prog)
+> -		idpf_deinit_dflt_mbx(adapter);
+> -
+>  	idpf_ptp_release(adapter);
+>  	idpf_deinit_task(adapter);
+>  	idpf_idc_deinit_core_aux_device(adapter);
+>  	idpf_rel_rx_pt_lkup(adapter);
+>  	idpf_intr_rel(adapter);
+> -
+> -	if (remove_in_prog)
+> -		idpf_deinit_dflt_mbx(adapter);
+> +	idpf_deinit_dflt_mbx(adapter);
+>=20
+>  	cancel_delayed_work_sync(&adapter->serv_task);
+>=20
+> --
+> 2.37.3
+
