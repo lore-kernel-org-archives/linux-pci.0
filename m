@@ -1,110 +1,65 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012037.outbound.protection.outlook.com [40.107.200.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3CB940DFC3;
-	Tue, 14 Apr 2026 15:01:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B42E330DD22
+	for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2026 15:08:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.200.37
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776178882; cv=fail; b=sL4omHq3N6K/0lxaoxZnm600MlrNrOBzqdn0GLDY3zBe4nDykkdyYSgZe7Q9lp/kjNvrgbhl4LEr3VJqQPEh0FZ1AvWPpobT6sKIc6OdnhsV/SXWLDMKfjwFDOKS+7AW2MwfwENizR5MO5+1ht+nb2CLvqB54nKMsuO+6Vkw36M=
+	t=1776179298; cv=fail; b=it0uzt42Ta2tHLVtz4BhRhyK8xT13vcvMCDg7V/vxKq0fMc3QyCXIoIqCGbhkEu3o6sySMjgr0VYLkTwpM2ovUuo9d6gALPtr20eupPVOZlnVCPDM3RQZTCBxM78N7BMHknw9tZGaWhVK0zvviJvxDqzD7EseYKcsh4KzciPF3k=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776178882; c=relaxed/simple;
-	bh=DXr3qFOiE2Em3S5HEDicDovuab/7S2PtjbD+ypdU3Lw=;
-	h=Message-ID:Date:Subject:To:CC:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=Az6LWYnvt1nhjI4+w3AIkKd2aHfco9VXZr3cXHKY2zEZCJmauLcO90QBwOODxEyWsnOHRsvEHplJ6MCivUE9/wV//AcRc+j4Upjc1IQG54t//5EqC3FHV/8CejQ3q/d9qHIK3SLBByR2/W3WfvIMUgCBwj1B0KKhrMDKB6v6H3g=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Rk3ERUKr; arc=fail smtp.client-ip=192.198.163.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1776179298; c=relaxed/simple;
+	bh=Ikw670nOyt5su2VaB34y/3FMXWBvoyuQlqG5YOBUmeI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=c74WrCuAGIJyzLC0tTcE3IVvL7x8p9vhj1Vu+OSTL0hgMu/+N9Fmrh6YyCuKwSPxcgFh2UrQEU9wZKq6VrRY0q7VZaQmhlE+bvWWnJo9xmUwm2pTSQoidAkxCxWVascQbMRxiRWbYA7I24/qQs5MGtsPbhopQRXKDrEUKKV4S30=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=PcGrAR84; arc=fail smtp.client-ip=40.107.200.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Rk3ERUKr"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1776178881; x=1807714881;
-  h=message-id:date:subject:to:cc:references:from:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=DXr3qFOiE2Em3S5HEDicDovuab/7S2PtjbD+ypdU3Lw=;
-  b=Rk3ERUKrOIg/QnI4ncrsTrFev2Tt8fWxDxW0wY/t+DVB5xsVqT2vW+By
-   HT1MpAVK4jBSujmJ/CDkJh7jNSYOr8jmD6+Fz+NaZa72F0W75LN4pqZq+
-   fMfD03pun1QuIFiOwJQr9QrUBrw/GfRfmBomIVmFh2gFFWU+9mjiemHjK
-   zoBKmEDnXjJkgT9bcjjqjpYRkYgsW1BleOXtlSwSZIOI7gpBjXT5paAYg
-   u6fYhO9/bi32G8v0b5I5v/UbJYOpoh74cQoEAWARX9AMvp9W5Sez1zTAQ
-   eUwP08ZvJinRrsvKHOsgwP+Q16nFNZ48JqyIUU5tajav+rQDULvWWI80U
-   w==;
-X-CSE-ConnectionGUID: qqap6Gp/QqmcnxozC2jhNA==
-X-CSE-MsgGUID: r1iLVOGHSKCQLnTRfPqcSQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11759"; a="77248406"
-X-IronPort-AV: E=Sophos;i="6.23,179,1770624000"; 
-   d="scan'208";a="77248406"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2026 08:01:20 -0700
-X-CSE-ConnectionGUID: S8PX/q2jQFqYZUf6sxuO3w==
-X-CSE-MsgGUID: 9YJdosDQSN6E7EsLEA/mJA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,179,1770624000"; 
-   d="scan'208";a="227470467"
-Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
-  by fmviesa008.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2026 08:01:20 -0700
-Received: from ORSMSX901.amr.corp.intel.com (10.22.229.23) by
- ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Tue, 14 Apr 2026 08:01:19 -0700
-Received: from ORSEDG901.ED.cps.intel.com (10.7.248.11) by
- ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37 via Frontend Transport; Tue, 14 Apr 2026 08:01:19 -0700
-Received: from PH8PR06CU001.outbound.protection.outlook.com (40.107.209.49) by
- edgegateway.intel.com (134.134.137.111) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Tue, 14 Apr 2026 08:01:14 -0700
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="PcGrAR84"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Yv0JJolUt+ph7Omn0wU35UyRUjWL1vj/uhT878Ya1ZW6k3cLFkWA3thZ5zkD/3i4vXRZ8dlARMztCsDKf9Cy4AkvFFSJOt2yl32pO0lHbtKDMy63yl9Iyq/GHMFaH4SS33pdTptz6dACI7sr6wvN2pOLwpc2Ea31GAr6zBa87msXmMPa7NxqTVWjw4ewCLUCYsyrR/XlN1KTae3XsZkXQCFCh7sqGdjXsG2oS0EmVAnns+9JEK2Tlv3USRhwzXXmxDWkoJywe27o4lWPSWzTkLcaoETLLmi6TF8Eqp8HT/zX2O0RcXL6XlAMKO8LfJWcLxyhs1E6Z/D4kZ7GLhnuiw==
+ b=wHgU0zMuVjX7LDkad6MizW76TTkE1VPMceYVbPyAcRBN7nCAZczY9PiOGOw3txrBvVZfNc3r7R/f7NTgZWha5xvLidNzqCfRoLEvirbeYDGrTmadaP7VEvT26DKlXq3HuqDoswiX3YjWNRcQgd3tqhdLVoZ1JXjJHDsNJuMUxqpsb1F4k9EbXbVAi7YplJ3KJYdtxY/JmxlHx4rjUfNqDT7JmgiKYLmKmV3obFgr8nV2wIMwm+1W7K+iM9ZASfVElxYnZ0bV3CjlzqROcE2OgC3h1+AlYXpCUQvD7aCVVV3ZfFvcBZCURGPwEPtH1t9ghWsP5V7VM0cJpY47OM271Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=SqizsChBozjdURrzEdpws76lnm3AshkI8fjXPAlg22E=;
- b=Jt+jRy5ynHuF0wlh/E68f2AL6Rg4gCV5bEGNgB5bCmW5m4VEuk3I4/0J0bXDHvH1CTeoU2s+Xb9XnLoOQEpS5t3D3BFRMgDKAa9ZDaaa8PYu7DfLOzHFBPFt3c/WjlGyb8bj/ox+53/0+Mhbsu9YC0cMJ/J8ZjwGVRJvFiz5B6cubyYf7Qt4d4pSasB2obi6EjIsX+LHgneW1jHIt0wqVwNaQTcHP7lWJIsZnoIxmfk9eUhfdjy0LoFDexLbjmvaugRqSWAwCK7Qf0YuHewmCk2t0Ka+M1jFBHoKXzmSa/Lv5Yt+vdLL5WjoLS5YsqTsPHfbESloKAQ39Jz/UiqXYA==
+ bh=TvbFZ4Oc6jPGHNXnGApeXfbK5Bs9hMWzPn0S/R4VpQg=;
+ b=NGOxa06B4GCcmfHgFfb0wevDqJtyparu3mWPn4W0z4+bBTZyu6hRUKlWJRx0SiV6aCGwjum++4qIpP0bfXEP0xX/vHvePacu19/w9LcxnFgB5UAJHJbpbRX/x/sW5t61Ln/AIoqLouslVmb/2oEoBxexegjxrqd5fOOaQUvX01VD5wZzQ4wiSiCn4JCiJfZeKLjsE1+/jiuYz5k0IGrhP+6cw0ycZdn4qSQFOhCR5wQ2to+xczSxXBbgI2W5QqNsYRTcsZUwX1qKlXJu+Wsah1e8eSp7e3unxNE6ViBhoUDxQvwpuubyhSFeOf6VSwk2IDU2pEdfcrJF8ptGusRAHQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=TvbFZ4Oc6jPGHNXnGApeXfbK5Bs9hMWzPn0S/R4VpQg=;
+ b=PcGrAR84a+mQCJf1q5vSyZYXaaLHijWw8+USY8AimVVfqNxQDFxTpxxs6pUbXmFSvaoZx3vqYOAvb58R4YHfBQfCgZ0h/Iomjf9V7XhnCBDNP0wC6mw7wWEQtdcKif2MwQV8b7bIUyTPNMMm9XqvgAvHWD3YNsK0I820n7XwsQEkFW7IfFZAKQ5rxAAwKJLpMeONPipg0YxeRPDvWSzkj6IPd71cNJhhppS59t1GwfaiAw5xJq557aIgnBLuePGdhj1HWbZW58fYgQBMJxOREDp49us3BqkQ9Xbdw9Nblgyt9rWXZZMDDxAN/q2p+GMynOlJqmvjvi4LXJFI6ihu7g==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from CH0PR11MB8168.namprd11.prod.outlook.com (2603:10b6:610:186::20)
- by SJ2PR11MB8369.namprd11.prod.outlook.com (2603:10b6:a03:53d::16) with
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CY1PR12MB9601.namprd12.prod.outlook.com (2603:10b6:930:107::16)
+ by DS4PR12MB9681.namprd12.prod.outlook.com (2603:10b6:8:281::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9818.20; Tue, 14 Apr
- 2026 15:01:05 +0000
-Received: from CH0PR11MB8168.namprd11.prod.outlook.com
- ([fe80::9549:c8e9:6748:12ee]) by CH0PR11MB8168.namprd11.prod.outlook.com
- ([fe80::9549:c8e9:6748:12ee%5]) with mapi id 15.20.9769.046; Tue, 14 Apr 2026
- 15:01:05 +0000
-Message-ID: <eb07b21f-0133-40c3-ae86-338572e2a64a@intel.com>
-Date: Tue, 14 Apr 2026 08:01:04 -0700
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH iwl-next v2 2/2] idpf: implement pci error handlers
-To: "Loktionov, Aleksandr" <aleksandr.loktionov@intel.com>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "Kitszel, Przemyslaw"
-	<przemyslaw.kitszel@intel.com>, "Bhat, Jay" <jay.bhat@intel.com>, "Barrera,
- Ivan D" <ivan.d.barrera@intel.com>, "Zaremba, Larysa"
-	<larysa.zaremba@intel.com>, "Nguyen, Anthony L" <anthony.l.nguyen@intel.com>,
-	"andrew+netdev@lunn.ch" <andrew+netdev@lunn.ch>, "davem@davemloft.net"
-	<davem@davemloft.net>, "edumazet@google.com" <edumazet@google.com>,
-	"kuba@kernel.org" <kuba@kernel.org>, "pabeni@redhat.com" <pabeni@redhat.com>,
-	"Lobakin, Aleksander" <aleksander.lobakin@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "Chittim, Madhu"
-	<madhu.chittim@intel.com>, "decot@google.com" <decot@google.com>,
-	"willemb@google.com" <willemb@google.com>, "sheenamo@google.com"
-	<sheenamo@google.com>, "lukas@wunner.de" <lukas@wunner.de>
-References: <20260414031631.2107-1-emil.s.tantilov@intel.com>
- <20260414031631.2107-3-emil.s.tantilov@intel.com>
- <IA3PR11MB8986C6EC840268F14C44B28CE5252@IA3PR11MB8986.namprd11.prod.outlook.com>
-Content-Language: en-US
-From: "Tantilov, Emil S" <emil.s.tantilov@intel.com>
-In-Reply-To: <IA3PR11MB8986C6EC840268F14C44B28CE5252@IA3PR11MB8986.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: MW4PR04CA0090.namprd04.prod.outlook.com
- (2603:10b6:303:6b::35) To CH0PR11MB8168.namprd11.prod.outlook.com
- (2603:10b6:610:186::20)
+ 2026 15:08:14 +0000
+Received: from CY1PR12MB9601.namprd12.prod.outlook.com
+ ([fe80::cd76:b497:475f:4de3]) by CY1PR12MB9601.namprd12.prod.outlook.com
+ ([fe80::cd76:b497:475f:4de3%5]) with mapi id 15.20.9818.017; Tue, 14 Apr 2026
+ 15:08:14 +0000
+Date: Tue, 14 Apr 2026 12:08:12 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: fengchengwen <fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [RFC] Proposal: Add sysfs interface for PCIe TPH Steering Tag
+ retrieval and configuration
+Message-ID: <20260414150812.GI2588311@nvidia.com>
+References: <6ea4c4c2-774e-aa76-3665-918e2a24cc84@huawei.com>
+ <20260413133542.GA1233417@nvidia.com>
+ <14d5ae84-5448-497b-9c9d-b1909570b964@huawei.com>
+ <20260414115752.GH2588311@nvidia.com>
+ <284350ea-e398-12da-c3e2-e156a1e6d127@huawei.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <284350ea-e398-12da-c3e2-e156a1e6d127@huawei.com>
+X-ClientProxiedBy: BL1PR13CA0207.namprd13.prod.outlook.com
+ (2603:10b6:208:2be::32) To CY1PR12MB9601.namprd12.prod.outlook.com
+ (2603:10b6:930:107::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -112,183 +67,80 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH0PR11MB8168:EE_|SJ2PR11MB8369:EE_
-X-MS-Office365-Filtering-Correlation-Id: dbf8030a-f28e-47a0-fdd1-08de9a36a6e2
+X-MS-TrafficTypeDiagnostic: CY1PR12MB9601:EE_|DS4PR12MB9681:EE_
+X-MS-Office365-Filtering-Correlation-Id: eb69ecea-b7f5-4cf6-7663-08de9a37a69f
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|7416014|366016|376014|56012099003|18002099003|22082099003|18096099003;
-X-Microsoft-Antispam-Message-Info: lTpJKL1XEE4YPmOh2QOws3e4z9RFsVpMkTPYL19E0NJzEg1ulLptaYGzCR/qeZbJbzlM4IbzzQd3n3lR0HUXTLdmL3uMSbxWilbGrQW5qaQWg5ZM4ZuGF8pLH+x/2b+77R6CHzlO64uVG0A5hq/0Z7x4DLuBR/RRcQSem7S4AkEy12yQoodrDZ8HXNTCzJA6SEtpv/HWL9ILSv/fOSQ35Wkw+pdO8sKHlIYFT4bKp2QwVzE/8/bhtL64kcgYo+PAlxkJ7wAfxZH5i80080yZPkoM+RVGAxe4zH+g+jTiNN5eb0o8+2X1lP3fWszIT+VZ3z2kat8LTDAKWTkGjR3N4eYVuU/buXCxLDymiwNdIin2+3Pd/6Y54qVT0chaRv8znrh6S6GdvHtqgXSO1pOXO4eXVYcjg/3dWRcl0MqJjael65L9zMd5yyT0m2wlCV7dt4FCQ5A4fzRqRvW3W8YXwN/Op2M17GPBIfiZ2Wg/+aLRsaZIqxSqJq0sxkBFKKPFMpzvBIzOeVZiAFOzPl4ntL56U5h2R7ueVOKJKpBAmIex6mxWYKPqZpAalfPcwLALctDnKJq2unnmFyTHsAX4Jamdj1hOzfSrW6U3kCPhwwN1Zd23GynqFMDE7e2ceaJtpmhnK6gw/QC4R3YtOhJ7PYw0x6XOzjVX3+jUp2hV7PagYVXc3VnMT401nydvn6okXS9n5C4O6IE9Joy4cPsC4kjFG2t5nBEi4c9s8EntmDI=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR11MB8168.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(366016)(376014)(56012099003)(18002099003)(22082099003)(18096099003);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|366016|1800799024|18002099003|56012099003|22082099003|3613699012;
+X-Microsoft-Antispam-Message-Info:
+	cPJzSsikSow3EkHcEZuV9CL+YFwqhdIHg3CP6OWNcWw3FYLgX9xwfE+7hEY4/ZdZtGv54rthccaG4NpMy5vGdn+OOZ4YezH0wonkEZ+8ABeo6uzq5nhQh7MD2Q4BgevdM7sf1barROjvMLvyULFPD3m5FocGYkkJDdnTCyaBTBB6vOeQ93IU0ErfE4z35H+SwMSySecJ3sQxtuTZZO9jqrZ6dqAuK55d9HQDCmOBNNwQiz0Bwsgj8CewnF/MHGFBFFoI+VbPQJ8FV85nY1Iu9R7NTFSFHqnICJSRlT1/zdHLzc6yMhII4Ozd0C/G6JpGmn0uE0YNCFs+MRy2vrz5MurbsvJ6IF0srSJRfnEMk4ryhtdubd32RpwhkWoVHnKT7Ay2tZUrGIRtIy9rPbExT+XXhSkLPEwG/CybKtFaL0ziZmNOsBfvJOsUqx4T4FnliY2aGGUP0589c2QfBax4ruBGPXr1dg9PP72mb5FjiCRkRIhL2VrvRO8ivuuhx7A3L2bldhZ3YFiooFnrMwn1PnqyYPprJP1X2yCI3OsdARwhubJQoMY+chzayS5YASzy9BBUiAMleKVIbyIrLlr15wYPaJwLRlC7VG6MgHKP9HswzixvUmACwPYLBT0XOXPvA7G3KLyoaPErEaN/qpnAQMs6MxRe5VxNyfLJnBhU4daV4I8LVDqKrm1a8Oug/1XXXaVq8UtSuL//FHRhm2qOsX4MfUP7PmWFZPjKXhBUPcsEQjHhmXiGitOcyQ1VyYhq9aPdin1H7ktCQ0IYz2rBMRx7gvmO3tGpr/sGkaWcS/s=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY1PR12MB9601.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(18002099003)(56012099003)(22082099003)(3613699012);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Y3F6cWgrZ1RUcHNjOFlEbitTUkltSjZla292d1d4U1E3cXZoaExwRDE3YjNS?=
- =?utf-8?B?MzRsRElTZDRISUthZnJqYm9YYzM1WHdlUUpEU3k4cVQ2elgwQ2s3Y0Z0L0tN?=
- =?utf-8?B?U2J0cU9XbmFOTWJ2ai9NaktieFdFUnpZRGRBLzBZM3dwbG4xM21hS2taK2M1?=
- =?utf-8?B?NURQS01aZmV2bmJaU25NakR6c2hvRWw0cGpOamxlM1l3TXJHOTAvUFhHZm45?=
- =?utf-8?B?WHQrZUU3UXVVR0pMTzVYVThaQnQwS0FJdVh1UllvTzk1S1pSZEpYbVlhcGpq?=
- =?utf-8?B?Y3FkWTVoaVMza3pUUCtsakpnWUx4VXRhRjB2U0pqN2xNalJnUitZZEJ1d0Rt?=
- =?utf-8?B?d3lNNm9MWU9mVUk5SHErZFVaL1Rub1dHK3M1RW1BVk1BeE5EalNSRFpveGpx?=
- =?utf-8?B?b1RHdHIvK3pJeE44OEUyTktESWtnN0h1ZlA3dTRlZ0RqYmR2cHoxb2tkVFBq?=
- =?utf-8?B?azFuQmxLWDNnQmxyZVFhTkJIa2hXcTJEMXU0bVQxME11ZmxPSStlUnc0UjBF?=
- =?utf-8?B?MTViRXdJelZaUEJhNnBQRlVKQkhXMzVXQkIvRTNZUnlHRU1IU3NUb3hEdkww?=
- =?utf-8?B?aHpiU3hBMWpCWk4vSFExY1VSRUU3c2hlcTFpcVhpdXhSMGJ3VStTMGEwTmcw?=
- =?utf-8?B?YnpDQmRQd0NUWEJrMlBQZldIZW8wWllFNUlUTzY4MVNBNCtiMGZxc3pQbkFv?=
- =?utf-8?B?WStkcGphdHR2ZkNYY3JpOTl6bmFmUVJEbVhiNjBramVPdE9GcmlLRkNKaWlh?=
- =?utf-8?B?Q0dUUndLMWt2Z2x4U3Z1cVZlUEc4UzIvREsrak9JbnZjdWhhSEs3eXdVYTZN?=
- =?utf-8?B?cExDMERiYUk2V1N4SEdiZ2p6QXMvdDc2ZThvZmk5eUsyZVNsRDFtMXlMSUxi?=
- =?utf-8?B?VHhYL3JGWmZPaXUwRVFuNmdhbCtTdGJYVmk2amxWOVdOazgrbXVrVnZmSmdN?=
- =?utf-8?B?c0hEa01XOEhUV2hyRnp3RzlmQkRtVTM0MzRveWNubnVwMXhKMHN0S1E3WlRl?=
- =?utf-8?B?Nkl0TkJMbnkybFNJa21pcTI0SkdvZ0x1K0NKMVNrZTc2WVZZTjhyVld3ZEFq?=
- =?utf-8?B?YnpkR1VNallqTGxwSFZYOTB2ZUpVdUZTcThOWDY1TGcwLzhiY0I0cXNVS0tk?=
- =?utf-8?B?WUgwT1hSaFhUQXphTzBwYndic3J6MlcrcGFLZDVjamZSVG9kSkxvenNkL3lr?=
- =?utf-8?B?S1I0ejJRa3BHcEVuUWZlZ0dVYjJzVnpqRzh2VG1lZkR3YXg4VjFkcncydmli?=
- =?utf-8?B?WWdqelkyNGw3U0VUMnpwSFFoTW11QTJiTHJlYmhObEtPSnZRNXdJYVhqcjBM?=
- =?utf-8?B?bVNPb3VTMkdxbTNsNE52UWhRb1dKY1JRL3pQSU41Znl5cWNKZDRiL2FnWHdh?=
- =?utf-8?B?bEdkRno3WUFDUFlaZ2c4b1IxSUdtUkxKT1g0YkxmQk11VElSL1VhNGNBdjBW?=
- =?utf-8?B?LzhhTmt5ejRFMzZRcG14T2JOSm94VFdiMzlEQmtIWmdOMEVTV0tOZUhUTlZw?=
- =?utf-8?B?bUZpclJFRlk5akRqU1RmTkM1ZUNjbkROUTU1SVl4Q2dKbDlmY0ROWnhVa1Jl?=
- =?utf-8?B?Wm13TDRWUzVvTXdYQ1VoOTM2Z1NkNGExcnZxRWJhdld5dTFqdDV1Z1J6RVZI?=
- =?utf-8?B?YkdBNmh5dlBHdEJkazBEWXFIV2FrMXd5dmpNbjZnUk1jSG9CREh5Zk1WL1Vy?=
- =?utf-8?B?UGR0TW81ZzRXMTY1TFhnd09KM0lzTG1vL0xxY1Y1NmJJNDVRSG5rdklmdXhS?=
- =?utf-8?B?VnhIVGNoc3dVZDErUFJCSmFBWEtJdjZOVlVDMWY1ZmN2ZVlTUmxvbHIybXVI?=
- =?utf-8?B?OTJ6VDhnNWhsOWFXTm84dVlIRHhnT3NJd2oxVVVySjdCS3JLU0lPdVBwOFMr?=
- =?utf-8?B?VmNJVU85T3YxT3A1OUs0OG1RSmMybVVYYlZBY21lT0tNZWZrSGMveEgzNnpq?=
- =?utf-8?B?ekh2ZlF4UTJBd20xS0MvazdZSHFIWWI4QmRTeThRTHpPRUtHZjFFTGVtTVUz?=
- =?utf-8?B?cmRJZ0tTNVl6R3R5ZWNnTFY2WVlrU1VCckwzVjlEbHhMQzdkRGhMY3FxaHRP?=
- =?utf-8?B?YmRmdjhyQXpNTmdaVEFSaW1rck4zU0lKdE5oVldEV2NjS2sxbEZGRnNqbFpt?=
- =?utf-8?B?OG5XelRUSHhzVVVGMlFQZmJtYlcrSzQyZnpFTTMvOUY3K3haWVJ1SHpJbEJV?=
- =?utf-8?B?SDRPT0ZhZjZ0NXdYQ2hBZHBTNEhQT20ybGNxdkNhcHl2MlFyd3BBcUxiTHF2?=
- =?utf-8?B?cWlmVTRWOFcvTCtXckNseVpnTU9ydGNnb0RNZ0FRclV3dzBCSm9jeGVIdXRo?=
- =?utf-8?B?REdQcWNJa0kwcURvMDNEY0VhMVE5bHJUdk9NZFBZTDdKTEFBcEM1YjExVGNL?=
- =?utf-8?Q?JVk+xsaEUFS9Zt58=3D?=
-X-Exchange-RoutingPolicyChecked: vRZEiOkywEtGUT2A+EzCuEIa7ZY+WDW9vWVy8x2tx6IaAIgIP8VIK8BGrHvLTfB9dG8mDsmEACpizbdc96lihUefzozuLiH9ycCV8sqAm1SQBHR9D4Ua1n5tCMEVNtTF3s0Mhbsn3xClccH5a62+cNO2Jomo9F4MqUwtFKJLL6XoXGJXf+p422RW+3sG6FTLer8KweGrYJ2jNsemVM4NXRhW7VUpZfR7QmCQyFtdXKQ3SsgBwzdb6t+pRJ/GUfE+WaHBJbSKEdAtKWaqD9S0mkUEOwg5N/OoyvenxKvLg816tbhxItjBqOxQpBwQ/iu7hWm1/iDsNPHB+siDNlnwLA==
-X-MS-Exchange-CrossTenant-Network-Message-Id: dbf8030a-f28e-47a0-fdd1-08de9a36a6e2
-X-MS-Exchange-CrossTenant-AuthSource: CH0PR11MB8168.namprd11.prod.outlook.com
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?uDK9a52uKMblSkwYUXIPZjt/hlSPXoMZtHygMogt0tbPnC9tK50QlkSsO9pL?=
+ =?us-ascii?Q?3otJQVxKgcOSUsDoV+d8uOvCZD6bTk8xBC32YoKMj7y7GrE48xxYrh62Gygo?=
+ =?us-ascii?Q?1spbIDaNDF/maSO7NWeiE9klnfgQKRbzvEoIsAR75ByUeKMgcgQX7gYs9HC1?=
+ =?us-ascii?Q?/mAf6pRLoz5zzovX5W+xBOsXUbK0rXGaxiwxrSi8WEUfpffWVsQgW3TuQNdd?=
+ =?us-ascii?Q?MG2TqToDHvydAq8lQAumAXPfSlQsQuKiz+hgdtlRGaYFZXuXSrnJasLg/SeP?=
+ =?us-ascii?Q?oBxC6jrAHymvxWa3ZtBPCV/oWv1Q3p2pbmH1+/zvmbBz0kserObRWJy0vN4b?=
+ =?us-ascii?Q?RMTeEbKNSnUVGvz7I3Mcc0Kejkj/oc9ZRAoMf66JGbD04ZBtgKFxGtqYUzOZ?=
+ =?us-ascii?Q?ZTp2KdxSdmd6IjI/JKP/0rG3lsJFJaYfSwlkZAmO7SaAH457BUog8V+HrfoR?=
+ =?us-ascii?Q?Zw0GgZXlBs3t5BQSZt1KkYGexqsM9xKD0wjiakrMAXNxPSKRcq3xaCJyKyhe?=
+ =?us-ascii?Q?1P6Bk7r7CGc4Naj5Vb1Tw0d+L/WIce0xWiDvHiv5EezMf/QVx0kNsT2+kaew?=
+ =?us-ascii?Q?5WWOHxgSxOFYNpPDCe4t2ERnCL+vvZ4D4SJeWel/MlAxyd1VpWKKlkH3841Z?=
+ =?us-ascii?Q?0xcOgdjmMcuwVfoKDeHfxd8vxHBi51FYUCtEbAxqpBTo9NWJMw6y34njY4dR?=
+ =?us-ascii?Q?dCamCjcw/pczaCq+ELIc5VajppISoyv724bMesOKikYsiVLyQLWgKT7fXrn2?=
+ =?us-ascii?Q?kHsoT8F/bYDppjhfltB8jE3L1WsofZPrQMBeNkIQaxkKLROjwfMitBWYamBp?=
+ =?us-ascii?Q?wB6zJ/IypZ/u835Xw/34gAExZnLgY8tPDHpAHSC+IK+6UF9HZ5ztQZTZBavz?=
+ =?us-ascii?Q?F8m/cCUXJf0c5zS04kkbDSfUjAD//4yb4IbA0znleIgqvRvEZffL96IIe66o?=
+ =?us-ascii?Q?ZznxmOl6qOWkScOUyRLhnd298xY992qT5Y562GmpEXRvJUavtYEXEOarEH18?=
+ =?us-ascii?Q?QnST3Wk1u1W7Q7GlGF3eDek2wHiHjbccVdVnpKIDd25AHXbBemIOst6oHRMf?=
+ =?us-ascii?Q?sjezaKRbK5kcZZP0tuFiBOZbMgdM2FutOL1SJIS0XhVeBEb6vuSrSI9KEFgr?=
+ =?us-ascii?Q?fhVhFFNoTyPLD75oPqA68OQpXuH37P80IFhoi1683i5gxbeuMfUj9/UsAre5?=
+ =?us-ascii?Q?vmBsFDO0bj9A3AFzB7SL6cD2AQd38Vt84KyRfFMMzSm3rqDiUMPMBiOtZ8RA?=
+ =?us-ascii?Q?Io7jAllwArIcT/grNmlSQKX2JhL3qQl1FfDHHkzXrzLzYTnoORF+2BjbCE/o?=
+ =?us-ascii?Q?TBmS0PSmrzzYZVq7B18jEq+P/grJWTn9tBsBvxDslPuidxIRfwZEl8xPUBXD?=
+ =?us-ascii?Q?9wR+zjXq92c0EBIxCFSrpLS6UV7ZrKhpVhPOHrU6GJdQOuj45Ozo9ARMoUdl?=
+ =?us-ascii?Q?RTSXp+LY0sbC5vg/D43EC41rd/L+RL8i1HgKoLDe9VHJPgioRwAyF8xJe+JG?=
+ =?us-ascii?Q?1zXueV05neahgb5zK2hBiImekdLDbcA3F4l8AGFRe9nkzsTZHVMHYPFgAbc/?=
+ =?us-ascii?Q?pk2kozQbt8csFC0T9kknIUx0ZL2M7X+1vh1ZDWKVxEOEpzpSx6jYWCA3yU81?=
+ =?us-ascii?Q?4hrxe8adjID/DgVXu64hQXt/KDi+csvaQ5D8WacYQjTI9NpraiPykpUJxDF8?=
+ =?us-ascii?Q?gbzBlXO5Tn/NLmIJ8fqoGlBNR5sQj7iDKqhrAYbhoui15nqY?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: eb69ecea-b7f5-4cf6-7663-08de9a37a69f
+X-MS-Exchange-CrossTenant-AuthSource: CY1PR12MB9601.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Apr 2026 15:01:05.4409
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Apr 2026 15:08:14.4433
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: aRvsHfbjfiWqswDlhFBN4azVf9haFtKK4ATN0binfuxnuwJ6DJB+GaRv2VB6GFwzPzAxiBZsLOI4eCJLqc0amT1RQOSFTMCZmoZwJ1x7O28=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR11MB8369
-X-OriginatorOrg: intel.com
+X-MS-Exchange-CrossTenant-UserPrincipalName: y210mZQSlfDh4i9se/bNxN1ITTVBU0Er9T8I0t3d4yvTJymWF2uWjh6H9Eh5/jUi
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS4PR12MB9681
 
+On Tue, Apr 14, 2026 at 10:40:39PM +0800, fengchengwen wrote:
+>    On 2026/4/14 19:57, Jason Gunthorpe wrote:
+> 
+> On Tue, Apr 14, 2026 at 09:33:01AM +0800, fengchengwen wrote:
+> 
+> 
+>    - For devices using the spec-defined ST location, userspace may
+>      provide (index, cpu) associations for the kernel to program safely.
+> 
+> No, it is not safe.
+> 
+>    Thank you for your clarification and for emphasizing the security
+>    concern.
+> 
+>    To address this properly and ensure safety, I plan to add a dedicated
+>    kernel boot parameter, similar to iommu.passthrough, to control this
+>    interface. The behavior would be:
 
+No, that's nonsense. The driver owns the tph table, nothing else is
+allowed to manipulate it.
 
-On 4/14/2026 4:09 AM, Loktionov, Aleksandr wrote:
-> 
-> 
->> -----Original Message-----
->> From: Tantilov, Emil S <emil.s.tantilov@intel.com>
->> Sent: Tuesday, April 14, 2026 5:17 AM
->> To: intel-wired-lan@lists.osuosl.org
->> Cc: netdev@vger.kernel.org; Kitszel, Przemyslaw
->> <przemyslaw.kitszel@intel.com>; Bhat, Jay <jay.bhat@intel.com>;
->> Barrera, Ivan D <ivan.d.barrera@intel.com>; Loktionov, Aleksandr
->> <aleksandr.loktionov@intel.com>; Zaremba, Larysa
->> <larysa.zaremba@intel.com>; Nguyen, Anthony L
->> <anthony.l.nguyen@intel.com>; andrew+netdev@lunn.ch;
->> davem@davemloft.net; edumazet@google.com; kuba@kernel.org;
->> pabeni@redhat.com; Lobakin, Aleksander <aleksander.lobakin@intel.com>;
->> linux-pci@vger.kernel.org; Chittim, Madhu <madhu.chittim@intel.com>;
->> decot@google.com; willemb@google.com; sheenamo@google.com;
->> lukas@wunner.de
->> Subject: [PATCH iwl-next v2 2/2] idpf: implement pci error handlers
->>
->> Add callbacks to handle PCI errors and FLR reset. When preparing to
->> handle reset on the bus, the driver must stop all operations that can
->> lead to MMIO access in order to prevent HW errors. To accomplish this
->> introduce helper
->> idpf_reset_prepare() that gets called prior to FLR or when PCI error
->> is detected. Upon resume the recovery is done through the existing
->> reset path by starting the event task.
->>
->> The following callbacks are implemented:
->> .reset_prepare runs the first portion of the generic reset path
->> leading up to the part where we wait for the reset to complete.
->> .reset_done/resume runs the recovery part of the reset handling.
->> .error_detected is the callback dealing with PCI errors, similar to
->> the prepare call, we stop all operations, prior to attempting a
->> recovery.
->> .slot_reset is the callback attempting to restore the device, provided
->> a PCI reset was initiated by the AER driver.
->>
->> Whereas previously the init logic guaranteed netdevs during reset, the
->> addition of idpf_detach_and_close() to the PCI callbacks flow makes it
->> possible for the function to be called without netdevs. Add check to
->> avoid NULL pointer dereference in that case.
->>
->> Co-developed-by: Alan Brady <alan.brady@intel.com>
->> Signed-off-by: Alan Brady <alan.brady@intel.com>
->> Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
->> Reviewed-by: Jay Bhat <jay.bhat@intel.com>
->> Reviewed-by: Madhu Chittim <madhu.chittim@intel.com>
->> ---
->>   drivers/net/ethernet/intel/idpf/idpf.h      |   3 +
->>   drivers/net/ethernet/intel/idpf/idpf_lib.c  |  13 ++-
->> drivers/net/ethernet/intel/idpf/idpf_main.c | 112 ++++++++++++++++++++
->>   3 files changed, 126 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/ethernet/intel/idpf/idpf.h
->> b/drivers/net/ethernet/intel/idpf/idpf.h
->> index 1d0e32e47e87..164d2f3e233a 100644
->> --- a/drivers/net/ethernet/intel/idpf/idpf.h
->> +++ b/drivers/net/ethernet/intel/idpf/idpf.h
->> @@ -88,6 +88,7 @@ enum idpf_state {
->>    * @IDPF_REMOVE_IN_PROG: Driver remove in progress
->>    * @IDPF_MB_INTR_MODE: Mailbox in interrupt mode
->>    * @IDPF_VC_CORE_INIT: virtchnl core has been init
->> + * @IDPF_PCI_CB_RESET: Reset via the PCI callbacks
->>    * @IDPF_FLAGS_NBITS: Must be last
->>    */
->>   enum idpf_flags {
->> @@ -97,6 +98,7 @@ enum idpf_flags {
->>   	IDPF_REMOVE_IN_PROG,
->>   	IDPF_MB_INTR_MODE,
->>   	IDPF_VC_CORE_INIT,
-> 
-> ...
-> 
->> +/**
->> + * idpf_pci_err_resume - Resume operations after PCI error recovery
->> + * @pdev: PCI device struct
->> + */
->> +static void idpf_pci_err_resume(struct pci_dev *pdev) {
->> +	struct idpf_adapter *adapter = pci_get_drvdata(pdev);
->> +
->> +	/* Force a PFR when resuming from PCI error. */
->> +	if (test_and_set_bit(IDPF_PCI_CB_RESET, adapter->flags))
->> +		adapter->dev_ops.reg_ops.trigger_reset(adapter,
->> IDPF_HR_FUNC_RESET);
-> You say "Force a PFR", but PFR is only triggered on the AER path, not on the FLR path.
+You haven't even sensibly explained why you'd want this.
 
-Hence the "force" - the call to `trigger_reset` results in a PFR and is
-only needed in the case of a PCI error. If this function was called
-because a user issued an FLR, the kernel will trigger it for us. This
-way we can reuse the reset handling path to restore the operation of the
-netdevs.
-
-Though I may be misunderstanding - are you referring to the wording or
-the logic?
-
-Thanks,
-Emil
-
-> 
-> Everything else looks fine
-> Reviewed-by: Aleksandr Loktionov <aleksandr.loktionov@intel.com>
-> 
->> +
->> +	queue_delayed_work(adapter->vc_event_wq,
->> +			   &adapter->vc_event_task,
->> +			   msecs_to_jiffies(300));
->> +}
-> 
-> ...
-> 
->>   };
->>   module_pci_driver(idpf_driver);
->> --
->> 2.37.3
-> 
-
+Jason
