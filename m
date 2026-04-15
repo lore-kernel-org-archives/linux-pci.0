@@ -1,110 +1,216 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 601483D34BF;
-	Wed, 15 Apr 2026 14:28:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0D512D0603;
+	Wed, 15 Apr 2026 14:57:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776263304; cv=none; b=Zyr+snHi2MyZqudhWIDBxfguJINYwx4gFW91hiXIuPGb6qFvcHREbCMeWcIpxskZ4SVx0crG6BsOE+gq2GvxjZw7VQtQ+u9Eg1NIETcqoBnTXN2YwHz56dFKSyRvlIPVhZRnfLDue2xh/JHBQj9WiFWhqHdx/SDBzzXcFx8JUd0=
+	t=1776265029; cv=none; b=nQ5jDbiiWlwgnap6aLET57e6sDd6rGRkd8dQtIgg6CT4JQ27CgwAuqEev5HXh8jGL52al2ICrq1rxrLRHtBgkTjnxJP6thJ5zP7MOEyjL9tvDitNhWa7XnYrH39tPOvazRxOT+iDg3wucdGlX9/NNgYLL8pdhWr557s8gEphx6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776263304; c=relaxed/simple;
-	bh=KLZl5mWnQ/fLEg517Nj8h/rm6MAMa8dENX79Fq95dso=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rxzkIDwZPZOEpWY4P1PY5yRQBQZP95LkDDot9K3+FPOWi0ycFznIDsIhTdUQdosWOdKFQKPyjlzhn230rE1aTHIIUY3RBJ83Pv+mUJ5bABY1OzLY4pHEhxY18xqcWfFTKWnq0JVmUOe6ikdjC3FUQbIZKmlB90bEM18ia3vXGOw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H/YX+RVR; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776265029; c=relaxed/simple;
+	bh=1S2kdSoru/ifNvwgwwUu/EShTTtvBQkznTzuC20u86I=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=dKd6O9rUDcbdDc4wOwby9ZSxZ/4rBKBKFVqVwXF7FQ49NrLQK0wCZpn7Eeiqom/LVRJlYC5wuPfS4hAxA4VjfWHCh74fPnqB6k7OvoAarGOu4K0NlaE/j805XEbBzKQP+8U6LIeePkEDNjVjxZ6f2kzodDyZNh7lK/jO6Oo36W8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=odMVGQ2n; arc=none smtp.client-ip=185.246.84.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H/YX+RVR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B35EBC19424;
-	Wed, 15 Apr 2026 14:28:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776263304;
-	bh=KLZl5mWnQ/fLEg517Nj8h/rm6MAMa8dENX79Fq95dso=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=H/YX+RVRFmDbZUEUouHLuZhFFOhEriVotbvOFw9wxSIAFOu1yin3oKr9hQA0Qc6pR
-	 I+WFVtfV4rosaPXwqeX+Kw27EcgVj1wXrS3hkWJI6FDy6VzZ/VM4FeseN1YJUcOtKF
-	 cIcgd6P3ftw6wMwBFE9Y5dT8LLZ8beEgm4Maazw7DT9d8U/b5MKbcLdDahzLWTvnq8
-	 y/Ia9YUWY2hscVdDJP/lLNEJaYQz2XQGSMPfrI7GvlevKVswmJ/nF5Bl8wOzaYMnE3
-	 3DB6G88J25UbvGy8+m0Peq0i8FqFF4fMf3+qxz5TJSxVacU/syZf5Hlb4HhAvCdLsO
-	 GpYzCyeW8yc9A==
-Date: Wed, 15 Apr 2026 15:28:18 +0100
-From: Conor Dooley <conor@kernel.org>
-To: Jia Wang <wangjia@ultrarisc.com>
-Cc: Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Xincheng Zhang <zhangxincheng@ultrarisc.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>, linux-riscv@lists.infradead.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] riscv: add UltraRISC SoC family Kconfig support
-Message-ID: <20260415-craving-rubbing-bc8d389d19de@spud>
-References: <20260415-ultrarisc-pcie-v3-0-73f06e972616@ultrarisc.com>
- <20260415-ultrarisc-pcie-v3-1-73f06e972616@ultrarisc.com>
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="odMVGQ2n"
+Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
+	by smtpout-02.galae.net (Postfix) with ESMTPS id BF20B1A32D8;
+	Wed, 15 Apr 2026 14:57:05 +0000 (UTC)
+Received: from mail.galae.net (mail.galae.net [212.83.136.155])
+	by smtpout-01.galae.net (Postfix) with ESMTPS id 7D7B360420;
+	Wed, 15 Apr 2026 14:57:05 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id A90DA10459FC4;
+	Wed, 15 Apr 2026 16:56:53 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
+	t=1776265023; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:in-reply-to:references;
+	bh=wNrWnquhsR0dlE0WJjRS5Whb5Pw+B2YUuFT6hABZVPw=;
+	b=odMVGQ2nxDTLW1G3zgpTCupAd+WE2qFmsXEHoMqdccBJm6+seTVkYni4wkvFut2s/DTE9G
+	rQgJl0iu49WoTtlt1D/ZKPek9XtvZcEmNB9JnLU3j86MKSmxk0y1H4eOFoLP4pJQsWK0+w
+	LDUa2pRoeccJ5yO0iFUiIEbEnbUiIajUOclrFN+JeJ62x/Xy4nqUEFN9xkXGH+zLdqVXtx
+	kehs4bdgRvsag91OXjg4XIBY8DTEtrZvQr4puEi8w9yA6S832dhmPp7KfxTskDf4t6OHwQ
+	pnPSy6MjhtDRs2iRsgVjZI0ToOQtgYM1i8qxDLRKg3x0iefOJqJW241JPYnlmg==
+Date: Wed, 15 Apr 2026 16:56:51 +0200
+From: Herve Codina <herve.codina@bootlin.com>
+To: Chen-Yu Tsai <wenst@chromium.org>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Manivannan
+ Sadhasivam <mani@kernel.org>, Manivannan Sadhasivam
+ <manivannan.sadhasivam@oss.qualcomm.com>, Rob Herring <robh@kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby
+ <jirislaby@kernel.org>, Nathan Chancellor <nathan@kernel.org>, Nicolas
+ Schier <nicolas.schier@linux.dev>, Hans de Goede <hansg@kernel.org>, Ilpo
+ =?UTF-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Mark Pearson
+ <mpearson-lenovo@squebb.ca>, "Derek J. Clark" <derekjohn.clark@gmail.com>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto
+ von Dentz <luiz.dentz@gmail.com>, Bartosz Golaszewski <brgl@bgdev.pl>,
+ Bartosz Golaszewski <brgl@kernel.org>, linux-serial@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org,
+ platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org, Stephan Gerhold
+ <stephan.gerhold@linaro.org>, Dmitry Baryshkov
+ <dmitry.baryshkov@oss.qualcomm.com>, linux-acpi@vger.kernel.org, Hans de
+ Goede <johannes.goede@oss.qualcomm.com>, Bartosz Golaszewski
+ <bartosz.golaszewski@oss.qualcomm.com>, Luca Ceresoli
+ <luca.ceresoli@bootlin.com>
+Subject: Re: [PATCH v7 0/8] Add support for handling PCIe M.2 Key E
+ connectors in devicetree
+Message-ID: <20260415165651.153b573d@bootlin.com>
+In-Reply-To: <CAGXv+5EPA29G-fsH=wWOD8AK6TZFezFhsE0NHPYj_Pt3nT+d_w@mail.gmail.com>
+References: <20260326-pci-m2-e-v7-0-43324a7866e6@oss.qualcomm.com>
+	<20260413075459.GA2626902@google.com>
+	<fpcs4p62f35a5qyqwgm5ysa73stbysxcr62tkmmkrrcvsuf4t4@4ivukyqjey57>
+	<eeytuhqpgdz4do4tgtbmfntub2femtyq7bij7svhodpyjwaylx@j3gmvq2a2zqc>
+	<CAGXv+5E=tujhtZjwi6Qm7hk3Ks74UzTQHWq82NiTEw1+vYod5g@mail.gmail.com>
+	<ad36pIu-0dutL7Nk@ashevche-desk.local>
+	<CAGXv+5EGe59nJctLweEdZjb3MNmMvjuCHngGSfptzN985OiLdg@mail.gmail.com>
+	<ad4tJN27opdEooA7@ashevche-desk.local>
+	<CAGXv+5EPA29G-fsH=wWOD8AK6TZFezFhsE0NHPYj_Pt3nT+d_w@mail.gmail.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.52; x86_64-redhat-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="m8S0HS9rYZzLUqT+"
-Content-Disposition: inline
-In-Reply-To: <20260415-ultrarisc-pcie-v3-1-73f06e972616@ultrarisc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Last-TLS-Session-Version: TLSv1.3
+
+Hi Chen, all,
+
+...
+ 
+> 
+> I'm not arguing for a even more generic "M.2" connector. The "key" is
+> already described in the compatible. I'm saying we should have some way
+> of describing the individual interfaces (PCIe, SDIO, USB, UART, I2S, I2C)
+> on the connector so further nodes or properties can be attached to them,
+> either with overlays or dynamically within the kernel. Right now the
+> are only described as individual ports, but we can't actually tie a
+> device to a OF graph port.
+> 
+> But maybe I'm overthinking the representation part. AFAICT for Qualcomm's
+> UART-based BT bit part, Mani just had the driver create a device node
+> under the UART (by traversing the OF graph to find the UART). If that's
+> the desired way then the connector binding should mention it. And that
+> works for me. But I think it's messier and also we're missing an
+> opportunity to make the M.2 connector a standardized attachment point
+> for overlays.
+> 
+> Mani, could you also chime in a bit on what you envisioned?
+> 
+> (Added Luca from Bootlin to CC, as I think there are parallels to the
+>  "Hotplug of Non-discoverable Hardware" work)
+>
+
+Related to "Hotplug of Non-discoverable Hardware",
+
+I would add entries for busses in the connector without using an OF graph.
+
+For I2C and later SPI, this was is done.
+
+You already have an i2c-parent property but no node where an i2c device
+can be added.
+
+The last discussion related to hotplug, connectors and DT led to the RFC
+series [1].
+
+It is a huge series. The last patch give a real example of representation:
+  https://lore.kernel.org/all/20260112142009.1006236-78-herve.codina@bootlin.com/
+
+In your case I would see some thing like:
+
+    connector {
+        compatible = "pcie-m2-e-connector";
+        vpcie3v3-supply = <&vreg_wcn_3p3>;
+        vpcie1v8-supply = <&vreg_l15b_1p8>;
+
+	/*
+	 * If those GPIOs have to be used by components available in
+	 * the connected board, a Nexus node should be used.
+         */
+        w-disable1-gpios = <&tlmm 115 GPIO_ACTIVE_LOW>;
+        w-disable2-gpios = <&tlmm 116 GPIO_ACTIVE_LOW>;
+        viocfg-gpios = <&tlmm 117 GPIO_ACTIVE_HIGH>;
+        uart-wake-gpios = <&tlmm 118 GPIO_ACTIVE_LOW>;
+        sdio-wake-gpios = <&tlmm 119 GPIO_ACTIVE_LOW>;
+        sdio-reset-gpios = <&tlmm 120 GPIO_ACTIVE_LOW>;
+
+	conn-i2c {
+		i2c-parent = <&i2c0>;
+
+		/*
+ 		 * Here i2c devices available on the board
+		 * connected to the connector can be described.
+		 */
+	};
+
+	/* Same kind to description for other busses */
+	conn-pcie {
+		pci-parent = <&xxxxx>;
+
+		/*
+		 * The PCIe bus has abilities to discover devices.
+		 * Not sure this node is needed.
+		 *
+		 * If a PCI device need a DT description to describe
+		 * stuffs behind the device, what has been done for LAN966x
+		 * could be re-used [2] and [3]
+		 */
+	};
+
+	conn_uart {
+		uart-parent = <&uart-ctrl>;
+
+		/* uart child (maybe a serdes) should be describe here
+	};
+
+	...
+    };
+
+Of course, some DT symbols need to be exported in order to have them usable from
+the DT describing the connected board.
+
+This notion of exported symbol is not yet available upstream and is the purpose of
+the RFC series [1].
+
+[1] https://lore.kernel.org/all/20260112142009.1006236-1-herve.codina@bootlin.com/
+[2] https://elixir.bootlin.com/linux/v7.0/source/drivers/misc/lan966x_pci.c
+[3] https://elixir.bootlin.com/linux/v7.0/source/drivers/misc/lan966x_pci.dtso
+
+Feel free to ask for more specific question if needed.
+
+Best regards,
+Hervé
+
+> 
+> Thanks
+> ChenYu
+> 
+> 
+> > > The latter part is solvable, but we likely need child nodes under the
+> > > connector for the different interfaces. Properties that make sense for
+> > > one type might not make sense for another.
+> > >
+> > > P.S. We could also just add child device nodes under the controller to
+> > > put the generic properties, but that's splitting the description into
+> > > multiple parts. Let's not go there if at all possible.  
+> >
+> > --
+> > With Best Regards,
+> > Andy Shevchenko
+> >
+> >  
 
 
---m8S0HS9rYZzLUqT+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Apr 15, 2026 at 03:21:17PM +0800, Jia Wang wrote:
-> The first SoC in the UltraRISC series is UR-DP1000, containing octa
-> UltraRISC CP100 cores.
->=20
-> Signed-off-by: Jia Wang <wangjia@ultrarisc.com>
-
-Acked-by: Conor Dooley <conor.dooley@microchip.com>
-
-> ---
->  arch/riscv/Kconfig.socs | 6 ++++++
->  1 file changed, 6 insertions(+)
->=20
-> diff --git a/arch/riscv/Kconfig.socs b/arch/riscv/Kconfig.socs
-> index d621b85dd63b..0b4d06a7b4bf 100644
-> --- a/arch/riscv/Kconfig.socs
-> +++ b/arch/riscv/Kconfig.socs
-> @@ -84,6 +84,12 @@ config ARCH_THEAD
->  	help
->  	  This enables support for the RISC-V based T-HEAD SoCs.
-> =20
-> +config ARCH_ULTRARISC
-> +	bool "UltraRISC RISC-V SoCs"
-> +	help
-> +	  This enables support for UltraRISC SoC platform hardware,
-> +	  including boards based on the UR-DP1000.
-> +
->  config ARCH_VIRT
->  	bool "QEMU Virt Machine"
->  	select POWER_RESET
->=20
-> --=20
-> 2.34.1
->=20
-
---m8S0HS9rYZzLUqT+
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCad+gggAKCRB4tDGHoIJi
-0k5KAP9cH8g7du35W2DxfKVlGZGBX5/qlVgxSMv7M3SiUrg/7wEA4Wam3N4GLDGE
-WWQIvTM0dOVnQcN5PygYLDSqx+9yGQk=
-=gd+p
------END PGP SIGNATURE-----
-
---m8S0HS9rYZzLUqT+--
+-- 
+Hervé Codina, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
