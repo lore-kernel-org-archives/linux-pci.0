@@ -1,166 +1,129 @@
-Received: from mxout70.expurgate.net (mxout70.expurgate.net [194.37.255.70])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BE6426A0B9;
-	Wed, 15 Apr 2026 12:26:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.37.255.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73D52823DD
+	for <linux-pci@vger.kernel.org>; Wed, 15 Apr 2026 12:46:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776255974; cv=none; b=nYBfiMhhhMLVyXXnt/3Qva7tAY4ea1bQ5dqTgeIWtTs6QVdqMVB0yseiGztMlZ3RGqnljcLtoue4TA1a6CKeKPO5eyX5/NRa5EzaXC27kykKncUTvjoCyofypLmBmKWwUykfC4PvFMxX/bV7RMa1j3RWRuIE7CgSkOxccCYfXYU=
+	t=1776257204; cv=none; b=jBnkwLXxgZJ/cTdQqnNKto6U8ZtlrCqLWEa9XO+dlOgb6Es4tzP0342zWesXNwcZD9qKPnyZqpwj/b/qVmKQNzd0cMT4ASmO5EeQCdPkvGIz/KRDocLRoxA5z46+eqCog/u0BdAOb/dbzzNDE7s0kZDCwo4N6hatVsjunA6nANA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776255974; c=relaxed/simple;
-	bh=Li63j71Mljod26r9+ICoxbjyS0KibXjBkSrFkDDhNmw=;
-	h=MIME-Version:Content-Type:Date:From:To:Cc:Subject:In-Reply-To:
-	 References:Message-ID; b=qy1ZfVbN0EthH6H7YX50bIYN9Mj/qj3utfUOlke9mC2Rh4iFjBVHwwxjxYhMrjbm+Az9R5Xmc48MwBfe9Da9N2eSdZjgxHAJqt2cXGZ59edaN5lUf2JB/I0WFkHFJ8WD/uq0YAsuoejBi6CM0mfjg8IY9L7hmpzDxt0YVZOem8Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=aEvjZUmV; arc=none smtp.client-ip=194.37.255.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev.tdt.de
+	s=arc-20240116; t=1776257204; c=relaxed/simple;
+	bh=y6aTsiofXPOnvztdKrV8k2Ec2I+P5cQybhcJwQvOeog=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=vERFIgMJkSpd1hUyV4MnH1dBd9R5uisP77Oj+j20G1epUEBSXzG/Na4PeRTPLF66En3tiugpqMpOh3Ic9uUYbPFlzzSX68D2WUE1vEYtOgzm101ljaQIE9CM6bUcvYaPETvO5f81+XX3mPSEUwm7XJ0rvTJAldBYpcQJJ590Anc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NAML3OpY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="aEvjZUmV"
-Received: from [194.37.255.9] (helo=mxout.expurgate.net)
-	by relay.expurgate.net with smtp (Exim 4.92)
-	(envelope-from <prvs=657992536b=fe@dev.tdt.de>)
-	id 1wCzJq-003mcy-EM; Wed, 15 Apr 2026 14:26:10 +0200
-Received: from [195.243.126.94] (helo=securemail.tdt.de)
-	by relay.expurgate.net with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <fe@dev.tdt.de>)
-	id 1wCzJp-001aHb-SV; Wed, 15 Apr 2026 14:26:09 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev.tdt.de;
-	s=z1-selector1; t=1776255969;
-	bh=P9F+Tlb4TGrVTlb8Ne7lydILYvERL367bJz/FgB5ffQ=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=aEvjZUmVevov5inqXPlRwb4l1ReAK8H0uJDyDi1swElMLvCBimpdlAu4MInooGzet
-	 V/Hrx1BL+xZQFDEZmW5gmwAkrKNIMdhHcl7AkCmAVU63UCAPKxZxETOMvlVGZUAK7u
-	 rIBfpyCo6mmHKWB9p0xpMbMWC9mrCvboTGTxpzIwayEV4TRuCVBbe+TWpJWUQXRZyf
-	 MubRhC1ia2gGS06pGCo56DmHmeeoSHKBmBpAERMwyUl0OBNEnCdfGLy9Y/pbQzqLkm
-	 Rgr2qq2GQYMLod5q6HoeW/FAozEpBC0TX8xrIG0F+M2v+MCuDgp1/CUatJE+oq4fGu
-	 0Zr7s/IHTrzkg==
-Received: from securemail.tdt.de (localhost [127.0.0.1])
-	by securemail.tdt.de (Postfix) with ESMTP id 78F18240042;
-	Wed, 15 Apr 2026 14:26:09 +0200 (CEST)
-Received: from mail.dev.tdt.de (unknown [10.2.4.42])
-	by securemail.tdt.de (Postfix) with ESMTP id 5B894240040;
-	Wed, 15 Apr 2026 14:26:09 +0200 (CEST)
-Received: from mail.dev.tdt.de (localhost [IPv6:::1])
-	by mail.dev.tdt.de (Postfix) with ESMTP id F003E23F75;
-	Wed, 15 Apr 2026 14:26:08 +0200 (CEST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NAML3OpY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43714C2BCB9
+	for <linux-pci@vger.kernel.org>; Wed, 15 Apr 2026 12:46:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776257204;
+	bh=y6aTsiofXPOnvztdKrV8k2Ec2I+P5cQybhcJwQvOeog=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=NAML3OpY1TjcqVX13hlsUO4T7/EL7/87EQccArfc3DzyT8jArSkr39Y6zqOQnkLjv
+	 UJCc+lARrNpX3YXcSYl3Fyrue153+6GLKrz6zxXYGBja8FTdA3Wj9Ed/fce9yLyGzr
+	 QMCgQBVKjcXwnr172m2TvTdUrjIKYBLpoOLbBoAjiHp75BBXenY8pVpLBYmk+mczne
+	 Yyr5HMyJwrzyYzyyry6ygT59/QKLVob0ju5sJfahkezQ3VlxXaJwYM4/UDkH9YXZhC
+	 xmlLQl11NLPvG9Dgpt934BQgS+vjfm8EO/vka/2Vti6nQ4Zh27AiMOuBC5rmne0BXA
+	 TNmEAsePtwl3g==
+Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-671dad7cac8so3164161a12.0
+        for <linux-pci@vger.kernel.org>; Wed, 15 Apr 2026 05:46:44 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ9+T4cx7P8G1kHBpgoB2KGiA2QFiHlpNTGaKTRQw6bZ0gyBXFvzAJl9t7tyJOo8YAslj6M8i0Qj5Yk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwzdyTjpc2bm4S9Pwy34/2XBLfBhHoQLYzNxdbqNnZxdK7+HAX2
+	m/gcbPjOlH/vX7zJGP5ze7DhnXq9xEkOJMpD5JBtWIgZyvvKyPMxxh+YXuJzqkbiael8TnaUOa2
+	AV0m/QLOilKiSUyKms7RM3AuUMKyjeQ==
+X-Received: by 2002:a05:6402:280b:b0:66e:37b0:f802 with SMTP id
+ 4fb4d7f45d1cf-6707aa4840fmr10497971a12.21.1776257202551; Wed, 15 Apr 2026
+ 05:46:42 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Wed, 15 Apr 2026 14:26:08 +0200 (CEST)
-From: Florian Eckert <fe@dev.tdt.de>
-To: Rob Herring <robh@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Johan Hovold <johan+linaro@kernel.org>,
-	Sajid Dalvi <sdalvi@google.com>,
-	Ajay Agarwal <ajayagarwal@google.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	Eckert.Florian@googlemail.com, ms@dev.tdt.de
-Subject: Re: [PATCH v4 7/7] dt-bindings: PCI: intel,lgm-pcie: Add atu
- resource
-In-Reply-To: <CAL_JsqJp_s1gH438sCTdOr_kTA3A9E8ch48ann-w-8D3ZH6MmQ@mail.gmail.com>
 References: <20260415-pcie-intel-gw-v4-0-ad45d2418c8e@dev.tdt.de>
- <20260415-pcie-intel-gw-v4-7-ad45d2418c8e@dev.tdt.de>
- <CAL_JsqJp_s1gH438sCTdOr_kTA3A9E8ch48ann-w-8D3ZH6MmQ@mail.gmail.com>
-Message-ID: <a7f3fb115256a180741aa817b14fee35@dev.tdt.de>
-X-Sender: fe@dev.tdt.de
-User-Agent: Roundcube Webmail/1.3.17
+ <20260415-pcie-intel-gw-v4-7-ad45d2418c8e@dev.tdt.de> <CAL_JsqJp_s1gH438sCTdOr_kTA3A9E8ch48ann-w-8D3ZH6MmQ@mail.gmail.com>
+ <a7f3fb115256a180741aa817b14fee35@dev.tdt.de>
+In-Reply-To: <a7f3fb115256a180741aa817b14fee35@dev.tdt.de>
+From: Rob Herring <robh@kernel.org>
+Date: Wed, 15 Apr 2026 07:46:31 -0500
+X-Gmail-Original-Message-ID: <CAL_JsqJ4KTq+HSS+4g_0GbOZ=Kw-wnJi2J_L_s_zaP+Gzy9kqQ@mail.gmail.com>
+X-Gm-Features: AQROBzAxKS5TTJOZJvS_S6XVlD4QyCz8G2jrW7sy2RQ1KlCNgne8zOM4PFaLeqU
+Message-ID: <CAL_JsqJ4KTq+HSS+4g_0GbOZ=Kw-wnJi2J_L_s_zaP+Gzy9kqQ@mail.gmail.com>
+Subject: Re: [PATCH v4 7/7] dt-bindings: PCI: intel,lgm-pcie: Add atu resource
+To: Florian Eckert <fe@dev.tdt.de>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Johan Hovold <johan+linaro@kernel.org>, Sajid Dalvi <sdalvi@google.com>, 
+	Ajay Agarwal <ajayagarwal@google.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, 
+	Eckert.Florian@googlemail.com, ms@dev.tdt.de
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-X-purgate: clean
-X-purgate-ID: 151534::1776255970-6EEFEC78-9BEA26FC/0/0
-X-purgate-type: clean
 
-
-
-On 2026-04-15 14:09, Rob Herring wrote:
-> On Wed, Apr 15, 2026 at 3:02=E2=80=AFAM Florian Eckert <fe@dev.tdt.de> =
+On Wed, Apr 15, 2026 at 7:26=E2=80=AFAM Florian Eckert <fe@dev.tdt.de> wrot=
+e:
+>
+>
+>
+> On 2026-04-15 14:09, Rob Herring wrote:
+> > On Wed, Apr 15, 2026 at 3:02=E2=80=AFAM Florian Eckert <fe@dev.tdt.de> =
 wrote:
->>=20
->> The 'atu' information is already set in the dwc core, if it is=20
->> specified
->> in the devicetree. The driver uses its own default, if not set in the
->> devicetree. This information is hardware specific and should therefore=
-=20
->> be
->> maintained in the devicetree rather than in the source.
->>=20
->> To be backward compatible, this field is not mandatory. If 'atu'
->> resource is not specified in the devicetree, the driver=E2=80=99s defa=
-ult=20
->> value
->> is used.
->>=20
->> Signed-off-by: Florian Eckert <fe@dev.tdt.de>
->> ---
->>  Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml | 8 ++++++--
->>  1 file changed, 6 insertions(+), 2 deletions(-)
->>=20
->> diff --git a/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml=20
->> b/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
->> index=20
->> 54e2890ae6314ac6847fc23f49440d05d66d87d4..9b7a8ef77585677841c7064c5001=
-110bc2b65db1=20
->> 100644
->> --- a/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
->> +++ b/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
->> @@ -27,16 +27,19 @@ properties:
->>        - const: snps,dw-pcie
->>=20
->>    reg:
->> +    minItems: 3
->>      items:
->>        - description: Controller control and status registers.
->>        - description: PCIe configuration registers.
->>        - description: Controller application registers.
->> +      - description: Internal Address Translation Unit (iATU)=20
->> registers.
->>=20
->>    reg-names:
->=20
-> Don't you need minItems here?
+> >>
+> >> The 'atu' information is already set in the dwc core, if it is
+> >> specified
+> >> in the devicetree. The driver uses its own default, if not set in the
+> >> devicetree. This information is hardware specific and should therefore
+> >> be
+> >> maintained in the devicetree rather than in the source.
+> >>
+> >> To be backward compatible, this field is not mandatory. If 'atu'
+> >> resource is not specified in the devicetree, the driver=E2=80=99s defa=
+ult
+> >> value
+> >> is used.
+> >>
+> >> Signed-off-by: Florian Eckert <fe@dev.tdt.de>
+> >> ---
+> >>  Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml | 8 ++++++--
+> >>  1 file changed, 6 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+> >> b/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+> >> index
+> >> 54e2890ae6314ac6847fc23f49440d05d66d87d4..9b7a8ef77585677841c7064c5001=
+110bc2b65db1
+> >> 100644
+> >> --- a/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+> >> +++ b/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+> >> @@ -27,16 +27,19 @@ properties:
+> >>        - const: snps,dw-pcie
+> >>
+> >>    reg:
+> >> +    minItems: 3
+> >>      items:
+> >>        - description: Controller control and status registers.
+> >>        - description: PCIe configuration registers.
+> >>        - description: Controller application registers.
+> >> +      - description: Internal Address Translation Unit (iATU)
+> >> registers.
+> >>
+> >>    reg-names:
+> >
+> > Don't you need minItems here?
+>
+> You're absolutely right, of course!
+> My fault. Thanks for pointing that out.
+> I will wait 24 hours to send a v5 with this change.
+>
+> Just to clarify. How does the creator of DTS know which items are
+> required.
+> Does that mean, in this case, that the last item is always optional and
+> the
+> others are absolutely essential?
 
-You're absolutely right, of course!
-My fault. Thanks for pointing that out.
-I will wait 24 hours to send a v5 with this change.
+Correct. There is no way in json-schema to express some entry in the
+middle of an 'items' list is optional.
 
-Just to clarify. How does the creator of DTS know which items are=20
-required.
-Does that mean, in this case, that the last item is always optional and=20
-the
-others are absolutely essential?
-
->=20
->>      items:
->>        - const: dbi
->>        - const: config
->>        - const: app
->> +      - const: atu
->>=20
->>    ranges:
->>      maxItems: 1
->> @@ -95,8 +98,9 @@ examples:
->>        #size-cells =3D <2>;
->>        reg =3D <0xd0e00000 0x1000>,
->>              <0xd2000000 0x800000>,
->> -            <0xd0a41000 0x1000>;
->> -      reg-names =3D "dbi", "config", "app";
->> +            <0xd0a41000 0x1000>,
->> +            <0xd0ec0000 0x1000>;
->> +      reg-names =3D "dbi", config", "app", "atu";
->>        linux,pci-domain =3D <0>;
->>        max-link-speed =3D <4>;
->>        bus-range =3D <0x00 0x08>;
->>=20
->> --
->> 2.47.3
->>=20
+Rob
