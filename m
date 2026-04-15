@@ -1,52 +1,52 @@
 Received: from mxout70.expurgate.net (mxout70.expurgate.net [91.198.224.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D45C1307AE3;
-	Wed, 15 Apr 2026 08:19:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA54E3B7751;
+	Wed, 15 Apr 2026 08:19:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.198.224.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776241179; cv=none; b=M84/8y2/Gib7rTVV9QUn200oiqdKzdt8zUMMFrUbOz/mzFckq8gDctDmL6pIAQGuN1sU15SkF+lCBa71U6BSsVOis6p9Bu2sqRtvxdQnuBUT02rwE7S9QOWLIOsOE8ePoxEs9ahI/bWlqmApbGNVWy1p4WZcXhCHFYBZdPCWvBg=
+	t=1776241190; cv=none; b=A3jc1D6ztsplCunnDr1JB3RZkyD/PGlGO7eHwogtUVcxoZwHSpCxPWlRcvamZDE7HvhVhU3bpH0rBcsq8w1UGzlCDEBE+dUPDz44kDLwbuZ5R/7x4/OGop9LKOl/bYNU3iSEYCV7v1Xkuru62ezPTZem9JHyjj5gMwpUeQUNw+0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776241179; c=relaxed/simple;
-	bh=EadTy1WXVKJsJIQNU5C/sb/DblrxVNjmV+l1CCkIcNU=;
+	s=arc-20240116; t=1776241190; c=relaxed/simple;
+	bh=9EFkreYEFt8jz6Z1NkYfjCRoqkyaofsUqKdhyek/ti4=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:Cc; b=F3rqXb/f90o/A963TTOPCcPy2gDND6LS91SiVjeQihBmxW+MG1rSiUOpbnYoBaOMl+8oau3NRVIuz/mn7hGmHtmUbQmGdu9LTuYpKDsVst9xvwWMh5MA3ijn+lIjwkNsYbilmya3chtdhuby21b223+uOiByMlBY26vJ7E6B1Ns=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=oEHi4N45; arc=none smtp.client-ip=91.198.224.70
+	 In-Reply-To:To:Cc; b=KKdu1e3/M0jpdlFPf7x7xdXs5pGkc/3y4JHvPQ+jon+YyKksV75SPg1JK9dfbhtLL1ZH5ukDkhssTwbrBKY1x6VoqcDV7VLpCxzd+qd2ebLDx2M8X99OS2UHKFVpsvOkC83V2muDEn/l/T32XqOJDh23/7FnIKhjcxvR28QgoH8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=lfCM565k; arc=none smtp.client-ip=91.198.224.70
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev.tdt.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="oEHi4N45"
+	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="lfCM565k"
 Received: from [194.37.255.9] (helo=mxout.expurgate.net)
 	by relay.expurgate.net with smtp (Exim 4.92)
 	(envelope-from <prvs=657992536b=fe@dev.tdt.de>)
-	id 1wCvC8-00BwY1-5X; Wed, 15 Apr 2026 10:01:56 +0200
+	id 1wCvC7-00BwWQ-EW; Wed, 15 Apr 2026 10:01:55 +0200
 Received: from [195.243.126.94] (helo=securemail.tdt.de)
 	by relay.expurgate.net with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
 	(Exim 4.92)
 	(envelope-from <fe@dev.tdt.de>)
-	id 1wCvC7-009xZa-JP; Wed, 15 Apr 2026 10:01:55 +0200
+	id 1wCvC6-00BwVb-US; Wed, 15 Apr 2026 10:01:54 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev.tdt.de;
-	s=z1-selector1; t=1776240115;
-	bh=qmOjkGY4isnqDRbe+0Ic2XKe3mIF3cZx+X8XlwRN5Jk=;
+	s=z1-selector1; t=1776240114;
+	bh=k0RzhtyN2lEDzgUVLjPsscw7natQWQb/iXLZdZSRiKo=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=oEHi4N45NaNJt2UAQWK4yWf8fSRloszekii9nxVQr7Nc0HH3Jy014HNmmQzJpoO8M
-	 9Lm/rKfW41wxaPy/H5qhg1bJyVfLlHyUc7i6WSsgb5RpdbMctjbL6H7okrb3x9UtXF
-	 cjqRX0TCSe4Q4UcJheF9queVjl1hK3SwbskfJDSgCr89Xyqymd0iohiJJkh7ppOytc
-	 hHI5+Ueh41ALeBWSyn9yre8rUMDRlvhyGUatLKj1o1H2sNXnj/iU22NX17F9NA/UD3
-	 r5D7gn+47PmcRaU60B4SEvw9GJi+rpK8BOQIEx00iqL0n/S+fm12HuRdpl/TjN6cgQ
-	 IENQKxOKhkaPg==
+	b=lfCM565kzBRusN/Xri47VzhyH+BZcKI0l9/0k6OG08J82FMcdTSke6amfmLM/KEyq
+	 4C7IZMZ5XnkwZi8zIss2dhxKhN5xAT2eKEigtplCzfvbEAmE86VGLWeYujLZgIaYPe
+	 zv+eXJpeHiPt6Pe8CDOzcYTiKEauzqPzGVExZnSIcr1Iq1yF2XPTGLbpG7J69Qb2Os
+	 jzNQ18pqhE0YcFnS3SWyai13jxtANZijZs3c8T9QDgOXuEA5kstJFokrHs6EGrGoRD
+	 wbdFwfjZ2u9t/I6Okmlki8HPfCH/TuqJWO0M3qGEno/Kru0YoAbHCYs9oClTqxK8Xa
+	 rsF5paDISLpTg==
 Received: from securemail.tdt.de (localhost [127.0.0.1])
-	by securemail.tdt.de (Postfix) with ESMTP id 309C3240051;
-	Wed, 15 Apr 2026 10:01:55 +0200 (CEST)
+	by securemail.tdt.de (Postfix) with ESMTP id 8C36E240041;
+	Wed, 15 Apr 2026 10:01:54 +0200 (CEST)
 Received: from mail.dev.tdt.de (unknown [10.2.4.42])
-	by securemail.tdt.de (Postfix) with ESMTP id 201A3240050;
-	Wed, 15 Apr 2026 10:01:55 +0200 (CEST)
+	by securemail.tdt.de (Postfix) with ESMTP id 8330D240040;
+	Wed, 15 Apr 2026 10:01:54 +0200 (CEST)
 Received: from [10.2.3.40] (unknown [10.2.3.40])
-	by mail.dev.tdt.de (Postfix) with ESMTPSA id 0513A24043;
-	Wed, 15 Apr 2026 10:01:55 +0200 (CEST)
+	by mail.dev.tdt.de (Postfix) with ESMTPSA id C385324028;
+	Wed, 15 Apr 2026 10:01:52 +0200 (CEST)
 From: Florian Eckert <fe@dev.tdt.de>
-Date: Wed, 15 Apr 2026 10:01:53 +0200 (CEST)
-Subject: [PATCH v4 7/7] dt-bindings: PCI: intel,lgm-pcie: Add atu resource
+Date: Wed, 15 Apr 2026 10:01:49 +0200 (CEST)
+Subject: [PATCH v4 3/7] PCI: intel-gw: Move interrupt enable to own function
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -54,7 +54,7 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-ID: <20260415-pcie-intel-gw-v4-7-ad45d2418c8e@dev.tdt.de>
+Message-ID: <20260415-pcie-intel-gw-v4-3-ad45d2418c8e@dev.tdt.de>
 References: <20260415-pcie-intel-gw-v4-0-ad45d2418c8e@dev.tdt.de>
 In-Reply-To: <20260415-pcie-intel-gw-v4-0-ad45d2418c8e@dev.tdt.de>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -70,71 +70,92 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	devicetree@vger.kernel.org, Florian Eckert <fe@dev.tdt.de>,
 	Eckert.Florian@googlemail.com, ms@dev.tdt.de
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1776240111; l=1906;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1776240111; l=2926;
  i=fe@dev.tdt.de; s=20260205; h=from:subject:message-id;
- bh=AXbWkqnfnXkg5GGOJ+SWn5GjqEnEK81zcfXBynbMX+Y=;
- b=qFOx4AXlU6qSrD3pRQNg40Jd30cjP0KfB+h/7s4PlP5d82gz0VP/G6ioWegoM4YyaqwVC00Xn
- /qqaFH1/FWFDGZIvbV+4GNNWjwhOkBlo2ezoDPCSkMYzMaWAdVhxBzo
+ bh=ZYKI9htHzLsLWQm9mMvJbP0KpPmuZ1vngPu0F8zCXMI=;
+ b=jcsd9M7td+8J8ulKtrrL+BPo6v8bhL6aK4wA3oMZfabsnaPpY8ewS3sf0kgvOvqJNKS5qRymy
+ awd53nP3yC4B3UgMH3YTeBpnIMkv7DXnkejsQQbwZQLswio7syQQSmF
 X-Developer-Key: i=fe@dev.tdt.de; a=ed25519;
  pk=q7Pvv3Au2sAVRhBz5UF7ZqUPNxUwXQ78Jdqu8E6Negk=
 Content-Transfer-Encoding: quoted-printable
-X-purgate: clean
-X-purgate-ID: 151534::1776240116-3D7F12EC-F235BB83/0/0
 X-purgate-type: clean
+X-purgate: clean
+X-purgate-ID: 151534::1776240115-3DFF02EC-420E88E8/0/0
 
-The 'atu' information is already set in the dwc core, if it is specified
-in the devicetree. The driver uses its own default, if not set in the
-devicetree. This information is hardware specific and should therefore be
-maintained in the devicetree rather than in the source.
+To improve the readability of the code, move the interrupt enable
+instructions to a separate function. That is already done for the disable
+interrupt instruction.
 
-To be backward compatible, this field is not mandatory. If 'atu'
-resource is not specified in the devicetree, the driver=E2=80=99s default=
- value
-is used.
+In addition, all pending interrupts are cleared and disabled, just as thi=
+s
+is done in the disable function 'intel_pcie_core_irq_disable()'. After
+that, all relevant interrupts are enabled again. The 'PCIE_APP_IRNEN'
+definition contains all the relevant interrupts that are of interest.
+
+This change is also done in the MaxLinear SDK [1]. As I unfortunately
+don=E2=80=99t have any documentation for this IP core, I suspect that the
+intention is to set the IP core for interrupt handling to a specific
+state. Perhaps the problem is that the IP core did not reinitialize the
+interrupt register properly after a power cycle.
+
+In my view, it can=E2=80=99t do any harm to switch the interrupt off and =
+then on
+again to set them to a specific state.
+
+The reason why the MaxLinear SDK is used as a reference here is, that thi=
+s
+pcie dwc IP is used in the URX851 and URX850 SoC. This SoC was originally
+developed by Intel when they acquired Lantiq=E2=80=99s home networking di=
+vision in
+2015 [2]. In 2020 the home network division was sold to MaxLinear [3].
+Since then, this SoC belongs to MaxLinear. They use their own SDK,
+which runs on kernel version '5.15.x'.
+
+[1] https://github.com/maxlinear/linux/blob/updk_9.1.90/drivers/pci/contr=
+oller/dwc/pcie-intel-gw.c#L431
+[2] https://www.intc.com/news-events/press-releases/detail/364/intel-to-a=
+cquire-lantiq-advancing-the-connected-home
+[3] https://investors.maxlinear.com/press-releases/detail/395/maxlinear-t=
+o-acquire-intels-home-gateway-platform
 
 Signed-off-by: Florian Eckert <fe@dev.tdt.de>
 ---
- Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/pci/controller/dwc/pcie-intel-gw.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml b/D=
-ocumentation/devicetree/bindings/pci/intel-gw-pcie.yaml
-index 54e2890ae6314ac6847fc23f49440d05d66d87d4..9b7a8ef77585677841c7064c5=
-001110bc2b65db1 100644
---- a/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
-@@ -27,16 +27,19 @@ properties:
-       - const: snps,dw-pcie
+diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/con=
+troller/dwc/pcie-intel-gw.c
+index 80d1607c46cbbb1e274b37a0bb9377a877678f5d..e88b8243cc41c607c39e4d58c=
+4dcd8c8c082e8b0 100644
+--- a/drivers/pci/controller/dwc/pcie-intel-gw.c
++++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
+@@ -195,6 +195,13 @@ static void intel_pcie_device_rst_deassert(struct in=
+tel_pcie *pcie)
+ 	gpiod_set_value_cansleep(pcie->reset_gpio, 0);
+ }
 =20
-   reg:
-+    minItems: 3
-     items:
-       - description: Controller control and status registers.
-       - description: PCIe configuration registers.
-       - description: Controller application registers.
-+      - description: Internal Address Translation Unit (iATU) registers.
++static void intel_pcie_core_irq_enable(struct intel_pcie *pcie)
++{
++	pcie_app_wr(pcie, PCIE_APP_IRNEN, 0);
++	pcie_app_wr(pcie, PCIE_APP_IRNCR, PCIE_APP_IRN_INT);
++	pcie_app_wr(pcie, PCIE_APP_IRNEN, PCIE_APP_IRN_INT);
++}
++
+ static void intel_pcie_core_irq_disable(struct intel_pcie *pcie)
+ {
+ 	pcie_app_wr(pcie, PCIE_APP_IRNEN, 0);
+@@ -316,9 +323,7 @@ static int intel_pcie_host_setup(struct intel_pcie *p=
+cie)
+ 	if (ret)
+ 		goto app_init_err;
 =20
-   reg-names:
-     items:
-       - const: dbi
-       - const: config
-       - const: app
-+      - const: atu
+-	/* Enable integrated interrupts */
+-	pcie_app_wr_mask(pcie, PCIE_APP_IRNEN, PCIE_APP_IRN_INT,
+-			 PCIE_APP_IRN_INT);
++	intel_pcie_core_irq_enable(pcie);
 =20
-   ranges:
-     maxItems: 1
-@@ -95,8 +98,9 @@ examples:
-       #size-cells =3D <2>;
-       reg =3D <0xd0e00000 0x1000>,
-             <0xd2000000 0x800000>,
--            <0xd0a41000 0x1000>;
--      reg-names =3D "dbi", "config", "app";
-+            <0xd0a41000 0x1000>,
-+            <0xd0ec0000 0x1000>;
-+      reg-names =3D "dbi", config", "app", "atu";
-       linux,pci-domain =3D <0>;
-       max-link-speed =3D <4>;
-       bus-range =3D <0x00 0x08>;
+ 	return 0;
+=20
 
 --=20
 2.47.3
