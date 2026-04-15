@@ -1,110 +1,101 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B93E332919;
-	Wed, 15 Apr 2026 09:20:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C71F532D0CF;
+	Wed, 15 Apr 2026 09:24:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776244808; cv=none; b=gqJJqze45jQtOp4MKd1mfvIZ/GIM/hvtB7V91Ztvoh4WNx7KxnulMJQiMyIylY3NXvCqxGrvL7+dMZgepif1kxttv28ZCX6gzCdEkokJJfEvqyrqy7BbHK3UcRIKDWbhLTdJ3ZniYjkJMVW3xMECAONhe7imsKfJBME/116IipA=
+	t=1776245051; cv=none; b=KlKhD7xZzaYPYYpe6ddbwhnlKO7wFz/0vXB2+FNTgOhI3jJt7EMgFCrEL87Nyh4eEG7xBUX0aY6+2UQnKUQd4zjgRWoZULwMjw5gvlrEq60yGROPnt7FdwNwBVQU2hW0Lstxu+u6+9kyAddD5SUDQgb3o/2XWk+9t68gOypfwrE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776244808; c=relaxed/simple;
-	bh=57UoY7yZS9MyAf+dMATtwydTkgWI00D69hwDa2/mVzY=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=At/xagWLTxGD8I4ui4TQqotFcG3ZoSIIftEB4bnIM+pQkG8q+bBnhMhkxwX1TnoSAwbFmIemFbPFVEm/e1XR+SBAaMhT2uwxsiI71+tM1Kq8g2YErHf0ixW4fZNnUzwCaMGxrzcK8eKp7NngnVZ329307deqYqshPI7XEAFNnBw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EdimU/eq; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1776245051; c=relaxed/simple;
+	bh=wsSRf+FgtSM4Tmbmls0rwxi6ii/1NE9W0IbBIkaPRi0=;
+	h=Date:Content-Type:MIME-Version:From:Cc:To:In-Reply-To:References:
+	 Message-Id:Subject; b=eXP++HTpUQyQ9NBb/SUvKN+bzgT0rtl+Y/as50+XFIe1foo5syxB1DULaGeAIIDffnnjkPFFhfiLI5hGxvexVPTWOabCSjL+U+Yiewv3oem66CUwvuF4pvqKVLcE/5l8iOwCVUu0T1rUVdQb/AOlnqYgmiNyA3ZmM0pj3sxMRUA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JypY5ms0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EdimU/eq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1776244806; x=1807780806;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=57UoY7yZS9MyAf+dMATtwydTkgWI00D69hwDa2/mVzY=;
-  b=EdimU/eq819X3KDpOy/uqSx0AqW1LEEsxQRG923zrSDmhPLxhc0G/gCC
-   XNzS41TEKqYEgvs1z4dIrcv42uC+8Dc1GP4BMyavV+uyE2vqqxwB0CvHd
-   0hap/CfwdW91GOtblmTKwDX50WsStyWFusC7OBSmvpJQN+eUqk9jQvQBe
-   UNz+jgZ257sFaKyjdKx6SosOYidZasmJUxBFayXQr2zAlc7rHmymcC22h
-   fJSbVsVrbNRdQgowVAwh4eFYukYo036hfcgQFBd4WHwmVBRkbRCLuSqH7
-   f/saHuIJ+DE26YtxjI2MRqfYZqEvcnMDMRCMR4A4GteSs4AeRIa1wANow
-   Q==;
-X-CSE-ConnectionGUID: tCBmRE49SmKpffqwdOL4Iw==
-X-CSE-MsgGUID: L0UFkCwRT5iDng5k/UUMWQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11759"; a="77122613"
-X-IronPort-AV: E=Sophos;i="6.23,179,1770624000"; 
-   d="scan'208";a="77122613"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Apr 2026 02:20:05 -0700
-X-CSE-ConnectionGUID: UQA5uWU7SeSLyuXYNXJFcw==
-X-CSE-MsgGUID: TH8qk+1iRQ6CjII5MJQLVA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,179,1770624000"; 
-   d="scan'208";a="227184557"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.114])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Apr 2026 02:20:02 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Wed, 15 Apr 2026 12:19:53 +0300 (EEST)
-To: Rio Liu <rio@r26.me>
-cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
-    "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
-    "regressions@lists.linux.dev" <regressions@lists.linux.dev>, 
-    Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [REGRESSION] amdgpu fails to load eGPU after 6.19
-In-Reply-To: <j-oL8G7jik8a-PYnIVU4kE-w4HJaq9pNshpbPC5zphvGa0SIno_vpSq1zEcBUVDx6hSMvbV1eAIcIO7C8jtMv0GTG7UfvWVZaEzabnQ-6YY=@r26.me>
-Message-ID: <3bdf3453-8052-3626-f877-c769b88ee0c0@linux.intel.com>
-References: <a1FodrO_nl6UemO3VLBk5Gsu6PjvxLU-OYhvJEMeKFem-Bpi7ZXDHrIxtwsTCmpn-WndBxnzZNtdKJy_V6PjafnFjSKz7sr1eEfGobRzpgs=@r26.me> <4dfc25f2-f660-c234-4e4d-c5c76216523d@linux.intel.com>
- <j-oL8G7jik8a-PYnIVU4kE-w4HJaq9pNshpbPC5zphvGa0SIno_vpSq1zEcBUVDx6hSMvbV1eAIcIO7C8jtMv0GTG7UfvWVZaEzabnQ-6YY=@r26.me>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JypY5ms0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FB9CC19424;
+	Wed, 15 Apr 2026 09:24:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776245051;
+	bh=wsSRf+FgtSM4Tmbmls0rwxi6ii/1NE9W0IbBIkaPRi0=;
+	h=Date:From:Cc:To:In-Reply-To:References:Subject:From;
+	b=JypY5ms0Oq9lbJcBPtM6l1MYZ3oGXeytjMCYXkAPu9kQAfw9pNXar0uj6kMjdm/Xo
+	 1dCOmw8/X3BYlIt7+BcJDgQ/6FQrzXOclf0JP1e0yIO9WZ3BDe8RgxsQ2dCR+aQVey
+	 8rsXyqOkhf1/J37L28oS9EDouk/94Hv3VVfiBAU9hLW94ETfL4Phu2uhQ3ndL4BXdh
+	 PaFZp5OYGqsubwy+rYV4z+WurFS7AMW897ygRtPL4cu8BaZWCDfWJWtXnm8BWa+Hr4
+	 jNCrW/0HEtl/onZGcftqqtIq8USkacoumHdLvP9/MYb8pv5P/n/F4Z0C0N+FC72KOL
+	 ZUo4FuWvGFX2A==
+Date: Wed, 15 Apr 2026 04:24:08 -0500
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: "Rob Herring (Arm)" <robh@kernel.org>
+Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>, Eckert.Florian@googlemail.com, 
+ ms@dev.tdt.de, Bjorn Helgaas <bhelgaas@google.com>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+ Johan Hovold <johan+linaro@kernel.org>, linux-kernel@vger.kernel.org, 
+ devicetree@vger.kernel.org, Ajay Agarwal <ajayagarwal@google.com>, 
+ Sajid Dalvi <sdalvi@google.com>, linux-pci@vger.kernel.org, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>
+To: Florian Eckert <fe@dev.tdt.de>
+In-Reply-To: <20260415-pcie-intel-gw-v4-7-ad45d2418c8e@dev.tdt.de>
+References: <20260415-pcie-intel-gw-v4-0-ad45d2418c8e@dev.tdt.de>
+ <20260415-pcie-intel-gw-v4-7-ad45d2418c8e@dev.tdt.de>
+Message-Id: <177624504894.3320247.14684447771089927124.robh@kernel.org>
+Subject: Re: [PATCH v4 7/7] dt-bindings: PCI: intel,lgm-pcie: Add atu
+ resource
 
-On Tue, 14 Apr 2026, Rio Liu wrote:
 
-> Hi Ilpo,
+On Wed, 15 Apr 2026 10:01:53 +0200, Florian Eckert wrote:
+> The 'atu' information is already set in the dwc core, if it is specified
+> in the devicetree. The driver uses its own default, if not set in the
+> devicetree. This information is hardware specific and should therefore be
+> maintained in the devicetree rather than in the source.
 > 
-> > This snippet only contains collateral damage and does not show where the
-> > problem originates from. Please provide a full dmesg instead with
-> > dyndbg="file drivers/pci/*.c +p" on the kernel command line.
-> >
-> > Preferrably test with the latest code + fixes that are in pci/resources
-> > branch (you can just take all changes from there) and get the logs from
-> > there. I wouldn't be surprised if your problem is already addressed by
-> > those fixes but we'll see.
+> To be backward compatible, this field is not mandatory. If 'atu'
+> resource is not specified in the devicetree, the driver’s default value
+> is used.
 > 
-> Thanks a lot for the help! I tested on pci/resources
-> 8cb081667377709f4924ab6b3a88a0d7a761fe91 "PCI: Fix alignment calculation for
-> resource size larger than align", and the eGPU is now loading! There are some
-> messages in dmesg showing "can't assign; no space" and "failed to assign", but I
-> don't see any functional impact from it. Including the dmesg anyways in case
-> there's anything important: https://pastebin.com/n5hhtkz0.
+> Signed-off-by: Florian Eckert <fe@dev.tdt.de>
+> ---
+>  Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
 
-Hi,
+My bot found errors running 'make dt_binding_check' on your patch:
 
-Thanks for testing.
+yamllint warnings/errors:
 
-Most of the assignment failures occur for io resources. It tends to be 
-that in large systems of today, hotplug reservation consumes all io space 
-for things that don't need any. Usually, the io resource assignment 
-failures are harmless.
+dtschema/dtc warnings/errors:
+Lexical error: Documentation/devicetree/bindings/pci/intel-gw-pcie.example.dts:28.30-36 Unexpected 'config'
+Error: Documentation/devicetree/bindings/pci/intel-gw-pcie.example.dts:28.30-36 syntax error
+FATAL ERROR: Unable to parse input tree
+make[2]: *** [scripts/Makefile.dtbs:140: Documentation/devicetree/bindings/pci/intel-gw-pcie.example.dtb] Error 1
+make[2]: *** Waiting for unfinished jobs....
+make[1]: *** [/builds/robherring/dt-review-ci/linux/Makefile:1601: dt_binding_check] Error 2
+make: *** [Makefile:248: __sub-make] Error 2
 
-Then there's a bridge window pin for this bridge window:
+doc reference errors (make refcheckdocs):
 
-pcieport 0000:04:00.0: bridge window [mem 0x6000000000-0x60201fffff 64bit pref]: was not released (still contains assigned resources)
+See https://patchwork.kernel.org/project/devicetree/patch/20260415-pcie-intel-gw-v4-7-ad45d2418c8e@dev.tdt.de
 
-That window is pinned in place by sibling devices so kernel cannot 
-release it prior to attempting BAR resizing, which in turn prevents BAR 
-resizing from succeeding as the bridge windows cannot be made large 
-enough.
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
 
-You should be able to see what the siblings are easily from /proc/iomem.
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
 
-It may be possible to manually remove the siblings first, resize the 
-eGPU's BAR through sysfs, and finally rescan.
+pip3 install dtschema --upgrade
 
--- 
- i.
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
+
