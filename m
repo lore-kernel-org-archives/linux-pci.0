@@ -1,221 +1,237 @@
-Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010056.outbound.protection.outlook.com [52.101.193.56])
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.102])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FD32372ECE;
-	Wed, 15 Apr 2026 06:32:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.56
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776234766; cv=fail; b=M3KU+ynNfg++gztr3zXFwvS6TkpCAlA3wUVipTmhLCN5Lub35Bn/h+uTk9cNoJYm5mWvuGLghRKE7FWy3MY8CkyqMMRvZmwNVhD0VdLKHi2Y4su0yLT9uh65b75y8NA8+G5li/XBtuo/dZxaPoZFCvZOdFa8J1fzYyNGVKe6R3k=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776234766; c=relaxed/simple;
-	bh=URXsEWWnNqdVX+pV6JNU+SEVlHOGYtJmNUJ2/atkYN4=;
-	h=Message-ID:Date:Subject:From:To:Cc:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Qvc6w2yt00iVP8JKtTLRxUQHBV/2a4u/IS8JMg/19mRw3TiYkj/gJ/jgix/c3kI2P40PNky+BzeyXWHP8VibeCuVGDxx6IM02/EeJnB7k+5qddnElGThQWO5lppx8x2HAJX7KiKA8NNgTYV9WjzL+BOuZNLcVMqlf0XhPnd+WIY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=dG5YyrFp; arc=fail smtp.client-ip=52.101.193.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 383E73921F8;
+	Wed, 15 Apr 2026 07:13:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.102
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776237219; cv=none; b=frLfQMFlKolts8mAKZzel6Go6CrRoGaJvC+ukKl3Af00KG7g6wAILlH7rW7NtmdP5mtWrHPMurK7UxRRi5wz/YOy7oNmXLXi4JqTO+DWHpY73tXify932B2lXXUbdDKR7jaH13vOGNo1EpG9C4ubXEphAahdbXuFDESLGU5fUOY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776237219; c=relaxed/simple;
+	bh=C5RXb3Sjd/HmzoErYe568YjOFdiqT6diMYrs4wtOWsE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CmXDgk43ktJipQXECO5b3tnAex/wa/GuvXLx8PUmcuJgABDTaxkKevQtaeQpUXyo0zSJinhPjsNW/cG8tpW9htFWiIAuQnuoK/vnsKje7KSRWMYRrskBRAga1ctZhyZs0NYt5fCWuCeZo3oVQhKhSIazrbhBld/fXz78sUDIx1s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=fPcp3u5s; arc=none smtp.client-ip=188.68.63.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="dG5YyrFp"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=MSJLBsNtrgwzrC9eNOYQ37fos0vl3g+cuOhPS1YZhaYcaeSMnvVaVHrb7iyXXQbWdZedCjHwxes2zS41aYCqT4cHOncPva1e8yPvIk6CbRnh5K/Hn472T/ubogPhK4keTvkFrFgXn9uBSVpIKnjnQcHyxHNIakxIN2RrY0LALvHAtcwhnkMF9DHouSp1pwoq6v7e9lsYdWMGALNmfWOlGfrznvf8/AAkE3W/yDgSQUy8UNwyNCA/GGkY3WEY2wskaz0ADJjo58Au6fGc8uhxxEnqSGPydMD7lUcZYpStj99UkIN54vjEEjP+0zgY1mZLvIQn/us2a/G0q1JG/Ivo4Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=3ETF5DHBD5LFGv45zswAeRt5ox9CSIMaHnuIVyHlOOg=;
- b=OixRetPAa8bKjgDDGo3zMNK5EKw0rqFUGTuyzccJ2riJ1VXii6IXK66PZzRIescMeqgRodzQy50TRMTT3z1UPanGsP1CYvSXvS0yxoAJ/qwGNjNtzntNHxkaxO3n0h0KhF+UCQvFVwEtU8iIu2UJWoslRvBYc//v1bgFldUzVIGjOS/VdHd/DVCsjgJYmaNyN4DYb6Kpt5X7siMjgOzgYS+Xd7i21s03rLbXhrPcGjZVVvyRtJXWSv/CPYlmv35tWqW5ATGcvPk+Zp3mxFIXdZkv9C9i7o/WJjBCM+5OkUcPJ/Jgwf4gskRlcSWxY0XE4An4vcuNyIyQSSJf9zUgaA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3ETF5DHBD5LFGv45zswAeRt5ox9CSIMaHnuIVyHlOOg=;
- b=dG5YyrFpA1OcuWGynSin1swAi2wU+R3DHGQKfxGRIWuIDlDxR5b5gvNRRR0/PW2wP+9DaKJrvirfhqPNfbuNDbzb0WiLH30yqn8MgcuxVO22WTWjHq85XrDeuoVQS9L2pLf8JBu70yyldvLf9/ApBuwvQafiZ11Bi8mcku0JfIA=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from CH3PR12MB9194.namprd12.prod.outlook.com (2603:10b6:610:19f::7)
- by DM4PR12MB6062.namprd12.prod.outlook.com (2603:10b6:8:b2::7) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9791.35; Wed, 15 Apr 2026 06:32:39 +0000
-Received: from CH3PR12MB9194.namprd12.prod.outlook.com
- ([fe80::1e6b:ca8b:7715:6fee]) by CH3PR12MB9194.namprd12.prod.outlook.com
- ([fe80::1e6b:ca8b:7715:6fee%6]) with mapi id 15.20.9818.017; Wed, 15 Apr 2026
- 06:32:39 +0000
-Message-ID: <137e5595-390e-49a7-8918-9ca057f7ebdd@amd.com>
-Date: Wed, 15 Apr 2026 16:32:14 +1000
-User-Agent: Mozilla Thunderbird Beta
-Subject: Re: [PATCH kernel 4/9] dma/swiotlb: Stop forcing SWIOTLB for TDISP
- devices
-From: Alexey Kardashevskiy <aik@amd.com>
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: dan.j.williams@intel.com, Robin Murphy <robin.murphy@arm.com>,
- x86@kernel.org, linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
- linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
- Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
- Dave Hansen <dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>,
- Sean Christopherson <seanjc@google.com>, Paolo Bonzini
- <pbonzini@redhat.com>, Andy Lutomirski <luto@kernel.org>,
- Peter Zijlstra <peterz@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Marek Szyprowski <m.szyprowski@samsung.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Michael Ellerman <mpe@ellerman.id.au>, Mike Rapoport <rppt@kernel.org>,
- Tom Lendacky <thomas.lendacky@amd.com>, Ard Biesheuvel <ardb@kernel.org>,
- Ashish Kalra <ashish.kalra@amd.com>, Stefano Garzarella
- <sgarzare@redhat.com>, Melody Wang <huibo.wang@amd.com>,
- Seongman Lee <augustus92@kaist.ac.kr>, Joerg Roedel <joerg.roedel@amd.com>,
- Nikunj A Dadhania <nikunj@amd.com>, Michael Roth <michael.roth@amd.com>,
- Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
- Andi Kleen <ak@linux.intel.com>,
- Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
- Tony Luck <tony.luck@intel.com>, David Woodhouse <dwmw@amazon.co.uk>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Denis Efremov <efremov@linux.com>, Geliang Tang <geliang@kernel.org>,
- Piotr Gregor <piotrgregor@rsyncme.org>, "Michael S. Tsirkin"
- <mst@redhat.com>, Alex Williamson <alex@shazbot.org>,
- Arnd Bergmann <arnd@arndb.de>, Jesse Barnes <jbarnes@virtuousgeek.org>,
- Jacob Pan <jacob.jun.pan@linux.intel.com>, Yinghai Lu <yinghai@kernel.org>,
- Kevin Brodsky <kevin.brodsky@arm.com>,
- Jonathan Cameron <jonathan.cameron@huawei.com>,
- "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
- Xu Yilun <yilun.xu@linux.intel.com>, Herbert Xu
- <herbert@gondor.apana.org.au>, Kim Phillips <kim.phillips@amd.com>,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- Stefano Stabellini <sstabellini@kernel.org>,
- Claire Chang <tientzu@chromium.org>, linux-coco@lists.linux.dev,
- iommu@lists.linux.dev
-References: <20260225053806.3311234-1-aik@amd.com>
- <20260225053806.3311234-5-aik@amd.com>
- <699f238873ae7_1cc5100b6@dwillia2-mobl4.notmuch>
- <04b06a53-769c-44f1-a157-34591b9f8439@arm.com>
- <699f621daab02_2f4a1008f@dwillia2-mobl4.notmuch>
- <20260228002808.GO44359@ziepe.ca>
- <69a622e92cccf_6423c10092@dwillia2-mobl4.notmuch>
- <20260303001911.GA964116@ziepe.ca> <20260303124306.GA1002356@nvidia.com>
- <5d669086-a5c8-4e55-8108-a9fff41cf094@amd.com>
- <20260304124316.GL972761@nvidia.com>
- <074633eb-103a-4452-9aec-6cd61e82f0cb@amd.com>
-Content-Language: en-US
-In-Reply-To: <074633eb-103a-4452-9aec-6cd61e82f0cb@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SY5PR01CA0080.ausprd01.prod.outlook.com
- (2603:10c6:10:1f5::19) To CH3PR12MB9194.namprd12.prod.outlook.com
- (2603:10b6:610:19f::7)
+	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="fPcp3u5s"
+Received: from mors-relay-2502.netcup.net (localhost [127.0.0.1])
+	by mors-relay-2502.netcup.net (Postfix) with ESMTPS id 4fwXH94jv2z64WD;
+	Wed, 15 Apr 2026 09:05:57 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1776236757;
+	bh=C5RXb3Sjd/HmzoErYe568YjOFdiqT6diMYrs4wtOWsE=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=fPcp3u5sljUrmjjFHVqupOHnqaWSbOvZvNImNfILmdPfrtBNJ0PplU5TcPnmJpabC
+	 AtIwCe8zRfkhOmjxfcsO8Q+KfLGUZJn98WZD9NC8hV/4n1wshrGStnbGgasRaDGQRv
+	 2xtGvrKZ2cFMhegwMZ2Tmr9brW4A5hjbtcOpZ9mDb1/Krf5EMtgmICxiY2ttfFkA4g
+	 J4tUWOq/VlpH7jjhsUSe3DhwycrZVcWHAwo7FYSXxC6LDr1Qbt0LSQeJVcOzED+t81
+	 ZtGoy856Au4I68H3IcZrYU8QvNOL8WtHbzsUw4fbAOo8JBCYX+NeJ3HPm+qblEDUeR
+	 tSxVRA+bSjL4Q==
+Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
+	by mors-relay-2502.netcup.net (Postfix) with ESMTPS id 4fwXH93z16z4xNs;
+	Wed, 15 Apr 2026 09:05:57 +0200 (CEST)
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4fwXH70m00z8sbB;
+	Wed, 15 Apr 2026 09:05:55 +0200 (CEST)
+Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 507E5635DB;
+	Wed, 15 Apr 2026 09:05:54 +0200 (CEST)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=linux@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <6616a20a-93d7-48e2-976a-d5587088f2fb@leemhuis.info>
+Date: Wed, 15 Apr 2026 09:05:52 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH3PR12MB9194:EE_|DM4PR12MB6062:EE_
-X-MS-Office365-Filtering-Correlation-Id: ef0d18d7-2b85-4aee-3b72-08de9ab8ca02
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|366016|1800799024|56012099003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	a5QpK8V+G+o4B5VgSAIu+YByeTX48uvj6NTfXBgVyh/VYYwqszSPUOUVRindkqa+Pr1wqT9scQo4Z3T20rueNPqooaTYq3M2uF6sz56J0sZT2q8hsVFArfeYkMOE53Yd+UZ+hyFbwO9vkjubvzOumd9nFQOxNTyzYPuzBkUy+H4HEsrjbsH2CPYOXrTeQTDsu/o3ztmWeL05hckQoY8x1z8sky9IHphFQPxUNXBUlVfdWVZKEdcqy/nRANOh18ZQ9klhMh44KGMWQW1bkcRYZJnw02LoNm2vZAeYnIU41dF5XqA9rxmLi9+sRBeaARBWCbTyiEGMZczfAaAT0ep+UyJs+5p1QKqK75kHa2+1Ya8g3FnjuU4cMF5nRmwDWsJ9wX3r68vZ3SuxXpMu9kGMkXKVf7vcbMtJ9J2ZuPALY4U+LVKs3XvTovhcFrMu7+QpPosupIFmwFarhGuBKDJnRTOeyPB4O+lFXqDUu1GoZhcHsQkqazKPVQpRJ4sHBXCqFRbDhSAbSzrs2CRxgoPMtlszOQEXV7MJ5vSQFMSrdEEOYxMpmHZx/aAFpXjf9hKv7yUZ6GAwTMB+zweSshQJU9TeyzG182FHDIm4TEYgmoNYGzhBJP4gqfkhyKNPIAzzyeBeN1+e5s5Ic3LrgGoyDJc/3rOdg9501IsoMyppTEkuqwtHfI1XPKplx5qth9aW6CLbk3bah8xNsDpK2LxLvLnoslNgR60xY4OFJYA+uXsn3/VyIv4d2IrXI7RVfBNX
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR12MB9194.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?WVdmMXR6UEYyY3A4MEtXdEtHVG45K04zL1NvcTZIZTFVcmllclRYWjhNZFJ6?=
- =?utf-8?B?RzQ1Njd5OEVtYi8vcTNuZ3BnVDdHYXd3S29FaU0rV0hMc2h3MUsybGtUbFZu?=
- =?utf-8?B?VUFJdUg1NmRnUlYxTjNnRmxUUWFDOVF1dCtLWEtjR2FuY2JDOVpDZHJOMjJ1?=
- =?utf-8?B?RExwZmNKK3JxTnlLQ0VBTkV1S3VEOGk5WTdjMGtVcnBNSlN6Ry9rVVVpTkZ5?=
- =?utf-8?B?cnJFbWZqcktWVVJNaVpQczZqWTVMTSsxUHV3QTZ5YWxRakZpTk1za0oxM05z?=
- =?utf-8?B?NkUyNHBIQm8yV2puTXUxcGVlcUx1Q1c5cFpPTzM5RnpvdXZFYko5Z0pTdXZj?=
- =?utf-8?B?N3FIZE9Rd1kwNkpPTng5LzF0cnVBTE1MZHdJVDd1UnRvRlIzZ1l5NDlTQ2V2?=
- =?utf-8?B?YUV0QzVhc1pOWWVlZS9RY1EyL3ArMFhhK0ZEYURuOEk0QnZnWHR4K0JKSitW?=
- =?utf-8?B?UGt0UE5WNVRtbkU5bUY1TERGNk5jVnFLWC95SWdrcS9uREFCUDRvSVorZXpr?=
- =?utf-8?B?MTZhUDRaSGxSckZpOG5vNDFxN2J0V2Y3MmdDcW15Znd6R0NMbkFPYWcwRDJw?=
- =?utf-8?B?OGJDZ1ZiNEhja3YxclhheHBOY1pxSG10Tkl6cWxVaGZxMXRIY3Q1b3h3dXVr?=
- =?utf-8?B?OVpoN0ZNOTd0OEx5RVQ2THErRTR1K1kxUnYyR0lHUFlDczl6Um1Kcm1lNklR?=
- =?utf-8?B?MFE4c1VTVjV3MlhUQUYvVXNCSDJkd3cxS05QaU1mMUtOVlJ5OTc5b1ZMZ2Vi?=
- =?utf-8?B?eGM0aWUzR2Y2aHNTYVJtcnFFVld0cFZYTG5GclpYZUtjYmNjNTRkdGVIcjlK?=
- =?utf-8?B?VytjYUY2RTljcStya0tjNzlvV003cEFDS08wNUExZjV0QzEyMGhjb3IwdTY5?=
- =?utf-8?B?cjhRcXR1YllabVk5UzlBSkMzelkwcy92a2xrVjlxZFo0QUphbzdWWXNVZUxj?=
- =?utf-8?B?Qjd1Qms0L05MU21laXlwcTVxUTFTOUp2SE1iYTI3VTE1aTRCSWxDcnE2MzJ0?=
- =?utf-8?B?T0hFdG9TaFZ4emcyZmc3ejNGZHNHNjFYS2s5aDM1aTZqQUxjN0ppNVVPYlht?=
- =?utf-8?B?KzEzeHlScXFjaXdlWnRoV0RPbEE1MTgzc1J4WlBNZ25rZ3UyNFFEZWZTaGFq?=
- =?utf-8?B?bVFCdEJzTVFTajA1Zi9ldEZEZ0tVQVVBNzJGS2NxdXdvTEJleC9JNzFWNjk1?=
- =?utf-8?B?NkZTOW1CR29sUkM3SDNYS29RWHdSUzBFWEQ1UW5OQjNONmlSdVhxMU1qMUo1?=
- =?utf-8?B?WEEyVUZlNWNOb1ZOTE0ybzduWWtLQThENFBWTHVseUF1a0VmaCtLazJjZ2o4?=
- =?utf-8?B?b0JYTXVsMHBkc2tPbGVWbjk0V3BPSENiQTRMYTB3VFA4VHpNM1BDU2pLYUt3?=
- =?utf-8?B?NE9EMko5eDVmbEo2TVFpQVhXYS92TVJLMXU0ZGdxclBaSy9NeXR4cEhMZDh5?=
- =?utf-8?B?Sjh6ZlJQdWo1WTl5N1FEd2dtd0Q2Yzg0N214M3JXSThnaUxPdU93a1ZOaDhm?=
- =?utf-8?B?Tmgwc1NscXR6TTduL21nbGQ5c29JelNPckx0RFpLSkFsYUM0bXVhY0lyZ0ww?=
- =?utf-8?B?K09RbU5NWDNNSGVXaDFyWUtzU0dKNmgvb2U1bDMzcDMrdnBJMUcyTDBTNDh4?=
- =?utf-8?B?TG9nb0MyYThZbXBKYjd2VG5JdFFGSGhyYWlZOC9OdDRKelVjZDh4ZnpnWHJN?=
- =?utf-8?B?QW93ZUhOenEySXFNdlBxVVhGTU5pam5JaWVHeU9hNUtzVlp3dC9vbW5nTkZh?=
- =?utf-8?B?amphVzR4Mk5WZXdPTjByVy8wblZaZmFQUHRVbDJqbVNGM05WaVBMQ0xjQkpX?=
- =?utf-8?B?ZVRZQ3VsRHVpZXp6N1k3NWE0UVhhNk9RWUlCSnRwakFlM1hpSGx0NkJkWmtQ?=
- =?utf-8?B?WVBqWWRyQ0NNaHNycDR3ejFObWVIU2xrSGZVUkNhaGI5M2dLYlh0cE03ejRE?=
- =?utf-8?B?emVqcHF5NGtGUkRmWWxvY1JtS1B3b1hicU1seU5NZEFIblEvVUs2Ym5yUlA5?=
- =?utf-8?B?dHVJUS94cnRsUGdoRFFwbEpFbGNRSmJpeHM3QVBSZHYxL3RSb0RiMVhNREda?=
- =?utf-8?B?MU1PZGhkYURTcDdXTzQrcjdIWVNveDAxWG5jd3lNM2dpVGZjWm51WmcySTcx?=
- =?utf-8?B?bEs3TW5YQkxnN2RaMnBzMlNOUVg5akFrU0h0YWx6ckVRbVRPZzk1WHRYaE1D?=
- =?utf-8?B?bXRCeU1FYnk5QmxMTWVrb3JjWG52eThPMVExM1lMSW5BcVBNTUNCWHFKbXFo?=
- =?utf-8?B?QW85VDNwVm5lc2ZaTVR3RHVuZWhueHZYNnE3SlFHY05mSDJKWkE1aXhsTEtY?=
- =?utf-8?B?RHZVVDZnTWt1S015d3FnSFhkaTc2STYxeXlkb1ozMXBTbzhZeG5Sdz09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ef0d18d7-2b85-4aee-3b72-08de9ab8ca02
-X-MS-Exchange-CrossTenant-AuthSource: CH3PR12MB9194.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Apr 2026 06:32:39.1161
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: M5OC5yMGARZhPPqDedDPBi3Tet16Et0uJHjojwXA+9DCH3ZszqVyRPXCnGevCH8OtIx8yEpUEhnyfe408zg8Eg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6062
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1] Bluetooth: btintel_pcie:Support Product level reset.
+To: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+Cc: oe-kbuild-all@lists.linux.dev, kernel test robot <lkp@intel.com>,
+ linux-bluetooth@vger.kernel.org, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, ravishankar.srivatsa@intel.com,
+ chethan.tumkur.narayan@intel.com,
+ Luiz Augusto von Dentz <luiz.von.dentz@intel.com>,
+ Linux Next Mailing List <linux-next@vger.kernel.org>,
+ "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+References: <20260330063842.1121545-1-chandrashekar.devegowda@intel.com>
+ <202603310744.5WIVh3e6-lkp@intel.com>
+From: Thorsten Leemhuis <linux@leemhuis.info>
+Content-Language: de-DE, en-US
+Autocrypt: addr=linux@leemhuis.info; keydata=
+ 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 MEK4
+In-Reply-To: <202603310744.5WIVh3e6-lkp@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-PPP-Message-ID: <177623675479.1883973.8741712713569291605@mxe9fb.netcup.net>
+X-NC-CID: UJ6oDEpB8fD9jJz/zflE157Zb1heHwfPa/Sgew6FSERkwi5gJP4=
+
+On 3/31/26 01:39, kernel test robot wrote:
+> Hi Chandrashekar,
+> 
+> kernel test robot noticed the following build errors:
+
+FWIW, a newer version of this patch hit -next yesterday and caused a
+similar build error for me, but only on ppc64le (on Fedora, using the
+rawhide config):
+
+"""
+> drivers/bluetooth/btintel_pcie.c: In function ‘btintel_pcie_acpi_reset_method’:
+> drivers/bluetooth/btintel_pcie.c:2309:14: error: implicit declaration of function ‘acpi_has_method’; did you mean ‘acpi_has_watchdog’? [-Wimplicit-function-declaration]
+>  2309 |         if (!acpi_has_method(handle, "_PRR")) {
+>       |              ^~~~~~~~~~~~~~~
+>       |              acpi_has_watchdog
+> make[4]: *** [scripts/Makefile.build:289: drivers/bluetooth/btintel_pcie.o] Error 1
+> make[4]: *** Waiting for unfinished jobs....
+> make[3]: *** [scripts/Makefile.build:548: drivers/bluetooth] Error 2
+> make[3]: *** Waiting for unfinished jobs....
+> make[2]: *** [scripts/Makefile.build:548: drivers] Error 2
+> make[1]: *** [/builddir/build/BUILD/kernel-7.1.0-build/kernel-next-20260414/linux-7.1.0-0.0.next.20260414.462.vanilla.fc45.ppc64le/Makefile:2147: .] Error 2
+> make: *** [Makefile:256: __sub-make] Error 2
+> + exit 1
+""""
+
+Full log:
+https://download.copr.fedorainfracloud.org/results/@kernel-vanilla/next/fedora-rawhide-ppc64le/10323070-next-next-all/builder-live.log.gz
+
+Ciao, Thorsten
 
 
-
-On 3/4/26 23:40, Alexey Kardashevskiy wrote:
+> [auto build test ERROR on bluetooth-next/master]
+> [also build test ERROR on next-20260327]
+> [cannot apply to bluetooth/master linus/master v7.0-rc6]
+> [If your patch is applied to the wrong git tree, kindly drop us a note.
+> And when submitting patch, we suggest to use '--base' as documented in
+> https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> 
+> url:    https://github.com/intel-lab-lkp/linux/commits/Chandrashekar-Devegowda/Bluetooth-btintel_pcie-Support-Product-level-reset/20260330-190125
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git master
+> patch link:    https://lore.kernel.org/r/20260330063842.1121545-1-chandrashekar.devegowda%40intel.com
+> patch subject: [PATCH v1] Bluetooth: btintel_pcie:Support Product level reset.
+> config: alpha-allyesconfig (https://download.01.org/0day-ci/archive/20260331/202603310744.5WIVh3e6-lkp@intel.com/config)
+> compiler: alpha-linux-gcc (GCC) 15.2.0
+> reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260331/202603310744.5WIVh3e6-lkp@intel.com/reproduce)
+> 
+> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <lkp@intel.com>
+> | Closes: https://lore.kernel.org/oe-kbuild-all/202603310744.5WIVh3e6-lkp@intel.com/
+> 
+> All errors (new ones prefixed by >>):
+> 
+>    drivers/bluetooth/btintel_pcie.c: In function 'btintel_pcie_acpi_reset_method':
+>>> drivers/bluetooth/btintel_pcie.c:2307:14: error: implicit declaration of function 'acpi_has_method'; did you mean 'acpi_has_watchdog'? [-Wimplicit-function-declaration]
+>     2307 |         if (!acpi_has_method(handle, "_PRR")) {
+>          |              ^~~~~~~~~~~~~~~
+>          |              acpi_has_watchdog
 > 
 > 
-> On 4/3/26 23:43, Jason Gunthorpe wrote:
->> On Wed, Mar 04, 2026 at 05:45:31PM +1100, Alexey Kardashevskiy wrote:
->>
->>>> I suspect AMD needs to use their vTOM feature to allow shared memory
->>>> to remain available to TDISP RUN with a high/low address split.
->>>
->>> I could probably do something about it bit I wonder what is the real
->>> live use case which requires leaking SME mask, have a live example
->>> which I could try recreating?
->>
->> We need shared memory allocated through a DMABUF heap:
->>
->> https://lore.kernel.org/all/20260223095136.225277-1-jiri@resnulli.us/
->>
->> To work with all PCI devices in the system, TDISP or not.
->>
->> Without this the ability for a TDISP device to ingest (encrypted) data
->> requires all kinds of memcpy..
->>
->> So the DMA API should see the DMA_ATTR_CC_DECRYPTED and setup the
->> correct dma_dddr_t either by choosing the shared alias for the TDISP
->> device's vTOM, or setting the C bit in a vIOMMU S1.
+> vim +2307 drivers/bluetooth/btintel_pcie.c
 > 
-> Something like that?
+>   2280	
+>   2281	static int btintel_pcie_acpi_reset_method(struct btintel_pcie_data *data)
+>   2282	{
+>   2283		union acpi_object *obj, argv4;
+>   2284		acpi_handle handle;
+>   2285		int ret;
+>   2286		struct pldr_mode {
+>   2287			u16	cmd_type;
+>   2288			u16	cmd_payload;
+>   2289		} __packed;
+>   2290	
+>   2291		/* set 1 for _PRR mode
+>   2292		 * Product Reset (PLDR Abort flow)
+>   2293		 */
+>   2294		static const struct pldr_mode mode = {
+>   2295			.cmd_type = 1,
+>   2296			.cmd_payload = BTINTEL_PCIE_DSM_PLDR_MODE_EN_PROD_RESET |
+>   2297				       BTINTEL_PCIE_DSM_PLDR_MODE_EN_WIFI_FLR,
+>   2298		};
+>   2299		struct hci_dev *hdev = data->hdev;
+>   2300	
+>   2301		handle = ACPI_HANDLE(GET_HCIDEV_DEV(data->hdev));
+>   2302		if (!handle) {
+>   2303			bt_dev_dbg(data->hdev, "No support for bluetooth device in ACPI firmware");
+>   2304			return -EACCES;
+>   2305		}
+>   2306	
+>> 2307		if (!acpi_has_method(handle, "_PRR")) {
+>   2308			bt_dev_dbg(data->hdev, "No support for _PRR ACPI method, falling back to FLR");
+>   2309			btintel_pcie_reset(data->hdev);
+>   2310			return -ENODEV;
+>   2311		}
+>   2312	
+>   2313		argv4.buffer.type = ACPI_TYPE_BUFFER;
+>   2314		argv4.buffer.length = sizeof(mode);
+>   2315		argv4.buffer.pointer = (void *)&mode;
+>   2316	
+>   2317		obj = acpi_evaluate_dsm(handle, &btintel_guid_dsm, 0,
+>   2318					BTINTEL_PCIE_DSM_DYNAMIC_PLDR, &argv4);
+>   2319		if (!obj) {
+>   2320			bt_dev_err(data->hdev, "Failed to call dsm to set reset method");
+>   2321			return -EIO;
+>   2322		}
+>   2323		ACPI_FREE(obj);
+>   2324	
+>   2325		pci_dev_lock(data->pdev);
+>   2326		pci_save_state(data->pdev);
+>   2327		ret = btintel_acpi_reset_method(hdev);
+>   2328		if (ret)
+>   2329			bt_dev_err(data->hdev, "ACPI _PRR reset failed (%d),PLDR incomplete",
+>   2330				   ret);
+>   2331		pci_restore_state(data->pdev);
+>   2332		pci_dev_unlock(data->pdev);
+>   2333		return ret;
+>   2334	}
+>   2335	
 > 
-> https://github.com/AMDESE/linux-kvm/commit/266a41a1ea746557eb63debce886ce2c98820667
-> 
-> With some little hacks I can make this tree do TDISP DMA to private or shared (swiotlb) memory by steering via this vTOM thing. Thanks,
-
-
-Ping? Thanks,
-
-
-> 
-> 
-> 
->>
->> Jason
-> 
-
--- 
-Alexey
 
