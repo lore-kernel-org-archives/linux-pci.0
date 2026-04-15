@@ -1,126 +1,110 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id CF8863CF031;
-	Wed, 15 Apr 2026 13:55:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 601483D34BF;
+	Wed, 15 Apr 2026 14:28:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776261341; cv=none; b=fbo6rYQI3xY0+i3+NTgELxKey35x5REubl6rWEPoUSgUKeXqA+v7lqg3+CapW686nJmC9oFfOYBFv6OZSZKpoT1Ca8l7mIfAm0JEKzKP3GSTV3EABn+N45kqAWN0/KwcsdRTfN2EzyHuHbjq5YHKExbZFd5JmQUmwKMx+aO10Qs=
+	t=1776263304; cv=none; b=Zyr+snHi2MyZqudhWIDBxfguJINYwx4gFW91hiXIuPGb6qFvcHREbCMeWcIpxskZ4SVx0crG6BsOE+gq2GvxjZw7VQtQ+u9Eg1NIETcqoBnTXN2YwHz56dFKSyRvlIPVhZRnfLDue2xh/JHBQj9WiFWhqHdx/SDBzzXcFx8JUd0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776261341; c=relaxed/simple;
-	bh=afT+/AJfr9Pd0za1i+sG5FU8fIdRySrPPxD6GeF5phE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Sq14KMISEPvpDpgFPwp/9HbTiOzzMQkBtecoRQjS9TmaDo00ZDDfmPNZrwE+tIN7MUwEh5xclQM8Jc43ADY3MX7gTiSEtKeC6x9syNLhXbFRP3NZg/y++afuX7zlJCBQf9AExcFg0HRByUF4nmCDvaX2FlD1k4Msd6iufybxJEc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b=k+X5mnHm; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+	s=arc-20240116; t=1776263304; c=relaxed/simple;
+	bh=KLZl5mWnQ/fLEg517Nj8h/rm6MAMa8dENX79Fq95dso=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rxzkIDwZPZOEpWY4P1PY5yRQBQZP95LkDDot9K3+FPOWi0ycFznIDsIhTdUQdosWOdKFQKPyjlzhn230rE1aTHIIUY3RBJ83Pv+mUJ5bABY1OzLY4pHEhxY18xqcWfFTKWnq0JVmUOe6ikdjC3FUQbIZKmlB90bEM18ia3vXGOw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H/YX+RVR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b="k+X5mnHm"
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4F8A24FAA;
-	Wed, 15 Apr 2026 06:55:32 -0700 (PDT)
-Received: from [10.122.46.229] (unknown [10.122.46.229])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id B04E13F7B4;
-	Wed, 15 Apr 2026 06:55:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=arm.com; s=foss;
-	t=1776261337; bh=afT+/AJfr9Pd0za1i+sG5FU8fIdRySrPPxD6GeF5phE=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=k+X5mnHm7hL+pj79CT721bT30dLBzwUTIuoMj8u2JJZ8J+Ijnpx99cGgiheJqXXZj
-	 KOmB7JtgJz6zyo9B0V8NlpJFgb7D2AjkyUdKLxZuTkHn0pmfkR2ouPjnvvkTY9ugHU
-	 YUhZLAvod9LMwm0jz0Bwm90fRZjGt1l2SPVv5E/E=
-Message-ID: <518e5e0a-d0b2-4775-a32a-e2dc87c8ba4b@arm.com>
-Date: Wed, 15 Apr 2026 08:55:37 -0500
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H/YX+RVR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B35EBC19424;
+	Wed, 15 Apr 2026 14:28:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776263304;
+	bh=KLZl5mWnQ/fLEg517Nj8h/rm6MAMa8dENX79Fq95dso=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=H/YX+RVRFmDbZUEUouHLuZhFFOhEriVotbvOFw9wxSIAFOu1yin3oKr9hQA0Qc6pR
+	 I+WFVtfV4rosaPXwqeX+Kw27EcgVj1wXrS3hkWJI6FDy6VzZ/VM4FeseN1YJUcOtKF
+	 cIcgd6P3ftw6wMwBFE9Y5dT8LLZ8beEgm4Maazw7DT9d8U/b5MKbcLdDahzLWTvnq8
+	 y/Ia9YUWY2hscVdDJP/lLNEJaYQz2XQGSMPfrI7GvlevKVswmJ/nF5Bl8wOzaYMnE3
+	 3DB6G88J25UbvGy8+m0Peq0i8FqFF4fMf3+qxz5TJSxVacU/syZf5Hlb4HhAvCdLsO
+	 GpYzCyeW8yc9A==
+Date: Wed, 15 Apr 2026 15:28:18 +0100
+From: Conor Dooley <conor@kernel.org>
+To: Jia Wang <wangjia@ultrarisc.com>
+Cc: Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Xincheng Zhang <zhangxincheng@ultrarisc.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, linux-riscv@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] riscv: add UltraRISC SoC family Kconfig support
+Message-ID: <20260415-craving-rubbing-bc8d389d19de@spud>
+References: <20260415-ultrarisc-pcie-v3-0-73f06e972616@ultrarisc.com>
+ <20260415-ultrarisc-pcie-v3-1-73f06e972616@ultrarisc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/4] vfio/pci: Add PCIe TPH GET_ST interface
-To: Chengwen Feng <fengchengwen@huawei.com>, alex@shazbot.org, jgg@ziepe.ca
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-References: <20260415090959.53672-1-fengchengwen@huawei.com>
- <20260415090959.53672-4-fengchengwen@huawei.com>
-Content-Language: en-US
-From: Wathsala Vithanage <wathsala.vithanage@arm.com>
-In-Reply-To: <20260415090959.53672-4-fengchengwen@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="m8S0HS9rYZzLUqT+"
+Content-Disposition: inline
+In-Reply-To: <20260415-ultrarisc-pcie-v3-1-73f06e972616@ultrarisc.com>
 
-Hi Feng,
 
-get_st  feature is unsafe. It allows a rogue userspace driver in 
-device-specific
-mode to obtain steering tags for arbitrary CPUs, including ones unrelated
-to the device or its workload, enabling it to direct traffic into those 
-CPUs’
-caches and potentially interfere with other workloads, opening doors to
-further exploits depending on other vulnerabilities.
+--m8S0HS9rYZzLUqT+
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-That's why we dropped this capability in 
-https://lore.kernel.org/kvm/20251013163515.16565-1-wathsala.vithanage@arm.com/
+On Wed, Apr 15, 2026 at 03:21:17PM +0800, Jia Wang wrote:
+> The first SoC in the UltraRISC series is UR-DP1000, containing octa
+> UltraRISC CP100 cores.
+>=20
+> Signed-off-by: Jia Wang <wangjia@ultrarisc.com>
 
---wathsala
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
 
->   }
->   
-> +static int vfio_pci_tph_get_st(struct vfio_pci_core_device *vdev,
-> +			       struct vfio_device_pci_tph_op *op,
-> +			       void __user *uarg)
-> +{
-> +	struct vfio_pci_tph_entry *ents;
-> +	struct vfio_pci_tph_st st;
-> +	enum tph_mem_type mtype;
-> +	size_t size;
-> +	int i, err;
+> ---
+>  arch/riscv/Kconfig.socs | 6 ++++++
+>  1 file changed, 6 insertions(+)
+>=20
+> diff --git a/arch/riscv/Kconfig.socs b/arch/riscv/Kconfig.socs
+> index d621b85dd63b..0b4d06a7b4bf 100644
+> --- a/arch/riscv/Kconfig.socs
+> +++ b/arch/riscv/Kconfig.socs
+> @@ -84,6 +84,12 @@ config ARCH_THEAD
+>  	help
+>  	  This enables support for the RISC-V based T-HEAD SoCs.
+> =20
+> +config ARCH_ULTRARISC
+> +	bool "UltraRISC RISC-V SoCs"
+> +	help
+> +	  This enables support for UltraRISC SoC platform hardware,
+> +	  including boards based on the UR-DP1000.
 > +
-> +	if (copy_from_user(&st, uarg, sizeof(st)))
-> +		return -EFAULT;
-> +
-> +	if (!st.count || st.count > 2048)
-> +		return -EINVAL;
-> +
-> +	size = st.count * sizeof(*ents);
-> +	ents = kvmalloc(size, GFP_KERNEL);
-> +	if (!ents)
-> +		return -ENOMEM;
-> +
-> +	if (copy_from_user(ents, uarg + sizeof(st), size)) {
-> +		err = -EFAULT;
-> +		goto out;
-> +	}
-> +
-> +	for (i = 0; i < st.count; i++) {
-> +		if (ents[i].mem_type == VFIO_PCI_TPH_MEM_TYPE_VM) {
-> +			mtype = TPH_MEM_TYPE_VM;
-> +		} else if (ents[i].mem_type == VFIO_PCI_TPH_MEM_TYPE_PM) {
-> +			mtype = TPH_MEM_TYPE_PM;
-> +		} else {
-> +			err = -EINVAL;
-> +			goto out;
-> +		}
-> +
-> +		err = pcie_tph_get_cpu_st(vdev->pdev, mtype, ents[i].cpu, &ents[i].st);
-> +		if (err)
-> +			goto out;
-> +	}
-> +
-> +	if (copy_to_user(uarg + sizeof(st), ents, size))
-> +		err = -EFAULT;
-> +
-> +out:
-> +	kvfree(ents);
-> +	return err;
-> +}
-> +
->   static int vfio_pci_ioctl_tph(struct vfio_pci_core_device *vdev,
->   			      void __user *uarg)
->   {
-> @@ -1544,6 +1593,8 @@ static int vfio_pci_ioctl_tph(struct vfio_pci_core_device *vdev,
->   		return vfio_pci_tph_enable(vdev, &op, uarg + minsz);
->   	case VFIO_PCI_TPH_DISABLE:
->   		return vfio_pci_tph_disable(vdev);
-> +	case VFIO_PCI_TPH_GET_ST:
-> +		return vfio_pci_tph_get_st(vdev, &op, uarg + minsz);
->   	default:
->   		/* Other ops are not implemented yet */
->   		return -EINVAL;
+>  config ARCH_VIRT
+>  	bool "QEMU Virt Machine"
+>  	select POWER_RESET
+>=20
+> --=20
+> 2.34.1
+>=20
+
+--m8S0HS9rYZzLUqT+
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCad+gggAKCRB4tDGHoIJi
+0k5KAP9cH8g7du35W2DxfKVlGZGBX5/qlVgxSMv7M3SiUrg/7wEA4Wam3N4GLDGE
+WWQIvTM0dOVnQcN5PygYLDSqx+9yGQk=
+=gd+p
+-----END PGP SIGNATURE-----
+
+--m8S0HS9rYZzLUqT+--
