@@ -1,227 +1,346 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11022077.outbound.protection.outlook.com [40.93.195.77])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C83A3311C32;
-	Wed, 15 Apr 2026 16:46:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.77
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776271585; cv=fail; b=H3DFbpWlm4cxb6kcSQEJlZ/d8jssXDxqAlv+pnCR6QOOj1Wz9tlsOR1tkf8YOx4GAHG8he2ZOhjvd+o56XwnwLzj6y2LXOkX1ix9gGR5lImt0P8LQOWEBhICUMM07q8bvKqfN2IOqP0q/yA4dxTZqRTr39Z6Pwe1PNwGaUZNFWU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776271585; c=relaxed/simple;
-	bh=NI6sk/0wY9467LJBNZFCh0nqtuJ+ru+ziw9FbMpXz8Q=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Tp9CMeTl7MTaVb2EMX0561tEO6nz/HVQ7IbUGhOuP0usNWHYfF04jrkwhfNiKhzgqNmAWDbvMZDe9/rFVbK/xewefbmSNw42xVXUhpO/bIii+aMgVbtoJZ8Ju2xFZuKEOKS64FtbdbvCes8BuKKP6dmfQ5i+wa8WuF+FZU8QYbA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=microsoft.com; dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b=Inph5Hj/; arc=fail smtp.client-ip=40.93.195.77
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microsoft.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EA753BB57;
+	Wed, 15 Apr 2026 19:18:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776280724; cv=none; b=C01WofKrkUNw802a6Klrnz6t+97OaRUzs4f0cZoQTIjeVHC1gQkcLSBmZAanWnOB0LAA4gOFrhggqhNhXm9KcQ16COX0tN4V82sHStF1jwnNmwpJKxty9j/tZ/bMNWrlqsKMG8EE3A0L9488y7N+h5+aceU9/HuGb5mZimf9r9k=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776280724; c=relaxed/simple;
+	bh=mStHPbupelR0bY+rmlPlxlfmtIwFFK3z+Q13AxCevus=;
+	h=Message-ID:Subject:From:To:Cc:In-Reply-To:References:Content-Type:
+	 Date:MIME-Version; b=q4iE+6/Xx86sl6/sSX33ZoXLrjicTowFoRpB5R7U90GLA9Pswzv/TbOKSAAhdzmS20Sz7OtIGduBa/lzmnDtBxM3daYkf5ySoiUeEv3DB8D0QJMr+QPmHqidhsE77FZYbgKDHE7fSJrY5rrezGb4qTrPmaIuvUZMOdlN85j5Pl0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=ZuwW9UgY; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="Inph5Hj/"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=dpb73HLDMfcVptJOk58oN19mq66kujuvjBFLcmalrTCTQmV7wMIH9iTcBSv4QgM6K9Fa4Fs75d/cSxjoz2DzMYtwVZUm0iGjgwEdEZu6AfT0C0RwOOwVe88PFPgEyJEteQsfhdvRFbwDgJBmjCaGS7JrQoRQdvNTSpWIW9NiDa1C1SMFMe1udCcrBtSs+YchyY2a6BVDXBoHu2qHClsH/2hZccUbafbU0Qe/FsQkTVwi1YLUlRs2ke+ebM6GIVX5g0Gn38ZGUyRn0efILlSWkB1hcQmr44fZQ85HCkDzShWGjXtg79Rl5yOjRFs8jEPfBDAbQ6keo4N5tp248ukCbA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=AvJnIg10CwU5NZfbuPat9O7j7C17KzEZkZlhtCzwvA0=;
- b=W/bjjSD8mpIGN8NbHM7G4SX5jYOnsjDpyzaAR0EXNIGdH0JhjlnU4UnlagDG8YF+Of1ByzppwgQvRMnbpfbQ1ZCcMARmD0XsBMZ5GaarAjTHQ88DT0VomBspMgZ+31pHMQ9OkaHducles+fXOj6n/2nlyBIQCLSk2qAg+ofAeJ0d3gD6V3F9Qc/r4WUV3dCYrX6qtqg//iku/7mJObsl1FxszhxCfZ8Qn/zG89rOZg262io0Iuj0fPIkF+ACtunkPf3EqxBs0mjzZTT83Yrx3yO5KTmTR3eWbc9kt7avJD9p5BiQsqtmm6rrB5CC2j+cigOg5SHCJW7KjhCQYkvjMA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AvJnIg10CwU5NZfbuPat9O7j7C17KzEZkZlhtCzwvA0=;
- b=Inph5Hj/7WtPeqfoUbhd5ZxxZ6MBAHds+VpwkWtuk/VjyDZ/BoZBYnDp5alSe8E3RKselCvmykdTmx1b0tRrOz7ADmcWEe2gqsQvAivUGlnpWB9JZcu7kIF24Ctp3sS66FqzpBhKZPGnkDVatEgATi8rWD13YDviKt+W3ea32C4=
-Received: from SA1PR21MB6921.namprd21.prod.outlook.com (2603:10b6:806:4a7::11)
- by DS2PR21MB4775.namprd21.prod.outlook.com (2603:10b6:8:2b0::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.2; Wed, 15 Apr
- 2026 16:46:19 +0000
-Received: from SA1PR21MB6921.namprd21.prod.outlook.com
- ([fe80::51cf:497c:e5df:f6d]) by SA1PR21MB6921.namprd21.prod.outlook.com
- ([fe80::51cf:497c:e5df:f6d%2]) with mapi id 15.20.9818.017; Wed, 15 Apr 2026
- 16:46:19 +0000
-From: Dexuan Cui <DECUI@microsoft.com>
-To: Dexuan Cui <DECUI@microsoft.com>, Michael Kelley <mhklinux@outlook.com>,
-	KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>,
-	"wei.liu@kernel.org" <wei.liu@kernel.org>, Long Li <longli@microsoft.com>,
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kwilczynski@kernel.org"
-	<kwilczynski@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, Jake Oshins <jakeo@microsoft.com>,
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"matthew.ruffell@canonical.com" <matthew.ruffell@canonical.com>,
-	"kjlx@templeofstupid.com" <kjlx@templeofstupid.com>
-CC: Krister Johansen <johansen@templeofstupid.com>, "stable@vger.kernel.org"
-	<stable@vger.kernel.org>
-Subject: RE: [PATCH v2] PCI: hv: Allocate MMIO from above 4GB for the config
- window
-Thread-Topic: [PATCH v2] PCI: hv: Allocate MMIO from above 4GB for the config
- window
-Thread-Index: AQHcwvqZ7/kLR2JkdUmudlv9HY41bLXRHh0QgAOgeDCAAHmtkIAKqeRQgACBovA=
-Date: Wed, 15 Apr 2026 16:46:19 +0000
-Message-ID:
- <SA1PR21MB69219E8C3ECE7723E8880924BF222@SA1PR21MB6921.namprd21.prod.outlook.com>
-References: <20260402234313.2490779-1-decui@microsoft.com>
- <SN6PR02MB415794E53D2B621F6A8BA382D45CA@SN6PR02MB4157.namprd02.prod.outlook.com>
- <SA1PR21MB69215C164B06109C6682984EBF5BA@SA1PR21MB6921.namprd21.prod.outlook.com>
- <SN6PR02MB4157D5C8EE35A221B130FC5AD45BA@SN6PR02MB4157.namprd02.prod.outlook.com>
- <SA1PR21MB69218F955B62DFF62E3E88D2BF222@SA1PR21MB6921.namprd21.prod.outlook.com>
-In-Reply-To:
- <SA1PR21MB69218F955B62DFF62E3E88D2BF222@SA1PR21MB6921.namprd21.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=064ced81-0360-4c14-8a5a-ba65234f13c6;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2026-04-15T08:44:21Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Tag=10,
- 3, 0, 1;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA1PR21MB6921:EE_|DS2PR21MB4775:EE_
-x-ms-office365-filtering-correlation-id: b8841640-80b8-4d54-647d-08de9b0e84fd
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|7416014|376014|366016|38070700021|921020|56012099003|22082099003|18002099003;
-x-microsoft-antispam-message-info:
- mcJs5D5fxcYT1d91FeMQCvFulAk0acRb2wZMzIR8rnf7KDZls1CLddU+cme3OJwseTAUu4eoMFBJa3XvYKabf6UsEsopfYn4AgAUs0X4kUpxHgs8TOU2yGPa9YBORnIrBUfxrgsm5lfPsPn0oDL9al/FQjlLvDGzUX7FyT/tYROLgFNZWw0EWOuNwMMQj+erf1Q11zqaqXBO/TLCvuMdLVAkgCa+3b1syAB7Rd2sE0rlDci6XOyOdTPqbcAW+W3EKWBFot6TkAWOiZxzQaKCZCvXU6eLi2efd0TV2JuVHvqLPscy0K8fyd3K43o1iUrTq0hgS+XwLyfqQYGmwkDlqanhMw9ye+zcd5NxdlLAJ1ElmKEmGcb846wRlNSLyCb7eY+pUamUjx1IS2py6wjmLq6XllzjAP25YDtcB6cTiTANwj0oG7VY+X58Bngmxc03gLA1oA1fK4a+se7OsQT8Y6DyednO4eKzRwZTu5GgRgwUW1rh+lHN1aK6jy2LRX466zoE0xuL2ljzGY+z5WUdveugw6WjKdh/YmZK7vo1LczWFu2UncjuasGl5UMOOjSEbLDIo3rDojYx1aabIcCchdQyFA2MY1HXTSDYkudTJgXA8zyJ0se5RyZfA8z9jHyXFk6wNxQ7hRTVoAlE8BJ6CKLTkO9R9tm4CqLPowF78KMjTItFsKrgJAC85P+0gUddxzubkX+/MTA2tZd0cZ/JxW+cS5QjZDPc7jKF/yZ1rQJEqAnqWnI3CPyEcWCxNaIJ4sJ1/vCQBt5MrmB6qjHXsYIdwIKAIp7qVs+tAa0GDPkdNw8IgsJFJ7+WFmrX/+k0
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR21MB6921.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(38070700021)(921020)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?zcenUkOybyXmUdWp1vZeH17Zn9MBWkCSg0glsYdZnmHPN/i0sHZyexuGLhFg?=
- =?us-ascii?Q?1fOSWs/rT22TVJichNsYMxjt72mDomfQaVGW4YA8lO9AhaXV6vT8+PvPRktP?=
- =?us-ascii?Q?7gMSQICf9mW/jnxxrpA0nCCandjPU5uAmm3vzoNfTKafpayMBxNmyHXeAiLn?=
- =?us-ascii?Q?d6pii7YlhGjFHaZywHcnaZ+/b4TdmMU4f4VGE3b7MVSYDgazxppzQbuwyeaS?=
- =?us-ascii?Q?15pp3mI3Zed51G7giUG1aFSDiojKc5tUreTDtrkW8PIQ+cbWJnICLmcVMEHY?=
- =?us-ascii?Q?Bi2qJV0Oblt1A+dkOEa0CpZH/p6AKnGvWDoqnexC4QR8YMgSEzhHOTVQRR85?=
- =?us-ascii?Q?ojmGiE8yuprbRHlzp0lj29fJCKqWtEftmV8TG5O5jDOAdvnZ8fY2yQvLqheG?=
- =?us-ascii?Q?GqYRW9Hd7FqcYynL16SiusNCaNlUoLbGYSY1RVEIPixXfsrASY1DlGDtqQzr?=
- =?us-ascii?Q?MqkUpuI6w5dTDOyiHGBLRSqh2638bbx5OqnTSOrm8KHyI6Z1WdFQsGXplOLN?=
- =?us-ascii?Q?p8KYWHuJl/hhO23L6cKOFgKE6D5lRn0wZvcsPFamGu9fVmV6yfv+xCokBuHB?=
- =?us-ascii?Q?qu0txkHTDyNERDJnsHdBgqKFTmO71fwcMHVMDti1rjasTpAPliM+vgn7Yk5y?=
- =?us-ascii?Q?FWWgEh4aJQfxuRatIlJPZxOZ3ObrVu0ubJojMcDI0oUZBNjDt0V18poHNgz1?=
- =?us-ascii?Q?gziaDBZn91YE4A24UoT3CJfbbpeTqKjdqwTb+bzSD3Hw5dNxxnfFt/QWRpN7?=
- =?us-ascii?Q?xluudgP/r07aiA2+2BXjCJbCQJBgggR/jGKkbF2eEJXHjqWtLOTJZvz/GcCO?=
- =?us-ascii?Q?yZ50KoXeyDddbQdqeACiA9lwuc69XwaHOLJHUXfHNJTyFHc1sLfn6VZKaqZ3?=
- =?us-ascii?Q?tS1baV4qb3So3qoz7lgxsyhJiMc+UKly7ACo9D+VST15GHoRdbmKjdyJOH8F?=
- =?us-ascii?Q?6775AkdzzXjESzbtboUVv7dtfaMhaC4dZY5dDMVQvVgBQkNCkG63A8LKTnML?=
- =?us-ascii?Q?XNRqFW4FE6bxocj0yg5xx9M48HEzPF6OhKmdvWr0K/PWlORwIWeodg+E7meP?=
- =?us-ascii?Q?SZsXp7SRevdWbXtFNHo6BHkeavS7ATWIAQjpUdBEl677EDqOfu6yQ2L+kGSj?=
- =?us-ascii?Q?8F18hRSsBLVUgV8lMx9z21w7UFiRP6Qwx4lOC6ICC+E+yFkCynztqsmHbIRA?=
- =?us-ascii?Q?HRQGbBizF9eAVX0o1rK/Tkh4mOnk/pSBIVkbN3nsboetK8cLRReHAl/iCo8Y?=
- =?us-ascii?Q?N0Lppl7EnjFkgz8cIhDgCNixTNo4lqEwjHmLYvstan12N3Z5edsQecDsBHRD?=
- =?us-ascii?Q?lENsjIJFwiCNueEvb1eaVXYnCOO6f8vNpmYqnhZ3haoTSmbQRSmRJZKCJb4X?=
- =?us-ascii?Q?XZQCR+6YBLAjje4J8ML49ewy9eAAouBeTkoepMrq/Ej9KeNPgxDXQEeF8oj3?=
- =?us-ascii?Q?GhCS76qUnoX5+8o/jVWdzmjVPFLMZvpeGiZNSU/fuQRuALWZZlkzkD4Wv4a7?=
- =?us-ascii?Q?B1DpY8jf2oYQlZFyrX34+Ea9juZ9o7HBbxv0wIoHyJ1onCXB9Z1blPfu1WKX?=
- =?us-ascii?Q?LKv4se8CCjpdFbZYbAe0wMPZfvuRftWo59F+qwSFGGuhUGVkVdhHxOb06Ql1?=
- =?us-ascii?Q?NbMywCcZmE/OzSwX1mvNklq+sz3COqMmsjTeHXVwKGfF+BpDJtkAcQfaSObW?=
- =?us-ascii?Q?a2bYJ+29DFg9rWzXKDWnUkQriHpIHbiiGpSvr6KJZVpcmCwR?=
-Content-Type: text/plain; charset="us-ascii"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ZuwW9UgY"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63FGj3kN1735742;
+	Wed, 15 Apr 2026 19:18:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=cy793L
+	HEds/cw6abUT+Lp7iwIANQViyL3BGCy3GEbrY=; b=ZuwW9UgYuNlPzNAmbzMSeu
+	0K2FNIPzOMA1yvtofKI1eSJFeIFDHej0HauDtLmXNkFFzzGhNFcPPuJzmyGTVHOp
+	t2xYCjzsFimXR1AaRUDddIdNBViL+JQc8Lmb7RzuqvQMrPzUi6qUIPVxTIeNqne4
+	3XSpnc0dcIBjUzqVC2SET+6MUTMmEuMlfUSCdNHfmPwKJb9Bt4GtOiKlkXrDSjwA
+	5zr87MlNTCukjxRfY2BC8DHAz+lww1+29jG2tUTgxYjk1YF7ej2li+bzEdG0qiN7
+	LcOwqEISEJlc41LiQjfoybDbPwmuOL+AJxR4zghlsanIbL9+nZnZfhRbWhsYjvAQ
+	==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dh89m99ss-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 15 Apr 2026 19:18:37 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 63FGnHkD003610;
+	Wed, 15 Apr 2026 19:18:36 GMT
+Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4dg1mnfph0-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 15 Apr 2026 19:18:36 +0000
+Received: from smtpav02.wdc07v.mail.ibm.com (smtpav02.wdc07v.mail.ibm.com [10.39.53.229])
+	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 63FJIZcK31588966
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 15 Apr 2026 19:18:35 GMT
+Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 3A69F58058;
+	Wed, 15 Apr 2026 19:18:35 +0000 (GMT)
+Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 369D15805B;
+	Wed, 15 Apr 2026 19:18:33 +0000 (GMT)
+Received: from [9.111.81.211] (unknown [9.111.81.211])
+	by smtpav02.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 15 Apr 2026 19:18:33 +0000 (GMT)
+Message-ID: <2059e5412e5d9367ac635b6471fefd0849ff7984.camel@linux.ibm.com>
+Subject: Re: [PATCH v13 5/7] vfio-pci/zdev: Add a device feature for error
+ information
+From: Niklas Schnelle <schnelle@linux.ibm.com>
+To: Farhan Ali <alifm@linux.ibm.com>, Alex Williamson <alex@shazbot.org>
+Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, helgaas@kernel.org, lukas@wunner.de,
+        clg@redhat.com, kbusch@kernel.org, mjrosato@linux.ibm.com
+In-Reply-To: <34f59b3b-dc28-4fd3-b2d6-d34bc4fd297c@linux.ibm.com>
+References: <20260413210608.2912-1-alifm@linux.ibm.com>
+	 <20260413210608.2912-6-alifm@linux.ibm.com>
+	 <20260413165758.0f87312b@shazbot.org>
+	 <cd9d7977-8b36-428c-81f2-c14b66173763@linux.ibm.com>
+	 <20260414081238.23e2cecc@shazbot.org>
+	 <5f26af4c-9584-4c70-9702-0a3bcd0c4ad1@linux.ibm.com>
+	 <20260414114132.31481b48@shazbot.org>
+	 <9d68b944-bd65-495b-b69c-e0d6758f15ee@linux.ibm.com>
+	 <f20c8b1c6cd7fefbe3fbeea1055d41bea009b5ba.camel@linux.ibm.com>
+	 <34f59b3b-dc28-4fd3-b2d6-d34bc4fd297c@linux.ibm.com>
+Autocrypt: addr=schnelle@linux.ibm.com; prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
+Date: Wed, 15 Apr 2026 21:17:32 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR21MB6921.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b8841640-80b8-4d54-647d-08de9b0e84fd
-X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Apr 2026 16:46:19.5930
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: vAoj53QKiUBKw7aawh4reqTHYbsnUhuiR9evklVD9pMPQHH9UC8mNxAC8j87Rx9j45rRNUKFo7eEsA43FW+47Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS2PR21MB4775
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=I/dVgtgg c=1 sm=1 tr=0 ts=69dfe48d cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VnNF1IyMAAAA:8
+ a=adBxAaxHKppDwLjIIogA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: Mzxnu8K5p-dNlUtcXXQgyAk4o4hZHqkb
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDE1MDE4MCBTYWx0ZWRfXzNgI08iyfuKi
+ 3A4LjE3R8ThoOw3am4Sw8r7T2FrfbU0jjpFQGgyblMyd3AlXeRyXbHS7Hhj2JeUb42BEdEwObs5
+ X8qpBGpG/9zBbnwn+zCqI/uBoe0v4li3wmk6HJbDtbWcoTJjyL6C/wY0Nig72tlIICqXxPmr8WY
+ CwvHg+x2z+SVRXo5EQvELFCdfx7F9i6pGkHsMQOx1RDdW4yG0Oa3KGZ8uSBhWTl0DUqBC339V4H
+ 3qqh/VjhiH9eOUf+JfgtLFL8Eg11v+02Vp1yfpSeW1X7TO6ZWm9oUxUtv6XDWcqgPWGqWP3DquZ
+ usecK3VUsiF3Z1I1g7OZSCG/lxDSHtLF4LBXcPHC2Ei4GlSecjZWdxIxIaHbtgRg0u7RgROOoRA
+ om6G8TxU1y5kUCwjFkNKIM/HzrhiCGrdcV4BKpmkq0nVboRrpU+Aqw16m2B0hQeTIBw7Bku6epB
+ WRXz94FJOpxU6aCsHfw==
+X-Proofpoint-ORIG-GUID: Mzxnu8K5p-dNlUtcXXQgyAk4o4hZHqkb
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-15_01,2026-04-13_04,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 bulkscore=0 clxscore=1015 adultscore=0 lowpriorityscore=0
+ suspectscore=0 impostorscore=0 phishscore=0 spamscore=0 priorityscore=1501
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2604070000 definitions=main-2604150180
 
-> From: Dexuan Cui <DECUI@microsoft.com>
-> Sent: Wednesday, April 15, 2026 8:31 AM
->  ...
-> 4) For Gen1 VMs, the framebuffer always starts at the fixed
->    location 4G-128MB.
+On Tue, 2026-04-14 at 14:06 -0700, Farhan Ali wrote:
+> On 4/14/2026 12:43 PM, Niklas Schnelle wrote:
+> > On Tue, 2026-04-14 at 11:45 -0700, Farhan Ali wrote:
+> > > On 4/14/2026 10:41 AM, Alex Williamson wrote:
+> > > > On Tue, 14 Apr 2026 10:13:22 -0700
+> > > > Farhan Ali <alifm@linux.ibm.com> wrote:
+> > > > > On 4/14/2026 7:12 AM, Alex Williamson wrote:
+> > > > > > On Mon, 13 Apr 2026 16:40:49 -0700
+> > > > > > Farhan Ali <alifm@linux.ibm.com> wrote:
+> > > > > > > On 4/13/2026 3:57 PM, Alex Williamson wrote:
+> > > > > > > > On Mon, 13 Apr 2026 14:06:06 -0700
+> > > > > > > > Farhan Ali <alifm@linux.ibm.com> wrote:
+> > > > > > > > > diff --git a/include/uapi/linux/vfio.h b/include/uapi/lin=
+ux/vfio.h
+> > > > > > > > > index 5de618a3a5ee..2980ca39dd38 100644
+> > > > > > > > > --- a/include/uapi/linux/vfio.h
+> > > > > > > > > +++ b/include/uapi/linux/vfio.h
+> > > > > > > > > @@ -1534,6 +1534,26 @@ struct vfio_device_feature_dma_buf=
+ {
+> > > > > > > > >       */
+> > > > > > > > >      #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
+> > > > > > > > >     =20
+> > > > > > > > > +/**
+> > > > > > > > > + * VFIO_DEVICE_FEATURE_ZPCI_ERROR feature provides PCI e=
+rror information to
+> > > > > > > > > + * userspace for vfio-pci devices on s390x. On s390x, PC=
+I error recovery
+> > > > > > > > > + * involves platform firmware and notification to operat=
+ing system is done
+> > > > > > > > > + * by architecture specific mechanism. Exposing this inf=
+ormation to
+> > > > > > > > > + * userspace allows it to take appropriate actions to ha=
+ndle an
+> > > > > > > > > + * error on the device. The pending_errors provide any a=
+dditional errors
+> > > > > > > > > + * pending for the device, and userspace should read unt=
+il zero. A value of
+> > > > > > > > > + * 0 for pending_errors and pec would indicate no pendin=
+g errors that need
+> > > > > > > > > + * to be handled.
+> > > > > > > > > + */
+> > > > > > > > > +
+> > > > > > > > > +struct vfio_device_feature_zpci_err {
+> > > > > > > > > +	__u8 version;
+> > > > > > > > > +	__u8 pending_errors;
+> > > > > > > > > +	__u16 pec;
+> > > > > > > > > +};
+> > > > > > > > I assume .version is for compatibility, but we don't define=
+ a strategy
+> > > > > > > > for using it or specify what the version should be for this=
+ table.  It
+> > > > > > > > doesn't seem like there's actually an value-add to having i=
+t.
+> > > > > > > Its possible we may need to extend this structure in the futu=
+re if we
+> > > > > > > want to report more information to userspace. I at least want=
+ the
+> > > > > > > flexibility to do so. We had some discussion around this [1] =
+in an
+> > > > > > > earlier version. I was trying to follow similar versioning pa=
+ttern we
+> > > > > > > had around vfio-pci/zdev structures.
+> > > > > > IMHO, the version field is a dead end towards achieving this,
+> > > > > > especially if we don't specify from the onset the expected vers=
+ion
+> > > > > > value or the compatibility semantics.  All that's going to happ=
+en is
+> > > > > > that some userspace will hard code that it understands version =
+1
+> > > > > > because that's what's currently reported and matches the struct=
+ defined
+> > > > > > here, and you can never ever report anything other than version=
+ 1
+> > > > > > without breaking that user.  At that point you need to come up =
+with
+> > > > > > some other means for the user to opt-in to a new version, wheth=
+er it's
+> > > > > > triggered by another feature (as we did with the PRECOPY_INFOv2=
+ above
+> > > > > > this), or we reimplement the whole v2 feature.
+> > > > > My understanding was based on how we version some of the capabili=
+ty
+> > > > > structures for zdev (in include/uapi/linux/vfio_zdev.h). If we wa=
+nted to
+> > > > > provide more information to userspace in the future, what would b=
+e
+> > > > > preferred approach? Do we need to explicitly define a v2 feature?=
+ I am
+> > > > > open to suggestions on this.
+> > > > >=20
+> > > > > If we need to define v2 explicitly in the future, then yes I agre=
+e we
+> > > > > can simplify it to return only the PEC code (or an error code oth=
+erwise).
+> > > > Maybe I'm reading too much into it, but it sounds like you already =
+have
+> > > > plans to expand this.
+> > > >=20
+> > > > The existing zdev structures seem to rely on the version field in t=
+he
+> > > > capability header and maybe you've gotten away with bumping the ver=
+sion
+> > > > without breaking userspace, but it's fragile.  AFAICT, the ioctls d=
+o not
+> > > > define a versioning strategy where vN+1 only adds fields to vN, so =
+all
+> > > > it takes is one outspoken userspace tool that hard codes its
+> > > > compatibility to a specific version to become a problem for further
+> > > > updates.
+> > > >=20
+> > > > Likewise this feature doesn't define a versioning policy for usersp=
+ace
+> > > > to follow.  I'm sure there are other examples within vfio that are
+> > > > problematic, but let's try not to create more.
+> > > >=20
+> > > > If you want to use a version, then also define what the version is =
+and
+> > > > what the compatibility policy is for future versions.  A flags fiel=
+d is
+> > > > another option that we've used extensively in vfio.  The version fi=
+eld
+> > > > might be better for incremental expansion of the structure, while f=
+lags
+> > > > can address specific fields more directly, ex. a reserved field bei=
+ng
+> > > > redefined.  Thanks,
+> > > >=20
+> > > > Alex
+> > > Just wanted to understand and clarify if we can associate multiple
+> > > fields with a feature flag? I think in that case flags would be bette=
+r
+> > > here and given its also something that is widely used in vfio. I am j=
+ust
+> > > trying to figure out the best way we can extend this without a lot of
+> > > code churn in the future.
+> > >=20
+> > > I appreciate the feedback and discussion on this.
+> > >=20
+> > > Thanks
+> > >=20
+> > > Farhan
+> > Here is an idea. I think we even discussed this internally at some
+> > point. How about we just use the architected CCDF Error Event (i.e.
+> > basically struct zpci_ccdf_err with possible uAPI type adjustments) as
+> > the data user-space reads. The bit definitions of it are already part
+> > of the architecture and it has provisions for extensibility based on
+> > s390 architecture principles which have worked quite well for forward
+> > compatibility. If we additionally make it possible to query its length
+> > as kind of a version it could even grow. I think this would also work
+> > well with the idea of returning an error on read if there are no more
+> > error events and user-space reading again and again until it sees the
+> > error. I agree with Alex that this seems much easier to get right than
+> > a pending_errs count. As a bonus we can immediately expose all the
+> > error event information Linux currently uses. That said, I would opt to
+> > setting the struct fields by copying field by field explicitly and
+> > leaving reserved fields 0 such that we don't pass-through any bits a
+> > future platform may add without having a defined field in Linux.
+> > Thoughts?
+> >=20
+> > Thanks,
+> > Niklas
 >=20
->    4.1) By default, the low mmio range also starts at 4G-128MB,
->         and the size is 127.75 MB, i.e. if
->         hdev->channel->offermsg.offer.mmio_megabytes needs 128MB,
->         the guest hyperv_drm driver can't find enough available
->         mmio in the low mmio range, and has to use the high mmio
->         range.
->=20
->    4.2) With "Set-VM -LowMemoryMappedIoSpace 1GB", the
->         low_mmio_base is 3GB, the low_mmio_size=3D1023.75 MB. The
->         fb_mmio_base is still 4G-128MB, i.e. if hyperv_drm needs
->         128 MB of mmio, it still has to use the high mmio range.
-
-Well, this is inaccurate: in this case we could reserve 128MB low
-mmio for hyperv_drm, but this is not really what we want: our
-purpose is that we reserve the "initial" framebuffer mmio range so that
-hyperv_drm in the first kernel doesn't have to relocate the framebuffer
-mmio range. Even if we reserve 128MB low mmio for hyperv_drm
-starting at 1GB:
-
-a) hyperv_drm can be blacklisted by the users so from the host perspective,
-it's still the "initial" framebuffer mmio range that takes affect, and we s=
-till
-can have the mmio conflict in the kdump kernel.
-
-b) hyperv_drm can load after hv_pci, so we can even have the mmio
-conflict in the first kernel.
-
-> On an ARM64 lab host, I also tested Gen2 VMs (there is no Gen1 VM
-> for ARM VMs):
->=20
-> By default:
->   low_mmio_base =3D 4GB - 512MB, i.e. 0xe0000000
->   low_mmio_size =3D 512MB
->   fb_mmio_base =3D low_mmio_base
->   The default framebuffer size is 3MB
->   (i.e. screen.lfb_size =3D 3MB) but hyperv_drm:
->   mmio_megabytes =3D 8 MB, which supports up to 1920 * 1080.
->=20
-> With the below commands:
->    Set-VM -LowMemoryMappedIoSpace 512MB \
->           -VMName decui-u2204-gen2-fb
->    // the command only accepts a value between 512MB and 3.5GB.
->    Set-VMVideo -VMName decui-u2204-gen2-fb \
->                -HorizontalResolution 4834 \
->                -VerticalResolution 3622 \
->                -ResolutionType Single
-> I thought we would have:
->     max_fb_size =3D round_up_to_2MB(4834*3622*4) =3D 68 MB
->     excess_fb_size =3D 4MB
->     low_mmio_base =3D 4GB - 512MB - 4MB * 2
->                   =3D 4GB - 520MB
->     fb_mmio_base =3D low_mmio_base
->     low_mmio_size =3D 4GB - low_mmio_base =3D 520MB
->=20
->     Since 4GB - target_low_mmio_size =3D 4GB - 512MB, which is
->     smaller than low_mmio_base, so low_mmio_base and
-
-Sorry for the typo: here the "smaller" should be "bigger".
-
->     fb_mmio_base would be both set to 4GB - 520MB, and
->     low_mmio_size would be 520MB.
->=20
->     However, the actual result is:
->     max_fb_size is indeed 68MB.
->     but fb_mmio_base =3D low_mmio_base =3D 4GB - 512MB, and
->     low_mmio_size =3D 512MB, i.e. the 'excess_fb_size' is not
->     considered on ARM64!
-
-I think this makes senses since " low_mmio_size =3D 512MB" is
-already bigger enough for the framebuffer.
-
->     In this case, we'd like to reserve
->     min(low_mmio_size/2, 128MB) =3D 128MB for the framebuffer
->     mmio, since the max possible framebuffer so far is 128MB.
->=20
+> My concern with exposing the entire struct zpci_ccdf_err was it could be=
 =20
+> error prone trying to keep the struct and vfio uAPI struct in sync. Just=
+=20
+> thinking out loud, to query the length we would need a different vfio=20
+> device feature bit? But if it makes for a better uAPI, I can make the=20
+> change. Thanks
+>=20
+> Farhan
+
+If we have a function that copies between the struct zpci_ccdf_err and
+the uAPI variant field by field and add a BUILD_BUG_ON() for matchting
+sizes it should be pretty hard to miss them going out of sync. If we
+want to be absolutely sure we could do a series of
+BUILD_BUG_ON(offsetof(struct zpci_ccdf_err, foo) !=3D offsetof(struct
+vfio_zpci_ccdf_err, foo)) into that copy function. It's not the most
+elegant but should definitely catch any mismatch.
+
 Thanks,
-Dexuan
+Niklas
