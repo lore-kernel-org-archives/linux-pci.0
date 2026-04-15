@@ -1,101 +1,125 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C71F532D0CF;
-	Wed, 15 Apr 2026 09:24:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6D183382CB
+	for <linux-pci@vger.kernel.org>; Wed, 15 Apr 2026 12:09:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776245051; cv=none; b=KlKhD7xZzaYPYYpe6ddbwhnlKO7wFz/0vXB2+FNTgOhI3jJt7EMgFCrEL87Nyh4eEG7xBUX0aY6+2UQnKUQd4zjgRWoZULwMjw5gvlrEq60yGROPnt7FdwNwBVQU2hW0Lstxu+u6+9kyAddD5SUDQgb3o/2XWk+9t68gOypfwrE=
+	t=1776254996; cv=none; b=Q9rGJYxfciuXrbWtcHMi7AXmJWesMYDTAfzpKNg0R27bxCyD9N+1reP81JH4L6BDVRihxqi60rhIGHWmTqEY2cV1xjEEF8c5HS9K059xUEwomTzArwtU02bcgjrDAQLQcGWmfsIPflnXjB0laR8YmbTSG4kiCqV5kNkXXkvnWP0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776245051; c=relaxed/simple;
-	bh=wsSRf+FgtSM4Tmbmls0rwxi6ii/1NE9W0IbBIkaPRi0=;
-	h=Date:Content-Type:MIME-Version:From:Cc:To:In-Reply-To:References:
-	 Message-Id:Subject; b=eXP++HTpUQyQ9NBb/SUvKN+bzgT0rtl+Y/as50+XFIe1foo5syxB1DULaGeAIIDffnnjkPFFhfiLI5hGxvexVPTWOabCSjL+U+Yiewv3oem66CUwvuF4pvqKVLcE/5l8iOwCVUu0T1rUVdQb/AOlnqYgmiNyA3ZmM0pj3sxMRUA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JypY5ms0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776254996; c=relaxed/simple;
+	bh=IsZjVVDU7pDTf9EQdpLWQT5bHICKqDwTS3CU10zyGhY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ckn/khqMT7w09jR+DGSDN4V05DlvmrQaqZnieU0VA5hMdRb7gKJykBUSZrBx5vVu1bx7bChMzGR6W6UCw53fWN3wCGEOguph0ZWDcP+yLli2MieisfpBZjcEkPBkM7hnNcyrr+E0T9iMs4SyBL2F3J3sT72vOc+cawvHPWUGlQc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oZYEQIbg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JypY5ms0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FB9CC19424;
-	Wed, 15 Apr 2026 09:24:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oZYEQIbg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95572C4AF09
+	for <linux-pci@vger.kernel.org>; Wed, 15 Apr 2026 12:09:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776245051;
-	bh=wsSRf+FgtSM4Tmbmls0rwxi6ii/1NE9W0IbBIkaPRi0=;
-	h=Date:From:Cc:To:In-Reply-To:References:Subject:From;
-	b=JypY5ms0Oq9lbJcBPtM6l1MYZ3oGXeytjMCYXkAPu9kQAfw9pNXar0uj6kMjdm/Xo
-	 1dCOmw8/X3BYlIt7+BcJDgQ/6FQrzXOclf0JP1e0yIO9WZ3BDe8RgxsQ2dCR+aQVey
-	 8rsXyqOkhf1/J37L28oS9EDouk/94Hv3VVfiBAU9hLW94ETfL4Phu2uhQ3ndL4BXdh
-	 PaFZp5OYGqsubwy+rYV4z+WurFS7AMW897ygRtPL4cu8BaZWCDfWJWtXnm8BWa+Hr4
-	 jNCrW/0HEtl/onZGcftqqtIq8USkacoumHdLvP9/MYb8pv5P/n/F4Z0C0N+FC72KOL
-	 ZUo4FuWvGFX2A==
-Date: Wed, 15 Apr 2026 04:24:08 -0500
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+	s=k20201202; t=1776254996;
+	bh=IsZjVVDU7pDTf9EQdpLWQT5bHICKqDwTS3CU10zyGhY=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=oZYEQIbgYgB0OAggPowebovAj9VVCPvt8g3D0lWYRnkhRRb2ROQDa3eIczRO2Gykh
+	 KjpDYVDduOB0ByOCM+a5ykALNN42KrFfJQ+56KSijvxICBD0siV9vz5laEVeZu+zAA
+	 HCxmrqRdeAAB6/+EiCS18G/tVdPzvD5+b2aQOZZ3kV8pfH4enftLOmqj1gl1y19L6K
+	 wy7FTZ6h/MwN0GZ5zS5T831MdhnGn3qANjXmfHz2LikYsRpsgauVHLzPdmnmr3VKz9
+	 yvZD+8uiDyWstMXZzm8PCL2CCls8cPOarIvV7fvgtGVhgwqdcNabEvnlBlP5alYqA2
+	 Ed3VsbAc5ouow==
+Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-671fe205535so2573256a12.2
+        for <linux-pci@vger.kernel.org>; Wed, 15 Apr 2026 05:09:56 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ951NGKrkK2AujSNnwg0AIypRGdzyw28fFeYHGCGJPCLOy4Vl8TupsFGh8ZzPYmUW61IqOG5gq9xhA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwiG+4I8vzuNpa6Iw1iU88m3IQC3XWW6yFWP8xBsEwTDh4JZaqN
+	gjcv6MmlFspn26u645GxnuiA/BCaXtOnKArwL/3dsIGZvABwYj9v2jxVIY9R8LGbjPruKh4r2y3
+	0WObMxTnrPhdVkFeMGqR1094lte+LNg==
+X-Received: by 2002:a05:6402:358c:b0:671:4565:6ee1 with SMTP id
+ 4fb4d7f45d1cf-67145657271mr7292515a12.23.1776254995084; Wed, 15 Apr 2026
+ 05:09:55 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: "Rob Herring (Arm)" <robh@kernel.org>
-Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>, Eckert.Florian@googlemail.com, 
- ms@dev.tdt.de, Bjorn Helgaas <bhelgaas@google.com>, 
- Manivannan Sadhasivam <mani@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
- Johan Hovold <johan+linaro@kernel.org>, linux-kernel@vger.kernel.org, 
- devicetree@vger.kernel.org, Ajay Agarwal <ajayagarwal@google.com>, 
- Sajid Dalvi <sdalvi@google.com>, linux-pci@vger.kernel.org, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>
-To: Florian Eckert <fe@dev.tdt.de>
+References: <20260415-pcie-intel-gw-v4-0-ad45d2418c8e@dev.tdt.de> <20260415-pcie-intel-gw-v4-7-ad45d2418c8e@dev.tdt.de>
 In-Reply-To: <20260415-pcie-intel-gw-v4-7-ad45d2418c8e@dev.tdt.de>
-References: <20260415-pcie-intel-gw-v4-0-ad45d2418c8e@dev.tdt.de>
- <20260415-pcie-intel-gw-v4-7-ad45d2418c8e@dev.tdt.de>
-Message-Id: <177624504894.3320247.14684447771089927124.robh@kernel.org>
-Subject: Re: [PATCH v4 7/7] dt-bindings: PCI: intel,lgm-pcie: Add atu
- resource
+From: Rob Herring <robh@kernel.org>
+Date: Wed, 15 Apr 2026 07:09:42 -0500
+X-Gmail-Original-Message-ID: <CAL_JsqJp_s1gH438sCTdOr_kTA3A9E8ch48ann-w-8D3ZH6MmQ@mail.gmail.com>
+X-Gm-Features: AQROBzC_mAVp6zOHeu_bjQpvZzAb9oxCTbS_Ekqoq7x32sgUj1cFvFnCWugBd6I
+Message-ID: <CAL_JsqJp_s1gH438sCTdOr_kTA3A9E8ch48ann-w-8D3ZH6MmQ@mail.gmail.com>
+Subject: Re: [PATCH v4 7/7] dt-bindings: PCI: intel,lgm-pcie: Add atu resource
+To: Florian Eckert <fe@dev.tdt.de>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Johan Hovold <johan+linaro@kernel.org>, Sajid Dalvi <sdalvi@google.com>, 
+	Ajay Agarwal <ajayagarwal@google.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, 
+	Eckert.Florian@googlemail.com, ms@dev.tdt.de
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-
-On Wed, 15 Apr 2026 10:01:53 +0200, Florian Eckert wrote:
+On Wed, Apr 15, 2026 at 3:02=E2=80=AFAM Florian Eckert <fe@dev.tdt.de> wrot=
+e:
+>
 > The 'atu' information is already set in the dwc core, if it is specified
 > in the devicetree. The driver uses its own default, if not set in the
 > devicetree. This information is hardware specific and should therefore be
 > maintained in the devicetree rather than in the source.
-> 
+>
 > To be backward compatible, this field is not mandatory. If 'atu'
-> resource is not specified in the devicetree, the driver’s default value
+> resource is not specified in the devicetree, the driver=E2=80=99s default=
+ value
 > is used.
-> 
+>
 > Signed-off-by: Florian Eckert <fe@dev.tdt.de>
 > ---
 >  Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml | 8 ++++++--
 >  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
+>
+> diff --git a/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml b/D=
+ocumentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+> index 54e2890ae6314ac6847fc23f49440d05d66d87d4..9b7a8ef77585677841c7064c5=
+001110bc2b65db1 100644
+> --- a/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+> @@ -27,16 +27,19 @@ properties:
+>        - const: snps,dw-pcie
+>
+>    reg:
+> +    minItems: 3
+>      items:
+>        - description: Controller control and status registers.
+>        - description: PCIe configuration registers.
+>        - description: Controller application registers.
+> +      - description: Internal Address Translation Unit (iATU) registers.
+>
+>    reg-names:
 
-My bot found errors running 'make dt_binding_check' on your patch:
+Don't you need minItems here?
 
-yamllint warnings/errors:
-
-dtschema/dtc warnings/errors:
-Lexical error: Documentation/devicetree/bindings/pci/intel-gw-pcie.example.dts:28.30-36 Unexpected 'config'
-Error: Documentation/devicetree/bindings/pci/intel-gw-pcie.example.dts:28.30-36 syntax error
-FATAL ERROR: Unable to parse input tree
-make[2]: *** [scripts/Makefile.dtbs:140: Documentation/devicetree/bindings/pci/intel-gw-pcie.example.dtb] Error 1
-make[2]: *** Waiting for unfinished jobs....
-make[1]: *** [/builds/robherring/dt-review-ci/linux/Makefile:1601: dt_binding_check] Error 2
-make: *** [Makefile:248: __sub-make] Error 2
-
-doc reference errors (make refcheckdocs):
-
-See https://patchwork.kernel.org/project/devicetree/patch/20260415-pcie-intel-gw-v4-7-ad45d2418c8e@dev.tdt.de
-
-The base for the series is generally the latest rc1. A different dependency
-should be noted in *this* patch.
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit after running the above command yourself. Note
-that DT_SCHEMA_FILES can be set to your schema file to speed up checking
-your schema. However, it must be unset to test all examples with your schema.
-
+>      items:
+>        - const: dbi
+>        - const: config
+>        - const: app
+> +      - const: atu
+>
+>    ranges:
+>      maxItems: 1
+> @@ -95,8 +98,9 @@ examples:
+>        #size-cells =3D <2>;
+>        reg =3D <0xd0e00000 0x1000>,
+>              <0xd2000000 0x800000>,
+> -            <0xd0a41000 0x1000>;
+> -      reg-names =3D "dbi", "config", "app";
+> +            <0xd0a41000 0x1000>,
+> +            <0xd0ec0000 0x1000>;
+> +      reg-names =3D "dbi", config", "app", "atu";
+>        linux,pci-domain =3D <0>;
+>        max-link-speed =3D <4>;
+>        bus-range =3D <0x00 0x08>;
+>
+> --
+> 2.47.3
+>
