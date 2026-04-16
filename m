@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F65D1D5CC6;
-	Thu, 16 Apr 2026 18:02:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E78A02556E;
+	Thu, 16 Apr 2026 18:02:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776362525; cv=none; b=UJkFJXWF7aGQWpqNx1MlnbGMMBVQL0byqLf4+2VjUHlwiv7gOanH8XMBEPmW5J2DdF5yFgod0wgaIvKqLqGVZIe8C061IgEwTkm1QaSGXcVoWwRWH8qYaqKUX+PQKnTuHLG6j0VGmHtcnuB9ypgY8uuzHM7uEEhItaI8KL3MX6E=
+	t=1776362529; cv=none; b=nT+oeZP/F6oLun9D1JwAJ/dkmed2lgCevZiqD7viipqZuFl6pHsZorSte+UacC71BfdDAIyovS7O4/ZWa6exkxMXmnON8ql4Oje/7iy/+7fGBFzeq1iZX1N8RAmNE8vvHWjZhm8I+5b2e08HlPr0Qg532c1ddhNYjQ7meLtA/x0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776362525; c=relaxed/simple;
-	bh=hgdLCn3GR7rdEsn4XPXwIRAUu3lfUvkyKZP9W2tZ9DM=;
+	s=arc-20240116; t=1776362529; c=relaxed/simple;
+	bh=C7GpgMoA+xWLQy3B4vgURd+aoELSeRsRY0lcMXhxgq8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kFBggKeipKW4nTsTugXo61qg5lbZZlGXe53uU5rOyQ7Lg6JZfa+XuAGLZW6iS02neW8gg/Uy+0nTBwfq0XO0JeR2miAmXHHIci85yb/gnHFP868eEqY4Ej+jTITqzQt7sv1GGhQY5MBAd7ttWnP0ZnecZ3u/mP9EnrMjNyi94Hg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OAOaoPkz; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=GHsIkfiqEGxspRp0MkPt4nPaKiRZHC4mVlv3Zma9x2fHBsbqPtoYiOxKjYs1Sef/NkGJlikgB5/d5VwT1DNM/t3QUCF1QKOxbGPWbQYDtE8zMcxvGhRbE5bVZgEslm2sw9i8CKcz3H/1Rm0WYkux4LwXmxH3QziBRlNVoIJ9OCE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dId8wEsY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OAOaoPkz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A193DC2BCB7;
-	Thu, 16 Apr 2026 18:02:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dId8wEsY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36BFFC2BCAF;
+	Thu, 16 Apr 2026 18:02:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776362524;
-	bh=hgdLCn3GR7rdEsn4XPXwIRAUu3lfUvkyKZP9W2tZ9DM=;
+	s=k20201202; t=1776362528;
+	bh=C7GpgMoA+xWLQy3B4vgURd+aoELSeRsRY0lcMXhxgq8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=OAOaoPkzMh/4vHIGkCH4nNcdBBPEEUjk8XIc6w4Y1mZFUaGJrRCQnXJXFW+BikZM3
-	 ps/CyoBlKt/2yjF2ApdaiQJX/xS3Kac5yH2d5G/6X7WUcVaZ7uut46gYlRiFluS8IO
-	 UL4UTYJXBCinNmcwWi8NF2bqsT5JvgQ/8bIgRW7Z6Y6kZ/J+8iYqT3+vJ/zE1V5/1U
-	 iMfMXasZx/VtIz1iLVPA1LJ7UIB9MrXiuDe/6lKUqkny5uea2rHW8pmZH697Cl/LDY
-	 T0GKcD4FFwaLOR5wpGse0X2JFYeOFZpiPsuqKQsxtORvFpNUSZ6CGXKtjMjlBpdP8y
-	 vYq9Ow+fvQ+/w==
+	b=dId8wEsYVSAfsFXbBlILYLGLa/L23gQCykY253jrHMtJ8gEavj86sOuE4SDtQw8dN
+	 u2981zNy4Q6K069PzR/9Zm8Xpylm59aDdZL8IVu6Vp4lNxzLLfkAZeiDF5VSHUooiQ
+	 N2woqRDQL4DhW3wdRIcFshDhl0OALsKFt3jHEGkVfPTUc7IzDddriGT2KusD9NugqW
+	 DSj4fDsCstcdrf+Mj3aXMJ5i4cXyBgT9fwMkkkC6GFOWUoVeqjWSngmHvkror09Z43
+	 rNV3QJjtJhIqEDC+B5ZqR23iCBvpQD+Zguk5FZaiviwq7H04dYsgKeDGO/n3B5I6+Z
+	 yARjOO7sdKqtw==
 From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>,
@@ -49,9 +49,9 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	linux-pci@vger.kernel.org,
 	linux-alpha@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v5 15/23] alpha/PCI: Remove WARN from __pci_mmap_fits()
-Date: Thu, 16 Apr 2026 18:00:59 +0000
-Message-ID: <20260416180107.777065-16-kwilczynski@kernel.org>
+Subject: [PATCH v5 16/23] alpha/PCI: Add static PCI resource attribute macros
+Date: Thu, 16 Apr 2026 18:01:00 +0000
+Message-ID: <20260416180107.777065-17-kwilczynski@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260416180107.777065-1-kwilczynski@kernel.org>
 References: <20260416180107.777065-1-kwilczynski@kernel.org>
@@ -64,40 +64,54 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Remove the WARN() that fires when userspace attempts to mmap beyond
-the BAR bounds.  The check still returns 0 to reject the mapping,
-but the warning is excessive for normal operation.
+Add macros for declaring static binary attributes for Alpha's PCI
+resource files:
 
-A similar warning was removed from the PCI core in the commit
-3b519e4ea618 ("PCI: fix size checks for mmap() on /proc/bus/pci files").
+  - pci_dev_resource_attr(),        for dense/BWX systems (mmap dense)
+  - pci_dev_resource_sparse_attr(), for sparse systems (mmap sparse)
+  - pci_dev_resource_dense_attr(),  for dense companion files (mmap dense)
+
+Each macro creates a const bin_attribute with the BAR index stored in
+the .private property and the appropriate .mmap callback.
 
 Tested-by: Magnus Lindholm <linmag7@gmail.com>
-Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 Acked-by: Magnus Lindholm <linmag7@gmail.com>
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 ---
- arch/alpha/kernel/pci-sysfs.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ arch/alpha/kernel/pci-sysfs.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
 diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
-index 8802f955256e..f2ee737c588c 100644
+index f2ee737c588c..3108c165b3d8 100644
 --- a/arch/alpha/kernel/pci-sysfs.c
 +++ b/arch/alpha/kernel/pci-sysfs.c
-@@ -48,13 +48,7 @@ static int __pci_mmap_fits(struct pci_dev *pdev, int num,
- 	start = vma->vm_pgoff;
- 	size = ((len - 1) >> (PAGE_SHIFT - shift)) + 1;
- 
--	if (start < size && size - start >= nr)
--		return 1;
--	WARN(1, "process \"%s\" tried to map%s 0x%08lx-0x%08lx on %s BAR %d "
--		"(size 0x%08lx)\n",
--		current->comm, sparse ? " sparse" : "", start, start + nr,
--		pci_name(pdev), num, size);
--	return 0;
-+	return start < size && size - start >= nr;
+@@ -104,6 +104,26 @@ static int pci_mmap_resource_dense(struct file *filp, struct kobject *kobj,
+ 	return pci_mmap_resource(kobj, attr, vma, 0);
  }
  
++#define __pci_dev_resource_attr(_bar, _name, _suffix, _mmap)		\
++static const struct bin_attribute					\
++pci_dev_resource##_bar##_suffix##_attr = {				\
++	.attr = { .name = __stringify(_name), .mode = 0600 },		\
++	.private = (void *)(unsigned long)(_bar),			\
++	.mmap = (_mmap),						\
++}
++
++#define pci_dev_resource_attr(_bar)					\
++	__pci_dev_resource_attr(_bar, resource##_bar,,			\
++			    pci_mmap_resource_dense)
++
++#define pci_dev_resource_sparse_attr(_bar)				\
++	__pci_dev_resource_attr(_bar, resource##_bar##_sparse, _sparse,	\
++			    pci_mmap_resource_sparse)
++
++#define pci_dev_resource_dense_attr(_bar)				\
++	__pci_dev_resource_attr(_bar, resource##_bar##_dense, _dense,	\
++			    pci_mmap_resource_dense)
++
  /**
+  * pci_remove_resource_files - cleanup resource files
+  * @pdev: pci_dev to cleanup
 -- 
 2.53.0
 
