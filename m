@@ -1,122 +1,108 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+Received: from canpmsgout06.his.huawei.com (canpmsgout06.his.huawei.com [113.46.200.221])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3A4D38C41C;
-	Thu, 16 Apr 2026 09:27:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 448B538F247;
+	Thu, 16 Apr 2026 09:30:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.221
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776331629; cv=none; b=lgMtpdDnAj8rRtwMz9Zf/Bv2ejdTQjz784FTLi6xVfC5IJKurWRWib1L51/DlfpRhoKwKUEAANAzMNRUG0XqPuYSaXI+udqxFWtWVcZh9/SteeITBtZ0lb35rxe8ZoqIK4HPVf5VLZlnUVVfTqnorzJaXMXfoY4bfSEwDuqJjYQ=
+	t=1776331852; cv=none; b=j4RSUm5cPwTmTPYKVnXnQXPmsknS6LLfT5AaW/WeFJeMTg4AJ5527blMqMoHMnmfaM5LaVhm33LMwAHpgwO5+TEpDkDYXKYF4cazS2eklikeily2c1U2CXzCUOoZmXsQmXfyF4PWKf36ZoTIcnOtHlBrGX3QU06Ue4MP5oVkYS8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776331629; c=relaxed/simple;
-	bh=odh4Ab4M7olPu40lFM1McLaJy3hd4bYZoX7Q+SGAqJE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iPcy4tTA71SN/ts/MiinPcPIMnxXT8776toa4Lzu6WkzO77gbwbfCabK+8m/TiW3UexdP3qnhNEHDh6n6967YhEsy8Qb2WFD3emsRxbNLuLxb+H6y3PDkdwiJA4Ek7+KpSaOTiC0M+YTiE4gNhgNKkNHlLooKlE2KHk82ti2HuA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ROf0lxOQ; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1776331852; c=relaxed/simple;
+	bh=eqLbjKpHvJJASnMNfj1/EGNkoZ7XXA9AM3aXkMF78Sk=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Dg8a0BzqV0LluR+eMZvkPH8kRqlDTd0nCO5P2DC5ZXzbSCCr1XNCUPNBoXzEAgig6wOq0e9vlVNGJKEowKq7k/m0aso5bzDdCMJDcswIOKTJXOuyM9oUpdn5A6HhvxQWTbVcVZ+j3U8MINGDlczfdSsybaZakJpiwQBz8lXGSFY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=ltzoepqt; arc=none smtp.client-ip=113.46.200.221
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ROf0lxOQ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1776331627; x=1807867627;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=odh4Ab4M7olPu40lFM1McLaJy3hd4bYZoX7Q+SGAqJE=;
-  b=ROf0lxOQXxRouB6DGKTntEWvsg9pIqj1uoVt+9hJI0Xo8AKxSJvH+4AV
-   LKVwTaLV3MoopIqIOqDBaDwvcyPcVR6G/h4NIbLFAe6nvQB0/xfa83CWL
-   VE7KA089A41fAnK7ZQD6HNH40VpNZBRbgqHzJEClwBLgzlkkMzgtJXxrZ
-   +sQC/WE9ehs3HcWu4bUwTK8rZxLe35ncJiVLBEYV6kVLGUtjj6Z5gB8+S
-   W1Q4yhF1L4Ct3CPq+xUd3VOYGaM9HkLXuDp0S+eJ4S5W1mTHs0bItWUOO
-   mN5wWwbQMsP7eZIPIQh7kJjl34564lnX1lDn8N7ZLsOpY1y8d/3taYSWH
-   A==;
-X-CSE-ConnectionGUID: 7/4iwh7FRkqHJM0OP8R+ZQ==
-X-CSE-MsgGUID: 8hiMD9CsTGyOp4Rd5/7XKw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11760"; a="77400041"
-X-IronPort-AV: E=Sophos;i="6.23,181,1770624000"; 
-   d="scan'208";a="77400041"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2026 02:27:06 -0700
-X-CSE-ConnectionGUID: H4y1wzlFRZGJbgKx1rFaKQ==
-X-CSE-MsgGUID: Ac030fLqQkK/Nz5K07C2vg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,181,1770624000"; 
-   d="scan'208";a="230611680"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa008.jf.intel.com with ESMTP; 16 Apr 2026 02:27:03 -0700
-Date: Thu, 16 Apr 2026 17:05:08 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Dan Williams <djbw@kernel.org>
-Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org, x86@kernel.org,
-	chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com,
-	yilun.xu@intel.com, zhenzhong.duan@intel.com, kvm@vger.kernel.org,
-	rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com,
-	kas@kernel.org, xiaoyao.li@intel.com, vishal.l.verma@intel.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 03/31] x86/virt/tdx: Add tdx_page_array helpers for
- new TDX Module objects
-Message-ID: <aeCmRKJ7ULcnAM3m@yilunxu-OptiPlex-7050>
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-4-yilun.xu@linux.intel.com>
- <69db0916ba63c_fe08310034@djbw-dev.notmuch>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="ltzoepqt"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=bAVowK7Q9YFx+myHaiGCXgYsB7sBEgPGL+pKIOE34z4=;
+	b=ltzoepqtRnEVkr8VlwAD9cfTNSHBjH+fBi/kTP5+N4c3t7EcqDcAKNEhBgIfPWoY1D6LTAfOf
+	9VO18U89KiMgdA6js0EEUNGYVGhNvgI5lSjnvAp15aZ3/I33kAv9MClYBc2xrMqjv5bfFV7vIkh
+	Uj3931mLqpAiuVux0hdVvp8=
+Received: from mail.maildlp.com (unknown [172.19.162.144])
+	by canpmsgout06.his.huawei.com (SkyGuard) with ESMTPS id 4fxCJX21YTzRhTx;
+	Thu, 16 Apr 2026 17:24:28 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 3AB0740538;
+	Thu, 16 Apr 2026 17:30:47 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 16 Apr 2026 17:30:46 +0800
+From: Chengwen Feng <fengchengwen@huawei.com>
+To: <alex@shazbot.org>, <jgg@ziepe.ca>
+CC: <wathsala.vithanage@arm.com>, <wangzhou1@hisilicon.com>,
+	<wangyushan12@huawei.com>, <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: [PATCH v2 RESEND 0/5] vfio/pci: Add PCIe TPH support
+Date: Thu, 16 Apr 2026 17:30:36 +0800
+Message-ID: <20260416093041.42070-1-fengchengwen@huawei.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <69db0916ba63c_fe08310034@djbw-dev.notmuch>
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-> > A main difference is HPA_ARRAY_T requires singleton mode when
-> > containing just 1 functional page (page0). In this mode the root page is
-> > not needed and the HPA field of the raw value directly points to the
-> > page0. But in this patch, root page is always allocated for user
-> > friendly kAPIs.
-> 
-> I think this undersells the fact that "singleton mode" is a premature
-> optimization that requires complication to take advantage of the benefit
-> (sometimes save a single page allocation). The Linux implementation
-> forfeits that small benefit for the larger gain of cleaner kAPIs.
-> 
-> > Another small difference is HPA_LIST_INFO contains a 'first entry' field
-> > which could be filled by TDX Module. This simplifies host by providing
-> > the same structure when re-invoke the interrupted SEAMCALL. No need for
-> > host to touch this field.
-> > 
-> > Typical usages of the tdx_page_array:
-> > 
-> > 1. Add control pages:
-> >  - struct tdx_page_array *array = tdx_page_array_create(nr_pages);
-> >  - seamcall(TDH_XXX_CREATE, array, ...);
-> > 
-> > 2. Release control pages:
-> >  - seamcall(TDX_XXX_DELETE, array, &nr_released, &released_hpa);
-> 
-> It is simply a bug if TDH_XXX_DELETE does not return every resource
-> passed to TDH_XXX_CREATE. The only "leak" case to worry about is that
-> TDH_XXX_DELETE fails. In that case it should be "fatal" (TDX_BUG_ON,
-> system can keep hobbling along, but panic_on_warn() would not be
-> unreasonable). If TDH_XXX_DELETE fails it indicates some catastrophic
-> misunderstanding between Linux and the TDX Module.
-> 
-> So the seamcall in this case has no need for @nr_released or
-> @released_hpa, those should already be known to the kernel.
-> 
-> What is missing is an architectural guarantee that TDH_XXX_DELETE
-> success == "all resources you arranged at TDH_XXX_CREATE time are free".
-> I would hope that is already the case and AUX_PAGE_PA is only an
+This series adds support for PCIe TLP Processing Hints (TPH) to
+vfio-pci, allowing userspace to manage device steering tags for
+improved performance and QoS in virtualized deployments.
 
-Yes, it is already the case.
+The implementation follows a clean incremental structure:
+- Patch 1: Export pcie_tph_get_st_modes()
+- Patch 2: Introduce UAPI ABI and implement capability query to
+  let userspace discover supported TPH modes, ST table presence
+  and size.
+- Patch 3: Add TPH enable/disable with mode selection.
+- Patch 4: Add interface to batch get per-CPU steering tags for
+  device-specific mode without standard ST table.
+- Patch 5: Add interface to batch program steering tag table
+  entries for standard TPH modes.
 
-> unfortunate distraction. If it can ever be the case that CREATE and
-> DELETE are asymmetric on success then that needs to be corrected and
-> Linux will wait for a future module that can make that guarantee.
+All user API definitions are finalized in the first patch and
+remain stable across the series. The design follows existing
+VFIO conventions and relies on kernel pcie-tph infrastructure.
 
-Agree. Thanks for this summary as well as the singleton-mode one.
+This series addresses the TPH management requirements discussed
+in the RFC "Proposal: Add sysfs interface for PCIe TPH Steering
+Tag retrieval and configuration".
 
-> 
-> I think that cleans up a bulk of the logic here to abandon caring that
-> the module tries to remind us what we are releasing.
+Instead of introducing a sysfs interface, we choose to implement
+TPH management via a VFIO-specific ioctl for these reasons:
+1. VFIO is the standard userspace interface for PCI devices.
+2. An ioctl approach provides better type safety, batch support
+   and stable ABI compared to sysfs for configuration.
+3. VFIO properly isolates TPH operations to the assigned device,
+   avoiding conflicts with other kernel management paths.
 
-Yes, I'll delete all these "released page matching" logic.
+Based on earlier RFC work by Wathsala Vithanage.
+
+v2:
+- Export pcie_tph_get_st_modes()
+- Add detailed comment for UAPI structures and operations
+- Add batch entry limit VFIO_TPH_MAX_ENTRIES
+- Improve robustness and error handling
+
+Chengwen Feng (5):
+  pci/tph: Export pcie_tph_get_st_modes() for external use
+  vfio/pci: Add PCIe TPH interface with capability query
+  vfio/pci: Add PCIe TPH enable/disable support
+  vfio/pci: Add PCIe TPH GET_ST interface
+  vfio/pci: Add PCIe TPH SET_ST interface
+
+ drivers/pci/tph.c                |  13 +-
+ drivers/vfio/pci/vfio_pci_core.c | 213 +++++++++++++++++++++++++++++++
+ include/linux/pci-tph.h          |   7 +
+ include/uapi/linux/vfio.h        | 131 +++++++++++++++++++
+ 4 files changed, 362 insertions(+), 2 deletions(-)
+
+-- 
+2.17.1
+
