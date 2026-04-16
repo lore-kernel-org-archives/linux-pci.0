@@ -1,317 +1,1265 @@
-Received: from mail-dy1-f169.google.com (mail-dy1-f169.google.com [74.125.82.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82C372FE58C
-	for <linux-pci@vger.kernel.org>; Thu, 16 Apr 2026 03:30:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.169
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776310238; cv=pass; b=ndJGd4vAMZ3sJqCtR+eo7MUVcWGZPqzBSE2SQy4W9Pt9yT3PgSf3LMbJWD7lQmz8UZvg5r/D6KIIp5+UOpeuAUQ/Mn71hvHHkeDDFtBTGRPBclDO3/es89z2TEmWKoxCtc3+bf7TywVIXU/yS9WU2VdwhTZ4XHS+nJABqlkt4OQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776310238; c=relaxed/simple;
-	bh=iTtON7C1saxGO1WpU3i+FepkxQvrPytkI30BQs9EQlY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZrIYJICVRHgd7fxmBp7Ey+4reufHDWvZt8PQ64cYKaRFoUG86Nve/4Ns3+opJtyUB5DbXtweHBLezfLb4lvp+BK/pgx8d0BI+pgMT+9l7JqvpnCCzRPb9LplOxbAKLdypHozwhumUA09nwZk6u2SVYYBABnwHnarUmb2yuMesTA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=q1VlrlmC; arc=pass smtp.client-ip=74.125.82.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3864248F64;
+	Thu, 16 Apr 2026 05:29:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776317353; cv=none; b=gVHYREiF+rEl3y0mkEqT5ZYJLphGLUXgw/Ntk+P4neY9Kb2mrD7O9hPX1ZVGNJi4gt9KFgR2WDkmM2yvf+VO+4DWcJkM2cJRKcvMzvscMcWOz/HEyaKP+BU5mHWUMuG4gcb+q0yCfujVh//6Je6+B/2WFhcTLrxKWiWTYLPZipU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776317353; c=relaxed/simple;
+	bh=S7mZ50UewIwmlyGHpi8dzh+qDTo7ko+JCZWvBEtCreE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eD4rxnry19Wbkws33cvC4HrOWKbhs4kLubxXMzu7187cXueVvftT4p18pxTyETSU9FratYLON9fAaxBv19zb2LN2apHXBxwl1bCZkBEfPI3SqQSqrY9CgC+Bt5+le0bjhW2/1Rmv6fdOfxbtOMMAaYyzOFxtjeEhtauE6ajP8lk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SDYI2RR7; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q1VlrlmC"
-Received: by mail-dy1-f169.google.com with SMTP id 5a478bee46e88-2bdd40d3c61so6749188eec.1
-        for <linux-pci@vger.kernel.org>; Wed, 15 Apr 2026 20:30:35 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1776310235; cv=none;
-        d=google.com; s=arc-20240605;
-        b=bmJCMKzXVieYYX5+m3P1oFePgrAhM3mwFdH3pwAUM2Lk4tkO3jJNnZ6QUpp/55n6oa
-         YHaGDN2WcbpW45iHMKAc/SKdKAZsugTPADmd341vwr7wPukkpeNIZedZpU/VqYIIhhvR
-         8nxgx7YsS78REo/1G8LgF7B7iDiGrj7AfqtLuMBhCOmC4h2HFzY/sGiVX9zg5l4Ryuzb
-         VSLOsoV5FlWE7oXH9YxYKZQUemXMVDxJ7lsEw3WV0Ug/lKPhPAB+JcKpDAbK4JSbUvTC
-         p+lEC3IQQnm3+9lu7xsfkFPVf7GCkd1+MF+18fE4/QaLTTDUCFcvNossDQeYPoTLizvV
-         B8Qg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=dpn4wedExfmNW/xYliv7dotiSXfXw7rsw6+UTSkfq+I=;
-        fh=Ls6w/r2ZLQVNinslVprJgt0FpnxsMhrcL3GNwEQ2pB4=;
-        b=ZCf69YFnBlkfQdMyylLFslexPOsN9LgzLQ+TDSGz8yIX89Kygs/mtWA2VF5O8/0guM
-         YXxsfRLYARQgkW8MccifIfc20O5O3ChceZs64uRiWBVa2blVvJdmkpgmb80Zb++NkXBH
-         Cn9jcLCDeoDddV8gsIlgByJxbl6URakvlE2+JOo72X9ZV8X5qenAfqXp/QFT9h07Fd1G
-         TPcqIjk3oMRmJsC2Y8NWI49pG0S4kz++n78r2xFI80vuoW8PtuWCWpEuamXvVKveONhe
-         BlfX0BfTU/dpJy0Ku1hum0Fhs7zuR/Jkb46Ld5+9F+wVVjiCvPVRRfXjt5Z+975BCIqk
-         vO9g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776310235; x=1776915035; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=dpn4wedExfmNW/xYliv7dotiSXfXw7rsw6+UTSkfq+I=;
-        b=q1VlrlmCFrtVHE5hetzAOsBCWcGxb/CFhXHSSopeF/IlxAPo0DUBJ/C6gbvOrvJiYw
-         cdceN5UReXjnL6InkeQtNyS50HI4ppuCooMyssWxnvX0g9UmryDd+Gyqq4X316cT7Xq8
-         c+2Cn4IvuJrzVNY6pRkBZr9cXPscrF3I20+ssiCoyF2uvtU1JjnxT8DNPMsmMUpjIST+
-         xqx4fbZU7R/wLJ6v9EW0ctWCZWKaKhltfVFfVB7WZZ3aKoJ3qHrPRHkCMZ7kDt5+SRYR
-         7IUSa6kyHZCFaqwvvSrtCw9WaQryviOrSLkTsnzqesOFhS1yQ04NIG2hhbuwYPWvcjiQ
-         pw+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776310235; x=1776915035;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=dpn4wedExfmNW/xYliv7dotiSXfXw7rsw6+UTSkfq+I=;
-        b=O5WolKh7C56NEdFcwCIewkBsO2SyYlP6ComFf3JreZxlOsxHuHkPoGFZAFOlsnRAL8
-         E9y9v3mQAfhX7Sw2GbFfqVZbOlVqc7ph3xbqZDWILuAx/sz0oK+l8B4mYZcovyeUPxsn
-         eDoHW8C4s8lO9eqb8F31OwsMnaALtMv4OVs0DDTe5O1S9eKw8g0hvjINLgRSiK43mJuh
-         DImJ3npooWOCHybJLyXULAB4kp1uGavzBGwmXlI1hqZlT+MxaSJMlQDw0PIzgb4lJXiJ
-         ZS2QF0x4fwgqanSrKmNJ4zxAfPTnwfqxeL1tJ50bfQB7QDyjjpyDv/tIUSV+e1e0ZdyH
-         dc2Q==
-X-Forwarded-Encrypted: i=1; AFNElJ+6gi0MWmovS0m9oLNXlhB14afrhRb3NLIDOZ8XyEfaGBLu/ZaF9N9NjswKCYedS35TRXI8OVpNYlM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx4QQwX0uPeeR/7r+Qn3SX3ZRBd0YiowaPABkMnLq4P6lLC4j7m
-	+awwNfgIL+4l3EQsS8RnSprKDq7iISX25DX1zgGIz0tFGUoTRhaNa99NTd1GlGmyRmJp6vrrHuD
-	zdTI1HLH+jRUZYMx90HA88X8sVPLPf54=
-X-Gm-Gg: AeBDievUSSUCKqv0WxoqX9WQBLeTbVdyPY+xSE5ej3V9TCwimQFbvWRURN2kwBc+pgE
-	z1y29bqaw7RVZN6+zzacneGlChNGNUMmmLKLkkVtYWFDi/+YMLqpcfd1mi4FxFvMMornOazG1Fn
-	CS6IZYaQUs+wsVuMI2dw9jrdv7oE7mnOc+32xm1ZUJWF52UQkJpXgYwqrCW9ZAMV48xUXbZBrY2
-	nV+ov28vL5uHa4m4eDxfbs1aknyRFywG5eCSrZ5wObybKP1uP1879L/5Vj8fr6A1Z2foMwWt4Pe
-	Mi7L/TY=
-X-Received: by 2002:a05:7300:e2cc:b0:2c1:7793:7bbb with SMTP id
- 5a478bee46e88-2d5898a59fdmr13887470eec.27.1776310234537; Wed, 15 Apr 2026
- 20:30:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SDYI2RR7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1776317350; x=1807853350;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=S7mZ50UewIwmlyGHpi8dzh+qDTo7ko+JCZWvBEtCreE=;
+  b=SDYI2RR7OcVpmTEUm+OWa54m58H9EpZB7wtNGGNzWk1u1S4LsdKMsZnY
+   smfc2JeOlXgQ9PUfyS4REYFPOeV7+15KnXUt9PBH2gG3BcVjfSrHBp5UF
+   jDBjr/oKWgJXvDyAjBmBYJWXhrTG+peO86P/4qBUAYiacudwkBrwgKd41
+   0DgUQJ/8Vu2KKwmNW/GQYrtXux9Job1bhD71aqefyu/4v2t54APHS/BD4
+   L1vRxC/UPnTrceyHNI0Iypi5wZk8s6TESSpxcWOFK+BM5lGasRxDO6VP9
+   +vMefuRHVfieZyIPtQ6B6lGO17D/NWzU/r2LPpJ3MUnBZiCI1wVzrS4Cf
+   A==;
+X-CSE-ConnectionGUID: mmLRnTsfT/yULIC6pWH1yA==
+X-CSE-MsgGUID: z71NMsqDRgKC24ry8u2pAQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11760"; a="76473805"
+X-IronPort-AV: E=Sophos;i="6.23,181,1770624000"; 
+   d="scan'208";a="76473805"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Apr 2026 22:29:09 -0700
+X-CSE-ConnectionGUID: YduiFPqZQwyAKPAY0P8OvQ==
+X-CSE-MsgGUID: kspW7npLTiK2WgAcKVBEyQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,181,1770624000"; 
+   d="scan'208";a="235585135"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
+  by fmviesa005.fm.intel.com with ESMTP; 15 Apr 2026 22:29:05 -0700
+Date: Thu, 16 Apr 2026 13:07:10 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: "Edgecombe, Rick P" <rick.p.edgecombe@intel.com>
+Cc: "Gao, Chao" <chao.gao@intel.com>, "Xu, Yilun" <yilun.xu@intel.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"kas@kernel.org" <kas@kernel.org>,
+	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+	"Li, Xiaoyao" <xiaoyao.li@intel.com>,
+	"Williams, Dan J" <dan.j.williams@intel.com>,
+	"Jiang, Dave" <dave.jiang@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Duan, Zhenzhong" <zhenzhong.duan@intel.com>,
+	"Verma, Vishal L" <vishal.l.verma@intel.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>
+Subject: Re: [PATCH v2 05/31] x86/virt/tdx: Extend tdx_page_array to support
+ IOMMU_MT
+Message-ID: <aeBufjwO3t7XzVle@yilunxu-OptiPlex-7050>
+References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
+ <20260327160132.2946114-6-yilun.xu@linux.intel.com>
+ <828f174d49a1ecaec65ba1179e08c6b22e249297.camel@intel.com>
+ <acvX1x5nDdGtZWyI@yilunxu-OptiPlex-7050>
+ <f38d0a080aee052937cb6721683d55155c657717.camel@intel.com>
+ <ad4Pj0cqlprvNUSj@yilunxu-OptiPlex-7050>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251209051128.76913-1-zhangyu1@linux.microsoft.com> <20251209051128.76913-4-zhangyu1@linux.microsoft.com>
-In-Reply-To: <20251209051128.76913-4-zhangyu1@linux.microsoft.com>
-From: Tianyu Lan <ltykernel@gmail.com>
-Date: Thu, 16 Apr 2026 11:30:18 +0800
-X-Gm-Features: AQROBzAshGAwo61mQxzSw05B4fc-T0M_3Sz-I4zsvryqbMNOOaLRwnMtQN-AzBI
-Message-ID: <CAMvTesDbCYPLowZ=RS4ZOwbY_hNixhop6t1ADjDQjJ8kWjwe3A@mail.gmail.com>
-Subject: Re: [RFC v1 3/5] hyperv: Introduce new hypercall interfaces used by
- Hyper-V guest IOMMU
-To: Yu Zhang <zhangyu1@linux.microsoft.com>
-Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org, 
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org, kys@microsoft.com, 
-	haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com, 
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
-	robh@kernel.org, bhelgaas@google.com, arnd@arndb.de, joro@8bytes.org, 
-	will@kernel.org, robin.murphy@arm.com, easwar.hariharan@linux.microsoft.com, 
-	jacob.pan@linux.microsoft.com, nunodasneves@linux.microsoft.com, 
-	mrathor@linux.microsoft.com, mhklinux@outlook.com, peterz@infradead.org, 
-	linux-arch@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ad4Pj0cqlprvNUSj@yilunxu-OptiPlex-7050>
 
-On Tue, Dec 9, 2025 at 1:13=E2=80=AFPM Yu Zhang <zhangyu1@linux.microsoft.c=
-om> wrote:
->
-> From: Wei Liu <wei.liu@kernel.org>
->
-> Hyper-V guest IOMMU is a para-virtualized IOMMU based on hypercalls.
-> Introduce the hypercalls used by the child partition to interact with
-> this facility.
->
-> These hypercalls fall into below categories:
-> - Detection and capability: HVCALL_GET_IOMMU_CAPABILITIES is used to
->   detect the existence and capabilities of the guest IOMMU.
->
-> - Device management: HVCALL_GET_LOGICAL_DEVICE_PROPERTY is used to
->   check whether an endpoint device is managed by the guest IOMMU.
->
-> - Domain management: A set of hypercalls is provided to handle the
->   creation, configuration, and deletion of guest domains, as well as
->   the attachment/detachment of endpoint devices to/from those domains.
->
-> - IOTLB flushing: HVCALL_FLUSH_DEVICE_DOMAIN is used to ask Hyper-V
->   for a domain-selective IOTLB flush(which in its handler may flush
->   the device TLB as well). Page-selective IOTLB flushes will be offered
->   by new hypercalls in future patches.
->
-> Signed-off-by: Wei Liu <wei.liu@kernel.org>
-> Co-developed-by: Jacob Pan <jacob.pan@linux.microsoft.com>
-> Signed-off-by: Jacob Pan <jacob.pan@linux.microsoft.com>
-> Co-developed-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-> Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-> Co-developed-by: Yu Zhang <zhangyu1@linux.microsoft.com>
-> Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
-> ---
->  include/hyperv/hvgdk_mini.h |   8 +++
->  include/hyperv/hvhdk_mini.h | 123 ++++++++++++++++++++++++++++++++++++
->  2 files changed, 131 insertions(+)
->
-> diff --git a/include/hyperv/hvgdk_mini.h b/include/hyperv/hvgdk_mini.h
-> index 77abddfc750e..e5b302bbfe14 100644
-> --- a/include/hyperv/hvgdk_mini.h
-> +++ b/include/hyperv/hvgdk_mini.h
-> @@ -478,10 +478,16 @@ union hv_vp_assist_msr_contents {  /* HV_REGISTER_V=
-P_ASSIST_PAGE */
->  #define HVCALL_GET_VP_INDEX_FROM_APIC_ID                       0x009a
->  #define HVCALL_FLUSH_GUEST_PHYSICAL_ADDRESS_SPACE      0x00af
->  #define HVCALL_FLUSH_GUEST_PHYSICAL_ADDRESS_LIST       0x00b0
-> +#define HVCALL_CREATE_DEVICE_DOMAIN                    0x00b1
-> +#define HVCALL_ATTACH_DEVICE_DOMAIN                    0x00b2
->  #define HVCALL_SIGNAL_EVENT_DIRECT                     0x00c0
->  #define HVCALL_POST_MESSAGE_DIRECT                     0x00c1
->  #define HVCALL_DISPATCH_VP                             0x00c2
-> +#define HVCALL_DETACH_DEVICE_DOMAIN                    0x00c4
-> +#define HVCALL_DELETE_DEVICE_DOMAIN                    0x00c5
->  #define HVCALL_GET_GPA_PAGES_ACCESS_STATES             0x00c9
-> +#define HVCALL_CONFIGURE_DEVICE_DOMAIN                 0x00ce
-> +#define HVCALL_FLUSH_DEVICE_DOMAIN                     0x00d0
->  #define HVCALL_ACQUIRE_SPARSE_SPA_PAGE_HOST_ACCESS     0x00d7
->  #define HVCALL_RELEASE_SPARSE_SPA_PAGE_HOST_ACCESS     0x00d8
->  #define HVCALL_MODIFY_SPARSE_GPA_PAGE_HOST_VISIBILITY  0x00db
-> @@ -492,6 +498,8 @@ union hv_vp_assist_msr_contents {    /* HV_REGISTER_V=
-P_ASSIST_PAGE */
->  #define HVCALL_GET_VP_CPUID_VALUES                     0x00f4
->  #define HVCALL_MMIO_READ                               0x0106
->  #define HVCALL_MMIO_WRITE                              0x0107
-> +#define HVCALL_GET_IOMMU_CAPABILITIES                  0x0125
-> +#define HVCALL_GET_LOGICAL_DEVICE_PROPERTY             0x0127
->
->  /* HV_HYPERCALL_INPUT */
->  #define HV_HYPERCALL_RESULT_MASK       GENMASK_ULL(15, 0)
-> diff --git a/include/hyperv/hvhdk_mini.h b/include/hyperv/hvhdk_mini.h
-> index 858f6a3925b3..ba6b91746b13 100644
-> --- a/include/hyperv/hvhdk_mini.h
-> +++ b/include/hyperv/hvhdk_mini.h
-> @@ -400,4 +400,127 @@ union hv_device_id {              /* HV_DEVICE_ID *=
-/
->         } acpi;
->  } __packed;
->
-> +/* Device domain types */
-> +#define HV_DEVICE_DOMAIN_TYPE_S1       1 /* Stage 1 domain */
-> +
-> +/* ID for default domain and NULL domain */
-> +#define HV_DEVICE_DOMAIN_ID_DEFAULT 0
-> +#define HV_DEVICE_DOMAIN_ID_NULL    0xFFFFFFFFULL
-> +
-> +union hv_device_domain_id {
-> +       u64 as_uint64;
-> +       struct {
-> +               u32 type: 4;
-> +               u32 reserved: 28;
-> +               u32 id;
-> +       } __packed;
-> +};
-> +
-> +struct hv_input_device_domain {
-> +       u64 partition_id;
-> +       union hv_input_vtl owner_vtl;
-> +       u8 padding[7];
-> +       union hv_device_domain_id domain_id;
-> +} __packed;
-> +
-> +union hv_create_device_domain_flags {
-> +       u32 as_uint32;
-> +       struct {
-> +               u32 forward_progress_required: 1;
-> +               u32 inherit_owning_vtl: 1;
-> +               u32 reserved: 30;
-> +       } __packed;
-> +};
-> +
-> +struct hv_input_create_device_domain {
-> +       struct hv_input_device_domain device_domain;
-> +       union hv_create_device_domain_flags create_device_domain_flags;
-> +} __packed;
-> +
-> +struct hv_input_delete_device_domain {
-> +       struct hv_input_device_domain device_domain;
-> +} __packed;
-> +
-> +struct hv_input_attach_device_domain {
-> +       struct hv_input_device_domain device_domain;
-> +       union hv_device_id device_id;
-> +} __packed;
-> +
-> +struct hv_input_detach_device_domain {
-> +       u64 partition_id;
-> +       union hv_device_id device_id;
-> +} __packed;
-> +
-> +struct hv_device_domain_settings {
-> +       struct {
-> +               /*
-> +                * Enable translations. If not enabled, all transaction b=
-ypass
-> +                * S1 translations.
-> +                */
-> +               u64 translation_enabled: 1;
-> +               u64 blocked: 1;
-> +               /*
-> +                * First stage address translation paging mode:
-> +                * 0: 4-level paging (default)
-> +                * 1: 5-level paging
-> +                */
-> +               u64 first_stage_paging_mode: 1;
-> +               u64 reserved: 61;
-> +       } flags;
-> +
-> +       /* Address of translation table */
-> +       u64 page_table_root;
-> +} __packed;
-> +
-> +struct hv_input_configure_device_domain {
-> +       struct hv_input_device_domain device_domain;
-> +       struct hv_device_domain_settings settings;
-> +} __packed;
-> +
-> +struct hv_input_get_iommu_capabilities {
-> +       u64 partition_id;
-> +       u64 reserved;
-> +} __packed;
-> +
-> +struct hv_output_get_iommu_capabilities {
-> +       u32 size;
-> +       u16 reserved;
-> +       u8  max_iova_width;
-> +       u8  max_pasid_width;
-> +
-> +#define HV_IOMMU_CAP_PRESENT (1ULL << 0)
-> +#define HV_IOMMU_CAP_S2 (1ULL << 1)
-> +#define HV_IOMMU_CAP_S1 (1ULL << 2)
-> +#define HV_IOMMU_CAP_S1_5LVL (1ULL << 3)
-> +#define HV_IOMMU_CAP_PASID (1ULL << 4)
-> +#define HV_IOMMU_CAP_ATS (1ULL << 5)
-> +#define HV_IOMMU_CAP_PRI (1ULL << 6)
-> +
-> +       u64 iommu_cap;
-> +       u64 pgsize_bitmap;
-> +} __packed;
-> +
-> +enum hv_logical_device_property_code {
-> +       HV_LOGICAL_DEVICE_PROPERTY_PVIOMMU =3D 10,
-> +};
-> +
-> +struct hv_input_get_logical_device_property {
-> +       u64 partition_id;
-> +       u64 logical_device_id;
-> +       enum hv_logical_device_property_code code;
-> +       u32 reserved;
-> +} __packed;
-> +
-> +struct hv_output_get_logical_device_property {
-> +#define HV_DEVICE_IOMMU_ENABLED (1ULL << 0)
-> +       u64 device_iommu;
-> +       u64 reserved;
-> +} __packed;
-> +
-> +struct hv_input_flush_device_domain {
-> +       struct hv_input_device_domain device_domain;
-> +       u32 flags;
-> +       u32 reserved;
-> +} __packed;
-> +
->  #endif /* _HV_HVHDK_MINI_H */
-> --
-> 2.49.0
->
->
+On Tue, Apr 14, 2026 at 05:57:35PM +0800, Xu Yilun wrote:
+> On Wed, Apr 01, 2026 at 12:17:45AM +0000, Edgecombe, Rick P wrote:
+> > On Tue, 2026-03-31 at 22:19 +0800, Xu Yilun wrote:
+> > > > Consider the amount of tricks that are needed to coax the tdx_page_array to
+> > > > populate the handoff page as needed. It adds 2 pages here, then subtracts
+> > > > them
+> > > > later in the callback. Then tweaks the pa in tdx_page_array_populate() to
+> > > > add
+> > > > the length...
+> > > 
+> > > mm.. The tricky part is the specific memory requirement/allocation, the
+> > > common part is the pa list contained in a root page. Maybe we only model
+> > > the later, let the specific user does the memory allocation. Is that
+> > > closer to your "break concepts apart" idea?
+> > 
+> > I haven't wrapped my head around this enough to suggest anything is definitely
+> > the right approach.
+> > 
+> > But yes, the idea would be that the allocation of the list of pages to give to
+> > the TDX module would be a separate allocation and set of management functions.
+> > And the the allocation of the pages that are used to communicate the list of
+> > pages (and in this case other args) with the module would be another set. So
+> > each type of TDX module arg page format (IOMMU_MT, etc) would be separable, but
+> > share the page list allocation part only. It looks like Nikolay was probing
+> > along the same path. Not sure if he had the same solution in mind.
+> > 
+> > So for this:
+> > 1. Allocate a list or array of pages using a generic method.
+> > 2. Allocate these two IOMMU special pages.
+> > 3. Allocate memory needed for the seamcall (root pages)
+> > 
+> > Hand all three to the wrapper and have it shove them all through in the special
+> > way it prefers.
+> 
+> I'm drafting some changes and make the tdx_page_array look like:
+> 
+>   struct tdx_page_array {
+> 	/* public: */
+> 	unsigned int nr_pages;
+> 	struct page **pages;
+> 
+> 	/* private: */
+> 	u64 *root;
+> 	bool flush_on_free;
+>   };
+> 
+>   - I removed the page allocations for tdx_page_array kAPIs. Now the
+>     caller needs to allocate the struct page **pages and the page list,
+>     then create the tdx_page_array by providing these pages.
+> 
+>     struct tdx_page_array *tdx_page_array_create(struct page **pages,
+> 						 unsigned int nr_pages)
+> 
+>     This also means tdx_page_array doesn't have to hold more than 512
+>     pages anymore, it now an exact descriptor for the TDX Module's
+>     definitions rather than a manager. It's a chunk of the required
+>     memory when we need more than 512 pages. This eliminates the need
+>     for 'offset' field and the slide window operations so make the
+>     helpers simpler.
+> 
+>   - I still keep the generic struct tdx_page_array to represent all
+>     kinds of object types (HPA_ARRAY_T, HPA_LIST_INFO, IOMMU_MT), and
+>     provide the tdx_page_array to SEAMCALL helpers as parameters. I
+>     think this structure is generally good enough to represent a list of
+>     pages, keeps type safety compared to a list of HPAs.
+> 
+>   - I still record both the page list (struct page **pages) and the HPA
+>     list (in u64 *root). struct page **pages works with kernel memory
+>     management (e.g. vmap) well while the populated root works with
+>     SEAMCALLs.
+> 
+>   - I'm not introducing more structures each for an object type, like 
+>     struct hpa_array, struct hpa_list_info, struct iommu_metadata. They
+>     are conceptually the same thing. The iommu_mt supports multi-order
+>     pages, hpa_array_t & hpa_list_info don't support. But their bit
+>     definitions don't conflict. I can use the same piece of code to
+>     populate their root page content.
+> 
+>   - Add a flush_on_free field to mark if a cache write back is needed on
+>     tdx_page_array_free(), then we don't need 2 free APIs.
+> 
+> I want to clean up my code, then post an incremental patch for preview.
 
-No code uses these definitions in this patch and it's better to merge
-with Patch 5?
---=20
-Thanks
-Tianyu Lan
+Hi, I end up made the following changes on top of this series:
+
+-------8<--------
+
+ arch/x86/include/asm/tdx.h            |  32 +-
+ arch/x86/virt/vmx/tdx/tdx.c           | 561 ++++++++------------------
+ drivers/virt/coco/tdx-host/tdx-host.c | 179 ++++++--
+ 3 files changed, 316 insertions(+), 456 deletions(-)
+
+diff --git a/arch/x86/include/asm/tdx.h b/arch/x86/include/asm/tdx.h
+index 7bdd66acda5b..31d1101a4f45 100644
+--- a/arch/x86/include/asm/tdx.h
++++ b/arch/x86/include/asm/tdx.h
+@@ -143,15 +143,12 @@ void tdx_quirk_reset_page(struct page *page);
+ 
+ /**
+  * struct tdx_page_array - Represents a list of pages for TDX Module access
+- * @nr_pages: Total number of data pages in the collection
+- * @pages: Array of data page pointers containing all the data
++ * @nr_pages: Number of data pages in the collection (up to 512)
++ * @pages: Array of data page pointers
+  *
+- * @offset: Internal: The starting index in @pages, positions the currently
+- *	    populated page window in @root.
+- * @nents: Internal: Number of valid HPAs for the page window in @root
+- * @root: Internal: A single 4KB page holding the 8-byte HPAs of the page
+- *	  window. The page window max size is constrained by the root page,
+- *	  which is 512 HPAs.
++ * @root: Internal: A single 4KB page holding the 8-byte HPAs of the @pages
++ * @flush_on_free: Internal: whether to flush cache when @pages are to be
++ *		   freed.
+  *
+  * This structure abstracts several TDX Module defined object types, e.g.,
+  * HPA_ARRAY_T and HPA_LIST_INFO. Typically they all use a "root page" as the
+@@ -165,20 +162,13 @@ struct tdx_page_array {
+ 	struct page **pages;
+ 
+ 	/* private: */
+-	unsigned int offset;
+-	unsigned int nents;
+ 	u64 *root;
++	bool flush_on_free;
+ };
+ 
+ void tdx_page_array_free(struct tdx_page_array *array);
+-DEFINE_FREE(tdx_page_array_free, struct tdx_page_array *, if (_T) tdx_page_array_free(_T))
+-struct tdx_page_array *tdx_page_array_create(unsigned int nr_pages);
+-void tdx_page_array_ctrl_leak(struct tdx_page_array *array);
+-int tdx_page_array_ctrl_release(struct tdx_page_array *array,
+-				unsigned int nr_released,
+-				u64 released_hpa);
+-struct tdx_page_array *
+-tdx_page_array_create_iommu_mt(unsigned int iq_order, unsigned int nr_mt_pages);
++struct tdx_page_array *tdx_page_array_create(struct page **pages,
++					     unsigned int nr_pages);
+ 
+ struct tdx_td {
+ 	/* TD root structure: */
+@@ -248,8 +238,7 @@ u64 tdh_phymem_page_wbinvd_hkid(u64 hkid, struct page *page);
+ u64 tdh_iommu_setup(u64 vtbar, struct tdx_page_array *iommu_mt, u64 *iommu_id);
+ u64 tdh_iommu_clear(u64 iommu_id, struct tdx_page_array *iommu_mt);
+ u64 tdh_spdm_create(u64 func_id, struct tdx_page_array *spdm_mt, u64 *spdm_id);
+-u64 tdh_spdm_delete(u64 spdm_id, struct tdx_page_array *spdm_mt,
+-		    unsigned int *nr_released, u64 *released_hpa);
++u64 tdh_spdm_delete(u64 spdm_id, struct tdx_page_array *spdm_mt);
+ u64 tdh_exec_spdm_connect(u64 spdm_id, struct page *spdm_conf,
+ 			  struct page *spdm_rsp, struct page *spdm_req,
+ 			  struct tdx_page_array *spdm_out,
+@@ -269,8 +258,7 @@ u64 tdh_ide_stream_create(u64 stream_info, u64 spdm_id,
+ 			  u64 *rp_ide_id);
+ u64 tdh_ide_stream_block(u64 spdm_id, u64 stream_id);
+ u64 tdh_ide_stream_delete(u64 spdm_id, u64 stream_id,
+-			  struct tdx_page_array *stream_mt,
+-			  unsigned int *nr_released, u64 *released_hpa);
++			  struct tdx_page_array *stream_mt);
+ u64 tdh_ide_stream_km(u64 spdm_id, u64 stream_id, u64 operation,
+ 		      struct page *spdm_rsp, struct page *spdm_req,
+ 		      u64 *spdm_req_len);
+diff --git a/arch/x86/virt/vmx/tdx/tdx.c b/arch/x86/virt/vmx/tdx/tdx.c
+index 72d836b25bd6..04f47c5eb2a5 100644
+--- a/arch/x86/virt/vmx/tdx/tdx.c
++++ b/arch/x86/virt/vmx/tdx/tdx.c
+@@ -262,21 +262,27 @@ static int build_tdx_memlist(struct list_head *tmb_list)
+ #define TDX_PAGE_ARRAY_MAX_NENTS	(PAGE_SIZE / sizeof(u64))
+ 
+ static int tdx_page_array_populate(struct tdx_page_array *array,
+-				   unsigned int offset)
++				   struct page **pages, unsigned int nr_pages)
+ {
+-	u64 *entries;
++	u64 *entries = array->root;
+ 	int i;
+ 
+-	if (offset >= array->nr_pages)
+-		return 0;
++	if (!pages || !nr_pages || nr_pages > TDX_PAGE_ARRAY_MAX_NENTS)
++		return -EINVAL;
++
++	/*
++	 * When re-populating, the old pages are no longer tracked.
++	 * Theoretically they require cache flushing similar to
++	 * tdx_page_array_free(). Since there is no use case for this yet,
++	 * just warn to prompt future improvement.
++	 */
++	WARN_ON_ONCE(array->pages && array->flush_on_free);
+ 
+-	array->offset = offset;
+-	array->nents = umin(array->nr_pages - offset,
+-			    TDX_PAGE_ARRAY_MAX_NENTS);
++	for (i = 0; i < nr_pages; i++) {
++		struct page *page = pages[i];
+ 
+-	entries = array->root;
+-	for (i = 0; i < array->nents; i++) {
+-		struct page *page = array->pages[offset + i];
++		if (!page)
++			return -EINVAL;
+ 
+ 		entries[i] = page_to_phys(page);
+ 
+@@ -285,359 +291,96 @@ static int tdx_page_array_populate(struct tdx_page_array *array,
+ 			entries[i] |= compound_nr(page);
+ 	}
+ 
+-	return array->nents;
+-}
+-
+-static void tdx_free_pages_bulk(unsigned int nr_pages, struct page **pages)
+-{
+-	int i;
+-
+-	for (i = 0; i < nr_pages; i++)
+-		put_page(pages[i]);
+-}
+-
+-static int tdx_alloc_pages_bulk(unsigned int nr_pages, struct page **pages,
+-				void *data)
+-{
+-	unsigned int filled, done = 0;
+-
+-	do {
+-		filled = alloc_pages_bulk(GFP_KERNEL, nr_pages - done,
+-					  pages + done);
+-		if (!filled) {
+-			tdx_free_pages_bulk(done, pages);
+-			return -ENOMEM;
+-		}
+-
+-		done += filled;
+-	} while (done != nr_pages);
++	array->pages = pages;
++	array->nr_pages = nr_pages;
+ 
+ 	return 0;
+ }
+ 
+ /**
+- * tdx_page_array_free() - Free all memory for a tdx_page_array
++ * tdx_page_array_free() - Free the tdx_page_array
+  * @array: The tdx_page_array to be freed.
+  *
+- * Free all associated pages and the container itself.
++ * Free this page array decriptor. Note the associated pages are not
++ * freed, their lifecycles are not controlled by tdx_page_array.
++ *
++ * TDX Module may consume page array for private accessing, flush cache before
++ * this tracking decriptor is freed, to avoid private cache write back
++ * damages these pages which may further be returned to kernel and reused.
++ * Specific SEAMCALL helpers should indicate the flushing by setting this flag.
+  */
+ void tdx_page_array_free(struct tdx_page_array *array)
+ {
+ 	if (!array)
+ 		return;
+ 
+-	tdx_free_pages_bulk(array->nr_pages, array->pages);
+-	kfree(array->pages);
+-	kfree(array->root);
+-	kfree(array);
+-}
+-EXPORT_SYMBOL_GPL(tdx_page_array_free);
+-
+-static struct tdx_page_array *
+-tdx_page_array_alloc(unsigned int nr_pages,
+-		     int (*alloc_fn)(unsigned int nr_pages,
+-				     struct page **pages, void *data),
+-		     void *data)
+-{
+-	struct tdx_page_array *array = NULL;
+-	struct page **pages = NULL;
+-	u64 *root = NULL;
+-	int ret;
+-
+-	if (!nr_pages)
+-		return NULL;
+-
+-	array = kzalloc_obj(*array);
+-	if (!array)
+-		goto out_free;
+-
+-	root = kzalloc(PAGE_SIZE, GFP_KERNEL);
+-	if (!root)
+-		goto out_free;
+-
+-	pages = kcalloc(nr_pages, sizeof(*pages), GFP_KERNEL);
+-	if (!pages)
+-		goto out_free;
+-
+-	ret = alloc_fn(nr_pages, pages, data);
+-	if (ret)
+-		goto out_free;
++	if (array->flush_on_free) {
++		int i;
+ 
+-	array->nr_pages = nr_pages;
+-	array->pages = pages;
+-	array->root = root;
++		for (i = 0; i < array->nr_pages; i++) {
++			u64 r;
+ 
+-	return array;
++			r = tdh_phymem_page_wbinvd_hkid(tdx_global_keyid,
++							array->pages[i]);
++			WARN_ON_ONCE(r);
++		}
++	}
+ 
+-out_free:
+-	kfree(pages);
+-	kfree(root);
++	kfree(array->root);
+ 	kfree(array);
+-
+-	return NULL;
+ }
++EXPORT_SYMBOL_GPL(tdx_page_array_free);
+ 
+-/**
+- * tdx_page_array_create() - Create a small tdx_page_array (up to 512 pages)
+- * @nr_pages: Number of pages to allocate (must be <= 512).
+- *
+- * Allocate and populate a tdx_page_array in a single step. This is intended
+- * for small collections that fit within a single root page. The allocated
+- * pages are all order-0 pages. This is the most common use case for a list of
+- * TDX control pages.
+- *
+- * If more pages are required, use tdx_page_array_alloc() and
+- * tdx_page_array_populate() to build tdx_page_array chunk by chunk.
+- *
+- * Return: Fully populated tdx_page_array or NULL on failure.
+- */
+-struct tdx_page_array *tdx_page_array_create(unsigned int nr_pages)
++static struct tdx_page_array *tdx_page_array_alloc(void)
+ {
+ 	struct tdx_page_array *array;
+-	int populated;
+ 
+-	if (nr_pages > TDX_PAGE_ARRAY_MAX_NENTS)
+-		return NULL;
+-
+-	array = tdx_page_array_alloc(nr_pages, tdx_alloc_pages_bulk, NULL);
++	array = kzalloc_obj(*array);
+ 	if (!array)
+ 		return NULL;
+ 
+-	populated = tdx_page_array_populate(array, 0);
+-	if (populated != nr_pages)
+-		goto out_free;
+-
+-	return array;
+-
+-out_free:
+-	tdx_page_array_free(array);
+-	return NULL;
+-}
+-EXPORT_SYMBOL_GPL(tdx_page_array_create);
+-
+-/**
+- * tdx_page_array_ctrl_leak() - Leak data pages and free the container
+- * @array: The tdx_page_array to be leaked.
+- *
+- * Call this function when failed to reclaim the control pages. Free the root
+- * page and the holding structures, but orphan the data pages, to prevent the
+- * host from re-allocating and accessing memory that the hardware may still
+- * consider private.
+- */
+-void tdx_page_array_ctrl_leak(struct tdx_page_array *array)
+-{
+-	if (!array)
+-		return;
+-
+-	kfree(array->pages);
+-	kfree(array->root);
+-	kfree(array);
+-}
+-EXPORT_SYMBOL_GPL(tdx_page_array_ctrl_leak);
+-
+-static bool tdx_page_array_validate_release(struct tdx_page_array *array,
+-					    unsigned int offset,
+-					    unsigned int nr_released,
+-					    u64 released_hpa)
+-{
+-	unsigned int nents;
+-
+-	if (offset >= array->nr_pages)
+-		return false;
+-
+-	nents = umin(array->nr_pages - offset, TDX_PAGE_ARRAY_MAX_NENTS);
+-
+-	if (nents != nr_released) {
+-		pr_err("%s nr_released [%d] doesn't match page array nents [%d]\n",
+-		       __func__, nr_released, nents);
+-		return false;
+-	}
+-
+-	/*
+-	 * Unfortunately TDX has multiple page allocation protocols, check the
+-	 * "singleton" case required for HPA_ARRAY_T.
+-	 */
+-	if (page_to_phys(array->pages[0]) == released_hpa &&
+-	    array->nr_pages == 1)
+-		return true;
+-
+-	/* Then check the "non-singleton" case */
+-	if (virt_to_phys(array->root) == released_hpa) {
+-		u64 *entries = array->root;
+-		int i;
+-
+-		for (i = 0; i < nents; i++) {
+-			struct page *page = array->pages[offset + i];
+-			u64 val = page_to_phys(page);
+-
+-			/* Now only for iommu_mt */
+-			if (compound_nr(page) > 1)
+-				val |= compound_nr(page);
+-
+-			if (val != entries[i]) {
+-				pr_err("%s entry[%d] [0x%llx] doesn't match page hpa [0x%llx]\n",
+-				       __func__, i, entries[i], val);
+-				return false;
+-			}
+-		}
+-
+-		return true;
++	array->root = kzalloc(PAGE_SIZE, GFP_KERNEL);
++	if (!array->root) {
++		kfree(array);
++		return NULL;
+ 	}
+ 
+-	pr_err("%s failed to validate, released_hpa [0x%llx], root page hpa [0x%llx], page0 hpa [%#llx], number pages %u\n",
+-	       __func__, released_hpa, virt_to_phys(array->root),
+-	       page_to_phys(array->pages[0]), array->nr_pages);
+-
+-	return false;
++	return array;
+ }
+ 
+ /**
+- * tdx_page_array_ctrl_release() - Verify and release TDX control pages
+- * @array: The tdx_page_array used to originally create control pages.
+- * @nr_released: Number of HPAs the TDX Module reported as released.
+- * @released_hpa: The HPA list the TDX Module reported as released.
++ * tdx_page_array_create() - Create a populated tdx_page_array (up to 512 pages)
++ * @pages: Pointer to struct page array for tdx_page_array populating
++ * @nr_pages: Size of @pages array.
+  *
+- * TDX Module can at most release 512 control pages, so this function only
+- * accepts small tdx_page_array (up to 512 pages), usually created by
+- * tdx_page_array_create().
++ * Create a populated tdx_page_array in a single step. This is intended for
++ * small collections that fit within a single root page. This is the most
++ * common use case for a list of TDX control pages.
+  *
+- * Return: 0 on success, -errno on page release protocol error.
+- */
+-int tdx_page_array_ctrl_release(struct tdx_page_array *array,
+-				unsigned int nr_released,
+-				u64 released_hpa)
+-{
+-	int i;
+-
+-	/*
+-	 * The only case where ->nr_pages is allowed to be >
+-	 * TDX_PAGE_ARRAY_MAX_NENTS is a case where those pages are never
+-	 * expected to be released by this function.
+-	 */
+-	if (WARN_ON(array->nr_pages > TDX_PAGE_ARRAY_MAX_NENTS))
+-		return -EINVAL;
+-
+-	if (WARN_ONCE(!tdx_page_array_validate_release(array, 0, nr_released,
+-						       released_hpa),
+-		      "page release protocol error, consider reboot and replace TDX Module.\n"))
+-		return -EFAULT;
+-
+-	for (i = 0; i < array->nr_pages; i++) {
+-		u64 r;
+-
+-		r = tdh_phymem_page_wbinvd_hkid(tdx_global_keyid,
+-						array->pages[i]);
+-		if (WARN_ON(r))
+-			return -EFAULT;
+-	}
+-
+-	tdx_page_array_free(array);
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(tdx_page_array_ctrl_release);
+-
+-static int tdx_alloc_pages_contig(unsigned int nr_pages, struct page **pages,
+-				  void *data)
+-{
+-	struct page *page;
+-	int i;
+-
+-	page = alloc_contig_pages(nr_pages, GFP_KERNEL, numa_mem_id(),
+-				  &node_online_map);
+-	if (!page)
+-		return -ENOMEM;
+-
+-	for (i = 0; i < nr_pages; i++)
+-		pages[i] = page + i;
+-
+-	return 0;
+-}
+-
+-/*
+- * For holding large number of contiguous pages, usually larger than
+- * TDX_PAGE_ARRAY_MAX_NENTS (512).
+- *
+- * Similar to tdx_page_array_alloc(), after allocating with this
+- * function, call tdx_page_array_populate() to populate the tdx_page_array.
+- */
+-static struct tdx_page_array *
+-tdx_page_array_alloc_contig(unsigned int nr_pages)
+-{
+-	return tdx_page_array_alloc(nr_pages, tdx_alloc_pages_contig, NULL);
+-}
+-
+-static int tdx_alloc_pages_iommu_mt(unsigned int nr_pages, struct page **pages,
+-				    void *data)
+-{
+-	unsigned int iq_order = (unsigned int)(long)data;
+-	struct folio *t_iq, *t_ctxiq;
+-	int ret;
+-
+-	/* TODO: folio_alloc_node() is preferred, but need numa info */
+-	t_iq = folio_alloc(GFP_KERNEL | __GFP_ZERO, iq_order);
+-	if (!t_iq)
+-		return -ENOMEM;
+-
+-	t_ctxiq = folio_alloc(GFP_KERNEL | __GFP_ZERO, iq_order);
+-	if (!t_ctxiq) {
+-		ret = -ENOMEM;
+-		goto out_t_iq;
+-	}
+-
+-	ret = tdx_alloc_pages_bulk(nr_pages - 2, pages + 2, NULL);
+-	if (ret)
+-		goto out_t_ctxiq;
+-
+-	pages[0] = folio_page(t_iq, 0);
+-	pages[1] = folio_page(t_ctxiq, 0);
+-
+-	return 0;
+-
+-out_t_ctxiq:
+-	folio_put(t_ctxiq);
+-out_t_iq:
+-	folio_put(t_iq);
+-
+-	return ret;
+-}
+-
+-/**
+- * tdx_page_array_create_iommu_mt() - Create a page array for IOMMU Memory Tables
+- * @iq_order: The allocation order for the IOMMU Invalidation Queue.
+- * @nr_mt_pages: Number of additional order-0 pages for the MT.
+- *
+- * Allocate and populate a specialized tdx_page_array for IOMMU_MT structures.
+- * The resulting array consists of two multi-order folios (at index 0 and 1)
+- * followed by the requested number of order-0 pages.
++ * If more pages are required, use tdx_page_array_alloc() and
++ * tdx_page_array_populate() to build tdx_page_array chunk by chunk.
+  *
+- * Return: Fully populated tdx_page_array or NULL on failure.
++ * Return: Populated tdx_page_array or NULL on failure.
+  */
+ struct tdx_page_array *
+-tdx_page_array_create_iommu_mt(unsigned int iq_order, unsigned int nr_mt_pages)
++tdx_page_array_create(struct page **pages, unsigned int nr_pages)
+ {
+-	unsigned int nr_pages = nr_mt_pages + 2;
+ 	struct tdx_page_array *array;
+-	int populated;
+-
+-	if (nr_pages > TDX_PAGE_ARRAY_MAX_NENTS)
+-		return NULL;
++	int ret;
+ 
+-	array = tdx_page_array_alloc(nr_pages, tdx_alloc_pages_iommu_mt,
+-				     (void *)(long)iq_order);
++	array = tdx_page_array_alloc();
+ 	if (!array)
+ 		return NULL;
+ 
+-	populated = tdx_page_array_populate(array, 0);
+-	if (populated != nr_pages)
+-		goto out_free;
++	ret = tdx_page_array_populate(array, pages, nr_pages);
++	if (ret) {
++		tdx_page_array_free(array);
++		return NULL;
++	}
+ 
+ 	return array;
+-
+-out_free:
+-	tdx_page_array_free(array);
+-	return NULL;
+ }
+-EXPORT_SYMBOL_GPL(tdx_page_array_create_iommu_mt);
++EXPORT_SYMBOL_GPL(tdx_page_array_create);
+ 
+ #define HPA_LIST_INFO_FIRST_ENTRY	GENMASK_U64(11, 3)
+ #define HPA_LIST_INFO_PFN		GENMASK_U64(51, 12)
+@@ -648,7 +391,7 @@ static u64 hpa_list_info_assign_raw(struct tdx_page_array *array)
+ 	return FIELD_PREP(HPA_LIST_INFO_FIRST_ENTRY, 0) |
+ 	       FIELD_PREP(HPA_LIST_INFO_PFN,
+ 			  PFN_DOWN(virt_to_phys(array->root))) |
+-	       FIELD_PREP(HPA_LIST_INFO_LAST_ENTRY, array->nents - 1);
++	       FIELD_PREP(HPA_LIST_INFO_LAST_ENTRY, array->nr_pages - 1);
+ }
+ 
+ #define HPA_ARRAY_T_PFN		GENMASK_U64(51, 12)
+@@ -658,18 +401,18 @@ static u64 hpa_array_t_assign_raw(struct tdx_page_array *array)
+ {
+ 	unsigned long pfn;
+ 
+-	if (array->nents == 1)
+-		pfn = page_to_pfn(array->pages[array->offset]);
++	if (array->nr_pages == 1)
++		pfn = page_to_pfn(array->pages[0]);
+ 	else
+ 		pfn = PFN_DOWN(virt_to_phys(array->root));
+ 
+ 	return FIELD_PREP(HPA_ARRAY_T_PFN, pfn) |
+-	       FIELD_PREP(HPA_ARRAY_T_SIZE, array->nents - 1);
++	       FIELD_PREP(HPA_ARRAY_T_SIZE, array->nr_pages - 1);
+ }
+ 
+ static u64 hpa_array_t_release_raw(struct tdx_page_array *array)
+ {
+-	if (array->nents == 1)
++	if (array->nr_pages == 1)
+ 		return 0;
+ 
+ 	return virt_to_phys(array->root);
+@@ -1515,8 +1258,8 @@ static void tdx_clflush_page(struct page *page)
+ 
+ static void tdx_clflush_page_array(struct tdx_page_array *array)
+ {
+-	for (int i = 0; i < array->nents; i++)
+-		tdx_clflush_page(array->pages[array->offset + i]);
++	for (int i = 0; i < array->nr_pages; i++)
++		tdx_clflush_page(array->pages[i]);
+ }
+ 
+ /* Initialize the TDX Module Extensions then Extension-SEAMCALLs can be used */
+@@ -1536,14 +1279,14 @@ static int tdx_ext_init(void)
+ 	return 0;
+ }
+ 
+-static int tdx_ext_mem_add(struct tdx_page_array *ext_mem)
++static int tdx_ext_mem_add(struct tdx_page_array *mem)
+ {
+ 	struct tdx_module_args args = {
+-		.rcx = hpa_list_info_assign_raw(ext_mem),
++		.rcx = hpa_list_info_assign_raw(mem),
+ 	};
+ 	u64 r;
+ 
+-	tdx_clflush_page_array(ext_mem);
++	tdx_clflush_page_array(mem);
+ 
+ 	do {
+ 		r = seamcall_ret(TDH_EXT_MEM_ADD, &args);
+@@ -1556,33 +1299,86 @@ static int tdx_ext_mem_add(struct tdx_page_array *ext_mem)
+ 	return 0;
+ }
+ 
+-static int tdx_ext_mem_setup(struct tdx_page_array *ext_mem)
++struct tdx_ext_mem {
++	struct page **pages;
++	unsigned int nr_pages;
++	struct tdx_page_array *chunk;
++};
++
++static void tdx_ext_mem_remove(struct tdx_ext_mem *ext_mem)
+ {
+-	unsigned int populated, offset = 0;
+-	int ret;
++	int i;
+ 
+-	/*
+-	 * tdx_page_array's root page can hold 512 HPAs at most. We have ~50MB
+-	 * memory to add, re-populate the array and add pages bulk by bulk.
+-	 */
+-	while (1) {
+-		populated = tdx_page_array_populate(ext_mem, offset);
+-		if (!populated)
+-			break;
++	tdx_page_array_free(ext_mem->chunk);
++
++	for (i = 0; i < ext_mem->nr_pages; i++)
++		__free_page(ext_mem->pages[i]);
++
++	kfree(ext_mem->pages);
++}
++
++static int tdx_ext_mem_setup(unsigned int nr_pages,
++			     struct tdx_ext_mem *ext_mem)
++{
++	struct tdx_page_array *chunk;
++	struct page **pages;
++	struct page *page;
++	int i, ret;
+ 
+-		ret = tdx_ext_mem_add(ext_mem);
++	pages = kmalloc_objs(*pages, nr_pages);
++	if (!pages)
++		return -ENOMEM;
++
++	page = alloc_contig_pages(nr_pages, GFP_KERNEL, numa_mem_id(),
++				  &node_online_map);
++	if (!page) {
++		ret = -ENOMEM;
++		goto out_free_pages;
++	}
++
++	for (i = 0; i < nr_pages; i++)
++		pages[i] = page + i;
++
++	chunk = tdx_page_array_alloc();
++	if (!chunk) {
++		ret = -ENOMEM;
++		goto out_free_contig;
++	}
++
++	for (i = 0; i < nr_pages;) {
++		int nents = min(nr_pages - i, TDX_PAGE_ARRAY_MAX_NENTS);
++
++		ret = tdx_page_array_populate(chunk, pages + i, nents);
+ 		if (ret)
+-			return ret;
++			goto out_free_chunk;
++
++		ret = tdx_ext_mem_add(chunk);
++		if (ret)
++			goto out_free_chunk;
+ 
+-		offset += populated;
++		i += nents;
+ 	}
+ 
++	ext_mem->nr_pages = nr_pages;
++	ext_mem->pages = pages;
++	ext_mem->chunk = chunk;
++
+ 	return 0;
++
++out_free_chunk:
++	tdx_page_array_free(chunk);
++out_free_contig:
++	for (i = 0; i < nr_pages; i++)
++		__free_page(pages[i]);
++out_free_pages:
++	kfree(pages);
++
++	return ret;
+ }
+ 
+ static int init_tdx_ext(void)
+ {
+-	struct tdx_page_array *ext_mem = NULL;
++	struct tdx_ext_mem ext_mem;
+ 	unsigned int nr_pages;
+ 	int ret;
+ 
+@@ -1600,48 +1396,48 @@ static int init_tdx_ext(void)
+ 	if (boot_cpu_has_bug(X86_BUG_TDX_PW_MCE))
+ 		return -ENXIO;
+ 
++	/* No feature requires TDX Module Extensions. */
++	if (!tdx_sysinfo.ext.ext_required)
++		return 0;
++
+ 	nr_pages = tdx_sysinfo.ext.memory_pool_required_pages;
+ 	/*
+ 	 * memory_pool_required_pages == 0 means no need to add more pages,
+ 	 * skip the memory setup.
+ 	 */
+ 	if (nr_pages) {
+-		ext_mem = tdx_page_array_alloc_contig(nr_pages);
+-		if (!ext_mem)
+-			return -ENOMEM;
+-
+-		ret = tdx_ext_mem_setup(ext_mem);
++		ret = tdx_ext_mem_setup(nr_pages, &ext_mem);
+ 		if (ret)
+-			goto out_ext_mem;
++			return ret;
+ 	}
+ 
++	ret = tdx_ext_init();
++	if (ret)
++		goto out_remove_ext_mem;
++
+ 	/*
+-	 * ext_required == 0 means no need to call TDH.EXT.INIT, the Extensions
+-	 * are already working.
++	 * Extensions memory is never reclaimed once assigned, stop tracking it
++	 * and free the tracking structures.
+ 	 */
+-	if (tdx_sysinfo.ext.ext_required) {
+-		ret = tdx_ext_init();
+-		/*
+-		 * Some pages may have been touched by the TDX module.
+-		 * Flush cache before returning these pages to kernel.
+-		 */
+-		if (ret)
+-			goto out_flush;
+-	}
+-
+-	/* Extension memory is never reclaimed once assigned */
+-	tdx_page_array_ctrl_leak(ext_mem);
++	tdx_page_array_free(ext_mem.chunk);
++	kfree(ext_mem.pages);
+ 
+ 	pr_info("%lu KB allocated for TDX Module Extensions\n",
+ 		nr_pages * PAGE_SIZE / 1024);
+ 
+ 	return 0;
+ 
+-out_flush:
+-	if (ext_mem)
++out_remove_ext_mem:
++	if (nr_pages) {
++		/*
++		 * TDH.EXT.MEM.ADD only collects required memory. TDX.EXT.INIT
++		 * does the actual initialization so if it fails some pages may
++		 * have been touched by the TDX module, flush cache before
++		 * returning these pages to kernel.
++		 */
+ 		wbinvd_on_all_cpus();
+-out_ext_mem:
+-	tdx_page_array_free(ext_mem);
++		tdx_ext_mem_remove(&ext_mem);
++	}
+ 
+ 	return ret;
+ }
+@@ -2497,6 +2293,7 @@ u64 tdh_iommu_setup(u64 vtbar, struct tdx_page_array *iommu_mt, u64 *iommu_id)
+ 	u64 r;
+ 
+ 	tdx_clflush_page_array(iommu_mt);
++	iommu_mt->flush_on_free = true;
+ 
+ 	r = seamcall_ret_ir_resched(TDH_IOMMU_SETUP, &args);
+ 
+@@ -2525,6 +2322,7 @@ u64 tdh_spdm_create(u64 func_id, struct tdx_page_array *spdm_mt, u64 *spdm_id)
+ 	u64 r;
+ 
+ 	tdx_clflush_page_array(spdm_mt);
++	spdm_mt->flush_on_free = true;
+ 
+ 	r = seamcall_ret(TDH_SPDM_CREATE, &args);
+ 
+@@ -2534,23 +2332,14 @@ u64 tdh_spdm_create(u64 func_id, struct tdx_page_array *spdm_mt, u64 *spdm_id)
+ }
+ EXPORT_SYMBOL_FOR_MODULES(tdh_spdm_create, "tdx-host");
+ 
+-u64 tdh_spdm_delete(u64 spdm_id, struct tdx_page_array *spdm_mt,
+-		    unsigned int *nr_released, u64 *released_hpa)
++u64 tdh_spdm_delete(u64 spdm_id, struct tdx_page_array *spdm_mt)
+ {
+ 	struct tdx_module_args args = {
+ 		.rcx = spdm_id,
+ 		.rdx = hpa_array_t_release_raw(spdm_mt),
+ 	};
+-	u64 r;
+-
+-	r = seamcall_ret(TDH_SPDM_DELETE, &args);
+-	if (r != TDX_SUCCESS)
+-		return r;
+ 
+-	*nr_released = FIELD_GET(HPA_ARRAY_T_SIZE, args.rcx) + 1;
+-	*released_hpa = FIELD_GET(HPA_ARRAY_T_PFN, args.rcx) << PAGE_SHIFT;
+-
+-	return r;
++	return seamcall_ret(TDH_SPDM_DELETE, &args);
+ }
+ EXPORT_SYMBOL_FOR_MODULES(tdh_spdm_delete, "tdx-host");
+ 
+@@ -2639,6 +2428,7 @@ u64 tdh_ide_stream_create(u64 stream_info, u64 spdm_id,
+ 	u64 r;
+ 
+ 	tdx_clflush_page_array(stream_mt);
++	stream_mt->flush_on_free = true;
+ 
+ 	r = seamcall_saved_ret(TDH_IDE_STREAM_CREATE, &args);
+ 
+@@ -2661,24 +2451,15 @@ u64 tdh_ide_stream_block(u64 spdm_id, u64 stream_id)
+ EXPORT_SYMBOL_FOR_MODULES(tdh_ide_stream_block, "tdx-host");
+ 
+ u64 tdh_ide_stream_delete(u64 spdm_id, u64 stream_id,
+-			  struct tdx_page_array *stream_mt,
+-			  unsigned int *nr_released, u64 *released_hpa)
++			  struct tdx_page_array *stream_mt)
+ {
+ 	struct tdx_module_args args = {
+ 		.rcx = spdm_id,
+ 		.rdx = stream_id,
+ 		.r8 = hpa_array_t_release_raw(stream_mt),
+ 	};
+-	u64 r;
+ 
+-	r = seamcall_ret(TDH_IDE_STREAM_DELETE, &args);
+-	if (r != TDX_SUCCESS)
+-		return r;
+-
+-	*nr_released = FIELD_GET(HPA_ARRAY_T_SIZE, args.rcx) + 1;
+-	*released_hpa = FIELD_GET(HPA_ARRAY_T_PFN, args.rcx) << PAGE_SHIFT;
+-
+-	return r;
++	return seamcall_ret(TDH_IDE_STREAM_DELETE, &args);
+ }
+ EXPORT_SYMBOL_FOR_MODULES(tdh_ide_stream_delete, "tdx-host");
+ 
+diff --git a/drivers/virt/coco/tdx-host/tdx-host.c b/drivers/virt/coco/tdx-host/tdx-host.c
+index 7800afb0893d..3a37e78dbc89 100644
+--- a/drivers/virt/coco/tdx-host/tdx-host.c
++++ b/drivers/virt/coco/tdx-host/tdx-host.c
+@@ -83,6 +83,119 @@ static struct tdx_tsm_link *to_tdx_tsm_link(struct pci_tsm *tsm)
+ 	return container_of(tsm, struct tdx_tsm_link, pci.base_tsm);
+ }
+ 
++static void tdx_free_pages_bulk(unsigned int nr_pages, struct page **pages)
++{
++	int i;
++
++	for (i = 0; i < nr_pages; i++)
++		put_page(pages[i]);
++}
++
++static int tdx_alloc_pages_bulk(unsigned int nr_pages, struct page **pages)
++{
++	unsigned int filled, done = 0;
++
++	do {
++		filled = alloc_pages_bulk(GFP_KERNEL, nr_pages - done,
++					  pages + done);
++		if (!filled) {
++			tdx_free_pages_bulk(done, pages);
++			return -ENOMEM;
++		}
++
++		done += filled;
++	} while (done != nr_pages);
++
++	return 0;
++}
++
++static void tdx_page_array_mt_free(struct tdx_page_array *array_mt)
++{
++	struct page **pages = array_mt->pages;
++	unsigned int nr_pages = array_mt->nr_pages;
++
++	tdx_page_array_free(array_mt);
++	tdx_free_pages_bulk(nr_pages, pages);
++	kfree(pages);
++}
++
++DEFINE_FREE(tdx_page_array_mt_free, struct tdx_page_array *, if (_T) tdx_page_array_mt_free(_T))
++
++static struct tdx_page_array *tdx_page_array_mt_create(unsigned int nr_pages)
++{
++	struct tdx_page_array *array;
++	struct page **pages;
++	int ret;
++
++	pages = kzalloc_objs(*pages, nr_pages);
++	if (!pages)
++		return NULL;
++
++	ret = tdx_alloc_pages_bulk(nr_pages, pages);
++	if (ret)
++		goto out_free_pages;
++
++	array = tdx_page_array_create(pages, nr_pages);
++	if (!array)
++		goto out_free_bulk;
++
++	return array;
++
++out_free_bulk:
++	tdx_free_pages_bulk(nr_pages, pages);
++out_free_pages:
++	kfree(pages);
++
++	return NULL;
++}
++
++static struct tdx_page_array *
++tdx_page_array_iommu_mt_create(unsigned int iq_order, unsigned int nr_mt_pages)
++{
++	unsigned int nr_pages = nr_mt_pages + 2;
++	struct tdx_page_array *array;
++	struct folio *t_iq, *t_ctxiq;
++	struct page **pages;
++	int ret;
++
++	pages = kzalloc_objs(*pages, nr_pages);
++	if (!pages)
++		return NULL;
++
++	/* TODO: folio_alloc_node() is preferred, but need numa info */
++	t_iq = folio_alloc(GFP_KERNEL | __GFP_ZERO, iq_order);
++	if (!t_iq)
++		goto out_free_pages;
++
++	t_ctxiq = folio_alloc(GFP_KERNEL | __GFP_ZERO, iq_order);
++	if (!t_ctxiq)
++		goto out_free_t_iq;
++
++	pages[0] = folio_page(t_iq, 0);
++	pages[1] = folio_page(t_ctxiq, 0);
++
++	ret = tdx_alloc_pages_bulk(nr_mt_pages, pages + 2);
++	if (ret)
++		goto out_free_t_ctxiq;
++
++	array = tdx_page_array_create(pages, nr_pages);
++	if (!array)
++		goto out_free_bulk;
++
++	return array;
++
++out_free_bulk:
++	tdx_free_pages_bulk(nr_mt_pages, pages + 2);
++out_free_t_ctxiq:
++	folio_put(t_ctxiq);
++out_free_t_iq:
++	folio_put(t_iq);
++out_free_pages:
++	kfree(pages);
++
++	return NULL;
++}
++
+ #define PCI_DOE_DATA_OBJECT_HEADER_1_OFFSET	0
+ #define PCI_DOE_DATA_OBJECT_HEADER_2_OFFSET	4
+ #define PCI_DOE_DATA_OBJECT_HEADER_SIZE		8
+@@ -275,8 +388,8 @@ static struct tdx_tsm_link *tdx_spdm_create(struct tdx_tsm_link *tlink)
+ 	unsigned int nr_pages = tdx_sysinfo->connect.spdm_mt_page_count;
+ 	u64 spdm_id, r;
+ 
+-	struct tdx_page_array *spdm_mt __free(tdx_page_array_free) =
+-		tdx_page_array_create(nr_pages);
++	struct tdx_page_array *spdm_mt __free(tdx_page_array_mt_free) =
++		tdx_page_array_mt_create(nr_pages);
+ 	if (!spdm_mt)
+ 		return ERR_PTR(-ENOMEM);
+ 
+@@ -292,24 +405,18 @@ static struct tdx_tsm_link *tdx_spdm_create(struct tdx_tsm_link *tlink)
+ static void tdx_spdm_delete(struct tdx_tsm_link *tlink)
+ {
+ 	struct pci_dev *pdev = tlink->pci.base_tsm.pdev;
+-	unsigned int nr_released;
+-	u64 released_hpa, r;
++	u64 r;
+ 
+-	r = tdh_spdm_delete(tlink->spdm_id, tlink->spdm_mt, &nr_released, &released_hpa);
++	r = tdh_spdm_delete(tlink->spdm_id, tlink->spdm_mt);
+ 	if (r) {
++		/* leak the metadata pages */
+ 		pci_err(pdev, "fail to delete spdm 0x%llx\n", r);
+-		goto leak;
++		return;
+ 	}
+ 
+-	if (tdx_page_array_ctrl_release(tlink->spdm_mt, nr_released, released_hpa)) {
+-		pci_err(pdev, "fail to release spdm_mt pages\n");
+-		goto leak;
+-	}
++	tdx_page_array_mt_free(tlink->spdm_mt);
+ 
+ 	return;
+-
+-leak:
+-	tdx_page_array_ctrl_leak(tlink->spdm_mt);
+ }
+ 
+ DEFINE_FREE(tdx_spdm_delete, struct tdx_tsm_link *, if (!IS_ERR_OR_NULL(_T)) tdx_spdm_delete(_T))
+@@ -323,8 +430,8 @@ static struct tdx_tsm_link *tdx_spdm_session_setup(struct tdx_tsm_link *tlink)
+ 	if (IS_ERR(tlink_create))
+ 		return tlink_create;
+ 
+-	struct tdx_page_array *dev_info __free(tdx_page_array_free) =
+-		tdx_page_array_create(nr_pages);
++	struct tdx_page_array *dev_info __free(tdx_page_array_mt_free) =
++		tdx_page_array_mt_create(nr_pages);
+ 	if (!dev_info)
+ 		return ERR_PTR(-ENOMEM);
+ 
+@@ -424,8 +531,8 @@ static struct tdx_tsm_link *tdx_ide_stream_create(struct tdx_tsm_link *tlink,
+ 	struct pci_ide_regs regs;
+ 	u64 r;
+ 
+-	struct tdx_page_array *stream_mt __free(tdx_page_array_free) =
+-		tdx_page_array_create(nr_pages);
++	struct tdx_page_array *stream_mt __free(tdx_page_array_mt_free) =
++		tdx_page_array_mt_create(nr_pages);
+ 	if (!stream_mt)
+ 		return ERR_PTR(-ENOMEM);
+ 
+@@ -472,33 +579,23 @@ static struct tdx_tsm_link *tdx_ide_stream_create(struct tdx_tsm_link *tlink,
+ static void tdx_ide_stream_delete(struct tdx_tsm_link *tlink)
+ {
+ 	struct pci_dev *pdev = tlink->pci.base_tsm.pdev;
+-	unsigned int nr_released;
+-	u64 released_hpa, r;
++	u64 r;
+ 
+ 	r = tdh_ide_stream_block(tlink->spdm_id, tlink->stream_id);
+ 	if (r) {
++		/* leak the metadata pages */
+ 		pci_err(pdev, "ide stream block fail 0x%llx\n", r);
+-		goto leak;
++		return;
+ 	}
+ 
+ 	r = tdh_ide_stream_delete(tlink->spdm_id, tlink->stream_id,
+-				  tlink->stream_mt, &nr_released,
+-				  &released_hpa);
++				  tlink->stream_mt);
+ 	if (r) {
+ 		pci_err(pdev, "ide stream delete fail 0x%llx\n", r);
+-		goto leak;
+-	}
+-
+-	if (tdx_page_array_ctrl_release(tlink->stream_mt, nr_released,
+-					released_hpa)) {
+-		pci_err(pdev, "fail to release IDE stream_mt pages\n");
+-		goto leak;
++		return;
+ 	}
+ 
+-	return;
+-
+-leak:
+-	tdx_page_array_ctrl_leak(tlink->stream_mt);
++	tdx_page_array_mt_free(tlink->stream_mt);
+ }
+ 
+ DEFINE_FREE(tdx_ide_stream_delete, struct tdx_tsm_link *,
+@@ -815,20 +912,14 @@ static void tdx_iommu_clear(u64 iommu_id, struct tdx_page_array *iommu_mt)
+ 
+ 	r = tdh_iommu_clear(iommu_id, iommu_mt);
+ 	if (r) {
++		/* leak the metadata pages */
+ 		pr_err("fail to clear tdx iommu 0x%llx\n", r);
+-		goto leak;
++		return;
+ 	}
+ 
+-	if (tdx_page_array_ctrl_release(iommu_mt, iommu_mt->nr_pages,
+-					virt_to_phys(iommu_mt->root))) {
+-		pr_err("fail to release iommu_mt pages\n");
+-		goto leak;
+-	}
++	tdx_page_array_mt_free(iommu_mt);
+ 
+ 	return;
+-
+-leak:
+-	tdx_page_array_ctrl_leak(iommu_mt);
+ }
+ 
+ static int tdx_iommu_enable_one(struct dmar_drhd_unit *drhd)
+@@ -837,8 +928,8 @@ static int tdx_iommu_enable_one(struct dmar_drhd_unit *drhd)
+ 	u64 r, iommu_id;
+ 	int ret;
+ 
+-	struct tdx_page_array *iommu_mt __free(tdx_page_array_free) =
+-		tdx_page_array_create_iommu_mt(1, nr_pages);
++	struct tdx_page_array *iommu_mt __free(tdx_page_array_mt_free) =
++		tdx_page_array_iommu_mt_create(1, nr_pages);
+ 	if (!iommu_mt)
+ 		return -ENOMEM;
+
