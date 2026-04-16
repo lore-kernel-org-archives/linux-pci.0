@@ -1,124 +1,317 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A95C22E424F;
-	Thu, 16 Apr 2026 17:31:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DF78331A4C;
+	Thu, 16 Apr 2026 18:01:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776360661; cv=none; b=n5K10PE/CiLqmxYAZmVn/mad8V9asjX03HSzpV7eoUxhemccOEnUdG1eDlTGWNTznzynFrJ3a5mr4rfe0jP39ait3/fJdxUk0tgM2IZqRPJ0iHdYdYxbbtbp5PUYVUKPCenp9F0mdjMYkM+6Dru2Jb11e9FWrQuQAjAwhSDCk9c=
+	t=1776362472; cv=none; b=RYo648TNdh896cpQ5yzG6+Vb/q7hvXRWtq60nn4FsyuRjXs/eSf1ET4oIWLdnkxhhvtoj7zgV3fwE6e9rXDh/ZLQR1tLAfLOgsc3m6q41gJddmMbLn2n6tf8qQTIIzZb/OgibqFCcyOdplIoaJQ/HmDhbWDHrB/zV8eVVix7iBo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776360661; c=relaxed/simple;
-	bh=vGNw0uxuy2/Dir37UhfQwUgLTRlb/4/Oq7Jd0D0d6lo=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=gQP0BawMQTAaVIFXQQTnKQKy4AWooXJBt2JKHPZClA6sqrcmmOqfnKuYTLNIFDIHjxxgMpfBPeUpfNmrri1K/6v8FthQnnzyU0W9WljqXoHZ6dGUhPCmysgUpqqG6fGVvvLCKIhiVFfYwAZDqIRXpe/S51DFcu96Zmrdfq2JrGs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tgXm2Nc0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776362472; c=relaxed/simple;
+	bh=0gwbU28QnN9fAESh13GoaD14hEGTKIIjtJA8T2NO+Uw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=OoUzx23SWvpm95USa6e+IaeFJswryzWNjV6gYLFHHpNg67lHhWzwnWYdwfAyAPm0zQiNttM3vFsqi3XdifXZVtjbhx1UFvssNjDOS/873d2Cl/gnhPCTlWJIKLQgq0NujzjybQCGcqqjGDYvte4TDmL0Qb/y1XusvUXhWsPeV5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IN0G++eL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tgXm2Nc0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DE8BC2BCAF;
-	Thu, 16 Apr 2026 17:31:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IN0G++eL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB3DBC2BCAF;
+	Thu, 16 Apr 2026 18:01:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776360661;
-	bh=vGNw0uxuy2/Dir37UhfQwUgLTRlb/4/Oq7Jd0D0d6lo=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=tgXm2Nc0oTKwPuU96QTpoy5h6bdCnb3EqRE/aG2JxxfL+EP/0rTRkZIqrvyMb8/eX
-	 34k9XCYKXuABtjW5tCDx/2j0ICV33OJjGDnzcR+GyHjBVoklegYQinm0K5UUXvoutt
-	 o+OLfPym8f2yqXZkAnLfrvaz44LWGZgB5Wb8Lr9VCZeTdlTQCY6rCwKkTyeCWwK5SZ
-	 AOuc/OoZ7JyLXuUURB4rIarcEiMaw7aB9iqFwSy2zfkL5FRlXHvbteXzvHzEa7OOO9
-	 gIMIPU6m8XtExNPmXp7EQfrW/RjI/S+fuh4jXtvSSJ5BdBS+XahtOL9tvk4uZMCnJv
-	 4CXPi9gSF8aSA==
-Date: Thu, 16 Apr 2026 12:31:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "yuan.gao" <yuan.gao@ucloud.cn>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Alex Williamson <alex@shazbot.org>,
-	Jason Gunthorpe <jgg@nvidia.com>
-Subject: Re: [PATCH] PCI: Avoid FLR for NVIDIA 5090 GPU
-Message-ID: <20260416173100.GA13378@bhelgaas>
+	s=k20201202; t=1776362472;
+	bh=0gwbU28QnN9fAESh13GoaD14hEGTKIIjtJA8T2NO+Uw=;
+	h=From:To:Cc:Subject:Date:From;
+	b=IN0G++eLHaqph6Kdkoprfm9BaOBsVO4IXrABjvmTLcu7EshpBE/81pDBZ1HDt2jD5
+	 kjGtnIIxLMB5mTbkeGBWsq2AxR+WXfNF97N1MBLknGCxunaV5Y18N3Gbdk8Xty737n
+	 xjQupnIl2esXrUf5abrzQl+0xMrE/YARvWE7UNG2eR+/W9tH1zylHYN1E9tMUmbT0/
+	 D9ytm5XHFENFMuvyhtSvWb573/suSQlOMRCvxGUjRqVloXBnuvB8OZEdOkkJokFeD6
+	 LO9L044tbnp9YkY899nxjM/p551NJ2GYPYkPB181hDqk6MmZpwILoMUqy78rciGYuj
+	 /fzjVlIdWjxag==
+From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Magnus Lindholm <linmag7@gmail.com>,
+	Matt Turner <mattst88@gmail.com>,
+	Richard Henderson <richard.henderson@linaro.org>,
+	Christophe Leroy <chleroy@kernel.org>,
+	Madhavan Srinivasan <maddy@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	Dexuan Cui <decui@microsoft.com>,
+	=?UTF-8?q?Krzysztof=20Ha=C5=82asa?= <khalasa@piap.pl>,
+	Lukas Wunner <lukas@wunner.de>,
+	"Oliver O'Halloran" <oohall@gmail.com>,
+	Saurabh Singh Sengar <ssengar@microsoft.com>,
+	Shuan He <heshuan@bytedance.com>,
+	Srivatsa Bhat <srivatsabhat@microsoft.com>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	linux-pci@vger.kernel.org,
+	linux-alpha@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH v5 00/23] PCI: Convert all dynamic sysfs attributes to static
+Date: Thu, 16 Apr 2026 18:00:44 +0000
+Message-ID: <20260416180107.777065-1-kwilczynski@kernel.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260416070707.3242381-1-yuan.gao@ucloud.cn>
 
-[+cc Alex, Jason]
+Hello,
 
-On Thu, Apr 16, 2026 at 03:07:06PM +0800, yuan.gao wrote:
-> When passing through the NVIDIA 5090 GPU to a vm, there is a certain
-> probability of encountering an flr timeout during vm shutdown, which
-> subsequently leads to a soft lock of the host cpu.
+This series converts every dynamically allocated PCI sysfs attribute to
+a static const definition.  After the full series, pci_sysfs_init() and
+sysfs_initialized are gone, and every sysfs file is created by the
+driver model at device_add() time.
 
-If possible, would like confirmation of device erratum from Nvidia.
-If there's no known erratum, there might be something wrong in the
-Linux FLR and wait.
+Currently, the PCI resource files (resourceN, resourceN_wc) and the
+legacy bus files (legacy_io, legacy_mem) are created dynamically
+from two unsynchronised paths:
 
-> As described in this post
-> (https://forum.level1techs.com/t/do-your-rtx-5090-or-general-rtx-50-series-has-reset-bug-in-vm-passthrough/228549).
-> 
-> And in dmesg:
-> 
->  [401106.011979] vfio-pci 0000:d8:00.0: not ready 1023ms after FLR; waiting
->  [401108.700074] vfio-pci 0000:d8:00.0: not ready 2047ms after FLR; waiting
->  [401112.412204] vfio-pci 0000:d8:00.0: not ready 4095ms after FLR; waiting
->  [401118.620399] vfio-pci 0000:d8:00.0: not ready 8191ms after FLR; waiting
->  [401128.860788] vfio-pci 0000:d8:00.0: not ready 16383ms after FLR; waiting
->  [401147.293518] vfio-pci 0000:d8:00.0: not ready 32767ms after FLR; waiting
->  [401185.694859] vfio-pci 0000:d8:00.0: not ready 65535ms after FLR; giving up
->  [401195.372583] vfio-pci 0000:38:00.2: Relaying device request to user (#0)
-> 
->  [401208.274941] watchdog: BUG: soft lockup - CPU#11 stuck for 21s! [CPU 22/KVM:30337]
-> 
->  [401209.887848] CPU: 11 PID: 30337 Comm: CPU 22/KVM Kdump: loaded Not tainted
->  [401209.887854] RIP: 0010:pci_mmcfg_read+0xaa/0xd0
-> 
->  [401209.887866] Call Trace:
->  [401209.887872]  pci_bus_read_config_dword+0x43/0x70
->  [401209.b887876]  pci_find_next_ext_capability.part.20+0x65/0xc0
->  [401209.887879]  pci_restore_state.part.39+0x6d/0x3f0
->  [401209.887883]  vfio_pci_disable+0x22b/0x4d0 [vfio_pci]
->  [401209.887886]  ? __dentry_kill+0x118/0x160
->  [401209.887888]  vfio_pci_release+0x5a/0xb0 [vfio_pci]
->  [401209.887891]  vfio_device_fops_release+0x18/0x30 [vfio]
->  [401209.887894]  __fput+0x98/0x240
->  [401209.887897]  task_work_run+0x6a/0xa0
->  [401209.887899]  do_exit+0x375/0xb10
->  [401209.887900]  do_group_exit+0x3a/0xa0
->  [401209.887902]  get_signal+0x140/0x7d0
->  [401209.887906]  arch_do_signal+0x2c/0x260
->  [401209.887909]  exit_to_user_mode_prepare+0xc0/0x120
->  [401209.887912]  syscall_exit_to_user_mode+0x27/0x180
->  [401209.887915]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> 
-> The flr seems to have some issues on the NVIDIA 5090 GPU,
-> so I’ve added flr-related quirks for these devices.
-> 
-> And with this patch in place, the host kernel doesn't exhibit these
-> problems. The vm starts up and works as expected with the passed-through
-> NVIDIA 5090 GPU.
-> 
-> Signed-off-by: yuan.gao <yuan.gao@ucloud.cn>
-> ---
->  drivers/pci/quirks.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 48946cca4be72..71f833f3e2d84 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -5618,6 +5618,9 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x7901, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x0616, quirk_no_flr);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x2b85, quirk_no_flr);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x2b87, quirk_no_flr);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x2b8c, quirk_no_flr);
->  
->  /* FLR may cause the SolidRun SNET DPU (rev 0x1) to hang */
->  static void quirk_no_flr_snet(struct pci_dev *dev)
-> -- 
-> 2.32.0
-> 
+Path A: late_initcall
+
+  pci_sysfs_init                        (late_initcall)
+    sysfs_initialized = 1
+    for_each_pci_dev
+      pci_create_sysfs_dev_files
+        sysfs_create_bin_file           (resourceN, resourceN_wc)
+    pci_find_next_bus
+      pci_create_legacy_files
+        sysfs_create_bin_file           (legacy_io, legacy_mem)
+
+Path B: device registration / hotplug
+
+  pci_bus_add_devices
+    pci_bus_add_device
+      pci_create_sysfs_dev_files
+        if (!sysfs_initialized) return  <- only guard
+        sysfs_create_bin_file           (resourceN, resourceN_wc)
+
+On most ACPI systems this does not race because PCI enumeration
+completes at subsys_initcall time, before pci_sysfs_init() runs:
+
+  subsys_initcall (level 4):
+    acpi_pci_root_add
+      pci_bus_add_device
+        pci_create_sysfs_dev_files
+          if (!sysfs_initialized)          <- not yet set
+            return -EACCES
+
+  late_initcall (level 7):
+    pci_sysfs_init
+      sysfs_initialized = 1
+      for_each_pci_dev
+        pci_create_sysfs_dev_files         <- creates the files, no race
+
+On Devicetree platforms the host controller is a platform driver that
+probes via the driver model, often on a workqueue, and overlaps with the
+late_initcall:
+
+  CPU 0 (late_initcall)                CPU 1 (driver probe)
+  ---------------------------          ----------------------------
+  pci_sysfs_init()
+    sysfs_initialized = 1
+    for_each_pci_dev(pdev)             pci_bus_add_device(pdev)
+      pci_create_sysfs_dev_files()       pci_create_sysfs_dev_files()
+        sysfs_create_bin_file()            sysfs_create_bin_file()
+                                             -> "duplicate filename"
+
+The same happens on ACPI when probing is asynchronous (hv_pci on
+Azure, RISC-V with ACPI).
+
+The duplicate causes sysfs_create_bin_file() to fail with -EEXIST.
+pci_create_resource_files() then calls pci_remove_resource_files() in
+its error unwind, tearing down files the other thread created and
+still references through pdev->res_attr[].  This has caused kernel
+panics on i.MX6 and boot failures on other platforms.
+
+Several different fixes have been proposed over the years: reordering
+the sysfs_initialized assignment, adding locks, checking
+pci_dev_is_added(), setting pdev->res_attr[] to NULL after kfree
+(which only prevents a double-free on the teardown path, not the
+error unwind removing the other thread's files).  None would address the
+root cause.
+
+This has been reported a few times:
+
+  - https://lore.kernel.org/linux-pci/20250702155112.40124-1-heshuan@bytedance.com/
+  - https://lore.kernel.org/linux-pci/b51519d6-ce45-4b6d-8135-c70169bd110e@h-partners.com/
+  - https://lore.kernel.org/linux-pci/1702093576-30405-1-git-send-email-ssengar@linux.microsoft.com/
+  - https://lore.kernel.org/linux-pci/SY0P300MB04687548090B73E40AF97D8897B82@SY0P300MB0468.AUSP300.PROD.OUTLOOK.COM/
+  - https://lore.kernel.org/linux-pci/20230105174736.GA1154719@bhelgaas/
+  - https://lore.kernel.org/linux-pci/m3eebg9puj.fsf@t19.piap.pl/
+  - https://lore.kernel.org/linux-pci/20200716110423.xtfyb3n6tn5ixedh@pali/
+  - https://lore.kernel.org/linux-pci/1366196798-15929-1-git-send-email-artem.savkov@gmail.com/
+  - https://bugzilla.kernel.org/show_bug.cgi?id=215515
+  - https://bugzilla.kernel.org/show_bug.cgi?id=216888
+
+With static attributes the driver model creates sysfs entries once per
+device at device_add() time, under the device lock, eliminating the
+late_initcall iteration and the race along with it.
+
+	Krzysztof
+
+---
+Changes in v5:
+  https://lore.kernel.org/linux-pci/20260411080148.471335-1-kwilczynski@kernel.org/
+  
+   - Added new Tested-by, Reviewed-by, and Acked-by tags.
+   - Used the existing _io function names in the static macro
+     definitions, deferring the rename to the conversion commit
+     where it belongs, to avoid a forward reference across
+     commits. This was reported by Sashiko, see:
+     https://sashiko.dev/#/patchset/20260411080148.471335-1-kwilczynski%40kernel.org?part=6
+   - Folded the __resource_resize_store() conversion into the
+     main static attributes commit so the resize path is never
+     broken between commits. This was reported by Sashiko, see:
+     https://sashiko.dev/#/patchset/20260410055040.39233-1-kwilczynski%40kernel.org?part=6
+     https://sashiko.dev/#/patchset/20260411080148.471335-1-kwilczynski%40kernel.org?part=7
+   - Dropped the unnecessary parentheses cleanup from the Alpha
+     BAR index commit, as the line is replaced two commits later
+     anyway, as per Ilpo Järvinen's feedback.
+   - Squashed the Alpha accessor macro and cleanup commits into
+     one, using pci_resource_is_mem() directly instead of the
+     intermediate pci_resource_flags() step, as per Ilpo
+     Järvinen's feedback.
+   - Moved the raw literal conversion in pci_create_legacy_files()
+     into the macro definition commit, so the macros and their
+     usage are introduced together, as per Ilpo Järvinen's
+     feedback.
+   - Removed unnecessary backslash line continuation from the
+     ternary in pci_mmap_legacy_page_range().
+   - Kept pci_resource_len() for visibility checks instead of
+     resource_assigned().  The static is_visible() callback
+     runs at device_add() time during the PCI enumeration,
+     before the pci_assign_unassigned_bus_resources() populates
+     res->parent, as such, resource_assigned() returned false
+     for every BAR, hiding all resource files.  This is related
+     to review feedback from Ilpo Järvinen.
+
+Changes in v4:
+  https://lore.kernel.org/linux-pci/20260410055040.39233-1-kwilczynski@kernel.org/
+
+   - Added new Reviewed-by tags.
+   - Added pci_resource_is_io() and pci_resource_is_mem() helpers
+     for resource type checks, replacing the open-coded bitwise
+     flag tests in pci_mmap_resource(), pci_resource_io(), and
+     Alpha's pci_mmap_resource(), as per Ilpo Järvinen's
+     suggestion.
+   - Split the __pci_mmap_fits() cleanup into two patches.  An
+     overflow fix for zero-length BARs, which now includes a
+     Fixes: tag referencing the original Alpha PCI sysfs commit,
+     and the WARN macro removal is a separate cleanup as per Ilpo
+     Järvinen's suggestion.
+   - Added a missing Fixes: tag to the Alpha lockdown check,
+     referencing the commit that added the check to the generic
+     path but missed Alpha's implementation.
+   - Added PCI_LEGACY_IO_SIZE and PCI_LEGACY_MEM_SIZE macros to
+     replace the raw literals used for legacy address space sizes.
+     These are used in both Alpha's pci_mmap_legacy_page_range()
+     and the static legacy attribute definitions, as per Ilpo
+     Järvinen's suggestion.
+   - Replaced sysfs_update_groups() in the BAR resize path with
+     sysfs_remove_groups() before the resize and sysfs_create_groups()
+     after, restoring the original teardown before BAR resize
+     ordering.  This was reported by Sashiko, see:
+     https://sashiko.dev/#/patchset/20260410055040.39233-1-kwilczynski%40kernel.org?part=7
+   - Defined pci_dev_resource_attr_groups as a NULL macro when
+     HAVE_PCI_MMAP and ARCH_GENERIC_PCI_MMAP_RESOURCE are both
+     absent, so the resize path compiles unconditionally without
+     #ifdef guards in the function body.  This was reported by
+     Sashiko, see:
+     https://sashiko.dev/#/patchset/20260410055040.39233-1-kwilczynski%40kernel.org?part=7
+   - Moved the pci_legacy_has_sparse() prototype into the patch
+     that introduces the function, alongside the existing
+     pci_adjust_legacy_attr() declaration, to fix a bisection
+     issue where Alpha would warn on -Wmissing-prototypes.
+     This was reported by Sashiko, see:
+     https://sashiko.dev/#/patchset/20260410055040.39233-1-kwilczynski%40kernel.org?part=18
+
+Changes in v3:
+  https://lore.kernel.org/linux-pci/20210910202623.2293708-1-kw@linux.com/
+
+  - Updated for modern kernel releases and expanded scope.  The
+    v2 only covered the generic resource files.  This version
+    also converts Alpha's sparse/dense resource files and the
+    legacy bus attributes, removing pci_sysfs_init() entirely.
+  - Split the single macro definition into three distinct ones
+    (per I/O, UC, and WC), to make sure that each carries only
+    the callbacks its resource type needs.
+  - Updated to use the new .bin_size callback, as the attributes
+    are const, to replace using a->size directly, which was not
+    ideal.  This required changes to pci_llseek_resource(), to
+    ensure that it would work for device and bus-level attributes.
+  - Updated the __resource_resize_store() to include CAP_SYS_ADMIN
+    capabilities check.
+  - Added the security_locked_down() check to Alpha's
+    pci_mmap_resource(), to align with other architectures.
+
+Changes in v2:
+  https://lore.kernel.org/linux-pci/20210825212255.878043-1-kw@linux.com/
+
+  - Refactored code so that the macros, helpers and internal
+    functions can be used to correctly leverage the read(),
+    write() and mmap() callbacks rather than to use the
+    .is_bin_visible() callback to set up sysfs objects
+    internals as this is not supported.
+  - Refactored some if-statements to check for a resource
+    flag first, and then call either arch_can_pci_mmap_io()
+    or arch_can_pci_mmap_wc(), plus store result of testing
+    for IORESOURCE_MEM and IORESOURCE_PREFETCH flags into
+    a boolean variable, as per Bjorn Helgaas' suggestion.
+  - Renamed pci_read_resource_io() and pci_write_resource_io()
+    callbacks so that these are not specifically tied to I/O
+    BARs read() and write() operations also as per Bjorn
+    Helgaas' suggestion.
+  - Updated style for code handling bitwise operations to
+    match the style that is preferred as per Bjorn Helgaas'
+    suggestion.
+  - Updated commit messages adding more details about the
+    implementation as requested by Bjorn Helgaas.
+
+Krzysztof Wilczyński (23):
+  PCI/sysfs: Use PCI resource accessor macros
+  PCI: Add pci_resource_is_io() and pci_resource_is_mem() helpers
+  PCI/sysfs: Only allow supported resource types in I/O and MMIO helpers
+  PCI/sysfs: Use BAR length in pci_llseek_resource() when attr->size is
+    zero
+  PCI/sysfs: Add CAP_SYS_ADMIN check to __resource_resize_store()
+  PCI/sysfs: Add static PCI resource attribute macros
+  PCI/sysfs: Convert PCI resource files to static attributes
+  PCI/sysfs: Warn about BAR resize failure in __resource_resize_store()
+  PCI/sysfs: Add stubs for pci_{create,remove}_sysfs_dev_files()
+  PCI/sysfs: Limit pci_sysfs_init() late_initcall compile scope
+  alpha/PCI: Add security_locked_down() check to pci_mmap_resource()
+  alpha/PCI: Use BAR index in sysfs attr->private instead of resource
+    pointer
+  alpha/PCI: Use PCI resource accessor macros
+  alpha/PCI: Fix __pci_mmap_fits() overflow for zero-length BARs
+  alpha/PCI: Remove WARN from __pci_mmap_fits()
+  alpha/PCI: Add static PCI resource attribute macros
+  alpha/PCI: Convert resource files to static attributes
+  PCI/sysfs: Remove pci_{create,remove}_sysfs_dev_files()
+  PCI: Add macros for legacy I/O and memory address space sizes
+  alpha/PCI: Compute legacy size in pci_mmap_legacy_page_range()
+  PCI/sysfs: Add __weak pci_legacy_has_sparse() helper
+  PCI/sysfs: Convert legacy I/O and memory attributes to static
+    definitions
+  PCI/sysfs: Remove pci_create_legacy_files() and pci_sysfs_init()
+
+ arch/alpha/include/asm/pci.h   |  13 +-
+ arch/alpha/kernel/pci-sysfs.c  | 373 +++++++++++----------
+ arch/powerpc/include/asm/pci.h |   2 -
+ drivers/pci/bus.c              |   1 -
+ drivers/pci/pci-sysfs.c        | 575 +++++++++++++++++++--------------
+ drivers/pci/pci.h              |  16 +-
+ drivers/pci/probe.c            |   6 -
+ drivers/pci/remove.c           |   3 -
+ include/linux/pci.h            |  39 ++-
+ 9 files changed, 578 insertions(+), 450 deletions(-)
+
+-- 
+2.53.0
+
