@@ -1,169 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB4653803E4;
-	Thu, 16 Apr 2026 08:55:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27442391E46;
+	Thu, 16 Apr 2026 09:21:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776329759; cv=none; b=HkmqzkC237y8LyPKIZ9CMaQtNFubvzI1X+BPUfJ+BUs6HlrxlMpVrPtgkUGMTfapXOir4Xru7dJekFjEWmA53jZMwVkIcRwnQMYVHoPPBNBlRY/eFWsjJo2FlUw5PyGYUOtEhsYGDHVUIgAPk46JlNcG8QsR4dlLuSxSHE6tisk=
+	t=1776331277; cv=none; b=RO+CzrZ+vxSKXbfl++CkGNXch7v7gWvvbBjluNY4nkdv+UD4BNoXlaGG840xG7mLGGdwi/+zzaP8yZEzwlUgGz7vP8KyjgiIWFJSHvBNpUBrWDOuY5EAKl1AWVDwFtNzwbJefwJAyzSq9Q10DiQ2wBFu5tR+1eeFs6+2U3M5tos=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776329759; c=relaxed/simple;
-	bh=qP9op7qqcS5Lukl0xY0FbOKSLZSPfuuTkBQ5FGAIXHs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eecpctI9I+2cTil7kbrNbea4202oxQSJKHcb44SGCNU5poUE+WG4fRDVQYJ5R5XMiaf94mhhAnPYTUJy+2KIbq+mXyst139gR3KRpYAgWC7C+0joLv/+eU89GcQYC5kS846Jdg6Mx09Pz0KNrlpqKe9yYh/3QwBmC9JNKc2WvwM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iJlnzjZD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776331277; c=relaxed/simple;
+	bh=RNwAGTBMpzwEr+myWRaeoZSPWXsAexs+BUjnA0eZ03I=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=IrIPHnKoKWD81GRzeOgixuW3zFPLBSU71A+UDpbUQqckOAOWIG9Z40CX1CWmNskQihSiu+BOU6fF81yZHgrF4aTUe4E/0W1NirCFn3y6ciRuTWS88nnnV4FxvmZyASYTD4FPXrnQPC8zJ459ObDwsKihlOqWa7bTTOP4Md//SVk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=qYhdb+kc; arc=none smtp.client-ip=113.46.200.225
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iJlnzjZD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE584C2BCB3;
-	Thu, 16 Apr 2026 08:55:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776329759;
-	bh=qP9op7qqcS5Lukl0xY0FbOKSLZSPfuuTkBQ5FGAIXHs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=iJlnzjZDwcviicCbIILPDAxC4Y0Mnwb5Vex/ZZdnkcTF4swx0HthKq5a/CxVUQJ5I
-	 RaWf/yMsvg2I7H+kK63WbY+o5zZt0NKR7QtexrEONzBwSOzI6xsrS6jpTYT39jbH02
-	 JAJFyv/K9BkTkJQziyfkkJJ+FhebMJ0JYH6D9GiJAJLx0OQpJOmwTMXGH3MoSGp+d2
-	 bqootzA4OtnmAGQ1OTMfP8QAFPMn4OuQ2WmuMCjZIKcbYpFs1TAUh1TPAydaBLNcIX
-	 5xr/kJUuKYS9LEiUC46WBOHJwYYsjh4h8xTtUoYnGFn89huAW56f/j+VjePkFn3Dl6
-	 dy5VRIffuc3YA==
-Date: Thu, 16 Apr 2026 14:25:39 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Herve Codina <herve.codina@bootlin.com>
-Cc: Chen-Yu Tsai <wenst@chromium.org>, 
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	Rob Herring <robh@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Jiri Slaby <jirislaby@kernel.org>, Nathan Chancellor <nathan@kernel.org>, 
-	Nicolas Schier <nicolas.schier@linux.dev>, Hans de Goede <hansg@kernel.org>, 
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Mark Pearson <mpearson-lenovo@squebb.ca>, 
-	"Derek J. Clark" <derekjohn.clark@gmail.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Bartosz Golaszewski <brgl@bgdev.pl>, 
-	Bartosz Golaszewski <brgl@kernel.org>, linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kbuild@vger.kernel.org, platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
-	linux-pm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-acpi@vger.kernel.org, 
-	Hans de Goede <johannes.goede@oss.qualcomm.com>, Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
-	Luca Ceresoli <luca.ceresoli@bootlin.com>
-Subject: Re: [PATCH v7 0/8] Add support for handling PCIe M.2 Key E
- connectors in devicetree
-Message-ID: <4yockfx5rjcvfh2n2excrgsknnhi72rv2w7wf7onks2ryt33sm@w7zkcxuc6vem>
-References: <20260326-pci-m2-e-v7-0-43324a7866e6@oss.qualcomm.com>
- <20260413075459.GA2626902@google.com>
- <fpcs4p62f35a5qyqwgm5ysa73stbysxcr62tkmmkrrcvsuf4t4@4ivukyqjey57>
- <eeytuhqpgdz4do4tgtbmfntub2femtyq7bij7svhodpyjwaylx@j3gmvq2a2zqc>
- <CAGXv+5E=tujhtZjwi6Qm7hk3Ks74UzTQHWq82NiTEw1+vYod5g@mail.gmail.com>
- <ad36pIu-0dutL7Nk@ashevche-desk.local>
- <CAGXv+5EGe59nJctLweEdZjb3MNmMvjuCHngGSfptzN985OiLdg@mail.gmail.com>
- <ad4tJN27opdEooA7@ashevche-desk.local>
- <CAGXv+5EPA29G-fsH=wWOD8AK6TZFezFhsE0NHPYj_Pt3nT+d_w@mail.gmail.com>
- <20260415165651.153b573d@bootlin.com>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="qYhdb+kc"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=Vm6GVTHIjg7srtzmpwKRJWxW+mbYdqCyts7eyl/ruek=;
+	b=qYhdb+kcJczbWaGsLeFOtykT+gMGaRbGygNdtXDrnboXqihEtNDfSzV43nDgpp2Nsoe4WuF6W
+	vK2rP4HwYDZphx1Gc3yrMEw7dVSj2bnwpqO9yFwn7X3e7sEHp3LV2h0S2VTCoN1OqQBhAwqTi5x
+	D9pEt/VLPJYO7mpGysztt0I=
+Received: from mail.maildlp.com (unknown [172.19.163.163])
+	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4fxC5X0ybJz1K99M;
+	Thu, 16 Apr 2026 17:14:56 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id CB2E94056E;
+	Thu, 16 Apr 2026 17:21:12 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 16 Apr 2026 17:21:12 +0800
+From: Chengwen Feng <fengchengwen@huawei.com>
+To: <alex@shazbot.org>, <jgg@ziepe.ca>
+CC: <wathsala.vithanage@arm.com>, <wangzhou1@hisilicon.com>,
+	<wangyushan12@huawei.com>, <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: [PATCH v2 3/5] vfio/pci: Add PCIe TPH enable/disable support
+Date: Thu, 16 Apr 2026 17:21:03 +0800
+Message-ID: <20260416092105.41439-4-fengchengwen@huawei.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20260416092105.41439-1-fengchengwen@huawei.com>
+References: <20260416092105.41439-1-fengchengwen@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260415165651.153b573d@bootlin.com>
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-On Wed, Apr 15, 2026 at 04:56:51PM +0200, Herve Codina wrote:
-> Hi Chen, all,
-> 
-> ...
->  
-> > 
-> > I'm not arguing for a even more generic "M.2" connector. The "key" is
-> > already described in the compatible. I'm saying we should have some way
-> > of describing the individual interfaces (PCIe, SDIO, USB, UART, I2S, I2C)
-> > on the connector so further nodes or properties can be attached to them,
-> > either with overlays or dynamically within the kernel. Right now the
-> > are only described as individual ports, but we can't actually tie a
-> > device to a OF graph port.
-> > 
-> > But maybe I'm overthinking the representation part. AFAICT for Qualcomm's
-> > UART-based BT bit part, Mani just had the driver create a device node
-> > under the UART (by traversing the OF graph to find the UART). If that's
-> > the desired way then the connector binding should mention it. And that
-> > works for me. But I think it's messier and also we're missing an
-> > opportunity to make the M.2 connector a standardized attachment point
-> > for overlays.
-> > 
-> > Mani, could you also chime in a bit on what you envisioned?
-> > 
-> > (Added Luca from Bootlin to CC, as I think there are parallels to the
-> >  "Hotplug of Non-discoverable Hardware" work)
-> >
-> 
-> Related to "Hotplug of Non-discoverable Hardware",
-> 
-> I would add entries for busses in the connector without using an OF graph.
-> 
+Add support to enable and disable TPH function with
+mode selection.
 
-I don't think this is a correct representation. It is non-standard to describe
-the device nodes in some other connectors. While it may work with your series in
-the future, not something I would bet-on at this point.
+Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+---
+ drivers/vfio/pci/vfio_pci_core.c | 36 ++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
-Using OF graph to link the connector nodes look like the cleaner solution to me.
-
-> For I2C and later SPI, this was is done.
-> 
-> You already have an i2c-parent property but no node where an i2c device
-> can be added.
-> 
-> The last discussion related to hotplug, connectors and DT led to the RFC
-> series [1].
-> 
-> It is a huge series. The last patch give a real example of representation:
->   https://lore.kernel.org/all/20260112142009.1006236-78-herve.codina@bootlin.com/
-> 
-> In your case I would see some thing like:
-> 
->     connector {
->         compatible = "pcie-m2-e-connector";
->         vpcie3v3-supply = <&vreg_wcn_3p3>;
->         vpcie1v8-supply = <&vreg_l15b_1p8>;
-> 
-> 	/*
-> 	 * If those GPIOs have to be used by components available in
-> 	 * the connected board, a Nexus node should be used.
->          */
->         w-disable1-gpios = <&tlmm 115 GPIO_ACTIVE_LOW>;
->         w-disable2-gpios = <&tlmm 116 GPIO_ACTIVE_LOW>;
->         viocfg-gpios = <&tlmm 117 GPIO_ACTIVE_HIGH>;
->         uart-wake-gpios = <&tlmm 118 GPIO_ACTIVE_LOW>;
->         sdio-wake-gpios = <&tlmm 119 GPIO_ACTIVE_LOW>;
->         sdio-reset-gpios = <&tlmm 120 GPIO_ACTIVE_LOW>;
-> 
-> 	conn-i2c {
-> 		i2c-parent = <&i2c0>;
-> 
-> 		/*
->  		 * Here i2c devices available on the board
-> 		 * connected to the connector can be described.
-> 		 */
-> 	};
-> 
-> 	/* Same kind to description for other busses */
-> 	conn-pcie {
-> 		pci-parent = <&xxxxx>;
-> 
-> 		/*
-> 		 * The PCIe bus has abilities to discover devices.
-> 		 * Not sure this node is needed.
-> 		 *
-> 		 * If a PCI device need a DT description to describe
-> 		 * stuffs behind the device, what has been done for LAN966x
-> 		 * could be re-used [2] and [3]
-> 		 */
-
-I don't think anyone would connect something like LAN966x to the M.2 connector.
-M.2 cards have a defined purpose, like NVMe, WLAN etc... If anyone wants to
-connect another SoC like LAN966x, they would use non-M.2 connectors.
-
-- Mani
-
+diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+index fc82ab845737..22c16662f533 100644
+--- a/drivers/vfio/pci/vfio_pci_core.c
++++ b/drivers/vfio/pci/vfio_pci_core.c
+@@ -1487,6 +1487,38 @@ static int vfio_pci_tph_get_cap(struct vfio_pci_core_device *vdev,
+ 	return 0;
+ }
+ 
++static int vfio_pci_tph_enable(struct vfio_pci_core_device *vdev,
++			      struct vfio_device_pci_tph_op *op,
++			      void __user *uarg)
++{
++	struct vfio_pci_tph_ctrl ctrl;
++	int mode;
++
++	if (op->argsz < offsetofend(struct vfio_device_pci_tph_op, ctrl))
++		return -EINVAL;
++
++	if (copy_from_user(&ctrl, uarg, sizeof(ctrl)))
++		return -EFAULT;
++
++	if (ctrl.mode != VFIO_PCI_TPH_MODE_IV &&
++	    ctrl.mode != VFIO_PCI_TPH_MODE_DS)
++		return -EINVAL;
++
++	/* Reserved must be zero */
++	if (memchr_inv(ctrl.reserved, 0, sizeof(ctrl.reserved)))
++		return -EINVAL;
++
++	mode = (ctrl.mode == VFIO_PCI_TPH_MODE_IV) ? PCI_TPH_ST_IV_MODE :
++						     PCI_TPH_ST_DS_MODE;
++	return pcie_enable_tph(vdev->pdev, mode);
++}
++
++static int vfio_pci_tph_disable(struct vfio_pci_core_device *vdev)
++{
++	pcie_disable_tph(vdev->pdev);
++	return 0;
++}
++
+ static int vfio_pci_ioctl_tph(struct vfio_pci_core_device *vdev,
+ 			      void __user *uarg)
+ {
+@@ -1503,6 +1535,10 @@ static int vfio_pci_ioctl_tph(struct vfio_pci_core_device *vdev,
+ 	switch (op.op) {
+ 	case VFIO_PCI_TPH_GET_CAP:
+ 		return vfio_pci_tph_get_cap(vdev, &op, uarg + minsz);
++	case VFIO_PCI_TPH_ENABLE:
++		return vfio_pci_tph_enable(vdev, &op, uarg + minsz);
++	case VFIO_PCI_TPH_DISABLE:
++		return vfio_pci_tph_disable(vdev);
+ 	default:
+ 		/* Other ops are not implemented yet */
+ 		return -EINVAL;
 -- 
-மணிவண்ணன் சதாசிவம்
+2.17.1
+
