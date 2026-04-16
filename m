@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E342A29D273;
-	Thu, 16 Apr 2026 18:02:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7854C191F91;
+	Thu, 16 Apr 2026 18:02:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776362544; cv=none; b=O/1xu0gKfDWrWTyrxEEAeaKo08KZGSoAJTQchQwz+h2Hsd2q/bVXlPVXhw9vR0SmazV8d6ys0nN1hbgCItqFd1Oz1i6MqLoK6sjk7JXka9R0+12gGWNponjx5WDnKcTZ/8vk4JF2xNuJA49O2pCSHjTLfpARrT8fcUzX61v50XM=
+	t=1776362547; cv=none; b=lNUwRTOv2eaH6YBlaHXa/ROmOejMyolzvDyHMRhK0LPr1oGsQehQkCTPgnYLgPTImWTnOoSF2kOqyxLIpCkKwQjmib69vDQV6K6OvyKxrZ+KlpYMtJAyjZVBku72YbvfVvaPg54Updn8FlrqgVvgqhmJSX+mEfliSDiD9lFknO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776362544; c=relaxed/simple;
-	bh=3y3q4SKWG8uBCQVxES1VtyO8TFOC6cRnNz4hWDgP87I=;
+	s=arc-20240116; t=1776362547; c=relaxed/simple;
+	bh=YEc36sAVn+9yB5XbpeaRu7DB+9I4juOmFIR6j0lP9Y4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UxmA01+WirceJ7X0N2CJMjCnYKYxrZvIxihzA1ejSUdnNZslFAP1fw8l37Z1Q7DlIHKIVpcrtKD+KRoqJPwzvBb55G35dGSVG8ILuutd7PhF3lMpzsX759YhvrgARherFOszfyEJarjs/pNp8pi+0HZbAl9/82cLM5dFFfktjTQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JZROWxYM; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=QN6PilooEE0ue1EGHh2Ai67hEVqVrwqmSTUZypHSe9vnofaf2NM6mwDGxzWVRm0IKy03nW/F6SrH6HOuoCCJp9ehevZxosyKAsNZKXnX90u6xvwHxQmLyf6VdkiS+ZRzFVZRvuMY8N4jImD75rzoZbLSLJDh6uKC+jYxiq2PWlo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nVama0fQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JZROWxYM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5E97C2BCB4;
-	Thu, 16 Apr 2026 18:02:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nVama0fQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 271F0C2BCAF;
+	Thu, 16 Apr 2026 18:02:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776362543;
-	bh=3y3q4SKWG8uBCQVxES1VtyO8TFOC6cRnNz4hWDgP87I=;
+	s=k20201202; t=1776362547;
+	bh=YEc36sAVn+9yB5XbpeaRu7DB+9I4juOmFIR6j0lP9Y4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=JZROWxYMyZnpkJ0LQfB/oZHknpvcDP9f05j4Zye6NbiSSEieB0+XAtLHztwXaLNQP
-	 zUXBh6dafQRhY1r9+qHucHSisgWRn/svKtQzC6xjKzBb6Jsa2kAR1jl3w1z1f3iZ7Z
-	 Bk7P0gGLjPJOWm/yFifbnORGr0npbqP7+2sSSgUnOT4EEPKaMOa/7AynmfHVPxLPg5
-	 1yrGSEq59p/RT7qDszGEmJEexbKvIRE6sFMZ4Bss8kyrphry6iaYnWRkdnqOEJxq7E
-	 i0ZEa4KlWRTFmL8jNDEMLXdwVB20c9lVSn55q2g5W7PFSYQ2RR2SY/m2omgxCctDqH
-	 Ru0xO0Y0zcMYQ==
+	b=nVama0fQaMsVSjG4EBfepgWG2L9Oyn29x2FbhCFLMaGXVuPCP25JrXxdoh9k3eN2d
+	 1tWrTzAr/2NhzstmTlqDAJA6fq8k3CP+ShTbzZuzoo1cKIf+im8xvA9WOHWSXLSp+8
+	 7NKfEou7XRbZAuut3C8OPRtyjDw9UCl+3q9RJ4VUBO2HIO7BaLUJmDcHD/wWjdJwgj
+	 Vjlvysp7EwdHySRg5r2aQ1ltRkjdYoLGOggaW21xh1L11CeUi12OOdAp/vqhze62rP
+	 ZdhGg7kGWpv6l2rXB5N60/4EjwXhtiHcLVSIX4Cs/R3vofyaUsFux83riKmHXaR5va
+	 LOwd6DvPQOjZA==
 From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>,
@@ -49,9 +49,9 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	linux-pci@vger.kernel.org,
 	linux-alpha@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v5 20/23] alpha/PCI: Compute legacy size in pci_mmap_legacy_page_range()
-Date: Thu, 16 Apr 2026 18:01:04 +0000
-Message-ID: <20260416180107.777065-21-kwilczynski@kernel.org>
+Subject: [PATCH v5 21/23] PCI/sysfs: Add __weak pci_legacy_has_sparse() helper
+Date: Thu, 16 Apr 2026 18:01:05 +0000
+Message-ID: <20260416180107.777065-22-kwilczynski@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260416180107.777065-1-kwilczynski@kernel.org>
 References: <20260416180107.777065-1-kwilczynski@kernel.org>
@@ -64,41 +64,85 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Currently, pci_mmap_legacy_page_range() reads the legacy resource
-size from bus->legacy_mem->size or bus->legacy_io->size.  This
-couples the mmap bounds check to the struct pci_bus fields that
-will be removed when legacy attributes are converted to static
-definitions.
+Currently, Alpha's sparse/dense legacy attribute handling is done via
+pci_adjust_legacy_attr(), which updates dynamically allocated attributes
+at runtime.  The upcoming conversion to static attributes needs a way
+to determine sparse support at visibility check time.
 
-Compute the size directly using PCI_LEGACY_MEM_SIZE (0x100000) and
-PCI_LEGACY_IO_SIZE (0xffff) macros, and shift by 5 bits for sparse
-systems.
+Add a __weak pci_legacy_has_sparse() that returns false by default.
+Alpha overrides it to check has_sparse() on the bus host controller.
 
-Tested-by: Magnus Lindholm <linmag7@gmail.com>
-Acked-by: Magnus Lindholm <linmag7@gmail.com>
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 ---
- arch/alpha/kernel/pci-sysfs.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ arch/alpha/include/asm/pci.h  | 2 ++
+ arch/alpha/kernel/pci-sysfs.c | 7 +++++++
+ drivers/pci/pci-sysfs.c       | 6 ++++++
+ drivers/pci/pci.h             | 4 ++++
+ 4 files changed, 19 insertions(+)
 
+diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
+index ef19295f2e33..95de7ffd59e8 100644
+--- a/arch/alpha/include/asm/pci.h
++++ b/arch/alpha/include/asm/pci.h
+@@ -86,6 +86,8 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ 				      enum pci_mmap_state mmap_state);
+ extern void pci_adjust_legacy_attr(struct pci_bus *bus,
+ 				   enum pci_mmap_state mmap_type);
++extern bool pci_legacy_has_sparse(struct pci_bus *bus,
++				  enum pci_mmap_state type);
+ #define HAVE_PCI_LEGACY	1
+ 
+ extern const struct attribute_group pci_dev_resource_attr_group;
 diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
-index 2e9693e5abe1..b986ff1e7a82 100644
+index b986ff1e7a82..98f81bc73660 100644
 --- a/arch/alpha/kernel/pci-sysfs.c
 +++ b/arch/alpha/kernel/pci-sysfs.c
-@@ -180,8 +180,11 @@ int pci_mmap_legacy_page_range(struct pci_bus *bus, struct vm_area_struct *vma,
- 	int sparse = has_sparse(hose, mmap_type);
- 	unsigned long res_size;
+@@ -191,6 +191,13 @@ int pci_mmap_legacy_page_range(struct pci_bus *bus, struct vm_area_struct *vma,
+ 	return hose_mmap_page_range(hose, vma, mmap_type, sparse);
+ }
  
--	res_size = (mmap_type == pci_mmap_mem) ? bus->legacy_mem->size :
--						 bus->legacy_io->size;
-+	res_size = (mmap_type == pci_mmap_mem) ? PCI_LEGACY_MEM_SIZE :
-+						 PCI_LEGACY_IO_SIZE;
-+	if (sparse)
-+		res_size <<= 5;
++bool pci_legacy_has_sparse(struct pci_bus *bus, enum pci_mmap_state type)
++{
++	struct pci_controller *hose = bus->sysdata;
 +
- 	if (!__legacy_mmap_fits(hose, vma, res_size, sparse))
- 		return -EINVAL;
++	return has_sparse(hose, type);
++}
++
+ /**
+  * pci_adjust_legacy_attr - adjustment of legacy file attributes
+  * @bus: bus to create files under
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index ad8ee192c94b..8d4ec862c326 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1019,6 +1019,12 @@ static int pci_mmap_legacy_io(struct file *filp, struct kobject *kobj,
+ 	return pci_mmap_legacy_page_range(bus, vma, pci_mmap_io);
+ }
  
++bool __weak pci_legacy_has_sparse(struct pci_bus *bus,
++				  enum pci_mmap_state type)
++{
++	return false;
++}
++
+ /**
+  * pci_adjust_legacy_attr - adjustment of legacy file attributes
+  * @b: bus to create files under
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 1bf165595583..f52caf7e4d13 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -390,6 +390,10 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
+ 
+ }
+ 
++#ifdef HAVE_PCI_LEGACY
++bool pci_legacy_has_sparse(struct pci_bus *bus, enum pci_mmap_state type);
++#endif
++
+ #ifdef CONFIG_SYSFS
+ extern const struct attribute_group *pci_dev_groups[];
+ extern const struct attribute_group *pci_dev_attr_groups[];
 -- 
 2.53.0
 
