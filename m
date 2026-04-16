@@ -1,208 +1,171 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11023131.outbound.protection.outlook.com [40.107.201.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 570BD191F91;
-	Thu, 16 Apr 2026 18:02:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776362555; cv=none; b=sPGq1/wty61TNeM79g1tlOIoPr18S+k8Auef7PgbNehoLadTbp+Zyta7q8rk1tC9w843ukNcAs7W+1PM3Rs20N1ZzR5sy7AcOdTiiwV+Z1JclxuwEDwGbKh75P15MeqAILABlKHK0eM9xa3bxtTzoLfZbgzx7xW4iiKPwq1zPdA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776362555; c=relaxed/simple;
-	bh=w2L/1BbQlnupAA1chm17jtpCQ2vcnErH2JeEEFYOqZw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Mo7fVGlpT76gKp3PxTukv5JVNVUditlPLrnP0eUD/6+jZd5uHZ6XMQriX2LsIwwKgqvy/YKhaaicTtXycIqeh/e3lDs22qmFDtR32hmedTO/lpLfTZ58cbYtHqznuoQjEOvPWtxOLptPdfLOStVpTtOq8cBJFRpgwE836c51b10=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ixR+9/lw; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCDB5334C3D;
+	Thu, 16 Apr 2026 18:49:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.131
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776365381; cv=fail; b=NsQQJTDkBIs+2r3b9C6btxXzz1q3Xei8zngPMlQ/hab7WfPCpHgat4H8YkQAZRbv20OXzhHPJaRjKypzqumKsGLh3f7Y4VzKRVnVFu1tonQY8rPweOFCJgLIkdKYT2Ru/nm80S1CthLPJoeqCvojZXseM/qpdAN6mLFxEp4EjY4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776365381; c=relaxed/simple;
+	bh=s0haecRgbsnxbZp4YD+bBWUfyc+rHX2LNsAGU/dRlfs=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=Bh+0cSUjEPyyv/wY2kb6LMul8oU1ugltFf1rlip65bPam+TLbo8R+ZbcEQpwtP6w7i5RbYipu4AQmdS5Y0pwqImZlExP9dIjNnf07kGzU6wYXEevFFAzZ6PCSaSVOSMUGtlmxJY+HcztSOKkUAo5Yo/gbpNMQL6v7HJp4w2f7b4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=microsoft.com; dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b=WW8nhs7D; arc=fail smtp.client-ip=40.107.201.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ixR+9/lw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C62BDC2BCAF;
-	Thu, 16 Apr 2026 18:02:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776362555;
-	bh=w2L/1BbQlnupAA1chm17jtpCQ2vcnErH2JeEEFYOqZw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ixR+9/lwLLH3bbp0iMVDTJIwkI2rqXIBOII0NxyC/hn6c2U/YDeUTFHAAOW5tf/O+
-	 oIkVXRXXawG2PT5i8LPuCC3/V7EuRi7fcg2ZnTqFZ0L6t/s3+ZGy/cTVBbQd9TUlnV
-	 4WoVcJlaNNyYzk1oFn5vV/Z7LpfZaksnCxir/6wIhyCzO7iLZlTcU3w2XWkpBKrQrZ
-	 Ot+Xb2kuJ38nCw8PoK7FOX0kdVMb/yXUmDJkbkQ+VtLhTaDn8GBQoty0U6DcDwT5b7
-	 d89PuG4rSTPdDtaTEeqn62fHInG08cog2fialg9Q21cjtsogFSFmyqCK8i08ssyMYp
-	 uvjWBdbXofx0w==
-From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Magnus Lindholm <linmag7@gmail.com>,
-	Matt Turner <mattst88@gmail.com>,
-	Richard Henderson <richard.henderson@linaro.org>,
-	Christophe Leroy <chleroy@kernel.org>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Dexuan Cui <decui@microsoft.com>,
-	=?UTF-8?q?Krzysztof=20Ha=C5=82asa?= <khalasa@piap.pl>,
-	Lukas Wunner <lukas@wunner.de>,
-	"Oliver O'Halloran" <oohall@gmail.com>,
-	Saurabh Singh Sengar <ssengar@microsoft.com>,
-	Shuan He <heshuan@bytedance.com>,
-	Srivatsa Bhat <srivatsabhat@microsoft.com>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	linux-pci@vger.kernel.org,
-	linux-alpha@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v5 23/23] PCI/sysfs: Remove pci_create_legacy_files() and pci_sysfs_init()
-Date: Thu, 16 Apr 2026 18:01:07 +0000
-Message-ID: <20260416180107.777065-24-kwilczynski@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260416180107.777065-1-kwilczynski@kernel.org>
-References: <20260416180107.777065-1-kwilczynski@kernel.org>
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="WW8nhs7D"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=D2FF0B7A9CvwJ8MDE+23kPjg2jgrk2MDQn66gAEobQrfX6Zaw2JKsF84+dlj5Rrq9bFwmim4dyfUu23/iyXcq1T94tQsbtd160cwDveB9Hg4Lt0JCyirP4lNrj19F/gaP9nN2BKLN1xfDrgbzKXUpgJY2KFXS+NCzMy/6hS+9oUVYVRmVP10SvqnE5rknJpOR5we0AQrqkAvXhEhINidVsomxg0+ep6qXCa1Ic79HOeeHOaYJvhIuySeb+GDJDw/fPsuYUIRE/XwlEGu2br1XlkhEg9hrvMwaCASQVWeQ7QZkDP3Y0aC+6Om5bPDcCdAlMnTGhyh/74JK4l1dBc6GQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=s0haecRgbsnxbZp4YD+bBWUfyc+rHX2LNsAGU/dRlfs=;
+ b=ChMEQk9u4LK/exDtlNwwYlzZaNj0pkr72d6qpUNr9OYo9eQGU9PL0J0Eif4bRkpoY0G4LMONdmlUO4MaHYGD3RTNSDERUaKxz+iofK/eUfqw3gUrA9xCyRPMSasGbPX+xd7eEHXYBPpvUrDHRZyrHqY2gBHO5ESbO0Fe4wGhje2+LAEIjsLuAv7pA82kI+R1HB5hSYQ75Z6XawKOoJJ/FRv7fFwgVP+P3eO2PYu4mI7Oo68R1FyBjTOijF9B48jU4WbLQgPLVCaocwuwpcDKeShgurTozo2Y4a+6YEYnJe+43sxKrqhpGKSzKcRx/i+hT5+bSOWRj+YvcPtAXm/fxw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=s0haecRgbsnxbZp4YD+bBWUfyc+rHX2LNsAGU/dRlfs=;
+ b=WW8nhs7D0pKGiDFf+cpCOg07ZYynG1xGaBf3Qu8w/E22fuCwpDZTXzZo4MVsHg9JqX0P3mm835ad72l7Pci8FB6fnWxVzqDHD5d5zfbXJ6Dx7GtGsipd8CNKKaI5GDaPnKzJBfPeJsbDBxeDvlaggCdPYWWyigmzFjWWC9+WMlc=
+Received: from SA1PR21MB6921.namprd21.prod.outlook.com (2603:10b6:806:4a7::11)
+ by SA1PR21MB6321.namprd21.prod.outlook.com (2603:10b6:806:4b0::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9818.20; Thu, 16 Apr
+ 2026 18:49:34 +0000
+Received: from SA1PR21MB6921.namprd21.prod.outlook.com
+ ([fe80::51cf:497c:e5df:f6d]) by SA1PR21MB6921.namprd21.prod.outlook.com
+ ([fe80::51cf:497c:e5df:f6d%2]) with mapi id 15.20.9818.017; Thu, 16 Apr 2026
+ 18:49:34 +0000
+From: Dexuan Cui <DECUI@microsoft.com>
+To: Michael Kelley <mhklinux@outlook.com>, KY Srinivasan <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>, "wei.liu@kernel.org"
+	<wei.liu@kernel.org>, Long Li <longli@microsoft.com>, "lpieralisi@kernel.org"
+	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+	"mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>, Jake Oshins
+	<jakeo@microsoft.com>, "linux-hyperv@vger.kernel.org"
+	<linux-hyperv@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "matthew.ruffell@canonical.com"
+	<matthew.ruffell@canonical.com>, "kjlx@templeofstupid.com"
+	<kjlx@templeofstupid.com>
+CC: Krister Johansen <johansen@templeofstupid.com>, "stable@vger.kernel.org"
+	<stable@vger.kernel.org>
+Subject: RE: [PATCH v2] PCI: hv: Allocate MMIO from above 4GB for the config
+ window
+Thread-Topic: [PATCH v2] PCI: hv: Allocate MMIO from above 4GB for the config
+ window
+Thread-Index: AQHcwvqZ7/kLR2JkdUmudlv9HY41bLXRHh0QgAOgeDCADVwxcA==
+Date: Thu, 16 Apr 2026 18:49:34 +0000
+Message-ID:
+ <SA1PR21MB692195828E5BF1698232774CBF232@SA1PR21MB6921.namprd21.prod.outlook.com>
+References: <20260402234313.2490779-1-decui@microsoft.com>
+ <SN6PR02MB415794E53D2B621F6A8BA382D45CA@SN6PR02MB4157.namprd02.prod.outlook.com>
+ <SA1PR21MB69215C164B06109C6682984EBF5BA@SA1PR21MB6921.namprd21.prod.outlook.com>
+In-Reply-To:
+ <SA1PR21MB69215C164B06109C6682984EBF5BA@SA1PR21MB6921.namprd21.prod.outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=8081b72c-a943-4099-8407-b0c722844253;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2026-04-08T06:38:12Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Tag=10,
+ 3, 0, 1;
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microsoft.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA1PR21MB6921:EE_|SA1PR21MB6321:EE_
+x-ms-office365-filtering-correlation-id: 5bf9d4c1-4935-44f4-a739-08de9be8e727
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|376014|1800799024|7416014|366016|921020|38070700021|18002099003|22082099003|56012099003;
+x-microsoft-antispam-message-info:
+ s9cotUakO/eQG+hqkFVPvsCRLgdtxmWhUHJXjhicNkfhibPuYG7dNiKyB8RIGFI/XZL7fKNAvjsi6mLoHZGq5G3+rS34ZgrRDVvrvXE2UDwiIhnJF1Eh8+Ji4gX8N1aKWvW21m5rxjY0N037YPiZ8A738l62f6I04QtR4iH4tFD+cfAp6WPVtRbnlQrt0sLE045TvsViKk3yb1qhZjwXcxoZDgkFnh9M/gLzcIzB0anlJmWxlS0XS/8ZWMpJPaObHBMUfq93mMRNIts0lS0oBdaKqJ7nMbohn6GZCcKRQuwibRg0dCyUjAkwn/jy9IobrHne+MPfN44KCJWlYQdrUG9PgcrYcYnjOx6uNJhS3Hd1Cc3JdwVj1oGyYWP2HA0sh9gry136jWNDKczx5OAL9RNxmFxQfgAfuGuqLwkkuw3bXU02ToZ9ljS0HlZWZYTm6BBaMciT1+kEGM4KSJW3ZJSmsawNHCxv5sVwXYeE6CWb4h5U84p1Dy74y9fzxtjpKU+PywbBngcxIDHkQKk66iXBwyUc86WfmTr9bMBtCuTSOgUfclXuwhPW1smL2+FGyv6E+X9xFhgqRSMmR1kCWm7kw6M+zOUHQe1UuegPZaHxuk0za29VnmR68DbmDl0H3N7MzqJ7KPHEpz6pFLDV8U9Zz+wxgVLe4MhFQVuM1vJFoKKR9qRJ01YaKQtZUkGb1v+blIYHRrsM5POTlp55CLCpbHVjUX8XQQ8M/jz7PBD6rBOk9VOUJou7VZhMTbHsXDuS3JtTDUP6J5wInIjLFA==
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR21MB6921.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(7416014)(366016)(921020)(38070700021)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?jzuFT0siUjWrcdgX9Bd2rvJm+MgMCJwKj7DU702tATV1KEbaP7++ujACh6pQ?=
+ =?us-ascii?Q?S4Dyt028Oz9v/vXavXR35ZyCHUGT1uugAJHCBgsBw829BQoHoTZsyE5KVfKT?=
+ =?us-ascii?Q?OPlYV3PM4zAbTe2GTuIsZgIMoPWBOY18vPDaPm51rCSwih/2sm5ha/q2Wiy2?=
+ =?us-ascii?Q?cz8CwqzEqtJZ9sJseysJZNLa2GjaFVqIBS5BAvx7tOqPM45QVFy/h9hXDGC5?=
+ =?us-ascii?Q?SpyAeUc2DA/AlMm0MpW7I3rcff4nNDT5maPFlxjT884memq1AYLmlz2TSI/O?=
+ =?us-ascii?Q?oJlQbRqPmP+/pck6oDj3UWrNzu8iN5bTyho0JDNwO7J2jEamBqZY+umWMkhq?=
+ =?us-ascii?Q?M0isCeOQCEFprai+Wx2BGG/BWENbUQ/v9LhEAMEHij4inknQqHgpSTds5g1Q?=
+ =?us-ascii?Q?FfExFQxloww7Mh9tKXeKVFMT1VMLx5+NBdGSR47a2ahN68BW4KWF4rWzEKGL?=
+ =?us-ascii?Q?wYSFaU0pE2abbVF9fAXrKW/RP6lb6C8juo8CmB9yIhAmzGBIhuNXyOBWrtnr?=
+ =?us-ascii?Q?CxFe32ks62NHbxM86SYfINh/tJ0ZgmFIKR/QQlPyMg9hTqnZN6Z6LUTlHgKp?=
+ =?us-ascii?Q?IwHRq0UNNOOD7vHZrvU9qdN63hENZr4mfES2y51Jlvp9VJeR3fMlTgbs4Wye?=
+ =?us-ascii?Q?IB9Jn3162T6JoPMny3Z1c1FxzA8lAQNIc9QvXXVUiKXDVhaKvXmAtES+Z5vc?=
+ =?us-ascii?Q?Sbxu8tUghElmX1mwFFmy4DI26ZTILcT+6VmM7oO+TiO8HAI+BH2mDsPO3X1G?=
+ =?us-ascii?Q?s5Dkar4WMv+TyH3TiiE58ibsp8HU7TsMyzemJcg21UdNEaL1IuYwNoxYMNSN?=
+ =?us-ascii?Q?l9uHHVGkl3bNAY99FZK4IUqJQZhLSTCVZMaW0VleoAYs9CwOw8HEJG/f5QG5?=
+ =?us-ascii?Q?UTxcNrQHhe5QLlNT2d1omZVZHjh2CvTj/CU1qB7zjgMaovtW8+l4T4EVAC4T?=
+ =?us-ascii?Q?GsEFmXeBbhhB4MBJVeamMM1f475waLwU+Dzp0ngsrAJ+UXqK/n2KVLegvm62?=
+ =?us-ascii?Q?kype1fh5XV14PAof3bzR8IbVq5rfyb+SS33Sd9PfSDm8KiLOwBWQFH032A2N?=
+ =?us-ascii?Q?knqLH8CZnmNzazPZbS1d5F84qiwtWsiLzrcddiQNJJJXSQ8KwVYoU8xkIgsi?=
+ =?us-ascii?Q?ezLaUe2Mfj6ISpmdWvXUKFQ9zh2hDo/YUUA5pMW+ofFSMolzvR9FSIbg+ty+?=
+ =?us-ascii?Q?tfgMzU2YTgnu7WiaMDj5clZ177YcFuA3rOUOsLx7mWnsL9NakD7qIiOZm+kE?=
+ =?us-ascii?Q?7Yr+Y8w4VyVsMCgLxqMOOsTBk5cpSoOFIQjomIdHJaEbm//ihA4iI8qA3ce3?=
+ =?us-ascii?Q?MWy05fpk1uuyy20tSxdEvWDMGOjFfg0nzS0XqZ+rbrCjsuhPbeibXnbzBpyh?=
+ =?us-ascii?Q?252yorKaNXfSNhsyr1rmbU+Y4lclFMrIPIHu7iFA/rD0NeHKwhC+R8bnBPiO?=
+ =?us-ascii?Q?0Y6d4zWTpB+1gIP4QGbPTj5znofp5iktK7OYiKe8OflnKCPyfkKwWa9Ia1Au?=
+ =?us-ascii?Q?Q0HeiBWYbP1VPUUVeH2t+XO+8JYi9hpp9v1kGF+yBQfg0PavKz7f7bwajic8?=
+ =?us-ascii?Q?NOMq+QMc8YHFbLOZFtHpydLKlej0pJIPj+p8qCdKq8EhPSK9JKTpWXbQmtmf?=
+ =?us-ascii?Q?WQtKyzwePvmnxomVmJDACdTh7znBQmCkq0YIetebRU8UuWMXllzZz5VEFThL?=
+ =?us-ascii?Q?piQQBHOOjjRF+knzufd1LYDu1CqqhhDmIybZpXDabcy01cQ1?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR21MB6921.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5bf9d4c1-4935-44f4-a739-08de9be8e727
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Apr 2026 18:49:34.5764
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Kh/AtsLEJsOE9Y8x/5dOIhtdW4nOph7OeM8sJwvLj++Aw9/7a6WjQp0/9ml8OT4dJD0nItBzdeE7Ke2xzAqL6Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR21MB6321
 
-Currently, pci_create_legacy_files() and pci_remove_legacy_files() are
-no-op stubs.  With legacy attributes now handled by static groups
-registered via pcibus_groups[], no call site needs them.
+> > ...
+> > This approach could be taken one step further, where vmbus_reserve_fb()
+> > *always* reserves 64 MiB starting at the low end of low MMIO space,
+> > regardless of the value of "start". The messy code for getting "start"
+> > could be dropped entirely, and the dependency on CONFIG_SYSFB goes
+> > away. Or maybe still get the value of "start" and "size", and if non-ze=
+ro
+> > just do a sanity check that they are within the fixed 64 MiB reserved a=
+rea.
 
-Remove both functions, their declarations, and the call sites in
-pci_register_host_bridge(), pci_alloc_child_bus(), and pci_remove_bus().
+My earlier reply yesterday explains why we shouldn't get rid of the
+screen.lfb_base. I'm trying to make as few assumptions as possible.
 
-Remove the pci_sysfs_init() late_initcall and sysfs_initialized.  The
-late_initcall originally existed to create all the dynamic PCI sysfs
-files, but with both resource and legacy attributes now handled by
-static groups, it is no longer needed.
+> > Thoughts? To me tweaking vmbus_reserve_fb() is a more
+> > straightforward and explicit way to do the reserving, vs. modifying
+> > the requested range in the Hyper-V PCI driver.
+>=20
+> Agreed. Let me try to make a new patch for review.
 
-Remove the legacy_io and legacy_mem fields from struct pci_bus which
-were used to track the dynamically allocated legacy attributes.
+I just posted a patch here:
+https://lwn.net/ml/linux-kernel/20260416183529.838321-1-decui%40microsoft.c=
+om/
+Please review.
 
-Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
----
- drivers/pci/pci-sysfs.c | 21 ---------------------
- drivers/pci/pci.h       |  8 --------
- drivers/pci/probe.c     |  6 ------
- drivers/pci/remove.c    |  2 --
- include/linux/pci.h     |  2 --
- 5 files changed, 39 deletions(-)
+The new patch changes the vmbus driver. With it, the previous v2 pci-hyperv=
+ patch
+ is unnecessary now.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index c81d3964cfa4..b167e32d55ac 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -37,10 +37,6 @@
- #define ARCH_PCI_DEV_GROUPS
- #endif
- 
--#ifdef HAVE_PCI_LEGACY
--static int sysfs_initialized;	/* = 0 */
--#endif
--
- /* show configuration fields */
- #define pci_config_attr(field, format_string)				\
- static ssize_t								\
-@@ -1135,8 +1131,6 @@ static const struct attribute_group pci_legacy_mem_sparse_group = {
- 	.is_bin_visible = pci_legacy_mem_sparse_is_visible,
- };
- 
--void pci_create_legacy_files(struct pci_bus *b) { }
--void pci_remove_legacy_files(struct pci_bus *b) { }
- #endif /* HAVE_PCI_LEGACY */
- 
- const struct attribute_group *pcibus_groups[] = {
-@@ -1811,21 +1805,6 @@ static const struct attribute_group pci_dev_resource_resize_attr_group = {
- 	.is_visible = resource_resize_attr_is_visible,
- };
- 
--#ifdef HAVE_PCI_LEGACY
--static int __init pci_sysfs_init(void)
--{
--	struct pci_bus *pbus = NULL;
--
--	sysfs_initialized = 1;
--
--	while ((pbus = pci_find_next_bus(pbus)))
--		pci_create_legacy_files(pbus);
--
--	return 0;
--}
--late_initcall(pci_sysfs_init);
--#endif
--
- static struct attribute *pci_dev_dev_attrs[] = {
- 	&dev_attr_boot_vga.attr,
- 	&dev_attr_serial_number.attr,
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index f52caf7e4d13..63f249d4833a 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -356,14 +356,6 @@ static inline int pci_proc_detach_bus(struct pci_bus *bus) { return 0; }
- int pci_hp_add_bridge(struct pci_dev *dev);
- bool pci_hp_spurious_link_change(struct pci_dev *pdev);
- 
--#if defined(CONFIG_SYSFS) && defined(HAVE_PCI_LEGACY)
--void pci_create_legacy_files(struct pci_bus *bus);
--void pci_remove_legacy_files(struct pci_bus *bus);
--#else
--static inline void pci_create_legacy_files(struct pci_bus *bus) { }
--static inline void pci_remove_legacy_files(struct pci_bus *bus) { }
--#endif
--
- /* Lock for read/write access to pci device and bus lists */
- extern struct rw_semaphore pci_bus_sem;
- extern struct mutex pci_slot_mutex;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index bccc7a4bdd79..94c52bf3a65c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1068,9 +1068,6 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
- 			dev_err(&bus->dev, "failed to add bus: %d\n", err);
- 	}
- 
--	/* Create legacy_io and legacy_mem files for this bus */
--	pci_create_legacy_files(bus);
--
- 	if (parent)
- 		dev_info(parent, "PCI host bridge to bus %s\n", name);
- 	else
-@@ -1276,9 +1273,6 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 			dev_err(&child->dev, "failed to add bus: %d\n", ret);
- 	}
- 
--	/* Create legacy_io and legacy_mem files for this bus */
--	pci_create_legacy_files(child);
--
- 	return child;
- }
- 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 6e796dbc5b29..d8bffa21498a 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -65,8 +65,6 @@ void pci_remove_bus(struct pci_bus *bus)
- 	list_del(&bus->node);
- 	pci_bus_release_busn_res(bus);
- 	up_write(&pci_bus_sem);
--	pci_remove_legacy_files(bus);
--
- 	if (bus->ops->remove_bus)
- 		bus->ops->remove_bus(bus);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6b630bac8c08..1859c0bf4e35 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -724,8 +724,6 @@ struct pci_bus {
- 	pci_bus_flags_t bus_flags;	/* Inherited by child buses */
- 	struct device		*bridge;
- 	struct device		dev;
--	struct bin_attribute	*legacy_io;	/* Legacy I/O for this bus */
--	struct bin_attribute	*legacy_mem;	/* Legacy mem */
- 	unsigned int		is_added:1;
- 	unsigned int		unsafe_warn:1;	/* warned about RW1C config write */
- 	unsigned int		flit_mode:1;	/* Link in Flit mode */
--- 
-2.53.0
-
+Thanks,
+-- Dexuan
