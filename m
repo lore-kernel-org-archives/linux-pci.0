@@ -1,118 +1,102 @@
-Received: from mail-m49209.qiye.163.com (mail-m49209.qiye.163.com [45.254.49.209])
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29CAA37F00D;
-	Thu, 16 Apr 2026 07:12:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.209
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DB5F2701BB;
+	Thu, 16 Apr 2026 08:02:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776323566; cv=none; b=EPMZhZni/ugRNMf2uGwjKMKhz7ZDEbAXlaoXMrq9k4iUnOijq09QbZD6/0Xbvtt4Ly0djrhe1QgSDJ4kLKdNF6P79vmHAHYg+iHM0dF2WlLHuc1CFG0FTVgd7JII9oWNiTO2i8pHsPa/Qa/owsq1zxhH5vPc6rPa0EwCtrCa+fY=
+	t=1776326538; cv=none; b=WrgEHwyLKpECOvS+YdZVfEKP82O/yLo7aSFBKf+kEeyJYZrLZhEbGgTIs6EO2+n8XsiZ31TRvoyZejP9SYTmWXtpizvivQ9wJWzPRld8KjCJvTlOA+CVJUZxcvR4nsJleCOZRrv8rCnYy08SNQ7UQLsMy/kzCK6F/0hqqxq9/bA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776323566; c=relaxed/simple;
-	bh=DGoUtmfUyJA820hOjw4yi3q4y8EGWylhVe7SKv4s89k=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=El4ZAh96iquWjFFuYgriOypVYl3inc0FtvrAy/zzZk7zZIxkOhbaOAWlN2rKL9ZGYOR6eDltoDi93rYw5W0iN5PzwRlobF/eIdu4xKscYKxkjQNSfbRbJjnMUrwNt2UnMeiW6ChO9SooX7CAtyagHpOYQzOcGFqxwLUhTpwxN2g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ucloud.cn; spf=pass smtp.mailfrom=ucloud.cn; dkim=pass (1024-bit key) header.d=ucloud.cn header.i=@ucloud.cn header.b=SKBOGdYW; arc=none smtp.client-ip=45.254.49.209
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ucloud.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ucloud.cn
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ucloud.cn header.i=@ucloud.cn header.b="SKBOGdYW"
-Received: from yuangap.. (unknown [106.75.220.2])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 18fc72fa3;
-	Thu, 16 Apr 2026 15:07:26 +0800 (GMT+08:00)
-From: "yuan.gao" <yuan.gao@ucloud.cn>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: "yuan.gao" <yuan.gao@ucloud.cn>
-Subject: [PATCH] PCI: Avoid FLR for NVIDIA 5090 GPU
-Date: Thu, 16 Apr 2026 15:07:06 +0800
-Message-Id: <20260416070707.3242381-1-yuan.gao@ucloud.cn>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1776326538; c=relaxed/simple;
+	bh=++J7X9OapmreZjjVgTluDHOIiqGwv5jdF1pv0ir3leY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=DhVn/LAAg7taojIfs2+9W3RDX1ch/oOAPDZsrL9NflCnTOdYhWhHZnGM6sPV75c1hoPpUW+KqQyxlhxAFOi1jQKbeE/Fm3xGO9DcqXNA2cbhFRNpMANu73IX02A4nBs1ERY/G9tu2FouiKJ0DdNXci60APL4hlF193fnfbYiwHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
+Received: from [192.168.2.229] (p5b13a2d1.dip0.t-ipconnect.de [91.19.162.209])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: pmenzel)
+	by mx.molgen.mpg.de (Postfix) with ESMTPSA id C82174C2C37F01;
+	Thu, 16 Apr 2026 10:02:00 +0200 (CEST)
+Message-ID: <8ae5fb2c-7066-4a1b-9798-020ea3290df8@molgen.mpg.de>
+Date: Thu, 16 Apr 2026 10:02:00 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1] Bluetooth: btintel_pcie: Fix build error when
+ CONFIG_ACPI is disabled
+To: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+Cc: linux-bluetooth@vger.kernel.org, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, ravishankar.srivatsa@intel.com,
+ chethan.tumkur.narayan@intel.com, kernel test robot <lkp@intel.com>
+References: <20260416060352.1392139-1-chandrashekar.devegowda@intel.com>
+Content-Language: en-US
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20260416060352.1392139-1-chandrashekar.devegowda@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9d951dba860229kunm87b7e6a7dff59
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFJQjdXWS1ZQUlXWQ8JGhUIEh9ZQVlDTElMVkIdH0lMSx5CQxlKHVYVFAkWGhdVGRETFh
-	oSFyQUDg9ZV1kYEgtZQVlKS01VTE5VSUlLVUlZV1kWGg8SFR0UWUFZT0tIVUpLSEtKSE1VSktLVU
-	tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=SKBOGdYWTW2GqidaVwTyFFLXpmLMm0Rlr2hYPFhLYJNEV0Kz7eOK5FPeC0xM9pwJabXJVBtzT4lO503LySi2Zix+R5wRA1YkMVcGNpRJVU2jWcg3rjYgv9N9ob81yXrAcaMahrQ/m7eiqe6XnaK1YxZeulQ4WawIOK0/DAsXVps=; c=relaxed/relaxed; s=default; d=ucloud.cn; v=1;
-	bh=sNStje91iAC4EO4tWOP9oKrQHdpAKriZjxYmfZ0ZIKE=;
-	h=date:mime-version:subject:message-id:from;
 
-When passing through the NVIDIA 5090 GPU to a vm, there is a certain
-probability of encountering an flr timeout during vm shutdown, which
-subsequently leads to a soft lock of the host cpu.
+Dear Chandrashekar,
 
-As described in this post
-(https://forum.level1techs.com/t/do-your-rtx-5090-or-general-rtx-50-series-has-reset-bug-in-vm-passthrough/228549).
 
-And in dmesg:
+Am 16.04.26 um 08:03 schrieb Chandrashekar Devegowda:
+> btintel_pcie_acpi_reset_method() uses ACPI APIs such as
+> acpi_evaluate_object() and acpi_has_method() which are not available
+> when CONFIG_ACPI is disabled, causing build errors on architectures
+> like ppc64le that lack ACPI support.
+> 
+> Guard btintel_pcie_acpi_reset_method() with IS_ENABLED(CONFIG_ACPI)
+> and provide a stub returning -ENODEV when ACPI is not enabled.
+> 
+> Fixes: 912a499a7955 ("Bluetooth: btintel_pcie: Support Product level reset")
+> Reported-by: kernel test robot <lkp@intel.com>
+> Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+> ---
+>   drivers/bluetooth/btintel_pcie.c | 7 +++++++
+>   1 file changed, 7 insertions(+)
+> 
+> diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
+> index 076beb45c410..4d136ff342b8 100644
+> --- a/drivers/bluetooth/btintel_pcie.c
+> +++ b/drivers/bluetooth/btintel_pcie.c
+> @@ -2280,6 +2280,7 @@ static void btintel_pcie_inc_recovery_count(struct pci_dev *pdev,
+>   static int btintel_pcie_setup_hdev(struct btintel_pcie_data *data);
+>   static void btintel_pcie_reset(struct hci_dev *hdev);
+>   
+> +#if IS_ENABLED(CONFIG_ACPI)
+>   static int btintel_pcie_acpi_reset_method(struct btintel_pcie_data *data)
+>   {
+>   	union acpi_object *obj, argv4;
+> @@ -2333,6 +2334,12 @@ static int btintel_pcie_acpi_reset_method(struct btintel_pcie_data *data)
+>   	pci_dev_unlock(data->pdev);
+>   	return ret;
+>   }
+> +#else
+> +static int btintel_pcie_acpi_reset_method(struct btintel_pcie_data *data)
+> +{
+> +	return -ENODEV;
+> +}
+> +#endif
 
- [401106.011979] vfio-pci 0000:d8:00.0: not ready 1023ms after FLR; waiting
- [401108.700074] vfio-pci 0000:d8:00.0: not ready 2047ms after FLR; waiting
- [401112.412204] vfio-pci 0000:d8:00.0: not ready 4095ms after FLR; waiting
- [401118.620399] vfio-pci 0000:d8:00.0: not ready 8191ms after FLR; waiting
- [401128.860788] vfio-pci 0000:d8:00.0: not ready 16383ms after FLR; waiting
- [401147.293518] vfio-pci 0000:d8:00.0: not ready 32767ms after FLR; waiting
- [401185.694859] vfio-pci 0000:d8:00.0: not ready 65535ms after FLR; giving up
- [401195.372583] vfio-pci 0000:38:00.2: Relaying device request to user (#0)
+Please look into using something similar like the macro `PTR_IF()`, 
+defined in `include/linux/util_macros.h`. It’s returning NULL, so not 
+applicable here, but all the code needs to be build tested.
 
- [401208.274941] watchdog: BUG: soft lockup - CPU#11 stuck for 21s! [CPU 22/KVM:30337]
+Also, if ACPI is not enabled, does it make sense to call 
+`btintel_pcie_perform_pldr()` at all?
 
- [401209.887848] CPU: 11 PID: 30337 Comm: CPU 22/KVM Kdump: loaded Not tainted
- [401209.887854] RIP: 0010:pci_mmcfg_read+0xaa/0xd0
+>   
+>   static void btintel_pcie_perform_pldr(struct btintel_pcie_data *data)
+>   {
 
- [401209.887866] Call Trace:
- [401209.887872]  pci_bus_read_config_dword+0x43/0x70
- [401209.b887876]  pci_find_next_ext_capability.part.20+0x65/0xc0
- [401209.887879]  pci_restore_state.part.39+0x6d/0x3f0
- [401209.887883]  vfio_pci_disable+0x22b/0x4d0 [vfio_pci]
- [401209.887886]  ? __dentry_kill+0x118/0x160
- [401209.887888]  vfio_pci_release+0x5a/0xb0 [vfio_pci]
- [401209.887891]  vfio_device_fops_release+0x18/0x30 [vfio]
- [401209.887894]  __fput+0x98/0x240
- [401209.887897]  task_work_run+0x6a/0xa0
- [401209.887899]  do_exit+0x375/0xb10
- [401209.887900]  do_group_exit+0x3a/0xa0
- [401209.887902]  get_signal+0x140/0x7d0
- [401209.887906]  arch_do_signal+0x2c/0x260
- [401209.887909]  exit_to_user_mode_prepare+0xc0/0x120
- [401209.887912]  syscall_exit_to_user_mode+0x27/0x180
- [401209.887915]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
 
-The flr seems to have some issues on the NVIDIA 5090 GPU,
-so I’ve added flr-related quirks for these devices.
+Kind regards,
 
-And with this patch in place, the host kernel doesn't exhibit these
-problems. The vm starts up and works as expected with the passed-through
-NVIDIA 5090 GPU.
-
-Signed-off-by: yuan.gao <yuan.gao@ucloud.cn>
----
- drivers/pci/quirks.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 48946cca4be72..71f833f3e2d84 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5618,6 +5618,9 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x7901, quirk_no_flr);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x0616, quirk_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x2b85, quirk_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x2b87, quirk_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x2b8c, quirk_no_flr);
- 
- /* FLR may cause the SolidRun SNET DPU (rev 0x1) to hang */
- static void quirk_no_flr_snet(struct pci_dev *dev)
--- 
-2.32.0
-
+Paul
