@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 139941514F8;
-	Thu, 16 Apr 2026 18:01:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89B9B1514F8;
+	Thu, 16 Apr 2026 18:01:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776362511; cv=none; b=dOxDcNCBUu1Nitvtsihfl02fzRPmPe1b3m913OnEMy9RuCApaYscNooEBCGaFFQYJMFJ5+pHscZq3/rR95saLtOPpU1VEyFLbIN4Og5M4dPIP1cQb/63OAqsw99k8qEuju48BkAh2PpvSsDt8wMtTzAnjaM9ycwyXztxQZeYQYI=
+	t=1776362514; cv=none; b=BSXDH9S4VEmFUwEr2RyfdQzI3CjirwNDqOxgLH9uI/vStfETL6D/5+ViqwosXzkqGuQWjtg4W+wl/JV6ocVmP0nwWE7raZhNEeaaMuzP5uSVmMYrFX43jD5awRzNb5viho4sX3NYGOJp9CcFmgWRa62FOcxXgC3HqW6nf7LUtTs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776362511; c=relaxed/simple;
-	bh=ynGnSMSFqOAAKmLZRmEyMAZNgYryMwxIuUv1xLlXFbQ=;
+	s=arc-20240116; t=1776362514; c=relaxed/simple;
+	bh=LSXfSjgBz15fSxwbvqqVboBWJc4CbgupbkaWY3yx6kA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KU+Awr81BNddTj6isSnva2vUNMmzCWGRwTxCyxiFdp9Ex1sRZ0X4ih3SXql+ozXXKjT5TE35+2tqWWoIB6C57Jku8eBdl6VzBO3Wl2nnVDKVXM8xGeNnCloD+SUeNxfSMsRy4LmRXVVaMp1Ygg0HwcsWFfWGjY8oziMNLNBFmP8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vRS/mQhV; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=JirkxSEBoU7C9pmrp2TXYpPnS6LNqs7958IS+nWbXGev7t2koaWR9i0KLl8fI7qvvC3wn4ArdTvlObEtwUUXU7PCnaqZM6+rBg3K0tL7MnDwoJWwvfLL1AzfwCET+yosMJp1rXwQrsRV9Ik7CK1O8kHcBI6WTiuJtbkZejIr7lo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OiGTWIqp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vRS/mQhV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A12AC2BCAF;
-	Thu, 16 Apr 2026 18:01:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OiGTWIqp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17CB5C2BCB5;
+	Thu, 16 Apr 2026 18:01:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776362510;
-	bh=ynGnSMSFqOAAKmLZRmEyMAZNgYryMwxIuUv1xLlXFbQ=;
+	s=k20201202; t=1776362514;
+	bh=LSXfSjgBz15fSxwbvqqVboBWJc4CbgupbkaWY3yx6kA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=vRS/mQhVt4v6pbbwRuRp+3xi/wnp2uYmhsRaYhN4EMQyiIPjz7f1U8eTl4xhkqjt8
-	 KlF2dtVGTSMrztvuWx0t2NhJD1N+THTMSRMwESPQTtgxODKTWrX9qkhuagqpgZRfoW
-	 mwXSliJWA6X0ArMLDMA5p0wCcCMaD9AAbOcf6VTtJeGoK+ZqgKVW3zsRzn0Y3Y4WzF
-	 DePodAHWOLMKDqCW/IiMI8SyvahzGh0dDt53HjVpwwPjTar4AGqmXLEXJBacNyvymd
-	 pppmWG9/19Earg7BHtBunVuN50FU/lXGZs2wXdyTbtWC6FFDhXoVWJu2QaXheZXKZZ
-	 2YVPFFVbfCD/Q==
+	b=OiGTWIqpmv4YGnWuufZIAg9U6Mv3LXjBtSjahu2SURo0/CKF7KTFO1fzqBRV1muaM
+	 WEm/ZZZDlGzSivb66L9p0h/cU4SVd/le0juBJhskNSGPxhe7yLWQTdweFqSuajcIl1
+	 HDwLhSOXK2CJsAyMYvb+X9CJ5yzMLkUt7dPmhE9um67LS2KOffaArsYp+cFLt1t0h6
+	 Sn26D9YUYUOpOfxmuQp4YoobCYPeJIl6Iq3LUvUVy8cwVk4NHSFpgbWLU6PnCwfHcX
+	 qsW6tiii16rqzpUz8zXPbxC73G7J56SDc76vcM3JK/loOeeD5qgpMTl7ixb7PjcUSr
+	 d36CWK6ktDTKg==
 From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>,
@@ -49,9 +49,9 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	linux-pci@vger.kernel.org,
 	linux-alpha@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v5 11/23] alpha/PCI: Add security_locked_down() check to pci_mmap_resource()
-Date: Thu, 16 Apr 2026 18:00:55 +0000
-Message-ID: <20260416180107.777065-12-kwilczynski@kernel.org>
+Subject: [PATCH v5 12/23] alpha/PCI: Use BAR index in sysfs attr->private instead of resource pointer
+Date: Thu, 16 Apr 2026 18:00:56 +0000
+Message-ID: <20260416180107.777065-13-kwilczynski@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260416180107.777065-1-kwilczynski@kernel.org>
 References: <20260416180107.777065-1-kwilczynski@kernel.org>
@@ -64,50 +64,68 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Currently, Alpha's pci_mmap_resource() does not check
-security_locked_down(LOCKDOWN_PCI_ACCESS) before allowing
-userspace to mmap PCI BARs.
+Currently, Alpha's pci_create_one_attr() stores a resource pointer in
+attr->private, and pci_mmap_resource() loops through all BARs to find
+the matching index.
 
-The generic version has had this check since commit eb627e17727e
-("PCI: Lock down BAR access when the kernel is locked down") to
-prevent DMA attacks when the kernel is locked down.
+Thus, store the BAR index directly in attr->private and retrieve the
+resource via pci_resource_n().  This eliminates the loop and aligns
+with the convention used by the generic PCI sysfs code.
 
-Add the same check to Alpha's pci_mmap_resource().
+The PCI core change was first added in the commit dca40b186b75 ("PCI:
+Use BAR index in sysfs attr->private instead of resource pointer").
 
-Fixes: eb627e17727e ("PCI: Lock down BAR access when the kernel is locked down")
 Tested-by: Magnus Lindholm <linmag7@gmail.com>
 Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 Acked-by: Magnus Lindholm <linmag7@gmail.com>
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 ---
- arch/alpha/kernel/pci-sysfs.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ arch/alpha/kernel/pci-sysfs.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
 
 diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
-index 3048758304b5..2324720c3e83 100644
+index 2324720c3e83..2330ab84d59c 100644
 --- a/arch/alpha/kernel/pci-sysfs.c
 +++ b/arch/alpha/kernel/pci-sysfs.c
-@@ -11,6 +11,7 @@
-  */
- 
- #include <linux/sched.h>
-+#include <linux/security.h>
- #include <linux/stat.h>
- #include <linux/slab.h>
- #include <linux/pci.h>
-@@ -71,7 +72,11 @@ static int pci_mmap_resource(struct kobject *kobj,
- 	struct resource *res = attr->private;
+@@ -69,25 +69,20 @@ static int pci_mmap_resource(struct kobject *kobj,
+ 			     struct vm_area_struct *vma, int sparse)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+-	struct resource *res = attr->private;
++	int barno = (unsigned long)attr->private;
++	struct resource *res = pci_resource_n(pdev, barno);
  	enum pci_mmap_state mmap_type;
  	struct pci_bus_region bar;
--	int i;
-+	int i, ret;
-+
-+	ret = security_locked_down(LOCKDOWN_PCI_ACCESS);
-+	if (ret)
-+		return ret;
+-	int i, ret;
++	int ret;
  
- 	for (i = 0; i < PCI_STD_NUM_BARS; i++)
- 		if (res == &pdev->resource[i])
+ 	ret = security_locked_down(LOCKDOWN_PCI_ACCESS);
+ 	if (ret)
+ 		return ret;
+ 
+-	for (i = 0; i < PCI_STD_NUM_BARS; i++)
+-		if (res == &pdev->resource[i])
+-			break;
+-	if (i >= PCI_STD_NUM_BARS)
+-		return -ENODEV;
+-
+ 	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
+ 		return -EINVAL;
+ 
+-	if (!__pci_mmap_fits(pdev, i, vma, sparse))
++	if (!__pci_mmap_fits(pdev, barno, vma, sparse))
+ 		return -EINVAL;
+ 
+ 	pcibios_resource_to_bus(pdev->bus, &bar, res);
+@@ -170,7 +165,7 @@ static int pci_create_one_attr(struct pci_dev *pdev, int num, char *name,
+ 	res_attr->attr.name = name;
+ 	res_attr->attr.mode = S_IRUSR | S_IWUSR;
+ 	res_attr->size = sparse ? size << 5 : size;
+-	res_attr->private = &pdev->resource[num];
++	res_attr->private = (void *)(unsigned long)num;
+ 	return sysfs_create_bin_file(&pdev->dev.kobj, res_attr);
+ }
+ 
 -- 
 2.53.0
 
