@@ -1,68 +1,68 @@
-Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012021.outbound.protection.outlook.com [52.101.48.21])
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010058.outbound.protection.outlook.com [52.101.193.58])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6239138C41F;
-	Thu, 16 Apr 2026 23:29:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5CF13A1696;
+	Thu, 16 Apr 2026 23:29:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.58
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776382181; cv=fail; b=RUdxZK0b/nYCk7JEJ1Yu9LkHMTcpoZzdBeym1IHDDRqygyYDw+X+Qx1+CFHZZUdmW8K6mv/SejGUdiAwWQ4rF/sOG0UEwOOKKocLfiERauujMMadyIc3CM5XGtStleplkAkd8tFoag6RruJ1Jsn7x+rfaTHR9AH0uKVOcUKCuOU=
+	t=1776382183; cv=fail; b=AZOlcwzWYHfZ5YA0r5VKV2AHD8oqTN9ID4Uv9ZfjbM+W6SQTwrOdTLwaTw1YLJ7S8v5EzzsJVhoPq9Oqg43E+XR+n5eT5ahMaKJJ3C25bgXZos3mUZTyMHvJsJOW21q1n5h4fE63x+/Y55sdXDYw3SP276FJ9tVEQap77B2HX6U=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776382181; c=relaxed/simple;
-	bh=jUwfMKzpHFliSmOjFFsW2ogIgLg2/lw1wDm9VR6LACo=;
+	s=arc-20240116; t=1776382183; c=relaxed/simple;
+	bh=fACbtkdCSgfnooGjGBCwZnes0C+wGyrC0KOX8hiZFk8=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AQL08mVNG0JDK7B2dpOwWKLQMJo0muIhUpWjBndbz2nz7u1dkKMMk3GX76CzCwd7r5Zorx4O7x642r5r2JSsBB5PY9OEIYFuzjxY7N5CH15BKagfsJUpMNAA4ZgWKYeuFJOro2xigPkLQTMnZDaPE7XTq8Tn++jN/VNLb2AJdsc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=tZgIEqis; arc=fail smtp.client-ip=52.101.48.21
+	 MIME-Version:Content-Type; b=AwUrIe1SXTsXwnpQFgN6zgs5e/YTho2wbpxWYQsNwQGjlMCLsnezSeGi622XBst/i0oYyueT91jrA30wGTX1NLrHVfThqzu/zKI24aHAuG5aVWnTiEhhC3Yqtu/LI9KwWngPgvBc3BeJHR3jMBqaJxyRcicEQjCJt9xmEMET4xE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=hnsM1dNs; arc=fail smtp.client-ip=52.101.193.58
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="tZgIEqis"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="hnsM1dNs"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=qq/U6Mi4ywIsiU/rWhmdSqMLV735vSpm9dNorsdZNmn4Q/T0esUcdYJWqkFFIYbFSYR+gCVdC3DXOeWRkqlnMMMdgALSwFsA6PZXGhQgsEbm3+Nu/PuKWU1c7fb9lfWxHwMz11i5k3ya/zuou2moPAG+RMwVqZhhX4nBlNQsOMVu86JvuXClFf+TGS6oiMvKHjyLsrM+2r525zYsV1SB3z4Ai/Itbos801P/4mud7AVaRIyosyKoCsoutiUXxDTRRcADBoXz1CunDfo8j3vwyZUK/HM5KzBtJg+sbpPgJ75hRuUOq6Aq8ItMh2f618UsDiFhj7lUFHUFmFhVZcSmdA==
+ b=fsa+xu4BeqgcxG+71f3PH4RpjeZqmaJG5CguJCbhPo1nSiERuWpX12iOhhm5pOtPqMbRIAu9aco/ipWxZi6DIwsUDpNFfreo7ruf+800Fh7HtqQcjonwSGE4phHHPRepsLz0waiDNQUnMETycgrFtnvZvsxWuTTyLexEtlv804gpYo7uLV2uhk3QwqKy03OJUTX4dw70DvyiWB/KxSlQQ6MZlWDVULWypQ2Nq5fr6i2A0viQ5cyEqsY5QtqO5d0qIsuPHFFZiSKXBsRUhJ7b1SgFvK86EA21Wyytc/nDJo2RXvXBfnbpigutueD5WePhwBLMnTzrk+H+7bHXGLbvuQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=CcDnQBtV4VSwFPkSDwK7rACLhmfoGxP1/Q82L8zAcOM=;
- b=h45W99vsQqOayIXEPj8XrUBWj/H5X2T6rJ8b+HpMgPsHA07qtIZBHraeH3xGSi1SrZipNM2IPK6oQ8j0U3W+U7KDLsbjqnVbWGj0EzK99bHrakcrF7UQiWgWHPcZeFOlpUFtXYJLBWDTnway7OfFc8BscUoTnDkDxhk6WnjS3SkBTkGfxcKO/53fG3X6uCDd2V4PwPcbhTNSNnq2DXxk7wScMZU0Tu1PnP+WRtpxRQjeRzz7CQG+/J64AwTxqO432efpwtmeI+1Xo/1xcSWL8jMIHyxBC/PNzkaVc3o6o+3RpUaaAeeD/NNf/QSG9oy1c+LDrlDIQdULA3YduNlzIw==
+ bh=cB8bN0zJMDTblGL66bdwTjTFEs7xuo2jBrOt2TU5/n0=;
+ b=krZJG/N649ldQ8lDW/bOo7jwXumVzqBDJ+8Rndw7yd/HQJIyvBhITx3G44xRSe++EpbcIWwg36zlw2FPuFtEWS+5o5P7c483/eDFC2qiQdSjD6TNFsAqkcal61IFLz+rtUa0Vd47CeN1blCNxSDCqkBRNYg2WUOB/W0xP2kaym9zwzx+sQBd6LeBX6G/aUY0GpJZ287GgLy2xzoUfxloQf77hXYi/B4Y/eW3WJCpwH+exspKJFm1073BPPiJAY3AfaqpkrsSuLQHjPFnYuBraQ6RklU4AZ13F8dM+PAOfzD+ZWLWOyqawr/uAG4nWdL3PWPy/hef7pEdSc5j6qRh1A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
+ 216.228.117.160) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CcDnQBtV4VSwFPkSDwK7rACLhmfoGxP1/Q82L8zAcOM=;
- b=tZgIEqisjbXUI/QJAj6gGbInNMx7A6rVWkI2mHp/38gNy3qnKZdKUL+725RCLDJjL403g/VYy140OI6R9+hXZ3YVqB5VLS2zc/xMkTxJaIqJy5Ve91t/47Waf4Z93aavN+yGBb9HBF/XUwzkQJJ3VKF1y5o+v/hhWbspH0Wy5Y8twWYsdSqgl16FSUtxU7B7fnXISfV1O6iIWk+a5pgFu6fr5kwEu6623HTyimMOLk/rl+x1rINWy4D8yAdXirkg5rqHfW5CRSVp3PA9wAntHki0/2bHXnbRHdQZ6TZ6+Ejz0yLA0zKmIhdsbUWfrOWkNAjq+Pmyds0SRg95R1UMCg==
-Received: from BY5PR17CA0054.namprd17.prod.outlook.com (2603:10b6:a03:167::31)
- by CY5PR12MB6406.namprd12.prod.outlook.com (2603:10b6:930:3d::18) with
+ bh=cB8bN0zJMDTblGL66bdwTjTFEs7xuo2jBrOt2TU5/n0=;
+ b=hnsM1dNs19/9frUJ8VpAhuMzyQcpOxNiwSMm5y5V/JdMqqN5OJQUYUtSOz4K/QLCYizKcAvjPsagS94iYj+tCJ2z5JLqsrvjuoDGz74gp7TgAqaQ5qR3DtoiAfQrqVnzOY0U430FYKl6WPfc1RByVmQw5hZ8pN4wH4zVXPGr8HiknczuAlaEn6eBt/C1koUqPlFqSaEfY0UySsOPOL3FBvu12X5mHYYiQpnqKKE4EsqHh9rzRCza8O/it+mH2P9AXLp6xyGYcb8Y+pcJEeXd3c4gxqqCUBOu0k3wIP/mlRHTuAgY//x18FgDMOsqvtdroAswmszDUvSxIjvsr7CSuQ==
+Received: from SJ2PR07CA0022.namprd07.prod.outlook.com (2603:10b6:a03:505::24)
+ by IA0PPF6E99B1BC1.namprd12.prod.outlook.com (2603:10b6:20f:fc04::bd1) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9818.20; Thu, 16 Apr
- 2026 23:29:31 +0000
-Received: from CO1PEPF00012E83.namprd03.prod.outlook.com
- (2603:10b6:a03:167:cafe::dc) by BY5PR17CA0054.outlook.office365.com
- (2603:10b6:a03:167::31) with Microsoft SMTP Server (version=TLS1_3,
+ 2026 23:29:37 +0000
+Received: from SJ1PEPF00002315.namprd03.prod.outlook.com
+ (2603:10b6:a03:505:cafe::fd) by SJ2PR07CA0022.outlook.office365.com
+ (2603:10b6:a03:505::24) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.20.9769.52 via Frontend Transport; Thu,
- 16 Apr 2026 23:29:31 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
+ 16 Apr 2026 23:29:36 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- CO1PEPF00012E83.mail.protection.outlook.com (10.167.249.58) with Microsoft
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ SJ1PEPF00002315.mail.protection.outlook.com (10.167.242.169) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9769.17 via Frontend Transport; Thu, 16 Apr 2026 23:29:31 +0000
+ 15.20.9769.17 via Frontend Transport; Thu, 16 Apr 2026 23:29:36 +0000
 Received: from rnnvmail202.nvidia.com (10.129.68.7) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 16 Apr
- 2026 16:29:12 -0700
+ 2026 16:29:16 -0700
 Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail202.nvidia.com
  (10.129.68.7) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 16 Apr
- 2026 16:29:11 -0700
+ 2026 16:29:15 -0700
 Received: from Asurada-Nvidia.nvidia.com (10.127.8.11) by mail.nvidia.com
  (10.129.68.9) with Microsoft SMTP Server id 15.2.2562.20 via Frontend
- Transport; Thu, 16 Apr 2026 16:29:08 -0700
+ Transport; Thu, 16 Apr 2026 16:29:12 -0700
 From: Nicolin Chen <nicolinc@nvidia.com>
 To: Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>, "Joerg
  Roedel" <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>, "Jason
@@ -74,9 +74,9 @@ CC: "Rafael J . Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
 	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
 	<linux-pci@vger.kernel.org>, <vsethi@nvidia.com>, Shuai Xue
 	<xueshuai@linux.alibaba.com>
-Subject: [PATCH v3 06/11] iommu: Defer __iommu_group_free_device() to be outside group->mutex
-Date: Thu, 16 Apr 2026 16:28:35 -0700
-Message-ID: <3f5d229267d1f4d918641bc5b896f54b5c4b7782.1776381841.git.nicolinc@nvidia.com>
+Subject: [PATCH v3 07/11] iommu: Add iommu_report_device_broken() to quarantine a broken device
+Date: Thu, 16 Apr 2026 16:28:36 -0700
+Message-ID: <ca5ae5e05074f4dc9cd18e0ae06a9daac60a60f8.1776381841.git.nicolinc@nvidia.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1776381841.git.nicolinc@nvidia.com>
 References: <cover.1776381841.git.nicolinc@nvidia.com>
@@ -91,144 +91,228 @@ Content-Type: text/plain
 X-NV-OnPremToCloud: ExternallySecured
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1PEPF00012E83:EE_|CY5PR12MB6406:EE_
-X-MS-Office365-Filtering-Correlation-Id: 91f09374-ca9b-463a-aebf-08de9c1002f0
+X-MS-TrafficTypeDiagnostic: SJ1PEPF00002315:EE_|IA0PPF6E99B1BC1:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8618dd01-c63a-4e6c-7376-08de9c100619
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|82310400026|36860700016|376014|7416014|22082099003|56012099003|18002099003;
+	BCL:0;ARA:13230040|1800799024|7416014|376014|82310400026|36860700016|56012099003|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	rrbdDCNUge75TZ1914UUaTqRfQKwqXPldboUtDhXxxALSqLJKHIK6uaQtnhJmcqawnf/01aXGgAkEshUZRf/9cDrdYQVBpvT91/BAsucy1oIJkLZYv11pZgPoubo8KBaG21/0d27xsIVo2enQCSst8PGJrxOP/XeUekOAh9BjhuuzUoWg4WjkqHN9Vfh9XEvNqXXX9OHUvsODGx52owhTzGTT558cSug+O9/rznp3NgbkaD8+zKV7wwtqG76dYB6SbxjjEZWreV4XW4xY+r7k6Db3C/BjR6Z+CUEEOxNSnRSQSaE/llCjhMXQ0Uc5RRVdSuYCTXzG8ubiqpyAgx1qkI03//Yc/qWO3LIMriJ+iEtkZ+ytk4uEyxuRTMArteRZWZ/1bTuWHOq66fWl7nxTOat8zsCBW4kO3XrQc+u8JgU2BZeK8dbupT2I13kIK3k/aaw24mXnD6kt+Zkt8elXqE2iRx4AhsIWF9moo9a976dFxsdFF7XdVDd7/B3ohOv0LkhldvUVnEJ6ljJJEXJGRxzAYZ5Sv+Uq4XnuWrxFISh4psmYtlSdlbEn31tCBTvSVhTLk3BIrFQG/RVkdzYwzzwappLMcgcBxNxHYxObMD234cKLM8GVq9fmtwX8fUXrTIjYuyAzuoRf3bcdQaHsNL6HSgHh/GK+cR1Jl0NxYI2J+uyrm5qfcgihrmAsWaDfCDEn/isH80V1nees9yh7Zqpiu5jLaCuC911KrTGE4AcHujjbl7IfhEdzBewaL835xWJvGLvf02Zlr8VaOZGwA==
+	xuEZ/xjei20z1r8h+Foy+1MUO0fFp+rHt8txtfmEWv5AlTqfQ4EBCNclIddtS/y/f8wt8QaoZf7dIoeRA60rBGzHFO91pm984aoBpnUZX5K2xsQIDNqE78uMvaBSts/Ev5F/AK+EmcPx2CwoivKZWB7UhKc7+MBGOKa1JlCrI6Rrp37Qtrk8SFVSSEMK03MA5QBxjbHwT8olGTx2rABezxtt/NsAg09sr/5IHDKnjNdzsZTEiQcXL679rgzcak5rOCayeE+0dRQXZnDlOwMjzbtW5PW7dKAL/nsZBN7UZPuHCaho+slt9Y7ryeR00gJUI2B0mDb2i+BpTcUB1rLcjgGNLfEKj6xr6r3mOsYnxZsukXZraFob7UPUpj5CoJL9LmgyLiCAzSEF3Ki6bvxzGd0VektlUK99EW+Nf4jcE6oI9p8rvbCMKh4mih4qw+1c3O5YPdq8lep+aLJdZVPW15QRTTvj5tAh3awy2YnqCiT08eXvPjV+heMHyhg3m20oP5TcDrTq7PgwsP863Zy2PxV3FyL1LvlGhvWX+51Vr+dmPoO/DgxouVcCKeaQduxkYNRtG71V70+/HEl90s2UKa4P8dugVwc/ua2wci6ocsXwfzBa0T919RIkCsiqiz/rrcUj4sL0eYkJYkjPjCxu8nGPPuurwPS114oT1j/65TYntCVHA0q1cdTuUBe31kzoSWLkCFInrT4IkFrS1BMLPX3dfG4O3vibnMc5bJWwys/HcRNljYfB0KFM6m3aSJUKY7cfTvZzbiJF4kOq35f4/A==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(36860700016)(376014)(7416014)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(82310400026)(36860700016)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	os7agqf34mPecweExe+OIEBp8GwocEy/KZez7ZlGh3WTUuX4t1/X+ihltYyaBfcMwnrDv6DsA3jr0fyZo2iGWymV79AqFQRbXzf29ig+IgS5+O3ydSUEnJWf3SplM3+ll6oKsoJVolTQnyAjtmvqZs1YOksE2qvVkiWaYg32CQTS7792E9LYcNVP71elmsPUWp6nB8cdaDxtAAcnL7BEacXRWXXQABU9+8DkdF1ZeUACpFXfTpSeM2yQFmk+MLkCh/VHkeCypAqMU81wfwwKo1INvn6tD0FfPQFMl5MVtfsPBDFOIAosHXTJsw89SAxZfiZ9+LvUXEWm8Wgo6YDDNZv1uLoLX70DAcNOnu7mrU/h4a0bMHbRwTYlZmFsXogHq7RdJ+r7BzNDS3TfKphb9FA76PBZdbM7OUacIdJ7pguDcfA1+haPfBMAGgaKESY4
+	q62D9gFUg/o7cdyZnFcx0MQPKHN+aI+aEyKjlzWxk/BiY7nk0kA6Z0U1HfjKeJ16vj/wJpQoT4rTM+Sn+jIYO2aWpjVNxuldmWYFmsZvXynAU0VLiXjhDEw7/J9Y8MqxO24ox2pTfA+K/zK2H3DrlyWV2pwKpgwfVUSvd3BXYih/Fk/65kb0xcSWrcKp5mpO6jhyvlJvIVLfp8hmIeF4ZfzvHTFDuvqocBw+8mRz+TqEh2QyiRW1eeRqHKagrQfxbNohbkapKTRhKhzjXwPWw/bVpLQPDbYFQD46kqYmdF9Cj466OnyJSNIIx/mkiHAE6sS3QghQgDmM975oa6ikm7eWab2LajgUFVLghAf539Pgj/E70APM2Xpq6yQ9boRKuSJf5qOJWyLeEZhKTHcArlPaE7Xzowt+pF102uE8JxFvFxFednwz0GPFkO4afG86
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Apr 2026 23:29:31.5004
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Apr 2026 23:29:36.7630
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 91f09374-ca9b-463a-aebf-08de9c1002f0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8618dd01-c63a-4e6c-7376-08de9c100619
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	CO1PEPF00012E83.namprd03.prod.outlook.com
+	SJ1PEPF00002315.namprd03.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY5PR12MB6406
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PPF6E99B1BC1
 
-__iommu_group_remove_device() holds group->mutex across the entire call to
-__iommu_group_free_device() that performs sysfs removals, tracing, and the
-final kfree_rcu(). But in fact, most of these operations don't really need
-the group->mutex.
+When an IOMMU hardware detects an error due to a faulty device (e.g. an ATS
+invalidation timeout), IOMMU drivers may quarantine the device by disabling
+specific hardware features or dropping translation capabilities.
 
-The group_device structure will support a work_struct to quarantine broken
-devices asynchronously. The work function must hold group->mutex to safely
-update group state. cancel_work_sync() must be called, to cancel that work
-before freeing the device. But doing so under group->mutex would deadlock
-if the worker is already running and waiting to acquire the same lock.
+However, the core-level states of the faulty device are out of sync, as the
+device can be still attached to a translation domain or even potentially be
+moved to a new domain that might overwrite the driver-level quarantine.
 
-Separate the assertion from __iommu_group_free_device() to another helper
-__iommu_group_empty_assert_owner_cnt().
+Given that such an error can likely be triggered from an ISR, introduce an
+asynchronous broken_work per group_device, and provide a helper function to
+allow driver initiate a quarantine in the core.
 
-Defer the __iommu_group_free_device() until the mutex is released.
-
-This is a preparatory refactor with no functional change.
+Note that the worker function must not use dev->iommu_group that is NULLed
+by iommu_deinit_device() holding group->mutex. The cancel_work_sync() only
+gets called afterwards outside the mutex. So, this would be a NULL pointer
+dereference. Add a stable group backpointer to struct group_device instead.
 
 Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 ---
- drivers/iommu/iommu.c | 35 +++++++++++++++++++++++------------
- 1 file changed, 23 insertions(+), 12 deletions(-)
+ include/linux/iommu.h |   6 +++
+ drivers/iommu/iommu.c | 100 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 106 insertions(+)
 
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index d1be62a07904a..810e7b94a1ae2 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -627,6 +627,19 @@ static struct iommu_domain *pasid_array_entry_to_domain(void *entry)
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index 3c5c5fa5cdc6a..97d0e5b90c58f 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -893,6 +893,8 @@ static inline struct iommu_device *__iommu_get_iommu_dev(struct device *dev)
+ #define iommu_get_iommu_dev(dev, type, member) \
+ 	container_of(__iommu_get_iommu_dev(dev), type, member)
  
- DEFINE_MUTEX(iommu_probe_device_lock);
++void iommu_report_device_broken(struct device *dev);
++
+ static inline void iommu_iotlb_gather_init(struct iommu_iotlb_gather *gather)
+ {
+ 	*gather = (struct iommu_iotlb_gather) {
+@@ -1207,6 +1209,10 @@ struct iommu_iotlb_gather {};
+ struct iommu_dirty_bitmap {};
+ struct iommu_dirty_ops {};
  
-+static void __iommu_group_empty_assert_owner_cnt(struct iommu_group *group)
++static inline void iommu_report_device_broken(struct device *dev)
 +{
-+	lockdep_assert_held(&group->mutex);
-+	/*
-+	 * If the group has become empty then ownership must have been
-+	 * released, and the current domain must be set back to NULL or
-+	 * the default domain.
-+	 */
-+	if (list_empty(&group->devices))
-+		WARN_ON(group->owner_cnt ||
-+			group->domain != group->default_domain);
 +}
 +
- static int __iommu_probe_device(struct device *dev, struct list_head *group_list)
+ static inline bool device_iommu_capable(struct device *dev, enum iommu_cap cap)
  {
- 	struct iommu_group *group;
-@@ -700,10 +713,12 @@ static int __iommu_probe_device(struct device *dev, struct list_head *group_list
+ 	return false;
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 810e7b94a1ae2..bb00918e1b70d 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -73,6 +73,7 @@ struct iommu_group {
+ };
  
- err_remove_gdev:
- 	list_del_rcu(&gdev->list);
--	__iommu_group_free_device(group, gdev);
-+	__iommu_group_empty_assert_owner_cnt(group);
- err_put_group:
- 	iommu_deinit_device(dev);
- 	mutex_unlock(&group->mutex);
-+	if (!IS_ERR(gdev))
-+		__iommu_group_free_device(group, gdev);
- 	iommu_group_put(group);
+ struct group_device {
++	struct iommu_group *group;
+ 	struct list_head list;
+ 	struct device *dev;
+ 	char *name;
+@@ -81,10 +82,12 @@ struct group_device {
+ 	 * retained. This can happen when:
+ 	 *  - Device is undergoing a reset
+ 	 *  - Device failed the last reset
++	 *  - Device is broken and quarantined
+ 	 */
+ 	bool blocked;
+ 	unsigned int reset_depth;
+ 	struct rcu_head rcu;
++	struct work_struct broken_work;
+ };
  
- 	return ret;
-@@ -732,20 +747,13 @@ static void __iommu_group_free_device(struct iommu_group *group,
- {
- 	struct device *dev = grp_dev->dev;
+ /* Iterate over each struct group_device in a struct iommu_group */
+@@ -170,6 +173,7 @@ static struct group_device *iommu_group_alloc_device(struct iommu_group *group,
+ 						     struct device *dev);
+ static void __iommu_group_free_device(struct iommu_group *group,
+ 				      struct group_device *grp_dev);
++static void iommu_group_broken_worker(struct work_struct *work);
+ static void iommu_domain_init(struct iommu_domain *domain, unsigned int type,
+ 			      const struct iommu_ops *ops);
  
-+	lockdep_assert_not_held(&group->mutex);
-+
+@@ -752,6 +756,8 @@ static void __iommu_group_free_device(struct iommu_group *group,
  	sysfs_remove_link(group->devices_kobj, grp_dev->name);
  	sysfs_remove_link(&dev->kobj, "iommu_group");
  
++	/* Must wait for broken_work to prevent UAF */
++	cancel_work_sync(&grp_dev->broken_work);
  	trace_remove_device_from_group(group->id, dev);
  
--	/*
--	 * If the group has become empty then ownership must have been
--	 * released, and the current domain must be set back to NULL or
--	 * the default domain.
--	 */
--	if (list_empty(&group->devices))
--		WARN_ON(group->owner_cnt ||
--			group->domain != group->default_domain);
--
  	kfree(grp_dev->name);
- 	kfree_rcu(grp_dev, rcu);
+@@ -1284,6 +1290,8 @@ static struct group_device *iommu_group_alloc_device(struct iommu_group *group,
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	device->dev = dev;
++	device->group = group;
++	INIT_WORK(&device->broken_work, iommu_group_broken_worker);
+ 
+ 	ret = sysfs_create_link(&dev->kobj, &group->kobj, "iommu_group");
+ 	if (ret)
+@@ -4178,6 +4186,98 @@ void pci_dev_reset_iommu_done(struct pci_dev *pdev, bool reset_succeeds)
  }
-@@ -754,7 +762,7 @@ static void __iommu_group_free_device(struct iommu_group *group,
- static void __iommu_group_remove_device(struct device *dev)
- {
- 	struct iommu_group *group = dev->iommu_group;
--	struct group_device *device;
-+	struct group_device *device, *to_free = NULL;
+ EXPORT_SYMBOL_GPL(pci_dev_reset_iommu_done);
  
- 	mutex_lock(&group->mutex);
- 	for_each_group_device(group, device) {
-@@ -762,15 +770,18 @@ static void __iommu_group_remove_device(struct device *dev)
- 			continue;
- 
- 		list_del_rcu(&device->list);
--		__iommu_group_free_device(group, device);
-+		__iommu_group_empty_assert_owner_cnt(group);
- 		if (dev_has_iommu(dev))
- 			iommu_deinit_device(dev);
- 		else
- 			dev->iommu_group = NULL;
-+		to_free = device;
- 		break;
- 	}
- 	mutex_unlock(&group->mutex);
- 
-+	if (to_free)
-+		__iommu_group_free_device(group, to_free);
- 	/*
- 	 * Pairs with the get in iommu_init_device() or
- 	 * iommu_group_add_device()
++static void iommu_group_broken_worker(struct work_struct *work)
++{
++	struct group_device *gdev =
++		container_of(work, struct group_device, broken_work);
++	struct iommu_group *group = gdev->group;
++	struct device *dev = gdev->dev;
++
++	mutex_lock(&group->mutex);
++
++	/*
++	 * iommu_deinit_device() frees dev->iommu under group->mutex. Bail
++	 * out if the device has already been removed from IOMMU handling.
++	 */
++	if (!dev_has_iommu(dev))
++		goto out_unlock;
++
++	if (gdev->blocked) {
++		dev_dbg(dev, "IOMMU has already quarantined the device\n");
++		goto out_unlock;
++	}
++
++	/*
++	 * Quarantine the device completely. For a PCI device, it will be lifted
++	 * upon a pci_dev_reset_iommu_done(pdev, succeeds=true) call indicating
++	 * a device recovery.
++	 *
++	 * For a non-PCI device, currently it has no recovery framework tied to
++	 * the IOMMU subsystem. Quarantine it indefinitely until a recovery path
++	 * is introduced.
++	 */
++	if (!WARN_ON(__iommu_group_block_device(group, gdev)))
++		dev_warn(dev, "IOMMU has quarantined the device\n");
++
++out_unlock:
++	mutex_unlock(&group->mutex);
++	iommu_group_put(group);
++}
++
++/**
++ * iommu_report_device_broken() - Report a broken device to quarantine it
++ * @dev: Device that has encountered an unrecoverable IOMMU-related error
++ *
++ * When an IOMMU driver detects a critical error caused by a device (e.g. an ATC
++ * invalidation timeout), this function should be used to quarantine the device
++ * at the IOMMU core level.
++ *
++ * The quarantine moves the device's RID and PASIDs to group->blocking_domain to
++ * prevent any further DMA/ATS activity that can potentially corrupt the system
++ * memory due to stale device cache entries.
++ *
++ * This function is safe to call from any context, including interrupt handlers,
++ * as it schedules the actual quarantine work asynchronously. The caller should
++ * have already taken driver-level measures (e.g., disabling ATS in hardware) to
++ * contain the fault immediately, before calling this function.
++ *
++ * For PCI devices, the quarantine will be lifted by a successful device reset
++ * via pci_dev_reset_iommu_done(). For non-PCI devices, the quarantine remains
++ * in effect indefinitely until a recovery mechanism is introduced.
++ *
++ * If the device is concurrently being removed or has already been removed from
++ * the IOMMU subsystem, this function will silently return without any action.
++ */
++void iommu_report_device_broken(struct device *dev)
++{
++	struct iommu_group *group = iommu_group_get(dev);
++	struct group_device *gdev;
++	bool scheduled = false;
++
++	if (!group)
++		return;
++	if (!dev_has_iommu(dev))
++		goto out;
++
++	rcu_read_lock();
++	/*
++	 * Note the device might have been concurrently removed from the group
++	 * (list_del_rcu) before iommu_deinit_device() cleared the dev->iommu.
++	 */
++	list_for_each_entry_rcu(gdev, &group->devices, list) {
++		if (gdev->dev != dev)
++			continue;
++		/* iommu_group_broken_worker() must put the group ref */
++		scheduled = schedule_work(&gdev->broken_work);
++		break;
++	}
++	rcu_read_unlock();
++out:
++	if (!scheduled)
++		iommu_group_put(group);
++}
++EXPORT_SYMBOL_GPL(iommu_report_device_broken);
++
+ #if IS_ENABLED(CONFIG_IRQ_MSI_IOMMU)
+ /**
+  * iommu_dma_prepare_msi() - Map the MSI page in the IOMMU domain
 -- 
 2.43.0
 
