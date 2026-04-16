@@ -1,79 +1,89 @@
-Received: from smtpout-03.galae.net (smtpout-03.galae.net [185.246.85.4])
+Received: from fout-b1-smtp.messagingengine.com (fout-b1-smtp.messagingengine.com [202.12.124.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCD623947AC;
-	Thu, 16 Apr 2026 13:34:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.85.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 413F23A1E95;
+	Thu, 16 Apr 2026 13:40:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776346477; cv=none; b=doszSaV/p5KCtGMihmDlkZnp1BuLfWP41ylh1eUv1VSW0ib0+x4h9ZKPeajQV4kByINW8gALFwALHXicsf5/GtWHsXMndQdXBRVcm3S1wH+tU4XMNUUMTlMt6F/KLs6ctZkugXwV4n7iFOdn+8SJUN50vzwo5PB8sLQm5eEFRAI=
+	t=1776346827; cv=none; b=mcCvjKh0i5QC6IoutAejGyvwFQe6niczx333hQIaZBHT36zYCLYpprS9gNgxa/3FkqYU62n0quIRHhe4aRU5FuJdfjqxBaJhnla9xInm9RkgAIN0D977tEkKBT0xFG3w1REYYIeox4aWnm+VpoNhxBxMqSKaud+r49l68ZkF/LU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776346477; c=relaxed/simple;
-	bh=OdPGRiJ2OTAd0wN0VpIuzIvWe5D9n+gShs26W0B8xqs=;
+	s=arc-20240116; t=1776346827; c=relaxed/simple;
+	bh=+Cm8zdxXLz7bcaZJWZhDWcXgaMPEgeSJ2u2pQZs12FE=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KN4c0OSYumQWlsmEKCbOgyqyBvvegLoAiFahJmzTq9woCjwVBWA4CUjMhC3VEPLOCm9H44+COB5KEhTUiihz2Glc7ROO9WbbKoRiFQ4LCkRfBFaJzb0sXtpB84b6/C6Pna4aEAGD6v+TFq7bXHp3f+ypIQo7f3Bfjn8+xA64zVw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=EloIX9sM; arc=none smtp.client-ip=185.246.85.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	 MIME-Version:Content-Type; b=nlKE62vwk3m7o9DtcXFk0jbq84Ie0zvMeuXaJ9JUutEyBPMarTXpaNePvrU69T1FjEVORgljzi79h/4vv86UlVWRmwQBg1pEe9/AEPJBNQiqo232q7tPCEXhbHyGVJj8WlFw+eVVeNmJIGDa4tmxLrdeuIx2sgN39yKEcMCiOrU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=cL02z3/J; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=BS60DdTJ; arc=none smtp.client-ip=202.12.124.144
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="EloIX9sM"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-03.galae.net (Postfix) with ESMTPS id 47F3F4E42A1E;
-	Thu, 16 Apr 2026 13:34:34 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 0867F60495;
-	Thu, 16 Apr 2026 13:34:34 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 360BB10460880;
-	Thu, 16 Apr 2026 15:34:23 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1776346472; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=3XpbdgVt+Cx8FP8MN9lmm4BPNvobbTQ5J2Ix6m+jMcE=;
-	b=EloIX9sM1QOhKmblue3jMDM5k8KpAKMHSGLQ8TanAuK7ENEV4CJPIMh2MskGhnhqAWn8Yw
-	kUAvaK1IF/Se+k3PBQG/MKIkBmVQpmTrY37v/4rJgCuO1y+r/1Gi1LkS705qt3VLfG8J/t
-	Xh6hvLhGANS4fiHpUfY431EjCRXdb9gafJMTVqrXQqnuY5IB80FZ7/DSZE6NczIytZJkU/
-	4zplh8emxfZOdpV5qrGtzBrEKS6pZZFh2AdjAIRSTDrK00XSpARNgEHfGzFQBwyefj3PSo
-	lEtKIt5lgvdG95GPo0kXJtjJ2O6cW+fsn6WroFDb1nkTBbUb0qISYKdg0D0cCg==
-Date: Thu, 16 Apr 2026 15:34:21 +0200
-From: Herve Codina <herve.codina@bootlin.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Chen-Yu Tsai <wenst@chromium.org>, Andy Shevchenko
- <andriy.shevchenko@linux.intel.com>, Manivannan Sadhasivam
- <manivannan.sadhasivam@oss.qualcomm.com>, Rob Herring <robh@kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby
- <jirislaby@kernel.org>, Nathan Chancellor <nathan@kernel.org>, Nicolas
- Schier <nicolas.schier@linux.dev>, Hans de Goede <hansg@kernel.org>, Ilpo
- =?UTF-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Mark Pearson
- <mpearson-lenovo@squebb.ca>, "Derek J. Clark" <derekjohn.clark@gmail.com>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto
- von Dentz <luiz.dentz@gmail.com>, Bartosz Golaszewski <brgl@bgdev.pl>,
- Bartosz Golaszewski <brgl@kernel.org>, linux-serial@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org,
- platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org,
- devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org, Stephan Gerhold
- <stephan.gerhold@linaro.org>, Dmitry Baryshkov
- <dmitry.baryshkov@oss.qualcomm.com>, linux-acpi@vger.kernel.org, Hans de
- Goede <johannes.goede@oss.qualcomm.com>, Bartosz Golaszewski
- <bartosz.golaszewski@oss.qualcomm.com>, Luca Ceresoli
- <luca.ceresoli@bootlin.com>
-Subject: Re: [PATCH v7 0/8] Add support for handling PCIe M.2 Key E
- connectors in devicetree
-Message-ID: <20260416153421.1692848f@bootlin.com>
-In-Reply-To: <4yockfx5rjcvfh2n2excrgsknnhi72rv2w7wf7onks2ryt33sm@w7zkcxuc6vem>
-References: <20260326-pci-m2-e-v7-0-43324a7866e6@oss.qualcomm.com>
-	<20260413075459.GA2626902@google.com>
-	<fpcs4p62f35a5qyqwgm5ysa73stbysxcr62tkmmkrrcvsuf4t4@4ivukyqjey57>
-	<eeytuhqpgdz4do4tgtbmfntub2femtyq7bij7svhodpyjwaylx@j3gmvq2a2zqc>
-	<CAGXv+5E=tujhtZjwi6Qm7hk3Ks74UzTQHWq82NiTEw1+vYod5g@mail.gmail.com>
-	<ad36pIu-0dutL7Nk@ashevche-desk.local>
-	<CAGXv+5EGe59nJctLweEdZjb3MNmMvjuCHngGSfptzN985OiLdg@mail.gmail.com>
-	<ad4tJN27opdEooA7@ashevche-desk.local>
-	<CAGXv+5EPA29G-fsH=wWOD8AK6TZFezFhsE0NHPYj_Pt3nT+d_w@mail.gmail.com>
-	<20260415165651.153b573d@bootlin.com>
-	<4yockfx5rjcvfh2n2excrgsknnhi72rv2w7wf7onks2ryt33sm@w7zkcxuc6vem>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.52; x86_64-redhat-linux-gnu)
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="cL02z3/J";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="BS60DdTJ"
+Received: from phl-compute-03.internal (phl-compute-03.internal [10.202.2.43])
+	by mailfout.stl.internal (Postfix) with ESMTP id A9CBB1D002E6;
+	Thu, 16 Apr 2026 09:40:23 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-03.internal (MEProxy); Thu, 16 Apr 2026 09:40:24 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1776346823;
+	 x=1776433223; bh=/wRBy3MPr3uBglPzHimTBE2v1WQkXuAVNb1SXsJzKsM=; b=
+	cL02z3/JXlwXMIQ0hL1iyF5rr0TSqB5ClZHgEvF5j+Gs+IPXwYKrIrti5g3qNB6w
+	K4JpGKiFJVUVS0yIkGmQINGU1W9PKii0POKonkmSQN5oRBFwbiU+iGo9cOBamNCN
+	O/ZyNDVXBu+QwN1/vyjNYG4Yc9HTsMI9tmof7R/cYU6JcqRNzpTRD1RTqqoZWxvv
+	mpe7vXSLXW7OVgL5ruuw/I04jwR5I/l50iWF1sfDHKRhBJCBvuphpZuLblrarjEt
+	z/3v2FtE/T6nA4TCmuMgQPC4x9Z57uvmJgIR2fyZmRFijg2MCNwjcNElqH61sFE4
+	rr+oxz7sKEkRaYzjYw+8Ow==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1776346823; x=
+	1776433223; bh=/wRBy3MPr3uBglPzHimTBE2v1WQkXuAVNb1SXsJzKsM=; b=B
+	S60DdTJFyzVflIZg8wsFxtK3sjKlEmry5YC5XeT2NNnwz/gSdBe6c5z/V+7kZmdd
+	fG2BoNE1fb2STkQEspaL66lUFrDx5qxd888i5edZdO+YSwFgYWhsNMc4JtFoEFXZ
+	osOhP0SpQgQxNPTe8LQaphMvsW4O6UFEhYPEBVgC3EAKLiprGbUtjHGkuOCSTqF2
+	qfxtaINc4dIInHOhKF8eUHMU1FWT+uP1muOFRigkWOPKNBsqw6GVA7XOLBAxjqGB
+	viGWVSltZZsUqrk65F8vvqX5z6e0rH5mhMnVN20dbesrqHZ1FQW6oK3ESh3lp0J9
+	RQ1HqdfPNkqfi++1BLf9A==
+X-ME-Sender: <xms:xubgaWyt2tvtXeYYRjIlO52P_s-g-HP0l_3YgeVK9pQlkyMkiwmH-g>
+    <xme:xubgablOaH-Ju3NySP55YpUj2G81veBf7BXFg3cSS_V0ItmADnPpHCGHi9vaA7nW_
+    d9s99fFXH7M4JFw3LMoT4eA1g-uVj8jaa2We0m-NAU9pll9odD_UQ>
+X-ME-Received: <xmr:xubgafmJJV1l6d5N-pBINb7BBwUP9Gi1xJrydj-yoWNxjSuE5_GsDkcOq68>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdegjedugecutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
+    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
+    hrpeffhffvvefukfgjfhfogggtgfesthhqredtredtjeenucfhrhhomheptehlvgigucgh
+    ihhllhhirghmshhonhcuoegrlhgvgiesshhhrgiisghothdrohhrgheqnecuggftrfgrth
+    htvghrnhepgeduvefhjeeufeevudeiueeuieeftedtkeevkefhgfdvteefleeuhefgtdeh
+    fffhnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
+    hlvgigsehshhgriigsohhtrdhorhhgpdhnsggprhgtphhtthhopeeipdhmohguvgepshhm
+    thhpohhuthdprhgtphhtthhopehfvghnghgthhgvnhhgfigvnheshhhurgifvghirdgtoh
+    hmpdhrtghpthhtohepfigrthhhshgrlhgrrdhvihhthhgrnhgrghgvsegrrhhmrdgtohhm
+    pdhrtghpthhtohepjhhgghesiihivghpvgdrtggrpdhrtghpthhtohepkhhvmhesvhhgvg
+    hrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdr
+    khgvrhhnvghlrdhorhhgpdhrtghpthhtoheprghlvgigsehshhgriigsohhtrdhorhhg
+X-ME-Proxy: <xmx:xubgadyTrRENBgprQaqnksVneOFwQ-SaBhdXq6DyX_5AXBeWl_MjhA>
+    <xmx:xubgaUoTmJ5yyaADRFnLhowZGefmOHzB3-Bo3dmxnW_PjeM9IgxAVg>
+    <xmx:xubgac62Ghv3SnlTRpUdtkkQaMOAzfKqSsmq_OaUuGmD-Es8Ml_upw>
+    <xmx:xubgabfFyJ-QAiZqgqkvMyK3w-GK5K3W0VuxEWh1QO51CR3qT5Q9vQ>
+    <xmx:x-bgaQq2O-QxmHmr7H8VWNlFUeleYNUsVx2p_tKJGf3aFMKgc14xIVwJ>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 16 Apr 2026 09:40:21 -0400 (EDT)
+Date: Thu, 16 Apr 2026 07:40:20 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: fengchengwen <fengchengwen@huawei.com>
+Cc: Wathsala Vithanage <wathsala.vithanage@arm.com>, <jgg@ziepe.ca>,
+ <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>, alex@shazbot.org
+Subject: Re: [PATCH 3/4] vfio/pci: Add PCIe TPH GET_ST interface
+Message-ID: <20260416074020.57e4ed72@shazbot.org>
+In-Reply-To: <41d5b3ea-abe2-4583-be88-2addf6b4d394@huawei.com>
+References: <20260415090959.53672-1-fengchengwen@huawei.com>
+	<20260415090959.53672-4-fengchengwen@huawei.com>
+	<518e5e0a-d0b2-4775-a32a-e2dc87c8ba4b@arm.com>
+	<41d5b3ea-abe2-4583-be88-2addf6b4d394@huawei.com>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,148 +91,78 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
+Content-Transfer-Encoding: quoted-printable
 
-Hi Manivannan,
+On Thu, 16 Apr 2026 09:09:50 +0800
+fengchengwen <fengchengwen@huawei.com> wrote:
 
-On Thu, 16 Apr 2026 14:25:39 +0530
-Manivannan Sadhasivam <mani@kernel.org> wrote:
+> On 4/15/2026 9:55 PM, Wathsala Vithanage wrote:
+> > Hi Feng,
+> >=20
+> > get_st=C2=A0 feature is unsafe. It allows a rogue userspace driver in d=
+evice-specific
+> > mode to obtain steering tags for arbitrary CPUs, including ones unrelat=
+ed
+> > to the device or its workload, enabling it to direct traffic into those=
+ CPUs=E2=80=99
+> > caches and potentially interfere with other workloads, opening doors to
+> > further exploits depending on other vulnerabilities. =20
+>=20
+> Thank you for the follow-up and for referencing the prior RFC
+> discussion on this topic. I appreciate you clarifying the
+> historical context of the safety concerns.
+>=20
+> I acknowledge the risks you=E2=80=99ve highlighted, but I believe the
+> risk profile in this VFIO interface is different and already
+> well bounded by existing design and practice:
+>=20
+> 1. VFIO device access requires elevated privileges
+>    A userspace process can only open a VFIO device node if it
+>    has sufficient privileges (typically root). This is not an
+>    interface for unprivileged users.
 
-> On Wed, Apr 15, 2026 at 04:56:51PM +0200, Herve Codina wrote:
-> > Hi Chen, all,
-> > 
-> > ...
-> >    
-> > > 
-> > > I'm not arguing for a even more generic "M.2" connector. The "key" is
-> > > already described in the compatible. I'm saying we should have some way
-> > > of describing the individual interfaces (PCIe, SDIO, USB, UART, I2S, I2C)
-> > > on the connector so further nodes or properties can be attached to them,
-> > > either with overlays or dynamically within the kernel. Right now the
-> > > are only described as individual ports, but we can't actually tie a
-> > > device to a OF graph port.
-> > > 
-> > > But maybe I'm overthinking the representation part. AFAICT for Qualcomm's
-> > > UART-based BT bit part, Mani just had the driver create a device node
-> > > under the UART (by traversing the OF graph to find the UART). If that's
-> > > the desired way then the connector binding should mention it. And that
-> > > works for me. But I think it's messier and also we're missing an
-> > > opportunity to make the M.2 connector a standardized attachment point
-> > > for overlays.
-> > > 
-> > > Mani, could you also chime in a bit on what you envisioned?
-> > > 
-> > > (Added Luca from Bootlin to CC, as I think there are parallels to the
-> > >  "Hotplug of Non-discoverable Hardware" work)
-> > >  
-> > 
-> > Related to "Hotplug of Non-discoverable Hardware",
-> > 
-> > I would add entries for busses in the connector without using an OF graph.
-> >   
-> 
-> I don't think this is a correct representation. It is non-standard to describe
-> the device nodes in some other connectors. While it may work with your series in
-> the future, not something I would bet-on at this point.
-> 
-> Using OF graph to link the connector nodes look like the cleaner solution to me.
+This argument is NOT helping your cause.  This is not the usage model
+we design for.  VFIO usage requires that privileges be granted to a
+user, in the form of device ACL access and locked memory, but does not
+generally require elevated privileges beyond that, or otherwise grant
+the user authority beyond the scope of the device.  The root use case
+may be typical for you, but is not required for many other typical use
+cases, such as device assignment to VMs.
+=20
+> 2. In the thread "[RFC v2 0/2] Retrieve tph from dmabuf for PCIe
+>    P2P memory access", applications can configure the steertag
+>    of exported dmabufs from userspace to the kernel. Kernel PCIe
+>    drivers (e.g., mlx5 NIC) then use these steertags and set them
+>    to their ST tables. Even here, userspace could set invalid
+>    steertags that impact GPU performance=E2=80=94but this model is
+>    basically accepted I think (refer from maillist discuss).
 
-In your DT binding, there is the i2c-parent property at connector level.
+It's an RFC.  It's bold to claim that it's nearly accepted.
 
-How it is used or planned to be used in order to handle devices available on the
-board connected to the M2 connector ?
+> 3. Malicious resource consumption is not unique to TPH
+>    A malicious thread can be created to forcibly consume CPU
+>    resources and bound to a specific CPU, affecting other CPUs.
+>    This is a general system security concern, not one specific
+>    to TPH GET_ST, and is addressed by existing system hardening
+>    and access control mechanisms=E2=80=94not by removing useful features.
 
-> 
-> > For I2C and later SPI, this was is done.
-> > 
-> > You already have an i2c-parent property but no node where an i2c device
-> > can be added.
-> > 
-> > The last discussion related to hotplug, connectors and DT led to the RFC
-> > series [1].
-> > 
-> > It is a huge series. The last patch give a real example of representation:
-> >   https://lore.kernel.org/all/20260112142009.1006236-78-herve.codina@bootlin.com/
-> > 
-> > In your case I would see some thing like:
-> > 
-> >     connector {
-> >         compatible = "pcie-m2-e-connector";
-> >         vpcie3v3-supply = <&vreg_wcn_3p3>;
-> >         vpcie1v8-supply = <&vreg_l15b_1p8>;
-> > 
-> > 	/*
-> > 	 * If those GPIOs have to be used by components available in
-> > 	 * the connected board, a Nexus node should be used.
-> >          */
-> >         w-disable1-gpios = <&tlmm 115 GPIO_ACTIVE_LOW>;
-> >         w-disable2-gpios = <&tlmm 116 GPIO_ACTIVE_LOW>;
-> >         viocfg-gpios = <&tlmm 117 GPIO_ACTIVE_HIGH>;
-> >         uart-wake-gpios = <&tlmm 118 GPIO_ACTIVE_LOW>;
-> >         sdio-wake-gpios = <&tlmm 119 GPIO_ACTIVE_LOW>;
-> >         sdio-reset-gpios = <&tlmm 120 GPIO_ACTIVE_LOW>;
-> > 
-> > 	conn-i2c {
-> > 		i2c-parent = <&i2c0>;
-> > 
-> > 		/*
-> >  		 * Here i2c devices available on the board
-> > 		 * connected to the connector can be described.
-> > 		 */
-> > 	};
-> > 
-> > 	/* Same kind to description for other busses */
-> > 	conn-pcie {
-> > 		pci-parent = <&xxxxx>;
-> > 
-> > 		/*
-> > 		 * The PCIe bus has abilities to discover devices.
-> > 		 * Not sure this node is needed.
-> > 		 *
-> > 		 * If a PCI device need a DT description to describe
-> > 		 * stuffs behind the device, what has been done for LAN966x
-> > 		 * could be re-used [2] and [3]
-> > 		 */  
-> 
-> I don't think anyone would connect something like LAN966x to the M.2 connector.
-> M.2 cards have a defined purpose, like NVMe, WLAN etc... If anyone wants to
-> connect another SoC like LAN966x, they would use non-M.2 connectors.
+You're conflating process abuse of a CPU to a potential side-channel
+DMA attach from a device.  What *existing* hardening protects against
+the latter?
 
-Hum, maybe yes, maybe not. I don't know what kind of hardware could be available
-on a M2 connector.
+> 4. GET_ST is strictly necessary for Device-Specific (DS) mode
+>    when no ST table is present on the device.
+>    For devices that do not have a dedicated ST table (a common
+>    scenario in many PCIe endpoints), DS mode requires userspace
+>    to retrieve per-CPU steering tags first, then program them
+>    into the device=E2=80=99s steering logic via other registers. Without
+>    GET_ST, userspace cannot obtain the required steertags to
+>    enable TPH DS mode at all=E2=80=94rendering TPH support useless for
+>    these devices. This is not an optional feature but a
+>    fundamental requirement to unlock TPH functionality for a
+>    large class of hardware.
 
-One think sure is that a PCIe bus is available on the connector and so, potentially
-all PCI devices could be wired on a M2 form factor.
+Unlocking a hardware feature does not give you authority to ignore the
+security implications of that feature.  Thanks,
 
-LAN966x in PCI version is just a PCI device.
-
-Anyway, Is it allowed to have sub-nodes in a port node ?
-
-I mean, can we describe devices connected to a bus described by the port node ?
-
-For USB and PCI it is probably not needed for common use cases but having a DT
-description for devices on PCI and/or USB exists and is supported in the current
-kernel
-
-On SDIO, wireless devices can be described:
-  Documentation/devicetree/bindings/net/wireless/
-
-and so, sub-nodes will be needed.
-
-As those devices need an address (reg property), #address-cells and
-#size-cells will be needed.
-
-This will end in a mix of sub-nodes describing devices and a sub-node
-describing the endpoint connection.
-
-#address-cells and #size-cells will conflict at some points.
-
-Is a reg value for endpoints has the same characteristics as a reg value
-for a SDIO device ?
-
-How a BT devices is described under the UART available in the M2
-connector ?
-
-Best regards,
-Hervé
+Alex
