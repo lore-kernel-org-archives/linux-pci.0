@@ -1,121 +1,124 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D356726158C
-	for <linux-pci@vger.kernel.org>; Thu, 16 Apr 2026 17:11:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A95C22E424F;
+	Thu, 16 Apr 2026 17:31:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776359486; cv=none; b=g6FkDjGLj21qBrAbd/khWguBof4vtZxsOJHHQZC5W7BsM0wKtFBSGO6TkRdBt5Yt5Ilc6bF438apG6GyQyZwevZDrcBGGCOMpZISND7wmyhmPi1pKfvYuS2u5r8qO2AXOqRbWR/UqOUurgnqt1jz6W8eWmj9/XVUTT7HdWKy10c=
+	t=1776360661; cv=none; b=n5K10PE/CiLqmxYAZmVn/mad8V9asjX03HSzpV7eoUxhemccOEnUdG1eDlTGWNTznzynFrJ3a5mr4rfe0jP39ait3/fJdxUk0tgM2IZqRPJ0iHdYdYxbbtbp5PUYVUKPCenp9F0mdjMYkM+6Dru2Jb11e9FWrQuQAjAwhSDCk9c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776359486; c=relaxed/simple;
-	bh=UeZHfyGs1tIaUr8eaZMz+XjGFzS1NiRWeYyTd0eK7qg=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=XSWYuBhqcuM2PguRU9oZKhLDQkd0pvubYvo07TABFU3oIpgmm0hKwqBgMHIk2iPEgxhCsjhKRSaEBjQYDW2ki7ZpOvJWnN2Nq1CgTrEMq7e4q0FF8R/oUEjLiM6JbCmiLOS27/uk7k1MGDP90d4/NOD6aWbf826vNZVVNuCiiTM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cKyyeUeW; arc=none smtp.client-ip=209.85.216.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1776360661; c=relaxed/simple;
+	bh=vGNw0uxuy2/Dir37UhfQwUgLTRlb/4/Oq7Jd0D0d6lo=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=gQP0BawMQTAaVIFXQQTnKQKy4AWooXJBt2JKHPZClA6sqrcmmOqfnKuYTLNIFDIHjxxgMpfBPeUpfNmrri1K/6v8FthQnnzyU0W9WljqXoHZ6dGUhPCmysgUpqqG6fGVvvLCKIhiVFfYwAZDqIRXpe/S51DFcu96Zmrdfq2JrGs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tgXm2Nc0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cKyyeUeW"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-35448ca4689so1243162a91.0
-        for <linux-pci@vger.kernel.org>; Thu, 16 Apr 2026 10:11:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776359484; x=1776964284; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:to:subject:cc
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=GeqmdJUNwyihZL8VfozVxzk8qrw3SLaKZYTKgL9iGNs=;
-        b=cKyyeUeWusWB1i/r50clWxjoPRaHHbTLJ9mAH0Bc4AZk4BTUUDqLl0QGPPUo4VhGD/
-         EjbXD24w7akMU9VGU2o3L81A9/oVP+rgeZwF3wiFwQHNCRiTahmK8T0bna4rt3UMU2is
-         xmHDFfS83FA4solvZbi4NKUX43Dhng9suEBmVVShvEONpQhnN+lp7Dd/yYQysckz7bq1
-         NJ3yf+EnZj2DJy72eOoHM6owxfOkVrbqDXGws8watfFV15U9Nul9TdovZDap0z94qu6g
-         nzJjkaV2t2RS3CQeUkPtNX9puf2fV90qdTpnmz4dc49+Q+7gMb6DWWOuYRpPty4qYtDB
-         VWcg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776359484; x=1776964284;
-        h=content-transfer-encoding:in-reply-to:from:references:to:subject:cc
-         :user-agent:mime-version:date:message-id:x-gm-gg:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=GeqmdJUNwyihZL8VfozVxzk8qrw3SLaKZYTKgL9iGNs=;
-        b=r3UK8UvQePZCtKoJCEIPLeqwotWBMBDIqI16qMsKBnGcyh1/ae7TqRdzLnOaVSRY/Z
-         j2dw3Wcs0LEbF6UZKSxL6E1Bdc+9K3QFMoNLXhwHtJ+gXxppvADDyUGAvSxTRKw5kxyr
-         sxJffJA7wct2zDf9q3WbrrOzkO61wbcqcFzhkyoihs0K2GR+xXHOy3NlKLq+yIAb25xz
-         t9lDU+XvnNFCO6c5v6k/95Y2sy0fVyJBaf29OTplL+5GJmSFB7ZUvqhiNuGmfifjMRkM
-         lK/MPA555GO17w2txu9bIxUmHGdYHtxYQDSntnLARUPYjCcVt8UVq48C8qyc+ZrVk0jP
-         f6Bw==
-X-Forwarded-Encrypted: i=1; AFNElJ9WU1+Cp1rMOiyYwarvGHunp4ZVePeCd3GprZRTF7f4VHHRYAaBfAv1zFYorMnL9eJKb79G45SCoAQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzN22IoTYjgHc2DQbkvyx+G1PLLEQepeTY/fviIxyVbH+Y9Af7f
-	VBJXt8QHveCjna5qHd0EJfIS8UHiGNtjUSXxJ98L0SQaG7EKmj/KseYq
-X-Gm-Gg: AeBDiettYZAisdNnKv70C3HAzbFBVBSjYFjNjcX0o52YNJMUI09M91QxKzskyAm6lMY
-	5UnoW5mFNi+VMsj8VLhZASbu5ADFdBz7NW4htEMwlwC2LP5Gfn+QHeKbMx/Kad4jkk4yUMbEi1e
-	iKaZ8PxFjGcejkuawESnKna3QvTVh9QFLAOkxAPDaZ0Jdtp6t1Xwb13Vd7GGcNzzGMX3FHX3sfG
-	LC8Fq/zhCHDXktweBmyCrESQuOz+l+ABITJc6eb7wIBKOpf3XzQH56/BUAWo3IMTwuH+mBZAepc
-	j+7PxKWrRYKV9n4UYRCN6MNJLE5ih0FCKrPbutjHhwGzLv2O6jC6TvZ5t3RakdKwiBBGlejudfp
-	tz8gMBvkmK0+q0E5t4L9BPizfl2EhK37V8uQhXc7qK2wjvh0iHYvEvDyatgz6vPQMxdSZw0ZQt1
-	fZDHzCil8YHqDkXgQ6OWP1Bu/e+LLXk6ONyatqPsp69dbOKDU1L6K6YQNWS2HRAShV8UY=
-X-Received: by 2002:a17:90b:184e:b0:35b:e4ed:4f60 with SMTP id 98e67ed59e1d1-3613e00e269mr89748a91.5.1776359484057;
-        Thu, 16 Apr 2026 10:11:24 -0700 (PDT)
-Received: from [192.168.0.100] ([163.125.228.136])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36132cd63a8sm3644769a91.12.2026.04.16.10.11.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 16 Apr 2026 10:11:23 -0700 (PDT)
-Message-ID: <4dfb0f17-dee8-4f42-aec6-f089a99bf221@gmail.com>
-Date: Fri, 17 Apr 2026 01:11:15 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tgXm2Nc0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DE8BC2BCAF;
+	Thu, 16 Apr 2026 17:31:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776360661;
+	bh=vGNw0uxuy2/Dir37UhfQwUgLTRlb/4/Oq7Jd0D0d6lo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=tgXm2Nc0oTKwPuU96QTpoy5h6bdCnb3EqRE/aG2JxxfL+EP/0rTRkZIqrvyMb8/eX
+	 34k9XCYKXuABtjW5tCDx/2j0ICV33OJjGDnzcR+GyHjBVoklegYQinm0K5UUXvoutt
+	 o+OLfPym8f2yqXZkAnLfrvaz44LWGZgB5Wb8Lr9VCZeTdlTQCY6rCwKkTyeCWwK5SZ
+	 AOuc/OoZ7JyLXuUURB4rIarcEiMaw7aB9iqFwSy2zfkL5FRlXHvbteXzvHzEa7OOO9
+	 gIMIPU6m8XtExNPmXp7EQfrW/RjI/S+fuh4jXtvSSJ5BdBS+XahtOL9tvk4uZMCnJv
+	 4CXPi9gSF8aSA==
+Date: Thu, 16 Apr 2026 12:31:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "yuan.gao" <yuan.gao@ucloud.cn>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Alex Williamson <alex@shazbot.org>,
+	Jason Gunthorpe <jgg@nvidia.com>
+Subject: Re: [PATCH] PCI: Avoid FLR for NVIDIA 5090 GPU
+Message-ID: <20260416173100.GA13378@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: yangyccccc@gmail.com, linuxarm@huawei.com, linux-pci@vger.kernel.org,
- jic23@kernel.org, Alexander Shishkin <alexander.shishkin@linux.intel.com>,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] MAINTAINERS: Update HiSilicon PCI Trace and Tune
- maintainer
-To: Jonathan Cameron <Jonathan.Cameron@huawei.com>,
- Sizhe Liu <liusizhe5@huawei.com>, Jie Zhan <zhanjie9@hisilicon.com>,
- Suzuki K Poulose <suzuki.poulose@arm.com>
-References: <20260416094219.25258-1-Jonathan.Cameron@huawei.com>
- <20260416110619.0000678a@huawei.com>
-From: Yicong Yang <yangyccccc@gmail.com>
-In-Reply-To: <20260416110619.0000678a@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260416070707.3242381-1-yuan.gao@ucloud.cn>
 
-On 2026/4/16 18:06, Jonathan Cameron wrote:
-> On Thu, 16 Apr 2026 10:42:19 +0100
-> Jonathan Cameron <Jonathan.Cameron@huawei.com> wrote:
->
->> Yicong left Huawei a while back so drop both of our entries and add one for
->> Sizhe Liu who will be looking after this code going forwards.
-> +Cc Yicong (Sorry!)
+[+cc Alex, Jason]
 
-It's been my pleasure to work with you. Thanks a lot for the help along the way (of course not
-only on this driver :) )
+On Thu, Apr 16, 2026 at 03:07:06PM +0800, yuan.gao wrote:
+> When passing through the NVIDIA 5090 GPU to a vm, there is a certain
+> probability of encountering an flr timeout during vm shutdown, which
+> subsequently leads to a soft lock of the host cpu.
 
->
->> Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+If possible, would like confirmation of device erratum from Nvidia.
+If there's no known erratum, there might be something wrong in the
+Linux FLR and wait.
 
-Acked-by: Yicong Yang <yangyccccc@gmail.com>
-
-Thanks.
-
->> ---
->>  MAINTAINERS | 3 +--
->>  1 file changed, 1 insertion(+), 2 deletions(-)
->>
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index d1cc0e12fe1f..79efa7b94c9e 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -11572,8 +11572,7 @@ F:	drivers/perf/hisilicon
->>  F:	tools/perf/pmu-events/arch/arm64/hisilicon/
->>  
->>  HISILICON PTT DRIVER
->> -M:	Yicong Yang <yangyicong@hisilicon.com>
->> -M:	Jonathan Cameron <jonathan.cameron@huawei.com>
->> +M:	Sizhe Liu <liusizhe5@huawei.com>
->>  L:	linux-kernel@vger.kernel.org
->>  S:	Maintained
->>  F:	Documentation/ABI/testing/sysfs-bus-event_source-devices-hisi_ptt
-
+> As described in this post
+> (https://forum.level1techs.com/t/do-your-rtx-5090-or-general-rtx-50-series-has-reset-bug-in-vm-passthrough/228549).
+> 
+> And in dmesg:
+> 
+>  [401106.011979] vfio-pci 0000:d8:00.0: not ready 1023ms after FLR; waiting
+>  [401108.700074] vfio-pci 0000:d8:00.0: not ready 2047ms after FLR; waiting
+>  [401112.412204] vfio-pci 0000:d8:00.0: not ready 4095ms after FLR; waiting
+>  [401118.620399] vfio-pci 0000:d8:00.0: not ready 8191ms after FLR; waiting
+>  [401128.860788] vfio-pci 0000:d8:00.0: not ready 16383ms after FLR; waiting
+>  [401147.293518] vfio-pci 0000:d8:00.0: not ready 32767ms after FLR; waiting
+>  [401185.694859] vfio-pci 0000:d8:00.0: not ready 65535ms after FLR; giving up
+>  [401195.372583] vfio-pci 0000:38:00.2: Relaying device request to user (#0)
+> 
+>  [401208.274941] watchdog: BUG: soft lockup - CPU#11 stuck for 21s! [CPU 22/KVM:30337]
+> 
+>  [401209.887848] CPU: 11 PID: 30337 Comm: CPU 22/KVM Kdump: loaded Not tainted
+>  [401209.887854] RIP: 0010:pci_mmcfg_read+0xaa/0xd0
+> 
+>  [401209.887866] Call Trace:
+>  [401209.887872]  pci_bus_read_config_dword+0x43/0x70
+>  [401209.b887876]  pci_find_next_ext_capability.part.20+0x65/0xc0
+>  [401209.887879]  pci_restore_state.part.39+0x6d/0x3f0
+>  [401209.887883]  vfio_pci_disable+0x22b/0x4d0 [vfio_pci]
+>  [401209.887886]  ? __dentry_kill+0x118/0x160
+>  [401209.887888]  vfio_pci_release+0x5a/0xb0 [vfio_pci]
+>  [401209.887891]  vfio_device_fops_release+0x18/0x30 [vfio]
+>  [401209.887894]  __fput+0x98/0x240
+>  [401209.887897]  task_work_run+0x6a/0xa0
+>  [401209.887899]  do_exit+0x375/0xb10
+>  [401209.887900]  do_group_exit+0x3a/0xa0
+>  [401209.887902]  get_signal+0x140/0x7d0
+>  [401209.887906]  arch_do_signal+0x2c/0x260
+>  [401209.887909]  exit_to_user_mode_prepare+0xc0/0x120
+>  [401209.887912]  syscall_exit_to_user_mode+0x27/0x180
+>  [401209.887915]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+> 
+> The flr seems to have some issues on the NVIDIA 5090 GPU,
+> so I’ve added flr-related quirks for these devices.
+> 
+> And with this patch in place, the host kernel doesn't exhibit these
+> problems. The vm starts up and works as expected with the passed-through
+> NVIDIA 5090 GPU.
+> 
+> Signed-off-by: yuan.gao <yuan.gao@ucloud.cn>
+> ---
+>  drivers/pci/quirks.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 48946cca4be72..71f833f3e2d84 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -5618,6 +5618,9 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x7901, quirk_no_flr);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x0616, quirk_no_flr);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x2b85, quirk_no_flr);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x2b87, quirk_no_flr);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x2b8c, quirk_no_flr);
+>  
+>  /* FLR may cause the SolidRun SNET DPU (rev 0x1) to hang */
+>  static void quirk_no_flr_snet(struct pci_dev *dev)
+> -- 
+> 2.32.0
+> 
