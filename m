@@ -1,113 +1,77 @@
-Received: from mail-m32102.qiye.163.com (mail-m32102.qiye.163.com [220.197.32.102])
+Received: from mail-m1973172.qiye.163.com (mail-m1973172.qiye.163.com [220.197.31.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAD5A339844
-	for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2026 07:48:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.102
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20A7F37F729;
+	Fri, 17 Apr 2026 07:49:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776412089; cv=none; b=IEDg8BhnOwcdiQ85RoIeXbIcVQHQvt9/BYj7IzT4PvYrfiAII/FQLffC3cXDmU5Q144r5gy0sJ5g3UNwzVuN+3rkP0xEzyMMNQb4NNy9t6wL40unmBpQiE1mzon7lSa32a8NJGn5AjVb/L+LGYPq1qrzRd5pDnfa9LaXr6ENXJE=
+	t=1776412204; cv=none; b=TZb7j97ozhkQ/sq39WAtVu3zRRMMy+zfR7P2xpE6BRoMLmy9yBe84IJ6bERuoSwU0aUa9ujPRrc+px7jfEakJsCQpcJEZxBCrcXLFE2ISi96qtt2cva+Hvole3/NnBdTXTKDbuG8GqABMIbFmfobrnvAahpGSYGT+mrJ78S01dU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776412089; c=relaxed/simple;
-	bh=UHMEUIW+jh05lb5eza5TT3MgxQCo16NqiMJS/Eo8ifg=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=bEFZEpITZmoQcRQ+L+p4QRbhUCnVVwyAWX7YisQ11DupW9xuqpaejWZ+fO+WVkIbjd9lm7P+Zf6b77FSxoBD5XyIZ6NVRivR3T67tUXxkoNKjiXJtgToWb7ObUI9QSvcHm5SfkRhjvrQgPcBEs0zIIa/QxwPQS2c6VxUYdhtENQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=C7DQVASJ; arc=none smtp.client-ip=220.197.32.102
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1776412204; c=relaxed/simple;
+	bh=oVwJ37WsLfBvBVidoPjvHj+PbzMcx0J+WOYOZma3nPs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HooKnul9zEpaqrtvHHUp0xC83kR4C9DsNbY9ZoUBfTpB4EZQDAf24GJgArJkK9OvaZ3PFGlSv5OaleNJQoCiC4iZh9WmXXWEX2FfsGeA2/JuQn9wV2+jgydjZc28eaNtZrh1JGvnC7I6F3fAuhF5m5i2hWkh7tpT3zTJNrp8TUI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ucloud.cn; spf=pass smtp.mailfrom=ucloud.cn; dkim=pass (1024-bit key) header.d=ucloud.cn header.i=@ucloud.cn header.b=i1kQuzSh; arc=none smtp.client-ip=220.197.31.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ucloud.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ucloud.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="C7DQVASJ"
-Received: from [172.16.12.17] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 3b19f2c60;
-	Fri, 17 Apr 2026 14:32:16 +0800 (GMT+08:00)
-Message-ID: <9cafe1d5-1105-cfbe-2ef4-3f018ef7025d@rock-chips.com>
-Date: Fri, 17 Apr 2026 14:32:15 +0800
+	dkim=pass (1024-bit key) header.d=ucloud.cn header.i=@ucloud.cn header.b="i1kQuzSh"
+Received: from localhost (unknown [106.75.220.2])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 1905520db;
+	Fri, 17 Apr 2026 10:06:56 +0800 (GMT+08:00)
+Date: Fri, 17 Apr 2026 10:06:55 +0800
+From: "yuan.gao" <yuan.gao@ucloud.cn>
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alex Williamson <alex@shazbot.org>
+Subject: Re: [PATCH] PCI: Avoid FLR for NVIDIA 5090 GPU
+Message-ID: <20260417020655.zun4qjiu3qsn4nnd@yuangap>
+References: <20260416070707.3242381-1-yuan.gao@ucloud.cn>
+ <20260416173100.GA13378@bhelgaas>
+ <20260416223754.GC761338@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
- Nirmal Patel <nirmal.patel@linux.intel.com>,
- Jonathan Derrick <jonathan.derrick@linux.dev>,
- Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
- Logan Gunthorpe <logang@deltatee.com>, Philipp Stanner <phasta@kernel.org>,
- linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] PCI/MSI: Add Devres managed IRQ vectors allocation
-To: Frank Li <Frank.li@nxp.com>
-References: <1776392767-83668-1-git-send-email-shawn.lin@rock-chips.com>
- <1776392767-83668-2-git-send-email-shawn.lin@rock-chips.com>
- <aeHOyYJR2GRRP4fY@lizhi-Precision-Tower-5810>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <aeHOyYJR2GRRP4fY@lizhi-Precision-Tower-5810>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9d9a23e25809cckunmb867f1f8346007
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260416223754.GC761338@nvidia.com>
+X-HM-Tid: 0a9d9930f5d70229kunm9e0eb86b13c871
 X-HM-MType: 1
 X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQxoaH1YeSENJGEhDGU4aGk1WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
+	tZV1koWUFJQjdXWS1ZQUlXWQ8JGhUIEh9ZQVlDS0seVh8fTEhJSU5MH0tOQlYVFAkWGhdVGRETFh
+	oSFyQUDg9ZV1kYEgtZQVlKS01VTE5VSUlLVUlZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0hVSktLVU
+	pCS0tZBg++
 DKIM-Signature: a=rsa-sha256;
-	b=C7DQVASJ/YUwbZBhp4b02j3GnpstuVTrofhcWEgDz7sR8qvSM+7Nlu0pE1hc+UphNWEVa0Lb2XPuHpWFLLY9ntZnOX3gW9nJUXVNtNvL6N1zY/uLyN8ChruFXN+q6xepI5PoFv9Yns1c4PLYRMFnUQstfjZ/upQkn1uCYBNpYMo=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=KoYhaGYwqJWwSEpHtu2ExjmIs9RJzVAemt5tG5n9Xuw=;
+	b=i1kQuzShgsCW2r3wrSR5EZa+ugiQX1MFNPFq9TaKwZgV3MSinf6P242O2/XhmaYDl9FRN7oVhvo1xAjFvcjZ/lMe6TsPSsqSMQkredhQjffklisHMS47iAV6YQiTyZSX8lXyTbjqbyc9O85SkbTJbFgJQNdg3hMtNEYi+nQdTa4=; c=relaxed/relaxed; s=default; d=ucloud.cn; v=1;
+	bh=bfqXgrnYB5A/hDRBS5OQqI7LAV26xC87aPYM7fgT1Uk=;
 	h=date:mime-version:subject:message-id:from;
 
-Hi Frank
-
-在 2026/04/17 星期五 14:10, Frank Li 写道:
-> On Fri, Apr 17, 2026 at 10:26:05AM +0800, Shawn Lin wrote:
->> pcim_alloc_irq_vectors() and pcim_alloc_irq_vectors_affinity() are created for
->> pci device drivers which rely on the devres machinery to help cleanup the IRQ
->> vectors.
->>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->>
->> ---
->>
->> Changes in v2: None
->>
->>   drivers/pci/msi/api.c | 26 ++++++++++++++++++++++++++
->>   include/linux/pci.h   | 22 ++++++++++++++++++++++
->>   2 files changed, 48 insertions(+)
->>
-> ...
->> +/**
->> + * pcim_alloc_irq_vectors_affinity() - devres managed pci_alloc_irq_vectors_affinity()
->> + * Interrupt vectors are automatically freed by the devres machinery
->> + */
->> +int pcim_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
->> +				   unsigned int max_vecs, unsigned int flags,
->> +				   struct irq_affinity *affd)
->> +{
->> +	dev->is_msi_managed = true;
->> +	return pci_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs,
->> +					      flags, affd);
+On Thu, Apr 16, 2026 at 07:37:54PM -0300, Jason Gunthorpe wrote:
+> On Thu, Apr 16, 2026 at 12:31:00PM -0500, Bjorn Helgaas wrote:
+> > On Thu, Apr 16, 2026 at 03:07:06PM +0800, yuan.gao wrote:
+> > > When passing through the NVIDIA 5090 GPU to a vm, there is a certain
+> > > probability of encountering an flr timeout during vm shutdown, which
+> > > subsequently leads to a soft lock of the host cpu.
+> > 
+> > If possible, would like confirmation of device erratum from Nvidia.
+> > If there's no known erratum, there might be something wrong in the
+> > Linux FLR and wait.
 > 
-> any side effect if pci_alloc_irq_vectors_affinity() return fail and
-> is_msi_managed keep true.
-
-Thanks for the review! This is a good point.
-
-You're absolutely right that in the current implementation, if
-pci_alloc_irq_vectors_affinity() fails, is_msi_managed remains true
-while no vectors are actually allocated.
-
-This replicates the behavior of pcim_enable_device() +
-pci_alloc_irq_vectors_affinity() , which also sets
-is_msi_managed unconditionally, but that doesn't make it ideal.
-
-I think we should fix this for better self-contained behavior. The
-pcim_* APIs should be robust on their own.
-
-I'll move the is_msi_managed assignment to after successful allocation
-in v3, if the general apporach looks feasible.
-
-
+> I asked and was told there is a known device firmware defect that
+> causes this.
 > 
-> Frank
->>
+> So blanket disabling FLR without detecting good and bad FW is not a
+> good idea.
 > 
+> I suggest Yuan try to use an NVIDIA support channel to try to resolve
+> the issue with their card..
 > 
+> Jason
+Got it, thanks.
+
+Cheers,
+Yuan Gao
