@@ -1,58 +1,96 @@
-Received: from nikam.ms.mff.cuni.cz (nikam.ms.mff.cuni.cz [195.113.20.16])
+Received: from spark.kcore.it (spark.kcore.it [49.13.27.68])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DE1135F607
-	for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2026 12:56:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.113.20.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 215E52949E0;
+	Fri, 17 Apr 2026 13:24:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=49.13.27.68
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776430591; cv=none; b=D8288pWbq5Lwrqjvut8zcprMzPDXTYxVtWvuJs6Aqjq/SGP4gsqDM/FP56c+/esfFI1TYajCKYxFT6Z4TEl6b840HnMmonxUOx5X1WuehI2O4Hh/+l4W+sobdHoqYzHBLNYYizvZgPSiwOZBoF9kiEzFweSvqO055WNHHte97Rw=
+	t=1776432286; cv=none; b=sJZpToF7U1/ER7JfcS2es1TL7fFCgUyIG8wPQTBXDoZGGJWZrFw1Zr17G6iLihpgJl8LjPmvSwuyhVK2/TIhTl8kr2BeTRWWGyopNdlxlhKmzQJmpos7OYFoIOdhrEuSMiu6bvRgDr4BTfOr9yq2dnurZgCr0UscarPY6O00yOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776430591; c=relaxed/simple;
-	bh=bph4j3Int2Y1BnzRX7Tv4lAKyfzRHnXm5XuE7fdEJtA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tbFxTFw3xDrpXLEwmb1fWxn7dMFBofgaCRZ9BuBX4snB4VAZun09Kv6kg2sYgybwhyPkMaoyL4VpO6DTIiODsir0/Fb76CNBhBrWFlmWxTxJnnO3HBWwkhi+LBqn4mvZ5JIai7uxZMvCsHgiMlwSAuU+w/3tGHYA+ZmsuGCPkX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ucw.cz; spf=pass smtp.mailfrom=ucw.cz; dkim=pass (1024-bit key) header.d=ucw.cz header.i=@ucw.cz header.b=I66wz3GZ; arc=none smtp.client-ip=195.113.20.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ucw.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ucw.cz
+	s=arc-20240116; t=1776432286; c=relaxed/simple;
+	bh=t3tJ+SAiGCi2KvgrmBY3Rqk5TNtkUO8KrlAYautdR7c=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=AJpRv8CTmtMN6E+O8wD6V76t+DrO19s+ZULfP+AXXRKPcFc9aFNJFyqIiwcPZswbaPxXWhWXaP0j0Yr40NJ6SEvtTwj8n37i+NbR/j0EhHmn182V7MASZBza+tNZpglxAnBfFdEvxtfpxkmVCqdWlIWSWGYjx5S8MmQgJrMjFHk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kcore.it; spf=pass smtp.mailfrom=kcore.it; dkim=pass (1024-bit key) header.d=kcore.it header.i=@kcore.it header.b=tQHRpFbO; arc=none smtp.client-ip=49.13.27.68
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kcore.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kcore.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ucw.cz header.i=@ucw.cz header.b="I66wz3GZ"
-Received: by nikam.ms.mff.cuni.cz (Postfix, from userid 2587)
-	id 34A952807F8; Fri, 17 Apr 2026 14:56:25 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ucw.cz; s=gen1;
-	t=1776430585;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=WENq5tvVQAOskotkUk0ifR3/NEd78cy9jrNA71IHlD4=;
-	b=I66wz3GZmWqAlKdt7bnd7Nd+3lAP+bk8GWMc5EdThI2gMOHrWBHcA8t18PMilIWqpifxMP
-	llb+fzaLOLFbdXaGNI/VRAgHmOmyCehDhTMUAQz3V9uxRAOAweww4DHkSERK2PeVsZsVXr
-	CmIzxKeT4KHa4et4FO2dMjV+awyEsxs=
-Date: Fri, 17 Apr 2026 14:56:25 +0200
-From: Martin =?utf-8?B?TWFyZcWh?= <mj@ucw.cz>
-To: Mattias Nissler <mnissler@meta.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH pciutils v3] ls-ecaps: Decode DPC RP PIO registers
-Message-ID: <mj+md-20260417.125559.94223.nikam@ucw.cz>
-References: <20260417104223.3457417-1-mnissler@meta.com>
+	dkim=pass (1024-bit key) header.d=kcore.it header.i=@kcore.it header.b="tQHRpFbO"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=kcore.it;
+	s=spark; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+	Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=Lzd3+dPt+cxg2OfNmx9stohUnV0gbXlmu4x9ZXeTZXA=; b=tQHRpFbOLAry2rQzz0GJcln4fY
+	GxHsy27IirpuDL0zTinC/OvzusvM5sqGVJszWVQLk5oW2umg7NPqotstmHa+I9wHFqRnse9IQUd9j
+	qMpN0DOHqotI356LpesCmOYFm7d3aqS6FMIAqZF4/BxwUtFamYe+36T/uhYJjiEzytOc=;
+Received: from mnencia by spark.kcore.it with local (Exim 4.96)
+	(envelope-from <mnencia@kcore.it>)
+	id 1wDjBV-007w6C-18;
+	Fri, 17 Apr 2026 15:24:37 +0200
+From: Marco Nenciarini <mnencia@kcore.it>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	=?UTF-8?q?Christian=20K=C3=B6nig?= <ckoenig.leichtzumerken@gmail.com>,
+	Marco Nenciarini <mnencia@kcore.it>
+Subject: [PATCH v2 0/2] PCI: Guard Resizable BAR restore against unreachable devices
+Date: Fri, 17 Apr 2026 15:24:35 +0200
+Message-Id: <cover.1776429882.git.mnencia@kcore.it>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20260408163922.1740497-1-mnencia@kcore.it>
+References: <20260408163922.1740497-1-mnencia@kcore.it>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260417104223.3457417-1-mnissler@meta.com>
+Content-Transfer-Encoding: 8bit
 
-Hi!
+This series addresses Bjorn's review feedback on v1 [1].
 
-> The RP PIO registers in the DPC extended capability contain status
-> information and control bits related to how root ports handle failing
-> requests.
+v1 bounds-checked bar_idx before indexing dev->sriov->barsz[] in
+sriov_restore_vf_rebar_state(). Bjorn pointed out that the non-SRIOV
+sibling pci_restore_rebar_state() has the same issue, and that a
+PCI_POSSIBLE_ERROR(ctrl) check on the config read makes the intent
+of the guard more obvious than a post-hoc range check on the
+extracted field.
 
-Thanks, applied.
+v2 therefore adopts PCI_POSSIBLE_ERROR(ctrl) after each Resizable
+BAR Control read in both functions, bailing out when config reads
+return the all-ones pattern. Patch 1 covers pci_restore_rebar_state().
+Patch 2 covers sriov_restore_vf_rebar_state(), with the NVIDIA GC6
+UBSAN splat as motivation.
 
-Could you please add a configuration space dump with this capability to
-tests/?
+Note that this changes behavior versus v1: on a bad read we abort
+the loop instead of skipping just the current BAR. This matches
+the structure Bjorn suggested in review and is safe because the
+all-ones pattern means the device is unreachable, so restoring the
+remaining BARs is moot.
 
-				Martin
+Compile-tested on pci/next (full drivers/pci/ build). The error
+path cannot be exercised without reproducing the GC6 failure that
+killed the GPU in the original report.
+
+The broader v1 discussion on the pci_restore_config_dword() retry
+loop and on save/restore behavior when the device has fallen off
+the bus is out of scope for this fix. Happy to tackle that
+separately if there is consensus.
+
+[1] https://lore.kernel.org/all/20260408163922.1740497-1-mnencia@kcore.it/
+
+Marco Nenciarini (2):
+  PCI: Skip Resizable BAR restore on read error
+  PCI/IOV: Skip VF Resizable BAR restore on read error
+
+ drivers/pci/iov.c   | 6 ++++++
+ drivers/pci/rebar.c | 6 ++++++
+ 2 files changed, 12 insertions(+)
+
+
+base-commit: 40286d6379aacfcc053253ef78dc78b09addffda
+-- 
+2.47.3
+
