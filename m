@@ -1,179 +1,119 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 769653BB9F1;
-	Fri, 17 Apr 2026 11:11:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 438F138C42F;
+	Fri, 17 Apr 2026 11:49:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776424278; cv=none; b=SCRDqqqFuarQxiF1htUmFpj2v95B3KCpeIQe4CBpoGKa3t3Gd9dn8SJk+KQPskIvRThPOqKk8hciL73kWjyF0UuSZCqX0jT4eLaovszsghUxARIFRWUvDIy/GugO+Clz/RXnC3BW9W5od3Rurw5zaJA1sxZpql6Ejm4N5ksrbq0=
+	t=1776426554; cv=none; b=kQ3cH1fq5HHaxv075tjD/+XoBIRhVBmgb7h8mbgwrsG4+ByJUI/P31L258cl4fDONykSDuV0WbtMSAvdTFJJKt165iPFTteI982Xd9HF6p3JKapM7WU7tNp04ZjRsk0WBJDHFt7h2D6WqWHpdQopN6kuL752szcbVFAMHzGTx1U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776424278; c=relaxed/simple;
-	bh=3ZUy4YVkjarPeySIaKJt8bDHdExqFMDvv7aQz4EKkcY=;
+	s=arc-20240116; t=1776426554; c=relaxed/simple;
+	bh=MI3uioBuwUgxsUjR1l3EmFcjUf9h5BvjSExDwm8I7tk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SCL0sdQ7rxF6GqrY2u7diWbyrshVldSHZzgmDM11UA4oBAJ+L3fUfIDH4nm39lVzBU7NZ0OmxeSl1kQVL43hshhGKpp0f+Npc0Ant2yUIowstaKI8pxieVB3Ln4Y3sB+8E4jI1K7xuisEwDEGpdXh8IfC3DXYlhnXERgDuVbHwM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nm2rCLtQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=lxYPq0QVMWrGnEKZdB+514aE9D5EyIqh6OoogJ9lOF+iDcD0vHIf9V+YKakNn2vNZ9QAj+r+kjJU0kSVOtee/G5wulzWDBfdpHRiXdVcC3W7FJZeyLY5UBJGXbiPQxLQjE4SEFBC8dY7mi3obmWcM6aArJL/MHDwYvT+cWcHd7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=evTmeijV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nm2rCLtQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A4B1C19425;
-	Fri, 17 Apr 2026 11:11:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="evTmeijV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95401C2BCB4;
+	Fri, 17 Apr 2026 11:49:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776424278;
-	bh=3ZUy4YVkjarPeySIaKJt8bDHdExqFMDvv7aQz4EKkcY=;
+	s=k20201202; t=1776426553;
+	bh=MI3uioBuwUgxsUjR1l3EmFcjUf9h5BvjSExDwm8I7tk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=nm2rCLtQIQ3tqfXx9mTQqaypfsrORL3CO07f3jkVHSANHErHqjMscHzS1fGL7SaQv
-	 GgiRm1dez3R5NS5H/LnWbjbn4bzvRqdno/jCUIhNrBlLn3pFloqDVHVX/O5m3vvYRA
-	 RwMdu+LwHloxCK5WKeKGwCB0PsM/w0Z9lLe57Ffg1AXQ+wVccKm98R+Ejuv8MAtrVZ
-	 6XsXgPKl4rYbl2kukg90t/BDpbzznUUaCAyz1m0SQd6aVW+/uvWncr3LHCr9FzRMBE
-	 Yn/QAJVMNRyMRTCohpZHSyXjOO218TfFkKZB8obJ81Xh0G79UmbFeP/BAFUJBJDmjA
-	 QaIZeoakgmq0g==
-Date: Fri, 17 Apr 2026 16:41:09 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: manivannan.sadhasivam@oss.qualcomm.com, 
-	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, Keith Busch <kbusch@kernel.org>, 
-	Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 1/4] PCI: Introduce an API to check if RC/platform can
- retain device context during suspend
-Message-ID: <xqwvjygt3bgttbipe6hhnpkfwauczxpoiyfbbakdyzesz6ydcd@en54522wjnar>
-References: <20260414-l1ss-fix-v1-1-adbb4555b5ab@oss.qualcomm.com>
- <20260416191855.GA25147@bhelgaas>
+	b=evTmeijVDLEB6aLBYspix6gADC5LjwWgom00t6nqowr4w3aOXLvWeHsMrBUauYm5C
+	 gGPAgcQeIUEHgSGU32kGesEYgbQdwwwXXPjqx7JtIeqN/22PeLHYQSCHf406lgGVZr
+	 8gnXVj6QtH17T0cjEOXmlBEtq76tN23CEsgj1xYHtdE9lB4Y4DhE9u4UcPur2jR0d1
+	 hG0a6P24tp3fZJJNKwyqT2g8Y3+f4QSrrys65VZmZ9KeuQW+xifnjgYlMlNU6YFY3A
+	 wHpQq0XxKkzHMrvfxNiw5f97NRIzlp2iMzJTzi98fipcb/ETGn4xaF0LzDOGs3TBZC
+	 KMEGe36WA60ow==
+Date: Fri, 17 Apr 2026 20:49:12 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Magnus Lindholm <linmag7@gmail.com>,
+	Matt Turner <mattst88@gmail.com>,
+	Richard Henderson <richard.henderson@linaro.org>,
+	Christophe Leroy <chleroy@kernel.org>,
+	Madhavan Srinivasan <maddy@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	Dexuan Cui <decui@microsoft.com>,
+	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	Lukas Wunner <lukas@wunner.de>,
+	Oliver O'Halloran <oohall@gmail.com>,
+	Saurabh Singh Sengar <ssengar@microsoft.com>,
+	Shuan He <heshuan@bytedance.com>,
+	Srivatsa Bhat <srivatsabhat@microsoft.com>,
+	linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v4 07/24] PCI/sysfs: Convert PCI resource files to static
+ attributes
+Message-ID: <20260417114912.GD1625998@rocinante>
+References: <20260411080148.471335-1-kwilczynski@kernel.org>
+ <20260411080148.471335-8-kwilczynski@kernel.org>
+ <eca4c119-65a8-ac84-3869-4064aa1f0829@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260416191855.GA25147@bhelgaas>
+In-Reply-To: <eca4c119-65a8-ac84-3869-4064aa1f0829@linux.intel.com>
 
-On Thu, Apr 16, 2026 at 02:18:55PM -0500, Bjorn Helgaas wrote:
-> [+cc Rafael]
-> 
-> On Tue, Apr 14, 2026 at 09:29:39PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
-> > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > 
-> > Currently, the PCI endpoint drivers like NVMe checks whether the device
-> > context will be retained or not during system suspend, with the help of
-> > pm_suspend_via_firmware() API.
-> > 
-> > But it is possible that the device context might be lost due to some
-> > platform limitation as well. Having those checks in the endpoint drivers
-> > will not scale and will cause a lot of code duplication.
-> > 
-> > So introduce an API that acts as a sole point of truth that the endpoint
-> > drivers can rely on to check whether they can expect the device context
-> > to be retained or not.
-> > 
-> > If the API returns 'false', then the client drivers need to prepare for
-> > context loss by performing actions such as resetting the device, saving
-> > the context, shutting it down etc... If it returns 'true', then the drivers
-> > do not need to perform any special action and can leave the device in
-> > active state.
-> > 
-> > Right now, this API only incorporates the pm_suspend_via_firmware() check.
-> > But will be extended in the future commits.
-> > 
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > ---
-> >  drivers/pci/pci.c   | 23 +++++++++++++++++++++++
-> >  include/linux/pci.h |  7 +++++++
-> >  2 files changed, 30 insertions(+)
-> > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 8479c2e1f74f..211616467a77 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -33,6 +33,7 @@
-> >  #include <asm/dma.h>
-> >  #include <linux/aer.h>
-> >  #include <linux/bitfield.h>
-> > +#include <linux/suspend.h>
-> >  #include "pci.h"
-> >  
-> >  DEFINE_MUTEX(pci_slot_mutex);
-> > @@ -2900,6 +2901,28 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
-> >  		pm_runtime_put_sync(parent);
-> >  }
-> >  
-> > +/**
-> > + * pci_dev_suspend_retention_supported - Check if the platform can retain the device
-> > + *					 context during system suspend
-> > + * @pdev: PCI device to check
-> > + *
-> > + * Returns true if the platform can guarantee to retain the device context,
-> > + * false otherwise.
-> > + */
-> > +bool pci_dev_suspend_retention_supported(struct pci_dev *pdev)
-> 
-> This doesn't seem like the right name.  This isn't a property of the
-> *device*; that's all determined by the PCI spec (devices must retain
-> all internal state in D0, D1, and D2, they retain it in D3hot if
-> No_Soft_Reset, and they never do in D3cold).
-> 
-> So this seems like something to do with the *platform* behavior.  It
-> sounds like this is basically a way to learn whether the device might
-> be put in D3cold on system suspend.
-> 
+Hello,
 
-That's correct. But I wanted to keep it device specific, since apart from
-pm_suspend_via_firmware() there could be other issues causing context to be
-lost. Like the issue with RC, brought up in the successive patches. There could
-be chances that only one hierarchy might be affected. So making it device
-specific would give us the granularity.
+> > -	/* Expose the PCI resources from this device as files */
+> > -	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
+> > +	if (!pci_resource_len(pdev, bar))
+> > +		return 0;
+[...]
+> Did you accidently forget to address some of the comments as I thought you 
+> were agreeing to changing this to resource_assigned() but I found no 
+> resource_assigned() from entire series?
 
-- Mani
+I have not.  Sorry for late reply here.
 
-> > +{
-> > +	/*
-> > +	 * If the platform firmware (like ACPI) is involved at the end of system
-> > +	 * suspend, device context may not be retained.
-> > +	 */
-> > +	if (pm_suspend_via_firmware())
-> > +		return false;
-> > +
-> > +	/* Assume that the context is retained by default */
-> > +	return true;
-> > +}
-> > +EXPORT_SYMBOL_GPL(pci_dev_suspend_retention_supported);
-> > +
-> >  static const struct dmi_system_id bridge_d3_blacklist[] = {
-> >  #ifdef CONFIG_X86
-> >  	{
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 1c270f1d5123..d9bc7ad4eaa4 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -2080,6 +2080,8 @@ pci_release_mem_regions(struct pci_dev *pdev)
-> >  			    pci_select_bars(pdev, IORESOURCE_MEM));
-> >  }
-> >  
-> > +bool pci_dev_suspend_retention_supported(struct pci_dev *pdev);
-> > +
-> >  #else /* CONFIG_PCI is not enabled */
-> >  
-> >  static inline void pci_set_flags(int flags) { }
-> > @@ -2239,6 +2241,11 @@ pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
-> >  static inline void pci_free_irq_vectors(struct pci_dev *dev)
-> >  {
-> >  }
-> > +
-> > +static inline bool pci_dev_suspend_retention_supported(struct pci_dev *pdev)
-> > +{
-> > +	return true;
-> > +}
-> >  #endif /* CONFIG_PCI */
-> >  
-> >  /* Include architecture-dependent settings and functions */
-> > 
-> > -- 
-> > 2.51.0
-> > 
-> > 
+When testing resource_assigned() as replacement for pci_resource_len(),
+none of the resource files would be made visible.
 
--- 
-மணிவண்ணன் சதாசிவம்
+The resource_assigned() checks res->parent, but the static .is_bin_visible
+callback runs at device_add() time, called from pci_device_add() during bus
+enumeration, so before pci_assign_unassigned_bus_resources() runs and inserts
+resources into the resource tree via pci_claim_resource(), etc.
+
+The call sequence in pci_host_probe() is:
+
+  pci_scan_root_bus_bridge()
+    pci_scan_child_bus()
+      pci_scan_slot()
+        pci_scan_single_device()
+          pci_scan_device()
+            pci_setup_device()
+              pci_read_bases()        <- res->start/end set from BARs
+          pci_device_add()
+            device_add()              <- is_bin_visible() runs here
+                                         res->parent still NULL
+
+  pci_assign_unassigned_root_bus_resources()
+    pci_claim_resource()
+      request_resource_conflict()
+        __request_resource()          <- res->parent set here
+
+At that point, the pci_resource_len() would return a non-zero value as
+res->start and res->end would already be set, but the res->parent is
+still NULL (not yet assigned to tree).
+
+The old dynamic code ran from pci_sysfs_init() as a late_initcall (after
+assignment), where resource_assigned() would have worked.
+
+As such, we can't really use resource_assigned() together with static
+sysfs attributes, at least not without solving the resources evaluation
+order here.
+
+Thank you!
+
+	Krzysztof
