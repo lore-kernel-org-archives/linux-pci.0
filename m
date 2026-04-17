@@ -1,264 +1,199 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C015535C1A0
-	for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2026 06:49:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776408585; cv=none; b=JKCdTEug17Fe7Sub+oO9lT8MyaOxHyir/4QjQXCST5BHObA0Qk2J8W6gNnhry35buglmV7hmkb7dLD8dxSlF8yWgnDivZCKpwLga15J/nBKVcbJD5UfFvbzaufUsCYanlYLnvIAXWFlpHyWQvvIhxdIH73CCdU2M2uzaq2X5bGQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776408585; c=relaxed/simple;
-	bh=6wBlfCZnjRaxx+UJMz6dglwS7I5L+mp6zaQlD5KYJI0=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=IF8FfC+1Njh6KpX8z3HMSCP9buyWZpFrnm2Mp2kx9MSLglZuFjcq1wFAHSupG+m4sy7NPckST/1ldSa70+V9dUOQyPNNHyxQW9/lfGeHYRM3up+7YIa2JquMXCi/geD/+NSF8B6wzqD4pDuE/83DBmdq0A3YmvwskWDCqPVpOvY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=D/PlJOkq; arc=none smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A914346A10;
+	Fri, 17 Apr 2026 07:16:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.10
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776410166; cv=fail; b=fBxrnK8jTRzv4Pw4bnz0lpwfLlLlWV3EBErL0ufdw3YsKU9Lle7UObzgrQ86cl5O19hAxFHgncgQSNYb2PRHckW1DB3OWeqtmHZptWrSXYsfhtGsq3cYfz3X1k96IubpqVym376PUgO2tamQmINRiwW1RPsyrU/+LuJsi+383mw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776410166; c=relaxed/simple;
+	bh=X4ga7xgZ5enWpd0MR/kuj1IBnmLJi/JU5geAjb9mkUk=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=PdX97kl0z0nvSJSOiYDKc9waIReD07PfGnTWVX0S+e7Pwx+KKmOsHMRQCeJ11UTvxrhyp4ju/s0cJhFeWYHlQg1LVcYjqhiWF7u72GuMal3DhpUGfPZpsw7y+kBml5rU1VhfAiLJMgbtXOdVnMzg9mHVzanggJJiUGGlwLr9rt8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BeiDjVin; arc=fail smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="D/PlJOkq"
-Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63GEWAl83788046;
-	Thu, 16 Apr 2026 23:49:40 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=s2048-2025-q2; bh=eixkrv4hRbb0EHj2lh
-	jUIdtnIZ/+LHrnB2ndktGkM/0=; b=D/PlJOkqz84OgV7R36t45byINrAh+4aO19
-	wuv9+GKWMgPh0BrP87Z/hYelnmQJKODRz1nTlXxKOoXejkCRascxKF7mJVIiMvr5
-	ZXpEGmoyrc3xwHOShswigunIhSCGq8LC7J27zJy4PoC9oJk9QrFUK3+DJN9h0Qc5
-	KOEgwWToNcWC+jbfofuogI756RXpiL+J78R2lWDedKpmYZQs/2JAozrO7I5wA6Fy
-	5x5IaatofvNGMslTYkBeIcIcg0nTREdX3D6ZxvdvSfF7fmlt6YV+aHugA8WS5Waq
-	UDFmt5/2sUiLFcg2OlSMjLize5PKSs5XRydGL76GX3JzHgneNz1Q==
-Received: from maileast.thefacebook.com ([163.114.135.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4dh84yt9vn-2
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-	Thu, 16 Apr 2026 23:49:40 -0700 (PDT)
-Received: from localhost (2620:10d:c0a8:fe::f072) by mail.thefacebook.com
- (2620:10d:c0a9:6f::8fd4) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.2.2562.37; Fri, 17 Apr
- 2026 06:49:38 +0000
-From: Mattias Nissler <mnissler@meta.com>
-To: <linux-pci@vger.kernel.org>
-CC: =?UTF-8?q?Martin=20Mare=C5=A1?= <mj@ucw.cz>,
-        Mattias Nissler
-	<mnissler@meta.com>
-Subject: [PATCH pciutils v2] ls-ecaps: Decode DPC RP PIO registers
-Date: Thu, 16 Apr 2026 23:49:31 -0700
-Message-ID: <20260417064931.2073728-1-mnissler@meta.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BeiDjVin"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1776410166; x=1807946166;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=X4ga7xgZ5enWpd0MR/kuj1IBnmLJi/JU5geAjb9mkUk=;
+  b=BeiDjVin6w1+Ljw+94Hb14YcDGk5YF07fswRxr2dSjIoskfdhLbGrAer
+   RB2MH5T8y1RJggCLqqu7DlLVbYZlQCLqTpRktW9qBCj94yi8iGqr4UUVw
+   Lt181xXZpKGTSzth3u8CRDK72bAMquun5O3vkziaPPwZ8yP5s+4soCG6I
+   QkzuBuXlnDEj4aMnOmfgaLuFy8Uv3l5AB0nFZI57Rwkw6rh1u0MkqFOM4
+   4kzZlcHE5V1P0kzpTasU+JpLJhZyhsm0W41JW1gKID++G1dgv0rzD2jw+
+   amFbM4ZR/NZhroz1ja+4VJyuI8LtarMU0bdDqNh4J+Ps3ngK3E+dMY+yT
+   Q==;
+X-CSE-ConnectionGUID: Vhqgzzp1SC+myUuSqLusbw==
+X-CSE-MsgGUID: 8LFNke54Siq7P+iZEW4YlQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11761"; a="94825447"
+X-IronPort-AV: E=Sophos;i="6.23,183,1770624000"; 
+   d="scan'208";a="94825447"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Apr 2026 00:16:06 -0700
+X-CSE-ConnectionGUID: o84kJJEBSC6sMskjYZ2fzA==
+X-CSE-MsgGUID: 6oOUKSwYRuulELU/qWIEYQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,183,1770624000"; 
+   d="scan'208";a="235339243"
+Received: from fmsmsx903.amr.corp.intel.com ([10.18.126.92])
+  by orviesa004.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Apr 2026 00:16:05 -0700
+Received: from FMSMSX902.amr.corp.intel.com (10.18.126.91) by
+ fmsmsx903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Fri, 17 Apr 2026 00:16:04 -0700
+Received: from fmsedg903.ED.cps.intel.com (10.1.192.145) by
+ FMSMSX902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37 via Frontend Transport; Fri, 17 Apr 2026 00:16:04 -0700
+Received: from PH7PR06CU001.outbound.protection.outlook.com (52.101.201.7) by
+ edgegateway.intel.com (192.55.55.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Fri, 17 Apr 2026 00:16:03 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=n1l2ojCsrc2B6mJxar8ZC4fVGg4a9n4XLCCA9TmCj5tncD/9UrvX16SqFl7NAUXeyGbhXXP/Br6QwDGOfUCoN3VdT7kSV+DWtYwWN+GyeCbaN3pPAF9LJdD1x19ctMjq6ghGRJnxNDuKt56eg4S0iZRybXjzG9XMD8K/PJOSlAdJgWsAvx85iAfYvs7SGaiprcm3xxljWUs1fiRJeZuw9yCfWWH7ZYUPN5zBHLu/kmTrwChrgAmUKnl8V96PIVvn36OmkCiUB/oAPEwofcAlhkiyLy2zbuH8gM2CX/n5JnhZOHEAfzLdT9t4a0/DeG/5v4s6eDYvSLn4w7hJmw2DOw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=KINzr1kygS3BzGFWICuVeQGZk9/ibknn55Vd211vVis=;
+ b=dWkSd5Eg5vxPKm5Wy9zcPRDwYJ25ktkoPUcETL0JCkd2P0/P+4vu6F5fp/LFYr8NtPbKcttn2Bvuhenb3DwYSSGMmZ3VXagDgHSVBzLDfZibhs7Aiacf01pOu74htzSVbDybGnp5qGwq1SX+V/YQ+mwwSTbWeOxx3GLXXcKuLCDbAGvE0zNEqvhC39s8Bi6g6IS5K6O//sV8E2XAlTeilek6/FcRZYV4IR7buAA6/QXz7Sj/78ZAf7l0KeQ7sU2DS87HfcG922kzT19W0gkSqYLAiF2vk8oMij9RbV/olmaY4GMFiDS9VSz9ugf2zUR8tz6eL5KYeV0XuteHz4j7kQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from BN9PR11MB5276.namprd11.prod.outlook.com (2603:10b6:408:135::18)
+ by DSSPR11MB9665.namprd11.prod.outlook.com (2603:10b6:8:377::24) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9818.25; Fri, 17 Apr
+ 2026 07:16:02 +0000
+Received: from BN9PR11MB5276.namprd11.prod.outlook.com
+ ([fe80::f997:762f:f079:134f]) by BN9PR11MB5276.namprd11.prod.outlook.com
+ ([fe80::f997:762f:f079:134f%5]) with mapi id 15.20.9818.023; Fri, 17 Apr 2026
+ 07:16:02 +0000
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Ankit Agrawal <ankita@nvidia.com>, "alex@shazbot.org" <alex@shazbot.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>
+CC: "jgg@ziepe.ca" <jgg@ziepe.ca>, "yishaih@nvidia.com" <yishaih@nvidia.com>,
+	"skolothumtho@nvidia.com" <skolothumtho@nvidia.com>, "bhelgaas@google.com"
+	<bhelgaas@google.com>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v3 1/1] vfio/nvgrace-gpu: Add Blackwell-Next GPU readiness
+ check via CXL DVSEC
+Thread-Topic: [PATCH v3 1/1] vfio/nvgrace-gpu: Add Blackwell-Next GPU
+ readiness check via CXL DVSEC
+Thread-Index: AQHczULBRDpxt6EPl0SQXWXMF888C7Xi2NBQ
+Date: Fri, 17 Apr 2026 07:16:02 +0000
+Message-ID: <BN9PR11MB5276004A82F75505C81EF94D8C202@BN9PR11MB5276.namprd11.prod.outlook.com>
+References: <20260416014504.63067-1-ankita@nvidia.com>
+In-Reply-To: <20260416014504.63067-1-ankita@nvidia.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: BN9PR11MB5276:EE_|DSSPR11MB9665:EE_
+x-ms-office365-filtering-correlation-id: e9bba4c4-a821-4ff6-40ba-08de9c512ef1
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|366016|376014|38070700021|18002099003|56012099003|22082099003;
+x-microsoft-antispam-message-info: mlJRGEJqG1uqO0siMLd+twpvFqvL/rhO5jS6RBo/7eQvO5V78jQLRASabwgS/WupFkVWgFm0rW+jW7JY8RHr3MOiOlSL2F153/EJY4MEAyGDfx8eJEJO48eB786Apjz8KbZtvE/v+73jSPxfzV7d44jZh9Gvyz3csvPe2rLkMHlsZj36TvCiCQ62gTmOkvf3SjJUhR61T1W/zwcWCENGKxvx2sEUe9IxHvA28c+24W/Ue+i4hAkfHMlRuEcRtHEzlNLW8Im6nrw80P9Ls8lJxbCfCb82QYYbbP+/Jd3+jvd6JBchkiZ3xqKfWVpLGpjDz7aTMKwxiB70L8OajgPvSbfU7c1fERjyiNK1/vTsoMjegeXYt0S64m+JEWYAe9kPFiN8SgiKo4XyRgWlA9IV/jGaphoUYFDIZS3ALu6LP9bppjkaeXwiYhFTS2/8YQnOkth7V9XydpJABgPYkoE2r/00RiV0ABDygMv7exlAl1DOt5QJ1+SWxPQ60IRABPzuzIsuvi6YeLU4JjJTwHJbsHs9lB75mvgnWxEBmlPE3lq/KacD6m02okCRMpki/Q0M0IZ45vzgEpa3AHaush/x4TRCg28FSEMeJYJNvqtwwe0WmV/pss2zyVOK6QVxMBQ5duyNdvvzBlpa/SMENY2fytxjS2EZ8s+rpWPonJ/iOnM4KyICU//N+r4CWKR599kwUUtHDrmTre7LFLD65D+Mzqrku6fNLCyh/8WM3Xs33p8=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR11MB5276.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(38070700021)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?81h6woBPnmHgneonBcO4fLGL5i3/fFRO6E6kCW3E6Kkx/1z14X4bpHoQDfYd?=
+ =?us-ascii?Q?X7TY4PKkZ/PisEIvQ+AtfEY+QDhBL2+DLVy6CW4+/wM1KzoBtA0GM326cejr?=
+ =?us-ascii?Q?81uSbsflCyxqHNo6MtppyuMq5/2H/qCxcl1cRSujHL9zFmvg5ebNK9CbYiUp?=
+ =?us-ascii?Q?Do6Vbpj7gRN5bn4KNYUaRsTRyAtweoykBLMY17QXeSaiLJz01XaYFe+w4hJe?=
+ =?us-ascii?Q?3Z6NxIhozbN8aOcpTH0V6lB3ahJ329RPCqlXkNe+r4+U7h0tsnCogbLpPQ4j?=
+ =?us-ascii?Q?gSRVduu4xtTUWMTtE/Mdbj28vBLv2pSLweQnWavhOhmdLDHml1+bg9OhTl7L?=
+ =?us-ascii?Q?J+mUVhzxeIgXoU2YnEfBDbzWpdWqAe/Ba/F1914IEHMGWJf3T7tp48v9hjp3?=
+ =?us-ascii?Q?d9ZkpyyMld58V6oaymFG8BtABedEDnvCpA170pRvcyoVbd7soX6mO7Y9g84B?=
+ =?us-ascii?Q?dEKgDAY48o+oSwIuLhj5ftDfbKNEHnFbKEBYVg5VCCDLOc4rwt80HHG9RteW?=
+ =?us-ascii?Q?dPClH3BPRC/G7IZ95ruo8FZw/ZWKZPHqB9Px6gkttSIoXDBEDzD+vl97Tl79?=
+ =?us-ascii?Q?sI/k4/JlEmXVBWOFQklg7T1qyD3lh/BYCTfinOrAToePDr1PJAip3AoHKHiE?=
+ =?us-ascii?Q?3zGNFpNaSDrp0l/zJSmzYZE2OAdTLtsTpBnt74d/A4GxSRAQc3Q0/ZsLIVvM?=
+ =?us-ascii?Q?7QLsj6CI0lijXy2OiSPPcMoVwmQalZGy2R/MQke5FIdc+hyDX6XAt4N50mwI?=
+ =?us-ascii?Q?8B11MQNVyaUCiAg1V76+R9b1hyXBefngseTJ0176Oqz20EF9umjeyTQgSaeg?=
+ =?us-ascii?Q?iOmVS7bqjG5IYlFFdCOJ9dhyl/ajYDPj175NHFDpUt7cc2FCTHB1Pj1BGvjE?=
+ =?us-ascii?Q?bJJqzGjsqbORxpss6SjRgHjcsu1+xJWJgFTG0l6+joE+l0uCE0QaVkaD+j/P?=
+ =?us-ascii?Q?V/T3XAsi7iD72bfrzTrIoqKAh8iqYZtOtKSNrWgnUSwBldJ07y49o9Fu9W48?=
+ =?us-ascii?Q?4hcdrotF0Pax4hFAHr1czBJHdXMJAp/dNGIsiw9i0x+ad4sXoX6ZwTFqqE1/?=
+ =?us-ascii?Q?2rMw7T9dkgkR5cxad69NVNXjRoyqcB2iFMiz8WwI+7gNRdFTjWqSdKUjfo8z?=
+ =?us-ascii?Q?UxsWM9jE496fDSbnzu+zlSnANyNXGZ4+zIRFAjR19W8/KE1SnJ1SMhpnVdx3?=
+ =?us-ascii?Q?Sl0DuHO04E/Bw/3xe9l+CvXNfnLxLFpdpd3wYEfZqrtSdqZxmT74Mab/1XL5?=
+ =?us-ascii?Q?Gb8v+bUxZzrx195zCtxf0HtumhJB2W5/KspCEpoZRLqHiEzjA6gkXgtNPfk8?=
+ =?us-ascii?Q?ZTUttzm4nhZk3SPaaZslQBRH3aLk4TkEcCvk0KcsP9hc4eGgLEgi2WGD4u0e?=
+ =?us-ascii?Q?mFcf/NbcF6OB9eSugybgF59Q1CpkfbVAv6RySuZu62Rp8VWrq6djINULZYGm?=
+ =?us-ascii?Q?dVQaJCS1AjKD37t/vje95wlM8nuwgQHgHq3fLTWfTPD8MPZZursYfd0Z21wn?=
+ =?us-ascii?Q?BMMdTgt9mUYrjfW0tm4L1qdnUXNZBPY9lrnp4paax+SX+mFH+CJNsljNoli4?=
+ =?us-ascii?Q?bmGCsXy3b8572MTTsQDTFnX/D9MwtabpKHSRGFV4nfBYWNCndLLtW8VSjjKk?=
+ =?us-ascii?Q?yNawWR43GPk00MGOcdENIZr8DAXipBpDZ1dV0eYgi3mhP8+Zi447pXVpBfns?=
+ =?us-ascii?Q?7aonlzc332dCOV2nHrZIuJxfoqf+4ZubSowZ75b66BFz4dXq?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDE3MDA2NSBTYWx0ZWRfXySufX2h0sSpu
- rSwsin4S48l8H0XobT/mnRCgET/Qycd9xdmtA5CEoxRiDbOGr192YQPlnodsrfyn6nTX1URHulc
- OvjRRAxMFaBqpiSCq0OCc6V1hVRfrKEpCRpuDTOEn69rRjqRAbMK81Y6mezmlmZtUOwwdVwOywa
- 5bKtDUDREDAQ9tAisB9ptgpfGxknyhiUl6m65qlxRbM5oEy8qCD5Pl2yCmsIF+1cnQucykeXMOS
- zqwRj5y8cVp69lylX3rVYYX/0IEBrJ4ZtIwJWrlJO0BvbSCSkheaXWd63MjXlRpJykfMRy15o4b
- 7Cuylf3g0sidF0EMIqB2ckvxqJFS9N+As29zy3OB0PKePqP4sYgYwuzc3lqxVLu0WQTjRXNgPhC
- x7hQ+jxe6s0r1k4tQyo4of9C8OJrKKdmCZe463CjDENzPwusKeeN/bo88xI7joaXhrHHeibDRu/
- cVTdNKsL8kxpQc3rKfw==
-X-Authority-Analysis: v=2.4 cv=eubvCIpX c=1 sm=1 tr=0 ts=69e1d804 cx=c_pps
- a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
- a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
- a=crHB47gyY4rKiduisYu9:22 a=VabnemYjAAAA:8 a=mvVm65g0eZYFh6_jv2gA:9
- a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-GUID: uq8bW19oIR-unPuhfaE2bPzS9KCUnne0
-X-Proofpoint-ORIG-GUID: uq8bW19oIR-unPuhfaE2bPzS9KCUnne0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-16_04,2026-04-16_03,2025-10-01_01
+X-Exchange-RoutingPolicyChecked: QH4tLbfE00Mp1/Fh0knUW372Hjr4KMDRWaZ/xYvxKq530Xc87hdJQIx9ISRpkEZ4GRm/psNdHEfyEBC1UYGNNTtKw7evn77Px0amAkc+jEjEudr4gqc/eigdJgIUoHy52X59j1WJ405TcXAiC0crx9s80hG5dLQofB8IF/k6ase/V67C+ZUziFlmkO6l+84p3VciCzdBCAUASXy9Exsvw7SNgFlDN/1CXnKWry9KnU9sFwCE9+bvSY00RA3JALkgZKZy0h7LxY9g4QXDvhB05/VPSiPPqaNGSM7AJmnxIl/dOnniP0Cnpjjrb5Dx7nU8CDwg0sOQA3mMZ5nPPv9CyQ==
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BN9PR11MB5276.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e9bba4c4-a821-4ff6-40ba-08de9c512ef1
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Apr 2026 07:16:02.6427
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: EtscV1X9+h9+qDGVe4MfYilMmpvXGrVpvK8pJtcZ5w2E/yEioLgp+dFBHj8ygaJb6Kg5os0d2U1O3Ya/OP2M8A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DSSPR11MB9665
+X-OriginatorOrg: intel.com
 
-The RP PIO registers in the DPC extended capability contain status
-information and control bits related to how root ports handle failing
-requests.
+> From: Ankit Agrawal <ankita@nvidia.com>
+> Sent: Thursday, April 16, 2026 9:45 AM
+>=20
+> +
+> +static int nvgrace_gpu_wait_device_ready_cxl(struct
+> nvgrace_gpu_pci_core_device *nvdev)
+> +{
+> +	struct pci_dev *pdev =3D nvdev->core_device.pdev;
+> +	int cxl_dvsec =3D nvdev->cxl_dvsec;
+> +	unsigned long mem_info_valid_deadline;
+> +	unsigned long timeout;
+> +	u32 dvsec_memory_status;
+> +	u8 mem_active_timeout;
+> +
+> +	pci_read_config_dword(pdev, cxl_dvsec +
+> PCI_DVSEC_CXL_RANGE_SIZE_LOW(0),
+> +			      &dvsec_memory_status);
+> +
+> +	if (cxl_dvsec_mem_is_active(dvsec_memory_status))
+> +		return 0;
+> +
+> +	mem_active_timeout =3D
+> FIELD_GET(PCI_DVSEC_CXL_MEM_ACTIVE_TIMEOUT,
+> +				       dvsec_memory_status);
 
-Sample output:
-        Capabilities: [380 v1] Downstream Port Containment
-                DpcCap: IntMsgNum 0, RPExt+ PoisonedTLP+ SwTrigger+ RP PIO Log 6, DL_ActiveErr+
-                DpcCtl: Trigger:0 Cmpl+ INT+ ErrCor+ PoisonedTLP- SwTrigger- DL_ActiveErr-
-                DpcSta: Trigger- Reason:00 INT- RPBusy- TriggerExt:00 RP PIO ErrPtr:11
-                Source: 0000
-                RP PIO:
-                        Sta: CfgUR+ CfgCA- CfgCTO- IOUR- IOCA- IOCTO- MemUR- MemCA+ MemCTO-
-                        Msk: CfgUR+ CfgCA+ CfgCTO+ IOUR+ IOCA+ IOCTO+ MemUR- MemCA- MemCTO-
-                        Sev: CfgUR- CfgCA- CfgCTO- IOUR- IOCA- IOCTO- MemUR- MemCA- MemCTO-
-                        Err: CfgUR- CfgCA- CfgCTO- IOUR- IOCA- IOCTO- MemUR- MemCA- MemCTO-
-                        Exc: CfgUR- CfgCA- CfgCTO- IOUR- IOCA- IOCTO- MemUR- MemCA- MemCTO-
-                        HeaderLog: 00001001 0000220f f7a01100 00000000
-                        ImpSpecLog: 00000000
-                        TLPPrefixLog: 00000000
+Sashiko pointed out that " the Memory_Active_Timeout field is
+only valid when the Memory_Info_Valid bit is set ". If it's true
+then blindly reading it here is incorrect.
 
-Signed-off-by: Mattias Nissler <mnissler@meta.com>
----
-Changes:
-v2:
- * fix style issues
- * correct DW read index for prefix log
----
- lib/header.h | 18 ++++++++++
- ls-ecaps.c   | 97 +++++++++++++++++++++++++++++++++++++++++++++-------
- 2 files changed, 102 insertions(+), 13 deletions(-)
+https://sashiko.dev/#/patchset/20260416014504.63067-1-ankita%40nvidia.com
 
-diff --git a/lib/header.h b/lib/header.h
-index 21fb628..507080f 100644
---- a/lib/header.h
-+++ b/lib/header.h
-@@ -1454,6 +1454,7 @@
- #define  PCI_DPC_CAP_SW_TRIGGER	0x80		/* DPC Software Trigger */
- #define  PCI_DPC_CAP_RP_LOG(x)	(((x) >> 8) & 0xf) /* DPC RP PIO Log Size */
- #define  PCI_DPC_CAP_DL_ACT_ERR	0x1000		/* DPC DL_Active ERR_COR Signal */
-+#define  PCI_DPC_CAP_RP_PIO_LOG_SIZE4	0x2000	/* RP PIO Log Size [4] */
- #define PCI_DPC_CTL		6	/* DPC Control */
- #define  PCI_DPC_CTL_TRIGGER(x) ((x) & 0x3)	/* DPC Trigger Enable */
- #define  PCI_DPC_CTL_CMPL	0x4		/* DPC Completion Control */
-@@ -1470,6 +1471,23 @@
- #define  PCI_DPC_STS_TRIGGER_EXT(x) (((x) >> 5) & 0x3) /* Trigger Reason Extension */
- #define  PCI_DPC_STS_PIO_FEP(x) (((x) >> 8) & 0x1f) /* DPC PIO First Error Pointer */
- #define PCI_DPC_SOURCE		10	/* DPC Source ID */
-+#define PCI_DPC_RP_PIO_STATUS	0xc	/* DPC RP PIO Status */
-+#define  PCI_DPC_RP_PIO_CFG_UR		0x00000001	/* Cfg Request UR Completion */
-+#define  PCI_DPC_RP_PIO_CFG_CA		0x00000002	/* Cfg Request CA Completion */
-+#define  PCI_DPC_RP_PIO_CFG_CTO		0x00000004	/* Cfg Request Completion Timeout */
-+#define  PCI_DPC_RP_PIO_IO_UR		0x00000100	/* I/O Request UR Completion */
-+#define  PCI_DPC_RP_PIO_IO_CA		0x00000200	/* I/O Request CA Completion */
-+#define  PCI_DPC_RP_PIO_IO_CTO		0x00000400	/* I/O Request Completion Timeout */
-+#define  PCI_DPC_RP_PIO_MEM_UR		0x00010000	/* Mem Request UR Completion */
-+#define  PCI_DPC_RP_PIO_MEM_CA		0x00020000	/* Mem Request CA Completion */
-+#define  PCI_DPC_RP_PIO_MEM_CTO		0x00040000	/* Mem Request Completion Timeout */
-+#define PCI_DPC_RP_PIO_MASK	0x10	/* DPC RP PIO Mask */
-+#define PCI_DPC_RP_PIO_SEVERITY	0x14	/* DPC RP PIO Severity */
-+#define PCI_DPC_RP_PIO_SYSERROR	0x18	/* DPC RP PIO SysError */
-+#define PCI_DPC_RP_PIO_EXCEPTION	0x1c	/* DPC RP PIO Exception */
-+#define PCI_DPC_RP_PIO_HEADER_LOG	0x20	/* DPC RP PIO Header Log */
-+#define PCI_DPC_RP_PIO_IMPSPEC_LOG	0x30	/* DPC RP PIO ImpSpec Log */
-+#define PCI_DPC_RP_PIO_TLP_PREFIX_LOG	0x34	/* DPC RP PIO TLP Prefix Log */
- 
- /* L1 PM Substates Extended Capability */
- #define PCI_L1PM_SUBSTAT_CAP	0x4	/* L1 PM Substate Capability */
-diff --git a/ls-ecaps.c b/ls-ecaps.c
-index 455c203..61a4dee 100644
---- a/ls-ecaps.c
-+++ b/ls-ecaps.c
-@@ -233,7 +233,9 @@ cap_aer(struct device *d, int where, int type)
- 
- static void cap_dpc(struct device *d, int where)
- {
--  u16 l;
-+  u16 cap, w, log_size;
-+  u32 l, l0, l1, l2, l3;
-+  int i;
- 
-   printf("Downstream Port Containment\n");
-   if (verbose < 2)
-@@ -242,24 +244,93 @@ static void cap_dpc(struct device *d, int where)
-   if (!config_fetch(d, where + PCI_DPC_CAP, 8))
-     return;
- 
--  l = get_conf_word(d, where + PCI_DPC_CAP);
-+  w = cap = get_conf_word(d, where + PCI_DPC_CAP);
-+  log_size = PCI_DPC_CAP_RP_LOG(cap) | (!!(PCI_DPC_CAP_RP_PIO_LOG_SIZE4 & cap) << 4);
-   printf("\t\tDpcCap:\tIntMsgNum %d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
--    PCI_DPC_CAP_INT_MSG(l), FLAG(l, PCI_DPC_CAP_RP_EXT), FLAG(l, PCI_DPC_CAP_TLP_BLOCK),
--    FLAG(l, PCI_DPC_CAP_SW_TRIGGER), PCI_DPC_CAP_RP_LOG(l), FLAG(l, PCI_DPC_CAP_DL_ACT_ERR));
-+    PCI_DPC_CAP_INT_MSG(w), FLAG(w, PCI_DPC_CAP_RP_EXT), FLAG(w, PCI_DPC_CAP_TLP_BLOCK),
-+    FLAG(w, PCI_DPC_CAP_SW_TRIGGER), log_size, FLAG(w, PCI_DPC_CAP_DL_ACT_ERR));
- 
--  l = get_conf_word(d, where + PCI_DPC_CTL);
-+  w = get_conf_word(d, where + PCI_DPC_CTL);
-   printf("\t\tDpcCtl:\tTrigger:%x Cmpl%c INT%c ErrCor%c PoisonedTLP%c SwTrigger%c DL_ActiveErr%c\n",
--    PCI_DPC_CTL_TRIGGER(l), FLAG(l, PCI_DPC_CTL_CMPL), FLAG(l, PCI_DPC_CTL_INT),
--    FLAG(l, PCI_DPC_CTL_ERR_COR), FLAG(l, PCI_DPC_CTL_TLP), FLAG(l, PCI_DPC_CTL_SW_TRIGGER),
--    FLAG(l, PCI_DPC_CTL_DL_ACTIVE));
-+    PCI_DPC_CTL_TRIGGER(w), FLAG(w, PCI_DPC_CTL_CMPL), FLAG(w, PCI_DPC_CTL_INT),
-+    FLAG(w, PCI_DPC_CTL_ERR_COR), FLAG(w, PCI_DPC_CTL_TLP), FLAG(w, PCI_DPC_CTL_SW_TRIGGER),
-+    FLAG(w, PCI_DPC_CTL_DL_ACTIVE));
- 
--  l = get_conf_word(d, where + PCI_DPC_STATUS);
-+  w = get_conf_word(d, where + PCI_DPC_STATUS);
-   printf("\t\tDpcSta:\tTrigger%c Reason:%02x INT%c RPBusy%c TriggerExt:%02x RP PIO ErrPtr:%02x\n",
--    FLAG(l, PCI_DPC_STS_TRIGGER), PCI_DPC_STS_REASON(l), FLAG(l, PCI_DPC_STS_INT),
--    FLAG(l, PCI_DPC_STS_RP_BUSY), PCI_DPC_STS_TRIGGER_EXT(l), PCI_DPC_STS_PIO_FEP(l));
-+    FLAG(w, PCI_DPC_STS_TRIGGER), PCI_DPC_STS_REASON(w), FLAG(w, PCI_DPC_STS_INT),
-+    FLAG(w, PCI_DPC_STS_RP_BUSY), PCI_DPC_STS_TRIGGER_EXT(w), PCI_DPC_STS_PIO_FEP(w));
-+
-+  w = get_conf_word(d, where + PCI_DPC_SOURCE);
-+  printf("\t\tSource:\t%04x\n", w);
- 
--  l = get_conf_word(d, where + PCI_DPC_SOURCE);
--  printf("\t\tSource:\t%04x\n", l);
-+  if ((cap & PCI_DPC_CAP_RP_EXT) && config_fetch(d, where + PCI_DPC_CAP + 8, 20 + 4 * log_size))
-+    {
-+      printf("\t\tRP PIO:\n");
-+
-+      l = get_conf_long(d, where + PCI_DPC_RP_PIO_STATUS);
-+      printf("\t\t\tSta: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c MemUR%c MemCA%c MemCTO%c\n",
-+             FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA),
-+             FLAG(l, PCI_DPC_RP_PIO_CFG_CTO), FLAG(l, PCI_DPC_RP_PIO_IO_UR),
-+             FLAG(l, PCI_DPC_RP_PIO_IO_CA), FLAG(l, PCI_DPC_RP_PIO_IO_CTO),
-+             FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA),
-+             FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
-+
-+      l = get_conf_long(d, where + PCI_DPC_RP_PIO_MASK);
-+      printf("\t\t\tMsk: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c MemUR%c MemCA%c MemCTO%c\n",
-+             FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA),
-+             FLAG(l, PCI_DPC_RP_PIO_CFG_CTO), FLAG(l, PCI_DPC_RP_PIO_IO_UR),
-+             FLAG(l, PCI_DPC_RP_PIO_IO_CA), FLAG(l, PCI_DPC_RP_PIO_IO_CTO),
-+             FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA),
-+             FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
-+
-+      l = get_conf_long(d, where + PCI_DPC_RP_PIO_SEVERITY);
-+      printf("\t\t\tSev: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c MemUR%c MemCA%c MemCTO%c\n",
-+             FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA),
-+             FLAG(l, PCI_DPC_RP_PIO_CFG_CTO), FLAG(l, PCI_DPC_RP_PIO_IO_UR),
-+             FLAG(l, PCI_DPC_RP_PIO_IO_CA), FLAG(l, PCI_DPC_RP_PIO_IO_CTO),
-+             FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA),
-+             FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
-+
-+      l = get_conf_long(d, where + PCI_DPC_RP_PIO_SYSERROR);
-+      printf("\t\t\tErr: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c MemUR%c MemCA%c MemCTO%c\n",
-+             FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA),
-+             FLAG(l, PCI_DPC_RP_PIO_CFG_CTO), FLAG(l, PCI_DPC_RP_PIO_IO_UR),
-+             FLAG(l, PCI_DPC_RP_PIO_IO_CA), FLAG(l, PCI_DPC_RP_PIO_IO_CTO),
-+             FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA),
-+             FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
-+
-+      l = get_conf_long(d, where + PCI_DPC_RP_PIO_EXCEPTION);
-+      printf("\t\t\tExc: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c MemUR%c MemCA%c MemCTO%c\n",
-+             FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA),
-+             FLAG(l, PCI_DPC_RP_PIO_CFG_CTO), FLAG(l, PCI_DPC_RP_PIO_IO_UR),
-+             FLAG(l, PCI_DPC_RP_PIO_IO_CA), FLAG(l, PCI_DPC_RP_PIO_IO_CTO),
-+             FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA),
-+             FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
-+
-+      l0 = get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG);
-+      l1 = get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG + 4);
-+      l2 = get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG + 8);
-+      l3 = get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG + 12);
-+      printf("\t\t\tHeaderLog: %08x %08x %08x %08x\n", l0, l1, l2, l3);
-+
-+      if (log_size >= 5)
-+        {
-+          l = get_conf_long(d, where + PCI_DPC_RP_PIO_IMPSPEC_LOG);
-+          printf("\t\t\tImpSpecLog: %08x\n", l);
-+        }
-+
-+      if (log_size >= 6)
-+        {
-+          printf("\t\t\tTLPPrefixLog:");
-+          for (i = 5; i < log_size; i++)
-+            {
-+              l = get_conf_long(d, where + PCI_DPC_RP_PIO_TLP_PREFIX_LOG + (i - 5) * 4);
-+              printf(" %08x", l);
-+            }
-+          printf("\n");
-+        }
-+    }
- }
- 
- static void
--- 
-2.52.0
+> @@ -1146,11 +1218,16 @@ static bool
+> nvgrace_gpu_has_mig_hw_bug(struct pci_dev *pdev)
+>   * Ensure that the BAR0 region is enabled before accessing the
+>   * registers.
+>   */
+> -static int nvgrace_gpu_probe_check_device_ready(struct pci_dev *pdev)
+> +static int nvgrace_gpu_probe_check_device_ready(struct
+> nvgrace_gpu_pci_core_device *nvdev)
 
+the comment above should be updated too.
