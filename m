@@ -1,113 +1,127 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22DFA2C9D
-	for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2026 18:26:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71CB7355F49;
+	Fri, 17 Apr 2026 19:55:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776450371; cv=none; b=JQK7i++q0Iv/7HqJ9hhQr49tnzPUZ7+QdUCEvQj8EK0wyhRNijdKtlQI6D9yFKAt0k0kZXm/17itHA05PT8kIosxVcGuXsSH+pyOxPzc9tKIVNGGGhNvcgjzMAiS6wT43yIdDiTDzis6T8qbK8gIUy8MdmMwejsZuhyr99VBe/8=
+	t=1776455735; cv=none; b=tMh/gXmm+eAC/uB3M5UdtVj5hr1+0BEn9YcRilS8XtejAkkfBAw2EuhiQZpIjdjCsNpy1yzkSpfvBVtorii+LWrjJEOVfj5Gr8ZWnJdwFEdU1gA4uoxa4RDoIG56+X9j1hRM6mLDyLjN+fyPdLeAj7DxsuG8P8oJuz+c9vNjdX8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776450371; c=relaxed/simple;
-	bh=WDxib3BR9wG5EfEd+gJpd06gX+LFgK/YUO47GtGFGtE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Dzt/DkMG9Lvn/+IYBd+o+EwnOSogWyj3Xm5TLvn6tMUhkYl5B5QdDpEZzd5FPk7xISsxRK37LeIf1QQczIfJV24WfyMtPV7W0VWLpusfA25c9h2ZJYHDqrzmpOP27/dePAbUpL6q/NsHOAN+oVCY+IiZCgBX/LIb+rmNTBNURHk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W6mle7Xg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776455735; c=relaxed/simple;
+	bh=l+dL+bsfkqpxw8vBZ2qjjX1NYJoorXmurqTXyqgMrXM=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=QBcEbN06/Lw93YXFZVVZUya4BLI7zO/rMLlsSdlijAHIKk0gfWv+bTce7qNVTA+X/2OQuPJpHvwuzZi8PwG2G6BG/jDMQhMC6xE0Qh2kq6HtnGBlQszQ32ZLt0A9CFIAbNTJWzFfOTqvlQNalLrAO2WP59zpL7Rw5GOvyJQOpks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oeyODZQ7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W6mle7Xg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34815C19425;
-	Fri, 17 Apr 2026 18:26:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oeyODZQ7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4050C19425;
+	Fri, 17 Apr 2026 19:55:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776450370;
-	bh=WDxib3BR9wG5EfEd+gJpd06gX+LFgK/YUO47GtGFGtE=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=W6mle7XgtdP+vOieX0znv0yHJfqrgXsY5QdzmDORtEsyGFfXLNpgJOsf+i8CX6ARJ
-	 etaIph7vQ6sXHs7JeBAhBEdTv/D9f9LvIqn/JvYG1AoldKKBdoZ2CczulVnbuQg8Bd
-	 HAbKrMwQkoPxuLtO93TSVabsEuZWT54CH+LVWKrNqIPJzBZVY+WjU3hnqrwJ1C26IY
-	 7tIXfeSGA+EOFT7jU9iPAARNNrrqLVkcPsn19+y92q3kHasghjjq1qFckfs0LgKy/4
-	 0J08M2Y4Y2cUcMx1+6lm1tNkrJ6t5GaA3nnzx7ig0J8s6fw6m5f0nS2QflFtENSqcm
-	 6Ebbl3SxVGjMw==
-Message-ID: <7ebd7665-4ae8-4937-8d48-04fe9c04fbe1@kernel.org>
-Date: Fri, 17 Apr 2026 13:26:09 -0500
+	s=k20201202; t=1776455735;
+	bh=l+dL+bsfkqpxw8vBZ2qjjX1NYJoorXmurqTXyqgMrXM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=oeyODZQ7mydKqug4mEFFqwgFy2wf0FKAlp7sEFJNQSbj1jDtm1VgmE/QiQPf6wMmb
+	 D6zt0jL2JMD8k/PnfFAHGgbQYWawCD76DJ6c1cxShv6ZsPixx+NHg+fAHLDx6wWtSo
+	 j6P1XSuE4JxbkM/JjIL41MapnGeDAPaBqhHqJ5fdrx+owkVvW5RBdGMUu8YzGH5uMv
+	 rr5BQnn8via7fKYmj89e3OfqaLe0mNoiG+3E1vhRhcFZpC42zQZ4HxSVrQXPGd21h5
+	 XFp0/tLX+i+3NsVPU0mCh+pOoCIROYgYzKM7j/B3RMf8AwiLoqUpuHStC6GxYRdvl/
+	 RcVvpgff6WYVQ==
+Date: Fri, 17 Apr 2026 14:55:33 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sherry Sun <sherry.sun@nxp.com>
+Cc: "robh@kernel.org" <robh@kernel.org>,
+	"krzk+dt@kernel.org" <krzk+dt@kernel.org>,
+	"conor+dt@kernel.org" <conor+dt@kernel.org>,
+	Frank Li <frank.li@nxp.com>,
+	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>,
+	"festevam@gmail.com" <festevam@gmail.com>,
+	"lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+	"mani@kernel.org" <mani@kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Hongxing Zhu <hongxing.zhu@nxp.com>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+	"imx@lists.linux.dev" <imx@lists.linux.dev>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH V13 02/12] PCI: host-generic: Add common helpers for
+ parsing Root Port properties
+Message-ID: <20260417195533.GA92707@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: Stop setting cached power state to "unknown" on
- unbind
-Content-Language: en-US
-To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Alex Williamson <alex@shazbot.org>, linux-pci@vger.kernel.org
-References: <af7d11d3ceb231acc90829f7a5c8400c2446744f.1776415510.git.lukas@wunner.de>
-From: Mario Limonciello <superm1@kernel.org>
-In-Reply-To: <af7d11d3ceb231acc90829f7a5c8400c2446744f.1776415510.git.lukas@wunner.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <VI0PR04MB1211449884AC3BC8E3711F1AB92202@VI0PR04MB12114.eurprd04.prod.outlook.com>
 
-
-
-On 4/17/26 03:51, Lukas Wunner wrote:
-> When a PCI device is unbound from its driver, pci_device_remove() sets the
-> cached power state in pci_dev->current_state to PCI_UNKNOWN.  This was
-> introduced by commit 2449e06a5696 ("PCI: reset pci device state to unknown
-> state for resume") to invalidate the cached power state in case the system
-> is subsequently put to sleep.
+On Fri, Apr 17, 2026 at 03:17:16AM +0000, Sherry Sun wrote:
+> > On Thu, Apr 16, 2026 at 07:14:12PM +0800, Sherry Sun wrote:
+> > > Introduce generic helper functions to parse Root Port device
+> > > tree nodes and extract common properties like reset GPIOs. This
+> > > allows multiple PCI host controller drivers to share the same
+> > > parsing logic.
+> > >
+> > > Define struct pci_host_port to hold common Root Port properties
+> > > (currently only reset GPIO descriptor) and add
+> > > pci_host_common_parse_ports() to parse Root Port nodes from
+> > > device tree.
+> > 
+> > Are the Root Port and the RC the only possible places for 'reset'
+> > GPIO descriptions in DT?  I think PERST# routing is outside the
+> > PCIe spec, so it seems like a system could provide a PERST# GPIO
+> > routed to any Switch Upstream Port or Endpoint (I assume a PERST#
+> > connected to a switch would apply to both the upstream port and
+> > the downstream ports).
 > 
-> For bound devices, the cached power state is set to PCI_UNKNOWN in
-> pci_pm_suspend_noirq(), immediately before entering system sleep.
+> Thanks for the feedback. You're right that PERST# routing could
+> theoretically be connected to any device in the hierarchy. However,
+> for this patch series, I've focused on the most common use case in
+> practice: use Root Port level PERST# instead of the legacy Root
+> Complex level PERST#.
 > 
-> Extend to unbound devices for consistency.
+> Root Port level PERST# - This is the primary target, where each Root
+> Port has individual control over devices connected to it.  RC level
+> PERST# - Legacy binding support, where a single GPIO controls all
+> ports.
 > 
-> This obviates the need to change the cached power state on unbind, so stop
-> doing so.
+> We can extend this framework later if real hardware emerges that
+> needs Switch or EP-level PERST# control. I can add a comment
+> documenting this limitation if needed.
 > 
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> BTW, Mani and Rob had some great discussions in dt-schema about
+> PERST# and WAKE# sideband signals settings.
 
-Reviewed-by: Mario Limonciello (AMD) <superm1@kernel.org>
+> You can check here:
+> https://github.com/devicetree-org/dt-schema/issues/168
+> https://github.com/devicetree-org/dt-schema/pull/126
+> https://github.com/devicetree-org/dt-schema/pull/170
 
-FWIW I also had review-prompts /kreview check for corner cases and it 
-didn't find any.
+The upshot of all those conversations is that WAKE# and PERST# can be
+routed to arbitrary devices independent of the PCI topology.
 
-> ---
->   drivers/pci/pci-driver.c | 10 ++--------
->   1 file changed, 2 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 7c2d9d5..774892d 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -482,13 +482,6 @@ static void pci_device_remove(struct device *dev)
->   	pm_runtime_put_sync(dev);
->   
->   	/*
-> -	 * If the device is still on, set the power state as "unknown",
-> -	 * since it might change by the next time we load the driver.
-> -	 */
-> -	if (pci_dev->current_state == PCI_D0)
-> -		pci_dev->current_state = PCI_UNKNOWN;
-> -
-> -	/*
->   	 * We would love to complain here if pci_dev->is_enabled is set, that
->   	 * the driver should have called pci_disable_device(), but the
->   	 * unfortunate fact is there are too many odd BIOS and bridge setups
-> @@ -862,7 +855,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
->   
->   	if (!pm) {
->   		pci_save_state(pci_dev);
-> -		goto Fixup;
-> +		goto set_unknown;
->   	}
->   
->   	if (pm->suspend_noirq) {
-> @@ -914,6 +907,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
->   		goto Fixup;
->   	}
->   
-> +set_unknown:
->   	pci_pm_set_unknown_state(pci_dev);
->   
->   	/*
+I think extending host-generic to look for 'reset' in Root Port nodes
+is the right thing.  My concern is more about where we store it.  This
+patch saves it in a new "pci_host_port" struct, but someday we'll want
+a place to save the PERST# GPIOs for several slots behind a switch.
+Then we'll have two different ways to save the same information.
 
+WAKE# signals might be more pertinent -- we definitely need to support
+multiple WAKE# signals below a single Root Port, and it seems like
+PERST# and WAKE# GPIOs should be saved the same place.
+
+I'm wondering if both should go in the pci_dev itself.  I guess the
+implication is that a pci_dev->reset GPIO would describe a PERST#
+connected to the device *below* the pci_dev, at least for Downstream
+Ports.
+
+I don't know about WAKE# signals.  When it's in a connector, there's
+probably only a single possible WAKE# per Downstream Port.  But is it
+possible have multiple WAKE# signals from a multi-function device
+that's on the motherboard?  Saving the WAKE# GPIO in the Downstream
+Port wouldn't accommodate that case.
