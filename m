@@ -1,155 +1,208 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013062.outbound.protection.outlook.com [40.107.159.62])
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9247B3191BB
-	for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2026 06:10:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.62
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 832C5351C07
+	for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2026 06:49:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.145.42
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776406229; cv=fail; b=JPNBDaECDWJiaok4P3P0YK8BG1ymL//5WnaMFUyYzHAIpxspfC4ZTHJoKm9L0hBGHjtR1mjDiilpEd1HjOo5SEJwjQDf6r4L8utIoqZOz1pknBFiTLsvECnivn4Ye/VpijzPvlRaITyNMuGcEKORbN9JDVY0KRefAF2bG2ZnF0A=
+	t=1776408566; cv=fail; b=ss7d0TCwWSWE1N46wzamreIeFPe37zkDfGYKAmOaaDrofrXrLx7ctgsebNO5TtFYXtJdXfYJQwm9UoviBEOqX/0yx63pZXxzhxWuj3yhstOIY/N0GDJK8hhu+bL5XDLskMEsy5iu7NIbnTY3MA+QtDwqcfu9OE5BOWr7l4MxfAI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776406229; c=relaxed/simple;
-	bh=vckmA/ayCUYtlHPXASUrLgfhjI4Ypp6JzLQKWIs7l+Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=dsd9ov0h33dqTjkcH2YvGsBRk9JZhbupPS4h9EhhsIsnpBk+yYPfFu1vWiM0OLD655GmgZDDEr4YWRZVYi/xnc3SK+C/1Upv0pWGctjeTbo6/LK4C22dHL6jfIR9vz9K1koaqz2cotiXXeA7vtaIpI7H+OT2Wx07kAxvU7OaJGw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=lXUtO4x6; arc=fail smtp.client-ip=40.107.159.62
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	s=arc-20240116; t=1776408566; c=relaxed/simple;
+	bh=oeHFaw3s/PCX7cU5u8dfbsK00eXcszbbKHbB6QtRK6M=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=BEECGgM/Iufiz6hHOBNaJuUwXWk8UGC09V/irrhdT63hYCRk5RXjhCMNecOgU4scyYzKkbKR2bzig9WvfK+gs1h9xRF77Exm1n6b4NsgaABnDftJ6Nsl8wCykg1BOWRMgcUp0ariVSe1gUM4bkpZL0083kW2guak0tDPKN1Yyuw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=SJxsmT1R; arc=fail smtp.client-ip=67.231.145.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="lXUtO4x6"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ot3i4UqKqlOtOXwGns4upE2Niwa4ug6t8xLjGF8LIhmHsx+Gc4k+9NlPM6n6i1axsggsRmKNTZKJBhFmTKllK0B091YoW4AbQNWnRZMq9ezH+dzmCpT4Nai7uvrhLNritSMEuFhzHG+Czc2PTmXcrrU0bdi+e660kjZzI/etUmC9ikhV460PgZwkWLfy7VVNB1afu9TYUl56cGlZC3qBuNq83EroBuf+st0EonmIydjJbpb/I5lGvpoZVsk7jy1z5nNTnIIulZ2BFyVugpbOEJUMcRNyi7l+Oet9EAWInw62LKDdU9mlDryZIgyjZdgO3910r+pJY+ek7mPtuhC8Zw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=LgLJIh2AcEdHlcdLwt/Eg+ur5hya9bBWvcOpEB0fpaI=;
- b=xncvPm1HvfPCz8bPNO5lAYK3PBRFWY3ZTQVJTffzhSXMOk9jql2PyQa5DXFCdvTfiNDb13xnC2pZSHdkw7j5UzyYHSVFq7FqA+TxuWinAUOSL0milRIDyOVxniWzHBBKZruB3oKkGoIdO3QHC40+5CH0sFRJCjf6XpmJ4hNfe6I/D7yfYzg7mzM44qvTrWBpajPpNqdJdPRrh6L64a54IE25x8jRgfCWIrbiUU1jycxOePOWMF3P24ey3p5zep3tXiWN6mdxTdQfTZVehS5sCYqpXJnUEa47S6ONzu70ORJ9a5LKIYp7rfujyw2wVUgVydvTFGXTr9m9d9nwWjPB9A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LgLJIh2AcEdHlcdLwt/Eg+ur5hya9bBWvcOpEB0fpaI=;
- b=lXUtO4x6jXHHJG8Sct3ZA2LZ/3k1L4vH0uyMdkdcCxILvfCUE/doo2V6D6TwK+rigM8gDk7gBecRzWpl2ug0JiJRDABiEf5+mpkNcd96SAJK0sqWL9CdIvFRU0ZFrhwKkU2YxZ/83quP04wSeOahNFlFvWahWqAd24sEY1RDCnsLalCZZSG8H2lgsK+MnMNd6nQ/OC2TecS+IWei4rZL45O+sq3IraIpI8KafjvhcNdskOrHiPjpxLXZ/XDE3p+OfpdNuWELc+LJTYlHzhRttlxKqL/fDDtrID1Etc1cMS0JwwCjRZfxa5crYsbxjC43ssmowQ19ZsLXFfXnsf7PPw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by AM0PR04MB6899.eurprd04.prod.outlook.com (2603:10a6:208:183::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.48; Fri, 17 Apr
- 2026 06:10:25 +0000
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9818.023; Fri, 17 Apr 2026
- 06:10:24 +0000
-Date: Fri, 17 Apr 2026 02:10:17 -0400
-From: Frank Li <Frank.li@nxp.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Nirmal Patel <nirmal.patel@linux.intel.com>,
-	Jonathan Derrick <jonathan.derrick@linux.dev>,
-	Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Philipp Stanner <phasta@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] PCI/MSI: Add Devres managed IRQ vectors allocation
-Message-ID: <aeHOyYJR2GRRP4fY@lizhi-Precision-Tower-5810>
-References: <1776392767-83668-1-git-send-email-shawn.lin@rock-chips.com>
- <1776392767-83668-2-git-send-email-shawn.lin@rock-chips.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1776392767-83668-2-git-send-email-shawn.lin@rock-chips.com>
-X-ClientProxiedBy: SA0PR11CA0118.namprd11.prod.outlook.com
- (2603:10b6:806:d1::33) To PA4PR04MB9366.eurprd04.prod.outlook.com
- (2603:10a6:102:2a9::8)
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="SJxsmT1R"
+Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63H4uFcR1706733
+	for <linux-pci@vger.kernel.org>; Thu, 16 Apr 2026 23:49:23 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
+	 bh=9DQIHSXy57V29gOreLP4MNlIs9IB+kfYCQIO/ug9DhE=; b=SJxsmT1Rb7wn
+	DnavkOP3WIE+/X9ro/gP8ybfIwxYHN7dYmGT8GQ7I1igZkUnzIzpGhSdEKEcpaBZ
+	8mzzG87jhfjr87Bwt5JdpZj7pPa5lGVUzfJRJ83dphDf/aZMzgNmYa0H2qwswi71
+	C9MtAt6zxw5YTg84BiUmFqBI5XDRrzvnXxg8fFSW8G9ePVv7m4T2vvGyGGv1bRFC
+	HDdFcrlb376z+yj2bU5FKD5ysAr26EjL/H845VSLyL/54vOulongU8sM5N4pzxpu
+	hQWP7cDZNDW7yRZb5o8+pW89STcjKqA30z7WviYtEX2x0eOPjSWSeRgYvVNLeFDs
+	Yf4863XNAg==
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com [209.85.218.72])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4dh84yt9u0-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 16 Apr 2026 23:49:23 -0700 (PDT)
+Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-b90484c398cso51584566b.3
+        for <linux-pci@vger.kernel.org>; Thu, 16 Apr 2026 23:49:23 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1776408562; cv=none;
+        d=google.com; s=arc-20240605;
+        b=V6LwPCA7m95x2cW2ZTNe888S3hNDKAMOx4QGBwc5rKxCi81SGFay/za7SddptyBII1
+         MK9/dvHlvH6+WdqM+qSizP7MlkXLlBSARahx1pbiBh4Bq7GDIMnhvYZB4j0UB0i8Njam
+         A14gmu7J9yc9Io7Ms74mNxyHiLxZ0Oi6mGlfmGIaNEhmk7mE2k/MTVKgkeT45MtO8qsb
+         nfOU0kk+HK0zLsXAxJMZ/77O2R/26sLEDWpjlRW74yZ1yfzcg94j5EzFHIq4qMpM5Bu2
+         9Y427v/1aoyiA5HnXLud6wUv9GiJfWwc5jTLuO6DHNmbFZr396tl1Wlf0Pe0WibPSQGq
+         +iDQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version;
+        bh=gfgVtS44xCRreKc6qtU92qVlIXNM8dOFIUDj8CN1Cow=;
+        fh=UA2AOduo0cf2iotDvWO6FplXjIxaHP/B2Hlv2tZeB4A=;
+        b=f7OOcQCWjTWfMhX0+lNTB7CAOqaCrN/CyiCfCBOvckD2UbyPC9WqpvdXU6Hi+75RW6
+         WMQqVmk+GZRpBXxUhnry/yiBdynKlgVU0vOaZrAZfz1LQZb/JeEHb67D8rXR5775Uqeu
+         85y+quXl/5bwbiml8g+6ClboNdZcfwhiyIZ+iAMHu69hG4QsYyVVPeN7jWeW9AGDnisf
+         CVfltgvmaL1MDDgtof+86GFOVsCX7NZV1SUpA6H1VVsNZIuRV400VtC/DdEPkIUSLLpz
+         o9OuqzkF7sk/+fMtkgAxja4fpLVoDUcfZYJyq8aS+CSd0+0RZcyzqDKs0uNxr5scvCjU
+         IL9A==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776408562; x=1777013362;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=gfgVtS44xCRreKc6qtU92qVlIXNM8dOFIUDj8CN1Cow=;
+        b=Ot+FCLRLykl/gVvtBvbOywy8eR7giNYAeeGvOGLas7O4rafLcAG3E72hv+UaZ09FRj
+         6Gt8+4iRHrZblQl0upqKqEKqtSLGRln+QHmoePnFStdz4NWoSicMSxBNSXkThnNlCOaT
+         uJ6crtChVPcHVAb75bRB6UDYfsn6MAs5BdJ+YXzFuIZqUh6cb+IrqfBwv4srDCuSSJdK
+         HgefoXrA3d0Dxv3JClFcLrxlcD63MKOCu0bj/+zoobQWzP96+O6Rkhxl+Okh5JhFtMTO
+         mYAoy1i2FtwMTC/KdRpWHTVvM0kAe6uN+gFFrcVKG+LKdk1pT+7li6rlxiOhj2AlOaq6
+         i/Iw==
+X-Gm-Message-State: AOJu0YxYoYvUm4AJv/NoNHmknnr891BLeUvAAjy681KJyoHAvkwCXFQS
+	yBI7rhKJUo1qraDoEYaN7W+w/uzGNPeWfNN5ZI6ApzNAIBOiZBMEnXIGACTHwyn2dkAoWGCWmpS
+	yjKXVN7zSezjMwYAL0CabA6BxeRkpiIFftmzD6ysMXVj6DZ2kDPJvTaq6dTvhauAh+vWFfyMyIy
+	iGbYCAUqIeo248X7ysSSEe+Z/CooRPkQ2Gyao=
+X-Gm-Gg: AeBDiesCBCynKawnke84xlEJ2vWEF09WlGLNHvz/F2bwfrUSZAEeXeY3ZKPQgPN5nvf
+	PP9aIUEqEh7dI4blVywt7w/35oh7DoGHOJ5oxYK+Z6nexSj+WiHJzXTU7EUDN0i9ilnWEKTQhM9
+	2QQsCU8uPkbvpHDx7HB0Pa+59tgppWDscJkXp8rTqsoQvOy0AiBQ/g7aWfkwoA+QTvBLoftPhZI
+	Lc3QtaYfEk4ZweC6URYP4Xy/BrCwIrRhsX3CL+IAebn/EhSi72jf9jNywCjQqkAInyJMwrA3rkH
+	aQeIVnU5oKAYkDJW7Fz8Obo1NVXFUYZAepw=
+X-Received: by 2002:a17:907:cd09:b0:b97:b3bc:f6ba with SMTP id a640c23a62f3a-ba41ac040f5mr86148366b.39.1776408561541;
+        Thu, 16 Apr 2026 23:49:21 -0700 (PDT)
+X-Received: by 2002:a17:907:cd09:b0:b97:b3bc:f6ba with SMTP id
+ a640c23a62f3a-ba41ac040f5mr86146666b.39.1776408560936; Thu, 16 Apr 2026
+ 23:49:20 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|AM0PR04MB6899:EE_
-X-MS-Office365-Filtering-Correlation-Id: d8636191-1cf9-4f8e-9667-08de9c48037b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|376014|52116014|1800799024|19092799006|56012099003|22082099003|18002099003|38350700014;
-X-Microsoft-Antispam-Message-Info:
-	sKlq2399IJg6WmoDq+N7DgPEpAexQIkQ4PLulG+i/3MGDZYnMFQ/nKAnC1zxq1lpeRld7YYYo0Dhz+vPfV0N1AKnLU7YOq2TYjCzR8EAZLTrLNVBjucpIsdAF/AUgE8f8EaySTB09D/ZyZD54T1FYJmuxYQIWl/8bOWTP4MKY20RjjFktLAUlgAW9UnnUMXUe4KuFUlBodwrcsYBAgVkXrKshabaXrPHPz+3XG1AJRE8c/1gH1bfq0HogwSL0ThaNXumyGSzVhHR8qIh1HQ0WgeUaxAIxW+7rQsIIKjAONLHk90XRcewPauwboAB5uVWEePD5TOs7v+CTWmnDoAOIfCJu5jlgXbBiL43MXzpy2ggtFqw/IpdVe59E+px1NQnokFQXcdMEd3cjZCtFY1XpWbKAkp1ZzrXWNQYjZrf+KVLg8tSg1TDOz2k0Rzp7duXozQ89bjAyibksRdlB+r2fzUPiY567MeLDobvtbmrMpyHIAEJer3j56124ta9czKUG+iLaCyFChEblgnl3zxs9mq7TKBBGv8QX61uzGrfaAJ14C8ZkDE5PF6cAZaC/LfjLvizTycSm8At8ZLEa12iUBORb52RF65BEPeJfb8h/cg05Ol53WyeeJwJCY5h8gB9/Qk/3MP1w6huSVPkAOJEkwRks9bt5NDWNw/sC+7iRO5uLSWhURPwRls+iHG3rg9wmsiZD1xiZYHzUXjnrYo25V1jZov7+ygXgtXBrSmZ8iMgxOQ3yDO1FmItUwF6ZB1TlOI5DLyfM9mOFpUuol4my99SvcVeAAOcIWhH9cV9a18=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(52116014)(1800799024)(19092799006)(56012099003)(22082099003)(18002099003)(38350700014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?EyUiaqr+/+0tQReEldf4ESUqOK03bvP5M5b/X7bJ+cRjsj0zSTu78cnV+Nna?=
- =?us-ascii?Q?cAIkAN1Qt9T5+VzP0QM9lj2VBWoJ2w2m0chtx5CWEulxa4nU8yKftd5CjaTq?=
- =?us-ascii?Q?JVfDFoioklOL6WuseH+pMCkjAhb8n+MdsAl5ZWKluW/uGqlxIXQChCWpin80?=
- =?us-ascii?Q?j+IzuGI5Rsfi5BeSMKrPzUmzzk8OZ/JjUorT4pKs3TtzjFTY5UWpwHNm0dlV?=
- =?us-ascii?Q?S3U1R2k+2e4s8/7nDet3TIQS58aZ3jTJXL96v3KDeOoyvLu5+VF4CqQxmMQ4?=
- =?us-ascii?Q?ntuFCfhiwcsrhrM6rNuTZgRlPmqIN6cAGtxxZSlHyELmUn+YBw3oWZJUTFQk?=
- =?us-ascii?Q?2LaSQdv2sArNMCWrng4BY3iAXfMj0KrC8UCDCGlOC/x9ah7pWPX8TBURx30/?=
- =?us-ascii?Q?48Q3tdyqZo27K1cLPzCYdIY1cg9MHv4cd2gTNOwgJLGTBmAKo5LkCs+nZVH1?=
- =?us-ascii?Q?yhc7ZDm/5oSugnZ78w+rSeXbe7UoKUZc2eOhAAVspqJWcmmSVIDleQnAcLnG?=
- =?us-ascii?Q?BJGiVm1QUVwJw1k/vyPSFKgq3knG6YFU2uAU/zC6RS/e2nwAcmQz9gwUsQFu?=
- =?us-ascii?Q?IUbTC8Eu01kIT430aknsG4ATsbyxB5LDuIN3DaePvjrFHoQ+WCWE5dIhQHRo?=
- =?us-ascii?Q?CNFjoUmDO/BzYo8938AzzU1f9gztMk7d5C+kUcWEL9odHSabxBlePZywgeZd?=
- =?us-ascii?Q?I/jXluza2HsqO3ILZ9QiNPPTa904dBuwnZilIrt6AVauAs9Y1gfys+zqyp9S?=
- =?us-ascii?Q?uxr9cGu/R31+MNbWfdT/84B7zP4Gfdu8NHJEtRh/OkaLFHI5XQhqx4L7d3XQ?=
- =?us-ascii?Q?spTJDfthyvvHibT0u3BVj/GrUz1AFzJP74XE4uiX5Kyo2WeVl3n7Nx6P6Sgp?=
- =?us-ascii?Q?L9MefqnJ2dlFZQ3dpAbXpnggZEfzD8s2AGdvBWwj79Tpehcw/zuTlN75okys?=
- =?us-ascii?Q?ZXgyEBVl7Dio5+MZhz6LxiJrfjiLmhOxd4Td5e724fdMLY+m0dmRFCF8C/+P?=
- =?us-ascii?Q?UHkuNy4LE3H5jde6mtLeBgBaPBunysbl5YluX0aAWmd5J4kk55gjUyAPkx9n?=
- =?us-ascii?Q?zZb72aoGrbmjmrQGbLFME9D+ZhFgof2mIEe88oBIAKa+HxG2idDrQZmOEYOD?=
- =?us-ascii?Q?ZagS2E2jR0jITn6RRlDWJYGVgiKFfUokKY6fdyl2SB5doWAmistOWhc2rr3L?=
- =?us-ascii?Q?OoiCqVhDVwRmhLH62A8rsCOZUEhm3O/kk5bmCsMADrgLjc7SKzdV0RQNNYOv?=
- =?us-ascii?Q?BBYSg0t7DELSdnyacSnAJlK2lDng2ZaJtG6ef3EemocSVRsWTHjAqZb5y3X0?=
- =?us-ascii?Q?xhJjcHczqB2cOcpWzG09XNUqAPezrRTb7ZveZwU1Mil8X5ExV8/40op1vnoC?=
- =?us-ascii?Q?PXUKv1o2EM0qh7XOgKrKzk9Xjwu4DnHjQS5bxX4mvm4/kUsO1vect2Q8u0Nm?=
- =?us-ascii?Q?2yfveG6TAzrHmjGcc3e26FUMRti8E8P27aEySHtudXtUvP9Gu98QaZCtdYOf?=
- =?us-ascii?Q?s+xoUm9uQMAf2NSG/muLm6yttAcz6HsEO3hzAi0nnk8tTcL5pJuMJPdnegWB?=
- =?us-ascii?Q?+XGVgu8iYAD3AL8pO3SqMoraPW8vRInLiIi8RouW0OmvBaR1O7i2hOMetne7?=
- =?us-ascii?Q?qo0Qogvh6YC6SWwEVStJhFiU7kP3xMtZuUmQct81lITGEJIZfHfsUBeeEA38?=
- =?us-ascii?Q?DZmZ7wH1F1nnn2DjZ37fU/kUWdd5BtKNQ2g6QsqJgy8K0FNT?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d8636191-1cf9-4f8e-9667-08de9c48037b
-X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Apr 2026 06:10:24.5020
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: SYnJS4oN0bbGXxExF3W5qacTbDZB7zWmLGLciXbz2qDzEQLHYU8MI+/Ino8Z/paE5hcoPr8BxiqLd340JA2FzQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB6899
+References: <20260416125706.3875359-1-mnissler@meta.com> <mj+md-20260416.200014.48272.nikam@ucw.cz>
+In-Reply-To: <mj+md-20260416.200014.48272.nikam@ucw.cz>
+From: Mattias Nissler <mnissler@meta.com>
+Date: Fri, 17 Apr 2026 08:49:09 +0200
+X-Gm-Features: AQROBzCd82nI2YZId8Pwk31oGLQ7yTcd4i9kLdPNRScdyoC-1cvq7vrQWBAp5sc
+Message-ID: <CADNGngY7bpBP59x9B7Ekiy4Bgbyrz4Sm-RkXPAy9FRLGpN-uTQ@mail.gmail.com>
+Subject: Re: [PATCH pciutils] ls-ecaps: Decode DPC RP PIO registers
+To: =?UTF-8?Q?Martin_Mare=C5=A1?= <mj@ucw.cz>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDE3MDA2NSBTYWx0ZWRfX7ljALyIOGfOg
+ FZdWKebjpy8fier410TQb2Rw3qOcIOXtowdN78NBIb7IKObcDx+HHLKsncMODV9wiN4k/rxFVQM
+ QvKM4mpL7W0gW5pHv/oodw5cP3cjD4LpOc1cuQ796Se18t0/hCBLD4nNn0gxPSF9XUv87Zc/llO
+ EMvQGOuCTRf9EZOajQCPSCbXgP4tGL16ljFsdRA2UiPHzH6E/5wba6bsteofRKt0Vm1lb7mukVO
+ mo10lR2rtf9biBq31nAjbPLd3B3bonidSjf/10tCbCGW4hnDtAzeSzUNHS3Hy4/Kn351TS6n1Om
+ ov4iWZCOYN72MYeXwRYQCner6yGgeZTjq92+xK7LgYt8OhGZ82ODGEG/deTkUFaczp/0zFLjfly
+ HJWRVTRr8b1UP2lbf3LcDnXt5OKh/O0693lrdIADjOeLlpbfqM6y+jy+QXy7kmxNEBkWzaX4s4E
+ N9ykF5bSg3Lw5p/IsVg==
+X-Authority-Analysis: v=2.4 cv=eubvCIpX c=1 sm=1 tr=0 ts=69e1d7f3 cx=c_pps
+ a=D+UBI74RbQA8i2EYnbuvxw==:117 a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=crHB47gyY4rKiduisYu9:22
+ a=z7uqSuEKCs6fyQqRiYEA:9 a=QEXdDO2ut3YA:10 a=PsfoTyiJ_72bb7xyA04f:22
+X-Proofpoint-GUID: VcO_1mmyI4f1HJrDkY2aIoYQpTcpHpH_
+X-Proofpoint-ORIG-GUID: VcO_1mmyI4f1HJrDkY2aIoYQpTcpHpH_
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-16_04,2026-04-16_03,2025-10-01_01
 
-On Fri, Apr 17, 2026 at 10:26:05AM +0800, Shawn Lin wrote:
-> pcim_alloc_irq_vectors() and pcim_alloc_irq_vectors_affinity() are created for
-> pci device drivers which rely on the devres machinery to help cleanup the IRQ
-> vectors.
+On Thu, Apr 16, 2026 at 10:03=E2=80=AFPM Martin Mare=C5=A1 <mj@ucw.cz> wrot=
+e:
 >
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> >
+> Hello!
 >
-> ---
+> > +#define PCI_DPC_RP_PIO_EXCEPTION     0x1C    /* DPC RP PIO Exception */
 >
-> Changes in v2: None
->
->  drivers/pci/msi/api.c | 26 ++++++++++++++++++++++++++
->  include/linux/pci.h   | 22 ++++++++++++++++++++++
->  2 files changed, 48 insertions(+)
->
-...
-> +/**
-> + * pcim_alloc_irq_vectors_affinity() - devres managed pci_alloc_irq_vectors_affinity()
-> + * Interrupt vectors are automatically freed by the devres machinery
-> + */
-> +int pcim_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
-> +				   unsigned int max_vecs, unsigned int flags,
-> +				   struct irq_affinity *affd)
-> +{
-> +	dev->is_msi_managed = true;
-> +	return pci_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs,
-> +					      flags, affd);
+> We use lower-case hex digits.
 
-any side effect if pci_alloc_irq_vectors_affinity() return fail and
-is_msi_managed keep true.
+Ack, will update.
 
-Frank
 >
+> > +  if ((cap & PCI_DPC_CAP_RP_EXT) && config_fetch(d, where + PCI_DPC_CA=
+P + 8, 24 + 4 * log_size)) {
+>
+> Please follow the indentation style of the rest of the file.
+
+Ack, adjusting.
+
+>
+> > +    printf("\t\tRP PIO:\n");
+> > +
+> > +    l =3D get_conf_long(d, where + PCI_DPC_RP_PIO_STATUS);
+> > +    printf("\t\t\tSta: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c =
+MemUR%c MemCA%c MemCTO%c\n",
+> > +      FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA), =
+FLAG(l, PCI_DPC_RP_PIO_CFG_CTO),
+> > +      FLAG(l, PCI_DPC_RP_PIO_IO_UR), FLAG(l, PCI_DPC_RP_PIO_IO_CA), FL=
+AG(l, PCI_DPC_RP_PIO_IO_CTO),
+> > +      FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA), =
+FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
+> > +
+> > +    l =3D get_conf_long(d, where + PCI_DPC_RP_PIO_MASK);
+> > +    printf("\t\t\tMsk: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c =
+MemUR%c MemCA%c MemCTO%c\n",
+> > +      FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA), =
+FLAG(l, PCI_DPC_RP_PIO_CFG_CTO),
+> > +      FLAG(l, PCI_DPC_RP_PIO_IO_UR), FLAG(l, PCI_DPC_RP_PIO_IO_CA), FL=
+AG(l, PCI_DPC_RP_PIO_IO_CTO),
+> > +      FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA), =
+FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
+> > +
+> > +    l =3D get_conf_long(d, where + PCI_DPC_RP_PIO_SEVERITY);
+> > +    printf("\t\t\tSev: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c =
+MemUR%c MemCA%c MemCTO%c\n",
+> > +      FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA), =
+FLAG(l, PCI_DPC_RP_PIO_CFG_CTO),
+> > +      FLAG(l, PCI_DPC_RP_PIO_IO_UR), FLAG(l, PCI_DPC_RP_PIO_IO_CA), FL=
+AG(l, PCI_DPC_RP_PIO_IO_CTO),
+> > +      FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA), =
+FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
+> > +
+> > +    l =3D get_conf_long(d, where + PCI_DPC_RP_PIO_SYSERROR);
+> > +    printf("\t\t\tErr: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c =
+MemUR%c MemCA%c MemCTO%c\n",
+> > +      FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA), =
+FLAG(l, PCI_DPC_RP_PIO_CFG_CTO),
+> > +      FLAG(l, PCI_DPC_RP_PIO_IO_UR), FLAG(l, PCI_DPC_RP_PIO_IO_CA), FL=
+AG(l, PCI_DPC_RP_PIO_IO_CTO),
+> > +      FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA), =
+FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
+> > +
+> > +    l =3D get_conf_long(d, where + PCI_DPC_RP_PIO_EXCEPTION);
+> > +    printf("\t\t\tExc: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c =
+MemUR%c MemCA%c MemCTO%c\n",
+> > +      FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA), =
+FLAG(l, PCI_DPC_RP_PIO_CFG_CTO),
+> > +      FLAG(l, PCI_DPC_RP_PIO_IO_UR), FLAG(l, PCI_DPC_RP_PIO_IO_CA), FL=
+AG(l, PCI_DPC_RP_PIO_IO_CTO),
+> > +      FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA), =
+FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
+> > +
+> > +    l0 =3D get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG);
+> > +    l1 =3D get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG + 4);
+> > +    l2 =3D get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG + 8);
+> > +    l3 =3D get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG + 12);
+>
+> Shouldn't you check that the log is long enough before accessing the
+> first 4 entries?
+
+Per the spec, the 4DW Header Log register is always present, and there
+is language requiring the log size field to be >=3D 4.
+
+Also, my understanding is that this is intentionally analogous to the
+AER Header Log register, so I took the same approach as used for that.
+
+>
+>                                 Martin
