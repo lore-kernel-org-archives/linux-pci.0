@@ -1,155 +1,162 @@
-Received: from mout.web.de (mout.web.de [212.227.17.12])
+Received: from mxout70.expurgate.net (mxout70.expurgate.net [194.37.255.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A9592AD2C;
-	Fri, 17 Apr 2026 08:28:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 597EC382398;
+	Fri, 17 Apr 2026 08:36:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.37.255.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776414519; cv=none; b=c4DaefbccgLq6qghueVjQUpKcH0ijDHITvAqxatdtEURyMez6BIXj2+wakOs7sT4xvdUVLbR3tuUIQQhxYuNc14SX5oFlSfN2L/xh0h6XDSWUvvk4ZxM46M/22dGoKsdFfQir1muMD5Ne6AKYS9wqqK7OfvWF+GQc/+kbfV/FXM=
+	t=1776414981; cv=none; b=ttyGbZLddk+fXjb9640YwTbYB/0KnVWcq+vm2RwWCfMomZtgrGNzeyxVGh4ybKxKkmT9SXrRt6u4Ws72tIHWAKVi2L7/WOaRGgjMAy2NoYW4Pj4exOi8TwAwal+g9qfzmVRYaOBkTuGQa/uBYYf8pOUQH3bDbWhL4lvgDUxmR58=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776414519; c=relaxed/simple;
-	bh=N6lYzWv46/Lqdzv0E7wevZ82OTqz7Gclu3q4Do0nAdw=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
-	 In-Reply-To:Content-Type; b=nWMGgpt/d3bbJihgu5wiAGUlmhFfVsNhDaoKVqejitpuCzqck8EfHGxnD930O5SPyw3HsXsmKc1bcNMtsnhCrjZX8FGFvsFesUNS7npoq+LOPy9RsjoWaB5YOGOMu1GaCUpr1ClihsBPeeOnQ0FXhTzuBuuizb5YlRyzpMRMYAU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=f144DM/a; arc=none smtp.client-ip=212.227.17.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1776414981; c=relaxed/simple;
+	bh=9EFkreYEFt8jz6Z1NkYfjCRoqkyaofsUqKdhyek/ti4=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
+	 In-Reply-To:To:Cc; b=lv/ojzdgFeVu1J3wRKIl2vbqXmRpIDEG4HxW/LW+C+t6/TR52/qlSQpks69SHpk8p86deiw4USCw0y7YcDxXJgAbxqTsBforNu9A2w8Bl+3FFvGA1LmUv+4wdEz2FYzAwcssrY4OHmZn7o3KhkvAeEom3rV5TI287llXSyhYkig=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=t3BsXscc; arc=none smtp.client-ip=194.37.255.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev.tdt.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="f144DM/a"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1776414515; x=1777019315; i=markus.elfring@web.de;
-	bh=N6lYzWv46/Lqdzv0E7wevZ82OTqz7Gclu3q4Do0nAdw=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
-	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 cc:content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=f144DM/aC3Yd4ZrslZNTZjuxmkwJ1+iKU9V9wHSUgtpuxcDgTOv0Ke9awwZQJ0jJ
-	 TqtM/1efkiNtgMiU/0SSdS4NU//YRhK76UPGxrqEA1l8aWvZAAVtxdOPnti/NWxQJ
-	 3+d8jsXncPbZIqMVWkF9lUsf1NeZcR4swkkifesiZE4jBrZOwNMvmODFV1SpSQn+G
-	 auKR6UfhNeD1+rWrSpNAhld4TSATohMxYHGyLMLsZOLI8GRItamQswnMwkRXG4kMk
-	 4TeYBH76gzBDBdzdCLZ/IlR1mwdS2giPZ6qseP2F1YtQn4axdeKb0h9UdPTJsaNuK
-	 Ycz83TdCVxUr8f9cDw==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from client.hidden.invalid by smtp.web.de (mrweb106
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1MzCA5-1vRKzm3ThD-013aZG; Fri, 17
- Apr 2026 10:02:21 +0200
-Message-ID: <68c9f7fe-8bbd-49fc-b9f5-407e62dbba63@web.de>
-Date: Fri, 17 Apr 2026 10:02:11 +0200
+	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="t3BsXscc"
+Received: from [194.37.255.9] (helo=mxout.expurgate.net)
+	by relay.expurgate.net with smtp (Exim 4.92)
+	(envelope-from <prvs=75813159fe=fe@dev.tdt.de>)
+	id 1wDegN-00Bg7d-CP; Fri, 17 Apr 2026 10:36:11 +0200
+Received: from [195.243.126.94] (helo=securemail.tdt.de)
+	by relay.expurgate.net with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <fe@dev.tdt.de>)
+	id 1wDegM-008Sa7-Sg; Fri, 17 Apr 2026 10:36:10 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev.tdt.de;
+	s=z1-selector1; t=1776414970;
+	bh=k0RzhtyN2lEDzgUVLjPsscw7natQWQb/iXLZdZSRiKo=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
+	b=t3BsXscc2EYfkVKclPkvocQ/8xJux+OFCmuxFuAzjWi7rT7aaIq3ZGxBI8F4DvSAB
+	 E1s7wHKu//0sqWZNJX8bYH5oQ6Yp5+oZhsqdDccTlq9puIaJ6c6CpDaV0B4vXDcK0v
+	 bPAweyGmhjG5Iljkr0XQh1tqZI+5IVGLYayKlHwKE4IulS3G00/m2gDie5gb1QxXPe
+	 j91kaUjB616s33WnLbEiJgM1fJwigE/dw+XFMk1q2DoozsEIxohOeQGZlDsjecdlZM
+	 HlpyuRqnVGZjnslIG0P2hIUVHtftPcen/bp7cjFu6GHdEH7xB6pVxftq3opFVSKfGo
+	 tF6myYyiXi9Hw==
+Received: from securemail.tdt.de (localhost [127.0.0.1])
+	by securemail.tdt.de (Postfix) with ESMTP id 781CD240042;
+	Fri, 17 Apr 2026 10:36:10 +0200 (CEST)
+Received: from mail.dev.tdt.de (unknown [10.2.4.42])
+	by securemail.tdt.de (Postfix) with ESMTP id 70926240041;
+	Fri, 17 Apr 2026 10:36:10 +0200 (CEST)
+Received: from [10.2.3.40] (unknown [10.2.3.40])
+	by mail.dev.tdt.de (Postfix) with ESMTPSA id DE7DB242E4;
+	Fri, 17 Apr 2026 10:36:09 +0200 (CEST)
+From: Florian Eckert <fe@dev.tdt.de>
+Date: Fri, 17 Apr 2026 10:35:47 +0200 (CEST)
+Subject: [PATCH v5 3/7] PCI: intel-gw: Move interrupt enable to own function
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Felix Gu <ustc.gu@gmail.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Senchuan Zhang <zhangsenchuan@eswincomputing.com>,
- Yanghui Ou <ouyanghui@eswincomputing.com>,
- Yu Ning <ningyu@eswincomputing.com>
-Cc: LKML <linux-kernel@vger.kernel.org>
-References: <20260416-eswin-v1-1-a4991725b5ca@gmail.com>
-Subject: Re: [PATCH] PCI: eswin: Fix resource leak on dw_pcie_host_init()
- failure
-Content-Language: en-GB, de-DE
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20260416-eswin-v1-1-a4991725b5ca@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Provags-ID: V03:K1:KHtSKF0wbfluoDjolZfxuUxWrE9/MMiMApUI5weLWikKbCgyR3D
- dhWnSFjJqBFu10eMrcw8K7dxTukZDGoO6lp+gcp7zwMdXIFOHrGvlElrghn3vHBJEN8uLWX
- BAjhyFeBMJbFPZ1uDf00GSylunybXMJ8GQPWgqb8mW6EVr/lxFLb+qVBWxISAaAIUwtuuHA
- qvNAessuZzi45RARZ1RKw==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:g5G9QvHezrE=;Io7nFtrd15/WMRWwS/E1Wd45RzE
- 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
- W9iWiiUeeacI8XZDm/PFrs8g==
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <20260417-pcie-intel-gw-v5-3-0a2b933fe04f@dev.tdt.de>
+References: <20260417-pcie-intel-gw-v5-0-0a2b933fe04f@dev.tdt.de>
+In-Reply-To: <20260417-pcie-intel-gw-v5-0-0a2b933fe04f@dev.tdt.de>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Johan Hovold <johan+linaro@kernel.org>,
+	Sajid Dalvi <sdalvi@google.com>,
+	Ajay Agarwal <ajayagarwal@google.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org, Florian Eckert <fe@dev.tdt.de>,
+	Eckert.Florian@googlemail.com, ms@dev.tdt.de
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1776414969; l=2926;
+ i=fe@dev.tdt.de; s=20260205; h=from:subject:message-id;
+ bh=ZYKI9htHzLsLWQm9mMvJbP0KpPmuZ1vngPu0F8zCXMI=;
+ b=vUYaTk3W4GeOmISuxVHH3knqZgg5q3s6hoeACz9jE3Pcy8WRqRe95TFpuF0KrDintt70mjNlV
+ j1SYRk0cpcTBVWFnkJY+oazLVJpxiALfgNvv2SIxuOgNcKqf3E+DXR6
+X-Developer-Key: i=fe@dev.tdt.de; a=ed25519;
+ pk=q7Pvv3Au2sAVRhBz5UF7ZqUPNxUwXQ78Jdqu8E6Negk=
+Content-Transfer-Encoding: quoted-printable
+X-purgate-ID: 151534::1776414971-2B429049-6B521993/0/0
+X-purgate: clean
+X-purgate-type: clean
 
-> When dw_pcie_host_init() fails, the code jumps to err_init which
-> only calls pm_runtime_put() but skips the clean up of port resources.
+To improve the readability of the code, move the interrupt enable
+instructions to a separate function. That is already done for the disable
+interrupt instruction.
 
-Thus use an other label?
+In addition, all pending interrupts are cleared and disabled, just as thi=
+s
+is done in the disable function 'intel_pcie_core_irq_disable()'. After
+that, all relevant interrupts are enabled again. The 'PCIE_APP_IRNEN'
+definition contains all the relevant interrupts that are of interest.
 
-See also:
-* https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst?h=v7.0#n94
-* https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/stable-kernel-rules.rst?h=v7.0#n34
+This change is also done in the MaxLinear SDK [1]. As I unfortunately
+don=E2=80=99t have any documentation for this IP core, I suspect that the
+intention is to set the IP core for interrupt handling to a specific
+state. Perhaps the problem is that the IP core did not reinitialize the
+interrupt register properly after a power cycle.
 
-Regards,
-Markus
+In my view, it can=E2=80=99t do any harm to switch the interrupt off and =
+then on
+again to set them to a specific state.
+
+The reason why the MaxLinear SDK is used as a reference here is, that thi=
+s
+pcie dwc IP is used in the URX851 and URX850 SoC. This SoC was originally
+developed by Intel when they acquired Lantiq=E2=80=99s home networking di=
+vision in
+2015 [2]. In 2020 the home network division was sold to MaxLinear [3].
+Since then, this SoC belongs to MaxLinear. They use their own SDK,
+which runs on kernel version '5.15.x'.
+
+[1] https://github.com/maxlinear/linux/blob/updk_9.1.90/drivers/pci/contr=
+oller/dwc/pcie-intel-gw.c#L431
+[2] https://www.intc.com/news-events/press-releases/detail/364/intel-to-a=
+cquire-lantiq-advancing-the-connected-home
+[3] https://investors.maxlinear.com/press-releases/detail/395/maxlinear-t=
+o-acquire-intels-home-gateway-platform
+
+Signed-off-by: Florian Eckert <fe@dev.tdt.de>
+---
+ drivers/pci/controller/dwc/pcie-intel-gw.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/con=
+troller/dwc/pcie-intel-gw.c
+index 80d1607c46cbbb1e274b37a0bb9377a877678f5d..e88b8243cc41c607c39e4d58c=
+4dcd8c8c082e8b0 100644
+--- a/drivers/pci/controller/dwc/pcie-intel-gw.c
++++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
+@@ -195,6 +195,13 @@ static void intel_pcie_device_rst_deassert(struct in=
+tel_pcie *pcie)
+ 	gpiod_set_value_cansleep(pcie->reset_gpio, 0);
+ }
+=20
++static void intel_pcie_core_irq_enable(struct intel_pcie *pcie)
++{
++	pcie_app_wr(pcie, PCIE_APP_IRNEN, 0);
++	pcie_app_wr(pcie, PCIE_APP_IRNCR, PCIE_APP_IRN_INT);
++	pcie_app_wr(pcie, PCIE_APP_IRNEN, PCIE_APP_IRN_INT);
++}
++
+ static void intel_pcie_core_irq_disable(struct intel_pcie *pcie)
+ {
+ 	pcie_app_wr(pcie, PCIE_APP_IRNEN, 0);
+@@ -316,9 +323,7 @@ static int intel_pcie_host_setup(struct intel_pcie *p=
+cie)
+ 	if (ret)
+ 		goto app_init_err;
+=20
+-	/* Enable integrated interrupts */
+-	pcie_app_wr_mask(pcie, PCIE_APP_IRNEN, PCIE_APP_IRN_INT,
+-			 PCIE_APP_IRN_INT);
++	intel_pcie_core_irq_enable(pcie);
+=20
+ 	return 0;
+=20
+
+--=20
+2.47.3
+
