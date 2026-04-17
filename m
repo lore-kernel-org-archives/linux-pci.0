@@ -1,96 +1,116 @@
 Received: from spark.kcore.it (spark.kcore.it [49.13.27.68])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 215E52949E0;
-	Fri, 17 Apr 2026 13:24:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94ED73A16A7;
+	Fri, 17 Apr 2026 13:24:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=49.13.27.68
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776432286; cv=none; b=sJZpToF7U1/ER7JfcS2es1TL7fFCgUyIG8wPQTBXDoZGGJWZrFw1Zr17G6iLihpgJl8LjPmvSwuyhVK2/TIhTl8kr2BeTRWWGyopNdlxlhKmzQJmpos7OYFoIOdhrEuSMiu6bvRgDr4BTfOr9yq2dnurZgCr0UscarPY6O00yOk=
+	t=1776432288; cv=none; b=KXiVdPaZz07wdbyRUzrFd2hhdyR6Je+E1GUfJ0Wv6rOcDZUSxwv9QiAH/Tbrsk2/0v1NnwdpVkhRJgr2IUC42bRMtQzxEIOY2mxK3hdws1KjUFz55Mxps6dbLq3Ca/ckBWoDLlHdOJOpElabQ0HNnQdSiLjux6qSpcfimTDOJeo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776432286; c=relaxed/simple;
-	bh=t3tJ+SAiGCi2KvgrmBY3Rqk5TNtkUO8KrlAYautdR7c=;
+	s=arc-20240116; t=1776432288; c=relaxed/simple;
+	bh=+7NpdMmWYEM3q5sy9cxgH2ACar+KhMk8tlirwg5hLUg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=AJpRv8CTmtMN6E+O8wD6V76t+DrO19s+ZULfP+AXXRKPcFc9aFNJFyqIiwcPZswbaPxXWhWXaP0j0Yr40NJ6SEvtTwj8n37i+NbR/j0EhHmn182V7MASZBza+tNZpglxAnBfFdEvxtfpxkmVCqdWlIWSWGYjx5S8MmQgJrMjFHk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kcore.it; spf=pass smtp.mailfrom=kcore.it; dkim=pass (1024-bit key) header.d=kcore.it header.i=@kcore.it header.b=tQHRpFbO; arc=none smtp.client-ip=49.13.27.68
+	 MIME-Version:Content-Type; b=eUYE76PDHKTNXRCx/Dm0lOMDAbExd2GcDU91KJIf/c2mvQvbfzDOgL7Tm92rkEYY9hkWTxX7r4XVPTbmzCI8KJUOaDFljbaUsU8g164SBvgYrLQS8pdpmbIkk7ukZrPCxVaMgl8pap30UlLmF0YomD23JETp8uD0sZYzSpKQM1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kcore.it; spf=pass smtp.mailfrom=kcore.it; dkim=pass (1024-bit key) header.d=kcore.it header.i=@kcore.it header.b=paSCx3Cw; arc=none smtp.client-ip=49.13.27.68
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kcore.it
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kcore.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=kcore.it header.i=@kcore.it header.b="tQHRpFbO"
+	dkim=pass (1024-bit key) header.d=kcore.it header.i=@kcore.it header.b="paSCx3Cw"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=kcore.it;
-	s=spark; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+	s=spark; h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:
+	In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=Lzd3+dPt+cxg2OfNmx9stohUnV0gbXlmu4x9ZXeTZXA=; b=tQHRpFbOLAry2rQzz0GJcln4fY
-	GxHsy27IirpuDL0zTinC/OvzusvM5sqGVJszWVQLk5oW2umg7NPqotstmHa+I9wHFqRnse9IQUd9j
-	qMpN0DOHqotI356LpesCmOYFm7d3aqS6FMIAqZF4/BxwUtFamYe+36T/uhYJjiEzytOc=;
+	bh=pSYcOdNIP33VlmJbr9B6GAXWdNfuxXFHPUxe73o1NEc=; b=paSCx3CwSZyCSfmYCZ82bVLLsm
+	0NoeMqU92U9GJCrcflhl/sLEQ1fqcX/C9W/YyHUDlp5EwOWgqNdggjIpZNbOR2gh91jhGLH6wGb8t
+	uK8MVk4rX0hgkI1ZAHhzKukhLcqflxGx9mD/fWDZ/cbyxtw87PCx8Q/bNG1/0LqsLQCE=;
 Received: from mnencia by spark.kcore.it with local (Exim 4.96)
 	(envelope-from <mnencia@kcore.it>)
-	id 1wDjBV-007w6C-18;
+	id 1wDjBV-007w6F-1D;
 	Fri, 17 Apr 2026 15:24:37 +0200
 From: Marco Nenciarini <mnencia@kcore.it>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	linux-pci@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org,
 	=?UTF-8?q?Christian=20K=C3=B6nig?= <ckoenig.leichtzumerken@gmail.com>,
-	Marco Nenciarini <mnencia@kcore.it>
-Subject: [PATCH v2 0/2] PCI: Guard Resizable BAR restore against unreachable devices
-Date: Fri, 17 Apr 2026 15:24:35 +0200
-Message-Id: <cover.1776429882.git.mnencia@kcore.it>
+	Marco Nenciarini <mnencia@kcore.it>,
+	stable@vger.kernel.org,
+	=?UTF-8?q?Micha=C5=82=20Winiarski?= <michal.winiarski@intel.com>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Eric Chanudet <echanude@redhat.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Lukas Wunner <lukas@wunner.de>
+Subject: [PATCH v2 1/2] PCI: Skip Resizable BAR restore on read error
+Date: Fri, 17 Apr 2026 15:24:36 +0200
+Message-Id: <666cac19b5daa0ab0e0ab64454e76b4d24465dbd.1776429882.git.mnencia@kcore.it>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20260408163922.1740497-1-mnencia@kcore.it>
-References: <20260408163922.1740497-1-mnencia@kcore.it>
+In-Reply-To: <cover.1776429882.git.mnencia@kcore.it>
+References: <20260408163922.1740497-1-mnencia@kcore.it> <cover.1776429882.git.mnencia@kcore.it>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This series addresses Bjorn's review feedback on v1 [1].
+pci_restore_rebar_state() uses the Resizable BAR Control register to
+decide how many BARs to restore (nbars) and which BAR each iteration
+addresses (bar_idx).
 
-v1 bounds-checked bar_idx before indexing dev->sriov->barsz[] in
-sriov_restore_vf_rebar_state(). Bjorn pointed out that the non-SRIOV
-sibling pci_restore_rebar_state() has the same issue, and that a
-PCI_POSSIBLE_ERROR(ctrl) check on the config read makes the intent
-of the guard more obvious than a post-hoc range check on the
-extracted field.
+When the device does not respond, config reads return the all-ones
+pattern. Both fields are 3 bits wide, so nbars and bar_idx both
+evaluate to 7, past the spec's valid ranges for both fields.
+pci_resource_n() then returns an unrelated resource slot, whose
+size is used to derive a nonsensical value written back to the
+Resizable BAR Control register.
 
-v2 therefore adopts PCI_POSSIBLE_ERROR(ctrl) after each Resizable
-BAR Control read in both functions, bailing out when config reads
-return the all-ones pattern. Patch 1 covers pci_restore_rebar_state().
-Patch 2 covers sriov_restore_vf_rebar_state(), with the NVIDIA GC6
-UBSAN splat as motivation.
+Bail out if any Resizable BAR Control read returns the error
+pattern. No further BARs are touched, which is safe because a
+config read that returns the error pattern indicates the device is
+unreachable and restoration is pointless.
 
-Note that this changes behavior versus v1: on a bad read we abort
-the loop instead of skipping just the current BAR. This matches
-the structure Bjorn suggested in review and is safe because the
-all-ones pattern means the device is unreachable, so restoring the
-remaining BARs is moot.
+Fixes: d3252ace0bc6 ("PCI: Restore resized BAR state on resume")
+Cc: stable@vger.kernel.org
+Signed-off-by: Marco Nenciarini <mnencia@kcore.it>
+---
+Cc: Michał Winiarski <michal.winiarski@intel.com>
+Cc: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Cc: Rafael J. Wysocki <rafael@kernel.org>
+Cc: Eric Chanudet <echanude@redhat.com>
+Cc: Alex Williamson <alex@shazbot.org>
+Cc: Lukas Wunner <lukas@wunner.de>
 
-Compile-tested on pci/next (full drivers/pci/ build). The error
-path cannot be exercised without reproducing the GC6 failure that
-killed the GPU in the original report.
-
-The broader v1 discussion on the pci_restore_config_dword() retry
-loop and on save/restore behavior when the device has fallen off
-the bus is out of scope for this fix. Happy to tackle that
-separately if there is consensus.
-
-[1] https://lore.kernel.org/all/20260408163922.1740497-1-mnencia@kcore.it/
-
-Marco Nenciarini (2):
-  PCI: Skip Resizable BAR restore on read error
-  PCI/IOV: Skip VF Resizable BAR restore on read error
-
- drivers/pci/iov.c   | 6 ++++++
  drivers/pci/rebar.c | 6 ++++++
- 2 files changed, 12 insertions(+)
+ 1 file changed, 6 insertions(+)
 
-
-base-commit: 40286d6379aacfcc053253ef78dc78b09addffda
+diff --git a/drivers/pci/rebar.c b/drivers/pci/rebar.c
+index 39f8cf3b70d57..11965947c4cb5 100644
+--- a/drivers/pci/rebar.c
++++ b/drivers/pci/rebar.c
+@@ -231,6 +231,9 @@ void pci_restore_rebar_state(struct pci_dev *pdev)
+ 		return;
+ 
+ 	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	if (PCI_POSSIBLE_ERROR(ctrl))
++		return;
++
+ 	nbars = FIELD_GET(PCI_REBAR_CTRL_NBAR_MASK, ctrl);
+ 
+ 	for (i = 0; i < nbars; i++, pos += 8) {
+@@ -238,6 +241,9 @@ void pci_restore_rebar_state(struct pci_dev *pdev)
+ 		int bar_idx, size;
+ 
+ 		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++		if (PCI_POSSIBLE_ERROR(ctrl))
++			return;
++
+ 		bar_idx = ctrl & PCI_REBAR_CTRL_BAR_IDX;
+ 		res = pci_resource_n(pdev, bar_idx);
+ 		size = pci_rebar_bytes_to_size(resource_size(res));
 -- 
 2.47.3
 
