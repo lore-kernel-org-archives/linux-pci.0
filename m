@@ -1,208 +1,264 @@
 Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 832C5351C07
-	for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2026 06:49:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.145.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776408566; cv=fail; b=ss7d0TCwWSWE1N46wzamreIeFPe37zkDfGYKAmOaaDrofrXrLx7ctgsebNO5TtFYXtJdXfYJQwm9UoviBEOqX/0yx63pZXxzhxWuj3yhstOIY/N0GDJK8hhu+bL5XDLskMEsy5iu7NIbnTY3MA+QtDwqcfu9OE5BOWr7l4MxfAI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776408566; c=relaxed/simple;
-	bh=oeHFaw3s/PCX7cU5u8dfbsK00eXcszbbKHbB6QtRK6M=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=BEECGgM/Iufiz6hHOBNaJuUwXWk8UGC09V/irrhdT63hYCRk5RXjhCMNecOgU4scyYzKkbKR2bzig9WvfK+gs1h9xRF77Exm1n6b4NsgaABnDftJ6Nsl8wCykg1BOWRMgcUp0ariVSe1gUM4bkpZL0083kW2guak0tDPKN1Yyuw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=SJxsmT1R; arc=fail smtp.client-ip=67.231.145.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C015535C1A0
+	for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2026 06:49:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776408585; cv=none; b=JKCdTEug17Fe7Sub+oO9lT8MyaOxHyir/4QjQXCST5BHObA0Qk2J8W6gNnhry35buglmV7hmkb7dLD8dxSlF8yWgnDivZCKpwLga15J/nBKVcbJD5UfFvbzaufUsCYanlYLnvIAXWFlpHyWQvvIhxdIH73CCdU2M2uzaq2X5bGQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776408585; c=relaxed/simple;
+	bh=6wBlfCZnjRaxx+UJMz6dglwS7I5L+mp6zaQlD5KYJI0=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=IF8FfC+1Njh6KpX8z3HMSCP9buyWZpFrnm2Mp2kx9MSLglZuFjcq1wFAHSupG+m4sy7NPckST/1ldSa70+V9dUOQyPNNHyxQW9/lfGeHYRM3up+7YIa2JquMXCi/geD/+NSF8B6wzqD4pDuE/83DBmdq0A3YmvwskWDCqPVpOvY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=D/PlJOkq; arc=none smtp.client-ip=67.231.145.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="SJxsmT1R"
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="D/PlJOkq"
 Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63H4uFcR1706733
-	for <linux-pci@vger.kernel.org>; Thu, 16 Apr 2026 23:49:23 -0700
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63GEWAl83788046;
+	Thu, 16 Apr 2026 23:49:40 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=9DQIHSXy57V29gOreLP4MNlIs9IB+kfYCQIO/ug9DhE=; b=SJxsmT1Rb7wn
-	DnavkOP3WIE+/X9ro/gP8ybfIwxYHN7dYmGT8GQ7I1igZkUnzIzpGhSdEKEcpaBZ
-	8mzzG87jhfjr87Bwt5JdpZj7pPa5lGVUzfJRJ83dphDf/aZMzgNmYa0H2qwswi71
-	C9MtAt6zxw5YTg84BiUmFqBI5XDRrzvnXxg8fFSW8G9ePVv7m4T2vvGyGGv1bRFC
-	HDdFcrlb376z+yj2bU5FKD5ysAr26EjL/H845VSLyL/54vOulongU8sM5N4pzxpu
-	hQWP7cDZNDW7yRZb5o8+pW89STcjKqA30z7WviYtEX2x0eOPjSWSeRgYvVNLeFDs
-	Yf4863XNAg==
-Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com [209.85.218.72])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4dh84yt9u0-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 16 Apr 2026 23:49:23 -0700 (PDT)
-Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-b90484c398cso51584566b.3
-        for <linux-pci@vger.kernel.org>; Thu, 16 Apr 2026 23:49:23 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1776408562; cv=none;
-        d=google.com; s=arc-20240605;
-        b=V6LwPCA7m95x2cW2ZTNe888S3hNDKAMOx4QGBwc5rKxCi81SGFay/za7SddptyBII1
-         MK9/dvHlvH6+WdqM+qSizP7MlkXLlBSARahx1pbiBh4Bq7GDIMnhvYZB4j0UB0i8Njam
-         A14gmu7J9yc9Io7Ms74mNxyHiLxZ0Oi6mGlfmGIaNEhmk7mE2k/MTVKgkeT45MtO8qsb
-         nfOU0kk+HK0zLsXAxJMZ/77O2R/26sLEDWpjlRW74yZ1yfzcg94j5EzFHIq4qMpM5Bu2
-         9Y427v/1aoyiA5HnXLud6wUv9GiJfWwc5jTLuO6DHNmbFZr396tl1Wlf0Pe0WibPSQGq
-         +iDQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version;
-        bh=gfgVtS44xCRreKc6qtU92qVlIXNM8dOFIUDj8CN1Cow=;
-        fh=UA2AOduo0cf2iotDvWO6FplXjIxaHP/B2Hlv2tZeB4A=;
-        b=f7OOcQCWjTWfMhX0+lNTB7CAOqaCrN/CyiCfCBOvckD2UbyPC9WqpvdXU6Hi+75RW6
-         WMQqVmk+GZRpBXxUhnry/yiBdynKlgVU0vOaZrAZfz1LQZb/JeEHb67D8rXR5775Uqeu
-         85y+quXl/5bwbiml8g+6ClboNdZcfwhiyIZ+iAMHu69hG4QsYyVVPeN7jWeW9AGDnisf
-         CVfltgvmaL1MDDgtof+86GFOVsCX7NZV1SUpA6H1VVsNZIuRV400VtC/DdEPkIUSLLpz
-         o9OuqzkF7sk/+fMtkgAxja4fpLVoDUcfZYJyq8aS+CSd0+0RZcyzqDKs0uNxr5scvCjU
-         IL9A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776408562; x=1777013362;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=gfgVtS44xCRreKc6qtU92qVlIXNM8dOFIUDj8CN1Cow=;
-        b=Ot+FCLRLykl/gVvtBvbOywy8eR7giNYAeeGvOGLas7O4rafLcAG3E72hv+UaZ09FRj
-         6Gt8+4iRHrZblQl0upqKqEKqtSLGRln+QHmoePnFStdz4NWoSicMSxBNSXkThnNlCOaT
-         uJ6crtChVPcHVAb75bRB6UDYfsn6MAs5BdJ+YXzFuIZqUh6cb+IrqfBwv4srDCuSSJdK
-         HgefoXrA3d0Dxv3JClFcLrxlcD63MKOCu0bj/+zoobQWzP96+O6Rkhxl+Okh5JhFtMTO
-         mYAoy1i2FtwMTC/KdRpWHTVvM0kAe6uN+gFFrcVKG+LKdk1pT+7li6rlxiOhj2AlOaq6
-         i/Iw==
-X-Gm-Message-State: AOJu0YxYoYvUm4AJv/NoNHmknnr891BLeUvAAjy681KJyoHAvkwCXFQS
-	yBI7rhKJUo1qraDoEYaN7W+w/uzGNPeWfNN5ZI6ApzNAIBOiZBMEnXIGACTHwyn2dkAoWGCWmpS
-	yjKXVN7zSezjMwYAL0CabA6BxeRkpiIFftmzD6ysMXVj6DZ2kDPJvTaq6dTvhauAh+vWFfyMyIy
-	iGbYCAUqIeo248X7ysSSEe+Z/CooRPkQ2Gyao=
-X-Gm-Gg: AeBDiesCBCynKawnke84xlEJ2vWEF09WlGLNHvz/F2bwfrUSZAEeXeY3ZKPQgPN5nvf
-	PP9aIUEqEh7dI4blVywt7w/35oh7DoGHOJ5oxYK+Z6nexSj+WiHJzXTU7EUDN0i9ilnWEKTQhM9
-	2QQsCU8uPkbvpHDx7HB0Pa+59tgppWDscJkXp8rTqsoQvOy0AiBQ/g7aWfkwoA+QTvBLoftPhZI
-	Lc3QtaYfEk4ZweC6URYP4Xy/BrCwIrRhsX3CL+IAebn/EhSi72jf9jNywCjQqkAInyJMwrA3rkH
-	aQeIVnU5oKAYkDJW7Fz8Obo1NVXFUYZAepw=
-X-Received: by 2002:a17:907:cd09:b0:b97:b3bc:f6ba with SMTP id a640c23a62f3a-ba41ac040f5mr86148366b.39.1776408561541;
-        Thu, 16 Apr 2026 23:49:21 -0700 (PDT)
-X-Received: by 2002:a17:907:cd09:b0:b97:b3bc:f6ba with SMTP id
- a640c23a62f3a-ba41ac040f5mr86146666b.39.1776408560936; Thu, 16 Apr 2026
- 23:49:20 -0700 (PDT)
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=s2048-2025-q2; bh=eixkrv4hRbb0EHj2lh
+	jUIdtnIZ/+LHrnB2ndktGkM/0=; b=D/PlJOkqz84OgV7R36t45byINrAh+4aO19
+	wuv9+GKWMgPh0BrP87Z/hYelnmQJKODRz1nTlXxKOoXejkCRascxKF7mJVIiMvr5
+	ZXpEGmoyrc3xwHOShswigunIhSCGq8LC7J27zJy4PoC9oJk9QrFUK3+DJN9h0Qc5
+	KOEgwWToNcWC+jbfofuogI756RXpiL+J78R2lWDedKpmYZQs/2JAozrO7I5wA6Fy
+	5x5IaatofvNGMslTYkBeIcIcg0nTREdX3D6ZxvdvSfF7fmlt6YV+aHugA8WS5Waq
+	UDFmt5/2sUiLFcg2OlSMjLize5PKSs5XRydGL76GX3JzHgneNz1Q==
+Received: from maileast.thefacebook.com ([163.114.135.16])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4dh84yt9vn-2
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+	Thu, 16 Apr 2026 23:49:40 -0700 (PDT)
+Received: from localhost (2620:10d:c0a8:fe::f072) by mail.thefacebook.com
+ (2620:10d:c0a9:6f::8fd4) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.2.2562.37; Fri, 17 Apr
+ 2026 06:49:38 +0000
+From: Mattias Nissler <mnissler@meta.com>
+To: <linux-pci@vger.kernel.org>
+CC: =?UTF-8?q?Martin=20Mare=C5=A1?= <mj@ucw.cz>,
+        Mattias Nissler
+	<mnissler@meta.com>
+Subject: [PATCH pciutils v2] ls-ecaps: Decode DPC RP PIO registers
+Date: Thu, 16 Apr 2026 23:49:31 -0700
+Message-ID: <20260417064931.2073728-1-mnissler@meta.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260416125706.3875359-1-mnissler@meta.com> <mj+md-20260416.200014.48272.nikam@ucw.cz>
-In-Reply-To: <mj+md-20260416.200014.48272.nikam@ucw.cz>
-From: Mattias Nissler <mnissler@meta.com>
-Date: Fri, 17 Apr 2026 08:49:09 +0200
-X-Gm-Features: AQROBzCd82nI2YZId8Pwk31oGLQ7yTcd4i9kLdPNRScdyoC-1cvq7vrQWBAp5sc
-Message-ID: <CADNGngY7bpBP59x9B7Ekiy4Bgbyrz4Sm-RkXPAy9FRLGpN-uTQ@mail.gmail.com>
-Subject: Re: [PATCH pciutils] ls-ecaps: Decode DPC RP PIO registers
-To: =?UTF-8?Q?Martin_Mare=C5=A1?= <mj@ucw.cz>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDE3MDA2NSBTYWx0ZWRfX7ljALyIOGfOg
- FZdWKebjpy8fier410TQb2Rw3qOcIOXtowdN78NBIb7IKObcDx+HHLKsncMODV9wiN4k/rxFVQM
- QvKM4mpL7W0gW5pHv/oodw5cP3cjD4LpOc1cuQ796Se18t0/hCBLD4nNn0gxPSF9XUv87Zc/llO
- EMvQGOuCTRf9EZOajQCPSCbXgP4tGL16ljFsdRA2UiPHzH6E/5wba6bsteofRKt0Vm1lb7mukVO
- mo10lR2rtf9biBq31nAjbPLd3B3bonidSjf/10tCbCGW4hnDtAzeSzUNHS3Hy4/Kn351TS6n1Om
- ov4iWZCOYN72MYeXwRYQCner6yGgeZTjq92+xK7LgYt8OhGZ82ODGEG/deTkUFaczp/0zFLjfly
- HJWRVTRr8b1UP2lbf3LcDnXt5OKh/O0693lrdIADjOeLlpbfqM6y+jy+QXy7kmxNEBkWzaX4s4E
- N9ykF5bSg3Lw5p/IsVg==
-X-Authority-Analysis: v=2.4 cv=eubvCIpX c=1 sm=1 tr=0 ts=69e1d7f3 cx=c_pps
- a=D+UBI74RbQA8i2EYnbuvxw==:117 a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=crHB47gyY4rKiduisYu9:22
- a=z7uqSuEKCs6fyQqRiYEA:9 a=QEXdDO2ut3YA:10 a=PsfoTyiJ_72bb7xyA04f:22
-X-Proofpoint-GUID: VcO_1mmyI4f1HJrDkY2aIoYQpTcpHpH_
-X-Proofpoint-ORIG-GUID: VcO_1mmyI4f1HJrDkY2aIoYQpTcpHpH_
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDE3MDA2NSBTYWx0ZWRfXySufX2h0sSpu
+ rSwsin4S48l8H0XobT/mnRCgET/Qycd9xdmtA5CEoxRiDbOGr192YQPlnodsrfyn6nTX1URHulc
+ OvjRRAxMFaBqpiSCq0OCc6V1hVRfrKEpCRpuDTOEn69rRjqRAbMK81Y6mezmlmZtUOwwdVwOywa
+ 5bKtDUDREDAQ9tAisB9ptgpfGxknyhiUl6m65qlxRbM5oEy8qCD5Pl2yCmsIF+1cnQucykeXMOS
+ zqwRj5y8cVp69lylX3rVYYX/0IEBrJ4ZtIwJWrlJO0BvbSCSkheaXWd63MjXlRpJykfMRy15o4b
+ 7Cuylf3g0sidF0EMIqB2ckvxqJFS9N+As29zy3OB0PKePqP4sYgYwuzc3lqxVLu0WQTjRXNgPhC
+ x7hQ+jxe6s0r1k4tQyo4of9C8OJrKKdmCZe463CjDENzPwusKeeN/bo88xI7joaXhrHHeibDRu/
+ cVTdNKsL8kxpQc3rKfw==
+X-Authority-Analysis: v=2.4 cv=eubvCIpX c=1 sm=1 tr=0 ts=69e1d804 cx=c_pps
+ a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
+ a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
+ a=crHB47gyY4rKiduisYu9:22 a=VabnemYjAAAA:8 a=mvVm65g0eZYFh6_jv2gA:9
+ a=gKebqoRLp9LExxC7YDUY:22
+X-Proofpoint-GUID: uq8bW19oIR-unPuhfaE2bPzS9KCUnne0
+X-Proofpoint-ORIG-GUID: uq8bW19oIR-unPuhfaE2bPzS9KCUnne0
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-04-16_04,2026-04-16_03,2025-10-01_01
 
-On Thu, Apr 16, 2026 at 10:03=E2=80=AFPM Martin Mare=C5=A1 <mj@ucw.cz> wrot=
-e:
->
-> >
-> Hello!
->
-> > +#define PCI_DPC_RP_PIO_EXCEPTION     0x1C    /* DPC RP PIO Exception */
->
-> We use lower-case hex digits.
+The RP PIO registers in the DPC extended capability contain status
+information and control bits related to how root ports handle failing
+requests.
 
-Ack, will update.
+Sample output:
+        Capabilities: [380 v1] Downstream Port Containment
+                DpcCap: IntMsgNum 0, RPExt+ PoisonedTLP+ SwTrigger+ RP PIO Log 6, DL_ActiveErr+
+                DpcCtl: Trigger:0 Cmpl+ INT+ ErrCor+ PoisonedTLP- SwTrigger- DL_ActiveErr-
+                DpcSta: Trigger- Reason:00 INT- RPBusy- TriggerExt:00 RP PIO ErrPtr:11
+                Source: 0000
+                RP PIO:
+                        Sta: CfgUR+ CfgCA- CfgCTO- IOUR- IOCA- IOCTO- MemUR- MemCA+ MemCTO-
+                        Msk: CfgUR+ CfgCA+ CfgCTO+ IOUR+ IOCA+ IOCTO+ MemUR- MemCA- MemCTO-
+                        Sev: CfgUR- CfgCA- CfgCTO- IOUR- IOCA- IOCTO- MemUR- MemCA- MemCTO-
+                        Err: CfgUR- CfgCA- CfgCTO- IOUR- IOCA- IOCTO- MemUR- MemCA- MemCTO-
+                        Exc: CfgUR- CfgCA- CfgCTO- IOUR- IOCA- IOCTO- MemUR- MemCA- MemCTO-
+                        HeaderLog: 00001001 0000220f f7a01100 00000000
+                        ImpSpecLog: 00000000
+                        TLPPrefixLog: 00000000
 
->
-> > +  if ((cap & PCI_DPC_CAP_RP_EXT) && config_fetch(d, where + PCI_DPC_CA=
-P + 8, 24 + 4 * log_size)) {
->
-> Please follow the indentation style of the rest of the file.
+Signed-off-by: Mattias Nissler <mnissler@meta.com>
+---
+Changes:
+v2:
+ * fix style issues
+ * correct DW read index for prefix log
+---
+ lib/header.h | 18 ++++++++++
+ ls-ecaps.c   | 97 +++++++++++++++++++++++++++++++++++++++++++++-------
+ 2 files changed, 102 insertions(+), 13 deletions(-)
 
-Ack, adjusting.
+diff --git a/lib/header.h b/lib/header.h
+index 21fb628..507080f 100644
+--- a/lib/header.h
++++ b/lib/header.h
+@@ -1454,6 +1454,7 @@
+ #define  PCI_DPC_CAP_SW_TRIGGER	0x80		/* DPC Software Trigger */
+ #define  PCI_DPC_CAP_RP_LOG(x)	(((x) >> 8) & 0xf) /* DPC RP PIO Log Size */
+ #define  PCI_DPC_CAP_DL_ACT_ERR	0x1000		/* DPC DL_Active ERR_COR Signal */
++#define  PCI_DPC_CAP_RP_PIO_LOG_SIZE4	0x2000	/* RP PIO Log Size [4] */
+ #define PCI_DPC_CTL		6	/* DPC Control */
+ #define  PCI_DPC_CTL_TRIGGER(x) ((x) & 0x3)	/* DPC Trigger Enable */
+ #define  PCI_DPC_CTL_CMPL	0x4		/* DPC Completion Control */
+@@ -1470,6 +1471,23 @@
+ #define  PCI_DPC_STS_TRIGGER_EXT(x) (((x) >> 5) & 0x3) /* Trigger Reason Extension */
+ #define  PCI_DPC_STS_PIO_FEP(x) (((x) >> 8) & 0x1f) /* DPC PIO First Error Pointer */
+ #define PCI_DPC_SOURCE		10	/* DPC Source ID */
++#define PCI_DPC_RP_PIO_STATUS	0xc	/* DPC RP PIO Status */
++#define  PCI_DPC_RP_PIO_CFG_UR		0x00000001	/* Cfg Request UR Completion */
++#define  PCI_DPC_RP_PIO_CFG_CA		0x00000002	/* Cfg Request CA Completion */
++#define  PCI_DPC_RP_PIO_CFG_CTO		0x00000004	/* Cfg Request Completion Timeout */
++#define  PCI_DPC_RP_PIO_IO_UR		0x00000100	/* I/O Request UR Completion */
++#define  PCI_DPC_RP_PIO_IO_CA		0x00000200	/* I/O Request CA Completion */
++#define  PCI_DPC_RP_PIO_IO_CTO		0x00000400	/* I/O Request Completion Timeout */
++#define  PCI_DPC_RP_PIO_MEM_UR		0x00010000	/* Mem Request UR Completion */
++#define  PCI_DPC_RP_PIO_MEM_CA		0x00020000	/* Mem Request CA Completion */
++#define  PCI_DPC_RP_PIO_MEM_CTO		0x00040000	/* Mem Request Completion Timeout */
++#define PCI_DPC_RP_PIO_MASK	0x10	/* DPC RP PIO Mask */
++#define PCI_DPC_RP_PIO_SEVERITY	0x14	/* DPC RP PIO Severity */
++#define PCI_DPC_RP_PIO_SYSERROR	0x18	/* DPC RP PIO SysError */
++#define PCI_DPC_RP_PIO_EXCEPTION	0x1c	/* DPC RP PIO Exception */
++#define PCI_DPC_RP_PIO_HEADER_LOG	0x20	/* DPC RP PIO Header Log */
++#define PCI_DPC_RP_PIO_IMPSPEC_LOG	0x30	/* DPC RP PIO ImpSpec Log */
++#define PCI_DPC_RP_PIO_TLP_PREFIX_LOG	0x34	/* DPC RP PIO TLP Prefix Log */
+ 
+ /* L1 PM Substates Extended Capability */
+ #define PCI_L1PM_SUBSTAT_CAP	0x4	/* L1 PM Substate Capability */
+diff --git a/ls-ecaps.c b/ls-ecaps.c
+index 455c203..61a4dee 100644
+--- a/ls-ecaps.c
++++ b/ls-ecaps.c
+@@ -233,7 +233,9 @@ cap_aer(struct device *d, int where, int type)
+ 
+ static void cap_dpc(struct device *d, int where)
+ {
+-  u16 l;
++  u16 cap, w, log_size;
++  u32 l, l0, l1, l2, l3;
++  int i;
+ 
+   printf("Downstream Port Containment\n");
+   if (verbose < 2)
+@@ -242,24 +244,93 @@ static void cap_dpc(struct device *d, int where)
+   if (!config_fetch(d, where + PCI_DPC_CAP, 8))
+     return;
+ 
+-  l = get_conf_word(d, where + PCI_DPC_CAP);
++  w = cap = get_conf_word(d, where + PCI_DPC_CAP);
++  log_size = PCI_DPC_CAP_RP_LOG(cap) | (!!(PCI_DPC_CAP_RP_PIO_LOG_SIZE4 & cap) << 4);
+   printf("\t\tDpcCap:\tIntMsgNum %d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
+-    PCI_DPC_CAP_INT_MSG(l), FLAG(l, PCI_DPC_CAP_RP_EXT), FLAG(l, PCI_DPC_CAP_TLP_BLOCK),
+-    FLAG(l, PCI_DPC_CAP_SW_TRIGGER), PCI_DPC_CAP_RP_LOG(l), FLAG(l, PCI_DPC_CAP_DL_ACT_ERR));
++    PCI_DPC_CAP_INT_MSG(w), FLAG(w, PCI_DPC_CAP_RP_EXT), FLAG(w, PCI_DPC_CAP_TLP_BLOCK),
++    FLAG(w, PCI_DPC_CAP_SW_TRIGGER), log_size, FLAG(w, PCI_DPC_CAP_DL_ACT_ERR));
+ 
+-  l = get_conf_word(d, where + PCI_DPC_CTL);
++  w = get_conf_word(d, where + PCI_DPC_CTL);
+   printf("\t\tDpcCtl:\tTrigger:%x Cmpl%c INT%c ErrCor%c PoisonedTLP%c SwTrigger%c DL_ActiveErr%c\n",
+-    PCI_DPC_CTL_TRIGGER(l), FLAG(l, PCI_DPC_CTL_CMPL), FLAG(l, PCI_DPC_CTL_INT),
+-    FLAG(l, PCI_DPC_CTL_ERR_COR), FLAG(l, PCI_DPC_CTL_TLP), FLAG(l, PCI_DPC_CTL_SW_TRIGGER),
+-    FLAG(l, PCI_DPC_CTL_DL_ACTIVE));
++    PCI_DPC_CTL_TRIGGER(w), FLAG(w, PCI_DPC_CTL_CMPL), FLAG(w, PCI_DPC_CTL_INT),
++    FLAG(w, PCI_DPC_CTL_ERR_COR), FLAG(w, PCI_DPC_CTL_TLP), FLAG(w, PCI_DPC_CTL_SW_TRIGGER),
++    FLAG(w, PCI_DPC_CTL_DL_ACTIVE));
+ 
+-  l = get_conf_word(d, where + PCI_DPC_STATUS);
++  w = get_conf_word(d, where + PCI_DPC_STATUS);
+   printf("\t\tDpcSta:\tTrigger%c Reason:%02x INT%c RPBusy%c TriggerExt:%02x RP PIO ErrPtr:%02x\n",
+-    FLAG(l, PCI_DPC_STS_TRIGGER), PCI_DPC_STS_REASON(l), FLAG(l, PCI_DPC_STS_INT),
+-    FLAG(l, PCI_DPC_STS_RP_BUSY), PCI_DPC_STS_TRIGGER_EXT(l), PCI_DPC_STS_PIO_FEP(l));
++    FLAG(w, PCI_DPC_STS_TRIGGER), PCI_DPC_STS_REASON(w), FLAG(w, PCI_DPC_STS_INT),
++    FLAG(w, PCI_DPC_STS_RP_BUSY), PCI_DPC_STS_TRIGGER_EXT(w), PCI_DPC_STS_PIO_FEP(w));
++
++  w = get_conf_word(d, where + PCI_DPC_SOURCE);
++  printf("\t\tSource:\t%04x\n", w);
+ 
+-  l = get_conf_word(d, where + PCI_DPC_SOURCE);
+-  printf("\t\tSource:\t%04x\n", l);
++  if ((cap & PCI_DPC_CAP_RP_EXT) && config_fetch(d, where + PCI_DPC_CAP + 8, 20 + 4 * log_size))
++    {
++      printf("\t\tRP PIO:\n");
++
++      l = get_conf_long(d, where + PCI_DPC_RP_PIO_STATUS);
++      printf("\t\t\tSta: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c MemUR%c MemCA%c MemCTO%c\n",
++             FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA),
++             FLAG(l, PCI_DPC_RP_PIO_CFG_CTO), FLAG(l, PCI_DPC_RP_PIO_IO_UR),
++             FLAG(l, PCI_DPC_RP_PIO_IO_CA), FLAG(l, PCI_DPC_RP_PIO_IO_CTO),
++             FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA),
++             FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
++
++      l = get_conf_long(d, where + PCI_DPC_RP_PIO_MASK);
++      printf("\t\t\tMsk: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c MemUR%c MemCA%c MemCTO%c\n",
++             FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA),
++             FLAG(l, PCI_DPC_RP_PIO_CFG_CTO), FLAG(l, PCI_DPC_RP_PIO_IO_UR),
++             FLAG(l, PCI_DPC_RP_PIO_IO_CA), FLAG(l, PCI_DPC_RP_PIO_IO_CTO),
++             FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA),
++             FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
++
++      l = get_conf_long(d, where + PCI_DPC_RP_PIO_SEVERITY);
++      printf("\t\t\tSev: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c MemUR%c MemCA%c MemCTO%c\n",
++             FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA),
++             FLAG(l, PCI_DPC_RP_PIO_CFG_CTO), FLAG(l, PCI_DPC_RP_PIO_IO_UR),
++             FLAG(l, PCI_DPC_RP_PIO_IO_CA), FLAG(l, PCI_DPC_RP_PIO_IO_CTO),
++             FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA),
++             FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
++
++      l = get_conf_long(d, where + PCI_DPC_RP_PIO_SYSERROR);
++      printf("\t\t\tErr: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c MemUR%c MemCA%c MemCTO%c\n",
++             FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA),
++             FLAG(l, PCI_DPC_RP_PIO_CFG_CTO), FLAG(l, PCI_DPC_RP_PIO_IO_UR),
++             FLAG(l, PCI_DPC_RP_PIO_IO_CA), FLAG(l, PCI_DPC_RP_PIO_IO_CTO),
++             FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA),
++             FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
++
++      l = get_conf_long(d, where + PCI_DPC_RP_PIO_EXCEPTION);
++      printf("\t\t\tExc: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c MemUR%c MemCA%c MemCTO%c\n",
++             FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA),
++             FLAG(l, PCI_DPC_RP_PIO_CFG_CTO), FLAG(l, PCI_DPC_RP_PIO_IO_UR),
++             FLAG(l, PCI_DPC_RP_PIO_IO_CA), FLAG(l, PCI_DPC_RP_PIO_IO_CTO),
++             FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA),
++             FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
++
++      l0 = get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG);
++      l1 = get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG + 4);
++      l2 = get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG + 8);
++      l3 = get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG + 12);
++      printf("\t\t\tHeaderLog: %08x %08x %08x %08x\n", l0, l1, l2, l3);
++
++      if (log_size >= 5)
++        {
++          l = get_conf_long(d, where + PCI_DPC_RP_PIO_IMPSPEC_LOG);
++          printf("\t\t\tImpSpecLog: %08x\n", l);
++        }
++
++      if (log_size >= 6)
++        {
++          printf("\t\t\tTLPPrefixLog:");
++          for (i = 5; i < log_size; i++)
++            {
++              l = get_conf_long(d, where + PCI_DPC_RP_PIO_TLP_PREFIX_LOG + (i - 5) * 4);
++              printf(" %08x", l);
++            }
++          printf("\n");
++        }
++    }
+ }
+ 
+ static void
+-- 
+2.52.0
 
->
-> > +    printf("\t\tRP PIO:\n");
-> > +
-> > +    l =3D get_conf_long(d, where + PCI_DPC_RP_PIO_STATUS);
-> > +    printf("\t\t\tSta: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c =
-MemUR%c MemCA%c MemCTO%c\n",
-> > +      FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA), =
-FLAG(l, PCI_DPC_RP_PIO_CFG_CTO),
-> > +      FLAG(l, PCI_DPC_RP_PIO_IO_UR), FLAG(l, PCI_DPC_RP_PIO_IO_CA), FL=
-AG(l, PCI_DPC_RP_PIO_IO_CTO),
-> > +      FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA), =
-FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
-> > +
-> > +    l =3D get_conf_long(d, where + PCI_DPC_RP_PIO_MASK);
-> > +    printf("\t\t\tMsk: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c =
-MemUR%c MemCA%c MemCTO%c\n",
-> > +      FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA), =
-FLAG(l, PCI_DPC_RP_PIO_CFG_CTO),
-> > +      FLAG(l, PCI_DPC_RP_PIO_IO_UR), FLAG(l, PCI_DPC_RP_PIO_IO_CA), FL=
-AG(l, PCI_DPC_RP_PIO_IO_CTO),
-> > +      FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA), =
-FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
-> > +
-> > +    l =3D get_conf_long(d, where + PCI_DPC_RP_PIO_SEVERITY);
-> > +    printf("\t\t\tSev: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c =
-MemUR%c MemCA%c MemCTO%c\n",
-> > +      FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA), =
-FLAG(l, PCI_DPC_RP_PIO_CFG_CTO),
-> > +      FLAG(l, PCI_DPC_RP_PIO_IO_UR), FLAG(l, PCI_DPC_RP_PIO_IO_CA), FL=
-AG(l, PCI_DPC_RP_PIO_IO_CTO),
-> > +      FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA), =
-FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
-> > +
-> > +    l =3D get_conf_long(d, where + PCI_DPC_RP_PIO_SYSERROR);
-> > +    printf("\t\t\tErr: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c =
-MemUR%c MemCA%c MemCTO%c\n",
-> > +      FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA), =
-FLAG(l, PCI_DPC_RP_PIO_CFG_CTO),
-> > +      FLAG(l, PCI_DPC_RP_PIO_IO_UR), FLAG(l, PCI_DPC_RP_PIO_IO_CA), FL=
-AG(l, PCI_DPC_RP_PIO_IO_CTO),
-> > +      FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA), =
-FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
-> > +
-> > +    l =3D get_conf_long(d, where + PCI_DPC_RP_PIO_EXCEPTION);
-> > +    printf("\t\t\tExc: CfgUR%c CfgCA%c CfgCTO%c IOUR%c IOCA%c IOCTO%c =
-MemUR%c MemCA%c MemCTO%c\n",
-> > +      FLAG(l, PCI_DPC_RP_PIO_CFG_UR), FLAG(l, PCI_DPC_RP_PIO_CFG_CA), =
-FLAG(l, PCI_DPC_RP_PIO_CFG_CTO),
-> > +      FLAG(l, PCI_DPC_RP_PIO_IO_UR), FLAG(l, PCI_DPC_RP_PIO_IO_CA), FL=
-AG(l, PCI_DPC_RP_PIO_IO_CTO),
-> > +      FLAG(l, PCI_DPC_RP_PIO_MEM_UR), FLAG(l, PCI_DPC_RP_PIO_MEM_CA), =
-FLAG(l, PCI_DPC_RP_PIO_MEM_CTO));
-> > +
-> > +    l0 =3D get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG);
-> > +    l1 =3D get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG + 4);
-> > +    l2 =3D get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG + 8);
-> > +    l3 =3D get_conf_long(d, where + PCI_DPC_RP_PIO_HEADER_LOG + 12);
->
-> Shouldn't you check that the log is long enough before accessing the
-> first 4 entries?
-
-Per the spec, the 4DW Header Log register is always present, and there
-is language requiring the log size field to be >=3D 4.
-
-Also, my understanding is that this is intentionally analogous to the
-AER Header Log register, so I took the same approach as used for that.
-
->
->                                 Martin
