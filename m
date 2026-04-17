@@ -1,123 +1,84 @@
-Received: from spark.kcore.it (spark.kcore.it [49.13.27.68])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9622C3A16B4;
-	Fri, 17 Apr 2026 13:24:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=49.13.27.68
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE7B2175A72
+	for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2026 15:51:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776432288; cv=none; b=aR/ggDXadbzzg1TBIRsA/TwjOFv3acnTUuN6ROV341KcgV32NsUedPA/VOdqzzziDIJ1SVyQT6ZJe3JU/ohbuIfDRfDNylxlZqmlzZm9hsZh51asemYv8Gw8WADcCWBgmCj8IVLgtUI7Q+LCloMcdrm661iiJqzIk/6xO+6Z53U=
+	t=1776441101; cv=none; b=ly8sb/e9x6Hx+ESUO7tqthWNJS8oq/RO+zJsVX5Eg5FpqH0CHNieR16ZV6VTTL2q9IQ+rRt7GR3cOcj0RLzQ6j5AO3Sr9US+nxOuG2KlrRr94u9FNcmwpL9lGFo0yr0oqpgJGkPa7psq5gy5zAn9unkPT/CDEf51jW5InaAhF4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776432288; c=relaxed/simple;
-	bh=LiqyxA4Fqp3E5PM/AtVrIZtpsvNwmNVzRuiijmPLyWQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MT+t4xhlEXlPI1J/JO6Cp7GuUXS7b3z4+ytreMoKBm9cQN4es8u7EyiKmFq70V2voxe4VuePfPRSoWe8Gamzp6YSDdzkGM1rYv4MlG11XAyrw4rKmBJZJPxCTJt3cwKVZafs4u4ATCMecyFEpZj0YPRe0gKH4s4pCPpnPypiKcQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kcore.it; spf=pass smtp.mailfrom=kcore.it; dkim=pass (1024-bit key) header.d=kcore.it header.i=@kcore.it header.b=MnCbf17X; arc=none smtp.client-ip=49.13.27.68
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kcore.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kcore.it
+	s=arc-20240116; t=1776441101; c=relaxed/simple;
+	bh=ixbHQbDg5pJETt37zIjFO0J4AmJGuU3o+3aRQBgcbhU=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=sR4HssDEzC60m+uiGQtAMb8PsjNmQi+VUKOo/cbYPy2MTrujdKrSITR8qJ4f6hGjBSs0JA/1wmzjV5UzQwB18RKJZTO1zTq0G5Bx3Q5mJJ3Mc1/Jx3W/JgJlwQWaXy2sYD8mjCXWJWBS1j+bxRS2C8SwHPcW9B881TXLb+mOEgE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=g/oYhrQA; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=kcore.it header.i=@kcore.it header.b="MnCbf17X"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=kcore.it;
-	s=spark; h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:
-	In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=SXo38i+4gu74nYK9SMz135VuFHiRnpB/1O9Er+Qdjtk=; b=MnCbf17XcrLEfgEFC9OpnFaLzg
-	DSEjzpzQLsaOr1e2GO5BQEEj2hVEsIdqeX7sZ+d31L4oVTcu9sE3WFRmybjkMqVaiEYfd9nS+b3oa
-	9RJkYmDDPaTi+mno7dRUKQM2cIuV59dTWarDTJzfVAorxg7NcNcQq1Yq86dLlerVZp20=;
-Received: from mnencia by spark.kcore.it with local (Exim 4.96)
-	(envelope-from <mnencia@kcore.it>)
-	id 1wDjBV-007w6I-1I;
-	Fri, 17 Apr 2026 15:24:37 +0200
-From: Marco Nenciarini <mnencia@kcore.it>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	=?UTF-8?q?Christian=20K=C3=B6nig?= <ckoenig.leichtzumerken@gmail.com>,
-	Marco Nenciarini <mnencia@kcore.it>,
-	stable@vger.kernel.org,
-	=?UTF-8?q?Micha=C5=82=20Winiarski?= <michal.winiarski@intel.com>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Eric Chanudet <echanude@redhat.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Lukas Wunner <lukas@wunner.de>
-Subject: [PATCH v2 2/2] PCI/IOV: Skip VF Resizable BAR restore on read error
-Date: Fri, 17 Apr 2026 15:24:37 +0200
-Message-Id: <44a4ae53ec2825816b816c85cd378430d9a95cc6.1776429882.git.mnencia@kcore.it>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <cover.1776429882.git.mnencia@kcore.it>
-References: <20260408163922.1740497-1-mnencia@kcore.it> <cover.1776429882.git.mnencia@kcore.it>
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="g/oYhrQA"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=9AvDY0ISEyLjnWkJjYEzw0I+S9rjrAOHDSJlPQul7Vc=; b=g/oYhrQAHC0VuSr5pkvzrz0Hjo
+	F/M3jw2TYaEzdFYdyhlGngQRZ4iL8MUKAmbPGVZoHZeZV7CkL5paDCUMaPcSBAErt2GFaYwyI177g
+	ii4lS1fHvUggZu7ZUT5VeZJQkaJsQiMj3TCPPP84lF607bu4OC2rCuRjMy4B+njmZzo4vou7LSm9Y
+	zCT/aHGu628Eabx8diLdGRqKh5cQRmfhGI5KoeAsO+F/lzJ/UZBrsYOrkwswKWIUXF+6YvuwUvVWj
+	TBwAm12kRq85I3VoPfmvtUHAune6aGMjuUUfteGArjjuErGCxjDVhDvy0pMBP34ul2epEzQIBDyCh
+	94hRDC7Q==;
+Received: from s0106ac1f6bb1ecac.cg.shawcable.net ([96.51.150.74] helo=[10.0.33.11])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1wDkwf-0000000EGsO-0LVR;
+	Fri, 17 Apr 2026 09:17:25 -0600
+Message-ID: <f232e368-2546-4206-97f4-dfdfea636a05@deltatee.com>
+Date: Fri, 17 Apr 2026 09:16:46 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+To: Shawn Lin <shawn.lin@rock-chips.com>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Nirmal Patel <nirmal.patel@linux.intel.com>,
+ Jonathan Derrick <jonathan.derrick@linux.dev>,
+ Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+ Philipp Stanner <phasta@kernel.org>, linux-pci@vger.kernel.org
+References: <1776392767-83668-1-git-send-email-shawn.lin@rock-chips.com>
+ <1776392767-83668-3-git-send-email-shawn.lin@rock-chips.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <1776392767-83668-3-git-send-email-shawn.lin@rock-chips.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 96.51.150.74
+X-SA-Exim-Rcpt-To: shawn.lin@rock-chips.com, bhelgaas@google.com, nirmal.patel@linux.intel.com, jonathan.derrick@linux.dev, kurt.schwemmer@microsemi.com, phasta@kernel.org, linux-pci@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH v2 2/3] PCI: switchtec: Replace pci_alloc_irq_vectors()
+ with pcim_alloc_irq_vectors()
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-sriov_restore_vf_rebar_state() uses the VF Resizable BAR Control
-register to decide how many VF BARs to restore (nbars) and which
-VF BAR each iteration addresses (bar_idx). bar_idx indexes into
-dev->sriov->barsz[], which has only PCI_SRIOV_NUM_BARS (6) entries.
 
-When the device does not respond, config reads return the all-ones
-pattern. Both fields are 3 bits wide, so nbars and bar_idx both
-evaluate to 7. The barsz[] access then goes out of bounds. UBSAN
-reports this as:
 
-  UBSAN: array-index-out-of-bounds in drivers/pci/iov.c:948:51
-  index 7 is out of range for type 'resource_size_t [6]'
+On 2026-04-16 8:26 p.m., Shawn Lin wrote:
+> Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors() to
+> explicitly request devres-managed interrupt vectors. This makes the
+> driver's intention clear and avoids the ambiguous implicit management
+> previously provided by pcim_enable_device().
+> 
+> The change prepares the driver for the eventual removal of the hybrid
+> IRQ management pattern from pcim_enable_device(), ensuring consistent
+> resource management through devres.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Observed on an NVIDIA RTX PRO 1000 GPU (GB207GLM) that fell off the
-PCIe bus during a failed GC6 power state exit. The subsequent
-pci_restore_state() invoked sriov_restore_vf_rebar_state() while
-config reads returned 0xffffffff, triggering the splat.
+This direction makes sense to me. I remember thinking it was odd that
+pci_alloc_ir_vectors() was applicable to managed cases without the pcim
+prefix. Thanks!
 
-Bail out if any VF Resizable BAR Control read returns the error
-pattern. No further VF BARs are touched, which is safe because a
-config read that returns the error pattern indicates the device is
-unreachable and restoration is pointless. This mirrors the guard
-in pci_restore_rebar_state().
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 
-Fixes: 5a8f77e24a30 ("PCI/IOV: Restore VF resizable BAR state after reset")
-Cc: stable@vger.kernel.org
-Signed-off-by: Marco Nenciarini <mnencia@kcore.it>
----
-Cc: Michał Winiarski <michal.winiarski@intel.com>
-Cc: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Cc: Rafael J. Wysocki <rafael@kernel.org>
-Cc: Eric Chanudet <echanude@redhat.com>
-Cc: Alex Williamson <alex@shazbot.org>
-Cc: Lukas Wunner <lukas@wunner.de>
-
- drivers/pci/iov.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 91ac4e37ecb9c..08df9bace13d1 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -938,12 +938,18 @@ static void sriov_restore_vf_rebar_state(struct pci_dev *dev)
- 		return;
- 
- 	pci_read_config_dword(dev, pos + PCI_VF_REBAR_CTRL, &ctrl);
-+	if (PCI_POSSIBLE_ERROR(ctrl))
-+		return;
-+
- 	nbars = FIELD_GET(PCI_VF_REBAR_CTRL_NBAR_MASK, ctrl);
- 
- 	for (i = 0; i < nbars; i++, pos += 8) {
- 		int bar_idx, size;
- 
- 		pci_read_config_dword(dev, pos + PCI_VF_REBAR_CTRL, &ctrl);
-+		if (PCI_POSSIBLE_ERROR(ctrl))
-+			return;
-+
- 		bar_idx = FIELD_GET(PCI_VF_REBAR_CTRL_BAR_IDX, ctrl);
- 		size = pci_rebar_bytes_to_size(dev->sriov->barsz[bar_idx]);
- 		ctrl &= ~PCI_VF_REBAR_CTRL_BAR_SIZE;
--- 
-2.47.3
 
