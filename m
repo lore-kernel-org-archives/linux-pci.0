@@ -1,52 +1,52 @@
 Received: from mxout70.expurgate.net (mxout70.expurgate.net [194.37.255.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5974E37C109;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 596C9358391;
 	Fri, 17 Apr 2026 08:36:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.37.255.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776414981; cv=none; b=Ona/0E0/LqlVFXN2OPx6cFizC+pZ/ECI3z+zS9XL0RxJDfHcYgo+6SBK8pDLJpVIYXxHxHptEG5GjgdLP7tNqmN7DnRhCqIh8ElwsqYCShlnb68N5J7ufrp4q2TvI1FxjbOqM1+ZdoVSO0LIHcHKSuCv4qpe46QM5wNWN/U4+Rg=
+	t=1776414982; cv=none; b=U2hB99zKsv3p6PTDwU52YyXsnoe4rRYCl949NT6h+Fpraxz3OMGbq5c17q1q2OsRWePU7Rmk6QnnhHwllLw5NObLAp22wXvESplyUVlPMhfsPtK5Yr3R9cI71bhKNn3Wg8U9bH5c8Y4Qiqll1qxd6q1D/On1fev1nCo8YfYppmI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776414981; c=relaxed/simple;
-	bh=xn9R5Y4c2FVuxWGJ+XDVZ0hhgrzdWZnr3TAJrrkBg1E=;
+	s=arc-20240116; t=1776414982; c=relaxed/simple;
+	bh=SDHu4CF6hiHHjw7wIYF2M+BZ1AnJr501zKLvFcrIIPQ=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:Cc; b=n3kArR5EOZ2UfNvOJbDS2GLcJVYCZdyRiZpGbg0SfLu93fyyXNULjSEyHd1YOYMlH7m8vxJ74D9nYJKVWu4nxHdj0rwod7tEuDeqLgs/8TF6C+qAc1B+uyje/YvEcj17rZhEW9CF5gK+yu0pj4VPEdB+02nCyoYJC4VAG66d3kg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=jwHWq+T2; arc=none smtp.client-ip=194.37.255.70
+	 In-Reply-To:To:Cc; b=gU9b8u/udUCAW/WoWULguYLDjyl5Al93NWtNHZBqbLFJNIbBr+jcvxsuXRMQUoc+AAOCT9V3zSv9FzLSrr2T+so0bX8fX2d/kDh5FmtsN35YFY6/Q78kHSQbdFev8Oe0pP5ImH1aVH1aR9F7BdJuiFRqcfCLqij/YEF3+Y9l+QI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=V/u9a+iS; arc=none smtp.client-ip=194.37.255.70
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev.tdt.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="jwHWq+T2"
+	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="V/u9a+iS"
 Received: from [194.37.255.9] (helo=mxout.expurgate.net)
 	by relay.expurgate.net with smtp (Exim 4.92)
 	(envelope-from <prvs=75813159fe=fe@dev.tdt.de>)
-	id 1wDegN-00Bg6j-3N; Fri, 17 Apr 2026 10:36:11 +0200
+	id 1wDegM-00Bg5v-Qm; Fri, 17 Apr 2026 10:36:10 +0200
 Received: from [195.243.126.94] (helo=securemail.tdt.de)
 	by relay.expurgate.net with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
 	(Exim 4.92)
 	(envelope-from <fe@dev.tdt.de>)
-	id 1wDegM-00A0Nv-Ju; Fri, 17 Apr 2026 10:36:10 +0200
+	id 1wDegM-00EXG6-Ak; Fri, 17 Apr 2026 10:36:10 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev.tdt.de;
-	s=z1-selector1; t=1776414970;
-	bh=dqCPK//hWZVdcc5L/u7Ya15VIfulvFBTzBi5FMRGLF0=;
+	s=z1-selector1; t=1776414969;
+	bh=JqZmvXp+hLfJuRdo0qRIk/QxAIHQamNDzRshObedo7Q=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=jwHWq+T2q/xklHc+xsq0BQcikPvtjqVmn9Qk1MK5rEj/2RVLQv0QbXfADFX6jxW3g
-	 +MyDqNbKTIWw/N5EOCzHI8og8KhKgvLJtJMBmvpxn/6L0FXYA/vdyPf0IPmeGRWuLb
-	 ZbIM6e/o8bQ62mOVH4XuKL/UG0/Iu85+zQ8XWzyqzWycALGyybW2mVNq41Jh96lxun
-	 oy3DEihPpzeixY5mUeHzgCKntAbrGfGn2PelaHP5/sK+UXgkhiy1FGt9J57WwHY1s2
-	 X6J2OBS45o/CO+21K9decNtC/94FtBArlicu+aknC6wKw7ULm3d2V77KweF50ddymc
-	 WmNobJkeoTcoQ==
+	b=V/u9a+iS39lP5DUq6Mwk7tWKlNQD8xUM6AeJrPQyMAA+n7VnSJN0o3wZjJmctgvLL
+	 jxst+w4rgD57DJf/rGmYaBnLkZPTMkdjTNK/4yNkpQYyR2OTdQNKIc8VyiHr8X95J8
+	 tC3HdzZppW1eOPEzEqH4xx4AuwXI6/tCw0rzsBboF2jkxzUW7kKJBDegCp7vfUGxb/
+	 23iBOq3W+Bxj7MWqXTx43c98c1/0pI/APhzAiGbUV8ubrwUzs1VXyvSilLbbIR9uhw
+	 g6L1nE7nKKcIm87CtU360Km8c0nQ9nKUUXeKovfGzOQfi91tPmi8rZyqx2mSAJBDfd
+	 DNnwW/pJ7+LOA==
 Received: from securemail.tdt.de (localhost [127.0.0.1])
-	by securemail.tdt.de (Postfix) with ESMTP id 0118A24004F;
-	Fri, 17 Apr 2026 10:36:10 +0200 (CEST)
+	by securemail.tdt.de (Postfix) with ESMTP id DE5B3240046;
+	Fri, 17 Apr 2026 10:36:09 +0200 (CEST)
 Received: from mail.dev.tdt.de (unknown [10.2.4.42])
-	by securemail.tdt.de (Postfix) with ESMTP id DFD54240047;
+	by securemail.tdt.de (Postfix) with ESMTP id C7937240045;
 	Fri, 17 Apr 2026 10:36:09 +0200 (CEST)
 Received: from [10.2.3.40] (unknown [10.2.3.40])
-	by mail.dev.tdt.de (Postfix) with ESMTPSA id C5D3023BD7;
+	by mail.dev.tdt.de (Postfix) with ESMTPSA id A74AE242E9;
 	Fri, 17 Apr 2026 10:36:09 +0200 (CEST)
 From: Florian Eckert <fe@dev.tdt.de>
-Date: Fri, 17 Apr 2026 10:35:46 +0200 (CEST)
-Subject: [PATCH v5 2/7] PCI: intel-gw: Remove unused define
+Date: Fri, 17 Apr 2026 10:35:45 +0200 (CEST)
+Subject: [PATCH v5 1/7] MAINTAINERS: Remove bouncing intel-gw maintainer
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -55,7 +55,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-ID: <20260417-pcie-intel-gw-v5-2-0a2b933fe04f@dev.tdt.de>
+Message-ID: <20260417-pcie-intel-gw-v5-1-0a2b933fe04f@dev.tdt.de>
 References: <20260417-pcie-intel-gw-v5-0-0a2b933fe04f@dev.tdt.de>
 In-Reply-To: <20260417-pcie-intel-gw-v5-0-0a2b933fe04f@dev.tdt.de>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -71,37 +71,40 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	devicetree@vger.kernel.org, Florian Eckert <fe@dev.tdt.de>,
 	Eckert.Florian@googlemail.com, ms@dev.tdt.de
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1776414969; l=814;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1776414969; l=809;
  i=fe@dev.tdt.de; s=20260205; h=from:subject:message-id;
- bh=xn9R5Y4c2FVuxWGJ+XDVZ0hhgrzdWZnr3TAJrrkBg1E=;
- b=cZ8ik4QHSpK5edsnADCxvQmasi61AYTd4JRzww7lKoY0EiR3l9qGVIO8FyCH+jMnin0Kdw1CV
- GsL8fGrBcUWDu2wTRxFkGIJJaSEOAf0MJR1Uocc6597gOEQEBRaZNN7
+ bh=SDHu4CF6hiHHjw7wIYF2M+BZ1AnJr501zKLvFcrIIPQ=;
+ b=bpmSa1lj6s6S7/G2Headrpqt+f067wIU9fI/h0b9vE8+qfbEYzBfUQmOfKimgtTa/XxhnlZYL
+ qX+gT65F5MLAvt6oP5ayc8iP06EZL65CG7lU5vzr0RVQF95xgP02Pwz
 X-Developer-Key: i=fe@dev.tdt.de; a=ed25519;
  pk=q7Pvv3Au2sAVRhBz5UF7ZqUPNxUwXQ78Jdqu8E6Negk=
-X-purgate-ID: 151534::1776414971-196C4049-9B8CBE30/0/0
+X-purgate-ID: 151534::1776414970-2BC2A049-D46FE017/0/0
 X-purgate: clean
 X-purgate-type: clean
 
-The C preprocessor define 'PCIE_APP_INTX_OFST' is not used in the sources
-and can therefore be deleted.
+The maintainer's email address has been bouncing for months. Mark the PCI
+intel-gw driver as orphaned.
 
 Signed-off-by: Florian Eckert <fe@dev.tdt.de>
 ---
- drivers/pci/controller/dwc/pcie-intel-gw.c | 1 -
- 1 file changed, 1 deletion(-)
+ MAINTAINERS | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/controller/dwc/pcie-intel-gw.c
-index c21906eced61896c8a8307dbd6b72d229f9a5c5f..80d1607c46cbbb1e274b37a0bb9377a877678f5d 100644
---- a/drivers/pci/controller/dwc/pcie-intel-gw.c
-+++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
-@@ -47,7 +47,6 @@
- #define PCIE_APP_IRN_INTD		BIT(16)
- #define PCIE_APP_IRN_MSG_LTR		BIT(18)
- #define PCIE_APP_IRN_SYS_ERR_RC		BIT(29)
--#define PCIE_APP_INTX_OFST		12
+diff --git a/MAINTAINERS b/MAINTAINERS
+index d1cc0e12fe1f004da89b1aa339116908f642e894..725f333f265bef416b5144c56649cb6eae736e40 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -20518,9 +20518,8 @@ F:	Documentation/devicetree/bindings/pci/intel,keembay-pcie*
+ F:	drivers/pci/controller/dwc/pcie-keembay.c
  
- #define PCIE_APP_IRN_INT \
- 	(PCIE_APP_IRN_AER_REPORT | PCIE_APP_IRN_PME | \
+ PCIE DRIVER FOR INTEL LGM GW SOC
+-M:	Chuanhua Lei <lchuanhua@maxlinear.com>
+ L:	linux-pci@vger.kernel.org
+-S:	Maintained
++S:	Orphan
+ F:	Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+ F:	drivers/pci/controller/dwc/pcie-intel-gw.c
+ 
 
 -- 
 2.47.3
