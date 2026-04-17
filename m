@@ -1,81 +1,93 @@
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [207.46.229.174])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3C2ED2DEA61;
-	Fri, 17 Apr 2026 08:49:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.46.229.174
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0172030EF9A
+	for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2026 08:51:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776415783; cv=none; b=c2jlF7EzdzeAtfAXMk7Xx+MSDaMhfxOuzzELibakYRlS3u8TJIQyGn287Jn4jJuGwc1rrsdUqY1YP9DcxCjNU5YrW7MaixqOZBqypShMOI9ZLYF/3RcypF+j70LbXs8cFFp7j6AmB9CpXzDzqLf1Dg7JUM89rlotGVwK3gAp1l0=
+	t=1776415909; cv=none; b=l6HVxyj3Z0aK8diJPY9+jG3gTdz3evHqiHcYB378EU6mQERg839Bpeu+aH/FGtnZjYzn1zgBeUHsYRO3Din7gqd1cwaV/h1SbRQ6btZXpudsAmJulDOOGN1UNDkatakQG7y17/7UEc2zbHuRTiGo/Jcz1q8uOoMCPQE9bzsp0/o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776415783; c=relaxed/simple;
-	bh=hrDCA86iMRZe79wW6zL67X7WRlZuj7pevmL/QYIw9GQ=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=efd106rat9C29At9cvnuP6/fDxgbCd+ohL9ypNaXD2UMTflN0ZACz0drRda56B1mUdCXeaRYokY3+WGlZvwf7Ew4l/Hslp2swcaUW/aRD9TXkTZ/Jx6oVhMDi32KH7k4eEpDaql0hS1C0TFgScMBATpMXKUKmb2mlhmeGMVEVtI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=207.46.229.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
-Received: from zhangsenchuan$eswincomputing.com ( [10.12.96.83] ) by
- ajax-webmail-app2 (Coremail) ; Fri, 17 Apr 2026 16:49:22 +0800 (GMT+08:00)
-Date: Fri, 17 Apr 2026 16:49:22 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: zhangsenchuan <zhangsenchuan@eswincomputing.com>
-To: "Felix Gu" <ustc.gu@gmail.com>
-Cc: "Lorenzo Pieralisi" <lpieralisi@kernel.org>,
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	"Manivannan Sadhasivam" <mani@kernel.org>,
-	"Rob Herring" <robh@kernel.org>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	"Yanghui Ou" <ouyanghui@eswincomputing.com>,
-	"Yu Ning" <ningyu@eswincomputing.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: eswin: Fix resource leak on dw_pcie_host_init()
- failure
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
- 20241203(6b039d88) Copyright (c) 2002-2026 www.mailtech.cn
- mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
-In-Reply-To: <20260416-eswin-v1-1-a4991725b5ca@gmail.com>
-References: <20260416-eswin-v1-1-a4991725b5ca@gmail.com>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	s=arc-20240116; t=1776415909; c=relaxed/simple;
+	bh=13QWmgexTjKgPWUs92J+iLyxUFTvlmZV6JzYUygNFuE=;
+	h=Message-Id:From:Date:Subject:To:Cc; b=bnJJNyS6w6WDfVc56Mt6C1YhBiCKoAfwn5t5OSyB87OUa9JzL8c0303VG4UcBNTvhU4MuDvH8mDADTgQI7UFZv5ZHrw6HVrXubjV4w12LuIj4ofcf8Ytq7vwT3shfgyGTjXbbSgMXqWJ1dEIiOmbu9qWEh3i0ssrW3SiECHOXxI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id 53C4AC27;
+	Fri, 17 Apr 2026 10:51:45 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 388FE6015A92; Fri, 17 Apr 2026 10:51:45 +0200 (CEST)
+Message-Id: <af7d11d3ceb231acc90829f7a5c8400c2446744f.1776415510.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Fri, 17 Apr 2026 10:51:46 +0200
+Subject: [PATCH] PCI: Stop setting cached power state to "unknown" on unbind
+To: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Mario Limonciello <mario.limonciello@amd.com>, Alex Williamson <alex@shazbot.org>, linux-pci@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Message-ID: <63f0d797.55eb.19d9aa167da.Coremail.zhangsenchuan@eswincomputing.com>
-X-Coremail-Locale: en_US
-X-CM-TRANSID:TQJkCgA3TJ8S9OFpvmgSAA--.2402W
-X-CM-SenderInfo: x2kd0wpvhquxxxdqqvxvzl0uprps33xlqjhudrp/1tbiAQEABmnhD
-	xkcjwAAsL
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-	daVFxhVjvjDU=
 
-PiBTdWJqZWN0OiBbUEFUQ0hdIFBDSTogZXN3aW46IEZpeCByZXNvdXJjZSBsZWFrIG9uIGR3X3Bj
-aWVfaG9zdF9pbml0KCkgZmFpbHVyZQo+IAo+IFdoZW4gZHdfcGNpZV9ob3N0X2luaXQoKSBmYWls
-cywgdGhlIGNvZGUganVtcHMgdG8gZXJyX2luaXQgd2hpY2gKPiBvbmx5IGNhbGxzIHBtX3J1bnRp
-bWVfcHV0KCkgYnV0IHNraXBzIHRoZSBjbGVhbiB1cCBvZiBwb3J0IHJlc291cmNlcy4KPiAKPiBG
-aXhlczogYjU5M2MyNmQwODFhICgiUENJOiBlc3dpbjogQWRkIEVTV0lOIFBDSWUgUm9vdCBDb21w
-bGV4IGRyaXZlciIpCj4gU2lnbmVkLW9mZi1ieTogRmVsaXggR3UgPHVzdGMuZ3VAZ21haWwuY29t
-Pgo+IC0tLQo+ICBkcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWVzd2luLmMgfCAzICst
-LQo+ICAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDIgZGVsZXRpb25zKC0pCj4gCj4g
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZXN3aW4uYyBiL2Ry
-aXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZXN3aW4uYwo+IGluZGV4IDI4NDU4MzJiMzgy
-NC4uMDE4NWI1NWUwOWUzIDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdj
-L3BjaWUtZXN3aW4uYwo+ICsrKyBiL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZXN3
-aW4uYwo+IEBAIC0zNDgsNyArMzQ4LDcgQEAgc3RhdGljIGludCBlc3dpbl9wY2llX3Byb2JlKHN0
-cnVjdCBwbGF0Zm9ybV9kZXZpY2UgKnBkZXYpCj4gIAlyZXQgPSBkd19wY2llX2hvc3RfaW5pdCgm
-cGNpLT5wcCk7Cj4gIAlpZiAocmV0KSB7Cj4gIAkJZGV2X2VycihkZXYsICJGYWlsZWQgdG8gaW5p
-dCBob3N0XG4iKTsKPiAtCQlnb3RvIGVycl9pbml0Owo+ICsJCWdvdG8gZXJyX3BtX3J1bnRpbWVf
-cHV0Owo+ICAJfQo+ICAKPiAgCXJldHVybiAwOwo+IEBAIC0zNTgsNyArMzU4LDYgQEAgc3RhdGlj
-IGludCBlc3dpbl9wY2llX3Byb2JlKHN0cnVjdCBwbGF0Zm9ybV9kZXZpY2UgKnBkZXYpCj4gIAkJ
-cmVzZXRfY29udHJvbF9wdXQocG9ydC0+cGVyc3QpOwo+ICAJCWxpc3RfZGVsKCZwb3J0LT5saXN0
-KTsKPiAgCX0KPiAtZXJyX2luaXQ6Cj4gIAlwbV9ydW50aW1lX3B1dChkZXYpOwo+ICAKPiAgCXJl
-dHVybiByZXQ7CgpUaGFua3MgZm9yIHlvdXIgcmVtaW5kZXIuCkluIHNvbWUgY2FzZXMsIHJlc291
-cmNlcyBhcmUgaW5kZWVkIHVuYWJsZSB0byBiZSByZWxlYXNlZC4gRm9yIGluc3RhbmNlLCBpZiB0
-aGUgCmNsa19idWxrX3ByZXBhcmVfZW5hYmxlIGZ1bmN0aW9uIGZhaWxzIHRvIGV4ZWN1dGUsIG9y
-IGlmIHNvbWUgZnVuY3Rpb25zIAppbiBkd19wY2llX2hvc3RfaW5pdCBmYWlsIHRvIGV4ZWN1dGUs
-IGFuZCB0aGUgcG9ydCByZXNvdXJjZXMgYXJlIG5vdCByZWxlYXNlZC4KCktpbmQgcmVnYXJkcywK
-U2VuY2h1YW4KPiAKPiAtLS0KPiBiYXNlLWNvbW1pdDogOTM2YzIxMDY4ZDdhZGUwMDMyNWU0MGQ4
-MmJmZDJmM2YyOWQ5ZjY1OQo+IGNoYW5nZS1pZDogMjAyNjA0MTYtZXN3aW4tNGQwOWRmNGU4ZjQ4
-Cj4gCgo=
+When a PCI device is unbound from its driver, pci_device_remove() sets the
+cached power state in pci_dev->current_state to PCI_UNKNOWN.  This was
+introduced by commit 2449e06a5696 ("PCI: reset pci device state to unknown
+state for resume") to invalidate the cached power state in case the system
+is subsequently put to sleep.
+
+For bound devices, the cached power state is set to PCI_UNKNOWN in
+pci_pm_suspend_noirq(), immediately before entering system sleep.
+
+Extend to unbound devices for consistency.
+
+This obviates the need to change the cached power state on unbind, so stop
+doing so.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/pci-driver.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 7c2d9d5..774892d 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -482,13 +482,6 @@ static void pci_device_remove(struct device *dev)
+ 	pm_runtime_put_sync(dev);
+ 
+ 	/*
+-	 * If the device is still on, set the power state as "unknown",
+-	 * since it might change by the next time we load the driver.
+-	 */
+-	if (pci_dev->current_state == PCI_D0)
+-		pci_dev->current_state = PCI_UNKNOWN;
+-
+-	/*
+ 	 * We would love to complain here if pci_dev->is_enabled is set, that
+ 	 * the driver should have called pci_disable_device(), but the
+ 	 * unfortunate fact is there are too many odd BIOS and bridge setups
+@@ -862,7 +855,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+ 
+ 	if (!pm) {
+ 		pci_save_state(pci_dev);
+-		goto Fixup;
++		goto set_unknown;
+ 	}
+ 
+ 	if (pm->suspend_noirq) {
+@@ -914,6 +907,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+ 		goto Fixup;
+ 	}
+ 
++set_unknown:
+ 	pci_pm_set_unknown_state(pci_dev);
+ 
+ 	/*
+-- 
+2.51.0
+
