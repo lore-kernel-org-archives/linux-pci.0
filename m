@@ -1,119 +1,168 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 438F138C42F;
-	Fri, 17 Apr 2026 11:49:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08AF932AADE;
+	Fri, 17 Apr 2026 12:06:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776426554; cv=none; b=kQ3cH1fq5HHaxv075tjD/+XoBIRhVBmgb7h8mbgwrsG4+ByJUI/P31L258cl4fDONykSDuV0WbtMSAvdTFJJKt165iPFTteI982Xd9HF6p3JKapM7WU7tNp04ZjRsk0WBJDHFt7h2D6WqWHpdQopN6kuL752szcbVFAMHzGTx1U=
+	t=1776427612; cv=none; b=BZnqcK/gBDnOP5rOiGAv0LjYyu0QKj3KQ3MfdyIhkQxsWAbbGZdnryCwcd6PzQDsF9JqqFVRSUQufnmCsamALu5OGdUxoKLL+GiozE4c3DLtnhXaBiwHQq3nlJmAgPZaQnDXaHHYwL1zgjHm5X7JrdM9yHRYMQYJjoQ7XJCP7DU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776426554; c=relaxed/simple;
-	bh=MI3uioBuwUgxsUjR1l3EmFcjUf9h5BvjSExDwm8I7tk=;
+	s=arc-20240116; t=1776427612; c=relaxed/simple;
+	bh=gX5slQsvRLsEFrAM+WwAVauNcHLIRbuo2mgnsXramdE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lxYPq0QVMWrGnEKZdB+514aE9D5EyIqh6OoogJ9lOF+iDcD0vHIf9V+YKakNn2vNZ9QAj+r+kjJU0kSVOtee/G5wulzWDBfdpHRiXdVcC3W7FJZeyLY5UBJGXbiPQxLQjE4SEFBC8dY7mi3obmWcM6aArJL/MHDwYvT+cWcHd7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=evTmeijV; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=aCnH386E5DzQQv8gKSNYklf9+oFij3Fu4uwYhEtohXccNAyq5kawelaAZ7utxuIEjIYWmZkUYQsOJHQazKszmnY8SBh74AGBPP/4X8B4b+XnaKuXeHmM1Sv+4kbjkzwyaaxYOHlkap7oFQeiVXTcfLYRt42PocKFPqrUso1bVE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eEFL5pS+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="evTmeijV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95401C2BCB4;
-	Fri, 17 Apr 2026 11:49:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eEFL5pS+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E74EC19425;
+	Fri, 17 Apr 2026 12:06:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776426553;
-	bh=MI3uioBuwUgxsUjR1l3EmFcjUf9h5BvjSExDwm8I7tk=;
+	s=k20201202; t=1776427611;
+	bh=gX5slQsvRLsEFrAM+WwAVauNcHLIRbuo2mgnsXramdE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=evTmeijVDLEB6aLBYspix6gADC5LjwWgom00t6nqowr4w3aOXLvWeHsMrBUauYm5C
-	 gGPAgcQeIUEHgSGU32kGesEYgbQdwwwXXPjqx7JtIeqN/22PeLHYQSCHf406lgGVZr
-	 8gnXVj6QtH17T0cjEOXmlBEtq76tN23CEsgj1xYHtdE9lB4Y4DhE9u4UcPur2jR0d1
-	 hG0a6P24tp3fZJJNKwyqT2g8Y3+f4QSrrys65VZmZ9KeuQW+xifnjgYlMlNU6YFY3A
-	 wHpQq0XxKkzHMrvfxNiw5f97NRIzlp2iMzJTzi98fipcb/ETGn4xaF0LzDOGs3TBZC
-	 KMEGe36WA60ow==
-Date: Fri, 17 Apr 2026 20:49:12 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Magnus Lindholm <linmag7@gmail.com>,
-	Matt Turner <mattst88@gmail.com>,
-	Richard Henderson <richard.henderson@linaro.org>,
-	Christophe Leroy <chleroy@kernel.org>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Dexuan Cui <decui@microsoft.com>,
-	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
-	Lukas Wunner <lukas@wunner.de>,
-	Oliver O'Halloran <oohall@gmail.com>,
-	Saurabh Singh Sengar <ssengar@microsoft.com>,
-	Shuan He <heshuan@bytedance.com>,
-	Srivatsa Bhat <srivatsabhat@microsoft.com>,
-	linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v4 07/24] PCI/sysfs: Convert PCI resource files to static
- attributes
-Message-ID: <20260417114912.GD1625998@rocinante>
-References: <20260411080148.471335-1-kwilczynski@kernel.org>
- <20260411080148.471335-8-kwilczynski@kernel.org>
- <eca4c119-65a8-ac84-3869-4064aa1f0829@linux.intel.com>
+	b=eEFL5pS+fJg+7QEkYJ06Vt7vuF/zJVS4dPQHL96T74FZtEHS8RZoSdJmaqJ6Zn8U8
+	 CnWb74b7vhNdd+0AoxJHIJMfsXAsdTIKoftNCUD3ls10XYEYpXFtbHbhj1t/Grj9+M
+	 LqjIBvHhbt/Te4blDWcIyUcE7j3nzAVCN88jmOPXDu6tPWtT1y1ePfnsMlWbkcXH0p
+	 7Q0K0ufSFEsoGLgPmhkdTn3WP7Hn1CkNt3rgjt19CcZXziP2t9ZkWI/T47PEIPfccU
+	 NfrBHyGMoVSAmxzdhziW1r1Irq2/lxEmDi1K9Zm5fjkI3I4ltClz617KPLyAO4hUa4
+	 JXhW6vAccvXIA==
+Date: Fri, 17 Apr 2026 17:36:42 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: manivannan.sadhasivam@oss.qualcomm.com, 
+	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, Keith Busch <kbusch@kernel.org>, 
+	Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-nvme@lists.infradead.org
+Subject: Re: [PATCH 3/4] PCI: qcom: Indicate broken L1ss exit during resume
+ from system suspend
+Message-ID: <vji2jty2pqerse6g66pavrt7e7oq3bax4m6sobp5wxew6xwv6d@r5lbv35klz6b>
+References: <20260414-l1ss-fix-v1-3-adbb4555b5ab@oss.qualcomm.com>
+ <20260416192000.GA21992@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <eca4c119-65a8-ac84-3869-4064aa1f0829@linux.intel.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260416192000.GA21992@bhelgaas>
 
-Hello,
+On Thu, Apr 16, 2026 at 02:20:00PM -0500, Bjorn Helgaas wrote:
+> [+cc Rafael]
+> 
+> On Tue, Apr 14, 2026 at 09:29:41PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+> > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > 
+> > Qcom PCIe RCs can successfully exit from L1ss during OS runtime. However,
+> > during system suspend, the Qcom PCIe RC driver may remove all resource
+> > votes and turns off the PHY to maximize power savings.
+> > 
+> > Consequently, when the host is in system suspend with the link in L1ss and
+> > the endpoint asserts CLKREQ#, the OS must first wake up and the RC driver
+> > must restore the PHY and enable the refclk. This recovery process causes
+> > the strict L1ss exit latency time to be exceeded. (If the RC driver were to
+> > retain all votes during suspend, L1ss exit would succeed without issue, but
+> > at the expense of higher power consumption).
+> 
+> I don't think the link can be in L1.x if the PHY is turned off, can
+> it?  I assume if the PHY is off, the link would be in L2 (if aux power
+> is available) or L3.
+> 
 
-> > -	/* Expose the PCI resources from this device as files */
-> > -	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
-> > +	if (!pci_resource_len(pdev, bar))
-> > +		return 0;
-[...]
-> Did you accidently forget to address some of the comments as I thought you 
-> were agreeing to changing this to resource_assigned() but I found no 
-> resource_assigned() from entire series?
+As per the spec, if the link is in L1.2, the entire analog circuitry of the PHY
+can be powered off and that's what I meant here. The LTSSM state would be
+preserved by the MAC layer, whose context is always retained.
 
-I have not.  Sorry for late reply here.
+The only problem is that, CLKREQ# is routed to an Always-on-Domain (AON) inside
+the SoC. So when the endpoint asserts CLKREQ#, AON wakes up the SoC and later
+the PCIe controller driver turns ON the PHY. But by that time, the L1ss exit
+latency would've elapsed, causing LDn.
 
-When testing resource_assigned() as replacement for pci_resource_len(),
-none of the resource files would be made visible.
+> L2 and L3 both correspond to the downstream device being in D3cold
+> (PCIe r7.0, sec 5.3.2), so I assume this is a reset as far as the
+> device is concerned, and we need all the delays associated with reset
+> and the D3cold -> D0 transition.
+> 
+> > This latency violation leads to an L1ss exit timeout, followed by a Link
+> > Down (LDn) condition during resume. This LDn can crash the OS if the
+> > endpoint hosts the RootFS, and for other types of devices, it may result in
+> > a full device reset/recovery.
+> 
+> What does "L1SS exit timeout" mean in PCIe terms?  Is there some event
+> (Message, interrupt, etc) that is triggered by the timeout?
+> 
 
-The resource_assigned() checks res->parent, but the static .is_bin_visible
-callback runs at device_add() time, called from pci_device_add() during bus
-enumeration, so before pci_assign_unassigned_bus_resources() runs and inserts
-resources into the resource tree via pci_claim_resource(), etc.
+By 'L1ss exit timeout' I meant the failure to move to L0 state post L1.2 exit.
+During L1.2 exit, the endpoint expects the refclk and common mode voltage to be
+restored within the negotiated time. Per spec, r7.0, sec 5.5.3.3.1, Exit from
+L1.2:
 
-The call sequence in pci_host_probe() is:
+```
+Next state is L1.0 after waiting for TPOWER_ON
 
-  pci_scan_root_bus_bridge()
-    pci_scan_child_bus()
-      pci_scan_slot()
-        pci_scan_single_device()
-          pci_scan_device()
-            pci_setup_device()
-              pci_read_bases()        <- res->start/end set from BARs
-          pci_device_add()
-            device_add()              <- is_bin_visible() runs here
-                                         res->parent still NULL
+* Common mode is permitted to be established passively during L1.0, and actively
+during Recovery. In order to ensure common mode has been established, the
+Downstream Port must maintain a timer, and the Downstream Port must continue to
+send TS1 training sequences until a minimum of TCOMMONMODE has elapsed since the
+Downstream Port has started transmitting TS1 training sequences and has detected
+electrical idle exit on any Lane of the configured Link.
+```
 
-  pci_assign_unassigned_root_bus_resources()
-    pci_claim_resource()
-      request_resource_conflict()
-        __request_resource()          <- res->parent set here
+So if this condition is not satisfied, then the link would move to the LDn
+state and that's the only event triggered to the OS.
 
-At that point, the pci_resource_len() would return a non-zero value as
-res->start and res->end would already be set, but the res->parent is
-still NULL (not yet assigned to tree).
+> > So to ensure that the client drivers can properly handle this scenario, let
+> > them know about this platform limitation by setting the
+> > 'pci_host_bridge::broken_l1ss_resume' flag.
+> 
+> I don't see how this means L1SS is broken.  If the device is
+> effectively reset, of course we can't go from L1.x to L0 because we
+> didn't start from L1.x.
+> 
 
-The old dynamic code ran from pci_sysfs_init() as a late_initcall (after
-assignment), where resource_assigned() would have worked.
+From the OS perspective, the link would still be in L1ss and not expected to
+move to L2/L3 during suspend/resume, since that transition is controlled by the
+OS itself. But when the OS resumes, the link would go to LDn state and it can
+only be brought back to L0, after a complete reset.
 
-As such, we can't really use resource_assigned() together with static
-sysfs attributes, at least not without solving the resources evaluation
-order here.
+- Mani
 
-Thank you!
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > ---
+> >  drivers/pci/controller/dwc/pcie-qcom.c | 11 +++++++++++
+> >  1 file changed, 11 insertions(+)
+> > 
+> > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> > index 67a16af69ddc..01afffd384f2 100644
+> > --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> > @@ -1363,6 +1363,17 @@ static void qcom_pcie_host_post_init(struct dw_pcie_rp *pp)
+> >  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> >  	struct qcom_pcie *pcie = to_qcom_pcie(pci);
+> >  
+> > +	/*
+> > +	 * During system suspend, the Qcom RC driver may turn off the PHY and
+> > +	 * remove votes to save power. If the endpoint asserts CLKREQ# to
+> > +	 * exit L1ss, the time required to wake the system and restore the
+> > +	 * PHY/refclk exceeds the strict L1ss exit timing, resulting in Link
+> > +	 * Down (LDn). Set this flag to indicate this limitation to client
+> > +	 * drivers so that they will avoid relying on L1ss during system
+> > +	 * suspend.
+> > +	 */
+> > +	pp->bridge->broken_l1ss_resume = true;
+> > +
+> >  	if (pcie->cfg->ops->host_post_init)
+> >  		pcie->cfg->ops->host_post_init(pcie);
+> >  }
+> > 
+> > -- 
+> > 2.51.0
+> > 
+> > 
 
-	Krzysztof
+-- 
+மணிவண்ணன் சதாசிவம்
