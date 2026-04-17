@@ -1,38 +1,33 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE7B2175A72
-	for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2026 15:51:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22DFA2C9D
+	for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2026 18:26:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776441101; cv=none; b=ly8sb/e9x6Hx+ESUO7tqthWNJS8oq/RO+zJsVX5Eg5FpqH0CHNieR16ZV6VTTL2q9IQ+rRt7GR3cOcj0RLzQ6j5AO3Sr9US+nxOuG2KlrRr94u9FNcmwpL9lGFo0yr0oqpgJGkPa7psq5gy5zAn9unkPT/CDEf51jW5InaAhF4Y=
+	t=1776450371; cv=none; b=JQK7i++q0Iv/7HqJ9hhQr49tnzPUZ7+QdUCEvQj8EK0wyhRNijdKtlQI6D9yFKAt0k0kZXm/17itHA05PT8kIosxVcGuXsSH+pyOxPzc9tKIVNGGGhNvcgjzMAiS6wT43yIdDiTDzis6T8qbK8gIUy8MdmMwejsZuhyr99VBe/8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776441101; c=relaxed/simple;
-	bh=ixbHQbDg5pJETt37zIjFO0J4AmJGuU3o+3aRQBgcbhU=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=sR4HssDEzC60m+uiGQtAMb8PsjNmQi+VUKOo/cbYPy2MTrujdKrSITR8qJ4f6hGjBSs0JA/1wmzjV5UzQwB18RKJZTO1zTq0G5Bx3Q5mJJ3Mc1/Jx3W/JgJlwQWaXy2sYD8mjCXWJWBS1j+bxRS2C8SwHPcW9B881TXLb+mOEgE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=g/oYhrQA; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1776450371; c=relaxed/simple;
+	bh=WDxib3BR9wG5EfEd+gJpd06gX+LFgK/YUO47GtGFGtE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Dzt/DkMG9Lvn/+IYBd+o+EwnOSogWyj3Xm5TLvn6tMUhkYl5B5QdDpEZzd5FPk7xISsxRK37LeIf1QQczIfJV24WfyMtPV7W0VWLpusfA25c9h2ZJYHDqrzmpOP27/dePAbUpL6q/NsHOAN+oVCY+IiZCgBX/LIb+rmNTBNURHk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W6mle7Xg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="g/oYhrQA"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=9AvDY0ISEyLjnWkJjYEzw0I+S9rjrAOHDSJlPQul7Vc=; b=g/oYhrQAHC0VuSr5pkvzrz0Hjo
-	F/M3jw2TYaEzdFYdyhlGngQRZ4iL8MUKAmbPGVZoHZeZV7CkL5paDCUMaPcSBAErt2GFaYwyI177g
-	ii4lS1fHvUggZu7ZUT5VeZJQkaJsQiMj3TCPPP84lF607bu4OC2rCuRjMy4B+njmZzo4vou7LSm9Y
-	zCT/aHGu628Eabx8diLdGRqKh5cQRmfhGI5KoeAsO+F/lzJ/UZBrsYOrkwswKWIUXF+6YvuwUvVWj
-	TBwAm12kRq85I3VoPfmvtUHAune6aGMjuUUfteGArjjuErGCxjDVhDvy0pMBP34ul2epEzQIBDyCh
-	94hRDC7Q==;
-Received: from s0106ac1f6bb1ecac.cg.shawcable.net ([96.51.150.74] helo=[10.0.33.11])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1wDkwf-0000000EGsO-0LVR;
-	Fri, 17 Apr 2026 09:17:25 -0600
-Message-ID: <f232e368-2546-4206-97f4-dfdfea636a05@deltatee.com>
-Date: Fri, 17 Apr 2026 09:16:46 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W6mle7Xg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34815C19425;
+	Fri, 17 Apr 2026 18:26:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776450370;
+	bh=WDxib3BR9wG5EfEd+gJpd06gX+LFgK/YUO47GtGFGtE=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=W6mle7XgtdP+vOieX0znv0yHJfqrgXsY5QdzmDORtEsyGFfXLNpgJOsf+i8CX6ARJ
+	 etaIph7vQ6sXHs7JeBAhBEdTv/D9f9LvIqn/JvYG1AoldKKBdoZ2CczulVnbuQg8Bd
+	 HAbKrMwQkoPxuLtO93TSVabsEuZWT54CH+LVWKrNqIPJzBZVY+WjU3hnqrwJ1C26IY
+	 7tIXfeSGA+EOFT7jU9iPAARNNrrqLVkcPsn19+y92q3kHasghjjq1qFckfs0LgKy/4
+	 0J08M2Y4Y2cUcMx1+6lm1tNkrJ6t5GaA3nnzx7ig0J8s6fw6m5f0nS2QflFtENSqcm
+	 6Ebbl3SxVGjMw==
+Message-ID: <7ebd7665-4ae8-4937-8d48-04fe9c04fbe1@kernel.org>
+Date: Fri, 17 Apr 2026 13:26:09 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,45 +35,79 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-To: Shawn Lin <shawn.lin@rock-chips.com>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Nirmal Patel <nirmal.patel@linux.intel.com>,
- Jonathan Derrick <jonathan.derrick@linux.dev>,
- Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
- Philipp Stanner <phasta@kernel.org>, linux-pci@vger.kernel.org
-References: <1776392767-83668-1-git-send-email-shawn.lin@rock-chips.com>
- <1776392767-83668-3-git-send-email-shawn.lin@rock-chips.com>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <1776392767-83668-3-git-send-email-shawn.lin@rock-chips.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH] PCI: Stop setting cached power state to "unknown" on
+ unbind
+Content-Language: en-US
+To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Alex Williamson <alex@shazbot.org>, linux-pci@vger.kernel.org
+References: <af7d11d3ceb231acc90829f7a5c8400c2446744f.1776415510.git.lukas@wunner.de>
+From: Mario Limonciello <superm1@kernel.org>
+In-Reply-To: <af7d11d3ceb231acc90829f7a5c8400c2446744f.1776415510.git.lukas@wunner.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 96.51.150.74
-X-SA-Exim-Rcpt-To: shawn.lin@rock-chips.com, bhelgaas@google.com, nirmal.patel@linux.intel.com, jonathan.derrick@linux.dev, kurt.schwemmer@microsemi.com, phasta@kernel.org, linux-pci@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v2 2/3] PCI: switchtec: Replace pci_alloc_irq_vectors()
- with pcim_alloc_irq_vectors()
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
 
 
-On 2026-04-16 8:26 p.m., Shawn Lin wrote:
-> Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors() to
-> explicitly request devres-managed interrupt vectors. This makes the
-> driver's intention clear and avoids the ambiguous implicit management
-> previously provided by pcim_enable_device().
+On 4/17/26 03:51, Lukas Wunner wrote:
+> When a PCI device is unbound from its driver, pci_device_remove() sets the
+> cached power state in pci_dev->current_state to PCI_UNKNOWN.  This was
+> introduced by commit 2449e06a5696 ("PCI: reset pci device state to unknown
+> state for resume") to invalidate the cached power state in case the system
+> is subsequently put to sleep.
 > 
-> The change prepares the driver for the eventual removal of the hybrid
-> IRQ management pattern from pcim_enable_device(), ensuring consistent
-> resource management through devres.
+> For bound devices, the cached power state is set to PCI_UNKNOWN in
+> pci_pm_suspend_noirq(), immediately before entering system sleep.
 > 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Extend to unbound devices for consistency.
+> 
+> This obviates the need to change the cached power state on unbind, so stop
+> doing so.
+> 
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
 
-This direction makes sense to me. I remember thinking it was odd that
-pci_alloc_ir_vectors() was applicable to managed cases without the pcim
-prefix. Thanks!
+Reviewed-by: Mario Limonciello (AMD) <superm1@kernel.org>
 
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+FWIW I also had review-prompts /kreview check for corner cases and it 
+didn't find any.
 
+> ---
+>   drivers/pci/pci-driver.c | 10 ++--------
+>   1 file changed, 2 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 7c2d9d5..774892d 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -482,13 +482,6 @@ static void pci_device_remove(struct device *dev)
+>   	pm_runtime_put_sync(dev);
+>   
+>   	/*
+> -	 * If the device is still on, set the power state as "unknown",
+> -	 * since it might change by the next time we load the driver.
+> -	 */
+> -	if (pci_dev->current_state == PCI_D0)
+> -		pci_dev->current_state = PCI_UNKNOWN;
+> -
+> -	/*
+>   	 * We would love to complain here if pci_dev->is_enabled is set, that
+>   	 * the driver should have called pci_disable_device(), but the
+>   	 * unfortunate fact is there are too many odd BIOS and bridge setups
+> @@ -862,7 +855,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+>   
+>   	if (!pm) {
+>   		pci_save_state(pci_dev);
+> -		goto Fixup;
+> +		goto set_unknown;
+>   	}
+>   
+>   	if (pm->suspend_noirq) {
+> @@ -914,6 +907,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+>   		goto Fixup;
+>   	}
+>   
+> +set_unknown:
+>   	pci_pm_set_unknown_state(pci_dev);
+>   
+>   	/*
 
