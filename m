@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF5973B3893;
-	Fri, 17 Apr 2026 09:30:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0B90219EB;
+	Fri, 17 Apr 2026 09:35:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776418237; cv=none; b=ABof8e/l5T0l1lFJwoIf9a5mJ8jI6T17aD5qsIyhGhnZYRPnmhAq0wMRjszDkE0YLaj27fmip5h94pyFJDsH6SfxNsh6mFeEUELpGItA7YhZm36AGBFHzsN1FBr/LSaPZ0jh7IfqnMesC1zefIQMBhV85MzSow4KBfAdAQRWPY4=
+	t=1776418505; cv=none; b=THwE/pWXyIgkk+uAPJioBPcGRtky0/61QIHs6kL2g3LEKoU3pXMfe1H1gY8s+lK87a0RTk0BSV4BqA8GePV5bIv219QUgAorGpsTkM14LleVgWzi/O5VZx60QjDdAlrE3LRSBBsPgxS8a0CiOuUmPIXsoGhVaaazQosGhbbemqA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776418237; c=relaxed/simple;
-	bh=OODs1MyWgSNpasOw1hA23+RBFDlFstERAlbq/6b8wFM=;
+	s=arc-20240116; t=1776418505; c=relaxed/simple;
+	bh=a9gbty5WFhq3JGklAorMAB3mAtTv1TV9SZwNDXwQnx4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aCPv4e6tfEHTHkiGtOITszbg6Yb915McLvSFNdoKd+YDKyae8nFZ5Q2dXQPpsPFmDqwnzyi2Ie9y+xHS6js0qH2X+elyJjedDXOi+xzRBaGj7biW8LTimk6bu53uhBlIpuPKwxpjou2VRZIAQQPsQiVByBZdbv02Mhy9V4v8m88=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GQ4yvM8x; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ihy6b8ouhQ9niAhgE02YUC9RswPp46J8TAf0pZK/v0eE7e78tvksPl+01cfL9TeLLagiz6wZQ5fxZJtO4CSAG383pdWXfOSeHuBTo0LE6VesxxBtQ8w3w/sgc1Gcn6oQM3CUjMRMzbwIeAQcwqtoTFiW/HDprFjtaAA5PSeXIHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ERphNZZO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GQ4yvM8x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 303EBC19425;
-	Fri, 17 Apr 2026 09:30:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ERphNZZO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE5AFC2BCB4;
+	Fri, 17 Apr 2026 09:35:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776418236;
-	bh=OODs1MyWgSNpasOw1hA23+RBFDlFstERAlbq/6b8wFM=;
+	s=k20201202; t=1776418505;
+	bh=a9gbty5WFhq3JGklAorMAB3mAtTv1TV9SZwNDXwQnx4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=GQ4yvM8xZuYo5PhUwW7XO6XulbcBvJxlhXl5LrlvIh/+8jcRKiL67KjYutgYM5uaU
-	 VszdfvA6AMmK+afpqvMNJE9X9WXuvqdoibKjoHhzWNezzqZAqJrwlKrBtY4rIMaotC
-	 o7MIGj71S0HF6oaAS62twx1qsb0/IORu2Bbvz0kuLBevRtNlQa7UuDTRnYhZEeSQiO
-	 Zf8yTncQxGk0yB61rWjeueGOYmme70h08ms00D0UGrTfV8O4i2PYP21zGlS3wpf597
-	 vAkMcStb88LoJ8tKUMK+Fz9npwFujSqiwtZAcQl0e4n2ov7s4PQ49uA5sC4JIm6QEK
-	 75EQgr1j2LB2g==
-Date: Fri, 17 Apr 2026 15:00:29 +0530
+	b=ERphNZZOxs/V1W7iuK2axQct/Ynkw63V4JCVpEptUtQo9DROAGZrBVYDaIaOJBEkt
+	 RUaG+sEYQpkwjrAtqpKkFFqS05rKf6hk9nSlafs5JRkGuxg19TDkhZqDFYWwOzNQvR
+	 +TkLXxTDCFpJxoXdjN7Nm8tKi6NFsI4TZDyO4XJYcxcqyuX9bCtyT4cgojYhV41xhE
+	 Pf+g2CIaaAccz2qtAVA+1ONzyUmeGZ5+xFojx3GXCmYRByWHGRKNkIf9aDKawC0rJM
+	 IkzlDv3LUIOR/Msc8/astuThSDCQdn1tyIKZcjzxbw7RYCvEhRtY3U9y9PhUIT5rvN
+	 S7yKKsg+VoAYA==
+Date: Fri, 17 Apr 2026 15:04:57 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Cc: Qiang Yu <qiang.yu@oss.qualcomm.com>, 
+To: Felix Gu <ustc.gu@gmail.com>
+Cc: Senchuan Zhang <zhangsenchuan@eswincomputing.com>, 
 	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
 	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Krishna chaitanya chundru <quic_krichai@quicinc.com>, linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
+	Yanghui Ou <ouyanghui@eswincomputing.com>, Yu Ning <ningyu@eswincomputing.com>, linux-pci@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: qcom: Set max OPP before DBI access during resume
-Message-ID: <znmi4ouobk2sak6g5i7mlcbbxrhrldtaifw3jsrwwfh6wtuau7@dgbvihjsnbph>
-References: <20260416-setmaxopp-v1-1-6a74e2d945a0@oss.qualcomm.com>
- <23078bf0-838f-4a57-be8b-6ba2dd0a27d5@oss.qualcomm.com>
+Subject: Re: [PATCH] PCI: eswin: Fix resource leak on dw_pcie_host_init()
+ failure
+Message-ID: <gs3kbuwifduoa3gdhyxpg25tl5kifmlxdavgjgyxmihyt4hmr4@bcwz36emppw6>
+References: <20260416-eswin-v1-1-a4991725b5ca@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,42 +47,41 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <23078bf0-838f-4a57-be8b-6ba2dd0a27d5@oss.qualcomm.com>
+In-Reply-To: <20260416-eswin-v1-1-a4991725b5ca@gmail.com>
 
-On Fri, Apr 17, 2026 at 10:18:44AM +0200, Konrad Dybcio wrote:
-> On 4/17/26 6:16 AM, Qiang Yu wrote:
-> > During resume, qcom_pcie_icc_opp_update() may access DBI registers before
-> > the OPP votes are restored, which can trigger NoC errors.
-> > 
-> > Set the PCIe controller to the maximum OPP first in resume_noirq(), then
-> > proceed with link/DBI accesses. The OPP is later updated again based on
-> > the actual link bandwidth requirements.
-> > 
-> > Also introduce a small helper to reuse the max-OPP setup path shared with
-> > probe.
-> > 
-> > Fixes: 5b6272e0efd5 ("PCI: qcom: Add OPP support to scale performance")
-> > Signed-off-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
-> > ---
-> >  drivers/pci/controller/dwc/pcie-qcom.c | 42 +++++++++++++++++++++-------------
-> >  1 file changed, 26 insertions(+), 16 deletions(-)
-> > 
-> > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> > index 9fdfc88ac15120b2b01cad746772ae612a2c9690..c9b201a1c033a9849e97db9ee4d07d26655d5a6c 100644
-> > --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> > @@ -1613,6 +1613,22 @@ static void qcom_pcie_icc_opp_update(struct qcom_pcie *pcie)
-> >  	}
-> >  }
-> >  
-> > +static int qcom_pcie_set_max_opp(struct device *dev)
+On Thu, Apr 16, 2026 at 08:30:20PM +0800, Felix Gu wrote:
+> When dw_pcie_host_init() fails, the code jumps to err_init which
+> only calls pm_runtime_put() but skips the clean up of port resources.
 > 
-> Can this be a small non-zero vote instead?
+> Fixes: b593c26d081a ("PCI: eswin: Add ESWIN PCIe Root Complex driver")
+> Signed-off-by: Felix Gu <ustc.gu@gmail.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-eswin.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
+> diff --git a/drivers/pci/controller/dwc/pcie-eswin.c b/drivers/pci/controller/dwc/pcie-eswin.c
+> index 2845832b3824..0185b55e09e3 100644
+> --- a/drivers/pci/controller/dwc/pcie-eswin.c
+> +++ b/drivers/pci/controller/dwc/pcie-eswin.c
+> @@ -348,7 +348,7 @@ static int eswin_pcie_probe(struct platform_device *pdev)
+>  	ret = dw_pcie_host_init(&pci->pp);
+>  	if (ret) {
+>  		dev_err(dev, "Failed to init host\n");
+> -		goto err_init;
+> +		goto err_pm_runtime_put;
+>  	}
+>  
+>  	return 0;
+> @@ -358,7 +358,6 @@ static int eswin_pcie_probe(struct platform_device *pdev)
+>  		reset_control_put(port->perst);
+>  		list_del(&port->list);
+>  	}
+> -err_init:
+>  	pm_runtime_put(dev);
 
-It won't make a difference. We are going to update the vote right after it.
-Furthermore, it will allow us to group the logic into one helper and call from
-both probe() and resume().
+Error path is really messed up. On pm_runtime_get_sync() failure, it should
+go to 'err_free_ports' and on dw_pcie_host_init() failure, it should go to
+err_pm_runtime_put.
 
 - Mani
 
