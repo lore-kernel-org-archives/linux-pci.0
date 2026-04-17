@@ -1,86 +1,85 @@
-Received: from mail-m49204.qiye.163.com (mail-m49204.qiye.163.com [45.254.49.204])
+Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A1511B983F
-	for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2026 02:42:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CF0F336ED1;
+	Fri, 17 Apr 2026 02:50:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776393740; cv=none; b=cP9T3VLlsd9h9zoSdqfYZ5A6+B2miFctiMPs5y1/6mKBxYhlUzRld8annDzfQ7kv1IzV2mMytMp/Xc4yH6IVCfo9N8ILQ171GYJ2x69buUKKPwo2Z64q+D14YX46s/2jrkQ4+BpaRUUpsgHZPMvWGrahQJ4+ekLOovYNSddL27M=
+	t=1776394230; cv=none; b=X/KlFdIQY0bzFuimlt8Vf4GJOT/h/1cIH9DH2QnXI40uo3jgDFG4NtACrc7FlBlDLgNO/MkyMOziaNsU9QdBC9i5c1lVXvhHRvwKrQe/ivLgqTClpdT5gSHNZweblXunjUeVJCMyP6EPDWzzR9Q89I49Ov6/CY8FVWdYIpBWRUY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776393740; c=relaxed/simple;
-	bh=8fI2vV9yzZf+lWrwp2+VdU9eq8j81wLH6Wi9aWh2cBA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=QTIHuPD3f8zjk6KG11Sd4EUuXUcOejIwZqrjgmjTaMOsR2Hov3LVIyQRpwzFrdJK63f0k6rfxiw8yR+gUgJ6AOyGNwWgQXEB7VRxb9YUyVOMsN1ypn/p5tfilA5L7LX0LeHEeow+4kILQynuz4JBKbzeIkFY1SaLJqQP2VDyBeM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=KOhMMgkg; arc=none smtp.client-ip=45.254.49.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1776394230; c=relaxed/simple;
+	bh=5p3Sm2amLE1ygQB0o6GVHtSC1KVohOP+qhV3gkwXeq4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=O3WQ6SGJTXtI5sxxyVGBdAD49Kec0nwyk/6cQoi0/EPVsgL4TZD8Q+2yjvnBSuvmK8pXhB1AmZGF1y6s6hLd+IOchqcafuyOA7deDUz7Rx5+WetyqbgwSEtva1fzZ9+1lTS0xa9SRBAUiT9o3DxYhuDcK++RlufjjlKyJ4Y6kbI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=Vek29DvQ; arc=none smtp.client-ip=113.46.200.220
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="KOhMMgkg"
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 3b1199b58;
-	Fri, 17 Apr 2026 10:26:47 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Nirmal Patel <nirmal.patel@linux.intel.com>,
-	Jonathan Derrick <jonathan.derrick@linux.dev>,
-	Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Philipp Stanner <phasta@kernel.org>,
-	linux-pci@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v2 3/3] PCI: vmd: Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors()
-Date: Fri, 17 Apr 2026 10:26:07 +0800
-Message-Id: <1776392767-83668-4-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1776392767-83668-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1776392767-83668-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Tid: 0a9d9943260109cckunm63489ccb2f7487
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQ0waHlYdHkoeQ0pMTktMQh1WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=KOhMMgkgKhFgaSDb1v+r44BUBEKy38Mi+deVzy4HVSTRjC1QnhPKNqLKaspgN6hiVRRewGXYao8tIqerBotInDl1obdX8nHg8BzcDv0dqeu9aVezpDdt4KaayMLKDH/bg4Cwp8B+G4vYRauMJc7A9bhkOsYZrmkM23cbKuoEpJc=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=jt3FY6M0j0PfOe4pfwyi+gf0X3EbfNf6lI3RgAfXY74=;
-	h=date:mime-version:subject:message-id:from;
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="Vek29DvQ"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=hg2qRKt05LW4zcRl9d9aEU93GPuGcduNp2wgx4z7rps=;
+	b=Vek29DvQ5Xp9tY9XF88rRzWcTLyHzi8hLkrwpqgt3dSNCFzRkFh1QoTcAbqaocq48wLWUTypp
+	xycFloana/ixnMu4SdIZAPO6RBpS6PuHYy5sOpWTesPmp8ouLudiviOn3yhPdGTJevysQO8b8ay
+	H28+KPMXI8QlPk8sPp8xZGI=
+Received: from mail.maildlp.com (unknown [172.19.162.144])
+	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4fxfN613fzz12LDP;
+	Fri, 17 Apr 2026 10:44:06 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 1E8FE40538;
+	Fri, 17 Apr 2026 10:50:23 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Fri, 17 Apr 2026 10:50:22 +0800
+Message-ID: <4b1aa148-e0f5-4599-9fbf-70a61b42e4ce@huawei.com>
+Date: Fri, 17 Apr 2026 10:50:22 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 RESEND 1/5] pci/tph: Export pcie_tph_get_st_modes() for
+ external use
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <alex@shazbot.org>, <jgg@ziepe.ca>, <wathsala.vithanage@arm.com>,
+	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
+	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
+References: <20260416204948.GA35511@bhelgaas>
+Content-Language: en-US
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <20260416204948.GA35511@bhelgaas>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors() to
-explicitly request devres-managed interrupt vectors. This makes the
-driver's intention clear and avoids the ambiguous implicit management
-previously provided by pcim_enable_device().
+On 4/17/2026 4:49 AM, Bjorn Helgaas wrote:
+> On Thu, Apr 16, 2026 at 05:30:37PM +0800, Chengwen Feng wrote:
+>> Export the helper to retrieve supported PCIe TPH steering tag modes so
+>> that drivers like VFIO can query and expose device capabilities to
+>> userspace.
+>>
+>> And also add pcie_tph_get_st_table_size() and
+>> pcie_tph_get_st_table_loc() stub implementation in the !CONFIG_PCI_TPH
+>> case.
+>>
+>> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+> Update subject to "PCI/TPH: Export ..." to match history.
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> I notice commit logs of other patches could be rewrapped to fill 75
+> columns.
 
-The change prepares the driver for the eventual removal of the hybrid
-IRQ management pattern from pcim_enable_device(), ensuring consistent
-resource management through devres.
+Hi Bjorn,
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Thank you for the review and the Ack!
 
-Changes in v2: None
+I'll fix the subject to "PCI/TPH: Export ..." and rewrap the commit
+messages to 75 columns in the next revision.
 
- drivers/pci/controller/vmd.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index d4ae250..d8de63a 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -684,8 +684,8 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
- 	if (vmd->msix_count < 0)
- 		return -ENODEV;
- 
--	vmd->msix_count = pci_alloc_irq_vectors(dev, vmd->first_vec + 1,
--						vmd->msix_count, PCI_IRQ_MSIX);
-+	vmd->msix_count = pcim_alloc_irq_vectors(dev, vmd->first_vec + 1,
-+						 vmd->msix_count, PCI_IRQ_MSIX);
- 	if (vmd->msix_count < 0)
- 		return vmd->msix_count;
- 
--- 
-2.7.4
-
+Thanks
