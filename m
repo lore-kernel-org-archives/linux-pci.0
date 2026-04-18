@@ -1,238 +1,131 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B1787175A97;
-	Sat, 18 Apr 2026 00:20:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1102A76026;
+	Sat, 18 Apr 2026 05:16:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776471661; cv=none; b=LrwcvbjKyTsmUGMkQHFhAYr2QM3BwVFTQmjbQq2IOtQboFRyJ+EZRBQEeOypHXDICSnMXDxNi4dEqrmjNPVCXT6yrPtkRp/d2UYpXjkVy62br+S38gvPwAsB0TpGcV1pu8myfXmJoaN9JLLXRYVIp6KDXlVR/RcBYd00Bff/NB4=
+	t=1776489376; cv=none; b=N6aImE8qo+v3G1iUCWduj4B3+kkVpTxzfKb1v1TfbORDItaRaTZ11UsFMO1WQQrtqDcoobTq1lSDCx1t4zy+9yTkY2tOUYeVP3ySjy2EKjfl8LabqjKGWz11Vore7aWWteOVS7lZr16N5ADMSRKUTDtNXzr5fSlSa7lt7wIptYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776471661; c=relaxed/simple;
-	bh=54HzNelDzBSSQvthwgLiprleLLldcu1fhR4OCJOh4bc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dd5sZJnLxfyw1Ny1Dz8wqh0vUmbJ1p61LOeM8ckL2+xttnat+kZOwBzAMX+wS12RY4NgjE5yUv0enqVUzQdJnmiB/TWM1DyDFfxhNXn4fVBz3uOwMnkAGgeuJU3PKDwAEEFwfOtU3OG7OfytdsuFSoPas/wblHkSTnG3GcRtsFo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=dYT9ZNDu; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1776489376; c=relaxed/simple;
+	bh=uMPl3Kc09k8mo4zpBH85e8Wx+IpfMYQJXFxOcuyR1oI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=p4zSGQB6gYeP/KQ43h4shlX/x0VyJC9UNIrAoNh9Aj2VUzozyDZM1AxFf2fOUiFEAGzLxCF1kCXCeWkxBk4J/79AvfJHTdseOsTzQqq3twV6dsTm394MuxLyPmcCmtvuwljzmAE00imi85DlTsioMf3LM+KzzuMxXrWq3VlzEdA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XxyLaMDf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="dYT9ZNDu"
-Received: from [192.168.0.88] (192-184-212-33.fiber.dynamic.sonic.net [192.184.212.33])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 3B96520B7128;
-	Fri, 17 Apr 2026 17:20:58 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 3B96520B7128
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1776471659;
-	bh=GVHuT39vJFq3z9p9Y8P4lQnO5Ygvg1D3+qSvKG01gbY=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=dYT9ZNDuycE39Rmok1I6PkVn+1fRDnnVG7AQULHoh8ka9lRpuZZfVcN3GE476KHCm
-	 7q9IKowPidbuXTYdIZorG3mFjFlT9roQFkhQcwZt5HmGQogAfGL0LjONAQykbCKjkF
-	 8HrR1mr46rqVdmR18Z3suICKceYTvClPyPCcdPKY=
-Message-ID: <ffe33ce4-0a1b-44af-9e17-7f641fef9339@linux.microsoft.com>
-Date: Fri, 17 Apr 2026 17:20:57 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XxyLaMDf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AF7FC19424;
+	Sat, 18 Apr 2026 05:16:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776489375;
+	bh=uMPl3Kc09k8mo4zpBH85e8Wx+IpfMYQJXFxOcuyR1oI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=XxyLaMDflw+emQt95R4lPo1h8kRa4KDHaOfY/ksAQGYU/F/xVdQVFeuTcfmI6QsSJ
+	 V70P2dugzCSIiv+7uSwEddAk+Ia30XVPuNjODqxsQCJWPLrz9eabfO+pBV71WLoG+8
+	 toUVlqB5SAGfwjZLAQW0mwR7nWX+S8IaHzKKhok9f+pm9qC5kGnW+IMDtghBA9/nOu
+	 LUhPOAei9BFDaVkEdnzFPNdt7Shvsalyfw76eWzCm3AvRC2GSucAfeinm+9Ov4LzG4
+	 UjM9JGJyPbM97rw4gFJkJKo5fHDblkgz/RDlCusOigib8lb2nyeVEPUyShDN88Qx82
+	 NlzhdLDi7pRtA==
+Date: Sat, 18 Apr 2026 10:46:06 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>
+Cc: manivannan.sadhasivam@oss.qualcomm.com, 
+	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, Keith Busch <kbusch@kernel.org>, 
+	Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	linux-nvme@lists.infradead.org
+Subject: Re: [PATCH 0/4] PCI: Introduce pci_dev_suspend_retention_supported()
+ API
+Message-ID: <r4l53y6vfxqojwprm24cfnqb4etjkfqfw6xfakrdixgi3sc2o5@t3wpxspylebs>
+References: <3smfckgl2vwhha7rtlqlpfzlfpg2rebyump77cbi5pcgwubn3y@d66eu7axo7xi>
+ <20260417222904.GA97164@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.1
-Subject: Re: [PATCH v0 07/15] mshv: Add ioctl support for MSHV-VFIO bridge
- device
-Content-Language: en-US
-To: Stanislav Kinsburskii <skinsburskii@linux.microsoft.com>
-Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
- linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, kys@microsoft.com,
- haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
- longli@microsoft.com, catalin.marinas@arm.com, will@kernel.org,
- tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
- dave.hansen@linux.intel.com, hpa@zytor.com, joro@8bytes.org,
- lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
- robh@kernel.org, bhelgaas@google.com, arnd@arndb.de,
- nunodasneves@linux.microsoft.com, mhklinux@outlook.com,
- romank@linux.microsoft.com
-References: <20260120064230.3602565-1-mrathor@linux.microsoft.com>
- <20260120064230.3602565-8-mrathor@linux.microsoft.com>
- <aW-pw7GlQdFv-lf5@skinsburskii.localdomain>
-From: Mukesh R <mrathor@linux.microsoft.com>
-In-Reply-To: <aW-pw7GlQdFv-lf5@skinsburskii.localdomain>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260417222904.GA97164@bhelgaas>
 
-On 1/20/26 08:13, Stanislav Kinsburskii wrote:
-> On Mon, Jan 19, 2026 at 10:42:22PM -0800, Mukesh R wrote:
->> From: Mukesh Rathor <mrathor@linux.microsoft.com>
->>
->> Add ioctl support for creating MSHV devices for a paritition. At
->> present only VFIO device types are supported, but more could be
->> added. At a high level, a partition ioctl to create device verifies
->> it is of type VFIO and does some setup for bridge code in mshv_vfio.c.
->> Adapted from KVM device ioctls.
->>
->> Credits: Original author: Wei Liu <wei.liu@kernel.org>
->> NB: Slightly modified from the original version.
->>
->> Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
->> ---
->>   drivers/hv/mshv_root_main.c | 126 ++++++++++++++++++++++++++++++++++++
->>   1 file changed, 126 insertions(+)
->>
->> diff --git a/drivers/hv/mshv_root_main.c b/drivers/hv/mshv_root_main.c
->> index 83c7bad269a0..27313419828d 100644
->> --- a/drivers/hv/mshv_root_main.c
->> +++ b/drivers/hv/mshv_root_main.c
->> @@ -1551,6 +1551,129 @@ mshv_partition_ioctl_initialize(struct mshv_partition *partition)
->>   	return ret;
->>   }
->>   
->> +static long mshv_device_attr_ioctl(struct mshv_device *mshv_dev, int cmd,
->> +				   ulong uarg)
->> +{
->> +	struct mshv_device_attr attr;
->> +	const struct mshv_device_ops *devops = mshv_dev->device_ops;
->> +
->> +	if (copy_from_user(&attr, (void __user *)uarg, sizeof(attr)))
->> +		return -EFAULT;
->> +
->> +	switch (cmd) {
->> +	case MSHV_SET_DEVICE_ATTR:
->> +		if (devops->device_set_attr)
->> +			return devops->device_set_attr(mshv_dev, &attr);
->> +		break;
->> +	case MSHV_HAS_DEVICE_ATTR:
->> +		if (devops->device_has_attr)
->> +			return devops->device_has_attr(mshv_dev, &attr);
->> +		break;
->> +	}
->> +
->> +	return -EPERM;
->> +}
->> +
->> +static long mshv_device_fop_ioctl(struct file *filp, unsigned int cmd,
->> +				  ulong uarg)
->> +{
->> +	struct mshv_device *mshv_dev = filp->private_data;
->> +
->> +	switch (cmd) {
->> +	case MSHV_SET_DEVICE_ATTR:
->> +	case MSHV_HAS_DEVICE_ATTR:
->> +		return mshv_device_attr_ioctl(mshv_dev, cmd, uarg);
->> +	}
->> +
->> +	return -ENOTTY;
->> +}
->> +
->> +static int mshv_device_fop_release(struct inode *inode, struct file *filp)
->> +{
->> +	struct mshv_device *mshv_dev = filp->private_data;
->> +	struct mshv_partition *partition = mshv_dev->device_pt;
->> +
->> +	if (mshv_dev->device_ops->device_release) {
->> +		mutex_lock(&partition->pt_mutex);
->> +		hlist_del(&mshv_dev->device_ptnode);
->> +		mshv_dev->device_ops->device_release(mshv_dev);
->> +		mutex_unlock(&partition->pt_mutex);
->> +	}
->> +
->> +	mshv_partition_put(partition);
->> +	return 0;
->> +}
->> +
->> +static const struct file_operations mshv_device_fops = {
->> +	.owner = THIS_MODULE,
->> +	.unlocked_ioctl = mshv_device_fop_ioctl,
->> +	.release = mshv_device_fop_release,
->> +};
->> +
->> +long mshv_partition_ioctl_create_device(struct mshv_partition *partition,
->> +					void __user *uarg)
->> +{
->> +	long rc;
->> +	struct mshv_create_device devargk;
->> +	struct mshv_device *mshv_dev;
->> +	const struct mshv_device_ops *vfio_ops;
->> +	int type;
->> +
->> +	if (copy_from_user(&devargk, uarg, sizeof(devargk))) {
->> +		rc = -EFAULT;
->> +		goto out;
->> +	}
->> +
->> +	/* At present, only VFIO is supported */
->> +	if (devargk.type != MSHV_DEV_TYPE_VFIO) {
->> +		rc = -ENODEV;
->> +		goto out;
->> +	}
->> +
->> +	if (devargk.flags & MSHV_CREATE_DEVICE_TEST) {
->> +		rc = 0;
->> +		goto out;
->> +	}
->> +
->> +	mshv_dev = kzalloc(sizeof(*mshv_dev), GFP_KERNEL_ACCOUNT);
->> +	if (mshv_dev == NULL) {
->> +		rc = -ENOMEM;
->> +		goto out;
->> +	}
->> +
->> +	vfio_ops = &mshv_vfio_device_ops;
->> +	mshv_dev->device_ops = vfio_ops;
->> +	mshv_dev->device_pt = partition;
->> +
->> +	rc = vfio_ops->device_create(mshv_dev, type);
->> +	if (rc < 0) {
->> +		kfree(mshv_dev);
->> +		goto out;
->> +	}
->> +
->> +	hlist_add_head(&mshv_dev->device_ptnode, &partition->pt_devices);
->> +
->> +	mshv_partition_get(partition);
->> +	rc = anon_inode_getfd(vfio_ops->device_name, &mshv_device_fops,
->> +			      mshv_dev, O_RDWR | O_CLOEXEC);
->> +	if (rc < 0) {
->> +		mshv_partition_put(partition);
->> +		hlist_del(&mshv_dev->device_ptnode);
->> +		vfio_ops->device_release(mshv_dev);
->> +		goto out;
->> +	}
->> +
->> +	devargk.fd = rc;
->> +	rc = 0;
->> +
->> +	if (copy_to_user(uarg, &devargk, sizeof(devargk))) {
+On Fri, Apr 17, 2026 at 05:29:04PM -0500, Bjorn Helgaas wrote:
+> On Fri, Apr 17, 2026 at 04:34:53PM +0530, Manivannan Sadhasivam wrote:
+> > On Thu, Apr 16, 2026 at 02:11:11PM -0500, Bjorn Helgaas wrote:
+> > > On Tue, Apr 14, 2026 at 09:29:38PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+> > > > This series introduces a new PCI API
+> > > > pci_dev_suspend_retention_supported() to let the client drivers
+> > > > know whether they can expect context retention across
+> > > > suspend/resume or not and uses it in the NVMe PCI host driver.
+> > > > 
+> > > > This new API is targeted to abstract the PCI power management
+> > > > details away from the client drivers. This is needed because
+> > > > client drivers like NVMe make use of APIs such as
+> > > > pm_suspend_via_firmware() and decide to keep the device in low
+> > > > power mode if this API returns 'false'. But some platforms may
+> > > > have other limitations like in the case of Qcom, where if the RC
+> > > > driver removes the resource vote to allow the SoC to enter low
+> > > > power mode, it cannot reliably exit the L1ss state when the
+> > > > endpoint asserts CLKREQ#. So in this case also, the client
+> > > > drivers cannot keep the device in low power state during suspend
+> > > > and expect context retention.
+> > > 
+> > > I don't know what pm_suspend_via_firmware() means.  The kernel-doc
+> > > says "platform firmware is going to be invoked at the end of the
+> > > system-wide power management transition," but that doesn't say
+> > > anything about what firmware might do or what it means to drivers.
+> > 
+> > It's hard to predict what the firmware might do after it gains
+> > control from the OS. But as far as the API goes, it just expects the
+> > drivers to save the context and reset the device so that the
+> > firmware could do anything it want.
 > 
-> Shouldn't the partition be put here?
-
-No. anon_inode_getfd was successful and so it installed the fd already..
-As a result the cleanup will happen in the file op release.
-
-Thanks,
--Mukesh
-
-> Thanks,
-> Stanislav
+> I don't see anything about the driver needing to reset the device.
+> (Kernel-doc says "driver *may* need to reset it" but no hint about how
+> to know.)
 > 
->> +		rc = -EFAULT;
->> +		goto out;
->> +	}
->> +out:
->> +	return rc;
->> +}
->> +
->>   static long
->>   mshv_partition_ioctl(struct file *filp, unsigned int ioctl, unsigned long arg)
->>   {
->> @@ -1587,6 +1710,9 @@ mshv_partition_ioctl(struct file *filp, unsigned int ioctl, unsigned long arg)
->>   	case MSHV_ROOT_HVCALL:
->>   		ret = mshv_ioctl_passthru_hvcall(partition, true, uarg);
->>   		break;
->> +	case MSHV_CREATE_DEVICE:
->> +		ret = mshv_partition_ioctl_create_device(partition, uarg);
->> +		break;
->>   	default:
->>   		ret = -ENOTTY;
->>   	}
->> -- 
->> 2.51.2.vfs.0.1
->>
+> Adding something like "device internal state is not preserved" would
+> go a long ways here.
+> 
 
+IIUC, 'may' is used in the description because not all firmware are going to
+turn off or do something with the device. But for a driver that is supposed to
+work with all firmware implementations, like a NIC/storage client driver, it
+should save the internal state and prepare for a possible power loss. This is
+what the NVMe driver does currently.
+
+> > > Based on d916b1be94b6 ("nvme-pci: use host managed power state for
+> > > suspend"), which used it in nvme_suspend(), I guess the assumption
+> > > is that pm_suspend_via_firmware() means the device might be put in
+> > > D3cold and lose all its internal state, and conversely,
+> > > !pm_suspend_via_firmware() means the device will *never* be put in
+> > > a low-power state that loses internal state.
+> > 
+> > Yes, that's the assumption. Though, the firmware might not do D3Cold
+> > at all, but the drivers should be prepared for that to be compatible
+> > with all firmware implementations.
+> 
+> I don't think it's useful for a driver to know "firmware might not do
+> D3cold".  What could a driver do with that?  Unless the driver *knows*
+> internal state will be preserved, it must act as though the state is
+> lost.
+
+A driver doesn't need to know whether device will be put into D3Cold or not. But
+it does need to know whether there is a possibility or not. Because, AFAIK,
+there is no way the OS can query what the firmware is going to do at the end of
+the suspend. So to be on the conservative side, this API gives an indication to
+the client drivers saying 'hey, firmware is going to be invoked at the end of
+suspend and it may do something with the device state like invoking D3Cold or
+doing something else. So be prepared for that.'
+
+And 'be prepared' means, saving the context and resetting the device.
+
+@Rafael: Please correct me if my above understanding is wrong.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
