@@ -1,130 +1,238 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAD6F40DFAB;
-	Sat, 18 Apr 2026 00:06:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B1787175A97;
+	Sat, 18 Apr 2026 00:20:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776470761; cv=none; b=iRU61HGC9WLwYCLpZv8igDaG+aiu82YzP1g6IR3SQQcTC9FfbiLgoum0ZTY0FRnd9m/LywsHlp+hTeFzgxk12ayv7z2Fr6tvssG3SKci9NoX28QfcT3eAg8sj8IZxD+dI/6GR58t9ZObJgSHDvrPs+HG+vXsuZQbOosrdziXU8Y=
+	t=1776471661; cv=none; b=LrwcvbjKyTsmUGMkQHFhAYr2QM3BwVFTQmjbQq2IOtQboFRyJ+EZRBQEeOypHXDICSnMXDxNi4dEqrmjNPVCXT6yrPtkRp/d2UYpXjkVy62br+S38gvPwAsB0TpGcV1pu8myfXmJoaN9JLLXRYVIp6KDXlVR/RcBYd00Bff/NB4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776470761; c=relaxed/simple;
-	bh=QGdfCQ84T4CRb1lUGI9SJPtbILd4AIxNSPRzeNf7H3M=;
-	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
-	 Mime-Version:Content-Type; b=uBvysUf70U/x57A7Hha7USuxlf8GkhCYseFaLlQxmfP9v1UDIdGFFQVa6hIXEW7lndvzU36E9uCa8IOF42CErA1V9sk+zogQEgegFP5998+ShrSaOcmbMJlSZHNiX8MKCVHWEhn7cgx25nYFOBUNK1Jcfg2j2vdbc/fQxtob7hI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=khG0J03U; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776471661; c=relaxed/simple;
+	bh=54HzNelDzBSSQvthwgLiprleLLldcu1fhR4OCJOh4bc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=dd5sZJnLxfyw1Ny1Dz8wqh0vUmbJ1p61LOeM8ckL2+xttnat+kZOwBzAMX+wS12RY4NgjE5yUv0enqVUzQdJnmiB/TWM1DyDFfxhNXn4fVBz3uOwMnkAGgeuJU3PKDwAEEFwfOtU3OG7OfytdsuFSoPas/wblHkSTnG3GcRtsFo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=dYT9ZNDu; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="khG0J03U"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82360C2BCB3;
-	Sat, 18 Apr 2026 00:06:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776470761;
-	bh=QGdfCQ84T4CRb1lUGI9SJPtbILd4AIxNSPRzeNf7H3M=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
-	b=khG0J03Uh9+m0+o/DvP8/tF4SLcHidUOl4W72LdxmHu69qkmCenLmTdI8r0jibCq2
-	 tR8mTf0qdLrLOQuMbkl+uOJH6cpMhVTmi4OxxyrS0NM+wfGHBW65A3DYxDT4M9Iwp/
-	 9TALxtL/Wbz/Yo1Bn3aMrZYhie5EHoA9Tbt+FkZn+OwdutYAHNwqX5FQAndnUgknz0
-	 HpUGF7Zwl9Qv3Qx64UckBcHD/dSLrQZz9IkIddMczwjNFZ/qRaarygCKVW9OciUM7m
-	 +5XGC7cx71Li/7QHny30OclsB4fc23T0HULOjKbHJE60yLvxDWeHJJoWm64YmB4hs4
-	 /5iXkb2EhCK7A==
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 4CD34F40069;
-	Fri, 17 Apr 2026 20:05:59 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-06.internal (MEProxy); Fri, 17 Apr 2026 20:05:59 -0400
-X-ME-Sender: <xms:58riaT96P48jQQL2LiyZiDHijo1h99w_G2O8RnastQ_zzE4fvTnJgg>
-    <xme:58riae_epX6EiclWmE0fOY5ejO665fCp_mu8bG7GFSqcY007EI4kp9laxX6EBYx6X
-    jL5-5PhJsGN-cFXwgMgfaedmF8BM1WE3YeIxAdNivPmlOohBGeIuKA>
-X-ME-Received: <xmr:58riaT2andN52XhF-85gcw_TOPQnVNvSwLGzSfScgAALTkfiv0dqHnpjSMIVw7YM4Un4q4A0iNqVSRqoqQujkVTE4eDMPmq2J70>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdehuddvkecutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
-    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
-    hrpeffhffvvefkjghfufggtgfgsehtjeertddttdejnecuhfhrohhmpeffrghnucghihhl
-    lhhirghmshcuoegujhgsfieskhgvrhhnvghlrdhorhhgqeenucggtffrrghtthgvrhhnpe
-    elhfeiudfgvdeijedtleeltdduueekffejjedvjefhgeevjeefueejledtleetjeenucev
-    lhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegujhgsfidomh
-    gvshhmthhprghuthhhphgvrhhsohhnrghlihhthidqudejjedvfedtgeehhedqfeeffeel
-    gedtgeejqdgujhgsfieppehkvghrnhgvlhdrohhrghesfhgrshhtmhgrihhlrdgtohhmpd
-    hnsggprhgtphhtthhopedukedpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohephihi
-    lhhunhdrgihusehlihhnuhigrdhinhhtvghlrdgtohhmpdhrtghpthhtoheplhhinhhugi
-    dqtghotghosehlihhsthhsrdhlihhnuhigrdguvghvpdhrtghpthhtoheplhhinhhugidq
-    phgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopegurghnrdhjrdifih
-    hllhhirghmshesihhnthgvlhdrtghomhdprhgtphhtthhopeigkeeisehkvghrnhgvlhdr
-    ohhrghdprhgtphhtthhopegthhgrohdrghgrohesihhnthgvlhdrtghomhdprhgtphhtth
-    hopegurghvvgdrjhhirghnghesihhnthgvlhdrtghomhdprhgtphhtthhopegsrgholhhu
-    rdhluheslhhinhhugidrihhnthgvlhdrtghomhdprhgtphhtthhopeihihhluhhnrdiguh
-    esihhnthgvlhdrtghomh
-X-ME-Proxy: <xmx:58riaW9Ru0Vcsn6vN93WDslULGPFHk_Bko8btQSstOAzhaQ1FCNmAg>
-    <xmx:58riaceui4Mm0Y9H-4Qe-r_xZKfqPb0B8ScRI498znSAgK9vR3Akyg>
-    <xmx:58riaaGD9w7LbZQ1OynWIiHToINuK6hD8xmJ18ZfX9EtnO_tta4xOw>
-    <xmx:58riaZCYJb8103e-nh0dqt4mZzERqxORbmUMfe6cFfMMPU6n7OZRCg>
-    <xmx:58riaV4_RgIQ7mK3v7Qi14LMbf7ragtY-OxmL-bcOiwOQdn4ObkU-hB7>
-Feedback-ID: i67ae4b3e:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 17 Apr 2026 20:05:58 -0400 (EDT)
-Date: Fri, 17 Apr 2026 17:05:57 -0700
-From: Dan Williams <djbw@kernel.org>
-To: Xu Yilun <yilun.xu@linux.intel.com>, 
- linux-coco@lists.linux.dev, 
- linux-pci@vger.kernel.org, 
- dan.j.williams@intel.com, 
- x86@kernel.org
-Cc: chao.gao@intel.com, 
- dave.jiang@intel.com, 
- baolu.lu@linux.intel.com, 
- yilun.xu@linux.intel.com, 
- yilun.xu@intel.com, 
- zhenzhong.duan@intel.com, 
- kvm@vger.kernel.org, 
- rick.p.edgecombe@intel.com, 
- dave.hansen@linux.intel.com, 
- kas@kernel.org, 
- xiaoyao.li@intel.com, 
- vishal.l.verma@intel.com, 
- linux-kernel@vger.kernel.org
-Message-ID: <69e2cae5aeb69_fe08310079@djbw-dev.notmuch>
-In-Reply-To: <20260327160132.2946114-5-yilun.xu@linux.intel.com>
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-5-yilun.xu@linux.intel.com>
-Subject: Re: [PATCH v2 04/31] x86/virt/tdx: Support allocating contiguous
- pages for tdx_page_array
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="dYT9ZNDu"
+Received: from [192.168.0.88] (192-184-212-33.fiber.dynamic.sonic.net [192.184.212.33])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 3B96520B7128;
+	Fri, 17 Apr 2026 17:20:58 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 3B96520B7128
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1776471659;
+	bh=GVHuT39vJFq3z9p9Y8P4lQnO5Ygvg1D3+qSvKG01gbY=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=dYT9ZNDuycE39Rmok1I6PkVn+1fRDnnVG7AQULHoh8ka9lRpuZZfVcN3GE476KHCm
+	 7q9IKowPidbuXTYdIZorG3mFjFlT9roQFkhQcwZt5HmGQogAfGL0LjONAQykbCKjkF
+	 8HrR1mr46rqVdmR18Z3suICKceYTvClPyPCcdPKY=
+Message-ID: <ffe33ce4-0a1b-44af-9e17-7f641fef9339@linux.microsoft.com>
+Date: Fri, 17 Apr 2026 17:20:57 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.1
+Subject: Re: [PATCH v0 07/15] mshv: Add ioctl support for MSHV-VFIO bridge
+ device
+Content-Language: en-US
+To: Stanislav Kinsburskii <skinsburskii@linux.microsoft.com>
+Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+ linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, kys@microsoft.com,
+ haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
+ longli@microsoft.com, catalin.marinas@arm.com, will@kernel.org,
+ tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
+ dave.hansen@linux.intel.com, hpa@zytor.com, joro@8bytes.org,
+ lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ robh@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+ nunodasneves@linux.microsoft.com, mhklinux@outlook.com,
+ romank@linux.microsoft.com
+References: <20260120064230.3602565-1-mrathor@linux.microsoft.com>
+ <20260120064230.3602565-8-mrathor@linux.microsoft.com>
+ <aW-pw7GlQdFv-lf5@skinsburskii.localdomain>
+From: Mukesh R <mrathor@linux.microsoft.com>
+In-Reply-To: <aW-pw7GlQdFv-lf5@skinsburskii.localdomain>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Xu Yilun wrote:
-> The current tdx_page_array implementation allocates scattered order-0
-> pages. However, some TDX Module operations benefit from contiguous
-> physical memory. E.g. Enabling TDX Module Extensions (an optional TDX
-> feature) requires ~50MB memory and never returns. Such allocation
-> would at worst cause ~25GB permanently fragmented memory if each
-> allocated page is from a different 2M region.
+On 1/20/26 08:13, Stanislav Kinsburskii wrote:
+> On Mon, Jan 19, 2026 at 10:42:22PM -0800, Mukesh R wrote:
+>> From: Mukesh Rathor <mrathor@linux.microsoft.com>
+>>
+>> Add ioctl support for creating MSHV devices for a paritition. At
+>> present only VFIO device types are supported, but more could be
+>> added. At a high level, a partition ioctl to create device verifies
+>> it is of type VFIO and does some setup for bridge code in mshv_vfio.c.
+>> Adapted from KVM device ioctls.
+>>
+>> Credits: Original author: Wei Liu <wei.liu@kernel.org>
+>> NB: Slightly modified from the original version.
+>>
+>> Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
+>> ---
+>>   drivers/hv/mshv_root_main.c | 126 ++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 126 insertions(+)
+>>
+>> diff --git a/drivers/hv/mshv_root_main.c b/drivers/hv/mshv_root_main.c
+>> index 83c7bad269a0..27313419828d 100644
+>> --- a/drivers/hv/mshv_root_main.c
+>> +++ b/drivers/hv/mshv_root_main.c
+>> @@ -1551,6 +1551,129 @@ mshv_partition_ioctl_initialize(struct mshv_partition *partition)
+>>   	return ret;
+>>   }
+>>   
+>> +static long mshv_device_attr_ioctl(struct mshv_device *mshv_dev, int cmd,
+>> +				   ulong uarg)
+>> +{
+>> +	struct mshv_device_attr attr;
+>> +	const struct mshv_device_ops *devops = mshv_dev->device_ops;
+>> +
+>> +	if (copy_from_user(&attr, (void __user *)uarg, sizeof(attr)))
+>> +		return -EFAULT;
+>> +
+>> +	switch (cmd) {
+>> +	case MSHV_SET_DEVICE_ATTR:
+>> +		if (devops->device_set_attr)
+>> +			return devops->device_set_attr(mshv_dev, &attr);
+>> +		break;
+>> +	case MSHV_HAS_DEVICE_ATTR:
+>> +		if (devops->device_has_attr)
+>> +			return devops->device_has_attr(mshv_dev, &attr);
+>> +		break;
+>> +	}
+>> +
+>> +	return -EPERM;
+>> +}
+>> +
+>> +static long mshv_device_fop_ioctl(struct file *filp, unsigned int cmd,
+>> +				  ulong uarg)
+>> +{
+>> +	struct mshv_device *mshv_dev = filp->private_data;
+>> +
+>> +	switch (cmd) {
+>> +	case MSHV_SET_DEVICE_ATTR:
+>> +	case MSHV_HAS_DEVICE_ATTR:
+>> +		return mshv_device_attr_ioctl(mshv_dev, cmd, uarg);
+>> +	}
+>> +
+>> +	return -ENOTTY;
+>> +}
+>> +
+>> +static int mshv_device_fop_release(struct inode *inode, struct file *filp)
+>> +{
+>> +	struct mshv_device *mshv_dev = filp->private_data;
+>> +	struct mshv_partition *partition = mshv_dev->device_pt;
+>> +
+>> +	if (mshv_dev->device_ops->device_release) {
+>> +		mutex_lock(&partition->pt_mutex);
+>> +		hlist_del(&mshv_dev->device_ptnode);
+>> +		mshv_dev->device_ops->device_release(mshv_dev);
+>> +		mutex_unlock(&partition->pt_mutex);
+>> +	}
+>> +
+>> +	mshv_partition_put(partition);
+>> +	return 0;
+>> +}
+>> +
+>> +static const struct file_operations mshv_device_fops = {
+>> +	.owner = THIS_MODULE,
+>> +	.unlocked_ioctl = mshv_device_fop_ioctl,
+>> +	.release = mshv_device_fop_release,
+>> +};
+>> +
+>> +long mshv_partition_ioctl_create_device(struct mshv_partition *partition,
+>> +					void __user *uarg)
+>> +{
+>> +	long rc;
+>> +	struct mshv_create_device devargk;
+>> +	struct mshv_device *mshv_dev;
+>> +	const struct mshv_device_ops *vfio_ops;
+>> +	int type;
+>> +
+>> +	if (copy_from_user(&devargk, uarg, sizeof(devargk))) {
+>> +		rc = -EFAULT;
+>> +		goto out;
+>> +	}
+>> +
+>> +	/* At present, only VFIO is supported */
+>> +	if (devargk.type != MSHV_DEV_TYPE_VFIO) {
+>> +		rc = -ENODEV;
+>> +		goto out;
+>> +	}
+>> +
+>> +	if (devargk.flags & MSHV_CREATE_DEVICE_TEST) {
+>> +		rc = 0;
+>> +		goto out;
+>> +	}
+>> +
+>> +	mshv_dev = kzalloc(sizeof(*mshv_dev), GFP_KERNEL_ACCOUNT);
+>> +	if (mshv_dev == NULL) {
+>> +		rc = -ENOMEM;
+>> +		goto out;
+>> +	}
+>> +
+>> +	vfio_ops = &mshv_vfio_device_ops;
+>> +	mshv_dev->device_ops = vfio_ops;
+>> +	mshv_dev->device_pt = partition;
+>> +
+>> +	rc = vfio_ops->device_create(mshv_dev, type);
+>> +	if (rc < 0) {
+>> +		kfree(mshv_dev);
+>> +		goto out;
+>> +	}
+>> +
+>> +	hlist_add_head(&mshv_dev->device_ptnode, &partition->pt_devices);
+>> +
+>> +	mshv_partition_get(partition);
+>> +	rc = anon_inode_getfd(vfio_ops->device_name, &mshv_device_fops,
+>> +			      mshv_dev, O_RDWR | O_CLOEXEC);
+>> +	if (rc < 0) {
+>> +		mshv_partition_put(partition);
+>> +		hlist_del(&mshv_dev->device_ptnode);
+>> +		vfio_ops->device_release(mshv_dev);
+>> +		goto out;
+>> +	}
+>> +
+>> +	devargk.fd = rc;
+>> +	rc = 0;
+>> +
+>> +	if (copy_to_user(uarg, &devargk, sizeof(devargk))) {
 > 
-> Support allocating contiguous pages for tdx_page_array by making the
-> allocation method configurable. Change the tdx_page_array_alloc() to
-> accept a custom allocation function pointer and a context parameter.
-> Wrap the specific allocation into a tdx_page_array_alloc_contig()
-> helper.
-> 
-> The foreseeable caller will allocate ~50MB memory with this helper,
-> exceeding the maximum HPAs (512) a root page can hold, the typical usage
-> will be:
-> 
->  - struct tdx_page_array *array = tdx_page_array_alloc_contig(nr_pages);
->  - for each 512-page bulk
->    - tdx_page_array_populate(array, offset);
->    - seamcall(TDH_XXX_ADD, array, ...);
-> 
-> The configurable allocation method would also benefit more
-> tdx_page_array usages. TDX Module may require more specific memory
-> layouts encoded in the root page. Will introduce them in following
-> patches.
+> Shouldn't the partition be put here?
 
-Will skip this one as I see it gets massively reworked in your
-incremental update. The change to make the caller responsible for
-creating the page array is great.
+No. anon_inode_getfd was successful and so it installed the fd already..
+As a result the cleanup will happen in the file op release.
+
+Thanks,
+-Mukesh
+
+> Thanks,
+> Stanislav
+> 
+>> +		rc = -EFAULT;
+>> +		goto out;
+>> +	}
+>> +out:
+>> +	return rc;
+>> +}
+>> +
+>>   static long
+>>   mshv_partition_ioctl(struct file *filp, unsigned int ioctl, unsigned long arg)
+>>   {
+>> @@ -1587,6 +1710,9 @@ mshv_partition_ioctl(struct file *filp, unsigned int ioctl, unsigned long arg)
+>>   	case MSHV_ROOT_HVCALL:
+>>   		ret = mshv_ioctl_passthru_hvcall(partition, true, uarg);
+>>   		break;
+>> +	case MSHV_CREATE_DEVICE:
+>> +		ret = mshv_partition_ioctl_create_device(partition, uarg);
+>> +		break;
+>>   	default:
+>>   		ret = -ENOTTY;
+>>   	}
+>> -- 
+>> 2.51.2.vfs.0.1
+>>
+
