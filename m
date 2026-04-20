@@ -1,47 +1,47 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013022.outbound.protection.outlook.com [40.107.159.22])
+Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013029.outbound.protection.outlook.com [52.101.72.29])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C58CE256C8D;
-	Mon, 20 Apr 2026 07:18:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.22
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAAAF28641E;
+	Mon, 20 Apr 2026 07:33:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.29
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776669519; cv=fail; b=PYOm7+BTGaK2l02kasLSzF0H/pLoitSt0x6fYNVjzBQbLxjmYWKkS5OLw6blFkwC5TS6KpSpxJj742K0dxelvLSCYp076bzKr/CTS/phvWN3VuXh/39oGKA04q+JuXDes09uwu4D7YMqbelyWD1lOd8rNihNjKu0U/cyF2Vp3g8=
+	t=1776670437; cv=fail; b=IT24f6UZvCZ2LN/obiyaXY4aDpFXotNODq/s84dAjk44Z21LB/RjMCQ6HqiQVBNbblaZvHiXbtcM7hQvTZAkim2LVcZBaeVuWJ28riGepisTjRI+jmz9l26Y6XAh+q7pf4Vb1vPhw9EhVVxlDatSbf3o5nuzraenS6XpkUkV7U4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776669519; c=relaxed/simple;
-	bh=GDYFnzfYxsuc618BCtRjnpoiLNhT0c0f4WFlQr7VqzY=;
+	s=arc-20240116; t=1776670437; c=relaxed/simple;
+	bh=xjoyyhtdr9kOQA/fn1DuP5/urNbHM+evyHzrzmu2jSk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=E8hoCvu4d8k+H0y+WDS5DCtduHmYPvp5S/fkCWwEB/90O9p74A1KQoCVcoU2VqJ3xEPhJ+r9+0kQsBIVr1kRzXY43MIzBeQpbcllFQSMt+NQIV+FqzmcKoJgIFjJaKpCyV5e/x1uwxSOrcDDdOjd4rxbztRNuRYbKUlhsMfv/5E=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=BZomjc3m; arc=fail smtp.client-ip=40.107.159.22
+	 Content-Disposition:In-Reply-To:MIME-Version; b=hxFcxA6lb2w+Nf2LTjEYGAzATM9FoVK1LIp4j/Eg+vehSDhKQ2I4/ijGf2c6kopjKt8m4Si02Ml8/W9jgkvKEYVjZsks8vbsMQgB12C/rO2Dy8hyln3HgbpT5p+ygWBy+rp5CGZF0r9WDQ4ZIxQvtUTIl6xI0KwQSVhaKRGU+h0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=YNh+h+AL; arc=fail smtp.client-ip=52.101.72.29
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="BZomjc3m"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="YNh+h+AL"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=EX8b/2Iy/DdLnw1P5+gWg1xbmRPrEMDioaascU78N7FMjcc33NlrNHgdPmre718xXqOkYjim710ZaAe/JEtqSX3tt8du6ZeEMBt2e2FGZxZv14ZhIDRwxXI/iIgergmsaaUudPsKbj/N2p2+LY9x+ZFizaNeUxpJ7J3UFmQtRfzsrg8bM/syk/sQXpWEtoMq8gmSfQK7MboDXvPGWwTTlThvGUmVx4BfOuyAzYJW8iyb1Y6HtupNviEn8iMtubdDHgjOGasS0WW0OvjNgNZVuzeJv/4TQ2U3ZPYU9WSo6oW0Sp5bK5JmtHiGAPLL8hQ9mHQmGHTzZbbtBaowKi6JIQ==
+ b=KGLqoXjaI8gd8ioaFvQgbrE3yHSxgMC8SGi9kvZ+qaiHUE0+9zFWY9NZiRF2d1oFRgkROg666Bhd0clwQNifokZcBJ1OiF6Qpgq9oGXxBbquOcOm2HG0IQmXcZVoARUjp7lpVxFzIQR6tdtcS2VKny1psbhwjvH8sWcorOzlBPCutw0iKiXha/8pX92XlJeEPZsVBIUjLgrQATcBksJCdiz4MVr+3Pzj2RuQgVdZz1XhURsEHhMGKxATcbH+wwzQdl3OuNEXKWwuZ/EdD+eIkpS4rWdG/oVHm3ZdOTVvGWfxNReoLhPj0VICXc26D8lw6KWT/A6X5tVg6VzoCj6CnQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Z8d4rDi0od6aYv4vGVLeiMoKEFQKAQGhqvQXhL/IkZM=;
- b=BvniFyq2uctI9oZh1+evfvMsIipZvBhGXYqFXPkoGwCsxSfBj8vbc6k9sx8m3Bj5mEcFaKdc6J6NFD8PW0VGE885aU3++jnTza6vlfwd/pn8a5gnKopAaLiFdWRkgJfCtnOykH8RiWqH981I4X5WYEGd5eYI2l+ZqUYOWJ2Clhpcc+e/DxCA/wWhvWCG8yQGp4QP/9CiP8ri2IPP/CUqaMmnU0pNWfWS9k4yTsJB7EsaM5U+YdO6HoplqG2xzUBxLlqYmUzl6cAI9SObQV5260k8Tn8L6/gepFMdJNvKE7PlKzRlSP2ONo6gxKpQKm9iiEaj9IHmW2sZGmI6mTRCcg==
+ bh=iKNpJnEfKnORFFzLz+dH+3D2+1jVZzolMwxVr9yhE0g=;
+ b=AetAgbmcs8/fgYkPpFUUffVuTtkIqWbiRXuc0F4tGL3ubcpFNgqQ4N8LSMi3IbN8+oZ9odWCWdNvBfieFX4/+m5qIjDtUwP3gyjFb+wDkWGO8Y8xSG9+onzi+xuCEMgqZ6nW0JVjILMIh19a+6Peb6uMs0Po/l34XdkLSbp0kVACtxZ5IcFumm+d20PZmLZ9wh2CKvTNqEHMu7U598GYfN8S/WY1Pv1UYcZ8vY3CHVo0mhhHhvn9v8ujeypnfcpfyjlmN6iDE6K9zs0hCksYSRsQ+DUKJj+B1OXuSSzKxiUJpa2lhOh9hdCPN2/RbqJSAXZzk2OIxxPB8t/2Don8Lw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Z8d4rDi0od6aYv4vGVLeiMoKEFQKAQGhqvQXhL/IkZM=;
- b=BZomjc3mfJaQ997TfMibbsWP/iI7m/uH2woHpCFf/sfw72aX7PljNcueeiL/qZM5ATDYajUR4YRLf6O4TjYJijh8K03TPenxg6nc879yuh78VF8KjMhetX6R7033+PZ2TxldyQxwc5vZZaxvFtCSuBjb6ZJhH8EYPqndcZamPRYkwC4a4UDkSYLVUzGfTO1+SQrYAVqpbNen/O9SZu7mJMaKUFisLCx1fbPrCYUve+FS6AdH3kwaXm6lqt+r9CA+OynK2UFw9Kzz/50brszmULBMmFnyHdP8fUrZ63RhDbxiiez8l9pNTD6SOn1126ZQQO03IJ/72Kz9+miL1wTGQQ==
+ bh=iKNpJnEfKnORFFzLz+dH+3D2+1jVZzolMwxVr9yhE0g=;
+ b=YNh+h+ALcZdQkrfv4x3Zra9LZXhVifP7XnQccCy/4gesSlihhcSoDg0v/fz8AHNNXupnGiStz+petSQkxn/E73gO7GwByn2kHl68bvg4ehDcpfBdczKgXQ+6viLzV99xD3DOzQNbG/Lcc2ODlJqDccOrsVTjlS8uoVsJvybKVyvy+RwSXoPgG0dgx/m6ZXxcm++v3783Iit0xVhUNpNeL+nUM8q5vjvzhnbLEjaHSHs2+NpJmm1pUALmZenPgbj0ORLYaC0LG9APGU8QgWNOjwmvwrCkgicsFGpxPJnIVQrtubwkqk2o/midOBwFBl1yjLJpR4GVN0AfaKaF1wIMJw==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by DU4PR04MB12026.eurprd04.prod.outlook.com (2603:10a6:10:643::14) with
+ by GV1PR04MB10396.eurprd04.prod.outlook.com (2603:10a6:150:1c5::19) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9818.31; Mon, 20 Apr
- 2026 07:18:35 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9818.32; Mon, 20 Apr
+ 2026 07:33:52 +0000
 Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
  ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
  ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9818.032; Mon, 20 Apr 2026
- 07:18:35 +0000
-Date: Mon, 20 Apr 2026 03:18:28 -0400
+ 07:33:52 +0000
+Date: Mon, 20 Apr 2026 03:33:46 -0400
 From: Frank Li <Frank.li@nxp.com>
 To: Nathan Lynch <nathan.lynch@amd.com>
 Cc: Vinod Koul <vkoul@kernel.org>, Wei Huang <wei.huang2@amd.com>,
@@ -52,16 +52,16 @@ Cc: Vinod Koul <vkoul@kernel.org>, Wei Huang <wei.huang2@amd.com>,
 	PradeepVineshReddy.Kodamati@amd.com, John.Kariuki@amd.com,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	dmaengine@vger.kernel.org
-Subject: Re: [PATCH 09/23] dmaengine: sdxi: Start functions on probe, stop on
- remove
-Message-ID: <aeXTRBnAmb3DYEWt@lizhi-Precision-Tower-5810>
+Subject: Re: [PATCH 10/23] dmaengine: sdxi: Complete administrative context
+ jump start
+Message-ID: <aeXW2pc0S6QBHQpB@lizhi-Precision-Tower-5810>
 References: <20260410-sdxi-base-v1-0-1d184cb5c60a@amd.com>
- <20260410-sdxi-base-v1-9-1d184cb5c60a@amd.com>
+ <20260410-sdxi-base-v1-10-1d184cb5c60a@amd.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260410-sdxi-base-v1-9-1d184cb5c60a@amd.com>
-X-ClientProxiedBy: SA1P222CA0154.NAMP222.PROD.OUTLOOK.COM
- (2603:10b6:806:3c3::27) To PA4PR04MB9366.eurprd04.prod.outlook.com
+In-Reply-To: <20260410-sdxi-base-v1-10-1d184cb5c60a@amd.com>
+X-ClientProxiedBy: SA1PR04CA0017.namprd04.prod.outlook.com
+ (2603:10b6:806:2ce::22) To PA4PR04MB9366.eurprd04.prod.outlook.com
  (2603:10a6:102:2a9::8)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -70,179 +70,144 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|DU4PR04MB12026:EE_
-X-MS-Office365-Filtering-Correlation-Id: 208fd17a-3209-40c3-38ac-08de9ead08da
+X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|GV1PR04MB10396:EE_
+X-MS-Office365-Filtering-Correlation-Id: 31457384-c4f8-4063-4802-08de9eaf2b92
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|19092799006|366016|7416014|52116014|376014|38350700014|56012099003|18002099003|22082099003;
+	BCL:0;ARA:13230040|52116014|366016|1800799024|376014|7416014|19092799006|38350700014|56012099003|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	QHBRtIt7UaQm24PtT3eLqdKfX5nqyp93lI5GjF5tdTO1p1fclLqcvib3l2f8XKEdVJ8iOBkaqxAWagUTbXDABdthPsr5Y1TIafhmSimsisFhvB0E2+t1rX/mrsHBs+hkFoMR/TumtaS3drEWKkoNQIeDn18yqdUzvog+ZcpFCqQyD75BeNniegTMwOEGjG9JsXugSpNOMHsMW79hRnutHPr4xfqBxeACr37NCkufhyIoSK8R/yVLbfaflVTzq2vRWSthrC5KK7+l3z+JjI5RW+Q08aETUk1AFE80edFzVJcvxuZByAQN4nbstbTJ80psb5K/Ki4DKOk0WpHdk7n2sRfb3ARaVTpnQJpLnJeYMbDQT+PhR6U+cefiCx9v3u5rKSK5PctYvmvvYA22H4YCdNBxZJWzRvTFoFBreMtm5n0U3lamtHc/5wCrHx4FOC3M0I6IpnwAZVHjowlzfe6lyw6cYcShUJExr0WvODcWcugiZJK1M0WXtFHZKYtOWEgs11j2mBXa2UkbUIiPaPF4cJLkAyQWaRZiUMbiZMzZXgD21SUap+rgdVVWt2RCYxNJwXRcZ0QmD/fAg9Gqt/t6f82LCDZZlQr4aceElBS0a0p3zu9frzzR+WnWbrRBvJ4pbIqpKLLTxkImaD/iLCon1kpmQnhU5XuQfYuUUJv1fXlCl9uwzabczpotPNjtQvzoL5o5kQfQXzCr+FDWFe+gV0p/nKVBoehRctKxYryJAbWv7RCjTtYpN6BEA76ud6tKNP//TCUYf4GEolcM2eSHp0VRtiOuwdYOaXkcaIkhvZ8=
+	mljm5tZHMnTPJTpaj8/0XdpBa2HXssEXpbuFeK3KfHrB0Pzn3T4yQ6VfXOUeNtzb8TRUevvceZa+63XLt4KpiI7ViVQi7nPTdUCK3l26BHKbwHqZ0MQicgDfuI++tJyFwiyOu7aRoDjnGw/GemVkTcEM2Do8gKuKmp4XwjrPU0pb1h/FIhD24R5vTWkzKTqpKPlvkbRmJM4bCiaeOtsi3IY4JL5DKoKTpbxCG1KjQ/GrRlBFSw13nZbN747btj76I0sCNtX3/QmQw+ROu2jlnl1Itmu8O6K3MykUGr3coSLsrDtjAp88aNWnhG6WntgVcDfCbzZFLTjfmRHTFlic5PpswYICRUlbntRJXZmkL9fUP5O0GU45izq3jc4A6w+2BKgxteqxYMOc1hKpsbHVx4BR+Zu2OZh8z+nSywItSOrtyBp71eZD7ugYPnhSST+kH0HM/ycFe9Hxr/p2IdyylyBFzl8d3d4c6BcqnkidDr2UeYGK/MJXNuSdvm7OzvROZ4drO/Y3C4n7EjkqjGy8qq6FY5XBCv0WL383/JMlIB2JvROgtVM4N8YY8JP8zb4TP5FTexGiFz/XW493nuhrgK0fR7diC9RgtvHUp45skYf0pzrc7C5TnQGosXN96311E0Gr7fiZLq2JBULntWuyMoI+TW9naD9bCS0dRZK6a2qrreOuWPpcG5/dqiUFnu6f9vtxYEbwi3RIhS0iO+EXAsC6v25BqPRgPY4619MNJ5juyuRcNTQ5X2psbkb3mfCLdcRewXaCqyU+KfW8zug9zKJ3fzRi7EqNxVnYtN8IQ1Q=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(19092799006)(366016)(7416014)(52116014)(376014)(38350700014)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(52116014)(366016)(1800799024)(376014)(7416014)(19092799006)(38350700014)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?uaKcEu2LtHarEtgEle8ZelmCJewPpNVbKshWRhhs7GwKVLApZCYx1ZAs/jQn?=
- =?us-ascii?Q?2wnd94350uRthUkPGOv/L3CqOwbQK90h2qpKQ9B4PISIHznH92fYPD0zJ9tu?=
- =?us-ascii?Q?RShcGqkPYLMK5I0hStSPRfweqPLzbkKi68X6HcsgmD5UGHoUJ2hqZ7kQpA4O?=
- =?us-ascii?Q?ZgET6czLXItjK6WFRt9WOXjymi8VAYXGkzQImBrUMsPCTMuXVDCp/Qt8+GlW?=
- =?us-ascii?Q?zV0X2P1sEprb+GayL2Xoh7bZ5tjx8hRtcPkUclTlXTyb5082+VLa1BdTIQKU?=
- =?us-ascii?Q?8hx5+LDq1D6m6GnDDrGRvYxtUYge29XJkmI8kXiewQmJKifGRcvJal8kvH1a?=
- =?us-ascii?Q?WtpsGBQGUt+wEdfdriSzSJ+xkveDHKEDpn6zqAew5C1pEDXh7/ZNCjU0C6ru?=
- =?us-ascii?Q?E7+nA8/JN8zkKT9ciEX3sBgEovRfDeDwaO+CUK9tgWOnVKXjuypo/4AlPQA4?=
- =?us-ascii?Q?aLLP3NyavVnzqhx6WeMPdodFEQ/KZy2+epM61KLHDLOg55SM2xvEJQjO0ls0?=
- =?us-ascii?Q?g4QxKmHxAxdUM4BiIP5vklmX4zqxqvOS91CHDCDRXKZ0sP4UMPXZQj3bgjFf?=
- =?us-ascii?Q?cK3QMRrgtYA+VC2RhZ1aUVon0Dlw79NgXxpujRsRPpRCBvtKTleOXkCHoDp8?=
- =?us-ascii?Q?PwtHkaQkPN5O0ioXlbSaOYILk4ktDc8IRe5yIVDf3Kov2kq/NALwxwSPE1Ti?=
- =?us-ascii?Q?vxp7cNcNtLf98Y3IlJ+9S5fFEsX2rNjK2I/hZF7C/I+Ad7jfuMZH6ROWm4zW?=
- =?us-ascii?Q?dXG1dlb04KMdnQ2YeGsE9wnxdhU0S0TobziJSUapOOYaaiBdlykLhtWWiAvO?=
- =?us-ascii?Q?6kz23wWpWBP6d0+WLN6gBDF0HJMytGFNf1CsgXNEBKUq2Q5JqhK2sS0W5qsi?=
- =?us-ascii?Q?WRpIgirk+O1uunTEEbVV8dMLe4XazL8QNEkD7Z/LYETk0LOAmeVU8jhAKhyH?=
- =?us-ascii?Q?hyveLb0zP/MEcDi8+Ii+pPGqu4+YgQvsaG1/ryrk4Nr8wehduhU/VtH6HkKH?=
- =?us-ascii?Q?7cL0qc96ufItQk+W0ceTGm/DRTEWu53kl0kvVJK9dchA45x5ydVO3930UfJC?=
- =?us-ascii?Q?y1qBd8ZZrL9GRnJr278VzZH9GYJWvEFcyZKygqILydiA5LOLtvnmXvER7soU?=
- =?us-ascii?Q?hH9vJVkbBIPs+BoqsPpORyTj/T8fiJh13RLWyldM+X/l1xE9mlBLzvir38te?=
- =?us-ascii?Q?kFcIBVpUK4Gkkh6OD0jsFB76FMqwG/Uidtrcz5j3gwqnHine5VTf2Jipw0gE?=
- =?us-ascii?Q?yFijN244ZMcfUEjIgiIVb9mPu/h49AGqbdZfNOLivxt3VNz4nI9EoinkuCUg?=
- =?us-ascii?Q?Urk+h6okjGQt/B8c4EHhxTMqvdQMzPFpqMQys97HTQnQCIhZuMDRsDErQVWz?=
- =?us-ascii?Q?5k1fUIXklhlwjfz7oNJzCzWRrHK3uDES8oC/lKotoO3of1Aco9u+3E51aRFo?=
- =?us-ascii?Q?pClsMYFGfIFsY25PxQhLJ2pwcJmPt2sA+K+Y3gg85XCKowrdB/8vTAWJfFdK?=
- =?us-ascii?Q?xxBmTg67TKPiJLPhGBw0eudXJPHwMWL+LgyuZ/Vtm6QsWxpfSGxzwKfBGcn/?=
- =?us-ascii?Q?uWjkyXodIh2jeyBJRumwx6Pur0mXOdlFfhrj1rUbJ3HnvAc3gW0Uzm//dp4B?=
- =?us-ascii?Q?bTWJxJwdkJ55Z7y9PCdsfUsSeruVHMg5kZgw4c7OFjbBy6fgANtIhW7t2ocq?=
- =?us-ascii?Q?k4BrbnQUAnvq1KMEKFhQUT2zXsQZufy4IOiZYpxaHeW2JXSRe1JKi9Kvt2ZQ?=
- =?us-ascii?Q?dJDHOu2eeQ=3D=3D?=
+	=?us-ascii?Q?2pl78/RiPo845ymWS1xcFIgbRzKXzK68IGWavLYskedtU9uy7AFSW3EC5CCb?=
+ =?us-ascii?Q?tQKGYfuBqVS0PGDYiGBXzPoYHsm+Vlh7/dePrAZQ4paLDB58YT/vRZQT6ZLk?=
+ =?us-ascii?Q?1EzV6ND4yYD34kSL4L8BrCL9Z7uOfqDK6vRGQEUvwb9kc/gB3e9So8/WAXHt?=
+ =?us-ascii?Q?P9kirN8Mn+v2ErggqoupX3rGwJ2xULGo/U5I6HfDIJB+dbNMhrUZqTEZdtgR?=
+ =?us-ascii?Q?xnRfc3beWf2R3UeO9tQJ8HzWbo8gV4muGwk/otAm7GeOFerFCVbB1l1IJFg1?=
+ =?us-ascii?Q?SBCzo1XNUk3OseFve6SLPskVIv6h/BJ93cC/VrAoCjzguooRth7wXkqen3xD?=
+ =?us-ascii?Q?FfMVSk1oTX2IL2TcBg7kwgFUOOTj50INdscOQA2KumURIFd0L+nwSMTO2ZDR?=
+ =?us-ascii?Q?YMyUllDuwOloRDh27IlAmSWiJk6qRwVpqp+6B5zxgZFyHKpTBCswWTY8aiRx?=
+ =?us-ascii?Q?ffHk0rSopIVnxghuGqF34nnLPYCKEI6mtQHxYGldP682szWdIPEmIcE4u8Jp?=
+ =?us-ascii?Q?e3X2T4x9RW/1eaCjB9szJRZkGCLmImyEC2iLPGqw8SGMBKC98CT369w84+9e?=
+ =?us-ascii?Q?DBX7aYRHO5BjZwfQXFODocG2459nl4M3IcJEWESIomQgvJrG2H7/HtQkr/e2?=
+ =?us-ascii?Q?e7R/AWXPNKVk/oTIYMRyz240sBhIAhjfOkEXe3/YrOeqaS8aTIiwl4YyxaeW?=
+ =?us-ascii?Q?IMW0W1YRVJtkeOFMlyefnB4jZhMnIKkEHLrkNMIjHti3yzQcxV5PAZAK8FoV?=
+ =?us-ascii?Q?X2rTCShBJ/d7dhIkiy4R9GYIJu5pqbCoYmseqmweDo7IaLFidJKxlTM5QLnr?=
+ =?us-ascii?Q?g2ZDCvUpA27vXZCqkWJKS4cMOxLN+EU5wUU6UxX24QCgB06hk4YBFFAASHD8?=
+ =?us-ascii?Q?EmCfA5RoyXBEM22j9Oq6Oh5oNrjWven5PZqJMtDVxPYY7IHYyK2oArsv0LZR?=
+ =?us-ascii?Q?ctOeMiMlIbi8BBuxO/+ucRu7jp+anKp2IMsCzWO5MR/x2yoA9iBCFEKaCtkX?=
+ =?us-ascii?Q?69UUnWik4AUVv9jIT+AkyzzvhaMEX+q8U6kewNMHqL0hfpnjzuT/oPB+BZU7?=
+ =?us-ascii?Q?Sz6DG1vNDVw+ehHxOvzAHS8+GCeZ4pckdP0QeCpmzxuz0RYXzCPxV2eew9DR?=
+ =?us-ascii?Q?627Thy6nI5nxVA0nCVxRUY6hHhb38kl1yfaYYJSJ9WchnRX3GtLtqGpk2NYZ?=
+ =?us-ascii?Q?yiMp4bcVnES3uovxfVdYh1hUGe7n92q52iqR17c+N2TQ47RCSY2AEbcO0r/E?=
+ =?us-ascii?Q?r6oJXMltY3JKgxePDCauHlTBepApj9e5CyTjrD0ke/cRZt7djGIeU/k5RATQ?=
+ =?us-ascii?Q?mWjYFyGgpJDr4qVndr1jKCqB48mNExrGtDgRGnPDQ6tANY3zCwnmXxZ0k9ps?=
+ =?us-ascii?Q?JPQ2aePc0bRXcEUnkmtcCUkvAoGUvzXjsn6co2VPXmLqIdevZGfuCNwMooLz?=
+ =?us-ascii?Q?af8BKgRxVU5QfCAE7PtctczxZ8D9fwgHRGAwidtFDqda3jGAaj8RE2kBGt0V?=
+ =?us-ascii?Q?GxjNhm+rRoa7wqqzRVAmlSYn5z+L02dWWymWRCAcIocCLBiF2DvmmT4VhESN?=
+ =?us-ascii?Q?+CXpWwVHX1agev1ce8c+M8l36xIwjmoMcjCfqbJaQBKBIcLy24oY6D6CdXO6?=
+ =?us-ascii?Q?Nv8bz/m+v87jFi1L36B9DesDzmB46drKu0aQDAhEQOlwgatRQ5qZFHNElHKs?=
+ =?us-ascii?Q?6TQZjqOqcQTm+U9/DHxqziOJ40M+w3faBOxeqGn/G8lFbrxd4ad95Dvwfp7j?=
+ =?us-ascii?Q?pRC+l6KUIQ=3D=3D?=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 208fd17a-3209-40c3-38ac-08de9ead08da
+X-MS-Exchange-CrossTenant-Network-Message-Id: 31457384-c4f8-4063-4802-08de9eaf2b92
 X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Apr 2026 07:18:35.2299
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Apr 2026 07:33:52.2912
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: uXFtZU09YDejxJEYLoPlHQmmcUbsyjnm01N4ODNBXH4/6FDoISEO+pyLwiVTHYqY6PuDFvLlGpUYUsQvv354EQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU4PR04MB12026
+X-MS-Exchange-CrossTenant-UserPrincipalName: m3uDO6IETHCr23xaWhSjCTxoMCAXTrElAHbWk6xPbpc98UgqN9PuvlRZL6Tx1sLLn0vtC1avXrMoTKF+XWL9kw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV1PR04MB10396
 
-On Fri, Apr 10, 2026 at 08:07:19AM -0500, Nathan Lynch wrote:
-> Following admin context setup in the previous patch, drive each SDXI
-> function to active state during probe. This is done by writing
-> GSRV_ACTIVE to MMIO_CTL0.fn_gsr and polling MMIO_STS0.fn_gsv until the
-> function reaches GSV_ACTIVE or an error state. A 1-second timeout has
-> been sufficient in practice so far.
->
-> Introduce sdxi_unregister() to stop the function during remove and wire
-> it up via the pci_driver .remove callback.
+On Fri, Apr 10, 2026 at 08:07:20AM -0500, Nathan Lynch wrote:
+> Now that the SDXI function has been placed in active state, the admin
+> context can finally be started by writing its doorbell. Introduce
+> sdxi_cxt_push_doorbell() to pair the necessary barrier with the
+> doorbell update.
 >
 > Co-developed-by: Wei Huang <wei.huang2@amd.com>
 > Signed-off-by: Wei Huang <wei.huang2@amd.com>
 > Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 > ---
->  drivers/dma/sdxi/device.c | 56 ++++++++++++++++++++++++++++++++++++++++++++++-
->  drivers/dma/sdxi/pci.c    |  6 +++++
->  drivers/dma/sdxi/sdxi.h   |  1 +
->  3 files changed, 62 insertions(+), 1 deletion(-)
+>  drivers/dma/sdxi/context.c |  8 ++++++++
+>  drivers/dma/sdxi/context.h |  2 ++
+>  drivers/dma/sdxi/device.c  | 15 ++++++++++++++-
+>  3 files changed, 24 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
+> index 097d871e530f..934c487b4774 100644
+> --- a/drivers/dma/sdxi/context.c
+> +++ b/drivers/dma/sdxi/context.c
+> @@ -16,6 +16,7 @@
+>  #include <linux/dmapool.h>
+>  #include <linux/errno.h>
+>  #include <linux/iommu.h>
+> +#include <linux/io-64-nonatomic-lo-hi.h>
+>  #include <linux/slab.h>
+>  #include <linux/types.h>
+>  #include <asm/barrier.h>
+> @@ -258,6 +259,13 @@ static int sdxi_publish_cxt(const struct sdxi_cxt *cxt)
+>  	/* todo: need to send DSC_CXT_UPD to admin */
+>  }
+>
+> +void sdxi_cxt_push_doorbell(struct sdxi_cxt *cxt, u64 index)
+> +{
+> +	/* Ensure preceding write index increment is visible. */
+> +	dma_wmb();
 
-...
-> +
-> +	sdxi_write_fn_gsr(sdxi, SDXI_GSRV_ACTIVE);
-> +
-> +	deadline = jiffies + msecs_to_jiffies(1000);
-> +	do {
-> +		status = sdxi_dev_gsv(sdxi);
-> +		sdxi_dbg(sdxi, "%s: function state: %s\n", __func__, gsv_str(status));
-> +
-> +		switch (status) {
-> +		case SDXI_GSV_ACTIVE:
-> +			sdxi_dbg(sdxi, "activated\n");
-> +			return 0;
-> +		case SDXI_GSV_ERROR:
-> +			sdxi_err(sdxi, "went to error state\n");
-> +			return -EIO;
-> +		case SDXI_GSV_INIT:
-> +		case SDXI_GSV_STOP:
-> +			/* transitional states, wait */
-> +			fsleep(1000);
-> +			break;
-> +		default:
-> +			sdxi_err(sdxi, "unexpected gsv %u, giving up\n", status);
-> +			return -EIO;
-> +		}
-> +	} while (time_before(jiffies, deadline));
+Needn't barrier(), iowrite64() should make sure previous write complete.
 
-suppose read_poll_timeout() should work
+See Documentation/memory-barriers.txt
 
 Frank
-
-> +
-> +	sdxi_err(sdxi, "activation timed out, current status %u\n",
-> +		sdxi_dev_gsv(sdxi));
-> +	return -ETIMEDOUT;
+> +	iowrite64(index, cxt->db);
 > +}
 > +
->  /* Get the device to the GSV_STOP state. */
->  static int sdxi_dev_stop(struct sdxi_dev *sdxi)
+>  static void free_admin_cxt(void *ptr)
 >  {
-> @@ -197,7 +240,11 @@ static int sdxi_fn_activate(struct sdxi_dev *sdxi)
->  	if (err)
->  		return err;
+>  	struct sdxi_dev *sdxi = ptr;
+> diff --git a/drivers/dma/sdxi/context.h b/drivers/dma/sdxi/context.h
+> index bbde1fd49af3..c34acd730acb 100644
+> --- a/drivers/dma/sdxi/context.h
+> +++ b/drivers/dma/sdxi/context.h
+> @@ -58,4 +58,6 @@ struct sdxi_cxt {
 >
-> -	return 0;
+>  int sdxi_admin_cxt_init(struct sdxi_dev *sdxi);
+>
+> +void sdxi_cxt_push_doorbell(struct sdxi_cxt *cxt, u64 index);
+> +
+>  #endif /* DMA_SDXI_CONTEXT_H */
+> diff --git a/drivers/dma/sdxi/device.c b/drivers/dma/sdxi/device.c
+> index 145aa098c269..15f61d1ce490 100644
+> --- a/drivers/dma/sdxi/device.c
+> +++ b/drivers/dma/sdxi/device.c
+> @@ -244,7 +244,20 @@ static int sdxi_fn_activate(struct sdxi_dev *sdxi)
+>  	 * SDXI 1.0 4.1.8.9: Set MMIO_CTL0.fn_gsr to GSRV_ACTIVE and
+>  	 * wait for MMIO_STS0.fn_gsv to reach GSV_ACTIVE or GSV_ERROR.
+>  	 */
+> -	return sdxi_dev_start(sdxi);
+> +	err = sdxi_dev_start(sdxi);
+> +	if (err)
+> +		return err;
+> +
 > +	/*
-> +	 * SDXI 1.0 4.1.8.9: Set MMIO_CTL0.fn_gsr to GSRV_ACTIVE and
-> +	 * wait for MMIO_STS0.fn_gsv to reach GSV_ACTIVE or GSV_ERROR.
+> +	 * SDXI 1.0 4.1.8.10.b: Start the admin context using method
+> +	 * #3 ("Jump Start 1") from 4.3.4 Starting A Context and
+> +	 * Context Signaling. We haven't queued any descriptors to the
+> +	 * admin context at this point, so the appropriate value for
+> +	 * the doorbell is 0.
 > +	 */
-> +	return sdxi_dev_start(sdxi);
+> +	sdxi_cxt_push_doorbell(sdxi->admin_cxt, 0);
+> +
+> +	return 0;
 >  }
 >
 >  static int sdxi_create_dma_pool(struct sdxi_dev *sdxi, struct dma_pool **pool,
-> @@ -250,3 +297,10 @@ int sdxi_register(struct device *dev, const struct sdxi_bus_ops *ops)
->
->  	return sdxi_device_init(sdxi);
->  }
-> +
-> +void sdxi_unregister(struct device *dev)
-> +{
-> +	struct sdxi_dev *sdxi = dev_get_drvdata(dev);
-> +
-> +	sdxi_dev_stop(sdxi);
-> +}
-> diff --git a/drivers/dma/sdxi/pci.c b/drivers/dma/sdxi/pci.c
-> index f3f8485e50e3..8e4dfde078ff 100644
-> --- a/drivers/dma/sdxi/pci.c
-> +++ b/drivers/dma/sdxi/pci.c
-> @@ -67,6 +67,11 @@ static int sdxi_pci_probe(struct pci_dev *pdev,
->  	return sdxi_register(&pdev->dev, &sdxi_pci_ops);
->  }
->
-> +static void sdxi_pci_remove(struct pci_dev *pdev)
-> +{
-> +	sdxi_unregister(&pdev->dev);
-> +}
-> +
->  static const struct pci_device_id sdxi_id_table[] = {
->  	{ PCI_DEVICE_CLASS(PCI_CLASS_ACCELERATOR_SDXI, 0xffffff) },
->  	{ }
-> @@ -77,6 +82,7 @@ static struct pci_driver sdxi_driver = {
->  	.name = "sdxi",
->  	.id_table = sdxi_id_table,
->  	.probe = sdxi_pci_probe,
-> +	.remove = sdxi_pci_remove,
->  	.sriov_configure = pci_sriov_configure_simple,
->  };
->
-> diff --git a/drivers/dma/sdxi/sdxi.h b/drivers/dma/sdxi/sdxi.h
-> index bbc14364a5c9..426101875334 100644
-> --- a/drivers/dma/sdxi/sdxi.h
-> +++ b/drivers/dma/sdxi/sdxi.h
-> @@ -75,6 +75,7 @@ static inline struct device *sdxi_to_dev(const struct sdxi_dev *sdxi)
->  #define sdxi_err(s, fmt, ...) dev_err(sdxi_to_dev(s), fmt, ## __VA_ARGS__)
->
->  int sdxi_register(struct device *dev, const struct sdxi_bus_ops *ops);
-> +void sdxi_unregister(struct device *dev);
->
->  static inline u64 sdxi_read64(const struct sdxi_dev *sdxi, enum sdxi_reg reg)
->  {
 >
 > --
 > 2.53.0
