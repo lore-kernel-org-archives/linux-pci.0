@@ -1,247 +1,470 @@
-Received: from mail-m49207.qiye.163.com (mail-m49207.qiye.163.com [45.254.49.207])
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010038.outbound.protection.outlook.com [52.101.193.38])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC11130EF95
-	for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2026 10:07:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.207
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776679659; cv=none; b=DUP/O3MZ/7fsrm/K2u2cUee3rf4Hu3pAtiwCS2HiINsdPSyKKPAiaLAOL/fkdGQbnBnlBsypJ7EtAv/Q95xzlNrygFDryMCUHnhyLjp9LvnfSAI+pLFUIUtBf4+3gNNN1Sn8G+UMSdEFfbXYzIj8DXhGyTdR4w8gERfQ59Cvi1U=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776679659; c=relaxed/simple;
-	bh=8tDeo6TW+INo9YjRfWa3uUVdlSdJmtEHYXLa8et7eD0=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=jCAa4g+KYc1RsFAxaCux9NgKLsP2EGiyPz20PGIZaSbKiZspuKhbwatjO8gLkQbv5dOParNEVcjvxqhG5JGC21cBiWJkZLNOHy6YISSczkc0dhbeWuzrgw/5StfH+3tL09ox5JSHwwiAM6a0BjqGaWURpSySerQASHGJtNqMoy8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=iqtLFLnP; arc=none smtp.client-ip=45.254.49.207
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D31C33947B8;
+	Mon, 20 Apr 2026 10:14:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.38
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776680066; cv=fail; b=b0k8ZzWbuFLNDqfYNahiT7SXGncDV85XbkgTVCn2a3m1aOPiUFm9E/z0+eZX7zkyblhAfubSJEbxXESgM95a1bDCwxqo7QBUipBjjiIcoF+0VOQacH6VvSda7kkbIZN2v0M4w1g9ZMFG1umVnd4P5onHDHRIYWolVrUSppF+odo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776680066; c=relaxed/simple;
+	bh=2I2O7pB0hNHQvDPmuizEXfkb4q1swqYw5Cfpo2Vz2Gc=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=UWnHWJEOtwqyLNs/GTl1ODIaqgbEQL8JZ8V7hZLbBaBtIlxF54gUoOHUvTuXZBGURD9xl/l4jqY+53tDWm2xtCuar28knxNfjQAw2LUG0tDt2fvSutdX8eRamcszwmhODasyPhFokMCcYMSZPa4BohCu+XIWj3CBti6D+e50nyw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=SatMF2Pk; arc=fail smtp.client-ip=52.101.193.38
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="iqtLFLnP"
-Received: from [172.16.12.17] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 3b641e2ae;
-	Mon, 20 Apr 2026 17:52:09 +0800 (GMT+08:00)
-Message-ID: <37904506-71ad-4284-67a6-32135a8265a6@rock-chips.com>
-Date: Mon, 20 Apr 2026 17:52:07 +0800
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="SatMF2Pk"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=E524Mzp0qHhgmPgizfgTKi4e6ykky0YZpyUpeNjP3V7m9zCmgAjh47on4xzq90TII2Mp1LZfo4KOtlqanWs3S9szlE3NYrNfnS9wBWOI1CV6pIs2yAwJ5akkaDUpji9Lsmg1n8WvrEYSRhmK98fsLsQ66aqEHf8mJLwCULnXOTgCZFn2SojoyBsLGaa0902211dPeco3dlXql3YLiWie61aRYrKk5C6bRfqJb8pjsrCP8xlM7QkxFmM4jfZeLwqA4cGlWqEkxIBjO3P8pWjOcdSXl+Y5e2kdub1K2I1kg5JnnuW3+EMRLZWwVBgE4AZ5zwC6Do1AM1tsL/MbJEO+9g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=XwToyZvlhSoMGHnBqEKT4cVRX5gES4fbPZTLCxJFUBY=;
+ b=WZnszWmzQOik4KGkZ6E7x8qFOQvEJCPGmaoueMOLEEDF2ckqV0++8/zg+Cjp2pXCP1zzm0XFE8MGgxBmPqXIx0xA3M3O3PgXYVfTLLsAUP4eQIlvaicBzK+1ckd8HoQ+y+ZkLkjdE/nLiYB+USbsHhaQrWDV01j8i+gM6nUBk6V+qtFitvrO5KTe4ngD2vo3DLIB4ze5W7I5uTaxssI3L9cEP4yT30oduA+Xu1owxAtN1H/9fb4CMTDk0KFIF4Wz4sg563fLnotKfBZVPNiBJq5L7Wy/FL/3cC9corxep1dpAOaxO9MkvW4R4VAsqiopdP6qmAx7AEKCrM+lNz5m0Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.118.232) smtp.rcpttodomain=posteo.de smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XwToyZvlhSoMGHnBqEKT4cVRX5gES4fbPZTLCxJFUBY=;
+ b=SatMF2PkQQTk5GH1xRyTcUfZM7pxIKpuDS2K34vYSoiD6lm2xc2oGYtanewxfJ31kcMtUVZqJzupyPx03yV3EWJSx3jnOwEJYtswf+fmKEo2hKi37mH5k30rSRrogyf2mgh57nDd9uRQPLMq0OBfQUloeGMPf2IY+foW8YWT2O0F1w3/CzW+rBYmfMoATQMo2iDZI/Wy+shryj2miWBnP1hYFDEiwGXrc3GngVv2B5fP5tftYVn68ANcqMMqu5m2NoYPlpNiYh2zZjxBIewXa1zBQ3bYExMdAcu0ISSI3tH9hamnXykDUj309UcOOUUQs8SpKJuLDmhUL+pOpS7boQ==
+Received: from BN9PR03CA0471.namprd03.prod.outlook.com (2603:10b6:408:139::26)
+ by SA1PR12MB9489.namprd12.prod.outlook.com (2603:10b6:806:45c::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.15; Mon, 20 Apr
+ 2026 10:14:18 +0000
+Received: from BN1PEPF00005FFE.namprd05.prod.outlook.com
+ (2603:10b6:408:139:cafe::e4) by BN9PR03CA0471.outlook.office365.com
+ (2603:10b6:408:139::26) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9791.48 via Frontend Transport; Mon,
+ 20 Apr 2026 10:14:17 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.232) by
+ BN1PEPF00005FFE.mail.protection.outlook.com (10.167.243.230) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9791.48 via Frontend Transport; Mon, 20 Apr 2026 10:14:17 +0000
+Received: from drhqmail202.nvidia.com (10.126.190.181) by mail.nvidia.com
+ (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 20 Apr
+ 2026 03:14:06 -0700
+Received: from drhqmail202.nvidia.com (10.126.190.181) by
+ drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.20; Mon, 20 Apr 2026 03:14:05 -0700
+Received: from inno-dell (10.127.8.12) by mail.nvidia.com (10.126.190.181)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Mon, 20 Apr 2026 03:13:59 -0700
+Date: Mon, 20 Apr 2026 13:13:56 +0300
+From: Zhi Wang <zhiw@nvidia.com>
+To: Alexandre Courbot <acourbot@nvidia.com>
+CC: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <dakr@kernel.org>, <aliceryhl@google.com>,
+	<bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
+	<boqun@kernel.org>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
+	<lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
+	<markus.probst@posteo.de>, <cjia@nvidia.com>, <smitra@nvidia.com>,
+	<ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
+	<targupta@nvidia.com>, <joelagnelf@nvidia.com>, <jhubbard@nvidia.com>,
+	<kjaju@nvidia.com>, <zhiwang@kernel.org>
+Subject: Re: [PATCH v3 1/1] rust: pci: add extended capability and SR-IOV
+ support
+Message-ID: <20260420131356.189e7209@inno-dell>
+In-Reply-To: <DHRTUAF52GNI.1J98TSAG1LS6Q@nvidia.com>
+References: <20260409185254.3869808-1-zhiw@nvidia.com>
+	<20260409185254.3869808-2-zhiw@nvidia.com>
+	<DHRTUAF52GNI.1J98TSAG1LS6Q@nvidia.com>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.50; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Cc: shawn.lin@rock-chips.com, Nirmal Patel <nirmal.patel@linux.intel.com>,
- Jonathan Derrick <jonathan.derrick@linux.dev>,
- Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
- Logan Gunthorpe <logang@deltatee.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2 1/3] PCI/MSI: Add Devres managed IRQ vectors allocation
-To: phasta@kernel.org
-References: <1776392767-83668-1-git-send-email-shawn.lin@rock-chips.com>
- <1776392767-83668-2-git-send-email-shawn.lin@rock-chips.com>
- <a688f479ee522b101f02d17f9fe81c64cbe5f70d.camel@mailbox.org>
- <c2f0d971-2150-7771-f9c6-cd02f05a5441@rock-chips.com>
- <cffc558c0110ba06e26912ea10df30ea1fb288cb.camel@mailbox.org>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <cffc558c0110ba06e26912ea10df30ea1fb288cb.camel@mailbox.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9daa4df5c809cckunm46e6cb44722d77
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGRhDH1YaTxlDSEkaSx5PHk1WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=iqtLFLnPURgd2Rljdl9TnEUnMNgr2GnRFA/fcinWMgegYEVQsMUkLK85+fd9D5EB/EGZKIT/x0qX3hg7cL8IoGx749XQu74VIdJUEqQO/6ZXQmbtxsxEUPlgybue3DY38cHZirEySetusvtLwwONj0pO2Rh6blt9r0fwRmJuJ4s=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=aeH2hX/T3o4AULp7NSrL9hApAeU3fPYzglKvcRpSDPs=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN1PEPF00005FFE:EE_|SA1PR12MB9489:EE_
+X-MS-Office365-Filtering-Correlation-Id: 11fe6919-d6c6-472d-7539-08de9ec594b3
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|36860700016|7416014|376014|1800799024|56012099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	Kb9BqYyaGqPs5yoSjPhd6qvymqWXeBibWZSgLib+MvCUMU9bWw9lDmCkYWNVzO1nmR+dpqiSwFbBr3RfXdLm68okS/Kmzq3V7EC+grcZGnN9wzLmZNItNc1icghKCwOXx8//lFA0a4Uwsbvr4DBPYeLpkzsyg4QjoXjkHI3diWM7BNE7f2V2FTdt8TpmsPhH3YRx8cCdYVyC5Z4WetISmJq9ZB2VPNriNZDDquEEphhyzay75Rj+82HjuGDSjvKWWfsSmtnbI1ZkXW41keTNnDWNq3j85BxOSWHogmughP14l5UL+MTQL9BO+eRLfP/NPwFmcfoF/wcVfYaHGquT+/0KBENk3a44PxecgfV7+/Ml+vicgPadeW8OkpR0cGmK17/H2YvRi9vwDW8eLzGswJXYo4+6k2wJNVUctPBhTMPjg6npCtk4DEr5AwvnH4Ah7ZpT9y3f1ytdIqPm6HndNYzz44Pa7h5NmOn0aHvUqwASyTJtTjtnHG4SyKvh2fXcYLcj41GtUay5tsGGTvqa8dC6P9EIrKpyua5mKnQj2QszfomIUgB/P+ZG/yVsuonrQC50cglBwqL3F0ZBv1UBO9LR3BJ0c7CTYdDRLifoCyRtrnV/wSB67FKEJd/KKVx+gHA9qMh96vXycPy8nCpKGapLh/LDvWNth8oSKlS44f8wsVLuZo+r+hQCO8TqEuSMvMySfDBzCwPQzSsufmGVvjrqgS8vk4vUrW2lsMnzSnfN+JkMRhDS8/oBvmRMvesbTbHZxiYhn9guUWt7enO8lQ==
+X-Forefront-Antispam-Report:
+	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(36860700016)(7416014)(376014)(1800799024)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	No4XNhKNEWNNkGvcnS1UZN8EhNDmElkiiyNxDa+B6VlrTAr2QZoghIEErxLI9ulrS3h8mWEEpMm7T0OCdshhGXdSGQzEs9PVUMSFq4x474lTLvFO0Cj3AXNDB8Q4kkqb39yyVMpIknGgXmAOKq1z0sRcA0quhW324XGnm6LrvX/1TmhK6jsjKUP0S54OJOZSQ+Kbdf6OoCrtzWfqN2KxRQxUU75TDyQYL3TF1tNy1vC9Q3HwRoApnFhW9aRAxb2gyIrPOMXYmKpenc4Z5qQug7bSXDAhWQyRK4fKU21I3fS1+ojU+UEhbGt+p58rNpEyDB6rvxZB3vYTAk13EeqcNIkHYIw/SCHh9FMNai9sXnnYtdRS+i7I27uD9mbVQB+a/YzfzpY2JQQ2Ru+SaHS/xKNg7SJ7VINrY6XJthDPQZRlE0jjpX5I/B+PF0a6ygij
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Apr 2026 10:14:17.1793
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 11fe6919-d6c6-472d-7539-08de9ec594b3
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BN1PEPF00005FFE.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB9489
 
-在 2026/04/20 星期一 17:28, Philipp Stanner 写道:
-> On Fri, 2026-04-17 at 17:33 +0800, Shawn Lin wrote:
->> Hi Philipp
->>
->> 在 2026/04/17 星期五 16:44, Philipp Stanner 写道:
->>> Hello Shawn,
->>>
->>> On Fri, 2026-04-17 at 10:26 +0800, Shawn Lin wrote:
->>>> pcim_alloc_irq_vectors() and pcim_alloc_irq_vectors_affinity() are created for
->>>> pci device drivers which rely on the devres machinery to help cleanup the IRQ
->>>> vectors.
->>>
->>> The commit message doesn't really detail *why* you add this. The rule
->>> of thumb is to first describe the problem and then describe roughly
->>> what the patch does about the problem. That also makes it easier for
->>> reviewers to quickly match code to intent
->>>
->>
->> Sure, will do.
->>> `
-> 
-> […]
-> 
->>>> +int pcim_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
->>>> +				   unsigned int max_vecs, unsigned int flags,
->>>> +				   struct irq_affinity *affd)
->>>> +{
->>>> +	dev->is_msi_managed = true;
->>>
->>> Do you have to set this to 'false' again? If so, who does that? A small
->>> comment here could describe that.
->>>
->>>
->>> Note that for your cleanup, in the long run, once all users are ported,
->>> these helper bools should not be necessary anymore because devres
->>> already stores all the relevant state.
->>>
->>> Likewise, I would like to remove the "is_managed" and "is_pinned"
->>> flags, but that can only be done once all API users are ported.
->>>
->>> If this is the case with 'is_msi_managed', too, there should be a
->>> cleanup TODO comment in my opinion. "This can be removed once…"
->>>
->>
->> My initial plan was to make it into 3 steps:
->> (1) Set is_msi_managed true via pcim_alloc_irq_vectors*();
->> (2) All pcim_enable_device() + pci_alloc_irq_vectors*() users are ported
->> (3) remove is_msi_managed assignment‌ from pcim_enable_device()
->>
->> As you could see, on step 1 & 2, pcim_enable_device() +
->> pci_alloc_irq_vectors*() users uncondictionly set is_msi_managed true.
-> 
-> pcim_enable_device() does not set that flag (if you meant that; I'm not
-> sure).
-> 
+On Mon, 13 Apr 2026 15:52:28 +0900
+"Alexandre Courbot" <acourbot@nvidia.com> wrote:
 
-My bad, I meant pcim_enable_device() sets is_managed, so
-pcim_setup_msi_release() would skip the check of `if 
-(!pci_is_managed(dev) || dev->is_msi_managed)`, thus is_msi_managed is 
-set at the end.
+> Hi Zhi,
+>=20
+> On Fri Apr 10, 2026 at 3:52 AM JST, Zhi Wang wrote:
+> <snip>
+> > +/// An extended PCI capability that implements [`Io`].
+> > +///
+> > +/// # Examples
+> > +///
+> > +/// ```no_run
+> > +/// use kernel::pci::{
+> > +///     self,
+> > +///     ExtSriovCapability, //
+> > +/// };
+> > +/// use kernel::io::Io;
+> > +///
+> > +/// fn probe_sriov(pdev: &pci::Device<kernel::device::Core>) ->
+> > Result<(), kernel::error::Error> { +///     let config =3D
+> > pdev.config_space_extended()?; +///     let sriov =3D
+> > ExtSriovCapability::find(&config)?; +///
+> > +///     let total_vfs =3D kernel::io_read!(&sriov, .total_vfs);
+> > +///     let vf_offset =3D kernel::io_read!(&sriov, .vf_offset);
+> > +///     let bar0 =3D kernel::io_read!(&sriov, .vf_bar[0]);
+> > +///     kernel::io_write!(&sriov, .num_vfs, 4u16);
+> > +///     let bar0_64 =3D sriov.read_vf_bar64(0)?;
+> > +///
+> > +///     Ok(())
+> > +/// }
+> > +/// ```
+> > +///
+> > +/// # Invariants
+> > +///
+> > +/// `ptr` is within the device's extended configuration space at a
+> > valid +/// capability. For sized `T`, the region is at least
+> > `size_of::<T>()` bytes. +pub struct ExtCapability<'a, T: ?Sized +
+> > KnownSize =3D Region<0>> {
+> > +    config: &'a ConfigSpace<'a, Extended>,
+> > +    ptr: *mut T,
+> > +} =20
+>=20
+> This strongly looks like this is reinventing `io::View`. :) Even the
+> internals look similar. Can you check whether `io::View` can replace
+> this type? This would remove all the macro business and impl blocks
+> and simplify this patch considerably.
+>=20
 
-> The flag is already set by pcim_setup_msi_release(). Why do you need a
-> second place to set it?
-> 
->> So they don't have to set it false again. At least it keeps the previous
->> behaviour. For potential new pci_enable_device() +
->> pcim_alloc_irq_vectors*() users before all the convertion is done, It's
->> indeed a problem here.
-> 
-> The thing is that I believe that this should be orthogonal.
-> 
-> 1. You'd keep the old functions exactly as they are now.
-> 
-> 2. Then, you add new pcim_irq_vector() et. al. functions. They won't
-> need any flag, because the managed state is stored by the devres
-> backend.
-> 
-> 3. You port a few users of the pcim_enable_device() + alloc_irq()
-> function combination
-> 
-> 4. Once you have ported all of them, you can completely remove the
-> is_managed flag and related devres functionality from the old
-> interfaces.
-> 
-> 
-> I don't see why new code should interact with that flag mechanism. That
-> seems incorrect to me. Can you explain to me why you think it's
-> necessary?
-> 
-> 
+Thanks for catching this. This should be updated with Gary's patches
+posted in the mailing list. Will address this in V4.
 
-I was thinking if we need to unset the flag but thinking more about it,
-the answer seems no, you're right, the devres backend manages it
-properly.
+> > +
+> > +impl<T: ?Sized + KnownSize> Io for ExtCapability<'_, T> {
+> > +    type Type =3D T;
+> > +
+> > +    #[inline]
+> > +    fn as_ptr(&self) -> *mut T {
+> > +        self.ptr
+> > +    }
+> > +}
+> > +
+> > +macro_rules! impl_ext_cap_io_capable {
+> > +    ($ty:ty) =3D> {
+> > +        impl<T: ?Sized + KnownSize> IoCapable<$ty> for
+> > ExtCapability<'_, T> {
+> > +            #[inline]
+> > +            unsafe fn io_read(&self, address: *mut $ty) -> $ty {
+> > +                // SAFETY: The caller guarantees `address` is
+> > within bounds of
+> > +                // this capability, which is within the config
+> > space.
+> > +                unsafe { self.config.io_read(address) }
+> > +            }
+> > +
+> > +            #[inline]
+> > +            unsafe fn io_write(&self, value: $ty, address: *mut
+> > $ty) {
+> > +                // SAFETY: The caller guarantees `address` is
+> > within bounds of
+> > +                // this capability, which is within the config
+> > space.
+> > +                unsafe { self.config.io_write(value, address) }
+> > +            }
+> > +        }
+> > +    };
+> > +}
+> > +
+> > +impl_ext_cap_io_capable!(u8);
+> > +impl_ext_cap_io_capable!(u16);
+> > +impl_ext_cap_io_capable!(u32);
+> > +
+> > +impl<'a> ExtCapability<'a> {
+> > +    /// Base offset of this capability in configuration space.
+> > +    #[inline]
+> > +    pub fn offset(&self) -> usize {
+> > +        self.ptr.addr()
+> > +    }
+> > +
+> > +    /// Size of this capability region in bytes.
+> > +    #[inline]
+> > +    pub fn size(&self) -> usize {
+> > +        KnownSize::size(self.ptr)
+> > +    }
+> > +
+> > +    /// Cast to a typed capability, checking that the region is
+> > large enough.
+> > +    pub fn cast_sized<U>(self) -> Result<ExtCapability<'a, U>> { =20
+>=20
+> This allows for any cast, including invalid ones, as long as `U` fits.
+> While not unsafe, this is still incorrect - I don't see any reason to
+> make this public, which could be a way to mitigate this.
+>=20
 
-Thanks, Philipp!
+Agreed. With the io::View rework above, cast_sized is gone. The size
+check can be done internally in find_sriov().
 
->>
->> Does something below make sense to you?
->>
->> int pcim_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int
->>                                       min_vecs, unsigned int max_vecs,
->>                                       unsigned int flags,
->>                                       struct irq_affinity *affd)
->> {
->> 	int nvecs;
->> 	bool already_set_msi_managed = dev->is_msi_managed;
->>
->> 	if (!already_set_msi_managed)
->> 		dev->is_msi_managed= true;
->>
->> 	nvecs = pci_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs,
->> 					      flags, affd);
->> 	if (nvecs < 0 && !already_set_msi_managed)
->> 		dev->is_msi_managed = false;
-> 
-> Hmm, not sure. See above.
-> 
-> 
-> P.
-> 
->>
->> 	return nvecs;
->> }
->>
->>
->> Thanks.
->>
->>> (But I'm not super deep in PCI devres since many months; but I think I
->>> remember that not properly dealing with that flag state even caused us
->>> a bug or two in the past)
->>>
->>>
->>> Regards,
->>> Philipp
->>>
->>>> +	return pci_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs,
->>>> +					      flags, affd);
->>>> +}
->>>> +EXPORT_SYMBOL(pcim_alloc_irq_vectors_affinity);
->>>> +
->>>> +/**
->>>>     * pci_irq_vector() - Get Linux IRQ number of a device interrupt vector
->>>>     * @dev: the PCI device to operate on
->>>>     * @nr:  device-relative interrupt vector index (0-based); has different
->>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>>> index 2c44545..3716c67 100644
->>>> --- a/include/linux/pci.h
->>>> +++ b/include/linux/pci.h
->>>> @@ -1770,6 +1770,12 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
->>>>    				   unsigned int max_vecs, unsigned int flags,
->>>>    				   struct irq_affinity *affd);
->>>>    
->>>> +int pcim_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
->>>> +			  unsigned int max_vecs, unsigned int flags);
->>>> +int pcim_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
->>>> +				   unsigned int max_vecs, unsigned int flags,
->>>> +				   struct irq_affinity *affd);
->>>> +
->>>>    bool pci_msix_can_alloc_dyn(struct pci_dev *dev);
->>>>    struct msi_map pci_msix_alloc_irq_at(struct pci_dev *dev, unsigned int index,
->>>>    				     const struct irq_affinity_desc *affdesc);
->>>> @@ -1812,6 +1818,22 @@ pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
->>>>    					      flags, NULL);
->>>>    }
->>>>    
->>>> +static inline int
->>>> +pcim_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
->>>> +			       unsigned int max_vecs, unsigned int flags,
->>>> +			       struct irq_affinity *aff_desc)
->>>> +{
->>>> +	return pci_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs,
->>>> +					      flags, aff_desc);
->>>> +}
->>>> +static inline int
->>>> +pcim_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
->>>> +		      unsigned int max_vecs, unsigned int flags)
->>>> +{
->>>> +	return pcim_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs,
->>>> +					      flags, NULL);
->>>> +}
->>>> +
->>>>    static inline bool pci_msix_can_alloc_dyn(struct pci_dev *dev)
->>>>    { return false; }
->>>>    static inline struct msi_map pci_msix_alloc_irq_at(struct pci_dev *dev, unsigned int index,
->>>
->>>
-> 
-> 
+> > +        if self.size() < core::mem::size_of::<U>() {
+> > +            return Err(EINVAL);
+> > +        }
+> > +
+> > +        // INVARIANT: `self` already satisfies the invariant (ptr
+> > is within extended config
+> > +        // space at a valid capability), and the size check above
+> > guarantees the region is at
+> > +        // least `size_of::<U>()` bytes.
+> > +        Ok(ExtCapability {
+> > +            config: self.config,
+> > +            ptr: core::ptr::without_provenance_mut(self.offset()),
+> > +        })
+> > +    }
+> > +}
+> > +
+> > +impl ConfigSpace<'_, Extended> {
+> > +    /// Finds an extended capability by ID, returning an untyped
+> > [`ExtCapability`].
+> > +    pub fn find_ext_capability(&self, cap: ExtCapId) ->
+> > Result<ExtCapability<'_>> {
+> > +        let offset =3D usize::from(
+> > +            // SAFETY: `self.pdev` is valid by the type invariant
+> > of `ConfigSpace`.
+> > +            unsafe {
+> > +
+> > bindings::pci_find_ext_capability(self.pdev.as_raw(),
+> > i32::from(cap.as_raw()))
+> > +            },
+> > +        );
+> > +
+> > +        if offset =3D=3D 0 {
+> > +            return Err(ENODEV);
+> > +        }
+> > +
+> > +        Ok(self.make_ext_capability(offset))
+> > +    }
+> > +
+> > +    /// Finds the next extended capability with `cap` after
+> > `start`.
+> > +    pub fn find_next_ext_capability(&self, start: u16, cap:
+> > ExtCapId) -> Result<ExtCapability<'_>> { =20
+>=20
+> This `start` offset can be anything and potentially lead to invalid
+> results being returned (I don't know what the C binding does, but
+> assuming the worst for safety).
+>=20
+> Listing capabilities should be done through an iterator as it provides
+> all their benefits to users. I understand we also want a `find` API to
+> look for a specific capability and that an iterator is not needed for
+> this, but if we end up providing a way to list them, it should be
+> through an iterator.
+>=20
+> In any case, this method seems to be unused, so you can safely drop it
+> for now.
+>=20
+
+Dropped in v4.
+
+> > +        let offset =3D usize::from(
+> > +            // SAFETY: `self.pdev` is valid by the type invariant
+> > of `ConfigSpace`.
+> > +            unsafe {
+> > +                bindings::pci_find_next_ext_capability(
+> > +                    self.pdev.as_raw(),
+> > +                    start,
+> > +                    i32::from(cap.as_raw()),
+> > +                )
+> > +            },
+> > +        );
+> > +
+> > +        if offset =3D=3D 0 {
+> > +            return Err(ENODEV);
+> > +        }
+> > +
+> > +        Ok(self.make_ext_capability(offset))
+> > +    }
+> > +
+> > +    fn make_ext_capability(&self, offset: usize) ->
+> > ExtCapability<'_> {
+> > +        let size =3D self.calculate_ext_cap_size(offset);
+> > +
+> > +        let ptr =3D core::ptr::slice_from_raw_parts_mut::<u8>(
+> > +            core::ptr::without_provenance_mut(offset),
+> > +            size,
+> > +            // CAST: `Region<0>` is a DST like `[u8]`, so this
+> > pointer cast preserves metadata.
+> > +        ) as *mut Region<0>;
+> > +
+> > +        // INVARIANT: `offset` was returned by
+> > `pci_find_ext_capability` / =20
+>=20
+> This method cannot make assumptions about the origin of its arguments
+> without being `unsafe`, as its correct behavior depends on the
+> goodwill of the caller. Given that we will drop
+> `find_next_ext_capability`, the code can be rolled into
+> `find_ext_capability` which is now the only user.
+>=20
+
+Will inline it into find_ext_capability in v4.
+
+> > +        // `pci_find_next_ext_capability`, which guarantees it
+> > points to a valid capability
+> > +        // within the extended configuration space. `size` is
+> > bounded by the next capability
+> > +        // offset or the end of the configuration space.
+> > +        ExtCapability { config: self, ptr }
+> > +    }
+> > +
+> > +    fn calculate_ext_cap_size(&self, offset: usize) -> usize { =20
+>=20
+> This method lacks documentation.
+>=20
+> > +        let header =3D self.try_read32(offset).unwrap_or(0);
+> > +        // SAFETY: Pure bit manipulation, no preconditions.
+> > +        // CAST: The next-cap pointer is a 12-bit field (max
+> > 0xFFC), always fits in `usize`.
+> > +        let next_ptr =3D unsafe { bindings::pci_ext_cap_next(header)
+> > } as usize; +
+> > +        if next_ptr > offset {
+> > +            next_ptr - offset
+> > +        } else {
+> > +            KnownSize::size(self.as_ptr()) - offset
+> > +        }
+> > +    }
+> > +}
+> > +
+> > +/// SR-IOV register layout per PCIe spec (64 bytes starting at cap
+> > offset). +#[repr(C)]
+> > +pub struct ExtSriovRegs {
+> > +    /// Extended capability header.
+> > +    pub header: u32,
+> > +    /// SR-IOV capabilities.
+> > +    pub cap: u32,
+> > +    /// SR-IOV control.
+> > +    pub ctrl: u16,
+> > +    /// SR-IOV status.
+> > +    pub status: u16,
+> > +    /// Initial VFs.
+> > +    pub initial_vfs: u16,
+> > +    /// Total VFs.
+> > +    pub total_vfs: u16,
+> > +    /// Number of VFs.
+> > +    pub num_vfs: u16,
+> > +    /// Function dependency link.
+> > +    pub func_dep_link: u16,
+> > +    /// First VF offset.
+> > +    pub vf_offset: u16,
+> > +    /// VF stride.
+> > +    pub vf_stride: u16,
+> > +    _reserved: u16,
+> > +    /// VF device ID.
+> > +    pub vf_device_id: u16,
+> > +    /// Supported page sizes.
+> > +    pub supported_page_sizes: u32,
+> > +    /// System page size.
+> > +    pub system_page_size: u32,
+> > +    /// VF BARs (BAR0=E2=80=93BAR5).
+> > +    pub vf_bar: [u32; 6],
+> > +    /// VF migration state array offset.
+> > +    pub migration_state: u32,
+> > +}
+> > +
+> > +/// SR-IOV capability. See [`ExtCapability`] for usage.
+> > +pub type ExtSriovCapability<'a> =3D ExtCapability<'a, ExtSriovRegs>;
+> > +
+> > +impl ExtCapability<'_, ExtSriovRegs> {
+> > +    /// Find the SR-IOV capability, or `ENODEV` if not present.
+> > +    #[inline]
+> > +    pub fn find<'a>(
+> > +        config: &'a ConfigSpace<'_, Extended>,
+> > +    ) -> Result<ExtCapability<'a, ExtSriovRegs>> {
+> > +        config.find_ext_capability(ExtCapId::Sriov)?.cast_sized()
+> > +    } =20
+>=20
+> This method looks like it belongs to `ConfigSpace`, and should be
+> generic. Something like
+>=20
+>   impl<'a> ConfigSpace<'a, Extended> {
+>     pub fn find_ext_capability::<C: ExtCapability>(&self)=20
+>       -> Result<io::View<...>> =20
+>   }
+>=20
+> If we use `io::View` to return capabilities, we can recycle the
+> `ExtCapability` name for a trait that provides the information
+> required for `find_ext_capability` to work properly, like the
+> associated constant for the capability ID. In this patch, it would be
+> implemented on `ExtSriovRegs`, providing the projection of the view
+> through `C`.
+>=20
+> This also opens the way for a `find_capability` method that handles
+> normal capabilities and is available to both variants of
+> `ConfigSpace`. I am not saying this needs to be done in this patch
+> though.
+>
+
+I've moved find to ConfigSpace::find_sriov() for now. I agree the
+trait-based generics direction makes sense, but with only SR-IOV as a
+user today I'd prefer to defer that to a follow-up when we have a
+second capability type. :)
+
+> > +
+> > +    /// Reads a 64-bit VF BAR from two consecutive 32-bit slots.
+> > +    #[inline]
+> > +    pub fn read_vf_bar64(&self, bar_index: usize) -> Result<u64> {
+> > +        if bar_index >=3D 5 { =20
+>=20
+> Why is this value hardcoded? If this is correct, let's make it a
+> constant with an informative name (and possibly a comment justifying
+> its value).
+>=20
+
+Sure. I changed it to use PCI_SRIOV_NUM_BARS.=20
+
+> > +            return Err(EINVAL);
+> > +        }
+> > +        let low =3D crate::io_read!(self, .vf_bar[bar_index]?);
+> > +        let high =3D crate::io_read!(self, .vf_bar[bar_index + 1]?);
+> > =20
+>=20
+> Don't we want to check whether the bar in question is actually a
+> 64-bit BAR?
+>=20
+> I wonder whether this also doesn't call for an iterator-based solution
+> returning an enum with the properly-sized BAR.
+
+Good point. I was assuming that the driver actually know its
+devcie support 64-bit bar or not. Do you prefer that we can have an
+iterator-based solution at this time? I think it makes the code looks
+nicer though. :)
+
+Z.
