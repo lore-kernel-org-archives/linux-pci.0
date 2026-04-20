@@ -1,174 +1,175 @@
-Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010056.outbound.protection.outlook.com [52.101.201.56])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E38F241C6A;
-	Mon, 20 Apr 2026 15:30:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.56
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776699006; cv=fail; b=VX1mevjTvF3x1MnntyAzmka859rdpraBpVHbpMoRLw2EQG2NVF0Tbzyqxl+/D++9ZVEAXklv20d0jCUtKIW+8feO4+L7TLeMuVk/r5akN6ap77hoCY24nAlWddSlOrpesN418yXqzJfDJKYXrx9ZlSgtebE8CqjtK4jXVUr6k/g=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776699006; c=relaxed/simple;
-	bh=nTb19nvdjandEA6OWeFtWmuLDsbkT+f2V3schxej6qk=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=RjfMFagUB1nzz08r12bxsNMf8dOmoZGy2LbEMMBHUBbf5Bg+IoG71gF76L1wFZ1MrdKSqNe+i4Qxa2uZh1Rkov7473D647deUwbWN263AGLqCgZilonWnTr0cMVUCwQ9SecNj9f2ttGnqxfWn5AAqvIP+EznDNa3nhzELD74yo8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=vdGHzZcC; arc=fail smtp.client-ip=52.101.201.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D248B33262B;
+	Mon, 20 Apr 2026 15:45:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776699932; cv=none; b=QQh+seZfbWn19eSXXpF29emklEqzeIkmvRUWmxIB2puue7ckkQ0S6DkHWA3htxyAuO5JXa+Ygumo4InLFcNi/qYsQuhorc/CbInYyZSgFcjNwmZ/tRfLSooW2lKZ2BCJQ6tqdtjrFbdMTtS5wabPoW5Jh1ZCJPz25mIT7Sp7XqY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776699932; c=relaxed/simple;
+	bh=E4pRxTPRrQmp7ZXujCObeaSRgz5fXjXQsqFdenkuzDg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=osE5C6ChEA+i3V8/SQCPJMsm7X4Znrf96njISZpsz8f3fNrXhmoNpqMbjEFzuRNN+N7mJKpU0Fy4pSp6ib2LTMinGeBap3q75oYK6Zjn/mOvqIfvPoZpK6rF3rb/tuHnXwD0ch2vxmOTOs20a7zQdp+oUK+cgC3W9i7GAP2nEIY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=BnjKsRD/; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="vdGHzZcC"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=t4O3+ulsWge/UD9QGpZuk8DnFe0A4yvKcSCMKfKkaNszgBiXpQ0RKQA9Kmy8HjuUSz+d9Keca7rz5esNdUZZ18P/214q+VLBBKpfi5DYjMHB/vLXLBRlouQ98FJNgFa3IpUsAOsMciEzTqE+7bVrBiG0ExPog/e8ztOgGPiy7RXTMJ86JMkaOZomPKBB663bUn+UJlOwavT0Mg6WrBruBpR0WVz2kIslyn8T8BdYU5Q/Bx4G2dHNtvzrWeZk75hzKFFPsHj61wxvIJoiYan6OhYkFHsVmYqxMKQWvsL3rUjW+kxNbX/7FZlPfGFp6mG9bX2W6bPR41dJ1HzTFo0DKQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VOcXcgmiAiFVOzVltynIQkZ6Mp5zWWEcvgnIjueq2kE=;
- b=GdVxMJdIWRuUyq8f4ne78d0UGa4FGZlFvjp8GlT/CZZWVuf5mKy6DqZukItncj2zLx3NIsaSq1XFXbwgeQI802tY68SU/XPJaIdTJEM66Md1ouoq4c8y2ucXjpHVVTJ4R01165bIocPhY98OW1btfqttzZkkxU9QP5FJbUaPglgWghdLrcDTHSM23b41SLnPC5Ql3mCFx6LqIfC2nQTHFdPeA4tlguTBqWYy3bnLpDbH+Skp9o+L1ztzqEjMNaeC7534yQtZrZgxVxwFaZs5Cdn5+forMiWnMi9mz30sym0h8wqh4sM7E6FeXyPBeuehhTzNgE6NxHYe0fplSkuqtg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VOcXcgmiAiFVOzVltynIQkZ6Mp5zWWEcvgnIjueq2kE=;
- b=vdGHzZcCbiuiGkCI1wPCwXaASwEnJHYcd6TP6wokkhLwB27x675xQtPrg4PYU7rWjcamx0XIQwaN1uX+Ya+5MtS4Fo75mqGToeuogc7LDMwtqIkCQmYenJkjcGvZ3yjqQRUDSOf4owttXf/QKUP9TKvA3QFZCqsB+6zZiA/yCPI=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from MW4PR12MB7357.namprd12.prod.outlook.com (2603:10b6:303:219::16)
- by SN7PR12MB8026.namprd12.prod.outlook.com (2603:10b6:806:34b::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9818.25; Mon, 20 Apr
- 2026 15:30:01 +0000
-Received: from MW4PR12MB7357.namprd12.prod.outlook.com
- ([fe80::a230:c3c8:a903:2b57]) by MW4PR12MB7357.namprd12.prod.outlook.com
- ([fe80::a230:c3c8:a903:2b57%4]) with mapi id 15.20.9846.014; Mon, 20 Apr 2026
- 15:30:01 +0000
-Message-ID: <4412b1f0-70a0-4581-8272-464cacf6d5e2@amd.com>
-Date: Mon, 20 Apr 2026 10:29:58 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 03/23] dmaengine: sdxi: Add PCI initialization
-To: Frank Li <Frank.li@nxp.com>
-Cc: Vinod Koul <vkoul@kernel.org>, Wei Huang <wei.huang2@amd.com>,
- Mario Limonciello <mario.limonciello@amd.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Jonathan Cameron <jonathan.cameron@huawei.com>,
- Stephen Bates <Stephen.Bates@amd.com>, PradeepVineshReddy.Kodamati@amd.com,
- John.Kariuki@amd.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-References: <20260410-sdxi-base-v1-0-1d184cb5c60a@amd.com>
- <20260410-sdxi-base-v1-3-1d184cb5c60a@amd.com>
- <aeXJhhPgfGjGZa__@lizhi-Precision-Tower-5810>
-Content-Language: en-US
-From: "Lynch, Nathan" <nathan.lynch@amd.com>
-In-Reply-To: <aeXJhhPgfGjGZa__@lizhi-Precision-Tower-5810>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: CH0PR03CA0187.namprd03.prod.outlook.com
- (2603:10b6:610:e4::12) To MW4PR12MB7357.namprd12.prod.outlook.com
- (2603:10b6:303:219::16)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="BnjKsRD/"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63K84NOK1315637;
+	Mon, 20 Apr 2026 15:45:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:sender:subject:to; s=pp1;
+	 bh=j/Yy/BcjOlWutxPpKZ3uZ3CWZ/zwdwMrV75ynpcqHwY=; b=BnjKsRD/HhHT
+	4wrOKZa9QknWLLBvQZzoMCccxon4vohS3SJyIpAuZ3SIH1yje/ze0Mg8/qaAnRu/
+	ypX6b0XrsY6fizAmfxg2jrJBpydDDHvyeKanCahvky1BidVdwohcgRI7OcNyF7V4
+	aDSDNS9b63vB4lfz4TQ9OC0lGYFlPbNqMarBhGKtNwYxbk9F7qgFBH81rdzdqhnc
+	lxuoG3g1ZeO8JCVnyQJle+oFrxquHZ4YlYt66TpRhgOJ87NP3enKWd14dMSwzUBg
+	4O0pbufx4HUjqW9UWgJXrBV62aA2iUEktlOQ26sIIY/EjN4ew0+7Zv7dPj+m4EZj
+	lF2uZcLy8A==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dm2k6fupd-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 20 Apr 2026 15:45:06 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 63KFZRNo002996;
+	Mon, 20 Apr 2026 15:45:05 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4dmnsgw8xe-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 20 Apr 2026 15:45:05 +0000 (GMT)
+Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
+	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 63KFj0Z151511778
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 20 Apr 2026 15:45:00 GMT
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 425052004B;
+	Mon, 20 Apr 2026 15:45:00 +0000 (GMT)
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2E1F920049;
+	Mon, 20 Apr 2026 15:45:00 +0000 (GMT)
+Received: from p1gen4-pw042f0m (unknown [9.52.223.163])
+	by smtpav06.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Mon, 20 Apr 2026 15:45:00 +0000 (GMT)
+Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.1)
+	(envelope-from <bblock@linux.ibm.com>)
+	id 1wEqnz-00000002hi8-3kSI;
+	Mon, 20 Apr 2026 17:44:59 +0200
+Date: Mon, 20 Apr 2026 17:44:59 +0200
+From: Benjamin Block <bblock@linux.ibm.com>
+To: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, helgaas@kernel.org,
+        sebott@linux.ibm.com, schnelle@linux.ibm.com, linux@roeck-us.net,
+        lukas@wunner.de, stable@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-xe@lists.freedesktop.org, matthew.brost@intel.com,
+        michal.wajdeczko@intel.com, piotr.piorkowski@intel.com,
+        dtatulea@nvidia.com, mani@kernel.org, kbusch@kernel.org,
+        lkml@mageta.org, alifm@linux.ibm.com, julianr@linux.ibm.com,
+        ionut_n2001@yahoo.com, sunlightlinux@gmail.com
+Subject: Re: [PATCH v11 2/2] PCI: Fix AB-BA deadlock between device_lock and
+ pci_rescan_remove_lock in remove_store
+Message-ID: <20260420154459.GA2707369@p1gen4-pw042f0m>
+References: <20260326083534.23602-1-ionut.nechita@windriver.com>
+ <20260326083534.23602-3-ionut.nechita@windriver.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MW4PR12MB7357:EE_|SN7PR12MB8026:EE_
-X-MS-Office365-Filtering-Correlation-Id: d2149e77-cab1-4d3f-b8aa-08de9ef1b038
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|1800799024|366016|22082099003|18002099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	ssz7tjFj8nMx83aiV34VfH+oqmiCExBn6zcN4iyWFmUfesD0W8IpslGbbUR3NcLttYmz8vmDYk/quRbP/jufuKGS1XaLCiia5pZ79WXLJyAhaIsV1XdZ7IQ4gnpkKAJutfwQeCSzJ+RVVPSlam27e+v6zkaoGbUjHVwF/e3U4f6WG4fBr2YW1N5w84kxhXBpkvehA4FlTjPOA4JEodo3vanto+6wgbKwGEBHAAEx6wgTf4x79jeltHeyrF6MHVGqEksDLu3nbffapFaZ1/EcRuWGkYP0UwXxK49YmsHKXVKWUFlIhAjTMfElLSigjkguQG/M4azrUCvsrvL0zg3nIVy6hY0ip+59WvQ6dB8YCvIb3K0OHLXkq3+a9iuNHy1ZO0tC7lBZhw1ZrRl8aCvPTgGNIoZT1WjtX0RBCeRZxPIMsaSTaRIBWCq4/+XyXyIdZFScIUvPWxt7R4RSX7Asw3YV14d+7KNgm4Fl+QKUY5xK2rnt/IW+bqEWf24S+MKHPsufDofjPhGgc4Xs5T61FJOS/zX//OBdeXt73c36RVbG23R+wglJd2/lgZuakRky6dLnabTUZpYACKdvAxUU0mbNT6NE2bxbKTROxhOXqzdxyicRyvC+wTzQkDXT9ppft9GpFZ0J+6PdzoChGr+61Gcw6lYJfoJanBqUOgRRo+vEgW0roiqN0nskwMUb0amQDjqBbZVSehpJAHbAS2iSulIufiUfbwwvCtXENz+29H8=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW4PR12MB7357.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?Rkt5dFFubWVSK3h3N3lCMWd4cXlhTWs4eWQvN1Jza3RnWG5kM3JmZmd2U1pY?=
- =?utf-8?B?UzZvc0JMdFRhNWozdU1lVWRKMGRjUVZyK0tCaU50TTg4dVlESXZ3bVhDZzR1?=
- =?utf-8?B?YW50QUZQM2VnMTVxOXpCY1R1cVBvUjJubnZGN0c1ajM5TUFtandrcmF5NWxE?=
- =?utf-8?B?OXFHNzF2UDM0YWtxdG04QWJaclRhakYwckdRaE54TG81VzZyWmpCNXNpSHh1?=
- =?utf-8?B?eEdwU1hNOUtNMmRHMGFhQnY2eVNWUkdNR0cvWUZJWUJLRWFheWxzWGdXSVlJ?=
- =?utf-8?B?aU9vTHVxTjR3OGVGZTdRS2lFMjhCKzRFWkYzTlZXSXF4WGIyOThqL2ZWT1lX?=
- =?utf-8?B?YWFIRmRWZkpVSC9qWlgrbWhub3ZPdy9aS296T3JvT3JtQmRSbCtLK2Mvd2xu?=
- =?utf-8?B?WXJCRi8rU2VtV2pvWEhVL1NqMHNGZktDM2lOWksrcCtpVHo2UFI3MkMzWWVl?=
- =?utf-8?B?T0swMXlyeWpLcTVWVzE1OGZQc0RpRjRpc29hSXhJYVdLWUkvUFZ2VlFrT2s3?=
- =?utf-8?B?R3FiUGFjUWJjMk9FRnRVZmE3VHU2bktXQ2Y0bEY5Qldxd3FGZ0taejl0M1E5?=
- =?utf-8?B?RHJEKzkxMFVIOE9KMzZGWVFYeStCcGNVRXlzRktkWWVTUUMzSDJpaVI3K2pE?=
- =?utf-8?B?K1lqc1R6Q1hyVjh0SjV0NEltd0ZnZmo4azRuOTZqbTNaUWt3ZlVUNUFCYVBR?=
- =?utf-8?B?b2sxUlB5eVVPM2k4SjlQenFDeDhFaUtMRGt4aVFvUml4YzZmM3h2OVl0QnQ5?=
- =?utf-8?B?OHcvYm5LbXd4UUxvc01BQmljclg1ck9NQ3o4UjV5blY3Ymh4TnQzT0hIdHNO?=
- =?utf-8?B?RlNaZnMrRDZ1dVgvaWlKNXNXSmlWSDdhRXlLK3JMbDYycEQ2NVdlY1dhK1R3?=
- =?utf-8?B?YjNGTW9pMGtaeS9pbWkzN091eFcrTWh0bkhvNlgyaHFkMFJQenZOUGdjQmhX?=
- =?utf-8?B?VUFzT3NLdHEzaXBwYU5xcG1iNXJXT3hNM3hFNGY1UHVnWVdYUFNHdU9CSUdZ?=
- =?utf-8?B?eFZTTWJCQzRYNWUxYXVOMS96bXRaL2Q3dkhMWEhWYVRsV2poaFBJTVI4OHJm?=
- =?utf-8?B?QVhta25nclpsSFlBUVgzNHYzeHlPR1U4LzJWTkk0UTZ3U3dVOFh3ZHYyczNJ?=
- =?utf-8?B?Zk0yNmowbXdaUTVEeDNXeW5LSCtEL3J5R2V0aTFCeTg1eEF6dC9lYjZoRFJO?=
- =?utf-8?B?MXF5Y05oejBuNlpXMUZTaHB1eDc5dXBUQm13VUZLOGl5VGtEY2l6RTZwZUY1?=
- =?utf-8?B?bXV1ZTNtSVYxaXBaSWhIcGVPNFVLWCtFd21tZjZpSTZIc09wY0FuaTlvbXcw?=
- =?utf-8?B?eXJxMTMrMnlEU0ovNTlxcFk3VGtrYTI4am50eXVheWVBOUJrRVMxQnU4SG95?=
- =?utf-8?B?Z21uWUdPMXdoVVBYZ0ZHNXJ2ek5Oa0VEMVJ1NVBTVVVPSmNkazBLUTYzQzR5?=
- =?utf-8?B?V2psS1NsMFFjeFR5MjZKTFQwblF5MzhFZElldHJOV1lwSllGbzUxTzRKKzEy?=
- =?utf-8?B?VzZseVN6THJVMC9yTS9PNVhDMjZuODRPQTNhd0x6OWZUR1J6M3JKNWtuYzVR?=
- =?utf-8?B?OStVN0craUM3a2JuL3BsbWJaOURzbXRVTzhMd28wdEJZcGg3dE9pd1BmSGR3?=
- =?utf-8?B?VGZkejNWUXFXdnlvZVFPb2UyYnNIeGlKWDNMWkNiRFdBYnFtMnJzb2pLdngz?=
- =?utf-8?B?K1o5QmQ2Ynd0c2FoZDRjOU1TN1ZjNEw5cXlTSzNvSC9zUklhOHJ1ZWVGYmsz?=
- =?utf-8?B?QU4vVERZRUhmd3dzUW5ncHZzZjBtWjhkaDAvM2lQNG05WTBzY0hVUmR4WWZD?=
- =?utf-8?B?eWVGR0prZWNaZEJBaWM1WGQ4N2x1RGt0eXp5K2xUb3k3U3ZoQnlyZVhGQ1hB?=
- =?utf-8?B?SlI0N0tEbXUvZWdSN2VVblgrS0FTVVROSGp2bDNtRlhlMTJhU0JDcHZoTFZz?=
- =?utf-8?B?T3pBVE5OK1d3bkZub09tKytrUW55Z2lNU1dCdXhkRElEa1FIeGVtTHVGY3Z4?=
- =?utf-8?B?MEc2QmljaGltdERXRDNYakw4QndNeXMrSnNMNWhFanRMYy9tR1ljQVF3ZVQx?=
- =?utf-8?B?K2pjelFpQUdZU2ZSRjhzR0h4ZDRzTGVhQmZiU3dQam14cUZRb0J1Y3FhRjdw?=
- =?utf-8?B?dy9EWkFIZ29tUmJYaGNhOG15Z2NtcHUvMm1ML2ZCTlpObmRVdWdJbUhVdzE5?=
- =?utf-8?B?TTBJeSthSldFdU5FS05xV1Jmc0pWL1Axdm1qOGxsN3Yrc1hZU3ZEVHJCcVVl?=
- =?utf-8?B?VUxJSlY5Nk9nUGpZL1NSVkJlZHZya2Z6ZVhnSk01b0NCZXJLSXZpS0gzSlR4?=
- =?utf-8?Q?u/9ZXeGhUULEyMd3u1?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d2149e77-cab1-4d3f-b8aa-08de9ef1b038
-X-MS-Exchange-CrossTenant-AuthSource: MW4PR12MB7357.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Apr 2026 15:30:01.6465
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: sLDceeuifvToOz28t/tOv+CMdSNFTUbb18zM4bLFANGuUF98o12BS3Lxf/qPYVCJiERLfMmqbYM+aFh/yWVpOQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB8026
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260326083534.23602-3-ionut.nechita@windriver.com>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Authority-Analysis: v=2.4 cv=L78theT8 c=1 sm=1 tr=0 ts=69e64a02 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=8nJEP1OIZ-IA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8
+ a=_jlGtV7tAAAA:8 a=p2eoyRXnAAAA:8 a=VnNF1IyMAAAA:8 a=t7CeM3EgAAAA:8
+ a=38I2V2JNsOjyXGpjdSMA:9 a=3ZKOabzyN94A:10 a=wPNLvfGTeEIA:10
+ a=nlm17XC03S6CtCLSeiRr:22 a=KSHYvF9M28j0gckGFaEs:22 a=FdTzh2GWekK77mhwV6Dw:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIwMDE1MCBTYWx0ZWRfX9+HYG0zg13HD
+ X8IaCoDz5SaK7kzmmd+5ikBq0D0pYM+LSYieRugIpTLumhJ0pyId6YwTpFp304BqzlCq0gVbwwt
+ E/sUkUVa+jZv30/gmBW7FaWeirvVJlV9G9AY7UrB6Z4tvc1zD9tsDI6ToY8znrCJMDofdTjcgLL
+ vWeRdQ5xhJh1hoknt4DpJUk2X0I6c7kz2SBwZRUZ69RIQA79oAKgpRrUVpRojHfLfQxXJlVxFal
+ Io7tjFMEHlnUz9lpoM/D10GwBek07/dZjGjbKyvMiZ2nCihdKObkxDsX4ttKOUFn1zrE1vLUEfC
+ JRZ4bZh7M/n/or7fFzhjtJbiV4GagKR8X4o7cUU8np7UDulSeDTIdAEq/clBME0ahOYkB+Usi+p
+ EH71j0jm/sbHYA18vSDmwv+HgsuFiXEjXGdiGXIUvbyjXVrzRbCIXoPbzSGMQ8EbvpxJ9EtFIGa
+ E5C5Db7zrbm0TITiHCw==
+X-Proofpoint-GUID: 2aQkmJIgEF6oHEufyLTzgYL4HSGwrj6v
+X-Proofpoint-ORIG-GUID: mdSpiUkZJHREJzle4vcqThZCVQUI064d
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-20_03,2026-04-20_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 impostorscore=0 spamscore=0 bulkscore=0 suspectscore=0
+ lowpriorityscore=0 adultscore=0 clxscore=1015 malwarescore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2604070000 definitions=main-2604200150
 
-On 4/20/2026 1:36 AM, Frank Li wrote:
->> +static int sdxi_pci_init(struct sdxi_dev *sdxi)
->> +{
->> +     struct pci_dev *pdev = sdxi_to_pci_dev(sdxi);
->> +     struct device *dev = &pdev->dev;
->> +     int ret;
->> +
->> +     ret = pcim_enable_device(pdev);
->> +     if (ret)
->> +             return dev_err_probe(dev, ret, "failed to enable device\n");
->> +
->> +     ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
->> +     if (ret)
->> +             return dev_err_probe(dev, ret, "failed to set DMA masks\n");
+Hey Ionut,
+
+On Thu, Mar 26, 2026 at 10:35:34AM +0200, Ionut Nechita (Wind River) wrote:
+> remove_store() calls pci_stop_and_remove_bus_device_locked() which
+> takes pci_rescan_remove_lock first, then device_lock during driver
+> release.  Meanwhile, unbind_store() takes device_lock first (via
+> device_driver_detach), and the driver's .remove() callback may call
+> pci_disable_sriov() -> sriov_del_vfs() -> pci_lock_rescan_remove().
 > 
-> Needn't check return value when mask >= 32.
-
-OK.
-
-
-
->> +     sdxi->ctrl_regs = pcim_iomap_region(pdev, SDXI_PCI_BAR_CTL_REGS,
->> +                                         KBUILD_MODNAME);
->> +     if (IS_ERR(sdxi->ctrl_regs)) {
->> +             return dev_err_probe(dev, PTR_ERR(sdxi->ctrl_regs),
->> +                                  "failed to map control registers\n");
->> +     }
+> This creates an AB-BA deadlock:
 > 
-> Does check_patch report warning, suppose needn't {}
-
-I don't think so, but I can drop the braces.
-
-
->> +#define SDXI_DRV_DESC                "SDXI driver"
+>   CPU0 (remove_store)               CPU1 (unbind_store)
+>   --------------------              --------------------
+>   pci_lock_rescan_remove()
+>                                     device_lock()
+>                                     driver .remove()
+>                                       sriov_del_vfs()
+>                                         pci_lock_rescan_remove()  <-- WAITS
+>   pci_stop_bus_device()
+>     device_release_driver()
+>       device_lock()                                               <-- WAITS
 > 
-> If only use once, needn't define macro.
+> Fix this by first marking the device as dead using kill_device() to
+> prevent any new driver from binding, then calling device_release_driver()
+> before pci_stop_and_remove_bus_device_locked().
+> 
+> Marking the device dead closes the race window between unbinding and
+> removal where a new driver could theoretically bind: once the dead flag
+> is set, the device core will refuse any new driver probe.
+> 
+> After device_release_driver() returns, the driver is already unbound,
+> so the subsequent device_release_driver() call inside
+> pci_stop_and_remove_bus_device_locked() becomes a no-op.
+> 
+> Fixes: a5338e365c45 ("PCI/IOV: Fix race between SR-IOV enable/disable and hotplug")
+> Reported-by: Guenter Roeck <linux@roeck-us.net>
+> Closes: https://lore.kernel.org/linux-pci/0ca9e675-478c-411d-be32-e2d81439288f@roeck-us.net/
+> Reported-by: Benjamin Block <bblock@linux.ibm.com>
+> Closes: https://lore.kernel.org/linux-pci/20260317090149.GA3835708@chlorum.ategam.org/
+> Suggested-by: Benjamin Block <bblock@linux.ibm.com>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Ionut Nechita <ionut.nechita@windriver.com>
+> ---
+>  drivers/pci/pci-sysfs.c | 30 +++++++++++++++++++++++++++++-
+>  1 file changed, 29 insertions(+), 1 deletion(-)
 
-OK.
+sorry for the late response, it slipped past me that I haven't given this a
+review yet.
+
+It looks fine to me. It solves the report we had with the previous patch. I
+also tested this, and so far it looks good in my (s390) setup.
+
+
+Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+Tested-by: Benjamin Block <bblock@linux.ibm.com>
+
+-- 
+Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
+Sitz der Ges.: Ehningen     /     Registergericht: AmtsG Stuttgart, HRB 243294
