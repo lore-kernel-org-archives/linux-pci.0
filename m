@@ -1,264 +1,207 @@
-Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011049.outbound.protection.outlook.com [40.107.208.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A79133BBA0D
-	for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2026 18:58:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776711512; cv=none; b=qMGgmvf69SN0PkT27l18kDj4EuyvDcKbcrUdrRdo3ppY+jxm6xh3nU+6IeePdYnuFfK9b5//P8n3XbSqKBI3c1Uq6WX5Ix6wfWCGI72QPVYJENyJnKa5ZKdlGenmzB5QyVhB3rWm7ioRxWtOSLxYE9/21VtDxq+4D/TBBy023IM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776711512; c=relaxed/simple;
-	bh=c+H6CmWoXBftXy4LNSdCRn2nogXkmEI7pZXWLEFW3g8=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GsSTzT5NF1r0CWq8KVDIN5CLysEBI37xw8FEDQPKwORRk/7Dx5htfBbbEu2mmSE4DngZRoQPTWMS1KpzlwkgPu5sLENj1pBRyw8yCBh/zdKW1ahi36O56OW+n1+Zgg95cRqfidrNt1Oa6k8OED91KIgA1fg1niqjBE4JOTb+oYo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=jnuippCf; arc=none smtp.client-ip=67.231.153.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32FA52E3B15;
+	Mon, 20 Apr 2026 19:32:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.49
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776713524; cv=fail; b=NJZmKJdsj7lJ+4bflktRue6UFSU8bdva9YEJ3BXowD7NWKnjKsGTRV8NVYzJ/GQkyrG51h+V6vG8wHCZG6lFtz7tY6yCg160PGFANy09kNxiaQ18V2lQWePkyOg+r6bDlH0SUlIRIzNYX0aDvrBjrcGl+hvhR+xUwtXoX3vlufA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776713524; c=relaxed/simple;
+	bh=mFtXIsYgRJKBEXA0m6fjiWTuWKKHa9e/m6zVN6GVzcg=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=GB10SQeGD8BVgLEg6HwmwCCdGjB33RjHNLXc7+M9M20KikPiBubCCWB+/KGD4CCr8xLERquNWFM9xwkcv3NbB5Bwx9qVuWPFR5Bx1Pqm77Hil690GbY+2CBE9eppeKHWzUiA1SCup8LLqIRsR1+yEzqsKZVu4WEKr0IXSpnR2E0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=F/w2F6j7; arc=fail smtp.client-ip=40.107.208.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="jnuippCf"
-Received: from pps.filterd (m0148460.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63KIcBNG1903351
-	for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2026 11:58:29 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=DGqOu01vpSuNphcdtrhRRkwLn0VqkagmIQlTluku0bA=; b=jnuippCfhRbm
-	HkPxmEAYYUi2QERkMuRu+8exogPBuVqeUQk+QsD2paT+AJA4Uff+XHVqyhhD5rrZ
-	kbkalvv7jUat0+5FhZuI0DmhU+NzckxDXnU4aZMZNnb0RPYc52dZs5EL99NzYOt1
-	dWTrKN4qAFnFMaLBtjeK9AKyuwzRnWDOTnQS1SkeURvLLHZWw3rycsa8q829GwpA
-	4d6/71Pfcfuxu22I+N5+a0j9AIZhqskybM9fznRu13B46hsB4rAI4H+G7C3gjKb5
-	6YiZoh/aQQcBm4Fh0ZfLLNuRzoFadx627hnW1bc/km3rr+PkOK+eSOv+4pMjqiQd
-	DFwD7SVBfg==
-Received: from mail.thefacebook.com ([163.114.134.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4dm7fau4c8-8
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2026 11:58:29 -0700 (PDT)
-Received: from twshared77462.17.frc2.facebook.com (2620:10d:c085:108::150d) by
- mail.thefacebook.com (2620:10d:c08b:78::2ac9) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.37; Mon, 20 Apr 2026 18:58:25 +0000
-Received: by devbig259.ftw1.facebook.com (Postfix, from userid 664516)
-	id F065D113E69D0; Mon, 20 Apr 2026 11:51:21 -0700 (PDT)
-From: Zhiping Zhang <zhipingz@meta.com>
-To: Stanislav Fomichev <sdf@meta.com>, Keith Busch <kbusch@kernel.org>
-CC: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-        Bjorn
- Helgaas <helgaas@kernel.org>, <linux-rdma@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <dri-devel@lists.freedesktop.org>, Yochai Cohen <yochai@nvidia.com>,
-        Yishai
- Hadas <yishaih@nvidia.com>, Zhiping Zhang <zhipingz@meta.com>
-Subject: [PATCH v1 2/2] RDMA/mlx5: get tph for p2p access when registering dma-buf mr
-Date: Mon, 20 Apr 2026 11:39:16 -0700
-Message-ID: <20260420183920.3626389-3-zhipingz@meta.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260420183920.3626389-1-zhipingz@meta.com>
-References: <20260420183920.3626389-1-zhipingz@meta.com>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="F/w2F6j7"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=mP+yLXVfkRvZL5UxnW9UyibuJKalKYSsN64esx7jXE0jxkhvJthj3MUKaqsXhwlaLPIr+mkmveuv2el9flsjfwVv5DED16/+TzTMAZP+7BSxKvkfUXhj8dE4C97MTLvfUqQJp00nrujsD+pJ3330pf209BFWRvWBwN26s4tigWpOvTh69EQ0cBRF6RH2eTo5iIcVF1ovrY6RGNCyK+bIABlfC1qqyW0kCSc84YS/v8S3eiJBUS6zjLL1GxaKCs80H5nnOQH3d0uUaCIwbHjBgnLH1IIH5uavcSDkNcMqaVhRHNztrbFdhBQkdFriD74dNpPX86V9kqoZTZSDTopgDQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=OzhiIYdFGDchsll+CyG492M8jxGbtf91XTqTzqvF+0E=;
+ b=k00X/wIhWMJq7WyjY2lyqQqoyD63RqPgDJRssgogfObGhd//2v/i8yFx0nCkxNWTUv8LSdrfW8QCzmBJVTz8tvNNgJGfPLeXKKkCUlHWBK1Oto8pBygGTqFrFAPE50qWADjr8tn9qi4uRcaXWuoY+Qw6d6eBD/sgYSNIWTNEFe9yKZ8TRRPlnubSpipK4DfE5wGotYq3iA7nAIxB0TzvObGcAlO2mUfa539hcMsWX6D+RkoMWuSKaekARuFjDPPGorzLkaz5/RL6cOFdzidHK3xtFmaJtX1EDppRTTQoJDEf/j09lAtQjWvdkUk/fnrk1iwg017L62Lfh6jjQygxLA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=OzhiIYdFGDchsll+CyG492M8jxGbtf91XTqTzqvF+0E=;
+ b=F/w2F6j7aO2ShkH3dH3lHvSEmioMGkk8DMHbg9BlL1F09SpWUNtCtqEIOz9aJBhss0oT2UG9MJioEWbQDQ4DSoAaV6a6WozkjJ0A3sSSjZ6l0ezJgNPnWwqoXG+jlck8QljHVfOydZ2egiVYgZjEqkpy0Clv3dy1L8ebquhTUlA=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from MW4PR12MB7357.namprd12.prod.outlook.com (2603:10b6:303:219::16)
+ by DS0PR12MB9346.namprd12.prod.outlook.com (2603:10b6:8:1be::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.15; Mon, 20 Apr
+ 2026 19:31:58 +0000
+Received: from MW4PR12MB7357.namprd12.prod.outlook.com
+ ([fe80::a230:c3c8:a903:2b57]) by MW4PR12MB7357.namprd12.prod.outlook.com
+ ([fe80::a230:c3c8:a903:2b57%4]) with mapi id 15.20.9846.014; Mon, 20 Apr 2026
+ 19:31:58 +0000
+Message-ID: <7d8cb403-74b9-4140-a60e-88ca08d31663@amd.com>
+Date: Mon, 20 Apr 2026 14:31:54 -0500
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 04/23] dmaengine: sdxi: Feature discovery and initial
+ configuration
+To: Frank Li <Frank.li@nxp.com>
+Cc: Vinod Koul <vkoul@kernel.org>, Wei Huang <wei.huang2@amd.com>,
+ Mario Limonciello <mario.limonciello@amd.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ Stephen Bates <Stephen.Bates@amd.com>, PradeepVineshReddy.Kodamati@amd.com,
+ John.Kariuki@amd.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+References: <20260410-sdxi-base-v1-0-1d184cb5c60a@amd.com>
+ <20260410-sdxi-base-v1-4-1d184cb5c60a@amd.com>
+ <aeXM4IChNyCX6vGp@lizhi-Precision-Tower-5810>
+Content-Language: en-US
+From: "Lynch, Nathan" <nathan.lynch@amd.com>
+In-Reply-To: <aeXM4IChNyCX6vGp@lizhi-Precision-Tower-5810>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SA9PR13CA0149.namprd13.prod.outlook.com
+ (2603:10b6:806:27::34) To MW4PR12MB7357.namprd12.prod.outlook.com
+ (2603:10b6:303:219::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIwMDE4NCBTYWx0ZWRfX4Esapk3dnerq
- aaCnekRLueccrM+y0RWdCzBnw0y8iqoqC2g00PrMQhslFZUh31KRb2JnccBkOwuTWqvbgij3NyF
- ovU17DL40L9P7s9R3RYobq8ds+7DUpDNlK72Zp/9Nir4q5zqCDYw7mo9DdqMb2FWfDlkcdMLzbT
- haOuSUCruOr6H21yNl3nDdDgWz60L6Pj98G4lAkanb/9GtQXVVGrLnSiLpTca+xjjN+tLllpeXI
- JjNwvIjaGzCof8NLnrsW5PpyZGa9g/78+RpC6kcsethyslRBfIbNcmqUnU/hVALliG2IC07rBNF
- rL1L0oeroJNkKrZT5SuxuGcEddgbCBf3nz0uBaFVHbg4VxqcPCdS0lqAfHJpm2tgbzxfD+KRsEL
- LZEYRcqqdUQWGP6RWRN0kwmufEYwXzOEaNu0d8gMTejEEgjXvtci2OAA2pdiZhyCOHFBkfSmFdq
- Xr0UiVumpVr4zNEtJvg==
-X-Proofpoint-ORIG-GUID: Wslw2XCITesLyjgcusj-fyY7jdyZqXpX
-X-Authority-Analysis: v=2.4 cv=VevH+lp9 c=1 sm=1 tr=0 ts=69e67755 cx=c_pps
- a=CB4LiSf2rd0gKozIdrpkBw==:117 a=CB4LiSf2rd0gKozIdrpkBw==:17
- a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
- a=JnKecZnUtZousrUlYMGU:22 a=VabnemYjAAAA:8 a=c4au4WjlRKfxtgWlyl4A:9
- a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-GUID: Wslw2XCITesLyjgcusj-fyY7jdyZqXpX
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-20_03,2026-04-20_02,2025-10-01_01
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MW4PR12MB7357:EE_|DS0PR12MB9346:EE_
+X-MS-Office365-Filtering-Correlation-Id: e7761c1c-2e36-4e23-2e96-08de9f137cb9
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|376014|56012099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	o1agM7QK1KJ59ILxKAythJEaiY7WeW9/0it9BTsiFg74TfQMgS5lgjoTFWbJfGkP7uDIpzmE03T54kRjTmRG7NoeKTkmWKUxGL0AZhoDk0pxWxaQ3v8OtJlZ7mq97Uppo6+Lcdgmp5IO7T+qpN0F8C/kyn1hc1YXjWUP7YMoETMwGvubBVBKU19AzZrI1SVR7eRDVPlpRrSSSyyCV4DAC+ZOh71t0BQfOMSAXRc4N4nYQQVN+m+umtO7aQuomGGm7yotajZ0XQxrerBmxRC77sQjhPnZ2fZyiAD30L0QwPjesRBeiWyeOgKJRKCVR9SdqC4ffCoH4gYIDyD/1UX0mtK3JEHkTmiXm2tpN1MpqiMMKVTwBBO+A/umnh4NObmP+2l8QvYjDeIZ5YTrsU/uXCaIDRpC9HelsOqWTCYDE0w6aGzZsGd2YSGHrUfelA8xp341Ve+0Wj2eiU9OGX41dXujTd9GaZI/UAY1IkIiBFJ/Ud9HfuG8/cXxB8JW9xnAzSOXUVAS8O7fVfj+rK/JFP9X60lHprhIcIA2pePnR8XMlTCx22yqZRng5Feq4ilTBGfn8GpoU5kD5nBnKBvQDohkBh4oswNylchxlkLRfT7xQH/+zfw/N3DQLSBxFfoXAQtWQGqzLwt/rEkPF9Coo/13HI6qSP9E7Ti2M5BBaz2jcokqqO0LnYtbC+laNR/H7jt1xUfjJtgCT+9iNkJwu471ZRW/rFcTLgDpO+aKeoo=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW4PR12MB7357.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?ck04SXgzS0RYSEpHMWFHYUM3dk5jZFdBL2o5NDhoY2Q4ZVpHR0xJTi94OFlR?=
+ =?utf-8?B?bE9NNkxlN0doVjBHdHhHZzN5QkxxZXBmbEV4alh5ejlvL0hQQ2cxcmF2M1d2?=
+ =?utf-8?B?YUIxMkt6NzhlNzNoWGRUVk9TdnZoYWhQR0ErNTJJV1RSbmZocitTSHVEeXg0?=
+ =?utf-8?B?UUJPODByRCsrNFNraTNoWWI1NWdBcHFVSGZLWm1XRHpCUXUxcit6YjZ2QXBh?=
+ =?utf-8?B?eXVpV0xIalU2SXVCY3dLNkt1eS95Tld2M1hlNEEveTRkQkZHcHVaY1ZNR0xm?=
+ =?utf-8?B?L1h0RnBIelJSb1JtNUJsYzhZNE9HM0M0bEdHNjYvL3NtYTloVHZVdlppd1BI?=
+ =?utf-8?B?eEVXUWxwcXJETTJKZTBXTlcyWVhNcjJxTXZyYmVwOHZlMVd6YS8zRmJjV0I2?=
+ =?utf-8?B?RDBHNng5QitUSTBvd1Y0Y2g5djBRRzZ1dmV6dnZSelNRbVQ2Z2xBb1RZNG42?=
+ =?utf-8?B?aThPaDcxNzYxU1VWc3FEekd6N3dwUnJ2d2tiejZSK2RjTklNMWJ3MExFczRv?=
+ =?utf-8?B?ZjVwTFhPdlNhd3lrVVhraXZIVC90QzBEZTdxZnBIRlNvL0s4cVI0WTFjTG1H?=
+ =?utf-8?B?bHVOb05SMG43V3dnT1FVY1lYRnkwaS9DRmVmOENQSWJhc3RrOE9xRlgvUDBx?=
+ =?utf-8?B?S2lwWlVBbUFzNEJBU3QvSENvQ3R0R2pHWWRXZ1FFRWtZeXJPWUNuSTZ0Mktt?=
+ =?utf-8?B?UTN0d1kvYU1yMVpKNTFodmkzOFIwb3ExUkk1ZnRCOFNDajBPZXkrTUdncGk4?=
+ =?utf-8?B?b1huOUxWTTlpMDBBOE9lNUJiL3BzZ3oxb0VVTkwvM2l1aGNzQjdxd01MWGFT?=
+ =?utf-8?B?VW5zOVp0ZUdNOFhJdTlwV3FHQVA1a2gzaXdGeE1JQitXZ0tBcmF5UmFIQXhD?=
+ =?utf-8?B?UktrL25GZDJ1REFuUHV4bzlaYm1ZZmxndXlQdWNrQ1ZoTGNmQ2U4NExSYTBr?=
+ =?utf-8?B?Unl6cnl0MjIrVWc0QVBGRFp1bjF3eU9aNlpJUkc5RVZzZThyRUxHSHdubzZC?=
+ =?utf-8?B?UVJxTk0vMVBJQStKMUJaMjdSMmJad0lkM1lFQmlQZTBTNk1NYUI0blhNUzNB?=
+ =?utf-8?B?MzN4cnhpZC9JajNoMnRGT0k1ejBDK3gwWFptNTEzaExFM1VkR0pwbGpQNGp1?=
+ =?utf-8?B?MFdXMm1FVHBLOFY1cGRXQ0gvVnBWMVpGUWhESW80NkFzSldPQXpUNUdGYU9X?=
+ =?utf-8?B?RDFjZklHOVBxNlRuVTBZK1FJTUJUUUU4NU1Ndk00QStpbU5mMG5hL09tY2xo?=
+ =?utf-8?B?YzZtU2tjanMvZUtDQ3pwWFhPT3R3VFc3bndpRTlGQVg5cnpMNmJ2MnJEcXp2?=
+ =?utf-8?B?WEVvMURLTDVsdnh1ZmdvNGhlTXpzY1ZGNk93bmI5dVlMYXozKzZib0tSdXd4?=
+ =?utf-8?B?NzlSUk9rNDNQajU0OFd6MW4wNTBtWm5sM09MQmEwTUFIOGRVZDg2QkJCWU9N?=
+ =?utf-8?B?ZG5DN2E1b3pzMHBSakRBdithdWs5ZkFzTyt6amZxVDhyeHF3WGt0OEhCWkdO?=
+ =?utf-8?B?RGNSVlVJQjBlVmdINUx0VTh0OTFJdGYxT3dZcG5pWGhMU1hOTisyZ1YwMkNn?=
+ =?utf-8?B?bkg3emRGV1l2aTM5ZU95YWhLakZ5cWR0bURDbGRFK05TNmJ0QThZWkVkRXdV?=
+ =?utf-8?B?RmZyWFpUT3dUS0ovMG5ROUxnSll1bS9wSGRabFl4dHZnYzhGNm1aRUFpamsv?=
+ =?utf-8?B?cXk4a1FoSERpb0w4TzZjQ0drcVRXemJXVU92TlN0YWxaSlVoUHUwVDJWa0xE?=
+ =?utf-8?B?NnNtY0JSSnE0YnlJV0lOdTN0MGhQY2tGQi9yWTkyT0d3RXlUK01TR3NUcUZS?=
+ =?utf-8?B?Nkh6YTAydW82UHhndFFkcEJya2R2ZjVLVDR6ZFlGT0ExR1lMbk9NRW0yYk5G?=
+ =?utf-8?B?cnl5NW03WWl4aVdtR0hsK0lqcEw2dDdRY2JuYU1FMHc5VS9KNDNUN3lBVWJv?=
+ =?utf-8?B?Sjd0cnVGVmEvQm1CKzBGZUgrRFZ1RUY0RXBOQ1BTSGphSmpnUWtERDNBOExo?=
+ =?utf-8?B?Q1ArblYwUjZwQm55bUlVLzJjS1I5THgrRkJlNHhqSHE0THBWWG1CdHYyVmZa?=
+ =?utf-8?B?ZGtiaDM2NWhWZ3VDOEs3UkhPWGtNOTMvNndIWk9ubkFldk56dDRyRkwxYTlq?=
+ =?utf-8?B?Tld3Y1lkSmhmT1hHOTkwMkNCQmJqbXh1WXF3eXBmMzFUdmRxYVZXcGYrNGpa?=
+ =?utf-8?B?WWNSdGxjL1FyZ3hSWXJFNlRKWDVaVktnL0xuZUFJOUpNUmRiVUNzQkw2NE1j?=
+ =?utf-8?B?aU5abTRoaGttVDUxLzRYMEJ6R3d6ay94a0tpbkdiL3FzeWRuQTNXenVrWlRr?=
+ =?utf-8?Q?eovgiF6+ZqXoZnsVM2?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e7761c1c-2e36-4e23-2e96-08de9f137cb9
+X-MS-Exchange-CrossTenant-AuthSource: MW4PR12MB7357.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Apr 2026 19:31:58.0486
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Uzf77Ad2qRQdRpnAuVV/6pYyBdmSHX+emPiDgN9xl3AFxOqfozlZvuk/SeIv9qLjZVoN2ueSEcQErhyim93Lbw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB9346
 
-Query dma-buf TPH metadata when registering a dma-buf MR for peer to
-peer access and translate the raw steering tag into an mlx5 steering tag
-index. Factor mlx5_st_alloc_index() so callers that already have a raw
-steering tag can allocate the corresponding mlx5 index directly. Keep the
-DMAH path as the first priority and only fall back to dma-buf metadata wh=
-en
-no DMAH is supplied.
+On 4/20/2026 1:51 AM, Frank Li wrote:
+> On Fri, Apr 10, 2026 at 08:07:14AM -0500, Nathan Lynch wrote:
+>> After bus-specific initialization, force the SDXI function to stopped
+>> state. This is the expected state from reset, but kexec or driver bugs
+>> can leave a function in other states from which the initialization
+>> code must be able to recover.
+> 
+> Move this paragraph to last because this major funciton is
+> "Discover via the capability register ..."
+> 
 
-Pass the device's supported ST width (8 or 16 bit, derived from
-pdev->tph_req_type) to get_tph() so the exporter can reject tags that
-exceed the consumer's capability. Initialize ret in mlx5_st_create() so t=
-he
-cached steering-tag path returns success cleanly under clang builds.
+OK.
 
-Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
----
- drivers/infiniband/hw/mlx5/mr.c               | 38 +++++++++++++++++++
- .../net/ethernet/mellanox/mlx5/core/lib/st.c  | 25 ++++++++----
- include/linux/mlx5/driver.h                   |  7 ++++
- 3 files changed, 62 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/infiniband/hw/mlx5/mr.c b/drivers/infiniband/hw/mlx5=
-/mr.c
-index 665323b90b64..618c84815d48 100644
---- a/drivers/infiniband/hw/mlx5/mr.c
-+++ b/drivers/infiniband/hw/mlx5/mr.c
-@@ -46,6 +46,8 @@
- #include "data_direct.h"
- #include "dmah.h"
-=20
-+MODULE_IMPORT_NS("DMA_BUF");
-+
- enum {
- 	MAX_PENDING_REG_MR =3D 8,
- };
-@@ -1622,6 +1624,40 @@ static struct dma_buf_attach_ops mlx5_ib_dmabuf_at=
-tach_ops =3D {
- 	.move_notify =3D mlx5_ib_dmabuf_invalidate_cb,
- };
-=20
-+static void get_tph_mr_dmabuf(struct mlx5_ib_dev *dev, int fd, u16 *st_i=
-ndex,
-+			      u8 *ph)
-+{
-+	struct pci_dev *pdev =3D dev->mdev->pdev;
-+	struct dma_buf *dmabuf;
-+	u16 steering_tag;
-+	u8 st_width;
-+	int ret;
-+
-+	st_width =3D (pdev->tph_req_type =3D=3D PCI_TPH_REQ_EXT_TPH) ? 16 : 8;
-+
-+	dmabuf =3D dma_buf_get(fd);
-+	if (IS_ERR(dmabuf))
-+		return;
-+
-+	if (!dmabuf->ops->get_tph)
-+		goto end_dbuf_put;
-+
-+	ret =3D dmabuf->ops->get_tph(dmabuf, &steering_tag, ph, st_width);
-+	if (ret) {
-+		mlx5_ib_dbg(dev, "get_tph failed (%d)\n", ret);
-+		goto end_dbuf_put;
-+	}
-+
-+	ret =3D mlx5_st_alloc_index_by_tag(dev->mdev, steering_tag, st_index);
-+	if (ret) {
-+		*ph =3D MLX5_IB_NO_PH;
-+		mlx5_ib_dbg(dev, "st_alloc_index_by_tag failed (%d)\n", ret);
-+	}
-+
-+end_dbuf_put:
-+	dma_buf_put(dmabuf);
-+}
-+
- static struct ib_mr *
- reg_user_mr_dmabuf(struct ib_pd *pd, struct device *dma_device,
- 		   u64 offset, u64 length, u64 virt_addr,
-@@ -1664,6 +1700,8 @@ reg_user_mr_dmabuf(struct ib_pd *pd, struct device =
-*dma_device,
- 		ph =3D dmah->ph;
- 		if (dmah->valid_fields & BIT(IB_DMAH_CPU_ID_EXISTS))
- 			st_index =3D mdmah->st_index;
-+	} else {
-+		get_tph_mr_dmabuf(dev, fd, &st_index, &ph);
- 	}
-=20
- 	mr =3D alloc_cacheable_mr(pd, &umem_dmabuf->umem, virt_addr,
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c b/drivers/n=
-et/ethernet/mellanox/mlx5/core/lib/st.c
-index 997be91f0a13..724b67c3f3a6 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
-@@ -29,7 +29,7 @@ struct mlx5_st *mlx5_st_create(struct mlx5_core_dev *de=
-v)
- 	u8 direct_mode =3D 0;
- 	u16 num_entries;
- 	u32 tbl_loc;
--	int ret;
-+	int ret =3D 0;
-=20
- 	if (!MLX5_CAP_GEN(dev, mkey_pcie_tph))
- 		return NULL;
-@@ -92,23 +92,18 @@ void mlx5_st_destroy(struct mlx5_core_dev *dev)
- 	kfree(st);
- }
-=20
--int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem=
-_type,
--			unsigned int cpu_uid, u16 *st_index)
-+int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev, u16 tag,
-+			       u16 *st_index)
- {
- 	struct mlx5_st_idx_data *idx_data;
- 	struct mlx5_st *st =3D dev->st;
- 	unsigned long index;
- 	u32 xa_id;
--	u16 tag;
- 	int ret;
-=20
- 	if (!st)
- 		return -EOPNOTSUPP;
-=20
--	ret =3D pcie_tph_get_cpu_st(dev->pdev, mem_type, cpu_uid, &tag);
--	if (ret)
--		return ret;
--
- 	if (st->direct_mode) {
- 		*st_index =3D tag;
- 		return 0;
-@@ -152,6 +147,20 @@ int mlx5_st_alloc_index(struct mlx5_core_dev *dev, e=
-num tph_mem_type mem_type,
- 	mutex_unlock(&st->lock);
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(mlx5_st_alloc_index_by_tag);
-+
-+int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem=
-_type,
-+			unsigned int cpu_uid, u16 *st_index)
-+{
-+	u16 tag;
-+	int ret;
-+
-+	ret =3D pcie_tph_get_cpu_st(dev->pdev, mem_type, cpu_uid, &tag);
-+	if (ret)
-+		return ret;
-+
-+	return mlx5_st_alloc_index_by_tag(dev, tag, st_index);
-+}
- EXPORT_SYMBOL_GPL(mlx5_st_alloc_index);
-=20
- int mlx5_st_dealloc_index(struct mlx5_core_dev *dev, u16 st_index)
-diff --git a/include/linux/mlx5/driver.h b/include/linux/mlx5/driver.h
-index 04dcd09f7517..c1d2d603bd96 100644
---- a/include/linux/mlx5/driver.h
-+++ b/include/linux/mlx5/driver.h
-@@ -1177,10 +1177,17 @@ int mlx5_dm_sw_icm_dealloc(struct mlx5_core_dev *=
-dev, enum mlx5_sw_icm_type type
- 			   u64 length, u16 uid, phys_addr_t addr, u32 obj_id);
-=20
- #ifdef CONFIG_PCIE_TPH
-+int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev, u16 tag,
-+			       u16 *st_index);
- int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem=
-_type,
- 			unsigned int cpu_uid, u16 *st_index);
- int mlx5_st_dealloc_index(struct mlx5_core_dev *dev, u16 st_index);
- #else
-+static inline int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev,
-+					     u16 tag, u16 *st_index)
-+{
-+	return -EOPNOTSUPP;
-+}
- static inline int mlx5_st_alloc_index(struct mlx5_core_dev *dev,
- 				      enum tph_mem_type mem_type,
- 				      unsigned int cpu_uid, u16 *st_index)
---=20
-2.52.0
+>> +/* Get the device to the GSV_STOP state. */
+>> +static int sdxi_dev_stop(struct sdxi_dev *sdxi)
+>> +{
+>> +     unsigned long deadline = jiffies + msecs_to_jiffies(1000);
+>> +     bool reset_issued = false;
+>> +
+>> +     do {
+>> +             enum sdxi_fn_gsv status = sdxi_dev_gsv(sdxi);
+>> +
+>> +             sdxi_dbg(sdxi, "%s: function state: %s\n", __func__, gsv_str(status));
+>> +
+>> +             switch (status) {
+>> +             case SDXI_GSV_ACTIVE:
+>> +                     sdxi_write_fn_gsr(sdxi, SDXI_GSRV_STOP_SF);
+>> +                     break;
+>> +             case SDXI_GSV_ERROR:
+>> +                     if (!reset_issued) {
+>> +                             sdxi_info(sdxi,
+>> +                                       "function in error state, issuing reset\n");
+>> +                             sdxi_write_fn_gsr(sdxi, SDXI_GSRV_RESET);
+>> +                             reset_issued = true;
+>> +                     } else {
+>> +                             fsleep(1000);
+>> +                     }
+>> +                     break;
+>> +             case SDXI_GSV_STOP:
+>> +                     return 0;
+>> +             case SDXI_GSV_INIT:
+>> +             case SDXI_GSV_STOPG_SF:
+>> +             case SDXI_GSV_STOPG_HD:
+>> +                     /* transitional states, wait */
+>> +                     sdxi_dbg(sdxi, "waiting for stop (gsv = %u)\n",
+>> +                              status);
+>> +                     fsleep(1000);
+>> +                     break;
+>> +             default:
+>> +                     sdxi_err(sdxi, "unknown gsv %u, giving up\n", status);
+>> +                     return -EIO;
+>> +             }
+>> +     } while (time_before(jiffies, deadline));
+> 
+> does read_poll_timeout() work?
+
+Maybe so. Thanks for the pointer.
+
+
+>> +#define sdxi_dbg(s, fmt, ...) dev_dbg(sdxi_to_dev(s), fmt, ## __VA_ARGS__)
+>> +#define sdxi_info(s, fmt, ...) dev_info(sdxi_to_dev(s), fmt, ## __VA_ARGS__)
+>> +#define sdxi_err(s, fmt, ...) dev_err(sdxi_to_dev(s), fmt, ## __VA_ARGS__)
+> 
+> suggest direct use dev_*
+
+OK. I guess these would be more justified if the driver were adding
+SDXI-specific information such as group ID or sfunc to the messages, but
+it's not as of now.
 
