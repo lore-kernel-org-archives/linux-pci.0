@@ -1,44 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E335E3CEB95;
-	Mon, 20 Apr 2026 13:29:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B780D42883F;
+	Mon, 20 Apr 2026 13:29:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776691760; cv=none; b=MB9VnjW5KPRRajj9CxgXHLpTlSlyy4XEvBSTjvHS9kTfzjq6oT11vf8nwmYVCbz4VSqXE3Rg2HtWJn4BfHBoIAXMhEABtfZ0XDzLpC4P1NyExiKXpvkoKpjIMzD2S9TJfN8yCZjyL6CUaN0IbW/to0V+7hV3/H/25sl53VC6SYg=
+	t=1776691770; cv=none; b=Otz/1UuA6mxlHwJ6DiuudfbGVS6CMn/uwigN5sbkGiPgmbua58rAQsDxoGWWd97n6/uqPhzjz+pkfc5ACRCZEoiP2WaVjKq77RoZOmGcrA92pFogcanz4uzRaYN10UJ0/g5lVsUkTNCsAQ0cEMsQagwLvtCsBd7TMrYBLZCj59Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776691760; c=relaxed/simple;
-	bh=fAIl7Oa60rYsXXpRjcp6tby5iEceDeFC2+fvbHkx/fM=;
+	s=arc-20240116; t=1776691770; c=relaxed/simple;
+	bh=Z9CLPjPQmW71WT9UUYJtgYvMhTbrEDzc4hwt1KPPJN8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=T/FD4Xdxbk4ItgyUB78+qFvfJ6NcOAii3EtJKMnrXgLWWi8Syp1TuLtvsMtNX8SOobQil6bcbREVtFyIADnYTe/8u74/OR823zmOVWVbMN/sQeVZ7S5AyAM5ImjVYnXKJwLKsUf0lOQ59iiuNPUB0Uih4+NLsAnnF//JAJpcweo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gNIuA3J5; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=UT8lNjSXtNHjeE45tL4MpuEspXSBW2cHs3EBnAvqJTzNNBJGnTIWFlsFyCubpsNStOrnnxHv5zkCN9ZP8Fw0P6NLfvSQHz8rYuyL+K4tFi48abzwH5JpJNojeX2EHFnV2TFKljvgcB3gwdgxb8sJMxsr3k97vuFEJYOzLuWQw8Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mV6FZlWB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gNIuA3J5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7565C2BCB7;
-	Mon, 20 Apr 2026 13:29:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mV6FZlWB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A15C2C2BCB4;
+	Mon, 20 Apr 2026 13:29:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776691759;
-	bh=fAIl7Oa60rYsXXpRjcp6tby5iEceDeFC2+fvbHkx/fM=;
+	s=k20201202; t=1776691770;
+	bh=Z9CLPjPQmW71WT9UUYJtgYvMhTbrEDzc4hwt1KPPJN8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=gNIuA3J5i7Bogg0cGQpEF3bopw0ALXTeIigMHK7mImUtJVtA6tIm2Z5X9D30iylAf
-	 xG6wedRGcbI9VchTrL5pz4y8zaGiun3GRDViMFK6QGCg82MEsOk9p8BWWAxMha7fU8
-	 zg7Sq26B+xgDantYRGBu5R+v9f5Yk88IgtoIIKvufWXRHDcZXT/GBlkOPEU9t8c/Y3
-	 ylxG0P4XsKdcUUne0dmp6IaXT/Y6KaGphVik0PX36NlgxpscwqophrmcT5J8snNgIK
-	 XUgmtPg7CIyY97S9BhfAoL4Dxm75P7mtInq6TpLlkCCPJENFWUMfgPXDQw1ZKDVK8Y
-	 7q+fu7IiMIWzw==
+	b=mV6FZlWBfyby0uJfZgUXY/Cq+G7KqCttVLBhshuHYuywarcOv6aNyl7/8ZWrVflMd
+	 d/EEJpvr9BLnTosUR+WCnEono7/IJ5qtDKL0qMhlcqA3NJyZxX2jqkjvBeoBtkd7Lh
+	 hQRy/iWmUjc3HiQsOHz3sDgWtYmxz4TzWzJeqBKTNaTd8Ogvjs6Eksb4O0ejfpMOBV
+	 Y4pER8O0pYvoKGJW8hJfcB5RQo+e6vepIXQRYtbQNW2+e0UNhur3lf/ErZOFroBsLb
+	 xn8bfGwvH1e3EzDMJ08JaSaSy+Wm9NZIb7h/sKEgmricr6neyxpuxFcEvweXGwBtSS
+	 Qdtelu+K5JFPA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Sizhe Liu <liusizhe5@huawei.com>,
+Cc: Simon Richter <Simon.Richter@hogyros.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Sasha Levin <sashal@kernel.org>,
-	mahesh@linux.ibm.com,
-	linuxppc-dev@lists.ozlabs.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 7.0-6.12] PCI/DPC: Hold pci_dev reference during error recovery
-Date: Mon, 20 Apr 2026 09:19:31 -0400
-Message-ID: <20260420132314.1023554-177-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 7.0-5.10] PCI/VGA: Pass vga_get_uninterruptible() errors to userspace
+Date: Mon, 20 Apr 2026 09:19:37 -0400
+Message-ID: <20260420132314.1023554-183-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260420132314.1023554-1-sashal@kernel.org>
 References: <20260420132314.1023554-1-sashal@kernel.org>
@@ -51,296 +49,345 @@ MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 7.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Sizhe Liu <liusizhe5@huawei.com>
+From: Simon Richter <Simon.Richter@hogyros.de>
 
-[ Upstream commit a1ed752bc7cb77b740cee671567d9508ae74becd ]
+[ Upstream commit 2a93c9851b2bb38614fadd84aa674b7a5c8181c6 ]
 
-The AER and EDR error handling paths hold a reference on the pci_dev during
-recovery.  Hold a reference during the DPC recovery path as well.
+If VGA routing cannot be established, vga_get_uninterruptible() returns an
+error and does not increment the lock count. Return the error to the
+caller.
 
-Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>
-[bhelgaas: split to separate patch]
+Return before incrementing uc->io_cnt/mem_cnt so vga_arb_release() won't
+call vga_put() when userspace closes the handle.
+
+Signed-off-by: Simon Richter <Simon.Richter@hogyros.de>
+[bhelgaas: commit log]
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-https://patch.msgid.link/20260214081130.1878424-1-liusizhe5@huawei.com
+Link: https://patch.msgid.link/20260307173538.763188-2-Simon.Richter@hogyros.de
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-Now I have all the information needed. Let me write the complete
-analysis.
+Now I have all the information needed for a thorough analysis. Let me
+compile the findings.
 
 ---
 
-## Complete Analysis: PCI/DPC: Hold pci_dev reference during error
-recovery
+## PHASE 1: COMMIT MESSAGE FORENSICS
 
-### PHASE 1: COMMIT MESSAGE FORENSICS
+### Step 1.1: Subject Line
+- **Subsystem**: PCI/VGA
+- **Action verb**: "Pass" (implies a fix for missing error propagation)
+- **Summary**: Pass error return from `vga_get_uninterruptible()` back
+  to userspace instead of silently ignoring it.
+- Record: [PCI/VGA] [pass/fix] [Propagate vga_get_uninterruptible()
+  error to userspace callers]
 
-**Step 1.1: Subject Line**
-- Subsystem: `PCI/DPC` (PCI Express Downstream Port Containment)
-- Action verb: "Hold" - implies adding a missing safety measure
-- Summary: Hold a pci_dev reference during error recovery to prevent
-  potential use-after-free
-- Record: [PCI/DPC] [Hold] [Add missing reference counting for pci_dev
-  during DPC recovery path]
-
-**Step 1.2: Tags**
-- `Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>` - Original author
-- `[bhelgaas: split to separate patch]` - Bjorn Helgaas (PCI subsystem
-  maintainer) split this from a larger patch
-- `Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>` - Committed by
+### Step 1.2: Tags
+- `Signed-off-by: Simon Richter <Simon.Richter@hogyros.de>` — patch
+  author
+- `[bhelgaas: commit log]` — Bjorn Helgaas (PCI subsystem maintainer)
+  edited the log
+- `Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>` — committed by
   the PCI subsystem maintainer
-- `Link: https://patch.msgid.link/20260214081130.1878424-1-
-  liusizhe5@huawei.com` - Original submission
+- `Link: https://patch.msgid.link/20260307173538.763188-2-
+  Simon.Richter@hogyros.de`
+- No Fixes: tag, no Cc: stable, no Reported-by. This is expected.
+- Record: Maintainer-committed. Message-id `-2-` suggests this may be
+  part of a series.
 
-No Fixes: tag, no Reported-by, no Cc: stable (expected for a candidate).
+### Step 1.3: Body Text
+The message clearly states two bugs:
+1. When `vga_get_uninterruptible()` fails, the error is silently dropped
+   — userspace isn't told the lock failed.
+2. Even on failure, `uc->io_cnt/mem_cnt` are incremented, causing
+   spurious `vga_put()` calls in `vga_arb_release()`.
 
-Record: Signed by author and PCI maintainer. Split from a larger patch
-by Bjorn Helgaas. No Fixes: tag.
+Record: Bug = ignored error return leads to false success report to
+userspace AND unbalanced lock counters. Failure mode = userspace
+believes it holds VGA locks it doesn't actually hold.
 
-**Step 1.3: Commit Body**
-The message states: "The AER and EDR error handling paths hold a
-reference on the pci_dev during recovery. Hold a reference during the
-DPC recovery path as well." This is a clear statement of a reference
-counting inconsistency between the three error recovery paths.
+### Step 1.4: Hidden Bug Fix?
+This is an explicit bug fix — the commit describes two concrete problems
+and the fix for each.
 
-Record: Bug = missing pci_dev reference during DPC error recovery.
-Symptom = potential use-after-free if device is freed during recovery.
-Root cause = reference counting inconsistency between DPC, AER, and EDR
-paths.
+---
 
-**Step 1.4: Hidden Bug Fix Detection**
-Yes - this is a reference counting bug fix. The word "Hold" implies
-adding a missing reference, aligning DPC with AER and EDR behavior. This
-fixes a potential use-after-free.
+## PHASE 2: DIFF ANALYSIS
 
-### PHASE 2: DIFF ANALYSIS
+### Step 2.1: Inventory
+- **Files changed**: 1 (`drivers/pci/vgaarb.c`)
+- **Lines added**: ~5 (new `int err;` variable, error check, and early
+  return)
+- **Functions modified**: `vga_arb_write()` (the "lock" command handler)
+- **Scope**: Single-file, single-function surgical fix.
 
-**Step 2.1: Inventory**
-- 1 file modified: `drivers/pci/pcie/dpc.c`
-- +2 lines added, 0 removed
-- Function modified: `dpc_handler()`
-- Classification: single-file surgical fix (2 lines)
+### Step 2.2: Code Flow Change
+**Before**: `vga_get_uninterruptible()` is called, return value
+discarded, code unconditionally increments user counters and returns
+`count` (success).
 
-**Step 2.2: Code Flow Change**
-Before: `dpc_handler()` uses `pdev` throughout `dpc_process_error()` and
-`pcie_do_recovery()` without holding a reference.
-After: `pci_dev_get(pdev)` before processing, `pci_dev_put(pdev)` after
-recovery completes. Ensures the `pci_dev` object lives through the
-entire recovery.
+**After**: Return value is captured in `err`. If non-zero, the function
+returns the error code to userspace via `goto done`, skipping the
+counter increments.
 
-**Step 2.3: Bug Mechanism**
-Category: **Reference counting fix**
-- `pci_dev_get()` is ADDED (this fixes a potential use-after-free /
-  missing reference hold)
-- AER path: uses `pci_dev_get()` in `add_error_device()` at `aer.c:992`
-  and `pci_dev_put()` in `handle_error_source()` at `aer.c:1202`
-- AER APEI path: uses `pci_get_domain_bus_and_slot()` (returns with ref)
-  at `aer.c:1226` and `pci_dev_put()` at `aer.c:1253`
-- EDR path: uses `pci_dev_get()` in `acpi_dpc_port_get()` at
-  `edr.c:89,94` and `pci_dev_put()` at `edr.c:218`
-- DPC path: **no reference held** before this fix
+### Step 2.3: Bug Mechanism
+This is a **logic/correctness fix** combined with a **reference counting
+fix**:
+- `vga_get()` returns `-ENODEV` when the VGA device is removed from the
+  list (e.g., hot-unplug between target check and lock attempt)
+- Ignoring this error means userspace thinks it holds a VGA lock when it
+  doesn't
+- The unbalanced counters cause `vga_arb_release()` (lines 1424-1427) to
+  call `vga_put()` for locks never acquired (though `__vga_put()`'s `>0`
+  guards prevent underflow)
 
-**Step 2.4: Fix Quality**
-- Obviously correct: balanced get/put pair wrapping the usage
-- Minimal/surgical: exactly 2 lines
-- No regression risk: adding reference counting cannot cause deadlock or
-  data corruption
-- No red flags
+### Step 2.4: Fix Quality
+- Obviously correct: standard error-checking pattern
+- Minimal/surgical: 5 lines, single hunk in the "lock" handler
+- No regression risk: the only change is to return error early rather
+  than continuing
+- No API or behavior change: callers of `vga_arb_write()` already handle
+  error returns
 
-### PHASE 3: GIT HISTORY INVESTIGATION
+---
 
-**Step 3.1: Blame**
-The `dpc_handler()` function was authored by Kuppuswamy Sathyanarayanan
-in commit `aea47413e7ceec` (2020-03-23), present since v5.15. The core
-structure with `dpc_process_error()` + `pcie_do_recovery()` has been
-stable since then. The surprise removal check was added later by
-`2ae8fbbe1cd42` (2024, first in v6.12).
+## PHASE 3: GIT HISTORY INVESTIGATION
 
-**Step 3.2: Fixes Tag Context**
-The original v3 patch had `Fixes: a57f2bfb4a58` ("PCI/AER: Ratelimit
-correctable and non-fatal error logging") which was first in v6.16-rc1.
-However, the reference counting bug existed earlier - the DPC path has
-been missing the reference since `aea47413e7ceec` (2020, v5.15+). Bjorn
-split the reference counting part into its own patch.
+### Step 3.1: Blame
+The buggy line (`vga_get_uninterruptible(pdev, io_state);` at line 1168)
+was introduced in commit `deb2d2ecd43dfc` by Benjamin Herrenschmidt on
+2009-08-11, the original VGA arbitration implementation. This is kernel
+v2.6.32-rc1 era code, present in **all** active stable trees.
 
-**Step 3.3: File History**
-Recent commits to `dpc.c` are mostly cleanup/improvement (FIELD_GET,
-defines, TLP log). No other reference counting fixes.
+### Step 3.2: Fixes Tag
+No Fixes: tag present (expected for a manually reviewed candidate).
 
-**Step 3.4: Author Context**
-Sizhe Liu (Huawei) identified the issue. Bjorn Helgaas (PCI subsystem
-maintainer) reviewed, suggested the reference counting addition, and
-committed the fix.
+### Step 3.3: File History
+Recent changes to `vgaarb.c` are mostly refactoring/cleanup (VGA device
+selection, typo fixes, simplifications). None touch the "lock" command
+handler in `vga_arb_write()`.
 
-**Step 3.5: Dependencies**
-This commit is fully standalone. It adds `pci_dev_get()`/`pci_dev_put()`
-around existing code. No new functions, no API changes, no dependencies.
+### Step 3.4: Author
+Simon Richter has other PCI-related commits (BAR resize fixes). Bjorn
+Helgaas (PCI maintainer) committed this, which indicates it was reviewed
+and accepted through the proper PCI maintainer tree.
 
-### PHASE 4: MAILING LIST RESEARCH
+### Step 3.5: Dependencies
+The message-id `-2-` suggests this is patch 2 in a series, but the fix
+is entirely self-contained. It only adds error checking to an existing
+call. No structural dependencies on other patches.
 
-The complete discussion was found. Key findings:
-1. Sizhe Liu submitted v1/v2/v3 of "PCI/AER: Fix missing AER logs in DPC
-   and EDR paths"
-2. On v2 review, **Bjorn Helgaas himself identified** the missing
-   reference: "I don't see a similar pci_dev_get() anywhere in the DPC
-   path ... holding that reference on the device is important."
-3. Sizhe Liu agreed and added it in v3
-4. Bjorn then split the v3 patch into two separate patches: the AER log
-   fix and this reference counting fix
-5. Shiju Jose reviewed v3 with minor formatting comments
-6. The patch was applied by Bjorn Helgaas
+---
 
-### PHASE 5: CODE SEMANTIC ANALYSIS
+## PHASE 4: MAILING LIST RESEARCH
 
-**Callers of affected code:**
-- `dpc_handler()` is a threaded IRQ handler registered in `dpc_probe()`
-  via `devm_request_threaded_irq()`
-- Triggered by `dpc_irq()` (hardirq handler) returning `IRQ_WAKE_THREAD`
-- `pcie_do_recovery()` is a long-running function that walks the PCI
-  bus, calls driver error handlers, resets links, and waits for
-  secondary bus readiness
+### Step 4.1-4.2: Original Patch
+b4 dig could not find a match by the message-id directly. Lore was
+inaccessible. However, the commit was signed off by Bjorn Helgaas (PCI
+maintainer), indicating proper review.
 
-**Call chain:** Hardware DPC trigger -> `dpc_irq()` -> `dpc_handler()`
--> `dpc_process_error()` + `pcie_do_recovery()` -> `dpc_reset_link()` ->
-`pcie_wait_for_link()` + `pci_bridge_wait_for_secondary_bus()`
+### Step 4.3-4.5: Bug Report / Stable Discussion
+No bug report links. No syzbot reference. This appears to be a code-
+review-discovered issue.
 
-The recovery process can take seconds (waiting for links, bus resets).
-During this time, the `pci_dev` must remain valid.
+---
 
-### PHASE 6: STABLE TREE ANALYSIS
+## PHASE 5: CODE SEMANTIC ANALYSIS
 
-The buggy code (`dpc_handler()` without reference) exists in all stable
-trees from v5.15 onwards. The function was introduced in
-`aea47413e7ceec` (v5.15). For trees older than v6.12, the surprise
-removal block won't be present, but the patch context for the
-`pci_dev_get`/`pci_dev_put` addition is around the `dpc_process_error()`
-+ `pcie_do_recovery()` calls which are present in all trees. Minor
-conflicts may be needed for trees without the surprise removal check.
+### Step 5.1: Functions Modified
+`vga_arb_write()` — the write handler for `/dev/vga_arbiter`.
 
-### PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+### Step 5.2: Callers
+`vga_arb_write()` is registered as the `.write` callback in
+`vga_arb_device_fops` (line 1498). It's called when userspace writes to
+`/dev/vga_arbiter`. This is the main userspace interface for the VGA
+arbiter, used by X servers and display managers on multi-GPU systems.
 
-- Subsystem: PCI Express (drivers/pci/pcie/) - IMPORTANT subsystem
-  affecting all PCIe users
-- DPC is a standard PCIe feature for error containment
-- Maintainer: Bjorn Helgaas - he personally identified and committed
-  this fix
-- Criticality: IMPORTANT - affects all systems with PCIe DPC support
+### Step 5.3-5.4: Call Chain
+Userspace → `write(fd, "lock io+mem", ...)` → `vga_arb_write()` →
+`vga_get_uninterruptible()` → `vga_get()`. The error path is directly
+reachable from userspace.
 
-### PHASE 8: IMPACT AND RISK ASSESSMENT
+### Step 5.5: Similar Patterns
+The i915 driver also ignores `vga_get_uninterruptible()` return values
+(lines 68, 93 in `intel_vga.c`), but those are kernel-internal callers
+where the consequences differ.
 
-**Who is affected:** All systems with PCIe DPC support (most modern x86
-systems, some ARM)
+---
 
-**Trigger conditions:** A DPC containment event (PCIe fatal error)
-concurrent with device removal. While the specific race may be hard to
-trigger, DPC events are not uncommon (hardware errors, NVMe removal
-under load).
+## PHASE 6: STABLE TREE ANALYSIS
 
-**Failure mode:** Potential use-after-free - accessing freed `pci_dev`
-during recovery. Severity: **HIGH** (crash, potential security issue)
+### Step 6.1: Buggy Code Existence
+The buggy code has been present since v2.6.32 (2009). It exists in
+**all** active stable trees (5.4.y, 5.10.y, 5.15.y, 6.1.y, 6.6.y,
+6.12.y).
 
-**Benefit:** Fixes a reference counting correctness bug, aligns DPC with
-AER/EDR behavior, prevents potential UAF during error recovery.
+### Step 6.2: Backport Complications
+The surrounding code in the "lock" handler has not changed significantly
+since the original commit. The patch should apply cleanly. The only
+nearby changes are comment fixes (`cc64ca4b62f50` in 2023).
 
-**Risk:** **Very low** - 2 lines, balanced get/put, obviously correct,
-no behavioral change.
+### Step 6.3: Related Fixes
+No other fix for this issue exists in any stable tree.
 
-### PHASE 9: FINAL SYNTHESIS
+---
 
-**Evidence FOR backporting:**
-1. Fixes a reference counting bug (missing `pci_dev_get` in DPC handler)
-2. Potential use-after-free during error recovery
-3. Only 2 lines added - minimal risk
-4. PCI subsystem maintainer (Bjorn Helgaas) personally identified the
-   issue and committed the fix
-5. Consistent with how AER and EDR paths already work
-6. `pcie_do_recovery()` is a long-running function making the window
-   non-trivial
-7. Buggy code present since v5.15
-8. Standalone fix with no dependencies
+## PHASE 7: SUBSYSTEM CONTEXT
 
-**Evidence AGAINST backporting:**
-1. No concrete crash report or syzbot finding (theoretical)
-2. Race requires specific timing (DPC + hot-removal)
+### Step 7.1: Subsystem Criticality
+PCI/VGA arbiter — **IMPORTANT** level. Used by all systems with VGA
+devices and userspace display servers (X11, Wayland compositors). Multi-
+GPU systems (common in desktop/workstation use) depend on correct VGA
+arbitration.
 
-**Stable Rules Checklist:**
-1. Obviously correct? **YES** - balanced get/put, trivially verifiable
-2. Fixes a real bug? **YES** - reference counting inconsistency,
-   potential UAF
-3. Important issue? **YES** - potential crash/UAF during error recovery
-4. Small and contained? **YES** - 2 lines in 1 file
-5. No new features/APIs? **YES** - pure bug fix
-6. Can apply to stable? **YES** - standalone, clean apply expected for
-   v7.0
+### Step 7.2: Subsystem Activity
+Moderately active — periodic cleanups and improvements, but core logic
+is mature.
 
-### Verification
+---
 
-- [Phase 1] Parsed tags: Signed-off-by Sizhe Liu + Bjorn Helgaas, Link
-  to lore
-- [Phase 2] Diff analysis: +2 lines in `dpc_handler()`, adds
-  `pci_dev_get()`/`pci_dev_put()` around error recovery
-- [Phase 3] git blame: `dpc_handler()` introduced in commit
-  `aea47413e7ceec` (2020), present since v5.15
-- [Phase 3] git show a57f2bfb4a58: confirmed the ratelimit commit is in
-  v6.16-rc1, first in v7.0 tree
-- [Phase 4] Found full thread via yhbt.net mirror of lore: v1/v2/v3
-  progression, Bjorn requested ref counting in v2 review
-- [Phase 4] Bjorn Helgaas (PCI maintainer) explicitly said "holding that
-  reference on the device is important"
-- [Phase 4] Bjorn split original 3-file patch into separate patches,
-  this is the DPC ref-counting portion
-- [Phase 5] `pcie_do_recovery()` walks bus, resets links, waits for
-  secondary bus - long-running operation
-- [Phase 5] Verified AER (aer.c:992/1202), AER APEI (aer.c:1226/1253),
-  EDR (edr.c:89/218) all hold references
-- [Phase 5] Verified DPC path has NO reference holding in current 7.0
-  tree
-- [Phase 6] Buggy code exists since v5.15 (aea47413e7ceec present in
-  v5.15, v6.1, v6.6, v6.12, v7.0)
-- [Phase 6] Surprise removal block (2ae8fbbe1cd42) is in v6.12+ only, so
-  older trees may need context adjustment
-- [Phase 7] PCI/DPC is an important subsystem; fix committed by
-  subsystem maintainer
-- [Phase 8] Failure mode: potential UAF during DPC recovery, severity
-  HIGH
-- UNVERIFIED: Whether the `devm_request_threaded_irq` + `free_irq`
-  synchronization fully prevents the race (it synchronizes handler
-  completion but doesn't prevent refcount drops during handler
-  execution)
+## PHASE 8: IMPACT AND RISK ASSESSMENT
 
-The fix is a 2-line, obviously correct reference counting addition that
-aligns the DPC error recovery path with the AER and EDR paths. The PCI
-subsystem maintainer identified and committed it. The potential
-consequence of the missing reference is a use-after-free, and the fix
-carries essentially zero regression risk.
+### Step 8.1: Affected Users
+Users with multi-GPU systems or systems where VGA device hot-unplug can
+occur. Includes desktop/workstation users running X servers or other VGA
+arbitration clients.
+
+### Step 8.2: Trigger Conditions
+- VGA device hot-unplug while userspace holds a reference via
+  `/dev/vga_arbiter`
+- The window is a race between target check and `vga_get()`, so it's
+  timing-dependent
+- Unprivileged user with access to `/dev/vga_arbiter` can trigger this
+
+### Step 8.3: Failure Mode Severity
+- **Userspace is told lock succeeded when it didn't**: MEDIUM — could
+  lead to concurrent VGA resource access, potentially causing display
+  corruption or GPU conflicts
+- **Unbalanced counters**: LOW — `__vga_put()` has `>0` guards
+  preventing counter underflow, though spurious wake-ups may occur
+- Overall severity: **MEDIUM**
+
+### Step 8.4: Risk-Benefit
+- **Benefit**: Correct error propagation to userspace; prevents VGA
+  resource conflicts on multi-GPU systems
+- **Risk**: Very low — 5-line change adding standard error checking
+- **Ratio**: Favorable for backport
+
+---
+
+## PHASE 9: FINAL SYNTHESIS
+
+### Step 9.1: Evidence
+**FOR backporting:**
+- Fixes a real correctness bug: userspace is lied to about VGA lock
+  acquisition
+- Fixes unbalanced reference counting on the cleanup path
+- Small, surgical fix (5 lines, single function)
+- Obviously correct: standard error-checking pattern
+- Committed by PCI subsystem maintainer (Bjorn Helgaas)
+- Bug present since v2.6.32 — affects all stable trees
+- Self-contained, no dependencies on other patches
+- Should apply cleanly to all stable trees
+
+**AGAINST backporting:**
+- The trigger window is a race condition (timing-dependent)
+- No reported real-world incidents (code-review-found issue)
+- The consequences are somewhat mitigated by `__vga_put()`'s `>0` guards
+
+### Step 9.2: Stable Rules Checklist
+1. Obviously correct and tested? **YES** — trivial error-checking
+   pattern, committed by maintainer
+2. Fixes a real bug? **YES** — incorrect error reporting to userspace +
+   unbalanced counters
+3. Important issue? **MEDIUM** — resource conflict possible but
+   mitigated in practice
+4. Small and contained? **YES** — 5 lines in one function
+5. No new features/APIs? **YES** — no new features
+6. Can apply to stable? **YES** — code unchanged since 2009
+
+### Step 9.3: Exception Categories
+Not an exception category; evaluated on its own merit as a bug fix.
+
+### Step 9.4: Decision
+This is a clear correctness fix: error values from
+`vga_get_uninterruptible()` must be propagated to userspace rather than
+silently swallowed. The fix is minimal, obviously correct, committed by
+the subsystem maintainer, and applies to all stable trees. Despite the
+trigger being race-dependent, the fix prevents both misleading userspace
+and unbalanced lock accounting.
+
+---
+
+## Verification
+
+- [Phase 1] Parsed tags: Signed-off-by from author and PCI maintainer,
+  Link to lore, no Fixes/Reported-by/Cc:stable (expected)
+- [Phase 2] Diff analysis: 5 lines added in the "lock" handler of
+  `vga_arb_write()` — captures return value of
+  `vga_get_uninterruptible()`, returns error before incrementing
+  counters
+- [Phase 3] git blame: buggy code introduced in commit deb2d2ecd43dfc
+  (v2.6.32-rc1, 2009), present in all stable trees
+- [Phase 3] git describe: `v2.6.32-rc1~670^2~52` confirms the original
+  commit is in all active stable trees
+- [Phase 3] git log: no recent changes to the "lock" handler code path,
+  ensuring clean backport
+- [Phase 4] b4 dig -c deb2d2ecd43dfc: found original VGA arbitration
+  patch from 2009
+- [Phase 4] lore inaccessible due to anti-scraping protection
+- [Phase 5] `vga_get_uninterruptible` returns `int` (verified in
+  include/linux/vgaarb.h lines 92-96), wrapping `vga_get()` which
+  returns -ENODEV on failure
+- [Phase 5] `vga_arb_release()` (lines 1418-1428): confirms `vga_put()`
+  is called for each `io_cnt`/`mem_cnt`, creating unbalanced puts if
+  counters were wrongly incremented
+- [Phase 5] `__vga_put()` (lines 378-381): confirmed `>0` guards exist,
+  preventing counter underflow
+- [Phase 5] `vga_get()` (lines 434-483): confirmed `-ENODEV` is the only
+  error possible for uninterruptible calls
+- [Phase 6] Code unchanged in the "lock" handler since v2.6.32; should
+  apply cleanly to all stable trees
+- [Phase 7] PCI/VGA arbiter is used by display servers on multi-GPU
+  systems
+- UNVERIFIED: Could not access lore to check full patch series context
+  or reviewer feedback
 
 **YES**
 
- drivers/pci/pcie/dpc.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/vgaarb.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index fc18349614d7c..f028bc795f197 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -372,11 +372,13 @@ static irqreturn_t dpc_handler(int irq, void *context)
- 		return IRQ_HANDLED;
- 	}
+diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+index d9383bf541e7c..22b2b6ebdefdb 100644
+--- a/drivers/pci/vgaarb.c
++++ b/drivers/pci/vgaarb.c
+@@ -1134,6 +1134,7 @@ static ssize_t vga_arb_write(struct file *file, const char __user *buf,
+ 	char kbuf[64], *curr_pos;
+ 	size_t remaining = count;
  
-+	pci_dev_get(pdev);
- 	dpc_process_error(pdev);
++	int err;
+ 	int ret_val;
+ 	int i;
  
- 	/* We configure DPC so it only triggers on ERR_FATAL */
- 	pcie_do_recovery(pdev, pci_channel_io_frozen, dpc_reset_link);
+@@ -1165,7 +1166,11 @@ static ssize_t vga_arb_write(struct file *file, const char __user *buf,
+ 			goto done;
+ 		}
  
-+	pci_dev_put(pdev);
- 	return IRQ_HANDLED;
- }
+-		vga_get_uninterruptible(pdev, io_state);
++		err = vga_get_uninterruptible(pdev, io_state);
++		if (err) {
++			ret_val = err;
++			goto done;
++		}
  
+ 		/* Update the client's locks lists */
+ 		for (i = 0; i < MAX_USER_CARDS; i++) {
 -- 
 2.53.0
 
