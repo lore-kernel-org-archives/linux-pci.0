@@ -1,64 +1,79 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 561603845D1;
-	Mon, 20 Apr 2026 20:10:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00F323CEBB7
+	for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2026 20:25:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776715846; cv=none; b=MI55PTS5/KuEn2tGuZ+z5eNIAnqc0atkK0dU779sctJFqpcF1mVIYhabZn/2BCr2IQG4Ux+BYPQH4B7VJS73yhurEQEuneI78RpJSBGYlLHAN0wgsHoYDmdJQsPJ1V5qgqTDwH6g3xHD09IpuezSCYzaeI92V0ZYi7F1D5klMDo=
+	t=1776716741; cv=none; b=fam4GwMDrq7kfb1HMdp8hBbJul79CFVUv1ZGP50cyBod+uTLAu89J/rT6ych24kDnBL6dz8/3mCvaWi4AaCnaS41wsE1lRwz1AeLFLLKas+EeNYiLr5sdYfW/1t0jG4aB+KpzdR9QsGw7PSZAWbWkS6L+Sm3o5mZuuA8COjU8uI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776715846; c=relaxed/simple;
-	bh=S/z0zn4Dn2TO2dYuuMEZ7tXprCTD2fyGXqNf8LXyvSc=;
+	s=arc-20240116; t=1776716741; c=relaxed/simple;
+	bh=Dx76hdPmzkcK4nbwEphDzpwF8eLBrP39wXmhzcE1i9Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lQ+bF8Ugwi0tAaA3Bdocx2L/Bh7N+dlLkW7zlgHbkfY2WOZcgTCyBUz+A2vF+C0SalZSyBQjCMDZ64i58xDvmSr9Ln3hIMH5Ul8j/wCBMrtRvb78i1h29sZDCIsjzrEdagXMCrBOhnEgxoclThW8tuH/xLD6XqxG3arUVT6OHIM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DiAbU0Ac; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=UCQZdVEEKzNcHw2RRVfqw0TZQCODAutW9gto3zF4+3EiaJmXqp3vq4Fxxw6bU68z80QQQn2TRWfQSaq2Q/YNWdsa3oTJ9zmruSp5i/Sqq0CKdv/000+5tddd5IuhJIHalmxvP79g2zuZP+fF38OoC7D6azcDoUqvI06ONGzB2TI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=MwCSCJDj; arc=none smtp.client-ip=209.85.219.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DiAbU0Ac"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1776715844; x=1808251844;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=S/z0zn4Dn2TO2dYuuMEZ7tXprCTD2fyGXqNf8LXyvSc=;
-  b=DiAbU0AcwtC4x2dJycv7D3/+Sgcj7HTYzhFI66KMqTtCq2uE/izCQO5Y
-   VzIWM1zGv8gEaN/NjNSUi/RnajP6qp7WBJVSoPJw1DxOLW1skxrVHRtdf
-   Gj7K42m7Lo7zK96w54GLukv4PzSA0RLGujiTVsj8Tc5dKfM63Cnz4Dx5Q
-   /UdSg+yaj6KqOmOrL/FHCIsgiqplF8VkXjjJcgOi3n9xSKuI7RdksBT7a
-   4EaZFyktKIgqvSUB2PjFsFL5EmbIAqMxbXF3LjEpOmLw+TLprrKQyFutj
-   950el7bg/08SOTIeX8xW8FsEgLsEr0Ao0X5QPud2eRzfrMsz/rAEE4XQM
-   g==;
-X-CSE-ConnectionGUID: Fz4Akc6kQACKC3yJkEdpAw==
-X-CSE-MsgGUID: 8Ek9/yZRQ8eW6QZBgevohw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11762"; a="88257774"
-X-IronPort-AV: E=Sophos;i="6.23,190,1770624000"; 
-   d="scan'208";a="88257774"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2026 13:10:43 -0700
-X-CSE-ConnectionGUID: oWPOVsJJRZuE44eifZB4XQ==
-X-CSE-MsgGUID: sh/CJk3cSRG0hPN6WuwX7Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,190,1770624000"; 
-   d="scan'208";a="236793311"
-Received: from lkp-server01.sh.intel.com (HELO 7e48d0ff8e22) ([10.239.97.150])
-  by fmviesa005.fm.intel.com with ESMTP; 20 Apr 2026 13:10:40 -0700
-Received: from kbuild by 7e48d0ff8e22 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wEux4-000000002pc-132t;
-	Mon, 20 Apr 2026 20:10:38 +0000
-Date: Tue, 21 Apr 2026 04:09:41 +0800
-From: kernel test robot <lkp@intel.com>
-To: Ankit Agrawal <ankita@nvidia.com>, alex@shazbot.org,
-	kvm@vger.kernel.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, jgg@ziepe.ca,
-	yishaih@nvidia.com, skolothumtho@nvidia.com, kevin.tian@intel.com,
-	ankita@nvidia.com, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 1/1] vfio/nvgrace-gpu: Add Blackwell-Next GPU
- readiness check via CXL DVSEC
-Message-ID: <202604210425.SVQZamM3-lkp@intel.com>
-References: <20260416014504.63067-1-ankita@nvidia.com>
+	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="MwCSCJDj"
+Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-89fc4147f2eso39962296d6.3
+        for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2026 13:25:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=soleen.com; s=google; t=1776716738; x=1777321538; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=86B2EppM//v3TWmEymAoj6QAs94Bt1WYW2cmbvlwvO8=;
+        b=MwCSCJDjXbCvC3v1RscWJNQ6YOVZFVHPpzP1nFOPs+Pt2NtU0oJJ7oPNGqLFnDPktw
+         JQivfdVMFtG/TTh19cK0LfNJTMpX6DhFeINI9+bXbdsjmVv/Ds59umoP3m2sMmDSj2Ov
+         CW44m8KumgVPrHC7bHyyEY/UCqNky5Nh1uFJRf+yP89OeyEgx2bA5CXrFUOtN7utWTPa
+         ysOTh8bHlSvAMd+jPHDO4f4GH21Ll0Y8xFjaWsOrhpB8PNyQhlp9FTNA2txcwDr/OUVB
+         bCJYbYtioyIcLpcaPBQlLIgtHGnLAcHF+aDWum6zTiiHn7hQppMnqofiAZq6jOgpcDBu
+         wvOg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776716738; x=1777321538;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=86B2EppM//v3TWmEymAoj6QAs94Bt1WYW2cmbvlwvO8=;
+        b=VchoTGytNrpXCJTpqp8LTlazTs8geBfEG/nB+F2HBMSCz0UANhVd1hm2b8amstHuSp
+         rdrWRVskohr7LCAOHgkUEvP7TchBuNB2IBPxrW6+cIL26l0NFvnPbRf6RfgDu+35o1sG
+         IZE5ZtcH0w07Qb3gGOnRnb06Nd3+U3prhBnXAoz9hPHXBUbG31mMKsBb4cWg0wij91gn
+         4NHABIjN/YyU2GiQQA415YcupSxH56rIgOpIerroS3E51MiP05LRYGwOqiEl8YDSx1FH
+         329LyWd10ZC7jP9bf8oxu6UGrfnW1F0MY9Z+3XC3Evp2WKk+mvFGmQiCPR0dSjfH20go
+         vdeA==
+X-Forwarded-Encrypted: i=1; AFNElJ/jDL5z50T3OR2Nhh3tbQN4AwQrp7Zqjm6zrjIfkLQ4SBGCxl++/6YOtoVDAc39oMhOzjy3g5bhOQI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YycdK8a/wykefe+1I9Qh96PkKD1OpIoRLsa0kooejhRlcbxgQcc
+	rz0sBYOgMZ+w8CSXNnigiG3sOgeP8GSxVvtg6PXLv/DcxRsSppIEpEqoCzZ8F8AqwI4=
+X-Gm-Gg: AeBDiesyvAkJtSzVLMU8ralTwaTRStOZdN8vfO4drhwRhYiQ31SvHznHX/XDFVUNoqJ
+	C/jxDBs7PsBbBh7AX2XZAoKvMxSbahcGrYbLgY/bqv0tulWEPe8yOHC886e6q/Husq4aq6u5gbn
+	CYkTYAaxfSz5AdE9Jf7fwdEo2f0c23gG4K22683mDuy7qgNp/Xkitg4NZN/Z1LbVTdlw3h22Xgu
+	HKBCy6cKj0R6QF0LjFh5XYLUojv982hjRRZWcyDzs3kNldb/0xZcmJejUR9aG8WySSDkDOZubxd
+	elE77a8qSbIQaIZNqk1SsXcb6oKUE4cXN+Oimp9ObWnGsuVBw0RTrDOsv1HfbDff2MfDg6Tpg3z
+	qRn1JOiFA+KUdPstQ6lWPm+5inBuFh9GUxCVRYeNSR3kC4IIoObT8FX7kyIZqrNdYNcaGz5Y+X4
+	GDysLRive3Ik5TBNfUh36ngmuXiLdqXCkyjKSQMnaxehV4OKC7rpacfzBSnmUw
+X-Received: by 2002:a05:6214:3209:b0:8ac:ab90:d764 with SMTP id 6a1803df08f44-8b0281653a5mr266452836d6.48.1776716737948;
+        Mon, 20 Apr 2026 13:25:37 -0700 (PDT)
+Received: from plex ([71.181.43.54])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8b02ac6c3e7sm85895836d6.13.2026.04.20.13.25.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Apr 2026 13:25:36 -0700 (PDT)
+Date: Mon, 20 Apr 2026 20:25:34 +0000
+From: Pasha Tatashin <pasha.tatashin@soleen.com>
+To: David Jeffery <djeffery@redhat.com>
+Cc: linux-kernel@vger.kernel.org, driver-core@lists.linux.dev, 
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Danilo Krummrich <dakr@kernel.org>, Tarun Sahu <tarunsahu@google.com>, 
+	Pasha Tatashin <tatashin@google.com>, =?utf-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>, 
+	Jordan Richards <jordanrichards@google.com>, Ewan Milne <emilne@redhat.com>, 
+	John Meneghini <jmeneghi@redhat.com>, "Lombardi, Maurizio" <mlombard@redhat.com>, 
+	Stuart Hayes <stuart.w.hayes@gmail.com>, Laurence Oberman <loberman@redhat.com>, 
+	Bart Van Assche <bvanassche@acm.org>, Bjorn Helgaas <helgaas@kernel.org>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, John Garry <john.g.garry@oracle.com>, kexec@lists.infradead.org
+Subject: Re: [PATCH 1/5] driver core: separate function to shutdown one device
+Message-ID: <h2r2jv4g2tednrybrmkn4d2dus3oalqsk3r2q4xrbuivucefon@n6vvx5bl5cm5>
+References: <20260420152608.6244-1-djeffery@redhat.com>
+ <20260420152608.6244-2-djeffery@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -67,85 +82,67 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260416014504.63067-1-ankita@nvidia.com>
+In-Reply-To: <20260420152608.6244-2-djeffery@redhat.com>
 
-Hi Ankit,
+On 04-20 11:26, David Jeffery wrote:
+> Make a separate function for the part of device_shutdown() that does the
+> shutown for a single device.  This is in preparation for making device
+> shutdown asynchronous.
+> 
+> Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
+> Signed-off-by: David Jeffery <djeffery@redhat.com>
+> Tested-by: Laurence Oberman <loberman@redhat.com>
+> ---
+>  drivers/base/core.c | 71 +++++++++++++++++++++++++--------------------
+>  1 file changed, 39 insertions(+), 32 deletions(-)
+> 
+> diff --git a/drivers/base/core.c b/drivers/base/core.c
+> index 0613de0fbe44..5353c6c22d49 100644
+> --- a/drivers/base/core.c
+> +++ b/drivers/base/core.c
+> @@ -4783,12 +4783,48 @@ int device_change_owner(struct device *dev, kuid_t kuid, kgid_t kgid)
+>  	return error;
+>  }
+>  
+> +static void shutdown_one_device(struct device *dev)
+> +{
+> +	struct device *parent = dev->parent;
+> +
+> +	/* hold lock to avoid race with probe/release */
+> +	if (parent)
+> +		device_lock(parent);
+> +	device_lock(dev);
+> +
+> +	/* Don't allow any more runtime suspends */
+> +	pm_runtime_get_noresume(dev);
+> +	pm_runtime_barrier(dev);
+> +
+> +	if (dev->class && dev->class->shutdown_pre) {
+> +		if (initcall_debug)
+> +			dev_info(dev, "shutdown_pre\n");
+> +		dev->class->shutdown_pre(dev);
+> +	}
+> +	if (dev->bus && dev->bus->shutdown) {
+> +		if (initcall_debug)
+> +			dev_info(dev, "shutdown\n");
+> +		dev->bus->shutdown(dev);
+> +	} else if (dev->driver && dev->driver->shutdown) {
+> +		if (initcall_debug)
+> +			dev_info(dev, "shutdown\n");
+> +		dev->driver->shutdown(dev);
+> +	}
+> +
+> +	device_unlock(dev);
+> +	if (parent)
+> +		device_unlock(parent);
+> +
+> +	put_device(parent);
+> +	put_device(dev);
+> +}
 
-kernel test robot noticed the following build errors:
+Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com> 
 
-[auto build test ERROR on awilliam-vfio/next]
-[also build test ERROR on awilliam-vfio/for-linus pci/next pci/for-linus linus/master v7.0 next-20260420]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Also, please CC: kexec@lists.infradead.org, this series helps the live 
+update, and kexec performance.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Ankit-Agrawal/vfio-nvgrace-gpu-Add-Blackwell-Next-GPU-readiness-check-via-CXL-DVSEC/20260419-053131
-base:   https://github.com/awilliam/linux-vfio.git next
-patch link:    https://lore.kernel.org/r/20260416014504.63067-1-ankita%40nvidia.com
-patch subject: [PATCH v3 1/1] vfio/nvgrace-gpu: Add Blackwell-Next GPU readiness check via CXL DVSEC
-config: s390-allmodconfig (https://download.01.org/0day-ci/archive/20260421/202604210425.SVQZamM3-lkp@intel.com/config)
-compiler: clang version 18.1.8 (https://github.com/llvm/llvm-project 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260421/202604210425.SVQZamM3-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202604210425.SVQZamM3-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
->> drivers/vfio/pci/nvgrace-gpu/main.c:296:23: error: call to undeclared function 'FIELD_GET'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-     296 |         mem_active_timeout = FIELD_GET(PCI_DVSEC_CXL_MEM_ACTIVE_TIMEOUT,
-         |                              ^
-   1 error generated.
-
-
-vim +/FIELD_GET +296 drivers/vfio/pci/nvgrace-gpu/main.c
-
-   280	
-   281	static int nvgrace_gpu_wait_device_ready_cxl(struct nvgrace_gpu_pci_core_device *nvdev)
-   282	{
-   283		struct pci_dev *pdev = nvdev->core_device.pdev;
-   284		int cxl_dvsec = nvdev->cxl_dvsec;
-   285		unsigned long mem_info_valid_deadline;
-   286		unsigned long timeout;
-   287		u32 dvsec_memory_status;
-   288		u8 mem_active_timeout;
-   289	
-   290		pci_read_config_dword(pdev, cxl_dvsec + PCI_DVSEC_CXL_RANGE_SIZE_LOW(0),
-   291				      &dvsec_memory_status);
-   292	
-   293		if (cxl_dvsec_mem_is_active(dvsec_memory_status))
-   294			return 0;
-   295	
- > 296		mem_active_timeout = FIELD_GET(PCI_DVSEC_CXL_MEM_ACTIVE_TIMEOUT,
-   297					       dvsec_memory_status);
-   298	
-   299		timeout = jiffies +
-   300			  msecs_to_jiffies(cxl_mem_active_timeout_ms(mem_active_timeout));
-   301	
-   302		mem_info_valid_deadline = jiffies + msecs_to_jiffies(POLL_QUANTUM_MS);
-   303	
-   304		do {
-   305			pci_read_config_dword(pdev,
-   306					      cxl_dvsec + PCI_DVSEC_CXL_RANGE_SIZE_LOW(0),
-   307					      &dvsec_memory_status);
-   308	
-   309			if (cxl_dvsec_mem_is_active(dvsec_memory_status))
-   310				return 0;
-   311	
-   312			/* Bail early if MEM_INFO_VALID is not set within 1 second */
-   313			if (!(dvsec_memory_status & PCI_DVSEC_CXL_MEM_INFO_VALID) &&
-   314			    time_after(jiffies, mem_info_valid_deadline))
-   315				return -ETIME;
-   316	
-   317			msleep(POLL_QUANTUM_MS);
-   318		} while (!time_after(jiffies, timeout));
-   319	
-   320		return -ETIME;
-   321	}
-   322	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Pasha
