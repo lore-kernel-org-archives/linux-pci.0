@@ -1,42 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 306133FB05C;
-	Mon, 20 Apr 2026 13:26:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E335E3CEB95;
+	Mon, 20 Apr 2026 13:29:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776691578; cv=none; b=uYKch381sm7p325bM1jtJYKvXirg7UqokQODwYW9ZknaOSo5EpIQhdkLUQCmznvI+vN8mMu4m4fk3ghtQtn4IDwLUJRn2ZCXXHM5rcTGBAaT1Wk+j/m1DBwHEvctKhspJy31Z6PbYt7pttgoBAByfG8oX1Ailqc0t2JpBEntmaU=
+	t=1776691760; cv=none; b=MB9VnjW5KPRRajj9CxgXHLpTlSlyy4XEvBSTjvHS9kTfzjq6oT11vf8nwmYVCbz4VSqXE3Rg2HtWJn4BfHBoIAXMhEABtfZ0XDzLpC4P1NyExiKXpvkoKpjIMzD2S9TJfN8yCZjyL6CUaN0IbW/to0V+7hV3/H/25sl53VC6SYg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776691578; c=relaxed/simple;
-	bh=oOmee+wIhKh6TyIF5+Mcfap836l1ShgVtk6iNOcZlmY=;
+	s=arc-20240116; t=1776691760; c=relaxed/simple;
+	bh=fAIl7Oa60rYsXXpRjcp6tby5iEceDeFC2+fvbHkx/fM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SHmbdf8eJPI+5bJpOJNNFFc9dTOn6qry18ulT8SnMRxmR5LKV8temFxOF4kTjqmzFtRwMMhM4tzIpDa7qL30uLGBnsOZTZv+BfRchLO86+m4yexVN3ZIVOm4xQfwzFRaHkTcwKTfc2DFLGsogYC1TYzrmUdrk+ZnxoJz1nfdkwI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b/dphhiM; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=T/FD4Xdxbk4ItgyUB78+qFvfJ6NcOAii3EtJKMnrXgLWWi8Syp1TuLtvsMtNX8SOobQil6bcbREVtFyIADnYTe/8u74/OR823zmOVWVbMN/sQeVZ7S5AyAM5ImjVYnXKJwLKsUf0lOQ59iiuNPUB0Uih4+NLsAnnF//JAJpcweo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gNIuA3J5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b/dphhiM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8453FC2BCB4;
-	Mon, 20 Apr 2026 13:26:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gNIuA3J5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7565C2BCB7;
+	Mon, 20 Apr 2026 13:29:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776691577;
-	bh=oOmee+wIhKh6TyIF5+Mcfap836l1ShgVtk6iNOcZlmY=;
+	s=k20201202; t=1776691759;
+	bh=fAIl7Oa60rYsXXpRjcp6tby5iEceDeFC2+fvbHkx/fM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=b/dphhiMbQrLObYh/wZv12CVXkeVTwGykQQJD9ndEJ4pweDeTuSI/g35E1z1S6hq7
-	 D4ZbdCrJfgWG8bxy76KG/fGj/AyGRj8WnbjYhlti8rabXEvNn14K0tNifQ0X71BswU
-	 DyB2/KLlzT9gisgUTLilFVzpUx0hD5it9r37HzoveD2UKRJBbmWGzdbEVDiyy6jpqX
-	 kHm2SI/i0fiWi3J1i5bQjopCgizjXCsqnbGFtkcLgLdteEwxiItEbGGFH6MapoLFpd
-	 tdoXP0iDByZDee+izQkpc4fiVwa67vE29gB6L4kY7PYZ1OSriaUPQybpSZmwhiwwje
-	 vmhgLa805saww==
+	b=gNIuA3J5i7Bogg0cGQpEF3bopw0ALXTeIigMHK7mImUtJVtA6tIm2Z5X9D30iylAf
+	 xG6wedRGcbI9VchTrL5pz4y8zaGiun3GRDViMFK6QGCg82MEsOk9p8BWWAxMha7fU8
+	 zg7Sq26B+xgDantYRGBu5R+v9f5Yk88IgtoIIKvufWXRHDcZXT/GBlkOPEU9t8c/Y3
+	 ylxG0P4XsKdcUUne0dmp6IaXT/Y6KaGphVik0PX36NlgxpscwqophrmcT5J8snNgIK
+	 XUgmtPg7CIyY97S9BhfAoL4Dxm75P7mtInq6TpLlkCCPJENFWUMfgPXDQw1ZKDVK8Y
+	 7q+fu7IiMIWzw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Lizhi Hou <lizhi.hou@amd.com>,
+Cc: Sizhe Liu <liusizhe5@huawei.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Sasha Levin <sashal@kernel.org>,
+	mahesh@linux.ibm.com,
+	linuxppc-dev@lists.ozlabs.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 7.0-5.10] PCI: Avoid FLR for AMD NPU device
-Date: Mon, 20 Apr 2026 09:18:25 -0400
-Message-ID: <20260420132314.1023554-111-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 7.0-6.12] PCI/DPC: Hold pci_dev reference during error recovery
+Date: Mon, 20 Apr 2026 09:19:31 -0400
+Message-ID: <20260420132314.1023554-177-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260420132314.1023554-1-sashal@kernel.org>
 References: <20260420132314.1023554-1-sashal@kernel.org>
@@ -49,369 +51,296 @@ MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 7.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Lizhi Hou <lizhi.hou@amd.com>
+From: Sizhe Liu <liusizhe5@huawei.com>
 
-[ Upstream commit 806140e9a33218f22188fe5019c7874aa78d81f8 ]
+[ Upstream commit a1ed752bc7cb77b740cee671567d9508ae74becd ]
 
-The AMD NPU device (PCI Device IDs 0x1502 and 0x17f0) advertises FLR
-support. However, triggering an FLR causes the device to hang.
+The AER and EDR error handling paths hold a reference on the pci_dev during
+recovery.  Hold a reference during the DPC recovery path as well.
 
-Signed-off-by: Lizhi Hou <lizhi.hou@amd.com>
+Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>
+[bhelgaas: split to separate patch]
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Link: https://patch.msgid.link/20260226182545.3057330-1-lizhi.hou@amd.com
+https://patch.msgid.link/20260214081130.1878424-1-liusizhe5@huawei.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-Here is the complete analysis:
+Now I have all the information needed. Let me write the complete
+analysis.
 
 ---
 
-## PHASE 1: COMMIT MESSAGE FORENSICS
+## Complete Analysis: PCI/DPC: Hold pci_dev reference during error
+recovery
+
+### PHASE 1: COMMIT MESSAGE FORENSICS
 
 **Step 1.1: Subject Line**
-- Subsystem: `PCI`
-- Action verb: "Avoid" (indicating a workaround for broken hardware
-  behavior)
-- Summary: Prevent FLR (Function Level Reset) on AMD NPU device IDs
-  0x1502 and 0x17f0 because it causes device hang.
-
-Record: [PCI] [Avoid] [Disable FLR on AMD NPU that hangs when FLR
-triggered]
+- Subsystem: `PCI/DPC` (PCI Express Downstream Port Containment)
+- Action verb: "Hold" - implies adding a missing safety measure
+- Summary: Hold a pci_dev reference during error recovery to prevent
+  potential use-after-free
+- Record: [PCI/DPC] [Hold] [Add missing reference counting for pci_dev
+  during DPC recovery path]
 
 **Step 1.2: Tags**
-- `Signed-off-by: Lizhi Hou <lizhi.hou@amd.com>` — author, AMD developer
-  working on AMD XDNA/NPU accelerator driver
-- `Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>` — PCI subsystem
-  maintainer applied the patch
-- `Link:
-  https://patch.msgid.link/20260226182545.3057330-1-lizhi.hou@amd.com` —
-  original submission
-- No Fixes: tag (expected — this is a new quirk addition, not a code
-  fix)
-- No Cc: stable tag (expected — that's why we're reviewing)
+- `Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>` - Original author
+- `[bhelgaas: split to separate patch]` - Bjorn Helgaas (PCI subsystem
+  maintainer) split this from a larger patch
+- `Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>` - Committed by
+  the PCI subsystem maintainer
+- `Link: https://patch.msgid.link/20260214081130.1878424-1-
+  liusizhe5@huawei.com` - Original submission
 
-Record: Author is AMD NPU developer. PCI subsystem maintainer (Bjorn
-Helgaas) applied it personally. No syzbot involvement (this is a
-hardware bug, not a software bug).
+No Fixes: tag, no Reported-by, no Cc: stable (expected for a candidate).
+
+Record: Signed by author and PCI maintainer. Split from a larger patch
+by Bjorn Helgaas. No Fixes: tag.
 
 **Step 1.3: Commit Body**
-The message is concise: AMD NPU devices with PCI Device IDs 0x1502 and
-0x17f0 advertise FLR support, but triggering FLR causes the device to
-hang. This is a hardware defect — the device's FLR capability
-advertisement is incorrect.
+The message states: "The AER and EDR error handling paths hold a
+reference on the pci_dev during recovery. Hold a reference during the
+DPC recovery path as well." This is a clear statement of a reference
+counting inconsistency between the three error recovery paths.
 
-Record: Bug = device hang on FLR. Symptom = device becomes unresponsive.
-Root cause = hardware defect in AMD NPU silicon.
+Record: Bug = missing pci_dev reference during DPC error recovery.
+Symptom = potential use-after-free if device is freed during recovery.
+Root cause = reference counting inconsistency between DPC, AER, and EDR
+paths.
 
 **Step 1.4: Hidden Bug Fix Detection**
-This is not a "hidden" fix — it's an explicit hardware workaround. The
-commit clearly states the problem (device hang) and the solution (avoid
-FLR).
+Yes - this is a reference counting bug fix. The word "Hold" implies
+adding a missing reference, aligning DPC with AER and EDR behavior. This
+fixes a potential use-after-free.
 
-Record: Not a hidden bug fix; explicit hardware quirk/workaround.
-
----
-
-## PHASE 2: DIFF ANALYSIS
+### PHASE 2: DIFF ANALYSIS
 
 **Step 2.1: Inventory**
-- Single file modified: `drivers/pci/quirks.c`
-- 3 lines added:
-  1. Comment line in the block comment listing affected devices: `* AMD
-     Neural Processing Unit 0x1502 0x17f0`
-  2. `DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1502, quirk_no_flr);`
-  3. `DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x17f0, quirk_no_flr);`
-- 0 lines removed
-- Function affected: none modified; new entries use existing
-  `quirk_no_flr()` function
-
-Record: +3 lines, 0 removals, 1 file. Scope: trivial device ID addition
-to existing quirk table.
+- 1 file modified: `drivers/pci/pcie/dpc.c`
+- +2 lines added, 0 removed
+- Function modified: `dpc_handler()`
+- Classification: single-file surgical fix (2 lines)
 
 **Step 2.2: Code Flow Change**
-Before: AMD NPU devices (0x1502, 0x17f0) are not in the quirk table, so
-`quirk_no_flr` is not called for them. When FLR is attempted via
-`pcie_reset_flr()` or `pci_af_flr()`, the `PCI_DEV_FLAGS_NO_FLR_RESET`
-flag is not set, and FLR proceeds — causing device hang.
-
-After: During PCI early fixups, `quirk_no_flr()` sets the
-`PCI_DEV_FLAGS_NO_FLR_RESET` flag on these devices. When FLR is later
-attempted, `pcie_reset_flr()` (line 4375) and `pci_af_flr()` (line 4398)
-check this flag and return `-ENOTTY` instead, preventing the hang.
-
-Record: [Before: FLR triggers and hangs device] → [After: FLR is
-blocked, device remains functional]
+Before: `dpc_handler()` uses `pdev` throughout `dpc_process_error()` and
+`pcie_do_recovery()` without holding a reference.
+After: `pci_dev_get(pdev)` before processing, `pci_dev_put(pdev)` after
+recovery completes. Ensures the `pci_dev` object lives through the
+entire recovery.
 
 **Step 2.3: Bug Mechanism**
-Category: Hardware workaround (PCI quirk).
-The `DECLARE_PCI_FIXUP_EARLY` macro registers a callback that runs
-during PCI enumeration for the specific vendor/device ID pair. The
-callback sets a flag that is checked in the FLR code paths. This is an
-extremely well-established pattern used for many other devices.
-
-Record: [Hardware workaround] [Device advertises broken FLR capability;
-quirk prevents FLR from being used]
+Category: **Reference counting fix**
+- `pci_dev_get()` is ADDED (this fixes a potential use-after-free /
+  missing reference hold)
+- AER path: uses `pci_dev_get()` in `add_error_device()` at `aer.c:992`
+  and `pci_dev_put()` in `handle_error_source()` at `aer.c:1202`
+- AER APEI path: uses `pci_get_domain_bus_and_slot()` (returns with ref)
+  at `aer.c:1226` and `pci_dev_put()` at `aer.c:1253`
+- EDR path: uses `pci_dev_get()` in `acpi_dpc_port_get()` at
+  `edr.c:89,94` and `pci_dev_put()` at `edr.c:218`
+- DPC path: **no reference held** before this fix
 
 **Step 2.4: Fix Quality**
-- Obviously correct: follows identical pattern of 7+ existing entries in
-  the same quirk table
-- Minimal/surgical: 3 lines, no logic changes
-- Regression risk: essentially zero — the flag only affects these
-  specific PCI device IDs; no impact on any other devices
+- Obviously correct: balanced get/put pair wrapping the usage
+- Minimal/surgical: exactly 2 lines
+- No regression risk: adding reference counting cannot cause deadlock or
+  data corruption
 - No red flags
 
-Record: Fix quality: excellent. Regression risk: near-zero.
-
----
-
-## PHASE 3: GIT HISTORY INVESTIGATION
+### PHASE 3: GIT HISTORY INVESTIGATION
 
 **Step 3.1: Blame**
-The `quirk_no_flr` function was introduced in commit `f65fd1aa4f9881`
-(2017-04-03, v4.12-rc1) for Intel 82579 NICs. It has been stable
-infrastructure since v4.12. Additional device entries were added over
-the years (AMD Matisse in 2020, AMD FCH AHCI in 2023, SolidRun SNET DPU,
-Mediatek MT7922 in 2025).
+The `dpc_handler()` function was authored by Kuppuswamy Sathyanarayanan
+in commit `aea47413e7ceec` (2020-03-23), present since v5.15. The core
+structure with `dpc_process_error()` + `pcie_do_recovery()` has been
+stable since then. The surprise removal check was added later by
+`2ae8fbbe1cd42` (2024, first in v6.12).
 
-Record: `quirk_no_flr` infrastructure exists since v4.12 (2017). Present
-in ALL active stable kernel trees.
-
-**Step 3.2: Fixes Tag**
-No Fixes: tag — not applicable (this is a new device ID addition, not a
-code fix).
+**Step 3.2: Fixes Tag Context**
+The original v3 patch had `Fixes: a57f2bfb4a58` ("PCI/AER: Ratelimit
+correctable and non-fatal error logging") which was first in v6.16-rc1.
+However, the reference counting bug existed earlier - the DPC path has
+been missing the reference since `aea47413e7ceec` (2020, v5.15+). Bjorn
+split the reference counting part into its own patch.
 
 **Step 3.3: File History**
-`drivers/pci/quirks.c` is an actively maintained file with frequent
-device-specific additions. The pattern of adding
-`DECLARE_PCI_FIXUP_EARLY` entries for broken FLR is well-established
-with many precedents.
+Recent commits to `dpc.c` are mostly cleanup/improvement (FIELD_GET,
+defines, TLP log). No other reference counting fixes.
 
-Record: File is active. Pattern is established. This is standalone — no
-prerequisites.
-
-**Step 3.4: Author**
-Lizhi Hou is an AMD developer who works on the `accel/amdxdna` (AMD NPU)
-driver. Their commits show deep familiarity with the AMD NPU hardware.
-They are the right person to identify this hardware defect.
-
-Record: Author is the AMD NPU subsystem developer — credible source for
-this hardware bug report.
+**Step 3.4: Author Context**
+Sizhe Liu (Huawei) identified the issue. Bjorn Helgaas (PCI subsystem
+maintainer) reviewed, suggested the reference counting addition, and
+committed the fix.
 
 **Step 3.5: Dependencies**
-None. The `quirk_no_flr` function, `DECLARE_PCI_FIXUP_EARLY` macro, and
-`PCI_VENDOR_ID_AMD` constant all exist in every stable tree back to
-v4.12. This patch is completely self-contained.
+This commit is fully standalone. It adds `pci_dev_get()`/`pci_dev_put()`
+around existing code. No new functions, no API changes, no dependencies.
 
-Record: No dependencies. Will apply cleanly to any stable tree with the
-quirk infrastructure (all of them).
+### PHASE 4: MAILING LIST RESEARCH
 
----
+The complete discussion was found. Key findings:
+1. Sizhe Liu submitted v1/v2/v3 of "PCI/AER: Fix missing AER logs in DPC
+   and EDR paths"
+2. On v2 review, **Bjorn Helgaas himself identified** the missing
+   reference: "I don't see a similar pci_dev_get() anywhere in the DPC
+   path ... holding that reference on the device is important."
+3. Sizhe Liu agreed and added it in v3
+4. Bjorn then split the v3 patch into two separate patches: the AER log
+   fix and this reference counting fix
+5. Shiju Jose reviewed v3 with minor formatting comments
+6. The patch was applied by Bjorn Helgaas
 
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+### PHASE 5: CODE SEMANTIC ANALYSIS
 
-**Step 4.1-4.5:** Lore and patch.msgid.link are currently returning
-anti-bot challenges. However, the commit was applied by Bjorn Helgaas
-(PCI subsystem maintainer), which is the strongest possible endorsement
-for a PCI patch. The Link: tag confirms it was submitted and reviewed
-through the standard kernel mailing list process.
+**Callers of affected code:**
+- `dpc_handler()` is a threaded IRQ handler registered in `dpc_probe()`
+  via `devm_request_threaded_irq()`
+- Triggered by `dpc_irq()` (hardirq handler) returning `IRQ_WAKE_THREAD`
+- `pcie_do_recovery()` is a long-running function that walks the PCI
+  bus, calls driver error handlers, resets links, and waits for
+  secondary bus readiness
 
-Record: Could not access lore discussion due to anti-bot protection.
-However, maintainer (Bjorn Helgaas) applied the patch directly, which is
-strong validation.
+**Call chain:** Hardware DPC trigger -> `dpc_irq()` -> `dpc_handler()`
+-> `dpc_process_error()` + `pcie_do_recovery()` -> `dpc_reset_link()` ->
+`pcie_wait_for_link()` + `pci_bridge_wait_for_secondary_bus()`
 
----
+The recovery process can take seconds (waiting for links, bus resets).
+During this time, the `pci_dev` must remain valid.
 
-## PHASE 5: CODE SEMANTIC ANALYSIS
+### PHASE 6: STABLE TREE ANALYSIS
 
-**Step 5.1: Functions**
-No functions modified. Two new `DECLARE_PCI_FIXUP_EARLY` entries added
-that call existing `quirk_no_flr()`.
+The buggy code (`dpc_handler()` without reference) exists in all stable
+trees from v5.15 onwards. The function was introduced in
+`aea47413e7ceec` (v5.15). For trees older than v6.12, the surprise
+removal block won't be present, but the patch context for the
+`pci_dev_get`/`pci_dev_put` addition is around the `dpc_process_error()`
++ `pcie_do_recovery()` calls which are present in all trees. Minor
+conflicts may be needed for trees without the surprise removal check.
 
-**Step 5.2: Callers of quirk_no_flr**
-Called by the PCI subsystem during device enumeration (early fixup
-phase). This runs for every PCI device matching the vendor/device ID
-pair.
+### PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 
-**Step 5.3-5.4: Impact path**
-`quirk_no_flr()` → sets `PCI_DEV_FLAGS_NO_FLR_RESET` → checked by
-`pcie_reset_flr()` and `pci_af_flr()` in `drivers/pci/pci.c`. FLR is
-triggered during VFIO device passthrough, device reset operations, and
-error recovery. The flag causes these functions to return `-ENOTTY`,
-which makes the PCI reset machinery use an alternative reset method.
+- Subsystem: PCI Express (drivers/pci/pcie/) - IMPORTANT subsystem
+  affecting all PCIe users
+- DPC is a standard PCIe feature for error containment
+- Maintainer: Bjorn Helgaas - he personally identified and committed
+  this fix
+- Criticality: IMPORTANT - affects all systems with PCIe DPC support
 
-Record: FLR is triggered in VFIO passthrough and device reset. The quirk
-prevents hang in these common operations.
+### PHASE 8: IMPACT AND RISK ASSESSMENT
 
-**Step 5.5: Similar patterns**
-7 existing entries in the same quirk table for AMD, Intel, Mediatek, and
-SolidRun devices. This is a very common pattern.
+**Who is affected:** All systems with PCIe DPC support (most modern x86
+systems, some ARM)
 
----
+**Trigger conditions:** A DPC containment event (PCIe fatal error)
+concurrent with device removal. While the specific race may be hard to
+trigger, DPC events are not uncommon (hardware errors, NVMe removal
+under load).
 
-## PHASE 6: STABLE TREE ANALYSIS
+**Failure mode:** Potential use-after-free - accessing freed `pci_dev`
+during recovery. Severity: **HIGH** (crash, potential security issue)
 
-**Step 6.1: Buggy code in stable?**
-The "buggy code" is the PCI FLR path itself which doesn't know about
-these AMD NPU devices. The `quirk_no_flr` infrastructure has existed
-since v4.12. However, the AMD NPU hardware itself may only appear in
-relatively recent systems.
+**Benefit:** Fixes a reference counting correctness bug, aligns DPC with
+AER/EDR behavior, prevents potential UAF during error recovery.
 
-Record: The quirk infrastructure exists in all stable trees. The fix
-will apply cleanly.
+**Risk:** **Very low** - 2 lines, balanced get/put, obviously correct,
+no behavioral change.
 
-**Step 6.2: Backport complications**
-None expected. The patch adds entries at the end of an existing table.
-The exact ordering might differ slightly across stable trees, but the
-macro entries are independent and the patch should apply with at most
-trivial context adjustments.
+### PHASE 9: FINAL SYNTHESIS
 
-Record: Expected backport difficulty: clean apply or trivial context
-adjustment.
+**Evidence FOR backporting:**
+1. Fixes a reference counting bug (missing `pci_dev_get` in DPC handler)
+2. Potential use-after-free during error recovery
+3. Only 2 lines added - minimal risk
+4. PCI subsystem maintainer (Bjorn Helgaas) personally identified the
+   issue and committed the fix
+5. Consistent with how AER and EDR paths already work
+6. `pcie_do_recovery()` is a long-running function making the window
+   non-trivial
+7. Buggy code present since v5.15
+8. Standalone fix with no dependencies
 
-**Step 6.3: Related fixes in stable**
-No related fixes for AMD NPU FLR already in stable.
+**Evidence AGAINST backporting:**
+1. No concrete crash report or syzbot finding (theoretical)
+2. Race requires specific timing (DPC + hot-removal)
 
----
+**Stable Rules Checklist:**
+1. Obviously correct? **YES** - balanced get/put, trivially verifiable
+2. Fixes a real bug? **YES** - reference counting inconsistency,
+   potential UAF
+3. Important issue? **YES** - potential crash/UAF during error recovery
+4. Small and contained? **YES** - 2 lines in 1 file
+5. No new features/APIs? **YES** - pure bug fix
+6. Can apply to stable? **YES** - standalone, clean apply expected for
+   v7.0
 
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+### Verification
 
-**Step 7.1:** PCI subsystem (`drivers/pci/`) — CORE infrastructure,
-affects all PCI device users.
+- [Phase 1] Parsed tags: Signed-off-by Sizhe Liu + Bjorn Helgaas, Link
+  to lore
+- [Phase 2] Diff analysis: +2 lines in `dpc_handler()`, adds
+  `pci_dev_get()`/`pci_dev_put()` around error recovery
+- [Phase 3] git blame: `dpc_handler()` introduced in commit
+  `aea47413e7ceec` (2020), present since v5.15
+- [Phase 3] git show a57f2bfb4a58: confirmed the ratelimit commit is in
+  v6.16-rc1, first in v7.0 tree
+- [Phase 4] Found full thread via yhbt.net mirror of lore: v1/v2/v3
+  progression, Bjorn requested ref counting in v2 review
+- [Phase 4] Bjorn Helgaas (PCI maintainer) explicitly said "holding that
+  reference on the device is important"
+- [Phase 4] Bjorn split original 3-file patch into separate patches,
+  this is the DPC ref-counting portion
+- [Phase 5] `pcie_do_recovery()` walks bus, resets links, waits for
+  secondary bus - long-running operation
+- [Phase 5] Verified AER (aer.c:992/1202), AER APEI (aer.c:1226/1253),
+  EDR (edr.c:89/218) all hold references
+- [Phase 5] Verified DPC path has NO reference holding in current 7.0
+  tree
+- [Phase 6] Buggy code exists since v5.15 (aea47413e7ceec present in
+  v5.15, v6.1, v6.6, v6.12, v7.0)
+- [Phase 6] Surprise removal block (2ae8fbbe1cd42) is in v6.12+ only, so
+  older trees may need context adjustment
+- [Phase 7] PCI/DPC is an important subsystem; fix committed by
+  subsystem maintainer
+- [Phase 8] Failure mode: potential UAF during DPC recovery, severity
+  HIGH
+- UNVERIFIED: Whether the `devm_request_threaded_irq` + `free_irq`
+  synchronization fully prevents the race (it synchronizes handler
+  completion but doesn't prevent refcount drops during handler
+  execution)
 
-**Step 7.2:** PCI quirks.c is actively maintained with frequent device
-additions.
-
-Record: [PCI subsystem] [CORE criticality] [Active development]
-
----
-
-## PHASE 8: IMPACT AND RISK ASSESSMENT
-
-**Step 8.1: Who is affected**
-Users with AMD NPU hardware (PCI IDs 0x1502, 0x17f0). This includes
-users doing VFIO passthrough to VMs, users experiencing error recovery
-that triggers FLR, and potentially users of the amdxdna accelerator
-driver.
-
-Record: Affected users: AMD NPU hardware users.
-
-**Step 8.2: Trigger conditions**
-FLR is triggered during: VFIO device attach/detach, device error
-recovery, and explicit reset operations. For VFIO users, this is
-triggered during normal VM operations.
-
-Record: Trigger is FLR attempt — common in VFIO and device reset
-scenarios.
-
-**Step 8.3: Failure mode**
-Device hang — the NPU becomes unresponsive and cannot be used. This is a
-HIGH severity issue.
-
-Record: Severity: HIGH (device hang, device becomes unusable)
-
-**Step 8.4: Risk-Benefit**
-- Benefit: HIGH — prevents device hang on real hardware for real users
-- Risk: VERY LOW — 3 lines, uses existing well-tested infrastructure,
-  affects only the specific device IDs, no logic changes
-- Ratio: Excellent benefit-to-risk ratio
-
----
-
-## PHASE 9: FINAL SYNTHESIS
-
-**Step 9.1: Evidence Summary**
-
-FOR backporting:
-- Classic PCI quirk addition — explicitly listed as an exception
-  category for stable
-- Only 3 lines added, using existing infrastructure unchanged since
-  v4.12
-- Prevents device hang (HIGH severity)
-- Applied by PCI subsystem maintainer (Bjorn Helgaas)
-- Author is the AMD NPU hardware developer (credible bug report)
-- Zero regression risk — only affects specific PCI device IDs
-- Pattern has 7+ precedents in the same file
-- Will apply cleanly to all stable trees
-
-AGAINST backporting:
-- None identified
-
-**Step 9.2: Stable Rules Checklist**
-1. Obviously correct and tested? **YES** — identical pattern to 7 other
-   entries, applied by subsystem maintainer
-2. Fixes a real bug? **YES** — device hang on FLR
-3. Important issue? **YES** — device hang is HIGH severity
-4. Small and contained? **YES** — 3 lines, single file
-5. No new features or APIs? **YES** — just device IDs for existing quirk
-6. Can apply to stable trees? **YES** — infrastructure exists since
-   v4.12
-
-**Step 9.3: Exception Category**
-This is a **hardware quirk/workaround** — explicitly called out as
-automatic YES for stable.
-
----
-
-## Verification
-
-- [Phase 1] Parsed tags: Signed-off-by from AMD developer (Lizhi Hou)
-  and PCI maintainer (Bjorn Helgaas)
-- [Phase 2] Diff analysis: +3 lines (1 comment, 2
-  DECLARE_PCI_FIXUP_EARLY macros) in `drivers/pci/quirks.c`
-- [Phase 3] git blame: `quirk_no_flr` introduced in commit
-  `f65fd1aa4f9881` (v4.12-rc1, 2017), present in all stable trees
-- [Phase 3] git show `0d14f06cd6657`: confirmed AMD Matisse FLR quirk
-  precedent from 2020
-- [Phase 3] git log --author: Lizhi Hou confirmed as AMD XDNA/NPU
-  accelerator developer
-- [Phase 4] Lore/patch.msgid.link blocked by anti-bot; maintainer SOB
-  confirms standard review process
-- [Phase 5] Grep for `PCI_DEV_FLAGS_NO_FLR_RESET`: checked in
-  `pcie_reset_flr()` (line 4375) and `pci_af_flr()` (line 4398) in
-  `pci.c`
-- [Phase 6] `quirk_no_flr` infrastructure exists since v4.12 — present
-  in ALL active stable trees
-- [Phase 6] No backport complications: trivial table additions
-- [Phase 8] Failure mode: device hang on FLR, severity HIGH
-- UNVERIFIED: Could not access lore discussion to check for reviewer
-  feedback or stable nominations (anti-bot protection)
-
-This is a textbook hardware quirk addition: minimal (3 lines), using
-long-established infrastructure, preventing a device hang on real AMD
-NPU hardware, applied by the PCI subsystem maintainer, with zero
-regression risk.
+The fix is a 2-line, obviously correct reference counting addition that
+aligns the DPC error recovery path with the AER and EDR paths. The PCI
+subsystem maintainer identified and committed it. The potential
+consequence of the missing reference is a use-after-free, and the fix
+carries essentially zero regression risk.
 
 **YES**
 
- drivers/pci/quirks.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/pcie/dpc.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 48946cca4be72..757a296eae411 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5603,6 +5603,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
-  * AMD Starship/Matisse HD Audio Controller 0x1487
-  * AMD Starship USB 3.0 Host Controller 0x148c
-  * AMD Matisse USB 3.0 Host Controller 0x149c
-+ * AMD Neural Processing Unit 0x1502 0x17f0
-  * Intel 82579LM Gigabit Ethernet Controller 0x1502
-  * Intel 82579V Gigabit Ethernet Controller 0x1503
-  * Mediatek MT7922 802.11ax PCI Express Wireless Network Adapter
-@@ -5615,6 +5616,8 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1487, quirk_no_flr);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x148c, quirk_no_flr);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x149c, quirk_no_flr);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x7901, quirk_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1502, quirk_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x17f0, quirk_no_flr);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x0616, quirk_no_flr);
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index fc18349614d7c..f028bc795f197 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -372,11 +372,13 @@ static irqreturn_t dpc_handler(int irq, void *context)
+ 		return IRQ_HANDLED;
+ 	}
+ 
++	pci_dev_get(pdev);
+ 	dpc_process_error(pdev);
+ 
+ 	/* We configure DPC so it only triggers on ERR_FATAL */
+ 	pcie_do_recovery(pdev, pci_channel_io_frozen, dpc_reset_link);
+ 
++	pci_dev_put(pdev);
+ 	return IRQ_HANDLED;
+ }
+ 
 -- 
 2.53.0
 
