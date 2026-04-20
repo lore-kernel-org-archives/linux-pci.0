@@ -1,49 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 793BC3B19A0;
-	Mon, 20 Apr 2026 13:16:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8CB93B47C2;
+	Mon, 20 Apr 2026 13:16:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776691000; cv=none; b=gXqi2Hh8nFmzUcsL/7pdlHHAxlzv0GMGe8F/2PH+3+Bfzc980H3KPWd5oNPOr1itWslSk7FjhMx3uzKLNhoqoh3r/CuJlhmxq3nOhFFNQtpWSajhgkTL75/cYAVr9ivEtTyqtjfKHldVhLIMkFnGmaLBcg+0sAjX5LR4tVOBDYE=
+	t=1776691012; cv=none; b=npZnbiWNPGvCzd47rXkKnEoKIQmhD65eyXWMvhOoAckrtn75MoQP8IUrTGorMjyPSUviD8iapw51t0ZAHJUCj/n5my/1FSCqhfbP5hflYX3UArff/0Bnt0AVsqBmwAuZhXjfp7D3eUB7bvajmUDOc3uVc7VodUnk/Q9rP+XtR3g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776691000; c=relaxed/simple;
-	bh=sLlPteD7lQfoTv9dBR+y8MY+DTQXae9AAcAO6Liy7pM=;
+	s=arc-20240116; t=1776691012; c=relaxed/simple;
+	bh=o9dA1ooCdh+IbsT5sarW2ygoNheFjaid1cQ3J2MAyQo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=oFpI6eV0gURKQqERg+vyv1DtvM9p0H8OqqeToFm6jbzqoaPbPgUx8AzdZbHJcBJEWHkk9aQfiOHlsc3qRmllDP706UDwb0EcuIop4I0aGgHChl72puZqSUtEEy5LItzYsfbY94jMyAmxUTVBWn1kt2Ij+yn3AB5k0GNMqH5+6I8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uL/ZFLdr; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=BmxkFpw8EvAEjhhnK/cFQPTqNFQAkAaqy2kywOqn6160i9L3H1fHH4tdOKME7Ilz1Bwa5KRCM1fWmLgpXy1Rs65JAcLDy7j6BAs+pSv9U99BMkEivyaVFCvruVyKSV8chwE6v4O52LPoqzPKgq7uyDEnNkN4mHsc0Q4oV7Dzink=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L73l+FXR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uL/ZFLdr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F666C2BCB7;
-	Mon, 20 Apr 2026 13:16:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L73l+FXR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40CEAC2BCB7;
+	Mon, 20 Apr 2026 13:16:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776691000;
-	bh=sLlPteD7lQfoTv9dBR+y8MY+DTQXae9AAcAO6Liy7pM=;
+	s=k20201202; t=1776691012;
+	bh=o9dA1ooCdh+IbsT5sarW2ygoNheFjaid1cQ3J2MAyQo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=uL/ZFLdrFDsfRc52cvS4/vmu8/uUgKta+/DwqT2AiFT3trzpPthFQ+H0Xywb37AxO
-	 sZiGu5Cjvqi6UTJAX6GqRzwckTESb9DCa2c17hFg7+4XbVGKEmyr7My9HyKRytN8xt
-	 lwiR6aiNMhRvO272TOb6vXDjaltQZrFbS00XgWwHDczOS4s69Z/Fc157taZeewIGn8
-	 UC72BrlVo2xxtVCcFJef8sZs6QIfVppOm5Nvym32Lw5hiDGjRGPN3WZ+Bcy6zc2dC2
-	 gH4Pq3+vc13uTLm8claMFOFxCZIvaKgps6tYoitlFj6GTN7jQ46tr6AwXxycQmCLXS
-	 uTAJ2HCLQrFtw==
+	b=L73l+FXRBXC25yj1nVd3iCOebu0Yuczn6MwEd4LXj2tSU5iPyQ2mXBEHbL6jd/tp5
+	 HbPAIEUI4JA22+qhSN6qdKZgS+Q6oHvlChnEWuiHWspydWNDfcwoHdSEQp1YY8Y+ue
+	 w7mO8Y2o4vnOdF+7rawE7uNCwFOWlPrvdvWP8GwJOzWeXfzCL52/N3qGG4bJ5ufxr8
+	 S2D5UGj8LufOQokB7BQZUvCfxcIMRfBMph3LvITN+4twfqmhHJJQ+YHUfU5eI3IamB
+	 415JhA3sHRA56g0UsZu2yxFQeHkMvkJrf04QHX/W3HHtZ9Wgv7HBmGzYhm4+orQUM2
+	 nZRs9/UZjSVVg==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Vidya Sagar <vidyas@nvidia.com>,
-	Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
 	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jon Hunter <jonathanh@nvidia.com>,
+	Frank Li <Frank.Li@nxp.com>,
 	Sasha Levin <sashal@kernel.org>,
+	jingoohan1@gmail.com,
 	lpieralisi@kernel.org,
 	kwilczynski@kernel.org,
-	thierry.reding@kernel.org,
+	bhelgaas@google.com,
 	linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 7.0-5.10] PCI: tegra194: Assert CLKREQ# explicitly by default
-Date: Mon, 20 Apr 2026 09:08:21 -0400
-Message-ID: <20260420131539.986432-35-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 7.0-6.18] PCI: dwc: Proceed with system suspend even if the endpoint doesn't respond with PME_TO_Ack message
+Date: Mon, 20 Apr 2026 09:08:28 -0400
+Message-ID: <20260420131539.986432-42-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260420131539.986432-1-sashal@kernel.org>
 References: <20260420131539.986432-1-sashal@kernel.org>
@@ -59,354 +58,353 @@ X-stable-base: Linux 7.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Vidya Sagar <vidyas@nvidia.com>
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-[ Upstream commit 01d36261ae331583e6bc2034e6aa75c101b83e1d ]
+[ Upstream commit eed390775470ff0db32cce37a681f3acc2b941c3 ]
 
-The Root Port's CLKREQ# signal is shared with a downstream PCIe switch and
-the endpoints behind it. By default, APPL_PINMUX_CLKREQ_OVERRIDE only
-overrides the CLKREQ# input to the controller (so REFCLK is enabled
-internally); it does not drive the CLKREQ# output pin low. Some PCIe
-switches (e.g. Broadcom PCIe Gen4) forward the Root Port's CLKREQ# to their
-downstream side and expect it to be driven low for REFCLK, even when the
-switch does not support CLK-PM or ASPM-L1SS. Without driving the output
-pin low, link-up can fail between the switch and endpoints.
+PCIe spec r7.0, sec 5.3.3.2.1, recommends proceeding with L2/L3 sequence
+even if one or devices do not respond with PME_TO_Ack message after 10ms
+timeout.
 
-Clear APPL_PINMUX_CLKREQ_DEFAULT_VALUE so the CLKREQ# output pad is
-explicitly driven low. That makes the shared CLKREQ# line low on the wire
-and avoids link-up issues with such switches.
+So just print a warning if the timeout happens and proceed with the system
+suspend.
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Reported-by: Neil Armstrong <neil.armstrong@linaro.org>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Tested-by: Jon Hunter <jonathanh@nvidia.com>
-Reviewed-by: Vidya Sagar <vidyas@nvidia.com>
-Reviewed-by: Jon Hunter <jonathanh@nvidia.com>
-Link: https://patch.msgid.link/20260324191000.1095768-2-mmaddireddy@nvidia.com
+Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on SM8650-HDK
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Link: https://patch.msgid.link/20260217113142.9140-1-manivannan.sadhasivam@oss.qualcomm.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-Now I have all the information needed. Let me compile the full analysis.
+Now I have enough information to complete the full analysis. Let me
+compile my findings.
 
 ---
 
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
-### Step 1.1: PARSE THE SUBJECT LINE
-Record: [PCI: tegra194] [Assert (fix/enable)] [CLKREQ# output pin driven
-low by default to fix PCIe link-up failures with certain switches]
+### Step 1.1: Subject Line
+- **Subsystem:** PCI: dwc
+- **Action verb:** "Proceed" (implies fixing incorrect behavior where it
+  was NOT proceeding)
+- **Summary:** Continue system suspend when a PCIe endpoint doesn't
+  respond with PME_TO_Ack
 
-### Step 1.2: PARSE ALL COMMIT MESSAGE TAGS
-- **Signed-off-by**: Vidya Sagar (original driver author), Manikanta
-  Maddireddy (author), Manivannan Sadhasivam (PCI maintainer), Bjorn
-  Helgaas (PCI global maintainer)
-- **Tested-by**: Jon Hunter (NVIDIA kernel lead for Tegra)
-- **Reviewed-by**: Vidya Sagar (original driver author), Jon Hunter
-- **Link**: `https://patch.msgid.link/20260324191000.1095768-2-
-  mmaddireddy@nvidia.com` (patch 2 in series)
-- No Fixes: tag (expected)
-- No Cc: stable (expected)
+### Step 1.2: Tags
+- **Reported-by:** Neil Armstrong <neil.armstrong@linaro.org> — Linaro
+  engineer, real-world issue on Qualcomm SM8650-HDK
+- **Tested-by:** Neil Armstrong <neil.armstrong@linaro.org> # on
+  SM8650-HDK — Hardware-verified
+- **Reviewed-by:** Frank Li <Frank.Li@nxp.com> — Major DWC PCI
+  contributor at NXP
+- **Signed-off-by:** Manivannan Sadhasivam — DWC PCI subsystem
+  maintainer (both @oss.qualcomm.com and @kernel.org)
+- **Link:** patch.msgid.link for the v2 patch
+- **No Fixes: tag** — expected for autosel candidates
+- **No Cc: stable** — expected for autosel candidates
 
-Record: Strong review chain - original driver author, NVIDIA Tegra
-kernel lead, and PCI subsystem maintainers all signed off/reviewed.
+### Step 1.3: Commit Body
+The commit references PCIe spec r7.0, sec 5.3.3.2.1, which explicitly
+recommends proceeding with L2/L3 sequence even when devices don't
+respond with PME_TO_Ack within 10ms. The current code aborts system
+suspend entirely when this timeout occurs, which is overly conservative
+and blocks real-world hardware.
 
-### Step 1.3: ANALYZE THE COMMIT BODY TEXT
-The commit explains that `APPL_PINMUX_CLKREQ_OVERRIDE` only overrides
-the CLKREQ# *input* to the controller (enabling REFCLK internally), but
-does NOT drive the CLKREQ# *output* pin low. Some PCIe switches (e.g.,
-Broadcom PCIe Gen4) forward the Root Port's CLKREQ# to their downstream
-side. Without driving the output low, **link-up can fail** between the
-switch and endpoints.
+**Bug:** System suspend fails when any PCIe endpoint doesn't respond
+with PME_TO_Ack within 10ms timeout.
+**Symptom:** `dev_err` + return error from `dw_pcie_suspend_noirq()`,
+preventing suspend.
+**Root cause:** Code treated a non-fatal timeout as fatal, contrary to
+spec recommendation.
 
-Record: Bug = PCIe link-up failure. Symptom = endpoints behind PCIe
-switches don't enumerate. Root cause = CLKREQ# output pad not driven low
-when it should be.
-
-### Step 1.4: DETECT HIDDEN BUG FIXES
-Record: This IS a bug fix - it fixes a real hardware link-up failure.
-The language "assert... explicitly" and "avoids link-up issues"
-describes fixing broken behavior.
+### Step 1.4: Hidden Bug Fix Assessment
+This is a clear behavior fix. "Proceed with system suspend" = "stop
+incorrectly aborting suspend". This is a real bug fix where the
+implementation deviates from the PCIe specification.
 
 ---
 
 ## PHASE 2: DIFF ANALYSIS
 
-### Step 2.1: INVENTORY THE CHANGES
-- **File**: `drivers/pci/controller/dwc/pcie-tegra194.c` (+2 lines)
-- **Change 1**: Add `#define APPL_PINMUX_CLKREQ_DEFAULT_VALUE BIT(13)`
-  in the register bit definitions
-- **Change 2**: Add `val &= ~APPL_PINMUX_CLKREQ_DEFAULT_VALUE;` inside
-  `tegra_pcie_config_controller()` in the `!supports_clkreq` block
+### Step 2.1: Inventory
+- **Files changed:** 1 (`drivers/pci/controller/dwc/pcie-designware-
+  host.c`)
+- **Lines changed:** ~7 lines modified within a single error-handling
+  block
+- **Functions modified:** `dw_pcie_suspend_noirq()`
+- **Scope:** Single-file, surgical fix to one error path
 
-Record: Single file, 2 lines added. Functions modified:
-`tegra_pcie_config_controller()`. Scope: single-file surgical fix.
+### Step 2.2: Code Flow Change
+**Before:** When `read_poll_timeout()` returns error (endpoint didn't
+reach L2 state in 10ms):
+- `dev_err()` prints an error
+- `return ret;` aborts the entire suspend
 
-### Step 2.2: UNDERSTAND THE CODE FLOW CHANGE
-- **Before**: When `!supports_clkreq`, the code enabled CLKREQ# override
-  (bit 2) and cleared CLKREQ# override value (bit 3) - this overrides
-  the CLKREQ# *input* but left the *output pad default value* (bit 13)
-  unchanged (high by default)
-- **After**: Additionally clears bit 13, which explicitly drives the
-  CLKREQ# output pad low on the wire
+**After:**
+- `dev_warn()` prints a warning
+- `ret = 0;` clears the error
+- Execution continues through `udelay(1)`, `dw_pcie_stop_link()`, and
+  `deinit()` to complete suspend
 
-Record: Before = REFCLK internally enabled but output pad floats high.
-After = REFCLK internally enabled AND output pad driven low.
+### Step 2.3: Bug Mechanism
+Category: **Logic/correctness fix** — the code was treating a non-fatal
+spec-compliant condition as fatal. The PCIe spec explicitly says to
+proceed with L2/L3 sequence even without PME_TO_Ack.
 
-### Step 2.3: IDENTIFY THE BUG MECHANISM
-Record: Category (h) Hardware workaround. The hardware register has a
-default-high bit for the CLKREQ# output pad that wasn't being cleared,
-causing PCIe link-up failures with switches that forward CLKREQ#.
-
-### Step 2.4: ASSESS THE FIX QUALITY
-- Obviously correct: just clearing one more register bit in a register
-  already being configured
-- Minimal/surgical: 2 lines total
-- Regression risk: extremely low - only affects Tegra platforms in the
-  `!supports_clkreq` path, only clears an additional bit that logically
-  should be cleared
-Record: Fix quality = excellent. Regression risk = negligible.
+### Step 2.4: Fix Quality
+- **Obviously correct:** Yes — directly implements PCIe spec r7.0
+  recommendation
+- **Minimal:** Yes — 2-line essential change (dev_err→dev_warn,
+  return→ret=0)
+- **Regression risk:** Very low — previous behavior blocked suspend
+  entirely; new behavior allows suspend to proceed per spec
+- **Red flags:** None
 
 ---
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
-### Step 3.1: BLAME THE CHANGED LINES
-The `!supports_clkreq` code block was introduced in commit
-`56e15a238d9278` ("PCI: tegra: Add Tegra194 PCIe support", 2019-08-13,
-v5.4) and modified by `ff5c2bb9c6f5ee` ("PCI: tegra: Fix CLKREQ
-dependency programming", 2019-10-05, also v5.4).
+### Step 3.1: Blame
+The error-returning code was introduced by commit `4774faf854f534`
+("PCI: dwc: Implement generic suspend/resume functionality") by Frank
+Li, merged in v6.6. The comment was modified by `112aba9a79345a`
+(Richard Zhu, v6.15).
 
-Record: Buggy code has been present since v5.4, when the driver was
-introduced. The code exists in all stable trees since v5.4.
+**Record:** Buggy code present since v6.6 in all stable trees through
+v6.16.
 
-### Step 3.2: FOLLOW THE FIXES TAG
-No Fixes: tag present. This is expected for candidate review.
+### Step 3.2: No Fixes tag to follow (expected).
 
-### Step 3.3: CHECK FILE HISTORY
-The file has many commits since v5.4 but the `!supports_clkreq` block
-hasn't changed since ff5c2bb9c6f5ee.
+### Step 3.3: File History
+Related recent commits in this area:
+- `58a17b2647ba5` — skip_l23_ready flag (v7.0 only, Cc: stable)
+- `cfd2fdfd0a8da` — skip PME_Turn_Off if link not up (v7.0 only)
+- `112aba9a79345a` — additional LTSSM state checks (v6.15)
+- `4774faf854f534` — original implementation (v6.6)
 
-Record: No prerequisites for this specific code block. The patch is
-standalone.
+### Step 3.4: Author
+Manivannan Sadhasivam IS the DWC PCI subsystem maintainer. He signed-off
+with both his Qualcomm and kernel.org addresses. He applied his own
+patch to his tree (commit `eed390775470ff0db32cce37a681f3acc2b941c3`).
 
-### Step 3.4: CHECK THE AUTHOR
-Manikanta Maddireddy is an NVIDIA engineer working on Tegra PCI. Vidya
-Sagar (original driver author) reviewed the patch. Jon Hunter (NVIDIA
-Tegra kernel lead) tested and reviewed it.
-
-Record: Author is an NVIDIA Tegra PCI engineer. Original driver author
-and NVIDIA kernel team lead both reviewed/tested.
-
-### Step 3.5: CHECK FOR DEPENDENCIES
-The patch is patch 2 of a series (from the message ID). However, the fix
-is completely self-contained:
-1. The new `#define` doesn't depend on anything new
-2. The bit-clear operation is added to an existing code block
-3. No other functions or data structures are modified
-
-One concern: the diff context shows `DW_PCIE_VER_500A` /
-`DW_PCIE_VER_562A` macros, but the v7.0 tree uses raw hex values
-`0x490A` / `0x562A`. This means the commit was built on top of a tree
-with a version macro rename. However, this only affects context lines in
-the header area — the actual code change applies to a completely
-different part of the function.
-
-Record: Self-contained fix. Minor context mismatch in header defines
-area, but actual functional change applies cleanly.
+### Step 3.5: Dependencies
+The core fix applies independently of other commits. The same `if (ret)
+{ dev_err(); return ret; }` pattern exists in all versions from v6.6
+through v7.0. Context lines differ slightly between versions, requiring
+minor conflict resolution but no functional dependencies.
 
 ---
 
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+## PHASE 4: MAILING LIST RESEARCH
 
-### Step 4.1-4.5: MAILING LIST INVESTIGATION
-Lore.kernel.org was behind an anti-scraping challenge and could not be
-accessed. However:
-- b4 dig found the original CLKREQ fix (ff5c2bb9c6f5ee) was part of a
-  series
-- The commit was accepted through the PCI maintainer tree (Manivannan
-  Sadhasivam -> Bjorn Helgaas)
-- The strong review chain (Tested-by, Reviewed-by from original author
-  and NVIDIA kernel lead) provides high confidence
+### Step 4.1: Original Submission
+Found via web search and spinics.net mirrors:
+- **v1:** Missing `ret = 0`, would pass error to callers
+- **v2:** Added `ret = 0` to properly clear the error (applied version)
+- Applied by maintainer on Feb 26, 2026
 
-Record: Could not access lore directly. Review chain provides strong
-confidence.
+### Step 4.2: Reviewers
+- **Frank Li (NXP):** Gave Reviewed-by, major DWC PCI contributor
+- **Neil Armstrong (Linaro):** Reporter and tester on SM8650-HDK
+- No NAKs or objections
+
+### Step 4.3: Bug Report
+Neil Armstrong reported the issue. His Tested-by comment says: "Allows
+ath12k to go into d3cold" — the WiFi chip (ath12k) on Qualcomm
+SM8650-HDK doesn't respond with PME_TO_Ack in time, blocking suspend.
+
+### Step 4.4: Related Patches
+The skip_l23_ready patch (58a17b2647ba5) is a separate fix for
+i.MX6QP/i.MX7D platforms and was explicitly tagged Cc: stable. This
+PME_TO_Ack patch is a different fix addressing a broader issue.
+
+### Step 4.5: Stable Discussion
+The skip_l23_ready patch was Cc'd to stable with explicit `Fixes:` tag.
+This patch was not Cc'd to stable, which is why it's under review.
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
-### Step 5.1-5.4: FUNCTION AND CALLER ANALYSIS
-`tegra_pcie_config_controller()` is called from:
-1. `tegra_pcie_init_controller()` (line 1526) — during initial
-   probe/boot
-2. `tegra_pcie_dw_resume_noirq()` (line 2346) — during resume from
-   suspend
+### Step 5.1: Functions Modified
+Only `dw_pcie_suspend_noirq()` is modified.
 
-Both are critical paths. The fix affects both initial boot and resume,
-meaning without the fix, PCIe link-up can fail both at boot and after
-suspend/resume.
+### Step 5.2: Callers
+Verified callers in each stable tree:
+- **v6.6:** `pci-layerscape.c`
+- **v6.12:** `pci-layerscape.c`
+- **v6.15:** `pci-layerscape.c`, `pci-imx6.c`
+- **v6.16:** `pci-layerscape.c`, `pci-imx6.c`
+- **v7.0:** `pci-layerscape.c`, `pci-imx6.c`, `pcie-stm32.c`, `pcie-
+  nxp-s32g.c`
 
-The `!supports_clkreq` condition is determined by the `supports-clkreq`
-DT property (line 1138-1139). Systems without this property will hit the
-bug.
+### Step 5.3: Call chain
+`dw_pcie_suspend_noirq()` is called during system suspend from platform-
+specific PM callbacks. This is triggered whenever the system enters
+suspend (e.g., `echo mem > /sys/power/state`).
 
-Record: Critical paths affected (boot and resume). Impact depends on DT
-configuration.
-
----
-
-## PHASE 6: CROSS-REFERENCING AND STABLE TREE ANALYSIS
-
-### Step 6.1: DOES THE BUGGY CODE EXIST IN STABLE TREES?
-Yes. The driver was introduced in v5.4, and the specific code block has
-been unchanged since ff5c2bb9c6f5ee (also v5.4). All active stable trees
-(5.4.y through 6.12.y and 7.0.y) contain the buggy code.
-
-### Step 6.2: BACKPORT COMPLICATIONS
-Minor context difference in the header define area (version macros
-changed upstream). The actual functional change in
-`tegra_pcie_config_controller()` applies cleanly to all stable trees
-since the `!supports_clkreq` block hasn't changed since v5.4.
-
-Record: Minor context adjustment needed for defines area. Functional
-code change applies cleanly.
+### Step 5.4: Reachability
+Reachable from userspace via system suspend on any platform with a DWC
+PCIe controller and an endpoint that doesn't respond to PME_TO_Ack in
+time.
 
 ---
 
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+## PHASE 6: STABLE TREE ANALYSIS
 
-### Step 7.1: SUBSYSTEM CRITICALITY
-PCI controller driver for NVIDIA Tegra194/234 SoCs. Platform: ARM64
-Tegra (Jetson, automotive, embedded).
+### Step 6.1: Buggy Code in Stable
+The buggy `return ret;` on L2 timeout exists in ALL stable trees from
+v6.6 through v6.16. Verified by examining the function body in each
+version.
 
-Record: Subsystem = PCI controller (drivers/pci/controller/dwc).
-Criticality = IMPORTANT (affects Tegra platform users, including Jetson
-dev boards and automotive systems).
+### Step 6.2: Backport Complexity
+The core fix (`dev_err→dev_warn`, `return ret→ret=0`) applies to the
+same code pattern in all versions. Context lines differ (skip_l23_ready
+block doesn't exist in v6.6-v6.16, DETECT_WAIT check only in v6.15+), so
+the patch won't apply cleanly but needs trivial adjustment.
+
+### Step 6.3: Related Fixes
+No other fix for this specific issue is in stable. The skip_l23_ready
+patch (Cc: stable) is a different fix for different hardware.
+
+---
+
+## PHASE 7: SUBSYSTEM CONTEXT
+
+### Step 7.1: Subsystem
+PCI controller driver (DWC — DesignWare Core). This is an IMPORTANT
+subsystem — DWC is the most widely used PCIe IP block, found in
+Qualcomm, NXP (LayerScape, i.MX), STM32, Samsung, and many other SoCs.
+
+### Step 7.2: Activity
+Very actively developed, with significant refactoring between versions.
 
 ---
 
 ## PHASE 8: IMPACT AND RISK ASSESSMENT
 
-### Step 8.1: WHO IS AFFECTED
-Users of Tegra194/234 PCIe root ports with downstream PCIe switches that
-forward CLKREQ# (e.g., Broadcom PCIe Gen4 switches), on systems without
-the `supports-clkreq` DT property.
+### Step 8.1: Affected Users
+Users of DWC-based PCIe platforms (LayerScape, i.MX, STM32, S32G) who
+attempt system suspend with endpoints that don't respond to PME_TO_Ack
+within 10ms.
 
-### Step 8.2: TRIGGER CONDITIONS
-- Triggered on every boot and resume when the hardware configuration
-  matches
-- Deterministic (not a race)
+### Step 8.2: Trigger
+System suspend on a DWC PCIe platform with a non-compliant or slow-
+responding PCIe endpoint. The ath12k WiFi chip is a known trigger.
 
-### Step 8.3: FAILURE MODE SEVERITY
-PCIe link-up failure = devices behind the switch don't enumerate =
-hardware doesn't work.
-Severity: HIGH (complete loss of PCIe functionality behind the affected
-switch)
+### Step 8.3: Severity
+**Failure mode:** System suspend fails entirely — the system cannot
+enter sleep.
+**Severity:** HIGH — prevents power management on affected hardware.
 
-### Step 8.4: RISK-BENEFIT RATIO
-- **Benefit**: HIGH — fixes complete PCIe link failure for affected
-  configurations
-- **Risk**: VERY LOW — 2 lines, clears one register bit, only affects
-  `!supports_clkreq` path on Tegra platforms
-- **Ratio**: Strongly favorable for backporting
+### Step 8.4: Risk-Benefit
+- **Benefit:** HIGH — prevents suspend failure on real hardware, aligns
+  with PCIe spec
+- **Risk:** VERY LOW — 2-line change, obviously correct per spec, no
+  possible crash or data corruption from the fix itself (it only allows
+  suspend to proceed as the spec recommends)
 
 ---
 
 ## PHASE 9: FINAL SYNTHESIS
 
-### Step 9.1: EVIDENCE COMPILATION
-
+### Step 9.1: Evidence Summary
 **FOR backporting:**
-- Fixes real hardware link-up failures on Tegra platforms
-- Extremely small and surgical (2 lines)
-- Obviously correct (clearing a register bit to match intended behavior)
-- Strong review chain: original driver author, NVIDIA kernel team lead,
-  PCI maintainers
-- Tested by Jon Hunter
-- Falls into "hardware workaround" exception category
-- Code has been present since v5.4 — affects all stable trees
-- Affects boot AND resume paths
+- Fixes real-world suspend failure reported by Linaro engineer on
+  SM8650-HDK
+- PCIe spec r7.0 explicitly recommends this behavior
+- Fix is 2 essential lines (dev_err→dev_warn, return ret→ret=0)
+- Author is DWC PCI subsystem maintainer
+- Reviewed-by from NXP contributor, Tested-by from reporter
+- Buggy code exists in all stable trees v6.6+
+- No regression risk — the alternative (current behavior) is worse
+  (blocks suspend)
 
 **AGAINST backporting:**
-- No crash/security/data corruption — "just" link-up failure
-- Minor context difference in header area requires fuzz/adjustment for
-  backport
-- Part of a multi-patch series (patch 2/N) — though self-contained
+- No explicit Cc: stable or Fixes: tag (expected)
+- Behavior change rather than crash fix (but prevents functional
+  failure)
+- Minor context conflicts in older stable trees (trivially resolvable)
+- Limited callers in older stable trees (mainly layerscape in
+  v6.6-v6.12)
 
-### Step 9.2: STABLE RULES CHECKLIST
-1. Obviously correct and tested? **YES** — Tested-by and Reviewed-by,
-   trivial change
-2. Fixes a real bug? **YES** — PCIe link-up failure
-3. Important issue? **YES** — complete PCIe failure for affected
-   configurations
-4. Small and contained? **YES** — 2 lines in 1 file
-5. No new features or APIs? **YES** — no new features
-6. Can apply to stable trees? **YES** — minor context adjustment may be
-   needed
+### Step 9.2: Stable Rules Checklist
+1. **Obviously correct and tested?** YES — per PCIe spec, tested on
+   hardware
+2. **Fixes a real bug?** YES — suspend failure with certain endpoints
+3. **Important issue?** YES — prevents system from suspending
+4. **Small and contained?** YES — 2-line change in one function
+5. **No new features?** CORRECT — no new features
+6. **Can apply to stable?** YES — with trivial context adjustments
 
-### Step 9.3: EXCEPTION CATEGORIES
-This falls into the **hardware quirk/workaround** category (explicitly
-allowed for stable).
+### Step 9.3: Exception Categories
+Not a standard exception category, but this is a straightforward bug fix
+that aligns implementation with PCIe specification.
 
 ---
 
 ## Verification
 
-- [Phase 1] Parsed tags: Tested-by Jon Hunter, Reviewed-by Vidya Sagar +
-  Jon Hunter, SOBs from PCI maintainers
-- [Phase 2] Diff analysis: 2 lines added — 1 new #define + 1 register
-  bit clear in `tegra_pcie_config_controller()`
-- [Phase 3] git blame: buggy code block from ff5c2bb9c6f5ee (v5.4),
-  present in all stable trees
-- [Phase 3] git show ff5c2bb9c6f5ee: confirmed this was "PCI: tegra: Fix
-  CLKREQ dependency programming" — an earlier incomplete fix
-- [Phase 3] git show 56e15a238d9278: confirmed original driver added in
-  v5.4
-- [Phase 4] b4 dig found the earlier CLKREQ fix series at lore;
-  lore.kernel.org blocked by anti-scraping
-- [Phase 5] `tegra_pcie_config_controller()` called from
-  `tegra_pcie_init_controller()` (probe) and
-  `tegra_pcie_dw_resume_noirq()` (resume)
-- [Phase 5] `supports_clkreq` determined from DT property "supports-
-  clkreq" (line 1138-1139)
-- [Phase 6] Code exists in all stable trees since v5.4; context mismatch
-  only in header defines area
-- [Phase 8] Failure mode: complete PCIe link-up failure, severity HIGH
-- UNVERIFIED: Could not access lore.kernel.org to verify mailing list
-  discussion or whether patch 1 of the series has any relevance
+- [Phase 1] Parsed tags: Reported-by Neil Armstrong (Linaro), Tested-by
+  Neil Armstrong on SM8650-HDK, Reviewed-by Frank Li (NXP)
+- [Phase 2] Diff analysis: 2-line essential change in error handler of
+  `dw_pcie_suspend_noirq()`: dev_err→dev_warn, return ret→ret=0
+- [Phase 3] git blame: buggy code introduced in 4774faf854f534 (v6.6),
+  confirmed present in v6.6 through v6.16
+- [Phase 3] git merge-base: confirmed 4774faf854f534 is in v6.6, v6.7,
+  ..., v6.16
+- [Phase 3] Author (Manivannan Sadhasivam) is the DWC PCI subsystem
+  maintainer, applied his own patch
+- [Phase 4] Found v1 and v2 on spinics.net; v1 missed `ret = 0`, v2
+  fixed it. Applied on Feb 26, 2026
+- [Phase 4] Frank Li gave Reviewed-by; Neil Armstrong confirmed it fixes
+  ath12k D3cold on SM8650-HDK
+- [Phase 4] No NAKs, no objections in review
+- [Phase 5] Callers verified: layerscape (v6.6+), imx6 (v6.15+),
+  stm32/s32g (v7.0 only)
+- [Phase 6] Buggy `dev_err(); return ret;` pattern verified in v6.6,
+  v6.12, v6.15, v6.16 — all return error on timeout
+- [Phase 6] Backport complexity: minor context differences, trivially
+  resolvable
+- [Phase 8] Failure mode: system suspend blocked entirely; severity HIGH
+  for affected users
+- UNVERIFIED: Exact set of PCIe endpoints that trigger this timeout
+  (only ath12k confirmed); does not affect decision
 
-The fix is a small, surgical hardware workaround that fixes real PCIe
-link-up failures on Tegra platforms. It meets all stable kernel criteria
-and falls into the hardware workaround exception category.
+The fix is small, surgical, spec-compliant, tested on real hardware,
+authored and merged by the subsystem maintainer, and prevents real-world
+suspend failures on DWC PCIe platforms.
 
 **YES**
 
- drivers/pci/controller/dwc/pcie-tegra194.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/controller/dwc/pcie-designware-host.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index 06571d806ab31..8ac9863fcc7ad 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -44,6 +44,7 @@
- #define APPL_PINMUX_CLKREQ_OVERRIDE		BIT(3)
- #define APPL_PINMUX_CLK_OUTPUT_IN_OVERRIDE_EN	BIT(4)
- #define APPL_PINMUX_CLK_OUTPUT_IN_OVERRIDE	BIT(5)
-+#define APPL_PINMUX_CLKREQ_DEFAULT_VALUE	BIT(13)
- 
- #define APPL_CTRL				0x4
- #define APPL_CTRL_SYS_PRE_DET_STATE		BIT(6)
-@@ -1454,6 +1455,7 @@ static int tegra_pcie_config_controller(struct tegra_pcie_dw *pcie,
- 		val = appl_readl(pcie, APPL_PINMUX);
- 		val |= APPL_PINMUX_CLKREQ_OVERRIDE_EN;
- 		val &= ~APPL_PINMUX_CLKREQ_OVERRIDE;
-+		val &= ~APPL_PINMUX_CLKREQ_DEFAULT_VALUE;
- 		appl_writel(pcie, val, APPL_PINMUX);
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 6ae6189e9b8a9..ba183fc3e77cd 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -1256,9 +1256,13 @@ int dw_pcie_suspend_noirq(struct dw_pcie *pci)
+ 				PCIE_PME_TO_L2_TIMEOUT_US/10,
+ 				PCIE_PME_TO_L2_TIMEOUT_US, false, pci);
+ 	if (ret) {
+-		/* Only log message when LTSSM isn't in DETECT or POLL */
+-		dev_err(pci->dev, "Timeout waiting for L2 entry! LTSSM: 0x%x\n", val);
+-		return ret;
++		/*
++		 * Failure is non-fatal since spec r7.0, sec 5.3.3.2.1,
++		 * recommends proceeding with L2/L3 sequence even if one or more
++		 * devices do not respond with PME_TO_Ack after 10ms timeout.
++		 */
++		dev_warn(pci->dev, "Timeout waiting for L2 entry! LTSSM: 0x%x\n", val);
++		ret = 0;
  	}
  
+ 	/*
 -- 
 2.53.0
 
