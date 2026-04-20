@@ -1,79 +1,47 @@
-Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00F323CEBB7
-	for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2026 20:25:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF9E519C54E;
+	Mon, 20 Apr 2026 20:49:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776716741; cv=none; b=fam4GwMDrq7kfb1HMdp8hBbJul79CFVUv1ZGP50cyBod+uTLAu89J/rT6ych24kDnBL6dz8/3mCvaWi4AaCnaS41wsE1lRwz1AeLFLLKas+EeNYiLr5sdYfW/1t0jG4aB+KpzdR9QsGw7PSZAWbWkS6L+Sm3o5mZuuA8COjU8uI=
+	t=1776718156; cv=none; b=a6qvUFvs4bEmZHbuL0K6RSWqwupG+MaQ3OVQeoAy6lfnyMAFADck81paodFQmEr6IQeL7dR+y2skzsBgJCTYYBooFpmWNIlc8Tj5imzQLszc4t4U2pFcxfef6uaBzXO8zb8B0qIX9sw9DFM0oUCw0on6uy7wMOYqvNv54vvyz+U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776716741; c=relaxed/simple;
-	bh=Dx76hdPmzkcK4nbwEphDzpwF8eLBrP39wXmhzcE1i9Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UCQZdVEEKzNcHw2RRVfqw0TZQCODAutW9gto3zF4+3EiaJmXqp3vq4Fxxw6bU68z80QQQn2TRWfQSaq2Q/YNWdsa3oTJ9zmruSp5i/Sqq0CKdv/000+5tddd5IuhJIHalmxvP79g2zuZP+fF38OoC7D6azcDoUqvI06ONGzB2TI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=MwCSCJDj; arc=none smtp.client-ip=209.85.219.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
+	s=arc-20240116; t=1776718156; c=relaxed/simple;
+	bh=BJ8ETRCkjFk05mCQgMXRwxFn1FURg0WZX+lXBX3zkxo=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=f4v1PmK1UNjf/sv4QScFu/pF5WhOOgQIC+kHA8/nHZW3hdbeDVElkv7fCxH+nTyHXdMsPwtIQ2r8SVxHYndM+hLdW1RvnSfNSYAqBQeN8mLai7S2VJMqYhCQs9TU7c/NgTAmLUicNuZljGusAxvHyBDzJsb3VIjhY6qRtwGzQQM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I18zC+fR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="MwCSCJDj"
-Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-89fc4147f2eso39962296d6.3
-        for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2026 13:25:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1776716738; x=1777321538; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=86B2EppM//v3TWmEymAoj6QAs94Bt1WYW2cmbvlwvO8=;
-        b=MwCSCJDjXbCvC3v1RscWJNQ6YOVZFVHPpzP1nFOPs+Pt2NtU0oJJ7oPNGqLFnDPktw
-         JQivfdVMFtG/TTh19cK0LfNJTMpX6DhFeINI9+bXbdsjmVv/Ds59umoP3m2sMmDSj2Ov
-         CW44m8KumgVPrHC7bHyyEY/UCqNky5Nh1uFJRf+yP89OeyEgx2bA5CXrFUOtN7utWTPa
-         ysOTh8bHlSvAMd+jPHDO4f4GH21Ll0Y8xFjaWsOrhpB8PNyQhlp9FTNA2txcwDr/OUVB
-         bCJYbYtioyIcLpcaPBQlLIgtHGnLAcHF+aDWum6zTiiHn7hQppMnqofiAZq6jOgpcDBu
-         wvOg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776716738; x=1777321538;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=86B2EppM//v3TWmEymAoj6QAs94Bt1WYW2cmbvlwvO8=;
-        b=VchoTGytNrpXCJTpqp8LTlazTs8geBfEG/nB+F2HBMSCz0UANhVd1hm2b8amstHuSp
-         rdrWRVskohr7LCAOHgkUEvP7TchBuNB2IBPxrW6+cIL26l0NFvnPbRf6RfgDu+35o1sG
-         IZE5ZtcH0w07Qb3gGOnRnb06Nd3+U3prhBnXAoz9hPHXBUbG31mMKsBb4cWg0wij91gn
-         4NHABIjN/YyU2GiQQA415YcupSxH56rIgOpIerroS3E51MiP05LRYGwOqiEl8YDSx1FH
-         329LyWd10ZC7jP9bf8oxu6UGrfnW1F0MY9Z+3XC3Evp2WKk+mvFGmQiCPR0dSjfH20go
-         vdeA==
-X-Forwarded-Encrypted: i=1; AFNElJ/jDL5z50T3OR2Nhh3tbQN4AwQrp7Zqjm6zrjIfkLQ4SBGCxl++/6YOtoVDAc39oMhOzjy3g5bhOQI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YycdK8a/wykefe+1I9Qh96PkKD1OpIoRLsa0kooejhRlcbxgQcc
-	rz0sBYOgMZ+w8CSXNnigiG3sOgeP8GSxVvtg6PXLv/DcxRsSppIEpEqoCzZ8F8AqwI4=
-X-Gm-Gg: AeBDiesyvAkJtSzVLMU8ralTwaTRStOZdN8vfO4drhwRhYiQ31SvHznHX/XDFVUNoqJ
-	C/jxDBs7PsBbBh7AX2XZAoKvMxSbahcGrYbLgY/bqv0tulWEPe8yOHC886e6q/Husq4aq6u5gbn
-	CYkTYAaxfSz5AdE9Jf7fwdEo2f0c23gG4K22683mDuy7qgNp/Xkitg4NZN/Z1LbVTdlw3h22Xgu
-	HKBCy6cKj0R6QF0LjFh5XYLUojv982hjRRZWcyDzs3kNldb/0xZcmJejUR9aG8WySSDkDOZubxd
-	elE77a8qSbIQaIZNqk1SsXcb6oKUE4cXN+Oimp9ObWnGsuVBw0RTrDOsv1HfbDff2MfDg6Tpg3z
-	qRn1JOiFA+KUdPstQ6lWPm+5inBuFh9GUxCVRYeNSR3kC4IIoObT8FX7kyIZqrNdYNcaGz5Y+X4
-	GDysLRive3Ik5TBNfUh36ngmuXiLdqXCkyjKSQMnaxehV4OKC7rpacfzBSnmUw
-X-Received: by 2002:a05:6214:3209:b0:8ac:ab90:d764 with SMTP id 6a1803df08f44-8b0281653a5mr266452836d6.48.1776716737948;
-        Mon, 20 Apr 2026 13:25:37 -0700 (PDT)
-Received: from plex ([71.181.43.54])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8b02ac6c3e7sm85895836d6.13.2026.04.20.13.25.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Apr 2026 13:25:36 -0700 (PDT)
-Date: Mon, 20 Apr 2026 20:25:34 +0000
-From: Pasha Tatashin <pasha.tatashin@soleen.com>
-To: David Jeffery <djeffery@redhat.com>
-Cc: linux-kernel@vger.kernel.org, driver-core@lists.linux.dev, 
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Danilo Krummrich <dakr@kernel.org>, Tarun Sahu <tarunsahu@google.com>, 
-	Pasha Tatashin <tatashin@google.com>, =?utf-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>, 
-	Jordan Richards <jordanrichards@google.com>, Ewan Milne <emilne@redhat.com>, 
-	John Meneghini <jmeneghi@redhat.com>, "Lombardi, Maurizio" <mlombard@redhat.com>, 
-	Stuart Hayes <stuart.w.hayes@gmail.com>, Laurence Oberman <loberman@redhat.com>, 
-	Bart Van Assche <bvanassche@acm.org>, Bjorn Helgaas <helgaas@kernel.org>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, John Garry <john.g.garry@oracle.com>, kexec@lists.infradead.org
-Subject: Re: [PATCH 1/5] driver core: separate function to shutdown one device
-Message-ID: <h2r2jv4g2tednrybrmkn4d2dus3oalqsk3r2q4xrbuivucefon@n6vvx5bl5cm5>
-References: <20260420152608.6244-1-djeffery@redhat.com>
- <20260420152608.6244-2-djeffery@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I18zC+fR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6725BC19425;
+	Mon, 20 Apr 2026 20:49:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776718156;
+	bh=BJ8ETRCkjFk05mCQgMXRwxFn1FURg0WZX+lXBX3zkxo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=I18zC+fRDQLO7ho+L8/FKaP1A/3fjIfQJThI2m6aLx1InirpH6RQbLXCf27UnN6X1
+	 Aboe0CptmgfoOwaaSfQmIl7kZvRIujOMFbNOzEhPZPKjSx3IspxAEv7FRQSRqhV/gd
+	 8btdr69IeFYf2RL9+WpO1n1TvpSnrnyxfWMbJHyg9DX+cO3Eesr4iWzTYZCz2ybFl5
+	 sY9F3R9LJKiFMl9XzT/qB2ONHLuumXdEFWH53LfL7vE9S4z7tfUddnFhuT4hjorxgq
+	 9hzXBnxgxjbVYTxqdCLTa37VIYoO3bSbA58MJQft9yjSvnxhlZyY9ECXJ9Ucy+IDfS
+	 3wEzMF1WLH+Qw==
+Date: Mon, 20 Apr 2026 15:49:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: manivannan.sadhasivam@oss.qualcomm.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Keith Busch <kbusch@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-nvme@lists.infradead.org
+Subject: Re: [PATCH 3/4] PCI: qcom: Indicate broken L1ss exit during resume
+ from system suspend
+Message-ID: <20260420204915.GA231862@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -82,67 +50,53 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260420152608.6244-2-djeffery@redhat.com>
+In-Reply-To: <zv3tl2cvlhpmwe5ikcszdneft4bjebqibrl6onbg7457vtzmmc@clh7nzgpeext>
 
-On 04-20 11:26, David Jeffery wrote:
-> Make a separate function for the part of device_shutdown() that does the
-> shutown for a single device.  This is in preparation for making device
-> shutdown asynchronous.
+On Sat, Apr 18, 2026 at 11:09:11AM +0530, Manivannan Sadhasivam wrote:
+> On Fri, Apr 17, 2026 at 05:26:15PM -0500, Bjorn Helgaas wrote:
+> ...
+
+> > Does L1.2 have to meet the advertised L1 Exit Latency?  I assume
+> > maybe it does because I don't see an exception for L1.x or any
+> > exit latencies advertised in the L1 PM Substates Capability.
 > 
-> Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
-> Signed-off-by: David Jeffery <djeffery@redhat.com>
-> Tested-by: Laurence Oberman <loberman@redhat.com>
-> ---
->  drivers/base/core.c | 71 +++++++++++++++++++++++++--------------------
->  1 file changed, 39 insertions(+), 32 deletions(-)
+> As per my understanding, 'L1 Exit Latency' only covers ASPM L1
+> state, not L1ss.  Because, 'L1 Exit Latency' field exists even
+> before L1 PM Substates got introduced in r3.1. So it doesn't cover
+> L1.2 exit latency.
 > 
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 0613de0fbe44..5353c6c22d49 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -4783,12 +4783,48 @@ int device_change_owner(struct device *dev, kuid_t kuid, kgid_t kgid)
->  	return error;
->  }
->  
-> +static void shutdown_one_device(struct device *dev)
-> +{
-> +	struct device *parent = dev->parent;
-> +
-> +	/* hold lock to avoid race with probe/release */
-> +	if (parent)
-> +		device_lock(parent);
-> +	device_lock(dev);
-> +
-> +	/* Don't allow any more runtime suspends */
-> +	pm_runtime_get_noresume(dev);
-> +	pm_runtime_barrier(dev);
-> +
-> +	if (dev->class && dev->class->shutdown_pre) {
-> +		if (initcall_debug)
-> +			dev_info(dev, "shutdown_pre\n");
-> +		dev->class->shutdown_pre(dev);
-> +	}
-> +	if (dev->bus && dev->bus->shutdown) {
-> +		if (initcall_debug)
-> +			dev_info(dev, "shutdown\n");
-> +		dev->bus->shutdown(dev);
-> +	} else if (dev->driver && dev->driver->shutdown) {
-> +		if (initcall_debug)
-> +			dev_info(dev, "shutdown\n");
-> +		dev->driver->shutdown(dev);
-> +	}
-> +
-> +	device_unlock(dev);
-> +	if (parent)
-> +		device_unlock(parent);
-> +
-> +	put_device(parent);
-> +	put_device(dev);
-> +}
+> > Regardless, I'd be kind of surprised if *any* system could meet an
+> > L1.2 exit latency from a system suspend situation where PHY power
+> > is removed.  On ACPI systems, the OS doesn't know how to remove
+> > PHY power, so I don't think that situation can happen unless
+> > firmware is involved in the suspend.
+> 
+> Yes, you are right. Even for systems turning off the PHY completely,
+> they should have some mechanism to detect the CLKREQ# assert and
+> turn ON the PHY within the expected time.
 
-Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com> 
+What would the expected time be?
 
-Also, please CC: kexec@lists.infradead.org, this series helps the live 
-update, and kexec performance.
+> On our Qcom platforms, we do have some co-processors handling this
+> even before the OS wakesup.  But support for that co-processor is
+> currently not available in upstream and we don't know when it is
+> going to be added. Until then, we only have one option to not put
+> the link to L1ss during suspend and keep the devices into D3Cold to
+> achieve the SoC low power state.
+> 
+> > Maybe that's part of why pm_suspend_via_firmware() exists.  What
+> > if native host drivers just called pm_set_suspend_via_firmware()?
+> > After all, if they support suspend, they're doing things that are
+> > done by firmware on other systems.
+> 
+> No, that would be inappropriate. pm_set_suspend_via_firmware() is
+> supposed to be called only when the firmware is invoked at the end
+> of suspend. If OS handles everything and not the firmware, there is
+> no need to invoke this API.
 
-Pasha
+This is part of my issue with the "pm_suspend_via_firmware()" name --
+it doesn't really matter whether the code is in the OS or in the
+firmware.  What matters is what the code *does* or is *allowed* to do.
+The native host bridge drivers do things that are done by firmware on
+ACPI systems, so the "via_firmware" part is not as clear as it once
+was.
