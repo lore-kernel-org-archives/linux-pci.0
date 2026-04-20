@@ -1,142 +1,140 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC81730BF6D
-	for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2026 15:26:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776698818; cv=none; b=qAUcb4TmtUyx8sRLKs/PK5dAvknlhvrYOAwSiy5jbx/jMpDMcddE9HTgPvksjAjAenBPKI7Re3eZ0lSQlonICNvaPLF4Btlkd9fXOfdfJvvsTaHZz/1XpDu3W0c0mCsXE6rJieSQZQ5/Jf+n8/zwOaCo8p4v2i4c0p1/WSkjOgQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776698818; c=relaxed/simple;
-	bh=DzGol+6Akg4BS/3rp1hfdfeLhb/Fbpu33lbWAn59wTs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=I+yqRqg+7WgjJxYrOr8CDGS5QvtJgRZ7JIQyzytgreRrh1F+GqsTgU/aj8WgbkoU+gPjwSnN5V9apCzlHO2mfaicA7QNh5fX+CpY0q/6kpUsEFIW2GTgYEOXY2H2qwy204EBJG9cuzgKoKTAh971KsCuDpYrEwb4SeUs5j4h7XY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Spu80Wtl; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA4762D3EF2
+	for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2026 15:27:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.153.30
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776698847; cv=fail; b=k11sx9Um2v0qLXMEzS48rIPvMvtbyHEyU+sN5RPKJy1Ur6c85i5hTijNrPVXcby+KhVRj1ygjlUvwrfygNx97D2unfawsYeoKGteRSoGqRvfL0A3BfKX2UZQIYGaHAZVMfWG5+1zRjCANHhRUK5Q9uPw6xuAXkLAc5Lvacebc1A=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776698847; c=relaxed/simple;
+	bh=L4kuFzmhSiJDEDk3U3r8fzjoMUjfFI5f37vT3OvTp3E=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=uM1cZRZ7swJ7MBi0cR+btbg39EYnIDyh8801BtTtXkBZrVf2xCfNUrZfN6mCpEZjj3ospp6qGUj4WM7521W4fqAy3pdjRbMgQ2h4rekGAHNnVz/jYbNHusIs8KAQHyE1m+JdRQs/BsxSlvV9amsBu2TyGoTAlDmyc1hFIUUmk+g=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=VB6Tk7Vb; arc=fail smtp.client-ip=67.231.153.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Spu80Wtl"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1776698814;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=OgXV8AVk24uZfipI0TCJZI2aNjRQXAU7ezMkj9ylv7U=;
-	b=Spu80WtlO4iUBmj+uHyiTlskfevUIjGMLlEhZ95Wic7xljKvr4yTY6BwvEupxYt2dJq+ow
-	NlzHOG+oagegotcGdDeEc+MqaijVdCkWD5GnijDNc+uj+3yIKO9Qio52bMDQs4+gX+BnxH
-	49f1C/6OTN40Wo340yNyFarFdR5xvWk=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-347-Y3tIG8GJMZqpjQl-iCmzxg-1; Mon,
- 20 Apr 2026 11:26:49 -0400
-X-MC-Unique: Y3tIG8GJMZqpjQl-iCmzxg-1
-X-Mimecast-MFC-AGG-ID: Y3tIG8GJMZqpjQl-iCmzxg_1776698806
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DEA1419560B9;
-	Mon, 20 Apr 2026 15:26:45 +0000 (UTC)
-Received: from fedora-work.redhat.com (unknown [10.22.65.236])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 0128B19560AB;
-	Mon, 20 Apr 2026 15:26:41 +0000 (UTC)
-From: David Jeffery <djeffery@redhat.com>
-To: linux-kernel@vger.kernel.org,
-	driver-core@lists.linux.dev,
-	linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>
-Cc: Tarun Sahu <tarunsahu@google.com>,
-	Pasha Tatashin <tatashin@google.com>,
-	=?UTF-8?q?Micha=C5=82=20C=C5=82api=C5=84ski?= <mclapinski@google.com>,
-	Jordan Richards <jordanrichards@google.com>,
-	Ewan Milne <emilne@redhat.com>,
-	John Meneghini <jmeneghi@redhat.com>,
-	"Lombardi, Maurizio" <mlombard@redhat.com>,
-	Stuart Hayes <stuart.w.hayes@gmail.com>,
-	Laurence Oberman <loberman@redhat.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	John Garry <john.g.garry@oracle.com>,
-	David Jeffery <djeffery@redhat.com>
-Subject: [PATCH 5/5] scsi: Enable async shutdown support
-Date: Mon, 20 Apr 2026 11:26:08 -0400
-Message-ID: <20260420152608.6244-6-djeffery@redhat.com>
-In-Reply-To: <20260420152608.6244-1-djeffery@redhat.com>
-References: <20260420152608.6244-1-djeffery@redhat.com>
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="VB6Tk7Vb"
+Received: from pps.filterd (m0528005.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63K4GQ533484258
+	for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2026 08:27:24 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
+	 bh=61B/9vU+A81G4L+O2ZcjO81N3rDPDghM3foVO1cppDk=; b=VB6Tk7VbeUQK
+	A9Pk08tyiCLxf9O7NfIltXyIQz9qKIiKA0BMqK8k/pyPvQQPoZgS6yrZl1Ra4cFq
+	097unjjbAqqjerTpJ04SpD0SlZZIZwhd/pazve6YBvqf8h+ekIQzRzY/KBK/L0L3
+	08mQWE0/x+9bR0iJ+/J6YRv2CFSetyevaZI6p3Y+uxEN1DPeXH5K/GVEM5BjBw0r
+	rVwGkEDFpipH0phyDnLlTx9No5z9bf8XyheRH+QM2BSuYmwAt8eNVQzCy1wk+yu8
+	x9jLcToMyxDwU15jBNC65YX5vbiopZbutxSj/yzCTc5ZgW7K7URuFTEoyJulfsgK
+	Ay3mTwrBig==
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com [209.85.218.72])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4dmuhgnv36-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2026 08:27:24 -0700 (PDT)
+Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-b90bb54d034so407434066b.0
+        for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2026 08:27:24 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1776698843; cv=none;
+        d=google.com; s=arc-20240605;
+        b=Z9FMsP6nG65BcQ1Z9M6ctiIig+5nQwTsZxuTzDkJrtR742eY+ZjM/LpGqgsYItzLj3
+         EXfnnr3XKNUQL7/umyYVwL54fRhY7jNp3OsuPURezX9o1xAfhvYg+urDK1L1fvPhcz2A
+         teF0Jdouc68/YMJk3wU+vs9hy78rWYFxsU5pGORsf64kKlRZ2B3qx6spv1BzVuGlJkRO
+         1vZYsREa/7v4HX/K8l8rbDG54apyhZU7P3w8l5m+GroqiROZIBvNMO1/HQg5RUsW9FIS
+         We7R4/8NVXAhVp849ifD//TU0bCFGhBP1nYvr5bEKmNl3V+0ywQNndgytlppo8P4tYNj
+         R0oQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version;
+        bh=RqAzmhyz8hrAMpUPFTdW8M9BUToBqVnAvelAPpDQEdE=;
+        fh=UA2AOduo0cf2iotDvWO6FplXjIxaHP/B2Hlv2tZeB4A=;
+        b=UPfCK5RfMNdXwVCcvewTfptNnc/aT/cX03bNVr3tf1nYGI9ThAktu9t20mrP1TXgRR
+         QKWRsreIPu16SJHnY5wr3OCUlgUjdGO0rgfcjkl1w52lCOK4i4mnn3sJclF+oj/puzeV
+         0XNWYNoRO30oSwPlZKB7SABYltkbqw5N6xf6hwm0uTOufVaNLq0V17oCgeIDIXnvoq6Z
+         UHQ8bp4iCPh20beFn/BGSQwOc46R/IwstKeUY++vLuRhy6ybIc586S6gqNusqTfQXNjQ
+         XYAZJWqrUwE9Ie7o6ktB08vykvG8Bwx2wIDKdHb4arM8mWomf9bDGUL4tTAxUsiI30ck
+         Ygmw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776698843; x=1777303643;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=RqAzmhyz8hrAMpUPFTdW8M9BUToBqVnAvelAPpDQEdE=;
+        b=FdfxTnrQcDxpSil6Bs/24UrEKYTI2Valpfe/RYSMb5e0lyzZ+dmKvMFUXVS8D74zgL
+         bUEM1lZcH9vppWbef05DojWbjyiCw1vuAsojL/bhEwh1LFkRaw0A8qvwujyFPaf4wqTn
+         x7TDM6gTj40ZI30S76rIJXj4qLHMdGUEV0pwRfpNdQPfjQXecxCp7ZeVKT3m56gw9WCz
+         UmETOQquAWkiRyMm14lu5sdasBw4XRbldev1TaYzGG/FfE8nGylCrKdmflwQBZzsi19G
+         /FsVP7mlotSNE6VvFnfE7DU70wY3QjRDUi0zK9V08uy5WV6YW+nMxqsazDuFTQBfNGcn
+         AI6g==
+X-Gm-Message-State: AOJu0YwR2DGv3nxX6F+4XuLU2Yj4GnzZjJC0jM2lkpptXzj7iRZctz9K
+	+PC9kYdcIEjhWKzTocJxSiezPfDdbsDxcx8rxBnH0hGJaMgaMHwnA5WI4I9zjxH5UKD4UGNf5N+
+	3En6kp/MV0XiyGqZz2HVyC970s0Zz0t5FlLx5jIHLcQG519WhPvYATZZdMLLWL0jOdNLxBWwG12
+	5SBc9YoHSc+rekLXXMxcUnB+1c5B7HdmUuZKLU1wMCxBaqSi8o
+X-Gm-Gg: AeBDieuaxq9jNlyH8gQcHFWb7qatOYoLftW5Ehg88vbNa366D2KKiHkeARrYrlJ1l6H
+	wgbWYH1pDuCcjsmUr7cev4RYmMY0zti7Xx/X1qwDYPVp8qsd9OPfUYqKZ8aAZci/D+FcVgqYMmu
+	vpTomTD8WJMVPBOvAkKOPbODoAcx93iYG1p2QVskuzRFCWxomJS0NxuQYkUJ5zasXbSaRz2SGBV
+	MonnG22zhMDIOn5TTbniYamZeA+lANp03S5nBBlsiDBILVmJNqO4JbUcYV1SbjkpDO18JPx78SY
+	L5sc9rOMSIFN7GFzQgG5UE1eYGyQbTr1lHM=
+X-Received: by 2002:a17:907:d10:b0:ba2:6dd1:a12a with SMTP id a640c23a62f3a-ba42063bd90mr595510966b.9.1776698842669;
+        Mon, 20 Apr 2026 08:27:22 -0700 (PDT)
+X-Received: by 2002:a17:907:d10:b0:ba2:6dd1:a12a with SMTP id
+ a640c23a62f3a-ba42063bd90mr595509666b.9.1776698842176; Mon, 20 Apr 2026
+ 08:27:22 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+References: <20260417104223.3457417-1-mnissler@meta.com> <mj+md-20260417.125559.94223.nikam@ucw.cz>
+In-Reply-To: <mj+md-20260417.125559.94223.nikam@ucw.cz>
+From: Mattias Nissler <mnissler@meta.com>
+Date: Mon, 20 Apr 2026 17:27:10 +0200
+X-Gm-Features: AQROBzAZCe3eQcR-z-ASm8YfWwpfT_aeZAJXtt5zt_xphdyeAoTdER-v1Xz8qUU
+Message-ID: <CADNGnga4ECcCWi8r_OZ1-89dfNrW8p4bSbXY3u+0VZ7cX1-pRQ@mail.gmail.com>
+Subject: Re: [PATCH pciutils v3] ls-ecaps: Decode DPC RP PIO registers
+To: =?UTF-8?Q?Martin_Mare=C5=A1?= <mj@ucw.cz>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Authority-Analysis: v=2.4 cv=Qo1uG1yd c=1 sm=1 tr=0 ts=69e645dc cx=c_pps
+ a=D+UBI74RbQA8i2EYnbuvxw==:117 a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=jCddH8ec0KUNCymVuxII:22
+ a=VwQbUJbxAAAA:8 a=VabnemYjAAAA:8 a=3Ut9Vrr-dLC2VLBHdPQA:9 a=QEXdDO2ut3YA:10
+ a=PsfoTyiJ_72bb7xyA04f:22 a=gKebqoRLp9LExxC7YDUY:22
+X-Proofpoint-ORIG-GUID: qJUp--Dilg-q-Pq6s0HLpVkGBwagpgni
+X-Proofpoint-GUID: qJUp--Dilg-q-Pq6s0HLpVkGBwagpgni
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIwMDE1MSBTYWx0ZWRfX4a+X7m66D3Z/
+ /ggYpi1MTHv+hTMfu+8ofBXaJ/vLwY+3V+ik0fopipH+IYv6kkdpor4DREjO8tl8N32lYnyEqBg
+ XMsttPgDfCgqV6ggiQ1jxD8JUtDN4rSQfK9DQoOw2ioEGoeJz8m2eHrpuBUzjFcjy09jZ5n/P0o
+ NSn459r5YB1/4Wgkm1agd0w5ZdEMh+gWcR7FuiBK5yXzvcpB9waFw9fHCxfCMdBoIgQb2SdC7JL
+ J6CX6AfXp0CfO7VgFbpdrkN3Wsb3kCffVvid+w5JlXLq79JaLkzkdBDyXG9/nLnHGNbjAfBplfP
+ T1BymY/cn7mZQh5uxYSARsVSnR7QLm2P1NOksjvUN722CDnbAEsa9kgYa6ys36mDe5OatgYdjj3
+ RGBCpVy/qQlONqqk4n7oDgSnEuQIS7JrBqxfh3SNmfF3S+tnGxL7gBoWrdUbxh9H2SOEH7uyjgx
+ HNlJ8J6HjbAnhQsq9Ww==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-20_03,2026-04-20_02,2025-10-01_01
 
-Like scsi's async suspend support, allow scsi devices to be shut down
-asynchronously to reduce system shutdown time.
+On Fri, Apr 17, 2026 at 2:56=E2=80=AFPM Martin Mare=C5=A1 <mj@ucw.cz> wrote:
+>
+> >
+> Hi!
+>
+> > The RP PIO registers in the DPC extended capability contain status
+> > information and control bits related to how root ports handle failing
+> > requests.
+>
+> Thanks, applied.
+>
+> Could you please add a configuration space dump with this capability to
+> tests/?
 
-Signed-off-by: David Jeffery <djeffery@redhat.com>
-Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
-Tested-by: Laurence Oberman <loberman@redhat.com>
----
- drivers/scsi/hosts.c      | 2 ++
- drivers/scsi/scsi_sysfs.c | 3 +++
- 2 files changed, 5 insertions(+)
+I just sent a patch for that:
+https://lore.kernel.org/linux-pci/20260420152529.687075-1-mnissler@meta.com=
+/T/#u
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index e047747d4ecf..471b5ce878b0 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -273,6 +273,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	pm_runtime_set_active(&shost->shost_gendev);
- 	pm_runtime_enable(&shost->shost_gendev);
- 	device_enable_async_suspend(&shost->shost_gendev);
-+	device_enable_async_shutdown(&shost->shost_gendev);
- 
- 	error = device_add(&shost->shost_gendev);
- 	if (error)
-@@ -282,6 +283,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	get_device(shost->shost_gendev.parent);
- 
- 	device_enable_async_suspend(&shost->shost_dev);
-+	device_enable_async_shutdown(&shost->shost_dev);
- 
- 	get_device(&shost->shost_gendev);
- 	error = device_add(&shost->shost_dev);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 6b8c5c05f294..0d450036236e 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1370,6 +1370,7 @@ static int scsi_target_add(struct scsi_target *starget)
- 	pm_runtime_set_active(&starget->dev);
- 	pm_runtime_enable(&starget->dev);
- 	device_enable_async_suspend(&starget->dev);
-+	device_enable_async_shutdown(&starget->dev);
- 
- 	return 0;
- }
-@@ -1396,6 +1397,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	transport_configure_device(&starget->dev);
- 
- 	device_enable_async_suspend(&sdev->sdev_gendev);
-+	device_enable_async_shutdown(&sdev->sdev_gendev);
- 	scsi_autopm_get_target(starget);
- 	pm_runtime_set_active(&sdev->sdev_gendev);
- 	if (!sdev->rpm_autosuspend)
-@@ -1415,6 +1417,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	}
- 
- 	device_enable_async_suspend(&sdev->sdev_dev);
-+	device_enable_async_shutdown(&sdev->sdev_dev);
- 	error = device_add(&sdev->sdev_dev);
- 	if (error) {
- 		sdev_printk(KERN_INFO, sdev,
--- 
-2.53.0
-
+>
+>                                 Martin
