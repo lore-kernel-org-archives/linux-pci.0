@@ -1,127 +1,88 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4995637A481;
-	Tue, 21 Apr 2026 17:11:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE87D33F8B4
+	for <linux-pci@vger.kernel.org>; Tue, 21 Apr 2026 17:13:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776791484; cv=none; b=ZI8YzxjqumgKOYMwxdgD+NAn6pIU0pjMYTiaIkLuxjydWq06FXFb+Dq1iCMTQYfPkpeReM/16svMg1wTxrShLA5hMdC+y6lH0IPD6QLJ1MgHdcWhFK56JV58wVpdoQDokITgYgQe7zVyUBRzz2Wb3RMGWl2I4Lm5nV0GT1O2lRs=
+	t=1776791617; cv=none; b=pOzky77EjI9PqNfEAR9oa3iBnojJpwb7L/XXZPbYw8eeFcklajXNpnv7ojnKsDT50k2NR/GPq/iqES6Bs5tLwPsYArelsfTysPkJGvOW1I2tX8dyPi10MOkIxNA8BCZNJbBS3zM3n6WzOhqqvWNp4rtTcQGE2U35GvpNWdZTGho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776791484; c=relaxed/simple;
-	bh=AHtrmGhN5J/vsvtIwiAqM8EI8sFhj4a4bvN+jToBjkQ=;
+	s=arc-20240116; t=1776791617; c=relaxed/simple;
+	bh=dNPqhdaCExXnqljjtmyEiK2FfGUZQrh5olPv++EE6Kw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rWfoH62TGhMErOqNq30JTtiFhGDK4vzADIT+gtQu4wTJ3jV8GbpjY9WwE4VbwiChLYUpcfllgn9owPekfKKrtEOOHLNp/bLRJSLU9tL1ghtz03KgY/8zpED8p3Ynuq8R+2fg2kNteq1nJw1iXaCHRp+JP0o2z5vYLSiBTo6YgzQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ny2Iu0dI; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ny2Iu0dI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 929F1C2BCB5;
-	Tue, 21 Apr 2026 17:11:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776791483;
-	bh=AHtrmGhN5J/vsvtIwiAqM8EI8sFhj4a4bvN+jToBjkQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ny2Iu0dIkI+IAzLWnRo/dQolio56CfrRzGLDxapFHeL41W2BMt9kWPWyJLjLnvHZx
-	 Hd9X0iNjCsOC5mp44673N+IozjhAKaDq2eD5jyrO2T45ddJGR1AAPz6nVXS4JLKUeo
-	 4kGbwAFy5IdQpTBJYmAB8Ly/WLLteSrUx53c/pkB0hdA5W6PZC38h2FU21W/BkYBuk
-	 7XlSdmytouADLU7flPD/JHXFoIroHSxKGS0iab3/1gE4l7BIJQFWMe8kUrVlLxl/TC
-	 N1zk0bKShx46dzqnG2VGGlo51HCIevKmDI0qaSRWyyYT6RaNArKp2d4CG8c0qJQsJt
-	 nAl3PhcPP3ezg==
-Date: Tue, 21 Apr 2026 22:41:08 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: manivannan.sadhasivam@oss.qualcomm.com, 
-	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, Keith Busch <kbusch@kernel.org>, 
-	Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 3/4] PCI: qcom: Indicate broken L1ss exit during resume
- from system suspend
-Message-ID: <bkejoqdchyv55efsyl7o6b3ewiwaj5kbc2hgltxt5vwqdvt5yf@cxvwcjo5zcrp>
-References: <zv3tl2cvlhpmwe5ikcszdneft4bjebqibrl6onbg7457vtzmmc@clh7nzgpeext>
- <20260420204915.GA231862@bhelgaas>
+	 Content-Type:Content-Disposition:In-Reply-To; b=otAn3o8Yp8qtnoDlu6HTxf+qCvVjgyr7+BGR+OEn6xFdVTt3L08Lse+qzLPPkyLfsoIkPqsfqV1eNNXcWBF4JxzEyFrqCDys2hqGFsxweTJZruZYwYCiHrQD4FDhI+Nq5rABqQrf4lxnj3H8118JEOwR3fUQ0g+3y5CIibxp6Hw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2b4583f0a1aso28313265ad.3
+        for <linux-pci@vger.kernel.org>; Tue, 21 Apr 2026 10:13:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776791616; x=1777396416;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=NOptXCQFoecDGSEMq5oXbgb/TQScxdLgsFvp93S1GiI=;
+        b=TyWuSlsKG7AdZ+/8igOxGVWZnNtZvxt279CZ+JPq3obl9jAmDdTb+Poo0uFNt119y5
+         efkv61fu+p4Nhfdco2++d5/8q13lAZ4lOQB3fc6sm6mQuMJ1MDwRSQlHt6s5xKBpCr0Q
+         IrqyXKdrwQhGgau+wyMzgJzqMi9mUP4zE+xnaQiIG46NoyIr+JKDqS3SXwmPUSp4Y4ec
+         FUSXCwe4CkmxynqQHNyeiLgcU+O2sxxYg9jWidE0LP5fWBLcuPIOFJjE+zgygvTPZEbp
+         FJ581VZpyesCCJdWFB3KPks1Mgat6moo8v68oDR17Td7dlzz7rcj6/lU/erAdTfMAz++
+         h6MA==
+X-Gm-Message-State: AOJu0YyyHLQovnhjXfh5s3eo3MslHCTU4f+c4sWik4cfg+9SxmCFG/hp
+	dybAWao4aPQRhQ0FzdOfF2BVgpmr2Y0+i7QexfidJXJF78bO5GwKSRif
+X-Gm-Gg: AeBDies1VxurIdbQehvB7osbtvMOodK3U8j86ltYUOCgPQ6I1BVZJOJdk6l9SbQ8Kdk
+	Ks9IJDkd7qPugv4xMxJRJmNi6z64VWhJr/L99gNcXnY0yD/SM9ckUEE3GWkkenBwHjvmuIoSWDn
+	wdVc1aRPfj43e+G6CWdV36+lnbC4wqUELaQPArjvNipa4fKu7ioHZgOX+tNINNs49+1asHQcjDp
+	UD1C9AFevgtex5Yt8pc5k8B130DeYBxXSHbrdQu/PEO6zZIXQqTeDOFZAUpSlwM8jLkr9x89quO
+	3esnigEYU/zbYxmQZBh3CPsuO0qQzHSWZZ9MKG5y/Rjp98ioul9k0KsSyjjP+t961zHoHtFmQLI
+	4UnxPc025H5XfRjTolRorJxjHmhcs1ceq84WOlLsW0dfgyTB3bTkSM1Q2cwGLV395/DjVE83AhC
+	8PxtLNa5mFDqQOVhPJfLvYHgDNNpuYHbFARsLhRwgwN04gX0kyLuxP9y6gL6CklbLFEM8ZLuTxu
+	Q80t5MCA9QhMHb2ozjli5pJMdWGGYQQbuPphZmihi8dtpA+ER3NSoykMS6hZfJPfTJWD16lKkvj
+	dFgFsRZvJLuf20dogdFUjhYcdY4YXUaGDidKyyEvrQ==
+X-Received: by 2002:a17:902:bf4a:b0:2b2:4e5c:69a9 with SMTP id d9443c01a7336-2b5f9e79fa8mr145008315ad.5.1776791616146;
+        Tue, 21 Apr 2026 10:13:36 -0700 (PDT)
+Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b5fa9ff713sm142070275ad.5.2026.04.21.10.13.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Apr 2026 10:13:35 -0700 (PDT)
+Date: Wed, 22 Apr 2026 02:13:34 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To: Ramesh Errabolu <ramesh@linux.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-s390@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Peter Oberparleiter <oberpar@linux.ibm.com>,
+	Matthew Rosato <mjrosato@linux.ibm.com>,
+	Gerd Bayer <gbayer@linux.ibm.com>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>
+Subject: Re: [PATCH v2 1/1] PCI/hotplug: Add 'uevent' sysfs attribute to
+ trigger slot events
+Message-ID: <20260421171334.GA1684602@rocinante>
+References: <20260416213909.705753-1-ramesh@linux.ibm.com>
+ <20260416213909.705753-2-ramesh@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260420204915.GA231862@bhelgaas>
+In-Reply-To: <20260416213909.705753-2-ramesh@linux.ibm.com>
 
-On Mon, Apr 20, 2026 at 03:49:15PM -0500, Bjorn Helgaas wrote:
-> On Sat, Apr 18, 2026 at 11:09:11AM +0530, Manivannan Sadhasivam wrote:
-> > On Fri, Apr 17, 2026 at 05:26:15PM -0500, Bjorn Helgaas wrote:
-> > ...
-> 
-> > > Does L1.2 have to meet the advertised L1 Exit Latency?  I assume
-> > > maybe it does because I don't see an exception for L1.x or any
-> > > exit latencies advertised in the L1 PM Substates Capability.
-> > 
-> > As per my understanding, 'L1 Exit Latency' only covers ASPM L1
-> > state, not L1ss.  Because, 'L1 Exit Latency' field exists even
-> > before L1 PM Substates got introduced in r3.1. So it doesn't cover
-> > L1.2 exit latency.
-> > 
-> > > Regardless, I'd be kind of surprised if *any* system could meet an
-> > > L1.2 exit latency from a system suspend situation where PHY power
-> > > is removed.  On ACPI systems, the OS doesn't know how to remove
-> > > PHY power, so I don't think that situation can happen unless
-> > > firmware is involved in the suspend.
-> > 
-> > Yes, you are right. Even for systems turning off the PHY completely,
-> > they should have some mechanism to detect the CLKREQ# assert and
-> > turn ON the PHY within the expected time.
-> 
-> What would the expected time be?
-> 
+Hello,
 
-That's mostly L10_REFCLK_ON + T_COMMONMODE. But nevertheless, the system wakeup
-and controller driver resume() time would be far greater than it.
+> +static struct pci_slot_attribute hotplug_slot_attr_uevent = {
+> +	.attr = {.name = "uevent", .mode = S_IFREG | 0200},
+> +	.show = NULL,
+> +	.store = uevent_write_file
+> +};
 
-> > On our Qcom platforms, we do have some co-processors handling this
-> > even before the OS wakesup.  But support for that co-processor is
-> > currently not available in upstream and we don't know when it is
-> > going to be added. Until then, we only have one option to not put
-> > the link to L1ss during suspend and keep the devices into D3Cold to
-> > achieve the SoC low power state.
-> > 
-> > > Maybe that's part of why pm_suspend_via_firmware() exists.  What
-> > > if native host drivers just called pm_set_suspend_via_firmware()?
-> > > After all, if they support suspend, they're doing things that are
-> > > done by firmware on other systems.
-> > 
-> > No, that would be inappropriate. pm_set_suspend_via_firmware() is
-> > supposed to be called only when the firmware is invoked at the end
-> > of suspend. If OS handles everything and not the firmware, there is
-> > no need to invoke this API.
-> 
-> This is part of my issue with the "pm_suspend_via_firmware()" name --
-> it doesn't really matter whether the code is in the OS or in the
-> firmware.  What matters is what the code *does* or is *allowed* to do.
-> The native host bridge drivers do things that are done by firmware on
-> ACPI systems, so the "via_firmware" part is not as clear as it once
-> was.
+I think, you could use the __ATTR_WO() macro here.
 
-I partly agree with you. But it should be noted that this API doesn't just apply
-to PCI alone, but for the overall system. So even if the native host controller
-drivers are present, the firmware might do something more at the end of suspend.
-This is exactly what happens on ARM64 systems where PSCI firmware carries out
-some activities at the end of suspend and we still have host controller drivers
-doing some power management. Consequently, even if the host controller driver
-wants to keep the bus active, the firmware might power down the whole PCI bus
-for system power savings.
+Thank you!
 
-So you are right that host controller drivers do what the firmware might do on
-ACPI based systems, but there could be some firmware involvement also.
-
-For this series, I'm trying to keep the existing behavior intact and just
-introduce one more check. But if we want to move away from
-pm_suspend_via_firmware(), that could be done as a follow up series. Wdyt?
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+	Krzysztof
