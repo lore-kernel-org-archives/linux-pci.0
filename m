@@ -1,43 +1,45 @@
 Received: from mx0b-0064b401.pphosted.com (mx0b-0064b401.pphosted.com [205.220.178.238])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9D1F384249;
-	Tue, 21 Apr 2026 07:35:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E579E38A706;
+	Tue, 21 Apr 2026 07:35:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.178.238
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776756932; cv=fail; b=B/UhwNiKRHl92O+uu1DS54iZGPbnUBQWTbtm91OquDAEJcU3Nn8uHgVnw01Z4u+ZVTnNP5jIxMSdcBRzGnnlKVxW1u0X7DCG0YhCso7VPOmtKrWV8fk1y9WrpyS7XQ9gZ91hnNUdtB7K58YABC188CTLXYzhSVEZzuvxNGUWQwc=
+	t=1776756935; cv=fail; b=Nhpwk6jo7+BYuMR7aHxa3tSqpG1wOHaNeEL28f3R5zrFhTG7j9cn/Xjp97XYS8hkG4dMmmVR6IL+hBSXPDeuwo5soe1O6xhHrupg3u6G7SSNTJuEZ1J4niOpWc6mx4aAr5kZGSccbcnMCEvZIc7LJfp8UzqYCbUYl0ke6lHY+Nw=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776756932; c=relaxed/simple;
-	bh=14j5MkEEdGi9xr4aONDZBk/UC0J5S/t3Htu71+/CY6g=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=AkRbQJe8GCJMXIYlhF6TBCxsEtj27vzak3vlmikC/yVyP+s7Ut0xXFIFRqiguSrHSP99Ko8eiO79bnsrMFD48LY9Lkbq1TniJMc9yvKxJiss1ievgAy3ENHLImAYeQIaXwAGDg6R3cExIkWf57B7ZyRDmWfkMu5cs8s0lXBeDEA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b=g2dhcZma; arc=fail smtp.client-ip=205.220.178.238
+	s=arc-20240116; t=1776756935; c=relaxed/simple;
+	bh=vrJgq2ubLedxXwnejb8xqvFNi+iBVzJof5NUXTpqQ60=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=XrcdaWOcBmHtBuAY7l4TmjiloHePWnWj7G/SoN/AP1mCkzLvBOajgAB1zrjPH4gzV32dJFY2+9Ro6y0wRn/ENU8vbbICCd+r/clQU5oUe7MIne2RzH0UfCeqqqDLo7sZhi7bq8y9DzugH/IxC5JZxa463Yxd2TxoLQauuQxuU7A=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b=IytWxjgV; arc=fail smtp.client-ip=205.220.178.238
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=windriver.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b="g2dhcZma"
+	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b="IytWxjgV"
 Received: from pps.filterd (m0250811.ppops.net [127.0.0.1])
-	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63L4GbHU308180;
-	Tue, 21 Apr 2026 07:34:48 GMT
+	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63L517XA383621;
+	Tue, 21 Apr 2026 07:35:08 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com;
 	 h=cc:content-transfer-encoding:content-type:date:from
-	:message-id:mime-version:subject:to; s=PPS06212021; bh=/N6uNJdDc
-	t1RMfUecUb4kMPLzRQl+NGfzHUlAxxjlYw=; b=g2dhcZmavfxz2NDHR2OSsOeje
-	jGobRR00H5XL+Dvq6i6DKEX130nWl55vd1J9v4wXb49W/QHb2RZ50GxWxp8CTmUi
-	ce3tmC037MteaYCJu3WyN05uGx/PO6KZxkOKrrV7qK8ECmBHFihg8BZjUHdMaueS
-	7FK0JxcQMXZpp3FgWCfajk0qqPKy/AvofxQDirQ2eiVw5VbF82I06Sdfw8NhaIOM
-	HKL7hfovcibkHOAY+cy/pWn44JyHcnyoqU/S86TEouNTmV5zCG2Zn4mlBCpRLzsk
-	CxHu4e6Ebu7VMQlSa5TqndumoU0sNDyUTTC40vRJHuWt09NGnxk/8wTcNVyZQ==
-Received: from bl2pr02cu003.outbound.protection.outlook.com (mail-eastusazon11011046.outbound.protection.outlook.com [52.101.52.46])
-	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4dky5yb2vv-1
+	:in-reply-to:message-id:mime-version:references:subject:to; s=
+	PPS06212021; bh=edruRNhOFxoTqLpoRttq5X20SXLnytn48rYp1IqcNcs=; b=
+	IytWxjgVsJQbDcB4kEcA4bNxTQLPiAoL8YBOk/BjeOGUJ8ZQEHVTIoWDZzarj7YR
+	wvuQNmBUlAD+OksRMGb8dtfQyHKxJMZdeAJ7DU6nNQ7jny6tBNBeRlxA3+fHOQgz
+	rInYoNSBWxFlpKrMO7hMtZFLh7ijCbk7XW4ZCvXYsgJMLBRVg42iRZMYBavHUOPg
+	aEtyiKm/VJ9dnSq8G+3f7YQqMto9JL5d/IAWjtwHko24aw1dTSn4c54SASt2bfWQ
+	05t0zTRCn0ySC8uEqRVstjboaae5rf1PvZm6VQX5ULQ1XM2KHX611UsAbxqDVSXb
+	xnwwGY8EmfkodN6BBdClvg==
+Received: from bl2pr02cu003.outbound.protection.outlook.com (mail-eastusazon11011009.outbound.protection.outlook.com [52.101.52.9])
+	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4dky5yb2w8-1
 	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Tue, 21 Apr 2026 07:34:48 +0000 (GMT)
+	Tue, 21 Apr 2026 07:35:07 +0000 (GMT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=a9i9znPIyF3Z6Wjb5tBwt/28n9r4OikXI95aHKXrUJ5zKpWLKYnmCF+Eod/pW5OFSm0yxdSTVdq2DHjbCLfWFkSkDGzBto6TWkoaaIVDnVj8gjVeJOx5/fAxfBop2HB95AeEYv9YV9ps7nKsQ7X1da0zSbMdnPvV9nDMxiazadFin+qrUtgU/4vL3LdgYoEJ6hYGjxMCnIZs9mBGMkaajv3P6BuD8S5epy5jCjv7KGOXrwwMl/F503vy/YLeCwIiY4kX6DB+jptW7yjYVuFAIfapSFvquKEZm50TNLMWp1vGBtLdk/r4n6GECOQMTvwKh/n6hy02TLiibyLSWuHzkw==
+ b=I6TKjxpQU5nu+bM17pmeNhTue5lE2+/OlzDAKiR+2sizhCB6GUvK/TEWHtIyZkC9WAddrOi4OSV3YV2ptnmuac3+hjLpytjH+1jwm+8SP+JQPB+Mjix2imbrhrY0hZ5OSdQs/odxq8BJ0sKiVkVEjk/MIZkT6HX3QTu101fzUOvOHNwrJJ0L7DPMM6kwrQhLqoScD029/gaI/DoVcWz4yeadrJ+U/563+Uggl7urB2oPbxgOei14ZaMaOotgNtupdg79LxE5xklVuXUHTnTuIswVTRWN/fqvnAxJWv4+5WSSpOIcy21FY8ALHY2N2KxefU0kDQUOnTK3HzMtIre7FA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/N6uNJdDct1RMfUecUb4kMPLzRQl+NGfzHUlAxxjlYw=;
- b=EtZy0n7Y/Yc5RNdZhHYdzA0hajaGndq2Kuru2aAiql6Yd9ZIQ0MpfGBXVlUVk8T+hYDOOcqOqf0/nrG688HqKhtZQ1CMMlSZGOIrQi7hinRWPhP7KZHtJ3r6jtv7HJ4FKopcQceHs8PU7ljoPj1XefVaV4cB+MSxD1jyhZvf+PI8eFvzdRAxGBO21uzPa2Ni/CZKHsQlbAVpgwD1TdWw6Lm7blSBruWw5wPOd+7ImE72eMxIE1OviLS3kdUJfdzaOtVG7BWcp/P0Sh+Q12Qb37s8htRomtToItFh0JkB8gdsoXG0MrlpyoXS8e50WXxNCJZSamiBnI4E8gpTIoSX0g==
+ bh=edruRNhOFxoTqLpoRttq5X20SXLnytn48rYp1IqcNcs=;
+ b=JWHjZ9uzt6AgrvU9Jc4Lne/6yLXxfKPD5i1qlQ8xDuwdWn8+1APipM8AGZcKuTb9G7xwhhdC+jQUoSGuKaxiSuT0yrfuSgBiPC5/zAmXyVcMeF6llgiG821/aiMFKDL9Va6+N7f8VvYPXmLVXrKxFEWBlT9p6CX1Fnlkf6iHUqV/OnRZwVowXrZf/zinThkD1DyB7Ee7ycCBjaNwRbBImdp/O0QmBmwKIdwWbTO4fEut2L2vSfiiQA/2mIsURGHNK4aZ44Ucj1HAV382PpUT94ex4OaymkBZFp4QoA+igjLRUQbDY+yEskgpBYj6LI7bLLoIkla7dTmMFoE4ChkXnQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=windriver.com; dmarc=pass action=none
  header.from=windriver.com; dkim=pass header.d=windriver.com; arc=none
@@ -45,11 +47,11 @@ Received: from SJ2PR11MB7546.namprd11.prod.outlook.com (2603:10b6:a03:4cc::8)
  by SA1PR11MB6782.namprd11.prod.outlook.com (2603:10b6:806:25e::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.16; Tue, 21 Apr
- 2026 07:34:43 +0000
+ 2026 07:35:05 +0000
 Received: from SJ2PR11MB7546.namprd11.prod.outlook.com
  ([fe80::ca9b:dcf:8881:bced]) by SJ2PR11MB7546.namprd11.prod.outlook.com
  ([fe80::ca9b:dcf:8881:bced%4]) with mapi id 15.20.9846.016; Tue, 21 Apr 2026
- 07:34:43 +0000
+ 07:35:05 +0000
 From: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
 To: linux-pci@vger.kernel.org, bhelgaas@google.com
 Cc: helgaas@kernel.org, sebott@linux.ibm.com, schnelle@linux.ibm.com,
@@ -60,10 +62,12 @@ Cc: helgaas@kernel.org, sebott@linux.ibm.com, schnelle@linux.ibm.com,
         dtatulea@nvidia.com, mani@kernel.org, kbusch@kernel.org,
         lkml@mageta.org, alifm@linux.ibm.com, julianr@linux.ibm.com,
         ionut_n2001@yahoo.com, sunlightlinux@gmail.com
-Subject: [PATCH v13 0/2] PCI/IOV: Fix SR-IOV locking races and AB-BA deadlock
-Date: Tue, 21 Apr 2026 10:34:19 +0300
-Message-ID: <cover.1776756380.git.ionut.nechita@windriver.com>
+Subject: [PATCH v13 2/2] PCI: Fix AB-BA deadlock between device_lock and pci_rescan_remove_lock in remove_store
+Date: Tue, 21 Apr 2026 10:34:21 +0300
+Message-ID: <4625becce42253d53a615efccc33c7d91ccf5312.1776756380.git.ionut.nechita@windriver.com>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <cover.1776756380.git.ionut.nechita@windriver.com>
+References: <cover.1776756380.git.ionut.nechita@windriver.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-ClientProxiedBy: VI1PR0202CA0012.eurprd02.prod.outlook.com
@@ -77,77 +81,78 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SJ2PR11MB7546:EE_|SA1PR11MB6782:EE_
-X-MS-Office365-Filtering-Correlation-Id: fa57b2e2-c3b1-43d4-86e0-08de9f78742e
+X-MS-Office365-Filtering-Correlation-Id: b322aa95-719b-4548-91a6-08de9f788163
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|10070799003|366016|376014|7416014|52116014|18002099003|56012099003;
+	BCL:0;ARA:13230040|1800799024|10070799003|366016|376014|7416014|52116014|22082099003|18002099003|56012099003;
 X-Microsoft-Antispam-Message-Info:
-	jif2mTkbdnXQVbNUo4N2nkVWGMKFzCRXNX3fKFiEdIK3Gp3QYuMxk12omqq+aoab0r7VpZya+aObxPi/WeYCJGyIqhtUtQUV6cwCXI8uOcChHndzCPOjqPvlzSduhVtG8oFqK55ECFi+6v9ArNq9qm/RadLqSZ3foFnweg1xlOi1cL4RVCOH2yVLCOQa8Att4tddqsjRiTYL4xw2a5IILxaCeFi2LFQlwkNhCYs+uqvouGSVZESzvq1isuWnK0MiE4+pHNnW8PTLowdEkLp4KxotgY4pDTtj+2RIGQ4gtYgpyxHAp7n01pYaWxXjnxx2hsiqI7TGTh8+jcOx8h/mhDn9LzSOC5G4XX3sXHCiZ7vqMN5mH/ChNie75CYGH8PmttUe+6iqOut1UDrIY0CXIZFTatc+LyuZwBj3/Szs4WS6XhGphLoNhfZnZUNW3KefFxAOb/psBB+m/DG3EwmckOzasrnVfKRAQs4nQxa4VCQ3+0DFEcFz84jfN/7VtGdMCxyoag+e2ltrnvFIca+VZd0wqglQYW3OABUGCeSP0k7qMLbPUfLgwFvbz7zvaszFiC4Ya3hUisc6t4mQhbbknOn8X+tJSFyAwpB051q8IL7mRGfbYaVsjjh+TbDNZdMRkyKY1MPCiCdDrw9uKp3J5Mw904/6J5iYkdoU+OT/7SLULoBRk+8ZMjGg2irM1VI+SCsJKqpJz+4RCOQ/vQ2PxcNwEQPX1SEJnWCyDSHeawJIB8kEuef4NHuKpwOv4OOe
+	v92Vm8SJDHUJCHl2o8R+XELUtFvIPNxP8Ya7vISlMWPHJDPun5Y4PV05UsYilsdqvx5bZgkHgH3RRs/Z+NHOcmtHmvw7yX+vAatnjhJ+iUQGlrnw0+uApoxVpMXPZ8i6CrDehT/z6WwTaf+/OBHjK8OnYr5tSxvXYwJYaaTDgpcwDGmH+gyEBHEruZOKbbE8UYx6sQXHcgzN0/2djfwN2QxVz2VEsT7yrFBOpWPyTQCzBzqgda8+JtEDIfQs/bE8Z0Zi82PqYNwpKL7bU5lUivmFyCb1F5bjZydYL+3f6WtLQymXjIZlmzyyi3ZXpYm/i3aI9i1YpzmpBr1zcpE9cSa+hAJ+k87AlGRnSsenZl36qw3DcjpsRHwXe5kPgTFw0eg5DtVlMFJ8ON28q3sjcSap2l2p2c67DHKmGJujpYfIVtPDEhPMUDh7QGIvMyeqtCnhL46J+HQK3k6bXE1Q6m5nOJqIeaSyvoZGh3cqsrkkfTFdCWUSI3Addyb7PrVBsRRhNhQGNDt1U8F9dWRAkbibQJF8cPBzcjkZlKYx4irflNpC4h5Dq+ygOHMJCUzimOjJBDA5M6eiMIHq8siXN6cO9JYphRxGoeSuLe57wiSHZWeiCt9F3bJ0XvJwhiUoyN3z4uXOPEgLzFzEmyeCCjiraM8w3c84vn7ZlGsENIWdeLf5t+teC0sWE9HpKi5D
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ2PR11MB7546.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(366016)(376014)(7416014)(52116014)(18002099003)(56012099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ2PR11MB7546.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(366016)(376014)(7416014)(52116014)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?gD3Zw5Y+eNbustfAcuhVSdc1/CLzjCPEI0SnFlwJga2nOKGchoGX/3ot/UCE?=
- =?us-ascii?Q?sTRMLQMkkTdK3HonctTQRZlhEb/tXYLWGdiX8cJGf1I37JdqOwFug7Wwf8NE?=
- =?us-ascii?Q?R+JLJLD6Qigy9Sxn+Nl5Hp2SmJz+7cmXhBgzi1cfN7ersS55FU+oqSchwTJK?=
- =?us-ascii?Q?QFTx629GScPtTgBR4yRnHLk02BuDZCyqq4maxWrJbDUxynK7H1gHypknVCqn?=
- =?us-ascii?Q?r5VZMy6Pjpb6TkCDqV+0Wt1iygAwvKGBbZT+RfUGP6UTwsMHypnlK2ffzIKO?=
- =?us-ascii?Q?ktD9+Slg5fLirUUzPW+s71ZigCZ0xNkUWDUVOiK0UlKiU7oeWkgTJ/UgOfFT?=
- =?us-ascii?Q?fLS94mO5lOmn2UBVkHWpyqzu0OgvlIJk2WaIAW0rhdq8//cg1GoplWkYeXPh?=
- =?us-ascii?Q?uboCvSbIJLs2r3BhGYYj+DDerW8RsW8s4JPMxxOgen7twFSHi6DCQEGYgKyz?=
- =?us-ascii?Q?Mc0s57bd4A3gA14PR3iyp6SRxhhLUFs9cFbtdG92r6a8bf/WqcdnErbWwbe8?=
- =?us-ascii?Q?dJ9/9+Nv9vD9ZqotHk2ilvOntB64jQZYznqNhQKAwej92in+UC9NT5R8EbQu?=
- =?us-ascii?Q?k+yPxeeT3iK8SMs5spEEVAHuE1zi5BsyoiVu4HfaCaaRGZjG4ls0c/UFiUD8?=
- =?us-ascii?Q?yinES2dNKh8n+Mz3cS6VEBaCtXtD8hye+KfnQue6dlhRQvGEhYQa0biX3Vl3?=
- =?us-ascii?Q?ZI0MCUIoEwc86X7AUqu8biFsa340JBs5ukMBmFJAWMkbvURtssfkw6yRej7I?=
- =?us-ascii?Q?SL8m7owdZ9ILBjChQ5lHfV5F9daRSHXN34LD7dcjtErGsKUjFiMwOBm8QMdj?=
- =?us-ascii?Q?j/AkT9Ok0XVSRf0UAcGEeb0AwV6UMmlGepWYZgRFh4m1stZ+SjhaYrs04pUC?=
- =?us-ascii?Q?yrErM8SVEOCqrLXZSojvYNF6auKn7RbFXNnAnJtAvO1bdEba6pFukiF1Xftu?=
- =?us-ascii?Q?Atjk9rUufZ/oXsQ/cTvScqlJ6rqL6p21eGbRsJMgNCCLVGxx3rxuI8gTmxIe?=
- =?us-ascii?Q?HmCerxf8nyaNYYtxb285/PMDTlTomGDxqWwfdF66LNwJ18J3JzXRTn4dqmZb?=
- =?us-ascii?Q?Umvj+qrGc+rg3DZGyTQtuJpE98R9DLP6yXYTSYiJO4SuWSo3O0gj9WPRG0gy?=
- =?us-ascii?Q?WiaUNGI8Yui5vLmIV1zG6PY8ElM3nJW7xq3Le2MBg9ClnWrmPig9xOTIw9V3?=
- =?us-ascii?Q?qmisA50/j9vJ10uC5PEbL4mRKwwySSXDR6SglTYXfEKu61Mzh9t4gXzm0wMa?=
- =?us-ascii?Q?/ZQXPnAUOjMBCmxUnWb0kpJdYd9H4GVsXf/lznUf0FjnYbvh1HeV9liRE7qg?=
- =?us-ascii?Q?gG6ZAsm1CuY99yTMCIxCW8H++Qhu9elyWHsvsTpG/ZXSX/t0f7IAaUDLIvDo?=
- =?us-ascii?Q?q3CROGg+lfY5NM95kQ3WJ3SVOxDwPzs1uGDu/E4VdE/9js5JNw+h9Cm4MQ/g?=
- =?us-ascii?Q?nNBd4WLoQXgvXYuzKScS33EUIQmiwZJum6RK2OyNfLMn1/5TOgDHfaIGFvJg?=
- =?us-ascii?Q?qkvyA92cC92R8I/vCGlIqoVdWiSSB4WhODtlaVFSRma2DkHkruvX3+KbKrya?=
- =?us-ascii?Q?B6nY0GK1vqTMO/sP/zyRNITHUtSl5q2S4XhlckaozBAg58LHOdKiiUoyT5SE?=
- =?us-ascii?Q?Qho+ZOudg4HaQfwzAhPb9veAlYZdBZuqs1Wim2ivilOrXOawRTXCr9yZSSjy?=
- =?us-ascii?Q?JEYECE9XqPFYpShGHSjGpWVt7zuGl51S7g6cYXMnlNIf93GC1AfwUTp108Bh?=
- =?us-ascii?Q?WxDlDuFvEEMPX9L1Y2h/wYRLIUb95RGTXVYjvOxP/d5UxyX59phwUBsIUWTG?=
-X-MS-Exchange-AntiSpam-MessageData-1: k87g58B+yK8F7WDGQQz6f97dFj85/AHRjlE=
+	=?us-ascii?Q?qIsFhG+03X+RkczgDjwIpjmpZcmuMYgdaARTLFZi7FKjAwde6w2Bs18TqNrj?=
+ =?us-ascii?Q?ctfJbWw2f7/D+t5vw5pbCo0p1YfIOqKEhU/uBQr8/ozkz53ltYYJbgNTGUts?=
+ =?us-ascii?Q?7Vq5VY54ay30+pC2X3s1In0rlVWNyi7udoqXps1M5vOAgunUf3beaguQ2s/s?=
+ =?us-ascii?Q?adGqRuQgS0Vg5pvjHCNvAskGM2yJEzlbclI1ndbqVY814o62ZDgCiGqFZh4I?=
+ =?us-ascii?Q?7jZJZntlWzaat9wVajWkKhlYbhU1EYdg+RjVk7IQccveIPythMlK0lI16AIW?=
+ =?us-ascii?Q?asfZQjwqdiTcqb7Sjh94Q+yM1/DR6GTp+htPRtAypOAX2FSV0c7iR4NMlWFi?=
+ =?us-ascii?Q?csIwThPnfnWNupcl+hmwVz/V+nqlSYpbCy3GyMZTqeNbjDRNWLlbiS2lvpbR?=
+ =?us-ascii?Q?moSYcmwZo+jAsIuKlm1zhprL22qsaRaZLRiTlsPamSHcgNCxEu/g0Q7gqdH7?=
+ =?us-ascii?Q?aMSqgCytP2WWNHPsb6sOKAn0t3UeMikNO/9ksiy5cC2esVLwBzsSjX+Cfh5g?=
+ =?us-ascii?Q?T5t150qeIuDJIoInmYVj0BdJQyfvv+551alKiDRxmbnntbfZMU8EE4AaGKIV?=
+ =?us-ascii?Q?Js0AbT7WFGH+Ywv96K8CuE/4UBWc+gKwx7djAMojFW3pufwh8KHmQsm30Cxu?=
+ =?us-ascii?Q?07tgHFh4m6F/tebdsGt96KRiGtDYV/3qssGQPd7gB6m+f8zXZX2FyKco6Ss+?=
+ =?us-ascii?Q?S4kaq4wYm78Rfxr+mPIrIYMkdksNB5Z3X3tDGiUQX+3wAMHX84zx7JNb76Gm?=
+ =?us-ascii?Q?x63vFZ4mPCb4t7dNO7voCQuIks26yfB8PVm0MgEiUw8vMhTCLl+3P6ywMBIh?=
+ =?us-ascii?Q?lHCizYeBQpJAbXI7obXQ1Nd7ohg1q7rLQB8dQ8cHVK3j5MY4QFqUQHBj5c8l?=
+ =?us-ascii?Q?z51vUvv/lilAeQOlRfNlZB83Dsk5luxNLPsQpcEUa+CSJWyuvoNuJbK9Wiv2?=
+ =?us-ascii?Q?uo1sNC4arbVbIB2hMG7F1pvFsF2fWOMf0Fv5saYrY4My/7w9Ij6IiF2iZ97W?=
+ =?us-ascii?Q?xz5igjddReY4MyZUTJk/EJjVbLaGCcxxH8XNuA+/xCDezTBBjqPR9eThyj1M?=
+ =?us-ascii?Q?oOxDg3GTxsmk+XXtWrRTpk72rGeJ1eYkOD14S54zChGRCmT6aXE7whKPxxoj?=
+ =?us-ascii?Q?U0ErgYGgE/scDI0fZ8zm5OHUfpUYpaZmMyND59hJwnITxA5AwiNvpIIPU7y8?=
+ =?us-ascii?Q?IZyrDtXU0G8PXe6RBknQF2dmaQwwemPSsziVjx+k4T0d++f1Ynb8Rh0+ZKKh?=
+ =?us-ascii?Q?hx6KiGikKy7ESnnwhZ+o6FgDPa0jMRG10tjOrWqIFeKp1Zmnp2dKKxlbm3N+?=
+ =?us-ascii?Q?eQ6IirgtzVCM16liO+a+toD34UfoxPW+ChiCS9Ex1qsEPNhdOa7vLQ62Z6xD?=
+ =?us-ascii?Q?ashOqndS6rKS/8I/cERmABXVV8sbvSHVsV4P1/uxfN6Vy2zhawD2Oqj+dzQe?=
+ =?us-ascii?Q?Q6LNMNgxswBeVAXHVIZTMKyVjE3zvwUo/WHlxGGPsh8CXEsJzydEGKa0BVf5?=
+ =?us-ascii?Q?V3f6eab4mMObyuDiR8kg15GB3Nj6EeV63Cdi6tfeRgLKOix9hi+6RymgF5bM?=
+ =?us-ascii?Q?MCklLNyWmclZUlBAtB+Hq800HMRCxjqNEdiU+vvfj5qmVVM0IOMPbRWJb3fJ?=
+ =?us-ascii?Q?bHnFIyfsL674CSOsGd6DoNs7AjRGeCD9+92noOTSDdsE25HRrUjkNSjCHasE?=
+ =?us-ascii?Q?GNqHHGlqr205LW4s3k9mZrg3N8XQJYR6wUlQ/1/SPK3JjJdjHWx1sDd8/5A/?=
+ =?us-ascii?Q?3hR1Re7FsGHdd56EYKaV9VJj0gtEP7G57mU2sU66WmzGXjVRGwIMK/4WjXLR?=
+X-MS-Exchange-AntiSpam-MessageData-1: lNLvL5G5sRH75Q9rvT0luTJlPFyjJYplDF0=
 X-Exchange-RoutingPolicyChecked:
-	DIIqrqls/c6H2CWZ+1uYjL1zorD2KxCG6842/+FIanpvMEbz1C1arENqP82hGTL5ICP5KEXC5LyzlasclzkUqCs9Etyh/pGBVkNEadG2oXWM97UkstdJANP9fZoVIntZISG1aSE1lglAvpxMXxpsOUXFOOs14efLFiA47dfgP/8LsRq4DbNe0ngpxsXk61OSdUl7+HMvigxSzOD18vhcAmTm9nGkw1QVXY2nazPqjrO1RwFIm0wFGLDv372U050FQc7Zpyoxqe0s314EYcxyGEqydud31j5kpJ12B0DrN1YdaiGWCJEOC0HuXzKn4I0Ly0j/I87g1dfl1tIjXLdUVg==
+	cUgMvsmkn7RwUUZjhdc+BwIi7J2bOdLgy/W9zgYyBDaZlI8MAf5YhAqPhK4/a5ytl8ysiKmbAsQexH9KMFGaL+AFJaT1bTwaxx7sU3g5tvkRtS7DAoODycs54Xe8PTuqAlZ6uQL+7FkCy/qm9Hcysql/G1OY+aGJJKGIx22lLO9jkeH8t5VHeclYxcsfFKBdLpRTzaLL6bnrZ2rN9sYLNDFNHgEtWE3iq83k3Vl/Ys7zJeacchj4i6aLs2on2QF/5oumXqa4yIVvX5fgcxfzMEl+tpaZI/C6m0S9iRhsxGBkGC7mP4Vw5T28vZAuzXnpcwe7Z+81cMe6f10ZTjqH6A==
 X-OriginatorOrg: windriver.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fa57b2e2-c3b1-43d4-86e0-08de9f78742e
+X-MS-Exchange-CrossTenant-Network-Message-Id: b322aa95-719b-4548-91a6-08de9f788163
 X-MS-Exchange-CrossTenant-AuthSource: SJ2PR11MB7546.namprd11.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Apr 2026 07:34:42.9025
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Apr 2026 07:35:05.3123
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 8ddb2873-a1ad-4a18-ae4e-4644631433be
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: knZl6zr4FFAQD/yFS2hb0DS5OMAYjGBCld1bjEKgLYD7AYoDhdGRHN1LDzfPmZ8CrjKofjn781rR7eoY14Le8PPKuI36H630LrU9USyoEaI=
+X-MS-Exchange-CrossTenant-UserPrincipalName: uD+5SDO3LjsamFw6qTEV1ulOvyB4q2FMrA7HbALqx/GZduqq9+7HQZh5j5naOKGv3wuU8S6MCMNnub+2MfUjXkAa1RGGKDs3yMBRny8RzI4=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR11MB6782
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIxMDA3MiBTYWx0ZWRfX0sUKTkqufCQP
- MOeHziRBbPxKy360PvY0BFLwVhcHb1S8RdyNzAS9I6+egP4odkKYUqc8TXkt+rZTrI9uhCbhPK1
- FK8NSfa49if8bovq+MbrnHQWTCK4CR3lg81YmAoIzwn+P8zcdz17isdV88yBoFoKGuHR3XUjyoY
- crUir9gP2dn/GPF8SNp1mplIPD2J7dr7IwcOOxTsz2zHYmMSnEG7zZOwfck6Mf1I4tBrOYl+Ty1
- W8+QAPL+Jry48dBY2QTd58eeQScPDQYgZ1Fj+m8wzjfJhht3tCvPQr3MLHSPnADZdaADkqwMfkK
- S6wjfvyFjO+7F59NzmSSZUmYdse38UnU9+JHrEYRQBaMxhM4HBHHknF6azXa4QoO1NC+0ECHkjc
- 0qr5CFlTZt7TUNDpnwqgX2OAymJxCLVVNxzAitilW0QCagJij2F/HYGCn/46vAFXLVfs5H6AOwn
- /7fCP2qz8VAfz7qA8eQ==
-X-Proofpoint-GUID: 8PeNgKDK82ffCMuETaqnc3-7-sCG5vdF
-X-Proofpoint-ORIG-GUID: 8PeNgKDK82ffCMuETaqnc3-7-sCG5vdF
-X-Authority-Analysis: v=2.4 cv=Bp+tB4X5 c=1 sm=1 tr=0 ts=69e72898 cx=c_pps
- a=bbY6CEmM+CWjO+hqT4zsvA==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIxMDA3MiBTYWx0ZWRfX2p5mXAUlYOao
+ ooRrVfpKuc2zcgJRYqEXKwQF0p5bIMbXJFvlfdwTi+U88LphqAx3s9WqpqZ/U450eK6VcQYJ8Ri
+ gvtDATHf9ouuA8piWlMWYsY/rXsWmNOvVXAkJatMb4BFFLQB1Dk5YoxCgrugBmauHT/iW1H1glV
+ Ql03hUn+2fOv/ePp4RWwppDGA/tyx2UG4/1awqrMc6BVlC/2SY28/Ia3m40lx8OOUaxhq98ktoL
+ kc4Qqc2hmhZfdhW4uKgmZNwQQoYkmNAmvh3LRQ1KeyNy/69O1KwEeSHp0TrB8jgMLlLEXZXGczC
+ dkXrew3Zjy4vizarzHWYO/Wln9+0DmPlwiAYRP2nCZW1HvFmuwJZB79Fd0FGHq/oeh71KHPTa5u
+ zewOFsN36bTG2tZxlIVrO3GpRbunlPcQ3D6eoGvZCoZmtf05sh7T9nIz2YIUvfGzjLl0uXARjtT
+ N8kYC/wOksWlQhOQejQ==
+X-Proofpoint-GUID: Qq-YpKawnwfepJfF_sJUImX8aEjDOSNQ
+X-Proofpoint-ORIG-GUID: Qq-YpKawnwfepJfF_sJUImX8aEjDOSNQ
+X-Authority-Analysis: v=2.4 cv=Bp+tB4X5 c=1 sm=1 tr=0 ts=69e728ab cx=c_pps
+ a=kBTuJkHEWKOaoYTOH1TR3A==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
  a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19
  a=xqWC_Br6kY4A:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
  a=bi6dqmuHe4P4UrxVR6um:22 a=klDOsUkWDRETUCZYPvoE:22 a=VwQbUJbxAAAA:8
- a=VnNF1IyMAAAA:8 a=t7CeM3EgAAAA:8 a=3fcuMNHXLARaAz_BQGYA:9
+ a=_jlGtV7tAAAA:8 a=p2eoyRXnAAAA:8 a=t7CeM3EgAAAA:8 a=VnNF1IyMAAAA:8
+ a=mm2UkWPFonPHBTd3Hn4A:9 a=nlm17XC03S6CtCLSeiRr:22 a=KSHYvF9M28j0gckGFaEs:22
  a=FdTzh2GWekK77mhwV6Dw:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
@@ -161,52 +166,13 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
 
 From: Ionut Nechita <ionut.nechita@windriver.com>
 
-Hi Bjorn,
+remove_store() calls pci_stop_and_remove_bus_device_locked() which
+takes pci_rescan_remove_lock first, then device_lock during driver
+release.  Meanwhile, unbind_store() takes device_lock first (via
+device_driver_detach), and the driver's .remove() callback may call
+pci_disable_sriov() -> sriov_del_vfs() -> pci_lock_rescan_remove().
 
-This is v13 of the fix for the SR-IOV race between driver .remove()
-and concurrent hotplug events.
-
-Changes since v12 (Apr 21):
-  - Patch 1/2: replace mutex_get_owner() with explicit owner tracking
-    (struct task_struct * + depth counter).  mutex_get_owner() is not
-    exported outside the scheduler core and caused link failures in
-    some build configurations:
-
-      ld: vmlinux.o: in function `pci_lock_rescan_remove':
-      drivers/pci/probe.c: undefined reference to `mutex_get_owner'
-
-    The new implementation records the owner on first acquisition and
-    clears it on final release, with a WARN_ON() catching mismatched
-    unlock calls.  Semantics are unchanged.
-  - Patch 1/2: dropped Reviewed-by/Tested-by since the locking
-    primitive changed; please re-review.
-  - Patch 2/2: unchanged from v12 (keeps R-b from Niklas Schnelle and
-    R-b/T-b from Benjamin Block).
-
-Changes since v11 (Mar 26):
-  - Patch 2/2 picked up R-b Niklas Schnelle and R-b/T-b Benjamin Block
-  - Rebased on linux-next (next-20260420)
-
-Changes since v10 (Mar 18):
-  - Patch 2/2: added kill_device() before device_release_driver() to
-    prevent a new driver from binding between unbind and removal,
-    closing the TOCTOU race window identified by Benjamin Block
-  - Patch 1/2 unchanged from v10
-
-Changes since v9 (Mar 10):
-  - NEW patch 2/2: fix AB-BA deadlock in remove_store() by calling
-    device_release_driver() before pci_stop_and_remove_bus_device_locked(),
-    as suggested by Benjamin Block (addresses Guenter Roeck's report)
-  - Patch 1/2 unchanged from v9
-
-Changes since v8 (Mar 9):
-  - Added Reviewed-by from Niklas Schnelle (IBM) and Tested-by (s390)
-  - Added Fixes tags for the three related commits
-  - Removed rescan/remove locking from sriov_numvfs_store() since
-    locking is now handled in sriov_add_vfs() and sriov_del_vfs()
-  - Rebased on linux-next (20260309)
-
-The AB-BA deadlock:
+This creates an AB-BA deadlock:
 
   CPU0 (remove_store)               CPU1 (unbind_store)
   --------------------              --------------------
@@ -219,59 +185,75 @@ The AB-BA deadlock:
     device_release_driver()
       device_lock()                                               <-- WAITS
 
-Patch 2/2 fixes this by:
-  1. Marking the device as dead via kill_device() so no new driver
-     can bind (prevents TOCTOU race between unbind and removal)
-  2. Calling device_release_driver() before
-     pci_stop_and_remove_bus_device_locked(), so both paths take
-     locks in the same order: device_lock first, then
-     pci_rescan_remove_lock
+Fix this by first marking the device as dead using kill_device() to
+prevent any new driver from binding, then calling device_release_driver()
+before pci_stop_and_remove_bus_device_locked().
 
-Note: the concurrent unbind_store + hotplug-event case (where the
-hotplug handler takes pci_rescan_remove_lock before device_lock)
-remains a known limitation.  This is a pre-existing issue that
-Benjamin Block is addressing separately in:
-  https://lore.kernel.org/linux-pci/354b9e4a54ced67f3c89df198041df19434fe4c8.1773235561.git.bblock@linux.ibm.com/
+Marking the device dead closes the race window between unbinding and
+removal where a new driver could theoretically bind: once the dead flag
+is set, the device core will refuse any new driver probe.
 
-This race has been independently observed by multiple organizations:
-  - IBM (s390 platform-generated hot-unplug events racing with
-    sriov_del_vfs during PF driver unload)
-  - NVIDIA (tested by Dragos Tatulea in earlier versions)
-  - Intel (xe driver hitting lockdep warnings and deadlocks when
-    calling pci_disable_sriov from .remove)
-  - Wind River (original reporter and patch author)
+After device_release_driver() returns, the driver is already unbound,
+so the subsequent device_release_driver() call inside
+pci_stop_and_remove_bus_device_locked() becomes a no-op.
 
-Test environment:
-  - Tested on s390 by Benjamin Block and Niklas Schnelle (IBM)
-  - Tested on x86_64 with Intel and NVIDIA SR-IOV devices (earlier
-    versions)
-
-Based on linux-next (next-20260420).
-
-Link: https://lore.kernel.org/linux-pci/20260214193235.262219-3-ionut.nechita@windriver.com/ [v1]
-Link: https://lore.kernel.org/linux-pci/20260219212648.82606-1-ionut.nechita@windriver.com/ [v2]
-Link: https://lore.kernel.org/lkml/20260225202434.18737-1-ionut.nechita@windriver.com/ [v3]
-Link: https://lore.kernel.org/linux-pci/20260228120138.51197-2-ionut.nechita@windriver.com/ [v4]
-Link: https://lore.kernel.org/linux-pci/20260303080903.28693-1-ionut.nechita@windriver.com/ [v5]
-Link: https://lore.kernel.org/linux-pci/20260306082108.17322-1-ionut.nechita@windriver.com/ [v6]
-Link: https://lore.kernel.org/linux-pci/20260308135352.80346-1-ionut.nechita@windriver.com/ [v7]
-Link: https://lore.kernel.org/linux-pci/20260309194920.16459-1-ionut.nechita@windriver.com/ [v8]
-Link: https://lore.kernel.org/linux-pci/20260310074303.17480-1-ionut.nechita@windriver.com/ [v9]
-Link: https://lore.kernel.org/linux-pci/20260318210316.61975-1-ionut.nechita@windriver.com/ [v10]
-Link: https://lore.kernel.org/linux-pci/20260326083534.23602-1-ionut.nechita@windriver.com/ [v11]
-Link: https://lore.kernel.org/linux-pci/cover.1776755661.git.ionut.nechita@windriver.com/ [v12]
-
-Ionut Nechita (Wind River) (2):
-  PCI/IOV: Make pci_lock_rescan_remove() reentrant and protect
-    sriov_add_vfs/sriov_del_vfs
-  PCI: Fix AB-BA deadlock between device_lock and pci_rescan_remove_lock
-    in remove_store
-
- drivers/pci/iov.c       |  9 +++++----
+Fixes: a5338e365c45 ("PCI/IOV: Fix race between SR-IOV enable/disable and hotplug")
+Reported-by: Guenter Roeck <linux@roeck-us.net>
+Closes: https://lore.kernel.org/linux-pci/0ca9e675-478c-411d-be32-e2d81439288f@roeck-us.net/
+Reported-by: Benjamin Block <bblock@linux.ibm.com>
+Closes: https://lore.kernel.org/linux-pci/20260317090149.GA3835708@chlorum.ategam.org/
+Suggested-by: Benjamin Block <bblock@linux.ibm.com>
+Cc: stable@vger.kernel.org
+Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+Tested-by: Benjamin Block <bblock@linux.ibm.com>
+Signed-off-by: Ionut Nechita <ionut.nechita@windriver.com>
+---
  drivers/pci/pci-sysfs.c | 30 +++++++++++++++++++++++++++++-
- drivers/pci/probe.c     | 18 ++++++++++++++++--
- 3 files changed, 50 insertions(+), 7 deletions(-)
+ 1 file changed, 29 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index d37860841260..1426328e9f05 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -521,8 +521,36 @@ static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
+ 	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+-	if (val && device_remove_file_self(dev, attr))
++	if (val && device_remove_file_self(dev, attr)) {
++		/*
++		 * Mark the device as dead so that no new driver can bind
++		 * between the unbind and the removal below.  Once the
++		 * dead flag is set, the device core will refuse any new
++		 * driver probe.
++		 */
++		device_lock(dev);
++		kill_device(dev);
++		device_unlock(dev);
++
++		/*
++		 * Unbind the driver before removing the device to avoid
++		 * an AB-BA deadlock between device_lock and
++		 * pci_rescan_remove_lock.  Without this, remove_store
++		 * takes pci_rescan_remove_lock first (via
++		 * pci_stop_and_remove_bus_device_locked) and then
++		 * device_lock during driver release, while a concurrent
++		 * unbind_store (or sriov_numvfs_store) takes device_lock
++		 * first and then pci_rescan_remove_lock (via
++		 * sriov_del_vfs), creating a circular dependency.
++		 *
++		 * By unbinding first, the driver's .remove() callback
++		 * (including any SR-IOV VF cleanup) completes before
++		 * pci_rescan_remove_lock is acquired, ensuring both
++		 * paths take locks in the same order.
++		 */
++		device_release_driver(dev);
+ 		pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
++	}
+ 	return count;
+ }
+ static DEVICE_ATTR_IGNORE_LOCKDEP(remove, 0220, NULL,
 -- 
 2.53.0
 
