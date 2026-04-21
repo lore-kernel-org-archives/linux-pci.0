@@ -1,138 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B8DF2F4A05;
-	Tue, 21 Apr 2026 21:33:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 010352773F0;
+	Tue, 21 Apr 2026 21:38:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776807212; cv=none; b=Zej1RspqZqcTNA2mbdXSbX5f34XMtajp+x1dAESkweSDIGZiBvs2GJwRm5dygFUMNHxG2JuA3WS/mas+1SnM28kMDbcevNWU61qR5LymuziDZs1YlZ0VrYYGpTtG4oHwlQhteRVSL9vp2banEGXKRf2jbvDaLzD+P1epPWnlAAc=
+	t=1776807531; cv=none; b=VhuA+F9JOu6SCuEMthj1r9ITEh3qrxh9Gd4iE79AMeSPQfgRW1C1L5WAbwe6N1sN+uOtQhB0A3URrqdMEUa7DeRm87nTEKSwbzmCkiR6VLzyxecaDPMzGMqfmD26uIGB15A7QmcvQbDk5Ot7hrrNN4O4kyyCGs+lvCvv9DmkMLE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776807212; c=relaxed/simple;
-	bh=vatupuq4WrABpSuEUMYUtujivXgVDiHk3e1MmNVxM+Q=;
-	h=Date:Content-Type:MIME-Version:From:Cc:To:In-Reply-To:References:
-	 Message-Id:Subject; b=e1kkqojvvb7JKiyHcSlbBsam7OTIMBBZQS6ktaBp07FzxRJ+3rBhtw0Dv8FXXsQBEUiwlwc2CLnacNUxdPuAJ5Ocy8zyq/z+XSHghqguR+xsIvSi1ug384x3X+rnZ5AWH85zkZtAcmQlrZes8q6xS7T0aJ1i6xB0cPa0OZWuDlo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RfEYijh7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776807531; c=relaxed/simple;
+	bh=CcnIhNX1Ct+b8gr30wn4e1tvYOD7yALVZlMLTbe45WI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=NbjhwsnyixVBAkbeJS/rhq1zAg9VRjIs+1ooDJTC0Y8OJdT168ghbwrN/pJZC6AY3ZGDqbCN5YOMb2eQXX+qUKgMMGYQqUhsKd0Cxxm0AdMrpFhro+BWMa6prrpWbYhDarBaNClUup584SMzWy4IGkdA74HjgHaVCH9nXhHffjk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=V2RfIuf2; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RfEYijh7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1D63C2BCB0;
-	Tue, 21 Apr 2026 21:33:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776807212;
-	bh=vatupuq4WrABpSuEUMYUtujivXgVDiHk3e1MmNVxM+Q=;
-	h=Date:From:Cc:To:In-Reply-To:References:Subject:From;
-	b=RfEYijh7XhOIIxtCBiZK1gn5IXNLv5qcn5amQw5CqC2XQ0mRjsWMy0SwC/jKxN8Ha
-	 +lGNHgaycbYUVz/8qUQTAV87+keU8WY1I1fe4qL/Cubm0CmcRljTFyT4oCGT3XsCWG
-	 21JAOI+XCTuLyqtAQ0JY89PQj9ztU0bsVRSzsv4sAV4REIQeaAk9EIXe86axCL8Lcv
-	 P49oQppEQE3W5ysKk35W1yekjIPJzFLIHvqS9YHqLVNNeeeAs1gWZnOJuQHTbQ76Mo
-	 fn4ArOBoMvEaOR/5jHbzodnC5RnVkOGNRxUq58/UbFZ0QTUKrwlb9kjzN5QiQ3GPHQ
-	 wuq7UQCA8GLiQ==
-Date: Tue, 21 Apr 2026 16:33:30 -0500
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="V2RfIuf2"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63LImJ6S590754;
+	Tue, 21 Apr 2026 21:38:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:to; s=pp1;
+	 bh=JUf5xe32ftQAeXDeJ8yyX8svTFp1E8fbIyIRFi3qqwg=; b=V2RfIuf2OTVd
+	uZ04Bz99InlFj3o3lfgGDsv7Vu40uVn84qgNhhK2gqAXfYzcZB4EeMPaxjRVil/k
+	wubxGCIk7DZptleat9lPnzogDmWUlnMFLStJ3EfL9UxwdYZ7qTSMgrVD6n36IiIi
+	IMr8pzczORoW66R8+6ZoaYDc6wTQV8s8Mj+td71kUJNE9HOVVLCWy4mTq4awf2HW
+	Ipo94ogE0EqhquaC9ZR1hYpcSouB3r+t/jl+IsMeNdiympChIERTJ3pV2dMTw2mK
+	8O9dsxB9KlanudR+rCzum4iPipMdgLXmL3fiiW72sqW1PSJy/NPUd5g2IzsqdvKS
+	OqoicaJgCA==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dpeu20jg2-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 21 Apr 2026 21:38:46 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 63LLKRgl028602;
+	Tue, 21 Apr 2026 21:38:46 GMT
+Received: from smtprelay06.wdc07v.mail.ibm.com ([172.16.1.73])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4dmpyy27gw-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 21 Apr 2026 21:38:46 +0000 (GMT)
+Received: from smtpav05.wdc07v.mail.ibm.com (smtpav05.wdc07v.mail.ibm.com [10.39.53.232])
+	by smtprelay06.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 63LLcikw18875062
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 21 Apr 2026 21:38:44 GMT
+Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 8C3F958053;
+	Tue, 21 Apr 2026 21:38:44 +0000 (GMT)
+Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id B34F358043;
+	Tue, 21 Apr 2026 21:38:43 +0000 (GMT)
+Received: from [9.61.249.207] (unknown [9.61.249.207])
+	by smtpav05.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Tue, 21 Apr 2026 21:38:43 +0000 (GMT)
+Message-ID: <305d85a8-660a-4063-9b47-5707d8b25fa2@linux.ibm.com>
+Date: Tue, 21 Apr 2026 16:38:43 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: "Rob Herring (Arm)" <robh@kernel.org>
-Cc: Sylwester Nawrocki <s.nawrocki@samsung.com>, ath11k@lists.infradead.org, 
- devicetree@vger.kernel.org, linux-pci@vger.kernel.org, 
- Mathieu Poirier <mathieu.poirier@linaro.org>, 
- Conor Dooley <conor+dt@kernel.org>, Xu Yang <xu.yang_2@nxp.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- Andrew Lunn <andrew+netdev@lunn.ch>, linux-spi@vger.kernel.org, 
- Patrice Chotard <patrice.chotard@foss.st.com>, 
- Rao Mandadapu <quic_srivasam@quicinc.com>, Mark Brown <broonie@kernel.org>, 
- linux-sound@vger.kernel.org, 
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
- Bjorn Andersson <andersson@kernel.org>, linux-remoteproc@vger.kernel.org, 
- Maxime Coquelin <mcoquelin.stm32@gmail.com>, 
- Thomas Zimmermann <tzimmermann@suse.de>, 
- Sibi Sankar <sibi.sankar@oss.qualcomm.com>, linux-wireless@vger.kernel.org, 
- Johannes Berg <johannes@sipsolutions.net>, 
- Yang Xiwen <forbidden405@outlook.com>, 
- Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
- Alex Elder <elder@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
- Ulf Hansson <ulf.hansson@linaro.org>, Stephan Gerhold <stephan@gerhold.net>, 
- linux-kernel@vger.kernel.org, Eric Dumazet <edumazet@google.com>, 
- Paolo Abeni <pabeni@redhat.com>, Jakub Kicinski <kuba@kernel.org>, 
- linux-arm-msm@vger.kernel.org, linux-usb@vger.kernel.org, 
- Bjorn Helgaas <bhelgaas@google.com>, Jeff Johnson <jjohnson@kernel.org>, 
- linux-mmc@vger.kernel.org, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Peng Fan <peng.fan@nxp.com>, 
- "David S. Miller" <davem@davemloft.net>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, ath10k@lists.infradead.org, 
- netdev@vger.kernel.org, Maxime Ripard <mripard@kernel.org>
-To: "Rob Herring (Arm)" <robh@kernel.org>
-In-Reply-To: <20260421195836.1547469-1-robh@kernel.org>
-References: <20260421195836.1547469-1-robh@kernel.org>
-Message-Id: <177680720998.183058.5012840252939438533.robh@kernel.org>
-Subject: Re: [PATCH] dt-bindings: Fix phandle-array constraints, again
+User-Agent: Mozilla Thunderbird
+Reply-To: ramesh@linux.ibm.com
+Subject: Re: [PATCH v2 1/1] PCI/hotplug: Add 'uevent' sysfs attribute to
+ trigger slot events
+To: =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-s390@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Niklas Schnelle <schnelle@linux.ibm.com>,
+        Peter Oberparleiter <oberpar@linux.ibm.com>,
+        Matthew Rosato <mjrosato@linux.ibm.com>,
+        Gerd Bayer <gbayer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>
+References: <20260416213909.705753-1-ramesh@linux.ibm.com>
+ <20260416213909.705753-2-ramesh@linux.ibm.com>
+ <20260421171334.GA1684602@rocinante>
+Content-Language: en-US
+From: Ramesh Errabolu <ramesh@linux.ibm.com>
+In-Reply-To: <20260421171334.GA1684602@rocinante>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-GUID: kjO1FGRRJEH0Owfen7rjb3pT3iW8W1BI
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIxMDIxMiBTYWx0ZWRfX1voHI0bWLjYr
+ a3Gosp13w6l+/COI4ELRiopckOqN9o5AD2M1o5venYBKOi2xpRL4f7N2yDKB8OBCqUsgt2pvMn0
+ QYi26ID5OTnF6DPbW8Ya/bEn0OfwDGa/0XaloAP5v684ofjAnCcHUdAcgb4mTNsUk4NW13vMy/J
+ SXzZSTocsZH7WWtuGtecTjZUpwziyKMT/DFKunlovJw9H/MJnhvqe5KQbW30O729HigE/BzbqpE
+ AINPhFk6fU8Ji2Jp1ehx6eH2su4jqvPKPKFEv09A8FD1cstceN5L7vvYher/wZwijyBNKmaBcoK
+ mIbS4enTf2QEiVu1bwH/xLtB4rEXlVjW8zFIVA/koEOT7p324B6udodtwhuNV8W++9OvrD3zU5o
+ bpuE+DyuayetUd6DX14m/v4j/WIJHlUaclV86ACH/Q2EMrdUuuSJctHH3Ds9aXJLG1iMlfGXH6M
+ Rm7WisXx6QtMXWPxnJA==
+X-Authority-Analysis: v=2.4 cv=C8LZDwP+ c=1 sm=1 tr=0 ts=69e7ee67 cx=c_pps
+ a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+ a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=Xe8eY8ZVJCK048dyR0cA:9
+ a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: -KZ-uPc59IxeIQQ4dM2P-GSfloP3vUUj
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-21_03,2026-04-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 suspectscore=0 priorityscore=1501 malwarescore=0
+ lowpriorityscore=0 clxscore=1011 bulkscore=0 impostorscore=0 spamscore=0
+ phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2604200000
+ definitions=main-2604210212
 
+On 4/21/2026 12:13 PM, Krzysztof Wilczyński wrote:
 
-On Tue, 21 Apr 2026 14:55:25 -0500, Rob Herring (Arm) wrote:
-> The unfortunately named 'phandle-array' property type is really a matrix
-> with phandle and fixed arg cells entries. A matrix property should have 2
-> levels of items constraints.
-> 
-> Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
-> ---
-> Can someone from QCom provide some descriptions for 'qcom,smem-states'
-> properties.
-> ---
->  .../display/rockchip/rockchip,rk3399-cdn-dp.yaml         | 2 ++
->  .../bindings/mmc/hisilicon,hi3798cv200-dw-mshc.yaml      | 7 ++++---
->  Documentation/devicetree/bindings/net/qcom,bam-dmux.yaml | 6 ++++++
->  Documentation/devicetree/bindings/net/qcom,ipa.yaml      | 6 ++++++
->  .../devicetree/bindings/net/wireless/qcom,ath10k.yaml    | 5 ++++-
->  .../devicetree/bindings/net/wireless/qcom,ath11k.yaml    | 5 ++++-
->  .../bindings/net/wireless/qcom,ipq5332-wifi.yaml         | 9 +++++++++
->  .../devicetree/bindings/pci/toshiba,tc9563.yaml          | 5 +++--
->  .../bindings/remoteproc/qcom,msm8916-mss-pil.yaml        | 3 +++
->  .../bindings/remoteproc/qcom,msm8996-mss-pil.yaml        | 3 +++
->  .../devicetree/bindings/remoteproc/qcom,pas-common.yaml  | 4 ++++
->  .../bindings/remoteproc/qcom,qcs404-cdsp-pil.yaml        | 4 ++++
->  .../bindings/remoteproc/qcom,sc7180-mss-pil.yaml         | 3 +++
->  .../bindings/remoteproc/qcom,sc7280-adsp-pil.yaml        | 3 +++
->  .../bindings/remoteproc/qcom,sc7280-mss-pil.yaml         | 3 +++
->  .../bindings/remoteproc/qcom,sc7280-wpss-pil.yaml        | 3 +++
->  .../bindings/remoteproc/qcom,sdm845-adsp-pil.yaml        | 3 +++
->  .../devicetree/bindings/remoteproc/qcom,wcnss-pil.yaml   | 3 +++
->  Documentation/devicetree/bindings/sound/samsung,tm2.yaml | 2 ++
->  .../devicetree/bindings/spi/st,stm32mp25-ospi.yaml       | 5 +++--
->  .../devicetree/bindings/usb/chipidea,usb2-common.yaml    | 2 ++
->  Documentation/devicetree/bindings/usb/ci-hdrc-usb2.yaml  | 7 ++++---
->  22 files changed, 81 insertions(+), 12 deletions(-)
-> 
-
-My bot found errors running 'make dt_binding_check' on your patch:
-
-yamllint warnings/errors:
-./Documentation/devicetree/bindings/remoteproc/qcom,qcs404-cdsp-pil.yaml:99:1: [warning] too many blank lines (2 > 1) (empty-lines)
-./Documentation/devicetree/bindings/remoteproc/qcom,pas-common.yaml:67:1: [warning] too many blank lines (2 > 1) (empty-lines)
-
-dtschema/dtc warnings/errors:
-/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/i2c/i2c-demux-pinctrl.example.dtb: i2c-mux3 (i2c-demux-pinctrl): i2c-parent:0: [2, 3, 4] is too long
-	from schema $id: http://devicetree.org/schemas/i2c/i2c-demux-pinctrl.yaml
-/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/sound/samsung,tm2.example.dtb: sound (samsung,tm2-audio): i2s-controller: [[4294967295], [0], [4294967295], [0]] is too long
-	from schema $id: http://devicetree.org/schemas/sound/samsung,tm2.yaml
-
-doc reference errors (make refcheckdocs):
-
-See https://patchwork.kernel.org/project/devicetree/patch/20260421195836.1547469-1-robh@kernel.org
-
-The base for the series is generally the latest rc1. A different dependency
-should be noted in *this* patch.
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit after running the above command yourself. Note
-that DT_SCHEMA_FILES can be set to your schema file to speed up checking
-your schema. However, it must be unset to test all examples with your schema.
-
+> Hello,
+>
+>> +static struct pci_slot_attribute hotplug_slot_attr_uevent = {
+>> +	.attr = {.name = "uevent", .mode = S_IFREG | 0200},
+>> +	.show = NULL,
+>> +	.store = uevent_write_file
+>> +};
+> I think, you could use the __ATTR_WO() macro here.
+Use of the suggested macro is not appropriate
+>
+> Thank you!
+>
+> 	Krzysztof
