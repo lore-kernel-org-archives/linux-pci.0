@@ -1,75 +1,83 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010005.outbound.protection.outlook.com [52.101.46.5])
+Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020082.outbound.protection.outlook.com [52.101.196.82])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EC051BD9CE;
-	Tue, 21 Apr 2026 14:27:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C3EF3D6470;
+	Tue, 21 Apr 2026 14:56:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.82
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776781668; cv=fail; b=O5xZzmQmHVUXkeTEbEF5xF9W6Ri3N5Mo9+oEFEeucVJlvqNtYGTwueIIz/ROhsXDZtX8GBQq+YG/CvsXtQbHT+UJluAaqEA/Mfqm46e5WtbVPIZ4edfE1bfkzKtgQjXzCvMZbS8Zax4VpQb8tcZux4YdaPYADKLSEDtQxXqEgc4=
+	t=1776783393; cv=fail; b=BsG2eaMp4fZmPXeiNMmse79wOnF1nB+gjF2srxwnAgL198n58WTLH4nGfKtPt9KUZprAZBN7CWB9j57SX3DuqENmLytwlMybLvCTNzr1qCvYVnFWoX0iiSZaHkNV7AWzxCWA1g8Ytoqqx0DhdEnXHJKAWs8fCLzmQhvouZepCYM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776781668; c=relaxed/simple;
-	bh=bHpyvLPesHDbglT4V7i6XGUTvZAml+n1YrGdoYdVYm0=;
-	h=Content-Type:Date:Message-Id:From:To:Cc:Subject:References:
-	 In-Reply-To:MIME-Version; b=qCk6PTOwsBed+imZgHqvRTjuYbyHciB92vzI8HyFJrSSxOkw9QaD9zThpw0DODWL/f7UTHPhYJ8S2B02nA2OBh0sRUW8WPRUZbcZBkLm+xksy1fnPeRF2wqVUVA+iaHW9BxH7Epwn9mXcxCxbZG1OjjQwB+3/CY0py+iDPtuSMo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=mWuJe4K+; arc=fail smtp.client-ip=52.101.46.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1776783393; c=relaxed/simple;
+	bh=faM0ZpteUlJaNJZMTjGbI7mkrrDCMYhjEeLbY0rM2bo=;
+	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
+	 To:Cc:MIME-Version; b=aS83v+UqhyVKs0qa2F6Reef9HFld/ZR/iS4gpJknhMyCleiGqLZfcZEFx3VHkCpKOyE026TEVdDAeziKRdOdFz5tcxvtdAyuic0aw5rZKTWwyLNwE3YeY6qkvhfOZuwnLeqekwFHdaJ9y7JEIFQHRIGfH3ygJWOq4PZfRYFCb+4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=PdfOfMNU; arc=fail smtp.client-ip=52.101.196.82
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="mWuJe4K+"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="PdfOfMNU"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=M9uVHvhQ2uwSnrWQlYWc7QKzE6mbe0NHYb7l1Hmg8n2TVmqQVgaBfKSL/RwzAtFJsr6oBWw5AiwMWa/wnbE5OKivJcWq/3l8sT3swU2rMYp/fOPx2p0y9aLDVhNbom1dEsR/YHhe0SapUauPc+MR/HikvaLt8Eeoh6d+8x47U8gB2ZWmm5dxIsQjMwXsntSoUnqvp4uYgfJRt3Ogg/xrR00cvZTZjxGCAvVwmf2TRlvibLKlb8KtG3hFJw564lGnvQgpgrT9hxN3vA1Y+ASw/dXs+8jgRxaQn72G7syWc9fVGclhh4VWXxWYW9dDLN9U265Pgd/dlRhCeFM0hvj3Gw==
+ b=rFE60l3M40jhyfxqTJ3WbjshygQqWA03GuWwXsIA3vMo1n6x3Zl+F4HNxqVjsCbZsXO78DX3panenH+St1Ws5ckjw+nA7qEQwRw+jVijj+sg+0QNZpVhKv9eEC6NiAwmYBvopNUnPzDLnOoM6ctZY2bwYr1PrR184cE5JgHuZH1IAQ3baS2etrY/A/ZOvx1uPmV0B3TK+rCi3HHY8KBeNvlpIiYuBRfhgS7boN+S9i9jkeUns9Lx3/yx1ErGTOCZ+AGXAYeRs9dn4zUHUdMWUjbQEZD/xC7ywonrSGl3cllZVtwYKAc6wcKqHBjnUY9oRBTEaAbS2DL9xY6tBXOD1g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qB0Jj/T0Kujz8AGG03SQNUTOv8Vu+AQGlUXDm1kJuF8=;
- b=l0t5vLoX4+lDDQKMFPpbBkmIvTXrKajMpscPPoj++R5F4X5eQEbLZqwsLWs1FVO763cWMf4avIW7rpTZCBDgybO5hShftQ1LHmpXIQcCwWyjgDpCZLXThgj4YDTJ7G029fs4ENa3SEQqnQgbmyTwwFhz/3PKARnDtxR0luF9E8NtQuY48Yo8txemkVQDye8Zvl3UukxPS5kD+LhLbGS5LBhyLjH4BQpy1UuBc9hmAyinGjiiLALOFoxj3cSOSbp0mVp6lOD6x8CenrXC5HMfqEQOTe4D//PPUtpqReFFzV3gp0bN4ZsH9grKULAZIfDk2Lp6nJMDuOqQwcf8oZ0Kng==
+ bh=RpvjKQBEOTrrEFGy3XscM4znZyZdhB2MI4KZHqsSb6c=;
+ b=KOd7sNWS8e3HTQ2d2DtQ1QJc7o3mijFfH3FXoIWhthvVSzuDlDzCwsE5DeV/zsWDPPB7vPT8q4cA7AhjfANWDme5K/dVmQuxtuz95Ti2qoh4/4wb/pKzSPwGZESDE7mB/zupT6h43Ah5x4GS17bDrkzEGAtHC3xljwtVjHmdAfa+1jbWLJAueT/L+3nmGgmm9UlW3JaBZGoCR03wLFgFCTuwnmmDVeZdNRfWoqgfK9jUmnvgH/SyzLMCnXOqbdawteqB2zvZpJzneA4smOWhPG7WOcHSEeGbls8VnzEMpS0XFqUmYzPfTPKtVHpKsy9Q6PlZVRpRhRRioOxeIbYPjA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qB0Jj/T0Kujz8AGG03SQNUTOv8Vu+AQGlUXDm1kJuF8=;
- b=mWuJe4K+xIkSV3BkyMxvRMpN7wEC9K+QXMCyoe1tNjy82GGHGx8K3at2PIA5TQjsN5DRgiXq9qqvV+1R7+tNnFHhU4fkr2IL7b595sJhsuFTSn/aG4kiRMu1vFH4FSpizWJTbqUyJGB6gLCHHb2Hg6LWkWSzHclFVMSBQDquqMGO/hlBmnyV0QMBSalQQhTzgCvpMeKiRsGmTX7OlNmRb6zAjtkn8W9TY/PRtOKbqFb2wqxllFqMNq3/oQX8t4ZZP+PFA5ByPhQPgJESVKZqsn0n2tjjvIEFw5ZxOeuMfhwieXStxhJggeTQforkTYdebaFANxaqstyxodnTZ6NYEw==
+ bh=RpvjKQBEOTrrEFGy3XscM4znZyZdhB2MI4KZHqsSb6c=;
+ b=PdfOfMNUKHNtdorRxVXdTxATKwEaxn4HtyhJmqXVHtKoA/4PKDMfXHhmPSZwm5L7oy4+3rndVgUe6dO7l1NfvAbviGjc4WMBDDXpAK/yt1kCVzfmg9up6MAIcRJMhPIK+YjWmL56AAz427Kt+dqfyt8ZB4ur4cdiivP47plkc+0=
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
- by CH1PPFDA34A4201.namprd12.prod.outlook.com (2603:10b6:61f:fc00::625) with
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
+ by CWLP265MB5523.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:1b9::6) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9818.21; Tue, 21 Apr
- 2026 14:27:37 +0000
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.20.9846.016; Tue, 21 Apr 2026
- 14:27:37 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 21 Apr 2026 23:27:33 +0900
-Message-Id: <DHYWJ32M02N4.2954OSJXFGD1G@nvidia.com>
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: "Eliot Courtney" <ecourtney@nvidia.com>
-Cc: "Danilo Krummrich" <dakr@kernel.org>, "Alice Ryhl"
- <aliceryhl@google.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
- <simona@ffwll.ch>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Miguel
- Ojeda" <ojeda@kernel.org>, "Gary Guo" <gary@garyguo.net>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Boqun Feng" <boqun@kernel.org>, "John Hubbard"
- <jhubbard@nvidia.com>, "Alistair Popple" <apopple@nvidia.com>, "Joel
- Fernandes" <joelagnelf@nvidia.com>, "Timur Tabi" <ttabi@nvidia.com>,
- <nouveau@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <rust-for-linux@vger.kernel.org>
-Subject: Re: [PATCH v2 4/5] gpu: nova-core: send UNLOADING_GUEST_DRIVER GSP
- command upon unloading
-References: <20260421-nova-unload-v2-0-2fe54963af8b@nvidia.com>
- <20260421-nova-unload-v2-4-2fe54963af8b@nvidia.com>
- <DHYQGLYYXEN6.11Q3FQGZMWCJ6@nvidia.com>
-In-Reply-To: <DHYQGLYYXEN6.11Q3FQGZMWCJ6@nvidia.com>
-X-ClientProxiedBy: TYCP286CA0076.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:2b3::13) To CH2PR12MB3990.namprd12.prod.outlook.com
- (2603:10b6:610:28::18)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.16; Tue, 21 Apr
+ 2026 14:56:28 +0000
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.20.9846.016; Tue, 21 Apr 2026
+ 14:56:28 +0000
+From: Gary Guo <gary@garyguo.net>
+Date: Tue, 21 Apr 2026 15:56:13 +0100
+Subject: [PATCH v2 02/11] rust: io: generalize `Mmio` to arbitrary type
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260421-io_projection-v2-2-4c251c692ef4@garyguo.net>
+References: <20260421-io_projection-v2-0-4c251c692ef4@garyguo.net>
+In-Reply-To: <20260421-io_projection-v2-0-4c251c692ef4@garyguo.net>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
+ Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
+ Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+ Daniel Almeida <daniel.almeida@collabora.com>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Abdiel Janulgue <abdiel.janulgue@gmail.com>, 
+ Robin Murphy <robin.murphy@arm.com>, 
+ Alexandre Courbot <acourbot@nvidia.com>, David Airlie <airlied@gmail.com>, 
+ Simona Vetter <simona@ffwll.ch>
+Cc: driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org
+X-Mailer: b4 0.15.1
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1776783386; l=16534;
+ i=gary@garyguo.net; s=20221204; h=from:subject:message-id;
+ bh=faM0ZpteUlJaNJZMTjGbI7mkrrDCMYhjEeLbY0rM2bo=;
+ b=81Koxp9RJC3hxba8mvXB9afBclGGtwdgEORR2NJq9fXTkJLb+ZFGPnT3+B6KfTXXlIvs4Bs+O
+ PGABNSh/1QlDu2wVLUmPExo7yUiXX7d2AHyiU6B+NusmGMXfJ8fpF7f
+X-Developer-Key: i=gary@garyguo.net; a=ed25519;
+ pk=vB3uIX95SM4eVrIqo1DWNWKDKD2xzB+yLLLr0yOPYMo=
+X-ClientProxiedBy: LO4P123CA0142.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:193::21) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -77,345 +85,548 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|CH1PPFDA34A4201:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0479f95b-a382-4047-6a1a-08de9fb222a6
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|CWLP265MB5523:EE_
+X-MS-Office365-Filtering-Correlation-Id: bac75a47-46e5-4887-4111-08de9fb62a5e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|10070799003|366016|7416014|376014|18002099003|22082099003|56012099003;
+	BCL:0;ARA:13230040|1800799024|376014|7416014|10070799003|366016|921020|22082099003|18002099003|56012099003;
 X-Microsoft-Antispam-Message-Info:
-	ch2lIj7zyTD7Q/IL3RTPRt5kIp43U5AQyU1YfOFiy1UZJtFrXHemk1lsiq5hc8ojFkZbhxaIEY/PNOvv20m8drRyH0uK3mFsW0YC8IugRVpA1C/CKzF4PHKlznqDVJ1mKfWeaCDNk1JpRwAw5tH2LGtnVQjmptfzxfxVVBb3qh6huNl5MTU67NyRLLnCzYHMm9pG2rPBQBbhwFALZUJNNGFNDxsGUVYRlTmUEFuI+UfcqgbP0ig9B7y3BhekL5jszcRTe6FX+JOJdrwrwOXJBc9su3MD7e2pf0rXowEYXcgMST5z0RTjNMK13/JGe6vnJCOOrHezZ57Z2k44CjiwGope7DpY+LBakStOqIoBdPGhVHWGujt0Po3/fQpH6RqsFmuDle3426eTw28uHjHmdC8y++rhSKBwRN4M4e/uE2iwBONC6+IytJW4SWcSQfAlz2yb8fv4bPx0l2w+tfbXF0FOL9tYF7XEuQdcrO9EwvGym5ZvI+1hPaPKK2zfChFSfPFYnwhMkeO1700H8cD/TOyY9PfTcWp0MiaKRx5yO7KB5RlJGieFZ6S4/PXUvlxxr3pHumffZzHT+ipQyfWPejlvTPfvyfpGtIKixpZi7VDUWoJWi0LT9CI4ruX+goyBO6jbB4k3rsKkBITK/x5CAQqu9mmu9EdZjCjyvQUSKWTw6zOz8dypFqkuIUFfubc7bSl5TlSThWuxbzZXph4nW3z9ijV0GXk26ukL8StSS/c=
+	OF8sboWGzHfUwFY3SIMlSqEGA6LX30q1Ln7K/Bt1cSMIgxTJD2kXsPgX9pmBbQDykFBH4jyk4IB+2Esxo7l2DEtnAeX0DqzPnc48GIq+TZulXbx/49J5+AOtK2cEQjgdq0kKcyGFNOr9lkEiSVRzxW9WDfDyVF/pCEDWzPy2S7beKgOKzCUvINr+Vuj09W0YcjD/9rMpJbxbKiOxmbkWBSW8++UkSaIIrJicUk84X0T+xx9oNKpsSvRxpeD7VjWp5UYnQG6qzawLNCu/Y0ZF/QKBAcYrqaQ7hmKWftMLGrgrmnQZV4ixo4+Xh8m7g9roewyVzMfNkiDDoYEQsvqyRcmwFZwbMt73z183hWpcAL5TaD+FyQy9mBgw5aLRLbsxNLF3FFE1t+ZVJcbeiSYV9WUxSqCGCzIBVMz+AxJ7ICyN9ZduOncFBVcRxyZ0T7x7OwIxqLxE0EsVsfCutoiS1bf5vMmz0JoukkS6YlsTNU5qaynylh/YM7USkBO9b6K+LCwz7we0+FLF7DbGLUaDSIw+FcSFfujQfb3GGFQMXRpkX/pV/cU/HXwZdjZnvDVTZKcQLj8paWTgcLYodUuRqq4nwjpN/2H4Q5k+TAUvqjEDqEPEL2VFSgbg+oVDqnfW2vCD8Smd0INuIdzEu+/jdgtFm1QLFxFS4taK9R9NDuLR1nY9GXI28aSYpQoKh2ge/troeo7+RHibMMTc13Qr/dbt1CEHSqrZsoFUh4mg9Z3eDzUP7mrYcqW8xDQ/VZUJTRlK0dODxN/V+4SCza0lnA==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(366016)(7416014)(376014)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(10070799003)(366016)(921020)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?bVo2eTFQaERPOHMxWU1NbUhSY1czS2Y2RlcrVEI4Y21rWERQSHFxY3EvaEZ1?=
- =?utf-8?B?aGtMM0dYcHhkSUJzSnNEWUxGMGJZTkdsUlVyQmNpYjBCdVlPYzRCQml2ZWpx?=
- =?utf-8?B?dzJzRHBZVGNnSnF0UDRyMEpEWWJLMW04RksvS0ZROURwcktJT3N3VUZMNXRZ?=
- =?utf-8?B?VXk4L3prNmpPeEMwdUYyMXlQQVR2SmxEcmtWa0RNNENTOVd4dXBNVHdzYXZG?=
- =?utf-8?B?Ky9rL2J3ZHErL2JYWHBjTHJlcjRKbmVITUdycXdQT2dSY1UxREtrd2dETWEx?=
- =?utf-8?B?bVhxZXRsUlhjVmVhZkIrRTRJVEN5MnNxc0NXZk9rbmpIVUVKMUh0dUt6b2ZN?=
- =?utf-8?B?aENsYURuMXZ5SHJKMVM2cURxd1hoc0M1MHRjckU3Snhxa2JpeUhBMUxkL0VL?=
- =?utf-8?B?bjA0eUo3cEZyVjl0aWtWTFVvRWtrSWxZSjhvaHNkcTE3MFlybjhyWUpGMytu?=
- =?utf-8?B?aVNIaVQ4eXNrV2pVTzViSyt1VlVabUptQTlEa1NOM1doeU1HZjc3d0l2V1l1?=
- =?utf-8?B?SUlyQXRBTU1sUDFkVUozeXJxOHZBNTFXcXRLaTF2N1NZR3dhaGFCRDEyTitM?=
- =?utf-8?B?RCtROXBERzZOcC9FNm40RzRQVXc5MC81M011QWRtaWtscThYaU44UXF1NUlP?=
- =?utf-8?B?alY4bzFMalBHUHlJa0ZYZ0hGSCthQlVtTU1pN2lNQVhHRFduWGNNWXdkOEM0?=
- =?utf-8?B?SGFDWGFBODV4WWhCOTVjTlVQYmR2dWF0OFl1akROWk8yVnE5bm9MWE5RZXJL?=
- =?utf-8?B?eG1VdnQvYXBjSHpNRUh1bnprY21BK2hPQkNCWlBlWEpEc0NycmJ2UHo5L01l?=
- =?utf-8?B?amkvQWI0SmpCN1doQ2pZcTVzOTBBNVRDNlJycjd4MmFZclQwZ2ZSWGZkVnJC?=
- =?utf-8?B?dkJQWVVJbG42MWVVSk9TL1VHRGkvbWpTSXlBMmdUdTM4enVtZVM4aFdoam52?=
- =?utf-8?B?ZjNzWmUxc1BWSXByMFU1clpiZGxuSmoycUpibHdRV2lwSFZUcHJaNnd4ODdV?=
- =?utf-8?B?T3BGOUFGcy9CMXVOQnFsNk11ek0rNkUrQmhrT3g4bFMzUThQbG8rdUJpTHBj?=
- =?utf-8?B?bldnVkhpRkV5ZkdJUDhSTzFlemt5UVFJZ0RxdTYyWGxyNHMvRGdJYlRFaUxn?=
- =?utf-8?B?c3BPZnhJN1QxRnFDdk5SSzB0UWkvamlpYVV3bkYrL3N4ei9XYlV1TFljN1Fi?=
- =?utf-8?B?bjdWS3VvSEdGbXNDb2Irdy94TmRGNzZqUUhNbEREem55M01QL3pBdEIrUVli?=
- =?utf-8?B?TXpDS0dwWmZPM1hJWjVQUzNZdGRmUDVHQjNsaEhhUGJZcjBJSGFsNjJ4M3VS?=
- =?utf-8?B?MU1aVXFtQ1dVWGZUVGlEZ3ZWZHF6ZHlDVVlVUTBHb3Q0TEQ1VzYxTS96aXlw?=
- =?utf-8?B?ZEFNSTZoS1J3SFVsZ08xV0pVKzVzeDIySDl2TWdWWnlucmFsbi9HSGhSZlJu?=
- =?utf-8?B?dk9rSi81QkwrZ0dTb1pBY0piSytoeTk4RVh1ZWVUdmVVQ2NaNUFKUnQ1dzU3?=
- =?utf-8?B?cWQwR2V5ZGtWNllDSER3VzZFaGNpOWV6TEcwZFJTcTRLSXlqRnJFWHVUUGcw?=
- =?utf-8?B?VFhyTXNIa05uNlRrdE90YURBYlQ4VStKdVQ3akNxVGRicW04K240dzloT2o5?=
- =?utf-8?B?SlBRbjUyMFpEVnErS2VUdFBUSlpaUXlsMk9QT2pYMnI3Z0owamVJRUVQTmpI?=
- =?utf-8?B?empMYk5URkJnM2ZTOEQ0SWFsdFZMZkRONzhmcDRyR0E5M2hndXFDWk1GK1V3?=
- =?utf-8?B?M2JvRGJPcHQ5L0tFRG5yMDE1NGV4MWppNnRNV1M5MkZzL0hHQmJDNVVscWxp?=
- =?utf-8?B?djdVcExkMUJIM21GUER5MFludUZwLzlGbTQ2TFpBVjFlVDFQT3BNZFN2dVVM?=
- =?utf-8?B?K0NqOVR2WFdyMjJ6Rll2M3hpOC9ybFFxR251RDdMeDRiZG9xb01VQnZXUE1V?=
- =?utf-8?B?TVE3V2FhaFA1UDRCREFidWxnNG1NWHpFZ1grdUlRbVlGTk9zK2JFTXFvUldn?=
- =?utf-8?B?b2RwR0RKUVJVVTJJWmJtNkVJZFRib3U3WmkrRkNFU3ViUGRNOWJ0ZGRCTmN0?=
- =?utf-8?B?cFdMcUZ3d0cvbFdPUUh5TkZIV0c1NVc5eWtTUEFmWS9iNjVxYmgzdTBVWHVI?=
- =?utf-8?B?S2lHWW4vRHYxc2JWekoxTU5aaVBaUWtvdElsL3JDUXQ1UGt2QVVSZkxlQXRv?=
- =?utf-8?B?M2ZpUitRVHoxWnQ4Smpha3ZLaVR5TVNKMWh1UkJvRURXUHU1N3BJR3U0YjFT?=
- =?utf-8?B?MU5TL01aOFgvZUg0L0JaRXBNTkRzQ0s1SGJoQnBQVDlsNmNVTmV4VjJEUlJU?=
- =?utf-8?B?YlB3aTFUaEx1YW82ZGpqNU1ubjFLbjVteVpKRjB1M2Mxd1JUU0xtZWpwOXd3?=
- =?utf-8?Q?H04LofcSLe+eibwAlClquIQ0RrCHzmoUAvpuZHii5CAwC?=
-X-MS-Exchange-AntiSpam-MessageData-1: ZQvvHxCaftyr2A==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0479f95b-a382-4047-6a1a-08de9fb222a6
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
+	=?utf-8?B?UnNkcDljUS9QMGpSSmlLM3ZkcC80Qm5PbnJLZS9JUnIrbmhDUm9YeXhMNFF3?=
+ =?utf-8?B?THVsbDdqNDUzeTdDZjdWVlFEbTJpbUtzNHJwTmZHdUc5eG4rKzNnaXBObDdl?=
+ =?utf-8?B?TjBjOWgzZlAvcVFxcVNQdW1kL3UrNGRhcktpcVhnRmFhTTZmTXZjQkkxVTN6?=
+ =?utf-8?B?Rk9tUlUrNzNJaTN0YkYxSjNDQXBNOGxZVnFSenV4SzBKeVJYeUt2eE1vVCt1?=
+ =?utf-8?B?cVJsNUg2RERIRTErQ1ljZUJSSit1TmdHVlJqUlQ1ZUNVM3hBZnV3aVh4V0tP?=
+ =?utf-8?B?Ny9sQzd1cDQxaC9wbytsV0NISTNFZXRmbXZ5WkpsWWlXWEpWWUxCbCtNZG5I?=
+ =?utf-8?B?OUl5MkhuVm0ya0twcUltazM1Y3NjTDUwZUFQcWxTZmQ2UnpIaVljSVI2SCtH?=
+ =?utf-8?B?R3JJOVRwOHlJemYzOCtnUzlKVzFCRCtxN3BGQlVBdXIvWFFnUTJTSTYydlJy?=
+ =?utf-8?B?QUJKZWRvdWdaaHZhbUxJSDFSZGZaTlhOSjB2QldZZlZkQTBzWXVwdjlNc3lZ?=
+ =?utf-8?B?R1JQT2RLRVhTbkJ3dTJ0MWVsdzdsMHg5NkQwY2R2K29PWjZ5aGx3QVhEOGxF?=
+ =?utf-8?B?Nnk3YjBWYVNqSU4yVWlrSVdPZWlac3NDSFNxbGFHeFovZktPK1VxL2NTQjY5?=
+ =?utf-8?B?bE1reDUzVGZtVzlDRUl6QStDY3B1Q251cm1wRmxFbERiMVN3OGRxbGJZOFZN?=
+ =?utf-8?B?aVhjUDE1bE4vNWFZZmJ2cVhaL2tlR3BwS2JRTm1ieVdqVE14Mkd4OTNxeDda?=
+ =?utf-8?B?VEs3SHl5bkFQYUd5aUlOQTduYWJZZUwwZHcvVVJqemZ0VDFNTm1sQ0dsbDBR?=
+ =?utf-8?B?Z3pGa2ExdXpRK0hoWVVxSjhlRHBuTmVPR2p5MWZLYWVpaDE2ckNEa2RpYndW?=
+ =?utf-8?B?L3Zyc3M3RXE3c2xiODNZWEZLNHVnMHcwSjRQUU1MTWlXTnF3VzdrM2tHZml3?=
+ =?utf-8?B?WUsrb29lTWgxb2RyWnJpMlRLQ3d5bHNKR256d1BmTFJiL0dRNXdhM3NhS29F?=
+ =?utf-8?B?cDJNclBld3EzVkV0NE9LTTR4QWJiZVo0c1JXNnUzT1NPNDVCbm1sckxvYWlU?=
+ =?utf-8?B?Mi82VEh2ODBHL283Wi9sUTI0dEQxTE9rQWdaNXBVQUF4eXRuUUNyeHRaVE93?=
+ =?utf-8?B?S2F4aXlYVmtTaEZZRW9SQVJIUWFqUm9LenhBTlZMdUtPbE94MWgrbVc2c3VM?=
+ =?utf-8?B?bW12OHgxcEpVY2kzWGZETXVUWW05VW9NY1pObFZHQkE0NmlpajBUaHNneWYr?=
+ =?utf-8?B?RCt3Rlh6Sk9TaHF6WjdQMUk3RVhUMFVMMjN1dktuQjkwQ2FCZDF0cngzRE80?=
+ =?utf-8?B?ZVJKQ3VXTTFKYXRucXB3TEVwSUhwWmVucFlUNklYSWM2aXdZWnBEcVk5WjZl?=
+ =?utf-8?B?TStReUloN1FFSzdiWkZlWjJiZ29pdHYzTjRDNW9kTFV0eThEdzNCa3ZFM3o5?=
+ =?utf-8?B?allLMy9ISThWV2dkVzZzdEtZRDV0Y3lxQU5YQXpHTEZlMkM1NmdJcmh6ajV5?=
+ =?utf-8?B?Tms2d2kwZk1Ia09ERGV5OTNza2ZBa1BNa0poT2NzZzk4SXp4V0xwM1F2NTQv?=
+ =?utf-8?B?Wlo1eDYvMnNkYnMxT0JOdUU4NHBOZ2FEdE0zUTBXMTRRTGtoU2JBN1J4UVA5?=
+ =?utf-8?B?WW5uZjFhbWdRYVdiTDBKaXNITkJaWVNHT1p5MTB1cXJZYVRxYXNlSlp4bDgz?=
+ =?utf-8?B?T1hwUXc0WjFRR3dCS1E5b1I2WVdZUk0vNEtSTWQ1aUluSmtmMnFZSDdKMmlE?=
+ =?utf-8?B?MEZSV1pFV3VPcGhVYSsyckdZWWRiY1pqYWNaMENZNHJMS1hhUCtERVBiSWFO?=
+ =?utf-8?B?dFE4NFRoemcveklBMEdrZlZJZ0hNcFdGaWhnWGM0WDBHR3IrUzlyd2kxVVh6?=
+ =?utf-8?B?NEZlTDZUMkVYVTBrem9uQ3VuRDUxaFpCVlVNZGRmczgvQXJSNy81K1MyeXpL?=
+ =?utf-8?B?RlRnL2lzV1c2YkRzb2Z5V0x5WFdlQTdPSXkxekdOSVg2RGJGY0NXUGRhajY2?=
+ =?utf-8?B?M05mTkdCc25ZNzdJanRZYkR6QlZsWWhhL1c1cnlkWUdWTURvSHBNN25vdzVX?=
+ =?utf-8?B?QmNLUkxyWVczMmM0cm1PNVc2OGxMOEw4ME9kRmN6dlU1U0gxaC8venp0Kzhl?=
+ =?utf-8?B?aDE1TGpQUCswaDJTOUphL3VPcnN1d1ZNYXhHbWlDRUFRY0tQOHRXZXpCcjhY?=
+ =?utf-8?B?Y3dFeUR6UVVNdGw1eWxyVHhHanA0MCt2TVRpeDhyNXo1TURuNzZSY2xxVnRZ?=
+ =?utf-8?B?QWJSZTZLdDNoTWZNcldObExXemlFYU1UUTR3NGw5NmU4S3RkeFpPSy9sTVRP?=
+ =?utf-8?B?UmhGS29xdC85Z2ZBZmt6UzV5MXBnQU9zY0ZYYWRNQ1ZiNGFtNlBOQT09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: bac75a47-46e5-4887-4111-08de9fb62a5e
+X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Apr 2026 14:27:37.2524
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Apr 2026 14:56:27.7791
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: IvAcGAbO6AUihVRIOEbGBbXrUUsIMkGXIj2KzrpZGfHUNIj8FfChpmcAct1aygCXlcVTv/TW0++eIK625gDcOQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH1PPFDA34A4201
+X-MS-Exchange-CrossTenant-UserPrincipalName: wHUMn/98Q1GvCqu2kP+fUEvPgpahshFQlmq47oS/dN0LZIKclqrDs+bN8/YhtC5+9eGsfa9gPQCaquvcsSHbTQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWLP265MB5523
 
-On Tue Apr 21, 2026 at 6:42 PM JST, Eliot Courtney wrote:
-> On Tue Apr 21, 2026 at 3:16 PM JST, Alexandre Courbot wrote:
->> Currently, the GSP is left running after the driver is unbound. This is
->> not great for several reasons, notably that it can still access shared
->> memory areas that the kernel will now reclaim (especially problematic on
->> setups without an IOMMU).
->>
->> Fix this by sending the `UNLOADING_GUEST_DRIVER` GSP command when
->> unbinding. This stops the GSP and lets us proceed with the rest of the
->> unbind sequence in the next patch.
->>
->> Signed-off-by: Alexandre Courbot <acourbot@nvidia.com>
->> ---
->>  drivers/gpu/nova-core/gpu.rs                      |  5 +++
->>  drivers/gpu/nova-core/gsp/boot.rs                 | 40 ++++++++++++++++=
-+++++++
->>  drivers/gpu/nova-core/gsp/commands.rs             | 36 ++++++++++++++++=
-++++
->>  drivers/gpu/nova-core/gsp/fw.rs                   |  4 +++
->>  drivers/gpu/nova-core/gsp/fw/commands.rs          | 23 +++++++++++++
->>  drivers/gpu/nova-core/gsp/fw/r570_144/bindings.rs |  8 +++++
->>  6 files changed, 116 insertions(+)
->>
->> diff --git a/drivers/gpu/nova-core/gpu.rs b/drivers/gpu/nova-core/gpu.rs
->> index 1701c2600538..8f2ae9e8a519 100644
->> --- a/drivers/gpu/nova-core/gpu.rs
->> +++ b/drivers/gpu/nova-core/gpu.rs
->> @@ -277,12 +277,17 @@ pub(crate) fn new<'a>(
->> =20
->>      /// Called when the corresponding [`Device`](device::Device) is unb=
-ound.
->>      ///
->> +    /// Prepares the GPU for unbinding by shutting down the GSP and unr=
-egistering the sysmem flush
->> +    /// memory page.
->> +    ///
->>      /// Note: This method must only be called from `Driver::unbind`.
->>      pub(crate) fn unbind(&self, dev: &device::Device<device::Core>) {
->>          let Ok(bar) =3D kernel::warn_on_err!(self.bar.access(dev)) else=
- {
->>              return;
->>          };
->> =20
->> +        let _ =3D kernel::warn_on_err!(self.gsp.unload(dev, bar, &self.=
-gsp_falcon));
->> +
->
-> If I remember correctly, at least on blackwell, doing the full unloading
-> procedure here actually resets the sysmem flush register, so you get a
-> spurious warning. In my local branch I actually swapped the order of
-> this and unregister to get rid of it (not sure if this is correct though)=
-.
-> My sysmem flush patch that skips printing the warning if the value is 0
-> would also fix this, if we care. Have you noticed this happening too?
+Currently, `io::Mmio` always represent an untyped region of a compile-time
+known minimum size, which is roughly equivalent to `void __iomem*` (but
+with bound checks). However, it is useful to also be to represent I/O
+memory of a specific type, e.g. `u32 __iomem*` or `struct foo __iomem*`.
 
-I haven't - this patch works fine and without any warning on my
-Blackwell card. But that deserves further investigation, so let's
-revisit once we add the Blackwell series and your own patch, as this
-series only supports Turing/Ampere for now.
+Thus, make `Mmio` generic on arbitrary `T`, where `T` is a sized type, or a
+DST that implements `KnownSize`. Similar to the `MmioRaw` change, the
+existing behaviour is preserved in the form of `Mmio<Region<SIZE>>`. This
+change brings the MMIO closer to the DMA coherent allocation types that we
+have, which is already typed.
 
->
->>          self.sysmem_flush.unregister(bar);
->>      }
->>  }
->> diff --git a/drivers/gpu/nova-core/gsp/boot.rs b/drivers/gpu/nova-core/g=
-sp/boot.rs
->> index 18f356c9178e..3f4e99b2497b 100644
->> --- a/drivers/gpu/nova-core/gsp/boot.rs
->> +++ b/drivers/gpu/nova-core/gsp/boot.rs
->> @@ -33,6 +33,7 @@
->>      },
->>      gpu::Chipset,
->>      gsp::{
->> +        cmdq::Cmdq,
->>          commands,
->>          sequencer::{
->>              GspSequencer,
->> @@ -237,4 +238,43 @@ pub(crate) fn boot(
->> =20
->>          Ok(())
->>      }
->> +
->> +    /// Shut down the GSP and wait until it is offline.
->> +    fn shutdown_gsp(
->> +        cmdq: &Cmdq,
->> +        bar: &Bar0,
->> +        gsp_falcon: &Falcon<Gsp>,
->> +        suspend: bool,
->> +    ) -> Result<()> {
->> +        // Send command to shutdown GSP and wait for response.
->> +        cmdq.send_command(bar, commands::UnloadingGuestDriver::new(susp=
-end))?;
->> +
->> +        // Wait until GSP signals it is suspended.
->> +        const LIBOS_INTERRUPT_PROCESSOR_SUSPENDED: u32 =3D 0x8000_0000;
->
-> If this can change based on firmware, should it be taken in via
-> bindings? I also noticed in openrm 595, this is waited on by checking the
-> bit rather than by strict equality (see _kgspIsProcessorSuspended). So
-> it may be more defensive to check the bit rather than strict equality
-> (even though that is correct for 570 according to openrm code).
+To be able to implement `IoKnownSize`, add a `MIN_SIZE` constant to
+`KnownSize` trait to represent compile-time known minimum size of a
+specific type.
 
-Indeed, in 570.144 the code is actually
+Acked-by: Miguel Ojeda <ojeda@kernel.org>
+Signed-off-by: Gary Guo <gary@garyguo.net>
+---
+ rust/kernel/devres.rs      |  2 +-
+ rust/kernel/io.rs          | 63 +++++++++++++++++++++++++++-------------------
+ rust/kernel/io/mem.rs      |  4 +--
+ rust/kernel/io/poll.rs     |  6 +++--
+ rust/kernel/io/register.rs | 19 ++++++++------
+ rust/kernel/pci/io.rs      |  2 +-
+ rust/kernel/ptr.rs         |  7 ++++++
+ 7 files changed, 64 insertions(+), 39 deletions(-)
 
-    return (mailbox =3D=3D 0x80000000);
+diff --git a/rust/kernel/devres.rs b/rust/kernel/devres.rs
+index 65a4082122af..3e22c63efb98 100644
+--- a/rust/kernel/devres.rs
++++ b/rust/kernel/devres.rs
+@@ -106,7 +106,7 @@ struct Inner<T> {
+ /// }
+ ///
+ /// impl<const SIZE: usize> Deref for IoMem<SIZE> {
+-///    type Target = Mmio<SIZE>;
++///    type Target = Mmio<Region<SIZE>>;
+ ///
+ ///    fn deref(&self) -> &Self::Target {
+ ///         // SAFETY: The memory range stored in `self` has been properly mapped in `Self::new`.
+diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+index d7f2145fa9b9..0b9c97c0a1d7 100644
+--- a/rust/kernel/io.rs
++++ b/rust/kernel/io.rs
+@@ -44,6 +44,8 @@ pub struct Region<const SIZE: usize = 0> {
+ }
+ 
+ impl<const SIZE: usize> KnownSize for Region<SIZE> {
++    const MIN_SIZE: usize = SIZE;
++
+     #[inline(always)]
+     fn size(p: *const Self) -> usize {
+         (p as *const [u8]).len()
+@@ -169,7 +171,7 @@ pub fn size(&self) -> usize {
+ /// }
+ ///
+ /// impl<const SIZE: usize> Deref for IoMem<SIZE> {
+-///    type Target = Mmio<SIZE>;
++///    type Target = Mmio<Region<SIZE>>;
+ ///
+ ///    fn deref(&self) -> &Self::Target {
+ ///         // SAFETY: The memory range stored in `self` has been properly mapped in `Self::new`.
+@@ -187,7 +189,7 @@ pub fn size(&self) -> usize {
+ /// # }
+ /// ```
+ #[repr(transparent)]
+-pub struct Mmio<const SIZE: usize = 0>(MmioRaw<Region<SIZE>>);
++pub struct Mmio<T: ?Sized>(MmioRaw<T>);
+ 
+ /// Checks whether an access of type `U` at the given `offset`
+ /// is valid within this region.
+@@ -462,9 +464,10 @@ fn write64(&self, value: u64, offset: usize)
+     /// use kernel::io::{
+     ///     Io,
+     ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+-    /// fn do_reads(io: &Mmio) -> Result {
++    /// fn do_reads(io: &Mmio<Region>) -> Result {
+     ///     // 32-bit read from address `0x10`.
+     ///     let v: u32 = io.try_read(0x10)?;
+     ///
+@@ -496,9 +499,10 @@ fn try_read<T, L>(&self, location: L) -> Result<T>
+     /// use kernel::io::{
+     ///     Io,
+     ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+-    /// fn do_writes(io: &Mmio) -> Result {
++    /// fn do_writes(io: &Mmio<Region>) -> Result {
+     ///     // 32-bit write of value `1` at address `0x10`.
+     ///     io.try_write(0x10, 1u32)?;
+     ///
+@@ -534,6 +538,7 @@ fn try_write<T, L>(&self, location: L, value: T) -> Result
+     ///     register,
+     ///     Io,
+     ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+     /// register! {
+@@ -549,7 +554,7 @@ fn try_write<T, L>(&self, location: L, value: T) -> Result
+     ///     }
+     /// }
+     ///
+-    /// fn do_write_reg(io: &Mmio) -> Result {
++    /// fn do_write_reg(io: &Mmio<Region>) -> Result {
+     ///
+     ///     io.try_write_reg(VERSION::new(1, 0))
+     /// }
+@@ -579,9 +584,10 @@ fn try_write_reg<T, L, V>(&self, value: V) -> Result
+     /// use kernel::io::{
+     ///     Io,
+     ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+-    /// fn do_update(io: &Mmio<0x1000>) -> Result {
++    /// fn do_update(io: &Mmio<Region<0x1000>>) -> Result {
+     ///     io.try_update(0x10, |v: u32| {
+     ///         v + 1
+     ///     })
+@@ -616,9 +622,10 @@ fn try_update<T, L, F>(&self, location: L, f: F) -> Result
+     /// use kernel::io::{
+     ///     Io,
+     ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+-    /// fn do_reads(io: &Mmio<0x1000>) {
++    /// fn do_reads(io: &Mmio<Region<0x1000>>) {
+     ///     // 32-bit read from address `0x10`.
+     ///     let v: u32 = io.read(0x10);
+     ///
+@@ -648,9 +655,10 @@ fn read<T, L>(&self, location: L) -> T
+     /// use kernel::io::{
+     ///     Io,
+     ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+-    /// fn do_writes(io: &Mmio<0x1000>) {
++    /// fn do_writes(io: &Mmio<Region<0x1000>>) {
+     ///     // 32-bit write of value `1` at address `0x10`.
+     ///     io.write(0x10, 1u32);
+     ///
+@@ -682,6 +690,7 @@ fn write<T, L>(&self, location: L, value: T)
+     ///     register,
+     ///     Io,
+     ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+     /// register! {
+@@ -697,7 +706,7 @@ fn write<T, L>(&self, location: L, value: T)
+     ///     }
+     /// }
+     ///
+-    /// fn do_write_reg(io: &Mmio<0x1000>) {
++    /// fn do_write_reg(io: &Mmio<Region<0x1000>>) {
+     ///     io.write_reg(VERSION::new(1, 0));
+     /// }
+     /// ```
+@@ -726,9 +735,10 @@ fn write_reg<T, L, V>(&self, value: V)
+     /// use kernel::io::{
+     ///     Io,
+     ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+-    /// fn do_update(io: &Mmio<0x1000>) {
++    /// fn do_update(io: &Mmio<Region<0x1000>>) {
+     ///     io.update(0x10, |v: u32| {
+     ///         v + 1
+     ///     })
+@@ -778,7 +788,7 @@ fn io_addr_assert<U>(&self, offset: usize) -> usize {
+ macro_rules! impl_mmio_io_capable {
+     ($mmio:ident, $(#[$attr:meta])* $ty:ty, $read_fn:ident, $write_fn:ident) => {
+         $(#[$attr])*
+-        impl<const SIZE: usize> IoCapable<$ty> for $mmio<SIZE> {
++        impl<T: ?Sized> IoCapable<$ty> for $mmio<T> {
+             unsafe fn io_read(&self, address: usize) -> $ty {
+                 // SAFETY: By the trait invariant `address` is a valid address for MMIO operations.
+                 unsafe { bindings::$read_fn(address as *const c_void) }
+@@ -805,7 +815,7 @@ unsafe fn io_write(&self, value: $ty, address: usize) {
+     writeq
+ );
+ 
+-impl<const SIZE: usize> Io for Mmio<SIZE> {
++impl<T: ?Sized + KnownSize> Io for Mmio<T> {
+     /// Returns the base address of this mapping.
+     #[inline]
+     fn addr(&self) -> usize {
+@@ -819,18 +829,18 @@ fn maxsize(&self) -> usize {
+     }
+ }
+ 
+-impl<const SIZE: usize> IoKnownSize for Mmio<SIZE> {
+-    const MIN_SIZE: usize = SIZE;
++impl<T: ?Sized + KnownSize> IoKnownSize for Mmio<T> {
++    const MIN_SIZE: usize = T::MIN_SIZE;
+ }
+ 
+-impl<const SIZE: usize> Mmio<SIZE> {
++impl<T: ?Sized + KnownSize> Mmio<T> {
+     /// Converts an `MmioRaw` into an `Mmio` instance, providing the accessors to the MMIO mapping.
+     ///
+     /// # Safety
+     ///
+     /// Callers must ensure that `addr` is the start of a valid I/O mapped memory region of size
+-    /// `maxsize`.
+-    pub unsafe fn from_raw(raw: &MmioRaw<Region<SIZE>>) -> &Self {
++    /// `addr.size()`.
++    pub unsafe fn from_raw(raw: &MmioRaw<T>) -> &Self {
+         // SAFETY: `Mmio` is a transparent wrapper around `MmioRaw`.
+         unsafe { &*core::ptr::from_ref(raw).cast() }
+     }
+@@ -843,9 +853,9 @@ pub unsafe fn from_raw(raw: &MmioRaw<Region<SIZE>>) -> &Self {
+ ///
+ /// See [`Mmio::relaxed`] for a usage example.
+ #[repr(transparent)]
+-pub struct RelaxedMmio<const SIZE: usize = 0>(Mmio<SIZE>);
++pub struct RelaxedMmio<T: ?Sized>(Mmio<T>);
+ 
+-impl<const SIZE: usize> Io for RelaxedMmio<SIZE> {
++impl<T: ?Sized + KnownSize> Io for RelaxedMmio<T> {
+     #[inline]
+     fn addr(&self) -> usize {
+         self.0.addr()
+@@ -857,11 +867,11 @@ fn maxsize(&self) -> usize {
+     }
+ }
+ 
+-impl<const SIZE: usize> IoKnownSize for RelaxedMmio<SIZE> {
+-    const MIN_SIZE: usize = SIZE;
++impl<T: ?Sized + KnownSize> IoKnownSize for RelaxedMmio<T> {
++    const MIN_SIZE: usize = T::MIN_SIZE;
+ }
+ 
+-impl<const SIZE: usize> Mmio<SIZE> {
++impl<T: ?Sized> Mmio<T> {
+     /// Returns a [`RelaxedMmio`] reference that performs relaxed I/O operations.
+     ///
+     /// Relaxed accessors do not provide ordering guarantees with respect to DMA or memory accesses
+@@ -873,18 +883,19 @@ impl<const SIZE: usize> Mmio<SIZE> {
+     /// use kernel::io::{
+     ///     Io,
+     ///     Mmio,
++    ///     Region,
+     ///     RelaxedMmio,
+     /// };
+     ///
+-    /// fn do_io(io: &Mmio<0x100>) {
++    /// fn do_io(io: &Mmio<Region<0x100>>) {
+     ///     // The access is performed using `readl_relaxed` instead of `readl`.
+     ///     let v = io.relaxed().read32(0x10);
+     /// }
+     ///
+     /// ```
+-    pub fn relaxed(&self) -> &RelaxedMmio<SIZE> {
+-        // SAFETY: `RelaxedMmio` is `#[repr(transparent)]` over `Mmio`, so `Mmio<SIZE>` and
+-        // `RelaxedMmio<SIZE>` have identical layout.
++    pub fn relaxed(&self) -> &RelaxedMmio<T> {
++        // SAFETY: `RelaxedMmio` is `#[repr(transparent)]` over `Mmio`, so `Mmio<T>` and
++        // `RelaxedMmio<T>` have identical layout.
+         unsafe { core::mem::transmute(self) }
+     }
+ }
+diff --git a/rust/kernel/io/mem.rs b/rust/kernel/io/mem.rs
+index 9117d417f99c..a6292f4ebfa4 100644
+--- a/rust/kernel/io/mem.rs
++++ b/rust/kernel/io/mem.rs
+@@ -214,7 +214,7 @@ pub fn new<'a>(io_request: IoRequest<'a>) -> impl PinInit<Devres<Self>, Error> +
+ }
+ 
+ impl<const SIZE: usize> Deref for ExclusiveIoMem<SIZE> {
+-    type Target = Mmio<SIZE>;
++    type Target = Mmio<super::Region<SIZE>>;
+ 
+     fn deref(&self) -> &Self::Target {
+         &self.iomem
+@@ -289,7 +289,7 @@ fn drop(&mut self) {
+ }
+ 
+ impl<const SIZE: usize> Deref for IoMem<SIZE> {
+-    type Target = Mmio<SIZE>;
++    type Target = Mmio<super::Region<SIZE>>;
+ 
+     fn deref(&self) -> &Self::Target {
+         // SAFETY: Safe as by the invariant of `IoMem`.
+diff --git a/rust/kernel/io/poll.rs b/rust/kernel/io/poll.rs
+index 75d1b3e8596c..2dce2b24b5ff 100644
+--- a/rust/kernel/io/poll.rs
++++ b/rust/kernel/io/poll.rs
+@@ -48,13 +48,14 @@
+ /// use kernel::io::{
+ ///     Io,
+ ///     Mmio,
++///     Region,
+ ///     poll::read_poll_timeout, //
+ /// };
+ /// use kernel::time::Delta;
+ ///
+ /// const HW_READY: u16 = 0x01;
+ ///
+-/// fn wait_for_hardware<const SIZE: usize>(io: &Mmio<SIZE>) -> Result {
++/// fn wait_for_hardware<const SIZE: usize>(io: &Mmio<Region<SIZE>>) -> Result {
+ ///     read_poll_timeout(
+ ///         // The `op` closure reads the value of a specific status register.
+ ///         || io.try_read16(0x1000),
+@@ -135,13 +136,14 @@ pub fn read_poll_timeout<Op, Cond, T>(
+ /// use kernel::io::{
+ ///     Io,
+ ///     Mmio,
++///     Region,
+ ///     poll::read_poll_timeout_atomic, //
+ /// };
+ /// use kernel::time::Delta;
+ ///
+ /// const HW_READY: u16 = 0x01;
+ ///
+-/// fn wait_for_hardware<const SIZE: usize>(io: &Mmio<SIZE>) -> Result {
++/// fn wait_for_hardware<const SIZE: usize>(io: &Mmio<Region<SIZE>>) -> Result {
+ ///     read_poll_timeout_atomic(
+ ///         // The `op` closure reads the value of a specific status register.
+ ///         || io.try_read16(0x1000),
+diff --git a/rust/kernel/io/register.rs b/rust/kernel/io/register.rs
+index abc49926abfe..1a407fc35edc 100644
+--- a/rust/kernel/io/register.rs
++++ b/rust/kernel/io/register.rs
+@@ -55,6 +55,7 @@
+ //!         register,
+ //!         Io,
+ //!         IoLoc,
++//!         Region,
+ //!     },
+ //!     num::Bounded,
+ //! };
+@@ -66,7 +67,7 @@
+ //! #         3:0 minor_revision;
+ //! #     }
+ //! # }
+-//! # fn test(io: &Mmio<0x1000>) {
++//! # fn test(io: &Mmio<Region<0x1000>>) {
+ //! # fn obtain_vendor_id() -> u8 { 0xff }
+ //!
+ //! // Read from the register's defined offset (0x100).
+@@ -441,6 +442,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///     io::{
+ ///         register,
+ ///         Io,
++///         Region,
+ ///     },
+ /// };
+ /// # use kernel::io::Mmio;
+@@ -452,7 +454,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///     }
+ /// }
+ ///
+-/// # fn test(io: &Mmio<0x1000>) {
++/// # fn test(io: &Mmio<Region<0x1000>>) {
+ /// let val = io.read(FIXED_REG);
+ ///
+ /// // Write from an already-existing value.
+@@ -554,6 +556,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///             WithBase,
+ ///         },
+ ///         Io,
++///         Region,
+ ///     },
+ /// };
+ /// # use kernel::io::Mmio;
+@@ -581,7 +584,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///     }
+ /// }
+ ///
+-/// # fn test(io: Mmio<0x1000>) {
++/// # fn test(io: Mmio<Region<0x1000>>) {
+ /// // Read the status of `Cpu0`.
+ /// let cpu0_started = io.read(CPU_CTL::of::<Cpu0>());
+ ///
+@@ -598,7 +601,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///     }
+ /// }
+ ///
+-/// # fn test2(io: Mmio<0x1000>) {
++/// # fn test2(io: Mmio<Region<0x1000>>) {
+ /// // Start the aliased `CPU0`, leaving its other fields untouched.
+ /// io.update(CPU_CTL_ALIAS::of::<Cpu0>(), |r| r.with_alias_start(true));
+ /// # }
+@@ -633,6 +636,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///         register,
+ ///         register::Array,
+ ///         Io,
++///         Region,
+ ///     },
+ /// };
+ /// # use kernel::io::Mmio;
+@@ -648,7 +652,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///     }
+ /// }
+ ///
+-/// # fn test(io: &Mmio<0x1000>)
++/// # fn test(io: &Mmio<Region<0x1000>>)
+ /// #     -> Result<(), Error>{
+ /// // Read scratch register 0, i.e. I/O address `0x80`.
+ /// let scratch_0 = io.read(SCRATCH::at(0)).value();
+@@ -719,6 +723,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///             WithBase,
+ ///         },
+ ///         Io,
++///         Region,
+ ///     },
+ /// };
+ /// # use kernel::io::Mmio;
+@@ -749,7 +754,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///     }
+ /// }
+ ///
+-/// # fn test(io: &Mmio<0x1000>) -> Result<(), Error> {
++/// # fn test(io: &Mmio<Region<0x1000>>) -> Result<(), Error> {
+ /// // Read scratch register 0 of CPU0.
+ /// let scratch = io.read(CPU_SCRATCH::of::<Cpu0>().at(0));
+ ///
+@@ -791,7 +796,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///     }
+ /// }
+ ///
+-/// # fn test2(io: &Mmio<0x1000>) -> Result<(), Error> {
++/// # fn test2(io: &Mmio<Region<0x1000>>) -> Result<(), Error> {
+ /// let cpu0_status = io.read(CPU_FIRMWARE_STATUS::of::<Cpu0>()).status();
+ /// # Ok(())
+ /// # }
+diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
+index 0335b5068f69..e048370fb8c1 100644
+--- a/rust/kernel/pci/io.rs
++++ b/rust/kernel/pci/io.rs
+@@ -238,7 +238,7 @@ fn drop(&mut self) {
+ }
+ 
+ impl<const SIZE: usize> Deref for Bar<SIZE> {
+-    type Target = Mmio<SIZE>;
++    type Target = Mmio<crate::io::Region<SIZE>>;
+ 
+     fn deref(&self) -> &Self::Target {
+         // SAFETY: By the type invariant of `Self`, the MMIO range in `self.io` is properly mapped.
+diff --git a/rust/kernel/ptr.rs b/rust/kernel/ptr.rs
+index 3f3e529e9f58..566e68f567a2 100644
+--- a/rust/kernel/ptr.rs
++++ b/rust/kernel/ptr.rs
+@@ -235,11 +235,16 @@ fn align_up(self, alignment: Alignment) -> Option<Self> {
+ ///
+ /// This is a generalization of [`size_of`] that works for dynamically sized types.
+ pub trait KnownSize {
++    /// Minimum size of this type known at compile-time.
++    const MIN_SIZE: usize;
++
+     /// Get the size of an object of this type in bytes, with the metadata of the given pointer.
+     fn size(p: *const Self) -> usize;
+ }
+ 
+ impl<T> KnownSize for T {
++    const MIN_SIZE: usize = core::mem::size_of::<T>();
++
+     #[inline(always)]
+     fn size(_: *const Self) -> usize {
+         size_of::<T>()
+@@ -247,6 +252,8 @@ fn size(_: *const Self) -> usize {
+ }
+ 
+ impl<T> KnownSize for [T] {
++    const MIN_SIZE: usize = 0;
++
+     #[inline(always)]
+     fn size(p: *const Self) -> usize {
+         p.len() * size_of::<T>()
 
-... but I checked against `main` and it has been changed to what you
-said, so testing the bit is probably better indeed.
+-- 
+2.51.2
 
-The value is also a file-local constant, so not something we can get
-through bindings unfortunately. :/ But I suspect we can rely on it being
-stable.
-
->
->> +        read_poll_timeout(
->> +            || Ok(gsp_falcon.read_mailbox0(bar)),
->> +            |&mb0| mb0 =3D=3D LIBOS_INTERRUPT_PROCESSOR_SUSPENDED,
->> +            Delta::from_millis(10),
->> +            Delta::from_secs(5),
->> +        )
->> +        .map(|_| ())
->> +    }
->> +
->> +    /// Attempts to unload the GSP firmware.
->> +    ///
->> +    /// This stops all activity on the GSP.
->> +    pub(crate) fn unload(
->> +        &self,
->> +        dev: &device::Device<device::Bound>,
->> +        bar: &Bar0,
->> +        gsp_falcon: &Falcon<Gsp>,
->> +    ) -> Result {
->> +        // Shut down the GSP.
->> +
->> +        Self::shutdown_gsp(&self.cmdq, bar, gsp_falcon, false)
->> +            .inspect_err(|e| dev_err!(dev, "unload guest driver failed:=
- {:?}", e))?;
->
-> It looks like "suspend" is only ever false here? Will this be used
-> later? If we want to keep this, it may be nice to use a 2 discriminant
-> enum so we don't have misc boolean parameters hanging around.
-
-It is in prevision of suspend/resume support yes. Agreed about the enum.
-
->
-> nit: dev_err! should have \n?
-
-It should!
-
->
->> +        dev_dbg!(dev, "GSP shut down\n");
->> +
->> +        Ok(())
->> +    }
->>  }
->> diff --git a/drivers/gpu/nova-core/gsp/commands.rs b/drivers/gpu/nova-co=
-re/gsp/commands.rs
->> index c80df421702c..fb94460c451e 100644
->> --- a/drivers/gpu/nova-core/gsp/commands.rs
->> +++ b/drivers/gpu/nova-core/gsp/commands.rs
->> @@ -237,3 +237,39 @@ pub(crate) fn gpu_name(&self) -> core::result::Resu=
-lt<&str, GpuNameError> {
->>  pub(crate) fn get_gsp_info(cmdq: &Cmdq, bar: &Bar0) -> Result<GetGspSta=
-ticInfoReply> {
->>      cmdq.send_command(bar, GetGspStaticInfo)
->>  }
->> +
->> +pub(crate) struct UnloadingGuestDriver {
->> +    suspend: bool,
->> +}
->
-> This feels like it only makes sense to call from within the gsp module,
-> so I wonder if it can be pub(super) (prolly a few others in this file
-> could be too, ofc not relevant for this series).
-
-I'll review that, we do want to limit visibility as much as possible.
-
->
-> nit: Should this have doc comment?
-
-Yep, I'll add that.
-
->
->> +
->> +impl UnloadingGuestDriver {
->> +    pub(crate) fn new(suspend: bool) -> Self {
->> +        Self { suspend }
->> +    }
->> +}
->> +
->> +impl CommandToGsp for UnloadingGuestDriver {
->> +    const FUNCTION: MsgFunction =3D MsgFunction::UnloadingGuestDriver;
->> +    type Command =3D fw::commands::UnloadingGuestDriver;
->> +    type Reply =3D UnloadingGuestDriverReply;
->> +    type InitError =3D Infallible;
->> +
->> +    fn init(&self) -> impl Init<Self::Command, Self::InitError> {
->> +        fw::commands::UnloadingGuestDriver::new(self.suspend)
->> +    }
->> +}
->> +
->> +pub(crate) struct UnloadingGuestDriverReply;
->> +
->> +impl MessageFromGsp for UnloadingGuestDriverReply {
->> +    const FUNCTION: MsgFunction =3D MsgFunction::UnloadingGuestDriver;
->> +    type InitError =3D Infallible;
->> +    type Message =3D ();
->> +
->> +    fn read(
->> +        _msg: &Self::Message,
->> +        _sbuffer: &mut SBufferIter<array::IntoIter<&[u8], 2>>,
->> +    ) -> Result<Self, Self::InitError> {
->> +        Ok(UnloadingGuestDriverReply)
->> +    }
->> +}
->> diff --git a/drivers/gpu/nova-core/gsp/fw.rs b/drivers/gpu/nova-core/gsp=
-/fw.rs
->> index 0c8a74f0e8ac..59b4c4883185 100644
->> --- a/drivers/gpu/nova-core/gsp/fw.rs
->> +++ b/drivers/gpu/nova-core/gsp/fw.rs
->> @@ -278,6 +278,7 @@ pub(crate) enum MsgFunction {
->>      Nop =3D bindings::NV_VGPU_MSG_FUNCTION_NOP,
->>      SetGuestSystemInfo =3D bindings::NV_VGPU_MSG_FUNCTION_SET_GUEST_SYS=
-TEM_INFO,
->>      SetRegistry =3D bindings::NV_VGPU_MSG_FUNCTION_SET_REGISTRY,
->> +    UnloadingGuestDriver =3D bindings::NV_VGPU_MSG_FUNCTION_UNLOADING_G=
-UEST_DRIVER,
->> =20
->>      // Event codes
->>      GspInitDone =3D bindings::NV_VGPU_MSG_EVENT_GSP_INIT_DONE,
->> @@ -322,6 +323,9 @@ fn try_from(value: u32) -> Result<MsgFunction> {
->>                  Ok(MsgFunction::SetGuestSystemInfo)
->>              }
->>              bindings::NV_VGPU_MSG_FUNCTION_SET_REGISTRY =3D> Ok(MsgFunc=
-tion::SetRegistry),
->> +            bindings::NV_VGPU_MSG_FUNCTION_UNLOADING_GUEST_DRIVER =3D> =
-{
->> +                Ok(MsgFunction::UnloadingGuestDriver)
->> +            }
->> =20
->>              // Event codes
->>              bindings::NV_VGPU_MSG_EVENT_GSP_INIT_DONE =3D> Ok(MsgFuncti=
-on::GspInitDone),
->> diff --git a/drivers/gpu/nova-core/gsp/fw/commands.rs b/drivers/gpu/nova=
--core/gsp/fw/commands.rs
->> index db46276430be..71c8690c9322 100644
->> --- a/drivers/gpu/nova-core/gsp/fw/commands.rs
->> +++ b/drivers/gpu/nova-core/gsp/fw/commands.rs
->> @@ -129,3 +129,26 @@ unsafe impl AsBytes for GspStaticConfigInfo {}
->>  // SAFETY: This struct only contains integer types for which all bit pa=
-tterns
->>  // are valid.
->>  unsafe impl FromBytes for GspStaticConfigInfo {}
->> +
->> +/// Payload of the `UnloadingGuestDriver` command and message.
->> +#[repr(transparent)]
->> +#[derive(Clone, Copy, Debug, Zeroable)]
->> +pub(crate) struct UnloadingGuestDriver(bindings::rpc_unloading_guest_dr=
-iver_v1F_07);
->> +
->> +impl UnloadingGuestDriver {
->> +    pub(crate) fn new(suspend: bool) -> Self {
->> +        Self(bindings::rpc_unloading_guest_driver_v1F_07 {
->> +            bInPMTransition: u8::from(suspend),
->> +            bGc6Entering: 0,
->> +            newLevel: if suspend { 3 } else { 0 },
->
-> Why '3'? Is there a binding that it makes sense to use for this?
-
-It's for suspend level 3 (suspend to RAM) if `suspend` is true, or
-normal destructive unloading otherwise. OpenRM has a set of possible
-values (`NV2080_CTRL_GPU_SET_POWER_STATE_GPU_LEVEL_*`) that directly
-translate to the corresponding number, but at least they limit the
-possible values to the valid set. I'll add an enum and the corresponding
-bindings.
-
-Thanks for the review!
