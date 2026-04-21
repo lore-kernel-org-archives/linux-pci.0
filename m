@@ -1,116 +1,151 @@
-Received: from mail-qv1-f53.google.com (mail-qv1-f53.google.com [209.85.219.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1852C1A6824
-	for <linux-pci@vger.kernel.org>; Tue, 21 Apr 2026 01:21:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBDBC19D092;
+	Tue, 21 Apr 2026 02:37:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776734466; cv=none; b=KtHa8bKFsjwG242cxeY5WRAS62rN40WZ4d9DGX75DsfSNsG0SNBzxUTKX8xH5yII5VYotcLDC1Eo/XFWtL1oawA4iFww6x0cUDVwrUvRFFFfr1dKwz10YA3D4DyvOQ1P4U94OEjtdJM8qdj36sEzx4mwNF2tDXH2p4gER6sVdHU=
+	t=1776739040; cv=none; b=D0bvmUYM/GRri72D3dfhmstz6Xgk5pmRf0yuz+6/rcX2DK3IR6kaaSHd2/xnk569ECLt9Mit28FgX/CqU4ihp/O813VM7FQhw0m1AAd3cSsflRC7vsCrULv8reLu/jiddHFB9jjSEDF1hDZMiqdLcJalJJWbz7zJR3hDfoz7UcM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776734466; c=relaxed/simple;
-	bh=vRCSbqHXwyn9w0QgeLkMbQIo4v+alkRVoWv3vOxbJqk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mXPDHh/3fTd013oR+3HvfBuClq9uqgFi/xraaD6PCADuHY3iI9rLnt1j42wq/kmZkTupJQaKekNj1UZHlMDfik/X4yIt2XMiNBBOGGnZCBQIvE/loIybEj5E4f0ZYipLJgi6G5Em5WIu+bsSA7g0vQltlKOq08c6JkFib2rRERo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qkrfcZHA; arc=none smtp.client-ip=209.85.219.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1776739040; c=relaxed/simple;
+	bh=kLjAJo70fkgnsD13Ls077Ot8cFRRYh1VFRwVAY2efjY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pwlLJLSP2+1ZsFXlaHFIhRw4bvRKUqkDd7Vl/NHOTePf/kiLG6BL7GJfs/4dPT1cfEGEJvl/T2nWpKU+ZDkFl/kd4scjkHTTTZEw4bcVDic+Kdsh4xUnIuWgi0yo+mGxnpJN7YrjyaAIG0duPWMfCBuvz1to/Jp8E0BailJsyNg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=RNyQ/Ai7; arc=none smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qkrfcZHA"
-Received: by mail-qv1-f53.google.com with SMTP id 6a1803df08f44-8a4b8c3a30bso44014916d6.3
-        for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2026 18:21:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776734464; x=1777339264; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=hEOtQ4G+O2Nb1ePWGM6JmoZNeLxsvMXbczlW0oI7404=;
-        b=qkrfcZHA7il892KK6iTwB5Af9JBz31HA4aj4AYEkgJqG08+9tjOYZW0KPsgl9o05EW
-         WeHWHzqPjUPvVh+VNfD8iphFw1+xJF9M/z8+84m21bPgy4F9tFuGvSil17rU4rjGMCWe
-         YP9Hwn3H0wHA5f7NtTmTNQgrsVlllkGpXtZdxmX5Q1FBbT4Z6kE2CGAsGQoOt1Hwyj9k
-         NgjMGEpDytKAbBMw/kG4Sx++fdZ3lOqAmcodkI9enY0pKt1dpUo9FqCC8rky+ZTfrQ7/
-         eBQe6JpipgFFKX9Fr2DmGd0FqC9beSxNdIN7c8b327OjZhOBHOrkntVM9nOxCqxMKvOE
-         Um4w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776734464; x=1777339264;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=hEOtQ4G+O2Nb1ePWGM6JmoZNeLxsvMXbczlW0oI7404=;
-        b=gFcCC/7qeJlAvBzswb7yKTUmiJHbEGnTq0U87/1rzwvwYkB+c2kIVUQdtFSvzpFWl7
-         loobM12NxW15crjftraG6WIl97+Pln8kxP5BYF+KgXKJv7s7ijxZrtuX4HhM/zMjKxnq
-         zgUdEeowh430ttTvpBj9q6pU7XD+0Zgy3R9ETjYmF8FqOcgf5J4tKEoDNYeSFFdYtohY
-         B19KtZ5M/HpWvI9AOSYGKYzhFNV5Yf31HpZj516riVgXbBb0ETzbOBUgkYPZTNmrVQ9D
-         +BzhnNTylTPhT5SWsX23rTNz/vlB+jf5Sygjd0WytwUNp5Pex/mnd4FWG2Q0Z7S+/wEA
-         48LQ==
-X-Forwarded-Encrypted: i=1; AFNElJ+H7IhTb1pSgRsV5jUb3vXTWUfdAwIt3aOKaR1o44ZDmWzPODPw026m3Ev1vJ+Ec9sKKrYxpjA7XR8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxdT9Ir2PKId67G8k+u3F7w4X4Jhp4S6JBTGVf4IE33HSN5oTyF
-	fdRo9JU85Tlrure2oYXxqpc4MjlkvLf0gCjtD7Ox1hWnI6agm6iEBhva
-X-Gm-Gg: AeBDiesQwT3A2uOfVT1vc5ODdwZsuisTENPxQ0vNhA+IcqbyD7xfQ79DVUl5H8u55FJ
-	z/yX43unDY8W+6lEakiwB3q3iYPZnkKG4fm/PzWT8XXG2C+bXzDteX2tlTL4vAzUURd251B6bsl
-	0R6k33RzELz/GFS8m/qsE96l2sU7N+m3Jm1i7BJQiMv1h9PWMJUyi4ZefbenlDGEBE6K0hj9/g2
-	gsKEaEJ6ohNshN/aO6S99K5E0PARbKpCzNDSQrTKX7+CyjSsQCK3/8+YJLQWRyca/0S9B65rbVl
-	sluW3s/bXG6I7NAdsDdfppZofsznXwb+59x9T8v6FQctgWpYgwR1cSvmgDVP9hKXA+quQnIJ7pk
-	iuXWEBnidBQdWgJYYER3sYZ9X8sUMJVDbZ7+aSGbSwp9M55Mi4cedr+ljSSyznD20FnnvIk3lhi
-	MqJFLdlFWxeLA1dF5ywXL8F3VP4qO/9lgOupIKzH0C/R6liW/RZ88sO6XTb2SVw7Ul050=
-X-Received: by 2002:a05:6214:4517:b0:8ac:a8df:639b with SMTP id 6a1803df08f44-8b0281f5138mr280164806d6.39.1776734464029;
-        Mon, 20 Apr 2026 18:21:04 -0700 (PDT)
-Received: from josh-ThinkPad-L14-Gen-3.. ([76.78.141.193])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8b02ae61332sm86911256d6.24.2026.04.20.18.21.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Apr 2026 18:21:03 -0700 (PDT)
-From: josh ziegler <joshziegler76@gmail.com>
-To: bhelgaas@google.com,
-	corbet@lwn.net
-Cc: skhan@linuxfoundation.org,
-	linux-pci@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	josh ziegler <joshziegler76@gmail.com>
-Subject: [PATCH] docs: fix typos in Documentation/PCI/
-Date: Mon, 20 Apr 2026 21:20:59 -0400
-Message-ID: <20260421012059.251492-1-joshziegler76@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="RNyQ/Ai7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1776739037; x=1808275037;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=kLjAJo70fkgnsD13Ls077Ot8cFRRYh1VFRwVAY2efjY=;
+  b=RNyQ/Ai7kIr/5g/Y6HGcRMxoGv5khRuFPUWkv75DdzkHKC4mTy+P+F8c
+   S0TwzDXd/29awIo1kLEeWiEKNi42KzI7JBgYRD6wx9eIjb7Fu8HGgobbE
+   +fuHld+e+kd8YU7pIjHClY5qurYgZvpq9Q5REhZMFGPzqHw0hi8x8un22
+   Gh+ZCiWJ2MJVzu3TNxpFcC+1e1JP7GmW6/CEZqpqnmQ3koe4CnZtUhJh6
+   ZOUBfipl56LyedMMA3ZaTIdzzJ76nH2ebtX41ycnOR4JPQvink9I6xxmr
+   GPJBs7P8decx+k2Zz1NNZi0MJzivXxGvnUGsTz00QJILiA6Jysm+G79G8
+   A==;
+X-CSE-ConnectionGUID: LIpecWWfQLa5NlsDPf/5rw==
+X-CSE-MsgGUID: 4t3apqgJTAG/NZUKF8LBDw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11762"; a="103125437"
+X-IronPort-AV: E=Sophos;i="6.23,190,1770624000"; 
+   d="scan'208";a="103125437"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2026 19:37:17 -0700
+X-CSE-ConnectionGUID: NkwAoNajSRO0BFlEPlrV9Q==
+X-CSE-MsgGUID: 9GwtlLztRhOSz5yxXSrZXA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,190,1770624000"; 
+   d="scan'208";a="233670397"
+Received: from lkp-server01.sh.intel.com (HELO 7e48d0ff8e22) ([10.239.97.150])
+  by fmviesa004.fm.intel.com with ESMTP; 20 Apr 2026 19:37:14 -0700
+Received: from kbuild by 7e48d0ff8e22 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wF0z9-0000000037E-3e6J;
+	Tue, 21 Apr 2026 02:37:11 +0000
+Date: Tue, 21 Apr 2026 10:37:01 +0800
+From: kernel test robot <lkp@intel.com>
+To: Ankit Agrawal <ankita@nvidia.com>, alex@shazbot.org,
+	kvm@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, jgg@ziepe.ca, yishaih@nvidia.com,
+	skolothumtho@nvidia.com, kevin.tian@intel.com, ankita@nvidia.com,
+	bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 1/1] vfio/nvgrace-gpu: Add Blackwell-Next GPU
+ readiness check via CXL DVSEC
+Message-ID: <202604211223.HLb8onLi-lkp@intel.com>
+References: <20260416014504.63067-1-ankita@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260416014504.63067-1-ankita@nvidia.com>
 
-Fix "chose" -> "choose" in pci.rst
-Fix "result an" -> "result in an" in pciebus-howto.rst
+Hi Ankit,
 
-Signed-off-by: josh ziegler <joshziegler76@gmail.com>
----
- Documentation/PCI/pci.rst           | 2 +-
- Documentation/PCI/pciebus-howto.rst | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+kernel test robot noticed the following build errors:
 
-diff --git a/Documentation/PCI/pci.rst b/Documentation/PCI/pci.rst
-index f4d2662871ab..be35e9a1ee75 100644
---- a/Documentation/PCI/pci.rst
-+++ b/Documentation/PCI/pci.rst
-@@ -338,7 +338,7 @@ the PCI_IRQ_MSI and PCI_IRQ_MSIX flags will fail, so try to always
- specify PCI_IRQ_INTX as well.
- 
- Drivers that have different interrupt handlers for MSI/MSI-X and
--legacy INTx should chose the right one based on the msi_enabled
-+legacy INTx should choose the right one based on the msi_enabled
- and msix_enabled flags in the pci_dev structure after calling
- pci_alloc_irq_vectors.
- 
-diff --git a/Documentation/PCI/pciebus-howto.rst b/Documentation/PCI/pciebus-howto.rst
-index 375d9ce171f6..9cc133ccdeec 100644
---- a/Documentation/PCI/pciebus-howto.rst
-+++ b/Documentation/PCI/pciebus-howto.rst
-@@ -97,7 +97,7 @@ register its service with the PCI Express Port Bus driver (see
- section 5.2.1 & 5.2.2). It is important that a service driver
- initializes the pcie_port_service_driver data structure, included in
- header file /include/linux/pcieport_if.h, before calling these APIs.
--Failure to do so will result an identity mismatch, which prevents
-+Failure to do so will result in an identity mismatch, which prevents
- the PCI Express Port Bus driver from loading a service driver.
- 
- pcie_port_service_register
+[auto build test ERROR on awilliam-vfio/next]
+[also build test ERROR on awilliam-vfio/for-linus pci/next pci/for-linus linus/master v7.0 next-20260420]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Ankit-Agrawal/vfio-nvgrace-gpu-Add-Blackwell-Next-GPU-readiness-check-via-CXL-DVSEC/20260419-053131
+base:   https://github.com/awilliam/linux-vfio.git next
+patch link:    https://lore.kernel.org/r/20260416014504.63067-1-ankita%40nvidia.com
+patch subject: [PATCH v3 1/1] vfio/nvgrace-gpu: Add Blackwell-Next GPU readiness check via CXL DVSEC
+config: alpha-allyesconfig (https://download.01.org/0day-ci/archive/20260421/202604211223.HLb8onLi-lkp@intel.com/config)
+compiler: alpha-linux-gcc (GCC) 15.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260421/202604211223.HLb8onLi-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202604211223.HLb8onLi-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   drivers/vfio/pci/nvgrace-gpu/main.c: In function 'nvgrace_gpu_wait_device_ready_cxl':
+>> drivers/vfio/pci/nvgrace-gpu/main.c:296:30: error: implicit declaration of function 'FIELD_GET' [-Wimplicit-function-declaration]
+     296 |         mem_active_timeout = FIELD_GET(PCI_DVSEC_CXL_MEM_ACTIVE_TIMEOUT,
+         |                              ^~~~~~~~~
+
+
+vim +/FIELD_GET +296 drivers/vfio/pci/nvgrace-gpu/main.c
+
+   280	
+   281	static int nvgrace_gpu_wait_device_ready_cxl(struct nvgrace_gpu_pci_core_device *nvdev)
+   282	{
+   283		struct pci_dev *pdev = nvdev->core_device.pdev;
+   284		int cxl_dvsec = nvdev->cxl_dvsec;
+   285		unsigned long mem_info_valid_deadline;
+   286		unsigned long timeout;
+   287		u32 dvsec_memory_status;
+   288		u8 mem_active_timeout;
+   289	
+   290		pci_read_config_dword(pdev, cxl_dvsec + PCI_DVSEC_CXL_RANGE_SIZE_LOW(0),
+   291				      &dvsec_memory_status);
+   292	
+   293		if (cxl_dvsec_mem_is_active(dvsec_memory_status))
+   294			return 0;
+   295	
+ > 296		mem_active_timeout = FIELD_GET(PCI_DVSEC_CXL_MEM_ACTIVE_TIMEOUT,
+   297					       dvsec_memory_status);
+   298	
+   299		timeout = jiffies +
+   300			  msecs_to_jiffies(cxl_mem_active_timeout_ms(mem_active_timeout));
+   301	
+   302		mem_info_valid_deadline = jiffies + msecs_to_jiffies(POLL_QUANTUM_MS);
+   303	
+   304		do {
+   305			pci_read_config_dword(pdev,
+   306					      cxl_dvsec + PCI_DVSEC_CXL_RANGE_SIZE_LOW(0),
+   307					      &dvsec_memory_status);
+   308	
+   309			if (cxl_dvsec_mem_is_active(dvsec_memory_status))
+   310				return 0;
+   311	
+   312			/* Bail early if MEM_INFO_VALID is not set within 1 second */
+   313			if (!(dvsec_memory_status & PCI_DVSEC_CXL_MEM_INFO_VALID) &&
+   314			    time_after(jiffies, mem_info_valid_deadline))
+   315				return -ETIME;
+   316	
+   317			msleep(POLL_QUANTUM_MS);
+   318		} while (!time_after(jiffies, timeout));
+   319	
+   320		return -ETIME;
+   321	}
+   322	
+
 -- 
-2.43.0
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
