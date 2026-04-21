@@ -1,173 +1,157 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D88323D6473;
-	Tue, 21 Apr 2026 12:48:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776775714; cv=none; b=iCZTlC63ZuSknMoccn40KNCILY1k5rC/SKGwUyqSphFXdV0rwrmh6/YFTGmpD4D5sZPMckQ0epVBIjnqpdgIH/q+bjhUs7NxkeXLrpBc3CM9DK8130uCaI2geFdR01Jzyq0qp2MMoOrtdQLQydGG9n2LT5pMOP6V4RbT9weGeKE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776775714; c=relaxed/simple;
-	bh=DqkUUpZt+hpjmPvXz874JmbMRCHrWto+MnCeLhZXaTM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VK2x/jQDOn312nYzGE8xYjPQINd6KwvdcQKgLDjx+N6kFjKHsR0TK9YOAgdQBp4QkLL/PTfS+BvJbIcx30Cj7JySywRg6LuTzGNbO1OuUi+M5G/uLCph5vGGUEHyD191EiQLN+nQj1DrhTSbhzi+6Sv5rgjMZ9sn7F0B2WyBMMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=TWIG9w6n; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11E8A241C8C
+	for <linux-pci@vger.kernel.org>; Tue, 21 Apr 2026 13:30:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776778242; cv=pass; b=MR/JUGw5GeyEs3GwsUN9oIjvERAz0EWwODPiVcgc7wDPjzuY2VssC24H9VdSKIbal4NXisEQhFIdrxd31zkDhfbmsBAg5g1NmK+iI/sTEWM8ZN2Ouv4UovoLsHb/Pe1+bh7/LuhLIIXx6kpj8F4nCWtIWjWdj6i7VBjwLCZeV+c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776778242; c=relaxed/simple;
+	bh=FFUNLVgGj6TBwQDXczffhQbCSgIoRnXbz8CETIMk0U0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=SagwsXAsd7sKTCP++olAJazFlQVk2F2azCC4I0aFipqaWKfwhKYotZXTxEwOmrUJ8J7HeUQlLkJKmsCLcKD6rJ77z3h1Vf3dMA1wwHBYa7zPsixdLn7eCpmPrreiVh9GQOi716J4XeOFFmRzvo/ama2N5kXKt+sVI2hjlBm77B0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fpeYJxEd; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=Bmyj6oCq; arc=pass smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="TWIG9w6n"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63LCYaeP1926131;
-	Tue, 21 Apr 2026 12:48:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:sender:subject:to; s=pp1;
-	 bh=M79HhCpXrEJibLCm0ot7+Qrs+NU6rdb9PIvmAG0wnZI=; b=TWIG9w6nErxf
-	SXoy89Ivu/SGbjMR8Skso48WhgB85VrsY3DHXFOlpODlGugqAc/lkeYgG+gfc8OT
-	PVq18Vs1EIAUeTc8nFt9a7pjAMBpI/yGg2ECHERdNixadBajvGq2U2PEN56JdFAR
-	G7dpKnbf1VsoGAHfpFRWf5/YPKXqdetwsCfgA6MkASocy7vWyn0fmsIMBZLVL61n
-	NvUlKFYkTwfSyJsMUWu+eqaAlWaPJXAEqbODK4vs13GXBODf7NAztw8qHmR5PMa4
-	baGicRpWWzTmJaFj71AaLB1dckYWzyT2IB5n3hLfZ34TWTkgOnrb4FZLxxE1kD3i
-	oqvnhWQTwg==
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dm2nf4afc-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 21 Apr 2026 12:48:09 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 63LCZHqP017802;
-	Tue, 21 Apr 2026 12:48:08 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4dmmnvrtuy-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 21 Apr 2026 12:48:08 +0000 (GMT)
-Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
-	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 63LCm19Z50397526
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 21 Apr 2026 12:48:02 GMT
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 0D5882005A;
-	Tue, 21 Apr 2026 12:48:01 +0000 (GMT)
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id ECFB320040;
-	Tue, 21 Apr 2026 12:48:00 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.52.223.163])
-	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Tue, 21 Apr 2026 12:48:00 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.1)
-	(envelope-from <bblock@linux.ibm.com>)
-	id 1wFAWG-00000008gcr-2uSw;
-	Tue, 21 Apr 2026 14:48:00 +0200
-Date: Tue, 21 Apr 2026 14:48:00 +0200
-From: Benjamin Block <bblock@linux.ibm.com>
-To: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, helgaas@kernel.org,
-        sebott@linux.ibm.com, schnelle@linux.ibm.com, linux@roeck-us.net,
-        lukas@wunner.de, stable@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-xe@lists.freedesktop.org, matthew.brost@intel.com,
-        michal.wajdeczko@intel.com, piotr.piorkowski@intel.com,
-        dtatulea@nvidia.com, mani@kernel.org, kbusch@kernel.org,
-        lkml@mageta.org, alifm@linux.ibm.com, julianr@linux.ibm.com,
-        ionut_n2001@yahoo.com, sunlightlinux@gmail.com
-Subject: Re: [PATCH v13 1/2] PCI/IOV: Make pci_lock_rescan_remove() reentrant
- and protect sriov_add_vfs/sriov_del_vfs
-Message-ID: <20260421124800.GC2707369@p1gen4-pw042f0m>
-References: <cover.1776756380.git.ionut.nechita@windriver.com>
- <288517e50996200c368cfe172de86ceb02bbd342.1776756380.git.ionut.nechita@windriver.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fpeYJxEd";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="Bmyj6oCq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1776778240;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FFUNLVgGj6TBwQDXczffhQbCSgIoRnXbz8CETIMk0U0=;
+	b=fpeYJxEdH9NpwWDbUF87zD0f1MupRdmHo/djHi1xTqTFQ/PzRbjYWn8kNMets3EDRWD50o
+	EpQGUGHFnz+B9TxhgJsytc+BWvvyLYQuhB1L5fuE8aGCpFBBBdhy+SYWMXab5tfbMFTg6b
+	GxVTnx/cAh9r/y4Jbv07yZWy2zWhKW4=
+Received: from mail-lj1-f198.google.com (mail-lj1-f198.google.com
+ [209.85.208.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-161-ACdU6JkfO8uB0Op1L05YbA-1; Tue, 21 Apr 2026 09:30:36 -0400
+X-MC-Unique: ACdU6JkfO8uB0Op1L05YbA-1
+X-Mimecast-MFC-AGG-ID: ACdU6JkfO8uB0Op1L05YbA_1776778235
+Received: by mail-lj1-f198.google.com with SMTP id 38308e7fff4ca-38a247e261dso38721121fa.3
+        for <linux-pci@vger.kernel.org>; Tue, 21 Apr 2026 06:30:36 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1776778235; cv=none;
+        d=google.com; s=arc-20240605;
+        b=SWP/qrRlm50Al9ze5tRm0pLceiu3C3KWFOgN5xduuXbAFD8OoMhNcXyJaocmQzKPom
+         rpw3UdaEymCaBYl5GcGbkhGUxWGtiQiCCN/yY8otzyHACgVZo28f5JsbCie2vODte8Ti
+         aUt7wCEAnHO2f9HMZFtIWa3iYprlHMeJXeDO95ezv2HWFuYoV846nU9R+G4l1cvOo+Pp
+         c1GfZZ0pYC/KG4JjKoT8WumrsNJCf84onZrXVXtUNNv34aT1YBUMkMybRxfEDCt9zD2g
+         o3jehtXfXRoN4nBfPHWVqXCwQShH2ScUItyIWZTDq6tq3o83yxEDGNzxzuLQxKxIjecW
+         PP8A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=FFUNLVgGj6TBwQDXczffhQbCSgIoRnXbz8CETIMk0U0=;
+        fh=Y3sZcX0clk8svb7aq+iRdl3WHsPdi5AzDovx8UvvLdk=;
+        b=OPhQBt6geom0sXNUIGN4hTXjzjk5XswJtyrsoVEaugFkgBw6lDc41Bf+1rWn0a/tfj
+         OqxTLgSy7QvrbFvwSLpkfmpFt76gd3HKqGxsdUlKwekdvf1ksfJKI+lH8WnH67fjku4N
+         KEHO0XG1ZsYqhuL0yqReSrD56wjMtXe7ojxl65uQKCuwpJOVZU/5Zn0coT0MLzfAfbA0
+         //JSM7GwSyMWDH5B9PT40VpoEF3kczl/NlOJybbYfMNmvqeI5KbQaNZRx/i+NUBCLMt5
+         o2tGYLcJAoG3XCHWyu2vbbBu2qOuUYfX0a65o30VoQSOtscqhIA9oepz7cfnUYrizDS/
+         Eqzw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1776778235; x=1777383035; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=FFUNLVgGj6TBwQDXczffhQbCSgIoRnXbz8CETIMk0U0=;
+        b=Bmyj6oCqW7YhECm3oxNrO3KIRTjLt0SGJo7PxX0vLOEOB+QSfnFjYaCVafSC6nr1XG
+         kj0fkywg0zcgU0MAeAv0hMedinu6uh+fK5Gtu+K5uqLYwze6v6W/WlqAjZ50oALtUn5B
+         Nnh1V6ypD3vTFuuZejO1u1ZhhwAlT+6ww3s0tU3YntkjRuyId1kELW1qDlCxrP64u1Ih
+         oh9+GT3/GIfiWD8tBBzwMHlwQaWNHNEbqlSeOlJANGoKzo0CHFwUIMe3UyMIeJZwZGAg
+         JU/klh9ZRkRl6Ap6HaXSigvUNsAYFbrVhXjtqTEDIuLDZdeEnZa/jSZE5uBUTgwexjg4
+         MR8A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776778235; x=1777383035;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=FFUNLVgGj6TBwQDXczffhQbCSgIoRnXbz8CETIMk0U0=;
+        b=i3mEqJNuDcGSPkxR8IVA9iLSajqVkpdISgVlSc5lTTWL7EqqOjj6soZSzYMko+ky56
+         eh4nszJQRbfpTIV5vKTcaDp2Lxussk7r6urBSrfErZ8wzienoUsjwV/c3YjZvFzqkBgh
+         1mDnyZqbNjhPCUHGiw6keONrhLIoeYj7M23gL+hIr7n+0BoKBm8sCfANUW0+O+YGTIZl
+         PZbqePquEldMr7wH3wb1b++XuY8opr7fzrOCTBJ66oM1JfmT5PjOUYB0jJafJc4YaPVZ
+         D3nbMjYSkYgOHVG6dlWkdI0wNpKnID91zjqMVc4nPIuBWFpjIFDa422EYKusj5+LiuUO
+         CSmA==
+X-Forwarded-Encrypted: i=1; AFNElJ+CO3RWzMV4F6hyjW5AlSeHzYLahcQM4uOr/utU8ILGlKE/jvBg7QjReLfBRuXzDpZlfJuj/ATGPRc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxEwipqAlDqkoqpSPCbyFkDNZYvii8PStrBUQ7LhOUavAvkGHex
+	C2EXBVTVNiuzkb52CmYUhF1TQP7QzeC7OrVVmJfht2Z/f3eflEVK46eR0SpUJOkE9KvQfOox2Q0
+	mvCmSn5kWapuIsZc+LlcXKc03mXnfydZMmDZtYaEEUcoqAuhab99Uk2lPfIKDuu0mKJHG6GLPta
+	Bwyi1U27OKzcNY2bW+HtyWLYNpy8f5BPBwHLnj
+X-Gm-Gg: AeBDietwtcNCPQAeSuyRRFpi5PZb7qDGCEKz443JhLFAE0F/xns2KL+s1SttpY0YjuU
+	pguyRovb2tn9KXN/am1PwGteGDxnDw4NNmMS5aZ5LuRlE6H5Qz0gc7Xr08ZH5c+uDGwoJSL4/6t
+	AL5yuyevieI+YPFLNFvNeR//3OIBLcGZ/fXVzAfQaEwswi1T/IR8OiLFRswil1sCq4icTCbhNT/
+	IdezvmQ7YlKBL8=
+X-Received: by 2002:a05:651c:2120:b0:38e:a8ef:b61 with SMTP id 38308e7fff4ca-38ec7b479b6mr54497121fa.29.1776778235033;
+        Tue, 21 Apr 2026 06:30:35 -0700 (PDT)
+X-Received: by 2002:a05:651c:2120:b0:38e:a8ef:b61 with SMTP id
+ 38308e7fff4ca-38ec7b479b6mr54496791fa.29.1776778234483; Tue, 21 Apr 2026
+ 06:30:34 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <288517e50996200c368cfe172de86ceb02bbd342.1776756380.git.ionut.nechita@windriver.com>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-ORIG-GUID: _T_YS1t-0kR617j0Vc0usA0NLymckQlx
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIxMDEyNyBTYWx0ZWRfXzv2wYY+WCjIe
- KBgiHPcxBLxGsTuee1IKtW8ise3WgABts9BprOSl012ZwwNKw35SyWA6syU2817r/qmDSM0toLU
- 7NP/hWT2zhQBXxGJRAHnoGaVZrBt98wlMN/5suML0AT9fNSk1RsMy/Xb6gWKDivB/3y1JLDtjKF
- FLqiDAOuMmOG8DiCtZZm8SVWXI9teaFw0iWZHZuwfOKNYklNhJOsDeIl7+uOClDYABfMYlx6iCe
- jxZaJ6ZHEMTyWeTZCGoynVgpwkF2IwAVObNVBiAfEviFjX18X9MTALOPt2Zp4sLAPqTDDbLt0Y6
- lROPWBdCPDBzx4MlcUJ8wmWHpDBBZMfgYAfpm5F7AxAawDYCizIBxDfIJRpl+pHuWeWBxKniMVB
- BLhsmciMRJBJkXgLfBt455APvm6c0rhiitA4wrK7lu8tvPmCF1KWHLbBSMu/yB/wQzPhBIbWMiE
- biMGOASBmX55wQ4MtwQ==
-X-Proofpoint-GUID: JO6cXdAwmXMtH6EKkilw8ZwQUwRUzAXu
-X-Authority-Analysis: v=2.4 cv=B7iJFutM c=1 sm=1 tr=0 ts=69e7720a cx=c_pps
- a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
- a=8nJEP1OIZ-IA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VnNF1IyMAAAA:8
- a=fGqJzq9b8BsJZAzwzYEA:9 a=3ZKOabzyN94A:10 a=wPNLvfGTeEIA:10
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-21_02,2026-04-20_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 priorityscore=1501 spamscore=0 impostorscore=0 adultscore=0
- bulkscore=0 phishscore=0 suspectscore=0 lowpriorityscore=0 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604070000 definitions=main-2604210127
+References: <20260420152608.6244-1-djeffery@redhat.com> <ff05ee4a-1cd8-4750-bbd2-8a8cbab59390@oracle.com>
+In-Reply-To: <ff05ee4a-1cd8-4750-bbd2-8a8cbab59390@oracle.com>
+From: David Jeffery <djeffery@redhat.com>
+Date: Tue, 21 Apr 2026 09:30:21 -0400
+X-Gm-Features: AQROBzBtok6Yzg4ok696ORQ140C5T6p4P5qZncZ6-KrGBII8XAtSjGeJb6YcdEY
+Message-ID: <CA+-xHTGSbbBYOLYgcD4_964dtuh0NzrnuBS5FT=+5+dPdV055A@mail.gmail.com>
+Subject: Re: [PATCH v14 0/5] shut down devices asynchronously
+To: John Garry <john.g.garry@oracle.com>
+Cc: linux-kernel@vger.kernel.org, driver-core@lists.linux.dev, 
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Danilo Krummrich <dakr@kernel.org>, Tarun Sahu <tarunsahu@google.com>, 
+	Pasha Tatashin <tatashin@google.com>, =?UTF-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>, 
+	Jordan Richards <jordanrichards@google.com>, Ewan Milne <emilne@redhat.com>, 
+	John Meneghini <jmeneghi@redhat.com>, "Lombardi, Maurizio" <mlombard@redhat.com>, 
+	Stuart Hayes <stuart.w.hayes@gmail.com>, Laurence Oberman <loberman@redhat.com>, 
+	Bart Van Assche <bvanassche@acm.org>, Bjorn Helgaas <helgaas@kernel.org>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Apr 21, 2026 at 10:34:20AM +0300, Ionut Nechita (Wind River) wrote:
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index b63cd0c310bc..0e62081bc5e5 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -3513,16 +3513,30 @@ EXPORT_SYMBOL_GPL(pci_rescan_bus);
->   * routines should always be executed under this mutex.
->   */
->  DEFINE_MUTEX(pci_rescan_remove_lock);
-> +static struct task_struct *pci_rescan_remove_owner;
+On Tue, Apr 21, 2026 at 4:02=E2=80=AFAM John Garry <john.g.garry@oracle.com=
+> wrote:
+>
+> On 20/04/2026 16:26, David Jeffery wrote:
+> > This patchset allows the kernel to shutdown devices asynchronously and
+> > unrelated async devices to be shut down in parallel to each other.
+> >
+> > Only devices which explicitly enable it are shut down asynchronously. T=
+he
+> > default is for a device to be shut down from the synchronous shutdown l=
+oop.
+> >
+> > This can dramatically reduce system shutdown/reboot time on systems tha=
+t
+> > have multiple devices that take many seconds to shut down (like certain
+> > NVMe drives). On one system tested, the shutdown time went from 11 minu=
+tes
+> > without this patch to 55 seconds with the patch. And on another system =
+from
+> > 80 seconds to 11.
+> >
+> > Changes from V13:
+> >
+> > Remove duplicate flagging of async shutdown on scsi hosts/targets/devic=
+es
+>
+> Please mention the baseline or branch that we can apply this. I tried
+> Linus' tree, but it did not apply.
+>
 
-You could make this variable `const`:
+The patchset was against the Linus tree, but is no longer recent
+enough as a driver-core merge conflicts with patch 3's header changes.
+I'll post a rebased version of the patch.
 
-    static const struct task_struct *pci_rescan_remove_owner;
-
-so it is clear that this pointer is not meant to be used to modify the
-task_struct in any way - just for these comparisons.
-
-> +static unsigned int pci_rescan_remove_depth;
->  
->  void pci_lock_rescan_remove(void)
->  {
-> -	mutex_lock(&pci_rescan_remove_lock);
-> +	if (pci_rescan_remove_owner == current) {
-> +		pci_rescan_remove_depth++;
-> +	} else {
-> +		mutex_lock(&pci_rescan_remove_lock);
-> +		pci_rescan_remove_owner = current;
-> +		pci_rescan_remove_depth = 1;
-> +	}
->  }
->  EXPORT_SYMBOL_GPL(pci_lock_rescan_remove);
->  
->  void pci_unlock_rescan_remove(void)
->  {
-> -	mutex_unlock(&pci_rescan_remove_lock);
-> +	if (WARN_ON(pci_rescan_remove_owner != current))
-> +		return;
-> +
-> +	if (--pci_rescan_remove_depth == 0) {
-> +		pci_rescan_remove_owner = NULL;
-> +		mutex_unlock(&pci_rescan_remove_lock);
-> +	}
->  }
->  EXPORT_SYMBOL_GPL(pci_unlock_rescan_remove);
-
-
-But anyway, with, or without this change, this looks good to me. I hadn't run
-into any linker issues, but I only ever used our debug config.
-Also holds up with my tests on my s390 rig.
-
-
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
-Tested-by: Benjamin Block <bblock@linux.ibm.com>
-
-
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
-Sitz der Ges.: Ehningen     /     Registergericht: AmtsG Stuttgart, HRB 243294
