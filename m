@@ -1,145 +1,176 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010047.outbound.protection.outlook.com [52.101.61.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 513E03D9DDA;
-	Tue, 21 Apr 2026 20:00:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776801617; cv=none; b=rh9tp3DjZdP3oDA3sa4lxMJEgpMU0OkdPqhQgu9nHbsFPe8JNk4NlGznUXZc43K9GsLR8qwzS2YQAK/100lQcftDISxPQgHH7lOU066Omjtjx3YgoEw8CXWwgfOhqPpHsPIXP5a1fLDilyPW5k5+3EolkPBLMNeeIixx4VErQJo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776801617; c=relaxed/simple;
-	bh=Zlc1xvs7V1MA2mbAbpURS34qCSlGhYRGswgZIBC4UrY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=l7s0wRpKAUaRlTYNweTQaSxXgHpVC+TQoOf8xJjGmK4DfcO3cqS7QSLgdu6QKqE4jKZC7j//X4Qpdpu4onodJ3m9mdjgH55Zz1Pc5qvFuxim0UxMGF4mC82ODfPgqQ0x1zeSgosQ1CPRzUK/l3tijUsZTwLE6KyDMzG3uzgtGRk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q3Ls/D6b; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3F45374E7A;
+	Tue, 21 Apr 2026 20:04:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.47
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776801850; cv=fail; b=K4qYBcKb51GIq/uE+FPAw5eCIN0gswxW57kqkRXPgOaGnPfLbZcEcCi6TSFbA443fvRumMSdqTvMCCW4KlIexNiB8HIFjuyL+70Zum9220L5VnGN9bThhIQ4xY/KFzH7JxYyL4ZGJpwZU78W+Xt2tdcDbYySB4yFeDcVfFCkSdc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776801850; c=relaxed/simple;
+	bh=egFTrjC/mEQ05UtGhoecf5BVhpdi/wOBwL0UJMJiaq0=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=Q05hd6yjdNU0KaTYVJN/7Do97dC84lPyyxWWCJdX61QJxofEMZ8SUhNVKx2NlirdVqleCTQnf2kagUwhzsRcjOL/l0ZSjIywrrLoulRIv1BCtsE1OjYwokm+O39XErDlx3xpll2RyXDpnVUNMO+uoZULLM7GnHIYqOPYjnUgbic=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=VvGI7IKW; arc=fail smtp.client-ip=52.101.61.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q3Ls/D6b"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F1E0C2BCB0;
-	Tue, 21 Apr 2026 20:00:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776801617;
-	bh=Zlc1xvs7V1MA2mbAbpURS34qCSlGhYRGswgZIBC4UrY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Q3Ls/D6bQyexm8rodqpy6NEtHra1oMoMVRLg3U9JMkuJrvmpKemOoLsPg8viOmxAA
-	 oqbL97hhSfvKpFblHAkaTwKXjjjZLWkOveAAbzSfAq6JcamM1T1fjT2bPzUSogslAK
-	 +zvD75CC72k7pSEbCjzlxRdWV5d56eR8iYLCZ//CrhVjnarDFCciD4iZ3S+xX53yHk
-	 JTeIP7kLtxMiNbsa1tHstJOkS9fk+Nvrwwvv0ksP1PkgiT2k6Bx4ENQF1dlHWnOOKe
-	 HidJJmzeMoiBAw/SATUP6S23FVd3QT8sw7/HfUkMqBjCCQnnLWyBosurg75kP4c4BR
-	 TJbjwsrX4yqUA==
-Date: Tue, 21 Apr 2026 21:00:06 +0100
-From: Mark Brown <broonie@kernel.org>
-To: "Rob Herring (Arm)" <robh@kernel.org>
-Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Stephan Gerhold <stephan@gerhold.net>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jeff Johnson <jjohnson@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Mathieu Poirier <mathieu.poirier@linaro.org>,
-	Sylwester Nawrocki <s.nawrocki@samsung.com>,
-	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yang Xiwen <forbidden405@outlook.com>,
-	Alex Elder <elder@kernel.org>,
-	Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-	Sibi Sankar <sibi.sankar@oss.qualcomm.com>,
-	Rao Mandadapu <quic_srivasam@quicinc.com>,
-	Patrice Chotard <patrice.chotard@foss.st.com>,
-	Xu Yang <xu.yang_2@nxp.com>, Peng Fan <peng.fan@nxp.com>,
-	Thomas Zimmermann <tzimmermann@suse.de>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	ath11k@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-remoteproc@vger.kernel.org, linux-sound@vger.kernel.org,
-	linux-spi@vger.kernel.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: Fix phandle-array constraints, again
-Message-ID: <ddeb29fc-1292-4191-8963-8ba817410740@sirena.org.uk>
-Mail-Followup-To: "Rob Herring (Arm)" <robh@kernel.org>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Stephan Gerhold <stephan@gerhold.net>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jeff Johnson <jjohnson@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Mathieu Poirier <mathieu.poirier@linaro.org>,
-	Sylwester Nawrocki <s.nawrocki@samsung.com>,
-	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yang Xiwen <forbidden405@outlook.com>,
-	Alex Elder <elder@kernel.org>,
-	Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-	Sibi Sankar <sibi.sankar@oss.qualcomm.com>,
-	Rao Mandadapu <quic_srivasam@quicinc.com>,
-	Patrice Chotard <patrice.chotard@foss.st.com>,
-	Xu Yang <xu.yang_2@nxp.com>, Peng Fan <peng.fan@nxp.com>,
-	Thomas Zimmermann <tzimmermann@suse.de>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	ath11k@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-remoteproc@vger.kernel.org, linux-sound@vger.kernel.org,
-	linux-spi@vger.kernel.org, linux-usb@vger.kernel.org
-References: <20260421195836.1547469-1-robh@kernel.org>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="VvGI7IKW"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=BZHgWDk8tsCMxCq13umm2F3JaYtPRGiJwW6zbnlLC4N+57mm++Ts7ZDocNx1PkTqSFKrx+hoGrNaSi9F60Zmu4GxVXEthRMT5ykiJZ3d+T/5C31SfhfnBeWf3XQCy8hBGF+KlGmH72KeqcFl33O6uU3wgjfsIQ542rmgSDXhssDsnYu60W5KrBVCSsmtCpJvVQ71hOT9f+7+FQd1kRqCsjjiF9N6ZFW1Amfq3/DzPzmHfzHpdptxf4tnofBcdWCTjZSMf1+mu10a6+I1F756cnEhXq/hVfcePP8RjEhnbGGUaeuh8VAWTdr5NU7tkPwasKqNeUIsa0p2TDAccI4JLg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=/XFw6p9O581jIK/jBe+cvL5JadQaPVESvVr6NjPSPbg=;
+ b=aCj6oIfYSkd4T0U7d9Pdw/h+Web1z7PNTmbjIo5rUSmLKrTU9wWJex1kJehstMw4uf71XyhdZWvme6YkNw2ZlMLqolc0dY63XbOHuLPAppifP55zjTzdSsz53PNFGnNIw7Zhcjib+Kgs1gz3HEQ8ovnQXAqUaAm+QD7wTiZqbAwJL+gkY1ncZFNMbln7FLMWTHZonvWgjtB1vw+JCYoBpZqFPka5cAImo/I1XuglVgzT1dl/gs5jQAxnq5us00io9tK2/xRpt2y6hmqcTyJXxJ2hNBP1uxEPjrdEwfyiXPtXAoprC7MyO9xHvrdy6FFZpB4cP00lpVAvZvZa2XeXSg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/XFw6p9O581jIK/jBe+cvL5JadQaPVESvVr6NjPSPbg=;
+ b=VvGI7IKWLo2wJWbVytEsGq1on/vvGw2cx4MG1MGBJTyuqBgUlQUAb3pb2ARDbEX/kxG5WWYb6pK8S6XKXugzsIp8sDXjDcalvQ7z2qp6nHFuGoRz4cZIwHVOt5hs5i97nsAbf8xwtN0+gxDaQhx4u8GxzBCxTi0B0n3weveH53M=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from MW4PR12MB7357.namprd12.prod.outlook.com (2603:10b6:303:219::16)
+ by SA1PR12MB8095.namprd12.prod.outlook.com (2603:10b6:806:33f::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.15; Tue, 21 Apr
+ 2026 20:04:04 +0000
+Received: from MW4PR12MB7357.namprd12.prod.outlook.com
+ ([fe80::a230:c3c8:a903:2b57]) by MW4PR12MB7357.namprd12.prod.outlook.com
+ ([fe80::a230:c3c8:a903:2b57%4]) with mapi id 15.20.9846.016; Tue, 21 Apr 2026
+ 20:04:04 +0000
+Message-ID: <a33372fd-1dc5-4239-84ca-c2429e79cf2a@amd.com>
+Date: Tue, 21 Apr 2026 15:04:00 -0500
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 23/23] dmaengine: sdxi: Add DMA engine provider
+To: Frank Li <Frank.li@nxp.com>
+Cc: Vinod Koul <vkoul@kernel.org>, Wei Huang <wei.huang2@amd.com>,
+ Mario Limonciello <mario.limonciello@amd.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ Stephen Bates <Stephen.Bates@amd.com>, PradeepVineshReddy.Kodamati@amd.com,
+ John.Kariuki@amd.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+References: <20260410-sdxi-base-v1-0-1d184cb5c60a@amd.com>
+ <20260410-sdxi-base-v1-23-1d184cb5c60a@amd.com>
+ <aeXs8pehnHIbPZd_@lizhi-Precision-Tower-5810>
+Content-Language: en-US
+From: "Lynch, Nathan" <nathan.lynch@amd.com>
+In-Reply-To: <aeXs8pehnHIbPZd_@lizhi-Precision-Tower-5810>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: CH0PR03CA0288.namprd03.prod.outlook.com
+ (2603:10b6:610:e6::23) To MW4PR12MB7357.namprd12.prod.outlook.com
+ (2603:10b6:303:219::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="SlEK5XXQLOw6MldA"
-Content-Disposition: inline
-In-Reply-To: <20260421195836.1547469-1-robh@kernel.org>
-X-Cookie: Jenkinson's Law:
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MW4PR12MB7357:EE_|SA1PR12MB8095:EE_
+X-MS-Office365-Filtering-Correlation-Id: bbc1909b-3351-4cda-8068-08de9fe12370
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|1800799024|366016|56012099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	/T0zGBG2W0GvCi9hEcL16RbzisXTC4Rg0YYXj2qlAn+Pe016NE1rqECcWGFkSyUmHzUhKyqeQnrfVSvydMWVGOTunUsCgobSJ70gj/FLqnpIa5kxRm3if+Sn5VIrEVhaemioID9crpMTgt+lQPaapfqoSJpEjv7OCHWNzxHALNm/E1jYJTKtHl/8kMpkn1sS7bDm5JRDOa7ycJ4NGDqmYtzMTF83bAGhdOcDNqLcbup5nKcqGqkUKUopZ/sGcNg3U+wkJTnNPljR2PyF+Eqz5iXqlBfsfEuGPCrGDqENbvO6XUe3XZD7pzTV3wHt080NiGop6wGEJvQlYTNNQJtCBmX1UYR+JAGzQPgoA8/cAjGANuc/ehCbvxloT8WD5jaUH4ljJkG1mjkwo4+ofDsj7OkMnivcI7dIqnslhlXrrgKwU3F03u2u7tPPbAgtIfl4rtOg17d4YBpz1MipZ3bmerv5p7DcGySY+9n1lTWlbVr3NJ5/mLHO78EsAS6FCGQYWDIoIWjxs8tlkEN5OtrFqjVHQ8ewQKw2Zn3MKdg8uMxRNXkSadjSGLgqKjmZtyYfYK7QviVQlmkJHoFYG1TN97B1COr+VE4rCatDvCqvgcLpJ6Qd8Z09NPukMRRZXHLJc4sWXthMUtXL9o9wLbN7xgHkR34GnJ5vl3lxUTrwWbkcgEfYSW9fpaXYr2KZ/LWXD7Pxa91X6npMVuRTs/rJV0VVc436itSc8bLtg+/QpNk=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW4PR12MB7357.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?b1l6Tnk4Y3Y3cExIV0x5c3J2cWVqdE1mWi9rNUNVcHpVRlJmZndDMXc2Q3VC?=
+ =?utf-8?B?TlMveW90N0lyeTFpTDE3WW9yOUgySE0yclhocloyTWtZcHFSREpBV0ljQ0xm?=
+ =?utf-8?B?TTk1S1NCMmNiVlhMTmIvT2U2SFBVWWZSaGRIeU9saUtPcVZtbVRyZXJreGll?=
+ =?utf-8?B?MWN0K0Z0aEZSTHdlZHJTRDF2UUZwaWFyekdocEFyS2hZMkZLMTZIaGQ0Ynp4?=
+ =?utf-8?B?djZTYStMNEhMdUt4TDBGUTNkbHp3bVlwWm5hdWJhTHFTTkpiUEJpbk1QeFBl?=
+ =?utf-8?B?SXo5THpPZ082RzVFZ0JSTW0vTVVZTlM4alR6blBZa2l1d1l1Zk1Qa3E2KzhQ?=
+ =?utf-8?B?RW9PUXJ5NWxuS2FoOHUzWTNFMTlPcTY5ZkZOdUlFZWExR3pMVkpwWnZTb1Uw?=
+ =?utf-8?B?Z1hwbzZVRzVyYmdtTm1ubm16RU9JT0JyZUJEdFlUWHV5eDZsY29qcnZBbXdx?=
+ =?utf-8?B?L1ZyQS9BcURlNCtVZExVMFdwVE93dDFFTmRmK0RkandtRVFPWE5QZTROUjE0?=
+ =?utf-8?B?b2p2OEJYUTQ3VnpvRUVHZnhnQkttdHNaVjJJVHRzZWJqczBvYksyUXZJdkRN?=
+ =?utf-8?B?cE5KSWJEL3ppcGRUbGJUS21ybGJQVndzdXRVZm9UTTlKQWczbndPY3hnZUpw?=
+ =?utf-8?B?QUdKWnU0V1E3UFJObHNpckxrMGF6RlBlRWJkVldtZGhKcEJXbFo5UzhSNUZU?=
+ =?utf-8?B?YldhaTRrZ25XMEtLZHFjOFpyVk9mQkg1MUtHNmRXYlJ5VlRralpTTnpWS0Jt?=
+ =?utf-8?B?MHgxNnA3cHYwV0xRZFhqNlM3S1FZbzRuT2lwcmhmMTNiNHU2djVWeExTejdt?=
+ =?utf-8?B?cmtCTWxJem5XZXBNei9jTlNLeFl2UU12VjVHRWhqSWpENTVrc1ZZWlM2OW1S?=
+ =?utf-8?B?dnVyUTZpN2grMG5HTFhqZUZtTDdGWFFlODkwaEo0ejFBaURPK3ViNlhhZ1o0?=
+ =?utf-8?B?a2ZBMTJwKzJ3dWxKNjI3UFRoT3hDMnN2KzFnUXN5NVRkVEVlYTBuM0tCNUZx?=
+ =?utf-8?B?enpiVU1HS3cveURoL0l0WEFjR1ZRUVdEWFNNNlJIVGF5U1FaZ1NsczFBdDJI?=
+ =?utf-8?B?NlZvM0VpbFZyUVlmOExMRjlkSS9uOXRLU2orY0I0WWVnV1NVN0swT0RSS2pL?=
+ =?utf-8?B?ZGNiMGI2Sm5iL01idTdaek1qeS9VN0I4MU9LQXBscnZhbENYQmJ0eCtoMmFr?=
+ =?utf-8?B?SlJ3MVRFa1QzSmE5Sncvc1RGdzBhSmVBcnRBVnB3Y1Zld3hUb3pqTHZHeG4z?=
+ =?utf-8?B?Mk4wYVQrZ1ZOdnA5a3lNa05mWHMxdDMvRUZ4cmtZOERqQVZRSjlXQXZOcWRx?=
+ =?utf-8?B?ajIySUdPcGNrWWZXT2F5NzFkemV3WGVqUTMzZDBWN25FZXE4d0NvQ2R4UDda?=
+ =?utf-8?B?Nk42NVd4dGJOeWhzdEdNUzlSRFZkYmJQaG9NZCsxeU5xOU85eEdHK2c3Ungv?=
+ =?utf-8?B?aVEyTVJJNmx3aUZXbUhkaDJsUkZxa3EvVHFmVWIrek1mYVRsTnJLUUNPRDJN?=
+ =?utf-8?B?SVQ3L1J2eWxmSXlzTnZtZzNlQ3d6Vy9GcE9RQXJrMGxkZCtUdDZtMFVtVFBx?=
+ =?utf-8?B?cUdiaU4yWlpTamxZREZVVlc3dmpPckp1T0JBQ1ZsdDFQd2RQcmx5b2c1dGhW?=
+ =?utf-8?B?ZVNmeHh0RXNLOEZJeDE0VzF4QnhVU2tldzRnVFdYcUlZZm5UdkE1UlZVZmdw?=
+ =?utf-8?B?ZDVFcENmSFVYQ3RlamZ3WFpCUENVU0V5VnZBOStoclAra3UzQTYwL2JkV00z?=
+ =?utf-8?B?bHZWSUJGeC8wMk5PZTRGMi9ENTVJN3B5RGw4bEpRVnNFV2QyR216OHpRQk04?=
+ =?utf-8?B?ZWpDTEhCYjdDMldVaWF4dUNlOC9jdHJGSzdLOVNTQXNnVVp1VUJCRTVlQmZX?=
+ =?utf-8?B?dnUwV0JpRHUvRUxHc2ZWaGR5VldyN0YzQWlXY083RXc5T2xoTzFjU2FyWklY?=
+ =?utf-8?B?aXR3YlhSYnRIQUdPTU9KaE1TbXRqRTI1TitGY2lLR2xsNCthdGNSSHlNNkZ4?=
+ =?utf-8?B?K1IyUjcwNDZZSU9IRWkrSWtoWGg5T3NQaDRRTnpMd0lod2Q1dHg3c0lqQmRV?=
+ =?utf-8?B?bEtwb2cwb1ZBQVZxRGlqU2IvVEVlSEtFSkRPUG1qdnlGYmVjVnZwZUxDR0Er?=
+ =?utf-8?B?b0VpRUNyc01TNUVhamhsUHJhK2hjL053eHhzKzFqemxmZ01hbXZIdGJaVlFr?=
+ =?utf-8?B?ellnTmNxSEt5SklWMHc0SkhFaTFTalkxTjU0NDJpSmVDWTNld1BqZHVNOHFz?=
+ =?utf-8?B?MG9zN0swRmtJRDBXZDFaUmtJZlBZMXgybkVBOTNQSVIyWGw4QWx0TWtmNEZu?=
+ =?utf-8?B?MGxjTXEzQlJWbmhpSVZSTXBtUVNLd1djZ2dmVjNCYm1TUjdXNUVaQT09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: bbc1909b-3351-4cda-8068-08de9fe12370
+X-MS-Exchange-CrossTenant-AuthSource: MW4PR12MB7357.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Apr 2026 20:04:04.6016
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: xL8h5rAAOEBDKmA9xKz7SHmIzu9gNtT9t5IQRcfARE+Jg6Liie9FudulUEmQxbuO+kVsdEOAhIE8Ksce88fy0A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB8095
 
+On 4/20/2026 4:08 AM, Frank Li wrote:
+> On Fri, Apr 10, 2026 at 08:07:33AM -0500, Nathan Lynch wrote:
+>> Register a DMA engine provider that implements memcpy. The number of
+>> channels per SDXI function can be controlled via a module
+>> parameter (dma_channels). The provider uses the virt-dma library.
+>>
+>> This survives dmatest runs with both polled and interrupt-signaled
+>> completion modes, with the following debug options and sanitizers
+>> enabled:
+>>
+>> CONFIG_DEBUG_KMEMLEAK=y
+>> CONFIG_KASAN=y
+>> CONFIG_PROVE_LOCKING=y
+>> CONFIG_SLUB_DEBUG_ON=y
+>> CONFIG_UBSAN=y
+>>
+> ...
+>> +}
+>> diff --git a/drivers/dma/sdxi/dma.h b/drivers/dma/sdxi/dma.h
+>> new file mode 100644
+>> index 000000000000..4ff3c2cb67fc
+>> --- /dev/null
+>> +++ b/drivers/dma/sdxi/dma.h
+>> @@ -0,0 +1,12 @@
+>> +/* SPDX-License-Identifier: GPL-2.0-only */
+>> +/* Copyright Advanced Micro Devices, Inc. */
+>> +
+>> +#ifndef DMA_SDXI_DMA_H
+>> +#define DMA_SDXI_DMA_H
+>> +
+>> +struct sdxi_dev;
+>> +
+>> +int sdxi_dma_register(struct sdxi_dev *sdxi);
+>> +void sdxi_dma_unregister(struct sdxi_dev *sdxi);
+> 
+> where use this it ?
 
---SlEK5XXQLOw6MldA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Looks like a leftover from before I converted this to use
+dmaenginem_async_device_register(). I'll remove it.
 
-On Tue, Apr 21, 2026 at 02:55:25PM -0500, Rob Herring (Arm) wrote:
-> The unfortunately named 'phandle-array' property type is really a matrix
-> with phandle and fixed arg cells entries. A matrix property should have 2
-> levels of items constraints.
-
-Acked-by: Mark Brown <broonie@kernel.org>
-
---SlEK5XXQLOw6MldA
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmnn10UACgkQJNaLcl1U
-h9C8Vgf/TIh3jOwQkzaSh+ITMEgUCeXAFPb4VUUhIGQS66939JxKIGlaCr8kVeam
-fIS+iyN8BAflGToJHouS473TERLm3pmQaKv4FHy2m/XW3E7aNKl/WZ6nuPJbZzLH
-jN5jU8h19JcMriiidDPn73PPnDdSLZHsxuegwuYvWjjutnanS7pzFFJnvB5FqglH
-DmQVRssnzzYzUBCLII2ARQtKPwTAkv1thWPjVRwXU0AxPSrEWA2+9xpNDedbe86f
-gZJyKDlrKgAXce/tnTDNOJYTUAUwUf66KgGMWLOjfRI+tbwsRV/Z1s6TbSIGgVif
-0AXVOMGUdqpfkYJFeGJGk/8tGGdtZw==
-=Hh8L
------END PGP SIGNATURE-----
-
---SlEK5XXQLOw6MldA--
