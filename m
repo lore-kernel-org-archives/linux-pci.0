@@ -1,88 +1,182 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012008.outbound.protection.outlook.com [40.107.209.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 541071AAE17;
-	Tue, 21 Apr 2026 19:50:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776801044; cv=none; b=XQ+ox+WpMLEfaj5c9GPQBO+8HG973FRozOhyCf4Ot3wYl2aFO9ASd4Oe/nS2TKbjWpzrw33PV31F6+Xg/594gWXLNNzKuDp86DhSETJV9w/ThmmbfHbGoqb55tOM56tmSpw8UoAoIH8i43+cbskeVBTs1XfD1dOlR4mTjMdA8fc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776801044; c=relaxed/simple;
-	bh=ooUX033PRSor4DZZcfiE5ZgW5rEzRajyd8nkM8cfXwc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AQqj4irJYza6QHUwD6oHW5hb0d7d5sEGWnrBs5sc+y5Zw3y/b99p079uQy65kc4aERQQ8ieseTkVnXo77Ny7C4ePCKrbUmBL9YKBQQHk70bMtrEHr2zxlP7Ato6R5w6FI84emHO2v8cAV8PJ5mPCDUgME1LlSvZsWEL9JQ+OAjE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XCYXlXCD; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B1802773F0;
+	Tue, 21 Apr 2026 19:54:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.8
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776801255; cv=fail; b=MhjJbJlhITOTfNvQjrfGIIp402x/gWU5JxsS0l8Yeq69TdrPKDjekjXgOMO2cmy+0qbbJYhZZ9MvgttBsb/ADc70plFMwolAiix1xs2JcTTExL6QlLyZgXCwQ0WqNwD0YaXBDPpiMAVSjNY3vuOj3tMn/qe7yMajJ56v2F1+/KM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776801255; c=relaxed/simple;
+	bh=YawQOF+/LLf/7pj02pknEcoUMTE6hU35hd/fOHYK6Iw=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=mCynnZPCwkP11WpDvT/th46nWZgKtsY5A9lxWuIK6i+lNSs8gW2QZZAY4hKH04hAs14TPVDiqM8sEbN21r2HR/iOh0AfHbRB/mlgfc1djm3t7wRSAE2IYNImOhMYtbYNdD+l/Lros81aZoI695x4RXJg0F3LRP1fOMo85fAbBxM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=DPaDZqo/; arc=fail smtp.client-ip=40.107.209.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XCYXlXCD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B40D7C2BCB4;
-	Tue, 21 Apr 2026 19:50:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776801044;
-	bh=ooUX033PRSor4DZZcfiE5ZgW5rEzRajyd8nkM8cfXwc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XCYXlXCD5ncatsOJrtdenK4w6lbDvos2aOvw1Vk0DVjK9s1BJl+4Yh6nhtCD21UtX
-	 8Aj+jgcfHe7bMH0TJ2A1fuhrgOrVc98OKspi1hYSNiDXiIiTh2NpZ6sR7hga2m7WZD
-	 Jf1tUW33tnqt+sKJvc+Ap0ut/TAsl9S+nza2U+lyoKpDN6zKk1UZ9Z4UJKx7wZIPv9
-	 NrQhx1+I04JOQ8tzkj56EudFABZqJY0SH6KxkOpwy0iiHexCeWwmyT328QwzyPX9fK
-	 7HI4JT4EmPdwn0qnOtYTgeWILzZNoGhCIOc6nQY2448nY4xnBw4Mk8bwW6WXMXMI9N
-	 CqS5bIo6A0CEg==
-Date: Wed, 22 Apr 2026 04:50:42 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Magnus Lindholm <linmag7@gmail.com>,
-	Matt Turner <mattst88@gmail.com>,
-	Richard Henderson <richard.henderson@linaro.org>,
-	Christophe Leroy <chleroy@kernel.org>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Dexuan Cui <decui@microsoft.com>,
-	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
-	Lukas Wunner <lukas@wunner.de>,
-	Oliver O'Halloran <oohall@gmail.com>,
-	Saurabh Singh Sengar <ssengar@microsoft.com>,
-	Shuan He <heshuan@bytedance.com>,
-	Srivatsa Bhat <srivatsabhat@microsoft.com>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v5 11/23] alpha/PCI: Add security_locked_down() check to
- pci_mmap_resource()
-Message-ID: <20260421195042.GD1684602@rocinante>
-References: <20260416180107.777065-1-kwilczynski@kernel.org>
- <20260416180107.777065-12-kwilczynski@kernel.org>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="DPaDZqo/"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=cdqN9y+0qTGmyrxSQyZSU35HuAdS2zJUpnJnD3SVPRnOeJUWRDMvm6UmVX1KpeKdRQIxvWvDU4V5TL17BCbDpLEFmyphGvtRsZzlQCaupZjx34qDcf49huIqBlUSVGrqt7KNuc5ATpkunlwn5ZmRiCUsPZ5j6H8dL7ocevN+DOd90p6Ww3mcneQEneWfzHebxDAoumvlRFsdOPg6Z0m1FaZsWex3i+oQaOsICNzWy1rYTL+2FUQ4VmCWn6LIFJdA7osKriiEO//bccBPpwd16jl8GKhqiTOBJv5jhqhHE0mQXScZnUKVjki0wvLyFRLZpx0BYljl2R0twdGzwgR0dA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=nEEDn+nvOGiUEoT+wDLfU2NhgYueKoA4gCfXTqrIUlU=;
+ b=SDFepfwgbQS2uHsoTGjjBAHa/XUDy3Ifzo2BgJgFccI6ScKGHeBpIkUv0Zmiq5hxI4jQw1uZp9KTLmhDftUFU1sMbBCWFX2BRd8ndgItdu1FVyvOK2bvS6heWHoDc9NhE+PcPg4X79nQm6F7PSMi/PudwcJbahO8koCALs6kAV2fLZtXFKQeDBUi4ggXTEdufG9Fp4UaK2OlzhYUALc9DX/oR9AbK6FgM9MjJ5nsP2F8yeagubLjGGcHaa2YcaCu8zIhBx6W0PfEiICAIOSyJOT0e1ERolPJMcf0C577FlqQd3dQq7eLX2K7mKug3KfVVGEHUKvklK7Ef1rcaOfFhA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=nEEDn+nvOGiUEoT+wDLfU2NhgYueKoA4gCfXTqrIUlU=;
+ b=DPaDZqo/kjgSZkancHdrdL1BmxBu2JQYDUdpNSQYiB9T/38rdcZ2Xhb9sESKHmtHsz8/RRK3rk+8aEChCEunqFfT7jdl+ILyYY5vOryAYc+OXKsQYGFI3CB214TPB7X3D9s43rBRBbMX35yLlr1pYWJZZwWodn7/APTN/RdkT4s=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from MW4PR12MB7357.namprd12.prod.outlook.com (2603:10b6:303:219::16)
+ by IA0PR12MB8227.namprd12.prod.outlook.com (2603:10b6:208:406::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.16; Tue, 21 Apr
+ 2026 19:54:11 +0000
+Received: from MW4PR12MB7357.namprd12.prod.outlook.com
+ ([fe80::a230:c3c8:a903:2b57]) by MW4PR12MB7357.namprd12.prod.outlook.com
+ ([fe80::a230:c3c8:a903:2b57%4]) with mapi id 15.20.9846.016; Tue, 21 Apr 2026
+ 19:54:11 +0000
+Message-ID: <a209d10e-305b-4ca7-85c6-b5f5fab13fa2@amd.com>
+Date: Tue, 21 Apr 2026 14:54:07 -0500
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 19/23] dmaengine: sdxi: Provide context start and stop
+ APIs
+To: Frank Li <Frank.li@nxp.com>
+Cc: Vinod Koul <vkoul@kernel.org>, Wei Huang <wei.huang2@amd.com>,
+ Mario Limonciello <mario.limonciello@amd.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ Stephen Bates <Stephen.Bates@amd.com>, PradeepVineshReddy.Kodamati@amd.com,
+ John.Kariuki@amd.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+References: <20260410-sdxi-base-v1-0-1d184cb5c60a@amd.com>
+ <20260410-sdxi-base-v1-19-1d184cb5c60a@amd.com>
+ <aeXo0VyXMhnZH0h7@lizhi-Precision-Tower-5810>
+Content-Language: en-US
+From: "Lynch, Nathan" <nathan.lynch@amd.com>
+In-Reply-To: <aeXo0VyXMhnZH0h7@lizhi-Precision-Tower-5810>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: CH0P223CA0029.NAMP223.PROD.OUTLOOK.COM
+ (2603:10b6:610:116::11) To MW4PR12MB7357.namprd12.prod.outlook.com
+ (2603:10b6:303:219::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260416180107.777065-12-kwilczynski@kernel.org>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MW4PR12MB7357:EE_|IA0PR12MB8227:EE_
+X-MS-Office365-Filtering-Correlation-Id: a23752b8-0524-490f-d7c5-08de9fdfc195
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|376014|22082099003|18002099003|56012099003;
+X-Microsoft-Antispam-Message-Info:
+	eqFGwtLCgIhe7jOtgOOUYtkf8IZQ5/1o+GPFZyuQIjSXYLNR5oHGrZSXxjVVNJmBRcYSp7BYqYMNjw8b2WYhzeGcQNaRXuVAxcnHSxqhP1An1FYOxef3f1WRXpuo/abSfuUvO/CQa6jxqaojbsCuKQh4oLIZIYmwubNm7oS9vs+31VsUoUk83IAcPy9FKjEXeAn0kXivrt4+Tbzkb6bFwJs250nWiktMdspeGvql0jdaywtLy3cNjdgZRX8GhqXn5k6/sMP+/zBf/LX95yjm37xVp1N828bLUVzDs0bYFPiMA15YSvJ0+mp6n/5BeQrRiAd7Y5ftlQqkrZAXKkDFJSZDvoPHYVnsplO8hRacx8jly3hnl473oRNJOz0bc52BdhF4kuLr+wvSvCP4J/pNyefvoQdxmEXLOGywxK4XrMgXCp3P7htA7YvwyVU4NW6acGiVbF+D2q+3DjHPmF9jgejD9T3XqQ6m6XUQ2UvXq7ghurMtOd+WYRR2/BtAzSwuYammqn9FKrXXRT4hOdSYxAI2Ad/9LWBXbV57TRoUO+tpd0s8a+g/mZAmrE2VClAqO6evBHz3LEzk0dKomqe43Qm4h29CfB4QuR10Zso5UdHQfjSsgXTKWSjdwoytJRvBwxQyuilRL0k9esTaMvJXWJaMvrVucnMiXvu4Da39/0JZcpz1t04wKZCx2M0KTHam2Ioc3/5MqRmZRBAwZ9HNETqctEoa1O8xnnbFpQ4+Tfs=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW4PR12MB7357.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?RjIvYlJndTJFVzIxci9pYTdKRms2d0dhY3dlOERCQ2tTc2dtRTBvUzNVYi9E?=
+ =?utf-8?B?M0ZiUm4vK0tqSGoyUUltTDZmVmg3cGN5UDNXcURUUmtxZE0yMTJvM3ZjNnZZ?=
+ =?utf-8?B?NzcrMko4K0JtUmVVcFBveGg0UmlnWGxzemp0S2wzOENHazJhYlhtOWpRSVZl?=
+ =?utf-8?B?UDlxU0RVUGluRmhyVFVrVmMxSEVqV21EemQwSC9tK0NiTzZJME9qQVB4SE5s?=
+ =?utf-8?B?RFAyVzlLWkZGYjJUdFBJZVFSa2dIYTVtUlYwNmZoTzZ6M3pYclhweTk4ZmFJ?=
+ =?utf-8?B?RnR6VTdQdGk1QXZLckQ4U1NRamFKcDNRSEhCMkNFdXpITDB6MTJHOS93Qmd6?=
+ =?utf-8?B?OUtkdUUwMmFEK0VJSkYzZ3kwZXZtT05jK1dRblNHcy9vMmNrU0MvVHYyaFhV?=
+ =?utf-8?B?K0JhRWErbmNwaFF5SllqMng5VUxXR0MraHBuRHI1T01DR0ZBZ3YvUER2OFdI?=
+ =?utf-8?B?UnpkWm9vbXNzVTl5VG9hZGxUTjdtcjV6Y3JoOFhidms0Zi9tTzQ3eEozQmpW?=
+ =?utf-8?B?NWd0djAvcm84akJUa1YvaHVKdElMcDJVT21oeWVjVmRKcUUvQ2dGZVAwTnBn?=
+ =?utf-8?B?bjRtak4yUytjR1JOYWZaVXgrOUc2MG9PNWNEblRTRDVrTzdiQ2EzM01IYm8y?=
+ =?utf-8?B?cWdRQ2dwWitaTUZJYjlWV2JJM2oreUNuMWNqL0NVRkVBZlJmdWQ3c3F0ckFm?=
+ =?utf-8?B?UGkxMTBwRmd1UDJQeHU2Rk02a0J3Ymh3dGl1bW1ZL1NzNDNOZzdYR3VnU2hI?=
+ =?utf-8?B?ZzcxeVgyaHZsQ1dMaHNJWWg0T2hOVGxMSEZ0QlN3TklZVzd3Ni92UXJaVWRv?=
+ =?utf-8?B?TDlURUpmZ3dXRWxiSnpFK1hPZ3F6UWlQU0owaVI1bGlDY1RLN0FGUmx3YzEx?=
+ =?utf-8?B?ZE5HS2NiMGgvQ0xWUlpmc3ZCbkdndkhiY3MxOS9VWURVaVc1NVpoNEpyc0ow?=
+ =?utf-8?B?dUtRaGdwTGU1c09GZHFFUFZsUitJbjZjTWhQc2VNWjE0NmxjUlVTVjNVTFhp?=
+ =?utf-8?B?YmFZQUtoa3dGcHVEdUtnNXYwNllPQXptVUNCL2d2Rzl4OXVDekx0TncycEVn?=
+ =?utf-8?B?RHRHSWdhdFRKYWJvTUxrSTQxSERiUVNDMU9zZ0ZtaGc3QkZ1Nk9rN0dTdGdZ?=
+ =?utf-8?B?RzlRMU9NY1ZBUlVjSVc3ZURUM01sN212WWV2YytuWitwWXlEbDFBUlVPeVJN?=
+ =?utf-8?B?QTlmVkV2ekhoN0N2YWU0blh4b0ppNHVFbGtVaXZscGRlQVN2RWszRTlNWTU4?=
+ =?utf-8?B?TlVyVmc1eW95OUE4eWxya04xWTVrRWNtRk5EVWJsY1JaTHEvVUlocEMyb3NI?=
+ =?utf-8?B?WHFyd3ZpNFM3UHl3ZVNhTnAzSzJxanFTYkJjdVlzaFZuNTdBWXdaQ1NtZlFv?=
+ =?utf-8?B?dkZZaWh5OE9pWk1FcklxZDkxeWJkeHhrclY2NVpaQVNKREpDOGd0VDhRc05J?=
+ =?utf-8?B?OFZYNlVQdmVoRzZUaU1lem1TekpZSUpiOXFjSkNyT2R3eVlrL2JWbTRHdGUy?=
+ =?utf-8?B?bjVicXpuNzdsMUlaN1lKM3hIYzhnRENYK0pjMmJNTytUdVhvU2MyTHVMb04w?=
+ =?utf-8?B?RE5YcTNzZ3l5TFErWkRjUDFNSXVVZkNTQXpKUlBNeDZlRXdzS0ZKenJvVm5s?=
+ =?utf-8?B?NGdWUlVzYkl6SlNia3VQdFU1b1FFM21CcTJ4aWNOQkZvbkdVMGxtVDZUeWp3?=
+ =?utf-8?B?SnVLREZhZjEyekhmT2RmVEZVbEt5RDd0aklaTE9VQXZnQlFVNnpWc2VKQnJl?=
+ =?utf-8?B?MmJHQkdXcFppTW1VdUk4dnFpNzlHZXgvdlpnOE5hNFQwMllhb2hCQk44MjRC?=
+ =?utf-8?B?bitWcnpMYlJ0Z2xsLzNIVjlJUnBhcXRGazhJTG5obndxazcwd1ZtK3E2QndJ?=
+ =?utf-8?B?Y1RDREJSTXhDN01Lc0E5ZGRDVzcrMkNtMXZVemYyRW53S0F6dEJzVERtYW1w?=
+ =?utf-8?B?Q05ZV1NOQTdSb2RUMUJQcmFXZ05hV0hTaXV5N2NYSHNIeVNmaEVkazM1d2VZ?=
+ =?utf-8?B?UnZuS0xLQjlrYXBpSnFKTTAwQURXQTNNeW01MU13WVZOOVNqenFmR1dkN0FQ?=
+ =?utf-8?B?eHNMY0QxMUJsUmt5RXRXOUZLUHR6RC9mVXp3dTJmdXdpZCtZQ09odEUzYk94?=
+ =?utf-8?B?cDNDbW5TR3YvZUN0UFpUVllqbDNIRFNBSVJYUjNseENjZUhOVjg3SU9LRmdG?=
+ =?utf-8?B?Yi9DRWIvQXNsaGpFV25JZFVjVjRTVUtZY3NYd2s3clcxNXkzWkVrZVpkemI5?=
+ =?utf-8?B?N295M3pJM2phc1hXNnYxL3lPUDltajZYYTF0ZmRlSm4vTjVMdHJqOExYcnFo?=
+ =?utf-8?Q?Og3faCj+58w3hXjzhY?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a23752b8-0524-490f-d7c5-08de9fdfc195
+X-MS-Exchange-CrossTenant-AuthSource: MW4PR12MB7357.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Apr 2026 19:54:10.9167
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: +Z8a85C/cXUwQehupvZSVapSSvdQE5GJO0BlS+/b+z69yPDBjtI9/UDeO5ynFJpLOiRrE8WkP2X1qITXa6nJdQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB8227
 
-Hello,
+On 4/20/2026 3:50 AM, Frank Li wrote:
+> On Fri, Apr 10, 2026 at 08:07:29AM -0500, Nathan Lynch wrote:
+>>
+>> +int sdxi_start_cxt(struct sdxi_cxt *cxt)
+>> +{
+>> +     struct sdxi_cxt *adm = to_admin_cxt(cxt);
+>> +     struct sdxi_desc *desc;
+>> +     struct sdxi_ring_resv resv;
+>> +     int err;
+>> +
+>> +     might_sleep();
+>> +
+>> +     struct sdxi_completion *sc __free(sdxi_completion) =
+>> +             sdxi_completion_alloc(cxt->sdxi);
+>> +
+>> +     if (!sc)
+>> +             return -ENOMEM;
+>> +
+>> +     /* This is not how to start the admin context. */
+>> +     if (WARN_ON(adm == cxt))
+>> +             return -EINVAL;
+>> +
+>> +     err = sdxi_ring_reserve(adm->ring_state, 1, &resv);
+>> +     if (err)
+>> +             return err;
+>> +
+>> +     desc = sdxi_ring_resv_next(&resv);
+>> +     sdxi_encode_cxt_start(desc, &(const struct sdxi_cxt_start) {
+>> +                     .range = sdxi_cxt_range_single(cxt->id),
+>> +             });
+>> +     sdxi_completion_attach(desc, sc);
+>> +     sdxi_desc_make_valid(desc);
+>> +     sdxi_cxt_push_doorbell(adm, sdxi_ring_resv_dbval(&resv));
+>> +     sdxi_completion_poll(sc);
+> 
+> Do check polll timeout?
 
-> @@ -71,7 +72,11 @@ static int pci_mmap_resource(struct kobject *kobj,
->  	struct resource *res = attr->private;
->  	enum pci_mmap_state mmap_type;
->  	struct pci_bus_region bar;
-> -	int i;
-> +	int i, ret;
-> +
-> +	ret = security_locked_down(LOCKDOWN_PCI_ACCESS);
-> +	if (ret)
-> +		return ret;
+Well, sdxi_completion_poll() will spin indefinitely as currently written.
 
-There is feedback from Sashiko about this:
+That's not great, and I'm reminded that maybe it ought to be checking
+the context status while polling the completion block as well.
 
-  https://sashiko.dev/#/patchset/20260416180107.777065-1-kwilczynski%40kernel.org?part=11
+Ultimately I want to convert administrative actions like this to
+interrupt-based completion signaling though.
 
-Might be something to look into later.  Out of scope for this series.
-
-Thank you!
-
-	Krzysztof
