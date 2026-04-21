@@ -1,151 +1,133 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from mail-m3286.qiye.163.com (mail-m3286.qiye.163.com [220.197.32.86])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBDBC19D092;
-	Tue, 21 Apr 2026 02:37:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E02751D5CE0;
+	Tue, 21 Apr 2026 02:38:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.86
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776739040; cv=none; b=D0bvmUYM/GRri72D3dfhmstz6Xgk5pmRf0yuz+6/rcX2DK3IR6kaaSHd2/xnk569ECLt9Mit28FgX/CqU4ihp/O813VM7FQhw0m1AAd3cSsflRC7vsCrULv8reLu/jiddHFB9jjSEDF1hDZMiqdLcJalJJWbz7zJR3hDfoz7UcM=
+	t=1776739125; cv=none; b=U1WdzXGNqntD3hF8qQ6nvb5TD4AQiFjpyFVzusV3RhgFkz6UW28HY7qtZl0oLZypDQ34aJu/st3myZjXJK30i1g8lVxlo5WQxSR6CKObK9XCST1OaYKGOq/iiC/iixIi0TKxDjPLy0Wxm7xdObu60Y/I/UqLvB9Qtspqx8zx56w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776739040; c=relaxed/simple;
-	bh=kLjAJo70fkgnsD13Ls077Ot8cFRRYh1VFRwVAY2efjY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pwlLJLSP2+1ZsFXlaHFIhRw4bvRKUqkDd7Vl/NHOTePf/kiLG6BL7GJfs/4dPT1cfEGEJvl/T2nWpKU+ZDkFl/kd4scjkHTTTZEw4bcVDic+Kdsh4xUnIuWgi0yo+mGxnpJN7YrjyaAIG0duPWMfCBuvz1to/Jp8E0BailJsyNg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=RNyQ/Ai7; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1776739125; c=relaxed/simple;
+	bh=JFhQ9eS307aoASJMXZjEXduN3hJhk2lOgWQP8TXF7gs=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=gN+YZEqafs4twsgzW9lA4ueNnPpxZdUOUxs5oCNkawv3vOOKpsn7NWQVQuUYk8Z7bB141rpD8SmfHJhjl8wp2ARBGbw0x4esKS1RrjKqlwWWPUKo6ue4DWn+fNWPOFoFjGYzYSr4Gu2947NX9C+Uii9JaAHz4REaPZ4IrW1lMFA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=HFTUVuKF; arc=none smtp.client-ip=220.197.32.86
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="RNyQ/Ai7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1776739037; x=1808275037;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=kLjAJo70fkgnsD13Ls077Ot8cFRRYh1VFRwVAY2efjY=;
-  b=RNyQ/Ai7kIr/5g/Y6HGcRMxoGv5khRuFPUWkv75DdzkHKC4mTy+P+F8c
-   S0TwzDXd/29awIo1kLEeWiEKNi42KzI7JBgYRD6wx9eIjb7Fu8HGgobbE
-   +fuHld+e+kd8YU7pIjHClY5qurYgZvpq9Q5REhZMFGPzqHw0hi8x8un22
-   Gh+ZCiWJ2MJVzu3TNxpFcC+1e1JP7GmW6/CEZqpqnmQ3koe4CnZtUhJh6
-   ZOUBfipl56LyedMMA3ZaTIdzzJ76nH2ebtX41ycnOR4JPQvink9I6xxmr
-   GPJBs7P8decx+k2Zz1NNZi0MJzivXxGvnUGsTz00QJILiA6Jysm+G79G8
-   A==;
-X-CSE-ConnectionGUID: LIpecWWfQLa5NlsDPf/5rw==
-X-CSE-MsgGUID: 4t3apqgJTAG/NZUKF8LBDw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11762"; a="103125437"
-X-IronPort-AV: E=Sophos;i="6.23,190,1770624000"; 
-   d="scan'208";a="103125437"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2026 19:37:17 -0700
-X-CSE-ConnectionGUID: NkwAoNajSRO0BFlEPlrV9Q==
-X-CSE-MsgGUID: 9GwtlLztRhOSz5yxXSrZXA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,190,1770624000"; 
-   d="scan'208";a="233670397"
-Received: from lkp-server01.sh.intel.com (HELO 7e48d0ff8e22) ([10.239.97.150])
-  by fmviesa004.fm.intel.com with ESMTP; 20 Apr 2026 19:37:14 -0700
-Received: from kbuild by 7e48d0ff8e22 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wF0z9-0000000037E-3e6J;
-	Tue, 21 Apr 2026 02:37:11 +0000
-Date: Tue, 21 Apr 2026 10:37:01 +0800
-From: kernel test robot <lkp@intel.com>
-To: Ankit Agrawal <ankita@nvidia.com>, alex@shazbot.org,
-	kvm@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, jgg@ziepe.ca, yishaih@nvidia.com,
-	skolothumtho@nvidia.com, kevin.tian@intel.com, ankita@nvidia.com,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 1/1] vfio/nvgrace-gpu: Add Blackwell-Next GPU
- readiness check via CXL DVSEC
-Message-ID: <202604211223.HLb8onLi-lkp@intel.com>
-References: <20260416014504.63067-1-ankita@nvidia.com>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="HFTUVuKF"
+Received: from [172.16.12.17] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 3b7964d53;
+	Tue, 21 Apr 2026 09:22:47 +0800 (GMT+08:00)
+Message-ID: <68f9def1-5828-aa30-8887-4b6594595bad@rock-chips.com>
+Date: Tue, 21 Apr 2026 09:22:43 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260416014504.63067-1-ankita@nvidia.com>
-
-Hi Ankit,
-
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on awilliam-vfio/next]
-[also build test ERROR on awilliam-vfio/for-linus pci/next pci/for-linus linus/master v7.0 next-20260420]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Ankit-Agrawal/vfio-nvgrace-gpu-Add-Blackwell-Next-GPU-readiness-check-via-CXL-DVSEC/20260419-053131
-base:   https://github.com/awilliam/linux-vfio.git next
-patch link:    https://lore.kernel.org/r/20260416014504.63067-1-ankita%40nvidia.com
-patch subject: [PATCH v3 1/1] vfio/nvgrace-gpu: Add Blackwell-Next GPU readiness check via CXL DVSEC
-config: alpha-allyesconfig (https://download.01.org/0day-ci/archive/20260421/202604211223.HLb8onLi-lkp@intel.com/config)
-compiler: alpha-linux-gcc (GCC) 15.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260421/202604211223.HLb8onLi-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202604211223.HLb8onLi-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   drivers/vfio/pci/nvgrace-gpu/main.c: In function 'nvgrace_gpu_wait_device_ready_cxl':
->> drivers/vfio/pci/nvgrace-gpu/main.c:296:30: error: implicit declaration of function 'FIELD_GET' [-Wimplicit-function-declaration]
-     296 |         mem_active_timeout = FIELD_GET(PCI_DVSEC_CXL_MEM_ACTIVE_TIMEOUT,
-         |                              ^~~~~~~~~
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Cc: shawn.lin@rock-chips.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+ bhelgaas@google.com, robh@kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: dwc: Initialize pp->lock before MSI domain
+ registration
+To: Yadu M G <yadu.mg@oss.qualcomm.com>, jingoohan1@gmail.com, mani@kernel.org
+References: <20260414065214.3085209-1-yadu.mg@oss.qualcomm.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <20260414065214.3085209-1-yadu.mg@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9dada1fbf509cckunmda2d5f7c8999d
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGUwdGlZDTxhCTUMeHU1JHk5WFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=HFTUVuKFPCzdxKsABvy82iK1bbW1IorxuM9WVeXodGQEmGkpAXQ56LRbxv5/4YIKmVcV/mWP6EuN5mOu4TRlsgPBV97RREuDaTjmDBYKIb/XHORl2QmA6Z7MRm4TIfE6qQdTwxuOrWRGV3wVsQKjs1Q/3oVw2mfibux7DewZhtE=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=dJaE3Wn3IfhoI0exjApvqtC03SMDFDnp0AnNhW9LRxs=;
+	h=date:mime-version:subject:message-id:from;
 
 
-vim +/FIELD_GET +296 drivers/vfio/pci/nvgrace-gpu/main.c
+在 2026/04/14 星期二 14:52, Yadu M G 写道:
+> A lockdep warning is observed during boot on a Qcom firmware managed
+> platform:
+> 
+>    INFO: trying to register non-static key.
+>    The code is fine but needs lockdep annotation, or maybe
+>    you didn't initialize this object before use?
+>    turning off the locking correctness validator.
+>    ...
+>    Call trace:
+>     register_lock_class+0x128/0x4d8
+>     __lock_acquire+0x110/0x1db0
+>     lock_acquire+0x278/0x3d8
+>     _raw_spin_lock_irq+0x6c/0xc0
+>     dw_pcie_irq_domain_alloc+0x48/0x190
+>     irq_domain_alloc_irqs_parent+0x2c/0x48
+>     msi_domain_alloc+0x90/0x160
+>    ...
+> 
+> dw_pcie_irq_domain_alloc() takes pp->lock while allocating MSI
+> interrupts. pp->lock was initialized in dw_pcie_host_init(). However,
+> some DWC glue drivers like those on Qcom firmware managed platforms
+> allocate MSI domains from their .msi_init callback by calling
+> dw_pcie_allocate_domains() directly, bypassing dw_pcie_host_init(). This
+> leaves pp->lock without a lockdep key and triggers the warning when MSI
+> vectors are later allocated.
+> 
+> Initialize pp->lock in dw_pcie_allocate_domains() immediately before
+> registering the MSI IRQ domain so the lock is always initialized for
+> every caller path.
+> 
 
-   280	
-   281	static int nvgrace_gpu_wait_device_ready_cxl(struct nvgrace_gpu_pci_core_device *nvdev)
-   282	{
-   283		struct pci_dev *pdev = nvdev->core_device.pdev;
-   284		int cxl_dvsec = nvdev->cxl_dvsec;
-   285		unsigned long mem_info_valid_deadline;
-   286		unsigned long timeout;
-   287		u32 dvsec_memory_status;
-   288		u8 mem_active_timeout;
-   289	
-   290		pci_read_config_dword(pdev, cxl_dvsec + PCI_DVSEC_CXL_RANGE_SIZE_LOW(0),
-   291				      &dvsec_memory_status);
-   292	
-   293		if (cxl_dvsec_mem_is_active(dvsec_memory_status))
-   294			return 0;
-   295	
- > 296		mem_active_timeout = FIELD_GET(PCI_DVSEC_CXL_MEM_ACTIVE_TIMEOUT,
-   297					       dvsec_memory_status);
-   298	
-   299		timeout = jiffies +
-   300			  msecs_to_jiffies(cxl_mem_active_timeout_ms(mem_active_timeout));
-   301	
-   302		mem_info_valid_deadline = jiffies + msecs_to_jiffies(POLL_QUANTUM_MS);
-   303	
-   304		do {
-   305			pci_read_config_dword(pdev,
-   306					      cxl_dvsec + PCI_DVSEC_CXL_RANGE_SIZE_LOW(0),
-   307					      &dvsec_memory_status);
-   308	
-   309			if (cxl_dvsec_mem_is_active(dvsec_memory_status))
-   310				return 0;
-   311	
-   312			/* Bail early if MEM_INFO_VALID is not set within 1 second */
-   313			if (!(dvsec_memory_status & PCI_DVSEC_CXL_MEM_INFO_VALID) &&
-   314			    time_after(jiffies, mem_info_valid_deadline))
-   315				return -ETIME;
-   316	
-   317			msleep(POLL_QUANTUM_MS);
-   318		} while (!time_after(jiffies, timeout));
-   319	
-   320		return -ETIME;
-   321	}
-   322	
+If pci_msi_enabled()returns false in dw_pcie_host_init()(e.g., via the
+pci=nomsi), the call to dw_pcie_allocate_domains() is skipped entirely,
+leaving pp‑>lock uninitialized. Since the same lock is also used to
+protect legacy INTx interrupts in some glue drivers (pcie‑sophgo.c or
+pcie‑uniphier.c), could those drivers attempt to acquire an
+uninitialized lock when unmasking or handling INTx interrupts? If so, we
+would need to ensure the lock is initialized regardless of the MSI
+enable state.
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Moreover, sophgo_pcie_host_init() calls sophgo_pcie_msi_enable() which
+need to acquires pp->lock with a uninitialized lock with your patch now.
+That could possible break all other variant drivers which need this lock
+in the .init() callback.
+
+> Signed-off-by: Yadu M G <yadu.mg@oss.qualcomm.com>
+> ---
+>   drivers/pci/controller/dwc/pcie-designware-host.c | 10 ++++++++--
+>   1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index c9517a348836..8acd671bbc8c 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -215,6 +215,14 @@ int dw_pcie_allocate_domains(struct dw_pcie_rp *pp)
+>   		.host_data	= pp,
+>   	};
+>   
+> +	/*
+> +	 * Initialize the lock here rather than in dw_pcie_host_init() so that
+> +	 * drivers using a custom msi_init() callback that call
+> +	 * dw_pcie_allocate_domains() directly also have the lock properly
+> +	 * initialized before dw_pcie_irq_domain_alloc() can be invoked.
+> +	 */
+> +	raw_spin_lock_init(&pp->lock);
+> +
+>   	pp->irq_domain = msi_create_parent_irq_domain(&info, &dw_pcie_msi_parent_ops);
+>   	if (!pp->irq_domain) {
+>   		dev_err(pci->dev, "Failed to create IRQ domain\n");
+> @@ -573,8 +581,6 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+>   	struct pci_host_bridge *bridge;
+>   	int ret;
+>   
+> -	raw_spin_lock_init(&pp->lock);
+> -
+>   	bridge = devm_pci_alloc_host_bridge(dev, 0);
+>   	if (!bridge)
+>   		return -ENOMEM;
