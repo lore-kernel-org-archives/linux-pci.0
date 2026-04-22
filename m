@@ -1,63 +1,70 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 243BE3CAE95;
-	Wed, 22 Apr 2026 10:15:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBE203542E5;
+	Wed, 22 Apr 2026 10:19:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776852953; cv=none; b=hzfmewmLETNb5IV/zz0ASVhbNEInkwmYyXjb6qDp1vjlk4altwA6Xm/BxX970mpILwjy2oQPHsDj5coEuW0LtC6b7y425GF/Sn2FgmMY7hvX53qEFzbiPdyOjfkRV+nPld+A5F5vY5MHyFW3cuMRVZRYoOZalis1dFoemiR0sX4=
+	t=1776853192; cv=none; b=ri/TvRAzj4XcckBNi/Grb97DUKwbIFV8gXo1HTyWjdJ9nzkQm9XIx8ACITs/6QwdklKC5C1dGQW94b/mdXN+V3LWpXeQaTwN/n+wC5rG7yJWm7VmO8yPnY3LLYIq4bKA8werrAjiH+uAnDx4sTrdUbamY71i8boMiyVeifHLj2A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776852953; c=relaxed/simple;
-	bh=4pm3cuE4YtiBWgDifB2kYoUnXjTiXLk2G7f65ddr4uo=;
+	s=arc-20240116; t=1776853192; c=relaxed/simple;
+	bh=RYQDqtGxjhv7K4s8pHKgwi4zGSUkmTBG3WhMUrxGSa8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LdRuPafa9DLB9lQ4pBqx4bfrWXttl629gAOJJc3eVd6kZDskobzCoLbdY9vtgeEuCHYL1tm042wnfQx+cbrm4d+YS9ssJ4gxuXScyIW+olOXXPA1xsbk5+RtsSPdIO4omKHGIl9yVFShbNPBUSezZUb3MYtvmPkyMi6u8DH953E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=U5SemlP9; arc=none smtp.client-ip=198.175.65.11
+	 Content-Type:Content-Disposition:In-Reply-To; b=BVOqFQ0c8J0E7x6/fSKbE/SeVylNjWAsczuA/SwsZ26sqeLVgpry5o2JR0C272s8Dz9HJy7bMqM0+Mw6zXEbHIdhzPbK63Tmtx1oA8CL7tgmLZMLNxSUkWeCByewjEjOWfT2pZbAC2MOV4kZS+qKxTa3j6JWUgQgy6VC4/ZnPoI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=chJVT3Iy; arc=none smtp.client-ip=198.175.65.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="U5SemlP9"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="chJVT3Iy"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1776852952; x=1808388952;
+  t=1776853191; x=1808389191;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=4pm3cuE4YtiBWgDifB2kYoUnXjTiXLk2G7f65ddr4uo=;
-  b=U5SemlP9hrw0llBaEkQ2q7iu04foN6faUT1/CZT94U0RvXTgrl1YfUWb
-   IIh6wHLVAY4F/PMH+j4KWPgM/86Pw90h04cNzkW7E+4IU6mm7OKor2EQX
-   azpvioUPriOFT6z7GZ0WAzAdHPYqTJeCdQB4PH+dUCbFcurj2XxdXbD5y
-   I4Gsh/Rwn5YCgfxa+/QHD5/fsUTh88Vwwc4K7vlmF1l2gmz0dX6RNMMyo
-   K/jlTtIiSG+grfhMMqxrs3cX9AfyMACjy1vxz9tDEJcxFeST5o61QlcJH
-   Kv1CN8SrOB0o0qrQN2v6Dh4RIVUD5Q5j63u29xZmn+cJdiGzNz17uewgA
-   Q==;
-X-CSE-ConnectionGUID: GVM6/bUURyShbWj8gujq6w==
-X-CSE-MsgGUID: Fdm0J4AqTZmk8LIAtGrkeQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11763"; a="88103576"
+  bh=RYQDqtGxjhv7K4s8pHKgwi4zGSUkmTBG3WhMUrxGSa8=;
+  b=chJVT3IyG+3DRHJ86bz4iA88rsRIlQfecJh9/M5GSg3eR4Av4zvnYZW1
+   g/dDIs1TqEMWnTPxXEwkuARs7LgTbrBgBtxEYNWzQvYuBS0ZHth3p0Rt5
+   dJUG8/ohOHftoRO5bAFMnnMpxAZZA8opPNlxbGzS9HUqxj/9WGjTuOaEN
+   KZ79UczntJjtQITpX9K+d1dsBzYnFW0NqepL/nJcfSuISP1zocgBqc4H7
+   EuwRj/TRizMXzbF78gAOlKlQ5kOWjQnT8fQZBKItNr/iDCMmfNNeHKF67
+   vTvvMgdXhdNp78K3rI0CD9CDevXdGFKMrcTkqKkksfzBJrnvCv2R8q4fh
+   g==;
+X-CSE-ConnectionGUID: x0p3a7VBR3mlUy8nf2bLXA==
+X-CSE-MsgGUID: 2qJDe5JmTNiJ8j1ZmOOwbQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11763"; a="77679228"
 X-IronPort-AV: E=Sophos;i="6.23,192,1770624000"; 
-   d="scan'208";a="88103576"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Apr 2026 03:15:51 -0700
-X-CSE-ConnectionGUID: clzp6i49Tqy7fKYj7FwyrQ==
-X-CSE-MsgGUID: 2wvphU5qQKabKVkwrdVVEQ==
+   d="scan'208";a="77679228"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Apr 2026 03:19:49 -0700
+X-CSE-ConnectionGUID: P2gYsQRtQVSoKuvREvJWeA==
+X-CSE-MsgGUID: 0ySYhr/kTnyRrOzI8GGvHQ==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,192,1770624000"; 
-   d="scan'208";a="227983651"
 Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by fmviesa010.fm.intel.com with ESMTP; 22 Apr 2026 03:15:47 -0700
-Date: Wed, 22 Apr 2026 17:53:34 +0800
+  by fmviesa003.fm.intel.com with ESMTP; 22 Apr 2026 03:19:44 -0700
+Date: Wed, 22 Apr 2026 17:57:31 +0800
 From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Nikolay Borisov <nik.borisov@suse.com>
-Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
-	dan.j.williams@intel.com, x86@kernel.org, chao.gao@intel.com,
-	dave.jiang@intel.com, baolu.lu@linux.intel.com, yilun.xu@intel.com,
-	zhenzhong.duan@intel.com, kvm@vger.kernel.org,
-	rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com,
-	kas@kernel.org, xiaoyao.li@intel.com, vishal.l.verma@intel.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 27/31] coco/tdx-host: Implement SPDM session setup
-Message-ID: <aeianoT0LZFC2DNt@yilunxu-OptiPlex-7050>
+To: "Tian, Kevin" <kevin.tian@intel.com>
+Cc: "linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Williams, Dan J" <dan.j.williams@intel.com>,
+	"x86@kernel.org" <x86@kernel.org>, "Gao, Chao" <chao.gao@intel.com>,
+	"Jiang, Dave" <dave.jiang@intel.com>,
+	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+	"Xu, Yilun" <yilun.xu@intel.com>,
+	"Duan, Zhenzhong" <zhenzhong.duan@intel.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"Edgecombe, Rick P" <rick.p.edgecombe@intel.com>,
+	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+	"kas@kernel.org" <kas@kernel.org>,
+	"Li, Xiaoyao" <xiaoyao.li@intel.com>,
+	"Verma, Vishal L" <vishal.l.verma@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 30/31] coco/tdx-host: Implement IDE stream
+ setup/teardown
+Message-ID: <aeibi7JzfZ2Kx0NU@yilunxu-OptiPlex-7050>
 References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-28-yilun.xu@linux.intel.com>
- <51f2be5a-47d2-4a06-92bb-368aaed73530@suse.com>
+ <20260327160132.2946114-31-yilun.xu@linux.intel.com>
+ <BN9PR11MB5276BB48433E1AF97E5D27298C582@BN9PR11MB5276.namprd11.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -66,91 +73,18 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <51f2be5a-47d2-4a06-92bb-368aaed73530@suse.com>
+In-Reply-To: <BN9PR11MB5276BB48433E1AF97E5D27298C582@BN9PR11MB5276.namprd11.prod.outlook.com>
 
-> > +#define TDISP_FUNC_ID		GENMASK(15, 0)
-> > +#define TDISP_FUNC_ID_SEGMENT		GENMASK(23, 16)
-> > +#define TDISP_FUNC_ID_SEG_VALID		BIT(24)
-> > +
-> > +static inline u32 tdisp_func_id(struct pci_dev *pdev)
-> > +{
-> > +	u32 func_id;
-> > +
-> > +	func_id = FIELD_PREP(TDISP_FUNC_ID_SEGMENT, pci_domain_nr(pdev->bus));
-> > +	if (func_id)
-> > +		func_id |= TDISP_FUNC_ID_SEG_VALID;
+On Thu, Apr 09, 2026 at 08:02:33AM +0000, Tian, Kevin wrote:
+> > From: Xu Yilun <yilun.xu@linux.intel.com>
+> > Sent: Saturday, March 28, 2026 12:02 AM
+> > 
+> > Implementation for a most straightforward Selective IDE stream setup.
+> > Hard code all parameters for Stream Control Register. And no IDE Key
+> > Refresh support.
+> > 
 > 
-> This check implies pci_domain_nr returning 0 is considered invalid. Other
-> callers in the kernel seem to not care, they just use the domain nr, so is
-> this check spurious or intentional ?
+> 'more straightforward', compared to what?
 
-This is the func_id format defined in TDISP SPEC, bit 24 is a must. It
-is not the linux defined SBDF format.
+Actually it is " *most* straightforward", I just mean "very".
 
-> 
-> > +	func_id |= FIELD_PREP(TDISP_FUNC_ID,
-> > +			      PCI_DEVID(pdev->bus->number, pdev->devfn));
-> > +
-> > +	return func_id;
-> > +}
-> > +
-> > +struct spdm_config_info_t {
-> > +	u32 vmm_spdm_cap;
-> > +#define SPDM_CAP_HBEAT          BIT(13)
-> > +#define SPDM_CAP_KEY_UPD        BIT(14)
-> 
-> nit: move those defines above the struct definition, they just break the
-> reading flow as it is.
-
-Yes.
-
-...
-
-> > +static void *tdx_dup_array_data(struct tdx_page_array *array,
-> > +				unsigned int data_size)
-> > +{
-> > +	unsigned int npages = (data_size + PAGE_SIZE - 1) / PAGE_SIZE;
-> 
-> nit: There's DIV_ROUND_UP
-
-Yes.
-
-...
-
-> > +DEFINE_FREE(tdx_spdm_session_teardown, struct tdx_tsm_link *,
-> > +	    if (!IS_ERR_OR_NULL(_T)) tdx_spdm_session_teardown(_T))
-> > +
-> >   static int tdx_tsm_link_connect(struct pci_dev *pdev)
-> >   {
-> > -	return -ENXIO;
-> > +	struct tdx_tsm_link *tlink = to_tdx_tsm_link(pdev->tsm);
-> > +
-> > +	struct tdx_tsm_link *tlink_spdm __free(tdx_spdm_session_teardown) =
-> > +		tdx_spdm_session_setup(tlink);
-> 
-> Is the free() really needed here, either the session is correctly setup and
-> tlink_spdm is returned. But if session_setup() files then what about calling
-> spdm_session_disconnect() on an unestablished session?
-
-Ah, we have more steps to add, the __free() will take function when the
-following steps fail.
-
-We may add __free() when we add more steps, but I think that makes the
-diff harder to read, so I want to keep this style.
-
-Thanks.
-
-> 
-> 
-> > +	if (IS_ERR(tlink_spdm)) {
-> > +		pci_err(pdev, "fail to setup spdm session\n");
-> > +		return PTR_ERR(tlink_spdm);
-> > +	}
-> > +
-> > +	retain_and_null_ptr(tlink_spdm);
-> > +
-> > +	return 0;
-> >   }
-> 
-> <snip>
-> 
