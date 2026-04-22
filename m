@@ -1,70 +1,69 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1350414AD0D
-	for <linux-pci@vger.kernel.org>; Wed, 22 Apr 2026 04:44:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9566E63CB;
+	Wed, 22 Apr 2026 05:46:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776833094; cv=none; b=eKmCP48TWKUdYM1LzI2uhiDvCHjAtLSBL9fNZJat/YVhKvrP/2RhHr6pN7GHUwyqV676DSXwHlUy0a8G3zaGoSC0EOs/wwG89yU2+gID4QXbE/d+sN62hxtflhId+3+8wCA2IN9DwCYcPZ5TGJAHQVmJGc7rrlKiEvMaVDT4XRo=
+	t=1776836803; cv=none; b=RCaC/YOd9pJf/GUqgpNUA3KnTZ/ecycjiRVidDsfuBy2FcuUlaBAJCX1mPEU16bzHvZ7Cw7CV3usRg0EG6s0yOMKyKbJUZWiCZve9KJqAmpO3i4DMZR/Qqd79QfIW+eDeLvTggAyZF8/3RpQcMW6dYwJ2T1fgiiUH2aSqz3IY94=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776833094; c=relaxed/simple;
-	bh=oOwDGIKkQYinZ6cEzj7x1hi+TEyEe7g2fiXeqCNMaws=;
+	s=arc-20240116; t=1776836803; c=relaxed/simple;
+	bh=iHTuLIFezrha1k24YoDSo0U0QgoHN5U9b98UCvK+v+A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bLXaUHsqksgpvT48Lvi5hP2/4pNf+ohd7PFmQBhCSe+3IgH/tUS4PwMNHBvQgFBV7zetVm/+pXYyZGxu/3Ma93ZZRsbaAA71owzCfWDBrstC/G+XevkSIt6M9jhJ4+kALbrgGnBAxHUDfkZXhCknujUnTxYFjCo0QipNnAasANk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-82faf871346so2461211b3a.0
-        for <linux-pci@vger.kernel.org>; Tue, 21 Apr 2026 21:44:52 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776833092; x=1777437892;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=XhIDpGgSMmQPWhVlMLk1NWm+UmS94pEyHKaTl2QDpX0=;
-        b=Dvd5gBuPClPHsAUPjBrwwOUYTKupgZe3o+FkQHUO2sXVWkPXCye8+UD5hJLS5fxQbp
-         VoT0kJr1P6GMo7K3TU6uTVlTM4W1X5+lVo6/MbIk7xGTyMy4WTvGY/ew35pz7cOQ3Ho3
-         oCNyMscKNxTmQGywEBTbsPdZoWm21mp4+uuFxuFW14vhnw3erO2JUVnV0DejYQ093ObI
-         22dL0yKGLja14vUYmqfntAj3fdx5k1U2lJ+c9O7n5ARILyxhHvI00JYVjQv2hsP1Pb5N
-         fnfA8gMVePCJA6pgcxtMDS5J2xcmCgBlbJEvMNs9Z+iCzVlbQl9Zrp+NxqpJQMCbF9my
-         7Olw==
-X-Gm-Message-State: AOJu0Yz0DarSHCI4zadm9JtZxBuskjf9ai/IX8cSwESL/Y+ClZt24UMe
-	flfw4VxOM/s+Lc47cwqvS7/X9kyibxKbwxCAf/HQr+k9UBknKL5xAw8k
-X-Gm-Gg: AeBDievFxxy6dkd0EoRzGUJYJDUcwW17v0h85Kvn68m3dDqucmHqqrICVh6niAyWC9J
-	xrlXXVJrNM21By9ViC2ZAB+n3OYi5EMP5WeqvJPqBbKEZqEqFqQjqzfjpG4MXnX/OXY2P4uqYis
-	4DEP2Qo80khKsMUahLJVsbYVYD8DLZf2cBSqziCBTQKnqSH68P9VJXdySKE28ATzcOLjLgEmTb+
-	BjCY2eDab5kjTZtimmTTGb7bwy4L83a3kAtcFMLxSCaJmWEpwKf+HWQkuXwLw83ek81b81hfLno
-	BDQW6tsv2xo6XsGBz4d4ckTuhjIMTrfuPFXMCn+/lwZG/UE4APm556nhr4VWhyU0iyLAGxchBSr
-	wnyJvwqubpPvP7GZzMT/r5aiLz20Kiv+/5GVFXNCSV0q5Ob+wU4MMXpPQ03hN364+EtEqCccxDb
-	rx+xwRxC15Pft31N13zbOdElML0DoZfOdgmWRjgRKiste4ZogtnqNOKjErqOmPCz8fwPmsfO5Zq
-	8rLRHEpd5EL5GOQztnKo21Pm4tb6tBMB6g2RtiovKA7SRvXpcGSNyMFpEnpmi3y4bIruTCpCPq7
-	rdFIi8tMovl/Ievv6oFq9QTnyVO4wy/q873Gzc3apw==
-X-Received: by 2002:a05:6a00:17a0:b0:82c:e0d7:2682 with SMTP id d2e1a72fcca58-82f8c8c8c5cmr22933258b3a.25.1776833092489;
-        Tue, 21 Apr 2026 21:44:52 -0700 (PDT)
-Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82f8e9d2f9asm16487176b3a.19.2026.04.21.21.44.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Apr 2026 21:44:51 -0700 (PDT)
-Date: Wed, 22 Apr 2026 13:44:50 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To: Ramesh Errabolu <ramesh@linux.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-s390@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Niklas Schnelle <schnelle@linux.ibm.com>,
-	Peter Oberparleiter <oberpar@linux.ibm.com>,
-	Matthew Rosato <mjrosato@linux.ibm.com>,
-	Gerd Bayer <gbayer@linux.ibm.com>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>
-Subject: Re: [PATCH v2 1/1] PCI/hotplug: Add 'uevent' sysfs attribute to
- trigger slot events
-Message-ID: <20260422044450.GA2544787@rocinante>
-References: <20260416213909.705753-1-ramesh@linux.ibm.com>
- <20260416213909.705753-2-ramesh@linux.ibm.com>
- <20260421171334.GA1684602@rocinante>
- <305d85a8-660a-4063-9b47-5707d8b25fa2@linux.ibm.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ek3rf2rx73h3O8b/u+YMibJWcGSkXc+UYTjN33JHKKTj5PIdfNsU4BvvTcvX4qNDNGkL/4VbxpD41TtzxI51ylwNeUfgWgTsil5ELpoRc+WenV9zVa0SyPktD9FYT0Yn4ECK5+lhBn6nmGmBtE6Ax77IoL8anOjPG0ceR2prI2c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=CeguupGc; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="CeguupGc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5EF7C19425;
+	Wed, 22 Apr 2026 05:46:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1776836803;
+	bh=iHTuLIFezrha1k24YoDSo0U0QgoHN5U9b98UCvK+v+A=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=CeguupGckqDP65N6NF+5nNirF0NNyfRUq2q5YVLXoZ+NJ8CHpzN1MtrNDFeiOXOMI
+	 3IAP92r5zyTS/ZiNdu71HsVN4guqNuX5OnjQtKC82hXq6MmRAFVPTbyifXRNIzuJAR
+	 ckL2rE5jWjyh1XNHoBUwdn5WTA5UFCdSUZP4TGLM=
+Date: Wed, 22 Apr 2026 07:46:40 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: "Rob Herring (Arm)" <robh@kernel.org>
+Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Stephan Gerhold <stephan@gerhold.net>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jeff Johnson <jjohnson@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Mathieu Poirier <mathieu.poirier@linaro.org>,
+	Sylwester Nawrocki <s.nawrocki@samsung.com>,
+	Mark Brown <broonie@kernel.org>,
+	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+	Yang Xiwen <forbidden405@outlook.com>,
+	Alex Elder <elder@kernel.org>,
+	Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Sibi Sankar <sibi.sankar@oss.qualcomm.com>,
+	Rao Mandadapu <quic_srivasam@quicinc.com>,
+	Patrice Chotard <patrice.chotard@foss.st.com>,
+	Xu Yang <xu.yang_2@nxp.com>, Peng Fan <peng.fan@nxp.com>,
+	Thomas Zimmermann <tzimmermann@suse.de>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	ath11k@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-remoteproc@vger.kernel.org, linux-sound@vger.kernel.org,
+	linux-spi@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH] dt-bindings: Fix phandle-array constraints, again
+Message-ID: <2026042233-barometer-backroom-d544@gregkh>
+References: <20260421195836.1547469-1-robh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -73,27 +72,40 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <305d85a8-660a-4063-9b47-5707d8b25fa2@linux.ibm.com>
+In-Reply-To: <20260421195836.1547469-1-robh@kernel.org>
 
-Hello,
+On Tue, Apr 21, 2026 at 02:55:25PM -0500, Rob Herring (Arm) wrote:
+> The unfortunately named 'phandle-array' property type is really a matrix
+> with phandle and fixed arg cells entries. A matrix property should have 2
+> levels of items constraints.
+> 
+> Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+> ---
+> Can someone from QCom provide some descriptions for 'qcom,smem-states'
+> properties.
+> ---
+>  .../display/rockchip/rockchip,rk3399-cdn-dp.yaml         | 2 ++
+>  .../bindings/mmc/hisilicon,hi3798cv200-dw-mshc.yaml      | 7 ++++---
+>  Documentation/devicetree/bindings/net/qcom,bam-dmux.yaml | 6 ++++++
+>  Documentation/devicetree/bindings/net/qcom,ipa.yaml      | 6 ++++++
+>  .../devicetree/bindings/net/wireless/qcom,ath10k.yaml    | 5 ++++-
+>  .../devicetree/bindings/net/wireless/qcom,ath11k.yaml    | 5 ++++-
+>  .../bindings/net/wireless/qcom,ipq5332-wifi.yaml         | 9 +++++++++
+>  .../devicetree/bindings/pci/toshiba,tc9563.yaml          | 5 +++--
+>  .../bindings/remoteproc/qcom,msm8916-mss-pil.yaml        | 3 +++
+>  .../bindings/remoteproc/qcom,msm8996-mss-pil.yaml        | 3 +++
+>  .../devicetree/bindings/remoteproc/qcom,pas-common.yaml  | 4 ++++
+>  .../bindings/remoteproc/qcom,qcs404-cdsp-pil.yaml        | 4 ++++
+>  .../bindings/remoteproc/qcom,sc7180-mss-pil.yaml         | 3 +++
+>  .../bindings/remoteproc/qcom,sc7280-adsp-pil.yaml        | 3 +++
+>  .../bindings/remoteproc/qcom,sc7280-mss-pil.yaml         | 3 +++
+>  .../bindings/remoteproc/qcom,sc7280-wpss-pil.yaml        | 3 +++
+>  .../bindings/remoteproc/qcom,sdm845-adsp-pil.yaml        | 3 +++
+>  .../devicetree/bindings/remoteproc/qcom,wcnss-pil.yaml   | 3 +++
+>  Documentation/devicetree/bindings/sound/samsung,tm2.yaml | 2 ++
+>  .../devicetree/bindings/spi/st,stm32mp25-ospi.yaml       | 5 +++--
+>  .../devicetree/bindings/usb/chipidea,usb2-common.yaml    | 2 ++
+>  Documentation/devicetree/bindings/usb/ci-hdrc-usb2.yaml  | 7 ++++---
+>  22 files changed, 81 insertions(+), 12 deletions(-)
 
-> > > +static struct pci_slot_attribute hotplug_slot_attr_uevent = {
-> > > +	.attr = {.name = "uevent", .mode = S_IFREG | 0200},
-> > > +	.show = NULL,
-> > > +	.store = uevent_write_file
-> > > +};
-> > I think, you could use the __ATTR_WO() macro here.
-> Use of the suggested macro is not appropriate
-
-Just to expand on the "not appropriate" bit here.
-
-Not wanting to change the name to have the _store suffix would be fine.
-
-The __ATTR() would work here.  But, this file is old and wanting to
-keep the style aligned with rest of it would be fine, too.
-
-So, both of these reasons would be fine, to avoid using any new macro.
-
-Thank you!
-
-	Krzysztof
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
