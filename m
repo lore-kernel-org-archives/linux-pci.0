@@ -1,116 +1,162 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D67C258EC2;
-	Wed, 22 Apr 2026 06:55:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3047C36C0AB
+	for <linux-pci@vger.kernel.org>; Wed, 22 Apr 2026 07:11:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776840948; cv=none; b=vAzdjWDhTpojfiSB/X2DQXAT5Xo0DS36oenSzLiO6ctnRXBKwvvyTrBv8ZdgkL8IKpjvbf4czY6zbP0Imzxk6QVicQBEA/TCJ0Nfg8GKt8v/IYSg4jA8obpFrv1Cr5ZZik5RwfIXGONfNL2HquaCymfEPKR1qfK6+jcrNVnb2lI=
+	t=1776841882; cv=none; b=IIYwjp9CiUAiSz7LPXbGQKXuMowFQQ+DkPpkoCgnc7Ygpn1PSFfFX009wV5KBswzjHHj0gt99tNSbsh4q2h1EWXCrGOhFzjmxbdY6WMqE89sraAb3Y8sVKnqcNeOl9/Xmoqt898USSdlJrX/2oAbVKrazp4D5D6IHkjEVpwqDMU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776840948; c=relaxed/simple;
-	bh=JjXhlWicHxG0hmwFHxjedLe/9O+tWbIe7LbrWuwawjc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=X7nZ8BB8KF+KQmkhzIznmKqEeap+cJDpy9pexmtdzg8OLHwKIhUu2yrnvxoxUBB1k3iYYPNUYtZ1fCHmde6EFF9XYdn/p8lcEZ+Hg2TcW+KEAFy+R6sXvsw1/uVmcxJ33Sy7bL+xOQ6hlUPbxjXPjIJhADG759EqpwaiEh+RHUY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QOeUyL/f; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1776841882; c=relaxed/simple;
+	bh=FCKztHHPrRwKwFmi6IgL0OZ0vw8BFnqNPc8MOCk1CJY=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=dOqSZmhVm6dnt5fO4KIv7mis4+dEqqQOFEWhAj48Hyt5j5jaj9gtLr/whxnBUgF2Y/ydyVX256PHtcDd6G8Gvec2YteuZcmYbmWiEmcZNn+eK/6QwrQ/WgMh+hb+avZK5VePuc6CH5XgWOiLBN1mxtYc8/BPkZFPl84vD4/RnRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=kV28y8qs; arc=none smtp.client-ip=80.241.56.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QOeUyL/f"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1776840947; x=1808376947;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=JjXhlWicHxG0hmwFHxjedLe/9O+tWbIe7LbrWuwawjc=;
-  b=QOeUyL/fIYgutCWF1CTGVHWnx9PyZ3V5JwsnZwjD1WZkScPuvILkv4KB
-   A+wf7Zmb25i9XBTfBkpZayT/jdGw1pRvBRkZUQWPuk0oH1qsb03AUUUXE
-   cffAyLT4gZQ+nGoA2SYEK9GZS4eyMpMl0lLNzLveI1eAGNbR6pj6aPx+4
-   M2xf980ahfkBZqW4p64pozLOWJmnKi0P2M2nZP0d7pg8LSYTin0B5jUsb
-   xhin04h1GgcxlEc/sRHncIxyLPZu6GQZJN539wSIWCjCC41C8ODrs1R9X
-   Qo1ZsIBmHQo+RiLxaGONJwhxSsderv5NIy+5/G8JIw4InEiSKe49b484A
-   w==;
-X-CSE-ConnectionGUID: bUiYaD2ESBCbv/RFpOqglw==
-X-CSE-MsgGUID: V6qdTbFqT9+hUoYX7TO2hQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11763"; a="77663790"
-X-IronPort-AV: E=Sophos;i="6.23,192,1770624000"; 
-   d="scan'208";a="77663790"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Apr 2026 23:55:47 -0700
-X-CSE-ConnectionGUID: izDu9szgSiuairFMvJ/KWg==
-X-CSE-MsgGUID: 5cZ8DhgrTlqCo+OVAQID1A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,192,1770624000"; 
-   d="scan'208";a="237309302"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa005.jf.intel.com with ESMTP; 21 Apr 2026 23:55:44 -0700
-Date: Wed, 22 Apr 2026 14:33:30 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: "Tian, Kevin" <kevin.tian@intel.com>
-Cc: "linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Williams, Dan J" <dan.j.williams@intel.com>,
-	"x86@kernel.org" <x86@kernel.org>, "Gao, Chao" <chao.gao@intel.com>,
-	"Jiang, Dave" <dave.jiang@intel.com>,
-	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
-	"Xu, Yilun" <yilun.xu@intel.com>,
-	"Duan, Zhenzhong" <zhenzhong.duan@intel.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"Edgecombe, Rick P" <rick.p.edgecombe@intel.com>,
-	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-	"kas@kernel.org" <kas@kernel.org>,
-	"Li, Xiaoyao" <xiaoyao.li@intel.com>,
-	"Verma, Vishal L" <vishal.l.verma@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 22/31] iommu/vt-d: Export a helper to do function for
- each dmar_drhd_unit
-Message-ID: <aehrup2/IWdq62mm@yilunxu-OptiPlex-7050>
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-23-yilun.xu@linux.intel.com>
- <BN9PR11MB527698CD6C350B371C47540F8C582@BN9PR11MB5276.namprd11.prod.outlook.com>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="kV28y8qs"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4g0r435Y86z9ty0;
+	Wed, 22 Apr 2026 09:11:15 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1776841875; h=from:from:reply-to:reply-to:subject:subject:date:date:
+	 message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+	 content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RmfhNBwa+8iw7/m2w2odHWWyYD5Z0Obf0O6CkCtHanI=;
+	b=kV28y8qsjeWXa6Ogd0t+2ekE8XuP41x86Q59Q5yvYAh5P7Y+zrSDX//wyUxUZGW1JCsywZ
+	1VKr9LH4nd3OT+JrRl4cDhvorkyidVBAVkKt9vOiE+c1vuO6TqOCMzvLbwp0MKdg3lXhhO
+	sWLQkJ5hdhfuHnQ4FMIM6nxYM7YAzL+v4jNQGPCI7rG/wTEBSknojlKI8f2Vz+/txeJgho
+	Ov0GfYiirPVkfKVBifqprLIB/+aOnLA/WcQTh4wSihNlS2M+Q1SecXz+oJkFYwyJVWeBLY
+	hLPXScX9Pth+qQjMLlnCZi6yx9LH4wFtMko0aujII2JU/SqPKgFD7zjjXVrCQA==
+Message-ID: <9dc66010d61670dc5182062ef5f1a932f7374323.camel@mailbox.org>
+Subject: Re: [RESEND PATCH v3 0/3] Add Devres managed IRQ vectors allocation
+From: Philipp Stanner <phasta@mailbox.org>
+Reply-To: phasta@kernel.org
+To: Shawn Lin <shawn.lin@rock-chips.com>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Nirmal Patel <nirmal.patel@linux.intel.com>, Jonathan Derrick
+ <jonathan.derrick@linux.dev>, Kurt Schwemmer
+ <kurt.schwemmer@microsemi.com>,  Logan Gunthorpe <logang@deltatee.com>,
+ Philipp Stanner <phasta@kernel.org>, linux-pci@vger.kernel.org
+Date: Wed, 22 Apr 2026 09:11:08 +0200
+In-Reply-To: <1776825522-6390-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1776825522-6390-1-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <BN9PR11MB527698CD6C350B371C47540F8C582@BN9PR11MB5276.namprd11.prod.outlook.com>
+X-MBO-RS-ID: 66b62ac848d6b6fb81c
+X-MBO-RS-META: 8yz1m393brjhg3zaoq1riysswp3jjd4q
 
-On Thu, Apr 09, 2026 at 07:49:46AM +0000, Tian, Kevin wrote:
-> > From: Xu Yilun <yilun.xu@linux.intel.com>
-> > Sent: Saturday, March 28, 2026 12:01 AM
-> > 
-> > @@ -86,6 +86,8 @@ extern struct list_head dmar_drhd_units;
-> >  				dmar_rcu_check())			\
-> >  		if (i=drhd->iommu, 0) {} else
-> > 
-> > +int do_for_each_drhd_unit(int (*fn)(struct dmar_drhd_unit *));
-> > +
-> >  static inline bool dmar_rcu_check(void)
-> 
-> It's a bit weird to insert it here. Move it to follow for_each_iommu().
+Hi,
 
-Sorry, it is following for_each_iommu(), is it?
+I did receive your first send-out of this v3. In case of doubt it's
+possible to check on lore.kernel.org whether it was actually sent out.
 
-> 
-> > +
-> > +int do_for_each_drhd_unit(int (*fn)(struct dmar_drhd_unit *))
-> > +{
-> > +	struct dmar_drhd_unit *drhd;
-> > +	int ret;
-> > +
-> > +	guard(rwsem_read)(&dmar_global_lock);
-> > +
-> > +	for_each_drhd_unit(drhd) {
-> > +		ret = fn(drhd);
-> > +		if (ret)
-> > +			return ret;
-> > +	}
-> > +	return 0;
-> > +}
-> 
-> use for_each_active_drhd_unit(). or is there need to setup the trusted
-> configuration even on ignored iommu?
+On Wed, 2026-04-22 at 10:38 +0800, Shawn Lin wrote:
+>=20
+> There is a long-standing design issue in the PCI/MSI subsystem where the
+> implicit, automatic management of IRQ vectors by the devres framework
+> conflicts with explicit driver cleanup, creating ambiguity and potential
+> resource management bugs.
+>=20
+> Historically, pcim_enable_device() not only manages standard PCI resource=
+s
+> (BARs) via devres
+>=20
 
-No, for_each_active_drhd_unit() is good.
+JFYI, it doesn't do that anymore, since I fully removed that.
+
+What is left though is the weird "plural functions",
+pcim_iomap_regions().
+
+I've done some work to also remove them, but it's a lot of work, and
+especially the ATA subsystem is relatively difficult to port.
+
+>  but also implicitly triggers automatic IRQ vector management
+> when calling pci_alloc_irq_vectors[_affinity], because pcim_enable_device=
+()
+> sets is_managed flag, thus pcim_msi_release() will register a cleanup act=
+ion.
+>=20
+> This creates an ambiguous ownership model. Many drivers follow a pattern =
+of:
+> 1. Calling pci_alloc_irq_vectors() to allocate interrupts.
+> 2. Also calling pci_free_irq_vectors() in their error paths or remove rou=
+tines.
+>=20
+> When such a driver also uses pcim_enable_device(), the devres framework m=
+ay
+> attempt to free the IRQ vectors a second time upon device release, leadin=
+g to
+> a double-free. Analysis of the tree shows this hazardous pattern exists w=
+idely,
+> while 35 other drivers correctly rely solely on the implicit cleanup.
+
+Also just as an idea: for your removal strategy it's probably a good
+idea to carry a list of the problematic drivers along, if that's not
+too much work. Once created, you could continuously update it on your
+machine, to keep track and later to provide evidence when you finally
+remove the API. That "35 other drivers" do it *correctly* isn't really
+that useful to know; what's important is to know who might explode.
+
+I did it this way:
+https://lore.kernel.org/linux-pci/20250519112959.25487-2-phasta@kernel.org/
+
+That then helps the maintainer to fearlessly merge your final removal,
+building trust that the drivers are safe.
+
+>=20
+> This series introduces new managed APIs: pcim_alloc_irq_vectors()and
+> pcim_alloc_irq_vectors_affinity(). Drivers that wish to have devres-manag=
+ed IRQ
+> vectors should use these functions. They are currently the same as non-de=
+vres
+> managed version. In the short term, the series converts two drivers withi=
+n the
+> PCI subsystem to use the new APIs. The long-term goal is to convert all o=
+ther
+> drivers which wish to use these managed functions, and finally to remove =
+the
+> problematic hybrid management pattern from pcim_enable_device() and
+> pcim_setup_msi_release() entirely.
+
+10/10
+
+P.
+
+>=20
+>=20
+> Changes in v3:
+> - Rework the commit message and function doc (Philipp)
+> - Remove setting is_msi_managed flag from new APIs (Philipp)
+>=20
+> Changes in v2:
+> - Rebase
+> - Introduce patches only for PCI subsystem to convert the API
+>=20
+> Shawn Lin (3):
+> =C2=A0 PCI/MSI: Add Devres managed IRQ vectors allocation
+> =C2=A0 PCI: switchtec: Replace pci_alloc_irq_vectors() with
+> =C2=A0=C2=A0=C2=A0 pcim_alloc_irq_vectors()
+> =C2=A0 PCI: vmd: Replace pci_alloc_irq_vectors() with
+> =C2=A0=C2=A0=C2=A0 pcim_alloc_irq_vectors()
+>=20
+> =C2=A0drivers/pci/controller/vmd.c=C2=A0=C2=A0 |=C2=A0 4 ++--
+> =C2=A0drivers/pci/msi/api.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0 | 47 ++++++++++++++++++++++++++++++++++++++++++
+> =C2=A0drivers/pci/switch/switchtec.c |=C2=A0 6 +++---
+> =C2=A0include/linux/pci.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 | 22 ++++++++++++++++++++
+> =C2=A04 files changed, 74 insertions(+), 5 deletions(-)
+>=20
+
