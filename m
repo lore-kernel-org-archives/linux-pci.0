@@ -1,357 +1,328 @@
-Received: from fhigh-a1-smtp.messagingengine.com (fhigh-a1-smtp.messagingengine.com [103.168.172.152])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A67621CC51;
-	Wed, 22 Apr 2026 15:23:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 732A5325495;
+	Wed, 22 Apr 2026 16:14:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776871413; cv=none; b=UZLjBUhE+pPCrPxKi7VeuyOgFmv8CcGHh5/UE/g3dpgwdX1DM02sS8wc4GhBNhxcFID/xBRRDoPCGGLOIDZ7Iyoahwz5460nYrLjPxgE2jFfPDQdus8GEBsmPztg/z5BMyh66d4SufmWjZNpGBHXHXg7jsgvdgW3J1ZXCSyrfIk=
+	t=1776874452; cv=none; b=AV6HgKZa6oPfDdedb0ExQyKHnhgN8iaIYr5wm9wj5nS8sqPWWwezR/Gg/L8RXB8qPKNzKyvXeAPE7fQHkIGqbfBEccn5xJ/UXs4yAZz2svNaZ3X3N20Xy+0zWx/nmd18aOOdzvjIM9RoWKX+vGfxIBslCXbbU2gjPHp/qke5MwA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776871413; c=relaxed/simple;
-	bh=NsV+bBhHjOzB6IJQMX7cu6lNjhAwM7eboDvjOAiCCS0=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=V7P6a5CgCr2uqSgfuQdlOFmkg/7+G5EbXSKNK5Ocvl/PD6WE+yicMzhQfA6WuTwnEaksadcMlymI6KEcAcshG9ykI7CF2srP6U1RrkiyQ5UMPg6FqqrK9lplApB4mkofV1hb46nlWfXVo3tUhgHVIKA1dWrSCNq9hXxOWmkrsa8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=rUc2xiht; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=QKfQ4zVP; arc=none smtp.client-ip=103.168.172.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1776874452; c=relaxed/simple;
+	bh=S9PpowBeLnXIC6YHRnoW7h59UKmsFctg9URvyS3brZA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=fz4+EG8Z4vCFB72zlpeCEyF3UNLfM/1u8eWMqFPxt9GcLOZLyTpFYrybKZPRZOJWPk2Cyq65upYR4b1vIPH5ThSRqMaOicXLvfBO0jtLGrzOf4QaRC+2pXyb378bUa9e3HHffJFOPopP2AEmSqTwjoxowwV0S/oRtGG3IIixaH4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h0lgDsgy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="rUc2xiht";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="QKfQ4zVP"
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 6F5301400064;
-	Wed, 22 Apr 2026 11:23:29 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-01.internal (MEProxy); Wed, 22 Apr 2026 11:23:29 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1776871409;
-	 x=1776957809; bh=hQMlk9Xq+ZB050Bu5h5Pj79B23kU/VRcG/nsXr+g5/Q=; b=
-	rUc2xihtS2cQdAuSwUnr0y9hgq5IwBRt0Tsc8ILzmkJmagGjVApGux4WHK2ycA0K
-	3IS7iCY8miyNBJfCA4fxgdr0GzuMGowKP3VSbdI74uFkrYLvcTNq2fFdsjs4wfjp
-	29OkpB2eDocEBVWejYCaxAh9nsGQzIBCPissSi56G8Q6Upw8QKd5A0lr33z7CwQ+
-	JutrxlpmR1oU+/sTRc00/T0wOFMU/EkFGEmWtacf3k8mI+4BdjJly7Zu3yca06NI
-	O8u5maNR0b4k1ErHzlc7ecxIuTdkJvwnjP/+0Ynsn5BW2pvpL/hvpV2sAkF55Fay
-	EoFPDNl0v0lQGE5hWIweHQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1776871409; x=
-	1776957809; bh=hQMlk9Xq+ZB050Bu5h5Pj79B23kU/VRcG/nsXr+g5/Q=; b=Q
-	KfQ4zVPMkiNPasEcIuOzqkJ6IyhtBK/0QDCAcy6He4QNOwK2Cb9B8mYpiy2tQNsZ
-	/g12FdDPrpuLb6ND3dc5PpL2sDCPHe1+EC94Ltr6aPsPVMU/hm254xwGu93FijKX
-	6kklVb7VCFSK3feEUb+yZE9XlCOOGmaiaKTQh/DkEbleHNDV8MDs/eq9tGYbOeA/
-	WdqHwlp/Gm529uiII0FQl0Nd/Mr6XI4HbUd8ecf5ZEkVnIIoyKqkZn0UPgF4XYAk
-	Grc/Mn4k48zei00i9tGR3/P3w3FUC++OZXHR/Ws2yvvB8n4ZUkXnftanCbLRmD1h
-	Puj8udp4gf1zjyssWHLaA==
-X-ME-Sender: <xms:8efoaRVM9j15U5FN97It6PPOed7eKcPS-2D9fypr3_rxwCt4Nv9tbw>
-    <xme:8efoaVQ2W6El0ICXVel6Kmlv6SM6w-D1b7t5wVz_SqPhD4KLZ9D3xqPlIGID05jbq
-    yuCfekr7Az6TojO2J5qjXsy5ihwxxM1Ti5ofo8vybAVxZBqpFFwyA>
-X-ME-Received: <xmr:8efoaWDnjFvkN2nEp_g06_i1lvCZvWQeE6vm-Sc3XlQnFtSSNXqhsCt0rd4>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdeigeeivdcutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
-    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
-    hrpeffhffvvefukfgjfhfogggtgfesthejredtredtvdenucfhrhhomheptehlvgigucgh
-    ihhllhhirghmshhonhcuoegrlhgvgiesshhhrgiisghothdrohhrgheqnecuggftrfgrth
-    htvghrnhepvdekfeejkedvudfhudfhteekudfgudeiteetvdeukedvheetvdekgfdugeev
-    ueeunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
-    hlvgigsehshhgriigsohhtrdhorhhgpdhnsggprhgtphhtthhopedufedpmhhouggvpehs
-    mhhtphhouhhtpdhrtghpthhtohepiihhihhpihhnghiisehmvghtrgdrtghomhdprhgtph
-    htthhopehsughfsehmvghtrgdrtghomhdprhgtphhtthhopehksghushgthheskhgvrhhn
-    vghlrdhorhhgpdhrtghpthhtohepjhhgghesiihivghpvgdrtggrpdhrtghpthhtoheplh
-    gvohhnsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehhvghlghgrrghssehkvghrnhgv
-    lhdrohhrghdprhgtphhtthhopehlihhnuhigqdhrughmrgesvhhgvghrrdhkvghrnhgvlh
-    drohhrghdprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghlrdho
-    rhhgpdhrtghpthhtohepnhgvthguvghvsehvghgvrhdrkhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:8efoaVsL30-Su4EHn6o1-1kxUePqFEnl0e0Q9han8VdJCNIZO5HbgQ>
-    <xmx:8efoac8feudf5sBZX0d9MbXUD-5TarHV7tn1c18EQUbIymllH2nt_Q>
-    <xmx:8efoaUTEhbrfTEuus2mOtj_Ysmuu-ybaNO1Yr76hqg-9Y5KWoucqHA>
-    <xmx:8efoaWU8dWKKFCRUIRCIQDOfFzW-yhNTf9qKpNTV-wpL_lWXeig7aQ>
-    <xmx:8efoaQze75CZ1fViASTOyrH-Gxcsrhd8qrd5j9hAHQr-9AEtcU9I-qNd>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 22 Apr 2026 11:23:28 -0400 (EDT)
-Date: Wed, 22 Apr 2026 09:23:27 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Zhiping Zhang <zhipingz@meta.com>
-Cc: Stanislav Fomichev <sdf@meta.com>, Keith Busch <kbusch@kernel.org>,
- Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, Bjorn
- Helgaas <helgaas@kernel.org>, <linux-rdma@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>,
- <dri-devel@lists.freedesktop.org>, Yochai Cohen <yochai@nvidia.com>, Yishai
- Hadas <yishaih@nvidia.com>, alex@shazbot.org
-Subject: Re: [PATCH v1 1/2] vfio: add callback to get tph info for dma-buf
-Message-ID: <20260422092327.3f629ad6@shazbot.org>
-In-Reply-To: <20260420183920.3626389-2-zhipingz@meta.com>
-References: <20260420183920.3626389-1-zhipingz@meta.com>
-	<20260420183920.3626389-2-zhipingz@meta.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h0lgDsgy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D50D1C19425;
+	Wed, 22 Apr 2026 16:14:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776874452;
+	bh=S9PpowBeLnXIC6YHRnoW7h59UKmsFctg9URvyS3brZA=;
+	h=From:To:Cc:Subject:Date:From;
+	b=h0lgDsgyuo8j+vRm4f1gAHT+qmmtMZhojA7cZeOpefD2kSADEHzKm6L97jR4fFwz7
+	 ZD3rDEqfz79kmbxQJRNziJFC4FFoeiWzs7dw8Ch6Im2gRPjpNHfvb6hD/hdPmSUw2O
+	 YJD4v6P6RfzBpE+VXRGBrbuDWlRVa5vx4bSdGRilO6e4Sw3hfq9uWl4AF43VE7pA8I
+	 4RNTM57IaLCD4QQYRECVgOtnPMX33iwB/rpttz7G3D6uTh9rsYZzp6CnCDEmME86ZW
+	 nRBYd4IaRlk4+7sDThDxGuytWr12aj5SdyP+r0nWiotxtebXO4WEXBr6WqiFfS0PZn
+	 ErAENBTcTWpGw==
+From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Magnus Lindholm <linmag7@gmail.com>,
+	Matt Turner <mattst88@gmail.com>,
+	Richard Henderson <richard.henderson@linaro.org>,
+	Christophe Leroy <chleroy@kernel.org>,
+	Madhavan Srinivasan <maddy@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	Dexuan Cui <decui@microsoft.com>,
+	=?UTF-8?q?Krzysztof=20Ha=C5=82asa?= <khalasa@piap.pl>,
+	Lukas Wunner <lukas@wunner.de>,
+	"Oliver O'Halloran" <oohall@gmail.com>,
+	Saurabh Singh Sengar <ssengar@microsoft.com>,
+	Shuan He <heshuan@bytedance.com>,
+	Srivatsa Bhat <srivatsabhat@microsoft.com>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	linux-pci@vger.kernel.org,
+	linux-alpha@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH v6 00/24] PCI: Convert all dynamic sysfs attributes to static
+Date: Wed, 22 Apr 2026 16:13:43 +0000
+Message-ID: <20260422161407.118748-1-kwilczynski@kernel.org>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Mon, 20 Apr 2026 11:39:15 -0700
-Zhiping Zhang <zhipingz@meta.com> wrote:
+Hello,
 
-> Add a dma-buf callback that returns raw TPH metadata from the exporter
-> so peer devices can reuse the steering tag and processing hint
-> associated with a VFIO-exported buffer.
-> 
-> Keep the existing VFIO_DEVICE_FEATURE_DMA_BUF uAPI layout intact by
-> using a flag plus one extra trailing entries[] object for the optional
-> TPH metadata. Rename the uAPI field dma_ranges to entries. The
-> nr_ranges field remains the DMA range count; when VFIO_DMABUF_FLAG_TPH
-> is set the kernel reads one extra entry beyond nr_ranges for the TPH
-> metadata.
-> 
-> Add an st_width parameter to get_tph() so the exporter can reject
-> steering tags that exceed the consumer's supported width (8 vs 16 bit).
-> When no TPH metadata was supplied, make get_tph() return -EOPNOTSUPP.
-> 
-> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
-> ---
->  drivers/vfio/pci/vfio_pci_dmabuf.c | 62 +++++++++++++++++++++++-------
->  include/linux/dma-buf.h            | 17 ++++++++
->  include/uapi/linux/vfio.h          | 28 ++++++++++++--
->  3 files changed, 89 insertions(+), 18 deletions(-)
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> index b1d658b8f7b5..fdc05f9ab3ae 100644
-> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> @@ -17,6 +17,9 @@ struct vfio_pci_dma_buf {
->  	struct phys_vec *phys_vec;
->  	struct p2pdma_provider *provider;
->  	u32 nr_ranges;
-> +	u16 steering_tag;
-> +	u8 ph;
-> +	u8 tph_present : 1;
->  	u8 revoked : 1;
->  };
->  
-> @@ -60,6 +63,22 @@ vfio_pci_dma_buf_map(struct dma_buf_attachment *attachment,
->  				       priv->size, dir);
->  }
->  
-> +static int vfio_pci_dma_buf_get_tph(struct dma_buf *dmabuf, u16 *steering_tag,
-> +				    u8 *ph, u8 st_width)
-> +{
-> +	struct vfio_pci_dma_buf *priv = dmabuf->priv;
-> +
-> +	if (!priv->tph_present)
-> +		return -EOPNOTSUPP;
-> +
-> +	if (st_width < 16 && priv->steering_tag > ((1U << st_width) - 1))
-> +		return -EINVAL;
-> +
-> +	*steering_tag = priv->steering_tag;
-> +	*ph = priv->ph;
-> +	return 0;
-> +}
-> +
->  static void vfio_pci_dma_buf_unmap(struct dma_buf_attachment *attachment,
->  				   struct sg_table *sgt,
->  				   enum dma_data_direction dir)
-> @@ -89,6 +108,7 @@ static const struct dma_buf_ops vfio_pci_dmabuf_ops = {
->  	.pin = vfio_pci_dma_buf_pin,
->  	.unpin = vfio_pci_dma_buf_unpin,
->  	.attach = vfio_pci_dma_buf_attach,
-> +	.get_tph = vfio_pci_dma_buf_get_tph,
->  	.map_dma_buf = vfio_pci_dma_buf_map,
->  	.unmap_dma_buf = vfio_pci_dma_buf_unmap,
->  	.release = vfio_pci_dma_buf_release,
-> @@ -211,7 +231,9 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
->  				  size_t argsz)
->  {
->  	struct vfio_device_feature_dma_buf get_dma_buf = {};
-> -	struct vfio_region_dma_range *dma_ranges;
-> +	bool tph_supplied;
-> +	u32 tph_index;
-> +	struct vfio_region_dma_range *entries;
->  	DEFINE_DMA_BUF_EXPORT_INFO(exp_info);
->  	struct vfio_pci_dma_buf *priv;
->  	size_t length;
-> @@ -228,7 +250,10 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
->  	if (copy_from_user(&get_dma_buf, arg, sizeof(get_dma_buf)))
->  		return -EFAULT;
->  
-> -	if (!get_dma_buf.nr_ranges || get_dma_buf.flags)
-> +	tph_supplied = !!(get_dma_buf.flags & VFIO_DMABUF_FLAG_TPH);
-> +	tph_index = get_dma_buf.nr_ranges;
-> +	if (!get_dma_buf.nr_ranges ||
-> +	    (get_dma_buf.flags & ~VFIO_DMABUF_FLAG_TPH))
->  		return -EINVAL;
->  
->  	/*
-> @@ -237,19 +262,21 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
->  	if (get_dma_buf.region_index >= VFIO_PCI_ROM_REGION_INDEX)
->  		return -ENODEV;
->  
-> -	dma_ranges = memdup_array_user(&arg->dma_ranges, get_dma_buf.nr_ranges,
-> -				       sizeof(*dma_ranges));
-> -	if (IS_ERR(dma_ranges))
-> -		return PTR_ERR(dma_ranges);
-> +	entries = memdup_array_user(&arg->entries,
-> +				    get_dma_buf.nr_ranges +
-> +					(tph_supplied ? 1 : 0),
-> +				    sizeof(*entries));
-> +	if (IS_ERR(entries))
-> +		return PTR_ERR(entries);
->  
-> -	ret = validate_dmabuf_input(&get_dma_buf, dma_ranges, &length);
-> +	ret = validate_dmabuf_input(&get_dma_buf, entries, &length);
->  	if (ret)
-> -		goto err_free_ranges;
-> +		goto err_free_entries;
->  
->  	priv = kzalloc_obj(*priv);
->  	if (!priv) {
->  		ret = -ENOMEM;
-> -		goto err_free_ranges;
-> +		goto err_free_entries;
->  	}
->  	priv->phys_vec = kzalloc_objs(*priv->phys_vec, get_dma_buf.nr_ranges);
->  	if (!priv->phys_vec) {
-> @@ -260,15 +287,22 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
->  	priv->vdev = vdev;
->  	priv->nr_ranges = get_dma_buf.nr_ranges;
->  	priv->size = length;
-> +
-> +	if (tph_supplied) {
-> +		priv->steering_tag = entries[tph_index].tph.steering_tag;
-> +		priv->ph = entries[tph_index].tph.ph;
-> +		priv->tph_present = 1;
-> +	}
-> +
->  	ret = vdev->pci_ops->get_dmabuf_phys(vdev, &priv->provider,
->  					     get_dma_buf.region_index,
-> -					     priv->phys_vec, dma_ranges,
-> +					     priv->phys_vec, entries,
->  					     priv->nr_ranges);
->  	if (ret)
->  		goto err_free_phys;
->  
-> -	kfree(dma_ranges);
-> -	dma_ranges = NULL;
-> +	kfree(entries);
-> +	entries = NULL;
->  
->  	if (!vfio_device_try_get_registration(&vdev->vdev)) {
->  		ret = -ENODEV;
-> @@ -311,8 +345,8 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
->  	kfree(priv->phys_vec);
->  err_free_priv:
->  	kfree(priv);
-> -err_free_ranges:
-> -	kfree(dma_ranges);
-> +err_free_entries:
-> +	kfree(entries);
->  	return ret;
->  }
->  
-> diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
-> index 133b9e637b55..b0a79ccbe100 100644
-> --- a/include/linux/dma-buf.h
-> +++ b/include/linux/dma-buf.h
-> @@ -113,6 +113,23 @@ struct dma_buf_ops {
->  	 */
->  	void (*unpin)(struct dma_buf_attachment *attach);
->  
-> +	/**
-> +	 * @get_tph:
-> +	 * @dmabuf: DMA buffer for which to retrieve TPH metadata
-> +	 * @steering_tag: Returns the raw TPH steering tag
-> +	 * @ph: Returns the TPH processing hint
-> +	 * @st_width: Consumer's supported steering tag width in bits (8 or 16)
-> +	 *
-> +	 * Return the TPH (TLP Processing Hints) metadata associated with this
-> +	 * DMA buffer. Exporters that do not provide TPH metadata should return
-> +	 * -EOPNOTSUPP. If the steering tag exceeds @st_width bits, return
-> +	 * -EINVAL.
-> +	 *
-> +	 * This callback is optional.
-> +	 */
-> +	int (*get_tph)(struct dma_buf *dmabuf, u16 *steering_tag, u8 *ph,
-> +		       u8 st_width);
-> +
->  	/**
->  	 * @map_dma_buf:
->  	 *
-> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> index bb7b89330d35..a0bd24623c52 100644
-> --- a/include/uapi/linux/vfio.h
-> +++ b/include/uapi/linux/vfio.h
-> @@ -1490,16 +1490,36 @@ struct vfio_device_feature_bus_master {
->   * open_flags are the typical flags passed to open(2), eg O_RDWR, O_CLOEXEC,
->   * etc. offset/length specify a slice of the region to create the dmabuf from.
->   * nr_ranges is the total number of (P2P DMA) ranges that comprise the dmabuf.
-> + * When VFIO_DMABUF_FLAG_TPH is set, entries[] contains one extra trailing
-> + * object after the nr_ranges DMA ranges carrying the TPH steering tag and
-> + * processing hint.
+This series converts every dynamically allocated PCI sysfs attribute to
+a static const definition.  After the full series, pci_sysfs_init() and
+sysfs_initialized are gone, and every sysfs file is created by the
+driver model at device_add() time.
 
-I really don't think we want to design an API where entries is
-implicitly one-off from what's actually there.  This feeds back into
-the below removal of the __counted by attribute, which is a red flag
-that this is the wrong approach.
+Currently, the PCI resource files (resourceN, resourceN_wc) and the
+legacy bus files (legacy_io, legacy_mem) are created dynamically
+from two unsynchronised paths:
 
-In general though, I'm really hoping that someone interested in
-enabling TPH as an interface through vfio actually decides to take
-resource targeting and revocation seriously.  There's no validation of
-the steering tag here relative to what the user has access to and no
-mechanism to revoke those tags if access changes.  In fact, there's not
-even a proposed mechanism allowing the user to derive valid steering
-tags.  Does the user implicitly know the value and the kernel just
-allows it because... yolo?  Thanks,
+Path A: late_initcall
 
-Alex
+  pci_sysfs_init                        (late_initcall)
+    sysfs_initialized = 1
+    for_each_pci_dev
+      pci_create_sysfs_dev_files
+        sysfs_create_bin_file           (resourceN, resourceN_wc)
+    pci_find_next_bus
+      pci_create_legacy_files
+        sysfs_create_bin_file           (legacy_io, legacy_mem)
 
->   *
-> - * flags should be 0.
-> + * flags should be 0 or VFIO_DMABUF_FLAG_TPH.
->   *
->   * Return: The fd number on success, -1 and errno is set on failure.
->   */
->  #define VFIO_DEVICE_FEATURE_DMA_BUF 11
->  
-> +enum vfio_device_feature_dma_buf_flags {
-> +	VFIO_DMABUF_FLAG_TPH = 1 << 0,
-> +};
-> +
-> +struct vfio_region_dma_tph {
-> +	__u16 steering_tag;
-> +	__u8 ph;
-> +	__u8 reserved;
-> +	__u32 reserved2;
-> +};
-> +
->  struct vfio_region_dma_range {
-> -	__u64 offset;
-> -	__u64 length;
-> +	union {
-> +		__u64 offset;
-> +		struct vfio_region_dma_tph tph;
-> +	};
-> +	union {
-> +		__u64 length;
-> +		__u64 reserved;
-> +	};
->  };
->  
->  struct vfio_device_feature_dma_buf {
-> @@ -1507,7 +1527,7 @@ struct vfio_device_feature_dma_buf {
->  	__u32	open_flags;
->  	__u32   flags;
->  	__u32   nr_ranges;
-> -	struct vfio_region_dma_range dma_ranges[] __counted_by(nr_ranges);
-> +	struct vfio_region_dma_range entries[];
->  };
->  
->  /* -------- API for Type1 VFIO IOMMU -------- */
+Path B: device registration / hotplug
+
+  pci_bus_add_devices
+    pci_bus_add_device
+      pci_create_sysfs_dev_files
+        if (!sysfs_initialized) return  <- only guard
+        sysfs_create_bin_file           (resourceN, resourceN_wc)
+
+On most ACPI systems this does not race because PCI enumeration
+completes at subsys_initcall time, before pci_sysfs_init() runs:
+
+  subsys_initcall (level 4):
+    acpi_pci_root_add
+      pci_bus_add_device
+        pci_create_sysfs_dev_files
+          if (!sysfs_initialized)          <- not yet set
+            return -EACCES
+
+  late_initcall (level 7):
+    pci_sysfs_init
+      sysfs_initialized = 1
+      for_each_pci_dev
+        pci_create_sysfs_dev_files         <- creates the files, no race
+
+On Devicetree platforms the host controller is a platform driver that
+probes via the driver model, often on a workqueue, and overlaps with the
+late_initcall:
+
+  CPU 0 (late_initcall)                CPU 1 (driver probe)
+  ---------------------------          ----------------------------
+  pci_sysfs_init()
+    sysfs_initialized = 1
+    for_each_pci_dev(pdev)             pci_bus_add_device(pdev)
+      pci_create_sysfs_dev_files()       pci_create_sysfs_dev_files()
+        sysfs_create_bin_file()            sysfs_create_bin_file()
+                                             -> "duplicate filename"
+
+The same happens on ACPI when probing is asynchronous (hv_pci on
+Azure, RISC-V with ACPI).
+
+The duplicate causes sysfs_create_bin_file() to fail with -EEXIST.
+pci_create_resource_files() then calls pci_remove_resource_files() in
+its error unwind, tearing down files the other thread created and
+still references through pdev->res_attr[].  This has caused kernel
+panics on i.MX6 and boot failures on other platforms.
+
+Several different fixes have been proposed over the years: reordering
+the sysfs_initialized assignment, adding locks, checking
+pci_dev_is_added(), setting pdev->res_attr[] to NULL after kfree
+(which only prevents a double-free on the teardown path, not the
+error unwind removing the other thread's files).  None would address the
+root cause.
+
+This has been reported a few times:
+
+  - https://lore.kernel.org/linux-pci/20250702155112.40124-1-heshuan@bytedance.com/
+  - https://lore.kernel.org/linux-pci/b51519d6-ce45-4b6d-8135-c70169bd110e@h-partners.com/
+  - https://lore.kernel.org/linux-pci/1702093576-30405-1-git-send-email-ssengar@linux.microsoft.com/
+  - https://lore.kernel.org/linux-pci/SY0P300MB04687548090B73E40AF97D8897B82@SY0P300MB0468.AUSP300.PROD.OUTLOOK.COM/
+  - https://lore.kernel.org/linux-pci/20230105174736.GA1154719@bhelgaas/
+  - https://lore.kernel.org/linux-pci/m3eebg9puj.fsf@t19.piap.pl/
+  - https://lore.kernel.org/linux-pci/20200716110423.xtfyb3n6tn5ixedh@pali/
+  - https://lore.kernel.org/linux-pci/1366196798-15929-1-git-send-email-artem.savkov@gmail.com/
+  - https://bugzilla.kernel.org/show_bug.cgi?id=215515
+  - https://bugzilla.kernel.org/show_bug.cgi?id=216888
+
+With static attributes the driver model creates sysfs entries once per
+device at device_add() time, under the device lock, eliminating the
+late_initcall iteration and the race along with it.
+
+	Krzysztof
+
+---
+Changes in v5:
+  https://lore.kernel.org/linux-pci/20260416180107.777065-1-kwilczynski@kernel.org/
+
+   - Fixed commit message for patch 13, removing reference to
+     pci_resource_flags() which was no longer changed there.
+   - Added a new patch (24) to move the BAR resource resize
+     (ReBAR) support behind existing PCI mmap #ifdef guard,
+     so that the code is not included on architectures that
+     do not support resource resizing (i.e., Alpha, etc.).
+
+Changes in v5:
+  https://lore.kernel.org/linux-pci/20260411080148.471335-1-kwilczynski@kernel.org/
+  
+   - Added new Tested-by, Reviewed-by, and Acked-by tags.
+   - Used the existing _io function names in the static macro
+     definitions, deferring the rename to the conversion commit
+     where it belongs, to avoid a forward reference across
+     commits. This was reported by Sashiko, see:
+     https://sashiko.dev/#/patchset/20260411080148.471335-1-kwilczynski%40kernel.org?part=6
+   - Folded the __resource_resize_store() conversion into the
+     main static attributes commit so the resize path is never
+     broken between commits. This was reported by Sashiko, see:
+     https://sashiko.dev/#/patchset/20260410055040.39233-1-kwilczynski%40kernel.org?part=6
+     https://sashiko.dev/#/patchset/20260411080148.471335-1-kwilczynski%40kernel.org?part=7
+   - Dropped the unnecessary parentheses cleanup from the Alpha
+     BAR index commit, as the line is replaced two commits later
+     anyway, as per Ilpo Järvinen's feedback.
+   - Squashed the Alpha accessor macro and cleanup commits into
+     one, using pci_resource_is_mem() directly instead of the
+     intermediate pci_resource_flags() step, as per Ilpo
+     Järvinen's feedback.
+   - Moved the raw literal conversion in pci_create_legacy_files()
+     into the macro definition commit, so the macros and their
+     usage are introduced together, as per Ilpo Järvinen's
+     feedback.
+   - Removed unnecessary backslash line continuation from the
+     ternary in pci_mmap_legacy_page_range().
+   - Kept pci_resource_len() for visibility checks instead of
+     resource_assigned().  The static is_visible() callback
+     runs at device_add() time during the PCI enumeration,
+     before the pci_assign_unassigned_bus_resources() populates
+     res->parent, as such, resource_assigned() returned false
+     for every BAR, hiding all resource files.  This is related
+     to review feedback from Ilpo Järvinen.
+
+Changes in v4:
+  https://lore.kernel.org/linux-pci/20260410055040.39233-1-kwilczynski@kernel.org/
+
+   - Added new Reviewed-by tags.
+   - Added pci_resource_is_io() and pci_resource_is_mem() helpers
+     for resource type checks, replacing the open-coded bitwise
+     flag tests in pci_mmap_resource(), pci_resource_io(), and
+     Alpha's pci_mmap_resource(), as per Ilpo Järvinen's
+     suggestion.
+   - Split the __pci_mmap_fits() cleanup into two patches.  An
+     overflow fix for zero-length BARs, which now includes a
+     Fixes: tag referencing the original Alpha PCI sysfs commit,
+     and the WARN macro removal is a separate cleanup as per Ilpo
+     Järvinen's suggestion.
+   - Added a missing Fixes: tag to the Alpha lockdown check,
+     referencing the commit that added the check to the generic
+     path but missed Alpha's implementation.
+   - Added PCI_LEGACY_IO_SIZE and PCI_LEGACY_MEM_SIZE macros to
+     replace the raw literals used for legacy address space sizes.
+     These are used in both Alpha's pci_mmap_legacy_page_range()
+     and the static legacy attribute definitions, as per Ilpo
+     Järvinen's suggestion.
+   - Replaced sysfs_update_groups() in the BAR resize path with
+     sysfs_remove_groups() before the resize and sysfs_create_groups()
+     after, restoring the original teardown before BAR resize
+     ordering.  This was reported by Sashiko, see:
+     https://sashiko.dev/#/patchset/20260410055040.39233-1-kwilczynski%40kernel.org?part=7
+   - Defined pci_dev_resource_attr_groups as a NULL macro when
+     HAVE_PCI_MMAP and ARCH_GENERIC_PCI_MMAP_RESOURCE are both
+     absent, so the resize path compiles unconditionally without
+     #ifdef guards in the function body.  This was reported by
+     Sashiko, see:
+     https://sashiko.dev/#/patchset/20260410055040.39233-1-kwilczynski%40kernel.org?part=7
+   - Moved the pci_legacy_has_sparse() prototype into the patch
+     that introduces the function, alongside the existing
+     pci_adjust_legacy_attr() declaration, to fix a bisection
+     issue where Alpha would warn on -Wmissing-prototypes.
+     This was reported by Sashiko, see:
+     https://sashiko.dev/#/patchset/20260410055040.39233-1-kwilczynski%40kernel.org?part=18
+
+Changes in v3:
+  https://lore.kernel.org/linux-pci/20210910202623.2293708-1-kw@linux.com/
+
+  - Updated for modern kernel releases and expanded scope.  The
+    v2 only covered the generic resource files.  This version
+    also converts Alpha's sparse/dense resource files and the
+    legacy bus attributes, removing pci_sysfs_init() entirely.
+  - Split the single macro definition into three distinct ones
+    (per I/O, UC, and WC), to make sure that each carries only
+    the callbacks its resource type needs.
+  - Updated to use the new .bin_size callback, as the attributes
+    are const, to replace using a->size directly, which was not
+    ideal.  This required changes to pci_llseek_resource(), to
+    ensure that it would work for device and bus-level attributes.
+  - Updated the __resource_resize_store() to include CAP_SYS_ADMIN
+    capabilities check.
+  - Added the security_locked_down() check to Alpha's
+    pci_mmap_resource(), to align with other architectures.
+
+Changes in v2:
+  https://lore.kernel.org/linux-pci/20210825212255.878043-1-kw@linux.com/
+
+  - Refactored code so that the macros, helpers and internal
+    functions can be used to correctly leverage the read(),
+    write() and mmap() callbacks rather than to use the
+    .is_bin_visible() callback to set up sysfs objects
+    internals as this is not supported.
+  - Refactored some if-statements to check for a resource
+    flag first, and then call either arch_can_pci_mmap_io()
+    or arch_can_pci_mmap_wc(), plus store result of testing
+    for IORESOURCE_MEM and IORESOURCE_PREFETCH flags into
+    a boolean variable, as per Bjorn Helgaas' suggestion.
+  - Renamed pci_read_resource_io() and pci_write_resource_io()
+    callbacks so that these are not specifically tied to I/O
+    BARs read() and write() operations also as per Bjorn
+    Helgaas' suggestion.
+  - Updated style for code handling bitwise operations to
+    match the style that is preferred as per Bjorn Helgaas'
+    suggestion.
+  - Updated commit messages adding more details about the
+    implementation as requested by Bjorn Helgaas.
+
+Krzysztof Wilczyński (24):
+  PCI/sysfs: Use PCI resource accessor macros
+  PCI: Add pci_resource_is_io() and pci_resource_is_mem() helpers
+  PCI/sysfs: Only allow supported resource types in I/O and MMIO helpers
+  PCI/sysfs: Use BAR length in pci_llseek_resource() when attr->size is
+    zero
+  PCI/sysfs: Add CAP_SYS_ADMIN check to __resource_resize_store()
+  PCI/sysfs: Add static PCI resource attribute macros
+  PCI/sysfs: Convert PCI resource files to static attributes
+  PCI/sysfs: Warn about BAR resize failure in __resource_resize_store()
+  PCI/sysfs: Add stubs for pci_{create,remove}_sysfs_dev_files()
+  PCI/sysfs: Limit pci_sysfs_init() late_initcall compile scope
+  alpha/PCI: Add security_locked_down() check to pci_mmap_resource()
+  alpha/PCI: Use BAR index in sysfs attr->private instead of resource
+    pointer
+  alpha/PCI: Use PCI resource accessor macros
+  alpha/PCI: Fix __pci_mmap_fits() overflow for zero-length BARs
+  alpha/PCI: Remove WARN from __pci_mmap_fits()
+  alpha/PCI: Add static PCI resource attribute macros
+  alpha/PCI: Convert resource files to static attributes
+  PCI/sysfs: Remove pci_{create,remove}_sysfs_dev_files()
+  PCI: Add macros for legacy I/O and memory address space sizes
+  alpha/PCI: Compute legacy size in pci_mmap_legacy_page_range()
+  PCI/sysfs: Add __weak pci_legacy_has_sparse() helper
+  PCI/sysfs: Convert legacy I/O and memory attributes to static
+    definitions
+  PCI/sysfs: Remove pci_create_legacy_files() and pci_sysfs_init()
+  PCI/sysfs: Limit BAR resize attribute scope to platforms with PCI mmap
+
+ arch/alpha/include/asm/pci.h   |  13 +-
+ arch/alpha/kernel/pci-sysfs.c  | 373 +++++++++++----------
+ arch/powerpc/include/asm/pci.h |   2 -
+ drivers/pci/bus.c              |   1 -
+ drivers/pci/pci-sysfs.c        | 575 +++++++++++++++++++--------------
+ drivers/pci/pci.h              |  16 +-
+ drivers/pci/probe.c            |   6 -
+ drivers/pci/remove.c           |   3 -
+ include/linux/pci.h            |  39 ++-
+ 9 files changed, 579 insertions(+), 449 deletions(-)
+
+-- 
+2.54.0
 
