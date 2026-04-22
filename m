@@ -1,468 +1,171 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from fhigh-a1-smtp.messagingengine.com (fhigh-a1-smtp.messagingengine.com [103.168.172.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2161F3ED5D6;
-	Wed, 22 Apr 2026 14:37:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07120267B05;
+	Wed, 22 Apr 2026 15:01:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776868672; cv=none; b=m4jOUNVIERvBNr1J1whTcyTb/qqdExK0TkBZRNcxWsunpKgnalVGiWzdrx3DrtQoNNIOyEM4olJ30wQMzOIzrNYI+amiuLHYo0xLiFJttcje3I8QrqnLL0Yx/KOCtsqMCDxGDVjgYeupmFKNf+Wdf3odiXi5t3QBM2ZZL8TuWYk=
+	t=1776870113; cv=none; b=CvAzh6vrosi8aAg6qQrLUwrDbQO2FTJ4+KQtjgiI3jY7JTvUhhpbOnPozG6Rx7NEhBDkBmtz2fJXApQCuxtkd+tzTLuIwbgSja7Dqe2bHGf8IM6To8BzSCxCrZi5NCmYc8aiYtixhnaGCvk71CwG8gDI7i1Bi+GVCX8JG79MxdA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776868672; c=relaxed/simple;
-	bh=ZNta48hiP9ii+dlj+m8fLbFgyJ5rLhiaUCHbCNYBwHw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jpELV2kSfDPhoUOKnELnjhCheAxZrdPmYA2h9F2z+gHcoQ01rgzdV9OEwb+mStx9W/y8d/IpOxv4yY0kbuG17PwQtkXCiklnd82m5rqrzaP7guy9sydtvEf62nR0mPCvXbiGpps79hbCkaqlQ8c0tgnfoo3G4C/mpj0y/8HDGyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=fHm++sUt; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1776870113; c=relaxed/simple;
+	bh=5za1Qa2r3jGUXiI+aKKQzUgVUw2yj3ACqVZ6IfmbBkw=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ZfjSgjo7vk/DT/mzNG1qmypX+BPzlsV286eEmOiaYibSIQmGM20uZ2kLaNVIdqmTrEufywZCFVimukeOSgKffQjs4y1QAMAma19eHbCp9+mgyVgPGKJwKQ0FbEb2hZllfe1OHFFLHFsUN9CrsWQ4/Xb8yuxmS4EM5wu2hvjawxQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=Wa+WHRfs; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=eCbT5UeV; arc=none smtp.client-ip=103.168.172.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="fHm++sUt"
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63M5wtEF2295513;
-	Wed, 22 Apr 2026 14:37:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:sender:subject:to; s=pp1;
-	 bh=lwxQ+vf6iGOq/j3B8Fs5yWgFSv8Kc5kF1vMdl+NnF2k=; b=fHm++sUtJ1p0
-	mA74FNIXWMOR7PV/tbT7Inmac6kT6+M36W2HUiy9cpuAnHW+DkG12oz9t/Dof/En
-	PJ6L07mcybKM4jL6wxKZ4+M8bXzXIbEGEh7aPPuc4mNIrBzCAc9iuquYM9a9riEV
-	cjjNoKbNzjeIPAv4GellVX4ohn/teUq96vrTsk2GpWqNdj3yzvsy4/orEX71xHJJ
-	dw3341tWpwHYnVzilR+AjR5mnnx4gTQNvaDg4zJGnJTq9lxRYrCsBtvbDTwnIj7P
-	Ztw5HuxuWZavkuyjx0jN0DgyyGJmtt2a9CgxHA3UyxjmtXJ8j/dZOvgD4hJa8UdI
-	IsXeoyT4nQ==
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dpeu3kpkr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 22 Apr 2026 14:37:49 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 63MEZf0C026690;
-	Wed, 22 Apr 2026 14:37:49 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4dpjkyakrf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 22 Apr 2026 14:37:48 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 63MEbjP145744486
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 22 Apr 2026 14:37:45 GMT
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 2681E2004E;
-	Wed, 22 Apr 2026 14:37:45 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 09AD32004B;
-	Wed, 22 Apr 2026 14:37:45 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.52.223.163])
-	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Wed, 22 Apr 2026 14:37:44 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.1)
-	(envelope-from <bblock@linux.ibm.com>)
-	id 1wFYi0-0000000G4Rg-3DwY;
-	Wed, 22 Apr 2026 16:37:44 +0200
-From: Benjamin Block <bblock@linux.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Schnelle <schnelle@linux.ibm.com>,
-        Tobias Schumacher <ts@linux.ibm.com>,
-        linux-s390 <linux-s390@vger.kernel.org>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Ionut Nechita <ionut_n2001@yahoo.com>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        Ionut Nechita <ionut.nechita@windriver.com>,
-        Farhan Ali <alifm@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>,
-        Julian Ruess <julianr@linux.ibm.com>,
-        Andreas Krebbel <krebbel@linux.ibm.com>,
-        Gerd Bayer <gbayer@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        Matthew Rosato <mjrosato@linux.ibm.com>,
-        Benjamin Block <bblock@linux.ibm.com>
-Subject: [PATCH v4 3/3] s390/pci: Fix circular/recursive deadlocks in PCI-bus and -device release
-Date: Wed, 22 Apr 2026 16:37:44 +0200
-Message-ID: <5c06d6cf37dfc8ff6e8de35fdef4cd5652cdb8b9.1776868550.git.bblock@linux.ibm.com>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <cover.1776868550.git.bblock@linux.ibm.com>
-References: <cover.1776868550.git.bblock@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="Wa+WHRfs";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="eCbT5UeV"
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id 1BEFF140001E;
+	Wed, 22 Apr 2026 11:01:49 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-01.internal (MEProxy); Wed, 22 Apr 2026 11:01:49 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1776870109;
+	 x=1776956509; bh=3zmVi2LhrzJd3wF1gCVRc/TZgEZBXHF1e7RvIlWo09w=; b=
+	Wa+WHRfsNFZdj6lNH0gxcILd9/7+/hrMG3/H2LZzqc+6KeQJ33f7vo9+9xcUuGpF
+	eGJpfFWUTmP7i0CZ4YBb4BhaHyw/CcATwlDotYDn4GJJ+uDkcbP4dg0m8jPO981t
+	s440bzzAdN+YwFnFQEOC0MGQIf+vUJH+KLOMwa2rrAybvUuUlPp/qR2bQ8cmtOMR
+	jq7JLjTW58N97xBRHiyqiI7s6th45iD6THuvL4RadoYN91w9XmavNYVMmeHk6wSD
+	gr4KhvxSbCz6Co205CdHWyKSOGaOxyG3V/iNH+LnndFOb1u++VvAVli6rl9yEdO+
+	ssupEG3zvmmMYwAJ5w1e0A==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1776870109; x=
+	1776956509; bh=3zmVi2LhrzJd3wF1gCVRc/TZgEZBXHF1e7RvIlWo09w=; b=e
+	CbT5UeV9LourinI0GRMDRrdVHpks3rt93BBeC7j/vpMk/0kG+5GWMoSAihA1/cSo
+	mHERi18RuEaqlpzmSamVNf20oQcVaNLCzY3H8H1zVdH51Q780I+k5/HuCwKSbNPg
+	Luw+636rZdQR9T4HGgCyc6B6uAtsqRP2U0vi4wZqVwQdRu+dq/3YNNw+Xy95ui3T
+	EGiMLGTTx0Pfbgi8AMzX/KLlxP3S+weuadSbvhpsOOzrqi3mTm1epmeKjgk2Cx58
+	xXo90yM68E0PG9mb4HWazmuShbm2m2h4zvYIzQ48Oz3v3VbyrjvSX6SmS5pJazWU
+	tURcVPt5g/Gicxg/XtgXA==
+X-ME-Sender: <xms:3OLoafN8sN6tJy5KK90N4M0oxvF2EjhyVwlcszLJCASl1rwvx_C09g>
+    <xme:3OLoaaY7DV0_zwRdliSLG0iB2nrc32R-_r9dydEOm0w4epFQ5Fg8E3vloN6vKo6Rc
+    kgv-0_ESnziUNlOeOBIUQRvmN4rumeUsT-uR4PaekLjTLzF5sIbqw>
+X-ME-Received: <xmr:3OLoae-FSDwqmxMSB7f2Kt_NR7zJkWNzPIziERyEJZKyqQamRhDI-t19gTE>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdeigeehkecutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
+    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
+    hrpeffhffvvefukfgjfhfogggtgfesthejredtredtvdenucfhrhhomheptehlvgigucgh
+    ihhllhhirghmshhonhcuoegrlhgvgiesshhhrgiisghothdrohhrgheqnecuggftrfgrth
+    htvghrnhepkeehjeeitefffeeuieetjedtjeffvdelledvuedvffdvfeetgefhveekuedv
+    fedvnecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiiigvpe
+    dtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrlhgvgiesshhhrgiisghothdrohhrghdp
+    nhgspghrtghpthhtohepledpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohepmhgrth
+    htvghvsehmvghtrgdrtghomhdprhgtphhtthhopegshhgvlhhgrggrshesghhoohhglhgv
+    rdgtohhmpdhrtghpthhtoheplhhoghgrnhhgseguvghlthgrthgvvgdrtghomhdprhgtph
+    htthhopegrnhhkihhtrgesnhhvihguihgrrdgtohhmpdhrtghpthhtoheplhgvohhnsehk
+    vghrnhgvlhdrohhrghdprhgtphhtthhopehstghhnhgvlhhlvgeslhhinhhugidrihgsmh
+    drtghomhdprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghlrdho
+    rhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrd
+    horhhgpdhrtghpthhtoheprghlvgigsehshhgriigsohhtrdhorhhg
+X-ME-Proxy: <xmx:3OLoabSnVQX1xE5g-QuqofVMW3G2BG9BWTCl1GYdKgn7FeEABgaHOQ>
+    <xmx:3OLoaYdYul9tNQKGUIt9y8w00KGeL_MsvPS0drQYjcDetkqQb6b9AA>
+    <xmx:3OLoadT8yQxaVIaPVv5DkW9UVroe7WDBKIv2ECR0ZvipI40LIOl9dg>
+    <xmx:3OLoaUL2tDJWHF5EhcEnnlvaAynEdtO5tU0Tp6e7mU4o40X2gnLyVA>
+    <xmx:3eLoabCaC6891GpUJnudtg3YMAICpPfMsNPFdyKLv653l-OFXD3iXV4l>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 22 Apr 2026 11:01:47 -0400 (EDT)
+Date: Wed, 22 Apr 2026 09:01:46 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Matt Evans <mattev@meta.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe
+ <logang@deltatee.com>, Ankit Agrawal <ankita@nvidia.com>, Leon Romanovsky
+ <leon@kernel.org>, Niklas Schnelle <schnelle@linux.ibm.com>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ alex@shazbot.org
+Subject: Re: [PATCH] PCI/P2PDMA: Avoid returning a provider for
+ non_mappable_bars
+Message-ID: <20260422090146.6faf00f8@shazbot.org>
+In-Reply-To: <20260421174351.3897842-1-mattev@meta.com>
+References: <20260421174351.3897842-1-mattev@meta.com>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Organization: IBM Deutschland Research & Development GmbH, https://www.ibm.com/privacy, Vors. Aufs.-R.: Wolfgang Wendt, Geschäftsführung: David Faller. Sitz der Ges.: Ehningen, Registergericht: AmtsG Stuttgart, HRB 243294
-Content-Transfer-Encoding: 8bit
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-GUID: lkKc0Z41StXDSEsPprwY_dgph0RDnCvn
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIyMDEzOCBTYWx0ZWRfX/5xJx50QUxaa
- FWOsQVkCHyFzDpF7+kePpleSBUEGCuwnYPgDpyPYnXtuSVAXZ4EeRUNQZlaQTxH+Bj2oAHXzt4Y
- XTXMs7AbfcRjr5dXAwGiJ92BihQJveiHy4W1/j/apsabhelxpmNxdlwwuOlGn+v1WMlpWalxP+E
- 6pPA+noFjaIePgXME82RLSQ4zpvf71zOkFSuMTe1kDxTMPRSYVjpN6dmz8RObkCkosSjjNzcxvx
- zu26/x7jECG01KnFsilCXCV6yUBOoXL3hELjcQXvWkitq5OWHn97SW8EOdB8K2AILey+JvRokNx
- sm8Hv4aTZK9bozfav7uxcDh3tIJ4nVa92dRlFZ4j/qbuyjsxowz6ye3X0GYJ26Ef+X9JLNoMl5J
- 8/aCjzBwy0qaF/DHFrSF1E93rj5MQCu7KI8REiwFbUPJjRlitAOxMrlFmShQgQ1gobA+u95Dwj9
- mxZRU8A8lGZl4xPQXaw==
-X-Authority-Analysis: v=2.4 cv=a6kAM0SF c=1 sm=1 tr=0 ts=69e8dd3d cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
- a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VnNF1IyMAAAA:8
- a=qptzKXhuCiR4edXAYWEA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: 67O-PfFj3lSi5AFlZ2PpLPfsHjetMJzF
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-22_01,2026-04-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 suspectscore=0 spamscore=0 adultscore=0 bulkscore=0
- lowpriorityscore=0 impostorscore=0 clxscore=1015 phishscore=0
- priorityscore=1501 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2604200000
- definitions=main-2604220138
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-When removing PCI device or PCI bus objects there are a couple of
-call-chains where it is possible that the kernel runs into a circular
-deadlock involving the central `pci_rescan_remove_lock`.
+On Tue, 21 Apr 2026 10:43:51 -0700
+Matt Evans <mattev@meta.com> wrote:
 
-Two examples:
+> Extend pcim_p2pdma_provider()'s checks to exclude functions that have
+> pdev->non_mappable_bars set.
+> 
+> Consumers such as VFIO were previously able to map these for access by
+> the CPU or P2P.  Update the comment on non_mappable_bars to show it
+> refers to any access, not just userspace CPU access.
+> 
+> Fixes: 372d6d1b8ae3c ("PCI/P2PDMA: Refactor to separate core P2P functionality from memory allocation")
+> Signed-off-by: Matt Evans <mattev@meta.com>
+> ---
+> 
+> This arises from Alex Williamson's suggestion to test
+> non_mappable_bars when getting the provider, with discussion here:
+> 
+>  https://lore.kernel.org/kvm/20260415181623.1021090-1-mattev@meta.com/
+> 
+> The goal was to prevent a hole where VFIO could export DMABUFs for
+> BARs marked non-mappable, and to fix for all users of the provider
+> rather than just VFIO.  Alex observed that non_mappable_bars should be
+> taken to mean BARs weren't usable by the CPU _or_ peers and,
+> considering that, its comment about userspace access wasn't quite
+> right.
+> 
+> 
+>  drivers/pci/p2pdma.c | 3 ++-
+>  include/linux/pci.h  | 2 +-
+>  2 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index 7c898542af8d..4a783413f466 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -318,7 +318,8 @@ struct p2pdma_provider *pcim_p2pdma_provider(struct pci_dev *pdev, int bar)
+>  {
+>  	struct pci_p2pdma *p2p;
+>  
+> -	if (!(pci_resource_flags(pdev, bar) & IORESOURCE_MEM))
+> +	if (!(pci_resource_flags(pdev, bar) & IORESOURCE_MEM) ||
+> +	    pdev->non_mappable_bars)
+>  		return NULL;
+>  
+>  	p2p = rcu_dereference_protected(pdev->p2pdma, 1);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 2c4454583c11..1e6802017d6b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -508,7 +508,7 @@ struct pci_dev {
+>  	unsigned int	no_command_memory:1;	/* No PCI_COMMAND_MEMORY */
+>  	unsigned int	rom_bar_overlap:1;	/* ROM BAR disable broken */
+>  	unsigned int	rom_attr_enabled:1;	/* Display of ROM attribute enabled? */
+> -	unsigned int	non_mappable_bars:1;	/* BARs can't be mapped to user-space  */
+> +	unsigned int	non_mappable_bars:1;	/* BARs can't be mapped by CPU or peers */
+>  	pci_dev_flags_t dev_flags;
+>  	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+>  
 
-(A) Thread α receives a PCI event notifying the kernel that a PCI
-virtual function has been moved into Reserved state, and so the PCI
-subsystem will try to remove that PCI function. The call-chain for that
-looks like this:
-  __zpci_event_availability()
-    -> zpci_zdev_put()              # will   lock(zpci_add_remove_lock),
-                                    # and    lock(zpci_list_lock)
-    -> zpci_release_device()        # will unlock(zpci_list_lock)
-    -> zpci_cleanup_bus_resources() # will   lock(pci_rescan_remove_lock)
+Should pcim_p2pdma_init() separately test pdev->non_mappable_bars
+before the rcu-deref/kzalloc of the pci_p2pdma object and return
+-EOPNOTSUPP?
 
-Thread β is triggered by userspace writing 0 into the SysFS attribute
-`sriov_numvfs` of the parent PCI physical function of the same function
-we just try to remove. This will also try to release the PCI virtual
-function; but this time the call-chain looks like this:
-  sriov_numvfs_store()
-    -> ... (device driver dependent)
-    -> sriov_disable()
-    -> sriov_del_vfs()              # will   lock(pci_rescan_remove_lock)
-    -> ... (deep chain)
-    -> pci_release_dev()
-    -> pcibios_release_device()
-    -> zpci_zdev_put()              # will   lock(zpci_add_remove_lock)
+That then invokes the same error paths we'd see if we simply don't have
+p2pdma in the kernel and handles the pci_p2pdma_add_resource() path
+automatically as well.
 
-If thread α and β coincide, this will result in a cyclic deadlock.
+This pcim_p2pdma_provider() test is really then just suppressing the
+WARN_ON that we'd otherwise see by not finding the p2p object on the
+device.  Thanks,
 
-(B) Thread γ receives a PCI event notifying the kernel that one or more
-PCI functions got hot plugged, and need to be configured. A possible
-call-chain that might happen while the PCI subsystem is trying to add
-those new function looks like this:
-  __zpci_event_availability()
-    -> ... (multiple ways in which a device gets added)
-    -> zpci_add_device()            # will   lock(zpci_add_remove_lock)
-    -> zpci_bus_device_register()
-    -> zpci_bus_put()               # will   lock(zbus_list_lock)
-    -> zpci_bus_release()           # will unlock(zbus_list_lock)
-                                    # will   lock(pci_rescan_remove_lock)
-
-Now the same thread β as above in (A) might coincide, and again could
-result in a cyclic deadlock.
-
-`pci_rescan_remove_lock` has to be and is taken at a "high level" in
-most call-chains since it is intended to protect/mutual exclude all
-rescan and/or removal actions taken in the PCI subsystem. So to prevent
-the outlined deadlock scenarios above remove it instead from the "low
-level" release functions for both the PCI device and PCI bus objects.
-
-Instead, lock `pci_rescan_remove_lock` in all call-chains leading to
-those release functions:
-  * initialization of the PCI subsystem;
-  * processing of availability events (CRWs) for PCI functions;
-  * processing of error events (CRWs) for PCI functions;
-  * architecture specific release PCI device implementation.
-
-Additionally, remove `pci_rescan_remove_lock` from zpci_bus_scan_bus()
-since its only caller zpci_scan_devices() is now always called with
-`pci_rescan_remove_lock` already held.
-
-Lastly, document the new locking expectations after these changes. Add
-sparse and lockdep annotations to functions that previously locked
-`pci_rescan_remove_lock` explicitly, making sure the lock is now
-already held when called. Additionally also add the annotations to
-zpci_zdev_put() and zpci_bus_put() to make sure that every function that
-potentially drops the last reference already holds the lock to prevent
-surprises.
-
-Fixes: 05bc1be6db4b2 ("s390/pci: create zPCI bus")
-Fixes: ab909509850b2 ("PCI: s390: Fix use-after-free of PCI resources with per-function hotplug")
-Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
-Tested-by: Niklas Schnelle <schnelle@linux.ibm.com>
-Signed-off-by: Benjamin Block <bblock@linux.ibm.com>
----
- arch/s390/pci/pci.c       | 11 ++++++++---
- arch/s390/pci/pci_bus.c   | 15 ++++++++-------
- arch/s390/pci/pci_event.c | 28 +++++++++++++++++++---------
- arch/s390/pci/pci_iov.c   |  3 +--
- arch/s390/pci/pci_sysfs.c |  9 +++------
- 5 files changed, 39 insertions(+), 27 deletions(-)
-
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 2a430722cbe4..86ef1e516857 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -71,9 +71,11 @@ struct airq_iv *zpci_aif_sbv;
- EXPORT_SYMBOL_GPL(zpci_aif_sbv);
- 
- void zpci_zdev_put(struct zpci_dev *zdev)
-+	__must_hold(&pci_rescan_remove_lock)
- {
- 	if (!zdev)
- 		return;
-+	lockdep_assert_held(&pci_rescan_remove_lock);
- 	mutex_lock(&zpci_add_remove_lock);
- 	kref_put_lock(&zdev->kref, zpci_release_device, &zpci_list_lock);
- 	mutex_unlock(&zpci_add_remove_lock);
-@@ -582,11 +584,13 @@ int zpci_setup_bus_resources(struct zpci_dev *zdev)
- }
- 
- static void zpci_cleanup_bus_resources(struct zpci_dev *zdev)
-+	__must_hold(&pci_rescan_remove_lock)
- {
- 	struct resource *res;
- 	int i;
- 
--	pci_lock_rescan_remove();
-+	lockdep_assert_held(&pci_rescan_remove_lock);
-+
- 	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
- 		res = zdev->bars[i].res;
- 		if (!res)
-@@ -599,7 +603,6 @@ static void zpci_cleanup_bus_resources(struct zpci_dev *zdev)
- 		kfree(res);
- 	}
- 	zdev->has_resources = 0;
--	pci_unlock_rescan_remove();
- }
- 
- int pcibios_device_add(struct pci_dev *pdev)
-@@ -629,6 +632,7 @@ void pcibios_release_device(struct pci_dev *pdev)
- {
- 	struct zpci_dev *zdev = to_zpci(pdev);
- 
-+	guard(pci_rescan_remove)();
- 	zpci_unmap_resources(pdev);
- 	zpci_zdev_put(zdev);
- }
-@@ -1208,7 +1212,8 @@ static int __init pci_base_init(void)
- 	if (rc)
- 		goto out_irq;
- 
--	rc = zpci_scan_devices();
-+	scoped_guard(pci_rescan_remove)
-+		rc = zpci_scan_devices();
- 	if (rc)
- 		goto out_find;
- 
-diff --git a/arch/s390/pci/pci_bus.c b/arch/s390/pci/pci_bus.c
-index 36a4807285fa..c1b48b572e86 100644
---- a/arch/s390/pci/pci_bus.c
-+++ b/arch/s390/pci/pci_bus.c
-@@ -82,9 +82,8 @@ int zpci_bus_scan_device(struct zpci_dev *zdev)
- 	if (!pdev)
- 		return -ENODEV;
- 
--	pci_lock_rescan_remove();
-+	guard(pci_rescan_remove)();
- 	pci_bus_add_device(pdev);
--	pci_unlock_rescan_remove();
- 
- 	return 0;
- }
-@@ -132,10 +131,13 @@ void zpci_bus_remove_device(struct zpci_dev *zdev, bool set_error)
-  * Return: 0 on success, an error value otherwise
-  */
- int zpci_bus_scan_bus(struct zpci_bus *zbus)
-+	__must_hold(&pci_rescan_remove_lock)
- {
- 	struct zpci_dev *zdev;
- 	int devfn, rc, ret = 0;
- 
-+	lockdep_assert_held(&pci_rescan_remove_lock);
-+
- 	for (devfn = 0; devfn < ZPCI_FUNCTIONS_PER_BUS; devfn++) {
- 		zdev = zbus->function[devfn];
- 		if (zdev && zdev->state == ZPCI_FN_STATE_CONFIGURED) {
-@@ -145,10 +147,8 @@ int zpci_bus_scan_bus(struct zpci_bus *zbus)
- 		}
- 	}
- 
--	pci_lock_rescan_remove();
- 	pci_scan_child_bus(zbus->bus);
- 	pci_bus_add_devices(zbus->bus);
--	pci_unlock_rescan_remove();
- 
- 	return ret;
- }
-@@ -214,11 +214,12 @@ static int zpci_bus_create_pci_bus(struct zpci_bus *zbus, struct zpci_dev *fr, s
-  * run of the function.
-  */
- static inline void zpci_bus_release(struct kref *kref)
--	__releases(&zbus_list_lock)
-+	__releases(&zbus_list_lock) __must_hold(&pci_rescan_remove_lock)
- {
- 	struct zpci_bus *zbus = container_of(kref, struct zpci_bus, kref);
- 
- 	lockdep_assert_held(&zbus_list_lock);
-+	lockdep_assert_held(&pci_rescan_remove_lock);
- 
- 	list_del(&zbus->bus_next);
- 	mutex_unlock(&zbus_list_lock);
-@@ -229,14 +230,12 @@ static inline void zpci_bus_release(struct kref *kref)
- 	 */
- 
- 	if (zbus->bus) {
--		pci_lock_rescan_remove();
- 		pci_stop_root_bus(zbus->bus);
- 
- 		zpci_free_domain(zbus->domain_nr);
- 		pci_free_resource_list(&zbus->resources);
- 
- 		pci_remove_root_bus(zbus->bus);
--		pci_unlock_rescan_remove();
- 	}
- 
- 	zpci_remove_parent_msi_domain(zbus);
-@@ -250,7 +249,9 @@ static inline void __zpci_bus_get(struct zpci_bus *zbus)
- }
- 
- static inline void zpci_bus_put(struct zpci_bus *zbus)
-+	__must_hold(&pci_rescan_remove_lock)
- {
-+	lockdep_assert_held(&pci_rescan_remove_lock);
- 	kref_put_mutex(&zbus->kref, zpci_bus_release, &zbus_list_lock);
- }
- 
-diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
-index 839bd91c056e..98253706b591 100644
---- a/arch/s390/pci/pci_event.c
-+++ b/arch/s390/pci/pci_event.c
-@@ -342,6 +342,7 @@ static void __zpci_event_error(struct zpci_ccdf_err *ccdf)
- no_pdev:
- 	if (zdev)
- 		mutex_unlock(&zdev->state_lock);
-+	guard(pci_rescan_remove)();
- 	zpci_zdev_put(zdev);
- }
- 
-@@ -400,9 +401,11 @@ static void __zpci_event_availability(struct zpci_ccdf_avail *ccdf)
- 			zdev = zpci_create_device(ccdf->fid, ccdf->fh, ZPCI_FN_STATE_CONFIGURED);
- 			if (IS_ERR(zdev))
- 				break;
--			if (zpci_add_device(zdev)) {
--				kfree(zdev);
--				break;
-+			scoped_guard(pci_rescan_remove) {
-+				if (zpci_add_device(zdev)) {
-+					kfree(zdev);
-+					break;
-+				}
- 			}
- 		} else {
- 			if (zdev->state == ZPCI_FN_STATE_RESERVED)
-@@ -419,9 +422,11 @@ static void __zpci_event_availability(struct zpci_ccdf_avail *ccdf)
- 			zdev = zpci_create_device(ccdf->fid, ccdf->fh, ZPCI_FN_STATE_STANDBY);
- 			if (IS_ERR(zdev))
- 				break;
--			if (zpci_add_device(zdev)) {
--				kfree(zdev);
--				break;
-+			scoped_guard(pci_rescan_remove) {
-+				if (zpci_add_device(zdev)) {
-+					kfree(zdev);
-+					break;
-+				}
- 			}
- 		} else {
- 			if (zdev->state == ZPCI_FN_STATE_RESERVED)
-@@ -450,24 +455,29 @@ static void __zpci_event_availability(struct zpci_ccdf_avail *ccdf)
- 			/* The 0x0304 event may immediately reserve the device */
- 			if (!clp_get_state(zdev->fid, &state) &&
- 			    state == ZPCI_FN_STATE_RESERVED) {
-+				guard(pci_rescan_remove)();
- 				zpci_device_reserved(zdev);
- 			}
- 		}
- 		break;
- 	case 0x0306: /* 0x308 or 0x302 for multiple devices */
--		zpci_remove_reserved_devices();
--		zpci_scan_devices();
-+		scoped_guard(pci_rescan_remove) {
-+			zpci_remove_reserved_devices();
-+			zpci_scan_devices();
-+		}
- 		break;
- 	case 0x0308: /* Standby -> Reserved */
- 		if (!zdev)
- 			break;
--		zpci_device_reserved(zdev);
-+		scoped_guard(pci_rescan_remove)
-+			zpci_device_reserved(zdev);
- 		break;
- 	default:
- 		break;
- 	}
- 	if (existing_zdev) {
- 		mutex_unlock(&zdev->state_lock);
-+		guard(pci_rescan_remove)();
- 		zpci_zdev_put(zdev);
- 	}
- }
-diff --git a/arch/s390/pci/pci_iov.c b/arch/s390/pci/pci_iov.c
-index 13050ce5c3e9..1f7e4dd018e7 100644
---- a/arch/s390/pci/pci_iov.c
-+++ b/arch/s390/pci/pci_iov.c
-@@ -38,10 +38,9 @@ void zpci_iov_map_resources(struct pci_dev *pdev)
- 
- void zpci_iov_remove_virtfn(struct pci_dev *pdev, int vfn)
- {
--	pci_lock_rescan_remove();
-+	guard(pci_rescan_remove)();
- 	/* Linux' vfid's start at 0 vfn at 1 */
- 	pci_iov_remove_virtfn(pdev->physfn, vfn - 1);
--	pci_unlock_rescan_remove();
- }
- 
- static int zpci_iov_link_virtfn(struct pci_dev *pdev, struct pci_dev *virtfn, int vfid)
-diff --git a/arch/s390/pci/pci_sysfs.c b/arch/s390/pci/pci_sysfs.c
-index c2444a23e26c..f5027aa95928 100644
---- a/arch/s390/pci/pci_sysfs.c
-+++ b/arch/s390/pci/pci_sysfs.c
-@@ -98,9 +98,9 @@ static ssize_t recover_store(struct device *dev, struct device_attribute *attr,
- 	WARN_ON_ONCE(!kn);
- 
- 	/* Device needs to be configured and state must not change */
--	mutex_lock(&zdev->state_lock);
-+	guard(mutex)(&zdev->state_lock);
- 	if (zdev->state != ZPCI_FN_STATE_CONFIGURED)
--		goto out;
-+		return count;
- 
- 	/* device_remove_file() serializes concurrent calls ignoring all but
- 	 * the first
-@@ -112,15 +112,12 @@ static ssize_t recover_store(struct device *dev, struct device_attribute *attr,
- 	 * Once it unblocks from pci_lock_rescan_remove() the original pdev
- 	 * will already be removed.
- 	 */
--	pci_lock_rescan_remove();
-+	guard(pci_rescan_remove)();
- 	if (pci_dev_is_added(pdev)) {
- 		ret = _do_recover(pdev, zdev);
- 	}
- 	pci_rescan_bus(zdev->zbus->bus);
--	pci_unlock_rescan_remove();
- 
--out:
--	mutex_unlock(&zdev->state_lock);
- 	if (kn)
- 		sysfs_unbreak_active_protection(kn);
- 	return ret ? ret : count;
--- 
-2.54.0
-
+Alex
