@@ -1,40 +1,58 @@
-Received: from nikam.ms.mff.cuni.cz (nikam.ms.mff.cuni.cz [195.113.20.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7940B345741
-	for <linux-pci@vger.kernel.org>; Wed, 22 Apr 2026 08:49:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.113.20.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 960D03C1969;
+	Wed, 22 Apr 2026 09:20:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776847764; cv=none; b=UQ/lp8uELphfcXEP5L7c8K6g3REvfYpGYsgY3vB2phjhk8vPQ8S6sYKNcSv0qVCpAIhQP6InnofbP0/itbjMFIu4UtrbL42jrqreBsww8GmARQepGzq4O3EbBsjq0xs9mSu2+2Zn5aINnZFswCMxjo73OaTsKOHIZUDrTDL+BSw=
+	t=1776849602; cv=none; b=WyNpMy504uiK3+Le6KnCIqS5uHNKVruvSxUSqffE3uMnYScu28aFm3AlqBDarkD6NmW+rk15YEw3aQTBOsq7AMSwfRarfFcdTCGl/ZtdTL/6He+SlHkH1Pncu91KNbzPAEPyaH9+hzck3QpvrUzFaDHXbkNlkoUJ2de5rayVmRo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776847764; c=relaxed/simple;
-	bh=NdCz7ujO15wUOuWq3Q01ds9gmYJkDjMI5V3dMQNLTiM=;
+	s=arc-20240116; t=1776849602; c=relaxed/simple;
+	bh=DpOEJWEbgy2EUIdAGmq2P4VnzdGsa4AlW6mJFjN6PwA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nIWHqZO1YSO+KRJyq+jov9qFBsaRPjIkj4jVTCsBd+ZDFHhI+9Gb1AuuTZD1sXZJmr5pEDozVHWnItZBFKkNMElIUvuGWpx0YLJwksZzak8fYN8XsPU9EfWUrxHWCkxWyOunJUQ7Mhr4hlU7B+NYgzhFyp4XChPtv5kEPLtdHhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ucw.cz; spf=pass smtp.mailfrom=ucw.cz; dkim=pass (1024-bit key) header.d=ucw.cz header.i=@ucw.cz header.b=WWnkfq2M; arc=none smtp.client-ip=195.113.20.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ucw.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ucw.cz
+	 Content-Type:Content-Disposition:In-Reply-To; b=dzBenPZvoa5nLard1Eyep2XtEbzl2/gzLblJv8G113VSr84Nthny73V9RoWjVrtV5q0xlbrqIS61nEKvugll52Mz9pl7Zcz2G2kScRGHAGPIaFE0oj/AJy98L/9jJH68Fm9dGF6ZHacfYu0Q+plkMWlp5FzsI4yk+Y+GGT6mSN4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UuyrWoo/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ucw.cz header.i=@ucw.cz header.b="WWnkfq2M"
-Received: by nikam.ms.mff.cuni.cz (Postfix, from userid 2587)
-	id E9AF628055B; Wed, 22 Apr 2026 10:49:11 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ucw.cz; s=gen1;
-	t=1776847751;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=xsVFbMzRvJJ54nAl05mEkoPpQT7/4+OF4i4Kl7rcGJE=;
-	b=WWnkfq2MrgWxzljXwhco1XiVYuz1bEx9NMNiHBeDXACb/cgXlyr4qVfbKJ4ZgJxy6boe22
-	kaQlLs74Hj5ejdAYVue3UBix4W9bd0YcZcohEmFapoJjOA+95nwzhhQ6mQ3lXFCTjLM88D
-	P0siDtWnmlIXn7+Oh4FQEHAQIEi3hK8=
-Date: Wed, 22 Apr 2026 10:49:11 +0200
-From: Martin =?utf-8?B?TWFyZcWh?= <mj@ucw.cz>
-To: Bjarni Ingi Gislason <bjarniig@simnet.is>
-Cc: linux-pci@vger.kernel.org, Guillem Jover <guillem@debian.org>
-Subject: Re: Debian maintainer does not forward bug reports
-Message-ID: <mj+md-20260422.080349.87303.nikam@ucw.cz>
-References: <aee7asxxZ1qzg_EV@kassi.invalid.is>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UuyrWoo/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC7EDC19425;
+	Wed, 22 Apr 2026 09:20:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776849602;
+	bh=DpOEJWEbgy2EUIdAGmq2P4VnzdGsa4AlW6mJFjN6PwA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=UuyrWoo/xf5nGazq35hR0q2RXtNpo6PANgA5dj5aWydhM6d4MmJNPyu0pUxwQbwgT
+	 +5ghBBHRsFi4BEGsP0unkz75GUvQQl7VVh4rsxyLO+9uu5J9+AkoX07iAWXyRu0vGw
+	 7zrU/imsnECPWBVYwYOM7vf4xXvQxduqIGOdPDPM2BcYUb6mA4PkQmJyRni8LWNaJF
+	 ApkZaCEQaauIQaxFdfDLF3zx4OhX+SDgN8fplrR2xs5bVBYc0EwmagTVSThAkS3ypr
+	 K7ty1GBMArtRgQROxzYgMHbhsvMHInLf+OCq5Hjg+Y/qYSAPlFuzX58VOcka23aD6q
+	 zfKZLUg1Qw/uQ==
+Date: Wed, 22 Apr 2026 11:19:59 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: "Rob Herring (Arm)" <robh@kernel.org>
+Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+	Maxime Ripard <mripard@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, 
+	Stephan Gerhold <stephan@gerhold.net>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	Johannes Berg <johannes@sipsolutions.net>, Jeff Johnson <jjohnson@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Bjorn Andersson <andersson@kernel.org>, Mathieu Poirier <mathieu.poirier@linaro.org>, 
+	Sylwester Nawrocki <s.nawrocki@samsung.com>, Mark Brown <broonie@kernel.org>, 
+	Maxime Coquelin <mcoquelin.stm32@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Yang Xiwen <forbidden405@outlook.com>, Alex Elder <elder@kernel.org>, 
+	Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Sibi Sankar <sibi.sankar@oss.qualcomm.com>, 
+	Rao Mandadapu <quic_srivasam@quicinc.com>, Patrice Chotard <patrice.chotard@foss.st.com>, 
+	Xu Yang <xu.yang_2@nxp.com>, Peng Fan <peng.fan@nxp.com>, 
+	Thomas Zimmermann <tzimmermann@suse.de>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-mmc@vger.kernel.org, linux-arm-msm@vger.kernel.org, netdev@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, ath11k@lists.infradead.org, 
+	linux-pci@vger.kernel.org, linux-remoteproc@vger.kernel.org, linux-sound@vger.kernel.org, 
+	linux-spi@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH] dt-bindings: Fix phandle-array constraints, again
+Message-ID: <20260422-proud-quartz-mastodon-fafb9e@quoll>
+References: <20260421195836.1547469-1-robh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -43,111 +61,20 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <aee7asxxZ1qzg_EV@kassi.invalid.is>
+In-Reply-To: <20260421195836.1547469-1-robh@kernel.org>
 
-Cc: Guillem who is the Debian maintainer of pciutils; see below for
-context.
-
-Let us go through all outstanding bugs filed against Debian pciutils:
-
-> #887113		pciutils: lspci does not detect sound for nvidia MPC67 on Pavilion DV9720us
-> #775453		/usr/bin/lspci: "lspci does not detect nvidia geforce 210M on Asus UL80Vt"
-
-These are likely kernel issues. Since they are a decade old, we should
-ask the submitter for testing on a recent kernel.
-
-> #656925		failure to detect PCIe Gigabit LAN
-
-Not a pciutils problem, probably a missing kernel driver. It's from
-2012, so it should be tested with a recent kernel.
-
-> #774063		pciutils: update-pciids changes md5sum of pci.ids
-
-This is specific to Debian. Another alternative would be to make
-update-pciids store the downloaded file to /usr/local/share and let
-libpci prefer this file over the one if /usr/share if it exists.
-
-> #595328		/usr/bin/lspci: lspci reports wrong video ram size
-
-It's from 2010, so I am not sure if it's worth investigating.
-
-When a bug like this is submitted, please ask the author to provide
-the output of "lspci -vvxxx".
-
-> #640239		/usr/bin/lspci: lspci -t (-v) doesn't show bridges
-
-We have rewritten the whole tree display code since this version,
-I hope that this problem does not exist any more.
-
-> #870000		pciutils: Debian Stretch freeze when I use "lspci"
-
-Very likely a hardware bug. If it should be worked around, the right
-place is the kernel.
-
-> #924237		lspci shows wrong/misleading string instead of "Device xxxx"
-
-Interesting... can you ask the submitter if they can reproduce it
-with current pciutils?
-
-> #1087569	pcilmr.8: Some remarks and editorial changes for this man page
-> #1087678	pcilib.7: Some remarks and editorial changes for this man page
-> #1099040	setpci.8: Some remarks and a patch with editorial changes for this man page
-
-Bjarni, I assume that these are the bugs that triggered your message.
-I don't see any Debian patches to pciutils man pages, so I will apply
-your patches upstream.
-
-> #585146		lspci: query the database for specific vendor/device IDs
-
-This could be useful. I will consider adding this feature.
-
-> #929984		lspci: please make -nn the default
-
-I admit that it would help in some cases, but on the other hand,
-it would make the default output more cluttered, so I don't think
-it's a clear win.
-
-				Have a nice fortnight
--- 
-Martin `MJ' Mareš                        <mj@ucw.cz>   http://mj.ucw.cz/
-United Computer Wizards, Prague, Czech Republic, Europe, Earth, Universe
-
----
-
-> See
+On Tue, Apr 21, 2026 at 02:55:25PM -0500, Rob Herring (Arm) wrote:
+> The unfortunately named 'phandle-array' property type is really a matrix
+> with phandle and fixed arg cells entries. A matrix property should have 2
+> levels of items constraints.
 > 
-> https://bugs.debian.org/cgi-bin/pkgreport.cgi?pkg=pciutils;dist=testing
-> 
-> -.-
-> 
->   Additional remarks.
-> 
->   Mails from me to "submit@bugs.debian.org" are no longer acknowledged.  A
-> Debian maintainer told me, that he would contact the mail administrator
-> about me not wanting to send bugs upstream.
-> 
-> -.-
-> 
-> From "/usr/share/doc/debian/bug-reporting.txt.gz":
-> 
->   Don't file bugs upstream
-> 
->    If you file a bug in Debian, don't send a copy to the upstream software
->    maintainers yourself, as it is possible that the bug exists only in
->    Debian. If necessary, the maintainer of the package will forward the
->    bug upstream.
-> 
-> -.-
-> 
->   For forwarding bug reports to upstream see:
-> 
-> https://www.debian.org/Bugs/Developer#forward
-> 
-> -.-
-> 
->   I do not send reports upstream if I have to get an account there.
-> The Debian maintainers have one already.
-> 
->   If I get a negative (or no) response from upstream, I send henceforth
-> bugs to Debian.
+> Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+> ---
+> Can someone from QCom provide some descriptions for 'qcom,smem-states'
+> properties.
+
+Working on it...
+
+Best regards,
+Krzysztof
+
