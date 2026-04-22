@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB550376496;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB5F13815F1;
 	Wed, 22 Apr 2026 11:25:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776857112; cv=none; b=NQ1W0D3B/6uPoYAsrSjbTWV1SCO28UpnM5cT3qjXSvt8oX7eT1zXvsoyVhN7z5tLKbTAsDxe5pgBlF8XNc18EhKl1CsXud0KBsoi6PHqEgi2riPLVN43cbCj+P7I5JPoYPrVCmraDVfs1Mppd4lE0/GUeG1OCyf6Ir1SNF9vPvs=
+	t=1776857112; cv=none; b=exM5qG9/Rw4LFe6Vg1ADBMH5AIT4qIqf7fDVzNaxajVROz5I8BiRSsCHGxi5Y/sFj4TucaazH9OxB7aEcdLtgTHPKSGOV72J6Gqs0GPi8vl/OOVpCsZuv9bR2TClMvP7+w+IYGaOzd0e5lGSbZLuBORQS2E4PqK4aDKWbF+dekE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1776857112; c=relaxed/simple;
-	bh=eBmp37Fh5ZTlSrodz8LYA7+9XM/VHH8EMneGh3WJBVA=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Up3lFu3Kuw5slrnankvHwNXtdPjG9anUct2SmosKbLlmRMfFWsWc52n1UUokTy29PzmMiLxMTQUjl3HF+Au5zUZV++LOzK/zQR8fTXOBY/YUNtNKZctM7YXAF1I8rT1rVbOFQnrDIdp4FwfoCMwpIlgN0gZ+ZNFXCl+/QA3jIas=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c8gGNfkD; arc=none smtp.client-ip=10.30.226.201
+	bh=lqk3QdLBMm60ixEGqFx4KyHoJO7Nz6868LggAMS8LtY=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=pgjJFjKOnQNnX/mFNHyJ8Z/Cnbl4G/cPWfQ/I8lgO9MpAUn2PWCnDaVpyR8AHjX8B/eaPSRe6aUYUl2KYUnaqTLr+VOKOYhEOZTJsnswqVebG85aOovuQb2pn3yIwMSzk6/BelHOOcw37yhCpPz7ET73UnK5Kri5DhYAU7N8cj0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kIR6rp2V; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c8gGNfkD"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 971F7C2BCB8;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kIR6rp2V"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 658C6C19425;
 	Wed, 22 Apr 2026 11:25:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1776857112;
-	bh=eBmp37Fh5ZTlSrodz8LYA7+9XM/VHH8EMneGh3WJBVA=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=c8gGNfkDPhwuVFHuYlh7ySuag3bN2J3tGptEhSsinFDqvr3XJvL1IyhHtV8/rOdTo
-	 QnLE7IzRCG7CjZkARPE1/EflVemx1Mo0qGrnWBPsEl86vet8nUmQrlUN98wywV+4eM
-	 PShHqQuDvCUg21g5AkkTAcCEGUKh79iB0RpwUEP2uOM5uRFW0sSw+JfxzCMoDG8iVQ
-	 GF0y8nlr8dMmSIyOKn078vni/xIVw/UwZVUt+lj9a3+ORaBDPhsS+HmutFsE8BBg/r
-	 ujsJADzdFHtl8XiAnYekJhzxrziCZ6qN/u9qtRIV7jsKj0+boLzzi43FpDjMY6q38S
-	 /mm0h/Wq7yKdw==
+	bh=lqk3QdLBMm60ixEGqFx4KyHoJO7Nz6868LggAMS8LtY=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=kIR6rp2Vu1BnKdcfqcJYA4zIQ94njZwWTA/DCn2B7lwVOSyO+tawSqkzlOVo6+rKw
+	 d+4c7+Mj7z3ELj93WICzPQrtzxlQnv+vFVw3d6X/8r3HO5Ihueo/tIm5tHT9J7jwMD
+	 YHYqC2s6tZ+AHuA3m4BfStRf6UagheUkYJVitk2ruGogw2ZL63+B1x90twLaZXoi0n
+	 uycMrfXY/bIsr2bshI2B/G3kJ+PqR6MqOts0kRgk27/ay2d/Vk+cVcdbaMEIyT0bGQ
+	 Alq2DS7xO7VzlA1TdagMYgpxTuG9UiQOhxJIp2qaU/mPN8uwoe3UtZ1kVB+cK6sBcQ
+	 IAl8vVfmuqfHA==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8596FF8FA87;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53B5BF9B606;
 	Wed, 22 Apr 2026 11:25:12 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Wed, 22 Apr 2026 16:54:44 +0530
-Subject: [PATCH 03/12] power: sequencing: qcom-wcn: Add support for
- 'is_fixed()' callback to 'bluetooth' target
+Subject: [PATCH 00/12] Fixes/improvements for the PCI M.2 power sequencing
+ driver
+Date: Wed, 22 Apr 2026 16:54:41 +0530
+Message-Id: <20260422-pwrseq-m2-bt-v1-0-720d02545a64@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,9 +41,10 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260422-pwrseq-m2-bt-v1-3-720d02545a64@oss.qualcomm.com>
-References: <20260422-pwrseq-m2-bt-v1-0-720d02545a64@oss.qualcomm.com>
-In-Reply-To: <20260422-pwrseq-m2-bt-v1-0-720d02545a64@oss.qualcomm.com>
+X-B4-Tracking: v=1; b=H4sIAPqv6GkC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIzMDEyMj3YLyouLUQt1cI92kEt3EpJTERHNDA0uT1CQloJaCotS0zAqwcdG
+ xEH5xaVJWanIJyAyl2loAycvp3XAAAAA=
+X-Change-ID: 20260422-pwrseq-m2-bt-abdaa71094eb
 To: Bartosz Golaszewski <brgl@kernel.org>, 
  Manivannan Sadhasivam <mani@kernel.org>, 
  Marcel Holtmann <marcel@holtmann.org>, 
@@ -53,18 +54,20 @@ Cc: linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
  linux-bluetooth@vger.kernel.org, Wei Deng <wei.deng@oss.qualcomm.com>, 
  Luiz Augusto von Dentz <luiz.von.dentz@intel.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+ Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
+ stable+noautosel@kernel.org
 X-Mailer: b4 0.15.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1665;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2584;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=OSA0rk78WdDSmkcO/t8XlaqhuYDC5RIPI2ByJSjXDI8=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBp6LAVY4ZUMxgx8tEOqbhjBW009KzxqC7sLg0vT
- YkPI3/4rnmJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaeiwFQAKCRBVnxHm/pHO
- 9XLTCACmBOZ/6vCM4GiNJ4EAGBbpjMZp+nMbfjxiLoBS84VUGeB8Hj8Xoy1cIX1iWY4oEe2c2/D
- YkmNGMDuV4gDCUu4QClzMHbBZeBfAkOLRttaC2X+uY24y0qyyiBqW7zuZD+KyCY+/dtNooVG/8V
- t/nqfqoVvJAW1FXZ6yXL0G6rxs3RCZZv61pGlJf4jr7OOoc4RvTMTLXfiBqSaKvXFiuKNN60/bJ
- 2/ERYv1EOw0+oo3S8KroevAAVwhTmM6JePXZpuqJZEizu+GBsRnA3CZOLAwoKl3x6MFjSTxv6nT
- NcYo1MoZvG8k7207e3Byz4wsXLkXTgGq68ShZY0sUYUDpVSb
+ bh=lqk3QdLBMm60ixEGqFx4KyHoJO7Nz6868LggAMS8LtY=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBp6K/+74ctGya8p8gkXaPiUCDCvw26R/1sf31k+
+ 3IL7DZbwWyJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaeiv/gAKCRBVnxHm/pHO
+ 9SONB/97M+ux5IjYybMtelgpS4I3KTrOMDXpTMpWH1ziA49OGXH8mUfyDlcDGatxmuRfF6dhz9m
+ tr0qaHJZLNOJsSgjWrh4E5qFDkKvO0Ss0DDwQpQJ8LA883KMrjYaL3g1jU1Ifq5fbqp7CeC7wIG
+ /cjfeBjOumzw/0bQ9QVRm3h/qBH6SVaymWRMuTCaSjROVI76j1e7hfuiqK1agIIe94TbEndP/6b
+ cYtLXHRTkUcC6rNuR8Q8MvlosdrmXeEI+PH/Pc8/IWfMlIyFjWCTrb5PLnSXeqRIPRoIet2KwzR
+ 0dzB41l4ZPR2ByB8P4xYX01vga7PK58akyC/9i3rgBraM+hT
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -72,50 +75,57 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Hi,
 
-Add support for 'is_fixed()' callback to indicate the consumers whether
-this power sequencer target 'bluetooth' is fixed or controllable. This is
-decided based on the availability of the 'bt-enable' GPIO in DT.
+This series has several key improvements and fixes to the M.2 power sequencing
+driver and also the BT HCI_QCA driver. Notably, this series allows the M.2 power
+sequencing driver to work with more M.2 cards, not just WCN7850. It also allows
+the BT HCI_QCA driver to detect whether it can control BT_EN (or W_DISABLE2#)
+signal on the connector and set the HCI_QUIRK_NON_PERSISTENT_SETUP quirk.
+
+Testing
+=======
+
+This series was tested on Lenovo Thinkpad T14s together with the below DTS
+patches:
+https://github.com/Mani-Sadhasivam/linux/commit/29534d15307551b2355eb254601dec511169f0aa
+https://github.com/Mani-Sadhasivam/linux/commit/f4eaacfe647674be200847092b43cdef2194fc55
+
+Merge Strategy
+==============
+
+Since the BT HCI_QCA changes depend on the pwrseq changes, it would be good to
+merge the whole series through pwrseq tree or through an immutable branch.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- drivers/power/sequencing/pwrseq-qcom-wcn.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+Manivannan Sadhasivam (12):
+      power: sequencing: Introduce an API to check whether the pwrseq is fixed or controllable
+      power: sequencing: pcie-m2: Add support for 'is_fixed()' callback to 'uart' target
+      power: sequencing: qcom-wcn: Add support for 'is_fixed()' callback to 'bluetooth' target
+      power: sequencing: pcie-m2: Fix inconsistent function prefixes
+      power: sequencing: pcie-m2: Allow creating serdev for multiple PCI devices
+      power: sequencing: pcie-m2: Improve PCI device ID check
+      power: sequencing: pcie-m2: Create serdev for PCI devices present before probe
+      power: sequencing: pcie-m2: Create BT node based on the pci_device_id[] table
+      Bluetooth: hci_qca: Add M.2 Bluetooth device support using pwrseq
+      Bluetooth: hci_qca: Rename 'power_ctrl_enabled' to 'bt_en_available'
+      Bluetooth: hci_qca: Check whether the M.2 UART interface is fixed or not
+      Bluetooth: hci_qca: Fix the broken BT_EN GPIO detection for Qcom WCN devices
 
-diff --git a/drivers/power/sequencing/pwrseq-qcom-wcn.c b/drivers/power/sequencing/pwrseq-qcom-wcn.c
-index b55b4317e21b..50ac5973b8e7 100644
---- a/drivers/power/sequencing/pwrseq-qcom-wcn.c
-+++ b/drivers/power/sequencing/pwrseq-qcom-wcn.c
-@@ -254,10 +254,18 @@ static int pwrseq_qcom_wcn6855_xo_clk_deassert(struct pwrseq_device *pwrseq)
- 	return pwrseq_qcom_wcn_pwup_delay(pwrseq);
- }
- 
-+static bool pwrseq_qcom_wcn_bt_is_fixed(struct pwrseq_device *pwrseq)
-+{
-+	struct pwrseq_qcom_wcn_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
-+
-+	return !ctx->bt_gpio;
-+}
-+
- static const struct pwrseq_target_data pwrseq_qcom_wcn_bt_target_data = {
- 	.name = "bluetooth",
- 	.unit = &pwrseq_qcom_wcn_bt_unit_data,
- 	.post_enable = pwrseq_qcom_wcn_pwup_delay,
-+	.is_fixed = pwrseq_qcom_wcn_bt_is_fixed,
- };
- 
- static const struct pwrseq_target_data pwrseq_qcom_wcn_wlan_target_data = {
-@@ -281,6 +289,7 @@ static const struct pwrseq_target_data pwrseq_qcom_wcn6855_bt_target_data = {
- 	.name = "bluetooth",
- 	.unit = &pwrseq_qcom_wcn6855_bt_unit_data,
- 	.post_enable = pwrseq_qcom_wcn6855_xo_clk_deassert,
-+	.is_fixed = pwrseq_qcom_wcn_bt_is_fixed,
- };
- 
- static const struct pwrseq_target_data pwrseq_qcom_wcn6855_wlan_target_data = {
+ drivers/bluetooth/hci_qca.c                |  40 +++--
+ drivers/power/sequencing/core.c            |  33 ++++
+ drivers/power/sequencing/pwrseq-pcie-m2.c  | 242 ++++++++++++++++++++++-------
+ drivers/power/sequencing/pwrseq-qcom-wcn.c |   9 ++
+ include/linux/pwrseq/consumer.h            |   6 +
+ include/linux/pwrseq/provider.h            |   2 +
+ 6 files changed, 262 insertions(+), 70 deletions(-)
+---
+base-commit: 6596a02b207886e9e00bb0161c7fd59fea53c081
+change-id: 20260422-pwrseq-m2-bt-abdaa71094eb
 
--- 
-2.51.0
+Best regards,
+--  
+Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
 
