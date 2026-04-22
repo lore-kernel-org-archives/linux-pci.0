@@ -1,350 +1,258 @@
-Received: from mail-m49209.qiye.163.com (mail-m49209.qiye.163.com [45.254.49.209])
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.162])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B693388E40
-	for <linux-pci@vger.kernel.org>; Wed, 22 Apr 2026 08:36:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.209
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F13B377575
+	for <linux-pci@vger.kernel.org>; Wed, 22 Apr 2026 08:39:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.162
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776846978; cv=none; b=E+ltX26FlKxAz7J7c8gXTOul/R3wAB+JdzzseE7gzlchGLHtfiuUyYoipYTao+pMlhaz8vl6rEcBCPccKjBYpcuvnJalZnHdwNm+48rBmxZsC0u3Uhe4+ILgTGzmQuxYSaoF68mMQg1ZeJP5u89lh+VxEwJKl+9USnwCkcsUKQ0=
+	t=1776847186; cv=none; b=IThGNOa8NIuIH5MI5PTyWu2bnOBL0l4CMQVUyXu9BRf7kFnD6BgoLI1zCeB3AGRXQ9f0TkzgkqWzsnF7NRKJRS/MNNVOHN0ex6NRTEH/BAcTDli0CLWeObvvJZZKZ+xOjFEKjMOkrl2TviTOpaT6lxXT45MGGifL5DrVp/wptOI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776846978; c=relaxed/simple;
-	bh=895r9R8pvH/grRaj2UAM9jvIap20aYhDb3LTZk450HE=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=Q6L5cNeyTkMG+ThNPaq8Qecy3/7hZztbIz1y5OdTSqX02MXHCekeyRT5nBsS5aYjK20DHvr2twMrtNfxi+cczyGzHNZdbwKomTMejsgLADwPvdlPB3zBwolz2zArB/2SJj86h+PEmlUsXWXgHlVWrBGvLSs/Xr6aLyua+VJyr78=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=L9a7Yz7v; arc=none smtp.client-ip=45.254.49.209
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1776847186; c=relaxed/simple;
+	bh=yUNY2WJfRMKnvbtKN/j/UvADsxIjSpJls0F3U9Rux10=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qeabovX/wxN/YRsF308cCfKdiGaRXnpGj3BfGNtjIqq5GTjBg4ems+k2cXA/QKv5UEGwdi8biFKrpFG251pds4fuHcb2S/PJBhVPa6ygdbIzgxPuC/ISNUEXWHaI95CGJqIN4uhTy68hHnLVdU61Xla/36/JC2IunIF6jGVDOsU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=g3S8Z4GC; arc=none smtp.client-ip=188.68.63.162
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="L9a7Yz7v"
-Received: from [172.16.12.17] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 3bb2452e8;
-	Wed, 22 Apr 2026 16:36:02 +0800 (GMT+08:00)
-Message-ID: <f912358d-925b-1e25-2852-1f265d09032a@rock-chips.com>
-Date: Wed, 22 Apr 2026 16:36:01 +0800
+	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="g3S8Z4GC"
+Received: from mors-relay-8201.netcup.net (localhost [127.0.0.1])
+	by mors-relay-8201.netcup.net (Postfix) with ESMTPS id 4g0t1z2Z2Nz3yVZ;
+	Wed, 22 Apr 2026 10:39:35 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1776847175;
+	bh=yUNY2WJfRMKnvbtKN/j/UvADsxIjSpJls0F3U9Rux10=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=g3S8Z4GC6aCNC+t29j/1QGZkgIt7qaTO+iQADn2aywvab/Ev8EjJuMreKxeleihQX
+	 2hdKfdg+HuMkcRjd42bCVLxtYVK/pYNPjhtKZBTkIbN9CBpY4tZ8TIqLN+gY3S7Zc2
+	 uL0t+O3FqDh7lspxKshvzyGOmKdjewuKGSX804Oo0ZDY9+CrX+pPoyPmzj8VBLk5iX
+	 0eOlsua9Cwy80ts/Nh9KmaS6Jq9czu/I2UE3aVO4tKs4gTEnx1vcB5X6RxG777+oOi
+	 4rRAUCE6mkWoex7wdG8eQHgHdDp+Q6kXFCQPyKcjRJvywyLQJcS9cnXpOz+0XPJdV4
+	 vOY3S33AEgiQA==
+Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
+	by mors-relay-8201.netcup.net (Postfix) with ESMTPS id 4g0t1k4b51z40Db;
+	Wed, 22 Apr 2026 10:39:22 +0200 (CEST)
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4g0t1j4MTwz8sZP;
+	Wed, 22 Apr 2026 10:39:21 +0200 (CEST)
+Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 88904632AD;
+	Wed, 22 Apr 2026 10:39:20 +0200 (CEST)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <0fe54399-1fb1-4f75-a60c-e171292415a6@leemhuis.info>
+Date: Wed, 22 Apr 2026 10:39:19 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Cc: shawn.lin@rock-chips.com, Nirmal Patel <nirmal.patel@linux.intel.com>,
- Jonathan Derrick <jonathan.derrick@linux.dev>,
- Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
- Logan Gunthorpe <logang@deltatee.com>, linux-pci@vger.kernel.org
-Subject: Re: [RESEND PATCH v3 1/3] PCI/MSI: Add Devres managed IRQ vectors
- allocation
-To: phasta@kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-References: <1776825522-6390-1-git-send-email-shawn.lin@rock-chips.com>
- <1776825522-6390-2-git-send-email-shawn.lin@rock-chips.com>
- <2c227e17a573c8c674c027c9b3014c2ec9ebfec7.camel@mailbox.org>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <2c227e17a573c8c674c027c9b3014c2ec9ebfec7.camel@mailbox.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla Thunderbird
+Subject: Re: i.MX8M Plus PCIe link regression
+To: Alexander Stein <alexander.stein@ew.tq-group.com>,
+ Hongxing Zhu <hongxing.zhu@nxp.com>, Manivannan Sadhasivam <mani@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "imx@lists.linux.dev" <imx@lists.linux.dev>,
+ Linux kernel regressions list <regressions@lists.linux.dev>
+References: <23024521.EfDdHjke4D@steina-w>
+ <AS8PR04MB88332979F06EDE29E751BCE18C7CA@AS8PR04MB8833.eurprd04.prod.outlook.com>
+ <2qto2ddqmtks37wxtklxo4ctvxyezmgtjcuprnk6crant5fvsu@vdbmqomrcqt3>
+ <6102060.LvFx2qVVIh@steina-w>
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Content-Language: de-DE, en-US
+In-Reply-To: <6102060.LvFx2qVVIh@steina-w>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9db455000709cckunm35c3acf31c7f24
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGhpNTlYeQ0pKT05PHUMdSE5WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=L9a7Yz7vIzyTmPWNR/uyn4V/9h1s8d1Dlgru8WRSPraVbm2JjipSFs1mV8kH8LvmAGfY9jSGmDWewXTGqnBo98JZyl6f2M1GXkJZUHCA+gLpO5/fKUki7R8hCNxH1/y5dTcbCW1//h8/WXFs72N4GRcLFi+XDw5FJyJD1ZtiBKg=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=HvzoTKGV5baRQBqmA+S6gxaOOoxHxlZHK5GStkF/uzw=;
-	h=date:mime-version:subject:message-id:from;
+X-PPP-Message-ID: <177684716089.1821918.1965836553222221611@mxe9fb.netcup.net>
+X-Rspamd-Server: rspamd-worker-8404
+X-Rspamd-Queue-Id: 88904632AD
+X-NC-CID: pbQs2wGavMMtO1Lsg5Lqnthp6i0QkgfZ7gamkgUvglMNXJR6u80=
 
-Hi Philipp
+Lo! What happened to this regression? It looks like it was never
+resolved. Is that something everybody can live with in some way? Or
+something we have to live with, as reverting the culprit at this point
+would create a regression and thus creates even more trouble then it solves?
 
-在 2026/04/22 星期三 15:32, Philipp Stanner 写道:
-> On Wed, 2026-04-22 at 10:38 +0800, Shawn Lin wrote:
->> The PCI/MSI subsystem suffers from a long-standing design issue where
->> the implicit, automatic management of IRQ vectors by the devres
+Ciao, Thorsten
+
+On 3/4/26 09:47, Alexander Stein wrote:
 > 
-> nit:
-> The *automatic* handling is not actually the issue. All devres
-> interfaces (pcim_) are automatic by definition.
-> 
-> The issue is the "sometimes managed, sometimes not" nature of some pci_
-> interfaces. I came to call those "hybrid functions".
-> 
->> framework conflicts with explicit driver cleanup, leading to ambiguous
->> ownership and potential resource management bugs.
+> Am Mittwoch, 4. März 2026, 07:32:48 CET schrieb Manivannan Sadhasivam:
+>> On Wed, Mar 04, 2026 at 02:55:51AM +0000, Hongxing Zhu wrote:
+>>>> -----Original Message-----
+>>>> From: Manivannan Sadhasivam <mani@kernel.org>
+>>>> Sent: 2026年3月4日 0:42
+>>>> To: Hongxing Zhu <hongxing.zhu@nxp.com>; Alexander Stein
+>>>> <alexander.stein@ew.tq-group.com>
+>>>> Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+>>>> imx@lists.linux.dev
+>>>> Subject: Re: i.MX8M Plus PCIe link regression
+>>>>
+>>>> On Tue, Mar 03, 2026 at 01:38:13PM +0100, Alexander Stein wrote:
+>>>>> Hi,
+>>>>>
+>>>>> these days I noticed that there is a PCIe link regression on my
+>>>>> i.MX8MP platform (TQMa8MPxL) running next-20260227.
+>>>>> I could bisect it back to commit 9c03e30e3ade3 ("PCI: imx6: Skip link
+>>>>> up workaround for newer platforms"). I always get the following errors:
+>>>>>
+>>>>> imx6q-pcie 33800000.pcie: Link failed to come up. LTSSM:
+>>>>> CFG_LINKWD_START imx6q-pcie 33800000.pcie: probe with driver
+>>>>> imx6q-pcie failed with error -110
+>>>>>
+>>>>> Connected is a Gen1 PCIe -> Ethernet adapter. Interestingly a Gen2
+>>>>> device is detected without issues.
+>>>>>
+>>>>> Reverting 3c96a61dd2e098dda8dcac3dce3d38a3c87afbfc and
+>>>>> b9a8d28ebbf118bb3eac953f4a37abbd341257ab "fixes" my platform, both
+>>>> Gen
+>>>>> 1 and Gen 2 devices are detect. Commit
+>>>>> 3c96a61dd2e098dda8dcac3dce3d38a3c87afbfc is only required for conflict
+>>>> free revert.
+>>>>>
+>>>>> Here is a summary with outputs:
+>>>>> Gen 1 device
+>>>>>> 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
+>>>>>> 01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
+>>>>>> RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller (rev
+>>>>>> 01)
+>>>>>
+>>>>> Gen 2 device
+>>>>>> 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
+>>>>>> 01:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9128 PCIe
+>>>>>> SATA 6 Gb/s RAID controller (rev 20)
+>>>>>
+>>>>> output of "dmesg | grep imx6q-pcie". Common part for all tests:
+>>>>>> imx6q-pcie 33800000.pcie: host bridge /soc@0/pcie@33800000 ranges:
+>>>>>> imx6q-pcie 33800000.pcie:       IO 0x001ff80000..0x001ff8ffff ->
+>>>>>> 0x0000000000
+>>>>>> imx6q-pcie 33800000.pcie:      MEM 0x0018000000..0x001fefffff ->
+>>>>>> 0x0018000000
+>>>>>> imx6q-pcie 33800000.pcie: config reg[1] 0x1ff00000 == cpu 0x1ff00000
+>>>>>> imx6q-pcie 33800000.pcie: iATU: unroll T, 4 ob, 4 ib, align 64K,
+>>>>>> limit 16G
+>>>>>
+>>>>> next-20260227
+>>>>> Gen 1
+>>>>>> imx6q-pcie 33800000.pcie: Link failed to come up. LTSSM:
+>>>>>> CFG_LINKWD_START imx6q-pcie 33800000.pcie: probe with driver
+>>>>>> imx6q-pcie failed with error -110
+>>>>>
+>>>>> Gen 2
+>>>>>> imx6q-pcie 33800000.pcie: PCIe Gen.2 x1 link up imx6q-pcie
+>>>>>> 33800000.pcie: PCI host bridge to bus 0000:00
+>>>>>
+>>>>> next-20260227 + reverts
+>>>>> Gen 1
+>>>>>> imx6q-pcie 33800000.pcie: PCIe Gen.1 x1 link up imx6q-pcie
+>>>>>> 33800000.pcie: PCIe Gen.1 x1 link up imx6q-pcie 33800000.pcie: PCI
+>>>>>> host bridge to bus 0000:00
+>>>>>
+>>>>> Gen 2
+>>>>>> imx6q-pcie 33800000.pcie: PCIe Gen.1 x1 link up imx6q-pcie
+>>>>>> 33800000.pcie: PCIe Gen.2 x1 link up imx6q-pcie 33800000.pcie: PCI
+>>>>>> host bridge to bus 0000:00
+>>>>>
+>>>>> What can we do here? I'm wondering why Gen 2 trains correctly, while
+>>>>> Gen 1 doesn't.
+>>>>>
+>>>>
+>>>> Thanks for the report and sorry for the breakage. Commit 9c03e30e3ade3,
+>>>> mentions that the workaround is only needed for the i.MX6 platforms. So
+>>>> I'm not sure why the patch breaks i.MX8M and that too only for Gen 1
+>>>> speed.
+>>>>
+>>>> Also, before 9c03e30e3ade3, LTSSM was always started in Gen 1, but as per
+>>>> your finding, only Gen 1 devices fail to work. So the code till
+>>>> imx_pcie_wait_for_speed_change() shouldn't have an impact. Maybe the
+>>>> issue is due to skipping imx_pcie_wait_for_speed_change()?
+>>>>
+>>>> Richard, thoughts?
+>>> Hi Maini:
+>>> Prior to calling imx_pcie_wait_for_speed_change(), the PCIe link must
+>>>  already be established. Before commit 9c03e30e3ade3, the speed change
+>>>  procedure was only initiated after the initial Gen1 link was successfully
+>>>  brought up.
+>>>
+>>> Hi Alexander:
+>>> Sorry for the breakage.
+>>> Before commit 9c03e30e3ade3, i.MX8MP PCIe forced Gen1 link training
+>>>  initially, then switched to Gen3 after link-up by triggering a speed
+>>>  change. After commit 9c03e30e3ade3, link training starts directly at
+>>>  the Gen3 capability level.
+>>>
+>>> The two link training methods differ only in the i.MX8MP Root Complex (RC)
+>>>  link capability configuration prior to link training: one method forces
+>>>  Gen1 speed, while the other retains the default Gen3 setting in your tests.
+>>>
 >>
->> Historically, pcim_enable_device() not only manages standard PCI
->> resources (BARs) via devres
->>
+>> I still don't understand why the link fails to train at Gen 1.
 > 
-> See cover-letter. As I said, that's not the case anymore. It was the
-> case once.
+> Independently from the configured maximum link speed, shouldn't the initial
+> link be Gen1 anyway and upgraded to Gen 2 later on?
 > 
-> I think you could just briefly state "Historically, some functions
-> exhibited this hybrid behavior, the last of which by now are …"
+> I added some debug output to dw_pcie_link_up()
 > 
-> If you want you could maybe also Link: one  of my patch series's for
-> the wider history.
+> imx6q-pcie 33800000.pcie: dw_pcie_link_set_max_speed: current pci->max_link_speed: 3
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f704
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x28000000
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f722
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
+> imx6q-pcie 33800000.pcie: Link failed to come up. LTSSM: CFG_LINKWD_START
+> imx6q-pcie 33800000.pcie: probe with driver imx6q-pcie failed with error -110
 > 
->> but also implicitly sets the is_msi_managed
->> flag if calling pci_alloc_irq_vectors*(). This registers pcim_msi_release()
->> as a cleanup action, creating a hybrid ownership model.
 > 
-> nit:
-> s/ownership/responsibility
+> imx6q-pcie 33800000.pcie: dw_pcie_link_set_max_speed: current pci->max_link_speed: 2
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x28000000
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x28000000
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x2800f702
+> imx6q-pcie 33800000.pcie: Link failed to come up. LTSSM: CFG_LINKWD_START
+> imx6q-pcie 33800000.pcie: probe with driver imx6q-pcie failed with error -110
 > 
->>
->> This ambiguity causes problems when drivers follow a common but
->> hazardous pattern:
->> 1. Using pcim_enable_device() (which implicitly marks IRQs as managed)
->> 2. Explicitly calling pci_alloc_irq_vectors() for IRQ allocation
->> 3. Also calling pci_free_irq_vectors() in error paths or remove routines
->>
->> In this scenario, the devres framework may attempt to free the IRQ
->> vectors a second time upon device release, leading to double-free
->> issues. Analysis of the tree shows this hazardous pattern exists
->> in multiple drivers, while 35 other drivers correctly rely solely
->> on the implicit cleanup.
 > 
-> See cover-letter.
+> imx6q-pcie 33800000.pcie: dw_pcie_link_set_max_speed: current pci->max_link_speed: 1
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08000010
+> imx6q-pcie 33800000.pcie: PCIe Gen.1 x1 link up
+> imx6q-pcie 33800000.pcie: PCI host bridge to bus 0000:00
 > 
-> I would leave that to Bjorn's preference, but I think that info is
-> useful for the cover letter so that reviewers get what's going on, but
-> it's not useful in the commit message. Your description of the
-> problematic API is justification enough IMO.
+> So for any maximum speed above Gen1 it seems that LTSSM is stuck at link
+> training.
+> Unfortunately only link training and link up bits are defined and RM doesn't
+> show anything, so I don't know what the other bits are indicating.
 > 
->>
->> To resolve this ambiguity, introduce explicit managed APIs for IRQ
->> vector allocation:
->> - pcim_alloc_irq_vectors()
->> - pcim_alloc_irq_vectors_affinity()
->>
->> These functions are the devres-managed counterparts to
->> pci_alloc_irq_vectors[_affinity](). Drivers that wish to have
->> devres-managed IRQ vectors should use these new APIs instead.
->>
->> The long-term goal is to convert all drivers which use pcim_enable_device()
->> as well as pci_alloc_irq_vectors[_affinity]() to use these managed
+> For a Gen2 device the link training succeeds right away.
 > 
-> nit:
-> s/as well as/in combination with
+> imx6q-pcie 33800000.pcie: dw_pcie_link_set_max_speed: current pci->max_link_speed: 2
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08200000
+> imx6q-pcie 33800000.pcie: dw_pcie_link_up: PCIE_PORT_DEBUG1: 0x08000010
+> imx6q-pcie 33800000.pcie: PCIe Gen.2 x1 link up
+> imx6q-pcie 33800000.pcie: PCI host bridge to bus 0000:00
 > 
->> functions, and eventually remove the problematic hybrid management
->> pattern from pcim_enable_device() and pcim_setup_msi_release() entirely.
->> This patch lays the foundation by introducing the APIs.
-> 
-> But in general reads very nice and is mostly spot-on :)
-> 
->>
->> Suggested-by: Philipp Stanner <phasta@kernel.org>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->>
->> ---
->>
->> Changes in v3:
->> - Rework the commit message and function doc (Philipp)
->> - Remove setting is_msi_managed flag from new APIs (Philipp)
->>
->> Changes in v2:
->> - Rebase
->> - Introduce patches only for PCI subsystem to convert the API
->>
->>   drivers/pci/msi/api.c | 47 +++++++++++++++++++++++++++++++++++++++++++++++
->>   include/linux/pci.h   | 22 ++++++++++++++++++++++
->>   2 files changed, 69 insertions(+)
->>
->> diff --git a/drivers/pci/msi/api.c b/drivers/pci/msi/api.c
->> index c18559b..90b67f5 100644
->> --- a/drivers/pci/msi/api.c
->> +++ b/drivers/pci/msi/api.c
->> @@ -297,6 +297,53 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
->>   EXPORT_SYMBOL(pci_alloc_irq_vectors_affinity);
->>   
->>   /**
->> + * pcim_alloc_irq_vectors - devres managed pci_alloc_irq_vectors()
->> + * @dev: the PCI device to operate on
->> + * @min_vecs: minimum number of vectors required (must be >= 1)
->> + * @max_vecs: maximum (desired) number of vectors
->> + * @flags: flags for this allocation, see pci_alloc_irq_vectors()
->> + *
->> + * This is a device resource managed version of pci_alloc_irq_vectors().
->> + * Interrupt vectors are automatically freed on driver detach by the
->> + * devres. Drivers do not need to explicitly call pci_free_irq_vectors().
-> 
-> s/the devres/devres
-> 
-> s/do not need/must not  <- You stated doing so would be a bug, right?
-> 
->> + *
->> + * Returns number of vectors allocated (which might be smaller than
->> + * @max_vecs) on success, or a negative error code on failure.
->> + */
->> +int pcim_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
->> +			   unsigned int max_vecs, unsigned int flags)
->> +{
->> +	return pcim_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs,
->> +					       flags, NULL);
->> +}
->> +EXPORT_SYMBOL(pcim_alloc_irq_vectors);
->> +
->> +/**
->> + * pcim_alloc_irq_vectors_affinity - devres managed pci_alloc_irq_vectors_affinity()
->> + * @dev: the PCI device to operate on
->> + * @min_vecs: minimum number of vectors required (must be >= 1)
->> + * @max_vecs: maximum (desired) number of vectors
->> + * @flags: flags for this allocation, see pci_alloc_irq_vectors()
->> + * @affd: optional description of the affinity requirements
->> + *
->> + * This is a device resource managed version of pci_alloc_irq_vectors_affinity().
->> + * Interrupt vectors are automatically freed on driver detach by the devres
->> + * machinery. Drivers which use pcim_enable_device() as well as this function,
->> + * do not need to explicitly call pci_free_irq_vectors() currently.
->> + *
->> + * Returns number of vectors allocated (which might be smaller than
->> + * @max_vecs) on success, or a negative error code on failure.
->> + */
->> +int pcim_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
->> +				   unsigned int max_vecs, unsigned int flags,
->> +				   struct irq_affinity *affd)
->> +{
->> +	return pci_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs,
->> +					      flags, affd);
-> 
-> Hmmm, OK – I am not thaaaat deep in the topic anymore, so correct me if
-> I am wrong. But to me it seems that we might have a problem.
-> 
-> Your intention seems to be to rely on hybrid devres here, isn't it?
-> 
+> Best regards,
+> Alexander
 
-Yes, it's.
-
-> Because pci_alloc_irq_vectors_affinity() runs into
-> __pci_enable_msi(x)_range(), which runs into pci_setup_msi_context(),
-> which sets up the devres callbacks.
-> 
-> And this would now mean that your new function here *also* is hybrid,
-> because it relies on pcim_enable_device() setting the flag, right?
-> 
-> IOW, when someone called pci_enable_device(), your pcim_ function here
-> would NOT be a managed devres function. Right?
-> 
-> That would obviously not fly. The current (and IMO) desirable design
-> goal for devres PCI is that pcim_ functions are ALWAYS managed (hence
-> the 'm' = managed, and pci_ functions are NEVER managed).
-> 
-> I am sorry if / that I overlooked that while first glimpsing at your
-> previous versions.
-> 
-
-Don't worry.
-
-> 
-> IIRC for this reason I had to provide a completely unmanaged backend,
-> and to do so I actually had to *copy* existing functions from pci.c, so
-> for many months PCI contained two versions of the same functions.
-> 
-
-I was trying to avoid copying the existing functions.
-
-There are some combinations here:
-1. pcim_enable_device() + pci_alloc   -> correct
-2. pcim_enable_device() + pci_alloc + pci_free  -> bug
-3. pci_enable_device() + pci_alloc + pci_free -> correct
-
-To solve the 2nd case, I need to remove the hybird mode from
-pcim_enable_device(). So what I had in mind is to is :
-
-1. keep pcim_alloc_irq_vectors() rely on pcim_enable_device(), still
-the hybrid mode as you pointed out.
-2. convert pcim_enable_device() + pci_alloc_irq_vectors() users to
-pcim_enable_device() + pcim_alloc_irq_vectors(), which is the first
-above case. Meanwhile add documentation or code check to prevent new
-pci_enable_device() + pcim_alloc_irq_vectors() user from using it.
-
-3. after conversions, we still have three combinations:
-- pcim_enable_device() + pcim_alloc()  -> correct
-- pcim_enable_device() + pci_alloc + pci_free  -> bug
-- pci_enable_device() + pci_alloc + pci_free   -> correct
-
-4. Then remove pcim_setup_msi_release() from pci_setup_msi_context().
-And add pcim_setup_msi_release() to my new APIs. This way,
-- pcim_enable_device() + pcim_alloc()  -> correct
-- pcim_enable_device() + pci_alloc + pci_free  -> correct
-- pci_enable_device() + pci_alloc + pci_free   -> correct
-
-5. remove the limitation of using pci_enable_device() + pcim_alloc, as
-mentioned in the 2nd above step. so we could allow this 4th pattern.
-Finally all things work fine.
-
-Please let me know if this approach works for you?
-
-
-> The reason was that the hybrid behavior was burried so deep in the
-> subsystem.
-> 
-> See here:
-> 
-> Here I had to reimplement some functions to be used by my new pcim_
-> functions:
-> https://lore.kernel.org/linux-pci/20240610093149.20640-4-pstanner@redhat.com/
-> 
-> 
-> And here I could finally remove them later:
-> https://lore.kernel.org/linux-pci/20250519112959.25487-7-phasta@kernel.org/
-> 
-> 
-> I hope this helps. And again sorry for potentially causing you
-> unnecessary work :(
-> 
-> 
-> Regards
-> Philipp
-> 
-> 
->> +}
->> +EXPORT_SYMBOL(pcim_alloc_irq_vectors_affinity);
->> +
->> +/**
->>    * pci_irq_vector() - Get Linux IRQ number of a device interrupt vector
->>    * @dev: the PCI device to operate on
->>    * @nr:  device-relative interrupt vector index (0-based); has different
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 2c44545..3716c67 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -1770,6 +1770,12 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
->>   				   unsigned int max_vecs, unsigned int flags,
->>   				   struct irq_affinity *affd);
->>   
->> +int pcim_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
->> +			  unsigned int max_vecs, unsigned int flags);
->> +int pcim_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
->> +				   unsigned int max_vecs, unsigned int flags,
->> +				   struct irq_affinity *affd);
->> +
->>   bool pci_msix_can_alloc_dyn(struct pci_dev *dev);
->>   struct msi_map pci_msix_alloc_irq_at(struct pci_dev *dev, unsigned int index,
->>   				     const struct irq_affinity_desc *affdesc);
->> @@ -1812,6 +1818,22 @@ pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
->>   					      flags, NULL);
->>   }
->>   
->> +static inline int
->> +pcim_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
->> +			       unsigned int max_vecs, unsigned int flags,
->> +			       struct irq_affinity *aff_desc)
->> +{
->> +	return pci_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs,
->> +					      flags, aff_desc);
->> +}
->> +static inline int
->> +pcim_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
->> +		      unsigned int max_vecs, unsigned int flags)
->> +{
->> +	return pcim_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs,
->> +					      flags, NULL);
->> +}
->> +
->>   static inline bool pci_msix_can_alloc_dyn(struct pci_dev *dev)
->>   { return false; }
->>   static inline struct msi_map pci_msix_alloc_irq_at(struct pci_dev *dev, unsigned int index,
-> 
-> 
