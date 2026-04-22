@@ -1,91 +1,170 @@
-Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9289337C0F2;
-	Wed, 22 Apr 2026 02:30:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1611E3806D9;
+	Wed, 22 Apr 2026 02:33:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776825063; cv=none; b=g1SBiRSCyaaBcYqeQUxMVJvQtB62gBdTW3mu+nEA9Q9uVcP5WZKer8Xnba7vh/Jjnnxvuk+x1p+gX494oUEXZHM6HbPqbY5v83IDdHvOfTpdXOGOu8HwyY+yHLzbFInAwFbWxyjSQ7YFY8DRNqRTw/BzRRRDVmidOm1Vubgli6c=
+	t=1776825220; cv=none; b=DGZkrvtIaGmjlszn2lj7/2Lu1Tdy9YqvUSynddtmQG+OeAABssPDya2OrSizXRnAupLBoY1kv/T5bBSZ2CwciEfENk0sP/Jjp7GkMOb4OUtRc9SQKw/2oVO7CISDnFUFuqXHdK8O8u/YmaTQs90wV20tcV05AbVUoP/q3Q50p8w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776825063; c=relaxed/simple;
-	bh=JPATYPYGBBQUUf/BoeEEX3QmLyl6F9JR/HmuQFXzMh8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=gifg6X91gI2rLYJnMUk8HKSN1RBy0oahF1En0mvqZ3DjaWKop1I41BdWlGS3b5aK0479OON2mnUQAr0/dxKIJMdfvXYp0FdG+3qZhSFieAbtsH/wQtGWfmrRTQLrRw/frc1smKaEdSoeKstOhUZCeE4KYocREfI/SphlUJFw/Iw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=2+LHgl2Q; arc=none smtp.client-ip=113.46.200.225
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1776825220; c=relaxed/simple;
+	bh=GmhkLwfa6h6rSszM+OfJhO9L6pKs23/XT/lrbTGZNX8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=suHVzafvR38GbiJzykcBt+vLW/QJifciO2fdeAFN+Jg/D6mKPKeQncb8vRZqV2/hRkpfsarvbE1Rwa5PqPMk2eXSA+N9lt8gpxK+qzgzKBxbPqPW+HbBNuSLYFcf5rYoumBiHA61rq4S+8a5KAiG9bwKGkGJxqXRrhUwFt8+Uaw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=lUQ+NBFU; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="2+LHgl2Q"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=v2mK18BsBvPSTONwESQ4nMackEaR4Y/ypyIV3y1RQtU=;
-	b=2+LHgl2Qe4H/GGbyis4Zht4mDEyLFzVfHnocxmvfUc4Iy9RTTuabOzufPzwlxgZwAE1/D61/i
-	/Its62ETzhsGLYI7c7Uv8L4IQXtJIDjCLikS+e1c8Bv+h98jEpwWWUVt4nAwpA7owbFQ9SprKf0
-	aR1W9FHLMW/485f5zFRj878=
-Received: from mail.maildlp.com (unknown [172.19.163.127])
-	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4g0jhy06yzz1K99M;
-	Wed, 22 Apr 2026 10:24:18 +0800 (CST)
-Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
-	by mail.maildlp.com (Postfix) with ESMTPS id 3B16B40573;
-	Wed, 22 Apr 2026 10:30:38 +0800 (CST)
-Received: from kwepemn200012.china.huawei.com (7.202.194.135) by
- dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Wed, 22 Apr 2026 10:30:38 +0800
-Received: from [10.67.120.233] (10.67.120.233) by
- kwepemn200012.china.huawei.com (7.202.194.135) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Wed, 22 Apr 2026 10:30:37 +0800
-Message-ID: <5ddede9a-7062-42cc-a224-b0dde3f95e2c@huawei.com>
-Date: Wed, 22 Apr 2026 10:30:37 +0800
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="lUQ+NBFU"
+Received: from mrdev.corp.microsoft.com (192-184-212-33.fiber.dynamic.sonic.net [192.184.212.33])
+	by linux.microsoft.com (Postfix) with ESMTPSA id AB52020B6F01;
+	Tue, 21 Apr 2026 19:33:28 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com AB52020B6F01
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1776825209;
+	bh=O+mpjpLBLfXxNngTSPHR4JXlp5P2eN9Wrs/JOmLiTYs=;
+	h=From:To:Cc:Subject:Date:From;
+	b=lUQ+NBFUMYhMiCKp5hJ4csDmWh7uDXFoFxm83NvWZ/IwJ9a5RxenB0Yd0zUaoi1pw
+	 3yv9M2bPsfObV813+Lm1OuK3i4jcBXSJHx2cUn1pSWMy43jtuQH42gb29McJePj3lT
+	 Ej8Q0Cx2NZEoOqbrcfAhwc/jLbsHBVnf65GmjuN0=
+From: Mukesh R <mrathor@linux.microsoft.com>
+To: hpa@zytor.com,
+	robin.murphy@arm.com,
+	robh@kernel.org,
+	wei.liu@kernel.org,
+	mrathor@linux.microsoft.com,
+	mhklinux@outlook.com,
+	muislam@microsoft.com,
+	namjain@linux.microsoft.com,
+	magnuskulke@linux.microsoft.com,
+	anbelski@linux.microsoft.com,
+	linux-kernel@vger.kernel.org,
+	linux-hyperv@vger.kernel.org,
+	iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Cc: kys@microsoft.com,
+	haiyangz@microsoft.com,
+	decui@microsoft.com,
+	longli@microsoft.com,
+	tglx@kernel.org,
+	mingo@redhat.com,
+	bp@alien8.de,
+	dave.hansen@linux.intel.com,
+	x86@kernel.org,
+	joro@8bytes.org,
+	will@kernel.org,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	bhelgaas@google.com,
+	arnd@arndb.de
+Subject: [PATCH V1 00/13] PCI passthru on Hyper-V (Part I)
+Date: Tue, 21 Apr 2026 19:32:26 -0700
+Message-ID: <20260422023239.1171963-1-mrathor@linux.microsoft.com>
+X-Mailer: git-send-email 2.51.2.vfs.0.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] MAINTAINERS: Update HiSilicon PCI Trace and Tune
- maintainer
-To: Jonathan Cameron <Jonathan.Cameron@huawei.com>, Jie Zhan
-	<zhanjie9@hisilicon.com>, Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-	<linux-kernel@vger.kernel.org>
-CC: <linuxarm@huawei.com>, <linux-pci@vger.kernel.org>, <jic23@kernel.org>,
-	Yicong Yang <yangyccccc@gmail.com>
-References: <20260416094219.25258-1-Jonathan.Cameron@huawei.com>
-From: Sizhe Liu <liusizhe5@huawei.com>
-In-Reply-To: <20260416094219.25258-1-Jonathan.Cameron@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- kwepemn200012.china.huawei.com (7.202.194.135)
+Content-Transfer-Encoding: 8bit
 
+Implement passthru of PCI devices to unprivileged virtual machines
+(VMs) when Linux is running as a privileged VM on Microsoft Hyper-V
+hypervisor. This support is made to fit within the workings of VFIO
+framework, and any VMM needing to use it must use the VFIO subsystem.
+This supports both full device passthru and SR-IOV based VFs.
 
-On 2026/4/16 17:42, Jonathan Cameron wrote:
-> Yicong left Huawei a while back so drop both of our entries and add one for
-> Sizhe Liu who will be looking after this code going forwards.
->
-> Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Sorry for getting back to this late. Thanks a lot for your efforts!
+At a high level, the hypervisor supports traditional mapped iommu domains
+that use explicit map and unmap hypercalls for mapping and unmapping guest
+RAM into the iommu subsystem. Hyper-V also has a concept of direct attach
+devices whereby the iommu subsystem simply uses the guest HW page table
+(ept/npt/..). This series adds support for both, and both are made to
+work with the VFIO subsystem.
 
-Acked-by: Sizhe Liu <liusizhe5@huawei.com>
-> ---
->   MAINTAINERS | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index d1cc0e12fe1f..79efa7b94c9e 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -11572,8 +11572,7 @@ F:	drivers/perf/hisilicon
->   F:	tools/perf/pmu-events/arch/arm64/hisilicon/
->   
->   HISILICON PTT DRIVER
-> -M:	Yicong Yang <yangyicong@hisilicon.com>
-> -M:	Jonathan Cameron <jonathan.cameron@huawei.com>
-> +M:	Sizhe Liu <liusizhe5@huawei.com>
->   L:	linux-kernel@vger.kernel.org
->   S:	Maintained
->   F:	Documentation/ABI/testing/sysfs-bus-event_source-devices-hisi_ptt
+While this Part I focuses on memory mappings, upcoming Part II
+will focus on irq bypass along with some minor irq remapping 
+updates.
+
+Based on: cd9f2e7d6e5b (origin/hyperv-next)
+
+Testing:
+ o Most testing done on hyperv-next:e733a9e28180 using Cloud Hypervisor (51).
+ o Limited testing on : cd9f2e7d6e5b
+ o Tested with impending Part II irq patches.
+ o All tests involved PF passthru of devices using MSIx.
+ o Following combinations were tested:
+    - L1VH(1): test 1: Mellanox ConnectX-6 Lx passthru
+               test 2: NVIDIA Tesla Tesla T4 GPU.
+               test 3: Both of above simultaneous passthru
+    - Baremetal dom0/root: All of above.
+
+(1) L1VH: this is a semi privileged VM that runs on Windows root on
+          Hyper-V, and allows users to create more child VMs.
+
+Pending: This to establish a baseline for further enhancements.
+ o arm64 : some delta to make this work on arm64 (in progress).
+ o device sleep/wakeup.
+ o More stress testing 
+ o CH reports it could not unbind vfio group upon guest shutdown. Need 
+   to reboot for now.
+ o Qemu support (in progress).
+
+Changes in V1:
+ o patch 1: Don't tie hyperv-irq.c to CONFIG_HYPERV_IOMMU.
+ o patch 4: Redesigned to address security vulnerability found by copilot 
+            with passing tgid as a parameter.  Also, do tgid setting right 
+            after setting pt_id.
+ o patch 5: Remove unused type parameter from mshv_device_ops.device_create
+ o patch 7: mshv_partition_ioctl_create_device cleanup on copy_to_user.
+ o patch 10: Add export of hv_build_devid_type_pci here to get rid of 
+             patch 11.
+ o patch 12: Move functions to build device ids from patch 11 here for
+             the benefit of arm64. Rename file to: hyperv-iommu-root.c.
+ o patch 13: removed to be made part of interrupt part II of this support.
+ o patch 14: get rid of fast path to reduce review noise.
+ o New (last) patch to pin ram regions if device passthru to a VM.
+
+Thanks,
+-Mukesh
+
+Mukesh R (13):
+  iommu/hyperv: rename hyperv-iommu.c to hyperv-irq.c
+  x86/hyperv: cosmetic changes in irqdomain.c for readability
+  x86/hyperv: add insufficient memory support in irqdomain.c
+  mshv: Provide a way to get partition id if running in a VMM process
+  mshv: Declarations and definitions for VFIO-MSHV bridge device
+  mshv: Implement mshv bridge device for VFIO
+  mshv: Add ioctl support for MSHV-VFIO bridge device
+  PCI: hv: rename hv_compose_msi_msg to hv_vmbus_compose_msi_msg
+  mshv: Import data structs around device passthru from hyperv headers
+  PCI: hv: Build device id for a VMBus device, export PCI devid function
+  x86/hyperv: Implement hyperv virtual iommu
+  mshv: Populate mmio mappings for PCI passthru
+  mshv: pin all ram mem regions if partition has device passthru
+
+ MAINTAINERS                                   |   3 +-
+ arch/x86/hyperv/irqdomain.c                   | 229 +++--
+ arch/x86/include/asm/mshyperv.h               |   4 +
+ arch/x86/kernel/pci-dma.c                     |   2 +
+ drivers/hv/Makefile                           |   3 +-
+ drivers/hv/mshv_root.h                        |  26 +
+ drivers/hv/mshv_root_main.c                   | 256 ++++-
+ drivers/hv/mshv_vfio.c                        | 211 ++++
+ drivers/iommu/Kconfig                         |   5 +-
+ drivers/iommu/Makefile                        |   3 +-
+ drivers/iommu/hyperv-iommu-root.c             | 899 ++++++++++++++++++
+ .../iommu/{hyperv-iommu.c => hyperv-irq.c}    |   2 +-
+ drivers/iommu/irq_remapping.c                 |   2 +-
+ drivers/pci/controller/pci-hyperv.c           | 120 ++-
+ include/asm-generic/mshyperv.h                |  34 +
+ include/hyperv/hvgdk_mini.h                   |  11 +
+ include/hyperv/hvhdk_mini.h                   | 112 +++
+ include/linux/hyperv.h                        |   6 +
+ include/uapi/linux/mshv.h                     |  31 +
+ 19 files changed, 1790 insertions(+), 169 deletions(-)
+ create mode 100644 drivers/hv/mshv_vfio.c
+ create mode 100644 drivers/iommu/hyperv-iommu-root.c
+ rename drivers/iommu/{hyperv-iommu.c => hyperv-irq.c} (99%)
+
+-- 
+2.51.2.vfs.0.1
+
