@@ -1,46 +1,46 @@
-Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013014.outbound.protection.outlook.com [40.107.162.14])
+Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013017.outbound.protection.outlook.com [40.107.162.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB6E1231836;
-	Wed, 22 Apr 2026 09:34:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F815372B3C;
+	Wed, 22 Apr 2026 09:34:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.17
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776850464; cv=fail; b=US8w3hjy1zB1QJUvGrXAXNdyNQGCd8iDnMXTPwY7OwyT4zIfpAefrhFgCtyrA0MyQHeLM8pCVJf0KQI/PQKaeUfM+3glCfgsfDnYJmlbZT9zkTZVXISzwkKeuMyQP2X91ARjcnAVSnPn8APyq9tgf5QEeTBPAfRdU8K0P2phvow=
+	t=1776850472; cv=fail; b=n/+k1i+/yelmopjzlRysm/L5TK/sOCro/5xhGJdZhrwe8dFC6HA27c0p9rhBXdSRlIYa26M/N9vYF4pKlGRN0vxeAjnVSVuFntKkwFQcAw38z9sITDGu/iRfBcbxmu3bQnMnamcl5w339SokuUQbd9lcZ6EqwZcUAJ4/dkOuRx8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776850464; c=relaxed/simple;
-	bh=A++ytBZo+0feJHUr1Rvi+b01Dxk7S8vyCF0Sue7S+D0=;
+	s=arc-20240116; t=1776850472; c=relaxed/simple;
+	bh=B+IUcdsIJ2cNFPRVaG+xcPg4bNSXo9vHqnC7VOsbhpA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=tn9U0jMzs8zoXjssuGwfJB+silTXWd9PAKUlLgElUNNzVMUkoHMTZKxgNdoxVIsapqY25gjb6a94G4fTfXaSBaPQzH9R3pKLU3F77ugYnCQ4k1LeoWFihhlMJn5oaBEj0TI1U4T/JcGIi+2/HcLcu9K0dMdCSvghQKIq8xinn2U=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=TD7m9QwC; arc=fail smtp.client-ip=40.107.162.14
+	 Content-Type:MIME-Version; b=Pfk4/Dcktb/Kgk53AhppUJzsc6+CTwPnNbZ+ez7bOwEZiTXhvlSxmeYKGJF0emsMFuGkds4vBrhy3ke4HF5uJyJ1siHuQoFdcStnqYovgSckJfKbFKXTOXtTF14DX8G8vcMePGLOjZMZOYQ5X73MfbAD2zdKUuGVRyVQDiHC/zA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=j/YZYv8n; arc=fail smtp.client-ip=40.107.162.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="TD7m9QwC"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="j/YZYv8n"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=NuRs1hSMBiv5zS6rO88PVjKhAGYSEVa2oMSTwUAmuc7AzlgWunIynLskzLwlV0cX/L94+xsZB+M6fdTSRQk13fhihg/nw7p0LG97zG+ftoecwULov2VXrSZJ8GLi2pAZpeinOB+2pc9HfhnDQogRdAtVAoP6qgYA6iErxdJOr4DHYkyiE9ac+GmvwMIdrYnMIrY4aFqtmDHD6z6JRzRp1OMrmu2gfSWGktFPKd4/AFpsdaxHTb/+7pyCDf9d2SPUhnEGEBh8C1jhJHvC+AEC6DhcpPMvd4gTSFRP28BdFe9IInfSoeQ3vBx5S1Utfsc2BVWjsog94mMPkp+8b6TyNA==
+ b=ZS0X5Gcjfs4cCVzBJSFfApERq7kQvEVZ1Asm+6WlZxJQRtf2Hq8dk8LLY748XyYT8xS8/ShS6qY9ZpMwtgVEBbkmzAnR3Gi37HuzpSdxKpm368r5gFRAzVXxs4O03Qq7j58GI7AUMT3fU47hWocMoHNLAD/XRUlkWXacxYLbRngcjDV/2PQvEWSbP1r3Ifh4hDeKyxBWlVpZNjdmBRK0UNjsZpcfXjq+s2ogV29Wbywz7qO/43TiTCWqhsA3BPNj13n/AX6hjkFEZPg3iF+K0RGoiaE4rkntisAJ+HEiaoFbA9ed5gOLULrPutnbm6XxJsC19FPLW48hKoPUdaZUIw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=sXYL9hD7Zb+bYERt9M3ghxoEy0ChaVYvDjQmA1hXq3U=;
- b=MncimihRaBF9sND5bwpvjtPS685piwTx2b1hWLC6VUpg4ghGMSn0yIDfEuInGvP7pYSDr6JS1o3d5Y5WNqiJ3iBjT5cL6iDWZE/pAK5wkLGmVj1MakYi4wjOSQ7tzlc3Oug059imi2RqOUTkOfZ2ilc3V9aHpSuUjLPF1NOSR79ArM5By6ZzqDtaxpjdTpGXLqFpqrjpClqaJK+J59ftJfY4YCOg9kK67wFX6PNlfLgcqYXhnBZBNA2cFjcIq4Zr+yBOgKN2qsTu2t5k7tqZNdpWt2ufAjkqWRpnDtQnGALaLvq5RUk6DUvKMZ/GjTNTg+TBM1pL9E9ZbM6oSPOhMg==
+ bh=jGVHqOPs/4jMGkcftvgjRX5BCFrejfz9iGaZzDJBg8s=;
+ b=Ied39/cpu7eTksWed5N9ISONZJ7BHpQGty74WgqxtFIMwuf+EcngIBF5gDxy/2IsKtAAgzfkeiNuKB2i+MLrwcRo3FF6Sg+Fetu+25Cw6qpF4eFOUguV6WSAe+JpaG6nG64avN2iQwv3OQoEdgVHy/8JYwg7k7cWwHbHM/PZOaNJE2lwZQj7FX7SDXsuwbjSkScNOwLeQigZQdnr7YHIgJNBvaDWMszWCya2l6TfOytbKtRotF0hDiK2TECVJMV6ctfK5M+IRdejHjCGwLXNgxsRv2fwtH+qy1Bg0qYHhNdf+6gNKWG0+8QAGcf0uspxVEWV+n5Sd45+Jy7VUthMqQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=sXYL9hD7Zb+bYERt9M3ghxoEy0ChaVYvDjQmA1hXq3U=;
- b=TD7m9QwCS83qM3TZj0gaLePlu4EUWEDDDN2OEbwX+p4BYFqWkkWJdyLJ9fBEE5UW8ExX7nbOG5ruBQtJMaFJh3Ad/EPfMSEGKLVTMy5diXNILSYPJavTkrAuxvo2ild4x96HtMX745N9yHFWllIFeN89fNFQqz0WL6NPSmpm7doZr2ouLEqJ/sdU5+AdqTzAeLlPzRITdMyEBgUqdqoTzySr5y55xe8pEXBKCB0QP1ILDoVMlFWXf+205nrQcmFzT2RdIbK5cZvk2gpF9Z6Hs4yEgNFZY/7EjtNVDysBPNA5wSm3ZtkFYkNCNAT1CV44ySRu/g2pkCGUokrSJT5l2w==
+ bh=jGVHqOPs/4jMGkcftvgjRX5BCFrejfz9iGaZzDJBg8s=;
+ b=j/YZYv8ngScfy3zjJAID/Qgy/9dh50tGjrDNBLsrygAi91AZOc333VZsmHlux3adTUL9VZF/fajHcToY1jMpKTAPpP6J8Qrn5hTFnVjIwq19xE52QApZ7YobUIDye0m/tK+/unKtmasKQ2wBggXU3ji52iaf7+kmLjMkeyLIKaPIHBuJJbA9SuvYY0ISNeRkgCtDjcZQue6MAhb92opCdqFz0BO2qCVkLj2EZA5DasCQbY0OcfeL7dmtx8xyFbDAX0Kp1DKMMIUcwPdMZLTaxg1cyh2Q0dkB9ullk8fIN7QlEYTdD+WyqDSpZ0qMNQF8J2fEm4V0C2J9S2+klAPxDQ==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
  (2603:10a6:800:315::13) by PA2PR04MB10129.eurprd04.prod.outlook.com
  (2603:10a6:102:3ff::12) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.18; Wed, 22 Apr
- 2026 09:34:19 +0000
+ 2026 09:34:27 +0000
 Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
  ([fe80::feda:fd0e:147f:f994]) by VI0PR04MB12114.eurprd04.prod.outlook.com
  ([fe80::feda:fd0e:147f:f994%6]) with mapi id 15.20.9818.032; Wed, 22 Apr 2026
- 09:34:19 +0000
+ 09:34:27 +0000
 From: Sherry Sun <sherry.sun@nxp.com>
 To: robh@kernel.org,
 	krzk+dt@kernel.org,
@@ -60,9 +60,9 @@ Cc: imx@lists.linux.dev,
 	linux-arm-kernel@lists.infradead.org,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH V14 02/12] PCI: host-generic: Add common helpers for parsing Root Port properties
-Date: Wed, 22 Apr 2026 17:35:39 +0800
-Message-Id: <20260422093549.407022-3-sherry.sun@nxp.com>
+Subject: [PATCH V14 03/12] PCI: imx6: Assert PERST# before enabling regulators
+Date: Wed, 22 Apr 2026 17:35:40 +0800
+Message-Id: <20260422093549.407022-4-sherry.sun@nxp.com>
 X-Mailer: git-send-email 2.37.1
 In-Reply-To: <20260422093549.407022-1-sherry.sun@nxp.com>
 References: <20260422093549.407022-1-sherry.sun@nxp.com>
@@ -79,323 +79,189 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: VI0PR04MB12114:EE_|PA2PR04MB10129:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2ec5b9a4-9f51-4ed0-cd85-08dea0525461
+X-MS-Office365-Filtering-Correlation-Id: da00a706-4c09-46bd-3ac8-08dea05258f2
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|376014|7416014|52116014|19092799006|1800799024|366016|56012099003|22082099003|18002099003|921020|38350700014;
 X-Microsoft-Antispam-Message-Info:
-	wc9QwWHZEoko3COLD2yUkHkpea+qxW8sAWlp75z90hU+s4kSk6FtBmCotYWyGZpoha94uYTApDxZ9ej41mcL9tFyKSEetu385yzQb3229TOVj3bvCs9Kyl1/rNKAz1yUCmn6TFCRNHYwJPMAljhY81k3Xm25sjbQfjCwsSuIYQpp4Yk5alyOH/+JtnA6FwCWm9URv+Yc1suja35L05xozImeRtslu7KXiDaFFzKPWDT4kyyhgnp4v7LrUIn6MpwAcNyqxNnlc8wgETE17I4nCn0h8cks0I8ghdv/pYXST6/kgJvYnvR49WL1tEQv10MncoyhIodjYWQMuder/mMwl1P/Q66TmtZRm6Tjebzhd7e+pfYUGqOY1qo/bYqJ2183Wd92FeLPJ64HiWJhomLn2OhiSRhIzoGgCKyaR6JECgE5jCv8Vegg0Hz8qMb7+kMUamdfi2oPxerXUlAvySlnQgHA6GXAEAucIlCqhAfxI+Kp1bu7M69KMu5kg1OxoyD8Dzz+BqnqMxWd1F0lbdGydMZAFel7mYdml515eTZYCzYgM4bDzYpjXtRLnrZlrbtREPOIE1izjY1+yskjiazAzJLztHLlQJ7Fnhmu5ZMnktpiLJpYstnKvTGUWutBaQBZjY8/HKZPjDQNicpCS23XUhrverJfJxLw2gl7TWEwvvm8SeDQ91Kij1hKBTseAjoQ1TXNxgZEopx7xm8zwQktLw05cgMOSlExCFelmUWnkHfxji1FRTXa0pbPG2Ol45zGzIOuKScYHSCCxLvaai4KSkNrsAMP5YxdeomYZC4tbRefaHwzI8MwHqQMrqOAhLFc
+	FCcQiBNkgCYUAqiJVcTc4NnP0PNtw6JdErqQXc9AH0m2gXbE2a+0CdtoS5c/AlPq/gTP9+bnJJSd+b+KM7Mgt2Ml7AH7ux73fC97aH8hHVKDhM/bgjzciNvy6Vr6f6xtkUL4XU0baKWvQwF+3Ra56n0zYfbUjPELtn94uwpB62eicHjHGuFjikivJD3nssv2Ti2SSAfYL3z0Wqivlk/7d+sA35KFJdxZy+CF8C5/NZnMlxWrj5JwkTWJ7luXbbHCAMPKQ6T+6CoOmcEOLHh4wVH1EP6XgMRUSUe2nwmbu/DX1MfbIyrdUau5okHXZI1qSZOLR+IocVtRGvUKLwlFizzspDy4xU0W/GGyAt9trsz9JSCwzy5BT+NxHnEt36lJ3Uvg1IOjYTEBtaXI3nA3Xmr+ee9dzEf0ZYDG5zVzAT/px4tfT+rYLYUgTjKjR5UxQ/mXoQoGQxMU22DgWvENWBioZ3G3eXL8J0++e2c7fIEhnh+TCEtM1/357DK4O1B+icF7vT3Jh5gpBpn1V1EsNaTpAGNKRlhPpkh1PrEpZxYJhDQRtRZIBKMAi/MU3Xp+Rv0kVZ0hEblkkB7XZmIVg/K+XK8UldLQV30UtdSPNxVvnW48OMM+8WucHB0+3Nxv8vxrYJ5tJnYJ4ebmqK/CHqUxJhEc9IM6K896qEoyuN9Uz1IF9Dx+JAR1J4Nsh5EkUqfeA+GOhRJEjK62DBYhGMEU/8QtxkshanpyDZJ2M7V83DL/d8SOHxfN2Wy/ha5WxS2Y1dDw7C+Ud7r+3Eu6MrhNiMMKBlWyK0CCcpJ9AGwg5tFJ2qrmBN0keZnDB5Yn
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI0PR04MB12114.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(52116014)(19092799006)(1800799024)(366016)(56012099003)(22082099003)(18002099003)(921020)(38350700014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?LQlNFFxPSq94CT81WfB51yv7sqF+FHfkF07tSHLWoVTa83ECcVw3Ccxo1XhG?=
- =?us-ascii?Q?PUkqwcaw0wug80x51VSHvMWijMBuWYuQB1kxpBxC8n5qJUBnOcFf++PYo7X4?=
- =?us-ascii?Q?9v6mXKA9VFKQgteiEo/Abghss4rMDJkJy5RzHRJ9LCEYeXUgQsIbK0CDj5Ju?=
- =?us-ascii?Q?RBdMwAeooCCn5yArLOPxi/HRd0CNRA4dyY3wCZvntc4LX5WxyhXt3zvLeSvx?=
- =?us-ascii?Q?8y/8WiV4bbJMWKr9Du1jUe6e7cd790ynBpKI9vZm0OGTZertlVjm9of9BCEi?=
- =?us-ascii?Q?w3WXhu5E+bfYpzSxdmtxsNcx3R65zee4c2hRjUrdetO8U55CbgJeoVQ7qBD1?=
- =?us-ascii?Q?e4+QAmnLmS4pviEqI/4/4t4r3d3owM5S2TUhGCjO6x8wlA+y0z0pyotUTXMR?=
- =?us-ascii?Q?AmpNY22a0teiF09NY0mg4Yygal+RsWyNVWbebG8vUOTRSpGsO6VxrXAMAwk/?=
- =?us-ascii?Q?zSgI6EZfOZsa5imON6TtlAgCp6FQiGo94fHtsi/yXT65MccEAWZQuqDe34Vh?=
- =?us-ascii?Q?wyKvNiUMR/QzRscMZG3uDb7/pAuQbgFpU3Cts7udCd7rqVXVmibFo40PhUqY?=
- =?us-ascii?Q?1iaq3IHFwWLhxjL+X6wEoTgG7z4v6x3h7Sr/Z90b8VpwKaa35V79zJru5krZ?=
- =?us-ascii?Q?pghL+ef0oxQsL/m2T04YmrrMtUl0TsS2xbJHujkCDGoCuh7HlHhlfyKLS8Yt?=
- =?us-ascii?Q?qXVEDxlYugAAc4fX/Q+griviOfUM4ttYlN+6Dgb2xxWGmis4ybimtuJydKF5?=
- =?us-ascii?Q?cWLAuLa2eQo3FQaqAumTIn4LNbDMRwpkUmlGuR8+wVLppWPn7UOEJVp4usPI?=
- =?us-ascii?Q?i5fVGKpTNHuCdSGNnyV1rzRtsuuTA982pKk2igNl9RqGKqAI3CZbPGMd9m8J?=
- =?us-ascii?Q?tC1s/Eye/qyKNPi8y8GgJP1cZdoRYvW5QUJ2OvcAiOx8SBHZsnPXcWTGoiQf?=
- =?us-ascii?Q?Bjvj64srBNJB+lHdU/gXjCCuub+AVJHaK2nirJeNUZVR0n80AFo0jcFtLNGX?=
- =?us-ascii?Q?RmPxFraUxbQRkDi0auef7nKFP/GZBaQZcHL2KPlcYHVnPT7IfIcfp8bHmBmj?=
- =?us-ascii?Q?wJUMLR4XWJZBly7iJ0SJSivnI+HrrMaD8ESdS30a/3JIdx1ySrmTrrCz/bQe?=
- =?us-ascii?Q?fmnKTQ4XTce11j0olMlhalRGKYBIaDj5Y3EEFbsvP83xw8WB4v9RqXYRy3MG?=
- =?us-ascii?Q?G9MEQth4I/w3h4WrG5qoUGI1dSaq8Voc6CwsPXoGzjEgYa6FLef4IwRsWi2d?=
- =?us-ascii?Q?UgOwq02RIbKbIyt1ayAF/LsXb5CD6ErfON7nVhXdpEp9X4mQkQoUceaHOvPP?=
- =?us-ascii?Q?Lyd7AiPmtHrqomJR42Yqvhd78yv1s0nLm0qyvYCCNAFK6r78l87C6dFDbLkl?=
- =?us-ascii?Q?Ke00QzOzixVySlNUCkMz8JVRCFWoyFd/gdYx/OsQD4dEDnEuiHSrD0ZVtQZC?=
- =?us-ascii?Q?haG0JLEWKbA5tIovd9lXuRW8LMOacdZc81U2UXAOicEH7IQXuhuMFtrceAGW?=
- =?us-ascii?Q?BRj21LnW180lFAoHCJu25L/PK3ZZZbOw4dyba5z4Lin1Vk840Owa8H64qzIc?=
- =?us-ascii?Q?H4EbeSFQ8sUIiyHI7otyBNRYLjPH1EqgAqzmrATdCAIW8+v1GjmK5vZE5V+O?=
- =?us-ascii?Q?Q1OQefe2kUkJ94ZVPPd75mL4gmzphC1lzYGXNVdjb2B5BNlLcnuHdfTX8FlU?=
- =?us-ascii?Q?NB6ZWt9d/VkEOdQsQecWgVoJ6u/Jn++YRvNEDU8Nd+gjMvvKwVwFv1pcnnry?=
- =?us-ascii?Q?z4F0lixd0g=3D=3D?=
+	=?us-ascii?Q?VRih8NhRVKSboZ/nSwpATq8rUwCxKZqM1s0q9ldfDxfWpPxSLGDBJf+w2Ryv?=
+ =?us-ascii?Q?86JnJHLDzpa/akUekgGZXPgqPAjlMB5qh+r/hhJi1x/twbiA02qjZgWJyy9T?=
+ =?us-ascii?Q?4EReE3G8HGiUSn+nbyXMcg97xdNjnkhAt5/q+JHCC91/AZ3+SwnnENJOp+xJ?=
+ =?us-ascii?Q?Nk84YqUVJjdPrcVlZBHU8e2JMQTK2ZJLfXVafs87UmJLJf/4InshD39dJv+u?=
+ =?us-ascii?Q?M3YS+FaTxcdYgfi8ZQdPGqVq5K90sjsRy1YMqY8ISwGbsxZXGsrWJS7b3xa4?=
+ =?us-ascii?Q?VkZ2lnFlwAbUDV2yjHUYgUaSkN3OXowHm/vrTNhJpDc1+WvC1qKwYGUV6pRv?=
+ =?us-ascii?Q?qzgmatNT/xu2X9D7GD5uW2GKM/ILxL2O27eCjAUn4S7dJPlNMzZDkrGtiylJ?=
+ =?us-ascii?Q?TYLrstCbs1y01YydTQPlDRm0J7OiGSTsgoU2YxtW0jUsevb4JoXGBKfn0QD1?=
+ =?us-ascii?Q?8vSTxA2jEYjDXxhCZjKr41VLCzY7bs346q7QcRQEZ8fhQIh7HstyI+iulJgE?=
+ =?us-ascii?Q?ZzEyvy/iNSQktUXFzabXUKU+4YqNGT6y9XrQr2BBzUS61rIKkKfK2ynFs+g8?=
+ =?us-ascii?Q?SgWqd0YTvceqrGdbAICd8Dit5CB+nljs/w+5bWSNoCOFUlssXMJZLx0bDEAw?=
+ =?us-ascii?Q?bSFgndK6fagvNQo8sLZLyeNKLPDYYkE2na555WErSA6ixjNArxS7a6pzoFgZ?=
+ =?us-ascii?Q?ESVAlwghYANM8i+zZdKCgzXkSp7sroZ8y/FsUjB5eTdBQaGz31DDbeo6Tuug?=
+ =?us-ascii?Q?9EzoT6Rk3CkoVPJCb0fMIKnCdrE9qp8djYA4OoDMNWox84TXPENTFQz4VTNG?=
+ =?us-ascii?Q?/2qz7FHInppK+mMkgO/p3JcMhmsLpe/k+fAmpsE4Tlci/oMJL4Dxka3/EQW+?=
+ =?us-ascii?Q?AVaR+MMBy/6c7tZ/BD1jSHOOY7et3ZMKhwSeU5h7iHcGLMvzY77sMWZ41AVY?=
+ =?us-ascii?Q?Bg6LZbFfQDemMr9BrjaBS9JCn0ehXU9BzyT+RLFqXtoDUnZ3GD4BU44N/Ck1?=
+ =?us-ascii?Q?6PmIJh195StlKHmqsM/QnRvaaiC3wAO3mve4H98zh/xH4m5uzNfaUSQdxnD7?=
+ =?us-ascii?Q?JfZqgyjsyymQociOym44A5Rt3NGnMwH+E/Np9u9zo4OYxW2MaFn1CR2/YDI1?=
+ =?us-ascii?Q?U4a9LJX708dmiv9F8ZzOooiBEq3oI3GILh+WJOaNCMFMI/Y+4Lgi4nqmlGyf?=
+ =?us-ascii?Q?gkWtuvgaM1Dkvl1KUH0unfQaUVzmIQp/tXV2F+mOpSnA2DdfJ4eRTNIydmv9?=
+ =?us-ascii?Q?aLZhZsRY+sYs6QCUfOMBFbCgF2lkw6EwtIcDArMC+Bes1OTurJGeLrUcTJGd?=
+ =?us-ascii?Q?55Y208T8CQBBddquAsneDakoYVgnz1HNwJxTWosAdwDz65ctUDijViUvpIDL?=
+ =?us-ascii?Q?eHePUVU6KU/IY158FB5maVSxeaxOt5zrnkS43z2c21b+mf9xhLvnCAXH55IH?=
+ =?us-ascii?Q?Jag873QXS6JB+KDpC/7vuX7955aEKZirDc2VZR3PdTuISKuuDP3Ut6v8eT+n?=
+ =?us-ascii?Q?WY1nsGtDxoAAyv3hpZC4FOj0wVlzpkfb+0K8xV4EjejF5cGv5YzKhjrZZNSu?=
+ =?us-ascii?Q?KcOLlmzmnQv3UG7Ho9tBeoDBpAAEiu0Kf8k562pCJyFTv1MrkcWnbdqM7DTy?=
+ =?us-ascii?Q?1F2zB842SY9yDfPYUWu+UBj2qrjknhXJS/YsPN5KmFa0DI/P08t6RKuarNWP?=
+ =?us-ascii?Q?VHHe1dSrVx9MaI0wyFb24kIyNv0j7TihL/tfJOQ/r0BsIDMkxZskLvk/v4/+?=
+ =?us-ascii?Q?yXmY9wIv2w=3D=3D?=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2ec5b9a4-9f51-4ed0-cd85-08dea0525461
+X-MS-Exchange-CrossTenant-Network-Message-Id: da00a706-4c09-46bd-3ac8-08dea05258f2
 X-MS-Exchange-CrossTenant-AuthSource: VI0PR04MB12114.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Apr 2026 09:34:19.7548
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Apr 2026 09:34:27.4212
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 1HtRdviUSr41HisYj3pnaGYjbRqBroKfO5PVlMxEwA2eiTIQdjMxEsjLMmOi32nZ1b+CfVuIOSMF53dLDURdfg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: a2XpXgZWy2BsP06Fwi40calf95hCPvXgxpqm6gtMIlq00vn6mYEYbodBbtJn63hsmk4RGlMpeHQBR4IJS1drDw==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA2PR04MB10129
 
-Introduce generic helper functions to parse Root Port device tree nodes
-and extract common properties like reset GPIOs. This allows multiple
-PCI host controller drivers to share the same parsing logic.
+The PCIe endpoint may start responding or driving signals as soon as
+its supply is enabled, even before the reference clock is stable.
+Asserting PERST# before enabling the regulator ensures that the
+endpoint remains in reset throughout the entire power-up sequence,
+until both power and refclk are known to be stable and link
+initialization can safely begin.
 
-Define struct pci_host_port to hold common Root Port properties
-(currently only list of PERST# GPIO descriptors) and add
-pci_host_common_parse_ports() to parse Root Port nodes from device tree.
+Currently, the driver enables the vpcie3v3aux regulator in
+imx_pcie_probe() before PERST# is asserted in imx_pcie_host_init(),
+which may cause PCIe endpoint undefined behavior during early
+power-up. However, there is no issue so far because PERST# is
+requested as GPIOD_OUT_HIGH in imx_pcie_probe(), which guarantees
+that PERST# is asserted before enabling the vpcie3v3aux regulator.
 
-Also add the 'ports' list to struct pci_host_bridge for better maintain
-parsed Root Port information.
+This is prepare for the upcoming changes that will parse the reset
+property using the new Root Port binding, which will use GPIOD_ASIS
+when requesting the reset GPIO. With GPIOD_ASIS, the GPIO state is not
+guaranteed, so explicit sequencing is required.
+
+Fix the power sequencing by:
+1. Moving vpcie3v3aux regulator enable from probe to
+   imx_pcie_host_init(), where it can be properly sequenced with PERST#.
+2. Moving imx_pcie_assert_perst() before regulator and clock enable to
+   ensure correct ordering.
 
 Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
 ---
- drivers/pci/controller/pci-host-common.c | 164 +++++++++++++++++++++++
- drivers/pci/controller/pci-host-common.h |  28 ++++
- drivers/pci/probe.c                      |   1 +
- include/linux/pci.h                      |   1 +
- 4 files changed, 194 insertions(+)
+ drivers/pci/controller/dwc/pci-imx6.c | 49 +++++++++++++++++++++------
+ 1 file changed, 39 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
-index d6258c1cffe5..77905c728d0d 100644
---- a/drivers/pci/controller/pci-host-common.c
-+++ b/drivers/pci/controller/pci-host-common.c
-@@ -9,6 +9,7 @@
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index e35044cc5218..735127ed1455 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -168,6 +168,8 @@ struct imx_pcie {
+ 	u32			tx_swing_full;
+ 	u32			tx_swing_low;
+ 	struct regulator	*vpcie;
++	struct regulator	*vpcie_aux;
++	bool			vpcie_aux_enabled;
+ 	struct regulator	*vph;
+ 	void __iomem		*phy_base;
  
- #include <linux/kernel.h>
- #include <linux/module.h>
-+#include <linux/gpio/consumer.h>
- #include <linux/of.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -17,6 +18,169 @@
+@@ -1222,6 +1224,13 @@ static void imx_pcie_disable_device(struct pci_host_bridge *bridge,
+ 	imx_pcie_remove_lut(imx_pcie, pci_dev_id(pdev));
+ }
  
- #include "pci-host-common.h"
- 
-+/**
-+ * pci_host_common_delete_ports - Cleanup function for port list
-+ * @data: Pointer to the port list head
-+ */
-+void pci_host_common_delete_ports(void *data)
++static void imx_pcie_vpcie_aux_disable(void *data)
 +{
-+	struct list_head *ports = data;
-+	struct pci_host_perst *perst, *tmp_perst;
-+	struct pci_host_port *port, *tmp_port;
++	struct regulator *vpcie_aux = data;
 +
-+	list_for_each_entry_safe(port, tmp_port, ports, list) {
-+		list_for_each_entry_safe(perst, tmp_perst, &port->perst, list)
-+			list_del(&perst->list);
-+		list_del(&port->list);
-+	}
++	regulator_disable(vpcie_aux);
 +}
-+EXPORT_SYMBOL_GPL(pci_host_common_delete_ports);
 +
-+/**
-+ * pci_host_common_parse_perst - Parse PERST# from all nodes in depth first manner
-+ * @dev: Device pointer
-+ * @port: PCI host port
-+ * @np: Device tree node to start parsing from
-+ *
-+ * This function recursively parses PERST# GPIO from all PCIe bridge nodes
-+ * starting from @np in a depth-first manner.
-+ *
-+ * Returns: 0 on success, negative error code on failure.
-+ */
-+static int pci_host_common_parse_perst(struct device *dev,
-+				       struct pci_host_port *port,
-+				       struct device_node *np)
-+{
-+	struct pci_host_perst *perst;
-+	struct gpio_desc *reset;
-+	int ret;
+ static void imx_pcie_assert_perst(struct imx_pcie *imx_pcie, bool assert)
+ {
+ 	if (assert) {
+@@ -1242,6 +1251,24 @@ static int imx_pcie_host_init(struct dw_pcie_rp *pp)
+ 	struct imx_pcie *imx_pcie = to_imx_pcie(pci);
+ 	int ret;
+ 
++	imx_pcie_assert_perst(imx_pcie, true);
 +
-+	if (!of_property_present(np, "reset-gpios"))
-+		goto parse_child_node;
++	/* Keep 3.3Vaux supply enabled for the entire PCIe controller lifecycle */
++	if (imx_pcie->vpcie_aux && !imx_pcie->vpcie_aux_enabled) {
++		ret = regulator_enable(imx_pcie->vpcie_aux);
++		if (ret) {
++			dev_err(dev, "failed to enable vpcie_aux regulator: %d\n",
++				ret);
++			return ret;
++		}
++		imx_pcie->vpcie_aux_enabled = true;
 +
-+	reset = devm_fwnode_gpiod_get(dev, of_fwnode_handle(np), "reset",
-+				      GPIOD_ASIS, "PERST#");
-+	if (IS_ERR(reset)) {
-+		/*
-+		 * FIXME: GPIOLIB currently supports exclusive GPIO access only.
-+		 * Non exclusive access is broken. But shared PERST# requires
-+		 * non-exclusive access. So once GPIOLIB properly supports it,
-+		 * implement it here.
-+		 */
-+		if (PTR_ERR(reset) == -EBUSY)
-+			dev_err(dev, "Shared PERST# is not supported\n");
-+
-+		return PTR_ERR(reset);
-+	}
-+
-+	perst = devm_kzalloc(dev, sizeof(*perst), GFP_KERNEL);
-+	if (!perst)
-+		return -ENOMEM;
-+
-+	INIT_LIST_HEAD(&perst->list);
-+	perst->desc = reset;
-+	list_add_tail(&perst->list, &port->perst);
-+
-+parse_child_node:
-+	for_each_available_child_of_node_scoped(np, child) {
-+		ret = pci_host_common_parse_perst(dev, port, child);
++		ret = devm_add_action_or_reset(dev, imx_pcie_vpcie_aux_disable,
++					       imx_pcie->vpcie_aux);
 +		if (ret)
 +			return ret;
 +	}
 +
-+	return 0;
-+}
-+
-+/**
-+ * pci_host_common_parse_port - Parse a single Root Port node
-+ * @dev: Device pointer
-+ * @bridge: PCI host bridge
-+ * @node: Device tree node of the Root Port
-+ *
-+ * This function parses Root Port properties from the device tree.
-+ * Currently it only handles the PERST# GPIO (including PERST# GPIOs from
-+ * all PCIe bridge nodes under this Root Port) which is optional.
-+ *
-+ * NOTE: This helper fetches resources (like PERST# GPIO) optionally.
-+ * If a controller driver has a hard dependency on certain resources(PHY,
-+ * clocks, regulators, etc.), those resources MUST be modeled correctly
-+ * in the DT binding and validated in DTS. This helper cannot enforce such
-+ * dependencies and the driver may fail to operate if required resources
-+ * are missing.
-+ *
-+ * Returns: 0 on success, -ENODEV if PERST# found in RC node (legacy binding
-+ * should be used), Other negative error codes on failure.
-+ */
-+static int pci_host_common_parse_port(struct device *dev,
-+				      struct pci_host_bridge *bridge,
-+				      struct device_node *node)
-+{
-+	struct pci_host_port *port;
-+	int ret;
-+
-+	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
-+	if (!port)
-+		return -ENOMEM;
-+
-+	INIT_LIST_HEAD(&port->perst);
-+
-+	ret = pci_host_common_parse_perst(dev, port, node);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * 1. PERST# found in RP or its child nodes - list is not empty, continue
-+	 * 2. PERST# not found in RP/children, but found in RC node - return -ENODEV
-+	 *    to fallback legacy binding
-+	 * 3. PERST# not found anywhere - list is empty, continue (optional PERST#)
-+	 */
-+	if (list_empty(&port->perst)) {
-+		if (of_property_present(dev->of_node, "reset-gpios") ||
-+		    of_property_present(dev->of_node, "reset-gpio"))
-+			return -ENODEV;
+ 	if (imx_pcie->vpcie) {
+ 		ret = regulator_enable(imx_pcie->vpcie);
+ 		if (ret) {
+@@ -1251,25 +1278,24 @@ static int imx_pcie_host_init(struct dw_pcie_rp *pp)
+ 		}
+ 	}
+ 
++	ret = imx_pcie_clk_enable(imx_pcie);
++	if (ret) {
++		dev_err(dev, "unable to enable pcie clocks: %d\n", ret);
++		goto err_reg_disable;
 +	}
 +
-+	INIT_LIST_HEAD(&port->list);
-+	list_add_tail(&port->list, &bridge->ports);
-+
-+	return 0;
-+}
-+
-+/**
-+ * pci_host_common_parse_ports - Parse Root Port nodes from device tree
-+ * @dev: Device pointer
-+ * @bridge: PCI host bridge
-+ *
-+ * This function iterates through child nodes of the host bridge and parses
-+ * Root Port properties (currently only reset GPIOs).
-+ *
-+ * Returns: 0 on success, -ENODEV if no ports found or PERST# found in RC node
-+ * (legacy binding should be used), Other negative error codes on failure.
-+ */
-+int pci_host_common_parse_ports(struct device *dev, struct pci_host_bridge *bridge)
-+{
-+	int ret = -ENODEV;
-+
-+	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
-+		if (!of_node_is_type(of_port, "pci"))
-+			continue;
-+		ret = pci_host_common_parse_port(dev, bridge, of_port);
-+		if (ret)
-+			goto err_cleanup;
+ 	if (pp->bridge && imx_check_flag(imx_pcie, IMX_PCIE_FLAG_HAS_LUT)) {
+ 		pp->bridge->enable_device = imx_pcie_enable_device;
+ 		pp->bridge->disable_device = imx_pcie_disable_device;
+ 	}
+ 
+ 	imx_pcie_assert_core_reset(imx_pcie);
+-	imx_pcie_assert_perst(imx_pcie, true);
+ 
+ 	if (imx_pcie->drvdata->init_phy)
+ 		imx_pcie->drvdata->init_phy(imx_pcie);
+ 
+ 	imx_pcie_configure_type(imx_pcie);
+ 
+-	ret = imx_pcie_clk_enable(imx_pcie);
+-	if (ret) {
+-		dev_err(dev, "unable to enable pcie clocks: %d\n", ret);
+-		goto err_reg_disable;
+-	}
+-
+ 	if (imx_pcie->phy) {
+ 		ret = phy_init(imx_pcie->phy);
+ 		if (ret) {
+@@ -1782,9 +1808,12 @@ static int imx_pcie_probe(struct platform_device *pdev)
+ 	of_property_read_u32(node, "fsl,max-link-speed", &pci->max_link_speed);
+ 	imx_pcie->supports_clkreq = of_property_read_bool(node, "supports-clkreq");
+ 
+-	ret = devm_regulator_get_enable_optional(&pdev->dev, "vpcie3v3aux");
+-	if (ret < 0 && ret != -ENODEV)
+-		return dev_err_probe(dev, ret, "failed to enable Vaux supply\n");
++	imx_pcie->vpcie_aux = devm_regulator_get_optional(&pdev->dev, "vpcie3v3aux");
++	if (IS_ERR(imx_pcie->vpcie_aux)) {
++		if (PTR_ERR(imx_pcie->vpcie_aux) != -ENODEV)
++			return PTR_ERR(imx_pcie->vpcie_aux);
++		imx_pcie->vpcie_aux = NULL;
 +	}
-+
-+	if (ret)
-+		return ret;
-+
-+	return devm_add_action_or_reset(dev, pci_host_common_delete_ports,
-+					&bridge->ports);
-+
-+err_cleanup:
-+	pci_host_common_delete_ports(&bridge->ports);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(pci_host_common_parse_ports);
-+
- static void gen_pci_unmap_cfg(void *ptr)
- {
- 	pci_ecam_free((struct pci_config_window *)ptr);
-diff --git a/drivers/pci/controller/pci-host-common.h b/drivers/pci/controller/pci-host-common.h
-index b5075d4bd7eb..6b4e43e6ff22 100644
---- a/drivers/pci/controller/pci-host-common.h
-+++ b/drivers/pci/controller/pci-host-common.h
-@@ -12,6 +12,34 @@
  
- struct pci_ecam_ops;
- 
-+/**
-+ * struct pci_host_perst - PERST# GPIO descriptor
-+ * @list: List node for linking multiple PERST# GPIOs
-+ * @desc: GPIO descriptor for PERST# signal
-+ *
-+ * This structure holds a single PERST# GPIO descriptor.
-+ */
-+struct pci_host_perst {
-+	struct list_head	list;
-+	struct gpio_desc	*desc;
-+};
-+
-+/**
-+ * struct pci_host_port - Generic Root Port properties
-+ * @list: List node for linking multiple ports
-+ * @perst: List of PERST# GPIO descriptors for this port and its children
-+ *
-+ * This structure contains common properties that can be parsed from
-+ * Root Port device tree nodes.
-+ */
-+struct pci_host_port {
-+	struct list_head	list;
-+	struct list_head	perst;
-+};
-+
-+void pci_host_common_delete_ports(void *data);
-+int pci_host_common_parse_ports(struct device *dev, struct pci_host_bridge *bridge);
-+
- int pci_host_common_probe(struct platform_device *pdev);
- int pci_host_common_init(struct platform_device *pdev,
- 			 struct pci_host_bridge *bridge,
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b63cd0c310bc..6094b6c1fc90 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -660,6 +660,7 @@ static void pci_init_host_bridge(struct pci_host_bridge *bridge)
- {
- 	INIT_LIST_HEAD(&bridge->windows);
- 	INIT_LIST_HEAD(&bridge->dma_ranges);
-+	INIT_LIST_HEAD(&bridge->ports);
- 
- 	/*
- 	 * We assume we can manage these PCIe features.  Some systems may
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2c4454583c11..cb5f3e7e8e48 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -636,6 +636,7 @@ struct pci_host_bridge {
- 	int		domain_nr;
- 	struct list_head windows;	/* resource_entry */
- 	struct list_head dma_ranges;	/* dma ranges resource list */
-+	struct list_head ports;		/* Root Port list (pci_host_port) */
- #ifdef CONFIG_PCI_IDE
- 	u16 nr_ide_streams; /* Max streams possibly active in @ide_stream_ida */
- 	struct ida ide_stream_ida;
+ 	imx_pcie->vpcie = devm_regulator_get_optional(&pdev->dev, "vpcie");
+ 	if (IS_ERR(imx_pcie->vpcie)) {
 -- 
 2.37.1
 
