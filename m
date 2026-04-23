@@ -1,186 +1,258 @@
-Received: from fhigh-a4-smtp.messagingengine.com (fhigh-a4-smtp.messagingengine.com [103.168.172.155])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f202.google.com (mail-pl1-f202.google.com [209.85.214.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A1513126B2;
-	Thu, 23 Apr 2026 19:40:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.155
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF8143BD648
+	for <linux-pci@vger.kernel.org>; Thu, 23 Apr 2026 21:22:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776973257; cv=none; b=ZzDDYbUAA2RoN1WwEkMp6DFF6hmmZZyfpNpO6qJgLMXUxEimIG9jJ7H8/6zTKu7OrGo5TGyzONx1qUMM15jkLQaQxiFFv7jSvHVgrTnvySxUcsuf+Ekr30RQLhBG+g0QI9VMmUboMPLP6cnhXUUDXbaDrXnT4Y7gQMB7ogjD06s=
+	t=1776979367; cv=none; b=Uc1YzhIBzqHDk+WoXks99rZyYPuq3LNPw6rn26fcvsY0kC6U6Gs8gpHXp9l7gVrFB+sk8E5/Efm2OZJlb0klxLCb91kg46XijHzleEQOTCnC1Syhc5Y116g8cxSTuA+jejkl8Hw7Oop3j8kVeUByH3QI3j8yF4Qbvm9j44D6KxY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776973257; c=relaxed/simple;
-	bh=nJqu9gsYfYmWAZCaOClg4DaYAEsN+5fB4HjCMJirMPk=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tNYMYKLevyZqAB6QgxRtkd51kgLw13R9fHySce+m0oCsEb5YMKUC3H9K5JzGjiJwvrTZpg6ysUZaToGV4Bu6pqr3V516LcKvCeCWnYg5AmEkoB/572CsQysOQjuPUXlEJFidn2mT9kzCL1xhYuZQ+U6R8iWEOYzSRwMY+9VO8Mc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=bMhsBi1G; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=tf9/upFY; arc=none smtp.client-ip=103.168.172.155
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1776979367; c=relaxed/simple;
+	bh=VEr3YGdqak3FVQ9/ao+xXZ+w5i00Ao9Ssj4jC1ZGrN4=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Content-Type; b=SNdHImCloQ3NAJ2814WAaPljjyrgV0B/vC+sXVJl5rWRurmoCl6LCkLnYdygAOhl1hiVGTjIAPNA+Z0R4diX33IeSI6ye7d5OXLxlweb2hvZ+tBTn1KC23crdlhxPN7mKedSN5N0mEoN+z2s3cT6fRMpdfeg/LupTAbkkkfRV7M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=mbdpiwSs; arc=none smtp.client-ip=209.85.214.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="bMhsBi1G";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="tf9/upFY"
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 4A6BE1400129;
-	Thu, 23 Apr 2026 15:40:54 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-02.internal (MEProxy); Thu, 23 Apr 2026 15:40:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1776973254;
-	 x=1777059654; bh=zCMKY/sFtkVHt3K1ICDRla4xyL9PgUE/tI3XoOzsjn0=; b=
-	bMhsBi1GN3q8l5XGbogOetqMo+BRjAzz6IacIhj2YVmZSEieNGdwoRGcOGQGSG/i
-	Bv00lurSNJpMGG/ZuVjn/g9sJeWjOQi4MynhupmN4hLhH/GPjmZ+IcLM48MMDVaj
-	CBzxJKgK1ExEHdOoP1147Ik+G217lJTWpd3ZbhI8vDJ6rhDRrWPieItDQ2QEN68b
-	dHae2r18qMVXtcpGViOegIFuqD91gzZ4S7Wzqc7BV4USNtmq2IqjDM5ZkDjMra+W
-	AjCbMBmIVfkSkRtMYBDVJUlJWD3/lbb1Wb4HCRqqy1VeBVyoG+5fe8vO5Mdj37y0
-	WoJ0kCv5RJLHdzhZ4U5stA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1776973254; x=
-	1777059654; bh=zCMKY/sFtkVHt3K1ICDRla4xyL9PgUE/tI3XoOzsjn0=; b=t
-	f9/upFYtKwbmyq+uqH0URbBKSoHWyUoRxe3X0qiwPREwo1JBqLlY9EZbfiZRhn2/
-	+YvlrZ2qCpYq1lpN85TtoJa9Fk7n+dxGCqjK7F0059VK9LyXehhqEdovd65094CT
-	UUztqogRgUNvWAg4XYG5XX+r/HL3fXCsh7kixrbkRQw8X8A+ZyL8AHjVZgY+cl4Q
-	O0VFv8DZsCev8mPxTbSe0CtOwUnRgIyLcQ3sAnAIIsSk+hTRQL+BPdbwNvtfh1w+
-	VdKyDc2y6Y/S/mzTiIT8lZGIbj5GS6KseDoDr2nGlSC4bc6q99OhKuekQZJYlLHf
-	amINU9pXdTFH+X23yZGYg==
-X-ME-Sender: <xms:xXXqaYtoVo2jQWEhVg0-yOE-RPB6vSIgJBbkiMrjzJKjK63sYCM1Bw>
-    <xme:xXXqaV4bfcuEy4cz38ZdFGxgZrQRX7uWvgBltup1LWnmBJrk9W1awdl7-dSvwXZvd
-    Z9usdty4iTuMS2v_kiYnNNhNN8LmhQJPby3EnAO2rKZsJ1yVV7AmA>
-X-ME-Received: <xmr:xXXqaUcXipK7mk-kF36CDBRlp4A6e42HlvVpfQQvj4pRRBjRIXu4DUKvNGA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdeikedtvdcutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
-    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
-    hrpeffhffvvefukfgjfhfogggtgfesthejredtredtvdenucfhrhhomheptehlvgigucgh
-    ihhllhhirghmshhonhcuoegrlhgvgiesshhhrgiisghothdrohhrgheqnecuggftrfgrth
-    htvghrnhepkeehjeeitefffeeuieetjedtjeffvdelledvuedvffdvfeetgefhveekuedv
-    fedvnecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiiigvpe
-    dtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrlhgvgiesshhhrgiisghothdrohhrghdp
-    nhgspghrtghpthhtohepledpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohepmhgrth
-    htvghvsehmvghtrgdrtghomhdprhgtphhtthhopegshhgvlhhgrggrshesghhoohhglhgv
-    rdgtohhmpdhrtghpthhtoheplhhoghgrnhhgseguvghlthgrthgvvgdrtghomhdprhgtph
-    htthhopegrnhhkihhtrgesnhhvihguihgrrdgtohhmpdhrtghpthhtoheplhgvohhnsehk
-    vghrnhgvlhdrohhrghdprhgtphhtthhopehstghhnhgvlhhlvgeslhhinhhugidrihgsmh
-    drtghomhdprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghlrdho
-    rhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrd
-    horhhgpdhrtghpthhtoheprghlvgigsehshhgriigsohhtrdhorhhg
-X-ME-Proxy: <xmx:xXXqaSya9fSwqrh-kHVS8u6HIlFlJY93bJ6sdEwGnusUPqMSQShrJw>
-    <xmx:xXXqaZ9lTLHnpcF0ey3EI6jsG11W-5Ym1q-ME6JZc0tYQdLE67v5wg>
-    <xmx:xXXqaQwg3eE6kC0JHAPWp00G-LVsHyov87zJQAxNlo9XxBlVO0eVIw>
-    <xmx:xXXqaRpFHyW_cIIVSQ8YpKZLOBuF0WkNWgjxUkybYCNHUOVbuN4mNA>
-    <xmx:xnXqaQjWGeyZAycgGqfhdRsm5W14wge_nUifTWWjz07oXGcoHQbq5vrs>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 23 Apr 2026 15:40:53 -0400 (EDT)
-Date: Thu, 23 Apr 2026 13:40:52 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Matt Evans <mattev@meta.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe
- <logang@deltatee.com>, Ankit Agrawal <ankita@nvidia.com>, Leon Romanovsky
- <leon@kernel.org>, Niklas Schnelle <schnelle@linux.ibm.com>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- alex@shazbot.org
-Subject: Re: [PATCH v2] PCI/P2PDMA: Avoid returning a provider for
- non_mappable_bars
-Message-ID: <20260423134052.292e92cf@shazbot.org>
-In-Reply-To: <20260423173051.1999679-1-mattev@meta.com>
-References: <20260423173051.1999679-1-mattev@meta.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="mbdpiwSs"
+Received: by mail-pl1-f202.google.com with SMTP id d9443c01a7336-2b461b36990so76308595ad.3
+        for <linux-pci@vger.kernel.org>; Thu, 23 Apr 2026 14:22:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1776979364; x=1777584164; darn=vger.kernel.org;
+        h=to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=kl+pv05082o4iUYPTAspfzDZexWtIImSBuw1JtCkgoE=;
+        b=mbdpiwSsOjUrW5IGSArA8vhCsSEPPwz2w+bbEWubZTO96PjGKHHS5tMk5qhx652vy6
+         +awzGC6QYXoiKEy35HALvsrTZ/vVlQiEzQHSBIl3IWjUMJ1JieM9EC/kNtUZ8XDtbD/h
+         aqbTKe7/kqhyarZfTJTVM7vO+SD1uwLNLfTH8Sr50+aMHJtTvW3EAtOrmNEE9IZuetBh
+         /oZIXW7tuOe//zpx2YeccBk1FwckkFk37JYnTgTWdFcvVZYNx5oBphjWv44q6rSfN3uZ
+         28jC2Fc4/nupjzq5lk9ZL4gzkKCqY9IgCUfqgh31qC2rvAoe2jpoKWs4lzzy68DJ2Qs5
+         hfKg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776979364; x=1777584164;
+        h=to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=kl+pv05082o4iUYPTAspfzDZexWtIImSBuw1JtCkgoE=;
+        b=cXV3WuDbYsV4T/GbtkAWzh0ULHlcf1RYqwxlhjackN+nBF55QgBs205z8wqPcyf3RK
+         8v9FGHDBhWVRoOknLC17nf3Lrto58/XhlesRiaduzTAFzeLXR6A5Qku8gSGHOBixQbGC
+         r9Jk/jMqwS8RGKZhBO5GFQ4++3PEuOolPoVJ40RkS9xFnWfsxaTqWzgwdq+9uTf/tlFa
+         EB9nvuCNmT/qtPZMENF7+Q2SdxliglqwOvGaFRPDTo8Ha1oUdLVeJ6Rdk52FCazOUnRK
+         YyaTmLzXTMmGz6e+M4JJMKF0vOW14B7RvDaRZAJeF4EZ0AkVPZKOLxzN9isptVyJEIs9
+         oCBw==
+X-Forwarded-Encrypted: i=1; AFNElJ9lG/HC+t/ctM+SJxLus9cvfNWKnNz4ArML+cOD970jDYmYf4R3wgsv+BaITY+B+mflSVTyKfO3ACM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YySlI7gnnWldkcWNvakKGOt7YP8hgi4tATA5xNNTe5FVgfRbTLV
+	zsKiDxm6/9UcqFfHHQEICUk8YoiCmw6AdJH+c2xnbgVrGNRFgGKJEGavZY4bP6uvRO5a855HFsK
+	bAqh72v6lanZwMQ==
+X-Received: from plnx22.prod.google.com ([2002:a17:902:8216:b0:2ae:ce70:7c80])
+ (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:902:7d8c:b0:2b4:604c:ec6f with SMTP id d9443c01a7336-2b5f9f86840mr213628685ad.32.1776979363647;
+ Thu, 23 Apr 2026 14:22:43 -0700 (PDT)
+Date: Thu, 23 Apr 2026 21:22:31 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.54.0.rc2.544.gc7ae2d5bb8-goog
+Message-ID: <20260423212242.3431136-1-dmatlack@google.com>
+Subject: [PATCH v4 00/11] PCI: liveupdate: PCI core support for Live Update
+From: David Matlack <dmatlack@google.com>
+To: dmatlack@google.com, iommu@lists.linux.dev, kexec@lists.infradead.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, 23 Apr 2026 10:30:51 -0700
-Matt Evans <mattev@meta.com> wrote:
+This series can be found on GitHub:
 
-> Extend the checks in pcim_p2pdma_init() and pcim_p2pdma_provider() to
-> exclude functions that have pdev->non_mappable_bars set.
-> 
-> Consumers such as VFIO were previously able to map these for access by
-> the CPU or P2P.  Update the comment on non_mappable_bars to show it
-> refers to any access, not just userspace CPU access.
-> 
-> Fixes: 372d6d1b8ae3c ("PCI/P2PDMA: Refactor to separate core P2P functionality from memory allocation")
-> Signed-off-by: Matt Evans <mattev@meta.com>
-> ---
-> 
-> This arises from Alex Williamson's suggestion to test
-> non_mappable_bars when getting the provider, with discussion here:
-> 
->  https://lore.kernel.org/kvm/20260415181623.1021090-1-mattev@meta.com/
-> 
-> The goal was to prevent a hole where VFIO could export DMABUFs for
-> BARs marked non-mappable, and to fix for all users of the provider
-> rather than just VFIO.  Alex observed that non_mappable_bars should be
-> taken to mean BARs weren't usable by the CPU _or_ peers and,
-> considering that, its comment about userspace access wasn't quite
-> right.
-> 
-> == Changes ==
-> 
-> v2:
->  - Also test non_mappable_bars in pcim_p2pdma_init(), as
->    otherwise pci_p2pdma_add_resource() will WARN_ON
->    pcim_p2pdma_provider() failing.
-> 
-> Niklas and Logan, I didn't re-add your R-B from v1 as (splitting
-> hairs...) the code's changed.
-> 
-> v1:
->  https://lore.kernel.org/linux-pci/20260421174351.3897842-1-mattev@meta.com/
-> 
-> 
->  drivers/pci/p2pdma.c | 6 +++++-
->  include/linux/pci.h  | 2 +-
->  2 files changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index 7c898542af8d..adb17a4f6939 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-> @@ -262,6 +262,9 @@ int pcim_p2pdma_init(struct pci_dev *pdev)
->  	struct pci_p2pdma *p2p;
->  	int i, ret;
->  
-> +	if (pdev->non_mappable_bars)
-> +		return -EOPNOTSUPP;
-> +
->  	p2p = rcu_dereference_protected(pdev->p2pdma, 1);
->  	if (p2p)
->  		return 0;
-> @@ -318,7 +321,8 @@ struct p2pdma_provider *pcim_p2pdma_provider(struct pci_dev *pdev, int bar)
->  {
->  	struct pci_p2pdma *p2p;
->  
-> -	if (!(pci_resource_flags(pdev, bar) & IORESOURCE_MEM))
-> +	if (!(pci_resource_flags(pdev, bar) & IORESOURCE_MEM) ||
-> +	    pdev->non_mappable_bars)
->  		return NULL;
->  
->  	p2p = rcu_dereference_protected(pdev->p2pdma, 1);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2c4454583c11..1e6802017d6b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -508,7 +508,7 @@ struct pci_dev {
->  	unsigned int	no_command_memory:1;	/* No PCI_COMMAND_MEMORY */
->  	unsigned int	rom_bar_overlap:1;	/* ROM BAR disable broken */
->  	unsigned int	rom_attr_enabled:1;	/* Display of ROM attribute enabled? */
-> -	unsigned int	non_mappable_bars:1;	/* BARs can't be mapped to user-space  */
-> +	unsigned int	non_mappable_bars:1;	/* BARs can't be mapped by CPU or peers */
->  	pci_dev_flags_t dev_flags;
->  	atomic_t	enable_cnt;	/* pci_enable_device has been called */
->  
+  https://github.com/dmatlack/linux/tree/liveupdate/pci/base/v4
 
-Reviewed-by: Alex Williamson <alex@shazbot.org>
-Suggested-by: Alex Williamson <alex@shazbot.org>
+This patch series introduces support in the PCI core for Live Update,
+enabling drivers to preserve PCI devices across a kexec-based kernel
+update without interrupting the device. This functionality is critical
+for minimizing downtime in environments where PCI devices (e.g., those
+assigned to VMs via VFIO) must continue operating or maintain state
+across a host kernel upgrade.
 
-Thanks,
-Alex
+This series was split off from the the VFIO driver series [1] to enable
+more rapid iteration on the PCI core changes, add breathing room to
+split changes into smaller patches, and add some more functionality.
+
+Series Overview
+---------------
+
+This series implements the following to support PCI device preservation
+across Live Update:
+
+  1. Set up a File-Lifecycle-Bound (FLB) handler to track and preserve
+     PCI-specific state (struct pci_ser) across Live Update using Kexec
+     Handover (KHO).
+
+  2. Add APIs for drivers to register "outgoing" devices for
+     preservation and for the PCI core to identify "incoming" preserved
+     devices during enumeration.
+
+  3. Automatically preserve all upstream bridges for any preserved
+     endpoint. Use reference counting to ensure bridges remain preserved
+     as long as any downstream device is preserved.
+
+  4. Inherit secondary/subordinate bus numbers, ARI Forwarding Enable,
+     and Access Control Services (ACS) flags from the previous kernel to
+     ensure a stable routing fabric and consistent IOMMU group
+     assignments during Live Update.
+
+  5. Restrict preservation to devices in immutable singleton IOMMU
+     groups. Require that all upstream bridges have the necessary ACS
+     features enabled to prevent IOMMU group changes across the update.
+
+  6. Modify the PCI shutdown path to avoid disabling bus mastering on
+     preserved devices and their upstream bridges, allowing memory
+     transactions to continue uninterrupted.
+
+  7. Provide comprehensive documentation for the FLB API, device
+     tracking mechanisms, and the division of responsibilities between
+     the PCI core, drivers, and userspace.
+
+This series could be simplified down to fewer patches by limiting
+preservation support to only devices on a root bus. Supporting devices
+downstream of bridges could be split off into a follow-up series.
+However since I got bridge preservation working and the series was less
+than 15 patches I opted to include it for now.
+
+Dependencies
+------------
+
+This series depends on 2 LUO patches to enable refcounting of the
+incoming FLB so that it is safe for the PCI core to use
+liveupdate_flb_get_incoming() during enumeration.
+
+  https://lore.kernel.org/lkml/20260423174032.3140399-1-dmatlack@google.com/
+
+VFIO support for PCI device preservation is built on top of this series.
+The following branch on GitHub contains all the patches together to
+enable testing (the LUO FLB changes, this series, and the VFIO patches):
+
+  https://github.com/dmatlack/linux/tree/liveupdate/pci/base/v4-with-vfio
+
+Testing
+-------
+
+This series was tested in combination with the VFIO patches mentioned in
+the previous section using the the new VFIO selftests:
+
+  - vfio_pci_liveupdate_uapi_test
+  - vfio_pci_liveupdate_kexec_test
+
+Both tests were ran in ran in a QEMU-based VM environment, using a
+single virtio-net PCIe device behind a PCI-to-PCI bridge as the test
+device, and in a baremetal environment on an Intel EMR server, using 8x
+Intel DSA PCIe devices (each on a host bridge).
+
+Future Work
+-----------
+
+After this series we expect to make further improvements to the PCI core
+support for Live Update. Once these are done we plan to drop the
+"experimental" verbiage from PCI_LIVEUPDATE Kconfig help message and
+documentation.
+
+  - Ensure bridges with downstream preserved devices stay in D0 across
+    Live Update in case preserved endpoints are doing memory
+    transactions.
+  - Preserve BARs of all preserved devices to avoid disrupting P2P
+
+Beyond that we also plan to add support for preserving Virtual Functions
+since that is a major use-case for Cloud environments. This will require
+keeping SR-IOV enabled on the partent PF across a Live Update.
+
+Changelog
+---------
+
+v4:
+
+ Enhancements on top of previous series:
+
+ - Split "PCI: Add API to track PCI devices preserved across Live
+   Update" from v3 into 4 separate commits to make reviewing easier (FLB
+   setup, outgoing device tracking, incoming device tracking, and
+   documentation for driver binding)
+ - Use new incoming FLB refcounting to avoid use-after-free bugs during
+   enumeration
+ - Use an xarray to speed up looking up of incoming preserved devices
+   during enumeration
+ - Use a per-device bit to indicate when secondary and subordinate bus
+   numbers should be inherited on bridges instead of global data to
+   avoid races between the 2 passes
+ - Inherit ARI enablement across Live Update
+ - Automatically preserve bridges upstream of preserved endpoints so
+   so that ACS flags, ARI enablement, and bus mastering can be kept
+   constant on bridges across Live Update
+ - Avoid clearing bus mastering during shutdown on outgoing preserved
+   device to avoid disrupting memory transcations being performed by
+   preserved devices
+ - Add a MAINTAINERS entry for the new files to support Live Update in
+   the PCI core
+ - Add info and debug level logging for various events throughout device
+   preservation
+
+ Changes based on review feedback on v3:
+
+ - Fix up typos, wording, documentation gaps, and code style (Bjorn)
+ - Use pci_WARN_ONCE() where possible (Bjorn)
+ - Require ACS flags to preserve devices behind bridges so that
+   singleton IOMMU group topology is guaranteed to remain across Live
+   Update (Yi)
+ - Preserve ACS flags (Jason, Alex)
+
+v3: https://lore.kernel.org/kvm/20260323235817.1960573-1-dmatlack@google.com/
+
+v2: https://lore.kernel.org/kvm/20260129212510.967611-1-dmatlack@google.com/
+
+v1: https://lore.kernel.org/kvm/20251126193608.2678510-1-dmatlack@google.com/
+
+rfc: https://lore.kernel.org/kvm/20251018000713.677779-1-vipinsh@google.com/
+
+
+[1] https://lore.kernel.org/kvm/20260323235817.1960573-1-dmatlack@google.com/
+
+David Matlack (11):
+  PCI: liveupdate: Set up FLB handler for the PCI core
+  PCI: liveupdate: Track outgoing preserved PCI devices
+  PCI: liveupdate: Track incoming preserved PCI devices
+  PCI: liveupdate: Document driver binding responsibilities
+  PCI: liveupdate: Inherit bus numbers during Live Update
+  PCI: liveupdate: Auto-preserve upstream bridges across Live Update
+  PCI: liveupdate: Inherit ACS flags in incoming preserved devices
+  PCI: liveupdate: Require preserved devices are in immutable singleton
+    IOMMU groups
+  PCI: liveupdate: Inherit ARI Forwarding Enable on preserved bridges
+  PCI: liveupdate: Do not disable bus mastering on preserved devices
+    during kexec
+  Documentation: PCI: Add documentation for Live Update
+
+ Documentation/PCI/index.rst                   |   1 +
+ Documentation/PCI/liveupdate.rst              |  23 +
+ .../admin-guide/kernel-parameters.txt         |   6 +-
+ Documentation/core-api/liveupdate.rst         |   1 +
+ MAINTAINERS                                   |  13 +
+ drivers/iommu/iommu.c                         |  35 ++
+ drivers/pci/Kconfig                           |  14 +
+ drivers/pci/Makefile                          |   1 +
+ drivers/pci/liveupdate.c                      | 562 ++++++++++++++++++
+ drivers/pci/pci-driver.c                      |  31 +-
+ drivers/pci/pci.c                             |  22 +-
+ drivers/pci/pci.h                             |  13 +
+ drivers/pci/probe.c                           |  25 +-
+ include/linux/iommu.h                         |   7 +
+ include/linux/kho/abi/pci.h                   |  62 ++
+ include/linux/pci.h                           |  58 ++
+ 16 files changed, 858 insertions(+), 16 deletions(-)
+ create mode 100644 Documentation/PCI/liveupdate.rst
+ create mode 100644 drivers/pci/liveupdate.c
+ create mode 100644 include/linux/kho/abi/pci.h
+
+
+base-commit: a13f7eb5b2d5bef886659768680093bec1c0470d
+-- 
+2.54.0.rc2.544.gc7ae2d5bb8-goog
+
