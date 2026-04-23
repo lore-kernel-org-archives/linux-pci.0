@@ -1,101 +1,152 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 464D73A5E62;
-	Thu, 23 Apr 2026 12:21:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C22913ED109;
+	Thu, 23 Apr 2026 13:04:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776946865; cv=none; b=syAnH4zxphu2NDceTWFLUnSsM8lRShF9hMMuYP/e7zyzUfSrwMxJUdkPYYQWoKcGglXVuVx15tFYpqzNY6xieoSmB+lSK1SQMaVXgRNC0wqPpZz1htzBp+UmDduEtp0eo/7ug7L3TWe3iyyZOR9DnIh8joEXeXAupyQ4dDga04A=
+	t=1776949480; cv=none; b=jQARBP29+8wNP6U/HQeQt6AEXaCscNrAOiYlIBglZbYW7QeUQO5DudGnQXT4fxWMajrm9pX7qmgIANzO/4DEDMi8N4wDkhdqyl7Um78N3pKP8VvFmRibB86cBOC8VLLieAwwLLw6uZiJbIXylxEHY7rBNhspIyZr6ReJGrZuzF0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776946865; c=relaxed/simple;
-	bh=9vX8M4xMjcTWYrCOwYDAFRogS36VuvNkR+NBI9imW6Q=;
+	s=arc-20240116; t=1776949480; c=relaxed/simple;
+	bh=3KN/9xYClnbKmpip1Kg4BXkQ4NkWlYtHiVbzGlXqlc8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DRxfCtkFVoMHbmF9WFu3FRZ6X7///iKlAd2hbmSLIAx1mLcIzynKnDWDNDtjqEeSZR1e9OskpQJk9agX1fnEdVQzQm2hHNgYEH+WsW5Ai9BkRSWRZTKmL/6Qu9te59GiPYtg19e1/D6o1RU9PMbBZYHJ81oD6+mfl7lUP0J4P+A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aBIwqBOQ; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=LGdsyZPY8RqipvDejH+6mcPv1oHdQnei4R8ZYBoCDsITsDf/1FZ2GNsrYV7uV06b4TCeToiMu2+BkehBx1J98JPTBdCzajHZAnkCl4zrpQ0WOCBBdWecHGT9m9XDKAv8BN107ssSoNo/kyhUBJ8LYNo0szcqVewhg3u4SxrJ2OQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VsT448tl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aBIwqBOQ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1776946864; x=1808482864;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=9vX8M4xMjcTWYrCOwYDAFRogS36VuvNkR+NBI9imW6Q=;
-  b=aBIwqBOQQD1BhnIWzd/JnBjzYrni9ZnEG7+y1aQ1db7UtZnZ+Y+bFChQ
-   BMhJp/5sQu/JbSJXFk1zn9jRPojxMz54W7p2N8D1/cypKJ+3zwCktpsYg
-   wjC6XitWHo6Be6Nkvo4T358JYzexJyQM1uKZLIbo+5BK+3IUSn4A1Cpdc
-   LJuiKux1llNnE9KIoysnO1Yyr7AYleyJz7sMqWNoAOLtjRWeqevaMgO/1
-   pj7sUaFzHUyqWzghR+DcE2An1Yn2A+MULB5yppW8+xIiXYnhJ/GARaU+5
-   xFtOnd3v1/jdrEf1OqE9NYJXHyiJEPvd6Ksn5diIlGzYMwCy4o1HCfNkn
-   g==;
-X-CSE-ConnectionGUID: g4/Pq0iQQqaGIt7ozmmhwA==
-X-CSE-MsgGUID: M+VWZsaeS8e5sfkASUOYNg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11764"; a="77975637"
-X-IronPort-AV: E=Sophos;i="6.23,194,1770624000"; 
-   d="scan'208";a="77975637"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Apr 2026 05:21:03 -0700
-X-CSE-ConnectionGUID: OP7QmNhNQvS8srQRLkMADg==
-X-CSE-MsgGUID: pj/gSRnBQMusJYYNDDiCKg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,194,1770624000"; 
-   d="scan'208";a="231613964"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa006.jf.intel.com with ESMTP; 23 Apr 2026 05:21:00 -0700
-Date: Thu, 23 Apr 2026 19:58:43 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Dan Williams <djbw@kernel.org>
-Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org, x86@kernel.org,
-	chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com,
-	yilun.xu@intel.com, zhenzhong.duan@intel.com, kvm@vger.kernel.org,
-	rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com,
-	kas@kernel.org, xiaoyao.li@intel.com, vishal.l.verma@intel.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 06/31] x86/virt/tdx: Read global metadata for TDX
- Module Extensions/Connect
-Message-ID: <aeoJczEza936bLO3@yilunxu-OptiPlex-7050>
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-7-yilun.xu@linux.intel.com>
- <69e7f808e9aa5_fe0831004@djbw-dev.notmuch>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VsT448tl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CF96C2BCAF;
+	Thu, 23 Apr 2026 13:04:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776949480;
+	bh=3KN/9xYClnbKmpip1Kg4BXkQ4NkWlYtHiVbzGlXqlc8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=VsT448tl/xYct0rR1E+hiGErLn2sJSkpSyRWragF+IMTUwo2OtWo37yNvrKho8QZc
+	 zEhJ7ISzM0SEdWfr3bHn407Km0B17u6GHQ/Ww67CO3ltIwZ9pjQ4wuv+w7LKWvuXZ3
+	 RurIresRLswrN2rcUcIQKFH7fCA9BBithVDE53sj2o2A/aLf/g0oNyLRKFuDAI/H+b
+	 1+yS1h289WEL5O8b/e8XJc+gPJJRMe4M5Y3yuz4QBX4WCo4OYbhavVefFYI39RFPm5
+	 kBESXrfxirSFymO18VWKPW4WKRxJWsEkBR3A2jN4/jiCURPIny0dx2FEcab9SZNmWL
+	 oR45LRdNOi7Qg==
+Date: Thu, 23 Apr 2026 18:34:31 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Jia Wang <wangjia@ultrarisc.com>
+Cc: Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, 
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Jingoo Han <jingoohan1@gmail.com>, Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	linux-riscv@lists.infradead.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] PCI: ultrarisc: Add UltraRISC DP1000 PCIe Root
+ Complex driver
+Message-ID: <yqxyjv2q4lp5ymb6mjzpldjp2folqsvu4qneaihapbchrcithl@tcj4gu3ez3wh>
+References: <20260415-ultrarisc-pcie-v3-0-73f06e972616@ultrarisc.com>
+ <20260415-ultrarisc-pcie-v3-3-73f06e972616@ultrarisc.com>
+ <7n5b44ynbem2xve3twofaqunqlkw4aijatuuemujrfq5yd5mzq@5qnikt7ximd3>
+ <177693928812.2917474.4251479012132866533.b4-reply@b4>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <69e7f808e9aa5_fe0831004@djbw-dev.notmuch>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <177693928812.2917474.4251479012132866533.b4-reply@b4>
 
-On Tue, Apr 21, 2026 at 03:19:52PM -0700, Dan Williams wrote:
-> Xu Yilun wrote:
-> > Add reading of the global metadata for TDX Module Extensions & TDX
-> > Connect. Add them in a batch as TDX Connect is currently the only user
-> > of TDX Module Extensions and no way to initialize TDX Module Extensions
-> > without firstly enabling TDX Connect.
+On Thu, Apr 23, 2026 at 06:14:48PM +0800, Jia Wang wrote:
+
+[...]
+
+> > > +	int ret;
+> > > +
+> > > +	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+> > > +	if (!pcie)
+> > > +		return -ENOMEM;
+> > > +
+> > > +	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> > > +	if (!pci)
+> > > +		return -ENOMEM;
+> > > +
+> > > +	pci->dev = dev;
+> > > +	pci->ops = &dw_pcie_ops;
+> > > +
+> > > +	/* Set a default value suitable for at most 16 in and 16 out windows */
+> > > +	pci->atu_size = SZ_8K;
+> > > +	pci->max_link_speed = 4;
 > > 
-> > TDX Module Extensions & TDX Connect are optional features enumerated by
-> > TDX_FEATURES0. Check the TDX_FEATURES0 before reading these metadata to
-> > avoid failing the whole TDX initialization.
+> > Get this from DT please... This can change between SoC revisions.
+> >
 > 
-> I think it is important to distinguish "optional" module features vs
-> required Linux features. Linux requires all features that a module
-> advertises to succeed at core TDX init time.
-
-Agree. But I want to reduce the scope to only about metadata reading in
-this patch. So:
-
-    TDX Module Extensions is an optional features enumerated by
-    TDX_FEATURES0. But in the implementation, Linux requires that all
-    features that a Module advertises must have a complete, valid set of
-    metadata, and the check must succeed at core TDX initialization time.
-
-    Check TDX_FEATURES0 before reading these metadata. If a feature is
-    advertised, a failure in reading associated metadata causes the whole
-    TDX initialization to fail, otherwise skip.
-
+> During the v2 DT binding review, Krzysztof pointed out that since the
+> properties are fixed for this hardware, they are deducible from the
+> compatible string and should be dropped from the DT bindings.
 > 
-> Otherwise, this looks ok / consistent with other metadata reading. It 
-> sets the precedent that if TDX Connect is advertised it must succeed all
-> core initialization.
+> The v2 discussion is here:
+> https://lore.kernel.org/all/c60a712e-ecf3-4926-9947-0e593cdb921d@kernel.org/
+> 
+> I then moved them into the driver for v3. If future SoC revisions introduce
+> variations, I'll update the driver to handle them accordingly.
+> 
+> Does this make sense?
+> 
+
+There are two uses of this property:
+
+1. To provide default Max Link Speed of the Root Port(s) if the hardware default
+value is wrong.'
+
+2. To override the hardware default to workaround the hardware issues like
+broken PCB routing etc...
+
+For the first usecase, you need to check if this value different from
+PCI_EXP_LNKCAP_SLS field of LNKCAP register? If not, you don't need to set it
+in soc.dtsi/dt-binding and the DWC core will extract this value from the DBI
+register.
+
+For the second case, you don't need to define it in your controller dt-binding
+with a default value and also in your soc.dtsi. Since this property is defined
+in the dtschema [1], you can just include the property in board DTS file to
+workaround hardware issues (board specific) and dtbs_check will not complain.
+
+NOTE: For both cases, you don't need driver changes, since DWC core will handle
+it.
+
+- Mani
+
+[1] https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-bus-common.yaml#L117
+
+> > > +	pcie->pci = pci;
+> > > +
+> > > +	pp = &pci->pp;
+> > > +
+> > > +	platform_set_drvdata(pdev, pcie);
+> > > +
+> > > +	pp->irq = platform_get_irq(pdev, 1);
+> > > +	if (pp->irq < 0)
+> > > +		return pp->irq;
+> > 
+> > Who is requesting this IRQ?
+> > 
+> 
+> Not needed. Will remove it in v4.
+> 
+> > > +
+> > > +	pp->num_vectors = MAX_MSI_IRQS;
+> > 
+> > Are you sure your controller supports 256 MSIs with one SPI interrupt? It is
+> > possible, but want to make sure it is the case.
+> > 
+> 
+> Yes. The controller implements 8 MSI control blocks (i = 0..7), each
+> providing 32 vectors, so 256 MSIs are supported. This is documented in the
+> controller IP specification.
+>
+
+Ok, thanks for confirming.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
