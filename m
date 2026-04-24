@@ -1,156 +1,101 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010019.outbound.protection.outlook.com [52.101.46.19])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C9F53ED5C0;
-	Fri, 24 Apr 2026 19:12:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.19
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777057979; cv=fail; b=kYYS/sLSp5HD5/by1DFw/SKjvFKgHZUrFYHLFG0wr5fdeiJykep3Aal2iprgEtjP+wD/jEtwQTGdqhuXFmKEW8N3sXZ7wRCnLjsOvFHjqwmIYXRipklIBYV2SMhnK30o9AG+fX/K3ZwYtrhlXQi73NPYFLhSjY1A1J1p0C53SbU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777057979; c=relaxed/simple;
-	bh=YIcIEYqEzMKZuuw36T9IcCvY91VKyUMZ/e2wjkcpZwk=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YMhn+3zqE9Vizi9atwPHIUKosQX3gCQJ4TfzeSjnJRfGYE3rWs3zOBbh55Y3T8pMwUnyduT1OdSNwBtFOUFTu4aYZH6Kk5qWh2Nl2/auyMu+QFRfMr44WLUcW5oImyCl04hOs8AJhYT5+3+eMyO3kX76aU0l9CEdi3Dy9Kh/h5I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=eM2mQZO3; arc=fail smtp.client-ip=52.101.46.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80F4734A3C5
+	for <linux-pci@vger.kernel.org>; Fri, 24 Apr 2026 22:09:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777068571; cv=none; b=NwJOhlTPgam/0xXYK2/J1nX8n13A2RWJmnXmsnZQ6O81HemCWmeokQFG2RwQNQvWPc4ZwdxvtyL9qWD76Cv7nrwsvPQ0ee007aAa76EtqfASwC1BGMXEg42LgBesniWOOT6t3ayzDrKNfEHinKfjwnPFV4CrcM4ZN+F+f4L3h3w=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777068571; c=relaxed/simple;
+	bh=g7Rt/3R/nfqSZ9jHy0CQVm1xkgoZtOMS1J6px4mTkgY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TZWKnO4SaIZAT1t02O4EztInJpmbPAj/KrkoEcUEb2WbeovNP6Vm15vGIJxOWGKMToYhhKcUMZUSZgwnsRe10ElN6w3h1RHWktRGl3dlzvgvN0jJgnlVCyOk89+A/z4hdzHYHZymj3xijvV71/rv9zhZCmXS7a7uUWoMlW4h4I8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nSrm2cMp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="eM2mQZO3"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=IMCFif/8WxvBQLBTo1EFVeA02MVpYCf/QCQkFFbCF/XjTuTiE50cawuOWN3i1fsXk2VQySBXj4Bc67jBWICmkiRms+y5YwBlJgkYpWTLjuD2EgUuem0l1GHq59sXbK2mbKRUqZ3jr1IszO3iNQB7LSvTy9mi62st0khYExeWcPDkdoC2GSBf4WXwc0666TKStg9AfTCUNRxJzb4rre9XbvagdQxkPae8Grqx/6a1dlXLeJyD5BxALU53ZL1cFIJsPNKAJZLhfcYmstAGSxCnsxPxGq2CY+gcucQcvxoLfhGshUdg8xuqwBCDKKrwVoxJ3m32lyMYm81sSxXCL8r4NQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=h/8FVfyx1j6IAH1RF/nR9TCTxzIhBd1Lcs3X4GTLgys=;
- b=pbjUaLTEMuqXCyMgnTzDjWTPRWZPC8RRLUoGPqCsY9Df8+MwcGb28mZla8UurolOmiPpyG0ghyinJNldVTHuboJv6of0Jo0ojdADziXBokKwVxYdg82vDurkNN7L/z3hcTX08tIn7Rp2z9bcRKUQAOYeqjP3gfo4AA6P5Se6+8lc1ecONkJrdB/tg1H23DLyd5oX5bO/b1JQYp+Req7pV+XQf7cfgLc2QXSjYU38f8JQk5kTE7ikcDVUx+pqDvUlERgZ2b7OjTMNT6Erkc7gogexmFexbP87cwv8L2fVXHU7kGv+nve6/S/O2JZvHLOLe1McctQL3NYGL0W2UGGQbA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=h/8FVfyx1j6IAH1RF/nR9TCTxzIhBd1Lcs3X4GTLgys=;
- b=eM2mQZO37icho9fUzwfy9X7Qs5gJSM1+q58qhNFvK050cvY+gQNoP9YZfhlMu+67yjnsIdGQIOmTFw3jnx06rM2wQmMZ1D+ZiGDq8feguDQ4yhU+yfez6mWOBCAnlcWET+xWl2vZsjA1wcbhv6PTDZORPjfD0WV56TTWsm8j7VT188JHBmM6gcr9pRUcID/bKOk7Wj8eR/kcSjD0ZjAjYYyyg9USWvspKyu/AUAKMIs60ikFJVFDuexjcblls83d1m+yy0sd36CUzjkrliXPIyl2ZOBb4V72wG7HnsPQQ45AmK8cvoig2fKXvrzooqTXiiYRc2WnnBvYkIdHRMjXcg==
-Received: from CH2PR07CA0053.namprd07.prod.outlook.com (2603:10b6:610:5b::27)
- by DS7PR12MB6165.namprd12.prod.outlook.com (2603:10b6:8:9a::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.19; Fri, 24 Apr
- 2026 19:12:52 +0000
-Received: from CH1PEPF0000A34C.namprd04.prod.outlook.com
- (2603:10b6:610:5b:cafe::4e) by CH2PR07CA0053.outlook.office365.com
- (2603:10b6:610:5b::27) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9846.22 via Frontend Transport; Fri,
- 24 Apr 2026 19:12:52 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- CH1PEPF0000A34C.mail.protection.outlook.com (10.167.244.6) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9846.18 via Frontend Transport; Fri, 24 Apr 2026 19:12:52 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Fri, 24 Apr
- 2026 12:12:43 -0700
-Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Fri, 24 Apr
- 2026 12:12:43 -0700
-Received: from Asurada-Nvidia (10.127.8.12) by mail.nvidia.com (10.129.68.9)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Fri, 24 Apr 2026 12:12:41 -0700
-Date: Fri, 24 Apr 2026 12:12:40 -0700
-From: Nicolin Chen <nicolinc@nvidia.com>
-To: Jason Gunthorpe <jgg@nvidia.com>
-CC: Baolu Lu <baolu.lu@linux.intel.com>, Will Deacon <will@kernel.org>, "Robin
- Murphy" <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, "Rafael J . Wysocki" <rafael@kernel.org>, Len Brown
-	<lenb@kernel.org>, Pranjal Shrivastava <praan@google.com>, Mostafa Saleh
-	<smostafa@google.com>, Kevin Tian <kevin.tian@intel.com>,
-	<linux-arm-kernel@lists.infradead.org>, <iommu@lists.linux.dev>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <vsethi@nvidia.com>, Shuai Xue
-	<xueshuai@linux.alibaba.com>
-Subject: Re: [PATCH v3 05/11] iommu: Change group->devices to RCU-protected
- list
-Message-ID: <aevAqKFq7ATYk3+i@Asurada-Nvidia>
-References: <cover.1776381841.git.nicolinc@nvidia.com>
- <12a224061de4fff9e0725909fd0ba4e14996ff08.1776381841.git.nicolinc@nvidia.com>
- <779dad61-d7e7-4ae0-83a9-8c5920222219@linux.intel.com>
- <aerey+ULGG589rdi@Asurada-Nvidia>
- <20260424131148.GB3444440@nvidia.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nSrm2cMp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E655DC19425;
+	Fri, 24 Apr 2026 22:09:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777068571;
+	bh=g7Rt/3R/nfqSZ9jHy0CQVm1xkgoZtOMS1J6px4mTkgY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nSrm2cMpa+714ClWkq7oieu3Hb0wfgQVadpf7+qv0iicVkidYM28sU1rNgwQYTONe
+	 Rb2xyqBFYJI/Jnk1XKCbT143JliioabfU0Ei5xBm0aBF/lvjFjNfidrrZvl9vXGYzn
+	 oO6l8x5fePT3fQWbWIRJyxDdO0kiGX1GqnkrGVjiWcYRvmF8xN7RjH2kkfmw4V9OKZ
+	 q6MOR18RGjeF1+xK3EAteUD2XdRHVygHcoO/rWI6B3U4BcmeFihfyVH6IWhd4qNTNO
+	 SmP8/UAKKCq5Zf59fFDlJ33tomBhv8UoOAq7s/EyOmc8U1mluHfslvlJyYXmpeRT3+
+	 zrdUXr0Ah6Tvw==
+Date: Fri, 24 Apr 2026 16:09:29 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Keith Busch <kbusch@meta.com>, linux-pci@vger.kernel.org,
+	bhelgaas@google.com
+Subject: Re: [PATCH] pci: don't fallback to bus reset after failed slot reset
+Message-ID: <aevqGci1hLqZQdOF@kbusch-mbp>
+References: <20260421150644.3543733-1-kbusch@meta.com>
+ <20260424161136.GA11831@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260424131148.GB3444440@nvidia.com>
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH1PEPF0000A34C:EE_|DS7PR12MB6165:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1da50109-f34c-44aa-b748-08dea2357bdb
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|1800799024|82310400026|7416014|376014|22082099003|56012099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	kxJyYShzdGF4VYgjHFkQsRKYJUGmzu1gofksDD/C3iUdpFqD4yb76FThviHARCGL/lCT3ltr9cKreXP4ybBp/Y6IbIVq86RGJbz/2GEf4E3uR/0cAZT7K4jm53QbE9bBR1IKO+m3/ugSAyNdt6xkqJPG6ed/cEznwDqxAhOurAj/2NmrzcW9OfPG2ip5T/sUNLtq6zN3elYYRi/H+Q1wfAqqBAJOAHbIpIBH8CUmuYM4MOkwqa4PAzteBau23LE2VIf4ZWU9qC9D+1QxkKRMEfSZWPVDBxZSIXVOobilMAMzXGZfTqlJliQ9uxAiFfmtKeeg2q0ByQRWAzulmRKXecB/+ZubTQ12cUnLCMztwzIE4qokl7nCOOdTklexUG4eGzIyOFd0cLciZn1oMf3Mn+HHpjmXjXWJ6eR29D5roQk0qwlu3e+vAc+hWCBvpfFXukA2orSuEHu3qRmpuHQTO6hea7Exy+hGkfOdwSOEpVvqy1L/PxnmcuxiJ7LecQWueIOiScyGJ+KAzUG/MSEemJWYmmwE/V1q30HnY7LfwdKjLM4z/+2iKidjAq9qT6lEkBGvK795f47xbsNDJZ2yYMq4QmBRLU0I3IHMFG2EhupeeffJ1TpELsL8XhXczNHKP5G7lyHljlPQH6pgOf6ZszAQ9xSGzl89yJKlXCTrUtIvKQItqccMFV110Hn58ol1eXbvBPSfY0C6VmM5vFSzJWiXM332V0xf5Ummf6ud8OpjezkoVS3L3fsuoqblTT/LGMlJ2sC09F2UjQFpl2RC/w==
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(1800799024)(82310400026)(7416014)(376014)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	Jap90dX63RHXFOeUTL5OUT2bUtkxwWtQJ7geaciMsn404klYyeg2UPLteHlUdB2NAr0moqBp/UDt19XzfbpsebtZnGaFXFXXjBNKQAtD/eEdDeMOMojlvLf1YCYyNRuRH9W6BiACBcuDuhUSxD3Zh0uZabi1eTnzG03MUY9cIe2FMybBTHC+SNWXtuLtwdUc6yfGiUX6/ZrY59OBQ6qfJnbTNziy8m4sbykhNL8TV/jGKQz0RX4KwlsTz6woMZk/By3yMDOxDEgGqEHrjflw65hmPGPIll2/WfZNRwZL8OanJXf9OGiEC+j3JjFDwf4/aBptDMtAM0of9kh2UlUntpk4dgglx+OagghIHTPO/RY70H1YK3d6OoeugvvzBBkxsXrSGC6m4eLsIFirD1fbyzYR/0EN85NCVxyQPMcfQsbG1I9yndgWBtUvbG0dML7i
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Apr 2026 19:12:52.6560
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1da50109-f34c-44aa-b748-08dea2357bdb
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CH1PEPF0000A34C.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB6165
+In-Reply-To: <20260424161136.GA11831@bhelgaas>
 
-On Fri, Apr 24, 2026 at 10:11:48AM -0300, Jason Gunthorpe wrote:
-> On Thu, Apr 23, 2026 at 08:08:59PM -0700, Nicolin Chen wrote:
-> > On Fri, Apr 24, 2026 at 10:53:49AM +0800, Baolu Lu wrote:
-> > > On 4/17/26 07:28, Nicolin Chen wrote:
-> > > 	    mutex_unlock(&group->mutex);
-> > >             /*
-> > >              * FIXME: Mis-locked because the ops->probe_finalize() call-back
-> > >              * of some IOMMU drivers calls arm_iommu_attach_device() which
-> > >              * in-turn might call back into IOMMU core code, where it tries
-> > >              * to take group->mutex, resulting in a deadlock.
-> > >              */
-> > >              for_each_group_device(group, gdev)
-> > >                         iommu_group_do_probe_finalize(gdev->dev);
-> > >         }
-> > > 
-> > >         return 0;
-> > > }
-> > > 
-> > > Will the change above trigger a lockdep splat due to this "mis-locked"
-> > > case?"
+On Fri, Apr 24, 2026 at 11:11:36AM -0500, Bjorn Helgaas wrote:
+> On Tue, Apr 21, 2026 at 08:06:44AM -0700, Keith Busch wrote:
+> > From: Keith Busch <kbusch@kernel.org>
 > > 
-> > Oh, I missed this one. That's a good finding!
+> > If a bus has hotplug slots that implement the slot's reset_slot
+> > callback, it is not safe to do the non-slot specific bus reset, so don't
+> > fallback to it. If a slot reset does fail, the subsequent bus reset will
+> > attempt a 2nd link reset on top of previous and fail to handle the
+> > hotplug events.
 > > 
-> > Perhaps we can just change it to list_for_each_entry_rcu holding
-> > rcu_read_lock() and drop the FIXME.
+> > Fixes: 8238cb69c01fe ("PCI: Make reset_subordinate hotplug safe")
+> > Signed-off-by: Keith Busch <kbusch@kernel.org>
 > 
-> You can't hold rcu across that function IIRC
+> Applied to pci/reset for v7.2, thanks!  Will be rebased after
+> v7.1-rc1.
 
-Oh right. I didn't think too carefully...
+I kind of think this is 7.1 material. If a pciehp slot reset fails
+because of some hardware issue, that means the device is being removed
+after disabling the hotplug "ignore". Falling back to a bus reset walks
+the bus' device list without a lock, so it risks grabbing an invalid
+pointer racing with the removal.
 
-I tend to keep it as-is. So, maybe just list_for_each_entry?
+I didn't intend to get into those details because it may distract to the
+pre-existing locking issues that you can hit from a variety of
+directions. But for the record, the failure from this particular path
+before this patch looks like this:
 
-Nicolin
+ pcieport 0000:55:01.0: pciehp: Slot(30): Link Down/Up ignored
+ pcieport 0000:55:01.0: pciehp: Slot(30): Link Down
+ pcieport 0000:55:01.0: pciehp: Slot(30): Card not present
+ Oops: general protection fault, probably for non-canonical address 0xdead000000000180: 0000 [#1] SMP
+...
+ RIP: 0010:pci_dev_save_and_disable+0x9/0x70
+ Code: 89 fe 48 89 c7 e8 57 9d 99 00 48 89 df e8 5f 5e ff ff 4c 89 f7 45 31 e4 e9 6c ff ff ff cc cc cc cc 0f 1f 44 00 00 53 48 89 fb <48> 8b 87 80 00 00 00 48 85 c0 75 27 48 89 df 31 f6 31 d2 e8 6f c1
+ RSP: 0018:ffa0000052f27db8 EFLAGS: 00010297
+ RAX: 0000000000000086 RBX: dead000000000100 RCX: 0000000000000000
+ RDX: 0000000000000400 RSI: 0000000000000004 RDI: dead000000000100
+ RBP: ff11000112c8f428 R08: 0000000000000002 R09: ffa0000052f27cfc
+ R10: ffffffff82b37718 R11: 0000000000000001 R12: ff11000112c8f440
+ R13: ff1100011024b508 R14: dead000000000100 R15: ff1100011024b500
+ FS:  00007f63b0ced740(0000) GS:ff11007eea90e000(0000) knlGS:0000000000000000
+ CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+ CR2: 00007f58fc1774e0 CR3: 00000003087c8002 CR4: 0000000000771ef0
+ PKRU: 55555554
+ Call Trace:
+  <TASK>
+  pci_bus_save_and_disable_locked+0x20/0x40
+  pci_reset_bridge+0x1e6/0x230
+  reset_subordinate_store+0x39/0x60
+  kernfs_fop_write_iter.llvm.2764860334700261357+0xd4/0x1d0
+  ? do_timerfd_settime+0x490/0x490
+  __x64_sys_write+0x309/0x540
+  do_syscall_64+0x6b/0x250
+  entry_SYSCALL_64_after_hwframe+0x4b/0x53
