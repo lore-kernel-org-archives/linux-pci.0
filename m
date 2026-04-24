@@ -1,164 +1,167 @@
-Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010066.outbound.protection.outlook.com [52.101.69.66])
+Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA83323EA94;
-	Fri, 24 Apr 2026 03:46:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.69.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B01313451B3
+	for <linux-pci@vger.kernel.org>; Fri, 24 Apr 2026 05:41:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.153.30
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777002364; cv=fail; b=A3kF3K5BpD8R7zcy+YcU3gj6xw60BiuxU2B5WjJBNj/ThPSrygjIEwQ41NiB9J76n7WjHvCJ5qF+Tz1+2FjVFCxRtIAFiqklAnC1HviLMzqAT673MW/PUF/YvVKakDGJmdJQuY3Fme9Li0eLCuOsmuKRKjFXRrZeUya+ydavWJ0=
+	t=1777009303; cv=fail; b=PQkl0UG0H1PVXqOw6qr4Kj4HUlmCeNGqUZtm+rYCo794kktridIoqZWo4mptislhA4xgt8p3yx5/xby0/uZNcLK/325XG7VGL1oR7iEe/GyUUnncAk8GbhrwbF3qXyV574PYiZajumAiFyTG+4thTYEoP8HQcz1HQ9zL0M8PgnE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777002364; c=relaxed/simple;
-	bh=rk3VYSkYAaPN2ZZxpsx1Z2GyPFxE9/CRFm2HYsZ7oP4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=tVFxtTfY1qtOEnSNc5R/HCt0byU49cPDkvrETPHWOqHQ2xDAq+2y6XeOdXCxC4Y1qa2eX93H4WrXslFGiKrgkL9OhQnSCVb5SHtopKoYWUJTZj4jezJ2LRcErjcSohtn7aODYscDT5UMEbvkr182PUa5AyIZlzDVU6dUC20QVuY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=iEC9gvDL; arc=fail smtp.client-ip=52.101.69.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	s=arc-20240116; t=1777009303; c=relaxed/simple;
+	bh=Q0GtZzioBAe1xOAjDbkhlrB1hPU4MmLixdCpyIV7MDw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=IyQ9dKNV2nyH6iLp7RH8s97z5QLTCscK3l2/p+NjFsDy1uc5jTG/mkoH/uZghpOSJ/N7YS0af14phjtD14QdyNSpV5tUeLMfVJtpS2ElT2J4wE9H4T7c9jQa8StjMJKURFmKMVfTnQvCUMoTlFojgvAAJa32O1jwLEtmey0x2dU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=Lm/Az7wf; arc=fail smtp.client-ip=67.231.153.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="iEC9gvDL"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=t6THCJrsEcuyDaIS5iYKJJv13HfBhpSsqqytYyvoxRNK200yRC07HGsF9iY6V1CzId6rjEBZaLqfYtTUm9xSiiRSwwT3PG3pauJn/a+NEFcrP5Q2WGt0oCF1ag3yhjpOEtuSz+sgP6FbW5PiHDPeZQup5DqpmncTevCDHR/W0YvnYzgFcBXp4tyChcVi5RnFIblNGAvpS9zgGUpTXXKVR2joROCTMRmHhycIXzfOmAcR9ShJkpEVPQZZYTsUt33vsPwlzJ9LTOZRyulaIDEKV6FqV9PyxCeQ3fHJUa+74Df4GvOT1wANiUO0hO+9G7zjS4Dh6dV3CUPr1Cnh2hrEtw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jWtxPk2LZK1xN5IifAGBjNI4Na0vNhUIBHblaRX7Skg=;
- b=gIPL0agk5BN/xKUdO9zSABu14nfs7vEbmT7LHEMVFsZJ1BGgtM1QjWcLzEWiy+iY5eu6L8YVHqRw/L4rvhjUgUmHxCtfIY4s9nM17tSoJF8JYSF3FqwQfbUZykNYj2Ei6V5Ru7q2BqGVqMiktkfY9z8y3e058DibqZBX1bQhnMmVYQoCqSU8Gz1C5xjyPvVuKmvXZBX4rZBbkSLeYDjbBYwaARuthGkB5KBzoUbjWOKtffYBYqf/EtCsCcki4ce81weiKiX4xBiCXJ8v8BDT0GCuOQ16zanz2li0OxHXGuOkt4mLJ+uQPHuY1Kgg0BfTE0hVI1EwxMvKybP9O8eg+w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jWtxPk2LZK1xN5IifAGBjNI4Na0vNhUIBHblaRX7Skg=;
- b=iEC9gvDLs9p/d3OdRYVwwuZweo3fo30TaWgaU1n8ccGSESCyrsnHvAMaZCVJdmg6ELroq1PXm/Sqlqc3mKj0WrNi+SUef0j+1gaqd845DQEqEUP4hx+5VfPP1w90slXEz2Jg5T8Aw5n6EoiisJ38YkntmiLx4VxB706io59VD1vi8sPHa2cERqSSPYqCK7WB8E6kIx/YooFm24Umkqf3pgpOL60aXvFTcbmQC9Gmu0tYNoN7fNwZ7h0kQ9yAZ3PYyohn1e9bTJk0PjESay01DSBy4GLPvZJAXVHg25qIp56pr5rmosyigN6wfnxJeyfnNJ485796Sk2GLRYTWZqvBw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by PAXPR04MB9187.eurprd04.prod.outlook.com (2603:10a6:102:221::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.22; Fri, 24 Apr
- 2026 03:45:58 +0000
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9846.021; Fri, 24 Apr 2026
- 03:45:58 +0000
-Date: Thu, 23 Apr 2026 23:45:46 -0400
-From: Frank Li <Frank.li@nxp.com>
-To: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
-	bhelgaas@google.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, mani@kernel.org, s.hauer@pengutronix.de,
-	kernel@pengutronix.de, festevam@gmail.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org, imx@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 1/3] dt-bindings: PCI: imx6q-pcie: Add intr, aer and
- pme interrupts
-Message-ID: <aernajxGnogO8BZz@lizhi-Precision-Tower-5810>
-References: <20260424025735.1490772-1-hongxing.zhu@nxp.com>
- <20260424025735.1490772-2-hongxing.zhu@nxp.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260424025735.1490772-2-hongxing.zhu@nxp.com>
-X-ClientProxiedBy: SA0PR11CA0017.namprd11.prod.outlook.com
- (2603:10b6:806:d3::22) To PA4PR04MB9366.eurprd04.prod.outlook.com
- (2603:10a6:102:2a9::8)
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="Lm/Az7wf"
+Received: from pps.filterd (m0089730.ppops.net [127.0.0.1])
+	by m0089730.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 63NH8hji1998000
+	for <linux-pci@vger.kernel.org>; Thu, 23 Apr 2026 22:41:40 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
+	 bh=9DPAzRc9hNFtKml/U1KgfOpti+rrtUBR6KtYeiX3hBQ=; b=Lm/Az7wf7xyF
+	brokmQfLsNW68y66IP7SZ8nGC1KsXbutmXjSA8cmHA2Jk5qKrwkv66B6NLirRkP7
+	QPJwKH1umKEEjOC/XCpEBPz8VR5HvrCHOhrvpKJ8eh9uddFh+K22h5l6zVDTktN7
+	jLt8ikr16+iDaTHEYZBdj9EwQNQuPWk9M1lNVPnUjA9qvJyXuvqeoXu9WoHbWI9B
+	L0t0VhbSUUEr2S6i4dfX70Bl57EMc2glo6cixMdYzAixPwMAfd/ptjPwyZbZODg2
+	Ev/aMiLmg2rES2HuztP8JKZyiegA5AN6JmiDik/5gngMEQiS5J4atlbQWviM1YCu
+	HCwba9g+jQ==
+Received: from mail-ot1-f72.google.com (mail-ot1-f72.google.com [209.85.210.72])
+	by m0089730.ppops.net (PPS) with ESMTPS id 4dpepamkda-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 23 Apr 2026 22:41:40 -0700 (PDT)
+Received: by mail-ot1-f72.google.com with SMTP id 46e09a7af769-7dcc59fe0d8so5750050a34.2
+        for <linux-pci@vger.kernel.org>; Thu, 23 Apr 2026 22:41:40 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1777009300; cv=none;
+        d=google.com; s=arc-20240605;
+        b=CrjGOjonwHtMCizM8X/r+MhgFsZauHT9lDdGpuDyartedj+m/tGQZaO71OKLVcG/lj
+         71djXX78DyTBt+HtGhH550CtO3s7buA+ZPt+h/Lrbpp8dnNNe4VOqGXFg8NSGElyqgEc
+         1f6INJy0kCM0xbkJomvUdr4qthIpxWd21ZhBziLrvG3fC/2OYSfU1fDCQMiQKA9x2UkT
+         180JwmwEy9+T5IMXMeR7aliRzfD1cUtqPHQDtW0d3Bv+PxELDY0lW7yfCYEHr4CUADw4
+         zi+Yk4BpLrQrqyFqVU5WgXdGR27dWgdPPytByt7ypQly0MKjbfS/oJisG1aSKd6agVP5
+         uUgg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version;
+        bh=a9nQ1tVs6iATHtHJgJt0jwwPeY71kxSwK9rxJ53fqFI=;
+        fh=fkv7hYQsrGW8zkbKQ4auIjUHagKZU97ZQia7WgAZ9l4=;
+        b=KWog2Bfcd0Fk7c+uRJ9+Jlo0o5SH3r9mutz/ov1YZa6yq+ItPQEl3SjdOps63TlvlK
+         4gxPvP9/ng8gb0Tm4UXkKEl2k2nxs4IMSVZqrKJwxGhLKAKzeo1KCjM5tlHZP1T2c4yJ
+         GlGqIHlTpKEVlz3AbgwWP1DpKSrlqIEUAFXkuk6JGju8vr9InePGzErr3r7h3jAwzqJl
+         86esoN3t5S/O0kg1JD25fr2ViZcF+8VN63ClCCjcT4nS0vYyDmJgbVT8XbF2RJJPtf97
+         mc+Tji2MCnTxi1n2yu/eeVJMLrdXOWp3JlD0EL+24SWRtftl3nhqLyTuoyLtN8WFlk1M
+         fTBg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777009300; x=1777614100;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=a9nQ1tVs6iATHtHJgJt0jwwPeY71kxSwK9rxJ53fqFI=;
+        b=JxmvQkys/my85xdCw7oUOEg70z8IwZlgp5f7wLjuOjIaNenGbyFQeOfWSioiWFqscE
+         1TLx2RCqjI0r+IXFkK6HVYmeUgALNcPFfHxl2BwfX6OUafcye5eP/E/ykhkkzEXkI+vk
+         yP7XxhyWcA/6/yCgGF3AEfPSSm7X6g0jLCkSTValxlD+izdcIY1dy8xlsGOdUv3sb9bM
+         ANtZm4Y1ZsynHHLVlhPb8V7Dq5NVSTRxA8eYPGON1jyUan1QdOZuTxiDMU8o0NSt6Hmi
+         hw/0RjwE6ESE7NCeDrY29hbJsXykiAHAsnW5A6XyHgseH2OEtrIwBTxFv47AvolF3DAz
+         Po/A==
+X-Forwarded-Encrypted: i=1; AFNElJ8v6XSaCseHhG/yNwpyGVXvFFhOxYW1gPuOPHRTdI4fte76Nfvw5Ep58xsPCvaTyr8WVkIV8IXAne8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwqiHcNB1gMX97o8ZQbamYEPc3hJ9tzpel7/SfwJU++91d/IgXi
+	kRJztPBvZ7DoWih/t6+mhqPQ+JYGc324FpGH0jPQ30sCwWgCuoBGtFrbuy5LDnMhVDiZSLCUY6O
+	gsjEE2sbOXJUMMF8eC0FOCBRVky/18Ti2N1vMlcS4Yc5amEergXqPHiQZzjk9/sz7xP/AkCYwGE
+	DuJYaDJ4y8wfQ6+b2X8DL3pkbk0PMuXQv8Mpw=
+X-Gm-Gg: AeBDiesaptt7c0XSKTsIlzz01hDH99SJnsl4E8fGx3W763CgabWA6BXH+ZYUAiv/VrG
+	/ZqhIqwENu1gspP58HJo3e3Pnwh0sPRY/T7/0nSpjch0PHmHjfrkJecTSOvTsT5/+HMdh1c68CJ
+	mBevmBwgvHJWmyc5E7J/mYe65uucbxj3M1yfJBVwZO+Sk3R2HC+OGUfHj1Qup+ifwsgmn8QRsN9
+	p4ufmo2XB2/eHUQCRrvCFxoG1pSo8VEM7Jew3+i6ZDjS4qHF+k=
+X-Received: by 2002:a05:6830:6583:b0:7dc:dd58:50c7 with SMTP id 46e09a7af769-7dcdd585530mr8104217a34.18.1777009299914;
+        Thu, 23 Apr 2026 22:41:39 -0700 (PDT)
+X-Received: by 2002:a05:6830:6583:b0:7dc:dd58:50c7 with SMTP id
+ 46e09a7af769-7dcdd585530mr8104199a34.18.1777009299430; Thu, 23 Apr 2026
+ 22:41:39 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|PAXPR04MB9187:EE_
-X-MS-Office365-Filtering-Correlation-Id: a1269769-2a1e-409c-9b59-08dea1b3ff32
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|52116014|7416014|376014|19092799006|1800799024|56012099003|22082099003|18002099003|38350700014;
-X-Microsoft-Antispam-Message-Info:
-	ZzfWFCTWfyf/8ej5Zh6EPYqIqsO6zcQDpdw3FqeIzqU7CA3NYwA2ZPY4KscukriHaU4JIH5QaQp+hnXd9gqqc43I+zyp5Akvlo/dXZF+xNYOhZUhchIznHlshwNafnZkUltGgjxoPwZ/Jc8REDgpLwCm0l8EGhrTdk2qvSChPZ9fE0KvO5Vwjt4zB3GzQnD8wVb5iJwpYbj7uq9zgkN9kFuWA7DKud2mNdUDbczVP4DwnKeYHJoFavinyXHxt+qzYn3i9iEMxKxHze+3J374Pd5sq0MB29kpgeZDbPlBQAOQNGUFWk4vYDFoQRhsb1FSj0Xa07UPK9O6EzHLh7jsquDOwd00KMkm5peT/kdP9hSjuBG1aRrXBHTGSzn1lXnyVAe2cSskObuK6IGjvRXpBYojVOP9YXVCMuxGWKSiUdS6Uby17lOFGMRJRt/oNq8te4dPlYJFp3Ssr+YjQ/94aigX0mjJ5JNDQEObwa6viAYxyOMUra5m4dx/pqiZSR6UqLrYOfM94JWkFvW+cS4U5DLVXG/cD8oFeREtjF7WMLQEIMIl5bjHciBWV/mFF3l200zhpoYHtOrVjz36Gir62w8ytTT1njNQlNyXkCNTb66Ww5s1Zi6i2WVb08L2dcft0/cWa4/vs+KWcSQAJT83TWC1MawvaAFISMFWzw+JHhnxsP34KfGZvPKdC7ktAaFmEqcVYT7AVJXmFNM6V34zj2qDxMipLvPPEhysBU0PoKvNzu1GRGoEBfYMTaEupIRn1UKvu7YDw5Mv4w/U25DGjceF89dE+DOCnyyIVGE1xQE=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(52116014)(7416014)(376014)(19092799006)(1800799024)(56012099003)(22082099003)(18002099003)(38350700014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?yzgSGcJu+XFNRQ8WS27miNkV3hmA4RF0lA77240xH9BSCxa9mlszqsLiHb+T?=
- =?us-ascii?Q?tqziRVNCH8sFic3fFhGyMFn2Csk7mQ8G7LWQMIp6uqOjGZtav80FLybkuoQo?=
- =?us-ascii?Q?gwWKSm+VXX+KgSs++xi8IPImnzUoU0jEcvKUni6JVng3Ci/kDVTA+PPzOnEH?=
- =?us-ascii?Q?qcQqc++ECBmzm/hzc1wKZlYSm2DnEPG+u4T+4v25TdcKs2S7BQQuXGOwm6/C?=
- =?us-ascii?Q?KqxRA45Rho0SnHqkXwdEECuH+jnEMDOZyuzPHe3KIsiO1C4unyXFXwf55Q9t?=
- =?us-ascii?Q?e4K4UWa/WaPoYkmrq6WHQ+yC9At0ZmPq56Ahy0RwiWlHOe6/9j8KVsjbtOnJ?=
- =?us-ascii?Q?YDGObDaGyVYHgTXltjNWmbFD1edRBXAe5GkAqSdvnueisUhzTgTdDpZUmbJp?=
- =?us-ascii?Q?BH3/5rWTGMevvXzqx/YsAzpduGGtwxsQIhxhBgUIWAjmNzUPCHXIPuG6EwZA?=
- =?us-ascii?Q?/Vq6yLU+Ps6ROBshJ3Y/sNT2xbawWHLaxQGQRJuZYpgtiy9T2LpnKefGCszR?=
- =?us-ascii?Q?wQAmdVE3v3/LQXbldJSGasXzM2GSJ1z9UaXyBovmWU1r/iMs8e11DDCiJhyN?=
- =?us-ascii?Q?8zp/YJFRFRw2jrRzuqkgkGZ/t+dsvT0VFq8YZhqroNnCGsUDD0Jqzr+QEMIg?=
- =?us-ascii?Q?8HLsjX1UG5KDBjiNt3VE5ZkoL9mLgpNGOsk9CrKLP7dMvGVvc2h2V4ryKx3Y?=
- =?us-ascii?Q?UG1GcVzuYRRtPz4Y3Vg6wtVd/3G41AuIFPps4q9Q47alqf26ipGmE9TZCJ0G?=
- =?us-ascii?Q?b6UOf9P1/8qXi9Onboj9pfN4vOMz2q2dCBWAnO2cg0sBpISoM3ud2ARYk6Tr?=
- =?us-ascii?Q?7WVMdCWIVuLk7gAe0TfCA0GV9Ih8WOoS6n7IjU1wnT9HQKSUj922GhfHwD+T?=
- =?us-ascii?Q?GZU9KwwjVn3YlvIFRPKdKcJ1Rg2agKIsamcH1yr1H2DxzFDcnajpiU0qfTzt?=
- =?us-ascii?Q?bzJgd2diI3xRxEcqTEiDdhBa/yT1crUN15CuSwuXJmh3INHiOfFhFxCH/4Ms?=
- =?us-ascii?Q?2nwrnfcBC/LFt2gTEgJ+hEZo9NZC6r+PBW8eYXNxvRoVvYYKPbhRIHf5DHf8?=
- =?us-ascii?Q?HAcgiBqrNHV8bFs+C6guYJLbj2IkZQgkkokvfvhK11fLc/K+k0ik+ZNjqOKA?=
- =?us-ascii?Q?ymI2IEFQMnRyocL6bfeyROAWk2f3zW33+60sGYxbIhEcgFsNchCmXUOKlnxA?=
- =?us-ascii?Q?EcM1Yi0Xsz8JKa/KnUxws0hksxN76CM+j/EL2Gw2KdxZ2fPRbZ3W6ca4594J?=
- =?us-ascii?Q?3SVm9EDq8DbPS7IamdAzZrych1gIRa65iFBLDOm6lKi9t9qriXSD6qy5/x7N?=
- =?us-ascii?Q?JfET+8cQTXu+xsUTL1fmJYrRYtXLvAu5RdspqN+zQFn8+dHvc5Ml79CL3XeJ?=
- =?us-ascii?Q?WitITjZ015lIvBkUbsCjkdPHHLFyK7sXpXiU2/29jspKrExM7/m40YrdnZ+w?=
- =?us-ascii?Q?jcdHOffq/Titd90ekZmCAqV3J//x/LHGZGEUe+8mlwb5T385fuaeIqu2Mk64?=
- =?us-ascii?Q?GPKwYL4e8wkJiuF/aO25wKLDbtxKW7VMvkuDhT0Mz6BfHT/TEHNAl+DJZG1c?=
- =?us-ascii?Q?VudPrQy+JQV0HG8WcF53AItrzOVu67vPMEgnhoPVYO781Qu0QAUVnGFnFvvL?=
- =?us-ascii?Q?It+xHa7YjbK9XYPNaAKGaMjBkOWXxB9LOr3SENiFfvEfR7bMDUJhcckDn0Pm?=
- =?us-ascii?Q?fJDZ/p6YSGj8d1IpuEA7eglNzRaThEvnkdVwXuPb9FkeMxYy?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a1269769-2a1e-409c-9b59-08dea1b3ff32
-X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Apr 2026 03:45:58.7557
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: O4jSjDExi82rg3HL1U8Sud02eINkIKvXRUy/hefIAUckk5ueIGVKfyDjhzD9TUMB7t4r+cPSMMvelA/7AAmHTg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB9187
+References: <20260420183920.3626389-1-zhipingz@meta.com> <20260420183920.3626389-2-zhipingz@meta.com>
+ <20260422092327.3f629ad6@shazbot.org> <20260422162928.GL3611611@ziepe.ca>
+ <20260422132740.5f809bf7@shazbot.org> <20260423142828.GQ3611611@ziepe.ca>
+ <20260423132016.4a25e074@shazbot.org> <20260423224626.GV3611611@ziepe.ca>
+In-Reply-To: <20260423224626.GV3611611@ziepe.ca>
+From: Zhiping Zhang <zhipingz@meta.com>
+Date: Thu, 23 Apr 2026 22:41:28 -0700
+X-Gm-Features: AQROBzB7q1PXr8uzLTg3LU7rQ4HbjUzfZl_SYDl7pi8tYSw_JSwSgZ8wHqWD6es
+Message-ID: <CAH3zFs3z5WPBygyk+ZZcDhZitj3+e3=sDsyE5ZmL2iwa=Cxykw@mail.gmail.com>
+Subject: Re: [PATCH v1 1/2] vfio: add callback to get tph info for dma-buf
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Alex Williamson <alex@shazbot.org>, Stanislav Fomichev <sdf@meta.com>,
+        Keith Busch <kbusch@kernel.org>, Leon Romanovsky <leon@kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>, linux-rdma@vger.kernel.org,
+        linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, Yochai Cohen <yochai@nvidia.com>,
+        Yishai Hadas <yishaih@nvidia.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-ORIG-GUID: yj9PDlngPmeFrA3vTsxQob0mYB-44MWv
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDI0MDA0OCBTYWx0ZWRfXwFzyCVf52WVS
+ /bvPbViitPmI6LbvnQjk058wH0EGs6gAIsz7QbwcmqB6RhMXJMFDmuSQhk/qjjMG4X6nZUJEfKn
+ o9xmTR9RReP675b55dMPJRweDPHIArtWYrJku593TONs+UxmsxpNPf+3UkNcNl/xUXf43AoQGKy
+ Pj+uiT/Ml0HYHPPqDHE6znNyWKOpsrPE+vSTgr/dd+hwrvR+M5BtPHFhy9SbdFui0QREXFFjh+X
+ C44Gb6ZR5TYs0CcF3qd7KkBXgttWPh00IVhkHkgY4jS+s4qyP2eSaGv8hdXL2BJS6pqTqtMhN8T
+ kZKmyzq4T4UvBaFdZjKg6FPokl0MI/H8NyrF5dpsp+/n0AYykdz7eKw9StNApsecsKYg5e6Z1bo
+ qQd0LkV+ZpxLBcEalltkOIgNngL2Qm5pKQBge1LUHGRBaqn1dxVJbAelCdLGHP6MUTpPon1SDzx
+ LKS2Ap5R1aGe++jFJRg==
+X-Proofpoint-GUID: yj9PDlngPmeFrA3vTsxQob0mYB-44MWv
+X-Authority-Analysis: v=2.4 cv=MIJQXsZl c=1 sm=1 tr=0 ts=69eb0294 cx=c_pps
+ a=+3WqYijBVYhDct2f5Fivkw==:117 a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=855S8uPTkML1Oy45N9_h:22
+ a=9jRdOu3wAAAA:8 a=4OgE2WNpP8yww339eGMA:9 a=QEXdDO2ut3YA:10
+ a=ZE6KLimJVUuLrTuGpvhn:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-23_03,2026-04-21_02,2025-10-01_01
 
-On Fri, Apr 24, 2026 at 10:57:33AM +0800, Richard Zhu wrote:
-> Add optional 'intr', 'aer', and 'pme' interrupt entries to the i.MX6Q
-> PCIe binding to support PCIe event-based interrupts for general
-> controller events, Advanced Error Reporting, and Power Management Events
-> respectively.
+On Thu, Apr 23, 2026 at 3:46=E2=80=AFPM Jason Gunthorpe <jgg@ziepe.ca> wrot=
+e:
 >
-> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-> ---
+> >
+> On Thu, Apr 23, 2026 at 01:20:16PM -0600, Alex Williamson wrote:
+>
+> > My suggestion would be that we leave VFIO_DEVICE_FEATURE_DMA_BUF
+> > unchanged and add a VFIO_DEVICE_FEATURE_DMA_BUF_TPH ioctl which takes
+> > the fd from VFIO_DEVICE_FEATURE_DMA_BUF, along with a steering tag and
+> > processing hint.  It would fdget() the dmabuf fd, validate it's a
+> > dmabuf via f_ops, validate it's a vfio exported dmabuf via dmabuf->ops,
+> > find the matching vfio_pci_dma_buf via priv under memory_lock, and
+> > stuff the provided TPH values into the object.  It would be left to the
+> > user to sequence setting the TPH values on the dmabuf before the dmabuf
+> > is consumed by the importer.
+> >
+> > Is that a more reasonable uAPI?  Thanks,
+>
+> Off hand I think it can work, with the proviso that if userspace uses
+> the dmabuf before setting the tph the importer may ignore it. I don't
+> think that is a problem in practice.
+>
+> Jason
 
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Thanks Alex and Jason!
 
->  Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml | 6 ++++++
->  1 file changed, 6 insertions(+)
->
-> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
-> index 9d1349855b422..badc7fcbd556c 100644
-> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
-> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
-> @@ -58,12 +58,18 @@ properties:
->      items:
->        - description: builtin MSI controller.
->        - description: builtin DMA controller.
-> +      - description: PCIe event interrupt.
-> +      - description: builtin AER SPI standalone interrupter line.
-> +      - description: builtin PME SPI standalone interrupter line.
->
->    interrupt-names:
->      minItems: 1
->      items:
->        - const: msi
->        - const: dma
-> +      - const: intr
-> +      - const: aer
-> +      - const: pme
->
->    reset-gpio:
->      description: Should specify the GPIO for controlling the PCI bus device
-> --
-> 2.37.1
->
+I agree that the separate feature sounds like a cleaner design and could av=
+oid
+the uAPI complications. For v2 I'll:
+    - Leave VFIO_DEVICE_FEATURE_DMA_BUF unchanged,
+    - Add VFIO_DEVICE_FEATURE_DMA_BUF_TPH as a SET-only feature that
+      takes the dmabuf fd, steering tag, and processing hint,
+    - Keep the dma_buf_ops.get_tph callback as-is.
+and then the userspace sequence would become:
+1. fd =3D VFIO_DEVICE_FEATURE_DMA_BUF  (create dmabuf, unchanged)
+2. VFIO_DEVICE_FEATURE_DMA_BUF_TPH   (set TPH on fd)
+3. pass fd to importer
+
+Zhiping
