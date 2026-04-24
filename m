@@ -1,88 +1,88 @@
-Received: from mail-m3290.qiye.163.com (mail-m3290.qiye.163.com [220.197.32.90])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC206344DA2
-	for <linux-pci@vger.kernel.org>; Fri, 24 Apr 2026 08:35:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.90
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1FE1332916
+	for <linux-pci@vger.kernel.org>; Fri, 24 Apr 2026 08:38:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777019728; cv=none; b=KDB2HlKsRW/2sUrhy+VSGMmVaI2XLXK3DPy5WbEcZRjT4VQNPV9g5zbh1Krz+IsDbvjSqCJqNokNxlGoANfs0w7MzTggwsNOtLMCNds3a7oLvERcxsNo8/WNi8M+lAxkU6o6gzEjvmqjqH2zDhqFrD1qEMaqhNb05H254wiIuSU=
+	t=1777019940; cv=none; b=gB64Hwfy6oToaYpCpXPfvnrlTeD8pYiOEn8CN9N8FMkiVosrQqH2Ji7syZqdEWDFxZkvepWX5B2wAtXoJEgXprhA2KA1s2rSEGmed0SXRTv2Ab5GQmYiAa/r3/QNpXyxwOYRbLRCPfRSK2ShTEHVGCcSuH8jjwR/GIp+5SZrXdQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777019728; c=relaxed/simple;
-	bh=yjhCYWJW6ULXxHB0lofHnJJCx6lVO0ezPzzYKhL0fr0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=HHxftbWe8mi6zTox43Dsyd2n+/In57CUqcf/kDOFNU8MboJqKEMrFFqQHaN/eDfKm4yYzEdUvOp/4gjGdyQV/MLnfQBTa2UQcuEqsMckEN7DcZRlCXjGI+Y07Qzq6GlBrU3l+3OuFD6rQfbNPOQfE+QH1vc2Uwc9uDadpv8VOT4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=YmpNSMVx; arc=none smtp.client-ip=220.197.32.90
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1777019940; c=relaxed/simple;
+	bh=CjuCkvBq1PB8b+gCgvVo/yQ7x7TLVoccW07r7OtiyA0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SD8CTg9Fjs5dyv9LSuh5rpmR4843xGZoMa+FIf1XJeQvcWkvqYckyh8O+yMTV6IRUgt9whJvTYaGMKUqNIKHYcBMeJn+sl90+8yq3tBgTb+GHG5KGggM8UgEbdP9DpGGVpj7oTvMqzl5U0lLTph3oW9bh/g+FDZsewpyhMM++oM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Cn1/Syts; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="YmpNSMVx"
-Received: from localhost.localdomain (unknown [61.154.14.86])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 3c02205ba;
-	Fri, 24 Apr 2026 15:59:33 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Nirmal Patel <nirmal.patel@linux.intel.com>,
-	Jonathan Derrick <jonathan.derrick@linux.dev>,
-	Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Philipp Stanner <phasta@kernel.org>,
-	linux-pci@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v4 7/7] PCI: vmd: Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors()
-Date: Fri, 24 Apr 2026 15:57:40 +0800
-Message-Id: <1777017460-243543-8-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1777017460-243543-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1777017460-243543-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Tid: 0a9dbe8050de09cckunm66d640875ecf8
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaGkkeVk4ZSkpCSUtKSBhJQlYVFA
-	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUpLSU
-	9PT0hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=YmpNSMVx5YRCkkuSiKt8mny6c95KBtoPCzuBUMah7dMy6pCGDbI+zr8Q2QBe/hVDZfENhTfs3m2+0UP5PEO9bYKjM4CptV9y/0k5JM9LH3q7N0ZD58x5X1faYdEgXruYeV8vVahzXJP9UKaAWZoHMsAxMyeFhyt3O83HB53HUjs=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=47IkHF4aJA+TODcabLDZ2iXJs9epIzBWf4fkeb+JCTk=;
-	h=date:mime-version:subject:message-id:from;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Cn1/Syts"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1777019940; x=1808555940;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=CjuCkvBq1PB8b+gCgvVo/yQ7x7TLVoccW07r7OtiyA0=;
+  b=Cn1/Syts8F1sOJ30Ns1ehoEvgIl0FztgFVzkySWX66UHHm5yC/fionTl
+   V2o4Ymv8THMkldQdeOFzwW8Sf9kd9F7oq5BFtV1OxnH8mKpSSOaK7bL5s
+   IdKTKOEo+36yk6ADXDRFd2qfEW+UEbr1YrCAAXrJ1dlZStBxVehGDrRy5
+   4whNw5UaxT+N5NJFNkSmenh0tpiMk7DrodtwJWNXwInHhlcm9z44s0vVb
+   toKsaASII37DxjbnEeWlZmNETE/v5mnmztH154Guz9u8lvGhA2DO8aj7h
+   drjoOcUio7lqAWXl2iTPEZJDVEI/BJHGPb7RmDODY+6o6k1VKGqGDFn+T
+   w==;
+X-CSE-ConnectionGUID: Bvrk7ivNTiSLkIST3LjWRg==
+X-CSE-MsgGUID: iJmIAqkqTf+ecVKENCAWDg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11765"; a="78112195"
+X-IronPort-AV: E=Sophos;i="6.23,196,1770624000"; 
+   d="scan'208";a="78112195"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Apr 2026 01:38:59 -0700
+X-CSE-ConnectionGUID: xrXG/JEYQyOfYAGawkKo+g==
+X-CSE-MsgGUID: o8lKoOCnSTCY4jiwR+HuEQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,196,1770624000"; 
+   d="scan'208";a="237951143"
+Received: from pgcooper-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.245.71])
+  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Apr 2026 01:38:57 -0700
+Date: Fri, 24 Apr 2026 11:38:54 +0300
+From: Andy Shevchenko <andriy.shevchenko@intel.com>
+To: Guixin Liu <kanie@linux.alibaba.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	linux-pci@vger.kernel.org, Xunlei Pang <xlpang@linux.alibaba.com>,
+	oliver.yang@linux.alibaba.com
+Subject: Re: [PATCH v11 0/2] PCI: Fix crash when access broken ROM
+Message-ID: <aessHrL4jkCbSjNA@ashevche-desk.local>
+References: <20260209175432.GA196137@bhelgaas>
+ <e607705c-b4eb-4582-b941-28e9a318dbe2@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <e607705c-b4eb-4582-b941-28e9a318dbe2@linux.alibaba.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors() to
-explicitly request devres-managed interrupt vectors. This makes the
-driver's intention clear and avoids the ambiguous implicit management
-previously provided by pcim_enable_device().
+On Fri, Apr 24, 2026 at 02:32:06PM +0800, Guixin Liu wrote:
+> 在 2026/2/10 01:54, Bjorn Helgaas 写道:
+> > On Mon, Feb 09, 2026 at 02:43:39PM +0800, Guixin Liu wrote:
 
-The change prepares the driver for the eventual removal of the hybrid
-IRQ management pattern from pcim_enable_device(), ensuring consistent
-resource management through devres.
+...
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+> > > In this version, I fixed the case issues in the first patch title.
+> > Will do, thanks.  Since the v7.0 merge window is open, this is on my
+> > list to look at as soon as v7.0-rc1 is tagged, probably on Feb 22.
+> Hi Bjorn, looks like these two patches still haven't been merged, Would it
+> be possible to get them merged for the 7.0 release?
 
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
+v7.0 has already been released. Now it's a v7.1-rc1 candidate at best.
 
- drivers/pci/controller/vmd.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index d4ae250..d8de63a 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -684,8 +684,8 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
- 	if (vmd->msix_count < 0)
- 		return -ENODEV;
- 
--	vmd->msix_count = pci_alloc_irq_vectors(dev, vmd->first_vec + 1,
--						vmd->msix_count, PCI_IRQ_MSIX);
-+	vmd->msix_count = pcim_alloc_irq_vectors(dev, vmd->first_vec + 1,
-+						 vmd->msix_count, PCI_IRQ_MSIX);
- 	if (vmd->msix_count < 0)
- 		return vmd->msix_count;
- 
 -- 
-2.7.4
+With Best Regards,
+Andy Shevchenko
+
 
