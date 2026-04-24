@@ -1,107 +1,78 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 559AE3CC9FE;
-	Fri, 24 Apr 2026 12:33:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AF4835F5ED;
+	Fri, 24 Apr 2026 12:42:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777033991; cv=none; b=qostOgc/J2xCmUTRTtVKXW+dBFSCrlXhXwCVlz+ZBqE3snecvA5hOtd2Najzw7xwGndPnEeKqeaQn3WjT+xMRTgG7Gj9xycBOFnbsAhM3qfkjYHzc/U+/pWc7sCxp/tg75TAbRiLg0OO6Wg/3zroCKU/B3DAmekLBVL2MZfWMZ0=
+	t=1777034523; cv=none; b=AU1tEtwMIuOwxDCBUUZk1X4RbbanljU33rhJnfhPSf8seYB/gX9ZC0jXjcjSf5w34ICFNlaUXJoC6j+BEow/Qq7Xu4koQrmYi6s8zYfwMvyLzHo7gZAIfC1R16y5J7VtdR3YZUrLrv23Xa2TXETXVHQzPK/oDhBOE/sNd1Q/8d0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777033991; c=relaxed/simple;
-	bh=m0zzjIAi6G3mbiTZhqEoSZO9I9LqVeMoE28CldoBOQ0=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=Sfb3vk29yyvKag1lSF+3TlZg8hQGK6aCcoYIhgRNM6AuHAoIAUqZBaD82gEUrCzggLPVhJPGe1wLq5G7lLkoGKmiwoiBc3TfGQvco1jmb+GlibBPSmrav6v6HY0iGE/3Y3kGbUksY9LFakSZKhDaEBXZEMONrPnKMxir04EzLtU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eLDco3bB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777034523; c=relaxed/simple;
+	bh=t/Tps5bQrQ/STr7dbi97w6/FCKOkiYBJ9dzPh2A63Ks=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qAuIH9U1NAPBMLuqCjm6SSWVTClxzXpYGIO+2ppe7g+3i9YpOmZTsvMnlgGcmjCPG4AtC/9eVkR1VZ8wYfze7eqCPsh51txKwAprebL4A0LJflU9STfJeFpcDI4eNgBfi+CXCBXoIk0J5+f9hXMyfAEeNgQX+3esUNEXD/0j3Gc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pKIgIXg9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eLDco3bB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B592C19425;
-	Fri, 24 Apr 2026 12:33:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pKIgIXg9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDFC4C19425;
+	Fri, 24 Apr 2026 12:42:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777033991;
-	bh=m0zzjIAi6G3mbiTZhqEoSZO9I9LqVeMoE28CldoBOQ0=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=eLDco3bBc0PX4AYSurXPqBWJwbosfw7HJtTqQMEb1e7HgcJDAe2lM28587PkhaPlf
-	 65Ybv2D8qAO2qCUzL4klNk66vCwfZaUL2iaIUwmPoboyVmiwjsSJWr3w5R7+2uw1ij
-	 xGl/2h1ImWFD8mCquOSBL4AUB29FAxoOrHCDjoA+yL2OBuPkkPXwi+jeidmphGPEhV
-	 KMoX5Tj2FsFwb01ItnjsOxDDTNrvMDxm00VuwVngUAlJ5KIAKdlSl4SYgSrlog1dyB
-	 T0s0pJ+dPo4hV5tygEubPKF5IlbBSUmlRP4SNsGhqvjn+1jn/Eys+M7Qwq6Os0g1+d
-	 3knpQBIl8aGWQ==
-From: Pratyush Yadav <pratyush@kernel.org>
-To: David Matlack <dmatlack@google.com>
-Cc: iommu@lists.linux.dev,  kexec@lists.infradead.org,
-  linux-doc@vger.kernel.org,  linux-kernel@vger.kernel.org,
-  linux-mm@kvack.org,  linux-pci@vger.kernel.org,  Adithya Jayachandran
- <ajayachandra@nvidia.com>,  Alexander Graf <graf@amazon.com>,  Alex
- Williamson <alex@shazbot.org>,  Bjorn Helgaas <bhelgaas@google.com>,
-  Chris Li <chrisl@kernel.org>,  David Rientjes <rientjes@google.com>,
-  Jacob Pan <jacob.pan@linux.microsoft.com>,  Jason Gunthorpe
- <jgg@nvidia.com>,  Joerg Roedel <joro@8bytes.org>,  Jonathan Corbet
- <corbet@lwn.net>,  Josh Hilke <jrhilke@google.com>,  Leon Romanovsky
- <leonro@nvidia.com>,  Lukas Wunner <lukas@wunner.de>,  Mike Rapoport
- <rppt@kernel.org>,  Parav Pandit <parav@nvidia.com>,  Pasha Tatashin
- <pasha.tatashin@soleen.com>,  Pranjal Shrivastava <praan@google.com>,
-  Pratyush Yadav <pratyush@kernel.org>,  Robin Murphy
- <robin.murphy@arm.com>,  Saeed Mahameed <saeedm@nvidia.com>,  Samiullah
- Khawaja <skhawaja@google.com>,  Shuah Khan <skhan@linuxfoundation.org>,
-  Will Deacon <will@kernel.org>,  William Tu <witu@nvidia.com>,  Yi Liu
- <yi.l.liu@intel.com>
-Subject: Re: [PATCH v4 01/11] PCI: liveupdate: Set up FLB handler for the
- PCI core
-In-Reply-To: <20260423212316.3431746-2-dmatlack@google.com> (David Matlack's
-	message of "Thu, 23 Apr 2026 21:23:05 +0000")
-References: <20260423212316.3431746-1-dmatlack@google.com>
-	<20260423212316.3431746-2-dmatlack@google.com>
-Date: Fri, 24 Apr 2026 14:33:04 +0200
-Message-ID: <2vxzeck45yin.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	s=k20201202; t=1777034523;
+	bh=t/Tps5bQrQ/STr7dbi97w6/FCKOkiYBJ9dzPh2A63Ks=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=pKIgIXg9vjHTamM6H/eqZUdo8ZkhcN3KEaekEIiDqKY+lu9LAKW1gKFmrqBmIYvO8
+	 OjyMP8k08Vh08EymgbCXesT/tyNXt/7rt1e8xwvJhqlVn5mPRjOgGzmCNU52u5UB4s
+	 3lEbFmtgwO5vEaXDrz1p/HC6cjsAzn6nIPLYkT9UuaAWNnNiq+iqI1Y9EggSzRu2jl
+	 IVUaq1uv2m7YcFyGIVTmdiQUXZv6Rp+CdLB7JlLTvE8N0HNKNnSOjrEp2z0awh/jQ7
+	 Q/hsfpcXULJDUI3dgM5gvpNGvlhm7u2kUM7+MRGZet73tFSp5y/lIwXrjUsecsyV/7
+	 Lh9hcE3XyRXJg==
+Message-ID: <11154ecc-d49d-40cb-8437-a4e6af1420de@kernel.org>
+Date: Fri, 24 Apr 2026 07:42:00 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/3] PCI: altera: fix resource leaks on probe failure
+Content-Language: en-US
+To: Mahesh Vaidya <mahesh.vaidya@altera.com>, joyce.ooi@intel.com,
+ lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ robh@kernel.org, bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, subhransu.sekhar.prusty@altera.com
+References: <20260424094913.522123-1-mahesh.vaidya@altera.com>
+ <20260424094913.522123-3-mahesh.vaidya@altera.com>
+From: Dinh Nguyen <dinguyen@kernel.org>
+In-Reply-To: <20260424094913.522123-3-mahesh.vaidya@altera.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi David,
+Hi Mahesh,
 
-On Thu, Apr 23 2026, David Matlack wrote:
-[...]
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index c9b7b6f9828e..94af31837375 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -20555,6 +20555,18 @@ L:	linux-pci@vger.kernel.org
->  S:	Supported
->  F:	Documentation/PCI/pci-error-recovery.rst
->  
-> +PCI LIVE UPDATE
-> +M:	Bjorn Helgaas <bhelgaas@google.com>
-> +M:	David Matlack <dmatlack@google.com>
-> +L:	linux-pci@vger.kernel.org
-> +S:	Supported
-> +Q:	https://patchwork.kernel.org/project/linux-pci/list/
-> +B:	https://bugzilla.kernel.org
-> +C:	irc://irc.oftc.net/linux-pci
-> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
-> +F:	drivers/pci/liveupdate.c
-> +F:	include/linux/kho/abi/pci.h
-> +
+On 4/24/26 04:49, Mahesh Vaidya wrote:
+> The chained IRQ handler is installed in altera_pcie_parse_dt() but
+> never unregistered on probe failure. If any subsequent step in
+> altera_pcie_probe() fails, devm frees the pcie struct while the
+> handler still references it. A subsequent interrupt would trigger
+> a use-after-free.
+> 
+> The INTx IRQ domain created in altera_pcie_init_irq_domain() is
+> similarly leaked on probe failure, since the existing cleanup via
+> altera_pcie_irq_teardown() is only invoked from the remove path.
+> 
+> Move the handler installation from altera_pcie_parse_dt() into
+> altera_pcie_probe() after the IRQ domain is created, and add a
+> goto-based error path so altera_pcie_irq_teardown() is called on
+> any failure after handler installation.
+> 
+> Fixes: 60f2ee5f1472 ("PCI: altera: Add Agilex support")
+> Signed-off-by: Mahesh Vaidya <mahesh.vaidya@altera.com>
+> ---
+>   drivers/pci/controller/pcie-altera.c | 17 +++++++++++++++--
+>   1 file changed, 15 insertions(+), 2 deletions(-)
+> 
+I think you should decouple this patch from this series.
 
-Can we please also add these files under the "LIVE UPDATE" entry. The
-code here concerns both live update and PCI. We can figure out the
-maintenance details as we go along, but I think the live update
-maintainers should at least get all the patches for PCI live update.
-
-Perhaps also add the kexec list here? We plan to use it to maintain the
-LUO patches, and adding it will make sure we get the patches in case
-someone updates the file list here but forgets to update it in the LIVE
-UPDATE entry.
-
->  PCI MSI DRIVER FOR ALTERA MSI IP
->  L:	linux-pci@vger.kernel.org
->  S:	Orphan
-[...]
-
--- 
-Regards,
-Pratyush Yadav
+Dinh
