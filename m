@@ -1,166 +1,137 @@
-Received: from lankhorst.se (unknown [141.105.120.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A37F3385B6
-	for <linux-pci@vger.kernel.org>; Fri, 24 Apr 2026 16:03:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.105.120.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B72F53DBD57;
+	Fri, 24 Apr 2026 16:08:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777046592; cv=none; b=st5SsxTJ/JpMXKium6drHxnCuJ2IsIlbXel5BQ6a6vCf4o+KexSqFZXo8tpXIBIgKUBpDRjrxVjn74xflUAHzJQoMNAU+5lStZg+po1NPfpGwEP0cLBKrNdt4zI1u7dUfjlAXz7sAhaLzh7PTQoh2N4RISzonkR2IZThKHqT2qA=
+	t=1777046904; cv=none; b=noNIvHZPiX0GCG38FPJqRrYeyNFEo5ykyzGuJJZ1OondCFTkGp0cPeGMAVGpU8+VmtNWRLj9WaxAFhNT41KN17DO3s8qpMjquH++aYFnOQzwu6QdHugdP1Dj5xa+eFHmQu7EgBu/3VtI1m/63suxb0xNIRheEouhj0nAe46rpfU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777046592; c=relaxed/simple;
-	bh=74wcFbX31LLTacwW895+s9BGxUexxeBqrZLsskclhjI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rlGVAM7w9F5UbKmi1CRUZqlMXy3WSv/X80DhFFHhmlRNxlGOPt+iBgzsH3xDjET66uh25t1v5TaCQJln7VNohJTP6Rn3n5YE0NJbISbyxVHkeO10hO/uAi9yhtFb8yW3gQTefbuSB7GU+fZ5zbVW9PWqa+PSRgiJqxjZOysJ7fM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lankhorst.se; spf=pass smtp.mailfrom=lankhorst.se; dkim=pass (2048-bit key) header.d=lankhorst.se header.i=@lankhorst.se header.b=CH9UZO0X; arc=none smtp.client-ip=141.105.120.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lankhorst.se
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lankhorst.se
+	s=arc-20240116; t=1777046904; c=relaxed/simple;
+	bh=hGC9jnHTZV5EtsFQpRo2fI3KRRoZIvzL+Z9bPIl/ziI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=TboDOU4cjv/WYgudDczIdaL+hLBtehj2ByZIIP7xBGt7bAD0iJO/QjreYpFXeMgssMjP/NGhI2gmJBmZU5/Ld8tvWXqMeD/yeHzMmIvljyKhx9U411lXSPXnXAyxsJiUp5Roo7oZrPCbWM1iSeYeLuKBpxOJjUjEGciFF5gWPQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hCvGPHa5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=lankhorst.se header.i=@lankhorst.se header.b="CH9UZO0X"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=lankhorst.se;
-	s=default; t=1777046588;
-	bh=74wcFbX31LLTacwW895+s9BGxUexxeBqrZLsskclhjI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=CH9UZO0X1+XHI59fG6jZ5leDMZbWLvQzKekAPJKLC7wrhPA8HoYb4ZUOBW9052Bg6
-	 K8vv+A6IeuEg19lZW6QPj/U9cas++lt0UICZH1Quou12GNent9c6dSWFShXfglT3SL
-	 ru09AvlhnUewhEZpeaBBInfF4zmGmfx39puux2rEs6tpS6tkwn2vWwuZaEfTz6fS9l
-	 h5yg7/8Bap/rzmAwcEGcG+Kqi5iHXogNeg0dyCiLAggrg+ygMX/IMolK8NTYpy7Jiu
-	 DNyCuWuoe6mZG9/oH93rB5iujvildeyvJLHNZ5Z3ZeXzFXawcUFkaFO7SwBjBbYND/
-	 6564Tx5xXr9Jg==
-Message-ID: <92850c9a-808e-47b9-ae5f-fa10c4bda3ce@lankhorst.se>
-Date: Fri, 24 Apr 2026 18:03:07 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hCvGPHa5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42CA8C19425;
+	Fri, 24 Apr 2026 16:08:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777046904;
+	bh=hGC9jnHTZV5EtsFQpRo2fI3KRRoZIvzL+Z9bPIl/ziI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=hCvGPHa5RcLZR9Zd3hpo0lZutgG3asKWUUJvamKu41u/Fjo4LbsrmW7UoHwRiDHu+
+	 hzFxLRZmfgyPkd83sux0ZbVwlh4LCIsrOb03UzLJ53B4xvrtD3svOB9RUh0z8aYLdY
+	 hx5OC0/J6ZsF9xhIA7vOoTENcGmtyU6t3UtMeB6s/9RnYLhRgmL6Wu9YNZZsmc6Dsw
+	 of2PZtPnjCO6c5cCbASofpSZlR2kQ5OXOV/tIaMoBz0qiHISJnssAWACJ228pNvHl1
+	 K+ZPYNQiHETg7GHsz6vlHilobXpQmTvzcaoH78HfFJ3qcOwqla9HCDoVljUXKS9QPg
+	 psseq8vPM7IYw==
+Date: Fri, 24 Apr 2026 11:08:23 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Matt Evans <mattev@meta.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Leon Romanovsky <leon@kernel.org>,
+	Alex Williamson <alex@shazbot.org>,
+	Niklas Schnelle <schnelle@linux.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI/P2PDMA: Avoid returning a provider for
+ non_mappable_bars
+Message-ID: <20260424160823.GA11106@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: Fix resizable bar fails due to bridge memory region
-To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- "intel-xe@lists.freedesktop.org" <intel-xe@lists.freedesktop.org>
-References: <7f673ce8-fa00-47aa-a50f-812ae5073279@lankhorst.se>
- <ee594d2d-f5c8-271b-e883-9d43a47ad4ff@linux.intel.com>
-Content-Language: en-US
-From: Maarten Lankhorst <dev@lankhorst.se>
-In-Reply-To: <ee594d2d-f5c8-271b-e883-9d43a47ad4ff@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260423173051.1999679-1-mattev@meta.com>
 
-Hey,
+On Thu, Apr 23, 2026 at 10:30:51AM -0700, Matt Evans wrote:
+> Extend the checks in pcim_p2pdma_init() and pcim_p2pdma_provider() to
+> exclude functions that have pdev->non_mappable_bars set.
+> 
+> Consumers such as VFIO were previously able to map these for access by
+> the CPU or P2P.  Update the comment on non_mappable_bars to show it
+> refers to any access, not just userspace CPU access.
+> 
+> Fixes: 372d6d1b8ae3c ("PCI/P2PDMA: Refactor to separate core P2P functionality from memory allocation")
+> Signed-off-by: Matt Evans <mattev@meta.com>
 
-Den 2026-04-24 kl. 17:04, skrev Ilpo Järvinen:
-> On Fri, 24 Apr 2026, Maarten Lankhorst wrote:
-> 
->> I encountered a problem that I have on my system, where I cannot resize
->> the bar because one of the bridges has a 
-> 
-> You're missing words from here. But I can guess you've that extra BAR on 
-> in-card the bridge.
-> 
->> If I take a look at the topology, the GPU shares the memory region with a bridge,
->>
->> +-[0000:64]-+-00.0-[65-68]----00.0-[66-68]--+-01.0-[67]----00.0
->>
->> The specific bridge likely causing a failure is:
->>
->> 65:00.0 PCI bridge: Intel Corporation Device e2ff (rev 01) (prog-if 00 [Normal decode])
->>         Flags: bus master, fast devsel, latency 0, IRQ 32, IOMMU group 1
->>         Memory at 382400000000 (64-bit, prefetchable) [size=8M]
->>         ....
->>
->> Which causes upstream bridge 64:00.0 initially to allocate the region
->> [38fe0000000-38ff0000000) for the GPU, and [382ff0000000..382ff07fffff]
->> for the bridge device.
->>
->> Bridge 64 is big enough for 1 BMG with a 32 GB bar and the second 8 MB allocation:
->> pci_bus 0000:64: resource 9 [mem 0x382000000000-0x382fffffffff window] (64GB window)
->>
->> The reason for failure is that bridge 65 has a 8 MB memory region assigned,
-> 
->> and previously it was ignored when reallocating.
-> 
-> What does this mean? I don't think it was ever ignored while 
-> reallocating??
-> 
-> Note that kernel has become much more verbose in explaining why things 
-> fail so perhaps the added message is confusing you (they won't appear in 
-> the old kernels).
-> 
->> Failing case:
->> xe 0000:67:00.0: [drm] Attempting to resize bar from 256MiB -> 16384MiB
->> xe 0000:67:00.0: BAR 2 [mem 0x382fe0000000-0x382fefffffff 64bit pref]: releasing
->> pcieport 0000:66:01.0: bridge window [mem 0x382fe0000000-0x382fefffffff 64bit pref]: releasing
->> pcieport 0000:65:00.0: bridge window [mem 0x382fe0000000-0x382fefffffff 64bit pref]: releasing
->> pcieport 0000:64:00.0: bridge window [mem 0x382fe0000000-0x382ff07fffff 64bit pref]: was not released (still contains assigned resources)
->> pcieport 0000:65:00.0: bridge window [mem size 0x400000000 64bit pref]: can't assign; no space
->> pcieport 0000:65:00.0: bridge window [mem size 0x400000000 64bit pref]: failed to assign
->> pcieport 0000:65:00.0: bridge window [mem size 0x400000000 64bit pref]: can't assign; no space
->> pcieport 0000:65:00.0: bridge window [mem size 0x400000000 64bit pref]: failed to assign
->> pcieport 0000:66:01.0: bridge window [mem size 0x400000000 64bit pref]: can't assign; no space
->> pcieport 0000:66:01.0: bridge window [mem size 0x400000000 64bit pref]: failed to assign
->> pcieport 0000:66:01.0: bridge window [mem size 0x400000000 64bit pref]: can't assign; no space
->> pcieport 0000:66:01.0: bridge window [mem size 0x400000000 64bit pref]: failed to assign
->> xe 0000:67:00.0: BAR 2 [mem size 0x400000000 64bit pref]: can't assign; no space
->> xe 0000:67:00.0: BAR 2 [mem size 0x400000000 64bit pref]: failed to assign
->> xe 0000:67:00.0: BAR 2 [mem size 0x400000000 64bit pref]: can't assign; no space
->> xe 0000:67:00.0: BAR 2 [mem size 0x400000000 64bit pref]: failed to assign
->> pcieport 0000:64:00.0: PCI bridge to [bus 65-68]
->> pcieport 0000:64:00.0:   bridge window [mem 0xd7000000-0xd83fffff]
->> pcieport 0000:64:00.0:   bridge window [mem 0x382fe0000000-0x382ff07fffff 64bit pref]
->> pcieport 0000:65:00.0: PCI bridge to [bus 66-68]
->> pcieport 0000:65:00.0:   bridge window [mem 0xd7000000-0xd83fffff]
->> pcieport 0000:65:00.0:   bridge window [mem 0x382fe0000000-0x382fefffffff 64bit pref]
->> pcieport 0000:66:01.0: PCI bridge to [bus 67]
->> pcieport 0000:66:01.0:   bridge window [mem 0xd7000000-0xd81fffff]
->> pcieport 0000:66:01.0:   bridge window [mem 0x382fe0000000-0x382fefffffff 64bit pref]
->>
->> Working with the patch below:
->> xe 0000:67:00.0: [drm] Attempting to resize bar from 256MiB -> 16384MiB
->> xe 0000:67:00.0: BAR 2 [mem 0x382fe0000000-0x382fefffffff 64bit pref]: releasing
->> pcieport 0000:66:01.0: bridge window [mem 0x382fe0000000-0x382fefffffff 64bit pref]: releasing
->> pcieport 0000:65:00.0: bridge window [mem 0x382fe0000000-0x382fefffffff 64bit pref]: releasing
->> pcieport 0000:65:00.0: BAR 0 [mem 0x382ff0000000-0x382ff07fffff 64bit pref]: releasing
->> pcieport 0000:64:00.0: bridge window [mem 0x382fe0000000-0x382ff07fffff 64bit pref]: releasing
->> pcieport 0000:64:00.0: bridge window [mem 0x382000000000-0x3824007fffff 64bit pref]: assigned
->> pcieport 0000:65:00.0: bridge window [mem 0x382000000000-0x3823ffffffff 64bit pref]: assigned
->> pcieport 0000:65:00.0: BAR 0 [mem 0x382400000000-0x3824007fffff 64bit pref]: assigned
->> pcieport 0000:66:01.0: bridge window [mem 0x382000000000-0x3823ffffffff 64bit pref]: assigned
->> xe 0000:67:00.0: BAR 2 [mem 0x382000000000-0x3823ffffffff 64bit pref]: assigned
->> pcieport 0000:64:00.0: PCI bridge to [bus 65-68]
->> pcieport 0000:64:00.0:   bridge window [mem 0xd7000000-0xd83fffff]
->> pcieport 0000:64:00.0:   bridge window [mem 0x382000000000-0x3824007fffff 64bit pref]
->> pcieport 0000:65:00.0: PCI bridge to [bus 66-68]
->> pcieport 0000:65:00.0:   bridge window [mem 0xd7000000-0xd83fffff]
->> pcieport 0000:65:00.0:   bridge window [mem 0x382000000000-0x3823ffffffff 64bit pref]
->> pcieport 0000:65:00.0: PCI bridge to [bus 66-68]
->> pcieport 0000:65:00.0:   bridge window [mem 0xd7000000-0xd83fffff]
->> pcieport 0000:65:00.0:   bridge window [mem 0x382000000000-0x3823ffffffff 64bit pref]
->> pcieport 0000:66:01.0: PCI bridge to [bus 67]
->> pcieport 0000:66:01.0:   bridge window [mem 0xd7000000-0xd81fffff]
->> pcieport 0000:66:01.0:   bridge window [mem 0x382000000000-0x3823ffffffff 64bit pref]
->> xe 0000:67:00.0: [drm] BAR2 resized to 16384MiB
->>
->>
->> Signed-off-by: Maarten Lankhorst <dev@lankhorst.se>
->> ---
->> I'm not 100% this is the correct fix, I don't know why the bridge itself has
->> a memory region, why the kernel allocates it and when it's supposed to
->> be used. Not a PCI expert. :-)
-> 
-> I don't know why it is there either. Nothing in the portdrv really uses it 
-> for anything. There is patchset somewhere lying around which adds a quirk 
-> that releases the "extra" BAR.
+Applied to pci/p2pdma for v7.2, thanks!  Will be rebased after
+v7.1-rc1.
 
-Thank you, I've taken a look at that patch series. It looks like patch 1/2
-would help a lot.
-
-I'm wondering if it will completely fix the issue, it is still possible
-that in the same config I have 2 identical cards, where resizing might
-work, but when GPU1's VRAM BAR is already bound, it might be unable
-to resize GPU2's VRAM BAR for the same reason as this patch.
-
-What would be the best way to handle this case?
-
-Kind regards,
-~Maarten Lankhorst
+> ---
+> 
+> This arises from Alex Williamson's suggestion to test
+> non_mappable_bars when getting the provider, with discussion here:
+> 
+>  https://lore.kernel.org/kvm/20260415181623.1021090-1-mattev@meta.com/
+> 
+> The goal was to prevent a hole where VFIO could export DMABUFs for
+> BARs marked non-mappable, and to fix for all users of the provider
+> rather than just VFIO.  Alex observed that non_mappable_bars should be
+> taken to mean BARs weren't usable by the CPU _or_ peers and,
+> considering that, its comment about userspace access wasn't quite
+> right.
+> 
+> == Changes ==
+> 
+> v2:
+>  - Also test non_mappable_bars in pcim_p2pdma_init(), as
+>    otherwise pci_p2pdma_add_resource() will WARN_ON
+>    pcim_p2pdma_provider() failing.
+> 
+> Niklas and Logan, I didn't re-add your R-B from v1 as (splitting
+> hairs...) the code's changed.
+> 
+> v1:
+>  https://lore.kernel.org/linux-pci/20260421174351.3897842-1-mattev@meta.com/
+> 
+> 
+>  drivers/pci/p2pdma.c | 6 +++++-
+>  include/linux/pci.h  | 2 +-
+>  2 files changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index 7c898542af8d..adb17a4f6939 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -262,6 +262,9 @@ int pcim_p2pdma_init(struct pci_dev *pdev)
+>  	struct pci_p2pdma *p2p;
+>  	int i, ret;
+>  
+> +	if (pdev->non_mappable_bars)
+> +		return -EOPNOTSUPP;
+> +
+>  	p2p = rcu_dereference_protected(pdev->p2pdma, 1);
+>  	if (p2p)
+>  		return 0;
+> @@ -318,7 +321,8 @@ struct p2pdma_provider *pcim_p2pdma_provider(struct pci_dev *pdev, int bar)
+>  {
+>  	struct pci_p2pdma *p2p;
+>  
+> -	if (!(pci_resource_flags(pdev, bar) & IORESOURCE_MEM))
+> +	if (!(pci_resource_flags(pdev, bar) & IORESOURCE_MEM) ||
+> +	    pdev->non_mappable_bars)
+>  		return NULL;
+>  
+>  	p2p = rcu_dereference_protected(pdev->p2pdma, 1);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 2c4454583c11..1e6802017d6b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -508,7 +508,7 @@ struct pci_dev {
+>  	unsigned int	no_command_memory:1;	/* No PCI_COMMAND_MEMORY */
+>  	unsigned int	rom_bar_overlap:1;	/* ROM BAR disable broken */
+>  	unsigned int	rom_attr_enabled:1;	/* Display of ROM attribute enabled? */
+> -	unsigned int	non_mappable_bars:1;	/* BARs can't be mapped to user-space  */
+> +	unsigned int	non_mappable_bars:1;	/* BARs can't be mapped by CPU or peers */
+>  	pci_dev_flags_t dev_flags;
+>  	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+>  
+> -- 
+> 2.47.3
+> 
