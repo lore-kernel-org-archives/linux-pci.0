@@ -1,139 +1,190 @@
-Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012032.outbound.protection.outlook.com [40.93.195.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7109C3D6494
-	for <linux-pci@vger.kernel.org>; Fri, 24 Apr 2026 13:29:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.173
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777037373; cv=none; b=gV2n3QvP3f8m3XMh+1rJR5NvoG+1NPHICSGCeC6ulTL3ZsK7iQGLBYG1lK+n5AHIT0dMBULylQm3v184qKHvFrGme8I7b1LBy+eakpEwRt6KlyTnIao6qWFAlYmyG1lGpOQoN3lmDLfcwf45oEcaQvXyXQsMEeMEafFa9ZjFiC4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777037373; c=relaxed/simple;
-	bh=8N9ZUyumLhZPpREviRbZwKlXS861tjEA3KjPMdkQopg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BR44HKnVnOfEGKGH3EMpB9xE+YX2U9OJ0Q4Tcx3gLsaX9ejiMHk2zAJMg+QSj5z4O1QsAs1uQuKlVDhuWNILlFbryGQStUoAnRGd4zLEYZ/uLVC/waSLslJgEGcKtf4zhOEC3tF9p7WqaJGGUfskzSquBfsyB8KN5E+fQOnsXto=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=RmEhauIs; arc=none smtp.client-ip=209.85.160.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50F9C3DDDB0;
+	Fri, 24 Apr 2026 14:35:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777041361; cv=fail; b=Gh9hIh0PF9uTFc2NwVQnDoeYK+NFWqNMxI8TUhIPLAYFoyabhgy39kUFKvJH/vobbmXRYQOkxglv0nF+/s+dFvRDtbqwsAiC4t8f3HcATwFZ4LkC6CPzrSg8vjFug/Zs+9CgM3RE6zcEgDaWasyLxEZohZEv2VdiBcphe7i4UFk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777041361; c=relaxed/simple;
+	bh=gfcJd4rPOdhQwZW5ODMTEPWgAW4Oj8HMstRG3f+BTsk=;
+	h=Content-Type:Date:Message-Id:To:Cc:Subject:From:References:
+	 In-Reply-To:MIME-Version; b=XDbuR7G+aEr0tTMbbtggAZMB2PQg6068u09Gft7OdNCOthnG8ree3/z6lgrJ+Azts5YlkXTRAEYbIofO8CRIZ3jnkb+9FIvewMI4GL5mW7WyjwEolZDTvUHGdca277viDy6luLNtUAMoz1zHApYw1lQQvGDezBPE4EjXcgOO/ws=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=H6uQexgF; arc=fail smtp.client-ip=40.93.195.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="RmEhauIs"
-Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-5062fc5d86aso64134021cf.1
-        for <linux-pci@vger.kernel.org>; Fri, 24 Apr 2026 06:29:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1777037368; x=1777642168; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=4ezbOz+DNq/Ln5lGWJ2GbxuTePwedL+fzC5CYxvFRhc=;
-        b=RmEhauIsLfxW6jH629GW4pWujwRJ8y91I3dBHvLzdqkILcwvhWgkHV9du5aa6+vVqO
-         4edw6N7ZtxzQcCuFOCPHC6mu8ds1UXTlT8riBOKNnhVJKVZRxHEcgzw6EpNcwdomH/Uf
-         24ytX8IUXD7f788ltV5nBwvwhRhak2QMaRCTWyE8TqUrmXS4AU6gR6Uf1bmH23dAoLGn
-         TXsPDTb7wBIp8bzzTj77X2xDa2nFyGKbWKaeWJ0zGxWr+IRLAUd8kZaa8NepCGwu/ybi
-         Vq9lSWJbbMItZ4arPqMVuEHgdez221JWjzVK0rfarsOswm27SyGOK6TG912QD/SIftpB
-         g9rA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777037368; x=1777642168;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=4ezbOz+DNq/Ln5lGWJ2GbxuTePwedL+fzC5CYxvFRhc=;
-        b=gb2xJJGkiwpKCLG6vjQB4h2qbZg7WNttqaYMZI7Ih8t5/i/miuIXtq9Q7XQh0Obq7O
-         o62v7drSpIMXd26gyJEFhIAg91y1syjiFXaqRunHnF55x0NeBInfWQHSYTb/hU1+H8Ni
-         ei+nIxPdK4Suir6aGL0MsPrGR5dUvCWNMeBLiv4tpDeuOVEP+h1j1pAOn7qEJiqcz6ig
-         WDOE3F0aUW0PDWJaJF7Xzn2NhINc4F9pgCboe1AJO9SLL9BJ0r1CmBVkX4dHa+3lgBDo
-         K+5HVAzkCTfs77D80kyWwhxKGf8LdQS8fPC0gLMOgwgTUrMhPctTqtvWk6WPqRg5tMaS
-         BUgg==
-X-Forwarded-Encrypted: i=1; AFNElJ8DwHxVS5QHQ1R2E7voviROckDRSIp5M4J7xo/4FfzXab7TcnAMW2zPkYjNUjEssHsZGk6fCsO2wTc=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzhs47NhIZkQgjW7TIr8K9ams/ei4OqrGjfbM344NGPj95xgaNp
-	hNRPyO70+z7PE/vdb6qM12d354xagGBaFOd5GqcOcCaTuhe1CG1uVKiBG8oDM8PZdt0=
-X-Gm-Gg: AeBDiestPBMWVx5RGOSlqkXV/3DvQcK2EbOJrLcfZCmP/4gzjJTsTehpO1u9BKB1Rem
-	uaj12baOtsl1zUDPpfyOVNKQHPzpD4UT8LOPFt/g6Z7r/uc64/4DFcX/VqlqcBEj7rc/ynXxV8g
-	3qHUZe9t1h48uIfQdarNNinNw1lK4lj/xuxF187+d4Xdh59FX7Nlj3CtUnkIprRbQ8mex8T/bqE
-	DGQP0GPgc1FaBR7xALplhvdQ5UnBqveG038U5y1w0WiMNM79rynihoQ4TlC6OZ81EJegrJgpyBD
-	iRHA8jR3CcRtLigR26zI4aqXmClA2RCZyGtm404NqEcJ+6rW59f2pF5NA3w+InAu+WEaELaxRfD
-	989TlmGhjU6qydPSXf3RVt0Qrs7ZLQqiIMusg2eyP1iuQ11Cd+Bjdjvqhy9OazM69a1mDYqEe+/
-	RXYLR6j8muqe6k554Atjnan1PxTYbF/QNKbXt6uAhKBpTW4MPSEDLtdTdRnJTaEA==
-X-Received: by 2002:a05:622a:1f0d:b0:50f:c36a:381a with SMTP id d75a77b69052e-50fc36a3bd2mr157337571cf.55.1777037367645;
-        Fri, 24 Apr 2026 06:29:27 -0700 (PDT)
-Received: from plex ([71.181.43.54])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-50fb5fc8e04sm101886121cf.13.2026.04.24.06.29.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 24 Apr 2026 06:29:26 -0700 (PDT)
-Date: Fri, 24 Apr 2026 13:29:24 +0000
-From: Pasha Tatashin <pasha.tatashin@soleen.com>
-To: Pratyush Yadav <pratyush@kernel.org>
-Cc: David Matlack <dmatlack@google.com>, iommu@lists.linux.dev, 
-	kexec@lists.infradead.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-mm@kvack.org, linux-pci@vger.kernel.org, 
-	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
-	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>, 
-	Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>, 
-	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, 
-	Parav Pandit <parav@nvidia.com>, Pasha Tatashin <pasha.tatashin@soleen.com>, 
-	Pranjal Shrivastava <praan@google.com>, Robin Murphy <robin.murphy@arm.com>, 
-	Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Will Deacon <will@kernel.org>, William Tu <witu@nvidia.com>, 
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v4 01/11] PCI: liveupdate: Set up FLB handler for the PCI
- core
-Message-ID: <aetvAkM0y45WAmfV@plex>
-References: <20260423212316.3431746-1-dmatlack@google.com>
- <20260423212316.3431746-2-dmatlack@google.com>
- <2vxzeck45yin.fsf@kernel.org>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="H6uQexgF"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=OxwAsEEI5NCcl2BB0KO/sZpd4SM4/Id/zZ3AP9+jMR17OUlBcHR3T9/02JwcAFOcETlfffVZQHTY9NIJgFdwAzN3Yl5aQGtR5D8nhKxfLPs3NLcKQS0pNvBrB/LeQ6VMMONAYuIJL0Uk47aTS/0JcyTjqhaYC4GfLm2lvIqXpjxi6l+OpSJZnGqUZ5lkz6Wng0Pm9vR8qT1kvYyz1YnL5tbM31982In/E9NfK6Y0G6sqQMB2Cppg8Um6ZeS1c7Eij8OD7kQ/yOJZq+RmpfZTdK6aCHY7eilxqXKU2P27zl7A25iXu0oOqmBC/zsjHoaIrwKCrDvNLjKSnWdAd8NFuA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=DGblsjNWDPiq0aCFoK8BCZoSIHt7lchoiKcbLbWh2wQ=;
+ b=lv4q42QJKfD6sqxXcwfO8yY3OBN+1P2gZOWGktmE9OXLcUPoR1nRRfhEAW2SGNgNbtuiSHNXiihODgDPXQI5bNi0SbjpEUN1d2FHPKnCK5DsjE8ZJgO3pqUNdorKn6vaFKJTJN5CRr1FGA/byPMTFAZwwKEXLA+1oMoG44TGOtJE+OzbkyCp/5IGpXgdLTijfHUnv93aD9jFIk8e/jsxRKeKrM10c2VU/f+VzmXFcZyKRyj2DR14wmomeNzn1XIhgmIhWlZa22L9vTEzBZqUin6vH8iMICDt+odpF1OB/FWDeQOJG3ZgQhVJav57wV1/A6HdBwgKsX2f5yiU2Lf/ng==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DGblsjNWDPiq0aCFoK8BCZoSIHt7lchoiKcbLbWh2wQ=;
+ b=H6uQexgFUNIvjK0Hd9r0fbPPCMAHkdUii6K09Lvc3eZbaqtNi6MbS/I1d3znwsOAZZYZS3DhMPjiZSqykFVR0ZqtsnWehOa8d+8ftl7BCNyRSzjbW+uV2EbPpi6AiGJA1AxHmWBX6eql/QmN+4CK/weAfuDM9CIFMqwFN/eTCgkFY5+SDazElY0pPZ47WhFwpE/KHzYN7kT89unVTuKx3R82lBqfO4IoLyY8NI7vWvIaQqstxzDABxopVpQPdq2NlT9sOmgRcLAjqXCtYm3G6xM0jyGTjwgBuje3iCYX6OKKpid5hFHKGAREVxolLzKQKKHE5sRp/xYnBBp/iHCCaA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
+ by PH7PR12MB6491.namprd12.prod.outlook.com (2603:10b6:510:1f4::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.22; Fri, 24 Apr
+ 2026 14:35:53 +0000
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.20.9846.021; Fri, 24 Apr 2026
+ 14:35:53 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 24 Apr 2026 23:35:48 +0900
+Message-Id: <DI1GL1FIGHO1.12VSIIQQN365T@nvidia.com>
+To: "Gary Guo" <gary@garyguo.net>
+Cc: "Danilo Krummrich" <dakr@kernel.org>, "Alice Ryhl"
+ <aliceryhl@google.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
+ <simona@ffwll.ch>, "Bjorn Helgaas" <bhelgaas@google.com>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Miguel
+ Ojeda" <ojeda@kernel.org>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
+ <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Andreas
+ Hindborg" <a.hindborg@kernel.org>, "Trevor Gross" <tmgross@umich.edu>,
+ "Boqun Feng" <boqun@kernel.org>, "John Hubbard" <jhubbard@nvidia.com>,
+ "Alistair Popple" <apopple@nvidia.com>, "Joel Fernandes"
+ <joelagnelf@nvidia.com>, "Timur Tabi" <ttabi@nvidia.com>, "Eliot Courtney"
+ <ecourtney@nvidia.com>, <nouveau@lists.freedesktop.org>,
+ <dri-devel@lists.freedesktop.org>, <linux-kernel@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
+Subject: Re: [PATCH v2 1/5] rust: add warn_on_err macro
+From: "Alexandre Courbot" <acourbot@nvidia.com>
+References: <20260421-nova-unload-v2-0-2fe54963af8b@nvidia.com>
+ <20260421-nova-unload-v2-1-2fe54963af8b@nvidia.com>
+ <DI0I3TH8B8ZZ.2118S8MDUHG@garyguo.net>
+In-Reply-To: <DI0I3TH8B8ZZ.2118S8MDUHG@garyguo.net>
+X-ClientProxiedBy: OS7PR01CA0043.jpnprd01.prod.outlook.com
+ (2603:1096:604:257::12) To CH2PR12MB3990.namprd12.prod.outlook.com
+ (2603:10b6:610:28::18)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2vxzeck45yin.fsf@kernel.org>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|PH7PR12MB6491:EE_
+X-MS-Office365-Filtering-Correlation-Id: f723a6fd-9448-479a-ac57-08dea20ec934
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|7416014|10070799003|1800799024|366016|18002099003|56012099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	JgetKVTKcsqKW0rFlOqBwKDSEQr4YYqi0J7NlEDQO+81Eh9WwC8nFCrGfYvQnq3ypxekH89JHp3nOxO/MwpzKP1hvsJez+SsLTtK8nlzlKGuSznVP8rVMo+6/SrrBIGHcUjiUxZ04gIboHGQb1Eypt58wpkUJS1AjMT12i1iuP7pCaKq8Cygrbw0u91HBNDi+xxma28X1Vvn2aYiCOJ/qDTBXC07JhbYxnWDjNMGsv4LyLjzYjl+abCWd6T0lnv5nogZGtxqL5SrnRq2fpmcRfIAUQvqLbbztxNkWywDjJoX2G3zGoGLbZ4qJxyNbWwoFuXCCbEaX4kEl4X5pV66uYj75GWyVuRrZsUaK2vw0XrNpr/afIc5K5U/hS+7iVsFXBekBHGtF3obiTnawqhPSpqTmnGjQewvAsn02fGzNsXPGc74orxXaalZMh2LuHAD1E/8iQz5XGb2BXfgQgmMLY/yP2JCJTYyST23gkwl6XFrX3uFCQL1NTM1drOJ52GnRqbqImkqmiNoGla5sGNGSa9rAeL+1pXEDU1Jpb9KUYRLFEkFV62q1XXAMdGo+IIKjwadfH6WazBR9LlWXY3Hm5fzGoD94h497dvglPuuHkL66lzyrpvmq8L/7s0ygv0DTNKIOR+NgfHZbmHfrwTEQQx+3MnXxlt3QDpPHlKwDOzeD3edDGq9WvhpXYBtCyVYStn49qIDIEjZpJNw00D7wWZ6pg0YiKNy4115Fsb4IE8=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(10070799003)(1800799024)(366016)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?YjBvdFdnZWZzUGg0ellrLytSZFprRkZWNWplaHNSV2hscnRqcGV5RWRqWHFU?=
+ =?utf-8?B?T1NSTXNtY2wremxDQVI5dk1nc2V0MlNDYzJSalV0S0hNa3E1MWNNSjRGU0JG?=
+ =?utf-8?B?MUZBakhrSDAyanJLRkNvVmtHZzNTUCtyWlVWUXcxTFpFTEVoWXk3VGx2Wjhs?=
+ =?utf-8?B?ajZ6Rzd4c2FoODZ4bWUxWDVxNXdJQXk2aG0xK056TC80UjhJakpLandLU0Ft?=
+ =?utf-8?B?SmRSS2N1VXlsQS93K0EwRUFmMDJpYUJ2aGhGeUZ3UEs5U2xHS3ZYVHVMdTFw?=
+ =?utf-8?B?eUpQdmFKczEvUCtuV1dITHFCeEUzTmJ6bEU2TUxOZzdpZHNrWjNObDdtZnVG?=
+ =?utf-8?B?Wi9DaVpDNDVCMGF4THlwUmRKZmJYejQvK2VOZ2g3K2dtYzhJUEM5cUEzR05O?=
+ =?utf-8?B?Q1lrR1JxMUZIK3hwV2dHdERQajh3TDErbzMvYzhkVjdBS2V5UHM3NndPdFQy?=
+ =?utf-8?B?VmVLQWN1SUVoZnRjbzh5Ym1MVUVNMklHaGZkaDBFYUdLeUxWcGJDbXJYVGU3?=
+ =?utf-8?B?R2paS3VJVjVoeDR4ZGQ0NEtRaWZPK3E1QWdNTHovdkZ3Nnl3SnRTRmxYWFM0?=
+ =?utf-8?B?cWdCNk1nTkdaS2pDamEvakpKaDhlaytuMGRyZlFUUWpFOVMybzVKd29qWEdD?=
+ =?utf-8?B?ODUvQ2VCSTR5dEMwcnVVa2w5eWwwSk81UVlBakozL2x2RjV4TW1tRERmQjlJ?=
+ =?utf-8?B?ckFyWDdmcTYyNDZBcjJ5UjhYeHNwS1VYY3cyck1aZmNhUWlOVGtFcUdBS0Fa?=
+ =?utf-8?B?c21jaFowTy82eGJKelBxRGpSc3JKNDM0ZysyTmJISGtVRms4bVdhQVFZYWFO?=
+ =?utf-8?B?VWZBdXZSUWtXVDc5aE5NWVErK2tUeWlQOS9MeE9rM01PZHEwQko2c05lbTRU?=
+ =?utf-8?B?REMvUEt4ZHhOdHF2b0o5MVNpMFBnZ0xsL3N1ZWExYjV5OWFuTUFUNkszdCtH?=
+ =?utf-8?B?bmVRQ1V6S3pFMkhua3RuRmZZeGFqNndZTGthbnlURUJtWitKT3dIZlp0SURn?=
+ =?utf-8?B?d1lWS3ZqVXVZV2J2ZjRBTXFDd2g1VitodkQzV214NTRLT21wQVovL3NBTS8z?=
+ =?utf-8?B?TDlia05KY2lKeXFlQzJLNDdtUGsycTc0VG9qazlIYzh1UXk4d0IvSVpyYmRS?=
+ =?utf-8?B?VzBqZTNJVk9ka2ZYYjFXempTUWZRUnJqMHNBOXJSeXlhSWVFNGtSaGpLVkRC?=
+ =?utf-8?B?emQ5OEdiTEllbHJFY3hESXNHWXBpSFlNOWttNWNlYUZjZVFlRlllNUcwWFBK?=
+ =?utf-8?B?U0hlQXBrZ1oxdkJ5TTV5VStDL0h5Y3VKOThXMmNPY085NDhacFpiOFZHN2RI?=
+ =?utf-8?B?TzJDcWk0UkFYdjdReG1IYytIZEVZVEZXcDhHR0NKZEVqZnNhSDZCVysxRWJj?=
+ =?utf-8?B?cHFtVFRJNXRQaU5mM0NORVJpelN4bFh3b0NFOU5abFVIZmJNM2ZlL2Voemxo?=
+ =?utf-8?B?dUEzNkVoeWNGQUZjM2x1aTFiNE1KMXpBUHJuNDVtQTFibENDTXd4OWZrNlps?=
+ =?utf-8?B?SFJObzIzVy9GNzZ0N2JmMUtKbE00QnlYNDRNZEpoRTEzS3VnZUpUZGZDMU9a?=
+ =?utf-8?B?WnlNUXlrZzRmVjZYa255cWxEYWg2ZkJITnV0Y1pjZjFCRGR6VFgrSU1HcUNx?=
+ =?utf-8?B?Nk5ScTBMS0x2aHdMaC8rOWlRejRaam0xQkJYMkJvVm1GVmZjdEYvVkxxVVht?=
+ =?utf-8?B?dnM4cnZyTnJmS2dOVUd4SWdwamxCdjE3WWVUVkltSDRIVTNwdFVacEZES2pu?=
+ =?utf-8?B?Y283Y3NhcU80V0NHQWI3cEZlcHR2NitnOWYyOExPcVVTK1ZrbkVTeVNEUEJO?=
+ =?utf-8?B?OGMxOWRSNGo0LzhYckxtbVpDZ1pJQjBOWXIvdnIvUjU1WitLWXMrKzhrd0Vu?=
+ =?utf-8?B?aFBBVjZ0V3FzRHN3UU9uK1lweVhYbnNTQmkrMkd1Y2loYXRON3dwaTVnZy9Z?=
+ =?utf-8?B?c1hXbDR0d1R3eW03cFNtQWNBWENEaXhOenlNSFNBd01FTGFGdGFySk5pMHZ1?=
+ =?utf-8?B?ZTAzRTVUSXV4cmRJWnhpOTkyTXFaYUYwQkxocUtMOC9iaFZzamdUeG5kb3cy?=
+ =?utf-8?B?OVFZWHF1cFNHcWJNTlkwTkF4bXhMZk45dFVnR1hIek0ydmFDWWl1Z0J4ZDhE?=
+ =?utf-8?B?QkV1SHVNTHc4Wk1jZVB2QWFzZkMrUk5Td0V2ZzYyeTNmZURyOEpua0QyeWhu?=
+ =?utf-8?B?bWxsYk54NzhSd2VCd3RMbnlTK1VHZVp1N2JxRno1NTFscDdXN1ZQR2JoMDdr?=
+ =?utf-8?B?THQ1TU1xS1lUZlZXY0lYMmlpMS91ejRvUDZ4a3IvRCs4QWtQMEJUbG4yWjJN?=
+ =?utf-8?B?Ynh6L29pZThkQWZEUlBWMlZiclI5WElKVU45WWJZazlDSWxiQ0k1UXRKZUlN?=
+ =?utf-8?Q?G5iES0EzSDlAkwxn1Na3/+2nz6JDKRiJPEvvGlMgyqrZU?=
+X-MS-Exchange-AntiSpam-MessageData-1: yLrsixex4+JIsA==
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f723a6fd-9448-479a-ac57-08dea20ec934
+X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Apr 2026 14:35:52.9265
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: T5XzZTrF8yG4OO9Kt1HIlcmAF7m6j7hml2+9Grziw8MIe5MjONdTr+IaRAckdyz2aWNlHfkRbLTXB2gyd5B7AQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB6491
 
-On 04-24 14:33, Pratyush Yadav wrote:
-> Hi David,
-> 
-> On Thu, Apr 23 2026, David Matlack wrote:
-> [...]
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index c9b7b6f9828e..94af31837375 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -20555,6 +20555,18 @@ L:	linux-pci@vger.kernel.org
-> >  S:	Supported
-> >  F:	Documentation/PCI/pci-error-recovery.rst
-> >  
-> > +PCI LIVE UPDATE
-> > +M:	Bjorn Helgaas <bhelgaas@google.com>
-> > +M:	David Matlack <dmatlack@google.com>
-> > +L:	linux-pci@vger.kernel.org
-> > +S:	Supported
-> > +Q:	https://patchwork.kernel.org/project/linux-pci/list/
-> > +B:	https://bugzilla.kernel.org
-> > +C:	irc://irc.oftc.net/linux-pci
-> > +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
-> > +F:	drivers/pci/liveupdate.c
-> > +F:	include/linux/kho/abi/pci.h
-> > +
-> 
-> Can we please also add these files under the "LIVE UPDATE" entry. The
-> code here concerns both live update and PCI. We can figure out the
-> maintenance details as we go along, but I think the live update
-> maintainers should at least get all the patches for PCI live update.
-> 
-> Perhaps also add the kexec list here? We plan to use it to maintain the
-> LUO patches, and adding it will make sure we get the patches in case
-> someone updates the file list here but forgets to update it in the LIVE
-> UPDATE entry.
+On Thu Apr 23, 2026 at 8:34 PM JST, Gary Guo wrote:
+> On Tue Apr 21, 2026 at 7:16 AM BST, Alexandre Courbot wrote:
+>> While we already have the `warn_on` macro, a common usage pattern in
+>> Rust is to check whether a `Result` is an error. Add a helper macro that
+>> allows this.
+>>
+>> Signed-off-by: Alexandre Courbot <acourbot@nvidia.com>
+>> ---
+>>  rust/kernel/bug.rs | 10 ++++++++++
+>>  1 file changed, 10 insertions(+)
+>>
+>> diff --git a/rust/kernel/bug.rs b/rust/kernel/bug.rs
+>> index ed943960f851..2fefc0aeef81 100644
+>> --- a/rust/kernel/bug.rs
+>> +++ b/rust/kernel/bug.rs
+>> @@ -130,3 +130,13 @@ macro_rules! warn_on {
+>>          cond
+>>      }};
+>>  }
+>> +
+>> +/// Report a warning if `res` is an error and return it unmodified.
+>> +#[macro_export]
+>> +macro_rules! warn_on_err {
+>> +    ($res:expr) =3D> {{
+>> +        let res =3D $res;
+>> +        let _ =3D $crate::warn_on!(res.is_err());
+>> +        res
+>> +    }};
+>> +}
+>
+>
+> I think `warn_on_err` could just be expressed as
+>
+>     res.inspect_err(|_| warn_on!(true))
 
-+1
+This would turn the verbose error message into something like
 
-These files should also be added to the Live Update entry, and the kexec
-mailing list should be included.
+  [true] module.rs
 
-Changes specific to Live Update should be routed through the
-liveupdate/linux.git tree, while generic PCI changes should go through
-pci/pci.git. In either case, if liveupdate.c or abi/pci.h are modified,
-acks are required from the Live Update group.
+I.e. the expression passed as argument won't be printed.
 
-Pasha
+That being said, my version has the exact same problem and I don't see
+how we can fix this without splitting `warn_on` and making it more
+complex.
+
+Since this was done as a small convenience, I think I will just remove
+this from this patchset and revisit later as a separate series.
