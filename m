@@ -1,164 +1,137 @@
-Received: from lankhorst.se (unknown [141.105.120.124])
+Received: from sender4-of-o54.zoho.com (sender4-of-o54.zoho.com [136.143.188.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F1023DDDBC
-	for <linux-pci@vger.kernel.org>; Fri, 24 Apr 2026 14:51:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.105.120.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777042264; cv=none; b=QB78RKpHqiUAMOYGulwxpWzho3VRMz6AtrlmgGIbGsa+0s0vnELOiauUCTa3sHX4cpKOgjjN5iFC8cX03gwHbZcIuDCxXxFzptsOzb/kxYTBrhLMNqa8ZEig0lApzmGOrVBXeZ320dxKQWyuW7h2VI3FvJQZvQxogLyHcOV3MJg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777042264; c=relaxed/simple;
-	bh=IkZ4HmVZrnr3YrXmiO7B9vcFYv7HAS2JPSowEZKO4fw=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Content-Type; b=EhVUSYYHEbBuZ9QjET3qByYma9R27/Vw1dqSFW26Wb9vr72FKWjular2Em4qAwLbdAmxJyRSC4M+nz4KlnLK958FluDFe8n2CqlvnLV2+6aHKVo0cVug+h3dm6HVeYVdnTeF4z3DH4rMRIc/2U+O/ZOMQiK1rhSpeaib5HzDdAk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lankhorst.se; spf=pass smtp.mailfrom=lankhorst.se; dkim=pass (2048-bit key) header.d=lankhorst.se header.i=@lankhorst.se header.b=RezyCm9T; arc=none smtp.client-ip=141.105.120.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lankhorst.se
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lankhorst.se
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A27063CF66B;
+	Fri, 24 Apr 2026 14:56:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.54
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777042596; cv=pass; b=HN/XjiGGoDKefoC3BPKpwXSK22CYM9yyLFa0bL7Oq5/HunnXG0ZcOfwarKYdeKziETZQEYd8mjvtVrinzTcjNRyYCsfGlMhfKB212ccPCi63elKi2FTheM0tME50BLjNM2HYJF0yAGwgNZyCMB6kQQEToqvHgwN0ytQpdgzVtJ0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777042596; c=relaxed/simple;
+	bh=XIboCUOqX1MwJvT44BSQ1l5Up9lRA42iFhJuzcHppPY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=U0Mwn70Vi39U4zwK1qyykLvGpYUB1BadFcNzyv8tlScOyeu4+FMzi7e+cfFeZmGANdzSRO+YcmqjfU9/74MosSaU4w95iSwzDGTi/aM/SuJ/6v5/lC0R7c+ta4MhvbiAWX8Ea2wE+fzk1CQIahqENeAhBq7Iy2T5PSj29vmK5M4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=anirudhrb.com; spf=pass smtp.mailfrom=anirudhrb.com; dkim=pass (1024-bit key) header.d=anirudhrb.com header.i=anirudh@anirudhrb.com header.b=EIdv0C+K; arc=pass smtp.client-ip=136.143.188.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=anirudhrb.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=anirudhrb.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=lankhorst.se header.i=@lankhorst.se header.b="RezyCm9T"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=lankhorst.se;
-	s=default; t=1777041807;
-	bh=IkZ4HmVZrnr3YrXmiO7B9vcFYv7HAS2JPSowEZKO4fw=;
-	h=Date:From:Subject:To:From;
-	b=RezyCm9TMidJBfoKFzHLEtwVnR7qVjIFWQMikwHEC+Ut7H2413nKoh3N1yNXSfua4
-	 zjw3tIpSdB/L7JEUN4ZoMGzfLFKrLPrrSjG/S2PRBav7C3X4FIAlUYb/4bx+ZPGIrU
-	 7ITHmhrEWPwaIjt3Xcn88zcwRQD1CDgoJU/HkLU+VTNmewWu6p7GDOQM8rvXMR5zMq
-	 OXbSXI/8kWV8cooup4IKkSjsDCpfa65sMSulgVzChZyV/XQ6Mo28bRHda+tvykydtH
-	 F6rPuZqpw5jo/56a2jGGQ8uHpfajTf+me0nPKe/M/NUFMGFCTdz+O2yxmvMwcPiaiZ
-	 hdYp2c/s1Ffhw==
-Message-ID: <7f673ce8-fa00-47aa-a50f-812ae5073279@lankhorst.se>
-Date: Fri, 24 Apr 2026 16:43:26 +0200
+	dkim=pass (1024-bit key) header.d=anirudhrb.com header.i=anirudh@anirudhrb.com header.b="EIdv0C+K"
+ARC-Seal: i=1; a=rsa-sha256; t=1777042558; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=BrFFf85hehGdw2XKPFeZwPMDURVfheQs4dC8bMyuEX7QxGvl5fCjqXy2UwSOmr6LonD1iNGZdBC3JOAbZQKLjv05LvFiBpqzWI5+5QAFkhl9j+rWxcdl33L/c49qdX21U00TdhxQt1hJ3uGPMfNFZ3MMKTcdy2BMy3SKXHSaJ88=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1777042558; h=Content-Type:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=mfqSqPUoxMBVCRtDCy7Ii6TvpUSj01bGGYteC+Ygh9E=; 
+	b=ADVpA/7oVFkkBtSGxszzWREq64J4eVWtyArwzLB87KAQXf57jDz96Qlby4+Dhbxv+S9xZqg1p6cXuuZLjAOelkdjTEh4r0raX8CZDHqrp3rWeN5ZpwiXiFwIAnhkzdx2ZUHPEWEJ0zXygATrbDtLn/RTahEZ9l38GPeQI3R3HZg=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=anirudhrb.com;
+	spf=pass  smtp.mailfrom=anirudh@anirudhrb.com;
+	dmarc=pass header.from=<anirudh@anirudhrb.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1777042558;
+	s=zoho; d=anirudhrb.com; i=anirudh@anirudhrb.com;
+	h=Date:Date:From:From:To:To:Cc:Cc:Subject:Subject:Message-ID:References:MIME-Version:Content-Type:In-Reply-To:Message-Id:Reply-To;
+	bh=mfqSqPUoxMBVCRtDCy7Ii6TvpUSj01bGGYteC+Ygh9E=;
+	b=EIdv0C+KkNTvVzxTnYNobl+h7f4xSxWTUGe3v8fCVtdPbV5MVNJRSuvzhraXGbz3
+	y8+53IW+Wd5s6h8h1uhP/5JwQlO3YjFU36oQa/XCUGmdIbt40hUxOx0+utpX5/InHhA
+	LQu+oM9NLO6gRXTgfLCXwsA31lwrhpYR//e38VzE=
+Received: by mx.zohomail.com with SMTPS id 1777042554688308.8891839177646;
+	Fri, 24 Apr 2026 07:55:54 -0700 (PDT)
+Date: Fri, 24 Apr 2026 14:55:43 +0000
+From: Anirudh Rayabharam <anirudh@anirudhrb.com>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: hpa@zytor.com, robin.murphy@arm.com, robh@kernel.org,
+	wei.liu@kernel.org, mhklinux@outlook.com, muislam@microsoft.com,
+	namjain@linux.microsoft.com, magnuskulke@linux.microsoft.com,
+	anbelski@linux.microsoft.com, linux-kernel@vger.kernel.org,
+	linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
+	longli@microsoft.com, tglx@kernel.org, mingo@redhat.com,
+	bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
+	joro@8bytes.org, will@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, bhelgaas@google.com, arnd@arndb.de
+Subject: Re: [PATCH V1 03/13] x86/hyperv: add insufficient memory support in
+ irqdomain.c
+Message-ID: <20260424-inquisitive-versatile-cuckoo-6bc36b@anirudhrb>
+References: <20260422023239.1171963-1-mrathor@linux.microsoft.com>
+ <20260422023239.1171963-4-mrathor@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Maarten Lankhorst <dev@lankhorst.se>
-Subject: [PATCH] PCI: Fix resizable bar fails due to bridge memory region
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- "intel-xe@lists.freedesktop.org" <intel-xe@lists.freedesktop.org>
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260422023239.1171963-4-mrathor@linux.microsoft.com>
+X-ZohoMailClient: External
 
-I encountered a problem that I have on my system, where I cannot resize
-the bar because one of the bridges has a 
+On Tue, Apr 21, 2026 at 07:32:29PM -0700, Mukesh R wrote:
+> Intermittent insufficient memory hypercall failure have been observed in
+> the current map device interrupt hypercall. In case of such a failure,
+> we must deposit more memory and redo the hypercall. Add support for
+> that. Deposit memory needs partition id, make that a parameter to the
+> map interrupt function.
+> 
+> Signed-off-by: Mukesh R <mrathor@linux.microsoft.com>
+> ---
+>  arch/x86/hyperv/irqdomain.c | 38 +++++++++++++++++++++++++++++++------
+>  1 file changed, 32 insertions(+), 6 deletions(-)
+> 
+> diff --git a/arch/x86/hyperv/irqdomain.c b/arch/x86/hyperv/irqdomain.c
+> index b3ad50a874dc..229f986e08ea 100644
+> --- a/arch/x86/hyperv/irqdomain.c
+> +++ b/arch/x86/hyperv/irqdomain.c
+> @@ -13,8 +13,9 @@
+>  #include <linux/irqchip/irq-msi-lib.h>
+>  #include <asm/mshyperv.h>
+>  
+> -static int hv_map_interrupt(union hv_device_id hv_devid, bool level,
+> -		int cpu, int vector, struct hv_interrupt_entry *ret_entry)
+> +static u64 hv_map_interrupt_hcall(u64 ptid, union hv_device_id hv_devid,
+> +				  bool level, int cpu, int vector,
+> +				  struct hv_interrupt_entry *ret_entry)
+>  {
+>  	struct hv_input_map_device_interrupt *input;
+>  	struct hv_output_map_device_interrupt *output;
+> @@ -30,8 +31,10 @@ static int hv_map_interrupt(union hv_device_id hv_devid, bool level,
+>  
+>  	intr_desc = &input->interrupt_descriptor;
+>  	memset(input, 0, sizeof(*input));
+> -	input->partition_id = hv_current_partition_id;
+> +
+> +	input->partition_id = ptid;
+>  	input->device_id = hv_devid.as_uint64;
+> +
+>  	intr_desc->interrupt_type = HV_X64_INTERRUPT_TYPE_FIXED;
+>  	intr_desc->vector_count = 1;
+>  	intr_desc->target.vector = vector;
+> @@ -64,6 +67,28 @@ static int hv_map_interrupt(union hv_device_id hv_devid, bool level,
+>  
+>  	local_irq_restore(flags);
+>  
+> +	return status;
+> +}
+> +
+> +static int hv_map_interrupt(u64 ptid, union hv_device_id device_id, bool level,
+> +			    int cpu, int vector,
+> +			    struct hv_interrupt_entry *ret_entry)
+> +{
+> +	u64 status;
+> +	int rc, deposit_pgs = 16;		/* don't loop forever */
+> +
+> +	while (deposit_pgs--) {
+> +		status = hv_map_interrupt_hcall(ptid, device_id, level, cpu,
+> +						vector, ret_entry);
+> +
+> +		if (hv_result(status) != HV_STATUS_INSUFFICIENT_MEMORY)
+> +			break;
+> +
+> +		rc = hv_call_deposit_pages(NUMA_NO_NODE, ptid, 1);
 
-If I take a look at the topology, the GPU shares the memory region with a bridge,
+This code should use the hv_result_needs_memory() and hv_deposit_memory()
+helpers instead.
 
-+-[0000:64]-+-00.0-[65-68]----00.0-[66-68]--+-01.0-[67]----00.0
+Thanks,
+Anirudh
 
-The specific bridge likely causing a failure is:
-
-65:00.0 PCI bridge: Intel Corporation Device e2ff (rev 01) (prog-if 00 [Normal decode])
-        Flags: bus master, fast devsel, latency 0, IRQ 32, IOMMU group 1
-        Memory at 382400000000 (64-bit, prefetchable) [size=8M]
-        ....
-
-Which causes upstream bridge 64:00.0 initially to allocate the region
-[38fe0000000-38ff0000000) for the GPU, and [382ff0000000..382ff07fffff]
-for the bridge device.
-
-Bridge 64 is big enough for 1 BMG with a 32 GB bar and the second 8 MB allocation:
-pci_bus 0000:64: resource 9 [mem 0x382000000000-0x382fffffffff window] (64GB window)
-
-The reason for failure is that bridge 65 has a 8 MB memory region assigned,
-and previously it was ignored when reallocating.
-
-Failing case:
-xe 0000:67:00.0: [drm] Attempting to resize bar from 256MiB -> 16384MiB
-xe 0000:67:00.0: BAR 2 [mem 0x382fe0000000-0x382fefffffff 64bit pref]: releasing
-pcieport 0000:66:01.0: bridge window [mem 0x382fe0000000-0x382fefffffff 64bit pref]: releasing
-pcieport 0000:65:00.0: bridge window [mem 0x382fe0000000-0x382fefffffff 64bit pref]: releasing
-pcieport 0000:64:00.0: bridge window [mem 0x382fe0000000-0x382ff07fffff 64bit pref]: was not released (still contains assigned resources)
-pcieport 0000:65:00.0: bridge window [mem size 0x400000000 64bit pref]: can't assign; no space
-pcieport 0000:65:00.0: bridge window [mem size 0x400000000 64bit pref]: failed to assign
-pcieport 0000:65:00.0: bridge window [mem size 0x400000000 64bit pref]: can't assign; no space
-pcieport 0000:65:00.0: bridge window [mem size 0x400000000 64bit pref]: failed to assign
-pcieport 0000:66:01.0: bridge window [mem size 0x400000000 64bit pref]: can't assign; no space
-pcieport 0000:66:01.0: bridge window [mem size 0x400000000 64bit pref]: failed to assign
-pcieport 0000:66:01.0: bridge window [mem size 0x400000000 64bit pref]: can't assign; no space
-pcieport 0000:66:01.0: bridge window [mem size 0x400000000 64bit pref]: failed to assign
-xe 0000:67:00.0: BAR 2 [mem size 0x400000000 64bit pref]: can't assign; no space
-xe 0000:67:00.0: BAR 2 [mem size 0x400000000 64bit pref]: failed to assign
-xe 0000:67:00.0: BAR 2 [mem size 0x400000000 64bit pref]: can't assign; no space
-xe 0000:67:00.0: BAR 2 [mem size 0x400000000 64bit pref]: failed to assign
-pcieport 0000:64:00.0: PCI bridge to [bus 65-68]
-pcieport 0000:64:00.0:   bridge window [mem 0xd7000000-0xd83fffff]
-pcieport 0000:64:00.0:   bridge window [mem 0x382fe0000000-0x382ff07fffff 64bit pref]
-pcieport 0000:65:00.0: PCI bridge to [bus 66-68]
-pcieport 0000:65:00.0:   bridge window [mem 0xd7000000-0xd83fffff]
-pcieport 0000:65:00.0:   bridge window [mem 0x382fe0000000-0x382fefffffff 64bit pref]
-pcieport 0000:66:01.0: PCI bridge to [bus 67]
-pcieport 0000:66:01.0:   bridge window [mem 0xd7000000-0xd81fffff]
-pcieport 0000:66:01.0:   bridge window [mem 0x382fe0000000-0x382fefffffff 64bit pref]
-
-Working with the patch below:
-xe 0000:67:00.0: [drm] Attempting to resize bar from 256MiB -> 16384MiB
-xe 0000:67:00.0: BAR 2 [mem 0x382fe0000000-0x382fefffffff 64bit pref]: releasing
-pcieport 0000:66:01.0: bridge window [mem 0x382fe0000000-0x382fefffffff 64bit pref]: releasing
-pcieport 0000:65:00.0: bridge window [mem 0x382fe0000000-0x382fefffffff 64bit pref]: releasing
-pcieport 0000:65:00.0: BAR 0 [mem 0x382ff0000000-0x382ff07fffff 64bit pref]: releasing
-pcieport 0000:64:00.0: bridge window [mem 0x382fe0000000-0x382ff07fffff 64bit pref]: releasing
-pcieport 0000:64:00.0: bridge window [mem 0x382000000000-0x3824007fffff 64bit pref]: assigned
-pcieport 0000:65:00.0: bridge window [mem 0x382000000000-0x3823ffffffff 64bit pref]: assigned
-pcieport 0000:65:00.0: BAR 0 [mem 0x382400000000-0x3824007fffff 64bit pref]: assigned
-pcieport 0000:66:01.0: bridge window [mem 0x382000000000-0x3823ffffffff 64bit pref]: assigned
-xe 0000:67:00.0: BAR 2 [mem 0x382000000000-0x3823ffffffff 64bit pref]: assigned
-pcieport 0000:64:00.0: PCI bridge to [bus 65-68]
-pcieport 0000:64:00.0:   bridge window [mem 0xd7000000-0xd83fffff]
-pcieport 0000:64:00.0:   bridge window [mem 0x382000000000-0x3824007fffff 64bit pref]
-pcieport 0000:65:00.0: PCI bridge to [bus 66-68]
-pcieport 0000:65:00.0:   bridge window [mem 0xd7000000-0xd83fffff]
-pcieport 0000:65:00.0:   bridge window [mem 0x382000000000-0x3823ffffffff 64bit pref]
-pcieport 0000:65:00.0: PCI bridge to [bus 66-68]
-pcieport 0000:65:00.0:   bridge window [mem 0xd7000000-0xd83fffff]
-pcieport 0000:65:00.0:   bridge window [mem 0x382000000000-0x3823ffffffff 64bit pref]
-pcieport 0000:66:01.0: PCI bridge to [bus 67]
-pcieport 0000:66:01.0:   bridge window [mem 0xd7000000-0xd81fffff]
-pcieport 0000:66:01.0:   bridge window [mem 0x382000000000-0x3823ffffffff 64bit pref]
-xe 0000:67:00.0: [drm] BAR2 resized to 16384MiB
-
-
-Signed-off-by: Maarten Lankhorst <dev@lankhorst.se>
----
-I'm not 100% this is the correct fix, I don't know why the bridge itself has
-a memory region, why the kernel allocates it and when it's supposed to
-be used. Not a PCI expert. :-)
----
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 61f769aaa2f6c..98692dccc4721 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -2258,6 +2258,7 @@ static int pbus_reassign_bridge_resources(struct pci_bus *bus, struct resource *
- 	unsigned long type = res->flags;
- 	struct pci_dev_resource *dev_res;
- 	struct pci_dev *bridge = NULL;
-+	struct resource *r;
- 	LIST_HEAD(added);
- 	LIST_HEAD(failed);
- 	unsigned int i;
-@@ -2286,6 +2287,21 @@ static int pbus_reassign_bridge_resources(struct pci_bus *bus, struct resource *
- 				 res_name, res);
- 		}
- 
-+		pci_dev_for_each_resource(bridge, r, i) {
-+			if (!resource_assigned(r) || r->child)
-+				continue;
-+
-+			if ((r->flags & IORESOURCE_TYPE_BITS) !=
-+			    (type & IORESOURCE_TYPE_BITS))
-+				continue;
-+
-+			ret = pci_dev_res_add_to_list(saved, bridge, r, 0, 0);
-+			if (ret)
-+				return ret;
-+
-+			pci_release_resource(bridge, i);
-+		}
-+
- 		bus = bus->parent;
- 	}
- 
