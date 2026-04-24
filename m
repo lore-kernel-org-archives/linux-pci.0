@@ -1,40 +1,48 @@
-Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A9D31A9F96;
-	Fri, 24 Apr 2026 01:26:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DD9533E7;
+	Fri, 24 Apr 2026 02:31:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776993966; cv=none; b=sP5U4VhW8gZXeBMMC7qrwwTvFcx6UX2Xg1H5nB2WJfgTM/ESIr20WEU5h30b7Id2lEZvAiLYliidEdbwvu8fjYmo2fzdUi/NOmm6GJTJtIe4uzULou+w/M8VRquSK+nE7GVAT87b6bh8AeU6kVjMUg69U4NruM2pkGHMeiGqdd4=
+	t=1776997912; cv=none; b=MECvJLn0fTZlbW5J9Wy4oisIba/F2iGweKKSOwZoJ/METqsPvwB54dm5dsM3s9sTJMEkl19dN9r+FfoOXldAC67pp2X0SxmJOJLTgfxdTxtEsiFqXGhj4I24Opa+p+SB+esUCGfgAJg4QSnOzC+WC9td17092uscxnb8e99tzDQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776993966; c=relaxed/simple;
-	bh=i4s9DTXZuzdQZ28wjVuPTCFDMD2wsf4HN3JZjaN+vOg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=Qb+UvWN0uH3+glxFhx8eeGF+ejuSsDD9WME6W5Qc5ocD+q8NgdWBGq/FRxfagqkOik7VDDhlmcKgj9XeaXEObg6Cv97Uoxe4TUurSCfOvdAAhPx6a1gkQA4WELC3e3dkQoNK8RKswx2BYJ5KXhsh0cqy2CvQNPmUHz5+DvfO0Y8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=YbXIHNko; arc=none smtp.client-ip=113.46.200.219
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1776997912; c=relaxed/simple;
+	bh=LyMvA85aXO9l8odLPd+42Em6naKlmY2OXKuRaUPutyE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=G01PNv79SGuVjE7Bf3h6yYc6Q7u8ilJcQ3DirS4RKdQET+aS2N6hdMr4iW17ZvQC3XOyiw3aDsj711qQ3rLZTqW+K3K5IqsvSebbT8TnrfIVfgzaNnIHVhA00z9BrKBIkDLEhYmGCDvaHa2tTetuC2o+a3VXulgPs+FQe2G2xgM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FHfZlMf3; arc=none smtp.client-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="YbXIHNko"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=ZMhYimDVN3PWm9O6wHwuFObgia/AxLaO9IAmAW5Pbk4=;
-	b=YbXIHNkoivr9IXDFkQgA3MJEcKS08F7teIcG0VKxfNt2fYhfwVrVIhWyeujsi4MJYHDTuSANp
-	GQRI5jNRA13PDTpOzBKA83SqYNiRaWOs20NzqGU76hd+JR+gzmSk75bis7m8c3JUEo2rG6Sebf1
-	v9cnfKUgo11fu3l/XIBGbRA=
-Received: from mail.maildlp.com (unknown [172.19.162.223])
-	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4g1w9F3DSXz1prN9;
-	Fri, 24 Apr 2026 09:19:29 +0800 (CST)
-Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id D863840571;
-	Fri, 24 Apr 2026 09:25:55 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Fri, 24 Apr 2026 09:25:55 +0800
-Message-ID: <486a8633-437d-42d1-85f9-690a9df311eb@huawei.com>
-Date: Fri, 24 Apr 2026 09:25:54 +0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FHfZlMf3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1776997911; x=1808533911;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=LyMvA85aXO9l8odLPd+42Em6naKlmY2OXKuRaUPutyE=;
+  b=FHfZlMf3FcQj07cq4/7u7myPK3erOONYO9bWJUTgoN1XVdvJYmzsbyuu
+   5tCmcg1gKIn7T1gpzUxetcSJJzJbSjcwQKl+WBjU3v25qCvUb8XPloC8L
+   AA/p4yzjobOPbN6YcOA4VPlurSgBnrcrTQh/REe7Q1U1aPcBVA/wC/7Sf
+   +Z+zzRqVCX8h485p5xFnbB+rCpal3NZrsGht+4c8jg9kZDhFTAjicoijA
+   rR9dgpVEwkUNbdXLdFoCArvbW+WLbfA1eYzg0wkReLcXKzcv2O4dHTLf4
+   +w80bPw9uzAMN6eUxswQKMWodYcZ/jBSwrkboEYNKPclSqO5awJ4UlA0Z
+   w==;
+X-CSE-ConnectionGUID: nm1iFSxMSu2iQX5M5GBR4g==
+X-CSE-MsgGUID: YcP26u6qSW6bLeCl0ZDLyw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11765"; a="88671342"
+X-IronPort-AV: E=Sophos;i="6.23,195,1770624000"; 
+   d="scan'208";a="88671342"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Apr 2026 19:31:51 -0700
+X-CSE-ConnectionGUID: hSntE3wvRXCvwE4MXgt62Q==
+X-CSE-MsgGUID: ZLZ+lQZtQqm4aQohybn0aw==
+X-ExtLoop1: 1
+Received: from allen-sbox.sh.intel.com (HELO [10.239.159.30]) ([10.239.159.30])
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Apr 2026 19:31:46 -0700
+Message-ID: <667647da-c8e3-483f-aa57-c3730194c8a5@linux.intel.com>
+Date: Fri, 24 Apr 2026 10:29:41 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,78 +50,76 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 0/5] vfio/pci: Add PCIe TPH support
-To: Leon Romanovsky <leon@kernel.org>
-CC: <alex@shazbot.org>, <jgg@ziepe.ca>, <wathsala.vithanage@arm.com>,
-	<helgaas@kernel.org>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
-	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-References: <20260423010851.46737-1-fengchengwen@huawei.com>
- <20260423145915.GG172828@unreal>
+Subject: Re: [PATCH v3 06/11] iommu: Defer __iommu_group_free_device() to be
+ outside group->mutex
+To: Nicolin Chen <nicolinc@nvidia.com>
+Cc: Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+ Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jason Gunthorpe <jgg@nvidia.com>, "Rafael J . Wysocki" <rafael@kernel.org>,
+ Len Brown <lenb@kernel.org>, Pranjal Shrivastava <praan@google.com>,
+ Mostafa Saleh <smostafa@google.com>, Kevin Tian <kevin.tian@intel.com>,
+ linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+ linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+ linux-pci@vger.kernel.org, vsethi@nvidia.com,
+ Shuai Xue <xueshuai@linux.alibaba.com>
+References: <cover.1776381841.git.nicolinc@nvidia.com>
+ <3f5d229267d1f4d918641bc5b896f54b5c4b7782.1776381841.git.nicolinc@nvidia.com>
+ <3570e178-f887-45c9-a251-e089915cfbd9@linux.intel.com>
+ <aeo/BDwYM9yYHctI@Asurada-Nvidia>
 Content-Language: en-US
-From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <20260423145915.GG172828@unreal>
-Content-Type: text/plain; charset="UTF-8"
+From: Baolu Lu <baolu.lu@linux.intel.com>
+In-Reply-To: <aeo/BDwYM9yYHctI@Asurada-Nvidia>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- kwepemk500009.china.huawei.com (7.202.194.94)
 
-On 4/23/2026 10:59 PM, Leon Romanovsky wrote:
-> On Thu, Apr 23, 2026 at 09:08:46AM +0800, Chengwen Feng wrote:
->> This series adds support for PCIe TLP Processing Hints (TPH) to
->> vfio-pci, allowing userspace to manage device steering tags for
->> improved performance and QoS in virtualized deployments.
+On 4/23/26 23:47, Nicolin Chen wrote:
+> On Thu, Apr 23, 2026 at 03:55:02PM +0800, Baolu Lu wrote:
+>> On 4/17/26 07:28, Nicolin Chen wrote:
+>>> +static void __iommu_group_empty_assert_owner_cnt(struct iommu_group *group)
+>>> +{
+>>> +	lockdep_assert_held(&group->mutex);
+>>> +	/*
+>>> +	 * If the group has become empty then ownership must have been
+>>> +	 * released, and the current domain must be set back to NULL or
+>>> +	 * the default domain.
+>>> +	 */
 >>
->> The implementation follows a clean incremental structure:
->> - Patch 1: Export pcie_tph_get_st_modes()
->> - Patch 2: Introduce UAPI ABI and implement capability query to
->>   let userspace discover supported TPH modes, ST table presence
->>   and size. Also add module parameter enable_unsafe_tph_ds to
->>   guard unsafe usage of TPH Device-Specific mode with no ST table.
->> - Patch 3: Add TPH enable/disable with mode selection. Restrict
->>   unsafe Device-Specific mode without ST table to be allowed only
->>   when the module parameter is enabled.
->> - Patch 4: Add interface to batch get per-CPU steering tags for
->>   device-specific mode without standard ST table. This interface
->>   is only available when the unsafe module parameter is enabled.
->> - Patch 5: Add interface to batch program steering tag table
->>   entries for standard TPH modes.
->>
->> All user API definitions are finalized in the first patch and
->> remain stable across the series. The design follows existing
->> VFIO conventions and relies on kernel pcie-tph infrastructure.
->>
->> To avoid potential security risks in virtualization environments,
->> TPH Device-Specific mode without a standard ST table is blocked
->> by default. It can only be enabled by administrators via the
->> enable_unsafe_tph_ds module parameter for trusted bare-metal
->> userspace.
->>
->> This series addresses the TPH management requirements discussed
->> in the RFC "Proposal: Add sysfs interface for PCIe TPH Steering
->> Tag retrieval and configuration".
+>> Nit: this comment doesn't quite match the following code. The code
+>> doesn't check "group->domain != NULL". Or perhaps in that case,
+>> group->default_domain must be NULL?
 > 
-> As in the RFC, this patch series still lacks an explanation of *why* it is
-> needed. Please describe the scenario that cannot be handled without these
-> changes.
+> This is the original patch from Jason:
+> https://lore.kernel.org/r/4-v3-328044aa278c+45e49-iommu_probe_jgg@nvidia.com
+> 
+> I kept the comments as-is, though It might be slightly confusing?
+> 
+> I think it means:
+> If group->default_domain == NULL, it does check "set back to NULL".
+> If group->default_domain != NULL, it then checks "default domain".
+> 
+> Maybe it could be "must be set back to the default domain (which
+> itself can be NULL"?
 
-Thanks for your review. To clarify the necessity in two clear layers:
-
-1. Why userspace needs the capability to control steering tags:
-   When PCIe devices are fully taken over by userspace workloads like DPDK
-   and SPDK, only userspace understands core binding policies and traffic
-   distribution. Without this series, userspace cannot enable TPH or
-   configure steering tags, leaving built-in PCIe performance optimizations
-   unused for high-throughput polling I/O scenarios.
-
-2. Why the interface must be implemented inside VFIO:
-   VFIO is the only mainstream and secure community solution for passing
-   complete PCIe device ownership to userspace. Existing kernel TPH
-   interfaces are designed exclusively for in-kernel drivers, so VFIO
-   provides the only correct, isolated path to expose per-device TPH
-   management for user-owned devices.
-
-Thanks
+This is clearer. As I understand it, when the last device leaves the
+iommu_group, the group->domain should be one of the static system
+domains, either the default domain or the blocking domain.
 
 > 
+>> Furthermore, if a device is currently quarantined, group->domain will be
+>> the blocking_domain. If that quarantined device is then hot-removed and
+>> happens to be the last device in the group, will this WARN_ON trigger
+>> unnecessarily?
+> 
+> If a device is quarantined, its group->domain is retained to the
+> previously attached domain. Its blocking state is logged in the
+> gdev->blocked flag. So, I think it can pass the test.
+
+Oh, my mistake. I thought group->domain would point to the blocking
+domain when a device is quarantined. It's fine if group->domain remains
+set to the previous domain.
+
 > Thanks
+> Nicolin
 
+Thanks,
+baolu
