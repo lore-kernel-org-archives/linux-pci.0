@@ -1,115 +1,59 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from nikam.ms.mff.cuni.cz (nikam.ms.mff.cuni.cz [195.113.20.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70045393DE9;
-	Sat, 25 Apr 2026 10:22:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A10A62E541F
+	for <linux-pci@vger.kernel.org>; Sat, 25 Apr 2026 22:37:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.113.20.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777112541; cv=none; b=sgo3scEdaWg2HXqG6+GMC7KrW23j7nKmluYM8HMG/KOADZ+XjUJyIs0KHe9hz0txhOBMfqtEL/aGlECHMoEpknV/6U+Rczeq8WRmEHUI/lONK3V+/S0VWvr2XHM8GRntICUBricJwriYGL/YhlCJF2W1jql+ZE4RmmnmfOpxTCE=
+	t=1777156652; cv=none; b=PJK8HJrZ7O7gIgWhOzpsUSTuiV3QQx7CpRd4EhlsSu0Af6e6L06N1+Tb/UazqUyIAHhQD34pJ3QZW+qP6g6wtCZOozONX3/HBR2xW6rmyTddr1mdCxiOLSkzV8DmRTVJUOgo9YCorPt2VUbAGfGiWlFqvB/QF8m8qyxIkoLFU2U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777112541; c=relaxed/simple;
-	bh=ZUPPhFVZQbljNA332u3LYRTprpkVR+YVWiGn+DzoKto=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iYh3ka2sBXRkqDqMTSuXaiZrDv+yGjxOIard560DPbFZv1Ii8xvLbOPCHtnC7CVEipLEcpUEuurIUTcXTJSSDRUKlMNnQcKRSM0gC14m9M2EA5Hj3vTIQ96OfAqBpS/QprEXWkrglcOSHQH7gU9EY4gKayCLSwFSX2W6t8JhWc0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WVigzOjT; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777156652; c=relaxed/simple;
+	bh=CgAiApvk4BoYGVmy7dwADuNrJZGCcbEa44TRjk0V3dg=;
+	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RD1IaCMgB0x3BJQxySlU2wGZnug4s6v1YPhLZgVknOBiv+ITdHenr+MurP1JoTMOyf7pufHjJ4uCAbg1QkI06aU4IoB/ELQnuQZuVbESI7b1c4URCZLxq+28UMhLPHpu+v4apmAw92rhAW2Kvj8Dnp1RqBgNz88du9/uBnis/B8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ucw.cz; spf=pass smtp.mailfrom=ucw.cz; dkim=pass (1024-bit key) header.d=ucw.cz header.i=@ucw.cz header.b=qSzO5bM2; arc=none smtp.client-ip=195.113.20.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ucw.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ucw.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WVigzOjT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77D4DC2BCB0;
-	Sat, 25 Apr 2026 10:22:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777112541;
-	bh=ZUPPhFVZQbljNA332u3LYRTprpkVR+YVWiGn+DzoKto=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WVigzOjTrHYv7Ua8lBOX9q+n9FsWYiyPo6WTeju8Fq6eKONInM+g4ZnN+90LbTky9
-	 2E7Ch0CVEOC36VYM3o/VzOL3wrryEfnGTxKVS4YrFG2aW2wYcRkNMdejOnDonyJOt/
-	 n7jc2UAa2zZwgnV0HLAabusZcazKhRuT+cJB7f3Br1q2gwdrAMs9Q3DX6929DvjSWc
-	 s610BDZRiB6gjdqJWlpk6Ne2XkUsKNXl/vKMwKHeeh2HCdAHAmCKdWvulItHY+aJNo
-	 cbS7XMDADiW9k5cz3Ah6opxkaWex5RW0dugONUJ7Te69LHUgs287Cx2H8RUd8X/NJV
-	 1Ca7YP7W2leig==
-Date: Sat, 25 Apr 2026 12:22:19 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Mahesh Vaidya <mahesh.vaidya@altera.com>
-Cc: joyce.ooi@intel.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
-	mani@kernel.org, robh@kernel.org, bhelgaas@google.com, krzk+dt@kernel.org, 
-	conor+dt@kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, subhransu.sekhar.prusty@altera.com, dinguyen@kernel.org
-Subject: Re: [PATCH 1/3] dt-bindings: PCI: altera: add binding for Agilex 5
-Message-ID: <20260425-witty-heron-of-perfection-cedddd@quoll>
-References: <20260424094913.522123-1-mahesh.vaidya@altera.com>
- <20260424094913.522123-2-mahesh.vaidya@altera.com>
+	dkim=pass (1024-bit key) header.d=ucw.cz header.i=@ucw.cz header.b="qSzO5bM2"
+Received: by nikam.ms.mff.cuni.cz (Postfix, from userid 2587)
+	id A41DB28049A; Sun, 26 Apr 2026 00:37:19 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ucw.cz; s=gen1;
+	t=1777156639;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=wyPBpsqL9+OQlQ4v/lb2O2mCb3GW4NOrwJPdwip7sW4=;
+	b=qSzO5bM2XIY53rEES5cmqUIu0aiEpaLPMmrEWKNNY/efYsmibTvb20vFnoiCrS2LPjxiSL
+	vofOgLT8H8L/rSnDgJ+8Opxh39z/TnssO68r6Dfs1X3DXdlSOpPMniUANvlhIy5vrrHQS+
+	5pyv9M7oUaUIfK8WG82iE54CHWYLSy8=
+Date: Sun, 26 Apr 2026 00:37:19 +0200
+From: Martin =?utf-8?B?TWFyZcWh?= <mj@ucw.cz>
+To: Guillem Jover <guillem@debian.org>,
+	Bjarni Ingi Gislason <bjarniig@simnet.is>,
+	linux-pci@vger.kernel.org
+Subject: Re: Debian maintainer does not forward bug reports
+Message-ID: <mj+md-20260425.223707.47829.nikam@ucw.cz>
+References: <aee7asxxZ1qzg_EV@kassi.invalid.is>
+ <mj+md-20260422.080349.87303.nikam@ucw.cz>
+ <ae1A9ZuAJPHW0S3H@thunder.hadrons.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260424094913.522123-2-mahesh.vaidya@altera.com>
+In-Reply-To: <ae1A9ZuAJPHW0S3H@thunder.hadrons.org>
 
-On Fri, Apr 24, 2026 at 02:49:11AM -0700, Mahesh Vaidya wrote:
->      enum:
->        - altr,pcie-root-port-1.0
-> @@ -25,20 +26,15 @@ properties:
->        - altr,pcie-root-port-3.0-f-tile
->        - altr,pcie-root-port-3.0-p-tile
->        - altr,pcie-root-port-3.0-r-tile
-> +      - altr,pcie-root-port-4.0
->  
->    reg:
-> -    items:
-> -      - description: TX slave port region
-> -      - description: Control register access region
-> -      - description: Hard IP region
+> > > #585146		lspci: query the database for specific vendor/device IDs
+> > 
+> > This could be useful. I will consider adding this feature.
+> 
+> Ah, great, let me know if you'd like a report filed upstream for
+> tracking.
 
-I don't understand why you are removing this.
+Yes please.
 
->      minItems: 2
-> +    maxItems: 3
->  
->    reg-names:
-> -    items:
-> -      - const: Txs
-> -      - const: Cra
-> -      - const: Hip
->      minItems: 2
-> +    maxItems: 3
->  
->    interrupts:
->      maxItems: 1
-> @@ -80,18 +76,25 @@ allOf:
->      then:
->        properties:
->          reg:
-> -          maxItems: 2
-> -
-> +          items:
-> +            - description: TX slave port region
-> +            - description: Control register access region
->          reg-names:
-> -          maxItems: 2
-> -
-> +          items:
-> +            - const: Txs
-> +            - const: Cra
->      else:
->        properties:
->          reg:
-> -          minItems: 3
-> -
-> +          items:
-> +            - description: TX slave port region
-> +            - description: Control register access region
-> +            - description: Hard IP region
->          reg-names:
-> -          minItems: 3
-> +          items:
-> +            - const: Txs
-> +            - const: Cra
-> +            - const: Hip
-
-So it's the same... Confusing or I miss here something.
-
-Best regards,
-Krzysztof
-
+				Martin
