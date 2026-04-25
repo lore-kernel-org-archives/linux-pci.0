@@ -1,46 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E341529ACCD;
-	Sat, 25 Apr 2026 10:00:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70045393DE9;
+	Sat, 25 Apr 2026 10:22:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777111217; cv=none; b=QvvsPSUnGL3P4P8sEbHqMnwHcz2NqdZxyvKnFaDX/fuWA43j4FTGXR2BwALMnCTaUCu3/KMp7JWhFWeS4Eg3wYZFwdNBrBV2+rNwFSGRxTY3Qy5qjraPc/17CztPTxTQpmo1ii7sLOWmkjcVddl2vj6aQrsTKk0WJUvfME18H5I=
+	t=1777112541; cv=none; b=sgo3scEdaWg2HXqG6+GMC7KrW23j7nKmluYM8HMG/KOADZ+XjUJyIs0KHe9hz0txhOBMfqtEL/aGlECHMoEpknV/6U+Rczeq8WRmEHUI/lONK3V+/S0VWvr2XHM8GRntICUBricJwriYGL/YhlCJF2W1jql+ZE4RmmnmfOpxTCE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777111217; c=relaxed/simple;
-	bh=0JI/sNhBy7s5x/BVI9wTKO0mI5GBqDtKbA7wQnD5N3g=;
+	s=arc-20240116; t=1777112541; c=relaxed/simple;
+	bh=ZUPPhFVZQbljNA332u3LYRTprpkVR+YVWiGn+DzoKto=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=i215y5zl85NRGGAFEDdd/hh4d8570X5GXcUaij+7a0RNbLiTLwqgVq5coPCVrOdtlRG8zESzZjx31CPmW+VIFelqFZlXEyUSb5NzIaCqJ7PEWDbiQg0Tiuj4YR/2BgCtwhB5yejIzxE42uelIX9A8+H3l/K35b+VotK57p+RsnY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fwmye6am; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=iYh3ka2sBXRkqDqMTSuXaiZrDv+yGjxOIard560DPbFZv1Ii8xvLbOPCHtnC7CVEipLEcpUEuurIUTcXTJSSDRUKlMNnQcKRSM0gC14m9M2EA5Hj3vTIQ96OfAqBpS/QprEXWkrglcOSHQH7gU9EY4gKayCLSwFSX2W6t8JhWc0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WVigzOjT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fwmye6am"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9D2CC2BCB0;
-	Sat, 25 Apr 2026 10:00:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WVigzOjT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77D4DC2BCB0;
+	Sat, 25 Apr 2026 10:22:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777111216;
-	bh=0JI/sNhBy7s5x/BVI9wTKO0mI5GBqDtKbA7wQnD5N3g=;
+	s=k20201202; t=1777112541;
+	bh=ZUPPhFVZQbljNA332u3LYRTprpkVR+YVWiGn+DzoKto=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fwmye6amN9Ii56XtGCyVLlIySXU6NXdKia5YQdMmYiGO4+Qrad9jKp1zwC243Of+g
-	 9Mtdo5xpmxVXCLNiU5Q1k1AAPX6ehs+5Nkepk8cmCDawaRvGDehvglZasErnowzf7F
-	 JZqHGW+VbhzZ2x5zZ2EUhdXITKbhdG6U01aFVsgzL658R9atdQembuVCysJ507Yo7H
-	 kbs6ZwoPsmmipysGr0K4uqcayBqchOE+R5I6zHy/NegQaDTzhQfEoP1/lSX+H5crbj
-	 1u2J6H3e72bRv9idBoOZVGWonRPNZzXdvAdWfam3hTr/r+iifGfSAdalb/6RQWo4hy
-	 DtSE5SopYCmMA==
-Date: Sat, 25 Apr 2026 12:00:14 +0200
+	b=WVigzOjTrHYv7Ua8lBOX9q+n9FsWYiyPo6WTeju8Fq6eKONInM+g4ZnN+90LbTky9
+	 2E7Ch0CVEOC36VYM3o/VzOL3wrryEfnGTxKVS4YrFG2aW2wYcRkNMdejOnDonyJOt/
+	 n7jc2UAa2zZwgnV0HLAabusZcazKhRuT+cJB7f3Br1q2gwdrAMs9Q3DX6929DvjSWc
+	 s610BDZRiB6gjdqJWlpk6Ne2XkUsKNXl/vKMwKHeeh2HCdAHAmCKdWvulItHY+aJNo
+	 cbS7XMDADiW9k5cz3Ah6opxkaWex5RW0dugONUJ7Te69LHUgs287Cx2H8RUd8X/NJV
+	 1Ca7YP7W2leig==
+Date: Sat, 25 Apr 2026 12:22:19 +0200
 From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Conor Dooley <conor@kernel.org>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>, robh@kernel.org, 
-	krzk+dt@kernel.org, conor+dt@kernel.org, bhelgaas@google.com, frank.li@nxp.com, 
-	l.stach@pengutronix.de, lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
-	s.hauer@pengutronix.de, kernel@pengutronix.de, festevam@gmail.com, 
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, 
-	imx@lists.linux.dev, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 1/3] dt-bindings: PCI: imx6q-pcie: Add intr, aer and
- pme interrupts
-Message-ID: <20260425-agile-impala-of-unity-cadced@quoll>
-References: <20260424025735.1490772-1-hongxing.zhu@nxp.com>
- <20260424025735.1490772-2-hongxing.zhu@nxp.com>
- <20260424-sinless-unfiled-d1087a894da5@spud>
+To: Mahesh Vaidya <mahesh.vaidya@altera.com>
+Cc: joyce.ooi@intel.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
+	mani@kernel.org, robh@kernel.org, bhelgaas@google.com, krzk+dt@kernel.org, 
+	conor+dt@kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, subhransu.sekhar.prusty@altera.com, dinguyen@kernel.org
+Subject: Re: [PATCH 1/3] dt-bindings: PCI: altera: add binding for Agilex 5
+Message-ID: <20260425-witty-heron-of-perfection-cedddd@quoll>
+References: <20260424094913.522123-1-mahesh.vaidya@altera.com>
+ <20260424094913.522123-2-mahesh.vaidya@altera.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,22 +45,70 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260424-sinless-unfiled-d1087a894da5@spud>
+In-Reply-To: <20260424094913.522123-2-mahesh.vaidya@altera.com>
 
-On Fri, Apr 24, 2026 at 06:06:18PM +0100, Conor Dooley wrote:
-> On Fri, Apr 24, 2026 at 10:57:33AM +0800, Richard Zhu wrote:
-> > Add optional 'intr', 'aer', and 'pme' interrupt entries to the i.MX6Q
-> > PCIe binding to support PCIe event-based interrupts for general
-> > controller events, Advanced Error Reporting, and Power Management Events
-> > respectively.
-> > 
-> > Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-> > ---
-> 
-> This binding supports lots of devices. Do they all have these additional
-> interrupts?
+On Fri, Apr 24, 2026 at 02:49:11AM -0700, Mahesh Vaidya wrote:
+>      enum:
+>        - altr,pcie-root-port-1.0
+> @@ -25,20 +26,15 @@ properties:
+>        - altr,pcie-root-port-3.0-f-tile
+>        - altr,pcie-root-port-3.0-p-tile
+>        - altr,pcie-root-port-3.0-r-tile
+> +      - altr,pcie-root-port-4.0
+>  
+>    reg:
+> -    items:
+> -      - description: TX slave port region
+> -      - description: Control register access region
+> -      - description: Hard IP region
 
-Yep. Commit msg says only i.MX6Q...
+I don't understand why you are removing this.
+
+>      minItems: 2
+> +    maxItems: 3
+>  
+>    reg-names:
+> -    items:
+> -      - const: Txs
+> -      - const: Cra
+> -      - const: Hip
+>      minItems: 2
+> +    maxItems: 3
+>  
+>    interrupts:
+>      maxItems: 1
+> @@ -80,18 +76,25 @@ allOf:
+>      then:
+>        properties:
+>          reg:
+> -          maxItems: 2
+> -
+> +          items:
+> +            - description: TX slave port region
+> +            - description: Control register access region
+>          reg-names:
+> -          maxItems: 2
+> -
+> +          items:
+> +            - const: Txs
+> +            - const: Cra
+>      else:
+>        properties:
+>          reg:
+> -          minItems: 3
+> -
+> +          items:
+> +            - description: TX slave port region
+> +            - description: Control register access region
+> +            - description: Hard IP region
+>          reg-names:
+> -          minItems: 3
+> +          items:
+> +            - const: Txs
+> +            - const: Cra
+> +            - const: Hip
+
+So it's the same... Confusing or I miss here something.
 
 Best regards,
 Krzysztof
