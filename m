@@ -1,164 +1,224 @@
-Received: from master.debian.org (master.debian.org [82.195.75.110])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB5CE39EF11
-	for <linux-pci@vger.kernel.org>; Sat, 25 Apr 2026 22:42:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.110
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86F20288AD;
+	Sat, 25 Apr 2026 23:38:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777156976; cv=none; b=YGSKLRZOuzTA9liVsaCSk5WhtXbqPg0Ecp/3BBDXGRcYROzs7XvBWbTj+agNUaK6mX6iIppbNv+8WVv8grj2AESoQFX8i029GQngik0Gmz6RJCpKv/iXqwguouM1PGTwQNdeGYpxUoZ4XgtK9exVDPr1tvJCCUzel3lVa0UO/3o=
+	t=1777160337; cv=none; b=ejTvLH95CYprpIQovRt8Wmq8v5S7rb9eHJxQSWt2KmS6tGN79xp8Wv2SLgY5oYoxNRMQZUmWYXJFDst/lKsJGbPIA3W9GLaanYUlGe2dpFH7OSVtW6jo6Zsp7LTKPtLkvc17UU3tYO/PNkpZ1VWUhOSIIJtsFYXluYmUXXpZOCA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777156976; c=relaxed/simple;
-	bh=SUaC8kbHxFE29yFJ38TrMwBmdtDBigp1xWTb/wqOgeU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=n9pXwPbiCHVmFXjjBU+Z6WD4PP7ikp+4fyNjHAfEBqJUJ1CItnqfWtB9ShWpeM4fP+hH3YwZKsNQAleIAZEdpdNSi57+kj2qs4zZ7qkw1jC9RzyaZjXgE/FqZZEbvSYhzRW/88IM001YKMTbKYAUvwbi3Z+hcX5C5BlPFXCywsM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=master.debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=spn10kUU; arc=none smtp.client-ip=82.195.75.110
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=master.debian.org
+	s=arc-20240116; t=1777160337; c=relaxed/simple;
+	bh=kfOjTCZ/WD/9yCW5AWc3k+LiKZnkPI4OkmQxEMM0K5g=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=sPgn3zlPt7RHuF6U6Hn9N3CL5CMYrUtdPjCgIiQGPV/Wo6KQ6eYZZBMwwbtVDd4ej957/CC/38EqlHhzvV3bwCYz5Z1aY7I0BpaFZVMl2wYzBJ1h+20LPhDpG/J7KMxojeM6orz4wHBwdQchY9Jefr/S/OaqwyKEjFJS5v7saBo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=AurzOrSo; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=g6eecBUm; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="spn10kUU"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
-	s=smtpauto.master; h=In-Reply-To:Content-Transfer-Encoding:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-ID:Content-Description;
-	bh=r5majvip2FMAT018+Nmrp5zFIP5nSBhbHJ0TM1EHnnk=; b=spn10kUU1LmDQM0jGVTt0fOBdb
-	NPHevR9t4i5yH3phyUy2pAVFPz1bnF84Qh/OHfUqcalzxI3RC04aEWVBk6HxtoY7zZc6LooRdWc2z
-	J2WUw4PfpUJdZuQiXF7MjbJAD86EvIpRQYLQO+1Ded4jeYBybFXDSctTKZWBBPq1vHIW7a5pon+LY
-	mWdyIXMI5BwrzUsolXRLrWPL/z2Te8D3A1D/2H1d84ck3nHViLpM7IHzd8FEV5bPMbbUR/6Jy0mRZ
-	+OnYeRNovtDSDTJ/4BvsF+o1w+/4W/1PTbNlKsOQ0Oqsj8HGKZX/IE8zuJOXjWjFr5u5gRy2Dwh92
-	svR1Yaug==;
-Received: from guillem by master.debian.org with local (Exim 4.96)
-	(envelope-from <guillem@master.debian.org>)
-	id 1wGlXy-004aRc-2U;
-	Sat, 25 Apr 2026 22:32:22 +0000
-Date: Sun, 26 Apr 2026 00:32:21 +0200
-From: Guillem Jover <guillem@debian.org>
-To: Martin =?utf-8?B?TWFyZcWh?= <mj@ucw.cz>
-Cc: Bjarni Ingi Gislason <bjarniig@simnet.is>, linux-pci@vger.kernel.org
-Subject: Re: Debian maintainer does not forward bug reports
-Message-ID: <ae1A9ZuAJPHW0S3H@thunder.hadrons.org>
-Mail-Followup-To: Guillem Jover <guillem@debian.org>,
-	Martin =?utf-8?B?TWFyZcWh?= <mj@ucw.cz>,
-	Bjarni Ingi Gislason <bjarniig@simnet.is>,
-	linux-pci@vger.kernel.org
-References: <aee7asxxZ1qzg_EV@kassi.invalid.is>
- <mj+md-20260422.080349.87303.nikam@ucw.cz>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="AurzOrSo";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="g6eecBUm"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4g35rD3DHSz9tf7;
+	Sun, 26 Apr 2026 01:38:52 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1777160332;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=sAz7g1dUi5hi0b+215Mn7DEKA29E+hd6TPfNhohZZAY=;
+	b=AurzOrSojFAvdt1g48mMPvzZRwJFPN3kNgApXaR80getd4hrWqwvXxyDdvG16Q9a0sAK1Z
+	bqL2MH2bHvdKrz4zaBbcXy9/OdrYIXLL3fJ4Eg0v2IWxpGc+zt1ZY4K2Fsi2Y0dbaT0ILT
+	HV8ceUr3xQO11jO8im3cwZ/ZrErA3IAGzjjOOJqWV3DY8xQrTPDWrkNyv9/KjUiweFEuDS
+	M280Ce6Q42MFvPjhkVuNPYoBzdXsRZgc5pXTVPNf/ISVgceWMR2OMXXJAB2+pbtFrANylE
+	MkNkd9dfwaYCxVHDUmBpDMeg3eRP9GQNofcm6C4e9hHBXrDiS0SviLJQb1K9pQ==
+From: Marek Vasut <marek.vasut+renesas@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1777160331;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=sAz7g1dUi5hi0b+215Mn7DEKA29E+hd6TPfNhohZZAY=;
+	b=g6eecBUmvcWtI59d4IpWU1TpbMNTB5i+jzsa0jQE+2d6U9w8EmjsR+UdJRkTGA6quZgmOn
+	oRYXLTiYA0Wo5/1tQkoOTfnYX48hN1/bcrk1FhFJxnFHYBbU2wkrCIDvHfCTne02qw4Vrl
+	1XP4qfWugCp1YNBdBpxSCJEYp3VXmN3nytWSiYPhO+fawEJZlTlIqhV7zqAphqUEXmBHxx
+	SqGSW1weZXcTcCPU6jNBHRhKFivMNjJDXppqyBXE4xfEYBQN8NjA7P7fgIG21wV86z7tBc
+	p0gHhGhpmRSAjOVcxM/4oUJ/h421aZM1QFV2CsTT6dKRyUIKFf3j1v9j22TCGw==
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	stable@vger.kernel.org,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Koichiro Den <den@valinux.co.jp>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Subject: [PATCH] PCI: rcar-gen4: Limit Max_Read_Request_Size and Max_Payload_Size to 256 Bytes
+Date: Sun, 26 Apr 2026 01:38:28 +0200
+Message-ID: <20260425233845.459175-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <mj+md-20260422.080349.87303.nikam@ucw.cz>
+X-MBO-RS-ID: 457bd6f4a564d15300f
+X-MBO-RS-META: r11zh8f91w5eo8fpxks54nrjtcmwxayk
 
-Hi!
+R-Car Gen4 PCIe controller has a hardware limitation of 256 Bytes
+maximum payload size. The PCIe DMA generates requests of size up
+to minimum(Max_Read_Request_Size, Max_Payload_Size). Force limit
+both Max_Read_Request_Size and Max_Payload_Size to 256 Bytes and
+propagate this limit to all downstream devices.
 
-On Wed, 2026-04-22 at 10:49:11 +0200, Martin Mareš wrote:
-> Cc: Guillem who is the Debian maintainer of pciutils; see below for
-> context.
-> 
-> Let us go through all outstanding bugs filed against Debian pciutils:
+This limitation can be triggered for example by using an NVMe SSD
+which does not use host memory buffer, Samsung 980 PRO is such an
+SSD. Affected SSD reports 'hmpre' field as 0:
+"
+$ nvme id-ctrl /dev/nvme0 | grep hmpre
+hmpre     : 0
+"
 
-Ah, thanks for that. When I took over the package in Debian in 2019, I
-had a brief look, but then never found the moment or forgot to really
-go over all of them. :/
+The symptom is a read from the SSD which wraps around at 256 Byte
+boundary. The test for this symptom can be implemented by writing
+512 Byte of random data into the SSD and reading the data back. If
+the read back data repeat after 256 Bytes, the device is affected.
+"
+$ dd if=/dev/urandom of=/tmp/data.bin bs=256 count=2 \
+  dd if=/tmp/data.bin of=/dev/nvme0n1 bs=256 count=2 \
+  dd if=/dev/nvme0n1 bs=256 count=2 of=/tmp/readback.bin
+"
 
-> > #887113		pciutils: lspci does not detect sound for nvidia MPC67 on Pavilion DV9720us
-> > #775453		/usr/bin/lspci: "lspci does not detect nvidia geforce 210M on Asus UL80Vt"
-> 
-> These are likely kernel issues. Since they are a decade old, we should
-> ask the submitter for testing on a recent kernel.
+Expected data:
+"
+$ hexdump -vC /tmp/data.bin
+00000000  97 81 b7 3b 0e 38 2b 4d  a7 d3 e0 47 ff c2 4b ca
+00000010  c1 85 98 f0 4a ac 03 a0  3b ab f3 19 44 dd 06 8b
+...
+00000100  7a ce 3c b2 e1 d5 d9 11  88 63 10 59 76 3c dc 32 <-- random
+00000110  72 32 2a 7d a3 e1 aa 13  7c da 58 a1 7b 21 11 50 <-- data
+"
 
-Ack, I've asked the reporters.
+Faulty readback, collected without this change in place:
+"
+$ hexdump -vC /tmp/readback.bin
+00000000  97 81 b7 3b 0e 38 2b 4d  a7 d3 e0 47 ff c2 4b ca <---.
+00000010  c1 85 98 f0 4a ac 03 a0  3b ab f3 19 44 dd 06 8b <-. |
+...                                                          | |
+00000100  97 81 b7 3b 0e 38 2b 4d  a7 d3 e0 47 ff c2 4b ca <-:-+- repeated
+00000110  c1 85 98 f0 4a ac 03 a0  3b ab f3 19 44 dd 06 8b <-+--- data
+     ^^^
+      |
+      '--- Repeat starts at offset 0x100 = 256 Bytes
+"
 
-> > #656925		failure to detect PCIe Gigabit LAN
-> 
-> Not a pciutils problem, probably a missing kernel driver. It's from
-> 2012, so it should be tested with a recent kernel.
+Fixes: 0d0c551011df ("PCI: rcar-gen4: Add R-Car Gen4 PCIe controller support for host mode")
+Cc: stable@vger.kernel.org
+Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+---
+Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Koichiro Den <den@valinux.co.jp>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-renesas-soc@vger.kernel.org
+---
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c | 56 +++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
 
-Ack, I've asked the reporter.
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index 8b03c42f8c84c..82f0a074a71da 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -576,6 +576,7 @@ static int r8a779f0_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable)
+ static void rcar_gen4_pcie_additional_common_init(struct rcar_gen4_pcie *rcar)
+ {
+ 	struct dw_pcie *dw = &rcar->dw;
++	u16 offset = dw_pcie_find_capability(dw, PCI_CAP_ID_EXP);
+ 	u32 val;
+ 
+ 	val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
+@@ -584,11 +585,66 @@ static void rcar_gen4_pcie_additional_common_init(struct rcar_gen4_pcie *rcar)
+ 		val |= BIT(6);
+ 	dw_pcie_writel_dbi(dw, PCIE_PORT_LANE_SKEW, val);
+ 
++	val = dw_pcie_readl_dbi(dw, offset + PCI_EXP_DEVCTL);
++	val &= ~(PCI_EXP_DEVCTL_PAYLOAD | PCI_EXP_DEVCTL_READRQ);
++	val |= PCI_EXP_DEVCTL_PAYLOAD_256B | PCI_EXP_DEVCTL_READRQ_256B;
++	dw_pcie_writel_dbi(dw, offset + PCI_EXP_DEVCTL, val);
++
+ 	val = readl(rcar->base + PCIEPWRMNGCTRL);
+ 	val |= APP_CLK_REQ_N | APP_CLK_PM_EN;
+ 	writel(val, rcar->base + PCIEPWRMNGCTRL);
+ }
+ 
++static void rcar_gen4_rc_pcie_quirk(struct pci_dev *dev)
++{
++	static const struct pci_device_id rcar_gen4_pcie_rc_devid = {
++		PCI_DEVICE(PCI_VENDOR_ID_RENESAS, 0x0030),
++		.class = PCI_CLASS_BRIDGE_PCI_NORMAL, .class_mask = ~0
++	};
++	struct pci_bus *bus = dev->bus;
++	struct pci_dev *bridge;
++
++	if (pci_is_root_bus(bus))
++		bridge = dev;
++
++	/* Look for the host bridge */
++	while (!pci_is_root_bus(bus)) {
++		bridge = bus->self;
++		bus = bus->parent;
++	}
++
++	if (!bridge)
++		return;
++
++	if (!pci_match_one_device(&rcar_gen4_pcie_rc_devid, bridge))
++		return;
++
++	/*
++	 * R-Car Gen4 PCIe controller has a hardware limitation of 256 Bytes
++	 * maximum payload size. The PCIe DMA generates requests of size up
++	 * to minimum(Max_Read_Request_Size, Max_Payload_Size). Force limit
++	 * both Max_Read_Request_Size and Max_Payload_Size to 256 Bytes and
++	 * propagate this limit to all downstream devices.
++	 *
++	 * For details, refer to:
++	 * R-Car S4 R19UH0161EJ0130 Rev.1.30 Jun. 16, 2025 or
++	 * R-Car V4H R19UH0186EJ0130 Rev.1.30 Apr. 21, 2025 or
++	 * R-Car V4M R19UH0217EJ0100 Rev.1.00 Dec. 12, 2025,
++	 * chapters 104.1.1 Features and 104.3.9 DMA Transfer
++	 * section DMA Read Transfer.
++	 */
++	if (pcie_get_readrq(dev) > 256) {
++		dev_info(&dev->dev, "Limiting MRRS to 256 bytes\n");
++		pcie_set_readrq(dev, 256);
++	}
++
++	if (pcie_get_mps(dev) > 256) {
++		dev_info(&dev->dev, "Limiting MPS to 256 bytes\n");
++		pcie_set_mps(dev, 256);
++	}
++}
++DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, rcar_gen4_rc_pcie_quirk);
++
+ static void rcar_gen4_pcie_phy_reg_update_bits(struct rcar_gen4_pcie *rcar,
+ 					       u32 offset, u32 mask, u32 val)
+ {
+-- 
+2.53.0
 
-> > #774063		pciutils: update-pciids changes md5sum of pci.ids
-> 
-> This is specific to Debian. Another alternative would be to make
-> update-pciids store the downloaded file to /usr/local/share and let
-> libpci prefer this file over the one if /usr/share if it exists.
-
-I've had a couple of packaging changes for pciutils and pci.ids to switch
-them to use alternatives:
-
-  https://git.hadrons.org/cgit/debian/pkgs/pci.ids.git/log/?h=pu/alternatives
-  https://git.hadrons.org/cgit/debian/pkgs/pciutils.git/log/?h=pu/alternatives
-
-But never merged those, because then /usr/share/misc/pci.ids would
-stop being known by dpkg, and then users cannot search for its owner.
-Which is arguably a problem in dpkg itself, but…
-
-At least the nice thing about the alternatives solution is that it defaults
-to use the latest version of the file, where using a set of directories
-(/var/lib/ comes to mind as perhaps better than /usr/local/share) with
-fixed preferred order, would not have that property.
-
-> > #595328		/usr/bin/lspci: lspci reports wrong video ram size
-> 
-> It's from 2010, so I am not sure if it's worth investigating.
-
-I've closed this one as it was affecting a motherboard for 32-bit x86,
-which Debian does not support anymore on real hardware.
-
-> When a bug like this is submitted, please ask the author to provide
-> the output of "lspci -vvxxx".
-
-Thanks, I'll add a package script for reportbug to print a note to that
-effect so that the submitter can see it in the template report to fill.
-
-> > #640239		/usr/bin/lspci: lspci -t (-v) doesn't show bridges
-> 
-> We have rewritten the whole tree display code since this version,
-> I hope that this problem does not exist any more.
-
-I've closed this now, on your request.
-
-> > #870000		pciutils: Debian Stretch freeze when I use "lspci"
-> 
-> Very likely a hardware bug. If it should be worked around, the right
-> place is the kernel.
-
-Ack, I've asked the reported whether this can still be reproduced.
-
-> > #924237		lspci shows wrong/misleading string instead of "Device xxxx"
-> 
-> Interesting... can you ask the submitter if they can reproduce it
-> with current pciutils?
-
-Ack, done.
-
-> > #1087569	pcilmr.8: Some remarks and editorial changes for this man page
-> > #1087678	pcilib.7: Some remarks and editorial changes for this man page
-> > #1099040	setpci.8: Some remarks and a patch with editorial changes for this man page
-> 
-> Bjarni, I assume that these are the bugs that triggered your message.
-> I don't see any Debian patches to pciutils man pages, so I will apply
-> your patches upstream.
-
-Thanks, I think these just slipped through the cracks on my side.
-
-> > #585146		lspci: query the database for specific vendor/device IDs
-> 
-> This could be useful. I will consider adding this feature.
-
-Ah, great, let me know if you'd like a report filed upstream for
-tracking.
-
-> > #929984		lspci: please make -nn the default
-> 
-> I admit that it would help in some cases, but on the other hand,
-> it would make the default output more cluttered, so I don't think
-> it's a clear win.
-
-Ack. I've closed this now.
-
-Thanks,
-Guillem
