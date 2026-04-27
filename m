@@ -1,248 +1,318 @@
-Received: from CWXP265CU008.outbound.protection.outlook.com (mail-ukwestazon11020138.outbound.protection.outlook.com [52.101.195.138])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 067DC29C325;
-	Mon, 27 Apr 2026 15:27:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.195.138
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777303650; cv=fail; b=h8lziy1ngj5EbDNYSVdah/kdXUvIqb1YswNswSMrjKav0PBx9/eoReZwxnDi7E0KaNO02khQp469BOoaRsbd7rtKO64mRy0Bq4sBOjzZy4/Zx11qw1MfV++6IJLEJ/DKR7ipGboiehbrZVgrwefSai1J7Eia/uC8vPOpvt3NktA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777303650; c=relaxed/simple;
-	bh=vE/qIBkzt+SoCYhhVQ97vSpQlkkOxCN+vLeQ7rGzHE0=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=bXa05ANdfAcfOr5+QoOeEuRkQzyPWiDTKcQ6tOpGhu/4oGXkWoRNtvzapTpBzm0Vmx5RSTL53RATOc/gnle3+nN+iFPJ2LTW7ru+9WaFQoqBFKQXiedZ4hOjKf1OpQ76z9pWjpoccken2Zi0GQBQ5IbUlyLz7wgs/PWuOI/PV8w=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=UAXin7wT; arc=fail smtp.client-ip=52.101.195.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 06E4C22A4FC;
+	Mon, 27 Apr 2026 15:57:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777305451; cv=none; b=A2PaLsJZD4EHIiitfBd109L8CNXkjTuiIpNTHNKOrXQ425hU8RLRCrf9gGx8jray38sU6Aq8g6/Wl+kshA3vUkDJnSgD49LCgNgxSRMRMVNUc2h4LtGJbKvexwYKqFOzy8R+jirWyDDQFwujuMsWJLHOyquPWU2YakBx7eLEzOQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777305451; c=relaxed/simple;
+	bh=kN0/zBZdm9NxVXKJAoQJhWqJCgj21oE9y9ViQHYtXGk=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=FyDQWT3SITPAi27fvYfT4PRqKxETTzx42w9zSqUIgx9dHJM2NfV0UcrY398lX0Ikt6oqUNP/i+pe4ITTJc9wg14ErHz1Aj2X1T5qoR3ZvMQ7O+BBD0zpZnN7AGWpvoTL/G6fYVQQ2yXNau6lsVBfgymijQqfnGvbrnycnWn+yiI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=OhQoS5cT; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="UAXin7wT"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=XXRLok/2HoWqb5OP6VqjkayyKHG4yQdCzZt8Lu75ux4KOJuqaMh7tUspVR8SPljpsCNyHK3XG0O3K5F+DF/+yV0gJZsw3DXOW9q6ceS4r1sQWlFpk/x+LMe/s/suOA2mfa+IStn4f/C4LOTLC/jSjn7xStuw1IwlgFET1nbOub5BjAUepv+sCN0FqqT3KuQIMq9pYxNXYYOEp7rI3SyJlRadpnfhjYHUUp6QXbG/PyKCtuQpt4uKpXXASMRoFfr3Gq6Uy+C49ueAkycndF/yF5dV6pVyPn/wZsgIb3qxle3EP6cATkcmxWL13ECgVrtf8RYy+xTDXnI6Vpr7PvDH/w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=iNZmHTGe471kIVIL4xdxKcZDsUrytI9jitdwsfdKkRE=;
- b=tCBiaEtqEvDAActNQfrkurB//Me19xYheZZhL2czT24BVORxDO6JPbcyovijAHg3tEQ6/q42SYDUr74/qo8F+hnRy+DtdMWI2JLqtnj1dirRWl2RW6EKpaiGv11J66sahIc4ZA8l85C8NCT+1dR+XaIA25HjwjwaRq3KGUBahIQn8sn9bTIv/Z7YeKefUyGFofKt/vkdfPyNtTIs1sjGakgziZcums/p3xnCGGepC6QiRdn3OQF9kt3TgWYPEXGd+QOL20oQ5z7VZqh1puAoQrGCibk66sg6FLHiRxBzw4qao4fG1iw4PGL+0pctODTcVzfsV4zvyZFRMnA5acFR5A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iNZmHTGe471kIVIL4xdxKcZDsUrytI9jitdwsfdKkRE=;
- b=UAXin7wTZmshiPQHnZ4S6x3zBENPO2l6iQkjGugc0jvFu9HdYtulx2lthBAk5/MduT8kuzWt9YrOeonz3+uL92ZwpkZKUJucvJ6zIPYZRyttvyWWsBr5gA3IAPM+88S1JNjmprBF97BCnQ6QoZ20ggtHt9ikguJ2ohAALgu1zdM=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO8P265MB7935.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:3a8::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.26; Mon, 27 Apr
- 2026 15:27:23 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.20.9846.025; Mon, 27 Apr 2026
- 15:27:22 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 27 Apr 2026 16:27:22 +0100
-Message-Id: <DI41K5J2FKE1.DF81VQ146J5T@garyguo.net>
-Cc: <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <nouveau@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>
-Subject: Re: [PATCH v2 03/11] rust: io: use pointer types instead of address
-From: "Gary Guo" <gary@garyguo.net>
-To: "Andreas Hindborg" <a.hindborg@kernel.org>, "Gary Guo"
- <gary@garyguo.net>, "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>, "Danilo Krummrich"
- <dakr@kernel.org>, "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng"
- <boqun@kernel.org>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
- <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Alice
- Ryhl" <aliceryhl@google.com>, "Trevor Gross" <tmgross@umich.edu>, "Daniel
- Almeida" <daniel.almeida@collabora.com>, "Bjorn Helgaas"
- <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, "Abdiel Janulgue" <abdiel.janulgue@gmail.com>,
- "Robin Murphy" <robin.murphy@arm.com>, "Alexandre Courbot"
- <acourbot@nvidia.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
- <simona@ffwll.ch>
-X-Mailer: aerc 0.21.0
-References: <20260421-io_projection-v2-0-4c251c692ef4@garyguo.net>
- <20260421-io_projection-v2-3-4c251c692ef4@garyguo.net>
- <87cxzkqybd.fsf@t14s.mail-host-address-is-not-set>
-In-Reply-To: <87cxzkqybd.fsf@t14s.mail-host-address-is-not-set>
-X-ClientProxiedBy: LO2P123CA0030.GBRP123.PROD.OUTLOOK.COM (2603:10a6:600::18)
- To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="OhQoS5cT"
+Received: from localhost (unknown [40.65.108.177])
+	by linux.microsoft.com (Postfix) with ESMTPSA id D338920B716A;
+	Mon, 27 Apr 2026 08:57:27 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com D338920B716A
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1777305448;
+	bh=9LeH8B86nKcZOpLZaBsejYDxB8jSKUcx+rF/bpcYhS4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=OhQoS5cTppvzXia529YlPHyl3gEpjLWlCpqEjC0wytPu1aoMn+auy5b+Twna7AZOq
+	 Lvng4260i2n0yzHjGfSp5eYpSAvQTyiXS2IYISChFXvH/uD1Pd2GiYxD6n9fpiMfwn
+	 a+1mc9wLudzyJ4EU5tC+TsVbZknBuN1SpzNpVqY8=
+Date: Mon, 27 Apr 2026 08:57:25 -0700
+From: Jacob Pan <jacob.pan@linux.microsoft.com>
+To: David Matlack <dmatlack@google.com>
+Cc: iommu@lists.linux.dev, kexec@lists.infradead.org,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-mm@kvack.org, linux-pci@vger.kernel.org, Adithya Jayachandran
+ <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, Alex
+ Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, Chris
+ Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>, Jason
+ Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>, Jonathan Corbet
+ <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, Leon Romanovsky
+ <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport
+ <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, Pasha Tatashin
+ <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>,
+ Pratyush Yadav <pratyush@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+ Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja
+ <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, Will Deacon
+ <will@kernel.org>, William Tu <witu@nvidia.com>, Yi Liu
+ <yi.l.liu@intel.com>
+Subject: Re: [PATCH v4 02/11] PCI: liveupdate: Track outgoing preserved PCI
+ devices
+Message-ID: <20260427085725.00005283@linux.microsoft.com>
+In-Reply-To: <20260423212316.3431746-3-dmatlack@google.com>
+References: <20260423212316.3431746-1-dmatlack@google.com>
+	<20260423212316.3431746-3-dmatlack@google.com>
+Organization: LSG
+X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO8P265MB7935:EE_
-X-MS-Office365-Filtering-Correlation-Id: e3b3877c-05cd-41ca-ff88-08dea4717a97
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|376014|1800799024|10070799003|56012099003|18002099003|22082099003|921020;
-X-Microsoft-Antispam-Message-Info:
-	t/KhFymq8ftn1YMzvdrNMm7d213u337G21EHc93nQdPmPE74Hp7oVhUARH7/0IWbs0X+q2FYXMZoq5OUx4IGOaEId1ZH4pcQ2IT3hhc9bWuJsmBSauijpFRjPRxwPcyJch2jiFgweC8FZXzMEpx9Ol3JVW7UMluHUxlyzSiDoy0RSx6GaXnPthrLyQaIVnQZK4ODnRkVG+UhOFlg3rbwklGvHr0qsPfqHLXTu1REbxK4CmnrcrwsBqtGBcpK9UwTrNZl+L4syhZjjoloiRnc/VVIAX+K66htzIITY9V52kAVpVVd6dCBGtiZDMS1PdmIFVaAFt2TLX/cSsCSeoOJyyCsEgDhHBu+PxZUw4SHJ/LnNaSwW6PEzVGRVhhux+IETQq7tuQl+/rD2IVkXqfRLRwLN0P1UmILFLVq2iBlZZcj4plADzBinmJrpBS4qSRtI3m+Pm16fqh/oCroY7RmHlEMPrTflk1skRLPtbe9pvD/8d6neDzIFelznXkGyHbxwvKg/l8HjbHdYtfYuyISRvCdSd3kUeXhT12pXz+kbPl2K7vFCcoIDafwB16Pk8iSyzdS0FwD0mtUV9/wW3cBs5RCsC4RM+ubuf53QZFmdNRngeacXDz0bPDcXfI7OAXl3vBbHqGQjeUhwYDZmOLp6umwxx474SawkVYMNRCm3AcHBiI+JGCEgm7DSqqazzkjoxZ1PoIu+PErlt1u8+QyTWiLZLEqVgadnFNkC6tAw8Fj5qe99vyNVVBol0L86jwWMNYVXMiy1umM8lesKmMCOA==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(10070799003)(56012099003)(18002099003)(22082099003)(921020);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?cDcxeHJXVkZyZERLZ1d1MTVwNkJGaVk0MnNTejA0ZXVIVS9zZldJR3d4WFRo?=
- =?utf-8?B?a01xWEdFSzlDT3JvTkQrTlM4TFVTK1l1QnZYL1dhZ0ViZTIzM2RqUWVsVG9W?=
- =?utf-8?B?R3BZUjk4b3cwLzJBR1pwTks1RmRMY3B6QTRLbkdGVGJqZ0cwaStkVkJBZUQr?=
- =?utf-8?B?T0FFT3FGQkFOWEhaVnh0VkNtU05XYUF6R3JMRjVTNjZkckx2ck1ubFRHV0tH?=
- =?utf-8?B?THVwcGNLeDhESlJhMit6WWhZdDF4SUZqR3ZMalRDMmZIRDgvNmR1eTVld3oy?=
- =?utf-8?B?NDBaSlgxQ0N4eWtkc1VMNXIyNGZmakIzMmtNd2h2cmRHZmZvM0FYb21qd2s0?=
- =?utf-8?B?SDI4OWprNm04aHFIUnFDWWNMOFRlalpGZGpidllsRUw4eEtTQXEvYnZlY3Yx?=
- =?utf-8?B?ZHpIdFpSeTlWSUNUTklKbnU3NHVBb3NNVVhaSFJSZEEySnhEQkZUdGtXVlZX?=
- =?utf-8?B?TlZ3NTMydWR4aFlQamJnb0RCUm1rek1ySXcvdFk0NDJtRC9oSTJUZzIrUmVa?=
- =?utf-8?B?dDYrSEtTOTZpalpmOG5pMjBEbE9qakx6dS83RUR2ZXpRWE9tM1NwWkRrNm93?=
- =?utf-8?B?cnZMOXUyRkFqU01LRGhZQ2IvUW1KeUNEb3pMNk5aNUhHR0ZFd0lXMk01dGlo?=
- =?utf-8?B?UlhJRStuY2dITFRoeXhwS0dPNjNpdzkwQWFWTlhPeHJsdlZJUFNISFJ2b3Aw?=
- =?utf-8?B?MExtaDRYY01xTExjNGlmQWpRR2pWOHNMYXJreWFwUFRMSFpWZ2JGZ1JqKzVl?=
- =?utf-8?B?WmRMRTZvK210cTZadWZEMUdnRzlQdERRY1I1NzZtSVRsVElDbEdoVXdlSjE2?=
- =?utf-8?B?OVN4TUhLQ1huMUxnVFc2RG9nakJuMkRkblkxa3Q5QU16R0E1WlRkZjRwVlU5?=
- =?utf-8?B?M2dONE05blhVMFc5d3NZQ2V4TjZEWWZLYzExTllnSk11dWNkdk9yNGx6bnVj?=
- =?utf-8?B?VU9LR1ZsRkowcHZrNHUrMnp5V01uOWYycTVZeHJJR2FuU2didHV3Szc2ZEwz?=
- =?utf-8?B?d3dtQTV2TDl3dlJseXIxY3d6MXRLSnBUajMrRzdiMU1CRWtDbDhOWmxaRUI4?=
- =?utf-8?B?aDhwL0orSHlOc2VMQzliRVN0b3ZaN2dSczdiUS9OZ2ZIZERWUW1GNS9oRnds?=
- =?utf-8?B?dkozRmJlVVJydnJDMTlvZVZUa3hibUQ1a2J3L3QxdTFSb092cXQ2TWswZ1BO?=
- =?utf-8?B?NHg3aVZ5T2k3dUpkMElVLzRqbExhTnZ3YWwrNWFCdkxuaEp3ZGVGc0tXSHMw?=
- =?utf-8?B?UUdscUtMSWFheW9tTk9WWkl3TFZaZ2srUTV6WWZSdFFIZmN3TWRrVXNzQ241?=
- =?utf-8?B?QnFhc0ZxenBybUtpN2txSUVQMTB5Rm15c3pMamZkQ0IyOGc5U00zeTVHZXRP?=
- =?utf-8?B?WmhqSjBKK2JDYndGUGxSbzRmcEJWeWo5YTJ0UjVaWUh1d01xamFMSGlUMEZP?=
- =?utf-8?B?ZXF2Mlg0WkFMbFBRNWs1dU0vR0FFcWd1VDRPYkZPaWk4S2JuNGhVNGhleXlQ?=
- =?utf-8?B?SFlaR0N1SXJDY2lkR3UrSVM0N29wQXprYTl1RTFEengwenR2RE9VdWZ2cGQ3?=
- =?utf-8?B?MVlWUGNyemg3MHlkT1NDSWhnRVM2dzNNQ2lqUDhQbVAyd0pvc3JOREo4enI0?=
- =?utf-8?B?N2hhMG15SUNxazF1U3U4MERJa1BGNzZEVURRa2ZuZkZGamI2NEhIZGRnL3ha?=
- =?utf-8?B?dXhvZFI4cFcxK1JjU21ISlcybE9FNkU5NzVZcFYzcGcrY3V2WllHVTVwei90?=
- =?utf-8?B?Rnc5Y2RrcTl0a2pZb1paTmZaMnZibmZUb1FXc082b1d1eFZSL3BxMm9FWEZQ?=
- =?utf-8?B?QWpTNVRUZjVONnBjNklGK01pYVZZYUdablgyNXJuUEUxbm50ekg0eTF5Sm9S?=
- =?utf-8?B?TG9mMHo4WnVLeWJsRnY5aHJ1T0ExNW5PM2lqK3RWS1lyamkxaVRVb2laT01G?=
- =?utf-8?B?R29HQUhlWVRFRGZrakZHWEVQSkZyYXdXUlB5R0pTQUIwT1p4K0F6cktmdzZz?=
- =?utf-8?B?YjhXeXpSUDVqb2ZtdTZyZ3N6N3NnMFIvUjJIWnNVVkhKWXhNUGV3Z0I0aFVk?=
- =?utf-8?B?bUMyazl3OEJqQmZKeUgzTG05cnhzSE1qM1lETFpjMlI0VHBMUXZZc1oybVFQ?=
- =?utf-8?B?WHo2aVpWKzNLSDIxVVllNnJ6aVY4ZDFsOG02ZVhGK01iS2UyY0RNcUhWczdX?=
- =?utf-8?B?M1kxMnBFdXdwUjFsM3RLU0h6OXJONXk0VG01cUlSVUlsMkZJOHlFT2lvSGNa?=
- =?utf-8?B?WFU3cHNFa1hDR24xR2Jlam9wSEY3bi9CVzJqbVp0NUxyQ2wvWTZNVGwvZVpx?=
- =?utf-8?B?WkNNSWtFdkhRQXRBdEpOSjc1eStiYSt0QXgvSDZ0bEpLSHd3amdtZz09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: e3b3877c-05cd-41ca-ff88-08dea4717a97
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Apr 2026 15:27:22.9155
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: zpyA+8xOjESN2t4CSL63BiSBpkZCRmdfGn1FLWfroH/hxc4vz7xEB7Gi/H8AxMX5ke9RFBuj79itQdqjHtMgBw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO8P265MB7935
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Mon Apr 27, 2026 at 3:20 PM BST, Andreas Hindborg wrote:
-> Gary Guo <gary@garyguo.net> writes:
->
->> This carries the size information with the pointer type and metadata, ma=
-kes
->> it possible to use I/O projections and paves the way for IO view types.
->>
->> With this change, minimum size information becomes available through typ=
-es;
->> so `KnownSize::MIN_SIZE` can be used and `IoKnownSize` trait is no longe=
-r
->> necessary. The trait is kept for compatibility and can be removed when
->> users stop using it for bounds.
->>
->> PCI config space uses only offsets and not pointers like MMIO; for this
->> null pointers (with proper size metadata) is used. This is okay as I/O
->> trait impl and I/O projections can operate on invalid pointers, and for =
-PCI
->> config space we will only use address info and ignore the provenance.
->>
->> Signed-off-by: Gary Guo <gary@garyguo.net>
->> ---
->>  rust/kernel/devres.rs |   2 +-
->>  rust/kernel/io.rs     | 123 +++++++++++++++++++++----------------------=
--------
->>  rust/kernel/io/mem.rs |   2 +-
->>  rust/kernel/pci/io.rs |  74 ++++++++++++++++++------------
->>  4 files changed, 99 insertions(+), 102 deletions(-)
->>
->> diff --git a/rust/kernel/devres.rs b/rust/kernel/devres.rs
->> index 3e22c63efb98..ea86e9c62cdf 100644
->> --- a/rust/kernel/devres.rs
->> +++ b/rust/kernel/devres.rs
->> @@ -101,7 +101,7 @@ struct Inner<T> {
->>  /// impl<const SIZE: usize> Drop for IoMem<SIZE> {
->>  ///     fn drop(&mut self) {
->>  ///         // SAFETY: `self.0.addr()` is guaranteed to be properly map=
-ped by `Self::new`.
->> -///         unsafe { bindings::iounmap(self.0.addr() as *mut c_void); }=
-;
->> +///         unsafe { bindings::iounmap(self.0.as_ptr().cast()); };
->>  ///     }
->>  /// }
->>  ///
->> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
->> index 0b9c97c0a1d7..1682f2a0d20d 100644
->> --- a/rust/kernel/io.rs
->> +++ b/rust/kernel/io.rs
->> @@ -105,8 +105,8 @@ pub fn new_region(addr: usize, size: usize) -> Resul=
-t<Self> {
->>  impl<T: ?Sized + KnownSize> MmioRaw<T> {
->>      /// Returns the base address of the MMIO region.
->>      #[inline]
->> -    pub fn addr(&self) -> usize {
->> -        self.addr.addr()
->> +    pub fn as_ptr(&self) -> *mut T {
->> +        self.addr
->>      }
->> =20
->>      /// Returns the size of the MMIO region.
->> @@ -166,7 +166,7 @@ pub fn size(&self) -> usize {
->>  /// impl<const SIZE: usize> Drop for IoMem<SIZE> {
->>  ///     fn drop(&mut self) {
->>  ///         // SAFETY: `self.0.addr()` is guaranteed to be properly map=
-ped by `Self::new`.
->> -///         unsafe { bindings::iounmap(self.0.addr() as *mut c_void); }=
-;
->> +///         unsafe { bindings::iounmap(self.0.as_ptr().cast()); };
->>  ///     }
->>  /// }
->>  ///
->> @@ -217,14 +217,14 @@ pub trait IoCapable<T> {
->>      /// # Safety
->>      ///
->>      /// The range `[address..address + size_of::<T>()]` must be within =
-the bounds of `Self`.
->> -    unsafe fn io_read(&self, address: usize) -> T;
->> +    unsafe fn io_read(&self, address: *mut T) -> T;
->> =20
->>      /// Performs an I/O write of `value` at `address`.
->>      ///
->>      /// # Safety
->>      ///
->>      /// The range `[address..address + size_of::<T>()]` must be within =
-the bounds of `Self`.
->> -    unsafe fn io_write(&self, value: T, address: usize);
->> +    unsafe fn io_write(&self, value: T, address: *mut T);
->>  }
->> =20
->
-> In v1 you had a requirement for `address` to be aligned. Why did you
-> drop that?
+Hi David,
 
-In v1 Alex wants me to split this part to a separate commit as this is a
-pre-existing requirement that is just not documented. The patch 4 is that
-change.
+On Thu, 23 Apr 2026 21:23:06 +0000
+David Matlack <dmatlack@google.com> wrote:
 
-Best,
-Gary
+> Add APIs to allow drivers to notify the PCI core of which devices are
+> being preserved across a Live Update for the next kernel, i.e.
+> "outgoing" devices.
+> 
+> Drivers must notify the PCI core when devices are preserved so that
+> the PCI core can update its FLB data (struct pci_ser) and track the
+> list of outgoing devices. pci_liveupdate_preserve() notifies the PCI
+> core that a device must be preserved across Live Update.
+> pci_liveupdate_unpreserve() reverses this (cancels the preservation
+> of the device).
+> 
+> This tracking ensures the PCI core is fully aware of which devices may
+> need special handling during shutdown and kexec, and so that it can be
+> handed off to the next kernel.
+> 
+> Signed-off-by: David Matlack <dmatlack@google.com>
+> ---
+>  drivers/pci/liveupdate.c    | 101
+> ++++++++++++++++++++++++++++++++++++ include/linux/kho/abi/pci.h |
+> 7 +-- include/linux/pci.h         |  26 ++++++++++
+>  3 files changed, 131 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> index d4fa61625d56..2dd8daa2f17c 100644
+> --- a/drivers/pci/liveupdate.c
+> +++ b/drivers/pci/liveupdate.c
+> @@ -43,6 +43,26 @@
+>   *
+>   *  * ``pci_liveupdate_register_flb(driver_file_handler)``
+>   *  * ``pci_liveupdate_unregister_flb(driver_file_handler)``
+> + *
+> + * Device Tracking
+> + * ===============
+> + *
+> + * Drivers must notify the PCI core when specific devices are
+> preserved or
+> + * unpreserved with the following APIs:
+> + *
+> + *  * ``pci_liveupdate_preserve(pci_dev)``
+> + *  * ``pci_liveupdate_unpreserve(pci_dev)``
+> + *
+> + * This allows the PCI core to keep it's FLB data (struct pci_ser)
+> up to date
+> + * with the list of **outgoing** preserved devices for the next
+> kernel.
+> + *
+> + * Restrictions
+> + * ============
+> + *
+> + * The PCI core enforces the following restrictions on which devices
+> can be
+> + * preserved. These may be relaxed in the future:
+> + *
+> + *  * The device cannot be a Virtual Function (VF).
+>   */
+>  
+>  #define pr_fmt(fmt) "PCI: liveupdate: " fmt
+> @@ -57,6 +77,8 @@
+>  #include <linux/pci.h>
+>  #include <linux/sort.h>
+>  
+> +static DEFINE_MUTEX(pci_flb_outgoing_lock);
+> +
+>  static int pci_flb_preserve(struct liveupdate_flb_op_args *args)
+>  {
+>  	struct pci_dev *dev = NULL;
+> @@ -124,6 +146,85 @@ static struct liveupdate_flb pci_liveupdate_flb
+> = { .compatible = PCI_LUO_FLB_COMPATIBLE,
+>  };
+>  
+> +int pci_liveupdate_preserve(struct pci_dev *dev)
+> +{
+> +	struct pci_ser *ser;
+> +	int i, ret;
+> +
+> +	guard(mutex)(&pci_flb_outgoing_lock);
+> +
+> +	ret = liveupdate_flb_get_outgoing(&pci_liveupdate_flb, (void
+> **)&ser);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (!ser)
+> +		return -ENOENT;
+> +
+> +	if (dev->is_virtfn)
+> +		return -EINVAL;
+This can be left outside the mutex?
 
->
->
-> Best regards,
-> Andreas Hindborg
+> +
+> +	if (dev->liveupdate_outgoing)
+> +		return -EBUSY;
+> +
+> +	if (ser->nr_devices == ser->max_nr_devices)
+> +		return -ENOSPC;
+> +
+> +	for (i = 0; i < ser->max_nr_devices; i++) {
+> +		/*
+> +		 * Start searching at index ser->nr_devices. This
+> should result
+> +		 * in a constant time search under expected
+> conditions (devices
+> +		 * are not getting unpreserved).
+> +		 */
+> +		int index = (ser->nr_devices + i) %
+> ser->max_nr_devices;
+> +		struct pci_dev_ser *dev_ser = &ser->devices[index];
+> +
+> +		if (dev_ser->refcount)
+> +			continue;
+> +
+> +		pci_info(dev, "Device will be preserved across next
+> Live Update\n");
+> +		ser->nr_devices++;
+> +
+> +		dev_ser->domain = pci_domain_nr(dev->bus);
+> +		dev_ser->bdf = pci_dev_id(dev);
+> +		dev_ser->refcount = 1;
+> +
+> +		dev->liveupdate_outgoing = dev_ser;
+> +		return 0;
+> +	}
+> +
+> +	return -ENOSPC;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_liveupdate_preserve);
+> +
+> +void pci_liveupdate_unpreserve(struct pci_dev *dev)
+> +{
+> +	struct pci_dev_ser *dev_ser;
+> +	struct pci_ser *ser = NULL;
+> +	int ret;
+> +
+> +	guard(mutex)(&pci_flb_outgoing_lock);
+> +
+> +	ret = liveupdate_flb_get_outgoing(&pci_liveupdate_flb, (void
+> **)&ser); +
+> +	if (ret || !ser) {
+> +		pci_warn(dev, "Cannot unpreserve device without
+> outgoing Live Update state\n");
+> +		return;
+> +
+> +	}
+> +
+> +	dev_ser = dev->liveupdate_outgoing;
+> +	if (!dev_ser) {
+> +		pci_warn(dev, "Cannot unpreserve device that is not
+> preserved\n");
+> +		return;
+> +	}
+> +
+> +	pci_info(dev, "Device will no longer be preserved across
+> next Live Update\n");
+> +	ser->nr_devices--;
+> +	memset(dev_ser, 0, sizeof(*dev_ser));
+> +	dev->liveupdate_outgoing = NULL;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_liveupdate_unpreserve);
+> +
+>  int pci_liveupdate_register_flb(struct liveupdate_file_handler *fh)
+>  {
+>  	pr_debug("Registering file handler \"%s\"\n",
+> fh->compatible); diff --git a/include/linux/kho/abi/pci.h
+> b/include/linux/kho/abi/pci.h index 5c0e92588c00..5b4c8d9e462c 100644
+> --- a/include/linux/kho/abi/pci.h
+> +++ b/include/linux/kho/abi/pci.h
+> @@ -23,19 +23,20 @@
+>   * incrementing the version number in the PCI_LUO_FLB_COMPATIBLE
+> string. */
+>  
+> -#define PCI_LUO_FLB_COMPATIBLE "pci-v1"
+> +#define PCI_LUO_FLB_COMPATIBLE "pci-v2"
+>  
+>  /**
+>   * struct pci_dev_ser - Serialized state about a single PCI device.
+>   *
+>   * @domain: The device's PCI domain number (segment).
+>   * @bdf: The device's PCI bus, device, and function number.
+> - * @reserved: Reserved (to naturally align struct pci_dev_ser).
+> + * @refcount: Reference count used by the PCI core to keep track of
+> whether it
+> + *            is done using a device's struct pci_dev_ser.
+>   */
+>  struct pci_dev_ser {
+>  	u32 domain;
+>  	u16 bdf;
+> -	u16 reserved;
+> +	u16 refcount;
+>  } __packed;
+>  
+>  /**
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index d70080babd52..eb94cbd8ab9d 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -41,6 +41,7 @@
+>  #include <linux/msi_api.h>
+>  #include <uapi/linux/pci.h>
+>  #include <linux/liveupdate.h>
+> +#include <linux/kho/abi/pci.h>
+>  
+>  #include <linux/pci_ids.h>
+>  
+> @@ -594,6 +595,9 @@ struct pci_dev {
+>  	u8		tph_mode;	/* TPH mode */
+>  	u8		tph_req_type;	/* TPH requester type
+> */ #endif
+> +#ifdef CONFIG_PCI_LIVEUPDATE
+> +	struct pci_dev_ser *liveupdate_outgoing; /* State preserved
+> for next kernel */ +#endif
+>  };
+>  
+>  static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+> @@ -2880,6 +2884,14 @@ void pci_uevent_ers(struct pci_dev *pdev, enum
+>  pci_ers_result err_type); #ifdef CONFIG_PCI_LIVEUPDATE
+>  int pci_liveupdate_register_flb(struct liveupdate_file_handler *fh);
+>  void pci_liveupdate_unregister_flb(struct liveupdate_file_handler
+> *fh); +
+> +int pci_liveupdate_preserve(struct pci_dev *dev);
+> +void pci_liveupdate_unpreserve(struct pci_dev *dev);
+> +
+> +static inline struct pci_dev_ser *pci_liveupdate_outgoing(struct
+> pci_dev *dev) +{
+> +	return dev->liveupdate_outgoing;
+> +}
+>  #else
+>  static inline int pci_liveupdate_register_flb(struct
+> liveupdate_file_handler *fh) {
+> @@ -2889,6 +2901,20 @@ static inline int
+> pci_liveupdate_register_flb(struct liveupdate_file_handler *fh static
+> inline void pci_liveupdate_unregister_flb(struct
+> liveupdate_file_handler *fh) { }
+> +
+> +static inline int pci_liveupdate_preserve(struct pci_dev *dev)
+> +{
+> +	return -EOPNOTSUPP;
+> +}
+> +
+> +static inline void pci_liveupdate_unpreserve(struct pci_dev *dev)
+> +{
+> +}
+> +
+> +static inline struct pci_dev_ser *pci_liveupdate_outgoing(struct
+> pci_dev *dev) +{
+> +	return NULL;
+> +}
+>  #endif
+>  
+>  #endif /* LINUX_PCI_H */
 
