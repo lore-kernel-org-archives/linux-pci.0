@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6221B373BE9;
-	Mon, 27 Apr 2026 21:07:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 364BB36EA93;
+	Mon, 27 Apr 2026 21:07:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777324021; cv=none; b=CfHqhlnaTTaM+juwvbJIHP1AHxWWdv7DlPWsTPra1dLAdCJXJmK5vLp5x8I6EbSrt+eN1vdT9tQK7dMq1ImwuQ/p0ARLnGv+0t7YA6dCMORnP2RFjOqIw6Xman3NREP0Qq28fnx2QxS5Db1zbgerqW1aJKFqkPlTu5FNNafNXWY=
+	t=1777324050; cv=none; b=SruYgohuXSW8wC1zV+nGrPYJ39bewOZxqP0xzc/sNAx5SUCqNGZr1DlZRkOeTNiTZugGxpSv8Phbpz1nfEgxeUWe/oaQL585QdDLJjJ0OFZdHWLySrD5yviHFChb4t5rj+Apd+KXXqFiob+imt3pWW9OU5UVzy1mVl/ooizBFYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777324021; c=relaxed/simple;
-	bh=Ji6QG+tICOp3jZRjVIPmRNoeZX3XNm+1s3nZGqpXmws=;
+	s=arc-20240116; t=1777324050; c=relaxed/simple;
+	bh=eTCpxLZv7LpMubk8KJGg69LwpKjJ4rCvsaQuqSw9Ybs=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=V6n6CO2AiEe3BFDUgN6jCIcKpbE6oYSY/dQtVWh4lJs8jtaLdqdkaZUhOzWBUwD+D82CMQHRipfeqTzw0gRHkZRZsykn1Xlf9cxqkcyIHcNf9QnigP7lp+iQluaOZ/EgSnqlPkJlEoKYj8awpD8t57pikstWJhi6yRBEQErL5/8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QFGNDaTG; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=B1WT9Vk06HqrtY+cO22uvKLv/blCwZ3WgrlVzujpTO0WZCD3+1xfd4tSGCCif3waBEv10ubdr6kMyrtJ7IaCP9vAmEHEvuH3qCbQRT63EScKCl4wX/i42K2EU/IZQbRVp6hOag7ixCgasOAX68B9J/jlcjgkptBRLyKi2i1MUXY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YXALoBTZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QFGNDaTG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11644C19425;
-	Mon, 27 Apr 2026 21:07:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YXALoBTZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5968C19425;
+	Mon, 27 Apr 2026 21:07:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777324021;
-	bh=Ji6QG+tICOp3jZRjVIPmRNoeZX3XNm+1s3nZGqpXmws=;
+	s=k20201202; t=1777324049;
+	bh=eTCpxLZv7LpMubk8KJGg69LwpKjJ4rCvsaQuqSw9Ybs=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=QFGNDaTGW9a6kdfYz+Q7sP5WR3ZkbzEL1ZCMz/x/Se8P+hqKd3UU21B0gzVx4pqBl
-	 kykxyVYNOR7VMHGZ+ds/id+OC9sE4OJiDDrLvBJuAtwrEL/oYKUj25SReZiK63RWqV
-	 zqLGHgGm4CQzNaDmqo+Ta83Ay0qv+7jcHNQkaY/6E5JQ9nFVjxzjC2iuYoPQaq1/27
-	 0XleZbQtLDheHJpPJP0IVRsnCI+hQSiEFIetIZfoCYJn1sRQx3kn2wlhuvPKWYM0G1
-	 nI8/zJ/fR1QDFe6OK/JGPNIwx73t5SJiu7g/Tn0MksDCYe357ycHL/XROhv+A4Hhfc
-	 cSXQLsRyl3SJw==
-Date: Mon, 27 Apr 2026 16:06:58 -0500
+	b=YXALoBTZ96HEbK/in8Mcqf+FcEg3cZ5fOQmzXfQw8l37KdDHJKEmdE1SvjbZeiRUV
+	 VjQLZPadaTR3oR6VVLBF0kc78fhKbe+XimUyJpt/bNLks1VVxuBNFtwP4Eey0qEitS
+	 d5cnToMQIQCGp38txEqfX8AkS3c9uVTSLVP9ETBVw0YALt9UsN8VG7oBDzRgckokRb
+	 tVJHOiw5mnG6eLdlPfV7lNskftueKD74BpFt5HaWzYuh4tsk9k1bgjN+gzC9jPc4vn
+	 BLwseIuVEzRz0DUfkLvXU9vK1VX7WcRcJJ10fQd2yr6magkpA+cv8wcamZrmJjRPwO
+	 QDO5vWHVk853w==
+Date: Mon, 27 Apr 2026 16:07:28 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: David Matlack <dmatlack@google.com>
 Cc: iommu@lists.linux.dev, kexec@lists.infradead.org,
@@ -51,9 +51,9 @@ Cc: iommu@lists.linux.dev, kexec@lists.infradead.org,
 	Shuah Khan <skhan@linuxfoundation.org>,
 	Will Deacon <will@kernel.org>, William Tu <witu@nvidia.com>,
 	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v4 03/11] PCI: liveupdate: Track incoming preserved PCI
- devices
-Message-ID: <20260427210658.GA186673@bhelgaas>
+Subject: Re: [PATCH v4 05/11] PCI: liveupdate: Inherit bus numbers during
+ Live Update
+Message-ID: <20260427210728.GA186712@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -62,28 +62,29 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260423212316.3431746-4-dmatlack@google.com>
+In-Reply-To: <20260423212316.3431746-6-dmatlack@google.com>
 
-On Thu, Apr 23, 2026 at 09:23:07PM +0000, David Matlack wrote:
-> During PCI enumeration, the previous kernel might have passed state about
-> devices that were preserved across kexec. The PCI core needs to fetch
-> this state to identify which devices are "incoming" and require special
-> handling.
+On Thu, Apr 23, 2026 at 09:23:09PM +0000, David Matlack wrote:
+> Inherit bus numbers from the previous kernel during a Live Update when
+> one or more PCI devices are being preserved.
 
 > +++ b/drivers/pci/liveupdate.c
+> @@ -93,6 +93,19 @@
+>   * bound to the correct driver. i.e. The PCI core does not protect against a
+>   * device getting preserved by driver A in the outgoing kernel and then getting
+>   * bound to driver B in the incoming kernel.
+> + *
+> + * BDF Stability
+> + * =============
+> + *
+> + * The PCI core guarantees that incoming preserved devices can be identified by
+> + * the same bus, device, and function numbers as prior to kexec. To accomplish
+> + * this, the PCI core always inherits the secondary and subordinate bus numbers
+> + * assigned to bridges during enumeration, rather than assigning new ones (the
+> + * PCI core assumes that the previous kernel established a sane topology).
+> + *
+> + * If a misconfigured or unconfigured bridge is encountered during enumeration
+> + * while there are incoming preserved devices, it's secondary and subordinate
+> + * bus numbers will be cleared and devices below it will not be enumerated.
 
-> +void pci_liveupdate_finish(struct pci_dev *dev)
-> +{
-> +	if (!dev->liveupdate_incoming) {
-> +		pci_warn(dev, "Cannot finish preserving an unpreserved device\n");
-> +		return;
-> +	}
-> +
-> +	pci_info(dev, "Device is finished participating in Live Update\n");
-> +
-> +	/*
-> +	 * Drop the refcount so this device does not get treated as an incoming
-> +	 * device again, e.g. in case pci_liveupdate_setup_device() gets called
-> +	 * again becase the device is hot-plugged.
-
-s/becase/because/
+s/it's/its/
