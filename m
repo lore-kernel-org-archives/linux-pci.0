@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E58853AC0FB;
-	Mon, 27 Apr 2026 22:13:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ACA43AB262;
+	Mon, 27 Apr 2026 22:13:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777328023; cv=none; b=fJ8fw+/C34HBqOmBFpYleI6RD1nNzE6uElZDsKBwKgCxlJS9EM+UEUsZIiTzXmJDpX32MbRiuxpQMN+BfwQRM3zKPQCB6np5iPEIWxUdIQEE1E0AR7tYxrFrOB+UrUGTXCZRa0MxMx0ZBtaQejw4SA0vw/Ji64xA4ILNkV+VB1g=
+	t=1777328029; cv=none; b=K7d6IxoE7DrnrwGqc3vVz1T4wCRMxUC33dnm0dVwCwxoZdHqFEpjsdJ0YM96EG2b9b9bcP0/NFA7UpWboycJ5vfJLntUNdiJsqfWOw4ad0jCFJFX+P/iMjtzXH9usXNy5Ll9U6is/2gN5mgLK/Y7KGYRd91Qygzte7qR21FIU9w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777328023; c=relaxed/simple;
-	bh=2wRXyoiGYh3N2MxiZpU0KF0q9rWzHw+tYKK7qMjArxI=;
+	s=arc-20240116; t=1777328029; c=relaxed/simple;
+	bh=LqoJmyLMcfvlHKDJq6T+tkDE6stHA+a+dnj6GefZ9os=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XUtQ/LpuHQDpAulOw0wjA6UL49pDxH8dTTEWrxc+ILv1DWyG+di8EMRy52My61fI9Ns1N8Oo4iCwNUsaBfaqYtf0aS3wTpSGpu/wQm/UOh1zdH88IUm5s7u3UeuE6+8Amh+HWpbk83rCFF+wRtXkfFuAHZa/7uhOsXJTGVO0KJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bQGkmtrf; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=JeJvrDbN6o3nxFjS0YwoYqR3LHJKn+NczTQ8ZBnIS9SdK8a7Wuc/sZYhqyKFPN0hpL6RKVwnJ8BPGjUGD0eZPl/gr+6MZmuz1q1MYy4UNTfMNBhYHNYHYTzgHeE4V0qAoJBGQ4Bce9C1wbBa3b/wAkraWhDX/cyEjw+pHx2yRic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aFiYEfVB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bQGkmtrf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA442C19425;
-	Mon, 27 Apr 2026 22:13:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aFiYEfVB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 410D6C2BCB6;
+	Mon, 27 Apr 2026 22:13:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777328022;
-	bh=2wRXyoiGYh3N2MxiZpU0KF0q9rWzHw+tYKK7qMjArxI=;
+	s=k20201202; t=1777328029;
+	bh=LqoJmyLMcfvlHKDJq6T+tkDE6stHA+a+dnj6GefZ9os=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=bQGkmtrfaOtuV8b1phg4BUOsZwWTo2RGRcZLJkJvxY84H0cAgrv0s1WFxR7FvnQPj
-	 ZyV6+O/clFd90kJOW/a6ltyel9t5FglZoFE7lOoOvdCaPUhymgXpKBERhilzisUgqC
-	 q9PSC0MCU0EbI2JsqE/QK8UpsIl6OsePWv8QIPYrjpQH3CnHf/CqbVmSR62Y8L7paX
-	 ikOJQb763jtz56W4bgS+DdXbeJSEIgbEf6wkWgGB1AiVQvPgusJYtdMLrk/X6at2sT
-	 DhlAAhBweOysTvimZ87GnzvOYsJzx5XiFgU+j03r4Jcmf2ueM6wTgzwbUFClsoJp/C
-	 nz1bJk/e+RWJQ==
+	b=aFiYEfVByRv2PjDa9rjYPjgR9q/fQlaBcDWAP+n9ARzSi35I3fnQBQL4jXkKGDFqb
+	 Z+VfYo+FSkRbNwQd6HzuNL2R+VKCaOPP2Vt7a5oRB1f1lN8QHUS7mkwa2kqHPVBPHD
+	 l03xRWXLrvCwYveEXJEMCVnnLbogwLsr1wkfNlkwlAmoq9F+HdY8YjBxU3qt84QonQ
+	 vdiQnv2fsuVsGsUCmq1lVdBEMwCQFAmiGn60q3rtrxY6WPr2VXXMG+6L4Xh1xwYO4V
+	 WJEmvDbKfwovia/wetB+zMtncjlIo7goJfWZX5JKqF73OCnqP5s8BCruWMyK6RvsV7
+	 duihnqd6v+KKw==
 From: Danilo Krummrich <dakr@kernel.org>
 To: gregkh@linuxfoundation.org,
 	rafael@kernel.org,
@@ -58,9 +58,9 @@ Cc: driver-core@lists.linux.dev,
 	linux-pci@vger.kernel.org,
 	rust-for-linux@vger.kernel.org,
 	Danilo Krummrich <dakr@kernel.org>
-Subject: [PATCH 15/24] samples: rust: rust_driver_auxiliary: showcase lifetime-bound registration data
-Date: Tue, 28 Apr 2026 00:11:13 +0200
-Message-ID: <20260427221155.2144848-16-dakr@kernel.org>
+Subject: [PATCH 16/24] rust: usb: make Driver trait lifetime-parameterized
+Date: Tue, 28 Apr 2026 00:11:14 +0200
+Message-ID: <20260427221155.2144848-17-dakr@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260427221155.2144848-1-dakr@kernel.org>
 References: <20260427221155.2144848-1-dakr@kernel.org>
@@ -72,90 +72,234 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Make the Data struct lifetime-parameterized, storing a reference to the
-parent pci::Device<Bound>. This demonstrates that registration data can
-hold device resources tied to the parent driver's lifetime.
+Make usb::Driver take a lifetime parameter 'a that ties device resources
+to the binding scope.
 
-In connect(), retrieve the parent PCI device from the registration data
-rather than casting through adev.parent().
+Internally, Adapter<T: Driver> becomes Adapter<F: ForLt> with a bound
+for<'a> F::Of<'a>: Driver<'a>; module_usb_driver! wraps the driver type
+in ForLt!() so drivers don't have to.
 
 Signed-off-by: Danilo Krummrich <dakr@kernel.org>
 ---
- samples/rust/rust_driver_auxiliary.rs | 27 ++++++++++++++++-----------
- 1 file changed, 16 insertions(+), 11 deletions(-)
+ rust/kernel/usb.rs              | 84 ++++++++++++++++++++-------------
+ samples/rust/rust_driver_usb.rs | 14 +++---
+ 2 files changed, 58 insertions(+), 40 deletions(-)
 
-diff --git a/samples/rust/rust_driver_auxiliary.rs b/samples/rust/rust_driver_auxiliary.rs
-index 4ad619c5731e..010ec2201a69 100644
---- a/samples/rust/rust_driver_auxiliary.rs
-+++ b/samples/rust/rust_driver_auxiliary.rs
-@@ -51,14 +51,15 @@ fn probe(
+diff --git a/rust/kernel/usb.rs b/rust/kernel/usb.rs
+index 442e456fd2d3..f519444cf8d0 100644
+--- a/rust/kernel/usb.rs
++++ b/rust/kernel/usb.rs
+@@ -35,22 +35,34 @@
+ };
+ 
+ /// An adapter for the registration of USB drivers.
+-pub struct Adapter<T: Driver>(T);
++///
++/// `F` is a [`ForLt`](trait@ForLt) type that maps lifetimes to the driver's device
++/// private data type, i.e. `F::Of<'a>` is the driver struct parameterized by `'a`. The macro
++/// `module_usb_driver!` generates this automatically via `ForLt!()`.
++pub struct Adapter<F>(PhantomData<F>);
+ 
+ // SAFETY:
+ // - `bindings::usb_driver` is a C type declared as `repr(C)`.
+-// - `T` is the type of the driver's device private data.
++// - `F::Of<'static>` is the stored type of the driver's device private data.
+ // - `struct usb_driver` embeds a `struct device_driver`.
+ // - `DEVICE_DRIVER_OFFSET` is the correct byte offset to the embedded `struct device_driver`.
+-unsafe impl<T: Driver + 'static> driver::DriverLayout for Adapter<T> {
++unsafe impl<F> driver::DriverLayout for Adapter<F>
++where
++    F: ForLt + 'static,
++    for<'a> F::Of<'a>: Driver<'a>,
++{
+     type DriverType = bindings::usb_driver;
+-    type DriverData = ForLt!(T);
++    type DriverData = F;
+     const DEVICE_DRIVER_OFFSET: usize = core::mem::offset_of!(Self::DriverType, driver);
+ }
+ 
+ // SAFETY: A call to `unregister` for a given instance of `DriverType` is guaranteed to be valid if
+ // a preceding call to `register` has been successful.
+-unsafe impl<T: Driver + 'static> driver::RegistrationOps for Adapter<T> {
++unsafe impl<F> driver::RegistrationOps for Adapter<F>
++where
++    F: ForLt + 'static,
++    for<'a> F::Of<'a>: Driver<'a>,
++{
+     unsafe fn register(
+         udrv: &Opaque<Self::DriverType>,
+         name: &'static CStr,
+@@ -61,7 +73,7 @@ unsafe fn register(
+             (*udrv.get()).name = name.as_char_ptr();
+             (*udrv.get()).probe = Some(Self::probe_callback);
+             (*udrv.get()).disconnect = Some(Self::disconnect_callback);
+-            (*udrv.get()).id_table = T::ID_TABLE.as_ptr();
++            (*udrv.get()).id_table = <F::Of<'static> as Driver<'static>>::ID_TABLE.as_ptr();
+         }
+ 
+         // SAFETY: `udrv` is guaranteed to be a valid `DriverType`.
+@@ -76,7 +88,11 @@ unsafe fn unregister(udrv: &Opaque<Self::DriverType>) {
      }
  }
  
--struct Data {
-+struct Data<'a> {
-     index: u32,
-+    parent: &'a pci::Device<Bound>,
- }
+-impl<T: Driver + 'static> Adapter<T> {
++impl<F> Adapter<F>
++where
++    F: ForLt + 'static,
++    for<'a> F::Of<'a>: Driver<'a>,
++{
+     extern "C" fn probe_callback(
+         intf: *mut bindings::usb_interface,
+         id: *const bindings::usb_device_id,
+@@ -87,16 +103,16 @@ extern "C" fn probe_callback(
+         // INVARIANT: `intf` is valid for the duration of `probe_callback()`.
+         let intf = unsafe { &*intf.cast::<Interface<device::CoreInternal>>() };
  
- #[allow(clippy::type_complexity)]
- struct ParentDriver {
--    _reg0: Devres<auxiliary::Registration<ForLt!(Data)>>,
--    _reg1: Devres<auxiliary::Registration<ForLt!(Data)>>,
-+    _reg0: Devres<auxiliary::Registration<ForLt!(Data<'_>)>>,
-+    _reg1: Devres<auxiliary::Registration<ForLt!(Data<'_>)>>,
- }
+-        from_result(|| {
+-            // SAFETY: `DeviceId` is a `#[repr(transparent)]` wrapper of `struct usb_device_id` and
+-            // does not add additional invariants, so it's safe to transmute.
+-            let id = unsafe { &*id.cast::<DeviceId>() };
++        // SAFETY: `DeviceId` is a `#[repr(transparent)]` wrapper of `struct usb_device_id` and
++        // does not add additional invariants, so it's safe to transmute.
++        let id = unsafe { &*id.cast::<DeviceId>() };
  
- kernel::pci_device_table!(
-@@ -83,14 +84,20 @@ fn probe(
-                 AUXILIARY_NAME,
-                 0,
-                 MODULE_NAME,
--                Data { index: 0 },
-+                Data {
-+                    index: 0,
-+                    parent: pdev,
-+                },
-             )?,
-             _reg1: auxiliary::Registration::new(
-                 pdev.as_ref(),
-                 AUXILIARY_NAME,
-                 1,
-                 MODULE_NAME,
--                Data { index: 1 },
-+                Data {
-+                    index: 1,
-+                    parent: pdev,
-+                },
-             )?,
+-            let info = T::ID_TABLE.info(id.index());
+-            let data = T::probe(intf, id, info);
++        from_result(|| {
++            let info = <F::Of<'_> as Driver<'_>>::ID_TABLE.info(id.index());
++            let data = <F::Of<'_> as Driver<'_>>::probe(intf, id, info);
+ 
+             let dev: &device::Device<device::CoreInternal> = intf.as_ref();
+-            dev.set_drvdata::<ForLt!(T)>(data)?;
++            dev.set_drvdata::<F>(data)?;
+             Ok(0)
          })
      }
-@@ -98,13 +105,11 @@ fn probe(
+@@ -111,11 +127,10 @@ extern "C" fn disconnect_callback(intf: *mut bindings::usb_interface) {
+         let dev: &device::Device<device::CoreInternal> = intf.as_ref();
  
- impl ParentDriver {
-     fn connect(adev: &auxiliary::Device<Bound>) -> Result {
--        let dev = adev.parent();
--        let pdev: &pci::Device<Bound> = dev.try_into()?;
--
--        let data = adev.registration_data::<ForLt!(Data)>()?;
-+        let data = adev.registration_data::<ForLt!(Data<'_>)>()?;
-+        let pdev = data.parent;
+         // SAFETY: `disconnect_callback` is only ever called after a successful call to
+-        // `probe_callback`, hence it's guaranteed that `Device::set_drvdata()` has been called
+-        // and stored a `Pin<KBox<T>>`.
+-        let data = unsafe { dev.drvdata_borrow::<ForLt!(T)>() };
++        // `probe_callback`, hence it's guaranteed that drvdata has been set.
++        let data = unsafe { dev.drvdata_borrow::<F>() };
  
-         dev_info!(
--            dev,
-+            pdev,
-             "Connect auxiliary {} with parent: VendorID={}, DeviceID={:#x}\n",
-             adev.id(),
-             pdev.vendor_id(),
-@@ -112,7 +117,7 @@ fn connect(adev: &auxiliary::Device<Bound>) -> Result {
-         );
+-        T::disconnect(intf, data);
++        <F::Of<'_> as Driver<'_>>::disconnect(intf, data);
+     }
+ }
  
-         dev_info!(
--            dev,
-+            pdev,
-             "Connected to auxiliary device with index {}.\n",
-             data.index
-         );
+@@ -281,29 +296,29 @@ macro_rules! usb_device_table {
+ /// kernel::usb_device_table!(
+ ///     USB_TABLE,
+ ///     MODULE_USB_TABLE,
+-///     <MyDriver as usb::Driver>::IdInfo,
++///     <MyDriver as usb::Driver<'_>>::IdInfo,
+ ///     [
+ ///         (usb::DeviceId::from_id(0x1234, 0x5678), ()),
+ ///         (usb::DeviceId::from_id(0xabcd, 0xef01), ()),
+ ///     ]
+ /// );
+ ///
+-/// impl usb::Driver for MyDriver {
++/// impl<'a> usb::Driver<'a> for MyDriver {
+ ///     type IdInfo = ();
+ ///     const ID_TABLE: usb::IdTable<Self::IdInfo> = &USB_TABLE;
+ ///
+ ///     fn probe(
+-///         _interface: &usb::Interface<Core>,
+-///         _id: &usb::DeviceId,
+-///         _info: &Self::IdInfo,
+-///     ) -> impl PinInit<Self, Error> {
++///         _interface: &'a usb::Interface<Core>,
++///         _id: &'a usb::DeviceId,
++///         _info: &'a Self::IdInfo,
++///     ) -> impl PinInit<Self, Error> + 'a {
+ ///         Err(ENODEV)
+ ///     }
+ ///
+-///     fn disconnect(_interface: &usb::Interface<Core>, _data: Pin<&Self>) {}
++///     fn disconnect(_interface: &'a usb::Interface<Core>, _data: Pin<&'a Self>) {}
+ /// }
+ ///```
+-pub trait Driver {
++pub trait Driver<'a> {
+     /// The type holding information about each one of the device ids supported by the driver.
+     type IdInfo: 'static;
+ 
+@@ -315,15 +330,15 @@ pub trait Driver {
+     /// Called when a new USB interface is bound to this driver.
+     /// Implementers should attempt to initialize the interface here.
+     fn probe(
+-        interface: &Interface<device::Core>,
+-        id: &DeviceId,
+-        id_info: &Self::IdInfo,
+-    ) -> impl PinInit<Self, Error>;
++        interface: &'a Interface<device::Core>,
++        id: &'a DeviceId,
++        id_info: &'a Self::IdInfo,
++    ) -> impl PinInit<Self, Error> + 'a;
+ 
+     /// USB driver disconnect.
+     ///
+     /// Called when the USB interface is about to be unbound from this driver.
+-    fn disconnect(interface: &Interface<device::Core>, data: Pin<&Self>);
++    fn disconnect(interface: &'a Interface<device::Core>, data: Pin<&'a Self>);
+ }
+ 
+ /// A USB interface.
+@@ -486,7 +501,10 @@ unsafe impl Sync for Device<device::Bound> {}
+ /// ```
+ #[macro_export]
+ macro_rules! module_usb_driver {
+-    ($($f:tt)*) => {
+-        $crate::module_driver!(<T>, $crate::usb::Adapter<T>, { $($f)* });
++    (type: $type:ty, $($rest:tt)*) => {
++        $crate::module_driver!(<T>, $crate::usb::Adapter<T>, {
++            type: $crate::types::ForLt!($type),
++            $($rest)*
++        });
+     }
+ }
+diff --git a/samples/rust/rust_driver_usb.rs b/samples/rust/rust_driver_usb.rs
+index ab72e99e1274..6f3e5db9f35d 100644
+--- a/samples/rust/rust_driver_usb.rs
++++ b/samples/rust/rust_driver_usb.rs
+@@ -20,26 +20,26 @@ struct SampleDriver {
+ kernel::usb_device_table!(
+     USB_TABLE,
+     MODULE_USB_TABLE,
+-    <SampleDriver as usb::Driver>::IdInfo,
++    <SampleDriver as usb::Driver<'_>>::IdInfo,
+     [(usb::DeviceId::from_id(0x1234, 0x5678), ()),]
+ );
+ 
+-impl usb::Driver for SampleDriver {
++impl<'a> usb::Driver<'a> for SampleDriver {
+     type IdInfo = ();
+     const ID_TABLE: usb::IdTable<Self::IdInfo> = &USB_TABLE;
+ 
+     fn probe(
+-        intf: &usb::Interface<Core>,
+-        _id: &usb::DeviceId,
+-        _info: &Self::IdInfo,
+-    ) -> impl PinInit<Self, Error> {
++        intf: &'a usb::Interface<Core>,
++        _id: &'a usb::DeviceId,
++        _info: &'a Self::IdInfo,
++    ) -> impl PinInit<Self, Error> + 'a {
+         let dev: &device::Device<Core> = intf.as_ref();
+         dev_info!(dev, "Rust USB driver sample probed\n");
+ 
+         Ok(Self { _intf: intf.into() })
+     }
+ 
+-    fn disconnect(intf: &usb::Interface<Core>, _data: Pin<&Self>) {
++    fn disconnect(intf: &'a usb::Interface<Core>, _data: Pin<&'a Self>) {
+         let dev: &device::Device<Core> = intf.as_ref();
+         dev_info!(dev, "Rust USB driver sample disconnected\n");
+     }
 -- 
 2.54.0
 
