@@ -1,197 +1,146 @@
-Received: from mout.web.de (mout.web.de [212.227.15.4])
+Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011064.outbound.protection.outlook.com [52.101.62.64])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 665BC2F39B4;
-	Mon, 27 Apr 2026 11:58:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.4
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777291131; cv=none; b=kHIe9FQy7mnb2zUhDQDBxPufiW+wGuRtFhQKetrFaacbjaUgjAZMJkjVH98IS25ozUYQ0ghMoQ+a6rBFt6RU7giGX9Gq37Fpc3EWWS3YgcGrL+dvocPaCy9EOVbmJCFjHcz20YvO2eZZ0X+LV8ijVav+5LlCCRJykjgd+xK5w6M=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777291131; c=relaxed/simple;
-	bh=sT7p1AOR4NHSCnt8HRgZeft4GbIzFKYA9NxPB4WqXM8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=m2dMBnVBSNzW2TMEimtpMjV8zr40Vmurwngg22WKXzHfNTBQjukBZ6Ns2pP9cOTnLHe3YR4K0UzGALE/6ciFNqgMZnHgbNl0yub4JOK4+WwP1Hdw7wZRXKV4DAWqsOLCPEwn5Qf2OqoO+VjDyp4BaUSEM5kGfuf2a+fvO1K1RXk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=smoch@web.de header.b=qgLSnrBO; arc=none smtp.client-ip=212.227.15.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B126A31194C;
+	Mon, 27 Apr 2026 12:12:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.64
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777291962; cv=fail; b=TCDY7/E5yh9RFevci22IaUQaR2Hg1X09GVT17cYrAbXi0lfL054rw1zAs5F1LCRqvInl82X8UGkwS9cJokUptcMYG5DeNNLcHgEuNOs76fkS5+FWJ/9WwRCd7nFGs/R6F5gMbr8GLnCq2YjdvJj2HJ5hONz6fQHsDNUFEH9GpX0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777291962; c=relaxed/simple;
+	bh=EMV1m0RfFhVmZlesnsKDCm0xEzz4tyy4OaeU6G1U1o4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mstAMgbyf7pbWzi6mfxpi89kzHDEX8sq7IZYMtfWGIn9ozXLk2XKfmtfzXDDg1IZLp46IrPG3suCkXq+SJ8vquzhwnzoT085ZTuGpyT60cBx+/205YMpQtuUy/WMVUX+xIbwYCXjZPx/wzNoYrTYuw2SWNfm5eDrqF8hLQF0dHU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=mwTW3nl6; arc=fail smtp.client-ip=52.101.62.64
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=smoch@web.de header.b="qgLSnrBO"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1777291095; x=1777895895; i=smoch@web.de;
-	bh=2KhQ2G6x2J8Q5WZNMz2VfLJf1mtdAD7QrMdDraBgb4Q=;
-	h=X-UI-Sender-Class:From:To:Cc:Subject:Date:Message-ID:
-	 MIME-Version:Content-Transfer-Encoding:cc:
-	 content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=qgLSnrBOud8WRCG8cYHih31yCxXrl3T7678GqJc5ngwJPL2i2HCrQpnMv2wdJOc1
-	 nZK4kRaGyhFEzmTk12KpLMA+tbQ1iLD/YF13jTSg8sxedrYX3zdHGCkrhZBaJRdXw
-	 ZowW5sQBFvf4CDtWxijY+ZVtuVR1gNTIA+8ezna/9o4q0frq1W0gOb6oY1G2+hRO5
-	 bVfWC5+Uyw0WpYEs0w/6hz3qd9nZg2E6G9smLbI/rXWzof3mQYDCl2DLQ3CQSo6cz
-	 mCFWzWG61EYkoxpJsRqCMC3M50LcdkSAcE6Sezxdax215Wi9SGrtS+4BwGzYULgXa
-	 IdYyXbitrs3kOxGOSw==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from client.hidden.invalid by smtp.web.de (mrweb005
- [213.165.67.108]) with ESMTPSA (Nemesis) id 1MECGX-1w7Bb80ngr-00FReF; Mon, 27
- Apr 2026 13:58:15 +0200
-From: Soeren Moch <smoch@web.de>
-To: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: Soeren Moch <smoch@web.de>,
-	stable@vger.kernel.org,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <Frank.Li@nxp.com>,
-	Fabio Estevam <festevam@gmail.com>,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	imx@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: imx6: Keep Root Port MSI capability also for i.MX6Q
-Date: Mon, 27 Apr 2026 13:58:04 +0200
-Message-ID: <20260427115804.134231-1-smoch@web.de>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="mwTW3nl6"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=RI9VKQzIz3ea0HWN8PjHPxYJMt9CzGmN9759ElDB72+YPgArLGr+0pc6dwUgUBHx6ko5gLV3lLtsQsZyV8FTs31Vbbz7Rx0cSiWHuBb45A4L1gp39qq2IPEzchbf6LS3ro+Ljs6aG5cQRGwqWqHHa9MWkOto3sv7DkkoL6oLIGNUbhBJ+XUKGy40c8/wc1vDpZKLBEJW3O7ikYFmbr27dw/hqHExFXQlGM2NV1ZstTeNmBVHQ9h8RIGsbDvuSkl6lUDJ0k+ePdrUVNByqoyTGGqNMTp9l8LEWszlzNEsg3Ugyq48/Ukwqy7tMYvJwWZc7xVxG2HuG1QMv3XVIjrmOA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=RfT5GnntMlbVsm/CVT6cl/CYFDxewxXHG2Wppo+kiok=;
+ b=pFtyvrGf7MbdMsnbxpT+tBS2JeX6uJJWeIJ0xK6WjsU8GKScnmCVHe7sypDR3qb5EOVtrbNIOuIM8MRg7iC6lT9Q1+ifsR3Tg/zHB3x4GuB12FX72hl4LtF7ip/eOAiLIXQKFwe2m55oSG4dZfy7pO37lvLTF1rgZk5D2upFdYaOBHgUsdtBaJKRLwjqPlElFd8WqW5KjiwxEmzGGSn2pEeUtUvGkkuHncLKn4zylaWl+JNXUOoqQM7eVUtXuDP91rQzLrplV1Pp7ZpCYB2cB0rNcZsaaPktExl/VZnyqmY/+nDqqS6njCbdaR9+/1k7W6Fjz99py71sSGsyr+PJxA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=RfT5GnntMlbVsm/CVT6cl/CYFDxewxXHG2Wppo+kiok=;
+ b=mwTW3nl6h7t8St4PIxiYjL9WAYYA9U8UD+iZlRjNYm3QrtabG/C+/nj32U4zW+IBEYD4HBTnoxLYIdo7PUf02Q6Widmjcf9CYabR/2V/ewiPiT7QR9VxFPKNmwMTRr/7M9U/Mkfa18Yf59uvT/qja88B/XMsTHzNzGgomGVK8Kk=
+Received: from BLAPR03CA0077.namprd03.prod.outlook.com (2603:10b6:208:329::22)
+ by DM4PR12MB6111.namprd12.prod.outlook.com (2603:10b6:8:ac::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.16; Mon, 27 Apr
+ 2026 12:12:35 +0000
+Received: from BL02EPF0001A0FD.namprd03.prod.outlook.com
+ (2603:10b6:208:329:cafe::6) by BLAPR03CA0077.outlook.office365.com
+ (2603:10b6:208:329::22) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9846.26 via Frontend Transport; Mon,
+ 27 Apr 2026 12:12:35 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
+Received: from satlexmb07.amd.com (165.204.84.17) by
+ BL02EPF0001A0FD.mail.protection.outlook.com (10.167.242.104) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9846.18 via Frontend Transport; Mon, 27 Apr 2026 12:12:35 +0000
+Received: from satlexmb07.amd.com (10.181.42.216) by satlexmb07.amd.com
+ (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Mon, 27 Apr
+ 2026 07:12:35 -0500
+Received: from xhdsamusham50x.xilinx.com (10.180.168.240) by
+ satlexmb07.amd.com (10.181.42.216) with Microsoft SMTP Server id 15.2.2562.17
+ via Frontend Transport; Mon, 27 Apr 2026 07:12:31 -0500
+From: Sai Krishna Musham <sai.krishna.musham@amd.com>
+To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
+	<mani@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
+	<conor+dt@kernel.org>, <cassel@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <michal.simek@amd.com>,
+	<bharat.kumar.gogada@amd.com>, <thippeswamy.havalige@amd.com>,
+	<sai.krishna.musham@amd.com>
+Subject: [PATCH RESEND] PCI: amd-mdb: Assert PERST# on shutdown
+Date: Mon, 27 Apr 2026 17:42:27 +0530
+Message-ID: <20260427121227.290604-1-sai.krishna.musham@amd.com>
+X-Mailer: git-send-email 2.44.4
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:N2MpFZIlfk3KyZHhfVQqO31PNrFqNAiZ5+xuJ+1cNABwhjlgbny
- EgBHSjNosX9kh08YvdEEWuacI2c5fyXe9V0/kVgq3+0Q+Qx+hhfKxOwnmGOq4toyLxVq0C+
- eqw//AKE+TZof9iqKd7BPzCyAzbdzu6+lDvVatUNqWg3CzVqjTqqcZJHCV62HeZK4+xP5Te
- TCIAPI8PCpBOJ7OrA0xEA==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:PaQqfRxTQgo=;3YyMQwVtLJHEbSUtr9bb85v9t6b
- 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
- xnvl9ce3N/352BQ==
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL02EPF0001A0FD:EE_|DM4PR12MB6111:EE_
+X-MS-Office365-Filtering-Correlation-Id: f1322cec-1bfc-4208-5d3f-08dea4564485
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|36860700016|1800799024|7416014|376014|82310400026|18002099003|56012099003;
+X-Microsoft-Antispam-Message-Info:
+	e6cVKN3xjAa41o/CIPUZKizK/a05noV+MzMWjkL4iQKHExqzsVbnFrAMz0vZ/Pf3I1wYN/lj7Fj/QEFMi6h/cQo8ODEto7an60HyQRL4jOje6b+F6PQS+awKMzi+MQC7ZQZ3/5knQBO1fPV40bxdvTTdP25Q8jEyMUQ42s2zItbMzAXVPop38amoxvCW33XdvOQdx0LyyC+HDYZvdqCPMb0IeAVQuuAyGSmisYVLfkhk31gPXuRYQryKw8uJ/9y4zBnXTLOx8zjkx/enIybKIjgN9WJb+tIETy2ZrrbbpQvIEj6PPnWsrYmVK1flxsqdJsZFA1oxCqgmB18Tprv8NH4Mg0oHa6aDH8Lk0xhSSQ3Qbhb3ZdQXFtOVautEb0mEPW44+Pm2o4DQQ190yDFmLaGmC2mQO5xwFAUBvJpUJp5D+beG/UbmCZOGLDwGMGK6XeTDO45VB0FTdhG6w7RTOWMBnTXhUFXcWXXZEtw8ro0IUkVxRAoBOqfHSKnoEypk5baaPIvcaoIeQMRdbvCRXHPGeeNV+QXO8zkN7xh/Gh3awuvVOJ2UNAIuGKaqbbzu2a04WxIrZR6M2sXI0eSs4C8RIup5BrabtypdW3VtTfvsmBF/QVZ6/LXefq0vzKasEcfrbZA6CNgLsPPgv9mLr6lHxOMuO2LB39QUxIP2w74EMHzM3qgDyP8dHPQRmAWNM6JsyPpcr1ChKQI6aXYw0BCikkyVCjQ8l21Xv8pwzBbm222AF/ztnY5txct0UpsTuXPamQQg9viXEmplvY+X0A==
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700016)(1800799024)(7416014)(376014)(82310400026)(18002099003)(56012099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	VrXZvjffSSojUNmBJ9ivXtSrzZP9D5JdHdfNwVIJc8+34KsGkCBW2J2U474IBxF/m3GdX8AGOqm+E6ssWKT3MnIlNvevJL/Rl8P0Bk5WPZCdOGErttaf0AeDPU+r91yFARAnrT7tlinEAPYQ8OPS/Wzi6B2ecPXeTMEj5uBlsphpPGSPrUlo9F0wBV1iBTr7rX4PWxhyrxJ5pBM6ET3vQwoFAEpXwoakw7k77m9hmtifnmmlZ+X0n3sVoDR/ycaImU7sKnGoO+KcMQOdDE5JhBjudSgzm35OIfajd518y/3SB6TbuGHJPGvhTCfjnuel2EOO3mz8T1fkQUHte2DWZjSuZV1LnCXzMXSXX1wPF+QrJsaUWeUr7QRZ6mgf9hX7WGTfXEjFc5MKzp/vtjnvTVdjIoE5/HTZuqUJ277YFuBdm5TPmBf8Z54gab8+iQ30
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Apr 2026 12:12:35.6559
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: f1322cec-1bfc-4208-5d3f-08dea4564485
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BL02EPF0001A0FD.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6111
 
-Also on the NXP i.MX6Q chipset MSIs from the endpoints won't be received b=
-y
-the iMSI-RX MSI controller if the Root Port MSI capability is disabled.
+Add a shutdown handler for the AMD MDB PCIe host controller that
+asserts the PERST# signal via GPIO before the system powers off or
+reboots. This ensures the connected PCIe endpoint is held in reset
+during shutdown.
 
-Even though the Root Port MSIs won't be received by the iMSI-RX controller
-due to design, this chipset has some weird hardware bug that prevents
-the endpoint MSIs from reaching when the Root Port MSI capability is
-disabled.
+Signed-off-by: Sai Krishna Musham <sai.krishna.musham@amd.com>
+---
+ drivers/pci/controller/dwc/pcie-amd-mdb.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-Hence, always keep the Root Port MSI capability for this chipset.
-
-Note that by keeping Root Port MSI capability, Root Port MSIs such as AER,
-PME and others won't be received by default. So users need to use
-workarounds such as passing 'pcie_pme=3Dnomsi' cmdline param.
-
-Fixes: 3a4e8302e72f ("PCI: imx6: Keep Root Port MSI capability with iMSI-R=
-X to work around hardware bug")
-Cc: <stable@vger.kernel.org> # 7.0.x
-Signed-off-by: Soeren Moch <smoch@web.de>
-=2D--
-Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <Frank.Li@nxp.com>
-Cc: Fabio Estevam <festevam@gmail.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: imx@lists.linux.dev
-Cc: linux-kernel@vger.kernel.org
-
-Tested on a tbs2910 board [1]
-[1] arch/arm/boot/dts/nxp/imx/imx6q-tbs2910.dts
-=2D--
- drivers/pci/controller/dwc/pci-imx6.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controlle=
-r/dwc/pci-imx6.c
-index 6d6a1688e7eb..3d461bdef967 100644
-=2D-- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -1865,7 +1865,8 @@ static const struct imx_pcie_drvdata drvdata[] =3D {
- 		.flags =3D IMX_PCIE_FLAG_IMX_PHY |
- 			 IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND |
- 			 IMX_PCIE_FLAG_BROKEN_SUSPEND |
--			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
-+			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
-+			 IMX_PCIE_FLAG_KEEP_MSI_CAP,
- 		.dbi_length =3D 0x200,
- 		.gpr =3D "fsl,imx6q-iomuxc-gpr",
- 		.ltssm_off =3D IOMUXC_GPR12,
-=2D-=20
+diff --git a/drivers/pci/controller/dwc/pcie-amd-mdb.c b/drivers/pci/controller/dwc/pcie-amd-mdb.c
+index 7e50e11fbffd..69d21b4727e4 100644
+--- a/drivers/pci/controller/dwc/pcie-amd-mdb.c
++++ b/drivers/pci/controller/dwc/pcie-amd-mdb.c
+@@ -507,6 +507,14 @@ static int amd_mdb_pcie_probe(struct platform_device *pdev)
+ 	return amd_mdb_add_pcie_port(pcie, pdev);
+ }
+ 
++static void amd_mdb_pcie_shutdown(struct platform_device *pdev)
++{
++	struct amd_mdb_pcie *pcie = platform_get_drvdata(pdev);
++
++	if (pcie->perst_gpio)
++		gpiod_set_value_cansleep(pcie->perst_gpio, 1);
++}
++
+ static const struct of_device_id amd_mdb_pcie_of_match[] = {
+ 	{
+ 		.compatible = "amd,versal2-mdb-host",
+@@ -521,6 +529,7 @@ static struct platform_driver amd_mdb_pcie_driver = {
+ 		.suppress_bind_attrs = true,
+ 	},
+ 	.probe = amd_mdb_pcie_probe,
++	.shutdown = amd_mdb_pcie_shutdown,
+ };
+ 
+ builtin_platform_driver(amd_mdb_pcie_driver);
+-- 
 2.43.0
 
